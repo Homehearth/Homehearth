@@ -1,17 +1,15 @@
 # Directory Structure Overview
 
-  \build       
-  \docs        
-  \media         
-  \client*    
-  \engine*        
-  \server*
-  \tests*
-  \editor*      
+  \build
+  \docs
+  \media
+  \client
+  \engine
+  \server
+  \tests
+  \editor
   \vendor
   \vs_2019       
-
-*subproject
 
 
 # How To Build The Project
