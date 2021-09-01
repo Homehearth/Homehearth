@@ -1,53 +1,84 @@
-<<<<<<< HEAD
 # Directory Structure Overview
 
 |── build
+
     |── debug
+    
     |── release
+    
 |── docs
+
 |── media
-|── client
+
+|── app
+
     |── assets
+    
         |── textures
+        
         |── models
+        
     |── includes
+    
     |── src
+    
     |── vs_2019
+    
 |── engine
+
     |── graphics
+    
         |── renderer
+        
         |── d3d11
+        
         |── dxgi
+        
         |── win32
+        
     |── core
+    
     |── resources/content
+    
         |── default shaders
+        
     |── audio
+    
     |── physics
+    
     |── network
+    
     |── animation
+    
     |── ecs
+    
     |── ai
+    
     |── vs_2019
-|── server
-    |── includes
-    |── src
-    |── vs_2019
+    
 |── tests
+
     |── includes
+    
     |── src
+    
     |── vs_2019
+    
 |── editor
+
     |── includes
+    
     |── src
+    
     |── vs_2019
+    
 |── vendor
+
     |── premake5
+    
 |── vs_2019
    
-
-=======
->>>>>>> 085e4cd2510891f3d78a72419098cee42227d3a8
+   
 # How To Build The Project
 
 This project has been developed using Visual Studio 2019. 
