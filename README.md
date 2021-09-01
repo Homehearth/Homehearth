@@ -1,16 +1,6 @@
 # Directory Structure Overview
 
-|── build
-
-    |── debug
-    
-    |── release
-    
-|── docs
-
-|── media
-
-|── app
+|── application
 
     |── assets
     
@@ -23,6 +13,16 @@
     |── src
     
     |── vs_2019
+
+|── build
+
+    |── debug
+    
+    |── release
+    
+|── docs
+
+|── media
     
 |── engine
 
