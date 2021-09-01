@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Directory Structure Overview
 
 |── build
@@ -45,7 +46,10 @@
 |── vs_2019
    
 
+=======
+>>>>>>> 085e4cd2510891f3d78a72419098cee42227d3a8
 # How To Build The Project
 
 This project has been developed using Visual Studio 2019. 
+
 It can be easily built using 'build_project.bat' and removed using 'clean_project.bat'.
