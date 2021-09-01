@@ -5,7 +5,7 @@
   \media         
   \client*    
   \engine*        
-  \server*       
+  \server*
   \tests*
   \editor*      
   \vendor
