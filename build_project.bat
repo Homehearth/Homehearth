@@ -1,2 +1,2 @@
-vendor\premake5.exe vs2019
+ThirdParty\Premake5\premake5.exe vs2019
 PAUSE

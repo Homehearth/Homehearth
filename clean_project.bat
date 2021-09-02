@@ -1,2 +1,2 @@
-vendor\premake5.exe clean
+ThirdParty\Premake5\premake5.exe clean
 PAUSE
