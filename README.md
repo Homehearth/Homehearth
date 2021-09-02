@@ -7,13 +7,9 @@
         |── textures
         
         |── models
-        
-    |── includes
-    
+            
     |── src
     
-    |── vs_2019
-
 |── Build
 
     |── debug
@@ -26,42 +22,40 @@
     
 |── Engine
 
-    |── graphics
+    |── src
+
+        |── graphics
     
-        |── renderer
+            |── renderer
         
-        |── d3d11
+            |── d3d11
         
-        |── dxgi
+            |── dxgi
         
-        |── win32
+            |── win32/window
         
-    |── core
+        |── core
     
-    |── resources/content
+        |── resources
     
-        |── default shaders
+            |── default shaders
         
-    |── audio
+        |── audio
     
-    |── physics
+        |── physics
     
-    |── network
+        |── network
     
-    |── animation
+        |── animation
     
-    |── ecs
+        |── ecs
     
-    |── ai
-    
-    |── vs_2019
+        |── ai
         
 |── ThirdParty
 
     |── premake5
-    
-|── vs_2019
-   
+       
    
 # How To Build The Project
 
