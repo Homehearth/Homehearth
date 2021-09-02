@@ -7,13 +7,9 @@
         |── textures
         
         |── models
-        
-    |── includes
-    
+            
     |── src
     
-    |── vs_2019
-
 |── Build
 
     |── debug
@@ -34,11 +30,11 @@
         
         |── dxgi
         
-        |── win32
+        |── win32/window
         
     |── core
     
-    |── resources/content
+    |── resources
     
         |── default shaders
         
@@ -53,15 +49,11 @@
     |── ecs
     
     |── ai
-    
-    |── vs_2019
         
 |── ThirdParty
 
     |── premake5
-    
-|── vs_2019
-   
+       
    
 # How To Build The Project
 
