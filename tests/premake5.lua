@@ -4,8 +4,8 @@ project "Tests"
     cppdialect "C++17"
     staticruntime "on"
 
-    targetdir("../build/bin/" .. outputdir .. "/%{prj.name}")
-    objdir("../build/bin-int/" .. outputdir .. "/%{prj.name}")
+    targetdir("build/bin/" .. outputdir .. "/%{prj.name}")
+    objdir("build/bin-int/" .. outputdir .. "/%{prj.name}")
 
     files {
         "src/**.cpp",

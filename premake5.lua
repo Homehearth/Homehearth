@@ -7,11 +7,11 @@ workspace "Workspace"
         "Release"
     }
 
-    startproject "Application"
+    startproject "App"
 
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
-include "Application"
+include "App"
 include "Engine"
 include "Tests"
 include "Editor"
