@@ -1,13 +1,14 @@
 -- Build.
 workspace "Workspace"
-    architecture "x64"
+    system "Windows"
+    architecture "x86_64"
 
     configurations {
         "Debug",
         "Release"
     }
 
-    startproject "Game"
+    startproject "Engine"
 
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
@@ -21,9 +22,11 @@ newaction {
     description = "Remove all binaries and intermediate binaries, and vs files.",
     execute = function()
         print("Removing binaries")
-        os.rmdir("./build/bin")
+        os.rmdir("Engine/build/bin")
+        os.rmdir("Game/build/bin")
         print("Removing intermediate binaries")
-        os.rmdir("./build/bin-int")
+        os.rmdir("Engine/build/bin-int")
+        os.rmdir("Game/build/bin-int")
         print("Removing project files")
         os.rmdir("./.vs")
         os.remove("**.sln")

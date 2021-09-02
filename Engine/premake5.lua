@@ -1,32 +1,49 @@
 project "Engine"
-    kind "ConsoleApp"
+    kind "WindowedApp"
     language "C++"
     cppdialect "C++17"
-    staticruntime "on"
-
     targetdir("build/bin/" .. outputdir .. "/%{prj.name}")
     objdir("build/bin-int/" .. outputdir .. "/%{prj.name}")
+ 
+    
+    -- Define the location of pre-compiled header.
+    pchheader "EnginePCH.h"
+	pchsource "src/EnginePCH.cpp"
+
 
     files {
-        "src/**.cpp",
-        "include/**.h"
+        "src/**.h",
+		"src/**.cpp",
     }
 
     includedirs {
-        "include"
+		"src"
     }
 
+
+    -- Define a macro/symbol which applies for the Windows system.
     filter {"system:windows"}
         defines {
             "WIN32"
         }
 
-    filter {"configurations:Debug"}
-        buildoptions "/MTd"
-        runtime "Debug"
-        symbols "on"
 
+    -- Define a macro/symbol which applies only to debug builds.
+    filter {"configurations:Debug"}
+        --buildoptions "/MTd"
+        runtime "Debug"
+        defines{"_DEBUG", "_UNICODE", "UNICODE"}
+        symbols "on"
+        --libdirs{"ThirdParty/DirectXTK/bin/x64/Debug_lib/"}
+        --links{"DirectXTK", "DirectXTKAudioWin7"}
+
+
+    -- Define a macro/symbol which applies only to release builds.
     filter {"configurations:Release"}
-        buildoptions "/MT"
+        --buildoptions "/MT"
         runtime "Release"
+        defines{"NDEBUG", "_UNICODE", "UNICODE"}
+        symbols "on"
         optimize "on"
+        --libdirs{"ThirdParty/DirectXTK/bin/x64/Debug_lib/"}
+        --links{"DirectXTK", "DirectXTKAudioWin7"}

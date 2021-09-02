@@ -8,17 +8,17 @@ project "Game"
     objdir("build/bin-int/" .. outputdir .. "/%{prj.name}")
 
     files {
-        "src/**.cpp",
-        "include/**.h"
+        "src/**.h",
+		"src/**.cpp",
     }
 
     includedirs {
-        "include"
+        "src"
     }
 
     filter {"system:windows"}
         defines {
-            "WIN32"
+        
         }
 
     filter {"configurations:Debug"}
