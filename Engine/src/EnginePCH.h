@@ -52,6 +52,6 @@
 
 
 // Custom
-#include "../Logger.h"
+#include "Logger.h"
 
 using Microsoft::WRL::ComPtr;

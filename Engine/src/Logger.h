@@ -4,7 +4,7 @@ class Logger
 public:
 	virtual ~Logger() = default;
 
-	static auto& Get(){
+	static auto& Get() {
 		static Logger instance;
 		return instance;
 	}
@@ -45,14 +45,51 @@ public:
 				str += val;
 		};
 		(l(str, args), ...);
-		LogToMessageBox("Error",str);
+		LogToMessageBox("Error", str);
 	}
 	
 private:
-	Logger() = default;
+	Logger() { LogSeperator(); };
 
-	static void LogToMessageBox(const std::string& level, const std::string& message) {
-		MessageBoxA(nullptr, message.c_str(), level.c_str(), 0);
+	static void LogToMessageBox(const std::string& logLevel, const std::string& logText) {
+		MessageBoxA(nullptr, logText.c_str(), logLevel.c_str(), 0);
+		LogToFile(logText);
+	}
+
+	static void LogToFile(const std::string& logText) {
+		auto now = std::chrono::system_clock::now();
+		time_t time = std::chrono::system_clock::to_time_t(now);
+		char* ctime = std::ctime(&time);
+		ctime[strlen(ctime) - 1] = '\0';
+
+		std::fstream outfile;
+		const std::string file = "engine.log";
+		outfile.open(file, std::ios_base::app);
+		if (outfile.is_open()) {
+			outfile << "[" << ctime << "]  " << logText + '\n';
+			outfile.close();
+		}
+		else {
+			const std::string msg = "Unable to open " + file;
+			MessageBoxA(nullptr, msg.c_str(), "Error", 0);
+		}	
+	}
+
+	static void LogSeperator()	{
+		std::fstream outfile;
+		const std::string file = "engine.log";
+		outfile.open(file, std::ios_base::app);
+		if (outfile.is_open()) {
+			outfile << "\n";
+			for (int i = 0; i < 130; i++)
+				outfile << "-";
+			outfile << "\n\n";
+			outfile.close();
+		}
+		else {
+			const std::string msg = "Unable to open " + file;
+			MessageBoxA(nullptr, msg.c_str(), "Error", 0);
+		}
 	}
 };
 
