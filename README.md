@@ -1,6 +1,6 @@
 # Directory Structure Overview
 
-|── application
+|── Game
 
     |── assets
     
@@ -14,17 +14,17 @@
     
     |── vs_2019
 
-|── build
+|── Build
 
     |── debug
     
     |── release
     
-|── docs
+|── Docs
 
-|── media
+|── Media
     
-|── engine
+|── Engine
 
     |── graphics
     
@@ -55,24 +55,8 @@
     |── ai
     
     |── vs_2019
-    
-|── tests
-
-    |── includes
-    
-    |── src
-    
-    |── vs_2019
-    
-|── editor
-
-    |── includes
-    
-    |── src
-    
-    |── vs_2019
-    
-|── vendor
+        
+|── ThirdParty
 
     |── premake5
     
