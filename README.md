@@ -22,33 +22,35 @@
     
 |── Engine
 
-    |── graphics
+    |── src
+
+        |── graphics
     
-        |── renderer
+            |── renderer
         
-        |── d3d11
+            |── d3d11
         
-        |── dxgi
+            |── dxgi
         
-        |── win32/window
+            |── win32/window
         
-    |── core
+        |── core
     
-    |── resources
+        |── resources
     
-        |── default shaders
+            |── default shaders
         
-    |── audio
+        |── audio
     
-    |── physics
+        |── physics
     
-    |── network
+        |── network
     
-    |── animation
+        |── animation
     
-    |── ecs
+        |── ecs
     
-    |── ai
+        |── ai
         
 |── ThirdParty
 
