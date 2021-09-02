@@ -10,6 +10,7 @@
 
 // Standard
 #include <string>
+#include <string_view>
 #include <exception>
 #include <chrono>
 #include <iostream>
@@ -49,5 +50,8 @@
 #include "imgui_impl_win32.h"
 */
 
+
+// Custom
+#include "../Logger.h"
 
 using Microsoft::WRL::ComPtr;

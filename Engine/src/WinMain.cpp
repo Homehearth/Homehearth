@@ -5,15 +5,14 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 {
 #ifdef _DEBUG
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-	MessageBox(nullptr, L"Hi and welcome to debug mode!", L"Engine", 0);
+	MessageBoxA(nullptr, "Hi and welcome to debug mode!", "Engine", 0);
 #else
-	MessageBox(nullptr, L"Hi and welcome to release mode!", L"Engine", 0);
+	MessageBoxA(nullptr, "Hi and welcome to release mode!", "Engine", 0);
 #endif
 	
-
-
-
-
+	LOG_INFO("Engine has successfully started.");
+	LOG_WARNING("Engine is about the crash.");
+	LOG_ERROR("Engine has successfully crashed.");
 	
 	return 0;
 }
