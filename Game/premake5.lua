@@ -1,4 +1,4 @@
-project "Editor"
+project "Game"
     kind "ConsoleApp"
     language "C++"
     cppdialect "C++17"

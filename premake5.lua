@@ -7,14 +7,12 @@ workspace "Workspace"
         "Release"
     }
 
-    startproject "App"
+    startproject "Game"
 
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
-include "App"
+include "Game"
 include "Engine"
-include "Tests"
-include "Editor"
 
 
 -- Clean.
