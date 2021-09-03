@@ -53,5 +53,6 @@
 
 // Custom
 #include "Logger.h"
+#include "multi_thread_manager.h"
 
 using Microsoft::WRL::ComPtr;
