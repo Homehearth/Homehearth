@@ -37,6 +37,8 @@
 #include <dwrite_3.h>
 #include <d2d1.h>
 
+#include <ctime>
+
 /*
 // DirectXTK
 #include "SimpleMath.h"
