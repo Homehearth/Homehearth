@@ -42,7 +42,7 @@ project "Engine"
             ["src/Graphics/Renderer"] = {"**Renderer.*"},
             ["src/Graphics/D3D11"] = { },
             ["src/Graphics/DXGI"] = { },
-            ["src/Graphics/Window"] = { },
+            ["src/Graphics/Window"] = { "**Window.*" },
 
         ["src/Resources"] = { },
             ["src/Resources/Shaders"] = { "**.hhlsl", "**.hlsli" },

@@ -4,13 +4,13 @@ class Scene {
 private:
 	// ecs stuff
 public:
-	Scene();
-	virtual ~Scene();
+	Scene(){}
+	virtual ~Scene(){}
 
 	// update all systems
-	void update(float dt);
+	void update(float dt){}
 	
 	// draw all renderSystems
-	void render();
+	void render(){}
 
 };

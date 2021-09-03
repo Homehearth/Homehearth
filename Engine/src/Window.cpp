@@ -2,8 +2,6 @@
 #include "Window.h"
 
 
-
-//--------------------------------------------------------------------------------------
 LRESULT CALLBACK WinProc(HWND handle, UINT msg, WPARAM wparam, LPARAM lparam)
 {
 	switch (msg)
@@ -39,11 +37,9 @@ LRESULT CALLBACK WinProc(HWND handle, UINT msg, WPARAM wparam, LPARAM lparam)
 	case WM_MOUSEWHEEL:
 	case WM_MOUSEMOVE:
 	case WM_INPUT:
-
 	case WM_CHAR:
 	{
-		switch (wparam)
-		{
+		switch (wparam)	{
 			case 0x1B: // Process escape key. 
 				PostQuitMessage(0);
 				break;
@@ -51,7 +47,7 @@ LRESULT CALLBACK WinProc(HWND handle, UINT msg, WPARAM wparam, LPARAM lparam)
 				break;
 		}
 	}
-
+	break;
 	default:
 		break;
 	}
@@ -59,12 +55,6 @@ LRESULT CALLBACK WinProc(HWND handle, UINT msg, WPARAM wparam, LPARAM lparam)
 	return DefWindowProc(handle, msg, wparam, lparam);
 }
 
-
-
-
-
-
-//--------------------------------------------------------------------------------------
 Window::Window()
 	: hWnd(nullptr)
 	, clientRect({})
@@ -72,13 +62,7 @@ Window::Window()
 {
 }
 
-
-
-
-
-
-//--------------------------------------------------------------------------------------
-bool Window::initialize(const Desc& desc)
+BOOL Window::initialize(const Desc& desc)
 {
 	// Define window style.
 	WNDCLASS wc;
@@ -88,13 +72,13 @@ bool Window::initialize(const Desc& desc)
 	wc.hInstance = desc.hInstance;
 	wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
 	wc.lpszClassName = desc.windowClass;
-	wc.hbrBackground = (HBRUSH)(CreateSolidBrush(RGB(100, 149, 237)));	// Cornflower blue.
+	wc.hbrBackground = (HBRUSH)CreateSolidBrush(RGB(100, 149, 237));	// Cornflower blue.
 	RegisterClass(&wc);
 
 	// Retrieve the desktop window.
 	RECT desktop;
-	const HWND hDesktop = GetDesktopWindow();
-	GetWindowRect(hDesktop, &desktop);
+	const HWND hwndDesktop = GetDesktopWindow();
+	GetWindowRect(hwndDesktop, &desktop);
 
 	// Create the window
 	this->hWnd = CreateWindowEx(0, desc.windowClass, desc.title,
@@ -112,46 +96,22 @@ bool Window::initialize(const Desc& desc)
 	return true;
 }
 
-
-
-
-
-
-//--------------------------------------------------------------------------------------
 HWND Window::getHWnd() const
 {
 	return this->hWnd;
 }
 
-
-
-
-
-
-//--------------------------------------------------------------------------------------
 RECT Window::getClientRect() const
 {
 	return this->clientRect;
 }
 
-
-
-
-
-
-//--------------------------------------------------------------------------------------
-int Window::getWidth() const
+INT Window::getWidth() const
 {
 	return this->windowDesc.width;
 }
 
-
-
-
-
-
-//--------------------------------------------------------------------------------------
-int Window::getHeight() const
+INT Window::getHeight() const
 {
 	return this->windowDesc.height;
 }
