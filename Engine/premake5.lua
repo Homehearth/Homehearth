@@ -87,5 +87,5 @@ project "Engine"
         defines{"NDEBUG", "_UNICODE", "UNICODE"}
         symbols "on"
         optimize "on"
-        libdirs{"../DirectXTK/lib/Release_lib/"}
+        libdirs{"../ThirdParty/DirectXTK/lib/Release_lib/"}
         links{"DirectXTK", "DirectXTKAudioWin7"}
