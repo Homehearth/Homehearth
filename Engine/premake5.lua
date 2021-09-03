@@ -27,7 +27,8 @@ project "Engine"
         "../ThirdParty/DirectXTK/include/",
         "../ThirdParty/DirectXTK/lib/",
         "../ThirdParty/imGUI/",
-        "../ThirdParty/stb_image/"
+        "../ThirdParty/stb_image/",
+		 "../ThirdParty/networking/"
     }
 
 
