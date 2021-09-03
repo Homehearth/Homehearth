@@ -8,7 +8,7 @@ void Engine::setup() {
 void Engine::update(float dt) {
 
 }
-*/
+
 void Engine::render() {
 
 }
