@@ -26,6 +26,7 @@ int CALLBACK WinMain(
 	
 	std::atexit(OnExit);
 	T_INIT(T_REC, thread::ThreadType::POOL_FIFO);
+	resource::ResourceManager::Initialize();
 	
 	Engine engine;
 	engine.setup(); 
