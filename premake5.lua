@@ -1,4 +1,4 @@
--- Build.
+-- Solution configurations file.
 workspace "Workspace"
     system "Windows"
     architecture "x86_64"
@@ -8,10 +8,12 @@ workspace "Workspace"
         "Release"
     }
 
+    -- Set the startup project.
     startproject "Engine"
 
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
+-- Subprojects.
 include "Game"
 include "Engine"
 
