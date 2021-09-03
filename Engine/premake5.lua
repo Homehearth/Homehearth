@@ -11,11 +11,15 @@ project "Engine"
 	pchsource "src/EnginePCH.cpp"
 
 
+    -- Define the location(s) of files.
     files {
         "src/**.h",
 		"src/**.cpp",
     }
 
+
+    -- Define any includes of folder(s).
+    -- Useful to remove any "../folder/file.h" in code.
     includedirs {
 		"src"
     }
