@@ -1,5 +1,10 @@
 #include <EnginePCH.h>
 
+void OnExit()
+{
+	T_DESTROY();
+}
+
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 	_In_ LPWSTR lpCmdLine, _In_ int nCmdShow)
 {
@@ -9,12 +14,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 #else
 	MessageBoxA(nullptr, "Hi and welcome to release mode!", "Engine", 0);
 #endif
+	std::atexit(OnExit);
 	T_INIT(T_REC, thread::ThreadType::POOL_FIFO);
 	
 	LOG_INFO("Engine has successfully started.");
 	LOG_WARNING("Engine is about the crash.");
 	LOG_ERROR("Engine has successfully crashed.");
-	
-	T_DESTROY();
 	return 0;
 }
