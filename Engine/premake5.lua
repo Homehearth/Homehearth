@@ -12,6 +12,7 @@ project "Engine"
 
 
     -- Define the location(s) of files.
+    -- Note: specify the path relative to the Premake file.
     files {
         "src/**.h",
 		"src/**.cpp",
@@ -20,8 +21,17 @@ project "Engine"
 
     -- Define any includes of folder(s).
     -- Useful to remove any "../folder/file.h" in code.
+    -- Note: specify the path relative to the Premake file.
     includedirs {
 		"src"
+    }
+
+
+    -- Define filter(s) inside this project. [path + NameOfFilter] { files }
+    -- Note: specify the path relative to the Premake file.
+    vpaths {
+        ["src/Headers"] = { "**.h", "**.hpp" },
+        ["src/Sources"] = {"**.c", "**.cpp"}
     }
 
 
