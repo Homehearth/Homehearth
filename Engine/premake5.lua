@@ -23,22 +23,48 @@ project "Engine"
     -- Useful to remove any "../folder/file.h" in code.
     -- Note: specify the path relative to the Premake file.
     includedirs {
-		"src"
+		"src",
+        "../ThirdParty/DirectXTK/include/",
+        "../ThirdParty/imGUI/",
+        "../ThirdParty/stb_image/"
     }
 
 
     -- Define filter(s) inside this project. [path + NameOfFilter] { files }
+    -- Create your files in 'src' folder on disk, then add them to a filter below (**filename).
     -- Note: specify the path relative to the Premake file.
     vpaths {
-        ["src/Headers"] = { "**.h", "**.hpp" },
-        ["src/Sources"] = {"**.c", "**.cpp"}
+        ["src/Graphics"] = { },
+            ["src/Graphics/Renderer"] = { },
+            ["src/Graphics/D3D11"] = { },
+            ["src/Graphics/DXGI"] = { },
+            ["src/Graphics/Window"] = { },
+
+        ["src/Core"] = { "**EnginePCH.h", "**EnginePCH.cpp", "**Logger.h", "**WinMain.cpp" },
+
+        ["src/Resources"] = { },
+            ["src/Resources/Shaders"] = { "**.hhlsl", "**.hlsli" },
+
+        ["src/Audio"] = {  },
+        ["src/Physics"] = {  },
+        ["src/Network"] = {  },
+        ["src/Animation"] = {  },
+        ["src/ESC"] = {  }, 
+        ["src/AI"] = {  }     
+    }
+
+
+    links{
+        "d3d11",
+        "d2d1"
     }
 
 
     -- Define a macro/symbol which applies for the Windows system.
     filter {"system:windows"}
         defines {
-            "WIN32"
+            "WIN32",
+            "_CRT_SECURE_NO_WARNINGS"
         }
 
 
@@ -48,8 +74,8 @@ project "Engine"
         runtime "Debug"
         defines{"_DEBUG", "_UNICODE", "UNICODE"}
         symbols "on"
-        --libdirs{"ThirdParty/DirectXTK/bin/x64/Debug_lib/"}
-        --links{"DirectXTK", "DirectXTKAudioWin7"}
+        libdirs{"../ThirdParty/DirectXTK/bin/x64/Debug_lib/"}
+        links{"DirectXTK", "DirectXTKAudioWin7"}
 
 
     -- Define a macro/symbol which applies only to release builds.
@@ -59,5 +85,5 @@ project "Engine"
         defines{"NDEBUG", "_UNICODE", "UNICODE"}
         symbols "on"
         optimize "on"
-        --libdirs{"ThirdParty/DirectXTK/bin/x64/Debug_lib/"}
-        --links{"DirectXTK", "DirectXTKAudioWin7"}
+        libdirs{"../DirectXTK/bin/x64/Release_lib/"}
+        links{"DirectXTK", "DirectXTKAudioWin7"}
