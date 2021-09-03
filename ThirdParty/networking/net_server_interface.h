@@ -1,7 +1,6 @@
 #pragma once
 #include "net_common.h"
 #include <functional>
-#include <chrono>
 
 namespace network
 {

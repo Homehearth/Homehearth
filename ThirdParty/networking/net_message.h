@@ -1,4 +1,5 @@
 #pragma once
+#include "net_common.h"
 
 namespace network
 {
