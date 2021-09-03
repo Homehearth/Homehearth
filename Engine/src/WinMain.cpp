@@ -14,8 +14,7 @@ int CALLBACK WinMain(
 	_In_ HINSTANCE hInstance,
 	_In_opt_ HINSTANCE hPrevInstance,
 	_In_ LPSTR lpCmdLine,
-	_In_ int nShowCmd 
-)
+	_In_ int nShowCmd )
 {
 	
 #ifdef _DEBUG
@@ -30,7 +29,9 @@ int CALLBACK WinMain(
 	
 	Engine engine;
 	engine.setup(); 
-	{		
+	{
+		LOG_INFO("Engine & Window created.");
+	
 		bool isRunning = true;
 		MSG msg = { nullptr };
 		while (isRunning)

@@ -19,7 +19,7 @@ public:
         BOOL fullScreen = false;
         BOOL resizableWindow = false;
         HINSTANCE hInstance = nullptr;
-        INT nShowCmd = -1;
+        INT nShowCmd = SW_NORMAL;
     };
 
     // Initialize window.

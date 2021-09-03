@@ -35,16 +35,16 @@ project "Engine"
     -- Create your files in 'src' folder on disk, then add them to a filter below (**filename).
     -- Note: specify the path relative to the Premake file.
     vpaths {
-        ["src/Core"] = { "**EnginePCH.*", "**Logger.*", "**Engine.*", "**Scene.*"},
+        ["src/Core"] = { "**EnginePCH.*", "**Logger.*", "**Engine.*", "**Scene.*", "**multi_thread_manager.*"},
             ["src/Core/Input"] = { },
 
-        ["src/Graphics"] = { },
+        ["src/Graphics"] = { "**Buffers.*", "**NYI.*" },
             ["src/Graphics/Renderer"] = {"**Renderer.*"},
             ["src/Graphics/D3D11"] = { },
             ["src/Graphics/DXGI"] = { },
             ["src/Graphics/Window"] = { "**Window.*" },
 
-        ["src/Resources"] = { },
+        ["src/Resources"] = { "**ResourceManager.*", "**GResource.*", "**RTexture.*" },
             ["src/Resources/Shaders"] = { "**.hhlsl", "**.hlsli" },
 
         ["src/Audio"] = {  },

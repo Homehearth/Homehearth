@@ -12,14 +12,8 @@ LRESULT CALLBACK WinProc(HWND handle, UINT msg, WPARAM wparam, LPARAM lparam)
 	case WM_CLOSE:
 		PostQuitMessage(0);
 		break;
-	case WM_PAINT:
-	{
-		PAINTSTRUCT ps;
-		HDC hdc = BeginPaint(handle, &ps);
-		FillRect(hdc, &ps.rcPaint, (HBRUSH)(COLOR_WINDOW + 1));
-		EndPaint(handle, &ps);
-	}
-	break;
+
+	case WM_ERASEBKGND:
 	case WM_SIZE:
 	case WM_SYSKEYDOWN:
 	case WM_KEYDOWN:
@@ -55,6 +49,7 @@ LRESULT CALLBACK WinProc(HWND handle, UINT msg, WPARAM wparam, LPARAM lparam)
 	return DefWindowProc(handle, msg, wparam, lparam);
 }
 
+
 Window::Window()
 	: hWnd(nullptr)
 	, clientRect({})
@@ -65,22 +60,29 @@ Window::Window()
 BOOL Window::initialize(const Desc& desc)
 {
 	// Define window style.
-	WNDCLASS wc;
-	ZeroMemory(&wc, sizeof(WNDCLASS));
-	wc.style = CS_CLASSDC;
-	wc.lpfnWndProc = WinProc;
-	wc.hInstance = desc.hInstance;
-	wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
-	wc.lpszClassName = desc.windowClass;
-	wc.hbrBackground = (HBRUSH)CreateSolidBrush(RGB(100, 149, 237));	// Cornflower blue.
-	RegisterClass(&wc);
+	WNDCLASSEX wcex;
+	ZeroMemory(&wcex, sizeof(WNDCLASSEX));
+
+	wcex.cbSize = sizeof(WNDCLASSEX);
+	wcex.style = CS_HREDRAW | CS_VREDRAW;
+	wcex.cbClsExtra = 0;
+	wcex.cbWndExtra = 0;
+	wcex.lpszClassName = desc.windowClass;
+	wcex.lpszMenuName = nullptr;
+	wcex.hbrBackground = (HBRUSH)CreateSolidBrush(RGB(100, 149, 237));	// Cornflower blue.
+	wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
+	wcex.hIcon = LoadIcon(nullptr, IDI_APPLICATION);
+	wcex.hIconSm = LoadIcon(nullptr, IDI_APPLICATION);;
+	wcex.hInstance = desc.hInstance;
+	wcex.lpfnWndProc = WinProc;
+	RegisterClassEx(&wcex);
 
 	// Retrieve the desktop window.
 	RECT desktop;
 	const HWND hwndDesktop = GetDesktopWindow();
 	GetWindowRect(hwndDesktop, &desktop);
 
-	// Create the window
+	// Create the window.
 	this->hWnd = CreateWindowEx(0, desc.windowClass, desc.title,
 		WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE,
 		((desktop.right / 2) - (desc.width / 2)),
@@ -88,6 +90,8 @@ BOOL Window::initialize(const Desc& desc)
 		desc.width, desc.height,
 		nullptr, nullptr, desc.hInstance, nullptr);
 
+	assert(this->hWnd && "Window wasn't successfully created.");
+	
 	UpdateWindow(this->hWnd);
 	ShowWindow(this->hWnd, desc.nShowCmd);
 

@@ -3,6 +3,7 @@
 #include "Window.h"
 #include "Scene.h"
 #include <unordered_map>
+#include "Buffers.h"
 
 class Engine {
 private:
@@ -12,7 +13,7 @@ private:
 	bool m_vsync;
 
 public:
-	Engine() = default;
+	Engine();
 	virtual ~Engine() = default;
 
 	void setup();

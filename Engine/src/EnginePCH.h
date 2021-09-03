@@ -5,6 +5,7 @@
 #include <Windows.h>
 #include <windowsx.h>
 #pragma comment(lib, "winmm.lib")
+#define HInstance() GetModuleHandle(NULL)
 #endif
 
 
