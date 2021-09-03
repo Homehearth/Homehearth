@@ -3,6 +3,7 @@
 void OnExit()
 {
 	T_DESTROY();
+	resource::ResourceManager::Destroy();
 }
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,

@@ -1,6 +1,7 @@
 #pragma once
 #include <unordered_map>
 #include "GResource.h"
+#include "RTexture.h"
 
 namespace resource
 {
@@ -16,14 +17,27 @@ namespace resource
 		static ResourceManager* instance;
 		static void Initialize();
 		static void Destroy();
-		template <class T>
-		T GetResource(std::string resource_name) const;
+		static void InsertResource(GResource* resource, std::string resource_name);
 
+		template <class T>
+		static T* GetResource(std::string resource_name);
 	};
 
 	template<class T>
-	inline T ResourceManager::GetResource(std::string resource_name) const
+	inline T* ResourceManager::GetResource(std::string resource_name)
 	{
+		auto f = ResourceManager::instance->resources.find(resource_name);
+		if (f != ResourceManager::instance->resources.end())
+		{
+			return dynamic_cast<T*>(f->second);
+		}
+		else
+		{
+			return nullptr;
+		}
 
+		// Eventual faults, return nullptr
+		return nullptr;
 	}
+
 }
