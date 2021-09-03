@@ -5,10 +5,11 @@ void Engine::setup() {
 
 }
 
+/*
 void Engine::update() {
 
 }
-
+*/
 void Engine::render() {
 
 }

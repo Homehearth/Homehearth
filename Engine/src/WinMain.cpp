@@ -3,6 +3,7 @@
 void OnExit()
 {
 	T_DESTROY();
+	resource::ResourceManager::Destroy();
 }
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
@@ -16,7 +17,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 #endif
 	std::atexit(OnExit);
 	T_INIT(T_REC, thread::ThreadType::POOL_FIFO);
+	resource::ResourceManager::Initialize();
+	RTexture* test = new RTexture();
+	resource::ResourceManager::InsertResource(test, "test");
 	
+	RTexture* test2 = resource::ResourceManager::GetResource<RTexture>("test");
 	LOG_INFO("Engine has successfully started.");
 	LOG_WARNING("Engine is about the crash.");
 	LOG_ERROR("Engine has successfully crashed.");
