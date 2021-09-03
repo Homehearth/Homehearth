@@ -51,7 +51,6 @@
 #include "imgui_impl_win32.h"
 
 
-
 // Custom
 #include "Logger.h"
 

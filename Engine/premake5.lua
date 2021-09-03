@@ -11,7 +11,7 @@ project "Engine"
 	pchsource "src/EnginePCH.cpp"
 
 
-    -- Define the location(s) of files.
+    -- Define the location(s) of files. 
     -- Note: specify the path relative to the Premake file.
     files {
         "src/**.h",
@@ -20,7 +20,7 @@ project "Engine"
 
 
     -- Define any includes of folder(s).
-    -- Useful to remove any "../folder/file.h" in code.
+    -- Useful to remove any "../folder/file.h" in visual studio.
     -- Note: specify the path relative to the Premake file.
     includedirs {
 		"src",
@@ -30,17 +30,18 @@ project "Engine"
     }
 
 
-    -- Define filter(s) inside this project. [path + NameOfFilter] { files }
+    -- Define filter(s) inside project: [path + NameOfFilter] { files }.
     -- Create your files in 'src' folder on disk, then add them to a filter below (**filename).
     -- Note: specify the path relative to the Premake file.
     vpaths {
+        ["src/Core"] = { "**EnginePCH.h", "**EnginePCH.cpp", "**Logger.h" },
+            ["src/Core/Input"] = { },
+
         ["src/Graphics"] = { },
             ["src/Graphics/Renderer"] = { },
             ["src/Graphics/D3D11"] = { },
             ["src/Graphics/DXGI"] = { },
             ["src/Graphics/Window"] = { },
-
-        ["src/Core"] = { "**EnginePCH.h", "**EnginePCH.cpp", "**Logger.h", "**WinMain.cpp" },
 
         ["src/Resources"] = { },
             ["src/Resources/Shaders"] = { "**.hhlsl", "**.hlsli" },
