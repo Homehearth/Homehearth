@@ -76,7 +76,7 @@ project "Engine"
         runtime "Debug"
         defines{"_DEBUG", "_UNICODE", "UNICODE"}
         symbols "on"
-        libdirs{"../ThirdParty/DirectXTK/lib/x64/Debug_lib/"}
+        libdirs{"../ThirdParty/DirectXTK/lib/Debug_lib/"}
         links{"DirectXTK", "DirectXTKAudioWin7"}
 
 
@@ -87,5 +87,5 @@ project "Engine"
         defines{"NDEBUG", "_UNICODE", "UNICODE"}
         symbols "on"
         optimize "on"
-        libdirs{"../DirectXTK/lib/x64/Release_lib/"}
+        libdirs{"../DirectXTK/lib/Release_lib/"}
         links{"DirectXTK", "DirectXTKAudioWin7"}
