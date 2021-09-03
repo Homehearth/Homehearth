@@ -35,7 +35,7 @@ project "Engine"
     -- Create your files in 'src' folder on disk, then add them to a filter below (**filename).
     -- Note: specify the path relative to the Premake file.
     vpaths {
-        ["src/Core"] = { "**EnginePCH.h", "**EnginePCH.cpp", "**Logger.h" },
+        ["src/Core"] = { "**EnginePCH.*", "**Logger.*", "**Engine.*", "**Scene.*"},
             ["src/Core/Input"] = { },
 
         ["src/Graphics"] = { },
