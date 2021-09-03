@@ -1,5 +1,5 @@
 #include <EnginePCH.h>
-
+#include <Window.h>
 void OnExit()
 {
 	T_DESTROY();
@@ -17,8 +17,32 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	std::atexit(OnExit);
 	T_INIT(T_REC, thread::ThreadType::POOL_FIFO);
 	
-	LOG_INFO("Engine has successfully started.");
-	LOG_WARNING("Engine is about the crash.");
-	LOG_ERROR("Engine has successfully crashed.");
+	// Create main window.
+	Window window;
+
+	// Setup window configurations.
+	Window::Desc config;
+	config.hInstance = hInstance; config.nShowCmd = nCmdShow;
+	config.width = 1920; config.height = 1080;
+	config.title = L"Default window";
+	if (!window.initialize(config))
+	{
+		LOG_ERROR("Could not initialize window.");
+	}
+	MSG msg = { nullptr };
+	bool isRunning = true;
+	//-- GAME LOOP --
+	while (isRunning)
+	{
+		// Service any and all pending Windows messages.
+		if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
+		{
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+			isRunning = (msg.message != WM_QUIT);
+		}
+	}
+
 	return 0;
 }
+	

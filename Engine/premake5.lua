@@ -39,7 +39,7 @@ project "Engine"
             ["src/Core/Input"] = { },
 
         ["src/Graphics"] = { },
-            ["src/Graphics/Renderer"] = { },
+            ["src/Graphics/Renderer"] = {"**Renderer.*"},
             ["src/Graphics/D3D11"] = { },
             ["src/Graphics/DXGI"] = { },
             ["src/Graphics/Window"] = { },
