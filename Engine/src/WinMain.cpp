@@ -31,7 +31,6 @@ int CALLBACK WinMain(
 	Engine engine;
 	engine.setup(); 
 	{
-		
 		bool isRunning = true;
 		MSG msg = { nullptr };
 		while (isRunning)
@@ -46,7 +45,7 @@ int CALLBACK WinMain(
 
 			const float dt = 0.16f;
 			engine.update(dt);
-			engine.render();
+			//engine.render();
 		}
 	}	
 	engine.shutdown();

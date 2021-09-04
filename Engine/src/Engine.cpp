@@ -1,14 +1,21 @@
 #include "EnginePCH.h"
 #include "Engine.h"
+#include "multi_thread_manager.h"
 
 Engine::Engine()
 	: m_scenes({0})
 	, m_currentScene(nullptr)
 	, m_vsync(false)
+    , m_isOn(false)
 {
 }
 
 void Engine::setup() {
+#ifdef _DEBUG
+    RedirectIoToConsole();
+#endif
+
+    this->m_isOn = true;
 	Window::Desc config;
 	config.hInstance = HInstance();
 	config.title = L"Engine Window";
@@ -23,6 +30,10 @@ void Engine::setup() {
     result = MessageBoxA(nullptr, "Do you want to switch back?", "Engine", MB_YESNO);
     if (result == IDYES)
         this->window.fullScreenSwitch();
+
+    // Starts a thread for rendering if multithreading is turned on.
+    if (thread::IsThreadActive());
+        T_CJOB(Engine, render);
 }
 
 void Engine::update(float dt)
@@ -56,10 +67,28 @@ void Engine::update(float dt)
     //swapBuffers();
 }
 
-void Engine::render() {
-
+void Engine::render() 
+{
+    while (this->m_isOn)
+    {
+        std::cout << "Rendering something...\n";
+        Sleep(5000);
+    }
 }
 
 void Engine::shutdown() {
+    this->m_isOn = false;
+}
 
+void Engine::RedirectIoToConsole()
+{
+    AllocConsole();
+    HANDLE stdHandle;
+    int hConsole;
+    FILE* fp;
+    stdHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+    hConsole = _open_osfhandle((intptr_t)stdHandle, _O_TEXT);
+    fp = _fdopen(hConsole, "w");
+
+    freopen_s(&fp, "CONOUT$", "w", stdout);
 }

@@ -11,7 +11,9 @@ private:
 	std::unordered_map<std::string, Scene> m_scenes;
 	Scene* m_currentScene;
 	bool m_vsync;
+	bool m_isOn;
 
+	void RedirectIoToConsole();
 public:
 	Engine();
 	virtual ~Engine() = default;
@@ -24,3 +26,4 @@ public:
 
 	void shutdown();
 };
+
