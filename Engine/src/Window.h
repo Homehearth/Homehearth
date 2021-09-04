@@ -6,14 +6,14 @@ class Window
 {
 public:
     Window();
-    virtual ~Window() = default;
+    virtual ~Window(){ DestroyWindow(this->hWnd); };
 
     // Window description with default values.
     // Use when initializing the window.
     struct Desc
     {
-        INT width = GetSystemMetrics(SM_CXSCREEN);
-        INT height = GetSystemMetrics(SM_CYSCREEN);
+        INT width = GetSystemMetrics(SM_CXSCREEN) / 2;
+        INT height = GetSystemMetrics(SM_CYSCREEN) / 2;
         LPCWSTR title = L"Default";
         LPCWSTR windowClass = L"Window Class A";
         BOOL fullScreen = false;
@@ -25,6 +25,9 @@ public:
     // Initialize window.
     BOOL initialize(const Desc & desc = Desc());
 
+	// Switch for window- / fullscreen mode.
+    VOID fullScreenSwitch();
+   	
     HWND getHWnd() const;
     RECT getClientRect() const;
     INT getWidth() const;

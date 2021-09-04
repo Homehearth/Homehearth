@@ -33,13 +33,8 @@ LRESULT CALLBACK WinProc(HWND handle, UINT msg, WPARAM wparam, LPARAM lparam)
 	case WM_INPUT:
 	case WM_CHAR:
 	{
-		switch (wparam)	{
-			case 0x1B: // Process escape key. 
-				PostQuitMessage(0);
-				break;
-			default:
-				break;
-		}
+		if (wparam == 0x1B)	// Process escape key. 
+			PostQuitMessage(0);
 	}
 	break;
 	default:
@@ -75,9 +70,12 @@ BOOL Window::initialize(const Desc& desc)
 	wcex.hIconSm = LoadIcon(nullptr, IDI_APPLICATION);;
 	wcex.hInstance = desc.hInstance;
 	wcex.lpfnWndProc = WinProc;
-	RegisterClassEx(&wcex);
 
-	// Retrieve the desktop window.
+	// Register window class.
+	const ATOM result = RegisterClassEx(&wcex);
+	assert(result && "Failed to register window class.");
+	
+	// Retrieve desktop window.
 	RECT desktop;
 	const HWND hwndDesktop = GetDesktopWindow();
 	GetWindowRect(hwndDesktop, &desktop);
@@ -118,4 +116,47 @@ INT Window::getWidth() const
 INT Window::getHeight() const
 {
 	return this->windowDesc.height;
+}
+
+VOID Window::fullScreenSwitch()
+{
+	assert(this->hWnd && "There's no window to resize.");
+	
+	WINDOWPLACEMENT wpc = { sizeof(wpc) };
+	LONG HWNDStyle = 0;
+	LONG HWNDStyleEx = 0;
+	
+	if (!this->windowDesc.fullScreen)
+	{
+		this->windowDesc.fullScreen = true;
+
+		GetWindowPlacement(this->hWnd, &wpc);
+		if (HWNDStyle == 0)
+			HWNDStyle = GetWindowLong(this->hWnd, GWL_STYLE);
+		if (HWNDStyleEx == 0)
+			HWNDStyleEx = GetWindowLong(this->hWnd, GWL_EXSTYLE);
+
+		LONG NewHWNDStyle = HWNDStyle;
+		NewHWNDStyle &= ~WS_BORDER;
+		NewHWNDStyle &= ~WS_DLGFRAME;
+		NewHWNDStyle &= ~WS_THICKFRAME;
+
+		LONG NewHWNDStyleEx = HWNDStyleEx;
+		NewHWNDStyleEx &= ~WS_EX_WINDOWEDGE;
+
+		SetWindowLong(this->hWnd, GWL_STYLE, NewHWNDStyle | WS_POPUP);
+		SetWindowLong(this->hWnd, GWL_EXSTYLE, NewHWNDStyleEx | WS_EX_TOPMOST);
+		ShowWindow(this->hWnd, SW_SHOWMAXIMIZED);
+	}
+	else
+	{
+		this->windowDesc.fullScreen = false;
+	
+		GetWindowPlacement(this->hWnd, &wpc);
+		HWNDStyle = WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE;
+		SetWindowLong(this->hWnd, GWL_STYLE, HWNDStyle);
+		SetWindowLong(this->hWnd, GWL_EXSTYLE, HWNDStyleEx);
+		SetWindowPlacement(this->hWnd, &wpc);
+		ShowWindow(this->hWnd, SW_SHOWNORMAL);
+	}
 }

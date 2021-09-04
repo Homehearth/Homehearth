@@ -31,8 +31,7 @@ int CALLBACK WinMain(
 	Engine engine;
 	engine.setup(); 
 	{
-		LOG_INFO("Engine & Window created.");
-	
+		
 		bool isRunning = true;
 		MSG msg = { nullptr };
 		while (isRunning)

@@ -4,21 +4,7 @@
 namespace Buffers
 {
 	
-    ConstantBuffer::ConstantBuffer()
-    {
-    }
-
-    ID3D11Buffer* const* ConstantBuffer::GetAddressOf() const
-    {
-        return this->constantBuffer.GetAddressOf();
-    }
-
-    ID3D11Buffer* ConstantBuffer::Get() const
-    {
-        return this->constantBuffer.Get();
-    }
-	
-    bool ConstantBuffer::createConstantBuffer(size_t byteWidth)
+    bool ConstantBuffer::create(size_t byteWidth)
     {
         if (this->constantBuffer.Get() != nullptr) {
             this->constantBuffer.Reset();
@@ -42,29 +28,29 @@ namespace Buffers
         return !FAILED(hr);
     }
 
+    ID3D11Buffer* const* ConstantBuffer::GetAddressOf() const
+    {
+        return this->constantBuffer.GetAddressOf();
+    }
+
+    ID3D11Buffer* ConstantBuffer::Get() const
+    {
+        return this->constantBuffer.Get();
+    }
 
 
 
 
 
-	
+
+
     //--------------------------------------------------------------------------------------
     VertexBuffer::VertexBuffer()
 	    : vertexCount(0)
     {
     }
-
-    ID3D11Buffer* const* VertexBuffer::GetAddressOf() const
-    {
-        return this->vertexBuffer.GetAddressOf();
-    }
-
-    ID3D11Buffer* VertexBuffer::Get() const
-    {
-        return this->vertexBuffer.Get();
-    }
-
-    bool VertexBuffer::createVertexBuffer(const simple_vertex_t * vertexData, size_t size)
+  
+    bool VertexBuffer::create(const simple_vertex_t * vertexData, size_t size)
     {
         if (this->vertexBuffer.Get() != nullptr) {
             this->vertexBuffer.Reset();
@@ -97,6 +83,21 @@ namespace Buffers
         return !FAILED(hr);
     }
 
+    size_t VertexBuffer::getVertexCount() const
+    {
+        return this->vertexCount;
+    }
+	
+    ID3D11Buffer* const* VertexBuffer::GetAddressOf() const
+    {
+        return this->vertexBuffer.GetAddressOf();
+    }
+
+    ID3D11Buffer* VertexBuffer::Get() const
+    {
+        return this->vertexBuffer.Get();
+    }
+
 
 
 
@@ -109,7 +110,7 @@ namespace Buffers
     {
     }
 
-    bool IndexBuffer::createIndexBuffer(const size_t * indexData, size_t size)
+    bool IndexBuffer::create(const size_t * indexData, size_t size)
     {
         if (this->indexBuffer.Get() != nullptr) {
             this->indexBuffer.Reset();

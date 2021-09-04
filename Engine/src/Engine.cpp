@@ -11,11 +11,18 @@ Engine::Engine()
 void Engine::setup() {
 	Window::Desc config;
 	config.hInstance = HInstance();
-	config.width = 1920; config.height = 1080;
 	config.title = L"Engine Window";
 	if (!window.initialize(config))	{
 		LOG_ERROR("Could not initialize window.");
 	}
+	
+    int result = MessageBoxA(nullptr, "Do you want to run in fullscreen mode? You can exit the app with ESC.", "Engine", MB_YESNO);
+    if (result == IDYES)
+        this->window.fullScreenSwitch();
+
+    result = MessageBoxA(nullptr, "Do you want to switch back?", "Engine", MB_YESNO);
+    if (result == IDYES)
+        this->window.fullScreenSwitch();
 }
 
 void Engine::update(float dt)
