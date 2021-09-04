@@ -1,7 +1,9 @@
 #pragma once
-
-class GResource
+namespace resource
 {
-public:
-	virtual ~GResource() = 0 {};
-};
+	class GResource
+	{
+	public:
+		virtual ~GResource() = 0 {};
+	};
+}

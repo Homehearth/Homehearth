@@ -4,7 +4,7 @@
 // RTexture -> (RESOURCE)Texture
 
 
-class RTexture : public GResource
+class RTexture : public resource::GResource
 {
 private:
 
@@ -19,7 +19,7 @@ private:
 public:
 
 	RTexture() {};
-	RTexture(ID3D11Texture2D* texture);
+	RTexture(const std::string&& filePath);
 	RTexture(ID2D1Bitmap* texture);
 	~RTexture();
 };

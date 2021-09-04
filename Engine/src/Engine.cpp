@@ -32,7 +32,7 @@ void Engine::setup() {
         this->window.fullScreenSwitch();
 
     // Starts a thread for rendering if multithreading is turned on.
-    if (thread::IsThreadActive());
+    if (thread::IsThreadActive())
         T_CJOB(Engine, render);
 }
 
