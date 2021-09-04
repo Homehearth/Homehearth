@@ -8,7 +8,6 @@ Engine::Engine()
 	: m_scenes({0})
 	, m_currentScene(nullptr)
 	, m_vsync(false)
-    , m_isOn(false)
 {
 }
 
