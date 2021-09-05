@@ -17,10 +17,6 @@ void Engine::setup(const HINSTANCE& hInstance) {
     RedirectIoToConsole();
 #endif
 
-	// Thread setup:
-    if (thread::IsThreadActive())
-        T_CJOB(Engine, render);
-	
 	// Window setup:
 	Window::Desc config;
 	config.hInstance = hInstance;
@@ -32,8 +28,10 @@ void Engine::setup(const HINSTANCE& hInstance) {
     // DirectX setup:
     D3D11Core::Get().initialize(this->window.get());
 
-	
+    // Thread should be launched after engineRunning is set to true and D3D11 is initalized.
     engineRunning = true;
+    if (thread::IsThreadActive())
+        T_CJOB(Engine, render);
 }
 
 void Engine::update(float dt)

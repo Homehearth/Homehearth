@@ -29,7 +29,6 @@ private:
 	std::unordered_map<std::string, Scene> m_scenes;
 	Scene* m_currentScene;
 	bool m_vSync;
-	bool m_isOn;
 
 	void RedirectIoToConsole();
 };

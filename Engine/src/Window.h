@@ -2,6 +2,7 @@
 
 LRESULT CALLBACK WinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
+// TODO: cleanup.
 class Window
 {
 public:
