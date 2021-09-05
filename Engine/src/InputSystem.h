@@ -28,8 +28,6 @@ public:
 		return false;
 	}
 
-	virtual ~InputSystem() = default;
-
 	// no copying allowed.
 	InputSystem(const InputSystem& other) = delete;
 	InputSystem& operator=(const InputSystem& other) = delete;
