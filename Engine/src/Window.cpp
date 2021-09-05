@@ -109,12 +109,12 @@ RECT Window::getClientRect() const
 	return this->clientRect;
 }
 
-int Window::getWidth() const
+unsigned int Window::getWidth() const
 {
 	return this->windowDesc.width;
 }
 
-int Window::getHeight() const
+unsigned int Window::getHeight() const
 {
 	return this->windowDesc.height;
 }

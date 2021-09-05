@@ -1,6 +1,5 @@
 #include "EnginePCH.h"
 #include "Engine.h"
-#include "EventHandler.h"
 #include "multi_thread_manager.h"
 
 static bool engineRunning = false;
@@ -12,13 +11,19 @@ Engine::Engine()
 {
 }
 
-void Engine::setup() {
+void Engine::setup(const HINSTANCE& hInstance) {
 #ifdef _DEBUG
     RedirectIoToConsole();
 #endif
+
+	// Engine setup:
     engineRunning = true;
+    if (thread::IsThreadActive())   // Starts a thread for rendering if multithreading is turned on.
+        T_CJOB(Engine, render);
+	
+	// Window setup:
 	Window::Desc config;
-	config.hInstance = HInstance();
+	config.hInstance = hInstance;
 	config.title = L"Engine Window";
 	if (!window.initialize(config))	{
 		LOG_ERROR("Could not initialize window.");
@@ -31,11 +36,9 @@ void Engine::setup() {
     result = MessageBoxA(nullptr, "Do you want to switch back?", "Engine", MB_YESNO);
     if (result == IDYES)
         this->window.setFullScreen(false);
-
-    // Starts a thread for rendering if multithreading is turned on.
-    if (thread::IsThreadActive())
-        T_CJOB(Engine, render);
 	
+    // DirectX setup:
+    this->dxCore.initialize(&this->window);
 }
 
 void Engine::update(float dt)

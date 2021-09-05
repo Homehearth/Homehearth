@@ -30,7 +30,7 @@ int CALLBACK WinMain(
 	resource::ResourceManager::Initialize();
 	
 	Engine engine;
-	engine.setup(); 
+	engine.setup(hInstance);
 	{
 		bool isRunning = true;
 		MSG msg = { nullptr };

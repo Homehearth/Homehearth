@@ -1,17 +1,11 @@
 #pragma once
 
 #include "Window.h"
+#include "D3D11Core.h"
 #include "Scene.h"
-#include "Buffers.h"
 
-class Engine {
-private:
-	Window window;
-	std::unordered_map<std::string, Scene> m_scenes;
-	Scene* m_currentScene;
-	bool m_vsync;
-
-	void RedirectIoToConsole();
+class Engine
+{
 public:
 	Engine();
 	Engine(const Window& other) = delete;
@@ -20,7 +14,7 @@ public:
 	Engine& operator=(Window&& other) = delete;
 	virtual ~Engine() = default;
 
-	void setup();
+	void setup(const HINSTANCE &hInstance);
 
 	void update(float dt);
 
@@ -30,6 +24,9 @@ public:
 
 private:
 	Window window;
+	D3D11Core dxCore;
+
+	
 	std::unordered_map<std::string, Scene> m_scenes;
 	Scene* m_currentScene;
 	bool m_vsync;
