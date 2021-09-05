@@ -3,11 +3,12 @@
 #include "EventHandler.h"
 #include "multi_thread_manager.h"
 
+static bool engineRunning = false;
+
 Engine::Engine()
 	: m_scenes({0})
 	, m_currentScene(nullptr)
 	, m_vsync(false)
-    , m_isOn(false)
 {
 }
 
@@ -15,8 +16,7 @@ void Engine::setup() {
 #ifdef _DEBUG
     RedirectIoToConsole();
 #endif
-
-    this->m_isOn = true;
+    engineRunning = true;
 	Window::Desc config;
 	config.hInstance = HInstance();
 	config.title = L"Engine Window";
@@ -71,15 +71,14 @@ void Engine::update(float dt)
 
 void Engine::render() 
 {
-    while (this->m_isOn)
+    while (engineRunning)
     {
-        std::cout << "Rendering something...\n";
-        Sleep(5000);
+
     }
 }
 
 void Engine::shutdown() {
-    this->m_isOn = false;
+    engineRunning = false;
 }
 
 void Engine::RedirectIoToConsole()

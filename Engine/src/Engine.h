@@ -4,8 +4,14 @@
 #include "Scene.h"
 #include "Buffers.h"
 
-class Engine
-{
+class Engine {
+private:
+	Window window;
+	std::unordered_map<std::string, Scene> m_scenes;
+	Scene* m_currentScene;
+	bool m_vsync;
+
+	void RedirectIoToConsole();
 public:
 	Engine();
 	Engine(const Window& other) = delete;
