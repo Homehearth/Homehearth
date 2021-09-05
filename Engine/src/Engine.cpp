@@ -1,5 +1,6 @@
 #include "EnginePCH.h"
 #include "Engine.h"
+#include "EventHandler.h"
 #include "multi_thread_manager.h"
 
 Engine::Engine()
@@ -25,15 +26,16 @@ void Engine::setup() {
 	
     int result = MessageBoxA(nullptr, "Do you want to run in fullscreen mode? You can exit the app with ESC.", "Engine", MB_YESNO);
     if (result == IDYES)
-        this->window.fullScreenSwitch();
+        this->window.setFullScreen(true);
 
     result = MessageBoxA(nullptr, "Do you want to switch back?", "Engine", MB_YESNO);
     if (result == IDYES)
-        this->window.fullScreenSwitch();
+        this->window.setFullScreen(false);
 
     // Starts a thread for rendering if multithreading is turned on.
     if (thread::IsThreadActive())
         T_CJOB(Engine, render);
+	
 }
 
 void Engine::update(float dt)
@@ -64,7 +66,7 @@ void Engine::update(float dt)
     // the most recently rendered image visible
     // on-screen. (Or, in windowed mode, copy (blit) the
     // back buffer's contents to the front buffer.
-    //swapBuffers();
+    //swapBuffers();	
 }
 
 void Engine::render() 

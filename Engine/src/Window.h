@@ -1,41 +1,48 @@
 #pragma once
 
-LRESULT CALLBACK WinProc(HWND handle, UINT msg, WPARAM wparam, LPARAM lparam);
+LRESULT CALLBACK WinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
+// TODO: cleanup.
 class Window
 {
 public:
     Window();
-    virtual ~Window(){ DestroyWindow(this->hWnd); };
+    Window(const Window& other) = delete;
+    Window(Window&& other) = delete;
+    Window& operator=(const Window& other) = delete;
+    Window& operator=(Window&& other) = delete;
+    virtual ~Window() {
+	    DestroyWindow(this->hWnd);
+    	LOG_INFO("Window has been destroyed.");
+    };
 
+	
     // Window description with default values.
     // Use when initializing the window.
     struct Desc
     {
-        INT width = GetSystemMetrics(SM_CXSCREEN) / 2;
-        INT height = GetSystemMetrics(SM_CYSCREEN) / 2;
+        int width = GetSystemMetrics(SM_CXSCREEN) / 2;
+        int height = GetSystemMetrics(SM_CYSCREEN) / 2;
         LPCWSTR title = L"Default";
-        LPCWSTR windowClass = L"Window Class A";
-        BOOL fullScreen = false;
-        BOOL resizableWindow = false;
+        bool fullScreen = false;
+        bool resizableWindow = false;
         HINSTANCE hInstance = nullptr;
-        INT nShowCmd = SW_NORMAL;
+        int nShowCmd = SW_NORMAL;
     };
 
-    // Initialize window.
-    BOOL initialize(const Desc & desc = Desc());
-
-	// Switch for window- / fullscreen mode.
-    VOID fullScreenSwitch();
-   	
+    bool initialize(const Desc & desc = Desc());
+    bool isFullScreen() const;
+    void setFullScreen(bool fullscreen);
+	
     HWND getHWnd() const;
     RECT getClientRect() const;
     INT getWidth() const;
     INT getHeight() const;
 
-private:
+private:	
     HWND hWnd;
     RECT clientRect;
     Desc windowDesc;
 };
+
 

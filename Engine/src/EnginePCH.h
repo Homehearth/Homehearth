@@ -56,9 +56,11 @@
 #include "imgui_impl_win32.h"
 
 
-// Custom
+// Custom Global includes (Singletons)
 #include "Logger.h"
 #include "multi_thread_manager.h"
 #include "ResourceManager.h"
+#include "InputSystem.h"
+#include "EventHandler.h"
 
 using Microsoft::WRL::ComPtr;

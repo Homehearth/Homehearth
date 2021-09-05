@@ -33,15 +33,18 @@ project "Engine"
 
 
     -- Define filter(s) inside project: [path + NameOfFilter] { files }.
-    -- Create your files in 'src' folder on disk, then add them to a filter below (**filename).
-    -- Note: specify the path relative to the Premake file.
+    -- Note: create your files in 'src' folder on disk, then add them to a filter below (**filename).
+    -- Else: specify the path relative to the this premake file.
     vpaths {
-        ["src/Core"] = { "**EnginePCH.*", "**Logger.*", "**Engine.*", "**Scene.*", "**multi_thread_manager.*", "**Client.*"},
-            ["src/Core/Input"] = { },
+        ["src/Core"] = { "**Scene.*" },
+            ["src/Core/Engine"] = { "**EnginePCH.*", "**Engine.*" },
+            ["src/Core/Input"] = { "**InputSystem.*", "**EventHandler.*" },
+            ["src/Core/Window"] = { "**Window.*" },
+            ["src/Core/Utility"] = { "**Logger.*", "**multi_thread_manager.*" },
 
         ["src/Graphics"] = { "**Buffers.*", "**NYI.*" },
             ["src/Graphics/Renderer"] = {"**Renderer.*"},
-            ["src/Graphics/D3D11"] = { },
+            ["src/Graphics/D3D11"] = { "**D3D11Core.*" },
             ["src/Graphics/DXGI"] = { },
             ["src/Graphics/Window"] = { "**Window.*" },
 
@@ -50,7 +53,7 @@ project "Engine"
 
         ["src/Audio"] = {  },
         ["src/Physics"] = {  },
-        ["src/Network"] = {  },
+        ["src/Network"] = { "**Client.*" },
         ["src/Animation"] = {  },
         ["src/ESC"] = {  }, 
         ["src/AI"] = {  }     

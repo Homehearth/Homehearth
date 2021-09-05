@@ -20,7 +20,7 @@ public:
 				str += val;
 		};
 		(l(str, args), ...);
-		LogToMessageBox("Info", str);
+		LogToFile(str);
 	}
 
 	template<typename... Args>
@@ -33,7 +33,7 @@ public:
 				str += val;
 		};
 		(l(str, args), ...);
-		LogToMessageBox("Warning", str);
+		LogToFile(str);
 	}
 
 	template<typename... Args>
@@ -46,15 +46,17 @@ public:
 				str += val;
 		};
 		(l(str, args), ...);
-		LogToMessageBox("Error", str);
+		LogToFile(str);
 	}
-	
+
+	// no copying allowed.
+	Logger(const Logger& other) = delete;
+	Logger& operator=(const Logger& other) = delete;
 private:
 	Logger() { LogSeperator(); };
 
 	static void LogToMessageBox(const std::string& logLevel, const std::string& logText) {
 		MessageBoxA(nullptr, logText.c_str(), logLevel.c_str(), 0);
-		LogToFile(logText);
 	}
 
 	static void LogToFile(const std::string& logText) {

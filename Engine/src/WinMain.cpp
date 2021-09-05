@@ -1,6 +1,7 @@
 #include <EnginePCH.h>
 
 #include "Engine.h"
+#include "InputSystem.h"
 
 void OnExit()
 {
@@ -19,9 +20,9 @@ int CALLBACK WinMain(
 	
 #ifdef _DEBUG
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-	MessageBoxA(nullptr, "Hi and welcome to debug mode!", "Engine", 0);
+	MessageBoxA(nullptr, "Debug mode!", "Engine", 0);
 #else
-	MessageBoxA(nullptr, "Hi and welcome to release mode!", "Engine", 0);
+	MessageBoxA(nullptr, "Release mode!", "Engine", 0);
 #endif
 	
 	std::atexit(OnExit);
@@ -41,6 +42,14 @@ int CALLBACK WinMain(
 				TranslateMessage(&msg);
 				DispatchMessage(&msg);
 				isRunning = (msg.message != WM_QUIT);
+			}
+
+			// TEST.
+			InputEvent event{};
+			while (InputSystem::Get().pollEvent(event)) {
+				std::cout << event.key_state << " : " << event.key_code << std::endl;
+				if (event.key_code == VK_ESCAPE)
+					isRunning = false;
 			}
 
 			const float dt = 0.16f;
