@@ -5,9 +5,10 @@
 static bool engineRunning = false;
 
 Engine::Engine()
-	: m_scenes({0})
+	: window(std::make_unique<Window>())
+	, m_scenes({0})
 	, m_currentScene(nullptr)
-	, m_vsync(false)
+	, m_vSync(false)
 {
 }
 
@@ -18,27 +19,21 @@ void Engine::setup(const HINSTANCE& hInstance) {
 
 	// Engine setup:
     engineRunning = true;
-    if (thread::IsThreadActive())   // Starts a thread for rendering if multithreading is turned on.
+
+	// Thread setup:
+    if (thread::IsThreadActive())
         T_CJOB(Engine, render);
 	
 	// Window setup:
 	Window::Desc config;
 	config.hInstance = hInstance;
 	config.title = L"Engine Window";
-	if (!window.initialize(config))	{
+	if (!window->initialize(config))	{
 		LOG_ERROR("Could not initialize window.");
 	}
 	
-    int result = MessageBoxA(nullptr, "Do you want to run in fullscreen mode? You can exit the app with ESC.", "Engine", MB_YESNO);
-    if (result == IDYES)
-        this->window.setFullScreen(true);
-
-    result = MessageBoxA(nullptr, "Do you want to switch back?", "Engine", MB_YESNO);
-    if (result == IDYES)
-        this->window.setFullScreen(false);
-	
     // DirectX setup:
-    this->dxCore.initialize(&this->window);
+    D3D11Core::Get().initialize(this->window.get());
 }
 
 void Engine::update(float dt)
@@ -51,10 +46,10 @@ void Engine::update(float dt)
     // relevant visual state of any dynamic elements
     // in the scene.
     //updateSceneElements(dt);
-
+    
     // for each entity:
 	//	entity.Update(dt);
-
+	
     //animationEngine.Update(dt);
     //physicsEngine.Simulate(dt);
     //collisionEngine.DetectAndResolveCollisions(dt);
@@ -67,8 +62,7 @@ void Engine::update(float dt)
 
     // Swap the back buffer with the front buffer, making
     // the most recently rendered image visible
-    // on-screen. (Or, in windowed mode, copy (blit) the
-    // back buffer's contents to the front buffer.
+    // on-screen. 
     //swapBuffers();	
 }
 

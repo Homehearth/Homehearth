@@ -1,8 +1,8 @@
 #pragma once
 
 #include "Window.h"
-#include "D3D11Core.h"
 #include "Scene.h"
+#include "Renderer.h"
 
 class Engine
 {
@@ -23,13 +23,12 @@ public:
 	void shutdown();
 
 private:
-	Window window;
-	D3D11Core dxCore;
-
+	std::unique_ptr<Window> window;
+	std::unique_ptr<Renderer> renderer;
 	
 	std::unordered_map<std::string, Scene> m_scenes;
 	Scene* m_currentScene;
-	bool m_vsync;
+	bool m_vSync;
 	bool m_isOn;
 
 	void RedirectIoToConsole();

@@ -37,7 +37,7 @@ LRESULT CALLBACK WinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		uMsg == WM_MOUSEWHEEL ||
 		uMsg == WM_MOUSEMOVE)
 	{
-		InputSystem::Get().addEvent(uMsg, wParam);
+		InputSystem::Get().addInputEvent(uMsg, wParam);
 	}
 
 	return DefWindowProc(hwnd, uMsg, wParam, lParam);
@@ -128,6 +128,8 @@ void Window::setFullScreen(bool fullscreen)
 {
 	assert(this->hWnd && "There's no window to resize.");
 
+	// TODO: This causes issues.
+	/*
 	WINDOWPLACEMENT wpc = { sizeof(wpc) };
 	LONG HWNDStyle = 0;
 	LONG HWNDStyleEx = 0;
@@ -165,4 +167,6 @@ void Window::setFullScreen(bool fullscreen)
 		SetWindowPlacement(this->hWnd, &wpc);
 		ShowWindow(this->hWnd, SW_SHOWNORMAL);
 	}
+	*/
+	
 }

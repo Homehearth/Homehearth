@@ -23,7 +23,7 @@ namespace Buffers
         constantBufferDesc.CPUAccessFlags = 0;
         constantBufferDesc.MiscFlags = 0;
 
-        HRESULT hr; //= pDevice->CreateBuffer(&constantBufferDesc, nullptr, this->constantBuffer.GetAddressOf());
+        HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&constantBufferDesc, nullptr, this->constantBuffer.GetAddressOf());
 
         return !FAILED(hr);
     }
@@ -76,7 +76,7 @@ namespace Buffers
         subresData.SysMemPitch = 0;
         subresData.SysMemSlicePitch = 0;
 
-        HRESULT hr;// = pDevice->CreateBuffer(&bufferDesc, &subresData, this->vertexBuffer.GetAddressOf());
+        HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&bufferDesc, &subresData, this->vertexBuffer.GetAddressOf());
 
         this->vertexCount = size;
     	
@@ -134,7 +134,7 @@ namespace Buffers
         subresData.SysMemPitch = 0;
         subresData.SysMemSlicePitch = 0;
 
-        HRESULT hr;// = pDevice->CreateBuffer(&indexBufferDesc, &subresData, this->indexBuffer.GetAddressOf());
+        HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&indexBufferDesc, &subresData, this->indexBuffer.GetAddressOf());
 
         this->indexCount = size;
 

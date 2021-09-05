@@ -7,39 +7,32 @@ D3D11Core::D3D11Core()
 {
 }
 
-void D3D11Core::initialize(Window * pWindow)
+void D3D11Core::initialize(Window* pWindow)
 {
-    assert(!isInitialized && "D3D11Core is already initialized.");
+    assert(isInitialized || "D3D11Core is already initialized.");
     if (this->pWindow == nullptr)
         this->pWindow = pWindow;
-	
+
     // Initialize DeviceAndSwapChain.
     if (!this->createDeviceAndSwapChain())
         LOG_ERROR("failed creating device and swapchain.");
 
-	
-	/*
-    // Initialize RenderTargetView.
-    if (!this->createRenderTargetView())
-	
-    // Initialize DepthStencilBuffer.
-    if (!this->createDepthStencilTexture())
-	
-    // Initialize DepthStencilState.
-    if (!this->createDepthStencilState())
-	
-    // Initialize DepthStencilView.
-    if (!this->createDepthStencilView())
-	
-    // Initialize RasterizerStates.
-    if (!this->createRasterizerStates())
-	
-    // Initialize SamplerStates.
-    if (!this->createSamplerStates())
-	
-    // Set Viewport.
-    this->setViewport();    
-	 */
+    this->isInitialized = true;
+}
+
+ID3D11Device* D3D11Core::Device() const
+{
+    return this->device.Get();
+}
+
+ID3D11DeviceContext* D3D11Core::DeviceContext() const
+{
+    return this->deviceContext.Get();
+}
+
+IDXGISwapChain* D3D11Core::SwapChain() const
+{
+    return this->swapChain.Get();
 }
 
 bool D3D11Core::createDeviceAndSwapChain()

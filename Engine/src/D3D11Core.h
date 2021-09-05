@@ -2,41 +2,36 @@
 
 #include "Window.h"
 
-/*
- *	Initialize D3D11: device, device-context, swapchain.
- */
-
 class D3D11Core
 {
 public:
-	D3D11Core();
-	D3D11Core(const D3D11Core& other) = delete;
-	D3D11Core(D3D11Core&& other) = delete;
-	D3D11Core& operator=(const D3D11Core& other) = delete;
-	D3D11Core& operator=(D3D11Core&& other) = delete;
 	virtual ~D3D11Core() = default;
 
+	static auto& Get(){
+		static D3D11Core instance;
+		return instance;
+	}
+	
 	void initialize(Window * pWindow);
+
+	// Getters.
+	ID3D11Device* Device() const;
+	ID3D11DeviceContext* DeviceContext() const;
+	IDXGISwapChain* SwapChain() const;
+
+	// no copying.
+	D3D11Core(const D3D11Core& other) = delete;
+	D3D11Core& operator=(const D3D11Core& other) = delete;
 private:
+	D3D11Core();
+	
 	Window* pWindow;
 	bool isInitialized;
-	
-	ComPtr<ID3D11Device>			device;
-	ComPtr<ID3D11DeviceContext>		deviceContext;
-	ComPtr<IDXGISwapChain>			swapChain;
-	D3D11_VIEWPORT					viewport;
+
+	ComPtr<ID3D11Device>		device;
+	ComPtr<ID3D11DeviceContext>	deviceContext;
+	ComPtr<IDXGISwapChain>		swapChain;
 
 	bool createDeviceAndSwapChain();
-
-	/*
-	bool createRenderTargetView();
-	bool createDepthStencilTexture();
-	bool createDepthStencilState();
-	bool createDepthStencilView();
-	bool createRasterizerStates();
-	bool createSamplerStates();
-	bool createUnorderedAccesView();
-	void setViewport();
-	 */
 };
 
