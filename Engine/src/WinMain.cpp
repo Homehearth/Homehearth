@@ -30,7 +30,7 @@ int CALLBACK WinMain(
 	resource::ResourceManager::Initialize();
 	
 	Engine engine;
-	engine.setup(); 
+	engine.setup(hInstance);
 	{
 		bool isRunning = true;
 		MSG msg = { nullptr };
@@ -44,14 +44,16 @@ int CALLBACK WinMain(
 				isRunning = (msg.message != WM_QUIT);
 			}
 
-			// TEST.
-			InputEvent event{};
+			
+			// [InputSystem test]
+			InputEvent event;
 			while (InputSystem::Get().pollEvent(event)) {
-				std::cout << event.key_state << " : " << event.key_code << std::endl;
+				std::cout << "key_state: " << event.key_state << " key_code: " << event.key_code << std::endl;
 				if (event.key_code == VK_ESCAPE)
 					isRunning = false;
 			}
 
+			
 			const float dt = 0.16f;
 			engine.update(dt);
 			//engine.render();

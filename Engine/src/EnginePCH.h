@@ -9,7 +9,6 @@
 #pragma comment(lib, "Ws2_32.lib")
 #include <windowsx.h>
 #pragma comment(lib, "winmm.lib")
-#define HInstance() GetModuleHandle(NULL)
 #endif
 
 
@@ -42,6 +41,7 @@
 #include <dwrite_3.h>
 #include <d2d1.h>
 #include <ctime>
+using Microsoft::WRL::ComPtr;
 
 
 // DirectXTK
@@ -56,9 +56,9 @@
 #include "imgui_impl_win32.h"
 
 
-// Custom
+// Custom Global includes (Singletons)
 #include "Logger.h"
 #include "multi_thread_manager.h"
 #include "ResourceManager.h"
-
-using Microsoft::WRL::ComPtr;
+#include "InputSystem.h"
+#include "D3D11Core.h"

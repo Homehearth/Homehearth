@@ -4,14 +4,12 @@
 
 LRESULT CALLBACK WinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	// Engine Input:
+	// Engine events:
 	switch (uMsg)
 	{
 	case WM_NCCREATE:
-	{
 		LOG_INFO("Window has been created.");
-	}
-	break;
+		break;
 	case WM_DESTROY:
 		PostQuitMessage(0);
 		break;
@@ -22,7 +20,7 @@ LRESULT CALLBACK WinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		break;
 	}
 
-	// Application Input:
+	// Application events:
 	if (uMsg == WM_KEYDOWN ||
 		uMsg == WM_KEYUP ||
 		uMsg == WM_CHAR ||
@@ -37,7 +35,8 @@ LRESULT CALLBACK WinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		uMsg == WM_MOUSEWHEEL ||
 		uMsg == WM_MOUSEMOVE)
 	{
-		InputSystem::Get().addEvent(uMsg, wParam);
+		// Add the event to the eventQueue.
+		InputSystem::Get().registerEvent(uMsg, wParam);
 	}
 
 	return DefWindowProc(hwnd, uMsg, wParam, lParam);
@@ -49,6 +48,12 @@ Window::Window()
 	, clientRect({})
 	, windowDesc({})
 {
+}
+
+Window::~Window()
+{
+	DestroyWindow(this->hWnd);
+	LOG_INFO("Window has been destroyed.");
 }
 
 bool Window::initialize(const Desc& desc)
@@ -65,7 +70,7 @@ bool Window::initialize(const Desc& desc)
 	wcex.cbWndExtra = 0;
 	wcex.lpszClassName = WINDOW_CLASS;
 	wcex.lpszMenuName = nullptr;
-	wcex.hbrBackground = (HBRUSH)CreateSolidBrush(RGB(100, 149, 237));	// Cornflower blue.
+	wcex.hbrBackground = static_cast<HBRUSH>(CreateSolidBrush(RGB(100, 149, 237)));	// Cornflower blue.
 	wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
 	wcex.hIcon = LoadIcon(nullptr, IDI_APPLICATION);
 	wcex.hIconSm = LoadIcon(nullptr, IDI_APPLICATION);;
@@ -109,12 +114,12 @@ RECT Window::getClientRect() const
 	return this->clientRect;
 }
 
-int Window::getWidth() const
+unsigned int Window::getWidth() const
 {
 	return this->windowDesc.width;
 }
 
-int Window::getHeight() const
+unsigned int Window::getHeight() const
 {
 	return this->windowDesc.height;
 }
@@ -128,41 +133,5 @@ void Window::setFullScreen(bool fullscreen)
 {
 	assert(this->hWnd && "There's no window to resize.");
 
-	WINDOWPLACEMENT wpc = { sizeof(wpc) };
-	LONG HWNDStyle = 0;
-	LONG HWNDStyleEx = 0;
-
-	if (fullscreen && !this->windowDesc.fullScreen)
-	{
-		this->windowDesc.fullScreen = true;
-
-		GetWindowPlacement(this->hWnd, &wpc);
-		if (HWNDStyle == 0)
-			HWNDStyle = GetWindowLong(this->hWnd, GWL_STYLE);
-		if (HWNDStyleEx == 0)
-			HWNDStyleEx = GetWindowLong(this->hWnd, GWL_EXSTYLE);
-
-		LONG NewHWNDStyle = HWNDStyle;
-		NewHWNDStyle &= ~WS_BORDER;
-		NewHWNDStyle &= ~WS_DLGFRAME;
-		NewHWNDStyle &= ~WS_THICKFRAME;
-
-		LONG NewHWNDStyleEx = HWNDStyleEx;
-		NewHWNDStyleEx &= ~WS_EX_WINDOWEDGE;
-
-		SetWindowLong(this->hWnd, GWL_STYLE, NewHWNDStyle | WS_POPUP);
-		SetWindowLong(this->hWnd, GWL_EXSTYLE, NewHWNDStyleEx | WS_EX_TOPMOST);
-		ShowWindow(this->hWnd, SW_SHOWMAXIMIZED);
-	}
-	else if (!fullscreen && this->windowDesc.fullScreen)
-	{
-		this->windowDesc.fullScreen = false;
-
-		GetWindowPlacement(this->hWnd, &wpc);
-		HWNDStyle = WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE;
-		SetWindowLong(this->hWnd, GWL_STYLE, HWNDStyle);
-		SetWindowLong(this->hWnd, GWL_EXSTYLE, HWNDStyleEx);
-		SetWindowPlacement(this->hWnd, &wpc);
-		ShowWindow(this->hWnd, SW_SHOWNORMAL);
-	}
+	// TODO: previous code caused issues.
 }

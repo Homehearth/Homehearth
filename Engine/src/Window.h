@@ -11,18 +11,15 @@ public:
     Window(Window&& other) = delete;
     Window& operator=(const Window& other) = delete;
     Window& operator=(Window&& other) = delete;
-    virtual ~Window() {
-	    DestroyWindow(this->hWnd);
-    	LOG_INFO("Window has been destroyed.");
-    };
+    virtual ~Window();
 
 	
     // Window description with default values.
     // Use when initializing the window.
     struct Desc
     {
-        int width = GetSystemMetrics(SM_CXSCREEN) / 2;
-        int height = GetSystemMetrics(SM_CYSCREEN) / 2;
+        unsigned int width = (unsigned int)GetSystemMetrics(SM_CXSCREEN) / 2;
+        unsigned int height = (unsigned int)GetSystemMetrics(SM_CYSCREEN) / 2;
         LPCWSTR title = L"Default";
         bool fullScreen = false;
         bool resizableWindow = false;
@@ -36,8 +33,8 @@ public:
 	
     HWND getHWnd() const;
     RECT getClientRect() const;
-    INT getWidth() const;
-    INT getHeight() const;
+    unsigned int getWidth() const;
+    unsigned int getHeight() const;
 
 private:	
     HWND hWnd;

@@ -1,8 +1,6 @@
 #pragma once
 
-/*
- *	Initialize D3D11: device, device-context, swapchain.
- */
+#include "Window.h"
 
 class D3D11Core
 {
@@ -17,14 +15,26 @@ public:
 		static D3D11Core instance;
 		return instance;
 	}
+	
+	void initialize(Window * pWindow);
 
+	ID3D11Device* Device() const;
+	ID3D11DeviceContext* DeviceContext() const;
+	IDXGISwapChain* SwapChain() const;
+
+	// no copying.
+	D3D11Core(const D3D11Core& other) = delete;
+	D3D11Core& operator=(const D3D11Core& other) = delete;
 private:
-	D3D11Core() = default;
+	D3D11Core();
+	
+	Window* pWindow;
+	bool isInitialized;
 
-	ComPtr<ID3D11Device>			device;
-	ComPtr<ID3D11DeviceContext>		deviceContext;
-	ComPtr<IDXGISwapChain>			swapChain;
-	DXGI_FORMAT						swapChainFormat;
-	D3D11_VIEWPORT					viewport;
+	ComPtr<ID3D11Device>		device;
+	ComPtr<ID3D11DeviceContext>	deviceContext;
+	ComPtr<IDXGISwapChain>		swapChain;
+
+	bool createDeviceAndSwapChain();
 };
 

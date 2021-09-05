@@ -1,19 +1,21 @@
 #pragma once
 
 struct InputEvent {
-	UINT key_state;
-	WPARAM key_code;
+	UINT key_state;		// ex: WM_KEYDOWN
+	WPARAM key_code;	// ex: VK_ESCAPE
 };
 
 class InputSystem
 {
-public:	
+public:
+	virtual ~InputSystem() = default;
+	
 	static auto& Get()	{
 		static InputSystem instance;
 		return instance;
 	}
 	
-	void addEvent(const UINT &uMsg, const WPARAM &wParam) {
+	void registerEvent(const UINT &uMsg, const WPARAM &wParam) {
 		this->eventQueue.push({ uMsg, wParam });
 	}
 
@@ -25,7 +27,7 @@ public:
 		}
 		return false;
 	}
-	
+
 	virtual ~InputSystem() = default;
 
 	// no copying allowed.
