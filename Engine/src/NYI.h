@@ -54,8 +54,8 @@ struct simple_vertex_t
 	DirectX::XMFLOAT3 position;
 	DirectX::XMFLOAT3 normal;
 	DirectX::XMFLOAT3 tangent;
-	// bitangent?
-	DirectX::XMFLOAT2 texCoord;
+	DirectX::XMFLOAT3 bitangent;
+	DirectX::XMFLOAT2 texcoord;
 };
 
 struct texture_resource_t
