@@ -21,6 +21,7 @@ public:
 				str += val;
 		};
 		(l(str, args), ...);
+		LogToConsole(str);
 		LogToFile(str);
 	}
 
@@ -34,6 +35,7 @@ public:
 				str += val;
 		};
 		(l(str, args), ...);
+		LogToConsole(str);
 		LogToFile(str);
 	}
 
@@ -47,6 +49,7 @@ public:
 				str += val;
 		};
 		(l(str, args), ...);
+		LogToConsole(str);
 		LogToFile(str);
 	}
 
@@ -56,8 +59,8 @@ public:
 private:
 	Logger() { LogSeperator(); };
 
-	static void LogToMessageBox(const std::string& logLevel, const std::string& logText) {
-		MessageBoxA(nullptr, logText.c_str(), logLevel.c_str(), 0);
+	static void LogToConsole(const std::string& logText) {
+		std::cout << logText << std::endl;
 	}
 
 	static void LogToFile(const std::string& logText) {

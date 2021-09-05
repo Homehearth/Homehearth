@@ -16,6 +16,9 @@ LRESULT CALLBACK WinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_CLOSE:
 		PostQuitMessage(0);
 		break;
+	case WM_SIZE:
+		// https://docs.microsoft.com/en-us/windows/win32/direct3ddxgi/d3d10-graphics-programming-guide-dxgi#handling-window-resizing
+		break;
 	default:
 		break;
 	}
@@ -65,7 +68,7 @@ bool Window::initialize(const Desc& desc)
 	const LPCWSTR WINDOW_CLASS = L"DefaultWindowClass";
 	
 	wcex.cbSize = sizeof(WNDCLASSEX);
-	wcex.style = CS_HREDRAW | CS_VREDRAW;
+	wcex.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
 	wcex.cbClsExtra = 0;
 	wcex.cbWndExtra = 0;
 	wcex.lpszClassName = WINDOW_CLASS;
@@ -134,4 +137,5 @@ void Window::setFullScreen(bool fullscreen)
 	assert(this->hWnd && "There's no window to resize.");
 
 	// TODO: previous code caused issues.
+	//D3D11Core::Get().SwapChain()->SetFullscreenState(true, nullptr);
 }

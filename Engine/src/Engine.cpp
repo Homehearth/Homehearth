@@ -32,6 +32,7 @@ void Engine::setup(const HINSTANCE& hInstance) {
     // DirectX setup:
     D3D11Core::Get().initialize(this->window.get());
 
+	
     engineRunning = true;
 }
 

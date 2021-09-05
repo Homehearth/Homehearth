@@ -42,8 +42,7 @@ int CALLBACK WinMain(
 				DispatchMessage(&msg);
 				isRunning = (msg.message != WM_QUIT);
 			}
-
-			
+	
 			// [InputSystem test]
 			InputEvent event;
 			while (InputSystem::Get().pollEvent(event)) {
@@ -51,8 +50,7 @@ int CALLBACK WinMain(
 				if (event.key_code == VK_ESCAPE)
 					isRunning = false;
 			}
-
-			
+	
 			const float dt = 0.16f;
 			engine.update(dt);
 			//engine.render();

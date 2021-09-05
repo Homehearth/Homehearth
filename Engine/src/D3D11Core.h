@@ -31,6 +31,12 @@ private:
 	ComPtr<ID3D11DeviceContext>	deviceContext;
 	ComPtr<IDXGISwapChain>		swapChain;
 
+	// TODO:
+	ComPtr<IDXGIDevice>			dxgiDevice;		// 1 2 
+	ComPtr<IDXGIAdapter>		dxgiAdapter;	// 1 2
+	ComPtr<IDXGIFactory>		dxgiFacory;		// 1 2
+	
+
 	bool createDeviceAndSwapChain();
 };
 

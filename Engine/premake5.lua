@@ -45,7 +45,6 @@ project "Engine"
         ["src/Graphics"] = { "**Buffers.*", "**NYI.*" },
             ["src/Graphics/Renderer"] = {"**Renderer.*"},
             ["src/Graphics/D3D11"] = { "**D3D11Core.*" },
-            ["src/Graphics/DXGI"] = { },
             ["src/Graphics/Window"] = { "**Window.*" },
 
         ["src/Resources"] = { "**ResourceManager.*", "**GResource.*", "**RTexture.*" },

@@ -9,7 +9,7 @@ public:
 	
 	void initialize(Window* pWindow);
 
-	void clearFrame()
+	void clearScreen()
 	{
 		
 	}
