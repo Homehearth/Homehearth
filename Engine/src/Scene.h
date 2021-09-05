@@ -1,16 +1,28 @@
 #pragma once
 
-class Scene {
-private:
-	// ecs stuff
+class Scene
+{
 public:
-	Scene(){}
-	virtual ~Scene(){}
+	Scene()
+	{
+		
+	}
+	virtual ~Scene()
+	{
+		
+	}
 
 	// update all systems
-	void update(float dt){}
+	void update(float dt)
+	{
+		
+	}
 	
 	// draw all renderSystems
-	void render(){}
-
+	void render()
+	{
+		
+	}
+private:
+	// ecs stuff
 };

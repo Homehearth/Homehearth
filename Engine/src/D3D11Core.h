@@ -14,7 +14,6 @@ public:
 	
 	void initialize(Window * pWindow);
 
-	// Getters.
 	ID3D11Device* Device() const;
 	ID3D11DeviceContext* DeviceContext() const;
 	IDXGISwapChain* SwapChain() const;

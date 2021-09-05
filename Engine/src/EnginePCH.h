@@ -61,5 +61,4 @@ using Microsoft::WRL::ComPtr;
 #include "multi_thread_manager.h"
 #include "ResourceManager.h"
 #include "InputSystem.h"
-#include "EventHandler.h"
 #include "D3D11Core.h"

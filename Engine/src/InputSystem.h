@@ -15,7 +15,7 @@ public:
 		return instance;
 	}
 	
-	void addInputEvent(const UINT &uMsg, const WPARAM &wParam) {
+	void registerEvent(const UINT &uMsg, const WPARAM &wParam) {
 		this->eventQueue.push({ uMsg, wParam });
 	}
 

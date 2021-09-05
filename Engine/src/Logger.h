@@ -1,5 +1,6 @@
 #pragma once
 
+// Maybe we should include some library instead?
 class Logger
 {
 public:

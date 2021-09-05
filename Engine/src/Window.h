@@ -2,7 +2,6 @@
 
 LRESULT CALLBACK WinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-// TODO: cleanup.
 class Window
 {
 public:
@@ -11,10 +10,7 @@ public:
     Window(Window&& other) = delete;
     Window& operator=(const Window& other) = delete;
     Window& operator=(Window&& other) = delete;
-    virtual ~Window() {
-	    DestroyWindow(this->hWnd);
-    	LOG_INFO("Window has been destroyed.");
-    };
+    virtual ~Window();
 
 	
     // Window description with default values.

@@ -17,9 +17,6 @@ void Engine::setup(const HINSTANCE& hInstance) {
     RedirectIoToConsole();
 #endif
 
-	// Engine setup:
-    engineRunning = true;
-
 	// Thread setup:
     if (thread::IsThreadActive())
         T_CJOB(Engine, render);
@@ -28,18 +25,19 @@ void Engine::setup(const HINSTANCE& hInstance) {
 	Window::Desc config;
 	config.hInstance = hInstance;
 	config.title = L"Engine Window";
-	if (!window->initialize(config))	{
+	if (!window->initialize(config)) {
 		LOG_ERROR("Could not initialize window.");
 	}
 	
     // DirectX setup:
     D3D11Core::Get().initialize(this->window.get());
+
+    engineRunning = true;
 }
 
 void Engine::update(float dt)
 {
-    // Update the camera transform based on interactive
-    // inputs or by following a predefined path.
+    // Update the camera transform based on interactive inputs.
     //updateCamera(dt);
 
     // Update positions, orientations and any other
@@ -56,13 +54,10 @@ void Engine::update(float dt)
     //audioEngine.Update(dt);
     //renderingEngine.RenderFrameAndSwapBuffers();
 
-    // Render a still frame into an off-screen frame
-    // buffer known as the "back buffer".
+    // Render into the "back buffer".
     //renderScene();
 
-    // Swap the back buffer with the front buffer, making
-    // the most recently rendered image visible
-    // on-screen. 
+    // Swap the back buffer with the front buffer.
     //swapBuffers();	
 }
 
@@ -87,6 +82,5 @@ void Engine::RedirectIoToConsole()
     stdHandle = GetStdHandle(STD_OUTPUT_HANDLE);
     hConsole = _open_osfhandle((intptr_t)stdHandle, _O_TEXT);
     fp = _fdopen(hConsole, "w");
-
     freopen_s(&fp, "CONOUT$", "w", stdout);
 }

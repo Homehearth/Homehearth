@@ -8,6 +8,11 @@ public:
 	virtual ~Renderer() = default;
 	
 	void initialize(Window* pWindow);
+
+	void clearFrame()
+	{
+		
+	}
 	
 	void beginFrame()
 	{
@@ -49,7 +54,6 @@ private:
 	bool createDepthStencilView();
 	bool createRasterizerStates();
 	bool createSamplerStates();
-	bool createUnorderedAccesView();
 	void setViewport();
 };
 

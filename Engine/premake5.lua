@@ -36,9 +36,9 @@ project "Engine"
     -- Note: create your files in 'src' folder on disk, then add them to a filter below (**filename).
     -- Else: specify the path relative to the this premake file.
     vpaths {
-        ["src/Core"] = { "**Scene.*" },
-            ["src/Core/Engine"] = { "**EnginePCH.*", "**Engine.*" },
-            ["src/Core/Input"] = { "**InputSystem.*", "**EventHandler.*" },
+        ["src/Core"] = { "**EnginePCH.*" },
+            ["src/Core/Engine"] = { "**Engine.*", "**Scene.*" },
+            ["src/Core/Input"] = { "**InputSystem.*" },
             ["src/Core/Window"] = { "**Window.*" },
             ["src/Core/Utility"] = { "**Logger.*", "**multi_thread_manager.*" },
 

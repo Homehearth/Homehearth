@@ -16,8 +16,8 @@ void D3D11Core::initialize(Window* pWindow)
     // Initialize DeviceAndSwapChain.
     if (!this->createDeviceAndSwapChain())
         LOG_ERROR("failed creating device and swapchain.");
-
-    this->isInitialized = true;
+    else
+		this->isInitialized = true;
 }
 
 ID3D11Device* D3D11Core::Device() const
@@ -45,7 +45,7 @@ bool D3D11Core::createDeviceAndSwapChain()
     swapChainDesc.OutputWindow = pWindow->getHWnd();
 
     // Set to windowed mode.
-    swapChainDesc.Windowed = pWindow->isFullScreen() ? FALSE : TRUE;
+    swapChainDesc.Windowed = TRUE;
     
     // Set the client dimensions of the back buffer.
     swapChainDesc.BufferDesc.Width = this->pWindow->getWidth();
