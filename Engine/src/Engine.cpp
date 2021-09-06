@@ -35,7 +35,7 @@ void Engine::Setup(const HINSTANCE& hInstance) {
     m_client = std::make_unique<Client>();
 
     if (thread::IsThreadActive())
-        T_CJOB(Engine, render);
+        T_CJOB(Engine, Render);
 
     // register Engine OnEvent function so Scene can talk to Engine
     Scene::GetEventDispatcher().sink<EngineEvent>().connect<&Engine::OnEvent>(this);
