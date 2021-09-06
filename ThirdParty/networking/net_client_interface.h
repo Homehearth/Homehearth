@@ -21,6 +21,7 @@ namespace network
 		virtual ~client_interface()
 		{
 			Disconnect();
+			WSACleanup();
 		}
 
 	public:
@@ -131,6 +132,8 @@ namespace network
 			{
 				continue;
 			}
+			u_long enable = 1;
+			ioctlsocket(m_socket, FIONBIO, &enable);
 			if (connect(m_socket, p->ai_addr, static_cast<int>(p->ai_addrlen)) != 0)
 			{
 				#ifdef _DEBUG

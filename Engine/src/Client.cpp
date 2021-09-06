@@ -4,7 +4,7 @@
 
 Client::Client()
 {
-	if (Connect("127.0.0.1", 4950))
+	if (Connect("188.148.27.231", 4950))
 	{
 #ifdef _DEBUG
 		std::cout << "Connected to server!" << std::endl;

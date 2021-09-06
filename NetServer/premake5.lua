@@ -24,7 +24,7 @@ project "NetServer"
     -- Note: specify the path relative to the Premake file.
     includedirs {
 		"src",
-		 "../ThirdParty/networking/",
+		 "../ThirdParty/networking/"
     }
 
 
@@ -32,7 +32,7 @@ project "NetServer"
     -- Note: create your files in 'src' folder on disk, then add them to a filter below (**filename).
     -- Else: specify the path relative to the this premake file.
     vpaths {
-        ["src/Core"] = { "**Window.*", "**Logger.*", "**NetServer.*", "**InputSystem.*" }   
+        ["src/Core"] = { "**Window.*", "**Logger.*", "**NetServer.*", "**InputSystem.*", "**Server.*", "**multi_thread_manager.*" }   
     }
 
 
