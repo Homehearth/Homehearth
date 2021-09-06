@@ -10,6 +10,7 @@ This project has been developed using Visual Studio 2019.
 This project is created with:
 * Visual Studio 2019
 * DirectX: 11.0
+* Premake5
 	
 ## Setup
 To run this project, clone and install it locally using:
