@@ -3,6 +3,8 @@
 #include "Engine.h"
 #include "InputSystem.h"
 
+#include <chrono>
+
 void OnExit()
 {
 	T_DESTROY();
@@ -30,18 +32,29 @@ int CALLBACK WinMain(
 	resource::ResourceManager::Initialize();
 	
 	Engine engine;
-	engine.setup(hInstance);
+	engine.Setup(hInstance);
+	
+	// Create or get scene
+	Scene& startScene = engine.GetScene("StartScene");
+	// Set as current scene
+	engine.SetScene(startScene);
+
 	{
-		bool isRunning = true;
+		auto lastTime = std::chrono::high_resolution_clock::now();
+
+		//bool isRunning = true;
 		MSG msg = { nullptr };
-		while (isRunning)
+		while (engine.IsRunning())
 		{
 			// Service any and all pending Windows messages.
 			if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
 			{
 				TranslateMessage(&msg);
 				DispatchMessage(&msg);
-				isRunning = (msg.message != WM_QUIT);
+				if (msg.message == WM_QUIT)
+				{
+					engine.Shutdown();
+				}
 			}
 	
 			// [InputSystem test]
@@ -49,15 +62,20 @@ int CALLBACK WinMain(
 			while (InputSystem::Get().pollEvent(event)) {
 				std::cout << "key_state: " << event.key_state << " key_code: " << event.key_code << std::endl;
 				if (event.key_code == VK_ESCAPE)
-					isRunning = false;
+				{
+					engine.Shutdown();
+				}
 			}
 	
-			const float dt = 0.16f;
-			engine.update(dt);
+			auto now = std::chrono::high_resolution_clock::now();
+			auto delta = std::chrono::duration_cast<std::chrono::duration<float>>(now - lastTime);
+			lastTime = now;
+			float dt = delta.count();
+			engine.Update(dt);
 			//engine.render();
 		}
 	}	
-	engine.shutdown();
+	engine.Shutdown();
 	return 0;
 }
 	

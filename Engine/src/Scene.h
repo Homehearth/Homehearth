@@ -1,28 +1,26 @@
 #pragma once
-
+#include <entt.hpp>
+#include "EventTypes.h"
 class Scene
 {
+private:
+	static entt::dispatcher m_staticEventDispatcher;
+	// ecs stuff
+	entt::registry m_ecsRegistry;
+	
+
 public:
-	Scene()
-	{
-		
-	}
-	virtual ~Scene()
-	{
-		
-	}
+	static entt::dispatcher& GetEventDispatcher() { return m_staticEventDispatcher; }
+
+	Scene();
+	virtual ~Scene() {}
 
 	// update all systems
-	void update(float dt)
-	{
-		
-	}
+	void Update(float dt);
 	
+
 	// draw all renderSystems
-	void render()
-	{
-		
-	}
-private:
-	// ecs stuff
+	void Render() {}
+
+
 };

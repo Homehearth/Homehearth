@@ -5,14 +5,14 @@
 static bool engineRunning = false;
 
 Engine::Engine()
-	: window(std::make_unique<Window>())
+	: m_window(std::make_unique<Window>())
 	, m_scenes({0})
 	, m_currentScene(nullptr)
 	, m_vSync(false)
 {
 }
 
-void Engine::setup(const HINSTANCE& hInstance) {
+void Engine::Setup(const HINSTANCE& hInstance) {
 #ifdef _DEBUG
     RedirectIoToConsole();
 #endif
@@ -21,20 +21,24 @@ void Engine::setup(const HINSTANCE& hInstance) {
 	Window::Desc config;
 	config.hInstance = hInstance;
 	config.title = L"Engine Window";
-	if (!window->initialize(config)) {
+	if (!m_window->initialize(config)) {
 		LOG_ERROR("Could not initialize window.");
 	}
 	
     // DirectX setup:
-    D3D11Core::Get().initialize(this->window.get());
+    D3D11Core::Get().initialize(m_window.get());
 
     // Thread should be launched after engineRunning is set to true and D3D11 is initalized.
     engineRunning = true;
     if (thread::IsThreadActive())
         T_CJOB(Engine, render);
+
+    // register Engine OnEvent function so Scene can talk to Engine
+    Scene::GetEventDispatcher().sink<EngineEvent>().connect<&Engine::OnEvent>(this);
+
 }
 
-void Engine::update(float dt)
+void Engine::Update(float dt)
 {
     // Update the camera transform based on interactive inputs.
     //updateCamera(dt);
@@ -42,7 +46,13 @@ void Engine::update(float dt)
     // Update positions, orientations and any other
     // relevant visual state of any dynamic elements
     // in the scene.
-    //updateSceneElements(dt);
+    
+    if (m_currentScene)
+    {
+        m_currentScene->Update(dt);
+    }
+    // Handle events enqueued by the scene
+    Scene::GetEventDispatcher().update(); 
     
     // for each entity:
 	//	entity.Update(dt);
@@ -60,16 +70,53 @@ void Engine::update(float dt)
     //swapBuffers();	
 }
 
-void Engine::render() 
+void Engine::Render() 
 {
     while (engineRunning)
     {
+        //TODO: vsync
 
+        if (m_currentScene)
+        {
+            m_currentScene->Render();
+        }
     }
 }
 
-void Engine::shutdown() {
+void Engine::Shutdown() 
+{
     engineRunning = false;
+}
+
+Scene& Engine::GetScene(const std::string& name) 
+{
+    return m_scenes[name];
+}
+
+void Engine::SetScene(const std::string& name) 
+{
+    SetScene(m_scenes.at(name));
+}
+
+void Engine::SetScene(Scene& scene)
+{
+    m_currentScene = &scene;
+}
+
+void Engine::OnEvent(EngineEvent& event) {
+    switch (event.type)
+    {
+    case EngineEvent::Type::SHUTDOWN:
+        engineRunning = false;
+        break;
+    default:
+        break;
+    }
+}
+
+bool Engine::IsRunning() const 
+{
+    return engineRunning;
 }
 
 void Engine::RedirectIoToConsole()
