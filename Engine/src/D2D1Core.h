@@ -23,6 +23,11 @@ public:
 	// Free up any used memory.
 	static void Destroy();
 
+	/*
+		Draw Text onto the window assigned in the parameter.
+		This is a basic version of drawing text onto screen.
+		Text will be drawn at the center of the window.
+	*/
 	static void DrawT(const std::string text, Window* window, IDWriteTextFormat* format = nullptr);
 
 private:
