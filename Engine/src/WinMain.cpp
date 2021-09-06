@@ -58,9 +58,10 @@ int CALLBACK WinMain(
 				}
 			}
 	
-			// [InputSystem test]
+			// [InputSystem Test]
 			InputEvent event;
-			while (InputSystem::Get().PollEvent(event)) {
+			while (InputSystem::Get().PollEvent(event)) 
+			{
 				LOG_CONSOLE("key_state: ", event.key_state, " key_code: ", event.key_code);
 				if (event.key_code == VK_ESCAPE)
 				{
