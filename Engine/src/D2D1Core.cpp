@@ -38,8 +38,12 @@ D2D1Core::~D2D1Core()
 
 const bool D2D1Core::Setup(Window* window)
 {
+	D2D1_FACTORY_OPTIONS options = {};
+#ifdef _DEBUG
+	options.debugLevel = D2D1_DEBUG_LEVEL_INFORMATION;
+#endif
 	// Create a factory for D2D1, if it fails we LOG_ERROR and return false.
-	HRESULT hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_MULTI_THREADED, &m_factory);
+	HRESULT hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_MULTI_THREADED, options, &m_factory);
 	if (FAILED(hr))
 		[] {LOG_ERROR("Creating D2D1Factory failed."); return false; };
 
@@ -119,7 +123,6 @@ void D2D1Core::Destroy()
 
 void D2D1Core::DrawT(const std::string text, Window* window, IDWriteTextFormat* format)
 {
-
 	if (INSTANCE->m_renderTarget)
 	{
 		IDWriteTextFormat* current_format = INSTANCE->m_writeFormat;
@@ -143,10 +146,8 @@ void D2D1Core::DrawT(const std::string text, Window* window, IDWriteTextFormat* 
 		int nChars = MultiByteToWideChar(CP_ACP, 0, t, -1, NULL, 0);
 		pwcsName = new WCHAR[nChars];
 		MultiByteToWideChar(CP_ACP, 0, t, -1, (LPWSTR)pwcsName, nChars);
-
-		INSTANCE->m_renderTarget->BeginDraw();
+		
 		INSTANCE->m_renderTarget->SetTransform(D2D1::IdentityMatrix());
-
 		INSTANCE->m_renderTarget->DrawTextW(pwcsName,
 			(UINT32)text.length(),
 			current_format,
@@ -154,8 +155,56 @@ void D2D1Core::DrawT(const std::string text, Window* window, IDWriteTextFormat* 
 			INSTANCE->m_solidBrush
 		);
 
-		HRESULT hr = INSTANCE->m_renderTarget->EndDraw();
-
 		delete[] pwcsName;
 	}
+}
+
+void D2D1Core::DrawF(const float upper_x, const float upper_y, const float width, const float height, const Shapes shape)
+{
+	INSTANCE->m_renderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
+	D2D1_SIZE_F rtSize = INSTANCE->m_renderTarget->GetSize();
+	ID2D1PathGeometry* geometry = nullptr;
+	switch (shape)
+	{
+	case Shapes::RECTANGLE_FILLED:
+		D2D1_RECT_F rectangle_filled = D2D1::RectF(upper_x, upper_y, upper_x + width , upper_y + height);
+		INSTANCE->m_renderTarget->FillRectangle(&rectangle_filled, INSTANCE->m_solidBrush);
+		break;
+	case Shapes::RECTANGLE_OUTLINED:
+		D2D1_RECT_F rectangle_outlined = D2D1::RectF(upper_x, upper_y, upper_x + width, upper_y + height);
+		INSTANCE->m_renderTarget->DrawRectangle(&rectangle_outlined, INSTANCE->m_solidBrush);
+		break;
+	case Shapes::TRIANGLE_FILLED:
+		INSTANCE->m_factory->CreatePathGeometry(&geometry);
+		if (!geometry)
+			break;
+		ID2D1GeometrySink* sink;
+		geometry->Open(&sink);
+		D2D1_POINT_2F p1 = D2D1::Point2F(upper_x + width * 0.5f, upper_y);
+		sink->BeginFigure(p1, D2D1_FIGURE_BEGIN_FILLED);
+		D2D1_POINT_2F p2 = D2D1::Point2F(upper_x + width, upper_y + height);
+		D2D1_POINT_2F p3 = D2D1::Point2F(upper_x, upper_y + height);
+		sink->AddLine(p2);
+		sink->AddLine(p3);
+		sink->EndFigure(D2D1_FIGURE_END_CLOSED);
+		HRESULT hr = sink->Close();
+
+		sink->Release();
+		INSTANCE->m_renderTarget->DrawGeometry(geometry, INSTANCE->m_solidBrush);
+		INSTANCE->m_renderTarget->FillGeometry(geometry, INSTANCE->m_solidBrush);
+		geometry->Release();
+		break;
+	}
+}
+
+void D2D1Core::Begin()
+{
+	if(INSTANCE)
+		INSTANCE->m_renderTarget->BeginDraw();
+}
+
+void D2D1Core::Present()
+{
+	if(INSTANCE)
+		INSTANCE->m_renderTarget->EndDraw();
 }
