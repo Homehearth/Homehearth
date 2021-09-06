@@ -23,6 +23,8 @@ public:
 	// Free up any used memory.
 	static void Destroy();
 
+	static void DrawT(const std::string text, Window* window, IDWriteTextFormat* format = nullptr);
+
 private:
 	/*
 		Default objects to be used when no other parameters are specified.

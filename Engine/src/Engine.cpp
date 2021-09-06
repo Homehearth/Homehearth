@@ -68,7 +68,10 @@ void Engine::render()
 {
     while (engineRunning)
     {
+        D2D1Core::DrawT("LOL XD", this->window.get());
 
+        if(D3D11Core::Get().SwapChain() != nullptr)
+            D3D11Core::Get().SwapChain()->Present(0, 0);
     }
 }
 
