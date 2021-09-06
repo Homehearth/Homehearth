@@ -135,6 +135,9 @@ void D2D1Core::DrawT(const std::string text, Window* window, IDWriteTextFormat* 
 			static_cast<FLOAT>(rc.bottom - rc.top)
 		);
 
+		/*
+			Convert the text to WCHAR.
+		*/
 		const char* t = text.c_str();
 		const WCHAR* pwcsName;
 		int nChars = MultiByteToWideChar(CP_ACP, 0, t, -1, NULL, 0);
@@ -142,7 +145,6 @@ void D2D1Core::DrawT(const std::string text, Window* window, IDWriteTextFormat* 
 		MultiByteToWideChar(CP_ACP, 0, t, -1, (LPWSTR)pwcsName, nChars);
 
 		INSTANCE->m_renderTarget->BeginDraw();
-		//INSTANCE->backBufferView->Clear(D2D1::ColorF(D2D1::ColorF::Black));
 		INSTANCE->m_renderTarget->SetTransform(D2D1::IdentityMatrix());
 
 		INSTANCE->m_renderTarget->DrawTextW(pwcsName,
