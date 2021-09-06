@@ -79,7 +79,7 @@ void Engine::Render()
     while (engineRunning)
     {
         //TODO: vsync
-        D2D1Core::DrawT("LOL XD", this->window.get());
+        D2D1Core::DrawT("LOL XD", m_window.get());
 
         if (m_currentScene)
         {
