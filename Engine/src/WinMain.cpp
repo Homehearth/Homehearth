@@ -7,6 +7,7 @@ void OnExit()
 {
 	T_DESTROY();
 	resource::ResourceManager::Destroy();
+	D2D1Core::Destroy();
 }
 
 
