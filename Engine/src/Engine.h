@@ -3,6 +3,7 @@
 #include "Window.h"
 #include "Scene.h"
 #include "Renderer.h"
+#include "Client.h"
 
 class Engine
 {
@@ -22,9 +23,13 @@ public:
 
 	void shutdown();
 
+	static bool engineRunning;
 private:
 	std::unique_ptr<Window> window;
 	std::unique_ptr<Renderer> renderer;
+
+	//CLIENT
+	std::unique_ptr<Client> m_client;
 	
 	std::unordered_map<std::string, Scene> m_scenes;
 	Scene* m_currentScene;
