@@ -121,7 +121,7 @@ namespace network
 			{
 				continue;
 			}
-			if (connect(m_socket, p->ai_addr, p->ai_addrlen) != 0)
+			if (connect(m_socket, p->ai_addr, static_cast<int>(p->ai_addrlen)) != 0)
 			{
 				std::cerr << "Connect error code: " << WSAGetLastError() << std::endl;
 				m_socket = INVALID_SOCKET;

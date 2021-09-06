@@ -5,8 +5,6 @@
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #include <winsock2.h>
-#include <ws2tcpip.h>
-#pragma comment(lib, "Ws2_32.lib")
 #include <windowsx.h>
 #pragma comment(lib, "winmm.lib")
 #endif
@@ -62,3 +60,4 @@ using Microsoft::WRL::ComPtr;
 #include "ResourceManager.h"
 #include "InputSystem.h"
 #include "D3D11Core.h"
+#include "D2D1Core.h"

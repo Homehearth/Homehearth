@@ -4,6 +4,7 @@
 #include "Scene.h"
 #include "Renderer.h"
 #include "EventTypes.h"
+#include "Client.h"
 
 class Engine
 {
@@ -31,9 +32,13 @@ public:
 
 	bool IsRunning() const;
 
+	static bool engineRunning;
 private:
 	std::unique_ptr<Window> m_window;
 	std::unique_ptr<Renderer> m_renderer;
+	
+	//CLIENT
+	std::unique_ptr<Client> m_client;
 	
 	std::unordered_map<std::string, Scene> m_scenes;
 	Scene* m_currentScene;
