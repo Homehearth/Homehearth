@@ -38,8 +38,8 @@ LRESULT CALLBACK WinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		uMsg == WM_MOUSEWHEEL ||
 		uMsg == WM_MOUSEMOVE)
 	{
-		// Add the event to the eventQueue.
-		InputSystem::Get().registerEvent(uMsg, wParam);
+		// Add the event to the m_eventQueue.
+		InputSystem::Get().RegisterEvent(uMsg, wParam);
 	}
 
 	return DefWindowProc(hwnd, uMsg, wParam, lParam);
@@ -47,19 +47,19 @@ LRESULT CALLBACK WinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 
 Window::Window()
-	: hWnd(nullptr)
-	, clientRect({})
-	, windowDesc({})
+	: m_hWnd(nullptr)
+	, m_clientRect({})
+	, m_windowDesc({})
 {
 }
 
 Window::~Window()
 {
-	DestroyWindow(this->hWnd);
+	DestroyWindow(this->m_hWnd);
 	LOG_INFO("Window has been destroyed.");
 }
 
-bool Window::initialize(const Desc& desc)
+bool Window::Initialize(const Desc& desc)
 {
 	// Define window style.
 	WNDCLASSEX wcex;
@@ -90,51 +90,51 @@ bool Window::initialize(const Desc& desc)
 	GetWindowRect(hwndDesktop, &desktop);
 
 	// Create the window.
-	this->hWnd = CreateWindowEx(0, WINDOW_CLASS, desc.title,
+	this->m_hWnd = CreateWindowEx(0, WINDOW_CLASS, desc.title,
 		WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE,
 		((desktop.right / 2) - (desc.width / 2)),
 		((desktop.bottom / 2) - (desc.height / 2)),
 		desc.width, desc.height,
 		nullptr, nullptr, desc.hInstance, nullptr);
 
-	assert(this->hWnd && "Window wasn't successfully created.");
+	assert(this->m_hWnd && "Window wasn't successfully created.");
 	
-	UpdateWindow(this->hWnd);
-	ShowWindow(this->hWnd, desc.nShowCmd);
+	UpdateWindow(this->m_hWnd);
+	ShowWindow(this->m_hWnd, desc.nShowCmd);
 
-	this->windowDesc = desc;
+	this->m_windowDesc = desc;
 
 	return true;
 }
 
-HWND Window::getHWnd() const
+HWND Window::GetHWnd() const
 {
-	return this->hWnd;
+	return this->m_hWnd;
 }
 
-RECT Window::getClientRect() const
+RECT Window::GetClientRect() const
 {
-	return this->clientRect;
+	return this->m_clientRect;
 }
 
-unsigned int Window::getWidth() const
+unsigned int Window::GetWidth() const
 {
-	return this->windowDesc.width;
+	return this->m_windowDesc.width;
 }
 
-unsigned int Window::getHeight() const
+unsigned int Window::GetHeight() const
 {
-	return this->windowDesc.height;
+	return this->m_windowDesc.height;
 }
 
-bool Window::isFullScreen() const
+bool Window::IsFullScreen() const
 {
-	return this->windowDesc.fullScreen;
+	return this->m_windowDesc.fullScreen;
 }
 
-void Window::setFullScreen(bool fullscreen)
+void Window::SetFullScreen(bool fullscreen)
 {
-	assert(this->hWnd && "There's no window to resize.");
+	assert(this->m_hWnd && "There's no window to resize.");
 
 	// TODO: previous code caused issues.
 	//D3D11Core::Get().SwapChain()->SetFullscreenState(true, nullptr);

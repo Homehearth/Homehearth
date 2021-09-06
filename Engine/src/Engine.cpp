@@ -2,43 +2,43 @@
 #include "Engine.h"
 #include "multi_thread_manager.h"
 
-bool Engine::engineRunning = false;
+bool Engine::s_engineRunning = false;
 
 Engine::Engine()
-	: window(std::make_unique<Window>())
+	: m_window(std::make_unique<Window>())
 	, m_scenes({0})
 	, m_currentScene(nullptr)
 	, m_vSync(false)
 {
 }
 
-void Engine::setup(const HINSTANCE& hInstance) {
+void Engine::Setup(const HINSTANCE& hInstance) {
 #ifdef _DEBUG
     RedirectIoToConsole();
 #endif
 
-	// Window setup:
+	// Window Setup:
 	Window::Desc config;
 	config.hInstance = hInstance;
 	config.title = L"Engine Window";
-	if (!window->initialize(config)) {
-		LOG_ERROR("Could not initialize window.");
+	if (!m_window->Initialize(config)) {
+		LOG_ERROR("Could not Initialize m_window.");
 	}
 	
-    // DirectX setup:
-    D3D11Core::Get().initialize(this->window.get());
-    D2D1Core::Initialize(this->window.get());
+    // DirectX Setup:
+    D3D11Core::Get().Initialize(this->m_window.get());
+    D2D1Core::Initialize(this->m_window.get());
 
-    // Thread should be launched after engineRunning is set to true and D3D11 is initalized.
-    engineRunning = true;
+    // Thread should be launched after s_engineRunning is set to true and D3D11 is initalized.
+    s_engineRunning = true;
 
     m_client = std::make_unique<Client>();
 
     if (thread::IsThreadActive())
-        T_CJOB(Engine, render);
+        T_CJOB(Engine, Render);
 }
 
-void Engine::update(float dt)
+void Engine::Update(float dt)
 {
     // Update the camera transform based on interactive inputs.
     //updateCamera(dt);
@@ -64,16 +64,16 @@ void Engine::update(float dt)
     //swapBuffers();	
 }
 
-void Engine::render() 
+void Engine::Render() 
 {
-    while (engineRunning)
+    while (s_engineRunning)
     {
 
     }
 }
 
-void Engine::shutdown() {
-    engineRunning = false;
+void Engine::Shutdown() {
+    s_engineRunning = false;
 }
 
 void Engine::RedirectIoToConsole()

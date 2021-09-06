@@ -28,7 +28,7 @@ Client::~Client()
 
 void Client::Update()
 {
-	while (Engine::engineRunning)
+	while (Engine::s_engineRunning)
 	{
 		using namespace network;
 

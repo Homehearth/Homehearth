@@ -71,8 +71,8 @@ bool Renderer::createDepthStencilTexture()
     ZeroMemory(&depthStencilBufferDesc, sizeof(D3D11_TEXTURE2D_DESC));
 
     // Set up the description of the depth buffer.
-    depthStencilBufferDesc.Width = this->pWindow->getWidth();
-    depthStencilBufferDesc.Height = this->pWindow->getHeight();
+    depthStencilBufferDesc.Width = this->pWindow->GetWidth();
+    depthStencilBufferDesc.Height = this->pWindow->GetHeight();
     depthStencilBufferDesc.MipLevels = 1;
     depthStencilBufferDesc.ArraySize = 1;
     depthStencilBufferDesc.SampleDesc.Count = 1;
@@ -239,15 +239,15 @@ void Renderer::setViewport()
 {
     // Initialize the viewport to occupy the entire client area.
     RECT clientRect;
-    GetClientRect(this->pWindow->getHWnd(), &clientRect);
+    GetClientRect(this->pWindow->GetHWnd(), &clientRect);
     const LONG clientWidth = clientRect.right - clientRect.left;
     const LONG clientHeight = clientRect.bottom - clientRect.top;
 
     ZeroMemory(&viewport, sizeof(D3D11_VIEWPORT));
 
     // Setup the viewport for rendering.
-    viewport.Width = static_cast<FLOAT>(this->pWindow->getWidth());
-    viewport.Height = static_cast<FLOAT>(this->pWindow->getHeight());
+    viewport.Width = static_cast<FLOAT>(this->pWindow->GetWidth());
+    viewport.Height = static_cast<FLOAT>(this->pWindow->GetHeight());
     viewport.TopLeftX = 0.f;
     viewport.TopLeftY = 0.f;
 
