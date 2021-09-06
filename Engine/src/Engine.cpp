@@ -27,6 +27,7 @@ void Engine::setup(const HINSTANCE& hInstance) {
 	
     // DirectX setup:
     D3D11Core::Get().initialize(this->window.get());
+    D2D1Core::Initialize(this->window.get());
 
     // Thread should be launched after engineRunning is set to true and D3D11 is initalized.
     engineRunning = true;
