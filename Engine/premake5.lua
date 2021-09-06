@@ -38,7 +38,7 @@ project "Engine"
     -- Else: specify the path relative to the this premake file.
     vpaths {
         ["src/Core"] = { "**EnginePCH.*" },
-            ["src/Core/Engine"] = { "**Engine.*", "**Scene.*" },
+            ["src/Core/Engine"] = { "**Engine.*", "**Scene.*", "**EventTypes.*" },
             ["src/Core/Input"] = { "**InputSystem.*" },
             ["src/Core/Window"] = { "**Window.*" },
             ["src/Core/Utility"] = { "**Logger.*", "**multi_thread_manager.*" },
@@ -65,7 +65,8 @@ project "Engine"
 
     links{
         "d3d11",
-        "d2d1"
+        "d2d1",
+		"dwrite"
     }
 
 

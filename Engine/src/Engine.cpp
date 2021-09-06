@@ -36,6 +36,10 @@ void Engine::Setup(const HINSTANCE& hInstance) {
 
     if (thread::IsThreadActive())
         T_CJOB(Engine, Render);
+
+    // register Engine OnEvent function so Scene can talk to Engine
+    Scene::GetEventDispatcher().sink<EngineEvent>().connect<&Engine::OnEvent>(this);
+
 }
 
 void Engine::Update(float dt)
@@ -46,7 +50,13 @@ void Engine::Update(float dt)
     // Update positions, orientations and any other
     // relevant visual state of any dynamic elements
     // in the scene.
-    //updateSceneElements(dt);
+    
+    if (m_currentScene)
+    {
+        m_currentScene->Update(dt);
+    }
+    // Handle events enqueued by the scene
+    Scene::GetEventDispatcher().update(); 
     
     // for each entity:
 	//	entity.Update(dt);
@@ -68,12 +78,52 @@ void Engine::Render()
 {
     while (s_engineRunning)
     {
+        //TODO: vsync
+        D2D1Core::DrawT("LOL XD", m_window.get());
 
+        if (m_currentScene)
+        {
+            m_currentScene->Render();
+        }
+        if(D3D11Core::Get().SwapChain() != nullptr)
+            D3D11Core::Get().SwapChain()->Present(0, 0);
     }
 }
 
-void Engine::Shutdown() {
-    s_engineRunning = false;
+void Engine::Shutdown() 
+{
+    engineRunning = false;
+}
+
+Scene& Engine::GetScene(const std::string& name) 
+{
+    return m_scenes[name];
+}
+
+void Engine::SetScene(const std::string& name) 
+{
+    SetScene(m_scenes.at(name));
+}
+
+void Engine::SetScene(Scene& scene)
+{
+    m_currentScene = &scene;
+}
+
+void Engine::OnEvent(EngineEvent& event) {
+    switch (event.type)
+    {
+    case EngineEvent::Type::SHUTDOWN:
+        engineRunning = false;
+        break;
+    default:
+        break;
+    }
+}
+
+bool Engine::IsRunning() const 
+{
+    return engineRunning;
 }
 
 void Engine::RedirectIoToConsole()
