@@ -1,6 +1,7 @@
 #include "NetServerPCH.h"
 
 #include "Window.h"
+#include "Server.h"
 void RedirectIoToConsole();
 
 
@@ -33,6 +34,8 @@ int CALLBACK WinMain(
 	
 	Window window;
 	window.Initialize();
+	T_INIT(T_REC, thread::ThreadType::POOL_FIFO);
+	Server server;
 	bool isRunning = true;
 	
 	MSG msg = { nullptr };
@@ -49,7 +52,7 @@ int CALLBACK WinMain(
 		InputEvent event;
 		while (InputSystem::Get().PollEvent(event)) 
 		{
-			LOG_CONSOLE("key_state: ", event.key_state, " key_code: ", event.key_code);
+			//LOG_CONSOLE("key_state: ", event.key_state, " key_code: ", event.key_code);
 			if (event.key_code == VK_ESCAPE)
 			{
 				isRunning = false;
@@ -57,7 +60,7 @@ int CALLBACK WinMain(
 		}
 	}
 
-	
+	T_DESTROY();
 	return 0;
 }
 

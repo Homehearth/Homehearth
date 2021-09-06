@@ -55,7 +55,7 @@ const bool D2D1Core::Setup(Window* window)
 	// Get the surface from the backbuffer from D3D11.
 	D3D11Core::Get().SwapChain()->GetBuffer(0, IID_PPV_ARGS(&m_surface));
 
-	FLOAT dpi = GetDpiForWindow(window->GetHWnd());
+	FLOAT dpi = static_cast<FLOAT>(GetDpiForWindow(window->GetHWnd()));
 	D2D1_RENDER_TARGET_PROPERTIES props =
 		D2D1::RenderTargetProperties(
 			D2D1_RENDER_TARGET_TYPE_DEFAULT,

@@ -6,9 +6,10 @@
 #include <Windows.h>
 #include <winsock2.h>
 #include <windowsx.h>
+#include <WS2tcpip.h>
+#pragma comment(lib, "WS2_32.Lib")
 #pragma comment(lib, "winmm.lib")
 #endif
-
 
 // Standard
 #include <string>
@@ -32,4 +33,7 @@
 // Custom Global includes (Singletons)
 #include "Logger.h"
 #include "InputSystem.h"
+#include "multi_thread_manager.h"
 
+// Networking
+#include "network.h"
