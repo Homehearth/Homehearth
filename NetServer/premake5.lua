@@ -1,4 +1,4 @@
-project "Engine"
+project "NetServer"
     kind "WindowedApp"
     language "C++"
     cppdialect "C++17"
@@ -7,10 +7,10 @@ project "Engine"
  
     
     -- Define the location of pre-compiled header.
-    pchheader "EnginePCH.h"
-	pchsource "src/EnginePCH.cpp"
+    pchheader "NetServerPCH.h"
+	pchsource "src/NetServerPCH.cpp"
 
-
+    
     -- Define the location(s) of files. 
     -- Note: specify the path relative to the Premake file.
     files {
@@ -24,12 +24,7 @@ project "Engine"
     -- Note: specify the path relative to the Premake file.
     includedirs {
 		"src",
-        "../ThirdParty/DirectXTK/include/",
-        "../ThirdParty/DirectXTK/lib/",
-        "../ThirdParty/imGUI/",
-        "../ThirdParty/stb_image/",
 		 "../ThirdParty/networking/",
-         "../ThirdParty/entt/"
     }
 
 
@@ -37,36 +32,12 @@ project "Engine"
     -- Note: create your files in 'src' folder on disk, then add them to a filter below (**filename).
     -- Else: specify the path relative to the this premake file.
     vpaths {
-        ["src/Core"] = { "**EnginePCH.*" },
-            ["src/Core/Engine"] = { "**Engine.*", "**Scene.*", "**EventTypes.*" },
-            ["src/Core/Input"] = { "**InputSystem.*" },
-            ["src/Core/Window"] = { "**Window.*" },
-            ["src/Core/Utility"] = { "**Logger.*", "**multi_thread_manager.*" },
-
-        ["src/Graphics"] = { "**Buffers.*", "**NYI.*" },
-            ["src/Graphics/Renderer"] = {"**Renderer.*"},
-            ["src/Graphics/D3D11"] = { "**D3D11Core.*" },
-			["src/Graphics/D2D1"] = { "**D2D1Core.*" },
-            ["src/Graphics/Window"] = { "**Window.*" },
-			
-			["src/Network"] = { "**Client.*" },
-
-        ["src/Resources"] = { "**ResourceManager.*", "**GResource.*", "**RTexture.*" },
-            ["src/Resources/Shaders"] = { "**.hhlsl", "**.hlsli" },
-
-        ["src/Audio"] = {  },
-        ["src/Physics"] = {  },
-        ["src/Network"] = { "**Client.*" },
-        ["src/Animation"] = {  },
-        ["src/ESC"] = {  }, 
-        ["src/AI"] = {  }     
+        ["src/Core"] = { "**Window.*", "**Logger.*", "**NetServer.*", "**InputSystem.*" }   
     }
 
 
     links{
-        "d3d11",
-        "d2d1",
-		"dwrite"
+
     }
 
 
@@ -84,8 +55,6 @@ project "Engine"
         runtime "Debug"
         defines{"_DEBUG", "_UNICODE", "UNICODE"}
         symbols "on"
-        libdirs{"../ThirdParty/DirectXTK/lib/Debug_lib/"}
-        links{"DirectXTK", "DirectXTKAudioWin7"}
 
 
     -- Define a macro/symbol which applies only to release builds.
@@ -95,5 +64,3 @@ project "Engine"
         defines{"NDEBUG", "_UNICODE", "UNICODE"}
         symbols "on"
         optimize "on"
-        libdirs{"../ThirdParty/DirectXTK/lib/Release_lib/"}
-        links{"DirectXTK", "DirectXTKAudioWin7"}

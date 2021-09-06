@@ -19,7 +19,7 @@ private:
 		ctime[strlen(ctime) - 1] = '\0';
 
 		std::fstream outfile;
-		const std::string file = "engine.log";
+		const std::string file = "server.log";
 		outfile.open(file, std::ios_base::app);
 		if (outfile.is_open()) {
 			outfile << "[" << ctime << "]  " << logText + '\n';
@@ -34,7 +34,7 @@ private:
 	static void LogSeperator()
 	{
 		std::fstream outfile;
-		const std::string file = "engine.log";
+		const std::string file = "server.log";
 		outfile.open(file, std::ios_base::app);
 		if (outfile.is_open()) {
 			outfile << "\n";

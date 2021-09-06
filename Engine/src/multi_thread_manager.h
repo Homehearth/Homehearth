@@ -15,7 +15,7 @@ namespace thread
 					running in the background and waiting for commands.
 
 					------Pooling------
-					To start initialize pooling simple call upon MultiThreader::Init(x, y);
+					To start Initialize pooling simple call upon MultiThreader::Init(x, y);
 					x - the amount of threads you want in the pool, this is recommended
 					to use the "availableCores" integer since it scans the computer and
 					returns the amount of available threads - 1 since the main thread
@@ -115,7 +115,7 @@ namespace thread
 		static void Destroy();
 
 		/*
-			This will initialize a thread with function. An integer is needed as parameter to track index number.
+			This will Initialize a thread with function. An integer is needed as parameter to track index number.
 			If the function is successful then it will return the index of the chosen thread. If it is unsuccessful it will return -1.
 		*/
 		static int Start(void(*function)(int));
@@ -155,7 +155,7 @@ namespace thread
 		static void InsertJob(const Lambda&... L);
 		*/
 
-		// Used for Threads to check if multithreader is currently active. If not all pooled threads will shutdown.
+		// Used for Threads to check if multithreader is currently active. If not all pooled threads will Shutdown.
 		static const bool IsActive();
 
 		static const int GetAmountOfJobs();
