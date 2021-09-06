@@ -92,7 +92,7 @@ void Engine::Render()
 
 void Engine::Shutdown() 
 {
-    engineRunning = false;
+    s_engineRunning = false;
 }
 
 Scene& Engine::GetScene(const std::string& name) 
@@ -114,7 +114,7 @@ void Engine::OnEvent(EngineEvent& event) {
     switch (event.type)
     {
     case EngineEvent::Type::SHUTDOWN:
-        engineRunning = false;
+        s_engineRunning = false;
         break;
     default:
         break;
@@ -123,7 +123,7 @@ void Engine::OnEvent(EngineEvent& event) {
 
 bool Engine::IsRunning() const 
 {
-    return engineRunning;
+    return s_engineRunning;
 }
 
 void Engine::RedirectIoToConsole()

@@ -46,18 +46,7 @@ public:
 
 	bool IsRunning() const;
 
-	static bool engineRunning;
-private:
-	std::unique_ptr<Window> m_window;
-	std::unique_ptr<Renderer> m_renderer;
-	
-	//CLIENT
-	std::unique_ptr<Client> m_client;
-	
-	std::unordered_map<std::string, Scene> m_scenes;
-	Scene* m_currentScene;
-	bool m_vSync;
+	static bool s_engineRunning;
 
-	void RedirectIoToConsole();
 };
 

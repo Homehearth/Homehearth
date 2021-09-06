@@ -51,7 +51,7 @@ const bool D2D1Core::Setup(Window* window)
 	// Get the surface from the backbuffer from D3D11.
 	D3D11Core::Get().SwapChain()->GetBuffer(0, IID_PPV_ARGS(&m_surface));
 
-	FLOAT dpi = GetDpiForWindow(window->getHWnd());
+	FLOAT dpi = GetDpiForWindow(window->GetHWnd());
 	D2D1_RENDER_TARGET_PROPERTIES props =
 		D2D1::RenderTargetProperties(
 			D2D1_RENDER_TARGET_TYPE_DEFAULT,
@@ -67,11 +67,11 @@ const bool D2D1Core::Setup(Window* window)
 
 	// Setup a HwndRender target with default properties.
 	RECT rc;
-	GetClientRect(window->getHWnd(), &rc);
+	GetClientRect(window->GetHWnd(), &rc);
 	D2D1_SIZE_U size = D2D1::SizeU(rc.right - rc.left, rc.bottom - rc.top);
 	hr = m_factory->CreateHwndRenderTarget(
 		D2D1::RenderTargetProperties(),
-		D2D1::HwndRenderTargetProperties(window->getHWnd(),
+		D2D1::HwndRenderTargetProperties(window->GetHWnd(),
 			D2D1::SizeU(rc.right - rc.left, rc.bottom - rc.top)),
 		&m_hwndTarget);
 	if (FAILED(hr))
@@ -127,7 +127,7 @@ void D2D1Core::DrawT(const std::string text, Window* window, IDWriteTextFormat* 
 			current_format = format;
 
 		RECT rc;
-		GetClientRect(window->getHWnd(), &rc);
+		GetClientRect(window->GetHWnd(), &rc);
 		D2D1_RECT_F layoutRect = D2D1::RectF(
 			static_cast<FLOAT>(rc.left),
 			static_cast<FLOAT>(rc.top),
