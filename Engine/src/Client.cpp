@@ -7,7 +7,7 @@ Client::Client()
 	if (Connect("127.0.0.1", 4950))
 	{
 #ifdef _DEBUG
-		std::cout << "Connected to the server!" << std::endl;
+		std::cout << "Connected to server!" << std::endl;
 #endif
 		if (thread::IsThreadActive())
 		{
@@ -17,7 +17,7 @@ Client::Client()
 	else
 	{
 #ifdef _DEBUG
-		std::cerr << "Failed to connect!" << std::endl;
+		std::cout << "The client could not connect to the server!" << std::endl;
 #endif
 	}
 }
@@ -28,7 +28,7 @@ Client::~Client()
 
 void Client::Update()
 {
-	while (Engine::engineRunning)
+	while (Engine::s_engineRunning)
 	{
 		using namespace network;
 
