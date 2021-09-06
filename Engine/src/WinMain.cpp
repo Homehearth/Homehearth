@@ -47,7 +47,7 @@ int CALLBACK WinMain(
 			// [InputSystem test]
 			InputEvent event;
 			while (InputSystem::Get().pollEvent(event)) {
-				std::cout << "key_state: " << event.key_state << " key_code: " << event.key_code << std::endl;
+				//std::cout << "key_state: " << event.key_state << " key_code: " << event.key_code << std::endl;
 				if (event.key_code == VK_ESCAPE)
 					isRunning = false;
 			}

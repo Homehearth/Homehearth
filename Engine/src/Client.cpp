@@ -17,7 +17,7 @@ Client::Client()
 	else
 	{
 #ifdef _DEBUG
-		std::cerr << "The client could not connect to the server!" << std::endl;
+		std::cout << "The client could not connect to the server!" << std::endl;
 #endif
 	}
 }
