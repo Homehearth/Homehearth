@@ -2,7 +2,7 @@
 #include "Engine.h"
 #include "multi_thread_manager.h"
 
-static bool engineRunning = false;
+bool Engine::engineRunning = false;
 
 Engine::Engine()
 	: window(std::make_unique<Window>())
@@ -30,6 +30,9 @@ void Engine::setup(const HINSTANCE& hInstance) {
 
     // Thread should be launched after engineRunning is set to true and D3D11 is initalized.
     engineRunning = true;
+
+    m_client = std::make_unique<Client>();
+
     if (thread::IsThreadActive())
         T_CJOB(Engine, render);
 }

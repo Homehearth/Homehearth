@@ -46,6 +46,8 @@ project "Engine"
             ["src/Graphics/Renderer"] = {"**Renderer.*"},
             ["src/Graphics/D3D11"] = { "**D3D11Core.*" },
             ["src/Graphics/Window"] = { "**Window.*" },
+			
+			["src/Network"] = { "**Client.*" },
 
         ["src/Resources"] = { "**ResourceManager.*", "**GResource.*", "**RTexture.*" },
             ["src/Resources/Shaders"] = { "**.hhlsl", "**.hlsli" },
