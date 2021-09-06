@@ -10,7 +10,7 @@ Renderer::Renderer()
 
 void Renderer::initialize(Window* pWindow)
 {
-    assert(isInitialized || "D3D11Core is already initialized.");
+    //assert(isInitialized || "D3D11Core is already initialized.");
     if (this->pWindow == nullptr)
         this->pWindow = pWindow;
 	

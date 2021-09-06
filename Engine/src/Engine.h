@@ -47,6 +47,6 @@ public:
 	bool IsRunning() const;
 
 	static bool s_engineRunning;
-
+	static bool s_safeExit;
 };
 
