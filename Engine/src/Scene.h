@@ -10,7 +10,7 @@ typedef std::function<void (entt::registry&)>		SystemRenderFunction;
 class Scene
 {
 private:
-	static entt::dispatcher m_staticEventDispatcher;
+	static entt::dispatcher s_eventDispatcher;
 	// ecs stuff
 	entt::registry m_ecsRegistry;
 	
@@ -20,10 +20,10 @@ private:
 	
 public:
 
-	static entt::dispatcher& GetEventDispatcher() { return m_staticEventDispatcher; }
+	static entt::dispatcher& GetEventDispatcher() { return s_eventDispatcher; }
 
 
-	Scene() = default;
+	Scene();
 	virtual ~Scene() = default;
 	Scene(const Scene&) = delete;
 	void operator=(const Scene&) = delete;
@@ -47,8 +47,6 @@ public:
 	template<typename T>
 	void RemoveComponent(entt::entity entity);
 
-
-
 	// Adds a function to be called when the scene is updated
 	void AddSystem(const SystemUpdateFunction& updateFunction);
 
@@ -60,6 +58,8 @@ public:
 
 	// Draw all renderSystems
 	void Render();
+
+	void OnInput(const InputEvent& e);
 
 };
 

@@ -6,9 +6,14 @@
 #include "EventTypes.h"
 #include "Client.h"
 
+#include <time.h>
+
 class Engine
 {
 private:
+	static bool s_engineRunning;
+	static bool s_safeExit;
+
 	std::unique_ptr<Window> m_window;
 	std::unique_ptr<Renderer> m_renderer;
 
@@ -22,6 +27,14 @@ private:
 	
 	void RedirectIoToConsole();
 
+	// job for rendering thread
+	void RenderThread();
+
+	// updates the current scene
+	void Update(float dt);
+	// renders one frame
+	void Render();
+
 public:
 	Engine();
 	Engine(const Window& other) = delete;
@@ -32,9 +45,7 @@ public:
 
 	void Setup(const HINSTANCE &hInstance);
 
-	void Update(float dt);
-
-	void Render();	
+	void Start();
 
 	void Shutdown();
 
@@ -44,9 +55,7 @@ public:
 
 	void OnEvent(EngineEvent& event);
 
-	bool IsRunning() const;
+	static bool IsRunning();
 
-	static bool s_engineRunning;
-	static bool s_safeExit;
 };
 
