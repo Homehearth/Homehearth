@@ -1,5 +1,4 @@
 #pragma once
-#include "network.h"
 
 class Client :public network::client_interface<network::MessageType>
 {

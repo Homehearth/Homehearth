@@ -7,6 +7,9 @@ namespace Buffers
 
 	class ConstantBuffer
 	{
+	private:
+		ComPtr<ID3D11Buffer> constantBuffer;
+	
 	public:
 		ConstantBuffer() = default;
 		ConstantBuffer(const ConstantBuffer& other) = delete;
@@ -19,12 +22,14 @@ namespace Buffers
 
 		ID3D11Buffer* const* GetAddressOf() const;
 		ID3D11Buffer* Get() const;
-	private:
-		ComPtr<ID3D11Buffer> constantBuffer;
 	};
 
 	class VertexBuffer
 	{
+	private:
+		ComPtr<ID3D11Buffer> vertexBuffer;
+		size_t vertexCount;
+	
 	public:
 		VertexBuffer();
 		VertexBuffer(const VertexBuffer& other) = delete;
@@ -38,13 +43,14 @@ namespace Buffers
 		size_t getVertexCount() const;
 		ID3D11Buffer* const* GetAddressOf() const;
 		ID3D11Buffer* Get() const;
-	private:
-		ComPtr<ID3D11Buffer> vertexBuffer;
-		size_t vertexCount;
 	};
 
 	class IndexBuffer
 	{
+	private:
+		ComPtr<ID3D11Buffer> indexBuffer;
+		size_t indexCount;
+	
 	public:
 		IndexBuffer();
 		IndexBuffer(const IndexBuffer& other) = delete;
@@ -58,9 +64,7 @@ namespace Buffers
 		size_t getIndexCount() const;
 		ID3D11Buffer* const* GetAddressOf() const;
 		ID3D11Buffer* Get() const;
-	private:
-		ComPtr<ID3D11Buffer> indexBuffer;
-		size_t indexCount;
+		
 	};
 
-} // end of namespace.
+} // End of namespace.

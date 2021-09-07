@@ -6,9 +6,7 @@
 #include <memory>
 #include <string>
 #include <chrono>
-
 #include <WS2tcpip.h>
-#pragma comment(lib, "WS2_32.Lib")
 
 #define IPV6_ADDRSTRLEN 46
 #define BUFFER_SIZE 4096
@@ -51,14 +49,6 @@ namespace network
 		}
 	}
 
-	enum class MessageType : uint32_t
-	{
-		Unknown,
-		Disconnected,
-		Connected,
-		PingServer
-	};
-
 	static uint64_t scrambleData(uint64_t input)
 	{
 		uint64_t output = input ^ 0xDEADBEEFA0FAAAF;
@@ -66,4 +56,12 @@ namespace network
 
 		return output;
 	}
+
+	enum class MessageType : uint32_t
+	{
+		Unknown,
+		Disconnected,
+		Connected,
+		PingServer
+	};
 }

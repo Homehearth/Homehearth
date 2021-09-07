@@ -8,6 +8,20 @@
 
 class Engine
 {
+private:
+	std::unique_ptr<Window> m_window;
+	std::unique_ptr<Renderer> m_renderer;
+
+	//CLIENT
+	std::unique_ptr<Client> m_client;
+	
+	std::unordered_map<std::string, Scene> m_scenes;
+	Scene* m_currentScene;
+	bool m_vSync;
+
+	
+	void RedirectIoToConsole();
+
 public:
 	Engine();
 	Engine(const Window& other) = delete;
@@ -32,18 +46,7 @@ public:
 
 	bool IsRunning() const;
 
-	static bool engineRunning;
-private:
-	std::unique_ptr<Window> m_window;
-	std::unique_ptr<Renderer> m_renderer;
-	
-	//CLIENT
-	std::unique_ptr<Client> m_client;
-	
-	std::unordered_map<std::string, Scene> m_scenes;
-	Scene* m_currentScene;
-	bool m_vSync;
-
-	void RedirectIoToConsole();
+	static bool s_engineRunning;
+	static bool s_safeExit;
 };
 

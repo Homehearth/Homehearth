@@ -2,37 +2,37 @@
 #include "D3D11Core.h"
 
 D3D11Core::D3D11Core()
-	: pWindow(nullptr)
-    , isInitialized(false)
+	: m_window(nullptr)
+    , m_isInitialized(false)
 {
 }
 
-void D3D11Core::initialize(Window* pWindow)
+void D3D11Core::Initialize(Window* pWindow)
 {
-    assert(isInitialized || "D3D11Core is already initialized.");
-    if (this->pWindow == nullptr)
-        this->pWindow = pWindow;
+    assert(m_isInitialized || "D3D11Core is already initialized.");
+    if (this->m_window == nullptr)
+        this->m_window = pWindow;
 
     // Initialize DeviceAndSwapChain.
     if (!this->createDeviceAndSwapChain())
-        LOG_ERROR("failed creating device and swapchain.");
+        LOG_ERROR("failed creating m_device and swapchain.");
     else
-		this->isInitialized = true;
+		this->m_isInitialized = true;
 }
 
 ID3D11Device* D3D11Core::Device() const
 {
-    return this->device.Get();
+    return this->m_device.Get();
 }
 
 ID3D11DeviceContext* D3D11Core::DeviceContext() const
 {
-    return this->deviceContext.Get();
+    return this->m_deviceContext.Get();
 }
 
 IDXGISwapChain* D3D11Core::SwapChain() const
 {
-    return this->swapChain.Get();
+    return this->m_swapChain.Get();
 }
 
 bool D3D11Core::createDeviceAndSwapChain()
@@ -42,14 +42,14 @@ bool D3D11Core::createDeviceAndSwapChain()
     ZeroMemory(&swapChainDesc, sizeof(DXGI_SWAP_CHAIN_DESC));
 
     // Set the handle for the window to render to.
-    swapChainDesc.OutputWindow = pWindow->getHWnd();
+    swapChainDesc.OutputWindow = m_window->GetHWnd();
 
     // Set to windowed mode.
     swapChainDesc.Windowed = TRUE;
     
     // Set the client dimensions of the back buffer.
-    swapChainDesc.BufferDesc.Width = this->pWindow->getWidth();
-    swapChainDesc.BufferDesc.Height = this->pWindow->getHeight();
+    swapChainDesc.BufferDesc.Width = this->m_window->GetWidth();
+    swapChainDesc.BufferDesc.Height = this->m_window->GetHeight();
 
     // Set to a duo back buffer.
     swapChainDesc.BufferCount = 2;
@@ -78,7 +78,7 @@ bool D3D11Core::createDeviceAndSwapChain()
     // Set this flag to enable an application to switch modes by calling IDXGISwapChain::ResizeTarget.
     swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 
-    // Creates a device that supports the debug layer. 
+    // Creates a m_device that supports the debug layer. 
     UINT flags = D3D11_CREATE_DEVICE_SINGLETHREADED | D3D11_CREATE_DEVICE_BGRA_SUPPORT;
 	
 #ifdef _DEBUG
@@ -91,9 +91,9 @@ bool D3D11Core::createDeviceAndSwapChain()
         D3D_FEATURE_LEVEL_11_0
     };
 
-    // Create the device, swap chain and device context.
+    // Create the m_device, swap chain and m_device context.
     HRESULT hr = D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, flags, featureLevels, _countof(featureLevels), D3D11_SDK_VERSION,
-        &swapChainDesc, this->swapChain.GetAddressOf(), this->device.GetAddressOf(), nullptr, this->deviceContext.GetAddressOf());
+        &swapChainDesc, this->m_swapChain.GetAddressOf(), this->m_device.GetAddressOf(), nullptr, this->m_deviceContext.GetAddressOf());
 
     return !FAILED(hr);
 }

@@ -5,12 +5,11 @@
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #include <winsock2.h>
+#include <windowsx.h>
 #include <WS2tcpip.h>
 #pragma comment(lib, "WS2_32.Lib")
-#include <windowsx.h>
 #pragma comment(lib, "winmm.lib")
 #endif
-
 
 // Standard
 #include <string>
@@ -31,38 +30,10 @@
 #include <queue>
 
 
-// DirectX
-#include <d3d11.h>
-#include <d3dcompiler.h>
-#include <DirectXMath.h>
-#include <DirectXColors.h>
-#include <wrl/client.h>
-#include <dwrite.h>
-#include <dwrite_3.h>
-#include <d2d1.h>
-#include <ctime>
-using Microsoft::WRL::ComPtr;
-
-
-// DirectXTK
-#include "SimpleMath.h"
-#include "BufferHelpers.h"
-#include <Audio.h>
-
-
-// imGUI
-#include "imgui.h"
-#include "imgui_impl_dx11.h"
-#include "imgui_impl_win32.h"
-
-
 // Custom Global includes (Singletons)
 #include "Logger.h"
-#include "multi_thread_manager.h"
-#include "ResourceManager.h"
 #include "InputSystem.h"
-#include "D3D11Core.h"
-#include "D2D1Core.h"
+#include "multi_thread_manager.h"
 
-// Network
+// Networking
 #include "network.h"

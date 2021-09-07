@@ -65,7 +65,8 @@ project "Engine"
 
     links{
         "d3d11",
-        "d2d1"
+        "d2d1",
+		"dwrite"
     }
 
 

@@ -4,6 +4,7 @@
 #include "InputSystem.h"
 
 #include <chrono>
+#include <time.h>
 
 void OnExit()
 {
@@ -31,6 +32,7 @@ int CALLBACK WinMain(
 	std::atexit(OnExit);
 	T_INIT(T_REC, thread::ThreadType::POOL_FIFO);
 	resource::ResourceManager::Initialize();
+	srand((unsigned int)time(NULL));
 	
 	Engine engine;
 	engine.Setup(hInstance);
@@ -58,10 +60,11 @@ int CALLBACK WinMain(
 				}
 			}
 	
-			// [InputSystem test]
+			// [InputSystem Test]
 			InputEvent event;
-			while (InputSystem::Get().pollEvent(event)) {
-				//std::cout << "key_state: " << event.key_state << " key_code: " << event.key_code << std::endl;
+			while (InputSystem::Get().PollEvent(event)) 
+			{
+				//LOG_CONSOLE("key_state: ", event.key_state, " key_code: ", event.key_code);
 				if (event.key_code == VK_ESCAPE)
 				{
 					engine.Shutdown();

@@ -1,6 +1,6 @@
 #pragma once
-#include "net_common.h"
 #include <functional>
+#include "net_common.h"
 
 namespace network
 {
@@ -9,7 +9,7 @@ namespace network
 	{
 	private:
 		SOCKET m_socket;
-		std::function<void(const uint16_t&, const message<MessageType>&)> MessageReceivedHandler;
+		std::function<void(const SOCKET&, const message<MessageType>&)> MessageReceivedHandler;
 		std::function<void(const std::string&, const uint16_t&)> ClientConnectHandler;
 		std::function<void()> ClientDisconnectHandler;
 
@@ -44,17 +44,17 @@ namespace network
 		// Function is called when a client disconnects
 		virtual void OnClientDisconnect() = 0;
 		// Function is called when a message is received
-		virtual void OnMessageReceived(const uint16_t& socketId, const message<MessageType>& msg) = 0;
+		virtual void OnMessageReceived(const SOCKET& socketId, const message<MessageType>& msg) = 0;
 	};
 
 	template <typename T>
-	inline SOCKET server_interface<T>::WaitForConnection()
+	SOCKET server_interface<T>::WaitForConnection()
 	{
 		return accept(m_socket, nullptr, nullptr);
 	}
 
 	template <typename T>
-	inline std::string server_interface<T>::PrintSocketData(addrinfo* p)
+	std::string server_interface<T>::PrintSocketData(addrinfo* p)
 	{
 		std::string data = "Full socket information:\n";
 
@@ -78,7 +78,7 @@ namespace network
 
 		char ipAsString[IPV6_ADDRSTRLEN] = {};
 
-		inet_ntop(p->ai_family, &((struct sockaddr_in*)p->ai_addr)->sin_addr, ipAsString, sizeof(ipAsString));
+		inet_ntop(p->ai_family, get_in_addr(p->ai_addr), ipAsString, sizeof(ipAsString));
 
 		data += "Host: ";
 		data += ipAsString;
@@ -91,7 +91,7 @@ namespace network
 	}
 
 	template <typename T>
-	inline SOCKET server_interface<T>::CreateSocket(const uint16_t& port)
+	SOCKET server_interface<T>::CreateSocket(const uint16_t& port)
 	{
 		// Get a linked network structure based on provided hints
 		struct addrinfo hints, * servinfo, * p;
@@ -122,9 +122,9 @@ namespace network
 			{
 				continue;
 			}
-			if (bind(listener, p->ai_addr, p->ai_addrlen) != 0)
+			if (bind(listener, p->ai_addr, static_cast<int>(p->ai_addrlen)) != 0)
 			{
-				std::cerr << "Bind error code: " << WSAGetLastError() << std::endl;
+				std::cout << "Bind error code: " << WSAGetLastError() << std::endl;
 				closesocket(listener);
 				continue;
 			}
@@ -144,7 +144,7 @@ namespace network
 	}
 
 	template <typename T>
-	inline bool server_interface<T>::Start(const uint16_t& port)
+	bool server_interface<T>::Start(const uint16_t& port)
 	{
 		// Initialize winsock
 		WSADATA wsaData;
@@ -185,7 +185,7 @@ namespace network
 	}
 
 	template <typename T>
-	inline void server_interface<T>::Update()
+	void server_interface<T>::Update()
 	{
 		fd_set master = {};
 		FD_SET(m_socket, &master);
@@ -230,7 +230,7 @@ namespace network
 					}
 					else
 					{
-						int32_t bytes = recv(currentSocket, (char*) & msg, sizeof(msg.header), 0);
+						int32_t bytes = recv(currentSocket, (char*)&msg, sizeof(msg.header), 0);
 
 						if (bytes > 0)
 						{
@@ -261,7 +261,7 @@ namespace network
 	}
 
 	template <typename T>
-	inline void server_interface<T>::Stop()
+	void server_interface<T>::Stop()
 	{
 
 	}
