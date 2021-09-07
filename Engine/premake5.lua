@@ -29,7 +29,7 @@ project "Engine"
         "../ThirdParty/imGUI/",
         "../ThirdParty/stb_image/",
 		"../ThirdParty/networking/",
-        "../ThirdParty/entt/"
+        "../ThirdParty/entt/",
         "../ThirdParty/assimp/include",
 		"../ThirdParty/assimp/lib/"
     }
