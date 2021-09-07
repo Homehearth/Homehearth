@@ -13,6 +13,7 @@ class Engine
 private:
 	static bool s_engineRunning;
 	static bool s_safeExit;
+	thread::TripleBuffer<int> m_drawBuffers;
 
 	std::unique_ptr<Window> m_window;
 	std::unique_ptr<Renderer> m_renderer;

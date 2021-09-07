@@ -19,7 +19,11 @@ void Engine::Setup(const HINSTANCE& hInstance) {
 #ifdef _DEBUG
     RedirectIoToConsole();
 #endif
-    
+
+    m_drawBuffers.SetUpBuffer(0, 3);
+    m_drawBuffers.SetUpBuffer(1, 5);
+    m_drawBuffers.SwapBuffers(0, 1);
+
     T_INIT(T_REC, thread::ThreadType::POOL_FIFO);
     resource::ResourceManager::Initialize();
     srand((unsigned int)time(NULL));
@@ -169,9 +173,9 @@ void Engine::Render()
     D2D1Core::Begin();
     auto lastTime = std::chrono::high_resolution_clock::now();
 
-    for (int i = 0; i < 100; i++)
+    //for (int i = 0; i < 100; i++)
         //D2D1Core::DrawF(0, 0, m_window.get()->GetWidth(), m_window.get()->GetHeight(), Shapes::RECTANGLE_FILLED);
-        D2D1Core::DrawF(rand() % m_window.get()->GetWidth() - 100, rand() % m_window.get()->GetHeight() - 100, 100, 100, Shapes::TRIANGLE_FILLED);
+       // D2D1Core::DrawF(rand() % m_window.get()->GetWidth() - 100, rand() % m_window.get()->GetHeight() - 100, 100, 100, Shapes::TRIANGLE_FILLED);
     if (m_currentScene)
     {
         m_currentScene->Render();

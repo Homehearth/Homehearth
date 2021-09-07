@@ -64,6 +64,7 @@ using Microsoft::WRL::ComPtr;
 #include "D3D11Core.h"
 #include "D2D1Core.h"
 #include "Profiler.h"
+#include "ThreadSyncer.h"
 
 // Network
 #include "network.h"
