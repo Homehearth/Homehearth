@@ -86,19 +86,19 @@ void setupDemoScene(Engine& engine, Scene& scene) {
 		});
 
 	// Create test Entities
-	for (int i = 0; i < 100; i++)
+	for (int i = 0; i < 200; i++)
 	{
 		entt::entity entity = scene.CreateEntity();
 		Triangle& comp = scene.AddComponent<Triangle>(entity);
 		comp.pos[0] = 0.0f;
 		comp.pos[1] = 0.0f;
-		comp.size[0] = (rand() % 70) + 30;
-		comp.size[1] = (rand() % 70) + 30;
+		comp.size[0] = (rand() % 40) + 20;
+		comp.size[1] = comp.size[0];
 
 		Velocity& vel = scene.AddComponent<Velocity>(entity);
 		vel.vel[0] = (rand() % 100) / 100.f;
 		vel.vel[1] = sqrtf(1 - vel.vel[0] * vel.vel[0]);
-		vel.mag = 300.f;
+		vel.mag = (rand() % 200) + 100.f;
 	}
 
 }

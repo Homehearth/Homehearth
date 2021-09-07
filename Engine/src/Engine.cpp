@@ -173,7 +173,7 @@ void Engine::Update(float dt)
 void Engine::Render()
 {
     D2D1Core::Begin();
-    auto lastTime = std::chrono::high_resolution_clock::now();
+    static auto lastTime = std::chrono::high_resolution_clock::now();
     
     if (m_currentScene)
     {
@@ -182,8 +182,7 @@ void Engine::Render()
     auto now = std::chrono::high_resolution_clock::now();
     auto delta = std::chrono::duration_cast<std::chrono::duration<float>>(now - lastTime);
     lastTime = now;
-    float dt = delta.count();
-    m_frameTime.render = dt;
+    m_frameTime.render = delta.count();
     const std::string fps = 
         "Rendering FPS: " + std::to_string(1.0f / m_frameTime.render) +
         "\nUpdate FPS: " + std::to_string(1.0f / m_frameTime.update) +
@@ -194,7 +193,7 @@ void Engine::Render()
     /*
         Present the final image and clear it for next frame.
     */
-    D3D11Core::Get().SwapChain()->Present(0, 0);
+    D3D11Core::Get().SwapChain()->Present(1, 0);
     m_renderer.get()->clearScreen();
     D2D1Core::Present();
 }
