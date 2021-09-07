@@ -42,6 +42,45 @@ int CALLBACK WinMain(
 	// Set as current scene
 	engine.SetScene(startScene);
 
+
+	// Simple Ecs Demo
+	// Simple Component
+	struct SayHelloComponent {
+		float timer;
+		float messageTime;
+		std::string message;
+	};
+	
+	// Simple System to update components
+	startScene.AddSystem([](entt::registry& reg, float dt)
+	{
+		auto view = reg.view<SayHelloComponent>();
+		view.each([dt](const entt::entity& entity, SayHelloComponent& comp)
+		{
+			comp.timer += dt;
+			if (comp.messageTime <= comp.timer) 
+			{
+				//LOG_CONSOLE("Entity ", entity, " says ", comp.message.c_str());
+				std::cout << "Entity " << (int)entity << " says " << comp.message.c_str() << std::endl;
+				comp.timer = 0.0f;
+			}
+		});
+	});
+
+	// Create test Entity
+	entt::entity entity = startScene.CreateEntity();
+	SayHelloComponent& comp = startScene.AddComponent<SayHelloComponent>(entity);
+	comp.timer = 2.0f;
+	comp.messageTime = 2.0f;
+	comp.message = "Hello World!";
+
+	// Create another test Entity
+	entt::entity entity1 = startScene.CreateEntity();
+	SayHelloComponent& comp1 = startScene.AddComponent<SayHelloComponent>(entity1);
+	comp1.timer = 3.0f;
+	comp1.messageTime = 3.0f;
+	comp1.message = "Helo Wurld!";
+
 	{
 		auto lastTime = std::chrono::high_resolution_clock::now();
 

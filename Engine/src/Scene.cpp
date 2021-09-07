@@ -4,7 +4,17 @@
 entt::dispatcher Scene::m_staticEventDispatcher;
 
 
-void Scene::AddSystem(const SystemUpdateFunction& updateFunction) 
+entt::entity Scene::CreateEntity()
+{
+	return m_ecsRegistry.create();
+}
+
+void Scene::DestroyEntity(entt::entity entity)
+{
+	m_ecsRegistry.destroy(entity);
+}
+
+void Scene::AddSystem(const SystemUpdateFunction& updateFunction)
 {
 	m_updateSystems.push_back(updateFunction);
 }
