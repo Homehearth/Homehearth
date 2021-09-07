@@ -3,6 +3,21 @@
 #include "Buffers.h"
 #include "ResourceManager.h"
 
+/*
+	Loads in mesh information with Assimp 5.0.1
+	Can load in submeshes and multiple materials
+
+
+	Still a bit of a sketchy version :,(
+
+
+	TODO:
+	* Convert it to ECS
+	* Fix loading in bones
+	* Rendering the mesh on screen
+	
+*/
+
 enum class EMeshType
 {
 	staticMesh,		//Will not change
@@ -38,7 +53,6 @@ private:
 	*/
 
 private:
-	std::string GetTextureName(const aiTextureType& type, const aiMaterial* mat);
 	void AddTextures(material_t& mat, const aiMaterial* aiMat);
 
 public:

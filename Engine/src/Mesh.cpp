@@ -10,26 +10,13 @@ Mesh::Mesh()
 
 Mesh::~Mesh()
 {
-}
-
-std::string Mesh::GetTextureName(const aiTextureType& type, const aiMaterial* mat)
-{
-    aiString path;
-    std::string finalFile = "";
-
-    if (AI_SUCCESS == mat->GetTexture(type, 0, &path))
-    {
-        std::string filePath = path.C_Str();
-        //Split up the string path to only textures filename
-        size_t index = filePath.find_last_of("/\\");
-        finalFile = filePath.substr(index + 1);
-    }
-
-    return finalFile;
+    m_materials.clear();
+    m_meshes.clear();
 }
 
 void Mesh::AddTextures(material_t& mat, const aiMaterial* aiMat)
 {
+    //Link together our format with assimps format
     std::unordered_map<ETextureType, aiTextureType> textureTypeMap =
     {
         {ETextureType::diffuse,   aiTextureType::aiTextureType_DIFFUSE},
@@ -41,13 +28,21 @@ void Mesh::AddTextures(material_t& mat, const aiMaterial* aiMat)
     //For every texturetype: add the texture to the map
     for (auto& type : textureTypeMap)
     {
-        std::string filename = GetTextureName(type.second, aiMat);
-        if (!filename.empty())
+        aiString path;
+        std::string filename = "";
+        
+        //Get the filepath from Assimp
+        if (AI_SUCCESS == aiMat->GetTexture(type.second, 0, &path))
         {
+            std::string filepath = path.C_Str();
+            //Split up the string path to only the textures filename
+            size_t index = filepath.find_last_of("/\\");
+            filename = filepath.substr(index + 1);
+
             ADD_RESOURCE(RTexture, filename);
             RTexture* texture = GET_RESOURCE(RTexture, filename);
-            //If it was nullptr, we address it to the map too
-            mat.textures[type.first] = texture;
+            if (texture)
+                mat.textures[type.first] = texture;
         }
     }
     textureTypeMap.clear();
@@ -101,10 +96,6 @@ bool Mesh::Initialize(const std::string& filepath)
    
         m_materials.push_back(mat);
     }
-
-    /*
-        TODO: Multiple textures, example: One per submesh
-    */
 
     //For every mesh
     for (unsigned int m = 0; m < scene->mNumMeshes; m++)

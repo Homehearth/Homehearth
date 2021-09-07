@@ -46,6 +46,10 @@ void Engine::Setup(const HINSTANCE& hInstance) {
     // register Engine OnEvent function so Scene can talk to Engine
     Scene::GetEventDispatcher().sink<EngineEvent>().connect<&Engine::OnEvent>(this);
 
+    // *** [TEMP] testing to load in a mesh ***
+    if (!m_testMesh.Initialize("../Assets/Models/Eric.fbx"))
+        std::cout << "Failed to load mesh..." << std::endl;
+
 }
 
 void Engine::Start() 
