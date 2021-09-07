@@ -86,28 +86,27 @@ void Engine::Render()
         auto lastTime = std::chrono::high_resolution_clock::now();
        
         //TODO: vsync
-        for(int i = 0; i < 5; i++)
-         D2D1Core::DrawF(rand() % m_window.get()->GetWidth() - 100, rand() % m_window.get()->GetHeight() - 100, 100, 100, Shapes::RECTANGLE_FILLED);
-
+        for (int i = 0; i < 100; i++)
+            //D2D1Core::DrawF(0, 0, m_window.get()->GetWidth(), m_window.get()->GetHeight(), Shapes::RECTANGLE_FILLED);
+         D2D1Core::DrawF(rand() % m_window.get()->GetWidth() - 100, rand() % m_window.get()->GetHeight() - 100, 100, 100, Shapes::TRIANGLE_FILLED);
         if (m_currentScene)
         {
             m_currentScene->Render();
         }
-
         auto now = std::chrono::high_resolution_clock::now();
         auto delta = std::chrono::duration_cast<std::chrono::duration<float>>(now - lastTime);
         lastTime = now;
         float dt = delta.count();
-        std::string fps = "FPS: " + std::to_string(1.0f / dt)
+        const std::string fps = "FPS: " + std::to_string(1.0f / dt)
             + "\nRAM: " + std::to_string(Profiler::Get().GetRAMUsage() / (1024.f * 1024.f))
             + "\nVRAM: " + std::to_string(Profiler::Get().GetVRAMUsage() / (1042.f * 1024.f));
         D2D1Core::DrawT(fps, m_window.get());
 
-        if (D3D11Core::Get().SwapChain() != nullptr)
-            D3D11Core::Get().SwapChain()->Present(0, 0);
-        if(m_renderer)
-           m_renderer.get()->clearScreen();
-
+        /*
+            Present the final image and clear it for next frame.
+        */
+        D3D11Core::Get().SwapChain()->Present(0, 0);
+        m_renderer.get()->clearScreen();
         D2D1Core::Present();
     }
     s_safeExit = true;
