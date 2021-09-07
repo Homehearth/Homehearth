@@ -16,7 +16,7 @@ public:
         bool fullScreen = false;
         bool resizableWindow = false;
         HINSTANCE hInstance = nullptr;
-        int nShowCmd = SW_NORMAL;
+        int nShowCmd = SW_HIDE;
     };
 
 private:
