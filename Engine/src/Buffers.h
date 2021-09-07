@@ -1,6 +1,5 @@
 #pragma once
-
-struct simple_vertex_t {};
+#include "MeshStructure.h"
 
 namespace Buffers
 {

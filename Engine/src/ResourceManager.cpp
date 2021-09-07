@@ -39,7 +39,11 @@ void resource::ResourceManager::InsertResource(GResource* resource, std::string 
 {
 	if (resource)
 	{
-		INSTANCE->resources.emplace(resource_name, resource);
+		auto f = ResourceManager::instance->resources.find(resource_name);
+		if (f != ResourceManager::instance->resources.end())
+		{
+			INSTANCE->resources.emplace(resource_name, resource);
+		}
 	}
 }
 

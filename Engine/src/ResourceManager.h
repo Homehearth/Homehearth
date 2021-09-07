@@ -2,6 +2,9 @@
 #include "GResource.h"
 #include "RTexture.h"
 
+#define ADD_RESOURCE(type, name) resource::ResourceManager::instance->InsertResource(new type(std::string(name)), name)
+#define GET_RESOURCE(type, name) resource::ResourceManager::instance->GetResource<type>(name)
+
 namespace resource
 {
 	class ResourceManager
@@ -31,11 +34,11 @@ namespace resource
 			RTexture* texture = GetResource<RTexture>(resource_name);
 		*/
 		template <class T>
-		static const T* GetResource(std::string resource_name);
+		static T* GetResource(std::string resource_name);
 	};
 
 	template<class T>
-	inline const T* ResourceManager::GetResource(std::string resource_name)
+	inline T* ResourceManager::GetResource(std::string resource_name)
 	{
 		auto f = ResourceManager::instance->resources.find(resource_name);
 		if (f != ResourceManager::instance->resources.end())

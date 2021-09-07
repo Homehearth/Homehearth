@@ -28,7 +28,9 @@ project "Engine"
         "../ThirdParty/DirectXTK/lib/",
         "../ThirdParty/imGUI/",
         "../ThirdParty/stb_image/",
-		 "../ThirdParty/networking/"
+		"../ThirdParty/networking/",
+		"../ThirdParty/assimp/include",
+		"../ThirdParty/assimp/lib/"
     }
 
 
@@ -80,7 +82,9 @@ project "Engine"
         defines{"_DEBUG", "_UNICODE", "UNICODE"}
         symbols "on"
         libdirs{"../ThirdParty/DirectXTK/lib/Debug_lib/"}
-        links{"DirectXTK", "DirectXTKAudioWin7"}
+        libdirs{"../ThirdParty/assimp/lib/Debug_lib/"}
+		links{"DirectXTK", "DirectXTKAudioWin7", "assimp-vc142-mtd"}
+		
 
 
     -- Define a macro/symbol which applies only to release builds.
@@ -91,4 +95,5 @@ project "Engine"
         symbols "on"
         optimize "on"
         libdirs{"../ThirdParty/DirectXTK/lib/Release_lib/"}
-        links{"DirectXTK", "DirectXTKAudioWin7"}
+		libdirs{"../ThirdParty/assimp/lib/Release_lib/"}
+        links{"DirectXTK", "DirectXTKAudioWin7", "assimp-vc142-mt"}
