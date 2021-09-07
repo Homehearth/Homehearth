@@ -37,7 +37,7 @@ namespace thread
 	{
 	private:
 		
-		T* m_buffers[3];
+		T** m_buffers;
 
 	public:
 
@@ -65,6 +65,7 @@ namespace thread
 	template<class T>
 	inline TripleBuffer<T>::TripleBuffer()
 	{
+		m_buffers = new T * [3];
 		for (int i = 0; i < 3; i++)
 			m_buffers[i] = nullptr;
 	}
@@ -76,10 +77,13 @@ namespace thread
 			if (m_buffers[i])
 				delete m_buffers[i];
 		}
+
+		delete[] m_buffers;
 	}
 	template<class T>
 	inline const bool TripleBuffer<T>::SetUpBuffer(const int&& index, const T& p_buffer)
 	{
+
 		if (index >= 3 || index < 0)
 			[] {LOG_WARNING("Index was out of range from 0 to 3."); return false; };
 		if (m_buffers[index])

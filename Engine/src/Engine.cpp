@@ -20,10 +20,6 @@ void Engine::Setup(const HINSTANCE& hInstance) {
     RedirectIoToConsole();
 #endif
 
-    m_drawBuffers.SetUpBuffer(0, 3);
-    m_drawBuffers.SetUpBuffer(1, 5);
-    m_drawBuffers.SwapBuffers(0, 1);
-
     T_INIT(T_REC, thread::ThreadType::POOL_FIFO);
     resource::ResourceManager::Initialize();
     srand((unsigned int)time(NULL));
