@@ -72,14 +72,14 @@ int CALLBACK WinMain(
 	SayHelloComponent& comp = startScene.AddComponent<SayHelloComponent>(entity);
 	comp.timer = 2.0f;
 	comp.messageTime = 2.0f;
-	comp.message = "Hello World!";
+	comp.message = "Marco!";
 
 	// Create another test Entity
 	entt::entity entity1 = startScene.CreateEntity();
 	SayHelloComponent& comp1 = startScene.AddComponent<SayHelloComponent>(entity1);
 	comp1.timer = 3.0f;
 	comp1.messageTime = 3.0f;
-	comp1.message = "Helo Wurld!";
+	comp1.message = "Polo!";
 
 	{
 		auto lastTime = std::chrono::high_resolution_clock::now();

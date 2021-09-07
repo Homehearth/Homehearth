@@ -98,7 +98,9 @@ void Engine::Render()
         auto delta = std::chrono::duration_cast<std::chrono::duration<float>>(now - lastTime);
         lastTime = now;
         float dt = delta.count();
-        const std::string fps = "FPS: " + std::to_string((1.0f / dt));
+        std::string fps = "FPS: " + std::to_string(1.0f / dt)
+            + "\nRAM: " + std::to_string(Profiler::Get().GetRAMUsage() / (1024.f * 1024.f))
+            + "\nVRAM: " + std::to_string(Profiler::Get().GetVRAMUsage() / (1042.f * 1024.f));
         D2D1Core::DrawT(fps, m_window.get());
 
         if (D3D11Core::Get().SwapChain() != nullptr)
