@@ -6,16 +6,14 @@
 #include <memory>
 #include <string>
 #include <chrono>
-
 #include <WS2tcpip.h>
-#pragma comment(lib, "WS2_32.Lib")
 
 #define IPV6_ADDRSTRLEN 46
 #define BUFFER_SIZE 4096
 
 namespace network
 {
-	void* get_in_addr(const struct sockaddr* sa)
+	static void* get_in_addr(const struct sockaddr* sa)
 	{
 		if (sa->sa_family == AF_INET)
 		{
@@ -27,7 +25,7 @@ namespace network
 		}
 	}
 
-	uint16_t GetPort(const struct sockaddr* sa)
+	static uint16_t GetPort(const struct sockaddr* sa)
 	{
 		if (sa->sa_family == AF_INET)
 		{
@@ -39,7 +37,7 @@ namespace network
 		}
 	}
 
-	std::string PrintAddressFamily(const struct sockaddr* sa)
+	static std::string PrintAddressFamily(const struct sockaddr* sa)
 	{
 		if (sa->sa_family == AF_INET)
 		{
@@ -51,6 +49,14 @@ namespace network
 		}
 	}
 
+	static uint64_t scrambleData(uint64_t input)
+	{
+		uint64_t output = input ^ 0xDEADBEEFA0FAAAF;
+		output = (output & 0x0F0F0F0F0F0) >> 4 | (output & 0x0E0E0E0E0E0E0) << 4;
+
+		return output;
+	}
+
 	enum class MessageType : uint32_t
 	{
 		Unknown,
@@ -58,12 +64,4 @@ namespace network
 		Connected,
 		PingServer
 	};
-
-	uint64_t scrambleData(uint64_t input)
-	{
-		uint64_t output = input ^ 0xDEADBEEFA0FAAAF;
-		output = (output & 0x0F0F0F0F0F0) >> 4 | (output & 0x0E0E0E0E0E0E0) << 4;
-
-		return output;
-	}
 }

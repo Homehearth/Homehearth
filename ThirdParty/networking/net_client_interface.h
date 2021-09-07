@@ -11,16 +11,20 @@ namespace network
 
 	private:
 		std::string PrintSocketData(struct addrinfo* p);
+		void InitWinsock();
 
 	public:
 		client_interface()
 		{
 			m_socket = INVALID_SOCKET;
+
+			InitWinsock();
 		}
 
 		virtual ~client_interface()
 		{
 			Disconnect();
+			WSACleanup();
 		}
 
 	public:
@@ -35,6 +39,33 @@ namespace network
 
 		void Send(const message<T>& msg);
 	};
+
+	template<typename T>
+	void client_interface<T>::InitWinsock()
+	{
+		// Initialize winsock
+		WSADATA wsaData;
+
+		WORD version = MAKEWORD(2, 2);
+
+		int8_t rv = WSAStartup(version, &wsaData);
+
+		if (rv != 0)
+		{
+#ifdef _DEBUG
+			std::cout << "WSAStartup error code: " << WSAGetLastError() << std::endl;
+#endif
+		}
+
+		if (LOBYTE(wsaData.wVersion) != 2 || HIBYTE(wsaData.wVersion) != 2)
+		{
+			/* Tell the user that we could not find a usable */
+			/* WinSock DLL.                                  */
+#ifdef _DEBUG
+			std::cout << "Could not find a usable version of Winsock.dll" << std::endl;
+#endif
+		}
+	}
 
 	template<typename T>
 	inline std::string client_interface<T>::PrintSocketData(addrinfo* p)
@@ -73,29 +104,6 @@ namespace network
 	template<typename T>
 	inline bool client_interface<T>::Connect(const std::string& ip, const uint16_t port)
 	{
-		// Initialize winsock
-		WSADATA wsaData;
-
-		WORD version = MAKEWORD(2, 2);
-
-		int8_t rv = WSAStartup(version, &wsaData);
-
-		if (rv != 0)
-		{
-			std::cout << "WSAStartup error code: " << WSAGetLastError() << std::endl;
-
-			return false;
-		}
-
-		if (LOBYTE(wsaData.wVersion) != 2 || HIBYTE(wsaData.wVersion) != 2)
-		{
-			/* Tell the user that we could not find a usable */
-			/* WinSock DLL.                                  */
-			std::cerr << "Could not find a usable version of Winsock.dll" << std::endl;
-
-			return false;
-		}
-
 		// Get a linked network structure based on provided hints
 		struct addrinfo hints, * servinfo, * p;
 
@@ -103,7 +111,11 @@ namespace network
 		hints.ai_family = AF_INET;
 		hints.ai_socktype = SOCK_STREAM;
 
-		rv = getaddrinfo(ip.c_str(), std::to_string(port).c_str(), &hints, &servinfo);
+#ifdef _DEBUG
+		std::cout << "Creating a client.." << std::endl;
+#endif
+
+		int8_t rv = getaddrinfo(ip.c_str(), std::to_string(port).c_str(), &hints, &servinfo);
 
 		if (rv != 0)
 		{
@@ -114,27 +126,41 @@ namespace network
 		// Loop through linked list of possible network structures
 		for (p = servinfo; p != nullptr; p = p->ai_next)
 		{
+#ifdef _DEBUG
 			std::cout << PrintSocketData(p) << std::endl;
+#endif
 			m_socket = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
 
 			if (m_socket == INVALID_SOCKET)
 			{
 				continue;
 			}
-			if (connect(m_socket, p->ai_addr, p->ai_addrlen) != 0)
+			u_long enable = 1;
+			ioctlsocket(m_socket, FIONBIO, &enable);
+
+			if (connect(m_socket, p->ai_addr, static_cast<int>(p->ai_addrlen)) != 0)
 			{
-				std::cerr << "Connect error code: " << WSAGetLastError() << std::endl;
-				m_socket = INVALID_SOCKET;
-				closesocket(m_socket);
-				continue;
+				if (WSAGetLastError() != WSAEWOULDBLOCK)
+				{
+#ifdef _DEBUG
+					std::cout << "Connect error code: " << WSAGetLastError() << std::endl;
+#endif			
+					closesocket(m_socket);
+					m_socket = INVALID_SOCKET;
+
+					return false;
+				}
 			}
+
 			break;
 		}
 
 		// Reached end of list and could not connect to any
 		if (p == nullptr)
 		{
-			std::cerr << "Failed to connect!" << std::endl;
+#ifdef _DEBUG
+			std::cout << "Failed to connect!" << std::endl;
+#endif
 			m_socket = INVALID_SOCKET;
 
 			return false;
@@ -153,12 +179,12 @@ namespace network
 
 		if (closesocket(m_socket) != 0)
 		{
-			std::cerr << "Failed to close socket: " << WSAGetLastError() << std::endl;
+#ifdef _DEBUG
+			std::cout << "Failed to close socket: " << WSAGetLastError() << std::endl;
+#endif
 		}
 
 		m_socket = INVALID_SOCKET;
-
-		WSACleanup();
 	}
 
 	template<typename T>

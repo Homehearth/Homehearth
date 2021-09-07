@@ -37,7 +37,7 @@ void resource::ResourceManager::Destroy()
 
 void resource::ResourceManager::InsertResource(GResource* resource, std::string resource_name)
 {
-	if (resource)
+	if (resource && INSTANCE)
 	{
 		auto f = ResourceManager::instance->resources.find(resource_name);
 		if (f != ResourceManager::instance->resources.end())

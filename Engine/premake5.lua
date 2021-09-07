@@ -29,7 +29,8 @@ project "Engine"
         "../ThirdParty/imGUI/",
         "../ThirdParty/stb_image/",
 		"../ThirdParty/networking/",
-		"../ThirdParty/assimp/include",
+        "../ThirdParty/entt/"
+        "../ThirdParty/assimp/include",
 		"../ThirdParty/assimp/lib/"
     }
 
@@ -39,17 +40,20 @@ project "Engine"
     -- Else: specify the path relative to the this premake file.
     vpaths {
         ["src/Core"] = { "**EnginePCH.*" },
-            ["src/Core/Engine"] = { "**Engine.*", "**Scene.*" },
+            ["src/Core/Engine"] = { "**Engine.*", "**Scene.*", "**EventTypes.*" },
             ["src/Core/Input"] = { "**InputSystem.*" },
             ["src/Core/Window"] = { "**Window.*" },
-            ["src/Core/Utility"] = { "**Logger.*", "**multi_thread_manager.*" },
+            ["src/Core/Utility"] = { "**Logger.*", "**multi_thread_manager.*", "**Profiler.*", "**ThreadSyncer.*"},
 
         ["src/Graphics"] = { "**Buffers.*", "**NYI.*" },
             ["src/Graphics/Renderer"] = {"**Renderer.*"},
             ["src/Graphics/D3D11"] = { "**D3D11Core.*" },
+			["src/Graphics/D2D1"] = { "**D2D1Core.*" },
             ["src/Graphics/Window"] = { "**Window.*" },
+			
+			["src/Network"] = { "**Client.*" },
 
-        ["src/Resources"] = { "**ResourceManager.*", "**GResource.*", "**RTexture.*" },
+        ["src/Resources"] = { "**ResourceManager.*", "**GResource.*", "**RTexture.*", "**Mesh.*", "**MeshStructure.*" },
             ["src/Resources/Shaders"] = { "**.hhlsl", "**.hlsli" },
 
         ["src/Audio"] = {  },
@@ -63,7 +67,9 @@ project "Engine"
 
     links{
         "d3d11",
-        "d2d1"
+        "d2d1",
+		"dwrite",
+        "dxgi"
     }
 
 

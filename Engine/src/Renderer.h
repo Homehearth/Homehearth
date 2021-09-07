@@ -11,7 +11,8 @@ public:
 
 	void clearScreen()
 	{
-		
+		const FLOAT color[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+		D3D11Core::Get().DeviceContext()->ClearRenderTargetView(this->renderTargetView.Get(), color);
 	}
 	
 	void beginFrame()

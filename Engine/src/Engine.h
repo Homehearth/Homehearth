@@ -3,9 +3,42 @@
 #include "Window.h"
 #include "Scene.h"
 #include "Renderer.h"
+#include "EventTypes.h"
+#include "Client.h"
+
+#include <time.h>
 
 class Engine
 {
+private:
+	static bool s_engineRunning;
+	static bool s_safeExit;
+
+	std::unique_ptr<Window> m_window;
+	std::unique_ptr<Renderer> m_renderer;
+
+	//CLIENT
+	std::unique_ptr<Client> m_client;
+	
+	std::unordered_map<std::string, Scene> m_scenes;
+	Scene* m_currentScene;
+	bool m_vSync;
+
+	struct {
+		float update;
+		float render;
+	} m_frameTime;
+	
+	void RedirectIoToConsole();
+
+	// job for rendering thread
+	void RenderThread();
+
+	// updates the current scene
+	void Update(float dt);
+	// renders one frame
+	void Render();
+
 public:
 	Engine();
 	Engine(const Window& other) = delete;
@@ -14,22 +47,21 @@ public:
 	Engine& operator=(Window&& other) = delete;
 	virtual ~Engine() = default;
 
-	void setup(const HINSTANCE &hInstance);
+	void Setup(const HINSTANCE &hInstance);
 
-	void update(float dt);
+	void Start();
 
-	void render();	
+	void Shutdown();
 
-	void shutdown();
+	Scene& GetScene(const std::string& name);
+	void SetScene(const std::string& name);
+	void SetScene(Scene& scene);
 
-private:
-	std::unique_ptr<Window> window;
-	std::unique_ptr<Renderer> renderer;
-	
-	std::unordered_map<std::string, Scene> m_scenes;
-	Scene* m_currentScene;
-	bool m_vSync;
+	Window* GetWindow() const;
 
-	void RedirectIoToConsole();
+	void OnEvent(EngineEvent& event);
+
+	static bool IsRunning();
+
 };
 
