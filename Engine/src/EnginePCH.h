@@ -63,6 +63,7 @@ using Microsoft::WRL::ComPtr;
 #include "InputSystem.h"
 #include "D3D11Core.h"
 #include "D2D1Core.h"
+#include "Profiler.h"
 
 // Network
 #include "network.h"
