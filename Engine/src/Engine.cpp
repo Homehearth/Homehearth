@@ -110,6 +110,11 @@ void Engine::SetScene(Scene& scene)
     m_currentScene = &scene;
 }
 
+Window* Engine::GetWindow() const
+{
+    return m_window.get();
+}
+
 void Engine::OnEvent(EngineEvent& event) {
     switch (event.type)
     {
@@ -149,6 +154,7 @@ void Engine::RenderThread()
 
 void Engine::Update(float dt)
 {
+    m_frameTime.update = dt;
     // Update the camera transform based on interactive inputs.
     //updateCamera(dt);
 
@@ -168,10 +174,7 @@ void Engine::Render()
 {
     D2D1Core::Begin();
     auto lastTime = std::chrono::high_resolution_clock::now();
-
-    for (int i = 0; i < 100; i++)
-        //D2D1Core::DrawF(0, 0, m_window.get()->GetWidth(), m_window.get()->GetHeight(), Shapes::RECTANGLE_FILLED);
-        D2D1Core::DrawF(rand() % m_window.get()->GetWidth() - 100, rand() % m_window.get()->GetHeight() - 100, 100, 100, Shapes::TRIANGLE_FILLED);
+    
     if (m_currentScene)
     {
         m_currentScene->Render();
@@ -180,9 +183,12 @@ void Engine::Render()
     auto delta = std::chrono::duration_cast<std::chrono::duration<float>>(now - lastTime);
     lastTime = now;
     float dt = delta.count();
-    const std::string fps = "FPS: " + std::to_string(1.0f / dt)
-        + "\nRAM: " + std::to_string(Profiler::Get().GetRAMUsage() / (1024.f * 1024.f))
-        + "\nVRAM: " + std::to_string(Profiler::Get().GetVRAMUsage() / (1042.f * 1024.f));
+    m_frameTime.render = dt;
+    const std::string fps = 
+        "Rendering FPS: " + std::to_string(1.0f / m_frameTime.render) +
+        "\nUpdate FPS: " + std::to_string(1.0f / m_frameTime.update) +
+        "\nRAM: " + std::to_string(Profiler::Get().GetRAMUsage() / (1024.f * 1024.f)) +
+        "\nVRAM: " + std::to_string(Profiler::Get().GetVRAMUsage() / (1042.f * 1024.f));
     D2D1Core::DrawT(fps, m_window.get());
 
     /*
