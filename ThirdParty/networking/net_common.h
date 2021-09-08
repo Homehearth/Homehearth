@@ -7,6 +7,7 @@
 #include <string>
 #include <chrono>
 #include <WS2tcpip.h>
+#include <functional>
 
 #define IPV6_ADDRSTRLEN 46
 #define BUFFER_SIZE 4096

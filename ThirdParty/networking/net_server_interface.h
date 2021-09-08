@@ -1,5 +1,4 @@
 #pragma once
-#include <functional>
 #include "net_common.h"
 
 namespace network
@@ -9,15 +8,17 @@ namespace network
 	{
 	private:
 		SOCKET m_socket;
+		fd_set m_master;
 		std::function<void(const SOCKET&, const message<MessageType>&)> MessageReceivedHandler;
 		std::function<void(const std::string&, const uint16_t&)> ClientConnectHandler;
 		std::function<void()> ClientDisconnectHandler;
 
-		SOCKET WaitForConnection();
-		std::string PrintSocketData(struct addrinfo* p);
-
 	private:
 		SOCKET CreateSocket(const uint16_t& port);
+		SOCKET WaitForConnection();
+		std::string PrintSocketData(struct addrinfo* p);
+		void Listen(const uint32_t& nListen);
+		void InitWinsock();
 
 	public:
 		server_interface()
@@ -28,24 +29,79 @@ namespace network
 			MessageReceivedHandler = std::bind(&server_interface::OnMessageReceived, this, _1, _2);
 			ClientConnectHandler = std::bind(&server_interface::OnClientConnect, this, _1, _2);
 			ClientDisconnectHandler = std::bind(&server_interface::OnClientDisconnect, this);
+
+			ZeroMemory(&m_master, sizeof(m_master));
+
+			InitWinsock();
 		}
 		virtual ~server_interface()
 		{
 			WSACleanup();
 		}
 
+	public:
 		bool Start(const uint16_t& port);
 		void Update();
 		void Stop();
+		void Broadcast();
 
-	public:
-		// Function is called when a client connects
+		// Pure virtuals that happen when an event occurs
+
+		// Called once when a client connects
 		virtual void OnClientConnect(const std::string& ip, const uint16_t& port) = 0;
-		// Function is called when a client disconnects
+		// Called once when a client connects
 		virtual void OnClientDisconnect() = 0;
-		// Function is called when a message is received
+		// Called once when a message is received
 		virtual void OnMessageReceived(const SOCKET& socketId, const message<MessageType>& msg) = 0;
 	};
+
+	template <typename T>
+	void server_interface<T>::Broadcast()
+	{
+		message<T> msg = { };
+		msg.header.id = MessageType::Unknown;
+		for (u_int i = 0; i < m_master.fd_count; i++)
+		{
+			SOCKET currentSocket = m_master.fd_array[i];
+			send(currentSocket, (char*)&msg, sizeof(msg.header), 0);
+		}
+	}
+
+	template <typename T>
+	void server_interface<T>::InitWinsock()
+	{
+		// Initialize winsock
+		WSADATA wsaData;
+
+		WORD version = MAKEWORD(2, 2);
+
+		int8_t rv = WSAStartup(version, &wsaData);
+
+		if (rv != 0)
+		{
+			std::cout << "WSAStartup error code: " << WSAGetLastError() << std::endl;
+
+			return;
+		}
+
+		if (LOBYTE(wsaData.wVersion) != 2 || HIBYTE(wsaData.wVersion) != 2)
+		{
+			/* Tell the user that we could not find a usable */
+			/* WinSock DLL.                                  */
+			std::cerr << "Could not find a usable version of Winsock.dll" << std::endl;
+
+			return;
+		}
+	}
+
+	template <typename T>
+	void server_interface<T>::Listen(const uint32_t& nListen)
+	{
+		if (listen(m_socket, nListen) == INVALID_SOCKET)
+		{
+			std::cerr << "Listen:" << WSAGetLastError() << std::endl;
+		}
+	}
 
 	template <typename T>
 	SOCKET server_interface<T>::WaitForConnection()
@@ -146,40 +202,15 @@ namespace network
 	template <typename T>
 	bool server_interface<T>::Start(const uint16_t& port)
 	{
-		// Initialize winsock
-		WSADATA wsaData;
-
-		WORD version = MAKEWORD(2, 2);
-
-		int8_t rv = WSAStartup(version, &wsaData);
-
-		if (rv != 0)
-		{
-			std::cout << "WSAStartup error code: " << WSAGetLastError() << std::endl;
-
-			return false;
-		}
-
-		if (LOBYTE(wsaData.wVersion) != 2 || HIBYTE(wsaData.wVersion) != 2)
-		{
-			/* Tell the user that we could not find a usable */
-			/* WinSock DLL.                                  */
-			std::cerr << "Could not find a usable version of Winsock.dll" << std::endl;
-
-			return false;
-		}
-
 		m_socket = CreateSocket(port);
 
 		u_long enable = 1;
 		setsockopt(m_socket, IPPROTO_TCP, TCP_NODELAY, reinterpret_cast<const char*>(&enable), sizeof(enable));
 		setsockopt(m_socket, SOL_SOCKET, SO_REUSEADDR, reinterpret_cast<const char*>(&enable), sizeof(enable));
 
-		if (listen(m_socket, SOMAXCONN) == INVALID_SOCKET)
-		{
-			std::cerr << "Listen:" << WSAGetLastError() << std::endl;
-			return false;
-		}
+		Listen(SOMAXCONN);
+
+		FD_SET(m_socket, &m_master);
 
 		return true;
 	}
@@ -187,14 +218,12 @@ namespace network
 	template <typename T>
 	void server_interface<T>::Update()
 	{
-		fd_set master = {};
-		FD_SET(m_socket, &master);
 		message<T> msg;
 
 		while (1)
 		{
 			ZeroMemory(&msg, sizeof(msg));
-			fd_set copy = master;
+			fd_set copy = m_master;
 
 			int8_t socketCount = select(0, &copy, nullptr, nullptr, nullptr);
 
@@ -217,7 +246,7 @@ namespace network
 						{
 							if (this->ClientConnectHandler != NULL)
 							{
-								FD_SET(currentSocket, &master);
+								FD_SET(currentSocket, &m_master);
 								char ipAsString[IPV6_ADDRSTRLEN] = {};
 								struct sockaddr_in client = {};
 								socklen_t len = sizeof(client);
@@ -249,7 +278,7 @@ namespace network
 							{
 								if (this->ClientDisconnectHandler != NULL)
 								{
-									FD_CLR(currentSocket, &master);
+									FD_CLR(currentSocket, &m_master);
 									this->ClientDisconnectHandler();
 								}
 							}

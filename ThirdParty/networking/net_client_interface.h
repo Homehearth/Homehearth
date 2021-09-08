@@ -8,6 +8,12 @@ namespace network
 	{
 	private:
 		SOCKET m_socket;
+		std::function<void(const network::message<network::MessageType>&)> MessageReceivedHandler;
+		fd_set m_master;
+
+		// REMOVE LATER
+		bool key[3] = { false, false, false };
+		bool old_key[3] = { false, false, false };
 
 	private:
 		std::string PrintSocketData(struct addrinfo* p);
@@ -19,6 +25,11 @@ namespace network
 			m_socket = INVALID_SOCKET;
 
 			InitWinsock();
+
+			using namespace std::placeholders;
+			MessageReceivedHandler = std::bind(&client_interface::OnMessageReceived, this, _1);
+
+			ZeroMemory(&m_master, sizeof(m_master));
 		}
 
 		virtual ~client_interface()
@@ -28,6 +39,8 @@ namespace network
 		}
 
 	public:
+		virtual void OnMessageReceived(const network::message<network::MessageType>& msg) = 0;
+
 		// Given IP and port establish a connection to the server
 		bool Connect(const std::string& ip, const uint16_t port);
 
@@ -38,7 +51,79 @@ namespace network
 		bool IsConnected();
 
 		void Send(const message<T>& msg);
+
+		void UpdateClient(const bool& condition);
 	};
+
+	template <typename T>
+	void client_interface<T>::UpdateClient(const bool& condition)
+	{
+		message<T> msg;
+		while (condition == true)
+		{
+			ZeroMemory(&msg, sizeof(msg));
+			fd_set copy = m_master;
+
+			int8_t socketCount = select(0, &copy, nullptr, nullptr, nullptr);
+
+			key[0] = GetAsyncKeyState('1') & 0x8000;
+			key[1] = GetAsyncKeyState('2') & 0x8000;
+			key[2] = GetAsyncKeyState('3') & 0x8000;
+
+			if (key[0] && !old_key[0])
+			{
+				message<MessageType> msg = {};
+				msg.header.id = MessageType::PingServer;
+
+				Send(msg);
+			}
+
+			for (int i = 0; i < 3; i++)
+			{
+				old_key[i] = key[i];
+			}
+
+			if (socketCount == SOCKET_ERROR)
+			{
+				if (WSAGetLastError() == WSAEWOULDBLOCK)
+				{
+					continue;
+				}
+				std::cout << "Select: " << WSAGetLastError() << std::endl;
+			}
+
+			for (int i = 0; i < socketCount; i++)
+			{
+				SOCKET currentSocket = copy.fd_array[i];
+
+				if (FD_ISSET(currentSocket, &copy))
+				{
+					// If the currentsocket is the socket client is bound to we have an incoming message from the server
+					if (currentSocket == m_socket)
+					{
+						uint32_t bytesLeft = recv(m_socket, (char*)&msg, sizeof(msg.header), 0);
+
+						if (bytesLeft > 0)
+						{
+							if (this->MessageReceivedHandler != nullptr)
+							{
+								this->MessageReceivedHandler(msg);
+							}
+						}
+						else
+						{
+							if (WSAGetLastError() == EWOULDBLOCK)
+							{
+								continue;
+							}
+
+							Disconnect();
+						}
+					}
+				}
+			}
+		}
+	}
 
 	template<typename T>
 	void client_interface<T>::InitWinsock()
@@ -165,6 +250,8 @@ namespace network
 
 			return false;
 		}
+
+		FD_SET(m_socket, &m_master);
 
 		return true;
 	}

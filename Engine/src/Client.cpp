@@ -22,31 +22,23 @@ Client::Client()
 	}
 }
 
+void Client::Update()
+{
+	UpdateClient(Engine::s_engineRunning);
+}
+
 Client::~Client()
 {
 }
 
-void Client::Update()
+void Client::OnMessageReceived(const network::message<network::MessageType>& msg)
 {
-	while (Engine::s_engineRunning)
+	using namespace network;
+
+	switch (msg.header.id)
 	{
-		using namespace network;
-
-		key[0] = GetAsyncKeyState('1') & 0x8000;
-		key[1] = GetAsyncKeyState('2') & 0x8000;
-		key[2] = GetAsyncKeyState('3') & 0x8000;
-
-		if (key[0] && !old_key[0])
-		{
-			message<MessageType> msg = {};
-			msg.header.id = MessageType::PingServer;
-
-			Send(msg);
-		}
-
-		for (int i = 0; i < 3; i++)
-		{
-			old_key[i] = key[i];
-		}
+	case MessageType::Unknown:
+		std::cout << "Broadcast received from server: " << msg << std::endl;
+		break;
 	}
 }

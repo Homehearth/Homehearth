@@ -3,8 +3,15 @@
 
 Server::Server()
 {
-	Start(4950);
-	T_CJOB(Server, Update);
+	if (Start(4950))
+	{
+		std::cout << "Server started successfully!" << std::endl;
+		T_CJOB(Server, Update);
+	}
+	else
+	{
+		std::cout << "Failed to start the server!" << std::endl;
+	}
 }
 
 Server::~Server()
@@ -15,6 +22,7 @@ Server::~Server()
 void Server::OnClientConnect(const std::string& ip, const uint16_t& port)
 {
 	std::cout << "Client connected from " << ip << ":" << std::to_string(port) << std::endl;
+	Broadcast();
 }
 
 void Server::OnClientDisconnect()
