@@ -11,7 +11,7 @@ Client::Client()
 #endif
 		if (thread::IsThreadActive())
 		{
-			T_CJOB(Client, Update);
+			//T_CJOB(Client, Update);
 		}
 	}
 	else

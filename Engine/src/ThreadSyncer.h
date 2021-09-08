@@ -73,7 +73,7 @@ namespace thread
 		const bool GetBuffer(const int&& index, T ** p_pointer);
 
 		/*
-			Get the pointer to a buffer without mutex protection.
+			Get the pointer to a buffer.
 		*/
 		T* GetBufferUnSafe(const int&& index);
 
@@ -124,26 +124,20 @@ namespace thread
 
 		if (index >= 3 || index < 0)
 			[] {LOG_WARNING("Index was out of range from 0 to 3."); return false; };
-		m_mutex.lock();
 		m_buffers[index] = &p_buffer;
-		m_mutex.unlock();
 		return true;
 	}
 	template<class T>
 	inline void TripleBuffer<T>::SwapBuffers(const int&& _first, const int&& _second)
 	{
-		m_mutex.lock();
 		std::swap(m_buffers[_first], m_buffers[_second]);
-		m_mutex.unlock();
 	}
 	template<class T>
 	inline const bool TripleBuffer<T>::GetBuffer(const int&& index, T** p_pointer)
 	{
 		if (index < 3 || index >= 0)
 		{
-			m_mutex.lock();
 			*p_pointer = m_buffers[index];
-			m_mutex.unlock();
 			return true;
 		}
 		else
@@ -167,9 +161,7 @@ namespace thread
 		if (index > 2 || index < 0)
 			return false;
 
-		m_mutex.lock();
 		m_buffers[index] = p_pointer;
-		m_mutex.unlock();
 
 		return true;
 	}

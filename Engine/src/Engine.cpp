@@ -22,7 +22,7 @@ void Engine::Setup(const HINSTANCE& hInstance) {
 #endif
     RedirectIoToConsole();
 
-    T_INIT(T_REC, thread::ThreadType::POOL_FIFO);
+    T_INIT(1, thread::ThreadType::POOL_FIFO);
     resource::ResourceManager::Initialize();
     srand((unsigned int)time(NULL));
 
@@ -47,11 +47,11 @@ void Engine::Setup(const HINSTANCE& hInstance) {
     */
     m_drawBuffers.AllocateBuffers();
     this->pointer = m_drawBuffers.GetBufferUnSafe(0);
-    //this->pointer->reserve(1001);
+    this->pointer->reserve(6000);
     this->pointer = m_drawBuffers.GetBufferUnSafe(1);
-    //this->pointer->reserve(1001);
+    this->pointer->reserve(6000);
     this->pointer = m_drawBuffers.GetBufferUnSafe(2);
-    //this->pointer->reserve(1001);
+    this->pointer->reserve(6000);
 
     m_client = std::make_unique<Client>();
 
@@ -69,7 +69,9 @@ void Engine::Setup(const HINSTANCE& hInstance) {
         m_drawBuffers.GetBuffer(0, &pointer);
         if (pointer)
         {
-            pointer->clear();
+            if(!pointer->empty())
+                pointer->clear();
+
             auto view = reg.view<Triangle, Velocity>();
             view.each([&, dt](Triangle& triangle, Velocity& velocity)
             {
@@ -102,10 +104,10 @@ void Engine::Setup(const HINSTANCE& hInstance) {
             {
                Triangle * triangle = &pointer->at(i);
                 if(triangle)
-                   D2D1Core::DrawF(triangle->pos[0], triangle->pos[1], triangle->size[0], triangle->size[1], Shapes::RECTANGLE_FILLED);
+                   D2D1Core::DrawF(triangle->pos[0], triangle->pos[1], triangle->size[0], triangle->size[1], Shapes::TRIANGLE_FILLED);
             }
 
-            //pointer->clear();
+            pointer->clear();
         }
         /*
         auto view = reg.view<Triangle>();
@@ -117,7 +119,7 @@ void Engine::Setup(const HINSTANCE& hInstance) {
     });
 
     // Create test Entities
-    for (int i = 0; i < 1; i++)
+    for (int i = 0; i < 50000; i++)
     {
         entt::entity entity = scene.CreateEntity();
         Triangle& comp = scene.AddComponent<Triangle>(entity);
@@ -307,9 +309,9 @@ void Engine::Render(float& dt)
     /*
         Present the final image and clear it for next frame.
     */
+    D2D1Core::Present();
     D3D11Core::Get().SwapChain()->Present(1, 0);
     m_renderer.get()->clearScreen();
-    D2D1Core::Present();
     m_drawBuffers.SwapBuffers(1, 2);
 }
 
