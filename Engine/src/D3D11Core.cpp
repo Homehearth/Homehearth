@@ -2,7 +2,7 @@
 #include "D3D11Core.h"
 
 D3D11Core::D3D11Core()
-	: m_window(nullptr)
+    : m_window(nullptr)
     , m_isInitialized(false)
 {
 }
@@ -17,7 +17,23 @@ void D3D11Core::Initialize(Window* pWindow)
     if (!this->createDeviceAndSwapChain())
         LOG_ERROR("failed creating m_device and swapchain.");
     else
-		this->m_isInitialized = true;
+        this->m_isInitialized = true;
+
+    if (FAILED(CreateDXGIFactory(__uuidof(IDXGIFactory), reinterpret_cast<void**>(m_dxgiFacory.GetAddressOf()))))
+    {
+        LOG_ERROR("Failed creating IDXGIFactory");
+    }
+
+    if (FAILED(m_dxgiFacory->EnumAdapters(0, m_dxgiAdapter.GetAddressOf())))
+    {
+        LOG_ERROR("Failed to create IDXGIAdapter");
+    }
+
+    if (FAILED(m_dxgiAdapter->QueryInterface(__uuidof(IDXGIAdapter4), (void**)&m_dxgiAdapter4)))
+    {
+        LOG_ERROR("Failed to create IDXGIAdapter4");
+    }
+
 }
 
 ID3D11Device* D3D11Core::Device() const
@@ -33,6 +49,16 @@ ID3D11DeviceContext* D3D11Core::DeviceContext() const
 IDXGISwapChain* D3D11Core::SwapChain() const
 {
     return this->m_swapChain.Get();
+}
+
+DXGI_QUERY_VIDEO_MEMORY_INFO D3D11Core::GetVideoMemoryInfo() 
+{
+    DXGI_QUERY_VIDEO_MEMORY_INFO info = {};
+    if (FAILED(m_dxgiAdapter4->QueryVideoMemoryInfo(0, DXGI_MEMORY_SEGMENT_GROUP_LOCAL, &info)))
+    {
+        LOG_ERROR("Failed to query memory information");
+    }
+    return info;
 }
 
 bool D3D11Core::createDeviceAndSwapChain()
