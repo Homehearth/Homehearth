@@ -46,12 +46,10 @@ void Engine::Setup(const HINSTANCE& hInstance) {
         Preallocate space for Triplebuffer
     */
     m_drawBuffers.AllocateBuffers();
-    this->pointer = m_drawBuffers.GetBufferUnSafe(0);
-    this->pointer->reserve(6000);
-    this->pointer = m_drawBuffers.GetBufferUnSafe(1);
-    this->pointer->reserve(6000);
-    this->pointer = m_drawBuffers.GetBufferUnSafe(2);
-    this->pointer->reserve(6000);
+    this->pointer = m_drawBuffers.GetBuffer(0);
+    this->pointer->reserve(10000);
+    this->pointer = m_drawBuffers.GetBuffer(1);
+    this->pointer->reserve(10000);
 
     m_client = std::make_unique<Client>();
 
@@ -66,7 +64,7 @@ void Engine::Setup(const HINSTANCE& hInstance) {
     scene.AddSystem([&](entt::registry& reg, float dt)
     {
         std::vector<Triangle>* pointer = nullptr;
-        m_drawBuffers.GetBuffer(0, &pointer);
+        pointer = m_drawBuffers.GetBuffer(0);
         if (pointer)
         {
             if(!pointer->empty())
@@ -97,7 +95,7 @@ void Engine::Setup(const HINSTANCE& hInstance) {
     scene.AddRenderSystem([&](entt::registry& reg)
     {
        std::vector<Triangle>* pointer = nullptr;
-        m_drawBuffers.GetBuffer(2, &pointer);
+        pointer = m_drawBuffers.GetBuffer(1);
         if (pointer && pointer->size() > 0)
         {
             for (int i = 0; i < pointer->size(); i++)
@@ -106,8 +104,6 @@ void Engine::Setup(const HINSTANCE& hInstance) {
                 if(triangle)
                    D2D1Core::DrawF(triangle->pos[0], triangle->pos[1], triangle->size[0], triangle->size[1], Shapes::TRIANGLE_FILLED);
             }
-
-            pointer->clear();
         }
         /*
         auto view = reg.view<Triangle>();
@@ -119,7 +115,7 @@ void Engine::Setup(const HINSTANCE& hInstance) {
     });
 
     // Create test Entities
-    for (int i = 0; i < 50000; i++)
+    for (int i = 0; i < 500; i++)
     {
         entt::entity entity = scene.CreateEntity();
         Triangle& comp = scene.AddComponent<Triangle>(entity);
@@ -146,7 +142,7 @@ void Engine::Start()
     double currentFrame = 0.f, lastFrame = omp_get_wtime();
     float deltaTime = 0.f, deltaSum = 0.f;
     // Desired FPS
-    const float targetDelta = 1 / 1000.f;
+    const float targetDelta = 1 / 10000.0f;
     MSG msg = { nullptr };
     while (IsRunning())
     {
@@ -249,7 +245,7 @@ void Engine::RenderThread()
     double currentFrame = 0.f, lastFrame = omp_get_wtime();
     float deltaTime = 0.f, deltaSum = 0.f;
     // Desired FPS
-    const float targetDelta = 1 / 144.f;
+    const float targetDelta = 1 / 144.01f;
     float fps = 0;
     while (IsRunning())
     {
@@ -286,7 +282,11 @@ void Engine::Update(float dt)
     //std::cout << "Y: " << y++ << "\n";
     // Handle events enqueued
     Scene::GetEventDispatcher().update();
-    m_drawBuffers.SwapBuffers(0, 1);
+
+    if (!m_drawBuffers.IsSwapped())
+    {
+        m_drawBuffers.SwapBuffers();
+    }
 }
 
 void Engine::Render(float& dt)
@@ -309,9 +309,16 @@ void Engine::Render(float& dt)
     /*
         Present the final image and clear it for next frame.
     */
+    std::vector<Triangle>* pointer = nullptr;
+    pointer = m_drawBuffers.GetBuffer(1);
+
+    if (pointer)
+        pointer->clear();
+
+    m_drawBuffers.ReadySwap();
     D2D1Core::Present();
     D3D11Core::Get().SwapChain()->Present(1, 0);
     m_renderer.get()->clearScreen();
-    m_drawBuffers.SwapBuffers(1, 2);
+
 }
 

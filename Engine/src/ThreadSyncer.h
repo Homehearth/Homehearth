@@ -98,11 +98,12 @@ namespace thread
 	{
 		if (m_isAllocated)
 		{
-			for (int i = 0; i < 3; i++)
-			{
-				if (m_buffers[i])
-					delete m_buffers[i];
-			}
+			if (m_buffers[0])
+				delete m_buffers[0];
+			if (m_buffers[1])
+				delete m_buffers[1];
+			if (m_buffers[2])
+				delete m_buffers[2];
 		}
 
 		delete[] m_buffers;
@@ -166,20 +167,104 @@ namespace thread
 		return true;
 	}
 
-	class Buff
+	template <class T>
+	class DoubleBuffer
 	{
+	private:
+
+		T** m_buffers;
+
+		bool m_isAllocated = false;
+		bool m_isSwapped = false;
 	public:
-		int** buffer = nullptr;
-		void Setup(int&& size)
-		{
-			this->buffer = new int * [size];
-		}
-		~Buff()
-		{
-			if (this->buffer)
-				delete[] this->buffer;
-		}
+
+		DoubleBuffer();
+		~DoubleBuffer();
+
+		/*
+			Allocate memory for the buffers.
+		*/
+		const bool AllocateBuffers();
+		/*
+			Get the buffer at index spot.
+		*/
+		T* GetBuffer(const int&& index);
+
+		/*
+			Swap the position of the two buffers.
+		*/
+		const bool SwapBuffers();
+
+		/*
+			Check if the buffers are swapped.
+			True if it is, False if not.
+		*/
+		const bool IsSwapped();
+
+		/*
+		* Set m_isSwapped to false.
+		*/
+		void ReadySwap();
 	};
+
+	template<class T>
+	inline DoubleBuffer<T>::DoubleBuffer()
+	{
+		m_buffers = new T * [2];
+	}
+
+	template<class T>
+	inline DoubleBuffer<T>::~DoubleBuffer()
+	{
+		if (m_isAllocated)
+		{
+			if (m_buffers[0])
+				delete m_buffers[0];
+			if (m_buffers[1])
+				delete m_buffers[1];
+		}
+
+		delete[] m_buffers;
+	}
+
+	template<class T>
+	inline const bool DoubleBuffer<T>::AllocateBuffers()
+	{
+		for (int i = 0; i < 2; i++)
+		{
+			T* temp = new T();
+			m_buffers[i] = temp;
+		}
+
+		m_isAllocated = true;
+		return true;
+	}
+
+	template<class T>
+	inline T* DoubleBuffer<T>::GetBuffer(const int&& index)
+	{
+		if (index == 0 || index == 1)
+			return m_buffers[index];
+		else
+			return nullptr;
+	}
+	template<class T>
+	inline const bool DoubleBuffer<T>::SwapBuffers()
+	{
+		std::swap(m_buffers[0], m_buffers[1]);
+		m_isSwapped = true;
+		return true;
+	}
+	template<class T>
+	inline const bool DoubleBuffer<T>::IsSwapped()
+	{
+		return m_isSwapped;
+	}
+	template<class T>
+	inline void DoubleBuffer<T>::ReadySwap()
+	{
+		m_isSwapped = false;
+	}
 }
 
 // Engine Index

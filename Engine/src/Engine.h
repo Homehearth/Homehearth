@@ -24,7 +24,8 @@ class Engine
 private:
 	static bool s_engineRunning;
 	static bool s_safeExit;
-	thread::TripleBuffer<std::vector<Triangle>> m_drawBuffers;
+	//thread::TripleBuffer<std::vector<Triangle>> m_drawBuffers;
+	thread::DoubleBuffer<std::vector<Triangle>> m_drawBuffers;
 	std::vector<Triangle> * pointer;
 	int x = 0;
 	int y = 0;
