@@ -24,6 +24,10 @@ private:
 	Scene* m_currentScene;
 	bool m_vSync;
 
+	struct {
+		float update;
+		float render;
+	} m_frameTime;
 	
 	void RedirectIoToConsole();
 
@@ -52,6 +56,8 @@ public:
 	Scene& GetScene(const std::string& name);
 	void SetScene(const std::string& name);
 	void SetScene(Scene& scene);
+
+	Window* GetWindow() const;
 
 	void OnEvent(EngineEvent& event);
 
