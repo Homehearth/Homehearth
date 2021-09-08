@@ -24,7 +24,6 @@ Client::Client()
 
 Client::~Client()
 {
-	UpdateClient(Engine::IsRunning());
 }
 
 void Client::Update()
