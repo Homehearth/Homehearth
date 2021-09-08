@@ -31,7 +31,7 @@ int CALLBACK WinMain(
 	// Set as current scene
 	engine.SetScene(startScene);
 
-	setupDemoScene(engine, startScene);
+	//setupDemoScene(engine, startScene);
 
 	engine.Start();
 

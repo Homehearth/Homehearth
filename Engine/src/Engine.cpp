@@ -42,18 +42,95 @@ void Engine::Setup(const HINSTANCE& hInstance) {
     // Thread should be launched after s_engineRunning is set to true and D3D11 is initalized.
     s_engineRunning = true;
 
+    /*
+        Preallocate space for Triplebuffer
+    */
     m_drawBuffers.AllocateBuffers();
     this->pointer = m_drawBuffers.GetBufferUnSafe(0);
-    this->pointer->reserve(10000000);
+    //this->pointer->reserve(1001);
     this->pointer = m_drawBuffers.GetBufferUnSafe(1);
-    this->pointer->reserve(10000000);
+    //this->pointer->reserve(1001);
     this->pointer = m_drawBuffers.GetBufferUnSafe(2);
-    this->pointer->reserve(10000000);
+    //this->pointer->reserve(1001);
 
     m_client = std::make_unique<Client>();
 
     // register Engine OnEvent function so Scene can talk to Engine
     Scene::GetEventDispatcher().sink<EngineEvent>().connect<&Engine::OnEvent>(this);
+
+
+
+
+    Scene& scene = GetScene("StartScene");
+    // System to update components
+    scene.AddSystem([&](entt::registry& reg, float dt)
+    {
+        std::vector<Triangle>* pointer = nullptr;
+        m_drawBuffers.GetBuffer(0, &pointer);
+        if (pointer)
+        {
+            pointer->clear();
+            auto view = reg.view<Triangle, Velocity>();
+            view.each([&, dt](Triangle& triangle, Velocity& velocity)
+            {
+                if (triangle.pos[0] > GetWindow()->GetWidth() - triangle.size[0] ||
+                    triangle.pos[0] < 0)
+                {
+                    velocity.vel[0] = -velocity.vel[0];
+                }
+                if (triangle.pos[1] > GetWindow()->GetHeight() - triangle.size[1] ||
+                    triangle.pos[1] < 0)
+                {
+                    velocity.vel[1] = -velocity.vel[1];
+                }
+                triangle.pos[0] += velocity.vel[0] * dt * velocity.mag;
+                triangle.pos[1] += velocity.vel[1] * dt * velocity.mag;
+
+                pointer->push_back(triangle);
+            });
+        }
+    });
+
+    // System to render Triangle components
+    scene.AddRenderSystem([&](entt::registry& reg)
+    {
+       std::vector<Triangle>* pointer = nullptr;
+        m_drawBuffers.GetBuffer(2, &pointer);
+        if (pointer && pointer->size() > 0)
+        {
+            for (int i = 0; i < pointer->size(); i++)
+            {
+               Triangle * triangle = &pointer->at(i);
+                if(triangle)
+                   D2D1Core::DrawF(triangle->pos[0], triangle->pos[1], triangle->size[0], triangle->size[1], Shapes::RECTANGLE_FILLED);
+            }
+
+            //pointer->clear();
+        }
+        /*
+        auto view = reg.view<Triangle>();
+        view.each([](Triangle& triangle)
+        {
+            D2D1Core::DrawF(triangle.pos[0], triangle.pos[1], triangle.size[0], triangle.size[1], Shapes::RECTANGLE_FILLED);
+        });
+        */
+    });
+
+    // Create test Entities
+    for (int i = 0; i < 1; i++)
+    {
+        entt::entity entity = scene.CreateEntity();
+        Triangle& comp = scene.AddComponent<Triangle>(entity);
+        comp.pos[0] = 0.0f;
+        comp.pos[1] = 0.0f;
+        comp.size[0] = (rand() % 40) + 20;
+        comp.size[1] = comp.size[0];
+
+        Velocity& vel = scene.AddComponent<Velocity>(entity);
+        vel.vel[0] = (rand() % 100) / 100.f;
+        vel.vel[1] = sqrtf(1 - vel.vel[0] * vel.vel[0]);
+        vel.mag = (rand() % 200) + 100.f;
+    }
 
 }
 
@@ -108,7 +185,9 @@ void Engine::Shutdown()
 {
     s_engineRunning = false;
     // Wait for the rendering thread to exit its last render cycle and shutdown.
+#ifdef _DEBUG
     while (!s_safeExit) {};
+#endif
 
     T_DESTROY();
     resource::ResourceManager::Destroy();
@@ -189,10 +268,6 @@ void Engine::RenderThread()
 
 void Engine::Update(float dt)
 {
-    std::vector<thread::Buff>* p = nullptr;
-    m_frameTime.update = dt;
-
-    m_drawBuffers.GetBuffer(0, &p);
 
     // Update the camera transform based on interactive inputs.
     //updateCamera(dt);
@@ -205,41 +280,22 @@ void Engine::Update(float dt)
     {
         m_currentScene->Update(dt);
     }
-
-    if (p)
-    {
-        p->clear();
-        for (int i = 0; i < 500; i++)
-        {
-            thread::Buff temp;
-            p->push_back(temp);
-        }
-    }
-
-
-    m_drawBuffers.SwapBuffers(0, 1);
+    
     //std::cout << "Y: " << y++ << "\n";
     // Handle events enqueued
     Scene::GetEventDispatcher().update();
+    m_drawBuffers.SwapBuffers(0, 1);
 }
 
 void Engine::Render(float& dt)
 {
     D2D1Core::Begin();
-    std::vector<thread::Buff>* readBlock = nullptr;
-    m_drawBuffers.GetBuffer(2, &readBlock);
     //for (int i = 0; i < 10000; i++)
         //D2D1Core::DrawF(0, 0, 100, 100, Shapes::RECTANGLE_FILLED);
           //D2D1Core::DrawF(rand() % m_window.get()->GetWidth() - 100, rand() % m_window.get()->GetHeight() - 100, 100, 100, Shapes::RECTANGLE_FILLED);
     if (m_currentScene)
     {
         m_currentScene->Render();
-    }
-
-    if (readBlock)
-    {
-        x++;
-        std::cout << "X: " << x << "\n";
     }
 
     const std::string fps = "Render FPS: " + std::to_string(1.0f / dt)

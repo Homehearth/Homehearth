@@ -8,13 +8,24 @@
 
 #include <time.h>
 
+// ECS DEMO
+// Simple Components
+struct Triangle {
+	float pos[2];
+	float size[2];
+};
+struct Velocity {
+	float vel[2];
+	float mag;
+};
+
 class Engine
 {
 private:
 	static bool s_engineRunning;
 	static bool s_safeExit;
-	thread::TripleBuffer<std::vector<thread::Buff>> m_drawBuffers;
-	std::vector<thread::Buff> * pointer;
+	thread::TripleBuffer<std::vector<Triangle>> m_drawBuffers;
+	std::vector<Triangle> * pointer;
 	int x = 0;
 	int y = 0;
 	float fps_int = 0;
