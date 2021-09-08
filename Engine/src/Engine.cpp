@@ -41,6 +41,7 @@ void Engine::Setup(const HINSTANCE& hInstance) {
     m_renderer->initialize(m_window.get());
     // Thread should be launched after s_engineRunning is set to true and D3D11 is initalized.
     s_engineRunning = true;
+    this->t.Setup(100000000);
 
     m_client = std::make_unique<Client>();
 
@@ -59,7 +60,7 @@ void Engine::Start()
     double currentFrame = 0.f, lastFrame = omp_get_wtime();
     float deltaTime = 0.f, deltaSum = 0.f;
     // Desired FPS
-    const float targetDelta = 1 / 100000000000000000000000.f;
+    const float targetDelta = 1 / 1000.f;
     MSG msg = { nullptr };
     while (IsRunning())
     {
@@ -187,9 +188,15 @@ void Engine::Update(float dt)
     {
         m_currentScene->Update(dt);
     }
-    thread::Buff t;
-    t.Setup(1000);
-    m_drawBuffers.SetUpBuffer(0, std::move(t));
+
+    for (int i = 0; i < 1000000; i++)
+    {
+        int temp = 500000;
+        t.buffer[i] = &temp;
+    }
+
+
+    //m_drawBuffers.SetUpBuffer(0, std::move(t));
     m_drawBuffers.SwapBuffers(0, 1);
     //std::cout << "Y: " << y++ << "\n";
     // Handle events enqueued

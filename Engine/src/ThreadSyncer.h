@@ -65,6 +65,11 @@ namespace thread
 			Return a pointer to the buffer at indexed spot.
 		*/
 		const bool GetBuffer(const int&& index, T * p_pointer);
+
+		/*
+			Set the buffer at position index to the preallocated pointer address.
+		*/
+		const bool SetPreAllocatedBuffer(const int&& index, T* p_pointer);
 	};
 
 	/*
@@ -122,18 +127,29 @@ namespace thread
 		}
 	}
 
+	template<class T>
+	inline const bool TripleBuffer<T>::SetPreAllocatedBuffer(const int&& index, T* p_pointer)
+	{
+		if (index > 2 || index < 0)
+			return false;
+
+		m_buffers[index] = p_pointer;
+
+		return true;
+	}
+
 	class Buff
 	{
 	public:
-		int* buffer = nullptr;
+		int** buffer = nullptr;
 		void Setup(int&& size)
 		{
-			this->buffer = new int[size];
+			this->buffer = new int * [size];
 		}
 		~Buff()
 		{
 			if (this->buffer)
-				delete this->buffer;
+				delete[] this->buffer;
 		}
 	};
 }

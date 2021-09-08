@@ -18,6 +18,7 @@ private:
 	int x = 0;
 	int y = 0;
 	float fps_int = 0;
+	thread::Buff t;
 
 	std::unique_ptr<Window> m_window;
 	std::unique_ptr<Renderer> m_renderer;
