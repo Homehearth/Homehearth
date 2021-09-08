@@ -41,7 +41,7 @@ project "Engine"
             ["src/Core/Engine"] = { "**Engine.*", "**Scene.*", "**EventTypes.*" },
             ["src/Core/Input"] = { "**InputSystem.*" },
             ["src/Core/Window"] = { "**Window.*" },
-            ["src/Core/Utility"] = { "**Logger.*", "**multi_thread_manager.*" },
+            ["src/Core/Utility"] = { "**Logger.*", "**multi_thread_manager.*", "**Profiler.*", "**ThreadSyncer.*"},
 
         ["src/Graphics"] = { "**Buffers.*", "**NYI.*" },
             ["src/Graphics/Renderer"] = {"**Renderer.*"},
@@ -66,7 +66,8 @@ project "Engine"
     links{
         "d3d11",
         "d2d1",
-		"dwrite"
+		"dwrite",
+        "dxgi"
     }
 
 

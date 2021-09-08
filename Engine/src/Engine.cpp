@@ -2,6 +2,7 @@
 #include "Engine.h"
 #include "multi_thread_manager.h"
 #include <chrono>
+#include <functional>
 
 bool Engine::s_engineRunning = false;
 bool Engine::s_safeExit = false;
@@ -18,6 +19,10 @@ void Engine::Setup(const HINSTANCE& hInstance) {
 #ifdef _DEBUG
     RedirectIoToConsole();
 #endif
+    
+    T_INIT(T_REC, thread::ThreadType::POOL_FIFO);
+    resource::ResourceManager::Initialize();
+    srand((unsigned int)time(NULL));
 
 	// Window Setup:
 	Window::Desc config;
@@ -38,77 +43,45 @@ void Engine::Setup(const HINSTANCE& hInstance) {
 
     m_client = std::make_unique<Client>();
 
-    if (thread::IsThreadActive())
-        T_CJOB(Engine, Render);
-
     // register Engine OnEvent function so Scene can talk to Engine
     Scene::GetEventDispatcher().sink<EngineEvent>().connect<&Engine::OnEvent>(this);
 
 }
 
-void Engine::Update(float dt)
+void Engine::Start() 
 {
-    // Update the camera transform based on interactive inputs.
-    //updateCamera(dt);
+    auto lastTime = std::chrono::high_resolution_clock::now();
 
-    // Update positions, orientations and any other
-    // relevant visual state of any dynamic elements
-    // in the scene.
-    
-    if (m_currentScene)
+    if (thread::IsThreadActive())
+        T_CJOB(Engine, RenderThread);
+
+    MSG msg = { nullptr };
+    while (IsRunning())
     {
-        m_currentScene->Update(dt);
-    }
-    // Handle events enqueued by the scene
-    Scene::GetEventDispatcher().update(); 
-    
-    // for each entity:
-	//	entity.Update(dt);
-	
-    //animationEngine.Update(dt);
-    //physicsEngine.Simulate(dt);
-    //collisionEngine.DetectAndResolveCollisions(dt);
-    //audioEngine.Update(dt);
-    //renderingEngine.RenderFrameAndSwapBuffers();
-
-    // Render into the "back buffer".
-    //renderScene();
-
-    // Swap the back buffer with the front buffer.
-    //swapBuffers();	
-}
-
-void Engine::Render() 
-{
-    while (s_engineRunning)
-    {
-        D2D1Core::Begin();
-        auto lastTime = std::chrono::high_resolution_clock::now();
-       
-        //TODO: vsync
-        for(int i = 0; i < 5; i++)
-         D2D1Core::DrawF(rand() % m_window.get()->GetWidth() - 100, rand() % m_window.get()->GetHeight() - 100, 100, 100, Shapes::RECTANGLE_FILLED);
-
-        if (m_currentScene)
+        // Service any and all pending Windows messages.
+        if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
         {
-            m_currentScene->Render();
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+            if (msg.message == WM_QUIT)
+            {
+                Shutdown();
+            }
+        }
+
+        // [InputSystem Test]
+        InputEvent event;
+        while (InputSystem::Get().PollEvent(event))
+        {
+            Scene::GetEventDispatcher().enqueue<InputEvent>(event);
         }
 
         auto now = std::chrono::high_resolution_clock::now();
         auto delta = std::chrono::duration_cast<std::chrono::duration<float>>(now - lastTime);
         lastTime = now;
         float dt = delta.count();
-        const std::string fps = "FPS: " + std::to_string((1.0f / dt));
-        D2D1Core::DrawT(fps, m_window.get());
-
-        if (D3D11Core::Get().SwapChain() != nullptr)
-            D3D11Core::Get().SwapChain()->Present(0, 0);
-        if(m_renderer)
-           m_renderer.get()->clearScreen();
-
-        D2D1Core::Present();
+        Update(dt);
     }
-    s_safeExit = true;
 }
 
 void Engine::Shutdown() 
@@ -116,6 +89,10 @@ void Engine::Shutdown()
     s_engineRunning = false;
     // Wait for the rendering thread to exit its last render cycle and shutdown.
     while (!s_safeExit) {};
+
+    T_DESTROY();
+    resource::ResourceManager::Destroy();
+    D2D1Core::Destroy();
 }
 
 Scene& Engine::GetScene(const std::string& name) 
@@ -133,18 +110,23 @@ void Engine::SetScene(Scene& scene)
     m_currentScene = &scene;
 }
 
+Window* Engine::GetWindow() const
+{
+    return m_window.get();
+}
+
 void Engine::OnEvent(EngineEvent& event) {
     switch (event.type)
     {
     case EngineEvent::Type::SHUTDOWN:
-        s_engineRunning = false;
+        Shutdown();
         break;
     default:
         break;
     }
 }
 
-bool Engine::IsRunning() const 
+bool Engine::IsRunning() 
 {
     return s_engineRunning;
 }
@@ -160,3 +142,59 @@ void Engine::RedirectIoToConsole()
     fp = _fdopen(hConsole, "w");
     freopen_s(&fp, "CONOUT$", "w", stdout);
 }
+
+void Engine::RenderThread()
+{
+    while (IsRunning())
+    {
+        Render();
+    }
+    s_safeExit = true;
+}
+
+void Engine::Update(float dt)
+{
+    m_frameTime.update = dt;
+    // Update the camera transform based on interactive inputs.
+    //updateCamera(dt);
+
+    // Update positions, orientations and any other
+    // relevant visual state of any dynamic elements
+    // in the scene.
+
+    if (m_currentScene)
+    {
+        m_currentScene->Update(dt);
+    }
+    // Handle events enqueued
+    Scene::GetEventDispatcher().update();
+}
+
+void Engine::Render()
+{
+    D2D1Core::Begin();
+    static auto lastTime = std::chrono::high_resolution_clock::now();
+    
+    if (m_currentScene)
+    {
+        m_currentScene->Render();
+    }
+    auto now = std::chrono::high_resolution_clock::now();
+    auto delta = std::chrono::duration_cast<std::chrono::duration<float>>(now - lastTime);
+    lastTime = now;
+    m_frameTime.render = delta.count();
+    const std::string fps = 
+        "Rendering FPS: " + std::to_string(1.0f / m_frameTime.render) +
+        "\nUpdate FPS: " + std::to_string(1.0f / m_frameTime.update) +
+        "\nRAM: " + std::to_string(Profiler::Get().GetRAMUsage() / (1024.f * 1024.f)) +
+        "\nVRAM: " + std::to_string(Profiler::Get().GetVRAMUsage() / (1042.f * 1024.f));
+    D2D1Core::DrawT(fps, m_window.get());
+
+    /*
+        Present the final image and clear it for next frame.
+    */
+    D3D11Core::Get().SwapChain()->Present(1, 0);
+    m_renderer.get()->clearScreen();
+    D2D1Core::Present();
+}
+
