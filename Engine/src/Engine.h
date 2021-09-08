@@ -13,12 +13,11 @@ class Engine
 private:
 	static bool s_engineRunning;
 	static bool s_safeExit;
-	thread::TripleBuffer<thread::Buff> m_drawBuffers;
-	thread::Buff test;
+	thread::TripleBuffer<std::vector<thread::Buff>> m_drawBuffers;
+	std::vector<thread::Buff> * pointer;
 	int x = 0;
 	int y = 0;
 	float fps_int = 0;
-	thread::Buff t;
 
 	std::unique_ptr<Window> m_window;
 	std::unique_ptr<Renderer> m_renderer;

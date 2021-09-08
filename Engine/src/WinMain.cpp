@@ -81,7 +81,7 @@ void setupDemoScene(Engine& engine, Scene& scene) {
 			auto view = reg.view<Triangle>();
 			view.each([](Triangle& triangle)
 				{
-					D2D1Core::DrawF(triangle.pos[0], triangle.pos[1], triangle.size[0], triangle.size[1], Shapes::TRIANGLE_FILLED);
+					D2D1Core::DrawF(triangle.pos[0], triangle.pos[1], triangle.size[0], triangle.size[1], Shapes::RECTANGLE_FILLED);
 				});
 		});
 

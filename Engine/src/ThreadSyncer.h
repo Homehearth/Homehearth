@@ -47,10 +47,16 @@ namespace thread
 		*/
 		std::mutex m_mutex;
 
+		bool m_isAllocated = false;
 	public:
 
 		TripleBuffer();
 		~TripleBuffer();
+
+		/*
+			Allocate up spots for the buffers.
+		*/
+		const bool AllocateBuffers();
 		/*
 			Copies the parameter buffer into indexed buffer spot.
 			If data was previously allocated to this buffer it will be deleted.
@@ -64,7 +70,12 @@ namespace thread
 		/*
 			Return a pointer to the buffer at indexed spot.
 		*/
-		const bool GetBuffer(const int&& index, T * p_pointer);
+		const bool GetBuffer(const int&& index, T ** p_pointer);
+
+		/*
+			Get the pointer to a buffer without mutex protection.
+		*/
+		T* GetBufferUnSafe(const int&& index);
 
 		/*
 			Set the buffer at position index to the preallocated pointer address.
@@ -85,13 +96,27 @@ namespace thread
 	template<class T>
 	inline TripleBuffer<T>::~TripleBuffer()
 	{
-		for (int i = 0; i < 3; i++)
+		if (m_isAllocated)
 		{
-			//if (m_buffers[i])
-				//delete m_buffers[i];
+			for (int i = 0; i < 3; i++)
+			{
+				if (m_buffers[i])
+					delete m_buffers[i];
+			}
 		}
 
 		delete[] m_buffers;
+	}
+	template<class T>
+	inline const bool TripleBuffer<T>::AllocateBuffers()
+	{
+		for (int i = 0; i < 3; i++)
+		{
+			T * temp = new T();
+			m_buffers[i] = temp;
+		}
+		m_isAllocated = true;
+		return true;
 	}
 	template<class T>
 	inline const bool TripleBuffer<T>::SetUpBuffer(const int&& index, T&& p_buffer)
@@ -112,12 +137,12 @@ namespace thread
 		m_mutex.unlock();
 	}
 	template<class T>
-	inline const bool TripleBuffer<T>::GetBuffer(const int&& index, T* p_pointer)
+	inline const bool TripleBuffer<T>::GetBuffer(const int&& index, T** p_pointer)
 	{
 		if (index < 3 || index >= 0)
 		{
 			m_mutex.lock();
-			p_pointer = m_buffers[index];
+			*p_pointer = m_buffers[index];
 			m_mutex.unlock();
 			return true;
 		}
@@ -128,12 +153,23 @@ namespace thread
 	}
 
 	template<class T>
+	inline T* TripleBuffer<T>::GetBufferUnSafe(const int&& index)
+	{
+		if (index < 2 || index >= 0)
+			return m_buffers[index];
+		else
+			return nullptr;
+	}
+
+	template<class T>
 	inline const bool TripleBuffer<T>::SetPreAllocatedBuffer(const int&& index, T* p_pointer)
 	{
 		if (index > 2 || index < 0)
 			return false;
 
+		m_mutex.lock();
 		m_buffers[index] = p_pointer;
+		m_mutex.unlock();
 
 		return true;
 	}

@@ -41,7 +41,14 @@ void Engine::Setup(const HINSTANCE& hInstance) {
     m_renderer->initialize(m_window.get());
     // Thread should be launched after s_engineRunning is set to true and D3D11 is initalized.
     s_engineRunning = true;
-    this->t.Setup(100000000);
+
+    m_drawBuffers.AllocateBuffers();
+    this->pointer = m_drawBuffers.GetBufferUnSafe(0);
+    this->pointer->reserve(10000000);
+    this->pointer = m_drawBuffers.GetBufferUnSafe(1);
+    this->pointer->reserve(10000000);
+    this->pointer = m_drawBuffers.GetBufferUnSafe(2);
+    this->pointer->reserve(10000000);
 
     m_client = std::make_unique<Client>();
 
@@ -182,7 +189,11 @@ void Engine::RenderThread()
 
 void Engine::Update(float dt)
 {
+    std::vector<thread::Buff>* p = nullptr;
     m_frameTime.update = dt;
+
+    m_drawBuffers.GetBuffer(0, &p);
+
     // Update the camera transform based on interactive inputs.
     //updateCamera(dt);
 
@@ -195,14 +206,17 @@ void Engine::Update(float dt)
         m_currentScene->Update(dt);
     }
 
-    for (int i = 0; i < 1000000; i++)
+    if (p)
     {
-        int temp = 500000;
-        t.buffer[i] = &temp;
+        p->clear();
+        for (int i = 0; i < 500; i++)
+        {
+            thread::Buff temp;
+            p->push_back(temp);
+        }
     }
 
 
-    //m_drawBuffers.SetUpBuffer(0, std::move(t));
     m_drawBuffers.SwapBuffers(0, 1);
     //std::cout << "Y: " << y++ << "\n";
     // Handle events enqueued
@@ -212,7 +226,8 @@ void Engine::Update(float dt)
 void Engine::Render(float& dt)
 {
     D2D1Core::Begin();
-   // m_drawBuffers.SwapBuffers(1, 2);
+    std::vector<thread::Buff>* readBlock = nullptr;
+    m_drawBuffers.GetBuffer(2, &readBlock);
     //for (int i = 0; i < 10000; i++)
         //D2D1Core::DrawF(0, 0, 100, 100, Shapes::RECTANGLE_FILLED);
           //D2D1Core::DrawF(rand() % m_window.get()->GetWidth() - 100, rand() % m_window.get()->GetHeight() - 100, 100, 100, Shapes::RECTANGLE_FILLED);
@@ -221,18 +236,16 @@ void Engine::Render(float& dt)
         m_currentScene->Render();
     }
 
-    thread::Buff* readBlock = nullptr;
-    //m_drawBuffers.GetBuffer(2, readBlock);
     if (readBlock)
     {
         x++;
-        //std::cout << "X: " << x << "\n";
+        std::cout << "X: " << x << "\n";
     }
 
-    const std::string fps = "Update FPS: " + std::to_string(1.0f / fps_int)
-        + "\nRender FPS: " + std::to_string(1.0f / dt)
-        + "\nRAM: " + std::to_string(Profiler::Get().GetRAMUsage() / (1024.f * 1024.f))
-        + "\nVRAM: " + std::to_string(Profiler::Get().GetVRAMUsage() / (1042.f * 1024.f));
+    const std::string fps = "Render FPS: " + std::to_string(1.0f / dt)
+        + "\nUpdate FPS: " + std::to_string(1.0f / fps_int)
+        + "\nRAM: " + std::to_string(Profiler::Get().GetRAMUsage() / (1024.f * 1024.f)) + " MB"
+        + "\nVRAM: " + std::to_string(Profiler::Get().GetVRAMUsage() / (1042.f * 1024.f)) + " MB";
     D2D1Core::DrawT(fps, m_window.get());
 
     /*
@@ -241,6 +254,6 @@ void Engine::Render(float& dt)
     D3D11Core::Get().SwapChain()->Present(1, 0);
     m_renderer.get()->clearScreen();
     D2D1Core::Present();
-
+    m_drawBuffers.SwapBuffers(1, 2);
 }
 
