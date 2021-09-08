@@ -3,6 +3,7 @@
 #include "multi_thread_manager.h"
 #include <chrono>
 #include <functional>
+#include <omp.h>
 
 bool Engine::s_engineRunning = false;
 bool Engine::s_safeExit = false;
@@ -17,27 +18,27 @@ Engine::Engine()
 
 void Engine::Setup(const HINSTANCE& hInstance) {
 #ifdef _DEBUG
-    RedirectIoToConsole();
+    //RedirectIoToConsole();
 #endif
+    RedirectIoToConsole();
 
     T_INIT(T_REC, thread::ThreadType::POOL_FIFO);
     resource::ResourceManager::Initialize();
     srand((unsigned int)time(NULL));
 
-	// Window Setup:
-	Window::Desc config;
-	config.hInstance = hInstance;
-	config.title = L"Engine Window";
-	if (!m_window->Initialize(config)) {
-		LOG_ERROR("Could not Initialize m_window.");
-	}
-	
+    // Window Setup:
+    Window::Desc config;
+    config.hInstance = hInstance;
+    config.title = L"Engine Window";
+    if (!m_window->Initialize(config)) {
+        LOG_ERROR("Could not Initialize m_window.");
+    }
+
     // DirectX Setup:
     D3D11Core::Get().Initialize(this->m_window.get());
     D2D1Core::Initialize(this->m_window.get());
     m_renderer = std::make_unique<Renderer>();
     m_renderer->initialize(m_window.get());
-
     // Thread should be launched after s_engineRunning is set to true and D3D11 is initalized.
     s_engineRunning = true;
 
@@ -55,6 +56,10 @@ void Engine::Start()
     if (thread::IsThreadActive())
         T_CJOB(Engine, RenderThread);
 
+    double currentFrame = 0.f, lastFrame = omp_get_wtime();
+    float deltaTime = 0.f, deltaSum = 0.f;
+    // Desired FPS
+    const float targetDelta = 1 / 100000000000000000000000.f;
     MSG msg = { nullptr };
     while (IsRunning())
     {
@@ -69,18 +74,25 @@ void Engine::Start()
             }
         }
 
-        // [InputSystem Test]
-        InputEvent event;
-        while (InputSystem::Get().PollEvent(event))
+        currentFrame = omp_get_wtime();
+        deltaTime = static_cast<float>(currentFrame - lastFrame);
+        if (deltaSum >= targetDelta)
         {
-            Scene::GetEventDispatcher().enqueue<InputEvent>(event);
-        }
+            // [InputSystem Test]
+            InputEvent event;
+            while (InputSystem::Get().PollEvent(event))
+            {
+                Scene::GetEventDispatcher().enqueue<InputEvent>(event);
+            }
 
-        auto now = std::chrono::high_resolution_clock::now();
-        auto delta = std::chrono::duration_cast<std::chrono::duration<float>>(now - lastTime);
-        lastTime = now;
-        float dt = delta.count();
-        Update(dt);
+            fps_int = deltaSum;
+            Update(deltaSum);
+            deltaSum = 0.f;
+        }
+        deltaSum += deltaTime;
+        lastFrame = currentFrame;
+
+       
     }
 }
 
@@ -140,10 +152,25 @@ void Engine::RedirectIoToConsole()
 
 void Engine::RenderThread()
 {
+    double currentFrame = 0.f, lastFrame = omp_get_wtime();
+    float deltaTime = 0.f, deltaSum = 0.f;
+    // Desired FPS
+    const float targetDelta = 1 / 144.f;
+    float fps = 0;
     while (IsRunning())
     {
-        Render();
+        currentFrame = omp_get_wtime();
+        deltaTime = static_cast<float>(currentFrame - lastFrame);
+        if (deltaSum >= targetDelta)
+        {
+            fps = deltaSum;
+            Render(fps);
+            deltaSum = 0.f;
+        }
+        deltaSum += deltaTime;
+        lastFrame = currentFrame;
     }
+
     s_safeExit = true;
 }
 
@@ -160,27 +187,37 @@ void Engine::Update(float dt)
     {
         m_currentScene->Update(dt);
     }
+    thread::Buff t;
+    t.Setup(1000);
+    m_drawBuffers.SetUpBuffer(0, std::move(t));
+    m_drawBuffers.SwapBuffers(0, 1);
+    //std::cout << "Y: " << y++ << "\n";
     // Handle events enqueued
     Scene::GetEventDispatcher().update();
 }
 
-void Engine::Render()
+void Engine::Render(float& dt)
 {
     D2D1Core::Begin();
-    auto lastTime = std::chrono::high_resolution_clock::now();
-
-    //for (int i = 0; i < 100; i++)
-        //D2D1Core::DrawF(0, 0, m_window.get()->GetWidth(), m_window.get()->GetHeight(), Shapes::RECTANGLE_FILLED);
-       // D2D1Core::DrawF(rand() % m_window.get()->GetWidth() - 100, rand() % m_window.get()->GetHeight() - 100, 100, 100, Shapes::TRIANGLE_FILLED);
+   // m_drawBuffers.SwapBuffers(1, 2);
+    //for (int i = 0; i < 10000; i++)
+        //D2D1Core::DrawF(0, 0, 100, 100, Shapes::RECTANGLE_FILLED);
+          //D2D1Core::DrawF(rand() % m_window.get()->GetWidth() - 100, rand() % m_window.get()->GetHeight() - 100, 100, 100, Shapes::RECTANGLE_FILLED);
     if (m_currentScene)
     {
         m_currentScene->Render();
     }
-    auto now = std::chrono::high_resolution_clock::now();
-    auto delta = std::chrono::duration_cast<std::chrono::duration<float>>(now - lastTime);
-    lastTime = now;
-    float dt = delta.count();
-    const std::string fps = "FPS: " + std::to_string(1.0f / dt)
+
+    thread::Buff* readBlock = nullptr;
+    //m_drawBuffers.GetBuffer(2, readBlock);
+    if (readBlock)
+    {
+        x++;
+        //std::cout << "X: " << x << "\n";
+    }
+
+    const std::string fps = "Update FPS: " + std::to_string(1.0f / fps_int)
+        + "\nRender FPS: " + std::to_string(1.0f / dt)
         + "\nRAM: " + std::to_string(Profiler::Get().GetRAMUsage() / (1024.f * 1024.f))
         + "\nVRAM: " + std::to_string(Profiler::Get().GetVRAMUsage() / (1042.f * 1024.f));
     D2D1Core::DrawT(fps, m_window.get());
@@ -188,8 +225,10 @@ void Engine::Render()
     /*
         Present the final image and clear it for next frame.
     */
+
     D3D11Core::Get().SwapChain()->Present(0, 0);
     m_renderer.get()->clearScreen();
     D2D1Core::Present();
+
 }
 

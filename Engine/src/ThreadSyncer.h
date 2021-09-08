@@ -39,6 +39,14 @@ namespace thread
 		
 		T** m_buffers;
 
+		// Atomics to prevent read/write?
+		/*
+		std::atomic<T> m_buffer1;
+		std::atomic<T> m_buffer2;
+		std::atomic<T> m_buffer3;
+		*/
+		std::mutex m_mutex;
+
 	public:
 
 		TripleBuffer();
@@ -47,7 +55,7 @@ namespace thread
 			Copies the parameter buffer into indexed buffer spot.
 			If data was previously allocated to this buffer it will be deleted.
 		*/
-		const bool SetUpBuffer(const int&& index, const T& p_buffer);
+		const bool SetUpBuffer(const int&& index, T&& p_buffer);
 		/*
 			Swap the buffer pointers between _first and _second
 		*/
@@ -56,7 +64,7 @@ namespace thread
 		/*
 			Return a pointer to the buffer at indexed spot.
 		*/
-		T* GetBuffer(const int&& index);
+		const bool GetBuffer(const int&& index, T * p_pointer);
 	};
 
 	/*
@@ -74,36 +82,60 @@ namespace thread
 	{
 		for (int i = 0; i < 3; i++)
 		{
-			if (m_buffers[i])
-				delete m_buffers[i];
+			//if (m_buffers[i])
+				//delete m_buffers[i];
 		}
 
 		delete[] m_buffers;
 	}
 	template<class T>
-	inline const bool TripleBuffer<T>::SetUpBuffer(const int&& index, const T& p_buffer)
+	inline const bool TripleBuffer<T>::SetUpBuffer(const int&& index, T&& p_buffer)
 	{
 
 		if (index >= 3 || index < 0)
 			[] {LOG_WARNING("Index was out of range from 0 to 3."); return false; };
-		if (m_buffers[index])
-			delete m_buffers[index];
-		m_buffers[index] = new T(p_buffer);
+		m_mutex.lock();
+		m_buffers[index] = &p_buffer;
+		m_mutex.unlock();
 		return true;
 	}
 	template<class T>
 	inline void TripleBuffer<T>::SwapBuffers(const int&& _first, const int&& _second)
 	{
+		m_mutex.lock();
 		std::swap(m_buffers[_first], m_buffers[_second]);
+		m_mutex.unlock();
 	}
 	template<class T>
-	inline T* TripleBuffer<T>::GetBuffer(const int&& index)
+	inline const bool TripleBuffer<T>::GetBuffer(const int&& index, T* p_pointer)
 	{
 		if (index < 3 || index >= 0)
-			return m_buffers[index];
+		{
+			m_mutex.lock();
+			p_pointer = m_buffers[index];
+			m_mutex.unlock();
+			return true;
+		}
 		else
-			return nullptr;
+		{
+			return false;
+		}
 	}
+
+	class Buff
+	{
+	public:
+		int* buffer = nullptr;
+		void Setup(int&& size)
+		{
+			this->buffer = new int[size];
+		}
+		~Buff()
+		{
+			if (this->buffer)
+				delete this->buffer;
+		}
+	};
 }
 
 // Engine Index

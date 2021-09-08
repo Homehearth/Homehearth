@@ -13,7 +13,11 @@ class Engine
 private:
 	static bool s_engineRunning;
 	static bool s_safeExit;
-	thread::TripleBuffer<std::vector<int>> m_drawBuffers;
+	thread::TripleBuffer<thread::Buff> m_drawBuffers;
+	thread::Buff test;
+	int x = 0;
+	int y = 0;
+	float fps_int = 0;
 
 	std::unique_ptr<Window> m_window;
 	std::unique_ptr<Renderer> m_renderer;
@@ -34,7 +38,7 @@ private:
 	// updates the current scene
 	void Update(float dt);
 	// renders one frame
-	void Render();
+	void Render(float& dt);
 
 public:
 	Engine();
