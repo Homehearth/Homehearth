@@ -123,6 +123,11 @@ void Engine::SetScene(Scene& scene)
     m_currentScene = &scene;
 }
 
+Window* Engine::GetWindow() const
+{
+    return m_window.get();
+}
+
 void Engine::OnEvent(EngineEvent& event) {
     switch (event.type)
     {
@@ -177,6 +182,7 @@ void Engine::RenderThread()
 
 void Engine::Update(float dt)
 {
+    m_frameTime.update = dt;
     // Update the camera transform based on interactive inputs.
     //updateCamera(dt);
 
@@ -232,8 +238,7 @@ void Engine::Render(float& dt)
     /*
         Present the final image and clear it for next frame.
     */
-
-    D3D11Core::Get().SwapChain()->Present(0, 0);
+    D3D11Core::Get().SwapChain()->Present(1, 0);
     m_renderer.get()->clearScreen();
     D2D1Core::Present();
 
