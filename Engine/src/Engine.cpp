@@ -96,7 +96,7 @@ void Engine::Setup(const HINSTANCE& hInstance) {
     {
        std::vector<Triangle>* pointer = nullptr;
         pointer = m_drawBuffers.GetBuffer(1);
-        if (pointer && pointer->size() > 0)
+        if (pointer)
         {
             for (int i = 0; i < pointer->size(); i++)
             {
@@ -115,7 +115,7 @@ void Engine::Setup(const HINSTANCE& hInstance) {
     });
 
     // Create test Entities
-    for (int i = 0; i < 500; i++)
+    for (int i = 0; i < 700; i++)
     {
         entt::entity entity = scene.CreateEntity();
         Triangle& comp = scene.AddComponent<Triangle>(entity);
@@ -142,7 +142,7 @@ void Engine::Start()
     double currentFrame = 0.f, lastFrame = omp_get_wtime();
     float deltaTime = 0.f, deltaSum = 0.f;
     // Desired FPS
-    const float targetDelta = 1 / 10000.0f;
+    const float targetDelta = 1 / 1000.0f;
     MSG msg = { nullptr };
     while (IsRunning())
     {
@@ -246,15 +246,16 @@ void Engine::RenderThread()
     float deltaTime = 0.f, deltaSum = 0.f;
     // Desired FPS
     const float targetDelta = 1 / 144.01f;
-    float fps = 0;
     while (IsRunning())
     {
         currentFrame = omp_get_wtime();
         deltaTime = static_cast<float>(currentFrame - lastFrame);
         if (deltaSum >= targetDelta)
         {
-            fps = deltaSum;
-            Render(fps);
+            if (m_drawBuffers.IsSwapped())
+            {
+                Render(deltaSum);
+            }
             deltaSum = 0.f;
         }
         deltaSum += deltaTime;
@@ -291,6 +292,7 @@ void Engine::Update(float dt)
 
 void Engine::Render(float& dt)
 {
+    m_renderer.get()->clearScreen();
     D2D1Core::Begin();
     //for (int i = 0; i < 10000; i++)
         //D2D1Core::DrawF(0, 0, 100, 100, Shapes::RECTANGLE_FILLED);
@@ -309,16 +311,12 @@ void Engine::Render(float& dt)
     /*
         Present the final image and clear it for next frame.
     */
-    std::vector<Triangle>* pointer = nullptr;
-    pointer = m_drawBuffers.GetBuffer(1);
 
-    if (pointer)
-        pointer->clear();
-
+    /*
+        Kanske vänta på att uppdateringstråden kan swappa buffrar.
+    */
     m_drawBuffers.ReadySwap();
     D2D1Core::Present();
     D3D11Core::Get().SwapChain()->Present(1, 0);
-    m_renderer.get()->clearScreen();
-
 }
 
