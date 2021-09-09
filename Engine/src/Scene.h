@@ -7,10 +7,9 @@
 typedef std::function<void(entt::registry&, float)>	SystemUpdateFunction;
 typedef std::function<void (entt::registry&)>		SystemRenderFunction;
 
-class Scene
+class Scene : public entt::emitter<Scene>
 {
 private:
-	static entt::dispatcher s_eventDispatcher;
 	// ecs stuff
 	entt::registry m_ecsRegistry;
 	
@@ -20,10 +19,7 @@ private:
 	
 public:
 
-	static entt::dispatcher& GetEventDispatcher() { return s_eventDispatcher; }
-
-
-	Scene();
+	Scene() = default;
 	virtual ~Scene() = default;
 	Scene(const Scene&) = delete;
 	void operator=(const Scene&) = delete;
