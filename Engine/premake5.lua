@@ -14,12 +14,8 @@ project "Engine"
     -- Define the location(s) of files. 
     -- Note: specify the path relative to the Premake file.
     files {
-        --[[
-            ]]
-
-            "src/**.h",
-            "src/**.cpp",
-            
+        "src/**.h",
+        "src/**.cpp"
     }
 
 

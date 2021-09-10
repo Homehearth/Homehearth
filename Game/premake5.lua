@@ -27,6 +27,10 @@ project "Game"
         "../ThirdParty/entt/"
     }
 
+    vpaths {
+        
+    }
+
     links{
         "Engine",
         "d3d11",
