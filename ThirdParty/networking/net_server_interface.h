@@ -19,20 +19,19 @@ namespace network
 	{
 	private:
 
-		DWORD EventTotal;
+		DWORD m_eventTotal;
 		// Essentially a mutex
 		CRITICAL_SECTION CriticalSection;
 		// Array storing all the events
-		WSAEVENT EventArray[WSA_MAXIMUM_WAIT_EVENTS];
-		WSABUF d;
+		WSAEVENT m_Events[WSA_MAXIMUM_WAIT_EVENTS];
 
 		// Container for all sockets that has an established connection
-		LPSOCKET_INFORMATION SocketArray[WSA_MAXIMUM_WAIT_EVENTS];
+		LPSOCKET_INFORMATION m_Sockets[WSA_MAXIMUM_WAIT_EVENTS];
 		// Function that will process all IO when event has been signaled
 		DWORD WINAPI ProcessIO();
 
 		// Struct containing all needed information regarding a client
-		SOCKET m_listen;
+		SOCKET m_listening;
 
 	private:
 		SOCKET CreateSocket(const uint16_t& port);
@@ -43,14 +42,14 @@ namespace network
 	public:
 		server_interface()
 		{
-			m_listen = INVALID_SOCKET;
+			m_listening = INVALID_SOCKET;
 			message<MessageType> msg;
 			using namespace std::placeholders;
 			MessageReceivedHandler = std::bind(&server_interface::OnMessageReceived, this, _1, _2);
 			ClientConnectHandler = std::bind(&server_interface::OnClientConnect, this, _1, _2);
 			ClientDisconnectHandler = std::bind(&server_interface::OnClientDisconnect, this);
 
-			EventTotal = 0;
+			m_eventTotal = 0;
 		}
 		virtual ~server_interface()
 		{
@@ -114,7 +113,7 @@ namespace network
 	template <typename T>
 	void server_interface<T>::Listen(const uint32_t& nListen)
 	{
-		if (listen(m_listen, nListen) != 0)
+		if (listen(m_listening, nListen) != 0)
 		{
 			std::cout << "Listen(): failed with error " << WSAGetLastError() << std::endl;
 		}
@@ -123,7 +122,7 @@ namespace network
 	template <typename T>
 	SOCKET server_interface<T>::WaitForConnection()
 	{
-		SOCKET clientSocket = accept(m_listen, nullptr, nullptr);
+		SOCKET clientSocket = accept(m_listening, nullptr, nullptr);
 		return clientSocket;
 	}
 
@@ -143,11 +142,20 @@ namespace network
 
 		if (p->ai_socktype == SOCK_STREAM)
 		{
-			data += "Socktype: TCP\n";
+			data += "Socktype: SOCK_STREAM\n";
 		}
 		else if (p->ai_socktype == SOCK_DGRAM)
 		{
-			data += "Socktype: UDP\n";
+			data += "Socktype: SOCK_DGRAM\n";
+		}
+
+		if (p->ai_protocol == IPPROTO_TCP)
+		{
+			data += "Protocol: TCP\n";
+		}
+		else if(p->ai_protocol == IPPROTO_UDP)
+		{
+			data += "Protocol: UDP\n";
 		}
 
 		char ipAsString[IPV6_ADDRSTRLEN] = {};
@@ -226,25 +234,30 @@ namespace network
 		InitWinsock();
 
 		WSABUF buffer = {};
-		m_listen = CreateSocket(port);
+		m_listening = CreateSocket(port);
 
 		// Options to disable Nagle's algorithm (can queue up multiple packets instead of sending 1 by 1)
 		// SO_REUSEADDR will let the server to reuse the port its bound on even if it have not closed 
 		// by the the operating system yet.
 		u_long enable = 1;
-		setsockopt(m_listen, IPPROTO_TCP, TCP_NODELAY, reinterpret_cast<const char*>(&enable), sizeof(enable));
-		setsockopt(m_listen, SOL_SOCKET, SO_REUSEADDR, reinterpret_cast<const char*>(&enable), sizeof(enable));
+		setsockopt(m_listening, IPPROTO_TCP, TCP_NODELAY, reinterpret_cast<const char*>(&enable), sizeof(enable));
+		setsockopt(m_listening, SOL_SOCKET, SO_REUSEADDR, reinterpret_cast<const char*>(&enable), sizeof(enable));
 
 		Listen(SOMAXCONN);
 
 		// Create an event for the accepting socket
-		if ((EventArray[0] = WSACreateEvent()) == WSA_INVALID_EVENT)
+		HANDLE connectionEvent = WSACreateEvent();
+
+		if (connectionEvent == WSA_INVALID_EVENT)
 		{
 			std::cout << "Failed to create event " << WSAGetLastError() << std::endl;
+			return;
 		}
 
+		m_Events[0] = connectionEvent;
+
 		DWORD ThreadId = 0;
-		EventTotal = 1;
+		m_eventTotal = 1;
 
 		thread::MultiThreader::InsertJob(std::bind([this] { ProcessIO(); }));
 
@@ -263,28 +276,28 @@ namespace network
 			this->ClientConnectHandler(ipAsString, port);
 
 			EnterCriticalSection(&CriticalSection);
-			SocketArray[EventTotal] = new _SOCKET_INFORMATION;
+			m_Sockets[m_eventTotal] = new _SOCKET_INFORMATION;
 			// Fill in the details of our accepted socket
 
-			SocketArray[EventTotal]->Socket = clientSocket;
-			ZeroMemory(&(SocketArray[EventTotal]->Overlapped), sizeof(OVERLAPPED));
-			SocketArray[EventTotal]->BytesSEND = 0;
-			SocketArray[EventTotal]->BytesRECV = 0;
-			SocketArray[EventTotal]->DataBuf.len = BUFFER_SIZE;
-			SocketArray[EventTotal]->DataBuf.buf = SocketArray[EventTotal]->Buffer;
+			m_Sockets[m_eventTotal]->Socket = clientSocket;
+			ZeroMemory(&(m_Sockets[m_eventTotal]->Overlapped), sizeof(OVERLAPPED));
+			m_Sockets[m_eventTotal]->BytesSEND = 0;
+			m_Sockets[m_eventTotal]->BytesRECV = 0;
+			m_Sockets[m_eventTotal]->DataBuf.len = BUFFER_SIZE;
+			m_Sockets[m_eventTotal]->DataBuf.buf = m_Sockets[m_eventTotal]->Buffer;
 
-			EventArray[EventTotal] = WSACreateEvent();
-			SocketArray[EventTotal]->Overlapped.hEvent = EventArray[EventTotal];
+			m_Events[m_eventTotal] = WSACreateEvent();
+			m_Sockets[m_eventTotal]->Overlapped.hEvent = m_Events[m_eventTotal];
 
 			// Post a WSARecv() request to to begin receiving data on the socket
 
 			DWORD Flags = 0;
 			DWORD RecvBytes = 0;
 
-			std::cout << "Receiving from: " << SocketArray[EventTotal]->Socket << std::endl;
+			std::cout << "Receiving from: " << m_Sockets[m_eventTotal]->Socket << std::endl;
 
-			if (WSARecv(SocketArray[EventTotal]->Socket,
-				&(SocketArray[EventTotal]->DataBuf), 1, &RecvBytes, &Flags, &(SocketArray[EventTotal]->Overlapped), NULL) == SOCKET_ERROR)
+			if (WSARecv(m_Sockets[m_eventTotal]->Socket,
+				&(m_Sockets[m_eventTotal]->DataBuf), 1, &RecvBytes, &Flags, &(m_Sockets[m_eventTotal]->Overlapped), NULL) == SOCKET_ERROR)
 			{
 				if (WSAGetLastError() != ERROR_IO_PENDING)
 				{
@@ -302,13 +315,13 @@ namespace network
 				printf("WSARecv() should be working!\n");
 			}
 
-			EventTotal++;
+			m_eventTotal++;
 
 			LeaveCriticalSection(&CriticalSection);
 
 			// Signal the first event in the event array to tell the worker thread to
 			// service an additional event in the event array
-			if (WSASetEvent(EventArray[0]) == FALSE)
+			if (WSASetEvent(m_Events[0]) == FALSE)
 			{
 				printf("WSASetEvent() failed with error %d\n", WSAGetLastError());
 				return;
@@ -339,7 +352,7 @@ namespace network
 		// Process asynchronous WSASend, WSARecv requests
 		while (1)
 		{
-			if ((index = WSAWaitForMultipleEvents(EventTotal, EventArray, FALSE, WSA_INFINITE, FALSE)) == WSA_WAIT_FAILED)
+			if ((index = WSAWaitForMultipleEvents(m_eventTotal, m_Events, FALSE, WSA_INFINITE, FALSE)) == WSA_WAIT_FAILED)
 			{
 				printf("WSAWaitForMultipleEvents() failed %d\n", WSAGetLastError());
 
@@ -354,16 +367,16 @@ namespace network
 
 			// If the event triggered was zero then a connection attempt was made
 			// on our listening socket.
-			SI = SocketArray[index];
+			SI = m_Sockets[index];
 
 			if (index == 0)
 			{
-				WSAResetEvent(EventArray[0]);
+				WSAResetEvent(m_Events[0]);
 
 				continue;
 			}
 
-			WSAResetEvent(EventArray[index]);
+			WSAResetEvent(m_Events[index]);
 
 			if (WSAGetOverlappedResult(SI->Socket, &(SI->Overlapped), &BytesTransferred, FALSE, &Flags) == FALSE || BytesTransferred == 0)
 			{
@@ -372,23 +385,23 @@ namespace network
 
 				delete SI;
 
-				WSACloseEvent(EventArray[index]);
+				WSACloseEvent(m_Events[index]);
 
 				// Cleanup SocketArray and EventArray by removing the socket event handle
 				// and socket information structure if they are not at the end of the arrays
 
 				EnterCriticalSection(&CriticalSection);
 
-				if (index + 1 != EventTotal)
+				if (index + 1 != m_eventTotal)
 				{
-					for (i = index; i < EventTotal; i++)
+					for (i = index; i < m_eventTotal; i++)
 					{
-						EventArray[i] = EventArray[i + 1];
-						SocketArray[i] = SocketArray[i + 1];
+						m_Events[i] = m_Events[i + 1];
+						m_Sockets[i] = m_Sockets[i + 1];
 					}
 				}
 
-				EventTotal--;
+				m_eventTotal--;
 
 				LeaveCriticalSection(&CriticalSection);
 
@@ -416,7 +429,7 @@ namespace network
 				// continue posting WSASend() calls until all received bytes are sent
 
 				ZeroMemory(&(SI->Overlapped), sizeof(WSAOVERLAPPED));
-				SI->Overlapped.hEvent = EventArray[index];
+				SI->Overlapped.hEvent = m_Events[index];
 
 				SI->DataBuf.buf = SI->Buffer + SI->BytesSEND;
 				SI->DataBuf.len = SI->BytesRECV - SI->BytesSEND;
@@ -444,7 +457,7 @@ namespace network
 				Flags = 0;
 				ZeroMemory(&(SI->Overlapped), sizeof(WSAOVERLAPPED));
 
-				SI->Overlapped.hEvent = EventArray[index];
+				SI->Overlapped.hEvent = m_Events[index];
 
 				SI->DataBuf.len = BUFFER_SIZE;
 				SI->DataBuf.buf = SI->Buffer;
