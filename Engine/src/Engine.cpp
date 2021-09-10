@@ -6,7 +6,6 @@
 
 bool Engine::s_engineRunning = false;
 bool Engine::s_safeExit = false;
-bool Engine::s_networkSafeExit = false;
 
 Engine::Engine()
 	: m_window(std::make_unique<Window>())
@@ -81,7 +80,7 @@ void Engine::Start()
         InputEvent event;
         while (InputSystem::Get().PollEvent(event))
         {
-            Scene::GetEventDispatcher().enqueue<InputEvent>(event);
+            m_currentScene->publish<InputEvent>(event);
         }
 
         auto now = std::chrono::high_resolution_clock::now();
@@ -115,7 +114,22 @@ void Engine::SetScene(const std::string& name)
 
 void Engine::SetScene(Scene& scene)
 {
+    if (m_currentScene)
+    {
+        m_currentScene->clear();
+    }
     m_currentScene = &scene;
+    m_currentScene->on<EngineEvent>([&](const EngineEvent& e, Scene& scene) 
+        {
+            switch (e.type)
+            {
+            case EngineEvent::Type::SHUTDOWN:
+                Shutdown();
+                break;
+            default:
+                break;
+            }
+        });
 }
 
 Window* Engine::GetWindow() const
@@ -123,7 +137,8 @@ Window* Engine::GetWindow() const
     return m_window.get();
 }
 
-void Engine::OnEvent(EngineEvent& event) {
+void Engine::OnEvent(EngineEvent& event) 
+{
     switch (event.type)
     {
     case EngineEvent::Type::SHUTDOWN:
@@ -175,7 +190,7 @@ void Engine::Update(float dt)
         m_currentScene->Update(dt);
     }
     // Handle events enqueued
-    Scene::GetEventDispatcher().update();
+    
 }
 
 void Engine::Render()
