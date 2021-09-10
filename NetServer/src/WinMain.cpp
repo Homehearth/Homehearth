@@ -35,7 +35,9 @@ int CALLBACK WinMain(
 	Window window;
 	window.Initialize();
 	T_INIT(T_REC, thread::ThreadType::POOL_FIFO);
-	Server server;
+
+	Server::Start(4950);
+
 	bool isRunning = true;
 	
 	MSG msg = { nullptr };
@@ -61,11 +63,9 @@ int CALLBACK WinMain(
 	}
 
 	T_DESTROY();
+	Server::Destroy();
 	return 0;
 }
-
-
-
 
 void RedirectIoToConsole()
 {

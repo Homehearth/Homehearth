@@ -6,6 +6,7 @@
 
 bool Engine::s_engineRunning = false;
 bool Engine::s_safeExit = false;
+bool Engine::s_networkSafeExit = false;
 
 Engine::Engine()
 	: m_window(std::make_unique<Window>())
@@ -41,8 +42,6 @@ void Engine::Setup(const HINSTANCE& hInstance) {
     // Thread should be launched after s_engineRunning is set to true and D3D11 is initalized.
     s_engineRunning = true;
 
-    m_client = std::make_unique<Client>();
-
     // register Engine OnEvent function so Scene can talk to Engine
     Scene::GetEventDispatcher().sink<EngineEvent>().connect<&Engine::OnEvent>(this);
 
@@ -54,6 +53,15 @@ void Engine::Start()
 
     if (thread::IsThreadActive())
         T_CJOB(Engine, RenderThread);
+
+    m_client = std::make_unique<Client>();
+    if (m_client->Connect("127.0.0.1", 4950))
+    {
+        if (thread::IsThreadActive())
+        {
+            thread::MultiThreader::InsertJob(std::bind([this] { m_client->Update(); }));
+        }
+    }
 
     MSG msg = { nullptr };
     while (IsRunning())
@@ -88,9 +96,9 @@ void Engine::Shutdown()
 {
     s_engineRunning = false;
     // Wait for the rendering thread to exit its last render cycle and shutdown.
-    while (!s_safeExit) {};
+    while (!s_safeExit && !s_networkSafeExit) {};
 
-    T_DESTROY();
+    thread::MultiThreader::Destroy();
     resource::ResourceManager::Destroy();
     D2D1Core::Destroy();
 }

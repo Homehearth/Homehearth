@@ -47,6 +47,8 @@ public:
 	Engine& operator=(Window&& other) = delete;
 	virtual ~Engine() = default;
 
+	static bool s_networkSafeExit;
+
 	void Setup(const HINSTANCE &hInstance);
 
 	void Start();

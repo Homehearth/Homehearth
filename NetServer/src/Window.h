@@ -1,4 +1,5 @@
 #pragma once
+#include "Server.h"
 
 LRESULT CALLBACK WinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 

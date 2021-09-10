@@ -8,8 +8,12 @@ namespace network
 	{
 	private:
 		SOCKET m_socket;
-		std::function<void(const network::message<network::MessageType>&)> MessageReceivedHandler;
+		std::function<void(const network::message<T>&)> MessageReceivedHandler;
+		std::function<void()> OnConnectHandler;
+		std::function<void()> OnDisconnectHandler;
 		fd_set m_master;
+		struct sockaddr_in m_endpoint;
+		socklen_t m_endpointLen;
 
 		// REMOVE LATER
 		bool key[3] = { false, false, false };
@@ -18,18 +22,22 @@ namespace network
 	private:
 		std::string PrintSocketData(struct addrinfo* p);
 		void InitWinsock();
+		SOCKET CreateSocket(std::string& ip, uint16_t& port);
 
 	public:
 		client_interface()
 		{
 			m_socket = INVALID_SOCKET;
-
-			InitWinsock();
-
 			using namespace std::placeholders;
 			MessageReceivedHandler = std::bind(&client_interface::OnMessageReceived, this, _1);
+			OnConnectHandler = std::bind(&client_interface::OnConnect, this);
+			OnDisconnectHandler = std::bind(&client_interface::OnDisconnect, this);
 
 			ZeroMemory(&m_master, sizeof(m_master));
+			m_endpointLen = sizeof(m_endpoint);
+			ZeroMemory(&m_endpoint, m_endpointLen);
+
+			InitWinsock();
 		}
 
 		virtual ~client_interface()
@@ -39,10 +47,14 @@ namespace network
 		}
 
 	public:
-		virtual void OnMessageReceived(const network::message<network::MessageType>& msg) = 0;
+		virtual void OnMessageReceived(const network::message<T>& msg) = 0;
+		
+		virtual void OnConnect() = 0;
+
+		virtual void OnDisconnect() = 0;
 
 		// Given IP and port establish a connection to the server
-		bool Connect(const std::string& ip, const uint16_t port);
+		bool Connect(std::string&& ip, uint16_t&& port);
 
 		// Disconnect from the server
 		void Disconnect();
@@ -56,6 +68,58 @@ namespace network
 	};
 
 	template <typename T>
+	SOCKET client_interface<T>::CreateSocket(std::string& ip, uint16_t& port)
+	{
+		SOCKET serverSocket = INVALID_SOCKET;
+		// Get a linked network structure based on provided hints
+		struct addrinfo hints, * servinfo, * p;
+
+		ZeroMemory(&hints, sizeof(hints));
+		hints.ai_family = AF_INET;
+		hints.ai_socktype = SOCK_STREAM;
+
+#ifdef _DEBUG
+		std::cout << "Creating a client.." << std::endl;
+#endif
+
+		int8_t rv = getaddrinfo(ip.c_str(), std::to_string(port).c_str(), &hints, &servinfo);
+
+		if (rv != 0)
+		{
+			std::cerr << "Addrinfo: " << WSAGetLastError() << std::endl;
+			return false;
+		}
+
+		// Loop through linked list of possible network structures
+		for (p = servinfo; p != nullptr; p = p->ai_next)
+		{
+#ifdef _DEBUG
+			std::cout << PrintSocketData(p) << std::endl;
+#endif
+			serverSocket = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
+
+			if (serverSocket == INVALID_SOCKET)
+			{
+				continue;
+			}
+			break;
+		}
+
+		if (p == nullptr)
+		{
+			return INVALID_SOCKET;
+		}
+
+		m_endpoint = *(struct sockaddr_in*)p->ai_addr;
+		m_endpointLen = sizeof(m_endpoint);
+
+		u_long enable = 1;
+		ioctlsocket(m_socket, FIONBIO, &enable);
+
+		return serverSocket;
+	}
+
+	template <typename T>
 	void client_interface<T>::UpdateClient(const bool& condition)
 	{
 		message<T> msg;
@@ -66,13 +130,23 @@ namespace network
 
 			int8_t socketCount = select(0, &copy, nullptr, nullptr, nullptr);
 
+			if (socketCount == SOCKET_ERROR)
+			{
+				if (WSAGetLastError() == WSAEWOULDBLOCK)
+				{
+					continue;
+				}
+				Disconnect();
+				break;
+			}
+
 			key[0] = GetAsyncKeyState('1') & 0x8000;
 			key[1] = GetAsyncKeyState('2') & 0x8000;
 			key[2] = GetAsyncKeyState('3') & 0x8000;
 
 			if (key[0] && !old_key[0])
 			{
-				message<MessageType> msg = {};
+				message<T> msg = {};
 				msg.header.id = MessageType::PingServer;
 
 				Send(msg);
@@ -81,15 +155,6 @@ namespace network
 			for (int i = 0; i < 3; i++)
 			{
 				old_key[i] = key[i];
-			}
-
-			if (socketCount == SOCKET_ERROR)
-			{
-				if (WSAGetLastError() == WSAEWOULDBLOCK)
-				{
-					continue;
-				}
-				std::cout << "Select: " << WSAGetLastError() << std::endl;
 			}
 
 			for (int i = 0; i < socketCount; i++)
@@ -101,7 +166,7 @@ namespace network
 					// If the currentsocket is the socket client is bound to we have an incoming message from the server
 					if (currentSocket == m_socket)
 					{
-						uint32_t bytesLeft = recv(m_socket, (char*)&msg, sizeof(msg.header), 0);
+						int32_t bytesLeft = recv(m_socket, (char*)&msg, sizeof(msg.header), 0);
 
 						if (bytesLeft > 0)
 						{
@@ -187,71 +252,28 @@ namespace network
 	}
 
 	template<typename T>
-	inline bool client_interface<T>::Connect(const std::string& ip, const uint16_t port)
+	inline bool client_interface<T>::Connect(std::string&& ip, uint16_t&& port)
 	{
-		// Get a linked network structure based on provided hints
-		struct addrinfo hints, * servinfo, * p;
+		m_socket = CreateSocket(ip, port);
 
-		ZeroMemory(&hints, sizeof(hints));
-		hints.ai_family = AF_INET;
-		hints.ai_socktype = SOCK_STREAM;
-
-#ifdef _DEBUG
-		std::cout << "Creating a client.." << std::endl;
-#endif
-
-		int8_t rv = getaddrinfo(ip.c_str(), std::to_string(port).c_str(), &hints, &servinfo);
-
-		if (rv != 0)
+		if (connect(m_socket, (struct sockaddr*)&m_endpoint, m_endpointLen) != 0)
 		{
-			std::cerr << "Addrinfo: " << WSAGetLastError() << std::endl;
-			return false;
-		}
-
-		// Loop through linked list of possible network structures
-		for (p = servinfo; p != nullptr; p = p->ai_next)
-		{
-#ifdef _DEBUG
-			std::cout << PrintSocketData(p) << std::endl;
-#endif
-			m_socket = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
-
-			if (m_socket == INVALID_SOCKET)
+			if (WSAGetLastError() != WSAEWOULDBLOCK)
 			{
-				continue;
-			}
-			u_long enable = 1;
-			ioctlsocket(m_socket, FIONBIO, &enable);
-
-			if (connect(m_socket, p->ai_addr, static_cast<int>(p->ai_addrlen)) != 0)
-			{
-				if (WSAGetLastError() != WSAEWOULDBLOCK)
-				{
 #ifdef _DEBUG
-					std::cout << "Connect error code: " << WSAGetLastError() << std::endl;
+				std::cout << "Connect error code: " << WSAGetLastError() << std::endl;
 #endif			
-					closesocket(m_socket);
-					m_socket = INVALID_SOCKET;
+				closesocket(m_socket);
+				m_socket = INVALID_SOCKET;
 
-					return false;
-				}
+				return false;
 			}
-
-			break;
-		}
-
-		// Reached end of list and could not connect to any
-		if (p == nullptr)
-		{
-#ifdef _DEBUG
-			std::cout << "Failed to connect!" << std::endl;
-#endif
-			m_socket = INVALID_SOCKET;
-
-			return false;
 		}
 
 		FD_SET(m_socket, &m_master);
+
+		// Callback to signal that client successfully connected to the server
+		this->OnConnectHandler();
 
 		return true;
 	}
@@ -270,7 +292,7 @@ namespace network
 			std::cout << "Failed to close socket: " << WSAGetLastError() << std::endl;
 #endif
 		}
-
+		this->OnDisconnectHandler();
 		m_socket = INVALID_SOCKET;
 	}
 

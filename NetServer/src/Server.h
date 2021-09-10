@@ -3,15 +3,25 @@
 class Server : public network::server_interface<network::MessageType>
 {
 private:
+	Server();
+
+	static Server* m_instance;
 
 public:
-	Server();
 	virtual ~Server();
+
+	static Server* GetInstance();
+
+	static SOCKET WaitForConnection();
+
 	// Inherited via server_interface
-	virtual void OnClientConnect(const std::string& ip, const uint16_t& port) override;
+	virtual void OnClientConnect(std::string&& ip, const uint16_t& port) override;
 
 	virtual void OnClientDisconnect() override;
 
 	virtual void OnMessageReceived(const SOCKET& socketId, const network::message<network::MessageType>& msg) override;
 
+	static void Destroy();
+
+	static void Start(uint16_t port);
 };
