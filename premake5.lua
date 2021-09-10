@@ -9,7 +9,7 @@ workspace "Workspace"
     }
 
     -- Set the startup project.
-    startproject "Engine"
+    startproject "Game"
 
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 

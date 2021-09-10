@@ -1,31 +1,16 @@
 #include <EnginePCH.h>
 
-#include "Engine.h"
-#include "InputSystem.h"
+#include <Engine.h>
 
-#include <chrono>
 
 void createTriangle(Scene& scene, float size, const float pos[2], const int velSign[2]);
 void setupDemoScene(Engine& engine, Scene& scene);
 
 // The main entry point of the engine.
-int CALLBACK WinMain(
-	_In_ HINSTANCE hInstance,
-	_In_opt_ HINSTANCE hPrevInstance,
-	_In_ LPSTR lpCmdLine,
-	_In_ int nShowCmd)
-{
-
-#ifdef _DEBUG
-	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-	MessageBoxA(nullptr, "Debug mode!", "Engine", 0);
-#else
-	MessageBoxA(nullptr, "Release mode!", "Engine", 0);
-#endif
-
-
+int main() {
 	Engine engine;
-	engine.Setup(hInstance);
+
+	engine.Setup(GetModuleHandle(NULL));
 
 	// Create or get scene
 	Scene& startScene = engine.GetScene("StartScene");
@@ -36,9 +21,9 @@ int CALLBACK WinMain(
 
 	engine.Start();
 
+
 	return 0;
 }
-
 // ECS DEMO
 // Simple Components
 struct Triangle {

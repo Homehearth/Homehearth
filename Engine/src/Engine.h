@@ -6,8 +6,6 @@
 #include "EventTypes.h"
 #include "Client.h"
 
-#include <time.h>
-
 class Engine
 {
 private:

@@ -1,5 +1,5 @@
 project "Engine"
-    kind "WindowedApp"
+    kind "StaticLib"
     language "C++"
     cppdialect "C++17"
     targetdir("build/bin/" .. outputdir .. "/%{prj.name}")
@@ -14,8 +14,12 @@ project "Engine"
     -- Define the location(s) of files. 
     -- Note: specify the path relative to the Premake file.
     files {
-        "src/**.h",
-		"src/**.cpp",
+        --[[
+            ]]
+
+            "src/**.h",
+            "src/**.cpp",
+            
     }
 
 
@@ -25,11 +29,10 @@ project "Engine"
     includedirs {
 		"src",
         "../ThirdParty/DirectXTK/include/",
-        "../ThirdParty/DirectXTK/lib/",
         "../ThirdParty/imGUI/",
         "../ThirdParty/stb_image/",
-		 "../ThirdParty/networking/",
-         "../ThirdParty/entt/"
+        "../ThirdParty/networking/",
+        "../ThirdParty/entt/"
     }
 
 
@@ -67,7 +70,9 @@ project "Engine"
         "d3d11",
         "d2d1",
 		"dwrite",
-        "dxgi"
+        "dxgi",
+        "DirectXTK",
+        "DirectXTKAudioWin7"
     }
 
 
@@ -81,20 +86,20 @@ project "Engine"
 
     -- Define a macro/symbol which applies only to debug builds.
     filter {"configurations:Debug"}
-        --buildoptions "/MTd"
+        buildoptions "/MTd"
         runtime "Debug"
         defines{"_DEBUG", "_UNICODE", "UNICODE"}
         symbols "on"
         libdirs{"../ThirdParty/DirectXTK/lib/Debug_lib/"}
-        links{"DirectXTK", "DirectXTKAudioWin7"}
+        
 
 
     -- Define a macro/symbol which applies only to release builds.
     filter {"configurations:Release"}
-        --buildoptions "/MT"
+        buildoptions "/MT"
         runtime "Release"
         defines{"NDEBUG", "_UNICODE", "UNICODE"}
         symbols "on"
         optimize "on"
         libdirs{"../ThirdParty/DirectXTK/lib/Release_lib/"}
-        links{"DirectXTK", "DirectXTKAudioWin7"}
+        

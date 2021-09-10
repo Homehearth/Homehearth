@@ -7,6 +7,7 @@
 #include <winsock2.h>
 #include <WS2tcpip.h>
 #pragma comment(lib, "WS2_32.Lib")
+#pragma comment(lib, "msvcrtd.lib")
 #include <windowsx.h>
 #pragma comment(lib, "winmm.lib")
 #endif
