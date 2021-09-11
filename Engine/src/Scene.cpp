@@ -1,13 +1,6 @@
 #include "EnginePCH.h"
 #include "Scene.h"
 
-entt::dispatcher Scene::s_eventDispatcher;
-
-Scene::Scene() 
-{
-	GetEventDispatcher().sink<InputEvent>().connect<&Scene::OnInput>(this);
-}
-
 entt::entity Scene::CreateEntity()
 {
 	return m_ecsRegistry.create();
@@ -41,15 +34,5 @@ void Scene::Render()
 	for (const auto& system : m_renderSystems)
 	{
 		system(m_ecsRegistry);
-	}
-}
-
-void Scene::OnInput(const InputEvent& e) 
-{
-	// TODO: TEMPORARY
-	if (e.key_code == VK_ESCAPE)
-	{
-		// Tell Engine to shutdown
-		GetEventDispatcher().enqueue<EngineEvent>({ EngineEvent::Type::SHUTDOWN });
 	}
 }
