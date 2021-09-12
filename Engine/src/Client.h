@@ -14,8 +14,6 @@ public:
 	// Inherited via client_interface
 	virtual void OnConnect() override;
 
-	void Update();
-
 	// Inherited via client_interface
 	virtual void OnDisconnect() override;
 };

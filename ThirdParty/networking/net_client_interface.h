@@ -11,9 +11,10 @@ namespace network
 		std::function<void(const network::message<T>&)> MessageReceivedHandler;
 		std::function<void()> OnConnectHandler;
 		std::function<void()> OnDisconnectHandler;
-		fd_set m_master;
 		struct sockaddr_in m_endpoint;
 		socklen_t m_endpointLen;
+
+		WSAEVENT m_event;
 
 		// REMOVE LATER
 		bool key[3] = { false, false, false };
@@ -23,6 +24,7 @@ namespace network
 		std::string PrintSocketData(struct addrinfo* p);
 		void InitWinsock();
 		SOCKET CreateSocket(std::string& ip, uint16_t& port);
+		void ProcessIO();
 
 	public:
 		client_interface()
@@ -33,7 +35,6 @@ namespace network
 			OnConnectHandler = std::bind(&client_interface::OnConnect, this);
 			OnDisconnectHandler = std::bind(&client_interface::OnDisconnect, this);
 
-			ZeroMemory(&m_master, sizeof(m_master));
 			m_endpointLen = sizeof(m_endpoint);
 			ZeroMemory(&m_endpoint, m_endpointLen);
 
@@ -64,13 +65,12 @@ namespace network
 
 		void Send(const message<T>& msg);
 
-		void UpdateClient(const bool& condition);
 	};
 
 	template <typename T>
 	SOCKET client_interface<T>::CreateSocket(std::string& ip, uint16_t& port)
 	{
-		SOCKET serverSocket = INVALID_SOCKET;
+		SOCKET sock = INVALID_SOCKET;
 		// Get a linked network structure based on provided hints
 		struct addrinfo hints, * servinfo, * p;
 
@@ -96,9 +96,9 @@ namespace network
 #ifdef _DEBUG
 			std::cout << PrintSocketData(p) << std::endl;
 #endif
-			serverSocket = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
+			sock = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
 
-			if (serverSocket == INVALID_SOCKET)
+			if (sock == INVALID_SOCKET)
 			{
 				continue;
 			}
@@ -113,79 +113,54 @@ namespace network
 		m_endpoint = *(struct sockaddr_in*)p->ai_addr;
 		m_endpointLen = sizeof(m_endpoint);
 
-		u_long enable = 1;
-		ioctlsocket(m_socket, FIONBIO, &enable);
+		const char enable = 1;
 
-		return serverSocket;
+		setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(enable));
+		setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, &enable, sizeof(enable));
+
+		return sock;
 	}
 
 	template <typename T>
-	void client_interface<T>::UpdateClient(const bool& condition)
+	void client_interface<T>::ProcessIO()
 	{
-		message<T> msg;
-		while (condition == true)
+		DWORD index = 0;
+		WSANETWORKEVENTS networkEvents = {};
+
+		while (1)
 		{
-			ZeroMemory(&msg, sizeof(msg));
-			fd_set copy = m_master;
-
-			int8_t socketCount = select(0, &copy, nullptr, nullptr, nullptr);
-
-			if (socketCount == SOCKET_ERROR)
+			// Will put thread to sleep unless there is I/O to process or a new connection has been made
+			if ((index = WSAWaitForMultipleEvents(1, &m_event, FALSE, WSA_INFINITE, FALSE)) == WSA_WAIT_FAILED)
 			{
-				if (WSAGetLastError() == WSAEWOULDBLOCK)
-				{
-					continue;
-				}
-				Disconnect();
-				break;
+				printf("WSAWaitForMultipleEvents() failed %d\n", WSAGetLastError());
+				continue;
 			}
 
-			key[0] = GetAsyncKeyState('1') & 0x8000;
-			key[1] = GetAsyncKeyState('2') & 0x8000;
-			key[2] = GetAsyncKeyState('3') & 0x8000;
+			index = index - WSA_WAIT_EVENT_0;
 
-			if (key[0] && !old_key[0])
+			WSAEnumNetworkEvents(m_socket, m_event, &networkEvents);
+
+			if (networkEvents.lNetworkEvents & FD_CONNECT && (networkEvents.iErrorCode[FD_CONNECT_BIT] == 0))
+			{
+				this->OnConnectHandler();
+			}
+
+			if (networkEvents.lNetworkEvents & FD_READ && (networkEvents.iErrorCode[FD_READ_BIT] == 0))
 			{
 				message<T> msg = {};
-				msg.header.id = MessageType::PingServer;
+				int32_t bytes = recv(m_socket, (char*)&msg.header, sizeof(msg.header), 0);
+				char buffer[4096] = {};
+				bytes = recv(m_socket, (char*)buffer, sizeof(msg.header.size - sizeof(msg.header)), 0);
+				msg.payload.resize(bytes);
+				memcpy(msg.payload.data(), buffer, bytes);
 
-				Send(msg);
-			}
-
-			for (int i = 0; i < 3; i++)
-			{
-				old_key[i] = key[i];
-			}
-
-			for (int i = 0; i < socketCount; i++)
-			{
-				SOCKET currentSocket = copy.fd_array[i];
-
-				if (FD_ISSET(currentSocket, &copy))
+				for (int i = 0; i < msg.payload.size(); i++)
 				{
-					// If the currentsocket is the socket client is bound to we have an incoming message from the server
-					if (currentSocket == m_socket)
-					{
-						int32_t bytesLeft = recv(m_socket, (char*)&msg, sizeof(msg.header), 0);
-
-						if (bytesLeft > 0)
-						{
-							if (this->MessageReceivedHandler != nullptr)
-							{
-								this->MessageReceivedHandler(msg);
-							}
-						}
-						else
-						{
-							if (WSAGetLastError() == EWOULDBLOCK)
-							{
-								continue;
-							}
-
-							Disconnect();
-						}
-					}
+					std::cout << msg.payload[i];
 				}
+				std::cout << std::endl;
+
+				this->MessageReceivedHandler(msg);
 			}
 		}
 	}
@@ -248,7 +223,8 @@ namespace network
 	template<typename T>
 	inline void client_interface<T>::Send(const message<T>& msg)
 	{
-		send(m_socket, (char*)&msg, sizeof(msg.header), 0);
+		send(m_socket, (char*)&msg.header, static_cast<int>(sizeof(msg.header)), 0);
+		send(m_socket, (char*)msg.payload.data(), static_cast<int>(sizeof(msg.payload.size())));
 	}
 
 	template<typename T>
@@ -270,10 +246,17 @@ namespace network
 			}
 		}
 
-		FD_SET(m_socket, &m_master);
+		m_event = WSACreateEvent();
 
-		// Callback to signal that client successfully connected to the server
-		this->OnConnectHandler();
+		WSAEventSelect(m_socket, m_event, FD_CONNECT | FD_READ | FD_CLOSE);
+
+		if (WSASetEvent(m_event) == FALSE)
+		{
+			printf("WSASetEvent() failed with error %d\n", WSAGetLastError());
+			return false;
+		}
+
+		thread::MultiThreader::InsertJob(std::bind([this] { ProcessIO(); })); 
 
 		return true;
 	}

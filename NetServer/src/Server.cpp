@@ -17,6 +17,11 @@ Server* Server::GetInstance()
 	return m_instance;
 }
 
+bool Server::IsRunning()
+{
+	return Server::GetInstance()->network::server_interface<network::MessageType>::IsRunning();
+}
+
 SOCKET Server::WaitForConnection()
 {
 	return Server::GetInstance()->network::server_interface<network::MessageType>::WaitForConnection();
@@ -40,6 +45,8 @@ void Server::OnClientDisconnect()
 void Server::OnMessageReceived(const SOCKET& socketId, const network::message<network::MessageType>& msg)
 {
 	std::cout << msg << std::endl;
+
+
 }
 
 void Server::Destroy()
@@ -50,4 +57,9 @@ void Server::Destroy()
 void Server::Start(uint16_t port)
 {
 	Server::GetInstance()->network::server_interface<network::MessageType>::Start(4950);
+}
+
+void Server::Stop()
+{
+	Server::GetInstance()->network::server_interface<network::MessageType>::Stop();
 }

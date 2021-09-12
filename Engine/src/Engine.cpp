@@ -42,7 +42,7 @@ void Engine::Setup(const HINSTANCE& hInstance) {
     s_engineRunning = true;
 
     m_client = std::make_unique<Client>();
-
+    m_client->Connect("127.0.0.1", 4950);
 }
 
 void Engine::Start() 

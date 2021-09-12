@@ -6,11 +6,6 @@ Client::Client()
 {
 }
 
-void Client::Update()
-{
-	UpdateClient(Engine::IsRunning());
-}
-
 void Client::OnDisconnect()
 {
 	std::cout << "Disconnected from server!" << std::endl;
@@ -26,8 +21,8 @@ void Client::OnMessageReceived(const network::message<network::MessageType>& msg
 
 	switch (msg.header.id)
 	{
-	case MessageType::Unknown:
-		std::cout << "Broadcast received from server: " << msg << std::endl;
+	case MessageType::Connected:
+		std::cout << "Server sent: " << msg << std::endl;
 		break;
 	}
 }

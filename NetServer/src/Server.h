@@ -12,6 +12,8 @@ public:
 
 	static Server* GetInstance();
 
+	static bool IsRunning();
+
 	static SOCKET WaitForConnection();
 
 	// Inherited via server_interface
@@ -24,4 +26,6 @@ public:
 	static void Destroy();
 
 	static void Start(uint16_t port);
+	
+	static void Stop();
 };

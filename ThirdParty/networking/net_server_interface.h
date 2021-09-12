@@ -3,15 +3,6 @@
 
 namespace network
 {
-	struct SOCKET_INFORMATION
-	{
-		CHAR Buffer[BUFFER_SIZE];
-		WSABUF DataBuf;
-		SOCKET Socket;
-		DWORD BytesSEND;
-		DWORD BytesRECV;
-	};
-
 	template <typename T>
 	class server_interface
 	{
@@ -19,12 +10,13 @@ namespace network
 		SOCKET m_listening;
 		DWORD m_eventTotal;
 		CRITICAL_SECTION CriticalSection;
+		bool m_isRunning;
 
 		// Array storing all the events
 		WSAEVENT m_Events[WSA_MAXIMUM_WAIT_EVENTS];
 
 		// Container for all sockets that has an established connection
-		SOCKET_INFORMATION* m_Sockets[WSA_MAXIMUM_WAIT_EVENTS] = { nullptr };
+		SOCKET m_Sockets[WSA_MAXIMUM_WAIT_EVENTS] = { INVALID_SOCKET };
 
 	private:
 		SOCKET CreateSocket(const uint16_t& port);
@@ -33,6 +25,7 @@ namespace network
 		void InitWinsock();
 		bool CreateSocketInformation(SOCKET s);
 		void ProcessIO();
+		void HandleEvents(SOCKET s, DWORD index, WSANETWORKEVENTS& net_Events);
 
 	public:
 		server_interface()
@@ -44,6 +37,7 @@ namespace network
 			ClientDisconnectHandler = std::bind(&server_interface::OnClientDisconnect, this);
 
 			m_eventTotal = 0;
+			m_isRunning = false;
 		}
 		virtual ~server_interface()
 		{
@@ -56,6 +50,7 @@ namespace network
 		void Broadcast();
 		SOCKET WaitForConnection();
 		void Send();
+		bool IsRunning();
 
 		// Pure virtuals that happen when an event occurs
 
@@ -72,17 +67,65 @@ namespace network
 	};
 
 	template <typename T>
+	void server_interface<T>::HandleEvents(SOCKET s, DWORD index, WSANETWORKEVENTS& net_Events)
+	{
+		WSAEnumNetworkEvents(s, m_Events[index], &net_Events);
+
+		if (net_Events.lNetworkEvents & FD_CLOSE && (net_Events.iErrorCode[FD_CLOSE_BIT] == 0))
+		{
+			this->ClientDisconnectHandler();
+
+			// De-allocate the structure for the connected client
+			closesocket(s);
+			s = INVALID_SOCKET;
+
+			WSACloseEvent(m_Events[index]);
+
+			EnterCriticalSection(&CriticalSection);
+
+			// Cleanup SocketArray and EventArray by removing the socket event handle
+			// and socket information structure if they are not at the end of the arrays
+			if (index + 1 != m_eventTotal)
+			{
+				for (DWORD i = index; i < m_eventTotal; i++)
+				{
+					m_Events[i] = m_Events[i + 1];
+					m_Sockets[i] = m_Sockets[i + 1];
+				}
+			}
+
+			m_eventTotal--;
+
+			LeaveCriticalSection(&CriticalSection);
+
+			return;
+		}
+		if (net_Events.lNetworkEvents & FD_READ && (net_Events.iErrorCode[FD_READ_BIT] == 0))
+		{
+			message<T> msg = {};
+
+			int32_t bytes = recv(s, (char*)&msg, sizeof(msg.header), 0);
+
+			if (bytes > 0)
+			{
+				this->MessageReceivedHandler(s, msg);
+			}
+			else
+			{
+				std::cout << "recv: " << WSAGetLastError() << std::endl;
+			}
+		}
+	}
+
+	template <typename T>
+	bool server_interface<T>::IsRunning()
+	{
+		return m_isRunning;
+	}
+
+	template <typename T>
 	bool server_interface<T>::CreateSocketInformation(SOCKET s)
 	{
-		// Fill in the details of our accepted socket
-		SOCKET_INFORMATION* SI = new SOCKET_INFORMATION;
-
-		SI->Socket = s;
-		SI->BytesSEND = 0;
-		SI->BytesRECV = 0;
-		SI->DataBuf.len = BUFFER_SIZE;
-		SI->DataBuf.buf = SI->Buffer;
-
 		m_Events[m_eventTotal] = WSACreateEvent();
 
 		WSAEventSelect(s, m_Events[m_eventTotal], FD_READ | FD_CLOSE);
@@ -94,12 +137,8 @@ namespace network
 			printf("WSASetEvent() failed with error %d\n", WSAGetLastError());
 			return false;
 		}
-		else
-		{
-			printf("Don't worry, WSASetEvent() is OK!\n");
-		}
 
-		m_Sockets[m_eventTotal] = SI;
+		m_Sockets[m_eventTotal] = s;
 
 		m_eventTotal++;
 
@@ -266,11 +305,11 @@ namespace network
 	void server_interface<T>::ProcessIO()
 	{
 		DWORD index;
-		SOCKET_INFORMATION* SI;
+		SOCKET currentSocket = INVALID_SOCKET;
 		WSANETWORKEVENTS wsaConnectEvents;
 		WSANETWORKEVENTS wsaProcessEvents;
 
-		while (1)
+		while (m_isRunning)
 		{
 			// Will put thread to sleep unless there is I/O to process or a new connection has been made
 			if ((index = WSAWaitForMultipleEvents(m_eventTotal, m_Events, FALSE, WSA_INFINITE, FALSE)) == WSA_WAIT_FAILED)
@@ -300,6 +339,11 @@ namespace network
 					uint16_t port = GetPort((struct sockaddr*)&c);
 
 					this->ClientConnectHandler(ipAsString, port);
+					message<MessageType> msg = {};
+					msg.header.id = MessageType::Connected;
+					msg << "hejhej";
+					send(clientSocket, (char*)&msg.header, sizeof(msg.header), 0);
+					send(clientSocket, (char*)msg.payload.data(), msg.payload.size(), 0);
 
 					EnterCriticalSection(&CriticalSection);
 
@@ -314,55 +358,9 @@ namespace network
 				continue;
 			}
 
-			SI = m_Sockets[index];
+			currentSocket = m_Sockets[index];
 
-			WSAEnumNetworkEvents(SI->Socket, m_Events[index], &wsaProcessEvents);
-
-			if (wsaProcessEvents.lNetworkEvents & FD_CLOSE && (wsaProcessEvents.iErrorCode[FD_CLOSE_BIT] == 0))
-			{
-				this->ClientDisconnectHandler();
-
-				// De-allocate the structure for the connected client
-				closesocket(SI->Socket);
-				delete m_Sockets[index];
-				m_Sockets[index] = nullptr;
-
-				WSACloseEvent(m_Events[index]);
-
-				EnterCriticalSection(&CriticalSection);
-
-				// Cleanup SocketArray and EventArray by removing the socket event handle
-				// and socket information structure if they are not at the end of the arrays
-				if (index + 1 != m_eventTotal)
-				{
-					for (DWORD i = index; i < m_eventTotal; i++)
-					{
-						m_Events[i] = m_Events[i + 1];
-						m_Sockets[i] = m_Sockets[i + 1];
-					}
-				}
-
-				m_eventTotal--;
-
-				LeaveCriticalSection(&CriticalSection);
-
-				continue;
-			}
-			if (wsaProcessEvents.lNetworkEvents & FD_READ && (wsaProcessEvents.iErrorCode[FD_READ_BIT] == 0))
-			{
-				message<T> msg = {};
-
-				int32_t bytes = recv(SI->Socket, (char*)&msg, sizeof(msg.header), 0);
-
-				if (bytes > 0)
-				{
-					this->MessageReceivedHandler(SI->Socket, msg);
-				}
-				else
-				{
-					std::cout << "recv: " << WSAGetLastError() << std::endl;
-				}
-			}
+			HandleEvents(currentSocket, index, wsaProcessEvents);
 		}
 	}
 
@@ -401,12 +399,15 @@ namespace network
 		DWORD ThreadId = 0;
 		m_eventTotal++;
 
-		ProcessIO();
+		m_isRunning = true;
+		thread::MultiThreader::InsertJob(std::bind([this] { ProcessIO(); }));
 	}
 
 	template <typename T>
 	void server_interface<T>::Stop()
 	{
-
+		EnterCriticalSection(&CriticalSection);
+		m_isRunning = false;
+		LeaveCriticalSection(&CriticalSection);
 	}
 }
