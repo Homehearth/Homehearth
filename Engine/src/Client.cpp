@@ -9,7 +9,6 @@ Client::Client()
 void Client::Update()
 {
 	UpdateClient(Engine::IsRunning());
-	Engine::s_networkSafeExit = true;
 }
 
 void Client::OnDisconnect()

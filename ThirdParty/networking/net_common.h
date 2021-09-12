@@ -11,7 +11,6 @@
 
 #define IPV6_ADDRSTRLEN 46
 #define BUFFER_SIZE 4096
-#define WM_NETWORK (WM_USER + 101)
 
 namespace network
 {

@@ -3,47 +3,41 @@
 
 namespace network
 {
-	typedef struct _SOCKET_INFORMATION
+	struct SOCKET_INFORMATION
 	{
 		CHAR Buffer[BUFFER_SIZE];
 		WSABUF DataBuf;
 		SOCKET Socket;
-		WSAOVERLAPPED Overlapped;
 		DWORD BytesSEND;
 		DWORD BytesRECV;
-
-	} SOCKET_INFORMATION, * LPSOCKET_INFORMATION;
+	};
 
 	template <typename T>
 	class server_interface
 	{
 	private:
-
+		SOCKET m_listening;
 		DWORD m_eventTotal;
-		// Essentially a mutex
 		CRITICAL_SECTION CriticalSection;
+
 		// Array storing all the events
 		WSAEVENT m_Events[WSA_MAXIMUM_WAIT_EVENTS];
 
 		// Container for all sockets that has an established connection
-		LPSOCKET_INFORMATION m_Sockets[WSA_MAXIMUM_WAIT_EVENTS];
-		// Function that will process all IO when event has been signaled
-		DWORD WINAPI ProcessIO();
-
-		// Struct containing all needed information regarding a client
-		SOCKET m_listening;
+		SOCKET_INFORMATION* m_Sockets[WSA_MAXIMUM_WAIT_EVENTS] = { nullptr };
 
 	private:
 		SOCKET CreateSocket(const uint16_t& port);
 		std::string PrintSocketData(struct addrinfo* p);
 		void Listen(const uint32_t& nListen);
 		void InitWinsock();
+		bool CreateSocketInformation(SOCKET s);
+		void ProcessIO();
 
 	public:
 		server_interface()
 		{
 			m_listening = INVALID_SOCKET;
-			message<MessageType> msg;
 			using namespace std::placeholders;
 			MessageReceivedHandler = std::bind(&server_interface::OnMessageReceived, this, _1, _2);
 			ClientConnectHandler = std::bind(&server_interface::OnClientConnect, this, _1, _2);
@@ -61,6 +55,7 @@ namespace network
 		void Stop();
 		void Broadcast();
 		SOCKET WaitForConnection();
+		void Send();
 
 		// Pure virtuals that happen when an event occurs
 
@@ -69,12 +64,53 @@ namespace network
 		// Called once when a client connects
 		virtual void OnClientDisconnect() = 0;
 		// Called once when a message is received
-		virtual void OnMessageReceived(const SOCKET& socketId, const message<MessageType>& msg) = 0;
+		virtual void OnMessageReceived(const SOCKET& socketId, const message<T>& msg) = 0;
 
-		std::function<void(const SOCKET&, const message<MessageType>&)> MessageReceivedHandler;
+		std::function<void(const SOCKET&, const message<T>&)> MessageReceivedHandler;
 		std::function<void(std::string&&, const uint16_t&)> ClientConnectHandler;
 		std::function<void()> ClientDisconnectHandler;
 	};
+
+	template <typename T>
+	bool server_interface<T>::CreateSocketInformation(SOCKET s)
+	{
+		// Fill in the details of our accepted socket
+		SOCKET_INFORMATION* SI = new SOCKET_INFORMATION;
+
+		SI->Socket = s;
+		SI->BytesSEND = 0;
+		SI->BytesRECV = 0;
+		SI->DataBuf.len = BUFFER_SIZE;
+		SI->DataBuf.buf = SI->Buffer;
+
+		m_Events[m_eventTotal] = WSACreateEvent();
+
+		WSAEventSelect(s, m_Events[m_eventTotal], FD_READ | FD_CLOSE);
+
+		// Signal the first event in the event array to tell the worker thread to
+		// service an additional event in the event array
+		if (WSASetEvent(m_Events[0]) == FALSE)
+		{
+			printf("WSASetEvent() failed with error %d\n", WSAGetLastError());
+			return false;
+		}
+		else
+		{
+			printf("Don't worry, WSASetEvent() is OK!\n");
+		}
+
+		m_Sockets[m_eventTotal] = SI;
+
+		m_eventTotal++;
+
+		return true;
+	}
+
+	template <typename T>
+	void server_interface<T>::Send()
+	{
+
+	}
 
 	template <typename T>
 	void server_interface<T>::Broadcast()
@@ -153,7 +189,7 @@ namespace network
 		{
 			data += "Protocol: TCP\n";
 		}
-		else if(p->ai_protocol == IPPROTO_UDP)
+		else if (p->ai_protocol == IPPROTO_UDP)
 		{
 			data += "Protocol: UDP\n";
 		}
@@ -199,7 +235,7 @@ namespace network
 		{
 			std::cout << PrintSocketData(p) << std::endl;
 
-			listener = WSASocket(p->ai_family, p->ai_socktype, p->ai_protocol, NULL, 0, WSA_FLAG_OVERLAPPED);
+			listener = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
 
 			if (listener == INVALID_SOCKET)
 			{
@@ -227,174 +263,79 @@ namespace network
 	}
 
 	template <typename T>
-	void server_interface<T>::Start(const uint16_t& port)
-	{
-		std::cout << "STARTING SERVER.." << std::endl;
-		InitializeCriticalSection(&CriticalSection);
-		InitWinsock();
-
-		WSABUF buffer = {};
-		m_listening = CreateSocket(port);
-
-		// Options to disable Nagle's algorithm (can queue up multiple packets instead of sending 1 by 1)
-		// SO_REUSEADDR will let the server to reuse the port its bound on even if it have not closed 
-		// by the the operating system yet.
-		u_long enable = 1;
-		setsockopt(m_listening, IPPROTO_TCP, TCP_NODELAY, reinterpret_cast<const char*>(&enable), sizeof(enable));
-		setsockopt(m_listening, SOL_SOCKET, SO_REUSEADDR, reinterpret_cast<const char*>(&enable), sizeof(enable));
-
-		Listen(SOMAXCONN);
-
-		// Create an event for the accepting socket
-		HANDLE connectionEvent = WSACreateEvent();
-
-		if (connectionEvent == WSA_INVALID_EVENT)
-		{
-			std::cout << "Failed to create event " << WSAGetLastError() << std::endl;
-			return;
-		}
-
-		m_Events[0] = connectionEvent;
-
-		DWORD ThreadId = 0;
-		m_eventTotal = 1;
-
-		thread::MultiThreader::InsertJob(std::bind([this] { ProcessIO(); }));
-
-		// This will run and accept incoming connections
-		while (1)
-		{
-			SOCKET clientSocket = WaitForConnection();
-
-			struct sockaddr_in c = {};
-			socklen_t cLen = sizeof(c);
-			getpeername(clientSocket, (struct sockaddr*)&c, &cLen);
-			char ipAsString[IPV6_ADDRSTRLEN] = {};
-			inet_ntop(c.sin_family, &c.sin_addr, ipAsString, sizeof(ipAsString));
-			uint16_t port = GetPort((struct sockaddr*)&c);
-
-			this->ClientConnectHandler(ipAsString, port);
-
-			EnterCriticalSection(&CriticalSection);
-			m_Sockets[m_eventTotal] = new _SOCKET_INFORMATION;
-			// Fill in the details of our accepted socket
-
-			m_Sockets[m_eventTotal]->Socket = clientSocket;
-			ZeroMemory(&(m_Sockets[m_eventTotal]->Overlapped), sizeof(OVERLAPPED));
-			m_Sockets[m_eventTotal]->BytesSEND = 0;
-			m_Sockets[m_eventTotal]->BytesRECV = 0;
-			m_Sockets[m_eventTotal]->DataBuf.len = BUFFER_SIZE;
-			m_Sockets[m_eventTotal]->DataBuf.buf = m_Sockets[m_eventTotal]->Buffer;
-
-			m_Events[m_eventTotal] = WSACreateEvent();
-			m_Sockets[m_eventTotal]->Overlapped.hEvent = m_Events[m_eventTotal];
-
-			// Post a WSARecv() request to to begin receiving data on the socket
-
-			DWORD Flags = 0;
-			DWORD RecvBytes = 0;
-
-			std::cout << "Receiving from: " << m_Sockets[m_eventTotal]->Socket << std::endl;
-
-			if (WSARecv(m_Sockets[m_eventTotal]->Socket,
-				&(m_Sockets[m_eventTotal]->DataBuf), 1, &RecvBytes, &Flags, &(m_Sockets[m_eventTotal]->Overlapped), NULL) == SOCKET_ERROR)
-			{
-				if (WSAGetLastError() != ERROR_IO_PENDING)
-				{
-					printf("WSARecv() failed with error %d\n", WSAGetLastError());
-
-					return;
-				}
-				else
-				{
-					std::cout << "WSARecv Error pending..." << std::endl;
-				}
-			}
-			else
-			{
-				printf("WSARecv() should be working!\n");
-			}
-
-			m_eventTotal++;
-
-			LeaveCriticalSection(&CriticalSection);
-
-			// Signal the first event in the event array to tell the worker thread to
-			// service an additional event in the event array
-			if (WSASetEvent(m_Events[0]) == FALSE)
-			{
-				printf("WSASetEvent() failed with error %d\n", WSAGetLastError());
-				return;
-			}
-			else
-			{
-				printf("Don't worry, WSASetEvent() is OK!\n");
-			}
-		}
-	}
-
-	template <typename T>
-	void server_interface<T>::Stop()
-	{
-
-	}
-
-	template <typename T>
-	DWORD WINAPI server_interface<T>::ProcessIO()
+	void server_interface<T>::ProcessIO()
 	{
 		DWORD index;
-		DWORD Flags;
-		LPSOCKET_INFORMATION SI;
-		DWORD BytesTransferred;
-		DWORD i;
-		DWORD RecvBytes, SendBytes;
+		SOCKET_INFORMATION* SI;
+		WSANETWORKEVENTS wsaConnectEvents;
+		WSANETWORKEVENTS wsaProcessEvents;
 
-		// Process asynchronous WSASend, WSARecv requests
 		while (1)
 		{
+			// Will put thread to sleep unless there is I/O to process or a new connection has been made
 			if ((index = WSAWaitForMultipleEvents(m_eventTotal, m_Events, FALSE, WSA_INFINITE, FALSE)) == WSA_WAIT_FAILED)
 			{
 				printf("WSAWaitForMultipleEvents() failed %d\n", WSAGetLastError());
-
 				continue;
 			}
-			else
-			{
-				index = index - WSA_WAIT_EVENT_0;
-				
-				std::cout << "Event index: " << index << std::endl;
-			}
+
+			index = index - WSA_WAIT_EVENT_0;
+			std::cout << "Event index: " << index << std::endl;
 
 			// If the event triggered was zero then a connection attempt was made
-			// on our listening socket.
-			SI = m_Sockets[index];
-
+			// on our listening socket. Because its the first event in the list
 			if (index == 0)
 			{
-				WSAResetEvent(m_Events[0]);
+				WSAEnumNetworkEvents(m_listening, m_Events[index], &wsaConnectEvents);
+
+				if (wsaConnectEvents.lNetworkEvents & FD_ACCEPT && (wsaConnectEvents.iErrorCode[FD_ACCEPT_BIT] == 0))
+				{
+					SOCKET clientSocket = WaitForConnection();
+
+					struct sockaddr_in c = {};
+					socklen_t cLen = sizeof(c);
+					getpeername(clientSocket, (struct sockaddr*)&c, &cLen);
+					char ipAsString[IPV6_ADDRSTRLEN] = {};
+					inet_ntop(c.sin_family, &c.sin_addr, ipAsString, sizeof(ipAsString));
+					uint16_t port = GetPort((struct sockaddr*)&c);
+
+					this->ClientConnectHandler(ipAsString, port);
+
+					EnterCriticalSection(&CriticalSection);
+
+					if (!CreateSocketInformation(clientSocket))
+					{
+						continue;
+					}
+
+					LeaveCriticalSection(&CriticalSection);
+				}
 
 				continue;
 			}
 
-			WSAResetEvent(m_Events[index]);
+			SI = m_Sockets[index];
 
-			if (WSAGetOverlappedResult(SI->Socket, &(SI->Overlapped), &BytesTransferred, FALSE, &Flags) == FALSE || BytesTransferred == 0)
+			WSAEnumNetworkEvents(SI->Socket, m_Events[index], &wsaProcessEvents);
+
+			if (wsaProcessEvents.lNetworkEvents & FD_CLOSE && (wsaProcessEvents.iErrorCode[FD_CLOSE_BIT] == 0))
 			{
 				this->ClientDisconnectHandler();
-				closesocket(SI->Socket);
 
-				delete SI;
+				// De-allocate the structure for the connected client
+				closesocket(SI->Socket);
+				delete m_Sockets[index];
+				m_Sockets[index] = nullptr;
 
 				WSACloseEvent(m_Events[index]);
 
-				// Cleanup SocketArray and EventArray by removing the socket event handle
-				// and socket information structure if they are not at the end of the arrays
-
 				EnterCriticalSection(&CriticalSection);
 
+				// Cleanup SocketArray and EventArray by removing the socket event handle
+				// and socket information structure if they are not at the end of the arrays
 				if (index + 1 != m_eventTotal)
 				{
-					for (i = index; i < m_eventTotal; i++)
+					for (DWORD i = index; i < m_eventTotal; i++)
 					{
 						m_Events[i] = m_Events[i + 1];
 						m_Sockets[i] = m_Sockets[i + 1];
@@ -407,75 +348,65 @@ namespace network
 
 				continue;
 			}
-
-			// Check to see if the BytesRECV field equals zero. If this is so, then
-			// this means a WSARecv call just completed so update the BytesRECV field
-			// with the BytesTransferred value from the completed WSARecv() call.
-
-			if (SI->BytesRECV == 0)
+			if (wsaProcessEvents.lNetworkEvents & FD_READ && (wsaProcessEvents.iErrorCode[FD_READ_BIT] == 0))
 			{
-				SI->BytesRECV = BytesTransferred;
-				SI->BytesSEND = 0;
-			}
-			else
-			{
-				SI->BytesSEND += BytesTransferred;
-			}
+				message<T> msg = {};
 
-			if (SI->BytesRECV > SI->BytesSEND)
-			{
-				// Post another WSASend() request.
-				// Since WSASend() is not guaranteed to send all of the bytes requested,
-				// continue posting WSASend() calls until all received bytes are sent
+				int32_t bytes = recv(SI->Socket, (char*)&msg, sizeof(msg.header), 0);
 
-				ZeroMemory(&(SI->Overlapped), sizeof(WSAOVERLAPPED));
-				SI->Overlapped.hEvent = m_Events[index];
-
-				SI->DataBuf.buf = SI->Buffer + SI->BytesSEND;
-				SI->DataBuf.len = SI->BytesRECV - SI->BytesSEND;
-
-				if (WSASend(SI->Socket, &(SI->DataBuf), 1, &SendBytes, 0, &(SI->Overlapped), NULL) == SOCKET_ERROR)
+				if (bytes > 0)
 				{
-					if (WSAGetLastError() != ERROR_IO_PENDING)
-					{
-						printf("WSASend() failed with error %d\n", WSAGetLastError());
-						continue;
-					}
-				}
-
-				else
-				{
-					printf("WSASend() is OK!\n");
-				}
-			}
-			else
-			{
-				SI->BytesRECV = 0;
-
-				// Now that there are no more bytes to send post another WSARecv() request
-
-				Flags = 0;
-				ZeroMemory(&(SI->Overlapped), sizeof(WSAOVERLAPPED));
-
-				SI->Overlapped.hEvent = m_Events[index];
-
-				SI->DataBuf.len = BUFFER_SIZE;
-				SI->DataBuf.buf = SI->Buffer;
-
-				if (WSARecv(SI->Socket, &(SI->DataBuf), 1, &RecvBytes, &Flags, &(SI->Overlapped), NULL) == SOCKET_ERROR)
-				{
-					if (WSAGetLastError() != ERROR_IO_PENDING)
-					{
-						printf("WSARecv() failed with error %d\n", WSAGetLastError());
-
-						continue;
-					}
+					this->MessageReceivedHandler(SI->Socket, msg);
 				}
 				else
 				{
-					printf("WSARecv() is OK!\n");
+					std::cout << "recv: " << WSAGetLastError() << std::endl;
 				}
 			}
 		}
+	}
+
+	template <typename T>
+	void server_interface<T>::Start(const uint16_t& port)
+	{
+		std::cout << "STARTING SERVER.." << std::endl;
+		InitializeCriticalSection(&CriticalSection);
+		InitWinsock();
+
+		WSABUF buffer = {};
+		m_listening = CreateSocket(port);
+
+		// Options to disable Nagle's algorithm (can queue up multiple packets instead of sending 1 by 1)
+		// SO_REUSEADDR will let the server to reuse the port its bound on even if it have not closed 
+		// by the the operating system yet.
+		const char enable = 1;
+		setsockopt(m_listening, IPPROTO_TCP, TCP_NODELAY, &enable, sizeof(enable));
+		setsockopt(m_listening, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(enable));
+
+		this->Listen(SOMAXCONN);
+
+		// Create an event for the accepting socket
+		HANDLE connectionEvent = WSACreateEvent();
+
+		if (connectionEvent == WSA_INVALID_EVENT)
+		{
+			std::cout << "Failed to create event " << WSAGetLastError() << std::endl;
+			return;
+		}
+
+		WSAEventSelect(m_listening, connectionEvent, FD_ACCEPT);
+
+		m_Events[0] = connectionEvent;
+
+		DWORD ThreadId = 0;
+		m_eventTotal++;
+
+		ProcessIO();
+	}
+
+	template <typename T>
+	void server_interface<T>::Stop()
+	{
+
 	}
 }
