@@ -6,11 +6,15 @@
 #include "EventTypes.h"
 #include "Client.h"
 
+#include <time.h>
+
 class Engine
 {
 private:
 	static bool s_engineRunning;
 	static bool s_safeExit;
+	//thread::DoubleBuffer<std::vector<Triangle>> m_drawBuffers;
+	std::vector<Triangle> * pointer;
 
 	Window m_window;
 	Renderer m_renderer;
@@ -33,7 +37,7 @@ private:
 	// updates the current scene
 	void Update(float dt);
 	// renders one frame
-	void Render();
+	void Render(float& dt);
 
 public:
 	Engine();
