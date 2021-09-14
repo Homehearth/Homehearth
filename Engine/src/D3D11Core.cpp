@@ -9,14 +9,15 @@ D3D11Core::D3D11Core()
 
 void D3D11Core::Initialize(Window* pWindow)
 {
-
     assert(m_isInitialized || "D3D11Core is already initialized.");
     if (this->m_window == nullptr)
         this->m_window = pWindow;
 
     // Initialize DeviceAndSwapChain.
     if (!this->createDeviceAndSwapChain())
+    {
         LOG_ERROR("failed creating m_device and swapchain.");
+    }
     else
         this->m_isInitialized = true;
 

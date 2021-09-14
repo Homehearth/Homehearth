@@ -13,26 +13,23 @@ Engine::Engine()
     , m_frameTime()
     , m_buffPointer(nullptr)
 {
+	LOG_INFO("Engine(): " __TIMESTAMP__);
 }
 
-void Engine::Setup() {
-#ifdef _DEBUG
-    //RedirectIoToConsole();
-#endif
-    //RedirectIoToConsole();
-
+void Engine::Startup()
+{
     T_INIT(1, thread::ThreadType::POOL_FIFO);
     resource::ResourceManager::Initialize();
     srand((unsigned int)time(NULL));
 
-	// Window Setup:
+	// Window Startup:
 	Window::Desc config;
-	config.title = L"Engine Window";
+	config.title = L"Engine";
 	if (!m_window.Initialize(config)) {
 		LOG_ERROR("Could not Initialize m_window.");
 	}
 	
-    // DirectX Setup:
+    // DirectX Startup:
     D3D11Core::Get().Initialize(&m_window);
     D2D1Core::Initialize(&m_window);
     
@@ -41,9 +38,7 @@ void Engine::Setup() {
     // Thread should be launched after s_engineRunning is set to true and D3D11 is initalized.
     s_engineRunning = true;
 
-    /*
-        Preallocate space for Triplebuffer
-    */
+    // Preallocate space for Triplebuffer
     m_drawBuffers.AllocateBuffers();
     m_buffPointer = m_drawBuffers.GetBuffer(0);
     m_buffPointer->reserve(200);
@@ -54,18 +49,18 @@ void Engine::Setup() {
 
 }
 
-void Engine::Start() 
+void Engine::Run() 
 {
-    auto lastTime = std::chrono::high_resolution_clock::now();
+    double currentFrame = 0.f;
+	double lastFrame = omp_get_wtime();
+    float deltaTime = 0.f;
+	float accumulator = 0.f;
+    const float targetDelta = 1 / 1000.0f;
 
-    
     if (thread::IsThreadActive())
         T_CJOB(Engine, RenderThread);
 
-    double currentFrame = 0.f, lastFrame = omp_get_wtime();
-    float deltaTime = 0.f, deltaSum = 0.f;
-    // Desired FPS
-    const float targetDelta = 1 / 1000.0f;
+	
     MSG msg = { nullptr };
     while (IsRunning())
     {
@@ -79,26 +74,26 @@ void Engine::Start()
                 Shutdown();
             }
         }
-
-        // [InputSystem Test]
-        InputEvent event;
-        while (InputSystem::Get().PollEvent(event))
-        {
-            m_currentScene->publish<InputEvent>(event);
-        }
+    	
+		// Handle Input.
+        // todo:
 
 
+    	
+    	// Update time.
         currentFrame = omp_get_wtime();
         deltaTime = static_cast<float>(currentFrame - lastFrame);
-        if (deltaSum >= targetDelta)
-        {
-            Update(deltaSum);
 
-            m_frameTime.update = deltaSum;
-            deltaSum = 0.f;
+    	
+        if (accumulator >= targetDelta)
+        {
+            Update(accumulator);
+
+            m_frameTime.update = accumulator;
+            accumulator = 0.f;
         }
-        deltaSum += deltaTime;
-        lastFrame = currentFrame;
+        accumulator += deltaTime;
+        lastFrame = currentFrame;	
     }
 
     // Wait for the rendering thread to exit its last render cycle and shutdown.

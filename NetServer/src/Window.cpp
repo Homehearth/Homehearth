@@ -65,7 +65,7 @@ bool Window::Initialize(const Desc& desc)
 	WNDCLASSEX wcex;
 	ZeroMemory(&wcex, sizeof(WNDCLASSEX));
 
-	const LPCWSTR WINDOW_CLASS = L"DefaultWindowClass";
+	const LPCWSTR WINDOW_CLASS = L"Default Window Class";
 	
 	wcex.cbSize = sizeof(WNDCLASSEX);
 	wcex.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;

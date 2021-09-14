@@ -93,14 +93,14 @@ namespace thread
 		ThreadType type;
 
 		/*
-		Start a pool of threads. To assign jobs to these threads please use StartPooled() function. Be sure to not assign more threads than
+		Run a pool of threads. To assign jobs to these threads please use StartPooled() function. Be sure to not assign more threads than
 		available cores. If thats the case the pool will start with highest available "amount" of threads.
 		*/
 		static void Pool(unsigned int amount);
 
 		/*
 		If multithreading is used please remember to put Update() into the "Per Frame" section of the game code.
-		To start a thread simply use the Start() function and input a function that returns void and have one parameter intake which is the index.
+		To start a thread simply use the Run() function and input a function that returns void and have one parameter intake which is the index.
 		On game closage the Multithreader will attempt to join all threads still in progress.
 		*/
 		MultiThreader();

@@ -3,7 +3,7 @@
 Game::Game() 
 {
 	// Engine setup
-	m_engine.Setup();
+	m_engine.Startup();
 
 
 	// DEMO Scene
@@ -19,5 +19,5 @@ Game::Game()
 
 void Game::Run() 
 {
-	m_engine.Start();
+	m_engine.Run();
 }

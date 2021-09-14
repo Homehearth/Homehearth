@@ -4,7 +4,7 @@ class Window
 {
 public:
     // Window description with default values.
-    // Use when initializing the m_window.
+    // Use when initializing m_window.
     struct Desc
     {
         unsigned int width = static_cast<unsigned int>(GetSystemMetrics(SM_CXSCREEN) / 2);
@@ -34,12 +34,14 @@ public:
     bool Initialize(const Desc & desc = Desc());
     bool IsFullScreen() const;
     void SetFullScreen(bool fullscreen);
-
+    void SetWindowTitle(const LPCWSTR &title);
+    void SetWindowTextBar(const std::string& text);
+	
     HWND GetHWnd() const;
     RECT GetClientRect() const;
     unsigned int GetWidth() const;
     unsigned int GetHeight() const;
-
+    LPCWSTR GetTitle() const;
 };
 
 

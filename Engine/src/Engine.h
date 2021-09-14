@@ -6,8 +6,6 @@
 #include "EventTypes.h"
 #include "Client.h"
 
-#include <time.h>
-
 struct Triangle2
 {
 	int x;
@@ -24,7 +22,6 @@ private:
 	Window m_window;
 	Renderer m_renderer;
 
-	//CLIENT
 	std::unique_ptr<Client> m_client;
 	
 	std::unordered_map<std::string, Scene> m_scenes;
@@ -36,12 +33,12 @@ private:
 		float render;
 	} m_frameTime;
 	
-	// job for rendering thread
+	// Job for rendering thread.
 	void RenderThread();
 
-	// updates the current scene
+	// Updates the current scene.
 	void Update(float dt);
-	// renders one frame
+	// Renders one frame.
 	void Render(float& dt);
 
 public:
@@ -52,10 +49,13 @@ public:
 	Engine& operator=(Window&& other) = delete;
 	virtual ~Engine() = default;
 
-	void Setup();
+	// Startup the Engine and its instances in a specific order.
+	void Startup();
 
-	void Start();
+	// Run the Engine's core loop.
+	void Run();
 
+	// Shutdown the Engine and its instances in the reverse order.
 	void Shutdown();
 
 	Scene& GetScene(const std::string& name);
