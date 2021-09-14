@@ -63,10 +63,7 @@ project "Engine"
 
 
     links{
-        "d3d11",
-        "d2d1",
-		"dwrite",
-        "dxgi",
+        "dxgi", -- links d3d11 d2d1 dwrite
         "DirectXTK",
         "DirectXTKAudioWin7"
     }

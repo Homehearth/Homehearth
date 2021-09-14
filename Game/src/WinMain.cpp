@@ -12,7 +12,6 @@ int main() {
 
 	engine.Setup();
 
-	std::cout << "Hello World" << std::endl;
 	// Create or get scene
 	Scene& startScene = engine.GetScene("StartScene");
 	// Set as current scene

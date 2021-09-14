@@ -69,7 +69,6 @@ void Engine::Start()
         {
             m_currentScene->publish<InputEvent>(event);
         }
-        
 
         auto now = std::chrono::high_resolution_clock::now();
         auto delta = std::chrono::duration_cast<std::chrono::duration<float>>(now - lastTime);

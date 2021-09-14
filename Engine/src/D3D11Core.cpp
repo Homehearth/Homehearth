@@ -9,6 +9,7 @@ D3D11Core::D3D11Core()
 
 void D3D11Core::Initialize(Window* pWindow)
 {
+
     assert(m_isInitialized || "D3D11Core is already initialized.");
     if (this->m_window == nullptr)
         this->m_window = pWindow;
