@@ -1,5 +1,5 @@
 project "Engine"
-    kind "WindowedApp"
+    kind "StaticLib"
     language "C++"
     cppdialect "C++17"
     targetdir("build/bin/" .. outputdir .. "/%{prj.name}")
@@ -15,7 +15,7 @@ project "Engine"
     -- Note: specify the path relative to the Premake file.
     files {
         "src/**.h",
-		"src/**.cpp",
+        "src/**.cpp"
     }
 
 
@@ -25,13 +25,11 @@ project "Engine"
     includedirs {
 		"src",
         "../ThirdParty/DirectXTK/include/",
-        "../ThirdParty/DirectXTK/lib/",
         "../ThirdParty/imGUI/",
         "../ThirdParty/stb_image/",
 		"../ThirdParty/networking/",
         "../ThirdParty/entt/",
         "../ThirdParty/assimp/include",
-		"../ThirdParty/assimp/lib/"
     }
 
 
@@ -67,10 +65,9 @@ project "Engine"
 
 
     links{
-        "d3d11",
-        "d2d1",
-		"dwrite",
-        "dxgi"
+        "dxgi", -- links d3d11 d2d1 dwrite
+        "DirectXTK",
+        "DirectXTKAudioWin7"
     }
 
 
@@ -84,23 +81,23 @@ project "Engine"
 
     -- Define a macro/symbol which applies only to debug builds.
     filter {"configurations:Debug"}
-        --buildoptions "/MTd"
+        buildoptions "/MTd"
         runtime "Debug"
         defines{"_DEBUG", "_UNICODE", "UNICODE"}
         symbols "on"
         libdirs{"../ThirdParty/DirectXTK/lib/Debug_lib/"}
         libdirs{"../ThirdParty/assimp/lib/Debug_lib/"}
-		links{"DirectXTK", "DirectXTKAudioWin7", "assimp-vc142-mtd"}
+		links{"assimp-vc142-mtd"}
 		
 
 
     -- Define a macro/symbol which applies only to release builds.
     filter {"configurations:Release"}
-        --buildoptions "/MT"
+        buildoptions "/MT"
         runtime "Release"
         defines{"NDEBUG", "_UNICODE", "UNICODE"}
         symbols "on"
         optimize "on"
         libdirs{"../ThirdParty/DirectXTK/lib/Release_lib/"}
 		libdirs{"../ThirdParty/assimp/lib/Release_lib/"}
-        links{"DirectXTK", "DirectXTKAudioWin7", "assimp-vc142-mt"}
+        links{"assimp-vc142-mt"}

@@ -1,6 +1,7 @@
 #include "EnginePCH.h"
 #include "ThreadSyncer.h"
 
+using namespace thread;
 #define INSTANCE ThreadSyncer::instance
 ThreadSyncer* INSTANCE = nullptr;
 

@@ -2,7 +2,7 @@
 #include "Window.h"
 #include "InputSystem.h"
 
-LRESULT CALLBACK WinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK Window::WinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	// Engine events:
 	switch (uMsg)

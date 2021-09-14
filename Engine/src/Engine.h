@@ -9,14 +9,21 @@
 #include <time.h>
 #include "RMesh.h"
 
+struct Triangle2
+{
+	int x;
+};
+
 class Engine
 {
 private:
 	static bool s_engineRunning;
 	static bool s_safeExit;
+	thread::DoubleBuffer<std::vector<Triangle2>> m_drawBuffers;
+	std::vector<Triangle2> * m_buffPointer;
 
-	std::unique_ptr<Window> m_window;
-	std::unique_ptr<Renderer> m_renderer;
+	Window m_window;
+	Renderer m_renderer;
 
 	//CLIENT
 	std::unique_ptr<Client> m_client;
@@ -30,15 +37,13 @@ private:
 		float render;
 	} m_frameTime;
 	
-	void RedirectIoToConsole();
-
 	// job for rendering thread
 	void RenderThread();
 
 	// updates the current scene
 	void Update(float dt);
 	// renders one frame
-	void Render();
+	void Render(float& dt);
 
 	RMesh* m_testMesh1;	//***TESTING to load model***
 
@@ -50,7 +55,7 @@ public:
 	Engine& operator=(Window&& other) = delete;
 	virtual ~Engine() = default;
 
-	void Setup(const HINSTANCE &hInstance);
+	void Setup();
 
 	void Start();
 
@@ -60,7 +65,7 @@ public:
 	void SetScene(const std::string& name);
 	void SetScene(Scene& scene);
 
-	Window* GetWindow() const;
+	Window* GetWindow();
 
 	void OnEvent(EngineEvent& event);
 

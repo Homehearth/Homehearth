@@ -42,10 +42,12 @@ RTexture::~RTexture()
 	switch (m_active)
 	{
 	case 0:
-		m_texture.texture2D->Release();
+		if(this->texture.texture2D)
+			this->texture.texture2D->Release();
 		break;
 	case 1:
-		m_texture.bitMap->Release();
+		if(this->texture.bitMap)
+			this->texture.bitMap->Release();
 		break;
 	default:
 		// nothing initalized

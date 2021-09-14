@@ -1,31 +1,16 @@
 #include <EnginePCH.h>
 
-#include "Engine.h"
-#include "InputSystem.h"
+#include <Engine.h>
 
-#include <chrono>
 
 void createTriangle(Scene& scene, float size, const float pos[2], const int velSign[2]);
 void setupDemoScene(Engine& engine, Scene& scene);
 
 // The main entry point of the engine.
-int CALLBACK WinMain(
-	_In_ HINSTANCE hInstance,
-	_In_opt_ HINSTANCE hPrevInstance,
-	_In_ LPSTR lpCmdLine,
-	_In_ int nShowCmd)
-{
-
-#ifdef _DEBUG
-	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-	MessageBoxA(nullptr, "Debug mode!", "Engine", 0);
-#else
-	MessageBoxA(nullptr, "Release mode!", "Engine", 0);
-#endif
-
-
+int main() {
 	Engine engine;
-	engine.Setup(hInstance);
+
+	engine.Setup();
 
 	// Create or get scene
 	Scene& startScene = engine.GetScene("StartScene");
@@ -36,9 +21,9 @@ int CALLBACK WinMain(
 
 	engine.Start();
 
+
 	return 0;
 }
-
 // ECS DEMO
 // Simple Components
 struct Triangle {
@@ -102,7 +87,6 @@ void setupDemoScene(Engine& engine, Scene& scene) {
 					}
 					triangle.pos[0] += velocity.vel[0] * dt * velocity.mag;
 					triangle.pos[1] += velocity.vel[1] * dt * velocity.mag;
-
 				});
 		});
 
@@ -115,7 +99,6 @@ void setupDemoScene(Engine& engine, Scene& scene) {
 					D2D1Core::DrawF(triangle.pos[0], triangle.pos[1], triangle.size[0], triangle.size[1], Shapes::TRIANGLE_FILLED);
 				});
 		});
-
 	scene.on<TriangleCollisionEvent>([](const TriangleCollisionEvent& e, Scene& scene)
 		{
 			// split
@@ -127,6 +110,7 @@ void setupDemoScene(Engine& engine, Scene& scene) {
 			createTriangle(scene, size, e.triangle->pos, velSign);
 
 		});
+	
 	// Create test Entity
 	const float pos[2] = { 0.f, 0.f };
 	const int signVel[2] = { 1, 1 };

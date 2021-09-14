@@ -8,43 +8,43 @@ Renderer::Renderer()
 {
 }
 
-void Renderer::initialize(Window* pWindow)
+void Renderer::Initialize(Window* pWindow)
 {
     //assert(isInitialized || "D3D11Core is already initialized.");
     if (this->pWindow == nullptr)
         this->pWindow = pWindow;
 	
     // Initialize RenderTargetView.
-    if (!this->createRenderTargetView())
+    if (!this->CreateRenderTargetView())
 		LOG_ERROR("failed creating RenderTargetView.");
     
     // Initialize DepthStencilBuffer.
-    if (!this->createDepthStencilTexture())
+    if (!this->CreateDepthStencilTexture())
         LOG_ERROR("failed creating DepthStencilBuffer.");
     
     // Initialize DepthStencilState.
-    if (!this->createDepthStencilState())
+    if (!this->CreateDepthStencilState())
         LOG_ERROR("failed creating DepthStencilState.");
     
     // Initialize DepthStencilView.
-    if (!this->createDepthStencilView())
+    if (!this->CreateDepthStencilView())
         LOG_ERROR("failed creating DepthStencilView.");
     
     // Initialize RasterizerStates.
-    if (!this->createRasterizerStates())
+    if (!this->CreateRasterizerStates())
         LOG_ERROR("failed creating RasterizerStates.");
     
     // Initialize SamplerStates.
-    if (!this->createSamplerStates())
+    if (!this->CreateSamplerStates())
         LOG_ERROR("failed creating SamplerStates.");
     
     // Set Viewport.
-    this->setViewport();
+    this->SetViewport();
 
     this->isInitialized = true;
 }
 
-bool Renderer::createRenderTargetView()
+bool Renderer::CreateRenderTargetView()
 {
     ID3D11Texture2D* pBackBuffer = nullptr;
 
@@ -64,7 +64,7 @@ bool Renderer::createRenderTargetView()
     return !FAILED(hr);
 }
 
-bool Renderer::createDepthStencilTexture()
+bool Renderer::CreateDepthStencilTexture()
 {
     // Initialize the description of the depth buffer.
     D3D11_TEXTURE2D_DESC depthStencilBufferDesc;
@@ -89,7 +89,7 @@ bool Renderer::createDepthStencilTexture()
     return !FAILED(hr);
 }
 
-bool Renderer::createDepthStencilState()
+bool Renderer::CreateDepthStencilState()
 {
     // Initialize the description of the stencil state.
     D3D11_DEPTH_STENCIL_DESC depthStencilDesc;
@@ -127,7 +127,7 @@ bool Renderer::createDepthStencilState()
     return !FAILED(hr);
 }
 
-bool Renderer::createDepthStencilView()
+bool Renderer::CreateDepthStencilView()
 {
     // Initialize the depth stencil View.
     D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc;
@@ -150,7 +150,7 @@ bool Renderer::createDepthStencilView()
     return !FAILED(hr);
 }
 
-bool Renderer::createRasterizerStates()
+bool Renderer::CreateRasterizerStates()
 {
     // Initialize the description of the rasterizer state.
     D3D11_RASTERIZER_DESC rasterizerDesc;
@@ -197,7 +197,7 @@ bool Renderer::createRasterizerStates()
     return !FAILED(hr);
 }
 
-bool Renderer::createSamplerStates()
+bool Renderer::CreateSamplerStates()
 {
     // Create a sampler state description.
     D3D11_SAMPLER_DESC samplerDesc;
@@ -235,7 +235,7 @@ bool Renderer::createSamplerStates()
     return !FAILED(hr);
 }
 
-void Renderer::setViewport()
+void Renderer::SetViewport()
 {
     // Initialize the viewport to occupy the entire client area.
     RECT clientRect;
