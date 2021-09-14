@@ -48,31 +48,38 @@ void RMesh::AddTextures(material_t& mat, const aiMaterial* aiMat)
 
 void RMesh::Render()
 {
-	uint16_t currentMat = -1;
+	//uint16_t currentMat = -1;
+    UINT stride = sizeof(simple_vertex_t);
+    UINT offset = 0;
 
 	//For every submesh if it exists
 	for (size_t m = 0; m < m_meshes.size(); m++)
 	{
-		//Switch material and upload to GPU?
-		if (currentMat != m_meshes[m].materialID)
-		{
-			currentMat = m_meshes[m].materialID;
+        //TODO: Fix rendering with materials
+		//Switch material if needed
+        /*
+            if (currentMat != m_meshes[m].materialID)
+		    {
+			    currentMat = m_meshes[m].materialID;
+                
+                Set the materialbuffer
+                D3D11Core::Get().DeviceContext()->
 
-			//m_materials[currentMat].ambient   //Go get the vector3
-			//m_materials[currentMat].textures[ETextureType::diffuse] to get the pointer to the texture
-
-		}
-
-		//Draw everything with indexbuffer
-		//m_meshes[m].vertexBuffer
-		//m_meshes[m].indexBuffer
-		//device.Draw()???
+                m_materials[currentMat].ambient   //Go get the vector3
+                m_materials[currentMat].textures[ETextureType::diffuse] to get the pointer to the texture
+            }
+        */
+	
+		//Draw with indexbuffer
+        D3D11Core::Get().DeviceContext()->IASetVertexBuffers(0, 1, m_meshes[m].vertexBuffer.GetAddressOf(), &stride, &offset);
+        D3D11Core::Get().DeviceContext()->IASetIndexBuffer(m_meshes[m].indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
+        D3D11Core::Get().DeviceContext()->DrawIndexed(m_meshes[m].indexCount, 0, 0);
 	}
-   
 }
 
-bool RMesh::Create(const std::string& filepath)
+bool RMesh::Create(const std::string& filename)
 {
+    std::string filepath = "../Assets/Models/" + filename;
     Assimp::Importer importer;
 
     const aiScene* scene = importer.ReadFile
@@ -171,7 +178,7 @@ bool RMesh::Create(const std::string& filepath)
             importer.FreeScene();
             return false;
         }
-        submesh.vertexBuffer = vBuff.Get();                 //GetAddressOf()?***
+        submesh.vertexBuffer = vBuff.Get();
 
         //Create index buffer
         Buffers::IndexBuffer iBuff;
@@ -181,8 +188,8 @@ bool RMesh::Create(const std::string& filepath)
             importer.FreeScene();
             return false;
         }
-        submesh.indexBuffer = iBuff.Get();                  //GetAddressOf?***
-        submesh.indexCount = iBuff.getIndexCount();
+        submesh.indexBuffer = iBuff.Get();
+        submesh.indexCount = uint32_t(iBuff.getIndexCount());
 
         //Cleaning
         vertices.clear();

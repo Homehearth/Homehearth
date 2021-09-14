@@ -9,7 +9,6 @@
 
 	TODO:
 	* Fix loading in bones
-	* Rendering the mesh on screen
 */
 
 class RMesh : public resource::GResource
@@ -46,7 +45,7 @@ private:
 	{
 		ComPtr<ID3D11Buffer> vertexBuffer;
 		ComPtr<ID3D11Buffer> indexBuffer;
-		size_t				 indexCount = 0;
+		uint32_t			 indexCount = 0;
 		uint16_t			 materialID = 0;
 	};
 
@@ -67,11 +66,11 @@ public:
 
 	/*
 		Render the mesh depending on type
-		[ON GOING...]
+		TODO: Skeletal special
 	*/
 	void Render();
 
 	// Inherited via GResource
-	virtual bool Create(const std::string& filepath) override;
+	virtual bool Create(const std::string& filename) override;
 
 };

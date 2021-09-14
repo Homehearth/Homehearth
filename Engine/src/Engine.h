@@ -7,6 +7,7 @@
 #include "Client.h"
 
 #include <time.h>
+#include "RMesh.h"
 
 class Engine
 {
@@ -38,6 +39,8 @@ private:
 	void Update(float dt);
 	// renders one frame
 	void Render();
+
+	RMesh* m_testMesh1;	//***TESTING to load model***
 
 public:
 	Engine();

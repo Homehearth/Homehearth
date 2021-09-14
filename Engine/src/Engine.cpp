@@ -46,8 +46,7 @@ void Engine::Setup(const HINSTANCE& hInstance) {
     m_client = std::make_unique<Client>();
 
     // *** [TEMP] testing to load in a mesh ***
-    RMesh* test1 = ResourceManager::GetResource<RMesh>("../Assets/Models/Eric.fbx");
-    RMesh* test2 = ResourceManager::GetResource<RMesh>("../Assets/Models/Eric.fbx");
+    m_testMesh1 = ResourceManager::GetResource<RMesh>("Monster.fbx");
 
 }
 
