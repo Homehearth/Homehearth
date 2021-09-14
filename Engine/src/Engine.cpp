@@ -10,6 +10,8 @@ Engine::Engine()
 	: m_scenes({0})
 	, m_currentScene(nullptr)
 	, m_vSync(false)
+    , m_frameTime()
+    , m_buffPointer(nullptr)
 {
 }
 
@@ -43,12 +45,12 @@ void Engine::Setup() {
         Preallocate space for Triplebuffer
     */
     m_drawBuffers.AllocateBuffers();
-    this->pointer = m_drawBuffers.GetBuffer(0);
-    this->pointer->reserve(200);
-    this->pointer = m_drawBuffers.GetBuffer(1);
-    this->pointer->reserve(200);
+    m_buffPointer = m_drawBuffers.GetBuffer(0);
+    m_buffPointer->reserve(200);
+    m_buffPointer = m_drawBuffers.GetBuffer(1);
+    m_buffPointer->reserve(200);
 
-    m_client = std::make_unique<Client>();
+    //m_client = std::make_unique<Client>();
 
 }
 
@@ -84,13 +86,19 @@ void Engine::Start()
         {
             m_currentScene->publish<InputEvent>(event);
         }
-        
 
-        auto now = std::chrono::high_resolution_clock::now();
-        auto delta = std::chrono::duration_cast<std::chrono::duration<float>>(now - lastTime);
-        lastTime = now;
-        float dt = delta.count();
-        Update(dt);
+
+        currentFrame = omp_get_wtime();
+        deltaTime = static_cast<float>(currentFrame - lastFrame);
+        if (deltaSum >= targetDelta)
+        {
+            Update(deltaSum);
+
+            m_frameTime.update = deltaSum;
+            deltaSum = 0.f;
+        }
+        deltaSum += deltaTime;
+        lastFrame = currentFrame;
     }
 
     // Wait for the rendering thread to exit its last render cycle and shutdown.
@@ -190,7 +198,7 @@ void Engine::RenderThread()
 
 void Engine::Update(float dt)
 {
-    pointer = m_drawBuffers.GetBuffer(0);
+    m_buffPointer = m_drawBuffers.GetBuffer(0);
     // Update the camera transform based on interactive inputs.
     //updateCamera(dt);
 
@@ -207,8 +215,6 @@ void Engine::Update(float dt)
     // Handle events enqueued
     //Scene::GetEventDispatcher().update();
 
-
-
     if (!m_drawBuffers.IsSwapped())
     {
         m_drawBuffers.SwapBuffers();
@@ -219,9 +225,6 @@ void Engine::Render(float& dt)
 {
     m_renderer.ClearScreen();
     D2D1Core::Begin();
-    //for (int i = 0; i < 10000; i++)
-        //D2D1Core::DrawF(0, 0, 100, 100, Shapes::RECTANGLE_FILLED);
-          //D2D1Core::DrawF(rand() % m_window.get()->GetWidth() - 100, rand() % m_window.get()->GetHeight() - 100, 100, 100, Shapes::RECTANGLE_FILLED);
     if (m_currentScene)
     {
         m_currentScene->Render();
@@ -244,6 +247,5 @@ void Engine::Render(float& dt)
     D2D1Core::Present();
     D3D11Core::Get().SwapChain()->Present(1, 0);
     m_renderer.ClearScreen();
-    D2D1Core::Present();
 }
 
