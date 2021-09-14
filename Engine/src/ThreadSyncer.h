@@ -17,11 +17,6 @@ namespace thread
 		static bool s_drawRunning;
 		static bool s_networkRunning;
 
-		// Used for sync between threads to prevent read/write on same block.
-		static int s_engineIndex;
-		static int s_drawIndex;
-		static int s_networkIndex;
-
 	public:
 
 		static void Initialize();
@@ -38,13 +33,6 @@ namespace thread
 	private:
 		
 		T** m_buffers;
-
-		// Atomics to prevent read/write?
-		/*
-		std::atomic<T> m_buffer1;
-		std::atomic<T> m_buffer2;
-		std::atomic<T> m_buffer3;
-		*/
 		std::mutex m_mutex;
 
 		bool m_isAllocated = false;
@@ -266,12 +254,3 @@ namespace thread
 		m_isSwapped = false;
 	}
 }
-
-// Engine Index
-#define eDex thread::ThreadSyncer::instance->s_engineIndex
-
-// Draw Index
-#define dDex thread::ThreadSyncer::instance->s_drawIndex
-
-// Network Index
-#define nDex thread::ThreadSyncer::instance->s_networkIndex

@@ -47,9 +47,9 @@ void Engine::Setup(const HINSTANCE& hInstance) {
     */
     m_drawBuffers.AllocateBuffers();
     this->pointer = m_drawBuffers.GetBuffer(0);
-    this->pointer->reserve(501);
+    this->pointer->reserve(200);
     this->pointer = m_drawBuffers.GetBuffer(1);
-    this->pointer->reserve(501);
+    this->pointer->reserve(200);
 
     m_client = std::make_unique<Client>();
 
@@ -64,9 +64,11 @@ void Engine::Setup(const HINSTANCE& hInstance) {
     scene.AddSystem([&](entt::registry& reg, float dt)
     {
         std::vector<Triangle>* pointer = nullptr;
+        // Get the buffer.
         pointer = m_drawBuffers.GetBuffer(0);
         if (pointer)
         {
+            // Clear list if not already done.
             if(!pointer->empty())
                 pointer->clear();
 
@@ -86,6 +88,7 @@ void Engine::Setup(const HINSTANCE& hInstance) {
                 triangle.pos[0] += velocity.vel[0] * dt * velocity.mag;
                 triangle.pos[1] += velocity.vel[1] * dt * velocity.mag;
 
+                // Write to buffer.
                 pointer->push_back(triangle);
             });
         }
@@ -105,13 +108,6 @@ void Engine::Setup(const HINSTANCE& hInstance) {
                    D2D1Core::DrawF(triangle->pos[0], triangle->pos[1], triangle->size[0], triangle->size[1], Shapes::TRIANGLE_FILLED);
             }
         }
-        /*
-        auto view = reg.view<Triangle>();
-        view.each([](Triangle& triangle)
-        {
-            D2D1Core::DrawF(triangle.pos[0], triangle.pos[1], triangle.size[0], triangle.size[1], Shapes::RECTANGLE_FILLED);
-        });
-        */
     });
 
     // Create test Entities
