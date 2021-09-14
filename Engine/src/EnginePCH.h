@@ -71,5 +71,11 @@ using Microsoft::WRL::ComPtr;
 #include "D2D1Core.h"
 #include "Profiler.h"
 
+
 // Network
 #include "network.h"
+
+
+// Stb
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"

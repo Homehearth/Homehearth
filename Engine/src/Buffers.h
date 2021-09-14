@@ -1,5 +1,5 @@
 #pragma once
-#include "MeshStructure.h"
+#include "VertexStructure.h"
 
 namespace Buffers
 {

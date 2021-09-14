@@ -1,57 +1,72 @@
 #pragma once
 #include "GResource.h"
-#include "RTexture.h"
 
-#define ADD_RESOURCE(type, name) resource::ResourceManager::instance->InsertResource(new type(std::string(name)), name)
-#define GET_RESOURCE(type, name) resource::ResourceManager::instance->GetResource<type>(name)
+/*
+	Discuss: 
+	* namespace resource? (was used previously) 
+	* Necessary/good to have?
+*/
 
-namespace resource
+class ResourceManager
 {
-	class ResourceManager
+private:
+	static ResourceManager* m_instance;
+	std::unordered_map<std::string, resource::GResource*> m_resources;
+	ResourceManager();
+	~ResourceManager();
+
+public:
+	//Delete copy constructors
+	ResourceManager(const ResourceManager& rm) = delete;
+	ResourceManager(const ResourceManager&& rm) = delete;
+	ResourceManager& operator=(const ResourceManager& rm) = delete;
+	ResourceManager& operator=(const ResourceManager&& rm) = delete;
+
+	static void Initialize();
+
+	/*
+		Any resources linked to the resource manager will be taken care of.
+		Please do not delete any pointers placed into the resource manager.
+	*/
+	static void Destroy();
+
+	/*
+		Retrieve any resource with the name (resource_name).
+		Use the appropiate T class when retrieving a resource.
+		If the resource does not exist we shall try to create it.
+		Failure to apply correct T class will return a nullptr.
+		Ex:
+		RTexture* texture = GetResource<RTexture>(resource_name);
+	*/
+	template <class T>
+	static T* GetResource(const std::string& resource_name);
+};
+
+template<class T>
+inline T* ResourceManager::GetResource(const std::string& resource_name)
+{
+	//Check if the resource exists
+	auto f = ResourceManager::m_instance->m_resources.find(resource_name);
+
+	//Resource is existing: returing it
+	if (f != ResourceManager::m_instance->m_resources.end())
 	{
-	private:
-
-		std::unordered_map<std::string, GResource*> resources;
-		ResourceManager();
-		~ResourceManager();
-
-	public:
-		static ResourceManager* instance;
-		static void Initialize();
-		/*
-			Any resources linked to the resource manager will be taken care of.
-			Please do not delete any pointers placed into the resource manager.
-		*/
-		static void Destroy();
-		// Insert the resource and link it with a key name to be used to retrieve it.
-		static void InsertResource(GResource* resource, std::string resource_name);
-
-		/* 
-			Retrieve any resource with the name (resource_name).
-			Use the appropiate T class when retrieving a resource.
-			Failure to apply correct T class will return a nullptr.
-			Ex:
-			RTexture* texture = GetResource<RTexture>(resource_name);
-		*/
-		template <class T>
-		static T* GetResource(std::string resource_name);
-	};
-
-	template<class T>
-	inline T* ResourceManager::GetResource(std::string resource_name)
+		return dynamic_cast<T*>(f->second);
+	}
+	//Not existing: going to try to create it
+	else
 	{
-		auto f = ResourceManager::instance->resources.find(resource_name);
-		if (f != ResourceManager::instance->resources.end())
-		{
-			return dynamic_cast<T*>(f->second);
-		}
-		else
-		{
-			return nullptr;
-		}
+		resource::GResource* resource;
+		resource = new T();
 
-		// Eventual faults, return nullptr
-		return nullptr;
+		//Create the new resource and if it was a success, add it to the resources
+		if (resource->Create(resource_name))
+		{
+			ResourceManager::m_instance->m_resources.emplace(resource_name, resource);
+			return dynamic_cast<T*>(resource);
+		}
 	}
 
+	// Eventual faults, return nullptr
+	return nullptr;
 }

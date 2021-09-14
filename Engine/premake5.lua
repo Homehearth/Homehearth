@@ -51,14 +51,15 @@ project "Engine"
 			["src/Graphics/D2D1"] = { "**D2D1Core.*" },
             ["src/Graphics/Window"] = { "**Window.*" },
 			
-			["src/Network"] = { "**Client.*" },
+		["src/Network"] = { "**Client.*" },
 
-        ["src/Resources"] = { "**ResourceManager.*", "**GResource.*", "**RTexture.*", "**Mesh.*", "**MeshStructure.*" },
+        ["src/Resources"] = { "**ResourceManager.*", "**GResource.*", "**RTexture.*", "**RMesh.*" },
             ["src/Resources/Shaders"] = { "**.hhlsl", "**.hlsli" },
+
+		["src/Structures" = { "**VertexStructure.*" },
 
         ["src/Audio"] = {  },
         ["src/Physics"] = {  },
-        ["src/Network"] = { "**Client.*" },
         ["src/Animation"] = {  },
         ["src/ESC"] = {  }, 
         ["src/AI"] = {  }     

@@ -49,3 +49,9 @@ RTexture::~RTexture()
 		break;
 	}
 }
+
+bool RTexture::Create(const std::string& filepath)
+{
+	//Do regular image loading to texture2d
+	return true;
+}

@@ -5,5 +5,8 @@ namespace resource
 	{
 	public:
 		virtual ~GResource() = 0 {};
+
+		//Every resource can be created with a filepath
+		virtual bool Create(const std::string& filepath) = 0;
 	};
 }

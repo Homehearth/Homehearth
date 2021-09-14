@@ -1,5 +1,4 @@
 #pragma once
-#include <EnginePCH.h>
 #include "GResource.h"
 // RTexture -> (RESOURCE)Texture
 
@@ -22,4 +21,7 @@ public:
 	RTexture(const std::string&& filePath);
 	RTexture(ID2D1Bitmap* texture);
 	~RTexture();
+
+	// Inherited via GResource
+	virtual bool Create(const std::string& filepath) override;
 };

@@ -1,0 +1,76 @@
+#pragma once
+#include "VertexStructure.h"
+#include "Buffers.h"
+#include "RTexture.h"
+
+/*
+	Loads in mesh information with Assimp 5.0.1
+	Can load in submeshes and multiple materials
+
+	TODO:
+	* Fix loading in bones
+	* Rendering the mesh on screen
+*/
+
+class RMesh : public resource::GResource
+{
+private:
+	enum class EMeshType
+	{
+		staticMesh,
+		skeletalMesh	//Has bones
+	};
+	enum class ETextureType
+	{
+		diffuse,
+		normal,
+		metalness,
+		roughness,
+		length
+	};
+
+	struct material_t
+	{
+		sm::Vector3 ambient								  = {};
+		sm::Vector3 diffuse								  = {};
+		sm::Vector3 specular							  = {};
+		float       shiniess							  = 0.0f;
+		float		opacity								  = 1.0f;  //?
+		RTexture* textures[uint8_t(ETextureType::length)] = { nullptr };
+	};
+
+	/*
+		Each mesh has its own buffers and materials
+	*/
+	struct mesh_t
+	{
+		ComPtr<ID3D11Buffer> vertexBuffer;
+		ComPtr<ID3D11Buffer> indexBuffer;
+		size_t				 indexCount = 0;
+		uint16_t			 materialID = 0;
+	};
+
+	EMeshType m_meshType;
+
+	//All the materials and meshes
+	std::vector<material_t> m_materials;
+	std::vector<mesh_t>  m_meshes;
+
+	//Save the skeleton in a structure: rootbone --> other parts
+
+private:
+	void AddTextures(material_t& mat, const aiMaterial* aiMat);
+
+public:
+	RMesh();
+	~RMesh();
+
+	/*
+		Render the mesh depending on type
+	*/
+	void Render();
+
+	// Inherited via GResource
+	virtual bool Create(const std::string& filepath) override;
+
+};

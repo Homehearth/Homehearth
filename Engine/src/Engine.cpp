@@ -4,6 +4,8 @@
 #include <chrono>
 #include <functional>
 
+#include "RMesh.h"
+
 bool Engine::s_engineRunning = false;
 bool Engine::s_safeExit = false;
 
@@ -21,7 +23,7 @@ void Engine::Setup(const HINSTANCE& hInstance) {
 #endif
     
     T_INIT(T_REC, thread::ThreadType::POOL_FIFO);
-    resource::ResourceManager::Initialize();
+    ResourceManager::Initialize();
     srand((unsigned int)time(NULL));
 
 	// Window Setup:
@@ -44,8 +46,8 @@ void Engine::Setup(const HINSTANCE& hInstance) {
     m_client = std::make_unique<Client>();
 
     // *** [TEMP] testing to load in a mesh ***
-    if (!m_testMesh.Initialize("../Assets/Models/Eric.fbx"))
-        std::cout << "Failed to load mesh..." << std::endl;
+    RMesh* test1 = ResourceManager::GetResource<RMesh>("../Assets/Models/Eric.fbx");
+    RMesh* test2 = ResourceManager::GetResource<RMesh>("../Assets/Models/Eric.fbx");
 
 }
 
@@ -92,7 +94,7 @@ void Engine::Shutdown()
     while (!s_safeExit) {};
 
     T_DESTROY();
-    resource::ResourceManager::Destroy();
+    ResourceManager::Destroy();
     D2D1Core::Destroy();
 }
 

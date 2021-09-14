@@ -1,20 +1,19 @@
 #pragma once
 #include "EnginePCH.h"
-#include "Mesh.h"
+#include "RMesh.h"
 
-Mesh::Mesh()
+RMesh::RMesh()
 {
     m_meshType = EMeshType::staticMesh;
-    m_isVisible = true;
 }
 
-Mesh::~Mesh()
+RMesh::~RMesh()
 {
     m_materials.clear();
     m_meshes.clear();
 }
 
-void Mesh::AddTextures(material_t& mat, const aiMaterial* aiMat)
+void RMesh::AddTextures(material_t& mat, const aiMaterial* aiMat)
 {
     //Link together our format with assimps format
     std::unordered_map<ETextureType, aiTextureType> textureTypeMap =
@@ -39,27 +38,51 @@ void Mesh::AddTextures(material_t& mat, const aiMaterial* aiMat)
             size_t index = filepath.find_last_of("/\\");
             filename = filepath.substr(index + 1);
 
-            ADD_RESOURCE(RTexture, filename);
-            RTexture* texture = GET_RESOURCE(RTexture, filename);
-            if (texture)
-                mat.textures[type.first] = texture;
+            //Get the texture
+            //Will be nullptr if it did not exist failed to be created
+            mat.textures[(uint16_t)type.first] = ResourceManager::GetResource<RTexture>(filename);
         }
     }
     textureTypeMap.clear();
 }
 
-bool Mesh::Initialize(const std::string& filepath)
+void RMesh::Render()
+{
+	uint16_t currentMat = -1;
+
+	//For every submesh if it exists
+	for (size_t m = 0; m < m_meshes.size(); m++)
+	{
+		//Switch material and upload to GPU?
+		if (currentMat != m_meshes[m].materialID)
+		{
+			currentMat = m_meshes[m].materialID;
+
+			//m_materials[currentMat].ambient   //Go get the vector3
+			//m_materials[currentMat].textures[ETextureType::diffuse] to get the pointer to the texture
+
+		}
+
+		//Draw everything with indexbuffer
+		//m_meshes[m].vertexBuffer
+		//m_meshes[m].indexBuffer
+		//device.Draw()???
+	}
+   
+}
+
+bool RMesh::Create(const std::string& filepath)
 {
     Assimp::Importer importer;
 
     const aiScene* scene = importer.ReadFile
     (
         filepath,
-        aiProcess_Triangulate           |   //Triangulate every surface
+        aiProcess_Triangulate |   //Triangulate every surface
         aiProcess_JoinIdenticalVertices |   //Ignores identical veritices - memory saving  
-        aiProcess_FlipWindingOrder      |   //Makes it clockwise order
-        aiProcess_MakeLeftHanded        |	//Use a lefthanded system for the models 
-        aiProcess_CalcTangentSpace      |   //Fix tangents and bitangents automatic for us
+        aiProcess_FlipWindingOrder |   //Makes it clockwise order
+        aiProcess_MakeLeftHanded |	//Use a lefthanded system for the models 
+        aiProcess_CalcTangentSpace |   //Fix tangents and bitangents automatic for us
         aiProcess_FlipUVs                   //Flips the textures to fit directX-style
     );
 
@@ -78,13 +101,13 @@ bool Mesh::Initialize(const std::string& filepath)
         std::cout << "The scene has no meshes..." << std::endl;
         return false;
     }
-    
+
     //Load in the materials
     for (unsigned int m = 0; m < scene->mNumMaterials; m++)
     {
         material_t mat;
         aiMaterial* aiMat = scene->mMaterials[m];
-        
+
         //Basic float3-values
         aiMat->Get(AI_MATKEY_COLOR_AMBIENT, mat.ambient);
         aiMat->Get(AI_MATKEY_COLOR_DIFFUSE, mat.diffuse);
@@ -93,21 +116,21 @@ bool Mesh::Initialize(const std::string& filepath)
 
         //Check what types of textures that exist and add them to a map
         AddTextures(mat, aiMat);
-   
+
         m_materials.push_back(mat);
     }
 
     //For every mesh
     for (unsigned int m = 0; m < scene->mNumMeshes; m++)
     {
-        const aiMesh* mesh = scene->mMeshes[m];
-        submesh_t submesh;
-        submesh.materialID = mesh->mMaterialIndex;
+        const aiMesh* aimesh = scene->mMeshes[m];
+        mesh_t submesh;
+        submesh.materialID = aimesh->mMaterialIndex;
 
         std::vector<simple_vertex_t> vertices;
         std::vector<size_t> indices;
-        vertices.reserve(mesh->mNumVertices);
-        indices.reserve(size_t(mesh->mNumFaces) * 3);
+        vertices.reserve(aimesh->mNumVertices);
+        indices.reserve(size_t(aimesh->mNumFaces) * 3);
 
         //Skeleton mesh
         /*if (mesh->HasBones())
@@ -119,46 +142,46 @@ bool Mesh::Initialize(const std::string& filepath)
         }*/
         //Else do this below
             //Go through all the vertices
-            for (unsigned int v = 0; v < mesh->mNumVertices; v++)
-            {
-                simple_vertex_t vert = {};
-                vert.position = { mesh->mVertices[v].x, mesh->mVertices[v].y, mesh->mVertices[v].z };
-                vert.uv = { mesh->mTextureCoords[0][v].x, mesh->mTextureCoords[0][v].y };
-                vert.normal = { mesh->mNormals[v].x, mesh->mNormals[v].y, mesh->mNormals[v].z };
-                vert.tangent = { mesh->mTangents[v].x, mesh->mTangents[v].y, mesh->mTangents[v].z };
-                vert.bitanget = { mesh->mBitangents[v].x, mesh->mBitangents[v].y, mesh->mBitangents[v].z };
-                vertices.push_back(vert);
-            }
-        
-		
+        for (unsigned int v = 0; v < aimesh->mNumVertices; v++)
+        {
+            simple_vertex_t vert = {};
+            vert.position = { aimesh->mVertices[v].x, aimesh->mVertices[v].y, aimesh->mVertices[v].z };
+            vert.uv = { aimesh->mTextureCoords[0][v].x, aimesh->mTextureCoords[0][v].y };
+            vert.normal = { aimesh->mNormals[v].x, aimesh->mNormals[v].y, aimesh->mNormals[v].z };
+            vert.tangent = { aimesh->mTangents[v].x, aimesh->mTangents[v].y, aimesh->mTangents[v].z };
+            vert.bitanget = { aimesh->mBitangents[v].x, aimesh->mBitangents[v].y, aimesh->mBitangents[v].z };
+            vertices.push_back(vert);
+        }
+
+
         //Indices
-		for (unsigned int f = 0; f < mesh->mNumFaces; f++)
-		{
-			const aiFace face = mesh->mFaces[f];
-			for (unsigned int id = 0; id < 3; id++)
-				indices.push_back(face.mIndices[id]);
-		}
+        for (unsigned int f = 0; f < aimesh->mNumFaces; f++)
+        {
+            const aiFace face = aimesh->mFaces[f];
+            for (unsigned int id = 0; id < 3; id++)
+                indices.push_back(face.mIndices[id]);
+        }
 
-		//Create vertex buffer
-		Buffers::VertexBuffer vBuff;
-		if (!vBuff.create(&vertices[0], vertices.size()))
-		{
+        //Create vertex buffer
+        Buffers::VertexBuffer vBuff;
+        if (!vBuff.create(&vertices[0], vertices.size()))
+        {
             std::cout << "Failed to create vertexbuffer..." << std::endl;
-			importer.FreeScene();
-			return false;
-		}
-		submesh.vertexBuffer = vBuff.Get();                 //GetAddressOf()?***
+            importer.FreeScene();
+            return false;
+        }
+        submesh.vertexBuffer = vBuff.Get();                 //GetAddressOf()?***
 
-		//Create index buffer
-		Buffers::IndexBuffer iBuff;
-		if (!iBuff.create(&indices[0], indices.size()))
-		{
+        //Create index buffer
+        Buffers::IndexBuffer iBuff;
+        if (!iBuff.create(&indices[0], indices.size()))
+        {
             std::cout << "Failed to create indexbuffer..." << std::endl;
-			importer.FreeScene();
-			return false;
-		}
-		submesh.indexBuffer = iBuff.Get();                  //GetAddressOf?***
-		submesh.indexCount = iBuff.getIndexCount();
+            importer.FreeScene();
+            return false;
+        }
+        submesh.indexBuffer = iBuff.Get();                  //GetAddressOf?***
+        submesh.indexCount = iBuff.getIndexCount();
 
         //Cleaning
         vertices.clear();
@@ -170,32 +193,4 @@ bool Mesh::Initialize(const std::string& filepath)
     importer.FreeScene();
     std::cout << "Mesh: '" << filepath << "' created" << std::endl;
     return true;
-}
-
-
-void Mesh::Render()
-{
-    if (m_isVisible)
-    {
-        unsigned int currentMat = -1;
-
-        //For every submesh if it exists
-        for (size_t m = 0; m < m_meshes.size(); m++)
-        {
-            //Switch material and upload to GPU?
-            if (currentMat != m_meshes[m].materialID)
-            {
-                currentMat = m_meshes[m].materialID;
-
-                //m_materials[currentMat].ambient   //Go get the vector3
-                //m_materials[currentMat].textures[ETextureType::diffuse] to get the pointer to the texture
-
-            }
-            
-            //Draw everything with indexbuffer
-            //m_meshes[m].vertexBuffer
-            //m_meshes[m].indexBuffer
-            //device.Draw()???
-        }
-    }
 }

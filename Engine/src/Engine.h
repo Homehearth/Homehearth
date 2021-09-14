@@ -8,8 +8,6 @@
 
 #include <time.h>
 
-#include "Mesh.h"
-
 class Engine
 {
 private:
@@ -40,8 +38,6 @@ private:
 	void Update(float dt);
 	// renders one frame
 	void Render();
-
-	Mesh m_testMesh;	//***TEMP - Only for testing***
 
 public:
 	Engine();
