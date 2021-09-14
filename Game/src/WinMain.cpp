@@ -87,7 +87,6 @@ void setupDemoScene(Engine& engine, Scene& scene) {
 					}
 					triangle.pos[0] += velocity.vel[0] * dt * velocity.mag;
 					triangle.pos[1] += velocity.vel[1] * dt * velocity.mag;
-
 				});
 		});
 

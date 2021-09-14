@@ -1,5 +1,6 @@
-#include "EnginePCH.h"
+﻿#include "EnginePCH.h"
 #include "Engine.h"
+#include <omp.h>
 
 
 bool Engine::s_engineRunning = false;
@@ -9,6 +10,8 @@ Engine::Engine()
 	: m_scenes({0})
 	, m_currentScene(nullptr)
 	, m_vSync(false)
+    , m_frameTime()
+    , m_buffPointer(nullptr)
 {
 }
 
@@ -16,8 +19,9 @@ void Engine::Setup() {
 #ifdef _DEBUG
     //RedirectIoToConsole();
 #endif
-    
-    T_INIT(T_REC, thread::ThreadType::POOL_FIFO);
+    //RedirectIoToConsole();
+
+    T_INIT(1, thread::ThreadType::POOL_FIFO);
     resource::ResourceManager::Initialize();
     srand((unsigned int)time(NULL));
 
@@ -37,7 +41,16 @@ void Engine::Setup() {
     // Thread should be launched after s_engineRunning is set to true and D3D11 is initalized.
     s_engineRunning = true;
 
-    m_client = std::make_unique<Client>();
+    /*
+        Preallocate space for Triplebuffer
+    */
+    m_drawBuffers.AllocateBuffers();
+    m_buffPointer = m_drawBuffers.GetBuffer(0);
+    m_buffPointer->reserve(200);
+    m_buffPointer = m_drawBuffers.GetBuffer(1);
+    m_buffPointer->reserve(200);
+
+    //m_client = std::make_unique<Client>();
 
 }
 
@@ -49,6 +62,10 @@ void Engine::Start()
     if (thread::IsThreadActive())
         T_CJOB(Engine, RenderThread);
 
+    double currentFrame = 0.f, lastFrame = omp_get_wtime();
+    float deltaTime = 0.f, deltaSum = 0.f;
+    // Desired FPS
+    const float targetDelta = 1 / 1000.0f;
     MSG msg = { nullptr };
     while (IsRunning())
     {
@@ -70,15 +87,24 @@ void Engine::Start()
             m_currentScene->publish<InputEvent>(event);
         }
 
-        auto now = std::chrono::high_resolution_clock::now();
-        auto delta = std::chrono::duration_cast<std::chrono::duration<float>>(now - lastTime);
-        lastTime = now;
-        float dt = delta.count();
-        Update(dt);
+
+        currentFrame = omp_get_wtime();
+        deltaTime = static_cast<float>(currentFrame - lastFrame);
+        if (deltaSum >= targetDelta)
+        {
+            Update(deltaSum);
+
+            m_frameTime.update = deltaSum;
+            deltaSum = 0.f;
+        }
+        deltaSum += deltaTime;
+        lastFrame = currentFrame;
     }
 
     // Wait for the rendering thread to exit its last render cycle and shutdown.
+#ifdef _DEBUG
     while (!s_safeExit) {};
+#endif
 
     T_DESTROY();
     resource::ResourceManager::Destroy();
@@ -144,16 +170,35 @@ bool Engine::IsRunning()
 
 void Engine::RenderThread()
 {
+    double currentFrame = 0.f, lastFrame = omp_get_wtime();
+    float deltaTime = 0.f, deltaSum = 0.f;
+    // Desired FPS
+    const float targetDelta = 1 / 144.01f;
     while (IsRunning())
     {
-        Render();
+        currentFrame = omp_get_wtime();
+        deltaTime = static_cast<float>(currentFrame - lastFrame);
+        if (deltaSum >= targetDelta)
+        {
+            if (m_drawBuffers.IsSwapped())
+            {
+                Render(deltaSum);
+            }
+
+            m_frameTime.render = deltaSum;
+            deltaSum = 0.f;
+        }
+        deltaSum += deltaTime;
+        lastFrame = currentFrame;
+        
     }
+
     s_safeExit = true;
 }
 
 void Engine::Update(float dt)
 {
-    m_frameTime.update = dt;
+    m_buffPointer = m_drawBuffers.GetBuffer(0);
     // Update the camera transform based on interactive inputs.
     //updateCamera(dt);
 
@@ -166,33 +211,41 @@ void Engine::Update(float dt)
         m_currentScene->Update(dt);
     }
     
+    //std::cout << "Y: " << y++ << "\n";
+    // Handle events enqueued
+    //Scene::GetEventDispatcher().update();
+
+    if (!m_drawBuffers.IsSwapped())
+    {
+        m_drawBuffers.SwapBuffers();
+    }
 }
 
-void Engine::Render()
+void Engine::Render(float& dt)
 {
+    m_renderer.ClearScreen();
     D2D1Core::Begin();
-    static auto lastTime = std::chrono::high_resolution_clock::now();
-    
     if (m_currentScene)
     {
         m_currentScene->Render();
     }
-    auto now = std::chrono::high_resolution_clock::now();
-    auto delta = std::chrono::duration_cast<std::chrono::duration<float>>(now - lastTime);
-    lastTime = now;
-    m_frameTime.render = delta.count();
-    const std::string fps = 
-        "Rendering FPS: " + std::to_string(1.0f / m_frameTime.render) +
-        "\nUpdate FPS: " + std::to_string(1.0f / m_frameTime.update) +
-        "\nRAM: " + std::to_string(Profiler::Get().GetRAMUsage() / (1024.f * 1024.f)) +
-        "\nVRAM: " + std::to_string(Profiler::Get().GetVRAMUsage() / (1042.f * 1024.f));
+
+    const std::string fps = "Render FPS: " + std::to_string(1.0f / m_frameTime.render)
+        + "\nUpdate FPS: " + std::to_string(1.0f / m_frameTime.update)
+        + "\nRAM: " + std::to_string(Profiler::Get().GetRAMUsage() / (1024.f * 1024.f)) + " MB"
+        + "\nVRAM: " + std::to_string(Profiler::Get().GetVRAMUsage() / (1042.f * 1024.f)) + " MB";
     D2D1Core::DrawT(fps, &m_window);
 
     /*
         Present the final image and clear it for next frame.
     */
+
+    /*
+        Kanske v�nta p� att uppdateringstr�den kan swappa buffrar.
+    */
+    m_drawBuffers.ReadySwap();
+    D2D1Core::Present();
     D3D11Core::Get().SwapChain()->Present(1, 0);
     m_renderer.ClearScreen();
-    D2D1Core::Present();
 }
 
