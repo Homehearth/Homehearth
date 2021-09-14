@@ -10,10 +10,13 @@ ResourceManager::ResourceManager()
 
 ResourceManager::~ResourceManager()
 {
+	std::cout << "Number of items: " << m_resources.size() << std::endl;
+
 	for (auto it = m_resources.begin(); it != m_resources.end(); it++)
 	{
 		if (it->second)
 		{
+			std::cout << "Deleting: " << it->first.c_str() << std::endl;
 			delete it->second;
 		}
 	}

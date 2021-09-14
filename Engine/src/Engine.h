@@ -7,7 +7,6 @@
 #include "Client.h"
 
 #include <time.h>
-#include "RMesh.h"
 
 struct Triangle2
 {
@@ -44,8 +43,6 @@ private:
 	void Update(float dt);
 	// renders one frame
 	void Render(float& dt);
-
-	RMesh* m_testMesh1;	//***TESTING to load model***
 
 public:
 	Engine();

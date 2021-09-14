@@ -29,7 +29,7 @@ project "Engine"
         "../ThirdParty/stb_image/",
 		"../ThirdParty/networking/",
         "../ThirdParty/entt/",
-        "../ThirdParty/assimp/include",
+        "../ThirdParty/assimp/include/"
     }
 
 
@@ -85,9 +85,9 @@ project "Engine"
         runtime "Debug"
         defines{"_DEBUG", "_UNICODE", "UNICODE"}
         symbols "on"
-        libdirs{"../ThirdParty/DirectXTK/lib/Debug_lib/"}
-        libdirs{"../ThirdParty/assimp/lib/Debug_lib/"}
-		links{"assimp-vc142-mtd"}
+        libdirs{
+				"../ThirdParty/DirectXTK/lib/Debug_lib/"
+				}
 		
 
 
@@ -98,6 +98,6 @@ project "Engine"
         defines{"NDEBUG", "_UNICODE", "UNICODE"}
         symbols "on"
         optimize "on"
-        libdirs{"../ThirdParty/DirectXTK/lib/Release_lib/"}
-		libdirs{"../ThirdParty/assimp/lib/Release_lib/"}
-        links{"assimp-vc142-mt"}
+        libdirs{
+				"../ThirdParty/DirectXTK/lib/Release_lib/"
+				}

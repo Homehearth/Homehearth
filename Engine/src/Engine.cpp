@@ -52,7 +52,7 @@ void Engine::Setup() {
     m_buffPointer->reserve(200);
 
     // *** [TEMP] testing to load in a mesh ***
-    m_testMesh1 = ResourceManager::GetResource<RMesh>("Monster.fbx");
+    ResourceManager::GetResource<RMesh>("Monster.fbx");
 
     //m_client = std::make_unique<Client>();
 

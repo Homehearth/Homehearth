@@ -59,12 +59,6 @@ using Microsoft::WRL::ComPtr;
 #include "imgui_impl_win32.h"
 
 
-// Assimp
-#include <assimp/Importer.hpp>
-#include <assimp/postprocess.h>
-#include <assimp/scene.h>
-
-
 // Custom Global includes (Singletons)
 #include "Logger.h"
 #include "multi_thread_manager.h"
@@ -78,3 +72,11 @@ using Microsoft::WRL::ComPtr;
 
 // Network
 #include "network.h"
+
+
+// Assimp
+#pragma warning(push, 0)
+#include <assimp/Importer.hpp>
+#include <assimp/postprocess.h>
+#include <assimp/scene.h>
+#pragma warning(pop)
