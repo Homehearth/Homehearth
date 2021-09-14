@@ -47,9 +47,9 @@ void Engine::Setup(const HINSTANCE& hInstance) {
     */
     m_drawBuffers.AllocateBuffers();
     this->pointer = m_drawBuffers.GetBuffer(0);
-    this->pointer->reserve(10000);
+    this->pointer->reserve(501);
     this->pointer = m_drawBuffers.GetBuffer(1);
-    this->pointer->reserve(10000);
+    this->pointer->reserve(501);
 
     m_client = std::make_unique<Client>();
 
@@ -115,7 +115,7 @@ void Engine::Setup(const HINSTANCE& hInstance) {
     });
 
     // Create test Entities
-    for (int i = 0; i < 700; i++)
+    for (int i = 0; i < 150; i++)
     {
         entt::entity entity = scene.CreateEntity();
         Triangle& comp = scene.AddComponent<Triangle>(entity);
@@ -168,7 +168,7 @@ void Engine::Start()
                 Scene::GetEventDispatcher().enqueue<InputEvent>(event);
             }
 
-            fps_int = deltaSum;
+            m_frameTime.update = deltaSum;
             Update(deltaSum);
             deltaSum = 0.f;
         }
@@ -256,10 +256,13 @@ void Engine::RenderThread()
             {
                 Render(deltaSum);
             }
+
+            m_frameTime.render = deltaSum;
             deltaSum = 0.f;
         }
         deltaSum += deltaTime;
         lastFrame = currentFrame;
+        
     }
 
     s_safeExit = true;
@@ -302,8 +305,8 @@ void Engine::Render(float& dt)
         m_currentScene->Render();
     }
 
-    const std::string fps = "Render FPS: " + std::to_string(1.0f / dt)
-        + "\nUpdate FPS: " + std::to_string(1.0f / fps_int)
+    const std::string fps = "Render FPS: " + std::to_string(1.0f / m_frameTime.render)
+        + "\nUpdate FPS: " + std::to_string(1.0f / m_frameTime.update)
         + "\nRAM: " + std::to_string(Profiler::Get().GetRAMUsage() / (1024.f * 1024.f)) + " MB"
         + "\nVRAM: " + std::to_string(Profiler::Get().GetVRAMUsage() / (1042.f * 1024.f)) + " MB";
     D2D1Core::DrawT(fps, m_window.get());
