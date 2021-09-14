@@ -78,11 +78,11 @@ bool RMesh::Create(const std::string& filepath)
     const aiScene* scene = importer.ReadFile
     (
         filepath,
-        aiProcess_Triangulate |   //Triangulate every surface
+        aiProcess_Triangulate           |   //Triangulate every surface
         aiProcess_JoinIdenticalVertices |   //Ignores identical veritices - memory saving  
-        aiProcess_FlipWindingOrder |   //Makes it clockwise order
-        aiProcess_MakeLeftHanded |	//Use a lefthanded system for the models 
-        aiProcess_CalcTangentSpace |   //Fix tangents and bitangents automatic for us
+        aiProcess_FlipWindingOrder      |   //Makes it clockwise order
+        aiProcess_MakeLeftHanded        |	//Use a lefthanded system for the models 
+        aiProcess_CalcTangentSpace      |   //Fix tangents and bitangents automatic for us
         aiProcess_FlipUVs                   //Flips the textures to fit directX-style
     );
 
@@ -142,6 +142,7 @@ bool RMesh::Create(const std::string& filepath)
         }*/
         //Else do this below
             //Go through all the vertices
+
         for (unsigned int v = 0; v < aimesh->mNumVertices; v++)
         {
             simple_vertex_t vert = {};

@@ -67,6 +67,7 @@ public:
 
 	/*
 		Render the mesh depending on type
+		[ON GOING...]
 	*/
 	void Render();
 

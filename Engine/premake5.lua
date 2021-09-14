@@ -56,7 +56,7 @@ project "Engine"
         ["src/Resources"] = { "**ResourceManager.*", "**GResource.*", "**RTexture.*", "**RMesh.*" },
             ["src/Resources/Shaders"] = { "**.hhlsl", "**.hlsli" },
 
-		["src/Structures" = { "**VertexStructure.*" },
+		["src/Structures"] = { "**VertexStructure.*" },
 
         ["src/Audio"] = {  },
         ["src/Physics"] = {  },
