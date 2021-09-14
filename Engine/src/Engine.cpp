@@ -1,5 +1,6 @@
 ﻿#include "EnginePCH.h"
 #include "Engine.h"
+#include <omp.h>
 
 
 bool Engine::s_engineRunning = false;
@@ -16,7 +17,7 @@ void Engine::Setup() {
 #ifdef _DEBUG
     //RedirectIoToConsole();
 #endif
-    RedirectIoToConsole();
+    //RedirectIoToConsole();
 
     T_INIT(1, thread::ThreadType::POOL_FIFO);
     resource::ResourceManager::Initialize();
@@ -189,7 +190,7 @@ void Engine::RenderThread()
 
 void Engine::Update(float dt)
 {
-
+    pointer = m_drawBuffers.GetBuffer(0);
     // Update the camera transform based on interactive inputs.
     //updateCamera(dt);
 
@@ -204,7 +205,9 @@ void Engine::Update(float dt)
     
     //std::cout << "Y: " << y++ << "\n";
     // Handle events enqueued
-    Scene::GetEventDispatcher().update();
+    //Scene::GetEventDispatcher().update();
+
+
 
     if (!m_drawBuffers.IsSwapped())
     {
@@ -214,7 +217,7 @@ void Engine::Update(float dt)
 
 void Engine::Render(float& dt)
 {
-    m_renderer.get()->clearScreen();
+    m_renderer.ClearScreen();
     D2D1Core::Begin();
     //for (int i = 0; i < 10000; i++)
         //D2D1Core::DrawF(0, 0, 100, 100, Shapes::RECTANGLE_FILLED);
@@ -228,7 +231,7 @@ void Engine::Render(float& dt)
         + "\nUpdate FPS: " + std::to_string(1.0f / m_frameTime.update)
         + "\nRAM: " + std::to_string(Profiler::Get().GetRAMUsage() / (1024.f * 1024.f)) + " MB"
         + "\nVRAM: " + std::to_string(Profiler::Get().GetVRAMUsage() / (1042.f * 1024.f)) + " MB";
-    D2D1Core::DrawT(fps, m_window.get());
+    D2D1Core::DrawT(fps, &m_window);
 
     /*
         Present the final image and clear it for next frame.
