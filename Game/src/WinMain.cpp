@@ -10,8 +10,9 @@ void setupDemoScene(Engine& engine, Scene& scene);
 int main() {
 	Engine engine;
 
-	engine.Setup(GetModuleHandle(NULL));
+	engine.Setup();
 
+	std::cout << "Hello World" << std::endl;
 	// Create or get scene
 	Scene& startScene = engine.GetScene("StartScene");
 	// Set as current scene
@@ -100,7 +101,6 @@ void setupDemoScene(Engine& engine, Scene& scene) {
 					D2D1Core::DrawF(triangle.pos[0], triangle.pos[1], triangle.size[0], triangle.size[1], Shapes::TRIANGLE_FILLED);
 				});
 		});
-
 	scene.on<TriangleCollisionEvent>([](const TriangleCollisionEvent& e, Scene& scene)
 		{
 			// split
@@ -112,6 +112,7 @@ void setupDemoScene(Engine& engine, Scene& scene) {
 			createTriangle(scene, size, e.triangle->pos, velSign);
 
 		});
+	
 	// Create test Entity
 	const float pos[2] = { 0.f, 0.f };
 	const int signVel[2] = { 1, 1 };

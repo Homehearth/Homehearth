@@ -1,23 +1,20 @@
 #include "EnginePCH.h"
 #include "Engine.h"
-#include "multi_thread_manager.h"
-#include <chrono>
-#include <functional>
+
 
 bool Engine::s_engineRunning = false;
 bool Engine::s_safeExit = false;
 
 Engine::Engine()
-	: m_window(std::make_unique<Window>())
-	, m_scenes({0})
+	: m_scenes({0})
 	, m_currentScene(nullptr)
 	, m_vSync(false)
 {
 }
 
-void Engine::Setup(const HINSTANCE& hInstance) {
+void Engine::Setup() {
 #ifdef _DEBUG
-    RedirectIoToConsole();
+    //RedirectIoToConsole();
 #endif
     
     T_INIT(T_REC, thread::ThreadType::POOL_FIFO);
@@ -26,17 +23,16 @@ void Engine::Setup(const HINSTANCE& hInstance) {
 
 	// Window Setup:
 	Window::Desc config;
-	config.hInstance = hInstance;
 	config.title = L"Engine Window";
-	if (!m_window->Initialize(config)) {
+	if (!m_window.Initialize(config)) {
 		LOG_ERROR("Could not Initialize m_window.");
 	}
 	
     // DirectX Setup:
-    D3D11Core::Get().Initialize(this->m_window.get());
-    D2D1Core::Initialize(this->m_window.get());
-    m_renderer = std::make_unique<Renderer>();
-    m_renderer->initialize(m_window.get());
+    D3D11Core::Get().Initialize(&m_window);
+    D2D1Core::Initialize(&m_window);
+    
+    m_renderer.Initialize(&m_window);
 
     // Thread should be launched after s_engineRunning is set to true and D3D11 is initalized.
     s_engineRunning = true;
@@ -49,6 +45,7 @@ void Engine::Start()
 {
     auto lastTime = std::chrono::high_resolution_clock::now();
 
+    
     if (thread::IsThreadActive())
         T_CJOB(Engine, RenderThread);
 
@@ -72,6 +69,7 @@ void Engine::Start()
         {
             m_currentScene->publish<InputEvent>(event);
         }
+        
 
         auto now = std::chrono::high_resolution_clock::now();
         auto delta = std::chrono::duration_cast<std::chrono::duration<float>>(now - lastTime);
@@ -79,17 +77,18 @@ void Engine::Start()
         float dt = delta.count();
         Update(dt);
     }
-}
 
-void Engine::Shutdown() 
-{
-    s_engineRunning = false;
     // Wait for the rendering thread to exit its last render cycle and shutdown.
     while (!s_safeExit) {};
 
     T_DESTROY();
     resource::ResourceManager::Destroy();
     D2D1Core::Destroy();
+}
+
+void Engine::Shutdown() 
+{
+    s_engineRunning = false;
 }
 
 Scene& Engine::GetScene(const std::string& name) 
@@ -122,9 +121,9 @@ void Engine::SetScene(Scene& scene)
         });
 }
 
-Window* Engine::GetWindow() const
+Window* Engine::GetWindow()
 {
-    return m_window.get();
+    return &m_window;
 }
 
 void Engine::OnEvent(EngineEvent& event) 
@@ -142,18 +141,6 @@ void Engine::OnEvent(EngineEvent& event)
 bool Engine::IsRunning() 
 {
     return s_engineRunning;
-}
-
-void Engine::RedirectIoToConsole()
-{
-    AllocConsole();
-    HANDLE stdHandle;
-    int hConsole;
-    FILE* fp;
-    stdHandle = GetStdHandle(STD_OUTPUT_HANDLE);
-    hConsole = _open_osfhandle((intptr_t)stdHandle, _O_TEXT);
-    fp = _fdopen(hConsole, "w");
-    freopen_s(&fp, "CONOUT$", "w", stdout);
 }
 
 void Engine::RenderThread()
@@ -179,7 +166,6 @@ void Engine::Update(float dt)
     {
         m_currentScene->Update(dt);
     }
-    // Handle events enqueued
     
 }
 
@@ -201,13 +187,13 @@ void Engine::Render()
         "\nUpdate FPS: " + std::to_string(1.0f / m_frameTime.update) +
         "\nRAM: " + std::to_string(Profiler::Get().GetRAMUsage() / (1024.f * 1024.f)) +
         "\nVRAM: " + std::to_string(Profiler::Get().GetVRAMUsage() / (1042.f * 1024.f));
-    D2D1Core::DrawT(fps, m_window.get());
+    D2D1Core::DrawT(fps, &m_window);
 
     /*
         Present the final image and clear it for next frame.
     */
     D3D11Core::Get().SwapChain()->Present(1, 0);
-    m_renderer.get()->clearScreen();
+    m_renderer.ClearScreen();
     D2D1Core::Present();
 }
 

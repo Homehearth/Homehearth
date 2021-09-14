@@ -1,8 +1,5 @@
 #pragma once
 
-LRESULT CALLBACK WinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-
-
 class Window
 {
 public:
@@ -20,6 +17,8 @@ public:
     };
 
 private:
+    static LRESULT CALLBACK WinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
     HWND m_hWnd;
     RECT m_clientRect;
     Desc m_windowDesc;

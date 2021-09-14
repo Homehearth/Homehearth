@@ -2,7 +2,7 @@
 #include "Window.h"
 #include "InputSystem.h"
 
-LRESULT CALLBACK WinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK Window::WinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	// Engine events:
 	switch (uMsg)
@@ -45,7 +45,6 @@ LRESULT CALLBACK WinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
-
 Window::Window()
 	: m_hWnd(nullptr)
 	, m_clientRect({})
@@ -77,7 +76,7 @@ bool Window::Initialize(const Desc& desc)
 	wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
 	wcex.hIcon = LoadIcon(nullptr, IDI_APPLICATION);
 	wcex.hIconSm = LoadIcon(nullptr, IDI_APPLICATION);;
-	wcex.hInstance = desc.hInstance;
+	wcex.hInstance = GetModuleHandle(NULL);
 	wcex.lpfnWndProc = WinProc;
 
 	// Register window class.

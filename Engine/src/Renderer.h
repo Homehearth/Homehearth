@@ -7,25 +7,20 @@ public:
 	Renderer();
 	virtual ~Renderer() = default;
 	
-	void initialize(Window* pWindow);
+	void Initialize(Window* pWindow);
 
-	void clearScreen()
+	void ClearScreen()
 	{
 		const FLOAT color[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
 		D3D11Core::Get().DeviceContext()->ClearRenderTargetView(this->renderTargetView.Get(), color);
 	}
 	
-	void beginFrame()
+	void BeginFrame()
 	{
 
 	}
 	
-	void draw()
-	{
-		
-	}
-	
-	void endFrame()
+	void EndFrame()
 	{
 		
 	}
@@ -49,12 +44,12 @@ private:
 	
 	D3D11_VIEWPORT						viewport;
 
-	bool createRenderTargetView();
-	bool createDepthStencilTexture();
-	bool createDepthStencilState();
-	bool createDepthStencilView();
-	bool createRasterizerStates();
-	bool createSamplerStates();
-	void setViewport();
+	bool CreateRenderTargetView();
+	bool CreateDepthStencilTexture();
+	bool CreateDepthStencilState();
+	bool CreateDepthStencilView();
+	bool CreateRasterizerStates();
+	bool CreateSamplerStates();
+	void SetViewport();
 };
 

@@ -31,6 +31,8 @@
 #include <set>
 #include <queue>
 
+#include <functional>
+
 
 // DirectX
 #include <d3d11.h>

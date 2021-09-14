@@ -55,8 +55,6 @@ public:
 	// Draw all renderSystems
 	void Render();
 
-	void OnInput(const InputEvent& e);
-
 };
 
 template<typename T, typename ...Args>

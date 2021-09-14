@@ -12,8 +12,8 @@ private:
 	static bool s_engineRunning;
 	static bool s_safeExit;
 
-	std::unique_ptr<Window> m_window;
-	std::unique_ptr<Renderer> m_renderer;
+	Window m_window;
+	Renderer m_renderer;
 
 	//CLIENT
 	std::unique_ptr<Client> m_client;
@@ -27,8 +27,6 @@ private:
 		float render;
 	} m_frameTime;
 	
-	void RedirectIoToConsole();
-
 	// job for rendering thread
 	void RenderThread();
 
@@ -45,7 +43,7 @@ public:
 	Engine& operator=(Window&& other) = delete;
 	virtual ~Engine() = default;
 
-	void Setup(const HINSTANCE &hInstance);
+	void Setup();
 
 	void Start();
 
@@ -55,7 +53,7 @@ public:
 	void SetScene(const std::string& name);
 	void SetScene(Scene& scene);
 
-	Window* GetWindow() const;
+	Window* GetWindow();
 
 	void OnEvent(EngineEvent& event);
 
