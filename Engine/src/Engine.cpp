@@ -25,7 +25,8 @@ void Engine::Startup()
 	// Window Startup:
 	Window::Desc config;
 	config.title = L"Engine";
-	if (!m_window.Initialize(config)) {
+	if (!m_window.Initialize(config)) 
+    {
 		LOG_ERROR("Could not Initialize m_window.");
 	}
 	
