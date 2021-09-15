@@ -21,7 +21,9 @@ public:
 
 	virtual void OnClientDisconnect() override;
 
-	virtual void OnMessageReceived(const SOCKET& socketId, const network::message<network::MessageType>& msg) override;
+	virtual void OnMessageReceived(const SOCKET& socketId, CHAR* buffer, DWORD bytesReceived) override;
+
+	virtual void OnClientValidated(const SOCKET& s) override;
 
 	static void Destroy();
 

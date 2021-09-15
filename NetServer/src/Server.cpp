@@ -42,11 +42,19 @@ void Server::OnClientDisconnect()
 	std::cout << "Client disconnected!" << std::endl;
 }
 
-void Server::OnMessageReceived(const SOCKET& socketId, const network::message<network::MessageType>& msg)
+void Server::OnMessageReceived(const SOCKET& socketId, CHAR* buffer, DWORD bytesReceived)
 {
-	std::cout << msg << std::endl;
+	Send(socketId, buffer, bytesReceived);
+}
 
+void Server::OnClientValidated(const SOCKET& s)
+{
+	//using namespace network;
+	//message<MessageType> msg = {};
+	//msg.header.id = MessageType::Client_Accepted;
+	//Send(s, msg);
 
+	//std::cout << "Client has been validated!" << std::endl;
 }
 
 void Server::Destroy()

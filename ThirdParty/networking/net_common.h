@@ -70,6 +70,7 @@ namespace network
 
 	enum class MessageType : uint32_t
 	{
+		Client_Accepted,
 		Unknown,
 		Disconnected,
 		Connected,

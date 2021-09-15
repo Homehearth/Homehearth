@@ -13,6 +13,8 @@ namespace network
 		std::function<void()> OnDisconnectHandler;
 		struct sockaddr_in m_endpoint;
 		socklen_t m_endpointLen;
+		uint64_t m_handshakeIn;
+		uint64_t m_handshakeOut;
 
 		WSAEVENT m_event;
 
@@ -37,6 +39,8 @@ namespace network
 
 			m_endpointLen = sizeof(m_endpoint);
 			ZeroMemory(&m_endpoint, m_endpointLen);
+			m_handshakeIn = 0;
+			m_handshakeOut = 0;
 
 			InitWinsock();
 		}
@@ -49,10 +53,12 @@ namespace network
 
 	public:
 		virtual void OnMessageReceived(const network::message<T>& msg) = 0;
-		
+
 		virtual void OnConnect() = 0;
 
 		virtual void OnDisconnect() = 0;
+
+		//virtual void OnValidation() = 0;
 
 		// Given IP and port establish a connection to the server
 		bool Connect(std::string&& ip, uint16_t&& port);
@@ -64,7 +70,6 @@ namespace network
 		bool IsConnected();
 
 		void Send(const message<T>& msg);
-
 	};
 
 	template <typename T>
@@ -147,20 +152,43 @@ namespace network
 
 			if (networkEvents.lNetworkEvents & FD_READ && (networkEvents.iErrorCode[FD_READ_BIT] == 0))
 			{
-				message<T> msg = {};
-				int32_t bytes = recv(m_socket, (char*)&msg.header, sizeof(msg.header), 0);
-				char buffer[4096] = {};
-				bytes = recv(m_socket, (char*)buffer, sizeof(msg.header.size - sizeof(msg.header)), 0);
-				msg.payload.resize(bytes);
-				memcpy(msg.payload.data(), buffer, bytes);
-
-				for (int i = 0; i < msg.payload.size(); i++)
+				if (!m_handshakeIn)
 				{
-					std::cout << msg.payload[i];
-				}
-				std::cout << std::endl;
+					int16_t bytes = recv(m_socket, (char*)&m_handshakeIn, sizeof(uint64_t), 0);
+					if (bytes > 0)
+					{
+						m_handshakeOut = scrambleData(m_handshakeIn);
+						send(m_socket, (char*)&m_handshakeOut, sizeof(uint64_t), 0);
 
-				this->MessageReceivedHandler(msg);
+						message<MessageType> msg = {};
+						recv(m_socket, (char*)&msg.header, sizeof(msg.header), 0);
+						switch (msg.header.id)
+						{
+						case MessageType::Client_Accepted:
+						{
+							std::cout << "VALIDATED!" << std::endl;
+						}
+						}
+					}
+					else
+					{
+						Disconnect();
+					}
+				}
+				//message<T> msg = {};
+				//int32_t bytes = recv(m_socket, (char*)&msg.header, sizeof(msg.header), 0);
+				//char buffer[4096] = {};
+				//bytes = recv(m_socket, (char*)buffer, sizeof(msg.header.size - sizeof(msg.header)), 0);
+				//msg.payload.resize(bytes);
+				//memcpy(msg.payload.data(), buffer, bytes);
+
+				//for (int i = 0; i < msg.payload.size(); i++)
+				//{
+				//	std::cout << msg.payload[i];
+				//}
+				//std::cout << std::endl;
+
+				//this->MessageReceivedHandler(msg);
 			}
 		}
 	}
@@ -256,7 +284,7 @@ namespace network
 			return false;
 		}
 
-		thread::MultiThreader::InsertJob(std::bind([this] { ProcessIO(); })); 
+		thread::MultiThreader::InsertJob(std::bind([this] { ProcessIO(); }));
 
 		return true;
 	}
