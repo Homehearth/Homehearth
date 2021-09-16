@@ -228,8 +228,8 @@ void Engine::Render(float& dt)
 
     const std::string fps = "Render FPS: " + std::to_string(1.0f / m_frameTime.render)
         + "\nUpdate FPS: " + std::to_string(1.0f / m_frameTime.update)
-        + "\nRAM: " + std::to_string(Profiler::Get().GetRAMUsage() / (1024.f * 1024.f)) + " MB"
-        + "\nVRAM: " + std::to_string(Profiler::Get().GetVRAMUsage() / (1042.f * 1024.f)) + " MB";
+        + "\nRAM: " + std::to_string(Profiler::GetRAMUsage() / (1024.f * 1024.f)) + " MB"
+        + "\nVRAM: " + std::to_string(Profiler::GetVRAMUsage() / (1042.f * 1024.f)) + " MB";
     D2D1Core::DrawT(fps, &m_window);
 
     /*
