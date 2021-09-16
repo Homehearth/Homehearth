@@ -1,6 +1,5 @@
 #pragma once
 #include "VertexStructure.h"
-#include "Buffers.h"
 #include "RTexture.h"
 
 /*
@@ -58,6 +57,8 @@ private:
 	//Save the skeleton in a structure: rootbone --> other parts
 
 private:
+	bool CreateVertexBuffer(const simple_vertex_t* data, const size_t& size, mesh_t& mesh);
+	bool CreateIndexBuffer(const size_t* data, const size_t& size, mesh_t& mesh);
 	void AddTextures(material_t& mat, const aiMaterial* aiMat);
 
 public:

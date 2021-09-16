@@ -13,6 +13,73 @@ RMesh::~RMesh()
     m_meshes.clear();
 }
 
+
+bool RMesh::CreateVertexBuffer(const simple_vertex_t* data, const size_t& size, mesh_t& mesh)
+{
+    D3D11_BUFFER_DESC bufferDesc;
+    ZeroMemory(&bufferDesc, sizeof(D3D11_BUFFER_DESC));
+
+    bufferDesc.ByteWidth = static_cast<UINT>(sizeof(simple_vertex_t) * size);
+    bufferDesc.Usage = D3D11_USAGE::D3D11_USAGE_DEFAULT;
+    bufferDesc.BindFlags = D3D11_BIND_FLAG::D3D11_BIND_VERTEX_BUFFER;
+    bufferDesc.CPUAccessFlags = 0;
+    bufferDesc.MiscFlags = 0;
+    bufferDesc.StructureByteStride = 0;
+
+    D3D11_SUBRESOURCE_DATA subresData;
+    ZeroMemory(&subresData, sizeof(D3D11_SUBRESOURCE_DATA));
+
+    subresData.pSysMem = data;
+    subresData.SysMemPitch = 0;
+    subresData.SysMemSlicePitch = 0;
+
+    ComPtr<ID3D11Buffer> vertexBuffer;
+
+    HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&bufferDesc, &subresData, vertexBuffer.GetAddressOf());
+    if (!FAILED(hr))
+    {
+        mesh.vertexBuffer = vertexBuffer;
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+bool RMesh::CreateIndexBuffer(const size_t* data, const size_t& size, mesh_t& mesh)
+{
+    D3D11_BUFFER_DESC indexBufferDesc;
+    ZeroMemory(&indexBufferDesc, sizeof(D3D11_BUFFER_DESC));
+
+    indexBufferDesc.ByteWidth = static_cast<UINT>(size);
+    indexBufferDesc.Usage = D3D11_USAGE::D3D11_USAGE_DEFAULT;
+    indexBufferDesc.BindFlags = D3D11_BIND_FLAG::D3D11_BIND_INDEX_BUFFER;
+    indexBufferDesc.CPUAccessFlags = 0;
+    indexBufferDesc.MiscFlags = 0;
+
+    D3D11_SUBRESOURCE_DATA subresData;
+    ZeroMemory(&subresData, sizeof(D3D11_SUBRESOURCE_DATA));
+
+    subresData.pSysMem = data;
+    subresData.SysMemPitch = 0;
+    subresData.SysMemSlicePitch = 0;
+
+    ComPtr<ID3D11Buffer> indexBuffer;
+
+    HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&indexBufferDesc, &subresData, indexBuffer.GetAddressOf());
+    if (!FAILED(hr))
+    {
+        mesh.indexBuffer = indexBuffer;
+        mesh.indexCount = (uint32_t)size;
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
 void RMesh::AddTextures(material_t& mat, const aiMaterial* aiMat)
 {
     //Link together our format with assimps format
@@ -96,7 +163,8 @@ bool RMesh::Create(const std::string& filename)
     //Check if readfile was successful
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
     {
-        std::cout << "Assimp error: " << importer.GetErrorString() << std::endl;
+        std::string errorString = "Assimp error: " + (std::string)importer.GetErrorString();
+        LOG_WARNING(errorString.c_str());
         importer.FreeScene();
         return false;
     }
@@ -104,8 +172,9 @@ bool RMesh::Create(const std::string& filename)
     //Will not go on if the scene has no meshes
     if (!scene->HasMeshes())
     {
+        std::string errorString = "The scene has no meshes...";
+        LOG_WARNING(errorString.c_str());
         importer.FreeScene();
-        std::cout << "The scene has no meshes..." << std::endl;
         return false;
     }
 
@@ -161,7 +230,6 @@ bool RMesh::Create(const std::string& filename)
             vertices.push_back(vert);
         }
 
-
         //Indices
         for (unsigned int f = 0; f < aimesh->mNumFaces; f++)
         {
@@ -170,35 +238,20 @@ bool RMesh::Create(const std::string& filename)
                 indices.push_back(face.mIndices[id]);
         }
 
-        //Create vertex buffer
-        Buffers::VertexBuffer vBuff;
-        if (!vBuff.create(&vertices[0], vertices.size()))
+        //Create vertex and indexbuffer
+        if (!CreateVertexBuffer(&vertices[0], vertices.size(), submesh) ||
+            !CreateIndexBuffer(&indices[0], indices.size(), submesh))
         {
-            std::cout << "Failed to create vertexbuffer..." << std::endl;
+            LOG_WARNING("Failed to load vertex- or indexbuffer...");
             vertices.clear();
             indices.clear();
             importer.FreeScene();
             return false;
         }
-        submesh.vertexBuffer = vBuff.Get();
-
-        //Create index buffer
-        Buffers::IndexBuffer iBuff;
-        if (!iBuff.create(&indices[0], indices.size()))
-        {
-            std::cout << "Failed to create indexbuffer..." << std::endl;
-            vertices.clear();
-            indices.clear();
-            importer.FreeScene();
-            return false;
-        }
-        submesh.indexBuffer = iBuff.Get();
-        submesh.indexCount = uint32_t(iBuff.getIndexCount());
 
         //Cleaning
         vertices.clear();
         indices.clear();
-
         m_meshes.push_back(submesh);
     }
 

@@ -57,8 +57,8 @@ project "Engine"
         ["src/Engine/Network"] = { "**Client.*" },
         ["src/Engine/Animation"] = {  },
         ["src/Engine/ESC"] = {  }, 
-        ["src/Engine/AI"] = {  }     
-		["src/Structures"] = { "**VertexStructure.*" }  
+        ["src/Engine/AI"] = {  },     
+		["src/Engine/Structures"] = { "**VertexStructure.*" }  
     }
 
 
