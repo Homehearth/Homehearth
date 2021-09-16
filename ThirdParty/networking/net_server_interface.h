@@ -1,5 +1,6 @@
 #pragma once
 #include "net_common.h"
+#include "Logger.h"
 
 
 namespace network
@@ -80,7 +81,7 @@ namespace network
 		void Stop();
 		void Broadcast();
 		SOCKET WaitForConnection();
-		void Send(const SOCKET& socketId, CHAR* buffer, DWORD bytesReceived);
+		void Send(const SOCKET& socketId, CHAR* buffer, DWORD bytesToSend);
 		bool IsRunning();
 
 		// Pure virtuals that happen when an event occurs
@@ -138,17 +139,17 @@ namespace network
 
 		if (CreateIoCompletionPort((HANDLE)SI->Socket, m_CompletionPort, (ULONG_PTR)SI, 0) == NULL)
 		{
-			printf("CreateIoCompletionPort() failed with error %d\n", GetLastError());
+			LOG_ERROR("CreateIoCompletionPort() failed with error %d", GetLastError());
 
 			return false;
 		}
 		else
 		{
-			printf("CreateIoCompletionPort() is OK!\n");
+			LOG_INFO("CreateIoCompletionPort() is OK!");
 		}
 
 		PER_IO_DATA* PIO = new PER_IO_DATA;
-		ZeroMemory(&(PIO->Overlapped), sizeof(OVERLAPPED));
+		ZeroMemory(&PIO->Overlapped, sizeof(OVERLAPPED));
 		PIO->BytesSEND = 0;
 		PIO->BytesRECV = 0;
 		PIO->DataBuf.len = BUFFER_SIZE;
@@ -162,29 +163,31 @@ namespace network
 		{
 			if (WSAGetLastError() != ERROR_IO_PENDING)
 			{
-				printf("WSARecv() failed with error %d\n", WSAGetLastError());
+				delete SI;
+				delete PIO;
+				LOG_ERROR("WSARecv() failed with error %d", WSAGetLastError());
 				return false;
 			}
 			else
 			{
-				std::cout << "Pending receive for client: " << SI->Socket << std::endl;
+				LOG_INFO("Pending receive for client: %lld", SI->Socket);
 			}
 		}
 		else
 		{
-			printf("WSARecv() is OK!\n");
+			LOG_INFO("WSARecv() is OK!");
 		}
 
 		return true;
 	}
 
 	template <typename T>
-	void server_interface<T>::Send(const SOCKET& socketId, CHAR* buffer, DWORD bytesReceived)
+	void server_interface<T>::Send(const SOCKET& socketId, CHAR* buffer, DWORD bytesToSend)
 	{
 		DWORD flags = 0;
-		PER_IO_DATA* context = new PER_IO_DATA();
+		PER_IO_DATA* context = new PER_IO_DATA;
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
-		context->DataBuf.len = bytesReceived;
+		context->DataBuf.len = bytesToSend;
 		context->DataBuf.buf = buffer;
 		DWORD bytesSent = 0;
 		context->net_event = NetworkEvent::WRITE;
@@ -193,13 +196,14 @@ namespace network
 		{
 			if (WSAGetLastError() != ERROR_IO_PENDING)
 			{
-				printf("WSASend() failed with error %d\n", WSAGetLastError());
+				delete context;
+				LOG_ERROR("WSASend() failed with error %d", WSAGetLastError());
 				return;
 			}
 		}
 		else
 		{
-			std::cout << "Sent " << bytesSent << " bytes." << std::endl;
+			LOG_INFO("Sent %d bytes", bytesToSend);
 		}
 	}
 
@@ -222,7 +226,7 @@ namespace network
 
 		if (rv != 0)
 		{
-			std::cout << "WSAStartup error code: " << WSAGetLastError() << std::endl;
+			LOG_ERROR("WSAStartup error code: %d", WSAGetLastError());
 
 			return;
 		}
@@ -231,7 +235,7 @@ namespace network
 		{
 			/* Tell the user that we could not find a usable */
 			/* WinSock DLL.                                  */
-			std::cerr << "Could not find a usable version of Winsock.dll" << std::endl;
+			LOG_ERROR("Could not find a usable version of Winsock.dll");
 
 			return;
 		}
@@ -242,7 +246,7 @@ namespace network
 	{
 		if (listen(m_listening, nListen) != 0)
 		{
-			std::cout << "Listen(): failed with error " << WSAGetLastError() << std::endl;
+			LOG_ERROR("Listen(): failed with error %d", WSAGetLastError());
 		}
 	}
 
@@ -316,7 +320,7 @@ namespace network
 
 		if (rv != 0)
 		{
-			std::cerr << "Addrinfo: " << gai_strerror(rv) << std::endl;
+			LOG_ERROR("Addrinfo: %d", WSAGetLastError());
 			return INVALID_SOCKET;
 		}
 
@@ -327,7 +331,7 @@ namespace network
 		{
 #ifdef _DEBUG
 			EnterCriticalSection(&CriticalSection);
-			std::cout << PrintSocketData(p) << std::endl;
+			LOG_INFO(PrintSocketData(p).c_str());
 			LeaveCriticalSection(&CriticalSection);
 #endif
 
@@ -339,7 +343,7 @@ namespace network
 			}
 			if (bind(listener, p->ai_addr, static_cast<int>(p->ai_addrlen)) != 0)
 			{
-				std::cout << "Bind error code: " << WSAGetLastError() << std::endl;
+				LOG_ERROR("Bind failed with error: %d", WSAGetLastError());
 				closesocket(listener);
 				continue;
 			}
@@ -355,7 +359,7 @@ namespace network
 
 #ifdef _DEBUG
 		EnterCriticalSection(&CriticalSection);
-		std::cout << "[SERVER] Socket created successfully." << std::endl;
+		LOG_INFO("[SERVER] Socket created successfully");
 		LeaveCriticalSection(&CriticalSection);
 #endif
 
@@ -376,7 +380,6 @@ namespace network
 	template <typename T>
 	void server_interface<T>::Start(const uint16_t& port)
 	{
-		std::cout << "STARTING SERVER.." << std::endl;
 		InitializeCriticalSection(&CriticalSection);
 		InitWinsock();
 		SYSTEM_INFO SystemInfo;
@@ -384,12 +387,8 @@ namespace network
 		// Setup an I/O completion port
 		if ((m_CompletionPort = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0)) == NULL)
 		{
-			printf("CreateIoCompletionPort() failed with error %d\n", GetLastError());
+			LOG_ERROR("CreateIoCompletionPort() failed with error %d", GetLastError());
 			return;
-		}
-		else
-		{
-			printf("CreateIoCompletionPort() is damn OK!\n");
 		}
 		// Determine how many processors are on the system
 		GetSystemInfo(&SystemInfo);
@@ -420,7 +419,7 @@ namespace network
 
 		if (acceptEvent == WSA_INVALID_EVENT)
 		{
-			std::cout << "Failed to create event " << WSAGetLastError() << std::endl;
+			LOG_ERROR("Failed to create event %d", WSAGetLastError());
 			return;
 		}
 
@@ -437,7 +436,7 @@ namespace network
 			// Will put thread to sleep unless there is I/O to process or a new connection has been made
 			if ((WSAWaitForMultipleEvents(1, &acceptEvent, FALSE, WSA_INFINITE, FALSE)) == WSA_WAIT_FAILED)
 			{
-				std::cout << "WSAWaitForEvents failed.. " << WSAGetLastError() << std::endl;
+				LOG_ERROR("WSAWaitForEvents failed with code: %d", WSAGetLastError());
 				continue;
 			}
 
@@ -475,84 +474,101 @@ namespace network
 	template <typename T>
 	DWORD server_interface<T>::ServerWorkerThread()
 	{
-		EnterCriticalSection(&CriticalSection);
-		LeaveCriticalSection(&CriticalSection);
 		DWORD BytesTransferred = 0;
 		SOCKET_INFORMATION* PER_HANDLE_DATA = nullptr;
 		PER_IO_DATA* io_context = nullptr;
 		DWORD bytesReceived = 0;
+		LPOVERLAPPED lpOverlapped;
+		BOOL bResult = false;
+		BOOL shouldDisconnect = false;
 
 		while (1)
 		{
-			if (GetQueuedCompletionStatus(m_CompletionPort, &BytesTransferred, (PULONG_PTR)&PER_HANDLE_DATA, (LPOVERLAPPED*)&io_context, INFINITE) == 0)
-			{
-				std::cout << "GetQueuedCompletionStatus() failed with error: " << GetLastError() << std::endl;
-				return 0;
-			}
-			else
-			{
-				std::cout << "GetQueuedCompletionStatus() is OK!" << std::endl;
-			}
+			bResult = GetQueuedCompletionStatus(m_CompletionPort, &BytesTransferred, (PULONG_PTR)&PER_HANDLE_DATA, &lpOverlapped, INFINITE);
 
-			// First check to see if an error has occurred on the socket and if so
-			// then close the socket and cleanup the SOCKET_INFORMATION structure
-			// associated with the socket
-			if (PER_HANDLE_DATA == nullptr)
+			// Failed but still filled in data into lpOverlapped, need to de-allocate.
+			if (!bResult && lpOverlapped != NULL)
 			{
-				return 0;
+				shouldDisconnect = true;
 			}
-			if (BytesTransferred == 0)
+			// Failed and didnt fill in data
+			else if (!bResult && lpOverlapped == NULL)
 			{
-				DisconnectClient(PER_HANDLE_DATA);
-				if (io_context)
-				{
-					delete io_context;
-				}
-				OnClientDisconnect();
+				LOG_ERROR("GetQueuedCompletionStatus() failed with error: %d", GetLastError());
 				continue;
 			}
-			else
+			// If an I/O was completed but we received no data means a client must've disconnected
+			if (BytesTransferred == 0)
 			{
-				// Receive call has completed
-				if (io_context->net_event == NetworkEvent::READ)
-				{
-					std::cout << "OP: READ" << std::endl;
-					std::cout << "Bytes received: " << BytesTransferred << std::endl;
-					std::cout << "Message is: " << io_context->DataBuf.buf << std::endl;
-					this->OnMessageReceived(PER_HANDLE_DATA->Socket, io_context->DataBuf.buf, BytesTransferred);
-					PER_IO_DATA* newContext = new PER_IO_DATA;
-					DWORD flags = 0;
-					ZeroMemory(&newContext->Overlapped, sizeof(OVERLAPPED));
-					newContext->DataBuf.len = BUFFER_SIZE;
-					newContext->DataBuf.buf = newContext->Buffer;
-					bytesReceived = 0;
-					newContext->net_event = NetworkEvent::READ;
-					newContext->BytesRECV = 0;
-					newContext->BytesSEND = 0;
-
-					// Prime the completion status queue with a pending receive request
-					if (WSARecv(PER_HANDLE_DATA->Socket, &newContext->DataBuf, 1, &bytesReceived, &flags, (OVERLAPPED*)newContext, NULL) == SOCKET_ERROR)
-					{
-						if (WSAGetLastError() != ERROR_IO_PENDING)
-						{
-							printf("WSARecv() failed with error %d\n", WSAGetLastError());
-							return 0;
-						}
-						else
-						{
-							std::cout << "Pending receive call for client: " << PER_HANDLE_DATA->Socket << std::endl;
-						}
-					}
-				}
-				// Send call has completed
-				else if (io_context->net_event == NetworkEvent::WRITE)
-				{
-					std::cout << "OP: WRITE" << std::endl;
-				}
+				shouldDisconnect = true;
 			}
-			if (io_context)
+
+			io_context = CONTAINING_RECORD(lpOverlapped, PER_IO_DATA, PER_IO_DATA::Overlapped);
+
+			if (shouldDisconnect)
 			{
 				delete io_context;
+				io_context = nullptr;
+				DisconnectClient(PER_HANDLE_DATA);
+				OnClientDisconnect();
+				shouldDisconnect = false;
+				continue;
+			}
+
+			EnterCriticalSection(&CriticalSection);
+			LOG_INFO("GetQueuedCompletionStatus() is OK!");
+			LeaveCriticalSection(&CriticalSection);
+
+			// Receive call has completed
+			if (io_context->net_event == NetworkEvent::READ)
+			{
+				EnterCriticalSection(&CriticalSection);
+				LOG_INFO("OP: READ");
+				LOG_INFO("Thread ID: %ld", GetCurrentThreadId());
+				this->OnMessageReceived(PER_HANDLE_DATA->Socket, io_context->DataBuf.buf, BytesTransferred);
+				LeaveCriticalSection(&CriticalSection);
+				PER_IO_DATA* newContext = new PER_IO_DATA;
+				DWORD flags = 0;
+				ZeroMemory(&newContext->Overlapped, sizeof(OVERLAPPED));
+				newContext->DataBuf.len = BUFFER_SIZE;
+				newContext->DataBuf.buf = newContext->Buffer;
+				bytesReceived = 0;
+				newContext->net_event = NetworkEvent::READ;
+				newContext->BytesRECV = 0;
+				newContext->BytesSEND = 0;
+
+				// Prime the completion status queue with a pending READ request
+				if (WSARecv(PER_HANDLE_DATA->Socket, &newContext->DataBuf, 1, &bytesReceived, &flags, (OVERLAPPED*)newContext, NULL) == SOCKET_ERROR)
+				{
+					if (WSAGetLastError() != ERROR_IO_PENDING)
+					{
+						LOG_ERROR("WSARecv() failed with error %d", WSAGetLastError());
+						return 0;
+					}
+					else
+					{
+						EnterCriticalSection(&CriticalSection);
+						LOG_INFO("Pending receive call for client: %lld", PER_HANDLE_DATA->Socket);
+						LeaveCriticalSection(&CriticalSection);
+					}
+				}
+			}
+			// Send call has completed
+			else if (io_context->net_event == NetworkEvent::WRITE)
+			{
+				EnterCriticalSection(&CriticalSection);
+				LOG_INFO("OP: WRITE");
+				LeaveCriticalSection(&CriticalSection);
+			}
+			// Since PER_IO_DATA is created for EVERY I/O that comes in we need to 
+			// delete that data struct after I/O has completed
+			if (io_context)
+			{
+				EnterCriticalSection(&CriticalSection);
+				LOG_INFO("Deleting current context! (This must happen)");
+				LeaveCriticalSection(&CriticalSection);
+				delete io_context;
+				io_context = nullptr;
 			}
 		}
 		return 0;

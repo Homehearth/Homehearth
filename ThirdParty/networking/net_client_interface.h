@@ -15,6 +15,7 @@ namespace network
 		socklen_t m_endpointLen;
 		uint64_t m_handshakeIn;
 		uint64_t m_handshakeOut;
+		CRITICAL_SECTION lock;
 
 		WSAEVENT m_event;
 
@@ -218,6 +219,8 @@ namespace network
 			std::cout << "Could not find a usable version of Winsock.dll" << std::endl;
 #endif
 		}
+
+		InitializeCriticalSection(&lock);
 	}
 
 	template<typename T>
@@ -258,6 +261,7 @@ namespace network
 	template<typename T>
 	inline bool client_interface<T>::Connect(std::string&& ip, uint16_t&& port)
 	{
+		EnterCriticalSection(&lock);
 		m_socket = CreateSocket(ip, port);
 
 		if (connect(m_socket, (struct sockaddr*)&m_endpoint, m_endpointLen) != 0)
@@ -285,6 +289,7 @@ namespace network
 		}
 
 		thread::MultiThreader::InsertJob(std::bind([this] { ProcessIO(); }));
+		LeaveCriticalSection(&lock);
 
 		return true;
 	}

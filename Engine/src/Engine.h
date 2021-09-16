@@ -22,7 +22,7 @@ private:
 	Window m_window;
 	Renderer m_renderer;
 
-	std::unique_ptr<Client> m_client;
+	Client m_client;
 	
 	std::unordered_map<std::string, Scene> m_scenes;
 	Scene* m_currentScene;

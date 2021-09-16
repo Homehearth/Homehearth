@@ -35,14 +35,15 @@ int CALLBACK WinMain(
 	Window window;
 	window.Initialize();
 	T_INIT(T_REC, thread::ThreadType::POOL_FIFO);
-
-	Server::Start(4950);
+	
+	Server<network::MessageType> s;
+	s.Start(4950);
 
 	bool isRunning = true;
 	
 	MSG msg = { nullptr };
 	int i = 0;
-	while (Server::IsRunning())
+	while (s.IsRunning())
 	{
 		// Service any and all pending Windows messages.
 		if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
@@ -64,7 +65,6 @@ int CALLBACK WinMain(
 	}
 
 	T_DESTROY();
-	Server::Destroy();
 
 	return 0;
 }
