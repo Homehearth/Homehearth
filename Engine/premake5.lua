@@ -48,6 +48,7 @@ project "Engine"
 			
 			["src/Engine/Network"] = { "**Client.*" },
 
+
         ["src/Engine/Resources"] = { "**ResourceManager.*", "**GResource.*", "**RTexture.*" },
             ["src/Engine/Resources/Shaders"] = { "**.hhlsl", "**.hlsli" },
 
@@ -63,9 +64,11 @@ project "Engine"
     links{
         "dxgi", -- links d3d11 d2d1 dwrite
         "DirectXTK",
-        "DirectXTKAudioWin7"
+        "DirectXTKAudioWin7",
+        "ImGui"
     }
 
+    libdirs{"../ThirdParty/imGUI/"}
 
     -- Define a macro/symbol which applies for the Windows system.
     filter {"system:windows"}
@@ -82,7 +85,7 @@ project "Engine"
         defines{"_DEBUG", "_UNICODE", "UNICODE"}
         symbols "on"
         libdirs{"../ThirdParty/DirectXTK/lib/Debug_lib/"}
-        
+
 
 
     -- Define a macro/symbol which applies only to release builds.
