@@ -25,11 +25,11 @@ void PooledThread(unsigned int id)
 	MultiThreader::SetStatus(thread_running, id);
 
 
-#ifdef _DEBUG
-	io_mtx.lock();
-	std::cout << "Thread started with ID: " << id << "\n";
-	io_mtx.unlock();
-#endif
+//#ifdef _DEBUG
+//	io_mtx.lock();
+//	std::cout << "Thread started with ID: " << id << "\n";
+//	io_mtx.unlock();
+//#endif
 
 	// Main active Loop
 	bool active = true;
