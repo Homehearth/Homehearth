@@ -68,5 +68,7 @@ public:
 
 	static bool IsRunning();
 
+	//IMGUI
+	void drawImGUI();
 };
 

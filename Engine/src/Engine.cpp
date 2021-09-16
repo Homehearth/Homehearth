@@ -53,12 +53,22 @@ void Engine::Startup()
 	}
 	else {
 		LOG_ERROR("Failed to connect to server");
-	}
-    // *** [TEMP] testing to load in a mesh ***
-    ResourceManager::GetResource<RMesh>("Monster.fbx");
-    
+	} 
     //m_client = std::make_unique<Client>();
 
+#ifdef _DEBUG
+	// Setup ImGUI
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO();
+	ImGui_ImplWin32_Init(m_window.GetHWnd());
+	ImGui_ImplDX11_Init(D3D11Core::Get().Device(), D3D11Core::Get().DeviceContext());
+	ImGui::StyleColorsDark();
+	LOG_INFO("ImGui was successfully initialized");
+#endif
+
+	
+	std::cout << "All clients mothafocking did it!" << std::endl;
 }
 
 void Engine::Run()
@@ -71,8 +81,7 @@ void Engine::Run()
 
 	if (thread::IsThreadActive())
 		T_CJOB(Engine, RenderThread);
-
-
+	
 	MSG msg = { nullptr };
 	while (IsRunning())
 	{
@@ -121,6 +130,12 @@ void Engine::Run()
 void Engine::Shutdown()
 {
 	s_engineRunning = false;
+
+	// ImGUI Shutdown
+	ImGui_ImplDX11_Shutdown();
+	ImGui_ImplWin32_Shutdown();
+	ImGui::DestroyContext();
+	
 }
 
 Scene& Engine::GetScene(const std::string& name)
@@ -175,6 +190,17 @@ bool Engine::IsRunning()
 	return s_engineRunning;
 }
 
+void Engine::drawImGUI()
+{
+	// Statistics window
+	ImGui::Begin("Statistics");
+	//const std::string frameRate = "FPS: " + std::to_string(static_cast<int>(1 / m_frameTime.render));
+	//const std::string screenRes = "Screen Resolution: " + std::to_string(m_window.GetWidth()) + "x" + std::to_string(m_window.GetHeight());
+	//ImGui::Text("%s", screenRes.c_str());
+	//ImGui::Text("%s", frameRate.c_str());
+	ImGui::End();
+}
+
 void Engine::RenderThread()
 {
 	double currentFrame = 0.f, lastFrame = omp_get_wtime();
@@ -212,7 +238,6 @@ void Engine::Update(float dt)
 	// Update positions, orientations and any other
 	// relevant visual state of any dynamic elements
 	// in the scene.
-
 	if (m_currentScene)
 	{
 		m_currentScene->Update(dt);
