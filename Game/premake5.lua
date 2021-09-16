@@ -29,10 +29,11 @@ project "Game"
     }
 
     vpaths {
-        
+        ["src/Game"] = { "**Game.*" },
+            ["src/Game/Scenes"] = { "**DemoScene.*" }
     }
 
-    links{
+    links {
         "Engine",
         "d3d11",
         "d2d1",

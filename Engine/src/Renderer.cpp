@@ -16,28 +16,40 @@ void Renderer::Initialize(Window* pWindow)
 	
     // Initialize RenderTargetView.
     if (!this->CreateRenderTargetView())
-		LOG_ERROR("failed creating RenderTargetView.");
-    
+    {
+        LOG_ERROR("failed creating RenderTargetView.");
+    }
+	
     // Initialize DepthStencilBuffer.
     if (!this->CreateDepthStencilTexture())
+    {
         LOG_ERROR("failed creating DepthStencilBuffer.");
-    
+    }
+	
     // Initialize DepthStencilState.
     if (!this->CreateDepthStencilState())
+    {
         LOG_ERROR("failed creating DepthStencilState.");
-    
+    }
+	
     // Initialize DepthStencilView.
     if (!this->CreateDepthStencilView())
+    {
         LOG_ERROR("failed creating DepthStencilView.");
-    
+    }
+	
     // Initialize RasterizerStates.
     if (!this->CreateRasterizerStates())
+    {
         LOG_ERROR("failed creating RasterizerStates.");
-    
+    }
+	
     // Initialize SamplerStates.
     if (!this->CreateSamplerStates())
+    {
         LOG_ERROR("failed creating SamplerStates.");
-    
+    }
+	
     // Set Viewport.
     this->SetViewport();
 
