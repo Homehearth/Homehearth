@@ -23,36 +23,10 @@ static const bool CreateTexture(const std::string& filePath, ID3D11Texture2D** t
 	return true;
 }
 
-RTexture::RTexture(const std::string&& filePath)
-{
-	if (CreateTexture(filePath, &m_texture.texture2D))
-	{
-		m_active = 0;
-	}
-}
-
-RTexture::RTexture(ID2D1Bitmap* texture)
-{
-	m_active = 1;
-	m_texture.bitMap = texture;
-}
-
 RTexture::~RTexture()
 {
-	switch (m_active)
-	{
-	case 0:
-		if(m_texture.texture2D)
-			m_texture.texture2D->Release();
-		break;
-	case 1:
-		if(m_texture.bitMap)
-			m_texture.bitMap->Release();
-		break;
-	default:
-		// nothing initalized
-		break;
-	}
+	if(m_texture)
+		m_texture->Release();
 }
 
 bool RTexture::Create(const std::string& filename)
@@ -89,13 +63,24 @@ bool RTexture::Create(const std::string& filename)
 	textureDesc.CPUAccessFlags = 0;
 	textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 
-	HRESULT hr = D3D11Core::Get().Device()->CreateTexture2D(&textureDesc, &data, &m_texture.texture2D);
+	HRESULT hr = D3D11Core::Get().Device()->CreateTexture2D(&textureDesc, &data, &m_texture);
 	if (FAILED(hr))
 	{
-		std::cout << "[Texture] Failed to create Texture2D!" << std::endl;
+		LOG_ERROR("[Texture2D] Failed to create Texture2D!\n");
 		return false;
 	}
 
 	stbi_image_free(image);
 	return true;
+}
+
+RBitMap::~RBitMap()
+{
+	if (m_texture)
+		m_texture->Release();
+}
+
+bool RBitMap::Create(const std::string& filename)
+{
+	return false;
 }
