@@ -17,12 +17,12 @@ private:
 	static bool s_engineRunning;
 	static bool s_safeExit;
 	thread::DoubleBuffer<std::vector<Triangle2>> m_drawBuffers;
-	std::vector<Triangle2> * m_buffPointer;
+	std::vector<Triangle2>* m_buffPointer;
 
 	Window m_window;
 	Renderer m_renderer;
 
-	std::unique_ptr<Client> m_client;
+	Client m_client;
 	
 	std::unordered_map<std::string, Scene> m_scenes;
 	Scene* m_currentScene;

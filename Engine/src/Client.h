@@ -3,13 +3,17 @@
 class Client :public network::client_interface<network::MessageType>
 {
 private:
-	// REMOVE LATER
-	bool key[3] = { false, false, false };
-	bool old_key[3] = { false, false, false };
 
 public:
 	Client();
 	virtual ~Client();
 
-	void Update();
+	// Inherited via client_interface
+	virtual void OnMessageReceived(const network::message<network::MessageType>& msg) override;
+
+	// Inherited via client_interface
+	virtual void OnConnect() override;
+
+	// Inherited via client_interface
+	virtual void OnDisconnect() override;
 };

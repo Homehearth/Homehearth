@@ -56,8 +56,8 @@ project "Engine"
         ["src/Engine/Physics"] = {  },
         ["src/Engine/Network"] = { "**Client.*" },
         ["src/Engine/Animation"] = {  },
-        ["src/Engine/ESC"] = {  }, 
-        ["src/Engine/AI"] = {  },     
+        ["src/Engine/ESC"] = { "**Components.*" }, 
+        ["src/Engine/AI"] = {  },  
 		["src/Engine/Structures"] = { "**VertexStructure.*" }  
     }
 
@@ -84,7 +84,7 @@ project "Engine"
         defines{"_DEBUG", "_UNICODE", "UNICODE"}
         symbols "on"
         libdirs{"../ThirdParty/DirectXTK/lib/Debug_lib/"}
-		
+        
 
 
     -- Define a macro/symbol which applies only to release builds.
@@ -95,3 +95,4 @@ project "Engine"
         symbols "on"
         optimize "on"
         libdirs{"../ThirdParty/DirectXTK/lib/Release_lib/"}
+        
