@@ -45,12 +45,14 @@
 #include <d2d1.h>
 #include <ctime>
 using Microsoft::WRL::ComPtr;
+namespace dx = DirectX;
 
 
 // DirectXTK
-#include "SimpleMath.h"
-#include "BufferHelpers.h"
+#include <SimpleMath.h>
+#include <BufferHelpers.h>
 #include <Audio.h>
+namespace sm = dx::SimpleMath;
 
 
 // imGUI
@@ -74,5 +76,14 @@ using Microsoft::WRL::ComPtr;
 #include "Profiler.h"
 #include "ThreadSyncer.h"
 
+
 // Network
 #include "network.h"
+
+
+// Assimp
+#pragma warning(push, 0)
+#include <assimp/Importer.hpp>
+#include <assimp/postprocess.h>
+#include <assimp/scene.h>
+#pragma warning(pop)

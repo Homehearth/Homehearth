@@ -2,6 +2,7 @@
 #include "Engine.h"
 #include <omp.h>
 
+#include "RMesh.h"
 
 bool Engine::s_engineRunning = false;
 bool Engine::s_safeExit = false;
@@ -18,9 +19,9 @@ Engine::Engine()
 
 void Engine::Startup()
 {
-	T_INIT(1, thread::ThreadType::POOL_FIFO);
-	resource::ResourceManager::Initialize();
-	srand((unsigned int)time(NULL));
+    T_INIT(1, thread::ThreadType::POOL_FIFO);
+    ResourceManager::Initialize();
+    srand((unsigned int)time(NULL));
 
 	// Window Startup:
 	Window::Desc config;
@@ -46,7 +47,14 @@ void Engine::Startup()
 	m_buffPointer = m_drawBuffers.GetBuffer(1);
 	m_buffPointer->reserve(200);
 
-	m_client.Connect("127.0.0.1", 4950);
+	if (m_client.Connect("127.0.0.1", 4950))
+	{
+		LOG_INFO("Connected to server");
+	}
+	else {
+		LOG_ERROR("Failed to connect to server");
+	} 
+    //m_client = std::make_unique<Client>();
 
 #ifdef _DEBUG
 	// Setup ImGUI
@@ -114,9 +122,9 @@ void Engine::Run()
 	while (!s_safeExit) {};
 #endif
 
-	T_DESTROY();
-	resource::ResourceManager::Destroy();
-	D2D1Core::Destroy();
+    T_DESTROY();
+    ResourceManager::Destroy();
+    D2D1Core::Destroy();
 }
 
 void Engine::Shutdown()

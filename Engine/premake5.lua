@@ -27,8 +27,9 @@ project "Engine"
         "../ThirdParty/DirectXTK/include/",
         "../ThirdParty/imGUI/",
         "../ThirdParty/stb_image/",
-        "../ThirdParty/networking/",
-        "../ThirdParty/entt/"
+		"../ThirdParty/networking/",
+        "../ThirdParty/entt/",
+        "../ThirdParty/assimp/include/"
     }
 
 
@@ -46,18 +47,18 @@ project "Engine"
             ["src/Engine/Graphics/D3D11"] = { "**D3D11Core.*" },
 			["src/Engine/Graphics/D2D1"] = { "**D2D1Core.*" },
 			
-			["src/Engine/Network"] = { "**Client.*" },
+			["src/Network"] = { "**Client.*" },
 
-
-        ["src/Engine/Resources"] = { "**ResourceManager.*", "**GResource.*", "**RTexture.*" },
+        ["src/Engine/Resources"] = { "**ResourceManager.*", "**GResource.*", "**RMesh.*", "**RTexture.*" },
             ["src/Engine/Resources/Shaders"] = { "**.hhlsl", "**.hlsli" },
 
         ["src/Engine/Audio"] = {  },
         ["src/Engine/Physics"] = {  },
         ["src/Engine/Network"] = { "**Client.*" },
         ["src/Engine/Animation"] = {  },
-        ["src/Engine/ESC"] = {  }, 
-        ["src/Engine/AI"] = {  }     
+        ["src/Engine/ESC"] = { "**Components.*" }, 
+        ["src/Engine/AI"] = {  },  
+		["src/Engine/Structures"] = { "**VertexStructure.*" }  
     }
 
 
