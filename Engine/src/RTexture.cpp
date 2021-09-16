@@ -4,25 +4,6 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
-static const bool CreateTexture(const std::string& filePath, ID3D11Texture2D** texture)
-{
-	// No path entered.
-	if (filePath.length() <= 0)
-		return false;
-
-	D3D11_TEXTURE2D_DESC tDesc = {};
-	tDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-	tDesc.ArraySize = 1;
-	tDesc.MipLevels = 1;
-	tDesc.Usage = D3D11_USAGE_IMMUTABLE;
-	tDesc.SampleDesc.Count = 1;
-	tDesc.SampleDesc.Quality = 1;
-	//tDesc.Width = 
-	//tDesc.Height = 
-
-	return true;
-}
-
 RTexture::~RTexture()
 {
 	if(m_texture)
@@ -40,7 +21,7 @@ bool RTexture::Create(const std::string& filename)
 	unsigned char* image = stbi_load(filepath.c_str(), &width, &height, &comp, STBI_rgb_alpha);
 	if (!image)
 	{
-		std::cout << "[Texture] Failed to load image: '" << filepath << "'" << std::endl;
+		LOG_WARNING("[Texture] Failed to load image: " + filepath + "'" + "\n");
 		return false;
 	}
 	
@@ -66,7 +47,7 @@ bool RTexture::Create(const std::string& filename)
 	HRESULT hr = D3D11Core::Get().Device()->CreateTexture2D(&textureDesc, &data, &m_texture);
 	if (FAILED(hr))
 	{
-		LOG_ERROR("[Texture2D] Failed to create Texture2D!\n");
+		LOG_WARNING("[Texture2D] Failed to create Texture2D!\n");
 		return false;
 	}
 
