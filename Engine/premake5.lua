@@ -51,7 +51,7 @@ project "Engine"
 			
 		["src/Network"] = { "**Client.*" },
 
-        ["src/Resources"] = { "**ResourceManager.*", "**GResource.*", "**RTexture.*", "**RMesh.*", "**RConstantBuffer." },
+        ["src/Resources"] = { "**ResourceManager.*", "**GResource.*", "**RTexture.*", "**RMesh.*" },
             ["src/Resources/Shaders"] = { "**.hhlsl", "**.hlsli" },
 
 		["src/Structures"] = { "**VertexStructure.*" },
