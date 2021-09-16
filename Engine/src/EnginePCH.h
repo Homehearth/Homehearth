@@ -7,6 +7,7 @@
 #include <winsock2.h>
 #include <WS2tcpip.h>
 #pragma comment(lib, "WS2_32.Lib")
+#pragma comment(lib, "msvcrtd.lib")
 #include <windowsx.h>
 #pragma comment(lib, "winmm.lib")
 #endif
@@ -29,6 +30,8 @@
 #include <array>
 #include <set>
 #include <queue>
+
+#include <functional>
 
 
 // DirectX
@@ -64,6 +67,7 @@ using Microsoft::WRL::ComPtr;
 #include "D3D11Core.h"
 #include "D2D1Core.h"
 #include "Profiler.h"
+#include "ThreadSyncer.h"
 
 // Network
 #include "network.h"

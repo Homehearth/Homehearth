@@ -15,7 +15,9 @@ void D3D11Core::Initialize(Window* pWindow)
 
     // Initialize DeviceAndSwapChain.
     if (!this->createDeviceAndSwapChain())
+    {
         LOG_ERROR("failed creating m_device and swapchain.");
+    }
     else
         this->m_isInitialized = true;
 

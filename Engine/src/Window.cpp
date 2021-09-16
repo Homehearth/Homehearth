@@ -2,7 +2,7 @@
 #include "Window.h"
 #include "InputSystem.h"
 
-LRESULT CALLBACK WinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK Window::WinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	// Engine events:
 	switch (uMsg)
@@ -16,6 +16,12 @@ LRESULT CALLBACK WinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_CLOSE:
 		PostQuitMessage(0);
 		break;
+	case WM_KEYDOWN:
+		{
+			if(wParam == VK_ESCAPE)
+				PostQuitMessage(0);
+		}
+		break;
 	case WM_SIZE:
 		// https://docs.microsoft.com/en-us/windows/win32/direct3ddxgi/d3d10-graphics-programming-guide-dxgi#handling-window-resizing
 		break;
@@ -23,28 +29,8 @@ LRESULT CALLBACK WinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		break;
 	}
 
-	// Application events:
-	if (uMsg == WM_KEYDOWN ||
-		uMsg == WM_KEYUP ||
-		uMsg == WM_CHAR ||
-		uMsg == WM_INPUT ||
-		uMsg == WM_MBUTTONUP ||
-		uMsg == WM_MBUTTONDOWN ||
-		uMsg == WM_RBUTTONDOWN ||
-		uMsg == WM_RBUTTONUP ||
-		uMsg == WM_LBUTTONDBLCLK ||
-		uMsg == WM_RBUTTONDBLCLK ||
-		uMsg == WM_MBUTTONDBLCLK ||
-		uMsg == WM_MOUSEWHEEL ||
-		uMsg == WM_MOUSEMOVE)
-	{
-		// Add the event to the m_eventQueue.
-		InputSystem::Get().RegisterEvent(uMsg, wParam);
-	}
-
 	return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
-
 
 Window::Window()
 	: m_hWnd(nullptr)
@@ -77,7 +63,7 @@ bool Window::Initialize(const Desc& desc)
 	wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
 	wcex.hIcon = LoadIcon(nullptr, IDI_APPLICATION);
 	wcex.hIconSm = LoadIcon(nullptr, IDI_APPLICATION);;
-	wcex.hInstance = desc.hInstance;
+	wcex.hInstance = GetModuleHandle(NULL);
 	wcex.lpfnWndProc = WinProc;
 
 	// Register window class.
@@ -127,9 +113,24 @@ unsigned int Window::GetHeight() const
 	return this->m_windowDesc.height;
 }
 
+LPCWSTR Window::GetTitle() const
+{
+	return this->m_windowDesc.title;
+}
+
 bool Window::IsFullScreen() const
 {
 	return this->m_windowDesc.fullScreen;
+}
+
+void Window::SetWindowTitle(const LPCWSTR& title)
+{
+	this->m_windowDesc.title = title;
+}
+
+void Window::SetWindowTextBar(const std::string& text)
+{
+	SetWindowTextA(this->m_hWnd,text.c_str());
 }
 
 void Window::SetFullScreen(bool fullscreen)

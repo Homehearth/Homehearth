@@ -50,7 +50,7 @@ public:
 	static void DrawF(const float upper_x, const float upper_y, const float width, const float height, const Shapes shape = Shapes::DEFAULT);
 
 	/*
-		Start buffering D2D1 Draw commands.
+		Run buffering D2D1 Draw commands.
 	*/
 	static void Begin();
 
