@@ -53,10 +53,7 @@ void Engine::Startup()
 	}
 	else {
 		LOG_ERROR("Failed to connect to server");
-	}
-    // *** [TEMP] testing to load in a mesh ***
-    ResourceManager::GetResource<RMesh>("Monster.fbx");
-    
+	} 
     //m_client = std::make_unique<Client>();
 
 }
