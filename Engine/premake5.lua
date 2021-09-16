@@ -44,12 +44,13 @@ project "Engine"
             ["src/Core/Utility"] = { "**Logger.*", "**multi_thread_manager.*", "**Profiler.*", "**ThreadSyncer.*"},
 
         ["src/Graphics"] = { "**Buffers.*", "**NYI.*" },
-            ["src/Graphics/Renderer"] = {"**Renderer.*"},
+            ["src/Graphics/Renderer"] = {"**Renderer.*", "**BackBuffer.*"},
             ["src/Graphics/D3D11"] = { "**D3D11Core.*" },
 			["src/Graphics/D2D1"] = { "**D2D1Core.*" },
             ["src/Graphics/Window"] = { "**Window.*" },
 			
 		["src/Network"] = { "**Client.*" },
+		["src/Objects"] = {"**RenderableObject.*", "**MeshRenderObject.*"},
 
         ["src/Resources"] = { "**ResourceManager.*", "**GResource.*", "**RTexture.*", "**RMesh.*" },
             ["src/Resources/Shaders"] = { "**.hhlsl", "**.hlsli" },

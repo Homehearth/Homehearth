@@ -1,6 +1,7 @@
 ﻿#include "EnginePCH.h"
 #include "Engine.h"
 #include <omp.h>
+#include "BackBuffer.h"
 
 #include "RMesh.h"
 
@@ -12,7 +13,6 @@ Engine::Engine()
 	, m_currentScene(nullptr)
 	, m_vSync(false)
     , m_frameTime()
-    , m_buffPointer(nullptr)
 {
 }
 
@@ -24,6 +24,7 @@ void Engine::Setup() {
 
     T_INIT(1, thread::ThreadType::POOL_FIFO);
     ResourceManager::Initialize();
+    //Backbuffer::Initialize();
     srand((unsigned int)time(NULL));
 
 	// Window Setup:
@@ -41,15 +42,6 @@ void Engine::Setup() {
 
     // Thread should be launched after s_engineRunning is set to true and D3D11 is initalized.
     s_engineRunning = true;
-
-    /*
-        Preallocate space for Triplebuffer
-    */
-    m_drawBuffers.AllocateBuffers();
-    m_buffPointer = m_drawBuffers.GetBuffer(0);
-    m_buffPointer->reserve(200);
-    m_buffPointer = m_drawBuffers.GetBuffer(1);
-    m_buffPointer->reserve(200);
 
     // *** [TEMP] testing to load in a mesh ***
     ResourceManager::GetResource<RMesh>("Monster.fbx");
@@ -112,6 +104,7 @@ void Engine::Start()
 
     T_DESTROY();
     ResourceManager::Destroy();
+    //Backbuffer::Destroy();
     D2D1Core::Destroy();
 }
 
@@ -184,10 +177,12 @@ void Engine::RenderThread()
         deltaTime = static_cast<float>(currentFrame - lastFrame);
         if (deltaSum >= targetDelta)
         {
-            if (m_drawBuffers.IsSwapped())
+            /*
+            if (Backbuffer::m_buffers.IsSwapped())
             {
                 Render(deltaSum);
             }
+            */
 
             m_frameTime.render = deltaSum;
             deltaSum = 0.f;
@@ -202,7 +197,7 @@ void Engine::RenderThread()
 
 void Engine::Update(float dt)
 {
-    m_buffPointer = m_drawBuffers.GetBuffer(0);
+    //Backbuffer::m_bPointer = Backbuffer::m_buffers.GetBuffer(0);
     // Update the camera transform based on interactive inputs.
     //updateCamera(dt);
 
@@ -219,10 +214,12 @@ void Engine::Update(float dt)
     // Handle events enqueued
     //Scene::GetEventDispatcher().update();
 
-    if (!m_drawBuffers.IsSwapped())
+    /*
+    if (Backbuffer::m_buffers.IsSwapped())
     {
-        m_drawBuffers.SwapBuffers();
+        Backbuffer::m_buffers.SwapBuffers();
     }
+    */
 }
 
 void Engine::Render(float& dt)
@@ -247,7 +244,7 @@ void Engine::Render(float& dt)
     /*
         Kanske v�nta p� att uppdateringstr�den kan swappa buffrar.
     */
-    m_drawBuffers.ReadySwap();
+    //Backbuffer::m_buffers.ReadySwap();
     D2D1Core::Present();
     D3D11Core::Get().SwapChain()->Present(1, 0);
     m_renderer.ClearScreen();
