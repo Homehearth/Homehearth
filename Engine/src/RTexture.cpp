@@ -23,6 +23,11 @@ static const bool CreateTexture(const std::string& filePath, ID3D11Texture2D** t
 	return true;
 }
 
+RTexture::RTexture()
+{
+	m_active = 0;
+}
+
 RTexture::RTexture(const std::string&& filePath)
 {
 	if (CreateTexture(filePath, &m_texture.texture2D))

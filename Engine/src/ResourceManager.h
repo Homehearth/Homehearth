@@ -62,8 +62,12 @@ inline T* ResourceManager::GetResource(const std::string& resource_name)
 		//Create the new resource and if it was a success, add it to the resources
 		if (resource->Create(resource_name))
 		{
-			ResourceManager::m_instance->m_resources.emplace(resource_name, resource);
+			ResourceManager::m_instance->m_resources[resource_name] = resource;
 			return dynamic_cast<T*>(resource);
+		}
+		else
+		{
+			delete resource;
 		}
 	}
 

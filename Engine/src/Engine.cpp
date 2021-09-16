@@ -53,7 +53,7 @@ void Engine::Setup() {
 
     // *** [TEMP] testing to load in a mesh ***
     ResourceManager::GetResource<RMesh>("Monster.fbx");
-
+    
     //m_client = std::make_unique<Client>();
 
 }

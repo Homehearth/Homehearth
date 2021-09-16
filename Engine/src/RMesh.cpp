@@ -40,7 +40,7 @@ void RMesh::AddTextures(material_t& mat, const aiMaterial* aiMat)
 
             //Get the texture
             //Will be nullptr if it did not exist failed to be created
-            mat.textures[(uint16_t)type.first] = ResourceManager::GetResource<RTexture>(filename);
+            mat.textures[(uint8_t)type.first] = ResourceManager::GetResource<RTexture>(filename);
         }
     }
     textureTypeMap.clear();
@@ -69,7 +69,7 @@ void RMesh::Render()
                 m_materials[currentMat].textures[ETextureType::diffuse] to get the pointer to the texture
             }
         */
-	
+
 		//Draw with indexbuffer
         D3D11Core::Get().DeviceContext()->IASetVertexBuffers(0, 1, m_meshes[m].vertexBuffer.GetAddressOf(), &stride, &offset);
         D3D11Core::Get().DeviceContext()->IASetIndexBuffer(m_meshes[m].indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
@@ -118,8 +118,8 @@ bool RMesh::Create(const std::string& filename)
         //Basic float3-values
         aiMat->Get(AI_MATKEY_COLOR_AMBIENT, mat.ambient);
         aiMat->Get(AI_MATKEY_COLOR_DIFFUSE, mat.diffuse);
-        aiMat->Get(AI_MATKEY_COLOR_SPECULAR, mat.specular);
-        aiMat->Get(AI_MATKEY_SHININESS, mat.shiniess);
+        aiMat->Get(AI_MATKEY_COLOR_SPECULAR,mat.specular);
+        aiMat->Get(AI_MATKEY_SHININESS,     mat.shiniess);
 
         //Check what types of textures that exist and add them to a map
         AddTextures(mat, aiMat);
@@ -175,6 +175,8 @@ bool RMesh::Create(const std::string& filename)
         if (!vBuff.create(&vertices[0], vertices.size()))
         {
             std::cout << "Failed to create vertexbuffer..." << std::endl;
+            vertices.clear();
+            indices.clear();
             importer.FreeScene();
             return false;
         }
@@ -185,6 +187,8 @@ bool RMesh::Create(const std::string& filename)
         if (!iBuff.create(&indices[0], indices.size()))
         {
             std::cout << "Failed to create indexbuffer..." << std::endl;
+            vertices.clear();
+            indices.clear();
             importer.FreeScene();
             return false;
         }

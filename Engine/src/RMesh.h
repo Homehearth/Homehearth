@@ -30,12 +30,12 @@ private:
 
 	struct material_t
 	{
-		sm::Vector3 ambient								  = {};
-		sm::Vector3 diffuse								  = {};
-		sm::Vector3 specular							  = {};
-		float       shiniess							  = 0.0f;
-		float		opacity								  = 1.0f;  //?
-		RTexture* textures[uint8_t(ETextureType::length)] = { nullptr };
+		sm::Vector3 ambient									= {};
+		sm::Vector3 diffuse									= {};
+		sm::Vector3 specular								= {};
+		float       shiniess								= 0.0f;
+		float		opacity								    = 1.0f;  //?
+		RTexture*   textures[uint8_t(ETextureType::length)] = { nullptr };
 	};
 
 	/*
@@ -53,7 +53,7 @@ private:
 
 	//All the materials and meshes
 	std::vector<material_t> m_materials;
-	std::vector<mesh_t>  m_meshes;
+	std::vector<mesh_t>		m_meshes;
 
 	//Save the skeleton in a structure: rootbone --> other parts
 

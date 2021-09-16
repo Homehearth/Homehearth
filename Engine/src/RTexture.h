@@ -16,7 +16,7 @@ private:
 
 public:
 
-	RTexture() {};
+	RTexture();
 	RTexture(const std::string&& filePath);
 	RTexture(ID2D1Bitmap* texture);
 	~RTexture();
