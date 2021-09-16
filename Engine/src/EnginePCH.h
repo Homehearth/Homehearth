@@ -45,12 +45,14 @@
 #include <d2d1.h>
 #include <ctime>
 using Microsoft::WRL::ComPtr;
+namespace dx = DirectX;
 
 
 // DirectXTK
-#include "SimpleMath.h"
-#include "BufferHelpers.h"
+#include <SimpleMath.h>
+#include <BufferHelpers.h>
 #include <Audio.h>
+namespace sm = dx::SimpleMath;
 
 
 // imGUI

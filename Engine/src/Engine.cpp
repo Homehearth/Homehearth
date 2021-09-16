@@ -46,9 +46,14 @@ void Engine::Startup()
 	m_buffPointer = m_drawBuffers.GetBuffer(1);
 	m_buffPointer->reserve(200);
 
-	m_client.Connect("127.0.0.1", 4950);
+	if (m_client.Connect("127.0.0.1", 4950))
+	{
+		LOG_INFO("Connected to server");
+	}
+	else {
+		LOG_ERROR("Failed to connect to server");
+	}
 
-	std::cout << "All clients mothafocking did it!" << std::endl;
 }
 
 void Engine::Run()

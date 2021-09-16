@@ -55,7 +55,7 @@ project "Engine"
         ["src/Engine/Physics"] = {  },
         ["src/Engine/Network"] = { "**Client.*" },
         ["src/Engine/Animation"] = {  },
-        ["src/Engine/ESC"] = {  }, 
+        ["src/Engine/ESC"] = { "**Components.*" }, 
         ["src/Engine/AI"] = {  }     
     }
 
