@@ -2,6 +2,7 @@
 #include "Engine.h"
 #include <omp.h>
 
+#include "RMesh.h"
 
 bool Engine::s_engineRunning = false;
 bool Engine::s_safeExit = false;
@@ -18,9 +19,9 @@ Engine::Engine()
 
 void Engine::Startup()
 {
-	T_INIT(1, thread::ThreadType::POOL_FIFO);
-	resource::ResourceManager::Initialize();
-	srand((unsigned int)time(NULL));
+    T_INIT(1, thread::ThreadType::POOL_FIFO);
+    ResourceManager::Initialize();
+    srand((unsigned int)time(NULL));
 
 	// Window Startup:
 	Window::Desc config;
@@ -53,6 +54,10 @@ void Engine::Startup()
 	else {
 		LOG_ERROR("Failed to connect to server");
 	}
+    // *** [TEMP] testing to load in a mesh ***
+    ResourceManager::GetResource<RMesh>("Monster.fbx");
+    
+    //m_client = std::make_unique<Client>();
 
 }
 
@@ -108,9 +113,9 @@ void Engine::Run()
 	while (!s_safeExit) {};
 #endif
 
-	T_DESTROY();
-	resource::ResourceManager::Destroy();
-	D2D1Core::Destroy();
+    T_DESTROY();
+    ResourceManager::Destroy();
+    D2D1Core::Destroy();
 }
 
 void Engine::Shutdown()
