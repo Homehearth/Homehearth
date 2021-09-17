@@ -1,6 +1,14 @@
 #include "EnginePCH.h"
 #include "Scene.h"
 
+
+Scene::Scene() 
+{
+	// Makes sure all entities with transforms get a constantbuffer
+	m_ecsRegistry.on_construct<ecs::component::Transform>().connect<ecs::OnTransformConstruct>();
+
+}
+
 entt::entity Scene::CreateEntity()
 {
 	return m_ecsRegistry.create();
