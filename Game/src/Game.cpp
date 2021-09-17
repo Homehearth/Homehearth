@@ -18,8 +18,9 @@ Game::Game()
 	m_engine.SetScene(demo);
 
 	//Testing to load in model in the resource manager
+	//ResourceManager::GetResource<RMesh>("rp_eric_rigged_001_yup_t.fbx");
 	ResourceManager::GetResource<RMesh>("Monster.fbx");
-	ResourceManager::GetResource<RMesh>("Cube.fbx");
+	//ResourceManager::GetResource<RMesh>("Cube.fbx");
 
 }
 

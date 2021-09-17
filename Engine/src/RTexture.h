@@ -5,22 +5,29 @@
 class RTexture : public resource::GResource
 {
 private:
-
-	union Texture
-	{
-		ID3D11Texture2D* texture2D;
-		ID2D1Bitmap* bitMap;
-	} m_texture = {};
-	// 0 -> Texture[0] : 1 -> Texture[1]
-	int8_t m_active = -1;
+	ID3D11Texture2D* m_texture = nullptr;
+	ID3D11ShaderResourceView* m_shaderView = nullptr;
 
 public:
 
-	RTexture();
-	RTexture(const std::string&& filePath);
-	RTexture(ID2D1Bitmap* texture);
+	RTexture() {};
 	~RTexture();
 
 	// Inherited via GResource
 	virtual bool Create(const std::string& filename) override;
+	ID3D11ShaderResourceView*& GetShaderView();
+};
+
+class RBitMap : public resource::GResource
+{
+private:
+	ID2D1Bitmap* m_texture = nullptr;
+
+public:
+
+	RBitMap() {};
+	~RBitMap();
+	// Inherited via GResource
+	virtual bool Create(const std::string& filename) override;
+
 };

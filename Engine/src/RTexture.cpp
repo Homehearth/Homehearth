@@ -4,60 +4,12 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
-static const bool CreateTexture(const std::string& filePath, ID3D11Texture2D** texture)
-{
-	// No path entered.
-	if (filePath.length() <= 0)
-		return false;
-
-	D3D11_TEXTURE2D_DESC tDesc = {};
-	tDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-	tDesc.ArraySize = 1;
-	tDesc.MipLevels = 1;
-	tDesc.Usage = D3D11_USAGE_IMMUTABLE;
-	tDesc.SampleDesc.Count = 1;
-	tDesc.SampleDesc.Quality = 1;
-	//tDesc.Width = 
-	//tDesc.Height = 
-
-	return true;
-}
-
-RTexture::RTexture()
-{
-	m_active = 0;
-}
-
-RTexture::RTexture(const std::string&& filePath)
-{
-	if (CreateTexture(filePath, &m_texture.texture2D))
-	{
-		m_active = 0;
-	}
-}
-
-RTexture::RTexture(ID2D1Bitmap* texture)
-{
-	m_active = 1;
-	m_texture.bitMap = texture;
-}
-
 RTexture::~RTexture()
 {
-	switch (m_active)
-	{
-	case 0:
-		if(m_texture.texture2D)
-			m_texture.texture2D->Release();
-		break;
-	case 1:
-		if(m_texture.bitMap)
-			m_texture.bitMap->Release();
-		break;
-	default:
-		// nothing initalized
-		break;
-	}
+	if (m_texture)
+		m_texture->Release();
+	if (m_shaderView)
+		m_shaderView->Release();
 }
 
 bool RTexture::Create(const std::string& filename)
@@ -71,10 +23,12 @@ bool RTexture::Create(const std::string& filename)
 	unsigned char* image = stbi_load(filepath.c_str(), &width, &height, &comp, STBI_rgb_alpha);
 	if (!image)
 	{
-		std::cout << "[Texture] Failed to load image: '" << filepath << "'" << std::endl;
+		std::string warning = "[Texture] Failed to load image: '" + filepath + "'\n";
+		LOG_WARNING(warning.c_str());
+		stbi_image_free(image);
 		return false;
 	}
-	
+
 	D3D11_SUBRESOURCE_DATA data = {};
 	data.pSysMem = (void*)image;
 	data.SysMemPitch = static_cast<UINT>(width * 4);
@@ -94,13 +48,38 @@ bool RTexture::Create(const std::string& filename)
 	textureDesc.CPUAccessFlags = 0;
 	textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 
-	HRESULT hr = D3D11Core::Get().Device()->CreateTexture2D(&textureDesc, &data, &m_texture.texture2D);
+	HRESULT hr = D3D11Core::Get().Device()->CreateTexture2D(&textureDesc, &data, &m_texture);
 	if (FAILED(hr))
 	{
-		std::cout << "[Texture] Failed to create Texture2D!" << std::endl;
+		LOG_WARNING("[Texture2D] Failed to create Texture2D!\n");
+		stbi_image_free(image);
+		return false;
+	}
+
+	hr = D3D11Core::Get().Device()->CreateShaderResourceView(m_texture, 0, &m_shaderView);
+	if (FAILED(hr))
+	{
+		LOG_WARNING("[Texture2D] Failed to create ShaderResourceView!\n");
+		stbi_image_free(image);
 		return false;
 	}
 
 	stbi_image_free(image);
 	return true;
+}
+
+ID3D11ShaderResourceView*& RTexture::GetShaderView()
+{
+	return m_shaderView;
+}
+
+RBitMap::~RBitMap()
+{
+	if (m_texture)
+		m_texture->Release();
+}
+
+bool RBitMap::Create(const std::string& filename)
+{
+	return false;
 }
