@@ -3,16 +3,20 @@
 
 
 Renderer::Renderer()
-	: pWindow(nullptr)
-	, isInitialized(false)
+	: m_window(nullptr)
+	, m_d3d11(nullptr)
 {
 }
 
 void Renderer::Initialize(Window* pWindow)
 {
-    //assert(isInitialized || "D3D11Core is already initialized.");
-    if (this->pWindow == nullptr)
-        this->pWindow = pWindow;
+    if (m_window == nullptr)
+        m_window = pWindow;
+
+    if (m_d3d11 == nullptr)
+        m_d3d11 = &D3D11Core::Get();
+	
+    assert((m_window || m_d3d11) || "Renderer could not be initialized.");
 	
     // Initialize RenderTargetView.
     if (!this->CreateRenderTargetView())
@@ -53,22 +57,18 @@ void Renderer::Initialize(Window* pWindow)
     // Set Viewport.
     this->SetViewport();
 
-    this->isInitialized = true;
 }
 
 bool Renderer::CreateRenderTargetView()
 {
     ID3D11Texture2D* pBackBuffer = nullptr;
 
-	// Temporary holder D3D11.
-    const auto temp = &D3D11Core::Get();
-	
     // Get the pointer to the back buffer.
-    if (FAILED(temp->SwapChain()->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<LPVOID*>(&pBackBuffer))))
+    if (FAILED(m_d3d11->SwapChain()->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<LPVOID*>(&pBackBuffer))))
         return false;
 
     // Create the renderTargetView with the back buffer pointer.
-    HRESULT hr = temp->Device()->CreateRenderTargetView(pBackBuffer, nullptr, this->renderTargetView.GetAddressOf());
+    HRESULT hr = m_d3d11->Device()->CreateRenderTargetView(pBackBuffer, nullptr, this->renderTargetView.GetAddressOf());
 
     // Release pointer to the back buffer.
     pBackBuffer->Release();
@@ -83,8 +83,8 @@ bool Renderer::CreateDepthStencilTexture()
     ZeroMemory(&depthStencilBufferDesc, sizeof(D3D11_TEXTURE2D_DESC));
 
     // Set up the description of the depth buffer.
-    depthStencilBufferDesc.Width = this->pWindow->GetWidth();
-    depthStencilBufferDesc.Height = this->pWindow->GetHeight();
+    depthStencilBufferDesc.Width = this->m_window->GetWidth();
+    depthStencilBufferDesc.Height = this->m_window->GetHeight();
     depthStencilBufferDesc.MipLevels = 1;
     depthStencilBufferDesc.ArraySize = 1;
     depthStencilBufferDesc.SampleDesc.Count = 1;
@@ -96,7 +96,7 @@ bool Renderer::CreateDepthStencilTexture()
     depthStencilBufferDesc.BindFlags = D3D11_BIND_FLAG::D3D11_BIND_DEPTH_STENCIL;
 
     // Create the texture for the depth buffer using the filled out description.
-    HRESULT hr = D3D11Core::Get().Device()->CreateTexture2D(&depthStencilBufferDesc, nullptr, this->depthStencilTexture.GetAddressOf());
+    HRESULT hr = m_d3d11->Device()->CreateTexture2D(&depthStencilBufferDesc, nullptr, this->depthStencilTexture.GetAddressOf());
 
     return !FAILED(hr);
 }
@@ -129,12 +129,12 @@ bool Renderer::CreateDepthStencilState()
     depthStencilDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
 
     // Create the depth stencil state.
-    HRESULT hr = D3D11Core::Get().Device()->CreateDepthStencilState(&depthStencilDesc, this->depthStencilState.GetAddressOf());
+    HRESULT hr = m_d3d11->Device()->CreateDepthStencilState(&depthStencilDesc, this->depthStencilState.GetAddressOf());
 
     if (SUCCEEDED(hr))
     {
         // Set the default depth stencil state.
-        D3D11Core::Get().DeviceContext()->OMSetDepthStencilState(this->depthStencilState.Get(), 1);
+        m_d3d11->DeviceContext()->OMSetDepthStencilState(this->depthStencilState.Get(), 1);
     }
     return !FAILED(hr);
 }
@@ -151,12 +151,12 @@ bool Renderer::CreateDepthStencilView()
     depthStencilViewDesc.Texture2D.MipSlice = 0;
 
     // Create the depth stencil View.
-    HRESULT hr = D3D11Core::Get().Device()->CreateDepthStencilView(this->depthStencilTexture.Get(), &depthStencilViewDesc, this->depthStencilView.GetAddressOf());
+    HRESULT hr = m_d3d11->Device()->CreateDepthStencilView(this->depthStencilTexture.Get(), &depthStencilViewDesc, this->depthStencilView.GetAddressOf());
 
     if (SUCCEEDED(hr))
     {
         // Bind the render target View and depth stencil buffer to the output render pipeline.
-        D3D11Core::Get().DeviceContext()->OMSetRenderTargets(1, this->renderTargetView.GetAddressOf(), this->depthStencilView.Get());
+        m_d3d11->DeviceContext()->OMSetRenderTargets(1, this->renderTargetView.GetAddressOf(), this->depthStencilView.Get());
     }
 
     return !FAILED(hr);
@@ -181,18 +181,15 @@ bool Renderer::CreateRasterizerStates()
     // Backface culling refers to the process of discarding back-facing triangles from the pipeline. 
     // This can potentially reduce the amount of triangles that need to be processed by half, hence it will be set as default.
     rasterizerDesc.CullMode = D3D11_CULL_MODE::D3D11_CULL_BACK;
-
-    // Temporary D3D11 holder.
-    const auto temp = &D3D11Core::Get();
 	
     // Create the rasterizer state from the description we just filled out.
-    HRESULT hr = temp->Device()->CreateRasterizerState(&rasterizerDesc, this->rasterizerState.GetAddressOf());
+    HRESULT hr = m_d3d11->Device()->CreateRasterizerState(&rasterizerDesc, this->rasterizerState.GetAddressOf());
 
     // Setup a raster description with no back face culling.
     rasterizerDesc.CullMode = D3D11_CULL_NONE;
 
     // Create the no culling rasterizer state.
-    hr = temp->Device()->CreateRasterizerState(&rasterizerDesc, this->rasterStateNoCulling.GetAddressOf());
+    hr = m_d3d11->Device()->CreateRasterizerState(&rasterizerDesc, this->rasterStateNoCulling.GetAddressOf());
     if (FAILED(hr))
         return false;
 
@@ -201,10 +198,10 @@ bool Renderer::CreateRasterizerStates()
     rasterizerDesc.FillMode = D3D11_FILL_WIREFRAME;
 
     // Create the wire frame rasterizer state.
-    hr = temp->Device()->CreateRasterizerState(&rasterizerDesc, this->rasterStateWireframe.GetAddressOf());
+    hr = m_d3d11->Device()->CreateRasterizerState(&rasterizerDesc, this->rasterStateWireframe.GetAddressOf());
 
     // Set default rasterizer state.
-    temp->DeviceContext()->RSSetState(this->rasterStateNoCulling.Get());
+    m_d3d11->DeviceContext()->RSSetState(this->rasterStateNoCulling.Get());
 
     return !FAILED(hr);
 }
@@ -251,15 +248,15 @@ void Renderer::SetViewport()
 {
     // Initialize the viewport to occupy the entire client area.
     RECT clientRect;
-    GetClientRect(this->pWindow->GetHWnd(), &clientRect);
+    GetClientRect(this->m_window->GetHWnd(), &clientRect);
     const LONG clientWidth = clientRect.right - clientRect.left;
     const LONG clientHeight = clientRect.bottom - clientRect.top;
 
     ZeroMemory(&viewport, sizeof(D3D11_VIEWPORT));
 
     // Setup the viewport for rendering.
-    viewport.Width = static_cast<FLOAT>(this->pWindow->GetWidth());
-    viewport.Height = static_cast<FLOAT>(this->pWindow->GetHeight());
+    viewport.Width = static_cast<FLOAT>(this->m_window->GetWidth());
+    viewport.Height = static_cast<FLOAT>(this->m_window->GetHeight());
     viewport.TopLeftX = 0.f;
     viewport.TopLeftY = 0.f;
 
@@ -268,7 +265,62 @@ void Renderer::SetViewport()
     viewport.MaxDepth = 1.f;
 
     // Set viewport.
-    D3D11Core::Get().DeviceContext()->RSSetViewports(1, &this->viewport);
+    m_d3d11->DeviceContext()->RSSetViewports(1, &this->viewport);
+}
+
+void Renderer::SetPipelineState()
+{
+	/*
+	 * 
+
+	// STRIDE & OFFSET.
+    static UINT stride = sizeof(DefaultVertexBuffer);
+    static UINT offset = 0;
+
+    const auto dc = m_d3d11->DeviceContext();
+	
+    // INPUT ASSEMBLY.
+    {
+        dc->IASetInputLayout();
+        dc->IASetPrimitiveTopology();
+    }
+
+    // SHADER STAGES.
+    {
+        dc->VSSetShader();
+        dc->PSSetShader();
+        dc->GSSetShader();
+        dc->HSSetShader();
+        dc->DSSetShader();
+        dc->CSSetShader();
+    }
+
+    // CONSTANT BUFFERS.
+    {
+        dc->PSSetConstantBuffers();
+        dc->VSSetConstantBuffers();
+    }
+
+    // SHADER RESOURCES.
+    {    
+		dc->PSSetShaderResources();
+		dc->VSSetShaderResources();
+		dc->PSSetSamplers();
+    }
+
+    // RASTERIZER.
+    {
+        dc->RSSetViewports();
+        dc->RSSetState();
+    }
+
+    // OUTPUT MERGER.
+    {
+        dc->OMSetRenderTargets();
+        dc->OMSetBlendState();
+        dc->OMSetDepthStencilState();
+    }
+	 */
 }
 
 
