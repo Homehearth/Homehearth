@@ -26,9 +26,9 @@ public:
 	}
 
 private:
-	Window* pWindow;
-	bool isInitialized;
-	
+	Window* m_window;
+	D3D11Core * m_d3d11;
+		
 	ComPtr<ID3D11RenderTargetView>		renderTargetView;
 	
 	ComPtr<ID3D11Texture2D>				depthStencilTexture;
@@ -44,6 +44,8 @@ private:
 	
 	D3D11_VIEWPORT						viewport;
 
+
+	// Initialize Methods.
 	bool CreateRenderTargetView();
 	bool CreateDepthStencilTexture();
 	bool CreateDepthStencilState();
@@ -51,5 +53,52 @@ private:
 	bool CreateRasterizerStates();
 	bool CreateSamplerStates();
 	void SetViewport();
+
+	
+	// Required Structs.
+	enum class RenderingTechnique
+	{
+		FORWARD,
+		FORWARD_PLUS
+	};
+	
+	// Forward-Rendering Technique.
+	struct PerFrame {};
+	struct PerObject {};
+	struct FullScreenVertexBuffer {};
+	struct DefaultVertexBuffer {};
+	
+	void SetPipelineState();
+
+
+	// Temporary to not get any errors.
+	using ETopology = int;
+	using RenderTargetIDs = int;
+	using DepthTargetID = int;
+	using RasterizerStateID = int;
+	using DepthStencilStateID = int;
+	using BlendStateID = int;
+	using ShaderID = int;
+	using BufferID = int;
+	using ConstantBufferID = int;
+	using Viewport = int;
+	
+	// PipelineState holds the settings for a draw call.
+	struct PipelineState
+	{
+		ETopology				topology;
+		RenderTargetIDs			renderTargets;
+		DepthTargetID			depthTargets;
+		RasterizerStateID		rasterizerState;
+		DepthStencilStateID		depthStencilState;
+		BlendStateID			blendState;
+		ShaderID				shader;
+		BufferID				vertexBuffer;
+		BufferID				indexBuffer;
+		ConstantBufferID		constantBuffer;
+		Viewport				viewPort;
+	};
+
+	std::vector<PipelineState> pipelineStates;
 };
 

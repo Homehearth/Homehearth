@@ -49,7 +49,7 @@ project "Engine"
 			["src/Engine/Network"] = { "**Client.*" },
 
         ["src/Engine/Resources"] = { "**ResourceManager.*", "**GResource.*", "**RTexture.*" },
-            ["src/Engine/Resources/Shaders"] = { "**.hhlsl", "**.hlsli" },
+            ["src/Engine/Resources/Shaders"] = { "**.hlsl", "**.hlsli" },
 
         ["src/Engine/Audio"] = {  },
         ["src/Engine/Physics"] = {  },
