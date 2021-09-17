@@ -17,7 +17,8 @@ public:
 	
 	void BeginFrame()
 	{
-
+		this->ClearScreen();
+		D3D11Core::Get().DeviceContext()->OMSetRenderTargets(1, this->renderTargetView.GetAddressOf(), nullptr);
 	}
 	
 	void EndFrame()

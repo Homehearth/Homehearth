@@ -16,6 +16,7 @@ class Engine
 private:
 	static bool s_engineRunning;
 	static bool s_safeExit;
+	std::atomic<bool> m_IsImguiReady;
 	thread::DoubleBuffer<std::vector<Triangle2>> m_drawBuffers;
 	std::vector<Triangle2>* m_buffPointer;
 
@@ -69,6 +70,6 @@ public:
 	static bool IsRunning();
 
 	//IMGUI
-	void drawImGUI();
+	void drawImGUI() const;
 };
 
