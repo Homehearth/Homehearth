@@ -44,11 +44,11 @@ void Engine::Startup()
 	//m_renderer.SetPipelineState();
 	debugCamera.Preset();
 
-	ResourceManager::GetResource<RMesh>("Monster.fbx");
+	/*ResourceManager::GetResource<RMesh>("Monster.fbx");
 	ResourceManager::GetResource<RMesh>("Cube.fbx");
-	ResourceManager::GetResource<RMesh>("geo_house2.obj");
+	ResourceManager::GetResource<RMesh>("geo_house2.obj");*/
 
-	meshLOLXD = new MeshRenderObject(ResourceManager::GetResource<RMesh>("geo_house2.obj"));
+	meshLOLXD = new MeshRenderObject(ResourceManager::GetResource<RMesh>("Cube.fbx"));
 
 	// Thread should be launched after s_engineRunning is set to true and D3D11 is initalized.
 	s_engineRunning = true;

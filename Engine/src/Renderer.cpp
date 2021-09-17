@@ -378,7 +378,7 @@ bool Renderer::CreateDefaultcBuffer()
     bDesc.MiscFlags = 0;
 
     BasicModelMatrix b;
-    b.worldMatrix = sm::Matrix::CreateWorld({ 0.f, 0.0f, -10.0f }, { 0.0f, 0.0f, -1.0f }, { 0.0f, 1.0f, 0.0f });
+    b.worldMatrix = sm::Matrix::CreateWorld({ 0.f, 0.0f, 1.0f }, { 0.0f, 0.0f, -1.0f }, { 0.0f, 1.0f, 0.0f }).Transpose();
 
     D3D11_SUBRESOURCE_DATA data;
     data.pSysMem = &(b.worldMatrix);

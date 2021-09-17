@@ -46,12 +46,12 @@ bool RMesh::CreateVertexBuffer(const std::vector<simple_vertex_t>& vertices, mes
     }
 }
 
-bool RMesh::CreateIndexBuffer(const std::vector<size_t>& indices, mesh_t& mesh)
+bool RMesh::CreateIndexBuffer(const std::vector<UINT>& indices, mesh_t& mesh)
 {
     D3D11_BUFFER_DESC indexBufferDesc;
     ZeroMemory(&indexBufferDesc, sizeof(D3D11_BUFFER_DESC));
 
-    indexBufferDesc.ByteWidth = static_cast<UINT>(sizeof(size_t) * indices.size());
+    indexBufferDesc.ByteWidth = sizeof(UINT) * (UINT)indices.size();
     indexBufferDesc.Usage = D3D11_USAGE::D3D11_USAGE_DEFAULT;
     indexBufferDesc.BindFlags = D3D11_BIND_FLAG::D3D11_BIND_INDEX_BUFFER;
     indexBufferDesc.CPUAccessFlags = 0;
@@ -202,7 +202,7 @@ bool RMesh::Create(const std::string& filename)
         submesh.materialID = aimesh->mMaterialIndex;
 
         std::vector<simple_vertex_t> vertices;
-        std::vector<size_t> indices;
+        std::vector<UINT> indices;
         vertices.reserve(aimesh->mNumVertices);
         indices.reserve(size_t(aimesh->mNumFaces) * 3);
 
@@ -232,8 +232,12 @@ bool RMesh::Create(const std::string& filename)
         for (unsigned int f = 0; f < aimesh->mNumFaces; f++)
         {
             const aiFace face = aimesh->mFaces[f];
-            for (unsigned int id = 0; id < 3; id++)
-                indices.push_back(face.mIndices[id]);
+
+            if (face.mNumIndices == 3)
+            {
+                for (unsigned int id = 0; id < 3; id++)
+                    indices.push_back(face.mIndices[id]);
+            }
         }
 
         //Create vertex and indexbuffer

@@ -57,7 +57,7 @@ private:
 
 private:
 	bool CreateVertexBuffer(const std::vector<simple_vertex_t>& vertices, mesh_t& mesh);
-	bool CreateIndexBuffer(const std::vector<size_t>& indices, mesh_t& mesh);
+	bool CreateIndexBuffer(const std::vector<UINT>& indices, mesh_t& mesh);
 	void AddTextures(material_t& mat, const aiMaterial* aiMat);
 
 public:
