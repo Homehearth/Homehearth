@@ -2,6 +2,7 @@
 #include "Engine.h"
 #include <omp.h>
 #include "BackBuffer.h"
+#include "MeshRenderObject.h"
 
 #include "RMesh.h"
 
@@ -19,6 +20,7 @@ Engine::Engine()
 void Engine::Setup() {
 #ifdef _DEBUG
     //RedirectIoToConsole();
+
 #endif
     //RedirectIoToConsole();
 
@@ -212,6 +214,16 @@ void Engine::Update(float dt)
     // Handle events enqueued
     //Scene::GetEventDispatcher().update();
 
+    Backbuffer::GetBuffers()->GetBuffer(0)->clear();
+    for (int i = 0; i < 10; i++)
+    {
+        /*
+            Minnesläckor kommer härifrån
+        */
+        //MeshRenderObject* newObject = new MeshRenderObject();
+        //Backbuffer::GetBuffers()->GetBuffer(0)->push_back(newObject);
+    }
+
     if (!Backbuffer::GetBuffers()->IsSwapped())
     {
         Backbuffer::GetBuffers()->SwapBuffers();
@@ -225,6 +237,13 @@ void Engine::Render(float& dt)
     if (m_currentScene)
     {
         m_currentScene->Render();
+    }
+
+    for (int i = 0; i < 10; i++)
+    {
+        //std::vector<RenderableObject*>* pointer = Backbuffer::GetBuffers()->GetBuffer(1);
+       
+        //delete Backbuffer::GetBuffers()->GetBuffer(1)->at(i);
     }
 
     const std::string fps = "Render FPS: " + std::to_string(1.0f / m_frameTime.render)

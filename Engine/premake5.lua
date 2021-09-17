@@ -53,7 +53,7 @@ project "Engine"
 		["src/Objects"] = {"**RenderableObject.*", "**MeshRenderObject.*"},
 
         ["src/Resources"] = { "**ResourceManager.*", "**GResource.*", "**RTexture.*", "**RMesh.*" },
-            ["src/Resources/Shaders"] = { "**.hhlsl", "**.hlsli" },
+            ["src/Resources/Shaders"] = { "**.hlsl", "**.hlsli" },
 
 		["src/Structures"] = { "**VertexStructure.*" },
 

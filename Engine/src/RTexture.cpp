@@ -8,6 +8,8 @@ RTexture::~RTexture()
 {
 	if(m_texture)
 		m_texture->Release();
+	if (m_shaderView)
+		m_shaderView->Release();
 }
 
 bool RTexture::Create(const std::string& filename)
@@ -51,8 +53,20 @@ bool RTexture::Create(const std::string& filename)
 		return false;
 	}
 
+	hr = D3D11Core::Get().Device()->CreateShaderResourceView(m_texture, 0, &m_shaderView);
+	if (FAILED(hr))
+	{
+		LOG_WARNING("[Texture2D] Failed to create ShaderResourceView!\n");
+		return false;
+	}
+
 	stbi_image_free(image);
 	return true;
+}
+
+ID3D11ShaderResourceView*& RTexture::GetShaderView()
+{
+	return m_shaderView;
 }
 
 RBitMap::~RBitMap()

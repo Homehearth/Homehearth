@@ -6,6 +6,7 @@ class RTexture : public resource::GResource
 {
 private:
 	ID3D11Texture2D* m_texture = nullptr;
+	ID3D11ShaderResourceView* m_shaderView = nullptr;
 
 public:
 
@@ -14,6 +15,7 @@ public:
 
 	// Inherited via GResource
 	virtual bool Create(const std::string& filename) override;
+	ID3D11ShaderResourceView*& GetShaderView();
 };
 
 class RBitMap : public resource::GResource

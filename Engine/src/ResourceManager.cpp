@@ -47,7 +47,7 @@ void ResourceManager::RemoveResource(const std::string& resource_name)
 	{
 		if (f->second != nullptr)
 		{
-			f->second->DecreaseRef();
+			f->second->Release();
 			if (f->second->GetRef() <= 0)
 			{
 #ifdef _DEBUG

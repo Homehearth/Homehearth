@@ -10,5 +10,7 @@ private:
 
 public:
 
+	virtual ~RenderableObject() {};
+
 	virtual void Render() = 0;
 };

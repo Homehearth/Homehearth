@@ -19,11 +19,18 @@ namespace resource
 		/*
 			Decrease the reference counter for this Resource.
 		*/
-		void DecreaseRef();
+		void Release();
 
 		/*
 			Returns the current reference counter for this Resource.
 		*/
 		const unsigned int GetRef() const;
 	};
+
+	/*
+		Release the pointer to a Resource.
+		This will decrease the reference counter and set
+		the pointer to nullptr.
+	*/
+	void SafeRelease(GResource* pointer);
 }
