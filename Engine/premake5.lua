@@ -43,7 +43,6 @@ project "Engine"
             ["src/Engine/Thread"] = { "**multi_thread_manager.*", "**ThreadSyncer.*"},
 
         ["src/Engine"] = {  },
-            ["src/Engine/Graphics"] = {"**BufferStructs.*"},
             ["src/Engine/Graphics/Renderer"] = {"**Renderer.*"},
             ["src/Engine/Graphics/D3D11"] = { "**D3D11Core.*" },
 			["src/Engine/Graphics/D2D1"] = { "**D2D1Core.*" },

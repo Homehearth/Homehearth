@@ -18,12 +18,8 @@ Game::Game()
 	m_engine.SetScene(demo);
 
 	//Testing to load in model in the resource manager
-	entt::entity entity = demo.CreateEntity();
-	comp::Transform& transform = demo.AddComponent<comp::Transform>(entity);
-	demo.AddComponent<comp::Mesh>(entity).mesh = ResourceManager::GetResource<RMesh>("Monster.fbx");
-
+	ResourceManager::GetResource<RMesh>("Monster.fbx");
 	ResourceManager::GetResource<RMesh>("Cube.fbx");
-
 
 }
 
