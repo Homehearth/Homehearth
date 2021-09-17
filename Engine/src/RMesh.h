@@ -33,7 +33,7 @@ private:
 
 private:
 	bool CreateVertexBuffer(const std::vector<simple_vertex_t>& vertices);
-	bool CreateIndexBuffer(const std::vector<size_t>& indices);
+	bool CreateIndexBuffer(const std::vector<UINT>& indices);
 
 public:
 	RMesh();

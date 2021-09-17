@@ -3,7 +3,15 @@
 
 RMaterial::RMaterial()
 {
+    m_name = "";
+    m_ambient  = {};
+    m_diffuse  = {};
+    m_specular = {};
+    m_shiniess = 0.0f;
+    m_opacity = 1.0f;
 
+    for (UINT i = 0; i < (UINT)ETextureType::length; i++)
+        m_textures[i] = nullptr;
 }
 
 RMaterial::~RMaterial()
@@ -44,7 +52,7 @@ void RMaterial::LoadMaterial(aiMaterial* aiMat)
     float shiniess;
     aiMat->Get(AI_MATKEY_SHININESS, shiniess);
     
-    //m_shiniess = shiniess;
+    m_shiniess = shiniess;
     
    
 

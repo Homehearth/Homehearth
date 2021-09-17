@@ -13,14 +13,13 @@ private:
 		length
 	};
 
-	std::string m_name		= "";
-
-	sm::Vector3 m_ambient	= {};
-	sm::Vector3 m_diffuse	= {};
-	sm::Vector3 m_specular	= {};
-	float       m_shiniess  = 0;
-	float		m_opacity	= 1;  //?
-	RTexture*   m_textures[uint8_t(ETextureType::length)] = { nullptr };
+	std::string m_name;
+	sm::Vector3 m_ambient;
+	sm::Vector3 m_diffuse;
+	sm::Vector3 m_specular;
+	float       m_shiniess;
+	float		m_opacity;
+	RTexture*   m_textures[UINT(ETextureType::length)];
 	
 private:
 	sm::Vector3 ConvertAI3D(const aiVector3D& aivec);
