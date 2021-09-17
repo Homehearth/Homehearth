@@ -2,7 +2,7 @@
 #include "Camera.h"
 
 Camera::Camera(sm::Vector3 pos, sm::Vector3 target, sm::Vector3 up, sm::Vector2 windowSize)
-    :m_position(pos), m_target(target), m_up(up), m_windowHeight(windowSize.x), m_windowWidth(windowSize.y)
+    :m_position(pos), m_target(target), m_up(up), m_windowHeight(windowSize.x), m_windowWidth(windowSize.y), m_rollPitchYaw(0,0,0)
 {
     m_FOV = 0.4f * 3.14f;
     m_aspectRatio = m_windowWidth / m_windowHeight;
@@ -11,6 +11,14 @@ Camera::Camera(sm::Vector3 pos, sm::Vector3 target, sm::Vector3 up, sm::Vector2 
 
     m_view = dx::XMMatrixLookAtLH(m_position, m_target, m_up);
     m_projection = dx::XMMatrixPerspectiveFovLH(m_FOV, m_windowWidth / m_windowHeight, m_nearPlane, m_farPlane);
+}
+
+void Camera::Update(float deltaTime)
+{
+    m_view = dx::XMMatrixLookAtLH(m_position, m_target, m_up);
+    m_rotation = dx::XMMatrixRotationRollPitchYaw(m_rollPitchYaw.y, m_rollPitchYaw.z, m_rollPitchYaw.x);
+
+    quaterion = sm::Quaternion::CreateFromYawPitchRoll(m_rollPitchYaw.z, m_rollPitchYaw.y, m_rollPitchYaw.x);
 }
 
 sm::Matrix Camera::GetView()

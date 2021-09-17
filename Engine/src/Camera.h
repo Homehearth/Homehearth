@@ -12,15 +12,20 @@ private:
 	sm::Vector3 m_right;
 	sm::Vector3 m_up;
 	sm::Vector3 m_target;
+	sm::Vector3 m_rollPitchYaw;
 
 	dx::XMMATRIX m_view;
 	dx::XMMATRIX m_projection;
+	dx::XMMATRIX m_rotation;
+
 	float m_FOV;
 	float m_nearPlane;
 	float m_farPlane;
 	float m_windowHeight;
 	float m_windowWidth;
 	float m_aspectRatio;
+
+	sm::Quaternion quaterion;
 
 public:
 	/* Position, Target, up, windowSize = (window height, window width) */
