@@ -63,10 +63,7 @@ private:
 	};
 	
 	// Forward-Rendering Technique.
-	struct PerFrame {};
-	struct PerObject {};
-	struct FullScreenVertexBuffer {};
-	struct DefaultVertexBuffer {};
+	struct fullscreen_t {};
 	
 	void SetPipelineState();
 
