@@ -43,14 +43,15 @@ project "Engine"
             ["src/Engine/Thread"] = { "**multi_thread_manager.*", "**ThreadSyncer.*"},
 
         ["src/Engine"] = {  },
-            ["src/Engine/Graphics/Renderer"] = {"**Renderer.*"},
+            ["src/Engine/Graphics/Renderer"] = {"**Renderer.*", "**Backbuffer.*"},
             ["src/Engine/Graphics/D3D11"] = { "**D3D11Core.*" },
 			["src/Engine/Graphics/D2D1"] = { "**D2D1Core.*" },
+			["src/Engine/Objects"] = { "**RenderableObject.*", "**MeshRenderObject.*" },
 			
 			["src/Network"] = { "**Client.*" },
 
         ["src/Engine/Resources"] = { "**ResourceManager.*", "**GResource.*", "**RMesh.*", "**RTexture.*" },
-            ["src/Engine/Resources/Shaders"] = { "**.hhlsl", "**.hlsli" },
+            ["src/Engine/Resources/Shaders"] = { "**.hlsl", "**.hlsli" },
 
         ["src/Engine/Audio"] = {  },
         ["src/Engine/Physics"] = {  },

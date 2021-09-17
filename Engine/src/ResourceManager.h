@@ -2,8 +2,8 @@
 #include "GResource.h"
 
 /*
-	Discuss: 
-	* namespace resource? (was used previously) 
+	Discuss:
+	* namespace resource? (was used previously)
 	* Necessary/good to have?
 */
 
@@ -29,6 +29,19 @@ public:
 		Please do not delete any pointers placed into the resource manager.
 	*/
 	static void Destroy();
+
+	/*
+		Decreases the reference count toward the resource with
+		name "resource_name". If this reference count is equal to 0
+		then the resource will be removed from the system.
+	*/
+	static void RemoveResource(const std::string& resource_name);
+
+	/*
+		Register a resource to the resource manager. A reference will be added
+		onto the resource.
+	*/
+	static void InsertResource(const std::string& resource_name, resource::GResource* resource);
 
 	/*
 		Retrieve any resource with the name (resource_name).
@@ -62,6 +75,8 @@ inline T* ResourceManager::GetResource(const std::string& resource_name)
 		//Create the new resource and if it was a success, add it to the resources
 		if (resource->Create(resource_name))
 		{
+			resource->AddRef();
+			ResourceManager::m_instance->m_resources.emplace(resource_name, resource);
 			ResourceManager::m_instance->m_resources[resource_name] = resource;
 			return dynamic_cast<T*>(resource);
 		}
