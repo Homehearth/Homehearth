@@ -12,7 +12,6 @@ Engine::Engine()
 	, m_currentScene(nullptr)
 	, m_vSync(false)
 	, m_frameTime()
-	, m_buffPointer(nullptr)
 {
 	LOG_INFO("Engine(): " __TIMESTAMP__);
 }
@@ -39,13 +38,6 @@ void Engine::Startup()
 
 	// Thread should be launched after s_engineRunning is set to true and D3D11 is initalized.
 	s_engineRunning = true;
-
-	// Preallocate space for Triplebuffer
-	m_drawBuffers.AllocateBuffers();
-	m_buffPointer = m_drawBuffers.GetBuffer(0);
-	m_buffPointer->reserve(200);
-	m_buffPointer = m_drawBuffers.GetBuffer(1);
-	m_buffPointer->reserve(200);
 
 	if (m_client.Connect("127.0.0.1", 4950))
 	{
@@ -213,10 +205,7 @@ void Engine::RenderThread()
 		deltaTime = static_cast<float>(currentFrame - lastFrame);
 		if (deltaSum >= targetDelta)
 		{
-			if (m_drawBuffers.IsSwapped())
-			{
-				Render(deltaSum);
-			}
+			Render(deltaSum);
 
 			m_frameTime.render = deltaSum;
 			deltaSum = 0.f;
@@ -231,7 +220,6 @@ void Engine::RenderThread()
 
 void Engine::Update(float dt)
 {
-	m_buffPointer = m_drawBuffers.GetBuffer(0);
 	// Update the camera transform based on interactive inputs.
 	//updateCamera(dt);
 
@@ -247,10 +235,12 @@ void Engine::Update(float dt)
 	// Handle events enqueued
 	//Scene::GetEventDispatcher().update();
 
+	/*
 	if (!m_drawBuffers.IsSwapped())
 	{
 		m_drawBuffers.SwapBuffers();
 	}
+	*/
 }
 
 void Engine::Render(float& dt)
@@ -275,7 +265,7 @@ void Engine::Render(float& dt)
 	/*
 		Kanske v�nta p� att uppdateringstr�den kan swappa buffrar.
 	*/
-	m_drawBuffers.ReadySwap();
+	//m_drawBuffers.ReadySwap();
 	D2D1Core::Present();
 	D3D11Core::Get().SwapChain()->Present(1, 0);
 	m_renderer.ClearScreen();
