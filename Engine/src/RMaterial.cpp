@@ -18,15 +18,6 @@ RMaterial::~RMaterial()
 {
 }
 
-sm::Vector3 RMaterial::ConvertAI3D(const aiVector3D& aivec)
-{
-    sm::Vector3 vec = {};
-    vec.x = aivec.x;
-    vec.y = aivec.y;
-    vec.z = aivec.z;
-    return vec;
-}
-
 void RMaterial::UploadToGPU()
 {
     //Upload the material to some kind of constantbuffer?
@@ -37,24 +28,10 @@ void RMaterial::LoadMaterial(aiMaterial* aiMat)
     /*
         Load in material numbers
     */
-    aiVector3D ambient;
-    if (AI_SUCCESS == aiMat->Get(AI_MATKEY_COLOR_AMBIENT, ambient))
-        m_ambient = ConvertAI3D(ambient);
-    
-    aiVector3D diffuse;
-    if (AI_SUCCESS == aiMat->Get(AI_MATKEY_COLOR_DIFFUSE, m_diffuse))
-        m_diffuse = ConvertAI3D(diffuse);
-    
-    aiVector3D specular;
-    if (AI_SUCCESS == aiMat->Get(AI_MATKEY_COLOR_SPECULAR, m_specular))
-        m_specular = ConvertAI3D(specular);
-
-    float shiniess;
-    aiMat->Get(AI_MATKEY_SHININESS, shiniess);
-    
-    m_shiniess = shiniess;
-    
-   
+    aiMat->Get(AI_MATKEY_COLOR_AMBIENT, m_ambient);
+    aiMat->Get(AI_MATKEY_COLOR_DIFFUSE, m_diffuse);
+    aiMat->Get(AI_MATKEY_COLOR_SPECULAR, m_specular);
+    aiMat->Get(AI_MATKEY_SHININESS, m_shiniess);
 
     /*
         Load in textures

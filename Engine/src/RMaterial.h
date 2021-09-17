@@ -1,17 +1,23 @@
 #pragma once
 #include "RTexture.h"
 
+/*
+	TODO:
+	* Load in mlt-files
+*/
+
 class RMaterial : public resource::GResource
 {
 private:
 	enum class ETextureType
 	{
-		diffuse,
+		diffuse,	//Albedo
 		normal,
 		metalness,
 		roughness,
 		length
 	};
+	//Add ambient occlution map
 
 	std::string m_name;
 	sm::Vector3 m_ambient;
@@ -21,9 +27,6 @@ private:
 	float		m_opacity;
 	RTexture*   m_textures[UINT(ETextureType::length)];
 	
-private:
-	sm::Vector3 ConvertAI3D(const aiVector3D& aivec);
-
 public:
 	RMaterial();
 	~RMaterial();

@@ -146,6 +146,7 @@ bool RMesh::Create(const std::string& filename)
         //Material was not loaded before
         if (!m_material)
         {
+            m_material = new RMaterial();
             m_material->LoadMaterial(scene->mMaterials[0]);
             ResourceManager::InsertResource(name, m_material);
         }

@@ -55,16 +55,10 @@ void ResourceManager::RemoveResource(const std::string& resource_name)
 
 void ResourceManager::InsertResource(const std::string& resource_name, resource::GResource* resource)
 {
-	//Check if the resource exists
-	auto f = ResourceManager::m_instance->m_resources.find(resource_name);
-	if (f != ResourceManager::m_instance->m_resources.end())
+	//Only insert resources that does not exist
+	if (ResourceManager::m_instance->m_resources.find(resource_name) == ResourceManager::m_instance->m_resources.end())
 	{
 		resource->AddRef();
 		ResourceManager::m_instance->m_resources.emplace(resource_name, resource);
-	}
-	else
-	{
-		std::string warning = "[ResourceManager] A resource with the name: '" + resource_name + "' already exists.";
-		LOG_WARNING(warning.c_str());
 	}
 }
