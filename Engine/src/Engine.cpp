@@ -121,8 +121,14 @@ void Engine::Run()
 	// Wait for the rendering thread to exit its last render cycle and shutdown.
 #ifdef _DEBUG
 	while (!s_safeExit) {};
+
+	// ImGUI Shutdown
+	ImGui_ImplDX11_Shutdown();
+	ImGui_ImplWin32_Shutdown();
+	ImGui::DestroyContext();
 #endif
 
+	
     T_DESTROY();
     ResourceManager::Destroy();
     D2D1Core::Destroy();
@@ -130,13 +136,7 @@ void Engine::Run()
 
 void Engine::Shutdown()
 {
-	s_engineRunning = false;
-
-	// ImGUI Shutdown
-	ImGui_ImplDX11_Shutdown();
-	ImGui_ImplWin32_Shutdown();
-	ImGui::DestroyContext();
-	
+	s_engineRunning = false;	
 }
 
 Scene& Engine::GetScene(const std::string& name)
