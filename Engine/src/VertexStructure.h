@@ -1,6 +1,4 @@
 #pragma once
-namespace dx = DirectX;
-namespace sm = DirectX::SimpleMath;
 
 /*
 	Basic objects like static meshes

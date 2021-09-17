@@ -55,6 +55,8 @@ namespace dx = DirectX;
 #include <Audio.h>
 namespace sm = dx::SimpleMath;
 
+// entt (ECS library)
+#include <entt.hpp>
 
 // imGUI
 #include <imgui.h>
@@ -78,7 +80,6 @@ namespace sm = dx::SimpleMath;
 #include "D2D1Core.h"
 #include "Profiler.h"
 #include "ThreadSyncer.h"
-
 
 // Network
 #include "network.h"
