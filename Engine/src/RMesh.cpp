@@ -13,13 +13,12 @@ RMesh::~RMesh()
     m_meshes.clear();
 }
 
-
-bool RMesh::CreateVertexBuffer(const simple_vertex_t* data, const size_t& size, mesh_t& mesh)
+bool RMesh::CreateVertexBuffer(const std::vector<simple_vertex_t>& vertices, mesh_t& mesh)
 {
     D3D11_BUFFER_DESC bufferDesc;
     ZeroMemory(&bufferDesc, sizeof(D3D11_BUFFER_DESC));
 
-    bufferDesc.ByteWidth = static_cast<UINT>(sizeof(simple_vertex_t) * size);
+    bufferDesc.ByteWidth = static_cast<UINT>(sizeof(simple_vertex_t) * vertices.size());
     bufferDesc.Usage = D3D11_USAGE::D3D11_USAGE_DEFAULT;
     bufferDesc.BindFlags = D3D11_BIND_FLAG::D3D11_BIND_VERTEX_BUFFER;
     bufferDesc.CPUAccessFlags = 0;
@@ -29,7 +28,7 @@ bool RMesh::CreateVertexBuffer(const simple_vertex_t* data, const size_t& size, 
     D3D11_SUBRESOURCE_DATA subresData;
     ZeroMemory(&subresData, sizeof(D3D11_SUBRESOURCE_DATA));
 
-    subresData.pSysMem = data;
+    subresData.pSysMem = &vertices[0];
     subresData.SysMemPitch = 0;
     subresData.SysMemSlicePitch = 0;
 
@@ -47,12 +46,12 @@ bool RMesh::CreateVertexBuffer(const simple_vertex_t* data, const size_t& size, 
     }
 }
 
-bool RMesh::CreateIndexBuffer(const size_t* data, const size_t& size, mesh_t& mesh)
+bool RMesh::CreateIndexBuffer(const std::vector<size_t>& indices, mesh_t& mesh)
 {
     D3D11_BUFFER_DESC indexBufferDesc;
     ZeroMemory(&indexBufferDesc, sizeof(D3D11_BUFFER_DESC));
 
-    indexBufferDesc.ByteWidth = static_cast<UINT>(size);
+    indexBufferDesc.ByteWidth = static_cast<UINT>(sizeof(size_t) * indices.size());
     indexBufferDesc.Usage = D3D11_USAGE::D3D11_USAGE_DEFAULT;
     indexBufferDesc.BindFlags = D3D11_BIND_FLAG::D3D11_BIND_INDEX_BUFFER;
     indexBufferDesc.CPUAccessFlags = 0;
@@ -61,7 +60,7 @@ bool RMesh::CreateIndexBuffer(const size_t* data, const size_t& size, mesh_t& me
     D3D11_SUBRESOURCE_DATA subresData;
     ZeroMemory(&subresData, sizeof(D3D11_SUBRESOURCE_DATA));
 
-    subresData.pSysMem = data;
+    subresData.pSysMem = &indices[0];
     subresData.SysMemPitch = 0;
     subresData.SysMemSlicePitch = 0;
 
@@ -71,7 +70,7 @@ bool RMesh::CreateIndexBuffer(const size_t* data, const size_t& size, mesh_t& me
     if (!FAILED(hr))
     {
         mesh.indexBuffer = indexBuffer;
-        mesh.indexCount = (uint32_t)size;
+        mesh.indexCount = (UINT)indices.size();
         return true;
     }
     else
@@ -96,7 +95,7 @@ void RMesh::AddTextures(material_t& mat, const aiMaterial* aiMat)
     {
         aiString path;
         std::string filename = "";
-        
+
         //Get the filepath from Assimp
         if (AI_SUCCESS == aiMat->GetTexture(type.second, 0, &path))
         {
@@ -115,33 +114,32 @@ void RMesh::AddTextures(material_t& mat, const aiMaterial* aiMat)
 
 void RMesh::Render()
 {
-	//uint16_t currentMat = -1;
+    //uint16_t currentMat = -1;
     UINT stride = sizeof(simple_vertex_t);
     UINT offset = 0;
 
-	//For every submesh if it exists
-	for (size_t m = 0; m < m_meshes.size(); m++)
-	{
+    //For every submesh if it exists
+    for (size_t m = 0; m < m_meshes.size(); m++)
+    {
         //TODO: Fix rendering with materials
-		//Switch material if needed
+        //Switch material if needed
         /*
             if (currentMat != m_meshes[m].materialID)
-		    {
-			    currentMat = m_meshes[m].materialID;
-                
+            {
+                currentMat = m_meshes[m].materialID;
+
                 Set the materialbuffer
                 D3D11Core::Get().DeviceContext()->
-
                 m_materials[currentMat].ambient   //Go get the vector3
                 m_materials[currentMat].textures[ETextureType::diffuse] to get the pointer to the texture
             }
         */
 
-		//Draw with indexbuffer
+        //Draw with indexbuffer
         D3D11Core::Get().DeviceContext()->IASetVertexBuffers(0, 1, m_meshes[m].vertexBuffer.GetAddressOf(), &stride, &offset);
         D3D11Core::Get().DeviceContext()->IASetIndexBuffer(m_meshes[m].indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
         D3D11Core::Get().DeviceContext()->DrawIndexed(m_meshes[m].indexCount, 0, 0);
-	}
+    }
 }
 
 bool RMesh::Create(const std::string& filename)
@@ -152,11 +150,11 @@ bool RMesh::Create(const std::string& filename)
     const aiScene* scene = importer.ReadFile
     (
         filepath,
-        aiProcess_Triangulate           |   //Triangulate every surface
+        aiProcess_Triangulate |   //Triangulate every surface
         aiProcess_JoinIdenticalVertices |   //Ignores identical veritices - memory saving  
-        aiProcess_FlipWindingOrder      |   //Makes it clockwise order
-        aiProcess_MakeLeftHanded        |	//Use a lefthanded system for the models 
-        aiProcess_CalcTangentSpace      |   //Fix tangents and bitangents automatic for us
+        aiProcess_FlipWindingOrder |   //Makes it clockwise order
+        aiProcess_MakeLeftHanded |	//Use a lefthanded system for the models 
+        aiProcess_CalcTangentSpace |   //Fix tangents and bitangents automatic for us
         aiProcess_FlipUVs                   //Flips the textures to fit directX-style
     );
 
@@ -187,8 +185,8 @@ bool RMesh::Create(const std::string& filename)
         //Basic float3-values
         aiMat->Get(AI_MATKEY_COLOR_AMBIENT, mat.ambient);
         aiMat->Get(AI_MATKEY_COLOR_DIFFUSE, mat.diffuse);
-        aiMat->Get(AI_MATKEY_COLOR_SPECULAR,mat.specular);
-        aiMat->Get(AI_MATKEY_SHININESS,     mat.shiniess);
+        aiMat->Get(AI_MATKEY_COLOR_SPECULAR, mat.specular);
+        aiMat->Get(AI_MATKEY_SHININESS, mat.shiniess);
 
         //Check what types of textures that exist and add them to a map
         AddTextures(mat, aiMat);
@@ -239,8 +237,8 @@ bool RMesh::Create(const std::string& filename)
         }
 
         //Create vertex and indexbuffer
-        if (!CreateVertexBuffer(&vertices[0], vertices.size(), submesh) ||
-            !CreateIndexBuffer(&indices[0], indices.size(), submesh))
+        if (!CreateVertexBuffer(vertices, submesh) ||
+            !CreateIndexBuffer(indices, submesh))
         {
             LOG_WARNING("Failed to load vertex- or indexbuffer...");
             vertices.clear();

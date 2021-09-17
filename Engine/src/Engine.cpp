@@ -46,8 +46,9 @@ void Engine::Startup()
 
 	ResourceManager::GetResource<RMesh>("Monster.fbx");
 	ResourceManager::GetResource<RMesh>("Cube.fbx");
+	ResourceManager::GetResource<RMesh>("geo_house2.obj");
 
-	meshLOLXD = new MeshRenderObject(ResourceManager::GetResource<RMesh>("Cube.fbx"));
+	meshLOLXD = new MeshRenderObject(ResourceManager::GetResource<RMesh>("geo_house2.obj"));
 
 	// Thread should be launched after s_engineRunning is set to true and D3D11 is initalized.
 	s_engineRunning = true;
@@ -242,10 +243,12 @@ void Engine::Update(float dt)
 	// Update positions, orientations and any other
 	// relevant visual state of any dynamic elements
 	// in the scene.
+	/*
 	if (m_currentScene)
 	{
 		m_currentScene->Update(dt);
 	}
+	*/
 
 	//std::cout << "Y: " << y++ << "\n";
 	// Handle events enqueued
@@ -272,18 +275,19 @@ void Engine::Render(float& dt)
 	}
 	*/
 
+	
+
 	debugCamera.UpdateDOOM();
 	debugCamera.Render();
 
 	Backbuffer::GetBuffers()->GetBuffer(1)->at(0)->Render();
 	//meshLOLXD->Render();
 
-
-    const std::string fps = "Render FPS: " + std::to_string(1.0f / m_frameTime.render)
-        + "\nUpdate FPS: " + std::to_string(1.0f / m_frameTime.update)
-        + "\nRAM: " + std::to_string(Profiler::GetRAMUsage() / (1024.f * 1024.f)) + " MB"
-        + "\nVRAM: " + std::to_string(Profiler::GetVRAMUsage() / (1042.f * 1024.f)) + " MB";
-    //D2D1Core::DrawT(fps, &m_window);
+	const std::string fps = "Render FPS: " + std::to_string(1.0f / m_frameTime.render)
+		+ "\nUpdate FPS: " + std::to_string(1.0f / m_frameTime.update)
+		+ "\nRAM: " + std::to_string(Profiler::GetRAMUsage() / (1024.f * 1024.f)) + " MB"
+		+ "\nVRAM: " + std::to_string(Profiler::GetVRAMUsage() / (1042.f * 1024.f)) + " MB";
+	//D2D1Core::DrawT(fps, &m_window);
 
 	/*
 		Present the final image and clear it for next frame.
@@ -294,7 +298,8 @@ void Engine::Render(float& dt)
 	*/
 	//D2D1Core::Present();
 	D3D11Core::Get().SwapChain()->Present(1, 0);
-	//Backbuffer::GetBuffers()->ReadySwap();
+
+	Backbuffer::GetBuffers()->ReadySwap();
 
 }
 
