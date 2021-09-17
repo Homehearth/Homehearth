@@ -1,5 +1,13 @@
 #pragma once
 
+/*
+	Used for default rendering, sets the object position 
+	at origo.
+*/
+struct BasicModelMatrix
+{
+	sm::Matrix worldMatrix;
+};
 
 class Renderer
 {
@@ -13,6 +21,7 @@ public:
 	{
 		const FLOAT color[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
 		D3D11Core::Get().DeviceContext()->ClearRenderTargetView(this->renderTargetView.Get(), color);
+		D3D11Core::Get().DeviceContext()->ClearDepthStencilView(this->depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 	}
 	
 	void BeginFrame()
@@ -24,7 +33,7 @@ public:
 	{
 		
 	}
-
+	void SetPipelineState();
 private:
 	Window* m_window;
 	D3D11Core * m_d3d11;
@@ -65,7 +74,7 @@ private:
 	// Forward-Rendering Technique.
 	struct fullscreen_t {};
 	
-	void SetPipelineState();
+	
 
 
 	// Temporary to not get any errors.
@@ -97,5 +106,17 @@ private:
 	};
 
 	std::vector<PipelineState> pipelineStates;
+
+private:
+
+	ComPtr<ID3D11InputLayout> m_defaultLayout;
+	ComPtr<ID3D11Buffer> m_defaultcBuffer;
+	ComPtr<ID3D11VertexShader> m_defaultVertexShader;
+	ComPtr<ID3D11PixelShader> m_defaultPixelShader;
+	std::string shaderByteCode;
+
+	bool CreateDefaultLayout();
+	bool CreateDefaultcBuffer();
+	bool CreateDefaultShaders();
 };
 

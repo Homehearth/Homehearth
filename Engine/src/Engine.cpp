@@ -1,8 +1,10 @@
 ﻿#include "EnginePCH.h"
 #include "Engine.h"
 #include <omp.h>
+#include "BackBuffer.h"
 
 #include "RMesh.h"
+
 
 bool Engine::s_engineRunning = false;
 bool Engine::s_safeExit = false;
@@ -21,6 +23,8 @@ void Engine::Startup()
     T_INIT(1, thread::ThreadType::POOL_FIFO);
     ResourceManager::Initialize();
     srand((unsigned int)time(NULL));
+	Backbuffer::Initialize();
+
 
 	// Window Startup:
 	Window::Desc config;
@@ -30,11 +34,20 @@ void Engine::Startup()
 		LOG_ERROR("Could not Initialize m_window.");
 	}
 
+	
+
 	// DirectX Startup:
 	D3D11Core::Get().Initialize(&m_window);
 	D2D1Core::Initialize(&m_window);
 
 	m_renderer.Initialize(&m_window);
+	//m_renderer.SetPipelineState();
+	debugCamera.Preset();
+
+	ResourceManager::GetResource<RMesh>("Monster.fbx");
+	ResourceManager::GetResource<RMesh>("Cube.fbx");
+
+	meshLOLXD = new MeshRenderObject(ResourceManager::GetResource<RMesh>("Monster.fbx"));
 
 	// Thread should be launched after s_engineRunning is set to true and D3D11 is initalized.
 	s_engineRunning = true;
@@ -117,6 +130,8 @@ void Engine::Run()
     T_DESTROY();
     ResourceManager::Destroy();
     D2D1Core::Destroy();
+	Backbuffer::Destroy();
+	delete meshLOLXD;
 }
 
 void Engine::Shutdown()
@@ -205,6 +220,7 @@ void Engine::RenderThread()
 		deltaTime = static_cast<float>(currentFrame - lastFrame);
 		if (deltaSum >= targetDelta)
 		{
+			//if(Backbuffer::GetBuffers()->IsSwapped())
 			Render(deltaSum);
 
 			m_frameTime.render = deltaSum;
@@ -235,28 +251,39 @@ void Engine::Update(float dt)
 	// Handle events enqueued
 	//Scene::GetEventDispatcher().update();
 
-	/*
-	if (!m_drawBuffers.IsSwapped())
+	Backbuffer::GetBuffers()->GetBuffer(0)->clear();
+	Backbuffer::GetBuffers()->GetBuffer(0)->push_back(meshLOLXD);
+
+	if (!Backbuffer::GetBuffers()->IsSwapped())
 	{
-		m_drawBuffers.SwapBuffers();
+		Backbuffer::GetBuffers()->SwapBuffers();
 	}
-	*/
 }
 
 void Engine::Render(float& dt)
 {
 	m_renderer.ClearScreen();
-	D2D1Core::Begin();
+	m_renderer.SetPipelineState();
+	//D2D1Core::Begin();
+	/*
 	if (m_currentScene)
 	{
 		m_currentScene->Render();
 	}
+	*/
+
+	debugCamera.UpdateDOOM();
+	debugCamera.Render();
+
+	//Backbuffer::GetBuffers()->GetBuffer(1)->at(0)->Render();
+	meshLOLXD->Render();
+
 
     const std::string fps = "Render FPS: " + std::to_string(1.0f / m_frameTime.render)
         + "\nUpdate FPS: " + std::to_string(1.0f / m_frameTime.update)
         + "\nRAM: " + std::to_string(Profiler::GetRAMUsage() / (1024.f * 1024.f)) + " MB"
         + "\nVRAM: " + std::to_string(Profiler::GetVRAMUsage() / (1042.f * 1024.f)) + " MB";
-    D2D1Core::DrawT(fps, &m_window);
+    //D2D1Core::DrawT(fps, &m_window);
 
 	/*
 		Present the final image and clear it for next frame.
@@ -265,9 +292,9 @@ void Engine::Render(float& dt)
 	/*
 		Kanske v�nta p� att uppdateringstr�den kan swappa buffrar.
 	*/
-	//m_drawBuffers.ReadySwap();
-	D2D1Core::Present();
+	//D2D1Core::Present();
 	D3D11Core::Get().SwapChain()->Present(1, 0);
-	m_renderer.ClearScreen();
+	//Backbuffer::GetBuffers()->ReadySwap();
+
 }
 

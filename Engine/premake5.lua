@@ -46,6 +46,7 @@ project "Engine"
 
         ["src/Engine"] = {  },
             ["src/Engine/Graphics/Renderer"] = {"**Renderer.*", "**BackBuffer.*"},
+			["src/Engine/Graphics/Camera"] = {"**DebugCamera.*"},
             ["src/Engine/Graphics/D3D11"] = { "**D3D11Core.*" },
 			["src/Engine/Graphics/D2D1"] = { "**D2D1Core.*" },
 			["src/Engine/Objects"] = { "**RenderableObject.*", "**MeshRenderObject.*" },

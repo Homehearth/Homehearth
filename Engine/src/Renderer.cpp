@@ -53,6 +53,15 @@ void Renderer::Initialize(Window* pWindow)
     {
         LOG_ERROR("failed creating SamplerStates.");
     }
+
+    this->CreateDefaultShaders();
+        //LOG_ERROR("failed creating default shaders.");
+
+    this->CreateDefaultLayout();
+        //LOG_ERROR("failed creating default layout.");
+
+    this->CreateDefaultcBuffer();
+        //LOG_ERROR("failed creating default cBuffer.");
 	
     // Set Viewport.
     this->SetViewport();
@@ -270,6 +279,7 @@ void Renderer::SetViewport()
 
 void Renderer::SetPipelineState()
 {
+#define CONTEXT D3D11Core::Get().DeviceContext()
 	/*
 	 * 
 
@@ -321,6 +331,93 @@ void Renderer::SetPipelineState()
         dc->OMSetDepthStencilState();
     }
 	 */
+
+
+    /*
+        Absolute default rendering.
+    */
+    CONTEXT->PSSetSamplers(0, 1, linearSamplerState.GetAddressOf());
+    CONTEXT->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    //CONTEXT->OMSetRenderTargets(1, renderTargetView.GetAddressOf(), depthStencilView.Get());
+    CONTEXT->VSSetConstantBuffers(0, 1, m_defaultcBuffer.GetAddressOf());
+    CONTEXT->IASetInputLayout(m_defaultLayout.Get());
+    CONTEXT->VSSetShader(m_defaultVertexShader.Get(), nullptr, NULL);
+    CONTEXT->PSSetShader(m_defaultPixelShader.Get(), nullptr, NULL);
+}
+
+bool Renderer::CreateDefaultLayout()
+{
+    D3D11_INPUT_ELEMENT_DESC inputDesc[] =
+    {
+        {"POSITION",    0, DXGI_FORMAT_R32G32B32_FLOAT,    0,                0,                    D3D11_INPUT_PER_VERTEX_DATA, 0},
+        {"TEXCOORD",    0, DXGI_FORMAT_R32G32_FLOAT,       0,    D3D11_APPEND_ALIGNED_ELEMENT,    D3D11_INPUT_PER_VERTEX_DATA, 0},
+        {"NORMAL",        0, DXGI_FORMAT_R32G32B32_FLOAT,    0,    D3D11_APPEND_ALIGNED_ELEMENT,    D3D11_INPUT_PER_VERTEX_DATA, 0},
+        {"TANGENT",        0, DXGI_FORMAT_R32G32B32_FLOAT,    0,    D3D11_APPEND_ALIGNED_ELEMENT,    D3D11_INPUT_PER_VERTEX_DATA, 0},
+        {"BINORMAL",        0, DXGI_FORMAT_R32G32B32_FLOAT,    0,    D3D11_APPEND_ALIGNED_ELEMENT,    D3D11_INPUT_PER_VERTEX_DATA, 0}
+    };
+
+    HRESULT hr = D3D11Core::Get().Device()->CreateInputLayout(inputDesc, ARRAYSIZE(inputDesc), shaderByteCode.c_str(), shaderByteCode.length(), &m_defaultLayout);
+
+    return !FAILED(hr);
+}
+
+bool Renderer::CreateDefaultcBuffer()
+{
+    D3D11_BUFFER_DESC bDesc;
+    bDesc.ByteWidth = sizeof(BasicModelMatrix);
+    bDesc.Usage = D3D11_USAGE_DEFAULT;
+    bDesc.CPUAccessFlags = 0;
+    bDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+    bDesc.MiscFlags = 0;
+
+    BasicModelMatrix b;
+    b.worldMatrix = sm::Matrix::CreateWorld({ 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, -1.0f }, { 0.0f, 1.0f, 0.0f });
+
+    D3D11_SUBRESOURCE_DATA data;
+    data.pSysMem = &(b.worldMatrix);
+
+    HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&bDesc, &data, m_defaultcBuffer.GetAddressOf());
+
+    return !FAILED(hr);
+}
+
+bool Renderer::CreateDefaultShaders()
+{
+
+    std::ifstream reader;
+    std::string shaderData;
+    reader.open("Model_vs.cso", std::ios::binary | std::ios::ate);
+    if (!reader.is_open())
+    {
+        std::cout << "ERROR::loadShaderData()::Could not open Model_vs.cso" << std::endl;
+        return false;
+    }
+    reader.seekg(0, std::ios::end);
+    shaderData.reserve(static_cast<unsigned int>(reader.tellg()));
+    reader.seekg(0, std::ios::beg);
+    shaderData.assign((std::istreambuf_iterator<char>(reader)), std::istreambuf_iterator<char>());
+    shaderByteCode = shaderData;
+    reader.close();
+
+    HRESULT hr = D3D11Core::Get().Device()->CreateVertexShader(shaderByteCode.c_str(), shaderByteCode.length(), nullptr, m_defaultVertexShader.GetAddressOf());
+
+    std::ifstream reader2;
+    std::string shaderData2;
+    reader2.open("Model_ps.cso", std::ios::binary | std::ios::ate);
+    if (!reader2.is_open())
+    {
+        std::cout << "ERROR::loadShaderData()::Could not open Model_ps.cso" << std::endl;
+        return false;
+    }
+    reader2.seekg(0, std::ios::end);
+    shaderData2.reserve(static_cast<unsigned int>(reader2.tellg()));
+    reader2.seekg(0, std::ios::beg);
+    shaderData2.assign((std::istreambuf_iterator<char>(reader2)), std::istreambuf_iterator<char>());
+    reader2.close();
+
+    hr = D3D11Core::Get().Device()->CreatePixelShader(shaderData2.c_str(), shaderData2.length(), nullptr, m_defaultPixelShader.GetAddressOf());
+   
+    return !FAILED(hr);
 }
 
 

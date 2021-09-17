@@ -80,7 +80,7 @@ bool D3D11Core::createDeviceAndSwapChain()
     swapChainDesc.BufferDesc.Height = this->m_window->GetHeight();
 
     // Set to a duo back buffer.
-    swapChainDesc.BufferCount = 2;
+    swapChainDesc.BufferCount = 1;
 
     // Set the refresh rate of the back buffer.
     swapChainDesc.BufferDesc.RefreshRate.Numerator = 0;
@@ -101,7 +101,7 @@ bool D3D11Core::createDeviceAndSwapChain()
     swapChainDesc.SampleDesc.Quality = 0;
 
     // Discard the contents of the back buffer after IDXGISwapChain1::Present() call.
-    swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+    swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
 
     // Set this flag to enable an application to switch modes by calling IDXGISwapChain::ResizeTarget.
     swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;

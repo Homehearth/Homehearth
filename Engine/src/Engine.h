@@ -5,6 +5,8 @@
 #include "Renderer.h"
 #include "EventTypes.h"
 #include "Client.h"
+#include "DebugCamera.h"
+#include "MeshRenderObject.h"
 
 class Engine
 {
@@ -14,6 +16,7 @@ private:
 
 	Window m_window;
 	Renderer m_renderer;
+	Camera debugCamera;
 
 	Client m_client;
 	
@@ -25,6 +28,8 @@ private:
 		float update;
 		float render;
 	} m_frameTime;
+
+	MeshRenderObject* meshLOLXD;
 	
 	// Job for rendering thread.
 	void RenderThread();
