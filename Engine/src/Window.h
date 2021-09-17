@@ -38,7 +38,7 @@ public:
     void SetWindowTextBar(const std::string& text);
 	
     HWND GetHWnd() const;
-    RECT GetClientRect() const;
+    RECT GetWindowClientRect() const;
     unsigned int GetWidth() const;
     unsigned int GetHeight() const;
     LPCWSTR GetTitle() const;
