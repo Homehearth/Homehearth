@@ -1,6 +1,20 @@
 #include "EnginePCH.h"
 #include "BackBuffer.h"
 
+/*
+	Word of advice.
+	If you make a static object inside the .h file of a singleton
+	and you get a linker error LNK2001? Make sure to define that object
+	here in the .cpp just like the instance is defined.
+
+	Ex.
+	--.H File--
+	static int x;
+	
+	--.CPP File--
+	int Backbuffer::x = 0;
+*/
+
 constexpr const size_t OBJECT_STORAGE_SIZE = 500;
 #define INSTANCE Backbuffer::instance
 Backbuffer* INSTANCE = nullptr;
@@ -34,8 +48,7 @@ void Backbuffer::Destroy()
 		delete INSTANCE;
 }
 
-std::vector<RenderableObject*>* Backbuffer::GetBuffer(int p_buffer)
+thread::DoubleBuffer<std::vector<RenderableObject*>>* Backbuffer::GetBuffers()
 {
-	std::vector<RenderableObject*>* m_bPointer = Backbuffer::m_buffers.GetBuffer(std::move(p_buffer));
-	return m_bPointer;
+	return &INSTANCE->m_buffers;
 }

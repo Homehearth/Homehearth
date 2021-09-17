@@ -24,7 +24,7 @@ void Engine::Setup() {
 
     T_INIT(1, thread::ThreadType::POOL_FIFO);
     ResourceManager::Initialize();
-    //Backbuffer::Initialize();
+    Backbuffer::Initialize();
     srand((unsigned int)time(NULL));
 
 	// Window Setup:
@@ -104,7 +104,7 @@ void Engine::Start()
 
     T_DESTROY();
     ResourceManager::Destroy();
-    //Backbuffer::Destroy();
+    Backbuffer::Destroy();
     D2D1Core::Destroy();
 }
 
@@ -177,12 +177,10 @@ void Engine::RenderThread()
         deltaTime = static_cast<float>(currentFrame - lastFrame);
         if (deltaSum >= targetDelta)
         {
-            /*
-            if (Backbuffer::m_buffers.IsSwapped())
+            if (Backbuffer::GetBuffers()->IsSwapped())
             {
                 Render(deltaSum);
             }
-            */
 
             m_frameTime.render = deltaSum;
             deltaSum = 0.f;
@@ -214,12 +212,10 @@ void Engine::Update(float dt)
     // Handle events enqueued
     //Scene::GetEventDispatcher().update();
 
-    /*
-    if (Backbuffer::m_buffers.IsSwapped())
+    if (!Backbuffer::GetBuffers()->IsSwapped())
     {
-        Backbuffer::m_buffers.SwapBuffers();
+        Backbuffer::GetBuffers()->SwapBuffers();
     }
-    */
 }
 
 void Engine::Render(float& dt)
@@ -244,7 +240,7 @@ void Engine::Render(float& dt)
     /*
         Kanske v�nta p� att uppdateringstr�den kan swappa buffrar.
     */
-    //Backbuffer::m_buffers.ReadySwap();
+    Backbuffer::GetBuffers()->ReadySwap();
     D2D1Core::Present();
     D3D11Core::Get().SwapChain()->Present(1, 0);
     m_renderer.ClearScreen();
