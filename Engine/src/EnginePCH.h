@@ -45,18 +45,25 @@
 #include <d2d1.h>
 #include <ctime>
 using Microsoft::WRL::ComPtr;
+namespace dx = DirectX;
 
 
 // DirectXTK
-#include "SimpleMath.h"
-#include "BufferHelpers.h"
+#include <SimpleMath.h>
+#include <BufferHelpers.h>
 #include <Audio.h>
+namespace sm = dx::SimpleMath;
 
 
 // imGUI
-#include "imgui.h"
-#include "imgui_impl_dx11.h"
-#include "imgui_impl_win32.h"
+#include <imgui.h>
+#include <imconfig.h>
+#include <imgui_internal.h>
+#include <imstb_rectpack.h>
+#include <imstb_textedit.h>
+#include <imstb_truetype.h>
+#include <imgui_impl_dx11.h>
+#include <imgui_impl_win32.h>
 
 
 // Custom Global includes (Singletons)
@@ -69,5 +76,14 @@ using Microsoft::WRL::ComPtr;
 #include "Profiler.h"
 #include "ThreadSyncer.h"
 
+
 // Network
 #include "network.h"
+
+
+// Assimp
+#pragma warning(push, 0)
+#include <assimp/Importer.hpp>
+#include <assimp/postprocess.h>
+#include <assimp/scene.h>
+#pragma warning(pop)

@@ -27,8 +27,9 @@ project "Engine"
         "../ThirdParty/DirectXTK/include/",
         "../ThirdParty/imGUI/",
         "../ThirdParty/stb_image/",
-        "../ThirdParty/networking/",
-        "../ThirdParty/entt/"
+		"../ThirdParty/networking/",
+        "../ThirdParty/entt/",
+        "../ThirdParty/assimp/include/"
     }
 
 
@@ -42,30 +43,34 @@ project "Engine"
             ["src/Engine/Thread"] = { "**multi_thread_manager.*", "**ThreadSyncer.*"},
 
         ["src/Engine"] = {  },
-            ["src/Engine/Graphics/Renderer"] = {"**Renderer.*"},
+            ["src/Engine/Graphics/Renderer"] = {"**Renderer.*", "**Backbuffer.*"},
             ["src/Engine/Graphics/D3D11"] = { "**D3D11Core.*" },
 			["src/Engine/Graphics/D2D1"] = { "**D2D1Core.*" },
+			["src/Engine/Objects"] = { "**RenderableObject.*", "**MeshRenderObject.*" },
 			
-			["src/Engine/Network"] = { "**Client.*" },
+			["src/Network"] = { "**Client.*" },
 
-        ["src/Engine/Resources"] = { "**ResourceManager.*", "**GResource.*", "**RTexture.*" },
+        ["src/Engine/Resources"] = { "**ResourceManager.*", "**GResource.*", "**RMesh.*", "**RTexture.*" },
             ["src/Engine/Resources/Shaders"] = { "**.hlsl", "**.hlsli" },
 
         ["src/Engine/Audio"] = {  },
         ["src/Engine/Physics"] = {  },
         ["src/Engine/Network"] = { "**Client.*" },
         ["src/Engine/Animation"] = {  },
-        ["src/Engine/ESC"] = {  }, 
-        ["src/Engine/AI"] = {  }     
+        ["src/Engine/ESC"] = { "**Components.*" }, 
+        ["src/Engine/AI"] = {  },  
+		["src/Engine/Structures"] = { "**VertexStructure.*" }  
     }
 
 
     links{
         "dxgi", -- links d3d11 d2d1 dwrite
         "DirectXTK",
-        "DirectXTKAudioWin7"
+        "DirectXTKAudioWin7",
+        "ImGui"
     }
 
+    libdirs{"../ThirdParty/imGUI/"}
 
     -- Define a macro/symbol which applies for the Windows system.
     filter {"system:windows"}
@@ -82,7 +87,7 @@ project "Engine"
         defines{"_DEBUG", "_UNICODE", "UNICODE"}
         symbols "on"
         libdirs{"../ThirdParty/DirectXTK/lib/Debug_lib/"}
-        
+
 
 
     -- Define a macro/symbol which applies only to release builds.

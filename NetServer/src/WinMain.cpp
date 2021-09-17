@@ -31,15 +31,19 @@ int CALLBACK WinMain(
 #endif
 
 	RedirectIoToConsole();
-	
+
 	Window window;
 	window.Initialize();
 	T_INIT(T_REC, thread::ThreadType::POOL_FIFO);
-	Server server;
+	
+	Server<network::MessageType> s;
+	s.Start(4950);
+
 	bool isRunning = true;
 	
 	MSG msg = { nullptr };
-	while (isRunning)
+	int i = 0;
+	while (s.IsRunning())
 	{
 		// Service any and all pending Windows messages.
 		if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
@@ -50,7 +54,7 @@ int CALLBACK WinMain(
 		}
 
 		InputEvent event;
-		while (InputSystem::Get().PollEvent(event)) 
+		while (InputSystem::Get().PollEvent(event))
 		{
 			//LOG_CONSOLE("key_state: ", event.key_state, " key_code: ", event.key_code);
 			if (event.key_code == VK_ESCAPE)
@@ -61,11 +65,9 @@ int CALLBACK WinMain(
 	}
 
 	T_DESTROY();
+
 	return 0;
 }
-
-
-
 
 void RedirectIoToConsole()
 {

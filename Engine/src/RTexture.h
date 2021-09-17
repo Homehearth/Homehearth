@@ -1,25 +1,36 @@
 #pragma once
-#include <EnginePCH.h>
+#include "GResource.h"
+#pragma once
 #include "GResource.h"
 // RTexture -> (RESOURCE)Texture
-
 
 class RTexture : public resource::GResource
 {
 private:
-
-	union Texture
-	{
-		ID3D11Texture2D* texture2D;
-		ID2D1Bitmap* bitMap;
-	}texture = {};
-	// 0 -> Texture[0] : 1 -> Texture[1]
-	int8_t active = -1;
+	ID3D11Texture2D* m_texture = nullptr;
+	ID3D11ShaderResourceView* m_shaderView = nullptr;
 
 public:
 
-	RTexture() {};
+	RTexture();
 	RTexture(const std::string&& filePath);
-	RTexture(ID2D1Bitmap* texture);
 	~RTexture();
+
+	// Inherited via GResource
+	virtual bool Create(const std::string& filename) override;
+	ID3D11ShaderResourceView*& GetShaderView();
+};
+
+class RBitMap : public resource::GResource
+{
+private:
+	ID2D1Bitmap* m_texture = nullptr;
+
+public:
+
+	RBitMap() {};
+	~RBitMap();
+	// Inherited via GResource
+	virtual bool Create(const std::string& filename) override;
+
 };

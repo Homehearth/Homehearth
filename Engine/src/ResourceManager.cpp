@@ -1,9 +1,9 @@
 #include <EnginePCH.h>
 #include "ResourceManager.h"
 #include <typeinfo>
-using namespace resource;
-#define INSTANCE ResourceManager::instance
-ResourceManager* INSTANCE = nullptr;
+
+#define INSTANCE ResourceManager::m_instance
+ResourceManager* ResourceManager::m_instance = nullptr;
 
 ResourceManager::ResourceManager()
 {
@@ -11,35 +11,63 @@ ResourceManager::ResourceManager()
 
 ResourceManager::~ResourceManager()
 {
-	for (auto it = this->resources.begin(); it != this->resources.end(); it++)
+	for (auto it = m_resources.begin(); it != m_resources.end(); it++)
 	{
 		if (it->second)
 		{
 			delete it->second;
 		}
 	}
-	this->resources.clear();
+	m_resources.clear();
 }
 
-void resource::ResourceManager::Initialize()
+void ResourceManager::Initialize()
 {
-	if (!INSTANCE)
+	if (!m_instance)
 	{
-		INSTANCE = new ResourceManager();
+		m_instance = new ResourceManager();
 	}
 }
 
-void resource::ResourceManager::Destroy()
+void ResourceManager::Destroy()
 {
-	if (INSTANCE)
-		delete INSTANCE;
+	if (m_instance)
+		delete m_instance;
 }
 
-void resource::ResourceManager::InsertResource(GResource* resource, std::string resource_name)
+void ResourceManager::RemoveResource(const std::string& resource_name)
 {
-	if (resource && INSTANCE)
+	//Check if the resource exists
+	auto f = ResourceManager::m_instance->m_resources.find(resource_name);
+
+	if (f != ResourceManager::m_instance->m_resources.end())
 	{
-		INSTANCE->resources.emplace(resource_name, resource);
+		if (f->second != nullptr)
+		{
+			f->second->Release();
+			if (f->second->GetRef() <= 0)
+			{
+#ifdef _DEBUG
+				std::cout << "Object removed: " << f->first << "\n";
+#endif
+				delete f->second;
+				INSTANCE->m_resources.erase(f);
+			}
+		}
 	}
 }
 
+void ResourceManager::InsertResource(const std::string& resource_name, resource::GResource* resource)
+{
+	//Check if the resource exists
+	auto f = ResourceManager::m_instance->m_resources.find(resource_name);
+	if (f != ResourceManager::m_instance->m_resources.end())
+	{
+		resource->AddRef();
+		INSTANCE->m_resources.emplace(resource_name, resource);
+	}
+	else
+	{
+		LOG_WARNING("[ResourceManager] A resource with the name: %s already exists.", resource_name.c_str());
+	}
+}
