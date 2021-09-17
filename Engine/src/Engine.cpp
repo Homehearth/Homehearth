@@ -47,7 +47,7 @@ void Engine::Startup()
 	ResourceManager::GetResource<RMesh>("Monster.fbx");
 	ResourceManager::GetResource<RMesh>("Cube.fbx");
 
-	meshLOLXD = new MeshRenderObject(ResourceManager::GetResource<RMesh>("Monster.fbx"));
+	meshLOLXD = new MeshRenderObject(ResourceManager::GetResource<RMesh>("Cube.fbx"));
 
 	// Thread should be launched after s_engineRunning is set to true and D3D11 is initalized.
 	s_engineRunning = true;
@@ -275,8 +275,8 @@ void Engine::Render(float& dt)
 	debugCamera.UpdateDOOM();
 	debugCamera.Render();
 
-	//Backbuffer::GetBuffers()->GetBuffer(1)->at(0)->Render();
-	meshLOLXD->Render();
+	Backbuffer::GetBuffers()->GetBuffer(1)->at(0)->Render();
+	//meshLOLXD->Render();
 
 
     const std::string fps = "Render FPS: " + std::to_string(1.0f / m_frameTime.render)

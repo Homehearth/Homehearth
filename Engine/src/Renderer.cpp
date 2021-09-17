@@ -5,6 +5,7 @@
 Renderer::Renderer()
 	: m_window(nullptr)
 	, m_d3d11(nullptr)
+    , viewport()
 {
 }
 
@@ -54,14 +55,20 @@ void Renderer::Initialize(Window* pWindow)
         LOG_ERROR("failed creating SamplerStates.");
     }
 
-    this->CreateDefaultShaders();
-        //LOG_ERROR("failed creating default shaders.");
+    if (!this->CreateDefaultShaders())
+    {
+        LOG_ERROR("failed creating default shaders.");
+    }
 
-    this->CreateDefaultLayout();
-        //LOG_ERROR("failed creating default layout.");
+    if (!this->CreateDefaultLayout())
+    {
+        LOG_ERROR("failed creating default layout.");
+    }
 
-    this->CreateDefaultcBuffer();
-        //LOG_ERROR("failed creating default cBuffer.");
+    if (!this->CreateDefaultcBuffer())
+    {
+        LOG_ERROR("failed creating default cBuffer.");
+    }
 	
     // Set Viewport.
     this->SetViewport();
