@@ -1,7 +1,8 @@
 #pragma once
 
-struct EngineEvent {
-	enum class Type {
-		SHUTDOWN
-	} type;
+struct ESceneChange
+{
+	std::string newScene;
 };
+
+struct EShutdown {};

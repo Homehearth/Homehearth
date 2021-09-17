@@ -41,6 +41,7 @@ private:
 	// Renders one frame.
 	void Render(float& dt);
 
+
 public:
 	Engine();
 	Engine(const Window& other) = delete;
@@ -63,8 +64,6 @@ public:
 	void SetScene(Scene& scene);
 
 	Window* GetWindow();
-
-	void OnEvent(EngineEvent& event);
 
 	static bool IsRunning();
 

@@ -155,34 +155,21 @@ void Engine::SetScene(Scene& scene)
 		m_currentScene->clear();
 	}
 	m_currentScene = &scene;
-	m_currentScene->on<EngineEvent>([&](const EngineEvent& e, Scene& scene)
+	
+	m_currentScene->on<EShutdown>([&](const EShutdown& e, Scene& scene)
 		{
-			switch (e.type)
-			{
-			case EngineEvent::Type::SHUTDOWN:
-				Shutdown();
-				break;
-			default:
-				break;
-			}
+			Shutdown();
+		});
+	
+	m_currentScene->on<ESceneChange>([&](const ESceneChange& e, Scene& scene)
+		{
+			SetScene(e.newScene);
 		});
 }
 
 Window* Engine::GetWindow()
 {
 	return &m_window;
-}
-
-void Engine::OnEvent(EngineEvent& event)
-{
-	switch (event.type)
-	{
-	case EngineEvent::Type::SHUTDOWN:
-		Shutdown();
-		break;
-	default:
-		break;
-	}
 }
 
 bool Engine::IsRunning()
