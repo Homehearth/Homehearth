@@ -4,9 +4,12 @@
 
 LRESULT CALLBACK Window::WinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+	if (ImGui_ImplWin32_WndProcHandler(hwnd, uMsg, wParam, lParam))
+		return true;
 	// Engine events:
 	switch (uMsg)
 	{
+		
 	case WM_NCCREATE:
 		LOG_INFO("Window has been created.");
 		break;

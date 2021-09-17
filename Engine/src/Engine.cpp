@@ -57,6 +57,7 @@ void Engine::Startup()
     //m_client = std::make_unique<Client>();
 
 #ifdef _DEBUG
+	m_IsImguiReady = false;
 	// Setup ImGUI
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -177,15 +178,61 @@ bool Engine::IsRunning()
 	return s_engineRunning;
 }
 
-void Engine::drawImGUI()
+void Engine::drawImGUI() const
 {
-	// Statistics window
-	ImGui::Begin("Statistics");
-	//const std::string frameRate = "FPS: " + std::to_string(static_cast<int>(1 / m_frameTime.render));
-	//const std::string screenRes = "Screen Resolution: " + std::to_string(m_window.GetWidth()) + "x" + std::to_string(m_window.GetHeight());
-	//ImGui::Text("%s", screenRes.c_str());
-	//ImGui::Text("%s", frameRate.c_str());
+	//Containers for plotting
+	static std::vector<float> fpsContainer;
+	static std::vector<float> fpsUpdateContainer;
+	static std::vector<float> ramUsageContainer;
+	static std::vector<float> vRamUsageContainer;
+	
+	static Timer timer;
+	
+	if(timer.getElapsedTime() > 0.5f)
+	{
+		fpsContainer.emplace_back((1 / m_frameTime.render));
+		fpsUpdateContainer.emplace_back((1.0f / m_frameTime.update));
+		ramUsageContainer.emplace_back((Profiler::GetRAMUsage() / (1024.f * 1024.f)));
+		vRamUsageContainer.emplace_back((Profiler::GetVRAMUsage() / (1042.f * 1024.f)));
+		timer.start();
+	}
+
+	if (fpsContainer.size() > 10)
+		fpsContainer.erase(fpsContainer.begin());
+
+	if (fpsUpdateContainer.size() > 10)
+		fpsUpdateContainer.erase(fpsUpdateContainer.begin());
+
+	if (ramUsageContainer.size() > 10)
+		ramUsageContainer.erase(ramUsageContainer.begin());
+
+	if (vRamUsageContainer.size() > 10)
+		vRamUsageContainer.erase(vRamUsageContainer.begin());
+
+	ImGui::Begin("Window");
+	const std::string screenRes = "Screen Resolution: " + std::to_string(m_window.GetWidth()) + "x" + std::to_string(m_window.GetHeight());
+	ImGui::Text("%s", screenRes.c_str());
 	ImGui::End();
+
+	
+	ImGui::Begin("Statistics");
+	if (ImGui::CollapsingHeader("FPS"))
+	{
+		ImGui::PlotLines(("FPS: " + std::to_string(static_cast<int>(1 / m_frameTime.render))).c_str(), fpsContainer.data(), fpsContainer.size(), 0, nullptr, 0.0f, 144.0f, ImVec2(150, 50));
+		ImGui::Spacing();
+		ImGui::PlotLines(("Update FPS: " + std::to_string(static_cast<int>(1.0f / m_frameTime.update))).c_str(), fpsUpdateContainer.data(), fpsUpdateContainer.size(), 0, nullptr, 0.0f, 144.0f, ImVec2(150, 50));
+		ImGui::Spacing();
+	}
+
+	if(ImGui::CollapsingHeader("Memory"))
+	{
+		ImGui::PlotHistogram(("RAM: "+std::to_string(static_cast<float>(Profiler::GetRAMUsage() / (1024.f * 1024.f))) + " MB").c_str(), ramUsageContainer.data(), ramUsageContainer.size(), 0, nullptr, 0.0f, 500.0f, ImVec2(150, 75));
+		ImGui::Spacing();
+		ImGui::PlotHistogram(("VRAM: " + std::to_string(static_cast<float>(Profiler::GetVRAMUsage() / (1024.f * 1024.f))) + " MB").c_str(), vRamUsageContainer.data(), vRamUsageContainer.size(), 0, nullptr, 0.0f, 500.0f, ImVec2(150, 75));
+	}
+
+	ImGui::End();
+	
 }
 
 void Engine::RenderThread()
@@ -218,6 +265,8 @@ void Engine::RenderThread()
 
 void Engine::Update(float dt)
 {
+
+
 	m_buffPointer = m_drawBuffers.GetBuffer(0);
 	// Update the camera transform based on interactive inputs.
 	//updateCamera(dt);
@@ -230,6 +279,21 @@ void Engine::Update(float dt)
 		m_currentScene->Update(dt);
 	}
 
+	
+#ifdef _DEBUG
+	if(!m_IsImguiReady.load())
+	{
+		//Start ImGui frame
+		ImGui_ImplDX11_NewFrame();
+		ImGui_ImplWin32_NewFrame();
+		ImGui::NewFrame();
+		drawImGUI();
+		
+		m_IsImguiReady = true;
+	}
+#endif // DEBUG
+
+	
 	//std::cout << "Y: " << y++ << "\n";
 	// Handle events enqueued
 	//Scene::GetEventDispatcher().update();
@@ -242,18 +306,13 @@ void Engine::Update(float dt)
 
 void Engine::Render(float& dt)
 {
-	m_renderer.ClearScreen();
+	
+	m_renderer.BeginFrame();
 	D2D1Core::Begin();
 	if (m_currentScene)
 	{
 		m_currentScene->Render();
 	}
-
-    const std::string fps = "Render FPS: " + std::to_string(1.0f / m_frameTime.render)
-        + "\nUpdate FPS: " + std::to_string(1.0f / m_frameTime.update)
-        + "\nRAM: " + std::to_string(Profiler::GetRAMUsage() / (1024.f * 1024.f)) + " MB"
-        + "\nVRAM: " + std::to_string(Profiler::GetVRAMUsage() / (1042.f * 1024.f)) + " MB";
-    D2D1Core::DrawT(fps, &m_window);
 
 	/*
 		Present the final image and clear it for next frame.
@@ -264,7 +323,18 @@ void Engine::Render(float& dt)
 	*/
 	m_drawBuffers.ReadySwap();
 	D2D1Core::Present();
+
+#ifdef _DEBUG
+	if (m_IsImguiReady.load())
+	{
+		// Assemble togheter draw data
+		ImGui::Render();
+		// Render draw data
+		ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+		m_IsImguiReady = false;
+	}
+#endif
+	
 	D3D11Core::Get().SwapChain()->Present(1, 0);
-	m_renderer.ClearScreen();
 }
 

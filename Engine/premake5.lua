@@ -42,6 +42,8 @@ project "Engine"
             ["src/Engine/Input"] = { "**InputSystem.*" },
             ["src/Engine/Thread"] = { "**multi_thread_manager.*", "**ThreadSyncer.*"},
 
+        ["src/Engine/Utility"] = { "**Timer.*" },
+        
         ["src/Engine"] = {  },
             ["src/Engine/Graphics/Renderer"] = {"**Renderer.*"},
             ["src/Engine/Graphics/D3D11"] = { "**D3D11Core.*" },
