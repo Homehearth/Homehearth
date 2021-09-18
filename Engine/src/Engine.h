@@ -4,7 +4,6 @@
 #include "Scene.h"
 #include "Renderer.h"
 #include "EventTypes.h"
-#include "Client.h"
 
 struct Triangle2
 {
@@ -21,8 +20,6 @@ private:
 
 	Window m_window;
 	Renderer m_renderer;
-
-	Client m_client;
 	
 	std::unordered_map<std::string, Scene> m_scenes;
 	Scene* m_currentScene;

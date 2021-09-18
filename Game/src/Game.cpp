@@ -14,7 +14,6 @@ Game::Game()
 
 	// Set as current scene
 	m_engine.SetScene(demo);
-
 }
 
 void Game::Run() 

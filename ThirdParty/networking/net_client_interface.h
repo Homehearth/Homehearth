@@ -3,45 +3,40 @@
 
 namespace network
 {
+	struct PER_IO_DATA
+	{
+		OVERLAPPED Overlapped;
+		CHAR buffer[BUFFER_SIZE] = {};
+		WSABUF DataBuf;
+		SOCKET socket;
+	};
+
 	template <typename T>
 	class client_interface
 	{
 	private:
-		SOCKET m_socket;
-		std::function<void(const network::message<T>&)> MessageReceivedHandler;
-		std::function<void()> OnConnectHandler;
-		std::function<void()> OnDisconnectHandler;
 		struct sockaddr_in m_endpoint;
 		socklen_t m_endpointLen;
-		uint64_t m_handshakeIn;
-		uint64_t m_handshakeOut;
 		CRITICAL_SECTION lock;
 
+		SOCKET m_socket;
 		WSAEVENT m_event;
-
-		// REMOVE LATER
-		bool key[3] = { false, false, false };
-		bool old_key[3] = { false, false, false };
 
 	private:
 		std::string PrintSocketData(struct addrinfo* p);
 		void InitWinsock();
 		SOCKET CreateSocket(std::string& ip, uint16_t& port);
-		void ProcessIO();
+		DWORD WINAPI ProcessIO();
+
+	protected:
 
 	public:
 		client_interface()
 		{
 			m_socket = INVALID_SOCKET;
-			using namespace std::placeholders;
-			MessageReceivedHandler = std::bind(&client_interface::OnMessageReceived, this, _1);
-			OnConnectHandler = std::bind(&client_interface::OnConnect, this);
-			OnDisconnectHandler = std::bind(&client_interface::OnDisconnect, this);
 
 			m_endpointLen = sizeof(m_endpoint);
 			ZeroMemory(&m_endpoint, m_endpointLen);
-			m_handshakeIn = 0;
-			m_handshakeOut = 0;
 
 			InitWinsock();
 		}
@@ -53,25 +48,141 @@ namespace network
 		}
 
 	public:
-		virtual void OnMessageReceived(const network::message<T>& msg) = 0;
+		virtual void OnMessageReceived(const message<T>& msg) = 0;
 
 		virtual void OnConnect() = 0;
 
 		virtual void OnDisconnect() = 0;
 
-		//virtual void OnValidation() = 0;
+		virtual void OnValidation() = 0;
 
 		// Given IP and port establish a connection to the server
 		bool Connect(std::string&& ip, uint16_t&& port);
-
 		// Disconnect from the server
 		void Disconnect();
-
 		// Check to see if client is connected to a server
 		bool IsConnected();
-
 		void Send(const message<T>& msg);
+		static VOID CALLBACK ReadHeader(DWORD dwError, DWORD cbTransferred, LPWSAOVERLAPPED lpOverlapped, DWORD dwFlags);
+		static VOID CALLBACK ReadPayload(DWORD dwError, DWORD cbTransferred, LPWSAOVERLAPPED lpOverlapped, DWORD dwFlags);
+		void WriteHeader();
+		void WritePayload();
+		static VOID CALLBACK ReadValidation(DWORD dwError, DWORD cbTransferred, LPWSAOVERLAPPED lpOverlapped, DWORD dwFlags);
+		static void WriteValidation(SOCKET s, uint64_t handshakeIn);
 	};
+
+	template <typename T>
+	VOID CALLBACK client_interface<T>::ReadValidation(DWORD dwError, DWORD cbTransferred, LPWSAOVERLAPPED lpOverlapped, DWORD dwFlags)
+	{
+		PER_IO_DATA* context = (PER_IO_DATA*)lpOverlapped;
+		std::cout << cbTransferred << std::endl;
+		uint64_t handshakeIn = 0;
+		memcpy(&handshakeIn, context->DataBuf.buf, sizeof(uint64_t));
+		std::cout << handshakeIn << std::endl;
+		if (cbTransferred > 0)
+		{
+			WriteValidation(context->socket, handshakeIn);
+		}
+		else
+		{
+			LOG_WARNING("Lost connection to server!");
+		}
+		delete context;
+	}
+
+	template <typename T>
+	void client_interface<T>::WriteValidation(SOCKET s, uint64_t handshakeIn)
+	{
+		uint64_t handshakeOut = scrambleData(handshakeIn);
+		PER_IO_DATA* context = new PER_IO_DATA;
+		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
+		context->DataBuf.len = sizeof(uint64_t);
+		memcpy(context->buffer, &handshakeOut, context->DataBuf.len);
+		context->DataBuf.buf = context->buffer;
+		DWORD BytesSent = 0;
+		DWORD flags = 0;
+		context->socket = s;
+
+		if (WSASend(s, &context->DataBuf, 1, &BytesSent, flags, &context->Overlapped, ReadHeader) == SOCKET_ERROR)
+		{
+			if (WSAGetLastError() != WSA_IO_PENDING)
+			{
+				LOG_ERROR("WSASend failed!");
+				delete context;
+			}
+			else
+			{
+				LOG_INFO("WSASend is pending!");
+			}
+		}
+		else
+		{
+			LOG_INFO("WSASend was ok!");
+		}
+	}
+
+	template <typename T>
+	VOID CALLBACK client_interface<T>::ReadHeader(DWORD dwError, DWORD cbTransferred, LPWSAOVERLAPPED lpOverlapped, DWORD dwFlags)
+	{
+		PER_IO_DATA* context = (PER_IO_DATA*)lpOverlapped;
+		SOCKET s = context->socket;
+		delete context;
+		context = new PER_IO_DATA;
+
+		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
+		context->DataBuf.buf = context->buffer;
+		context->DataBuf.len = BUFFER_SIZE;
+		context->socket = s;
+		DWORD flags = 0;
+		DWORD ReceivedBytes = 0;
+
+		if (WSARecv(s, &context->DataBuf, 1, &ReceivedBytes, &flags, &context->Overlapped, ReadPayload) == SOCKET_ERROR)
+		{
+			if (WSAGetLastError() != WSA_IO_PENDING)
+			{
+				LOG_ERROR("WSARecv failed!");
+				delete context;
+			}
+			else
+			{
+				LOG_INFO("WSARecv is pending!");
+			}
+		}
+		else
+		{
+			LOG_INFO("WSARecv was ok!");
+		}
+	}
+
+	template <typename T>
+	void client_interface<T>::WriteHeader()
+	{
+
+	}
+
+	template <typename T>
+	VOID CALLBACK client_interface<T>::ReadPayload(DWORD dwError, DWORD cbTransferred, LPWSAOVERLAPPED lpOverlapped, DWORD dwFlags)
+	{
+		PER_IO_DATA* context = (PER_IO_DATA*)lpOverlapped;
+
+		message<MessageType> msg = {};
+
+		memcpy(&msg.header, context->DataBuf.buf, sizeof(msg.header));
+		switch (msg.header.id)
+		{
+		case MessageType::Client_Accepted:
+		{
+			LOG_INFO("YOU ARE VALIDATED!");
+		}
+		}
+		delete context;
+	}
+
+	template <typename T>
+	void client_interface<T>::WritePayload()
+	{
+
+	}
 
 	template <typename T>
 	SOCKET client_interface<T>::CreateSocket(std::string& ip, uint16_t& port)
@@ -102,7 +213,7 @@ namespace network
 #ifdef _DEBUG
 			std::cout << PrintSocketData(p) << std::endl;
 #endif
-			sock = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
+			sock = WSASocket(p->ai_family, p->ai_socktype, p->ai_protocol, NULL, 0, WSA_FLAG_OVERLAPPED);
 
 			if (sock == INVALID_SOCKET)
 			{
@@ -128,7 +239,7 @@ namespace network
 	}
 
 	template <typename T>
-	void client_interface<T>::ProcessIO()
+	DWORD client_interface<T>::ProcessIO()
 	{
 		DWORD index = 0;
 		WSANETWORKEVENTS networkEvents = {};
@@ -136,46 +247,79 @@ namespace network
 		while (1)
 		{
 			// Will put thread to sleep unless there is I/O to process or a new connection has been made
-			if ((index = WSAWaitForMultipleEvents(1, &m_event, FALSE, WSA_INFINITE, FALSE)) == WSA_WAIT_FAILED)
+			if ((index = WSAWaitForMultipleEvents(1, &m_event, FALSE, WSA_INFINITE, TRUE)) == WSA_WAIT_FAILED)
 			{
 				printf("WSAWaitForMultipleEvents() failed %d\n", WSAGetLastError());
 				continue;
 			}
 
-			index = index - WSA_WAIT_EVENT_0;
+			if (index == WAIT_IO_COMPLETION)
+			{
+				// An overlapped request completion routine
+				// just completed. Continue servicing more completion routines.
+
+				//continue;
+			}
 
 			WSAEnumNetworkEvents(m_socket, m_event, &networkEvents);
 
 			if (networkEvents.lNetworkEvents & FD_CONNECT && (networkEvents.iErrorCode[FD_CONNECT_BIT] == 0))
 			{
-				this->OnConnectHandler();
+				// CALLING THREAD MUST ISSUE A RECEIVE TASK TO USE THE COMPLETION ROUTINE AKA CALLBACK FUNCTION
+				PER_IO_DATA* context = new PER_IO_DATA;
+				ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
+				context->DataBuf.buf = context->buffer;
+				context->DataBuf.len = BUFFER_SIZE;
+				DWORD flags = 0;
+				DWORD bytesReceived = 0;
+				context->socket = m_socket;
+
+				if (WSARecv(m_socket, &context->DataBuf, 1, &bytesReceived, &flags, &context->Overlapped, ReadValidation) == SOCKET_ERROR)
+				{
+					if (WSAGetLastError() != WSA_IO_PENDING)
+					{
+						LOG_ERROR("WSARecv failed!");
+						delete context;
+					}
+					else
+					{
+						LOG_INFO("WSARecv is pending!");
+					}
+				}
+				else
+				{
+					LOG_INFO("WSARecv was ok!");
+				}
 			}
 
 			if (networkEvents.lNetworkEvents & FD_READ && (networkEvents.iErrorCode[FD_READ_BIT] == 0))
 			{
-				if (!m_handshakeIn)
-				{
-					int16_t bytes = recv(m_socket, (char*)&m_handshakeIn, sizeof(uint64_t), 0);
-					if (bytes > 0)
-					{
-						m_handshakeOut = scrambleData(m_handshakeIn);
-						send(m_socket, (char*)&m_handshakeOut, sizeof(uint64_t), 0);
+				std::cout << "Read is k!" << std::endl;
+				//ReadValidation();
+				//getchar();
+				//if (!m_handshakeIn)
+				//{
+				//	int16_t bytes = recv(m_socket, (char*)&m_handshakeIn, sizeof(uint64_t), 0);
+				//	if (bytes > 0)
+				//	{
+				//		m_handshakeOut = scrambleData(m_handshakeIn);
+				//		send(m_socket, (char*)&m_handshakeOut, sizeof(uint64_t), 0);
 
-						message<MessageType> msg = {};
-						recv(m_socket, (char*)&msg.header, sizeof(msg.header), 0);
-						switch (msg.header.id)
-						{
-						case MessageType::Client_Accepted:
-						{
-							std::cout << "VALIDATED!" << std::endl;
-						}
-						}
-					}
-					else
-					{
-						Disconnect();
-					}
-				}
+				//		message<MessageType> msg = {};
+				//		recv(m_socket, (char*)&msg.header, sizeof(msg.header), 0);
+				//		switch (msg.header.id)
+				//		{
+				//		case MessageType::Client_Accepted:
+				//		{
+				//			std::cout << "VALIDATED!" << std::endl;
+				//		}
+				//		}
+				//	}
+				//	else
+				//	{
+				//		Disconnect();
+				//	}
+				//}
 				//message<T> msg = {};
 				//int32_t bytes = recv(m_socket, (char*)&msg.header, sizeof(msg.header), 0);
 				//char buffer[4096] = {};
@@ -192,6 +336,7 @@ namespace network
 				//this->MessageReceivedHandler(msg);
 			}
 		}
+		return 0;
 	}
 
 	template<typename T>
@@ -261,7 +406,6 @@ namespace network
 	template<typename T>
 	inline bool client_interface<T>::Connect(std::string&& ip, uint16_t&& port)
 	{
-		EnterCriticalSection(&lock);
 		m_socket = CreateSocket(ip, port);
 
 		if (connect(m_socket, (struct sockaddr*)&m_endpoint, m_endpointLen) != 0)
@@ -280,7 +424,7 @@ namespace network
 
 		m_event = WSACreateEvent();
 
-		WSAEventSelect(m_socket, m_event, FD_CONNECT | FD_READ | FD_CLOSE);
+		WSAEventSelect(m_socket, m_event, FD_CONNECT | FD_READ | FD_WRITE);
 
 		if (WSASetEvent(m_event) == FALSE)
 		{
@@ -288,8 +432,8 @@ namespace network
 			return false;
 		}
 
-		thread::MultiThreader::InsertJob(std::bind([this] { ProcessIO(); }));
-		LeaveCriticalSection(&lock);
+		std::thread t(&client_interface<T>::ProcessIO, this);
+		t.detach();
 
 		return true;
 	}
@@ -308,8 +452,8 @@ namespace network
 			std::cout << "Failed to close socket: " << WSAGetLastError() << std::endl;
 #endif
 		}
-		this->OnDisconnectHandler();
 		m_socket = INVALID_SOCKET;
+		this->OnDisconnect();
 	}
 
 	template<typename T>
@@ -319,7 +463,9 @@ namespace network
 		{
 			return false;
 		}
-
-		return true;
+		else
+		{
+			return true;
+		}
 	}
 }

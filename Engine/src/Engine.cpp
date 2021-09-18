@@ -2,7 +2,6 @@
 #include "Engine.h"
 #include <omp.h>
 
-
 bool Engine::s_engineRunning = false;
 bool Engine::s_safeExit = false;
 
@@ -45,10 +44,6 @@ void Engine::Startup()
 	m_buffPointer->reserve(200);
 	m_buffPointer = m_drawBuffers.GetBuffer(1);
 	m_buffPointer->reserve(200);
-
-	m_client.Connect("127.0.0.1", 4950);
-
-	std::cout << "All clients mothafocking did it!" << std::endl;
 }
 
 void Engine::Run()

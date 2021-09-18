@@ -70,4 +70,6 @@ using Microsoft::WRL::ComPtr;
 #include "ThreadSyncer.h"
 
 // Network
-#include "network.h"
+#include "net_common.h"
+#include "net_message.h"
+#include "net_client_interface.h"
