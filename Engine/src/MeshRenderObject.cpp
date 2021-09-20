@@ -32,6 +32,7 @@ MeshRenderObject::~MeshRenderObject()
 void MeshRenderObject::Render(const objectPass::RenderPass& pass)
 {
 #define CONTEXT D3D11Core::Get().DeviceContext()
+	T_LOCK();
 	if (m_texture)
 	{
 		CONTEXT->PSSetShaderResources(0, 1, &m_texture->GetShaderView());
@@ -39,4 +40,5 @@ void MeshRenderObject::Render(const objectPass::RenderPass& pass)
 
 	if (m_mesh)
 		m_mesh->Render();
+	T_UNLOCK();
 }

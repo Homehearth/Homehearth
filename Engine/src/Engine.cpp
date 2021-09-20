@@ -271,9 +271,6 @@ void Engine::RenderThread()
 
 void Engine::Update(float dt)
 {
-
-
-	m_buffPointer = m_drawBuffers.GetBuffer(0);
 	// Update the camera transform based on interactive inputs.
 	//updateCamera(dt);
 
@@ -286,7 +283,7 @@ void Engine::Update(float dt)
 		m_currentScene->Update(dt);
 	}
 	*/
-
+	
 	
 #ifdef _DEBUG
 	if(!m_IsImguiReady.load())
@@ -306,6 +303,7 @@ void Engine::Update(float dt)
 	// Handle events enqueued
 	//Scene::GetEventDispatcher().update();
 
+	/*
 	Backbuffer::GetBuffers()->GetBuffer(0)->clear();
 	Backbuffer::GetBuffers()->GetBuffer(0)->push_back(meshLOLXD);
 
@@ -313,6 +311,7 @@ void Engine::Update(float dt)
 	{
 		Backbuffer::GetBuffers()->SwapBuffers();
 	}
+	*/
 }
 
 void Engine::Render(float& dt)
@@ -335,8 +334,8 @@ void Engine::Render(float& dt)
 	debugCamera.UpdateDOOM();
 	debugCamera.Render();
 
-	Backbuffer::GetBuffers()->GetBuffer(1)->at(0)->Render();
-	//meshLOLXD->Render();
+	//Backbuffer::GetBuffers()->GetBuffer(1)->at(0)->Render();
+	meshLOLXD->Render(objectPass::RenderPass::DEFAULT);
 
 	/*
 		Present the final image and clear it for next frame.
@@ -345,7 +344,6 @@ void Engine::Render(float& dt)
 	/*
 		Kanske v�nta p� att uppdateringstr�den kan swappa buffrar.
 	*/
-	m_drawBuffers.ReadySwap();
 	D2D1Core::Present();
 
 #ifdef _DEBUG

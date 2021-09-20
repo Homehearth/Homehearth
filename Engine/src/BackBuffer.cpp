@@ -21,7 +21,7 @@ Backbuffer* INSTANCE = nullptr;
 
 Backbuffer::Backbuffer()
 {
-	std::vector<RenderableObject*>* m_bPointer = nullptr;
+	std::vector<comp::RenderAble>* m_bPointer = nullptr;
 	m_buffers.AllocateBuffers();
 	m_bPointer = m_buffers.GetBuffer(0);
 	m_bPointer->reserve(OBJECT_STORAGE_SIZE);
@@ -48,7 +48,7 @@ void Backbuffer::Destroy()
 		delete INSTANCE;
 }
 
-thread::DoubleBuffer<std::vector<RenderableObject*>>* Backbuffer::GetBuffers()
+thread::DoubleBuffer<std::vector<comp::RenderAble>>* Backbuffer::GetBuffers()
 {
 	return &INSTANCE->m_buffers;
 }

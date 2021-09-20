@@ -1,5 +1,7 @@
 #include "EnginePCH.h"
 #include "Scene.h"
+#include "Components.h"
+#include "BackBuffer.h"
 
 entt::entity Scene::CreateEntity()
 {
@@ -27,6 +29,12 @@ void Scene::Update(float dt)
 	{
 		system(m_ecsRegistry, dt);
 	}
+
+	Backbuffer::GetBuffers()->GetBuffer(0)->clear();
+	auto v = m_ecsRegistry.view<comp::RenderAble>();
+	v.each([](comp::RenderAble& rend) {
+		//Backbuffer::GetBuffers()->GetBuffer(0)->push_back(rend);
+	});
 }
 
 void Scene::Render() 
