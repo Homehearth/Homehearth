@@ -3,6 +3,9 @@
 
 namespace network
 {
+	// TODO
+	// SIGNAL THREADS IF THE SERVER HAS SHUTDOWN TO AVOID MEMORY LEAKS
+
 	class Server : public server_interface<MessageType>
 	{
 	private:
@@ -28,13 +31,17 @@ namespace network
 
 	void Server::OnClientConnect(std::string&& ip, const uint16_t& port)
 	{
+		EnterCriticalSection(&lock);
 		LOG_INFO("Client connected from %s:%d", ip.c_str(), port);
+		LeaveCriticalSection(&lock);
 		//Broadcast();
 	}
 
 	void Server::OnClientDisconnect()
 	{
+		EnterCriticalSection(&lock);
 		LOG_INFO("Client disconnected!");
+		LeaveCriticalSection(&lock);
 	}
 
 	void Server::OnMessageReceived(const SOCKET& socketId, CHAR* buffer, DWORD bytesReceived)
@@ -49,7 +56,9 @@ namespace network
 		msg.header.id = MessageType::Client_Accepted;
 		Send(s, msg);
 
-		LOG_INFO("Client has been validated!");
+		EnterCriticalSection(&lock);
+		LOG_INFO("Client has been validated on socket %lld", s);
+		LeaveCriticalSection(&lock);
 	}
 
 }

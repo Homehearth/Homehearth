@@ -1,5 +1,6 @@
 #pragma once
 #include "net_common.h"
+#include "net_tsqueue.h"
 
 namespace network
 {
@@ -63,7 +64,7 @@ namespace network
 		// Check to see if client is connected to a server
 		bool IsConnected();
 		void Send(const message<T>& msg);
-		static VOID CALLBACK ReadHeader(DWORD dwError, DWORD cbTransferred, LPWSAOVERLAPPED lpOverlapped, DWORD dwFlags);
+		void ReadHeader();
 		static VOID CALLBACK ReadPayload(DWORD dwError, DWORD cbTransferred, LPWSAOVERLAPPED lpOverlapped, DWORD dwFlags);
 		void WriteHeader();
 		void WritePayload();
@@ -75,10 +76,9 @@ namespace network
 	VOID CALLBACK client_interface<T>::ReadValidation(DWORD dwError, DWORD cbTransferred, LPWSAOVERLAPPED lpOverlapped, DWORD dwFlags)
 	{
 		PER_IO_DATA* context = (PER_IO_DATA*)lpOverlapped;
-		std::cout << cbTransferred << std::endl;
 		uint64_t handshakeIn = 0;
 		memcpy(&handshakeIn, context->DataBuf.buf, sizeof(uint64_t));
-		std::cout << handshakeIn << std::endl;
+
 		if (cbTransferred > 0)
 		{
 			WriteValidation(context->socket, handshakeIn);
@@ -103,7 +103,7 @@ namespace network
 		DWORD flags = 0;
 		context->socket = s;
 
-		if (WSASend(s, &context->DataBuf, 1, &BytesSent, flags, &context->Overlapped, ReadHeader) == SOCKET_ERROR)
+		if (WSASend(s, &context->DataBuf, 1, &BytesSent, flags, &context->Overlapped, NULL) == SOCKET_ERROR)
 		{
 			if (WSAGetLastError() != WSA_IO_PENDING)
 			{
@@ -122,21 +122,18 @@ namespace network
 	}
 
 	template <typename T>
-	VOID CALLBACK client_interface<T>::ReadHeader(DWORD dwError, DWORD cbTransferred, LPWSAOVERLAPPED lpOverlapped, DWORD dwFlags)
+	void client_interface<T>::ReadHeader()
 	{
-		PER_IO_DATA* context = (PER_IO_DATA*)lpOverlapped;
-		SOCKET s = context->socket;
-		delete context;
-		context = new PER_IO_DATA;
+		PER_IO_DATA* context = new PER_IO_DATA;
 
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
 		context->DataBuf.buf = context->buffer;
 		context->DataBuf.len = BUFFER_SIZE;
-		context->socket = s;
+		context->socket = m_socket;
 		DWORD flags = 0;
 		DWORD ReceivedBytes = 0;
 
-		if (WSARecv(s, &context->DataBuf, 1, &ReceivedBytes, &flags, &context->Overlapped, ReadPayload) == SOCKET_ERROR)
+		if (WSARecv(m_socket, &context->DataBuf, 1, &ReceivedBytes, &flags, &context->Overlapped, ReadPayload) == SOCKET_ERROR)
 		{
 			if (WSAGetLastError() != WSA_IO_PENDING)
 			{
@@ -145,12 +142,16 @@ namespace network
 			}
 			else
 			{
+				EnterCriticalSection(&lock);
 				LOG_INFO("WSARecv is pending!");
+				LeaveCriticalSection(&lock);
 			}
 		}
 		else
 		{
+			EnterCriticalSection(&lock);
 			LOG_INFO("WSARecv was ok!");
+			LeaveCriticalSection(&lock);
 		}
 	}
 
@@ -195,15 +196,11 @@ namespace network
 		hints.ai_family = AF_INET;
 		hints.ai_socktype = SOCK_STREAM;
 
-#ifdef _DEBUG
-		std::cout << "Creating a client.." << std::endl;
-#endif
-
 		int8_t rv = getaddrinfo(ip.c_str(), std::to_string(port).c_str(), &hints, &servinfo);
 
 		if (rv != 0)
 		{
-			std::cerr << "Addrinfo: " << WSAGetLastError() << std::endl;
+			LOG_ERROR("Addrinfo: %ld", WSAGetLastError());
 			return false;
 		}
 
@@ -241,10 +238,13 @@ namespace network
 	template <typename T>
 	DWORD client_interface<T>::ProcessIO()
 	{
+		EnterCriticalSection(&lock);
+		LOG_INFO("Client created successfully!");
+		LeaveCriticalSection(&lock);
 		DWORD index = 0;
 		WSANETWORKEVENTS networkEvents = {};
 
-		while (1)
+		while (IsConnected())
 		{
 			// Will put thread to sleep unless there is I/O to process or a new connection has been made
 			if ((index = WSAWaitForMultipleEvents(1, &m_event, FALSE, WSA_INFINITE, TRUE)) == WSA_WAIT_FAILED)
@@ -283,57 +283,32 @@ namespace network
 					}
 					else
 					{
+						EnterCriticalSection(&lock);
 						LOG_INFO("WSARecv is pending!");
+						LeaveCriticalSection(&lock);
 					}
 				}
 				else
 				{
+					EnterCriticalSection(&lock);
 					LOG_INFO("WSARecv was ok!");
+					LeaveCriticalSection(&lock);
 				}
 			}
 
 			if (networkEvents.lNetworkEvents & FD_READ && (networkEvents.iErrorCode[FD_READ_BIT] == 0))
 			{
-				std::cout << "Read is k!" << std::endl;
-				//ReadValidation();
-				//getchar();
-				//if (!m_handshakeIn)
-				//{
-				//	int16_t bytes = recv(m_socket, (char*)&m_handshakeIn, sizeof(uint64_t), 0);
-				//	if (bytes > 0)
-				//	{
-				//		m_handshakeOut = scrambleData(m_handshakeIn);
-				//		send(m_socket, (char*)&m_handshakeOut, sizeof(uint64_t), 0);
-
-				//		message<MessageType> msg = {};
-				//		recv(m_socket, (char*)&msg.header, sizeof(msg.header), 0);
-				//		switch (msg.header.id)
-				//		{
-				//		case MessageType::Client_Accepted:
-				//		{
-				//			std::cout << "VALIDATED!" << std::endl;
-				//		}
-				//		}
-				//	}
-				//	else
-				//	{
-				//		Disconnect();
-				//	}
-				//}
-				//message<T> msg = {};
-				//int32_t bytes = recv(m_socket, (char*)&msg.header, sizeof(msg.header), 0);
-				//char buffer[4096] = {};
-				//bytes = recv(m_socket, (char*)buffer, sizeof(msg.header.size - sizeof(msg.header)), 0);
-				//msg.payload.resize(bytes);
-				//memcpy(msg.payload.data(), buffer, bytes);
-
-				//for (int i = 0; i < msg.payload.size(); i++)
-				//{
-				//	std::cout << msg.payload[i];
-				//}
-				//std::cout << std::endl;
-
-				//this->MessageReceivedHandler(msg);
+			}
+			if (networkEvents.lNetworkEvents & FD_CLOSE && (networkEvents.iErrorCode[FD_CLOSE_BIT] == 0))
+			{
+				this->Disconnect();
+			}
+			if (networkEvents.lNetworkEvents & FD_WRITE && (networkEvents.iErrorCode[FD_WRITE_BIT] == 0))
+			{
+				EnterCriticalSection(&lock);
+				LOG_INFO("READING HEADER!");
+				LeaveCriticalSection(&lock);
+				ReadHeader();
 			}
 		}
 		return 0;
@@ -412,9 +387,9 @@ namespace network
 		{
 			if (WSAGetLastError() != WSAEWOULDBLOCK)
 			{
-#ifdef _DEBUG
-				std::cout << "Connect error code: " << WSAGetLastError() << std::endl;
-#endif			
+				EnterCriticalSection(&lock);
+				LOG_ERROR("Failed to connect to server!");
+				LeaveCriticalSection(&lock);
 				closesocket(m_socket);
 				m_socket = INVALID_SOCKET;
 
@@ -424,7 +399,7 @@ namespace network
 
 		m_event = WSACreateEvent();
 
-		WSAEventSelect(m_socket, m_event, FD_CONNECT | FD_READ | FD_WRITE);
+		WSAEventSelect(m_socket, m_event, FD_CONNECT | FD_READ | FD_WRITE | FD_CLOSE);
 
 		if (WSASetEvent(m_event) == FALSE)
 		{
