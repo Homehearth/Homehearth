@@ -13,6 +13,9 @@ class Engine
 private:
 	static bool s_engineRunning;
 	static bool s_safeExit;
+	std::atomic<bool> m_IsImguiReady;
+	thread::DoubleBuffer<std::vector<Triangle2>> m_drawBuffers;
+	std::vector<Triangle2>* m_buffPointer;
 
 	Window m_window;
 	Renderer m_renderer;
@@ -39,6 +42,7 @@ private:
 	// Renders one frame.
 	void Render(float& dt);
 
+
 public:
 	Engine();
 	Engine(const Window& other) = delete;
@@ -62,11 +66,9 @@ public:
 
 	Window* GetWindow();
 
-	void OnEvent(EngineEvent& event);
-
 	static bool IsRunning();
 
 	//IMGUI
-	void drawImGUI();
+	void drawImGUI() const;
 };
 
