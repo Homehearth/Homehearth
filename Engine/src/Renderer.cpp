@@ -31,8 +31,8 @@ void Renderer::Render()
             if (pass->IsEnabled())
             {
                 pass->PreRender(m_d3d11->DeviceContext(), &m_pipelineManager);
-                pass->Render();     // args?
-                pass->PostRender(); // args?
+                pass->Render();     // args? currently does nothing.
+                pass->PostRender(); // args? currently does nothing.
             }
         }
     }
@@ -46,12 +46,14 @@ void Renderer::AddPass(IRenderPass* pass)
 void Renderer::SetPipelineState()
 {
 #define CONTEXT D3D11Core::Get().DeviceContext()
-	
-    CONTEXT->PSSetSamplers(0, 1, m_pipelineManager.m_linearSamplerState.GetAddressOf());
-    CONTEXT->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    CONTEXT->OMSetRenderTargets(1, m_pipelineManager.m_renderTargetView.GetAddressOf(), m_pipelineManager.m_depthStencilView.Get());
-    CONTEXT->VSSetConstantBuffers(0, 1, m_pipelineManager.m_defaultConstantBuffer.GetAddressOf());
+
     CONTEXT->IASetInputLayout(m_pipelineManager.m_defaultInputLayout.Get());
+    CONTEXT->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    CONTEXT->RSSetState(m_pipelineManager.m_rasterStateNoCulling.Get());
+    CONTEXT->OMSetDepthStencilState(m_pipelineManager.m_depthStencilState.Get(), 1);
+    CONTEXT->OMSetRenderTargets(1, m_pipelineManager.m_renderTargetView.GetAddressOf(), m_pipelineManager.m_depthStencilView.Get());
+    CONTEXT->PSSetSamplers(0, 1, m_pipelineManager.m_linearSamplerState.GetAddressOf());
+    CONTEXT->VSSetConstantBuffers(0, 1, m_pipelineManager.m_defaultConstantBuffer.GetAddressOf());
     CONTEXT->VSSetShader(m_pipelineManager.m_defaultVertexShader.Get(), nullptr, NULL);
     CONTEXT->PSSetShader(m_pipelineManager.m_defaultPixelShader.Get(), nullptr, NULL);
 }

@@ -13,10 +13,6 @@ void BasePass::Initialize()
 
 void BasePass::PreRender(ID3D11DeviceContext* dc, PipelineManager* pm)
 {
-	// STRIDE & OFFSET.
-    //static UINT stride = sizeof(DefaultVertexBuffer);
-    //static UINT offset = 0;
-	
     // INPUT ASSEMBLY.
     {
         dc->IASetInputLayout(pm->m_defaultInputLayout.Get());
@@ -49,15 +45,15 @@ void BasePass::PreRender(ID3D11DeviceContext* dc, PipelineManager* pm)
     // RASTERIZER.
     {
         dc->RSSetViewports(0, nullptr);
-        dc->RSSetState(nullptr);
+        dc->RSSetState(pm->m_rasterStateNoCulling.Get());
     }
 
     // OUTPUT MERGER.
     {
-        dc->OMSetRenderTargets(0, nullptr, nullptr);
+        dc->OMSetRenderTargets(1, pm->m_renderTargetView.GetAddressOf(), pm->m_depthStencilView.Get());
         dc->OMSetBlendState(nullptr, nullptr, 0);
-        dc->OMSetDepthStencilState(nullptr, 0);
-    }	
+        dc->OMSetDepthStencilState(pm->m_depthStencilState.Get(), 1);
+    }
 }
 
 void BasePass::Render()

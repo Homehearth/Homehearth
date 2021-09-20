@@ -55,7 +55,7 @@ private:
 	bool CreateRasterizerStates();
 	bool CreateSamplerStates();
 
-	bool CreateDefaultLayout();
+	bool CreateDefaultInputLayout();
 	bool CreateDefaultConstantBuffer();
 	bool CreateDefaultShaders();
 

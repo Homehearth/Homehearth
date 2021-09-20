@@ -4,6 +4,7 @@
 PipelineManager::PipelineManager()
 	: m_window(nullptr)
 	, m_d3d11(nullptr)
+	, m_viewport()
 {
 }
 
@@ -53,16 +54,19 @@ void PipelineManager::Initialize(Window* pWindow)
         LOG_ERROR("failed creating SamplerStates.");
     }
 
+    // Initialize Shaders.
     if (!this->CreateDefaultShaders())
     {
         LOG_ERROR("failed creating default shaders.");
     }
 
-    if (!this->CreateDefaultLayout())
+    // Initialize InputLayouts.
+    if (!this->CreateDefaultInputLayout())
     {
         LOG_ERROR("failed creating default layout.");
     }
 
+    // Initialize ConstantBuffers (temp?).
     if (!this->CreateDefaultConstantBuffer())
     {
         LOG_ERROR("failed creating default cBuffer.");
@@ -144,11 +148,6 @@ bool PipelineManager::CreateDepthStencilState()
     // Create the depth stencil state.
     HRESULT hr = m_d3d11->Device()->CreateDepthStencilState(&depthStencilDesc, m_depthStencilState.GetAddressOf());
 
-    if (SUCCEEDED(hr))
-    {
-        // Set the default depth stencil state.
-        m_d3d11->DeviceContext()->OMSetDepthStencilState(m_depthStencilState.Get(), 1);
-    }
     return !FAILED(hr);
 }
 
@@ -165,12 +164,6 @@ bool PipelineManager::CreateDepthStencilView()
 
     // Create the depth stencil View.
     HRESULT hr = m_d3d11->Device()->CreateDepthStencilView(m_depthStencilTexture.Get(), &depthStencilViewDesc, m_depthStencilView.GetAddressOf());
-
-    if (SUCCEEDED(hr))
-    {
-        // Bind the render target View and depth stencil buffer to the output render pipeline.
-        m_d3d11->DeviceContext()->OMSetRenderTargets(1, m_renderTargetView.GetAddressOf(), m_depthStencilView.Get());
-    }
 
     return !FAILED(hr);
 }
@@ -212,9 +205,6 @@ bool PipelineManager::CreateRasterizerStates()
 
     // Create the wire frame rasterizer state.
     hr = m_d3d11->Device()->CreateRasterizerState(&rasterizerDesc, m_rasterStateWireframe.GetAddressOf());
-
-    // Set default rasterizer state.
-    m_d3d11->DeviceContext()->RSSetState(m_rasterStateNoCulling.Get());
 
     return !FAILED(hr);
 }
@@ -281,7 +271,7 @@ void PipelineManager::SetViewport()
     m_d3d11->DeviceContext()->RSSetViewports(1, &m_viewport);
 }
 
-bool PipelineManager::CreateDefaultLayout()
+bool PipelineManager::CreateDefaultInputLayout()
 {
     D3D11_INPUT_ELEMENT_DESC inputDesc[] =
     {
@@ -319,7 +309,6 @@ bool PipelineManager::CreateDefaultConstantBuffer()
 
 bool PipelineManager::CreateDefaultShaders()
 {
-
     std::ifstream reader;
     std::string shaderData;
     reader.open("Model_vs.cso", std::ios::binary | std::ios::ate);

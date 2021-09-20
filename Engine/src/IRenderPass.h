@@ -2,7 +2,7 @@
 #include "PipelineManager.h"
 
 //--------------------------------------
-//	Abstract class.
+// Abstract class.
 //--------------------------------------
 class IRenderPass
 {

@@ -18,15 +18,17 @@ public:
 	virtual ~Renderer() = default;
 
 	void Initialize(Window* pWindow);
-	
+
+	// Clears the screen.
 	void ClearFrame();
-	
+
+	// Call this each frame to render all passes.
 	void Render();
 
-	// Add pass that are created outside the Renderer.
+	// Add a pass to the list. Useful if a pass is created outside the Renderer class.
 	void AddPass(IRenderPass* pass);
 
-	// temporary tester
+	// A temporary function used for testing (Forward Rendering).
 	void SetPipelineState();
 };
 
