@@ -1,38 +1,21 @@
 #include "EnginePCH.h"
 #include "Scene.h"
 
-entt::entity Scene::CreateEntity()
+Scene::Scene() 
 {
-	return m_ecsRegistry.create();
+
 }
 
-void Scene::DestroyEntity(entt::entity entity)
-{
-	m_ecsRegistry.destroy(entity);
-}
-
-void Scene::AddSystem(const SystemUpdateFunction& updateFunction)
-{
-	m_updateSystems.push_back(updateFunction);
-}
-
-void Scene::AddRenderSystem(const SystemRenderFunction& renderFunction) 
-{
-	m_renderSystems.push_back(renderFunction);
+entt::registry& Scene::GetRegistry() {
+	return m_registry;
 }
 
 void Scene::Update(float dt)
 {
-	for (const auto& system : m_updateSystems)
-	{
-		system(m_ecsRegistry, dt);
-	}
+	publish<ESceneUpdate>(dt);
 }
 
 void Scene::Render() 
 {
-	for (const auto& system : m_renderSystems)
-	{
-		system(m_ecsRegistry);
-	}
+	publish<ESceneRender>();
 }

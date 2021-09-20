@@ -1,18 +1,16 @@
 #include "DemoScene.h"
 
 
-void createTriangle(Scene& scene, float size, const float pos[2], const int velSign[2]) 
+void createTriangle(Scene& scene, float size, const sm::Vector2& pos, const sm::Vector2& velSign) 
 {
-	entt::entity entity = scene.CreateEntity();
-	Triangle& comp = scene.AddComponent<Triangle>(entity);
-	comp.pos[0] = pos[0];
-	comp.pos[1] = pos[1];
-	comp.size[0] = size;
-	comp.size[1] = comp.size[0];
-
-	Velocity& vel = scene.AddComponent<Velocity>(entity);
-	vel.vel[0] = ((rand() % 100) / 100.f) * velSign[0];
-	vel.vel[1] = sqrtf(1 - vel.vel[0] * vel.vel[0]) * velSign[1];
+	entt::entity entity = scene.GetRegistry().create();
+	Triangle& comp = scene.GetRegistry().emplace<Triangle>(entity);
+	comp.pos = pos;
+	comp.size = size;
+	
+	Velocity& vel = scene.GetRegistry().emplace<Velocity>(entity);
+	vel.vel.x = ((rand() % 100) / 100.f) * velSign.x;
+	vel.vel.y = sqrtf(1 - vel.vel.x * vel.vel.x) * velSign.y;
 	vel.mag = (rand() % 200) + 100.f;
 }
 
@@ -20,60 +18,56 @@ void setupDemoScene(Engine& engine, Scene& scene)
 {
 
 	// System to update triangles
-	scene.AddSystem([&](entt::registry& reg, float dt)
+	scene.on<ESceneUpdate>([&](const ESceneUpdate& e, Scene& scene)
 		{
-			auto view = reg.view<Triangle, Velocity>();
-			view.each([&, dt](Triangle& triangle, Velocity& velocity)
+			auto view = scene.GetRegistry().view<Triangle, Velocity>();
+			view.each([&](Triangle& triangle, Velocity& velocity)
 				{
-					float nextPos[2] =
+					sm::Vector2 nextPos = triangle.pos + velocity.vel * e.dt * velocity.mag;
+					
+					if (nextPos.x > engine.GetWindow()->GetWidth() - triangle.size ||
+						nextPos.x < 0)
 					{
-						triangle.pos[0] + velocity.vel[0] * dt * velocity.mag,
-						triangle.pos[1] + velocity.vel[1] * dt * velocity.mag,
-					};
-					if (nextPos[0] > engine.GetWindow()->GetWidth() - triangle.size[0] ||
-						nextPos[0] < 0)
-					{
-						velocity.vel[0] = -velocity.vel[0];
+						velocity.vel.x = -velocity.vel.x;
 
 						TriangleCollisionEvent e = { &triangle, &velocity };
 						scene.publish<TriangleCollisionEvent>(e);
 					}
-					if (nextPos[1] > engine.GetWindow()->GetHeight() - triangle.size[1] ||
-						nextPos[1] < 0)
+					if (nextPos.y > engine.GetWindow()->GetHeight() - triangle.size ||
+						nextPos.y < 0)
 					{
-						velocity.vel[1] = -velocity.vel[1];
+						velocity.vel.y = -velocity.vel.y;
 						TriangleCollisionEvent e = { &triangle, &velocity };
 						scene.publish<TriangleCollisionEvent>(e);
 					}
-					triangle.pos[0] += velocity.vel[0] * dt * velocity.mag;
-					triangle.pos[1] += velocity.vel[1] * dt * velocity.mag;
+					triangle.pos = nextPos;
 				});
 		});
 
 	// System to render Triangle components
-	scene.AddRenderSystem([&](entt::registry& reg)
+	scene.on<ESceneRender>([&](const ESceneRender&, Scene& scene)
 		{
-			auto view = reg.view<Triangle>();
+			auto view = scene.GetRegistry().view<Triangle>();
 			view.each([](Triangle& triangle)
 				{
-					D2D1Core::DrawF(triangle.pos[0], triangle.pos[1], triangle.size[0], triangle.size[1], Shapes::TRIANGLE_FILLED);
+					D2D1Core::DrawF(triangle.pos.x, triangle.pos.y, triangle.size, triangle.size, Shapes::TRIANGLE_FILLED);
 				});
 		});
 	scene.on<TriangleCollisionEvent>([](const TriangleCollisionEvent& e, Scene& scene)
 		{
 			// split
-			float size = e.triangle->size[0] * 0.7f;
+			float size = e.triangle->size * 0.7f;
 			if (size < 5) return;
-			e.triangle->size[0] = size;
-			e.triangle->size[1] = size;
-			const int velSign[2] = { std::signbit(e.velocity->vel[0]) ? -1 : 1, std::signbit(e.velocity->vel[1]) ? -1 : 1 };
+			e.triangle->size = size;
+			
+			const sm::Vector2 velSign(std::signbit(e.velocity->vel.x) ? -1 : 1, std::signbit(e.velocity->vel.y) ? -1 : 1 );
 			createTriangle(scene, size, e.triangle->pos, velSign);
 
 		});
 
 	// Create test Entity
-	const float pos[2] = { 0.f, 0.f };
-	const int signVel[2] = { 1, 1 };
+	const sm::Vector2 pos = { 0.f, 0.f };
+	const sm::Vector2 signVel = { 1, 1 };
 	createTriangle(scene, 200, pos, signVel);
 
 }
