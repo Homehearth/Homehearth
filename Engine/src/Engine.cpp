@@ -306,8 +306,8 @@ void Engine::Update(float dt)
 
 void Engine::Render(float& dt)
 {
-	
-	m_renderer.BeginFrame();
+	m_renderer.ClearFrame();
+	m_renderer.SetPipelineState();
 	D2D1Core::Begin();
 	if (m_currentScene)
 	{
