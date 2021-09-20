@@ -1,6 +1,8 @@
 #include "EnginePCH.h"
 #include "MeshRenderObject.h"
 
+using namespace objectPass;
+
 MeshRenderObject::MeshRenderObject(RMesh* p_mesh, RTexture* p_texture, ID3D11Buffer* p_cBuffer)
 {
 	/*
@@ -27,7 +29,7 @@ MeshRenderObject::~MeshRenderObject()
 		m_constantBuffer->Release();
 }
 
-void MeshRenderObject::Render()
+void MeshRenderObject::Render(const objectPass::RenderPass& pass)
 {
 #define CONTEXT D3D11Core::Get().DeviceContext()
 	if (m_texture)

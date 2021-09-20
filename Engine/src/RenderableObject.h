@@ -2,6 +2,17 @@
 #include "RTexture.h"
 #include "RMesh.h"
 
+namespace objectPass
+{
+	enum class RenderPass {
+		// Draws the object normally, Looks for texture, mesh and more.
+		DEFAULT,
+
+		// Draws the shadow for the object.
+		SHADOW,
+	};
+}
+
 class RenderableObject
 {
 private:
@@ -12,5 +23,5 @@ public:
 
 	virtual ~RenderableObject() {};
 
-	virtual void Render() = 0;
+	virtual void Render(const objectPass::RenderPass& pass = objectPass::RenderPass::DEFAULT) = 0;
 };

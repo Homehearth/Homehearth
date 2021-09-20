@@ -16,6 +16,6 @@ public:
 	virtual ~MeshRenderObject() override;
 
 	// Inherited via RenderableObject
-	virtual void Render() override;
+	virtual void Render(const objectPass::RenderPass& pass) override;
 
 };
