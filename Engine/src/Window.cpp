@@ -4,9 +4,12 @@
 
 LRESULT CALLBACK Window::WinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+	if (ImGui_ImplWin32_WndProcHandler(hwnd, uMsg, wParam, lParam))
+		return true;
 	// Engine events:
 	switch (uMsg)
 	{
+		
 	case WM_NCCREATE:
 		LOG_INFO("Window has been created.");
 		break;
@@ -75,18 +78,31 @@ bool Window::Initialize(const Desc& desc)
 	const HWND hwndDesktop = GetDesktopWindow();
 	GetWindowRect(hwndDesktop, &desktop);
 
+	const int posX = ((desktop.right / 2) - (desc.width / 2));
+	const int posY = ((desktop.bottom / 2) - (desc.height / 2));
+
+	RECT rect;
+	rect.left = posX;
+	rect.right = posX + desc.width;
+	rect.top = posY;
+	rect.bottom = posY + desc.height;
+
+	AdjustWindowRect(&rect, WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE, FALSE);
+	const int width = rect.right - rect.left;
+	const int height = rect.bottom - rect.top;
+
 	// Create the window.
 	this->m_hWnd = CreateWindowEx(0, WINDOW_CLASS, desc.title,
 		WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE,
-		((desktop.right / 2) - (desc.width / 2)),
-		((desktop.bottom / 2) - (desc.height / 2)),
-		desc.width, desc.height,
+		posX, posY,
+		width, height,
 		nullptr, nullptr, desc.hInstance, nullptr);
 
 	assert(this->m_hWnd && "Window wasn't successfully created.");
 	
 	UpdateWindow(this->m_hWnd);
 	ShowWindow(this->m_hWnd, desc.nShowCmd);
+
 
 	this->m_windowDesc = desc;
 
@@ -98,7 +114,7 @@ HWND Window::GetHWnd() const
 	return this->m_hWnd;
 }
 
-RECT Window::GetClientRect() const
+RECT Window::GetWindowClientRect() const
 {
 	return this->m_clientRect;
 }

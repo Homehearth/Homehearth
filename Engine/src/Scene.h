@@ -1,9 +1,6 @@
 #pragma once
 #include "EventTypes.h"
 
-#include <entt.hpp>
-#include <vector>
-
 typedef std::function<void(entt::registry&, float)>	SystemUpdateFunction;
 typedef std::function<void (entt::registry&)>		SystemRenderFunction;
 

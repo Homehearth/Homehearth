@@ -24,7 +24,8 @@ project "Game"
         "../ThirdParty/imGUI/",
         "../ThirdParty/stb_image/",
         "../ThirdParty/networking/",
-        "../ThirdParty/entt/"
+        "../ThirdParty/entt/",
+		"../ThirdParty/assimp/include/"
     }
 
     vpaths {
@@ -39,7 +40,8 @@ project "Game"
 		"dwrite",
         "dxgi",
         "DirectXTK",
-        "DirectXTKAudioWin7"
+        "DirectXTKAudioWin7",
+		"assimp-vc142-mt.lib"
     }
 
     filter {"system:windows"}
@@ -55,8 +57,9 @@ project "Game"
         symbols "on"
         libdirs{
             "../ThirdParty/DirectXTK/lib/Debug_lib/",
-            "../Engine/build/bin/Debug-windows-x86_64/Engine"
-        }
+            "../Engine/build/bin/Debug-windows-x86_64/Engine",
+			"../ThirdParty/assimp/lib/"
+				}
 
 
     filter {"configurations:Release"}
@@ -66,5 +69,6 @@ project "Game"
         optimize "on"
         libdirs{
             "../ThirdParty/DirectXTK/lib/Release_lib/",
-            "../Engine/build/bin/Release-windows-x86_64/Engine"
-        }
+            "../Engine/build/bin/Release-windows-x86_64/Engine",
+			"../ThirdParty/assimp/lib/"
+				}

@@ -1,5 +1,5 @@
 #pragma once
-
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 class Window
 {
 public:
@@ -38,7 +38,7 @@ public:
     void SetWindowTextBar(const std::string& text);
 	
     HWND GetHWnd() const;
-    RECT GetClientRect() const;
+    RECT GetWindowClientRect() const;
     unsigned int GetWidth() const;
     unsigned int GetHeight() const;
     LPCWSTR GetTitle() const;

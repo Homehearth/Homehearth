@@ -2,6 +2,8 @@
 #include "Engine.h"
 #include <omp.h>
 
+#include "RMesh.h"
+
 bool Engine::s_engineRunning = false;
 bool Engine::s_safeExit = false;
 
@@ -17,9 +19,9 @@ Engine::Engine()
 
 void Engine::Startup()
 {
-	T_INIT(1, thread::ThreadType::POOL_FIFO);
-	resource::ResourceManager::Initialize();
-	srand((unsigned int)time(NULL));
+    T_INIT(1, thread::ThreadType::POOL_FIFO);
+    ResourceManager::Initialize();
+    srand((unsigned int)time(NULL));
 
 	// Window Startup:
 	Window::Desc config;
@@ -44,6 +46,30 @@ void Engine::Startup()
 	m_buffPointer->reserve(200);
 	m_buffPointer = m_drawBuffers.GetBuffer(1);
 	m_buffPointer->reserve(200);
+
+	if (m_client.Connect("127.0.0.1", 4950))
+	{
+		LOG_INFO("Connected to server");
+	}
+	else {
+		LOG_ERROR("Failed to connect to server");
+	} 
+    //m_client = std::make_unique<Client>();
+
+#ifdef _DEBUG
+	m_IsImguiReady = false;
+	// Setup ImGUI
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO();
+	ImGui_ImplWin32_Init(m_window.GetHWnd());
+	ImGui_ImplDX11_Init(D3D11Core::Get().Device(), D3D11Core::Get().DeviceContext());
+	ImGui::StyleColorsDark();
+	LOG_INFO("ImGui was successfully initialized");
+#endif
+
+	
+	std::cout << "All clients mothafocking did it!" << std::endl;
 }
 
 void Engine::Run()
@@ -56,8 +82,7 @@ void Engine::Run()
 
 	if (thread::IsThreadActive())
 		T_CJOB(Engine, RenderThread);
-
-
+	
 	MSG msg = { nullptr };
 	while (IsRunning())
 	{
@@ -96,16 +121,22 @@ void Engine::Run()
 	// Wait for the rendering thread to exit its last render cycle and shutdown.
 #ifdef _DEBUG
 	while (!s_safeExit) {};
+
+	// ImGUI Shutdown
+	ImGui_ImplDX11_Shutdown();
+	ImGui_ImplWin32_Shutdown();
+	ImGui::DestroyContext();
 #endif
 
-	T_DESTROY();
-	resource::ResourceManager::Destroy();
-	D2D1Core::Destroy();
+	
+    T_DESTROY();
+    ResourceManager::Destroy();
+    D2D1Core::Destroy();
 }
 
 void Engine::Shutdown()
 {
-	s_engineRunning = false;
+	s_engineRunning = false;	
 }
 
 Scene& Engine::GetScene(const std::string& name)
@@ -125,16 +156,15 @@ void Engine::SetScene(Scene& scene)
 		m_currentScene->clear();
 	}
 	m_currentScene = &scene;
-	m_currentScene->on<EngineEvent>([&](const EngineEvent& e, Scene& scene)
+	
+	m_currentScene->on<EShutdown>([&](const EShutdown& e, Scene& scene)
 		{
-			switch (e.type)
-			{
-			case EngineEvent::Type::SHUTDOWN:
-				Shutdown();
-				break;
-			default:
-				break;
-			}
+			Shutdown();
+		});
+	
+	m_currentScene->on<ESceneChange>([&](const ESceneChange& e, Scene& scene)
+		{
+			SetScene(e.newScene);
 		});
 }
 
@@ -143,21 +173,66 @@ Window* Engine::GetWindow()
 	return &m_window;
 }
 
-void Engine::OnEvent(EngineEvent& event)
-{
-	switch (event.type)
-	{
-	case EngineEvent::Type::SHUTDOWN:
-		Shutdown();
-		break;
-	default:
-		break;
-	}
-}
-
 bool Engine::IsRunning()
 {
 	return s_engineRunning;
+}
+
+void Engine::drawImGUI() const
+{
+	//Containers for plotting
+	static std::vector<float> fpsContainer;
+	static std::vector<float> fpsUpdateContainer;
+	static std::vector<float> ramUsageContainer;
+	static std::vector<float> vRamUsageContainer;
+	
+	static Timer timer;
+	
+	if(timer.getElapsedTime() > 0.5f)
+	{
+		fpsContainer.emplace_back((1 / m_frameTime.render));
+		fpsUpdateContainer.emplace_back((1.0f / m_frameTime.update));
+		ramUsageContainer.emplace_back((Profiler::GetRAMUsage() / (1024.f * 1024.f)));
+		vRamUsageContainer.emplace_back((Profiler::GetVRAMUsage() / (1042.f * 1024.f)));
+		timer.start();
+	}
+
+	if (fpsContainer.size() > 10)
+		fpsContainer.erase(fpsContainer.begin());
+
+	if (fpsUpdateContainer.size() > 10)
+		fpsUpdateContainer.erase(fpsUpdateContainer.begin());
+
+	if (ramUsageContainer.size() > 10)
+		ramUsageContainer.erase(ramUsageContainer.begin());
+
+	if (vRamUsageContainer.size() > 10)
+		vRamUsageContainer.erase(vRamUsageContainer.begin());
+
+	ImGui::Begin("Window");
+	const std::string screenRes = "Screen Resolution: " + std::to_string(m_window.GetWidth()) + "x" + std::to_string(m_window.GetHeight());
+	ImGui::Text("%s", screenRes.c_str());
+	ImGui::End();
+
+	
+	ImGui::Begin("Statistics");
+	if (ImGui::CollapsingHeader("FPS"))
+	{
+		ImGui::PlotLines(("FPS: " + std::to_string(static_cast<int>(1 / m_frameTime.render))).c_str(), fpsContainer.data(), fpsContainer.size(), 0, nullptr, 0.0f, 144.0f, ImVec2(150, 50));
+		ImGui::Spacing();
+		ImGui::PlotLines(("Update FPS: " + std::to_string(static_cast<int>(1.0f / m_frameTime.update))).c_str(), fpsUpdateContainer.data(), fpsUpdateContainer.size(), 0, nullptr, 0.0f, 144.0f, ImVec2(150, 50));
+		ImGui::Spacing();
+	}
+
+	if(ImGui::CollapsingHeader("Memory"))
+	{
+		ImGui::PlotHistogram(("RAM: "+std::to_string(static_cast<float>(Profiler::GetRAMUsage() / (1024.f * 1024.f))) + " MB").c_str(), ramUsageContainer.data(), ramUsageContainer.size(), 0, nullptr, 0.0f, 500.0f, ImVec2(150, 75));
+		ImGui::Spacing();
+		ImGui::PlotHistogram(("VRAM: " + std::to_string(static_cast<float>(Profiler::GetVRAMUsage() / (1024.f * 1024.f))) + " MB").c_str(), vRamUsageContainer.data(), vRamUsageContainer.size(), 0, nullptr, 0.0f, 500.0f, ImVec2(150, 75));
+	}
+
+	ImGui::End();
+	
 }
 
 void Engine::RenderThread()
@@ -190,6 +265,8 @@ void Engine::RenderThread()
 
 void Engine::Update(float dt)
 {
+
+
 	m_buffPointer = m_drawBuffers.GetBuffer(0);
 	// Update the camera transform based on interactive inputs.
 	//updateCamera(dt);
@@ -197,12 +274,26 @@ void Engine::Update(float dt)
 	// Update positions, orientations and any other
 	// relevant visual state of any dynamic elements
 	// in the scene.
-
 	if (m_currentScene)
 	{
 		m_currentScene->Update(dt);
 	}
 
+	
+#ifdef _DEBUG
+	if(!m_IsImguiReady.load())
+	{
+		//Start ImGui frame
+		ImGui_ImplDX11_NewFrame();
+		ImGui_ImplWin32_NewFrame();
+		ImGui::NewFrame();
+		drawImGUI();
+		
+		m_IsImguiReady = true;
+	}
+#endif // DEBUG
+
+	
 	//std::cout << "Y: " << y++ << "\n";
 	// Handle events enqueued
 	//Scene::GetEventDispatcher().update();
@@ -215,18 +306,13 @@ void Engine::Update(float dt)
 
 void Engine::Render(float& dt)
 {
-	m_renderer.ClearScreen();
+	
+	m_renderer.BeginFrame();
 	D2D1Core::Begin();
 	if (m_currentScene)
 	{
 		m_currentScene->Render();
 	}
-
-	const std::string fps = "Render FPS: " + std::to_string(1.0f / m_frameTime.render)
-		+ "\nUpdate FPS: " + std::to_string(1.0f / m_frameTime.update)
-		+ "\nRAM: " + std::to_string(Profiler::Get().GetRAMUsage() / (1024.f * 1024.f)) + " MB"
-		+ "\nVRAM: " + std::to_string(Profiler::Get().GetVRAMUsage() / (1042.f * 1024.f)) + " MB";
-	D2D1Core::DrawT(fps, &m_window);
 
 	/*
 		Present the final image and clear it for next frame.
@@ -237,7 +323,18 @@ void Engine::Render(float& dt)
 	*/
 	m_drawBuffers.ReadySwap();
 	D2D1Core::Present();
+
+#ifdef _DEBUG
+	if (m_IsImguiReady.load())
+	{
+		// Assemble togheter draw data
+		ImGui::Render();
+		// Render draw data
+		ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+		m_IsImguiReady = false;
+	}
+#endif
+	
 	D3D11Core::Get().SwapChain()->Present(1, 0);
-	m_renderer.ClearScreen();
 }
 
