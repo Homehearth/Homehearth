@@ -37,7 +37,7 @@ void Engine::Startup()
 
 	m_renderer.Initialize(&m_window);
 
-	// Thread should be launched after s_engineRunning is set to true and D3D11 is initalized.
+	// Thread should be launched after s_engineRunning is set to true and D3D11 is initialized.
 	s_engineRunning = true;
 
 	// Preallocate space for Triplebuffer
@@ -68,8 +68,6 @@ void Engine::Startup()
 	LOG_INFO("ImGui was successfully initialized");
 #endif
 
-	
-	std::cout << "All clients mothafocking did it!" << std::endl;
 }
 
 void Engine::Run()
@@ -86,7 +84,6 @@ void Engine::Run()
 	MSG msg = { nullptr };
 	while (IsRunning())
 	{
-		// Service any and all pending Windows messages.
 		if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
 		{
 			TranslateMessage(&msg);
@@ -101,11 +98,9 @@ void Engine::Run()
 		// todo:
 
 
-
 		// Update time.
 		currentFrame = omp_get_wtime();
 		deltaTime = static_cast<float>(currentFrame - lastFrame);
-
 
 		if (accumulator >= targetDelta)
 		{
@@ -239,8 +234,7 @@ void Engine::RenderThread()
 {
 	double currentFrame = 0.f, lastFrame = omp_get_wtime();
 	float deltaTime = 0.f, deltaSum = 0.f;
-	// Desired FPS
-	const float targetDelta = 1 / 144.01f;
+	const float targetDelta = 1 / 144.01f; 	// Desired FPS
 	while (IsRunning())
 	{
 		currentFrame = omp_get_wtime();
@@ -265,15 +259,12 @@ void Engine::RenderThread()
 
 void Engine::Update(float dt)
 {
-
-
 	m_buffPointer = m_drawBuffers.GetBuffer(0);
+	
 	// Update the camera transform based on interactive inputs.
-	//updateCamera(dt);
+	// todo:
 
-	// Update positions, orientations and any other
-	// relevant visual state of any dynamic elements
-	// in the scene.
+	// Update elements in the scene.
 	if (m_currentScene)
 	{
 		m_currentScene->Update(dt);
@@ -283,7 +274,7 @@ void Engine::Update(float dt)
 #ifdef _DEBUG
 	if(!m_IsImguiReady.load())
 	{
-		//Start ImGui frame
+		// Start ImGui frame
 		ImGui_ImplDX11_NewFrame();
 		ImGui_ImplWin32_NewFrame();
 		ImGui::NewFrame();
@@ -292,11 +283,6 @@ void Engine::Update(float dt)
 		m_IsImguiReady = true;
 	}
 #endif // DEBUG
-
-	
-	//std::cout << "Y: " << y++ << "\n";
-	// Handle events enqueued
-	//Scene::GetEventDispatcher().update();
 
 	if (!m_drawBuffers.IsSwapped())
 	{
@@ -314,22 +300,13 @@ void Engine::Render(float& dt)
 		m_currentScene->Render();
 	}
 
-	/*
-		Present the final image and clear it for next frame.
-	*/
-
-	/*
-		Kanske v�nta p� att uppdateringstr�den kan swappa buffrar.
-	*/
 	m_drawBuffers.ReadySwap();
 	D2D1Core::Present();
 
 #ifdef _DEBUG
 	if (m_IsImguiReady.load())
 	{
-		// Assemble togheter draw data
 		ImGui::Render();
-		// Render draw data
 		ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 		m_IsImguiReady = false;
 	}

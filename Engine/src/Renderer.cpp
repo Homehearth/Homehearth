@@ -49,7 +49,7 @@ void Renderer::SetPipelineState()
 	
     CONTEXT->PSSetSamplers(0, 1, m_pipelineManager.m_linearSamplerState.GetAddressOf());
     CONTEXT->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    //CONTEXT->OMSetRenderTargets(1, m_pipelineManager.m_renderTargetView.GetAddressOf(), m_pipelineManager.m_depthStencilView.Get());
+    CONTEXT->OMSetRenderTargets(1, m_pipelineManager.m_renderTargetView.GetAddressOf(), m_pipelineManager.m_depthStencilView.Get());
     CONTEXT->VSSetConstantBuffers(0, 1, m_pipelineManager.m_defaultConstantBuffer.GetAddressOf());
     CONTEXT->IASetInputLayout(m_pipelineManager.m_defaultInputLayout.Get());
     CONTEXT->VSSetShader(m_pipelineManager.m_defaultVertexShader.Get(), nullptr, NULL);
