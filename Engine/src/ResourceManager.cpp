@@ -58,6 +58,9 @@ void ResourceManager::InsertResource(const std::string& resource_name, resource:
 	//Only insert resources that does not exist
 	if (ResourceManager::m_instance->m_resources.find(resource_name) == ResourceManager::m_instance->m_resources.end())
 	{
+#ifdef _DEBUG
+		LOG_INFO("RM added '%s'", resource_name.c_str());
+#endif 
 		resource->AddRef();
 		ResourceManager::m_instance->m_resources.emplace(resource_name, resource);
 	}

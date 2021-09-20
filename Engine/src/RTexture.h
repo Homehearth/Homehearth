@@ -1,5 +1,7 @@
 #pragma once
 #include "GResource.h"
+const UINT MAXSIZE = 4096;
+
 // RTexture -> (RESOURCE)Texture
 
 class RTexture : public resource::GResource

@@ -1,23 +1,18 @@
 #pragma once
 #include "RTexture.h"
 
-/*
-	TODO:
-	* Load in mlt-files
-*/
-
 class RMaterial : public resource::GResource
 {
 private:
 	enum class ETextureType
 	{
-		diffuse,	//Albedo
+		albedo,
 		normal,
 		metalness,
 		roughness,
+		aoMap,	//Ambient occulution
 		length
 	};
-	//Add ambient occlution map
 
 	std::string m_name;
 	sm::Vector3 m_ambient;
@@ -26,11 +21,16 @@ private:
 	float       m_shiniess;
 	float		m_opacity;
 	RTexture*   m_textures[UINT(ETextureType::length)];
-	
+
+private:
+	//Split the path to only get the filename
+	std::string GetFilename(const std::string& path);
+
 public:
 	RMaterial();
 	~RMaterial();
 
+	//[TODO] Fix later
 	void UploadToGPU();
 
 	//Loaded from assimp

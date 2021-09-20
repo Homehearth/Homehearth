@@ -117,8 +117,9 @@ bool RMesh::Create(const std::string& filename)
     //Check if readfile was successful
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
     {
-        std::string errorString = "Assimp error: " + (std::string)importer.GetErrorString();
-        LOG_WARNING(errorString.c_str());
+#ifdef _DEBUG
+        LOG_WARNING("Assimp error: %s", importer.GetErrorString());
+#endif 
         importer.FreeScene();
         return false;
     }
@@ -126,8 +127,9 @@ bool RMesh::Create(const std::string& filename)
     //Will not go on if the scene has no meshes
     if (!scene->HasMeshes())
     {
-        std::string errorString = "The scene has no meshes...";
-        LOG_WARNING(errorString.c_str());
+#ifdef _DEBUG
+        LOG_WARNING("The scene has no meshes...");
+#endif 
         importer.FreeScene();
         return false;
     }
@@ -198,12 +200,12 @@ bool RMesh::Create(const std::string& filename)
     if (!CreateVertexBuffer(vertices) ||
         !CreateIndexBuffer(indices))
     {
+#ifdef _DEBUG
         LOG_WARNING("Failed to load vertex- or indexbuffer...");
+#endif 
         success = false;
     }
-    else
-        std::cout << "Mesh: '" << filepath << "' created" << std::endl;
-
+    
     //Cleaning
     vertices.clear();
     indices.clear();

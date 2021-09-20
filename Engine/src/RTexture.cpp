@@ -2,7 +2,9 @@
 #include "RTexture.h"
 
 #define STB_IMAGE_IMPLEMENTATION
+#pragma warning(push, 0)
 #include <stb_image.h>
+#pragma warning(pop)
 
 RTexture::~RTexture()
 {
@@ -23,8 +25,19 @@ bool RTexture::Create(const std::string& filename)
 	unsigned char* image = stbi_load(filepath.c_str(), &width, &height, &comp, STBI_rgb_alpha);
 	if (!image)
 	{
-		std::string warning = "[Texture] Failed to load image: '" + filepath + "'\n";
-		LOG_WARNING(warning.c_str());
+#ifdef _DEBUG
+		LOG_WARNING("[Texture] Failed to load image: %s", filepath.c_str());
+#endif 
+		stbi_image_free(image);
+		return false;
+	}
+
+	//The texture is to large for the engine
+	if (width > MAXSIZE || height > MAXSIZE)
+	{
+#ifdef _DEBUG
+		LOG_WARNING("[Texture] %s is too large (%d x %d)", filename.c_str(), width, height);
+#endif
 		stbi_image_free(image);
 		return false;
 	}
@@ -51,7 +64,9 @@ bool RTexture::Create(const std::string& filename)
 	HRESULT hr = D3D11Core::Get().Device()->CreateTexture2D(&textureDesc, &data, &m_texture);
 	if (FAILED(hr))
 	{
-		LOG_WARNING("[Texture2D] Failed to create Texture2D!\n");
+#ifdef _DEBUG
+		LOG_WARNING("[Texture2D] Failed to create Texture2D!");
+#endif
 		stbi_image_free(image);
 		return false;
 	}
@@ -59,7 +74,9 @@ bool RTexture::Create(const std::string& filename)
 	hr = D3D11Core::Get().Device()->CreateShaderResourceView(m_texture, 0, &m_shaderView);
 	if (FAILED(hr))
 	{
-		LOG_WARNING("[Texture2D] Failed to create ShaderResourceView!\n");
+#ifdef _DEBUG
+		LOG_WARNING("[Texture2D] Failed to create ShaderResourceView!");
+#endif
 		stbi_image_free(image);
 		return false;
 	}
