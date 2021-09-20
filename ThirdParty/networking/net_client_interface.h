@@ -66,7 +66,7 @@ namespace network
 		void Send(const message<T>& msg);
 		void ReadHeader();
 		static VOID CALLBACK ReadPayload(DWORD dwError, DWORD cbTransferred, LPWSAOVERLAPPED lpOverlapped, DWORD dwFlags);
-		void WriteHeader();
+		void WriteHeader(const message<T>& msg);
 		void WritePayload();
 		static VOID CALLBACK ReadValidation(DWORD dwError, DWORD cbTransferred, LPWSAOVERLAPPED lpOverlapped, DWORD dwFlags);
 		static void WriteValidation(SOCKET s, uint64_t handshakeIn);
@@ -156,9 +156,33 @@ namespace network
 	}
 
 	template <typename T>
-	void client_interface<T>::WriteHeader()
+	void client_interface<T>::WriteHeader(const message<T>& msg)
 	{
-
+		PER_IO_DATA* context = new PER_IO_DATA;
+		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
+		context->socket = m_socket;
+		memcpy(context->buffer, &msg.header, sizeof(msg.header));
+		context->DataBuf.buf = context->buffer;
+		context->DataBuf.len = sizeof(msg.header);
+		DWORD BytesSent = 0;
+		DWORD flags = 0;
+		
+		if (WSASend(context->socket, &context->DataBuf, 1, &BytesSent, flags, &context->Overlapped, NULL) == SOCKET_ERROR)
+		{
+			if (WSAGetLastError() != WSA_IO_PENDING)
+			{
+				LOG_ERROR("WSASend failed!");
+				delete context;
+			}
+			else
+			{
+				LOG_INFO("WSASend is pending!");
+			}
+		}
+		else
+		{
+			LOG_INFO("WSASend was ok!");
+		}
 	}
 
 	template <typename T>
@@ -374,6 +398,7 @@ namespace network
 	template<typename T>
 	inline void client_interface<T>::Send(const message<T>& msg)
 	{
+
 		send(m_socket, (char*)&msg.header, static_cast<int>(sizeof(msg.header)), 0);
 		send(m_socket, (char*)msg.payload.data(), static_cast<int>(sizeof(msg.payload.size())));
 	}

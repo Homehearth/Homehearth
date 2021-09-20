@@ -1,4 +1,5 @@
 #pragma once
+#include "EnginePCH.h"
 
 namespace network
 {
@@ -27,7 +28,7 @@ namespace network
 
 	void Client::OnDisconnect()
 	{
-		std::cout << "Disconnected from server!" << std::endl;
+		LOG_INFO("Disconnected from the server!");
 	}
 
 	Client::~Client()
@@ -36,7 +37,7 @@ namespace network
 
 	void Client::OnValidation()
 	{
-		std::cout << "Connection has been validated!" << std::endl;
+		LOG_INFO("Your connection has been validated!");
 	}
 
 	void Client::OnMessageReceived(const network::message<MessageType>& msg)
