@@ -15,7 +15,9 @@ project "Engine"
     -- Note: specify the path relative to the Premake file.
     files {
         "src/**.h",
-        "src/**.cpp"
+        "src/**.cpp",
+        "**.hlsl", 
+        "**.hlsli"
     }
 
 
@@ -45,14 +47,15 @@ project "Engine"
         ["src/Engine/Utility"] = { "**Timer.*" },
         
         ["src/Engine"] = {  },
-            ["src/Engine/Graphics/Renderer"] = {"**Renderer.*"},
+            ["src/Engine/Graphics/Renderer"] = {"**Renderer.*", "**PipelineManager.*"},
+                ["src/Engine/Graphics/Renderer/RenderPass"] = {"**Pass.*"},
             ["src/Engine/Graphics/D3D11"] = { "**D3D11Core.*" },
 			["src/Engine/Graphics/D2D1"] = { "**D2D1Core.*" },
 			
 			["src/Network"] = { "**Client.*" },
 
-        ["src/Engine/Resources"] = { "**ResourceManager.*", "**GResource.*", "**RMesh.*", "**RTexture.*" },
-            ["src/Engine/Resources/Shaders"] = { "**.hhlsl", "**.hlsli" },
+        ["src/Engine/Resources"] = { "**ResourceManager.*", "**GResource.*", "**RMesh.*", "**RTexture.*", "**RMaterial.*", "**RSceneMesh.*" },
+            ["src/Engine/Resources/Shaders"] = { "**.hlsl", "**.hlsli" },
 
         ["src/Engine/Audio"] = {  },
         ["src/Engine/Physics"] = {  },
@@ -99,4 +102,24 @@ project "Engine"
         symbols "on"
         optimize "on"
         libdirs{"../ThirdParty/DirectXTK/lib/Release_lib/"}
-        
+
+
+
+
+    filter "*"
+        local ws = "$(ProjectDir)%%(Filename).cso"
+        files("*.hlsl")
+            shadermodel("5.0")
+            shaderobjectfileoutput(ws)
+
+        filter("files:**_vs.hlsl")
+            shadertype("Vertex")
+
+        filter("files:**_ps.hlsl")
+            shadertype("Pixel")
+            
+        filter("files:**_gs.hlsl")
+            shadertype("Geometry")
+           
+        filter("files:**_cs.hlsl")
+            shadertype("Compute")
