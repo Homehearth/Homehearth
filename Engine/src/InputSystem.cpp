@@ -28,10 +28,7 @@ bool InputSystem::PollEvent(InputEvent& event)
 	return false;
 }
 
-const std::unique_ptr<DirectX::Keyboard>& InputSystem::GetKeyboard() const
-{
-	return this->m_keyboard;
-}
+
 
 void InputSystem::UpdateEvents()
 {

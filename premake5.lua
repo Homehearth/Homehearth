@@ -12,6 +12,7 @@ workspace "Workspace"
     startproject "Game"
 
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
+linkoptions { "-IGNORE:LNK2038" }
 
 -- Subprojects.
 include "Game"

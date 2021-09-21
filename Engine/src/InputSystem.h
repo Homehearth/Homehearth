@@ -1,9 +1,5 @@
 #pragma once
-#include <EnginePCH.h>
-#pragma warning(push, 0)
-#include <Keyboard.h>
-#include <Mouse.h>
-#pragma warning(pop)
+
 struct InputEvent
 {
 	UINT key_state;		// ex: WM_KEYDOWN
@@ -30,7 +26,7 @@ public:
 	virtual ~InputSystem() = default;
 	//Set which window for the mouse to operate in
 	void SetMouseWindow(const HWND& windowHandle);
-	static InputSystem& Get()
+	static auto& Get()
 	{
 		static InputSystem s_instance;
 		return s_instance;
@@ -42,7 +38,6 @@ public:
 	//Pull potential events from the queue
 	bool PollEvent(InputEvent& event);
 
-	const std::unique_ptr<DirectX::Keyboard>& GetKeyboard() const;
 
 	//Updates KB and Mouse, checking new inputs
 	void UpdateEvents();

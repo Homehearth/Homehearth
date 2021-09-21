@@ -53,6 +53,8 @@ namespace dx = DirectX;
 #include <SimpleMath.h>
 #include <BufferHelpers.h>
 #include <Audio.h>
+#include <Keyboard.h>
+#include <Mouse.h>
 namespace sm = dx::SimpleMath;
 
 // entt (ECS library)

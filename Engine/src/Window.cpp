@@ -21,7 +21,7 @@ LRESULT CALLBACK Window::WinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 		break;
 	case WM_KEYDOWN:
 		{
-		InputSystem::Get().GetKeyboard()->ProcessMessage(uMsg, wParam, lParam);
+		//InputSystem::Get().GetKeyboard()->ProcessMessage(uMsg, wParam, lParam);
 		std::cout << "Message Processed!\n";
 			if(wParam == VK_ESCAPE)
 				PostQuitMessage(0);
