@@ -100,7 +100,6 @@ void Engine::Run()
 	{
 		if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
 		{
-			D3D11Core::Get();
 			InputSystem::Get().UpdateEvents();
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
