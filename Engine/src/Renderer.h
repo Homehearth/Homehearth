@@ -1,56 +1,34 @@
 #pragma once
+#include "BasePass.h"
+#include "IRenderPass.h"
+#include "PipelineManager.h"
 
 
 class Renderer
 {
+private:
+	D3D11Core* m_d3d11;
+	PipelineManager m_pipelineManager;
+	std::vector<IRenderPass*> m_passes;
+	
+	BasePass m_basePass;	// Forward Rendering.
+
 public:
 	Renderer();
 	virtual ~Renderer() = default;
-	
+
 	void Initialize(Window* pWindow);
 
-	void ClearScreen()
-	{
-		const FLOAT color[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-		D3D11Core::Get().DeviceContext()->ClearRenderTargetView(this->renderTargetView.Get(), color);
-	}
-	
-	void BeginFrame()
-	{
-		this->ClearScreen();
-		D3D11Core::Get().DeviceContext()->OMSetRenderTargets(1, this->renderTargetView.GetAddressOf(), nullptr);
-	}
-	
-	void EndFrame()
-	{
-		
-	}
+	// Clears the screen.
+	void ClearFrame();
 
-private:
-	Window* pWindow;
-	bool isInitialized;
-	
-	ComPtr<ID3D11RenderTargetView>		renderTargetView;
-	
-	ComPtr<ID3D11Texture2D>				depthStencilTexture;
-	ComPtr<ID3D11DepthStencilView>		depthStencilView;
-	ComPtr<ID3D11DepthStencilState>		depthStencilState;
-	
-	ComPtr<ID3D11RasterizerState>		rasterizerState;
-	ComPtr<ID3D11RasterizerState>		rasterStateNoCulling;
-	ComPtr<ID3D11RasterizerState>		rasterStateWireframe;
-	
-	ComPtr<ID3D11SamplerState>			linearSamplerState;
-	ComPtr<ID3D11SamplerState>			pointSamplerState;
-	
-	D3D11_VIEWPORT						viewport;
+	// Call this each frame to render all passes.
+	void Render();
 
-	bool CreateRenderTargetView();
-	bool CreateDepthStencilTexture();
-	bool CreateDepthStencilState();
-	bool CreateDepthStencilView();
-	bool CreateRasterizerStates();
-	bool CreateSamplerStates();
-	void SetViewport();
+	// Add a pass to the list. Useful if a pass is created outside the Renderer class.
+	void AddPass(IRenderPass* pass);
+
+	// A temporary function used for testing (Forward Rendering).
+	void SetPipelineState();
 };
 
