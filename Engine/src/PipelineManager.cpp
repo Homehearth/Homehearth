@@ -290,13 +290,13 @@ bool PipelineManager::CreateDefaultInputLayout()
 bool PipelineManager::CreateDefaultConstantBuffer()
 {
     D3D11_BUFFER_DESC bDesc;
-    bDesc.ByteWidth = sizeof(BasicModelMatrix);
+    bDesc.ByteWidth = sizeof(basic_model_matrix_t);
     bDesc.Usage = D3D11_USAGE_DEFAULT;
     bDesc.CPUAccessFlags = 0;
     bDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
     bDesc.MiscFlags = 0;
 
-    BasicModelMatrix b;
+    basic_model_matrix_t b;
     b.worldMatrix = sm::Matrix::CreateWorld({ 0.f, 0.0f, 1.0f }, { 0.0f, 0.0f, -1.0f }, { 0.0f, 1.0f, 0.0f }).Transpose();
 
     D3D11_SUBRESOURCE_DATA data;

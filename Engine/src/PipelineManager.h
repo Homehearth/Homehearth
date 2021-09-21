@@ -1,11 +1,5 @@
 #pragma once
-
-// todo: move this somewhere else.
-struct BasicModelMatrix
-{
-	sm::Matrix worldMatrix;
-};
-
+#include "VertexStructure.h"
 
 class PipelineManager
 {
@@ -26,6 +20,7 @@ public:
 	ComPtr<ID3D11RenderTargetView>	m_renderTargetView;
 
 	ComPtr<ID3D11Texture2D>			m_depthStencilTexture;
+	
 	ComPtr<ID3D11DepthStencilView>	m_depthStencilView;
 	ComPtr<ID3D11DepthStencilState>	m_depthStencilState;
 
@@ -41,6 +36,7 @@ public:
 	ComPtr<ID3D11Buffer>			m_defaultConstantBuffer;
 	
 	ComPtr<ID3D11VertexShader>		m_defaultVertexShader;
+
 	ComPtr<ID3D11PixelShader>		m_defaultPixelShader;
 
 	
@@ -56,8 +52,8 @@ private:
 	bool CreateSamplerStates();
 
 	bool CreateDefaultInputLayout();
-	bool CreateDefaultConstantBuffer();
-	bool CreateDefaultShaders();
+	bool CreateDefaultConstantBuffer();	// todo: Use HelperBuffer.h
+	bool CreateDefaultShaders();	// todo: make loading dynamic. Create a wrapper class using GResource.
 
 	void SetViewport();
 };
