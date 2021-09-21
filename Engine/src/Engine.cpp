@@ -13,7 +13,7 @@ Engine::Engine()
 	, m_vSync(false)
 	, m_frameTime()
 	, m_buffPointer(nullptr)
-{
+{	
 	LOG_INFO("Engine(): " __TIMESTAMP__);
 }
 
@@ -56,6 +56,20 @@ void Engine::Startup()
 	} 
     //m_client = std::make_unique<Client>();
 
+	//
+	// AUDIO 
+	//
+	HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+	if (FAILED(hr))
+	{
+		LOG_ERROR("Failed to initialize AudioEngine.");
+	}
+	DirectX::AUDIO_ENGINE_FLAGS eflags = DirectX::AudioEngine_Default;
+#ifdef _DEBUG
+	eflags |= DirectX::AudioEngine_Debug;
+#endif
+	this->m_audio_engine = std::make_unique<DirectX::AudioEngine>(eflags);
+	
 #ifdef _DEBUG
 	m_IsImguiReady = false;
 	// Setup ImGUI
@@ -215,17 +229,17 @@ void Engine::drawImGUI() const
 	ImGui::Begin("Statistics");
 	if (ImGui::CollapsingHeader("FPS"))
 	{
-		ImGui::PlotLines(("FPS: " + std::to_string(static_cast<int>(1 / m_frameTime.render))).c_str(), fpsContainer.data(), fpsContainer.size(), 0, nullptr, 0.0f, 144.0f, ImVec2(150, 50));
+		ImGui::PlotLines(("FPS: " + std::to_string(static_cast<size_t>(1 / m_frameTime.render))).c_str(), fpsContainer.data(), static_cast<int>(fpsContainer.size()), 0, nullptr, 0.0f, 144.0f, ImVec2(150, 50));
 		ImGui::Spacing();
-		ImGui::PlotLines(("Update FPS: " + std::to_string(static_cast<int>(1.0f / m_frameTime.update))).c_str(), fpsUpdateContainer.data(), fpsUpdateContainer.size(), 0, nullptr, 0.0f, 144.0f, ImVec2(150, 50));
+		ImGui::PlotLines(("Update FPS: " + std::to_string(static_cast<size_t>(1.0f / m_frameTime.update))).c_str(), fpsUpdateContainer.data(), static_cast<int>(fpsUpdateContainer.size()), 0, nullptr, 0.0f, 144.0f, ImVec2(150, 50));
 		ImGui::Spacing();
 	}
 
 	if(ImGui::CollapsingHeader("Memory"))
 	{
-		ImGui::PlotHistogram(("RAM: "+std::to_string(static_cast<float>(Profiler::GetRAMUsage() / (1024.f * 1024.f))) + " MB").c_str(), ramUsageContainer.data(), ramUsageContainer.size(), 0, nullptr, 0.0f, 500.0f, ImVec2(150, 75));
+		ImGui::PlotHistogram(("RAM: "+std::to_string(static_cast<float>(Profiler::GetRAMUsage() / (1024.f * 1024.f))) + " MB").c_str(), ramUsageContainer.data(), static_cast<int>(ramUsageContainer.size()), 0, nullptr, 0.0f, 500.0f, ImVec2(150, 75));
 		ImGui::Spacing();
-		ImGui::PlotHistogram(("VRAM: " + std::to_string(static_cast<float>(Profiler::GetVRAMUsage() / (1024.f * 1024.f))) + " MB").c_str(), vRamUsageContainer.data(), vRamUsageContainer.size(), 0, nullptr, 0.0f, 500.0f, ImVec2(150, 75));
+		ImGui::PlotHistogram(("VRAM: " + std::to_string(static_cast<float>(Profiler::GetVRAMUsage() / (1024.f * 1024.f))) + " MB").c_str(), vRamUsageContainer.data(), static_cast<int>(vRamUsageContainer.size()), 0, nullptr, 0.0f, 500.0f, ImVec2(150, 75));
 	}
 
 	ImGui::End();

@@ -40,7 +40,6 @@ project "Game"
 		"dwrite",
         "dxgi",
         "DirectXTK",
-        "DirectXTKAudioWin7",
 		"assimp-vc142-mt.lib"
     }
 

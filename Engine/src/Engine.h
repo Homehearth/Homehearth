@@ -23,6 +23,8 @@ private:
 	Renderer m_renderer;
 
 	Client m_client;
+
+	std::unique_ptr<DirectX::AudioEngine> m_audio_engine;
 	
 	std::unordered_map<std::string, Scene> m_scenes;
 	Scene* m_currentScene;
@@ -32,6 +34,7 @@ private:
 		float update;
 		float render;
 	} m_frameTime;
+
 	
 	// Job for rendering thread.
 	void RenderThread();

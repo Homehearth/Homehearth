@@ -70,7 +70,6 @@ project "Engine"
     links{
         "dxgi", -- links d3d11 d2d1 dwrite
         "DirectXTK",
-        "DirectXTKAudioWin7",
         "ImGui"
     }
 
