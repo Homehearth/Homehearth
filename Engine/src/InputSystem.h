@@ -16,8 +16,9 @@ class InputSystem
 private:
 	InputSystem();
 
-
+	//Unsure if needed
 	std::queue<InputEvent> m_eventQueue;
+
 	std::unique_ptr<DirectX::Keyboard> m_keyboard;
 	std::unique_ptr<DirectX::Mouse> m_mouse;
 	std::unique_ptr<DirectX::Keyboard::KeyboardStateTracker> m_kBTracker;
@@ -40,6 +41,8 @@ public:
 
 	//Pull potential events from the queue
 	bool PollEvent(InputEvent& event);
+
+	const std::unique_ptr<DirectX::Keyboard>& GetKeyboard() const;
 
 	//Updates KB and Mouse, checking new inputs
 	void UpdateEvents();
