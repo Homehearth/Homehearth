@@ -28,6 +28,8 @@ bool InputSystem::PollEvent(InputEvent& event)
 	return false;
 }
 
+
+
 void InputSystem::UpdateEvents()
 {
 	this->m_kBState = this->m_keyboard->GetState();
