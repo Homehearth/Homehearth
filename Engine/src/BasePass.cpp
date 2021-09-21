@@ -32,7 +32,8 @@ void BasePass::PreRender(ID3D11DeviceContext* dc, PipelineManager* pm)
     // CONSTANT BUFFERS.
     {
         dc->PSSetConstantBuffers(0, 0, nullptr);
-        dc->VSSetConstantBuffers(0, 1, pm->m_defaultConstantBuffer.GetAddressOf());
+        dc->VSSetConstantBuffers(0, 1, pm->m_defaultModelConstantBuffer.GetAddressOf());
+        dc->VSSetConstantBuffers(1, 1, pm->m_defaultViewConstantBuffer.GetAddressOf());
     }
 
     // SHADER RESOURCES.
@@ -44,14 +45,15 @@ void BasePass::PreRender(ID3D11DeviceContext* dc, PipelineManager* pm)
 
     // RASTERIZER.
     {
-        dc->RSSetViewports(0, nullptr);
+        dc->RSSetViewports(1, &pm->m_viewport);
         dc->RSSetState(pm->m_rasterStateNoCulling.Get());
     }
 
     // OUTPUT MERGER.
     {
         dc->OMSetRenderTargets(1, pm->m_renderTargetView.GetAddressOf(), pm->m_depthStencilView.Get());
-        dc->OMSetBlendState(nullptr, nullptr, 0);
+        // TODO set appropriate blendState
+        //dc->OMSetBlendState(nullptr, nullptr, 0); 
         dc->OMSetDepthStencilState(pm->m_depthStencilState.Get(), 1);
     }
 }

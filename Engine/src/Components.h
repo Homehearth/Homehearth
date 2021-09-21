@@ -10,16 +10,21 @@ namespace ecs
 			sm::Vector3 rotation;
 			sm::Vector3 scale;
 
-			//dx::ConstantBuffer<cbuffer::PerObject>* pConstantBuffer;
+			std::unique_ptr<dx::ConstantBuffer<sm::Matrix>> pConstantBuffer;
 		};
 
-		struct Mesh
+		struct Renderable
 		{
 			RMesh* mesh;
+			std::unique_ptr<dx::ConstantBuffer<sm::Matrix>> pConstantBuffer;
 		};
 	};
 
 	void OnTransformConstruct(entt::registry& reg, entt::entity entity);
+	void OnTransformUpdate(entt::registry& reg, entt::entity entity);
+
+	void OnRenderableConstruct(entt::registry& reg, entt::entity entity);
+
 
 	sm::Matrix GetMatrix(component::Transform& transform);
 	sm::Vector3 GetForward(component::Transform& transform);
@@ -28,3 +33,4 @@ namespace ecs
 };
 
 namespace comp = ecs::component;
+

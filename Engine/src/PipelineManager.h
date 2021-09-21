@@ -13,8 +13,6 @@ private:
 	Window*							m_window;
 	D3D11Core*						m_d3d11;
 	
-	D3D11_VIEWPORT					m_viewport;
-
 public:
 	PipelineManager();
 	virtual ~PipelineManager() = default;
@@ -38,10 +36,13 @@ public:
 
 	ComPtr<ID3D11InputLayout>		m_defaultInputLayout;
 	
-	ComPtr<ID3D11Buffer>			m_defaultConstantBuffer;
+	ComPtr<ID3D11Buffer>			m_defaultModelConstantBuffer;
+	ComPtr<ID3D11Buffer>			m_defaultViewConstantBuffer; // TODO: maybe put in Camera class or update from Camera class
 	
 	ComPtr<ID3D11VertexShader>		m_defaultVertexShader;
 	ComPtr<ID3D11PixelShader>		m_defaultPixelShader;
+
+	D3D11_VIEWPORT					m_viewport;
 
 	
 	std::string shaderByteCode;

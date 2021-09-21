@@ -39,13 +39,6 @@ void Engine::Startup()
 	// Thread should be launched after s_engineRunning is set to true and D3D11 is initialized.
 	s_engineRunning = true;
 
-	// Preallocate space for Triplebuffer
-	m_drawBuffers.AllocateBuffers();
-	m_buffPointer = m_drawBuffers.GetBuffer(0);
-	m_buffPointer->reserve(200);
-	m_buffPointer = m_drawBuffers.GetBuffer(1);
-	m_buffPointer->reserve(200);
-
 	if (m_client.Connect("127.0.0.1", 4950))
 	{
 		LOG_INFO("Connected to server");
@@ -53,7 +46,6 @@ void Engine::Startup()
 	else {
 		LOG_ERROR("Failed to connect to server");
 	} 
-    //m_client = std::make_unique<Client>();
 
 #ifdef _DEBUG
 	m_IsImguiReady = false;
@@ -114,7 +106,7 @@ void Engine::Run()
 
 	// Wait for the rendering thread to exit its last render cycle and shutdown.
 #ifdef _DEBUG
-	while (!s_safeExit) {};
+	while (!s_safeExit) {}; // TODO: why only in debug??
 
 	// ImGUI Shutdown
 	ImGui_ImplDX11_Shutdown();
@@ -122,7 +114,6 @@ void Engine::Run()
 	ImGui::DestroyContext();
 #endif
 
-	
     T_DESTROY();
     ResourceManager::Destroy();
     D2D1Core::Destroy();
@@ -130,7 +121,7 @@ void Engine::Run()
 
 void Engine::Shutdown()
 {
-	s_engineRunning = false;	
+	s_engineRunning = false;
 }
 
 Scene& Engine::GetScene(const std::string& name)
@@ -255,9 +246,8 @@ void Engine::RenderThread()
 
 void Engine::Update(float dt)
 {
-	
-	// Update the camera transform based on interactive inputs.
 	// todo:
+	// Update the camera transform based on interactive inputs.
 
 	// Update elements in the scene.
 	if (m_currentScene)
@@ -265,9 +255,8 @@ void Engine::Update(float dt)
 		m_currentScene->Update(dt);
 	}
 
-	
 #ifdef _DEBUG
-	if(!m_IsImguiReady.load())
+	if(!m_IsImguiReady)
 	{
 		// Start ImGui frame
 		ImGui_ImplDX11_NewFrame();
@@ -278,7 +267,6 @@ void Engine::Update(float dt)
 		m_IsImguiReady = true;
 	}
 #endif // DEBUG
-
 }
 
 void Engine::Render(float& dt)
@@ -291,11 +279,10 @@ void Engine::Render(float& dt)
 		m_currentScene->Render();
 	}
 
-	
 	D2D1Core::Present();
 
 #ifdef _DEBUG
-	if (m_IsImguiReady.load())
+	if (m_IsImguiReady)
 	{
 		ImGui::Render();
 		ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());

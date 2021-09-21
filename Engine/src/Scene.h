@@ -1,11 +1,15 @@
 #pragma once
 #include "EventTypes.h"
 
+#include "Components.h"
+
 class Scene : public entt::emitter<Scene>
 {
 private:
-	// ecs stuff
+	// Registry handles all ecs data
 	entt::registry m_registry;
+	
+	std::atomic<bool> m_isConstantBuffersReadySwap;
 	
 public:
 
@@ -19,7 +23,7 @@ public:
 	// Emit update event and update constant buffers
 	void Update(float dt);
 
-	// Emit render event
+	// Emit render event and render Renderable components
 	void Render();
 
 };
