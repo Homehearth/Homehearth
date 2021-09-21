@@ -12,7 +12,6 @@ Engine::Engine()
 	, m_currentScene(nullptr)
 	, m_vSync(false)
 	, m_frameTime()
-	, m_buffPointer(nullptr)
 {
 	LOG_INFO("Engine(): " __TIMESTAMP__);
 }
@@ -241,10 +240,7 @@ void Engine::RenderThread()
 		deltaTime = static_cast<float>(currentFrame - lastFrame);
 		if (deltaSum >= targetDelta)
 		{
-			if (m_drawBuffers.IsSwapped())
-			{
-				Render(deltaSum);
-			}
+			Render(deltaSum);
 
 			m_frameTime.render = deltaSum;
 			deltaSum = 0.f;
@@ -259,7 +255,6 @@ void Engine::RenderThread()
 
 void Engine::Update(float dt)
 {
-	m_buffPointer = m_drawBuffers.GetBuffer(0);
 	
 	// Update the camera transform based on interactive inputs.
 	// todo:
@@ -284,10 +279,6 @@ void Engine::Update(float dt)
 	}
 #endif // DEBUG
 
-	if (!m_drawBuffers.IsSwapped())
-	{
-		m_drawBuffers.SwapBuffers();
-	}
 }
 
 void Engine::Render(float& dt)
@@ -300,7 +291,7 @@ void Engine::Render(float& dt)
 		m_currentScene->Render();
 	}
 
-	m_drawBuffers.ReadySwap();
+	
 	D2D1Core::Present();
 
 #ifdef _DEBUG
