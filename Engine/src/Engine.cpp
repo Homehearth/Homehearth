@@ -38,7 +38,8 @@ void Engine::Startup()
 
 	// Thread should be launched after s_engineRunning is set to true and D3D11 is initialized.
 	s_engineRunning = true;
-
+	
+	/*
 	if (m_client.Connect("127.0.0.1", 4950))
 	{
 		LOG_INFO("Connected to server");
@@ -46,6 +47,7 @@ void Engine::Startup()
 	else {
 		LOG_ERROR("Failed to connect to server");
 	} 
+	*/
 
 	//
 	// AUDIO 
@@ -59,7 +61,7 @@ void Engine::Startup()
 #ifdef _DEBUG
 	eflags |= DirectX::AudioEngine_Debug;
 #endif
-	this->m_audio_engine = std::make_unique<DirectX::AudioEngine>(eflags);
+	//this->m_audio_engine = std::make_unique<DirectX::AudioEngine>(eflags);
 	
 #ifdef _DEBUG
 	m_IsImguiReady = false;
@@ -70,6 +72,7 @@ void Engine::Startup()
 	ImGui_ImplWin32_Init(m_window.GetHWnd());
 	ImGui_ImplDX11_Init(D3D11Core::Get().Device(), D3D11Core::Get().DeviceContext());
 	ImGui::StyleColorsDark();
+	ImGui_ImplDX11_CreateDeviceObjects(); // uses device, therefore has to be called before render thread starts
 	LOG_INFO("ImGui was successfully initialized");
 #endif
 
@@ -91,7 +94,6 @@ void Engine::Run()
 	{
 		if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
 		{
-			D3D11Core::Get();
 			InputSystem::Get().UpdateEvents();
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
@@ -280,6 +282,8 @@ void Engine::Update(float dt)
 		ImGui::NewFrame();
 		drawImGUI();
 		
+		ImGui::EndFrame();
+
 		m_IsImguiReady = true;
 	}
 #endif // DEBUG

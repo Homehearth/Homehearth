@@ -8,20 +8,15 @@ namespace ecs
 		{
 			sm::Vector3 position;
 			sm::Vector3 rotation;
-			sm::Vector3 scale;
-
-			std::unique_ptr<dx::ConstantBuffer<sm::Matrix>> pConstantBuffer;
+			sm::Vector3 scale = sm::Vector3(1);
 		};
 
 		struct Renderable
 		{
 			RMesh* mesh;
-			std::unique_ptr<dx::ConstantBuffer<sm::Matrix>> pConstantBuffer;
+			dx::ConstantBuffer<sm::Matrix> constantBuffer;
 		};
 	};
-
-	void OnTransformConstruct(entt::registry& reg, entt::entity entity);
-	void OnTransformUpdate(entt::registry& reg, entt::entity entity);
 
 	void OnRenderableConstruct(entt::registry& reg, entt::entity entity);
 
