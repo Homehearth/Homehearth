@@ -4,11 +4,13 @@
 void ecs::OnTransformConstruct(entt::registry& reg, entt::entity entity)
 {
     component::Transform& transform = reg.get<component::Transform>(entity);
-    transform.constBuf.Create(D3D11Core::Get().Device());
+    transform.constBuf = std::make_unique<dx::ConstantBuffer<sm::Matrix>>();
+    transform.constBuf->Create(D3D11Core::Get().Device());
     sm::Matrix mx = GetMatrix(transform).Transpose();
+    
 
     T_LOCK();
-    transform.constBuf.SetData(D3D11Core::Get().DeviceContext(), mx);
+    transform.constBuf->SetData(D3D11Core::Get().DeviceContext(), mx);
     T_UNLOCK();
 }
 
@@ -18,7 +20,7 @@ void ecs::OnTransformUpdate(entt::registry& reg, entt::entity entity)
 
     sm::Matrix mx = GetMatrix(transform).Transpose();
     T_LOCK();
-    transform.constBuf.SetData(D3D11Core::Get().DeviceContext(), mx);
+    transform.constBuf->SetData(D3D11Core::Get().DeviceContext(), mx);
     T_UNLOCK();
 }
 
@@ -41,12 +43,15 @@ sm::Vector3 ecs::GetForward(component::Transform& transform)
 void ecs::OnRenderAbleConstruct(entt::registry& reg, entt::entity entity)
 {
     component::RenderAble& transform = reg.get<component::RenderAble>(entity);
-    transform.constBuf.Create(D3D11Core::Get().Device());
+    transform.constBuf = std::make_shared<dx::ConstantBuffer<sm::Matrix>>();
     sm::Matrix mx; 
     mx = sm::Matrix::Identity;
 
+    D3D11_BUFFER_DESC bDesc;
+    bDesc.ByteWidth = sizeof(sm::Matrix);
+
     T_LOCK();
-    transform.constBuf.SetData(D3D11Core::Get().DeviceContext(), mx);
+    //transform.constBuf.SetData(D3D11Core::Get().DeviceContext(), mx);
     T_UNLOCK();
 }
 

@@ -11,7 +11,8 @@ namespace ecs
 			sm::Vector3 rotation;
 			sm::Vector3 scale;
 
-			dx::ConstantBuffer<sm::Matrix> constBuf;
+			std::unique_ptr<dx::ConstantBuffer<sm::Matrix>> constBuf;
+			//ID3D11Buffer* constBuf = nullptr;
 		};
 
 		struct RenderAble
@@ -20,8 +21,8 @@ namespace ecs
 			RTexture* texture = nullptr;
 
 			// Constant buffer
-			dx::ConstantBuffer<sm::Matrix> constBuf;
-
+			std::shared_ptr<dx::ConstantBuffer<sm::Matrix>> constBuf;
+			//ID3D11Buffer* constBuf = nullptr;
 		};
 
 		struct Mesh

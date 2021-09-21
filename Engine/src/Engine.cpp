@@ -48,7 +48,7 @@ void Engine::Startup()
 	ResourceManager::GetResource<RMesh>("Cube.fbx");
 	ResourceManager::GetResource<RMesh>("geo_house2.obj");*/
 
-	meshLOLXD = new MeshRenderObject(ResourceManager::GetResource<RMesh>("Cube.fbx"));
+	//meshLOLXD = new MeshRenderObject(ResourceManager::GetResource<RMesh>("Cube.fbx"));
 
 	// Thread should be launched after s_engineRunning is set to true and D3D11 is initalized.
 	s_engineRunning = true;
@@ -139,7 +139,7 @@ void Engine::Run()
     ResourceManager::Destroy();
     D2D1Core::Destroy();
 	Backbuffer::Destroy();
-	delete meshLOLXD;
+	//delete meshLOLXD;
 }
 
 void Engine::Shutdown()
@@ -255,8 +255,8 @@ void Engine::RenderThread()
 		deltaTime = static_cast<float>(currentFrame - lastFrame);
 		if (deltaSum >= targetDelta)
 		{
-			//if(Backbuffer::GetBuffers()->IsSwapped())
-			Render(deltaSum);
+			if(Backbuffer::GetBuffers()->IsSwapped())
+				Render(deltaSum);
 
 			m_frameTime.render = deltaSum;
 			deltaSum = 0.f;
@@ -277,14 +277,13 @@ void Engine::Update(float dt)
 	// Update positions, orientations and any other
 	// relevant visual state of any dynamic elements
 	// in the scene.
-	/*
 	if (m_currentScene)
 	{
 		m_currentScene->Update(dt);
 	}
-	*/
 	
 	
+	/*
 #ifdef _DEBUG
 	if(!m_IsImguiReady.load())
 	{
@@ -297,6 +296,7 @@ void Engine::Update(float dt)
 		m_IsImguiReady = true;
 	}
 #endif // DEBUG
+*/
 
 	
 	//std::cout << "Y: " << y++ << "\n";
@@ -316,18 +316,14 @@ void Engine::Update(float dt)
 
 void Engine::Render(float& dt)
 {
-	
 	m_renderer.BeginFrame();
-	D2D1Core::Begin();
+	//D2D1Core::Begin();
 	m_renderer.ClearScreen();
 	m_renderer.SetPipelineState();
-	//D2D1Core::Begin();
-	/*
 	if (m_currentScene)
 	{
 		m_currentScene->Render();
 	}
-	*/
 
 	
 
@@ -335,7 +331,7 @@ void Engine::Render(float& dt)
 	debugCamera.Render();
 
 	//Backbuffer::GetBuffers()->GetBuffer(1)->at(0)->Render();
-	meshLOLXD->Render(objectPass::RenderPass::DEFAULT);
+	//meshLOLXD->Render(objectPass::RenderPass::DEFAULT);
 
 	/*
 		Present the final image and clear it for next frame.
@@ -344,8 +340,9 @@ void Engine::Render(float& dt)
 	/*
 		Kanske v�nta p� att uppdateringstr�den kan swappa buffrar.
 	*/
-	D2D1Core::Present();
+	//D2D1Core::Present();
 
+	/*
 #ifdef _DEBUG
 	if (m_IsImguiReady.load())
 	{
@@ -356,10 +353,12 @@ void Engine::Render(float& dt)
 		m_IsImguiReady = false;
 	}
 #endif
+//*/
 	
-	D3D11Core::Get().SwapChain()->Present(1, 0);
+	HRESULT hr = D3D11Core::Get().SwapChain()->Present(1, 0);
+	if (FAILED(hr))
+		std::cout << GetLastError() << "\n";
 
 	Backbuffer::GetBuffers()->ReadySwap();
-
 }
 

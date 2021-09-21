@@ -1,4 +1,5 @@
 #include "DemoScene.h"
+#include "Components.h"
 
 
 void createTriangle(Scene& scene, float size, const float pos[2], const int velSign[2]) 
@@ -14,6 +15,12 @@ void createTriangle(Scene& scene, float size, const float pos[2], const int velS
 	vel.vel[0] = ((rand() % 100) / 100.f) * velSign[0];
 	vel.vel[1] = sqrtf(1 - vel.vel[0] * vel.vel[0]) * velSign[1];
 	vel.mag = (rand() % 200) + 100.f;
+
+	entt::entity object = scene.CreateEntity();
+	comp::RenderAble& rend = scene.AddComponent<comp::RenderAble>(object);
+	rend.mesh = ResourceManager::GetResource<RMesh>("Cube.fbx");
+	rend.constBuf = nullptr;
+	rend.texture = nullptr;
 }
 
 void setupDemoScene(Engine& engine, Scene& scene) 
