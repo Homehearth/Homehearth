@@ -1,5 +1,5 @@
 #pragma once
-#include "VertexStructure.h"
+#include "CommonStructures.h"
 #include "RMaterial.h"
 
 /*
