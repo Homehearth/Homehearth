@@ -18,9 +18,9 @@ void createTriangle(Scene& scene, float size, const float pos[2], const int velS
 
 	entt::entity object = scene.CreateEntity();
 	comp::RenderAble& rend = scene.AddComponent<comp::RenderAble>(object);
-	rend.mesh = ResourceManager::GetResource<RMesh>("Cube.fbx");
+	rend.mesh = ResourceManager::GetResource<RMesh>("Monster.fbx");
 	rend.constBuf = nullptr;
-	rend.texture = nullptr;
+	rend.texture = ResourceManager::GetResource<RTexture>("monster_albedo.png");
 }
 
 void setupDemoScene(Engine& engine, Scene& scene) 

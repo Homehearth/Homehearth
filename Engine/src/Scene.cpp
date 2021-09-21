@@ -49,6 +49,7 @@ void Scene::Render()
 
 	if (data)
 	{
+
 		// Loop through each object.
 		for (int i = 0; i < data->size(); i++)
 		{
@@ -59,6 +60,11 @@ void Scene::Render()
 
 			if(object->mesh)
 				object->mesh->Render();
+
+			if (object->texture)
+			{
+				D3D11Core::Get().DeviceContext()->PSSetShaderResources(0, 1, &object->texture->GetShaderView());
+			}
 		}
 	}
 

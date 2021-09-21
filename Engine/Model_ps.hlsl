@@ -1,5 +1,4 @@
-
-//Texture2D diffuseTexture : register(t0);
+Texture2D diffuseTexture : register(t0);
 SamplerState samp : register(s0);
 
 struct PixelIn
@@ -13,6 +12,6 @@ struct PixelIn
 
 float4 main(PixelIn input) : SV_TARGET
 {
-    return float4(1.0f, 0.0f, 0.0f, 1.0f);
-    //return diffuseTexture.Sample(samp, input.uv);
+    //return float4(1.0f, 0.0f, 0.0f, 1.0f);
+    return diffuseTexture.Sample(samp, input.uv);
 }

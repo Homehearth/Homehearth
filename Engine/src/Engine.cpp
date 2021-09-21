@@ -354,6 +354,17 @@ void Engine::Render(float& dt)
 	}
 #endif
 //*/
+
+	//Start ImGui frame
+	ImGui_ImplDX11_NewFrame();
+	ImGui_ImplWin32_NewFrame();
+	ImGui::NewFrame();
+	drawImGUI();
+
+	// Assemble togheter draw data
+	ImGui::Render();
+	// Render draw data
+	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 	
 	HRESULT hr = D3D11Core::Get().SwapChain()->Present(1, 0);
 	if (FAILED(hr))
