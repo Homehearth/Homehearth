@@ -9,8 +9,9 @@ private:
 	// Registry handles all ecs data
 	entt::registry m_registry;
 	
-	std::atomic<bool> m_isConstantBuffersReadySwap;
-	
+	std::unordered_map<entt::entity, comp::Transform> m_transformCopies;
+	std::atomic<bool> m_hasRendered;
+
 public:
 
 	Scene();
