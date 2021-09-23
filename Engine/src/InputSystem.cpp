@@ -14,22 +14,6 @@ void InputSystem::SetMouseWindow(const HWND& windowHandle)
 	this->m_mouse->SetMode(DirectX::Mouse::MODE_RELATIVE);
 }
 
-void InputSystem::RegisterEvent(const UINT& uMsg, const WPARAM& wParam)
-{
-	this->m_eventQueue.push({ uMsg, wParam });
-}
-bool InputSystem::PollEvent(InputEvent& event)
-{
-	if (!m_eventQueue.empty()) {
-		event = m_eventQueue.front();
-		m_eventQueue.pop();
-		return true;
-	}
-	return false;
-}
-
-
-
 void InputSystem::UpdateEvents()
 {
 	this->m_kBState = this->m_keyboard->GetState();
@@ -55,6 +39,16 @@ const bool InputSystem::CheckKeyboardKey(const DirectX::Keyboard::Keys& key, con
 		return false;
 		break;
 	}
+}
+
+const std::unique_ptr<DirectX::Keyboard>& InputSystem::GetKeyboard() const
+{
+	return this->m_keyboard;
+}
+
+const std::unique_ptr<DirectX::Mouse>& InputSystem::GetMouse() const
+{
+	return this->m_mouse;
 }
 
 const bool InputSystem::CheckMouseKey(const MouseKey mouseButton, const KeyState state)
@@ -89,5 +83,39 @@ const bool InputSystem::CheckMouseKey(const MouseKey mouseButton, const KeyState
 	default:
 		return false;
 		break;
+	}
+}
+
+const MousePos& InputSystem::GetMousePos() const
+{
+	MousePos position(this->m_mouseState.x, this->m_mouseState.y);
+	return position;
+}
+
+void InputSystem::ToggleMouseVisibility()
+{
+	if (this->m_mouseState.positionMode == DirectX::Mouse::MODE_ABSOLUTE)
+	{
+		if (this->m_mouse->IsVisible())
+		{
+			this->m_mouse->SetVisible(false);
+		}
+		else
+		{
+			this->m_mouse->SetVisible(true);
+		}
+	}
+
+}
+
+void InputSystem::SwitchMouseMode()
+{
+	if (this->m_mouseState.positionMode == DirectX::Mouse::MODE_RELATIVE)
+	{
+		this->m_mouse->SetMode(DirectX::Mouse::MODE_ABSOLUTE);
+	}
+	else
+	{
+		this->m_mouse->SetMode(DirectX::Mouse::MODE_RELATIVE);
 	}
 }

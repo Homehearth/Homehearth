@@ -33,7 +33,7 @@
 
 // Custom Global includes (Singletons)
 #include "Logger.h"
-#include "InputSystem.h"
+#include "InputSystemServer.h"
 #include "multi_thread_manager.h"
 
 // Networking

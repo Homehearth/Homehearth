@@ -13,15 +13,15 @@ Engine::Engine()
 	, m_vSync(false)
 	, m_frameTime()
 	, m_buffPointer(nullptr)
-{	
+{
 	LOG_INFO("Engine(): " __TIMESTAMP__);
 }
 
 void Engine::Startup()
 {
-    T_INIT(1, thread::ThreadType::POOL_FIFO);
-    ResourceManager::Initialize();
-    srand((unsigned int)time(NULL));
+	T_INIT(1, thread::ThreadType::POOL_FIFO);
+	ResourceManager::Initialize();
+	srand((unsigned int)time(NULL));
 
 	// Window Startup:
 	Window::Desc config;
@@ -53,8 +53,8 @@ void Engine::Startup()
 	}
 	else {
 		LOG_ERROR("Failed to connect to server");
-	} 
-    //m_client = std::make_unique<Client>();
+	}
+	//m_client = std::make_unique<Client>();
 
 	//
 	// AUDIO 
@@ -69,7 +69,7 @@ void Engine::Startup()
 	eflags |= DirectX::AudioEngine_Debug;
 #endif
 	this->m_audio_engine = std::make_unique<DirectX::AudioEngine>(eflags);
-	
+
 #ifdef _DEBUG
 	m_IsImguiReady = false;
 	// Setup ImGUI
@@ -81,6 +81,7 @@ void Engine::Startup()
 	ImGui::StyleColorsDark();
 	LOG_INFO("ImGui was successfully initialized");
 #endif
+	InputSystem::Get().SetMouseWindow(m_window.GetHWnd());
 
 }
 
@@ -94,13 +95,12 @@ void Engine::Run()
 
 	if (thread::IsThreadActive())
 		T_CJOB(Engine, RenderThread);
-	
+
 	MSG msg = { nullptr };
 	while (IsRunning())
 	{
 		if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
 		{
-			InputSystem::Get().UpdateEvents();
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 			if (msg.message == WM_QUIT)
@@ -110,8 +110,27 @@ void Engine::Run()
 		}
 
 		// Handle Input.
+		InputSystem::Get().UpdateEvents();
 		// todo:
-
+		if (InputSystem::Get().CheckKeyboardKey(DirectX::Keyboard::D, KeyState::RELEASED))
+		{
+			std::cout << "D Pressed\n";
+		}
+		if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED))
+		{
+			std::cout << "Mouse left Pressed\n";
+			std::cout << "XPos: " << InputSystem::Get().GetMousePos().x << std::endl;
+		}
+		if (InputSystem::Get().CheckMouseKey(MouseKey::RIGHT, KeyState::PRESSED))
+		{
+			std::cout << "Switching mouse mode\n";
+			InputSystem::Get().SwitchMouseMode();
+		}
+		if (InputSystem::Get().CheckMouseKey(MouseKey::MIDDLE, KeyState::PRESSED))
+		{
+			std::cout << "Toggling mouse visibility\n";
+			InputSystem::Get().ToggleMouseVisibility();
+		}
 
 		// Update time.
 		currentFrame = omp_get_wtime();
@@ -138,15 +157,15 @@ void Engine::Run()
 	ImGui::DestroyContext();
 #endif
 
-	
-    T_DESTROY();
-    ResourceManager::Destroy();
-    D2D1Core::Destroy();
+
+	T_DESTROY();
+	ResourceManager::Destroy();
+	D2D1Core::Destroy();
 }
 
 void Engine::Shutdown()
 {
-	s_engineRunning = false;	
+	s_engineRunning = false;
 }
 
 Scene& Engine::GetScene(const std::string& name)
@@ -166,16 +185,16 @@ void Engine::SetScene(Scene& scene)
 		m_currentScene->clear();
 	}
 	m_currentScene = &scene;
-	
+
 	m_currentScene->on<EShutdown>([&](const EShutdown& e, Scene& scene)
-		{
-			Shutdown();
-		});
-	
+	{
+		Shutdown();
+	});
+
 	m_currentScene->on<ESceneChange>([&](const ESceneChange& e, Scene& scene)
-		{
-			SetScene(e.newScene);
-		});
+	{
+		SetScene(e.newScene);
+	});
 }
 
 Window* Engine::GetWindow()
@@ -195,10 +214,10 @@ void Engine::drawImGUI() const
 	static std::vector<float> fpsUpdateContainer;
 	static std::vector<float> ramUsageContainer;
 	static std::vector<float> vRamUsageContainer;
-	
+
 	static Timer timer;
-	
-	if(timer.getElapsedTime() > 0.5f)
+
+	if (timer.getElapsedTime() > 0.5f)
 	{
 		fpsContainer.emplace_back((1 / m_frameTime.render));
 		fpsUpdateContainer.emplace_back((1.0f / m_frameTime.update));
@@ -224,7 +243,7 @@ void Engine::drawImGUI() const
 	ImGui::Text("%s", screenRes.c_str());
 	ImGui::End();
 
-	
+
 	ImGui::Begin("Statistics");
 	if (ImGui::CollapsingHeader("FPS"))
 	{
@@ -234,15 +253,15 @@ void Engine::drawImGUI() const
 		ImGui::Spacing();
 	}
 
-	if(ImGui::CollapsingHeader("Memory"))
+	if (ImGui::CollapsingHeader("Memory"))
 	{
-		ImGui::PlotHistogram(("RAM: "+std::to_string(static_cast<float>(Profiler::GetRAMUsage() / (1024.f * 1024.f))) + " MB").c_str(), ramUsageContainer.data(), static_cast<int>(ramUsageContainer.size()), 0, nullptr, 0.0f, 500.0f, ImVec2(150, 75));
+		ImGui::PlotHistogram(("RAM: " + std::to_string(static_cast<float>(Profiler::GetRAMUsage() / (1024.f * 1024.f))) + " MB").c_str(), ramUsageContainer.data(), static_cast<int>(ramUsageContainer.size()), 0, nullptr, 0.0f, 500.0f, ImVec2(150, 75));
 		ImGui::Spacing();
 		ImGui::PlotHistogram(("VRAM: " + std::to_string(static_cast<float>(Profiler::GetVRAMUsage() / (1024.f * 1024.f))) + " MB").c_str(), vRamUsageContainer.data(), static_cast<int>(vRamUsageContainer.size()), 0, nullptr, 0.0f, 500.0f, ImVec2(150, 75));
 	}
 
 	ImGui::End();
-	
+
 }
 
 void Engine::RenderThread()
@@ -275,7 +294,7 @@ void Engine::RenderThread()
 void Engine::Update(float dt)
 {
 	m_buffPointer = m_drawBuffers.GetBuffer(0);
-	
+
 	// Update the camera transform based on interactive inputs.
 	// todo:
 
@@ -285,16 +304,16 @@ void Engine::Update(float dt)
 		m_currentScene->Update(dt);
 	}
 
-	
+
 #ifdef _DEBUG
-	if(!m_IsImguiReady.load())
+	if (!m_IsImguiReady.load())
 	{
 		// Start ImGui frame
 		ImGui_ImplDX11_NewFrame();
 		ImGui_ImplWin32_NewFrame();
 		ImGui::NewFrame();
 		drawImGUI();
-		
+
 		m_IsImguiReady = true;
 	}
 #endif // DEBUG
@@ -326,7 +345,7 @@ void Engine::Render(float& dt)
 		m_IsImguiReady = false;
 	}
 #endif
-	
+
 	D3D11Core::Get().SwapChain()->Present(1, 0);
 }
 
