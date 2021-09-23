@@ -31,6 +31,11 @@ public:
 	virtual ~InputSystem() = default;
 	//Set which window for the mouse to operate in
 	void SetMouseWindow(const HWND& windowHandle);
+	static auto& Get()
+	{
+		static InputSystem s_instance;
+		return s_instance;
+	}
 
 	//Updates KB and Mouse, checking new inputs
 	void UpdateEvents();
