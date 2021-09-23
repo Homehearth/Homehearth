@@ -13,6 +13,7 @@ namespace
 		virtual ~Client();
 
 		std::chrono::system_clock::time_point timeThen;
+
 		Client& operator=(const Client& other) = delete;
 		Client(const Client& other) = delete;
 
