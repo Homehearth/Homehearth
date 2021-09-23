@@ -96,6 +96,7 @@ namespace network
 		void Disconnect();
 		// Check to see if client is connected to a server
 		bool IsConnected();
+		// Sends a message to the server
 		void Send(message<T>& msg);
 	};
 
@@ -114,7 +115,7 @@ namespace network
 		{
 			if (WSAGetLastError() != WSA_IO_PENDING)
 			{
-				LOG_ERROR("WSARecv failed!");
+				LOG_ERROR("WSARecv failed! %d", WSAGetLastError());
 				delete context;
 			}
 		}
@@ -135,7 +136,7 @@ namespace network
 		{
 			if (WSAGetLastError() != WSA_IO_PENDING)
 			{
-				LOG_ERROR("WSARecv failed!");
+				LOG_ERROR("WSARecv failed! %d", WSAGetLastError());
 				delete context;
 			}
 		}
@@ -147,7 +148,7 @@ namespace network
 		PER_IO_DATA* context = new PER_IO_DATA;
 		ZeroMemory(&context->Overlapped, sizeof(WSAOVERLAPPED));
 		context->DataBuf.buf = context->buffer;
-		context->DataBuf.len = BUFFER_SIZE;
+		context->DataBuf.len = sizeof(uint64_t);
 		DWORD flags = 0;
 		DWORD bytesReceived = 0;
 		context->state = NetState::READ_VALIDATION;
@@ -157,7 +158,7 @@ namespace network
 			if (WSAGetLastError() != WSA_IO_PENDING)
 			{
 				delete context;
-				LOG_ERROR("WSARecv failed!");
+				LOG_ERROR("WSARecv failed! %d", WSAGetLastError());
 			}
 		}
 	}
@@ -188,7 +189,7 @@ namespace network
 		{
 			if (WSAGetLastError() != WSA_IO_PENDING)
 			{
-				LOG_ERROR("WSASend failed!");
+				LOG_ERROR("WSASend failed! %d", WSAGetLastError());
 				delete context;
 			}
 		}
@@ -226,7 +227,7 @@ namespace network
 		{
 			if (WSAGetLastError() != WSA_IO_PENDING)
 			{
-				LOG_ERROR("WSASend failed!");
+				LOG_ERROR("WSASend failed! %d", WSAGetLastError());
 				delete context;
 			}
 		}
@@ -257,7 +258,7 @@ namespace network
 		{
 			if (WSAGetLastError() != WSA_IO_PENDING)
 			{
-				LOG_ERROR("WSASend failed!");
+				LOG_ERROR("WSASend failed! %d", WSAGetLastError());
 				delete context;
 			}
 		}
