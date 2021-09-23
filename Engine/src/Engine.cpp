@@ -58,7 +58,7 @@ void Engine::Startup()
 	ImGui::StyleColorsDark();
 	LOG_INFO("ImGui was successfully initialized");
 #endif
-	m_client.Connect("188.148.27.231", 4950);
+	m_client.Connect("127.0.0.1", 4950);
 }
 
 void Engine::Run()
