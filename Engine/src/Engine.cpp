@@ -47,10 +47,6 @@ void Engine::Startup()
 	m_buffPointer = m_drawBuffers.GetBuffer(1);
 	m_buffPointer->reserve(200);
 
-#ifdef _DEBUG
-	eflags |= DirectX::AudioEngine_Debug;
-#endif
-	this->m_audio_engine = std::make_unique<DirectX::AudioEngine>(eflags);
 
 #ifdef _DEBUG
 	m_IsImguiReady = false;

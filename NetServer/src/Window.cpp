@@ -1,6 +1,6 @@
 #include "NetServerPCH.h"
 #include "Window.h"
-#include "InputSystem.h"
+#include "InputSystemServer.h"
 
 LRESULT CALLBACK Window::WinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
