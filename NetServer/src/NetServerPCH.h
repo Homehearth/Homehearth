@@ -3,7 +3,6 @@
 // Windows
 #ifdef WIN32
 #define WIN32_LEAN_AND_MEAN
-#define _WINSOCK_DEPRECATED_NO_WARNINGS
 #include <Windows.h>
 #include <winsock2.h>
 #include <windowsx.h>
@@ -37,4 +36,7 @@
 #include "multi_thread_manager.h"
 
 // Networking
-#include "network.h"
+#include "net_common.h"
+#include "net_message.h"
+#include "net_server_interface.h"
+#include "net_tsqueue.h"

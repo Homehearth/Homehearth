@@ -22,7 +22,10 @@ public:
 	// Clears the screen.
 	void ClearFrame();
 
-	// Call this each frame to render all passes.
+	// Call this each frame to all passes:
+	//	PreRender(): set pipeline.
+	//	Render(): render all objects.
+	//	PostRender(): clear pipeline settings.
 	void Render();
 
 	// Add a pass to the list. Useful if a pass is created outside the Renderer class.

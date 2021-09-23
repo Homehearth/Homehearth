@@ -4,8 +4,6 @@
 #include "Server.h"
 void RedirectIoToConsole();
 
-
-
 //------------------------------------------------------------------------------//
 //																				//
 //	Högerklicka på "NetServer"-projektet och välj: "Set as Startup Project".	//
@@ -34,15 +32,14 @@ int CALLBACK WinMain(
 
 	Window window;
 	window.Initialize();
-	T_INIT(T_REC, thread::ThreadType::POOL_FIFO);
-	
-	Server<network::MessageType> s;
+
+	network::Server s;
 	s.Start(4950);
 
-	bool isRunning = true;
-	
 	MSG msg = { nullptr };
 	int i = 0;
+	bool key[3] = { false, false, false };
+	bool old_key[3] = { false, false, false };
 	while (s.IsRunning())
 	{
 		// Service any and all pending Windows messages.
@@ -50,21 +47,25 @@ int CALLBACK WinMain(
 		{
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
-			isRunning = (msg.message != WM_QUIT);
 		}
 
-		InputEvent event;
-		while (InputSystemServer::Get().PollEvent(event))
+		if (GetForegroundWindow() == GetConsoleWindow())
 		{
-			//LOG_CONSOLE("key_state: ", event.key_state, " key_code: ", event.key_code);
-			if (event.key_code == VK_ESCAPE)
-			{
-				isRunning = false;
-			}
+			key[0] = GetAsyncKeyState('1') & 0x8000;
+			key[1] = GetAsyncKeyState('2') & 0x8000;
+			key[2] = GetAsyncKeyState('3') & 0x8000;
+		}
+		if (key[0] && !old_key[0])
+		{
+			std::cout << "stopping!" << std::endl;
+			s.Stop();
+		}
+		
+		for (int i = 0; i < 3; i++)
+		{
+			old_key[i] = key[i];
 		}
 	}
-
-	T_DESTROY();
 
 	return 0;
 }
