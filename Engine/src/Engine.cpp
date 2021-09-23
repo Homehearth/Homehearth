@@ -183,13 +183,13 @@ void Engine::drawImGUI() const
 	
 	static Timer timer;
 	
-	if(timer.getElapsedTime() > 0.5f)
+	if(timer.GetElapsedTime() > 0.5f)
 	{
 		fpsContainer.emplace_back((1 / m_frameTime.render));
 		fpsUpdateContainer.emplace_back((1.0f / m_frameTime.update));
 		ramUsageContainer.emplace_back((Profiler::GetRAMUsage() / (1024.f * 1024.f)));
 		vRamUsageContainer.emplace_back((Profiler::GetVRAMUsage() / (1042.f * 1024.f)));
-		timer.start();
+		timer.Start();
 	}
 
 	if (fpsContainer.size() > 10)
