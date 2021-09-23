@@ -1,4 +1,5 @@
 #include "DemoScene.h"
+#include <Engine.h>
 
 
 void createTriangle(Scene& scene, float size, const sm::Vector2& pos, const sm::Vector2& velSign) 
