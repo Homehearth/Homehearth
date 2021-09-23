@@ -1,12 +1,10 @@
 #pragma once
-
-// todo: move this somewhere else.
-struct BasicModelMatrix
-{
-	sm::Matrix worldMatrix;
-};
+#include "Shader.h"
 
 
+/*
+ * This class holds the D3D11-specific resources used in different passes.
+ */
 class PipelineManager
 {
 private:
@@ -20,10 +18,13 @@ public:
 	// Initialize PipelineManager.
 	void Initialize(Window * pWindow);
 
-	// PUBLIC DATA.
+	
+	// PUBLIC AVAILABLE DATA.
+	
 	ComPtr<ID3D11RenderTargetView>	m_renderTargetView;
 
 	ComPtr<ID3D11Texture2D>			m_depthStencilTexture;
+	
 	ComPtr<ID3D11DepthStencilView>	m_depthStencilView;
 	ComPtr<ID3D11DepthStencilState>	m_depthStencilState;
 
@@ -39,28 +40,27 @@ public:
 	ComPtr<ID3D11Buffer>			m_defaultModelConstantBuffer;
 	ComPtr<ID3D11Buffer>			m_defaultViewConstantBuffer; // TODO: maybe put in Camera class or update from Camera class
 	
-	ComPtr<ID3D11VertexShader>		m_defaultVertexShader;
-	ComPtr<ID3D11PixelShader>		m_defaultPixelShader;
+	Shaders::VertexShader			m_defaultVertexShader;
+	Shaders::PixelShader			m_defaultPixelShader;
 
 	D3D11_VIEWPORT					m_viewport;
 
 	
-	std::string shaderByteCode;
 
 private:
 	// INITIALIZE METHODS.
+	
 	bool CreateRenderTargetView();
 	bool CreateDepthStencilTexture();
 	bool CreateDepthStencilState();
 	bool CreateDepthStencilView();
 	bool CreateRasterizerStates();
 	bool CreateSamplerStates();
-
-	bool CreateDefaultInputLayout();
-	bool CreateDefaultConstantBuffer();
-	bool CreateDefaultShaders();
-
+	bool CreateShaders();
 	void SetViewport();
+
+	bool CreateDefaultInputLayout();	// todo: create all input layouts.
+	bool CreateDefaultConstantBuffer();	// todo: make use the HelperBuffer.h.
 };
 
 

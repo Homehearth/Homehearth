@@ -1,6 +1,8 @@
 #include "EnginePCH.h"
 #include "PipelineManager.h"
 
+#include "CommonStructures.h"
+
 PipelineManager::PipelineManager()
 	: m_window(nullptr)
 	, m_d3d11(nullptr)
@@ -55,7 +57,7 @@ void PipelineManager::Initialize(Window* pWindow)
     }
 
     // Initialize Shaders.
-    if (!this->CreateDefaultShaders())
+    if (!this->CreateShaders())
     {
         LOG_ERROR("failed creating default shaders.");
     }
@@ -282,6 +284,8 @@ bool PipelineManager::CreateDefaultInputLayout()
         {"BINORMAL",        0, DXGI_FORMAT_R32G32B32_FLOAT,    0,    D3D11_APPEND_ALIGNED_ELEMENT,    D3D11_INPUT_PER_VERTEX_DATA, 0}
     };
 
+	const std::string shaderByteCode = m_defaultVertexShader.GetShaderByteCode();
+	
     HRESULT hr = D3D11Core::Get().Device()->CreateInputLayout(inputDesc, ARRAYSIZE(inputDesc), shaderByteCode.c_str(), shaderByteCode.length(), &m_defaultInputLayout);
 
     return !FAILED(hr);
@@ -290,16 +294,19 @@ bool PipelineManager::CreateDefaultInputLayout()
 bool PipelineManager::CreateDefaultConstantBuffer()
 {
     D3D11_BUFFER_DESC bDesc;
-    bDesc.ByteWidth = sizeof(BasicModelMatrix);
+    bDesc.ByteWidth = sizeof(basic_model_matrix_t);
     bDesc.Usage = D3D11_USAGE_DEFAULT;
     bDesc.CPUAccessFlags = 0;
     bDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
     bDesc.MiscFlags = 0;
 
-    BasicModelMatrix b;
-    b.worldMatrix = sm::Matrix::CreateWorld({ 0.f, 0.0f, -10.0f }, { 0.0f, 0.0f, -1.0f }, { 0.0f, 1.0f, 0.0f });
+    basic_model_matrix_t b;
+    b.worldMatrix = sm::Matrix::CreateWorld({ 0.f, 0.0f, 1.0f }, { 0.0f, 0.0f, -1.0f }, { 0.0f, 1.0f, 0.0f }).Transpose();
+
     D3D11_SUBRESOURCE_DATA data;
     data.pSysMem = &b;
+    data.SysMemPitch = 0;
+    data.SysMemSlicePitch = 0;
 
     // Model ConstantBuffer
     HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&bDesc, &data, m_defaultModelConstantBuffer.GetAddressOf());
@@ -313,40 +320,17 @@ bool PipelineManager::CreateDefaultConstantBuffer()
     return !FAILED(hr);
 }
 
-bool PipelineManager::CreateDefaultShaders()
+bool PipelineManager::CreateShaders()
 {
-    std::ifstream reader;
-    std::string shaderData;
-    reader.open("Model_vs.cso", std::ios::binary | std::ios::ate);
-    if (!reader.is_open())
+    if (!m_defaultVertexShader.Create("Model_vs"))
     {
-        LOG_WARNING("failed to open Model_vs.cso");
         return false;
     }
-    reader.seekg(0, std::ios::end);
-    shaderData.reserve(static_cast<unsigned int>(reader.tellg()));
-    reader.seekg(0, std::ios::beg);
-    shaderData.assign((std::istreambuf_iterator<char>(reader)), std::istreambuf_iterator<char>());
-    shaderByteCode = shaderData;
-    reader.close();
-
-    HRESULT hr = D3D11Core::Get().Device()->CreateVertexShader(shaderByteCode.c_str(), shaderByteCode.length(), nullptr, m_defaultVertexShader.GetAddressOf());
-
-    std::ifstream reader2;
-    std::string shaderData2;
-    reader2.open("Model_ps.cso", std::ios::binary | std::ios::ate);
-    if (!reader2.is_open())
+	
+    if(!m_defaultPixelShader.Create("Model_ps"))
     {
-        LOG_WARNING("failed to open Model_ps.cso");
         return false;
     }
-    reader2.seekg(0, std::ios::end);
-    shaderData2.reserve(static_cast<unsigned int>(reader2.tellg()));
-    reader2.seekg(0, std::ios::beg);
-    shaderData2.assign((std::istreambuf_iterator<char>(reader2)), std::istreambuf_iterator<char>());
-    reader2.close();
 
-    hr = D3D11Core::Get().Device()->CreatePixelShader(shaderData2.c_str(), shaderData2.length(), nullptr, m_defaultPixelShader.GetAddressOf());
-
-    return !FAILED(hr);
-}
+    return true;
+}                         

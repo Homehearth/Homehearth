@@ -2,6 +2,7 @@
 #include "BasePass.h"
 
 #include "PipelineManager.h"
+#include "RMesh.h"
 
 void BasePass::Initialize()
 {
@@ -18,6 +19,7 @@ void BasePass::PreRender(ID3D11DeviceContext* dc, PipelineManager* pm)
         dc->IASetInputLayout(pm->m_defaultInputLayout.Get());
         dc->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     }
+
 
     // SHADER STAGES.
     {

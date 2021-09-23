@@ -55,7 +55,7 @@ project "Engine"
 			["src/Network"] = { "**Client.*" },
 
         ["src/Engine/Resources"] = { "**ResourceManager.*", "**GResource.*", "**RMesh.*", "**RTexture.*", "**RMaterial.*", "**RSceneMesh.*" },
-            ["src/Engine/Resources/Shaders"] = { "**.hlsl", "**.hlsli" },
+            ["src/Engine/Resources/Shaders"] = { "**.hlsl", "**.hlsli", "**Shader.*" },
 
         ["src/Engine/Audio"] = {  },
         ["src/Engine/Physics"] = {  },
@@ -99,7 +99,7 @@ project "Engine"
         runtime "Release"
         defines{"NDEBUG", "_UNICODE", "UNICODE"}
         symbols "on"
-        optimize "on"
+        optimize "Full"
         libdirs{"../ThirdParty/DirectXTK/lib/Release_lib/"}
 
 
