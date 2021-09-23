@@ -14,6 +14,9 @@ namespace network
 		Server();
 		virtual ~Server();
 
+		Server& operator=(const Server& other) = delete;
+		Server(const Server& other) = delete;
+
 		// Inherited via server_interface
 		virtual void OnClientConnect(std::string&& ip, const uint16_t& port) override;
 		virtual void OnClientDisconnect() override;

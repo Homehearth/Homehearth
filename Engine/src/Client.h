@@ -12,6 +12,9 @@ namespace
 		Client();
 		virtual ~Client();
 
+		Client& operator=(const Client& other) = delete;
+		Client(const Client& other) = delete;
+
 		// Inherited via client_interface
 		virtual void OnValidation() override;
 

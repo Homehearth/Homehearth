@@ -69,6 +69,9 @@ namespace network
 			lock = {};
 			m_CompletionPort = {};
 		}
+		server_interface<T>& operator=(const server_interface<T>& other) = delete;
+		server_interface(const server_interface<T>& other) = delete;
+
 		virtual ~server_interface()
 		{
 			WSACleanup();

@@ -72,6 +72,9 @@ namespace network
 			InitWinsock();
 		}
 
+		client_interface<T>& operator=(const client_interface<T>& other) = delete;
+		client_interface(const client_interface<T>& other) = delete;
+
 		virtual ~client_interface()
 		{
 			Disconnect();
