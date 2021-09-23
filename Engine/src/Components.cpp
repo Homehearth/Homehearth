@@ -1,6 +1,7 @@
 #include "EnginePCH.h"
 #include "Components.h"
 
+/*
 void ecs::OnTransformConstruct(entt::registry& reg, entt::entity entity)
 {
     component::Transform& transform = reg.get<component::Transform>(entity);
@@ -62,3 +63,5 @@ sm::Vector3 ecs::GetUp(component::Transform& transform) {
     u = sm::Vector3::TransformNormal(u, sm::Matrix::CreateRotationZ(transform.rotation.z));
     return u;
 }
+
+*/

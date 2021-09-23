@@ -16,10 +16,15 @@ void createTriangle(Scene& scene, float size, const float pos[2], const int velS
 	vel.vel[1] = sqrtf(1 - vel.vel[0] * vel.vel[0]) * velSign[1];
 	vel.mag = (rand() % 200) + 100.f;
 
+
+}
+
+void CreateTest(Scene& scene)
+{
 	entt::entity object = scene.CreateEntity();
 	comp::RenderAble& rend = scene.AddComponent<comp::RenderAble>(object);
 	rend.mesh = ResourceManager::GetResource<RMesh>("Monster.fbx");
-	rend.constBuf = nullptr;
+	rend.renderForm = {};
 	rend.texture = ResourceManager::GetResource<RTexture>("monster_albedo.png");
 }
 
@@ -82,5 +87,10 @@ void setupDemoScene(Engine& engine, Scene& scene)
 	const float pos[2] = { 0.f, 0.f };
 	const int signVel[2] = { 1, 1 };
 	createTriangle(scene, 200, pos, signVel);
+
+	for (int i = 0; i < 100; i++)
+	{
+		CreateTest(scene);
+	}
 
 }

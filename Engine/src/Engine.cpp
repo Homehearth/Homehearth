@@ -226,7 +226,7 @@ void Engine::drawImGUI() const
 	ImGui::Begin("Statistics");
 	if (ImGui::CollapsingHeader("FPS"))
 	{
-		ImGui::PlotLines(("FPS: " + std::to_string(static_cast<int>(1 / m_frameTime.render))).c_str(), fpsContainer.data(), fpsContainer.size(), 0, nullptr, 0.0f, 144.0f, ImVec2(150, 50));
+		ImGui::PlotLines(("FPS: " + std::to_string(static_cast<int>(1.0f / m_frameTime.render))).c_str(), fpsContainer.data(), fpsContainer.size(), 0, nullptr, 0.0f, 144.0f, ImVec2(150, 50));
 		ImGui::Spacing();
 		ImGui::PlotLines(("Update FPS: " + std::to_string(static_cast<int>(1.0f / m_frameTime.update))).c_str(), fpsUpdateContainer.data(), fpsUpdateContainer.size(), 0, nullptr, 0.0f, 144.0f, ImVec2(150, 50));
 		ImGui::Spacing();
@@ -366,7 +366,7 @@ void Engine::Render(float& dt)
 	// Render draw data
 	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 	
-	HRESULT hr = D3D11Core::Get().SwapChain()->Present(1, 0);
+	HRESULT hr = D3D11Core::Get().SwapChain()->Present(0, 0);
 	if (FAILED(hr))
 		std::cout << GetLastError() << "\n";
 

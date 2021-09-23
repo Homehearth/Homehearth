@@ -31,6 +31,20 @@ void Scene::Update(float dt)
 	}
 
 	Backbuffer::GetBuffers()->GetBuffer(0)->clear();
+	/*
+	auto v = m_ecsRegistry.view<comp::RenderAble, comp::Transform>();
+	v.each([](comp::RenderAble rend, comp::Transform transf) {
+		comp::RenderAble Render;
+		T_LOCK();
+		D3D11Core::Get().DeviceContext()->CopyResource(Render.constBuf, rend.constBuf);
+		T_UNLOCK();
+		Render.mesh = rend.mesh;
+		Render.texture = rend.texture;
+
+		Backbuffer::GetBuffers()->GetBuffer(0)->push_back(Render);
+	});
+	*/
+
 	auto v = m_ecsRegistry.view<comp::RenderAble>();
 	v.each([](comp::RenderAble rend) {
 		Backbuffer::GetBuffers()->GetBuffer(0)->push_back(rend);
@@ -58,13 +72,14 @@ void Scene::Render()
 			if (!object)
 				continue;
 
-			if(object->mesh)
-				object->mesh->Render();
-
 			if (object->texture)
 			{
 				D3D11Core::Get().DeviceContext()->PSSetShaderResources(0, 1, &object->texture->GetShaderView());
 			}
+
+			if(object->mesh)
+				object->mesh->Render();
+
 		}
 	}
 

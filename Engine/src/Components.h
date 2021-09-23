@@ -10,19 +10,14 @@ namespace ecs
 			sm::Vector3 position;
 			sm::Vector3 rotation;
 			sm::Vector3 scale;
-
-			std::unique_ptr<dx::ConstantBuffer<sm::Matrix>> constBuf;
-			//ID3D11Buffer* constBuf = nullptr;
 		};
 
+		// It is able to render, simple :)
 		struct RenderAble
 		{
 			RMesh* mesh = nullptr;
 			RTexture* texture = nullptr;
-
-			// Constant buffer
-			std::shared_ptr<dx::ConstantBuffer<sm::Matrix>> constBuf;
-			//ID3D11Buffer* constBuf = nullptr;
+			Transform renderForm;
 		};
 
 		struct Mesh
