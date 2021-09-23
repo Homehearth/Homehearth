@@ -30,7 +30,7 @@ void Scene::Update(float dt)
 		system(m_ecsRegistry, dt);
 	}
 
-	Backbuffer::GetBuffers()->GetBuffer(0)->clear();
+
 	/*
 	auto v = m_ecsRegistry.view<comp::RenderAble, comp::Transform>();
 	v.each([](comp::RenderAble rend, comp::Transform transf) {
@@ -45,6 +45,7 @@ void Scene::Update(float dt)
 	});
 	*/
 
+	Backbuffer::GetBuffers()->GetBuffer(0)->clear();
 	auto v = m_ecsRegistry.view<comp::RenderAble>();
 	v.each([](comp::RenderAble rend) {
 		Backbuffer::GetBuffers()->GetBuffer(0)->push_back(rend);

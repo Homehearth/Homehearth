@@ -29,8 +29,6 @@ private:
 		float update;
 		float render;
 	} m_frameTime;
-
-	MeshRenderObject* meshLOLXD;
 	
 	// Job for rendering thread.
 	void RenderThread();

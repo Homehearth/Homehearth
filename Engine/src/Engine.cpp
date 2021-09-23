@@ -48,8 +48,6 @@ void Engine::Startup()
 	ResourceManager::GetResource<RMesh>("Cube.fbx");
 	ResourceManager::GetResource<RMesh>("geo_house2.obj");*/
 
-	//meshLOLXD = new MeshRenderObject(ResourceManager::GetResource<RMesh>("Cube.fbx"));
-
 	// Thread should be launched after s_engineRunning is set to true and D3D11 is initalized.
 	s_engineRunning = true;
 
@@ -263,7 +261,6 @@ void Engine::RenderThread()
 		}
 		deltaSum += deltaTime;
 		lastFrame = currentFrame;
-
 	}
 
 	s_safeExit = true;
@@ -320,18 +317,14 @@ void Engine::Render(float& dt)
 	//D2D1Core::Begin();
 	m_renderer.ClearScreen();
 	m_renderer.SetPipelineState();
+
 	if (m_currentScene)
 	{
 		m_currentScene->Render();
 	}
 
-	
-
 	debugCamera.UpdateDOOM();
 	debugCamera.Render();
-
-	//Backbuffer::GetBuffers()->GetBuffer(1)->at(0)->Render();
-	//meshLOLXD->Render(objectPass::RenderPass::DEFAULT);
 
 	/*
 		Present the final image and clear it for next frame.

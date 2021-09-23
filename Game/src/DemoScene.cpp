@@ -24,13 +24,16 @@ void CreateTest(Scene& scene)
 	entt::entity object = scene.CreateEntity();
 	comp::RenderAble& rend = scene.AddComponent<comp::RenderAble>(object);
 	rend.mesh = ResourceManager::GetResource<RMesh>("Monster.fbx");
-	rend.renderForm = {};
+	rend.renderForm.position = { 0.0f, 0.0f, 0.0f };
+	rend.renderForm.rotation = { 0.0f, 0.0f, 0.0f };
+	rend.renderForm.scale = { 0.0f, 0.0f, 0.0f };
 	rend.texture = ResourceManager::GetResource<RTexture>("monster_albedo.png");
 }
 
 void setupDemoScene(Engine& engine, Scene& scene) 
 {
 
+	/*
 	// System to update triangles
 	scene.AddSystem([&](entt::registry& reg, float dt)
 		{
@@ -87,8 +90,9 @@ void setupDemoScene(Engine& engine, Scene& scene)
 	const float pos[2] = { 0.f, 0.f };
 	const int signVel[2] = { 1, 1 };
 	createTriangle(scene, 200, pos, signVel);
+	*/
 
-	for (int i = 0; i < 100; i++)
+	for (int i = 0; i < 5000; i++)
 	{
 		CreateTest(scene);
 	}
