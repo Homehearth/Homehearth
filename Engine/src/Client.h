@@ -58,7 +58,7 @@ namespace
 			std::chrono::system_clock::time_point timeThen;
 			msg >> timeThen;
 
-			LOG_INFO("Ping: %f", std::chrono::duration<double>(timeNow - timeThen).count());
+			LOG_INFO("Ping: %fs", std::chrono::duration<double>(timeNow - timeThen).count());
 
 			break;
 		}

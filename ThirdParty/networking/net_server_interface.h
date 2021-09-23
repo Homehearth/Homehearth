@@ -1,5 +1,6 @@
 #pragma once
 #include "net_tsqueue.h"
+//#define PRINT_NETWORK_DEBUG
 
 namespace network
 {
@@ -663,48 +664,60 @@ namespace network
 			{
 			case NetState::READ_HEADER:
 			{
+#ifdef PRINT_NETWORK_DEBUG
 				EnterCriticalSection(&lock);
 				LOG_INFO("Read I/O completed! \"HEADER\"");
 				LeaveCriticalSection(&lock);
+#endif
 				this->ReadHeader(context, SI);
 				break;
 			}
 			case NetState::READ_PAYLOAD:
 			{
+#ifdef PRINT_NETWORK_DEBUG
 				EnterCriticalSection(&lock);
 				LOG_INFO("Read I/O completed! \"PAYLOAD\"");
 				LeaveCriticalSection(&lock);
+#endif
 				this->ReadPayload(context, SI);
 				break;
 			}
 			case NetState::READ_VALIDATION:
 			{
+#ifdef PRINT_NETWORK_DEBUG
 				EnterCriticalSection(&lock);
 				LOG_INFO("Read I/O completed! \"VALIDATION\"");
 				LeaveCriticalSection(&lock);
+#endif
 				this->ReadValidation(context, SI);
 				break;
 			}
 			case NetState::WRITE_HEADER:
 			{
+#ifdef PRINT_NETWORK_DEBUG
 				EnterCriticalSection(&lock);
 				LOG_INFO("Write I/O completed! \"HEADER\"");
 				LeaveCriticalSection(&lock);
+#endif
 				this->PrimeReadHeader(SI);
 				break;
 			}
 			case NetState::WRITE_PAYLOAD:
 			{
+#ifdef PRINT_NETWORK_DEBUG
 				EnterCriticalSection(&lock);
 				LOG_INFO("Write I/O completed! \"PAYLOAD\"");
 				LeaveCriticalSection(&lock);
+#endif
 				break;
 			}
 			case NetState::WRITE_VALIDATION:
 			{
+#ifdef PRINT_NETWORK_DEBUG
 				EnterCriticalSection(&lock);
 				LOG_INFO("Write I/O completed! \"VALIDATION\"");
 				LeaveCriticalSection(&lock);
+#endif
 				this->PrimeReadValidation(SI);
 				break;
 			}

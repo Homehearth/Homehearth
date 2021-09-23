@@ -1,5 +1,6 @@
 #pragma once
 #include "net_tsqueue.h"
+//#define PRINT_NETWORK_DEBUG
 
 namespace network
 {
@@ -22,11 +23,6 @@ namespace network
 		NetState state;
 	};
 
-	struct PER_HANDLE_DATA
-	{
-		SOCKET sock;
-	};
-
 	template <typename T>
 	class client_interface
 	{
@@ -35,10 +31,9 @@ namespace network
 		socklen_t m_endpointLen;
 		CRITICAL_SECTION lock;
 		HANDLE m_CompletionPort;
-		PER_HANDLE_DATA* SI;
 		message<T> tempMsg;
-
 		SOCKET m_socket;
+
 		WSAEVENT m_event;
 
 	private:
@@ -239,7 +234,7 @@ namespace network
 	{
 		tempMsg.payload.resize(context->DataBuf.len);
 		memcpy(&tempMsg.payload[0], context->DataBuf.buf, context->DataBuf.len);
-		
+
 		this->OnMessageReceived(tempMsg);
 	}
 
@@ -288,7 +283,7 @@ namespace network
 		for (p = servinfo; p != nullptr; p = p->ai_next)
 		{
 #ifdef _DEBUG
-			std::cout << PrintSocketData(p) << std::endl;
+			LOG_NETWORK(PrintSocketData(p).c_str());
 #endif
 			sock = WSASocket(p->ai_family, p->ai_socktype, p->ai_protocol, NULL, 0, WSA_FLAG_OVERLAPPED);
 
@@ -321,18 +316,17 @@ namespace network
 		EnterCriticalSection(&lock);
 		LOG_INFO("Client created successfully!");
 		LeaveCriticalSection(&lock);
-		DWORD index = 0;
-		WSANETWORKEVENTS networkEvents = {};
 		DWORD BytesTransferred = 0;
 		DWORD flags = 0;
 		BOOL bResult = false;
 		LPOVERLAPPED lpOverlapped;
 		PER_IO_DATA* context = nullptr;
 		BOOL shouldDisconnect = false;
+		SOCKET* sock;
 
 		while (IsConnected())
 		{
-			bResult = GetQueuedCompletionStatus(m_CompletionPort, &BytesTransferred, (PULONG_PTR)&SI, &lpOverlapped, INFINITE);
+			bResult = GetQueuedCompletionStatus(m_CompletionPort, &BytesTransferred, (PULONG_PTR)&sock, &lpOverlapped, WSA_INFINITE);
 
 			// Failed but allocated data for lpOverlapped, need to de-allocate.
 			if (!bResult && lpOverlapped != NULL)
@@ -363,49 +357,61 @@ namespace network
 			case NetState::READ_VALIDATION:
 			{
 				this->OnConnect();
+#ifdef PRINT_NETWORK_DEBUG
 				EnterCriticalSection(&lock);
 				LOG_NETWORK("Reading validation!");
 				LeaveCriticalSection(&lock);
+#endif
 				this->ReadValidation(context);
 				break;
 			}
 			case NetState::WRITE_VALIDATION:
 			{
+#ifdef PRINT_NETWORK_DEBUG
 				EnterCriticalSection(&lock);
 				LOG_NETWORK("Writing validation!");
 				LeaveCriticalSection(&lock);
+#endif
 				this->PrimeReadHeader();
 				break;
-			}	
+			}
 			case NetState::READ_HEADER:
 			{
+#ifdef PRINT_NETWORK_DEBUG
 				EnterCriticalSection(&lock);
 				LOG_NETWORK("Reading header!");
 				LeaveCriticalSection(&lock);
+#endif
 				this->ReadHeader(context);
 				break;
 			}
 			case NetState::READ_PAYLOAD:
 			{
+#ifdef PRINT_NETWORK_DEBUG
 				EnterCriticalSection(&lock);
 				LOG_NETWORK("Reading payload!");
 				LeaveCriticalSection(&lock);
+#endif
 				this->ReadPayload(context);
 				break;
 			}
 			case NetState::WRITE_HEADER:
 			{
+#ifdef PRINT_NETWORK_DEBUG
 				EnterCriticalSection(&lock);
 				LOG_NETWORK("Writing header!");
 				LeaveCriticalSection(&lock);
+#endif
 				this->PrimeReadHeader();
 				break;
 			}
 			case NetState::WRITE_PAYLOAD:
 			{
+#ifdef PRINT_NETWORK_DEBUG
 				EnterCriticalSection(&lock);
 				LOG_NETWORK("Writing payload!");
 				LeaveCriticalSection(&lock);
+#endif
 				break;
 			}
 			}
@@ -463,13 +469,27 @@ namespace network
 
 		if (p->ai_socktype == SOCK_STREAM)
 		{
-			data += "Socktype: TCP";
+			data += "Socktype: SOCK_STREAM\n";
 		}
 		else if (p->ai_socktype == SOCK_DGRAM)
 		{
-			data += "Socktype: UDP";
+			data += "Socktype: SOCK_DGRAM\n";
+		}
+		if (p->ai_protocol == IPPROTO_TCP)
+		{
+			data += "Protocol: TCP\n";
 		}
 
+		char ipAsString[IPV6_ADDRSTRLEN] = {};
+
+		inet_ntop(p->ai_family, get_in_addr(p->ai_addr), ipAsString, sizeof(ipAsString));
+
+		data += "Connecting to: ";
+		data += ipAsString;
+		data += ":";
+		data += std::to_string(GetPort(p->ai_addr));
+
+		data += "\n";
 		data += "\n";
 
 		return data;
@@ -505,10 +525,8 @@ namespace network
 			}
 		}
 
-		SI = new PER_HANDLE_DATA;
-		SI->sock = m_socket;
 
-		if ((m_CompletionPort = CreateIoCompletionPort((HANDLE)m_socket, NULL, (ULONG_PTR)SI, 0)) == NULL)
+		if ((m_CompletionPort = CreateIoCompletionPort((HANDLE)m_socket, NULL, (ULONG_PTR)&m_socket, 0)) == NULL)
 		{
 			LOG_ERROR("CreateIoCompletionPort() failed with error %d", GetLastError());
 			return false;
@@ -533,11 +551,11 @@ namespace network
 		{
 			return;
 		}
-
 		if (closesocket(m_socket) != 0)
 		{
 			LOG_ERROR("Failed to close socket!");
 		}
+
 		m_socket = INVALID_SOCKET;
 		this->OnDisconnect();
 	}

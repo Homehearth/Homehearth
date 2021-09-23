@@ -138,6 +138,7 @@ void Engine::Run()
 		lastFrame = currentFrame;
 	}
 
+
 	// Wait for the rendering thread to exit its last render cycle and shutdown.
 #ifdef _DEBUG
 	while (!s_safeExit) {};
@@ -148,7 +149,7 @@ void Engine::Run()
 	ImGui::DestroyContext();
 #endif
 
-	
+	m_client.Disconnect();
     T_DESTROY();
     ResourceManager::Destroy();
     D2D1Core::Destroy();
