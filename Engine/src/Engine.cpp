@@ -39,7 +39,6 @@ void Engine::Startup()
 	// Thread should be launched after s_engineRunning is set to true and D3D11 is initialized.
 	s_engineRunning = true;
 	
-	/*
 	if (m_client.Connect("127.0.0.1", 4950))
 	{
 		LOG_INFO("Connected to server");
@@ -47,7 +46,6 @@ void Engine::Startup()
 	else {
 		LOG_ERROR("Failed to connect to server");
 	} 
-	*/
 
 	//
 	// AUDIO 
