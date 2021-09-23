@@ -1,15 +1,30 @@
 #pragma once
-#include "net_common.h"
 #include "net_tsqueue.h"
 
 namespace network
 {
+	enum class NetState
+	{
+		NOT_VALIDATED,
+		READ_VALIDATION,
+		WRITE_VALIDATION,
+		READ_HEADER,
+		READ_PAYLOAD,
+		WRITE_HEADER,
+		WRITE_PAYLOAD
+	};
+
 	struct PER_IO_DATA
 	{
-		OVERLAPPED Overlapped;
+		WSAOVERLAPPED Overlapped;
 		CHAR buffer[BUFFER_SIZE] = {};
 		WSABUF DataBuf;
-		SOCKET socket;
+		NetState state;
+	};
+
+	struct PER_HANDLE_DATA
+	{
+		SOCKET sock;
 	};
 
 	template <typename T>
@@ -19,6 +34,9 @@ namespace network
 		struct sockaddr_in m_endpoint;
 		socklen_t m_endpointLen;
 		CRITICAL_SECTION lock;
+		HANDLE m_CompletionPort;
+		PER_HANDLE_DATA* SI;
+		message<T> tempMsg;
 
 		SOCKET m_socket;
 		WSAEVENT m_event;
@@ -29,6 +47,22 @@ namespace network
 		SOCKET CreateSocket(std::string& ip, uint16_t& port);
 		DWORD WINAPI ProcessIO();
 
+		/*
+				Because the nature of async I/O the internal functions will PRIME the socket
+				to read or write data. It might be a pending call, hence I make a callback
+				to a completion routine once the recv/send call is completed. At that point
+				the data is accessible.
+		*/
+		void PrimeReadValidation();
+		void PrimeReadHeader();
+		void PrimeReadPayload(uint32_t size);
+		void ReadHeader(PER_IO_DATA*& context);
+		void ReadPayload(PER_IO_DATA*& context);
+		void ReadValidation(PER_IO_DATA*& context);
+		void WriteHeader(message<T>& msg);
+		void WritePayload(message<T>& msg);
+		void WriteValidation(uint64_t handshakeIn);
+
 	protected:
 
 	public:
@@ -38,6 +72,7 @@ namespace network
 
 			m_endpointLen = sizeof(m_endpoint);
 			ZeroMemory(&m_endpoint, m_endpointLen);
+			tempMsg = {};
 
 			InitWinsock();
 		}
@@ -47,9 +82,9 @@ namespace network
 			Disconnect();
 			WSACleanup();
 		}
-
+		tsQueue<message<T>> messages;
 	public:
-		virtual void OnMessageReceived(const message<T>& msg) = 0;
+		virtual void OnMessageReceived(message<T>& msg) = 0;
 
 		virtual void OnConnect() = 0;
 
@@ -63,150 +98,171 @@ namespace network
 		void Disconnect();
 		// Check to see if client is connected to a server
 		bool IsConnected();
-		void Send(const message<T>& msg);
-		void ReadHeader();
-		static VOID CALLBACK ReadPayload(DWORD dwError, DWORD cbTransferred, LPWSAOVERLAPPED lpOverlapped, DWORD dwFlags);
-		void WriteHeader(const message<T>& msg);
-		void WritePayload();
-		static VOID CALLBACK ReadValidation(DWORD dwError, DWORD cbTransferred, LPWSAOVERLAPPED lpOverlapped, DWORD dwFlags);
-		static void WriteValidation(SOCKET s, uint64_t handshakeIn);
+		void Send(message<T>& msg);
 	};
 
 	template <typename T>
-	VOID CALLBACK client_interface<T>::ReadValidation(DWORD dwError, DWORD cbTransferred, LPWSAOVERLAPPED lpOverlapped, DWORD dwFlags)
-	{
-		PER_IO_DATA* context = (PER_IO_DATA*)lpOverlapped;
-		uint64_t handshakeIn = 0;
-		memcpy(&handshakeIn, context->DataBuf.buf, sizeof(uint64_t));
-
-		if (cbTransferred > 0)
-		{
-			WriteValidation(context->socket, handshakeIn);
-		}
-		else
-		{
-			LOG_WARNING("Lost connection to server!");
-		}
-		delete context;
-	}
-
-	template <typename T>
-	void client_interface<T>::WriteValidation(SOCKET s, uint64_t handshakeIn)
-	{
-		uint64_t handshakeOut = scrambleData(handshakeIn);
-		PER_IO_DATA* context = new PER_IO_DATA;
-		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
-		context->DataBuf.len = sizeof(uint64_t);
-		memcpy(context->buffer, &handshakeOut, context->DataBuf.len);
-		context->DataBuf.buf = context->buffer;
-		DWORD BytesSent = 0;
-		DWORD flags = 0;
-		context->socket = s;
-
-		if (WSASend(s, &context->DataBuf, 1, &BytesSent, flags, &context->Overlapped, NULL) == SOCKET_ERROR)
-		{
-			if (WSAGetLastError() != WSA_IO_PENDING)
-			{
-				LOG_ERROR("WSASend failed!");
-				delete context;
-			}
-			else
-			{
-				LOG_INFO("WSASend is pending!");
-			}
-		}
-		else
-		{
-			LOG_INFO("WSASend was ok!");
-		}
-	}
-
-	template <typename T>
-	void client_interface<T>::ReadHeader()
+	void client_interface<T>::PrimeReadPayload(uint32_t size)
 	{
 		PER_IO_DATA* context = new PER_IO_DATA;
-
-		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
+		ZeroMemory(&context->Overlapped, sizeof(WSAOVERLAPPED));
 		context->DataBuf.buf = context->buffer;
-		context->DataBuf.len = BUFFER_SIZE;
-		context->socket = m_socket;
+		context->DataBuf.len = (ULONG)size;
 		DWORD flags = 0;
-		DWORD ReceivedBytes = 0;
+		DWORD bytesReceived = 0;
+		context->state = NetState::READ_PAYLOAD;
 
-		if (WSARecv(m_socket, &context->DataBuf, 1, &ReceivedBytes, &flags, &context->Overlapped, ReadPayload) == SOCKET_ERROR)
+		if (WSARecv(m_socket, &context->DataBuf, 1, &bytesReceived, &flags, &context->Overlapped, NULL) == SOCKET_ERROR)
 		{
 			if (WSAGetLastError() != WSA_IO_PENDING)
 			{
 				LOG_ERROR("WSARecv failed!");
 				delete context;
 			}
-			else
-			{
-				EnterCriticalSection(&lock);
-				LOG_INFO("WSARecv is pending!");
-				LeaveCriticalSection(&lock);
-			}
-		}
-		else
-		{
-			EnterCriticalSection(&lock);
-			LOG_INFO("WSARecv was ok!");
-			LeaveCriticalSection(&lock);
 		}
 	}
 
 	template <typename T>
-	void client_interface<T>::WriteHeader(const message<T>& msg)
+	void client_interface<T>::PrimeReadHeader()
 	{
 		PER_IO_DATA* context = new PER_IO_DATA;
-		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
-		context->socket = m_socket;
-		memcpy(context->buffer, &msg.header, sizeof(msg.header));
+		ZeroMemory(&context->Overlapped, sizeof(WSAOVERLAPPED));
 		context->DataBuf.buf = context->buffer;
-		context->DataBuf.len = sizeof(msg.header);
+		context->DataBuf.len = sizeof(msg_header<T>);
+		context->state = NetState::READ_HEADER;
+		DWORD flags = 0;
+		DWORD ReceivedBytes = 0;
+
+		if (WSARecv(m_socket, &context->DataBuf, 1, &ReceivedBytes, &flags, &context->Overlapped, NULL) == SOCKET_ERROR)
+		{
+			if (WSAGetLastError() != WSA_IO_PENDING)
+			{
+				LOG_ERROR("WSARecv failed!");
+				delete context;
+			}
+		}
+	}
+
+	template <typename T>
+	void client_interface<T>::PrimeReadValidation()
+	{
+		PER_IO_DATA* context = new PER_IO_DATA;
+		ZeroMemory(&context->Overlapped, sizeof(WSAOVERLAPPED));
+		context->DataBuf.buf = context->buffer;
+		context->DataBuf.len = BUFFER_SIZE;
+		DWORD flags = 0;
+		DWORD bytesReceived = 0;
+		context->state = NetState::READ_VALIDATION;
+
+		if (WSARecv(m_socket, &context->DataBuf, 1, &bytesReceived, &flags, &context->Overlapped, NULL) == SOCKET_ERROR)
+		{
+			if (WSAGetLastError() != WSA_IO_PENDING)
+			{
+				delete context;
+				LOG_ERROR("WSARecv failed!");
+			}
+		}
+	}
+
+	template <typename T>
+	void client_interface<T>::ReadValidation(PER_IO_DATA*& context)
+	{
+		uint64_t handshakeIn = 0;
+		memcpy(&handshakeIn, context->DataBuf.buf, sizeof(uint64_t));
+
+		WriteValidation(handshakeIn);
+	}
+
+	template <typename T>
+	void client_interface<T>::WriteValidation(uint64_t handshakeIn)
+	{
+		PER_IO_DATA* context = new PER_IO_DATA;
+		uint64_t handshakeOut = scrambleData(handshakeIn);
+		ZeroMemory(&context->Overlapped, sizeof(WSAOVERLAPPED));
+		context->DataBuf.len = sizeof(uint64_t);
+		memcpy(context->buffer, &handshakeOut, context->DataBuf.len);
+		context->DataBuf.buf = context->buffer;
 		DWORD BytesSent = 0;
 		DWORD flags = 0;
-		
-		if (WSASend(context->socket, &context->DataBuf, 1, &BytesSent, flags, &context->Overlapped, NULL) == SOCKET_ERROR)
+		context->state = NetState::WRITE_VALIDATION;
+
+		if (WSASend(m_socket, &context->DataBuf, 1, &BytesSent, flags, &context->Overlapped, NULL) == SOCKET_ERROR)
 		{
 			if (WSAGetLastError() != WSA_IO_PENDING)
 			{
 				LOG_ERROR("WSASend failed!");
 				delete context;
 			}
-			else
-			{
-				LOG_INFO("WSASend is pending!");
-			}
+		}
+	}
+
+	template <typename T>
+	void client_interface<T>::ReadHeader(PER_IO_DATA*& context)
+	{
+		memcpy(&tempMsg.header, context->DataBuf.buf, sizeof(msg_header<T>));
+
+		if (tempMsg.header.size > 0)
+		{
+			tempMsg.payload.clear();
+			this->PrimeReadPayload(tempMsg.header.size - sizeof(msg_header<T>));
 		}
 		else
 		{
-			LOG_INFO("WSASend was ok!");
+			this->OnMessageReceived(tempMsg);
 		}
 	}
 
 	template <typename T>
-	VOID CALLBACK client_interface<T>::ReadPayload(DWORD dwError, DWORD cbTransferred, LPWSAOVERLAPPED lpOverlapped, DWORD dwFlags)
+	void client_interface<T>::WriteHeader(message<T>& msg)
 	{
-		PER_IO_DATA* context = (PER_IO_DATA*)lpOverlapped;
+		PER_IO_DATA* context = new PER_IO_DATA;
+		ZeroMemory(&context->Overlapped, sizeof(WSAOVERLAPPED));
+		memcpy(context->buffer, &msg.header, sizeof(msg.header));
+		context->DataBuf.buf = context->buffer;
+		context->DataBuf.len = sizeof(msg.header);
+		context->state = NetState::WRITE_HEADER;
+		DWORD BytesSent = 0;
+		DWORD flags = 0;
 
-		message<MessageType> msg = {};
-
-		memcpy(&msg.header, context->DataBuf.buf, sizeof(msg.header));
-		switch (msg.header.id)
+		if (WSASend(m_socket, &context->DataBuf, 1, &BytesSent, flags, &context->Overlapped, NULL) == SOCKET_ERROR)
 		{
-		case MessageType::Client_Accepted:
-		{
-			LOG_INFO("YOU ARE VALIDATED!");
+			if (WSAGetLastError() != WSA_IO_PENDING)
+			{
+				LOG_ERROR("WSASend failed!");
+				delete context;
+			}
 		}
-		}
-		delete context;
 	}
 
 	template <typename T>
-	void client_interface<T>::WritePayload()
+	void client_interface<T>::ReadPayload(PER_IO_DATA*& context)
 	{
+		tempMsg.payload.resize(context->DataBuf.len);
+		memcpy(&tempMsg.payload[0], context->DataBuf.buf, context->DataBuf.len);
+		
+		this->OnMessageReceived(tempMsg);
+	}
 
+	template <typename T>
+	void client_interface<T>::WritePayload(message<T>& msg)
+	{
+		PER_IO_DATA* context = new PER_IO_DATA;
+		ZeroMemory(&context->Overlapped, sizeof(WSAOVERLAPPED));
+		memcpy(context->buffer, &msg.payload[0], msg.payload.size());
+		context->DataBuf.buf = context->buffer;
+		context->DataBuf.len = (ULONG)msg.payload.size();
+		context->state = NetState::WRITE_PAYLOAD;
+		DWORD BytesSent = 0;
+		DWORD flags = 0;
+
+		if (WSASend(m_socket, &context->DataBuf, 1, &BytesSent, flags, &context->Overlapped, NULL) == SOCKET_ERROR)
+		{
+			if (WSAGetLastError() != WSA_IO_PENDING)
+			{
+				LOG_ERROR("WSASend failed!");
+				delete context;
+			}
+		}
 	}
 
 	template <typename T>
@@ -267,72 +323,92 @@ namespace network
 		LeaveCriticalSection(&lock);
 		DWORD index = 0;
 		WSANETWORKEVENTS networkEvents = {};
+		DWORD BytesTransferred = 0;
+		DWORD flags = 0;
+		BOOL bResult = false;
+		LPOVERLAPPED lpOverlapped;
+		PER_IO_DATA* context = nullptr;
+		BOOL shouldDisconnect = false;
 
 		while (IsConnected())
 		{
-			// Will put thread to sleep unless there is I/O to process or a new connection has been made
-			if ((index = WSAWaitForMultipleEvents(1, &m_event, FALSE, WSA_INFINITE, TRUE)) == WSA_WAIT_FAILED)
+			bResult = GetQueuedCompletionStatus(m_CompletionPort, &BytesTransferred, (PULONG_PTR)&SI, &lpOverlapped, INFINITE);
+
+			// Failed but allocated data for lpOverlapped, need to de-allocate.
+			if (!bResult && lpOverlapped != NULL)
 			{
-				printf("WSAWaitForMultipleEvents() failed %d\n", WSAGetLastError());
+				shouldDisconnect = true;
+			}
+			// Failed and lpOverlapped was not allocated any data
+			else if (!bResult && lpOverlapped == NULL)
+			{
+				LOG_ERROR("GetQueuedCompletionStatus() failed with error: %d", GetLastError());
 				continue;
 			}
-
-			if (index == WAIT_IO_COMPLETION)
+			// If an I/O was completed but we received no data means a client must've disconnected
+			if (BytesTransferred == 0)
 			{
-				// An overlapped request completion routine
-				// just completed. Continue servicing more completion routines.
-
-				//continue;
+				shouldDisconnect = true;
 			}
 
-			WSAEnumNetworkEvents(m_socket, m_event, &networkEvents);
-
-			if (networkEvents.lNetworkEvents & FD_CONNECT && (networkEvents.iErrorCode[FD_CONNECT_BIT] == 0))
+			if (shouldDisconnect)
 			{
-				// CALLING THREAD MUST ISSUE A RECEIVE TASK TO USE THE COMPLETION ROUTINE AKA CALLBACK FUNCTION
-				PER_IO_DATA* context = new PER_IO_DATA;
-				ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
-				context->DataBuf.buf = context->buffer;
-				context->DataBuf.len = BUFFER_SIZE;
-				DWORD flags = 0;
-				DWORD bytesReceived = 0;
-				context->socket = m_socket;
-
-				if (WSARecv(m_socket, &context->DataBuf, 1, &bytesReceived, &flags, &context->Overlapped, ReadValidation) == SOCKET_ERROR)
-				{
-					if (WSAGetLastError() != WSA_IO_PENDING)
-					{
-						LOG_ERROR("WSARecv failed!");
-						delete context;
-					}
-					else
-					{
-						EnterCriticalSection(&lock);
-						LOG_INFO("WSARecv is pending!");
-						LeaveCriticalSection(&lock);
-					}
-				}
-				else
-				{
-					EnterCriticalSection(&lock);
-					LOG_INFO("WSARecv was ok!");
-					LeaveCriticalSection(&lock);
-				}
+				Disconnect();
 			}
 
-			if (networkEvents.lNetworkEvents & FD_READ && (networkEvents.iErrorCode[FD_READ_BIT] == 0))
+			context = CONTAINING_RECORD(lpOverlapped, PER_IO_DATA, PER_IO_DATA::Overlapped);
+
+			switch (context->state)
 			{
-			}
-			if (networkEvents.lNetworkEvents & FD_CLOSE && (networkEvents.iErrorCode[FD_CLOSE_BIT] == 0))
+			case NetState::READ_VALIDATION:
 			{
-				this->Disconnect();
+				this->OnConnect();
+				EnterCriticalSection(&lock);
+				LOG_NETWORK("Reading validation!");
+				LeaveCriticalSection(&lock);
+				this->ReadValidation(context);
+				break;
 			}
-			if (networkEvents.lNetworkEvents & FD_WRITE && (networkEvents.iErrorCode[FD_WRITE_BIT] == 0))
+			case NetState::WRITE_VALIDATION:
 			{
 				EnterCriticalSection(&lock);
-				LOG_INFO("READING HEADER!");
+				LOG_NETWORK("Writing validation!");
 				LeaveCriticalSection(&lock);
-				ReadHeader();
+				this->PrimeReadHeader();
+				break;
+			}
+			case NetState::READ_HEADER:
+			{
+				EnterCriticalSection(&lock);
+				LOG_NETWORK("Reading header!");
+				LeaveCriticalSection(&lock);
+				this->ReadHeader(context);
+				break;
+			}
+			case NetState::READ_PAYLOAD:
+			{
+				EnterCriticalSection(&lock);
+				LOG_NETWORK("Reading payload!");
+				LeaveCriticalSection(&lock);
+				this->ReadPayload(context);
+				break;
+			}
+			case NetState::WRITE_HEADER:
+			{
+				LOG_NETWORK("Writing header!");
+				this->PrimeReadHeader();
+				break;
+			}
+			case NetState::WRITE_PAYLOAD:
+			{
+				LOG_NETWORK("Writing payload!");
+				break;
+			}
+			}
+
+			if (context)
+			{
+				delete context;
 			}
 		}
 		return 0;
@@ -396,11 +472,14 @@ namespace network
 	}
 
 	template<typename T>
-	inline void client_interface<T>::Send(const message<T>& msg)
+	inline void client_interface<T>::Send(message<T>& msg)
 	{
+		this->WriteHeader(msg);
 
-		send(m_socket, (char*)&msg.header, static_cast<int>(sizeof(msg.header)), 0);
-		send(m_socket, (char*)msg.payload.data(), static_cast<int>(sizeof(msg.payload.size())));
+		if (msg.payload.size() > 0)
+		{
+			this->WritePayload(msg);
+		}
 	}
 
 	template<typename T>
@@ -422,15 +501,20 @@ namespace network
 			}
 		}
 
-		m_event = WSACreateEvent();
+		SI = new PER_HANDLE_DATA;
+		SI->sock = m_socket;
 
-		WSAEventSelect(m_socket, m_event, FD_CONNECT | FD_READ | FD_WRITE | FD_CLOSE);
-
-		if (WSASetEvent(m_event) == FALSE)
+		if ((m_CompletionPort = CreateIoCompletionPort((HANDLE)m_socket, NULL, (ULONG_PTR)SI, 0)) == NULL)
 		{
-			printf("WSASetEvent() failed with error %d\n", WSAGetLastError());
+			LOG_ERROR("CreateIoCompletionPort() failed with error %d", GetLastError());
 			return false;
 		}
+		else
+		{
+			LOG_INFO("CompletionPort OK!");
+		}
+
+		PrimeReadValidation();
 
 		std::thread t(&client_interface<T>::ProcessIO, this);
 		t.detach();
@@ -448,9 +532,7 @@ namespace network
 
 		if (closesocket(m_socket) != 0)
 		{
-#ifdef _DEBUG
-			std::cout << "Failed to close socket: " << WSAGetLastError() << std::endl;
-#endif
+			LOG_ERROR("Failed to close socket!");
 		}
 		m_socket = INVALID_SOCKET;
 		this->OnDisconnect();

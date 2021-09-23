@@ -17,7 +17,7 @@ namespace network
 		// Inherited via server_interface
 		virtual void OnClientConnect(std::string&& ip, const uint16_t& port) override;
 		virtual void OnClientDisconnect() override;
-		virtual void OnMessageReceived(const SOCKET& socketId, CHAR* buffer, DWORD bytesReceived) override;
+		virtual void OnMessageReceived(const SOCKET& socketId, message<MessageType>& msg) override;
 		virtual void OnClientValidated(const SOCKET& s) override;
 	};
 
@@ -44,9 +44,23 @@ namespace network
 		LeaveCriticalSection(&lock);
 	}
 
-	void Server::OnMessageReceived(const SOCKET& socketId, CHAR* buffer, DWORD bytesReceived)
+	void Server::OnMessageReceived(const SOCKET& socketId, message<MessageType>& msg)
 	{
-		LOG_INFO("Message received: %s Bytes: %ld", buffer, bytesReceived);
+		switch (msg.header.id)
+		{
+		case MessageType::PingServer:
+		{
+			message<MessageType> msg = {};
+			msg.header.id = MessageType::PingServer;
+			std::chrono::system_clock::time_point timeNow = std::chrono::system_clock::now();
+			msg << timeNow;
+			Send(socketId, msg);
+			EnterCriticalSection(&lock);
+			LOG_INFO("CLIENT IS PINGING SERVER");
+			LeaveCriticalSection(&lock);
+			break;
+		}
+		}
 		/*Send(socketId, buffer, bytesReceived);*/
 	}
 

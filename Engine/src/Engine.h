@@ -4,6 +4,7 @@
 #include "Scene.h"
 #include "Renderer.h"
 #include "EventTypes.h"
+#include "Client.h"
 
 struct Triangle2
 {
@@ -25,6 +26,7 @@ private:
 	std::unordered_map<std::string, Scene> m_scenes;
 	Scene* m_currentScene;
 	bool m_vSync;
+	Client m_client;
 
 	struct {
 		float update;

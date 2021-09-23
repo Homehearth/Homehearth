@@ -2,8 +2,6 @@
 #include <EnginePCH.h>
 #include <Engine.h>
 
-#include "DemoScene.h"
-
 class Game
 {
 private:

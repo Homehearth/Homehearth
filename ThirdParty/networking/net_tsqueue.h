@@ -34,14 +34,14 @@ namespace network
 		{
 			std::scoped_lock lock(mutex);
 
-			return deqQueue.emplace_back(item);
+			deqQueue.emplace_back(item);
 		}
 
 		void push_front(const T& item)
 		{
 			std::scoped_lock lock(mutex);
 
-			return deqQueue.emplace_front(item);
+			deqQueue.emplace_front(item);
 		}
 
 		size_t count()
@@ -62,7 +62,7 @@ namespace network
 		{
 			std::scoped_lock lock(mutex);
 
-			return deqQueue.clear();
+			deqQueue.clear();
 		}
 
 		T pop_front()

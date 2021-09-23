@@ -1,7 +1,8 @@
 #pragma once
-#include "EnginePCH.h"
 
-namespace network
+using namespace network;
+
+namespace
 {
 	class Client :public client_interface<MessageType>
 	{
@@ -11,9 +12,11 @@ namespace network
 		Client();
 		virtual ~Client();
 
-		virtual void OnValidation() override;
 		// Inherited via client_interface
-		virtual void OnMessageReceived(const message<MessageType>& msg) override;
+		virtual void OnValidation() override;
+
+		// Inherited via client_interface
+		virtual void OnMessageReceived(message<MessageType>& msg) override;
 
 		// Inherited via client_interface
 		virtual void OnConnect() override;
@@ -40,18 +43,30 @@ namespace network
 		LOG_INFO("Your connection has been validated!");
 	}
 
-	void Client::OnMessageReceived(const network::message<MessageType>& msg)
+	void Client::OnMessageReceived(network::message<MessageType>& msg)
 	{
 		switch (msg.header.id)
 		{
-		case MessageType::Connected:
-			std::cout << "Server sent: " << msg << std::endl;
+		case MessageType::Client_Accepted:
+		{
+			LOG_INFO("You are validated!");
 			break;
+		}
+		case MessageType::PingServer:
+		{
+			std::chrono::system_clock::time_point timeNow = std::chrono::system_clock::now();
+			std::chrono::system_clock::time_point timeThen;
+			msg >> timeThen;
+
+			LOG_INFO("Ping: %f", std::chrono::duration<double>(timeNow - timeThen).count());
+
+			break;
+		}
 		}
 	}
 
 	void Client::OnConnect()
 	{
-		std::cout << "Connected to server!" << std::endl;
+		LOG_INFO("Connected to the server!");
 	}
 }

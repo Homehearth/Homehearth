@@ -26,6 +26,7 @@ namespace Logger
 #define LOG_ERROR(...)
 #define LOG_WARNING(...)
 #define LOG_INFO(...)
+#define LOG_NETWORK(...)
 #endif																																
 
 

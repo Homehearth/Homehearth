@@ -47,15 +47,6 @@ void Engine::Startup()
 	m_buffPointer = m_drawBuffers.GetBuffer(1);
 	m_buffPointer->reserve(200);
 
-	if (m_client.Connect("127.0.0.1", 4950))
-	{
-		LOG_INFO("Connected to server");
-	}
-	else {
-		LOG_ERROR("Failed to connect to server");
-	} 
-    //m_client = std::make_unique<Client>();
-
 #ifdef _DEBUG
 	m_IsImguiReady = false;
 	// Setup ImGUI
@@ -67,9 +58,7 @@ void Engine::Startup()
 	ImGui::StyleColorsDark();
 	LOG_INFO("ImGui was successfully initialized");
 #endif
-
-	
-	std::cout << "All clients mothafocking did it!" << std::endl;
+	m_client.Connect("127.0.0.1", 4950);
 }
 
 void Engine::Run()
@@ -79,6 +68,9 @@ void Engine::Run()
 	float deltaTime = 0.f;
 	float accumulator = 0.f;
 	const float targetDelta = 1 / 1000.0f;
+
+	bool key[3] = { false, false, false };
+	bool old_key[3] = { false, false, false };
 
 	if (thread::IsThreadActive())
 		T_CJOB(Engine, RenderThread);
@@ -94,6 +86,37 @@ void Engine::Run()
 			if (msg.message == WM_QUIT)
 			{
 				Shutdown();
+			}
+		}
+
+		if (m_client.IsConnected())
+		{
+			if (!m_client.messages.empty())
+			{
+				std::cout << "TESTING!!!!!" << std::endl;
+				message<MessageType> msg = m_client.messages.pop_front();
+			}
+			if (GetForegroundWindow() == this->m_window.GetHWnd())
+			{
+				key[0] = GetAsyncKeyState('1') & 0x8000;
+				key[1] = GetAsyncKeyState('2') & 0x8000;
+				key[2] = GetAsyncKeyState('3') & 0x8000;
+
+				if (key[0] && !old_key[0])
+				{
+					message<MessageType> msg = {};
+					msg.header.id = MessageType::PingServer;
+					std::chrono::system_clock::time_point timeNow = std::chrono::system_clock::now();
+					msg << timeNow;
+					LOG_INFO("Pinging server!");
+
+					m_client.Send(msg);
+				}
+
+				for (int i = 0; i < 3; i++)
+				{
+					old_key[i] = key[i];
+				}
 			}
 		}
 

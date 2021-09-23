@@ -60,7 +60,7 @@ namespace network
 
 			msg.payload.resize(i);
 
-			msg.header.size = msg.size();
+			msg.header.size = static_cast<uint32_t>(msg.size());
 
 			return msg;
 		}
