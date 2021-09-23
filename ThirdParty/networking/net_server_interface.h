@@ -576,7 +576,7 @@ namespace network
 
 		// Create worker threads based on the number of processors available on the
 		// system. Create two worker threads for each processor
-		for (size_t i = 0; i < SystemInfo.dwNumberOfProcessors * DWORD(2); i++)
+		for (size_t i = 0; i < SystemInfo.dwNumberOfProcessors; i++)
 		{
 			std::thread workerThread = std::thread(&server_interface<T>::ServerWorkerThread, this);
 			workerThread.detach();

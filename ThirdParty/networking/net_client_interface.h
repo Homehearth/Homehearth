@@ -376,7 +376,7 @@ namespace network
 				LeaveCriticalSection(&lock);
 				this->PrimeReadHeader();
 				break;
-			}
+			}	
 			case NetState::READ_HEADER:
 			{
 				EnterCriticalSection(&lock);
@@ -395,13 +395,17 @@ namespace network
 			}
 			case NetState::WRITE_HEADER:
 			{
+				EnterCriticalSection(&lock);
 				LOG_NETWORK("Writing header!");
+				LeaveCriticalSection(&lock);
 				this->PrimeReadHeader();
 				break;
 			}
 			case NetState::WRITE_PAYLOAD:
 			{
+				EnterCriticalSection(&lock);
 				LOG_NETWORK("Writing payload!");
+				LeaveCriticalSection(&lock);
 				break;
 			}
 			}
