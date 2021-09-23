@@ -24,3 +24,9 @@ struct anim_vertex_t
 	dx::XMUINT3		boneID	   = {};
 	sm::Vector3		boneWeight = {};
 };
+
+
+struct basic_model_matrix_t
+{
+	sm::Matrix worldMatrix;
+};

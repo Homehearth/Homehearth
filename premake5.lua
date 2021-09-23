@@ -1,8 +1,11 @@
--- Solution configurations file.
+-- Solution configuration file.
 workspace "Workspace"
     system "Windows"
     architecture "x86_64"
-
+    flags { 
+        "MultiProcessorCompile" 
+    }
+    
     configurations {
         "Debug",
         "Release"
