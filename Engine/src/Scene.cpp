@@ -64,7 +64,6 @@ void Scene::Render()
 
 	if (data)
 	{
-
 		// Loop through each object.
 		for (int i = 0; i < data->size(); i++)
 		{
