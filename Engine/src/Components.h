@@ -4,6 +4,7 @@
 namespace ecs
 {
 	namespace component {
+		
 		struct Transform
 		{
 			sm::Vector3 position;
@@ -20,6 +21,11 @@ namespace ecs
 		struct Velocity
 		{
 			sm::Vector3 vel;
+		};
+
+		struct Player
+		{
+			float runSpeed;
 		};
 	};
 

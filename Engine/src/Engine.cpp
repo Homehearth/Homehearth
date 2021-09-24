@@ -247,7 +247,7 @@ void Engine::drawImGUI() const
 
 	static Timer timer;
 
-	if (timer.getElapsedTime() > 0.5f)
+	if (timer.GetElapsedTime() > 0.5f)
 	{
 		fpsContainer.emplace_back((1 / m_frameTime.render));
 		fpsUpdateContainer.emplace_back((1.0f / m_frameTime.update));
@@ -334,7 +334,7 @@ void Engine::RenderThread()
 
 void Engine::Update(float dt)
 {
-	m_buffPointer = m_drawBuffers.GetBuffer(0);
+	//m_buffPointer = m_drawBuffers.GetBuffer(0);
 
 	// Update the camera transform based on interactive inputs.
 	// todo:

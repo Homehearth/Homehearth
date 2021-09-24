@@ -1,30 +1,10 @@
 #include "GameSystems.h"
 void GameSystems::UserInputSystem(Scene& scene)
 {
-	
-
-//if key code W | A | S | D
-	{
-		auto group = scene.GetRegistry().group<comp::Transform, comp::Velocity>();
-		
-		group.each([&](comp::Transform&, comp::Velocity& velocity)
+		auto view = scene.GetRegistry().view<comp::Transform, comp::Velocity, comp::Player>();
+		view.each([&](comp::Transform&, comp::Velocity& velocity, comp::Player& player)
 			{
-				//if keycode W
-				{
-					velocity.vel.z = 1.0f;
-				}
-				//if keycode S
-				{
-					velocity.vel.z = -1.0f;
-				}
-				//if keycode D
-				{
-					velocity.vel.x = 1.0f;
-				}
-				//if keycode A
-				{
-					velocity.vel.x = -1.0f;
-				}
+				velocity.vel.z = InputSystem::Get().GetAxis(Axis::VERTICAL) * player.runSpeed;
+				velocity.vel.x = InputSystem::Get().GetAxis(Axis::HORIZONTAL) * player.runSpeed;
 			});
-	}
 }

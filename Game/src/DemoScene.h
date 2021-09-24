@@ -1,6 +1,7 @@
 #pragma once
 #include <EnginePCH.h>
 #include <Engine.h>
+#include "GameSystems.h"
 
 // ECS DEMO
 // Simple Components
@@ -22,8 +23,6 @@ struct TriangleCollisionEvent
 	Velocity* velocity;
 };
 
-//Entitys
-inline entt::entity m_player;
 
 void createTriangle(Scene& scene, float size, const sm::Vector2& pos, const sm::Vector2& velSign);
 void setupDemoScene(Engine& engine, Scene& scene);

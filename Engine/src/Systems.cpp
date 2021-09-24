@@ -10,8 +10,5 @@ void Systems::MovementSystem(Scene& scene, float dt)
 		{
 
 			transform.position += velocity.vel * dt;
-
-			//reset velocity?	
-			velocity.vel = sm::Vector3{ 0.0f, 0.0f, 0.0f };
 		});
 }
