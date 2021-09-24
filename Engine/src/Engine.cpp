@@ -121,8 +121,7 @@ void Engine::Run()
 				{
 					message<MessageType> msg = {};
 					msg.header.id = MessageType::PingServer;
-					std::chrono::system_clock::time_point timeNow = std::chrono::system_clock::now();
-					msg << timeNow;
+					m_client.timeThen = std::chrono::system_clock::now();
 					LOG_INFO("Pinging server!");
 
 					m_client.Send(msg);
