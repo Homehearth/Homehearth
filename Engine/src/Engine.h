@@ -5,7 +5,6 @@
 #include "Renderer.h"
 #include "EventTypes.h"
 #include "Client.h"
-
 struct Triangle2
 {
 	int x;
@@ -32,6 +31,7 @@ private:
 		float update;
 		float render;
 	} m_frameTime;
+
 	
 	// Job for rendering thread.
 	void RenderThread();
