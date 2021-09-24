@@ -199,12 +199,13 @@ namespace network
 	template <typename T>
 	void client_interface<T>::ReadHeader(PER_IO_DATA*& context)
 	{
+		ZeroMemory(&tempMsg.header, sizeof(msg_header<T>));
 		memcpy(&tempMsg.header, context->DataBuf.buf, sizeof(msg_header<T>));
 
-		if (tempMsg.header.size > 0)
+		if (tempMsg.size() > sizeof(msg_header<T>))
 		{
 			tempMsg.payload.clear();
-			this->PrimeReadPayload(tempMsg.header.size - sizeof(msg_header<T>));
+			this->PrimeReadPayload(tempMsg.size() - sizeof(msg_header<T>));
 		}
 		else
 		{

@@ -59,12 +59,11 @@ namespace network
 			msg << timeNow;
 			Send(socketId, msg);
 			EnterCriticalSection(&lock);
-			LOG_INFO("CLIENT IS PINGING SERVER");
+			LOG_INFO("Client on socket: %lld is pinging server", socketId);
 			LeaveCriticalSection(&lock);
 			break;
 		}
 		}
-		/*Send(socketId, buffer, bytesReceived);*/
 	}
 
 	void Server::OnClientValidated(const SOCKET& s)
