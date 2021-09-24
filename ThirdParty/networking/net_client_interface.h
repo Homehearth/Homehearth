@@ -239,7 +239,7 @@ namespace network
 	void client_interface<T>::ReadPayload(PER_IO_DATA*& context)
 	{
 		tempMsg.payload.resize(context->DataBuf.len);
-		memcpy(&tempMsg.payload[0], context->DataBuf.buf, context->DataBuf.len);
+		memcpy(&tempMsg.payload[0], context->buffer, context->DataBuf.len);
 
 		this->OnMessageReceived(tempMsg);
 	}

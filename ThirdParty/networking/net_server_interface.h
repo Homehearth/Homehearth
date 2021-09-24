@@ -179,7 +179,7 @@ namespace network
 	void server_interface<T>::ReadPayload(PER_IO_DATA* context, SOCKET_INFORMATION* SI)
 	{
 		msgTemp.payload.resize(size_t(context->DataBuf.len));
-		memcpy(msgTemp.payload.data(), context->DataBuf.buf, context->DataBuf.len);
+		memcpy(msgTemp.payload.data(), context->Buffer, context->DataBuf.len);
 
 		this->OnMessageReceived(SI->Socket, msgTemp);
 	}
@@ -187,12 +187,13 @@ namespace network
 	template <typename T>
 	void server_interface<T>::ReadHeader(PER_IO_DATA* context, SOCKET_INFORMATION* SI)
 	{
+		ZeroMemory(&msgTemp.header, sizeof(msg_header<T>));
 		msgTemp.payload.clear();
-		memcpy(&msgTemp.header, context->DataBuf.buf, sizeof(msg_header<T>));
+		memcpy(&msgTemp.header, context->Buffer, sizeof(msg_header<T>));
 
 		if (msgTemp.header.size > 0)
 		{
-			this->PrimeReadPayload(SI, msgTemp.header.size - sizeof(msg_header<T>));
+			this->PrimeReadPayload(SI, msgTemp.size() - sizeof(msg_header<T>));
 		}
 		else
 		{
@@ -206,7 +207,7 @@ namespace network
 		PER_IO_DATA* context = new PER_IO_DATA;
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
 		context->DataBuf.buf = context->Buffer;
-		context->DataBuf.len = sizeof(msg_header);
+		context->DataBuf.len = sizeof(msg_header<T>);
 		context->net_state = NetState::WRITE_HEADER;
 		DWORD BytesReceived = 0;
 		DWORD flags = 0;
@@ -364,7 +365,7 @@ namespace network
 		DWORD flags = 0;
 		PER_IO_DATA* context = new PER_IO_DATA;
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
-		ULONG bytesToSend = sizeof(msg.header);
+		ULONG bytesToSend = sizeof(msg_header<T>);
 		memcpy(&context->Buffer[0], &msg.header, bytesToSend);
 		context->DataBuf.buf = context->Buffer;
 		context->DataBuf.len = bytesToSend;

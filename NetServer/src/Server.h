@@ -55,8 +55,6 @@ namespace network
 		{
 			message<MessageType> msg = {};
 			msg.header.id = MessageType::PingServer;
-			std::chrono::system_clock::time_point timeNow = std::chrono::system_clock::now();
-			msg << timeNow;
 			Send(socketId, msg);
 			EnterCriticalSection(&lock);
 			LOG_INFO("Client on socket: %lld is pinging server", socketId);
