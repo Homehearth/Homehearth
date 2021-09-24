@@ -1,4 +1,5 @@
 #pragma once
 #include "Scene.h"
 
-void InputSystem(entt::registry reg, Scene& scene);
+void UserInputSystem(entt::registry reg, Scene& scene);
+void MovementSystem(entt::registry reg, Scene& scene);
