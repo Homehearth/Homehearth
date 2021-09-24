@@ -15,9 +15,8 @@ void createTriangle(Scene& scene, float size, const sm::Vector2& pos, const sm::
 	vel.mag = (rand() % 200) + 100.f;
 }
 
-void setupDemoScene(Engine& engine, Scene& scene) 
+void InitializePlayerEntity(Scene& scene)
 {
-	//Initialize player entity
 	auto playerEntity = scene.GetRegistry().create();
 	auto& transform = scene.GetRegistry().emplace<comp::Transform>(playerEntity);
 	transform.position.z = -17.0f;
@@ -26,6 +25,12 @@ void setupDemoScene(Engine& engine, Scene& scene)
 	auto& player = scene.GetRegistry().emplace<comp::Player>(playerEntity);
 	player.runSpeed = 10.f;
 	renderable.mesh = ResourceManager::GetResource<RMesh>("Monster.fbx");
+}
+
+void setupDemoScene(Engine& engine, Scene& scene) 
+{
+	//Initialize player entity
+	InitializePlayerEntity(scene);
 	
 	//System to update velocity
 	scene.on<ESceneUpdate>([&](const ESceneUpdate& e, Scene& scene)
