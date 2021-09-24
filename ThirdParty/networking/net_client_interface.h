@@ -205,7 +205,7 @@ namespace network
 		if (tempMsg.size() > sizeof(msg_header<T>))
 		{
 			tempMsg.payload.clear();
-			this->PrimeReadPayload(tempMsg.size() - sizeof(msg_header<T>));
+			this->PrimeReadPayload(uint32_t(tempMsg.size() - sizeof(msg_header<T>)));
 		}
 		else
 		{
