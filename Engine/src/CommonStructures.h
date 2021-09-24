@@ -4,6 +4,7 @@
 	Basic objects like static meshes
 	//[TODO] Discuss bitanget?
 */
+ALIGN16
 struct simple_vertex_t
 {
 	sm::Vector3 position = {};
@@ -19,6 +20,7 @@ struct simple_vertex_t
 	Uses 3 bones per vertex which is cheaper than 4 
 	without much of a noticeable difference
 */
+ALIGN16
 struct anim_vertex_t
 {
 	simple_vertex_t vertex	   = {};
@@ -26,15 +28,19 @@ struct anim_vertex_t
 	sm::Vector3		boneWeight = {};
 };
 
+ALIGN16
 
 struct basic_model_matrix_t
 {
 	sm::Matrix worldMatrix;
 };
 
-
+ALIGN16
 struct camera_Matrix_t
 {
+	sm::Vector4 position;
+	sm::Vector4 target;
+
 	sm::Matrix projection;
 	sm::Matrix view;
 };

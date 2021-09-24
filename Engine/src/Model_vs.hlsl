@@ -5,14 +5,11 @@ cbuffer Matrices : register(b0)
 
 cbuffer Camera : register(b1)
 {
-    // now combined projectionView matrix
+    float4 cameraPosition;
+    float4 cameraTarget;
+    
     float4x4 projection;
     float4x4 view;
-
-    /*
-    float4 position;
-    float4 lookAt;
-    */
 }
 
 struct VertexIn

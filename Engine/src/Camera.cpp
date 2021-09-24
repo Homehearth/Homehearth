@@ -36,6 +36,11 @@ sm::Vector3 Camera::GetPosition()
     return m_position;
 }
 
+sm::Vector3 Camera::GetTarget()
+{
+    return m_target;
+}
+
 void Camera::SetFOV(float fov)
 {
     m_FOV = fov;

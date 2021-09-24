@@ -316,6 +316,11 @@ bool PipelineManager::CreateDefaultConstantBuffer()
 
     Camera debugCamera(sm::Vector3(0, 0, -1), sm::Vector3(0, 0, 0), sm::Vector3(0, 1, 0), sm::Vector2((float)m_window->GetWidth(), (float)m_window->GetHeight()));
     camera_Matrix_t cameraMat;
+
+    sm::Vector3 vec = debugCamera.GetPosition();
+    sm::Vector3 vec1 = debugCamera.GetTarget();
+    cameraMat.position = sm::Vector4(vec.x, vec.y, vec.z, 0);
+    cameraMat.target = sm::Vector4(vec1.x, vec1.y, vec1.z, 0);
     cameraMat.projection = debugCamera.GetProjection();
     cameraMat.view = debugCamera.GetView();
 

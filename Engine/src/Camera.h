@@ -33,6 +33,7 @@ public:
 	sm::Matrix GetView();
 	sm::Matrix GetProjection();
 	sm::Vector3 GetPosition();
+	sm::Vector3 GetTarget();
 	
 	//Set Functions
 	void SetFOV(float fov);
