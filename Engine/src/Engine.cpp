@@ -123,10 +123,12 @@ void Engine::Run()
 
 		// Handle Input.
 		InputSystem::Get().UpdateEvents();
-		// todo:
-		if (InputSystem::Get().CheckKeyboardKey(DirectX::Keyboard::D, KeyState::RELEASED))
+
+
+		//Showing examples of keyboard and mouse (THIS CODE SHOULD BE HANDLED SOMEWHERE ELSE (GAMEPLAY LOGIC))
+		if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::G, KeyState::RELEASED))
 		{
-			std::cout << "D Pressed\n";
+			std::cout << "G Released\n";
 		}
 		if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED))
 		{
@@ -142,6 +144,10 @@ void Engine::Run()
 		{
 			std::cout << "Toggling mouse visibility\n";
 			InputSystem::Get().ToggleMouseVisibility();
+		}
+		if (InputSystem::Get().GetAxis(Axis::HORIZONTAL) == 1)
+		{
+			std::cout << "Moving right\n";
 		}
 
 		// Update time.

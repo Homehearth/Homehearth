@@ -45,6 +45,7 @@ Generated\ Files/
 [Bb]uild[Ll]og.*
 [Ee]ngine/*.cso
 [Gg]ame/*.cso
+[Gg]ame/*.ini
 # NUNIT
 *.VisualState.xml
 TestResult.xml

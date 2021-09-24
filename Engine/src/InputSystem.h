@@ -1,15 +1,11 @@
 #pragma once
-struct InputEvent
-{
-	UINT key_state;		// ex: WM_KEYDOWN
-	WPARAM key_code;	// ex: VK_ESCAPE
-};
 enum class KeyState { PRESSED, RELEASED, HELD };
 enum class MouseKey { LEFT, RIGHT, MIDDLE };
+enum class Axis {VERTICAL, HORIZONTAL};
 struct MousePos
 {
-	float x, y;
-	MousePos(float xPos, float yPos)
+	int x, y;
+	MousePos(int xPos, int yPos)
 	{
 		x = xPos;
 		y = yPos;
@@ -20,35 +16,37 @@ class InputSystem
 private:
 	InputSystem();
 
-	std::unique_ptr<DirectX::Keyboard> m_keyboard;
-	std::unique_ptr<DirectX::Mouse> m_mouse;
-	std::unique_ptr<DirectX::Keyboard::KeyboardStateTracker> m_kBTracker;
-	std::unique_ptr<DirectX::Mouse::ButtonStateTracker> m_mouseTracker;
-	DirectX::Keyboard::State m_kBState;
-	DirectX::Mouse::State m_mouseState;
+	std::unique_ptr<dx::Keyboard> m_keyboard;
+	std::unique_ptr<dx::Mouse> m_mouse;
+	std::unique_ptr<dx::Keyboard::KeyboardStateTracker> m_kBTracker;
+	std::unique_ptr<dx::Mouse::ButtonStateTracker> m_mouseTracker;
+	dx::Keyboard::State m_kBState;
+	dx::Mouse::State m_mouseState;
 
 public:
 	virtual ~InputSystem() = default;
-	//Set which window for the mouse to operate in
-	void SetMouseWindow(const HWND& windowHandle);
 	static auto& Get()
 	{
 		static InputSystem s_instance;
 		return s_instance;
 	}
 
+	//Set which window for the mouse to operate in
+	void SetMouseWindow(const HWND& windowHandle);
 	//Updates KB and Mouse, checking new inputs
 	void UpdateEvents();
 
 	//Check if keyboard keys are pressed,held or released. Enums 2nd arg: PRESSED, RELEASED or HELD
-	const bool CheckKeyboardKey(const DirectX::Keyboard::Keys& key, const KeyState state);
+	const bool CheckKeyboardKey(const dx::Keyboard::Keys& key, const KeyState state) const;
 
-	const std::unique_ptr<DirectX::Keyboard>& GetKeyboard() const;
-	const std::unique_ptr<DirectX::Mouse>& GetMouse() const;
+	const std::unique_ptr<dx::Keyboard>& GetKeyboard() const;
+	const std::unique_ptr<dx::Mouse>& GetMouse() const;
 
 	//Check if mouse keys are pressed,held or released. Enums 1st arg: LEFT, MIDDLE or RIGHT. Enums 2nd arg:  PRESSED, RELEASED or HELD
-	const bool CheckMouseKey(const MouseKey mouseButton, const KeyState state);
+	const bool CheckMouseKey(const MouseKey mouseButton, const KeyState state) const;
 
+	//Checks if the user is holding down an axis key (WASD and Arrow keys) returns 1 on right or up, -1 on left or down (0 if nothing). Use Axis enums: VÈRTICAL, HORIZONTAL
+	const int GetAxis(Axis axis) const;
 	//Toggle the mouse mode between absolute and relative
 	void SwitchMouseMode();
 
@@ -56,7 +54,7 @@ public:
 	void ToggleMouseVisibility();
 
 	//Get the position of the Mouse (only really works in Absolute mode)
-	const MousePos& GetMousePos() const;
+	const MousePos GetMousePos() const;
 	// No copying allowed.
 	InputSystem(const InputSystem& other) = delete;
 	InputSystem& operator=(const InputSystem& other) = delete;

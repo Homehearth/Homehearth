@@ -1,5 +1,5 @@
 #pragma once
-
+#pragma warning(push, 3)
 // Windows
 #ifdef WIN32
 #define WIN32_LEAN_AND_MEAN
@@ -55,6 +55,7 @@ namespace dx = DirectX;
 #include <SimpleMath.h>
 #include <BufferHelpers.h>
 #include <Audio.h>
+
 #include <Keyboard.h>
 #include <Mouse.h>
 namespace sm = dx::SimpleMath;
@@ -71,6 +72,7 @@ namespace sm = dx::SimpleMath;
 #include <imstb_truetype.h>
 #include <imgui_impl_dx11.h>
 #include <imgui_impl_win32.h>
+#pragma warning(pop)
 
 //Utility
 #include "Timer.h"
