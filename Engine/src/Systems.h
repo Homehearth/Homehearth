@@ -1,5 +1,6 @@
 #pragma once
 #include "Scene.h"
-#include "Components.h"
-
-void MovementSystem(entt::registry reg, Scene& scene, float dt);
+namespace Systems
+{
+	void MovementSystem(Scene& scene, float dt);
+}

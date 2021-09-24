@@ -62,6 +62,8 @@ namespace sm = dx::SimpleMath;
 // entt (ECS library)
 #include <entt.hpp>
 
+//Entity systems
+#include "Systems.h"
 
 // imGUI
 #include <imgui.h>

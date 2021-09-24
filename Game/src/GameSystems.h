@@ -5,7 +5,7 @@
 
 namespace GameSystems
 {
-	void UserInputSystem(entt::registry reg, Scene& scene);
+	void UserInputSystem(Scene& scene);
 }
 
 

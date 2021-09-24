@@ -22,6 +22,8 @@ struct TriangleCollisionEvent
 	Velocity* velocity;
 };
 
+//Entitys
+inline entt::entity m_player;
 
 void createTriangle(Scene& scene, float size, const sm::Vector2& pos, const sm::Vector2& velSign);
 void setupDemoScene(Engine& engine, Scene& scene);

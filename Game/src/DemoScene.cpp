@@ -17,7 +17,14 @@ void createTriangle(Scene& scene, float size, const sm::Vector2& pos, const sm::
 
 void setupDemoScene(Engine& engine, Scene& scene) 
 {
+	//System to update velocity
+	scene.on<ESceneUpdate>([&](const ESceneUpdate& e, Scene& scene)
+	{
+		Systems::MovementSystem(scene, e.dt);
+	});
 
+	
+	
 	// System to update triangles
 	scene.on<ESceneUpdate>([&](const ESceneUpdate& e, Scene& scene)
 		{

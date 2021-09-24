@@ -38,7 +38,7 @@ void Engine::Startup()
 
 	// Thread should be launched after s_engineRunning is set to true and D3D11 is initialized.
 	s_engineRunning = true;
-	
+
 	//
 	// AUDIO 
 	//
@@ -52,7 +52,7 @@ void Engine::Startup()
 	eflags |= DirectX::AudioEngine_Debug;
 #endif
 	this->m_audio_engine = std::make_unique<DirectX::AudioEngine>(eflags);
-	
+
 #ifdef _DEBUG
 	m_IsImguiReady = false;
 	// Setup ImGUI
@@ -66,6 +66,9 @@ void Engine::Startup()
 	LOG_INFO("ImGui was successfully initialized");
 #endif
 	m_client.Connect("127.0.0.1", 4950);
+
+	
+	
 }
 
 void Engine::Run()

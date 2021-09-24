@@ -1,11 +1,11 @@
 #include "GameSystems.h"
-void GameSystems::UserInputSystem(entt::registry reg, Scene& scene)
+void GameSystems::UserInputSystem(Scene& scene)
 {
-	//InputSystem::Get();
+	
 
 //if key code W | A | S | D
 	{
-		auto group = reg.group<comp::Transform, comp::Velocity>();
+		auto group = scene.GetRegistry().group<comp::Transform, comp::Velocity>();
 		
 		group.each([&](comp::Transform&, comp::Velocity& velocity)
 			{
