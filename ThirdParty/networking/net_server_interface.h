@@ -57,9 +57,20 @@ namespace network
 		std::string PrintSocketData(struct addrinfo* p);
 		void Listen(const uint32_t& nListen);
 		void InitWinsock();
-		bool CreateSocketInformation(SOCKET s);
+		bool CreateSocketInformation(SOCKET& s);
 		void DisconnectClient(SOCKET_INFORMATION*& SI);
 		bool ClientIsConnected(SOCKET_INFORMATION* SI);
+
+		// FUNCTIONS TO EASIER HANDLE DATA IN AND OUT FROM SERVER
+		void WriteValidation(const SOCKET& socketId, uint64_t handshakeOut);
+		void ReadValidation(SOCKET_INFORMATION*& SI, PER_IO_DATA* context);
+		void ReadHeader(const SOCKET& socketId, PER_IO_DATA* context);
+		void ReadPayload(const SOCKET& socketId, PER_IO_DATA* context);
+		void WriteHeader(const SOCKET& socketId, msg_header<T>& header);
+		void WritePayload(const SOCKET& socketId, message<T>& msg);
+		void PrimeReadHeader(const SOCKET& socketId);
+		void PrimeReadPayload(const SOCKET& socketId, size_t size);
+		void PrimeReadValidation(const SOCKET& socketId);
 
 	public:
 		server_interface()
@@ -86,17 +97,6 @@ namespace network
 		void Send(const SOCKET& socketId, message<T>& msg);
 		bool IsRunning();
 
-		void WriteValidation(SOCKET_INFORMATION* SI, uint64_t handshakeOut);
-		void ReadValidation(PER_IO_DATA* context, SOCKET_INFORMATION* SI);
-		void ReadHeader(PER_IO_DATA* context, SOCKET_INFORMATION* SI);
-		void ReadPayload(PER_IO_DATA* context, SOCKET_INFORMATION* SI);
-		void WriteHeader(SOCKET_INFORMATION* SI);
-		void WritePayload();
-		void PrimeReadHeader(SOCKET_INFORMATION* SI);
-		void PrimeReadPayload(SOCKET_INFORMATION* SI, size_t size);
-		void PrimeReadValidation(SOCKET_INFORMATION* SI);
-
-		// Pure virtuals that happen when an event occurs
 		// Called once when a client connects
 		virtual void OnClientConnect(std::string&& ip, const uint16_t& port) = 0;
 		// Called once when a client connects
@@ -108,7 +108,29 @@ namespace network
 	};
 
 	template <typename T>
-	void server_interface<T>::PrimeReadValidation(SOCKET_INFORMATION* SI)
+	void server_interface<T>::WritePayload(const SOCKET& socketId, message<T>& msg)
+	{
+		PER_IO_DATA* context = new PER_IO_DATA;
+		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
+		context->DataBuf.len = ULONG(msg.payload.size());
+		memcpy(&context->Buffer[0], &msg.payload[0], msg.payload.size());
+		context->DataBuf.buf = context->Buffer;
+		context->net_state = NetState::WRITE_PAYLOAD;
+		DWORD bytesSent = 0;
+		DWORD flags = 0;
+
+		if (WSASend(socketId, &context->DataBuf, 1, &bytesSent, flags, (OVERLAPPED*)context, NULL) == SOCKET_ERROR)
+		{
+			if (WSAGetLastError() != ERROR_IO_PENDING)
+			{
+				delete context;
+				LOG_ERROR("WSASend() failed with error %d", WSAGetLastError());
+			}
+		}
+	}
+
+	template <typename T>
+	void server_interface<T>::PrimeReadValidation(const SOCKET& socketId)
 	{
 		PER_IO_DATA* context = new PER_IO_DATA;
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
@@ -118,19 +140,18 @@ namespace network
 		DWORD BytesReceived = 0;
 		DWORD flags = 0;
 
-		if (WSARecv(SI->Socket, &context->DataBuf, 1, &BytesReceived, &flags, &context->Overlapped, NULL) == SOCKET_ERROR)
+		if (WSARecv(socketId, &context->DataBuf, 1, &BytesReceived, &flags, &context->Overlapped, NULL) == SOCKET_ERROR)
 		{
 			if (GetLastError() != WSA_IO_PENDING)
 			{
 				delete context;
 				LOG_ERROR("Error sending puzzle with error: %ld", GetLastError());
-				return;
 			}
 		}
 	}
 
 	template <typename T>
-	void server_interface<T>::PrimeReadHeader(SOCKET_INFORMATION* SI)
+	void server_interface<T>::PrimeReadHeader(const SOCKET& socketId)
 	{
 		PER_IO_DATA* context = new PER_IO_DATA;
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
@@ -140,20 +161,18 @@ namespace network
 		DWORD BytesReceived = 0;
 		DWORD flags = 0;
 
-		if (WSARecv(SI->Socket, &context->DataBuf, 1, &BytesReceived, &flags, &context->Overlapped, NULL) == SOCKET_ERROR)
+		if (WSARecv(socketId, &context->DataBuf, 1, &BytesReceived, &flags, &context->Overlapped, NULL) == SOCKET_ERROR)
 		{
 			if (GetLastError() != WSA_IO_PENDING)
 			{
 				delete context;
-				delete SI;
 				LOG_ERROR("Error sending puzzle with error: %ld", GetLastError());
-				return;
 			}
 		}
 	}
 
 	template <typename T>
-	void server_interface<T>::PrimeReadPayload(SOCKET_INFORMATION* SI, size_t size)
+	void server_interface<T>::PrimeReadPayload(const SOCKET& socketId, size_t size)
 	{
 		PER_IO_DATA* context = new PER_IO_DATA;
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
@@ -163,69 +182,66 @@ namespace network
 		DWORD BytesReceived = 0;
 		DWORD flags = 0;
 
-		if (WSARecv(SI->Socket, &context->DataBuf, 1, &BytesReceived, &flags, &context->Overlapped, NULL) == SOCKET_ERROR)
+		if (WSARecv(socketId, &context->DataBuf, 1, &BytesReceived, &flags, &context->Overlapped, NULL) == SOCKET_ERROR)
 		{
 			if (GetLastError() != WSA_IO_PENDING)
 			{
-				delete SI;
 				delete context;
 				LOG_ERROR("Error sending puzzle with error: %ld", GetLastError());
-				return;
 			}
 		}
 	}
 
 	template <typename T>
-	void server_interface<T>::ReadPayload(PER_IO_DATA* context, SOCKET_INFORMATION* SI)
+	void server_interface<T>::ReadPayload(const SOCKET& socketId, PER_IO_DATA* context)
 	{
 		msgTemp.payload.resize(size_t(context->DataBuf.len));
-		memcpy(msgTemp.payload.data(), context->Buffer, context->DataBuf.len);
+		memcpy(msgTemp.payload.data(), context->DataBuf.buf, context->DataBuf.len);
 
-		this->OnMessageReceived(SI->Socket, msgTemp);
+		this->OnMessageReceived(socketId, msgTemp);
 	}
 
 	template <typename T>
-	void server_interface<T>::ReadHeader(PER_IO_DATA* context, SOCKET_INFORMATION* SI)
+	void server_interface<T>::ReadHeader(const SOCKET& socketId, PER_IO_DATA* context)
 	{
 		ZeroMemory(&msgTemp.header, sizeof(msg_header<T>));
 		msgTemp.payload.clear();
-		memcpy(&msgTemp.header, context->Buffer, sizeof(msg_header<T>));
+		memcpy(&msgTemp.header, context->DataBuf.buf, sizeof(msg_header<T>));
 
 		if (msgTemp.header.size > 0)
 		{
-			this->PrimeReadPayload(SI, msgTemp.size() - sizeof(msg_header<T>));
+			this->PrimeReadPayload(socketId, msgTemp.size() - sizeof(msg_header<T>));
 		}
 		else
 		{
-			this->OnMessageReceived(SI->Socket, msgTemp);
+			this->OnMessageReceived(socketId, msgTemp);
 		}
 	}
 
 	template <typename T>
-	void server_interface<T>::WriteHeader(SOCKET_INFORMATION* SI)
+	void server_interface<T>::WriteHeader(const SOCKET& socketId, msg_header<T>& header)
 	{
 		PER_IO_DATA* context = new PER_IO_DATA;
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
+		memcpy(&context->Buffer[0], &header, sizeof(msg_header<T>));
 		context->DataBuf.buf = context->Buffer;
 		context->DataBuf.len = sizeof(msg_header<T>);
 		context->net_state = NetState::WRITE_HEADER;
-		DWORD BytesReceived = 0;
+		DWORD BytesSent = 0;
 		DWORD flags = 0;
 
-		if (WSASend(SI->Socket, &context->DataBuf, 1, &BytesSent, flags, &context->Overlapped, NULL) == SOCKET_ERROR)
+		if (WSASend(socketId, &context->DataBuf, 1, &BytesSent, flags, &context->Overlapped, NULL) == SOCKET_ERROR)
 		{
 			if (GetLastError() != WSA_IO_PENDING)
 			{
-				delete SI;
 				delete context;
 				LOG_ERROR("Error sending puzzle with error: %ld", GetLastError());
-				return false;
 			}
 		}
 	}
 
 	template <typename T>
-	void server_interface<T>::ReadValidation(PER_IO_DATA* context, SOCKET_INFORMATION* SI)
+	void server_interface<T>::ReadValidation(SOCKET_INFORMATION*& SI, PER_IO_DATA* context)
 	{
 		memcpy(&SI->handshakeIn, context->DataBuf.buf, sizeof(uint64_t));
 
@@ -245,7 +261,7 @@ namespace network
 	}
 
 	template <typename T>
-	void server_interface<T>::WriteValidation(SOCKET_INFORMATION* SI, uint64_t handshakeOut)
+	void server_interface<T>::WriteValidation(const SOCKET& socketId, uint64_t handshakeOut)
 	{
 		// Sends a puzzle that the client has to solve to be accepted into the server
 		PER_IO_DATA* context = new PER_IO_DATA;
@@ -257,7 +273,7 @@ namespace network
 		DWORD BytesSent = 0;
 		DWORD flags = 0;
 
-		if (WSASend(SI->Socket, &context->DataBuf, 1, &BytesSent, flags, &context->Overlapped, NULL) == SOCKET_ERROR)
+		if (WSASend(socketId, &context->DataBuf, 1, &BytesSent, flags, &context->Overlapped, NULL) == SOCKET_ERROR)
 		{
 			if (GetLastError() != WSA_IO_PENDING)
 			{
@@ -339,7 +355,7 @@ namespace network
 	}
 
 	template <typename T>
-	bool server_interface<T>::CreateSocketInformation(SOCKET s)
+	bool server_interface<T>::CreateSocketInformation(SOCKET& s)
 	{
 		SOCKET_INFORMATION* SI = new SOCKET_INFORMATION;
 		SI->Socket = s;
@@ -354,7 +370,7 @@ namespace network
 			return false;
 		}
 
-		WriteValidation(SI, SI->handshakeOut);
+		this->WriteValidation(SI->Socket, SI->handshakeOut);
 
 		return true;
 	}
@@ -362,45 +378,11 @@ namespace network
 	template <typename T>
 	void server_interface<T>::Send(const SOCKET& socketId, message<T>& msg)
 	{
-		DWORD flags = 0;
-		PER_IO_DATA* context = new PER_IO_DATA;
-		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
-		ULONG bytesToSend = sizeof(msg_header<T>);
-		memcpy(&context->Buffer[0], &msg.header, bytesToSend);
-		context->DataBuf.buf = context->Buffer;
-		context->DataBuf.len = bytesToSend;
-		DWORD bytesSent = 0;
-		context->net_state = NetState::WRITE_HEADER;
-
-		if (WSASend(socketId, &context->DataBuf, 1, &bytesSent, flags, (OVERLAPPED*)context, NULL) == SOCKET_ERROR)
-		{
-			if (WSAGetLastError() != ERROR_IO_PENDING)
-			{
-				delete context;
-				LOG_ERROR("WSASend() failed with error %d", WSAGetLastError());
-				return;
-			}
-		}
+		this->WriteHeader(socketId, msg.header);
 
 		if (msg.header.size > 0)
 		{
-			PER_IO_DATA* context2 = new PER_IO_DATA;
-			ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
-			context2->DataBuf.len = ULONG(msg.payload.size());
-			memcpy(&context2->Buffer[0], &msg.payload[0], msg.payload.size());
-			context2->DataBuf.buf = context2->Buffer;
-			context2->net_state = NetState::WRITE_PAYLOAD;
-			DWORD bytesSent = 0;
-
-			if (WSASend(socketId, &context2->DataBuf, 1, &bytesSent, flags, (OVERLAPPED*)context2, NULL) == SOCKET_ERROR)
-			{
-				if (WSAGetLastError() != ERROR_IO_PENDING)
-				{
-					delete context2;
-					LOG_ERROR("WSASend() failed with error %d", WSAGetLastError());
-					return;
-				}
-			}
+			this->WritePayload(socketId, msg);
 		}
 	}
 
@@ -672,7 +654,7 @@ namespace network
 				LOG_INFO("Read I/O completed! \"HEADER\"");
 				LeaveCriticalSection(&lock);
 #endif
-				this->ReadHeader(context, SI);
+				this->ReadHeader(SI->Socket, context);
 				break;
 			}
 			case NetState::READ_PAYLOAD:
@@ -682,7 +664,7 @@ namespace network
 				LOG_INFO("Read I/O completed! \"PAYLOAD\"");
 				LeaveCriticalSection(&lock);
 #endif
-				this->ReadPayload(context, SI);
+				this->ReadPayload(SI->Socket, context);
 				break;
 			}
 			case NetState::READ_VALIDATION:
@@ -692,7 +674,7 @@ namespace network
 				LOG_INFO("Read I/O completed! \"VALIDATION\"");
 				LeaveCriticalSection(&lock);
 #endif
-				this->ReadValidation(context, SI);
+				this->ReadValidation(SI, context);
 				break;
 			}
 			case NetState::WRITE_HEADER:
@@ -702,7 +684,7 @@ namespace network
 				LOG_INFO("Write I/O completed! \"HEADER\"");
 				LeaveCriticalSection(&lock);
 #endif
-				this->PrimeReadHeader(SI);
+				this->PrimeReadHeader(SI->Socket);
 				break;
 			}
 			case NetState::WRITE_PAYLOAD:
@@ -721,7 +703,7 @@ namespace network
 				LOG_INFO("Write I/O completed! \"VALIDATION\"");
 				LeaveCriticalSection(&lock);
 #endif
-				this->PrimeReadValidation(SI);
+				this->PrimeReadValidation(SI->Socket);
 				break;
 			}
 			}

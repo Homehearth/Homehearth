@@ -55,7 +55,7 @@ namespace network
 		void ReadHeader(PER_IO_DATA*& context);
 		void ReadPayload(PER_IO_DATA*& context);
 		void ReadValidation(PER_IO_DATA*& context);
-		void WriteHeader(message<T>& msg);
+		void WriteHeader(msg_header<T>& header);
 		void WritePayload(message<T>& msg);
 		void WriteValidation(uint64_t handshakeIn);
 
@@ -200,7 +200,7 @@ namespace network
 	void client_interface<T>::ReadHeader(PER_IO_DATA*& context)
 	{
 		ZeroMemory(&tempMsg.header, sizeof(msg_header<T>));
-		memcpy(&tempMsg.header, context->buffer, context->DataBuf.len);
+		memcpy(&tempMsg.header, context->DataBuf.buf, context->DataBuf.len);
 
 		if (tempMsg.size() > sizeof(msg_header<T>))
 		{
@@ -214,11 +214,11 @@ namespace network
 	}
 
 	template <typename T>
-	void client_interface<T>::WriteHeader(message<T>& msg)
+	void client_interface<T>::WriteHeader(msg_header<T>& header)
 	{
 		PER_IO_DATA* context = new PER_IO_DATA;
 		ZeroMemory(&context->Overlapped, sizeof(WSAOVERLAPPED));
-		memcpy(context->buffer, &msg.header, sizeof(msg_header<T>));
+		memcpy(context->buffer, &header, sizeof(msg_header<T>));
 		context->DataBuf.buf = context->buffer;
 		context->DataBuf.len = sizeof(msg_header<T>);
 		context->state = NetState::WRITE_HEADER;
@@ -239,7 +239,7 @@ namespace network
 	void client_interface<T>::ReadPayload(PER_IO_DATA*& context)
 	{
 		tempMsg.payload.resize(context->DataBuf.len);
-		memcpy(&tempMsg.payload[0], context->buffer, context->DataBuf.len);
+		memcpy(&tempMsg.payload[0], context->DataBuf.buf, context->DataBuf.len);
 
 		this->OnMessageReceived(tempMsg);
 	}
@@ -501,7 +501,7 @@ namespace network
 	template<typename T>
 	inline void client_interface<T>::Send(message<T>& msg)
 	{
-		this->WriteHeader(msg);
+		this->WriteHeader(msg.header);
 
 		if (msg.payload.size() > 0)
 		{
