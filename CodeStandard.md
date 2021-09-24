@@ -2,7 +2,8 @@ Kodstandard:
 
 - Use namespace.
 Men helst inte, typ, globalt? (Rikard får förklara)
-Remember to comment what your functions do, it isn't obvious for everyone.
+
+- Remember to comment what your functions do, it isn't obvious for everyone.
 
 - Simple math. = sm
 
@@ -16,6 +17,14 @@ Remember to comment what your functions do, it isn't obvious for everyone.
 	void DoThings();
 
 - m_variabelnamn.
+
+- Struct _t
+
+	struct camera_Matrix_t
+	{
+		sm::Matrix projection;
+		sm::Matrix view;
+	};
 
 - Finns en .cpp fil, gör alla funktioner där oavsett storlek.
 

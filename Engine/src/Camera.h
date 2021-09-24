@@ -11,9 +11,9 @@ private:
 	sm::Vector3 m_target;
 	sm::Vector3 m_rollPitchYaw;
 
-	dx::XMMATRIX m_view;
-	dx::XMMATRIX m_projection;
-	dx::XMMATRIX m_rotation;
+	sm::Matrix  m_view;
+	sm::Matrix  m_projection;
+	sm::Matrix  m_rotation;
 
 	float m_FOV;
 	float m_nearPlane;
@@ -32,6 +32,7 @@ public:
 	//Get Functions
 	sm::Matrix GetView();
 	sm::Matrix GetProjection();
+	sm::Vector3 GetPosition();
 	
 	//Set Functions
 	void SetFOV(float fov);

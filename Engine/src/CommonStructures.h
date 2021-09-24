@@ -13,6 +13,7 @@ struct simple_vertex_t
 	sm::Vector3 bitanget = {};
 };
 
+
 /*
 	Skeletal animated meshes
 	Uses 3 bones per vertex which is cheaper than 4 
@@ -29,4 +30,11 @@ struct anim_vertex_t
 struct basic_model_matrix_t
 {
 	sm::Matrix worldMatrix;
+};
+
+
+struct camera_Matrix_t
+{
+	sm::Matrix projection;
+	sm::Matrix view;
 };

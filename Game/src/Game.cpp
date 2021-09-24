@@ -30,7 +30,7 @@ Game::Game()
 				{
 	
 					sm::Vector3 pos = t.position;
-					t.position = sm::Vector3(0, 0, 0);
+					t.position = sm::Vector3(0, 0, 1);
 					pos += sm::Vector3(0, 0, -i) * e.dt;
 					t.position = pos;
 									
