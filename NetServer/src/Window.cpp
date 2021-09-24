@@ -51,6 +51,7 @@ Window::Window()
 	, m_clientRect({})
 	, m_windowDesc({})
 {
+	
 }
 
 Window::~Window()
@@ -83,7 +84,7 @@ bool Window::Initialize(const Desc& desc)
 	// Register window class.
 	const ATOM result = RegisterClassEx(&wcex);
 	assert(result && "Failed to register window class.");
-	
+
 	// Retrieve desktop window.
 	RECT desktop;
 	const HWND hwndDesktop = GetDesktopWindow();
@@ -98,7 +99,7 @@ bool Window::Initialize(const Desc& desc)
 		nullptr, nullptr, desc.hInstance, nullptr);
 
 	assert(this->m_hWnd && "Window wasn't successfully created.");
-	
+
 	UpdateWindow(this->m_hWnd);
 	ShowWindow(this->m_hWnd, desc.nShowCmd);
 

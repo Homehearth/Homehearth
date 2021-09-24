@@ -31,6 +31,7 @@
 #include <set>
 #include <queue>
 
+
 #include <functional>
 
 
@@ -45,19 +46,30 @@
 #include <d2d1.h>
 #include <ctime>
 using Microsoft::WRL::ComPtr;
+namespace dx = DirectX;
 
 
 // DirectXTK
-#include "SimpleMath.h"
-#include "BufferHelpers.h"
+#include <SimpleMath.h>
+#include <BufferHelpers.h>
 #include <Audio.h>
+namespace sm = dx::SimpleMath;
 
+// entt (ECS library)
+#include <entt.hpp>
 
 // imGUI
-#include "imgui.h"
-#include "imgui_impl_dx11.h"
-#include "imgui_impl_win32.h"
+#include <imgui.h>
+#include <imconfig.h>
+#include <imgui_internal.h>
+#include <imstb_rectpack.h>
+#include <imstb_textedit.h>
+#include <imstb_truetype.h>
+#include <imgui_impl_dx11.h>
+#include <imgui_impl_win32.h>
 
+//Utility
+#include "Timer.h"
 
 // Custom Global includes (Singletons)
 #include "Logger.h"
@@ -70,4 +82,14 @@ using Microsoft::WRL::ComPtr;
 #include "ThreadSyncer.h"
 
 // Network
-#include "network.h"
+#include "net_common.h"
+#include "net_message.h"
+#include "net_tsqueue.h"
+#include "net_client_interface.h"
+
+// Assimp
+#pragma warning(push, 0)
+#include <assimp/Importer.hpp>
+#include <assimp/postprocess.h>
+#include <assimp/scene.h>
+#pragma warning(pop)

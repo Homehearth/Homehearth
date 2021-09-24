@@ -1,4 +1,6 @@
 #include "Game.h"
+#include "RMesh.h"
+#include "DemoScene.h"
 
 Game::Game() 
 {
@@ -14,6 +16,10 @@ Game::Game()
 
 	// Set as current scene
 	m_engine.SetScene(demo);
+
+	//Testing to load in model in the resource manager
+	ResourceManager::GetResource<RMesh>("Monster.fbx");
+	//ResourceManager::GetResource<RMesh>("Cube.fbx");
 
 }
 

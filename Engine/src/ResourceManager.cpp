@@ -1,9 +1,8 @@
 #include <EnginePCH.h>
 #include "ResourceManager.h"
 #include <typeinfo>
-using namespace resource;
-#define INSTANCE ResourceManager::instance
-ResourceManager* INSTANCE = nullptr;
+
+ResourceManager* ResourceManager::m_instance = nullptr;
 
 ResourceManager::ResourceManager()
 {
@@ -11,35 +10,58 @@ ResourceManager::ResourceManager()
 
 ResourceManager::~ResourceManager()
 {
-	for (auto it = this->resources.begin(); it != this->resources.end(); it++)
+	for (auto it = m_resources.begin(); it != m_resources.end(); it++)
 	{
 		if (it->second)
 		{
 			delete it->second;
 		}
 	}
-	this->resources.clear();
+	m_resources.clear();
 }
 
-void resource::ResourceManager::Initialize()
+void ResourceManager::Initialize()
 {
-	if (!INSTANCE)
+	if (!m_instance)
 	{
-		INSTANCE = new ResourceManager();
+		m_instance = new ResourceManager();
 	}
 }
 
-void resource::ResourceManager::Destroy()
+void ResourceManager::Destroy()
 {
-	if (INSTANCE)
-		delete INSTANCE;
+	if (m_instance)
+		delete m_instance;
 }
 
-void resource::ResourceManager::InsertResource(GResource* resource, std::string resource_name)
+void ResourceManager::RemoveResource(const std::string& resource_name)
 {
-	if (resource && INSTANCE)
+	//Check if the resource exists
+	auto f = ResourceManager::m_instance->m_resources.find(resource_name);
+
+	if (f != ResourceManager::m_instance->m_resources.end())
 	{
-		INSTANCE->resources.emplace(resource_name, resource);
+		if (f->second != nullptr)
+		{
+			f->second->Release();
+			if (f->second->GetRef() <= 0)
+			{
+				delete f->second;
+				ResourceManager::m_instance->m_resources.erase(f);
+			}
+		}
 	}
 }
 
+void ResourceManager::InsertResource(const std::string& resource_name, resource::GResource* resource)
+{
+	//Only insert resources that does not exist
+	if (ResourceManager::m_instance->m_resources.find(resource_name) == ResourceManager::m_instance->m_resources.end())
+	{
+#ifdef _DEBUG
+		LOG_INFO("RM added '%s'", resource_name.c_str());
+#endif 
+		resource->AddRef();
+		ResourceManager::m_instance->m_resources.emplace(resource_name, resource);
+	}
+}

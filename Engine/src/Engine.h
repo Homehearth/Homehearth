@@ -16,17 +16,17 @@ class Engine
 private:
 	static bool s_engineRunning;
 	static bool s_safeExit;
+	std::atomic<bool> m_IsImguiReady;
 	thread::DoubleBuffer<std::vector<Triangle2>> m_drawBuffers;
-	std::vector<Triangle2> * m_buffPointer;
+	std::vector<Triangle2>* m_buffPointer;
 
 	Window m_window;
 	Renderer m_renderer;
-
-	std::unique_ptr<Client> m_client;
 	
 	std::unordered_map<std::string, Scene> m_scenes;
 	Scene* m_currentScene;
 	bool m_vSync;
+	Client m_client;
 
 	struct {
 		float update;
@@ -40,6 +40,7 @@ private:
 	void Update(float dt);
 	// Renders one frame.
 	void Render(float& dt);
+
 
 public:
 	Engine();
@@ -64,9 +65,9 @@ public:
 
 	Window* GetWindow();
 
-	void OnEvent(EngineEvent& event);
-
 	static bool IsRunning();
 
+	// IMGUI
+	void drawImGUI() const;
 };
 

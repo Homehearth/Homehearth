@@ -1,4 +1,5 @@
 #include "DemoScene.h"
+#include <Engine.h>
 
 
 void createTriangle(Scene& scene, float size, const float pos[2], const int velSign[2]) 

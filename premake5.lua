@@ -1,8 +1,11 @@
--- Solution configurations file.
+-- Solution configuration file.
 workspace "Workspace"
     system "Windows"
     architecture "x86_64"
-
+    flags { 
+        "MultiProcessorCompile" 
+    }
+    
     configurations {
         "Debug",
         "Release"
@@ -17,6 +20,7 @@ outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 include "Game"
 include "NetServer"
 include "Engine"
+
 
 
 -- Clean.
