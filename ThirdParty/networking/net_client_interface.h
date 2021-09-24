@@ -33,6 +33,7 @@ namespace network
 		HANDLE m_CompletionPort;
 		message<T> tempMsg;
 		SOCKET m_socket;
+		SOCKET* SI;
 
 		WSAEVENT m_event;
 
@@ -96,6 +97,7 @@ namespace network
 		void Disconnect();
 		// Check to see if client is connected to a server
 		bool IsConnected();
+		// Sends a message to the server
 		void Send(message<T>& msg);
 	};
 
@@ -114,7 +116,7 @@ namespace network
 		{
 			if (WSAGetLastError() != WSA_IO_PENDING)
 			{
-				LOG_ERROR("WSARecv failed!");
+				LOG_ERROR("WSARecv failed with error: %d", WSAGetLastError());
 				delete context;
 			}
 		}
@@ -135,7 +137,7 @@ namespace network
 		{
 			if (WSAGetLastError() != WSA_IO_PENDING)
 			{
-				LOG_ERROR("WSARecv failed!");
+				LOG_ERROR("WSARecv failed with error: %d", WSAGetLastError());
 				delete context;
 			}
 		}
@@ -147,7 +149,7 @@ namespace network
 		PER_IO_DATA* context = new PER_IO_DATA;
 		ZeroMemory(&context->Overlapped, sizeof(WSAOVERLAPPED));
 		context->DataBuf.buf = context->buffer;
-		context->DataBuf.len = BUFFER_SIZE;
+		context->DataBuf.len = sizeof(uint64_t);
 		DWORD flags = 0;
 		DWORD bytesReceived = 0;
 		context->state = NetState::READ_VALIDATION;
@@ -157,7 +159,7 @@ namespace network
 			if (WSAGetLastError() != WSA_IO_PENDING)
 			{
 				delete context;
-				LOG_ERROR("WSARecv failed!");
+				LOG_ERROR("WSARecv failed with error: %d", WSAGetLastError());
 			}
 		}
 	}
@@ -188,7 +190,7 @@ namespace network
 		{
 			if (WSAGetLastError() != WSA_IO_PENDING)
 			{
-				LOG_ERROR("WSASend failed!");
+				LOG_ERROR("WSASend failed with error: %d", WSAGetLastError());
 				delete context;
 			}
 		}
@@ -226,7 +228,7 @@ namespace network
 		{
 			if (WSAGetLastError() != WSA_IO_PENDING)
 			{
-				LOG_ERROR("WSASend failed!");
+				LOG_ERROR("WSASend failed with error: %d", WSAGetLastError());
 				delete context;
 			}
 		}
@@ -257,7 +259,7 @@ namespace network
 		{
 			if (WSAGetLastError() != WSA_IO_PENDING)
 			{
-				LOG_ERROR("WSASend failed!");
+				LOG_ERROR("WSASend failed! %d", WSAGetLastError());
 				delete context;
 			}
 		}
@@ -316,20 +318,16 @@ namespace network
 	template <typename T>
 	DWORD client_interface<T>::ProcessIO()
 	{
-		EnterCriticalSection(&lock);
-		LOG_INFO("Client created successfully!");
-		LeaveCriticalSection(&lock);
 		DWORD BytesTransferred = 0;
 		DWORD flags = 0;
 		BOOL bResult = false;
 		LPOVERLAPPED lpOverlapped;
 		PER_IO_DATA* context = nullptr;
 		BOOL shouldDisconnect = false;
-		SOCKET* sock;
 
 		while (IsConnected())
 		{
-			bResult = GetQueuedCompletionStatus(m_CompletionPort, &BytesTransferred, (PULONG_PTR)&sock, &lpOverlapped, WSA_INFINITE);
+			bResult = GetQueuedCompletionStatus(m_CompletionPort, &BytesTransferred, (PULONG_PTR)&SI, &lpOverlapped, WSA_INFINITE);
 
 			// Failed but allocated data for lpOverlapped, need to de-allocate.
 			if (!bResult && lpOverlapped != NULL)
@@ -340,6 +338,7 @@ namespace network
 			else if (!bResult && lpOverlapped == NULL)
 			{
 				LOG_ERROR("GetQueuedCompletionStatus() failed with error: %d", GetLastError());
+				getchar();
 				continue;
 			}
 			// If an I/O was completed but we received no data means a client must've disconnected
@@ -540,6 +539,9 @@ namespace network
 		}
 
 		PrimeReadValidation();
+
+		SI = new SOCKET;
+		*SI = m_socket;
 
 		std::thread t(&client_interface<T>::ProcessIO, this);
 		t.detach();

@@ -12,6 +12,8 @@ namespace
 		Client();
 		virtual ~Client();
 
+		std::chrono::system_clock::time_point timeThen;
+
 		Client& operator=(const Client& other) = delete;
 		Client(const Client& other) = delete;
 
@@ -58,10 +60,8 @@ namespace
 		case MessageType::PingServer:
 		{
 			std::chrono::system_clock::time_point timeNow = std::chrono::system_clock::now();
-			std::chrono::system_clock::time_point timeThen;
-			msg >> timeThen;
 
-			LOG_INFO("Ping: %fs", std::chrono::duration<double>(timeNow - timeThen).count());
+			LOG_INFO("Ping: %fs", std::chrono::duration<double>(timeNow - this->timeThen).count());
 
 			break;
 		}
