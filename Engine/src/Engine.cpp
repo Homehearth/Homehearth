@@ -1,6 +1,7 @@
 ﻿#include "EnginePCH.h"
 #include "Engine.h"
 #include <omp.h>
+#include "BackBuffer.h"
 
 #include "RMesh.h"
 
@@ -21,6 +22,8 @@ void Engine::Startup()
     T_INIT(1, thread::ThreadType::POOL_FIFO);
     ResourceManager::Initialize();
     srand((unsigned int)time(NULL));
+
+	Backbuffer::Initialize();
 
 	// Window Startup:
 	Window::Desc config;
@@ -288,7 +291,8 @@ void Engine::RenderThread()
 		deltaTime = static_cast<float>(currentFrame - lastFrame);
 		if (deltaSum >= targetDelta)
 		{
-			Render(deltaSum);
+			if(Backbuffer::GetBuffers()->IsSwapped())
+				Render(deltaSum);
 
 			m_frameTime.render = deltaSum;
 			deltaSum = 0.f;
@@ -312,21 +316,7 @@ void Engine::Update(float dt)
 		m_currentScene->Update(dt);
 	}
 	
-#ifdef _DEBUG
-	if(!m_IsImguiReady)
-	{
-		// Start ImGui frame
-		ImGui_ImplDX11_NewFrame();
-		ImGui_ImplWin32_NewFrame();
-		ImGui::NewFrame();
-		drawImGUI();
-		
-		ImGui::EndFrame();
-		
-		m_IsImguiReady = true;
 
-	}
-#endif // DEBUG
 
 }
 
@@ -343,6 +333,22 @@ void Engine::Render(float& dt)
 	D2D1Core::Present();
 
 #ifdef _DEBUG
+	if (!m_IsImguiReady)
+	{
+		// Start ImGui frame
+		ImGui_ImplDX11_NewFrame();
+		ImGui_ImplWin32_NewFrame();
+		ImGui::NewFrame();
+		drawImGUI();
+
+		ImGui::EndFrame();
+
+		m_IsImguiReady = true;
+
+	}
+#endif // DEBUG
+
+#ifdef _DEBUG
 	if (m_IsImguiReady)
 	{
 		ImGui::Render();
@@ -352,5 +358,6 @@ void Engine::Render(float& dt)
 #endif
 	
 	D3D11Core::Get().SwapChain()->Present(0, 0);
+	Backbuffer::GetBuffers()->ReadySwap();
 }
 

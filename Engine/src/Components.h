@@ -14,7 +14,7 @@ namespace ecs
 		struct Renderable
 		{
 			RMesh* mesh;
-			dx::ConstantBuffer<sm::Matrix> constantBuffer;
+			Transform renderForm;
 		};
 	};
 

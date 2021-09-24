@@ -11,6 +11,7 @@ private:
 	
 	std::unordered_map<entt::entity, comp::Transform> m_transformCopies;
 	std::atomic<bool> m_hasRendered;
+	dx::ConstantBuffer<sm::Matrix> publicBuffer;
 
 public:
 

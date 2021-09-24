@@ -15,6 +15,13 @@ void createTriangle(Scene& scene, float size, const sm::Vector2& pos, const sm::
 	vel.mag = (rand() % 200) + 100.f;
 }
 
+void CreateTest(Scene& scene)
+{
+	entt::entity entity = scene.GetRegistry().create();
+	comp::Renderable& rend = scene.GetRegistry().emplace<comp::Renderable>(entity);
+	rend.mesh = ResourceManager::GetResource<RMesh>("Cube.fbx");
+}
+
 void setupDemoScene(Engine& engine, Scene& scene) 
 {
 
