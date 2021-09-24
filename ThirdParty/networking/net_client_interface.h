@@ -218,9 +218,9 @@ namespace network
 	{
 		PER_IO_DATA* context = new PER_IO_DATA;
 		ZeroMemory(&context->Overlapped, sizeof(WSAOVERLAPPED));
-		memcpy(context->buffer, &msg.header, sizeof(msg.header));
+		memcpy(context->buffer, &msg.header, sizeof(msg_header<T>));
 		context->DataBuf.buf = context->buffer;
-		context->DataBuf.len = sizeof(msg.header);
+		context->DataBuf.len = sizeof(msg_header<T>);
 		context->state = NetState::WRITE_HEADER;
 		DWORD BytesSent = 0;
 		DWORD flags = 0;
@@ -543,6 +543,8 @@ namespace network
 
 		SI = new SOCKET;
 		*SI = m_socket;
+
+		LOG_INFO("Socket is: %lld", m_socket);
 
 		std::thread t(&client_interface<T>::ProcessIO, this);
 		t.detach();
