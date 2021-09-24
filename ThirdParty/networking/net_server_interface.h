@@ -187,7 +187,6 @@ namespace network
 	template <typename T>
 	void server_interface<T>::ReadHeader(PER_IO_DATA* context, SOCKET_INFORMATION* SI)
 	{
-		//message<T> msg = {};
 		msgTemp.payload.clear();
 		memcpy(&msgTemp.header, context->DataBuf.buf, sizeof(msg_header<T>));
 
