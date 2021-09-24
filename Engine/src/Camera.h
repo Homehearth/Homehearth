@@ -1,9 +1,6 @@
 #pragma once
 #include "EnginePCH.h"
 
-namespace dx = DirectX;
-namespace sm = DirectX::SimpleMath;
-
 class Camera
 {
 private:
