@@ -15,7 +15,7 @@ Game::Game()
 	Scene& demo = m_engine.GetScene("Demo");
 	// Scene logic
 	//setupDemoScene(m_engine, demo);
-	for (int i = 0; i < 2000; i++) {
+	for (int i = 0; i < 1000; i++) {
 		auto e = demo.GetRegistry().create();
 		auto& transform = demo.GetRegistry().emplace<comp::Transform>(e);
 		auto& renderable = demo.GetRegistry().emplace<comp::Renderable>(e);
@@ -24,14 +24,18 @@ Game::Game()
 
 	demo.on<ESceneUpdate>([&](const ESceneUpdate& e, Scene& scene) 
 		{
+		
 			int i = 1;
 			demo.GetRegistry().view<comp::Transform>().each([&](comp::Transform& t)
 				{
+	
 					sm::Vector3 pos = t.position;
 					t.position = sm::Vector3(0, 0, 0);
 					pos += sm::Vector3(0, 0, -i) * e.dt;
 					t.position = pos;
+									
 					i++;
+
 				});
 			
 		});

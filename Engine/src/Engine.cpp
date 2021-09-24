@@ -39,14 +39,6 @@ void Engine::Startup()
 	// Thread should be launched after s_engineRunning is set to true and D3D11 is initialized.
 	s_engineRunning = true;
 	
-	if (m_client.Connect("127.0.0.1", 4950))
-	{
-		LOG_INFO("Connected to server");
-	}
-	else {
-		LOG_ERROR("Failed to connect to server");
-	} 
-
 	//
 	// AUDIO 
 	//
@@ -269,6 +261,20 @@ void Engine::drawImGUI() const
 
 	ImGui::End();
 	
+
+	ImGui::Begin("Objects");
+	m_currentScene->GetRegistry().view<comp::Transform>().each([&](entt::entity e, comp::Transform& transform) 
+		{
+
+			ImGui::Separator();
+			ImGui::DragFloat3(("Position: " + std::to_string((int)e)).c_str(), (float*)&transform.position);
+			ImGui::DragFloat3(("Rotation: " + std::to_string((int)e)).c_str(), (float*)&transform.rotation, dx::XMConvertToRadians(1.f));
+			ImGui::Spacing();
+
+		});
+	ImGui::End();
+
+
 }
 
 void Engine::RenderThread()
@@ -305,7 +311,7 @@ void Engine::Update(float dt)
 	{
 		m_currentScene->Update(dt);
 	}
-
+	
 #ifdef _DEBUG
 	if(!m_IsImguiReady)
 	{
@@ -316,10 +322,12 @@ void Engine::Update(float dt)
 		drawImGUI();
 		
 		ImGui::EndFrame();
-
+		
 		m_IsImguiReady = true;
+
 	}
 #endif // DEBUG
+
 }
 
 void Engine::Render(float& dt)
@@ -343,6 +351,6 @@ void Engine::Render(float& dt)
 	}
 #endif
 	
-	D3D11Core::Get().SwapChain()->Present(1, 0);
+	D3D11Core::Get().SwapChain()->Present(0, 0);
 }
 
