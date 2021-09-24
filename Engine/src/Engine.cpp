@@ -20,7 +20,6 @@ Engine::Engine()
 void Engine::Startup()
 {
     T_INIT(1, thread::ThreadType::POOL_FIFO);
-    ResourceManager::Initialize();
     srand((unsigned int)time(NULL));
 
 	// Window Startup:
@@ -150,7 +149,7 @@ void Engine::Run()
 
 	m_client.Disconnect();
     T_DESTROY();
-    ResourceManager::Destroy();
+    ResourceManager::Get().Destroy();
     D2D1Core::Destroy();
 }
 

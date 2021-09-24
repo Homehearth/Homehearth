@@ -63,7 +63,7 @@ void RMaterial::LoadMaterial(aiMaterial* aiMat)
             std::string filename = GetFilename(path.C_Str());
             //Get the texture
             //Will be nullptr if it did not exist failed to be created
-            m_textures[(uint8_t)type.first] = ResourceManager::GetResource<RTexture>(filename);
+            m_textures[(uint8_t)type.first] = ResourceManager::Get().GetResource<RTexture>(filename);
         }
     }
     textureTypeMap.clear();
@@ -138,7 +138,7 @@ bool RMaterial::Create(const std::string& filename)
                 if (ss >> filepath)
                 {
                     std::string filename = GetFilename(filepath);
-                    m_textures[(uint8_t)ETextureType::albedo] = ResourceManager::GetResource<RTexture>(filename);
+                    m_textures[(uint8_t)ETextureType::albedo] = ResourceManager::Get().GetResource<RTexture>(filename);
                 }
             }
             //Normalmap
@@ -148,7 +148,7 @@ bool RMaterial::Create(const std::string& filename)
                 if (ss >> filepath)
                 {
                     std::string filename = GetFilename(filepath);
-                    m_textures[(uint8_t)ETextureType::normal] = ResourceManager::GetResource<RTexture>(filename);
+                    m_textures[(uint8_t)ETextureType::normal] = ResourceManager::Get().GetResource<RTexture>(filename);
                 }
             }
             //Metallic
@@ -158,7 +158,7 @@ bool RMaterial::Create(const std::string& filename)
                 if (ss >> filepath)
                 {
                     std::string filename = GetFilename(filepath);
-                    m_textures[(uint8_t)ETextureType::metalness] = ResourceManager::GetResource<RTexture>(filename);
+                    m_textures[(uint8_t)ETextureType::metalness] = ResourceManager::Get().GetResource<RTexture>(filename);
                 }
             }
             //Roughness
@@ -168,7 +168,7 @@ bool RMaterial::Create(const std::string& filename)
                 if (ss >> filepath)
                 {
                     std::string filename = GetFilename(filepath);
-                    m_textures[(uint8_t)ETextureType::roughness] = ResourceManager::GetResource<RTexture>(filename);
+                    m_textures[(uint8_t)ETextureType::roughness] = ResourceManager::Get().GetResource<RTexture>(filename);
                 }
             }
             //Ambient occulution map
@@ -178,7 +178,7 @@ bool RMaterial::Create(const std::string& filename)
                 if (ss >> filepath)
                 {
                     std::string filename = GetFilename(filepath);
-                    m_textures[(uint8_t)ETextureType::aoMap] = ResourceManager::GetResource<RTexture>(filename);
+                    m_textures[(uint8_t)ETextureType::aoMap] = ResourceManager::Get().GetResource<RTexture>(filename);
                 }
             }
         }

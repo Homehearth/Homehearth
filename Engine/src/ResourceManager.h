@@ -1,41 +1,53 @@
 #pragma once
 #include "GResource.h"
 
+/*
+	Resourcemanager is a singleton and can be used everywhere
+	Code example about how to use: 
+	 
+	* RMesh* testMesh = ResourceManager::Get().GetResource<RMesh>("Cube.fbx");
+	* 
+	* ResourceManager::Get().RemoveResource("Cube.fbx");
+	* 
+	* RMesh* testMesh = new RMesh();
+	* if (testMesh.Create("Cube.fbx"))
+	*	  ResourceManager::Get().InsertResource("Cube.fbx", testMesh);
+	* 
+*/
+
 class ResourceManager
 {
 private:
-	static ResourceManager* m_instance;
+	ResourceManager() = default;
 	std::unordered_map<std::string, resource::GResource*> m_resources;
-	ResourceManager();
-	~ResourceManager();
 
 public:
+	~ResourceManager() = default;
+	
 	//Delete copy constructors
 	ResourceManager(const ResourceManager& rm) = delete;
 	ResourceManager(const ResourceManager&& rm) = delete;
 	ResourceManager& operator=(const ResourceManager& rm) = delete;
 	ResourceManager& operator=(const ResourceManager&& rm) = delete;
 
-	static void Initialize();
-
-	/*
-		Any resources linked to the resource manager will be taken care of.
-		Please do not delete any pointers placed into the resource manager.
-	*/
-	static void Destroy();
+	static auto& Get()
+	{
+		static ResourceManager s_instance;
+		return s_instance;
+	}
 
 	/*
 		Decreases the reference count toward the resource with
 		name "resource_name". If this reference count is equal to 0
 		then the resource will be removed from the system.
 	*/
-	static void RemoveResource(const std::string& resource_name);
+	void RemoveResource(const std::string& resource_name);
 
 	/*
 		Register a resource to the resource manager. A reference will be added
 		onto the resource.
 	*/
-	static void InsertResource(const std::string& resource_name, resource::GResource* resource);
+	void InsertResource(const std::string& resource_name, resource::GResource* resource);
 
 	/*
 		Retrieve any resource with the name (resource_name).
@@ -46,17 +58,22 @@ public:
 		RTexture* texture = GetResource<RTexture>(resource_name);
 	*/
 	template <class T>
-	static T* GetResource(const std::string& resource_name);
+	T* GetResource(const std::string& resource_name);
+
+	/*
+		Removes every object in the manager
+	*/
+	void Destroy();
 };
 
 template<class T>
 inline T* ResourceManager::GetResource(const std::string& resource_name)
 {
 	//Check if the resource exists
-	auto f = ResourceManager::m_instance->m_resources.find(resource_name);
+	auto f = m_resources.find(resource_name);
 
 	//Resource is existing: returing it
-	if (f != ResourceManager::m_instance->m_resources.end())
+	if (f != m_resources.end())
 	{
 		return dynamic_cast<T*>(f->second);
 	}

@@ -143,14 +143,14 @@ bool RMesh::Create(const std::string& filename)
         
         //Search and see if the material already has been loaded.
         //If it was not loaded, we try to create it by searching the mtl-files
-        m_material = ResourceManager::GetResource<RMaterial>(name);
+        m_material = ResourceManager::Get().GetResource<RMaterial>(name);
 
         //Material was not loaded before
         if (!m_material)
         {
             m_material = new RMaterial();
             m_material->LoadMaterial(scene->mMaterials[0]);
-            ResourceManager::InsertResource(name, m_material);
+            ResourceManager::Get().InsertResource(name, m_material);
         }
     }
 
