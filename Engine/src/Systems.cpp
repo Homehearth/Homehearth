@@ -1,16 +1,16 @@
 #include "EnginePCH.h"
 #include "Systems.h"
 
-void UserInputSystem(entt::registry reg, Scene& scene)
+void MovementSystem(entt::registry reg, Scene& scene, float dt)
 {
-	InputSystem::Get();
+	const auto view = reg.view<comp::Transform, comp::Velocity>();
 
-
-	//TODO IF W,A,S,D call movement System 
-	//
-}
-
-void MovementSystem(entt::registry reg, Scene& scene)
-{
-	
+	view.each([&, dt](comp::Transform& transform, comp::Velocity& velocity)
+		{
+			
+			transform.position += velocity.vel * dt;
+		
+			//reset velocity?	
+			velocity.vel = sm::Vector3{ 0.0f, 0.0f, 0.0f};
+		});
 }

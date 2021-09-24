@@ -1,5 +1,5 @@
 #pragma once
 #include "Scene.h"
+#include "Components.h"
 
-void UserInputSystem(entt::registry reg, Scene& scene);
-void MovementSystem(entt::registry reg, Scene& scene);
+void MovementSystem(entt::registry reg, Scene& scene, float dt);

@@ -17,6 +17,11 @@ namespace ecs
 		{
 			RMesh* mesh;
 		};
+
+		struct Velocity
+		{
+			sm::Vector3 vel;
+		};
 	};
 
 	void OnTransformConstruct(entt::registry& reg, entt::entity entity);
