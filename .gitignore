@@ -43,7 +43,9 @@ Generated\ Files/
 # MSTest test Results
 [Tt]est[Rr]esult*/
 [Bb]uild[Ll]og.*
-
+[Ee]ngine/*.cso
+[Gg]ame/*.cso
+[Gg]ame/*.ini
 # NUNIT
 *.VisualState.xml
 TestResult.xml
@@ -98,7 +100,6 @@ StyleCopReport.xml
 *.cso
 # Chutzpah Test files
 _Chutzpah*
-
 # Visual C++ cache files
 ipch/
 *.aps

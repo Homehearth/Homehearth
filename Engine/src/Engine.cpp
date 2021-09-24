@@ -18,9 +18,9 @@ Engine::Engine()
 
 void Engine::Startup()
 {
-    T_INIT(1, thread::ThreadType::POOL_FIFO);
-    ResourceManager::Initialize();
-    srand((unsigned int)time(NULL));
+	T_INIT(1, thread::ThreadType::POOL_FIFO);
+	ResourceManager::Initialize();
+	srand((unsigned int)time(NULL));
 
 	// Window Startup:
 	Window::Desc config;
@@ -53,6 +53,7 @@ void Engine::Startup()
 #endif
 	this->m_audio_engine = std::make_unique<DirectX::AudioEngine>(eflags);
 
+
 #ifdef _DEBUG
 	m_IsImguiReady = false;
 	// Setup ImGUI
@@ -65,6 +66,8 @@ void Engine::Startup()
 	ImGui_ImplDX11_CreateDeviceObjects(); // uses device, therefore has to be called before render thread starts
 	LOG_INFO("ImGui was successfully initialized");
 #endif
+	InputSystem::Get().SetMouseWindow(m_window.GetHWnd());
+
 	m_client.Connect("127.0.0.1", 4950);
 
 	
@@ -84,7 +87,7 @@ void Engine::Run()
 
 	if (thread::IsThreadActive())
 		T_CJOB(Engine, RenderThread);
-	
+
 	MSG msg = { nullptr };
 	while (IsRunning())
 	{
@@ -130,8 +133,33 @@ void Engine::Run()
 		}
 
 		// Handle Input.
-		// todo:
+		InputSystem::Get().UpdateEvents();
 
+
+		//Showing examples of keyboard and mouse (THIS CODE SHOULD BE HANDLED SOMEWHERE ELSE (GAMEPLAY LOGIC))
+		if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::G, KeyState::RELEASED))
+		{
+			std::cout << "G Released\n";
+		}
+		if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED))
+		{
+			std::cout << "Mouse left Pressed\n";
+			std::cout << "XPos: " << InputSystem::Get().GetMousePos().x << std::endl;
+		}
+		if (InputSystem::Get().CheckMouseKey(MouseKey::RIGHT, KeyState::PRESSED))
+		{
+			std::cout << "Switching mouse mode\n";
+			InputSystem::Get().SwitchMouseMode();
+		}
+		if (InputSystem::Get().CheckMouseKey(MouseKey::MIDDLE, KeyState::PRESSED))
+		{
+			std::cout << "Toggling mouse visibility\n";
+			InputSystem::Get().ToggleMouseVisibility();
+		}
+		if (InputSystem::Get().GetAxis(Axis::HORIZONTAL) == 1)
+		{
+			std::cout << "Moving right\n";
+		}
 
 		// Update time.
 		currentFrame = omp_get_wtime();
@@ -187,16 +215,16 @@ void Engine::SetScene(Scene& scene)
 		m_currentScene->clear();
 	}
 	m_currentScene = &scene;
-	
+
 	m_currentScene->on<EShutdown>([&](const EShutdown& e, Scene& scene)
-		{
-			Shutdown();
-		});
-	
+	{
+		Shutdown();
+	});
+
 	m_currentScene->on<ESceneChange>([&](const ESceneChange& e, Scene& scene)
-		{
-			SetScene(e.newScene);
-		});
+	{
+		SetScene(e.newScene);
+	});
 }
 
 Window* Engine::GetWindow()
@@ -216,10 +244,10 @@ void Engine::drawImGUI() const
 	static std::vector<float> fpsUpdateContainer;
 	static std::vector<float> ramUsageContainer;
 	static std::vector<float> vRamUsageContainer;
-	
+
 	static Timer timer;
-	
-	if(timer.GetElapsedTime() > 0.5f)
+
+	if (timer.getElapsedTime() > 0.5f)
 	{
 		fpsContainer.emplace_back((1 / m_frameTime.render));
 		fpsUpdateContainer.emplace_back((1.0f / m_frameTime.update));
@@ -245,7 +273,7 @@ void Engine::drawImGUI() const
 	ImGui::Text("%s", screenRes.c_str());
 	ImGui::End();
 
-	
+
 	ImGui::Begin("Statistics");
 	if (ImGui::CollapsingHeader("FPS"))
 	{
@@ -255,9 +283,9 @@ void Engine::drawImGUI() const
 		ImGui::Spacing();
 	}
 
-	if(ImGui::CollapsingHeader("Memory"))
+	if (ImGui::CollapsingHeader("Memory"))
 	{
-		ImGui::PlotHistogram(("RAM: "+std::to_string(static_cast<float>(Profiler::GetRAMUsage() / (1024.f * 1024.f))) + " MB").c_str(), ramUsageContainer.data(), static_cast<int>(ramUsageContainer.size()), 0, nullptr, 0.0f, 500.0f, ImVec2(150, 75));
+		ImGui::PlotHistogram(("RAM: " + std::to_string(static_cast<float>(Profiler::GetRAMUsage() / (1024.f * 1024.f))) + " MB").c_str(), ramUsageContainer.data(), static_cast<int>(ramUsageContainer.size()), 0, nullptr, 0.0f, 500.0f, ImVec2(150, 75));
 		ImGui::Spacing();
 		ImGui::PlotHistogram(("VRAM: " + std::to_string(static_cast<float>(Profiler::GetVRAMUsage() / (1024.f * 1024.f))) + " MB").c_str(), vRamUsageContainer.data(), static_cast<int>(vRamUsageContainer.size()), 0, nullptr, 0.0f, 500.0f, ImVec2(150, 75));
 	}
@@ -306,6 +334,9 @@ void Engine::RenderThread()
 
 void Engine::Update(float dt)
 {
+	m_buffPointer = m_drawBuffers.GetBuffer(0);
+
+	// Update the camera transform based on interactive inputs.
 	// todo:
 	// Update the camera transform based on interactive inputs.
 
@@ -314,18 +345,16 @@ void Engine::Update(float dt)
 	{
 		m_currentScene->Update(dt);
 	}
-	
+
+
 #ifdef _DEBUG
-	if(!m_IsImguiReady)
+	if (!m_IsImguiReady.load())
 	{
 		// Start ImGui frame
 		ImGui_ImplDX11_NewFrame();
 		ImGui_ImplWin32_NewFrame();
 		ImGui::NewFrame();
 		drawImGUI();
-		
-		ImGui::EndFrame();
-		
 		m_IsImguiReady = true;
 
 	}
@@ -353,7 +382,7 @@ void Engine::Render(float& dt)
 		m_IsImguiReady = false;
 	}
 #endif
-	
-	D3D11Core::Get().SwapChain()->Present(0, 0);
+
+	D3D11Core::Get().SwapChain()->Present(1, 0);
 }
 
