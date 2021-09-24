@@ -200,7 +200,7 @@ namespace network
 	void client_interface<T>::ReadHeader(PER_IO_DATA*& context)
 	{
 		ZeroMemory(&tempMsg.header, sizeof(msg_header<T>));
-		memcpy(&tempMsg.header, context->DataBuf.buf, sizeof(msg_header<T>));
+		memcpy(&tempMsg.header, context->buffer, context->DataBuf.len);
 
 		if (tempMsg.size() > sizeof(msg_header<T>))
 		{
