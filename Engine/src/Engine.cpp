@@ -156,10 +156,10 @@ void Engine::Run()
 			std::cout << "Toggling mouse visibility\n";
 			InputSystem::Get().ToggleMouseVisibility();
 		}
-		if (InputSystem::Get().GetAxis(Axis::HORIZONTAL) == 1)
-		{
-			std::cout << "Moving right\n";
-		}
+		//if (InputSystem::Get().GetAxis(Axis::HORIZONTAL) == 1)
+		//{
+		//	std::cout << "Moving right\n";
+		//}
 
 		// Update time.
 		currentFrame = omp_get_wtime();
