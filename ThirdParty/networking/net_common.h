@@ -9,11 +9,12 @@
 #include <WS2tcpip.h>
 #include <functional>
 
-#define IPV6_ADDRSTRLEN 46
-#define BUFFER_SIZE 4096
 
 namespace network
 {
+#define IPV6_ADDRSTRLEN 46
+#define BUFFER_SIZE 4096
+
 	static void* get_in_addr(const struct sockaddr* sa)
 	{
 		if (sa->sa_family == AF_INET)
@@ -57,12 +58,12 @@ namespace network
 
 		return output;
 	}
-	
+
 	// static std::string PrintRemoteAddress(SOCKET s)
 	// {
 		// struct sockaddr_in c = {};
 		// socklen_t cLen = sizeof(c);
-		
+
 		// getpeername(clientSocket, (struct sockaddr*)&c, &cLen);
 		// char ipAsString[IPV6_ADDRSTRLEN] = {};
 		// inet_ntop(c.sin_family, &c.sin_addr, ipAsString, sizeof(ipAsString));
