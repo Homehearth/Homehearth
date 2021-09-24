@@ -4,7 +4,7 @@ SamplerState samp : register(s0);
 
 struct PixelIn
 {
-    float4 pos : SV_Position;
+    float4 pos : SV_POSITION;
     float2 uv : TEXCOORD;
     float3 normal : NORMAL;
     float3 tangent : TANGENT;

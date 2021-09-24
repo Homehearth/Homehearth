@@ -1,38 +1,58 @@
 #include "EnginePCH.h"
 #include "Scene.h"
 
-entt::entity Scene::CreateEntity()
+Scene::Scene() 
 {
-	return m_ecsRegistry.create();
+	m_registry.on_construct<comp::Renderable>().connect<ecs::OnRenderableConstruct>();
+	m_hasRendered = true;
 }
 
-void Scene::DestroyEntity(entt::entity entity)
-{
-	m_ecsRegistry.destroy(entity);
-}
-
-void Scene::AddSystem(const SystemUpdateFunction& updateFunction)
-{
-	m_updateSystems.push_back(updateFunction);
-}
-
-void Scene::AddRenderSystem(const SystemRenderFunction& renderFunction) 
-{
-	m_renderSystems.push_back(renderFunction);
+entt::registry& Scene::GetRegistry() {
+	return m_registry;
 }
 
 void Scene::Update(float dt)
 {
-	for (const auto& system : m_updateSystems)
+	// Emit event
+	publish<ESceneUpdate>(dt);
+	
+	// only copy if the last frame has been rendered
+	if (m_hasRendered)
 	{
-		system(m_ecsRegistry, dt);
+		m_registry.view<comp::Transform>().each([&](entt::entity e, comp::Transform& t) 
+			{
+				m_transformCopies[e] = t;
+			});
+		m_hasRendered = false;
 	}
 }
 
 void Scene::Render() 
 {
-	for (const auto& system : m_renderSystems)
-	{
-		system(m_ecsRegistry);
-	}
+
+	while (m_hasRendered); // makes sure render thread is not faster than update thread
+
+	// System that renders Renderable component
+	auto view = m_registry.view<comp::Renderable>();
+	view.each([&](entt::entity e, comp::Renderable& renderable)
+		{
+			if (m_transformCopies.find(e) != m_transformCopies.end())
+			{
+				comp::Transform transform = m_transformCopies.at(e);
+				sm::Matrix m = ecs::GetMatrix(transform);
+				renderable.constantBuffer.SetData(D3D11Core::Get().DeviceContext(), m);
+			}
+
+			ID3D11Buffer* buffers[1] = 
+			{
+				renderable.constantBuffer.GetBuffer()
+			};
+
+			D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, buffers);
+			renderable.mesh->Render();
+		});
+	m_hasRendered = true;
+
+	// Emit event
+	publish<ESceneRender>();
 }
