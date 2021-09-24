@@ -9,8 +9,8 @@ class PipelineManager
 {
 private:
 	Window*							m_window;
-	D3D11Core*						m_d3d11;	
-	D3D11_VIEWPORT					m_viewport;
+	D3D11Core*						m_d3d11;
+	
 public:
 	PipelineManager();
 	virtual ~PipelineManager() = default;
@@ -37,11 +37,15 @@ public:
 
 	ComPtr<ID3D11InputLayout>		m_defaultInputLayout;
 	
-	ComPtr<ID3D11Buffer>			m_defaultConstantBuffer;
-
+	ComPtr<ID3D11Buffer>			m_defaultModelConstantBuffer;
+	ComPtr<ID3D11Buffer>			m_defaultViewConstantBuffer; // TODO: maybe put in Camera class or update from Camera class
+	
 	Shaders::VertexShader			m_defaultVertexShader;
 	Shaders::PixelShader			m_defaultPixelShader;
 
+	D3D11_VIEWPORT					m_viewport;
+
+	
 
 private:
 	// INITIALIZE METHODS.

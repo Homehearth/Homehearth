@@ -6,12 +6,12 @@
 // Simple Components
 struct Triangle 
 {
-	float pos[2];
-	float size[2];
+	sm::Vector2 pos;
+	float size;
 };
 struct Velocity 
 {
-	float vel[2];
+	sm::Vector2 vel;
 	float mag;
 };
 
@@ -23,6 +23,6 @@ struct TriangleCollisionEvent
 };
 
 
-void createTriangle(Scene& scene, float size, const float pos[2], const int velSign[2]);
+void createTriangle(Scene& scene, float size, const sm::Vector2& pos, const sm::Vector2& velSign);
 void setupDemoScene(Engine& engine, Scene& scene);
 

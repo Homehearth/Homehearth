@@ -12,7 +12,6 @@ Engine::Engine()
 	, m_currentScene(nullptr)
 	, m_vSync(false)
 	, m_frameTime()
-	, m_buffPointer(nullptr)
 {
 	LOG_INFO("Engine(): " __TIMESTAMP__);
 }
@@ -39,14 +38,21 @@ void Engine::Startup()
 
 	// Thread should be launched after s_engineRunning is set to true and D3D11 is initialized.
 	s_engineRunning = true;
-
-	// Preallocate space for Triplebuffer
-	m_drawBuffers.AllocateBuffers();
-	m_buffPointer = m_drawBuffers.GetBuffer(0);
-	m_buffPointer->reserve(200);
-	m_buffPointer = m_drawBuffers.GetBuffer(1);
-	m_buffPointer->reserve(200);
-
+	
+	//
+	// AUDIO 
+	//
+	HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+	if (FAILED(hr))
+	{
+		LOG_ERROR("Failed to initialize AudioEngine.");
+	}
+	DirectX::AUDIO_ENGINE_FLAGS eflags = DirectX::AudioEngine_Default;
+#ifdef _DEBUG
+	eflags |= DirectX::AudioEngine_Debug;
+#endif
+	this->m_audio_engine = std::make_unique<DirectX::AudioEngine>(eflags);
+	
 #ifdef _DEBUG
 	m_IsImguiReady = false;
 	// Setup ImGUI
@@ -56,6 +62,7 @@ void Engine::Startup()
 	ImGui_ImplWin32_Init(m_window.GetHWnd());
 	ImGui_ImplDX11_Init(D3D11Core::Get().Device(), D3D11Core::Get().DeviceContext());
 	ImGui::StyleColorsDark();
+	ImGui_ImplDX11_CreateDeviceObjects(); // uses device, therefore has to be called before render thread starts
 	LOG_INFO("ImGui was successfully initialized");
 #endif
 	m_client.Connect("127.0.0.1", 4950);
@@ -80,6 +87,7 @@ void Engine::Run()
 	{
 		if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
 		{
+			InputSystem::Get().UpdateEvents();
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 			if (msg.message == WM_QUIT)
@@ -140,7 +148,7 @@ void Engine::Run()
 
 	// Wait for the rendering thread to exit its last render cycle and shutdown.
 #ifdef _DEBUG
-	while (!s_safeExit) {};
+	while (!s_safeExit) {}; // TODO: why only in debug??
 
 	// ImGUI Shutdown
 	ImGui_ImplDX11_Shutdown();
@@ -156,7 +164,7 @@ void Engine::Run()
 
 void Engine::Shutdown()
 {
-	s_engineRunning = false;	
+	s_engineRunning = false;
 }
 
 Scene& Engine::GetScene(const std::string& name)
@@ -238,21 +246,35 @@ void Engine::drawImGUI() const
 	ImGui::Begin("Statistics");
 	if (ImGui::CollapsingHeader("FPS"))
 	{
-		ImGui::PlotLines(("FPS: " + std::to_string(static_cast<int>(1 / m_frameTime.render))).c_str(), fpsContainer.data(), fpsContainer.size(), 0, nullptr, 0.0f, 144.0f, ImVec2(150, 50));
+		ImGui::PlotLines(("FPS: " + std::to_string(static_cast<size_t>(1 / m_frameTime.render))).c_str(), fpsContainer.data(), static_cast<int>(fpsContainer.size()), 0, nullptr, 0.0f, 144.0f, ImVec2(150, 50));
 		ImGui::Spacing();
-		ImGui::PlotLines(("Update FPS: " + std::to_string(static_cast<int>(1.0f / m_frameTime.update))).c_str(), fpsUpdateContainer.data(), fpsUpdateContainer.size(), 0, nullptr, 0.0f, 144.0f, ImVec2(150, 50));
+		ImGui::PlotLines(("Update FPS: " + std::to_string(static_cast<size_t>(1.0f / m_frameTime.update))).c_str(), fpsUpdateContainer.data(), static_cast<int>(fpsUpdateContainer.size()), 0, nullptr, 0.0f, 144.0f, ImVec2(150, 50));
 		ImGui::Spacing();
 	}
 
 	if(ImGui::CollapsingHeader("Memory"))
 	{
-		ImGui::PlotHistogram(("RAM: "+std::to_string(static_cast<float>(Profiler::GetRAMUsage() / (1024.f * 1024.f))) + " MB").c_str(), ramUsageContainer.data(), ramUsageContainer.size(), 0, nullptr, 0.0f, 500.0f, ImVec2(150, 75));
+		ImGui::PlotHistogram(("RAM: "+std::to_string(static_cast<float>(Profiler::GetRAMUsage() / (1024.f * 1024.f))) + " MB").c_str(), ramUsageContainer.data(), static_cast<int>(ramUsageContainer.size()), 0, nullptr, 0.0f, 500.0f, ImVec2(150, 75));
 		ImGui::Spacing();
-		ImGui::PlotHistogram(("VRAM: " + std::to_string(static_cast<float>(Profiler::GetVRAMUsage() / (1024.f * 1024.f))) + " MB").c_str(), vRamUsageContainer.data(), vRamUsageContainer.size(), 0, nullptr, 0.0f, 500.0f, ImVec2(150, 75));
+		ImGui::PlotHistogram(("VRAM: " + std::to_string(static_cast<float>(Profiler::GetVRAMUsage() / (1024.f * 1024.f))) + " MB").c_str(), vRamUsageContainer.data(), static_cast<int>(vRamUsageContainer.size()), 0, nullptr, 0.0f, 500.0f, ImVec2(150, 75));
 	}
 
 	ImGui::End();
 	
+
+	ImGui::Begin("Objects");
+	m_currentScene->GetRegistry().view<comp::Transform>().each([&](entt::entity e, comp::Transform& transform) 
+		{
+
+			ImGui::Separator();
+			ImGui::DragFloat3(("Position: " + std::to_string((int)e)).c_str(), (float*)&transform.position);
+			ImGui::DragFloat3(("Rotation: " + std::to_string((int)e)).c_str(), (float*)&transform.rotation, dx::XMConvertToRadians(1.f));
+			ImGui::Spacing();
+
+		});
+	ImGui::End();
+
+
 }
 
 void Engine::RenderThread()
@@ -266,10 +288,7 @@ void Engine::RenderThread()
 		deltaTime = static_cast<float>(currentFrame - lastFrame);
 		if (deltaSum >= targetDelta)
 		{
-			if (m_drawBuffers.IsSwapped())
-			{
-				Render(deltaSum);
-			}
+			Render(deltaSum);
 
 			m_frameTime.render = deltaSum;
 			deltaSum = 0.f;
@@ -284,20 +303,17 @@ void Engine::RenderThread()
 
 void Engine::Update(float dt)
 {
-	m_buffPointer = m_drawBuffers.GetBuffer(0);
-	
-	// Update the camera transform based on interactive inputs.
 	// todo:
+	// Update the camera transform based on interactive inputs.
 
 	// Update elements in the scene.
 	if (m_currentScene)
 	{
 		m_currentScene->Update(dt);
 	}
-
 	
 #ifdef _DEBUG
-	if(!m_IsImguiReady.load())
+	if(!m_IsImguiReady)
 	{
 		// Start ImGui frame
 		ImGui_ImplDX11_NewFrame();
@@ -305,14 +321,13 @@ void Engine::Update(float dt)
 		ImGui::NewFrame();
 		drawImGUI();
 		
+		ImGui::EndFrame();
+		
 		m_IsImguiReady = true;
+
 	}
 #endif // DEBUG
 
-	if (!m_drawBuffers.IsSwapped())
-	{
-		m_drawBuffers.SwapBuffers();
-	}
 }
 
 void Engine::Render(float& dt)
@@ -325,11 +340,10 @@ void Engine::Render(float& dt)
 		m_currentScene->Render();
 	}
 
-	m_drawBuffers.ReadySwap();
 	D2D1Core::Present();
 
 #ifdef _DEBUG
-	if (m_IsImguiReady.load())
+	if (m_IsImguiReady)
 	{
 		ImGui::Render();
 		ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
@@ -337,6 +351,6 @@ void Engine::Render(float& dt)
 	}
 #endif
 	
-	D3D11Core::Get().SwapChain()->Present(1, 0);
+	D3D11Core::Get().SwapChain()->Present(0, 0);
 }
 

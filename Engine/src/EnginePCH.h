@@ -45,6 +45,8 @@
 #include <dwrite_3.h>
 #include <d2d1.h>
 #include <ctime>
+#include <Keyboard.h>
+#include <Mouse.h>
 using Microsoft::WRL::ComPtr;
 namespace dx = DirectX;
 
@@ -53,6 +55,8 @@ namespace dx = DirectX;
 #include <SimpleMath.h>
 #include <BufferHelpers.h>
 #include <Audio.h>
+#include <Keyboard.h>
+#include <Mouse.h>
 namespace sm = dx::SimpleMath;
 
 // entt (ECS library)

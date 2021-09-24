@@ -8,18 +8,18 @@ namespace ecs
 		{
 			sm::Vector3 position;
 			sm::Vector3 rotation;
-			sm::Vector3 scale;
-
-			//dx::ConstantBuffer<cbuffer::PerObject>* pConstantBuffer;
+			sm::Vector3 scale = sm::Vector3(1);
 		};
 
-		struct Mesh
+		struct Renderable
 		{
 			RMesh* mesh;
+			dx::ConstantBuffer<sm::Matrix> constantBuffer;
 		};
 	};
 
-	void OnTransformConstruct(entt::registry& reg, entt::entity entity);
+	void OnRenderableConstruct(entt::registry& reg, entt::entity entity);
+
 
 	sm::Matrix GetMatrix(component::Transform& transform);
 	sm::Vector3 GetForward(component::Transform& transform);
@@ -28,3 +28,4 @@ namespace ecs
 };
 
 namespace comp = ecs::component;
+
