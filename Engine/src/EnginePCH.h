@@ -45,6 +45,8 @@
 #include <dwrite_3.h>
 #include <d2d1.h>
 #include <ctime>
+#include <Keyboard.h>
+#include <Mouse.h>
 using Microsoft::WRL::ComPtr;
 namespace dx = DirectX;
 
@@ -53,6 +55,7 @@ namespace dx = DirectX;
 #include <SimpleMath.h>
 #include <BufferHelpers.h>
 #include <Audio.h>
+
 #include <Keyboard.h>
 #include <Mouse.h>
 namespace sm = dx::SimpleMath;
@@ -70,6 +73,7 @@ namespace sm = dx::SimpleMath;
 #include <imgui_impl_dx11.h>
 #include <imgui_impl_win32.h>
 #pragma warning(pop)
+
 //Utility
 #include "Timer.h"
 
