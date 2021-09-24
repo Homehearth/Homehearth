@@ -3,6 +3,11 @@
 #include "Components.h"
 #include "BackBuffer.h"
 
+Scene::Scene()
+{
+	//publicBuffer.Create(D3D11Core::Get().Device());
+}
+
 entt::entity Scene::CreateEntity()
 {
 	return m_ecsRegistry.create();
@@ -46,9 +51,13 @@ void Scene::Update(float dt)
 	*/
 
 	Backbuffer::GetBuffers()->GetBuffer(0)->clear();
-	auto v = m_ecsRegistry.view<comp::RenderAble>();
-	v.each([](comp::RenderAble rend) {
-		Backbuffer::GetBuffers()->GetBuffer(0)->push_back(rend);
+	auto v = m_ecsRegistry.view<comp::RenderAble, comp::Transform>();
+	v.each([](comp::RenderAble& rend, comp::Transform& transf) {
+		comp::RenderAble Render;
+		Render.mesh = rend.mesh;
+		Render.texture = rend.texture;
+		Render.renderForm = transf;
+		Backbuffer::GetBuffers()->GetBuffer(0)->push_back(Render);
 	});
 
 	if (!Backbuffer::GetBuffers()->IsSwapped())
@@ -71,6 +80,14 @@ void Scene::Render()
 			object = &data->at(i);
 			if (!object)
 				continue;
+			
+			//publicBuffer.SetData(D3D11Core::Get().DeviceContext(),);
+
+			/*
+			ID3D11Buffer* buffer[1];
+			buffer[0] = publicBuffer.GetBuffer();
+			D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, buffer);
+			*/
 
 			if (object->texture)
 			{

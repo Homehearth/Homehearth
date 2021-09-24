@@ -1,17 +1,16 @@
 #include "EnginePCH.h"
 #include "Components.h"
 
-/*
 void ecs::OnTransformConstruct(entt::registry& reg, entt::entity entity)
 {
     component::Transform& transform = reg.get<component::Transform>(entity);
-    transform.constBuf = std::make_unique<dx::ConstantBuffer<sm::Matrix>>();
-    transform.constBuf->Create(D3D11Core::Get().Device());
+    //transform.constBuf = std::make_unique<dx::ConstantBuffer<sm::Matrix>>();
+    //transform.constBuf->Create(D3D11Core::Get().Device());
     sm::Matrix mx = GetMatrix(transform).Transpose();
     
 
     T_LOCK();
-    transform.constBuf->SetData(D3D11Core::Get().DeviceContext(), mx);
+    //transform.constBuf->SetData(D3D11Core::Get().DeviceContext(), mx);
     T_UNLOCK();
 }
 
@@ -21,7 +20,7 @@ void ecs::OnTransformUpdate(entt::registry& reg, entt::entity entity)
 
     sm::Matrix mx = GetMatrix(transform).Transpose();
     T_LOCK();
-    transform.constBuf->SetData(D3D11Core::Get().DeviceContext(), mx);
+    //transform.constBuf->SetData(D3D11Core::Get().DeviceContext(), mx);
     T_UNLOCK();
 }
 
@@ -32,6 +31,8 @@ sm::Matrix ecs::GetMatrix(component::Transform& transform)
     return mat;
 }
 
+
+
 sm::Vector3 ecs::GetForward(component::Transform& transform)
 {
     sm::Vector3 f = sm::Vector3::Forward;
@@ -40,11 +41,10 @@ sm::Vector3 ecs::GetForward(component::Transform& transform)
     f = sm::Vector3::TransformNormal(f, sm::Matrix::CreateRotationZ(transform.rotation.z));
     return f;
 }
-
 void ecs::OnRenderAbleConstruct(entt::registry& reg, entt::entity entity)
 {
     component::RenderAble& transform = reg.get<component::RenderAble>(entity);
-    transform.constBuf = std::make_shared<dx::ConstantBuffer<sm::Matrix>>();
+    //transform.constBuf = std::make_shared<dx::ConstantBuffer<sm::Matrix>>();
     sm::Matrix mx; 
     mx = sm::Matrix::Identity;
 
@@ -63,5 +63,3 @@ sm::Vector3 ecs::GetUp(component::Transform& transform) {
     u = sm::Vector3::TransformNormal(u, sm::Matrix::CreateRotationZ(transform.rotation.z));
     return u;
 }
-
-*/

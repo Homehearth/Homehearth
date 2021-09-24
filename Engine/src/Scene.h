@@ -12,11 +12,11 @@ private:
 	
 	std::vector<SystemUpdateFunction> m_updateSystems;
 	std::vector<SystemRenderFunction> m_renderSystems;
-
+	//dx::ConstantBuffer<sm::Matrix> publicBuffer;
 	
 public:
 
-	Scene() = default;
+	Scene();
 	virtual ~Scene() = default;
 	Scene(const Scene&) = delete;
 	void operator=(const Scene&) = delete;

@@ -28,6 +28,11 @@ void CreateTest(Scene& scene)
 	rend.renderForm.rotation = { 0.0f, 0.0f, 0.0f };
 	rend.renderForm.scale = { 0.0f, 0.0f, 0.0f };
 	rend.texture = ResourceManager::GetResource<RTexture>("monster_albedo.png");
+
+	comp::Transform& transf = scene.AddComponent<comp::Transform>(object);
+	transf.position = { (float)(rand() % 100), (float)(rand() % 100), (float)(rand() % 100) };
+	transf.rotation = { (float)(rand() % 100), (float)(rand() % 100), (float)(rand() % 100) };
+	transf.scale = { 1, 1, 1 };
 }
 
 void setupDemoScene(Engine& engine, Scene& scene) 
@@ -92,7 +97,7 @@ void setupDemoScene(Engine& engine, Scene& scene)
 	createTriangle(scene, 200, pos, signVel);
 	*/
 
-	for (int i = 0; i < 5000; i++)
+	for (int i = 0; i < 2500; i++)
 	{
 		CreateTest(scene);
 	}
