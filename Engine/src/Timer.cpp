@@ -4,9 +4,9 @@
 
 //--------------------------------------------------------------------------------------
 Timer::Timer()
-	: hasStoped(false)
+	: m_hasStoped(false)
 {
-	start();
+	Start();
 }
 
 
@@ -14,10 +14,10 @@ Timer::Timer()
 
 
 //--------------------------------------------------------------------------------------
-void Timer::start()
+void Timer::Start()
 {
-	startTime = std::chrono::steady_clock::now();
-	hasStoped = false;
+	m_startTime = std::chrono::steady_clock::now();
+	m_hasStoped = false;
 }
 
 
@@ -25,10 +25,10 @@ void Timer::start()
 
 
 //--------------------------------------------------------------------------------------
-void Timer::stop()
+void Timer::Stop()
 {
-	stopTime = std::chrono::steady_clock::now();
-	hasStoped = true;
+	m_stopTime = std::chrono::steady_clock::now();
+	m_hasStoped = true;
 }
 
 
@@ -36,14 +36,14 @@ void Timer::stop()
 
 
 //--------------------------------------------------------------------------------------
-double Timer::getElapsedTime() const
+double Timer::GetElapsedTime() const
 {
 	std::chrono::duration<double> elapsed_seconds;
 
-	if(hasStoped)
-		elapsed_seconds = stopTime - startTime;
+	if(m_hasStoped)
+		elapsed_seconds = m_stopTime - m_startTime;
 	else
-		elapsed_seconds = std::chrono::steady_clock::now() - startTime;
+		elapsed_seconds = std::chrono::steady_clock::now() - m_startTime;
 
 	return elapsed_seconds.count();
 }

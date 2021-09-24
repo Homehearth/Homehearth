@@ -4,6 +4,7 @@
 namespace ecs
 {
 	namespace component {
+		
 		struct Transform
 		{
 			sm::Vector3 position;
@@ -15,6 +16,16 @@ namespace ecs
 		{
 			RMesh* mesh;
 			dx::ConstantBuffer<sm::Matrix> constantBuffer;
+		};
+
+		struct Velocity
+		{
+			sm::Vector3 vel;
+		};
+
+		struct Player
+		{
+			float runSpeed;
 		};
 	};
 

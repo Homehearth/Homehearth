@@ -15,56 +15,34 @@ void createTriangle(Scene& scene, float size, const sm::Vector2& pos, const sm::
 	vel.mag = (rand() % 200) + 100.f;
 }
 
+void InitializePlayerEntity(Scene& scene)
+{
+	auto playerEntity = scene.GetRegistry().create();
+	auto& transform = scene.GetRegistry().emplace<comp::Transform>(playerEntity);
+	transform.position.z = -17.0f;
+	auto& velocity = scene.GetRegistry().emplace<comp::Velocity>(playerEntity);
+	auto& renderable = scene.GetRegistry().emplace<comp::Renderable>(playerEntity);
+	auto& player = scene.GetRegistry().emplace<comp::Player>(playerEntity);
+	player.runSpeed = 10.f;
+	renderable.mesh = ResourceManager::GetResource<RMesh>("Monster.fbx");
+}
+
 void setupDemoScene(Engine& engine, Scene& scene) 
 {
-
-	// System to update triangles
+	//Initialize player entity
+	InitializePlayerEntity(scene);
+	
+	//System to update velocity
 	scene.on<ESceneUpdate>([&](const ESceneUpdate& e, Scene& scene)
-		{
-			auto view = scene.GetRegistry().view<Triangle, Velocity>();
-			view.each([&](Triangle& triangle, Velocity& velocity)
-				{
-					sm::Vector2 nextPos = triangle.pos + velocity.vel * e.dt * velocity.mag;
-					
-					if (nextPos.x > engine.GetWindow()->GetWidth() - triangle.size ||
-						nextPos.x < 0)
-					{
-						velocity.vel.x = -velocity.vel.x;
+	{
+		Systems::MovementSystem(scene, e.dt);
+	});
 
-						TriangleCollisionEvent e = { &triangle, &velocity };
-						scene.publish<TriangleCollisionEvent>(e);
-					}
-					if (nextPos.y > engine.GetWindow()->GetHeight() - triangle.size ||
-						nextPos.y < 0)
-					{
-						velocity.vel.y = -velocity.vel.y;
-						TriangleCollisionEvent e = { &triangle, &velocity };
-						scene.publish<TriangleCollisionEvent>(e);
-					}
-					triangle.pos = nextPos;
-				});
-		});
-
-	// System to render Triangle components
-	scene.on<ESceneRender>([&](const ESceneRender&, Scene& scene)
-		{
-			auto view = scene.GetRegistry().view<Triangle>();
-			view.each([](Triangle& triangle)
-				{
-					D2D1Core::DrawF(triangle.pos.x, triangle.pos.y, triangle.size, triangle.size, Shapes::TRIANGLE_FILLED);
-				});
-		});
-	scene.on<TriangleCollisionEvent>([](const TriangleCollisionEvent& e, Scene& scene)
-		{
-			// split
-			float size = e.triangle->size * 0.7f;
-			if (size < 5) return;
-			e.triangle->size = size;
-			
-			const sm::Vector2 velSign(std::signbit(e.velocity->vel.x) ? -1 : 1, std::signbit(e.velocity->vel.y) ? -1 : 1 );
-			createTriangle(scene, size, e.triangle->pos, velSign);
-
-		});
+	//System responding to user input
+	scene.on<ESceneUpdate>([&](const ESceneUpdate& e, Scene& scene)
+	{
+		GameSystems::UserInputSystem(scene);
+	});
 
 	// Create test Entity
 	const sm::Vector2 pos = { 0.f, 0.f };
