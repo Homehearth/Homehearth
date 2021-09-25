@@ -17,7 +17,8 @@ void InitializePlayerEntity(Scene& scene)
 void setupDemoScene(Engine& engine, Scene& scene) 
 {
 	//Initialize player entity
-	InitializePlayerEntity(scene);
+	for (int i = 0; i < 2000; i++)
+		InitializePlayerEntity(scene);
 	
 	
 	scene.on<ESceneUpdate>([&](const ESceneUpdate& e, Scene& scene)
