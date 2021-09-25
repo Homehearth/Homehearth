@@ -91,8 +91,9 @@ void Engine::Run()
 	MSG msg = { nullptr };
 	while (IsRunning())
 	{
-		if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
+		while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
 		{
+			// Handle Input.
 			InputSystem::Get().UpdateEvents();
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
@@ -132,9 +133,7 @@ void Engine::Run()
 			}
 		}
 
-		// Handle Input.
-		InputSystem::Get().UpdateEvents();
-
+		
 
 		//Showing examples of keyboard and mouse (THIS CODE SHOULD BE HANDLED SOMEWHERE ELSE (GAMEPLAY LOGIC))
 		if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::G, KeyState::RELEASED))

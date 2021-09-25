@@ -2,19 +2,6 @@
 #include <Engine.h>
 
 
-void createTriangle(Scene& scene, float size, const sm::Vector2& pos, const sm::Vector2& velSign) 
-{
-	entt::entity entity = scene.GetRegistry().create();
-	Triangle& comp = scene.GetRegistry().emplace<Triangle>(entity);
-	comp.pos = pos;
-	comp.size = size;
-	
-	Velocity& vel = scene.GetRegistry().emplace<Velocity>(entity);
-	vel.vel.x = ((rand() % 100) / 100.f) * velSign.x;
-	vel.vel.y = sqrtf(1 - vel.vel.x * vel.vel.x) * velSign.y;
-	vel.mag = (rand() % 200) + 100.f;
-}
-
 void InitializePlayerEntity(Scene& scene)
 {
 	auto playerEntity = scene.GetRegistry().create();
@@ -32,21 +19,13 @@ void setupDemoScene(Engine& engine, Scene& scene)
 	//Initialize player entity
 	InitializePlayerEntity(scene);
 	
-	//System to update velocity
+	
 	scene.on<ESceneUpdate>([&](const ESceneUpdate& e, Scene& scene)
 	{
+		//System to update velocity
 		Systems::MovementSystem(scene, e.dt);
-	});
-
-	//System responding to user input
-	scene.on<ESceneUpdate>([&](const ESceneUpdate& e, Scene& scene)
-	{
+		//System responding to user input
 		GameSystems::UserInputSystem(scene);
 	});
-
-	// Create test Entity
-	const sm::Vector2 pos = { 0.f, 0.f };
-	const sm::Vector2 signVel = { 1, 1 };
-	createTriangle(scene, 200, pos, signVel);
 
 }
