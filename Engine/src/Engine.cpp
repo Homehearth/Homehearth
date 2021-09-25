@@ -91,10 +91,10 @@ void Engine::Run()
 	MSG msg = { nullptr };
 	while (IsRunning())
 	{
+		// Handle Input.
+		InputSystem::Get().UpdateEvents();
 		while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
 		{
-			// Handle Input.
-			InputSystem::Get().UpdateEvents();
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 			if (msg.message == WM_QUIT)
@@ -319,7 +319,6 @@ void Engine::RenderThread()
 		if (deltaSum >= targetDelta)
 		{
 			Render(deltaSum);
-
 			m_frameTime.render = deltaSum;
 			deltaSum = 0.f;
 		}
@@ -339,13 +338,6 @@ void Engine::Update(float dt)
 	// todo:
 	// Update the camera transform based on interactive inputs.
 
-	// Update elements in the scene.
-	if (m_currentScene)
-	{
-		m_currentScene->Update(dt);
-	}
-
-
 #ifdef _DEBUG
 	if (!m_IsImguiReady.load())
 	{
@@ -359,10 +351,20 @@ void Engine::Update(float dt)
 	}
 #endif // DEBUG
 
+	// Update elements in the scene.
+	if (m_currentScene)
+	{
+		m_currentScene->Update(dt);
+	}
+
 }
 
 void Engine::Render(float& dt)
 {
+
+	if (!m_currentScene->IsRenderReady())
+		return;
+
 	m_renderer.ClearFrame();
 	m_renderer.Render();
 	D2D1Core::Begin();
