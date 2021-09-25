@@ -17,9 +17,28 @@ Game::Game()
 	// Set as current scene
 	m_engine.SetScene(demo);
 
-	//Testing to load in model in the resource manager
-	ResourceManager::Get().GetResource<RMesh>("Monster.fbx");
-	//ResourceManager::Get().GetResource<RMesh>("Cube.fbx");
+
+	/*
+		Testing new resource manager
+	*/
+	//RMesh* barrel = ResourceManager::Get().GetResource<RMesh>("Barrel.obj");
+	//RMesh* chest = ResourceManager::Get().GetResource<RMesh>("Chest.obj");
+	//RMesh* monster = ResourceManager::Get().GetResource<RMesh>("Monster.fbx");
+	{
+		std::shared_ptr<RMesh> chest1 = ResourceManager::Get().GetResource<RMesh>("Chest.obj");
+		std::shared_ptr<RMesh> chest2 = ResourceManager::Get().GetResource<RMesh>("Chest.obj");
+		std::shared_ptr<RMesh> chest3 = ResourceManager::Get().GetResource<RMesh>("Chest.obj");
+		std::shared_ptr<RMesh> chest4 = ResourceManager::Get().GetResource<RMesh>("Chest.obj");
+
+
+		//std::shared_ptr<RMesh> monster = ResourceManager::Get().GetResource<RMesh>("Monster.fbx");
+		//std::shared_ptr<RMesh> chest3 = ResourceManager::Get().GetResource<RMesh>("Chest.obj");
+	}
+
+	ResourceManager::Get().FreeResources();
+
+
+	//RMesh* cube = ResourceManager::Get().GetResource<RMesh>("Cube.fbx");
 
 }
 

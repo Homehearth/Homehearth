@@ -2,46 +2,50 @@
 #include "ResourceManager.h"
 #include <typeinfo>
 
-void ResourceManager::RemoveResource(const std::string& resource_name)
-{
-	//Check if the resource exists
-	auto f = m_resources.find(resource_name);
-
-	if (f != m_resources.end())
-	{
-		if (f->second != nullptr)
-		{
-			f->second->Release();
-			if (f->second->GetRef() <= 0)
-			{
-				delete f->second;
-				m_resources.erase(f);
-			}
-		}
-	}
-}
-
-void ResourceManager::InsertResource(const std::string& resource_name, resource::GResource* resource)
-{
-	//Only insert resources that does not exist
-	if (m_resources.find(resource_name) == m_resources.end())
-	{
-#ifdef _DEBUG
-		LOG_INFO("RM added '%s'", resource_name.c_str());
-#endif 
-		resource->AddRef();
-		m_resources.emplace(resource_name, resource);
-	}
-}
 
 void ResourceManager::Destroy()
 {
-	for (auto it = m_resources.begin(); it != m_resources.end(); it++)
+	//Erase calls destroy on every resource
+	for (auto it = m_resources.begin(); it != m_resources.end(); )
 	{
-		if (it->second)
-		{
-			delete it->second;
-		}
+		std::cout << "Resource used before: " << it->second.use_count() << " for " << it->first << std::endl;
+		it = m_resources.erase(it);
 	}
 	m_resources.clear();
+}
+
+void ResourceManager::FreeResources()
+{
+	/*
+		Need to recursively free resources???
+
+		A mesh has material
+		Material has textures
+		
+		Textures first
+		Material later
+		Mesh last
+	*/
+
+	std::cout << "Resources in the manager (before): " << m_resources.size() << std::endl;
+
+	for (auto it = m_resources.begin(); it != m_resources.end(); )
+	{
+		//If there is only one of this left, we free up memory and delete it
+		if (it->second.use_count() <= 1)
+		{
+#ifdef _DEBUG
+			LOG_INFO("RM removed '%s'", it->first.c_str());
+#endif 
+			m_resources.erase(it);
+			//Need to go back to start again, could have destroyed some object
+			//Not efficient though...
+			//Have to be a better way...
+			it = m_resources.begin();
+		}
+		else
+			it++;
+	}
+
+	std::cout << "Resources in the manager (after): " << m_resources.size() << std::endl;
 }

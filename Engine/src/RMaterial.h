@@ -14,13 +14,12 @@ private:
 		length
 	};
 
-	std::string m_name;
-	sm::Vector3 m_ambient;
-	sm::Vector3 m_diffuse;
-	sm::Vector3 m_specular;
-	float       m_shiniess;
-	float		m_opacity;
-	RTexture*   m_textures[UINT(ETextureType::length)];
+	sm::Vector3				  m_ambient;
+	sm::Vector3				  m_diffuse;
+	sm::Vector3				  m_specular;
+	float					  m_shiniess;
+	float					  m_opacity;
+	std::shared_ptr<RTexture> m_textures[UINT(ETextureType::length)];
 
 private:
 	//Split the path to only get the filename

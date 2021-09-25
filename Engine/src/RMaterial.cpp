@@ -3,15 +3,11 @@
 
 RMaterial::RMaterial()
 {
-    m_name = "";
-    m_ambient  = {};
-    m_diffuse  = {};
-    m_specular = {};
-    m_shiniess = 0.0f;
-    m_opacity = 1.0f;
-
-    for (UINT i = 0; i < (UINT)ETextureType::length; i++)
-        m_textures[i] = nullptr;
+    m_ambient   = {};
+    m_diffuse   = {};
+    m_specular  = {};
+    m_shiniess  = 0.0f;
+    m_opacity   = 1.0f;
 }
 
 RMaterial::~RMaterial()
@@ -61,8 +57,8 @@ void RMaterial::LoadMaterial(aiMaterial* aiMat)
         if (AI_SUCCESS == aiMat->GetTexture(type.second, 0, &path))
         {
             std::string filename = GetFilename(path.C_Str());
-            //Get the texture
-            //Will be nullptr if it did not exist failed to be created
+            
+            //Add the resource - return true if it was successfully added and get the pointer to the texture
             m_textures[(uint8_t)type.first] = ResourceManager::Get().GetResource<RTexture>(filename);
         }
     }
@@ -72,7 +68,6 @@ void RMaterial::LoadMaterial(aiMaterial* aiMat)
 bool RMaterial::Create(const std::string& filename)
 {
     //Load a mtl file
-    m_name = filename;
     std::string filepath = "../Assets/Materials/" + filename;
     std::ifstream readfile(filepath);
     
@@ -86,17 +81,12 @@ bool RMaterial::Create(const std::string& filename)
             std::string prefix;
             ss >> prefix;
 
-            if (prefix == "newmtl")
-            {
-                ss >> m_name;
-            }
-
             /*
                 Basic material information
             */
 
             //Ambient
-            else if (prefix == "Ka")
+            if (prefix == "Ka")
             {
                 ss >> m_ambient.x;
                 ss >> m_ambient.y;
