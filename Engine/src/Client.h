@@ -1,33 +1,31 @@
 #pragma once
-
-using namespace network;
+#include "EnginePCH.h"
 
 namespace
 {
+	using namespace network;
 	class Client :public client_interface<MessageType>
 	{
 	private:
+		std::chrono::system_clock::time_point timeThen;
+
+	private:
+		// Inherited via client_interface
+		virtual void OnValidation() override;
+		virtual void OnMessageReceived(message<MessageType>& msg) override;
+		virtual void OnConnect() override;
+		virtual void OnDisconnect() override;
 
 	public:
 		Client();
 		virtual ~Client();
 
-		std::chrono::system_clock::time_point timeThen;
 
 		Client& operator=(const Client& other) = delete;
 		Client(const Client& other) = delete;
 
-		// Inherited via client_interface
-		virtual void OnValidation() override;
-
-		// Inherited via client_interface
-		virtual void OnMessageReceived(message<MessageType>& msg) override;
-
-		// Inherited via client_interface
-		virtual void OnConnect() override;
-
-		// Inherited via client_interface
-		virtual void OnDisconnect() override;
+		void PingServer();
+		void TestServerWithGibberishData();
 	};
 
 	Client::Client()
@@ -36,16 +34,43 @@ namespace
 
 	void Client::OnDisconnect()
 	{
+		EnterCriticalSection(&lock);
 		LOG_INFO("Disconnected from the server!");
+		LeaveCriticalSection(&lock);
 	}
 
 	Client::~Client()
 	{
 	}
 
+	inline void Client::PingServer()
+	{
+		message<MessageType> msg = {};
+		msg.header.id = MessageType::PingServer;
+		this->timeThen = std::chrono::system_clock::now();
+		LOG_INFO("Pinging server!");
+
+		this->Send(msg);
+	}
+
+	inline void Client::TestServerWithGibberishData()
+	{
+		message<MessageType> msg = {};
+		msg.header.id = MessageType::Unknown;
+		char text[] = "Rofl this is a nice time to be alive and the thing is with that is that Im a cool guy that walks a lot because its fun!!!!! :)";
+		msg << text;
+		EnterCriticalSection(&lock);
+		LOG_INFO("Sending gibberish to server!");
+		LeaveCriticalSection(&lock);
+
+		this->Send(msg);
+	}
+
 	void Client::OnValidation()
 	{
+		EnterCriticalSection(&lock);
 		LOG_INFO("Your connection has been validated!");
+		LeaveCriticalSection(&lock);
 	}
 
 	void Client::OnMessageReceived(network::message<MessageType>& msg)
@@ -54,7 +79,9 @@ namespace
 		{
 		case MessageType::Client_Accepted:
 		{
+			EnterCriticalSection(&lock);
 			LOG_INFO("You are validated!");
+			LeaveCriticalSection(&lock);
 			break;
 		}
 		case MessageType::PingServer:
@@ -65,11 +92,20 @@ namespace
 
 			break;
 		}
+		case MessageType::Unknown:
+		{
+			EnterCriticalSection(&lock);
+			LOG_INFO("Gibberish was successfully received!");
+			LeaveCriticalSection(&lock);
+			break;
+		}
 		}
 	}
 
 	void Client::OnConnect()
 	{
+		EnterCriticalSection(&lock);
 		LOG_INFO("Connected to the server!");
+		LeaveCriticalSection(&lock);
 	}
 }

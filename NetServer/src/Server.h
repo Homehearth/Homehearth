@@ -3,12 +3,16 @@
 
 namespace network
 {
-	// TODO
-	// SIGNAL THREADS IF THE SERVER HAS SHUTDOWN TO AVOID MEMORY LEAKS
-
 	class Server : public server_interface<MessageType>
 	{
 	private:
+
+	private:
+		// Inherited via server_interface
+		virtual void OnClientConnect(std::string&& ip, const uint16_t& port) override;
+		virtual void OnClientDisconnect() override;
+		virtual void OnMessageReceived(const SOCKET& socketId, message<MessageType>& msg) override;
+		virtual void OnClientValidated(const SOCKET& s) override;
 
 	public:
 		Server();
@@ -17,11 +21,6 @@ namespace network
 		Server& operator=(const Server& other) = delete;
 		Server(const Server& other) = delete;
 
-		// Inherited via server_interface
-		virtual void OnClientConnect(std::string&& ip, const uint16_t& port) override;
-		virtual void OnClientDisconnect() override;
-		virtual void OnMessageReceived(const SOCKET& socketId, message<MessageType>& msg) override;
-		virtual void OnClientValidated(const SOCKET& s) override;
 	};
 
 	Server::Server()
@@ -55,10 +54,17 @@ namespace network
 		{
 			message<MessageType> msg = {};
 			msg.header.id = MessageType::PingServer;
-			Send(socketId, msg);
+			this->SendToClient(socketId, msg);
 			EnterCriticalSection(&lock);
 			LOG_INFO("Client on socket: %lld is pinging server", socketId);
 			LeaveCriticalSection(&lock);
+			break;
+		}
+		case MessageType::Unknown:
+		{
+			message<MessageType> msg = {};
+			msg.header.id = MessageType::Unknown;
+			this->SendToClient(socketId, msg);
 			break;
 		}
 		}
@@ -68,7 +74,7 @@ namespace network
 	{
 		network::message<MessageType> msg = {};
 		msg.header.id = MessageType::Client_Accepted;
-		Send(s, msg);
+		this->SendToClient(s, msg);
 
 		EnterCriticalSection(&lock);
 		LOG_INFO("Client has been validated on socket %lld", s);

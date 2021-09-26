@@ -23,24 +23,29 @@ namespace network
 		NetState state;
 	};
 
+	/*
+			The interface will initialize winsock on its own and all socket programming is abstracted away.
+			From this interface you can use simple functions as connect or disconnect or to see wether or not
+			you are connected to the server.
+	*/
 	template <typename T>
 	class client_interface
 	{
 	private:
 		struct sockaddr_in m_endpoint;
 		socklen_t m_endpointLen;
-		CRITICAL_SECTION lock;
 		HANDLE m_CompletionPort;
 		message<T> tempMsg;
 		SOCKET m_socket;
-		SOCKET* SI;
 
 		WSAEVENT m_event;
 
 	private:
-		std::string PrintSocketData(struct addrinfo* p);
+		// Initialize winsock
 		void InitWinsock();
+		std::string PrintSocketData(struct addrinfo* p);
 		SOCKET CreateSocket(std::string& ip, uint16_t& port);
+		// Client worker thread that processes all incoming and outgoing data
 		DWORD WINAPI ProcessIO();
 
 		/*
@@ -60,6 +65,17 @@ namespace network
 		void WriteValidation(uint64_t handshakeIn);
 
 	protected:
+		CRITICAL_SECTION lock;
+
+	protected:
+		// Functions that runs once when an event happens
+		virtual void OnMessageReceived(message<T>& msg) = 0;
+		virtual void OnConnect() = 0;
+		virtual void OnDisconnect() = 0;
+		virtual void OnValidation() = 0;
+
+	public:
+		tsQueue<message<T>> messages;
 
 	public:
 		client_interface()
@@ -81,15 +97,7 @@ namespace network
 			Disconnect();
 			WSACleanup();
 		}
-		tsQueue<message<T>> messages;
 	public:
-		virtual void OnMessageReceived(message<T>& msg) = 0;
-
-		virtual void OnConnect() = 0;
-
-		virtual void OnDisconnect() = 0;
-
-		virtual void OnValidation() = 0;
 
 		// Given IP and port establish a connection to the server
 		bool Connect(std::string&& ip, uint16_t&& port);
@@ -118,6 +126,7 @@ namespace network
 			{
 				LOG_ERROR("WSARecv failed with error: %d", WSAGetLastError());
 				delete context;
+				context = nullptr;
 			}
 		}
 	}
@@ -139,6 +148,7 @@ namespace network
 			{
 				LOG_ERROR("WSARecv failed with error: %d", WSAGetLastError());
 				delete context;
+				context = nullptr;
 			}
 		}
 	}
@@ -158,8 +168,9 @@ namespace network
 		{
 			if (WSAGetLastError() != WSA_IO_PENDING)
 			{
-				delete context;
 				LOG_ERROR("WSARecv failed with error: %d", WSAGetLastError());
+				delete context;
+				context = nullptr;
 			}
 		}
 	}
@@ -192,6 +203,7 @@ namespace network
 			{
 				LOG_ERROR("WSASend failed with error: %d", WSAGetLastError());
 				delete context;
+				context = nullptr;
 			}
 		}
 	}
@@ -231,6 +243,7 @@ namespace network
 			{
 				LOG_ERROR("WSASend failed with error: %d", WSAGetLastError());
 				delete context;
+				context = nullptr;
 			}
 		}
 	}
@@ -262,6 +275,7 @@ namespace network
 			{
 				LOG_ERROR("WSASend failed! %d", WSAGetLastError());
 				delete context;
+				context = nullptr;
 			}
 		}
 	}
@@ -288,9 +302,9 @@ namespace network
 		// Loop through linked list of possible network structures
 		for (p = servinfo; p != nullptr; p = p->ai_next)
 		{
-#ifdef _DEBUG
+			EnterCriticalSection(&lock);
 			LOG_NETWORK(PrintSocketData(p).c_str());
-#endif
+			LeaveCriticalSection(&lock);
 			sock = WSASocket(p->ai_family, p->ai_socktype, p->ai_protocol, NULL, 0, WSA_FLAG_OVERLAPPED);
 
 			if (sock == INVALID_SOCKET)
@@ -325,10 +339,11 @@ namespace network
 		LPOVERLAPPED lpOverlapped;
 		PER_IO_DATA* context = nullptr;
 		BOOL shouldDisconnect = false;
+		SOCKET* sock;
 
 		while (IsConnected())
 		{
-			bResult = GetQueuedCompletionStatus(m_CompletionPort, &BytesTransferred, (PULONG_PTR)&SI, &lpOverlapped, WSA_INFINITE);
+			bResult = GetQueuedCompletionStatus(m_CompletionPort, &BytesTransferred, (PULONG_PTR)&sock, &lpOverlapped, WSA_INFINITE);
 
 			// Failed but allocated data for lpOverlapped, need to de-allocate.
 			if (!bResult && lpOverlapped != NULL)
@@ -338,8 +353,9 @@ namespace network
 			// Failed and lpOverlapped was not allocated any data
 			else if (!bResult && lpOverlapped == NULL)
 			{
+				EnterCriticalSection(&lock);
 				LOG_ERROR("GetQueuedCompletionStatus() failed with error: %d", GetLastError());
-				getchar();
+				LeaveCriticalSection(&lock);
 				continue;
 			}
 			// If an I/O was completed but we received no data means a client must've disconnected
@@ -350,7 +366,7 @@ namespace network
 
 			if (shouldDisconnect)
 			{
-				Disconnect();
+				this->Disconnect();
 			}
 
 			context = CONTAINING_RECORD(lpOverlapped, PER_IO_DATA, PER_IO_DATA::Overlapped);
@@ -430,7 +446,6 @@ namespace network
 	template<typename T>
 	void client_interface<T>::InitWinsock()
 	{
-		// Initialize winsock
 		WSADATA wsaData;
 
 		WORD version = MAKEWORD(2, 2);
@@ -528,23 +543,14 @@ namespace network
 			}
 		}
 
-
 		if ((m_CompletionPort = CreateIoCompletionPort((HANDLE)m_socket, NULL, (ULONG_PTR)&m_socket, 0)) == NULL)
 		{
 			LOG_ERROR("CreateIoCompletionPort() failed with error %d", GetLastError());
 			return false;
 		}
-		else
-		{
-			LOG_INFO("CompletionPort OK!");
-		}
 
-		PrimeReadValidation();
-
-		SI = new SOCKET;
-		*SI = m_socket;
-
-		LOG_INFO("Socket is: %lld", m_socket);
+		// Primes the async handle with a receive call to process incoming messages
+		this->PrimeReadValidation();
 
 		std::thread t(&client_interface<T>::ProcessIO, this);
 		t.detach();
@@ -565,6 +571,7 @@ namespace network
 		}
 
 		m_socket = INVALID_SOCKET;
+		CloseHandle(m_CompletionPort);
 		this->OnDisconnect();
 	}
 
