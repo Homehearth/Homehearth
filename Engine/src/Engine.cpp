@@ -54,18 +54,18 @@ void Engine::Startup()
 	this->m_audio_engine = std::make_unique<DirectX::AudioEngine>(eflags);
 
 
-#ifdef _DEBUG
-	m_IsImguiReady = false;
-	// Setup ImGUI
-	IMGUI_CHECKVERSION();
-	ImGui::CreateContext();
-	ImGuiIO& io = ImGui::GetIO();
-	ImGui_ImplWin32_Init(m_window.GetHWnd());
-	ImGui_ImplDX11_Init(D3D11Core::Get().Device(), D3D11Core::Get().DeviceContext());
-	ImGui::StyleColorsDark();
-	ImGui_ImplDX11_CreateDeviceObjects(); // uses device, therefore has to be called before render thread starts
-	LOG_INFO("ImGui was successfully initialized");
-#endif
+	IMGUI(
+		// Setup ImGUI
+		IMGUI_CHECKVERSION();
+		ImGui::CreateContext();
+		ImGuiIO & io = ImGui::GetIO();
+		ImGui_ImplWin32_Init(m_window.GetHWnd());
+		ImGui_ImplDX11_Init(D3D11Core::Get().Device(), D3D11Core::Get().DeviceContext());
+		ImGui::StyleColorsDark();
+		ImGui_ImplDX11_CreateDeviceObjects(); // uses device, therefore has to be called before render thread starts
+		LOG_INFO("ImGui was successfully initialized");
+	);
+
 	InputSystem::Get().SetMouseWindow(m_window.GetHWnd());
 
 	m_client.Connect("127.0.0.1", 4950);
@@ -176,15 +176,14 @@ void Engine::Run()
 	}
 
 
-	// Wait for the rendering thread to exit its last render cycle and shutdown.
-#ifdef _DEBUG
-	while (!s_safeExit) {}; // TODO: why only in debug??
-
-	// ImGUI Shutdown
-	ImGui_ImplDX11_Shutdown();
-	ImGui_ImplWin32_Shutdown();
-	ImGui::DestroyContext();
-#endif
+	// Wait for the rendering thread to exit its last render cycle and shutdown
+	IMGUI(
+		while (!s_safeExit) {}; // TODO: why only in debug??
+		// ImGUI Shutdown
+		ImGui_ImplDX11_Shutdown();
+		ImGui_ImplWin32_Shutdown();
+		ImGui::DestroyContext();
+	);
 
 	m_client.Disconnect();
     T_DESTROY();
@@ -291,9 +290,9 @@ void Engine::drawImGUI() const
 
 	ImGui::End();
 	
-
+	/*
 	ImGui::Begin("Objects");
-	m_currentScene->GetRegistry().view<comp::Transform>().each([&](entt::entity e, comp::Transform& transform) 
+	m_currentScene->GetRegistry().view<comp::Transform>().each([&](entt::entity e, comp::Transform& transform)
 		{
 
 			ImGui::Separator();
@@ -303,6 +302,7 @@ void Engine::drawImGUI() const
 
 		});
 	ImGui::End();
+	*/
 
 
 }
@@ -332,30 +332,28 @@ void Engine::RenderThread()
 
 void Engine::Update(float dt)
 {
-	//m_buffPointer = m_drawBuffers.GetBuffer(0);
-
-	// Update the camera transform based on interactive inputs.
 	// todo:
 	// Update the camera transform based on interactive inputs.
-
-#ifdef _DEBUG
-	if (!m_IsImguiReady.load())
-	{
+	
+	IMGUI(
+		m_imguiMutex.lock();
 		// Start ImGui frame
 		ImGui_ImplDX11_NewFrame();
 		ImGui_ImplWin32_NewFrame();
 		ImGui::NewFrame();
-		drawImGUI();
-		m_IsImguiReady = true;
-
-	}
-#endif // DEBUG
+	);
 
 	// Update elements in the scene.
 	if (m_currentScene)
 	{
 		m_currentScene->Update(dt);
 	}
+
+	IMGUI(
+		drawImGUI();
+		ImGui::EndFrame();
+		m_imguiMutex.unlock();
+	);
 
 }
 
@@ -375,15 +373,13 @@ void Engine::Render(float& dt)
 
 	D2D1Core::Present();
 
-#ifdef _DEBUG
-	if (m_IsImguiReady)
-	{
+	IMGUI(
+		m_imguiMutex.lock();
 		ImGui::Render();
 		ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
-		m_IsImguiReady = false;
-	}
-#endif
+		m_imguiMutex.unlock();
+	);
 
-	D3D11Core::Get().SwapChain()->Present(1, 0);
+	D3D11Core::Get().SwapChain()->Present(0, 0);
 }
 

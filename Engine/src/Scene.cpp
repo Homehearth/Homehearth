@@ -17,11 +17,12 @@ void Scene::Update(float dt)
 	
 	// only copy if the last frame has been rendered
 	
+	
 	m_registry.view<comp::Transform>().each([&](entt::entity e, comp::Transform& t) 
 		{
 			m_transformCopies[0][e] = t;
 		});
-	
+
 	if (!m_transformCopies.IsSwapped()) {
 		m_transformCopies.Swap();
 	}

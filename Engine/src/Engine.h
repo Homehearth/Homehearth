@@ -15,7 +15,7 @@ class Engine
 private:
 	static bool s_engineRunning;
 	static bool s_safeExit;
-	std::atomic<bool> m_IsImguiReady;
+	std::mutex m_imguiMutex;
 	
 	Window m_window;
 	Renderer m_renderer;

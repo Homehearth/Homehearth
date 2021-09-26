@@ -1,5 +1,14 @@
 #pragma once
 #pragma warning(push, 3)
+
+//Macros
+#ifdef _DEBUG
+#define IMGUI(a) a
+#else
+#define IMGUI(a) do {} while()
+#endif
+
+
 // Windows
 #ifdef WIN32
 #define WIN32_LEAN_AND_MEAN
