@@ -19,11 +19,49 @@ LRESULT CALLBACK Window::WinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 	case WM_CLOSE:
 		PostQuitMessage(0);
 		break;
+	case WM_INPUT:
+		InputSystem::Get().GetMouse()->ProcessMessage(uMsg, wParam, lParam);
+		break;
 	case WM_KEYDOWN:
-		{
-			if(wParam == VK_ESCAPE)
-				PostQuitMessage(0);
-		}
+		InputSystem::Get().GetKeyboard()->ProcessMessage(uMsg, wParam, lParam);
+		if (wParam == VK_ESCAPE)
+			PostQuitMessage(0);
+		break;
+	case WM_KEYUP:
+		InputSystem::Get().GetKeyboard()->ProcessMessage(uMsg, wParam, lParam);
+		break;
+	case WM_MOUSEMOVE:
+		InputSystem::Get().GetMouse()->ProcessMessage(uMsg, wParam, lParam);
+		break;
+	case WM_MBUTTONDBLCLK:
+		InputSystem::Get().GetMouse()->ProcessMessage(uMsg, wParam, lParam);
+		break;
+	case WM_MBUTTONUP:
+		InputSystem::Get().GetMouse()->ProcessMessage(uMsg, wParam, lParam);
+		break;
+	case WM_MBUTTONDOWN:
+		InputSystem::Get().GetMouse()->ProcessMessage(uMsg, wParam, lParam);
+		break;
+	case WM_LBUTTONDOWN:
+		InputSystem::Get().GetMouse()->ProcessMessage(uMsg, wParam, lParam);
+		break;
+	case WM_LBUTTONUP:
+		InputSystem::Get().GetMouse()->ProcessMessage(uMsg, wParam, lParam);
+		break;
+	case WM_RBUTTONDOWN:
+		InputSystem::Get().GetMouse()->ProcessMessage(uMsg, wParam, lParam);
+		break;
+	case WM_RBUTTONUP:
+		InputSystem::Get().GetMouse()->ProcessMessage(uMsg, wParam, lParam);
+		break;
+	case WM_MOUSEHOVER:
+		InputSystem::Get().GetMouse()->ProcessMessage(uMsg, wParam, lParam);
+		break;
+	case WM_SYSKEYDOWN:
+		InputSystem::Get().GetKeyboard()->ProcessMessage(uMsg, wParam, lParam);
+		break;
+	case WM_SYSKEYUP:
+		InputSystem::Get().GetKeyboard()->ProcessMessage(uMsg, wParam, lParam);
 		break;
 	case WM_SIZE:
 		// https://docs.microsoft.com/en-us/windows/win32/direct3ddxgi/d3d10-graphics-programming-guide-dxgi#handling-window-resizing
