@@ -12,7 +12,6 @@ Engine::Engine()
 	, m_currentScene(nullptr)
 	, m_vSync(false)
 	, m_frameTime()
-	, m_buffPointer(nullptr)
 {
 	LOG_INFO("Engine(): " __TIMESTAMP__);
 }
@@ -40,6 +39,21 @@ void Engine::Startup()
 	// Thread should be launched after s_engineRunning is set to true and D3D11 is initialized.
 	s_engineRunning = true;
 
+	//
+	// AUDIO 
+	//
+	HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+	if (FAILED(hr))
+	{
+		LOG_ERROR("Failed to initialize AudioEngine.");
+	}
+	DirectX::AUDIO_ENGINE_FLAGS eflags = DirectX::AudioEngine_Default;
+#ifdef _DEBUG
+	eflags |= DirectX::AudioEngine_Debug;
+#endif
+	this->m_audio_engine = std::make_unique<DirectX::AudioEngine>(eflags);
+
+
 	// Preallocate space for Triplebuffer
 	m_drawBuffers.AllocateBuffers();
 	m_buffPointer = m_drawBuffers.GetBuffer(0);
@@ -57,11 +71,15 @@ void Engine::Startup()
 	ImGui_ImplWin32_Init(m_window.GetHWnd());
 	ImGui_ImplDX11_Init(D3D11Core::Get().Device(), D3D11Core::Get().DeviceContext());
 	ImGui::StyleColorsDark();
+	ImGui_ImplDX11_CreateDeviceObjects(); // uses device, therefore has to be called before render thread starts
 	LOG_INFO("ImGui was successfully initialized");
 #endif
 	InputSystem::Get().SetMouseWindow(m_window.GetHWnd());
 
 	m_client.Connect("127.0.0.1", 4950);
+
+	
+	
 }
 
 void Engine::Run()
@@ -145,10 +163,10 @@ void Engine::Run()
 			std::cout << "Toggling mouse visibility\n";
 			InputSystem::Get().ToggleMouseVisibility();
 		}
-		if (InputSystem::Get().GetAxis(Axis::HORIZONTAL) == 1)
-		{
-			std::cout << "Moving right\n";
-		}
+		//if (InputSystem::Get().GetAxis(Axis::HORIZONTAL) == 1)
+		//{
+		//	std::cout << "Moving right\n";
+		//}
 
 		// Update time.
 		currentFrame = omp_get_wtime();
@@ -168,7 +186,7 @@ void Engine::Run()
 
 	// Wait for the rendering thread to exit its last render cycle and shutdown.
 #ifdef _DEBUG
-	while (!s_safeExit) {};
+	while (!s_safeExit) {}; // TODO: why only in debug??
 
 	// ImGUI Shutdown
 	ImGui_ImplDX11_Shutdown();
@@ -236,13 +254,13 @@ void Engine::drawImGUI() const
 
 	static Timer timer;
 
-	if (timer.getElapsedTime() > 0.5f)
+	if (timer.GetElapsedTime() > 0.5f)
 	{
 		fpsContainer.emplace_back((1 / m_frameTime.render));
 		fpsUpdateContainer.emplace_back((1.0f / m_frameTime.update));
 		ramUsageContainer.emplace_back((Profiler::GetRAMUsage() / (1024.f * 1024.f)));
 		vRamUsageContainer.emplace_back((Profiler::GetVRAMUsage() / (1042.f * 1024.f)));
-		timer.start();
+		timer.Start();
 	}
 
 	if (fpsContainer.size() > 10)
@@ -280,6 +298,20 @@ void Engine::drawImGUI() const
 	}
 
 	ImGui::End();
+	
+
+	ImGui::Begin("Objects");
+	m_currentScene->GetRegistry().view<comp::Transform>().each([&](entt::entity e, comp::Transform& transform) 
+		{
+
+			ImGui::Separator();
+			ImGui::DragFloat3(("Position: " + std::to_string((int)e)).c_str(), (float*)&transform.position);
+			ImGui::DragFloat3(("Rotation: " + std::to_string((int)e)).c_str(), (float*)&transform.rotation, dx::XMConvertToRadians(1.f));
+			ImGui::Spacing();
+
+		});
+	ImGui::End();
+
 
 }
 
@@ -294,10 +326,7 @@ void Engine::RenderThread()
 		deltaTime = static_cast<float>(currentFrame - lastFrame);
 		if (deltaSum >= targetDelta)
 		{
-			if (m_drawBuffers.IsSwapped())
-			{
-				Render(deltaSum);
-			}
+			Render(deltaSum);
 
 			m_frameTime.render = deltaSum;
 			deltaSum = 0.f;
@@ -312,10 +341,11 @@ void Engine::RenderThread()
 
 void Engine::Update(float dt)
 {
-	m_buffPointer = m_drawBuffers.GetBuffer(0);
+	//m_buffPointer = m_drawBuffers.GetBuffer(0);
 
 	// Update the camera transform based on interactive inputs.
 	// todo:
+	// Update the camera transform based on interactive inputs.
 
 	// Update elements in the scene.
 	if (m_currentScene)
@@ -332,15 +362,11 @@ void Engine::Update(float dt)
 		ImGui_ImplWin32_NewFrame();
 		ImGui::NewFrame();
 		drawImGUI();
-
 		m_IsImguiReady = true;
+
 	}
 #endif // DEBUG
 
-	if (!m_drawBuffers.IsSwapped())
-	{
-		m_drawBuffers.SwapBuffers();
-	}
 }
 
 void Engine::Render(float& dt)
@@ -353,11 +379,10 @@ void Engine::Render(float& dt)
 		m_currentScene->Render();
 	}
 
-	m_drawBuffers.ReadySwap();
 	D2D1Core::Present();
 
 #ifdef _DEBUG
-	if (m_IsImguiReady.load())
+	if (m_IsImguiReady)
 	{
 		ImGui::Render();
 		ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());

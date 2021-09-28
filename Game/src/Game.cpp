@@ -2,6 +2,8 @@
 #include "RMesh.h"
 #include "DemoScene.h"
 
+#include "Components.h"
+
 Game::Game() 
 {
 	// Engine setup
@@ -13,12 +15,11 @@ Game::Game()
 	Scene& demo = m_engine.GetScene("Demo");
 	// Scene logic
 	setupDemoScene(m_engine, demo);
-
-	// Set as current scene
+	
+	//Set as current scene
 	m_engine.SetScene(demo);
 
 	//Testing to load in model in the resource manager
-	ResourceManager::GetResource<RMesh>("Monster.fbx");
 	//ResourceManager::GetResource<RMesh>("Cube.fbx");
 
 }

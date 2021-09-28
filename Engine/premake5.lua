@@ -106,7 +106,9 @@ project "Engine"
 
 
     filter "*"
-        local ws = "$(ProjectDir)%%(Filename).cso"
+        --local ws = "$(ProjectDir)%%(Filename).cso"
+        local ws = "../Game/%%(Filename).cso"
+        
         files("*.hlsl")
             shadermodel("5.0")
             shaderobjectfileoutput(ws)

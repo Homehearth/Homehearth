@@ -3,6 +3,12 @@
 
 class Timer
 {
+private:
+    std::chrono::time_point<std::chrono::steady_clock> m_startTime;
+    std::chrono::time_point<std::chrono::steady_clock> m_stopTime;
+    bool m_hasStoped;
+
+	
 public:
     Timer();                                                  
     Timer(const Timer& other) = delete;                       
@@ -11,13 +17,9 @@ public:
     Timer& operator=(Timer&& other) = delete;                 
     virtual ~Timer() {};
 
-    void start();
-    void stop();
-    double getElapsedTime() const;  
+    void Start();
+    void Stop();
+    double GetElapsedTime() const;  
 
-private:
-    std::chrono::time_point<std::chrono::steady_clock> startTime;
-    std::chrono::time_point<std::chrono::steady_clock> stopTime;
-    bool hasStoped;
 };
 

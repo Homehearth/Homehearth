@@ -30,8 +30,5 @@ public:
 
 	// Add a pass to the list. Useful if a pass is created outside the Renderer class.
 	void AddPass(IRenderPass* pass);
-
-	// A temporary function used for testing (Forward Rendering).
-	void SetPipelineState();
 };
 

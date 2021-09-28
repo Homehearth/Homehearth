@@ -45,7 +45,7 @@ public:
 	//Check if mouse keys are pressed,held or released. Enums 1st arg: LEFT, MIDDLE or RIGHT. Enums 2nd arg:  PRESSED, RELEASED or HELD
 	const bool CheckMouseKey(const MouseKey mouseButton, const KeyState state) const;
 
-	//Checks if the user is holding down an axis key (WASD and Arrow keys) returns 1 on right or up, -1 on left or down (0 if nothing). Use Axis enums: VÈRTICAL, HORIZONTAL
+	//Checks if the user is holding down an axis key (WASD and Arrow keys) returns 1 on right or up, -1 on left or down (0 if nothing). Use Axis enums: Vï¿½RTICAL, HORIZONTAL
 	const int GetAxis(Axis axis) const;
 	//Toggle the mouse mode between absolute and relative
 	void SwitchMouseMode();
