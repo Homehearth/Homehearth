@@ -116,7 +116,6 @@ void Engine::Run()
 				}
 				else if (key[1] && !old_key[1])
 				{
-					//m_client.TestServerWithGibberishData();
 					m_client.TestServerWithGibberishData();
 				}
 

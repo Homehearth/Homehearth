@@ -22,6 +22,7 @@ namespace network
 		uint64_t handshakeOut;
 		uint64_t handshakeResult;
 		SOCKET Socket;
+		message<MessageType> msgTempIn = {};
 	};
 
 	// Information regarding every input or output
@@ -74,12 +75,12 @@ namespace network
 		// FUNCTIONS TO EASIER HANDLE DATA IN AND OUT FROM SERVER
 		void WriteValidation(const SOCKET& socketId, uint64_t handshakeOut);
 		void ReadValidation(SOCKET_INFORMATION*& SI, PER_IO_DATA* context);
-		void ReadHeader(const SOCKET& socketId, PER_IO_DATA* context);
-		void ReadPayload(const SOCKET& socketId, PER_IO_DATA* context);
+		void ReadHeader(SOCKET_INFORMATION*& SI, PER_IO_DATA* context);
+		void ReadPayload(SOCKET_INFORMATION*& SI, PER_IO_DATA* context);
 		void WriteHeader(const SOCKET& socketId, msg_header<T>& header);
 		void WritePayload(const SOCKET& socketId, message<T>& msg);
-		void PrimeReadHeader(const SOCKET& socketId);
-		void PrimeReadPayload(const SOCKET& socketId, size_t size);
+		void PrimeReadHeader(SOCKET_INFORMATION*& SI);
+		void PrimeReadPayload(SOCKET_INFORMATION*& SI);
 		void PrimeReadValidation(SOCKET_INFORMATION*& SI);
 
 		static void AlertThreadFunction();
@@ -128,7 +129,6 @@ namespace network
 	{
 		PER_IO_DATA* context = new PER_IO_DATA;
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
-		//message<T> msgTemp = m_messagesOut.front();
 		context->DataBuf.buf = (CHAR*)&msg.payload[0];
 		context->DataBuf.len = ULONG(msg.payload.size());
 		context->net_state = NetState::WRITE_PAYLOAD;
@@ -167,18 +167,17 @@ namespace network
 	}
 
 	template <typename T>
-	void server_interface<T>::PrimeReadHeader(const SOCKET& socketId)
+	void server_interface<T>::PrimeReadHeader(SOCKET_INFORMATION*& SI)
 	{
-		ZeroMemory(&msgTempIn.header, sizeof(msg_header<T>));
 		PER_IO_DATA* context = new PER_IO_DATA;
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
-		context->DataBuf.buf = (CHAR*)&msgTempIn.header;
+		context->DataBuf.buf = (CHAR*)&SI->msgTempIn.header;
 		context->DataBuf.len = sizeof(msg_header<T>);
 		context->net_state = NetState::READ_HEADER;
 		DWORD BytesReceived = 0;
 		DWORD flags = 0;
 
-		if (WSARecv(socketId, &context->DataBuf, 1, &BytesReceived, &flags, &context->Overlapped, NULL) == SOCKET_ERROR)
+		if (WSARecv(SI->Socket, &context->DataBuf, 1, &BytesReceived, &flags, &context->Overlapped, NULL) == SOCKET_ERROR)
 		{
 			if (GetLastError() != WSA_IO_PENDING)
 			{
@@ -189,7 +188,7 @@ namespace network
 			{
 #ifdef PRINT_NETWORK_DEBUG
 				EnterCriticalSection(&lock);
-				LOG_NETWORK("Waiting to receive from: %lld", socketId);
+				LOG_NETWORK("Waiting to receive from: %lld", SI->Socket);
 				LeaveCriticalSection(&lock);
 #endif
 			}
@@ -197,19 +196,19 @@ namespace network
 	}
 
 	template <typename T>
-	void server_interface<T>::PrimeReadPayload(const SOCKET& socketId, size_t size)
+	void server_interface<T>::PrimeReadPayload(SOCKET_INFORMATION*& SI)
 	{
-		msgTempIn.payload.clear();
 		PER_IO_DATA* context = new PER_IO_DATA;
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
-		msgTempIn.payload.resize(size);
-		context->DataBuf.buf = (CHAR*)&msgTempIn.payload[0];
+		size_t size = SI->msgTempIn.header.size - sizeof(msg_header<T>);
+		SI->msgTempIn.payload.resize(size);
+		context->DataBuf.buf = (CHAR*)SI->msgTempIn.payload.data();
 		context->DataBuf.len = (ULONG)size;
 		context->net_state = NetState::READ_PAYLOAD;
 		DWORD BytesReceived = 0;
 		DWORD flags = 0;
 
-		if (WSARecv(socketId, &context->DataBuf, 1, &BytesReceived, &flags, &context->Overlapped, NULL) == SOCKET_ERROR)
+		if (WSARecv(SI->Socket, &context->DataBuf, 1, &BytesReceived, &flags, &context->Overlapped, NULL) == SOCKET_ERROR)
 		{
 			if (GetLastError() != WSA_IO_PENDING)
 			{
@@ -220,7 +219,7 @@ namespace network
 			{
 #ifdef PRINT_NETWORK_DEBUG
 				EnterCriticalSection(&lock);
-				LOG_NETWORK("Waiting to receive from: %lld", socketId);
+				LOG_NETWORK("Waiting to receive from: %lld", SI->Socket);
 				LeaveCriticalSection(&lock);
 #endif
 			}
@@ -228,24 +227,22 @@ namespace network
 	}
 
 	template <typename T>
-	void server_interface<T>::ReadPayload(const SOCKET& socketId, PER_IO_DATA* context)
+	void server_interface<T>::ReadPayload(SOCKET_INFORMATION*& SI, PER_IO_DATA* context)
 	{
-		m_messagesIn.push_back(msgTempIn);
-		this->OnMessageReceived(socketId, msgTempIn);
-		msgTempIn.payload.clear();
+		this->OnMessageReceived(SI->Socket, SI->msgTempIn);
+		SI->msgTempIn.payload.clear();
 	}
 
 	template <typename T>
-	void server_interface<T>::ReadHeader(const SOCKET& socketId, PER_IO_DATA* context)
+	void server_interface<T>::ReadHeader(SOCKET_INFORMATION*& SI, PER_IO_DATA* context)
 	{
-		if (msgTempIn.header.size > 0)
+		if (SI->msgTempIn.header.size > 0)
 		{
-			this->PrimeReadPayload(socketId, msgTempIn.header.size - sizeof(msg_header<T>));
+			this->PrimeReadPayload(SI);
 		}
 		else
 		{
-			m_messagesIn.push_back(msgTempIn);
-			this->OnMessageReceived(socketId, msgTempIn);
+			this->OnMessageReceived(SI->Socket, SI->msgTempIn);
 		}
 	}
 
@@ -254,7 +251,6 @@ namespace network
 	{
 		PER_IO_DATA* context = new PER_IO_DATA;
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
-		//message<T> msg = m_messagesOut.front();
 		context->DataBuf.buf = (CHAR*)&header;
 		context->DataBuf.len = sizeof(msg_header<T>);
 		context->net_state = NetState::WRITE_HEADER;
@@ -408,14 +404,12 @@ namespace network
 	template <typename T>
 	void server_interface<T>::SendToClient(const SOCKET& socketId, message<T>& msg)
 	{
-		m_messagesOut.push_back(msg);
 		this->WriteHeader(socketId, msg.header);
 
 		if (msg.header.size > 0)
 		{
 			this->WritePayload(socketId, msg);
 		}
-		m_messagesOut.pop_front();
 	}
 
 	template <typename T>
@@ -660,7 +654,6 @@ namespace network
 		SOCKET_INFORMATION* SI = nullptr;
 		PER_IO_DATA* context = nullptr;
 		DWORD bytesReceived = 0;
-		//LPOVERLAPPED lpOverlapped;
 		BOOL bResult = false;
 		BOOL shouldDisconnect;
 		const DWORD CAP = 10;
@@ -707,36 +700,48 @@ namespace network
 					{
 					case NetState::READ_HEADER:
 					{
+						EnterCriticalSection(&lock);
 						LOG_INFO("Reading header!");
-						this->ReadHeader(SI->Socket, context);
+						LeaveCriticalSection(&lock);
+						this->ReadHeader(SI, context);
 						break;
 					}
 					case NetState::READ_PAYLOAD:
 					{
+						EnterCriticalSection(&lock);
 						LOG_INFO("Reading payload!");
-						this->ReadPayload(SI->Socket, context);
+						LeaveCriticalSection(&lock);
+						this->ReadPayload(SI, context);
 						break;
 					}
 					case NetState::READ_VALIDATION:
 					{
+						EnterCriticalSection(&lock);
 						LOG_INFO("Reading validation!");
+						LeaveCriticalSection(&lock);
 						this->ReadValidation(SI, context);
 						break;
 					}
 					case NetState::WRITE_HEADER:
 					{
+						EnterCriticalSection(&lock);
 						LOG_INFO("Writing header!");
-						this->PrimeReadHeader(SI->Socket);
+						LeaveCriticalSection(&lock);
+						this->PrimeReadHeader(SI);
 						break;
 					}
 					case NetState::WRITE_PAYLOAD:
 					{
+						EnterCriticalSection(&lock);
 						LOG_INFO("Writing payload!");
+						LeaveCriticalSection(&lock);
 						break;
 					}
 					case NetState::WRITE_VALIDATION:
 					{
+						EnterCriticalSection(&lock);
 						LOG_INFO("Writing validation!");
+						LeaveCriticalSection(&lock);
 						this->PrimeReadValidation(SI);
 						break;
 					}
@@ -748,6 +753,10 @@ namespace network
 						delete context;
 						context = nullptr;
 					}
+				}
+				else
+				{
+					LOG_WARNING("I/O not complete!");
 				}
 			}
 		}

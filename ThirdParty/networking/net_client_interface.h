@@ -110,12 +110,10 @@ namespace network
 	template <typename T>
 	void client_interface<T>::PrimeReadPayload(size_t size)
 	{
-		message<T> tempMsg = m_messagesIn.front();
-		tempMsg.payload.clear();
 		PER_IO_DATA* context = new PER_IO_DATA;
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
-		tempMsg.payload.resize(size);
-		context->DataBuf.buf = (CHAR*)&tempMsg.payload[0];
+		tempMsgIn.payload.resize(size);
+		context->DataBuf.buf = (CHAR*)&tempMsgIn.payload[0];
 		context->DataBuf.len = (ULONG)size;
 		DWORD flags = 0;
 		DWORD bytesReceived = 0;
@@ -209,21 +207,19 @@ namespace network
 	template <typename T>
 	void client_interface<T>::ReadHeader(PER_IO_DATA*& context)
 	{
-		m_messagesIn.push_back(tempMsgIn);
-		message<T> tempMsg = m_messagesIn.front();
-		if (tempMsg.header.size > sizeof(msg_header<T>))
+		if (tempMsgIn.header.size > sizeof(msg_header<T>))
 		{
-			if (tempMsg.header.size > 300)
+			if (tempMsgIn.header.size > 300)
 			{
 				std::cout << "lol" << std::endl;
 			}
-			this->PrimeReadPayload(tempMsg.header.size - sizeof(msg_header<T>));
+			this->PrimeReadPayload(tempMsgIn.header.size - sizeof(msg_header<T>));
 		}
 		else
 		{
-			this->OnMessageReceived(tempMsg);
+			this->OnMessageReceived(tempMsgIn);
+			//this->m_messagesIn.push_back(tempMsgIn);
 		}
-		m_messagesIn.pop_front();
 	}
 
 	template <typename T>
@@ -252,6 +248,7 @@ namespace network
 	void client_interface<T>::ReadPayload(PER_IO_DATA*& context)
 	{
 		this->OnMessageReceived(tempMsgIn);
+		this->m_messagesIn.push_back(tempMsgIn);
 		tempMsgIn.payload.clear();
 	}
 
