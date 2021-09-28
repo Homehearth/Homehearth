@@ -6,7 +6,8 @@
 
 	----Shared pointers---- 
 	* Every resource has a shared_ptr which means that every resource
-	* has a referens counter. Can only destroy a resource when none is using it
+	* has a referens counter. Can only destroy a resource when none is using it.
+	* shared_ptr's dies when getting out of scope
 
 
 	----Code example----

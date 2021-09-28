@@ -19,10 +19,11 @@ Game::Game()
 	//Set as current scene
 	m_engine.SetScene(demo);
 
-
+	
 	/*
 		Resource manager example
 	*/
+	/*
 	std::shared_ptr<RMesh> monster = ResourceManager::Get().GetResource<RMesh>("Monster.fbx");
 
 	{	//Start a scope for show
@@ -35,6 +36,7 @@ Game::Game()
 
 	//Clearing up resources after chest1
 	ResourceManager::Get().FreeResources();
+	*/
 
 }	//monster dies here
 

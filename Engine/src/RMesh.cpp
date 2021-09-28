@@ -32,18 +32,8 @@ bool RMesh::CreateVertexBuffer(const std::vector<simple_vertex_t>& vertices)
     subresData.SysMemPitch = 0;
     subresData.SysMemSlicePitch = 0;
 
-    ComPtr<ID3D11Buffer> vertexBuffer;
-
-    HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&bufferDesc, &subresData, vertexBuffer.GetAddressOf());
-    if (!FAILED(hr))
-    {
-        m_vertexBuffer = vertexBuffer;
-        return true;
-    }
-    else
-    {
-        return false;
-    }
+    HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&bufferDesc, &subresData, m_vertexBuffer.GetAddressOf());
+    return !FAILED(hr);
 }
 
 bool RMesh::CreateIndexBuffer(const std::vector<UINT>& indices)
@@ -63,20 +53,10 @@ bool RMesh::CreateIndexBuffer(const std::vector<UINT>& indices)
     subresData.pSysMem = &indices[0];
     subresData.SysMemPitch = 0;
     subresData.SysMemSlicePitch = 0;
+    m_indexCount = (UINT)indices.size();
 
-    ComPtr<ID3D11Buffer> indexBuffer;
-
-    HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&indexBufferDesc, &subresData, indexBuffer.GetAddressOf());
-    if (!FAILED(hr))
-    {
-        m_indexBuffer = indexBuffer;
-        m_indexCount = (UINT)indices.size();
-        return true;
-    }
-    else
-    {
-        return false;
-    }
+    HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&indexBufferDesc, &subresData, m_indexBuffer.GetAddressOf());
+    return !FAILED(hr);
 }
 
 void RMesh::Render()
@@ -87,7 +67,7 @@ void RMesh::Render()
 	//Draw with indexbuffer
     UINT offset = 0;
     UINT stride = sizeof(simple_vertex_t);
-    D3D11Core::Get().DeviceContext()->IASetVertexBuffers(0, 1, &m_vertexBuffer, &stride, &offset);
+    D3D11Core::Get().DeviceContext()->IASetVertexBuffers(0, 1, m_vertexBuffer.GetAddressOf(), &stride, &offset);
     D3D11Core::Get().DeviceContext()->IASetIndexBuffer(m_indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
     D3D11Core::Get().DeviceContext()->DrawIndexed(m_indexCount, 0, 0);
 

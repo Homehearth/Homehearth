@@ -14,7 +14,7 @@ namespace ecs
 
 		struct Renderable
 		{
-			RMesh* mesh;
+		 	std::shared_ptr<RMesh> mesh;
 			dx::ConstantBuffer<sm::Matrix> constantBuffer;
 		};
 

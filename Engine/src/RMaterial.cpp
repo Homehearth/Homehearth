@@ -87,13 +87,14 @@ void RMaterial::BindMaterial()
 void RMaterial::UnBindMaterial()
 {
     //Unbind the constantbuffers
-    D3D11Core::Get().DeviceContext()->PSSetConstantBuffers(0, 1, nullptr);
-    D3D11Core::Get().DeviceContext()->PSSetConstantBuffers(1, 1, nullptr);
+    ID3D11Buffer* nullBuffer = nullptr;
+    D3D11Core::Get().DeviceContext()->PSSetConstantBuffers(0, 1, &nullBuffer);
+    D3D11Core::Get().DeviceContext()->PSSetConstantBuffers(1, 1, &nullBuffer);
 
     //Unbind all the textures
     const UINT nrOfTextures = UINT(ETextureType::length);
-    ID3D11ShaderResourceView* nullPtr = nullptr;
-    D3D11Core::Get().DeviceContext()->PSSetShaderResources(0, nrOfTextures, &nullPtr);
+    ID3D11ShaderResourceView* nullSRV[nrOfTextures] = { nullptr };
+    D3D11Core::Get().DeviceContext()->PSSetShaderResources(0, nrOfTextures, nullSRV);
 }
 
 bool RMaterial::LoadMaterial(aiMaterial* aiMat)

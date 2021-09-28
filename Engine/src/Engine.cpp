@@ -19,7 +19,6 @@ Engine::Engine()
 void Engine::Startup()
 {
 	T_INIT(1, thread::ThreadType::POOL_FIFO);
-	ResourceManager::Initialize();
 	srand((unsigned int)time(NULL));
 
 	// Window Startup:

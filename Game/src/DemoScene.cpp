@@ -24,7 +24,7 @@ void InitializePlayerEntity(Scene& scene)
 	auto& renderable = scene.GetRegistry().emplace<comp::Renderable>(playerEntity);
 	auto& player = scene.GetRegistry().emplace<comp::Player>(playerEntity);
 	player.runSpeed = 10.f;
-	renderable.mesh = ResourceManager::GetResource<RMesh>("Monster.fbx");
+	renderable.mesh = ResourceManager::Get().GetResource<RMesh>("Monster.fbx");
 }
 
 void setupDemoScene(Engine& engine, Scene& scene) 
