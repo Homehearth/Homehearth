@@ -117,7 +117,7 @@ void Engine::Run()
 				else if (key[1] && !old_key[1])
 				{
 					//m_client.TestServerWithGibberishData();
-					m_client.PingServer();
+					m_client.TestServerWithGibberishData();
 				}
 
 				for (int i = 0; i < 3; i++)
