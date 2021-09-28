@@ -1,6 +1,6 @@
 #include "NetServerPCH.h"
 #include "Window.h"
-#include "InputSystem.h"
+#include "InputSystemServer.h"
 
 LRESULT CALLBACK Window::WinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -39,7 +39,7 @@ LRESULT CALLBACK Window::WinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 		uMsg == WM_MOUSEMOVE)
 	{
 		// Add the event to the m_eventQueue.
-		InputSystem::Get().RegisterEvent(uMsg, wParam);
+		InputSystemServer::Get().RegisterEvent(uMsg, wParam);
 	}
 
 	return DefWindowProc(hwnd, uMsg, wParam, lParam);

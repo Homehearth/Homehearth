@@ -5,7 +5,6 @@
 #include "Renderer.h"
 #include "EventTypes.h"
 #include "Client.h"
-
 struct Triangle2
 {
 	int x;
@@ -17,12 +16,10 @@ private:
 	static bool s_engineRunning;
 	static bool s_safeExit;
 	std::atomic<bool> m_IsImguiReady;
-	thread::DoubleBuffer<std::vector<Triangle2>> m_drawBuffers;
-	std::vector<Triangle2>* m_buffPointer;
-
+	
 	Window m_window;
 	Renderer m_renderer;
-	
+	std::unique_ptr<DirectX::AudioEngine> m_audio_engine;
 	std::unordered_map<std::string, Scene> m_scenes;
 	Scene* m_currentScene;
 	bool m_vSync;
@@ -32,6 +29,7 @@ private:
 		float update;
 		float render;
 	} m_frameTime;
+
 	
 	// Job for rendering thread.
 	void RenderThread();

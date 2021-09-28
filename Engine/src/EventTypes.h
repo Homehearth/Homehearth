@@ -1,8 +1,15 @@
 #pragma once
 
+struct EShutdown {};
+
 struct ESceneChange
 {
 	std::string newScene;
 };
 
-struct EShutdown {};
+struct ESceneUpdate 
+{
+	float dt;
+};
+
+struct ESceneRender {};

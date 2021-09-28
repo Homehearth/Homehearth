@@ -20,6 +20,8 @@ void Renderer::ClearFrame()
     // Clear the back buffer.
     const float m_clearColor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
     m_d3d11->DeviceContext()->ClearRenderTargetView(m_pipelineManager.m_renderTargetView.Get(), m_clearColor);
+    m_d3d11->DeviceContext()->ClearDepthStencilView(m_pipelineManager.m_depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0.0f);
+    
 }
 
 void Renderer::Render()
@@ -41,19 +43,4 @@ void Renderer::Render()
 void Renderer::AddPass(IRenderPass* pass)
 {
     m_passes.emplace_back(pass);
-}
-
-void Renderer::SetPipelineState()
-{
-#define CONTEXT D3D11Core::Get().DeviceContext()
-
-    CONTEXT->IASetInputLayout(m_pipelineManager.m_defaultInputLayout.Get());
-    CONTEXT->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    CONTEXT->RSSetState(m_pipelineManager.m_rasterStateNoCulling.Get());
-    CONTEXT->OMSetDepthStencilState(m_pipelineManager.m_depthStencilState.Get(), 1);
-    CONTEXT->OMSetRenderTargets(1, m_pipelineManager.m_renderTargetView.GetAddressOf(), m_pipelineManager.m_depthStencilView.Get());
-    CONTEXT->PSSetSamplers(0, 1, m_pipelineManager.m_linearSamplerState.GetAddressOf());
-    CONTEXT->VSSetConstantBuffers(0, 1, m_pipelineManager.m_defaultConstantBuffer.GetAddressOf());
-    CONTEXT->VSSetShader(m_pipelineManager.m_defaultVertexShader.Get(), nullptr, NULL);
-    CONTEXT->PSSetShader(m_pipelineManager.m_defaultPixelShader.Get(), nullptr, NULL);
 }

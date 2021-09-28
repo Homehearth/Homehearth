@@ -1,6 +1,8 @@
 #pragma once
 #include "RTexture.h"
 
+struct aiMaterial;
+
 class RMaterial : public resource::GResource
 {
 private:
