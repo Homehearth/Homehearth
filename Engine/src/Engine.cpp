@@ -54,13 +54,6 @@ void Engine::Startup()
 	this->m_audio_engine = std::make_unique<DirectX::AudioEngine>(eflags);
 
 
-	// Preallocate space for Triplebuffer
-	m_drawBuffers.AllocateBuffers();
-	m_buffPointer = m_drawBuffers.GetBuffer(0);
-	m_buffPointer->reserve(200);
-	m_buffPointer = m_drawBuffers.GetBuffer(1);
-	m_buffPointer->reserve(200);
-
 
 #ifdef _DEBUG
 	m_IsImguiReady = false;
