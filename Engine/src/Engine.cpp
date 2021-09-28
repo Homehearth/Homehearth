@@ -67,7 +67,7 @@ void Engine::Startup()
 	ImGui_ImplDX11_CreateDeviceObjects(); // uses device, therefore has to be called before render thread starts
 	LOG_INFO("ImGui was successfully initialized");
 #endif
-	InputSystem::Get().SetMouseWindow(m_window.GetHWnd());
+	InputSystem::Get().SetMouseWindow(m_window.GetHWnd(), m_window.GetWidth(), m_window.GetHeight());
 
 	m_client.Connect("127.0.0.1", 4950);
 

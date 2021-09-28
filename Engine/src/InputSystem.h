@@ -5,11 +5,10 @@ enum class Axis {VERTICAL, HORIZONTAL};
 struct MousePos
 {
 	int x, y;
-	MousePos(int xPos, int yPos)
-	{
-		x = xPos;
-		y = yPos;
-	}
+};
+struct MouseRay
+{
+	sm::Vector3 rayPos, rayDir;
 };
 class InputSystem
 {
@@ -22,6 +21,9 @@ private:
 	std::unique_ptr<dx::Mouse::ButtonStateTracker> m_mouseTracker;
 	dx::Keyboard::State m_kBState;
 	dx::Mouse::State m_mouseState;
+	MousePos m_mousePos;
+	MouseRay m_mouseRay;
+	int m_windowWidth, m_windowHeight;
 
 public:
 	virtual ~InputSystem() = default;
@@ -32,7 +34,7 @@ public:
 	}
 
 	//Set which window for the mouse to operate in
-	void SetMouseWindow(const HWND& windowHandle);
+	void SetMouseWindow(const HWND& windowHandle, const int width, const int height);
 	//Updates KB and Mouse, checking new inputs
 	void UpdateEvents();
 
@@ -52,6 +54,10 @@ public:
 
 	//Toggle the visibility of the mouse. Only works in absolute mode
 	void ToggleMouseVisibility();
+
+	void UpdateMouseRay(sm::Matrix projection, sm::Matrix view);
+
+	const MouseRay GetMouseRay() const;
 
 	//Get the position of the Mouse (only really works in Absolute mode)
 	const MousePos GetMousePos() const;

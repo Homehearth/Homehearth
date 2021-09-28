@@ -2,16 +2,22 @@
 #include "InputSystem.h"
 InputSystem::InputSystem()
 {
+	m_mousePos.x = 0;
+	m_mousePos.y = 0;
 	m_keyboard = std::make_unique<dx::Keyboard>();
 	m_kBTracker = std::make_unique<dx::Keyboard::KeyboardStateTracker>();
 	m_mouse = std::make_unique<dx::Mouse>();
 	m_mouseTracker = std::make_unique<dx::Mouse::ButtonStateTracker>();
+	m_windowWidth = 0;
+	m_windowHeight = 0;
 }
 
-void InputSystem::SetMouseWindow(const HWND& windowHandle)
+void InputSystem::SetMouseWindow(const HWND& windowHandle, const int width, const int height)
 {
 	m_mouse->SetWindow(windowHandle);
 	m_mouse->SetMode(DirectX::Mouse::MODE_RELATIVE);
+	m_windowWidth = width;
+	m_windowHeight = height;
 }
 
 void InputSystem::UpdateEvents()
@@ -20,6 +26,8 @@ void InputSystem::UpdateEvents()
 	m_kBTracker->Update(m_kBState);
 	m_mouseState = m_mouse->GetState();
 	m_mouseTracker->Update(m_mouseState);
+	m_mousePos.x = m_mouseState.x;
+	m_mousePos.y = m_mouseState.y;
 }
 
 const bool InputSystem::CheckKeyboardKey(const dx::Keyboard::Keys& key, const KeyState state) const
@@ -119,7 +127,7 @@ const int InputSystem::GetAxis(Axis axis) const
 
 const MousePos InputSystem::GetMousePos() const
 {
-	return { m_mouseState.x, m_mouseState.y };
+	return m_mousePos;
 }
 
 void InputSystem::ToggleMouseVisibility()
@@ -136,6 +144,23 @@ void InputSystem::ToggleMouseVisibility()
 		}
 	}
 
+}
+
+void InputSystem::UpdateMouseRay(sm::Matrix projection, sm::Matrix view)
+{
+	// Transform from 2D view port coordinates to NDC -> also inverse projection to get to 4D view space
+	float viewX = ((2.f * m_mousePos.x) / m_windowWidth - 1.f) / projection._11;
+	float viewY = (1.f - (2.f * m_mousePos.y) / m_windowHeight) / projection._22;
+
+	sm::Matrix viewInverse = view.Invert();
+
+	m_mouseRay.rayDir = sm::Vector3::TransformNormal({ viewX, viewY, 1.f }, viewInverse);
+	m_mouseRay.rayPos = sm::Vector3::Transform({ 0.f,0.f,0.f }, viewInverse);
+}
+
+const MouseRay InputSystem::GetMouseRay() const
+{
+	return m_mouseRay;
 }
 
 void InputSystem::SwitchMouseMode()
