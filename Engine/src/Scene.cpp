@@ -17,16 +17,12 @@ void Scene::Update(float dt)
 	publish<ESceneUpdate>(dt);
 	
 	// only copy if the last frame has been rendered
-	
-	{
+	if (!m_transformCopies.IsSwapped()) {
 		PROFILE_SCOPE("Copy Transforms");
 		m_registry.view<comp::Transform>().each([&](entt::entity e, comp::Transform& t) 
 			{
 				m_transformCopies[0][e] = t;
 			});
-	}
-
-	if (!m_transformCopies.IsSwapped()) {
 		m_transformCopies.Swap();
 	}
 }

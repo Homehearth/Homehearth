@@ -55,7 +55,7 @@ public:
 
 
 
-#ifdef _DEBUG
+#if PROFILER
 #define PROFILER_BEGIN_SESSION(filepath) ::Profiler::Get().BeginSession(filepath)
 #define PROFILER_END_SESSION() ::Profiler::Get().EndSession()
 #define PROFILE_SCOPE(name) ::Profiler::ProfileTimer timer##__LINE__(name)

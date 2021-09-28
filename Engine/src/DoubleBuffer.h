@@ -6,7 +6,6 @@ class DoubleBuffer {
 private:
 	T m_data[2];
 	std::atomic<bool> m_isSwapped;
-	std::mutex m_mutex;
 public:
 	DoubleBuffer();
 
@@ -34,9 +33,7 @@ inline T& DoubleBuffer<T>::operator[](short i)
 template<typename T>
 inline void DoubleBuffer<T>::Swap()
 {
-	m_mutex.lock();
 	std::swap(m_data[0], m_data[1]);
-	m_mutex.unlock();
 	m_isSwapped = true;
 }
 
