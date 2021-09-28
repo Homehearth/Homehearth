@@ -313,7 +313,6 @@ bool PipelineManager::CreateDefaultConstantBuffer()
     if (FAILED(hr)) return false;
 
     // Camera ConstantBuffer
-
     Camera debugCamera(sm::Vector3(0, 0, -1), sm::Vector3(0, 0, 0), sm::Vector3(0, 1, 0), sm::Vector2((float)m_window->GetWidth(), (float)m_window->GetHeight()));
     camera_Matrix_t cameraMat;
 
