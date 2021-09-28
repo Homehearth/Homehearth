@@ -1,6 +1,6 @@
 #pragma once
 #include "net_tsqueue.h"
-//#define PRINT_NETWORK_DEBUG
+#define PRINT_NETWORK_DEBUG
 
 namespace network
 {
@@ -17,8 +17,7 @@ namespace network
 
 	struct PER_IO_DATA
 	{
-		WSAOVERLAPPED Overlapped;
-		CHAR buffer[BUFFER_SIZE] = {};
+		OVERLAPPED Overlapped;
 		WSABUF DataBuf;
 		NetState state;
 	};
@@ -32,13 +31,14 @@ namespace network
 	class client_interface
 	{
 	private:
+		HANDLE m_CompletionPort;
 		struct sockaddr_in m_endpoint;
 		socklen_t m_endpointLen;
-		HANDLE m_CompletionPort;
-		message<T> tempMsg;
+		message<T> tempMsgIn;
 		SOCKET m_socket;
-
-		WSAEVENT m_event;
+		uint64_t m_handshakeIn;
+		uint64_t m_handshakeOut;
+		tsQueue<message<T>> m_messagesIn;
 
 	private:
 		// Initialize winsock
@@ -56,13 +56,13 @@ namespace network
 		*/
 		void PrimeReadValidation();
 		void PrimeReadHeader();
-		void PrimeReadPayload(uint32_t size);
+		void PrimeReadPayload(size_t size);
 		void ReadHeader(PER_IO_DATA*& context);
 		void ReadPayload(PER_IO_DATA*& context);
 		void ReadValidation(PER_IO_DATA*& context);
 		void WriteHeader(msg_header<T>& header);
 		void WritePayload(message<T>& msg);
-		void WriteValidation(uint64_t handshakeIn);
+		void WriteValidation();
 
 	protected:
 		CRITICAL_SECTION lock;
@@ -75,16 +75,15 @@ namespace network
 		virtual void OnValidation() = 0;
 
 	public:
-		tsQueue<message<T>> messages;
 
 	public:
 		client_interface()
 		{
 			m_socket = INVALID_SOCKET;
-
 			m_endpointLen = sizeof(m_endpoint);
 			ZeroMemory(&m_endpoint, m_endpointLen);
-			tempMsg = {};
+			m_handshakeIn = 0;
+			m_handshakeOut = 0;
 
 			InitWinsock();
 		}
@@ -94,7 +93,6 @@ namespace network
 
 		virtual ~client_interface()
 		{
-			Disconnect();
 			WSACleanup();
 		}
 	public:
@@ -110,11 +108,14 @@ namespace network
 	};
 
 	template <typename T>
-	void client_interface<T>::PrimeReadPayload(uint32_t size)
+	void client_interface<T>::PrimeReadPayload(size_t size)
 	{
+		message<T> tempMsg = m_messagesIn.front();
+		tempMsg.payload.clear();
 		PER_IO_DATA* context = new PER_IO_DATA;
-		ZeroMemory(&context->Overlapped, sizeof(WSAOVERLAPPED));
-		context->DataBuf.buf = context->buffer;
+		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
+		tempMsg.payload.resize(size);
+		context->DataBuf.buf = (CHAR*)&tempMsg.payload[0];
 		context->DataBuf.len = (ULONG)size;
 		DWORD flags = 0;
 		DWORD bytesReceived = 0;
@@ -134,9 +135,10 @@ namespace network
 	template <typename T>
 	void client_interface<T>::PrimeReadHeader()
 	{
+		ZeroMemory(&tempMsgIn.header, sizeof(msg_header<T>));
 		PER_IO_DATA* context = new PER_IO_DATA;
-		ZeroMemory(&context->Overlapped, sizeof(WSAOVERLAPPED));
-		context->DataBuf.buf = context->buffer;
+		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
+		context->DataBuf.buf = (CHAR*)&tempMsgIn.header;
 		context->DataBuf.len = sizeof(msg_header<T>);
 		context->state = NetState::READ_HEADER;
 		DWORD flags = 0;
@@ -157,8 +159,8 @@ namespace network
 	void client_interface<T>::PrimeReadValidation()
 	{
 		PER_IO_DATA* context = new PER_IO_DATA;
-		ZeroMemory(&context->Overlapped, sizeof(WSAOVERLAPPED));
-		context->DataBuf.buf = context->buffer;
+		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
+		context->DataBuf.buf = (CHAR*)&this->m_handshakeIn;
 		context->DataBuf.len = sizeof(uint64_t);
 		DWORD flags = 0;
 		DWORD bytesReceived = 0;
@@ -178,21 +180,17 @@ namespace network
 	template <typename T>
 	void client_interface<T>::ReadValidation(PER_IO_DATA*& context)
 	{
-		uint64_t handshakeIn = 0;
-		memcpy(&handshakeIn, context->DataBuf.buf, sizeof(uint64_t));
-
-		WriteValidation(handshakeIn);
+		WriteValidation();
 	}
 
 	template <typename T>
-	void client_interface<T>::WriteValidation(uint64_t handshakeIn)
+	void client_interface<T>::WriteValidation()
 	{
 		PER_IO_DATA* context = new PER_IO_DATA;
-		uint64_t handshakeOut = scrambleData(handshakeIn);
-		ZeroMemory(&context->Overlapped, sizeof(WSAOVERLAPPED));
+		this->m_handshakeOut = scrambleData(this->m_handshakeIn);
+		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
+		context->DataBuf.buf = (CHAR*)&this->m_handshakeOut;
 		context->DataBuf.len = sizeof(uint64_t);
-		memcpy(context->buffer, &handshakeOut, context->DataBuf.len);
-		context->DataBuf.buf = context->buffer;
 		DWORD BytesSent = 0;
 		DWORD flags = 0;
 		context->state = NetState::WRITE_VALIDATION;
@@ -211,27 +209,29 @@ namespace network
 	template <typename T>
 	void client_interface<T>::ReadHeader(PER_IO_DATA*& context)
 	{
-		ZeroMemory(&tempMsg.header, sizeof(msg_header<T>));
-		memcpy(&tempMsg.header, context->DataBuf.buf, context->DataBuf.len);
-
-		if (tempMsg.size() > sizeof(msg_header<T>))
+		m_messagesIn.push_back(tempMsgIn);
+		message<T> tempMsg = m_messagesIn.front();
+		if (tempMsg.header.size > sizeof(msg_header<T>))
 		{
-			tempMsg.payload.clear();
-			this->PrimeReadPayload(uint32_t(tempMsg.size() - sizeof(msg_header<T>)));
+			if (tempMsg.header.size > 300)
+			{
+				std::cout << "lol" << std::endl;
+			}
+			this->PrimeReadPayload(tempMsg.header.size - sizeof(msg_header<T>));
 		}
 		else
 		{
 			this->OnMessageReceived(tempMsg);
 		}
+		m_messagesIn.pop_front();
 	}
 
 	template <typename T>
 	void client_interface<T>::WriteHeader(msg_header<T>& header)
 	{
 		PER_IO_DATA* context = new PER_IO_DATA;
-		ZeroMemory(&context->Overlapped, sizeof(WSAOVERLAPPED));
-		memcpy(context->buffer, &header, sizeof(msg_header<T>));
-		context->DataBuf.buf = context->buffer;
+		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
+		context->DataBuf.buf = (CHAR*)&header;
 		context->DataBuf.len = sizeof(msg_header<T>);
 		context->state = NetState::WRITE_HEADER;
 		DWORD BytesSent = 0;
@@ -251,19 +251,16 @@ namespace network
 	template <typename T>
 	void client_interface<T>::ReadPayload(PER_IO_DATA*& context)
 	{
-		tempMsg.payload.resize(context->DataBuf.len);
-		memcpy(&tempMsg.payload[0], context->DataBuf.buf, context->DataBuf.len);
-
-		this->OnMessageReceived(tempMsg);
+		this->OnMessageReceived(tempMsgIn);
+		tempMsgIn.payload.clear();
 	}
 
 	template <typename T>
 	void client_interface<T>::WritePayload(message<T>& msg)
 	{
 		PER_IO_DATA* context = new PER_IO_DATA;
-		ZeroMemory(&context->Overlapped, sizeof(WSAOVERLAPPED));
-		memcpy(context->buffer, &msg.payload[0], msg.payload.size());
-		context->DataBuf.buf = context->buffer;
+		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
+		context->DataBuf.buf = (CHAR*)&msg.payload[0];
 		context->DataBuf.len = (ULONG)msg.payload.size();
 		context->state = NetState::WRITE_PAYLOAD;
 		DWORD BytesSent = 0;
@@ -336,108 +333,115 @@ namespace network
 		DWORD BytesTransferred = 0;
 		DWORD flags = 0;
 		BOOL bResult = false;
-		LPOVERLAPPED lpOverlapped;
+		//LPOVERLAPPED lpOverlapped;
 		PER_IO_DATA* context = nullptr;
 		BOOL shouldDisconnect = false;
-		SOCKET* sock;
+		const DWORD CAP = 10;
+		OVERLAPPED_ENTRY Entries[CAP];
+		ULONG EntriesRemoved = 0;
 
 		while (IsConnected())
 		{
-			bResult = GetQueuedCompletionStatus(m_CompletionPort, &BytesTransferred, (PULONG_PTR)&sock, &lpOverlapped, WSA_INFINITE);
+			if (!GetQueuedCompletionStatusEx(m_CompletionPort, Entries, CAP, &EntriesRemoved, WSA_INFINITE, TRUE))
+			{
+				DWORD LastError = GetLastError();
+				if (LastError != ERROR_EXE_MARKED_INVALID)
+				{
+					LOG_ERROR("%d", LastError);
+				}
 
-			// Failed but allocated data for lpOverlapped, need to de-allocate.
-			if (!bResult && lpOverlapped != NULL)
-			{
-				shouldDisconnect = true;
-			}
-			// Failed and lpOverlapped was not allocated any data
-			else if (!bResult && lpOverlapped == NULL)
-			{
-				EnterCriticalSection(&lock);
-				LOG_ERROR("GetQueuedCompletionStatus() failed with error: %d", GetLastError());
-				LeaveCriticalSection(&lock);
 				continue;
 			}
-			// If an I/O was completed but we received no data means a client must've disconnected
-			if (BytesTransferred == 0)
+
+			if (EntriesRemoved > 1)
 			{
-				shouldDisconnect = true;
+				LOG_WARNING("Entries removed: %u", EntriesRemoved);
 			}
 
-			if (shouldDisconnect)
+			for (int i = 0; i < (int)EntriesRemoved; i++)
 			{
-				this->Disconnect();
-			}
+				// If an I/O was completed but we received no data means a client must've disconnected
+				// Basically a memcpy so we have data in correct structure
+				if (Entries[i].dwNumberOfBytesTransferred == 0)
+				{
+					this->Disconnect();
+					delete context;
+					continue;
+				}
+				// I/O has completed, process it
+				if (HasOverlappedIoCompleted(Entries[i].lpOverlapped))
+				{
+					context = (PER_IO_DATA*)Entries[i].lpOverlapped;
 
-			context = CONTAINING_RECORD(lpOverlapped, PER_IO_DATA, PER_IO_DATA::Overlapped);
+					switch (context->state)
+					{
+					case NetState::READ_VALIDATION:
+					{
+						this->OnConnect();
+#ifdef PRINT_NETWORK_DEBUG
+						EnterCriticalSection(&lock);
+						LOG_NETWORK("Reading validation! Bytes: %ld", Entries[i].dwNumberOfBytesTransferred);
+#endif
+						this->ReadValidation(context);
+						LeaveCriticalSection(&lock);
+						break;
+					}
+					case NetState::WRITE_VALIDATION:
+					{
+#ifdef PRINT_NETWORK_DEBUG
+						EnterCriticalSection(&lock);
+						LOG_NETWORK("Writing validation! Bytes: %ld", Entries[i].dwNumberOfBytesTransferred);
+#endif
+						this->PrimeReadHeader();
+						LeaveCriticalSection(&lock);
+						break;
+					}
+					case NetState::READ_HEADER:
+					{
+#ifdef PRINT_NETWORK_DEBUG
+						EnterCriticalSection(&lock);
+						LOG_NETWORK("Reading header! Bytes: %ld", Entries[i].dwNumberOfBytesTransferred);
+#endif
+						this->ReadHeader(context);
+						LeaveCriticalSection(&lock);
+						break;
+					}
+					case NetState::READ_PAYLOAD:
+					{
+#ifdef PRINT_NETWORK_DEBUG
+						EnterCriticalSection(&lock);
+						LOG_NETWORK("Reading payload! Bytes: %ld", Entries[i].dwNumberOfBytesTransferred);
+#endif
+						this->ReadPayload(context);
+						LeaveCriticalSection(&lock);
+						break;
+					}
+					case NetState::WRITE_HEADER:
+					{
+#ifdef PRINT_NETWORK_DEBUG
+						EnterCriticalSection(&lock);
+						LOG_NETWORK("Writing header! Bytes: %ld", Entries[i].dwNumberOfBytesTransferred);
+#endif
+						this->PrimeReadHeader();
+						LeaveCriticalSection(&lock);
+						break;
+					}
+					case NetState::WRITE_PAYLOAD:
+					{
+#ifdef PRINT_NETWORK_DEBUG
+						EnterCriticalSection(&lock);
+						LOG_NETWORK("Writing payload! Bytes: %ld", Entries[i].dwNumberOfBytesTransferred);
+						LeaveCriticalSection(&lock);
+#endif
+						break;
+					}
+					}
 
-			switch (context->state)
-			{
-			case NetState::READ_VALIDATION:
-			{
-				this->OnConnect();
-#ifdef PRINT_NETWORK_DEBUG
-				EnterCriticalSection(&lock);
-				LOG_NETWORK("Reading validation!");
-				LeaveCriticalSection(&lock);
-#endif
-				this->ReadValidation(context);
-				break;
-			}
-			case NetState::WRITE_VALIDATION:
-			{
-#ifdef PRINT_NETWORK_DEBUG
-				EnterCriticalSection(&lock);
-				LOG_NETWORK("Writing validation!");
-				LeaveCriticalSection(&lock);
-#endif
-				this->PrimeReadHeader();
-				break;
-			}
-			case NetState::READ_HEADER:
-			{
-#ifdef PRINT_NETWORK_DEBUG
-				EnterCriticalSection(&lock);
-				LOG_NETWORK("Reading header!");
-				LeaveCriticalSection(&lock);
-#endif
-				this->ReadHeader(context);
-				break;
-			}
-			case NetState::READ_PAYLOAD:
-			{
-#ifdef PRINT_NETWORK_DEBUG
-				EnterCriticalSection(&lock);
-				LOG_NETWORK("Reading payload!");
-				LeaveCriticalSection(&lock);
-#endif
-				this->ReadPayload(context);
-				break;
-			}
-			case NetState::WRITE_HEADER:
-			{
-#ifdef PRINT_NETWORK_DEBUG
-				EnterCriticalSection(&lock);
-				LOG_NETWORK("Writing header!");
-				LeaveCriticalSection(&lock);
-#endif
-				this->PrimeReadHeader();
-				break;
-			}
-			case NetState::WRITE_PAYLOAD:
-			{
-#ifdef PRINT_NETWORK_DEBUG
-				EnterCriticalSection(&lock);
-				LOG_NETWORK("Writing payload!");
-				LeaveCriticalSection(&lock);
-#endif
-				break;
-			}
-			}
-
-			if (context)
-			{
-				delete context;
+					if (context)
+					{
+						delete context;
+					}
+				}
 			}
 		}
 		return 0;
@@ -518,7 +522,7 @@ namespace network
 	{
 		this->WriteHeader(msg.header);
 
-		if (msg.payload.size() > 0)
+		if (msg.header.size > 0)
 		{
 			this->WritePayload(msg);
 		}
@@ -561,8 +565,10 @@ namespace network
 	template<typename T>
 	inline void client_interface<T>::Disconnect()
 	{
+		EnterCriticalSection(&lock);
 		if (!IsConnected())
 		{
+			LeaveCriticalSection(&lock);
 			return;
 		}
 		if (closesocket(m_socket) != 0)
@@ -571,8 +577,8 @@ namespace network
 		}
 
 		m_socket = INVALID_SOCKET;
-		CloseHandle(m_CompletionPort);
 		this->OnDisconnect();
+		LeaveCriticalSection(&lock);
 	}
 
 	template<typename T>

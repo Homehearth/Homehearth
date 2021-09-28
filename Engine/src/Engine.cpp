@@ -114,9 +114,10 @@ void Engine::Run()
 				{
 					m_client.PingServer();
 				}
-				if (key[1] && !old_key[1])
+				else if (key[1] && !old_key[1])
 				{
-					m_client.TestServerWithGibberishData();
+					//m_client.TestServerWithGibberishData();
+					m_client.PingServer();
 				}
 
 				for (int i = 0; i < 3; i++)
@@ -128,8 +129,6 @@ void Engine::Run()
 
 		// Handle Input.
 		InputSystem::Get().UpdateEvents();
-
-
 		//Showing examples of keyboard and mouse (THIS CODE SHOULD BE HANDLED SOMEWHERE ELSE (GAMEPLAY LOGIC))
 		if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::G, KeyState::RELEASED))
 		{
@@ -180,7 +179,6 @@ void Engine::Run()
 	ImGui_ImplWin32_Shutdown();
 	ImGui::DestroyContext();
 #endif
-
 	m_client.Disconnect();
     T_DESTROY();
     ResourceManager::Destroy();

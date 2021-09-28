@@ -29,8 +29,6 @@ namespace network
 	{
 		OVERLAPPED Overlapped = {};
 		WSABUF DataBuf = {};
-		DWORD BytesSEND = 0;
-		DWORD BytesRECV = 0;
 		NetState net_state;
 	};
 
@@ -130,9 +128,9 @@ namespace network
 	{
 		PER_IO_DATA* context = new PER_IO_DATA;
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
-		message<T> msgTemp = m_messagesOut.front();
-		context->DataBuf.buf = (CHAR*)&msgTemp.payload[0];
-		context->DataBuf.len = ULONG(msgTemp.payload.size());
+		//message<T> msgTemp = m_messagesOut.front();
+		context->DataBuf.buf = (CHAR*)&msg.payload[0];
+		context->DataBuf.len = ULONG(msg.payload.size());
 		context->net_state = NetState::WRITE_PAYLOAD;
 		DWORD bytesSent = 0;
 		DWORD flags = 0;
@@ -171,10 +169,10 @@ namespace network
 	template <typename T>
 	void server_interface<T>::PrimeReadHeader(const SOCKET& socketId)
 	{
-		ZeroMemory(&msgTempIn.header, sizeof(msgTempIn.header));
+		ZeroMemory(&msgTempIn.header, sizeof(msg_header<T>));
 		PER_IO_DATA* context = new PER_IO_DATA;
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
-		context->DataBuf.buf = (CHAR*)&msgTempIn;
+		context->DataBuf.buf = (CHAR*)&msgTempIn.header;
 		context->DataBuf.len = sizeof(msg_header<T>);
 		context->net_state = NetState::READ_HEADER;
 		DWORD BytesReceived = 0;
@@ -256,8 +254,8 @@ namespace network
 	{
 		PER_IO_DATA* context = new PER_IO_DATA;
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
-		message<T> msg = m_messagesOut.front();
-		context->DataBuf.buf = (CHAR*)&msg.header;
+		//message<T> msg = m_messagesOut.front();
+		context->DataBuf.buf = (CHAR*)&header;
 		context->DataBuf.len = sizeof(msg_header<T>);
 		context->net_state = NetState::WRITE_HEADER;
 		DWORD BytesSent = 0;
@@ -599,7 +597,6 @@ namespace network
 		// system. Create two worker threads for each processor
 		for (size_t i = 0; i < SystemInfo.dwNumberOfProcessors; i++)
 		{
-			//std::thread workerThread = std::thread(&server_interface<T>::ServerWorkerThread, this);
 			workerThreads[i] = std::thread(&server_interface<T>::ServerWorkerThread, this);
 		}
 
@@ -609,9 +606,16 @@ namespace network
 		// Options to disable Nagle's algorithm (can queue up multiple packets instead of sending 1 by 1)
 		// SO_REUSEADDR will let the server to reuse the port its bound on even if it have not closed 
 		// by the the operating system yet.
-		const char enable = 1;
-		setsockopt(m_listening, IPPROTO_TCP, TCP_NODELAY, &enable, sizeof(enable));
-		setsockopt(m_listening, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(enable));
+		int enable = 1;
+		if (setsockopt(m_listening, IPPROTO_TCP, TCP_NODELAY, (char*)&enable, sizeof(int)) != 0)
+		{
+			LOG_ERROR("WTF?1");
+		}
+
+		if (setsockopt(m_listening, SOL_SOCKET, SO_REUSEADDR, (char*)&enable, sizeof(int)) != 0)
+		{
+			LOG_ERROR("WTF?2");
+		}
 
 		this->Listen(SOMAXCONN);
 
@@ -703,30 +707,36 @@ namespace network
 					{
 					case NetState::READ_HEADER:
 					{
+						LOG_INFO("Reading header!");
 						this->ReadHeader(SI->Socket, context);
 						break;
 					}
 					case NetState::READ_PAYLOAD:
 					{
+						LOG_INFO("Reading payload!");
 						this->ReadPayload(SI->Socket, context);
 						break;
 					}
 					case NetState::READ_VALIDATION:
 					{
+						LOG_INFO("Reading validation!");
 						this->ReadValidation(SI, context);
 						break;
 					}
 					case NetState::WRITE_HEADER:
 					{
+						LOG_INFO("Writing header!");
 						this->PrimeReadHeader(SI->Socket);
 						break;
 					}
 					case NetState::WRITE_PAYLOAD:
 					{
+						LOG_INFO("Writing payload!");
 						break;
 					}
 					case NetState::WRITE_VALIDATION:
 					{
+						LOG_INFO("Writing validation!");
 						this->PrimeReadValidation(SI);
 						break;
 					}

@@ -19,13 +19,12 @@ namespace
 	public:
 		Client();
 		virtual ~Client();
-
-
 		Client& operator=(const Client& other) = delete;
 		Client(const Client& other) = delete;
 
 		void PingServer();
 		void TestServerWithGibberishData();
+		void test();
 	};
 
 	Client::Client()
@@ -34,13 +33,16 @@ namespace
 
 	void Client::OnDisconnect()
 	{
-		EnterCriticalSection(&lock);
 		LOG_INFO("Disconnected from the server!");
-		LeaveCriticalSection(&lock);
 	}
 
 	Client::~Client()
 	{
+	}
+
+	inline void Client::test()
+	{
+
 	}
 
 	inline void Client::PingServer()
@@ -88,14 +90,15 @@ namespace
 		{
 			std::chrono::system_clock::time_point timeNow = std::chrono::system_clock::now();
 
+			EnterCriticalSection(&lock);
 			LOG_INFO("Ping: %fs", std::chrono::duration<double>(timeNow - this->timeThen).count());
-
+			LeaveCriticalSection(&lock);
 			break;
 		}
 		case MessageType::Unknown:
 		{
 			EnterCriticalSection(&lock);
-			LOG_INFO("Gibberish was successfully received!");
+			LOG_INFO("Gibberish success!");
 			LeaveCriticalSection(&lock);
 			break;
 		}

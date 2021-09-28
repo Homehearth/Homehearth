@@ -61,9 +61,14 @@ namespace network
 			break;
 		}
 		case MessageType::Unknown:
-		{
-			message<MessageType> msg = {};
-			msg.header.id = MessageType::Unknown;
+		{		
+			EnterCriticalSection(&lock);
+			for (int i = 0; i < (int)msg.payload.size(); i++)
+			{
+				std::cout << msg.payload[i];
+			}
+			std::cout << std::endl;
+			LeaveCriticalSection(&lock);
 			this->SendToClient(socketId, msg);
 			break;
 		}
