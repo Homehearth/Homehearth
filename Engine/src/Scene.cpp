@@ -36,7 +36,7 @@ void Scene::Update(float dt)
 	Backbuffer::GetBuffers()->GetBuffer(0)->clear();
 	auto v = m_registry.group<comp::Renderable, comp::Transform>();
 	{
-		PROFILE_SCOPE("Copy Transforms");
+		//PROFILE_SCOPE("Copy Transforms");
 		v.each([](const comp::Renderable& rend, const comp::Transform& transf) {
 			comp::Renderable Render;
 			Render.mesh = rend.mesh;
@@ -53,7 +53,7 @@ void Scene::Update(float dt)
 
 void Scene::Render() 
 {
-	PROFILE_FUNCTION();
+	//PROFILE_FUNCTION();
 	//while (m_hasRendered); // makes sure render thread is not faster than update thread
 
 	std::vector<comp::Renderable>* data = Backbuffer::GetBuffers()->GetBuffer(1);
@@ -75,7 +75,7 @@ void Scene::Render()
 			*/
 	if (data)
 	{
-		PROFILE_SCOPE("Render Renderable");
+		//PROFILE_SCOPE("Render Renderable");
 		// Loop through each object.
 		for (int i = 0; i < data->size(); i++)
 		{

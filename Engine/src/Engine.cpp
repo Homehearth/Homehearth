@@ -80,7 +80,7 @@ void Engine::Startup()
 void Engine::Run()
 {
 
-	PROFILER_BEGIN_SESSION();
+	//PROFILER_BEGIN_SESSION();
 
 	double currentFrame = 0.f;
 	double lastFrame = omp_get_wtime();
@@ -97,7 +97,7 @@ void Engine::Run()
 	MSG msg = { nullptr };
 	while (IsRunning())
 	{
-		PROFILE_SCOPE("Frame");
+		//PROFILE_SCOPE("Frame");
 		
 		while(PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
 		{
@@ -200,7 +200,7 @@ void Engine::Run()
     ResourceManager::Destroy();
     D2D1Core::Destroy();
 
-	PROFILER_END_SESSION();
+	//PROFILER_END_SESSION();
 }
 
 void Engine::Shutdown()
