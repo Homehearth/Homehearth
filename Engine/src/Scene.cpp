@@ -12,6 +12,7 @@ entt::registry& Scene::GetRegistry() {
 
 void Scene::Update(float dt)
 {
+	PROFILE_FUNCTION();
 	// Emit event
 	publish<ESceneUpdate>(dt);
 	
@@ -30,10 +31,12 @@ void Scene::Update(float dt)
 
 void Scene::Render() 
 {
+	PROFILE_FUNCTION();
 	// System that renders Renderable component
 	auto view = m_registry.view<comp::Renderable>();
 	view.each([&](entt::entity e, comp::Renderable& renderable)
 		{
+			PROFILE_SCOPE("Render Renderable");
 			if (m_transformCopies[1].find(e) != m_transformCopies[1].end())
 			{
 				comp::Transform transform = m_transformCopies[1].at(e);

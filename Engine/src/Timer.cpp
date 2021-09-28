@@ -34,16 +34,3 @@ void Timer::Stop()
 
 
 
-
-//--------------------------------------------------------------------------------------
-double Timer::GetElapsedTime() const
-{
-	std::chrono::duration<double> elapsed_seconds;
-
-	if(m_hasStoped)
-		elapsed_seconds = m_stopTime - m_startTime;
-	else
-		elapsed_seconds = std::chrono::steady_clock::now() - m_startTime;
-
-	return elapsed_seconds.count();
-}

@@ -76,6 +76,9 @@ void Engine::Startup()
 
 void Engine::Run()
 {
+
+	PROFILER_BEGIN_SESSION();
+
 	double currentFrame = 0.f;
 	double lastFrame = omp_get_wtime();
 	float deltaTime = 0.f;
@@ -91,10 +94,10 @@ void Engine::Run()
 	MSG msg = { nullptr };
 	while (IsRunning())
 	{
-		// Handle Input.
-		InputSystem::Get().UpdateEvents();
-		while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
+		PROFILE_SCOPE("Frame");
+		if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
 		{
+			InputSystem::Get().UpdateEvents();
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 			if (msg.message == WM_QUIT)
@@ -189,6 +192,8 @@ void Engine::Run()
     T_DESTROY();
     ResourceManager::Destroy();
     D2D1Core::Destroy();
+
+	PROFILER_END_SESSION();
 }
 
 void Engine::Shutdown()
@@ -332,6 +337,8 @@ void Engine::RenderThread()
 
 void Engine::Update(float dt)
 {
+	PROFILE_FUNCTION();
+	
 	// todo:
 	// Update the camera transform based on interactive inputs.
 	
@@ -359,6 +366,7 @@ void Engine::Update(float dt)
 
 void Engine::Render(float& dt)
 {
+	PROFILE_FUNCTION();
 
 	if (!m_currentScene->IsRenderReady())
 		return;
