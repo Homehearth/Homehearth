@@ -19,8 +19,8 @@ void Scene::Update(float dt)
 	publish<ESceneUpdate>(dt);
 	
 	Backbuffer::GetBuffers()->GetBuffer(0)->clear();
-	auto v = m_registry.view<comp::Renderable, comp::Transform>();
-	v.each([](comp::Renderable& rend, comp::Transform& transf) {
+	auto v = m_registry.group<comp::Renderable, comp::Transform>();
+	v.each([](const comp::Renderable& rend, const comp::Transform& transf) {
 		comp::Renderable Render;
 		Render.mesh = rend.mesh;
 		Render.renderForm = transf;

@@ -15,11 +15,11 @@ Game::Game()
 	Scene& demo = m_engine.GetScene("Demo");
 	// Scene logic
 	//setupDemoScene(m_engine, demo);
-	for (int i = 0; i < 1000; i++) {
+	for (int i = 0; i < 1500; i++) {
 		auto e = demo.GetRegistry().create();
 		auto& transform = demo.GetRegistry().emplace<comp::Transform>(e);
 		auto& renderable = demo.GetRegistry().emplace<comp::Renderable>(e);
-		renderable.mesh = ResourceManager::GetResource<RMesh>("Monster.fbx");
+		renderable.mesh = ResourceManager::GetResource<RMesh>("Cube.fbx");
 	}
 
 	demo.on<ESceneUpdate>([&](const ESceneUpdate& e, Scene& scene) 
