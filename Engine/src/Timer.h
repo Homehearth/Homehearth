@@ -4,8 +4,8 @@
 class Timer
 {
 private:
-    std::chrono::time_point<std::chrono::steady_clock> m_startTime;
-    std::chrono::time_point<std::chrono::steady_clock> m_stopTime;
+    std::chrono::time_point<std::chrono::high_resolution_clock> m_startTime;
+    std::chrono::time_point<std::chrono::high_resolution_clock> m_stopTime;
     bool m_hasStoped;
 
 	
@@ -43,7 +43,7 @@ inline auto Timer::GetElapsedTime() const
     if (m_hasStoped)
         elapsed_time = std::chrono::duration_cast<T>(m_stopTime - m_startTime);
     else
-        elapsed_time = std::chrono::duration_cast<T>(std::chrono::steady_clock::now() - m_startTime);
+        elapsed_time = std::chrono::duration_cast<T>(std::chrono::high_resolution_clock::now() - m_startTime);
 
 
     return elapsed_time.count();

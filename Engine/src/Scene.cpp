@@ -18,11 +18,13 @@ void Scene::Update(float dt)
 	
 	// only copy if the last frame has been rendered
 	
-	
-	m_registry.view<comp::Transform>().each([&](entt::entity e, comp::Transform& t) 
-		{
-			m_transformCopies[0][e] = t;
-		});
+	{
+		PROFILE_SCOPE("Copy Transforms");
+		m_registry.view<comp::Transform>().each([&](entt::entity e, comp::Transform& t) 
+			{
+				m_transformCopies[0][e] = t;
+			});
+	}
 
 	if (!m_transformCopies.IsSwapped()) {
 		m_transformCopies.Swap();
@@ -34,24 +36,26 @@ void Scene::Render()
 	PROFILE_FUNCTION();
 	// System that renders Renderable component
 	auto view = m_registry.view<comp::Renderable>();
-	view.each([&](entt::entity e, comp::Renderable& renderable)
-		{
-			PROFILE_SCOPE("Render Renderable");
-			if (m_transformCopies[1].find(e) != m_transformCopies[1].end())
+	{
+		PROFILE_SCOPE("Render Renderable");
+		view.each([&](entt::entity e, comp::Renderable& renderable)
 			{
-				comp::Transform transform = m_transformCopies[1].at(e);
-				sm::Matrix m = ecs::GetMatrix(transform);
-				renderable.constantBuffer.SetData(D3D11Core::Get().DeviceContext(), m);
-			}
+				if (m_transformCopies[1].find(e) != m_transformCopies[1].end())
+				{
+					comp::Transform transform = m_transformCopies[1].at(e);
+					sm::Matrix m = ecs::GetMatrix(transform);
+					renderable.constantBuffer.SetData(D3D11Core::Get().DeviceContext(), m);
+				}
 
-			ID3D11Buffer* buffers[1] = 
-			{
-				renderable.constantBuffer.GetBuffer()
-			};
+				ID3D11Buffer* buffers[1] = 
+				{
+					renderable.constantBuffer.GetBuffer()
+				};
 
-			D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, buffers);
-			renderable.mesh->Render();
-		});
+				D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, buffers);
+				renderable.mesh->Render();
+			});
+	}
 	
 	// Emit event
 	publish<ESceneRender>();
