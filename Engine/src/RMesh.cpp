@@ -145,9 +145,13 @@ bool RMesh::Create(const std::string& filename)
         scene->mMaterials[index]->Get(AI_MATKEY_NAME, matName);
         std::string name = matName.C_Str();
 
-        //Load in the material without using create
-        m_material = ResourceManager::Get().AddResource<RMaterial>(name);
+        //Create a new material and load it. Add it to manager
+        m_material = std::make_shared<RMaterial>();
+        std::cout << "Usecount before for material: " << m_material.use_count() << std::endl;
         m_material->LoadMaterial(scene->mMaterials[index]);
+        ResourceManager::Get().AddResource(name, m_material);
+        std::cout << "Usecount after for material: " << m_material.use_count() << std::endl;
+
     }
 
     std::vector<simple_vertex_t> vertices;

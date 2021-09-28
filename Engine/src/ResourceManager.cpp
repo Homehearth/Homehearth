@@ -3,12 +3,24 @@
 #include <typeinfo>
 
 
+bool ResourceManager::AddResource(const std::string& key, const std::shared_ptr<resource::GResource>& resource)
+{
+	bool added = false;
+	if (m_resources.find(key) == m_resources.end())
+	{
+		m_resources.emplace(key, resource);
+		added = true;
+#ifdef _DEBUG
+		LOG_INFO("RM added '%s'", key.c_str());
+#endif 
+	}
+	return added;
+}
+
 void ResourceManager::Destroy()
 {
-	//Erase calls destroy on every resource
 	for (auto it = m_resources.begin(); it != m_resources.end(); )
 	{
-		std::cout << "Resource used before: " << it->second.use_count() << " for " << it->first << std::endl;
 		it = m_resources.erase(it);
 	}
 	m_resources.clear();

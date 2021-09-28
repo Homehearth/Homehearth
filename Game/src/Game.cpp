@@ -25,6 +25,7 @@ Game::Game()
 	//RMesh* chest = ResourceManager::Get().GetResource<RMesh>("Chest.obj");
 	//RMesh* monster = ResourceManager::Get().GetResource<RMesh>("Monster.fbx");
 	{
+		std::shared_ptr<RMesh> monster = ResourceManager::Get().GetResource<RMesh>("Monster.fbx");
 		std::shared_ptr<RMesh> chest1 = ResourceManager::Get().GetResource<RMesh>("Chest.obj");
 		std::shared_ptr<RMesh> chest2 = ResourceManager::Get().GetResource<RMesh>("Chest.obj");
 		std::shared_ptr<RMesh> chest3 = ResourceManager::Get().GetResource<RMesh>("Chest.obj");
