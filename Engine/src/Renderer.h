@@ -17,7 +17,7 @@ public:
 	Renderer();
 	virtual ~Renderer() = default;
 
-	void Initialize(Window* pWindow);
+	void Initialize(Window* pWindow, Camera* debugCamera);
 
 	// Clears the screen.
 	void ClearFrame();
