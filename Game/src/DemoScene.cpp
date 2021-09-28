@@ -20,6 +20,7 @@ void InitializePlayerEntity(Scene& scene)
 	auto playerEntity = scene.GetRegistry().create();
 	auto& transform = scene.GetRegistry().emplace<comp::Transform>(playerEntity);
 	transform.position.z = -17.0f;
+	transform.position.y = -1.0f;
 	auto& velocity = scene.GetRegistry().emplace<comp::Velocity>(playerEntity);
 	auto& renderable = scene.GetRegistry().emplace<comp::Renderable>(playerEntity);
 	auto& player = scene.GetRegistry().emplace<comp::Player>(playerEntity);

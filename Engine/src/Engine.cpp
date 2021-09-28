@@ -86,7 +86,7 @@ void Engine::Run()
 	double lastFrame = omp_get_wtime();
 	float deltaTime = 0.f;
 	float accumulator = 0.f;
-	const float targetDelta = 1 / 1000.0f;
+	const float targetDelta = 1 / 10000.0f;
 
 	bool key[3] = { false, false, false };
 	bool old_key[3] = { false, false, false };
@@ -322,18 +322,19 @@ void Engine::RenderThread()
 {
 	double currentFrame = 0.f, lastFrame = omp_get_wtime();
 	float deltaTime = 0.f, deltaSum = 0.f;
-	const float targetDelta = 1 / 144.01f; 	// Desired FPS
+	const float targetDelta = 1 / 10000.0f; 	// Desired FPS
 	while (IsRunning())
 	{
 		currentFrame = omp_get_wtime();
 		deltaTime = static_cast<float>(currentFrame - lastFrame);
 		if (deltaSum >= targetDelta)
 		{
-			if(Backbuffer::GetBuffers()->IsSwapped())
+			if (Backbuffer::GetBuffers()->IsSwapped())
+			{
 				Render(deltaSum);
-
-			m_frameTime.render = deltaSum;
-			deltaSum = 0.f;
+				m_frameTime.render = deltaSum;
+				deltaSum = 0.f;
+			}
 		}
 		deltaSum += deltaTime;
 		lastFrame = currentFrame;
@@ -345,7 +346,7 @@ void Engine::RenderThread()
 
 void Engine::Update(float dt)
 {
-	PROFILE_FUNCTION();
+	//PROFILE_FUNCTION();
 	//m_buffPointer = m_drawBuffers.GetBuffer(0);
 
 	// Update the camera transform based on interactive inputs.
@@ -364,7 +365,7 @@ void Engine::Update(float dt)
 
 void Engine::Render(float& dt)
 {
-	PROFILE_FUNCTION();
+	//PROFILE_FUNCTION();
 	m_renderer.ClearFrame();
 	m_renderer.Render();
 	D2D1Core::Begin();
@@ -374,6 +375,7 @@ void Engine::Render(float& dt)
 	}
 
 	D2D1Core::Present();
+
 
 #ifdef _DEBUG
 	if (!m_IsImguiReady)
@@ -399,6 +401,7 @@ void Engine::Render(float& dt)
 		m_IsImguiReady = false;
 	}
 #endif
+
 	
 	D3D11Core::Get().SwapChain()->Present(0, 0);
 	Backbuffer::GetBuffers()->ReadySwap();

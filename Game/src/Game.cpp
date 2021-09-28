@@ -17,13 +17,14 @@ Game::Game()
 	setupDemoScene(m_engine, demo);
 	
 	//setupDemoScene(m_engine, demo);
-	for (int i = 0; i < 500; i++) {
+	for (int i = 0; i < 800; i++) {
 		auto e = demo.GetRegistry().create();
 		auto& transform = demo.GetRegistry().emplace<comp::Transform>(e);
 		auto& renderable = demo.GetRegistry().emplace<comp::Renderable>(e);
 		renderable.mesh = ResourceManager::GetResource<RMesh>("Cube.fbx");
 	}
 
+	
 	demo.on<ESceneUpdate>([&](const ESceneUpdate& e, Scene& scene) 
 		{
 		
