@@ -55,13 +55,15 @@ namespace dx = DirectX;
 #include <SimpleMath.h>
 #include <BufferHelpers.h>
 #include <Audio.h>
-
 #include <Keyboard.h>
 #include <Mouse.h>
 namespace sm = dx::SimpleMath;
 
 // entt (ECS library)
 #include <entt.hpp>
+
+//Entity systems
+#include "Systems.h"
 
 // imGUI
 #include <imgui.h>
