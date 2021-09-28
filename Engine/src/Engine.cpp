@@ -77,8 +77,6 @@ void Engine::Startup()
 void Engine::Run()
 {
 
-	PROFILER_BEGIN_SESSION();
-
 	double currentFrame = 0.f;
 	double lastFrame = omp_get_wtime();
 	float deltaTime = 0.f;
@@ -193,8 +191,6 @@ void Engine::Run()
     T_DESTROY();
     ResourceManager::Destroy();
     D2D1Core::Destroy();
-
-	PROFILER_END_SESSION();
 }
 
 void Engine::Shutdown()
@@ -250,7 +246,7 @@ void Engine::drawImGUI() const
 	static std::vector<float> vRamUsageContainer;
 
 	static Timer timer;
-
+	static int dots = 0;
 	if (timer.GetElapsedTime() > 0.5f)
 	{
 		fpsContainer.emplace_back((1 / m_frameTime.render));
@@ -258,6 +254,7 @@ void Engine::drawImGUI() const
 		ramUsageContainer.emplace_back((Profiler::GetRAMUsage() / (1024.f * 1024.f)));
 		vRamUsageContainer.emplace_back((Profiler::GetVRAMUsage() / (1042.f * 1024.f)));
 		timer.Start();
+		dots = (dots + 1) % 4;
 	}
 
 	if (fpsContainer.size() > 10)
@@ -279,6 +276,31 @@ void Engine::drawImGUI() const
 
 
 	ImGui::Begin("Statistics");
+	static bool isRecProfileSession = false;
+	if (!isRecProfileSession)
+	{
+		if (ImGui::Button("Record"))
+		{
+			isRecProfileSession = true;
+			PROFILER_BEGIN_SESSION();
+		}
+		ImGui::SameLine();
+		ImGui::Text("- Starts Profiler Session");
+	}
+	else
+	{
+		if (ImGui::Button("Stop Recording"))
+		{
+			isRecProfileSession = false;
+			PROFILER_END_SESSION();
+		}
+		ImGui::SameLine();
+		std::string loadingDots = "";
+		for (int i = 0; i < dots; i++)
+			loadingDots.append(".");
+		ImGui::TextColored(ImColor(1.f, 0.f, 0.f, 1.0f), ("Recording" + loadingDots).c_str());
+	}
+
 	if (ImGui::CollapsingHeader("FPS"))
 	{
 		ImGui::PlotLines(("FPS: " + std::to_string(static_cast<size_t>(1 / m_frameTime.render))).c_str(), fpsContainer.data(), static_cast<int>(fpsContainer.size()), 0, nullptr, 0.0f, 144.0f, ImVec2(150, 50));
