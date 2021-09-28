@@ -14,6 +14,8 @@ Game::Game()
 	// Create or get scene
 	Scene& demo = m_engine.GetScene("Demo");
 	// Scene logic
+	setupDemoScene(m_engine, demo);
+	
 	//setupDemoScene(m_engine, demo);
 	for (int i = 0; i < 500; i++) {
 		auto e = demo.GetRegistry().create();
