@@ -81,13 +81,8 @@ bool RMesh::CreateIndexBuffer(const std::vector<UINT>& indices)
 
 void RMesh::Render()
 {
-    //Upload the material to gpu
-    /*
     if (m_material)
-    {
-        m_material->UploadToGPU();
-    }
-    */
+        m_material->BindMaterial();
 
 	//Draw with indexbuffer
     UINT offset = 0;
@@ -95,6 +90,9 @@ void RMesh::Render()
     D3D11Core::Get().DeviceContext()->IASetVertexBuffers(0, 1, &m_vertexBuffer, &stride, &offset);
     D3D11Core::Get().DeviceContext()->IASetIndexBuffer(m_indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
     D3D11Core::Get().DeviceContext()->DrawIndexed(m_indexCount, 0, 0);
+
+    if (m_material)
+        m_material->UnBindMaterial();
 }
 
 bool RMesh::Create(const std::string& filename)
@@ -148,8 +146,8 @@ bool RMesh::Create(const std::string& filename)
         //Create a new material and load it. Add it to manager
         m_material = std::make_shared<RMaterial>();
         std::cout << "Usecount before for material: " << m_material.use_count() << std::endl;
-        m_material->LoadMaterial(scene->mMaterials[index]);
-        ResourceManager::Get().AddResource(name, m_material);
+        if (m_material->LoadMaterial(scene->mMaterials[index]))
+            ResourceManager::Get().AddResource(name, m_material);
         std::cout << "Usecount after for material: " << m_material.use_count() << std::endl;
 
     }
