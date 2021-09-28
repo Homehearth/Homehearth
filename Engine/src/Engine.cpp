@@ -95,9 +95,10 @@ void Engine::Run()
 	while (IsRunning())
 	{
 		PROFILE_SCOPE("Frame");
-		if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
+		InputSystem::Get().UpdateEvents();
+
+		while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
 		{
-			InputSystem::Get().UpdateEvents();
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 			if (msg.message == WM_QUIT)
