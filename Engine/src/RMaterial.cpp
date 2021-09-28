@@ -1,6 +1,11 @@
 #include "EnginePCH.h"
 #include "RMaterial.h"
 
+/*
+    [Tweak]: Bind constantbuffers to specific locations/numbers
+    search in file for "[Tweak]" if needed
+*/
+
 RMaterial::RMaterial()
 {
 }
@@ -58,6 +63,7 @@ void RMaterial::BindMaterial()
 {
     /*
         Bind the constant buffers
+        [Tweak]
     */
     D3D11Core::Get().DeviceContext()->PSSetConstantBuffers(0, 1, &m_matConstCB);
     D3D11Core::Get().DeviceContext()->PSSetConstantBuffers(1, 1, &m_hasTextureCB);

@@ -19,28 +19,22 @@ Game::Game()
 
 
 	/*
-		Testing new resource manager
+		Resource manager example
 	*/
-	//RMesh* barrel = ResourceManager::Get().GetResource<RMesh>("Barrel.obj");
-	//RMesh* chest = ResourceManager::Get().GetResource<RMesh>("Chest.obj");
-	//RMesh* monster = ResourceManager::Get().GetResource<RMesh>("Monster.fbx");
-	{
-		std::shared_ptr<RMesh> monster = ResourceManager::Get().GetResource<RMesh>("Monster.fbx");
-		/*std::shared_ptr<RMesh> chest1 = ResourceManager::Get().GetResource<RMesh>("Chest.obj");
+	std::shared_ptr<RMesh> monster = ResourceManager::Get().GetResource<RMesh>("Monster.fbx");
+
+	{	//Start a scope for show
+		
+		std::shared_ptr<RMesh> chest1 = ResourceManager::Get().GetResource<RMesh>("Chest.obj");
 		std::shared_ptr<RMesh> chest2 = ResourceManager::Get().GetResource<RMesh>("Chest.obj");
 		std::shared_ptr<RMesh> chest3 = ResourceManager::Get().GetResource<RMesh>("Chest.obj");
-		std::shared_ptr<RMesh> chest4 = ResourceManager::Get().GetResource<RMesh>("Chest.obj");*/
 
-		//std::shared_ptr<RMesh> monster = ResourceManager::Get().GetResource<RMesh>("Monster.fbx");
-		//std::shared_ptr<RMesh> chest3 = ResourceManager::Get().GetResource<RMesh>("Chest.obj");
-	}
+	}	//chest1,2,3 dies here
 
+	//Clearing up resources after chest1
 	ResourceManager::Get().FreeResources();
 
-
-	//RMesh* cube = ResourceManager::Get().GetResource<RMesh>("Cube.fbx");
-
-}
+}	//monster dies here
 
 void Game::Run() 
 {

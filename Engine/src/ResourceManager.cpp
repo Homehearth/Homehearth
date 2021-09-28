@@ -1,6 +1,5 @@
 #include <EnginePCH.h>
 #include "ResourceManager.h"
-#include <typeinfo>
 
 
 bool ResourceManager::AddResource(const std::string& key, const std::shared_ptr<resource::GResource>& resource)
@@ -28,19 +27,6 @@ void ResourceManager::Destroy()
 
 void ResourceManager::FreeResources()
 {
-	/*
-		Need to recursively free resources???
-
-		A mesh has material
-		Material has textures
-		
-		Textures first
-		Material later
-		Mesh last
-	*/
-
-	std::cout << "Resources in the manager (before): " << m_resources.size() << std::endl;
-
 	for (auto it = m_resources.begin(); it != m_resources.end(); )
 	{
 		//If there is only one of this left, we free up memory and delete it
@@ -50,14 +36,17 @@ void ResourceManager::FreeResources()
 			LOG_INFO("RM removed '%s'", it->first.c_str());
 #endif 
 			m_resources.erase(it);
-			//Need to go back to start again, could have destroyed some object
-			//Not efficient though...
-			//Have to be a better way...
+			/*
+				Not the most effient for now...
+				Have to be in this order as everything 
+				in unordered_map is "unordered"
+			*/
 			it = m_resources.begin();
 		}
 		else
 			it++;
 	}
-
-	std::cout << "Resources in the manager (after): " << m_resources.size() << std::endl;
+#ifdef _DEBUG
+	LOG_INFO("RM cleared unused resources. Resources left: %d", (int)m_resources.size());
+#endif 
 }

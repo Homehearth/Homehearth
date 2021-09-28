@@ -12,7 +12,7 @@
 	----Code example----
 	add - resource get added to manager
 	* std::shared_ptr<RMaterial> material = std::make_shared<RMaterial>();
-	* do something with it: material.create or whatever
+	* do something with it: material.Create() or material.Whatever()
 	* ResourceManager::Get().AddResource("testMat", material);
 	 
 	get - resource will be returned and created if not found
@@ -24,13 +24,7 @@
 
 	----Future work (if needed)----
 	* If the resource manager is performaning slow - dynamic_pointer_cast
-*/
-
-/*
-	New functions ideas
-	* GetResource(): get the resource, or if it does not exist add it
-	* Free(): remove resources not in use
-	* 
+	* Optimize freeresources
 */
 
 class ResourceManager
@@ -61,12 +55,10 @@ public:
 	bool AddResource(const std::string& key, const std::shared_ptr<resource::GResource>& resource);
 
 	/*
-		Retrieve any resource with the name (resource_name).
-		Tries to create it if it does not exist
-		Use the appropiate T class when retrieving a resource.
-		Failure to apply correct T class will return a nullptr.
-		Ex:
-		RTexture* texture = GetResource<RTexture>(resource_name);
+		Retrieve any resource with the name (key).
+		Creates a resource if it does not exist.
+		Uses the GResource::Create()-function 
+		Uses the appropiate T class when retrieving a resource.
 	*/
 	template <class T>
 	std::shared_ptr<T> GetResource(const std::string& key);
@@ -104,23 +96,25 @@ inline std::shared_ptr<T> ResourceManager::GetResource(const std::string& key)
 		//https://en.cppreference.com/w/cpp/memory/shared_ptr/pointer_cast
 		return std::dynamic_pointer_cast<T>(f->second);
 	}
-	//Create the resource
+	//Create a new resource of this type
 	else
 	{
 		std::shared_ptr<T> resource = std::make_shared<T>();
-		
-		if (!resource->Create(key))
+
+		if (resource->Create(key))
 		{
-			return nullptr;
-		}
-		
 #ifdef _DEBUG
-		LOG_INFO("RM added and created '%s'", key.c_str());
-#endif 
+			LOG_INFO("RM added '%s' and created", key.c_str());
+#endif
+		}
+		else
+		{
+#ifdef _DEBUG
+			LOG_INFO("RM added '%s'", key.c_str());
+#endif
+		}
+
 		m_resources.emplace(key, resource);
 		return std::dynamic_pointer_cast<T>(resource);
 	}
-
-	// Failed to find resource
-	return nullptr;
 }
