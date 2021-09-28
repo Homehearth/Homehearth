@@ -13,12 +13,14 @@ entt::registry& Scene::GetRegistry() {
 
 void Scene::Update(float dt)
 {
+	PROFILE_FUNCTION();
 	// Emit event
 	publish<ESceneUpdate>(dt);
 	
 	// only copy if the last frame has been rendered
 	if (m_hasRendered)
 	{
+		PROFILE_SCOPE("Copy Transforms");
 		m_registry.view<comp::Transform>().each([&](entt::entity e, comp::Transform& t) 
 			{
 				m_transformCopies[e] = t;
@@ -29,13 +31,14 @@ void Scene::Update(float dt)
 
 void Scene::Render() 
 {
-
+	PROFILE_FUNCTION();
 	while (m_hasRendered); // makes sure render thread is not faster than update thread
 
 	// System that renders Renderable component
 	auto view = m_registry.view<comp::Renderable>();
 	view.each([&](entt::entity e, comp::Renderable& renderable)
 		{
+			PROFILE_SCOPE("Render Renderable");
 			if (m_transformCopies.find(e) != m_transformCopies.end())
 			{
 				comp::Transform transform = m_transformCopies.at(e);

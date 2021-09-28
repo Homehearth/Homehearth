@@ -348,3 +348,6 @@ ASALocalRun/
 # BeatPulse healthcheck temp database
 healthchecksdb
 **.cso
+
+# profiling files
+**.json
