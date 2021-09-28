@@ -19,23 +19,31 @@ void Scene::Update(float dt)
 	// Emit event
 	publish<ESceneUpdate>(dt);
 	
+	/*
 	// only copy if the last frame has been rendered
 	if (m_hasRendered)
 	{
 		PROFILE_SCOPE("Copy Transforms");
-		m_registry.view<comp::Transform>().each([&](entt::entity e, comp::Transform& t) 
-			{
-				m_transformCopies[e] = t;
-			});
+		m_registry.view<comp::Transform>().each([&](entt::entity e, comp::Transform& t)
+		{
+			m_transformCopies[e] = t;
+		});
+
 		m_hasRendered = false;
+	}
+	*/
+
 	Backbuffer::GetBuffers()->GetBuffer(0)->clear();
 	auto v = m_registry.group<comp::Renderable, comp::Transform>();
-	v.each([](const comp::Renderable& rend, const comp::Transform& transf) {
-		comp::Renderable Render;
-		Render.mesh = rend.mesh;
-		Render.renderForm = transf;
-		Backbuffer::GetBuffers()->GetBuffer(0)->push_back(Render);
-	});
+	{
+		PROFILE_SCOPE("Copy Transforms");
+		v.each([](const comp::Renderable& rend, const comp::Transform& transf) {
+			comp::Renderable Render;
+			Render.mesh = rend.mesh;
+			Render.renderForm = transf;
+			Backbuffer::GetBuffers()->GetBuffer(0)->push_back(Render);
+		});
+	}
 
 	if (!Backbuffer::GetBuffers()->IsSwapped())
 	{
@@ -46,24 +54,28 @@ void Scene::Update(float dt)
 void Scene::Render() 
 {
 	PROFILE_FUNCTION();
-	while (m_hasRendered); // makes sure render thread is not faster than update thread
+	//while (m_hasRendered); // makes sure render thread is not faster than update thread
 
 	std::vector<comp::Renderable>* data = Backbuffer::GetBuffers()->GetBuffer(1);
 	comp::Renderable* object = nullptr;
 
+	/*
 	// System that renders Renderable component
 	auto view = m_registry.view<comp::Renderable>();
 	view.each([&](entt::entity e, comp::Renderable& renderable)
 		{
-			PROFILE_SCOPE("Render Renderable");
+			//PROFILE_SCOPE("Render Renderable");
 			if (m_transformCopies.find(e) != m_transformCopies.end())
 			{
 				comp::Transform transform = m_transformCopies.at(e);
 				sm::Matrix m = ecs::GetMatrix(transform);
 				renderable.constantBuffer.SetData(D3D11Core::Get().DeviceContext(), m);
 			}
+		}
+			*/
 	if (data)
 	{
+		PROFILE_SCOPE("Render Renderable");
 		// Loop through each object.
 		for (int i = 0; i < data->size(); i++)
 		{
