@@ -12,7 +12,7 @@ private:
 	entt::registry m_registry;
 	
 	DoubleBuffer<std::vector<comp::Renderable>> m_renderableCopies;
-	dx::ConstantBuffer<sm::Matrix> m_publicBuffer;
+	dx::ConstantBuffer<basic_model_matrix_t> m_publicBuffer;
 
 public:
 

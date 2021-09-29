@@ -21,9 +21,9 @@ void Scene::Update(float dt)
 	if (!m_renderableCopies.IsSwapped()) {
 		PROFILE_SCOPE("Copy Transforms");
 		m_renderableCopies[0].clear();
-		m_registry.view<comp::Transform, comp::Renderable>().each([&](entt::entity e, comp::Transform& t, comp::Renderable& r) 
+		m_registry.group<comp::Renderable, comp::Transform>().each([&](entt::entity e, comp::Renderable& r, comp::Transform& t)
 			{
-				r.transformCopy = t;
+				r.data.worldMatrix = ecs::GetMatrix(t);
 				m_renderableCopies[0].push_back(r);
 			});
 		m_renderableCopies.Swap();
@@ -43,7 +43,7 @@ void Scene::Render()
 	D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, buffers);
 	for (const auto& it : m_renderableCopies[1])
 	{
-		m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), ecs::GetMatrix(it.transformCopy));
+		m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
 		it.mesh->Render();	
 	}
 	

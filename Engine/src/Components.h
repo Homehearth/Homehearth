@@ -15,7 +15,7 @@ namespace ecs
 		struct Renderable
 		{
 			std::shared_ptr<RMesh> mesh;
-			Transform transformCopy;
+			 basic_model_matrix_t data;
 		};
 
 		struct Velocity
