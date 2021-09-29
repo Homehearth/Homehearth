@@ -1,6 +1,21 @@
 
-//Texture2D diffuseTexture : register(t0);
+Texture2D albedo    : register(t0);
+Texture2D normal    : register(t1);
+Texture2D metalness : register(t2);
+Texture2D roughness : register(t3);
+Texture2D aomap     : register(t4);
+
 SamplerState samp : register(s0);
+
+
+//cbuffer textures_t
+//{
+//    bool hasAlbedo;
+//    bool hasNormal;
+//    bool hasMetalness;
+//    bool hasRoughness;
+//    bool hasAoMap;
+//};
 
 struct PixelIn
 {
@@ -13,6 +28,6 @@ struct PixelIn
 
 float4 main(PixelIn input) : SV_TARGET
 {
-    return float4(1.0f, 0.0f, 0.0f, 1.0f);
-    //return diffuseTexture.Sample(samp, input.uv);
+    //return float4(1.0f, 0.0f, 0.0f, 1.0f);
+    return albedo.Sample(samp, input.uv);
 }

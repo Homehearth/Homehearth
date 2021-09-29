@@ -125,10 +125,8 @@ bool RMesh::Create(const std::string& filename)
 
         //Create a new material and load it. Add it to manager
         m_material = std::make_shared<RMaterial>();
-        std::cout << "Usecount before for material: " << m_material.use_count() << std::endl;
-        if (m_material->LoadMaterial(scene->mMaterials[index]))
+        if (m_material->Create(scene->mMaterials[index]))
             ResourceManager::Get().AddResource(name, m_material);
-        std::cout << "Usecount after for material: " << m_material.use_count() << std::endl;
 
     }
 

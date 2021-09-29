@@ -97,16 +97,31 @@ void RMaterial::UnBindMaterial()
     D3D11Core::Get().DeviceContext()->PSSetShaderResources(0, nrOfTextures, nullSRV);
 }
 
-bool RMaterial::LoadMaterial(aiMaterial* aiMat)
+bool RMaterial::Create(aiMaterial* aiMat)
 {
     /*
         Load in material constants
     */
+    std::cout << "Material name: " << aiMat->GetName().C_Str() << std::endl;
+
     matConstants_t matConst;
-    aiMat->Get(AI_MATKEY_COLOR_AMBIENT,  matConst.ambient);
-    aiMat->Get(AI_MATKEY_COLOR_DIFFUSE,  matConst.diffuse);
-    aiMat->Get(AI_MATKEY_COLOR_SPECULAR, matConst.specular);
-    aiMat->Get(AI_MATKEY_SHININESS,      matConst.shiniess);
+    aiColor3D ambient = { 0.f, 0.f, 0.f };
+    if (AI_SUCCESS == aiMat->Get(AI_MATKEY_COLOR_AMBIENT, ambient))
+        matConst.ambient = { ambient.r, ambient.g, ambient.b };
+    
+    aiColor3D diffuse = { 0.f, 0.f, 0.f };
+    if (AI_SUCCESS == aiMat->Get(AI_MATKEY_COLOR_DIFFUSE,  diffuse))
+        matConst.diffuse = { diffuse.r, diffuse.g, diffuse.b };
+    
+    aiColor3D specular = { 0.f, 0.f, 0.f };
+    if (AI_SUCCESS == aiMat->Get(AI_MATKEY_COLOR_SPECULAR, specular))
+        matConst.specular = { specular.r, specular.g, specular.b };
+
+    float shiniess = 0.0f;
+    if (AI_SUCCESS == aiMat->Get(AI_MATKEY_SHININESS, shiniess))
+        matConst.shiniess = shiniess;
+    
+    
     if (!CreateConstBuf(matConst))
     {
 #ifdef _DEBUG

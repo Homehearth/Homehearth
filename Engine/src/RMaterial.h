@@ -64,7 +64,7 @@ public:
 	void UnBindMaterial();
 
 	//Loaded from assimp
-	bool LoadMaterial(aiMaterial* aiMat);
+	bool Create(aiMaterial* aiMat);
 
 	// Inherited via GResource
 	// Load material with file - mtl files
