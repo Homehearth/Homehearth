@@ -347,4 +347,12 @@ ASALocalRun/
 
 # BeatPulse healthcheck temp database
 healthchecksdb
+
+# binary shader files
 **.cso
+
+# profiling files
+**.json
+
+# imgui.ini
+**.ini

@@ -12,6 +12,7 @@ void Renderer::Initialize(Window* pWindow)
 	m_pipelineManager.Initialize(pWindow);
 	
     m_d3d11 = &D3D11Core::Get();
+    m_basePass.SetEnable(true);
     AddPass(&m_basePass);
 }
 

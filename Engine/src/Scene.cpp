@@ -4,7 +4,7 @@
 Scene::Scene() 
 {
 	m_registry.on_construct<comp::Renderable>().connect<ecs::OnRenderableConstruct>();
-	m_hasRendered = true;
+	m_publicBuffer.Create(D3D11Core::Get().Device());
 }
 
 entt::registry& Scene::GetRegistry() {
@@ -13,46 +13,77 @@ entt::registry& Scene::GetRegistry() {
 
 void Scene::Update(float dt)
 {
+	PROFILE_FUNCTION();
 	// Emit event
 	publish<ESceneUpdate>(dt);
 	
 	// only copy if the last frame has been rendered
-	if (m_hasRendered)
-	{
-		m_registry.view<comp::Transform>().each([&](entt::entity e, comp::Transform& t) 
+	if (!m_transformCopies.IsSwapped()) {
+		PROFILE_SCOPE("Copy Transforms");
+		m_registry.view<comp::Transform, comp::Renderable>().each([&](entt::entity e, comp::Transform& t, comp::Renderable& r) 
 			{
-				m_transformCopies[e] = t;
+			comp::Renderable rend;
+			rend.mesh = r.mesh;
+			rend.renderForm = t;
+				m_transformCopies[0][e] = rend;
+				//m_transformCopies[0][e] = t;
 			});
-		m_hasRendered = false;
+		m_transformCopies.Swap();
 	}
 }
 
 void Scene::Render() 
 {
-
-	while (m_hasRendered); // makes sure render thread is not faster than update thread
-
+	PROFILE_FUNCTION();
 	// System that renders Renderable component
-	auto view = m_registry.view<comp::Renderable>();
-	view.each([&](entt::entity e, comp::Renderable& renderable)
-		{
-			if (m_transformCopies.find(e) != m_transformCopies.end())
-			{
-				comp::Transform transform = m_transformCopies.at(e);
-				sm::Matrix m = ecs::GetMatrix(transform);
-				renderable.constantBuffer.SetData(D3D11Core::Get().DeviceContext(), m);
-			}
 
-			ID3D11Buffer* buffers[1] = 
+	for (auto it = m_transformCopies[1].begin(); it != m_transformCopies[1].end(); it++)
+	{
+		auto* pointer = &it->second;
+		if (pointer)
+		{
+			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), ecs::GetMatrix(pointer->renderForm));
+			ID3D11Buffer* buffers[1] =
 			{
-				renderable.constantBuffer.GetBuffer()
+				m_publicBuffer.GetBuffer()
 			};
 
 			D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, buffers);
-			renderable.mesh->Render();
-		});
-	m_hasRendered = true;
+			pointer->mesh->Render();
+		}
+	}
 
+	/*
+	auto view = m_registry.view<comp::Renderable>();
+	{
+		PROFILE_SCOPE("Render Renderable");
+		view.each([&](entt::entity e, comp::Renderable& renderable)
+			{
+				if (m_transformCopies[1].find(e) != m_transformCopies[1].end())
+				{
+					comp::Transform transform = m_transformCopies[1].at(e);
+					sm::Matrix m = ecs::GetMatrix(transform);
+					renderable.constantBuffer.SetData(D3D11Core::Get().DeviceContext(), m);
+				}
+
+				ID3D11Buffer* buffers[1] = 
+				{
+					renderable.constantBuffer.GetBuffer()
+				};
+
+				D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, buffers);
+				renderable.mesh->Render();
+			});
+	}
+	*/
+	
 	// Emit event
 	publish<ESceneRender>();
+
+	m_transformCopies.ReadyForSwap();
+}
+
+bool Scene::IsRenderReady() const 
+{
+	return m_transformCopies.IsSwapped();
 }

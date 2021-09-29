@@ -19,7 +19,6 @@ Engine::Engine()
 void Engine::Startup()
 {
 	T_INIT(1, thread::ThreadType::POOL_FIFO);
-	ResourceManager::Initialize();
 	srand((unsigned int)time(NULL));
 
 	// Window Startup:
@@ -54,20 +53,19 @@ void Engine::Startup()
 	this->m_audio_engine = std::make_unique<DirectX::AudioEngine>(eflags);
 
 
+	IMGUI(
+		// Setup ImGUI
+		IMGUI_CHECKVERSION();
+		ImGui::CreateContext();
+		ImGuiIO & io = ImGui::GetIO();
+		ImGui_ImplWin32_Init(m_window.GetHWnd());
+		ImGui_ImplDX11_Init(D3D11Core::Get().Device(), D3D11Core::Get().DeviceContext());
+		ImGui::StyleColorsDark();
+		ImGui_ImplDX11_CreateDeviceObjects(); // uses device, therefore has to be called before render thread starts
+		LOG_INFO("ImGui was successfully initialized");
+	);
 
-#ifdef _DEBUG
-	m_IsImguiReady = false;
-	// Setup ImGUI
-	IMGUI_CHECKVERSION();
-	ImGui::CreateContext();
-	ImGuiIO& io = ImGui::GetIO();
-	ImGui_ImplWin32_Init(m_window.GetHWnd());
-	ImGui_ImplDX11_Init(D3D11Core::Get().Device(), D3D11Core::Get().DeviceContext());
-	ImGui::StyleColorsDark();
-	ImGui_ImplDX11_CreateDeviceObjects(); // uses device, therefore has to be called before render thread starts
-	LOG_INFO("ImGui was successfully initialized");
-#endif
-	InputSystem::Get().SetMouseWindow(m_window.GetHWnd(), m_window.GetWidth(), m_window.GetHeight());
+	InputSystem::Get().SetMouseWindow(m_window.GetHWnd());
 
 	m_client.Connect("127.0.0.1", 4950);
 
@@ -77,11 +75,14 @@ void Engine::Startup()
 
 void Engine::Run()
 {
+
+	PROFILER_BEGIN_SESSION();
+
 	double currentFrame = 0.f;
 	double lastFrame = omp_get_wtime();
 	float deltaTime = 0.f;
 	float accumulator = 0.f;
-	const float targetDelta = 1 / 1000.0f;
+	const float targetDelta = 1 / 10000.0f;
 
 	bool key[3] = { false, false, false };
 	bool old_key[3] = { false, false, false };
@@ -92,7 +93,10 @@ void Engine::Run()
 	MSG msg = { nullptr };
 	while (IsRunning())
 	{
-		if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
+		PROFILE_SCOPE("Frame");
+		InputSystem::Get().UpdateEvents();
+
+		while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
 		{
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
@@ -132,9 +136,7 @@ void Engine::Run()
 			}
 		}
 
-		// Handle Input.
-		InputSystem::Get().UpdateEvents();
-
+		
 
 		//Showing examples of keyboard and mouse (THIS CODE SHOULD BE HANDLED SOMEWHERE ELSE (GAMEPLAY LOGIC))
 		if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::G, KeyState::RELEASED))
@@ -177,20 +179,21 @@ void Engine::Run()
 	}
 
 
-	// Wait for the rendering thread to exit its last render cycle and shutdown.
-#ifdef _DEBUG
-	while (!s_safeExit) {}; // TODO: why only in debug??
-
-	// ImGUI Shutdown
-	ImGui_ImplDX11_Shutdown();
-	ImGui_ImplWin32_Shutdown();
-	ImGui::DestroyContext();
-#endif
+	// Wait for the rendering thread to exit its last render cycle and shutdown
+	IMGUI(
+		while (!s_safeExit) {}; // TODO: why only in debug??
+		// ImGUI Shutdown
+		ImGui_ImplDX11_Shutdown();
+		ImGui_ImplWin32_Shutdown();
+		ImGui::DestroyContext();
+	);
 
 	m_client.Disconnect();
     T_DESTROY();
-    ResourceManager::Destroy();
+    ResourceManager::Get().Destroy();
     D2D1Core::Destroy();
+
+	PROFILER_END_SESSION();
 }
 
 void Engine::Shutdown()
@@ -292,9 +295,9 @@ void Engine::drawImGUI() const
 
 	ImGui::End();
 	
-
+	/*
 	ImGui::Begin("Objects");
-	m_currentScene->GetRegistry().view<comp::Transform>().each([&](entt::entity e, comp::Transform& transform) 
+	m_currentScene->GetRegistry().view<comp::Transform>().each([&](entt::entity e, comp::Transform& transform)
 		{
 
 			ImGui::Separator();
@@ -304,6 +307,7 @@ void Engine::drawImGUI() const
 
 		});
 	ImGui::End();
+	*/
 
 
 }
@@ -312,7 +316,7 @@ void Engine::RenderThread()
 {
 	double currentFrame = 0.f, lastFrame = omp_get_wtime();
 	float deltaTime = 0.f, deltaSum = 0.f;
-	const float targetDelta = 1 / 144.01f; 	// Desired FPS
+	const float targetDelta = 1 / 10000.0f; 	// Desired FPS
 	while (IsRunning())
 	{
 		currentFrame = omp_get_wtime();
@@ -320,7 +324,6 @@ void Engine::RenderThread()
 		if (deltaSum >= targetDelta)
 		{
 			Render(deltaSum);
-
 			m_frameTime.render = deltaSum;
 			deltaSum = 0.f;
 		}
@@ -334,11 +337,18 @@ void Engine::RenderThread()
 
 void Engine::Update(float dt)
 {
-	//m_buffPointer = m_drawBuffers.GetBuffer(0);
-
-	// Update the camera transform based on interactive inputs.
+	PROFILE_FUNCTION();
+	
 	// todo:
 	// Update the camera transform based on interactive inputs.
+	
+	IMGUI(
+		m_imguiMutex.lock();
+		// Start ImGui frame
+		ImGui_ImplDX11_NewFrame();
+		ImGui_ImplWin32_NewFrame();
+		ImGui::NewFrame();
+	);
 
 	// Update elements in the scene.
 	if (m_currentScene)
@@ -346,24 +356,21 @@ void Engine::Update(float dt)
 		m_currentScene->Update(dt);
 	}
 
-
-#ifdef _DEBUG
-	if (!m_IsImguiReady.load())
-	{
-		// Start ImGui frame
-		ImGui_ImplDX11_NewFrame();
-		ImGui_ImplWin32_NewFrame();
-		ImGui::NewFrame();
+	IMGUI(
 		drawImGUI();
-		m_IsImguiReady = true;
-
-	}
-#endif // DEBUG
+		ImGui::EndFrame();
+		m_imguiMutex.unlock();
+	);
 
 }
 
 void Engine::Render(float& dt)
 {
+	PROFILE_FUNCTION();
+
+	if (!m_currentScene->IsRenderReady())
+		return;
+
 	m_renderer.ClearFrame();
 	m_renderer.Render();
 	D2D1Core::Begin();
@@ -374,15 +381,13 @@ void Engine::Render(float& dt)
 
 	D2D1Core::Present();
 
-#ifdef _DEBUG
-	if (m_IsImguiReady)
-	{
+	IMGUI(
+		m_imguiMutex.lock();
 		ImGui::Render();
 		ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
-		m_IsImguiReady = false;
-	}
-#endif
+		m_imguiMutex.unlock();
+	);
 
-	D3D11Core::Get().SwapChain()->Present(1, 0);
+	D3D11Core::Get().SwapChain()->Present(0, 0);
 }
 
