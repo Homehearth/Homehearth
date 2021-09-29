@@ -39,7 +39,6 @@ namespace network
 		SOCKET m_listening;
 		bool m_isRunning;
 		HANDLE m_CompletionPort;
-		message<T> msgTempIn;
 		std::thread* workerThreads;
 		std::thread acceptThread;
 		int nrOfThreads;
@@ -83,7 +82,7 @@ namespace network
 		void PrimeReadPayload(SOCKET_INFORMATION*& SI);
 		void PrimeReadValidation(SOCKET_INFORMATION*& SI);
 
-		static void AlertThreadFunction();
+		static void AlertThread();
 
 	public:
 		// Constructor and Deconstructor
@@ -115,7 +114,7 @@ namespace network
 	};
 
 	template <typename T>
-	void server_interface<T>::AlertThreadFunction()
+	void server_interface<T>::AlertThread()
 	{
 		LOG_INFO("Thread id: %lu alerted!", GetCurrentThreadId());
 	}
@@ -160,14 +159,6 @@ namespace network
 				delete context;
 				LOG_ERROR("Error sending puzzle with error: %ld", GetLastError());
 			}
-			else
-			{
-#ifdef PRINT_NETWORK_DEBUG
-				EnterCriticalSection(&lock);
-				LOG_NETWORK("Waiting to receive from: %lld", SI->Socket);
-				LeaveCriticalSection(&lock);
-#endif
-			}
 		}
 	}
 
@@ -190,14 +181,6 @@ namespace network
 			{
 				delete context;
 				LOG_ERROR("Error sending puzzle with error: %ld", GetLastError());
-			}
-			else
-			{
-#ifdef PRINT_NETWORK_DEBUG
-				EnterCriticalSection(&lock);
-				LOG_NETWORK("Waiting to receive from: %lld", SI->Socket);
-				LeaveCriticalSection(&lock);
-#endif
 			}
 		}
 	}
@@ -354,11 +337,13 @@ namespace network
 	template<typename T>
 	void server_interface<T>::DisconnectClient(SOCKET_INFORMATION*& SI)
 	{
-		closesocket(SI->Socket);
-		delete SI;
-		SI = nullptr;
-
-		this->OnClientDisconnect();
+		if (SI != NULL)
+		{
+			closesocket(SI->Socket);
+			delete SI;
+			SI = nullptr;
+			this->OnClientDisconnect();
+		}
 	}
 
 	template <typename T>
@@ -622,11 +607,11 @@ namespace network
 
 		for (DWORD i = 0; i < SystemInfo.dwNumberOfProcessors; i++)
 		{
-			QueueUserAPC((PAPCFUNC)server_interface<T>::AlertThreadFunction, (HANDLE)workerThreads[i].native_handle(), NULL);
+			QueueUserAPC((PAPCFUNC)server_interface<T>::AlertThread, (HANDLE)workerThreads[i].native_handle(), NULL);
 			workerThreads[i].join();
 		}
 
-		QueueUserAPC((PAPCFUNC)server_interface<T>::AlertThreadFunction, (HANDLE)acceptThread.native_handle(), NULL);
+		QueueUserAPC((PAPCFUNC)server_interface<T>::AlertThread, (HANDLE)acceptThread.native_handle(), NULL);
 		acceptThread.join();
 	}
 
@@ -658,67 +643,45 @@ namespace network
 				continue;
 			}
 
-			if (EntriesRemoved > 1)
-			{
-				EnterCriticalSection(&lock);
-				LOG_WARNING("Entries removed: %u", EntriesRemoved);
-				LeaveCriticalSection(&lock);
-			}
-
 			for (int i = 0; i < (int)EntriesRemoved; i++)
 			{
+				SI = (SOCKET_INFORMATION*)Entries[i].lpCompletionKey;
 				context = (PER_IO_DATA*)Entries[i].lpOverlapped;
 				// If an I/O was completed but we received no data means a client must've disconnected
 				// Basically a memcpy so we have data in correct structure
 				if (Entries[i].dwNumberOfBytesTransferred == 0)
 				{
 					this->DisconnectClient(SI);
+					delete context;
 					continue;
 				}
 				// I/O has completed, process it
 				if (HasOverlappedIoCompleted(Entries[i].lpOverlapped))
 				{
-					SI = (SOCKET_INFORMATION*)Entries[i].lpCompletionKey;
-
-					LOG_WARNING("BytesTransferred: %ld", Entries[i].dwNumberOfBytesTransferred);
 					switch (context->net_state)
 					{
 					case NetState::READ_HEADER:
 					{
-						EnterCriticalSection(&lock);
-						LOG_INFO("Reading header!");
-						LeaveCriticalSection(&lock);
 						this->ReadHeader(SI, context);
 						break;
 					}
 					case NetState::READ_PAYLOAD:
 					{
-						EnterCriticalSection(&lock);
-						LOG_INFO("Reading payload!");
-						LeaveCriticalSection(&lock);
 						this->ReadPayload(SI, context);
 						break;
 					}
 					case NetState::READ_VALIDATION:
 					{
-						EnterCriticalSection(&lock);
-						LOG_INFO("Reading validation!");
-						LeaveCriticalSection(&lock);
 						this->ReadValidation(SI, context);
 						break;
 					}
 					case NetState::WRITE_MESSAGE:
 					{
-						EnterCriticalSection(&lock);
-						LOG_INFO("Writing header!");
-						LeaveCriticalSection(&lock);
+						// Not yet used for anything
 						break;
 					}
 					case NetState::WRITE_VALIDATION:
 					{
-						EnterCriticalSection(&lock);
-						LOG_INFO("Writing validation!");
-						LeaveCriticalSection(&lock);
 						this->PrimeReadValidation(SI);
 						break;
 					}

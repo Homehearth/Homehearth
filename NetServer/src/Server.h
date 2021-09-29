@@ -45,7 +45,6 @@ namespace network
 		EnterCriticalSection(&lock);
 		LOG_INFO("Client connected from %s:%d", ip.c_str(), port);
 		LeaveCriticalSection(&lock);
-		//Broadcast();
 	}
 
 	void Server::OnClientDisconnect()

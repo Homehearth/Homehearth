@@ -37,10 +37,12 @@ namespace network
 		uint64_t m_handshakeIn;
 		uint64_t m_handshakeOut;
 		message<T> tempMsgIn;
-		tsQueue<message<T>> m_messagesIn;
 
 	protected:
 		CRITICAL_SECTION lock;
+
+	public:
+		tsQueue<message<T>> m_messagesIn;
 
 	private:
 		// Initialize winsock
@@ -93,7 +95,6 @@ namespace network
 			WSACleanup();
 		}
 	public:
-
 		// Given IP and port establish a connection to the server
 		bool Connect(std::string&& ip, uint16_t&& port);
 		// Disconnect from the server
@@ -206,10 +207,10 @@ namespace network
 	{
 		if (tempMsgIn.header.size > sizeof(msg_header<T>))
 		{
-			if (tempMsgIn.header.size > 300)
+			if (tempMsgIn.header.size > 3000)
 			{
 				EnterCriticalSection(&lock);
-				LOG_ERROR("Allocating to much memory!");
+				LOG_ERROR("Allocating to much memory! THIS IS BAD");
 				LeaveCriticalSection(&lock);
 			}
 			this->PrimeReadPayload(tempMsgIn.header.size - sizeof(msg_header<T>));
@@ -335,11 +336,6 @@ namespace network
 				continue;
 			}
 
-			if (EntriesRemoved > 1)
-			{
-				LOG_WARNING("Entries removed: %u", EntriesRemoved);
-			}
-
 			for (int i = 0; i < (int)EntriesRemoved; i++)
 			{
 				context = (PER_IO_DATA*)Entries[i].lpOverlapped;
@@ -360,51 +356,27 @@ namespace network
 					case NetState::READ_VALIDATION:
 					{
 						this->OnConnect();
-#ifdef PRINT_NETWORK_DEBUG
-						EnterCriticalSection(&lock);
-						LOG_NETWORK("Reading validation! Bytes: %ld", Entries[i].dwNumberOfBytesTransferred);
-#endif
 						this->ReadValidation(context);
-						LeaveCriticalSection(&lock);
 						break;
 					}
 					case NetState::WRITE_VALIDATION:
 					{
-#ifdef PRINT_NETWORK_DEBUG
-						EnterCriticalSection(&lock);
-						LOG_NETWORK("Writing validation! Bytes: %ld", Entries[i].dwNumberOfBytesTransferred);
-#endif
 						this->PrimeReadHeader();
-						LeaveCriticalSection(&lock);
 						break;
 					}
 					case NetState::READ_HEADER:
 					{
-#ifdef PRINT_NETWORK_DEBUG
-						EnterCriticalSection(&lock);
-						LOG_NETWORK("Reading header! Bytes: %ld", Entries[i].dwNumberOfBytesTransferred);
-#endif
 						this->ReadHeader(context);
-						LeaveCriticalSection(&lock);
 						break;
 					}
 					case NetState::READ_PAYLOAD:
 					{
-#ifdef PRINT_NETWORK_DEBUG
-						EnterCriticalSection(&lock);
-						LOG_NETWORK("Reading payload! Bytes: %ld", Entries[i].dwNumberOfBytesTransferred);
-#endif
 						this->ReadPayload(context);
-						LeaveCriticalSection(&lock);
 						break;
 					}
 					case NetState::WRITE_MESSAGE:
 					{
-#ifdef PRINT_NETWORK_DEBUG
-						EnterCriticalSection(&lock);
-						LOG_NETWORK("Writing header! Bytes: %ld", Entries[i].dwNumberOfBytesTransferred);
-#endif
-						LeaveCriticalSection(&lock);
+						// NOT YET USED FOR ANYTHING
 						break;
 					}
 					}

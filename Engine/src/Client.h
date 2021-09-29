@@ -24,7 +24,6 @@ namespace
 
 		void PingServer();
 		void TestServerWithGibberishData();
-		void test();
 	};
 
 	Client::Client()
@@ -40,18 +39,11 @@ namespace
 	{
 	}
 
-	inline void Client::test()
-	{
-
-	}
-
 	inline void Client::PingServer()
 	{
 		message<MessageType> msg = {};
 		msg.header.id = MessageType::PingServer;
 		this->timeThen = std::chrono::system_clock::now();
-		LOG_INFO("Pinging server!");
-
 		this->Send(msg);
 	}
 
@@ -61,10 +53,6 @@ namespace
 		msg.header.id = MessageType::Unknown;
 		char text[] = "Rofl this is a nice time to be alive and the thing is with that is that Im a cool guy that walks a lot because its fun!!!!! :)";
 		msg << text;
-		EnterCriticalSection(&lock);
-		LOG_INFO("Sending gibberish to server!");
-		LeaveCriticalSection(&lock);
-
 		this->Send(msg);
 	}
 
