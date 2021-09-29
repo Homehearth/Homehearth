@@ -390,8 +390,8 @@ void Engine::Render(float& dt)
 		Render 2D
 	*/
 	D2D1Core::Begin();
-
 	D2D1Core::DrawP(_DRAW(), ResourceManager::GetResource<RBitMap>("oohstonefigures.jpg")->GetTexture());
+	D2D1Core::DrawT("LOOOOL", _DRAW_TEXT(0.0f, 0.0f, 100.0f, 10.0f));
 	D2D1Core::Present();
 
 	IMGUI(

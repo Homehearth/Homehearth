@@ -134,21 +134,21 @@ void D2D1Core::Destroy()
 		delete INSTANCE;
 }
 
-void D2D1Core::DrawT(const std::string text, IDWriteTextFormat* format)
+void D2D1Core::DrawT(const std::string text, const _DRAW_TEXT& opt)
 {
 	if (INSTANCE->m_renderTarget)
 	{
 		IDWriteTextFormat* current_format = INSTANCE->m_writeFormat;
-		if (format)
-			current_format = format;
+		if (opt.textFormat)
+			current_format = opt.textFormat;
 
 		RECT rc;
 		GetClientRect(INSTANCE->m_windowPointer->GetHWnd(), &rc);
 		D2D1_RECT_F layoutRect = D2D1::RectF(
-			static_cast<FLOAT>(rc.left),
-			static_cast<FLOAT>(rc.top),
-			static_cast<FLOAT>(rc.right - rc.left),
-			static_cast<FLOAT>(rc.bottom - rc.top)
+			opt.x_pos,
+			opt.y_pos,
+			opt.x_pos + opt.x_stretch,
+			opt.y_pos + opt.y_stretch
 		);
 
 		/*
@@ -172,7 +172,7 @@ void D2D1Core::DrawT(const std::string text, IDWriteTextFormat* format)
 	}
 }
 
-void D2D1Core::DrawF(const float upper_x, const float upper_y, const float width, const float height, const Shapes shape)
+void D2D1Core::DrawF(const _DRAW& fig, const Shapes shape)
 {
 	INSTANCE->m_renderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
 	D2D1_SIZE_F rtSize = INSTANCE->m_renderTarget->GetSize();
@@ -180,11 +180,11 @@ void D2D1Core::DrawF(const float upper_x, const float upper_y, const float width
 	switch (shape)
 	{
 	case Shapes::RECTANGLE_FILLED:
-		D2D1_RECT_F rectangle_filled = D2D1::RectF(upper_x, upper_y, upper_x + width , upper_y + height);
+		D2D1_RECT_F rectangle_filled = D2D1::RectF(fig.x_pos, fig.y_pos, fig.x_pos + fig.width , fig.y_pos + fig.height);
 		INSTANCE->m_renderTarget->FillRectangle(&rectangle_filled, INSTANCE->m_solidBrush);
 		break;
 	case Shapes::RECTANGLE_OUTLINED:
-		D2D1_RECT_F rectangle_outlined = D2D1::RectF(upper_x, upper_y, upper_x + width, upper_y + height);
+		D2D1_RECT_F rectangle_outlined = D2D1::RectF(fig.x_pos, fig.y_pos, fig.x_pos + fig.width, fig.y_pos + fig.height);
 		INSTANCE->m_renderTarget->DrawRectangle(&rectangle_outlined, INSTANCE->m_solidBrush);
 		break;
 	case Shapes::TRIANGLE_FILLED:
@@ -193,10 +193,10 @@ void D2D1Core::DrawF(const float upper_x, const float upper_y, const float width
 			break;
 		ID2D1GeometrySink* sink;
 		geometry->Open(&sink);
-		D2D1_POINT_2F p1 = D2D1::Point2F(upper_x + width * 0.5f, upper_y);
+		D2D1_POINT_2F p1 = D2D1::Point2F(fig.x_pos + fig.width * 0.5f, fig.y_pos);
 		sink->BeginFigure(p1, D2D1_FIGURE_BEGIN_FILLED);
-		D2D1_POINT_2F p2 = D2D1::Point2F(upper_x + width, upper_y + height);
-		D2D1_POINT_2F p3 = D2D1::Point2F(upper_x, upper_y + height);
+		D2D1_POINT_2F p2 = D2D1::Point2F(fig.x_pos + fig.width, fig.y_pos + fig.height);
+		D2D1_POINT_2F p3 = D2D1::Point2F(fig.x_pos, fig.y_pos + fig.height);
 		sink->AddLine(p2);
 		sink->AddLine(p3);
 		sink->EndFigure(D2D1_FIGURE_END_CLOSED);

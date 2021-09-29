@@ -34,6 +34,50 @@ struct _DRAW
 	}
 };
 
+/*
+	Struct to Define text format
+	as well as position and stretch area.
+*/
+struct _DRAW_TEXT
+{
+	// Text format.
+	IDWriteTextFormat* textFormat = nullptr;
+
+	/*
+		Upper Left Corner position.
+	*/
+	float x_pos = 1.0f;
+	float y_pos = 1.0f;
+
+	/*
+		Lower Right Corner position.
+	*/
+	float x_stretch = 100.0f;
+	float y_stretch = 100.0f;
+
+	_DRAW_TEXT()
+	{
+		// Empty
+	}
+
+	_DRAW_TEXT(IDWriteTextFormat* format, float x, float y, float x_stretch, float y_stretch)
+	{
+		textFormat = format;
+		this->x_pos = x;
+		this->y_pos = y;
+		this->x_stretch = x_stretch;
+		this->y_stretch = y_stretch;
+	}
+
+	_DRAW_TEXT(float x, float y, float x_stretch, float y_stretch)
+	{
+		this->x_pos = x;
+		this->y_pos = y;
+		this->x_stretch = x_stretch;
+		this->y_stretch = y_stretch;
+	}
+};
+
 enum class Shapes
 {
 	DEFAULT,
@@ -80,22 +124,19 @@ public:
 		This is a basic version of drawing text onto screen.
 		Text will be drawn at the center of the window.
 	*/
-	static void DrawT(const std::string text, IDWriteTextFormat* format = nullptr);
+	static void DrawT(const std::string text, const _DRAW_TEXT& opt = _DRAW_TEXT());
 
 	/*
 		Draws the specified shape with position upper_x, upper_y and width, height.
 		Uses the default brush/color.
-		Ex:
-		upper_x = 0, upper_y = 0. width = window.width, height = window.height, shape = QUAD_FILLED
-		will draw a quad over the entire screen.
 	*/
-	static void DrawF(const float upper_x, const float upper_y, const float width, const float height, const Shapes shape = Shapes::DEFAULT);
+	static void DrawF(const _DRAW& fig, const Shapes shape = Shapes::DEFAULT);
 
 	/*
 		Draws a Bitmap onto the screen at the coordinates of
 		_DRAW specification.
 	*/
-	static void DrawP(const _DRAW& fig, ID2D1Bitmap* texture);
+	static void DrawP(const _DRAW& fig, ID2D1Bitmap* texture = nullptr);
 
 	/*
 		Run buffering D2D1 Draw commands.
