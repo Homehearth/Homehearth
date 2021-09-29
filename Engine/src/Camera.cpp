@@ -1,14 +1,33 @@
 #include "EnginePCH.h"
 #include "Camera.h"
 
-Camera::Camera(sm::Vector3 pos, sm::Vector3 target, sm::Vector3 up, sm::Vector2 windowSize)
-    :m_position(pos), m_target(target), m_up(up), m_windowHeight(windowSize.y), m_windowWidth(windowSize.x), m_rollPitchYaw(0,0,0)
+#define KEYPRESS InputSystem::Get().CheckKeyboardKey
+
+Camera::Camera()
 {
     m_FOV = dx::XMConvertToRadians(90.f); //0.4f * 3.14f;
     m_zoomValue = 1;
-    m_aspectRatio = m_windowWidth / m_windowHeight;
     m_nearPlane = 0.01f; // 1.0f;
     m_farPlane = 100.0f; // 1000.0f
+    m_rollPitchYaw = { 0.0f, 0.0f, 0.0f };
+    m_move = { 0.0f, 0.0f, 0.0f };
+
+    m_defaultForward = { 0.0f, 0.0f, 0.1f };
+    m_defaultRight = { 1.0f, 0.0f, 0.0f };
+
+    m_rotationSpeed = 0.001f;
+    m_movingSepeed = 0.001f;
+    m_movingSepeed = 0.001f;
+}
+
+void Camera::Initialize(sm::Vector3 pos, sm::Vector3 target, sm::Vector3 up, sm::Vector2 windowSize)
+{
+    m_position = pos;
+    m_target = target;
+    m_up = up;
+    m_windowHeight = windowSize.y;
+    m_windowWidth = windowSize.x;
+    m_aspectRatio = m_windowWidth / m_windowHeight;
 
     m_view = dx::XMMatrixLookAtRH(m_position, m_target, m_up);
     m_projection = dx::XMMatrixPerspectiveFovLH(m_FOV * m_zoomValue, m_aspectRatio, m_nearPlane, m_farPlane);
@@ -16,37 +35,74 @@ Camera::Camera(sm::Vector3 pos, sm::Vector3 target, sm::Vector3 up, sm::Vector2 
 
 void Camera::Update(float deltaTime)
 {
+    //TODO: get mouse input
+
+    //if (KEYPRESS(dx::Keyboard::W, KeyState::PRESSED))
+    //{
+    //    m_moveZ -= m_movingSepeed;
+    //    std::cout << "pressing w" << std::endl;
+    //}
+    //if (KEYPRESS(dx::Keyboard::S, KeyState::PRESSED))
+    //{
+    //    m_moveZ += m_movingSepeed;
+    //}
+    //if (KEYPRESS(dx::Keyboard::A, KeyState::PRESSED))
+    //{
+    //    m_moveX -= m_movingSepeed;
+    //}
+    //if (KEYPRESS(dx::Keyboard::D, KeyState::PRESSED))
+    //{
+    //    m_moveX += m_movingSepeed;
+    //}
+
+    m_move.x = InputSystem::Get().GetAxis(Axis::HORIZONTAL) * m_movingSepeed;
+    m_move.y = InputSystem::Get().GetAxis(Axis::VERTICAL) * m_movingSepeed;
+
     m_rotationMatrix = dx::XMMatrixRotationRollPitchYaw(m_rollPitchYaw.y, m_rollPitchYaw.z, m_rollPitchYaw.x);
 
     quaterion = sm::Quaternion::CreateFromYawPitchRoll(m_rollPitchYaw.z, m_rollPitchYaw.y, m_rollPitchYaw.x);
 
     //Update camera values
-    m_right = dx::XMVector3TransformCoord(m_defaultRight, m_rotationMatrix);
-    m_forward = dx::XMVector3TransformCoord(m_defaultForward, m_rotationMatrix);
-    m_up = dx::XMVector3Cross(m_forward, m_right);
+    //m_right = dx::XMVector3TransformNormal(m_defaultRight, m_rotationMatrix);
+    //m_forward = dx::XMVector3TransformNormal(m_defaultForward, m_rotationMatrix);
+   
+    m_target = dx::XMVector3TransformCoord(m_defaultForward, m_rotationMatrix);
+    m_target = dx::XMVector3Normalize(m_target);
+    
+    //m_up = dx::XMVector3Cross(m_forward, m_right);
+    //m_up = dx::XMVector3Normalize(m_up);
 
-    m_target = m_position + m_target;
+    m_position += m_move;
+    //m_move = { 0.0f, 0.0f, 0.0f };
+    m_forward = m_target;
+
+    m_target = dx::XMVectorAdd(m_target, m_position);
     m_view = dx::XMMatrixLookAtRH(m_position, m_target, m_up);
 }
 
-sm::Matrix Camera::GetView()
+sm::Matrix Camera::GetView() const
 {
     return m_view;
 }
 
-sm::Matrix Camera::GetProjection()
+sm::Matrix Camera::GetProjection() const
 {
     return m_projection;
 }
 
-sm::Vector3 Camera::GetPosition()
+sm::Vector3 Camera::GetPosition() const
 {
     return m_position;
 }
 
-sm::Vector3 Camera::GetTarget()
+sm::Vector3 Camera::GetTarget() const
 {
     return m_target;
+}
+
+sm::Vector3 Camera::GetUp() const
+{
+    return m_up;
 }
 
 void Camera::SetFOV(float fov)

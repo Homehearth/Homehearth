@@ -12,6 +12,7 @@ private:
 	sm::Vector3 m_right;
 	sm::Vector3 m_defaultForward;
 	sm::Vector3 m_defaultRight;
+	sm::Vector3 m_move;
 
 	sm::Matrix  m_view;
 	sm::Matrix  m_projection;
@@ -28,18 +29,21 @@ private:
 	float m_rotationSpeed;
 	float m_movingSepeed;
 
+
 	sm::Quaternion quaterion;
 
 public:
-	/* Position, Target, up, windowSize = (window height, window width) */
-	Camera(sm::Vector3 pos, sm::Vector3 target, sm::Vector3 up, sm::Vector2 windowSize);
+	Camera();
+	/* Position, Target, up, windowSize = (window width, window height) */
+	void Initialize(sm::Vector3 pos, sm::Vector3 target, sm::Vector3 up, sm::Vector2 windowSize);
 	void Update(float deltaTime);
 
 	//Get Functions
-	sm::Matrix GetView();
-	sm::Matrix GetProjection();
-	sm::Vector3 GetPosition();
-	sm::Vector3 GetTarget();
+	sm::Matrix GetView() const;
+	sm::Matrix GetProjection() const;
+	sm::Vector3 GetPosition() const;
+	sm::Vector3 GetTarget() const;
+	sm::Vector3 GetUp() const;
 	
 	//Set Functions
 	void SetFOV(float fov);
