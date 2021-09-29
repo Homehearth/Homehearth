@@ -673,7 +673,6 @@ namespace network
 				if (Entries[i].dwNumberOfBytesTransferred == 0)
 				{
 					this->DisconnectClient(SI);
-					delete context;
 					continue;
 				}
 				// I/O has completed, process it
