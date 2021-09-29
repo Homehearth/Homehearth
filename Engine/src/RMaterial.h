@@ -1,7 +1,24 @@
 #pragma once
 #include "RTexture.h"
+#include <assimp/material.h>
 
-struct aiMaterial;
+/*
+	---MTL-Standard---
+	make sure that the obj-file has a link to material
+	relative to where it is, otherwise assimp will not find it 
+	* "mtllib ../Materials/Barrel.mtl"
+
+	---PBR---
+	Assimp can't load in pbr-material for mtl-files
+	Have to use following for it to work:
+
+	* Albedo				"map_Kd Object_Albedo.png"
+	* Normal				"map_Kn Object_Normal.png"
+	* Metalness				"map_ns Object_Metalness.png"
+	* Roughness				"map_Ks Object_Roughness.png"
+	* Ambient occlusion		"map_Ka Object_AO.png"
+	
+*/
 
 class RMaterial : public resource::GResource
 {
@@ -12,7 +29,7 @@ private:
 		normal,
 		metalness,
 		roughness,
-		aoMap,	//Ambient occulution
+		ambientOcclusion,
 		length
 	};
 
@@ -55,6 +72,7 @@ private:
 	std::string GetFilename(const std::string& path);
 	bool CreateConstBuf(const matConstants_t& mat);
 	bool CreateConstBuf(const textures_t& mat);
+
 
 public:
 	RMaterial();

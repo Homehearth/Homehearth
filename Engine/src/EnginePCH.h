@@ -112,5 +112,4 @@ namespace sm = dx::SimpleMath;
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
-#include <assimp/pbrmaterial.h>
 #pragma warning(pop)

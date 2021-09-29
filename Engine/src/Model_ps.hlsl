@@ -1,9 +1,9 @@
 
-Texture2D albedo    : register(t0);
-Texture2D normal    : register(t1);
-Texture2D metalness : register(t2);
-Texture2D roughness : register(t3);
-Texture2D aomap     : register(t4);
+Texture2D T_albedo    : register(t0);
+Texture2D T_normal    : register(t1);
+Texture2D T_metalness : register(t2);
+Texture2D T_roughness : register(t3);
+Texture2D T_aomap     : register(t4);
 
 SamplerState samp : register(s0);
 
@@ -29,5 +29,5 @@ struct PixelIn
 float4 main(PixelIn input) : SV_TARGET
 {
     //return float4(1.0f, 0.0f, 0.0f, 1.0f);
-    return albedo.Sample(samp, input.uv);
+    return T_albedo.Sample(samp, input.uv);
 }

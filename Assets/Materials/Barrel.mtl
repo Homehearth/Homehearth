@@ -1,11 +1,12 @@
 newmtl StingrayPBS1SG
 illum 4
-Ka 1.00 1.00 1.00
-Kd 0.70 0.70 0.70
-Ks 2.00 1.00 2.00
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
 Tf 1.00 1.00 1.00
 Ni 0.00
-Ns 96.0
 
-map_Ka Barrel_Albedo.png
-norm Barrel_Normal.png
+map_Kd Barrel_Albedo.png
+map_Kn Barrel_Normal.png
+map_ns Barrel_Metalness.png
+map_Ks Barrel_Roughness.png
+map_Ka Barrel_AO.png

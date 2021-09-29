@@ -136,11 +136,11 @@ bool RMaterial::Create(aiMaterial* aiMat)
     //Syncing the enums between assimp and this structure
     std::unordered_map<ETextureType, aiTextureType> textureTypeMap =
     {
-        {ETextureType::albedo,    aiTextureType::aiTextureType_DIFFUSE},
-        {ETextureType::normal,    aiTextureType::aiTextureType_NORMALS},
-        {ETextureType::metalness, aiTextureType::aiTextureType_METALNESS},
-        {ETextureType::roughness, aiTextureType::aiTextureType_DIFFUSE_ROUGHNESS},
-        {ETextureType::aoMap,     aiTextureType::aiTextureType_AMBIENT_OCCLUSION}
+        {ETextureType::albedo,              aiTextureType::aiTextureType_DIFFUSE},
+        {ETextureType::normal,              aiTextureType::aiTextureType_NORMALS},
+        {ETextureType::metalness,           aiTextureType::aiTextureType_SHININESS},
+        {ETextureType::roughness,           aiTextureType::aiTextureType_SPECULAR},
+        {ETextureType::ambientOcclusion,    aiTextureType::aiTextureType_AMBIENT}
     };
 
     //For every texturetype: add the texture to the map
@@ -150,9 +150,9 @@ bool RMaterial::Create(aiMaterial* aiMat)
         //Get the filepath from Assimp
         if (AI_SUCCESS == aiMat->GetTexture(type.second, 0, &path))
         {
+            //Strip down path to only filename
             std::string filename = GetFilename(path.C_Str());
-            
-            //Add the resource - return true if it was successfully added and get the pointer to the texture
+            //Add the resource and create it
             m_textures[(uint8_t)type.first] = ResourceManager::Get().GetResource<RTexture>(filename);
         }
     }
@@ -168,7 +168,7 @@ bool RMaterial::Create(aiMaterial* aiMat)
         hasTextures.hasMetalness = true;
     if (m_textures[(uint8_t)ETextureType::roughness])
         hasTextures.hasRoughness = true;
-    if (m_textures[(uint8_t)ETextureType::aoMap])
+    if (m_textures[(uint8_t)ETextureType::ambientOcclusion])
         hasTextures.hasAlbedo = true;
 
     if (!CreateConstBuf(hasTextures))
@@ -210,9 +210,7 @@ bool RMaterial::Create(const std::string& filename)
 		//Ambient
 		if (prefix == "Ka")
 		{
-			ss >> matConst.ambient.x;
-			ss >> matConst.ambient.y;
-			ss >> matConst.ambient.z;
+			ss >> matConst.ambient.x >> matConst.ambient.y >> matConst.ambient.z;
 		}
 		//Diffuse
 		else if (prefix == "Kd")
@@ -242,8 +240,8 @@ bool RMaterial::Create(const std::string& filename)
 		/*
 			Textures
 		*/
-		//Diffuse/albedo map
-		else if (prefix == "map_Ka" || prefix == "map_Kd")
+		//Albedo map
+		else if (prefix == "map_Kd")
 		{
 			std::string filepath;
 			if (ss >> filepath)
@@ -254,7 +252,7 @@ bool RMaterial::Create(const std::string& filename)
 			}
 		}
 		//Normalmap
-		else if (prefix == "bump" || prefix == "norm")
+		else if (prefix == "map_Kn")
 		{
 			std::string filepath;
 			if (ss >> filepath)
@@ -265,7 +263,7 @@ bool RMaterial::Create(const std::string& filename)
 			}
 		}
 		//Metallic
-		else if (prefix == "map_Pm" || prefix == "Pm")
+		else if (prefix == "map_ns")
 		{
 			std::string filepath;
 			if (ss >> filepath)
@@ -276,7 +274,7 @@ bool RMaterial::Create(const std::string& filename)
 			}
 		}
 		//Roughness
-		else if (prefix == "map_Pr" || prefix == "Pr")
+		else if (prefix == "map_Ks")
 		{
 			std::string filepath;
 			if (ss >> filepath)
@@ -287,13 +285,13 @@ bool RMaterial::Create(const std::string& filename)
 			}
 		}
 		//Ambient occulution map
-		else if (prefix == "map_AO" || prefix == "AO")
+		else if (prefix == "map_Ka")
 		{
 			std::string filepath;
 			if (ss >> filepath)
 			{
 				std::string filename = GetFilename(filepath);
-				m_textures[(uint8_t)ETextureType::aoMap] = ResourceManager::Get().GetResource<RTexture>(filename);
+				m_textures[(uint8_t)ETextureType::ambientOcclusion] = ResourceManager::Get().GetResource<RTexture>(filename);
 				hasTextures.hasAoMap = true;
 			}
 		}
