@@ -156,6 +156,10 @@ void Engine::Run()
 		{
 			std::cout << "Mouse left Pressed\n";
 			std::cout << "XPos: " << InputSystem::Get().GetMousePos().x << std::endl;
+			//Testing mouse ray TODO Move this update to game?
+			InputSystem::Get().UpdateMouseRay(m_debugCamera.GetProjection(), m_debugCamera.GetView());
+			std::cout << "Mouseraydir: " << InputSystem::Get().GetMouseRay().rayDir.x << " " << InputSystem::Get().GetMouseRay().rayDir.y << " " << InputSystem::Get().GetMouseRay().rayDir.z << std::endl;
+			//LOG_INFO("Mouseray: " + std::to_string(InputSystem::Get().GetMouseRay().rayDir.x));
 		}
 		if (InputSystem::Get().CheckMouseKey(MouseKey::RIGHT, KeyState::PRESSED))
 		{

@@ -53,7 +53,7 @@ public:
 
 	// Shutdown the Engine and its instances in the reverse order.
 	void Shutdown();
-
+	
 	Scene& GetScene(const std::string& name);
 	void SetScene(const std::string& name);
 	void SetScene(Scene& scene);
