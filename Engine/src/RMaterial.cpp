@@ -102,8 +102,6 @@ bool RMaterial::Create(aiMaterial* aiMat)
     /*
         Load in material constants
     */
-    std::cout << "Material name: " << aiMat->GetName().C_Str() << std::endl;
-
     matConstants_t matConst;
     aiColor3D ambient = { 0.f, 0.f, 0.f };
     if (AI_SUCCESS == aiMat->Get(AI_MATKEY_COLOR_AMBIENT, ambient))
