@@ -10,16 +10,13 @@ PipelineManager::PipelineManager()
 {
 }
 
-void PipelineManager::Initialize(Window* pWindow, Camera* camera)
+void PipelineManager::Initialize(Window* pWindow)
 {
     if (m_window == nullptr)
         m_window = pWindow;
 
     if (m_d3d11 == nullptr)
         m_d3d11 = &D3D11Core::Get();
-
-    if (m_camera == nullptr)
-        m_camera = camera;  
 
     assert((m_window || m_d3d11) || "Renderer could not be initialized.");
 

@@ -9,10 +9,12 @@ Renderer::Renderer()
 
 void Renderer::Initialize(Window* pWindow, Camera* camera)
 {
-	m_pipelineManager.Initialize(pWindow, camera);
-	
+	m_pipelineManager.Initialize(pWindow);
+    m_camera = camera;
+
     m_d3d11 = &D3D11Core::Get();
     AddPass(&m_basePass);
+    m_basePass.GetCamera(camera);
 }
 
 void Renderer::ClearFrame()

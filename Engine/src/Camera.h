@@ -29,7 +29,6 @@ private:
 	float m_rotationSpeed;
 	float m_movingSepeed;
 
-	ComPtr<ID3D11Buffer> m_viewConstantBuffer;
 	camera_Matrix_t m_cameraMat;
 
 	sm::Quaternion quaterion;
@@ -47,9 +46,8 @@ public:
 	sm::Vector3 GetPosition() const;
 	sm::Vector3 GetTarget() const;
 	sm::Vector3 GetUp() const;
-	ComPtr<ID3D11Buffer> GetConstantBuffer();
 	camera_Matrix_t GetCameraMatrixes();
-	
+
 	//Set Functions
 	void SetFOV(float fov);
 	void SetNearFarPlane(float nearPlane, float farPlane);
@@ -60,4 +58,6 @@ public:
 	/*Run this function after setting any new values for projection*/
 	void UpdateProjection();
 
+	//Public variables and stuff
+	ComPtr<ID3D11Buffer> m_viewConstantBuffer;
 };

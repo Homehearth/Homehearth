@@ -38,7 +38,7 @@ void Engine::Startup()
 	//Camera
 	m_debugCamera.Initialize(sm::Vector3(0, 0, -1), sm::Vector3(0, 0, 0), sm::Vector3(0, 1, 0), sm::Vector2((float)m_window.GetWidth(), (float)m_window.GetHeight()));
 
-	m_currentCamera = std::make_shared<Camera>();
+	m_currentCamera = std::make_shared<Camera>(m_debugCamera);
 
 	m_renderer.Initialize(&m_window, m_currentCamera.get());
 

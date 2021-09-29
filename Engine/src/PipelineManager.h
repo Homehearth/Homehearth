@@ -16,12 +16,10 @@ public:
 	virtual ~PipelineManager() = default;
 
 	// Initialize PipelineManager.
-	void Initialize(Window* pWindow, Camera* debugCamera);
+	void Initialize(Window* pWindow);
 
 	
 	// PUBLIC AVAILABLE DATA.
-	Camera* m_camera = nullptr;
-
 	ComPtr<ID3D11RenderTargetView>	m_renderTargetView;
 
 	ComPtr<ID3D11Texture2D>			m_depthStencilTexture;
