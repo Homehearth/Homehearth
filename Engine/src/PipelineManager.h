@@ -10,13 +10,14 @@ class PipelineManager
 private:
 	Window*							m_window;
 	D3D11Core*						m_d3d11;
+	Camera*							m_debugCamera = nullptr;
 	
 public:
 	PipelineManager();
 	virtual ~PipelineManager() = default;
 
 	// Initialize PipelineManager.
-	void Initialize(Window * pWindow);
+	void Initialize(Window* pWindow, Camera* debugCamera);
 
 	
 	// PUBLIC AVAILABLE DATA.

@@ -1,6 +1,7 @@
 ﻿#include "EnginePCH.h"
 #include "Engine.h"
 #include <omp.h>
+#include "Camera.h"
 
 #include "RMesh.h"
 
@@ -33,10 +34,15 @@ void Engine::Startup()
 	D3D11Core::Get().Initialize(&m_window);
 	D2D1Core::Initialize(&m_window);
 
-	m_renderer.Initialize(&m_window);
+	//Camera
+	Camera debugCamera(sm::Vector3(0, 0, -1), sm::Vector3(0, 0, 0), sm::Vector3(0, 1, 0), sm::Vector2((float)m_window.GetWidth(), (float)m_window.GetHeight()));
+
+	m_renderer.Initialize(&m_window, &debugCamera);
 
 	// Thread should be launched after s_engineRunning is set to true and D3D11 is initialized.
 	s_engineRunning = true;
+
+	
 
 	//
 	// AUDIO 

@@ -7,9 +7,9 @@ Renderer::Renderer()
 {
 }
 
-void Renderer::Initialize(Window* pWindow)
+void Renderer::Initialize(Window* pWindow, Camera* debugCamera)
 {
-	m_pipelineManager.Initialize(pWindow);
+	m_pipelineManager.Initialize(pWindow, debugCamera);
 	
     m_d3d11 = &D3D11Core::Get();
     m_basePass.SetEnable(true);
