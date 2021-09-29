@@ -11,8 +11,7 @@ namespace network
 		WRITE_VALIDATION,
 		READ_HEADER,
 		READ_PAYLOAD,
-		WRITE_HEADER,
-		WRITE_PAYLOAD
+		WRITE_MESSAGE,
 	};
 
 	struct PER_IO_DATA
@@ -20,7 +19,6 @@ namespace network
 		OVERLAPPED Overlapped;
 		WSABUF DataBuf;
 		NetState state;
-		CHAR buffer[BUFFER_SIZE] = {};
 	};
 
 	/*
@@ -35,19 +33,20 @@ namespace network
 		HANDLE m_CompletionPort;
 		struct sockaddr_in m_endpoint;
 		socklen_t m_endpointLen;
-		message<T> tempMsgIn;
 		SOCKET m_socket;
 		uint64_t m_handshakeIn;
 		uint64_t m_handshakeOut;
+		message<T> tempMsgIn;
 		tsQueue<message<T>> m_messagesIn;
-		tsQueue<message<T>> m_messagesOut;
+
+	protected:
+		CRITICAL_SECTION lock;
 
 	private:
 		// Initialize winsock
 		void InitWinsock();
 		std::string PrintSocketData(struct addrinfo* p);
 		SOCKET CreateSocket(std::string& ip, uint16_t& port);
-		// Client worker thread that processes all incoming and outgoing data
 		DWORD WINAPI ProcessIO();
 
 		/*
@@ -62,12 +61,8 @@ namespace network
 		void ReadHeader(PER_IO_DATA*& context);
 		void ReadPayload(PER_IO_DATA*& context);
 		void ReadValidation(PER_IO_DATA*& context);
-		void WriteHeader(message<T>& msg);
-		void WritePayload(message<T>& msg);
+		void WriteMessage(message<T>& msg);
 		void WriteValidation();
-
-	protected:
-		CRITICAL_SECTION lock;
 
 	protected:
 		// Functions that runs once when an event happens
@@ -221,24 +216,26 @@ namespace network
 		}
 		else
 		{
+			this->m_messagesIn.push_back(tempMsgIn);
 			this->OnMessageReceived(tempMsgIn);
 			this->PrimeReadHeader();
 		}
 	}
 
 	template <typename T>
-	void client_interface<T>::WriteHeader(message<T>& msg)
+	void client_interface<T>::WriteMessage(message<T>& msg)
 	{
 		PER_IO_DATA* context = new PER_IO_DATA;
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
-		memcpy(&context->buffer[0], &msg.header, sizeof(msg_header<T>));
+		char buffer[BUFFER_SIZE];
+		memcpy(&buffer[0], &msg.header, sizeof(msg_header<T>));
 		if (msg.header.size > 0)
 		{
-			memcpy(&context->buffer[sizeof(msg_header<T>)], msg.payload.data(), msg.payload.size());
+			memcpy(&buffer[sizeof(msg_header<T>)], msg.payload.data(), msg.payload.size());
 		}
-		context->DataBuf.buf = (CHAR*)context->buffer;
+		context->DataBuf.buf = (CHAR*)buffer;
 		context->DataBuf.len = ULONG(sizeof(msg_header<T>) + msg.payload.size());
-		context->state = NetState::WRITE_HEADER;
+		context->state = NetState::WRITE_MESSAGE;
 		DWORD BytesSent = 0;
 		DWORD flags = 0;
 
@@ -256,31 +253,10 @@ namespace network
 	template <typename T>
 	void client_interface<T>::ReadPayload(PER_IO_DATA*& context)
 	{
+		this->m_messagesIn.push_back(tempMsgIn);
 		this->OnMessageReceived(tempMsgIn);
 		tempMsgIn.payload.clear();
 		this->PrimeReadHeader();
-	}
-
-	template <typename T>
-	void client_interface<T>::WritePayload(message<T>& msg)
-	{
-		PER_IO_DATA* context = new PER_IO_DATA;
-		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
-		context->DataBuf.buf = (CHAR*)&msg.payload[0];
-		context->DataBuf.len = (ULONG)msg.payload.size();
-		context->state = NetState::WRITE_PAYLOAD;
-		DWORD BytesSent = 0;
-		DWORD flags = 0;
-
-		if (WSASend(m_socket, &context->DataBuf, 1, &BytesSent, flags, &context->Overlapped, NULL) == SOCKET_ERROR)
-		{
-			if (WSAGetLastError() != WSA_IO_PENDING)
-			{
-				LOG_ERROR("WSASend failed! %d", WSAGetLastError());
-				delete context;
-				context = nullptr;
-			}
-		}
 	}
 
 	template <typename T>
@@ -422,22 +398,13 @@ namespace network
 						LeaveCriticalSection(&lock);
 						break;
 					}
-					case NetState::WRITE_HEADER:
+					case NetState::WRITE_MESSAGE:
 					{
 #ifdef PRINT_NETWORK_DEBUG
 						EnterCriticalSection(&lock);
 						LOG_NETWORK("Writing header! Bytes: %ld", Entries[i].dwNumberOfBytesTransferred);
 #endif
 						LeaveCriticalSection(&lock);
-						break;
-					}
-					case NetState::WRITE_PAYLOAD:
-					{
-#ifdef PRINT_NETWORK_DEBUG
-						EnterCriticalSection(&lock);
-						LOG_NETWORK("Writing payload! Bytes: %ld", Entries[i].dwNumberOfBytesTransferred);
-						LeaveCriticalSection(&lock);
-#endif
 						break;
 					}
 					}
@@ -525,12 +492,7 @@ namespace network
 	template<typename T>
 	inline void client_interface<T>::Send(message<T>& msg)
 	{
-		this->WriteHeader(msg);
-
-		//if (msg.header.size > 0)
-		//{
-		//	this->WritePayload(msg);
-		//}
+		this->WriteMessage(msg);
 	}
 
 	template<typename T>

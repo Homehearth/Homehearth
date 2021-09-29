@@ -10,9 +10,8 @@ namespace network
 		WRITE_VALIDATION,
 		READ_VALIDATION,
 		READ_HEADER,
-		WRITE_HEADER,
 		READ_PAYLOAD,
-		WRITE_PAYLOAD
+		WRITE_MESSAGE
 	};
 
 	// Information regarding every connection
@@ -23,7 +22,6 @@ namespace network
 		uint64_t handshakeResult;
 		SOCKET Socket;
 		message<MessageType> msgTempIn = {};
-		message<MessageType> msgTempOut = {};
 	};
 
 	// Information regarding every input or output
@@ -31,7 +29,6 @@ namespace network
 	{
 		OVERLAPPED Overlapped = {};
 		WSABUF DataBuf = {};
-		CHAR buffer[4096] = {};
 		NetState net_state;
 	};
 
@@ -49,7 +46,9 @@ namespace network
 
 	protected:
 		CRITICAL_SECTION lock;
-		tsQueue<message<T>> m_messagesOut;
+
+	public:
+		tsQueue<message<T>> m_messagesIn;
 
 	protected:
 		// Called once when a client connects
@@ -79,16 +78,12 @@ namespace network
 		void ReadValidation(SOCKET_INFORMATION*& SI, PER_IO_DATA* context);
 		void ReadHeader(SOCKET_INFORMATION*& SI, PER_IO_DATA* context);
 		void ReadPayload(SOCKET_INFORMATION*& SI, PER_IO_DATA* context);
-		void WriteHeader(SOCKET_INFORMATION*& SI, message<T>& msg);
-		void WritePayload(SOCKET_INFORMATION*& SI);
+		void WriteMessage(SOCKET_INFORMATION*& SI, message<T>& msg);
 		void PrimeReadHeader(SOCKET_INFORMATION*& SI);
 		void PrimeReadPayload(SOCKET_INFORMATION*& SI);
 		void PrimeReadValidation(SOCKET_INFORMATION*& SI);
 
 		static void AlertThreadFunction();
-
-	public:
-		tsQueue<message<T>> m_messagesIn;
 
 	public:
 		// Constructor and Deconstructor
@@ -123,31 +118,6 @@ namespace network
 	void server_interface<T>::AlertThreadFunction()
 	{
 		LOG_INFO("Thread id: %lu alerted!", GetCurrentThreadId());
-	}
-
-	template <typename T>
-	void server_interface<T>::WritePayload(SOCKET_INFORMATION*& SI)
-	{
-		if (SI->msgTempOut.header.size > 0)
-		{
-			PER_IO_DATA* context = new PER_IO_DATA;
-			ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
-			size_t size = SI->msgTempOut.payload.size();
-			context->DataBuf.buf = (CHAR*)SI->msgTempOut.payload.data();
-			context->DataBuf.len = (ULONG)size;
-			context->net_state = NetState::WRITE_PAYLOAD;
-			DWORD bytesSent = 0;
-			DWORD flags = 0;
-
-			if (WSASend(SI->Socket, &context->DataBuf, 1, &bytesSent, flags, (OVERLAPPED*)context, NULL) == SOCKET_ERROR)
-			{
-				if (WSAGetLastError() != ERROR_IO_PENDING)
-				{
-					delete context;
-					LOG_ERROR("WSASend() failed with error %d", WSAGetLastError());
-				}
-			}
-		}
 	}
 
 	template <typename T>
@@ -236,6 +206,7 @@ namespace network
 	void server_interface<T>::ReadPayload(SOCKET_INFORMATION*& SI, PER_IO_DATA* context)
 	{
 		this->OnMessageReceived(SI, SI->msgTempIn);
+		this->m_messagesIn.push_back(SI->msgTempIn);
 		SI->msgTempIn.payload.clear();
 		this->PrimeReadHeader(SI);
 	}
@@ -249,24 +220,26 @@ namespace network
 		}
 		else
 		{
+			this->m_messagesIn.push_back(SI->msgTempIn);
 			this->OnMessageReceived(SI, SI->msgTempIn);
 			this->PrimeReadHeader(SI);
 		}
 	}
 
 	template <typename T>
-	void server_interface<T>::WriteHeader(SOCKET_INFORMATION*& SI, message<T>& msg)
+	void server_interface<T>::WriteMessage(SOCKET_INFORMATION*& SI, message<T>& msg)
 	{
 		PER_IO_DATA* context = new PER_IO_DATA;
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
-		memcpy(&context->buffer[0], &msg.header, sizeof(msg_header<T>));
+		char buffer[BUFFER_SIZE];
+		memcpy(&buffer[0], &msg.header, sizeof(msg_header<T>));
 		if (msg.header.size > 0)
 		{
-			memcpy(&context->buffer[sizeof(msg_header<T>)], msg.payload.data(), msg.payload.size());
+			memcpy(&buffer[sizeof(msg_header<T>)], msg.payload.data(), msg.payload.size());
 		}
-		context->DataBuf.buf = (CHAR*)context->buffer;
+		context->DataBuf.buf = (CHAR*)buffer;
 		context->DataBuf.len = ULONG(sizeof(msg_header<T>) + msg.payload.size());
-		context->net_state = NetState::WRITE_HEADER;
+		context->net_state = NetState::WRITE_MESSAGE;
 		DWORD BytesSent = 0;
 		DWORD flags = 0;
 
@@ -418,8 +391,7 @@ namespace network
 	template <typename T>
 	void server_interface<T>::SendToClient(SOCKET_INFORMATION*& SI, message<T>& msg)
 	{
-		//SI->msgTempOut = msg;
-		this->WriteHeader(SI, msg);
+		this->WriteMessage(SI, msg);
 	}
 
 	template <typename T>
@@ -688,7 +660,9 @@ namespace network
 
 			if (EntriesRemoved > 1)
 			{
+				EnterCriticalSection(&lock);
 				LOG_WARNING("Entries removed: %u", EntriesRemoved);
+				LeaveCriticalSection(&lock);
 			}
 
 			for (int i = 0; i < (int)EntriesRemoved; i++)
@@ -734,17 +708,10 @@ namespace network
 						this->ReadValidation(SI, context);
 						break;
 					}
-					case NetState::WRITE_HEADER:
+					case NetState::WRITE_MESSAGE:
 					{
 						EnterCriticalSection(&lock);
 						LOG_INFO("Writing header!");
-						LeaveCriticalSection(&lock);
-						break;
-					}
-					case NetState::WRITE_PAYLOAD:
-					{
-						EnterCriticalSection(&lock);
-						LOG_INFO("Writing payload!");
 						LeaveCriticalSection(&lock);
 						break;
 					}
