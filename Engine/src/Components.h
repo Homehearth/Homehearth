@@ -15,8 +15,7 @@ namespace ecs
 		struct Renderable
 		{
 			RMesh* mesh;
-			Transform renderForm;
-			//dx::ConstantBuffer<sm::Matrix> constantBuffer;
+			Transform transformCopy;
 		};
 
 		struct Velocity
@@ -29,9 +28,6 @@ namespace ecs
 			float runSpeed;
 		};
 	};
-
-	void OnRenderableConstruct(entt::registry& reg, entt::entity entity);
-
 
 	sm::Matrix GetMatrix(component::Transform& transform);
 	sm::Vector3 GetForward(component::Transform& transform);

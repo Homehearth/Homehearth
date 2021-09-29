@@ -1,17 +1,6 @@
 #include "EnginePCH.h"
 #include "Components.h"
 
-void ecs::OnRenderableConstruct(entt::registry& reg, entt::entity entity) {
-    component::Renderable& renderable = reg.get<component::Renderable>(entity);
-    //renderable.constantBuffer.Create(D3D11Core::Get().Device());
-
-    sm::Matrix m = sm::Matrix::Identity;
-    T_LOCK();
-    //renderable.constantBuffer.SetData(D3D11Core::Get().DeviceContext(), m);
-    T_UNLOCK();
-}
-
-
 sm::Matrix ecs::GetMatrix(component::Transform& transform)
 {
     sm::Matrix mat = sm::Matrix::CreateWorld(transform.position, GetForward(transform), GetUp(transform));

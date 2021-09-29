@@ -319,19 +319,20 @@ void Engine::drawImGUI() const
 
 	ImGui::End();
 	
-	/*
-	ImGui::Begin("Objects");
+	ImGui::Begin("Transforms");
 	m_currentScene->GetRegistry().view<comp::Transform>().each([&](entt::entity e, comp::Transform& transform)
 		{
-
 			ImGui::Separator();
-			ImGui::DragFloat3(("Position: " + std::to_string((int)e)).c_str(), (float*)&transform.position);
-			ImGui::DragFloat3(("Rotation: " + std::to_string((int)e)).c_str(), (float*)&transform.rotation, dx::XMConvertToRadians(1.f));
+			ImGui::Text("Entity: %d", (int)e);
+			ImGui::DragFloat3(("Position##" + std::to_string((int)e)).c_str(), (float*)&transform.position);
+			ImGui::DragFloat3(("Rotation##" + std::to_string((int)e)).c_str(), (float*)&transform.rotation, dx::XMConvertToRadians(1.f));
+			if(ImGui::Button(("Remove##" + std::to_string((int)e)).c_str()))
+			{
+				m_currentScene->GetRegistry().destroy(e);
+			}
 			ImGui::Spacing();
-
 		});
 	ImGui::End();
-	*/
 
 
 }
@@ -404,14 +405,19 @@ void Engine::Render(float& dt)
 	}
 
 	D2D1Core::Present();
+	{
+		PROFILE_SCOPE("Draw ImGui");
+		IMGUI(
+			m_imguiMutex.lock();
+			ImGui::Render();
+			ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+			m_imguiMutex.unlock();
+		);
+	}
 
-	IMGUI(
-		m_imguiMutex.lock();
-		ImGui::Render();
-		ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
-		m_imguiMutex.unlock();
-	);
-
-	D3D11Core::Get().SwapChain()->Present(0, 0);
+	{
+		PROFILE_SCOPE("Present");
+		D3D11Core::Get().SwapChain()->Present(0, 0);
+	}
 }
 
