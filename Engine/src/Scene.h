@@ -11,11 +11,9 @@ private:
 	// Registry handles all ecs data
 	entt::registry m_registry;
 	
-	DoubleBuffer<std::unordered_map<entt::entity, comp::Renderable>> m_renderableCopies;
+	DoubleBuffer<std::vector<comp::Renderable>> m_renderableCopies;
 	dx::ConstantBuffer<sm::Matrix> m_publicBuffer;
 
-	std::mutex m_destroyedEntityMutex;
-	void OnRenderableDestroy(entt::registry& reg, entt::entity e);
 public:
 
 	Scene();

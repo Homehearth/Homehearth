@@ -29,9 +29,9 @@ namespace ecs
 		};
 	};
 
-	sm::Matrix GetMatrix(component::Transform& transform);
-	sm::Vector3 GetForward(component::Transform& transform);
-	sm::Vector3 GetUp(component::Transform& transform);
+	sm::Matrix GetMatrix(const component::Transform& transform);
+	sm::Vector3 GetForward(const component::Transform& transform);
+	sm::Vector3 GetUp(const component::Transform& transform);
 
 };
 

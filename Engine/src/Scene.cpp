@@ -1,18 +1,8 @@
 #include "EnginePCH.h"
 #include "Scene.h"
 
-void Scene::OnRenderableDestroy(entt::registry& reg, entt::entity e)
-{
-	m_renderableCopies[0].erase(e);
-	m_destroyedEntityMutex.lock();
-	m_renderableCopies[1].erase(e);
-	m_destroyedEntityMutex.unlock();
-}
-
 Scene::Scene()
-{
-	m_registry.on_destroy<comp::Renderable>().connect<&Scene::OnRenderableDestroy>(this);
-
+{	
 	m_publicBuffer.Create(D3D11Core::Get().Device());
 }
 
@@ -30,10 +20,11 @@ void Scene::Update(float dt)
 	// only copy if the last frame has been rendered
 	if (!m_renderableCopies.IsSwapped()) {
 		PROFILE_SCOPE("Copy Transforms");
+		m_renderableCopies[0].clear();
 		m_registry.view<comp::Transform, comp::Renderable>().each([&](entt::entity e, comp::Transform& t, comp::Renderable& r) 
 			{
 				r.transformCopy = t;
-				m_renderableCopies[0][e] = r;
+				m_renderableCopies[0].push_back(r);
 			});
 		m_renderableCopies.Swap();
 	}
@@ -50,13 +41,11 @@ void Scene::Render()
 	};
 
 	D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, buffers);
-	m_destroyedEntityMutex.lock();
-	for (auto& it = m_renderableCopies[1].begin(); it != m_renderableCopies[1].end(); it++)
+	for (const auto& it : m_renderableCopies[1])
 	{
-		m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), ecs::GetMatrix(it->second.transformCopy));
-		it->second.mesh->Render();	
+		m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), ecs::GetMatrix(it.transformCopy));
+		it.mesh->Render();	
 	}
-	m_destroyedEntityMutex.unlock();
 	
 	// Emit event
 	publish<ESceneRender>();
