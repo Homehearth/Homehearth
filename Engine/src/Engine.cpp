@@ -19,7 +19,6 @@ Engine::Engine()
 void Engine::Startup()
 {
 	T_INIT(1, thread::ThreadType::POOL_FIFO);
-	ResourceManager::Initialize();
 	srand((unsigned int)time(NULL));
 
 	// Window Startup:
@@ -107,11 +106,6 @@ void Engine::Run()
 
 		if (m_client.IsConnected())
 		{
-			if (!m_client.messages.empty())
-			{
-				std::cout << "TESTING!!!!!" << std::endl;
-				message<MessageType> msg = m_client.messages.pop_front();
-			}
 			if (GetForegroundWindow() == this->m_window.GetHWnd())
 			{
 				key[0] = GetAsyncKeyState('1') & 0x8000;
@@ -120,12 +114,11 @@ void Engine::Run()
 
 				if (key[0] && !old_key[0])
 				{
-					message<MessageType> msg = {};
-					msg.header.id = MessageType::PingServer;
-					m_client.timeThen = std::chrono::system_clock::now();
-					LOG_INFO("Pinging server!");
-
-					m_client.Send(msg);
+					m_client.PingServer();
+				}
+				else if (key[1] && !old_key[1])
+				{
+					m_client.TestServerWithGibberishData();
 				}
 
 				for (int i = 0; i < 3; i++)
@@ -135,8 +128,8 @@ void Engine::Run()
 			}
 		}
 
-		
-
+		// Handle Input.
+		InputSystem::Get().UpdateEvents();
 		//Showing examples of keyboard and mouse (THIS CODE SHOULD BE HANDLED SOMEWHERE ELSE (GAMEPLAY LOGIC))
 		if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::G, KeyState::RELEASED))
 		{
@@ -187,9 +180,10 @@ void Engine::Run()
 		ImGui::DestroyContext();
 	);
 
+
 	m_client.Disconnect();
     T_DESTROY();
-    ResourceManager::Destroy();
+    ResourceManager::Get().Destroy();
     D2D1Core::Destroy();
 }
 
