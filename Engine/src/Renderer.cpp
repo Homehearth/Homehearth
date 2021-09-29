@@ -12,7 +12,11 @@ void Renderer::Initialize(Window* pWindow)
 	m_pipelineManager.Initialize(pWindow);
 	
     m_d3d11 = &D3D11Core::Get();
+	
+    //AddPass(&m_depthPass);
     AddPass(&m_basePass);
+
+    LOG_INFO("Number of rendering passes: %d", static_cast<int>(m_passes.size()));
 }
 
 void Renderer::ClearFrame()

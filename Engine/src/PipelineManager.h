@@ -23,10 +23,15 @@ public:
 	
 	ComPtr<ID3D11RenderTargetView>	m_renderTargetView;
 
+	// depth buffer data	
 	ComPtr<ID3D11Texture2D>			m_depthStencilTexture;
 	
 	ComPtr<ID3D11DepthStencilView>	m_depthStencilView;
-	ComPtr<ID3D11DepthStencilState>	m_depthStencilState;
+	ComPtr<ID3D11ShaderResourceView>m_depthStencilSRV;
+	
+	ComPtr<ID3D11DepthStencilState>	m_depthStencilStateLess;
+	ComPtr<ID3D11DepthStencilState> m_depthStencilStateGreater;
+	ComPtr<ID3D11DepthStencilState> m_depthStencilStateEqualAndDisableDepthWrite;
 
 	ComPtr<ID3D11RasterizerState>	m_rasterizerState;
 	ComPtr<ID3D11RasterizerState>	m_rasterStateNoCulling;
@@ -52,15 +57,16 @@ private:
 	
 	bool CreateRenderTargetView();
 	bool CreateDepthStencilTexture();
-	bool CreateDepthStencilState();
+	bool CreateDepthStencilStates();
 	bool CreateDepthStencilView();
 	bool CreateRasterizerStates();
 	bool CreateSamplerStates();
+	bool CreateBlendStates();
 	bool CreateShaders();
+	bool CreateInputLayouts();	
 	void SetViewport();
 
-	bool CreateDefaultInputLayout();	// todo: create all input layouts.
-	bool CreateDefaultConstantBuffer();	// todo: make use the HelperBuffer.h.
+	bool CreateDefaultConstantBuffer();	// TODO: maybe put in Camera class or update from Camera class
 };
 
 

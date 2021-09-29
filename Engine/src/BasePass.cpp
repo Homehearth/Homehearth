@@ -20,7 +20,6 @@ void BasePass::PreRender(ID3D11DeviceContext* dc, PipelineManager* pm)
         dc->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     }
 
-
     // SHADER STAGES.
     {
         dc->VSSetShader(pm->m_defaultVertexShader.Get(), nullptr, 0);
