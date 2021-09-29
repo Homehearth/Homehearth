@@ -15,9 +15,8 @@ Camera::Camera()
     m_defaultForward = { 0.0f, 0.0f, 0.1f };
     m_defaultRight = { 1.0f, 0.0f, 0.0f };
 
-    m_rotationSpeed = 0.001f;
-    m_movingSepeed = 0.001f;
-    m_movingSepeed = 0.001f;
+    m_rotationSpeed = 0.00001f;
+    m_movingSepeed = 0.00001f;
 }
 
 Camera::~Camera()
