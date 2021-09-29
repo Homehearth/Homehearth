@@ -35,7 +35,7 @@ void BasePass::PreRender(ID3D11DeviceContext* dc, PipelineManager* pm)
     {
         dc->PSSetConstantBuffers(0, 0, nullptr);
         dc->VSSetConstantBuffers(0, 1, pm->m_defaultModelConstantBuffer.GetAddressOf());
-        dc->VSSetConstantBuffers(1, 1, pm->m_defaultViewConstantBuffer.GetAddressOf());
+        dc->VSSetConstantBuffers(1, 1, pm->m_camera->GetConstantBuffer().GetAddressOf());
     }
 
     // SHADER RESOURCES.

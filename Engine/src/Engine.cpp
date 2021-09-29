@@ -38,12 +38,12 @@ void Engine::Startup()
 	//Camera
 	m_debugCamera.Initialize(sm::Vector3(0, 0, -1), sm::Vector3(0, 0, 0), sm::Vector3(0, 1, 0), sm::Vector2((float)m_window.GetWidth(), (float)m_window.GetHeight()));
 
-	m_renderer.Initialize(&m_window, &m_debugCamera);
+	m_currentCamera = std::make_shared<Camera>();
+
+	m_renderer.Initialize(&m_window, m_currentCamera.get());
 
 	// Thread should be launched after s_engineRunning is set to true and D3D11 is initialized.
 	s_engineRunning = true;
-
-	
 
 	//
 	// AUDIO 
@@ -311,6 +311,20 @@ void Engine::drawImGUI() const
 
 		});
 	ImGui::End();
+
+	ImGui::Begin("Camera");
+	{
+		ImGui::Separator();
+		ImGui::DragFloat3("Position: ", (float*)&m_debugCamera.GetPosition());
+		ImGui::DragFloat3("Target: ", (float*)&m_debugCamera.GetTarget());
+		ImGui::DragFloat3("Up: " , (float*)&m_debugCamera.GetUp());
+		ImGui::Spacing();
+
+	};
+	ImGui::End();
+
+
+
 }
 
 void Engine::RenderThread()

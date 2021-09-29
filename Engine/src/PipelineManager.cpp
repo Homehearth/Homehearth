@@ -10,7 +10,7 @@ PipelineManager::PipelineManager()
 {
 }
 
-void PipelineManager::Initialize(Window* pWindow, Camera * debugCamera)
+void PipelineManager::Initialize(Window* pWindow, Camera* camera)
 {
     if (m_window == nullptr)
         m_window = pWindow;
@@ -18,8 +18,8 @@ void PipelineManager::Initialize(Window* pWindow, Camera * debugCamera)
     if (m_d3d11 == nullptr)
         m_d3d11 = &D3D11Core::Get();
 
-    if (m_debugCamera == nullptr)
-        m_debugCamera = debugCamera;
+    if (m_camera == nullptr)
+        m_camera = camera;  
 
     assert((m_window || m_d3d11) || "Renderer could not be initialized.");
 
@@ -315,19 +315,10 @@ bool PipelineManager::CreateDefaultConstantBuffer()
     HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&bDesc, &data, m_defaultModelConstantBuffer.GetAddressOf());
     if (FAILED(hr)) return false;
 
-    // Camera ConstantBuffer
-    camera_Matrix_t cameraMat;
-
-    sm::Vector3 vec = m_debugCamera->GetPosition();
-    sm::Vector3 vec1 = m_debugCamera->GetTarget();
-    cameraMat.position = sm::Vector4(vec.x, vec.y, vec.z, 0);
-    cameraMat.target = sm::Vector4(vec1.x, vec1.y, vec1.z, 0);
-    cameraMat.projection = m_debugCamera->GetProjection();
-    cameraMat.view = m_debugCamera->GetView();
-
-    bDesc.ByteWidth = sizeof(camera_Matrix_t);
-    data.pSysMem = &cameraMat;
-    hr = D3D11Core::Get().Device()->CreateBuffer(&bDesc, &data, m_defaultViewConstantBuffer.GetAddressOf());
+    ////Create Camera ConstantBuffer
+    //bDesc.ByteWidth = sizeof(camera_Matrix_t);
+    //data.pSysMem = &m_camera->GetCameraMatrixes();
+    //hr = D3D11Core::Get().Device()->CreateBuffer(&bDesc, &data, m_camera->GetConstantBuffer().GetAddressOf());
 
     return !FAILED(hr);
 }

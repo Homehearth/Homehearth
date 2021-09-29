@@ -20,6 +20,10 @@ Camera::Camera()
     m_movingSepeed = 0.001f;
 }
 
+Camera::~Camera()
+{
+}
+
 void Camera::Initialize(sm::Vector3 pos, sm::Vector3 target, sm::Vector3 up, sm::Vector2 windowSize)
 {
     m_position = pos;
@@ -31,6 +35,30 @@ void Camera::Initialize(sm::Vector3 pos, sm::Vector3 target, sm::Vector3 up, sm:
 
     m_view = dx::XMMatrixLookAtRH(m_position, m_target, m_up);
     m_projection = dx::XMMatrixPerspectiveFovLH(m_FOV * m_zoomValue, m_aspectRatio, m_nearPlane, m_farPlane);
+
+    camera_Matrix_t cameraMat;
+    cameraMat.position = { m_position.x, m_position.y, m_position.z, 0.0f };
+    cameraMat.target = { m_target.x, m_target.y, m_target.z, 0 };
+    cameraMat.projection = m_projection;
+    cameraMat.view = m_view;
+
+    D3D11_BUFFER_DESC bDesc;
+    bDesc.ByteWidth = sizeof(camera_Matrix_t);
+    bDesc.Usage = D3D11_USAGE_DEFAULT;
+    bDesc.CPUAccessFlags = 0;
+    bDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+    bDesc.MiscFlags = 0;
+
+    D3D11_SUBRESOURCE_DATA data;
+    data.pSysMem = &cameraMat;
+    data.SysMemPitch = 0;
+    data.SysMemSlicePitch = 0;
+
+    HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&bDesc, &data, m_viewConstantBuffer.GetAddressOf());
+    if (!hr)
+    {
+        std::cout << "fuck, camera buffer wont create" << std::endl;
+    }
 }
 
 void Camera::Update(float deltaTime)
@@ -78,6 +106,11 @@ void Camera::Update(float deltaTime)
 
     m_target = dx::XMVectorAdd(m_target, m_position);
     m_view = dx::XMMatrixLookAtRH(m_position, m_target, m_up);
+
+    m_cameraMat.position = { m_position.x, m_position.y, m_position.z, 0.0f };
+    m_cameraMat.target = { m_target.x, m_target.y, m_target.z, 0 };
+    m_cameraMat.projection = m_projection;
+    m_cameraMat.view = m_view;
 }
 
 sm::Matrix Camera::GetView() const
@@ -103,6 +136,16 @@ sm::Vector3 Camera::GetTarget() const
 sm::Vector3 Camera::GetUp() const
 {
     return m_up;
+}
+
+ComPtr<ID3D11Buffer> Camera::GetConstantBuffer()
+{
+    return m_viewConstantBuffer;
+}
+
+camera_Matrix_t Camera::GetCameraMatrixes()
+{
+    return m_cameraMat;
 }
 
 void Camera::SetFOV(float fov)

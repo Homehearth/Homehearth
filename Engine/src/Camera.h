@@ -29,11 +29,14 @@ private:
 	float m_rotationSpeed;
 	float m_movingSepeed;
 
+	ComPtr<ID3D11Buffer> m_viewConstantBuffer;
+	camera_Matrix_t m_cameraMat;
 
 	sm::Quaternion quaterion;
 
 public:
 	Camera();
+	~Camera();
 	/* Position, Target, up, windowSize = (window width, window height) */
 	void Initialize(sm::Vector3 pos, sm::Vector3 target, sm::Vector3 up, sm::Vector2 windowSize);
 	void Update(float deltaTime);
@@ -44,6 +47,8 @@ public:
 	sm::Vector3 GetPosition() const;
 	sm::Vector3 GetTarget() const;
 	sm::Vector3 GetUp() const;
+	ComPtr<ID3D11Buffer> GetConstantBuffer();
+	camera_Matrix_t GetCameraMatrixes();
 	
 	//Set Functions
 	void SetFOV(float fov);
