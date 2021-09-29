@@ -35,9 +35,9 @@ void Engine::Startup()
 	D2D1Core::Initialize(&m_window);
 
 	//Camera
-	Camera debugCamera(sm::Vector3(0, 0, -1), sm::Vector3(0, 0, 0), sm::Vector3(0, 1, 0), sm::Vector2((float)m_window.GetWidth(), (float)m_window.GetHeight()));
+	m_debugCamera.Initialize(sm::Vector3(0, 0, -1), sm::Vector3(0, 0, 0), sm::Vector3(0, 1, 0), sm::Vector2((float)m_window.GetWidth(), (float)m_window.GetHeight()));
 
-	m_renderer.Initialize(&m_window, &debugCamera);
+	m_renderer.Initialize(&m_window, &m_debugCamera);
 
 	// Thread should be launched after s_engineRunning is set to true and D3D11 is initialized.
 	s_engineRunning = true;
@@ -142,8 +142,11 @@ void Engine::Run()
 			}
 		}
 
+		// Handle Input.
+		InputSystem::Get().UpdateEvents();
 		
-
+		m_debugCamera.Update(deltaTime);
+		
 		//Showing examples of keyboard and mouse (THIS CODE SHOULD BE HANDLED SOMEWHERE ELSE (GAMEPLAY LOGIC))
 		if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::G, KeyState::RELEASED))
 		{
@@ -301,7 +304,6 @@ void Engine::drawImGUI() const
 
 	ImGui::End();
 	
-	/*
 	ImGui::Begin("Objects");
 	m_currentScene->GetRegistry().view<comp::Transform>().each([&](entt::entity e, comp::Transform& transform)
 		{
@@ -313,9 +315,6 @@ void Engine::drawImGUI() const
 
 		});
 	ImGui::End();
-	*/
-
-
 }
 
 void Engine::RenderThread()
