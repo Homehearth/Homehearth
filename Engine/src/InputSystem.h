@@ -1,4 +1,5 @@
 #pragma once
+#include "Camera.h"
 enum class KeyState { PRESSED, RELEASED, HELD };
 enum class MouseKey { LEFT, RIGHT, MIDDLE };
 enum class Axis {VERTICAL, HORIZONTAL};
@@ -19,6 +20,7 @@ private:
 	std::unique_ptr<dx::Mouse> m_mouse;
 	std::unique_ptr<dx::Keyboard::KeyboardStateTracker> m_kBTracker;
 	std::unique_ptr<dx::Mouse::ButtonStateTracker> m_mouseTracker;
+	Camera* m_currentCamera;
 	dx::Keyboard::State m_kBState;
 	dx::Mouse::State m_mouseState;
 	MousePos m_mousePos;
@@ -35,6 +37,8 @@ public:
 
 	//Set which window for the mouse to operate in
 	void SetMouseWindow(const HWND& windowHandle, const int width, const int height);
+	//Set which camera to operate in
+	void SetCamera(Camera* camera);
 	//Updates KB and Mouse, checking new inputs
 	void UpdateEvents();
 
@@ -55,7 +59,7 @@ public:
 	//Toggle the visibility of the mouse. Only works in absolute mode
 	void ToggleMouseVisibility();
 
-	void UpdateMouseRay(sm::Matrix projection, sm::Matrix view);
+	void UpdateMouseRay();
 
 	const MouseRay GetMouseRay() const;
 

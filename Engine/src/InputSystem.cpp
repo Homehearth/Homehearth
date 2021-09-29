@@ -10,6 +10,7 @@ InputSystem::InputSystem()
 	m_mouseTracker = std::make_unique<dx::Mouse::ButtonStateTracker>();
 	m_windowWidth = 0;
 	m_windowHeight = 0;
+	m_currentCamera = nullptr;
 }
 
 void InputSystem::SetMouseWindow(const HWND& windowHandle, const int width, const int height)
@@ -18,6 +19,16 @@ void InputSystem::SetMouseWindow(const HWND& windowHandle, const int width, cons
 	m_mouse->SetMode(DirectX::Mouse::MODE_RELATIVE);
 	m_windowWidth = width;
 	m_windowHeight = height;
+}
+
+void InputSystem::SetCamera(Camera* camera)
+{
+	if (camera != nullptr)
+		this->m_currentCamera = camera;
+	else
+	{
+		LOG_WARNING("Tried to set camera as nullptr...");
+	}
 }
 
 void InputSystem::UpdateEvents()
@@ -146,16 +157,24 @@ void InputSystem::ToggleMouseVisibility()
 
 }
 
-void InputSystem::UpdateMouseRay(sm::Matrix projection, sm::Matrix view)
+void InputSystem::UpdateMouseRay()
 {
-	// Transform from 2D view port coordinates to NDC -> also inverse projection to get to 4D view space
-	float viewX = ((2.f * m_mousePos.x) / m_windowWidth - 1.f) / projection._11;
-	float viewY = (1.f - (2.f * m_mousePos.y) / m_windowHeight) / projection._22;
+	if (m_currentCamera != nullptr)
+	{
+		// Transform from 2D view port coordinates to NDC -> also inverse projection to get to 4D view space
+		float viewX = ((2.f * m_mousePos.x) / m_windowWidth - 1.f) / m_currentCamera->GetProjection()._11;
+		float viewY = (1.f - (2.f * m_mousePos.y) / m_windowHeight) / m_currentCamera->GetProjection()._22;
 
-	sm::Matrix viewInverse = view.Invert();
+		sm::Matrix viewInverse = m_currentCamera->GetView().Invert();
 
-	m_mouseRay.rayDir = sm::Vector3::TransformNormal({ viewX, viewY, 1.f }, viewInverse);
-	m_mouseRay.rayPos = sm::Vector3::Transform({ 0.f,0.f,0.f }, viewInverse);
+		m_mouseRay.rayDir = sm::Vector3::TransformNormal({ viewX, viewY, 1.f }, viewInverse);
+		m_mouseRay.rayPos = sm::Vector3::Transform({ 0.f,0.f,0.f }, viewInverse);
+	}
+	else
+	{
+		LOG_ERROR("Tried to update MouseRay when the camera is nullptr...");
+	}
+
 }
 
 const MouseRay InputSystem::GetMouseRay() const

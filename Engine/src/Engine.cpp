@@ -33,11 +33,11 @@ void Engine::Startup()
 	// DirectX Startup:
 	D3D11Core::Get().Initialize(&m_window);
 	D2D1Core::Initialize(&m_window);
-
+	m_currentcamera = std::make_shared<Camera>();
 	//Camera
-	m_debugCamera.Initialize(sm::Vector3(0, 0, -1), sm::Vector3(0, 0, 0), sm::Vector3(0, 1, 0), sm::Vector2((float)m_window.GetWidth(), (float)m_window.GetHeight()));
+	m_currentcamera->Initialize(sm::Vector3(0, 0, -1), sm::Vector3(0, 0, 0), sm::Vector3(0, 1, 0), sm::Vector2((float)m_window.GetWidth(), (float)m_window.GetHeight()));
 
-	m_renderer.Initialize(&m_window, &m_debugCamera);
+	m_renderer.Initialize(&m_window, m_currentcamera.get());
 
 	// Thread should be launched after s_engineRunning is set to true and D3D11 is initialized.
 	s_engineRunning = true;
@@ -72,6 +72,7 @@ void Engine::Startup()
 	);
 
 	InputSystem::Get().SetMouseWindow(m_window.GetHWnd(), m_window.GetWidth(), m_window.GetHeight());
+	InputSystem::Get().SetCamera(m_currentcamera.get());
 
 	m_client.Connect("127.0.0.1", 4950);
 
@@ -145,7 +146,7 @@ void Engine::Run()
 		// Handle Input.
 		InputSystem::Get().UpdateEvents();
 		
-		m_debugCamera.Update(deltaTime);
+		m_currentcamera->Update(deltaTime);
 		
 		//Showing examples of keyboard and mouse (THIS CODE SHOULD BE HANDLED SOMEWHERE ELSE (GAMEPLAY LOGIC))
 		if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::G, KeyState::RELEASED))
@@ -157,7 +158,7 @@ void Engine::Run()
 			std::cout << "Mouse left Pressed\n";
 			std::cout << "XPos: " << InputSystem::Get().GetMousePos().x << std::endl;
 			//Testing mouse ray TODO Move this update to game?
-			InputSystem::Get().UpdateMouseRay(m_debugCamera.GetProjection(), m_debugCamera.GetView());
+			InputSystem::Get().UpdateMouseRay();
 			std::cout << "Mouseraydir: " << InputSystem::Get().GetMouseRay().rayDir.x << " " << InputSystem::Get().GetMouseRay().rayDir.y << " " << InputSystem::Get().GetMouseRay().rayDir.z << std::endl;
 			//LOG_INFO("Mouseray: " + std::to_string(InputSystem::Get().GetMouseRay().rayDir.x));
 		}
