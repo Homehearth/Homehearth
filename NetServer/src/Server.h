@@ -11,8 +11,8 @@ namespace network
 		// Inherited via server_interface
 		virtual void OnClientConnect(std::string&& ip, const uint16_t& port) override;
 		virtual void OnClientDisconnect() override;
-		virtual void OnMessageReceived(const SOCKET& socketId, message<MessageType>& msg) override;
-		virtual void OnClientValidated(const SOCKET& s) override;
+		virtual void OnMessageReceived(SOCKET_INFORMATION*& SI, message<MessageType>& msg) override;
+		virtual void OnClientValidated(SOCKET_INFORMATION*& SI) override;
 
 	public:
 		Server();
@@ -21,6 +21,7 @@ namespace network
 		Server& operator=(const Server& other) = delete;
 		Server(const Server& other) = delete;
 
+		void Update();
 	};
 
 	Server::Server()
@@ -29,6 +30,14 @@ namespace network
 
 	Server::~Server()
 	{
+	}
+
+	inline void Server::Update()
+	{
+		if (!m_messagesIn.empty())
+		{
+
+		}
 	}
 
 	void Server::OnClientConnect(std::string&& ip, const uint16_t& port)
@@ -46,7 +55,7 @@ namespace network
 		LeaveCriticalSection(&lock);
 	}
 
-	void Server::OnMessageReceived(const SOCKET& socketId, message<MessageType>& msg)
+	void Server::OnMessageReceived(SOCKET_INFORMATION*& SI, message<MessageType>& msg)
 	{
 		switch (msg.header.id)
 		{
@@ -54,9 +63,9 @@ namespace network
 		{
 			message<MessageType> msg = {};
 			msg.header.id = MessageType::PingServer;
-			this->SendToClient(socketId, msg);
+			this->SendToClient(SI, msg);
 			EnterCriticalSection(&lock);
-			LOG_INFO("Client on socket: %lld is pinging server", socketId);
+			LOG_INFO("Client on socket: %lld is pinging server", SI->Socket);
 			LeaveCriticalSection(&lock);
 			break;
 		}
@@ -69,20 +78,20 @@ namespace network
 			}
 			std::cout << std::endl;
 			LeaveCriticalSection(&lock);
-			this->SendToClient(socketId, msg);
+			this->SendToClient(SI, msg);
 			break;
 		}
 		}
 	}
 
-	void Server::OnClientValidated(const SOCKET& s)
+	void Server::OnClientValidated(SOCKET_INFORMATION*& SI)
 	{
 		network::message<MessageType> msg = {};
 		msg.header.id = MessageType::Client_Accepted;
-		this->SendToClient(s, msg);
+		this->SendToClient(SI, msg);
 
 		EnterCriticalSection(&lock);
-		LOG_INFO("Client has been validated on socket %lld", s);
+		LOG_INFO("Client has been validated on socket %lld", SI->Socket);
 		LeaveCriticalSection(&lock);
 	}
 

@@ -10,9 +10,6 @@ void RedirectIoToConsole();
 //																				//
 //------------------------------------------------------------------------------//
 
-
-
-
 // The main entry point of the engine.
 int CALLBACK WinMain(
 	_In_ HINSTANCE hInstance,

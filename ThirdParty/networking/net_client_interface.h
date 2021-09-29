@@ -20,6 +20,7 @@ namespace network
 		OVERLAPPED Overlapped;
 		WSABUF DataBuf;
 		NetState state;
+		CHAR buffer[BUFFER_SIZE] = {};
 	};
 
 	/*
@@ -39,6 +40,7 @@ namespace network
 		uint64_t m_handshakeIn;
 		uint64_t m_handshakeOut;
 		tsQueue<message<T>> m_messagesIn;
+		tsQueue<message<T>> m_messagesOut;
 
 	private:
 		// Initialize winsock
@@ -60,7 +62,7 @@ namespace network
 		void ReadHeader(PER_IO_DATA*& context);
 		void ReadPayload(PER_IO_DATA*& context);
 		void ReadValidation(PER_IO_DATA*& context);
-		void WriteHeader(msg_header<T>& header);
+		void WriteHeader(message<T>& msg);
 		void WritePayload(message<T>& msg);
 		void WriteValidation();
 
@@ -211,24 +213,31 @@ namespace network
 		{
 			if (tempMsgIn.header.size > 300)
 			{
-				std::cout << "lol" << std::endl;
+				EnterCriticalSection(&lock);
+				LOG_ERROR("Allocating to much memory!");
+				LeaveCriticalSection(&lock);
 			}
 			this->PrimeReadPayload(tempMsgIn.header.size - sizeof(msg_header<T>));
 		}
 		else
 		{
 			this->OnMessageReceived(tempMsgIn);
-			//this->m_messagesIn.push_back(tempMsgIn);
+			this->PrimeReadHeader();
 		}
 	}
 
 	template <typename T>
-	void client_interface<T>::WriteHeader(msg_header<T>& header)
+	void client_interface<T>::WriteHeader(message<T>& msg)
 	{
 		PER_IO_DATA* context = new PER_IO_DATA;
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
-		context->DataBuf.buf = (CHAR*)&header;
-		context->DataBuf.len = sizeof(msg_header<T>);
+		memcpy(&context->buffer[0], &msg.header, sizeof(msg_header<T>));
+		if (msg.header.size > 0)
+		{
+			memcpy(&context->buffer[sizeof(msg_header<T>)], msg.payload.data(), msg.payload.size());
+		}
+		context->DataBuf.buf = (CHAR*)context->buffer;
+		context->DataBuf.len = ULONG(sizeof(msg_header<T>) + msg.payload.size());
 		context->state = NetState::WRITE_HEADER;
 		DWORD BytesSent = 0;
 		DWORD flags = 0;
@@ -248,8 +257,8 @@ namespace network
 	void client_interface<T>::ReadPayload(PER_IO_DATA*& context)
 	{
 		this->OnMessageReceived(tempMsgIn);
-		this->m_messagesIn.push_back(tempMsgIn);
 		tempMsgIn.payload.clear();
+		this->PrimeReadHeader();
 	}
 
 	template <typename T>
@@ -357,8 +366,8 @@ namespace network
 
 			for (int i = 0; i < (int)EntriesRemoved; i++)
 			{
-				// If an I/O was completed but we received no data means a client must've disconnected
-				// Basically a memcpy so we have data in correct structure
+				context = (PER_IO_DATA*)Entries[i].lpOverlapped;
+
 				if (Entries[i].dwNumberOfBytesTransferred == 0)
 				{
 					this->Disconnect();
@@ -419,7 +428,6 @@ namespace network
 						EnterCriticalSection(&lock);
 						LOG_NETWORK("Writing header! Bytes: %ld", Entries[i].dwNumberOfBytesTransferred);
 #endif
-						this->PrimeReadHeader();
 						LeaveCriticalSection(&lock);
 						break;
 					}
@@ -517,12 +525,12 @@ namespace network
 	template<typename T>
 	inline void client_interface<T>::Send(message<T>& msg)
 	{
-		this->WriteHeader(msg.header);
+		this->WriteHeader(msg);
 
-		if (msg.header.size > 0)
-		{
-			this->WritePayload(msg);
-		}
+		//if (msg.header.size > 0)
+		//{
+		//	this->WritePayload(msg);
+		//}
 	}
 
 	template<typename T>
