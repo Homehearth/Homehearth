@@ -241,7 +241,7 @@ void Engine::drawImGUI() const
 
 	static Timer timer;
 	static int dots = 0;
-	if (timer.GetElapsedTime() > 0.5f)
+	if (timer.GetElapsedTime<std::chrono::duration<float>>() > 0.5f)
 	{
 		fpsContainer.emplace_back((1 / m_frameTime.render));
 		fpsUpdateContainer.emplace_back((1.0f / m_frameTime.update));
@@ -313,19 +313,22 @@ void Engine::drawImGUI() const
 
 	ImGui::End();
 	
-	ImGui::Begin("Transforms");
-	m_currentScene->GetRegistry().view<comp::Transform>().each([&](entt::entity e, comp::Transform& transform)
-		{
-			ImGui::Separator();
-			ImGui::Text("Entity: %d", (int)e);
-			ImGui::DragFloat3(("Position##" + std::to_string((int)e)).c_str(), (float*)&transform.position);
-			ImGui::DragFloat3(("Rotation##" + std::to_string((int)e)).c_str(), (float*)&transform.rotation, dx::XMConvertToRadians(1.f));
-			if(ImGui::Button(("Remove##" + std::to_string((int)e)).c_str()))
+	ImGui::Begin("Components");
+	if (ImGui::CollapsingHeader("Transform"))
+	{
+		m_currentScene->GetRegistry().view<comp::Transform>().each([&](entt::entity e, comp::Transform& transform)
 			{
-				m_currentScene->GetRegistry().destroy(e);
-			}
-			ImGui::Spacing();
-		});
+				ImGui::Separator();
+				ImGui::Text("Entity: %d", (int)e);
+				ImGui::DragFloat3(("Position##" + std::to_string((int)e)).c_str(), (float*)&transform.position);
+				ImGui::DragFloat3(("Rotation##" + std::to_string((int)e)).c_str(), (float*)&transform.rotation, dx::XMConvertToRadians(1.f));
+				if(ImGui::Button(("Remove##" + std::to_string((int)e)).c_str()))
+				{
+					m_currentScene->GetRegistry().destroy(e);
+				}
+				ImGui::Spacing();
+			});
+	}
 	ImGui::End();
 
 
@@ -360,14 +363,16 @@ void Engine::Update(float dt)
 	
 	// todo:
 	// Update the camera transform based on interactive inputs.
-	
-	IMGUI(
-		m_imguiMutex.lock();
-		// Start ImGui frame
-		ImGui_ImplDX11_NewFrame();
-		ImGui_ImplWin32_NewFrame();
-		ImGui::NewFrame();
-	);
+	{
+		PROFILE_SCOPE("Starting ImGui");
+		IMGUI(
+			m_imguiMutex.lock();
+			// Start ImGui frame
+			ImGui_ImplDX11_NewFrame();
+			ImGui_ImplWin32_NewFrame();
+			ImGui::NewFrame();
+		);
+	}
 
 	// Update elements in the scene.
 	if (m_currentScene)
@@ -375,12 +380,15 @@ void Engine::Update(float dt)
 		m_currentScene->Update(dt);
 	}
 
-	IMGUI(
-		drawImGUI();
-		ImGui::EndFrame();
-		m_imguiMutex.unlock();
-	);
+	{
+		PROFILE_SCOPE("Ending ImGui");
 
+		IMGUI(
+			drawImGUI();
+			ImGui::EndFrame();
+			m_imguiMutex.unlock();
+		);
+	}
 }
 
 void Engine::Render(float& dt)
@@ -398,9 +406,8 @@ void Engine::Render(float& dt)
 		m_currentScene->Render();
 	}
 
-	D2D1Core::Present();
 	{
-		PROFILE_SCOPE("Draw ImGui");
+		PROFILE_SCOPE("Render ImGui");
 		IMGUI(
 			m_imguiMutex.lock();
 			ImGui::Render();
@@ -411,6 +418,7 @@ void Engine::Render(float& dt)
 
 	{
 		PROFILE_SCOPE("Present");
+		D2D1Core::Present();
 		D3D11Core::Get().SwapChain()->Present(0, 0);
 	}
 }
