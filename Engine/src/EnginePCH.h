@@ -2,7 +2,7 @@
 #pragma warning(push, 3)
 
 #define RENDER_IMGUI 1
-#define PROFILER 1
+#define PROFILER 0
 
 //Macros
 #if RENDER_IMGUI
@@ -16,6 +16,7 @@
 #ifdef WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
+#include <wincodec.h>
 #include <winsock2.h>
 #include <WS2tcpip.h>
 #pragma comment(lib, "WS2_32.Lib")
@@ -113,3 +114,6 @@ namespace sm = dx::SimpleMath;
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
 #pragma warning(pop)
+
+EXTERN_C IMAGE_DOS_HEADER __ImageBase;
+#define HINST_THISCOMPONENT ((HINSTANCE)&__ImageBase)

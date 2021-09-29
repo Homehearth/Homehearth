@@ -34,6 +34,8 @@ void Engine::Startup()
 	D3D11Core::Get().Initialize(&m_window);
 	D2D1Core::Initialize(&m_window);
 
+	ResourceManager::GetResource<RBitMap>("oohstonefigures.jpg");
+
 	m_renderer.Initialize(&m_window);
 
 	// Thread should be launched after s_engineRunning is set to true and D3D11 is initialized.
@@ -179,10 +181,10 @@ void Engine::Run()
 		lastFrame = currentFrame;
 	}
 
-
+	while (!s_safeExit) {};
 	// Wait for the rendering thread to exit its last render cycle and shutdown
 	IMGUI(
-		while (!s_safeExit) {}; // TODO: why only in debug??
+		 // TODO: why only in debug??
 		// ImGUI Shutdown
 		ImGui_ImplDX11_Shutdown();
 		ImGui_ImplWin32_Shutdown();
@@ -191,8 +193,9 @@ void Engine::Run()
 
 	m_client.Disconnect();
     T_DESTROY();
-    ResourceManager::Destroy();
     D2D1Core::Destroy();
+	ResourceManager::Destroy();
+
 
 	PROFILER_END_SESSION();
 }
@@ -372,14 +375,23 @@ void Engine::Render(float& dt)
 	if (!m_currentScene->IsRenderReady())
 		return;
 
+	/*
+		Render 3D
+	*/
 	m_renderer.ClearFrame();
 	m_renderer.Render();
-	D2D1Core::Begin();
+	
 	if (m_currentScene)
 	{
 		m_currentScene->Render();
 	}
 
+	/*
+		Render 2D
+	*/
+	D2D1Core::Begin();
+
+	D2D1Core::DrawP(_DRAW(), ResourceManager::GetResource<RBitMap>("oohstonefigures.jpg")->GetTexture());
 	D2D1Core::Present();
 
 	IMGUI(

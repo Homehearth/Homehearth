@@ -34,11 +34,16 @@ D2D1Core::~D2D1Core()
 		m_hwndTarget->Release();
 	if (m_solidBrush)
 		m_solidBrush->Release();
+	if (m_imageFactory)
+		m_imageFactory->Release();
+
+	CoUninitialize();
 }
 
 const bool D2D1Core::Setup(Window* window)
 {
 	D2D1_FACTORY_OPTIONS options = {};
+	m_windowPointer = window;
 #ifdef _DEBUG
 	options.debugLevel = D2D1_DEBUG_LEVEL_INFORMATION;
 #endif
@@ -103,6 +108,14 @@ const bool D2D1Core::Setup(Window* window)
 		m_writeFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER);
 		m_writeFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
 	}
+
+	hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
+
+	hr = CoCreateInstance(CLSID_WICImagingFactory,
+		NULL,
+		CLSCTX_INPROC_SERVER,
+		IID_PPV_ARGS(&m_imageFactory));
+
 	return true;
 }
 
@@ -121,7 +134,7 @@ void D2D1Core::Destroy()
 		delete INSTANCE;
 }
 
-void D2D1Core::DrawT(const std::string text, Window* window, IDWriteTextFormat* format)
+void D2D1Core::DrawT(const std::string text, IDWriteTextFormat* format)
 {
 	if (INSTANCE->m_renderTarget)
 	{
@@ -130,7 +143,7 @@ void D2D1Core::DrawT(const std::string text, Window* window, IDWriteTextFormat* 
 			current_format = format;
 
 		RECT rc;
-		GetClientRect(window->GetHWnd(), &rc);
+		GetClientRect(INSTANCE->m_windowPointer->GetHWnd(), &rc);
 		D2D1_RECT_F layoutRect = D2D1::RectF(
 			static_cast<FLOAT>(rc.left),
 			static_cast<FLOAT>(rc.top),
@@ -197,6 +210,22 @@ void D2D1Core::DrawF(const float upper_x, const float upper_y, const float width
 	}
 }
 
+void D2D1Core::DrawP(const _DRAW& fig, ID2D1Bitmap* texture)
+{
+	if (texture == nullptr)
+		return;
+
+	HRESULT hr;
+	
+	D2D1_SIZE_F size = texture->GetSize();
+	D2D1_POINT_2F upperLeftCorner = D2D1::Point2F(fig.x_pos, fig.y_pos);
+
+	D2D1_RECT_F dest = D2D1::RectF(upperLeftCorner.x, upperLeftCorner.y,
+		(upperLeftCorner.x + size.width) * fig.width, (upperLeftCorner.y + size.height) * fig.height);
+
+	INSTANCE->m_renderTarget->DrawBitmap(texture, dest);
+}
+
 void D2D1Core::Begin()
 {
 	if(INSTANCE)
@@ -207,4 +236,80 @@ void D2D1Core::Present()
 {
 	if(INSTANCE)
 		INSTANCE->m_renderTarget->EndDraw();
+}
+
+const bool D2D1Core::CreateImage(const std::string& filename, ID2D1Bitmap** p_pointer)
+{
+	/*
+		Todo: Divide Filename to get name and type.
+	*/
+	std::string searchPath = "../Assets/Textures/";
+	searchPath.append(filename);
+	const char* t = searchPath.c_str();
+	const WCHAR* pwcsName;
+	int nChars = MultiByteToWideChar(CP_ACP, 0, t, -1, NULL, 0);
+	pwcsName = new WCHAR[nChars];
+	MultiByteToWideChar(CP_ACP, 0, t, -1, (LPWSTR)pwcsName, nChars);
+
+	HRESULT hr = INSTANCE->LoadBitMap(pwcsName, p_pointer);
+
+	delete[] pwcsName;
+	if (SUCCEEDED(hr))
+		return true;
+	else
+		return false;
+}
+
+HRESULT D2D1Core::LoadBitMap(const LPCWSTR& filePath, ID2D1Bitmap** bitMap)
+{
+	HRESULT hr;
+	IWICBitmapDecoder* decoder = nullptr;
+	IWICBitmapFrameDecode* fDecoder = nullptr;
+	IWICFormatConverter* convert = nullptr;
+
+	hr = m_imageFactory->CreateDecoderFromFilename(
+		filePath,
+		NULL,
+		GENERIC_READ,
+		WICDecodeMetadataCacheOnLoad,
+		&decoder
+	);
+	if (SUCCEEDED(hr))
+	{
+		hr = decoder->GetFrame(0, &fDecoder);
+	}
+	if (SUCCEEDED(hr))
+	{
+		hr = m_imageFactory->CreateFormatConverter(&convert);
+	}
+	if (SUCCEEDED(hr))
+	{
+		hr = convert->Initialize(
+			fDecoder,
+			GUID_WICPixelFormat32bppPBGRA,
+			WICBitmapDitherTypeNone,
+			NULL,
+			0.f,
+			WICBitmapPaletteTypeMedianCut
+		);
+	}
+	if (SUCCEEDED(hr))
+	{
+		hr = m_renderTarget->CreateBitmapFromWicBitmap(
+			convert,
+			NULL,
+			bitMap
+		);
+
+		convert->Release();
+		fDecoder->Release();
+		decoder->Release();
+
+		if (SUCCEEDED(hr))
+			return S_OK;
+		else
+			return E_FAIL;
+	}
+
+	return E_FAIL;
 }

@@ -98,5 +98,10 @@ RBitMap::~RBitMap()
 
 bool RBitMap::Create(const std::string& filename)
 {
-	return false;
+	return D2D1Core::CreateImage(filename, &m_texture);
+}
+
+ID2D1Bitmap*& RBitMap::GetTexture()
+{
+	return m_texture;
 }
