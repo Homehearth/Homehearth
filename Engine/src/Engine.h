@@ -5,10 +5,6 @@
 #include "Renderer.h"
 #include "EventTypes.h"
 #include "Client.h"
-struct Triangle2
-{
-	int x;
-};
 
 class Engine
 {

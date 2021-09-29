@@ -11,8 +11,9 @@ private:
 	// Registry handles all ecs data
 	entt::registry m_registry;
 	
-	DoubleBuffer<std::unordered_map<entt::entity, comp::Transform>> m_transformCopies;
-	
+	DoubleBuffer<std::unordered_map<entt::entity, comp::Renderable>> m_transformCopies;
+	dx::ConstantBuffer<sm::Matrix> m_publicBuffer;
+
 public:
 
 	Scene();
