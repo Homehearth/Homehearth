@@ -276,6 +276,7 @@ void Engine::drawImGUI() const
 
 
 	ImGui::Begin("Statistics");
+#if PROFILER
 	static bool isRecProfileSession = false;
 	if (!isRecProfileSession)
 	{
@@ -300,7 +301,7 @@ void Engine::drawImGUI() const
 			loadingDots.append(".");
 		ImGui::TextColored(ImColor(1.f, 0.f, 0.f, 1.0f), ("Recording" + loadingDots).c_str());
 	}
-
+#endif
 	if (ImGui::CollapsingHeader("FPS"))
 	{
 		ImGui::PlotLines(("FPS: " + std::to_string(static_cast<size_t>(1 / m_frameTime.render))).c_str(), fpsContainer.data(), static_cast<int>(fpsContainer.size()), 0, nullptr, 0.0f, 144.0f, ImVec2(150, 50));
