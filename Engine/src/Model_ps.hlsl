@@ -75,13 +75,13 @@ float3 FresnelSchlick(float cosTheta, float3 F0)
 
 float4 main(PixelIn input) : SV_TARGET
 {
-    float3 camPos = float3(0.0, 0.0, 3.0); //TODO: Get actual camera pos
+    float3 camPos = float3(0.0, 0.0, 30.0); //TODO: Get actual camera pos
     float3 albedo = float3(0.5, 0.0, 0.0); //TODO: Get albedo from texture
-    float metallic = 0.1; //TODO: Get metallic from texture
-	float roughness = 0.5; //TODO: Get roughness from texture
+    float metallic = 0.0; //TODO: Get metallic from texture
+	float roughness = 0.9; //TODO: Get roughness from texture
 	float ao = 1.0; //TODO: Get ao from texture
-    float3 lightPos = float3(0.0, 0.0, 0.0); //TODO: Light-struct to GPU
-    float3 lightCol = float3(300.0, 300.0, 300.0); //TODO: Light-struct to GPU
+    float3 lightPos = float3(0.0, 8.0, -17.0); //TODO: Light-struct to GPU
+    float3 lightCol = float3(1.0, 1.0, 1.0); //TODO: Light-struct to GPU
 
     float3 N = normalize(input.normal);
     float3 V = normalize(camPos - input.worldPos.xyz);
@@ -113,22 +113,18 @@ float4 main(PixelIn input) : SV_TARGET
        //kS is equal to Fresnel
 	float3 kS = F;
        //For energy conservation, the diffuse and specular light can't
-       //be above 1.0 (unless the surface emits light); to preserve this
-       //relationship the diffuse component (kD) should equal 1.0 - kS.
+       //be above 1.0 (unless the surface emits light)
 	float3 kD = float3(1.0, 1.0, 1.0) - kS;
-       //Multiply kD by the inverse metalness such that only non-metals
-       //have diffuse lighting, or a linear blend if partly metal (pure metals
-       //have no diffuse light).
 	kD *= 1.0 - metallic;
     
        //Scale light by NdotL
 	float NdotL = max(dot(N, L), 0.0);
     
        //Add to outgoing radiance Lo
-	Lo += (kD * albedo / PI + specular) * radiance * NdotL; //Note that we already multiplied the BRDF by the Fresnel (kS) so we won't multiply by kS again
+	Lo += (kD * albedo / PI + specular) * radiance * NdotL; 
 	
     //Ambient lighting
-    float3 ambient = float3(1.0, 1.0, 1.0) * albedo * ao;
+    float3 ambient = float3(0.5, 0.5, 0.5) * albedo * ao;
     
     float3 color = ambient + Lo;
     
@@ -137,6 +133,6 @@ float4 main(PixelIn input) : SV_TARGET
     //Gamma correct
 	//color = pow(color, float3(1.0 / 2.2, 1.0 / 2.2, 1.0 / 2.2));
     
-	float4 ReturnColor = float4(color, 1.0);
-	return ReturnColor;
+	float4 ReturnColor = float4(color, 0.0);
+    return ReturnColor;
 }
