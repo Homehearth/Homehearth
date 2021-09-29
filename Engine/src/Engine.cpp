@@ -65,7 +65,7 @@ void Engine::Startup()
 		LOG_INFO("ImGui was successfully initialized");
 	);
 
-	InputSystem::Get().SetMouseWindow(m_window.GetHWnd());
+	InputSystem::Get().SetMouseWindow(m_window.GetHWnd(), m_window.GetWidth(), m_window.GetHeight());
 
 	m_client.Connect("127.0.0.1", 4950);
 
