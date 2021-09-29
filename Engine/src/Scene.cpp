@@ -4,6 +4,7 @@
 Scene::Scene() 
 {
 	m_registry.on_construct<comp::Renderable>().connect<ecs::OnRenderableConstruct>();
+	m_publicBuffer.Create(D3D11Core::Get().Device());
 }
 
 entt::registry& Scene::GetRegistry() {
@@ -19,9 +20,13 @@ void Scene::Update(float dt)
 	// only copy if the last frame has been rendered
 	if (!m_transformCopies.IsSwapped()) {
 		PROFILE_SCOPE("Copy Transforms");
-		m_registry.view<comp::Transform>().each([&](entt::entity e, comp::Transform& t) 
+		m_registry.view<comp::Transform, comp::Renderable>().each([&](entt::entity e, comp::Transform& t, comp::Renderable& r) 
 			{
-				m_transformCopies[0][e] = t;
+			comp::Renderable rend;
+			rend.mesh = r.mesh;
+			rend.renderForm = t;
+				m_transformCopies[0][e] = rend;
+				//m_transformCopies[0][e] = t;
 			});
 		m_transformCopies.Swap();
 	}
@@ -31,6 +36,24 @@ void Scene::Render()
 {
 	PROFILE_FUNCTION();
 	// System that renders Renderable component
+
+	for (auto it = m_transformCopies[1].begin(); it != m_transformCopies[1].end(); it++)
+	{
+		auto* pointer = &it->second;
+		if (pointer)
+		{
+			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), ecs::GetMatrix(pointer->renderForm));
+			ID3D11Buffer* buffers[1] =
+			{
+				m_publicBuffer.GetBuffer()
+			};
+
+			D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, buffers);
+			pointer->mesh->Render();
+		}
+	}
+
+	/*
 	auto view = m_registry.view<comp::Renderable>();
 	{
 		PROFILE_SCOPE("Render Renderable");
@@ -52,6 +75,7 @@ void Scene::Render()
 				renderable.mesh->Render();
 			});
 	}
+	*/
 	
 	// Emit event
 	publish<ESceneRender>();

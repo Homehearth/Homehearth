@@ -81,7 +81,7 @@ void Engine::Run()
 	double lastFrame = omp_get_wtime();
 	float deltaTime = 0.f;
 	float accumulator = 0.f;
-	const float targetDelta = 1 / 1000.0f;
+	const float targetDelta = 1 / 10000.0f;
 
 	bool key[3] = { false, false, false };
 	bool old_key[3] = { false, false, false };
@@ -340,7 +340,7 @@ void Engine::RenderThread()
 {
 	double currentFrame = 0.f, lastFrame = omp_get_wtime();
 	float deltaTime = 0.f, deltaSum = 0.f;
-	const float targetDelta = 1 / 144.01f; 	// Desired FPS
+	const float targetDelta = 1 / 10000.0f; 	// Desired FPS
 	while (IsRunning())
 	{
 		currentFrame = omp_get_wtime();
