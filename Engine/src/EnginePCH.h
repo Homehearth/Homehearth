@@ -1,5 +1,17 @@
 #pragma once
 #pragma warning(push, 3)
+
+#define RENDER_IMGUI 1
+#define PROFILER 1
+
+//Macros
+#if RENDER_IMGUI
+#define IMGUI(a) a
+#else
+#define IMGUI(a) do {} while(0)
+#endif
+
+
 // Windows
 #ifdef WIN32
 #define WIN32_LEAN_AND_MEAN
