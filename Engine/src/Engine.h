@@ -9,6 +9,8 @@ class Engine
 private:
 	static bool s_engineRunning;
 	static bool s_safeExit;
+	std::mutex m_imguiMutex;
+	
 	std::atomic<bool> m_IsImguiReady;
 
 	Camera m_debugCamera;
@@ -27,12 +29,12 @@ private:
 		float render;
 	} m_frameTime;
 
-	
 	// Job for rendering thread.
 	void RenderThread();
 
 	// Updates the current scene.
 	void Update(float dt);
+	
 	// Renders one frame.
 	void Render(float& dt);
 

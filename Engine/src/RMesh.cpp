@@ -77,6 +77,7 @@ void RMesh::Render()
 
 bool RMesh::Create(const std::string& filename)
 {
+    //std::string filepath = "../../../../../Assets/Models/" + filename;
     std::string filepath = "../Assets/Models/" + filename;
     Assimp::Importer importer;
 

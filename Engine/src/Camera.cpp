@@ -18,7 +18,7 @@ Camera::Camera()
     m_defaultRight = { 1.0f, 0.0f, 0.0f };
 
     m_rotationSpeed = 5.f;
-    m_movingSepeed = 0.00005f;
+    m_movingSepeed = 0.025f;
 
     m_cameraMat = nullptr;
 }
@@ -63,7 +63,7 @@ void Camera::Initialize(sm::Vector3 pos, sm::Vector3 target, sm::Vector3 up, sm:
     HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&desc, &data, m_viewConstantBuffer.GetAddressOf());
     if (FAILED(hr))
     {
-        std::cout << "fuck, camera buffer wont create" << std::endl;
+        LOG_ERROR("Camera couldnt create constant buffer");
     }
 }
 

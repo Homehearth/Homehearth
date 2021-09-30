@@ -1,15 +1,18 @@
 #pragma once
 #include "IRenderPass.h"
 
-class OpaquePass : public IRenderPass
+/*
+ * Write the depth values of the scene from the camera's perspective into a depth buffer.
+ */
+class DepthPass : public IRenderPass
 {
 private:
 	bool m_isEnabled;
 
 public:
-	OpaquePass() = default;
-	virtual ~OpaquePass() = default;
-	
+	DepthPass() = default;
+	virtual ~DepthPass() = default;
+
 	void Initialize() override;
 
 	bool IsEnabled() override { return m_isEnabled; }
@@ -21,5 +24,6 @@ public:
 	void Render(Scene* pScene) override;
 
 	void PostRender() override;
+
 };
 

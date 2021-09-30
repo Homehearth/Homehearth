@@ -27,9 +27,17 @@ size_t Profiler::GetVRAMUsage()
 
 void Profiler::BeginSession(const std::string& filepath)
 {
+	if (m_outputStream.is_open())
+		return;
+
 	m_mutex.lock();
 
 	m_outputStream.open(filepath);
+	if (!m_outputStream.is_open())
+	{
+		LOG_ERROR("Failed to open session file");
+		return;
+	}
 	WriteHeader();
 
 	m_mutex.unlock();
@@ -37,6 +45,9 @@ void Profiler::BeginSession(const std::string& filepath)
 
 void Profiler::EndSession()
 {
+	if (!m_outputStream.is_open())
+		return;
+
 	m_mutex.lock();
 
 	WriteFooter();
@@ -54,6 +65,9 @@ void Profiler::WriteHeader()
 
 void Profiler::WriteProfile(const Profiler::Result& result)
 {
+	if (!m_outputStream.is_open())
+		return;
+
 	m_mutex.lock();
 
 	if (m_profileCount++ > 0)
