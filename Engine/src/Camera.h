@@ -4,6 +4,9 @@
 class Camera
 {
 private:
+	sm::Vector2 m_currentMousePosition;
+	sm::Vector2 m_lastMousePosition;
+
 	sm::Vector3 m_position;
 	sm::Vector3 m_up;
 	sm::Vector3 m_target;
@@ -18,8 +21,6 @@ private:
 	sm::Matrix  m_projection;
 	sm::Matrix  m_rotationMatrix;
 
-	float m_FOV;
-	float m_zoomValue;
 	float m_nearPlane;
 	float m_farPlane;
 	float m_windowHeight;
@@ -31,6 +32,9 @@ private:
 
 	camera_Matrix_t* m_cameraMat;
 	sm::Quaternion quaterion;
+
+	/*Run in all the set functions*/
+	void UpdateProjection();
 
 public:
 	Camera();
@@ -54,9 +58,10 @@ public:
 	void SetFarPlane(float farPlane);
 	/*Val can only be between 0 and 1, 1 is normal*/
 	void SetZoom(float val);
-	/*Run this function after setting any new values for projection*/
-	void UpdateProjection();
 
 	//Public variables and stuff
 	ComPtr<ID3D11Buffer> m_viewConstantBuffer;
+	float m_FOV;
+	float m_zoomValue;
+
 };

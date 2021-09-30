@@ -314,17 +314,14 @@ void Engine::drawImGUI() const
 
 	ImGui::Begin("Camera");
 	{
+		const std::string position = "Position: " + std::to_string(m_currentCamera->GetPosition().x)+ " " + std::to_string(m_currentCamera->GetPosition().y) + " " + std::to_string(m_currentCamera->GetPosition().z);
 		ImGui::Separator();
-		ImGui::DragFloat3("Position: ", (float*)&m_debugCamera.GetPosition());
-		ImGui::DragFloat3("Target: ", (float*)&m_debugCamera.GetTarget());
-		ImGui::DragFloat3("Up: " , (float*)&m_debugCamera.GetUp());
+		ImGui::Text(position.c_str());
+		//ImGui::DragFloat("Zoom: ", &m_currentCamera->m_zoomValue, 0.01f, 0.f, 1.0f);
 		ImGui::Spacing();
 
 	};
 	ImGui::End();
-
-
-
 }
 
 void Engine::RenderThread()
