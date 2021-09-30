@@ -11,12 +11,16 @@ Camera::Camera()
     m_farPlane = 100.0f; // 1000.0f
     m_rollPitchYaw = { 0.0f, 0.0f, 0.0f };
     m_move = { 0.0f, 0.0f, 0.0f };
-
+    m_aspectRatio = 0;
+    m_windowHeight = 0;
+    m_windowWidth = 0;
     m_defaultForward = { 0.0f, 0.0f, 0.1f };
     m_defaultRight = { 1.0f, 0.0f, 0.0f };
 
     m_rotationSpeed = 5.f;
     m_movingSepeed = 0.00005f;
+
+    m_cameraMat = nullptr;
 }
 
 Camera::~Camera()
@@ -66,7 +70,7 @@ void Camera::Initialize(sm::Vector3 pos, sm::Vector3 target, sm::Vector3 up, sm:
 void Camera::Update(float deltaTime)
 {
     //Mouse
-    m_currentMousePosition = sm::Vector2(InputSystem::Get().GetMousePos().x, InputSystem::Get().GetMousePos().y);
+    m_currentMousePosition = sm::Vector2((float)InputSystem::Get().GetMousePos().x, (float)InputSystem::Get().GetMousePos().y);
  
     sm::Vector2 delta = (m_currentMousePosition - m_lastMousePosition) * deltaTime * m_rotationSpeed;
 
