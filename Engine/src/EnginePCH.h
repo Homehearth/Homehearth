@@ -35,7 +35,7 @@
 
 #include <functional>
 
-#define ALIGN16 __declspec(align(16))
+#define ALIGN16 __declspec(align(16)) 
 
 // DirectX
 #include <d3d11.h>
