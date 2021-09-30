@@ -31,10 +31,12 @@ int CALLBACK WinMain(
 	window.Initialize();
 
 	network::Server s;
-	s.Start(4950);
+	if (!s.Start(4950))
+	{
+		exit(0);
+	}
 
 	MSG msg = { nullptr };
-	int i = 0;
 	bool key = false;
 	bool old_key = false;
 
