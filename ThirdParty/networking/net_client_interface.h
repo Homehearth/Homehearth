@@ -315,10 +315,7 @@ namespace network
 	{
 		DWORD BytesTransferred = 0;
 		DWORD flags = 0;
-		BOOL bResult = false;
-		//LPOVERLAPPED lpOverlapped;
 		PER_IO_DATA* context = nullptr;
-		BOOL shouldDisconnect = false;
 		const DWORD CAP = 10;
 		OVERLAPPED_ENTRY Entries[CAP];
 		ULONG EntriesRemoved = 0;
@@ -342,7 +339,6 @@ namespace network
 
 				if (Entries[i].dwNumberOfBytesTransferred == 0)
 				{
-					this->Disconnect();
 					delete context;
 					continue;
 				}
@@ -504,20 +500,16 @@ namespace network
 	template<typename T>
 	inline void client_interface<T>::Disconnect()
 	{
-		EnterCriticalSection(&lock);
-		if (!IsConnected())
+		if (IsConnected())
 		{
-			LeaveCriticalSection(&lock);
-			return;
-		}
-		if (closesocket(m_socket) != 0)
-		{
-			LOG_ERROR("Failed to close socket!");
-		}
+			if (closesocket(m_socket) != 0)
+			{
+				LOG_ERROR("Failed to close socket!");
+			}
+			m_socket = INVALID_SOCKET;
 
-		m_socket = INVALID_SOCKET;
-		this->OnDisconnect();
-		LeaveCriticalSection(&lock);
+			this->OnDisconnect();
+		}
 	}
 
 	template<typename T>

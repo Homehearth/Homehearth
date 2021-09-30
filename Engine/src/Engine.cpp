@@ -95,7 +95,6 @@ void Engine::Run()
 	while (IsRunning())
 	{
 		PROFILE_SCOPE("Frame");
-		InputSystem::Get().UpdateEvents();
 
 		while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
 		{
@@ -109,30 +108,6 @@ void Engine::Run()
 
 		// Handle Input.
 		InputSystem::Get().UpdateEvents();
-		//Showing examples of keyboard and mouse (THIS CODE SHOULD BE HANDLED SOMEWHERE ELSE (GAMEPLAY LOGIC))
-		if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::G, KeyState::RELEASED))
-		{
-			std::cout << "G Released\n";
-		}
-		if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED))
-		{
-			std::cout << "Mouse left Pressed\n";
-			std::cout << "XPos: " << InputSystem::Get().GetMousePos().x << std::endl;
-		}
-		if (InputSystem::Get().CheckMouseKey(MouseKey::RIGHT, KeyState::PRESSED))
-		{
-			std::cout << "Switching mouse mode\n";
-			InputSystem::Get().SwitchMouseMode();
-		}
-		if (InputSystem::Get().CheckMouseKey(MouseKey::MIDDLE, KeyState::PRESSED))
-		{
-			std::cout << "Toggling mouse visibility\n";
-			InputSystem::Get().ToggleMouseVisibility();
-		}
-		//if (InputSystem::Get().GetAxis(Axis::HORIZONTAL) == 1)
-		//{
-		//	std::cout << "Moving right\n";
-		//}
 
 		// Update time.
 		currentFrame = omp_get_wtime();
@@ -350,13 +325,14 @@ void Engine::Update(float dt)
 			ImGui::NewFrame();
 		);
 	}
+	// Updates game logic
+	this->OnUserUpdate(dt);
 
 	// Update elements in the scene.
 	if (m_currentScene)
 	{
 		m_currentScene->Update(dt);
 	}
-
 	{
 		PROFILE_SCOPE("Ending ImGui");
 

@@ -22,7 +22,6 @@ namespace
 		Client(const Client& other) = delete;
 
 		void PingServer();
-		void TestServerWithGibberishData();
 	};
 
 	Client::Client()
@@ -44,15 +43,9 @@ namespace
 		msg.header.id = MessageType::Server_GetPing;
 		this->timeThen = std::chrono::system_clock::now();
 		this->Send(msg);
-	}
-
-	inline void Client::TestServerWithGibberishData()
-	{
-		message<MessageType> msg = {};
-		msg.header.id = MessageType::Unknown;
-		char text[] = "Rofl this is a nice time to be alive and the thing is with that is that Im a cool guy that walks a lot because its fun!!!!! :)";
-		msg << text;
-		this->Send(msg);
+		EnterCriticalSection(&lock);
+		LOG_INFO("PINGING");
+		LeaveCriticalSection(&lock);
 	}
 
 	void Client::OnValidation()
@@ -79,13 +72,6 @@ namespace
 
 			EnterCriticalSection(&lock);
 			LOG_INFO("Ping: %fs", std::chrono::duration<double>(timeNow - this->timeThen).count());
-			LeaveCriticalSection(&lock);
-			break;
-		}
-		case MessageType::Unknown:
-		{
-			EnterCriticalSection(&lock);
-			LOG_INFO("Gibberish success!");
 			LeaveCriticalSection(&lock);
 			break;
 		}

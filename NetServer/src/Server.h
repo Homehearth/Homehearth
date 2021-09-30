@@ -20,8 +20,6 @@ namespace network
 
 		Server& operator=(const Server& other) = delete;
 		Server(const Server& other) = delete;
-
-		void Update();
 	};
 
 	Server::Server()
@@ -30,14 +28,6 @@ namespace network
 
 	Server::~Server()
 	{
-	}
-
-	inline void Server::Update()
-	{
-		if (!m_messagesIn.empty())
-		{
-
-		}
 	}
 
 	void Server::OnClientConnect(std::string&& ip, const uint16_t& port)
@@ -68,18 +58,6 @@ namespace network
 			LeaveCriticalSection(&lock);
 			break;
 		}
-		case MessageType::Unknown:
-		{
-			EnterCriticalSection(&lock);
-			for (int i = 0; i < (int)msg.payload.size(); i++)
-			{
-				std::cout << msg.payload[i];
-			}
-			std::cout << std::endl;
-			LeaveCriticalSection(&lock);
-			this->SendToClient(SI, msg);
-			break;
-		}
 		}
 	}
 
@@ -93,5 +71,4 @@ namespace network
 		LOG_INFO("Client has been validated on socket %lld", SI->Socket);
 		LeaveCriticalSection(&lock);
 	}
-
 }

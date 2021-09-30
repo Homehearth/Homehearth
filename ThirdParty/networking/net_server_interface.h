@@ -557,17 +557,6 @@ namespace network
 			LOG_ERROR("CreateIoCompletionPort() failed with error %d", GetLastError());
 			return false;
 		}
-		// Determine how many processors are on the system
-		GetSystemInfo(&SystemInfo);
-		nrOfThreads = (int)SystemInfo.dwNumberOfProcessors;
-		workerThreads = new std::thread[nrOfThreads];
-
-		// Create worker threads based on the number of processors available on the
-		// system. Create two worker threads for each processor
-		for (size_t i = 0; i < nrOfThreads; i++)
-		{
-			workerThreads[i] = std::thread(&server_interface<T>::ServerWorkerThread, this);
-		}
 
 		// Options to disable Nagle's algorithm (can queue up multiple packets instead of sending 1 by 1)
 		// SO_REUSEADDR will let the server to reuse the port its bound on even if it have not closed 
@@ -598,12 +587,24 @@ namespace network
 			LOG_ERROR("Failed to create event %d", WSAGetLastError());
 			return false;
 		}
-
-		m_isRunning = true;
-
 		WSAEventSelect(m_listening, acceptEvent, FD_ACCEPT);
 
 		acceptThread = std::thread(&server_interface<T>::ProcessIncomingConnections, this, acceptEvent);
+
+		// Determine how many processors are on the system
+		GetSystemInfo(&SystemInfo);
+		nrOfThreads = (int)SystemInfo.dwNumberOfProcessors;
+		workerThreads = new std::thread[nrOfThreads];
+
+
+		m_isRunning = true;
+		// Create worker threads based on the number of processors available on the
+		// system. Create two worker threads for each processor
+		for (size_t i = 0; i < nrOfThreads; i++)
+		{
+			workerThreads[i] = std::thread(&server_interface<T>::ServerWorkerThread, this);
+		}
+
 
 		return true;
 	}
@@ -620,7 +621,7 @@ namespace network
 			SYSTEM_INFO SystemInfo;
 			GetSystemInfo(&SystemInfo);
 
-			for (DWORD i = 0; i < SystemInfo.dwNumberOfProcessors; i++)
+			for (DWORD i = 0; i < nrOfThreads; i++)
 			{
 				QueueUserAPC((PAPCFUNC)server_interface<T>::AlertThread, (HANDLE)workerThreads[i].native_handle(), NULL);
 				workerThreads[i].join();
@@ -638,8 +639,6 @@ namespace network
 		SOCKET_INFORMATION* SI = nullptr;
 		PER_IO_DATA* context;
 		DWORD bytesReceived = 0;
-		BOOL bResult = false;
-		BOOL shouldDisconnect;
 		const DWORD CAP = 10;
 		OVERLAPPED_ENTRY Entries[CAP];
 		ULONG EntriesRemoved = 0;
@@ -663,14 +662,14 @@ namespace network
 				{
 					SI = (SOCKET_INFORMATION*)Entries[i].lpCompletionKey;
 					context = (PER_IO_DATA*)Entries[i].lpOverlapped;
-					// If an I/O was completed but we received no data means a client must've disconnected
-					// Basically a memcpy so we have data in correct structure
 					if (Entries[i].dwNumberOfBytesTransferred == 0)
 					{
 						this->DisconnectClient(SI);
 						delete context;
 						continue;
 					}
+					// If an I/O was completed but we received no data means a client must've disconnected
+					// Basically a memcpy so we have data in correct structure
 					// I/O has completed, process it
 					if (HasOverlappedIoCompleted(Entries[i].lpOverlapped))
 					{

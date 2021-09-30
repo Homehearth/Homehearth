@@ -34,13 +34,11 @@ private:
 	// Renders one frame.
 	void Render(float& dt);
 
-
 	// Run the Engine's core loop.
 	void Run();
 
 	// Shutdown the Engine and its instances in the reverse order.
 	void Shutdown();
-
 
 	Window* GetWindow();
 
@@ -65,5 +63,5 @@ public:
 	virtual ~Engine() = default;
 
 	virtual bool OnStartup() = 0;
+	virtual bool OnUserUpdate(float deltaTime) = 0;
 };
-

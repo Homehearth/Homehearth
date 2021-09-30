@@ -27,10 +27,13 @@ Game::Game()
 
 }
 
+Game::~Game()
+{
+	m_client.Disconnect();
+}
+
 bool Game::OnStartup()
 {
-	LOG_INFO("TEST");
-
 	Scene& demo = Engine::GetScene("Demo");
 	// Scene logic
 	setupDemoScene(demo);
@@ -48,3 +51,12 @@ void Game::Start()
 	Engine::Startup();
 }
 
+bool Game::OnUserUpdate(float deltaTime)
+{
+	if(InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Keys::P, KeyState::PRESSED))
+	{
+		m_client.PingServer();
+	}
+
+	return true;
+}

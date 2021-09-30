@@ -9,8 +9,11 @@ private:
 
 	// Inherited via Engine
 	virtual bool OnStartup() override;
+	virtual bool OnUserUpdate(float deltaTime) override;
+
 public:
 	Game();
+	virtual ~Game();
 
 	void Start();
 };

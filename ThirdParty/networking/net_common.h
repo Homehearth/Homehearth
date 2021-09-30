@@ -73,9 +73,9 @@ namespace network
 	{
 		Client_Accepted,
 		Client_AssignID,
-		Unknown,
 		Server_GetPing,
 		Game_AddPlayer,
-		Game_RemovePlayer
+		Game_RemovePlayer,
+		Game_Update
 	};
 }
