@@ -51,7 +51,7 @@ project "NetServer"
 
     -- Define a macro/symbol which applies only to debug builds.
     filter {"configurations:Debug"}
-        buildoptions "/MTd"
+        staticruntime "on"
         runtime "Debug"
         defines{"_DEBUG", "_UNICODE", "UNICODE"}
         symbols "on"
@@ -59,7 +59,7 @@ project "NetServer"
 
     -- Define a macro/symbol which applies only to release builds.
     filter {"configurations:Release"}
-        buildoptions "/MT"
+        staticruntime "on"
         runtime "Release"
         defines{"NDEBUG", "_UNICODE", "UNICODE"}
         symbols "on"

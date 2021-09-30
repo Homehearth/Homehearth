@@ -1,11 +1,9 @@
 #pragma once
-
 #include "Window.h"
 #include "Scene.h"
 #include "Renderer.h"
 #include "EventTypes.h"
 #include "Client.h"
-
 class Engine
 {
 private:
@@ -65,4 +63,3 @@ public:
 	// IMGUI
 	void drawImGUI() const;
 };
-

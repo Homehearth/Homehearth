@@ -400,4 +400,3 @@ void Engine::Render(float& dt)
 
 	D3D11Core::Get().SwapChain()->Present(0, 0);
 }
-
