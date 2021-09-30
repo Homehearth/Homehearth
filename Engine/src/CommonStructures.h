@@ -29,7 +29,6 @@ struct anim_vertex_t
 };
 
 ALIGN16
-
 struct basic_model_matrix_t
 {
 	sm::Matrix worldMatrix;

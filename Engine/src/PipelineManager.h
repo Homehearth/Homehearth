@@ -10,18 +10,16 @@ class PipelineManager
 private:
 	Window*							m_window;
 	D3D11Core*						m_d3d11;
-	Camera*							m_debugCamera = nullptr;
 	
 public:
 	PipelineManager();
 	virtual ~PipelineManager() = default;
 
 	// Initialize PipelineManager.
-	void Initialize(Window* pWindow, Camera* debugCamera);
+	void Initialize(Window* pWindow);
 
 	
 	// PUBLIC AVAILABLE DATA.
-	
 	ComPtr<ID3D11RenderTargetView>	m_renderTargetView;
 
 	ComPtr<ID3D11Texture2D>			m_depthStencilTexture;
@@ -39,7 +37,7 @@ public:
 	ComPtr<ID3D11InputLayout>		m_defaultInputLayout;
 	
 	ComPtr<ID3D11Buffer>			m_defaultModelConstantBuffer;
-	ComPtr<ID3D11Buffer>			m_defaultViewConstantBuffer; // TODO: maybe put in Camera class or update from Camera class
+	//ComPtr<ID3D11Buffer>			m_defaultViewConstantBuffer; // TODO: maybe put in Camera class or update from Camera class
 	
 	Shaders::VertexShader			m_defaultVertexShader;
 	Shaders::PixelShader			m_defaultPixelShader;
@@ -62,6 +60,7 @@ private:
 
 	bool CreateDefaultInputLayout();	// todo: create all input layouts.
 	bool CreateDefaultConstantBuffer();	// todo: make use the HelperBuffer.h.
+
 };
 
 

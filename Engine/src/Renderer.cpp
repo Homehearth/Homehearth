@@ -7,13 +7,15 @@ Renderer::Renderer()
 {
 }
 
-void Renderer::Initialize(Window* pWindow, Camera* debugCamera)
+void Renderer::Initialize(Window* pWindow, Camera* camera)
 {
-	m_pipelineManager.Initialize(pWindow, debugCamera);
-	
+	m_pipelineManager.Initialize(pWindow);
+    m_camera = camera;
+
     m_d3d11 = &D3D11Core::Get();
     m_basePass.SetEnable(true);
     AddPass(&m_basePass);
+    m_basePass.GetCamera(camera);
 }
 
 void Renderer::ClearFrame()

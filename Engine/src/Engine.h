@@ -9,11 +9,13 @@ class Engine
 private:
 	static bool s_engineRunning;
 	static bool s_safeExit;
-	std::mutex m_imguiMutex;
-	
+	std::atomic<bool> m_IsImguiReady;
+
+	Camera m_debugCamera;
+	std::shared_ptr<Camera> m_currentCamera;
+
 	Window m_window;
 	Renderer m_renderer;
-	std::shared_ptr<Camera> m_currentcamera;
 	std::unique_ptr<DirectX::AudioEngine> m_audio_engine;
 	std::unordered_map<std::string, Scene> m_scenes;
 	Scene* m_currentScene;

@@ -8,6 +8,7 @@ class BasePass : public IRenderPass
 {
 private:
 	bool m_isEnabled;
+	Camera* m_camera;
 
 public:
 	BasePass() = default;
@@ -24,6 +25,8 @@ public:
 	void Render() override;
 	
 	void PostRender() override;
+
+	void GetCamera(Camera* camera);
 	
 };
 
