@@ -4,8 +4,8 @@
 class Timer
 {
 private:
-    std::chrono::time_point<std::chrono::steady_clock> m_startTime;
-    std::chrono::time_point<std::chrono::steady_clock> m_stopTime;
+    std::chrono::time_point<std::chrono::high_resolution_clock> m_startTime;
+    std::chrono::time_point<std::chrono::high_resolution_clock> m_stopTime;
     bool m_hasStoped;
 
 	
@@ -19,7 +19,44 @@ public:
 
     void Start();
     void Stop();
-    double GetElapsedTime() const;  
+
+    template<typename T = std::chrono::seconds>
+    auto GetElapsedTime() const;
+
+    template<typename T = std::chrono::seconds>
+    auto GetStartTime() const;
+
+    template<typename T = std::chrono::seconds>
+    auto GetStopTime() const;
+
 
 };
 
+
+
+//--------------------------------------------------------------------------------------
+template<typename T>
+inline auto Timer::GetElapsedTime() const
+{
+    T elapsed_time;
+
+    if (m_hasStoped)
+        elapsed_time = std::chrono::duration_cast<T>(m_stopTime - m_startTime);
+    else
+        elapsed_time = std::chrono::duration_cast<T>(std::chrono::high_resolution_clock::now() - m_startTime);
+
+
+    return elapsed_time.count();
+}
+
+template<typename T>
+inline auto Timer::GetStartTime() const
+{
+    return std::chrono::time_point_cast<T>(m_startTime).time_since_epoch().count();
+}
+
+template<typename T>
+inline auto Timer::GetStopTime() const
+{
+    return std::chrono::time_point_cast<T>(m_stopTime).time_since_epoch().count();
+}

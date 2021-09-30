@@ -56,7 +56,7 @@ void DepthPass::PreRender(ID3D11DeviceContext* dc, PipelineManager* pm)
     }
 }
 
-void DepthPass::Render()
+void DepthPass::Render(Scene* pScene)
 {
     // Render objects.
 }

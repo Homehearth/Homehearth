@@ -20,7 +20,7 @@ void LightPass::PreRender(ID3D11DeviceContext* dc, PipelineManager* pm)
 // Require : B is the 2D size of a tile.
 }
 
-void LightPass::Render()
+void LightPass::Render(Scene* pScene)
 {
 	// Render objects.
 }

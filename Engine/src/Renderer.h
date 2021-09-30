@@ -32,7 +32,7 @@ public:
 	//	PreRender(): set pipeline.
 	//	Render(): render all objects.
 	//	PostRender(): clear pipeline settings.
-	void Render();
+	void Render(Scene* pScene);
 
 };
 

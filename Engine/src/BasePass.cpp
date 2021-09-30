@@ -58,10 +58,10 @@ void BasePass::PreRender(ID3D11DeviceContext* dc, PipelineManager* pm)
     }
 }
 
-void BasePass::Render()
+void BasePass::Render(Scene* pScene)
 {
 	// Render objects.
-		
+    pScene->Render();
 }
 
 void BasePass::PostRender()
