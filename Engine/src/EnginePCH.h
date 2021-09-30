@@ -113,3 +113,9 @@ namespace sm = dx::SimpleMath;
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
 #pragma warning(pop)
+
+// Paths
+const std::string MODELPATH		= "../Assets/Models/";		//"../../../../../Assets/Models/"
+const std::string MATERIALPATH	= "../Assets/Materials/";
+const std::string TEXTUREPATH	= "../Assets/Textures/";
+const std::string ANIMATIONPATH = "../Assets/Animations/";

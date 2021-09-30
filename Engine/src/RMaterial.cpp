@@ -183,7 +183,7 @@ bool RMaterial::Create(aiMaterial* aiMat)
 bool RMaterial::Create(const std::string& filename)
 {
     //Load a mtl file
-    std::string filepath = "../Assets/Materials/" + filename;
+    std::string filepath = MATERIALPATH + filename;
     std::ifstream readfile(filepath);
     
     //Failed to open file

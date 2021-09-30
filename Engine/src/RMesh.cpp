@@ -77,8 +77,7 @@ void RMesh::Render()
 
 bool RMesh::Create(const std::string& filename)
 {
-    //std::string filepath = "../../../../../Assets/Models/" + filename;
-    std::string filepath = "../Assets/Models/" + filename;
+    std::string filepath = MODELPATH + filename;
     Assimp::Importer importer;
 
     const aiScene* scene = importer.ReadFile
