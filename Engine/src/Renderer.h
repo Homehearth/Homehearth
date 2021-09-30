@@ -1,5 +1,6 @@
 #pragma once
 #include "BasePass.h"
+#include "DepthPass.h"
 #include "IRenderPass.h"
 #include "PipelineManager.h"
 
@@ -12,6 +13,11 @@ private:
 	std::vector<IRenderPass*> m_passes;
 	
 	BasePass m_basePass;	// Forward Rendering.
+	DepthPass m_depthPass;	// Forward Plus (1st pass).
+
+	
+	// Add a pass to the list.
+	void AddPass(IRenderPass* pass);
 
 public:
 	Renderer();
@@ -22,13 +28,11 @@ public:
 	// Clears the screen.
 	void ClearFrame();
 
-	// Call this each frame to all passes:
+	// Call this each frame to render all passes:
 	//	PreRender(): set pipeline.
 	//	Render(): render all objects.
 	//	PostRender(): clear pipeline settings.
-	void Render();
+	void Render(Scene* pScene);
 
-	// Add a pass to the list. Useful if a pass is created outside the Renderer class.
-	void AddPass(IRenderPass* pass);
 };
 

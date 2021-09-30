@@ -33,7 +33,7 @@ void PipelineManager::Initialize(Window* pWindow)
     }
 
     // Initialize DepthStencilState.
-    if (!this->CreateDepthStencilState())
+    if (!this->CreateDepthStencilStates())
     {
         LOG_ERROR("failed creating DepthStencilState.");
     }
@@ -56,22 +56,28 @@ void PipelineManager::Initialize(Window* pWindow)
         LOG_ERROR("failed creating SamplerStates.");
     }
 
+    // Initialize CreateBlendStates.
+    if (!this->CreateBlendStates())
+    {
+        LOG_ERROR("failed creating BlendStates.");
+    }
+
     // Initialize Shaders.
     if (!this->CreateShaders())
     {
-        LOG_ERROR("failed creating default shaders.");
+        LOG_ERROR("failed creating Shaders.");
     }
 
     // Initialize InputLayouts.
-    if (!this->CreateDefaultInputLayout())
+    if (!this->CreateInputLayouts())
     {
-        LOG_ERROR("failed creating default layout.");
+        LOG_ERROR("failed creating InputLayouts.");
     }
 
     // Initialize ConstantBuffers (temp?).
     if (!this->CreateDefaultConstantBuffer())
     {
-        LOG_ERROR("failed creating default cBuffer.");
+        LOG_ERROR("failed creating default constant buffer.");
     }
 
     // Set Viewport.
@@ -98,29 +104,29 @@ bool PipelineManager::CreateRenderTargetView()
 bool PipelineManager::CreateDepthStencilTexture()
 {
     // Initialize the description of the depth buffer.
-    D3D11_TEXTURE2D_DESC depthStencilBufferDesc;
-    ZeroMemory(&depthStencilBufferDesc, sizeof(D3D11_TEXTURE2D_DESC));
+    D3D11_TEXTURE2D_DESC depthStencilTextureDesc;
+    ZeroMemory(&depthStencilTextureDesc, sizeof(D3D11_TEXTURE2D_DESC));
 
     // Set up the description of the depth buffer.
-    depthStencilBufferDesc.Width = this->m_window->GetWidth();
-    depthStencilBufferDesc.Height = this->m_window->GetHeight();
-    depthStencilBufferDesc.MipLevels = 1;
-    depthStencilBufferDesc.ArraySize = 1;
-    depthStencilBufferDesc.SampleDesc.Count = 1;
-    depthStencilBufferDesc.SampleDesc.Quality = 0;
-    depthStencilBufferDesc.CPUAccessFlags = 0;
-    depthStencilBufferDesc.MiscFlags = 0;
-    depthStencilBufferDesc.Format = DXGI_FORMAT::DXGI_FORMAT_D24_UNORM_S8_UINT;
-    depthStencilBufferDesc.Usage = D3D11_USAGE::D3D11_USAGE_DEFAULT;
-    depthStencilBufferDesc.BindFlags = D3D11_BIND_FLAG::D3D11_BIND_DEPTH_STENCIL;
+    depthStencilTextureDesc.Width = this->m_window->GetWidth();
+    depthStencilTextureDesc.Height = this->m_window->GetHeight();
+    depthStencilTextureDesc.MipLevels = 1;
+    depthStencilTextureDesc.ArraySize = 1;
+    depthStencilTextureDesc.SampleDesc.Count = 1;
+    depthStencilTextureDesc.SampleDesc.Quality = 0;
+    depthStencilTextureDesc.CPUAccessFlags = 0;
+    depthStencilTextureDesc.MiscFlags = 0;
+    depthStencilTextureDesc.Format = DXGI_FORMAT::DXGI_FORMAT_D24_UNORM_S8_UINT;
+    depthStencilTextureDesc.Usage = D3D11_USAGE::D3D11_USAGE_DEFAULT;
+    depthStencilTextureDesc.BindFlags = D3D11_BIND_FLAG::D3D11_BIND_DEPTH_STENCIL;
 
     // Create the texture for the depth buffer using the filled out description.
-    HRESULT hr = m_d3d11->Device()->CreateTexture2D(&depthStencilBufferDesc, nullptr, m_depthStencilTexture.GetAddressOf());
+    HRESULT hr = m_d3d11->Device()->CreateTexture2D(&depthStencilTextureDesc, nullptr, m_depthStencilTexture.GetAddressOf());
 
     return !FAILED(hr);
 }
 
-bool PipelineManager::CreateDepthStencilState()
+bool PipelineManager::CreateDepthStencilStates()
 {
     // Initialize the description of the stencil state.
     D3D11_DEPTH_STENCIL_DESC depthStencilDesc;
@@ -147,9 +153,22 @@ bool PipelineManager::CreateDepthStencilState()
     depthStencilDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
     depthStencilDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
 
-    // Create the depth stencil state.
-    HRESULT hr = m_d3d11->Device()->CreateDepthStencilState(&depthStencilDesc, m_depthStencilState.GetAddressOf());
+    // Create m_depthStencilStateLess.
+    HRESULT hr = m_d3d11->Device()->CreateDepthStencilState(&depthStencilDesc, m_depthStencilStateLess.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+	
+    // Create m_depthStencilStateGreater.
+    depthStencilDesc.DepthFunc = D3D11_COMPARISON_GREATER;
+    hr = m_d3d11->Device()->CreateDepthStencilState(&depthStencilDesc, m_depthStencilStateGreater.GetAddressOf());
+    if (FAILED(hr))
+        return false;
 
+	// Create m_depthStencilStateEqualAndDisableDepthWrite.
+    depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+    depthStencilDesc.DepthFunc = D3D11_COMPARISON_EQUAL;
+    hr = m_d3d11->Device()->CreateDepthStencilState(&depthStencilDesc, m_depthStencilStateEqualAndDisableDepthWrite.GetAddressOf());
+	
     return !FAILED(hr);
 }
 
@@ -191,7 +210,7 @@ bool PipelineManager::CreateRasterizerStates()
     rasterizerDesc.CullMode = D3D11_CULL_MODE::D3D11_CULL_BACK;
 
     // Create the rasterizer state from the description we just filled out.
-    HRESULT hr = m_d3d11->Device()->CreateRasterizerState(&rasterizerDesc, m_rasterizerState.GetAddressOf());
+    HRESULT hr = m_d3d11->Device()->CreateRasterizerState(&rasterizerDesc, m_rasterState.GetAddressOf());
 
     // Setup a raster description with no back face culling.
     rasterizerDesc.CullMode = D3D11_CULL_NONE;
@@ -249,6 +268,47 @@ bool PipelineManager::CreateSamplerStates()
     return !FAILED(hr);
 }
 
+bool PipelineManager::CreateBlendStates()
+{
+    // Create a blend state description. 
+    D3D11_BLEND_DESC blendStateDesc;
+    ZeroMemory(&blendStateDesc, sizeof(D3D11_BLEND_DESC));
+
+    D3D11_RENDER_TARGET_BLEND_DESC rtbd;
+    ZeroMemory(&rtbd, sizeof(D3D11_RENDER_TARGET_BLEND_DESC));
+	
+    // Setup for Opaque BlendState.
+    rtbd.BlendEnable = 0;
+    rtbd.BlendOp = D3D11_BLEND_OP_ADD;
+    rtbd.SrcBlend = D3D11_BLEND_ONE;
+    rtbd.DestBlend = D3D11_BLEND_ZERO;
+    rtbd.BlendOpAlpha = D3D11_BLEND_OP_ADD;
+    rtbd.SrcBlendAlpha = D3D11_BLEND_ONE;
+    rtbd.DestBlendAlpha = D3D11_BLEND_ZERO;
+    rtbd.RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+    blendStateDesc.RenderTarget[0] = rtbd;
+    blendStateDesc.AlphaToCoverageEnable = 0;
+    blendStateDesc.IndependentBlendEnable = 0;
+
+    // Create m_blendStatepOpaque.
+    HRESULT hr = m_d3d11->Device()->CreateBlendState(&blendStateDesc, m_blendStatepOpaque.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+
+    // Create m_blendStatepDepthOnlyAlphaTest.
+    blendStateDesc.RenderTarget[0].RenderTargetWriteMask = 0;
+    hr = m_d3d11->Device()->CreateBlendState(&blendStateDesc, m_blendStatepDepthOnlyAlphaTest.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+
+    // Create m_blendStateDepthOnlyAlphaToCoverage.
+	// "...the quality is significantly improved when used in conjunction with MSAA".
+    blendStateDesc.AlphaToCoverageEnable = 1;
+    hr = m_d3d11->Device()->CreateBlendState(&blendStateDesc, m_blendStateDepthOnlyAlphaToCoverage.GetAddressOf());
+
+	return !FAILED(hr);
+}
+
 void PipelineManager::SetViewport()
 {
     // Initialize the viewport to occupy the entire client area.
@@ -273,20 +333,39 @@ void PipelineManager::SetViewport()
     m_d3d11->DeviceContext()->RSSetViewports(1, &m_viewport);
 }
 
-bool PipelineManager::CreateDefaultInputLayout()
+bool PipelineManager::CreateInputLayouts()
 {
-    D3D11_INPUT_ELEMENT_DESC inputDesc[] =
+    HRESULT hr = S_FALSE;
+
+	// Create m_defaultInputLayout.
+	std::string shaderByteCode = m_defaultVertexShader.GetShaderByteCode();
+    D3D11_INPUT_ELEMENT_DESC defaultVertexShaderDesc[] =
     {
-        {"POSITION",    0, DXGI_FORMAT_R32G32B32_FLOAT,    0,                0,                    D3D11_INPUT_PER_VERTEX_DATA, 0},
+        {"POSITION",    0, DXGI_FORMAT_R32G32B32_FLOAT,    0,                0,                   D3D11_INPUT_PER_VERTEX_DATA, 0},
         {"TEXCOORD",    0, DXGI_FORMAT_R32G32_FLOAT,       0,    D3D11_APPEND_ALIGNED_ELEMENT,    D3D11_INPUT_PER_VERTEX_DATA, 0},
-        {"NORMAL",        0, DXGI_FORMAT_R32G32B32_FLOAT,    0,    D3D11_APPEND_ALIGNED_ELEMENT,    D3D11_INPUT_PER_VERTEX_DATA, 0},
-        {"TANGENT",        0, DXGI_FORMAT_R32G32B32_FLOAT,    0,    D3D11_APPEND_ALIGNED_ELEMENT,    D3D11_INPUT_PER_VERTEX_DATA, 0},
-        {"BINORMAL",        0, DXGI_FORMAT_R32G32B32_FLOAT,    0,    D3D11_APPEND_ALIGNED_ELEMENT,    D3D11_INPUT_PER_VERTEX_DATA, 0}
+        {"NORMAL",      0, DXGI_FORMAT_R32G32B32_FLOAT,    0,    D3D11_APPEND_ALIGNED_ELEMENT,    D3D11_INPUT_PER_VERTEX_DATA, 0},
+        {"TANGENT",     0, DXGI_FORMAT_R32G32B32_FLOAT,    0,    D3D11_APPEND_ALIGNED_ELEMENT,    D3D11_INPUT_PER_VERTEX_DATA, 0},
+        {"BINORMAL",    0, DXGI_FORMAT_R32G32B32_FLOAT,    0,    D3D11_APPEND_ALIGNED_ELEMENT,    D3D11_INPUT_PER_VERTEX_DATA, 0}
+    };
+	
+	if(FAILED(hr = D3D11Core::Get().Device()->CreateInputLayout(defaultVertexShaderDesc, ARRAYSIZE(defaultVertexShaderDesc), shaderByteCode.c_str(), shaderByteCode.length(), &m_defaultInputLayout)))
+    {
+        LOG_WARNING("failed creating m_defaultInputLayout.");
+        return false;
+    }
+
+	// Create m_positionOnlyInputLayout.
+    shaderByteCode = m_positionOnlyVertexShader.GetShaderByteCode();
+    D3D11_INPUT_ELEMENT_DESC positionOnlyVertexShaderDesc[] =
+    {
+        {"POSITION",    0, DXGI_FORMAT_R32G32B32_FLOAT,    0,                0,                   D3D11_INPUT_PER_VERTEX_DATA, 0}
     };
 
-	const std::string shaderByteCode = m_defaultVertexShader.GetShaderByteCode();
-	
-    HRESULT hr = D3D11Core::Get().Device()->CreateInputLayout(inputDesc, ARRAYSIZE(inputDesc), shaderByteCode.c_str(), shaderByteCode.length(), &m_defaultInputLayout);
+    if (FAILED(hr = D3D11Core::Get().Device()->CreateInputLayout(positionOnlyVertexShaderDesc, ARRAYSIZE(positionOnlyVertexShaderDesc), shaderByteCode.c_str(), shaderByteCode.length(), &m_positionOnlyInputLayout)))
+    {
+        LOG_WARNING("failed creating m_positionOnlyInputLayout.");
+        return false;
+    }
 
     return !FAILED(hr);
 }
@@ -313,7 +392,7 @@ bool PipelineManager::CreateDefaultConstantBuffer()
     if (FAILED(hr)) return false;
 
     // Camera ConstantBuffer
-    sm::Matrix mat = sm::Matrix::CreatePerspectiveFieldOfView(dx::XMConvertToRadians(90.f), (float)m_window->GetWidth() / m_window->GetHeight(), 0.01f, 100.0f);
+    sm::Matrix mat = sm::Matrix::CreatePerspectiveFieldOfView(dx::XMConvertToRadians(90.f), static_cast<float>(m_window->GetWidth()) / static_cast<float>(m_window->GetHeight()), 0.01f, 100.0f);
     data.pSysMem = &mat;
     hr = D3D11Core::Get().Device()->CreateBuffer(&bDesc, &data, m_defaultViewConstantBuffer.GetAddressOf());
 
@@ -321,14 +400,22 @@ bool PipelineManager::CreateDefaultConstantBuffer()
 }
 
 bool PipelineManager::CreateShaders()
-{
+{	
     if (!m_defaultVertexShader.Create("Model_vs"))
     {
+        LOG_WARNING("failed creating Model_vs.");
+		return false;
+    }
+
+    if (!m_positionOnlyVertexShader.Create("depth_vs"))
+    {
+        LOG_WARNING("failed creating depth_vs.");
         return false;
     }
 	
     if(!m_defaultPixelShader.Create("Model_ps"))
     {
+        LOG_WARNING("failed creating Model_ps.");
         return false;
     }
 

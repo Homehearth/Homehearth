@@ -20,7 +20,6 @@ void BasePass::PreRender(ID3D11DeviceContext* dc, PipelineManager* pm)
         dc->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     }
 
-
     // SHADER STAGES.
     {
         dc->VSSetShader(pm->m_defaultVertexShader.Get(), nullptr, 0);
@@ -54,15 +53,15 @@ void BasePass::PreRender(ID3D11DeviceContext* dc, PipelineManager* pm)
     // OUTPUT MERGER.
     {
         dc->OMSetRenderTargets(1, pm->m_renderTargetView.GetAddressOf(), pm->m_depthStencilView.Get());
-        // TODO set appropriate blendState
-        //dc->OMSetBlendState(nullptr, nullptr, 0); 
-        dc->OMSetDepthStencilState(pm->m_depthStencilState.Get(), 1);
+        dc->OMSetBlendState(pm->m_blendStatepOpaque.Get(), nullptr, 0xFFFFFFFF); 
+        dc->OMSetDepthStencilState(pm->m_depthStencilStateLess.Get(), 1);
     }
 }
 
-void BasePass::Render()
+void BasePass::Render(Scene* pScene)
 {
 	// Render objects.
+    pScene->Render();
 }
 
 void BasePass::PostRender()

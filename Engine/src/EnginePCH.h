@@ -6,7 +6,7 @@
 
 //Macros
 #if RENDER_IMGUI
-#define IMGUI(a) a
+#define IMGUI(a) do {a} while(0)
 #else
 #define IMGUI(a) do {} while(0)
 #endif

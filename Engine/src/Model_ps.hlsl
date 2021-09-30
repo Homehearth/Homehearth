@@ -1,3 +1,4 @@
+#include "Phong.hlsli"
 
 Texture2D T_albedo    : register(t0);
 Texture2D T_normal    : register(t1);
