@@ -33,9 +33,9 @@ void Engine::Startup()
 	// DirectX Startup:
 	D3D11Core::Get().Initialize(&m_window);
 	D2D1Core::Initialize(&m_window);
-	m_currentcamera = std::make_shared<Camera>();
+	m_currentCamera = std::make_shared<Camera>();
 	//Camera
-	m_currentcamera->Initialize(sm::Vector3(0, 0, -1), sm::Vector3(0, 0, 0), sm::Vector3(0, 1, 0), sm::Vector2((float)m_window.GetWidth(), (float)m_window.GetHeight()));
+	m_currentCamera->Initialize(sm::Vector3(0, 0, -1), sm::Vector3(0, 0, 0), sm::Vector3(0, 1, 0), sm::Vector2((float)m_window.GetWidth(), (float)m_window.GetHeight()));
 
 	m_currentCamera = std::make_shared<Camera>(m_debugCamera);
 
@@ -72,7 +72,7 @@ void Engine::Startup()
 	);
 
 	InputSystem::Get().SetMouseWindow(m_window.GetHWnd(), m_window.GetWidth(), m_window.GetHeight());
-	InputSystem::Get().SetCamera(m_currentcamera.get());
+	InputSystem::Get().SetCamera(m_currentCamera.get());
 
 	m_client.Connect("127.0.0.1", 4950);
 
@@ -138,7 +138,7 @@ void Engine::Run()
 		// Handle Input.
 		InputSystem::Get().UpdateEvents();
 		
-		m_currentcamera->Update(deltaTime);
+		m_currentCamera->Update(deltaTime);
 		
 		//Showing examples of keyboard and mouse (THIS CODE SHOULD BE HANDLED SOMEWHERE ELSE (GAMEPLAY LOGIC))
 		if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::G, KeyState::RELEASED))
