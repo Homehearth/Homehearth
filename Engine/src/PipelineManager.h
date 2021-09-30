@@ -1,6 +1,6 @@
 #pragma once
 #include "Shader.h"
-
+#include "Camera.h"
 
 /*
  * This class holds the D3D11-specific resources used in different passes.
@@ -16,11 +16,10 @@ public:
 	virtual ~PipelineManager() = default;
 
 	// Initialize PipelineManager.
-	void Initialize(Window * pWindow);
+	void Initialize(Window* pWindow);
 
 	
 	// PUBLIC AVAILABLE DATA.
-	
 	ComPtr<ID3D11RenderTargetView>	m_renderTargetView;
 
 	ComPtr<ID3D11Texture2D>			m_depthStencilTexture;
@@ -47,7 +46,6 @@ public:
 	ComPtr<ID3D11InputLayout>		m_positionOnlyInputLayout;
 	
 	ComPtr<ID3D11Buffer>			m_defaultModelConstantBuffer;	// TODO: maybe put in Camera class or update from Camera class
-	ComPtr<ID3D11Buffer>			m_defaultViewConstantBuffer;	// TODO: maybe put in Camera class or update from Camera class
 	
 	Shaders::VertexShader			m_defaultVertexShader;
 	Shaders::VertexShader			m_positionOnlyVertexShader;
