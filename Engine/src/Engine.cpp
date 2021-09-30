@@ -67,11 +67,18 @@ void Engine::Startup()
 
 	InputSystem::Get().SetMouseWindow(m_window.GetHWnd());
 	
+	// Sets up the game specific information
+	if (!this->OnStartup())
+	{
+		LOG_ERROR("Failed to start game!");
+		exit(0);
+	}
+
+	this->Run();
 }
 
 void Engine::Run()
 {
-
 	double currentFrame = 0.f;
 	double lastFrame = omp_get_wtime();
 	float deltaTime = 0.f;

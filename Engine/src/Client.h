@@ -1,5 +1,4 @@
 #pragma once
-#include "EnginePCH.h"
 
 namespace
 {
@@ -42,7 +41,7 @@ namespace
 	inline void Client::PingServer()
 	{
 		message<MessageType> msg = {};
-		msg.header.id = MessageType::PingServer;
+		msg.header.id = MessageType::Server_GetPing;
 		this->timeThen = std::chrono::system_clock::now();
 		this->Send(msg);
 	}
@@ -74,7 +73,7 @@ namespace
 			LeaveCriticalSection(&lock);
 			break;
 		}
-		case MessageType::PingServer:
+		case MessageType::Server_GetPing:
 		{
 			std::chrono::system_clock::time_point timeNow = std::chrono::system_clock::now();
 

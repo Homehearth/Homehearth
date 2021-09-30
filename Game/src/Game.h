@@ -2,13 +2,15 @@
 #include <EnginePCH.h>
 #include <Engine.h>
 
-class Game
+class Game : public Engine
 {
 private:
-	Engine m_engine;
+	Client m_client;
+
+	// Inherited via Engine
+	virtual bool OnStartup() override;
 public:
 	Game();
 
-	void Run();
+	void Start();
 };
-

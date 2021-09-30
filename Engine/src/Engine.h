@@ -19,7 +19,6 @@ private:
 	std::unordered_map<std::string, Scene> m_scenes;
 	Scene* m_currentScene;
 	bool m_vSync;
-	Client m_client;
 
 	struct {
 		float update;
@@ -36,26 +35,12 @@ private:
 	void Render(float& dt);
 
 
-public:
-	Engine();
-	Engine(const Window& other) = delete;
-	Engine(Window&& other) = delete;
-	Engine& operator=(const Window& other) = delete;
-	Engine& operator=(Window&& other) = delete;
-	virtual ~Engine() = default;
-
-	// Startup the Engine and its instances in a specific order.
-	void Startup();
-
 	// Run the Engine's core loop.
 	void Run();
 
 	// Shutdown the Engine and its instances in the reverse order.
 	void Shutdown();
 
-	Scene& GetScene(const std::string& name);
-	void SetScene(const std::string& name);
-	void SetScene(Scene& scene);
 
 	Window* GetWindow();
 
@@ -63,5 +48,22 @@ public:
 
 	// IMGUI
 	void drawImGUI() const;
+
+protected:
+	Scene& GetScene(const std::string& name);
+	void SetScene(const std::string& name);
+	void SetScene(Scene& scene);
+	// Startup the Engine and its instances in a specific order.
+	void Startup();
+
+public:
+	Engine();
+	Engine(const Engine& other) = delete;
+	Engine(Engine&& other) = delete;
+	Engine& operator=(const Engine& other) = delete;
+	Engine& operator=(Engine&& other) = delete;
+	virtual ~Engine() = default;
+
+	virtual bool OnStartup() = 0;
 };
 

@@ -14,7 +14,7 @@ void InitializePlayerEntity(Scene& scene)
 	renderable.mesh = ResourceManager::Get().GetResource<RMesh>("Monster.fbx");
 }
 
-void setupDemoScene(Engine& engine, Scene& scene) 
+void setupDemoScene(Scene& scene) 
 {
 	//Initialize player entity
 	for(int i = 0; i < 700; i++)

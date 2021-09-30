@@ -72,9 +72,10 @@ namespace network
 	enum class MessageType : uint32_t
 	{
 		Client_Accepted,
+		Client_AssignID,
 		Unknown,
-		Disconnected,
-		Connected,
-		PingServer
+		Server_GetPing,
+		Game_AddPlayer,
+		Game_RemovePlayer
 	};
 }

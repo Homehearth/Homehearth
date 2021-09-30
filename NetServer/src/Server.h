@@ -58,10 +58,10 @@ namespace network
 	{
 		switch (msg.header.id)
 		{
-		case MessageType::PingServer:
+		case MessageType::Server_GetPing:
 		{
 			message<MessageType> msg = {};
-			msg.header.id = MessageType::PingServer;
+			msg.header.id = MessageType::Server_GetPing;
 			this->SendToClient(SI, msg);
 			EnterCriticalSection(&lock);
 			LOG_INFO("Client on socket: %lld is pinging server", SI->Socket);
@@ -69,7 +69,7 @@ namespace network
 			break;
 		}
 		case MessageType::Unknown:
-		{		
+		{
 			EnterCriticalSection(&lock);
 			for (int i = 0; i < (int)msg.payload.size(); i++)
 			{

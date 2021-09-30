@@ -4,22 +4,9 @@
 
 #include "Components.h"
 
-Game::Game() 
+Game::Game()
+	:Engine()
 {
-	// Engine setup
-	m_engine.Startup();
-
-
-	// DEMO Scene
-	// Create or get scene
-	Scene& demo = m_engine.GetScene("Demo");
-	// Scene logic
-	setupDemoScene(m_engine, demo);
-	
-	//Set as current scene
-	m_engine.SetScene(demo);
-
-	
 	/*
 		Resource manager example
 	*/
@@ -38,9 +25,26 @@ Game::Game()
 	ResourceManager::Get().FreeResources();
 	*/
 
-}	//monster dies here
-
-void Game::Run() 
-{
-	m_engine.Run();
 }
+
+bool Game::OnStartup()
+{
+	LOG_INFO("TEST");
+
+	Scene& demo = Engine::GetScene("Demo");
+	// Scene logic
+	setupDemoScene(demo);
+
+	//Set as current scene
+	Engine::SetScene(demo);
+
+	m_client.Connect("127.0.0.1", 4950);
+
+	return true;
+}
+
+void Game::Start()
+{
+	Engine::Startup();
+}
+
