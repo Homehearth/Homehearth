@@ -18,9 +18,8 @@
 	_DRAW_SHAPE(Shape, color) <-- Used for drawing shapes.
 
 	Explanation:
-	_DRAW(..., width, height), width and height are both representing
-	percentages of how wide and tall the texture is.
-	ex. width = height = 0.5f will result in half the height/width of texture.
+	_DRAW(..., width, height), width and height represent the pixel
+	width and height of the element.
 
 	_DRAW_TEXT(format, ...), format is a IDWriteTextFormat pointer needed
 	for drawing customized fonts or font scale and more. If however no
@@ -61,8 +60,11 @@ struct _DRAW
 	/*
 		Width and Height scale.
 	*/
-	float width = 1.0f;
-	float height = 1.0f;
+	float width = 250.0f;
+	float height = 250.0f;
+
+	// Layer for layered drawing.
+	unsigned int layer = 0;
 
 	_DRAW()
 	{
@@ -150,6 +152,12 @@ struct _DRAW_SHAPE
 		this->shape = shape;
 		this->color = D2D1::ColorF(r, g, b, a);
 	}
+
+	_DRAW_SHAPE(const Shapes& shape, const D2D1_COLOR_F& color)
+	{
+		this->shape = shape;
+		this->color = color;
+	}
 };
 
 class D2D1Core
@@ -224,7 +232,6 @@ private:
 		Default objects to be used when no other parameters are specified.
 	*/
 
-	IDWriteFont* m_writeFont;
 	IDWriteTextFormat* m_writeFormat;
 	ID2D1SolidColorBrush* m_solidBrush;
 };

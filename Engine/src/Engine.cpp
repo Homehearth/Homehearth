@@ -33,6 +33,7 @@ void Engine::Startup()
 	// DirectX Startup:
 	D3D11Core::Get().Initialize(&m_window);
 	D2D1Core::Initialize(&m_window);
+	rtd::Handler2D::Initialize();
 
 	m_renderer.Initialize(&m_window);
 
@@ -55,9 +56,6 @@ void Engine::Startup()
 #endif
 	this->m_audio_engine = std::make_unique<DirectX::AudioEngine>(eflags);
 
-
-	ResourceManager::GetResource<RBitMap>("oohstonefigures.jpg");
-
 	IMGUI(
 		// Setup ImGUI
 		IMGUI_CHECKVERSION();
@@ -74,8 +72,15 @@ void Engine::Startup()
 
 	m_client.Connect("127.0.0.1", 4950);
 
-	
-	
+	Picture* test = new Picture("oohstonefigures.jpg", _DRAW(rand() % 100, rand() % 100, 100.0f, 100.0f));
+	rtd::Handler2D::InsertElement(test);
+	/*
+	for (int i = 0; i < 50; i++)
+	{
+		Picture* test = new Picture("oohstonefigures.jpg", _DRAW(rand() % 100 + i, rand() % 100 + i, 100.0f, 100.0f));
+		rtd::Handler2D::InsertElement(test);
+	}
+	*/
 }
 
 void Engine::Run()
@@ -183,10 +188,10 @@ void Engine::Run()
 		lastFrame = currentFrame;
 	}
 
-	while (!s_safeExit) {};
 	// Wait for the rendering thread to exit its last render cycle and shutdown
+	while (!s_safeExit) {};
+	
 	IMGUI(
-		 // TODO: why only in debug??
 		// ImGUI Shutdown
 		ImGui_ImplDX11_Shutdown();
 		ImGui_ImplWin32_Shutdown();
@@ -197,7 +202,7 @@ void Engine::Run()
     T_DESTROY();
     D2D1Core::Destroy();
 	ResourceManager::Destroy();
-
+	rtd::Handler2D::Destroy();
 
 	PROFILER_END_SESSION();
 }
@@ -392,8 +397,7 @@ void Engine::Render(float& dt)
 		Render 2D
 	*/
 	D2D1Core::Begin();
-	D2D1Core::DrawP(_DRAW(100.0f, 100.0f, 0.5f, 0.5f), ResourceManager::GetResource<RBitMap>("oohstonefigures.jpg")->GetTexture());
-	D2D1Core::DrawT("This is Text", _DRAW_TEXT(100.0f, 100.0f, 150.0f, 150.0f));
+	rtd::Handler2D::Render();
 	D2D1Core::Present();
 
 	IMGUI(

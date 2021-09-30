@@ -1,0 +1,32 @@
+#pragma once
+#include "D2D1Core.h"
+
+/*
+	Base-class for Rendering elements through D2D1
+*/
+class Element2D
+{
+private:
+
+	// Which layer this element should be rendered at.
+	unsigned int m_layer = 0;
+
+	// Name for get() Element from Handler2D
+	std::string m_name = "";
+
+protected:
+
+	// Set the identifying name of Element.
+	void SetName(const std::string& name);
+
+public:
+
+	Element2D();
+	virtual ~Element2D();
+
+	const std::string& GetName();
+	void SetLayer(const unsigned int layer);
+	const unsigned int GetLayer() const;
+
+	virtual void Draw() = 0;
+};

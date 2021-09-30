@@ -8,7 +8,6 @@ D2D1Core::D2D1Core()
 {
 	m_writeFactory = nullptr;
 	m_factory = nullptr;
-	m_writeFont = nullptr;
 	m_writeFormat = nullptr;
 	m_renderTarget = nullptr;
 	m_surface = nullptr;
@@ -24,8 +23,6 @@ D2D1Core::~D2D1Core()
 		m_writeFactory->Release();
 	if (m_factory)
 		m_factory->Release();
-	if (m_writeFont)
-		m_writeFont->Release();
 	if (m_writeFormat)
 		m_writeFormat->Release();
 	if (m_renderTarget)
@@ -233,7 +230,7 @@ void D2D1Core::DrawP(const _DRAW& fig, ID2D1Bitmap* texture)
 	D2D1_POINT_2F upperLeftCorner = D2D1::Point2F(fig.x_pos, fig.y_pos);
 
 	D2D1_RECT_F dest = D2D1::RectF(upperLeftCorner.x, upperLeftCorner.y,
-		(upperLeftCorner.x + size.width) * fig.width, (upperLeftCorner.y + size.height) * fig.height);
+		(upperLeftCorner.x + fig.width), (upperLeftCorner.y + fig.height));
 
 	INSTANCE->m_renderTarget->DrawBitmap(texture, dest);
 }
@@ -319,6 +316,8 @@ HRESULT D2D1Core::LoadBitMap(const LPCWSTR& filePath, ID2D1Bitmap** bitMap)
 			bitMap
 		);
 
+		LOG_INFO("Creating bitmap success!\n");
+
 		// Release
 		if (convert)
 			convert->Release();
@@ -332,6 +331,8 @@ HRESULT D2D1Core::LoadBitMap(const LPCWSTR& filePath, ID2D1Bitmap** bitMap)
 		else
 			return E_FAIL;
 	}
+
+	LOG_WARNING("Creating: bitmap texture failed.\n");
 
 	// Release if anything failed.
 	if(convert)
