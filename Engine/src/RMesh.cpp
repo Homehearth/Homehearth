@@ -111,14 +111,16 @@ bool RMesh::Create(const std::string& filename)
         return false;
     }
 
-    //Load in the mesh
-    const aiMesh* aimesh = scene->mMeshes[0];
-
-    //Load in the material 
+    /*
+        Load in material from the first mesh.
+        Only supports one material per RMesh for now.
+        If more materials needed per RMesh performance will be lower.
+        This is because we have to change material between every drawcall
+    */
     if (scene->HasMaterials())
     {
         //Get the material-index
-        UINT index = aimesh->mMaterialIndex;
+        UINT index = scene->mMeshes[0]->mMaterialIndex;
         aiString matName;
         scene->mMaterials[index]->Get(AI_MATKEY_NAME, matName);
         std::string name = matName.C_Str();
@@ -127,13 +129,7 @@ bool RMesh::Create(const std::string& filename)
         m_material = std::make_shared<RMaterial>();
         if (m_material->Create(scene->mMaterials[index]))
             ResourceManager::Get().AddResource(name, m_material);
-
     }
-
-    std::vector<simple_vertex_t> vertices;
-    std::vector<UINT> indices;
-    vertices.reserve(aimesh->mNumVertices);
-    indices.reserve(size_t(aimesh->mNumFaces) * 3);
 
     //Skeleton mesh
     /*if (mesh->HasBones())
@@ -146,30 +142,58 @@ bool RMesh::Create(const std::string& filename)
     //Else do this below
         //Go through all the vertices
 
-    for (unsigned int v = 0; v < aimesh->mNumVertices; v++)
+   
+    /*
+        Load in the mesh and all the submeshes
+        Combines all the meshes to one. 
+        This is to avoid multiple drawcalls
+    */
+    std::vector<simple_vertex_t> vertices;
+    std::vector<UINT> indices;
+    UINT indexOffSet = 0;
+    for (UINT m = 0; m < scene->mNumMeshes; m++)
     {
-        simple_vertex_t vert = {};
-        vert.position = { aimesh->mVertices[v].x,         aimesh->mVertices[v].y,       aimesh->mVertices[v].z  };
-        vert.uv       = { aimesh->mTextureCoords[0][v].x, aimesh->mTextureCoords[0][v].y                        };
-        vert.normal   = { aimesh->mNormals[v].x,          aimesh->mNormals[v].y,        aimesh->mNormals[v].z   };
-        vert.tangent  = { aimesh->mTangents[v].x,         aimesh->mTangents[v].y,       aimesh->mTangents[v].z  };
-        vert.bitanget = { aimesh->mBitangents[v].x,       aimesh->mBitangents[v].y,     aimesh->mBitangents[v].z};
-        vertices.push_back(vert);
-    }
-
-    //Indices
-    for (unsigned int f = 0; f < aimesh->mNumFaces; f++)
-    {
-        const aiFace face = aimesh->mFaces[f];
-        if (face.mNumIndices == 3)
+        const aiMesh* aimesh = scene->mMeshes[m];
+        
+        //Load in vertices
+        for (UINT v = 0; v < aimesh->mNumVertices; v++)
         {
-            for (unsigned int id = 0; id < 3; id++)
-                indices.push_back(face.mIndices[id]);
+            simple_vertex_t vert = {};
+			vert.position   = { aimesh->mVertices[v].x,         aimesh->mVertices[v].y,       aimesh->mVertices[v].z    };
+			vert.uv         = { aimesh->mTextureCoords[0][v].x, aimesh->mTextureCoords[0][v].y                          };
+			vert.normal     = { aimesh->mNormals[v].x,          aimesh->mNormals[v].y,        aimesh->mNormals[v].z     };
+			vert.tangent    = { aimesh->mTangents[v].x,         aimesh->mTangents[v].y,       aimesh->mTangents[v].z    };
+			vert.bitanget   = { aimesh->mBitangents[v].x,       aimesh->mBitangents[v].y,     aimesh->mBitangents[v].z  };
+            vertices.push_back(vert);
         }
-    }
 
-    bool success = true;
+        //Max index so that we know how much to step to reach next vertices-set
+        UINT localMaxIndex = 0;
+        //Going through all the indices
+        for (UINT f = 0; f < aimesh->mNumFaces; f++)
+        {
+            const aiFace face = aimesh->mFaces[f];
+            if (face.mNumIndices == 3)
+            {
+                for (unsigned int id = 0; id < 3; id++)
+                {
+                    UINT faceIndex = face.mIndices[id];
+                    if (faceIndex > localMaxIndex)
+                        localMaxIndex = faceIndex;
+
+                    indices.push_back(face.mIndices[id] + indexOffSet);
+                }
+            }
+        }
+        //Adding to the offset
+        indexOffSet += (localMaxIndex+1);
+    }
+    //Have to shrink the vectors
+    vertices.shrink_to_fit();
+    indices.shrink_to_fit();
+
     //Create vertex and indexbuffer
+    bool success = true;
     if (!CreateVertexBuffer(vertices) ||
         !CreateIndexBuffer(indices))
     {

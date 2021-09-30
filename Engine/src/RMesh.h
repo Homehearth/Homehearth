@@ -3,7 +3,12 @@
 #include "RMaterial.h"
 
 /*
-	Load in a single mesh with Assimp 5.0.1
+	Load in a model (".obj", ".fbx") with Assimp 5.0.1
+
+	Can load in a mesh with submeshes. (combines all to one in create)
+	Limited to only one material per RMesh at this time.
+	More materials == lower performance
+	This is because we have to change material between every drawcall
 
 	TODO:
 	* Fix loading in bones
@@ -17,13 +22,11 @@ private:
 		staticMesh,
 		skeletalMesh	//Has bones
 	};	
-	EMeshType			 m_meshType;
-	ComPtr<ID3D11Buffer> m_vertexBuffer;
-	ComPtr<ID3D11Buffer> m_indexBuffer;
-	UINT				 m_indexCount;
-
-
-	std::shared_ptr<RMaterial> m_material;
+	EMeshType					m_meshType;
+	ComPtr<ID3D11Buffer>		m_vertexBuffer;
+	ComPtr<ID3D11Buffer>		m_indexBuffer;
+	UINT						m_indexCount;
+	std::shared_ptr<RMaterial>	m_material;
 
 	//Save the skeleton in a structure: rootbone --> other parts
 
