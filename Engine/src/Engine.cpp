@@ -66,10 +66,6 @@ void Engine::Startup()
 	);
 
 	InputSystem::Get().SetMouseWindow(m_window.GetHWnd());
-
-	m_client.Connect("127.0.0.1", 4950);
-
-	
 	
 }
 
@@ -103,30 +99,6 @@ void Engine::Run()
 			if (msg.message == WM_QUIT)
 			{
 				Shutdown();
-			}
-		}
-
-		if (m_client.IsConnected())
-		{
-			if (GetForegroundWindow() == this->m_window.GetHWnd())
-			{
-				key[0] = GetAsyncKeyState('1') & 0x8000;
-				key[1] = GetAsyncKeyState('2') & 0x8000;
-				key[2] = GetAsyncKeyState('3') & 0x8000;
-
-				if (key[0] && !old_key[0])
-				{
-					m_client.PingServer();
-				}
-				else if (key[1] && !old_key[1])
-				{
-					m_client.TestServerWithGibberishData();
-				}
-
-				for (int i = 0; i < 3; i++)
-				{
-					old_key[i] = key[i];
-				}
 			}
 		}
 
@@ -182,8 +154,6 @@ void Engine::Run()
 		ImGui::DestroyContext();
 	);
 
-
-	m_client.Disconnect();
     T_DESTROY();
     ResourceManager::Get().Destroy();
     D2D1Core::Destroy();
