@@ -15,8 +15,7 @@ namespace ecs
 		struct Renderable
 		{
 			std::shared_ptr<RMesh> mesh;
-			Transform renderForm;
-			//dx::ConstantBuffer<sm::Matrix> constantBuffer;
+			 basic_model_matrix_t data;
 		};
 
 		struct Velocity
@@ -30,12 +29,9 @@ namespace ecs
 		};
 	};
 
-	void OnRenderableConstruct(entt::registry& reg, entt::entity entity);
-
-
-	sm::Matrix GetMatrix(component::Transform& transform);
-	sm::Vector3 GetForward(component::Transform& transform);
-	sm::Vector3 GetUp(component::Transform& transform);
+	sm::Matrix GetMatrix(const component::Transform& transform);
+	sm::Vector3 GetForward(const component::Transform& transform);
+	sm::Vector3 GetUp(const component::Transform& transform);
 
 };
 

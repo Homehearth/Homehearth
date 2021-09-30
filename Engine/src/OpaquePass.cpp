@@ -14,7 +14,7 @@ void OpaquePass::PreRender(ID3D11DeviceContext* dc, PipelineManager* pm)
 	// Bind Camera and PipelineState.
 }
 
-void OpaquePass::Render()
+void OpaquePass::Render(Scene* pScene)
 {
 	// Render objects.
 }

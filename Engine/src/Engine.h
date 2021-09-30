@@ -26,12 +26,12 @@ private:
 		float render;
 	} m_frameTime;
 
-	
 	// Job for rendering thread.
 	void RenderThread();
 
 	// Updates the current scene.
 	void Update(float dt);
+	
 	// Renders one frame.
 	void Render(float& dt);
 
