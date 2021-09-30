@@ -49,6 +49,8 @@
 #define ALIGN16 __declspec(align(16))
 
 // DirectX
+#pragma warning(push)
+#pragma warning(disable:26812)
 #include <d3d11.h>
 #include <d3dcompiler.h>
 #include <DirectXMath.h>
@@ -60,6 +62,7 @@
 #include <ctime>
 #include <Keyboard.h>
 #include <Mouse.h>
+#pragma warning(pop)
 using Microsoft::WRL::ComPtr;
 namespace dx = DirectX;
 
@@ -109,7 +112,9 @@ namespace sm = dx::SimpleMath;
 #include "net_client_interface.h"
 
 // Assimp
-#pragma warning(push, 0)
+#pragma warning(push)
+#pragma warning(disable:26812)
+#pragma warning(disable:26451)
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
