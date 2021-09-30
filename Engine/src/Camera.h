@@ -29,7 +29,7 @@ private:
 	float m_rotationSpeed;
 	float m_movingSepeed;
 
-
+	camera_Matrix_t* m_cameraMat;
 	sm::Quaternion quaterion;
 
 public:
@@ -45,7 +45,7 @@ public:
 	sm::Vector3 GetPosition() const;
 	sm::Vector3 GetTarget() const;
 	sm::Vector3 GetUp() const;
-	camera_Matrix_t GetCameraMatrixes();
+	camera_Matrix_t* GetCameraMatrixes();
 
 	//Set Functions
 	void SetFOV(float fov);
@@ -59,6 +59,4 @@ public:
 
 	//Public variables and stuff
 	ComPtr<ID3D11Buffer> m_viewConstantBuffer;
-	camera_Matrix_t m_cameraMat;
-
 };
