@@ -53,15 +53,15 @@ void BasePass::PreRender(ID3D11DeviceContext* dc, PipelineManager* pm)
     // OUTPUT MERGER.
     {
         dc->OMSetRenderTargets(1, pm->m_renderTargetView.GetAddressOf(), pm->m_depthStencilView.Get());
-        // TODO set appropriate blendState
-        //dc->OMSetBlendState(nullptr, nullptr, 0); 
-        dc->OMSetDepthStencilState(pm->m_depthStencilState.Get(), 1);
+        dc->OMSetBlendState(pm->m_blendStatepOpaque.Get(), nullptr, 0xFFFFFFFF); 
+        dc->OMSetDepthStencilState(pm->m_depthStencilStateLess.Get(), 1);
     }
 }
 
 void BasePass::Render()
 {
 	// Render objects.
+		
 }
 
 void BasePass::PostRender()

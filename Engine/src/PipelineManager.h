@@ -23,7 +23,6 @@ public:
 	
 	ComPtr<ID3D11RenderTargetView>	m_renderTargetView;
 
-	// depth buffer data	
 	ComPtr<ID3D11Texture2D>			m_depthStencilTexture;
 	
 	ComPtr<ID3D11DepthStencilView>	m_depthStencilView;
@@ -33,19 +32,26 @@ public:
 	ComPtr<ID3D11DepthStencilState> m_depthStencilStateGreater;
 	ComPtr<ID3D11DepthStencilState> m_depthStencilStateEqualAndDisableDepthWrite;
 
-	ComPtr<ID3D11RasterizerState>	m_rasterizerState;
+	ComPtr<ID3D11RasterizerState>	m_rasterState;
 	ComPtr<ID3D11RasterizerState>	m_rasterStateNoCulling;
 	ComPtr<ID3D11RasterizerState>	m_rasterStateWireframe;
 
+	ComPtr<ID3D11BlendState>		m_blendStatepOpaque;
+	ComPtr<ID3D11BlendState>		m_blendStatepDepthOnlyAlphaTest;
+	ComPtr<ID3D11BlendState>		m_blendStateDepthOnlyAlphaToCoverage;;
+	
 	ComPtr<ID3D11SamplerState>		m_linearSamplerState;
 	ComPtr<ID3D11SamplerState>		m_pointSamplerState;
 
 	ComPtr<ID3D11InputLayout>		m_defaultInputLayout;
+	ComPtr<ID3D11InputLayout>		m_positionOnlyInputLayout;
 	
-	ComPtr<ID3D11Buffer>			m_defaultModelConstantBuffer;
-	ComPtr<ID3D11Buffer>			m_defaultViewConstantBuffer; // TODO: maybe put in Camera class or update from Camera class
+	ComPtr<ID3D11Buffer>			m_defaultModelConstantBuffer;	// TODO: maybe put in Camera class or update from Camera class
+	ComPtr<ID3D11Buffer>			m_defaultViewConstantBuffer;	// TODO: maybe put in Camera class or update from Camera class
 	
 	Shaders::VertexShader			m_defaultVertexShader;
+	Shaders::VertexShader			m_positionOnlyVertexShader;
+
 	Shaders::PixelShader			m_defaultPixelShader;
 
 	D3D11_VIEWPORT					m_viewport;

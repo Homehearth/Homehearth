@@ -56,6 +56,12 @@ void PipelineManager::Initialize(Window* pWindow)
         LOG_ERROR("failed creating SamplerStates.");
     }
 
+    // Initialize CreateBlendStates.
+    if (!this->CreateBlendStates())
+    {
+        LOG_ERROR("failed creating BlendStates.");
+    }
+
     // Initialize Shaders.
     if (!this->CreateShaders())
     {
@@ -152,7 +158,7 @@ bool PipelineManager::CreateDepthStencilStates()
     if (FAILED(hr))
         return false;
 	
-    // Create m_depthStencilStateGreater
+    // Create m_depthStencilStateGreater.
     depthStencilDesc.DepthFunc = D3D11_COMPARISON_GREATER;
     hr = m_d3d11->Device()->CreateDepthStencilState(&depthStencilDesc, m_depthStencilStateGreater.GetAddressOf());
     if (FAILED(hr))
@@ -204,7 +210,7 @@ bool PipelineManager::CreateRasterizerStates()
     rasterizerDesc.CullMode = D3D11_CULL_MODE::D3D11_CULL_BACK;
 
     // Create the rasterizer state from the description we just filled out.
-    HRESULT hr = m_d3d11->Device()->CreateRasterizerState(&rasterizerDesc, m_rasterizerState.GetAddressOf());
+    HRESULT hr = m_d3d11->Device()->CreateRasterizerState(&rasterizerDesc, m_rasterState.GetAddressOf());
 
     // Setup a raster description with no back face culling.
     rasterizerDesc.CullMode = D3D11_CULL_NONE;
@@ -264,25 +270,43 @@ bool PipelineManager::CreateSamplerStates()
 
 bool PipelineManager::CreateBlendStates()
 {
-    // Create blend states 
+    // Create a blend state description. 
     D3D11_BLEND_DESC blendStateDesc;
+    ZeroMemory(&blendStateDesc, sizeof(D3D11_BLEND_DESC));
+
+    D3D11_RENDER_TARGET_BLEND_DESC rtbd;
+    ZeroMemory(&rtbd, sizeof(D3D11_RENDER_TARGET_BLEND_DESC));
+	
+    // Setup for Opaque BlendState.
+    rtbd.BlendEnable = 0;
+    rtbd.BlendOp = D3D11_BLEND_OP_ADD;
+    rtbd.SrcBlend = D3D11_BLEND_ONE;
+    rtbd.DestBlend = D3D11_BLEND_ZERO;
+    rtbd.BlendOpAlpha = D3D11_BLEND_OP_ADD;
+    rtbd.SrcBlendAlpha = D3D11_BLEND_ONE;
+    rtbd.DestBlendAlpha = D3D11_BLEND_ZERO;
+    rtbd.RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+    blendStateDesc.RenderTarget[0] = rtbd;
     blendStateDesc.AlphaToCoverageEnable = 0;
     blendStateDesc.IndependentBlendEnable = 0;
-    blendStateDesc.RenderTarget[0].BlendEnable = 0;
-    blendStateDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
-    blendStateDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_ONE;
-    blendStateDesc.RenderTarget[0].DestBlend = D3D11_BLEND_ZERO;
-    blendStateDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
-    blendStateDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
-    blendStateDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
-    blendStateDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
-	
-	//V_RETURN(pd3dDevice->CreateBlendState(&BlendStateDesc, &g_pOpaqueState));
+
+    // Create m_blendStatepOpaque.
+    HRESULT hr = m_d3d11->Device()->CreateBlendState(&blendStateDesc, m_blendStatepOpaque.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+
+    // Create m_blendStatepDepthOnlyAlphaTest.
     blendStateDesc.RenderTarget[0].RenderTargetWriteMask = 0;
-    //V_RETURN(pd3dDevice->CreateBlendState(&BlendStateDesc, &g_pDepthOnlyAlphaTestState));
-    blendStateDesc.RenderTarget[0].RenderTargetWriteMask = 0;
-    blendStateDesc.AlphaToCoverageEnable = TRUE;
-    //V_RETURN(pd3dDevice->CreateBlendState(&BlendStateDesc, &g_pDepthOnlyAlphaToCoverageState));
+    hr = m_d3d11->Device()->CreateBlendState(&blendStateDesc, m_blendStatepDepthOnlyAlphaTest.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+
+    // Create m_blendStateDepthOnlyAlphaToCoverage.
+	// "...the quality is significantly improved when used in conjunction with MSAA".
+    blendStateDesc.AlphaToCoverageEnable = 1;
+    hr = m_d3d11->Device()->CreateBlendState(&blendStateDesc, m_blendStateDepthOnlyAlphaToCoverage.GetAddressOf());
+
+	return !FAILED(hr);
 }
 
 void PipelineManager::SetViewport()
@@ -311,10 +335,11 @@ void PipelineManager::SetViewport()
 
 bool PipelineManager::CreateInputLayouts()
 {
-    HRESULT hr;
-	
+    HRESULT hr = S_FALSE;
+
+	// Create m_defaultInputLayout.
 	std::string shaderByteCode = m_defaultVertexShader.GetShaderByteCode();
-    D3D11_INPUT_ELEMENT_DESC inputDesc[] =
+    D3D11_INPUT_ELEMENT_DESC defaultVertexShaderDesc[] =
     {
         {"POSITION",    0, DXGI_FORMAT_R32G32B32_FLOAT,    0,                0,                   D3D11_INPUT_PER_VERTEX_DATA, 0},
         {"TEXCOORD",    0, DXGI_FORMAT_R32G32_FLOAT,       0,    D3D11_APPEND_ALIGNED_ELEMENT,    D3D11_INPUT_PER_VERTEX_DATA, 0},
@@ -323,15 +348,24 @@ bool PipelineManager::CreateInputLayouts()
         {"BINORMAL",    0, DXGI_FORMAT_R32G32B32_FLOAT,    0,    D3D11_APPEND_ALIGNED_ELEMENT,    D3D11_INPUT_PER_VERTEX_DATA, 0}
     };
 	
-	if(FAILED(hr = D3D11Core::Get().Device()->CreateInputLayout(inputDesc, ARRAYSIZE(inputDesc), shaderByteCode.c_str(), shaderByteCode.length(), &m_defaultInputLayout)))
+	if(FAILED(hr = D3D11Core::Get().Device()->CreateInputLayout(defaultVertexShaderDesc, ARRAYSIZE(defaultVertexShaderDesc), shaderByteCode.c_str(), shaderByteCode.length(), &m_defaultInputLayout)))
     {
-        LOG_WARNING("failed creating m_defaultVertexShader.");
+        LOG_WARNING("failed creating m_defaultInputLayout.");
         return false;
     }
-	
-    /*
-     * Add other input layouts here. Re-use 'shaderByteCode' and 'inputDesc[]'.
-     */
+
+	// Create m_positionOnlyInputLayout.
+    shaderByteCode = m_positionOnlyVertexShader.GetShaderByteCode();
+    D3D11_INPUT_ELEMENT_DESC positionOnlyVertexShaderDesc[] =
+    {
+        {"POSITION",    0, DXGI_FORMAT_R32G32B32_FLOAT,    0,                0,                   D3D11_INPUT_PER_VERTEX_DATA, 0}
+    };
+
+    if (FAILED(hr = D3D11Core::Get().Device()->CreateInputLayout(positionOnlyVertexShaderDesc, ARRAYSIZE(positionOnlyVertexShaderDesc), shaderByteCode.c_str(), shaderByteCode.length(), &m_positionOnlyInputLayout)))
+    {
+        LOG_WARNING("failed creating m_positionOnlyInputLayout.");
+        return false;
+    }
 
     return !FAILED(hr);
 }
@@ -371,6 +405,12 @@ bool PipelineManager::CreateShaders()
     {
         LOG_WARNING("failed creating Model_vs.");
 		return false;
+    }
+
+    if (!m_positionOnlyVertexShader.Create("depth_vs"))
+    {
+        LOG_WARNING("failed creating depth_vs.");
+        return false;
     }
 	
     if(!m_defaultPixelShader.Create("Model_ps"))
