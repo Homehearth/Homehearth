@@ -14,6 +14,8 @@ D2D1Core::D2D1Core()
 	m_surface = nullptr;
 	m_hwndTarget = nullptr;
 	m_solidBrush = nullptr;
+	m_windowPointer = nullptr;
+	m_imageFactory = nullptr;
 }
 
 D2D1Core::~D2D1Core()
@@ -172,12 +174,19 @@ void D2D1Core::DrawT(const std::string text, const _DRAW_TEXT& opt)
 	}
 }
 
-void D2D1Core::DrawF(const _DRAW& fig, const Shapes shape)
+void D2D1Core::DrawF(const _DRAW& fig, const _DRAW_SHAPE& shape)
 {
+	D2D1_COLOR_F oldColor = INSTANCE->m_solidBrush->GetColor();
 	INSTANCE->m_renderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
 	D2D1_SIZE_F rtSize = INSTANCE->m_renderTarget->GetSize();
+
+	// Set the color
+	INSTANCE->m_solidBrush->SetColor(shape.color);
+
 	ID2D1PathGeometry* geometry = nullptr;
-	switch (shape)
+
+	// Determine which shape to render.
+	switch (shape.shape)
 	{
 	case Shapes::RECTANGLE_FILLED:
 		D2D1_RECT_F rectangle_filled = D2D1::RectF(fig.x_pos, fig.y_pos, fig.x_pos + fig.width , fig.y_pos + fig.height);
@@ -208,6 +217,9 @@ void D2D1Core::DrawF(const _DRAW& fig, const Shapes shape)
 		geometry->Release();
 		break;
 	}
+
+	// Reset it to its old color.
+	INSTANCE->m_solidBrush->SetColor(oldColor);
 }
 
 void D2D1Core::DrawP(const _DRAW& fig, ID2D1Bitmap* texture)
@@ -241,12 +253,15 @@ void D2D1Core::Present()
 const bool D2D1Core::CreateImage(const std::string& filename, ID2D1Bitmap** p_pointer)
 {
 	/*
-		Todo: Divide Filename to get name and type.
+		Setup searchpath, convert char* to WCHAR*
+		Load Bitmap from file.
 	*/
 	std::string searchPath = "../Assets/Textures/";
 	searchPath.append(filename);
 	const char* t = searchPath.c_str();
 	const WCHAR* pwcsName;
+
+	// conversion
 	int nChars = MultiByteToWideChar(CP_ACP, 0, t, -1, NULL, 0);
 	pwcsName = new WCHAR[nChars];
 	MultiByteToWideChar(CP_ACP, 0, t, -1, (LPWSTR)pwcsName, nChars);
@@ -267,6 +282,9 @@ HRESULT D2D1Core::LoadBitMap(const LPCWSTR& filePath, ID2D1Bitmap** bitMap)
 	IWICBitmapFrameDecode* fDecoder = nullptr;
 	IWICFormatConverter* convert = nullptr;
 
+	/*
+		Creating Bitmap pipeline.
+	*/
 	hr = m_imageFactory->CreateDecoderFromFilename(
 		filePath,
 		NULL,
@@ -301,15 +319,27 @@ HRESULT D2D1Core::LoadBitMap(const LPCWSTR& filePath, ID2D1Bitmap** bitMap)
 			bitMap
 		);
 
-		convert->Release();
-		fDecoder->Release();
-		decoder->Release();
+		// Release
+		if (convert)
+			convert->Release();
+		if (fDecoder)
+			fDecoder->Release();
+		if (decoder)
+			decoder->Release();
 
 		if (SUCCEEDED(hr))
 			return S_OK;
 		else
 			return E_FAIL;
 	}
+
+	// Release if anything failed.
+	if(convert)
+		convert->Release();
+	if(fDecoder)
+		fDecoder->Release();
+	if(decoder)
+		decoder->Release();
 
 	return E_FAIL;
 }

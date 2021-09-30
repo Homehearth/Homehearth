@@ -3,6 +3,50 @@
 #include "RTexture.h"
 
 /*
+	Is this your first time in this .h Header file?
+	WIKI:
+
+	The Draw options/functions are as follows:
+	void DrawP() <-- Draw Picture {Draws a texture}
+	void DrawF() <-- Draw Form {Draws one of the basic forms available}
+	void DrawT() <-- Draw Text {Draws text at desired position}
+
+	These draw options has different structure parameters.
+	The structures can be seen below but for a quick summary:
+	_DRAW(x, y, width, height) <-- Used when to draw textures and shapes.
+	_DRAW_TEXT(format, x, y, x_stretch, y_stretch) <-- Used when to draw text.
+	_DRAW_SHAPE(Shape, color) <-- Used for drawing shapes.
+
+	Explanation:
+	_DRAW(..., width, height), width and height are both representing
+	percentages of how wide and tall the texture is.
+	ex. width = height = 0.5f will result in half the height/width of texture.
+
+	_DRAW_TEXT(format, ...), format is a IDWriteTextFormat pointer needed
+	for drawing customized fonts or font scale and more. If however no
+	format is input in DrawT() the default font will be used which is
+	"Times New Roman" with size of 24.0f.
+
+	_DRAW_SHAPE(Shape, color), Shape comes from the enum class Shapes
+	which can be viewed below. These shapes are the currently available basic
+	shapes.
+	color is the desired color of the to be drawn shape. This requires
+	D2D1::ColorF(float, float, float, float = 1.0f) to get input.
+
+	Image Rendering:
+	To start rendering an image you must first load it into the ResourceManager.
+	The specified class has to be RBitMap since this is what we use to render 2d textures.
+	Ex. auto* image = ResourceManager::GetResource<RBitMap>("oohstonefigures.jpg");
+	When this is done use the D2D1Core to render your texture.
+	Ex. D2D1Core::DrawP(_DRAW(), image);
+
+	Troubleshooting:
+	Make sure you have your Draw() function within the bounds of Being() and Present().
+	Make sure your Draw isn't being obstructed by any other draws.
+	If image is a nullptr nothing will get rendered.
+*/
+
+/*
 	Struct used to set position and scale 
 	of drawable element.
 */
@@ -80,12 +124,32 @@ struct _DRAW_TEXT
 
 enum class Shapes
 {
-	DEFAULT,
+	NONE,
 	RECTANGLE_FILLED,
 	RECTANGLE_OUTLINED,
 	TRIANGLE_FILLED,
 	TRIANGLE_OUTLINED,
 	NR_OF_SHAPES
+};
+
+/*
+	Struct used to draw a shape with a specific color.
+*/
+struct _DRAW_SHAPE
+{
+	Shapes shape = Shapes::NONE;
+	D2D1_COLOR_F color = D2D1::ColorF(1.0f, 1.0f, 1.0f);
+
+	_DRAW_SHAPE()
+	{
+		// Empty
+	}
+
+	_DRAW_SHAPE(const Shapes& shape, float r, float g, float b, float a = 1.0f)
+	{
+		this->shape = shape;
+		this->color = D2D1::ColorF(r, g, b, a);
+	}
 };
 
 class D2D1Core
@@ -124,13 +188,13 @@ public:
 		This is a basic version of drawing text onto screen.
 		Text will be drawn at the center of the window.
 	*/
-	static void DrawT(const std::string text, const _DRAW_TEXT& opt = _DRAW_TEXT());
+	static void DrawT(const std::string text = "Basic Text", const _DRAW_TEXT& opt = _DRAW_TEXT());
 
 	/*
-		Draws the specified shape with position upper_x, upper_y and width, height.
-		Uses the default brush/color.
+		Draws the specified shape with _DRAW input specifications.
+		This method uses the default brush.
 	*/
-	static void DrawF(const _DRAW& fig, const Shapes shape = Shapes::DEFAULT);
+	static void DrawF(const _DRAW& fig, const _DRAW_SHAPE& shape);
 
 	/*
 		Draws a Bitmap onto the screen at the coordinates of

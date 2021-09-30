@@ -34,9 +34,9 @@ void Engine::Startup()
 	D3D11Core::Get().Initialize(&m_window);
 	D2D1Core::Initialize(&m_window);
 
-	ResourceManager::GetResource<RBitMap>("oohstonefigures.jpg");
-
 	m_renderer.Initialize(&m_window);
+
+
 
 	// Thread should be launched after s_engineRunning is set to true and D3D11 is initialized.
 	s_engineRunning = true;
@@ -55,6 +55,8 @@ void Engine::Startup()
 #endif
 	this->m_audio_engine = std::make_unique<DirectX::AudioEngine>(eflags);
 
+
+	ResourceManager::GetResource<RBitMap>("oohstonefigures.jpg");
 
 	IMGUI(
 		// Setup ImGUI
@@ -390,8 +392,8 @@ void Engine::Render(float& dt)
 		Render 2D
 	*/
 	D2D1Core::Begin();
-	D2D1Core::DrawP(_DRAW(), ResourceManager::GetResource<RBitMap>("oohstonefigures.jpg")->GetTexture());
-	D2D1Core::DrawT("LOOOOL", _DRAW_TEXT(0.0f, 0.0f, 100.0f, 10.0f));
+	D2D1Core::DrawP(_DRAW(100.0f, 100.0f, 0.5f, 0.5f), ResourceManager::GetResource<RBitMap>("oohstonefigures.jpg")->GetTexture());
+	D2D1Core::DrawT("This is Text", _DRAW_TEXT(100.0f, 100.0f, 150.0f, 150.0f));
 	D2D1Core::Present();
 
 	IMGUI(
