@@ -28,6 +28,13 @@ namespace ecs
 		{
 			float runSpeed;
 		};
+
+		struct BoxCollider
+		{
+			sm::Vector3 center;
+			sm::Vector3 norm[3];
+			float halfSize[3];
+		};
 	};
 
 	void OnRenderableConstruct(entt::registry& reg, entt::entity entity);
