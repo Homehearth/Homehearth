@@ -1,67 +1,52 @@
 #include <EnginePCH.h>
 #include "ResourceManager.h"
-#include <typeinfo>
 
-ResourceManager* ResourceManager::m_instance = nullptr;
 
-ResourceManager::ResourceManager()
+bool ResourceManager::AddResource(const std::string& key, const std::shared_ptr<resource::GResource>& resource)
 {
-}
-
-ResourceManager::~ResourceManager()
-{
-	for (auto it = m_resources.begin(); it != m_resources.end(); it++)
+	bool added = false;
+	if (m_resources.find(key) == m_resources.end())
 	{
-		if (it->second)
-		{
-			delete it->second;
-		}
+		m_resources.emplace(key, resource);
+		added = true;
+#ifdef _DEBUG
+		LOG_INFO("RM added '%s'", key.c_str());
+#endif 
 	}
-	m_resources.clear();
-}
-
-void ResourceManager::Initialize()
-{
-	if (!m_instance)
-	{
-		m_instance = new ResourceManager();
-	}
+	return added;
 }
 
 void ResourceManager::Destroy()
 {
-	if (m_instance)
-		delete m_instance;
+	for (auto it = m_resources.begin(); it != m_resources.end(); )
+	{
+		it = m_resources.erase(it);
+	}
+	m_resources.clear();
 }
 
-void ResourceManager::RemoveResource(const std::string& resource_name)
+void ResourceManager::FreeResources()
 {
-	//Check if the resource exists
-	auto f = ResourceManager::m_instance->m_resources.find(resource_name);
-
-	if (f != ResourceManager::m_instance->m_resources.end())
+	for (auto it = m_resources.begin(); it != m_resources.end(); )
 	{
-		if (f->second != nullptr)
+		//If there is only one of this left, we free up memory and delete it
+		if (it->second.use_count() <= 1)
 		{
-			f->second->Release();
-			if (f->second->GetRef() <= 0)
-			{
-				delete f->second;
-				ResourceManager::m_instance->m_resources.erase(f);
-			}
-		}
-	}
-}
-
-void ResourceManager::InsertResource(const std::string& resource_name, resource::GResource* resource)
-{
-	//Only insert resources that does not exist
-	if (ResourceManager::m_instance->m_resources.find(resource_name) == ResourceManager::m_instance->m_resources.end())
-	{
 #ifdef _DEBUG
-		LOG_INFO("RM added '%s'", resource_name.c_str());
+			LOG_INFO("RM removed '%s'", it->first.c_str());
 #endif 
-		resource->AddRef();
-		ResourceManager::m_instance->m_resources.emplace(resource_name, resource);
+			m_resources.erase(it);
+			/*
+				Not the most effient for now...
+				Have to be in this order as everything 
+				in unordered_map is "unordered"
+			*/
+			it = m_resources.begin();
+		}
+		else
+			it++;
 	}
+#ifdef _DEBUG
+	LOG_INFO("RM cleared unused resources. Resources left: %d", (int)m_resources.size());
+#endif 
 }

@@ -1,6 +1,7 @@
 ﻿#include "EnginePCH.h"
 #include "Engine.h"
 #include <omp.h>
+#include "Camera.h"
 
 #include "RMesh.h"
 
@@ -19,8 +20,7 @@ Engine::Engine()
 void Engine::Startup()
 {
 	T_INIT(1, thread::ThreadType::POOL_FIFO);
-	ResourceManager::Initialize();
-	srand((unsigned int)time(NULL));
+	srand(static_cast<unsigned>(time(NULL)));
 
 	// Window Startup:
 	Window::Desc config;
@@ -36,9 +36,12 @@ void Engine::Startup()
 	rtd::Handler2D::Initialize();
 	BackBuffer::Initialize();
 
-	m_renderer.Initialize(&m_window);
+	//Camera
+	m_debugCamera.Initialize(sm::Vector3(0, 0, -1), sm::Vector3(0, 0, 0), sm::Vector3(0, 1, 0), sm::Vector2((float)m_window.GetWidth(), (float)m_window.GetHeight()));
 
+	m_currentCamera = std::make_shared<Camera>(m_debugCamera);
 
+	m_renderer.Initialize(&m_window, m_currentCamera.get());
 
 	// Thread should be launched after s_engineRunning is set to true and D3D11 is initialized.
 	s_engineRunning = true;
@@ -87,8 +90,6 @@ void Engine::Startup()
 void Engine::Run()
 {
 
-	PROFILER_BEGIN_SESSION();
-
 	double currentFrame = 0.f;
 	double lastFrame = omp_get_wtime();
 	float deltaTime = 0.f;
@@ -119,11 +120,6 @@ void Engine::Run()
 
 		if (m_client.IsConnected())
 		{
-			if (!m_client.messages.empty())
-			{
-				std::cout << "TESTING!!!!!" << std::endl;
-				message<MessageType> msg = m_client.messages.pop_front();
-			}
 			if (GetForegroundWindow() == this->m_window.GetHWnd())
 			{
 				key[0] = GetAsyncKeyState('1') & 0x8000;
@@ -132,12 +128,11 @@ void Engine::Run()
 
 				if (key[0] && !old_key[0])
 				{
-					message<MessageType> msg = {};
-					msg.header.id = MessageType::PingServer;
-					m_client.timeThen = std::chrono::system_clock::now();
-					LOG_INFO("Pinging server!");
-
-					m_client.Send(msg);
+					m_client.PingServer();
+				}
+				else if (key[1] && !old_key[1])
+				{
+					m_client.TestServerWithGibberishData();
 				}
 
 				for (int i = 0; i < 3; i++)
@@ -147,8 +142,11 @@ void Engine::Run()
 			}
 		}
 
+		// Handle Input.
+		InputSystem::Get().UpdateEvents();
 		
-
+		m_debugCamera.Update(deltaTime);
+		
 		//Showing examples of keyboard and mouse (THIS CODE SHOULD BE HANDLED SOMEWHERE ELSE (GAMEPLAY LOGIC))
 		if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::G, KeyState::RELEASED))
 		{
@@ -199,6 +197,7 @@ void Engine::Run()
 		ImGui::DestroyContext();
 	);
 
+
 	m_client.Disconnect();
     T_DESTROY();
     D2D1Core::Destroy();
@@ -206,7 +205,7 @@ void Engine::Run()
 	rtd::Handler2D::Destroy();
 	BackBuffer::Destroy();
 
-	PROFILER_END_SESSION();
+	//PROFILER_END_SESSION();
 }
 
 void Engine::Shutdown()
@@ -262,14 +261,15 @@ void Engine::drawImGUI() const
 	static std::vector<float> vRamUsageContainer;
 
 	static Timer timer;
-
-	if (timer.GetElapsedTime() > 0.5f)
+	static int dots = 0;
+	if (timer.GetElapsedTime<std::chrono::duration<float>>() > 0.5f)
 	{
 		fpsContainer.emplace_back((1 / m_frameTime.render));
 		fpsUpdateContainer.emplace_back((1.0f / m_frameTime.update));
 		ramUsageContainer.emplace_back((Profiler::GetRAMUsage() / (1024.f * 1024.f)));
 		vRamUsageContainer.emplace_back((Profiler::GetVRAMUsage() / (1042.f * 1024.f)));
 		timer.Start();
+		dots = (dots + 1) % 4;
 	}
 
 	if (fpsContainer.size() > 10)
@@ -291,6 +291,32 @@ void Engine::drawImGUI() const
 
 
 	ImGui::Begin("Statistics");
+#if PROFILER
+	static bool isRecProfileSession = false;
+	if (!isRecProfileSession)
+	{
+		if (ImGui::Button("Record"))
+		{
+			isRecProfileSession = true;
+			PROFILER_BEGIN_SESSION();
+		}
+		ImGui::SameLine();
+		ImGui::Text("- Starts Profiler Session");
+	}
+	else
+	{
+		if (ImGui::Button("Stop Recording"))
+		{
+			isRecProfileSession = false;
+			PROFILER_END_SESSION();
+		}
+		ImGui::SameLine();
+		std::string loadingDots = "";
+		for (int i = 0; i < dots; i++)
+			loadingDots.append(".");
+		ImGui::TextColored(ImColor(1.f, 0.f, 0.f, 1.0f), ("Recording" + loadingDots).c_str());
+	}
+#endif
 	if (ImGui::CollapsingHeader("FPS"))
 	{
 		ImGui::PlotLines(("FPS: " + std::to_string(static_cast<size_t>(1 / m_frameTime.render))).c_str(), fpsContainer.data(), static_cast<int>(fpsContainer.size()), 0, nullptr, 0.0f, 144.0f, ImVec2(150, 50));
@@ -301,28 +327,41 @@ void Engine::drawImGUI() const
 
 	if (ImGui::CollapsingHeader("Memory"))
 	{
-		ImGui::PlotHistogram(("RAM: " + std::to_string(static_cast<float>(Profiler::GetRAMUsage() / (1024.f * 1024.f))) + " MB").c_str(), ramUsageContainer.data(), static_cast<int>(ramUsageContainer.size()), 0, nullptr, 0.0f, 500.0f, ImVec2(150, 75));
+		ImGui::PlotHistogram(("RAM: " + std::to_string(Profiler::GetRAMUsage() / (1024.f * 1024.f)) + " MB").c_str(), ramUsageContainer.data(), static_cast<int>(ramUsageContainer.size()), 0, nullptr, 0.0f, 500.0f, ImVec2(150, 75));
 		ImGui::Spacing();
-		ImGui::PlotHistogram(("VRAM: " + std::to_string(static_cast<float>(Profiler::GetVRAMUsage() / (1024.f * 1024.f))) + " MB").c_str(), vRamUsageContainer.data(), static_cast<int>(vRamUsageContainer.size()), 0, nullptr, 0.0f, 500.0f, ImVec2(150, 75));
+		ImGui::PlotHistogram(("VRAM: " + std::to_string(Profiler::GetVRAMUsage() / (1024.f * 1024.f)) + " MB").c_str(), vRamUsageContainer.data(), static_cast<int>(vRamUsageContainer.size()), 0, nullptr, 0.0f, 500.0f, ImVec2(150, 75));
 	}
 
 	ImGui::End();
 	
-	/*
-	ImGui::Begin("Objects");
-	m_currentScene->GetRegistry().view<comp::Transform>().each([&](entt::entity e, comp::Transform& transform)
-		{
-
-			ImGui::Separator();
-			ImGui::DragFloat3(("Position: " + std::to_string((int)e)).c_str(), (float*)&transform.position);
-			ImGui::DragFloat3(("Rotation: " + std::to_string((int)e)).c_str(), (float*)&transform.rotation, dx::XMConvertToRadians(1.f));
-			ImGui::Spacing();
-
-		});
+	ImGui::Begin("Components");
+	if (ImGui::CollapsingHeader("Transform"))
+	{
+		m_currentScene->GetRegistry().view<comp::Transform>().each([&](entt::entity e, comp::Transform& transform)
+			{
+				ImGui::Separator();
+				ImGui::Text("Entity: %d", static_cast<int>(e));
+				ImGui::DragFloat3(("Position##" + std::to_string(static_cast<int>(e))).c_str(), (float*)&transform.position);
+				ImGui::DragFloat3(("Rotation##" + std::to_string(static_cast<int>(e))).c_str(), (float*)&transform.rotation, dx::XMConvertToRadians(1.f));
+				if(ImGui::Button(("Remove##" + std::to_string(static_cast<int>(e))).c_str()))
+				{
+					m_currentScene->GetRegistry().destroy(e);
+				}
+				ImGui::Spacing();
+			});
+	}
 	ImGui::End();
-	*/
 
+	ImGui::Begin("Camera");
+	{
+		const std::string position = "Position: " + std::to_string(m_currentCamera->GetPosition().x)+ " " + std::to_string(m_currentCamera->GetPosition().y) + " " + std::to_string(m_currentCamera->GetPosition().z);
+		ImGui::Separator();
+		ImGui::Text(position.c_str());
+		//ImGui::DragFloat("Zoom: ", &m_currentCamera->m_zoomValue, 0.01f, 0.f, 1.0f);
+		ImGui::Spacing();
 
+	};
+	ImGui::End();
 }
 
 void Engine::RenderThread()
@@ -354,17 +393,19 @@ void Engine::RenderThread()
 void Engine::Update(float dt)
 {
 	PROFILE_FUNCTION();
-	
+
 	// todo:
 	// Update the camera transform based on interactive inputs.
-	
-	IMGUI(
-		m_imguiMutex.lock();
-		// Start ImGui frame
-		ImGui_ImplDX11_NewFrame();
-		ImGui_ImplWin32_NewFrame();
-		ImGui::NewFrame();
-	);
+	{
+		PROFILE_SCOPE("Starting ImGui");
+		IMGUI(
+			m_imguiMutex.lock();
+			// Start ImGui frame
+			ImGui_ImplDX11_NewFrame();
+			ImGui_ImplWin32_NewFrame();
+			ImGui::NewFrame();
+		);
+	}
 
 	// Update elements in the scene.
 	if (m_currentScene)
@@ -372,12 +413,15 @@ void Engine::Update(float dt)
 		m_currentScene->Update(dt);
 	}
 
-	IMGUI(
-		drawImGUI();
-		ImGui::EndFrame();
-		m_imguiMutex.unlock();
-	);
+	{
+		PROFILE_SCOPE("Ending ImGui");
 
+		IMGUI(
+			drawImGUI();
+			ImGui::EndFrame();
+			m_imguiMutex.unlock();
+		);
+	}
 }
 
 void Engine::Render(float& dt)
@@ -388,27 +432,22 @@ void Engine::Render(float& dt)
 		Render 3D
 	*/
 	m_renderer.ClearFrame();
-	m_renderer.Render();
-	
-	if (m_currentScene)
-	{
-		m_currentScene->Render();
+	m_renderer.Render(m_currentScene);
+	D2D1Core::Begin();
+
+		PROFILE_SCOPE("Render ImGui");
+		IMGUI(
+			m_imguiMutex.lock();
+			ImGui::Render();
+			ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+			m_imguiMutex.unlock();
+		);
 	}
 
-	/*
-		Render 2D
-	*/
-	D2D1Core::Begin();
-	rtd::Handler2D::Render();
-	D2D1Core::Present();
-
-	IMGUI(
-		m_imguiMutex.lock();
-		ImGui::Render();
-		ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
-		m_imguiMutex.unlock();
-	);
-
-	D3D11Core::Get().SwapChain()->Present(0, 0);
+	{
+		PROFILE_SCOPE("Present");
+		D2D1Core::Present();
+		D3D11Core::Get().SwapChain()->Present(0, 0);
+	}
 }
 

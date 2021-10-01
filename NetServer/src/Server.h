@@ -3,12 +3,16 @@
 
 namespace network
 {
-	// TODO
-	// SIGNAL THREADS IF THE SERVER HAS SHUTDOWN TO AVOID MEMORY LEAKS
-
 	class Server : public server_interface<MessageType>
 	{
 	private:
+
+	private:
+		// Inherited via server_interface
+		virtual void OnClientConnect(std::string&& ip, const uint16_t& port) override;
+		virtual void OnClientDisconnect() override;
+		virtual void OnMessageReceived(SOCKET_INFORMATION*& SI, message<MessageType>& msg) override;
+		virtual void OnClientValidated(SOCKET_INFORMATION*& SI) override;
 
 	public:
 		Server();
@@ -17,11 +21,7 @@ namespace network
 		Server& operator=(const Server& other) = delete;
 		Server(const Server& other) = delete;
 
-		// Inherited via server_interface
-		virtual void OnClientConnect(std::string&& ip, const uint16_t& port) override;
-		virtual void OnClientDisconnect() override;
-		virtual void OnMessageReceived(const SOCKET& socketId, message<MessageType>& msg) override;
-		virtual void OnClientValidated(const SOCKET& s) override;
+		void Update();
 	};
 
 	Server::Server()
@@ -32,12 +32,19 @@ namespace network
 	{
 	}
 
+	inline void Server::Update()
+	{
+		if (!m_messagesIn.empty())
+		{
+
+		}
+	}
+
 	void Server::OnClientConnect(std::string&& ip, const uint16_t& port)
 	{
 		EnterCriticalSection(&lock);
 		LOG_INFO("Client connected from %s:%d", ip.c_str(), port);
 		LeaveCriticalSection(&lock);
-		//Broadcast();
 	}
 
 	void Server::OnClientDisconnect()
@@ -47,7 +54,7 @@ namespace network
 		LeaveCriticalSection(&lock);
 	}
 
-	void Server::OnMessageReceived(const SOCKET& socketId, message<MessageType>& msg)
+	void Server::OnMessageReceived(SOCKET_INFORMATION*& SI, message<MessageType>& msg)
 	{
 		switch (msg.header.id)
 		{
@@ -55,26 +62,35 @@ namespace network
 		{
 			message<MessageType> msg = {};
 			msg.header.id = MessageType::PingServer;
-			std::chrono::system_clock::time_point timeNow = std::chrono::system_clock::now();
-			msg << timeNow;
-			Send(socketId, msg);
+			this->SendToClient(SI, msg);
 			EnterCriticalSection(&lock);
-			LOG_INFO("CLIENT IS PINGING SERVER");
+			LOG_INFO("Client on socket: %lld is pinging server", SI->Socket);
 			LeaveCriticalSection(&lock);
 			break;
 		}
+		case MessageType::Unknown:
+		{		
+			EnterCriticalSection(&lock);
+			for (int i = 0; i < (int)msg.payload.size(); i++)
+			{
+				std::cout << msg.payload[i];
+			}
+			std::cout << std::endl;
+			LeaveCriticalSection(&lock);
+			this->SendToClient(SI, msg);
+			break;
 		}
-		/*Send(socketId, buffer, bytesReceived);*/
+		}
 	}
 
-	void Server::OnClientValidated(const SOCKET& s)
+	void Server::OnClientValidated(SOCKET_INFORMATION*& SI)
 	{
 		network::message<MessageType> msg = {};
 		msg.header.id = MessageType::Client_Accepted;
-		Send(s, msg);
+		this->SendToClient(SI, msg);
 
 		EnterCriticalSection(&lock);
-		LOG_INFO("Client has been validated on socket %lld", s);
+		LOG_INFO("Client has been validated on socket %lld", SI->Socket);
 		LeaveCriticalSection(&lock);
 	}
 

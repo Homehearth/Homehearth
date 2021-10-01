@@ -13,6 +13,11 @@ private:
 	static bool s_safeExit;
 	std::mutex m_imguiMutex;
 	
+	std::atomic<bool> m_IsImguiReady;
+
+	Camera m_debugCamera;
+	std::shared_ptr<Camera> m_currentCamera;
+
 	Window m_window;
 	Renderer m_renderer;
 	std::unique_ptr<DirectX::AudioEngine> m_audio_engine;
@@ -26,12 +31,12 @@ private:
 		float render;
 	} m_frameTime;
 
-	
 	// Job for rendering thread.
 	void RenderThread();
 
 	// Updates the current scene.
 	void Update(float dt);
+	
 	// Renders one frame.
 	void Render(float& dt);
 

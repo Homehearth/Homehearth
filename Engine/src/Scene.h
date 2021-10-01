@@ -11,8 +11,8 @@ private:
 	// Registry handles all ecs data
 	entt::registry m_registry;
 	
-	DoubleBuffer<std::unordered_map<entt::entity, comp::Renderable>>* m_buffers;
-	dx::ConstantBuffer<sm::Matrix> m_publicBuffer;
+	DoubleBuffer<std::vector<comp::Renderable>> m_renderableCopies;
+	dx::ConstantBuffer<basic_model_matrix_t> m_publicBuffer;
 
 public:
 
