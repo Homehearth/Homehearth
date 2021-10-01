@@ -90,7 +90,7 @@ namespace rtd
 	template<class T>
 	inline T* rtd::Handler2D::GetElement(const std::string& element_name)
 	{
-		for (auto elem : Handler2D::instance->m_elements)
+		for (const auto const & elem : Handler2D::instance->m_elements)
 		{
 			if (elem)
 			{

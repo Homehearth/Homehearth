@@ -196,7 +196,7 @@ public:
 		This is a basic version of drawing text onto screen.
 		Text will be drawn at the center of the window.
 	*/
-	static void DrawT(const std::string text = "Basic Text", const draw_text_t& opt = draw_text_t());
+	static void DrawT(const std::string& text = "Basic Text", const draw_text_t& opt = draw_text_t());
 
 	/*
 		Draws the specified shape with _DRAW input specifications.

@@ -11,7 +11,7 @@ rtd::Handler2D::Handler2D()
 
 rtd::Handler2D::~Handler2D()
 {
-	for (auto elem : m_elements)
+	for (auto& elem : m_elements)
 	{
 		delete elem;
 	}
@@ -39,7 +39,7 @@ void rtd::Handler2D::InsertElement(Element2D* element)
 
 void rtd::Handler2D::Render()
 {
-	for (auto elem : INSTANCE->m_elements)
+	for (const auto const& elem : INSTANCE->m_elements)
 	{
 		if (elem)
 		{
@@ -51,7 +51,7 @@ void rtd::Handler2D::Render()
 
 void rtd::Handler2D::Update()
 {
-	for (auto elem : INSTANCE->m_elements)
+	for (const auto const& elem : INSTANCE->m_elements)
 	{
 		if (elem)
 		{
@@ -65,7 +65,7 @@ void rtd::Handler2D::Update()
 
 void rtd::Handler2D::EraseAll()
 {
-	for (auto elem : m_elements)
+	for (auto& elem : m_elements)
 	{
 		delete elem;
 	}
@@ -74,7 +74,7 @@ void rtd::Handler2D::EraseAll()
 
 void rtd::Handler2D::RemoveAll()
 {
-	for (auto elem : m_elements)
+	for (auto& elem : m_elements)
 	{
 		elem = nullptr;
 	}

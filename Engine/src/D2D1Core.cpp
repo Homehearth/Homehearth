@@ -133,7 +133,7 @@ void D2D1Core::Destroy()
 		delete INSTANCE;
 }
 
-void D2D1Core::DrawT(const std::string text, const draw_text_t& opt)
+void D2D1Core::DrawT(const std::string& text, const draw_text_t& opt)
 {
 	if (INSTANCE->m_renderTarget)
 	{
