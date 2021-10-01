@@ -186,7 +186,10 @@ void Engine::Run()
 	}
 
 	// Wait for the rendering thread to exit its last render cycle and shutdown
+#if _DEBUG
+	// This is debug since it catches release in endless loop.
 	while (!s_safeExit) {};
+#endif
 	
 	IMGUI(
 		// ImGUI Shutdown
