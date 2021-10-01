@@ -58,3 +58,8 @@ const bool Scene::IsRenderReady() const
 {
 	return m_renderableCopies.IsSwapped();
 }
+
+DoubleBuffer<std::vector<comp::Renderable>>* Scene::GetBuffers()
+{
+	return &m_renderableCopies;
+}

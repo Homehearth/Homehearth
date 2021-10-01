@@ -30,4 +30,6 @@ public:
 	void Render();
 
 	const bool IsRenderReady() const;
+
+	DoubleBuffer<std::vector<comp::Renderable>>* GetBuffers();
 };
