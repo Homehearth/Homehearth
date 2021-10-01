@@ -13,7 +13,6 @@ private:
 	
 	std::atomic<bool> m_IsImguiReady;
 
-	Camera m_debugCamera;
 	std::shared_ptr<Camera> m_currentCamera;
 
 	Window m_window;
