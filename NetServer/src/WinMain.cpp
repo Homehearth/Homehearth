@@ -30,7 +30,7 @@ int CALLBACK WinMain(
 	Window window;
 	window.Initialize();
 
-	network::Server s;
+	Server<network::MessageType> s;
 	if (!s.Start(4950))
 	{
 		exit(0);

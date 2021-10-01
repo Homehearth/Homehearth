@@ -34,14 +34,13 @@ Game::~Game()
 
 bool Game::OnStartup()
 {
+	m_client.Connect("127.0.0.1", 4950);
 	Scene& demo = Engine::GetScene("Demo");
 	// Scene logic
-	setupDemoScene(demo);
+	setupDemoScene(demo, m_client);
 
 	//Set as current scene
 	SetScene(demo);
-
-	m_client.Connect("127.0.0.1", 4950);
 
 	return true;
 }
@@ -53,7 +52,7 @@ void Game::Start()
 
 bool Game::OnUserUpdate(float deltaTime)
 {
-	if(InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Keys::P, KeyState::PRESSED))
+	if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::P, KeyState::PRESSED))
 	{
 		m_client.PingServer();
 	}

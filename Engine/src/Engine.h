@@ -4,7 +4,6 @@
 #include "Scene.h"
 #include "Renderer.h"
 #include "EventTypes.h"
-#include "Client.h"
 #include "HeadlessEngine.h"
 
 class Engine : public HeadlessEngine

@@ -4,23 +4,6 @@
 
 namespace network
 {
-	enum class NetState
-	{
-		NOT_VALIDATED,
-		READ_VALIDATION,
-		WRITE_VALIDATION,
-		READ_HEADER,
-		READ_PAYLOAD,
-		WRITE_MESSAGE,
-	};
-
-	struct PER_IO_DATA
-	{
-		OVERLAPPED Overlapped;
-		WSABUF DataBuf;
-		NetState state;
-	};
-
 	/*
 			The interface will initialize winsock on its own and all socket programming is abstracted away.
 			From this interface you can use simple functions as connect or disconnect or to see wether or not

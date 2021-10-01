@@ -4,16 +4,6 @@
 
 namespace network
 {
-	// What current state are the current connection in
-	enum class NetState
-	{
-		WRITE_VALIDATION,
-		READ_VALIDATION,
-		READ_HEADER,
-		READ_PAYLOAD,
-		WRITE_MESSAGE
-	};
-
 	// Information regarding every connection
 	struct SOCKET_INFORMATION
 	{
@@ -22,14 +12,6 @@ namespace network
 		uint64_t handshakeResult;
 		SOCKET Socket;
 		message<MessageType> msgTempIn = {};
-	};
-
-	// Information regarding every input or output
-	struct PER_IO_DATA
-	{
-		OVERLAPPED Overlapped = {};
-		WSABUF DataBuf = {};
-		NetState net_state;
 	};
 
 	template <typename T>
@@ -55,9 +37,9 @@ namespace network
 		// Called once when a client connects
 		virtual void OnClientDisconnect() = 0;
 		// Called once when a message is received
-		virtual void OnMessageReceived(SOCKET_INFORMATION*& SI, message<T>& msg) = 0;
+		virtual void OnMessageReceived(const SOCKET& socket, message<T>& msg) = 0;
 		// Client has solved the puzzle from the server and is now validated
-		virtual void OnClientValidated(SOCKET_INFORMATION*& SI) = 0;
+		virtual void OnClientValidated(const SOCKET& socket) = 0;
 
 	private:
 		DWORD WINAPI ServerWorkerThread();
@@ -77,7 +59,7 @@ namespace network
 		void ReadValidation(SOCKET_INFORMATION*& SI, PER_IO_DATA* context);
 		void ReadHeader(SOCKET_INFORMATION*& SI, PER_IO_DATA* context);
 		void ReadPayload(SOCKET_INFORMATION*& SI, PER_IO_DATA* context);
-		void WriteMessage(SOCKET_INFORMATION*& SI, message<T>& msg);
+		void WriteMessage(const SOCKET& socket, message<T>& msg);
 		void PrimeReadHeader(SOCKET_INFORMATION*& SI);
 		void PrimeReadPayload(SOCKET_INFORMATION*& SI);
 		void PrimeReadValidation(SOCKET_INFORMATION*& SI);
@@ -109,7 +91,7 @@ namespace network
 		bool Start(const uint16_t& port);
 		void Stop();
 		void Broadcast(message<T>& msg);
-		void SendToClient(SOCKET_INFORMATION*& SI, message<T>& msg);
+		void SendToClient(const SOCKET& socket, message<T>& msg);
 		bool IsRunning();
 	};
 
@@ -126,7 +108,7 @@ namespace network
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
 		context->DataBuf.buf = (CHAR*)&SI->handshakeIn;
 		context->DataBuf.len = sizeof(uint64_t);
-		context->net_state = NetState::READ_VALIDATION;
+		context->state = NetState::READ_VALIDATION;
 		DWORD BytesReceived = 0;
 		DWORD flags = 0;
 
@@ -143,12 +125,11 @@ namespace network
 	template <typename T>
 	void server_interface<T>::PrimeReadHeader(SOCKET_INFORMATION*& SI)
 	{
-		ZeroMemory(&SI->msgTempIn.header, sizeof(msg_header<T>));
 		PER_IO_DATA* context = new PER_IO_DATA;
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
 		context->DataBuf.buf = (CHAR*)&SI->msgTempIn.header;
 		context->DataBuf.len = sizeof(msg_header<T>);
-		context->net_state = NetState::READ_HEADER;
+		context->state = NetState::READ_HEADER;
 		DWORD BytesReceived = 0;
 		DWORD flags = 0;
 
@@ -171,7 +152,7 @@ namespace network
 		SI->msgTempIn.payload.resize(size);
 		context->DataBuf.buf = (CHAR*)SI->msgTempIn.payload.data();
 		context->DataBuf.len = (ULONG)size;
-		context->net_state = NetState::READ_PAYLOAD;
+		context->state = NetState::READ_PAYLOAD;
 		DWORD BytesReceived = 0;
 		DWORD flags = 0;
 
@@ -188,7 +169,7 @@ namespace network
 	template <typename T>
 	void server_interface<T>::ReadPayload(SOCKET_INFORMATION*& SI, PER_IO_DATA* context)
 	{
-		this->OnMessageReceived(SI, SI->msgTempIn);
+		this->OnMessageReceived(SI->Socket, SI->msgTempIn);
 		this->m_messagesIn.push_back(SI->msgTempIn);
 		SI->msgTempIn.payload.clear();
 		this->PrimeReadHeader(SI);
@@ -204,13 +185,14 @@ namespace network
 		else
 		{
 			this->m_messagesIn.push_back(SI->msgTempIn);
-			this->OnMessageReceived(SI, SI->msgTempIn);
+			this->OnMessageReceived(SI->Socket, SI->msgTempIn);
+			ZeroMemory(&SI->msgTempIn.header, sizeof(msg_header<T>));
 			this->PrimeReadHeader(SI);
 		}
 	}
 
 	template <typename T>
-	void server_interface<T>::WriteMessage(SOCKET_INFORMATION*& SI, message<T>& msg)
+	void server_interface<T>::WriteMessage(const SOCKET& socket, message<T>& msg)
 	{
 		PER_IO_DATA* context = new PER_IO_DATA;
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
@@ -222,11 +204,11 @@ namespace network
 		}
 		context->DataBuf.buf = (CHAR*)buffer;
 		context->DataBuf.len = ULONG(sizeof(msg_header<T>) + msg.payload.size());
-		context->net_state = NetState::WRITE_MESSAGE;
+		context->state = NetState::WRITE_MESSAGE;
 		DWORD BytesSent = 0;
 		DWORD flags = 0;
 
-		if (WSASend(SI->Socket, &context->DataBuf, 1, &BytesSent, flags, &context->Overlapped, NULL) == SOCKET_ERROR)
+		if (WSASend(socket, &context->DataBuf, 1, &BytesSent, flags, &context->Overlapped, NULL) == SOCKET_ERROR)
 		{
 			if (GetLastError() != WSA_IO_PENDING)
 			{
@@ -244,7 +226,7 @@ namespace network
 		if (SI->handshakeIn == SI->handshakeResult)
 		{
 			EnterCriticalSection(&lock);
-			this->OnClientValidated(SI);
+			this->OnClientValidated(SI->Socket);
 			LeaveCriticalSection(&lock);
 			this->PrimeReadHeader(SI);
 		}
@@ -265,7 +247,7 @@ namespace network
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
 		context->DataBuf.buf = (CHAR*)&handshakeOut;
 		context->DataBuf.len = sizeof(uint64_t);
-		context->net_state = NetState::WRITE_VALIDATION;
+		context->state = NetState::WRITE_VALIDATION;
 		DWORD BytesSent = 0;
 		DWORD flags = 0;
 
@@ -374,9 +356,9 @@ namespace network
 	}
 
 	template <typename T>
-	void server_interface<T>::SendToClient(SOCKET_INFORMATION*& SI, message<T>& msg)
+	void server_interface<T>::SendToClient(const SOCKET& socket, message<T>& msg)
 	{
-		this->WriteMessage(SI, msg);
+		this->WriteMessage(socket, msg);
 	}
 
 	template <typename T>
@@ -621,7 +603,7 @@ namespace network
 			SYSTEM_INFO SystemInfo;
 			GetSystemInfo(&SystemInfo);
 
-			for (DWORD i = 0; i < nrOfThreads; i++)
+			for (int i = 0; i < nrOfThreads; i++)
 			{
 				QueueUserAPC((PAPCFUNC)server_interface<T>::AlertThread, (HANDLE)workerThreads[i].native_handle(), NULL);
 				workerThreads[i].join();
@@ -673,7 +655,7 @@ namespace network
 					// I/O has completed, process it
 					if (HasOverlappedIoCompleted(Entries[i].lpOverlapped))
 					{
-						switch (context->net_state)
+						switch (context->state)
 						{
 						case NetState::READ_HEADER:
 						{
