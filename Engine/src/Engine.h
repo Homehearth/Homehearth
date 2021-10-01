@@ -5,21 +5,18 @@
 #include "Renderer.h"
 #include "EventTypes.h"
 #include "Client.h"
+#include "HeadlessEngine.h"
 
-class Engine
+class Engine : public HeadlessEngine
 {
 private:
-	static bool s_engineRunning;
 	static bool s_safeExit;
 	std::mutex m_imguiMutex;
 	
 	Window m_window;
 	Renderer m_renderer;
 	std::unique_ptr<DirectX::AudioEngine> m_audio_engine;
-	std::unordered_map<std::string, Scene> m_scenes;
-	Scene* m_currentScene;
-	bool m_vSync;
-
+	
 	struct {
 		float update;
 		float render;
@@ -29,30 +26,22 @@ private:
 	void RenderThread();
 
 	// Updates the current scene.
-	void Update(float dt);
+	void Update(float dt) override;
 	
 	// Renders one frame.
 	void Render(float& dt);
 
 	// Run the Engine's core loop.
-	void Run();
-
-	// Shutdown the Engine and its instances in the reverse order.
-	void Shutdown();
+	void Run() override;
 
 	Window* GetWindow();
-
-	static bool IsRunning();
 
 	// IMGUI
 	void drawImGUI() const;
 
 protected:
-	Scene& GetScene(const std::string& name);
-	void SetScene(const std::string& name);
-	void SetScene(Scene& scene);
 	// Startup the Engine and its instances in a specific order.
-	void Startup();
+	void Startup() override;
 
 public:
 	Engine();

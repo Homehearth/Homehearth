@@ -4,13 +4,10 @@
 
 #include "RMesh.h"
 
-bool Engine::s_engineRunning = false;
 bool Engine::s_safeExit = false;
 
 Engine::Engine()
-	: m_scenes({ 0 })
-	, m_currentScene(nullptr)
-	, m_vSync(false)
+	: HeadlessEngine()
 	, m_frameTime()
 {
 	LOG_INFO("Engine(): " __TIMESTAMP__);
@@ -18,6 +15,7 @@ Engine::Engine()
 
 void Engine::Startup()
 {
+	
 	T_INIT(1, thread::ThreadType::POOL_FIFO);
 	srand(static_cast<unsigned>(time(NULL)));
 
@@ -36,8 +34,6 @@ void Engine::Startup()
 	m_renderer.Initialize(&m_window);
 
 	// Thread should be launched after s_engineRunning is set to true and D3D11 is initialized.
-	s_engineRunning = true;
-
 	//
 	// AUDIO 
 	//
@@ -67,63 +63,17 @@ void Engine::Startup()
 
 	InputSystem::Get().SetMouseWindow(m_window.GetHWnd());
 	
-	// Sets up the game specific information
-	if (!this->OnStartup())
-	{
-		LOG_ERROR("Failed to start game!");
-		exit(0);
-	}
+	HeadlessEngine::Startup();
 
-	this->Run();
 }
 
 void Engine::Run()
 {
-	double currentFrame = 0.f;
-	double lastFrame = omp_get_wtime();
-	float deltaTime = 0.f;
-	float accumulator = 0.f;
-	const float targetDelta = 1 / 10000.0f;
-
-	bool key[3] = { false, false, false };
-	bool old_key[3] = { false, false, false };
-
+	
 	if (thread::IsThreadActive())
 		T_CJOB(Engine, RenderThread);
 
-	MSG msg = { nullptr };
-	while (IsRunning())
-	{
-		PROFILE_SCOPE("Frame");
-
-		while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
-		{
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
-			if (msg.message == WM_QUIT)
-			{
-				Shutdown();
-			}
-		}
-
-		// Handle Input.
-		InputSystem::Get().UpdateEvents();
-
-		// Update time.
-		currentFrame = omp_get_wtime();
-		deltaTime = static_cast<float>(currentFrame - lastFrame);
-
-		if (accumulator >= targetDelta)
-		{
-			Update(accumulator);
-
-			m_frameTime.update = accumulator;
-			accumulator = 0.f;
-		}
-		accumulator += deltaTime;
-		lastFrame = currentFrame;
-	}
-
+	HeadlessEngine::Run();
 
 	// Wait for the rendering thread to exit its last render cycle and shutdown
 	IMGUI(
@@ -139,48 +89,10 @@ void Engine::Run()
     D2D1Core::Destroy();
 }
 
-void Engine::Shutdown()
-{
-	s_engineRunning = false;
-}
-
-Scene& Engine::GetScene(const std::string& name)
-{
-	return m_scenes[name];
-}
-
-void Engine::SetScene(const std::string& name)
-{
-	SetScene(m_scenes.at(name));
-}
-
-void Engine::SetScene(Scene& scene)
-{
-	if (m_currentScene)
-	{
-		m_currentScene->clear();
-	}
-	m_currentScene = &scene;
-
-	m_currentScene->on<EShutdown>([&](const EShutdown& e, Scene& scene)
-	{
-		Shutdown();
-	});
-
-	m_currentScene->on<ESceneChange>([&](const ESceneChange& e, Scene& scene)
-	{
-		SetScene(e.newScene);
-	});
-}
 
 Window* Engine::GetWindow()
 {
 	return &m_window;
-}
-
-bool Engine::IsRunning()
-{
-	return s_engineRunning;
 }
 
 void Engine::drawImGUI() const
@@ -268,7 +180,7 @@ void Engine::drawImGUI() const
 	ImGui::Begin("Components");
 	if (ImGui::CollapsingHeader("Transform"))
 	{
-		m_currentScene->GetRegistry().view<comp::Transform>().each([&](entt::entity e, comp::Transform& transform)
+		GetCurrentScene()->GetRegistry().view<comp::Transform>().each([&](entt::entity e, comp::Transform& transform)
 			{
 				ImGui::Separator();
 				ImGui::Text("Entity: %d", static_cast<int>(e));
@@ -276,7 +188,7 @@ void Engine::drawImGUI() const
 				ImGui::DragFloat3(("Rotation##" + std::to_string(static_cast<int>(e))).c_str(), (float*)&transform.rotation, dx::XMConvertToRadians(1.f));
 				if(ImGui::Button(("Remove##" + std::to_string(static_cast<int>(e))).c_str()))
 				{
-					m_currentScene->GetRegistry().destroy(e);
+					GetCurrentScene()->GetRegistry().destroy(e);
 				}
 				ImGui::Spacing();
 			});
@@ -312,9 +224,28 @@ void Engine::RenderThread()
 void Engine::Update(float dt)
 {
 	PROFILE_FUNCTION();
+	m_frameTime.update = dt;
 
-	// todo:
-	// Update the camera transform based on interactive inputs.
+	
+	InputSystem::Get().UpdateEvents();
+
+	MSG msg = { nullptr };
+	while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
+	{
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+		if (msg.message == WM_QUIT)
+		{
+			Shutdown();
+		}
+	}
+
+	if (InputSystem::Get().CheckMouseKey(MouseKey::RIGHT, KeyState::PRESSED))
+	{
+		InputSystem::Get().SwitchMouseMode();
+		LOG_INFO("Switched mouse Mode");
+	}
+
 	{
 		PROFILE_SCOPE("Starting ImGui");
 		IMGUI(
@@ -325,14 +256,12 @@ void Engine::Update(float dt)
 			ImGui::NewFrame();
 		);
 	}
+
+	HeadlessEngine::Update(dt);
+
 	// Updates game logic
 	this->OnUserUpdate(dt);
 
-	// Update elements in the scene.
-	if (m_currentScene)
-	{
-		m_currentScene->Update(dt);
-	}
 	{
 		PROFILE_SCOPE("Ending ImGui");
 
@@ -348,11 +277,11 @@ void Engine::Render(float& dt)
 {
 	PROFILE_FUNCTION();
 
-	if (!m_currentScene->IsRenderReady())
+	if (!GetCurrentScene()->IsRenderReady())
 		return;
 
 	m_renderer.ClearFrame();
-	m_renderer.Render(m_currentScene);
+	m_renderer.Render(GetCurrentScene());
 	D2D1Core::Begin();
 
 	{

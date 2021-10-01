@@ -5,7 +5,7 @@
 #include "Components.h"
 
 Game::Game()
-	:Engine()
+	: Engine()
 {
 	/*
 		Resource manager example
@@ -39,7 +39,7 @@ bool Game::OnStartup()
 	setupDemoScene(demo);
 
 	//Set as current scene
-	Engine::SetScene(demo);
+	SetScene(demo);
 
 	m_client.Connect("127.0.0.1", 4950);
 
