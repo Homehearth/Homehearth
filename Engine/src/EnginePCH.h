@@ -102,6 +102,7 @@ namespace sm = dx::SimpleMath;
 #include "Profiler.h"
 #include "ThreadSyncer.h"
 #include "Handler2D.h"
+#include "BackBuffer.h"
 
 // Network
 #include "net_common.h"

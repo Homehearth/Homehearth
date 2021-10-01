@@ -3,17 +3,6 @@
 #define INSTANCE rtd::Handler2D::instance
 rtd::Handler2D* INSTANCE = nullptr;
 
-bool rtd::compare_elements(Element2D* first, Element2D* second)
-{
-	if (first && second)
-	{
-		if (first->GetLayer() < second->GetLayer())
-			return true;
-	}
-	
-	return false;
-}
-
 rtd::Handler2D::~Handler2D()
 {
 	for (auto elem : m_elements)
@@ -39,25 +28,14 @@ void rtd::Handler2D::Destroy()
 
 void rtd::Handler2D::InsertElement(Element2D* element)
 {
-	INSTANCE->m_elements.insert(element);
-}
-
-void rtd::Handler2D::RemoveElement(const std::string& element_name)
-{
-	for (auto elem : INSTANCE->m_elements)
-	{
-		if (elem->GetName() == element_name)
-		{
-			delete elem;
-			INSTANCE->m_elements.erase(elem);
-		}
-	}
+	INSTANCE->m_elements.push_back(element);
 }
 
 void rtd::Handler2D::Render()
 {
 	for (auto elem : INSTANCE->m_elements)
 	{
-		elem->Draw();
+		if(elem)
+			elem->Draw();
 	}
 }

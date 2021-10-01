@@ -1,12 +1,11 @@
 #include "EnginePCH.h"
 #include "Picture.h"
 
-Picture::Picture(const std::string& fileName, const _DRAW& opts)
+Picture::Picture(const std::string& fileName, const _DRAW_T& opts)
 {
 
 	m_texture = ResourceManager::GetResource<RBitMap>(fileName);
 	m_drawOpts = opts;
-	this->SetName(fileName);
 	this->SetLayer(m_drawOpts.layer);
 }
 

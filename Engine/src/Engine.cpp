@@ -34,6 +34,7 @@ void Engine::Startup()
 	D3D11Core::Get().Initialize(&m_window);
 	D2D1Core::Initialize(&m_window);
 	rtd::Handler2D::Initialize();
+	BackBuffer::Initialize();
 
 	m_renderer.Initialize(&m_window);
 
@@ -72,7 +73,7 @@ void Engine::Startup()
 
 	m_client.Connect("127.0.0.1", 4950);
 
-	Picture* test = new Picture("oohstonefigures.jpg", _DRAW(rand() % 100, rand() % 100, 100.0f, 100.0f));
+	Picture* test = new Picture("oohstonefigures.jpg", _DRAW_T(rand() % 100, rand() % 100, 100.0f, 100.0f));
 	rtd::Handler2D::InsertElement(test);
 	/*
 	for (int i = 0; i < 50; i++)
@@ -203,6 +204,7 @@ void Engine::Run()
     D2D1Core::Destroy();
 	ResourceManager::Destroy();
 	rtd::Handler2D::Destroy();
+	BackBuffer::Destroy();
 
 	PROFILER_END_SESSION();
 }
@@ -334,9 +336,12 @@ void Engine::RenderThread()
 		deltaTime = static_cast<float>(currentFrame - lastFrame);
 		if (deltaSum >= targetDelta)
 		{
-			Render(deltaSum);
-			m_frameTime.render = deltaSum;
-			deltaSum = 0.f;
+			if (BackBuffer::GetBuffers()->IsSwapped())
+			{
+				Render(deltaSum);
+				m_frameTime.render = deltaSum;
+				deltaSum = 0.f;
+			}
 		}
 		deltaSum += deltaTime;
 		lastFrame = currentFrame;
@@ -378,9 +383,6 @@ void Engine::Update(float dt)
 void Engine::Render(float& dt)
 {
 	PROFILE_FUNCTION();
-
-	if (!m_currentScene->IsRenderReady())
-		return;
 
 	/*
 		Render 3D

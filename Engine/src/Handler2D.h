@@ -15,13 +15,11 @@
 */
 namespace rtd
 {
-	bool compare_elements(Element2D* first, Element2D* second);
-
 	class Handler2D
 	{
 	private:
 
-		std::set<Element2D*, std::integral_constant<decltype(&compare_elements), &compare_elements>> m_elements;
+		std::vector<Element2D*> m_elements;
 		static Handler2D* instance;
 		~Handler2D();
 
@@ -32,9 +30,6 @@ namespace rtd
 
 		// Insert an element into the rendering system.
 		static void InsertElement(Element2D* element);
-
-		// Remove an element.
-		static void RemoveElement(const std::string& element_name);
 
 		/*
 			Get an Element by its assigned name.
@@ -49,7 +44,7 @@ namespace rtd
 	};
 
 	template<class T>
-	inline T* Handler2D::GetElement(const std::string& element_name)
+	inline T* rtd::Handler2D::GetElement(const std::string& element_name)
 	{
 		for (auto elem : m_elements)
 		{

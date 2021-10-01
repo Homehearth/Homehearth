@@ -11,7 +11,7 @@ private:
 	// Registry handles all ecs data
 	entt::registry m_registry;
 	
-	DoubleBuffer<std::unordered_map<entt::entity, comp::Renderable>> m_transformCopies;
+	DoubleBuffer<std::unordered_map<entt::entity, comp::Renderable>>* m_buffers;
 	dx::ConstantBuffer<sm::Matrix> m_publicBuffer;
 
 public:
@@ -28,7 +28,4 @@ public:
 
 	// Emit render event and render Renderable components
 	void Render();
-
-	bool IsRenderReady() const;
-
 };

@@ -48,7 +48,7 @@ project "Engine"
 		["src/Engine/Elements"] = {"**Canvas.*", "**Picture.*"},
         
         ["src/Engine"] = {  },
-            ["src/Engine/Graphics/Renderer"] = {"**Renderer.*", "**PipelineManager.*"},
+            ["src/Engine/Graphics/Renderer"] = {"**Renderer.*", "**PipelineManager.*", "**BackBuffer.*"},
                 ["src/Engine/Graphics/Renderer/RenderPass"] = {"**Pass.*"},
 				["src/Engine/Graphics/Renderer2D"] = {"**Handler2D.*", "**Element2D.*"},
             ["src/Engine/Graphics/D3D11"] = { "**D3D11Core.*" },

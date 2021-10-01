@@ -13,20 +13,20 @@
 
 	These draw options has different structure parameters.
 	The structures can be seen below but for a quick summary:
-	_DRAW(x, y, width, height) <-- Used when to draw textures and shapes.
-	_DRAW_TEXT(format, x, y, x_stretch, y_stretch) <-- Used when to draw text.
-	_DRAW_SHAPE(Shape, color) <-- Used for drawing shapes.
+	_DRAW_T(x, y, width, height) <-- Used when to draw textures and shapes.
+	_DRAW_TEXT_T(format, x, y, x_stretch, y_stretch) <-- Used when to draw text.
+	_DRAW_SHAPE_T(Shape, color) <-- Used for drawing shapes.
 
 	Explanation:
-	_DRAW(..., width, height), width and height represent the pixel
+	_DRAW_T(..., width, height), width and height represent the pixel
 	width and height of the element.
 
-	_DRAW_TEXT(format, ...), format is a IDWriteTextFormat pointer needed
+	_DRAW_TEXT_T(format, ...), format is a IDWriteTextFormat pointer needed
 	for drawing customized fonts or font scale and more. If however no
 	format is input in DrawT() the default font will be used which is
 	"Times New Roman" with size of 24.0f.
 
-	_DRAW_SHAPE(Shape, color), Shape comes from the enum class Shapes
+	_DRAW_SHAPE_T(Shape, color), Shape comes from the enum class Shapes
 	which can be viewed below. These shapes are the currently available basic
 	shapes.
 	color is the desired color of the to be drawn shape. This requires
@@ -37,7 +37,7 @@
 	The specified class has to be RBitMap since this is what we use to render 2d textures.
 	Ex. auto* image = ResourceManager::GetResource<RBitMap>("oohstonefigures.jpg");
 	When this is done use the D2D1Core to render your texture.
-	Ex. D2D1Core::DrawP(_DRAW(), image);
+	Ex. D2D1Core::DrawP(_DRAW_T(), image);
 
 	Troubleshooting:
 	Make sure you have your Draw() function within the bounds of Being() and Present().
@@ -49,7 +49,7 @@
 	Struct used to set position and scale 
 	of drawable element.
 */
-struct _DRAW
+struct _DRAW_T
 {
 	/*
 		The upper left corner position.
@@ -66,12 +66,12 @@ struct _DRAW
 	// Layer for layered drawing.
 	unsigned int layer = 0;
 
-	_DRAW()
+	_DRAW_T()
 	{
 		//Empty
 	}
 
-	_DRAW(float x_pos, float y_pos, float width, float height)
+	_DRAW_T(float x_pos, float y_pos, float width, float height)
 	{
 		this->x_pos = x_pos;
 		this->y_pos = y_pos;
@@ -84,7 +84,7 @@ struct _DRAW
 	Struct to Define text format
 	as well as position and stretch area.
 */
-struct _DRAW_TEXT
+struct _DRAW_TEXT_T
 {
 	// Text format.
 	IDWriteTextFormat* textFormat = nullptr;
@@ -101,12 +101,12 @@ struct _DRAW_TEXT
 	float x_stretch = 100.0f;
 	float y_stretch = 100.0f;
 
-	_DRAW_TEXT()
+	_DRAW_TEXT_T()
 	{
 		// Empty
 	}
 
-	_DRAW_TEXT(IDWriteTextFormat* format, float x, float y, float x_stretch, float y_stretch)
+	_DRAW_TEXT_T(IDWriteTextFormat* format, float x, float y, float x_stretch, float y_stretch)
 	{
 		textFormat = format;
 		this->x_pos = x;
@@ -115,7 +115,7 @@ struct _DRAW_TEXT
 		this->y_stretch = y_stretch;
 	}
 
-	_DRAW_TEXT(float x, float y, float x_stretch, float y_stretch)
+	_DRAW_TEXT_T(float x, float y, float x_stretch, float y_stretch)
 	{
 		this->x_pos = x;
 		this->y_pos = y;
@@ -137,23 +137,23 @@ enum class Shapes
 /*
 	Struct used to draw a shape with a specific color.
 */
-struct _DRAW_SHAPE
+struct _DRAW_SHAPE_T
 {
 	Shapes shape = Shapes::NONE;
 	D2D1_COLOR_F color = D2D1::ColorF(1.0f, 1.0f, 1.0f);
 
-	_DRAW_SHAPE()
+	_DRAW_SHAPE_T()
 	{
 		// Empty
 	}
 
-	_DRAW_SHAPE(const Shapes& shape, float r, float g, float b, float a = 1.0f)
+	_DRAW_SHAPE_T(const Shapes& shape, float r, float g, float b, float a = 1.0f)
 	{
 		this->shape = shape;
 		this->color = D2D1::ColorF(r, g, b, a);
 	}
 
-	_DRAW_SHAPE(const Shapes& shape, const D2D1_COLOR_F& color)
+	_DRAW_SHAPE_T(const Shapes& shape, const D2D1_COLOR_F& color)
 	{
 		this->shape = shape;
 		this->color = color;
@@ -196,19 +196,19 @@ public:
 		This is a basic version of drawing text onto screen.
 		Text will be drawn at the center of the window.
 	*/
-	static void DrawT(const std::string text = "Basic Text", const _DRAW_TEXT& opt = _DRAW_TEXT());
+	static void DrawT(const std::string text = "Basic Text", const _DRAW_TEXT_T& opt = _DRAW_TEXT_T());
 
 	/*
 		Draws the specified shape with _DRAW input specifications.
 		This method uses the default brush.
 	*/
-	static void DrawF(const _DRAW& fig, const _DRAW_SHAPE& shape);
+	static void DrawF(const _DRAW_T& fig, const _DRAW_SHAPE_T& shape);
 
 	/*
 		Draws a Bitmap onto the screen at the coordinates of
 		_DRAW specification.
 	*/
-	static void DrawP(const _DRAW& fig, ID2D1Bitmap* texture = nullptr);
+	static void DrawP(const _DRAW_T& fig, ID2D1Bitmap* texture = nullptr);
 
 	/*
 		Run buffering D2D1 Draw commands.

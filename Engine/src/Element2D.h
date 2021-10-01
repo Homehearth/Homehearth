@@ -14,17 +14,16 @@ private:
 	// Name for get() Element from Handler2D
 	std::string m_name = "";
 
-protected:
+public:
 
 	// Set the identifying name of Element.
 	void SetName(const std::string& name);
-
-public:
+	const std::string& GetName();
 
 	Element2D();
 	virtual ~Element2D();
 
-	const std::string& GetName();
+	// Set the layer at which to draw at.
 	void SetLayer(const unsigned int layer);
 	const unsigned int GetLayer() const;
 

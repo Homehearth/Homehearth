@@ -133,7 +133,7 @@ void D2D1Core::Destroy()
 		delete INSTANCE;
 }
 
-void D2D1Core::DrawT(const std::string text, const _DRAW_TEXT& opt)
+void D2D1Core::DrawT(const std::string text, const _DRAW_TEXT_T& opt)
 {
 	if (INSTANCE->m_renderTarget)
 	{
@@ -171,7 +171,7 @@ void D2D1Core::DrawT(const std::string text, const _DRAW_TEXT& opt)
 	}
 }
 
-void D2D1Core::DrawF(const _DRAW& fig, const _DRAW_SHAPE& shape)
+void D2D1Core::DrawF(const _DRAW_T& fig, const _DRAW_SHAPE_T& shape)
 {
 	D2D1_COLOR_F oldColor = INSTANCE->m_solidBrush->GetColor();
 	INSTANCE->m_renderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
@@ -219,7 +219,7 @@ void D2D1Core::DrawF(const _DRAW& fig, const _DRAW_SHAPE& shape)
 	INSTANCE->m_solidBrush->SetColor(oldColor);
 }
 
-void D2D1Core::DrawP(const _DRAW& fig, ID2D1Bitmap* texture)
+void D2D1Core::DrawP(const _DRAW_T& fig, ID2D1Bitmap* texture)
 {
 	if (texture == nullptr)
 		return;

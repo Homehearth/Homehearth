@@ -5,6 +5,7 @@ Scene::Scene()
 {
 	m_registry.on_construct<comp::Renderable>().connect<ecs::OnRenderableConstruct>();
 	m_publicBuffer.Create(D3D11Core::Get().Device());
+	m_buffers = BackBuffer::GetBuffers();
 }
 
 entt::registry& Scene::GetRegistry() {
@@ -18,26 +19,25 @@ void Scene::Update(float dt)
 	publish<ESceneUpdate>(dt);
 	
 	// only copy if the last frame has been rendered
-	if (!m_transformCopies.IsSwapped()) {
+	if (!m_buffers->IsSwapped()) {
 		PROFILE_SCOPE("Copy Transforms");
 		m_registry.view<comp::Transform, comp::Renderable>().each([&](entt::entity e, comp::Transform& t, comp::Renderable& r) 
 			{
 			comp::Renderable rend;
 			rend.mesh = r.mesh;
 			rend.renderForm = t;
-				m_transformCopies[0][e] = rend;
-				//m_transformCopies[0][e] = t;
+			(*m_buffers)[0][e] = rend;
 			});
-		m_transformCopies.Swap();
+		m_buffers->Swap();
 	}
 }
 
 void Scene::Render() 
 {
 	PROFILE_FUNCTION();
-	// System that renders Renderable component
 
-	for (auto it = m_transformCopies[1].begin(); it != m_transformCopies[1].end(); it++)
+	// System that renders Renderable component
+	for (auto it = (*m_buffers)[1].begin(); it != (*m_buffers)[1].end(); it++)
 	{
 		auto* pointer = &it->second;
 		if (pointer)
@@ -80,10 +80,5 @@ void Scene::Render()
 	// Emit event
 	publish<ESceneRender>();
 
-	m_transformCopies.ReadyForSwap();
-}
-
-bool Scene::IsRenderReady() const 
-{
-	return m_transformCopies.IsSwapped();
+	m_buffers->ReadyForSwap();
 }
