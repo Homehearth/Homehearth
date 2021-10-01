@@ -103,9 +103,7 @@ namespace sm = dx::SimpleMath;
 #include "ThreadSyncer.h"
 
 // Network
-#include "net_common.h"
-#include "net_message.h"
-#include "net_tsqueue.h"
+#include "network.h"
 
 // Assimp
 #pragma warning(push, 0)

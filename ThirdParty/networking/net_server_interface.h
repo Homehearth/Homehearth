@@ -5,13 +5,14 @@
 namespace network
 {
 	// Information regarding every connection
+	template <typename T>
 	struct SOCKET_INFORMATION
 	{
 		uint64_t handshakeIn;
 		uint64_t handshakeOut;
 		uint64_t handshakeResult;
 		SOCKET Socket;
-		message<MessageType> msgTempIn = {};
+		message<T> msgTempIn = {};
 	};
 
 	template <typename T>
@@ -50,19 +51,19 @@ namespace network
 		bool Listen(const uint32_t& nListen);
 		void InitWinsock();
 		bool CreateSocketInformation(SOCKET& s);
-		void DisconnectClient(SOCKET_INFORMATION*& SI);
-		bool ClientIsConnected(SOCKET_INFORMATION* SI);
+		void DisconnectClient(SOCKET_INFORMATION<T>*& SI);
+		bool ClientIsConnected(SOCKET_INFORMATION<T>* SI);
 		SOCKET WaitForConnection();
 
 		// FUNCTIONS TO EASIER HANDLE DATA IN AND OUT FROM SERVER
 		void WriteValidation(const SOCKET& socketId, uint64_t handshakeOut);
-		void ReadValidation(SOCKET_INFORMATION*& SI, PER_IO_DATA* context);
-		void ReadHeader(SOCKET_INFORMATION*& SI, PER_IO_DATA* context);
-		void ReadPayload(SOCKET_INFORMATION*& SI, PER_IO_DATA* context);
+		void ReadValidation(SOCKET_INFORMATION<T>*& SI, PER_IO_DATA* context);
+		void ReadHeader(SOCKET_INFORMATION<T>*& SI, PER_IO_DATA* context);
+		void ReadPayload(SOCKET_INFORMATION<T>*& SI, PER_IO_DATA* context);
 		void WriteMessage(const SOCKET& socket, message<T>& msg);
-		void PrimeReadHeader(SOCKET_INFORMATION*& SI);
-		void PrimeReadPayload(SOCKET_INFORMATION*& SI);
-		void PrimeReadValidation(SOCKET_INFORMATION*& SI);
+		void PrimeReadHeader(SOCKET_INFORMATION<T>*& SI);
+		void PrimeReadPayload(SOCKET_INFORMATION<T>*& SI);
+		void PrimeReadValidation(SOCKET_INFORMATION<T>*& SI);
 
 		static void AlertThread();
 
@@ -84,6 +85,10 @@ namespace network
 		{
 			WSACleanup();
 			DeleteCriticalSection(&lock);
+			for (int i = 0; i < nrOfThreads; i++)
+			{
+				workerThreads[i].join();
+			}
 			delete[] workerThreads;
 		}
 
@@ -102,7 +107,7 @@ namespace network
 	}
 
 	template <typename T>
-	void server_interface<T>::PrimeReadValidation(SOCKET_INFORMATION*& SI)
+	void server_interface<T>::PrimeReadValidation(SOCKET_INFORMATION<T>*& SI)
 	{
 		PER_IO_DATA* context = new PER_IO_DATA;
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
@@ -123,7 +128,7 @@ namespace network
 	}
 
 	template <typename T>
-	void server_interface<T>::PrimeReadHeader(SOCKET_INFORMATION*& SI)
+	void server_interface<T>::PrimeReadHeader(SOCKET_INFORMATION<T>*& SI)
 	{
 		PER_IO_DATA* context = new PER_IO_DATA;
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
@@ -144,7 +149,7 @@ namespace network
 	}
 
 	template <typename T>
-	void server_interface<T>::PrimeReadPayload(SOCKET_INFORMATION*& SI)
+	void server_interface<T>::PrimeReadPayload(SOCKET_INFORMATION<T>*& SI)
 	{
 		PER_IO_DATA* context = new PER_IO_DATA;
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
@@ -167,7 +172,7 @@ namespace network
 	}
 
 	template <typename T>
-	void server_interface<T>::ReadPayload(SOCKET_INFORMATION*& SI, PER_IO_DATA* context)
+	void server_interface<T>::ReadPayload(SOCKET_INFORMATION<T>*& SI, PER_IO_DATA* context)
 	{
 		this->OnMessageReceived(SI->Socket, SI->msgTempIn);
 		this->m_messagesIn.push_back(SI->msgTempIn);
@@ -176,7 +181,7 @@ namespace network
 	}
 
 	template <typename T>
-	void server_interface<T>::ReadHeader(SOCKET_INFORMATION*& SI, PER_IO_DATA* context)
+	void server_interface<T>::ReadHeader(SOCKET_INFORMATION<T>*& SI, PER_IO_DATA* context)
 	{
 		if (SI->msgTempIn.header.size > 0)
 		{
@@ -219,7 +224,7 @@ namespace network
 	}
 
 	template <typename T>
-	void server_interface<T>::ReadValidation(SOCKET_INFORMATION*& SI, PER_IO_DATA* context)
+	void server_interface<T>::ReadValidation(SOCKET_INFORMATION<T>*& SI, PER_IO_DATA* context)
 	{
 		memcpy(&SI->handshakeIn, context->DataBuf.buf, sizeof(uint64_t));
 
@@ -304,7 +309,7 @@ namespace network
 	}
 
 	template <typename T>
-	bool server_interface<T>::ClientIsConnected(SOCKET_INFORMATION* SI)
+	bool server_interface<T>::ClientIsConnected(SOCKET_INFORMATION<T>* SI)
 	{
 		bool isConnected = false;
 
@@ -317,7 +322,7 @@ namespace network
 	}
 
 	template<typename T>
-	void server_interface<T>::DisconnectClient(SOCKET_INFORMATION*& SI)
+	void server_interface<T>::DisconnectClient(SOCKET_INFORMATION<T>*& SI)
 	{
 		if (SI != NULL)
 		{
@@ -337,7 +342,7 @@ namespace network
 	template <typename T>
 	bool server_interface<T>::CreateSocketInformation(SOCKET& s)
 	{
-		SOCKET_INFORMATION* SI = new SOCKET_INFORMATION;
+		SOCKET_INFORMATION<T>* SI = new SOCKET_INFORMATION<T>;
 		SI->Socket = s;
 		SI->handshakeIn = 0;
 		SI->handshakeOut = uint64_t(std::chrono::system_clock::now().time_since_epoch().count());
@@ -606,7 +611,7 @@ namespace network
 			for (int i = 0; i < nrOfThreads; i++)
 			{
 				QueueUserAPC((PAPCFUNC)server_interface<T>::AlertThread, (HANDLE)workerThreads[i].native_handle(), NULL);
-				workerThreads[i].join();
+				//workerThreads[i].join();
 			}
 
 			QueueUserAPC((PAPCFUNC)server_interface<T>::AlertThread, (HANDLE)acceptThread.native_handle(), NULL);
@@ -618,14 +623,15 @@ namespace network
 	DWORD server_interface<T>::ServerWorkerThread()
 	{
 		DWORD BytesTransferred = 0;
-		SOCKET_INFORMATION* SI = nullptr;
+		SOCKET_INFORMATION<T>* SI = nullptr;
 		PER_IO_DATA* context;
 		DWORD bytesReceived = 0;
 		const DWORD CAP = 10;
 		OVERLAPPED_ENTRY Entries[CAP];
 		ULONG EntriesRemoved = 0;
+		BOOL ShouldShutdown = false;
 
-		while (m_isRunning)
+		while (1)
 		{
 			if (!GetQueuedCompletionStatusEx(m_CompletionPort, Entries, CAP, &EntriesRemoved, WSA_INFINITE, TRUE))
 			{
@@ -634,6 +640,8 @@ namespace network
 				{
 					LOG_ERROR("%d", LastError);
 				}
+				CancelIo(GetCurrentThreadToken());
+				ShouldShutdown = true;
 
 				continue;
 			}
@@ -642,7 +650,7 @@ namespace network
 			{
 				if (Entries[i].lpOverlapped != NULL)
 				{
-					SI = (SOCKET_INFORMATION*)Entries[i].lpCompletionKey;
+					SI = (SOCKET_INFORMATION<T>*)Entries[i].lpCompletionKey;
 					context = (PER_IO_DATA*)Entries[i].lpOverlapped;
 					if (Entries[i].dwNumberOfBytesTransferred == 0)
 					{
@@ -691,6 +699,11 @@ namespace network
 							context = nullptr;
 						}
 					}
+				}
+				if (ShouldShutdown)
+				{
+					LOG_WARNING("SUCCESS!");
+					break;
 				}
 			}
 		}

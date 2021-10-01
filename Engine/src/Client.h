@@ -45,8 +45,8 @@ Client<T>::~Client()
 template <typename T>
 void Client<T>::PingServer()
 {
-	message<MessageType> msg = {};
-	msg.header.id = MessageType::Server_GetPing;
+	message<T> msg = {};
+	msg.header.id = GameMsg::Server_GetPing;
 	this->timeThen = std::chrono::system_clock::now();
 	this->Send(msg);
 	EnterCriticalSection(&lock);
@@ -67,14 +67,14 @@ void Client<T>::OnMessageReceived(message<T>& msg)
 {
 	switch (msg.header.id)
 	{
-	case MessageType::Client_Accepted:
+	case GameMsg::Client_Accepted:
 	{
 		EnterCriticalSection(&lock);
 		LOG_INFO("You are validated!");
 		LeaveCriticalSection(&lock);
 		break;
 	}
-	case MessageType::Server_GetPing:
+	case GameMsg::Server_GetPing:
 	{
 		std::chrono::system_clock::time_point timeNow = std::chrono::system_clock::now();
 

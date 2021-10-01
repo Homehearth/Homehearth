@@ -6,7 +6,7 @@
 class Game : public Engine
 {
 private:
-	Client<network::MessageType> m_client;
+	Client<network::GameMsg> m_client;
 	// Maybe move this later
 	std::unordered_map<uint64_t, entt::entity> players;
 	uint64_t localPID;

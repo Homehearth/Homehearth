@@ -12,7 +12,7 @@ void InitializePlayerEntity(Scene& scene)
 	renderable.mesh = ResourceManager::Get().GetResource<RMesh>("Monster.fbx");
 }
 
-void setupDemoScene(Scene& scene, Client<network::MessageType>& client)
+void setupDemoScene(Scene& scene, Client<network::GameMsg>& client)
 {
 	//Initialize player entity
 	InitializePlayerEntity(scene);

@@ -56,17 +56,17 @@ void Server<T>::OnMessageReceived(const SOCKET& socket, message<T>& msg)
 {
 	switch (msg.header.id)
 	{
-	case MessageType::Server_GetPing:
+	case GameMsg::Server_GetPing:
 	{
 		message<T> msg = {};
-		msg.header.id = MessageType::Server_GetPing;
+		msg.header.id = GameMsg::Server_GetPing;
 		this->SendToClient(socket, msg);
 		EnterCriticalSection(&lock);
 		LOG_INFO("Client on socket: %lld is pinging server", socket);
 		LeaveCriticalSection(&lock);
 		break;
 	}
-	case MessageType::Game_MovePlayer:
+	case GameMsg::Game_MovePlayer:
 	{
 		EnterCriticalSection(&lock);
 		LOG_INFO("Moving player!");
@@ -82,8 +82,9 @@ void Server<T>::OnClientValidated(const SOCKET& socket)
 	EnterCriticalSection(&lock);
 	uint64_t tempID = m_CurrentID++;
 	LeaveCriticalSection(&lock);
-	network::message<T> msg = {};
-	msg.header.id = MessageType::Client_Accepted;
+	message<T> msg = {};
+	msg << tempID;
+	msg.header.id = GameMsg::Server_AssignID;
 	this->SendToClient(socket, msg);
 
 	EnterCriticalSection(&lock);

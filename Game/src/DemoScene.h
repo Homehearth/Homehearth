@@ -5,5 +5,5 @@
 
 void InitializePlayerEntity(Scene& scene);
 
-void setupDemoScene(Scene& scene, Client<network::MessageType>& client);
+void setupDemoScene(Scene& scene, Client<network::GameMsg>& client);
 
