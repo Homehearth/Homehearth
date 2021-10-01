@@ -70,14 +70,17 @@ void Camera::Initialize(sm::Vector3 pos, sm::Vector3 target, sm::Vector3 up, sm:
 
 void Camera::Update(float deltaTime)
 {
-    //Mouse
-    m_currentMousePosition = sm::Vector2((float)InputSystem::Get().GetMousePos().x, (float)InputSystem::Get().GetMousePos().y);
-
-    if (m_currentMousePosition.x != m_lastMousePosition.x || m_currentMousePosition.y != m_lastMousePosition.y)
+    //Can't move the camera when in relative mode
+    if (InputSystem::Get().IsMouseRelative())
     {
-        m_rollPitchYaw.z += m_lastMousePosition.x * m_rotationSpeed;
-        m_rollPitchYaw.y -= m_lastMousePosition.y * m_rotationSpeed;
-        m_lastMousePosition = m_currentMousePosition;
+        m_currentMousePosition = sm::Vector2((float)InputSystem::Get().GetMousePos().x, (float)InputSystem::Get().GetMousePos().y);
+
+        if (m_currentMousePosition.x != m_lastMousePosition.x || m_currentMousePosition.y != m_lastMousePosition.y)
+        {
+            m_rollPitchYaw.z += m_lastMousePosition.x * m_rotationSpeed;
+            m_rollPitchYaw.y -= m_lastMousePosition.y * m_rotationSpeed;
+            m_lastMousePosition = m_currentMousePosition;
+        }
     }
 
     ////IDk if i need thb

@@ -53,6 +53,9 @@ public:
 	//Toggle the visibility of the mouse. Only works in absolute mode
 	void ToggleMouseVisibility();
 
+	//Check if mouse is relative
+	const bool IsMouseRelative() const;
+
 	//Get the position of the Mouse (only really works in Absolute mode)
 	const MousePos GetMousePos() const;
 	// No copying allowed.
