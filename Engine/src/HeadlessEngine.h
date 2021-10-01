@@ -1,11 +1,7 @@
 #pragma once
-#pragma once
 
-#include "Window.h"
 #include "Scene.h"
-#include "Renderer.h"
 #include "EventTypes.h"
-#include "Client.h"
 
 class HeadlessEngine
 {

@@ -1,5 +1,5 @@
 project "NetServer"
-    kind "WindowedApp"
+    kind "ConsoleApp"
     language "C++"
     cppdialect "C++17"
     targetdir("build/bin/" .. outputdir .. "/%{prj.name}")
@@ -24,7 +24,13 @@ project "NetServer"
     -- Note: specify the path relative to the Premake file.
     includedirs {
 		"src",
-		 "../ThirdParty/networking/"
+        "../Engine/src",
+        "../ThirdParty/DirectXTK/include/",
+        "../ThirdParty/imGUI/",
+        "../ThirdParty/stb_image/",
+        "../ThirdParty/networking/",
+        "../ThirdParty/entt/",
+		"../ThirdParty/assimp/include/"
     }
 
 
