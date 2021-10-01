@@ -138,6 +138,16 @@ void InputSystem::ToggleMouseVisibility()
 
 }
 
+const bool InputSystem::IsMouseRelative() const
+{
+	bool isRelative = false;
+	if (m_mouseState.positionMode == dx::Mouse::MODE_RELATIVE)
+	{
+		isRelative = true;
+	}
+	return isRelative;
+}
+
 void InputSystem::SwitchMouseMode()
 {
 	if (m_mouseState.positionMode == dx::Mouse::MODE_RELATIVE)
