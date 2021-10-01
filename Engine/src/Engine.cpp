@@ -35,10 +35,13 @@ void Engine::Startup()
 	D2D1Core::Initialize(&m_window);
 
 	//Camera
-	Camera m_debugCamera;
-	m_debugCamera.Initialize(sm::Vector3(0, 0, 1), sm::Vector3(0, 0, 0), sm::Vector3(0, 1, 0), sm::Vector2((float)m_window.GetWidth(), (float)m_window.GetHeight()));
+	m_gameCamera.Initialize(sm::Vector3(0, 0, 1), sm::Vector3(0, 0, 0), sm::Vector3(0, 1, 0), sm::Vector2((float)m_window.GetWidth(), (float)m_window.GetHeight()), false);
 
-	m_currentCamera = std::make_shared<Camera>(m_debugCamera);
+#ifdef _DEBUG
+	m_debugCamera.Initialize(sm::Vector3(0, 0, 1), sm::Vector3(0, 0, 0), sm::Vector3(0, 1, 0), sm::Vector2((float)m_window.GetWidth(), (float)m_window.GetHeight()), true);
+	m_currentCamera = std::make_unique<Camera>(m_debugCamera);
+#endif // DEBUG
+
 
 	m_renderer.Initialize(&m_window, m_currentCamera.get());
 
@@ -136,8 +139,7 @@ void Engine::Run()
 
 		// Handle Input.
 		InputSystem::Get().UpdateEvents();
-		
-		
+				
 		//Showing examples of keyboard and mouse (THIS CODE SHOULD BE HANDLED SOMEWHERE ELSE (GAMEPLAY LOGIC))
 		if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::G, KeyState::RELEASED))
 		{
@@ -344,7 +346,9 @@ void Engine::drawImGUI() const
 		const std::string position = "Position: " + std::to_string(m_currentCamera->GetPosition().x)+ " " + std::to_string(m_currentCamera->GetPosition().y) + " " + std::to_string(m_currentCamera->GetPosition().z);
 		ImGui::Separator();
 		ImGui::Text(position.c_str());
-		//ImGui::DragFloat("Zoom: ", &m_currentCamera->m_zoomValue, 0.01f, 0.f, 1.0f);
+		ImGui::DragFloat("Zoom: ", &m_currentCamera->m_zoomValue, 0.01f, 0.0001f, 1.0f);
+		ImGui::DragFloat("Near Plane : ", &m_currentCamera->m_nearPlane, 0.1f , 0.0001f, m_currentCamera->m_farPlane-1);
+		ImGui::DragFloat("Far Plane: ", &m_currentCamera->m_farPlane, 0.1f, m_currentCamera->m_nearPlane+1);
 		ImGui::Spacing();
 
 	};
@@ -395,8 +399,7 @@ void Engine::Update(float dt)
 	if (m_currentScene)
 	{
 		m_currentScene->Update(dt);
-		m_currentCamera->Update(dt);
-
+		CameraUpdate(dt);
 	}
 
 	{
@@ -438,3 +441,26 @@ void Engine::Render(float& dt)
 	}
 }
 
+void Engine::CameraUpdate(float deltaTime)
+{
+	m_currentCamera->Update(deltaTime);
+
+#ifdef _DEBUG
+	if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Space, KeyState::RELEASED))
+	{
+		if (isDebug)
+		{
+			*m_currentCamera = m_gameCamera;
+			LOG_INFO("Game Camera selected");
+			isDebug = false;
+		}
+		else
+		{
+			*m_currentCamera = m_debugCamera;
+			LOG_INFO("Debugg Camera selected");
+			isDebug = true;
+		}	
+	}
+#endif // DEBUG
+
+}

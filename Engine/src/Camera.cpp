@@ -14,10 +14,9 @@ Camera::Camera()
     m_aspectRatio = 0;
     m_windowHeight = 0;
     m_windowWidth = 0;
-
+    m_isFreeRoaming = false;
     m_rotationSpeed = 0.01f;
     m_movingSepeed = 0.025f;
-
 }
 
 Camera::~Camera()
@@ -25,7 +24,7 @@ Camera::~Camera()
 
 }
 
-void Camera::Initialize(sm::Vector3 pos, sm::Vector3 target, sm::Vector3 up, sm::Vector2 windowSize)
+void Camera::Initialize(sm::Vector3 pos, sm::Vector3 target, sm::Vector3 up, sm::Vector2 windowSize, bool isFreeRoaming)
 {
     m_position = pos;
     m_target = target;
@@ -34,6 +33,7 @@ void Camera::Initialize(sm::Vector3 pos, sm::Vector3 target, sm::Vector3 up, sm:
     m_windowHeight = windowSize.y;
     m_windowWidth = windowSize.x;
     m_aspectRatio = m_windowWidth / m_windowHeight;
+    m_isFreeRoaming = isFreeRoaming;
 
     m_defaultForward = { 0.0f, 0.0f, -1.0f };
     m_defaultRight = { -1.0f, 0.0f, 0.0f };
@@ -42,7 +42,6 @@ void Camera::Initialize(sm::Vector3 pos, sm::Vector3 target, sm::Vector3 up, sm:
     m_projection = dx::XMMatrixPerspectiveFovLH(m_FOV * m_zoomValue, m_aspectRatio, m_nearPlane, m_farPlane);
 
     //Constant buffer struct
-    //m_cameraMat = new camera_Matrix_t;
     m_cameraMat.position = sm::Vector4( m_position.x, m_position.y, m_position.z, 0.0f );
     m_cameraMat.target = sm::Vector4(m_target.x, m_target.y, m_target.z, 0);
     m_cameraMat.projection = m_projection;
@@ -71,15 +70,21 @@ void Camera::Initialize(sm::Vector3 pos, sm::Vector3 target, sm::Vector3 up, sm:
 void Camera::Update(float deltaTime)
 {
     //Mouse
-    m_currentMousePosition = sm::Vector2((float)InputSystem::Get().GetMousePos().x, (float)InputSystem::Get().GetMousePos().y);
-
-    if (m_currentMousePosition.x != m_lastMousePosition.x || m_currentMousePosition.y != m_lastMousePosition.y)
+    if (m_isFreeRoaming)
     {
-        m_rollPitchYaw.z += m_lastMousePosition.x * m_rotationSpeed;
-        m_rollPitchYaw.y -= m_lastMousePosition.y * m_rotationSpeed;
-        m_lastMousePosition = m_currentMousePosition;
-    }
+        m_currentMousePosition = sm::Vector2((float)InputSystem::Get().GetMousePos().x, (float)InputSystem::Get().GetMousePos().y);
 
+        if (m_currentMousePosition.x != m_lastMousePosition.x || m_currentMousePosition.y != m_lastMousePosition.y)
+        {
+            m_rollPitchYaw.z += m_lastMousePosition.x * m_rotationSpeed;
+            m_rollPitchYaw.y -= m_lastMousePosition.y * m_rotationSpeed;
+            m_lastMousePosition = m_currentMousePosition;
+        }
+
+        quaterion = sm::Quaternion::CreateFromYawPitchRoll(m_rollPitchYaw.z, m_rollPitchYaw.y, m_rollPitchYaw.x);
+        m_rotationMatrix = dx::XMMatrixRotationRollPitchYaw(m_rollPitchYaw.y, m_rollPitchYaw.z, m_rollPitchYaw.x);
+    }
+   
     ////IDk if i need thb
     //if (m_rollPitchYaw.z > dx::XM_PI)
     //{
@@ -89,9 +94,6 @@ void Camera::Update(float deltaTime)
     //{
     //    m_rollPitchYaw.z += dx::XM_PI * 2.0f;
     //}
-
-    quaterion = sm::Quaternion::CreateFromYawPitchRoll(m_rollPitchYaw.z, m_rollPitchYaw.y, m_rollPitchYaw.x);
-    m_rotationMatrix = dx::XMMatrixRotationRollPitchYaw(m_rollPitchYaw.y, m_rollPitchYaw.z, m_rollPitchYaw.x);
 
     //Keyboard
     if (KEYPRESS(dx::Keyboard::E, KeyState::HELD)) //Down
@@ -124,13 +126,16 @@ void Camera::Update(float deltaTime)
     m_target = dx::XMVectorAdd(m_target, m_position);
     m_view = dx::XMMatrixLookAtLH(m_position, m_target, m_up);
 
-    //UpdateProjection();
-    //m_projection = dx::XMMatrixPerspectiveFovLH(m_FOV * m_zoomValue, m_aspectRatio, m_nearPlane, m_farPlane);
+    UpdateProjection();
 
     m_cameraMat.position = { m_position.x, m_position.y, m_position.z, 0.0f };
     m_cameraMat.target = { m_target.x, m_target.y, m_target.z, 0 };
     m_cameraMat.projection = m_projection;
     m_cameraMat.view = m_view;
+}
+
+void Camera::FollowEntity(sm::Vector3& position)
+{
 }
 
 //Get functions

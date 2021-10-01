@@ -15,7 +15,10 @@ private:
 	
 	std::atomic<bool> m_IsImguiReady;
 
+	Camera m_gameCamera;
+	Camera m_debugCamera;
 	std::shared_ptr<Camera> m_currentCamera;
+	bool isDebug;
 
 	Window m_window;
 	Renderer m_renderer;
@@ -39,6 +42,7 @@ private:
 	// Renders one frame.
 	void Render(float& dt);
 
+	void CameraUpdate(float deltaTime);
 
 public:
 	Engine();

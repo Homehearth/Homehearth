@@ -21,8 +21,6 @@ private:
 	sm::Matrix  m_projection;
 	sm::Matrix  m_rotationMatrix;
 
-	float m_nearPlane;
-	float m_farPlane;
 	float m_windowHeight;
 	float m_windowWidth;
 	float m_aspectRatio;
@@ -32,6 +30,7 @@ private:
 
 	camera_Matrix_t m_cameraMat;
 	sm::Quaternion quaterion;
+	bool m_isFreeRoaming;
 
 	/*Run in all the set functions*/
 	void UpdateProjection();
@@ -40,8 +39,9 @@ public:
 	Camera();
 	~Camera();
 	/* Position, Target, up, windowSize = (window width, window height) */
-	void Initialize(sm::Vector3 pos, sm::Vector3 target, sm::Vector3 up, sm::Vector2 windowSize);
+	void Initialize(sm::Vector3 pos, sm::Vector3 target, sm::Vector3 up, sm::Vector2 windowSize, bool isFreeRoaming);
 	void Update(float deltaTime);
+	void FollowEntity(sm::Vector3& position);
 
 	//Get Functions
 	sm::Matrix GetView() const;
@@ -63,5 +63,6 @@ public:
 	ComPtr<ID3D11Buffer> m_viewConstantBuffer;
 	float m_FOV;
 	float m_zoomValue;
-
+	float m_nearPlane;
+	float m_farPlane;
 };
