@@ -1,6 +1,7 @@
 ﻿#include "EnginePCH.h"
 #include "Engine.h"
 #include <omp.h>
+#include "Camera.h"
 
 #include "RMesh.h"
 
@@ -31,7 +32,13 @@ void Engine::Startup()
 	D3D11Core::Get().Initialize(&m_window);
 	D2D1Core::Initialize(&m_window);
 
-	m_renderer.Initialize(&m_window);
+	//Camera
+	Camera m_debugCamera;
+	m_debugCamera.Initialize(sm::Vector3(0, 0, 1), sm::Vector3(0, 0, 0), sm::Vector3(0, 1, 0), sm::Vector2((float)m_window.GetWidth(), (float)m_window.GetHeight()));
+
+	m_currentCamera = std::make_shared<Camera>(m_debugCamera);
+
+	m_renderer.Initialize(&m_window, m_currentCamera.get());
 
 	// Thread should be launched after s_engineRunning is set to true and D3D11 is initialized.
 	//
@@ -195,7 +202,16 @@ void Engine::drawImGUI() const
 	}
 	ImGui::End();
 
+	ImGui::Begin("Camera");
+	{
+		const std::string position = "Position: " + std::to_string(m_currentCamera->GetPosition().x)+ " " + std::to_string(m_currentCamera->GetPosition().y) + " " + std::to_string(m_currentCamera->GetPosition().z);
+		ImGui::Separator();
+		ImGui::Text(position.c_str());
+		//ImGui::DragFloat("Zoom: ", &m_currentCamera->m_zoomValue, 0.01f, 0.f, 1.0f);
+		ImGui::Spacing();
 
+	};
+	ImGui::End();
 }
 
 void Engine::RenderThread()
