@@ -453,7 +453,10 @@ void Engine::Render(float& dt)
 		);
 	}
 
-	rtd::Handler2D::Render();
+	{
+		PROFILE_SCOPE("Render D2D1");
+		rtd::Handler2D::Render();
+	}
 
 	{
 		PROFILE_SCOPE("Present");

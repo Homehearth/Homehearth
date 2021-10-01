@@ -6,6 +6,7 @@
 #include "Picture.h"
 #include "Border.h"
 #include "Button.h"
+#include "Text.h"
 
 // std
 #include <set>

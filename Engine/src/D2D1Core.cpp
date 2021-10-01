@@ -272,6 +272,19 @@ const bool D2D1Core::CreateImage(const std::string& filename, ID2D1Bitmap** p_po
 		return false;
 }
 
+const bool D2D1Core::CreateTextFormat(const WCHAR* fontName, 
+	IDWriteFontCollection* fontCollection, 
+	const DWRITE_FONT_WEIGHT& weight, const DWRITE_FONT_STYLE& style, 
+	const DWRITE_FONT_STRETCH& stretch, const FLOAT& fontSize, const WCHAR* localeName, 
+	IDWriteTextFormat** pointer)
+{
+	HRESULT hr;
+
+	hr = INSTANCE->m_writeFactory->CreateTextFormat(fontName, fontCollection, weight, style, stretch, fontSize, localeName, pointer);
+
+	return SUCCEEDED(hr);
+}
+
 HRESULT D2D1Core::LoadBitMap(const LPCWSTR& filePath, ID2D1Bitmap** bitMap)
 {
 	HRESULT hr;

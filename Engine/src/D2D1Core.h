@@ -227,6 +227,15 @@ public:
 	*/
 	static const bool CreateImage(const std::string& filename, ID2D1Bitmap** p_pointer = nullptr);
 
+	/*
+		Loads a text format into the pointer.
+		returns true if successful and false if not.
+	*/
+	static const bool CreateTextFormat(const WCHAR* fontName, IDWriteFontCollection* fontCollection,
+		const DWRITE_FONT_WEIGHT& weight, const DWRITE_FONT_STYLE& style,
+		const DWRITE_FONT_STRETCH& stretch, const FLOAT& fontSize,
+		const WCHAR* localeName, IDWriteTextFormat** pointer);
+
 private:
 	/*
 		Default objects to be used when no other parameters are specified.

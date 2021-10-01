@@ -45,7 +45,7 @@ project "Engine"
             ["src/Engine/Thread"] = { "**multi_thread_manager.*", "**ThreadSyncer.*"},
 
         ["src/Engine/Utility"] = { "**Timer.*", "**Profiler.*", "**Logger.*" },
-		["src/Engine/Elements"] = {"**Canvas.*", "**Picture.*", "**Border.*", "**Button.*"},
+		["src/Engine/Elements"] = {"**Canvas.*", "**Picture.*", "**Border.*", "**Button.*", "**Text.*"},
         
         ["src/Engine"] = {  },
             ["src/Engine/Graphics/Renderer"] = {"**Renderer.*", "**PipelineManager.*", "**BackBuffer.*"},
