@@ -24,18 +24,23 @@ namespace rtd
 			Name is for identifying information.
 		*/
 		Canvas(const D2D1_COLOR_F& color, const draw_t& opts);
+		Canvas(const draw_t& opts);
+		Canvas();
 		~Canvas();
+
+		// Set new color for canvas.
+		void SetColor(const D2D1_COLOR_F& new_color);
+		D2D1_COLOR_F& GetColor();
 
 		Border* GetBorder();
 
 		// Inherited via Element2D
 		virtual void Draw() override;
-
-		// Inherited via Element2D
-		virtual const bool IsClicked() override;
-
-		// Inherited via Element2D
 		virtual void OnClick() override;
+		virtual void OnHover() override;
+		virtual const bool CheckClick() override;
 
+		// Inherited via Element2D
+		virtual const bool CheckHover() override;
 	};
 }

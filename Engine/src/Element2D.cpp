@@ -27,3 +27,18 @@ const unsigned int Element2D::GetLayer() const
 {
 	return m_layer;
 }
+
+const bool Element2D::IsVisible() const
+{
+	return m_isVisible;
+}
+
+const bool Element2D::IsClicked()
+{
+	return m_isClicked;
+}
+
+const bool Element2D::IsHovered()
+{
+	return m_isHovering;
+}

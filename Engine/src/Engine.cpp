@@ -77,13 +77,16 @@ void Engine::Startup()
 
 	m_client.Connect("127.0.0.1", 4950);
 
-	for (int i = 0; i < 1; i++)
-	{
-		//rtd::Canvas* test = new rtd::Canvas(D2D1::ColorF(0.5f, 0.5f, 0.25f), draw_t(0.0f, 0.0f, 100.0f, 50.0f));
-		rtd::Picture* test = new rtd::Picture("demo_start_game_button.png", draw_t(0, 0, 300.0f, 100.0f));
-		test->GetBorder();
-		rtd::Handler2D::InsertElement(test);
-	}
+	rtd::Button* test = new rtd::Button("demo_start_game_button.png", draw_t(100.0f, 100.0f, 275.0f, 100.0f), true);
+	rtd::Button* test2 = new rtd::Button("demo_options_button.png", draw_t(100.0f, 225.0f, 275.0f, 100.0f), true);
+	rtd::Button* test3 = new rtd::Button("demo_exit_button.png", draw_t(100.0f, 350.0f, 275.0f, 100.0f), false);
+	test->GetBorder()->SetColor(D2D1::ColorF(1.0f, 0.0f, 0.5f));
+	test2->GetBorder()->SetColor(D2D1::ColorF(0.1f, .75f, 0.25f));
+	test3->GetBorder()->SetColor(D2D1::ColorF(0.5f, .23f, 0.65f));
+	test->SetName("Button1");
+	rtd::Handler2D::InsertElement(test);
+	rtd::Handler2D::InsertElement(test2);
+	rtd::Handler2D::InsertElement(test3);
 }
 
 void Engine::Run()
@@ -143,7 +146,10 @@ void Engine::Run()
 		// Handle Input.
 		InputSystem::Get().UpdateEvents();
 		
-		rtd::Handler2D::Update();
+		{
+			PROFILE_SCOPE("Update 2D Elements");
+			rtd::Handler2D::Update();
+		}
 		
 		//Showing examples of keyboard and mouse (THIS CODE SHOULD BE HANDLED SOMEWHERE ELSE (GAMEPLAY LOGIC))
 		if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::G, KeyState::RELEASED))
@@ -185,6 +191,7 @@ void Engine::Run()
 		lastFrame = currentFrame;
 	}
 
+	s_engineRunning = false;
 	// Wait for the rendering thread to exit its last render cycle and shutdown
 #if _DEBUG
 	// This is debug since it catches release in endless loop.

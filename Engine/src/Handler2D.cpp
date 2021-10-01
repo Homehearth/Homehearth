@@ -2,6 +2,7 @@
 
 #define INSTANCE rtd::Handler2D::instance
 rtd::Handler2D* INSTANCE = nullptr;
+std::vector<Element2D*> rtd::Handler2D::m_elements = {};
 
 rtd::Handler2D::Handler2D()
 {
@@ -40,8 +41,11 @@ void rtd::Handler2D::Render()
 {
 	for (auto elem : INSTANCE->m_elements)
 	{
-		if(elem)
-			elem->Draw();
+		if (elem)
+		{
+			if(elem->IsVisible())
+				elem->Draw();
+		}
 	}
 }
 
@@ -51,8 +55,28 @@ void rtd::Handler2D::Update()
 	{
 		if (elem)
 		{
-			if (elem->IsClicked())
+			if (elem->CheckClick())
 				elem->OnClick();
+			if (elem->CheckHover())
+				elem->OnHover();
 		}
 	}
+}
+
+void rtd::Handler2D::EraseAll()
+{
+	for (auto elem : m_elements)
+	{
+		delete elem;
+	}
+	m_elements.clear();
+}
+
+void rtd::Handler2D::RemoveAll()
+{
+	for (auto elem : m_elements)
+	{
+		elem = nullptr;
+	}
+	m_elements.clear();
 }

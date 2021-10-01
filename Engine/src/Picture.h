@@ -23,6 +23,7 @@ namespace rtd
 			Options is for position and scale.
 		*/
 		Picture(const std::string& fileName, const draw_t& opts);
+		Picture();
 		virtual ~Picture() override;
 
 		/*
@@ -33,13 +34,19 @@ namespace rtd
 		// remove the border and deallocate the space used for it.
 		void RemoveBorder();
 
+		// set the texture of the picture.
+		void SetTexture(const std::string& fileName);
+
+		// Update the position.
+		void UpdatePos(const draw_t& new_pos);
+
 		// Inherited via Element2D
 		virtual void Draw() override;
-
-		// Inherited via Element2D
-		virtual const bool IsClicked() override;
-
-		// Inherited via Element2D
 		virtual void OnClick() override;
+		virtual void OnHover() override;
+		virtual const bool CheckClick() override;
+
+		// Inherited via Element2D
+		virtual const bool CheckHover() override;
 	};
 }

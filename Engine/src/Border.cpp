@@ -3,7 +3,6 @@
 
 rtd::Border::Border()
 {
-	// Default Construction.
 }
 
 rtd::Border::Border(const draw_t& opts)
@@ -17,6 +16,16 @@ rtd::Border::Border(const draw_shape_t& shape, const draw_t& opts)
 {
 	m_borderOpts = shape;
 	m_opts = opts;
+}
+
+void rtd::Border::SetColor(const D2D1_COLOR_F& new_color)
+{
+	m_borderOpts.color = new_color;
+}
+
+D2D1_COLOR_F& rtd::Border::GetColor()
+{
+	return m_borderOpts.color;
 }
 
 void rtd::Border::UpdatePos(const draw_t& new_opts)
@@ -34,11 +43,20 @@ void rtd::Border::Draw()
 	D2D1Core::DrawF(m_opts, m_borderOpts);
 }
 
-const bool rtd::Border::IsClicked()
+void rtd::Border::OnClick()
+{
+}
+
+void rtd::Border::OnHover()
+{
+}
+
+const bool rtd::Border::CheckClick()
 {
 	return false;
 }
 
-void rtd::Border::OnClick()
+const bool rtd::Border::CheckHover()
 {
+	return false;
 }

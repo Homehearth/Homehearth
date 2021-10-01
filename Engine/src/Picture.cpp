@@ -11,6 +11,11 @@ Picture::Picture(const std::string& fileName, const draw_t& opts)
 	this->SetLayer(m_drawOpts.layer);
 }
 
+rtd::Picture::Picture()
+{
+	m_border = nullptr;
+}
+
 rtd::Picture::~Picture()
 {
 	if (m_border)
@@ -35,7 +40,17 @@ void rtd::Picture::RemoveBorder()
 	{
 		delete m_border;
 	}
+}
 
+void rtd::Picture::SetTexture(const std::string& fileName)
+{
+	m_texture.reset();
+	m_texture = ResourceManager::Get().GetResource<RBitMap>(fileName);
+}
+
+void rtd::Picture::UpdatePos(const draw_t& new_pos)
+{
+	m_drawOpts = new_pos;
 }
 
 void Picture::Draw()
@@ -46,28 +61,22 @@ void Picture::Draw()
 		D2D1Core::DrawP(m_drawOpts, m_texture->GetTexture());
 }
 
-const bool rtd::Picture::IsClicked()
+void rtd::Picture::OnClick()
 {
-	// Check if mouse key is pressed.
-	if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED))
-	{
-		// Is within bounds?
-		if (InputSystem::Get().GetMousePos().x > m_drawOpts.x_pos &&
-			InputSystem::Get().GetMousePos().x < m_drawOpts.x_pos + m_drawOpts.width &&
-			InputSystem::Get().GetMousePos().y > m_drawOpts.y_pos &&
-			InputSystem::Get().GetMousePos().y < m_drawOpts.y_pos + m_drawOpts.height)
-		{
-			return true;
-		}
-	}
+
+}
+
+void rtd::Picture::OnHover()
+{
+}
+
+const bool rtd::Picture::CheckClick()
+{
 	return false;
 }
 
-void rtd::Picture::OnClick()
+const bool rtd::Picture::CheckHover()
 {
-	m_drawOpts.x_pos = rand() % 400;
-	m_drawOpts.y_pos = rand() % 400;
-	if (m_border)
-		m_border->UpdatePos(m_drawOpts);
+	return false;
 }
 

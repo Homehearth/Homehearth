@@ -191,7 +191,7 @@ void D2D1Core::DrawF(const draw_t& fig, const draw_shape_t& shape)
 		break;
 	case Shapes::RECTANGLE_OUTLINED:
 		D2D1_RECT_F rectangle_outlined = D2D1::RectF(fig.x_pos, fig.y_pos, fig.x_pos + fig.width, fig.y_pos + fig.height);
-		INSTANCE->m_renderTarget->DrawRectangle(&rectangle_outlined, INSTANCE->m_solidBrush);
+		INSTANCE->m_renderTarget->DrawRectangle(&rectangle_outlined, INSTANCE->m_solidBrush, 5.0f);
 		break;
 	case Shapes::TRIANGLE_FILLED:
 		INSTANCE->m_factory->CreatePathGeometry(&geometry);
