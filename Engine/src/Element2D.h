@@ -28,4 +28,6 @@ public:
 	const unsigned int GetLayer() const;
 
 	virtual void Draw() = 0;
+	virtual const bool IsClicked() = 0;
+	virtual void OnClick() = 0;
 };

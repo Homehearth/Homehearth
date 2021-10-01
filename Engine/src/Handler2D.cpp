@@ -39,3 +39,15 @@ void rtd::Handler2D::Render()
 			elem->Draw();
 	}
 }
+
+void rtd::Handler2D::Update()
+{
+	for (auto elem : INSTANCE->m_elements)
+	{
+		if (elem)
+		{
+			if (elem->IsClicked())
+				elem->OnClick();
+		}
+	}
+}

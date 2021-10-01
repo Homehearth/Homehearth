@@ -4,6 +4,7 @@
 // Elements
 #include "Canvas.h"
 #include "Picture.h"
+#include "Border.h"
 
 // std
 #include <set>
@@ -41,6 +42,9 @@ namespace rtd
 
 		// Render all elements.
 		static void Render();
+
+		// Update the states of all buttons.
+		static void Update();
 	};
 
 	template<class T>

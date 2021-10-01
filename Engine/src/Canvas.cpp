@@ -1,6 +1,8 @@
 #include "EnginePCH.h"
 #include "Canvas.h"
 
+using namespace rtd;
+
 Canvas::Canvas(const D2D1_COLOR_F& color, const draw_t& opts, const std::string& name)
 {
 	m_color = color;
@@ -11,4 +13,13 @@ Canvas::Canvas(const D2D1_COLOR_F& color, const draw_t& opts, const std::string&
 void Canvas::Draw()
 {
 	D2D1Core::DrawF(m_drawOpts, draw_shape_t(Shapes::RECTANGLE_FILLED, m_color));
+}
+
+const bool rtd::Canvas::IsClicked()
+{
+	return false;
+}
+
+void rtd::Canvas::OnClick()
+{
 }

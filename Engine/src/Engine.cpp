@@ -77,15 +77,9 @@ void Engine::Startup()
 
 	m_client.Connect("127.0.0.1", 4950);
 
-	//Picture* test = new Picture("oohstonefigures.jpg", draw_t(rand() % 100, rand() % 100, 100.0f, 100.0f));
-	//rtd::Handler2D::InsertElement(test);
-	/*
-	for (int i = 0; i < 50; i++)
-	{
-		Picture* test = new Picture("oohstonefigures.jpg", _DRAW(rand() % 100 + i, rand() % 100 + i, 100.0f, 100.0f));
-		rtd::Handler2D::InsertElement(test);
-	}
-	*/
+	rtd::Picture* test = new rtd::Picture("oohstonefigures.jpg", draw_t(0, 0, 100.0f, 100.0f));
+	test->GetBorder();
+	rtd::Handler2D::InsertElement(test);
 }
 
 void Engine::Run()
@@ -145,6 +139,7 @@ void Engine::Run()
 		// Handle Input.
 		InputSystem::Get().UpdateEvents();
 		
+		rtd::Handler2D::Update();
 		
 		//Showing examples of keyboard and mouse (THIS CODE SHOULD BE HANDLED SOMEWHERE ELSE (GAMEPLAY LOGIC))
 		if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::G, KeyState::RELEASED))
@@ -443,6 +438,8 @@ void Engine::Render(float& dt)
 			m_imguiMutex.unlock();
 		);
 	}
+
+	rtd::Handler2D::Render();
 
 	{
 		PROFILE_SCOPE("Present");
