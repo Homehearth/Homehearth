@@ -18,7 +18,6 @@ Camera::Camera()
     m_rotationSpeed = 0.01f;
     m_movingSepeed = 0.025f;
 
-    m_cameraMat = nullptr;
 }
 
 Camera::~Camera()
@@ -43,11 +42,11 @@ void Camera::Initialize(sm::Vector3 pos, sm::Vector3 target, sm::Vector3 up, sm:
     m_projection = dx::XMMatrixPerspectiveFovLH(m_FOV * m_zoomValue, m_aspectRatio, m_nearPlane, m_farPlane);
 
     //Constant buffer struct
-    m_cameraMat = new camera_Matrix_t;
-    m_cameraMat->position = sm::Vector4( m_position.x, m_position.y, m_position.z, 0.0f );
-    m_cameraMat->target = sm::Vector4(m_target.x, m_target.y, m_target.z, 0);
-    m_cameraMat->projection = m_projection;
-    m_cameraMat->view = m_view;
+    //m_cameraMat = new camera_Matrix_t;
+    m_cameraMat.position = sm::Vector4( m_position.x, m_position.y, m_position.z, 0.0f );
+    m_cameraMat.target = sm::Vector4(m_target.x, m_target.y, m_target.z, 0);
+    m_cameraMat.projection = m_projection;
+    m_cameraMat.view = m_view;
 
     //Constant buffer
     D3D11_BUFFER_DESC desc;
@@ -58,7 +57,7 @@ void Camera::Initialize(sm::Vector3 pos, sm::Vector3 target, sm::Vector3 up, sm:
     desc.MiscFlags = 0;
 
     D3D11_SUBRESOURCE_DATA data;
-    data.pSysMem = m_cameraMat;
+    data.pSysMem = &m_cameraMat;
     data.SysMemPitch = 0;
     data.SysMemSlicePitch = 0;
 
@@ -128,10 +127,10 @@ void Camera::Update(float deltaTime)
     //UpdateProjection();
     //m_projection = dx::XMMatrixPerspectiveFovLH(m_FOV * m_zoomValue, m_aspectRatio, m_nearPlane, m_farPlane);
 
-    m_cameraMat->position = { m_position.x, m_position.y, m_position.z, 0.0f };
-    m_cameraMat->target = { m_target.x, m_target.y, m_target.z, 0 };
-    m_cameraMat->projection = m_projection;
-    m_cameraMat->view = m_view;
+    m_cameraMat.position = { m_position.x, m_position.y, m_position.z, 0.0f };
+    m_cameraMat.target = { m_target.x, m_target.y, m_target.z, 0 };
+    m_cameraMat.projection = m_projection;
+    m_cameraMat.view = m_view;
 }
 
 //Get functions
@@ -162,7 +161,7 @@ sm::Vector3 Camera::GetUp() const
 
 camera_Matrix_t* Camera::GetCameraMatrixes()
 {
-    return m_cameraMat;
+    return &m_cameraMat;
 }
 
 //Set functions

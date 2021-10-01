@@ -30,7 +30,7 @@ private:
 	float m_rotationSpeed;
 	float m_movingSepeed;
 
-	camera_Matrix_t* m_cameraMat;
+	camera_Matrix_t m_cameraMat;
 	sm::Quaternion quaterion;
 
 	/*Run in all the set functions*/
