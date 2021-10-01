@@ -12,27 +12,33 @@
 	Assimp can't load in pbr-material for mtl-files
 	Have to use following for it to work:
 
-	* Albedo				"map_Kd Object_Albedo.png"
-	* Normal				"map_Kn Object_Normal.png"
-	* Metalness				"map_ns Object_Metalness.png"
-	* Roughness				"map_Ks Object_Roughness.png"
-	* Ambient occlusion		"map_Ka Object_AO.png"
-	
+	* Albedo				"map_Kd   Object_Albedo.png"
+	* Normal				"map_Kn   Object_Normal.png"
+	* Metalness				"map_ns   Object_Metalness.png"
+	* Roughness				"map_Ks   Object_Roughness.png"
+	* Ambient occlusion		"map_Ka	  Object_AO.png"
+	//Extra
+	* Displacement			"map_disp Object_Displace.png
+
 */
+
+/*
+	Types of textures that a material can have
+*/
+enum class ETextureType
+{
+	albedo,
+	normal,
+	metalness,
+	roughness,
+	ambientOcclusion,
+	displacement,
+	length
+};
 
 class RMaterial : public resource::GResource
 {
 private:
-	enum class ETextureType
-	{
-		albedo,
-		normal,
-		metalness,
-		roughness,
-		ambientOcclusion,
-		length
-	};
-
 	/*
 		Constantbuffer with constants for the material
 	*/
@@ -51,15 +57,17 @@ private:
 		Constantbuffer that should make it easier in HLSL-shader
 		to check if a specific texture exist
 	*/
-	struct textures_t
+	struct properties_t
 	{
 		bool	hasAlbedo	 = false;	//1 byte
 		bool	hasNormal	 = false;	//1 byte
 		bool	hasMetalness = false;	//1 byte
 		bool	hasRoughness = false;	//1 byte
 		bool	hasAoMap	 = false;	//1 byte
-		bool	padding[11]	 = {false};	//11 bytes
+		bool	hasDisplace  = false;	//1 byte
+		bool	padding[10]	 = {false};	//10 bytes
 	};
+	properties_t m_properties;
 	ComPtr<ID3D11Buffer> m_hasTextureCB;
 
 	/*
@@ -71,7 +79,7 @@ private:
 	//Split the path to only get the filename
 	std::string GetFilename(const std::string& path);
 	bool CreateConstBuf(const matConstants_t& mat);
-	bool CreateConstBuf(const textures_t& mat);
+	bool CreateConstBuf(const properties_t& mat);
 
 
 public:
@@ -80,6 +88,9 @@ public:
 
 	void BindMaterial();
 	void UnBindMaterial();
+	
+	//Check if a material has a specific texture
+	bool HasTexture(const ETextureType& type);
 
 	//Loaded from assimp
 	bool Create(aiMaterial* aiMat);

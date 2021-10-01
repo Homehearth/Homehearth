@@ -208,5 +208,14 @@ bool RMesh::Create(const std::string& filename)
     indices.clear();
     importer.FreeScene();
 
+    std::cout << "Mesh has albedo: " << m_material->HasTexture(ETextureType::albedo) << std::endl;
+    std::cout << "Mesh has normal: " << m_material->HasTexture(ETextureType::normal) << std::endl;
+    std::cout << "Mesh has roughness: " << m_material->HasTexture(ETextureType::roughness) << std::endl;
+    std::cout << "Mesh has metalness: " << m_material->HasTexture(ETextureType::metalness) << std::endl;
+    std::cout << "Mesh has ambientOcclusion: " << m_material->HasTexture(ETextureType::ambientOcclusion) << std::endl;
+    std::cout << "Mesh has displacement: " << m_material->HasTexture(ETextureType::displacement) << std::endl;
+    std::cout << "Mesh has length: " << m_material->HasTexture(ETextureType::length) << std::endl;
+
+
     return success;
 }

@@ -40,10 +40,10 @@ bool RMaterial::CreateConstBuf(const matConstants_t& mat)
     return !FAILED(hr);
 }
 
-bool RMaterial::CreateConstBuf(const textures_t& mat)
+bool RMaterial::CreateConstBuf(const properties_t& mat)
 {
     D3D11_BUFFER_DESC desc;
-    desc.ByteWidth           = sizeof(textures_t);
+    desc.ByteWidth           = sizeof(properties_t);
     desc.Usage               = D3D11_USAGE_DYNAMIC;
     desc.BindFlags           = D3D11_BIND_CONSTANT_BUFFER;
     desc.CPUAccessFlags      = D3D11_CPU_ACCESS_WRITE;
@@ -97,6 +97,19 @@ void RMaterial::UnBindMaterial()
     D3D11Core::Get().DeviceContext()->PSSetShaderResources(0, nrOfTextures, nullSRV);
 }
 
+bool RMaterial::HasTexture(const ETextureType& type)
+{
+    bool foundTexture = false;
+
+    //Ignore length type
+    if (type != ETextureType::length)
+    {
+        if (m_textures[(UINT)type])
+            foundTexture = true;
+    }
+    return foundTexture;
+}
+
 bool RMaterial::Create(aiMaterial* aiMat)
 {
     /*
@@ -138,7 +151,8 @@ bool RMaterial::Create(aiMaterial* aiMat)
         {ETextureType::normal,              aiTextureType::aiTextureType_NORMALS},
         {ETextureType::metalness,           aiTextureType::aiTextureType_SHININESS},
         {ETextureType::roughness,           aiTextureType::aiTextureType_SPECULAR},
-        {ETextureType::ambientOcclusion,    aiTextureType::aiTextureType_AMBIENT}
+        {ETextureType::ambientOcclusion,    aiTextureType::aiTextureType_AMBIENT},
+        {ETextureType::displacement,        aiTextureType::aiTextureType_DISPLACEMENT}
     };
 
     //For every texturetype: add the texture to the map
@@ -157,19 +171,20 @@ bool RMaterial::Create(aiMaterial* aiMat)
     textureTypeMap.clear();
 
     //Create constbuffer with what textures that exist
-    textures_t hasTextures;
     if (m_textures[(uint8_t)ETextureType::albedo])
-        hasTextures.hasAlbedo = true;
+        m_properties.hasAlbedo = true;
     if (m_textures[(uint8_t)ETextureType::normal])
-        hasTextures.hasNormal = true;
+        m_properties.hasNormal = true;
     if (m_textures[(uint8_t)ETextureType::metalness])
-        hasTextures.hasMetalness = true;
+        m_properties.hasMetalness = true;
     if (m_textures[(uint8_t)ETextureType::roughness])
-        hasTextures.hasRoughness = true;
+        m_properties.hasRoughness = true;
     if (m_textures[(uint8_t)ETextureType::ambientOcclusion])
-        hasTextures.hasAlbedo = true;
+        m_properties.hasAlbedo = true;
+    if (m_textures[(uint8_t)ETextureType::displacement])
+        m_properties.hasDisplace = true;
 
-    if (!CreateConstBuf(hasTextures))
+    if (!CreateConstBuf(m_properties))
     {
 #ifdef _DEBUG
         LOG_WARNING("Failed to create constantbuffer for 'hasTextures'");
@@ -194,7 +209,6 @@ bool RMaterial::Create(const std::string& filename)
 
 	std::string line;
 	matConstants_t matConst;
-	textures_t hasTextures;
 
 	while (std::getline(readfile, line))
 	{
@@ -246,7 +260,7 @@ bool RMaterial::Create(const std::string& filename)
 			{
 				std::string filename = GetFilename(filepath);
 				m_textures[(uint8_t)ETextureType::albedo] = ResourceManager::Get().GetResource<RTexture>(filename);
-				hasTextures.hasAlbedo = true;
+                m_properties.hasAlbedo = true;
 			}
 		}
 		//Normalmap
@@ -257,7 +271,7 @@ bool RMaterial::Create(const std::string& filename)
 			{
 				std::string filename = GetFilename(filepath);
 				m_textures[(uint8_t)ETextureType::normal] = ResourceManager::Get().GetResource<RTexture>(filename);
-				hasTextures.hasNormal = true;
+                m_properties.hasNormal = true;
 			}
 		}
 		//Metallic
@@ -268,7 +282,7 @@ bool RMaterial::Create(const std::string& filename)
 			{
 				std::string filename = GetFilename(filepath);
 				m_textures[(uint8_t)ETextureType::metalness] = ResourceManager::Get().GetResource<RTexture>(filename);
-				hasTextures.hasMetalness = true;
+                m_properties.hasMetalness = true;
 			}
 		}
 		//Roughness
@@ -279,7 +293,7 @@ bool RMaterial::Create(const std::string& filename)
 			{
 				std::string filename = GetFilename(filepath);
 				m_textures[(uint8_t)ETextureType::roughness] = ResourceManager::Get().GetResource<RTexture>(filename);
-				hasTextures.hasRoughness = true;
+                m_properties.hasRoughness = true;
 			}
 		}
 		//Ambient occulution map
@@ -290,9 +304,20 @@ bool RMaterial::Create(const std::string& filename)
 			{
 				std::string filename = GetFilename(filepath);
 				m_textures[(uint8_t)ETextureType::ambientOcclusion] = ResourceManager::Get().GetResource<RTexture>(filename);
-				hasTextures.hasAoMap = true;
+                m_properties.hasAoMap = true;
 			}
 		}
+        //Displacement map
+        else if (prefix == "map_disp")
+        {
+            std::string filepath;
+            if (ss >> filepath)
+            {
+                std::string filename = GetFilename(filepath);
+                m_textures[(uint8_t)ETextureType::displacement] = ResourceManager::Get().GetResource<RTexture>(filename);
+                m_properties.hasDisplace = true;
+            }
+        }
 	}
 	readfile.close();
 
@@ -304,7 +329,7 @@ bool RMaterial::Create(const std::string& filename)
 		return false;
 	}
 
-	if (!CreateConstBuf(hasTextures))
+	if (!CreateConstBuf(m_properties))
 	{
 #ifdef _DEBUG
 		LOG_WARNING("Failed to create constantbuffer for 'hasTextures'");
