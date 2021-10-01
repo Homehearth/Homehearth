@@ -76,7 +76,7 @@ void Engine::Startup()
 
 	m_client.Connect("127.0.0.1", 4950);
 
-	//Picture* test = new Picture("oohstonefigures.jpg", _DRAW_T(rand() % 100, rand() % 100, 100.0f, 100.0f));
+	//Picture* test = new Picture("oohstonefigures.jpg", draw_t(rand() % 100, rand() % 100, 100.0f, 100.0f));
 	//rtd::Handler2D::InsertElement(test);
 	/*
 	for (int i = 0; i < 50; i++)
@@ -204,8 +204,6 @@ void Engine::Run()
 	ResourceManager::Get().Destroy();
 	rtd::Handler2D::Destroy();
 	BackBuffer::Destroy();
-
-	//PROFILER_END_SESSION();
 }
 
 void Engine::Shutdown()

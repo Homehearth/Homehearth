@@ -1,7 +1,7 @@
 #include "EnginePCH.h"
 #include "Picture.h"
 
-Picture::Picture(const std::string& fileName, const _DRAW_T& opts)
+Picture::Picture(const std::string& fileName, const draw_t& opts)
 {
 
 	m_texture = ResourceManager::Get().GetResource<RBitMap>(fileName);

@@ -2,7 +2,7 @@
 #pragma warning(push, 3)
 
 #define RENDER_IMGUI 1
-#define PROFILER 0
+#define PROFILER 1
 
 //Macros
 #if RENDER_IMGUI

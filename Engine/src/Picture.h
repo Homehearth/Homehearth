@@ -9,7 +9,7 @@ class Picture : public Element2D
 private:
 
 	std::shared_ptr<RBitMap> m_texture;
-	_DRAW_T m_drawOpts;
+	draw_t m_drawOpts;
 
 public:
 
@@ -18,7 +18,7 @@ public:
 		fileName is the filename of the texture. Default path is Assets/Textures/
 		Options is for position and scale.
 	*/
-	Picture(const std::string& fileName, const _DRAW_T& opts);
+	Picture(const std::string& fileName, const draw_t& opts);
 
 	// Inherited via Element2D
 	virtual void Draw() override;

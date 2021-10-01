@@ -9,7 +9,7 @@ class Canvas : public Element2D
 private:
 
 	D2D1_COLOR_F m_color;
-	_DRAW_T m_drawOpts;
+	draw_t m_drawOpts;
 
 public:
 
@@ -19,7 +19,7 @@ public:
 		Options is for position and scale.
 		Name is for identifying information.
 	*/
-	Canvas(const D2D1_COLOR_F& color, const _DRAW_T& opts, const std::string& name);
+	Canvas(const D2D1_COLOR_F& color, const draw_t& opts, const std::string& name);
 
 	// Inherited via Element2D
 	virtual void Draw() override;
