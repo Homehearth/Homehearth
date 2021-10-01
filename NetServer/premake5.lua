@@ -43,9 +43,17 @@ project "NetServer"
 
 
     links{
-
+        "ImGui",
+        "Engine",
+        "d3d11",
+        "d2d1",
+		"dwrite",
+        "dxgi",
+        "DirectXTK",
+		"assimp-vc142-mt.lib",
     }
 
+    libdirs{"../ThirdParty/imGUI/"}
 
     -- Define a macro/symbol which applies for the Windows system.
     filter {"system:windows"}
@@ -61,6 +69,11 @@ project "NetServer"
         runtime "Debug"
         defines{"_DEBUG", "_UNICODE", "UNICODE"}
         symbols "on"
+        libdirs{
+            "../ThirdParty/DirectXTK/lib/Debug_lib/",
+            "../Engine/build/bin/Debug-windows-x86_64/Engine",
+			"../ThirdParty/assimp/lib/"
+        }
 
 
     -- Define a macro/symbol which applies only to release builds.
@@ -70,3 +83,8 @@ project "NetServer"
         defines{"NDEBUG", "_UNICODE", "UNICODE"}
         symbols "on"
         optimize "on"
+        libdirs{
+            "../ThirdParty/DirectXTK/lib/Release_lib/",
+            "../Engine/build/bin/Release-windows-x86_64/Engine",
+			"../ThirdParty/assimp/lib/"
+        }

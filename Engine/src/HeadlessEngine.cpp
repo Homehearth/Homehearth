@@ -96,11 +96,12 @@ void HeadlessEngine::Run()
 
 }
 
-void HeadlessEngine::Shutdown() {
+void HeadlessEngine::Shutdown() 
+{
 	m_isEngineRunning = false;
 }
 
-bool HeadlessEngine::IsRunning()
+bool HeadlessEngine::IsRunning() const
 {
 	return m_isEngineRunning;
 }

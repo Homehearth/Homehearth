@@ -19,9 +19,9 @@ protected:
 	virtual void Run();
 
 	// Shutdown the Engine and its instances in the reverse order.
-	virtual void Shutdown();
+	void Shutdown();
 
-	bool IsRunning();
+	bool IsRunning() const;
 
 	Scene& GetScene(const std::string& name);
 	Scene* GetCurrentScene() const;
