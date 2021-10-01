@@ -24,6 +24,11 @@ void rtd::Border::UpdatePos(const draw_t& new_opts)
 	m_opts = new_opts;
 }
 
+void rtd::Border::SetShape(const draw_shape_t& new_shape)
+{
+	m_borderOpts = new_shape;
+}
+
 void rtd::Border::Draw()
 {
 	D2D1Core::DrawF(m_opts, m_borderOpts);

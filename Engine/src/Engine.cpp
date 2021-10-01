@@ -77,9 +77,13 @@ void Engine::Startup()
 
 	m_client.Connect("127.0.0.1", 4950);
 
-	rtd::Picture* test = new rtd::Picture("oohstonefigures.jpg", draw_t(0, 0, 100.0f, 100.0f));
-	test->GetBorder();
-	rtd::Handler2D::InsertElement(test);
+	for (int i = 0; i < 1; i++)
+	{
+		//rtd::Canvas* test = new rtd::Canvas(D2D1::ColorF(0.5f, 0.5f, 0.25f), draw_t(0.0f, 0.0f, 100.0f, 50.0f));
+		rtd::Picture* test = new rtd::Picture("demo_start_game_button.png", draw_t(0, 0, 300.0f, 100.0f));
+		test->GetBorder();
+		rtd::Handler2D::InsertElement(test);
+	}
 }
 
 void Engine::Run()

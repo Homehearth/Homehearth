@@ -47,7 +47,7 @@ const bool D2D1Core::Setup(Window* window)
 	options.debugLevel = D2D1_DEBUG_LEVEL_INFORMATION;
 #endif
 	// Create a factory for D2D1, if it fails we LOG_ERROR and return false.
-	HRESULT hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_MULTI_THREADED, options, &m_factory);
+	HRESULT hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, options, &m_factory);
 	if (FAILED(hr))
 		[] {LOG_ERROR("Creating D2D1Factory failed."); return false; };
 

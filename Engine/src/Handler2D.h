@@ -22,6 +22,7 @@ namespace rtd
 
 		std::vector<Element2D*> m_elements;
 		static Handler2D* instance;
+		Handler2D();
 		~Handler2D();
 
 	public:

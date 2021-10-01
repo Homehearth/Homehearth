@@ -3,6 +3,11 @@
 #define INSTANCE rtd::Handler2D::instance
 rtd::Handler2D* INSTANCE = nullptr;
 
+rtd::Handler2D::Handler2D()
+{
+
+}
+
 rtd::Handler2D::~Handler2D()
 {
 	for (auto elem : m_elements)

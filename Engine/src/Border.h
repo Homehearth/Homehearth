@@ -19,6 +19,8 @@ namespace rtd
 		// Update position of border.
 		void UpdatePos(const draw_t& new_opts);
 
+		void SetShape(const draw_shape_t& new_shape);
+
 		// Inherited via Element2D
 		virtual void Draw() override;
 
