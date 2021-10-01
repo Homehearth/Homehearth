@@ -68,3 +68,33 @@ bool Intersect::MouseRayIntersectBox(comp::BoxCollider& boxCollider, float& t)
 
 	return true;
 }
+
+bool Intersect::MouseRayIntersectSphere(comp::SphereCollider& sphereCollider, float& t)
+{
+	//Todo: Change to Epsilon comparison
+	if (sphereCollider.radius == 0.f)
+	{
+		return false;
+	}
+	sm::Vector3 rayOrigin = InputSystem::Get().GetMouseRay().rayPos;
+	sm::Vector3 rayDir = InputSystem::Get().GetMouseRay().rayDir;
+
+	sm::Vector3 objectPos = sphereCollider.centerOffset;
+	sm::Vector3 rayToCenter = objectPos - rayOrigin;
+
+	double scalar = rayToCenter.Dot(rayDir);
+
+	if (scalar < 0 && sphereCollider.radius * sphereCollider.radius < rayToCenter.Dot(rayToCenter))
+	{
+		return false;
+	}
+	double m2 = rayToCenter.Dot(rayToCenter) - (scalar * scalar);
+	if (m2 > sphereCollider.radius * sphereCollider.radius)
+	{
+		return false;
+	}
+	double axis = sqrt(sphereCollider.radius * sphereCollider.radius - m2);
+	double intersectionLength = scalar - axis, intersectionLength2 = scalar + axis;
+	t = (intersectionLength < intersectionLength2) ? intersectionLength : intersectionLength2;
+	return true;
+}
