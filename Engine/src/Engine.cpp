@@ -37,7 +37,8 @@ void Engine::Startup()
 	BackBuffer::Initialize();
 
 	//Camera
-	m_debugCamera.Initialize(sm::Vector3(0, 0, -1), sm::Vector3(0, 0, 0), sm::Vector3(0, 1, 0), sm::Vector2((float)m_window.GetWidth(), (float)m_window.GetHeight()));
+	Camera m_debugCamera;
+	m_debugCamera.Initialize(sm::Vector3(0, 0, 1), sm::Vector3(0, 0, 0), sm::Vector3(0, 1, 0), sm::Vector2((float)m_window.GetWidth(), (float)m_window.GetHeight()));
 
 	m_currentCamera = std::make_shared<Camera>(m_debugCamera);
 
@@ -106,7 +107,6 @@ void Engine::Run()
 	while (IsRunning())
 	{
 		PROFILE_SCOPE("Frame");
-		InputSystem::Get().UpdateEvents();
 
 		while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
 		{
@@ -145,7 +145,6 @@ void Engine::Run()
 		// Handle Input.
 		InputSystem::Get().UpdateEvents();
 		
-		m_debugCamera.Update(deltaTime);
 		
 		//Showing examples of keyboard and mouse (THIS CODE SHOULD BE HANDLED SOMEWHERE ELSE (GAMEPLAY LOGIC))
 		if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::G, KeyState::RELEASED))
@@ -409,6 +408,8 @@ void Engine::Update(float dt)
 	if (m_currentScene)
 	{
 		m_currentScene->Update(dt);
+		m_currentCamera->Update(dt);
+
 	}
 
 	{

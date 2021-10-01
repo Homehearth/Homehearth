@@ -14,10 +14,8 @@ Camera::Camera()
     m_aspectRatio = 0;
     m_windowHeight = 0;
     m_windowWidth = 0;
-    m_defaultForward = { 0.0f, 0.0f, 0.1f };
-    m_defaultRight = { 1.0f, 0.0f, 0.0f };
 
-    m_rotationSpeed = 5.f;
+    m_rotationSpeed = 0.01f;
     m_movingSepeed = 0.025f;
 
     m_cameraMat = nullptr;
@@ -32,12 +30,16 @@ void Camera::Initialize(sm::Vector3 pos, sm::Vector3 target, sm::Vector3 up, sm:
 {
     m_position = pos;
     m_target = target;
+    m_forward = dx::XMVector3Normalize(m_target);
     m_up = up;
     m_windowHeight = windowSize.y;
     m_windowWidth = windowSize.x;
     m_aspectRatio = m_windowWidth / m_windowHeight;
 
-    m_view = dx::XMMatrixLookAtRH(m_position, m_target, m_up);
+    m_defaultForward = { 0.0f, 0.0f, -1.0f };
+    m_defaultRight = { -1.0f, 0.0f, 0.0f };
+
+    m_view = dx::XMMatrixLookAtLH(m_position, m_target, m_up);
     m_projection = dx::XMMatrixPerspectiveFovLH(m_FOV * m_zoomValue, m_aspectRatio, m_nearPlane, m_farPlane);
 
     //Constant buffer struct
@@ -71,25 +73,26 @@ void Camera::Update(float deltaTime)
 {
     //Mouse
     m_currentMousePosition = sm::Vector2((float)InputSystem::Get().GetMousePos().x, (float)InputSystem::Get().GetMousePos().y);
- 
-    sm::Vector2 delta = (m_currentMousePosition - m_lastMousePosition) * deltaTime * m_rotationSpeed;
 
-    m_rollPitchYaw.y += delta.y;
-    m_rollPitchYaw.z -= delta.x;
-
-    //IDk if i need th
-   /* if (m_rollPitchYaw.z > dx::XM_PI)
+    if (m_currentMousePosition.x != m_lastMousePosition.x || m_currentMousePosition.y != m_lastMousePosition.y)
     {
-        m_rollPitchYaw.z -= dx::XM_PI * 2.0f;
+        m_rollPitchYaw.z += m_lastMousePosition.x * m_rotationSpeed;
+        m_rollPitchYaw.y -= m_lastMousePosition.y * m_rotationSpeed;
+        m_lastMousePosition = m_currentMousePosition;
     }
-    else if (m_rollPitchYaw.z < -dx::XM_PI)
-    {
-        m_rollPitchYaw.z += dx::XM_PI * 2.0f;
-    }*/
-    m_lastMousePosition = m_currentMousePosition;
 
-    m_rotationMatrix = dx::XMMatrixRotationRollPitchYaw(m_rollPitchYaw.y, m_rollPitchYaw.z, m_rollPitchYaw.x);
+    ////IDk if i need thb
+    //if (m_rollPitchYaw.z > dx::XM_PI)
+    //{
+    //    m_rollPitchYaw.z -= dx::XM_PI * 2.0f;
+    //}
+    //else if (m_rollPitchYaw.z < -dx::XM_PI)
+    //{
+    //    m_rollPitchYaw.z += dx::XM_PI * 2.0f;
+    //}
+
     quaterion = sm::Quaternion::CreateFromYawPitchRoll(m_rollPitchYaw.z, m_rollPitchYaw.y, m_rollPitchYaw.x);
+    m_rotationMatrix = dx::XMMatrixRotationRollPitchYaw(m_rollPitchYaw.y, m_rollPitchYaw.z, m_rollPitchYaw.x);
 
     //Keyboard
     if (KEYPRESS(dx::Keyboard::E, KeyState::HELD)) //Down
@@ -120,7 +123,7 @@ void Camera::Update(float deltaTime)
     m_forward = m_target;
 
     m_target = dx::XMVectorAdd(m_target, m_position);
-    m_view = dx::XMMatrixLookAtRH(m_position, m_target, m_up);
+    m_view = dx::XMMatrixLookAtLH(m_position, m_target, m_up);
 
     //UpdateProjection();
     //m_projection = dx::XMMatrixPerspectiveFovLH(m_FOV * m_zoomValue, m_aspectRatio, m_nearPlane, m_farPlane);
@@ -129,7 +132,6 @@ void Camera::Update(float deltaTime)
     m_cameraMat->target = { m_target.x, m_target.y, m_target.z, 0 };
     m_cameraMat->projection = m_projection;
     m_cameraMat->view = m_view;
-
 }
 
 //Get functions
