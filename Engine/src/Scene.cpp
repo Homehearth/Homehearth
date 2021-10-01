@@ -4,7 +4,6 @@
 Scene::Scene()
 {	
 	m_publicBuffer.Create(D3D11Core::Get().Device());
-	m_buffers = BackBuffer::GetBuffers();
 }
 
 entt::registry& Scene::GetRegistry() {
@@ -55,7 +54,7 @@ void Scene::Render()
 	m_renderableCopies.ReadyForSwap();
 }
 
-bool Scene::IsRenderReady() const 
+const bool Scene::IsRenderReady() const
 {
 	return m_renderableCopies.IsSwapped();
 }

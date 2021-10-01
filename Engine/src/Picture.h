@@ -8,7 +8,7 @@ class Picture : public Element2D
 {
 private:
 
-	RBitMap* m_texture;
+	std::shared_ptr<RBitMap> m_texture;
 	_DRAW_T m_drawOpts;
 
 public:

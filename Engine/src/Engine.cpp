@@ -76,8 +76,8 @@ void Engine::Startup()
 
 	m_client.Connect("127.0.0.1", 4950);
 
-	Picture* test = new Picture("oohstonefigures.jpg", _DRAW_T(rand() % 100, rand() % 100, 100.0f, 100.0f));
-	rtd::Handler2D::InsertElement(test);
+	//Picture* test = new Picture("oohstonefigures.jpg", _DRAW_T(rand() % 100, rand() % 100, 100.0f, 100.0f));
+	//rtd::Handler2D::InsertElement(test);
 	/*
 	for (int i = 0; i < 50; i++)
 	{
@@ -201,7 +201,7 @@ void Engine::Run()
 	m_client.Disconnect();
     T_DESTROY();
     D2D1Core::Destroy();
-	ResourceManager::Destroy();
+	ResourceManager::Get().Destroy();
 	rtd::Handler2D::Destroy();
 	BackBuffer::Destroy();
 
@@ -375,7 +375,7 @@ void Engine::RenderThread()
 		deltaTime = static_cast<float>(currentFrame - lastFrame);
 		if (deltaSum >= targetDelta)
 		{
-			if (BackBuffer::GetBuffers()->IsSwapped())
+			if (m_currentScene->IsRenderReady())
 			{
 				Render(deltaSum);
 				m_frameTime.render = deltaSum;
@@ -435,6 +435,7 @@ void Engine::Render(float& dt)
 	m_renderer.Render(m_currentScene);
 	D2D1Core::Begin();
 
+	{
 		PROFILE_SCOPE("Render ImGui");
 		IMGUI(
 			m_imguiMutex.lock();

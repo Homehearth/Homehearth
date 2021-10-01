@@ -4,7 +4,7 @@
 Picture::Picture(const std::string& fileName, const _DRAW_T& opts)
 {
 
-	m_texture = ResourceManager::GetResource<RBitMap>(fileName);
+	m_texture = ResourceManager::Get().GetResource<RBitMap>(fileName);
 	m_drawOpts = opts;
 	this->SetLayer(m_drawOpts.layer);
 }

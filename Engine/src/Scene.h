@@ -28,4 +28,6 @@ public:
 
 	// Emit render event and render Renderable components
 	void Render();
+
+	const bool IsRenderReady() const;
 };
