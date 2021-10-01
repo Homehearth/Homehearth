@@ -15,8 +15,8 @@ Camera::Camera()
     m_windowHeight = 0;
     m_windowWidth = 0;
 
-    m_rotationSpeed = 0.01f;
-    m_movingSepeed = 0.025f;
+    m_rotationSpeed = 0.005f;
+    m_movingSepeed = 0.005f;
 
 }
 

@@ -17,7 +17,7 @@ void InitializePlayerEntity(Scene& scene)
 void setupDemoScene(Engine& engine, Scene& scene) 
 {
 	//Initialize player entity
-	for(int i = 0; i < 700; i++)
+	//for(int i = 0; i < 700; i++)	//Makes fps unstable and spikes //FW
 		InitializePlayerEntity(scene);
 	
 	

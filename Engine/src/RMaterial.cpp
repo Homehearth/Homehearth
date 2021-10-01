@@ -36,7 +36,7 @@ bool RMaterial::CreateConstBuf(const matConstants_t& mat)
     data.SysMemPitch        = 0;
     data.SysMemSlicePitch   = 0;
 
-    HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&desc, &data, &m_matConstCB);
+    HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&desc, &data, m_matConstCB.GetAddressOf());
     return !FAILED(hr);
 }
 
@@ -55,7 +55,7 @@ bool RMaterial::CreateConstBuf(const properties_t& mat)
     data.SysMemPitch        = 0;
     data.SysMemSlicePitch   = 0;
 
-    HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&desc, &data, &m_hasTextureCB);
+    HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&desc, &data, m_hasTextureCB.GetAddressOf());
     return !FAILED(hr);
 }
 
@@ -65,8 +65,8 @@ void RMaterial::BindMaterial()
         Bind the constant buffers
         [Tweak]
     */
-    D3D11Core::Get().DeviceContext()->PSSetConstantBuffers(0, 1, &m_matConstCB);
-    D3D11Core::Get().DeviceContext()->PSSetConstantBuffers(1, 1, &m_hasTextureCB);
+    D3D11Core::Get().DeviceContext()->PSSetConstantBuffers(0, 1, m_matConstCB.GetAddressOf());
+    D3D11Core::Get().DeviceContext()->PSSetConstantBuffers(1, 1, m_hasTextureCB.GetAddressOf());
 
     /*
         Upload all textures
@@ -180,7 +180,7 @@ bool RMaterial::Create(aiMaterial* aiMat)
     if (m_textures[(uint8_t)ETextureType::roughness])
         m_properties.hasRoughness = true;
     if (m_textures[(uint8_t)ETextureType::ambientOcclusion])
-        m_properties.hasAlbedo = true;
+        m_properties.hasAoMap = true;
     if (m_textures[(uint8_t)ETextureType::displacement])
         m_properties.hasDisplace = true;
 

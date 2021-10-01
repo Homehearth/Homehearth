@@ -9,14 +9,27 @@ Texture2D T_aomap     : register(t4);
 SamplerState samp : register(s0);
 
 
-//cbuffer textures_t
-//{
-//    bool hasAlbedo;
-//    bool hasNormal;
-//    bool hasMetalness;
-//    bool hasRoughness;
-//    bool hasAoMap;
-//};
+/*
+    Material constant buffers
+*/
+cbuffer matConstants_t : register(b0)
+{
+    float3 c_ambient;
+    float  c_shiniess;
+    float3 c_diffuse;
+    float  c_opacity;
+    float3 c_specular;
+};
+cbuffer properties_t : register(b1)
+{
+    //If a texture is set this will be 1
+    int c_hasAlbedo;
+    int c_hasNormal;
+    int c_hasMetalness;
+    int c_hasRoughness;
+    int c_hasAoMap;
+    int c_hasDisplace;
+};
 
 struct PixelIn
 {
@@ -28,7 +41,9 @@ struct PixelIn
 };
 
 float4 main(PixelIn input) : SV_TARGET
-{
-    //return float4(1.0f, 0.0f, 0.0f, 1.0f);
-    return T_albedo.Sample(samp, input.uv);
+{ 
+    if (c_hasAlbedo)
+        return T_albedo.Sample(samp, input.uv);
+    else
+        return float4(1.0f, 0.0f, 0.0f, 1.0f);
 }

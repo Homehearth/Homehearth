@@ -41,6 +41,7 @@ class RMaterial : public resource::GResource
 private:
 	/*
 		Constantbuffer with constants for the material
+		Size: 48 bytes
 	*/
 	struct matConstants_t
 	{
@@ -56,16 +57,18 @@ private:
 	/*
 		Constantbuffer that should make it easier in HLSL-shader
 		to check if a specific texture exist
+		Size: 32 bytes
+		Optimization: save memory with bitwise? send only one number
 	*/
 	struct properties_t
 	{
-		bool	hasAlbedo	 = false;	//1 byte
-		bool	hasNormal	 = false;	//1 byte
-		bool	hasMetalness = false;	//1 byte
-		bool	hasRoughness = false;	//1 byte
-		bool	hasAoMap	 = false;	//1 byte
-		bool	hasDisplace  = false;	//1 byte
-		bool	padding[10]	 = {false};	//10 bytes
+		int 	hasAlbedo	 = 0;	//4 byte
+		int		hasNormal	 = 0;	//4 byte
+		int		hasMetalness = 0;	//4 byte
+		int		hasRoughness = 0;	//4 byte
+		int		hasAoMap	 = 0;	//4 byte
+		int		hasDisplace  = 0;	//4 byte
+		int		padding[2];			//8 bytes
 	};
 	properties_t m_properties;
 	ComPtr<ID3D11Buffer> m_hasTextureCB;
