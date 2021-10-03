@@ -30,7 +30,10 @@ Game::Game()
 
 Game::~Game()
 {
-	m_client.Disconnect();
+	if (m_client.IsConnected())
+	{
+		m_client.Disconnect();
+	}
 }
 
 bool Game::OnStartup()
@@ -56,6 +59,11 @@ bool Game::OnUserUpdate(float deltaTime)
 	if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::P, KeyState::PRESSED))
 	{
 		m_client.PingServer();
+	}
+
+	if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::R, KeyState::PRESSED))
+	{
+		m_client.Connect("127.0.0.1", 4950);
 	}
 
 	if (m_client.IsConnected())

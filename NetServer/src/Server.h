@@ -7,7 +7,7 @@ template <typename T>
 class Server : public server_interface<T>
 {
 private:
-	uint64_t m_CurrentID;
+	uint64_t m_uniqueID;
 
 private:
 	// Inherited via server_interface
@@ -27,7 +27,7 @@ public:
 template <typename T>
 Server<T>::Server()
 {
-	m_CurrentID = 0;
+	m_uniqueID = 0;
 }
 
 template <typename T>
@@ -46,9 +46,7 @@ void Server<T>::OnClientConnect(std::string&& ip, const uint16_t& port)
 template <typename T>
 void Server<T>::OnClientDisconnect()
 {
-	EnterCriticalSection(&lock);
 	LOG_INFO("Client disconnected!");
-	LeaveCriticalSection(&lock);
 }
 
 template <typename T>
@@ -61,16 +59,12 @@ void Server<T>::OnMessageReceived(const SOCKET& socket, message<T>& msg)
 		message<T> msg = {};
 		msg.header.id = GameMsg::Server_GetPing;
 		this->SendToClient(socket, msg);
-		EnterCriticalSection(&lock);
 		LOG_INFO("Client on socket: %lld is pinging server", socket);
-		LeaveCriticalSection(&lock);
 		break;
 	}
 	case GameMsg::Game_MovePlayer:
 	{
-		EnterCriticalSection(&lock);
 		LOG_INFO("Moving player!");
-		LeaveCriticalSection(&lock);
 		break;
 	}
 	}
@@ -80,14 +74,12 @@ template <typename T>
 void Server<T>::OnClientValidated(const SOCKET& socket)
 {
 	EnterCriticalSection(&lock);
-	uint64_t tempID = m_CurrentID++;
+	m_uniqueID++;
 	LeaveCriticalSection(&lock);
 	message<T> msg = {};
-	msg << tempID;
+	msg << m_uniqueID;
 	msg.header.id = GameMsg::Server_AssignID;
 	this->SendToClient(socket, msg);
 
-	EnterCriticalSection(&lock);
 	LOG_INFO("Client has been validated on socket %lld", socket);
-	LeaveCriticalSection(&lock);
 }

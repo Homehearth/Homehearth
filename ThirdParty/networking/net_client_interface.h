@@ -20,6 +20,7 @@ namespace network
 		uint64_t m_handshakeIn;
 		uint64_t m_handshakeOut;
 		message<T> tempMsgIn;
+		std::thread* m_workerThread;
 
 	protected:
 		CRITICAL_SECTION lock;
@@ -49,6 +50,11 @@ namespace network
 		void WriteMessage(message<T>& msg);
 		void WriteValidation();
 
+		static VOID CALLBACK AlertThread()
+		{
+			LOG_INFO("Thread was alerted!");
+		}
+
 	protected:
 		// Functions that runs once when an event happens
 		virtual void OnMessageReceived(message<T>& msg) = 0;
@@ -68,6 +74,7 @@ namespace network
 			m_handshakeOut = 0;
 
 			InitWinsock();
+			this->m_workerThread = nullptr;
 		}
 
 		client_interface<T>& operator=(const client_interface<T>& other) = delete;
@@ -76,13 +83,18 @@ namespace network
 		virtual ~client_interface()
 		{
 			WSACleanup();
+			if (m_workerThread)
+			{
+				m_workerThread->join();
+				delete m_workerThread;
+			}
 		}
 	public:
 		// Given IP and port establish a connection to the server
 		bool Connect(std::string&& ip, uint16_t&& port);
-		// Disconnect from the server
+		// Disconnect from the server (THREAD SAFE)
 		void Disconnect();
-		// Check to see if client is connected to a server
+		// Check to see if client is connected to a server (THREAD SAFE)
 		bool IsConnected();
 		// Sends a message to the server
 		void Send(message<T>& msg);
@@ -266,7 +278,7 @@ namespace network
 		for (p = servinfo; p != nullptr; p = p->ai_next)
 		{
 			EnterCriticalSection(&lock);
-			LOG_NETWORK(PrintSocketData(p).c_str());
+			LOG_NETWORK("%s", PrintSocketData(p).c_str());
 			LeaveCriticalSection(&lock);
 			sock = WSASocket(p->ai_family, p->ai_socktype, p->ai_protocol, NULL, 0, WSA_FLAG_OVERLAPPED);
 
@@ -305,6 +317,7 @@ namespace network
 
 		while (IsConnected())
 		{
+			memset(Entries, 0, sizeof(Entries));
 			if (!GetQueuedCompletionStatusEx(m_CompletionPort, Entries, CAP, &EntriesRemoved, WSA_INFINITE, TRUE))
 			{
 				DWORD LastError = GetLastError();
@@ -323,6 +336,7 @@ namespace network
 				if (Entries[i].dwNumberOfBytesTransferred == 0)
 				{
 					delete context;
+					this->Disconnect();
 					continue;
 				}
 				// I/O has completed, process it
@@ -449,6 +463,11 @@ namespace network
 	template<typename T>
 	inline bool client_interface<T>::Connect(std::string&& ip, uint16_t&& port)
 	{
+		if (IsConnected())
+		{
+			return false;
+		}
+
 		m_socket = CreateSocket(ip, port);
 
 		if (connect(m_socket, (struct sockaddr*)&m_endpoint, m_endpointLen) != 0)
@@ -470,12 +489,15 @@ namespace network
 			LOG_ERROR("CreateIoCompletionPort() failed with error %d", GetLastError());
 			return false;
 		}
-
+		if (m_workerThread)
+		{
+			m_workerThread->join();
+			delete m_workerThread;
+		}
 		// Primes the async handle with a receive call to process incoming messages
 		this->PrimeReadValidation();
 
-		std::thread t(&client_interface<T>::ProcessIO, this);
-		t.detach();
+		m_workerThread = new std::thread(&client_interface<T>::ProcessIO, this);
 
 		return true;
 	}
@@ -485,6 +507,7 @@ namespace network
 	{
 		if (IsConnected())
 		{
+			EnterCriticalSection(&lock);
 			if (closesocket(m_socket) != 0)
 			{
 				LOG_ERROR("Failed to close socket!");
@@ -492,19 +515,24 @@ namespace network
 			m_socket = INVALID_SOCKET;
 
 			this->OnDisconnect();
+
+			QueueUserAPC((PAPCFUNC)AlertThread, m_workerThread->native_handle(), NULL);
+
+			CloseHandle(m_CompletionPort);
+			LeaveCriticalSection(&lock);
 		}
 	}
 
 	template<typename T>
 	inline bool client_interface<T>::IsConnected()
 	{
-		if (m_socket == INVALID_SOCKET)
+		EnterCriticalSection(&lock);
+		bool isConnected = false;
+		if (m_socket != INVALID_SOCKET)
 		{
-			return false;
+			isConnected = true;
 		}
-		else
-		{
-			return true;
-		}
+		LeaveCriticalSection(&lock);
+		return isConnected;
 	}
 }

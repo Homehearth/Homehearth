@@ -1,30 +1,31 @@
 #pragma once
 #include "net_tsqueue.h"
+#include <unordered_map>
 #define PRINT_NETWORK_DEBUG
 
 namespace network
 {
-	// Information regarding every connection
-	template <typename T>
-	struct SOCKET_INFORMATION
-	{
-		uint64_t handshakeIn;
-		uint64_t handshakeOut;
-		uint64_t handshakeResult;
-		SOCKET Socket;
-		message<T> msgTempIn = {};
-	};
-
 	template <typename T>
 	class server_interface
 	{
 	private:
+		// Information regarding every connection
+		struct SOCKET_INFORMATION
+		{
+			uint64_t handshakeIn;
+			uint64_t handshakeOut;
+			uint64_t handshakeResult;
+			SOCKET Socket;
+			message<T> msgTempIn = {};
+		};
+
 		SOCKET m_listening;
 		bool m_isRunning;
 		HANDLE m_CompletionPort;
 		std::thread* workerThreads;
 		std::thread acceptThread;
 		int nrOfThreads;
+		std::unordered_map<SOCKET, SOCKET_INFORMATION*> connections;
 
 	protected:
 		CRITICAL_SECTION lock;
@@ -51,19 +52,19 @@ namespace network
 		bool Listen(const uint32_t& nListen);
 		void InitWinsock();
 		bool CreateSocketInformation(SOCKET& s);
-		void DisconnectClient(SOCKET_INFORMATION<T>*& SI);
-		bool ClientIsConnected(SOCKET_INFORMATION<T>* SI);
+		void DisconnectClient(SOCKET_INFORMATION*& SI);
+		bool ClientIsConnected(SOCKET_INFORMATION* SI);
 		SOCKET WaitForConnection();
 
 		// FUNCTIONS TO EASIER HANDLE DATA IN AND OUT FROM SERVER
 		void WriteValidation(const SOCKET& socketId, uint64_t handshakeOut);
-		void ReadValidation(SOCKET_INFORMATION<T>*& SI, PER_IO_DATA* context);
-		void ReadHeader(SOCKET_INFORMATION<T>*& SI, PER_IO_DATA* context);
-		void ReadPayload(SOCKET_INFORMATION<T>*& SI, PER_IO_DATA* context);
+		void ReadValidation(SOCKET_INFORMATION*& SI, PER_IO_DATA* context);
+		void ReadHeader(SOCKET_INFORMATION*& SI, PER_IO_DATA* context);
+		void ReadPayload(SOCKET_INFORMATION*& SI, PER_IO_DATA* context);
 		void WriteMessage(const SOCKET& socket, message<T>& msg);
-		void PrimeReadHeader(SOCKET_INFORMATION<T>*& SI);
-		void PrimeReadPayload(SOCKET_INFORMATION<T>*& SI);
-		void PrimeReadValidation(SOCKET_INFORMATION<T>*& SI);
+		void PrimeReadHeader(SOCKET_INFORMATION*& SI);
+		void PrimeReadPayload(SOCKET_INFORMATION*& SI);
+		void PrimeReadValidation(SOCKET_INFORMATION*& SI);
 
 		static void AlertThread();
 
@@ -85,10 +86,6 @@ namespace network
 		{
 			WSACleanup();
 			DeleteCriticalSection(&lock);
-			for (int i = 0; i < nrOfThreads; i++)
-			{
-				workerThreads[i].join();
-			}
 			delete[] workerThreads;
 		}
 
@@ -107,7 +104,7 @@ namespace network
 	}
 
 	template <typename T>
-	void server_interface<T>::PrimeReadValidation(SOCKET_INFORMATION<T>*& SI)
+	void server_interface<T>::PrimeReadValidation(SOCKET_INFORMATION*& SI)
 	{
 		PER_IO_DATA* context = new PER_IO_DATA;
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
@@ -128,7 +125,7 @@ namespace network
 	}
 
 	template <typename T>
-	void server_interface<T>::PrimeReadHeader(SOCKET_INFORMATION<T>*& SI)
+	void server_interface<T>::PrimeReadHeader(SOCKET_INFORMATION*& SI)
 	{
 		PER_IO_DATA* context = new PER_IO_DATA;
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
@@ -149,7 +146,7 @@ namespace network
 	}
 
 	template <typename T>
-	void server_interface<T>::PrimeReadPayload(SOCKET_INFORMATION<T>*& SI)
+	void server_interface<T>::PrimeReadPayload(SOCKET_INFORMATION*& SI)
 	{
 		PER_IO_DATA* context = new PER_IO_DATA;
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
@@ -172,7 +169,7 @@ namespace network
 	}
 
 	template <typename T>
-	void server_interface<T>::ReadPayload(SOCKET_INFORMATION<T>*& SI, PER_IO_DATA* context)
+	void server_interface<T>::ReadPayload(SOCKET_INFORMATION*& SI, PER_IO_DATA* context)
 	{
 		this->OnMessageReceived(SI->Socket, SI->msgTempIn);
 		this->m_messagesIn.push_back(SI->msgTempIn);
@@ -181,7 +178,7 @@ namespace network
 	}
 
 	template <typename T>
-	void server_interface<T>::ReadHeader(SOCKET_INFORMATION<T>*& SI, PER_IO_DATA* context)
+	void server_interface<T>::ReadHeader(SOCKET_INFORMATION*& SI, PER_IO_DATA* context)
 	{
 		if (SI->msgTempIn.header.size > 0)
 		{
@@ -224,7 +221,7 @@ namespace network
 	}
 
 	template <typename T>
-	void server_interface<T>::ReadValidation(SOCKET_INFORMATION<T>*& SI, PER_IO_DATA* context)
+	void server_interface<T>::ReadValidation(SOCKET_INFORMATION*& SI, PER_IO_DATA* context)
 	{
 		memcpy(&SI->handshakeIn, context->DataBuf.buf, sizeof(uint64_t));
 
@@ -309,7 +306,7 @@ namespace network
 	}
 
 	template <typename T>
-	bool server_interface<T>::ClientIsConnected(SOCKET_INFORMATION<T>* SI)
+	bool server_interface<T>::ClientIsConnected(SOCKET_INFORMATION* SI)
 	{
 		bool isConnected = false;
 
@@ -322,15 +319,18 @@ namespace network
 	}
 
 	template<typename T>
-	void server_interface<T>::DisconnectClient(SOCKET_INFORMATION<T>*& SI)
+	void server_interface<T>::DisconnectClient(SOCKET_INFORMATION*& SI)
 	{
+		EnterCriticalSection(&lock);
 		if (SI != NULL)
 		{
 			closesocket(SI->Socket);
+			connections.erase(SI->Socket);
 			delete SI;
 			SI = nullptr;
 			this->OnClientDisconnect();
 		}
+		LeaveCriticalSection(&lock);
 	}
 
 	template <typename T>
@@ -342,11 +342,12 @@ namespace network
 	template <typename T>
 	bool server_interface<T>::CreateSocketInformation(SOCKET& s)
 	{
-		SOCKET_INFORMATION<T>* SI = new SOCKET_INFORMATION<T>;
+		SOCKET_INFORMATION* SI = new SOCKET_INFORMATION;
 		SI->Socket = s;
 		SI->handshakeIn = 0;
 		SI->handshakeOut = uint64_t(std::chrono::system_clock::now().time_since_epoch().count());
 		SI->handshakeResult = scrambleData(SI->handshakeOut);
+		connections[SI->Socket] = SI;
 
 		if (CreateIoCompletionPort((HANDLE)SI->Socket, m_CompletionPort, (ULONG_PTR)SI, 0) == NULL)
 		{
@@ -410,7 +411,7 @@ namespace network
 			LOG_ERROR("Listen(): failed with error %d", WSAGetLastError());
 			return false;
 		}
-		
+
 		return true;
 	}
 
@@ -583,7 +584,6 @@ namespace network
 		nrOfThreads = (int)SystemInfo.dwNumberOfProcessors;
 		workerThreads = new std::thread[nrOfThreads];
 
-
 		m_isRunning = true;
 		// Create worker threads based on the number of processors available on the
 		// system. Create two worker threads for each processor
@@ -591,7 +591,6 @@ namespace network
 		{
 			workerThreads[i] = std::thread(&server_interface<T>::ServerWorkerThread, this);
 		}
-
 
 		return true;
 	}
@@ -601,29 +600,42 @@ namespace network
 	{
 		EnterCriticalSection(&lock);
 		m_isRunning = false;
-		LeaveCriticalSection(&lock);
 
 		if (m_listening != INVALID_SOCKET)
 		{
 			SYSTEM_INFO SystemInfo;
 			GetSystemInfo(&SystemInfo);
 
+			for (auto con : connections)
+			{
+				if (CancelIoEx((HANDLE)con.second->Socket, NULL))
+				{
+					LOG_INFO("Cancelled all IO");
+				}
+				else
+				{
+					LOG_INFO("Didnt cancel IO: %d", GetLastError());
+				}
+			}
+			LeaveCriticalSection(&lock);
 			for (int i = 0; i < nrOfThreads; i++)
 			{
 				QueueUserAPC((PAPCFUNC)server_interface<T>::AlertThread, (HANDLE)workerThreads[i].native_handle(), NULL);
-				//workerThreads[i].join();
+				workerThreads[i].join();
 			}
 
 			QueueUserAPC((PAPCFUNC)server_interface<T>::AlertThread, (HANDLE)acceptThread.native_handle(), NULL);
 			acceptThread.join();
+			return;
 		}
+		LeaveCriticalSection(&lock);
 	}
 
 	template <typename T>
 	DWORD server_interface<T>::ServerWorkerThread()
 	{
 		DWORD BytesTransferred = 0;
-		SOCKET_INFORMATION<T>* SI = nullptr;
+		SOCKET_INFORMATION* SI = nullptr;
 		PER_IO_DATA* context;
 		DWORD bytesReceived = 0;
 		const DWORD CAP = 10;
@@ -631,8 +643,10 @@ namespace network
 		ULONG EntriesRemoved = 0;
 		BOOL ShouldShutdown = false;
 
-		while (1)
+		while (m_isRunning)
 		{
+			SOCKET_INFORMATION* SI = nullptr;
+			memset(Entries, 0, sizeof(Entries));
 			if (!GetQueuedCompletionStatusEx(m_CompletionPort, Entries, CAP, &EntriesRemoved, WSA_INFINITE, TRUE))
 			{
 				DWORD LastError = GetLastError();
@@ -640,17 +654,13 @@ namespace network
 				{
 					LOG_ERROR("%d", LastError);
 				}
-				CancelIo(GetCurrentThreadToken());
-				ShouldShutdown = true;
-
-				continue;
 			}
 
 			for (int i = 0; i < (int)EntriesRemoved; i++)
 			{
 				if (Entries[i].lpOverlapped != NULL)
 				{
-					SI = (SOCKET_INFORMATION<T>*)Entries[i].lpCompletionKey;
+					SI = (SOCKET_INFORMATION*)Entries[i].lpCompletionKey;
 					context = (PER_IO_DATA*)Entries[i].lpOverlapped;
 					if (Entries[i].dwNumberOfBytesTransferred == 0)
 					{
@@ -699,11 +709,6 @@ namespace network
 							context = nullptr;
 						}
 					}
-				}
-				if (ShouldShutdown)
-				{
-					LOG_WARNING("SUCCESS!");
-					break;
 				}
 			}
 		}
