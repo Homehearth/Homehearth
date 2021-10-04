@@ -23,9 +23,17 @@ private:
 		skeletalMesh	//Has bones
 	};	
 	EMeshType					m_meshType;
-	ComPtr<ID3D11Buffer>		m_vertexBuffer;
-	ComPtr<ID3D11Buffer>		m_indexBuffer;
-	UINT						m_indexCount;
+
+	//struct mesh_t
+	//{
+		ComPtr<ID3D11Buffer>		m_vertexBuffer;
+		ComPtr<ID3D11Buffer>		m_indexBuffer;
+		UINT						m_indexCount;
+	//};
+	
+	//std::vector<mesh_t>						m_meshes;
+	//std::vector<std::shared_ptr<RMaterial>> m_materials;
+
 	std::shared_ptr<RMaterial>	m_material;
 
 	//Save the skeleton in a structure: rootbone --> other parts

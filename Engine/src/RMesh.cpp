@@ -125,9 +125,14 @@ bool RMesh::Create(const std::string& filename)
         scene->mMaterials[index]->Get(AI_MATKEY_NAME, matName);
         std::string name = matName.C_Str();
 
+        //Check if mesh is fbx-file. Material follows other order
+        bool isOBJ = false;
+        if (filename.find(".obj") != std::string::npos)
+            isOBJ = true;
+
         //Create a new material and load it. Add it to manager
         m_material = std::make_shared<RMaterial>();
-        if (m_material->Create(scene->mMaterials[index]))
+        if (m_material->Create(scene->mMaterials[index], isOBJ))
             ResourceManager::Get().AddResource(name, m_material);
     }
 

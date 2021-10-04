@@ -110,7 +110,7 @@ bool RMaterial::HasTexture(const ETextureType& type)
     return foundTexture;
 }
 
-bool RMaterial::Create(aiMaterial* aiMat)
+bool RMaterial::Create(aiMaterial* aiMat, bool isMeshOBJ)
 {
     /*
         Load in material constants
@@ -149,10 +149,21 @@ bool RMaterial::Create(aiMaterial* aiMat)
     {
         {ETextureType::albedo,              aiTextureType::aiTextureType_DIFFUSE},
         {ETextureType::normal,              aiTextureType::aiTextureType_NORMALS},
-        {ETextureType::metalness,           aiTextureType::aiTextureType_SHININESS},
-        {ETextureType::roughness,           aiTextureType::aiTextureType_SPECULAR},
-        {ETextureType::ambientOcclusion,    aiTextureType::aiTextureType_AMBIENT},
         {ETextureType::displacement,        aiTextureType::aiTextureType_DISPLACEMENT}
+    };
+    
+    //OBJ with MTL has a special format that they follows
+    if (isMeshOBJ)
+    {
+        textureTypeMap[ETextureType::metalness]         = aiTextureType::aiTextureType_SHININESS;
+        textureTypeMap[ETextureType::roughness]         = aiTextureType::aiTextureType_SPECULAR;
+        textureTypeMap[ETextureType::ambientOcclusion]  = aiTextureType::aiTextureType_AMBIENT;
+    }
+    else
+    {
+        textureTypeMap[ETextureType::metalness]         = aiTextureType::aiTextureType_METALNESS;
+        textureTypeMap[ETextureType::roughness]         = aiTextureType::aiTextureType_DIFFUSE_ROUGHNESS;
+        textureTypeMap[ETextureType::ambientOcclusion]  = aiTextureType::aiTextureType_AMBIENT_OCCLUSION;
     };
 
     //For every texturetype: add the texture to the map
