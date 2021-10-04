@@ -34,6 +34,13 @@ namespace ecs
 			sm::Vector3 norm[3];
 			float halfSize[3];
 		};
+		struct SphereCollider
+		{
+			sm::Vector3 center;
+			float radius;
+			//Unsure if needed
+			sm::Vector3 centerOffset;
+		};
 	};
 
 	sm::Matrix GetMatrix(const component::Transform& transform);
