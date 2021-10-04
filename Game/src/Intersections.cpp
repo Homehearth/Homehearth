@@ -76,25 +76,25 @@ bool Intersect::MouseRayIntersectSphere(comp::SphereCollider& sphereCollider, fl
 	{
 		return false;
 	}
-	sm::Vector3 rayOrigin = InputSystem::Get().GetMouseRay().rayPos;
-	sm::Vector3 rayDir = InputSystem::Get().GetMouseRay().rayDir;
+	const sm::Vector3 rayOrigin = InputSystem::Get().GetMouseRay().rayPos;
+	const sm::Vector3 rayDir = InputSystem::Get().GetMouseRay().rayDir;
 
-	sm::Vector3 objectPos = sphereCollider.centerOffset;
-	sm::Vector3 rayToCenter = objectPos - rayOrigin;
+	const sm::Vector3 objectPos = sphereCollider.centerOffset;
+	const sm::Vector3 rayToCenter = objectPos - rayOrigin;
 
-	double scalar = rayToCenter.Dot(rayDir);
+	const float scalar = rayToCenter.Dot(rayDir);
 
 	if (scalar < 0 && sphereCollider.radius * sphereCollider.radius < rayToCenter.Dot(rayToCenter))
 	{
 		return false;
 	}
-	double m2 = rayToCenter.Dot(rayToCenter) - (scalar * scalar);
+	const float m2 = rayToCenter.Dot(rayToCenter) - (scalar * scalar);
 	if (m2 > sphereCollider.radius * sphereCollider.radius)
 	{
 		return false;
 	}
-	double axis = sqrt(sphereCollider.radius * sphereCollider.radius - m2);
-	double intersectionLength = scalar - axis, intersectionLength2 = scalar + axis;
-	t = (intersectionLength < intersectionLength2) ? intersectionLength : intersectionLength2;
+	const float axis = sqrt(sphereCollider.radius * sphereCollider.radius - m2);
+	float intersectionLength = scalar - axis, intersectionLength2 = scalar + axis;
+	t = intersectionLength < intersectionLength2 ? intersectionLength : intersectionLength2;
 	return true;
 }

@@ -2,6 +2,7 @@ project "Engine"
     kind "StaticLib"
     language "C++"
     cppdialect "C++17"
+    disablewarnings{"26812"}
     targetdir("build/bin/" .. outputdir .. "/%{prj.name}")
     objdir("build/bin-int/" .. outputdir .. "/%{prj.name}")
  
