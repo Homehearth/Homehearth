@@ -23,6 +23,7 @@ bool RMesh::CombineMeshes(std::vector<aiMesh*>& submeshes)
 {
     std::vector<simple_vertex_t> vertices;
     std::vector<UINT> indices;
+    //Offset when moving between different submeshes
     UINT indexOffset = 0;
 
     //Go through all the meshes
@@ -86,10 +87,16 @@ bool RMesh::CombineMeshes(std::vector<aiMesh*>& submeshes)
     vertices.clear();
     indices.clear();
 
-    //Finally add the mesh to the vector
-    m_meshes.push_back(newMesh);
-
-    return true;
+    if (success)
+    {
+        //Finally add the mesh to the vector
+        m_meshes.push_back(newMesh);
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }
 
 bool RMesh::CreateVertexBuffer(const std::vector<simple_vertex_t>& vertices, mesh_t& mesh)
@@ -140,8 +147,6 @@ bool RMesh::CreateIndexBuffer(const std::vector<UINT>& indices, mesh_t& mesh)
 
 void RMesh::Render()
 {
-    //Render all of the submeshes in the RMesh
-    //Swapping materials when needed
     UINT offset = 0;
     UINT stride = sizeof(simple_vertex_t);
     for (size_t m = 0; m < m_meshes.size(); m++)
@@ -243,109 +248,7 @@ bool RMesh::Create(const std::string& filename)
         }
     }
 
-    matSet.clear();
-
-
-
-
-    /*
-        OLD VERSION - only supported one mesh with one material
-    */
-    /*
-        Load in material from the first mesh.
-        Only supports one material per RMesh for now.
-        If more materials needed per RMesh performance will be lower.
-        This is because we have to change material between every drawcall
-    */
-    /*
-    if (scene->HasMaterials())
-    {
-        //Get the material-index
-        UINT index = scene->mMeshes[0]->mMaterialIndex;
-        aiString matName;
-        scene->mMaterials[index]->Get(AI_MATKEY_NAME, matName);
-        std::string name = matName.C_Str();
-
-        //Check if mesh is fbx-file. Material follows other order
-        bool isOBJ = false;
-        if (filename.find(".obj") != std::string::npos)
-            isOBJ = true;
-
-        //Create a new material and load it. Add it to manager
-        m_material = std::make_shared<RMaterial>();
-        if (m_material->Create(scene->mMaterials[index], isOBJ))
-            ResourceManager::Get().AddResource(name, m_material);
-    }
-    */
-   
-    /*
-        Load in the mesh and all the submeshes
-        Combines all the meshes to one. 
-        This is to avoid multiple drawcalls
-    */
-    /*std::vector<simple_vertex_t> vertices;
-    std::vector<UINT> indices;
-    UINT indexOffSet = 0;
-    for (UINT m = 0; m < scene->mNumMeshes; m++)
-    {
-        const aiMesh* aimesh = scene->mMeshes[m];
-        
-        //Load in vertices
-        for (UINT v = 0; v < aimesh->mNumVertices; v++)
-        {
-            simple_vertex_t vert = {};
-			vert.position   = { aimesh->mVertices[v].x,         aimesh->mVertices[v].y,       aimesh->mVertices[v].z    };
-			vert.uv         = { aimesh->mTextureCoords[0][v].x, aimesh->mTextureCoords[0][v].y                          };
-			vert.normal     = { aimesh->mNormals[v].x,          aimesh->mNormals[v].y,        aimesh->mNormals[v].z     };
-			vert.tangent    = { aimesh->mTangents[v].x,         aimesh->mTangents[v].y,       aimesh->mTangents[v].z    };
-			vert.bitanget   = { aimesh->mBitangents[v].x,       aimesh->mBitangents[v].y,     aimesh->mBitangents[v].z  };
-            vertices.push_back(vert);
-        }
-
-        //Max index so that we know how much to step to reach next vertices-set
-        UINT localMaxIndex = 0;
-        //Going through all the indices
-        for (UINT f = 0; f < aimesh->mNumFaces; f++)
-        {
-            const aiFace face = aimesh->mFaces[f];
-            if (face.mNumIndices == 3)
-            {
-                for (unsigned int id = 0; id < 3; id++)
-                {
-                    UINT faceIndex = face.mIndices[id];
-                    if (faceIndex > localMaxIndex)
-                        localMaxIndex = faceIndex;
-
-                    indices.push_back(face.mIndices[id] + indexOffSet);
-                }
-            }
-        }
-        //Adding to the offset
-        indexOffSet += (localMaxIndex+1);
-    }
-    //Have to shrink the vectors
-    vertices.shrink_to_fit();
-    indices.shrink_to_fit();
-
-    //Create vertex and indexbuffer
-    bool success = true;
-    if (!CreateVertexBuffer(vertices) ||
-        !CreateIndexBuffer(indices))
-    {
-#ifdef _DEBUG
-        LOG_WARNING("Failed to load vertex- or indexbuffer...");
-#endif 
-        success = false;
-    }
-    
-    //Cleaning
-    vertices.clear();
-    indices.clear();
-    importer.FreeScene();
-
-    return success;
-    */
-
+    matSet.clear(); 
     importer.FreeScene();
     return true;
 }

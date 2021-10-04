@@ -1,16 +1,17 @@
 #pragma once
 #include "CommonStructures.h"
 #include "RMaterial.h"
-//struct RMaterial;
 struct aiMesh;
 
 /*
-	Load in a model (".obj", ".fbx") with Assimp 5.0.1
+	Load in a model/scene of multiple meshes with Assimp 5.0.1
+	Format supported:
+	* FBX
+	* OBJ
 
-	Can load in a mesh with submeshes. (combines all to one in create)
-	Limited to only one material per RMesh at this time.
-	More materials == lower performance
-	This is because we have to change material between every drawcall
+	Supports files with multiple submeshes and multiple materials
+	Combines all the submeshes with same material to one.
+	This is to optimized and lower the amount of drawcalls.
 
 	TODO:
 	* Fix loading in bones
@@ -24,8 +25,6 @@ private:
 		staticMesh,
 		skeletalMesh	//Has bones
 	};	
-	EMeshType m_meshType;
-
 	struct mesh_t
 	{
 		ComPtr<ID3D11Buffer> vertexBuffer;
@@ -33,9 +32,9 @@ private:
 		UINT				 indexCount = 0;
 	};
 	
+	EMeshType								m_meshType;
 	std::vector<mesh_t>						m_meshes;
 	std::vector<std::shared_ptr<RMaterial>> m_materials;
-
 	//Save the skeleton in a structure: rootbone --> other parts
 
 private:
@@ -56,8 +55,7 @@ public:
 	~RMesh();
 
 	/*
-		Render the mesh depending on type
-		TODO: Skeletal special
+		Render all of the submeshes in the RMesh with correct material
 	*/
 	void Render();
 

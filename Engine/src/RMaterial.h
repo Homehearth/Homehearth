@@ -84,7 +84,6 @@ private:
 	bool CreateConstBuf(const matConstants_t& mat);
 	bool CreateConstBuf(const properties_t& mat);
 
-
 public:
 	RMaterial();
 	~RMaterial();
