@@ -110,7 +110,7 @@ bool RMaterial::HasTexture(const ETextureType& type)
     return foundTexture;
 }
 
-bool RMaterial::Create(aiMaterial* aiMat, bool isMeshOBJ)
+bool RMaterial::Create(aiMaterial* aiMat, const std::string& fileformat)
 {
     /*
         Load in material constants
@@ -152,20 +152,20 @@ bool RMaterial::Create(aiMaterial* aiMat, bool isMeshOBJ)
         {ETextureType::displacement,        aiTextureType::aiTextureType_DISPLACEMENT}
     };
     
-    //OBJ with MTL has a special format that they follows
-    if (isMeshOBJ)
+    //OBJ with MTL has a special format to work with pbr
+    if (fileformat == ".obj")
     {
         textureTypeMap[ETextureType::metalness]         = aiTextureType::aiTextureType_SHININESS;
         textureTypeMap[ETextureType::roughness]         = aiTextureType::aiTextureType_SPECULAR;
         textureTypeMap[ETextureType::ambientOcclusion]  = aiTextureType::aiTextureType_AMBIENT;
     }
-    else
+    else if (fileformat == ".fbx")
     {
         textureTypeMap[ETextureType::metalness]         = aiTextureType::aiTextureType_METALNESS;
         textureTypeMap[ETextureType::roughness]         = aiTextureType::aiTextureType_DIFFUSE_ROUGHNESS;
         textureTypeMap[ETextureType::ambientOcclusion]  = aiTextureType::aiTextureType_AMBIENT_OCCLUSION;
-    };
-
+    }
+    
     //For every texturetype: add the texture to the map
     for (auto& type : textureTypeMap)
     {

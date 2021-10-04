@@ -11,7 +11,7 @@ void InitializePlayerEntity(Scene& scene)
 	auto& renderable = scene.GetRegistry().emplace<comp::Renderable>(playerEntity);
 	auto& player = scene.GetRegistry().emplace<comp::Player>(playerEntity);
 	player.runSpeed = 10.f;
-	renderable.mesh = ResourceManager::Get().GetResource<RMesh>("Chest.obj");
+	renderable.mesh = ResourceManager::Get().GetResource<RMesh>("Tree1.obj");
 }
 
 void setupDemoScene(Engine& engine, Scene& scene) 

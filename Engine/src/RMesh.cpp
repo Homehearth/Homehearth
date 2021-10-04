@@ -5,15 +5,94 @@
 RMesh::RMesh()
 {
     m_meshType   = EMeshType::staticMesh;
-    m_material   = nullptr;
-    m_indexCount = 0;
 }
 
 RMesh::~RMesh()
 {
+    m_meshes.clear();
+    m_materials.clear();
 }
 
-bool RMesh::CreateVertexBuffer(const std::vector<simple_vertex_t>& vertices)
+const std::string RMesh::GetFileFormat(const std::string& filename)
+{
+    size_t startIndex = filename.find_last_of(".");
+    return filename.substr(startIndex);
+}
+
+bool RMesh::CombineMeshes(std::vector<aiMesh*>& submeshes)
+{
+    std::vector<simple_vertex_t> vertices;
+    std::vector<UINT> indices;
+    UINT indexOffset = 0;
+
+    //Go through all the meshes
+    for (UINT m = 0; m < submeshes.size(); m++)
+    {
+        const aiMesh* aimesh = submeshes[m];
+
+        //Load in vertices
+        for (UINT v = 0; v < aimesh->mNumVertices; v++)
+        {
+            simple_vertex_t vert = {};
+            vert.position   = { aimesh->mVertices[v].x,         aimesh->mVertices[v].y,       aimesh->mVertices[v].z    };
+            vert.uv         = { aimesh->mTextureCoords[0][v].x, aimesh->mTextureCoords[0][v].y                          };
+            vert.normal     = { aimesh->mNormals[v].x,          aimesh->mNormals[v].y,        aimesh->mNormals[v].z     };
+            vert.tangent    = { aimesh->mTangents[v].x,         aimesh->mTangents[v].y,       aimesh->mTangents[v].z    };
+            vert.bitanget   = { aimesh->mBitangents[v].x,       aimesh->mBitangents[v].y,     aimesh->mBitangents[v].z  };
+            vertices.push_back(vert);
+        }
+
+        //Max index so that we know how much to step to reach next vertices-set
+        UINT localMaxIndex = 0;
+        //Going through all the indices
+        for (UINT f = 0; f < aimesh->mNumFaces; f++)
+        {
+            const aiFace face = aimesh->mFaces[f];
+            if (face.mNumIndices == 3)
+            {
+                for (unsigned int id = 0; id < 3; id++)
+                {
+                    UINT faceIndex = face.mIndices[id];
+                    if (faceIndex > localMaxIndex)
+                        localMaxIndex = faceIndex;
+
+                    indices.push_back(face.mIndices[id] + indexOffset);
+                }
+            }
+        }
+        //Adding to the offset
+        indexOffset += (localMaxIndex+1);
+    }
+
+    //Have to shrink the vectors
+    vertices.shrink_to_fit();
+    indices.shrink_to_fit();
+
+    //Create a new mesh
+    mesh_t newMesh;
+
+    //Create vertex and indexbuffer
+    bool success = true;
+    if (!CreateVertexBuffer(vertices, newMesh) ||
+        !CreateIndexBuffer(indices, newMesh))
+    {
+#ifdef _DEBUG
+        LOG_WARNING("Failed to load vertex- or indexbuffer...");
+#endif
+        success = false;
+    }
+
+    //Cleaning
+    vertices.clear();
+    indices.clear();
+
+    //Finally add the mesh to the vector
+    m_meshes.push_back(newMesh);
+
+    return true;
+}
+
+bool RMesh::CreateVertexBuffer(const std::vector<simple_vertex_t>& vertices, mesh_t& mesh)
 {
     D3D11_BUFFER_DESC bufferDesc;
     ZeroMemory(&bufferDesc, sizeof(D3D11_BUFFER_DESC));
@@ -32,11 +111,11 @@ bool RMesh::CreateVertexBuffer(const std::vector<simple_vertex_t>& vertices)
     subresData.SysMemPitch = 0;
     subresData.SysMemSlicePitch = 0;
 
-    HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&bufferDesc, &subresData, m_vertexBuffer.GetAddressOf());
+    HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&bufferDesc, &subresData, mesh.vertexBuffer.GetAddressOf());
     return !FAILED(hr);
 }
 
-bool RMesh::CreateIndexBuffer(const std::vector<UINT>& indices)
+bool RMesh::CreateIndexBuffer(const std::vector<UINT>& indices, mesh_t& mesh)
 {
     D3D11_BUFFER_DESC indexBufferDesc;
     ZeroMemory(&indexBufferDesc, sizeof(D3D11_BUFFER_DESC));
@@ -53,26 +132,30 @@ bool RMesh::CreateIndexBuffer(const std::vector<UINT>& indices)
     subresData.pSysMem = &indices[0];
     subresData.SysMemPitch = 0;
     subresData.SysMemSlicePitch = 0;
-    m_indexCount = (UINT)indices.size();
 
-    HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&indexBufferDesc, &subresData, m_indexBuffer.GetAddressOf());
+    mesh.indexCount = (UINT)indices.size();
+    HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&indexBufferDesc, &subresData, mesh.indexBuffer.GetAddressOf());
     return !FAILED(hr);
 }
 
 void RMesh::Render()
 {
-    if (m_material)
-        m_material->BindMaterial();
-
-	//Draw with indexbuffer
+    //Render all of the submeshes in the RMesh
+    //Swapping materials when needed
     UINT offset = 0;
     UINT stride = sizeof(simple_vertex_t);
-    D3D11Core::Get().DeviceContext()->IASetVertexBuffers(0, 1, m_vertexBuffer.GetAddressOf(), &stride, &offset);
-    D3D11Core::Get().DeviceContext()->IASetIndexBuffer(m_indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
-    D3D11Core::Get().DeviceContext()->DrawIndexed(m_indexCount, 0, 0);
-
-    if (m_material)
-        m_material->UnBindMaterial();
+    for (size_t m = 0; m < m_meshes.size(); m++)
+    {
+        if (m_materials[m])
+            m_materials[m]->BindMaterial();
+        
+        D3D11Core::Get().DeviceContext()->IASetVertexBuffers(0, 1, m_meshes[m].vertexBuffer.GetAddressOf(), &stride, &offset);
+        D3D11Core::Get().DeviceContext()->IASetIndexBuffer(m_meshes[m].indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
+        D3D11Core::Get().DeviceContext()->DrawIndexed(m_meshes[m].indexCount, 0, 0);
+        
+        if (m_materials[m])
+            m_materials[m]->UnBindMaterial();
+    }
 }
 
 bool RMesh::Create(const std::string& filename)
@@ -101,22 +184,80 @@ bool RMesh::Create(const std::string& filename)
         return false;
     }
 
-    //Will not go on if the scene has no meshes
+    /*
+        The model has to have meshes and materials for this to work
+    */
     if (!scene->HasMeshes())
     {
 #ifdef _DEBUG
-        LOG_WARNING("The scene has no meshes...");
+        LOG_WARNING("The model has no meshes...");
+#endif 
+        importer.FreeScene();
+        return false;
+    }
+    if (!scene->HasMaterials())
+    {
+#ifdef _DEBUG
+        LOG_WARNING("The model has no materials...");
 #endif 
         importer.FreeScene();
         return false;
     }
 
+    std::string fileformat = GetFileFormat(filename);
+
+    /*
+        Loading submeshes and multiple materials
+    */
+    std::unordered_map<UINT, std::vector<aiMesh*>> matSet;
+    //Creating all the sets
+    for (UINT i = 0; i < scene->mNumMeshes; i++)
+    {
+        UINT matIndex = scene->mMeshes[i]->mMaterialIndex;
+        matSet[matIndex].push_back(scene->mMeshes[i]);
+    }
+
+    //Load in every material needed
+    for (auto& mat : matSet)
+    {
+        UINT matIndex = mat.first;
+        //Get name of the material
+        aiString matName;
+        scene->mMaterials[matIndex]->Get(AI_MATKEY_NAME, matName);
+
+        //Load in the materials
+        std::shared_ptr<RMaterial> material = std::make_shared<RMaterial>();
+        if (material->Create(scene->mMaterials[matIndex], fileformat))
+        {
+            ResourceManager::Get().AddResource(matName.C_Str(), material);
+            m_materials.push_back(material);
+        }
+
+        /*
+            Load in vertex- and index-data and combines all the meshes in a set to one
+        */
+        if (!CombineMeshes(mat.second))
+        {
+            importer.FreeScene();
+            return false;
+        }
+    }
+
+    matSet.clear();
+
+
+
+
+    /*
+        OLD VERSION - only supported one mesh with one material
+    */
     /*
         Load in material from the first mesh.
         Only supports one material per RMesh for now.
         If more materials needed per RMesh performance will be lower.
         This is because we have to change material between every drawcall
     */
+    /*
     if (scene->HasMaterials())
     {
         //Get the material-index
@@ -135,25 +276,14 @@ bool RMesh::Create(const std::string& filename)
         if (m_material->Create(scene->mMaterials[index], isOBJ))
             ResourceManager::Get().AddResource(name, m_material);
     }
-
-    //Skeleton mesh
-    /*if (mesh->HasBones())
-    {
-        m_meshType = EMeshType::skeletalMesh
-        //[TODO LATER]
-        //Load in all the bones
-        //anim_vertex_t vertices
-    }*/
-    //Else do this below
-        //Go through all the vertices
-
+    */
    
     /*
         Load in the mesh and all the submeshes
         Combines all the meshes to one. 
         This is to avoid multiple drawcalls
     */
-    std::vector<simple_vertex_t> vertices;
+    /*std::vector<simple_vertex_t> vertices;
     std::vector<UINT> indices;
     UINT indexOffSet = 0;
     for (UINT m = 0; m < scene->mNumMeshes; m++)
@@ -214,4 +344,8 @@ bool RMesh::Create(const std::string& filename)
     importer.FreeScene();
 
     return success;
+    */
+
+    importer.FreeScene();
+    return true;
 }

@@ -96,7 +96,7 @@ public:
 	bool HasTexture(const ETextureType& type);
 
 	//Loaded from assimp
-	bool Create(aiMaterial* aiMat, bool isMeshOBJ = true);
+	bool Create(aiMaterial* aiMat, const std::string& fileformat);
 
 	// Inherited via GResource
 	// Load material with file - mtl files
