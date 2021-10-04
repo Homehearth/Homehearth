@@ -9,6 +9,7 @@ void GameSystems::UserInputSystem(Scene& scene)
 			});
 }
 
+//System check if mouse ray intersects any of the box collider components in scene
 void GameSystems::MRayIntersectBoxSystem(Scene& scene)
 {
 	float t = 0;
