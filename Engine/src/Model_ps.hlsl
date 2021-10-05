@@ -77,6 +77,18 @@ float4 main(PixelIn input) : SV_TARGET
         albedo = T_albedo.Sample(samp, input.uv);
     }
     
+    if(c_hasNormal == 1)
+    {
+        float3 normalMap = T_normal.Sample(samp, input.uv).rgb;
+        normalMap = normalMap * 2.0f - 1.0f;
+        
+        float3 tangent = normalize(input.tangent.xyz);
+        float3 biTangent = normalize(input.biTangent);
+        float3x3 TBN = float3x3(tangent, biTangent, input.normal);
+        
+        N = normalize(mul(normalMap, TBN));
+    }
+    
     if(c_hasMetalness == 1)
     {
         metallic = T_metalness.Sample(samp, input.uv).r;
