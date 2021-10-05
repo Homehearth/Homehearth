@@ -38,8 +38,6 @@ Game::~Game()
 
 bool Game::OnStartup()
 {
-	m_client.Connect("127.0.0.1", 4950);
-	
 	// Scene logic
 	Scene& demo = DemoScene(*this, m_client).GetScene();
 
@@ -70,14 +68,14 @@ bool Game::OnUserUpdate(float deltaTime)
 	{
 		while (!m_client.m_messagesIn.empty())
 		{
-			message<GameMsg> msg = m_client.m_messagesIn.pop_front();
+			auto msg = m_client.m_messagesIn.pop_front();
 			switch (msg.header.id)
 			{
 			case GameMsg::Server_AssignID:
 			{
 				msg >> this->localPID;
 
-				LOG_INFO("YOUR ID IS: %lld", this->localPID);
+				LOG_INFO("YOUR ID IS: %lu", this->localPID);
 				break;
 			}
 			}

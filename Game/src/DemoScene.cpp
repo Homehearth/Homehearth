@@ -1,6 +1,6 @@
 #include "DemoScene.h"
 
-DemoScene::DemoScene(HeadlessEngine& engine, Client<network::GameMsg>& client)
+DemoScene::DemoScene(HeadlessEngine& engine, Client& client)
 	: SceneBuilder(engine)
 {
 	// Set up Scene
@@ -8,6 +8,7 @@ DemoScene::DemoScene(HeadlessEngine& engine, Client<network::GameMsg>& client)
 	//Initialize player entity
 	Entity player = CreatePlayerEntity();
 
+	// Define what scene does on update
 	m_scene.on<ESceneUpdate>([&](const ESceneUpdate& e, Scene& scene)
 		{
 			//System to update velocity

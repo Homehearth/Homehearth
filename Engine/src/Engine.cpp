@@ -273,6 +273,7 @@ void Engine::Update(float dt)
 		);
 	}
 
+	m_currentCamera->Update(dt);
 	HeadlessEngine::Update(dt);
 
 	// Updates game logic

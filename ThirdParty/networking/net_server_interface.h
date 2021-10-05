@@ -1,6 +1,7 @@
 #pragma once
 #include "net_tsqueue.h"
-#include <unordered_map>
+#include "net_message.h"
+#include "net_common.h"
 #define PRINT_NETWORK_DEBUG
 
 namespace network
@@ -16,7 +17,7 @@ namespace network
 			uint64_t handshakeOut;
 			uint64_t handshakeResult;
 			SOCKET Socket;
-			message<T> msgTempIn = {};
+			owned_message<T> msgTempIn = {};
 		};
 
 		SOCKET m_listening;
@@ -29,9 +30,7 @@ namespace network
 
 	protected:
 		CRITICAL_SECTION lock;
-
-	public:
-		tsQueue<message<T>> m_messagesIn;
+		tsQueue<owned_message<T>> m_qMessagesIn;
 
 	protected:
 		// Called once when a client connects
@@ -53,7 +52,7 @@ namespace network
 		void InitWinsock();
 		bool CreateSocketInformation(SOCKET& s);
 		void DisconnectClient(SOCKET_INFORMATION*& SI);
-		bool ClientIsConnected(SOCKET_INFORMATION* SI);
+		bool ClientIsConnected(const SOCKET& socket);
 		SOCKET WaitForConnection();
 
 		// FUNCTIONS TO EASIER HANDLE DATA IN AND OUT FROM SERVER
@@ -129,7 +128,8 @@ namespace network
 	{
 		PER_IO_DATA* context = new PER_IO_DATA;
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
-		context->DataBuf.buf = (CHAR*)&SI->msgTempIn.header;
+		SI->msgTempIn.remote = SI->Socket;
+		context->DataBuf.buf = (CHAR*)&SI->msgTempIn.msg.header;
 		context->DataBuf.len = sizeof(msg_header<T>);
 		context->state = NetState::READ_HEADER;
 		DWORD BytesReceived = 0;
@@ -150,9 +150,10 @@ namespace network
 	{
 		PER_IO_DATA* context = new PER_IO_DATA;
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
-		size_t size = SI->msgTempIn.header.size - sizeof(msg_header<T>);
-		SI->msgTempIn.payload.resize(size);
-		context->DataBuf.buf = (CHAR*)SI->msgTempIn.payload.data();
+		SI->msgTempIn.remote = SI->Socket;
+		size_t size = SI->msgTempIn.msg.header.size - sizeof(msg_header<T>);
+		SI->msgTempIn.msg.payload.resize(size);
+		context->DataBuf.buf = (CHAR*)SI->msgTempIn.msg.payload.data();
 		context->DataBuf.len = (ULONG)size;
 		context->state = NetState::READ_PAYLOAD;
 		DWORD BytesReceived = 0;
@@ -171,24 +172,22 @@ namespace network
 	template <typename T>
 	void server_interface<T>::ReadPayload(SOCKET_INFORMATION*& SI, PER_IO_DATA* context)
 	{
-		this->OnMessageReceived(SI->Socket, SI->msgTempIn);
-		this->m_messagesIn.push_back(SI->msgTempIn);
-		SI->msgTempIn.payload.clear();
+		this->m_qMessagesIn.push_back(SI->msgTempIn);
+		SI->msgTempIn.msg.payload.clear();
 		this->PrimeReadHeader(SI);
 	}
 
 	template <typename T>
 	void server_interface<T>::ReadHeader(SOCKET_INFORMATION*& SI, PER_IO_DATA* context)
 	{
-		if (SI->msgTempIn.header.size > 0)
+		if (SI->msgTempIn.msg.header.size > 0)
 		{
 			this->PrimeReadPayload(SI);
 		}
 		else
 		{
-			this->m_messagesIn.push_back(SI->msgTempIn);
-			this->OnMessageReceived(SI->Socket, SI->msgTempIn);
-			ZeroMemory(&SI->msgTempIn.header, sizeof(msg_header<T>));
+			this->m_qMessagesIn.push_back(SI->msgTempIn);
+			ZeroMemory(&SI->msgTempIn.msg.header, sizeof(msg_header<T>));
 			this->PrimeReadHeader(SI);
 		}
 	}
@@ -306,14 +305,16 @@ namespace network
 	}
 
 	template <typename T>
-	bool server_interface<T>::ClientIsConnected(SOCKET_INFORMATION* SI)
+	bool server_interface<T>::ClientIsConnected(const SOCKET& socket)
 	{
+		EnterCriticalSection(&lock);
 		bool isConnected = false;
 
-		if (SI)
+		if (socket != INVALID_SOCKET)
 		{
 			isConnected = true;
 		}
+		LeaveCriticalSection(&lock);
 
 		return isConnected;
 	}
@@ -364,7 +365,10 @@ namespace network
 	template <typename T>
 	void server_interface<T>::SendToClient(const SOCKET& socket, message<T>& msg)
 	{
-		this->WriteMessage(socket, msg);
+		if (ClientIsConnected(socket))
+		{
+			this->WriteMessage(socket, msg);
+		}
 	}
 
 	template <typename T>

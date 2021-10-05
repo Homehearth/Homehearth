@@ -10,7 +10,7 @@ class DemoScene : public SceneBuilder<DemoScene>
 private:
 
 public:
-	DemoScene(HeadlessEngine& engine, Client<network::GameMsg>& client);
+	DemoScene(HeadlessEngine& engine, Client& client);
 	
 	Entity CreatePlayerEntity();
 

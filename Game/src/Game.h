@@ -6,10 +6,10 @@
 class Game : public Engine
 {
 private:
-	Client<network::GameMsg> m_client;
+	Client m_client;
 	// Maybe move this later
 	std::unordered_map<uint64_t, entt::entity> players;
-	uint64_t localPID;
+	uint32_t localPID;
 
 	// Inherited via Engine
 	virtual bool OnStartup() override;
