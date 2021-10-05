@@ -40,6 +40,7 @@
 	Update();
 	Initialize();
 	Destroy();
+	IsRenderReady();
 */
 
 
@@ -88,6 +89,8 @@ namespace rtd
 
 		// Remove all pointers without deallocation.
 		static void RemoveAll();
+
+		static const bool IsRenderReady();
 	};
 
 

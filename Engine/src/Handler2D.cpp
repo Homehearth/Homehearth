@@ -54,8 +54,9 @@ void rtd::Handler2D::Render()
 
 void rtd::Handler2D::Update()
 {
-	for (auto elem : INSTANCE->m_elements)
+	for (int i = 0; i < INSTANCE->m_elements.size(); i++)
 	{
+		Element2D* elem = INSTANCE->m_elements[i];
 		if (elem != nullptr)
 		{
 			if (elem->GetRef() > 0)
@@ -85,19 +86,25 @@ void rtd::Handler2D::Update()
 
 void rtd::Handler2D::EraseAll()
 {
-	for (auto& elem : m_elements)
+	for (int i = 0; i < (int)INSTANCE->m_elements.size(); i++)
 	{
-		if (elem->GetRef() <= 0)
+		if (INSTANCE->m_elements[i]->GetRef() <= 0)
 		{
-			delete elem;
+			delete INSTANCE->m_elements[i];
+			INSTANCE->m_elements.erase(INSTANCE->m_elements.begin() + i);
 		}
 	}
 }
 
 void rtd::Handler2D::RemoveAll()
 {
-	for (auto& elem : m_elements)
+	for (auto elem : m_elements)
 	{
 		elem = nullptr;
 	}
+}
+
+const bool rtd::Handler2D::IsRenderReady()
+{
+	return INSTANCE->m_drawBuffers.IsSwapped();
 }

@@ -191,6 +191,8 @@ void Engine::Run()
 		}
 		accumulator += deltaTime;
 		lastFrame = currentFrame;
+
+		rtd::Handler2D::EraseAll();
 	}
 
 	s_engineRunning = false;
@@ -383,7 +385,7 @@ void Engine::RenderThread()
 		deltaTime = static_cast<float>(currentFrame - lastFrame);
 		if (deltaSum >= targetDelta)
 		{
-			if (m_currentScene->IsRenderReady())
+			if (m_currentScene->IsRenderReady() && rtd::Handler2D::IsRenderReady())
 			{
 				Render(deltaSum);
 				m_frameTime.render = deltaSum;
@@ -443,7 +445,6 @@ void Engine::Render(float& dt)
 	*/
 	m_renderer.ClearFrame();
 	m_renderer.Render(m_currentScene);
-	D2D1Core::Begin();
 
 	{
 		PROFILE_SCOPE("Render ImGui");
@@ -457,12 +458,13 @@ void Engine::Render(float& dt)
 
 	{
 		PROFILE_SCOPE("Render D2D1");
+		D2D1Core::Begin();
 		rtd::Handler2D::Render();
+		D2D1Core::Present();
 	}
 
 	{
 		PROFILE_SCOPE("Present");
-		D2D1Core::Present();
 		D3D11Core::Get().SwapChain()->Present(0, 0);
 	}
 }
