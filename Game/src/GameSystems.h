@@ -6,5 +6,5 @@
 
 namespace GameSystems
 {
-	void UserInputSystem(Scene& scene, Client<network::GameMsg>& client);
+	void UserInputSystem(Scene& scene, Client& client);
 }

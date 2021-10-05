@@ -103,7 +103,7 @@ namespace sm = dx::SimpleMath;
 #include "ThreadSyncer.h"
 
 // Network
-#include "network.h"
+//#include "network.h"
 
 // Assimp
 #pragma warning(push, 0)

@@ -26,7 +26,8 @@ void ServerGame::Run()
 
 	std::thread t(&ServerGame::InputThread, this);
 
-	HeadlessEngine::Run();
+	//HeadlessEngine::Run();
+	this->m_server.Update(1);
 
 	t.join();
 }

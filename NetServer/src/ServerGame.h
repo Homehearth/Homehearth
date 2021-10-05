@@ -8,7 +8,7 @@
 class ServerGame : public HeadlessEngine 
 {
 private:
-	Server<network::GameMsg> m_server;
+	Server m_server;
 public:
 	ServerGame();
 

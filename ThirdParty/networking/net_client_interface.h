@@ -1,5 +1,7 @@
 #pragma once
 #include "net_tsqueue.h"
+#include "net_message.h"
+#include "net_common.h"
 #define PRINT_NETWORK_DEBUG
 
 namespace network
@@ -171,7 +173,10 @@ namespace network
 	template <typename T>
 	void client_interface<T>::ReadValidation(PER_IO_DATA*& context)
 	{
-		WriteValidation();
+		if (IsConnected())
+		{
+			WriteValidation();
+		}
 	}
 
 	template <typename T>
@@ -457,7 +462,10 @@ namespace network
 	template<typename T>
 	inline void client_interface<T>::Send(message<T>& msg)
 	{
-		this->WriteMessage(msg);
+		if (IsConnected())
+		{
+			this->WriteMessage(msg);
+		}
 	}
 
 	template<typename T>
