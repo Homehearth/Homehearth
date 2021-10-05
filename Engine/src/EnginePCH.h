@@ -1,5 +1,4 @@
 #pragma once
-#pragma warning(push, 3)
 
 #define RENDER_IMGUI 1
 #define PROFILER 1
@@ -49,8 +48,6 @@
 #define ALIGN16 __declspec(align(16)) 
 
 // DirectX
-#pragma warning(push)
-#pragma warning(disable:26812)
 #include <d3d11.h>
 #include <d3dcompiler.h>
 #include <DirectXMath.h>
@@ -62,7 +59,6 @@
 #include <ctime>
 #include <Keyboard.h>
 #include <Mouse.h>
-#pragma warning(pop)
 using Microsoft::WRL::ComPtr;
 namespace dx = DirectX;
 
@@ -90,7 +86,6 @@ namespace sm = dx::SimpleMath;
 #include <imstb_truetype.h>
 #include <imgui_impl_dx11.h>
 #include <imgui_impl_win32.h>
-#pragma warning(pop)
 
 //Utility
 #include "Timer.h"
@@ -112,10 +107,6 @@ namespace sm = dx::SimpleMath;
 #include "net_client_interface.h"
 
 // Assimp
-#pragma warning(push)
-#pragma warning(disable:26812)
-#pragma warning(disable:26451)
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
-#pragma warning(pop)
