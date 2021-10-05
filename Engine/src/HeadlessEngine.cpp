@@ -78,7 +78,6 @@ void HeadlessEngine::Run()
 	while (IsRunning())
 	{
 		PROFILE_SCOPE("Update Frame");
-		rtd::Handler2D::Update();
 		// Update time.
 		currentFrame = omp_get_wtime();
 		deltaTime = static_cast<float>(currentFrame - lastFrame);

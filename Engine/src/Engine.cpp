@@ -267,6 +267,7 @@ void Engine::Update(float dt)
 
 	
 	InputSystem::Get().UpdateEvents();
+	rtd::Handler2D::Update();
 
 	MSG msg = { nullptr };
 	while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
