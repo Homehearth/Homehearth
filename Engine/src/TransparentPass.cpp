@@ -3,10 +3,6 @@
 
 void TransparentPass::Initialize()
 {
-	// Initialize Pass.
-	// accept scene.
-	// accept materials.
-	// accept 
 }
 
 void TransparentPass::PreRender(ID3D11DeviceContext* dc, PipelineManager* pm)
@@ -19,7 +15,7 @@ void TransparentPass::Render(Scene* pScene)
 	// Render objects.
 }
 
-void TransparentPass::PostRender()
+void TransparentPass::PostRender(ID3D11DeviceContext* dc, PipelineManager* pm)
 {
-	// ?
+	// Cleanup.
 }

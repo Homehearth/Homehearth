@@ -5,10 +5,6 @@
 
 void DepthPass::Initialize()
 {
-    // Initialize Pass.
-    // accept scene.
-    // accept materials.
-    // accept ...
 }
 
 void DepthPass::PreRender(ID3D11DeviceContext* dc, PipelineManager* pm)
@@ -21,7 +17,7 @@ void DepthPass::PreRender(ID3D11DeviceContext* dc, PipelineManager* pm)
 
     // SHADER STAGES.
     {
-        dc->VSSetShader(nullptr, nullptr, 0);
+        dc->VSSetShader(pm->m_depthVertexShader.Get(), nullptr, 0);
         dc->PSSetShader(nullptr, nullptr, 0);
         dc->GSSetShader(nullptr, nullptr, 0);
         dc->HSSetShader(nullptr, nullptr, 0);
@@ -32,7 +28,8 @@ void DepthPass::PreRender(ID3D11DeviceContext* dc, PipelineManager* pm)
     // CONSTANT BUFFERS.
     {
         dc->PSSetConstantBuffers(0, 0, nullptr);
-        dc->VSSetConstantBuffers(0, 0, nullptr);
+        dc->VSSetConstantBuffers(0, 1, pm->m_defaultModelConstantBuffer.GetAddressOf());
+        dc->VSSetConstantBuffers(1, 1, pm->m_defaultViewConstantBuffer.GetAddressOf());
     }
 
     // SHADER RESOURCES.
@@ -50,18 +47,22 @@ void DepthPass::PreRender(ID3D11DeviceContext* dc, PipelineManager* pm)
 
     // OUTPUT MERGER.
     {
-        dc->OMSetRenderTargets(0, nullptr, nullptr);
-        dc->OMSetBlendState(nullptr, nullptr, 0); 
-        dc->OMSetDepthStencilState(nullptr, 0);
+        ID3D11RenderTargetView* nullRTV[] = { nullptr };		
+        dc->OMSetRenderTargets(_countof(nullRTV), nullRTV, pm->m_depthBuffer.depthStencilView.Get());
+        dc->OMSetBlendState(nullptr, nullptr, 0);
+        dc->OMSetDepthStencilState(pm->m_depthStencilStateGreater.Get(), 0);
     }
 }
 
 void DepthPass::Render(Scene* pScene)
 {
     // Render objects.
+    pScene->Render();
 }
 
-void DepthPass::PostRender()
-{
-    // return rendertarget for next pass?
+void DepthPass::PostRender(ID3D11DeviceContext* dc, PipelineManager* pm)
+{	
+	// Cleanup.
+    ID3D11RenderTargetView* nullRTV[] = { nullptr };
+    dc->OMSetRenderTargets(_countof(nullRTV), nullRTV, nullptr);
 }

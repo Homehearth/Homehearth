@@ -8,11 +8,21 @@ cbuffer Camera : register(b1)
     float4x4 projectionView;
 }
 
-// Depth pre-pass.
-float4 main( float4 pos : POSITION ) : SV_POSITION
+struct VertexIn
 {
-    pos = mul(world, pos);
-    pos = mul(projectionView, pos);
+    float3 pos : POSITION;
+    float2 uv : TEXCOORD;
+    float3 normal : NORMAL;
+    float3 tangent : TANGENT;
+    float3 biTangent : BINORMAL;
+};
+
+// Depth pre-pass.
+float4 main(VertexIn input) : SV_POSITION
+{
+    float4 output = float4(input.pos, 1.0f);
+    output = mul(world, input.pos);
+    output = mul(projectionView, input.pos);
 	
-	return pos;
+	return output;
 }

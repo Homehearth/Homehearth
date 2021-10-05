@@ -6,10 +6,6 @@
 
 void BasePass::Initialize()
 {
-	// Initialize Pass.
-	// accept scene.
-	// accept materials.
-	// accept ...
 }
 
 void BasePass::PreRender(ID3D11DeviceContext* dc, PipelineManager* pm)
@@ -39,8 +35,8 @@ void BasePass::PreRender(ID3D11DeviceContext* dc, PipelineManager* pm)
 
     // SHADER RESOURCES.
     {
-        dc->PSSetShaderResources(0, 0, nullptr);
         dc->VSSetShaderResources(0, 0, nullptr);
+        dc->PSSetShaderResources(1, 1, pm->m_depthBuffer.shaderResourceView.GetAddressOf());		// DepthBuffer.
         dc->PSSetSamplers(0, 1, pm->m_linearSamplerState.GetAddressOf());
     }
 
@@ -64,7 +60,9 @@ void BasePass::Render(Scene* pScene)
     pScene->Render();
 }
 
-void BasePass::PostRender()
+void BasePass::PostRender(ID3D11DeviceContext* dc, PipelineManager* pm)
 {
-	// return rendertarget for next pass?
+	// Cleanup.
+    ID3D11ShaderResourceView* const nullSRV[] = { nullptr };
+    dc->PSSetShaderResources(1, 1, nullSRV);
 }

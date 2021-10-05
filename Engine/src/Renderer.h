@@ -12,12 +12,13 @@ private:
 	PipelineManager m_pipelineManager;
 	std::vector<IRenderPass*> m_passes;
 	
-	BasePass m_basePass;	// Forward Rendering.
-	DepthPass m_depthPass;	// Forward Plus (1st pass).
-
+	DepthPass m_depthPass;	// Depth, pre Z-pass.
+	BasePass m_basePass;	// Forward, "GeometryPass".
 	
 	// Add a pass to the list.
 	void AddPass(IRenderPass* pass);
+
+	std::string GetInfoAboutPasses();
 
 public:
 	Renderer();

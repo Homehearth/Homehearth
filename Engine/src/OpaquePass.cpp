@@ -3,10 +3,6 @@
 
 void OpaquePass::Initialize()
 {
-	// Initialize Pass.
-	// accept scene.
-	// accept materials.
-	// accept 
 }
 
 void OpaquePass::PreRender(ID3D11DeviceContext* dc, PipelineManager* pm)
@@ -19,7 +15,7 @@ void OpaquePass::Render(Scene* pScene)
 	// Render objects.
 }
 
-void OpaquePass::PostRender()
+void OpaquePass::PostRender(ID3D11DeviceContext* dc, PipelineManager* pm)
 {
-	// ?
+	// Cleanup.
 }

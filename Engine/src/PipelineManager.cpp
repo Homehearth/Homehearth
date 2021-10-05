@@ -80,6 +80,12 @@ void PipelineManager::Initialize(Window* pWindow)
         LOG_ERROR("failed creating default constant buffer.");
     }
 
+    // Initialize CreateDepthBuffer.
+    if (!this->CreateDepthBuffer())
+    {
+        LOG_ERROR("failed creating depth buffer.");
+    }
+	
     // Set Viewport.
     this->SetViewport();
 }
@@ -320,8 +326,8 @@ void PipelineManager::SetViewport()
     ZeroMemory(&m_viewport, sizeof(D3D11_VIEWPORT));
 
     // Setup the viewport for rendering.
-    m_viewport.Width = static_cast<FLOAT>(this->m_window->GetWidth());
-    m_viewport.Height = static_cast<FLOAT>(this->m_window->GetHeight());
+    m_viewport.Width = static_cast<FLOAT>(m_window->GetWidth());
+    m_viewport.Height = static_cast<FLOAT>(m_window->GetHeight());
     m_viewport.TopLeftX = 0.f;
     m_viewport.TopLeftY = 0.f;
 
@@ -347,25 +353,63 @@ bool PipelineManager::CreateInputLayouts()
         {"TANGENT",     0, DXGI_FORMAT_R32G32B32_FLOAT,    0,    D3D11_APPEND_ALIGNED_ELEMENT,    D3D11_INPUT_PER_VERTEX_DATA, 0},
         {"BINORMAL",    0, DXGI_FORMAT_R32G32B32_FLOAT,    0,    D3D11_APPEND_ALIGNED_ELEMENT,    D3D11_INPUT_PER_VERTEX_DATA, 0}
     };
-	
-	if(FAILED(hr = D3D11Core::Get().Device()->CreateInputLayout(defaultVertexShaderDesc, ARRAYSIZE(defaultVertexShaderDesc), shaderByteCode.c_str(), shaderByteCode.length(), &m_defaultInputLayout)))
+	if(FAILED(hr = m_d3d11->Device()->CreateInputLayout(defaultVertexShaderDesc, ARRAYSIZE(defaultVertexShaderDesc), shaderByteCode.c_str(), shaderByteCode.length(), m_defaultInputLayout.GetAddressOf())))
     {
         LOG_WARNING("failed creating m_defaultInputLayout.");
         return false;
     }
 
-	// Create m_positionOnlyInputLayout.
-    shaderByteCode = m_positionOnlyVertexShader.GetShaderByteCode();
-    D3D11_INPUT_ELEMENT_DESC positionOnlyVertexShaderDesc[] =
-    {
-        {"POSITION",    0, DXGI_FORMAT_R32G32B32_FLOAT,    0,                0,                   D3D11_INPUT_PER_VERTEX_DATA, 0}
-    };
+    return !FAILED(hr);
+}
 
-    if (FAILED(hr = D3D11Core::Get().Device()->CreateInputLayout(positionOnlyVertexShaderDesc, ARRAYSIZE(positionOnlyVertexShaderDesc), shaderByteCode.c_str(), shaderByteCode.length(), &m_positionOnlyInputLayout)))
-    {
-        LOG_WARNING("failed creating m_positionOnlyInputLayout.");
+bool PipelineManager::CreateDepthBuffer()
+{
+    // Initialize the description of the depth buffer.
+    D3D11_TEXTURE2D_DESC textureDesc;
+    ZeroMemory(&textureDesc, sizeof(D3D11_TEXTURE2D_DESC));
+
+    // Set up the description of the depth buffer.
+    textureDesc.Width = m_window->GetWidth();
+    textureDesc.Height = m_window->GetHeight();
+
+    // Use typeless format because the DSV is going to interpret
+    // the bits as DXGI_FORMAT_D24_UNORM_S8_UINT, whereas the SRV is going
+    // to interpret the bits as DXGI_FORMAT_R24_UNORM_X8_TYPELESS.
+    textureDesc.Format = DXGI_FORMAT::DXGI_FORMAT_R24G8_TYPELESS;
+    textureDesc.Usage = D3D11_USAGE::D3D11_USAGE_DEFAULT;
+    textureDesc.BindFlags = D3D11_BIND_FLAG::D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
+
+    textureDesc.MipLevels = 1;
+    textureDesc.ArraySize = 1;
+    textureDesc.SampleDesc.Count = 1;
+    textureDesc.SampleDesc.Quality = 0;
+    textureDesc.CPUAccessFlags = 0;
+    textureDesc.MiscFlags = 0;
+
+    // Create the texture for the depth buffer using the filled out description.
+    HRESULT hr = m_d3d11->Device()->CreateTexture2D(&textureDesc, nullptr, m_depthBuffer.texture2D.GetAddressOf());
+    if (FAILED(hr))
         return false;
-    }
+
+    D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilvDesc;
+    ZeroMemory(&depthStencilvDesc, sizeof(D3D11_DEPTH_STENCIL_VIEW_DESC));
+
+    depthStencilvDesc.Flags = 0;
+    depthStencilvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+    depthStencilvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+    depthStencilvDesc.Texture2D.MipSlice = 0;
+
+    hr = m_d3d11->Device()->CreateDepthStencilView(m_depthBuffer.texture2D.Get(), &depthStencilvDesc, m_depthBuffer.depthStencilView.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+
+    D3D11_SHADER_RESOURCE_VIEW_DESC shaderResourceViewDesc;
+    shaderResourceViewDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
+    shaderResourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+    shaderResourceViewDesc.Texture2D.MipLevels = textureDesc.MipLevels;
+    shaderResourceViewDesc.Texture2D.MostDetailedMip = 0;
+
+    hr = m_d3d11->Device()->CreateShaderResourceView(m_depthBuffer.texture2D.Get(), &shaderResourceViewDesc, m_depthBuffer.shaderResourceView.GetAddressOf());
 
     return !FAILED(hr);
 }
@@ -407,7 +451,7 @@ bool PipelineManager::CreateShaders()
 		return false;
     }
 
-    if (!m_positionOnlyVertexShader.Create("depth_vs"))
+    if (!m_depthVertexShader.Create("depth_vs"))
     {
         LOG_WARNING("failed creating depth_vs.");
         return false;

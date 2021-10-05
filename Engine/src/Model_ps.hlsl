@@ -1,7 +1,7 @@
 #include "Phong.hlsli"
 
-//Texture2D diffuseTexture : register(t0);
-SamplerState samp : register(s0);
+Texture2D DepthTexture : register(t1);
+SamplerState LinearSampler : register(s0);
 
 struct PixelIn
 {
@@ -14,6 +14,6 @@ struct PixelIn
 
 float4 main(PixelIn input) : SV_TARGET
 {
-    return float4(1.0f, 0.0f, 0.0f, 1.0f);
-    //return diffuseTexture.Sample(samp, input.uv);
+    const float surfaceDepth = DepthTexture.Sample(LinearSampler, input.uv.xy).r;
+    return float4(surfaceDepth, surfaceDepth, surfaceDepth, 1.0f);
 }

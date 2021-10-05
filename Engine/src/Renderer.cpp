@@ -10,14 +10,19 @@ Renderer::Renderer()
 void Renderer::Initialize(Window* pWindow)
 {
 	m_pipelineManager.Initialize(pWindow);
-	
     m_d3d11 = &D3D11Core::Get();
+
+    // DepthPass
+    m_depthPass.SetName("DepthPass");
+	m_depthPass.SetEnable(true);
+    AddPass(&m_depthPass);
+	
+	// BasePass (Forward).
+    m_basePass.SetName("BasePass");
     m_basePass.SetEnable(true);
-    m_depthPass.SetEnable(true);
-    //AddPass(&m_depthPass);
     AddPass(&m_basePass);
 
-    LOG_INFO("Number of rendering passes: %d", static_cast<int>(m_passes.size()));
+    LOG_INFO(GetInfoAboutPasses().c_str());
 }
 
 void Renderer::ClearFrame()
@@ -39,8 +44,8 @@ void Renderer::Render(Scene* pScene)
                 if (pass->IsEnabled())
                 {
                     pass->PreRender(m_d3d11->DeviceContext(), &m_pipelineManager);
-                    pass->Render(pScene);     // args? currently does nothing.
-                    pass->PostRender(); // args? currently does nothing.
+                    pass->Render(pScene);
+                    pass->PostRender(m_d3d11->DeviceContext(), &m_pipelineManager);
                 }
             }
         }
@@ -50,4 +55,25 @@ void Renderer::Render(Scene* pScene)
 void Renderer::AddPass(IRenderPass* pass)
 {
     m_passes.emplace_back(pass);
+}
+
+std::string Renderer::GetInfoAboutPasses()
+{
+    std::vector<std::string> activePasses;
+
+	for(const auto & pass : m_passes)
+	{
+		if(pass->IsEnabled())
+		{
+            activePasses.emplace_back(pass->GetName());
+		}
+	}
+
+    std::string info = std::to_string(activePasses.size()) + " of " + std::to_string(m_passes.size()) + " active rendering passes: ";
+    for (const auto& pass : activePasses)
+    {
+        info += pass + " ";
+    }
+	
+    return info;
 }
