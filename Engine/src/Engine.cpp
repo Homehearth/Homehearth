@@ -194,7 +194,9 @@ void Engine::Run()
 		accumulator += deltaTime;
 		lastFrame = currentFrame;
 
+#if DRAW_TEMP_2D
 		rtd::Handler2D::EraseAll();
+#endif
 	}
 
 	s_engineRunning = false;
