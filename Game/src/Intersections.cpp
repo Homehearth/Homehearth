@@ -1,7 +1,7 @@
 #include "Intersections.h"
 
 //Check if the mouse ray intersects with a box collider.
-bool Intersect::RayIntersectBox(const Ray_t& mouseRay, comp::BoxCollider& boxCollider, float& t)
+bool Intersect::RayIntersectBox(const Ray_t& ray, comp::BoxCollider& boxCollider, float& t)
 {
 	/**
 	 * computing all t-values for the ray
@@ -9,8 +9,8 @@ bool Intersect::RayIntersectBox(const Ray_t& mouseRay, comp::BoxCollider& boxCol
 	 * It returns the closest positive t-value
 	 *
 	 */
-	const sm::Vector3 rayOrigin = mouseRay.rayPos;
-	const sm::Vector3 rayDir = mouseRay.rayDir;
+	const sm::Vector3 rayOrigin = ray.rayPos;
+	const sm::Vector3 rayDir = ray.rayDir;
 
 	float tmin = (std::numeric_limits<float>::min)();
 	float tmax = (std::numeric_limits<float>::max)();
@@ -69,15 +69,15 @@ bool Intersect::RayIntersectBox(const Ray_t& mouseRay, comp::BoxCollider& boxCol
 	return true;
 }
 
-bool Intersect::RayIntersectSphere(const Ray_t& mouseRay, comp::SphereCollider& sphereCollider, float& t)
+bool Intersect::RayIntersectSphere(const Ray_t& ray, comp::SphereCollider& sphereCollider, float& t)
 {
 	//Todo: Change to Epsilon comparison
 	if (sphereCollider.radius == 0.f)
 	{ 
 		return false;
 	}
-	const sm::Vector3 rayOrigin = mouseRay.rayPos;
-	const sm::Vector3 rayDir = mouseRay.rayDir;
+	const sm::Vector3 rayOrigin = ray.rayPos;
+	const sm::Vector3 rayDir = ray.rayDir;
 
 	const sm::Vector3 objectPos = sphereCollider.centerOffset;
 	const sm::Vector3 rayToCenter = objectPos - rayOrigin;

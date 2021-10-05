@@ -16,7 +16,7 @@ void GameSystems::MRayIntersectBoxSystem(Scene& scene)
 	auto view = scene.GetRegistry().view<comp::BoxCollider>();
 	view.each([&](comp::BoxCollider& boxCollider)
 	{
-		//Collided with mouse
+		//Collided with mouse TODO make it do someting?
 		bool hasCollided = Intersect::RayIntersectBox(InputSystem::Get().GetMouseRay(), boxCollider, t);
 	});
 }
