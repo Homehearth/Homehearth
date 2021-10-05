@@ -14,6 +14,7 @@ public:
 		std::string name;
 		long long start, end;
 		uint32_t threadID;
+		Result(): start(0), end(0), threadID(0){} ;
 	};
 
 	class ProfileTimer

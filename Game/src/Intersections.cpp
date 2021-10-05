@@ -1,6 +1,6 @@
 #include "Intersections.h"
 
-//Check if the mouse ray intersects with a box collider.
+//Check if the ray intersects with a box collider.
 bool Intersect::RayIntersectBox(const Ray_t& ray, comp::BoxCollider& boxCollider, float& t)
 {
 	/**

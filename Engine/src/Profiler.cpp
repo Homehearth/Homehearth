@@ -112,6 +112,6 @@ Profiler::ProfileTimer::~ProfileTimer()
 	res.start = m_timer.GetStartTime<std::chrono::microseconds>();
 	res.end = m_timer.GetStopTime<std::chrono::microseconds>();
 	res.name = m_name;
-	res.threadID = std::hash<std::thread::id>()(std::this_thread::get_id());
+	res.threadID = static_cast<uint32_t>(std::hash<std::thread::id>()(std::this_thread::get_id()));
 	Profiler::Get().WriteProfile(res);
 }
