@@ -6,7 +6,3 @@ namespace GameSystems
 	void UserInputSystem(Scene& scene);
 	void MRayIntersectBoxSystem(Scene& scene);
 }
-
-
-
-

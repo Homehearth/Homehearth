@@ -65,4 +65,18 @@ namespace network
 			return msg;
 		}
 	};
+
+	// An owned message is a message that includes a remote SOCKET to be able to know where this messages belongs to
+	template <typename T>
+	struct owned_message
+	{
+		SOCKET remote = INVALID_SOCKET;
+		message<T> msg;
+
+		friend std::ostream& operator<<(std::ostream& os, const owned_message<T>& msg)
+		{
+			os << msg.msg;
+			return os;
+		}
+	};
 }

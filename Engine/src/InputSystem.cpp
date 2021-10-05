@@ -182,7 +182,17 @@ const Ray_t& InputSystem::GetMouseRay() const
 	return m_mouseRay;
 }
 
-void InputSystem::SwitchMouseMode() const
+const bool InputSystem::IsMouseRelative() const
+{
+	bool isRelative = false;
+	if (m_mouseState.positionMode == dx::Mouse::MODE_RELATIVE)
+	{
+		isRelative = true;
+	}
+	return isRelative;
+}
+
+void InputSystem::SwitchMouseMode()
 {
 	if (m_mouseState.positionMode == dx::Mouse::MODE_RELATIVE)
 	{

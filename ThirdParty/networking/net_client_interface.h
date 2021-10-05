@@ -1,26 +1,11 @@
 #pragma once
 #include "net_tsqueue.h"
+#include "net_message.h"
+#include "net_common.h"
 #define PRINT_NETWORK_DEBUG
 
 namespace network
 {
-	enum class NetState
-	{
-		NOT_VALIDATED,
-		READ_VALIDATION,
-		WRITE_VALIDATION,
-		READ_HEADER,
-		READ_PAYLOAD,
-		WRITE_MESSAGE,
-	};
-
-	struct PER_IO_DATA
-	{
-		OVERLAPPED Overlapped;
-		WSABUF DataBuf;
-		NetState state;
-	};
-
 	/*
 			The interface will initialize winsock on its own and all socket programming is abstracted away.
 			From this interface you can use simple functions as connect or disconnect or to see wether or not
@@ -37,6 +22,7 @@ namespace network
 		uint64_t m_handshakeIn;
 		uint64_t m_handshakeOut;
 		message<T> tempMsgIn;
+		std::thread* m_workerThread;
 
 	protected:
 		CRITICAL_SECTION lock;
@@ -66,6 +52,11 @@ namespace network
 		void WriteMessage(message<T>& msg);
 		void WriteValidation();
 
+		static VOID CALLBACK AlertThread()
+		{
+			LOG_INFO("Thread was alerted!");
+		}
+
 	protected:
 		// Functions that runs once when an event happens
 		virtual void OnMessageReceived(message<T>& msg) = 0;
@@ -85,6 +76,7 @@ namespace network
 			m_handshakeOut = 0;
 
 			InitWinsock();
+			this->m_workerThread = nullptr;
 		}
 
 		client_interface<T>& operator=(const client_interface<T>& other) = delete;
@@ -93,13 +85,18 @@ namespace network
 		virtual ~client_interface()
 		{
 			WSACleanup();
+			if (m_workerThread)
+			{
+				m_workerThread->join();
+				delete m_workerThread;
+			}
 		}
 	public:
 		// Given IP and port establish a connection to the server
 		bool Connect(std::string&& ip, uint16_t&& port);
-		// Disconnect from the server
+		// Disconnect from the server (THREAD SAFE)
 		void Disconnect();
-		// Check to see if client is connected to a server
+		// Check to see if client is connected to a server (THREAD SAFE)
 		bool IsConnected();
 		// Sends a message to the server
 		void Send(message<T>& msg);
@@ -176,7 +173,10 @@ namespace network
 	template <typename T>
 	void client_interface<T>::ReadValidation(PER_IO_DATA*& context)
 	{
-		WriteValidation();
+		if (IsConnected())
+		{
+			WriteValidation();
+		}
 	}
 
 	template <typename T>
@@ -283,7 +283,7 @@ namespace network
 		for (p = servinfo; p != nullptr; p = p->ai_next)
 		{
 			EnterCriticalSection(&lock);
-			LOG_NETWORK(PrintSocketData(p).c_str());
+			LOG_NETWORK("%s", PrintSocketData(p).c_str());
 			LeaveCriticalSection(&lock);
 			sock = WSASocket(p->ai_family, p->ai_socktype, p->ai_protocol, NULL, 0, WSA_FLAG_OVERLAPPED);
 
@@ -315,16 +315,14 @@ namespace network
 	{
 		DWORD BytesTransferred = 0;
 		DWORD flags = 0;
-		BOOL bResult = false;
-		//LPOVERLAPPED lpOverlapped;
 		PER_IO_DATA* context = nullptr;
-		BOOL shouldDisconnect = false;
 		const DWORD CAP = 10;
 		OVERLAPPED_ENTRY Entries[CAP];
 		ULONG EntriesRemoved = 0;
 
 		while (IsConnected())
 		{
+			memset(Entries, 0, sizeof(Entries));
 			if (!GetQueuedCompletionStatusEx(m_CompletionPort, Entries, CAP, &EntriesRemoved, WSA_INFINITE, TRUE))
 			{
 				DWORD LastError = GetLastError();
@@ -342,8 +340,8 @@ namespace network
 
 				if (Entries[i].dwNumberOfBytesTransferred == 0)
 				{
-					this->Disconnect();
 					delete context;
+					this->Disconnect();
 					continue;
 				}
 				// I/O has completed, process it
@@ -464,12 +462,20 @@ namespace network
 	template<typename T>
 	inline void client_interface<T>::Send(message<T>& msg)
 	{
-		this->WriteMessage(msg);
+		if (IsConnected())
+		{
+			this->WriteMessage(msg);
+		}
 	}
 
 	template<typename T>
 	inline bool client_interface<T>::Connect(std::string&& ip, uint16_t&& port)
 	{
+		if (IsConnected())
+		{
+			return false;
+		}
+
 		m_socket = CreateSocket(ip, port);
 
 		if (connect(m_socket, (struct sockaddr*)&m_endpoint, m_endpointLen) != 0)
@@ -491,12 +497,15 @@ namespace network
 			LOG_ERROR("CreateIoCompletionPort() failed with error %d", GetLastError());
 			return false;
 		}
-
+		if (m_workerThread)
+		{
+			m_workerThread->join();
+			delete m_workerThread;
+		}
 		// Primes the async handle with a receive call to process incoming messages
 		this->PrimeReadValidation();
 
-		std::thread t(&client_interface<T>::ProcessIO, this);
-		t.detach();
+		m_workerThread = new std::thread(&client_interface<T>::ProcessIO, this);
 
 		return true;
 	}
@@ -504,32 +513,34 @@ namespace network
 	template<typename T>
 	inline void client_interface<T>::Disconnect()
 	{
-		EnterCriticalSection(&lock);
-		if (!IsConnected())
+		if (IsConnected())
 		{
-			LeaveCriticalSection(&lock);
-			return;
-		}
-		if (closesocket(m_socket) != 0)
-		{
-			LOG_ERROR("Failed to close socket!");
-		}
+			EnterCriticalSection(&lock);
+			if (closesocket(m_socket) != 0)
+			{
+				LOG_ERROR("Failed to close socket!");
+			}
+			m_socket = INVALID_SOCKET;
 
-		m_socket = INVALID_SOCKET;
-		this->OnDisconnect();
-		LeaveCriticalSection(&lock);
+			this->OnDisconnect();
+
+			QueueUserAPC((PAPCFUNC)AlertThread, m_workerThread->native_handle(), NULL);
+
+			CloseHandle(m_CompletionPort);
+			LeaveCriticalSection(&lock);
+		}
 	}
 
 	template<typename T>
 	inline bool client_interface<T>::IsConnected()
 	{
-		if (m_socket == INVALID_SOCKET)
+		EnterCriticalSection(&lock);
+		bool isConnected = false;
+		if (m_socket != INVALID_SOCKET)
 		{
-			return false;
+			isConnected = true;
 		}
-		else
-		{
-			return true;
-		}
+		LeaveCriticalSection(&lock);
+		return isConnected;
 	}
 }

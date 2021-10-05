@@ -9,7 +9,7 @@ Profiler::Profiler()
 PROCESS_MEMORY_COUNTERS Profiler::GetMemoryInfo()
 {
 	PROCESS_MEMORY_COUNTERS pmc;
-	if (FAILED(GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc))))
+	if (!GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc)))
 	{
 		LOG_ERROR("Failed to get memory information");
 	}
@@ -36,6 +36,7 @@ void Profiler::BeginSession(const std::string& filepath)
 	if (!m_outputStream.is_open())
 	{
 		LOG_ERROR("Failed to open session file");
+		m_mutex.unlock();
 		return;
 	}
 	WriteHeader();
@@ -112,6 +113,6 @@ Profiler::ProfileTimer::~ProfileTimer()
 	res.start = m_timer.GetStartTime<std::chrono::microseconds>();
 	res.end = m_timer.GetStopTime<std::chrono::microseconds>();
 	res.name = m_name;
-	res.threadID = static_cast<uint32_t>(std::hash<std::thread::id>()(std::this_thread::get_id()));
+	res.threadID = uint32_t(std::hash<std::thread::id>()(std::this_thread::get_id()));
 	Profiler::Get().WriteProfile(res);
 }
