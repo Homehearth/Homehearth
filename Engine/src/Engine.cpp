@@ -70,8 +70,6 @@ void Engine::Startup()
 	);
 
 	InputSystem::Get().SetMouseWindow(m_window.GetHWnd());
-	
-	HeadlessEngine::Startup();
 
 #if DRAW_TEMP_2D
 	rtd::Button* test = new rtd::Button("demo_start_game_button.png", draw_t(100.0f, 100.0f, 275.0f, 100.0f), true);
@@ -87,6 +85,8 @@ void Engine::Startup()
 	rtd::Handler2D::InsertElement(test3);
 	rtd::Handler2D::InsertElement(test4);
 #endif
+	
+	HeadlessEngine::Startup();
 }
 
 void Engine::Run()
@@ -96,8 +96,6 @@ void Engine::Run()
 		T_CJOB(Engine, RenderThread);
 
 	HeadlessEngine::Run();
-
-	s_engineRunning = false;
 	// Wait for the rendering thread to exit its last render cycle and shutdown
 #if _DEBUG
 	// This is debug since it catches release in endless loop.
@@ -247,7 +245,7 @@ void Engine::RenderThread()
 		deltaTime = static_cast<float>(currentFrame - lastFrame);
 		if (deltaSum >= targetDelta)
 		{
-			if (m_currentScene->IsRenderReady() && rtd::Handler2D::IsRenderReady())
+			if (GetCurrentScene()->IsRenderReady() && rtd::Handler2D::IsRenderReady())
 			{
 				Render(deltaSum);
 				m_frameTime.render = deltaSum;
@@ -323,7 +321,7 @@ void Engine::Render(float& dt)
 		Render 3D
 	*/
 	m_renderer.ClearFrame();
-	m_renderer.Render(m_currentScene);
+	m_renderer.Render(GetCurrentScene());
 
 	{
 		PROFILE_SCOPE("Render ImGui");

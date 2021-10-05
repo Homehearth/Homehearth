@@ -108,7 +108,7 @@ const bool D2D1Core::Setup(Window* window)
 		m_writeFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
 	}
 
-	hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
+	hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
 
 	hr = CoCreateInstance(CLSID_WICImagingFactory,
 		NULL,
