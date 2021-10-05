@@ -77,6 +77,7 @@ void Engine::Startup()
 
 	m_client.Connect("127.0.0.1", 4950);
 
+#if DRAW_TEMP_2D
 	rtd::Button* test = new rtd::Button("demo_start_game_button.png", draw_t(100.0f, 100.0f, 275.0f, 100.0f), true);
 	rtd::Button* test2 = new rtd::Button("demo_options_button.png", draw_t(100.0f, 225.0f, 275.0f, 100.0f), true);
 	rtd::Button* test3 = new rtd::Button("demo_exit_button.png", draw_t(100.0f, 350.0f, 275.0f, 100.0f), false);
@@ -87,6 +88,7 @@ void Engine::Startup()
 	rtd::Handler2D::InsertElement(test);
 	rtd::Handler2D::InsertElement(test2);
 	rtd::Handler2D::InsertElement(test3);
+#endif
 }
 
 void Engine::Run()

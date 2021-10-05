@@ -3,6 +3,7 @@
 
 #define RENDER_IMGUI 1
 #define PROFILER 1
+#define DRAW_TEMP_2D 0
 
 //Macros
 #if RENDER_IMGUI

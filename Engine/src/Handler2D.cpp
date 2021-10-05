@@ -98,9 +98,12 @@ void rtd::Handler2D::EraseAll()
 
 void rtd::Handler2D::RemoveAll()
 {
-	for (auto elem : m_elements)
+	for (int i = 0; i < (int)INSTANCE->m_elements.size(); i++)
 	{
-		elem = nullptr;
+		if (INSTANCE->m_elements[i]->GetRef() <= 0)
+		{
+			INSTANCE->m_elements.erase(INSTANCE->m_elements.begin() + i);
+		}
 	}
 }
 
