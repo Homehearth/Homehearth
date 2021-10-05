@@ -22,7 +22,7 @@ cbuffer matConstants_t : register(b0)
     float  c_opacity;
     float3 c_specular;
 };
-cbuffer properties_t : register(b1)
+cbuffer properties_t : register(b2)
 {
     //If a texture is set this will be 1
     int c_hasAlbedo;
@@ -58,16 +58,43 @@ void CalcRadiance(PixelIn input, float3 V, float3 N, float roughness, float meta
 float4 main(PixelIn input) : SV_TARGET
 {
     float3 camPos = cameraPosition.xyz;
-    float3 albedo = float3(0.5f, 0.0f, 0.0f); // = albedoTexture.Sample(anisotropic, input.uv);
-    float metallic = 0.5f; // = metallicTexture.Sample(anisotropic, input.uv).r;
-    float roughness = 0.4f; // = roughnessTexture.Sample(anisotropic, input.uv).r;
-    float ao = 1.0; // = aoTexture.Sample(anisotropic, input.uv).r;
+    float ao = 1.0f;
+    float3 albedo = float3(1.0f, 1.0f, 1.0f);
+    float metallic = 0.5f;
+    float roughness = 0.5f;
+    
     float3 lightPos = float3(0.0f, 8.0f, -10.0f); //TODO: Light-struct to GPU
-    float3 lightCol = float3(300.0f, 300.0f, 300.0f); //TODO: Light-struct to GPU
-
+    float3 lightCol = float3(300.0f, 300.0f, 300.0f); //TODO: Light-struct to GPU   
+    
+    //Normal Vector
     float3 N = normalize(input.normal);
+    //View Direction Vector
     float3 V = normalize(camPos - input.worldPos.xyz);
+    
+    //If an object has a texture sample from it, else use default values.
+    if(c_hasAlbedo == 1)
+    {
+        albedo = T_albedo.Sample(samp, input.uv);
+    }
+    
+    if(c_hasMetalness == 1)
+    {
+        metallic = T_metalness.Sample(samp, input.uv).r;
+    }
+    
+    if(c_hasRoughness == 1)
+    {
+        roughness = T_roughness.Sample(samp, input.uv).r;
+    }
+    
+    if(c_hasAoMap == 1)
+    {
+        ao = T_aomap.Sample(samp, input.uv).r;        
+    }    
+    
 
+    //---------------------------------PBR-Shading Calculations---------------------------------
+    
     // calculate reflectance at normal incidence; if dia-electric (like plastic) use F0 
     // of 0.04 and if it's a metal, use the albedo color as F0 (metallic workflow)
 	float3 F0 = float3(0.04f, 0.04f, 0.04f);
@@ -81,8 +108,7 @@ float4 main(PixelIn input) : SV_TARGET
     Lo += rad;
 	
     //Ambient lighting
-    float3 ambient = float3(0.03f, 0.03f, 0.03f) * albedo * ao;
-    
+    float3 ambient = float3(0.5f, 0.5f, 0.5f) * albedo * ao;
     float3 color = ambient + Lo;
     
     //HDR tonemapping
