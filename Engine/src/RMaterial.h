@@ -80,7 +80,7 @@ private:
 
 private:
 	//Split the path to only get the filename
-	std::string GetFilename(const std::string& path);
+	const std::string GetFilename(const std::string& path) const;
 	bool CreateConstBuf(const matConstants_t& mat);
 	bool CreateConstBuf(const properties_t& mat);
 
@@ -88,11 +88,11 @@ public:
 	RMaterial();
 	~RMaterial();
 
-	void BindMaterial();
-	void UnBindMaterial();
+	void BindMaterial() const;
+	void UnBindMaterial() const;
 	
 	//Check if a material has a specific texture
-	bool HasTexture(const ETextureType& type);
+	bool HasTexture(const ETextureType& type) const;
 
 	//Loaded from assimp
 	bool Create(aiMaterial* aiMat, const std::string& fileformat);

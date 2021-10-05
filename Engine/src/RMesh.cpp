@@ -4,7 +4,7 @@
 
 RMesh::RMesh()
 {
-    m_meshType   = EMeshType::staticMesh;
+    m_meshType = EMeshType::staticMesh;
 }
 
 RMesh::~RMesh()
@@ -13,7 +13,21 @@ RMesh::~RMesh()
     m_materials.clear();
 }
 
-const std::string RMesh::GetFileFormat(const std::string& filename)
+bool RMesh::ChangeMaterial(const std::string& mtlfile)
+{
+    /*
+        The new material have to have as many submaterials as previously,
+        otherwise things will look weird...
+
+        Load in the material from a mtl
+        * Can have many materials in same file
+        * 
+
+    */
+    return false;
+}
+
+const std::string RMesh::GetFileFormat(const std::string& filename) const
 {
     size_t startIndex = filename.find_last_of(".");
     return filename.substr(startIndex);
@@ -145,7 +159,7 @@ bool RMesh::CreateIndexBuffer(const std::vector<UINT>& indices, mesh_t& mesh)
     return !FAILED(hr);
 }
 
-void RMesh::Render()
+void RMesh::Render() const
 {
     UINT offset = 0;
     UINT stride = sizeof(simple_vertex_t);

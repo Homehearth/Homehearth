@@ -14,7 +14,7 @@ RMaterial::~RMaterial()
 {
 }
 
-std::string RMaterial::GetFilename(const std::string& path)
+const std::string RMaterial::GetFilename(const std::string& path) const
 {
     //Split up the string path to only the textures filename
     size_t index = path.find_last_of("/\\");
@@ -59,7 +59,7 @@ bool RMaterial::CreateConstBuf(const properties_t& mat)
     return !FAILED(hr);
 }
 
-void RMaterial::BindMaterial()
+void RMaterial::BindMaterial() const
 {
     /*
         Bind the constant buffers
@@ -84,7 +84,7 @@ void RMaterial::BindMaterial()
     D3D11Core::Get().DeviceContext()->PSSetShaderResources(0, nrOfTextures, allSRV);
 }
 
-void RMaterial::UnBindMaterial()
+void RMaterial::UnBindMaterial() const
 {
     //Unbind the constantbuffers
     ID3D11Buffer* nullBuffer = nullptr;
@@ -97,7 +97,7 @@ void RMaterial::UnBindMaterial()
     D3D11Core::Get().DeviceContext()->PSSetShaderResources(0, nrOfTextures, nullSRV);
 }
 
-bool RMaterial::HasTexture(const ETextureType& type)
+bool RMaterial::HasTexture(const ETextureType& type) const
 {
     bool foundTexture = false;
 

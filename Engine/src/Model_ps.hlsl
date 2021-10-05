@@ -44,7 +44,14 @@ struct PixelIn
 float4 main(PixelIn input) : SV_TARGET
 { 
     if (c_hasAlbedo)
-        return T_albedo.Sample(samp, input.uv);
+    {
+        float4 colour = T_albedo.Sample(samp, input.uv);
+        //Check if transparent
+        if (colour.w == 0.0f)
+            return float4(0.0f, 0.0f, 0.0f, 0.0f);
+        else
+            return colour;
+    }
     else
         return float4(1.0f, 0.0f, 0.0f, 1.0f);
 }

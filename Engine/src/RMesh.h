@@ -39,7 +39,7 @@ private:
 
 private:
 	//Get the end of file. Searches for "."
-	const std::string GetFileFormat(const std::string& filename);
+	const std::string GetFileFormat(const std::string& filename) const;
 	/*
 		Combines multiple submeshes that uses the same material to one.
 		This is to avoid to many drawcalls per RMesh
@@ -54,10 +54,13 @@ public:
 	RMesh();
 	~RMesh();
 
+	//Change the material to something else
+	bool ChangeMaterial(const std::string& mtlfile);
+
 	/*
 		Render all of the submeshes in the RMesh with correct material
 	*/
-	void Render();
+	void Render() const;
 
 	// Inherited via GResource
 	virtual bool Create(const std::string& filename) override;
