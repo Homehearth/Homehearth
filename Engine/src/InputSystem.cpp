@@ -192,7 +192,7 @@ const bool InputSystem::IsMouseRelative() const
 	return isRelative;
 }
 
-void InputSystem::SwitchMouseMode()
+void InputSystem::SwitchMouseMode() const
 {
 	if (m_mouseState.positionMode == dx::Mouse::MODE_RELATIVE)
 	{
