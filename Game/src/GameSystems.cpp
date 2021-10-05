@@ -17,7 +17,7 @@ void GameSystems::MRayIntersectBoxSystem(Scene& scene)
 	view.each([&](comp::BoxCollider& boxCollider)
 	{
 		//Collided with mouse
-		bool hasCollided = Intersect::MouseRayIntersectBox(boxCollider, t);
+		bool hasCollided = Intersect::RayIntersectBox(InputSystem::Get().GetMouseRay(), boxCollider, t);
 	});
 }
 

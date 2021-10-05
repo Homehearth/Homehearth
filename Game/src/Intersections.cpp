@@ -1,7 +1,7 @@
 #include "Intersections.h"
 
 //Check if the mouse ray intersects with a box collider.
-bool Intersect::MouseRayIntersectBox(comp::BoxCollider& boxCollider, float& t)
+bool Intersect::RayIntersectBox(const Ray_t& mouseRay, comp::BoxCollider& boxCollider, float& t)
 {
 	/**
 	 * computing all t-values for the ray
@@ -9,8 +9,8 @@ bool Intersect::MouseRayIntersectBox(comp::BoxCollider& boxCollider, float& t)
 	 * It returns the closest positive t-value
 	 *
 	 */
-	sm::Vector3 rayOrigin = InputSystem::Get().GetMouseRay().rayPos;
-	sm::Vector3 rayDir = InputSystem::Get().GetMouseRay().rayDir;
+	const sm::Vector3 rayOrigin = mouseRay.rayPos;
+	const sm::Vector3 rayDir = mouseRay.rayDir;
 
 	float tmin = (std::numeric_limits<float>::min)();
 	float tmax = (std::numeric_limits<float>::max)();
@@ -18,8 +18,8 @@ bool Intersect::MouseRayIntersectBox(comp::BoxCollider& boxCollider, float& t)
 	sm::Vector3 p = boxCollider.center - rayOrigin;
 	for (size_t i = 0; i < 3; i++)
 	{
-		float e = boxCollider.norm[i].x * p.x + boxCollider.norm[i].y * p.y + boxCollider.norm[i].z * p.z;
-		float f = boxCollider.norm[i].x * rayDir.x + boxCollider.norm[i].y * rayDir.y + boxCollider.norm[i].z * rayDir.z;
+		const float e = boxCollider.norm[i].x * p.x + boxCollider.norm[i].y * p.y + boxCollider.norm[i].z * p.z;
+		const float f = boxCollider.norm[i].x * rayDir.x + boxCollider.norm[i].y * rayDir.y + boxCollider.norm[i].z * rayDir.z;
 
 		//Check normal face is not ortogonal to ray direction
 		if (abs(f) > 0.00001f)
@@ -69,15 +69,15 @@ bool Intersect::MouseRayIntersectBox(comp::BoxCollider& boxCollider, float& t)
 	return true;
 }
 
-bool Intersect::MouseRayIntersectSphere(comp::SphereCollider& sphereCollider, float& t)
+bool Intersect::RayIntersectSphere(const Ray_t& mouseRay, comp::SphereCollider& sphereCollider, float& t)
 {
 	//Todo: Change to Epsilon comparison
 	if (sphereCollider.radius == 0.f)
-	{
+	{ 
 		return false;
 	}
-	const sm::Vector3 rayOrigin = InputSystem::Get().GetMouseRay().rayPos;
-	const sm::Vector3 rayDir = InputSystem::Get().GetMouseRay().rayDir;
+	const sm::Vector3 rayOrigin = mouseRay.rayPos;
+	const sm::Vector3 rayDir = mouseRay.rayDir;
 
 	const sm::Vector3 objectPos = sphereCollider.centerOffset;
 	const sm::Vector3 rayToCenter = objectPos - rayOrigin;

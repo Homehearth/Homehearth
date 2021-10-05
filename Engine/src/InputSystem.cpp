@@ -1,6 +1,6 @@
 #include "EnginePCH.h"
 #include "InputSystem.h"
-InputSystem::InputSystem()
+InputSystem::InputSystem(): m_kBState(), m_mouseState()
 {
 	m_mousePos.x = 0;
 	m_mousePos.y = 0;
@@ -41,7 +41,7 @@ void InputSystem::UpdateEvents()
 	m_mousePos.y = m_mouseState.y;
 }
 
-const bool InputSystem::CheckKeyboardKey(const dx::Keyboard::Keys& key, const KeyState state) const
+bool InputSystem::CheckKeyboardKey(const dx::Keyboard::Keys& key, const KeyState state) const
 {
 	switch (state)
 	{
@@ -70,7 +70,7 @@ const std::unique_ptr<dx::Mouse>& InputSystem::GetMouse() const
 	return m_mouse;
 }
 
-const bool InputSystem::CheckMouseKey(const MouseKey mouseButton, const KeyState state) const
+bool InputSystem::CheckMouseKey(const MouseKey mouseButton, const KeyState state) const
 {
 	dx::Mouse::ButtonStateTracker::ButtonState* button = nullptr;
 	switch (mouseButton)
@@ -105,7 +105,7 @@ const bool InputSystem::CheckMouseKey(const MouseKey mouseButton, const KeyState
 	}
 }
 
-const int InputSystem::GetAxis(Axis axis) const
+int InputSystem::GetAxis(Axis axis) const
 {
 	int toReturn = 0;
 	switch (axis)
@@ -136,12 +136,12 @@ const int InputSystem::GetAxis(Axis axis) const
 	return toReturn;
 }
 
-const MousePos InputSystem::GetMousePos() const
+const MousePos& InputSystem::GetMousePos() const
 {
 	return m_mousePos;
 }
 
-void InputSystem::ToggleMouseVisibility()
+void InputSystem::ToggleMouseVisibility() const
 {
 	if (m_mouseState.positionMode == dx::Mouse::MODE_ABSOLUTE)
 	{
@@ -162,10 +162,10 @@ void InputSystem::UpdateMouseRay()
 	if (m_currentCamera != nullptr)
 	{
 		// Transform from 2D view port coordinates to NDC -> also inverse projection to get to 4D view space
-		float viewX = ((2.f * m_mousePos.x) / m_windowWidth - 1.f) / m_currentCamera->GetProjection()._11;
-		float viewY = (1.f - (2.f * m_mousePos.y) / m_windowHeight) / m_currentCamera->GetProjection()._22;
+		const float viewX = ((2.f * static_cast<float>(m_mousePos.x)) / (static_cast<float>(m_windowWidth) - 1.f)) / m_currentCamera->GetProjection()._11;
+		const float viewY = (1.f - (2.f * static_cast<float>(m_mousePos.y)) / static_cast<float>(m_windowHeight)) / m_currentCamera->GetProjection()._22;
 
-		sm::Matrix viewInverse = m_currentCamera->GetView().Invert();
+		const sm::Matrix viewInverse = m_currentCamera->GetView().Invert();
 
 		m_mouseRay.rayDir = sm::Vector3::TransformNormal({ viewX, viewY, 1.f }, viewInverse);
 		m_mouseRay.rayPos = sm::Vector3::Transform({ 0.f,0.f,0.f }, viewInverse);
@@ -177,12 +177,12 @@ void InputSystem::UpdateMouseRay()
 
 }
 
-const MouseRay InputSystem::GetMouseRay() const
+const Ray_t& InputSystem::GetMouseRay() const
 {
 	return m_mouseRay;
 }
 
-void InputSystem::SwitchMouseMode()
+void InputSystem::SwitchMouseMode() const
 {
 	if (m_mouseState.positionMode == dx::Mouse::MODE_RELATIVE)
 	{
