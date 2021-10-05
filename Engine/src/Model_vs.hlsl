@@ -37,11 +37,9 @@ VertexOut main(VertexIn input)
     
     output.pos = float4(input.pos, 1.0f);
     output.pos = mul(world, output.pos);
+    output.worldPos = output.pos;
     output.pos = mul(view, output.pos);
     output.pos = mul(projection, output.pos);
-    output.pos = mul(projectionView, output.pos);
-    output.worldPos = float4(input.pos, 1.0f);
-    output.worldPos = mul(world, output.worldPos);
 
     output.normal = mul(input.normal, (float3x3) world);
     output.uv = input.uv;
