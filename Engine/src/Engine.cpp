@@ -31,6 +31,8 @@ void Engine::Startup()
 	// DirectX Startup:
 	D3D11Core::Get().Initialize(&m_window);
 	D2D1Core::Initialize(&m_window);
+	rtd::Handler2D::Get()->Initialize();
+	BackBuffer::Initialize();
 
 	//Camera
 	Camera m_debugCamera;
@@ -55,7 +57,6 @@ void Engine::Startup()
 #endif
 	this->m_audio_engine = std::make_unique<DirectX::AudioEngine>(eflags);
 
-
 	IMGUI(
 		// Setup ImGUI
 		IMGUI_CHECKVERSION();
@@ -69,9 +70,23 @@ void Engine::Startup()
 	);
 
 	InputSystem::Get().SetMouseWindow(m_window.GetHWnd());
+
+#if DRAW_TEMP_2D
+	rtd::Button* test = new rtd::Button("demo_start_game_button.png", draw_t(100.0f, 100.0f, 275.0f, 100.0f), true);
+	rtd::Button* test2 = new rtd::Button("demo_options_button.png", draw_t(100.0f, 225.0f, 275.0f, 100.0f), true);
+	rtd::Button* test3 = new rtd::Button("demo_exit_button.png", draw_t(100.0f, 350.0f, 275.0f, 100.0f), false);
+	rtd::Text* test4 = new rtd::Text("Welcome to Homehearth!", draw_text_t(350.0f, 25.0f, 300.0f, 100.0f));
+	test->GetBorder()->SetColor(D2D1::ColorF(1.0f, 0.0f, 0.5f));
+	test2->GetBorder()->SetColor(D2D1::ColorF(0.1f, .75f, 0.25f));
+	test3->GetBorder()->SetColor(D2D1::ColorF(0.5f, .23f, 0.65f));
+	test->SetName("Button1");
+	rtd::Handler2D::InsertElement(test);
+	rtd::Handler2D::InsertElement(test2);
+	rtd::Handler2D::InsertElement(test3);
+	rtd::Handler2D::InsertElement(test4);
+#endif
 	
 	HeadlessEngine::Startup();
-
 }
 
 void Engine::Run()
@@ -81,10 +96,13 @@ void Engine::Run()
 		T_CJOB(Engine, RenderThread);
 
 	HeadlessEngine::Run();
-
 	// Wait for the rendering thread to exit its last render cycle and shutdown
+#if _DEBUG
+	// This is debug since it catches release in endless loop.
+	while (!s_safeExit) {};
+#endif
+	
 	IMGUI(
-		while (!s_safeExit) {}; // TODO: why only in debug??
 		// ImGUI Shutdown
 		ImGui_ImplDX11_Shutdown();
 		ImGui_ImplWin32_Shutdown();
@@ -92,8 +110,10 @@ void Engine::Run()
 	);
 
     T_DESTROY();
-    ResourceManager::Get().Destroy();
     D2D1Core::Destroy();
+	ResourceManager::Get().Destroy();
+	rtd::Handler2D::Get()->Destroy();
+	BackBuffer::Destroy();
 }
 
 
@@ -225,9 +245,12 @@ void Engine::RenderThread()
 		deltaTime = static_cast<float>(currentFrame - lastFrame);
 		if (deltaSum >= targetDelta)
 		{
-			Render(deltaSum);
-			m_frameTime.render = deltaSum;
-			deltaSum = 0.f;
+			if (GetCurrentScene()->IsRenderReady() && rtd::Handler2D::Get()->IsRenderReady())
+			{
+				Render(deltaSum);
+				m_frameTime.render = deltaSum;
+				deltaSum = 0.f;
+			}
 		}
 		deltaSum += deltaTime;
 		lastFrame = currentFrame;
@@ -294,12 +317,11 @@ void Engine::Render(float& dt)
 {
 	PROFILE_FUNCTION();
 
-	if (!GetCurrentScene()->IsRenderReady())
-		return;
-
+	/*
+		Render 3D
+	*/
 	m_renderer.ClearFrame();
 	m_renderer.Render(GetCurrentScene());
-	D2D1Core::Begin();
 
 	{
 		PROFILE_SCOPE("Render ImGui");
@@ -312,8 +334,14 @@ void Engine::Render(float& dt)
 	}
 
 	{
-		PROFILE_SCOPE("Present");
+		PROFILE_SCOPE("Render D2D1");
+		D2D1Core::Begin();
+		rtd::Handler2D::Get()->Render();
 		D2D1Core::Present();
+	}
+
+	{
+		PROFILE_SCOPE("Present");
 		D3D11Core::Get().SwapChain()->Present(0, 0);
 	}
 }

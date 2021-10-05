@@ -3,6 +3,7 @@
 
 #define RENDER_IMGUI 1
 #define PROFILER 1
+#define DRAW_TEMP_2D 1
 
 //Macros
 #if RENDER_IMGUI
@@ -16,6 +17,7 @@
 #ifdef WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
+#include <wincodec.h>
 #include <winsock2.h>
 #include <WS2tcpip.h>
 #pragma comment(lib, "WS2_32.Lib")
@@ -101,6 +103,8 @@ namespace sm = dx::SimpleMath;
 #include "D2D1Core.h"
 #include "Profiler.h"
 #include "ThreadSyncer.h"
+#include "Handler2D.h"
+#include "BackBuffer.h"
 
 // Network
 //#include "network.h"
@@ -110,6 +114,10 @@ namespace sm = dx::SimpleMath;
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
+#pragma warning(pop)
+
+EXTERN_C IMAGE_DOS_HEADER __ImageBase;
+#define HINST_THISCOMPONENT ((HINSTANCE)&__ImageBase)
 #pragma warning(pop)
 
 // Paths
