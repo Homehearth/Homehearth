@@ -1,15 +1,12 @@
 #pragma once
 
+#include "HeadlessEngine.h"
 #include "Window.h"
-#include "Scene.h"
 #include "Renderer.h"
-#include "EventTypes.h"
-#include "Client.h"
 
-class Engine
+class Engine : public HeadlessEngine
 {
 private:
-	static bool s_engineRunning;
 	static bool s_safeExit;
 	std::mutex m_imguiMutex;
 	
@@ -23,11 +20,7 @@ private:
 	Window m_window;
 	Renderer m_renderer;
 	std::unique_ptr<DirectX::AudioEngine> m_audio_engine;
-	std::unordered_map<std::string, Scene> m_scenes;
-	Scene* m_currentScene;
-	bool m_vSync;
-	Client m_client;
-
+	
 	struct {
 		float update;
 		float render;
@@ -37,39 +30,32 @@ private:
 	void RenderThread();
 
 	// Updates the current scene.
-	void Update(float dt);
+	void Update(float dt) override;
 	
 	// Renders one frame.
 	void Render(float& dt);
 
-	void CameraUpdate(float deltaTime);
-
-public:
-	Engine();
-	Engine(const Window& other) = delete;
-	Engine(Window&& other) = delete;
-	Engine& operator=(const Window& other) = delete;
-	Engine& operator=(Window&& other) = delete;
-	virtual ~Engine() = default;
-
-	// Startup the Engine and its instances in a specific order.
-	void Startup();
-
 	// Run the Engine's core loop.
-	void Run();
-
-	// Shutdown the Engine and its instances in the reverse order.
-	void Shutdown();
-
-	Scene& GetScene(const std::string& name);
-	void SetScene(const std::string& name);
-	void SetScene(Scene& scene);
+	void Run() override;
 
 	Window* GetWindow();
 
-	static bool IsRunning();
-
 	// IMGUI
 	void drawImGUI() const;
-};
+	void CameraUpdate(float deltaTime);
 
+protected:
+	// Startup the Engine and its instances in a specific order.
+	void Startup() override;
+
+public:
+	Engine();
+	Engine(const Engine& other) = delete;
+	Engine(Engine&& other) = delete;
+	Engine& operator=(const Engine& other) = delete;
+	Engine& operator=(Engine&& other) = delete;
+	virtual ~Engine() = default;
+
+	virtual bool OnStartup() = 0;
+	virtual bool OnUserUpdate(float deltaTime) = 0;
+};
