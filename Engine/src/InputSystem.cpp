@@ -163,7 +163,7 @@ void InputSystem::UpdateMouseRay()
 	{
 		// Transform from 2D view port coordinates to NDC -> also inverse projection to get to 4D view space
 		const float viewX = (((2.0f * static_cast<float>(m_mousePos.x)) / (static_cast<float>(m_windowWidth))) - 1.0f) / m_currentCamera->GetProjection()._11;
-		const float viewY = ((((2.0f * static_cast<float>(m_mousePos.y)) / static_cast<float>(m_windowHeight)) - 1.0f) * 1.0f) / m_currentCamera->GetProjection()._22;
+		const float viewY = ((((2.0f * static_cast<float>(m_mousePos.y)) / static_cast<float>(m_windowHeight)) - 1.0f) * -1.0f) / m_currentCamera->GetProjection()._22;
 
 		const sm::Matrix viewInverse = m_currentCamera->GetView().Invert();
 

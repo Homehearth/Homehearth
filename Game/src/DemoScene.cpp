@@ -15,14 +15,10 @@ void InitializePlayerEntity(Scene& scene)
 	auto boxEntity = scene.GetRegistry().create();
 	auto& transform = scene.GetRegistry().emplace<comp::Transform>(boxEntity);
 	transform.position = sm::Vector3(0.0f, 0.0f, -5.0f);
-	auto& boxCollider = scene.GetRegistry().emplace<comp::BoxCollider>(boxEntity);
+	auto& boxCollider = scene.GetRegistry().emplace<comp::SphereCollider>(boxEntity);
 	boxCollider.center = sm::Vector3(0.0f, 0.0f, -5.0f);;
-	boxCollider.halfSize[0] = 1.f;
-	boxCollider.halfSize[1] = 1.f;
-	boxCollider.halfSize[2] = 1.f;
-	boxCollider.norm[0] = sm::Vector3(1.0f, 0.0f, 0.0f);
-	boxCollider.norm[1] = sm::Vector3(0.0f, 1.0f, 0.0f);
-	boxCollider.norm[2] = sm::Vector3(0.0f, 0.0f, 1.0f);
+	boxCollider.centerOffset = sm::Vector3(0.0f, 0.0f, -5.0f);
+	boxCollider.radius = 1.f;
 	auto& renderable = scene.GetRegistry().emplace<comp::Renderable>(boxEntity);
 	renderable.mesh = ResourceManager::Get().GetResource<RMesh>("Cube.fbx");
 	
