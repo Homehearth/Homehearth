@@ -3,14 +3,16 @@
 
 #include "Components.h"
 
+#include "DoubleBuffer.h"
+
 class Scene : public entt::emitter<Scene>
 {
 private:
 	// Registry handles all ecs data
 	entt::registry m_registry;
 	
-	std::unordered_map<entt::entity, comp::Transform> m_transformCopies;
-	std::atomic<bool> m_hasRendered;
+	DoubleBuffer<std::vector<comp::Renderable>> m_renderableCopies;
+	dx::ConstantBuffer<basic_model_matrix_t> m_publicBuffer;
 
 public:
 
@@ -26,5 +28,7 @@ public:
 
 	// Emit render event and render Renderable components
 	void Render();
+
+	bool IsRenderReady() const;
 
 };

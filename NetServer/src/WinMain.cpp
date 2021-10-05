@@ -10,9 +10,6 @@ void RedirectIoToConsole();
 //																				//
 //------------------------------------------------------------------------------//
 
-
-
-
 // The main entry point of the engine.
 int CALLBACK WinMain(
 	_In_ HINSTANCE hInstance,
@@ -38,8 +35,9 @@ int CALLBACK WinMain(
 
 	MSG msg = { nullptr };
 	int i = 0;
-	bool key[3] = { false, false, false };
-	bool old_key[3] = { false, false, false };
+	bool key = false;
+	bool old_key = false;
+
 	while (s.IsRunning())
 	{
 		// Service any and all pending Windows messages.
@@ -48,23 +46,15 @@ int CALLBACK WinMain(
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
-
 		if (GetForegroundWindow() == GetConsoleWindow())
 		{
-			key[0] = GetAsyncKeyState('1') & 0x8000;
-			key[1] = GetAsyncKeyState('2') & 0x8000;
-			key[2] = GetAsyncKeyState('3') & 0x8000;
+			key = GetAsyncKeyState('1') & 0x8000;
 		}
-		if (key[0] && !old_key[0])
+		if (key && !old_key)
 		{
-			std::cout << "stopping!" << std::endl;
 			s.Stop();
 		}
-		
-		for (int i = 0; i < 3; i++)
-		{
-			old_key[i] = key[i];
-		}
+		old_key = key;
 	}
 
 	return 0;

@@ -1,5 +1,17 @@
 #pragma once
 #pragma warning(push, 3)
+
+#define RENDER_IMGUI 1
+#define PROFILER 1
+
+//Macros
+#if RENDER_IMGUI
+#define IMGUI(a) do {a} while(0)
+#else
+#define IMGUI(a) do {} while(0)
+#endif
+
+
 // Windows
 #ifdef WIN32
 #define WIN32_LEAN_AND_MEAN
@@ -34,6 +46,7 @@
 
 #include <functional>
 
+#define ALIGN16 __declspec(align(16)) 
 
 // DirectX
 #include <d3d11.h>

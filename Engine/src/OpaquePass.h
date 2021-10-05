@@ -18,7 +18,7 @@ public:
 
 	void PreRender(ID3D11DeviceContext* dc, PipelineManager* pm) override;
 
-	void Render() override;
+	void Render(Scene* pScene) override;
 
 	void PostRender() override;
 };

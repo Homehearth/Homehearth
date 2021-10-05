@@ -5,13 +5,11 @@ cbuffer Matrices : register(b0)
 
 cbuffer Camera : register(b1)
 {
-    // now combined projectionView matrix
-    float4x4 projectionView;
-    /*
+    float4 cameraPosition;
+    float4 cameraTarget;
+    
     float4x4 projection;
-    float4 position;
-    float4 lookAt;
-    */
+    float4x4 view;
 }
 
 struct VertexIn
@@ -39,6 +37,8 @@ VertexOut main(VertexIn input)
     
     output.pos = float4(input.pos, 1.0f);
     output.pos = mul(world, output.pos);
+    output.pos = mul(view, output.pos);
+    output.pos = mul(projection, output.pos);
     output.pos = mul(projectionView, output.pos);
     output.worldPos = float4(input.pos, 1.0f);
     output.worldPos = mul(world, output.worldPos);

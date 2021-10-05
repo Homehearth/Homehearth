@@ -4,8 +4,9 @@
 
 RMesh::RMesh()
 {
-    m_meshType = EMeshType::staticMesh;
-    m_material = nullptr;
+    m_meshType   = EMeshType::staticMesh;
+    m_material   = nullptr;
+    m_indexCount = 0;
 }
 
 RMesh::~RMesh()
@@ -31,18 +32,8 @@ bool RMesh::CreateVertexBuffer(const std::vector<simple_vertex_t>& vertices)
     subresData.SysMemPitch = 0;
     subresData.SysMemSlicePitch = 0;
 
-    ComPtr<ID3D11Buffer> vertexBuffer;
-
-    HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&bufferDesc, &subresData, vertexBuffer.GetAddressOf());
-    if (!FAILED(hr))
-    {
-        m_meshInfo.vertexBuffer = vertexBuffer;
-        return true;
-    }
-    else
-    {
-        return false;
-    }
+    HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&bufferDesc, &subresData, m_vertexBuffer.GetAddressOf());
+    return !FAILED(hr);
 }
 
 bool RMesh::CreateIndexBuffer(const std::vector<UINT>& indices)
@@ -62,44 +53,31 @@ bool RMesh::CreateIndexBuffer(const std::vector<UINT>& indices)
     subresData.pSysMem = &indices[0];
     subresData.SysMemPitch = 0;
     subresData.SysMemSlicePitch = 0;
+    m_indexCount = (UINT)indices.size();
 
-    ComPtr<ID3D11Buffer> indexBuffer;
-
-    HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&indexBufferDesc, &subresData, indexBuffer.GetAddressOf());
-    if (!FAILED(hr))
-    {
-        m_meshInfo.indexBuffer = indexBuffer;
-        m_meshInfo.indexCount = (UINT)indices.size();
-        return true;
-    }
-    else
-    {
-        return false;
-    }
+    HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&indexBufferDesc, &subresData, m_indexBuffer.GetAddressOf());
+    return !FAILED(hr);
 }
 
 void RMesh::Render()
 {
-	//uint16_t currentMat = -1;
-    UINT stride = sizeof(simple_vertex_t);
-    UINT offset = 0;
-
-    //Upload the material to gpu
-    /*
     if (m_material)
-    {
-        m_material->UploadToGPU();
-    }
-    */
+        m_material->BindMaterial();
 
 	//Draw with indexbuffer
-    D3D11Core::Get().DeviceContext()->IASetVertexBuffers(0, 1, m_meshInfo.vertexBuffer.GetAddressOf(), &stride, &offset);
-    D3D11Core::Get().DeviceContext()->IASetIndexBuffer(m_meshInfo.indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
-    D3D11Core::Get().DeviceContext()->DrawIndexed(m_meshInfo.indexCount, 0, 0);
+    UINT offset = 0;
+    UINT stride = sizeof(simple_vertex_t);
+    D3D11Core::Get().DeviceContext()->IASetVertexBuffers(0, 1, m_vertexBuffer.GetAddressOf(), &stride, &offset);
+    D3D11Core::Get().DeviceContext()->IASetIndexBuffer(m_indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
+    D3D11Core::Get().DeviceContext()->DrawIndexed(m_indexCount, 0, 0);
+
+    if (m_material)
+        m_material->UnBindMaterial();
 }
 
 bool RMesh::Create(const std::string& filename)
 {
+    //std::string filepath = "../../../../../Assets/Models/" + filename;
     std::string filepath = "../Assets/Models/" + filename;
     Assimp::Importer importer;
 
@@ -134,28 +112,26 @@ bool RMesh::Create(const std::string& filename)
         return false;
     }
 
-    //Get the name of the material
-    if (scene->HasMaterials())
-    {
-        aiString matName;
-        scene->mMaterials[0]->Get(AI_MATKEY_NAME, matName);
-        std::string name = matName.C_Str();
-        
-        //Search and see if the material already has been loaded.
-        //If it was not loaded, we try to create it by searching the mtl-files
-        m_material = ResourceManager::GetResource<RMaterial>(name);
-
-        //Material was not loaded before
-        if (!m_material)
-        {
-            m_material = new RMaterial();
-            m_material->LoadMaterial(scene->mMaterials[0]);
-            ResourceManager::InsertResource(name, m_material);
-        }
-    }
-
     //Load in the mesh
     const aiMesh* aimesh = scene->mMeshes[0];
+
+    //Load in the material 
+    if (scene->HasMaterials())
+    {
+        //Get the material-index
+        UINT index = aimesh->mMaterialIndex;
+        aiString matName;
+        scene->mMaterials[index]->Get(AI_MATKEY_NAME, matName);
+        std::string name = matName.C_Str();
+
+        //Create a new material and load it. Add it to manager
+        m_material = std::make_shared<RMaterial>();
+        std::cout << "Usecount before for material: " << m_material.use_count() << std::endl;
+        if (m_material->LoadMaterial(scene->mMaterials[index]))
+            ResourceManager::Get().AddResource(name, m_material);
+        std::cout << "Usecount after for material: " << m_material.use_count() << std::endl;
+
+    }
 
     std::vector<simple_vertex_t> vertices;
     std::vector<UINT> indices;

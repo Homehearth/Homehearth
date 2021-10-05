@@ -6,6 +6,7 @@
  */
 namespace Shaders
 {
+	
 	// Shader Interface.
     class IShaders
     {
@@ -17,6 +18,8 @@ namespace Shaders
     public:
         std::string GetShaderByteCode() const;
     };
+
+
 	
     class VertexShader : public IShaders, resource::GResource
     {
@@ -24,10 +27,10 @@ namespace Shaders
         ComPtr<ID3D11VertexShader> m_shader;
     public:
         VertexShader() = default;
-        VertexShader(const VertexShader& other) = delete;
-        VertexShader(VertexShader&& other) = delete;
-        VertexShader& operator=(const VertexShader& other) = delete;
-        VertexShader& operator=(VertexShader&& other) = delete;
+        VertexShader(const VertexShader& other) = default;
+        VertexShader(VertexShader&& other) = default;
+        VertexShader& operator=(const VertexShader& other) = default;
+        VertexShader& operator=(VertexShader&& other) = default;
         virtual ~VertexShader() = default;
     	
         bool Create(const std::string& filename) override;
@@ -42,10 +45,10 @@ namespace Shaders
         ComPtr<ID3D11PixelShader> m_shader;
     public:
         PixelShader() = default;
-        PixelShader(const PixelShader& other) = delete;
-        PixelShader(PixelShader&& other) = delete;
-        PixelShader& operator=(const PixelShader& other) = delete;
-        PixelShader& operator=(PixelShader&& other) = delete;
+        PixelShader(const PixelShader& other) = default;
+        PixelShader(PixelShader&& other) = default;
+        PixelShader& operator=(const PixelShader& other) = default;
+        PixelShader& operator=(PixelShader&& other) = default;
         virtual ~PixelShader() = default;
     	
         bool Create(const std::string& filename) override;
@@ -61,9 +64,9 @@ namespace Shaders
     public:
         ComputeShader() = default;
         ComputeShader(const ComputeShader& other) = delete;
-        ComputeShader(ComputeShader&& other) = delete;
+        ComputeShader(ComputeShader&& other) = default;
         ComputeShader& operator=(const ComputeShader& other) = delete;
-        ComputeShader& operator=(ComputeShader&& other) = delete;
+        ComputeShader& operator=(ComputeShader&& other) = default;
         virtual ~ComputeShader() = default;
 
         bool Create(const std::string& filename) override;
@@ -79,9 +82,9 @@ namespace Shaders
     public:
         GeometryShader() = default;
         GeometryShader(const GeometryShader& other) = delete;
-        GeometryShader(GeometryShader&& other) = delete;
+        GeometryShader(GeometryShader&& other) = default;
         GeometryShader& operator=(const GeometryShader& other) = delete;
-        GeometryShader& operator=(GeometryShader&& other) = delete;
+        GeometryShader& operator=(GeometryShader&& other) = default;
         virtual ~GeometryShader() = default;
 
         bool Create(const std::string& filename) override;
@@ -97,9 +100,9 @@ namespace Shaders
     public:
         HullShader() = default;
         HullShader(const HullShader& other) = delete;
-        HullShader(HullShader&& other) = delete;
+        HullShader(HullShader&& other) = default;
         HullShader& operator=(const HullShader& other) = delete;
-        HullShader& operator=(HullShader&& other) = delete;
+        HullShader& operator=(HullShader&& other) = default;
         virtual ~HullShader() = default;
 
         bool Create(const std::string& filename) override;
@@ -115,9 +118,9 @@ namespace Shaders
     public:
         DomainShader() = default;
         DomainShader(const DomainShader& other) = delete;
-        DomainShader(DomainShader&& other) = delete;
+        DomainShader(DomainShader&& other) = default;
         DomainShader& operator=(const DomainShader& other) = delete;
-        DomainShader& operator=(DomainShader&& other) = delete;
+        DomainShader& operator=(DomainShader&& other) = default;
         virtual ~DomainShader() = default;
 
         bool Create(const std::string& filename) override;

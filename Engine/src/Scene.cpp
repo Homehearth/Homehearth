@@ -1,10 +1,9 @@
 #include "EnginePCH.h"
 #include "Scene.h"
 
-Scene::Scene() 
-{
-	m_registry.on_construct<comp::Renderable>().connect<ecs::OnRenderableConstruct>();
-	m_hasRendered = true;
+Scene::Scene()
+{	
+	m_publicBuffer.Create(D3D11Core::Get().Device());
 }
 
 entt::registry& Scene::GetRegistry() {
@@ -13,46 +12,48 @@ entt::registry& Scene::GetRegistry() {
 
 void Scene::Update(float dt)
 {
+	PROFILE_FUNCTION();
+
 	// Emit event
 	publish<ESceneUpdate>(dt);
 	
 	// only copy if the last frame has been rendered
-	if (m_hasRendered)
-	{
-		m_registry.view<comp::Transform>().each([&](entt::entity e, comp::Transform& t) 
+	if (!m_renderableCopies.IsSwapped()) {
+		PROFILE_SCOPE("Copy Transforms");
+		m_renderableCopies[0].clear();
+		m_registry.group<comp::Renderable, comp::Transform>().each([&](entt::entity e, comp::Renderable& r, comp::Transform& t)
 			{
-				m_transformCopies[e] = t;
+				r.data.worldMatrix = ecs::GetMatrix(t);
+				m_renderableCopies[0].push_back(r);
 			});
-		m_hasRendered = false;
+		m_renderableCopies.Swap();
 	}
 }
 
 void Scene::Render() 
 {
-
-	while (m_hasRendered); // makes sure render thread is not faster than update thread
-
+	PROFILE_FUNCTION();
 	// System that renders Renderable component
-	auto view = m_registry.view<comp::Renderable>();
-	view.each([&](entt::entity e, comp::Renderable& renderable)
-		{
-			if (m_transformCopies.find(e) != m_transformCopies.end())
-			{
-				comp::Transform transform = m_transformCopies.at(e);
-				sm::Matrix m = ecs::GetMatrix(transform);
-				renderable.constantBuffer.SetData(D3D11Core::Get().DeviceContext(), m);
-			}
 
-			ID3D11Buffer* buffers[1] = 
-			{
-				renderable.constantBuffer.GetBuffer()
-			};
+	ID3D11Buffer* buffers[1] =
+	{
+		m_publicBuffer.GetBuffer()
+	};
 
-			D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, buffers);
-			renderable.mesh->Render();
-		});
-	m_hasRendered = true;
-
+	D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, buffers);
+	for (const auto& it : m_renderableCopies[1])
+	{
+		m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
+		it.mesh->Render();	
+	}
+	
 	// Emit event
 	publish<ESceneRender>();
+
+	m_renderableCopies.ReadyForSwap();
+}
+
+bool Scene::IsRenderReady() const 
+{
+	return m_renderableCopies.IsSwapped();
 }

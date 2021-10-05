@@ -5,18 +5,18 @@
 #include "Renderer.h"
 #include "EventTypes.h"
 #include "Client.h"
-struct Triangle2
-{
-	int x;
-};
 
 class Engine
 {
 private:
 	static bool s_engineRunning;
 	static bool s_safeExit;
-	std::atomic<bool> m_IsImguiReady;
+	std::mutex m_imguiMutex;
 	
+	std::atomic<bool> m_IsImguiReady;
+
+	std::shared_ptr<Camera> m_currentCamera;
+
 	Window m_window;
 	Renderer m_renderer;
 	std::unique_ptr<DirectX::AudioEngine> m_audio_engine;
@@ -30,12 +30,12 @@ private:
 		float render;
 	} m_frameTime;
 
-	
 	// Job for rendering thread.
 	void RenderThread();
 
 	// Updates the current scene.
 	void Update(float dt);
+	
 	// Renders one frame.
 	void Render(float& dt);
 
