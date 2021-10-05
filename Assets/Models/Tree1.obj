@@ -1,6 +1,6 @@
 # This file uses centimeters as units for non-parametric coordinates.
 
-mtllib ../Materials/Tree1.mtl
+mtllib ../Materials/Tree.mtl
 g default
 v -6.998085 47.191784 1.699262
 v 8.487085 47.191784 1.699262
