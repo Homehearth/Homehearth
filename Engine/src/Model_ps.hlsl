@@ -34,10 +34,10 @@ float4 main(PixelIn input) : SV_TARGET
 {
     float3 camPos = cameraPosition.xyz;
     float3 albedo = float3(0.5f, 0.0f, 0.0f); // = albedoTexture.Sample(anisotropic, input.uv);
-    float metallic = 0.0f; // = metallicTexture.Sample(anisotropic, input.uv).r;
-    float roughness = 0.9f; // = roughnessTexture.Sample(anisotropic, input.uv).r;
+    float metallic = 0.5f; // = metallicTexture.Sample(anisotropic, input.uv).r;
+    float roughness = 0.4f; // = roughnessTexture.Sample(anisotropic, input.uv).r;
     float ao = 1.0; // = aoTexture.Sample(anisotropic, input.uv).r;
-    float3 lightPos = float3(0.0f, 8.0f, -17.0f); //TODO: Light-struct to GPU
+    float3 lightPos = float3(0.0f, 8.0f, -10.0f); //TODO: Light-struct to GPU
     float3 lightCol = float3(1.0f, 1.0f, 1.0f); //TODO: Light-struct to GPU
 
     float3 N = normalize(input.normal);
@@ -56,14 +56,14 @@ float4 main(PixelIn input) : SV_TARGET
     Lo += rad;
 	
     //Ambient lighting
-    float3 ambient = float3(0.5f, 0.5f, 0.5f) * albedo * ao;
+    float3 ambient = float3(0.03f, 0.03f, 0.03f) * albedo * ao;
     
     float3 color = ambient + Lo;
     
     //HDR tonemapping
-	//color = color / (color + float3(1.0, 1.0, 1.0));
+	color = color / (color + float3(1.0, 1.0, 1.0));
     //Gamma correct
-	//color = pow(color, float3(1.0 / 2.2, 1.0 / 2.2, 1.0 / 2.2));
+	color = pow(color, float3(1.0 / 2.2, 1.0 / 2.2, 1.0 / 2.2));
     
 	return float4(color, 0.0);    
 }

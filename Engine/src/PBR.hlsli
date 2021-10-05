@@ -1,3 +1,5 @@
+static const float PI = 3.14159265359;
+
 /*
 ---------------------------------Normal distribution function---------------------------------
 Approximates the amount the surface's microfacets are aligned to the halfway vector, 
