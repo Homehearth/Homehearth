@@ -57,7 +57,7 @@ namespace rtd
 		// Double buffer
 		static std::vector<Element2D*> m_elements;
 
-		static DoubleBuffer<std::vector<Element2D*>> m_drawBuffers;
+		static DoubleBuffer<std::vector<Element2D**>> m_drawBuffers;
 		static Handler2D* instance;
 		Handler2D();
 		~Handler2D();

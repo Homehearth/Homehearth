@@ -3,7 +3,7 @@
 #define INSTANCE rtd::Handler2D::instance
 rtd::Handler2D* INSTANCE = nullptr;
 std::vector<Element2D*> rtd::Handler2D::m_elements = {};
-DoubleBuffer<std::vector<Element2D*>> rtd::Handler2D::m_drawBuffers;
+DoubleBuffer<std::vector<Element2D**>> rtd::Handler2D::m_drawBuffers;
 
 rtd::Handler2D::Handler2D()
 {
@@ -40,12 +40,15 @@ void rtd::Handler2D::InsertElement(Element2D* element)
 
 void rtd::Handler2D::Render()
 {
-	for (auto elem : INSTANCE->m_drawBuffers[1])
+	for (int i = 0; i < (int)INSTANCE->m_drawBuffers[1].size(); i++)
 	{
+		Element2D* elem = *INSTANCE->m_drawBuffers[1][i];
 		if (elem)
 		{
 			if (elem->IsVisible())
 				elem->Draw();
+
+			elem->Release();
 		}
 	}
 
@@ -54,6 +57,7 @@ void rtd::Handler2D::Render()
 
 void rtd::Handler2D::Update()
 {
+	bool shouldErase = false;
 	for (int i = 0; i < INSTANCE->m_elements.size(); i++)
 	{
 		Element2D* elem = INSTANCE->m_elements[i];
@@ -66,7 +70,17 @@ void rtd::Handler2D::Update()
 				if (elem->CheckHover())
 					elem->OnHover();
 			}
+			else
+				shouldErase = true;
 		}
+	}
+
+	/*
+		Cleanup before push up to render
+	*/
+	if (shouldErase)
+	{
+		INSTANCE->EraseAll();
 	}
 
 	if (!INSTANCE->m_drawBuffers.IsSwapped())
@@ -74,10 +88,8 @@ void rtd::Handler2D::Update()
 		INSTANCE->m_drawBuffers[0].clear();
 		for (int i = 0; i < INSTANCE->m_elements.size(); i++)
 		{
-			if (INSTANCE->m_elements[i]->GetRef() > 0)
-			{
-				INSTANCE->m_drawBuffers[0].push_back(INSTANCE->m_elements[i]);
-			}
+			INSTANCE->m_drawBuffers[0].push_back(&INSTANCE->m_elements[i]);
+			INSTANCE->m_elements[i]->AddRef();
 		}
 
 		INSTANCE->m_drawBuffers.Swap();
