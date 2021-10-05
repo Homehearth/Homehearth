@@ -155,6 +155,8 @@ void Engine::Run()
 		if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::G, KeyState::RELEASED))
 		{
 			std::cout << "G Released\n";
+			if(rtd::Handler2D::GetElement<rtd::Button>("Button1"))
+				rtd::Handler2D::GetElement<rtd::Button>("Button1")->Release();
 		}
 		if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED))
 		{

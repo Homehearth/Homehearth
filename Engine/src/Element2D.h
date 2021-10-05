@@ -55,6 +55,8 @@ private:
 	// Name for get() Element from Handler2D
 	std::string m_name = "";
 
+	unsigned int m_references = 1;
+
 protected:
 
 	// Set the visibilty
@@ -113,4 +115,19 @@ public:
 	Write the logic for detecting if anyone has clicked the element.
 	*/
 	virtual const bool CheckClick() = 0;
+
+	/*
+		Add a reference to the element.
+	*/
+	void AddRef();
+
+	/*
+		Release the object.
+	*/
+	void Release();
+
+	/*
+		Get the amount of references to this element.
+	*/
+	const unsigned int GetRef() const;
 };

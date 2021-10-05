@@ -1,5 +1,6 @@
 #pragma once
 #include "Element2D.h"
+#include "DoubleBuffer.h"
 
 // Elements
 #include "Canvas.h"
@@ -52,7 +53,10 @@ namespace rtd
 	{
 	private:
 
+		// Double buffer
 		static std::vector<Element2D*> m_elements;
+
+		static DoubleBuffer<std::vector<Element2D*>> m_drawBuffers;
 		static Handler2D* instance;
 		Handler2D();
 		~Handler2D();
@@ -98,5 +102,7 @@ namespace rtd
 					return dynamic_cast<T*>(elem);
 			}
 		}
+
+		return nullptr;
 	}
 }
