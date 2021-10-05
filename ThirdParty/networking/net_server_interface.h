@@ -1,53 +1,36 @@
 #pragma once
 #include "net_tsqueue.h"
+#include "net_message.h"
+#include "net_common.h"
 #define PRINT_NETWORK_DEBUG
 
 namespace network
 {
-	// What current state are the current connection in
-	enum class NetState
-	{
-		WRITE_VALIDATION,
-		READ_VALIDATION,
-		READ_HEADER,
-		READ_PAYLOAD,
-		WRITE_MESSAGE
-	};
-
-	// Information regarding every connection
-	struct SOCKET_INFORMATION
-	{
-		uint64_t handshakeIn;
-		uint64_t handshakeOut;
-		uint64_t handshakeResult;
-		SOCKET Socket;
-		message<MessageType> msgTempIn = {};
-	};
-
-	// Information regarding every input or output
-	struct PER_IO_DATA
-	{
-		OVERLAPPED Overlapped = {};
-		WSABUF DataBuf = {};
-		NetState net_state;
-	};
-
 	template <typename T>
 	class server_interface
 	{
 	private:
+		// Information regarding every connection
+		struct SOCKET_INFORMATION
+		{
+			uint64_t handshakeIn;
+			uint64_t handshakeOut;
+			uint64_t handshakeResult;
+			SOCKET Socket;
+			owned_message<T> msgTempIn = {};
+		};
+
 		SOCKET m_listening;
 		bool m_isRunning;
 		HANDLE m_CompletionPort;
 		std::thread* workerThreads;
 		std::thread acceptThread;
 		int nrOfThreads;
+		std::unordered_map<SOCKET, SOCKET_INFORMATION*> connections;
 
 	protected:
 		CRITICAL_SECTION lock;
-
-	public:
-		tsQueue<message<T>> m_messagesIn;
+		tsQueue<owned_message<T>> m_qMessagesIn;
 
 	protected:
 		// Called once when a client connects
@@ -55,9 +38,9 @@ namespace network
 		// Called once when a client connects
 		virtual void OnClientDisconnect() = 0;
 		// Called once when a message is received
-		virtual void OnMessageReceived(SOCKET_INFORMATION*& SI, message<T>& msg) = 0;
+		virtual void OnMessageReceived(const SOCKET& socket, message<T>& msg) = 0;
 		// Client has solved the puzzle from the server and is now validated
-		virtual void OnClientValidated(SOCKET_INFORMATION*& SI) = 0;
+		virtual void OnClientValidated(const SOCKET& socket) = 0;
 
 	private:
 		DWORD WINAPI ServerWorkerThread();
@@ -65,11 +48,11 @@ namespace network
 
 		SOCKET CreateSocket(const uint16_t& port);
 		std::string PrintSocketData(struct addrinfo* p);
-		void Listen(const uint32_t& nListen);
+		bool Listen(const uint32_t& nListen);
 		void InitWinsock();
 		bool CreateSocketInformation(SOCKET& s);
 		void DisconnectClient(SOCKET_INFORMATION*& SI);
-		bool ClientIsConnected(SOCKET_INFORMATION* SI);
+		bool ClientIsConnected(const SOCKET& socket);
 		SOCKET WaitForConnection();
 
 		// FUNCTIONS TO EASIER HANDLE DATA IN AND OUT FROM SERVER
@@ -77,7 +60,7 @@ namespace network
 		void ReadValidation(SOCKET_INFORMATION*& SI, PER_IO_DATA* context);
 		void ReadHeader(SOCKET_INFORMATION*& SI, PER_IO_DATA* context);
 		void ReadPayload(SOCKET_INFORMATION*& SI, PER_IO_DATA* context);
-		void WriteMessage(SOCKET_INFORMATION*& SI, message<T>& msg);
+		void WriteMessage(const SOCKET& socket, message<T>& msg);
 		void PrimeReadHeader(SOCKET_INFORMATION*& SI);
 		void PrimeReadPayload(SOCKET_INFORMATION*& SI);
 		void PrimeReadValidation(SOCKET_INFORMATION*& SI);
@@ -106,10 +89,10 @@ namespace network
 		}
 
 	public:
-		void Start(const uint16_t& port);
+		bool Start(const uint16_t& port);
 		void Stop();
 		void Broadcast(message<T>& msg);
-		void SendToClient(SOCKET_INFORMATION*& SI, message<T>& msg);
+		void SendToClient(const SOCKET& socket, message<T>& msg);
 		bool IsRunning();
 	};
 
@@ -126,7 +109,7 @@ namespace network
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
 		context->DataBuf.buf = (CHAR*)&SI->handshakeIn;
 		context->DataBuf.len = sizeof(uint64_t);
-		context->net_state = NetState::READ_VALIDATION;
+		context->state = NetState::READ_VALIDATION;
 		DWORD BytesReceived = 0;
 		DWORD flags = 0;
 
@@ -143,12 +126,12 @@ namespace network
 	template <typename T>
 	void server_interface<T>::PrimeReadHeader(SOCKET_INFORMATION*& SI)
 	{
-		ZeroMemory(&SI->msgTempIn.header, sizeof(msg_header<T>));
 		PER_IO_DATA* context = new PER_IO_DATA;
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
-		context->DataBuf.buf = (CHAR*)&SI->msgTempIn.header;
+		SI->msgTempIn.remote = SI->Socket;
+		context->DataBuf.buf = (CHAR*)&SI->msgTempIn.msg.header;
 		context->DataBuf.len = sizeof(msg_header<T>);
-		context->net_state = NetState::READ_HEADER;
+		context->state = NetState::READ_HEADER;
 		DWORD BytesReceived = 0;
 		DWORD flags = 0;
 
@@ -167,11 +150,12 @@ namespace network
 	{
 		PER_IO_DATA* context = new PER_IO_DATA;
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
-		size_t size = SI->msgTempIn.header.size - sizeof(msg_header<T>);
-		SI->msgTempIn.payload.resize(size);
-		context->DataBuf.buf = (CHAR*)SI->msgTempIn.payload.data();
+		SI->msgTempIn.remote = SI->Socket;
+		size_t size = SI->msgTempIn.msg.header.size - sizeof(msg_header<T>);
+		SI->msgTempIn.msg.payload.resize(size);
+		context->DataBuf.buf = (CHAR*)SI->msgTempIn.msg.payload.data();
 		context->DataBuf.len = (ULONG)size;
-		context->net_state = NetState::READ_PAYLOAD;
+		context->state = NetState::READ_PAYLOAD;
 		DWORD BytesReceived = 0;
 		DWORD flags = 0;
 
@@ -188,29 +172,28 @@ namespace network
 	template <typename T>
 	void server_interface<T>::ReadPayload(SOCKET_INFORMATION*& SI, PER_IO_DATA* context)
 	{
-		this->OnMessageReceived(SI, SI->msgTempIn);
-		this->m_messagesIn.push_back(SI->msgTempIn);
-		SI->msgTempIn.payload.clear();
+		this->m_qMessagesIn.push_back(SI->msgTempIn);
+		SI->msgTempIn.msg.payload.clear();
 		this->PrimeReadHeader(SI);
 	}
 
 	template <typename T>
 	void server_interface<T>::ReadHeader(SOCKET_INFORMATION*& SI, PER_IO_DATA* context)
 	{
-		if (SI->msgTempIn.header.size > 0)
+		if (SI->msgTempIn.msg.header.size > 0)
 		{
 			this->PrimeReadPayload(SI);
 		}
 		else
 		{
-			this->m_messagesIn.push_back(SI->msgTempIn);
-			this->OnMessageReceived(SI, SI->msgTempIn);
+			this->m_qMessagesIn.push_back(SI->msgTempIn);
+			ZeroMemory(&SI->msgTempIn.msg.header, sizeof(msg_header<T>));
 			this->PrimeReadHeader(SI);
 		}
 	}
 
 	template <typename T>
-	void server_interface<T>::WriteMessage(SOCKET_INFORMATION*& SI, message<T>& msg)
+	void server_interface<T>::WriteMessage(const SOCKET& socket, message<T>& msg)
 	{
 		PER_IO_DATA* context = new PER_IO_DATA;
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
@@ -222,11 +205,11 @@ namespace network
 		}
 		context->DataBuf.buf = (CHAR*)buffer;
 		context->DataBuf.len = ULONG(sizeof(msg_header<T>) + msg.payload.size());
-		context->net_state = NetState::WRITE_MESSAGE;
+		context->state = NetState::WRITE_MESSAGE;
 		DWORD BytesSent = 0;
 		DWORD flags = 0;
 
-		if (WSASend(SI->Socket, &context->DataBuf, 1, &BytesSent, flags, &context->Overlapped, NULL) == SOCKET_ERROR)
+		if (WSASend(socket, &context->DataBuf, 1, &BytesSent, flags, &context->Overlapped, NULL) == SOCKET_ERROR)
 		{
 			if (GetLastError() != WSA_IO_PENDING)
 			{
@@ -244,7 +227,7 @@ namespace network
 		if (SI->handshakeIn == SI->handshakeResult)
 		{
 			EnterCriticalSection(&lock);
-			this->OnClientValidated(SI);
+			this->OnClientValidated(SI->Socket);
 			LeaveCriticalSection(&lock);
 			this->PrimeReadHeader(SI);
 		}
@@ -265,7 +248,7 @@ namespace network
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
 		context->DataBuf.buf = (CHAR*)&handshakeOut;
 		context->DataBuf.len = sizeof(uint64_t);
-		context->net_state = NetState::WRITE_VALIDATION;
+		context->state = NetState::WRITE_VALIDATION;
 		DWORD BytesSent = 0;
 		DWORD flags = 0;
 
@@ -322,14 +305,16 @@ namespace network
 	}
 
 	template <typename T>
-	bool server_interface<T>::ClientIsConnected(SOCKET_INFORMATION* SI)
+	bool server_interface<T>::ClientIsConnected(const SOCKET& socket)
 	{
+		EnterCriticalSection(&lock);
 		bool isConnected = false;
 
-		if (SI)
+		if (socket != INVALID_SOCKET)
 		{
 			isConnected = true;
 		}
+		LeaveCriticalSection(&lock);
 
 		return isConnected;
 	}
@@ -337,13 +322,16 @@ namespace network
 	template<typename T>
 	void server_interface<T>::DisconnectClient(SOCKET_INFORMATION*& SI)
 	{
+		EnterCriticalSection(&lock);
 		if (SI != NULL)
 		{
 			closesocket(SI->Socket);
+			connections.erase(SI->Socket);
 			delete SI;
 			SI = nullptr;
 			this->OnClientDisconnect();
 		}
+		LeaveCriticalSection(&lock);
 	}
 
 	template <typename T>
@@ -360,6 +348,7 @@ namespace network
 		SI->handshakeIn = 0;
 		SI->handshakeOut = uint64_t(std::chrono::system_clock::now().time_since_epoch().count());
 		SI->handshakeResult = scrambleData(SI->handshakeOut);
+		connections[SI->Socket] = SI;
 
 		if (CreateIoCompletionPort((HANDLE)SI->Socket, m_CompletionPort, (ULONG_PTR)SI, 0) == NULL)
 		{
@@ -374,9 +363,12 @@ namespace network
 	}
 
 	template <typename T>
-	void server_interface<T>::SendToClient(SOCKET_INFORMATION*& SI, message<T>& msg)
+	void server_interface<T>::SendToClient(const SOCKET& socket, message<T>& msg)
 	{
-		this->WriteMessage(SI, msg);
+		if (ClientIsConnected(socket))
+		{
+			this->WriteMessage(socket, msg);
+		}
 	}
 
 	template <typename T>
@@ -416,12 +408,15 @@ namespace network
 	}
 
 	template <typename T>
-	void server_interface<T>::Listen(const uint32_t& nListen)
+	bool server_interface<T>::Listen(const uint32_t& nListen)
 	{
 		if (listen(m_listening, nListen) != 0)
 		{
 			LOG_ERROR("Listen(): failed with error %d", WSAGetLastError());
+			return false;
 		}
+
+		return true;
 	}
 
 	template <typename T>
@@ -519,6 +514,7 @@ namespace network
 			{
 				LOG_ERROR("Bind failed with error: %d", WSAGetLastError());
 				closesocket(listener);
+				listener = INVALID_SOCKET;
 				continue;
 			}
 
@@ -537,33 +533,22 @@ namespace network
 	}
 
 	template <typename T>
-	void server_interface<T>::Start(const uint16_t& port)
+	bool server_interface<T>::Start(const uint16_t& port)
 	{
 		InitializeCriticalSection(&lock);
 		InitWinsock();
 		SYSTEM_INFO SystemInfo;
-		m_isRunning = true;
+		if ((m_listening = CreateSocket(port)) == INVALID_SOCKET)
+		{
+			return false;
+		}
 
 		// Setup an I/O completion port
 		if ((m_CompletionPort = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0)) == NULL)
 		{
 			LOG_ERROR("CreateIoCompletionPort() failed with error %d", GetLastError());
-			return;
+			return false;
 		}
-		// Determine how many processors are on the system
-		GetSystemInfo(&SystemInfo);
-		nrOfThreads = (int)SystemInfo.dwNumberOfProcessors;
-		workerThreads = new std::thread[nrOfThreads];
-
-		// Create worker threads based on the number of processors available on the
-		// system. Create two worker threads for each processor
-		for (size_t i = 0; i < nrOfThreads; i++)
-		{
-			workerThreads[i] = std::thread(&server_interface<T>::ServerWorkerThread, this);
-		}
-
-		WSABUF buffer = {};
-		m_listening = CreateSocket(port);
 
 		// Options to disable Nagle's algorithm (can queue up multiple packets instead of sending 1 by 1)
 		// SO_REUSEADDR will let the server to reuse the port its bound on even if it have not closed 
@@ -572,14 +557,19 @@ namespace network
 		if (setsockopt(m_listening, IPPROTO_TCP, TCP_NODELAY, (char*)&enable, sizeof(int)) != 0)
 		{
 			LOG_ERROR("setsockopt: %d", WSAGetLastError());
+			return false;
 		}
 
 		if (setsockopt(m_listening, SOL_SOCKET, SO_REUSEADDR, (char*)&enable, sizeof(int)) != 0)
 		{
 			LOG_ERROR("setsockopt: %d", WSAGetLastError());
+			return false;
 		}
 
-		this->Listen(SOMAXCONN);
+		if (!this->Listen(SOMAXCONN))
+		{
+			return false;
+		}
 
 		// Create an event for the accepting socket
 		HANDLE acceptEvent = WSACreateEvent();
@@ -587,12 +577,26 @@ namespace network
 		if (acceptEvent == WSA_INVALID_EVENT)
 		{
 			LOG_ERROR("Failed to create event %d", WSAGetLastError());
-			return;
+			return false;
 		}
-
 		WSAEventSelect(m_listening, acceptEvent, FD_ACCEPT);
 
 		acceptThread = std::thread(&server_interface<T>::ProcessIncomingConnections, this, acceptEvent);
+
+		// Determine how many processors are on the system
+		GetSystemInfo(&SystemInfo);
+		nrOfThreads = (int)SystemInfo.dwNumberOfProcessors;
+		workerThreads = new std::thread[nrOfThreads];
+
+		m_isRunning = true;
+		// Create worker threads based on the number of processors available on the
+		// system. Create two worker threads for each processor
+		for (size_t i = 0; i < nrOfThreads; i++)
+		{
+			workerThreads[i] = std::thread(&server_interface<T>::ServerWorkerThread, this);
+		}
+
+		return true;
 	}
 
 	template <typename T>
@@ -600,19 +604,35 @@ namespace network
 	{
 		EnterCriticalSection(&lock);
 		m_isRunning = false;
-		LeaveCriticalSection(&lock);
 
-		SYSTEM_INFO SystemInfo;
-		GetSystemInfo(&SystemInfo);
-
-		for (DWORD i = 0; i < SystemInfo.dwNumberOfProcessors; i++)
+		if (m_listening != INVALID_SOCKET)
 		{
-			QueueUserAPC((PAPCFUNC)server_interface<T>::AlertThread, (HANDLE)workerThreads[i].native_handle(), NULL);
-			workerThreads[i].join();
-		}
+			SYSTEM_INFO SystemInfo;
+			GetSystemInfo(&SystemInfo);
 
-		QueueUserAPC((PAPCFUNC)server_interface<T>::AlertThread, (HANDLE)acceptThread.native_handle(), NULL);
-		acceptThread.join();
+			for (auto con : connections)
+			{
+				if (CancelIoEx((HANDLE)con.second->Socket, NULL))
+				{
+					LOG_INFO("Cancelled all IO");
+				}
+				else
+				{
+					LOG_INFO("Didnt cancel IO: %d", GetLastError());
+				}
+			}
+			LeaveCriticalSection(&lock);
+			for (int i = 0; i < nrOfThreads; i++)
+			{
+				QueueUserAPC((PAPCFUNC)server_interface<T>::AlertThread, (HANDLE)workerThreads[i].native_handle(), NULL);
+				workerThreads[i].join();
+			}
+
+			QueueUserAPC((PAPCFUNC)server_interface<T>::AlertThread, (HANDLE)acceptThread.native_handle(), NULL);
+			acceptThread.join();
+			return;
+		}
+		LeaveCriticalSection(&lock);
 	}
 
 	template <typename T>
@@ -622,16 +642,15 @@ namespace network
 		SOCKET_INFORMATION* SI = nullptr;
 		PER_IO_DATA* context;
 		DWORD bytesReceived = 0;
-		BOOL bResult = false;
-		BOOL shouldDisconnect;
 		const DWORD CAP = 10;
 		OVERLAPPED_ENTRY Entries[CAP];
 		ULONG EntriesRemoved = 0;
+		BOOL ShouldShutdown = false;
 
 		while (m_isRunning)
 		{
-			shouldDisconnect = false;
-
+			SOCKET_INFORMATION* SI = nullptr;
+			memset(Entries, 0, sizeof(Entries));
 			if (!GetQueuedCompletionStatusEx(m_CompletionPort, Entries, CAP, &EntriesRemoved, WSA_INFINITE, TRUE))
 			{
 				DWORD LastError = GetLastError();
@@ -639,64 +658,61 @@ namespace network
 				{
 					LOG_ERROR("%d", LastError);
 				}
-
-				continue;
 			}
 
 			for (int i = 0; i < (int)EntriesRemoved; i++)
 			{
-				SI = (SOCKET_INFORMATION*)Entries[i].lpCompletionKey;
-				context = (PER_IO_DATA*)Entries[i].lpOverlapped;
-				// If an I/O was completed but we received no data means a client must've disconnected
-				// Basically a memcpy so we have data in correct structure
-				if (Entries[i].dwNumberOfBytesTransferred == 0)
+				if (Entries[i].lpOverlapped != NULL)
 				{
-					this->DisconnectClient(SI);
-					delete context;
-					continue;
-				}
-				// I/O has completed, process it
-				if (HasOverlappedIoCompleted(Entries[i].lpOverlapped))
-				{
-					switch (context->net_state)
+					SI = (SOCKET_INFORMATION*)Entries[i].lpCompletionKey;
+					context = (PER_IO_DATA*)Entries[i].lpOverlapped;
+					if (Entries[i].dwNumberOfBytesTransferred == 0)
 					{
-					case NetState::READ_HEADER:
-					{
-						this->ReadHeader(SI, context);
-						break;
-					}
-					case NetState::READ_PAYLOAD:
-					{
-						this->ReadPayload(SI, context);
-						break;
-					}
-					case NetState::READ_VALIDATION:
-					{
-						this->ReadValidation(SI, context);
-						break;
-					}
-					case NetState::WRITE_MESSAGE:
-					{
-						// Not yet used for anything
-						break;
-					}
-					case NetState::WRITE_VALIDATION:
-					{
-						this->PrimeReadValidation(SI);
-						break;
-					}
-					}
-					// Since PER_IO_DATA is created for EVERY I/O that comes in we need to 
-					// delete that data struct after I/O has completed
-					if (context)
-					{
+						this->DisconnectClient(SI);
 						delete context;
-						context = nullptr;
+						continue;
 					}
-				}
-				else
-				{
-					LOG_WARNING("I/O not complete!");
+					// If an I/O was completed but we received no data means a client must've disconnected
+					// Basically a memcpy so we have data in correct structure
+					// I/O has completed, process it
+					if (HasOverlappedIoCompleted(Entries[i].lpOverlapped))
+					{
+						switch (context->state)
+						{
+						case NetState::READ_HEADER:
+						{
+							this->ReadHeader(SI, context);
+							break;
+						}
+						case NetState::READ_PAYLOAD:
+						{
+							this->ReadPayload(SI, context);
+							break;
+						}
+						case NetState::READ_VALIDATION:
+						{
+							this->ReadValidation(SI, context);
+							break;
+						}
+						case NetState::WRITE_MESSAGE:
+						{
+							// Not yet used for anything
+							break;
+						}
+						case NetState::WRITE_VALIDATION:
+						{
+							this->PrimeReadValidation(SI);
+							break;
+						}
+						}
+						// Since PER_IO_DATA is created for EVERY I/O that comes in we need to 
+						// delete that data struct after I/O has completed
+						if (context)
+						{
+							delete context;
+							context = nullptr;
+						}
+					}
 				}
 			}
 		}

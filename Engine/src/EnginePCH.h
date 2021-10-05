@@ -107,10 +107,7 @@ namespace sm = dx::SimpleMath;
 #include "BackBuffer.h"
 
 // Network
-#include "net_common.h"
-#include "net_message.h"
-#include "net_tsqueue.h"
-#include "net_client_interface.h"
+//#include "network.h"
 
 // Assimp
 #pragma warning(push, 0)
@@ -121,3 +118,10 @@ namespace sm = dx::SimpleMath;
 
 EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 #define HINST_THISCOMPONENT ((HINSTANCE)&__ImageBase)
+#pragma warning(pop)
+
+// Paths
+const std::string MODELPATH		= "../Assets/Models/";		//"../../../../../Assets/Models/"
+const std::string MATERIALPATH	= "../Assets/Materials/";
+const std::string TEXTUREPATH	= "../Assets/Textures/";
+const std::string ANIMATIONPATH = "../Assets/Animations/";

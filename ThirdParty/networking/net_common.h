@@ -8,12 +8,30 @@
 #include <chrono>
 #include <WS2tcpip.h>
 #include <functional>
-
+#include <unordered_map>
 
 namespace network
 {
 #define IPV6_ADDRSTRLEN 46
 #define BUFFER_SIZE 4096
+
+	// What current state are the current connection in
+	enum class NetState
+	{
+		WRITE_VALIDATION,
+		READ_VALIDATION,
+		READ_HEADER,
+		READ_PAYLOAD,
+		WRITE_MESSAGE
+	};
+
+	// Information regarding every input or output
+	struct PER_IO_DATA
+	{
+		OVERLAPPED Overlapped = {};
+		WSABUF DataBuf = {};
+		NetState state;
+	};
 
 	static void* get_in_addr(const struct sockaddr* sa)
 	{
@@ -59,22 +77,14 @@ namespace network
 		return output;
 	}
 
-	// static std::string PrintRemoteAddress(SOCKET s)
-	// {
-		// struct sockaddr_in c = {};
-		// socklen_t cLen = sizeof(c);
-
-		// getpeername(clientSocket, (struct sockaddr*)&c, &cLen);
-		// char ipAsString[IPV6_ADDRSTRLEN] = {};
-		// inet_ntop(c.sin_family, &c.sin_addr, ipAsString, sizeof(ipAsString));
-	// }
-
-	enum class MessageType : uint32_t
+	enum class GameMsg : uint32_t
 	{
 		Client_Accepted,
-		Unknown,
-		Disconnected,
-		Connected,
-		PingServer
+		Server_AssignID,
+		Server_GetPing,
+		Game_AddPlayer,
+		Game_RemovePlayer,
+		Game_Update,
+		Game_MovePlayer
 	};
 }

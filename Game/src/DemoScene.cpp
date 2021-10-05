@@ -1,6 +1,4 @@
 #include "DemoScene.h"
-#include <Engine.h>
-
 
 void InitializePlayerEntity(Scene& scene)
 {
@@ -11,22 +9,19 @@ void InitializePlayerEntity(Scene& scene)
 	auto& renderable = scene.GetRegistry().emplace<comp::Renderable>(playerEntity);
 	auto& player = scene.GetRegistry().emplace<comp::Player>(playerEntity);
 	player.runSpeed = 10.f;
-	renderable.mesh = ResourceManager::Get().GetResource<RMesh>("Monster.fbx");
+	renderable.mesh = ResourceManager::Get().GetResource<RMesh>("Tree1.obj");
 }
 
-void setupDemoScene(Engine& engine, Scene& scene) 
+void setupDemoScene(Scene& scene, Client& client)
 {
 	//Initialize player entity
-	for(int i = 0; i < 1; i++)
-		InitializePlayerEntity(scene);
-	
-	
-	scene.on<ESceneUpdate>([&](const ESceneUpdate& e, Scene& scene)
-	{
-		//System to update velocity
-		Systems::MovementSystem(scene, e.dt);
-		//System responding to user input
-		GameSystems::UserInputSystem(scene);
-	});
+	InitializePlayerEntity(scene);
 
+	scene.on<ESceneUpdate>([&](const ESceneUpdate& e, Scene& scene)
+		{
+			//System to update velocity
+			Systems::MovementSystem(scene, e.dt);
+			//System responding to user input
+			GameSystems::UserInputSystem(scene, client);
+		});
 }

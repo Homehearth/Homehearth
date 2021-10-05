@@ -5,13 +5,10 @@
 
 #include "RMesh.h"
 
-bool Engine::s_engineRunning = false;
 bool Engine::s_safeExit = false;
 
 Engine::Engine()
-	: m_scenes({ 0 })
-	, m_currentScene(nullptr)
-	, m_vSync(false)
+	: HeadlessEngine()
 	, m_frameTime()
 {
 	LOG_INFO("Engine(): " __TIMESTAMP__);
@@ -19,6 +16,7 @@ Engine::Engine()
 
 void Engine::Startup()
 {
+	
 	T_INIT(1, thread::ThreadType::POOL_FIFO);
 	srand(static_cast<unsigned>(time(NULL)));
 
@@ -45,8 +43,6 @@ void Engine::Startup()
 	m_renderer.Initialize(&m_window, m_currentCamera.get());
 
 	// Thread should be launched after s_engineRunning is set to true and D3D11 is initialized.
-	s_engineRunning = true;
-
 	//
 	// AUDIO 
 	//
@@ -74,8 +70,8 @@ void Engine::Startup()
 	);
 
 	InputSystem::Get().SetMouseWindow(m_window.GetHWnd());
-
-	m_client.Connect("127.0.0.1", 4950);
+	
+	HeadlessEngine::Startup();
 
 #if DRAW_TEMP_2D
 	rtd::Button* test = new rtd::Button("demo_start_game_button.png", draw_t(100.0f, 100.0f, 275.0f, 100.0f), true);
@@ -95,113 +91,11 @@ void Engine::Startup()
 
 void Engine::Run()
 {
-
-	double currentFrame = 0.f;
-	double lastFrame = omp_get_wtime();
-	float deltaTime = 0.f;
-	float accumulator = 0.f;
-	const float targetDelta = 1 / 10000.0f;
-
-	bool key[3] = { false, false, false };
-	bool old_key[3] = { false, false, false };
-
+	
 	if (thread::IsThreadActive())
 		T_CJOB(Engine, RenderThread);
 
-	MSG msg = { nullptr };
-	while (IsRunning())
-	{
-		PROFILE_SCOPE("Frame");
-
-		while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
-		{
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
-			if (msg.message == WM_QUIT)
-			{
-				Shutdown();
-			}
-		}
-
-		if (m_client.IsConnected())
-		{
-			if (GetForegroundWindow() == this->m_window.GetHWnd())
-			{
-				key[0] = GetAsyncKeyState('1') & 0x8000;
-				key[1] = GetAsyncKeyState('2') & 0x8000;
-				key[2] = GetAsyncKeyState('3') & 0x8000;
-
-				if (key[0] && !old_key[0])
-				{
-					m_client.PingServer();
-				}
-				else if (key[1] && !old_key[1])
-				{
-					m_client.TestServerWithGibberishData();
-				}
-
-				for (int i = 0; i < 3; i++)
-				{
-					old_key[i] = key[i];
-				}
-			}
-		}
-
-		// Handle Input.
-		InputSystem::Get().UpdateEvents();
-		
-		{
-			PROFILE_SCOPE("Update 2D Elements");
-			rtd::Handler2D::Update();
-		}
-		
-		//Showing examples of keyboard and mouse (THIS CODE SHOULD BE HANDLED SOMEWHERE ELSE (GAMEPLAY LOGIC))
-		if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::G, KeyState::RELEASED))
-		{
-			std::cout << "G Released\n";
-#if DRAW_TEMP_2D
-			if(rtd::Handler2D::GetElement<rtd::Button>("Button1"))
-				rtd::Handler2D::GetElement<rtd::Button>("Button1")->Release();
-#endif
-		}
-		if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED))
-		{
-			std::cout << "Mouse left Pressed\n";
-			std::cout << "XPos: " << InputSystem::Get().GetMousePos().x << std::endl;
-		}
-		if (InputSystem::Get().CheckMouseKey(MouseKey::RIGHT, KeyState::PRESSED))
-		{
-			std::cout << "Switching mouse mode\n";
-			InputSystem::Get().SwitchMouseMode();
-		}
-		if (InputSystem::Get().CheckMouseKey(MouseKey::MIDDLE, KeyState::PRESSED))
-		{
-			std::cout << "Toggling mouse visibility\n";
-			InputSystem::Get().ToggleMouseVisibility();
-		}
-		//if (InputSystem::Get().GetAxis(Axis::HORIZONTAL) == 1)
-		//{
-		//	std::cout << "Moving right\n";
-		//}
-
-		// Update time.
-		currentFrame = omp_get_wtime();
-		deltaTime = static_cast<float>(currentFrame - lastFrame);
-
-		if (accumulator >= targetDelta)
-		{
-			Update(accumulator);
-
-			m_frameTime.update = accumulator;
-			accumulator = 0.f;
-		}
-		accumulator += deltaTime;
-		lastFrame = currentFrame;
-
-#if DRAW_TEMP_2D
-		rtd::Handler2D::EraseAll();
-#endif
-	}
+	HeadlessEngine::Run();
 
 	s_engineRunning = false;
 	// Wait for the rendering thread to exit its last render cycle and shutdown
@@ -217,8 +111,6 @@ void Engine::Run()
 		ImGui::DestroyContext();
 	);
 
-
-	m_client.Disconnect();
     T_DESTROY();
     D2D1Core::Destroy();
 	ResourceManager::Get().Destroy();
@@ -226,48 +118,10 @@ void Engine::Run()
 	BackBuffer::Destroy();
 }
 
-void Engine::Shutdown()
-{
-	s_engineRunning = false;
-}
-
-Scene& Engine::GetScene(const std::string& name)
-{
-	return m_scenes[name];
-}
-
-void Engine::SetScene(const std::string& name)
-{
-	SetScene(m_scenes.at(name));
-}
-
-void Engine::SetScene(Scene& scene)
-{
-	if (m_currentScene)
-	{
-		m_currentScene->clear();
-	}
-	m_currentScene = &scene;
-
-	m_currentScene->on<EShutdown>([&](const EShutdown& e, Scene& scene)
-	{
-		Shutdown();
-	});
-
-	m_currentScene->on<ESceneChange>([&](const ESceneChange& e, Scene& scene)
-	{
-		SetScene(e.newScene);
-	});
-}
 
 Window* Engine::GetWindow()
 {
 	return &m_window;
-}
-
-bool Engine::IsRunning()
-{
-	return s_engineRunning;
 }
 
 void Engine::drawImGUI() const
@@ -355,7 +209,7 @@ void Engine::drawImGUI() const
 	ImGui::Begin("Components");
 	if (ImGui::CollapsingHeader("Transform"))
 	{
-		m_currentScene->GetRegistry().view<comp::Transform>().each([&](entt::entity e, comp::Transform& transform)
+		GetCurrentScene()->GetRegistry().view<comp::Transform>().each([&](entt::entity e, comp::Transform& transform)
 			{
 				ImGui::Separator();
 				ImGui::Text("Entity: %d", static_cast<int>(e));
@@ -363,7 +217,7 @@ void Engine::drawImGUI() const
 				ImGui::DragFloat3(("Rotation##" + std::to_string(static_cast<int>(e))).c_str(), (float*)&transform.rotation, dx::XMConvertToRadians(1.f));
 				if(ImGui::Button(("Remove##" + std::to_string(static_cast<int>(e))).c_str()))
 				{
-					m_currentScene->GetRegistry().destroy(e);
+					GetCurrentScene()->GetRegistry().destroy(e);
 				}
 				ImGui::Spacing();
 			});
@@ -411,9 +265,28 @@ void Engine::RenderThread()
 void Engine::Update(float dt)
 {
 	PROFILE_FUNCTION();
+	m_frameTime.update = dt;
 
-	// todo:
-	// Update the camera transform based on interactive inputs.
+	
+	InputSystem::Get().UpdateEvents();
+
+	MSG msg = { nullptr };
+	while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
+	{
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+		if (msg.message == WM_QUIT)
+		{
+			Shutdown();
+		}
+	}
+
+	if (InputSystem::Get().CheckMouseKey(MouseKey::RIGHT, KeyState::PRESSED))
+	{
+		InputSystem::Get().SwitchMouseMode();
+		LOG_INFO("Switched mouse Mode");
+	}
+
 	{
 		PROFILE_SCOPE("Starting ImGui");
 		IMGUI(
@@ -425,13 +298,11 @@ void Engine::Update(float dt)
 		);
 	}
 
-	// Update elements in the scene.
-	if (m_currentScene)
-	{
-		m_currentScene->Update(dt);
-		m_currentCamera->Update(dt);
+	m_currentCamera->Update(dt);
+	HeadlessEngine::Update(dt);
 
-	}
+	// Updates game logic
+	this->OnUserUpdate(dt);
 
 	{
 		PROFILE_SCOPE("Ending ImGui");

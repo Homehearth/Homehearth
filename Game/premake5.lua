@@ -48,6 +48,10 @@ project "Game"
             "WIN32",
             "_CRT_SECURE_NO_WARNINGS"
         }
+		
+	postbuildcommands {
+        "{COPY} assimp-vc142-mt.dll %{wks.location}/Game/build/bin/" .. outputdir .. "/Game/"
+		}
 
     filter {"configurations:Debug"}
         buildoptions "/MTd"
@@ -59,7 +63,6 @@ project "Game"
             "../Engine/build/bin/Debug-windows-x86_64/Engine",
 			"../ThirdParty/assimp/lib/"
 				}
-
 
     filter {"configurations:Release"}
         buildoptions "/MT"

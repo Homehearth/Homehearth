@@ -16,7 +16,7 @@ RTexture::~RTexture()
 
 bool RTexture::Create(const std::string& filename)
 {
-	std::string filepath = "../Assets/Textures/" + filename;
+	std::string filepath = TEXTUREPATH + filename;
 	int width;
 	int height;
 	int comp;
