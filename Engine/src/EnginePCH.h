@@ -103,10 +103,7 @@ namespace sm = dx::SimpleMath;
 #include "ThreadSyncer.h"
 
 // Network
-#include "net_common.h"
-#include "net_message.h"
-#include "net_tsqueue.h"
-#include "net_client_interface.h"
+//#include "network.h"
 
 // Assimp
 #pragma warning(push, 0)
@@ -114,3 +111,9 @@ namespace sm = dx::SimpleMath;
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
 #pragma warning(pop)
+
+// Paths
+const std::string MODELPATH		= "../Assets/Models/";		//"../../../../../Assets/Models/"
+const std::string MATERIALPATH	= "../Assets/Materials/";
+const std::string TEXTUREPATH	= "../Assets/Textures/";
+const std::string ANIMATIONPATH = "../Assets/Animations/";

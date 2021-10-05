@@ -54,7 +54,7 @@ project "Engine"
 			
 			["src/Network"] = { "**Client.*" },
 
-        ["src/Engine/Resources"] = { "**ResourceManager.*", "**GResource.*", "**RMesh.*", "**RTexture.*", "**RMaterial.*", "**RSceneMesh.*" },
+        ["src/Engine/Resources"] = { "**ResourceManager.*", "**GResource.*", "**RMesh.*", "**RTexture.*", "**RMaterial.*" },
             ["src/Engine/Resources/Shaders"] = { "**.hlsl", "**.hlsli", "**Shader.*" },
 
         ["src/Engine/Audio"] = {  },
@@ -124,3 +124,9 @@ project "Engine"
            
         filter("files:**_cs.hlsl")
             shadertype("Compute")
+			
+	postbuildcommands
+	{
+		--Does not work... "../Game/build/bin/" .. outputdir .. "/Game/assimp-vc142-mt
+		os.copyfile("../ThirdParty/assimp/lib/assimp-vc142-mt.dll" , "../Game/build/bin/Debug-windows-x86_64/Game/assimp-vc142-mt.dll")
+	}

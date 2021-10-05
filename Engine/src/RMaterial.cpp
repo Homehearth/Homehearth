@@ -14,7 +14,7 @@ RMaterial::~RMaterial()
 {
 }
 
-std::string RMaterial::GetFilename(const std::string& path)
+const std::string RMaterial::GetFilename(const std::string& path) const
 {
     //Split up the string path to only the textures filename
     size_t index = path.find_last_of("/\\");
@@ -36,14 +36,14 @@ bool RMaterial::CreateConstBuf(const matConstants_t& mat)
     data.SysMemPitch        = 0;
     data.SysMemSlicePitch   = 0;
 
-    HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&desc, &data, &m_matConstCB);
+    HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&desc, &data, m_matConstCB.GetAddressOf());
     return !FAILED(hr);
 }
 
-bool RMaterial::CreateConstBuf(const textures_t& mat)
+bool RMaterial::CreateConstBuf(const properties_t& mat)
 {
     D3D11_BUFFER_DESC desc;
-    desc.ByteWidth           = sizeof(textures_t);
+    desc.ByteWidth           = sizeof(properties_t);
     desc.Usage               = D3D11_USAGE_DYNAMIC;
     desc.BindFlags           = D3D11_BIND_CONSTANT_BUFFER;
     desc.CPUAccessFlags      = D3D11_CPU_ACCESS_WRITE;
@@ -55,18 +55,18 @@ bool RMaterial::CreateConstBuf(const textures_t& mat)
     data.SysMemPitch        = 0;
     data.SysMemSlicePitch   = 0;
 
-    HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&desc, &data, &m_hasTextureCB);
+    HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&desc, &data, m_hasTextureCB.GetAddressOf());
     return !FAILED(hr);
 }
 
-void RMaterial::BindMaterial()
+void RMaterial::BindMaterial() const
 {
     /*
         Bind the constant buffers
         [Tweak]
     */
-    D3D11Core::Get().DeviceContext()->PSSetConstantBuffers(0, 1, &m_matConstCB);
-    D3D11Core::Get().DeviceContext()->PSSetConstantBuffers(1, 1, &m_hasTextureCB);
+    D3D11Core::Get().DeviceContext()->PSSetConstantBuffers(0, 1, m_matConstCB.GetAddressOf());
+    D3D11Core::Get().DeviceContext()->PSSetConstantBuffers(1, 1, m_hasTextureCB.GetAddressOf());
 
     /*
         Upload all textures
@@ -84,7 +84,7 @@ void RMaterial::BindMaterial()
     D3D11Core::Get().DeviceContext()->PSSetShaderResources(0, nrOfTextures, allSRV);
 }
 
-void RMaterial::UnBindMaterial()
+void RMaterial::UnBindMaterial() const
 {
     //Unbind the constantbuffers
     ID3D11Buffer* nullBuffer = nullptr;
@@ -97,16 +97,42 @@ void RMaterial::UnBindMaterial()
     D3D11Core::Get().DeviceContext()->PSSetShaderResources(0, nrOfTextures, nullSRV);
 }
 
-bool RMaterial::LoadMaterial(aiMaterial* aiMat)
+bool RMaterial::HasTexture(const ETextureType& type) const
+{
+    bool foundTexture = false;
+
+    //Ignore length type
+    if (type != ETextureType::length)
+    {
+        if (m_textures[(UINT)type])
+            foundTexture = true;
+    }
+    return foundTexture;
+}
+
+bool RMaterial::Create(aiMaterial* aiMat, const std::string& fileformat)
 {
     /*
         Load in material constants
     */
     matConstants_t matConst;
-    aiMat->Get(AI_MATKEY_COLOR_AMBIENT,  matConst.ambient);
-    aiMat->Get(AI_MATKEY_COLOR_DIFFUSE,  matConst.diffuse);
-    aiMat->Get(AI_MATKEY_COLOR_SPECULAR, matConst.specular);
-    aiMat->Get(AI_MATKEY_SHININESS,      matConst.shiniess);
+    aiColor3D ambient = { 0.f, 0.f, 0.f };
+    if (AI_SUCCESS == aiMat->Get(AI_MATKEY_COLOR_AMBIENT, ambient))
+        matConst.ambient = { ambient.r, ambient.g, ambient.b };
+    
+    aiColor3D diffuse = { 0.f, 0.f, 0.f };
+    if (AI_SUCCESS == aiMat->Get(AI_MATKEY_COLOR_DIFFUSE,  diffuse))
+        matConst.diffuse = { diffuse.r, diffuse.g, diffuse.b };
+    
+    aiColor3D specular = { 0.f, 0.f, 0.f };
+    if (AI_SUCCESS == aiMat->Get(AI_MATKEY_COLOR_SPECULAR, specular))
+        matConst.specular = { specular.r, specular.g, specular.b };
+
+    float shiniess = 0.0f;
+    if (AI_SUCCESS == aiMat->Get(AI_MATKEY_SHININESS, shiniess))
+        matConst.shiniess = shiniess;
+    
+    
     if (!CreateConstBuf(matConst))
     {
 #ifdef _DEBUG
@@ -121,13 +147,25 @@ bool RMaterial::LoadMaterial(aiMaterial* aiMat)
     //Syncing the enums between assimp and this structure
     std::unordered_map<ETextureType, aiTextureType> textureTypeMap =
     {
-        {ETextureType::albedo,    aiTextureType::aiTextureType_DIFFUSE},
-        {ETextureType::normal,    aiTextureType::aiTextureType_NORMALS},
-        {ETextureType::metalness, aiTextureType::aiTextureType_METALNESS},
-        {ETextureType::roughness, aiTextureType::aiTextureType_DIFFUSE_ROUGHNESS},
-        {ETextureType::aoMap,     aiTextureType::aiTextureType_AMBIENT_OCCLUSION}
+        {ETextureType::albedo,              aiTextureType::aiTextureType_DIFFUSE},
+        {ETextureType::normal,              aiTextureType::aiTextureType_NORMALS},
+        {ETextureType::displacement,        aiTextureType::aiTextureType_DISPLACEMENT}
     };
-
+    
+    //OBJ with MTL has a special format to work with pbr
+    if (fileformat == ".obj")
+    {
+        textureTypeMap[ETextureType::metalness]         = aiTextureType::aiTextureType_SHININESS;
+        textureTypeMap[ETextureType::roughness]         = aiTextureType::aiTextureType_SPECULAR;
+        textureTypeMap[ETextureType::ambientOcclusion]  = aiTextureType::aiTextureType_AMBIENT;
+    }
+    else if (fileformat == ".fbx")
+    {
+        textureTypeMap[ETextureType::metalness]         = aiTextureType::aiTextureType_METALNESS;
+        textureTypeMap[ETextureType::roughness]         = aiTextureType::aiTextureType_DIFFUSE_ROUGHNESS;
+        textureTypeMap[ETextureType::ambientOcclusion]  = aiTextureType::aiTextureType_AMBIENT_OCCLUSION;
+    }
+    
     //For every texturetype: add the texture to the map
     for (auto& type : textureTypeMap)
     {
@@ -135,28 +173,29 @@ bool RMaterial::LoadMaterial(aiMaterial* aiMat)
         //Get the filepath from Assimp
         if (AI_SUCCESS == aiMat->GetTexture(type.second, 0, &path))
         {
+            //Strip down path to only filename
             std::string filename = GetFilename(path.C_Str());
-            
-            //Add the resource - return true if it was successfully added and get the pointer to the texture
+            //Add the resource and create it
             m_textures[(uint8_t)type.first] = ResourceManager::Get().GetResource<RTexture>(filename);
         }
     }
     textureTypeMap.clear();
 
     //Create constbuffer with what textures that exist
-    textures_t hasTextures;
     if (m_textures[(uint8_t)ETextureType::albedo])
-        hasTextures.hasAlbedo = true;
+        m_properties.hasAlbedo = true;
     if (m_textures[(uint8_t)ETextureType::normal])
-        hasTextures.hasNormal = true;
+        m_properties.hasNormal = true;
     if (m_textures[(uint8_t)ETextureType::metalness])
-        hasTextures.hasMetalness = true;
+        m_properties.hasMetalness = true;
     if (m_textures[(uint8_t)ETextureType::roughness])
-        hasTextures.hasRoughness = true;
-    if (m_textures[(uint8_t)ETextureType::aoMap])
-        hasTextures.hasAlbedo = true;
+        m_properties.hasRoughness = true;
+    if (m_textures[(uint8_t)ETextureType::ambientOcclusion])
+        m_properties.hasAoMap = true;
+    if (m_textures[(uint8_t)ETextureType::displacement])
+        m_properties.hasDisplace = true;
 
-    if (!CreateConstBuf(hasTextures))
+    if (!CreateConstBuf(m_properties))
     {
 #ifdef _DEBUG
         LOG_WARNING("Failed to create constantbuffer for 'hasTextures'");
@@ -170,7 +209,7 @@ bool RMaterial::LoadMaterial(aiMaterial* aiMat)
 bool RMaterial::Create(const std::string& filename)
 {
     //Load a mtl file
-    std::string filepath = "../Assets/Materials/" + filename;
+    std::string filepath = MATERIALPATH + filename;
     std::ifstream readfile(filepath);
     
     //Failed to open file
@@ -181,7 +220,6 @@ bool RMaterial::Create(const std::string& filename)
 
 	std::string line;
 	matConstants_t matConst;
-	textures_t hasTextures;
 
 	while (std::getline(readfile, line))
 	{
@@ -195,9 +233,7 @@ bool RMaterial::Create(const std::string& filename)
 		//Ambient
 		if (prefix == "Ka")
 		{
-			ss >> matConst.ambient.x;
-			ss >> matConst.ambient.y;
-			ss >> matConst.ambient.z;
+			ss >> matConst.ambient.x >> matConst.ambient.y >> matConst.ambient.z;
 		}
 		//Diffuse
 		else if (prefix == "Kd")
@@ -227,61 +263,72 @@ bool RMaterial::Create(const std::string& filename)
 		/*
 			Textures
 		*/
-		//Diffuse/albedo map
-		else if (prefix == "map_Ka" || prefix == "map_Kd")
+		//Albedo map
+		else if (prefix == "map_Kd")
 		{
 			std::string filepath;
 			if (ss >> filepath)
 			{
 				std::string filename = GetFilename(filepath);
 				m_textures[(uint8_t)ETextureType::albedo] = ResourceManager::Get().GetResource<RTexture>(filename);
-				hasTextures.hasAlbedo = true;
+                m_properties.hasAlbedo = true;
 			}
 		}
 		//Normalmap
-		else if (prefix == "bump" || prefix == "norm")
+		else if (prefix == "map_Kn")
 		{
 			std::string filepath;
 			if (ss >> filepath)
 			{
 				std::string filename = GetFilename(filepath);
 				m_textures[(uint8_t)ETextureType::normal] = ResourceManager::Get().GetResource<RTexture>(filename);
-				hasTextures.hasNormal = true;
+                m_properties.hasNormal = true;
 			}
 		}
 		//Metallic
-		else if (prefix == "map_Pm" || prefix == "Pm")
+		else if (prefix == "map_ns")
 		{
 			std::string filepath;
 			if (ss >> filepath)
 			{
 				std::string filename = GetFilename(filepath);
 				m_textures[(uint8_t)ETextureType::metalness] = ResourceManager::Get().GetResource<RTexture>(filename);
-				hasTextures.hasMetalness = true;
+                m_properties.hasMetalness = true;
 			}
 		}
 		//Roughness
-		else if (prefix == "map_Pr" || prefix == "Pr")
+		else if (prefix == "map_Ks")
 		{
 			std::string filepath;
 			if (ss >> filepath)
 			{
 				std::string filename = GetFilename(filepath);
 				m_textures[(uint8_t)ETextureType::roughness] = ResourceManager::Get().GetResource<RTexture>(filename);
-				hasTextures.hasRoughness = true;
+                m_properties.hasRoughness = true;
 			}
 		}
 		//Ambient occulution map
-		else if (prefix == "map_AO" || prefix == "AO")
+		else if (prefix == "map_Ka")
 		{
 			std::string filepath;
 			if (ss >> filepath)
 			{
 				std::string filename = GetFilename(filepath);
-				m_textures[(uint8_t)ETextureType::aoMap] = ResourceManager::Get().GetResource<RTexture>(filename);
-				hasTextures.hasAoMap = true;
+				m_textures[(uint8_t)ETextureType::ambientOcclusion] = ResourceManager::Get().GetResource<RTexture>(filename);
+                m_properties.hasAoMap = true;
 			}
 		}
+        //Displacement map
+        else if (prefix == "map_disp")
+        {
+            std::string filepath;
+            if (ss >> filepath)
+            {
+                std::string filename = GetFilename(filepath);
+                m_textures[(uint8_t)ETextureType::displacement] = ResourceManager::Get().GetResource<RTexture>(filename);
+                m_properties.hasDisplace = true;
+            }
+        }
 	}
 	readfile.close();
 
@@ -293,7 +340,7 @@ bool RMaterial::Create(const std::string& filename)
 		return false;
 	}
 
-	if (!CreateConstBuf(hasTextures))
+	if (!CreateConstBuf(m_properties))
 	{
 #ifdef _DEBUG
 		LOG_WARNING("Failed to create constantbuffer for 'hasTextures'");
