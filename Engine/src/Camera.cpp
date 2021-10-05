@@ -15,8 +15,8 @@ Camera::Camera()
     m_windowHeight = 0;
     m_windowWidth = 0;
     m_isFreeRoaming = false;
-    m_rotationSpeed = 0.002f;
-    m_movingSepeed = 0.0035f;
+    m_rotationSpeed = 5.0f;
+    m_movingSepeed = 15.0f;
     m_TargetVelocity.x = 0.0f;
     m_TargetVelocity.y = 0.0f;
     m_TargetVelocity.z = 0.0f;
@@ -72,18 +72,16 @@ void Camera::Initialize(sm::Vector3 pos, sm::Vector3 target, sm::Vector3 up, sm:
 
 void Camera::Update(float deltaTime)
 {
-     //Can't move the camera when in relative mode
+    //For Debug Camera
     if (m_isFreeRoaming && InputSystem::Get().IsMouseRelative()) //Can't move the camera when in absolut mode
     {
-        m_rotationSpeed* deltaTime;
-        m_movingSepeed* deltaTime;
-
+        //Mouse
         m_currentMousePosition = sm::Vector2((float)InputSystem::Get().GetMousePos().x, (float)InputSystem::Get().GetMousePos().y);
 
         if (m_currentMousePosition.x != m_lastMousePosition.x || m_currentMousePosition.y != m_lastMousePosition.y)
         {
-            m_rollPitchYaw.z += m_lastMousePosition.x * m_rotationSpeed;
-            m_rollPitchYaw.y -= m_lastMousePosition.y * m_rotationSpeed;
+            m_rollPitchYaw.z += m_lastMousePosition.x * m_rotationSpeed * deltaTime;
+            m_rollPitchYaw.y -= m_lastMousePosition.y * m_rotationSpeed * deltaTime;
             m_lastMousePosition = m_currentMousePosition;
         }
 
@@ -93,14 +91,14 @@ void Camera::Update(float deltaTime)
         //Keyboard
         if (KEYPRESS(dx::Keyboard::E, KeyState::HELD)) //Down
         {
-            m_move.y -= m_movingSepeed;
+            m_move.y -= m_movingSepeed * deltaTime;
         }
         if (KEYPRESS(dx::Keyboard::Q, KeyState::HELD)) //UP
         {
-            m_move.y += m_movingSepeed;
+            m_move.y += m_movingSepeed * deltaTime;
         }
-        m_move.x = -InputSystem::Get().GetAxis(Axis::HORIZONTAL) * m_movingSepeed;
-        m_move.z = -InputSystem::Get().GetAxis(Axis::VERTICAL) * m_movingSepeed;
+        m_move.x = -InputSystem::Get().GetAxis(Axis::HORIZONTAL) * m_movingSepeed * deltaTime;
+        m_move.z = -InputSystem::Get().GetAxis(Axis::VERTICAL) * m_movingSepeed * deltaTime;
 
         //Update camera values
         m_right = dx::XMVector3TransformNormal(m_defaultRight, m_rotationMatrix);
@@ -121,7 +119,9 @@ void Camera::Update(float deltaTime)
         m_target = dx::XMVectorAdd(m_target, m_position);
         m_view = dx::XMMatrixLookAtLH(m_position, m_target, m_up);
     }
-    else if (!m_isFreeRoaming)
+
+    //For Game Camera
+    else if (!m_isFreeRoaming) 
     {
 
         //m_position.x += m_targetTransform->position.x;
