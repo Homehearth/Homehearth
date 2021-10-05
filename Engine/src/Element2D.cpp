@@ -1,21 +1,11 @@
 #include "EnginePCH.h"
 
-Element2D::Element2D()
-{
-
-}
-
-Element2D::~Element2D()
-{
-
-}
-
 void Element2D::SetName(const std::string& name)
 {
 	m_name = name;
 }
 
-const std::string& Element2D::GetName()
+const std::string& Element2D::GetName() const
 {
 	return m_name;
 }
@@ -35,12 +25,12 @@ const bool Element2D::IsVisible() const
 	return m_isVisible;
 }
 
-const bool Element2D::IsClicked()
+const bool Element2D::IsClicked() const
 {
 	return m_isClicked;
 }
 
-const bool Element2D::IsHovered()
+const bool Element2D::IsHovered() const
 {
 	return m_isHovering;
 }

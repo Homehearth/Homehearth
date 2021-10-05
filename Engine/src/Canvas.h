@@ -13,7 +13,7 @@ namespace rtd
 
 		D2D1_COLOR_F m_color;
 		draw_t m_drawOpts;
-		Border* m_border;
+		std::unique_ptr<Border> m_border;
 
 	public:
 

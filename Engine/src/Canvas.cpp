@@ -26,8 +26,7 @@ rtd::Canvas::Canvas()
 
 rtd::Canvas::~Canvas()
 {
-	if (m_border)
-		delete m_border;
+
 }
 
 void rtd::Canvas::SetColor(const D2D1_COLOR_F& new_color)
@@ -44,9 +43,9 @@ Border* rtd::Canvas::GetBorder()
 {
 	if (!m_border)
 	{
-		m_border = new Border(m_drawOpts);
+		m_border = std::make_unique<Border>(m_drawOpts);
 	}
-	return m_border;
+	return m_border.get();
 }
 
 void Canvas::Draw()

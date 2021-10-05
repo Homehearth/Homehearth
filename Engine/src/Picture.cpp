@@ -18,19 +18,15 @@ rtd::Picture::Picture()
 
 rtd::Picture::~Picture()
 {
-	if (m_border)
-	{
-		delete m_border;
-	}
 }
 
 Border* rtd::Picture::GetBorder()
 {
 	if (!m_border)
 	{
-		m_border = new Border(m_drawOpts);
+		m_border = std::make_unique<Border>(m_drawOpts);
 	}
-	return m_border;
+	return m_border.get();
 }
 
 
@@ -38,7 +34,7 @@ void rtd::Picture::RemoveBorder()
 {
 	if (m_border)
 	{
-		delete m_border;
+		delete m_border.get();
 	}
 }
 

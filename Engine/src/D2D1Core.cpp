@@ -19,23 +19,6 @@ D2D1Core::D2D1Core()
 
 D2D1Core::~D2D1Core()
 {
-	if (m_writeFactory)
-		m_writeFactory->Release();
-	if (m_factory)
-		m_factory->Release();
-	if (m_writeFormat)
-		m_writeFormat->Release();
-	if (m_renderTarget)
-		m_renderTarget->Release();
-	if (m_surface)
-		m_surface->Release();
-	if (m_hwndTarget)
-		m_hwndTarget->Release();
-	if (m_solidBrush)
-		m_solidBrush->Release();
-	if (m_imageFactory)
-		m_imageFactory->Release();
-
 	CoUninitialize();
 }
 
@@ -47,12 +30,12 @@ const bool D2D1Core::Setup(Window* window)
 	options.debugLevel = D2D1_DEBUG_LEVEL_INFORMATION;
 #endif
 	// Create a factory for D2D1, if it fails we LOG_ERROR and return false.
-	HRESULT hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, options, &m_factory);
+	HRESULT hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, options, m_factory.GetAddressOf());
 	if (FAILED(hr))
 		[] {LOG_ERROR("Creating D2D1Factory failed."); return false; };
 
 	hr = DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory),
-		reinterpret_cast<IUnknown**>(&m_writeFactory));
+		reinterpret_cast<IUnknown**>(m_writeFactory.GetAddressOf()));
 	if (FAILED(hr))
 		[] {LOG_ERROR("Creating Write Factory failed."); return false; };
 
@@ -69,7 +52,7 @@ const bool D2D1Core::Setup(Window* window)
 		);
 
 	// Create a render target for the surface we created with D3D11 swapchain.
-	hr = m_factory->CreateDxgiSurfaceRenderTarget(m_surface, props, &m_renderTarget);
+	hr = m_factory->CreateDxgiSurfaceRenderTarget(m_surface.Get(), props, m_renderTarget.GetAddressOf());
 	if (FAILED(hr))
 		[] {LOG_ERROR("Surface render target failed."); return false; };
 
@@ -137,7 +120,7 @@ void D2D1Core::DrawT(const std::string& text, const draw_text_t& opt)
 {
 	if (INSTANCE->m_renderTarget)
 	{
-		IDWriteTextFormat* current_format = INSTANCE->m_writeFormat;
+		IDWriteTextFormat* current_format = INSTANCE->m_writeFormat.Get();
 		if (opt.textFormat)
 			current_format = opt.textFormat;
 
@@ -164,7 +147,7 @@ void D2D1Core::DrawT(const std::string& text, const draw_text_t& opt)
 			(UINT32)text.length(),
 			current_format,
 			layoutRect,
-			INSTANCE->m_solidBrush
+			INSTANCE->m_solidBrush.Get()
 		);
 
 		delete[] pwcsName;
@@ -187,11 +170,11 @@ void D2D1Core::DrawF(const draw_t& fig, const draw_shape_t& shape)
 	{
 	case Shapes::RECTANGLE_FILLED:
 		D2D1_RECT_F rectangle_filled = D2D1::RectF(fig.x_pos, fig.y_pos, fig.x_pos + fig.width , fig.y_pos + fig.height);
-		INSTANCE->m_renderTarget->FillRectangle(&rectangle_filled, INSTANCE->m_solidBrush);
+		INSTANCE->m_renderTarget->FillRectangle(&rectangle_filled, INSTANCE->m_solidBrush.Get());
 		break;
 	case Shapes::RECTANGLE_OUTLINED:
 		D2D1_RECT_F rectangle_outlined = D2D1::RectF(fig.x_pos, fig.y_pos, fig.x_pos + fig.width, fig.y_pos + fig.height);
-		INSTANCE->m_renderTarget->DrawRectangle(&rectangle_outlined, INSTANCE->m_solidBrush, 5.0f);
+		INSTANCE->m_renderTarget->DrawRectangle(&rectangle_outlined, INSTANCE->m_solidBrush.Get(), 5.0f);
 		break;
 	case Shapes::TRIANGLE_FILLED:
 		INSTANCE->m_factory->CreatePathGeometry(&geometry);
@@ -209,8 +192,8 @@ void D2D1Core::DrawF(const draw_t& fig, const draw_shape_t& shape)
 		HRESULT hr = sink->Close();
 
 		sink->Release();
-		INSTANCE->m_renderTarget->DrawGeometry(geometry, INSTANCE->m_solidBrush);
-		INSTANCE->m_renderTarget->FillGeometry(geometry, INSTANCE->m_solidBrush);
+		INSTANCE->m_renderTarget->DrawGeometry(geometry, INSTANCE->m_solidBrush.Get());
+		INSTANCE->m_renderTarget->FillGeometry(geometry, INSTANCE->m_solidBrush.Get());
 		geometry->Release();
 		break;
 	}

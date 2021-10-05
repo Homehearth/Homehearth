@@ -72,10 +72,10 @@ public:
 
 	// Set the identifying name of Element.
 	void SetName(const std::string& name);
-	const std::string& GetName();
+	const std::string& GetName() const;
 
-	Element2D();
-	virtual ~Element2D();
+	Element2D() = default;
+	virtual ~Element2D() = default;
 
 	// Set the layer at which to draw at.
 	void SetLayer(const unsigned int layer);
@@ -87,7 +87,7 @@ public:
 	/*
 		Returns true if clicked, false if not.
 	*/
-	const bool IsClicked();
+	const bool IsClicked() const;
 
 	/*
 		Logic for what happens with the element if it is clicked.
@@ -108,7 +108,7 @@ public:
 	/*
 		Returns true if hovered over, false if not.
 	*/
-	const bool IsHovered();
+	const bool IsHovered() const;
 
 	/*
 	Function used for Handler2D to call on OnClick.

@@ -10,17 +10,11 @@ Button::Button()
 
 Button::~Button()
 {
-	if (m_canvas)
-		delete m_canvas;
-	if (m_border)
-		delete m_border;
-	if (m_picture)
-		delete m_picture;
 }
 
 rtd::Button::Button(const std::string& fileName, const draw_t& opts, const bool border)
 {
-	m_picture = new Picture(fileName, opts);
+	m_picture = std::make_unique<Picture>(fileName, opts);
 	m_drawOpts = opts;
 	if (border)
 	{
@@ -32,27 +26,27 @@ Border* rtd::Button::GetBorder()
 {
 	if (!m_border)
 	{
-		m_border = new Border(m_drawOpts);
+		m_border = std::make_unique<Border>(m_drawOpts);
 	}
-	return m_border;
+	return m_border.get();
 }
 
 Picture* rtd::Button::GetPicture()
 {
 	if (!m_picture)
 	{
-		m_picture = new Picture();
+		m_picture = std::make_unique<Picture>();
 	}
-	return m_picture;
+	return m_picture.get();
 }
 
 Canvas* rtd::Button::GetCanvas()
 {
 	if (!m_canvas)
 	{
-		m_canvas = new Canvas();
+		m_canvas = std::make_unique<Canvas>();
 	}
-	return m_canvas;
+	return m_canvas.get();
 }
 
 const bool Button::CheckClicked() const
@@ -62,7 +56,6 @@ const bool Button::CheckClicked() const
 
 void Button::Draw()
 {
-
 	// Draw Order
 	if (m_border)
 		m_border->Draw();

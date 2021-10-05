@@ -64,6 +64,11 @@ namespace rtd
 
 	public:
 
+		static auto& Get()
+		{
+			return Handler2D::instance;
+		}
+
 		static void Initialize();
 		static void Destroy();
 

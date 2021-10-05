@@ -10,9 +10,9 @@ namespace rtd
 
 		draw_t m_drawOpts;
 		D2D1_COLOR_F m_color = D2D1::ColorF(.0f, 1.0f, .5f);
-		Border* m_border = nullptr;
-		Picture* m_picture = nullptr;
-		Canvas* m_canvas = nullptr;
+		std::unique_ptr<Border> m_border = nullptr;
+		std::unique_ptr<Picture> m_picture = nullptr;
+		std::unique_ptr<Canvas> m_canvas = nullptr;
 
 	public:
 

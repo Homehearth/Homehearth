@@ -66,10 +66,7 @@ struct draw_t
 	// Layer for layered drawing.
 	unsigned int layer = 0;
 
-	draw_t()
-	{
-		//Empty
-	}
+	draw_t() = default;
 
 	draw_t(float x_pos, float y_pos, float width, float height)
 	{
@@ -101,10 +98,7 @@ struct draw_text_t
 	float x_stretch = 100.0f;
 	float y_stretch = 100.0f;
 
-	draw_text_t()
-	{
-		// Empty
-	}
+	draw_text_t() = default;
 
 	draw_text_t(IDWriteTextFormat* format, float x, float y, float x_stretch, float y_stretch)
 	{
@@ -142,10 +136,7 @@ struct draw_shape_t
 	Shapes shape = Shapes::NONE;
 	D2D1_COLOR_F color = D2D1::ColorF(1.0f, 1.0f, 1.0f);
 
-	draw_shape_t()
-	{
-		// Empty
-	}
+	draw_shape_t() = default;
 
 	draw_shape_t(const Shapes& shape, float r, float g, float b, float a = 1.0f)
 	{
@@ -163,12 +154,12 @@ struct draw_shape_t
 class D2D1Core
 {
 private:
-	IDWriteFactory* m_writeFactory;
-	ID2D1Factory* m_factory;
-	ID2D1RenderTarget* m_renderTarget;
-	ID2D1HwndRenderTarget* m_hwndTarget;
-	IDXGISurface1* m_surface;
-	IWICImagingFactory* m_imageFactory;
+	ComPtr<IDWriteFactory> m_writeFactory;
+	ComPtr<ID2D1Factory> m_factory;
+	ComPtr<ID2D1RenderTarget> m_renderTarget;
+	ComPtr<ID2D1HwndRenderTarget> m_hwndTarget;
+	ComPtr<IDXGISurface1> m_surface;
+	ComPtr<IWICImagingFactory> m_imageFactory;
 	Window* m_windowPointer;
 
 private:
@@ -241,6 +232,6 @@ private:
 		Default objects to be used when no other parameters are specified.
 	*/
 
-	IDWriteTextFormat* m_writeFormat;
-	ID2D1SolidColorBrush* m_solidBrush;
+	ComPtr<IDWriteTextFormat> m_writeFormat;
+	ComPtr<ID2D1SolidColorBrush> m_solidBrush;
 };
