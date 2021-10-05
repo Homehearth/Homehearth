@@ -1,5 +1,6 @@
 #pragma once
 #include "EnginePCH.h"
+#include "Components.h"
 
 class Camera
 {
@@ -16,6 +17,9 @@ private:
 	sm::Vector3 m_defaultForward;
 	sm::Vector3 m_defaultRight;
 	sm::Vector3 m_move;
+
+	sm::Vector3 m_TargetVelocity;
+	comp::Transform* m_targetTransform;
 
 	sm::Matrix  m_view;
 	sm::Matrix  m_projection;
@@ -41,7 +45,7 @@ public:
 	/* Position, Target, up, windowSize = (window width, window height) */
 	void Initialize(sm::Vector3 pos, sm::Vector3 target, sm::Vector3 up, sm::Vector2 windowSize, bool isFreeRoaming);
 	void Update(float deltaTime);
-	void FollowEntity(sm::Vector3& position);
+	void SetFollowTarget(comp::Transform* target);
 
 	//Get Functions
 	sm::Matrix GetView() const;

@@ -278,7 +278,7 @@ void Engine::Update(float dt)
 		);
 	}
 
-	m_currentCamera->Update(dt);
+	CameraUpdate(dt);
 	HeadlessEngine::Update(dt);
 
 	// Updates game logic
@@ -345,4 +345,9 @@ void Engine::CameraUpdate(float deltaTime)
 	}
 #endif // DEBUG
 
+}
+
+Camera* Engine::GetCamera()
+{
+	return m_currentCamera.get();
 }

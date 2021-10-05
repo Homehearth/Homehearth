@@ -39,6 +39,7 @@ private:
 	void Run() override;
 
 	Window* GetWindow();
+	//Camera* GetCamera();
 
 	// IMGUI
 	void drawImGUI() const;
@@ -58,4 +59,6 @@ public:
 
 	virtual bool OnStartup() = 0;
 	virtual bool OnUserUpdate(float deltaTime) = 0;
+
+	Camera* GetCamera();
 };

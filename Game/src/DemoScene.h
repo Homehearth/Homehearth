@@ -3,7 +3,7 @@
 #include "GameSystems.h"
 #include "Client.h"
 
-void InitializePlayerEntity(Scene& scene);
+void InitializePlayerEntity(Engine& engine, Scene& scene);
 
 void setupDemoScene(Scene& scene, Client& client);
 

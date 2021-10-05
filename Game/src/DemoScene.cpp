@@ -10,6 +10,8 @@ void InitializePlayerEntity(Scene& scene)
 	auto& player = scene.GetRegistry().emplace<comp::Player>(playerEntity);
 	player.runSpeed = 10.f;
 	renderable.mesh = ResourceManager::Get().GetResource<RMesh>("Monster.fbx");
+
+	//engine.GetCamera()->SetFollowTarget(&transform.position);
 }
 
 void setupDemoScene(Scene& scene, Client& client)
