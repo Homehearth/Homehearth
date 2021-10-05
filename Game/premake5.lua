@@ -50,9 +50,9 @@ project "Game"
             "_CRT_SECURE_NO_WARNINGS"
         }
 		
-	postbuildcommands {
-        "{COPY} assimp-vc142-mt.dll %{wks.location}/Game/build/bin/" .. outputdir .. "/Game/"
-		}
+	--postbuildcommands {
+        --"{COPY} assimp-vc142-mt.dll %{wks.location}/Game/build/bin/" .. outputdir .. "/Game/"
+		--}
 
     filter {"configurations:Debug"}
         staticruntime "on"

@@ -15,11 +15,19 @@ void GameSystems::UserInputSystem(Scene& scene, Client& client)
 void GameSystems::MRayIntersectBoxSystem(Scene& scene)
 {
 	float t = 0;
-	auto view = scene.GetRegistry().view<comp::BoxCollider>();
-	view.each([&](comp::BoxCollider& boxCollider)
+	auto view = scene.GetRegistry().view<comp::BoxCollider, comp::Transform>();
+	view.each([&](comp::BoxCollider& boxCollider, comp::Transform& transform)
 	{
 		//Collided with mouse TODO make it do someting?
-		bool hasCollided = Intersect::RayIntersectBox(InputSystem::Get().GetMouseRay(), boxCollider, t);
+		if(Intersect::RayIntersectBox(InputSystem::Get().GetMouseRay(), boxCollider, t))
+		{
+			LOG_INFO("Mouse position %f, %f, %f", InputSystem::Get().GetMouseRay().rayPos.x, InputSystem::Get().GetMouseRay().rayPos.y, InputSystem::Get().GetMouseRay().rayPos.z);
+			LOG_INFO("Transform position %f, %f, %f", transform.position.x, transform.position.y, transform.position.z);
+			//transform.scale = sm::Vector3(1.5f, 1.5f, 1.5f);
+		}
+		else
+			transform.scale = sm::Vector3(1.f, 1.f, 1.f);
+		
 	});
 }
 

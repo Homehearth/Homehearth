@@ -7,6 +7,7 @@ struct MousePos
 {
 	int x, y;
 };
+//TODO move this struct
 struct Ray_t
 {
 	sm::Vector3 rayPos, rayDir;

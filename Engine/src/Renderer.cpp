@@ -3,7 +3,7 @@
 
 
 Renderer::Renderer()
-	: m_d3d11(nullptr)
+	: m_d3d11(nullptr), m_camera(nullptr)
 {
 }
 
