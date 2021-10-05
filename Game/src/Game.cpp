@@ -39,9 +39,9 @@ Game::~Game()
 bool Game::OnStartup()
 {
 	m_client.Connect("127.0.0.1", 4950);
-	Scene& demo = Engine::GetScene("Demo");
+	
 	// Scene logic
-	setupDemoScene(demo, m_client);
+	Scene& demo = DemoScene(*this, m_client).GetScene();
 
 	//Set as current scene
 	SetScene(demo);

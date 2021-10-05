@@ -1,9 +1,19 @@
 #pragma once
 #include <EnginePCH.h>
+#include <SceneBuilder.h>
+
 #include "GameSystems.h"
 #include "Client.h"
 
-void InitializePlayerEntity(Scene& scene);
+class DemoScene : public SceneBuilder<DemoScene>
+{
+private:
 
-void setupDemoScene(Scene& scene, Client<network::GameMsg>& client);
+public:
+	DemoScene(HeadlessEngine& engine, Client<network::GameMsg>& client);
+	
+	Entity CreatePlayerEntity();
+
+
+};
 

@@ -23,10 +23,6 @@ protected:
 
 	bool IsRunning() const;
 
-	Scene& GetScene(const std::string& name);
-	Scene* GetCurrentScene() const;
-	void SetScene(const std::string& name);
-	void SetScene(Scene& scene);
 	// Startup the Engine and its instances in a specific order.
 	virtual void Startup();
 
@@ -38,6 +34,12 @@ public:
 	HeadlessEngine& operator=(HeadlessEngine&& other) = delete;
 	virtual ~HeadlessEngine() = default;
 
+	Scene& GetScene(const std::string& name);
+	Scene* GetCurrentScene() const;
+	void SetScene(const std::string& name);
+	void SetScene(Scene& scene);
+
 	virtual bool OnStartup() = 0;
+	
 };
 

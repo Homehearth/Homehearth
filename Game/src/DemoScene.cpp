@@ -1,27 +1,33 @@
 #include "DemoScene.h"
 
-void InitializePlayerEntity(Scene& scene)
+DemoScene::DemoScene(HeadlessEngine& engine, Client<network::GameMsg>& client)
+	: SceneBuilder(engine)
 {
-	auto playerEntity = scene.GetRegistry().create();
-	auto& transform = scene.GetRegistry().emplace<comp::Transform>(playerEntity);
-	transform.position.z = -17.0f;
-	auto& velocity = scene.GetRegistry().emplace<comp::Velocity>(playerEntity);
-	auto& renderable = scene.GetRegistry().emplace<comp::Renderable>(playerEntity);
-	auto& player = scene.GetRegistry().emplace<comp::Player>(playerEntity);
-	player.runSpeed = 10.f;
-	renderable.mesh = ResourceManager::Get().GetResource<RMesh>("Monster.fbx");
-}
+	// Set up Scene
 
-void setupDemoScene(Scene& scene, Client<network::GameMsg>& client)
-{
 	//Initialize player entity
-	InitializePlayerEntity(scene);
+	Entity player = CreatePlayerEntity();
 
-	scene.on<ESceneUpdate>([&](const ESceneUpdate& e, Scene& scene)
+	m_scene.on<ESceneUpdate>([&](const ESceneUpdate& e, Scene& scene)
 		{
 			//System to update velocity
 			Systems::MovementSystem(scene, e.dt);
 			//System responding to user input
 			GameSystems::UserInputSystem(scene, client);
 		});
+}
+
+
+Entity DemoScene::CreatePlayerEntity()
+{
+
+	Entity playerEntity = m_scene.CreateEntity();
+	playerEntity.AddComponent<comp::Transform>()->position.z = -17.0f;
+	
+	playerEntity.AddComponent<comp::Velocity>();
+	comp::Renderable* renderable = playerEntity.AddComponent<comp::Renderable>();
+	playerEntity.AddComponent<comp::Player>()->runSpeed = 10.f;
+
+	renderable->mesh = ResourceManager::Get().GetResource<RMesh>("Monster.fbx");
+	return playerEntity;
 }
