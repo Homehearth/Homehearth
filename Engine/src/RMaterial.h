@@ -2,6 +2,11 @@
 #include "RTexture.h"
 #include <assimp/material.h>
 
+//Slots to bind to on shader-side
+const UINT CB_MAT_SLOT			= 0;
+const UINT CB_PROPERTIES_SLOT	= 1;
+const UINT T2D_STARTSLOT		= 1;
+
 /*
 	---MTL-Standard---
 	make sure that the obj-file has a link to material

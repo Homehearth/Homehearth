@@ -1,11 +1,6 @@
 #include "EnginePCH.h"
 #include "RMaterial.h"
 
-/*
-    [Tweak]: Bind constantbuffers to specific locations/numbers
-    search in file for "[Tweak]" if needed
-*/
-
 RMaterial::RMaterial()
 {
 }
@@ -63,10 +58,9 @@ void RMaterial::BindMaterial() const
 {
     /*
         Bind the constant buffers
-        [Tweak]
     */
-    D3D11Core::Get().DeviceContext()->PSSetConstantBuffers(0, 1, m_matConstCB.GetAddressOf());
-    D3D11Core::Get().DeviceContext()->PSSetConstantBuffers(1, 1, m_hasTextureCB.GetAddressOf());
+    D3D11Core::Get().DeviceContext()->PSSetConstantBuffers(CB_MAT_SLOT,         1, m_matConstCB.GetAddressOf());
+    D3D11Core::Get().DeviceContext()->PSSetConstantBuffers(CB_PROPERTIES_SLOT,  1, m_hasTextureCB.GetAddressOf());
 
     /*
         Upload all textures
@@ -81,20 +75,20 @@ void RMaterial::BindMaterial() const
             allSRV[i] = m_textures[i]->GetShaderView();
     }
     //Bind all the textures to the GPU's pixelshader
-    D3D11Core::Get().DeviceContext()->PSSetShaderResources(0, nrOfTextures, allSRV);
+    D3D11Core::Get().DeviceContext()->PSSetShaderResources(T2D_STARTSLOT, nrOfTextures, allSRV);
 }
 
 void RMaterial::UnBindMaterial() const
 {
     //Unbind the constantbuffers
     ID3D11Buffer* nullBuffer = nullptr;
-    D3D11Core::Get().DeviceContext()->PSSetConstantBuffers(0, 1, &nullBuffer);
-    D3D11Core::Get().DeviceContext()->PSSetConstantBuffers(1, 1, &nullBuffer);
+    D3D11Core::Get().DeviceContext()->PSSetConstantBuffers(CB_MAT_SLOT,         1, &nullBuffer);
+    D3D11Core::Get().DeviceContext()->PSSetConstantBuffers(CB_PROPERTIES_SLOT,  1, &nullBuffer);
 
     //Unbind all the textures
     const UINT nrOfTextures = UINT(ETextureType::length);
     ID3D11ShaderResourceView* nullSRV[nrOfTextures] = { nullptr };
-    D3D11Core::Get().DeviceContext()->PSSetShaderResources(0, nrOfTextures, nullSRV);
+    D3D11Core::Get().DeviceContext()->PSSetShaderResources(T2D_STARTSLOT, nrOfTextures, nullSRV);
 }
 
 bool RMaterial::HasTexture(const ETextureType& type) const
