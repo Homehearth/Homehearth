@@ -38,7 +38,7 @@ float4 main(PixelIn input) : SV_TARGET
     float roughness = 0.4f; // = roughnessTexture.Sample(anisotropic, input.uv).r;
     float ao = 1.0; // = aoTexture.Sample(anisotropic, input.uv).r;
     float3 lightPos = float3(0.0f, 8.0f, -10.0f); //TODO: Light-struct to GPU
-    float3 lightCol = float3(1.0f, 1.0f, 1.0f); //TODO: Light-struct to GPU
+    float3 lightCol = float3(300.0f, 300.0f, 300.0f); //TODO: Light-struct to GPU
 
     float3 N = normalize(input.normal);
     float3 V = normalize(camPos - input.worldPos.xyz);
