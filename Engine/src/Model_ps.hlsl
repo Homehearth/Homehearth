@@ -5,6 +5,7 @@ Texture2D T_normal    : register(t1);
 Texture2D T_metalness : register(t2);
 Texture2D T_roughness : register(t3);
 Texture2D T_aomap     : register(t4);
+Texture2D T_displace  : register(t5);
 
 SamplerState samp : register(s0);
 
