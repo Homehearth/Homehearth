@@ -1,4 +1,3 @@
-#include "Phong.hlsli"
 #include "PBR.hlsli"
 
 Texture2D T_albedo    : register(t0);
@@ -10,10 +9,10 @@ Texture2D T_displace  : register(t5);
 
 SamplerState samp : register(s0);
 
-
 /*
     Material constant buffers
 */
+
 cbuffer matConstants_t : register(b0)
 {
     float3 c_ambient;
@@ -22,6 +21,7 @@ cbuffer matConstants_t : register(b0)
     float  c_opacity;
     float3 c_specular;
 };
+
 cbuffer properties_t : register(b2)
 {
     //If a texture is set this will be 1
@@ -33,16 +33,6 @@ cbuffer properties_t : register(b2)
     int c_hasDisplace;
 };
 
-struct PixelIn
-{
-    float4 pos : SV_POSITION;
-    float2 uv : TEXCOORD;
-    float3 normal : NORMAL;
-    float3 tangent : TANGENT;
-    float3 biTangent : BINORMAL;
-    float4 worldPos : WORLDPOSITION;
-};
-
 cbuffer Camera : register(b1)
 {
     float4 cameraPosition;
@@ -52,24 +42,35 @@ cbuffer Camera : register(b1)
     float4x4 view;
 }
 
-//Calculates the outgoing radiance level of each light
-void CalcRadiance(PixelIn input, float3 V, float3 N, float roughness, float metallic, float3 albedo, float3 lightPos, float3 lightCol, float3 F0, out float3 rad);
-
 float4 main(PixelIn input) : SV_TARGET
 {
     float3 camPos = cameraPosition.xyz;
     float ao = 1.0f;
-    float3 albedo = float3(1.0f, 1.0f, 1.0f);
+    float3 albedo = 1.f;
     float metallic = 0.5f;
     float roughness = 0.5f;
-    
-    float3 lightPos = float3(0.0f, 8.0f, -10.0f); //TODO: Light-struct to GPU
-    float3 lightCol = float3(300.0f, 300.0f, 300.0f); //TODO: Light-struct to GPU   
     
     //Normal Vector
     float3 N = normalize(input.normal);
     //View Direction Vector
     float3 V = normalize(camPos - input.worldPos.xyz);
+    
+    //TEMP
+    Light L[2];
+    L[0].position = float4(0.f, 8.f, 10.f, 1.f);
+    L[0].color = 300.f;
+    L[0].direction = float4(0.f, -1.f, -1.f, 0.f);
+    L[0].range = 75.f;
+    L[0].type = 0;
+    L[0].enabled = 1;
+    
+    L[1].position = float4(0.f, 8.f, 10.f, 1.f);
+    L[1].color = 300.f;
+    L[1].direction = float4(0.f, -1.f, -1.f, 0.f);
+    L[1].range = 75.f;
+    L[1].type = 1;
+    L[1].enabled = 1;
+    
     
     //If an object has a texture sample from it, else use default values.
     if(c_hasAlbedo == 1)
@@ -109,15 +110,35 @@ float4 main(PixelIn input) : SV_TARGET
     
     // calculate reflectance at normal incidence; if dia-electric (like plastic) use F0 
     // of 0.04 and if it's a metal, use the albedo color as F0 (metallic workflow)
-	float3 F0 = float3(0.04f, 0.04f, 0.04f);
+    float3 F0 = 0.04f;
     F0 = lerp(F0, albedo, metallic);
 
     //Reflectance Equation
-    float3 Lo = float3(0.0f, 0.0f, 0.0f);
-    float3 rad = float3(0.0f, 0.0f, 0.0f);
+    float3 Lo = 0.f;
+    float3 rad = 0.f;
+    float3 lightCol = 0.f;
     
-    CalcRadiance(input, V, N, roughness, metallic, albedo, lightPos, lightCol, F0, rad);
-    Lo += rad;
+    for (int i = 0; i < NR_LIGHTS; i++)
+    {
+        if(L[i].enabled = 1)
+        {
+            switch (L[i].type)
+            {
+                case 0:
+                    lightCol += DoDirectionlight(L[i], N);
+                    break;
+                case 1:
+                    lightCol += DoPointlight(L[i], input, N);
+                    break;
+                default:
+                    break;
+            }
+        
+            CalcRadiance(input, V, N, roughness, metallic, albedo, L[i].position.xyz, lightCol, F0, rad);
+            Lo += rad;
+        }
+    }
+    
 	
     //Ambient lighting
     float3 ambient = float3(0.03f, 0.03f, 0.03f) * albedo * ao;
@@ -129,34 +150,4 @@ float4 main(PixelIn input) : SV_TARGET
 	color = pow(color, float3(1.0 / 2.2, 1.0 / 2.2, 1.0 / 2.2));
     
 	return float4(color, 0.0);    
-}
-
-
-void CalcRadiance(PixelIn input, float3 V, float3 N, float roughness, float metallic, float3 albedo, float3 lightPos, float3 lightCol, float3 F0, out float3 rad)
-{
-    static const float PI = 3.14159265359;
-    
-    //Calculate Light Radiance
-    float3 lightDir = normalize(lightPos - input.worldPos.xyz);
-    float3 H = normalize(V + lightDir);
-    float distance = length(lightPos - input.worldPos.xyz);
-    float attenuation = 1.0f / dot(float3(1.0f, 0.0f, 1.0f), float3(1.0f, distance, distance * distance));
-    float3 radiance = lightCol * attenuation;
-    
-    //Cook-Torrance BRDF
-    float D = DistributionGGX(N, H, roughness);
-    float G = GeometrySmith(N, V, lightDir, roughness);
-    float3 F = FresnelSchlick(max(dot(H, V), 0.0f), F0);
-    
-    float3 kS = F;
-    float kD = float3(1.0f, 1.0f, 1.0f) - kS;
-    kD *= (1.0 - metallic);
-    
-    float3 nom = D * G * F;
-    float denom = 4 * max(dot(N, V), 0.0f) * max(dot(N, lightDir), 0.0f) + 0.001f;
-    float3 specular = nom / denom;
-    
-    float NdotL = max(dot(N, lightDir), 0.0f);
-    rad = (((kD * albedo / PI) + specular) * radiance * NdotL);
-
 }
