@@ -35,7 +35,7 @@ namespace network
 		// Initialize winsock
 		void InitWinsock();
 		std::string PrintSocketData(struct addrinfo* p);
-		SOCKET CreateSocket(std::string& ip, uint16_t& port);
+		SOCKET CreateSocket(const char* ip, uint16_t& port);
 		DWORD WINAPI ProcessIO();
 
 		/*
@@ -97,7 +97,7 @@ namespace network
 		}
 	public:
 		// Given IP and port establish a connection to the server
-		bool Connect(std::string&& ip, uint16_t&& port);
+		bool Connect(const char* ip, uint16_t& port);
 		// Disconnect from the server (THREAD SAFE)
 		void Disconnect();
 		// Check to see if client is connected to a server (THREAD SAFE)
@@ -263,7 +263,7 @@ namespace network
 	}
 
 	template <typename T>
-	SOCKET client_interface<T>::CreateSocket(std::string& ip, uint16_t& port)
+	SOCKET client_interface<T>::CreateSocket(const char* ip, uint16_t& port)
 	{
 		SOCKET sock = INVALID_SOCKET;
 		// Get a linked network structure based on provided hints
@@ -273,7 +273,7 @@ namespace network
 		hints.ai_family = AF_INET;
 		hints.ai_socktype = SOCK_STREAM;
 
-		int8_t rv = getaddrinfo(ip.c_str(), std::to_string(port).c_str(), &hints, &servinfo);
+		int8_t rv = getaddrinfo(ip, std::to_string(port).c_str(), &hints, &servinfo);
 
 		if (rv != 0)
 		{
@@ -469,7 +469,7 @@ namespace network
 	}
 
 	template<typename T>
-	inline bool client_interface<T>::Connect(std::string&& ip, uint16_t&& port)
+	inline bool client_interface<T>::Connect(const char* ip, uint16_t& port)
 	{
 		if (IsConnected())
 		{

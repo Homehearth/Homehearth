@@ -59,8 +59,6 @@ void Game::OnUserUpdate(float deltaTime)
 
 		}
 
-
-		
 		static uint32_t lobbyID = 0;
 		ImGui::InputInt("LobbyID", (int*)&lobbyID);
 		ImGui::SameLine();
@@ -75,19 +73,19 @@ void Game::OnUserUpdate(float deltaTime)
 		}
 	}
 	else {
-		static char buffer[64];
+		static char buffer[IPV6_ADDRSTRLEN];
 		strcpy(buffer, "127.0.0.1");
-		ImGui::InputText("IP", buffer, 64);
+		ImGui::InputText("IP", buffer, IPV6_ADDRSTRLEN);
+		static uint16_t port = 0;
+		ImGui::InputInt("Port", (int*)&port);
 		if (ImGui::Button("Connect"))
 		{
-			m_client.Connect(buffer, 4950);
+			m_client.Connect(buffer, port);
 		}
 	}
 	ImGui::End();
 
 	);
-
-
 
 	if (m_client.IsConnected())
 	{
