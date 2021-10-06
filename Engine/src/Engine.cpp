@@ -69,14 +69,12 @@ void Engine::Startup()
 	);
 
 	InputSystem::Get().SetMouseWindow(m_window.GetHWnd());
-	
 	HeadlessEngine::Startup();
 
 }
 
 void Engine::Run()
 {
-	
 	if (thread::IsThreadActive())
 		T_CJOB(Engine, RenderThread);
 

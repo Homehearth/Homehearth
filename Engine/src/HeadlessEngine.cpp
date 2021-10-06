@@ -59,7 +59,6 @@ HeadlessEngine::HeadlessEngine()
 	: m_scenes({ 0 })
 	, m_currentScene(nullptr)
 {
-
 }
 
 

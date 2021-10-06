@@ -1,11 +1,11 @@
 #include "NetServerPCH.h"
 #include "Server.h"
 
-Server::Server()
+Server::Server(std::function<void(message<GameMsg>&)> handler)
+	:server_interface<GameMsg>(handler)
 {
 	m_uniqueID = 0;
 }
-
 
 Server::~Server()
 {
@@ -13,18 +13,21 @@ Server::~Server()
 
 void Server::Update(size_t nMaxMessage)
 {
-	if (IsRunning())
+
+	size_t nMessageCount = 0;
+	while (nMessageCount < nMaxMessage && !m_qMessagesIn.empty())
 	{
-		size_t nMessageCount = 0;
-		while (nMessageCount < nMaxMessage && !m_qMessagesIn.empty())
-		{
-			auto msg = m_qMessagesIn.pop_front();
+		auto msg = m_qMessagesIn.pop_front();
 
-			this->OnMessageReceived(msg.remote, msg.msg);
+		this->OnMessageReceived(msg);
 
-			nMessageCount++;
-		}
+		nMessageCount++;
 	}
+}
+
+SOCKET Server::GetConnection(uint32_t playerID) const
+{
+	return connections.at(playerID);
 }
 
 void Server::OnClientConnect(std::string&& ip, const uint16_t& port)
@@ -36,27 +39,15 @@ void Server::OnClientConnect(std::string&& ip, const uint16_t& port)
 
 void Server::OnClientDisconnect()
 {
+	EnterCriticalSection(&lock);
+	connections.erase(m_uniqueID);
+	LeaveCriticalSection(&lock);
 	LOG_INFO("Client disconnected!");
 }
 
-void Server::OnMessageReceived(const SOCKET& socket, message<GameMsg>& msg)
+void Server::OnMessageReceived(message<GameMsg>& msg)
 {
-	switch (msg.header.id)
-	{
-	case GameMsg::Server_GetPing:
-	{
-		message<GameMsg> msg = {};
-		msg.header.id = GameMsg::Server_GetPing;
-		this->SendToClient(socket, msg);
-		LOG_INFO("Client on socket: %lld is pinging server", socket);
-		break;
-	}
-	case GameMsg::Game_MovePlayer:
-	{
-		LOG_INFO("Moving player!");
-		break;
-	}
-	}
+	this->messageReceivedHandler(msg);
 }
 
 void Server::OnClientValidated(const SOCKET& socket)
@@ -67,6 +58,7 @@ void Server::OnClientValidated(const SOCKET& socket)
 	message<GameMsg> msg = {};
 	msg << m_uniqueID;
 	msg.header.id = GameMsg::Server_AssignID;
+	connections[m_uniqueID] = socket;
 	this->SendToClient(socket, msg);
 
 	LOG_INFO("Client has been validated on socket %lld", socket);
