@@ -54,6 +54,7 @@ HeadlessEngine::HeadlessEngine()
 {
 }
 
+
 void HeadlessEngine::Update(float dt)
 {
 	PROFILE_FUNCTION();
