@@ -1,7 +1,7 @@
 #include "Intersections.h"
 
 //Check if the ray intersects with a box collider.
-bool Intersect::RayIntersectBox(const Ray_t& ray, comp::BoxCollider& boxCollider, float& t)
+bool Intersect::RayIntersectBox(const Ray_t& ray, const comp::BoxCollider& boxCollider, float& t)
 {
 	/**
 	 * computing all t-values for the ray
@@ -69,32 +69,35 @@ bool Intersect::RayIntersectBox(const Ray_t& ray, comp::BoxCollider& boxCollider
 	return true;
 }
 
-bool Intersect::RayIntersectSphere(const Ray_t& ray, comp::SphereCollider& sphereCollider, float& t)
+bool Intersect::RayIntersectSphere(const Ray_t& ray, const comp::SphereCollider& sphereCollider, float& t)
 {
-	//Todo: Change to Epsilon comparison
-	if (sphereCollider.radius == 0.f)
-	{ 
+	const sm::Vector3 rayToCenter = ray.rayPos - sphereCollider.center;
+	
+	//Parameterization to use for the quadtratic formula.
+	const float scalarRayDir =  ray.rayDir.Dot(ray.rayDir);
+	const float b = 2.0f * rayToCenter.Dot(ray.rayDir);
+	const float c = rayToCenter.Dot(rayToCenter) - sphereCollider.radius * sphereCollider.radius;
+
+	const float discriminant = b * b - 4.0f * scalarRayDir * c;
+	
+	//discriminant < 0 the ray does not intersect sphere.
+	//discriminant = 0 the ray touches the sphere in one point
+	//discriminant > 0 the ray touches the sphere in two points
+	if (discriminant < 0.0f) {
 		return false;
 	}
-	const sm::Vector3 rayOrigin = ray.rayPos;
-	const sm::Vector3 rayDir = ray.rayDir;
-
-	const sm::Vector3 objectPos = sphereCollider.centerOffset;
-	const sm::Vector3 rayToCenter = objectPos - rayOrigin;
-
-	const float scalar = rayToCenter.Dot(rayDir);
-
-	if (scalar < 0 && sphereCollider.radius * sphereCollider.radius < rayToCenter.Dot(rayToCenter))
+	else
 	{
-		return false;
+		const float numerator = -b + sqrt(discriminant);
+		
+		if(numerator > 0.0f)
+		{
+			t = numerator / (2.0f * scalarRayDir);
+			return true;
+		}
+		else
+		{
+			return false;
+		}
 	}
-	const float m2 = rayToCenter.Dot(rayToCenter) - (scalar * scalar);
-	if (m2 > sphereCollider.radius * sphereCollider.radius)
-	{
-		return false;
-	}
-	const float axis = sqrt(sphereCollider.radius * sphereCollider.radius - m2);
-	float intersectionLength = scalar - axis, intersectionLength2 = scalar + axis;
-	t = intersectionLength < intersectionLength2 ? intersectionLength : intersectionLength2;
-	return true;
 }

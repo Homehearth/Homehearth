@@ -38,8 +38,6 @@ namespace ecs
 		{
 			sm::Vector3 center;
 			float radius;
-			//Unsure if needed
-			sm::Vector3 centerOffset;
 		};
 	};
 
