@@ -71,27 +71,35 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 	}
 	case GameMsg::Client_CreateLobby:
 	{
-		LOG_INFO("Creating a game lobby!");
-		uint32_t uniquePID;
-		msg >> uniquePID;
-		this->CreateSimulation(uniquePID);
+		uint32_t playerID;
+		msg >> playerID;
+		uint32_t lobbyID;
+		if (this->CreateSimulation(playerID, lobbyID))
+		{
+			LOG_INFO("Created Game lobby %d", lobbyID);
+		}
+		else
+		{
+			LOG_INFO("Failed to create Lobby");
+		}
 		break;
 	}
 	case GameMsg::Client_JoinLobby:
 	{
-		LOG_INFO("Joining Game lobby!");
 		uint32_t lobbyID;
 		msg >> lobbyID;
 		uint32_t playerID;
 		msg >> playerID;
+		LOG_INFO("Player %d trying to join lobby %d", playerID, lobbyID);
 		games[lobbyID]->AddPlayer(playerID);
 		break;
 	}
 	}
 }
 
-bool ServerGame::CreateSimulation(uint32_t lobbyLeaderID)
+bool ServerGame::CreateSimulation(uint32_t lobbyLeaderID, uint32_t& lobbyID)
 {
+	lobbyID = m_nGameID;
 	games[m_nGameID] = std::make_unique<Simulation>(&m_server);
 	if (!games[m_nGameID]->CreateLobby(m_nGameID, lobbyLeaderID))
 	{

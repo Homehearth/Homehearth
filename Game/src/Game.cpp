@@ -10,7 +10,7 @@ Game::Game()
 	: m_client(std::bind(&Game::CheckIncoming, this, _1))
 	, Engine()
 {
-	this->localPID = 0;
+	this->m_localPID = 0;
 
 }
 
@@ -26,10 +26,10 @@ bool Game::OnStartup()
 {
 
 	// Scene logic
-	Scene& demo = DemoScene(*this, m_client).GetScene();
+	m_demoScene = std::make_unique<DemoScene>(*this, m_client);
 
 	//Set as current scene
-	SetScene(demo);
+	SetScene(m_demoScene->GetScene());
 
 	return true;
 }
@@ -52,10 +52,8 @@ void Game::OnUserUpdate(float deltaTime)
 			message<GameMsg> msg;
 
 			msg.header.id = GameMsg::Client_CreateLobby;
-			msg << this->localPID;
+			msg << this->m_localPID;
 			m_client.Send(msg);
-
-			LOG_INFO("Creating game lobby!");
 
 		}
 
@@ -67,11 +65,7 @@ void Game::OnUserUpdate(float deltaTime)
 
 		if (ImGui::Button("Join"))
 		{
-			message<GameMsg> msg;
-
-			msg.header.id = GameMsg::Client_JoinLobby;
-			msg << this->localPID << lobbyID;
-			m_client.Send(msg);
+			JoinLobby(lobbyID);
 		}
 	}
 	else {
@@ -89,11 +83,12 @@ void Game::OnUserUpdate(float deltaTime)
 
 
 
+	InputSystem::Get().UpdateEvents();
+
 	if (m_client.IsConnected())
 	{
 		m_client.Update();
 	}
-
 }
 
 
@@ -110,21 +105,28 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	{
 		std::chrono::system_clock::time_point timeNow = std::chrono::system_clock::now();
 
-		LOG_INFO("Ping: %fs", std::chrono::duration<double>(timeNow - this->timeThen).count());
+		LOG_INFO("Ping: %fs", std::chrono::duration<double>(timeNow - this->m_timeThen).count());
 		break;
 	}
 	case GameMsg::Server_AssignID:
 	{
-		msg >> this->localPID;
+		msg >> this->m_localPID;
 
-		LOG_INFO("YOUR ID IS: %lu", this->localPID);
+		LOG_INFO("YOUR ID IS: %lu", this->m_localPID);
 		break;
 	}
+	
 	case GameMsg::Game_AddPlayer:
 	{
-		uint32_t remotePlayerID;
-		msg >> remotePlayerID;
-		LOG_INFO("Player with ID: %ld has joined the game!", remotePlayerID);
+		uint32_t count; // Could be more than one player
+		msg >> count;
+		for (uint32_t i = 0; i < count; i++)
+		{
+			uint32_t remotePlayerID;
+			msg >> remotePlayerID;
+			LOG_INFO("Player with ID: %ld has joined the game!", remotePlayerID);
+			m_players.insert(std::make_pair(remotePlayerID, m_demoScene->CreatePlayerEntity()));
+		}
 		break;
 	}
 	}
@@ -134,9 +136,20 @@ void Game::PingServer()
 {
 	message<GameMsg> msg = {};
 	msg.header.id = GameMsg::Server_GetPing;
-	msg << this->localPID;
+	msg << this->m_localPID;
 
-	this->timeThen = std::chrono::system_clock::now();
+	this->m_timeThen = std::chrono::system_clock::now();
+	m_client.Send(msg);
+}
+
+void Game::JoinLobby(uint32_t lobbyID)
+{
+	LOG_INFO("Joining Lobby %d ...", lobbyID);
+	this->m_gameID = lobbyID;
+	message<GameMsg> msg;
+
+	msg.header.id = GameMsg::Client_JoinLobby;
+	msg << this->m_localPID << lobbyID;
 	m_client.Send(msg);
 }
 

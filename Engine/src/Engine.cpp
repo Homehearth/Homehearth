@@ -242,8 +242,6 @@ void Engine::Update(float dt)
 	PROFILE_FUNCTION();
 	m_frameTime.update = dt;
 
-	
-	InputSystem::Get().UpdateEvents();
 
 	MSG msg = { nullptr };
 	while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
@@ -255,7 +253,7 @@ void Engine::Update(float dt)
 			Shutdown();
 		}
 	}
-
+	// todo temp
 	if (InputSystem::Get().CheckMouseKey(MouseKey::RIGHT, KeyState::PRESSED))
 	{
 		InputSystem::Get().SwitchMouseMode();

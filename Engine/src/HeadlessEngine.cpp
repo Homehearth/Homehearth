@@ -66,13 +66,14 @@ void HeadlessEngine::Update(float dt)
 {
 	PROFILE_FUNCTION();
 
+	this->OnUserUpdate(dt);
+
 	// Update elements in the scene.
 	if (m_currentScene)
 	{
 		m_currentScene->Update(dt);
 	}
 
-	this->OnUserUpdate(dt);
 }
 
 void HeadlessEngine::Run()

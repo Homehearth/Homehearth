@@ -12,6 +12,12 @@ Entity::Entity(entt::registry& registry, entt::entity id)
 	m_entity = id;
 }
 
+Entity::Entity()
+{
+	m_registry = nullptr;
+	m_entity = entt::null;
+}
+
 void Entity::Destroy() 
 {
 	m_registry->destroy(m_entity);

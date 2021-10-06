@@ -20,6 +20,7 @@ public:
 	SceneBuilder(HeadlessEngine& m_engine);
 
 	Scene& GetScene() const;
+
 };
 
 template<typename T>
@@ -29,6 +30,7 @@ inline SceneBuilder<T>::SceneBuilder(HeadlessEngine& engine)
 	, m_sceneName(GetTypeName<T>())
 {
 	LOG_INFO("Created Scene: %s", m_sceneName.c_str());
+
 }
 
 template<typename T>

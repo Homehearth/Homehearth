@@ -6,7 +6,7 @@ DemoScene::DemoScene(HeadlessEngine& engine, Client& client)
 	// Set up Scene
 
 	//Initialize player entity
-	Entity player = CreatePlayerEntity();
+	m_player = CreatePlayerEntity();
 
 	// Define what scene does on update
 	m_scene.on<ESceneUpdate>([&](const ESceneUpdate& e, Scene& scene)
@@ -14,10 +14,13 @@ DemoScene::DemoScene(HeadlessEngine& engine, Client& client)
 			//System to update velocity
 			Systems::MovementSystem(scene, e.dt);
 			//System responding to user input
-			GameSystems::UserInputSystem(scene, client);
+			//GameSystems::UserInputSystem(scene, client);
+			
+			m_player.GetComponent<comp::Velocity>()->vel.z = InputSystem::Get().GetAxis(Axis::VERTICAL) * m_player.GetComponent<comp::Player>()->runSpeed;
+			m_player.GetComponent<comp::Velocity>()->vel.x = InputSystem::Get().GetAxis(Axis::HORIZONTAL) * m_player.GetComponent<comp::Player>()->runSpeed;
+
 		});
 }
-
 
 Entity DemoScene::CreatePlayerEntity()
 {
