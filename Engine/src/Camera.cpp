@@ -14,12 +14,12 @@ Camera::Camera()
     m_aspectRatio = 0;
     m_windowHeight = 0;
     m_windowWidth = 0;
-    m_isFreeRoaming = false;
     m_rotationSpeed = 5.0f;
     m_movingSepeed = 15.0f;
     m_TargetVelocity.x = 0.0f;
     m_TargetVelocity.y = 0.0f;
     m_TargetVelocity.z = 0.0f;
+    m_type = CAMERATYPE::DEFAULT;
 }
 
 Camera::~Camera()
@@ -27,7 +27,7 @@ Camera::~Camera()
 
 }
 
-void Camera::Initialize(sm::Vector3 pos, sm::Vector3 target, sm::Vector3 up, sm::Vector2 windowSize, bool isFreeRoaming)
+void Camera::Initialize(sm::Vector3 pos, sm::Vector3 target, sm::Vector3 up, sm::Vector2 windowSize, CAMERATYPE type)
 {
     m_position = pos;
     m_target = target;
@@ -36,7 +36,7 @@ void Camera::Initialize(sm::Vector3 pos, sm::Vector3 target, sm::Vector3 up, sm:
     m_windowHeight = windowSize.y;
     m_windowWidth = windowSize.x;
     m_aspectRatio = m_windowWidth / m_windowHeight;
-    m_isFreeRoaming = isFreeRoaming;
+    m_type = type;
 
     m_defaultForward = { 0.0f, 0.0f, -1.0f };
     m_defaultRight = { -1.0f, 0.0f, 0.0f };
@@ -71,9 +71,8 @@ void Camera::Initialize(sm::Vector3 pos, sm::Vector3 target, sm::Vector3 up, sm:
 }
 
 void Camera::Update(float deltaTime)
-{
-    //For Debug Camera
-    if (m_isFreeRoaming && InputSystem::Get().IsMouseRelative()) //Can't move the camera when in absolut mode
+{ 
+    if (m_type == CAMERATYPE::DEBUG)// && InputSystem::Get().IsMouseRelative()) //Can't move the camera when in absolut mode
     {
         //Mouse
         m_currentMousePosition = sm::Vector2((float)InputSystem::Get().GetMousePos().x, (float)InputSystem::Get().GetMousePos().y);
@@ -97,7 +96,7 @@ void Camera::Update(float deltaTime)
         {
             m_move.y += m_movingSepeed * deltaTime;
         }
-        m_move.x = -InputSystem::Get().GetAxis(Axis::HORIZONTAL) * m_movingSepeed * deltaTime;
+        m_move.x = InputSystem::Get().GetAxis(Axis::HORIZONTAL) * m_movingSepeed * deltaTime;
         m_move.z = -InputSystem::Get().GetAxis(Axis::VERTICAL) * m_movingSepeed * deltaTime;
 
         //Update camera values
@@ -119,9 +118,7 @@ void Camera::Update(float deltaTime)
         m_target = dx::XMVectorAdd(m_target, m_position);
         m_view = dx::XMMatrixLookAtLH(m_position, m_target, m_up);
     }
-
-    //For Game Camera
-    else if (!m_isFreeRoaming) 
+    else if (m_type == CAMERATYPE::PLAY)
     {
 
         //m_position.x += m_targetTransform->position.x;
@@ -144,6 +141,10 @@ void Camera::Update(float deltaTime)
         m_view = dx::XMMatrixLookAtLH(m_position, m_target, m_up);
 
         UpdateProjection();
+    }
+    else if (m_type == CAMERATYPE::DEFAULT) 
+    {
+
     }
 
     //IDk if i need thb
@@ -198,6 +199,11 @@ sm::Vector3 Camera::GetUp() const
 camera_Matrix_t* Camera::GetCameraMatrixes()
 {
     return &m_cameraMat;
+}
+
+CAMERATYPE Camera::GetCameraType()
+{
+    return m_type;
 }
 
 //Set functions

@@ -12,12 +12,7 @@ private:
 	
 	std::atomic<bool> m_IsImguiReady;
 
-	Camera m_gameCamera;
-	Camera m_debugCamera;
-	std::shared_ptr<Camera> m_currentCamera;
-	bool isDebug;
-
-	Window m_window;
+	inline static Window m_window;
 	Renderer m_renderer;
 	std::unique_ptr<DirectX::AudioEngine> m_audio_engine;
 	
@@ -25,7 +20,7 @@ private:
 		float update;
 		float render;
 	} m_frameTime;
-
+	
 	// Job for rendering thread.
 	void RenderThread();
 
@@ -38,12 +33,9 @@ private:
 	// Run the Engine's core loop.
 	void Run() override;
 
-	Window* GetWindow();
-	//Camera* GetCamera();
 
 	// IMGUI
 	void drawImGUI() const;
-	void CameraUpdate(float deltaTime);
 
 protected:
 	// Startup the Engine and its instances in a specific order.
@@ -60,5 +52,5 @@ public:
 	virtual bool OnStartup() = 0;
 	virtual bool OnUserUpdate(float deltaTime) = 0;
 
-	Camera* GetCamera();
+	static Window* GetWindow();
 };

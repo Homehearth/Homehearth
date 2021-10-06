@@ -57,3 +57,8 @@ bool Scene::IsRenderReady() const
 {
 	return m_renderableCopies.IsSwapped();
 }
+
+Camera* Scene::GetCamera()
+{
+	return m_currentCamera.get();
+}

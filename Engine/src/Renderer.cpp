@@ -7,10 +7,9 @@ Renderer::Renderer()
 {
 }
 
-void Renderer::Initialize(Window* pWindow, Camera* camera)
+void Renderer::Initialize(Window* pWindow)
 {
 	m_pipelineManager.Initialize(pWindow);
-    m_camera = camera;
 
     m_d3d11 = &D3D11Core::Get();
     m_basePass.SetEnable(true);
@@ -19,7 +18,6 @@ void Renderer::Initialize(Window* pWindow, Camera* camera)
     AddPass(&m_basePass);
 
     LOG_INFO("Number of rendering passes: %d", static_cast<int>(m_passes.size()));
-    m_basePass.GetCamera(camera);
 }
 
 void Renderer::ClearFrame()
@@ -34,6 +32,11 @@ void Renderer::Render(Scene* pScene)
 {
     if (pScene)
     {
+        if (!m_basePass.HasCamera())
+        {
+            m_basePass.SetCamera(pScene->GetCamera());
+        }
+
         if (!m_passes.empty())
         {
             for (const auto& pass : m_passes)

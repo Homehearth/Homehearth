@@ -32,20 +32,11 @@ void Engine::Startup()
 	D3D11Core::Get().Initialize(&m_window);
 	D2D1Core::Initialize(&m_window);
 
-	//Camera
-	m_gameCamera.Initialize(sm::Vector3(0, 0, 1), sm::Vector3(0, 0, 0), sm::Vector3(0, 1, 0), sm::Vector2((float)m_window.GetWidth(), (float)m_window.GetHeight()), false);
-
-#ifdef _DEBUG
-	m_debugCamera.Initialize(sm::Vector3(0, 0, 1), sm::Vector3(0, 0, 0), sm::Vector3(0, 1, 0), sm::Vector2((float)m_window.GetWidth(), (float)m_window.GetHeight()), true);
-	m_currentCamera = std::make_unique<Camera>(m_debugCamera);
-#endif // DEBUG
-
-
-	m_renderer.Initialize(&m_window, m_currentCamera.get());
+	m_renderer.Initialize(&m_window);
 
 	// Thread should be launched after s_engineRunning is set to true and D3D11 is initialized.
 	//
-	// AUDIO 
+	// AUDIO - we supposed to use other audio engine
 	//
 	HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
 	if (FAILED(hr))
@@ -207,12 +198,12 @@ void Engine::drawImGUI() const
 
 	ImGui::Begin("Camera");
 	{
-		const std::string position = "Position: " + std::to_string(m_currentCamera->GetPosition().x)+ " " + std::to_string(m_currentCamera->GetPosition().y) + " " + std::to_string(m_currentCamera->GetPosition().z);
+		const std::string position = "Position: " + std::to_string(GetCurrentScene()->m_currentCamera->GetPosition().x)+ " " + std::to_string(GetCurrentScene()->m_currentCamera->GetPosition().y) + " " + std::to_string(GetCurrentScene()->m_currentCamera->GetPosition().z);
 		ImGui::Separator();
 		ImGui::Text(position.c_str());
-		ImGui::DragFloat("Zoom: ", &m_currentCamera->m_zoomValue, 0.01f, 0.0001f, 1.0f);
-		ImGui::DragFloat("Near Plane : ", &m_currentCamera->m_nearPlane, 0.1f , 0.0001f, m_currentCamera->m_farPlane-1);
-		ImGui::DragFloat("Far Plane: ", &m_currentCamera->m_farPlane, 0.1f, m_currentCamera->m_nearPlane+1);
+		ImGui::DragFloat("Zoom: ", &GetCurrentScene()->m_currentCamera->m_zoomValue, 0.01f, 0.0001f, 1.0f);
+		ImGui::DragFloat("Near Plane : ", &GetCurrentScene()->m_currentCamera->m_nearPlane, 0.1f , 0.0001f, GetCurrentScene()->m_currentCamera->m_farPlane-1);
+		ImGui::DragFloat("Far Plane: ", &GetCurrentScene()->m_currentCamera->m_farPlane, 0.1f, GetCurrentScene()->m_currentCamera->m_nearPlane+1);
 		ImGui::Spacing();
 
 	};
@@ -278,7 +269,6 @@ void Engine::Update(float dt)
 		);
 	}
 
-	CameraUpdate(dt);
 	HeadlessEngine::Update(dt);
 
 	// Updates game logic
@@ -321,33 +311,4 @@ void Engine::Render(float& dt)
 		D2D1Core::Present();
 		D3D11Core::Get().SwapChain()->Present(0, 0);
 	}
-}
-
-void Engine::CameraUpdate(float deltaTime)
-{
-	m_currentCamera->Update(deltaTime);
-
-#ifdef _DEBUG
-	if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Space, KeyState::RELEASED))
-	{
-		if (isDebug)
-		{
-			*m_currentCamera = m_gameCamera;
-			LOG_INFO("Game Camera selected");
-			isDebug = false;
-		}
-		else
-		{
-			*m_currentCamera = m_debugCamera;
-			LOG_INFO("Debugg Camera selected");
-			isDebug = true;
-		}	
-	}
-#endif // DEBUG
-
-}
-
-Camera* Engine::GetCamera()
-{
-	return m_currentCamera.get();
 }

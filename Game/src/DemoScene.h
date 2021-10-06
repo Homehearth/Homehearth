@@ -3,7 +3,11 @@
 #include "GameSystems.h"
 #include "Client.h"
 
-void InitializePlayerEntity(Engine& engine, Scene& scene);
+void InitializePlayerEntity(Scene& scene);
 
 void setupDemoScene(Scene& scene, Client& client);
+
+void SetUpCamera(Scene& scene);
+void CameraUpdate(Scene& scene, float deltaTime);
+
 
