@@ -42,7 +42,7 @@ project "Engine"
         ["src/Engine"] = { "**EnginePCH.*" },
             ["src/Engine/Core"] = { "**Engine.*", "**Scene.*", "**EventTypes.*", "**Window.*" },
             ["src/Engine/Input"] = { "**InputSystem.*" },
-            ["src/Engine/Thread"] = { "**multi_thread_manager.*", "**ThreadSyncer.*"},
+            ["src/Engine/Thread"] = { "**multi_thread_manager.*", "**ThreadSyncer.*", "**RenderThreadHandler.*"},
 
         ["src/Engine/Utility"] = { "**Timer.*", "**Profiler.*", "**Logger.*" },
 		["src/Engine/Elements"] = {"**Canvas.*", "**Picture.*", "**Border.*", "**Button.*", "**Text.*"},

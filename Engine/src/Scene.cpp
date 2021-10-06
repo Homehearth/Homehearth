@@ -45,10 +45,16 @@ void Scene::Render()
 	};
 
 	D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, buffers);
-	for (const auto& it : m_renderableCopies[1])
+
+	// Todo: Divide up work for threads.
+
+	if ((bool)thread::RenderThreadHandler::Get().Launch(m_renderableCopies[1].size(), &m_renderableCopies[1]))
 	{
-		m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
-		it.mesh->Render();	
+		for (const auto& it : m_renderableCopies[1])
+		{
+			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
+			it.mesh->Render();
+		}
 	}
 	
 	// Emit event
