@@ -27,6 +27,18 @@ namespace ecs
 		{
 			float runSpeed;
 		};
+
+		struct BoxCollider
+		{
+			sm::Vector3 center;
+			sm::Vector3 norm[3];
+			float halfSize[3];
+		};
+		struct SphereCollider
+		{
+			sm::Vector3 center;
+			float radius;
+		};
 	};
 
 	sm::Matrix GetMatrix(const component::Transform& transform);

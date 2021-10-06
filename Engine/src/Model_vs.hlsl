@@ -28,6 +28,7 @@ struct VertexOut
     float3 normal : NORMAL;
     float3 tangent : TANGENT;
     float3 biTangent : BINORMAL;
+    float4 worldPos : WORLDPOSITION;
 };
 
 VertexOut main(VertexIn input)
@@ -36,6 +37,7 @@ VertexOut main(VertexIn input)
     
     output.pos = float4(input.pos, 1.0f);
     output.pos = mul(world, output.pos);
+    output.worldPos = output.pos;
     output.pos = mul(view, output.pos);
     output.pos = mul(projection, output.pos);
 
@@ -43,5 +45,6 @@ VertexOut main(VertexIn input)
     output.uv = input.uv;
     output.tangent = input.tangent;
     output.biTangent = input.biTangent;
+    
     return output;
 }

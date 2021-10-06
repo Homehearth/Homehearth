@@ -2,6 +2,7 @@ project "Engine"
     kind "StaticLib"
     language "C++"
     cppdialect "C++17"
+    disablewarnings{"26812"}
     targetdir("build/bin/" .. outputdir .. "/%{prj.name}")
     objdir("build/bin-int/" .. outputdir .. "/%{prj.name}")
  
@@ -45,10 +46,12 @@ project "Engine"
             ["src/Engine/Thread"] = { "**multi_thread_manager.*", "**ThreadSyncer.*"},
 
         ["src/Engine/Utility"] = { "**Timer.*", "**Profiler.*", "**Logger.*" },
+		["src/Engine/Elements"] = {"**Canvas.*", "**Picture.*", "**Border.*", "**Button.*", "**Text.*"},
         
         ["src/Engine"] = {  },
-            ["src/Engine/Graphics/Renderer"] = {"**Renderer.*", "**PipelineManager.*"},
+            ["src/Engine/Graphics/Renderer"] = {"**Renderer.*", "**PipelineManager.*", "**BackBuffer.*"},
                 ["src/Engine/Graphics/Renderer/RenderPass"] = {"**Pass.*"},
+				["src/Engine/Graphics/Renderer2D"] = {"**Handler2D.*", "**Element2D.*"},
             ["src/Engine/Graphics/D3D11"] = { "**D3D11Core.*" },
 			["src/Engine/Graphics/D2D1"] = { "**D2D1Core.*" },
 			
@@ -85,7 +88,7 @@ project "Engine"
 
     -- Define a macro/symbol which applies only to debug builds.
     filter {"configurations:Debug"}
-        buildoptions "/MTd"
+        staticruntime "on"
         runtime "Debug"
         defines{"_DEBUG", "_UNICODE", "UNICODE"}
         symbols "on"
@@ -95,7 +98,7 @@ project "Engine"
 
     -- Define a macro/symbol which applies only to release builds.
     filter {"configurations:Release"}
-        buildoptions "/MT"
+        staticruntime "on"
         runtime "Release"
         defines{"NDEBUG", "_UNICODE", "UNICODE"}
         symbols "on"

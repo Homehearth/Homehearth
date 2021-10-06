@@ -17,22 +17,26 @@ void Scene::Update(float dt)
 	// Emit event
 	publish<ESceneUpdate>(dt);
 	
-	// only copy if the last frame has been rendered
-	if (!m_renderableCopies.IsSwapped()) {
+	{
 		PROFILE_SCOPE("Copy Transforms");
 		m_renderableCopies[0].clear();
 		m_registry.group<comp::Renderable, comp::Transform>().each([&](entt::entity e, comp::Renderable& r, comp::Transform& t)
-			{
-				r.data.worldMatrix = ecs::GetMatrix(t);
-				m_renderableCopies[0].push_back(r);
-			});
-		m_renderableCopies.Swap();
+		{
+			r.data.worldMatrix = ecs::GetMatrix(t);
+			m_renderableCopies[0].push_back(r);
+		});
+
+		if (!m_renderableCopies.IsSwapped())
+		{
+			m_renderableCopies.Swap();
+		}
 	}
 }
 
 void Scene::Render() 
 {
 	PROFILE_FUNCTION();
+
 	// System that renders Renderable component
 
 	ID3D11Buffer* buffers[1] =
@@ -54,7 +58,12 @@ void Scene::Render()
 	m_renderableCopies.ReadyForSwap();
 }
 
-bool Scene::IsRenderReady() const 
+const bool Scene::IsRenderReady() const
 {
 	return m_renderableCopies.IsSwapped();
+}
+
+DoubleBuffer<std::vector<comp::Renderable>>* Scene::GetBuffers()
+{
+	return &m_renderableCopies;
 }

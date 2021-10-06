@@ -9,7 +9,7 @@ void InitializePlayerEntity(Scene& scene)
 	auto& renderable = scene.GetRegistry().emplace<comp::Renderable>(playerEntity);
 	auto& player = scene.GetRegistry().emplace<comp::Player>(playerEntity);
 	player.runSpeed = 10.f;
-	renderable.model = ResourceManager::Get().GetResource<RModel>("StreetLamp.obj");
+	renderable.model = ResourceManager::Get().GetResource<RModel>("Chest.obj");
 }
 
 void setupDemoScene(Scene& scene, Client& client)
@@ -23,5 +23,6 @@ void setupDemoScene(Scene& scene, Client& client)
 			Systems::MovementSystem(scene, e.dt);
 			//System responding to user input
 			GameSystems::UserInputSystem(scene, client);
+			GameSystems::MRayIntersectBoxSystem(scene);
 		});
 }
