@@ -393,11 +393,6 @@ bool PipelineManager::CreateDefaultConstantBuffer()
     HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&bDesc, &data, m_defaultModelConstantBuffer.GetAddressOf());
     if (FAILED(hr)) return false;
 
-    // Camera ConstantBuffer
-    sm::Matrix mat = sm::Matrix::CreatePerspectiveFieldOfView(dx::XMConvertToRadians(90.f), static_cast<float>(m_window->GetWidth()) / static_cast<float>(m_window->GetHeight()), 0.01f, 100.0f);
-    data.pSysMem = &mat;
-    hr = D3D11Core::Get().Device()->CreateBuffer(&bDesc, &data, m_defaultViewConstantBuffer.GetAddressOf());
-
     return !FAILED(hr);
 }
 

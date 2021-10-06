@@ -30,7 +30,7 @@ void BasePass::PreRender(ID3D11DeviceContext* dc, PipelineManager* pm)
     {
         dc->PSSetConstantBuffers(0, 0, nullptr);
         dc->VSSetConstantBuffers(0, 1, pm->m_defaultModelConstantBuffer.GetAddressOf());
-        dc->VSSetConstantBuffers(1, 1, pm->m_defaultViewConstantBuffer.GetAddressOf());
+        dc->VSSetConstantBuffers(1, 1, m_camera->m_viewConstantBuffer.GetAddressOf());
     }
 
     // SHADER RESOURCES.
@@ -63,6 +63,14 @@ void BasePass::Render(Scene* pScene)
 
 void BasePass::PostRender(ID3D11DeviceContext* dc, PipelineManager* pm)
 {
+	// return rendertarget for next pass?
+    D3D11Core::Get().DeviceContext()->UpdateSubresource(m_camera->m_viewConstantBuffer.Get(), 0, nullptr, m_camera->GetCameraMatrixes(), 0, 0);
+}
+
+void BasePass::GetCamera(Camera* camera)
+{
+    m_camera = camera;
+}
 	// Cleanup.
     ID3D11ShaderResourceView* const nullSRV[] = { nullptr };
     dc->PSSetShaderResources(10, 1, nullSRV);

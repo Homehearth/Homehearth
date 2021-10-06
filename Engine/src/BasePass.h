@@ -3,6 +3,10 @@
 
 class BasePass : public IRenderPass
 {
+private:
+	bool m_isEnabled;
+	Camera* m_camera;
+
 public:
 	BasePass() = default;
 	virtual ~BasePass() = default;
@@ -14,6 +18,10 @@ public:
 	void Render(Scene* pScene) override;
 	
 	void PostRender(ID3D11DeviceContext* dc, PipelineManager* pm) override;
+	
+	void PostRender() override;
+
+	void GetCamera(Camera* camera);
 	
 };
 

@@ -11,6 +11,7 @@ private:
 	D3D11Core* m_d3d11;
 	PipelineManager m_pipelineManager;
 	std::vector<IRenderPass*> m_passes;
+	Camera* m_camera;
 	
 	DepthPass m_depthPass;	// Depth, pre Z-pass.
 	BasePass m_basePass;	// Forward, "GeometryPass".
@@ -24,7 +25,7 @@ public:
 	Renderer();
 	virtual ~Renderer() = default;
 
-	void Initialize(Window* pWindow);
+	void Initialize(Window* pWindow, Camera* camera);
 
 	// Clears the screen.
 	void ClearFrame();

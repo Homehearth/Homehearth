@@ -7,9 +7,11 @@ Renderer::Renderer()
 {
 }
 
-void Renderer::Initialize(Window* pWindow)
+void Renderer::Initialize(Window* pWindow, Camera* camera)
 {
 	m_pipelineManager.Initialize(pWindow);
+    m_camera = camera;
+
     m_d3d11 = &D3D11Core::Get();
 
     // DepthPass
@@ -22,6 +24,8 @@ void Renderer::Initialize(Window* pWindow)
     m_basePass.SetEnable(true);
     AddPass(&m_basePass);
 
+    LOG_INFO("Number of rendering passes: %d", static_cast<int>(m_passes.size()));
+    m_basePass.GetCamera(camera);
     LOG_INFO(GetInfoAboutPasses().c_str());
 }
 
