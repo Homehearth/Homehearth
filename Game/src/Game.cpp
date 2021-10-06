@@ -4,28 +4,13 @@
 
 #include "Components.h"
 
+using namespace std::placeholders;
+
 Game::Game()
-	: Engine()
+	: m_client(std::bind(&Game::CheckIncoming, this, _1))
+	, Engine()
 {
 	this->localPID = 0;
-	/*
-		Resource manager example
-	*/
-	/*
-	std::shared_ptr<RMesh> monster = ResourceManager::Get().GetResource<RMesh>("Monster.fbx");
-
-	{	//Start a scope for show
-
-		std::shared_ptr<RMesh> chest1 = ResourceManager::Get().GetResource<RMesh>("Chest.obj");
-		std::shared_ptr<RMesh> chest2 = ResourceManager::Get().GetResource<RMesh>("Chest.obj");
-		std::shared_ptr<RMesh> chest3 = ResourceManager::Get().GetResource<RMesh>("Chest.obj");
-
-	}	//chest1,2,3 dies here
-
-	//Clearing up resources after chest1
-	ResourceManager::Get().FreeResources();
-	*/
-
 }
 
 Game::~Game()
@@ -54,11 +39,54 @@ void Game::Start()
 	Engine::Startup();
 }
 
+void Game::CheckIncoming(message<GameMsg>& msg)
+{
+	switch (msg.header.id)
+	{
+	case GameMsg::Client_Accepted:
+	{
+		LOG_INFO("You are validated!");
+		break;
+	}
+	case GameMsg::Server_GetPing:
+	{
+		std::chrono::system_clock::time_point timeNow = std::chrono::system_clock::now();
+
+		LOG_INFO("Ping: %fs", std::chrono::duration<double>(timeNow - this->timeThen).count());
+		break;
+	}
+	case GameMsg::Server_AssignID:
+	{
+		msg >> this->localPID;
+
+		LOG_INFO("YOUR ID IS: %lu", this->localPID);
+		break;
+	}
+	case GameMsg::Game_AddPlayer:
+	{
+		uint32_t remotePlayerID;
+		msg >> remotePlayerID;
+		LOG_INFO("Player with ID: %ld has joined the game!", remotePlayerID);
+		break;
+	}
+	}
+}
+
+void Game::PingServer()
+{
+	message<GameMsg> msg = {};
+	msg.header.id = GameMsg::Server_GetPing;
+	msg << this->localPID;
+
+	this->timeThen = std::chrono::system_clock::now();
+	m_client.Send(msg);
+}
+
 bool Game::OnUserUpdate(float deltaTime)
 {
 	if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::P, KeyState::PRESSED))
 	{
-		m_client.PingServer();
+		this->PingServer();
 	}
 
 	if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::R, KeyState::PRESSED))
@@ -66,22 +94,32 @@ bool Game::OnUserUpdate(float deltaTime)
 		m_client.Connect("127.0.0.1", 4950);
 	}
 
-	if (m_client.IsConnected())
+	if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::C, KeyState::PRESSED))
 	{
-		while (!m_client.m_messagesIn.empty())
-		{
-			auto msg = m_client.m_messagesIn.pop_front();
-			switch (msg.header.id)
-			{
-			case GameMsg::Server_AssignID:
-			{
-				msg >> this->localPID;
+		message<GameMsg> msg; 
 
-				LOG_INFO("YOUR ID IS: %lu", this->localPID);
-				break;
-			}
-			}
-		}
+		msg.header.id = GameMsg::Client_CreateLobby;
+		msg << this->localPID;
+		m_client.Send(msg);
+
+		LOG_INFO("Creating game lobby!");
+	}
+	
+	if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::J, KeyState::PRESSED))
+	{
+		message<GameMsg> msg;
+
+		msg.header.id = GameMsg::Client_JoinLobby;
+		uint32_t lobbyID;
+		std::cout << "Type in the lobby ID you wish to join: ";
+		std::cin >> lobbyID;
+		msg << this->localPID << lobbyID;
+		m_client.Send(msg);
+	}
+
+	if (m_client.IsConnected())
+	{	
+		m_client.Update();
 	}
 
 	return true;

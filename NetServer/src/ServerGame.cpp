@@ -1,9 +1,17 @@
 #include "NetServerPCH.h"
 #include "ServerGame.h"
 
-ServerGame::ServerGame() 
-{
+using namespace std::placeholders;
 
+ServerGame::ServerGame() 
+	:m_server(std::bind(&ServerGame::CheckIncoming, this, _1))
+{
+	m_nGameID = 0;
+}
+
+ServerGame::~ServerGame()
+{
+	inputThread.join();
 }
 
 void ServerGame::InputThread()
@@ -21,17 +29,6 @@ void ServerGame::InputThread()
 
 }
 
-void ServerGame::Run() 
-{
-
-	std::thread t(&ServerGame::InputThread, this);
-
-	//HeadlessEngine::Run();
-	this->m_server.Update(1);
-
-	t.join();
-}
-
 bool ServerGame::OnStartup()
 {
 	if (!m_server.Start(4950))
@@ -39,7 +36,7 @@ bool ServerGame::OnStartup()
 		LOG_ERROR("Failed to start server");
 		exit(0);
 	}
-
+	inputThread = std::thread(&ServerGame::InputThread, this);
 
 	return true;
 }
@@ -47,4 +44,63 @@ bool ServerGame::OnStartup()
 void ServerGame::Start()
 {
 	Startup();
+	HeadlessEngine::StartUpdateLoop();
+}
+
+bool ServerGame::OnUserUpdate(float deltaTime)
+{
+	this->m_server.Update();
+
+	return true;
+}
+
+void ServerGame::CheckIncoming(message<GameMsg>& msg)
+{
+	switch (msg.header.id)
+	{
+	case GameMsg::Server_GetPing:
+	{
+		uint32_t playerID;
+		msg >> playerID;
+		this->m_server.SendToClient(m_server.GetConnection(playerID), msg);
+		LOG_INFO("Client on with ID: %ld is pinging server", playerID);
+		break;
+	}
+	case GameMsg::Game_MovePlayer:
+	{
+		LOG_INFO("Moving player!");
+		break;
+	}
+	case GameMsg::Client_CreateLobby:
+	{
+		LOG_INFO("Creating a game lobby!");
+		uint32_t uniquePID;
+		msg >> uniquePID;
+		this->CreateSimulation(uniquePID);
+		break;
+	}
+	case GameMsg::Client_JoinLobby:
+	{
+		LOG_INFO("Joining Game lobby!");
+		uint32_t lobbyID;
+		msg >> lobbyID;
+		uint32_t playerID;
+		msg >> playerID;
+		games[lobbyID]->AddPlayer(playerID);
+		break;
+	}
+	}
+}
+
+bool ServerGame::CreateSimulation(uint32_t lobbyLeaderID)
+{
+	games[m_nGameID] = std::make_unique<Simulation>(&m_server);
+	if (!games[m_nGameID]->CreateLobby(m_nGameID, lobbyLeaderID))
+	{
+		games.erase(m_nGameID);
+		return false;
+	}
+	m_nGameID++;
+
+	return true;
 }

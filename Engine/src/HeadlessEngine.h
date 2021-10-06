@@ -11,12 +11,14 @@ private:
 	std::unordered_map<std::string, Scene> m_scenes;
 	Scene* m_currentScene;
 	
+	virtual bool OnStartup() = 0;
+	virtual bool OnUserUpdate(float deltaTime) = 0;
 protected:
 	// Updates the current scene.
 	virtual void Update(float dt);
 
 	// Run the Engine's core loop.
-	virtual void Run();
+	void StartUpdateLoop();
 
 	// Shutdown the Engine and its instances in the reverse order.
 	void Shutdown();
@@ -38,6 +40,5 @@ public:
 	HeadlessEngine& operator=(HeadlessEngine&& other) = delete;
 	virtual ~HeadlessEngine() = default;
 
-	virtual bool OnStartup() = 0;
 };
 

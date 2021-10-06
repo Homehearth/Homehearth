@@ -46,20 +46,18 @@ void HeadlessEngine::Startup()
 		exit(0);
 	}
 	m_isEngineRunning = true;
-	this->Run();
 }
 
 HeadlessEngine::HeadlessEngine()
 	: m_scenes({ 0 })
 	, m_currentScene(nullptr)
 {
-
 }
 
 void HeadlessEngine::Update(float dt)
 {
 	PROFILE_FUNCTION();
-
+	this->OnUserUpdate(dt);
 	// Update elements in the scene.
 	if (m_currentScene)
 	{
@@ -68,7 +66,7 @@ void HeadlessEngine::Update(float dt)
 
 }
 
-void HeadlessEngine::Run()
+void HeadlessEngine::StartUpdateLoop()
 {
 	double currentFrame = 0.f;
 	double lastFrame = omp_get_wtime();

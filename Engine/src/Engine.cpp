@@ -69,19 +69,15 @@ void Engine::Startup()
 	);
 
 	InputSystem::Get().SetMouseWindow(m_window.GetHWnd());
-	
 	HeadlessEngine::Startup();
-
+	this->Run();
 }
 
 void Engine::Run()
 {
-	
 	if (thread::IsThreadActive())
 		T_CJOB(Engine, RenderThread);
-
-	HeadlessEngine::Run();
-
+	HeadlessEngine::StartUpdateLoop();
 	// Wait for the rendering thread to exit its last render cycle and shutdown
 	IMGUI(
 		while (!s_safeExit) {}; // TODO: why only in debug??
@@ -275,9 +271,6 @@ void Engine::Update(float dt)
 
 	m_currentCamera->Update(dt);
 	HeadlessEngine::Update(dt);
-
-	// Updates game logic
-	this->OnUserUpdate(dt);
 
 	{
 		PROFILE_SCOPE("Ending ImGui");

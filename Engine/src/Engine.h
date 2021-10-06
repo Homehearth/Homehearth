@@ -33,7 +33,7 @@ private:
 	void Render(float& dt);
 
 	// Run the Engine's core loop.
-	void Run() override;
+	void Run();
 
 	Window* GetWindow();
 
@@ -53,5 +53,4 @@ public:
 	virtual ~Engine() = default;
 
 	virtual bool OnStartup() = 0;
-	virtual bool OnUserUpdate(float deltaTime) = 0;
 };
