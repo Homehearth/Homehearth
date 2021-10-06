@@ -26,6 +26,7 @@ thread::RenderThreadHandler::RenderThreadHandler()
 thread::RenderThreadHandler::~RenderThreadHandler()
 {
 	INSTANCE.m_isRunning = false;
+	cv.notify_all();
 	if (m_workerThreads)
 	{
 		for (int i = 0; i < INSTANCE.m_amount; i++)
@@ -113,6 +114,7 @@ const int thread::RenderThreadHandler::Launch(const int& amount_of_objects, void
 
 		unsigned int iterations = (amount_of_objects / objects_per_thread);
 
+		// Launch Threads
 		if (INSTANCE.m_isPooled)
 		{
 			for (int i = 0; i < iterations; i++)
@@ -123,8 +125,10 @@ const int thread::RenderThreadHandler::Launch(const int& amount_of_objects, void
 				};
 				INSTANCE.m_jobs.push_back(f);
 			}
+			cv.notify_all();
 		}
 
+		// Join Threads
 		INSTANCE.Finish();
 
 		return 0;
@@ -148,6 +152,17 @@ const unsigned int thread::RenderThreadHandler::GetAmountOfJobs()
 	return (unsigned int)INSTANCE.m_jobs.size();
 }
 
+bool ShouldContinue()
+{
+	if (!INSTANCE.GetHandlerStatus())
+		return true;
+
+	if (INSTANCE.GetAmountOfJobs() > 0)
+		return true;
+
+	return false;
+}
+
 void RenderMain(const unsigned int& id)
 {
 	// On start
@@ -168,22 +183,21 @@ void RenderMain(const unsigned int& id)
 	// On Update
 	while (INSTANCE.GetHandlerStatus())
 	{
-		cv.wait(uqmtx, [] {return shouldRender; });
-		shouldRender = false;
+		cv.wait(uqmtx, ShouldContinue);
 		EnterCriticalSection(&criticalSection);
 		if (!INSTANCE.GetHandlerStatus())
 		{
+			LeaveCriticalSection(&criticalSection);
 			cv.notify_all();
 			break;
 		}
+
 		// Look for job.
 		std::function<void(void*, void*)> func = thread::RenderThreadHandler::Get().GetJob();
 		if (func)
 		{
 			thread::RenderThreadHandler::Get().UpdateStatus(t_id, thread::thread_working);
 			thread::RenderThreadHandler::Get().PopJob();
-			cv.notify_all();
-			shouldRender = true;
 			LeaveCriticalSection(&criticalSection);
 
 			// Run render.
@@ -193,8 +207,6 @@ void RenderMain(const unsigned int& id)
 			continue;
 		}
 		LeaveCriticalSection(&criticalSection);
-		shouldRender = true;
-		cv.notify_all();
 	}
 	thread::RenderThreadHandler::UpdateStatus(t_id, thread::thread_done);
 
@@ -212,7 +224,7 @@ void RenderJob(const unsigned int start,
 	{
 		for (int i = start; i < stop; i++)
 		{
-			comp::Renderable* it = &(*m_objects)[1][i];
+			comp::Renderable* it = &(*m_objects)[1].at(i);
 			if (it)
 			{
 				m_buffer->SetData(D3D11Core::Get().DeviceContext(), it->data);
