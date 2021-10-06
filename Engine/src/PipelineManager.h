@@ -21,9 +21,8 @@ public:
 	
 	// PUBLIC AVAILABLE DATA.
 
-	ComPtr<ID3D11RenderTargetView>	m_renderTargetView;
+	ComPtr<ID3D11RenderTargetView>	m_backBufferTarget;
 
-	ComPtr<ID3D11Texture2D>			m_depthStencilTexture;		
 	ComPtr<ID3D11DepthStencilView>	m_depthStencilView;
 	ComPtr<ID3D11ShaderResourceView>m_depthStencilSRV;
 	
@@ -48,46 +47,39 @@ public:
 	ComPtr<ID3D11Buffer>			m_defaultViewConstantBuffer;	// TODO: maybe put in Camera class or update from Camera class
 	
 	Shaders::VertexShader			m_defaultVertexShader;
-	Shaders::VertexShader			m_depthVertexShader;
-
 	Shaders::PixelShader			m_defaultPixelShader;
+	Shaders::VertexShader			m_depthVertexShader;
+	Shaders::PixelShader			m_depthPixelShader;
 
 	D3D11_VIEWPORT					m_viewport;
 
-	struct depth_buffer_t
-	{
-		ComPtr<ID3D11Texture2D>				texture2D;
-		ComPtr<ID3D11ShaderResourceView>	shaderResourceView;
-		ComPtr <ID3D11DepthStencilView>		depthStencilView;
-	} m_depthBuffer;
-
 	
 	// POINT LIGHTS.
-	ComPtr<ID3D11Buffer>				m_pPointLightBufferCenterAndRadius;
-	ComPtr<ID3D11ShaderResourceView>	m_pPointLightBufferCenterAndRadiusSRV;
-	ComPtr<ID3D11Buffer>				m_pPointLightBufferColor;
-	ComPtr<ID3D11ShaderResourceView>	m_pPointLightBufferColorSRV;
+	
+	ComPtr<ID3D11Buffer>				m_pointLightBufferCenterAndRadius;
+	ComPtr<ID3D11ShaderResourceView>	m_pointLightBufferCenterAndRadiusSRV;
+	ComPtr<ID3D11Buffer>				m_pointLightBufferColor;
+	ComPtr<ID3D11ShaderResourceView>	m_pointLightBufferColorSRV;
 
-	// BUFFERS FPR LIGHT CULLING.
-	ComPtr <ID3D11Buffer>				m_pLightIndexBuffer;
-	ComPtr <ID3D11ShaderResourceView>	m_pLightIndexBufferSRV;
-	ComPtr <ID3D11UnorderedAccessView>	m_pLightIndexBufferUAV;
+	// BUFFERS FOR LIGHT CULLING.
+	
+	ComPtr <ID3D11Buffer>				m_lightIndexBuffer;
+	ComPtr <ID3D11ShaderResourceView>	m_lightIndexBufferSRV;
+	ComPtr <ID3D11UnorderedAccessView>	m_lightIndexBufferUAV;
 
 
 private:
 	// INITIALIZE METHODS.
 	
 	bool CreateRenderTargetView();
-	bool CreateDepthStencilTexture();
 	bool CreateDepthStencilStates();
-	bool CreateDepthStencilView();
 	bool CreateRasterizerStates();
 	bool CreateSamplerStates();
 	bool CreateBlendStates();
 	bool CreateShaders();
 	bool CreateInputLayouts();
-	bool CreateDepthBuffer();
-	bool CreateStructuredBuffer();
+	bool CreateDepthMap();
+	bool CreateStructuredBuffers();
 	void SetViewport();
 
 	bool CreateDefaultConstantBuffer();	// TODO: maybe put in Camera class or update from Camera class

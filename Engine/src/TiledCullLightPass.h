@@ -13,9 +13,25 @@
  * 32x32 tiles = 32x32 thread groups (1,024 threads per group).
  *
  * Buffers: light list, light index list and light grid list.
+ *
+ * For point lights, the radius of the bounding sphere for the light (used for culling) 
+ * and the falloff distance of the light (used for lighting) are the same.
  */
+
 class TiledCullLightPass : public IRenderPass
 {
+private:
+	static const unsigned TILE_RESOLUTION = 8;
+	static const unsigned MAX_NUM_LIGHTS_PER_TILE = 255;
+
+	// RenderTargetView.
+	unsigned m_width;
+	unsigned m_height;
+	
+	unsigned GetNumTilesX();
+	unsigned GetNumTilesY();
+	unsigned GetMaxNumLightsPerTile();
+
 public:
 	TiledCullLightPass() = default;
 	virtual ~TiledCullLightPass() = default;

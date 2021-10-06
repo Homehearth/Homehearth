@@ -48,9 +48,9 @@ void DepthPass::PreRender(ID3D11DeviceContext* dc, PipelineManager* pm)
     // OUTPUT MERGER.
     {
         ID3D11RenderTargetView* nullRTV[] = { nullptr };		
-        dc->OMSetRenderTargets(_countof(nullRTV), nullRTV, pm->m_depthBuffer.depthStencilView.Get());
+        dc->OMSetRenderTargets(ARRAYSIZE(nullRTV), nullRTV, pm->m_depthStencilView.Get());
         dc->OMSetBlendState(nullptr, nullptr, 0);
-        dc->OMSetDepthStencilState(pm->m_depthStencilStateGreater.Get(), 0);
+        dc->OMSetDepthStencilState(pm->m_depthStencilStateLess.Get(), 0);
     }
 }
 

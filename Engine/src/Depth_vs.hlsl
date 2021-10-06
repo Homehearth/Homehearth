@@ -21,8 +21,7 @@ struct VertexIn
 float4 main(VertexIn input) : SV_POSITION
 {
     float4 output = float4(input.pos, 1.0f);
-    output = mul(world, input.pos);
-    output = mul(projectionView, input.pos);
-	
-	return output;
+    output = mul(world, output);
+    output = mul(projectionView, output);
+    return output;
 }

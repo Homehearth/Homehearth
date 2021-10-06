@@ -42,3 +42,18 @@ void TiledCullLightPass::PostRender(ID3D11DeviceContext* dc, PipelineManager* pm
     dc->CSSetShaderResources(2, 1, nullSRV);
     dc->CSSetUnorderedAccessViews(0, 1, nullUAV, nullptr);
 }
+
+unsigned TiledCullLightPass::GetNumTilesX()
+{
+    return (unsigned)((m_width + TILE_RESOLUTION - 1) / (float)TILE_RESOLUTION);
+}
+
+unsigned TiledCullLightPass::GetNumTilesY()
+{
+    return (unsigned)((m_height + TILE_RESOLUTION - 1) / (float)TILE_RESOLUTION);
+}
+
+unsigned TiledCullLightPass::GetMaxNumLightsPerTile()
+{
+    return MAX_NUM_LIGHTS_PER_TILE;
+}

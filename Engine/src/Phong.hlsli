@@ -41,17 +41,17 @@ float4 ComputeSpecular(float4 lightColor, float shininess, float specularPower, 
 }
 
 
-void PointLight()
+void PointLightPhong()
 {
 	// todo:
 }
 
-void SpotLight()
+void SpotLightPhong()
 {
 	// todo:
 }
 
-void DirectionalLight()
+void DirectionalLightPhong()
 {
 	// todo:
 }

@@ -36,8 +36,9 @@ void BasePass::PreRender(ID3D11DeviceContext* dc, PipelineManager* pm)
     // SHADER RESOURCES.
     {
         dc->VSSetShaderResources(0, 0, nullptr);
-        dc->PSSetShaderResources(1, 1, pm->m_depthBuffer.shaderResourceView.GetAddressOf());		// DepthBuffer.
+        dc->PSSetShaderResources(10, 1, pm->m_depthStencilSRV.GetAddressOf());	// DepthBuffer.
         dc->PSSetSamplers(0, 1, pm->m_linearSamplerState.GetAddressOf());
+        dc->PSSetSamplers(1, 1, pm->m_pointSamplerState.GetAddressOf());
     }
 
     // RASTERIZER.
@@ -48,9 +49,9 @@ void BasePass::PreRender(ID3D11DeviceContext* dc, PipelineManager* pm)
 
     // OUTPUT MERGER.
     {
-        dc->OMSetRenderTargets(1, pm->m_renderTargetView.GetAddressOf(), pm->m_depthStencilView.Get());
+        dc->OMSetRenderTargets(1, pm->m_backBufferTarget.GetAddressOf(), nullptr);
         dc->OMSetBlendState(pm->m_blendStatepOpaque.Get(), nullptr, 0xFFFFFFFF); 
-        dc->OMSetDepthStencilState(pm->m_depthStencilStateLess.Get(), 1);
+        dc->OMSetDepthStencilState(nullptr, 0);
     }
 }
 
@@ -64,5 +65,5 @@ void BasePass::PostRender(ID3D11DeviceContext* dc, PipelineManager* pm)
 {
 	// Cleanup.
     ID3D11ShaderResourceView* const nullSRV[] = { nullptr };
-    dc->PSSetShaderResources(1, 1, nullSRV);
+    dc->PSSetShaderResources(10, 1, nullSRV);
 }

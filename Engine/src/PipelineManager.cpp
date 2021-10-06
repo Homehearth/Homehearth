@@ -26,22 +26,10 @@ void PipelineManager::Initialize(Window* pWindow)
         LOG_ERROR("failed creating RenderTargetView.");
     }
 
-    // Initialize DepthStencilBuffer.
-    if (!this->CreateDepthStencilTexture())
-    {
-        LOG_ERROR("failed creating DepthStencilBuffer.");
-    }
-
     // Initialize DepthStencilState.
     if (!this->CreateDepthStencilStates())
     {
         LOG_ERROR("failed creating DepthStencilState.");
-    }
-
-    // Initialize DepthStencilView.
-    if (!this->CreateDepthStencilView())
-    {
-        LOG_ERROR("failed creating DepthStencilView.");
     }
 
     // Initialize RasterizerStates.
@@ -80,10 +68,15 @@ void PipelineManager::Initialize(Window* pWindow)
         LOG_ERROR("failed creating default constant buffer.");
     }
 
-    // Initialize CreateDepthBuffer.
-    if (!this->CreateDepthBuffer())
+    // Initialize CreateDepthMap.
+    if (!this->CreateDepthMap())
     {
-        LOG_ERROR("failed creating depth buffer.");
+        LOG_ERROR("failed creating depth map.");
+    }
+
+	if(!CreateStructuredBuffers())
+    {
+        LOG_ERROR("failed creating structured buffers.");
     }
 	
     // Set Viewport.
@@ -99,35 +92,10 @@ bool PipelineManager::CreateRenderTargetView()
         return false;
 
     // Create the renderTargetView with the back buffer pointer.
-    HRESULT hr = m_d3d11->Device()->CreateRenderTargetView(pBackBuffer, nullptr, m_renderTargetView.GetAddressOf());
+    HRESULT hr = m_d3d11->Device()->CreateRenderTargetView(pBackBuffer, nullptr, m_backBufferTarget.GetAddressOf());
 
     // Release pointer to the back buffer.
     pBackBuffer->Release();
-
-    return !FAILED(hr);
-}
-
-bool PipelineManager::CreateDepthStencilTexture()
-{
-    // Initialize the description of the depth buffer.
-    D3D11_TEXTURE2D_DESC depthStencilTextureDesc;
-    ZeroMemory(&depthStencilTextureDesc, sizeof(D3D11_TEXTURE2D_DESC));
-
-    // Set up the description of the depth buffer.
-    depthStencilTextureDesc.Width = this->m_window->GetWidth();
-    depthStencilTextureDesc.Height = this->m_window->GetHeight();
-    depthStencilTextureDesc.MipLevels = 1;
-    depthStencilTextureDesc.ArraySize = 1;
-    depthStencilTextureDesc.SampleDesc.Count = 1;
-    depthStencilTextureDesc.SampleDesc.Quality = 0;
-    depthStencilTextureDesc.CPUAccessFlags = 0;
-    depthStencilTextureDesc.MiscFlags = 0;
-    depthStencilTextureDesc.Format = DXGI_FORMAT::DXGI_FORMAT_D24_UNORM_S8_UINT;
-    depthStencilTextureDesc.Usage = D3D11_USAGE::D3D11_USAGE_DEFAULT;
-    depthStencilTextureDesc.BindFlags = D3D11_BIND_FLAG::D3D11_BIND_DEPTH_STENCIL;
-
-    // Create the texture for the depth buffer using the filled out description.
-    HRESULT hr = m_d3d11->Device()->CreateTexture2D(&depthStencilTextureDesc, nullptr, m_depthStencilTexture.GetAddressOf());
 
     return !FAILED(hr);
 }
@@ -175,23 +143,6 @@ bool PipelineManager::CreateDepthStencilStates()
     depthStencilDesc.DepthFunc = D3D11_COMPARISON_EQUAL;
     hr = m_d3d11->Device()->CreateDepthStencilState(&depthStencilDesc, m_depthStencilStateEqualAndDisableDepthWrite.GetAddressOf());
 	
-    return !FAILED(hr);
-}
-
-bool PipelineManager::CreateDepthStencilView()
-{
-    // Initialize the depth stencil View.
-    D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc;
-    ZeroMemory(&depthStencilViewDesc, sizeof(depthStencilViewDesc));
-
-    // Set up the depth stencil View description, setting applied for Deferred Rendering.
-    depthStencilViewDesc.Format = DXGI_FORMAT::DXGI_FORMAT_D24_UNORM_S8_UINT;
-    depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION::D3D11_DSV_DIMENSION_TEXTURE2D;
-    depthStencilViewDesc.Texture2D.MipSlice = 0;
-
-    // Create the depth stencil View.
-    HRESULT hr = m_d3d11->Device()->CreateDepthStencilView(m_depthStencilTexture.Get(), &depthStencilViewDesc, m_depthStencilView.GetAddressOf());
-
     return !FAILED(hr);
 }
 
@@ -332,8 +283,8 @@ void PipelineManager::SetViewport()
     m_viewport.TopLeftY = 0.f;
 
     // Direct3D uses a depth buffer range of 0 to 1, hence:
-    m_viewport.MinDepth = 0.f;
-    m_viewport.MaxDepth = 1.f;
+    m_viewport.MinDepth = 0.0f;
+    m_viewport.MaxDepth = 1.0f;
 
     // Set viewport.
     m_d3d11->DeviceContext()->RSSetViewports(1, &m_viewport);
@@ -345,7 +296,7 @@ bool PipelineManager::CreateInputLayouts()
 
 	// Create m_defaultInputLayout.
 	std::string shaderByteCode = m_defaultVertexShader.GetShaderByteCode();
-    D3D11_INPUT_ELEMENT_DESC defaultVertexShaderDesc[] =
+    D3D11_INPUT_ELEMENT_DESC defaultInputLayoutDesc[] =
     {
         {"POSITION",    0, DXGI_FORMAT_R32G32B32_FLOAT,    0,                0,                   D3D11_INPUT_PER_VERTEX_DATA, 0},
         {"TEXCOORD",    0, DXGI_FORMAT_R32G32_FLOAT,       0,    D3D11_APPEND_ALIGNED_ELEMENT,    D3D11_INPUT_PER_VERTEX_DATA, 0},
@@ -353,16 +304,16 @@ bool PipelineManager::CreateInputLayouts()
         {"TANGENT",     0, DXGI_FORMAT_R32G32B32_FLOAT,    0,    D3D11_APPEND_ALIGNED_ELEMENT,    D3D11_INPUT_PER_VERTEX_DATA, 0},
         {"BINORMAL",    0, DXGI_FORMAT_R32G32B32_FLOAT,    0,    D3D11_APPEND_ALIGNED_ELEMENT,    D3D11_INPUT_PER_VERTEX_DATA, 0}
     };
-	if(FAILED(hr = m_d3d11->Device()->CreateInputLayout(defaultVertexShaderDesc, ARRAYSIZE(defaultVertexShaderDesc), shaderByteCode.c_str(), shaderByteCode.length(), m_defaultInputLayout.GetAddressOf())))
+	if(FAILED(hr = m_d3d11->Device()->CreateInputLayout(defaultInputLayoutDesc, ARRAYSIZE(defaultInputLayoutDesc), shaderByteCode.c_str(), shaderByteCode.length(), m_defaultInputLayout.GetAddressOf())))
     {
         LOG_WARNING("failed creating m_defaultInputLayout.");
         return false;
     }
-
+	
     return !FAILED(hr);
 }
 
-bool PipelineManager::CreateDepthBuffer()
+bool PipelineManager::CreateDepthMap()
 {
     // Initialize the description of the depth buffer.
     D3D11_TEXTURE2D_DESC textureDesc;
@@ -371,14 +322,9 @@ bool PipelineManager::CreateDepthBuffer()
     // Set up the description of the depth buffer.
     textureDesc.Width = m_window->GetWidth();
     textureDesc.Height = m_window->GetHeight();
-
-    // Use typeless format because the DSV is going to interpret
-    // the bits as DXGI_FORMAT_D24_UNORM_S8_UINT, whereas the SRV is going
-    // to interpret the bits as DXGI_FORMAT_R24_UNORM_X8_TYPELESS.
     textureDesc.Format = DXGI_FORMAT::DXGI_FORMAT_R24G8_TYPELESS;
     textureDesc.Usage = D3D11_USAGE::D3D11_USAGE_DEFAULT;
-    textureDesc.BindFlags = D3D11_BIND_FLAG::D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
-
+    textureDesc.BindFlags = D3D11_BIND_FLAG::D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_FLAG::D3D11_BIND_SHADER_RESOURCE;
     textureDesc.MipLevels = 1;
     textureDesc.ArraySize = 1;
     textureDesc.SampleDesc.Count = 1;
@@ -387,31 +333,43 @@ bool PipelineManager::CreateDepthBuffer()
     textureDesc.MiscFlags = 0;
 
     // Create the texture for the depth buffer using the filled out description.
-    HRESULT hr = m_d3d11->Device()->CreateTexture2D(&textureDesc, nullptr, m_depthBuffer.texture2D.GetAddressOf());
+    ID3D11Texture2D* pDepthStencilTexture;
+    HRESULT hr = m_d3d11->Device()->CreateTexture2D(&textureDesc, nullptr, &pDepthStencilTexture);
     if (FAILED(hr))
         return false;
 
-    D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilvDesc;
-    ZeroMemory(&depthStencilvDesc, sizeof(D3D11_DEPTH_STENCIL_VIEW_DESC));
+    D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc;
+    ZeroMemory(&depthStencilViewDesc, sizeof(D3D11_DEPTH_STENCIL_VIEW_DESC));
 
-    depthStencilvDesc.Flags = 0;
-    depthStencilvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-    depthStencilvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
-    depthStencilvDesc.Texture2D.MipSlice = 0;
+    depthStencilViewDesc.Flags = 0;
+    depthStencilViewDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+    depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+    depthStencilViewDesc.Texture2D.MipSlice = 0;
 
-    hr = m_d3d11->Device()->CreateDepthStencilView(m_depthBuffer.texture2D.Get(), &depthStencilvDesc, m_depthBuffer.depthStencilView.GetAddressOf());
+    hr = m_d3d11->Device()->CreateDepthStencilView(pDepthStencilTexture, &depthStencilViewDesc, m_depthStencilView.GetAddressOf());
     if (FAILED(hr))
         return false;
 
     D3D11_SHADER_RESOURCE_VIEW_DESC shaderResourceViewDesc;
+    ZeroMemory(&shaderResourceViewDesc, sizeof(D3D11_SHADER_RESOURCE_VIEW_DESC));
     shaderResourceViewDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
     shaderResourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
     shaderResourceViewDesc.Texture2D.MipLevels = textureDesc.MipLevels;
     shaderResourceViewDesc.Texture2D.MostDetailedMip = 0;
 
-    hr = m_d3d11->Device()->CreateShaderResourceView(m_depthBuffer.texture2D.Get(), &shaderResourceViewDesc, m_depthBuffer.shaderResourceView.GetAddressOf());
+    hr = m_d3d11->Device()->CreateShaderResourceView(pDepthStencilTexture, &shaderResourceViewDesc, m_depthStencilSRV.GetAddressOf());
 
+    if (pDepthStencilTexture != nullptr)
+        pDepthStencilTexture->Release();
+	
     return !FAILED(hr);
+}
+
+bool PipelineManager::CreateStructuredBuffers()
+{
+
+
+    return true;
 }
 
 bool PipelineManager::CreateDefaultConstantBuffer()
@@ -424,7 +382,7 @@ bool PipelineManager::CreateDefaultConstantBuffer()
     bDesc.MiscFlags = 0;
 
     basic_model_matrix_t b;
-    b.worldMatrix = sm::Matrix::CreateWorld({ 0.f, 0.0f, 1.0f }, { 0.0f, 0.0f, -1.0f }, { 0.0f, 1.0f, 0.0f }).Transpose();
+    b.worldMatrix = sm::Matrix::CreateWorld({ 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, -1.0f }, { 0.0f, 1.0f, 0.0f }).Transpose();
 
     D3D11_SUBRESOURCE_DATA data;
     data.pSysMem = &b;
@@ -451,15 +409,21 @@ bool PipelineManager::CreateShaders()
 		return false;
     }
 
-    if (!m_depthVertexShader.Create("depth_vs"))
+    if (!m_depthVertexShader.Create("Depth_vs"))
     {
-        LOG_WARNING("failed creating depth_vs.");
+        LOG_WARNING("failed creating Depth_vs.");
         return false;
     }
 	
     if(!m_defaultPixelShader.Create("Model_ps"))
     {
         LOG_WARNING("failed creating Model_ps.");
+        return false;
+    }
+
+    if (!m_depthPixelShader.Create("Depth_ps"))
+    {
+        LOG_WARNING("failed creating Depth_ps.");
         return false;
     }
 
