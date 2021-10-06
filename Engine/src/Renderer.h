@@ -13,19 +13,25 @@ private:
 	std::vector<IRenderPass*> m_passes;
 	Camera* m_camera;
 	
-	DepthPass m_depthPass;	// Depth, pre Z-pass.
-	BasePass m_basePass;	// Forward, "GeometryPass".
-	
+	DepthPass m_depthPass;	
+	BasePass m_basePass;
+
+
 	// Add a pass to the list.
 	void AddPass(IRenderPass* pass);
 
+	// Updates Camera & Scene-ref once per frame.
+	void UpdatePerFrame(Scene* pScene);
+
+	// Debugging info.
 	std::string GetInfoAboutPasses();
 
 public:
 	Renderer();
 	virtual ~Renderer() = default;
 
-	void Initialize(Window* pWindow, Camera* camera);
+	// Initialize Renderer.
+	void Initialize(Window* pWindow, Camera* pCamera);
 
 	// Clears the screen.
 	void ClearFrame();
@@ -37,4 +43,5 @@ public:
 	void Render(Scene* pScene);
 
 };
+
 

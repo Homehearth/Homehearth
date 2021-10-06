@@ -149,9 +149,9 @@ bool RMesh::Create(const std::string& filename)
     //Else do this below
         //Go through all the vertices
 
+    simple_vertex_t vert = {};
     for (unsigned int v = 0; v < aimesh->mNumVertices; v++)
     {
-        simple_vertex_t vert = {};
         vert.position = { aimesh->mVertices[v].x,         aimesh->mVertices[v].y,       aimesh->mVertices[v].z  };
         vert.uv       = { aimesh->mTextureCoords[0][v].x, aimesh->mTextureCoords[0][v].y                        };
         vert.normal   = { aimesh->mNormals[v].x,          aimesh->mNormals[v].y,        aimesh->mNormals[v].z   };

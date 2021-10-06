@@ -26,9 +26,8 @@ public:
 	// Emit update event and update constant buffers
 	void Update(float dt);
 
-	// Emit render event and render Renderable components
-	void Render();
-
+	DoubleBuffer<std::vector<comp::Renderable>>& GetRenderableCopies();
+	dx::ConstantBuffer<basic_model_matrix_t>& GetRenderableBuffer();
+	
 	bool IsRenderReady() const;
-
 };

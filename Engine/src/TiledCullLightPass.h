@@ -21,7 +21,7 @@
 class TiledCullLightPass : public IRenderPass
 {
 private:
-	static const unsigned TILE_RESOLUTION = 8;
+	static const unsigned TILE_SIZE = 8;
 	static const unsigned MAX_NUM_LIGHTS_PER_TILE = 255;
 
 	// RenderTargetView.
@@ -38,10 +38,10 @@ public:
 	
 	void Initialize() override;
 
-	void PreRender(ID3D11DeviceContext* dc, PipelineManager* pm) override;
+	void PreRender() override;
 
-	void Render(Scene* pScene) override;
+	void Render() override;
 
-	void PostRender(ID3D11DeviceContext* dc, PipelineManager* pm) override;
+	void PostRender() override;
 };
 

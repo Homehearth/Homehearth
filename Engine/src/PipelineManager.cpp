@@ -62,12 +62,6 @@ void PipelineManager::Initialize(Window* pWindow)
         LOG_ERROR("failed creating InputLayouts.");
     }
 
-    // Initialize ConstantBuffers (temp?).
-    if (!this->CreateDefaultConstantBuffer())
-    {
-        LOG_ERROR("failed creating default constant buffer.");
-    }
-
     // Initialize CreateDepthMap.
     if (!this->CreateDepthMap())
     {
@@ -102,46 +96,102 @@ bool PipelineManager::CreateRenderTargetView()
 
 bool PipelineManager::CreateDepthStencilStates()
 {
-    // Initialize the description of the stencil state.
-    D3D11_DEPTH_STENCIL_DESC depthStencilDesc;
-    ZeroMemory(&depthStencilDesc, sizeof(depthStencilDesc));
-
     // Set up the description of the stencil state.
+    D3D11_DEPTH_STENCIL_DESC depthStencilDesc;
+    ZeroMemory(&depthStencilDesc, sizeof(D3D11_DEPTH_STENCIL_DESC));
+
+	// m_defaultDSS.
     depthStencilDesc.DepthEnable = true;
     depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
     depthStencilDesc.DepthFunc = D3D11_COMPARISON_LESS;
-
     depthStencilDesc.StencilEnable = true;
-    depthStencilDesc.StencilReadMask = 0xFF;
-    depthStencilDesc.StencilWriteMask = 0xFF;
-
-    // Stencil operations if pixel is front-facing.
+    depthStencilDesc.StencilReadMask = 0xff;
+    depthStencilDesc.StencilWriteMask = 0xff;
     depthStencilDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
-    depthStencilDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
-    depthStencilDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+    depthStencilDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
+    depthStencilDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_REPLACE;
     depthStencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
-
-    // Stencil operations if pixel is back-facing.
     depthStencilDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
-    depthStencilDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_DECR;
+    depthStencilDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
     depthStencilDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
     depthStencilDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
-
-    // Create m_depthStencilStateLess.
-    HRESULT hr = m_d3d11->Device()->CreateDepthStencilState(&depthStencilDesc, m_depthStencilStateLess.GetAddressOf());
+    HRESULT hr = m_d3d11->Device()->CreateDepthStencilState(&depthStencilDesc, m_lessDSS.GetAddressOf());
     if (FAILED(hr))
         return false;
 	
-    // Create m_depthStencilStateGreater.
-    depthStencilDesc.DepthFunc = D3D11_COMPARISON_GREATER;
-    hr = m_d3d11->Device()->CreateDepthStencilState(&depthStencilDesc, m_depthStencilStateGreater.GetAddressOf());
-    if (FAILED(hr))
-        return false;
-
-	// Create m_depthStencilStateEqualAndDisableDepthWrite.
+	// equalDeapthAndDisableDepthWriteDSS.
+    depthStencilDesc.DepthEnable = true;
     depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
     depthStencilDesc.DepthFunc = D3D11_COMPARISON_EQUAL;
-    hr = m_d3d11->Device()->CreateDepthStencilState(&depthStencilDesc, m_depthStencilStateEqualAndDisableDepthWrite.GetAddressOf());
+    depthStencilDesc.StencilEnable = true;
+    depthStencilDesc.StencilReadMask = 0xff;
+    depthStencilDesc.StencilWriteMask = 0xff;
+    depthStencilDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+    depthStencilDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
+    depthStencilDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_REPLACE;
+    depthStencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+    depthStencilDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+    depthStencilDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
+    depthStencilDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+    depthStencilDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+    hr = m_d3d11->Device()->CreateDepthStencilState(&depthStencilDesc, m_equalDSS.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+	
+	// m_disableDSS.
+    depthStencilDesc.DepthEnable = false;
+    depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+    depthStencilDesc.DepthFunc = D3D11_COMPARISON_LESS;
+    depthStencilDesc.StencilEnable = true;
+    depthStencilDesc.StencilReadMask = 0xff;
+    depthStencilDesc.StencilWriteMask = 0xff;
+    depthStencilDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+    depthStencilDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
+    depthStencilDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+    depthStencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+    depthStencilDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+    depthStencilDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
+    depthStencilDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+    depthStencilDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+    hr = m_d3d11->Device()->CreateDepthStencilState(&depthStencilDesc, m_disableDSS.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+	
+	// m_disableZWriteDSS.
+    depthStencilDesc.DepthEnable = true;
+    depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+    depthStencilDesc.DepthFunc = D3D11_COMPARISON_LESS;
+    depthStencilDesc.StencilEnable = true;
+    depthStencilDesc.StencilReadMask = 0xff;
+    depthStencilDesc.StencilWriteMask = 0xff;
+    depthStencilDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+    depthStencilDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
+    depthStencilDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_REPLACE;
+    depthStencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+    depthStencilDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+    depthStencilDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
+    depthStencilDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+    depthStencilDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+    hr = m_d3d11->Device()->CreateDepthStencilState(&depthStencilDesc, m_disableZWriteDSS.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+	
+    // m_disableZWriteDSS.
+    depthStencilDesc.DepthEnable = true;
+    depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+    depthStencilDesc.DepthFunc = D3D11_COMPARISON_GREATER;
+    depthStencilDesc.StencilEnable = false;
+    depthStencilDesc.StencilReadMask = D3D11_DEFAULT_STENCIL_READ_MASK;
+    depthStencilDesc.StencilWriteMask = D3D11_DEFAULT_STENCIL_WRITE_MASK;
+    depthStencilDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+    depthStencilDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
+    depthStencilDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_REPLACE;
+    depthStencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+    depthStencilDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+    depthStencilDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
+    depthStencilDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+    depthStencilDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+    hr = m_d3d11->Device()->CreateDepthStencilState(&depthStencilDesc, m_greaterDSS.GetAddressOf());
 	
     return !FAILED(hr);
 }
@@ -315,52 +365,42 @@ bool PipelineManager::CreateInputLayouts()
 
 bool PipelineManager::CreateDepthMap()
 {
-    // Initialize the description of the depth buffer.
-    D3D11_TEXTURE2D_DESC textureDesc;
-    ZeroMemory(&textureDesc, sizeof(D3D11_TEXTURE2D_DESC));
-
-    // Set up the description of the depth buffer.
-    textureDesc.Width = m_window->GetWidth();
-    textureDesc.Height = m_window->GetHeight();
-    textureDesc.Format = DXGI_FORMAT::DXGI_FORMAT_R24G8_TYPELESS;
-    textureDesc.Usage = D3D11_USAGE::D3D11_USAGE_DEFAULT;
-    textureDesc.BindFlags = D3D11_BIND_FLAG::D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_FLAG::D3D11_BIND_SHADER_RESOURCE;
-    textureDesc.MipLevels = 1;
-    textureDesc.ArraySize = 1;
-    textureDesc.SampleDesc.Count = 1;
-    textureDesc.SampleDesc.Quality = 0;
-    textureDesc.CPUAccessFlags = 0;
-    textureDesc.MiscFlags = 0;
-
-    // Create the texture for the depth buffer using the filled out description.
-    ID3D11Texture2D* pDepthStencilTexture;
-    HRESULT hr = m_d3d11->Device()->CreateTexture2D(&textureDesc, nullptr, &pDepthStencilTexture);
+    D3D11_TEXTURE2D_DESC depthBufferTextureDesc;
+    ZeroMemory(&depthBufferTextureDesc, sizeof(D3D11_TEXTURE2D_DESC));
+    depthBufferTextureDesc.Width = m_window->GetWidth();
+    depthBufferTextureDesc.Height = m_window->GetHeight();
+    depthBufferTextureDesc.MipLevels = 1;
+    depthBufferTextureDesc.ArraySize = 1;
+    depthBufferTextureDesc.Format = DXGI_FORMAT_R24G8_TYPELESS;
+    depthBufferTextureDesc.SampleDesc.Count = 1;
+    depthBufferTextureDesc.SampleDesc.Quality = 0;
+    depthBufferTextureDesc.Usage = D3D11_USAGE_DEFAULT;
+    depthBufferTextureDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
+    depthBufferTextureDesc.CPUAccessFlags = 0;
+    depthBufferTextureDesc.MiscFlags = 0;
+	
+    HRESULT hr = m_d3d11->Device()->CreateTexture2D(&depthBufferTextureDesc, nullptr, &m_depthStencilTexture);
     if (FAILED(hr))
         return false;
-
+	
     D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc;
     ZeroMemory(&depthStencilViewDesc, sizeof(D3D11_DEPTH_STENCIL_VIEW_DESC));
-
-    depthStencilViewDesc.Flags = 0;
     depthStencilViewDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
     depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
     depthStencilViewDesc.Texture2D.MipSlice = 0;
 
-    hr = m_d3d11->Device()->CreateDepthStencilView(pDepthStencilTexture, &depthStencilViewDesc, m_depthStencilView.GetAddressOf());
+    hr = m_d3d11->Device()->CreateDepthStencilView(m_depthStencilTexture.Get(), &depthStencilViewDesc, &m_depthStencilView);
     if (FAILED(hr))
         return false;
+	
+    D3D11_SHADER_RESOURCE_VIEW_DESC depthBufferSRVDesc;
+    ZeroMemory(&depthStencilViewDesc, sizeof(D3D11_SHADER_RESOURCE_VIEW_DESC));
+    depthBufferSRVDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
+    depthBufferSRVDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+    depthBufferSRVDesc.Texture2D.MostDetailedMip = 0;
+    depthBufferSRVDesc.Texture2D.MipLevels = depthBufferTextureDesc.MipLevels;
 
-    D3D11_SHADER_RESOURCE_VIEW_DESC shaderResourceViewDesc;
-    ZeroMemory(&shaderResourceViewDesc, sizeof(D3D11_SHADER_RESOURCE_VIEW_DESC));
-    shaderResourceViewDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
-    shaderResourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-    shaderResourceViewDesc.Texture2D.MipLevels = textureDesc.MipLevels;
-    shaderResourceViewDesc.Texture2D.MostDetailedMip = 0;
-
-    hr = m_d3d11->Device()->CreateShaderResourceView(pDepthStencilTexture, &shaderResourceViewDesc, m_depthStencilSRV.GetAddressOf());
-
-    if (pDepthStencilTexture != nullptr)
-        pDepthStencilTexture->Release();
+    hr = m_d3d11->Device()->CreateShaderResourceView(m_depthStencilTexture.Get(), &depthBufferSRVDesc, &m_depthBufferSRV);
 	
     return !FAILED(hr);
 }
@@ -370,30 +410,6 @@ bool PipelineManager::CreateStructuredBuffers()
 
 
     return true;
-}
-
-bool PipelineManager::CreateDefaultConstantBuffer()
-{
-    D3D11_BUFFER_DESC bDesc;
-    bDesc.ByteWidth = sizeof(basic_model_matrix_t);
-    bDesc.Usage = D3D11_USAGE_DEFAULT;
-    bDesc.CPUAccessFlags = 0;
-    bDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-    bDesc.MiscFlags = 0;
-
-    basic_model_matrix_t b;
-    b.worldMatrix = sm::Matrix::CreateWorld({ 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, -1.0f }, { 0.0f, 1.0f, 0.0f }).Transpose();
-
-    D3D11_SUBRESOURCE_DATA data;
-    data.pSysMem = &b;
-    data.SysMemPitch = 0;
-    data.SysMemSlicePitch = 0;
-
-    // Model ConstantBuffer
-    HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&bDesc, &data, m_defaultModelConstantBuffer.GetAddressOf());
-    if (FAILED(hr)) return false;
-
-    return !FAILED(hr);
 }
 
 bool PipelineManager::CreateShaders()
@@ -416,11 +432,6 @@ bool PipelineManager::CreateShaders()
         return false;
     }
 
-    if (!m_depthPixelShader.Create("Depth_ps"))
-    {
-        LOG_WARNING("failed creating Depth_ps.");
-        return false;
-    }
 
     return true;
 }                         

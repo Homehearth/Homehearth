@@ -39,4 +39,4 @@ namespace Logger
  *	__FILE__						The pathname of the file from which the module was loaded.
  *	__LINE__						Current line number in the source file.
  *	
- */ 
+ */

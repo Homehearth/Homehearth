@@ -8,8 +8,13 @@ void BasePass::Initialize()
 {
 }
 
-void BasePass::PreRender(ID3D11DeviceContext* dc, PipelineManager* pm)
+void BasePass::PreRender()
 {
+    ClearPipelineSettings();
+	
+    auto dc = GetContext();
+    auto pm = GetPipelineManager();
+	
     // INPUT ASSEMBLY.
     {
         dc->IASetInputLayout(pm->m_defaultInputLayout.Get());
@@ -20,23 +25,16 @@ void BasePass::PreRender(ID3D11DeviceContext* dc, PipelineManager* pm)
     {
         dc->VSSetShader(pm->m_defaultVertexShader.Get(), nullptr, 0);
         dc->PSSetShader(pm->m_defaultPixelShader.Get(), nullptr, 0);
-        dc->GSSetShader(nullptr, nullptr, 0);
-        dc->HSSetShader(nullptr, nullptr, 0);
-        dc->DSSetShader(nullptr, nullptr, 0);
-        dc->CSSetShader(nullptr, nullptr, 0);
     }
 
     // CONSTANT BUFFERS.
     {
-        dc->PSSetConstantBuffers(0, 0, nullptr);
-        dc->VSSetConstantBuffers(0, 1, pm->m_defaultModelConstantBuffer.GetAddressOf());
-        dc->VSSetConstantBuffers(1, 1, m_camera->m_viewConstantBuffer.GetAddressOf());
+        dc->VSSetConstantBuffers(1, 1, GetCamera()->m_viewConstantBuffer.GetAddressOf());
     }
 
     // SHADER RESOURCES.
     {
-        dc->VSSetShaderResources(0, 0, nullptr);
-        dc->PSSetShaderResources(10, 1, pm->m_depthStencilSRV.GetAddressOf());	// DepthBuffer.
+        dc->PSSetShaderResources(10, 1, pm->m_depthBufferSRV.GetAddressOf());	// DepthBuffer.
         dc->PSSetSamplers(0, 1, pm->m_linearSamplerState.GetAddressOf());
         dc->PSSetSamplers(1, 1, pm->m_pointSamplerState.GetAddressOf());
     }
@@ -50,28 +48,30 @@ void BasePass::PreRender(ID3D11DeviceContext* dc, PipelineManager* pm)
     // OUTPUT MERGER.
     {
         dc->OMSetRenderTargets(1, pm->m_backBufferTarget.GetAddressOf(), nullptr);
+        dc->OMSetDepthStencilState(pm->m_lessDSS.Get(), 0);
         dc->OMSetBlendState(pm->m_blendStatepOpaque.Get(), nullptr, 0xFFFFFFFF); 
-        dc->OMSetDepthStencilState(nullptr, 0);
     }
 }
 
-void BasePass::Render(Scene* pScene)
+void BasePass::Render()
 {
-	// Render objects.
-    pScene->Render();
+    ID3D11Buffer* buffers[] = { GetScene()->GetRenderableBuffer().GetBuffer() };
+
+    // System that renders Renderable component.
+    GetContext()->VSSetConstantBuffers(0, 1, buffers);
+
+    auto& renderableCopies = GetScene()->GetRenderableCopies();
+    for (auto& it : renderableCopies[1])
+    {
+        GetScene()->GetRenderableBuffer().SetData(D3D11Core::Get().DeviceContext(), it.data);
+        it.mesh->Render();
+    }
+
+    renderableCopies.ReadyForSwap();
 }
 
-void BasePass::PostRender(ID3D11DeviceContext* dc, PipelineManager* pm)
+void BasePass::PostRender()
 {
-	// return rendertarget for next pass?
-    D3D11Core::Get().DeviceContext()->UpdateSubresource(m_camera->m_viewConstantBuffer.Get(), 0, nullptr, m_camera->GetCameraMatrixes(), 0, 0);
-}
 
-void BasePass::GetCamera(Camera* camera)
-{
-    m_camera = camera;
-}
-	// Cleanup.
-    ID3D11ShaderResourceView* const nullSRV[] = { nullptr };
-    dc->PSSetShaderResources(10, 1, nullSRV);
+    
 }

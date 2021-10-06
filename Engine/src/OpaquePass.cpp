@@ -5,17 +5,17 @@ void OpaquePass::Initialize()
 {
 }
 
-void OpaquePass::PreRender(ID3D11DeviceContext* dc, PipelineManager* pm)
+void OpaquePass::PreRender()
 {
 	// Bind Camera and PipelineState.
 }
 
-void OpaquePass::Render(Scene* pScene)
+void OpaquePass::Render()
 {
 	// Render objects.
 }
 
-void OpaquePass::PostRender(ID3D11DeviceContext* dc, PipelineManager* pm)
+void OpaquePass::PostRender()
 {
 	// Cleanup.
 }
