@@ -110,6 +110,44 @@ bool RMaterial::HasTexture(const ETextureType& type) const
     return foundTexture;
 }
 
+void RMaterial::BindDeferredMaterial(ID3D11DeviceContext* context)
+{
+    /*
+       Bind the constant buffers
+       [Tweak]
+   */
+    context->PSSetConstantBuffers(0, 1, m_matConstCB.GetAddressOf());
+    context->PSSetConstantBuffers(1, 1, m_hasTextureCB.GetAddressOf());
+
+    /*
+        Upload all textures
+    */
+    //Get every shader resource view
+    const UINT nrOfTextures = UINT(ETextureType::length);
+    ID3D11ShaderResourceView* allSRV[nrOfTextures] = { nullptr };
+    for (UINT i = 0; i < nrOfTextures; i++)
+    {
+        //Texture has to exist
+        if (m_textures[i])
+            allSRV[i] = m_textures[i]->GetShaderView();
+    }
+    //Bind all the textures to the GPU's pixelshader
+    context->PSSetShaderResources(0, nrOfTextures, allSRV);
+}
+
+void RMaterial::UnBindDeferredMaterial(ID3D11DeviceContext* context)
+{
+    //Unbind the constantbuffers
+    ID3D11Buffer* nullBuffer = nullptr;
+    context->PSSetConstantBuffers(0, 1, &nullBuffer);
+    context->PSSetConstantBuffers(1, 1, &nullBuffer);
+
+    //Unbind all the textures
+    const UINT nrOfTextures = UINT(ETextureType::length);
+    ID3D11ShaderResourceView* nullSRV[nrOfTextures] = { nullptr };
+    context->PSSetShaderResources(0, nrOfTextures, nullSRV);
+}
+
 bool RMaterial::Create(aiMaterial* aiMat, const std::string& fileformat)
 {
     /*

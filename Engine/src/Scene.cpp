@@ -48,6 +48,7 @@ void Scene::Render()
 
 	// Todo: Divide up work for threads.
 
+	// Renders on one thread if Launch returns 1. else everything already rendered.
 	if ((bool)thread::RenderThreadHandler::Get().Launch(m_renderableCopies[1].size(), &m_renderableCopies[1]))
 	{
 		for (const auto& it : m_renderableCopies[1])

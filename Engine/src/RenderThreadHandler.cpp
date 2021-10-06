@@ -1,20 +1,25 @@
 #include "EnginePCH.h"
 #include "RenderThreadHandler.h"
+#include "multi_thread_manager.h"
 
 #define INSTANCE thread::RenderThreadHandler::Get()
-bool thread::RenderThreadHandler::m_isRunning = false;
 
 CRITICAL_SECTION criticalSection;
+std::condition_variable cv;
+std::mutex render_mutex;
+bool shouldRender = true;
 
-void RenderThread(const unsigned int& id);
-
-void RenderJob(const unsigned int start, const unsigned int stop, void* objects);
+bool ShouldContinue();
+void RenderMain(const unsigned int& id);
+void RenderJob(const unsigned int start, const unsigned int stop, void* objects, void* buffer, void* context);
 
 thread::RenderThreadHandler::RenderThreadHandler()
 {
 	m_workerThreads = nullptr;
 	m_amount = 0;
 	m_statuses = nullptr;
+	m_isRunning = false;
+	InitializeCriticalSection(&criticalSection);
 }
 
 thread::RenderThreadHandler::~RenderThreadHandler()
@@ -22,14 +27,52 @@ thread::RenderThreadHandler::~RenderThreadHandler()
 	INSTANCE.m_isRunning = false;
 	if (m_workerThreads)
 	{
-
+		for (int i = 0; i < INSTANCE.m_amount; i++)
+		{
+			if (INSTANCE.m_workerThreads[i].joinable())
+				INSTANCE.m_workerThreads[i].join();
+			else
+				INSTANCE.m_workerThreads[i].detach();
+		}
 		delete[] INSTANCE.m_workerThreads;
 		delete[] INSTANCE.m_statuses;
 	}
 }
 
-std::function<void(const unsigned int, const unsigned int, void*)> thread::RenderThreadHandler::GetJob()
+void thread::RenderThreadHandler::Finish()
 {
+	if (!INSTANCE.m_isPooled)
+	{
+		for (int i = 0; i < INSTANCE.m_amount; i++)
+		{
+			INSTANCE.m_workerThreads[i].join();
+		}
+	}
+	else
+	{
+		// Block until all threads have stopped working.
+		for (int i = 0; i < INSTANCE.m_amount; i++)
+		{
+			if (INSTANCE.GetStatus(i) != thread::thread_running)
+			{
+				i = 0;
+			}
+		}
+	}
+}
+
+const int thread::RenderThreadHandler::GetStatus(const unsigned int& id)
+{
+	return INSTANCE.m_statuses[id];
+}
+
+std::function<void(void*, void*)> thread::RenderThreadHandler::GetJob()
+{
+	if (INSTANCE.m_jobs.size() <= 0)
+	{
+		return nullptr;
+	}
+
 	return INSTANCE.m_jobs[(int)INSTANCE.m_jobs.size() - 1];
 }
 
@@ -47,9 +90,11 @@ void thread::RenderThreadHandler::Setup(const int& amount)
 
 	for (unsigned int i = 0; i < (unsigned int)amount; i++)
 	{
-		std::thread worker(RenderThread, i);
+		std::thread worker(RenderMain, i);
 		INSTANCE.m_workerThreads[i] = std::move(worker);
 	}
+
+	INSTANCE.m_isPooled = true;
 }
 
 const int thread::RenderThreadHandler::Launch(const int& amount_of_objects, void* objects)
@@ -60,18 +105,26 @@ const int thread::RenderThreadHandler::Launch(const int& amount_of_objects, void
 		// Convert 
 		DoubleBuffer<std::vector<comp::Renderable>>* m_objects = (DoubleBuffer<std::vector<comp::Renderable>>*)objects;
 
-		unsigned int iterations = (amount_of_objects / objects_per_thread) - 1;
+		unsigned int iterations = (amount_of_objects / objects_per_thread);
 
-		for (int i = 0; i < iterations; i++)
+		if (INSTANCE.m_isPooled)
 		{
-			//std::function<void(const unsigned int, const unsigned int, void*)> job = RenderJob(i, i + 1, m_objects);
-			//INSTANCE.m_jobs.push_back();
+			for (int i = 0; i < iterations; i++)
+			{
+				auto& f = [&](void* buffer, void* context)
+				{
+					RenderJob(i * objects_per_thread, (i + 1) * objects_per_thread, m_objects, buffer, context);
+				};
+				INSTANCE.m_jobs.push_back(f);
+			}
 		}
 
-		return 1;
+		INSTANCE.Finish();
+
+		return 0;
 	}
 
-	return 0;
+	return 1;
 }
 
 const bool thread::RenderThreadHandler::GetHandlerStatus()
@@ -79,21 +132,85 @@ const bool thread::RenderThreadHandler::GetHandlerStatus()
 	return INSTANCE.m_isRunning;
 }
 
-void thread::RenderThreadHandler::UpdateStatus(unsigned int& id, unsigned int& status)
+void thread::RenderThreadHandler::UpdateStatus(const unsigned int& id, unsigned int status)
 {
-
+	INSTANCE.m_statuses[id] = status;
 }
 
-void RenderThread(const unsigned int& id)
+const unsigned int thread::RenderThreadHandler::GetAmountOfJobs()
 {
+	return (unsigned int)INSTANCE.m_jobs.size();
+}
+
+void RenderMain(const unsigned int& id)
+{
+	// On start
+	ID3D11DeviceContext* deferred_context = nullptr;
+	dx::ConstantBuffer<basic_model_matrix_t> m_privateBuffer;
+	unsigned int t_id = id;
+	std::unique_lock<std::mutex> uqmtx(render_mutex);
+
+	D3D11Core::Get().CreateDeferredContext(&deferred_context);
+	if (!deferred_context)
+	{
+		thread::RenderThreadHandler::UpdateStatus(t_id, thread::thread_done);
+		return;
+	}
+	m_privateBuffer.Create(D3D11Core::Get().Device());
+	thread::RenderThreadHandler::UpdateStatus(t_id, thread::thread_running);
+
+	// On Update
 	while (INSTANCE.GetHandlerStatus())
 	{
+		cv.wait(uqmtx, [] {return shouldRender; });
+		shouldRender = false;
+		if (!INSTANCE.GetHandlerStatus())
+		{
+			cv.notify_all();
+			break;
+		}
+		// Look for job.
+		std::function<void(void*, void*)> func = thread::RenderThreadHandler::Get().GetJob();
+		if (func)
+		{
+			thread::RenderThreadHandler::Get().UpdateStatus(t_id, thread::thread_working);
+			thread::RenderThreadHandler::Get().PopJob();
+			cv.notify_all();
+			shouldRender = true;
 
+			// Run render.
+			func(&m_privateBuffer, deferred_context);
+			thread::RenderThreadHandler::Get().UpdateStatus(t_id, thread::thread_running);
+
+			continue;
+		}
+
+		shouldRender = true;
+		cv.notify_all();
 	}
+	thread::RenderThreadHandler::UpdateStatus(t_id, thread::thread_done);
+
+	// On End of Life
+	deferred_context->Release();
 }
 
 void RenderJob(const unsigned int start,
-	const unsigned int stop, void* objects)
+	const unsigned int stop, void* objects, void* buffer, void* context)
 {
-	
+	DoubleBuffer<std::vector<comp::Renderable>>* m_objects = (DoubleBuffer<std::vector<comp::Renderable>>*)objects;
+	dx::ConstantBuffer<basic_model_matrix_t>* m_buffer = (dx::ConstantBuffer<basic_model_matrix_t>*)buffer;
+	ID3D11DeviceContext* m_context = (ID3D11DeviceContext*)context;
+	if (m_objects)
+	{
+		for (int i = start; i < stop; i++)
+		{
+			comp::Renderable* it = &(*m_objects)[1][i];
+			if (it)
+			{
+				m_buffer->SetData(D3D11Core::Get().DeviceContext(), it->data);
+				it->mesh->RenderDeferred(m_context);
+			}
+		}
+	}
+
 }

@@ -4,7 +4,7 @@
 namespace thread
 {
 	// The must-meet threshold for divided rendering.
-	const int threshold = 100;
+	const int threshold = 1;
 
 	class RenderThreadHandler
 	{
@@ -12,7 +12,8 @@ namespace thread
 
 		std::thread* m_workerThreads;
 		unsigned int* m_statuses;
-		static bool m_isRunning;
+		bool m_isRunning;
+		bool m_isPooled = false;
 
 		unsigned int m_amount;
 		RenderThreadHandler();
@@ -21,16 +22,15 @@ namespace thread
 		/*
 			Vector in charge of distributing jobs to threads.
 		*/
-		std::vector<std::function<void( 
-			const unsigned int, const unsigned int, void*)>> m_jobs;
+		std::vector<std::function<void(void*, void*)>> m_jobs;
+
 
 		/*
-			Get a job from the queue.
+			Join all the threads.
 		*/
-		static std::function<void(
-			const unsigned int, const unsigned int, void*)> GetJob();
+		static void Finish();
 
-		static void PopJob();
+		static const int GetStatus(const unsigned int& id);
 
 	public:
 
@@ -59,6 +59,21 @@ namespace thread
 		/*
 			Update the status of thread with id.
 		*/
-		static void UpdateStatus(unsigned int& id, unsigned int& status);
+		static void UpdateStatus(const unsigned int& id, unsigned int status);
+
+		/*
+			Get a job from the queue.
+		*/
+		static std::function<void(void*, void*)> GetJob();
+
+		/*
+			Pop the recent job from queue.
+		*/
+		static void PopJob();
+
+		/*
+			Get the amount of jobs from the queue.
+		*/
+		static const unsigned int GetAmountOfJobs();
 	};
 }

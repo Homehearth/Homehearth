@@ -20,8 +20,6 @@ void Engine::Startup()
 	T_INIT(1, thread::ThreadType::POOL_FIFO);
 	srand(static_cast<unsigned>(time(NULL)));
 
-	thread::RenderThreadHandler::Get().Setup(T_REC - thread::MultiThreader::GetAmountOfThreads());
-
 	// Window Startup:
 	Window::Desc config;
 	config.title = L"Engine";
@@ -35,6 +33,9 @@ void Engine::Startup()
 	D2D1Core::Initialize(&m_window);
 	rtd::Handler2D::Get()->Initialize();
 	BackBuffer::Initialize();
+
+	// Thread Startup.
+	thread::RenderThreadHandler::Get().Setup(T_REC - thread::MultiThreader::GetAmountOfThreads());
 
 	//Camera
 	Camera m_debugCamera;

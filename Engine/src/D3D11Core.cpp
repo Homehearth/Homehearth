@@ -63,6 +63,11 @@ DXGI_QUERY_VIDEO_MEMORY_INFO D3D11Core::GetVideoMemoryInfo()
     return info;
 }
 
+void D3D11Core::CreateDeferredContext(ID3D11DeviceContext** context)
+{
+    D3D11Core::Get().m_device->CreateDeferredContext(0, context);
+}
+
 bool D3D11Core::createDeviceAndSwapChain()
 {
     // Initialize the swap chain description.
@@ -107,7 +112,7 @@ bool D3D11Core::createDeviceAndSwapChain()
     swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 
     // Creates a m_device that supports the debug layer. 
-    UINT flags = D3D11_CREATE_DEVICE_SINGLETHREADED | D3D11_CREATE_DEVICE_BGRA_SUPPORT;
+    UINT flags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
 	
 #ifdef _DEBUG
     flags |= D3D11_CREATE_DEVICE_DEBUG;
