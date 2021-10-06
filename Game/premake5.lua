@@ -3,7 +3,8 @@ project "Game"
     language "C++"
     cppdialect "C++17"
     staticruntime "on"
-
+    disablewarnings{"26812"}
+    linkoptions { "-IGNORE:4075", "-IGNORE:4098", "-IGNORE:4099"}
     targetdir("build/bin/" .. outputdir .. "/%{prj.name}")
     objdir("build/bin-int/" .. outputdir .. "/%{prj.name}")
 
@@ -48,9 +49,13 @@ project "Game"
             "WIN32",
             "_CRT_SECURE_NO_WARNINGS"
         }
+		
+	--postbuildcommands {
+        --"{COPY} assimp-vc142-mt.dll %{wks.location}/Game/build/bin/" .. outputdir .. "/Game/"
+		--}
 
     filter {"configurations:Debug"}
-        buildoptions "/MTd"
+        staticruntime "on"
         runtime "Debug"
         defines{"_DEBUG", "_UNICODE", "UNICODE"}
         symbols "on"
@@ -60,9 +65,8 @@ project "Game"
 			"../ThirdParty/assimp/lib/"
 				}
 
-
     filter {"configurations:Release"}
-        buildoptions "/MT"
+        staticruntime "on"
         runtime "Release"
         defines{"NDEBUG", "_UNICODE", "UNICODE"}
         optimize "on"

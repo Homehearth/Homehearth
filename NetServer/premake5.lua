@@ -1,7 +1,9 @@
 project "NetServer"
-    kind "WindowedApp"
+    kind "ConsoleApp"
     language "C++"
     cppdialect "C++17"
+    disablewarnings{"26812"}
+    linkoptions { "-IGNORE:4075", "-IGNORE:4098", "-IGNORE:4099"}
     targetdir("build/bin/" .. outputdir .. "/%{prj.name}")
     objdir("build/bin-int/" .. outputdir .. "/%{prj.name}")
  
@@ -24,7 +26,13 @@ project "NetServer"
     -- Note: specify the path relative to the Premake file.
     includedirs {
 		"src",
-		 "../ThirdParty/networking/"
+        "../Engine/src",
+        "../ThirdParty/DirectXTK/include/",
+        "../ThirdParty/imGUI/",
+        "../ThirdParty/stb_image/",
+        "../ThirdParty/networking/",
+        "../ThirdParty/entt/",
+		"../ThirdParty/assimp/include/"
     }
 
 
@@ -37,9 +45,17 @@ project "NetServer"
 
 
     links{
-
+        "ImGui",
+        "Engine",
+        "d3d11",
+        "d2d1",
+		"dwrite",
+        "dxgi",
+        "DirectXTK",
+		"assimp-vc142-mt.lib",
     }
 
+    libdirs{"../ThirdParty/imGUI/"}
 
     -- Define a macro/symbol which applies for the Windows system.
     filter {"system:windows"}
@@ -51,16 +67,26 @@ project "NetServer"
 
     -- Define a macro/symbol which applies only to debug builds.
     filter {"configurations:Debug"}
-        buildoptions "/MTd"
+        staticruntime "on"
         runtime "Debug"
         defines{"_DEBUG", "_UNICODE", "UNICODE"}
         symbols "on"
+        libdirs{
+            "../ThirdParty/DirectXTK/lib/Debug_lib/",
+            "../Engine/build/bin/Debug-windows-x86_64/Engine",
+			"../ThirdParty/assimp/lib/"
+        }
 
 
     -- Define a macro/symbol which applies only to release builds.
     filter {"configurations:Release"}
-        buildoptions "/MT"
+        staticruntime "on"
         runtime "Release"
         defines{"NDEBUG", "_UNICODE", "UNICODE"}
         symbols "on"
         optimize "on"
+        libdirs{
+            "../ThirdParty/DirectXTK/lib/Release_lib/",
+            "../Engine/build/bin/Release-windows-x86_64/Engine",
+			"../ThirdParty/assimp/lib/"
+        }

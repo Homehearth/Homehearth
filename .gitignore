@@ -72,7 +72,11 @@ StyleCopReport.xml
 *_h.h
 *.ilk
 *.meta
-*.obj
+
+#Dont ignore obj-files
+###*.obj
+
+
 *.iobj
 *.pch
 *.pdb
