@@ -7,6 +7,7 @@
 CRITICAL_SECTION criticalSection;
 std::condition_variable cv;
 std::mutex render_mutex;
+std::mutex thread_mutex;
 bool shouldRender = true;
 
 bool ShouldContinue();
@@ -66,6 +67,11 @@ const int thread::RenderThreadHandler::GetStatus(const unsigned int& id)
 	return INSTANCE.m_statuses[id];
 }
 
+void thread::RenderThreadHandler::InsertRenderJob(std::function<void(void*, void*)> job)
+{
+	INSTANCE.Get().m_jobs.push_back(job);
+}
+
 std::function<void(void*, void*)> thread::RenderThreadHandler::GetJob()
 {
 	if (INSTANCE.m_jobs.size() <= 0)
@@ -111,7 +117,7 @@ const int thread::RenderThreadHandler::Launch(const int& amount_of_objects, void
 		{
 			for (int i = 0; i < iterations; i++)
 			{
-				auto& f = [&](void* buffer, void* context)
+				auto f = [&](void* buffer, void* context)
 				{
 					RenderJob(i * objects_per_thread, (i + 1) * objects_per_thread, m_objects, buffer, context);
 				};
@@ -164,6 +170,7 @@ void RenderMain(const unsigned int& id)
 	{
 		cv.wait(uqmtx, [] {return shouldRender; });
 		shouldRender = false;
+		EnterCriticalSection(&criticalSection);
 		if (!INSTANCE.GetHandlerStatus())
 		{
 			cv.notify_all();
@@ -177,6 +184,7 @@ void RenderMain(const unsigned int& id)
 			thread::RenderThreadHandler::Get().PopJob();
 			cv.notify_all();
 			shouldRender = true;
+			LeaveCriticalSection(&criticalSection);
 
 			// Run render.
 			func(&m_privateBuffer, deferred_context);
@@ -184,7 +192,7 @@ void RenderMain(const unsigned int& id)
 
 			continue;
 		}
-
+		LeaveCriticalSection(&criticalSection);
 		shouldRender = true;
 		cv.notify_all();
 	}

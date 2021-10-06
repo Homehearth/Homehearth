@@ -32,6 +32,8 @@ namespace thread
 
 		static const int GetStatus(const unsigned int& id);
 
+		static void InsertRenderJob(std::function<void(void*, void*)> job);
+
 	public:
 
 		static auto& Get()
