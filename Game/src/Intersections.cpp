@@ -1,7 +1,7 @@
 #include "Intersections.h"
 
 //Check if the ray intersects with a box collider.
-bool Intersect::RayIntersectBox(const Ray_t& ray, const comp::BoxCollider& boxCollider, float& t)
+const bool Intersect::RayIntersectBox(const Ray_t& ray, const comp::BoxCollider& boxCollider, float& t)
 {
 	/**
 	 * computing all t-values for the ray
@@ -69,7 +69,7 @@ bool Intersect::RayIntersectBox(const Ray_t& ray, const comp::BoxCollider& boxCo
 	return true;
 }
 
-bool Intersect::RayIntersectSphere(const Ray_t& ray, const comp::SphereCollider& sphereCollider, float& t)
+const bool Intersect::RayIntersectSphere(const Ray_t& ray, const comp::SphereCollider& sphereCollider, float& t)
 {
 	const sm::Vector3 rayToCenter = ray.rayPos - sphereCollider.center;
 	
@@ -83,7 +83,8 @@ bool Intersect::RayIntersectSphere(const Ray_t& ray, const comp::SphereCollider&
 	//discriminant < 0 the ray does not intersect sphere.
 	//discriminant = 0 the ray touches the sphere in one point
 	//discriminant > 0 the ray touches the sphere in two points
-	if (discriminant < 0.0f) {
+	if (discriminant < 0.0f)
+	{
 		return false;
 	}
 	else
