@@ -12,19 +12,21 @@ private:
 	Scene* m_currentScene;
 	
 protected:
-	// Updates the current scene.
-	virtual void Update(float dt);
+
+	// Startup the Engine and its instances in a specific order.
+	virtual void Startup();
 
 	// Run the Engine's core loop.
 	virtual void Run();
 
-	// Shutdown the Engine and its instances in the reverse order.
-	void Shutdown();
+	// Updates the current scene.
+	virtual void Update(float dt);
+	
+	
+	virtual bool OnStartup() = 0;
+	virtual void OnUserUpdate(float deltaTime) = 0;
+	virtual void OnShutdown() = 0;
 
-	bool IsRunning() const;
-
-	// Startup the Engine and its instances in a specific order.
-	virtual void Startup();
 
 public:
 	HeadlessEngine();
@@ -34,12 +36,15 @@ public:
 	HeadlessEngine& operator=(HeadlessEngine&& other) = delete;
 	virtual ~HeadlessEngine() = default;
 
+	bool IsRunning() const;
+
 	Scene& GetScene(const std::string& name);
 	Scene* GetCurrentScene() const;
 	void SetScene(const std::string& name);
 	void SetScene(Scene& scene);
 
-	virtual bool OnStartup() = 0;
-	
+	void Start();
+
+	void Shutdown();
 };
 

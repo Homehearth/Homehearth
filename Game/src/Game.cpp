@@ -8,24 +8,7 @@ Game::Game()
 	: Engine()
 {
 	this->localPID = 0;
-	/*
-		Resource manager example
-	*/
-	/*
-	std::shared_ptr<RMesh> monster = ResourceManager::Get().GetResource<RMesh>("Monster.fbx");
-
-	{	//Start a scope for show
-
-		std::shared_ptr<RMesh> chest1 = ResourceManager::Get().GetResource<RMesh>("Chest.obj");
-		std::shared_ptr<RMesh> chest2 = ResourceManager::Get().GetResource<RMesh>("Chest.obj");
-		std::shared_ptr<RMesh> chest3 = ResourceManager::Get().GetResource<RMesh>("Chest.obj");
-
-	}	//chest1,2,3 dies here
-
-	//Clearing up resources after chest1
-	ResourceManager::Get().FreeResources();
-	*/
-
+	
 }
 
 Game::~Game()
@@ -38,6 +21,7 @@ Game::~Game()
 
 bool Game::OnStartup()
 {
+
 	// Scene logic
 	Scene& demo = DemoScene(*this, m_client).GetScene();
 
@@ -47,23 +31,39 @@ bool Game::OnStartup()
 	return true;
 }
 
-void Game::Start()
+void Game::OnUserUpdate(float deltaTime)
 {
-	Engine::Startup();
-}
 
-bool Game::OnUserUpdate(float deltaTime)
-{
-	if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::P, KeyState::PRESSED))
-	{
-		m_client.PingServer();
-	}
+	IMGUI(
+	ImGui::Begin("Test");
+		
+		if (m_client.IsConnected())
+		{
+			if (ImGui::Button("Ping"))
+			{
+				m_client.PingServer();
+			}
+			if (ImGui::Button("Host")) 
+			{
 
-	if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::R, KeyState::PRESSED))
-	{
-		m_client.Connect("127.0.0.1", 4950);
-	}
+			}
+			if (ImGui::Button("Join"))
+			{
 
+			}
+		}
+		else {
+			static char buffer[64];
+			strcpy(buffer, "127.0.0.1");
+			ImGui::InputText("IP", buffer, 64);
+			if (ImGui::Button("Connect"))
+			{
+				m_client.Connect(buffer, 4950);
+			}
+		}
+		ImGui::End();
+	);
+	
 	if (m_client.IsConnected())
 	{
 		while (!m_client.m_messagesIn.empty())
@@ -82,5 +82,9 @@ bool Game::OnUserUpdate(float deltaTime)
 		}
 	}
 
-	return true;
+}
+
+void Game::OnShutdown()
+{
+	
 }

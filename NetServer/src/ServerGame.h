@@ -9,14 +9,15 @@ class ServerGame : public HeadlessEngine
 {
 private:
 	Server m_server;
+	std::thread m_inputThread;
 public:
 	ServerGame();
 
 	void InputThread();
 
-	virtual void Run() override;
-
-	virtual bool OnStartup();
-	void Start();
+	virtual bool OnStartup() override;
+	virtual void OnUserUpdate(float deltaTime) override;
+	virtual void OnShutdown() override;
+	
 };
 

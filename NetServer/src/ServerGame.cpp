@@ -21,17 +21,6 @@ void ServerGame::InputThread()
 
 }
 
-void ServerGame::Run() 
-{
-
-	std::thread t(&ServerGame::InputThread, this);
-
-	//HeadlessEngine::Run();
-	this->m_server.Update(1);
-
-	t.join();
-}
-
 bool ServerGame::OnStartup()
 {
 	if (!m_server.Start(4950))
@@ -40,11 +29,19 @@ bool ServerGame::OnStartup()
 		exit(0);
 	}
 
+	m_inputThread = std::thread(&ServerGame::InputThread, this);
+
 
 	return true;
 }
 
-void ServerGame::Start()
+void ServerGame::OnUserUpdate(float deltaTime)
 {
-	Startup();
+	this->m_server.Update(1);
+
+}
+
+void ServerGame::OnShutdown()
+{
+	m_inputThread.join();
 }

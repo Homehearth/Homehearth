@@ -92,8 +92,10 @@ void Engine::Run()
 	);
 
     T_DESTROY();
-    ResourceManager::Get().Destroy();
+    ResourceManager::Get().Destroy(); //todo what difference?
+	//ResourceManager::Get().FreeResources();
     D2D1Core::Destroy();
+
 }
 
 
@@ -274,10 +276,9 @@ void Engine::Update(float dt)
 	}
 
 	m_currentCamera->Update(dt);
-	HeadlessEngine::Update(dt);
 
-	// Updates game logic
-	this->OnUserUpdate(dt);
+	// updates Scenes
+	HeadlessEngine::Update(dt);
 
 	{
 		PROFILE_SCOPE("Ending ImGui");

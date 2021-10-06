@@ -13,7 +13,7 @@ Server::~Server()
 
 void Server::Update(size_t nMaxMessage)
 {
-	while (IsRunning())
+	if (IsRunning())
 	{
 		size_t nMessageCount = 0;
 		while (nMessageCount < nMaxMessage && !m_qMessagesIn.empty())
