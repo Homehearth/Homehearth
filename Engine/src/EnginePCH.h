@@ -3,6 +3,9 @@
 #define RENDER_IMGUI 1
 #define PROFILER 1
 
+// Turn this to 1 if you want to see the very beautiful demo menu
+#define DRAW_TEMP_2D 0
+
 //Macros
 #if RENDER_IMGUI
 #define IMGUI(a) do {a} while(0)
@@ -15,6 +18,7 @@
 #ifdef WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
+#include <wincodec.h>
 #include <winsock2.h>
 #include <WS2tcpip.h>
 #pragma comment(lib, "WS2_32.Lib")
@@ -99,6 +103,8 @@ namespace sm = dx::SimpleMath;
 #include "D2D1Core.h"
 #include "Profiler.h"
 #include "ThreadSyncer.h"
+#include "Handler2D.h"
+#include "BackBuffer.h"
 
 // Network
 //#include "network.h"
@@ -107,3 +113,12 @@ namespace sm = dx::SimpleMath;
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
+
+EXTERN_C IMAGE_DOS_HEADER __ImageBase;
+#define HINST_THISCOMPONENT ((HINSTANCE)&__ImageBase)
+
+// Paths
+const std::string MODELPATH		= "../Assets/Models/";		//"../../../../../Assets/Models/"
+const std::string MATERIALPATH	= "../Assets/Materials/";
+const std::string TEXTUREPATH	= "../Assets/Textures/";
+const std::string ANIMATIONPATH = "../Assets/Animations/";

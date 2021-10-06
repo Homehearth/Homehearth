@@ -59,7 +59,6 @@ HeadlessEngine::HeadlessEngine()
 void HeadlessEngine::Update(float dt)
 {
 	PROFILE_FUNCTION();
-
 	// Update elements in the scene.
 	if (m_currentScene)
 	{
@@ -79,7 +78,6 @@ void HeadlessEngine::Run()
 	while (IsRunning())
 	{
 		PROFILE_SCOPE("Update Frame");
-
 		// Update time.
 		currentFrame = omp_get_wtime();
 		deltaTime = static_cast<float>(currentFrame - lastFrame);
