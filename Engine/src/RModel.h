@@ -17,14 +17,9 @@ struct aiMesh;
 	* Fix loading in bones
 */
 
-class RMesh : public resource::GResource
+class RModel : public resource::GResource
 {
 private:
-	enum class EMeshType
-	{
-		staticMesh,
-		skeletalMesh	//Has bones
-	};	
 	struct mesh_t
 	{
 		ComPtr<ID3D11Buffer> vertexBuffer;
@@ -32,9 +27,12 @@ private:
 		UINT				 indexCount = 0;
 	};
 	
-	EMeshType								m_meshType;
 	std::vector<mesh_t>						m_meshes;
 	std::vector<std::shared_ptr<RMaterial>> m_materials;
+
+	//dx::BoundingBox							m_globalCollider;	//total boundingbox
+	std::vector<dx::BoundingBox>			m_colliders;	//accurate
+
 	//Save the skeleton in a structure: rootbone --> other parts
 
 private:
@@ -42,7 +40,7 @@ private:
 	const std::string GetFileFormat(const std::string& filename) const;
 	/*
 		Combines multiple submeshes that uses the same material to one.
-		This is to avoid to many drawcalls per RMesh
+		This is to avoid to many drawcalls per RModel
 	*/
 	bool CombineMeshes(std::vector<aiMesh*>& submeshes);
 
@@ -51,14 +49,14 @@ private:
 	bool CreateIndexBuffer(const std::vector<UINT>& indices, mesh_t& mesh);
 
 public:
-	RMesh();
-	~RMesh();
+	RModel();
+	~RModel();
 
 	//Change the material to something else
 	bool ChangeMaterial(const std::string& mtlfile);
 
 	/*
-		Render all of the submeshes in the RMesh with correct material
+		Render all of the submeshes in the RModel with correct material
 	*/
 	void Render() const;
 

@@ -1,19 +1,18 @@
 #pragma once
 #include "EnginePCH.h"
-#include "RMesh.h"
+#include "RModel.h"
 
-RMesh::RMesh()
+RModel::RModel()
 {
-    m_meshType = EMeshType::staticMesh;
 }
 
-RMesh::~RMesh()
+RModel::~RModel()
 {
     m_meshes.clear();
     m_materials.clear();
 }
 
-bool RMesh::ChangeMaterial(const std::string& mtlfile)
+bool RModel::ChangeMaterial(const std::string& mtlfile)
 {
     /*
         The new material have to have as many submaterials as previously,
@@ -27,13 +26,13 @@ bool RMesh::ChangeMaterial(const std::string& mtlfile)
     return false;
 }
 
-const std::string RMesh::GetFileFormat(const std::string& filename) const
+const std::string RModel::GetFileFormat(const std::string& filename) const
 {
     size_t startIndex = filename.find_last_of(".");
     return filename.substr(startIndex);
 }
 
-bool RMesh::CombineMeshes(std::vector<aiMesh*>& submeshes)
+bool RModel::CombineMeshes(std::vector<aiMesh*>& submeshes)
 {
     std::vector<simple_vertex_t> vertices;
     std::vector<UINT> indices;
@@ -113,7 +112,7 @@ bool RMesh::CombineMeshes(std::vector<aiMesh*>& submeshes)
     }
 }
 
-bool RMesh::CreateVertexBuffer(const std::vector<simple_vertex_t>& vertices, mesh_t& mesh)
+bool RModel::CreateVertexBuffer(const std::vector<simple_vertex_t>& vertices, mesh_t& mesh)
 {
     D3D11_BUFFER_DESC bufferDesc;
     ZeroMemory(&bufferDesc, sizeof(D3D11_BUFFER_DESC));
@@ -136,7 +135,7 @@ bool RMesh::CreateVertexBuffer(const std::vector<simple_vertex_t>& vertices, mes
     return !FAILED(hr);
 }
 
-bool RMesh::CreateIndexBuffer(const std::vector<UINT>& indices, mesh_t& mesh)
+bool RModel::CreateIndexBuffer(const std::vector<UINT>& indices, mesh_t& mesh)
 {
     D3D11_BUFFER_DESC indexBufferDesc;
     ZeroMemory(&indexBufferDesc, sizeof(D3D11_BUFFER_DESC));
@@ -159,7 +158,7 @@ bool RMesh::CreateIndexBuffer(const std::vector<UINT>& indices, mesh_t& mesh)
     return !FAILED(hr);
 }
 
-void RMesh::Render() const
+void RModel::Render() const
 {
     UINT offset = 0;
     UINT stride = sizeof(simple_vertex_t);
@@ -177,7 +176,7 @@ void RMesh::Render() const
     }
 }
 
-bool RMesh::Create(const std::string& filename)
+bool RModel::Create(const std::string& filename)
 {
     std::string filepath = MODELPATH + filename;
     Assimp::Importer importer;
@@ -222,6 +221,34 @@ bool RMesh::Create(const std::string& filename)
         importer.FreeScene();
         return false;
     }
+
+    /*
+        Testing AABB
+    */
+    //vector3 min = scene->mMeshes[0]->mAABB.mMin
+    //vector3 max = scene->mMeshes[0]->mAABB.mMax
+    //scene->mMeshes[0]->mAABB.mMax
+    //DirectX::BoundingBox::CreateFromPoints(boundingbox, min, max)
+    /*
+        IDEA:
+        for every mesh
+            load in max and min
+            create a boundingbox
+            pushback to the vector
+
+        An idea too:
+            A submesh can have multiple colliders
+            This is because when combining meshes we lose precion
+
+        Collidercheck
+            bouningbox RModel::GetCollider() const
+            bool Collided(const RModel*  mesh) const
+                first check the big boundingbox
+                    if false we ignore it from here.
+                    else we shall check deeper and see which one that collided with
+
+    */
+
 
     std::string fileformat = GetFileFormat(filename);
 

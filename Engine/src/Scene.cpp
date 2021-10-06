@@ -44,7 +44,7 @@ void Scene::Render()
 	for (const auto& it : m_renderableCopies[1])
 	{
 		m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
-		it.mesh->Render();	
+		it.model->Render();	
 	}
 	
 	// Emit event

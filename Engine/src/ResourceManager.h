@@ -18,7 +18,7 @@
 	 
 	get - resource will be returned if found. If not it will try to create it
 		  if create is succesfull, return resource, otherwise return no resource
-	* std::shared_ptr<RMesh> mesh = ResourceManager::Get().GetResource<RMesh>("Cube.fbx");
+	* std::shared_ptr<RModel> mesh = ResourceManager::Get().GetResource<RModel>("Cube.fbx");
 	
 	free - remove any resources that is not in use
 	* ResourceManager::Get().FreeResources();
