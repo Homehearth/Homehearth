@@ -16,9 +16,9 @@ Camera::Camera()
     m_windowWidth = 0;
     m_rotationSpeed = 5.0f;
     m_movingSepeed = 15.0f;
-    m_TargetVelocity.x = 0.0f;
-    m_TargetVelocity.y = 0.0f;
-    m_TargetVelocity.z = 0.0f;
+    //m_targetVelocity->vel.x = 0.0f;
+    //m_targetVelocity->vel.y = 0.0f;
+    //m_targetVelocity->vel.z = 0.0f;
     m_type = CAMERATYPE::DEFAULT;
 }
 
@@ -72,7 +72,7 @@ void Camera::Initialize(sm::Vector3 pos, sm::Vector3 target, sm::Vector3 up, sm:
 
 void Camera::Update(float deltaTime)
 { 
-    if (m_type == CAMERATYPE::DEBUG)// && InputSystem::Get().IsMouseRelative()) //Can't move the camera when in absolut mode
+    if (m_type == CAMERATYPE::DEBUG && InputSystem::Get().IsMouseRelative()) //Can't move the camera when in absolut mode
     {
         //Mouse
         m_currentMousePosition = sm::Vector2((float)InputSystem::Get().GetMousePos().x, (float)InputSystem::Get().GetMousePos().y);
@@ -120,9 +120,8 @@ void Camera::Update(float deltaTime)
     }
     else if (m_type == CAMERATYPE::PLAY)
     {
-
-        //m_position.x += m_targetTransform->position.x;
-        //m_position.z += m_targetTransform->position.z;
+        m_position.x += m_targetVelocity->vel.x * deltaTime;
+        m_position.z += m_targetVelocity->vel.z * deltaTime;
 
         m_right = dx::XMVector3TransformNormal(m_defaultRight, m_rotationMatrix);
         m_forward = dx::XMVector3TransformNormal(m_defaultForward, m_rotationMatrix);
@@ -144,7 +143,7 @@ void Camera::Update(float deltaTime)
     }
     else if (m_type == CAMERATYPE::DEFAULT) 
     {
-
+        //Nothing???
     }
 
     //IDk if i need thb
@@ -168,6 +167,11 @@ void Camera::SetFollowTarget(comp::Transform* target)
     m_targetTransform = target;
 
     //Is functions if lerp ect wants to be added for gamefeel
+}
+
+void Camera::SetFollowVelocity(comp::Velocity* target)
+{
+    m_targetVelocity = target;
 }
 
 //Get functions
