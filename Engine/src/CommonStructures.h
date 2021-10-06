@@ -34,6 +34,11 @@ struct basic_model_matrix_t
 	sm::Matrix worldMatrix;
 };
 
+struct delta_time_t
+{
+	float deltaTime;
+};
+
 ALIGN16
 struct camera_Matrix_t
 {

@@ -217,19 +217,19 @@ void Engine::drawImGUI() const
 void Engine::RenderThread()
 {
 	double currentFrame = 0.f, lastFrame = omp_get_wtime();
-	float deltaTime = 0.f, deltaSum = 0.f;
+	float m_deltaTime = 0.f, deltaSum = 0.f;
 	const float targetDelta = 1 / 10000.0f; 	// Desired FPS
 	while (IsRunning())
 	{
 		currentFrame = omp_get_wtime();
-		deltaTime = static_cast<float>(currentFrame - lastFrame);
+		m_deltaTime = static_cast<float>(currentFrame - lastFrame);
 		if (deltaSum >= targetDelta)
 		{
 			Render(deltaSum);
 			m_frameTime.render = deltaSum;
 			deltaSum = 0.f;
 		}
-		deltaSum += deltaTime;
+		deltaSum += m_deltaTime;
 		lastFrame = currentFrame;
 
 	}
@@ -317,3 +317,7 @@ void Engine::Render(float& dt)
 	}
 }
 
+float Engine::GetDeltaTime()
+{
+	return m_deltaTime;
+}

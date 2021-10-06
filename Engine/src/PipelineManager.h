@@ -46,11 +46,17 @@ public:
 	ComPtr<ID3D11InputLayout>		m_positionOnlyInputLayout;
 	
 	ComPtr<ID3D11Buffer>			m_defaultModelConstantBuffer;	// TODO: maybe put in Camera class or update from Camera class
-	
+	ComPtr<ID3D11Buffer>			m_textureEffectConstantBuffer; // Nikki's water effect constant buffer (Only has delta time) 
+
 	Shaders::VertexShader			m_defaultVertexShader;
 	Shaders::VertexShader			m_positionOnlyVertexShader;
 
 	Shaders::PixelShader			m_defaultPixelShader;
+
+	// Nikkis Texture Effect shaders.
+	Shaders::VertexShader           m_textureEffectVertexShader;  // Nikki's dummy water effect vertex shader.
+	Shaders::PixelShader            m_textureEffectPixelShader;   // Nikki's water effect pixel shader.
+	Shaders::ComputeShader          m_textureEffectComputeShader; // Nikki's water effect compute shader.
 
 	D3D11_VIEWPORT					m_viewport;
 
@@ -71,6 +77,7 @@ private:
 	void SetViewport();
 
 	bool CreateDefaultConstantBuffer();	// TODO: maybe put in Camera class or update from Camera class
+	bool CreateTextureEffectConstantBuffer();
 };
 
 

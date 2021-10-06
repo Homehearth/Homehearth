@@ -394,6 +394,33 @@ bool PipelineManager::CreateDefaultConstantBuffer()
     return !FAILED(hr);
 }
 
+bool PipelineManager::CreateTextureEffectConstantBuffer()
+{
+    D3D11_BUFFER_DESC bDesc = {};
+    bDesc.ByteWidth = sizeof(delta_time_t);
+    bDesc.Usage = D3D11_USAGE_DEFAULT;
+    bDesc.CPUAccessFlags = 0;
+    bDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+    bDesc.MiscFlags = 0;
+
+    delta_time_t b;
+    b.deltaTime = 0;
+
+    D3D11_SUBRESOURCE_DATA data = {};
+    data.pSysMem = &b;
+    data.SysMemPitch = 0;
+    data.SysMemSlicePitch = 0;
+
+    HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&bDesc, &data, m_textureEffectConstantBuffer.GetAddressOf());
+
+    if (FAILED(hr))
+    {
+        LOG_WARNING("failed to create textureEffectConstantBuffer");
+        return false;
+    }
+    return !FAILED(hr);
+}
+
 bool PipelineManager::CreateShaders()
 {	
     if (!m_defaultVertexShader.Create("Model_vs"))
@@ -411,6 +438,18 @@ bool PipelineManager::CreateShaders()
     if(!m_defaultPixelShader.Create("Model_ps"))
     {
         LOG_WARNING("failed creating Model_ps.");
+        return false;
+    }
+
+    if (!m_textureEffectComputeShader.Create("textureEffect_cs"))
+    {
+        LOG_WARNING("failed to create textureEffect_cs");
+        return false;
+    }
+
+    if (!m_textureEffectPixelShader.Create("textureEffect_ps"))
+    {
+        LOG_WARNING("failed to create textureEffect_ps");
         return false;
     }
 

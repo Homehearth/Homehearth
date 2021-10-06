@@ -23,6 +23,8 @@ private:
 		float render;
 	} m_frameTime;
 
+	static float m_deltaTime;
+
 	// Job for rendering thread.
 	void RenderThread();
 
@@ -54,4 +56,7 @@ public:
 
 	virtual bool OnStartup() = 0;
 	virtual bool OnUserUpdate(float deltaTime) = 0;
+
+
+	static float GetDeltaTime();
 };
