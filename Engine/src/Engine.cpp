@@ -69,7 +69,8 @@ void Engine::Startup()
 		LOG_INFO("ImGui was successfully initialized");
 	);
 
-	InputSystem::Get().SetMouseWindow(m_window.GetHWnd());
+	InputSystem::Get().SetMouseWindow(m_window.GetHWnd(), m_window.GetWidth(), m_window.GetHeight());
+	InputSystem::Get().SetCamera(this->m_currentCamera.get());
 
 #if DRAW_TEMP_2D
 	rtd::Button* test = new rtd::Button("demo_start_game_button.png", draw_t(100.0f, 100.0f, 275.0f, 100.0f), true);
