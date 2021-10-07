@@ -17,9 +17,11 @@ struct VertexIn
     float3 biTangent : BINORMAL;
 };
 
-// Depth pre-pass VertexShader.
+// Depth pre-pass.
 float4 main(VertexIn input) : SV_POSITION
 {
-    const float4 worldPosition = mul(world, float4(input.pos, 1.0f));
-    return  mul(projectionView, worldPosition);
+    float4 output = float4(input.pos, 1.0f);
+    output = mul(world, output);
+    output = mul(projectionView, output);
+    return output;
 }

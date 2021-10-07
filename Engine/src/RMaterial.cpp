@@ -76,7 +76,7 @@ void RMaterial::BindMaterial() const
     ID3D11ShaderResourceView* allSRV[nrOfTextures] = { nullptr };
     for (UINT i = 0; i < nrOfTextures; i++)
     {
-        // Texture has to exist
+        //Texture has to exist
         if (m_textures[i])
             allSRV[i] = m_textures[i]->GetShaderView();
     }

@@ -18,55 +18,50 @@ public:
 	// Initialize PipelineManager.
 	void Initialize(Window* pWindow);
 
-	//
+	
 	// PUBLIC AVAILABLE DATA.
-	//
+
 	ComPtr<ID3D11RenderTargetView>	m_backBufferTarget;
 
-	// DepthBuffer.
-	ComPtr<ID3D11Texture2D>			m_depthStencilTexture;
 	ComPtr<ID3D11DepthStencilView>	m_depthStencilView;
-	ComPtr<ID3D11ShaderResourceView>m_depthBufferSRV;
-
-	// DepthStencilStates.
-	ComPtr<ID3D11DepthStencilState>	m_lessDSS;
-	ComPtr<ID3D11DepthStencilState> m_equalDSS;
-	ComPtr<ID3D11DepthStencilState> m_disableDSS;
-	ComPtr<ID3D11DepthStencilState> m_disableZWriteDSS;
-	ComPtr<ID3D11DepthStencilState> m_greaterDSS;
+	ComPtr<ID3D11ShaderResourceView>m_depthStencilSRV;
 	
-	// RasterStates.
+	ComPtr<ID3D11DepthStencilState>	m_depthStencilStateLess;
+	ComPtr<ID3D11DepthStencilState> m_depthStencilStateGreater;
+	ComPtr<ID3D11DepthStencilState> m_depthStencilStateEqualAndDisableDepthWrite;	
+	
 	ComPtr<ID3D11RasterizerState>	m_rasterState;
 	ComPtr<ID3D11RasterizerState>	m_rasterStateNoCulling;
 	ComPtr<ID3D11RasterizerState>	m_rasterStateWireframe;
 
-	// BlendStates.
 	ComPtr<ID3D11BlendState>		m_blendStatepOpaque;
 	ComPtr<ID3D11BlendState>		m_blendStatepDepthOnlyAlphaTest;
 	ComPtr<ID3D11BlendState>		m_blendStateDepthOnlyAlphaToCoverage;;
 
-	// SampleStates.
 	ComPtr<ID3D11SamplerState>		m_linearSamplerState;
 	ComPtr<ID3D11SamplerState>		m_pointSamplerState;
 
-	// InputLayouts.
 	ComPtr<ID3D11InputLayout>		m_defaultInputLayout;
-
-	// Shaders.
+	
+	ComPtr<ID3D11Buffer>			m_defaultModelConstantBuffer;	// TODO: maybe put in Camera class or update from Camera class
+	
 	Shaders::VertexShader			m_defaultVertexShader;
 	Shaders::PixelShader			m_defaultPixelShader;
 	Shaders::VertexShader			m_depthVertexShader;
+	Shaders::PixelShader			m_depthPixelShader;
 
 	D3D11_VIEWPORT					m_viewport;
 
 	
 	// POINT LIGHTS.
+	
 	ComPtr<ID3D11Buffer>				m_pointLightBufferCenterAndRadius;
 	ComPtr<ID3D11ShaderResourceView>	m_pointLightBufferCenterAndRadiusSRV;
 	ComPtr<ID3D11Buffer>				m_pointLightBufferColor;
 	ComPtr<ID3D11ShaderResourceView>	m_pointLightBufferColorSRV;
 
-	// BUFFERS FOR LIGHT CULLING.	
+	// BUFFERS FOR LIGHT CULLING.
+	
 	ComPtr <ID3D11Buffer>				m_lightIndexBuffer;
 	ComPtr <ID3D11ShaderResourceView>	m_lightIndexBufferSRV;
 	ComPtr <ID3D11UnorderedAccessView>	m_lightIndexBufferUAV;
@@ -85,6 +80,8 @@ private:
 	bool CreateDepthMap();
 	bool CreateStructuredBuffers();
 	void SetViewport();
+
+	bool CreateDefaultConstantBuffer();	// TODO: maybe put in Camera class or update from Camera class
 };
 
 

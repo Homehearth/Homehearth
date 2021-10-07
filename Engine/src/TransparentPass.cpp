@@ -5,17 +5,17 @@ void TransparentPass::Initialize()
 {
 }
 
-void TransparentPass::PreRender()
+void TransparentPass::PreRender(ID3D11DeviceContext* dc, PipelineManager* pm)
 {
-
+	// Bind Camera and PipelineState.
 }
 
-void TransparentPass::Render()
+void TransparentPass::Render(Scene* pScene)
 {
 	// Render objects.
 }
 
-void TransparentPass::PostRender()
+void TransparentPass::PostRender(ID3D11DeviceContext* dc, PipelineManager* pm)
 {
 	// Cleanup.
 }

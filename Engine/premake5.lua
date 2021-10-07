@@ -41,7 +41,7 @@ project "Engine"
     -- Else: specify the path relative to the this premake file.
     vpaths {
         ["src/Engine"] = { "**EnginePCH.*" },
-            ["src/Engine/Core"] = { "**Engine.*", "**Scene.*", "**EventTypes.*", "**Window.*", "**Camera.*" },
+            ["src/Engine/Core"] = { "**Engine.*", "**Scene.*", "**EventTypes.*", "**Window.*" },
             ["src/Engine/Input"] = { "**InputSystem.*" },
             ["src/Engine/Thread"] = { "**multi_thread_manager.*", "**ThreadSyncer.*"},
 

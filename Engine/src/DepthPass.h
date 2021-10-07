@@ -9,11 +9,11 @@ public:
 
 	void Initialize() override;
 
-	void PreRender() override;
+	void PreRender(ID3D11DeviceContext* dc, PipelineManager* pm) override;
 
-	void Render() override;
+	void Render(Scene* pScene) override;
 
-	void PostRender() override;
+	void PostRender(ID3D11DeviceContext* dc, PipelineManager* pm) override;
 
 };
 

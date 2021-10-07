@@ -33,14 +33,27 @@ void Scene::Update(float dt)
 	}
 }
 
-DoubleBuffer<std::vector<comp::Renderable>>& Scene::GetRenderableCopies()
+void Scene::Render() 
 {
-	return m_renderableCopies;
-}
+	PROFILE_FUNCTION();
+	// System that renders Renderable component
 
-dx::ConstantBuffer<basic_model_matrix_t>& Scene::GetRenderableBuffer()
-{
-	return m_publicBuffer;
+	ID3D11Buffer* buffers[1] =
+	{
+		m_publicBuffer.GetBuffer()
+	};
+
+	D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, buffers);
+	for (const auto& it : m_renderableCopies[1])
+	{
+		m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
+		it.mesh->Render();	
+	}
+	
+	// Emit event
+	publish<ESceneRender>();
+
+	m_renderableCopies.ReadyForSwap();
 }
 
 const bool Scene::IsRenderReady() const

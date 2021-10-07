@@ -225,6 +225,7 @@ bool RMesh::Create(const std::string& filename)
 
     std::string fileformat = GetFileFormat(filename);
 
+<<<<<<< HEAD
     /*
         Loading submeshes and multiple materials
     */
@@ -234,6 +235,28 @@ bool RMesh::Create(const std::string& filename)
     {
         UINT matIndex = scene->mMeshes[i]->mMaterialIndex;
         matSet[matIndex].push_back(scene->mMeshes[i]);
+=======
+    //Skeleton mesh
+    /*if (mesh->HasBones())
+    {
+        m_meshType = EMeshType::skeletalMesh
+        //[TODO LATER]
+        //Load in all the bones
+        //anim_vertex_t vertices
+    }*/
+    //Else do this below
+        //Go through all the vertices
+
+    for (unsigned int v = 0; v < aimesh->mNumVertices; v++)
+    {
+        simple_vertex_t vert = {};
+        vert.position = { aimesh->mVertices[v].x,         aimesh->mVertices[v].y,       aimesh->mVertices[v].z  };
+        vert.uv       = { aimesh->mTextureCoords[0][v].x, aimesh->mTextureCoords[0][v].y                        };
+        vert.normal   = { aimesh->mNormals[v].x,          aimesh->mNormals[v].y,        aimesh->mNormals[v].z   };
+        vert.tangent  = { aimesh->mTangents[v].x,         aimesh->mTangents[v].y,       aimesh->mTangents[v].z  };
+        vert.bitanget = { aimesh->mBitangents[v].x,       aimesh->mBitangents[v].y,     aimesh->mBitangents[v].z};
+        vertices.push_back(vert);
+>>>>>>> parent of dfc17b1 (Changes to most of the rendering system.)
     }
 
     //Load in every material needed
