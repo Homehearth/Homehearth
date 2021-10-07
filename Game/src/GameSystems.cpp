@@ -14,8 +14,9 @@ void GameSystems::UserInputSystem(Scene& scene, Client& client)
 void GameSystems::MRayIntersectBoxSystem(Scene& scene)
 {
 	float t = 0;
-	scene.ForEachComponent<comp::BoxCollider, comp::Transform>([&](comp::BoxCollider& boxCollider, comp::Transform& transform)
-	{
+	
+	scene.ForEachComponent<comp::BoundingOrientedBox, comp::Transform>([&](Entity entity, comp::BoundingOrientedBox& boxCollider, comp::Transform& transform)
+    {
 		//Collided with mouse TODO make it do someting?
 		if(Intersect::RayIntersectBox(InputSystem::Get().GetMouseRay(), boxCollider, t))
 		{
@@ -31,23 +32,70 @@ void GameSystems::MRayIntersectBoxSystem(Scene& scene)
 
 void GameSystems::CollisionSystem(Scene& scene)
 {
-	const auto viewOBB = scene.GetRegistry().view<comp::BoundingOrientedBox>();
-	const auto viewSphere = scene.GetRegistry().view<comp::BoundingSphere>();
-	for(auto entity: viewOBB)
-	{
-		auto& obb1 = viewOBB.get<comp::BoundingOrientedBox>(entity);
-		for(auto entity2: viewOBB)
+	scene.ForEachComponent<comp::Transform>([&](Entity entity, comp::Transform& transform)
 		{
-			if(entity != entity2)
+			comp::BoundingOrientedBox* obb1 = entity.GetComponent<comp::BoundingOrientedBox>();
+			comp::BoundingSphere* sphere1 = entity.GetComponent<comp::BoundingSphere>();
+
+			if(obb1 != nullptr)
 			{
-				auto& obb2 = viewOBB.get<comp::BoundingOrientedBox>(entity2);
-				if(obb1.Intersects(obb2))
+				scene.ForEachComponent<comp::Transform>([&](Entity entity2, comp::Transform& transform)
 				{
-					scene.publish<ESceneCollision>(entity, entity2);
-				}
+					if(entity != entity2)
+					{
+						comp::BoundingOrientedBox* obb2 = entity2.GetComponent<comp::BoundingOrientedBox>();
+						comp::BoundingSphere* sphere2 = entity2.GetComponent<comp::BoundingSphere>();
+						
+						if(obb1 && obb2 && obb1->Intersects(*obb2))
+						{
+							scene.publish<ESceneCollision>(entity, entity2);
+						}
+					}
+				});
+
 			}
-		}
-	}
+			else if(sphere1 != nullptr)
+			{
+				scene.ForEachComponent<comp::Transform>([&](Entity entity2, comp::Transform& transform)
+					{
+						if (entity != entity2)
+						{
+							comp::BoundingOrientedBox* obb2 = entity2.GetComponent<comp::BoundingOrientedBox>();
+							comp::BoundingSphere* sphere2 = entity2.GetComponent<comp::BoundingSphere>();
+							
+							if (sphere1 && obb2 && sphere1->Intersects(*obb2))
+							{
+								scene.publish<ESceneCollision>(entity, entity2);
+							}
+						}
+					});
+			}
+		});
+
+
+
+
+
+
+
+	
+	//const auto viewOBB = scene.GetRegistry().view<comp::BoundingOrientedBox>();
+	//const auto viewSphere = scene.GetRegistry().view<comp::BoundingSphere>();
+	//for(auto entity: viewOBB)
+	//{
+	//	auto& obb1 = viewOBB.get<comp::BoundingOrientedBox>(entity);
+	//	for(auto entity2: viewOBB)
+	//	{
+	//		if(entity != entity2)
+	//		{
+	//			auto& obb2 = viewOBB.get<comp::BoundingOrientedBox>(entity2);
+	//			if(obb1.Intersects(obb2))
+	//			{
+	//				scene.publish<ESceneCollision>(entity, entity2);
+	//			}
+	//		}
+	//	}
+	//}
 }
 
 

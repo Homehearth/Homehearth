@@ -1,5 +1,5 @@
 #pragma once
-#include <entt.hpp>
+#include "Entity.h"
 struct EShutdown {};
 
 struct ESceneChange
@@ -14,8 +14,8 @@ struct ESceneUpdate
 
 struct ESceneCollision
 {
-	entt::entity obj1;
-	entt::entity obj2;
+	Entity obj1;
+	Entity obj2;
 };
 
 struct ESceneRender {};
