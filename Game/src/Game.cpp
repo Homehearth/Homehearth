@@ -20,7 +20,6 @@ Game::~Game()
 
 bool Game::OnStartup()
 {
-
 	// Scene logic
 	m_demoScene = std::make_unique<DemoScene>(*this, m_client, &this->m_localPID, &this->m_gameID);
 
@@ -47,7 +46,7 @@ void Game::OnUserUpdate(float deltaTime)
 		{
 			message<GameMsg> msg;
 
-			msg.header.id = GameMsg::Client_CreateLobby;
+			msg.header.id = GameMsg::Lobby_Create;
 			msg << this->m_localPID;
 			m_client.Send(msg);
 
@@ -121,6 +120,12 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		}
 		break;
 	}
+	case GameMsg::Lobby_Accepted:
+	{
+		msg >> this->m_gameID;
+		LOG_INFO("Successfully created lobby!");
+		break;
+	}
 	case GameMsg::Game_Update:
 	{
 		uint32_t playerID;
@@ -150,7 +155,7 @@ void Game::JoinLobby(uint32_t lobbyID)
 	this->m_gameID = lobbyID;
 	message<GameMsg> msg;
 
-	msg.header.id = GameMsg::Client_JoinLobby;
+	msg.header.id = GameMsg::Lobby_Join;
 	msg << this->m_localPID << lobbyID;
 	m_client.Send(msg);
 }

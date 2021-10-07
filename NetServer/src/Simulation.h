@@ -23,7 +23,7 @@ public:
 	Simulation(Server* server);
 	virtual ~Simulation() = default;
 
-	bool CreateLobby(uint32_t uniqueGameID, uint32_t hostID);
+	bool CreateLobby(uint32_t playerID, uint32_t gameID);
 	bool AddPlayer(uint32_t playerID);
 	void UpdatePlayer(uint32_t playerID, const comp::Transform& transform);
 

@@ -7,10 +7,17 @@ Simulation::Simulation(Server* server)
 	this->m_gameID = 0;
 }
 
-bool Simulation::CreateLobby(uint32_t uniqueGameID, uint32_t hostID)
+bool Simulation::CreateLobby(uint32_t playerID, uint32_t gameID)
 {
-	this->m_gameID = uniqueGameID;
-	AddPlayer(hostID);
+	this->m_gameID = gameID;
+	AddPlayer(playerID);
+
+	message<GameMsg> msg;
+	msg.header.id = GameMsg::Lobby_Accepted;
+	msg << m_gameID;
+
+	m_server->SendToClient(m_connections[playerID], msg);
+
 	return true;
 }
 
@@ -39,7 +46,7 @@ bool Simulation::AddPlayer(uint32_t playerID)
 	return true;
 }
 
-void Simulation::UpdatePlayer(uint32_t playerID, const comp::Transform& transform) 
+void Simulation::UpdatePlayer(uint32_t playerID, const comp::Transform& transform)
 {
 	message<GameMsg> msg;
 	msg.header.id = GameMsg::Game_Update;
