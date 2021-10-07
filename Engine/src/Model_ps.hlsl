@@ -75,7 +75,8 @@ float4 main(PixelIn input) : SV_TARGET
     //If an object has a texture sample from it, else use default values.
     if(c_hasAlbedo == 1)
     {
-        albedo = T_albedo.Sample(samp, input.uv).rgb;
+        albedo = pow(T_albedo.Sample(samp, input.uv).rgb, 2.2f);
+        
     }
     
     if(c_hasNormal == 1)
