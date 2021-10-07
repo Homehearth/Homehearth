@@ -10,6 +10,8 @@ class TextureEffectPass : public IRenderPass
 private:
 	bool m_isEnabled;
 	Camera* m_camera;
+	texture_effect_t m_CBuffer;
+	PipelineManager *m_pm;
 
 public:
 	TextureEffectPass() = default;

@@ -14,6 +14,8 @@ void TextureEffectPass::Initialize()
 
 void TextureEffectPass::PreRender(ID3D11DeviceContext* dc, PipelineManager* pm)
 {
+    m_pm = pm;
+
     // INPUT ASSEMBLY.
     {
         dc->IASetInputLayout(nullptr);
@@ -60,7 +62,10 @@ void TextureEffectPass::Render(Scene* pScene)
 
 void TextureEffectPass::PostRender()
 {
-    // return rendertarget for next pass?
-    //D3D11Core::Get().DeviceContext()->UpdateSubresource(m_camera->m_viewConstantBuffer.Get(), 0, nullptr, m_camera->GetCameraMatrixes(), 0, 0);
+    // Update constantbuffer here!
+    D3D11Core::Get().DeviceContext()->UpdateSubresource(m_pm->m_textureEffectConstantBuffer.Get(), 0, nullptr, m_CBuffer, 0, 0); //WHYYYYYYY
+
+    D3D11Core::Get().DeviceContext()->UpdateSubresource(m_camera->m_viewConstantBuffer.Get(), 0, nullptr, m_camera->GetCameraMatrixes(), 0, 0);
+
 }
 
