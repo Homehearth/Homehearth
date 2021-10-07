@@ -25,7 +25,6 @@ private:
 	sm::Vector3 m_defaultRight;
 	sm::Vector3 m_move;
 
-	comp::Transform* m_targetTransform;
 	comp::Velocity* m_targetVelocity;
 
 	sm::Matrix  m_view;
@@ -52,7 +51,6 @@ public:
 	/* Position, Target, up, windowSize = (window width, window height) */
 	void Initialize(sm::Vector3 pos, sm::Vector3 target, sm::Vector3 up, sm::Vector2 windowSize, CAMERATYPE type) ;
 	void Update(float deltaTime);
-	void SetFollowTarget(comp::Transform* target);
 	void SetFollowVelocity(comp::Velocity* target);
 
 	//Get Functions

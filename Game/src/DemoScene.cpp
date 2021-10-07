@@ -19,8 +19,6 @@ void InitializePlayerEntity(Scene& scene)
 
 	//InputSystem::Get().SetCamera(scene.m_currentCamera.get());
 
-
-	scene.m_gameCamera.SetFollowTarget(&transform);
 	scene.m_gameCamera.SetFollowVelocity(&velocity);
 }
 

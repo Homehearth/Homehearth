@@ -16,9 +16,7 @@ Camera::Camera()
     m_windowWidth = 0;
     m_rotationSpeed = 5.0f;
     m_movingSepeed = 15.0f;
-    //m_targetVelocity->vel.x = 0.0f;
-    //m_targetVelocity->vel.y = 0.0f;
-    //m_targetVelocity->vel.z = 0.0f;
+    m_targetVelocity = NULL;
     m_type = CAMERATYPE::DEFAULT;
 }
 
@@ -160,13 +158,6 @@ void Camera::Update(float deltaTime)
     m_cameraMat.target = { m_target.x, m_target.y, m_target.z, 0 };
     m_cameraMat.projection = m_projection;
     m_cameraMat.view = m_view;
-}
-
-void Camera::SetFollowTarget(comp::Transform* target)
-{
-    m_targetTransform = target;
-
-    //Is functions if lerp ect wants to be added for gamefeel
 }
 
 void Camera::SetFollowVelocity(comp::Velocity* target)
