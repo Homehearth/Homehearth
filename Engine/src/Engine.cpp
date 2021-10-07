@@ -85,7 +85,6 @@ void Engine::Startup()
 
 void Engine::Run()
 {
-	
 	if (thread::IsThreadActive())
 		T_CJOB(Engine, RenderThread);
 
@@ -201,15 +200,15 @@ void Engine::drawImGUI() const
 	ImGui::Begin("Components");
 	if (ImGui::CollapsingHeader("Transform"))
 	{
-		GetCurrentScene()->GetRegistry().view<comp::Transform>().each([&](entt::entity e, comp::Transform& transform)
+		GetCurrentScene()->ForEachComponent<comp::Transform>([&](Entity& e, comp::Transform& transform)
 			{
 				ImGui::Separator();
-				ImGui::Text("Entity: %d", static_cast<int>(e));
-				ImGui::DragFloat3(("Position##" + std::to_string(static_cast<int>(e))).c_str(), (float*)&transform.position);
-				ImGui::DragFloat3(("Rotation##" + std::to_string(static_cast<int>(e))).c_str(), (float*)&transform.rotation, dx::XMConvertToRadians(1.f));
-				if(ImGui::Button(("Remove##" + std::to_string(static_cast<int>(e))).c_str()))
+				ImGui::Text("Entity: %d", static_cast<int>((entt::entity)e));
+				ImGui::DragFloat3(("Position##" + std::to_string(static_cast<int>((entt::entity)e))).c_str(), (float*)&transform.position);
+				ImGui::DragFloat3(("Rotation##" + std::to_string(static_cast<int>((entt::entity)e))).c_str(), (float*)&transform.rotation, dx::XMConvertToRadians(1.f));
+				if(ImGui::Button(("Remove##" + std::to_string(static_cast<int>((entt::entity)e))).c_str()))
 				{
-					GetCurrentScene()->GetRegistry().destroy(e);
+					e.Destroy();
 				}
 				ImGui::Spacing();
 			});
@@ -275,7 +274,7 @@ void Engine::Update(float dt)
 			Shutdown();
 		}
 	}
-
+	// todo temp
 	if (InputSystem::Get().CheckMouseKey(MouseKey::RIGHT, KeyState::PRESSED))
 	{
 		InputSystem::Get().SwitchMouseMode();
@@ -294,9 +293,6 @@ void Engine::Update(float dt)
 	}
 
 	HeadlessEngine::Update(dt);
-
-	// Updates game logic
-	this->OnUserUpdate(dt);
 
 	{
 		PROFILE_SCOPE("Ending ImGui");

@@ -15,10 +15,10 @@ namespace network
 	class client_interface
 	{
 	private:
+		SOCKET m_socket;
 		HANDLE m_CompletionPort;
 		struct sockaddr_in m_endpoint;
 		socklen_t m_endpointLen;
-		SOCKET m_socket;
 		uint64_t m_handshakeIn;
 		uint64_t m_handshakeOut;
 		message<T> tempMsgIn;
@@ -26,15 +26,16 @@ namespace network
 
 	protected:
 		CRITICAL_SECTION lock;
+		std::function<void(message<T>&)> messageReceivedHandler;
 
 	public:
-		tsQueue<message<T>> m_messagesIn;
+		tsQueue<message<T>> m_qMessagesIn;
 
 	private:
 		// Initialize winsock
 		void InitWinsock();
 		std::string PrintSocketData(struct addrinfo* p);
-		SOCKET CreateSocket(std::string& ip, uint16_t& port);
+		SOCKET CreateSocket(const char* ip, uint16_t& port);
 		DWORD WINAPI ProcessIO();
 
 		/*
@@ -67,7 +68,8 @@ namespace network
 	public:
 
 	public:
-		client_interface()
+		client_interface(std::function<void(message<GameMsg>&)> handler)
+			:messageReceivedHandler(handler)
 		{
 			m_socket = INVALID_SOCKET;
 			m_endpointLen = sizeof(m_endpoint);
@@ -78,6 +80,8 @@ namespace network
 			InitWinsock();
 			this->m_workerThread = nullptr;
 		}
+
+		client_interface() = default;
 
 		client_interface<T>& operator=(const client_interface<T>& other) = delete;
 		client_interface(const client_interface<T>& other) = delete;
@@ -93,7 +97,7 @@ namespace network
 		}
 	public:
 		// Given IP and port establish a connection to the server
-		bool Connect(std::string&& ip, uint16_t&& port);
+		bool Connect(const char* ip, uint16_t& port);
 		// Disconnect from the server (THREAD SAFE)
 		void Disconnect();
 		// Check to see if client is connected to a server (THREAD SAFE)
@@ -217,8 +221,7 @@ namespace network
 		}
 		else
 		{
-			this->m_messagesIn.push_back(tempMsgIn);
-			this->OnMessageReceived(tempMsgIn);
+			this->m_qMessagesIn.push_back(tempMsgIn);
 			this->PrimeReadHeader();
 		}
 	}
@@ -254,14 +257,13 @@ namespace network
 	template <typename T>
 	void client_interface<T>::ReadPayload(PER_IO_DATA*& context)
 	{
-		this->m_messagesIn.push_back(tempMsgIn);
-		this->OnMessageReceived(tempMsgIn);
+		this->m_qMessagesIn.push_back(tempMsgIn);
 		tempMsgIn.payload.clear();
 		this->PrimeReadHeader();
 	}
 
 	template <typename T>
-	SOCKET client_interface<T>::CreateSocket(std::string& ip, uint16_t& port)
+	SOCKET client_interface<T>::CreateSocket(const char* ip, uint16_t& port)
 	{
 		SOCKET sock = INVALID_SOCKET;
 		// Get a linked network structure based on provided hints
@@ -271,7 +273,7 @@ namespace network
 		hints.ai_family = AF_INET;
 		hints.ai_socktype = SOCK_STREAM;
 
-		int8_t rv = getaddrinfo(ip.c_str(), std::to_string(port).c_str(), &hints, &servinfo);
+		int8_t rv = getaddrinfo(ip, std::to_string(port).c_str(), &hints, &servinfo);
 
 		if (rv != 0)
 		{
@@ -347,8 +349,6 @@ namespace network
 				// I/O has completed, process it
 				if (HasOverlappedIoCompleted(Entries[i].lpOverlapped))
 				{
-					context = (PER_IO_DATA*)Entries[i].lpOverlapped;
-
 					switch (context->state)
 					{
 					case NetState::READ_VALIDATION:
@@ -469,7 +469,7 @@ namespace network
 	}
 
 	template<typename T>
-	inline bool client_interface<T>::Connect(std::string&& ip, uint16_t&& port)
+	inline bool client_interface<T>::Connect(const char* ip, uint16_t& port)
 	{
 		if (IsConnected())
 		{

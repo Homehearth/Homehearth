@@ -12,7 +12,7 @@ private:
 	
 	std::atomic<bool> m_IsImguiReady;
 
-	inline static Window m_window;
+	Window m_window;
 	Renderer m_renderer;
 	std::unique_ptr<DirectX::AudioEngine> m_audio_engine;
 	
@@ -20,7 +20,10 @@ private:
 		float update;
 		float render;
 	} m_frameTime;
-	
+
+	// Startup the Engine and its instances in a specific order.
+	void Startup() override;
+
 	// Job for rendering thread.
 	void RenderThread();
 
@@ -37,10 +40,6 @@ private:
 	// IMGUI
 	void drawImGUI() const;
 
-protected:
-	// Startup the Engine and its instances in a specific order.
-	void Startup() override;
-
 public:
 	Engine();
 	Engine(const Engine& other) = delete;
@@ -48,9 +47,6 @@ public:
 	Engine& operator=(const Engine& other) = delete;
 	Engine& operator=(Engine&& other) = delete;
 	virtual ~Engine() = default;
+	Window* GetWindow();
 
-	virtual bool OnStartup() = 0;
-	virtual bool OnUserUpdate(float deltaTime) = 0;
-
-	static Window* GetWindow();
 };

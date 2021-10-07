@@ -1,14 +1,25 @@
 #pragma once
-#include <EnginePCH.h>
+#include "EnginePCH.h"
 #include "GameSystems.h"
-#include "Client.h"
+#include "Engine.h"
 
-void InitializePlayerEntity(Scene& scene);
+class DemoScene : public SceneBuilder<DemoScene>
+{
+private:
+	Engine* m_engine;
 
-void setupDemoScene(Scene& scene, Client& client);
+	Entity m_player;
 
-//Camera
-void SetUpCamera(Scene& scene);
-void CameraUpdate(Scene& scene, float deltaTime);
+	Camera m_gameCamera;
+	Camera m_debugCamera;
+	sm::Vector3 m_oldGameCameraPosition;
+	sm::Vector3 m_oldDebugCameraPosition;
+public:
+	DemoScene(Engine& engine, Client& client);
 
+	Entity CreatePlayerEntity();
 
+	//Camera
+	void SetUpCamera();
+	void CameraUpdate(float deltaTime);
+};

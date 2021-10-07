@@ -6,8 +6,9 @@ Scene::Scene()
 	m_publicBuffer.Create(D3D11Core::Get().Device());
 }
 
-entt::registry& Scene::GetRegistry() {
-	return m_registry;
+Entity Scene::CreateEntity()
+{
+	return Entity(m_registry);
 }
 
 void Scene::Update(float dt)
@@ -16,20 +17,17 @@ void Scene::Update(float dt)
 
 	// Emit event
 	publish<ESceneUpdate>(dt);
-	
+	if (!m_renderableCopies.IsSwapped())
 	{
 		PROFILE_SCOPE("Copy Transforms");
 		m_renderableCopies[0].clear();
-		m_registry.group<comp::Renderable, comp::Transform>().each([&](entt::entity e, comp::Renderable& r, comp::Transform& t)
+		m_registry.group<comp::Renderable, comp::Transform>().each([&](comp::Renderable& r, comp::Transform& t)
 		{
 			r.data.worldMatrix = ecs::GetMatrix(t);
 			m_renderableCopies[0].push_back(r);
 		});
-
-		if (!m_renderableCopies.IsSwapped())
-		{
-			m_renderableCopies.Swap();
-		}
+		
+		m_renderableCopies.Swap();
 	}
 }
 
