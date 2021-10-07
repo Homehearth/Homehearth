@@ -37,6 +37,14 @@ void HeadlessEngine::SetScene(Scene& scene)
 		});
 }
 
+void HeadlessEngine::Start()
+{
+	this->Startup();
+	m_isEngineRunning = true;
+	this->Run();
+	this->OnShutdown();
+}
+
 void HeadlessEngine::Startup()
 {
 	// Sets up the game specific information
@@ -45,20 +53,21 @@ void HeadlessEngine::Startup()
 		LOG_ERROR("Failed to start game!");
 		exit(0);
 	}
-	m_isEngineRunning = true;
-	this->Run();
 }
 
 HeadlessEngine::HeadlessEngine()
 	: m_scenes({ 0 })
 	, m_currentScene(nullptr)
 {
-
 }
+
 
 void HeadlessEngine::Update(float dt)
 {
 	PROFILE_FUNCTION();
+
+	this->OnUserUpdate(dt);
+
 	// Update elements in the scene.
 	if (m_currentScene)
 	{

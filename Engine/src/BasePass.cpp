@@ -70,7 +70,17 @@ void BasePass::PostRender()
     D3D11Core::Get().DeviceContext()->UpdateSubresource(m_camera->m_viewConstantBuffer.Get(), 0, nullptr, m_camera->GetCameraMatrixes(), 0, 0);
 }
 
-void BasePass::GetCamera(Camera* camera)
+void BasePass::SetCamera(Camera* camera)
 {
     m_camera = camera;
+}
+
+bool BasePass::HasCamera()
+{
+    if (m_camera == nullptr)
+    {
+        return false;
+    }
+    else 
+        return true;
 }

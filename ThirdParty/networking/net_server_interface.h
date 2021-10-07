@@ -13,11 +13,11 @@ namespace network
 		// Information regarding every connection
 		struct SOCKET_INFORMATION
 		{
-			uint64_t handshakeIn;
-			uint64_t handshakeOut;
-			uint64_t handshakeResult;
-			SOCKET Socket;
-			owned_message<T> msgTempIn = {};
+			uint64_t handshakeIn = 0;
+			uint64_t handshakeOut = 0;
+			uint64_t handshakeResult = 0;
+			SOCKET Socket = {};
+			message<T> msgTempIn = {};
 		};
 
 		SOCKET m_listening;
@@ -26,11 +26,12 @@ namespace network
 		std::thread* workerThreads;
 		std::thread acceptThread;
 		int nrOfThreads;
-		std::unordered_map<SOCKET, SOCKET_INFORMATION*> connections;
 
 	protected:
+		std::unordered_map<uint32_t, SOCKET> connections;
+		std::function<void(message<T>&)> messageReceivedHandler;
 		CRITICAL_SECTION lock;
-		tsQueue<owned_message<T>> m_qMessagesIn;
+		tsQueue<message<T>> m_qMessagesIn;
 
 	protected:
 		// Called once when a client connects
@@ -38,7 +39,7 @@ namespace network
 		// Called once when a client connects
 		virtual void OnClientDisconnect() = 0;
 		// Called once when a message is received
-		virtual void OnMessageReceived(const SOCKET& socket, message<T>& msg) = 0;
+		virtual void OnMessageReceived(message<T>& msg) = 0;
 		// Client has solved the puzzle from the server and is now validated
 		virtual void OnClientValidated(const SOCKET& socket) = 0;
 
@@ -69,7 +70,9 @@ namespace network
 
 	public:
 		// Constructor and Deconstructor
-		server_interface()
+		server_interface() = default;
+		server_interface(std::function<void(message<T>&)> handler)
+			:messageReceivedHandler(handler)
 		{
 			m_listening = INVALID_SOCKET;
 			m_isRunning = false;
@@ -128,8 +131,7 @@ namespace network
 	{
 		PER_IO_DATA* context = new PER_IO_DATA;
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
-		SI->msgTempIn.remote = SI->Socket;
-		context->DataBuf.buf = (CHAR*)&SI->msgTempIn.msg.header;
+		context->DataBuf.buf = (CHAR*)&SI->msgTempIn.header;
 		context->DataBuf.len = sizeof(msg_header<T>);
 		context->state = NetState::READ_HEADER;
 		DWORD BytesReceived = 0;
@@ -140,7 +142,7 @@ namespace network
 			if (GetLastError() != WSA_IO_PENDING)
 			{
 				delete context;
-				LOG_ERROR("Error sending puzzle with error: %ld", GetLastError());
+				LOG_ERROR("WSARecv header with error: %ld", GetLastError());
 			}
 		}
 	}
@@ -150,10 +152,9 @@ namespace network
 	{
 		PER_IO_DATA* context = new PER_IO_DATA;
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
-		SI->msgTempIn.remote = SI->Socket;
-		size_t size = SI->msgTempIn.msg.header.size - sizeof(msg_header<T>);
-		SI->msgTempIn.msg.payload.resize(size);
-		context->DataBuf.buf = (CHAR*)SI->msgTempIn.msg.payload.data();
+		size_t size = SI->msgTempIn.header.size - sizeof(msg_header<T>);
+		SI->msgTempIn.payload.resize(size);
+		context->DataBuf.buf = (CHAR*)SI->msgTempIn.payload.data();
 		context->DataBuf.len = (ULONG)size;
 		context->state = NetState::READ_PAYLOAD;
 		DWORD BytesReceived = 0;
@@ -164,7 +165,7 @@ namespace network
 			if (GetLastError() != WSA_IO_PENDING)
 			{
 				delete context;
-				LOG_ERROR("Error sending puzzle with error: %ld", GetLastError());
+				LOG_ERROR("WSARecv payload with error: %ld", GetLastError());
 			}
 		}
 	}
@@ -173,21 +174,21 @@ namespace network
 	void server_interface<T>::ReadPayload(SOCKET_INFORMATION*& SI, PER_IO_DATA* context)
 	{
 		this->m_qMessagesIn.push_back(SI->msgTempIn);
-		SI->msgTempIn.msg.payload.clear();
+		SI->msgTempIn.payload.clear();
 		this->PrimeReadHeader(SI);
 	}
 
 	template <typename T>
 	void server_interface<T>::ReadHeader(SOCKET_INFORMATION*& SI, PER_IO_DATA* context)
 	{
-		if (SI->msgTempIn.msg.header.size > 0)
+		if (SI->msgTempIn.header.size > 0)
 		{
 			this->PrimeReadPayload(SI);
 		}
 		else
 		{
 			this->m_qMessagesIn.push_back(SI->msgTempIn);
-			ZeroMemory(&SI->msgTempIn.msg.header, sizeof(msg_header<T>));
+			ZeroMemory(&SI->msgTempIn.header, sizeof(msg_header<T>));
 			this->PrimeReadHeader(SI);
 		}
 	}
@@ -214,7 +215,7 @@ namespace network
 			if (GetLastError() != WSA_IO_PENDING)
 			{
 				delete context;
-				LOG_ERROR("Error sending puzzle with error: %ld", GetLastError());
+				LOG_ERROR("WSASend message with error: %ld", GetLastError());
 			}
 		}
 	}
@@ -326,7 +327,6 @@ namespace network
 		if (SI != NULL)
 		{
 			closesocket(SI->Socket);
-			connections.erase(SI->Socket);
 			delete SI;
 			SI = nullptr;
 			this->OnClientDisconnect();
@@ -348,7 +348,6 @@ namespace network
 		SI->handshakeIn = 0;
 		SI->handshakeOut = uint64_t(std::chrono::system_clock::now().time_since_epoch().count());
 		SI->handshakeResult = scrambleData(SI->handshakeOut);
-		connections[SI->Socket] = SI;
 
 		if (CreateIoCompletionPort((HANDLE)SI->Socket, m_CompletionPort, (ULONG_PTR)SI, 0) == NULL)
 		{
@@ -612,7 +611,7 @@ namespace network
 
 			for (auto con : connections)
 			{
-				if (CancelIoEx((HANDLE)con.second->Socket, NULL))
+				if (CancelIoEx((HANDLE)con.second, NULL))
 				{
 					LOG_INFO("Cancelled all IO");
 				}
