@@ -1,25 +1,31 @@
 #include "EnginePCH.h"
 #include "Client.h"
 
-Client::Client()
-{
-}
-
 void Client::OnDisconnect()
 {
 	LOG_INFO("Disconnected from the server!");
+}
+
+Client::Client(std::function<void(message<GameMsg>&)> handler)
+	:client_interface<GameMsg>(handler)
+{
 }
 
 Client::~Client()
 {
 }
 
-void Client::PingServer()
+void Client::Update(size_t nMaxMessage)
 {
-	message<GameMsg> msg = {};
-	msg.header.id = GameMsg::Server_GetPing;
-	this->timeThen = std::chrono::system_clock::now();
-	Send(msg);
+	size_t nMessageCount = 0;
+	while (nMessageCount < nMaxMessage && !m_qMessagesIn.empty())
+	{
+		auto msg = m_qMessagesIn.pop_front();
+
+		this->OnMessageReceived(msg);
+
+		nMessageCount++;
+	}
 }
 
 void Client::OnValidation()
@@ -31,25 +37,9 @@ void Client::OnValidation()
 
 void Client::OnMessageReceived(message<GameMsg>& msg)
 {
-	switch (msg.header.id)
-	{
-	case GameMsg::Client_Accepted:
-	{
-		EnterCriticalSection(&lock);
-		LOG_INFO("You are validated!");
-		LeaveCriticalSection(&lock);
-		break;
-	}
-	case GameMsg::Server_GetPing:
-	{
-		std::chrono::system_clock::time_point timeNow = std::chrono::system_clock::now();
-
-		EnterCriticalSection(&lock);
-		LOG_INFO("Ping: %fs", std::chrono::duration<double>(timeNow - this->timeThen).count());
-		LeaveCriticalSection(&lock);
-		break;
-	}
-	}
+	EnterCriticalSection(&lock);
+	this->messageReceivedHandler(msg);
+	LeaveCriticalSection(&lock);
 }
 
 void Client::OnConnect()

@@ -269,6 +269,10 @@ bool RMesh::Create(const std::string& filename)
             ResourceManager::Get().AddResource(matName.C_Str(), material);
             m_materials.push_back(material);
         }
+        else
+        {
+            LOG_ERROR("Failed to create material!");
+        }
 
         /*
             Load in vertex- and index-data and combines all the meshes in a set to one

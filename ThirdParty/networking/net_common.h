@@ -76,10 +76,12 @@ namespace network
 
 		return output;
 	}
-
+	
 	enum class GameMsg : uint32_t
 	{
 		Client_Accepted,
+		Client_CreateLobby,
+		Client_JoinLobby,
 		Server_AssignID,
 		Server_GetPing,
 		Game_AddPlayer,
