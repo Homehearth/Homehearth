@@ -397,13 +397,13 @@ bool PipelineManager::CreateDefaultConstantBuffer()
 bool PipelineManager::CreateTextureEffectConstantBuffer()
 {
     D3D11_BUFFER_DESC bDesc = {};
-    bDesc.ByteWidth = sizeof(delta_time_t);
+    bDesc.ByteWidth = sizeof(texture_effect_t);
     bDesc.Usage = D3D11_USAGE_DEFAULT;
     bDesc.CPUAccessFlags = 0;
     bDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
     bDesc.MiscFlags = 0;
 
-    delta_time_t b;
+    texture_effect_t b;
     b.deltaTime = 0;
 
     D3D11_SUBRESOURCE_DATA data = {};
