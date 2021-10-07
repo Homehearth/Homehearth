@@ -1,6 +1,12 @@
-newmtl StingrayPBS1SG
+newmtl ChestMaterial
 illum 4
 Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
 Tf 1.00 1.00 1.00
 Ni 0.00
+
+map_Kd Chest_Albedo.png
+map_Kn Chest_Normal.png
+map_ns Chest_Metalness.png
+map_Ks Chest_Roughness.png
+map_Ka Chest_AO.png

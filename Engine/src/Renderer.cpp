@@ -3,7 +3,7 @@
 
 
 Renderer::Renderer()
-	: m_d3d11(nullptr)
+	: m_d3d11(nullptr), m_camera(nullptr)
 {
 }
 
@@ -25,7 +25,7 @@ void Renderer::Initialize(Window* pWindow, Camera* camera)
 void Renderer::ClearFrame()
 {
     // Clear the back buffer.
-    const float m_clearColor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+    const float m_clearColor[4] = { 0.5f, 0.5f, 0.5f, 1.0f };
     m_d3d11->DeviceContext()->ClearRenderTargetView(m_pipelineManager.m_renderTargetView.Get(), m_clearColor);
     m_d3d11->DeviceContext()->ClearDepthStencilView(m_pipelineManager.m_depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);  
 }

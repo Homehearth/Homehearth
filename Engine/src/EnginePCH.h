@@ -1,8 +1,10 @@
 #pragma once
-#pragma warning(push, 3)
 
 #define RENDER_IMGUI 1
 #define PROFILER 1
+
+// Turn this to 1 if you want to see the very beautiful demo menu
+#define DRAW_TEMP_2D 0
 
 //Macros
 #if RENDER_IMGUI
@@ -16,6 +18,7 @@
 #ifdef WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
+#include <wincodec.h>
 #include <winsock2.h>
 #include <WS2tcpip.h>
 #pragma comment(lib, "WS2_32.Lib")
@@ -87,7 +90,6 @@ namespace sm = dx::SimpleMath;
 #include <imstb_truetype.h>
 #include <imgui_impl_dx11.h>
 #include <imgui_impl_win32.h>
-#pragma warning(pop)
 
 //Utility
 #include "Timer.h"
@@ -101,13 +103,22 @@ namespace sm = dx::SimpleMath;
 #include "D2D1Core.h"
 #include "Profiler.h"
 #include "ThreadSyncer.h"
+#include "Handler2D.h"
+#include "BackBuffer.h"
 
 // Network
 //#include "network.h"
 
 // Assimp
-#pragma warning(push, 0)
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
-#pragma warning(pop)
+
+EXTERN_C IMAGE_DOS_HEADER __ImageBase;
+#define HINST_THISCOMPONENT ((HINSTANCE)&__ImageBase)
+
+// Paths
+const std::string MODELPATH		= "../Assets/Models/";		//"../../../../../Assets/Models/"
+const std::string MATERIALPATH	= "../Assets/Materials/";
+const std::string TEXTUREPATH	= "../Assets/Textures/";
+const std::string ANIMATIONPATH = "../Assets/Animations/";

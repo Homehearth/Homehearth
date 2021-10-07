@@ -48,3 +48,14 @@ struct camera_Matrix_t
 	sm::Matrix projection;
 	sm::Matrix view;
 };
+
+ALIGN16
+struct light_t
+{
+	sm::Vector4 position;
+	sm::Vector4 direction;
+	sm::Vector4 color;
+	float		range;
+	UINT		type;	 // 0 = Directional, 1 = Point
+	UINT		enabled; // 0 = Off, 1 = On
+};

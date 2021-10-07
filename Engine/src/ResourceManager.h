@@ -16,7 +16,8 @@
 	* do something with it: material.Create() or material.Whatever()
 	* ResourceManager::Get().AddResource("testMat", material);
 	 
-	get - resource will be returned and created if not found
+	get - resource will be returned if found. If not it will try to create it
+		  if create is succesfull, return resource, otherwise return no resource
 	* std::shared_ptr<RMesh> mesh = ResourceManager::Get().GetResource<RMesh>("Cube.fbx");
 	
 	free - remove any resources that is not in use
@@ -60,6 +61,7 @@ public:
 		Creates a resource if it does not exist.
 		Uses the GResource::Create()-function 
 		Uses the appropiate T class when retrieving a resource.
+		Returns a shared_ptr that is nullptr if it failed to create
 	*/
 	template <class T>
 	std::shared_ptr<T> GetResource(const std::string& key);
@@ -107,15 +109,15 @@ inline std::shared_ptr<T> ResourceManager::GetResource(const std::string& key)
 #ifdef _DEBUG
 			LOG_INFO("RM added '%s' and created", key.c_str());
 #endif
+			m_resources.emplace(key, resource);
+			return std::dynamic_pointer_cast<T>(resource);
 		}
 		else
 		{
 #ifdef _DEBUG
-			LOG_INFO("RM added '%s'", key.c_str());
+			LOG_WARNING("RM failed to create '%s'", key.c_str());
 #endif
+			return std::shared_ptr<T>(nullptr);
 		}
-
-		m_resources.emplace(key, resource);
-		return std::dynamic_pointer_cast<T>(resource);
 	}
 }

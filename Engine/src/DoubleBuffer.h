@@ -11,6 +11,8 @@ public:
 
 	T& operator[](short i);
 
+	T& GetBuffer(short i);
+
 	void Swap();
 
 	void ReadyForSwap();
@@ -28,6 +30,12 @@ template<typename T>
 inline T& DoubleBuffer<T>::operator[](short i)
 {
 	return m_data[i];	
+}
+
+template<typename T>
+inline T& DoubleBuffer<T>::GetBuffer(short i)
+{
+	return &m_data[i];
 }
 
 template<typename T>
