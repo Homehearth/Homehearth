@@ -87,7 +87,6 @@ void HeadlessEngine::Run()
 	while (IsRunning())
 	{
 		PROFILE_SCOPE("Update Frame");
-
 		// Update time.
 		currentFrame = omp_get_wtime();
 		deltaTime = static_cast<float>(currentFrame - lastFrame);

@@ -15,7 +15,7 @@ DemoScene::DemoScene(HeadlessEngine& engine, Client& client)
 			Systems::MovementSystem(scene, e.dt);
 			//System responding to user input
 			//GameSystems::UserInputSystem(scene, client);
-			
+			GameSystems::MRayIntersectBoxSystem(scene);
 			m_player.GetComponent<comp::Velocity>()->vel.z = InputSystem::Get().GetAxis(Axis::VERTICAL) * m_player.GetComponent<comp::Player>()->runSpeed;
 			m_player.GetComponent<comp::Velocity>()->vel.x = InputSystem::Get().GetAxis(Axis::HORIZONTAL) * m_player.GetComponent<comp::Player>()->runSpeed;
 

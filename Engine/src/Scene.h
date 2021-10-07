@@ -39,8 +39,9 @@ public:
 	// Emit render event and render Renderable components
 	void Render();
 
-	bool IsRenderReady() const;
+	const bool IsRenderReady() const;
 
+	DoubleBuffer<std::vector<comp::Renderable>>* GetBuffers();
 };
 
 
