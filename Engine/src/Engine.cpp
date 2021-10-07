@@ -348,7 +348,3 @@ void Engine::Render(float& dt)
 	}
 }
 
-float Engine::GetDeltaTime()
-{
-	return m_deltaTime;
-}
