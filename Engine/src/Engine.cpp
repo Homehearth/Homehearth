@@ -223,6 +223,8 @@ void Engine::drawImGUI() const
 		ImGui::DragFloat("Zoom: ", &GetCurrentScene()->m_currentCamera->m_zoomValue, 0.01f, 0.0001f, 1.0f);
 		ImGui::DragFloat("Near Plane : ", &GetCurrentScene()->m_currentCamera->m_nearPlane, 0.1f , 0.0001f, GetCurrentScene()->m_currentCamera->m_farPlane-1);
 		ImGui::DragFloat("Far Plane: ", &GetCurrentScene()->m_currentCamera->m_farPlane, 0.1f, GetCurrentScene()->m_currentCamera->m_nearPlane+1);
+		ImGui::DragFloat3("Position: ", (float*)&GetCurrentScene()->m_currentCamera->m_position, 0.1f);
+		ImGui::DragFloat3("Rotation: ", (float*)&GetCurrentScene()->m_currentCamera->m_rollPitchYaw, 0.1f, 0.0f);
 		ImGui::Spacing();
 
 	};

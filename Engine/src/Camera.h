@@ -15,10 +15,8 @@ private:
 	sm::Vector2 m_currentMousePosition;
 	sm::Vector2 m_lastMousePosition;
 
-	sm::Vector3 m_position;
 	sm::Vector3 m_up;
 	sm::Vector3 m_target;
-	sm::Vector3 m_rollPitchYaw;
 	sm::Vector3 m_forward;
 	sm::Vector3 m_right;
 	sm::Vector3 m_defaultForward;
@@ -70,12 +68,15 @@ public:
 	void SetFarPlane(float farPlane);
 	/*Val can only be between 0 and 1, 1 is normal*/
 	void SetZoom(float val);
+	void SetRollPitchYaw(sm::Vector3 rotation);
 
 	//Public variables and stuff for IMGU
 	ComPtr<ID3D11Buffer> m_viewConstantBuffer;
+
 	float m_FOV;
 	float m_zoomValue;
 	float m_nearPlane;
 	float m_farPlane;
-
+	sm::Vector3 m_rollPitchYaw;
+	sm::Vector3 m_position;
 };

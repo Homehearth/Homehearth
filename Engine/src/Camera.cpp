@@ -70,6 +70,10 @@ void Camera::Initialize(sm::Vector3 pos, sm::Vector3 target, sm::Vector3 up, sm:
 
 void Camera::Update(float deltaTime)
 { 
+    //dx::XMConvertToRadians(m_rollPitchYaw.x);
+    //dx::XMConvertToRadians(m_rollPitchYaw.y);
+    //dx::XMConvertToRadians(m_rollPitchYaw.z);
+
     if (m_type == CAMERATYPE::DEBUG && InputSystem::Get().IsMouseRelative()) //Can't move the camera when in absolut mode
     {
         //Mouse
@@ -118,6 +122,9 @@ void Camera::Update(float deltaTime)
     }
     else if (m_type == CAMERATYPE::PLAY)
     {
+        quaterion = sm::Quaternion::CreateFromYawPitchRoll(m_rollPitchYaw.z, m_rollPitchYaw.y, m_rollPitchYaw.x);
+        m_rotationMatrix = dx::XMMatrixRotationRollPitchYaw(m_rollPitchYaw.y, m_rollPitchYaw.z, m_rollPitchYaw.x);
+
         m_position.x += m_targetVelocity->vel.x * deltaTime;
         m_position.z += m_targetVelocity->vel.z * deltaTime;
 
@@ -226,6 +233,11 @@ void Camera::SetZoom(float val)
 {
     m_zoomValue = val;
     UpdateProjection();
+}
+
+void Camera::SetRollPitchYaw(sm::Vector3 rotation)
+{
+    m_rollPitchYaw = rotation;
 }
 
 void Camera::UpdateProjection()
