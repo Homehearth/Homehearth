@@ -34,8 +34,8 @@ bool Simulation::AddPlayer(uint32_t playerID)
 	{
 		msg1 << con.first;
 	}
-	msg << static_cast<uint32_t>(m_connections.size());
-	m_server->SendToClient(m_server->GetConnection(playerID), msg);
+	msg1 << static_cast<uint32_t>(m_connections.size());
+	m_server->SendToClient(m_server->GetConnection(playerID), msg1);
 
 	m_connections[playerID] = m_server->GetConnection(playerID);
 
