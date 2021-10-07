@@ -56,7 +56,7 @@ void thread::RenderThreadHandler::Finish()
 		// Block until all threads have stopped working.
 		for (int i = 0; i < INSTANCE.m_amount; i++)
 		{
-			if (INSTANCE.GetStatus(i) != thread::thread_running)
+			if (INSTANCE.m_statuses[i] != thread::thread_running)
 			{
 				i = 0;
 			}
@@ -244,6 +244,7 @@ void RenderJob(const unsigned int start,
 		}
 
 		// Release Context
+
 
 	}
 
