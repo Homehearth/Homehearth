@@ -23,7 +23,7 @@ public:
 
 	void Render(Scene* pScene) override;
 
-	void PostRender() override;
+	void PostRender(ID3D11DeviceContext* dc = D3D11Core::Get().DeviceContext()) override;
 
 };
 

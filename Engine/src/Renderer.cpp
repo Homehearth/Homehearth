@@ -36,8 +36,10 @@ void Renderer::Render(Scene* pScene)
     {
         if (!m_passes.empty())
         {
-            for (const auto& pass : m_passes)
+            for (int i = 0; i < m_passes.size(); i++)
             {
+                m_currentPass = i;
+                IRenderPass* pass = m_passes[i];
                 if (pass->IsEnabled())
                 {
                     pass->PreRender(m_d3d11->DeviceContext(), &m_pipelineManager);
@@ -47,6 +49,11 @@ void Renderer::Render(Scene* pScene)
             }
         }
     }
+}
+
+IRenderPass* Renderer::GetCurrentPass() const
+{
+    return m_passes[m_currentPass];
 }
 
 void Renderer::AddPass(IRenderPass* pass)

@@ -1,5 +1,6 @@
 #pragma once
 #include <thread>
+#include "Renderer.h"
 
 namespace thread
 {
@@ -11,6 +12,8 @@ namespace thread
 	private:
 
 		std::thread* m_workerThreads;
+		Renderer* m_renderer;
+		Window* m_window;
 		unsigned int* m_statuses;
 		bool m_isRunning;
 		bool m_isPooled = false;
@@ -22,7 +25,7 @@ namespace thread
 		/*
 			Vector in charge of distributing jobs to threads.
 		*/
-		std::vector<std::function<void(void*, void*)>> m_jobs;
+		std::vector<std::function<void(void*, void*, void*)>> m_jobs;
 
 
 		/*
@@ -32,7 +35,7 @@ namespace thread
 
 		static const int GetStatus(const unsigned int& id);
 
-		static void InsertRenderJob(std::function<void(void*, void*)> job);
+		static void InsertRenderJob(std::function<void(void*, void*, void*)> job);
 
 	public:
 
@@ -66,7 +69,7 @@ namespace thread
 		/*
 			Get a job from the queue.
 		*/
-		static std::function<void(void*, void*)> GetJob();
+		static std::function<void(void*, void*, void*)> GetJob();
 
 		/*
 			Pop the recent job from queue.
@@ -77,5 +80,17 @@ namespace thread
 			Get the amount of jobs from the queue.
 		*/
 		static const unsigned int GetAmountOfJobs();
+
+		/*
+			Set the reference to renderer object.
+		*/
+		static void SetRenderer(Renderer* rend);
+		static Renderer* GetRenderer();
+
+		/*
+			Set the reference to window object.
+		*/
+		static void SetWindow(Window* wind);
+		static Window* GetWindow();
 	};
 }

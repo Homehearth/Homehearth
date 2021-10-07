@@ -64,10 +64,10 @@ void BasePass::Render(Scene* pScene)
     pScene->Render();
 }
 
-void BasePass::PostRender()
+void BasePass::PostRender(ID3D11DeviceContext* dc)
 {
 	// return rendertarget for next pass?
-    D3D11Core::Get().DeviceContext()->UpdateSubresource(m_camera->m_viewConstantBuffer.Get(), 0, nullptr, m_camera->GetCameraMatrixes(), 0, 0);
+    dc->UpdateSubresource(m_camera->m_viewConstantBuffer.Get(), 0, nullptr, m_camera->GetCameraMatrixes(), 0, 0);
 }
 
 void BasePass::GetCamera(Camera* camera)

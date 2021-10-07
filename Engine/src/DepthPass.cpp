@@ -61,7 +61,7 @@ void DepthPass::Render(Scene* pScene)
     // Render objects.
 }
 
-void DepthPass::PostRender()
+void DepthPass::PostRender(ID3D11DeviceContext* dc)
 {
     // return rendertarget for next pass?
 }

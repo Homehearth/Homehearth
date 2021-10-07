@@ -19,7 +19,7 @@ void TransparentPass::Render(Scene* pScene)
 	// Render objects.
 }
 
-void TransparentPass::PostRender()
+void TransparentPass::PostRender(ID3D11DeviceContext* dc)
 {
 	// ?
 }

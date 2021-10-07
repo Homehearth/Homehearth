@@ -13,5 +13,5 @@ public:
 	virtual void SetEnable(bool enable) = 0;
 	virtual void PreRender(ID3D11DeviceContext* dc, PipelineManager * pm) = 0;
 	virtual void Render(Scene* pScene) = 0;
-	virtual void PostRender() = 0;
+	virtual void PostRender(ID3D11DeviceContext* dc = D3D11Core::Get().DeviceContext()) = 0;
 };

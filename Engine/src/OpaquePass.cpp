@@ -19,7 +19,7 @@ void OpaquePass::Render(Scene* pScene)
 	// Render objects.
 }
 
-void OpaquePass::PostRender()
+void OpaquePass::PostRender(ID3D11DeviceContext* dc)
 {
 	// ?
 }

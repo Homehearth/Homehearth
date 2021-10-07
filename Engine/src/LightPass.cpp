@@ -25,7 +25,7 @@ void LightPass::Render(Scene* pScene)
 	// Render objects.
 }
 
-void LightPass::PostRender()
+void LightPass::PostRender(ID3D11DeviceContext* dc)
 {
 	// ?
 }

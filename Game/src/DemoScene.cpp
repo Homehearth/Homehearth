@@ -15,7 +15,7 @@ void InitializePlayerEntity(Scene& scene)
 void setupDemoScene(Scene& scene, Client& client)
 {
 	//Initialize player entity
-	for (int i = 0; i < 50; i++)
+	for (int i = 0; i < 20; i++)
 	{
 		InitializePlayerEntity(scene);
 	}

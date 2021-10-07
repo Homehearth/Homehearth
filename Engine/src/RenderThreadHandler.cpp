@@ -13,7 +13,7 @@ bool shouldRender = true;
 
 bool ShouldContinue();
 void RenderMain(const unsigned int& id);
-void RenderJob(const unsigned int start, const unsigned int stop, void* objects, void* buffer, void* context);
+void RenderJob(const unsigned int start, const unsigned int stop, void* objects, void* buffer, void* context, void* pipe);
 
 thread::RenderThreadHandler::RenderThreadHandler()
 {
@@ -69,12 +69,12 @@ const int thread::RenderThreadHandler::GetStatus(const unsigned int& id)
 	return INSTANCE.m_statuses[id];
 }
 
-void thread::RenderThreadHandler::InsertRenderJob(std::function<void(void*, void*)> job)
+void thread::RenderThreadHandler::InsertRenderJob(std::function<void(void*, void*, void*)> job)
 {
 	INSTANCE.Get().m_jobs.push_back(job);
 }
 
-std::function<void(void*, void*)> thread::RenderThreadHandler::GetJob()
+std::function<void(void*, void*, void*)> thread::RenderThreadHandler::GetJob()
 {
 	if (INSTANCE.m_jobs.size() <= 0)
 	{
@@ -120,9 +120,9 @@ const int thread::RenderThreadHandler::Launch(const int& amount_of_objects, void
 		{
 			for (int i = 0; i < iterations; i++)
 			{
-				auto f = [=](void* buffer, void* context)
+				auto f = [=](void* buffer, void* context, void* pipe)
 				{
-					RenderJob(i * objects_per_thread, (i + 1) * objects_per_thread, m_objects, buffer, context);
+					RenderJob(i * objects_per_thread, (i + 1) * objects_per_thread, m_objects, buffer, context, pipe);
 				};
 				INSTANCE.m_jobs.push_back(f);
 			}
@@ -153,6 +153,26 @@ const unsigned int thread::RenderThreadHandler::GetAmountOfJobs()
 	return (unsigned int)INSTANCE.m_jobs.size();
 }
 
+void thread::RenderThreadHandler::SetRenderer(Renderer* rend)
+{
+	INSTANCE.m_renderer = rend;
+}
+
+Renderer* thread::RenderThreadHandler::GetRenderer()
+{
+	return INSTANCE.m_renderer;
+}
+
+void thread::RenderThreadHandler::SetWindow(Window* wind)
+{
+	INSTANCE.m_window = wind;
+}
+
+Window* thread::RenderThreadHandler::GetWindow()
+{
+	return INSTANCE.m_window;
+}
+
 bool ShouldContinue()
 {
 	if (!INSTANCE.GetHandlerStatus())
@@ -167,6 +187,8 @@ bool ShouldContinue()
 void RenderMain(const unsigned int& id)
 {
 	// On start
+	PipelineManager pipeManager;
+	pipeManager.Initialize(INSTANCE.GetWindow());
 	ID3D11DeviceContext* deferred_context = nullptr;
 	dx::ConstantBuffer<basic_model_matrix_t> m_privateBuffer;
 	unsigned int t_id = id;
@@ -194,7 +216,7 @@ void RenderMain(const unsigned int& id)
 		}
 
 		// Look for job.
-		std::function<void(void*, void*)> func = thread::RenderThreadHandler::Get().GetJob();
+		std::function<void(void*, void*, void*)> func = thread::RenderThreadHandler::Get().GetJob();
 		if (func)
 		{
 			thread::RenderThreadHandler::Get().UpdateStatus(t_id, thread::thread_working);
@@ -202,7 +224,7 @@ void RenderMain(const unsigned int& id)
 			LeaveCriticalSection(&criticalSection);
 
 			// Run render.
-			func(&m_privateBuffer, deferred_context);
+			func(&m_privateBuffer, deferred_context, &pipeManager);
 			thread::RenderThreadHandler::Get().UpdateStatus(t_id, thread::thread_running);
 
 			continue;
@@ -216,20 +238,22 @@ void RenderMain(const unsigned int& id)
 }
 
 void RenderJob(const unsigned int start,
-	const unsigned int stop, void* objects, void* buffer, void* context)
+	const unsigned int stop, void* objects, void* buffer, void* context, void* pipe)
 {
 	DoubleBuffer<std::vector<comp::Renderable>>* m_objects = (DoubleBuffer<std::vector<comp::Renderable>>*)objects;
 	dx::ConstantBuffer<basic_model_matrix_t>* m_buffer = (dx::ConstantBuffer<basic_model_matrix_t>*)buffer;
 	ID3D11DeviceContext* m_context = (ID3D11DeviceContext*)context;
+	PipelineManager* m_pipeManager = (PipelineManager*)pipe;
 	if (m_objects)
 	{
-
 		// Update Context
+		//IRenderPass* pass = thread::RenderThreadHandler::Get().GetRenderer()->GetCurrentPass();
 
+		//pass->PreRender(m_context, m_pipeManager);
 
 		for (int i = start; i < stop; i++)
 		{
-			comp::Renderable* it = &(*m_objects)[1].at(i);
+			comp::Renderable* it = &(*m_objects)[1][i];
 			if (it)
 			{
 				ID3D11Buffer* buffers[1] =
@@ -237,14 +261,14 @@ void RenderJob(const unsigned int start,
 					m_buffer->GetBuffer()
 				};
 
-				m_buffer->SetData(m_context, it->data);
-				m_context->VSSetConstantBuffers(0, 1, buffers);
-				it->mesh->RenderDeferred(m_context);
+				//m_buffer->SetData(m_context, it->data);
+				//m_context->VSSetConstantBuffers(0, 1, buffers);
+				//it->mesh->RenderDeferred(m_context);
 			}
 		}
 
 		// Release Context
-
+		//pass->PostRender(m_context);
 
 	}
 

@@ -15,6 +15,7 @@ private:
 	
 	BasePass m_basePass;	// Forward Rendering.
 	DepthPass m_depthPass;	// Forward Plus (1st pass).
+	unsigned int m_currentPass = 0;
 
 	
 	// Add a pass to the list.
@@ -35,5 +36,6 @@ public:
 	//	PostRender(): clear pipeline settings.
 	void Render(Scene* pScene);
 
+	IRenderPass* GetCurrentPass() const;
 };
 

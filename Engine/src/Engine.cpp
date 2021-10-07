@@ -34,8 +34,7 @@ void Engine::Startup()
 	rtd::Handler2D::Get()->Initialize();
 	BackBuffer::Initialize();
 
-	// Thread Startup.
-	thread::RenderThreadHandler::Get().Setup(T_REC - thread::MultiThreader::GetAmountOfThreads());
+	
 
 	//Camera
 	Camera m_debugCamera;
@@ -44,6 +43,11 @@ void Engine::Startup()
 	m_currentCamera = std::make_shared<Camera>(m_debugCamera);
 
 	m_renderer.Initialize(&m_window, m_currentCamera.get());
+
+	// Thread Startup.
+	thread::RenderThreadHandler::Get().SetRenderer(&m_renderer);
+	thread::RenderThreadHandler::Get().SetWindow(&m_window);
+	thread::RenderThreadHandler::Get().Setup(T_REC - thread::MultiThreader::GetAmountOfThreads());
 
 	// Thread should be launched after s_engineRunning is set to true and D3D11 is initialized.
 	//
