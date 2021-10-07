@@ -55,6 +55,8 @@ void Scene::Render()
 			it.mesh->Render();
 		}
 	}
+
+	thread::RenderThreadHandler::ExecuteCommandLists();
 	
 	// Emit event
 	publish<ESceneRender>();

@@ -110,27 +110,19 @@ const int thread::RenderThreadHandler::Launch(const int& amount_of_objects, void
 	unsigned int objects_per_thread = (amount_of_objects / INSTANCE.m_amount);
 	if (objects_per_thread >= thread::threshold)
 	{
-		// Convert 
-		DoubleBuffer<std::vector<comp::Renderable>>* m_objects = (DoubleBuffer<std::vector<comp::Renderable>>*)objects;
-
-		unsigned int iterations = (amount_of_objects / objects_per_thread);
-
 		// Launch Threads
 		if (INSTANCE.m_isPooled)
 		{
-			for (int i = 0; i < iterations; i++)
+			for (unsigned int i = 0; i < INSTANCE.m_amount; i++)
 			{
-				auto f = [=](void* buffer, void* context, void* pipe)
+				const auto& f = [=](void* buffer, void* context, void* pipe)
 				{
-					RenderJob(i * objects_per_thread, (i + 1) * objects_per_thread, m_objects, buffer, context, pipe);
+					RenderJob(i * objects_per_thread, (i + 1) * objects_per_thread, objects, buffer, context, pipe);
 				};
 				INSTANCE.m_jobs.push_back(f);
 			}
 			cv.notify_all();
 		}
-
-		// Join Threads
-		INSTANCE.Finish();
 
 		return 0;
 	}
@@ -171,6 +163,38 @@ void thread::RenderThreadHandler::SetWindow(Window* wind)
 Window* thread::RenderThreadHandler::GetWindow()
 {
 	return INSTANCE.m_window;
+}
+
+void thread::RenderThreadHandler::InsertCommandList(ID3D11CommandList* list)
+{
+	INSTANCE.m_commands.push_back(list);
+}
+
+void thread::RenderThreadHandler::ExecuteCommandLists()
+{
+
+	// Join Threads
+	INSTANCE.Finish();
+
+	if (INSTANCE.m_commands.size() > 0)
+	{
+		// Execture the commands.
+		for (int i = 0; i < INSTANCE.m_commands.size(); i++)
+		{
+			if (INSTANCE.m_commands[i])
+			{
+				/*
+					Crash here?
+				*/
+				D3D11Core::Get().DeviceContext()->ExecuteCommandList(INSTANCE.m_commands[i], TRUE);
+				INSTANCE.m_commands[i]->Release();
+			}
+
+		}
+
+		// Remove all traces of evidence.
+		INSTANCE.m_commands.clear();
+	}
 }
 
 bool ShouldContinue()
@@ -246,12 +270,14 @@ void RenderJob(const unsigned int start,
 	PipelineManager* m_pipeManager = (PipelineManager*)pipe;
 	if (m_objects)
 	{
+		
 		// Update Context
-		//IRenderPass* pass = thread::RenderThreadHandler::Get().GetRenderer()->GetCurrentPass();
+		ID3D11CommandList* command_list = nullptr;
+		IRenderPass* pass = thread::RenderThreadHandler::Get().GetRenderer()->GetCurrentPass();
 
-		//pass->PreRender(m_context, m_pipeManager);
+		pass->PreRender(m_context, m_pipeManager);
 
-		for (int i = start; i < stop; i++)
+		for (unsigned int i = start; i < stop - 1; i++)
 		{
 			comp::Renderable* it = &(*m_objects)[1][i];
 			if (it)
@@ -261,15 +287,28 @@ void RenderJob(const unsigned int start,
 					m_buffer->GetBuffer()
 				};
 
+				/*
+					Crash here..
+				*/
+
 				//m_buffer->SetData(m_context, it->data);
 				//m_context->VSSetConstantBuffers(0, 1, buffers);
 				//it->mesh->RenderDeferred(m_context);
 			}
 		}
 
-		// Release Context
-		//pass->PostRender(m_context);
 
+		// Release Context
+		pass->PostRender(m_context);
+
+		HRESULT hr = m_context->FinishCommandList(false, &command_list);
+
+		EnterCriticalSection(&criticalSection);
+		if (SUCCEEDED(hr))
+			command_list->Release();
+			//thread::RenderThreadHandler::Get().InsertCommandList(command_list);
+		LeaveCriticalSection(&criticalSection);
+		
 	}
 
 }

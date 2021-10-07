@@ -3,13 +3,11 @@
 DemoScene::DemoScene(HeadlessEngine& engine, Client& client)
 	: SceneBuilder(engine)
 {
-	// Set up Scene
-
 	//Initialize player entity
 	m_player = CreatePlayerEntity();
-	for (int i = 0; i < 20; i++)
+	for (int i = 0; i < 49; i++)
 	{
-		InitializePlayerEntity(scene);
+		CreatePlayerEntity();
 	}
 
 	// Define what scene does on update

@@ -12,6 +12,7 @@ namespace thread
 	private:
 
 		std::thread* m_workerThreads;
+		std::vector<ID3D11CommandList*> m_commands;
 		Renderer* m_renderer;
 		Window* m_window;
 		unsigned int* m_statuses;
@@ -92,5 +93,8 @@ namespace thread
 		*/
 		static void SetWindow(Window* wind);
 		static Window* GetWindow();
+
+		static void InsertCommandList(ID3D11CommandList* list);
+		static void ExecuteCommandLists();
 	};
 }

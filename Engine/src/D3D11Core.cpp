@@ -65,7 +65,7 @@ DXGI_QUERY_VIDEO_MEMORY_INFO D3D11Core::GetVideoMemoryInfo()
 
 void D3D11Core::CreateDeferredContext(ID3D11DeviceContext** context)
 {
-    D3D11Core::Get().m_device->CreateDeferredContext(0, context);
+    this->m_device->CreateDeferredContext(0, context);
 }
 
 bool D3D11Core::createDeviceAndSwapChain()
