@@ -17,7 +17,7 @@ void Scene::Update(float dt)
 
 	// Emit event
 	publish<ESceneUpdate>(dt);
-	
+	if (!m_renderableCopies.IsSwapped())
 	{
 		PROFILE_SCOPE("Copy Transforms");
 		m_renderableCopies[0].clear();

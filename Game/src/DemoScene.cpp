@@ -32,6 +32,6 @@ Entity DemoScene::CreatePlayerEntity()
 	comp::Renderable* renderable = playerEntity.AddComponent<comp::Renderable>();
 	playerEntity.AddComponent<comp::Player>()->runSpeed = 10.f;
 
-	renderable->mesh = ResourceManager::Get().GetResource<RMesh>("Monster.fbx");
+	renderable->mesh = ResourceManager::Get().GetResource<RMesh>("Chest.obj");
 	return playerEntity;
 }

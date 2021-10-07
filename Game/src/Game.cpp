@@ -1,8 +1,4 @@
 #include "Game.h"
-#include "RMesh.h"
-#include "DemoScene.h"
-
-#include "Components.h"
 
 using namespace std::placeholders;
 
@@ -11,7 +7,7 @@ Game::Game()
 	, Engine()
 {
 	this->m_localPID = 0;
-
+	this->m_gameID = 0;
 }
 
 Game::~Game()
@@ -80,10 +76,6 @@ void Game::OnUserUpdate(float deltaTime)
 	ImGui::End();
 
 	);
-
-
-
-	InputSystem::Get().UpdateEvents();
 
 	if (m_client.IsConnected())
 	{

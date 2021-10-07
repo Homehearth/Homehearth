@@ -1,9 +1,7 @@
 #pragma once
 #include <EnginePCH.h>
 #include <Engine.h>
-#include <Client.h>
-
-#include "DemoScene.h"
+#include <DemoScene.h>
 
 class Game : public Engine
 {
@@ -15,7 +13,6 @@ private:
 	uint32_t m_localPID;
 	uint32_t m_gameID;
 
-
 	std::unique_ptr<DemoScene> m_demoScene;
 
 	// Inherited via Engine
@@ -23,11 +20,9 @@ private:
 	virtual void OnUserUpdate(float deltaTime) override;
 	virtual void OnShutdown() override;
 
-
 	// User defined function to check messages which must comply with the function pointer arguments from Client
 	void CheckIncoming(message<GameMsg>& msg);
 	void PingServer();
-
 	void JoinLobby(uint32_t lobbyID);
 
 public:

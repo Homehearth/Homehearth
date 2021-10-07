@@ -1,9 +1,6 @@
 #pragma once
-#include <EnginePCH.h>
-#include <SceneBuilder.h>
-
+#include "EnginePCH.h"
 #include "GameSystems.h"
-#include "Client.h"
 
 class DemoScene : public SceneBuilder<DemoScene>
 {
@@ -16,4 +13,3 @@ public:
 	
 
 };
-

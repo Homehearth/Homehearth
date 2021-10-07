@@ -1,10 +1,7 @@
 #pragma once
 #include "EventTypes.h"
-
 #include "Components.h"
-
 #include "DoubleBuffer.h"
-
 #include "Entity.h"
 
 class Scene : public entt::emitter<Scene>

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Scene.h"
-#include "EventTypes.h"
 
 class HeadlessEngine
 {
