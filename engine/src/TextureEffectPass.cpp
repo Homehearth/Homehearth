@@ -34,7 +34,7 @@ void TextureEffectPass::PreRender(ID3D11DeviceContext* dc, PipelineManager* pm)
         dc->PSSetConstantBuffers(0, 0, nullptr);
         dc->VSSetConstantBuffers(0, 0, nullptr);
         dc->VSSetConstantBuffers(0, 0, nullptr);
-        dc->CSGetConstantBuffers(0, 1, pm->m_textureEffectConstantBuffer.GetAddressOf());
+        dc->CSSetConstantBuffers(0, 1, pm->m_textureEffectConstantBuffer.GetAddressOf());
     }
 
     // SHADER RESOURCES.

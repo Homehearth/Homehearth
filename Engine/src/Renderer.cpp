@@ -36,6 +36,7 @@ void Renderer::Render(Scene* pScene)
     {
         if (!m_passes.empty())
         {
+
             for (const auto& pass : m_passes)
             {
                 if (pass->IsEnabled())
