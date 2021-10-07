@@ -66,7 +66,7 @@ void RMaterial::BindMaterial() const
         [Tweak]
     */
     D3D11Core::Get().DeviceContext()->PSSetConstantBuffers(0, 1, m_matConstCB.GetAddressOf());
-    D3D11Core::Get().DeviceContext()->PSSetConstantBuffers(1, 1, m_hasTextureCB.GetAddressOf());
+    D3D11Core::Get().DeviceContext()->PSSetConstantBuffers(2, 1, m_hasTextureCB.GetAddressOf());
 
     /*
         Upload all textures
