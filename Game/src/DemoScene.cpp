@@ -6,7 +6,7 @@ DemoScene::DemoScene(Engine& engine, Client& client)
 	Entity box = m_scene.CreateEntity();
 	box.AddComponent<comp::Transform>()->position.z = -5.0f;
 	comp::Renderable* boxRender = box.AddComponent<comp::Renderable>();
-	boxRender->mesh = ResourceManager::Get().GetResource<RMesh>("Cube.fbx");
+	boxRender->model = ResourceManager::Get().GetResource<RModel>("Cube.fbx");
 
 	m_engine = &engine;
 	//Initialize player entity
@@ -27,6 +27,9 @@ DemoScene::DemoScene(Engine& engine, Client& client)
 				//m_player.GetComponent<comp::Velocity>()->vel.z = InputSystem::Get().GetAxis(Axis::VERTICAL) * m_player.GetComponent<comp::Player>()->runSpeed;
 				//m_player.GetComponent<comp::Velocity>()->vel.x = InputSystem::Get().GetAxis(Axis::HORIZONTAL) * m_player.GetComponent<comp::Player>()->runSpeed;
 			}
+
+			//***REMOVE LATER***
+			GameSystems::MaterialTestSystem(scene);
 		});
 }
 
@@ -80,7 +83,7 @@ Entity DemoScene::CreatePlayerEntity()
 	comp::Renderable* renderable = playerEntity.AddComponent<comp::Renderable>();
 	playerEntity.AddComponent<comp::Player>()->runSpeed = 10.f;
 
-	renderable->mesh = ResourceManager::Get().GetResource<RMesh>("Chest.obj");
+	renderable->model = ResourceManager::Get().GetResource<RModel>("Chest.obj");
 
 	m_gameCamera.SetFollowVelocity(playeerVelocity);
 

@@ -369,10 +369,6 @@ bool RModel::Create(const std::string& filename)
             importer.FreeScene();
             return false;
         }
-        else
-        {
-            LOG_ERROR("Failed to create material!");
-        }
 
         //Add the material
         ResourceManager::Get().AddResource(matName.C_Str(), material);
