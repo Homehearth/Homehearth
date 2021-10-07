@@ -64,11 +64,6 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 		LOG_INFO("Client on with ID: %ld is pinging server", playerID);
 		break;
 	}
-	case GameMsg::Game_MovePlayer:
-	{
-		LOG_INFO("Moving player!");
-		break;
-	}
 	case GameMsg::Client_CreateLobby:
 	{
 		uint32_t playerID;
@@ -92,6 +87,17 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 		msg >> playerID;
 		LOG_INFO("Player %d trying to join lobby %d", playerID, lobbyID);
 		games[lobbyID]->AddPlayer(playerID);
+		break;
+	}
+	case GameMsg::Game_Update: // other messages gets sent to simulation
+	{
+		uint32_t gameID;
+		msg >> gameID;
+		uint32_t playerID;
+		msg >> playerID;
+		comp::Transform t;
+		msg >> t;
+		games[gameID]->UpdatePlayer(playerID, t);
 		break;
 	}
 	}

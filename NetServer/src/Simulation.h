@@ -25,4 +25,8 @@ public:
 
 	bool CreateLobby(uint32_t uniqueGameID, uint32_t hostID);
 	bool AddPlayer(uint32_t playerID);
+	void UpdatePlayer(uint32_t playerID, const comp::Transform& transform);
+
+	void Broadcast(network::message<GameMsg>& msg, uint32_t exclude);
+
 };

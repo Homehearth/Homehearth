@@ -22,10 +22,7 @@ bool Simulation::AddPlayer(uint32_t playerID)
 	message<GameMsg> msg;
 	msg.header.id = GameMsg::Game_AddPlayer;
 	msg << playerID << (uint32_t)1;
-	for (auto con : m_connections)
-	{
-		m_server->SendToClient(con.second, msg);
-	}
+	Broadcast(msg, playerID);
 
 	// Send all player IDs to new Player
 	message<GameMsg> msg1;
@@ -40,4 +37,23 @@ bool Simulation::AddPlayer(uint32_t playerID)
 	m_connections[playerID] = m_server->GetConnection(playerID);
 
 	return true;
+}
+
+void Simulation::UpdatePlayer(uint32_t playerID, const comp::Transform& transform) 
+{
+	message<GameMsg> msg;
+	msg.header.id = GameMsg::Game_Update;
+	msg << transform << playerID;
+	Broadcast(msg, playerID);
+}
+
+void Simulation::Broadcast(network::message<GameMsg>& msg, uint32_t exclude)
+{
+	for (auto con : m_connections)
+	{
+		if (con.first != exclude)
+		{
+			m_server->SendToClient(m_server->GetConnection(con.first), msg);
+		}
+	}
 }

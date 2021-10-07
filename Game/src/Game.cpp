@@ -6,8 +6,8 @@ Game::Game()
 	: m_client(std::bind(&Game::CheckIncoming, this, _1))
 	, Engine()
 {
-	this->m_localPID = 0;
-	this->m_gameID = 0;
+	this->m_localPID = -1;
+	this->m_gameID = -1;
 }
 
 Game::~Game()
@@ -22,7 +22,7 @@ bool Game::OnStartup()
 {
 
 	// Scene logic
-	m_demoScene = std::make_unique<DemoScene>(*this, m_client);
+	m_demoScene = std::make_unique<DemoScene>(*this, m_client, &this->m_localPID, &this->m_gameID);
 
 	//Set as current scene
 	SetScene(m_demoScene->GetScene());
@@ -119,6 +119,16 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			LOG_INFO("Player with ID: %ld has joined the game!", remotePlayerID);
 			m_players.insert(std::make_pair(remotePlayerID, m_demoScene->CreatePlayerEntity()));
 		}
+		break;
+	}
+	case GameMsg::Game_Update:
+	{
+		uint32_t playerID;
+		msg >> playerID;
+		comp::Transform t;
+		msg >> t;
+		*m_players.at(playerID).GetComponent<comp::Transform>() = t;
+
 		break;
 	}
 	}
