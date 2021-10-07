@@ -23,6 +23,9 @@ private:
 		float render;
 	} m_frameTime;
 
+	// Startup the Engine and its instances in a specific order.
+	void Startup() override;
+
 	// Job for rendering thread.
 	void RenderThread();
 
@@ -40,10 +43,6 @@ private:
 	// IMGUI
 	void drawImGUI() const;
 
-protected:
-	// Startup the Engine and its instances in a specific order.
-	void Startup() override;
-
 public:
 	Engine();
 	Engine(const Engine& other) = delete;
@@ -51,7 +50,4 @@ public:
 	Engine& operator=(const Engine& other) = delete;
 	Engine& operator=(Engine&& other) = delete;
 	virtual ~Engine() = default;
-
-	virtual bool OnStartup() = 0;
-	virtual bool OnUserUpdate(float deltaTime) = 0;
 };

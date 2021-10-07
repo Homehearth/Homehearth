@@ -164,7 +164,7 @@ void CalcRadiance(PixelIn input, float3 V, float3 N, float roughness, float meta
     float3 F = FresnelSchlick(max(dot(H, V), 0.0f), F0);
     
     float3 kS = F;
-    float kD = float3(1.0f, 1.0f, 1.0f) - kS;
+    float3 kD = float3(1.0f, 1.0f, 1.0f) - kS;
     kD *= (1.0 - metallic);
     
     float3 nom = D * G * F;

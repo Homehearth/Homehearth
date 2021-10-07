@@ -1,3 +1,4 @@
+#include "EnginePCH.h"
 #include "Intersections.h"
 
 //Check if the ray intersects with a box collider.

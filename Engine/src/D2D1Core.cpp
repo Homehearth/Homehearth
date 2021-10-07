@@ -206,8 +206,6 @@ void D2D1Core::DrawP(const draw_t& fig, ID2D1Bitmap* texture)
 {
 	if (texture == nullptr)
 		return;
-
-	HRESULT hr;
 	
 	D2D1_SIZE_F size = texture->GetSize();
 	D2D1_POINT_2F upperLeftCorner = D2D1::Point2F(fig.x_pos, fig.y_pos);
