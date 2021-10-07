@@ -1,6 +1,7 @@
 #pragma once
 #include "BasePass.h"
 #include "DepthPass.h"
+#include "TextureEffectPass.h"
 #include "IRenderPass.h"
 #include "PipelineManager.h"
 
@@ -15,7 +16,7 @@ private:
 	
 	BasePass m_basePass;	// Forward Rendering.
 	DepthPass m_depthPass;	// Forward Plus (1st pass).
-
+	TextureEffectPass m_textureEffectPass; // Water effect pass.
 	
 	// Add a pass to the list.
 	void AddPass(IRenderPass* pass);

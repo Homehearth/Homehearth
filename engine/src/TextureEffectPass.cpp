@@ -44,17 +44,11 @@ void TextureEffectPass::PreRender(ID3D11DeviceContext* dc, PipelineManager* pm)
         dc->PSSetSamplers(0, 1, pm->m_linearSamplerState.GetAddressOf());
     }
 
-    // RASTERIZER.
-    {
-        dc->RSSetViewports(1, &pm->m_viewport);
-        dc->RSSetState(pm->m_rasterStateNoCulling.Get());
-    }
-
     // OUTPUT MERGER.
     {
-        dc->OMSetRenderTargets(0, nullptr, nullptr);
-        dc->OMSetBlendState(nullptr, nullptr, 0xFFFFFFFF);
-        dc->OMSetDepthStencilState(nullptr, 0);
+        dc->OMSetRenderTargets(1, pm->m_renderTargetView.GetAddressOf(), pm->m_depthStencilView.Get());
+        dc->OMSetBlendState(pm->m_blendStatepOpaque.Get(), nullptr, 0xFFFFFFFF);
+        dc->OMSetDepthStencilState(pm->m_depthStencilStateLess.Get(), 1);
     }
 }
 
