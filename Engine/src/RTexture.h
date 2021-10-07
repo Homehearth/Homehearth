@@ -31,5 +31,5 @@ public:
 	~RBitMap();
 	// Inherited via GResource
 	virtual bool Create(const std::string& filename) override;
-
+	ID2D1Bitmap*& GetTexture();
 };

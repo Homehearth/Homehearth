@@ -31,10 +31,14 @@ public:
 	// Emit render event and render Renderable components
 	void Render();
 
-	bool IsRenderReady() const;
+	const bool IsRenderReady() const;
 
 	Camera* GetCamera();
 	std::shared_ptr<Camera> m_currentCamera;
 	Camera m_gameCamera;
 	Camera m_debugCamera;
+	sm::Vector3 m_oldGameCameraPosition;
+	sm::Vector3 m_oldDebugCameraPosition;
+
+	DoubleBuffer<std::vector<comp::Renderable>>* GetBuffers();
 };

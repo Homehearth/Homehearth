@@ -1,10 +1,8 @@
 #pragma once
-#include <EnginePCH.h>
-#include <Engine.h>
-#include <Components.h>
-#include "Client.h"
-
+#include "Game.h"
+#include "Intersections.h"
 namespace GameSystems
 {
 	void UserInputSystem(Scene& scene, Client& client);
+	void MRayIntersectBoxSystem(Scene& scene);
 }

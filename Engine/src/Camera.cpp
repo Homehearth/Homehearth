@@ -96,7 +96,7 @@ void Camera::Update(float deltaTime)
         {
             m_move.y += m_movingSepeed * deltaTime;
         }
-        m_move.x = InputSystem::Get().GetAxis(Axis::HORIZONTAL) * m_movingSepeed * deltaTime;
+        m_move.x = -InputSystem::Get().GetAxis(Axis::HORIZONTAL) * m_movingSepeed * deltaTime;
         m_move.z = -InputSystem::Get().GetAxis(Axis::VERTICAL) * m_movingSepeed * deltaTime;
 
         //Update camera values
@@ -208,6 +208,11 @@ camera_Matrix_t* Camera::GetCameraMatrixes()
 CAMERATYPE Camera::GetCameraType()
 {
     return m_type;
+}
+
+void Camera::SetPosition(sm::Vector3 newPosition)
+{
+    m_position = { newPosition.x, newPosition.y, newPosition.z };
 }
 
 //Set functions

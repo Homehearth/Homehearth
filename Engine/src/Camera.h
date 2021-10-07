@@ -65,6 +65,7 @@ public:
 	CAMERATYPE GetCameraType();
 
 	//Set Functions
+	void SetPosition(sm::Vector3 newPosition);
 	void SetFOV(float fov);
 	void SetNearFarPlane(float nearPlane, float farPlane);
 	void SetNearPlane(float nearPlane);

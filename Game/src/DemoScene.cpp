@@ -17,7 +17,7 @@ void InitializePlayerEntity(Scene& scene)
 	auto& renderable2 = scene.GetRegistry().emplace<comp::Renderable>(box);
 	renderable2.mesh = ResourceManager::Get().GetResource<RMesh>("Cube.fbx");
 
-
+	//InputSystem::Get().SetCamera(scene.m_currentCamera.get());
 
 
 	scene.m_gameCamera.SetFollowTarget(&transform);
@@ -38,6 +38,7 @@ void setupDemoScene(Scene& scene, Client& client)
 				Systems::MovementSystem(scene, e.dt);
 				//System responding to user input
 				GameSystems::UserInputSystem(scene, client);
+				GameSystems::MRayIntersectBoxSystem(scene);
 			}
 		});
 }
@@ -64,12 +65,18 @@ void CameraUpdate(Scene& scene, float deltaTime)
 	{
 		if (scene.m_currentCamera->GetCameraType() == CAMERATYPE::DEBUG)
 		{
+			scene.m_oldDebugCameraPosition = scene.m_currentCamera.get()->GetPosition();
 			*scene.m_currentCamera = scene.m_gameCamera;
+			scene.m_currentCamera.get()->SetPosition(scene.m_oldGameCameraPosition);
+
 			LOG_INFO("Game Camera selected");
 		}
 		else if (scene.m_currentCamera->GetCameraType() == CAMERATYPE::PLAY)
 		{
+			scene.m_oldGameCameraPosition = scene.m_currentCamera.get()->GetPosition();
 			*scene.m_currentCamera = scene.m_debugCamera;
+			scene.m_currentCamera.get()->SetPosition(scene.m_oldDebugCameraPosition);
+
 			LOG_INFO("Debugg Camera selected");
 		}
 	}
