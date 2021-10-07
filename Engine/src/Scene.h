@@ -4,6 +4,7 @@
 #include "Components.h"
 
 #include "DoubleBuffer.h"
+#include "Camera.h"
 
 class Scene : public entt::emitter<Scene>
 {
@@ -13,6 +14,7 @@ private:
 	
 	DoubleBuffer<std::vector<comp::Renderable>> m_renderableCopies;
 	dx::ConstantBuffer<basic_model_matrix_t> m_publicBuffer;
+
 
 public:
 
@@ -30,6 +32,13 @@ public:
 	void Render();
 
 	const bool IsRenderReady() const;
+
+	Camera* GetCamera();
+	std::shared_ptr<Camera> m_currentCamera;
+	Camera m_gameCamera;
+	Camera m_debugCamera;
+	sm::Vector3 m_oldGameCameraPosition;
+	sm::Vector3 m_oldDebugCameraPosition;
 
 	DoubleBuffer<std::vector<comp::Renderable>>* GetBuffers();
 };

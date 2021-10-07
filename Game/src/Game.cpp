@@ -25,6 +25,7 @@ bool Game::OnStartup()
 	m_client.Connect("127.0.0.1", 4950);
 	Scene& demo = Engine::GetScene("Demo");
 	// Scene logic
+
 	setupDemoScene(demo, m_client);
 
 	//Set as current scene
@@ -40,6 +41,8 @@ void Game::Start()
 
 bool Game::OnUserUpdate(float deltaTime)
 {
+	CameraUpdate(Engine::GetScene("Demo"), deltaTime);
+
 	if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::P, KeyState::PRESSED))
 	{
 		m_client.PingServer();

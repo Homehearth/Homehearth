@@ -7,3 +7,8 @@ void InitializePlayerEntity(Scene& scene);
 
 void setupDemoScene(Scene& scene, Client& client);
 
+//Camera
+void SetUpCamera(Scene& scene);
+void CameraUpdate(Scene& scene, float deltaTime);
+
+

@@ -62,6 +62,11 @@ const bool Scene::IsRenderReady() const
 	return m_renderableCopies.IsSwapped();
 }
 
+Camera* Scene::GetCamera()
+{
+	return m_currentCamera.get();
+}
+
 DoubleBuffer<std::vector<comp::Renderable>>* Scene::GetBuffers()
 {
 	return &m_renderableCopies;
