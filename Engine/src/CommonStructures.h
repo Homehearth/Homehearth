@@ -34,9 +34,12 @@ struct basic_model_matrix_t
 	sm::Matrix worldMatrix;
 };
 
-struct delta_time_t
+ALIGN16
+struct texture_effect_t
 {
 	float deltaTime;
+	float direction;
+	float radious; 
 };
 
 ALIGN16
