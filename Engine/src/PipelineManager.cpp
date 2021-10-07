@@ -80,6 +80,12 @@ void PipelineManager::Initialize(Window* pWindow)
         LOG_ERROR("failed creating default constant buffer.");
     }
 
+    // Initialize ConstantBuffers (temp?).
+    if (!this->CreateTextureEffectConstantBuffer())
+    {
+        LOG_ERROR("failed creating texture effect constant buffer.");
+    }
+
     // Set Viewport.
     this->SetViewport();
 }
