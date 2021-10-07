@@ -3,6 +3,7 @@
 #include "multi_thread_manager.h"
 
 #define INSTANCE thread::RenderThreadHandler::Get()
+#define CONTEXT D3D11Core::Get().DeviceContext()
 
 CRITICAL_SECTION criticalSection;
 std::condition_variable cv;
@@ -119,7 +120,7 @@ const int thread::RenderThreadHandler::Launch(const int& amount_of_objects, void
 		{
 			for (int i = 0; i < iterations; i++)
 			{
-				auto f = [&](void* buffer, void* context)
+				auto f = [=](void* buffer, void* context)
 				{
 					RenderJob(i * objects_per_thread, (i + 1) * objects_per_thread, m_objects, buffer, context);
 				};
@@ -222,15 +223,28 @@ void RenderJob(const unsigned int start,
 	ID3D11DeviceContext* m_context = (ID3D11DeviceContext*)context;
 	if (m_objects)
 	{
+
+		// Update Context
+
+
 		for (int i = start; i < stop; i++)
 		{
 			comp::Renderable* it = &(*m_objects)[1].at(i);
 			if (it)
 			{
-				m_buffer->SetData(D3D11Core::Get().DeviceContext(), it->data);
+				ID3D11Buffer* buffers[1] =
+				{
+					m_buffer->GetBuffer()
+				};
+
+				m_buffer->SetData(m_context, it->data);
+				m_context->VSSetConstantBuffers(0, 1, buffers);
 				it->mesh->RenderDeferred(m_context);
 			}
 		}
+
+		// Release Context
+
 	}
 
 }

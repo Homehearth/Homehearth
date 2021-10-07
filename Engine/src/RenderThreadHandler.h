@@ -4,7 +4,7 @@
 namespace thread
 {
 	// The must-meet threshold for divided rendering.
-	const int threshold = 1;
+	const int threshold = 1000;
 
 	class RenderThreadHandler
 	{
@@ -47,8 +47,8 @@ namespace thread
 		/*
 			Launches threads to take care of divided rendering.
 			Retval:
-			1 - Render on one thread.
-			0 - Rendered on multiple threads.
+			0 - Render on same thread.
+			x > 0 - Spot where to start rendering on main render thread.
 		*/
 		static const int Launch(const int& amount_of_objects, void* objects);
 
