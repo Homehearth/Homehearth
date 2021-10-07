@@ -2,14 +2,28 @@
 
 void InitializePlayerEntity(Scene& scene)
 {
+	//auto playerEntity = scene.GetRegistry().create();
+	//auto& transform = scene.GetRegistry().emplace<comp::Transform>(playerEntity);
+	//transform.position.z = -17.0f;
+	//auto& velocity = scene.GetRegistry().emplace<comp::Velocity>(playerEntity);
+	//auto& renderable = scene.GetRegistry().emplace<comp::Renderable>(playerEntity);
+	//auto& player = scene.GetRegistry().emplace<comp::Player>(playerEntity);
+	//player.runSpeed = 10.f;
+	//renderable.mesh = ResourceManager::Get().GetResource<RMesh>("Tree1.obj");
+	
 	auto playerEntity = scene.GetRegistry().create();
 	auto& transform = scene.GetRegistry().emplace<comp::Transform>(playerEntity);
-	transform.position.z = -17.0f;
+	transform.position.z = -5.0f;
 	auto& velocity = scene.GetRegistry().emplace<comp::Velocity>(playerEntity);
+	auto& box = scene.GetRegistry().emplace<comp::BoundingOrientedBox>(playerEntity);
+	box.Center = sm::Vector3(0.0f, 0.0f, -5.0f);
+	box.Extents = sm::Vector3(1.0f, 1.0f, 1.0f);
 	auto& renderable = scene.GetRegistry().emplace<comp::Renderable>(playerEntity);
 	auto& player = scene.GetRegistry().emplace<comp::Player>(playerEntity);
 	player.runSpeed = 10.f;
-	renderable.mesh = ResourceManager::Get().GetResource<RMesh>("Tree1.obj");
+	renderable.mesh = ResourceManager::Get().GetResource<RMesh>("Cube.obj");
+
+	
 }
 
 void setupDemoScene(Scene& scene, Client& client)

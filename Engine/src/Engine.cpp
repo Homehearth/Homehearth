@@ -222,7 +222,7 @@ void Engine::drawImGUI() const
 			});
 	}
 	ImGui::End();
-
+	
 	ImGui::Begin("Camera");
 	{
 		const std::string position = "Position: " + std::to_string(m_currentCamera->GetPosition().x)+ " " + std::to_string(m_currentCamera->GetPosition().y) + " " + std::to_string(m_currentCamera->GetPosition().z);
@@ -230,7 +230,6 @@ void Engine::drawImGUI() const
 		ImGui::Text(position.c_str());
 		//ImGui::DragFloat("Zoom: ", &m_currentCamera->m_zoomValue, 0.01f, 0.f, 1.0f);
 		ImGui::Spacing();
-
 	};
 	ImGui::End();
 }

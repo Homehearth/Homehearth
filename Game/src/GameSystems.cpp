@@ -15,8 +15,8 @@ void GameSystems::UserInputSystem(Scene& scene, Client& client)
 void GameSystems::MRayIntersectBoxSystem(Scene& scene)
 {
 	float t = 0;
-	const auto view = scene.GetRegistry().view<comp::BoxCollider, comp::Transform>();
-	view.each([&](comp::BoxCollider& boxCollider, comp::Transform& transform)
+	const auto view = scene.GetRegistry().view<comp::BoundingOrientedBox, comp::Transform>();
+	view.each([&](comp::BoundingOrientedBox& boxCollider, comp::Transform& transform)
 	{
 		//Collided with mouse TODO make it do someting?
 		if(Intersect::RayIntersectBox(InputSystem::Get().GetMouseRay(), boxCollider, t))
@@ -29,6 +29,27 @@ void GameSystems::MRayIntersectBoxSystem(Scene& scene)
 			transform.scale = sm::Vector3(1.f, 1.f, 1.f);
 		
 	});
+}
+
+void GameSystems::CollisionSystem(Scene& scene)
+{
+	const auto viewOBB = scene.GetRegistry().view<comp::BoundingOrientedBox>();
+	const auto viewSphere = scene.GetRegistry().view<comp::BoundingSphere>();
+	for(auto entity: viewOBB)
+	{
+		auto& obb1 = viewOBB.get<comp::BoundingOrientedBox>(entity);
+		for(auto entity2: viewOBB)
+		{
+			if(entity != entity2)
+			{
+				auto& obb2 = viewOBB.get<comp::BoundingOrientedBox>(entity2);
+				if(obb1.Intersects(obb2))
+				{
+					scene.publish<ESceneCollision>(entity, entity2);
+				}
+			}
+		}
+	}
 }
 
 

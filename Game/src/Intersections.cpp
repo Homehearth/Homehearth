@@ -1,7 +1,7 @@
 #include "Intersections.h"
 
 //Check if the ray intersects with a box collider.
-const bool Intersect::RayIntersectBox(const Ray_t& ray, const comp::BoxCollider& boxCollider, float& t)
+const bool Intersect::RayIntersectBox(const Ray_t& ray, const comp::BoundingOrientedBox& boxCollider, float& t)
 {
 	/**
 	 * computing all t-values for the ray
@@ -15,17 +15,32 @@ const bool Intersect::RayIntersectBox(const Ray_t& ray, const comp::BoxCollider&
 	float tmin = (std::numeric_limits<float>::min)();
 	float tmax = (std::numeric_limits<float>::max)();
 
-	sm::Vector3 p = boxCollider.center - rayOrigin;
+	sm::Vector3 p = boxCollider.Center - rayOrigin;
+
+	std::array<sm::Vector3, 3> norms;
+	norms[0] = sm::Vector3(1.0f, 0.0f, 0.0f);
+	norms[1] = sm::Vector3(0.0f, 1.0f, 0.0f);
+	norms[2] = sm::Vector3(0.0f, 0.0f, 1.0f);
+	
+	norms[0] = sm::Vector3::Transform(norms[0], boxCollider.Orientation);
+	norms[1] = sm::Vector3::Transform(norms[1], boxCollider.Orientation);
+	norms[2] = sm::Vector3::Transform(norms[2], boxCollider.Orientation);
+
+	float halfSize[3];
+	halfSize[0] = boxCollider.Extents.x;
+	halfSize[1] = boxCollider.Extents.y;
+	halfSize[2] = boxCollider.Extents.z;
+	
 	for (size_t i = 0; i < 3; i++)
 	{
-		const float e = boxCollider.norm[i].x * p.x + boxCollider.norm[i].y * p.y + boxCollider.norm[i].z * p.z;
-		const float f = boxCollider.norm[i].x * rayDir.x + boxCollider.norm[i].y * rayDir.y + boxCollider.norm[i].z * rayDir.z;
+		const float e = norms[i].x * p.x + norms[i].y * p.y + norms[i].z * p.z;
+		const float f = norms[i].x * rayDir.x + norms[i].y * rayDir.y + norms[i].z * rayDir.z;
 
 		//Check normal face is not ortogonal to ray direction
 		if (abs(f) > 0.00001f)
 		{
-			float t1 = (e + boxCollider.halfSize[i]) / f;
-			float t2 = (e - boxCollider.halfSize[i]) / f;
+			float t1 = (e + halfSize[i]) / f;
+			float t2 = (e - halfSize[i]) / f;
 
 			if (t1 > t2)
 			{
@@ -54,7 +69,7 @@ const bool Intersect::RayIntersectBox(const Ray_t& ray, const comp::BoxCollider&
 		 * (and so cannot intersect it); it tests if the ray is outside the slab.
 		 * If so, then the ray misses the box and the test terminates.
 		 */
-		else if (-e - boxCollider.halfSize[i] > 0 || -e + boxCollider.halfSize[i] < 0)
+		else if (-e - halfSize[i] > 0 || -e + halfSize[i] < 0)
 		{
 			return false;
 		}
@@ -69,14 +84,14 @@ const bool Intersect::RayIntersectBox(const Ray_t& ray, const comp::BoxCollider&
 	return true;
 }
 
-const bool Intersect::RayIntersectSphere(const Ray_t& ray, const comp::SphereCollider& sphereCollider, float& t)
+const bool Intersect::RayIntersectSphere(const Ray_t& ray, const comp::BoundingSphere& sphereCollider, float& t)
 {
-	const sm::Vector3 rayToCenter = ray.rayPos - sphereCollider.center;
+	const sm::Vector3 rayToCenter = ray.rayPos - sphereCollider.Center;
 	
 	//Parameterization to use for the quadtratic formula.
 	const float scalarRayDir =  ray.rayDir.Dot(ray.rayDir);
 	const float b = 2.0f * rayToCenter.Dot(ray.rayDir);
-	const float c = rayToCenter.Dot(rayToCenter) - sphereCollider.radius * sphereCollider.radius;
+	const float c = rayToCenter.Dot(rayToCenter) - sphereCollider.Radius * sphereCollider.Radius;
 
 	const float discriminant = b * b - 4.0f * scalarRayDir * c;
 	
