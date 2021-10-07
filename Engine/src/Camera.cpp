@@ -141,18 +141,8 @@ void Camera::Update(float deltaTime)
     }
     else if (m_type == CAMERATYPE::DEFAULT) 
     {
-        //Nothing???
+        //TODO: check if see if something is needed to add
     }
-
-    //IDk if i need thb
-    /*if (m_rollPitchYaw.z > dx::XM_PI)
-    {
-        m_rollPitchYaw.z -= dx::XM_PI * 2.0f;
-    }
-    else if (m_rollPitchYaw.z < -dx::XM_PI)
-    {
-        m_rollPitchYaw.z += dx::XM_PI * 2.0f;
-    }*/
 
     m_cameraMat.position = { m_position.x, m_position.y, m_position.z, 0.0f };
     m_cameraMat.target = { m_target.x, m_target.y, m_target.z, 0 };
