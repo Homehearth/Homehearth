@@ -114,9 +114,6 @@ inline std::shared_ptr<T> ResourceManager::GetResource(const std::string& key)
 		}
 		else
 		{
-#ifdef _DEBUG
-			LOG_WARNING("RM failed to create '%s'", key.c_str());
-#endif
 			return std::shared_ptr<T>(nullptr);
 		}
 	}

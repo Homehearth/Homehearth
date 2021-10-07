@@ -14,16 +14,83 @@ RModel::~RModel()
 
 bool RModel::ChangeMaterial(const std::string& mtlfile)
 {
+    const std::string filepath = MATERIALPATH + mtlfile;
+    std::ifstream readfile(filepath);
+    if (!readfile.is_open())
+        return false;
+
     /*
-        The new material have to have as many submaterials as previously,
-        otherwise things will look weird...
-
-        Load in the material from a mtl
-        * Can have many materials in same file
-        * 
-
+        Load data from file
     */
-    return false;
+    std::string line;
+    std::string totalData = "";
+    while (std::getline(readfile, line))
+    {
+        if (!line.empty())
+        {
+            line += '\n';
+            totalData.append(line);
+        }
+    }
+    readfile.close();
+
+    std::vector<std::string> blocks;
+    size_t mtlIndex = -1;
+    bool hasReachedEnd = false;
+    const std::string newmtl = "newmtl";
+
+    /*
+        Split the total data into multiple blocks
+    */
+    while (!hasReachedEnd)
+    {
+        mtlIndex = totalData.find(newmtl, mtlIndex +1);
+        if (mtlIndex != std::string::npos)
+        {
+            size_t mtlLast = totalData.find(newmtl, mtlIndex + 1);
+            blocks.push_back(totalData.substr(mtlIndex, mtlLast - mtlIndex));
+        }
+        else
+            hasReachedEnd = true;
+    }
+
+    /*
+        Get the names of all the materials
+    */
+    std::vector<std::string> materialNames;
+    for (int i = 0; i < blocks.size(); i++)
+    {
+        size_t nameIndex = blocks[i].find(newmtl) + newmtl.length() + 1;
+        size_t nameEnd = blocks[i].find('\n');
+        std::string matName = blocks[i].substr(nameIndex, nameEnd - nameIndex);
+        materialNames.push_back(matName);
+    }
+
+    /*
+        Bind the "new" materials to the model
+    */
+    for (size_t m = 0; m < m_meshes.size(); m++)
+    {
+        m_meshes[m].material.reset();
+        if (m < materialNames.size())
+        {
+            const std::string matName = materialNames[m];
+            m_meshes[m].material = ResourceManager::Get().GetResource<RMaterial>(matName);
+            
+            //Material not found - going to try to create it
+            if (!m_meshes[m].material)
+            {
+                m_meshes[m].material = std::make_shared<RMaterial>();
+                if (m_meshes[m].material->CreateFromMTL(blocks[m]))
+                {
+                    ResourceManager::Get().AddResource(matName, m_meshes[m].material);
+                }
+            }
+        }
+    }
+    blocks.clear();
+    materialNames.clear();
+    return true;
 }
 
 const dx::BoundingSphere& RModel::GetBoundingSphere() const
@@ -238,7 +305,7 @@ bool RModel::Create(const std::string& filename)
         aiProcess_MakeLeftHanded        |	//Use a lefthanded system for the models 
         aiProcess_CalcTangentSpace      |   //Fix tangents and bitangents automatic for us
         aiProcess_FlipUVs               |   //Flips the textures to fit directX-style
-        aiProcess_GenBoundingBoxes          //Calculate boundingboxes
+        aiProcess_GenBoundingBoxes          //Calculates boundingboxes
     );
 
     //Check if readfile was successful
@@ -285,8 +352,8 @@ bool RModel::Create(const std::string& filename)
     }
 
     /*
-        For every material we should load in the material
-        and then combine the multiple meshes to one, if needed.
+        Loads in each material and then combine
+        the multiple meshes to one, if needed.
     */
     for (auto& mat : matSet)
     {

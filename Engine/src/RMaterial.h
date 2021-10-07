@@ -48,6 +48,7 @@ private:
 		Constantbuffer with constants for the material
 		Size: 48 bytes
 	*/
+	ALIGN16
 	struct matConstants_t
 	{
 		sm::Vector3	 ambient	= {};		//12 bytes
@@ -65,6 +66,7 @@ private:
 		Size: 32 bytes
 		Optimization: save memory with bitwise? send only one number
 	*/
+	ALIGN16
 	struct properties_t
 	{
 		int 	hasAlbedo	 = 0;	//4 byte
@@ -101,6 +103,9 @@ public:
 
 	//Loaded from assimp
 	bool Create(aiMaterial* aiMat, const std::string& fileformat);
+
+	//Load a part of a mtl-file. Text = "newmtl ..."
+	bool CreateFromMTL(std::string& text);
 
 	// Inherited via GResource
 	// Load material with file - mtl files

@@ -16,6 +16,9 @@ struct aiMesh;
 	The model has a BoundingSphere that covers everything.
 	There is also multiple boundingboxes, one per submesh
 
+	The model can change material to any other mtl-file.
+	Order in the mtl-file is important.
+
 	TODO:
 	* Fix loading in bones
 */
@@ -33,7 +36,7 @@ private:
 	};
 	std::vector<submesh_t>			m_meshes;
 	
-	//Colliders. Sphere covers the mesh
+	//Local colliders. Sphere covers the mesh
 	dx::BoundingSphere				m_boundingSphere;
 	std::vector<dx::BoundingBox>	m_boundingBoxes;
 
@@ -68,7 +71,13 @@ public:
 	RModel();
 	~RModel();
 
-	//Change the material to something else
+	/*
+		Change the material to other. Uses a mtlfile.
+		Limited to how many materials was set from start.
+		Example: RModel has 3 materials from start.
+		* mtl-file has 5 materials only 3 will be applied.
+		* mtl-file only has 1 material, the reset will be reseted to none
+	*/
 	bool ChangeMaterial(const std::string& mtlfile);
 
 	//Get colliders

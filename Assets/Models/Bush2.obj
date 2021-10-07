@@ -1,6 +1,6 @@
 # This file uses centimeters as units for non-parametric coordinates.
 
-mtllib ../Materials/Bush.mtl
+mtllib ../Materials/Bush2.mtl
 g default
 v 2.626488 6.131329 2.741084
 v -3.878561 6.925245 -2.548262

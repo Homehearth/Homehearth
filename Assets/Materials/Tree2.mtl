@@ -1,9 +1,25 @@
-newmtl lambert3SG
+newmtl lambert7SG
 illum 4
 Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
 Tf 1.00 1.00 1.00
-map_Kd TWigDark.png
+map_Kd Leafs3.png
+Ni 1.00
+
+newmtl lambert11SG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+map_Kd LeafsDark.png
+Ni 1.00
+
+newmtl lambert10SG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+map_Kd Light.png
 Ni 1.00
 
 newmtl lambert5SG
@@ -22,28 +38,12 @@ Tf 1.00 1.00 1.00
 map_Kd TWig3Dark.png
 Ni 1.00
 
-newmtl lambert7SG
+newmtl lambert3SG
 illum 4
 Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
 Tf 1.00 1.00 1.00
-map_Kd Leafs3.png
-Ni 1.00
-
-newmtl lambert10SG
-illum 4
-Kd 0.00 0.00 0.00
-Ka 0.00 0.00 0.00
-Tf 1.00 1.00 1.00
-map_Kd Light.png
-Ni 1.00
-
-newmtl lambert11SG
-illum 4
-Kd 0.00 0.00 0.00
-Ka 0.00 0.00 0.00
-Tf 1.00 1.00 1.00
-map_Kd LeafsDark.png
+map_Kd TWigDark.png
 Ni 1.00
 
 newmtl lambert12SG
@@ -52,12 +52,4 @@ Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
 Tf 1.00 1.00 1.00
 map_Kd TreeTexture2.png
-Ni 1.00
-
-newmtl lambert13SG
-illum 4
-Kd 0.00 0.00 0.00
-Ka 0.00 0.00 0.00
-Tf 1.00 1.00 1.00
-map_Kd TreeTexture1.png
 Ni 1.00

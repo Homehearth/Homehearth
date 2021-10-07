@@ -24,5 +24,18 @@ void setupDemoScene(Scene& scene, Client& client)
 			//System responding to user input
 			GameSystems::UserInputSystem(scene, client);
 			GameSystems::MRayIntersectBoxSystem(scene);
+
+			/*
+				REMOVE LATER: Temp to show that it is possible to swap material
+			*/
+			const auto view = scene.GetRegistry().view<comp::Renderable>();
+			view.each([&](comp::Renderable& renderable)
+				{
+					if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::I, KeyState::RELEASED))
+						renderable.model->ChangeMaterial("Barrel.mtl");
+					else if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::O, KeyState::RELEASED))
+						renderable.model->ChangeMaterial("Chest.mtl");
+				});
+
 		});
 }
