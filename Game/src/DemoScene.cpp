@@ -91,7 +91,7 @@ Entity DemoScene::CreatePlayerEntity()
 	comp::Renderable* renderable = playerEntity.AddComponent<comp::Renderable>();
 	playerEntity.AddComponent<comp::Player>()->runSpeed = 10.f;
 
-	renderable->mesh = ResourceManager::Get().GetResource<RMesh>("Cube.obj");
+	renderable->mesh = ResourceManager::Get().GetResource<RMesh>("Chest.obj");
 
 	m_gameCamera.SetFollowVelocity(playeerVelocity);
 

@@ -58,8 +58,8 @@ float4 main(PixelIn input) : SV_TARGET
     //TEMP
     Light L[2];
     L[0].position = float4(0.f, 8.f, 10.f, 1.f);
-    L[0].color = 300.f;
-    L[0].direction = float4(0.f, -1.f, -1.f, 0.f);
+    L[0].color = 10.f;
+    L[0].direction = float4(-1.f, 0.f, 0.f, 0.f);
     L[0].range = 75.f;
     L[0].type = 0;
     L[0].enabled = 1;

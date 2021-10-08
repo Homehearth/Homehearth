@@ -138,7 +138,7 @@ float3 DoDirectionlight(Light L, float3 normal)
     float3 N = normalize(normal);
     float3 VL = -normalize(L.direction.xyz);
     
-    float3 diff = 1.0f;
+    float3 diff = L.color.xyz;
     
     float diffuseFactor = max(dot(VL, N), 0.0f);
     
