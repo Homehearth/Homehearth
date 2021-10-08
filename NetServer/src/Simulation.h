@@ -27,6 +27,6 @@ public:
 	bool AddPlayer(uint32_t playerID);
 	void UpdatePlayer(uint32_t playerID, const comp::Transform& transform);
 
-	void Broadcast(network::message<GameMsg>& msg, uint32_t exclude);
-
+	// -1 will be defaulted to max value of unsigned 32 bit integer
+	void Broadcast(network::message<GameMsg>& msg, uint32_t exclude = -1);
 };

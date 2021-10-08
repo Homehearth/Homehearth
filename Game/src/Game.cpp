@@ -42,7 +42,7 @@ void Game::OnUserUpdate(float deltaTime)
 		{
 			PingServer();
 		}
-		if (ImGui::Button("Host"))
+		if (ImGui::Button("Create Lobby"))
 		{
 			message<GameMsg> msg;
 
