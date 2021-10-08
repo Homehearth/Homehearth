@@ -229,25 +229,25 @@ void RModel::Render() const
     }
 }
 
-void RMesh::RenderDeferred(ID3D11DeviceContext* context) const
+void RModel::RenderDeferred(ID3D11DeviceContext* context) const
 {
     UINT offset = 0;
     UINT stride = sizeof(simple_vertex_t);
     for (size_t m = 0; m < m_meshes.size(); m++)
     {
-        if (m_materials[m])
-            m_materials[m]->BindDeferredMaterial(context);
+        if (m_meshes[m].material)
+            m_meshes[m].material->BindDeferredMaterial(context);
 
         context->IASetVertexBuffers(0, 1, m_meshes[m].vertexBuffer.GetAddressOf(), &stride, &offset);
         context->IASetIndexBuffer(m_meshes[m].indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
         context->DrawIndexed(m_meshes[m].indexCount, 0, 0);
 
-        if (m_materials[m])
-            m_materials[m]->UnBindDeferredMaterial(context);
+        if (m_meshes[m].material)
+            m_meshes[m].material->UnBindDeferredMaterial(context);
     }
 }
 
-bool RMesh::Create(const std::string& filename)
+bool RModel::Create(const std::string& filename)
 {
     std::string filepath = MODELPATH + filename;
     Assimp::Importer importer;

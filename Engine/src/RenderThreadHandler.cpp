@@ -8,11 +8,14 @@
 
 CRITICAL_SECTION criticalSection;
 std::condition_variable cv;
+std::condition_variable rv;
 std::mutex render_mutex;
 std::mutex thread_mutex;
+std::mutex main_thread_mutex;
 bool shouldRender = true;
 
 bool ShouldContinue();
+bool ShouldRender();
 void RenderMain(const unsigned int& id);
 void RenderJob(const unsigned int start, unsigned int stop, void* objects, void* buffer, void* context, void* pipe);
 
@@ -24,6 +27,7 @@ thread::RenderThreadHandler::RenderThreadHandler()
 	m_window = nullptr;
 	m_statuses = nullptr;
 	m_isRunning = false;
+	m_renderMutex = nullptr;
 	InitializeCriticalSection(&criticalSection);
 }
 
@@ -44,6 +48,8 @@ thread::RenderThreadHandler::~RenderThreadHandler()
 		delete[] INSTANCE.m_statuses;
 	}
 
+	delete INSTANCE.m_renderMutex;
+
 	for (int i = 0; i < (int)INSTANCE.m_commands.size(); i++)
 	{
 		INSTANCE.m_commands[i]->Release();
@@ -62,17 +68,7 @@ void thread::RenderThreadHandler::Finish()
 	}
 	else
 	{
-		// Block until all threads have gotten their jobs.
-		while (INSTANCE.m_jobs.size() > 0);
-
-		// Block until all threads have stopped working.
-		for (int i = 0; i < (int)INSTANCE.m_amount; i++)
-		{
-			if (INSTANCE.m_statuses[i] != thread::thread_running)
-			{
-				i = 0;
-			}
-		}
+		rv.wait(*INSTANCE.m_renderMutex, ShouldRender);
 	}
 }
 
@@ -114,6 +110,7 @@ void thread::RenderThreadHandler::Setup(const int& amount)
 	}
 
 	INSTANCE.m_isPooled = true;
+	INSTANCE.m_renderMutex = new std::unique_lock<std::mutex>(main_thread_mutex);
 }
 
 const int thread::RenderThreadHandler::Launch(const int& amount_of_objects, void* objects)
@@ -195,7 +192,7 @@ void thread::RenderThreadHandler::ExecuteCommandLists()
 		{
 			if (INSTANCE.m_commands[i])
 			{
-				D3D11Core::Get().DeviceContext()->ExecuteCommandList(INSTANCE.m_commands[i], false);
+				D3D11Core::Get().DeviceContext()->ExecuteCommandList(INSTANCE.m_commands[i], true);
 				INSTANCE.m_commands[i]->Release();
 			}
 		}
@@ -214,6 +211,16 @@ bool ShouldContinue()
 		return true;
 
 	return false;
+}
+
+bool ShouldRender()
+{
+	if (INSTANCE.GetAmountOfJobs() > 0)
+	{
+		return false;
+	}
+	else
+		return true;
 }
 
 void RenderMain(const unsigned int& id)
@@ -258,10 +265,16 @@ void RenderMain(const unsigned int& id)
 			// Run render.
 			func(&m_privateBuffer, deferred_context, &pipeManager);
 			thread::RenderThreadHandler::Get().UpdateStatus(t_id, thread::thread_running);
+			
+			// Notify main render thread that functions are done.
+			rv.notify_all();
 
 			continue;
 		}
 		LeaveCriticalSection(&criticalSection);
+
+		// Notify main render thread that functions are done.
+		rv.notify_all();
 	}
 	thread::RenderThreadHandler::UpdateStatus(t_id, thread::thread_done);
 
@@ -302,7 +315,7 @@ void RenderJob(const unsigned int start,
 
 				m_buffer->SetData(m_context, it->data);
 				m_context->VSSetConstantBuffers(0, 1, buffers);
-				it->mesh->RenderDeferred(m_context);
+				it->model->RenderDeferred(m_context);
 			}
 		}
 
