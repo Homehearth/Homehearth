@@ -65,7 +65,7 @@ void Game::OnUserUpdate(float deltaTime)
 	else 
 	{
 		static char buffer[IPV6_ADDRSTRLEN];
-		strcpy(buffer, "127.0.0.1");
+		//strcpy(buffer, "127.0.0.1");
 		ImGui::InputText("IP", buffer, IPV6_ADDRSTRLEN);
 		static uint16_t port = 0;
 		ImGui::InputInt("Port", (int*)&port);
@@ -124,8 +124,8 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	}
 	case GameMsg::Lobby_Accepted:
 	{
-		msg >> this->m_gameID;
-		LOG_INFO("Successfully created lobby!");
+		msg >> m_gameID;
+		LOG_INFO("You are now in lobby: %lu", m_gameID);
 		break;
 	}
 	case GameMsg::Game_Update:
@@ -154,7 +154,6 @@ void Game::PingServer()
 void Game::JoinLobby(uint32_t lobbyID)
 {
 	LOG_INFO("Joining Lobby %d ...", lobbyID);
-	this->m_gameID = lobbyID;
 	message<GameMsg> msg;
 
 	msg.header.id = GameMsg::Lobby_Join;

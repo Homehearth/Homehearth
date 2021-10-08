@@ -80,12 +80,13 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 	}
 	case GameMsg::Lobby_Join:
 	{
-		uint32_t lobbyID;
-		msg >> lobbyID;
+		uint32_t gameID;
+		msg >> gameID;
 		uint32_t playerID;
 		msg >> playerID;
-		LOG_INFO("Player %d trying to join lobby %d", playerID, lobbyID);
-		games[lobbyID]->AddPlayer(playerID);
+		LOG_INFO("Player %d trying to join lobby %d", playerID, gameID);
+		games[gameID]->JoinLobby(playerID, gameID);
+		//games[gameID]->AddPlayer(playerID);
 		break;
 	}
 	case GameMsg::Game_Update: // other messages gets sent to simulation

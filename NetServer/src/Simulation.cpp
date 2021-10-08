@@ -7,6 +7,21 @@ Simulation::Simulation(Server* server)
 	this->m_gameID = 0;
 }
 
+bool Simulation::JoinLobby(uint32_t playerID, uint32_t gameID)
+{
+	// Send to client the message with the new game ID
+	message<GameMsg> msg;
+	msg.header.id = GameMsg::Lobby_Accepted;
+	msg << gameID;
+
+	m_server->SendToClient(m_server->GetConnection(playerID), msg);
+
+	// Add the players to the simulation on that specific client
+	this->AddPlayer(playerID);
+
+	return true;
+}
+
 bool Simulation::CreateLobby(uint32_t playerID, uint32_t gameID)
 {
 	this->m_gameID = gameID;
