@@ -87,7 +87,7 @@ float4 main(PixelIn input) : SV_TARGET
     //If an object has a texture sample from it, else use default values.
     if(c_hasAlbedo == 1)
     {
-        albedo = pow(T_albedo.Sample(LinearSampler, input.uv).rgb, 2.2f); //Power the albedo by 2.2f to get it to linear space.
+        albedo = pow(max(T_albedo.Sample(samp, input.uv).rgb, 0.0f), 2.2f); //Power the albedo by 2.2f to get it to linear space.
         
     }
     
@@ -160,7 +160,7 @@ float4 main(PixelIn input) : SV_TARGET
     //HDR tonemapping
 	color = color / (color + float3(1.0, 1.0, 1.0));
     //Gamma correct
-	color = pow(color, float3(1.0 / 2.2, 1.0 / 2.2, 1.0 / 2.2));
+    color = pow(max(color, 0.0f), float3(1.0 / 2.2, 1.0 / 2.2, 1.0 / 2.2));
     
 	return float4(color, 0.0);    
 }

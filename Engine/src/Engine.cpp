@@ -34,17 +34,11 @@ void Engine::Startup()
 	rtd::Handler2D::Get()->Initialize();
 	BackBuffer::Initialize();
 
-	//Camera
-	Camera m_debugCamera;
-	m_debugCamera.Initialize(sm::Vector3(0, 0, 1), sm::Vector3(0, 0, 0), sm::Vector3(0, 1, 0), sm::Vector2((float)m_window.GetWidth(), (float)m_window.GetHeight()));
-
-	m_currentCamera = std::make_shared<Camera>(m_debugCamera);
-
-	m_renderer.Initialize(&m_window, m_currentCamera.get());
+	m_renderer.Initialize(&m_window);
 
 	// Thread should be launched after s_engineRunning is set to true and D3D11 is initialized.
 	//
-	// AUDIO 
+	// AUDIO - we supposed to use other audio engine
 	//
 	HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
 	if (FAILED(hr))
@@ -70,7 +64,6 @@ void Engine::Startup()
 	);
 
 	InputSystem::Get().SetMouseWindow(m_window.GetHWnd(), m_window.GetWidth(), m_window.GetHeight());
-	InputSystem::Get().SetCamera(this->m_currentCamera.get());
 
 #if DRAW_TEMP_2D
 	rtd::Button* test = new rtd::Button("demo_start_game_button.png", draw_t(100.0f, 100.0f, 275.0f, 100.0f), true);
@@ -224,10 +217,14 @@ void Engine::drawImGUI() const
 
 	ImGui::Begin("Camera");
 	{
-		const std::string position = "Position: " + std::to_string(m_currentCamera->GetPosition().x)+ " " + std::to_string(m_currentCamera->GetPosition().y) + " " + std::to_string(m_currentCamera->GetPosition().z);
+		const std::string position = "Position: " + std::to_string(GetCurrentScene()->m_currentCamera->GetPosition().x)+ " " + std::to_string(GetCurrentScene()->m_currentCamera->GetPosition().y) + " " + std::to_string(GetCurrentScene()->m_currentCamera->GetPosition().z);
 		ImGui::Separator();
 		ImGui::Text(position.c_str());
-		//ImGui::DragFloat("Zoom: ", &m_currentCamera->m_zoomValue, 0.01f, 0.f, 1.0f);
+		ImGui::DragFloat("Zoom: ", &GetCurrentScene()->m_currentCamera->m_zoomValue, 0.01f, 0.0001f, 1.0f);
+		ImGui::DragFloat("Near Plane : ", &GetCurrentScene()->m_currentCamera->m_nearPlane, 0.1f , 0.0001f, GetCurrentScene()->m_currentCamera->m_farPlane-1);
+		ImGui::DragFloat("Far Plane: ", &GetCurrentScene()->m_currentCamera->m_farPlane, 0.1f, GetCurrentScene()->m_currentCamera->m_nearPlane+1);
+		ImGui::DragFloat3("Position: ", (float*)&GetCurrentScene()->m_currentCamera->m_position, 0.1f);
+		ImGui::DragFloat3("Rotation: ", (float*)&GetCurrentScene()->m_currentCamera->m_rollPitchYaw, 0.1f, 0.0f);
 		ImGui::Spacing();
 
 	};
@@ -297,9 +294,6 @@ void Engine::Update(float dt)
 		);
 	}
 
-	m_currentCamera->Update(dt);
-
-	// updates Scenes
 	HeadlessEngine::Update(dt);
 
 	{
@@ -345,4 +339,3 @@ void Engine::Render(float& dt)
 		D3D11Core::Get().SwapChain()->Present(0, 0);
 	}
 }
-

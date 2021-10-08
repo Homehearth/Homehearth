@@ -3,7 +3,7 @@
 
 
 Renderer::Renderer()
-	: m_d3d11(nullptr), m_camera(nullptr)
+	: m_d3d11(nullptr)
 {
 }
 
@@ -37,6 +37,11 @@ void Renderer::Render(Scene* pScene)
 {
     if (pScene && m_camera)
     {
+        if (!m_basePass.HasCamera())
+        {
+            m_basePass.SetCamera(pScene->GetCamera());
+        }
+
         if (!m_passes.empty())
         {
             UpdatePerFrame(); // once per frame.

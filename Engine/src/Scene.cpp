@@ -64,6 +64,12 @@ void Scene::ReadyForSwap()
 }
 
 DoubleBuffer<std::vector<comp::Renderable>>* Scene::GetDoubleBuffers()
+Camera* Scene::GetCamera()
+{
+	return m_currentCamera.get();
+}
+
+DoubleBuffer<std::vector<comp::Renderable>>* Scene::GetBuffers()
 {
 	return &m_renderableCopies;
 }

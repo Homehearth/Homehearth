@@ -6,8 +6,8 @@ Game::Game()
 	: m_client(std::bind(&Game::CheckIncoming, this, _1))
 	, Engine()
 {
-	this->m_localPID = 0;
-	this->m_gameID = 0;
+	this->m_localPID = -1;
+	this->m_gameID = -1;
 }
 
 Game::~Game()
@@ -20,9 +20,8 @@ Game::~Game()
 
 bool Game::OnStartup()
 {
-
 	// Scene logic
-	m_demoScene = std::make_unique<DemoScene>(*this, m_client);
+	m_demoScene = std::make_unique<DemoScene>(*this, m_client, &this->m_localPID, &this->m_gameID);
 
 	//Set as current scene
 	SetScene(m_demoScene->GetScene());
@@ -32,8 +31,9 @@ bool Game::OnStartup()
 
 void Game::OnUserUpdate(float deltaTime)
 {
+	m_demoScene->CameraUpdate(deltaTime);
 
-	
+
 	IMGUI(
 	ImGui::Begin("Test");
 
@@ -43,11 +43,11 @@ void Game::OnUserUpdate(float deltaTime)
 		{
 			PingServer();
 		}
-		if (ImGui::Button("Host"))
+		if (ImGui::Button("Create Lobby"))
 		{
 			message<GameMsg> msg;
 
-			msg.header.id = GameMsg::Client_CreateLobby;
+			msg.header.id = GameMsg::Lobby_Create;
 			msg << this->m_localPID;
 			m_client.Send(msg);
 
@@ -62,9 +62,10 @@ void Game::OnUserUpdate(float deltaTime)
 			JoinLobby(lobbyID);
 		}
 	}
-	else {
+	else 
+	{
 		static char buffer[IPV6_ADDRSTRLEN];
-		strcpy(buffer, "127.0.0.1");
+		//strcpy(buffer, "127.0.0.1");
 		ImGui::InputText("IP", buffer, IPV6_ADDRSTRLEN);
 		static uint16_t port = 0;
 		ImGui::InputInt("Port", (int*)&port);
@@ -121,6 +122,22 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		}
 		break;
 	}
+	case GameMsg::Lobby_Accepted:
+	{
+		msg >> this->m_gameID;
+		LOG_INFO("Successfully created lobby!");
+		break;
+	}
+	case GameMsg::Game_Update:
+	{
+		uint32_t playerID;
+		msg >> playerID;
+		comp::Transform t;
+		msg >> t;
+		*m_players.at(playerID).GetComponent<comp::Transform>() = t;
+
+		break;
+	}
 	}
 }
 
@@ -140,7 +157,7 @@ void Game::JoinLobby(uint32_t lobbyID)
 	this->m_gameID = lobbyID;
 	message<GameMsg> msg;
 
-	msg.header.id = GameMsg::Client_JoinLobby;
+	msg.header.id = GameMsg::Lobby_Join;
 	msg << this->m_localPID << lobbyID;
 	m_client.Send(msg);
 }

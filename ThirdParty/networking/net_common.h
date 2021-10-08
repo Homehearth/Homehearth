@@ -80,8 +80,9 @@ namespace network
 	enum class GameMsg : uint32_t
 	{
 		Client_Accepted,
-		Client_CreateLobby,
-		Client_JoinLobby,
+		Lobby_Create,
+		Lobby_Join,
+		Lobby_Accepted,
 		Server_AssignID,
 		Server_GetPing,
 		Game_AddPlayer,
