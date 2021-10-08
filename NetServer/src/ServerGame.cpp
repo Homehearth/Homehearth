@@ -64,27 +64,21 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 		LOG_INFO("Client on with ID: %ld is pinging server", playerID);
 		break;
 	}
-	case GameMsg::Game_MovePlayer:
-	{
-		LOG_INFO("Moving player!");
-		break;
-	}
-	case GameMsg::Client_CreateLobby:
+	case GameMsg::Lobby_Create:
 	{
 		uint32_t playerID;
 		msg >> playerID;
-		uint32_t lobbyID;
-		if (this->CreateSimulation(playerID, lobbyID))
+		if (this->CreateSimulation(playerID))
 		{
-			LOG_INFO("Created Game lobby %d", lobbyID);
+			LOG_INFO("Created Game lobby!");
 		}
 		else
 		{
-			LOG_INFO("Failed to create Lobby");
+			LOG_ERROR("Failed to create Lobby!");
 		}
 		break;
 	}
-	case GameMsg::Client_JoinLobby:
+	case GameMsg::Lobby_Join:
 	{
 		uint32_t lobbyID;
 		msg >> lobbyID;
@@ -94,18 +88,29 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 		games[lobbyID]->AddPlayer(playerID);
 		break;
 	}
+	case GameMsg::Game_Update: // other messages gets sent to simulation
+	{
+		uint32_t gameID;
+		msg >> gameID;
+		uint32_t playerID;
+		msg >> playerID;
+		comp::Transform t;
+		msg >> t;
+		games[gameID]->UpdatePlayer(playerID, t);
+		break;
+	}
 	}
 }
 
-bool ServerGame::CreateSimulation(uint32_t lobbyLeaderID, uint32_t& lobbyID)
+bool ServerGame::CreateSimulation(uint32_t playerID)
 {
-	lobbyID = m_nGameID;
 	games[m_nGameID] = std::make_unique<Simulation>(&m_server);
-	if (!games[m_nGameID]->CreateLobby(m_nGameID, lobbyLeaderID))
+	if (!games[m_nGameID]->CreateLobby(playerID, m_nGameID))
 	{
 		games.erase(m_nGameID);
 		return false;
 	}
+
 	m_nGameID++;
 
 	return true;
