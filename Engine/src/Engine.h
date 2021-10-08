@@ -12,8 +12,6 @@ private:
 	
 	std::atomic<bool> m_IsImguiReady;
 
-	std::shared_ptr<Camera> m_currentCamera;
-
 	Window m_window;
 	Renderer m_renderer;
 	std::unique_ptr<DirectX::AudioEngine> m_audio_engine;
@@ -38,7 +36,6 @@ private:
 	// Run the Engine's core loop.
 	void Run() override;
 
-	Window* GetWindow();
 
 	// IMGUI
 	void drawImGUI() const;
@@ -50,4 +47,6 @@ public:
 	Engine& operator=(const Engine& other) = delete;
 	Engine& operator=(Engine&& other) = delete;
 	virtual ~Engine() = default;
+	Window* GetWindow();
+
 };

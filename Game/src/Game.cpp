@@ -31,8 +31,9 @@ bool Game::OnStartup()
 
 void Game::OnUserUpdate(float deltaTime)
 {
+	m_demoScene->CameraUpdate(deltaTime);
 
-	
+
 	IMGUI(
 	ImGui::Begin("Test");
 
@@ -61,7 +62,8 @@ void Game::OnUserUpdate(float deltaTime)
 			JoinLobby(lobbyID);
 		}
 	}
-	else {
+	else 
+	{
 		static char buffer[IPV6_ADDRSTRLEN];
 		strcpy(buffer, "127.0.0.1");
 		ImGui::InputText("IP", buffer, IPV6_ADDRSTRLEN);

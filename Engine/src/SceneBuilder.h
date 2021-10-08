@@ -13,7 +13,7 @@ template<typename T>
 class SceneBuilder
 {
 protected:
-	HeadlessEngine& m_engine;
+	HeadlessEngine& m_headlessEngine;
 	Scene& m_scene;
 	std::string m_sceneName;
 public:
@@ -25,7 +25,7 @@ public:
 
 template<typename T>
 inline SceneBuilder<T>::SceneBuilder(HeadlessEngine& engine)
-	: m_engine(engine)
+	: m_headlessEngine(engine)
 	, m_scene(engine.GetScene(GetTypeName<T>()))
 	, m_sceneName(GetTypeName<T>())
 {
