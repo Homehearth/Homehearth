@@ -14,9 +14,11 @@ private:
 	Camera m_debugCamera;
 	sm::Vector3 m_oldGameCameraPosition;
 	sm::Vector3 m_oldDebugCameraPosition;
+	uint32_t* m_playerID, *m_gameID;
+	Client& m_client;
 public:
-	DemoScene(Engine& engine, Client& client);
-
+	DemoScene(Engine& engine, Client& client, uint32_t* playerID, uint32_t* gameID);
+	
 	Entity CreatePlayerEntity();
 
 	//Camera
