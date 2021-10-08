@@ -33,7 +33,7 @@ thread::RenderThreadHandler::~RenderThreadHandler()
 	cv.notify_all();
 	if (m_workerThreads)
 	{
-		for (int i = 0; i < INSTANCE.m_amount; i++)
+		for (int i = 0; i < (int)INSTANCE.m_amount; i++)
 		{
 			if (INSTANCE.m_workerThreads[i].joinable())
 				INSTANCE.m_workerThreads[i].join();
@@ -55,7 +55,7 @@ void thread::RenderThreadHandler::Finish()
 {
 	if (!INSTANCE.m_isPooled)
 	{
-		for (int i = 0; i < INSTANCE.m_amount; i++)
+		for (int i = 0; i < (int)INSTANCE.m_amount; i++)
 		{
 			INSTANCE.m_workerThreads[i].join();
 		}
@@ -66,7 +66,7 @@ void thread::RenderThreadHandler::Finish()
 		while (INSTANCE.m_jobs.size() > 0);
 
 		// Block until all threads have stopped working.
-		for (int i = 0; i < INSTANCE.m_amount; i++)
+		for (int i = 0; i < (int)INSTANCE.m_amount; i++)
 		{
 			if (INSTANCE.m_statuses[i] != thread::thread_running)
 			{
@@ -203,7 +203,6 @@ void thread::RenderThreadHandler::ExecuteCommandLists()
 				D3D11Core::Get().DeviceContext()->ExecuteCommandList(INSTANCE.m_commands[i], false);
 				INSTANCE.m_commands[i]->Release();
 			}
-
 		}
 	}
 
@@ -284,16 +283,18 @@ void RenderJob(const unsigned int start,
 	PipelineManager* m_pipeManager = (PipelineManager*)pipe;
 	if (m_objects)
 	{
-		// Update Context
+		// On Pass Start
 		ID3D11CommandList* command_list = nullptr;
 		IRenderPass* pass = thread::RenderThreadHandler::Get().GetRenderer()->GetCurrentPass();
-
+		
+		// Update pass
 		pass->PreRender(m_context, m_pipeManager);
 
 		// Make sure not to go out of range
 		if (stop > (*m_objects)[1].size())
-			stop = (*m_objects)[1].size();
+			stop = (unsigned int)(*m_objects)[1].size();
 
+		// On Pass Render
 		for (unsigned int i = start; i < stop; i++)
 		{
 			comp::Renderable* it = &(*m_objects)[1][i];
@@ -311,14 +312,13 @@ void RenderJob(const unsigned int start,
 		}
 
 
-		// Release Context
+		// Release pass
 		pass->PostRender(m_context);
 
-		HRESULT hr = m_context->FinishCommandList(false, &command_list);
-
+		// On Pass End
+		HRESULT hr = m_context->FinishCommandList(true, &command_list);
 		EnterCriticalSection(&criticalSection);
 		if (SUCCEEDED(hr))
-			//command_list->Release();
 			thread::RenderThreadHandler::Get().InsertCommandList(command_list);
 		LeaveCriticalSection(&criticalSection);
 	}
