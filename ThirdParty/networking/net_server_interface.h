@@ -97,7 +97,21 @@ namespace network
 		void Broadcast(message<T>& msg);
 		void SendToClient(const SOCKET& socket, message<T>& msg);
 		bool IsRunning();
+		bool isClientConnected(const SOCKET& socket)const;
 	};
+
+	template <typename T>
+	bool server_interface<T>::isClientConnected(const SOCKET& socket)const
+	{
+		bool isConnected = false;
+
+		if (socket != INVALID_SOCKET)
+		{
+			isConnected = true;
+		}
+
+		return isConnected;
+	}
 
 	template <typename T>
 	void server_interface<T>::AlertThread()
