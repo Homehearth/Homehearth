@@ -29,7 +29,7 @@ DemoScene::DemoScene(Engine& engine, Client& client)
 			}
 
 			//***REMOVE LATER***
-			GameSystems::MaterialTestSystem(scene);
+			GameSystems::ChangeMaterialSystem(scene);
 		});
 }
 
