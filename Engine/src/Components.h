@@ -1,5 +1,7 @@
 #pragma once
 #include "RMesh.h"
+#include "net_common.h"
+#include "net_message.h"
 
 namespace ecs
 {
@@ -45,7 +47,12 @@ namespace ecs
 	sm::Vector3 GetForward(const component::Transform& transform);
 	sm::Vector3 GetUp(const component::Transform& transform);
 
+
 };
+// serialize
+network::message<network::GameMsg>& operator << (network::message<network::GameMsg>& msg, const ecs::component::Transform& data);
+
+network::message<network::GameMsg>& operator >> (network::message<network::GameMsg>& msg, ecs::component::Transform& data);
 
 namespace comp = ecs::component;
 
