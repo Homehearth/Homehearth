@@ -3,7 +3,7 @@
 
 using namespace std::placeholders;
 
-ServerGame::ServerGame() 
+ServerGame::ServerGame()
 	:m_server(std::bind(&ServerGame::CheckIncoming, this, _1))
 {
 	m_nGameID = 0;
@@ -93,7 +93,10 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 		uint32_t gameID;
 		uint32_t playerID;
 		msg >> gameID >> playerID;
-		games[gameID]->UpdatePlayer(playerID, msg);
+		if (games.find(gameID) != games.end())
+		{
+			games[gameID]->UpdatePlayer(playerID, msg);
+		}
 		break;
 	}
 	}

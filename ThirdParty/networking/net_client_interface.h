@@ -211,13 +211,16 @@ namespace network
 	{
 		if (tempMsgIn.header.size > sizeof(msg_header<T>))
 		{
-			if (tempMsgIn.header.size > 3000)
+			if (tempMsgIn.header.size > 100)
 			{
 				EnterCriticalSection(&lock);
 				LOG_ERROR("Allocating to much memory! THIS IS BAD");
 				LeaveCriticalSection(&lock);
 			}
-			this->PrimeReadPayload(tempMsgIn.header.size - sizeof(msg_header<T>));
+			else
+			{
+				this->PrimeReadPayload(tempMsgIn.header.size - sizeof(msg_header<T>));
+			}
 		}
 		else
 		{

@@ -1,4 +1,5 @@
 #pragma once
+#pragma once
 
 #include <HeadlessEngine.h>
 #include "Simulation.h"
