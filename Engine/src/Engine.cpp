@@ -34,17 +34,11 @@ void Engine::Startup()
 	rtd::Handler2D::Get()->Initialize();
 	BackBuffer::Initialize();
 
-	//Camera
-	Camera m_debugCamera;
-	m_debugCamera.Initialize(sm::Vector3(0, 0, 1), sm::Vector3(0, 0, 0), sm::Vector3(0, 1, 0), sm::Vector2((float)m_window.GetWidth(), (float)m_window.GetHeight()));
-
-	m_currentCamera = std::make_shared<Camera>(m_debugCamera);
-
-	m_renderer.Initialize(&m_window, m_currentCamera.get());
+	m_renderer.Initialize(&m_window);
 
 	// Thread should be launched after s_engineRunning is set to true and D3D11 is initialized.
 	//
-	// AUDIO 
+	// AUDIO - we supposed to use other audio engine
 	//
 	HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
 	if (FAILED(hr))
@@ -70,7 +64,6 @@ void Engine::Startup()
 	);
 
 	InputSystem::Get().SetMouseWindow(m_window.GetHWnd(), m_window.GetWidth(), m_window.GetHeight());
-	InputSystem::Get().SetCamera(this->m_currentCamera.get());
 
 #if DRAW_TEMP_2D
 	rtd::Button* test = new rtd::Button("demo_start_game_button.png", draw_t(100.0f, 100.0f, 275.0f, 100.0f), true);
@@ -92,7 +85,6 @@ void Engine::Startup()
 
 void Engine::Run()
 {
-	
 	if (thread::IsThreadActive())
 		T_CJOB(Engine, RenderThread);
 
@@ -208,15 +200,15 @@ void Engine::drawImGUI() const
 	ImGui::Begin("Components");
 	if (ImGui::CollapsingHeader("Transform"))
 	{
-		GetCurrentScene()->GetRegistry().view<comp::Transform>().each([&](entt::entity e, comp::Transform& transform)
+		GetCurrentScene()->ForEachComponent<comp::Transform>([&](Entity& e, comp::Transform& transform)
 			{
 				ImGui::Separator();
-				ImGui::Text("Entity: %d", static_cast<int>(e));
-				ImGui::DragFloat3(("Position##" + std::to_string(static_cast<int>(e))).c_str(), (float*)&transform.position);
-				ImGui::DragFloat3(("Rotation##" + std::to_string(static_cast<int>(e))).c_str(), (float*)&transform.rotation, dx::XMConvertToRadians(1.f));
-				if(ImGui::Button(("Remove##" + std::to_string(static_cast<int>(e))).c_str()))
+				ImGui::Text("Entity: %d", static_cast<int>((entt::entity)e));
+				ImGui::DragFloat3(("Position##" + std::to_string(static_cast<int>((entt::entity)e))).c_str(), (float*)&transform.position);
+				ImGui::DragFloat3(("Rotation##" + std::to_string(static_cast<int>((entt::entity)e))).c_str(), (float*)&transform.rotation, dx::XMConvertToRadians(1.f));
+				if(ImGui::Button(("Remove##" + std::to_string(static_cast<int>((entt::entity)e))).c_str()))
 				{
-					GetCurrentScene()->GetRegistry().destroy(e);
+					e.Destroy();
 				}
 				ImGui::Spacing();
 			});
@@ -225,10 +217,14 @@ void Engine::drawImGUI() const
 
 	ImGui::Begin("Camera");
 	{
-		const std::string position = "Position: " + std::to_string(m_currentCamera->GetPosition().x)+ " " + std::to_string(m_currentCamera->GetPosition().y) + " " + std::to_string(m_currentCamera->GetPosition().z);
+		const std::string position = "Position: " + std::to_string(GetCurrentScene()->m_currentCamera->GetPosition().x)+ " " + std::to_string(GetCurrentScene()->m_currentCamera->GetPosition().y) + " " + std::to_string(GetCurrentScene()->m_currentCamera->GetPosition().z);
 		ImGui::Separator();
 		ImGui::Text(position.c_str());
-		//ImGui::DragFloat("Zoom: ", &m_currentCamera->m_zoomValue, 0.01f, 0.f, 1.0f);
+		ImGui::DragFloat("Zoom: ", &GetCurrentScene()->m_currentCamera->m_zoomValue, 0.01f, 0.0001f, 1.0f);
+		ImGui::DragFloat("Near Plane : ", &GetCurrentScene()->m_currentCamera->m_nearPlane, 0.1f , 0.0001f, GetCurrentScene()->m_currentCamera->m_farPlane-1);
+		ImGui::DragFloat("Far Plane: ", &GetCurrentScene()->m_currentCamera->m_farPlane, 0.1f, GetCurrentScene()->m_currentCamera->m_nearPlane+1);
+		ImGui::DragFloat3("Position: ", (float*)&GetCurrentScene()->m_currentCamera->m_position, 0.1f);
+		ImGui::DragFloat3("Rotation: ", (float*)&GetCurrentScene()->m_currentCamera->m_rollPitchYaw, 0.1f, 0.0f);
 		ImGui::Spacing();
 
 	};
@@ -280,7 +276,7 @@ void Engine::Update(float dt)
 			Shutdown();
 		}
 	}
-
+	// todo temp
 	if (InputSystem::Get().CheckMouseKey(MouseKey::RIGHT, KeyState::PRESSED))
 	{
 		InputSystem::Get().SwitchMouseMode();
@@ -298,11 +294,7 @@ void Engine::Update(float dt)
 		);
 	}
 
-	m_currentCamera->Update(dt);
 	HeadlessEngine::Update(dt);
-
-	// Updates game logic
-	this->OnUserUpdate(dt);
 
 	{
 		PROFILE_SCOPE("Ending ImGui");
@@ -347,4 +339,3 @@ void Engine::Render(float& dt)
 		D3D11Core::Get().SwapChain()->Present(0, 0);
 	}
 }
-

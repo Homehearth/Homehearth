@@ -1,5 +1,10 @@
 #pragma once
 
+struct Ray_t
+{
+	sm::Vector3 rayPos, rayDir;
+};
+
 /*
 	Basic objects like static meshes
 	//[TODO] Discuss bitanget?

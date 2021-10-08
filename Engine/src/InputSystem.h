@@ -1,16 +1,12 @@
 #pragma once
 #include "Camera.h"
+#include "CommonStructures.h"
 enum class KeyState { PRESSED, RELEASED, HELD };
 enum class MouseKey { LEFT, RIGHT, MIDDLE };
 enum class Axis {VERTICAL, HORIZONTAL};
 struct MousePos
 {
 	int x, y;
-};
-//TODO move this struct
-struct Ray_t
-{
-	sm::Vector3 rayPos, rayDir;
 };
 class InputSystem final
 {
