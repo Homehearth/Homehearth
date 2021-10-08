@@ -51,8 +51,6 @@ void Scene::Render()
 	
 	// Emit event
 	publish<ESceneRender>();
-
-	m_renderableCopies.ReadyForSwap();
 }
 
 const bool Scene::IsRenderReady() const
@@ -60,7 +58,12 @@ const bool Scene::IsRenderReady() const
 	return m_renderableCopies.IsSwapped();
 }
 
-DoubleBuffer<std::vector<comp::Renderable>>* Scene::GetBuffers()
+void Scene::ReadyForSwap()
+{
+	m_renderableCopies.ReadyForSwap();
+}
+
+DoubleBuffer<std::vector<comp::Renderable>>* Scene::GetDoubleBuffers()
 {
 	return &m_renderableCopies;
 }

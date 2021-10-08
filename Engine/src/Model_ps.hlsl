@@ -6,14 +6,25 @@ Texture2D T_metalness : register(t2);
 Texture2D T_roughness : register(t3);
 Texture2D T_aomap     : register(t4);
 Texture2D T_displace  : register(t5);
+Texture2D T_depth     : register(t10);
 
-SamplerState samp : register(s0);
+SamplerState LinearSampler : register(s0);
+SamplerState PointSampler : register(s1);
+
+cbuffer Camera : register(b1)
+{
+    float4 cameraPosition;
+    float4 cameraTarget;
+
+    float4x4 projection;
+    float4x4 view;
+}
 
 /*
     Material constant buffers
 */
 
-cbuffer matConstants_t : register(b0)
+cbuffer matConstants_t : register(b2)
 {
     float3 c_ambient;
     float  c_shiniess;
@@ -22,7 +33,7 @@ cbuffer matConstants_t : register(b0)
     float3 c_specular;
 };
 
-cbuffer properties_t : register(b2)
+cbuffer properties_t : register(b3)
 {
     //If a texture is set this will be 1
     int c_hasAlbedo;
@@ -33,17 +44,18 @@ cbuffer properties_t : register(b2)
     int c_hasDisplace;
 };
 
-cbuffer Camera : register(b1)
+float LinearizeDepth(float depth)
 {
-    float4 cameraPosition;
-    float4 cameraTarget;
-    
-    float4x4 projection;
-    float4x4 view;
+    float z = depth * 2.0 - 1.0; // back to NDC 
+    return (2.0 * 0.01f * 100.0f) / (100.0f + 0.01f - z * (100.0f - 0.01f));
 }
 
 float4 main(PixelIn input) : SV_TARGET
 {
+    float depth = T_depth.Sample(PointSampler, input.uv).r;
+	//depth = LinearizeDepth(depth);
+	//return float4(depth, depth, depth, 1.0f);
+	
     float3 camPos = cameraPosition.xyz;
     float ao = 1.0f;
     float3 albedo = 1.f;
@@ -75,13 +87,13 @@ float4 main(PixelIn input) : SV_TARGET
     //If an object has a texture sample from it, else use default values.
     if(c_hasAlbedo == 1)
     {
-        albedo = pow(T_albedo.Sample(samp, input.uv).rgb, 2.2f); //Power the albedo by 2.2f to get it to linear space.
+        albedo = pow(T_albedo.Sample(LinearSampler, input.uv).rgb, 2.2f); //Power the albedo by 2.2f to get it to linear space.
         
     }
     
     if(c_hasNormal == 1)
     {
-        float3 normalMap = T_normal.Sample(samp, input.uv).rgb;
+        float3 normalMap = T_normal.Sample(LinearSampler, input.uv).rgb;
         normalMap = normalMap * 2.0f - 1.0f;
         
         float3 tangent = normalize(input.tangent.xyz);
@@ -93,17 +105,17 @@ float4 main(PixelIn input) : SV_TARGET
     
     if(c_hasMetalness == 1)
     {
-        metallic = T_metalness.Sample(samp, input.uv).r;
+        metallic = T_metalness.Sample(LinearSampler, input.uv).r;
     }
     
     if(c_hasRoughness == 1)
     {
-        roughness = T_roughness.Sample(samp, input.uv).r;
+        roughness = T_roughness.Sample(LinearSampler, input.uv).r;
     }
     
     if(c_hasAoMap == 1)
     {
-        ao = T_aomap.Sample(samp, input.uv).r;        
+        ao = T_aomap.Sample(LinearSampler, input.uv).r;
     }    
     
 

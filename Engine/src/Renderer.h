@@ -13,9 +13,11 @@ private:
 	std::vector<IRenderPass*> m_passes;
 	Camera* m_camera;
 	
-	BasePass m_basePass;	// Forward Rendering.
-	DepthPass m_depthPass;	// Forward Plus (1st pass).
+	BasePass m_basePass;	
+	DepthPass m_depthPass;
 
+	// Update per frame related resources.
+	void UpdatePerFrame();
 	
 	// Add a pass to the list.
 	void AddPass(IRenderPass* pass);

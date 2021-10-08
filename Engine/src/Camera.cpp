@@ -126,7 +126,7 @@ void Camera::Update(float deltaTime)
 
     m_target = dx::XMVectorAdd(m_target, m_position);
     m_view = dx::XMMatrixLookAtLH(m_position, m_target, m_up);
-
+    
     //UpdateProjection();
     //m_projection = dx::XMMatrixPerspectiveFovLH(m_FOV * m_zoomValue, m_aspectRatio, m_nearPlane, m_farPlane);
 
@@ -202,4 +202,5 @@ void Camera::SetZoom(float val)
 void Camera::UpdateProjection()
 {
     m_projection = dx::XMMatrixPerspectiveFovLH(m_FOV * m_zoomValue, m_aspectRatio, m_nearPlane, m_farPlane);
+
 }

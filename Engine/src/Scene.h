@@ -28,7 +28,6 @@ public:
 	
 	template<typename ...T>
 	void ForEachComponent(std::function<void(Entity, T&...)> func); 
-	
 
 	// Emit update event and update constant buffers
 	void Update(float dt);
@@ -38,7 +37,9 @@ public:
 
 	const bool IsRenderReady() const;
 
-	DoubleBuffer<std::vector<comp::Renderable>>* GetBuffers();
+	void ReadyForSwap();
+	
+	DoubleBuffer<std::vector<comp::Renderable>>* GetDoubleBuffers();
 };
 
 

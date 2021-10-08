@@ -1,15 +1,7 @@
 #include "EnginePCH.h"
 #include "LightPass.h"
 
-void LightPass::Initialize()
-{
-	// Initialize Pass.
-	// accept scene.
-	// accept materials.
-	// accept 
-}
-
-void LightPass::PreRender(ID3D11DeviceContext* dc, PipelineManager* pm)
+void LightPass::PreRender()
 {
 // Require: L is a list of n lights.
 // Require : C is the current index in the global light index list.
@@ -22,10 +14,8 @@ void LightPass::PreRender(ID3D11DeviceContext* dc, PipelineManager* pm)
 
 void LightPass::Render(Scene* pScene)
 {
-	// Render objects.
 }
 
 void LightPass::PostRender()
 {
-	// ?
 }
