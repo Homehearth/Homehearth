@@ -231,7 +231,7 @@ namespace network
 	{
 		PER_IO_DATA* context = new PER_IO_DATA;
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
-		char buffer[BUFFER_SIZE];
+		char buffer[BUFFER_SIZE] = {};
 		memcpy(&buffer[0], &msg.header, sizeof(msg_header<T>));
 		if (msg.header.size > 0)
 		{

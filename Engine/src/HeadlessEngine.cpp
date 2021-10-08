@@ -82,7 +82,7 @@ void HeadlessEngine::Run()
 	double lastFrame = omp_get_wtime();
 	float deltaTime = 0.f;
 	float accumulator = 0.f;
-	const float targetDelta = 1 / 10000.0f;
+	const float targetDelta = 1 / 60.0f;
 
 	while (IsRunning())
 	{

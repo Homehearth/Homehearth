@@ -183,6 +183,10 @@ namespace network
 	{
 		if (SI->msgTempIn.header.size > 0)
 		{
+			if (SI->msgTempIn.header.size > 3000)
+			{
+				LOG_ERROR("Allocating to much memory!");
+			}
 			this->PrimeReadPayload(SI);
 		}
 		else
@@ -198,7 +202,7 @@ namespace network
 	{
 		PER_IO_DATA* context = new PER_IO_DATA;
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
-		char buffer[BUFFER_SIZE];
+		char buffer[BUFFER_SIZE] = {};
 		memcpy(&buffer[0], &msg.header, sizeof(msg_header<T>));
 		if (msg.header.size > 0)
 		{
