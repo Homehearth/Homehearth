@@ -659,7 +659,7 @@ namespace network
 		SOCKET_INFORMATION* SI = nullptr;
 		PER_IO_DATA* context;
 		DWORD bytesReceived = 0;
-		const DWORD CAP = 10;
+		const DWORD CAP = 50;
 		OVERLAPPED_ENTRY Entries[CAP];
 		ULONG EntriesRemoved = 0;
 		BOOL ShouldShutdown = false;

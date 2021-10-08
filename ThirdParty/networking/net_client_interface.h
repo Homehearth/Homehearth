@@ -321,7 +321,7 @@ namespace network
 		DWORD BytesTransferred = 0;
 		DWORD flags = 0;
 		PER_IO_DATA* context = nullptr;
-		const DWORD CAP = 10;
+		const DWORD CAP = 50;
 		OVERLAPPED_ENTRY Entries[CAP];
 		ULONG EntriesRemoved = 0;
 
