@@ -6,11 +6,6 @@ DemoScene::DemoScene(Engine& engine, Client& client, uint32_t* playerID, uint32_
 	, m_playerID(playerID)
 	, m_client(client)
 {
-	Entity box = m_scene.CreateEntity();
-	box.AddComponent<comp::Transform>()->position.z = -5.0f;
-	comp::Renderable* boxRender = box.AddComponent<comp::Renderable>();
-	boxRender->mesh = ResourceManager::Get().GetResource<RMesh>("Cube.fbx");
-
 	m_engine = &engine;
 	//Initialize player entity
 	SetUpCamera();
@@ -21,16 +16,18 @@ DemoScene::DemoScene(Engine& engine, Client& client, uint32_t* playerID, uint32_
 		{
 			//System responding to user input
 			GameSystems::MRayIntersectBoxSystem(scene);
-			
-			//GameSystems::UserInputSystem(scene, client);
+
 			int ver = InputSystem::Get().GetAxis(Axis::VERTICAL);
-			int hor = InputSystem::Get().GetAxis(Axis::VERTICAL);
-			
-			m_player.GetComponent<comp::Velocity>()->vel.z = ver * m_player.GetComponent<comp::Player>()->runSpeed;
-			m_player.GetComponent<comp::Velocity>()->vel.x = hor * m_player.GetComponent<comp::Player>()->runSpeed;
-		
-			//System to update velocity
-			Systems::MovementSystem(scene, e.dt);
+			int hor = InputSystem::Get().GetAxis(Axis::HORIZONTAL);
+
+			if (scene.m_currentCamera.get()->GetCameraType() == CAMERATYPE::PLAY)
+			{
+				m_player.GetComponent<comp::Velocity>()->vel.z = ver * m_player.GetComponent<comp::Player>()->runSpeed;
+				m_player.GetComponent<comp::Velocity>()->vel.x = hor * m_player.GetComponent<comp::Player>()->runSpeed;
+
+				// Updates the position based on input from player
+				Systems::MovementSystem(scene, e.dt);
+			}
 
 			if (m_client.IsConnected() && *m_gameID != UINT32_MAX)
 			{
@@ -40,18 +37,6 @@ DemoScene::DemoScene(Engine& engine, Client& client, uint32_t* playerID, uint32_
 				comp::Transform t = *m_player.GetComponent<comp::Transform>();
 				msg << t << *m_playerID << *m_gameID;
 				m_client.Send(msg);
-			}
-			
-			if (scene.m_currentCamera.get()->GetCameraType() == CAMERATYPE::PLAY)
-			{
-				//System to update velocity
-				Systems::MovementSystem(scene, e.dt);
-				//System responding to user input
-				GameSystems::UserInputSystem(scene, client);
-				GameSystems::MRayIntersectBoxSystem(scene);
-
-				//m_player.GetComponent<comp::Velocity>()->vel.z = InputSystem::Get().GetAxis(Axis::VERTICAL) * m_player.GetComponent<comp::Player>()->runSpeed;
-				//m_player.GetComponent<comp::Velocity>()->vel.x = InputSystem::Get().GetAxis(Axis::HORIZONTAL) * m_player.GetComponent<comp::Player>()->runSpeed;
 			}
 		});
 }
@@ -101,12 +86,12 @@ Entity DemoScene::CreatePlayerEntity()
 
 	Entity playerEntity = m_scene.CreateEntity();
 	playerEntity.AddComponent<comp::Transform>()->position.z = -17.0f;
-	
-	comp::Velocity* playeerVelocity =  playerEntity.AddComponent<comp::Velocity>();
+
+	comp::Velocity* playeerVelocity = playerEntity.AddComponent<comp::Velocity>();
 	comp::Renderable* renderable = playerEntity.AddComponent<comp::Renderable>();
 	playerEntity.AddComponent<comp::Player>()->runSpeed = 10.f;
 
-	renderable->mesh = ResourceManager::Get().GetResource<RMesh>("Chest.obj");
+	renderable->mesh = ResourceManager::Get().GetResource<RMesh>("Cube.obj");
 
 	m_gameCamera.SetFollowVelocity(playeerVelocity);
 
