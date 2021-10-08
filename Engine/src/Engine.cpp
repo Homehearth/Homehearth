@@ -324,11 +324,14 @@ void Engine::Render(float& dt)
 {
 	PROFILE_FUNCTION();
 
-	/*
-		Render 3D
-	*/
-	m_renderer.ClearFrame();
-	m_renderer.Render(GetCurrentScene());
+	{
+		PROFILE_SCOPE("Render D3D11");
+		/*
+			Render 3D
+		*/
+		m_renderer.ClearFrame();
+		m_renderer.Render(GetCurrentScene());
+	}
 
 	{
 		PROFILE_SCOPE("Render ImGui");
@@ -352,4 +355,3 @@ void Engine::Render(float& dt)
 		D3D11Core::Get().SwapChain()->Present(0, 0);
 	}
 }
-

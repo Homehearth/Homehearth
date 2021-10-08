@@ -322,9 +322,4 @@ void RenderJob(const unsigned int start,
 			thread::RenderThreadHandler::Get().InsertCommandList(command_list);
 		LeaveCriticalSection(&criticalSection);
 	}
-
-	m_objects = nullptr;
-	m_buffer = nullptr;
-	m_context = nullptr;
-	m_pipeManager = nullptr;
 }
