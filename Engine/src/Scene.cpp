@@ -52,6 +52,7 @@ void Scene::Render()
 		}
 	}
 
+	// Run any available Command lists from worker threads.
 	thread::RenderThreadHandler::ExecuteCommandLists();
 	
 	// Emit event

@@ -8,9 +8,11 @@
 
 CRITICAL_SECTION criticalSection;
 std::condition_variable cv;
+std::condition_variable rv;
 std::mutex render_mutex;
 
 bool ShouldContinue();
+bool ShouldRender();
 void RenderMain(const unsigned int& id);
 void RenderJob(const unsigned int start, unsigned int stop, void* objects, void* buffer, void* context, void* pipe);
 
@@ -22,6 +24,7 @@ thread::RenderThreadHandler::RenderThreadHandler()
 	m_window = nullptr;
 	m_statuses = nullptr;
 	m_isRunning = false;
+	m_renderMutex = nullptr;
 	InitializeCriticalSection(&criticalSection);
 }
 
@@ -41,6 +44,8 @@ thread::RenderThreadHandler::~RenderThreadHandler()
 		delete[] INSTANCE.m_workerThreads;
 		delete[] INSTANCE.m_statuses;
 	}
+
+	delete INSTANCE.m_renderMutex;
 
 	for (int i = 0; i < (int)INSTANCE.m_commands.size(); i++)
 	{
@@ -112,6 +117,7 @@ void thread::RenderThreadHandler::Setup(const int& amount)
 	}
 
 	INSTANCE.m_isPooled = true;
+	INSTANCE.m_renderMutex = new std::unique_lock<std::mutex>(main_thread_mutex);
 }
 
 const int thread::RenderThreadHandler::Launch(const int& amount_of_objects, void* objects)
@@ -214,6 +220,16 @@ bool ShouldContinue()
 	return false;
 }
 
+bool ShouldRender()
+{
+	if (INSTANCE.GetAmountOfJobs() > 0)
+	{
+		return false;
+	}
+	else
+		return true;
+}
+
 void RenderMain(const unsigned int& id)
 {
 	// On start
@@ -256,10 +272,16 @@ void RenderMain(const unsigned int& id)
 			// Run render.
 			func(&m_privateBuffer, deferred_context, &pipeManager);
 			thread::RenderThreadHandler::Get().UpdateStatus(t_id, thread::thread_running);
+			
+			// Notify main render thread that functions are done.
+			rv.notify_all();
 
 			continue;
 		}
 		LeaveCriticalSection(&criticalSection);
+
+		// Notify main render thread that functions are done.
+		rv.notify_all();
 	}
 	thread::RenderThreadHandler::UpdateStatus(t_id, thread::thread_done);
 
