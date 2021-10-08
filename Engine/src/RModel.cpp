@@ -11,30 +11,6 @@ RModel::~RModel()
     m_meshes.clear();
 }
 
-bool RModel::SetBoundingBox(const sm::Vector3& center, const sm::Vector3& halfLengths)
-{
-    dx::BoundingOrientedBox bob;
-    bob.Center = { center.x, center.y, center.z };
-    bob.Extents = { halfLengths.x, halfLengths.y, halfLengths.z };
-
-    std::vector<simple_vertex_t> corners;
-
-    dx::XMFLOAT3 dxcorners[dx::BoundingOrientedBox::CORNER_COUNT];
-    bob.GetCorners(dxcorners);
-
-    /*for (size_t i = 0; i < dx::BoundingOrientedBox::CORNER_COUNT; i++)
-    {
-        corners.push_back({ dxcorners[i].x, dxcorners[i].y, dxcorners[i].z });
-    }
-    
-    if (!CreateVertexBuffer(corners))
-    {
-        std::cout << "Failed to create vertexbuffer..." << std::endl;
-        return false;
-    }*/
-    return true;
-}
-
 bool RModel::ChangeMaterial(const std::string& mtlfile)
 {
     const std::string filepath = MATERIALPATH + mtlfile;
@@ -235,29 +211,6 @@ bool RModel::CreateIndexBuffer(const std::vector<UINT>& indices, submesh_t& mesh
     return !FAILED(hr);
 }
 
-bool RModel::CreateVertexBuffer(const std::vector<sm::Vector3>& positions)
-{
-    D3D11_BUFFER_DESC bufferDesc;
-    ZeroMemory(&bufferDesc, sizeof(D3D11_BUFFER_DESC));
-
-    bufferDesc.ByteWidth = static_cast<UINT>(sizeof(sm::Vector3) * positions.size());
-    bufferDesc.Usage = D3D11_USAGE::D3D11_USAGE_DEFAULT;
-    bufferDesc.BindFlags = D3D11_BIND_FLAG::D3D11_BIND_VERTEX_BUFFER;
-    bufferDesc.CPUAccessFlags = 0;
-    bufferDesc.MiscFlags = 0;
-    bufferDesc.StructureByteStride = 0;
-
-    D3D11_SUBRESOURCE_DATA subresData;
-    ZeroMemory(&subresData, sizeof(D3D11_SUBRESOURCE_DATA));
-
-    subresData.pSysMem = &positions[0];
-    subresData.SysMemPitch = 0;
-    subresData.SysMemSlicePitch = 0;
-
-    HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&bufferDesc, &subresData, m_boundingBoxBuffer.GetAddressOf());
-    return !FAILED(hr);
-}
-
 void RModel::Render() const
 {
     UINT offset = 0;
@@ -274,13 +227,6 @@ void RModel::Render() const
         if (m_meshes[m].material)
             m_meshes[m].material->UnBindMaterial();
     }
-
-    /*if (m_boundingBoxBuffer)
-    {
-        D3D11Core::Get().DeviceContext()->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
-        D3D11Core::Get().DeviceContext()->IASetVertexBuffers(0, 1, m_boundingBoxBuffer.GetAddressOf(), &stride, &offset);
-        D3D11Core::Get().DeviceContext()->Draw(8, 0);
-    }*/
 }
 
 bool RModel::Create(const std::string& filename)
@@ -378,8 +324,6 @@ bool RModel::Create(const std::string& filename)
         //Add the submesh to the vector
         m_meshes.push_back(submesh);
     }
-
-    SetBoundingBox({ 0.f,0.f,0.f }, { 1.f, 1.f, 1.f });
 
     matSet.clear(); 
     importer.FreeScene();
