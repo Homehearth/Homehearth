@@ -9,7 +9,6 @@ RModel::RModel()
 RModel::~RModel()
 {
     m_meshes.clear();
-    m_boundingBoxes.clear();
 }
 
 bool RModel::ChangeMaterial(const std::string& mtlfile)
@@ -93,70 +92,10 @@ bool RModel::ChangeMaterial(const std::string& mtlfile)
     return true;
 }
 
-const dx::BoundingSphere& RModel::GetBoundingSphere() const
-{
-    return m_boundingSphere;
-}
-
-const std::vector<dx::BoundingBox>& RModel::GetBoundingBoxes() const
-{
-    return m_boundingBoxes;
-}
-
 const std::string RModel::GetFileFormat(const std::string& filename) const
 {
     size_t startIndex = filename.find_last_of(".");
     return filename.substr(startIndex);
-}
-
-void RModel::AddBoundingBox(const aiMesh*& aimesh, submesh_t& submesh)
-{
-    //Get the data
-    aiVector3D aiMin = aimesh->mAABB.mMin;
-    dx::XMVECTOR min = dx::XMVectorSet(aiMin.x, aiMin.y, aiMin.z, 0.0f);
-    aiVector3D aiMax = aimesh->mAABB.mMax;
-    dx::XMVECTOR max = dx::XMVectorSet(aiMax.x, aiMax.y, aiMax.z, 0.0f);
-    
-    //Create the box
-    dx::BoundingBox bb;
-    dx::BoundingBox::CreateFromPoints(bb, min, max);
-
-    //Add the boundingbox
-    m_boundingBoxes.push_back(bb);
-}
-
-void RModel::CalcBoundingSphere()
-{
-    dx::XMFLOAT3 totalMin = { D3D11_FLOAT32_MAX, D3D11_FLOAT32_MAX, D3D11_FLOAT32_MAX };
-    dx::XMFLOAT3 totalMax = { -D3D11_FLOAT32_MAX, -D3D11_FLOAT32_MAX, -D3D11_FLOAT32_MAX };
-
-    //Go through all the boundingboxes
-    for (size_t i = 0; i < m_boundingBoxes.size(); i++)
-    {
-        const dx::BoundingBox bb = m_boundingBoxes[i];
-        dx::XMFLOAT3 max = { bb.Center.x + bb.Extents.x, bb.Center.y + bb.Extents.y, bb.Center.z + bb.Extents.z };
-        dx::XMFLOAT3 min = { bb.Center.x - bb.Extents.x, bb.Center.y - bb.Extents.y, bb.Center.z - bb.Extents.z };
-
-        //Compare the max-values
-        if (max.x > totalMax.x)
-            totalMax.x = max.x;
-        if (max.y > totalMax.y)
-            totalMax.y = max.y;
-        if (max.z > totalMax.z)
-            totalMax.z = max.z;
-
-        //Compare the min-values
-        if (min.x < totalMin.x)
-            totalMin.x = min.x;
-        if (min.y < totalMin.y)
-            totalMin.y = min.y;
-        if (min.z < totalMin.z)
-            totalMin.z = min.z;
-    }
-
-    //Create the sphere
-    dx::XMFLOAT3 packed[2] = { totalMin, totalMax };
-    dx::BoundingSphere::CreateFromPoints(m_boundingSphere, 2, packed, sizeof(dx::XMFLOAT3));
 }
 
 bool RModel::CombineMeshes(std::vector<aiMesh*>& submeshes, submesh_t& submesh)
@@ -170,7 +109,6 @@ bool RModel::CombineMeshes(std::vector<aiMesh*>& submeshes, submesh_t& submesh)
     for (UINT m = 0; m < submeshes.size(); m++)
     {
         const aiMesh* aimesh = submeshes[m];
-        AddBoundingBox(aimesh, submesh);
 
         //Load in vertices
         for (UINT v = 0; v < aimesh->mNumVertices; v++)
@@ -304,8 +242,7 @@ bool RModel::Create(const std::string& filename)
         aiProcess_FlipWindingOrder      |   //Makes it clockwise order
         aiProcess_MakeLeftHanded        |	//Use a lefthanded system for the models 
         aiProcess_CalcTangentSpace      |   //Fix tangents and bitangents automatic for us
-        aiProcess_FlipUVs               |   //Flips the textures to fit directX-style
-        aiProcess_GenBoundingBoxes          //Calculates boundingboxes
+        aiProcess_FlipUVs                   //Flips the textures to fit directX-style
     );
 
     //Check if readfile was successful
@@ -387,11 +324,6 @@ bool RModel::Create(const std::string& filename)
         //Add the submesh to the vector
         m_meshes.push_back(submesh);
     }
-
-    /*
-        Create the global boundingsphere for the model
-    */
-    CalcBoundingSphere();
 
     matSet.clear(); 
     importer.FreeScene();

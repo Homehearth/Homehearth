@@ -36,7 +36,7 @@ void GameSystems::MaterialTestSystem(Scene& scene)
 			if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::I, KeyState::RELEASED))
 				renderable.model->ChangeMaterial("Chest.mtl");
 			else if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::O, KeyState::RELEASED))
-				renderable.model->ChangeMaterial("Tree1.mtl");
+				renderable.model->ChangeMaterial("Barrel.mtl");
 		});
 }
 

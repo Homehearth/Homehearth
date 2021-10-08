@@ -13,9 +13,6 @@ struct aiMesh;
 	Combines all the submeshes with same material to one.
 	This is to optimized and lower the amount of drawcalls.
 
-	The model has a BoundingSphere that covers everything.
-	There is also multiple boundingboxes, one per submesh
-
 	The model can change material to any other mtl-file.
 	Order in the mtl-file is important.
 
@@ -34,29 +31,14 @@ private:
 		UINT							indexCount = 0;
 		std::shared_ptr<RMaterial>		material;
 	};
-	std::vector<submesh_t>			m_meshes;
+	std::vector<submesh_t>					m_meshes;
 	
-	//Local colliders. Sphere covers the mesh
-	dx::BoundingSphere				m_boundingSphere;
-	std::vector<dx::BoundingBox>	m_boundingBoxes;
-
 	//Save the skeleton in a structure: rootbone --> other parts
 
 private:
 	//Get the end of file. Searches for "."
 	const std::string GetFileFormat(const std::string& filename) const;
 	
-	/*
-		Add a boundingbox to the submesh. A submesh can have multiple boundingboxes.
-		This is to avoid losing precision
-	*/
-	void AddBoundingBox(const aiMesh*& aimesh, submesh_t& submesh);
-
-	/*
-		Create a global sphere
-	*/
-	void CalcBoundingSphere();
-
 	/*
 		Combines multiple submeshes that uses the same material to one.
 		This is to avoid to many drawcalls per RModel.
@@ -79,10 +61,6 @@ public:
 		* mtl-file only has 1 material, the reset will be reseted to none
 	*/
 	bool ChangeMaterial(const std::string& mtlfile);
-
-	//Get colliders
-	const dx::BoundingSphere& GetBoundingSphere() const;
-	const std::vector<dx::BoundingBox>& GetBoundingBoxes() const;
 
 	/*
 		Render all of the submeshes in the RModel with correct material
