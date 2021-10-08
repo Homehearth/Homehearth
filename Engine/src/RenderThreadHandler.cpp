@@ -9,8 +9,6 @@
 CRITICAL_SECTION criticalSection;
 std::condition_variable cv;
 std::mutex render_mutex;
-std::mutex thread_mutex;
-bool shouldRender = true;
 
 bool ShouldContinue();
 void RenderMain(const unsigned int& id);
@@ -63,7 +61,7 @@ void thread::RenderThreadHandler::Finish()
 	else
 	{
 		// Block until all threads have gotten their jobs.
-		while (INSTANCE.m_jobs.size() > 0);
+		while (INSTANCE.m_jobs.size() > 0) {};
 
 		// Block until all threads have stopped working.
 		for (int i = 0; i < (int)INSTANCE.m_amount; i++)
@@ -118,7 +116,7 @@ void thread::RenderThreadHandler::Setup(const int& amount)
 
 const int thread::RenderThreadHandler::Launch(const int& amount_of_objects, void* objects)
 {
-	const unsigned int objects_per_thread = (unsigned int)ceil(amount_of_objects / INSTANCE.m_amount);
+	const unsigned int objects_per_thread = ceil(amount_of_objects / INSTANCE.m_amount);
 	if (objects_per_thread >= thread::threshold)
 	{
 		// Launch Threads
@@ -195,7 +193,7 @@ void thread::RenderThreadHandler::ExecuteCommandLists()
 		{
 			if (INSTANCE.m_commands[i])
 			{
-				D3D11Core::Get().DeviceContext()->ExecuteCommandList(INSTANCE.m_commands[i], false);
+				D3D11Core::Get().DeviceContext()->ExecuteCommandList(INSTANCE.m_commands[i], true);
 				INSTANCE.m_commands[i]->Release();
 			}
 		}
@@ -302,7 +300,7 @@ void RenderJob(const unsigned int start,
 
 				m_buffer->SetData(m_context, it->data);
 				m_context->VSSetConstantBuffers(0, 1, buffers);
-				it->mesh->RenderDeferred(m_context);
+				it->model->RenderDeferred(m_context);
 			}
 		}
 

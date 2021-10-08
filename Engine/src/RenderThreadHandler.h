@@ -51,8 +51,8 @@ namespace thread
 		/*
 			Launches threads to take care of divided rendering.
 			Retval:
-			0 - Render on same thread.
-			1 - Rendered on separate threads.
+			1/true - Render on same thread.
+			0/false - Rendered on separate threads.
 		*/
 		static const int Launch(const int& amount_of_objects, void* objects);
 

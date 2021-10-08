@@ -35,24 +35,20 @@ void Scene::Render()
 {
 	PROFILE_FUNCTION();
 
-	// System that renders Renderable component
-
-	ID3D11Buffer* buffers[1] =
-	{
-		m_publicBuffer.GetBuffer()
-	};
-
-	D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, buffers);
-
-	// Todo: Divide up work for threads.
-
 	// Renders on one thread if Launch returns 1. else everything already rendered.
 	if ((bool)thread::RenderThreadHandler::Get().Launch(m_renderableCopies[1].size(), &m_renderableCopies))
 	{
+		ID3D11Buffer* buffers[1] =
+		{
+			m_publicBuffer.GetBuffer()
+		};
+
+		D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, buffers);
+		// System that renders Renderable component
 		for (const auto& it : m_renderableCopies[1])
 		{
 			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
-			it.mesh->Render();
+			it.model->Render();
 		}
 	}
 
