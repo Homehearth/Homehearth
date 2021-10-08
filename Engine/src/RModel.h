@@ -31,8 +31,12 @@ private:
 		UINT							indexCount = 0;
 		std::shared_ptr<RMaterial>		material;
 	};
-	std::vector<submesh_t>					m_meshes;
+	std::vector<submesh_t>				m_meshes;
 	
+	//Holds the vertices
+	ComPtr<ID3D11Buffer> m_boundingBoxBuffer;
+
+
 	//Save the skeleton in a structure: rootbone --> other parts
 
 private:
@@ -49,9 +53,14 @@ private:
 	bool CreateVertexBuffer(const std::vector<simple_vertex_t>& vertices, submesh_t& mesh);
 	bool CreateIndexBuffer(const std::vector<UINT>& indices, submesh_t& mesh);
 
+	bool CreateVertexBuffer(const std::vector<sm::Vector3>& positions);
+
 public:
 	RModel();
 	~RModel();
+
+	//
+	bool SetBoundingBox(const sm::Vector3& center, const sm::Vector3& halfLengths);
 
 	/*
 		Change the material to other. Uses a mtlfile.
