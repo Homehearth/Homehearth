@@ -25,7 +25,7 @@ void GameSystems::MRayIntersectBoxSystem(Scene& scene)
 	});
 }
 
-void GameSystems::CollisionSystem(Scene& scene)
+void GameSystems::CollisionUpdateSystem(Scene& scene)
 {
 	//OBB collision on OBB & Sphere
 	scene.ForEachComponent<comp::BoundingOrientedBox>([&](Entity entity, comp::BoundingOrientedBox& boundingBox)

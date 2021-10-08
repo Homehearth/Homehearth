@@ -53,7 +53,7 @@ DemoScene::DemoScene(Engine& engine, Client& client, uint32_t* playerID, uint32_
 				m_client.Send(msg);
 			}
 			GameSystems::MRayIntersectBoxSystem(scene);
-			GameSystems::CollisionSystem(scene);
+			GameSystems::CollisionUpdateSystem(scene);
 		});
 
 	m_scene.on<ESceneCollision>([&](const ESceneCollision& e, Scene& scene)

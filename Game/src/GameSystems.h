@@ -6,7 +6,5 @@ namespace GameSystems
 {
 	void UserInputSystem(Scene& scene, Client& client);
 	void MRayIntersectBoxSystem(Scene& scene);
-	void CollisionSystem(Scene& scene);
-
-	
+	void CollisionUpdateSystem(Scene& scene);
 }
