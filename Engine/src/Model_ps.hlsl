@@ -1,11 +1,11 @@
 #include "PBR.hlsli"
 
-Texture2D T_albedo    : register(t0);
-Texture2D T_normal    : register(t1);
-Texture2D T_metalness : register(t2);
-Texture2D T_roughness : register(t3);
-Texture2D T_aomap     : register(t4);
-Texture2D T_displace  : register(t5);
+Texture2D T_albedo    : register(t1);
+Texture2D T_normal    : register(t2);
+Texture2D T_metalness : register(t3);
+Texture2D T_roughness : register(t4);
+Texture2D T_aomap     : register(t5);
+Texture2D T_displace  : register(t6);
 
 SamplerState samp : register(s0);
 

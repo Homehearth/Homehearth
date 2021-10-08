@@ -3,8 +3,6 @@
 #include <omp.h>
 #include "Camera.h"
 
-#include "RMesh.h"
-
 bool Engine::s_safeExit = false;
 
 Engine::Engine()

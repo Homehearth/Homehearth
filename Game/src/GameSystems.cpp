@@ -28,5 +28,3 @@ void GameSystems::MRayIntersectBoxSystem(Scene& scene)
 		
 	});
 }
-
-
