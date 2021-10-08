@@ -459,5 +459,11 @@ bool PipelineManager::CreateShaders()
         return false;
     }
 
+    if (!m_textureEffectVertexShader.Create("textureEffect_vs"))
+    {
+        LOG_WARNING("failed to create textureEffect_vs");
+        return false;
+    }
+
     return true;
 }                         
