@@ -18,12 +18,12 @@ void TextureEffectPass::PreRender(ID3D11DeviceContext* dc, PipelineManager* pm)
 
     // INPUT ASSEMBLY.
     {
-        dc->IASetInputLayout(nullptr);
+        dc->IASetInputLayout(pm->m_positionOnlyInputLayout.Get());
     }
 
     // SHADER STAGES.
     {
-        dc->VSSetShader(nullptr, nullptr, 0); 
+        dc->VSSetShader(pm->m_textureEffectVertexShader.Get(),  nullptr, 0); 
         dc->GSSetShader(nullptr, nullptr, 0);
         dc->HSSetShader(nullptr, nullptr, 0);
         dc->DSSetShader(nullptr, nullptr, 0);
@@ -63,7 +63,6 @@ void TextureEffectPass::Render(Scene* pScene)
 void TextureEffectPass::PostRender()
 {
     // Update constantbuffer here!
-    D3D11Core::Get().DeviceContext()->UpdateSubresource(m_pm->m_textureEffectConstantBuffer.Get(), 0, nullptr, &m_CBuffer, 0, 0);
-
+    //D3D11Core::Get().DeviceContext()->UpdateSubresource(m_pm->m_textureEffectConstantBuffer.Get(), 0, nullptr, &m_CBuffer, 0, 0);
 }
 
