@@ -13,12 +13,14 @@ bool shouldRender = true;
 
 bool ShouldContinue();
 void RenderMain(const unsigned int& id);
-void RenderJob(const unsigned int start, const unsigned int stop, void* objects, void* buffer, void* context, void* pipe);
+void RenderJob(const unsigned int start, unsigned int stop, void* objects, void* buffer, void* context, void* pipe);
 
 thread::RenderThreadHandler::RenderThreadHandler()
 {
 	m_workerThreads = nullptr;
 	m_amount = 0;
+	m_renderer = nullptr;
+	m_window = nullptr;
 	m_statuses = nullptr;
 	m_isRunning = false;
 	InitializeCriticalSection(&criticalSection);
@@ -107,7 +109,7 @@ void thread::RenderThreadHandler::Setup(const int& amount)
 
 const int thread::RenderThreadHandler::Launch(const int& amount_of_objects, void* objects)
 {
-	unsigned int objects_per_thread = (amount_of_objects / INSTANCE.m_amount);
+	const unsigned int objects_per_thread = (amount_of_objects / INSTANCE.m_amount);
 	if (objects_per_thread >= thread::threshold)
 	{
 		// Launch Threads
@@ -262,7 +264,7 @@ void RenderMain(const unsigned int& id)
 }
 
 void RenderJob(const unsigned int start,
-	const unsigned int stop, void* objects, void* buffer, void* context, void* pipe)
+	unsigned int stop, void* objects, void* buffer, void* context, void* pipe)
 {
 	DoubleBuffer<std::vector<comp::Renderable>>* m_objects = (DoubleBuffer<std::vector<comp::Renderable>>*)objects;
 	dx::ConstantBuffer<basic_model_matrix_t>* m_buffer = (dx::ConstantBuffer<basic_model_matrix_t>*)buffer;
@@ -277,7 +279,11 @@ void RenderJob(const unsigned int start,
 
 		pass->PreRender(m_context, m_pipeManager);
 
-		for (unsigned int i = start; i < stop - 1; i++)
+		// Make sure not to go out of range
+		if (stop > (*m_objects)[1].size())
+			stop = (*m_objects)[1].size();
+
+		for (unsigned int i = start; i < stop; i++)
 		{
 			comp::Renderable* it = &(*m_objects)[1][i];
 			if (it)
