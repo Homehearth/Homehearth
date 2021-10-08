@@ -63,9 +63,7 @@ void TextureEffectPass::Render(Scene* pScene)
 void TextureEffectPass::PostRender()
 {
     // Update constantbuffer here!
-    D3D11Core::Get().DeviceContext()->UpdateSubresource(m_pm->m_textureEffectConstantBuffer.Get(), 0, nullptr, m_CBuffer, 0, 0); //WHYYYYYYY
-
-    D3D11Core::Get().DeviceContext()->UpdateSubresource(m_camera->m_viewConstantBuffer.Get(), 0, nullptr, m_camera->GetCameraMatrixes(), 0, 0);
+    D3D11Core::Get().DeviceContext()->UpdateSubresource(m_pm->m_textureEffectConstantBuffer.Get(), 0, nullptr, &m_CBuffer, 0, 0);
 
 }
 
