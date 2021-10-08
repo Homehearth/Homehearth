@@ -38,9 +38,6 @@ DemoScene::DemoScene(Engine& engine, Client& client, uint32_t* playerID, uint32_
 				msg << t << *m_playerID << *m_gameID;
 				m_client.Send(msg);
 			}
-
-			//***REMOVE LATER***
-			GameSystems::ChangeMaterialSystem(scene);
 		});
 }
 

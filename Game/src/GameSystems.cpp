@@ -28,18 +28,3 @@ void GameSystems::MRayIntersectBoxSystem(Scene& scene)
 		
 	});
 }
-
-
-//***REMOVE LATER***
-void GameSystems::ChangeMaterialSystem(Scene& scene)
-{
-	scene.ForEachComponent<comp::Renderable, comp::Player>([&](comp::Renderable& renderable, comp::Player&)
-		{
-			if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::I, KeyState::RELEASED))
-				renderable.model->ChangeMaterial("Chest.mtl");
-			else if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::O, KeyState::RELEASED))
-				renderable.model->ChangeMaterial("Tree1.mtl");
-		});
-}
-
-
