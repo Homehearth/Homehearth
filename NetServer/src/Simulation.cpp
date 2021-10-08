@@ -73,14 +73,7 @@ void Simulation::Broadcast(network::message<GameMsg>& msg, uint32_t exclude)
 	{
 		if (exclude != con.first)
 		{
-			if (m_server->isClientConnected(con.second))
-			{
-				m_server->SendToClient(con.second, msg);
-			}
-			else
-			{
-				m_connections.erase(con.first);
-			}
+			m_server->SendToClient(con.second, msg);
 		}
 	}
 }
