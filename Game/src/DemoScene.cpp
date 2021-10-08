@@ -5,7 +5,7 @@ DemoScene::DemoScene(HeadlessEngine& engine, Client& client)
 {
 	//Initialize player entity
 	m_player = CreatePlayerEntity();
-	for (int i = 0; i < 49; i++)
+	for (int i = 0; i < 52; i++)
 	{
 		CreatePlayerEntity();
 	}

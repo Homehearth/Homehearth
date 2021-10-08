@@ -1,6 +1,7 @@
 #include "EnginePCH.h"
 #include "RenderThreadHandler.h"
 #include "multi_thread_manager.h"
+#include <tgmath.h>
 
 #define INSTANCE thread::RenderThreadHandler::Get()
 #define CONTEXT D3D11Core::Get().DeviceContext()
@@ -42,6 +43,12 @@ thread::RenderThreadHandler::~RenderThreadHandler()
 		delete[] INSTANCE.m_workerThreads;
 		delete[] INSTANCE.m_statuses;
 	}
+
+	for (int i = 0; i < (int)INSTANCE.m_commands.size(); i++)
+	{
+		INSTANCE.m_commands[i]->Release();
+	}
+	INSTANCE.m_jobs.clear();
 }
 
 void thread::RenderThreadHandler::Finish()
@@ -55,6 +62,9 @@ void thread::RenderThreadHandler::Finish()
 	}
 	else
 	{
+		// Block until all threads have gotten their jobs.
+		while (INSTANCE.m_jobs.size() > 0);
+
 		// Block until all threads have stopped working.
 		for (int i = 0; i < INSTANCE.m_amount; i++)
 		{
@@ -82,7 +92,6 @@ std::function<void(void*, void*, void*)> thread::RenderThreadHandler::GetJob()
 	{
 		return nullptr;
 	}
-
 	return INSTANCE.m_jobs[(int)INSTANCE.m_jobs.size() - 1];
 }
 
@@ -109,19 +118,25 @@ void thread::RenderThreadHandler::Setup(const int& amount)
 
 const int thread::RenderThreadHandler::Launch(const int& amount_of_objects, void* objects)
 {
-	const unsigned int objects_per_thread = (amount_of_objects / INSTANCE.m_amount);
+	const unsigned int objects_per_thread = (unsigned int)ceil(amount_of_objects / INSTANCE.m_amount);
 	if (objects_per_thread >= thread::threshold)
 	{
 		// Launch Threads
 		if (INSTANCE.m_isPooled)
 		{
+			// Remove any old jobs no longer in use.
+			//INSTANCE.m_jobs.clear();
+
 			for (unsigned int i = 0; i < INSTANCE.m_amount; i++)
 			{
-				const auto& f = [=](void* buffer, void* context, void* pipe)
+				const auto f = [=](void* buffer, void* context, void* pipe)
 				{
 					RenderJob(i * objects_per_thread, (i + 1) * objects_per_thread, objects, buffer, context, pipe);
 				};
+
 				INSTANCE.m_jobs.push_back(f);
+				//int size = (int)INSTANCE.m_jobs.size();
+				//std::cout << "Size is: " << size << "\n";
 			}
 			cv.notify_all();
 		}
@@ -185,18 +200,15 @@ void thread::RenderThreadHandler::ExecuteCommandLists()
 		{
 			if (INSTANCE.m_commands[i])
 			{
-				/*
-					Crash here?
-				*/
-				D3D11Core::Get().DeviceContext()->ExecuteCommandList(INSTANCE.m_commands[i], TRUE);
+				D3D11Core::Get().DeviceContext()->ExecuteCommandList(INSTANCE.m_commands[i], false);
 				INSTANCE.m_commands[i]->Release();
 			}
 
 		}
-
-		// Remove all traces of evidence.
-		INSTANCE.m_commands.clear();
 	}
+
+	// Remove all traces of evidence.
+	INSTANCE.m_commands.clear();
 }
 
 bool ShouldContinue()
@@ -272,7 +284,6 @@ void RenderJob(const unsigned int start,
 	PipelineManager* m_pipeManager = (PipelineManager*)pipe;
 	if (m_objects)
 	{
-		
 		// Update Context
 		ID3D11CommandList* command_list = nullptr;
 		IRenderPass* pass = thread::RenderThreadHandler::Get().GetRenderer()->GetCurrentPass();
@@ -293,13 +304,9 @@ void RenderJob(const unsigned int start,
 					m_buffer->GetBuffer()
 				};
 
-				/*
-					Crash here..
-				*/
-
-				//m_buffer->SetData(m_context, it->data);
-				//m_context->VSSetConstantBuffers(0, 1, buffers);
-				//it->mesh->RenderDeferred(m_context);
+				m_buffer->SetData(m_context, it->data);
+				m_context->VSSetConstantBuffers(0, 1, buffers);
+				it->mesh->RenderDeferred(m_context);
 			}
 		}
 
@@ -311,10 +318,13 @@ void RenderJob(const unsigned int start,
 
 		EnterCriticalSection(&criticalSection);
 		if (SUCCEEDED(hr))
-			command_list->Release();
-			//thread::RenderThreadHandler::Get().InsertCommandList(command_list);
+			//command_list->Release();
+			thread::RenderThreadHandler::Get().InsertCommandList(command_list);
 		LeaveCriticalSection(&criticalSection);
-		
 	}
 
+	m_objects = nullptr;
+	m_buffer = nullptr;
+	m_context = nullptr;
+	m_pipeManager = nullptr;
 }
