@@ -8,7 +8,7 @@ class BasePass : public IRenderPass
 {
 private:
 	bool m_isEnabled;
-	Camera* m_camera;
+	Camera* m_camera = nullptr;
 
 public:
 	BasePass() = default;
@@ -26,7 +26,8 @@ public:
 	
 	void PostRender(ID3D11DeviceContext* dc = D3D11Core::Get().DeviceContext()) override;
 
-	void GetCamera(Camera* camera);
+	void SetCamera(Camera* camera);
+	bool HasCamera();
 	
 };
 

@@ -6,6 +6,7 @@ Men helst inte, typ, globalt? (Rikard får förklara)
 - Remember to comment what your functions do, it isn't obvious for everyone.
 
 - Simple math. = sm
+- Dirextx = dx
 
 - Måsvingar på separata rader.
 	if ()
@@ -19,12 +20,15 @@ Men helst inte, typ, globalt? (Rikard får förklara)
 - m_variabelnamn.
 
 - Struct _t
-
 	struct camera_Matrix_t
 	{
 		sm::Matrix projection;
 		sm::Matrix view;
 	};
+
+-Bool
+	- isDoingSomething
+	- hasDoneSomething
 
 - Finns en .cpp fil, gör alla funktioner där oavsett storlek.
 

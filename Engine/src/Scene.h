@@ -3,6 +3,7 @@
 #include "Components.h"
 #include "DoubleBuffer.h"
 #include "Entity.h"
+#include "Camera.h"
 
 class Scene : public entt::emitter<Scene>
 {
@@ -37,6 +38,9 @@ public:
 	void Render();
 
 	const bool IsRenderReady() const;
+
+	Camera* GetCamera();
+	std::shared_ptr<Camera> m_currentCamera;
 
 	DoubleBuffer<std::vector<comp::Renderable>>* GetBuffers();
 };

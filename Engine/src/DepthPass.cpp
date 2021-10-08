@@ -1,7 +1,7 @@
 #include "EnginePCH.h"
 #include "DepthPass.h"
 #include "PipelineManager.h"
-#include "RMesh.h"
+#include "RModel.h"
 
 void DepthPass::Initialize()
 {

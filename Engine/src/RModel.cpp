@@ -1,39 +1,104 @@
 #pragma once
 #include "EnginePCH.h"
-#include "RMesh.h"
+#include "RModel.h"
 
-RMesh::RMesh()
+RModel::RModel()
 {
-    m_meshType = EMeshType::staticMesh;
 }
 
-RMesh::~RMesh()
+RModel::~RModel()
 {
     m_meshes.clear();
-    m_materials.clear();
 }
 
-bool RMesh::ChangeMaterial(const std::string& mtlfile)
+bool RModel::ChangeMaterial(const std::string& mtlfile)
 {
+    const std::string filepath = MATERIALPATH + mtlfile;
+    std::ifstream readfile(filepath);
+    if (!readfile.is_open())
+        return false;
+
     /*
-        The new material have to have as many submaterials as previously,
-        otherwise things will look weird...
-
-        Load in the material from a mtl
-        * Can have many materials in same file
-        * 
-
+        Load data from file
     */
-    return false;
+    std::string line;
+    std::string totalData = "";
+    while (std::getline(readfile, line))
+    {
+        if (!line.empty())
+        {
+            line += '\n';
+            totalData.append(line);
+        }
+    }
+    readfile.close();
+
+    std::vector<std::string> blocks;
+    size_t mtlIndex = -1;
+    bool hasReachedEnd = false;
+    const std::string newmtl = "newmtl";
+
+    /*
+        Split the total data into multiple blocks
+    */
+    while (!hasReachedEnd)
+    {
+        mtlIndex = totalData.find(newmtl, mtlIndex +1);
+        if (mtlIndex != std::string::npos)
+        {
+            size_t mtlLast = totalData.find(newmtl, mtlIndex + 1);
+            blocks.push_back(totalData.substr(mtlIndex, mtlLast - mtlIndex));
+        }
+        else
+            hasReachedEnd = true;
+    }
+
+    /*
+        Get the names of all the materials
+    */
+    std::vector<std::string> materialNames;
+    for (int i = 0; i < blocks.size(); i++)
+    {
+        size_t nameIndex = blocks[i].find(newmtl) + newmtl.length() + 1;
+        size_t nameEnd = blocks[i].find('\n');
+        std::string matName = blocks[i].substr(nameIndex, nameEnd - nameIndex);
+        materialNames.push_back(matName);
+    }
+
+    /*
+        Bind the "new" materials to the model
+    */
+    for (size_t m = 0; m < m_meshes.size(); m++)
+    {
+        m_meshes[m].material.reset();
+        if (m < materialNames.size())
+        {
+            const std::string matName = materialNames[m];
+            m_meshes[m].material = ResourceManager::Get().GetResource<RMaterial>(matName);
+            
+            //Material not found - going to try to create it
+            if (!m_meshes[m].material)
+            {
+                m_meshes[m].material = std::make_shared<RMaterial>();
+                if (m_meshes[m].material->CreateFromMTL(blocks[m]))
+                {
+                    ResourceManager::Get().AddResource(matName, m_meshes[m].material);
+                }
+            }
+        }
+    }
+    blocks.clear();
+    materialNames.clear();
+    return true;
 }
 
-const std::string RMesh::GetFileFormat(const std::string& filename) const
+const std::string RModel::GetFileFormat(const std::string& filename) const
 {
     size_t startIndex = filename.find_last_of(".");
     return filename.substr(startIndex);
 }
 
-bool RMesh::CombineMeshes(std::vector<aiMesh*>& submeshes)
+bool RModel::CombineMeshes(std::vector<aiMesh*>& submeshes, submesh_t& submesh)
 {
     std::vector<simple_vertex_t> vertices;
     std::vector<UINT> indices;
@@ -83,13 +148,10 @@ bool RMesh::CombineMeshes(std::vector<aiMesh*>& submeshes)
     vertices.shrink_to_fit();
     indices.shrink_to_fit();
 
-    //Create a new mesh
-    mesh_t newMesh;
-
     //Create vertex and indexbuffer
     bool success = true;
-    if (!CreateVertexBuffer(vertices, newMesh) ||
-        !CreateIndexBuffer(indices, newMesh))
+    if (!CreateVertexBuffer(vertices, submesh) ||
+        !CreateIndexBuffer(indices, submesh))
     {
 #ifdef _DEBUG
         LOG_WARNING("Failed to load vertex- or indexbuffer...");
@@ -100,20 +162,10 @@ bool RMesh::CombineMeshes(std::vector<aiMesh*>& submeshes)
     //Cleaning
     vertices.clear();
     indices.clear();
-
-    if (success)
-    {
-        //Finally add the mesh to the vector
-        m_meshes.push_back(newMesh);
-        return true;
-    }
-    else
-    {
-        return false;
-    }
+    return success;
 }
 
-bool RMesh::CreateVertexBuffer(const std::vector<simple_vertex_t>& vertices, mesh_t& mesh)
+bool RModel::CreateVertexBuffer(const std::vector<simple_vertex_t>& vertices, submesh_t& mesh)
 {
     D3D11_BUFFER_DESC bufferDesc;
     ZeroMemory(&bufferDesc, sizeof(D3D11_BUFFER_DESC));
@@ -136,7 +188,7 @@ bool RMesh::CreateVertexBuffer(const std::vector<simple_vertex_t>& vertices, mes
     return !FAILED(hr);
 }
 
-bool RMesh::CreateIndexBuffer(const std::vector<UINT>& indices, mesh_t& mesh)
+bool RModel::CreateIndexBuffer(const std::vector<UINT>& indices, submesh_t& mesh)
 {
     D3D11_BUFFER_DESC indexBufferDesc;
     ZeroMemory(&indexBufferDesc, sizeof(D3D11_BUFFER_DESC));
@@ -159,21 +211,21 @@ bool RMesh::CreateIndexBuffer(const std::vector<UINT>& indices, mesh_t& mesh)
     return !FAILED(hr);
 }
 
-void RMesh::Render() const
+void RModel::Render() const
 {
     UINT offset = 0;
     UINT stride = sizeof(simple_vertex_t);
     for (size_t m = 0; m < m_meshes.size(); m++)
     {
-        if (m_materials[m])
-            m_materials[m]->BindMaterial();
+        if (m_meshes[m].material)
+            m_meshes[m].material->BindMaterial();
         
         D3D11Core::Get().DeviceContext()->IASetVertexBuffers(0, 1, m_meshes[m].vertexBuffer.GetAddressOf(), &stride, &offset);
         D3D11Core::Get().DeviceContext()->IASetIndexBuffer(m_meshes[m].indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
         D3D11Core::Get().DeviceContext()->DrawIndexed(m_meshes[m].indexCount, 0, 0);
         
-        if (m_materials[m])
-            m_materials[m]->UnBindMaterial();
+        if (m_meshes[m].material)
+            m_meshes[m].material->UnBindMaterial();
     }
 }
 
@@ -244,7 +296,7 @@ bool RMesh::Create(const std::string& filename)
     std::string fileformat = GetFileFormat(filename);
 
     /*
-        Loading submeshes and multiple materials
+        Links together a material to multiple submeshes
     */
     std::unordered_map<UINT, std::vector<aiMesh*>> matSet;
     //Creating all the sets
@@ -254,7 +306,10 @@ bool RMesh::Create(const std::string& filename)
         matSet[matIndex].push_back(scene->mMeshes[i]);
     }
 
-    //Load in every material needed
+    /*
+        Loads in each material and then combine
+        the multiple meshes to one, if needed.
+    */
     for (auto& mat : matSet)
     {
         UINT matIndex = mat.first;
@@ -264,24 +319,28 @@ bool RMesh::Create(const std::string& filename)
 
         //Load in the materials
         std::shared_ptr<RMaterial> material = std::make_shared<RMaterial>();
-        if (material->Create(scene->mMaterials[matIndex], fileformat))
-        {
-            ResourceManager::Get().AddResource(matName.C_Str(), material);
-            m_materials.push_back(material);
-        }
-        else
-        {
-            LOG_ERROR("Failed to create material!");
-        }
-
-        /*
-            Load in vertex- and index-data and combines all the meshes in a set to one
-        */
-        if (!CombineMeshes(mat.second))
+        if (!material->Create(scene->mMaterials[matIndex], fileformat))
         {
             importer.FreeScene();
             return false;
         }
+
+        //Add the material
+        ResourceManager::Get().AddResource(matName.C_Str(), material);
+        submesh_t submesh;
+        submesh.material = material;
+
+        /*
+            Load in vertex- and index-data and combines all the meshes in a set to one
+        */
+        if (!CombineMeshes(mat.second, submesh))
+        {
+            importer.FreeScene();
+            return false;
+        }
+
+        //Add the submesh to the vector
+        m_meshes.push_back(submesh);
     }
 
     matSet.clear(); 

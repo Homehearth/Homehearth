@@ -2,7 +2,7 @@
 #include "BasePass.h"
 
 #include "PipelineManager.h"
-#include "RMesh.h"
+#include "RModel.h"
 
 void BasePass::Initialize()
 {
@@ -70,7 +70,17 @@ void BasePass::PostRender(ID3D11DeviceContext* dc)
     dc->UpdateSubresource(m_camera->m_viewConstantBuffer.Get(), 0, nullptr, m_camera->GetCameraMatrixes(), 0, 0);
 }
 
-void BasePass::GetCamera(Camera* camera)
+void BasePass::SetCamera(Camera* camera)
 {
     m_camera = camera;
+}
+
+bool BasePass::HasCamera()
+{
+    if (m_camera == nullptr)
+    {
+        return false;
+    }
+    else 
+        return true;
 }

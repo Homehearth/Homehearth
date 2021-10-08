@@ -1,5 +1,7 @@
 #pragma once
-#include "RMesh.h"
+#include "net_common.h"
+#include "net_message.h"
+#include "RModel.h"
 
 namespace ecs
 {
@@ -14,7 +16,7 @@ namespace ecs
 
 		struct Renderable
 		{
-			std::shared_ptr<RMesh> mesh;
+			std::shared_ptr<RModel> model;
 			 basic_model_matrix_t data;
 		};
 
@@ -45,7 +47,12 @@ namespace ecs
 	sm::Vector3 GetForward(const component::Transform& transform);
 	sm::Vector3 GetUp(const component::Transform& transform);
 
+
 };
+// serialize
+network::message<network::GameMsg>& operator << (network::message<network::GameMsg>& msg, const ecs::component::Transform& data);
+
+network::message<network::GameMsg>& operator >> (network::message<network::GameMsg>& msg, ecs::component::Transform& data);
 
 namespace comp = ecs::component;
 
