@@ -27,7 +27,7 @@ public:
 
 	bool JoinLobby(uint32_t playerID, uint32_t gameID);
 	bool CreateLobby(uint32_t playerID, uint32_t gameID);
-	void UpdatePlayer(uint32_t playerID, const comp::Transform& transform);
+	void UpdatePlayer(const uint32_t& playerID, message<GameMsg>& msg);
 
 	// -1 will be defaulted to max value of unsigned 32 bit integer
 	void Broadcast(network::message<GameMsg>& msg, uint32_t exclude = -1);

@@ -35,7 +35,7 @@ void Game::OnUserUpdate(float deltaTime)
 
 
 	IMGUI(
-	ImGui::Begin("Test");
+		ImGui::Begin("Test");
 
 	if (m_client.IsConnected())
 	{
@@ -62,7 +62,7 @@ void Game::OnUserUpdate(float deltaTime)
 			JoinLobby(lobbyID);
 		}
 	}
-	else 
+	else
 	{
 		static char buffer[IPV6_ADDRSTRLEN];
 		//strcpy(buffer, "127.0.0.1");
@@ -108,7 +108,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		LOG_INFO("YOUR ID IS: %lu", this->m_localPID);
 		break;
 	}
-	
+
 	case GameMsg::Game_AddPlayer:
 	{
 		uint32_t count; // Could be more than one player
@@ -120,6 +120,10 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			LOG_INFO("Player with ID: %ld has joined the game!", remotePlayerID);
 			m_players.insert(std::make_pair(remotePlayerID, m_demoScene->CreatePlayerEntity()));
 		}
+
+		message<GameMsg> message;
+		message.header.id = GameMsg::Lobby_Accepted;
+
 		break;
 	}
 	case GameMsg::Lobby_Accepted:
@@ -132,10 +136,12 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	{
 		uint32_t playerID;
 		msg >> playerID;
-		comp::Transform t;
-		msg >> t;
-		*m_players.at(playerID).GetComponent<comp::Transform>() = t;
-
+		if (m_players.find(playerID) != m_players.end())
+		{
+			comp::Transform t;
+			msg >> t;
+			*m_players.at(playerID).GetComponent<comp::Transform>() = t;
+		}
 		break;
 	}
 	}
@@ -165,5 +171,5 @@ void Game::JoinLobby(uint32_t lobbyID)
 
 void Game::OnShutdown()
 {
-	
+
 }

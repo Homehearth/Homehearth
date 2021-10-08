@@ -61,11 +61,9 @@ bool Simulation::AddPlayer(uint32_t playerID)
 	return true;
 }
 
-void Simulation::UpdatePlayer(uint32_t playerID, const comp::Transform& transform)
+void Simulation::UpdatePlayer(const uint32_t& playerID, message<GameMsg>& msg)
 {
-	message<GameMsg> msg;
-	msg.header.id = GameMsg::Game_Update;
-	msg << transform << playerID;
+	msg << playerID;
 	Broadcast(msg, playerID);
 }
 

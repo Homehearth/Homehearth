@@ -86,18 +86,14 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 		msg >> playerID;
 		LOG_INFO("Player %d trying to join lobby %d", playerID, gameID);
 		games[gameID]->JoinLobby(playerID, gameID);
-		//games[gameID]->AddPlayer(playerID);
 		break;
 	}
-	case GameMsg::Game_Update: // other messages gets sent to simulation
+	case GameMsg::Game_Update:
 	{
 		uint32_t gameID;
-		msg >> gameID;
 		uint32_t playerID;
-		msg >> playerID;
-		comp::Transform t;
-		msg >> t;
-		games[gameID]->UpdatePlayer(playerID, t);
+		msg >> gameID >> playerID;
+		games[gameID]->UpdatePlayer(playerID, msg);
 		break;
 	}
 	}
