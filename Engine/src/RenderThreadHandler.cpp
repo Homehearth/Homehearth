@@ -124,9 +124,6 @@ const int thread::RenderThreadHandler::Launch(const int& amount_of_objects, void
 		// Launch Threads
 		if (INSTANCE.m_isPooled)
 		{
-			// Remove any old jobs no longer in use.
-			//INSTANCE.m_jobs.clear();
-
 			for (unsigned int i = 0; i < INSTANCE.m_amount; i++)
 			{
 				const auto f = [=](void* buffer, void* context, void* pipe)
@@ -135,8 +132,6 @@ const int thread::RenderThreadHandler::Launch(const int& amount_of_objects, void
 				};
 
 				INSTANCE.m_jobs.push_back(f);
-				//int size = (int)INSTANCE.m_jobs.size();
-				//std::cout << "Size is: " << size << "\n";
 			}
 			cv.notify_all();
 		}

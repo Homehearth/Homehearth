@@ -52,7 +52,7 @@ namespace thread
 			Launches threads to take care of divided rendering.
 			Retval:
 			0 - Render on same thread.
-			x > 0 - Spot where to start rendering on main render thread.
+			1 - Rendered on separate threads.
 		*/
 		static const int Launch(const int& amount_of_objects, void* objects);
 
@@ -94,7 +94,14 @@ namespace thread
 		static void SetWindow(Window* wind);
 		static Window* GetWindow();
 
+		/*
+			Insert a command list into the stack.
+		*/
 		static void InsertCommandList(ID3D11CommandList* list);
+
+		/*
+			Execute each command list available on the stack.
+		*/
 		static void ExecuteCommandLists();
 	};
 }
