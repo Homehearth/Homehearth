@@ -5,6 +5,9 @@ DemoScene::DemoScene(Engine& engine, Client& client)
 {
 	Entity box = m_scene.CreateEntity();
 	box.AddComponent<comp::Transform>()->position.z = -5.0f;
+	comp::BoundingOrientedBox* obb = box.AddComponent<comp::BoundingOrientedBox>();
+	obb->Center = sm::Vector3(0.0f, 0.0f, -10.0f);
+	obb->Extents = sm::Vector3(1.0f, 1.0f, 1.0f);
 	comp::Renderable* boxRender = box.AddComponent<comp::Renderable>();
 	boxRender->mesh = ResourceManager::Get().GetResource<RMesh>("Cube.fbx");
 
@@ -22,11 +25,18 @@ DemoScene::DemoScene(Engine& engine, Client& client)
 				Systems::MovementSystem(scene, e.dt);
 				//System responding to user input
 				GameSystems::UserInputSystem(scene, client);
-				GameSystems::MRayIntersectBoxSystem(scene);
 
+				
 				//m_player.GetComponent<comp::Velocity>()->vel.z = InputSystem::Get().GetAxis(Axis::VERTICAL) * m_player.GetComponent<comp::Player>()->runSpeed;
 				//m_player.GetComponent<comp::Velocity>()->vel.x = InputSystem::Get().GetAxis(Axis::HORIZONTAL) * m_player.GetComponent<comp::Player>()->runSpeed;
 			}
+			GameSystems::MRayIntersectBoxSystem(scene);
+			GameSystems::CollisionSystem(scene);
+		});
+
+	m_scene.on<ESceneCollision>([&](const ESceneCollision& e, Scene& scene)
+		{
+			LOG_INFO("COLLISION DETECTED");
 		});
 }
 
@@ -40,6 +50,7 @@ void DemoScene::SetUpCamera()
 	m_scene.m_currentCamera = std::make_unique<Camera>(m_debugCamera);
 
 #endif // DEBUG
+	InputSystem::Get().SetCamera(m_scene.m_currentCamera.get());
 }
 
 void DemoScene::CameraUpdate(float deltaTime)
@@ -79,7 +90,9 @@ Entity DemoScene::CreatePlayerEntity()
 	comp::Velocity* playeerVelocity =  playerEntity.AddComponent<comp::Velocity>();
 	comp::Renderable* renderable = playerEntity.AddComponent<comp::Renderable>();
 	playerEntity.AddComponent<comp::Player>()->runSpeed = 10.f;
-
+	comp::BoundingOrientedBox* obb = playerEntity.AddComponent<comp::BoundingOrientedBox>();
+	obb->Center = sm::Vector3(0.0f, 0.0f, -5.0f);
+	obb->Extents = sm::Vector3(1.0f, 1.0f, 1.0f);
 	renderable->mesh = ResourceManager::Get().GetResource<RMesh>("Chest.obj");
 
 	m_gameCamera.SetFollowVelocity(playeerVelocity);
