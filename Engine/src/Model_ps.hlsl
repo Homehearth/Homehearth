@@ -1,11 +1,11 @@
 #include "PBR.hlsli"
 
-Texture2D T_albedo    : register(t0);
-Texture2D T_normal    : register(t1);
-Texture2D T_metalness : register(t2);
-Texture2D T_roughness : register(t3);
-Texture2D T_aomap     : register(t4);
-Texture2D T_displace  : register(t5);
+Texture2D T_albedo    : register(t1);
+Texture2D T_normal    : register(t2);
+Texture2D T_metalness : register(t3);
+Texture2D T_roughness : register(t4);
+Texture2D T_aomap     : register(t5);
+Texture2D T_displace  : register(t6);
 
 SamplerState samp : register(s0);
 
@@ -59,12 +59,12 @@ float4 main(PixelIn input) : SV_TARGET
     Light L[2];
     L[0].position = float4(0.f, 8.f, 10.f, 1.f);
     L[0].color = 300.f;
-    L[0].direction = float4(0.f, -1.f, -1.f, 0.f);
+    L[0].direction = float4(0.f, -1.f, 1.f, 0.f);
     L[0].range = 75.f;
     L[0].type = 0;
     L[0].enabled = 1;
     
-    L[1].position = float4(0.f, 8.f, 10.f, 1.f);
+    L[1].position = float4(0.f, 8.f, -10.f, 1.f);
     L[1].color = 300.f;
     L[1].direction = float4(0.f, -1.f, -1.f, 0.f);
     L[1].range = 75.f;
@@ -75,7 +75,7 @@ float4 main(PixelIn input) : SV_TARGET
     //If an object has a texture sample from it, else use default values.
     if(c_hasAlbedo == 1)
     {
-        albedo = pow(T_albedo.Sample(samp, input.uv).rgb, 2.2f); //Power the albedo by 2.2f to get it to linear space.
+        albedo = pow(max(T_albedo.Sample(samp, input.uv).rgb, 0.0f), 2.2f); //Power the albedo by 2.2f to get it to linear space.
         
     }
     
@@ -148,7 +148,7 @@ float4 main(PixelIn input) : SV_TARGET
     //HDR tonemapping
 	color = color / (color + float3(1.0, 1.0, 1.0));
     //Gamma correct
-	color = pow(color, float3(1.0 / 2.2, 1.0 / 2.2, 1.0 / 2.2));
+    color = pow(max(color, 0.0f), float3(1.0 / 2.2, 1.0 / 2.2, 1.0 / 2.2));
     
 	return float4(color, 0.0);    
 }
