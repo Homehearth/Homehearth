@@ -2,6 +2,7 @@
 #include "net_tsqueue.h"
 #include "net_message.h"
 #include "net_common.h"
+#include <future>
 #define PRINT_NETWORK_DEBUG
 
 namespace network
@@ -32,6 +33,7 @@ namespace network
 		std::function<void(message<T>&)> messageReceivedHandler;
 		CRITICAL_SECTION lock;
 		tsQueue<message<T>> m_qMessagesIn;
+		tsQueue<owned_message<T>> m_qMessagesOut;
 
 	protected:
 		// Called once when a client connects
@@ -61,7 +63,7 @@ namespace network
 		void ReadValidation(SOCKET_INFORMATION*& SI, PER_IO_DATA* context);
 		void ReadHeader(SOCKET_INFORMATION*& SI, PER_IO_DATA* context);
 		void ReadPayload(SOCKET_INFORMATION*& SI, PER_IO_DATA* context);
-		void WriteMessage(const SOCKET& socket, message<T>& msg);
+		void WriteMessage();
 		void PrimeReadHeader(SOCKET_INFORMATION*& SI);
 		void PrimeReadPayload(SOCKET_INFORMATION*& SI);
 		void PrimeReadValidation(SOCKET_INFORMATION*& SI);
@@ -212,23 +214,24 @@ namespace network
 	}
 
 	template <typename T>
-	void server_interface<T>::WriteMessage(const SOCKET& socket, message<T>& msg)
+	void server_interface<T>::WriteMessage()
 	{
 		PER_IO_DATA* context = new PER_IO_DATA;
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
 		char buffer[BUFFER_SIZE] = {};
-		memcpy(&buffer[0], &msg.header, sizeof(msg_header<T>));
-		if (msg.header.size > 0)
+		owned_message<T> msg = m_qMessagesOut.front();
+		memcpy(&buffer[0], &msg.msg.header, sizeof(msg_header<T>));
+		if (msg.msg.header.size > 0)
 		{
-			memcpy(&buffer[sizeof(msg_header<T>)], msg.payload.data(), msg.payload.size());
+			memcpy(&buffer[sizeof(msg_header<T>)], msg.msg.payload.data(), msg.msg.payload.size());
 		}
 		context->DataBuf.buf = (CHAR*)buffer;
-		context->DataBuf.len = ULONG(sizeof(msg_header<T>) + msg.payload.size());
+		context->DataBuf.len = ULONG(sizeof(msg_header<T>) + msg.msg.payload.size());
 		context->state = NetState::WRITE_MESSAGE;
 		DWORD BytesSent = 0;
 		DWORD flags = 0;
 
-		if (WSASend(socket, &context->DataBuf, 1, &BytesSent, flags, &context->Overlapped, NULL) == SOCKET_ERROR)
+		if (WSASend(msg.remote, &context->DataBuf, 1, &BytesSent, flags, &context->Overlapped, NULL) == SOCKET_ERROR)
 		{
 			if (GetLastError() != WSA_IO_PENDING)
 			{
@@ -384,7 +387,18 @@ namespace network
 	{
 		if (ClientIsConnected(socket))
 		{
-			this->WriteMessage(socket, msg);
+			owned_message<T> message;
+			message.msg = msg;
+			message.remote = socket;
+			EnterCriticalSection(&lock);
+			bool writingMessage = !m_qMessagesOut.empty();
+			m_qMessagesOut.push_back(message);
+
+			if (!writingMessage)
+			{
+				this->WriteMessage();
+			}
+			LeaveCriticalSection(&lock);
 		}
 	}
 
@@ -713,7 +727,14 @@ namespace network
 						}
 						case NetState::WRITE_MESSAGE:
 						{
-							// Not yet used for anything
+							EnterCriticalSection(&lock);
+							m_qMessagesOut.pop_front();
+
+							if (!m_qMessagesOut.empty())
+							{
+								this->WriteMessage();
+							}
+							LeaveCriticalSection(&lock);
 							break;
 						}
 						case NetState::WRITE_VALIDATION:
@@ -722,8 +743,8 @@ namespace network
 							break;
 						}
 						}
-						// Since PER_IO_DATA is created for EVERY I/O that comes in we need to 
-						// delete that data struct after I/O has completed
+						// Since PER_IO_DATA is created with new for EVERY I/O we need to 
+						// de-allocate that data after I/O has completed
 						if (context)
 						{
 							delete context;
