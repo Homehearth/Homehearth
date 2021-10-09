@@ -2,6 +2,12 @@
 #include <thread>
 #include "Renderer.h"
 
+struct thread_instructions_t
+{
+	int start;
+	int stop;
+};
+
 namespace thread
 {
 	// The must-meet threshold for divided rendering.
