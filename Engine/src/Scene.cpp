@@ -31,7 +31,7 @@ void Scene::Update(float dt)
 	}
 }
 
-void Scene::Render() 
+void Scene::Render()
 {
 	PROFILE_FUNCTION();
 
@@ -46,7 +46,7 @@ void Scene::Render()
 	for (const auto& it : m_renderableCopies[1])
 	{
 		m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
-		it.mesh->Render();	
+		it.mesh->Render();
 	}
 	
 	// Emit event
@@ -63,7 +63,6 @@ void Scene::ReadyForSwap()
 	m_renderableCopies.ReadyForSwap();
 }
 
-DoubleBuffer<std::vector<comp::Renderable>>* Scene::GetDoubleBuffers()
 Camera* Scene::GetCamera()
 {
 	return m_currentCamera.get();

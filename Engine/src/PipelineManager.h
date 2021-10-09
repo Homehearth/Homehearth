@@ -20,16 +20,15 @@ public:
 
 	
 	// PUBLIC AVAILABLE DATA.
-	ComPtr<ID3D11RenderTargetView>	m_renderTargetView;
+	ComPtr<ID3D11RenderTargetView>	m_backBuffer;
 
 	ComPtr<ID3D11Texture2D>			m_depthStencilTexture;
 	ComPtr<ID3D11DepthStencilView>	m_depthStencilView;
 	ComPtr<ID3D11ShaderResourceView>m_depthBufferSRV;
 	
-	ComPtr<ID3D11DepthStencilState>	m_depthStencilStateLess;
+	ComPtr<ID3D11DepthStencilState>	m_depthStencilStateLessEqual;
+	ComPtr<ID3D11DepthStencilState> m_depthStencilStateGreater;
 	ComPtr<ID3D11DepthStencilState> m_depthStencilStateEqualAndDisableDepthWrite;
-
-
 	
 	ComPtr<ID3D11RasterizerState>	m_rasterState;
 	ComPtr<ID3D11RasterizerState>	m_rasterStateNoCulling;

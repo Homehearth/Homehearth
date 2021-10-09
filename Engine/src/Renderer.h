@@ -9,6 +9,7 @@ class Renderer
 {
 private:
 	D3D11Core* m_d3d11;
+	Camera* m_camera;
 	PipelineManager m_pipelineManager;
 	std::vector<IRenderPass*> m_passes;
 	
@@ -27,13 +28,8 @@ public:
 
 	void Initialize(Window* pWindow);
 
-	// Clears the screen.
 	void ClearFrame();
 
-	// Call this each frame to render all passes:
-	//	PreRender(): set pipeline.
-	//	Render(): render all objects.
-	//	PostRender(): clear pipeline settings.
 	void Render(Scene* pScene);
 
 };

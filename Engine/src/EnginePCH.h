@@ -70,6 +70,7 @@ namespace dx = DirectX;
 // DirectXTK
 #include <SimpleMath.h>
 #include <BufferHelpers.h>
+#include "CommonStates.h"
 #include <Audio.h>
 #include <Keyboard.h>
 #include <Mouse.h>

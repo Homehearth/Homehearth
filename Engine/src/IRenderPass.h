@@ -1,6 +1,11 @@
 #pragma once
 #include "PipelineManager.h"
 
+// Only to be used inside a RenderPass (!).
+#define CAMERA GetCamera()
+#define DC GetDeviceContext()
+#define PM GetPipelineManager()
+
 //--------------------------------------
 // Abstract class. Header file only.
 //--------------------------------------

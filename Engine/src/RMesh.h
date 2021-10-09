@@ -53,7 +53,7 @@ private:
 public:
 	RMesh();
 	~RMesh();
-
+	
 	//Change the material to something else
 	bool ChangeMaterial(const std::string& mtlfile);
 
