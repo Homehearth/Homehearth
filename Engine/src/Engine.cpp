@@ -350,6 +350,8 @@ void Engine::Render(float& dt)
 		D2D1Core::Present();
 	}
 
+	thread::RenderThreadHandler::ExecuteCommandLists();
+
 	{
 		PROFILE_SCOPE("Present");
 		D3D11Core::Get().SwapChain()->Present(0, 0);

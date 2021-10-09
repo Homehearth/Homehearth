@@ -18,7 +18,6 @@ namespace thread
 		unsigned int* m_statuses;
 		bool m_isRunning;
 		bool m_isPooled = false;
-		std::unique_lock<std::mutex>* m_renderMutex;
 
 		unsigned int m_amount;
 		RenderThreadHandler();

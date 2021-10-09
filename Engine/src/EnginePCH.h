@@ -1,10 +1,10 @@
 #pragma once
 
-#define RENDER_IMGUI 1
+#define RENDER_IMGUI 0
 #define PROFILER 1
 
 // Turn this to 1 if you want to see the very beautiful demo menu
-#define DRAW_TEMP_2D 1
+#define DRAW_TEMP_2D 0
 
 //Macros
 #if RENDER_IMGUI

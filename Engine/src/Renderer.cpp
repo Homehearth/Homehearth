@@ -45,9 +45,9 @@ void Renderer::Render(Scene* pScene)
                 IRenderPass* pass = m_passes[i];
                 if (pass->IsEnabled())
                 {
-                    pass->PreRender(m_d3d11->DeviceContext(), &m_pipelineManager);
+                    //pass->PreRender(m_d3d11->DeviceContext(), &m_pipelineManager);
                     pass->Render(pScene);     // args? currently does nothing.
-                    pass->PostRender(); // args? currently does nothing.
+                    //pass->PostRender(); // args? currently does nothing.
                 }
             }
         }

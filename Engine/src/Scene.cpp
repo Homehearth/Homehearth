@@ -53,7 +53,7 @@ void Scene::Render()
 	}
 
 	// Run any available Command lists from worker threads.
-	thread::RenderThreadHandler::ExecuteCommandLists();
+	//thread::RenderThreadHandler::ExecuteCommandLists();
 	
 	// Emit event
 	publish<ESceneRender>();

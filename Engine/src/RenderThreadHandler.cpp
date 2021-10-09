@@ -44,7 +44,7 @@ thread::RenderThreadHandler::~RenderThreadHandler()
 	cv.notify_all();
 	if (m_workerThreads)
 	{
-		for (int i = 0; i < INSTANCE.m_amount; i++)
+		for (int i = 0; i < (int)INSTANCE.m_amount; i++)
 		{
 			if (INSTANCE.m_workerThreads[i].joinable())
 				INSTANCE.m_workerThreads[i].join();
@@ -66,7 +66,7 @@ void thread::RenderThreadHandler::Finish()
 {
 	if (!INSTANCE.m_isPooled)
 	{
-		for (int i = 0; i < INSTANCE.m_amount; i++)
+		for (int i = 0; i < (int)INSTANCE.m_amount; i++)
 		{
 			INSTANCE.m_workerThreads[i].join();
 		}
@@ -75,11 +75,11 @@ void thread::RenderThreadHandler::Finish()
 	{
 		// Block until all threads have gotten their jobs.
 		while (INSTANCE.m_jobs.size() > 0) { 
-			std::cout << "Size: " << INSTANCE.m_jobs.size() << "\n";
+			//std::cout << "Size: " << INSTANCE.m_jobs.size() << "\n";
 		};
 
 		// Block until all threads have stopped working.
-		for (int i = 0; i < INSTANCE.m_amount; i++)
+		for (int i = 0; i < (int)INSTANCE.m_amount; i++)
 		{
 			if (INSTANCE.m_statuses[i] != thread::thread_running)
 			{
@@ -101,12 +101,12 @@ void thread::RenderThreadHandler::InsertRenderJob(std::function<void(void*, void
 
 std::function<void(void*, void*, void*)> thread::RenderThreadHandler::GetJob()
 {
-	if (INSTANCE.m_jobs.size() <= 0)
+	if ((int)INSTANCE.m_jobs.size() <= 0)
 	{
 		return nullptr;
 	}
-	int size = (int)INSTANCE.m_jobs.size() - 1;
-	std::function<void(void*, void*, void*)>* p = &INSTANCE.m_jobs[(int)INSTANCE.m_jobs.size() - 1];
+	const int size = (int)INSTANCE.m_jobs.size() - 1;
+	//std::function<void(void*, void*, void*)>* p = &INSTANCE.m_jobs[(int)INSTANCE.m_jobs.size() - 1];
 
 	// Ugly fix
 	if (!INSTANCE.m_jobs[size])
@@ -141,7 +141,7 @@ void thread::RenderThreadHandler::Setup(const int& amount)
 
 const int thread::RenderThreadHandler::Launch(const int& amount_of_objects, void* objects)
 {
-	const unsigned int objects_per_thread = (unsigned int)ceil(amount_of_objects / INSTANCE.m_amount);
+	const unsigned int objects_per_thread = (unsigned int)ceil(amount_of_objects / INSTANCE.m_amount) + 1;
 	if (objects_per_thread >= thread::threshold)
 	{
 		// Launch Threads
@@ -150,11 +150,17 @@ const int thread::RenderThreadHandler::Launch(const int& amount_of_objects, void
 
 			for (unsigned int i = 0; i < INSTANCE.m_amount; i++)
 			{
-				auto f = [=](void* buffer, void* context, void* pipe)
+				const int start = i * objects_per_thread;
+				const int stop = (i + 1) * objects_per_thread;
+				const auto& f = [=](void* buffer, void* context, void* pipe)
 				{
-					RenderJob(i * objects_per_thread, (i + 1) * objects_per_thread, objects, buffer, context, pipe);
+					RenderJob(start, stop, objects, buffer, context, pipe);
 				};
 
+				if (!&f)
+				{
+					std::cout << "FAULTY FUNCTION!\n";
+				}
 
 				INSTANCE.m_jobs.push_back(f);
 			}
@@ -218,9 +224,10 @@ void thread::RenderThreadHandler::ExecuteCommandLists()
 	{
 		if (INSTANCE.m_commands[i])
 		{
-			int j = INSTANCE.m_commands.size();
+			//int j = INSTANCE.m_commands.size();
 			D3D11Core::Get().DeviceContext()->ExecuteCommandList(INSTANCE.m_commands[i], true);
 			INSTANCE.m_commands[i]->Release();
+			INSTANCE.m_commands[i] = nullptr;
 		}
 
 	}
@@ -308,7 +315,7 @@ void RenderJob(const unsigned int start,
 	PipelineManager* m_pipeManager = (PipelineManager*)pipe;
 	if (m_objects)
 	{
-		// Update Context
+		// On Render Start
 		ID3D11CommandList* command_list = nullptr;
 		IRenderPass* pass = thread::RenderThreadHandler::Get().GetRenderer()->GetCurrentPass();
 
@@ -316,8 +323,9 @@ void RenderJob(const unsigned int start,
 
 		// Make sure not to go out of range
 		if (stop > (*m_objects)[1].size())
-			stop = (*m_objects)[1].size();
+			stop = (unsigned int)(*m_objects)[1].size();
 
+		// On Render
 		for (unsigned int i = start; i < stop; i++)
 		{
 			comp::Renderable* it = &(*m_objects)[1][i];
@@ -335,15 +343,14 @@ void RenderJob(const unsigned int start,
 		}
 
 
-		// Release Context
+		// On Render Finish
 		pass->PostRender(m_context);
 
-		HRESULT hr = m_context->FinishCommandList(false, &command_list);
+		HRESULT hr = m_context->FinishCommandList(true, &command_list);
 
 		EnterCriticalSection(&criticalSection);
 		if (SUCCEEDED(hr))
-			command_list->Release();
-			//thread::RenderThreadHandler::Get().InsertCommandList(command_list);
+			thread::RenderThreadHandler::Get().InsertCommandList(command_list);
 		LeaveCriticalSection(&criticalSection);
 	}
 
