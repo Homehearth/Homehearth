@@ -7,9 +7,9 @@ DemoScene::DemoScene(Engine& engine, Client& client, uint32_t* playerID, uint32_
 	, m_client(client)
 {
 	Entity box = m_scene.CreateEntity();
-	box.AddComponent<comp::Transform>()->position.z = -5.0f;
+	comp::Transform* transform = box.AddComponent<comp::Transform>();
 	comp::BoundingOrientedBox* obb = box.AddComponent<comp::BoundingOrientedBox>();
-	obb->Center = sm::Vector3(0.0f, 0.0f, -5.0f);
+	obb->Center = transform->position;
 	obb->Extents = sm::Vector3(1.0f, 1.0f, 1.0f);
 	comp::Renderable* boxRender = box.AddComponent<comp::Renderable>();
 	boxRender->mesh = ResourceManager::Get().GetResource<RMesh>("Cube.fbx");
