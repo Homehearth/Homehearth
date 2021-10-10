@@ -24,6 +24,7 @@ private:
 	void CheckIncoming(message<GameMsg>& msg);
 	void PingServer();
 	void JoinLobby(uint32_t lobbyID);
+	void CreateLobby();
 
 public:
 	Game();

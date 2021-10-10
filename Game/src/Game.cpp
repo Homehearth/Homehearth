@@ -31,11 +31,8 @@ bool Game::OnStartup()
 
 void Game::OnUserUpdate(float deltaTime)
 {
-	m_demoScene->CameraUpdate(deltaTime);
-
-
 	IMGUI(
-		ImGui::Begin("Test");
+	ImGui::Begin("Test");
 
 	if (m_client.IsConnected())
 	{
@@ -45,12 +42,7 @@ void Game::OnUserUpdate(float deltaTime)
 		}
 		if (ImGui::Button("Create Lobby"))
 		{
-			message<GameMsg> msg;
-
-			msg.header.id = GameMsg::Lobby_Create;
-			msg << this->m_localPID;
-			m_client.Send(msg);
-
+			this->CreateLobby();
 		}
 
 		static uint32_t lobbyID = 0;
@@ -59,7 +51,11 @@ void Game::OnUserUpdate(float deltaTime)
 
 		if (ImGui::Button("Join"))
 		{
-			JoinLobby(lobbyID);
+			this->JoinLobby(lobbyID);
+		}
+		if (ImGui::Button("Disconnect"))
+		{
+			this->m_client.Disconnect();
 		}
 	}
 	else
@@ -75,7 +71,6 @@ void Game::OnUserUpdate(float deltaTime)
 		}
 	}
 	ImGui::End();
-
 	);
 
 	if (m_client.IsConnected())
@@ -108,7 +103,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		LOG_INFO("YOUR ID IS: %lu", this->m_localPID);
 		break;
 	}
-
 	case GameMsg::Game_AddPlayer:
 	{
 		uint32_t count; // Could be more than one player
@@ -144,6 +138,11 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		}
 		break;
 	}
+	case GameMsg::Lobby_Invalid:
+	{
+		LOG_WARNING("Request denied: Invalid lobby");
+		break;
+	}
 	}
 }
 
@@ -159,15 +158,34 @@ void Game::PingServer()
 
 void Game::JoinLobby(uint32_t lobbyID)
 {
-	LOG_INFO("Joining Lobby %d ...", lobbyID);
-	message<GameMsg> msg;
-
-	msg.header.id = GameMsg::Lobby_Join;
-	msg << this->m_localPID << lobbyID;
-	m_client.Send(msg);
+	if (m_gameID == (uint32_t)-1)
+	{
+		message<GameMsg> msg;
+		msg.header.id = GameMsg::Lobby_Join;
+		msg << this->m_localPID << lobbyID;
+		m_client.Send(msg);
+	}
+	else
+	{
+		LOG_WARNING("Request denied: You are already in a lobby");
+	}
 }
 
+void Game::CreateLobby()
+{
+	if (m_gameID == (uint32_t)-1)
+	{
+		message<GameMsg> msg;
 
+		msg.header.id = GameMsg::Lobby_Create;
+		msg << this->m_localPID;
+		m_client.Send(msg);
+	}
+	else
+	{
+		LOG_WARNING("Request denied: You are already in a lobby");
+	}
+}
 
 void Game::OnShutdown()
 {

@@ -269,7 +269,6 @@ void Engine::Update(float dt)
 	PROFILE_FUNCTION();
 	m_frameTime.update = dt;
 
-	
 	InputSystem::Get().UpdateEvents();
 	rtd::Handler2D::Update();
 

@@ -27,10 +27,14 @@ DemoScene::DemoScene(Engine& engine, Client& client, uint32_t* playerID, uint32_
 				m_player.GetComponent<comp::Velocity>()->vel.x = hor * m_player.GetComponent<comp::Player>()->runSpeed;
 
 				// Updates the position based on input from player
-				Systems::MovementSystem(scene, e.dt);
+				if (hor || ver)
+				{
+					Systems::MovementSystem(scene, e.dt);
+				}
+				scene.m_currentCamera.get()->Update(e.dt);
 			}
 
-			if (m_client.IsConnected() && *m_gameID != UINT32_MAX)
+			if ((m_client.IsConnected() && *m_gameID != UINT32_MAX) && (ver || hor))
 			{
 				// send updated player position
 				network::message<GameMsg> msg;
@@ -56,7 +60,7 @@ void DemoScene::SetUpCamera()
 
 void DemoScene::CameraUpdate(float deltaTime)
 {
-	m_scene.m_currentCamera->Update(deltaTime);
+	//m_scene.m_currentCamera->Update(deltaTime);
 	CAMERATYPE test = m_scene.m_currentCamera->GetCameraType();
 
 #ifdef _DEBUG
@@ -84,27 +88,21 @@ void DemoScene::CameraUpdate(float deltaTime)
 
 Entity DemoScene::CreatePlayerEntity()
 {
-
 	Entity playerEntity = m_scene.CreateEntity();
 	playerEntity.AddComponent<comp::Transform>();
-	comp::Velocity* playeerVelocity = playerEntity.AddComponent<comp::Velocity>();
+	comp::Velocity* playerVelocity = playerEntity.AddComponent<comp::Velocity>();
 	comp::Renderable* renderable = playerEntity.AddComponent<comp::Renderable>();
 	playerEntity.AddComponent<comp::Player>()->runSpeed = 10.f;
-
+	comp::Network* network = playerEntity.AddComponent<comp::Network>();
 	renderable->model = ResourceManager::Get().GetResource<RModel>("cube.obj");
 
-	m_gameCamera.SetFollowVelocity(playeerVelocity);
-
+	m_gameCamera.SetFollowVelocity(playerVelocity);
 
 	Entity chest = m_scene.CreateEntity();
 	chest.AddComponent<comp::Transform>()->position.z = 5;
-
-	comp::Velocity* chestVelocity = chest.AddComponent<comp::Velocity>();
 	comp::Renderable* renderable2 = chest.AddComponent<comp::Renderable>();
-	chest.AddComponent<comp::Player>()->runSpeed = 10.f;
 
 	renderable2->model = ResourceManager::Get().GetResource<RModel>("Chest.obj");
-
 
 	return playerEntity;
 }

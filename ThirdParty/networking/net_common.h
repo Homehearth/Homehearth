@@ -83,6 +83,7 @@ namespace network
 		Lobby_Create,
 		Lobby_Join,
 		Lobby_Accepted,
+		Lobby_Invalid,
 		Server_AssignID,
 		Server_GetPing,
 		Game_AddPlayer,

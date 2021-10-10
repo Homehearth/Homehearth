@@ -23,6 +23,7 @@ namespace network
 		uint64_t m_handshakeOut;
 		message<T> tempMsgIn;
 		std::thread* m_workerThread;
+		tsQueue<message<T>> m_qMessagesOut;
 
 	protected:
 		CRITICAL_SECTION lock;
@@ -50,12 +51,18 @@ namespace network
 		void ReadHeader(PER_IO_DATA*& context);
 		void ReadPayload(PER_IO_DATA*& context);
 		void ReadValidation(PER_IO_DATA*& context);
-		void WriteMessage(message<T>& msg);
+		void WriteMessage();
 		void WriteValidation();
 
 		static VOID CALLBACK AlertThread()
 		{
 			LOG_INFO("Thread was alerted!");
+		}
+
+		static VOID CALLBACK AsyncWriteMessage(ULONG_PTR param)
+		{
+			client_interface<T>* c = (client_interface<T>*)param;
+			c->WriteMessage();
 		}
 
 	protected:
@@ -81,7 +88,17 @@ namespace network
 			this->m_workerThread = nullptr;
 		}
 
-		client_interface() = default;
+		client_interface()
+		{
+			m_socket = INVALID_SOCKET;
+			m_endpointLen = sizeof(m_endpoint);
+			ZeroMemory(&m_endpoint, m_endpointLen);
+			m_handshakeIn = 0;
+			m_handshakeOut = 0;
+
+			InitWinsock();
+			this->m_workerThread = nullptr;
+		}
 
 		client_interface<T>& operator=(const client_interface<T>& other) = delete;
 		client_interface(const client_interface<T>& other) = delete;
@@ -97,7 +114,7 @@ namespace network
 		}
 	public:
 		// Given IP and port establish a connection to the server
-		bool Connect(const char* ip, uint16_t& port);
+		bool Connect(const char* ip, uint16_t port);
 		// Disconnect from the server (THREAD SAFE)
 		void Disconnect();
 		// Check to see if client is connected to a server (THREAD SAFE)
@@ -230,10 +247,11 @@ namespace network
 	}
 
 	template <typename T>
-	void client_interface<T>::WriteMessage(message<T>& msg)
+	void client_interface<T>::WriteMessage()
 	{
 		PER_IO_DATA* context = new PER_IO_DATA;
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
+		message<T> msg = m_qMessagesOut.front();
 		char buffer[BUFFER_SIZE] = {};
 		memcpy(&buffer[0], &msg.header, sizeof(msg_header<T>));
 		if (msg.header.size > 0)
@@ -335,56 +353,64 @@ namespace network
 				{
 					LOG_ERROR("%d", LastError);
 				}
-
-				continue;
 			}
 
 			for (int i = 0; i < (int)EntriesRemoved; i++)
 			{
-				context = (PER_IO_DATA*)Entries[i].lpOverlapped;
-
-				if (Entries[i].dwNumberOfBytesTransferred == 0)
+				if (Entries[i].lpOverlapped != NULL)
 				{
-					delete context;
-					this->Disconnect();
-					continue;
-				}
-				// I/O has completed, process it
-				if (HasOverlappedIoCompleted(Entries[i].lpOverlapped))
-				{
-					switch (context->state)
-					{
-					case NetState::READ_VALIDATION:
-					{
-						this->OnConnect();
-						this->ReadValidation(context);
-						break;
-					}
-					case NetState::WRITE_VALIDATION:
-					{
-						this->PrimeReadHeader();
-						break;
-					}
-					case NetState::READ_HEADER:
-					{
-						this->ReadHeader(context);
-						break;
-					}
-					case NetState::READ_PAYLOAD:
-					{
-						this->ReadPayload(context);
-						break;
-					}
-					case NetState::WRITE_MESSAGE:
-					{
-						// NOT YET USED FOR ANYTHING
-						break;
-					}
-					}
+					context = (PER_IO_DATA*)Entries[i].lpOverlapped;
 
-					if (context)
+					if (Entries[i].dwNumberOfBytesTransferred == 0)
 					{
 						delete context;
+						this->Disconnect();
+						continue;
+					}
+					// I/O has completed, process it
+					if (HasOverlappedIoCompleted(Entries[i].lpOverlapped))
+					{
+						switch (context->state)
+						{
+						case NetState::READ_VALIDATION:
+						{
+							this->OnConnect();
+							this->ReadValidation(context);
+							break;
+						}
+						case NetState::WRITE_VALIDATION:
+						{
+							this->PrimeReadHeader();
+							break;
+						}
+						case NetState::READ_HEADER:
+						{
+							this->ReadHeader(context);
+							break;
+						}
+						case NetState::READ_PAYLOAD:
+						{
+							this->ReadPayload(context);
+							break;
+						}
+						case NetState::WRITE_MESSAGE:
+						{
+							EnterCriticalSection(&lock);
+							m_qMessagesOut.pop_front();
+
+							if (!m_qMessagesOut.empty())
+							{
+								this->WriteMessage();
+							}
+							LeaveCriticalSection(&lock);
+							break;
+						}
+						}
+
+						if (context)
+						{
+							delete context;
+						}
 					}
 				}
 			}
@@ -465,14 +491,23 @@ namespace network
 	template<typename T>
 	inline void client_interface<T>::Send(message<T>& msg)
 	{
+		EnterCriticalSection(&lock);
 		if (IsConnected())
 		{
-			this->WriteMessage(msg);
+			message<T> message = msg;
+			bool writingMessage = !m_qMessagesOut.empty();
+			m_qMessagesOut.push_back(msg);
+
+			if (!writingMessage)
+			{
+				QueueUserAPC((PAPCFUNC)&client_interface<T>::AsyncWriteMessage, m_workerThread->native_handle(), (ULONG_PTR)this);
+			}
 		}
+		LeaveCriticalSection(&lock);
 	}
 
 	template<typename T>
-	inline bool client_interface<T>::Connect(const char* ip, uint16_t& port)
+	inline bool client_interface<T>::Connect(const char* ip, uint16_t port)
 	{
 		if (IsConnected())
 		{

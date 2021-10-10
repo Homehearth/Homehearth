@@ -6,7 +6,7 @@ using namespace std::placeholders;
 ServerGame::ServerGame()
 	:m_server(std::bind(&ServerGame::CheckIncoming, this, _1))
 {
-	m_nGameID = 0;
+	m_nGameID = 10000;
 }
 
 ServerGame::~ServerGame()
@@ -85,7 +85,17 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 		uint32_t playerID;
 		msg >> playerID;
 		LOG_INFO("Player %d trying to join lobby %d", playerID, gameID);
-		games[gameID]->JoinLobby(playerID, gameID);
+		if (games.find(gameID) != games.end())
+		{
+			games[gameID]->JoinLobby(playerID, gameID);
+		}
+		else
+		{
+			message<GameMsg> invalidLobbyMsg;
+			invalidLobbyMsg.header.id = GameMsg::Lobby_Invalid;
+			LOG_WARNING("Request denied: Player trying to join invalid Lobby");
+			m_server.SendToClient(m_server.GetConnection(playerID), invalidLobbyMsg);
+		}
 		break;
 	}
 	case GameMsg::Game_Update:

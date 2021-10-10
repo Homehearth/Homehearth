@@ -27,13 +27,13 @@ namespace network
 		std::thread* workerThreads;
 		std::thread acceptThread;
 		int nrOfThreads;
+		tsQueue<owned_message<T>> m_qMessagesOut;
 
 	protected:
 		std::unordered_map<uint32_t, SOCKET> connections;
 		std::function<void(message<T>&)> messageReceivedHandler;
 		CRITICAL_SECTION lock;
 		tsQueue<message<T>> m_qMessagesIn;
-		tsQueue<owned_message<T>> m_qMessagesOut;
 
 	protected:
 		// Called once when a client connects
@@ -69,6 +69,7 @@ namespace network
 		void PrimeReadValidation(SOCKET_INFORMATION*& SI);
 
 		static void AlertThread();
+		static void CALLBACK AsyncWriteMessage(ULONG_PTR param);
 
 	public:
 		// Constructor and Deconstructor
@@ -111,8 +112,14 @@ namespace network
 		{
 			isConnected = true;
 		}
-
 		return isConnected;
+	}
+
+	template <typename T>
+	void server_interface<T>::AsyncWriteMessage(ULONG_PTR param)
+	{
+		server_interface<T>* s = (server_interface<T>*)param;
+		s->WriteMessage();
 	}
 
 	template <typename T>
@@ -393,10 +400,10 @@ namespace network
 			EnterCriticalSection(&lock);
 			bool writingMessage = !m_qMessagesOut.empty();
 			m_qMessagesOut.push_back(message);
-
 			if (!writingMessage)
 			{
-				this->WriteMessage();
+				int threadID = rand() % nrOfThreads;
+				QueueUserAPC((PAPCFUNC)&server_interface<T>::AsyncWriteMessage, workerThreads[threadID].native_handle(), (ULONG_PTR)this);
 			}
 			LeaveCriticalSection(&lock);
 		}

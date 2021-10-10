@@ -2,6 +2,7 @@
 #include "net_common.h"
 #include "net_message.h"
 #include "RModel.h"
+class Client;
 
 namespace ecs
 {
@@ -12,6 +13,11 @@ namespace ecs
 			sm::Vector3 position;
 			sm::Vector3 rotation;
 			sm::Vector3 scale = sm::Vector3(1);
+		};
+
+		struct Network
+		{
+			std::shared_ptr<Client> client;
 		};
 
 		struct Renderable
@@ -46,8 +52,6 @@ namespace ecs
 	sm::Matrix GetMatrix(const component::Transform& transform);
 	sm::Vector3 GetForward(const component::Transform& transform);
 	sm::Vector3 GetUp(const component::Transform& transform);
-
-
 };
 // serialize
 network::message<network::GameMsg>& operator << (network::message<network::GameMsg>& msg, const ecs::component::Transform& data);

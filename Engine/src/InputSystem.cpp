@@ -16,7 +16,8 @@ InputSystem::InputSystem(): m_kBState(), m_mouseState()
 void InputSystem::SetMouseWindow(const HWND& windowHandle, const int width, const int height)
 {
 	m_mouse->SetWindow(windowHandle);
-	m_mouse->SetMode(DirectX::Mouse::MODE_RELATIVE);
+	//m_mouse->SetMode(DirectX::Mouse::MODE_RELATIVE);
+	m_mouse->SetMode(DirectX::Mouse::MODE_ABSOLUTE);
 	m_windowWidth = width;
 	m_windowHeight = height;
 }
