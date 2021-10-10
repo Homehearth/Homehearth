@@ -9,6 +9,7 @@ private:
 	Engine* m_engine;
 
 	Entity m_player;
+	Entity m_box;
 
 	Camera m_gameCamera;
 	Camera m_debugCamera;

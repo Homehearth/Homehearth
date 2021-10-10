@@ -6,12 +6,12 @@ DemoScene::DemoScene(Engine& engine, Client& client, uint32_t* playerID, uint32_
 	, m_playerID(playerID)
 	, m_client(client)
 {
-	Entity box = m_scene.CreateEntity();
-	comp::Transform* transform = box.AddComponent<comp::Transform>();
-	comp::BoundingOrientedBox* obb = box.AddComponent<comp::BoundingOrientedBox>();
-	obb->Center = transform->position;
+	m_box = m_scene.CreateEntity();
+	comp::Transform* transform = m_box.AddComponent<comp::Transform>();
+	comp::BoundingOrientedBox* obb = m_box.AddComponent<comp::BoundingOrientedBox>();
+	obb->Center = sm::Vector3{0.0f,0.0f,-5.0f};
 	obb->Extents = sm::Vector3(1.0f, 1.0f, 1.0f);
-	comp::Renderable* boxRender = box.AddComponent<comp::Renderable>();
+	comp::Renderable* boxRender = m_box.AddComponent<comp::Renderable>();
 	boxRender->mesh = ResourceManager::Get().GetResource<RMesh>("Cube.fbx");
 
 	m_engine = &engine;
@@ -24,7 +24,7 @@ DemoScene::DemoScene(Engine& engine, Client& client, uint32_t* playerID, uint32_
 	// Define what scene does on update
 	m_scene.on<ESceneUpdate>([&](const ESceneUpdate& e, Scene& scene)
 		{
-			if(CollisionSystem::Get().IsColliding(box, m_player))
+			if(CollisionSystem::Get().IsColliding(m_box, m_player))
 			{
 				LOG_INFO("Player is Colliding with box...");
 			}
@@ -64,7 +64,8 @@ DemoScene::DemoScene(Engine& engine, Client& client, uint32_t* playerID, uint32_
 
 	m_scene.on<ESceneCollision>([&](const ESceneCollision& e, Scene& scene)
 		{
-			CollisionSystem::Get().AddPair(e.obj1, e.obj2);
+			if(e.obj1 != e.obj2)
+				CollisionSystem::Get().AddPair(e.obj1, e.obj2);
 		});
 }
 
@@ -112,18 +113,18 @@ void DemoScene::CameraUpdate(float deltaTime)
 Entity DemoScene::CreatePlayerEntity()
 {
 
-	Entity playerEntity = m_scene.CreateEntity();
-	playerEntity.AddComponent<comp::Transform>()->position.z = -17.0f;
+	m_player = m_scene.CreateEntity();
+	m_player.AddComponent<comp::Transform>()->position.z = -17.0f;
 
-	comp::Velocity* playeerVelocity = playerEntity.AddComponent<comp::Velocity>();
-	comp::Renderable* renderable = playerEntity.AddComponent<comp::Renderable>();
-	playerEntity.AddComponent<comp::Player>()->runSpeed = 10.f;
-	comp::BoundingOrientedBox* obb = playerEntity.AddComponent<comp::BoundingOrientedBox>();
+	comp::Velocity* playeerVelocity = m_player.AddComponent<comp::Velocity>();
+	comp::Renderable* renderable = m_player.AddComponent<comp::Renderable>();
+	m_player.AddComponent<comp::Player>()->runSpeed = 10.f;
+	comp::BoundingOrientedBox* obb = m_player.AddComponent<comp::BoundingOrientedBox>();
 	obb->Center = sm::Vector3(0.0f, 0.0f, -5.0f);
 	obb->Extents = sm::Vector3(1.0f, 1.0f, 1.0f);
 	renderable->mesh = ResourceManager::Get().GetResource<RMesh>("Chest.obj");
 
 	m_gameCamera.SetFollowVelocity(playeerVelocity);
 
-	return playerEntity;
+	return m_player;
 }
