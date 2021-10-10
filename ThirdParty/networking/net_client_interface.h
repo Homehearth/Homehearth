@@ -61,8 +61,6 @@ namespace network
 
 		static VOID CALLBACK AsyncWriteMessage(ULONG_PTR param)
 		{
-			client_interface<T>* c = (client_interface<T>*)param;
-			c->WriteMessage();
 		}
 
 	protected:
@@ -395,14 +393,7 @@ namespace network
 						}
 						case NetState::WRITE_MESSAGE:
 						{
-							EnterCriticalSection(&lock);
 							m_qMessagesOut.pop_front();
-
-							if (!m_qMessagesOut.empty())
-							{
-								this->WriteMessage();
-							}
-							LeaveCriticalSection(&lock);
 							break;
 						}
 						}
@@ -411,9 +402,16 @@ namespace network
 						{
 							delete context;
 						}
+
 					}
 				}
 			}
+			EnterCriticalSection(&lock);
+			if (!m_qMessagesOut.empty())
+			{
+				this->WriteMessage();
+			}
+			LeaveCriticalSection(&lock);
 		}
 		return 0;
 	}
@@ -491,7 +489,6 @@ namespace network
 	template<typename T>
 	inline void client_interface<T>::Send(message<T>& msg)
 	{
-		EnterCriticalSection(&lock);
 		if (IsConnected())
 		{
 			message<T> message = msg;
@@ -500,10 +497,9 @@ namespace network
 
 			if (!writingMessage)
 			{
-				QueueUserAPC((PAPCFUNC)&client_interface<T>::AsyncWriteMessage, m_workerThread->native_handle(), (ULONG_PTR)this);
+				QueueUserAPC((PAPCFUNC)&client_interface<T>::AsyncWriteMessage, m_workerThread->native_handle(), NULL);
 			}
 		}
-		LeaveCriticalSection(&lock);
 	}
 
 	template<typename T>
