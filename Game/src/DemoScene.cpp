@@ -93,7 +93,7 @@ Entity DemoScene::CreatePlayerEntity()
 	comp::Velocity* playerVelocity = playerEntity.AddComponent<comp::Velocity>();
 	comp::Renderable* renderable = playerEntity.AddComponent<comp::Renderable>();
 	playerEntity.AddComponent<comp::Player>()->runSpeed = 10.f;
-	comp::Network* network = playerEntity.AddComponent<comp::Network>();
+	//comp::Network* network = playerEntity.AddComponent<comp::Network>();
 	renderable->model = ResourceManager::Get().GetResource<RModel>("cube.obj");
 
 	m_gameCamera.SetFollowVelocity(playerVelocity);
