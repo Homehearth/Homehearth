@@ -229,7 +229,7 @@ void RModel::Render() const
     }
 }
 
-void RModel::RenderDeferred(ID3D11DeviceContext* context) const
+void RModel::RenderDeferred(ID3D11DeviceContext* context)
 {
     UINT offset = 0;
     UINT stride = sizeof(simple_vertex_t);

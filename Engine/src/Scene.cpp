@@ -4,6 +4,7 @@
 Scene::Scene()
 {	
 	m_publicBuffer.Create(D3D11Core::Get().Device());
+	thread::RenderThreadHandler::Get().SetObjectsBuffer(&m_renderableCopies);
 }
 
 Entity Scene::CreateEntity()
@@ -36,7 +37,7 @@ void Scene::Render()
 	PROFILE_FUNCTION();
 
 	// Renders on one thread if Launch returns 1. else everything already rendered.
-	if ((bool)thread::RenderThreadHandler::Get().Launch(m_renderableCopies[1].size(), &m_renderableCopies))
+	if ((bool)thread::RenderThreadHandler::Get().Launch(m_renderableCopies[1].size()))
 	{
 		ID3D11Buffer* buffers[1] =
 		{
@@ -53,7 +54,7 @@ void Scene::Render()
 	}
 
 	// Run any available Command lists from worker threads.
-	//thread::RenderThreadHandler::ExecuteCommandLists();
+	thread::RenderThreadHandler::ExecuteCommandLists();
 	
 	// Emit event
 	publish<ESceneRender>();

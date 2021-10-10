@@ -6,11 +6,9 @@
 
 /*
 	Crash info:
-
-	Trådarna fastnar i ett läge där ena tråden sover i cv variablen
-	medan andra sitter och tar upp ett job som enligt den ej existerar.
-	Detta händer efter ett olikt antal frames.
-
+	Lambda funktionen när den vill ska tas ut returnerar empty ibland.
+	Anledningen är funktionen RenderDeferred på model.
+	Varför vet jag inte.
 */
 
 #define INSTANCE thread::RenderThreadHandler::Get()
@@ -25,7 +23,7 @@ bool shouldRender = true;
 
 bool ShouldContinue();
 void RenderMain(const unsigned int& id);
-void RenderJob(const unsigned int start, unsigned int stop, void* objects, void* buffer, void* context, void* pipe);
+void RenderJob(const unsigned int start, unsigned int stop, void* buffer, void* context, void* pipe);
 
 thread::RenderThreadHandler::RenderThreadHandler()
 {
@@ -34,6 +32,7 @@ thread::RenderThreadHandler::RenderThreadHandler()
 	m_renderer = nullptr;
 	m_window = nullptr;
 	m_statuses = nullptr;
+	m_objects = nullptr;
 	m_isRunning = false;
 	InitializeCriticalSection(&criticalSection);
 }
@@ -106,14 +105,6 @@ std::function<void(void*, void*, void*)> thread::RenderThreadHandler::GetJob()
 		return nullptr;
 	}
 	const int size = (int)INSTANCE.m_jobs.size() - 1;
-	//std::function<void(void*, void*, void*)>* p = &INSTANCE.m_jobs[(int)INSTANCE.m_jobs.size() - 1];
-
-	// Ugly fix
-	if (!INSTANCE.m_jobs[size])
-	{
-		INSTANCE.m_jobs.pop_back();
-		return nullptr;
-	}
 
 	return INSTANCE.m_jobs[size];
 }
@@ -139,7 +130,7 @@ void thread::RenderThreadHandler::Setup(const int& amount)
 	INSTANCE.m_isPooled = true;
 }
 
-const int thread::RenderThreadHandler::Launch(const int& amount_of_objects, void* objects)
+const int thread::RenderThreadHandler::Launch(const int& amount_of_objects)
 {
 	const unsigned int objects_per_thread = (unsigned int)ceil(amount_of_objects / INSTANCE.m_amount) + 1;
 	if (objects_per_thread >= thread::threshold)
@@ -150,17 +141,13 @@ const int thread::RenderThreadHandler::Launch(const int& amount_of_objects, void
 
 			for (unsigned int i = 0; i < INSTANCE.m_amount; i++)
 			{
-				const int start = i * objects_per_thread;
-				const int stop = (i + 1) * objects_per_thread;
+				// Prepare job for threads.
 				const auto& f = [=](void* buffer, void* context, void* pipe)
 				{
-					RenderJob(start, stop, objects, buffer, context, pipe);
+					const int start = i * objects_per_thread;
+					const int stop = (i + 1) * objects_per_thread;
+					RenderJob(start, stop, buffer, context, pipe);
 				};
-
-				if (!&f)
-				{
-					std::cout << "FAULTY FUNCTION!\n";
-				}
 
 				INSTANCE.m_jobs.push_back(f);
 			}
@@ -236,6 +223,16 @@ void thread::RenderThreadHandler::ExecuteCommandLists()
 	INSTANCE.m_commands.clear();
 }
 
+void thread::RenderThreadHandler::SetObjectsBuffer(void* objects)
+{
+	INSTANCE.m_objects = objects;
+}
+
+void* thread::RenderThreadHandler::GetObjectsBuffer()
+{
+	return INSTANCE.m_objects;
+}
+
 bool ShouldContinue()
 {
 	if (!INSTANCE.GetHandlerStatus())
@@ -307,9 +304,9 @@ void RenderMain(const unsigned int& id)
 }
 
 void RenderJob(const unsigned int start,
-	unsigned int stop, void* objects, void* buffer, void* context, void* pipe)
+	unsigned int stop, void* buffer, void* context, void* pipe)
 {
-	DoubleBuffer<std::vector<comp::Renderable>>* m_objects = (DoubleBuffer<std::vector<comp::Renderable>>*)objects;
+	DoubleBuffer<std::vector<comp::Renderable>>* m_objects = (DoubleBuffer<std::vector<comp::Renderable>>*)thread::RenderThreadHandler::GetObjectsBuffer();
 	dx::ConstantBuffer<basic_model_matrix_t>* m_buffer = (dx::ConstantBuffer<basic_model_matrix_t>*)buffer;
 	ID3D11DeviceContext* m_context = (ID3D11DeviceContext*)context;
 	PipelineManager* m_pipeManager = (PipelineManager*)pipe;
@@ -321,10 +318,11 @@ void RenderJob(const unsigned int start,
 
 		pass->PreRender(m_context, m_pipeManager);
 
+		
 		// Make sure not to go out of range
 		if (stop > (*m_objects)[1].size())
 			stop = (unsigned int)(*m_objects)[1].size();
-
+		
 		// On Render
 		for (unsigned int i = start; i < stop; i++)
 		{
@@ -342,7 +340,6 @@ void RenderJob(const unsigned int start,
 			}
 		}
 
-
 		// On Render Finish
 		pass->PostRender(m_context);
 
@@ -354,8 +351,5 @@ void RenderJob(const unsigned int start,
 		LeaveCriticalSection(&criticalSection);
 	}
 
-	m_objects = nullptr;
-	m_buffer = nullptr;
-	m_context = nullptr;
-	m_pipeManager = nullptr;
+	return;
 }

@@ -24,6 +24,7 @@ namespace thread
 		unsigned int* m_statuses;
 		bool m_isRunning;
 		bool m_isPooled = false;
+		void* m_objects;
 
 		unsigned int m_amount;
 		RenderThreadHandler();
@@ -60,7 +61,7 @@ namespace thread
 			1/true - Render on same thread.
 			0/false - Rendered on separate threads.
 		*/
-		static const int Launch(const int& amount_of_objects, void* objects);
+		static const int Launch(const int& amount_of_objects);
 
 		/*
 			Returns a bool that tells if the handler is currently running
@@ -109,5 +110,9 @@ namespace thread
 			Execute each command list available on the stack.
 		*/
 		static void ExecuteCommandLists();
+
+		static void SetObjectsBuffer(void* objects);
+
+		static void* GetObjectsBuffer();
 	};
 }
