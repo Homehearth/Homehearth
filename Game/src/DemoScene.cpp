@@ -91,7 +91,7 @@ Entity DemoScene::CreatePlayerEntity()
 	comp::Renderable* renderable = playerEntity.AddComponent<comp::Renderable>();
 	playerEntity.AddComponent<comp::Player>()->runSpeed = 10.f;
 
-	renderable->model = ResourceManager::Get().GetResource<RModel>("Chest.obj");
+	renderable->model = ResourceManager::Get().GetResource<RModel>("StreetLamp.obj");
 
 	m_gameCamera.SetFollowVelocity(playeerVelocity);
 

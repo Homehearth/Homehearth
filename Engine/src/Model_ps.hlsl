@@ -75,8 +75,10 @@ float4 main(PixelIn input) : SV_TARGET
     //If an object has a texture sample from it, else use default values.
     if(c_hasAlbedo == 1)
     {
-        albedo = pow(max(T_albedo.Sample(samp, input.uv).rgb, 0.0f), 2.2f); //Power the albedo by 2.2f to get it to linear space.
-        
+        float4 albedoSamp = T_albedo.Sample(samp, input.uv);
+        //Alpha test: If the alpha is lower than 0.1f we shall ignore this pixel
+        clip(albedoSamp.a < 0.1f ? -1 : 1);
+        albedo = pow(max(albedoSamp.rgb, 0.0f), 2.2f); //Power the albedo by 2.2f to get it to linear space.
     }
     
     if(c_hasNormal == 1)
