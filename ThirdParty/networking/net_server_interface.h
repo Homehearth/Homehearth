@@ -118,6 +118,8 @@ namespace network
 	template <typename T>
 	void server_interface<T>::AsyncWriteMessage(ULONG_PTR param)
 	{
+		server_interface<T>* s = (server_interface<T>*)param;
+		s->WriteMessage();
 	}
 
 	template <typename T>
@@ -221,34 +223,29 @@ namespace network
 	template <typename T>
 	void server_interface<T>::WriteMessage()
 	{
-		EnterCriticalSection(&lock);
-		if (!m_qMessagesOut.empty())
+		owned_message<T> msg = m_qMessagesOut.front();
+		PER_IO_DATA* context = new PER_IO_DATA;
+		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
+		char buffer[BUFFER_SIZE] = {};
+		memcpy(&buffer[0], &msg.msg.header, sizeof(msg_header<T>));
+		if (msg.msg.header.size > 0)
 		{
-			owned_message<T> msg = m_qMessagesOut.front();
-			PER_IO_DATA* context = new PER_IO_DATA;
-			ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
-			char buffer[BUFFER_SIZE] = {};
-			memcpy(&buffer[0], &msg.msg.header, sizeof(msg_header<T>));
-			if (msg.msg.header.size > 0)
-			{
-				memcpy(&buffer[sizeof(msg_header<T>)], msg.msg.payload.data(), msg.msg.payload.size());
-			}
-			context->DataBuf.buf = (CHAR*)buffer;
-			context->DataBuf.len = ULONG(sizeof(msg_header<T>) + msg.msg.payload.size());
-			context->state = NetState::WRITE_MESSAGE;
-			DWORD BytesSent = 0;
-			DWORD flags = 0;
+			memcpy(&buffer[sizeof(msg_header<T>)], msg.msg.payload.data(), msg.msg.payload.size());
+		}
+		context->DataBuf.buf = (CHAR*)buffer;
+		context->DataBuf.len = ULONG(sizeof(msg_header<T>) + msg.msg.payload.size());
+		context->state = NetState::WRITE_MESSAGE;
+		DWORD BytesSent = 0;
+		DWORD flags = 0;
 
-			if (WSASend(msg.remote, &context->DataBuf, 1, &BytesSent, flags, &context->Overlapped, NULL) == SOCKET_ERROR)
+		if (WSASend(msg.remote, &context->DataBuf, 1, &BytesSent, flags, &context->Overlapped, NULL) == SOCKET_ERROR)
+		{
+			if (GetLastError() != WSA_IO_PENDING)
 			{
-				if (GetLastError() != WSA_IO_PENDING)
-				{
-					delete context;
-					LOG_ERROR("WSASend message with error: %ld", GetLastError());
-				}
+				delete context;
+				LOG_ERROR("WSASend message with error: %ld", GetLastError());
 			}
 		}
-		LeaveCriticalSection(&lock);
 	}
 
 	template <typename T>
@@ -400,10 +397,15 @@ namespace network
 			owned_message<T> message;
 			message.msg = msg;
 			message.remote = socket;
+			EnterCriticalSection(&lock);
 			bool writingMessage = !m_qMessagesOut.empty();
 			m_qMessagesOut.push_back(message);
-			int threadID = rand() % nrOfThreads;
-			QueueUserAPC((PAPCFUNC)&server_interface<T>::AsyncWriteMessage, workerThreads[threadID].native_handle(), NULL);
+			if (!writingMessage)
+			{
+				int threadID = rand() % nrOfThreads;
+				QueueUserAPC((PAPCFUNC)&server_interface<T>::AsyncWriteMessage, workerThreads[threadID].native_handle(), (ULONG_PTR)this);
+			}
+			LeaveCriticalSection(&lock);
 		}
 	}
 
@@ -694,10 +696,6 @@ namespace network
 				{
 					LOG_ERROR("%d", LastError);
 				}
-				if (!m_qMessagesOut.empty())
-				{
-					this->WriteMessage();
-				}
 			}
 
 			for (int i = 0; i < (int)EntriesRemoved; i++)
@@ -740,9 +738,12 @@ namespace network
 							if (!m_qMessagesOut.empty())
 							{
 								m_qMessagesOut.pop_front();
+								if (!m_qMessagesOut.empty())
+								{
+									this->WriteMessage();
+								}
 							}
 							LeaveCriticalSection(&lock);
-							this->WriteMessage();
 							break;
 						}
 						case NetState::WRITE_VALIDATION:
