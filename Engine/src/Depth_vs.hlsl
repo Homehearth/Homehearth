@@ -5,7 +5,11 @@ cbuffer Matrices : register(b0)
 
 cbuffer Camera : register(b1)
 {
-    float4x4 projectionView;
+    float4 cameraPosition;
+    float4 cameraTarget;
+
+    float4x4 projection;
+    float4x4 view;
 }
 
 struct VertexIn
@@ -22,5 +26,6 @@ float4 main(VertexIn input) : SV_POSITION
 {
     float4 position = float4(input.pos, 1.0f);
     position = mul(world, position);
-    return mul(projectionView, position);
+    position = mul(view, position);
+    return mul(projection, position);
 }

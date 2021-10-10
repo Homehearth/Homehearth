@@ -29,5 +29,7 @@ void DepthPass::Render(Scene* pScene)
 
 void DepthPass::PostRender()
 {
-
+	// Cleanup.
+    ID3D11DepthStencilView* nullDSV = { nullptr };
+    DC->OMSetRenderTargets(0, nullptr, nullDSV);
 }
