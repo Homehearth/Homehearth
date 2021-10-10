@@ -27,20 +27,28 @@ void GameSystems::MRayIntersectBoxSystem(Scene& scene)
 
 void GameSystems::CollisionUpdateSystem(Scene& scene)
 {
+	auto viewObb = scene.GetRegistry()->view<comp::BoundingOrientedBox>();
+	auto viewSphere = scene.GetRegistry()->view<comp::BoundingSphere>();
+	auto pack = viewObb | viewSphere;
+	for (auto entity1 = entt::view.begin(), end = view.end(); entity1 != end; ++entity1)
+	{
+		comp::BoundingOrientedBox obb1 = view.get<comp::BoundingOrientedBox>(*entity1);
 
-	//auto view = scene.GetRegistryView<comp::BoundingOrientedBox>();
+		for (auto entity2 = entity1; entity2 != end; ++entity2)
+		{
+			comp::BoundingOrientedBox obb2 = view.get<comp::BoundingOrientedBox>(*entity2);
 
-	//for (auto iter = view.begin(), end = view.end(); iter != end; ++iter)
-	//{
-	//	auto const id_a = *iter;
+			if(obb1.Intersects(obb2))
+			{
+				scene.publish<ESceneCollision>(entity1, entity2);
+			}
+			
+		}
+	}
 
-	//	for (auto iterb = iter; iterb != end; ++iterb)
-	//	{
-	//		auto const id_b = *iterb;
 
-	//		// proceed as usual
-	//	}
-	//}
+
+	
 	//OBB collision on OBB & Sphere
 	scene.ForEachComponent<comp::BoundingOrientedBox>([&](Entity entity, comp::BoundingOrientedBox& boundingBox)
 		{
