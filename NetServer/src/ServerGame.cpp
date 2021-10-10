@@ -22,11 +22,10 @@ void ServerGame::InputThread()
 		if (input == "/stop")
 		{
 			m_server.Stop();
-			Shutdown();
+			this->Shutdown();
 			break;
 		}
 	}
-
 }
 
 bool ServerGame::OnStartup()

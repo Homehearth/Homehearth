@@ -15,11 +15,6 @@ namespace ecs
 			sm::Vector3 scale = sm::Vector3(1);
 		};
 
-		struct Network
-		{
-			std::shared_ptr<Client> client;
-		};
-
 		struct Renderable
 		{
 			std::shared_ptr<RModel> model;

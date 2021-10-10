@@ -61,19 +61,42 @@ bool Simulation::AddPlayer(uint32_t playerID)
 	return true;
 }
 
+bool Simulation::RemovePlayer(uint32_t playerID)
+{
+	message<GameMsg> msg;
+	msg.header.id = GameMsg::Game_RemovePlayer;
+	msg << playerID;
+
+	this->Broadcast(msg);
+
+	return true;
+}
+
 void Simulation::UpdatePlayer(const uint32_t& playerID, message<GameMsg>& msg)
 {
 	msg << playerID;
-	Broadcast(msg, playerID);
+	this->Broadcast(msg, playerID);
 }
 
 void Simulation::Broadcast(network::message<GameMsg>& msg, uint32_t exclude)
 {
-	for (auto con : m_connections)
+	auto it = m_connections.begin();
+
+	while (it != m_connections.end())
 	{
-		if (exclude != con.first)
+		if (m_server->GetConnection(it->first) != INVALID_SOCKET)
 		{
-			m_server->SendToClient(con.second, msg);
+			if (exclude != it->first)
+			{
+				m_server->SendToClient(it->second, msg);
+			}
+			it++;
+		}
+		else
+		{
+			uint32_t playerID = it->first;
+			it = m_connections.erase(it);
+ 			this->RemovePlayer(playerID);
 		}
 	}
 }

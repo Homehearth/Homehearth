@@ -25,6 +25,7 @@ private:
 	void PingServer();
 	void JoinLobby(uint32_t lobbyID);
 	void CreateLobby();
+	void OnClientDisconnect();
 
 public:
 	Game();

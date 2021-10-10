@@ -12,14 +12,6 @@ namespace network
 	{
 	private:
 		// Information regarding every connection
-		struct SOCKET_INFORMATION
-		{
-			uint64_t handshakeIn = 0;
-			uint64_t handshakeOut = 0;
-			uint64_t handshakeResult = 0;
-			SOCKET Socket = {};
-			message<T> msgTempIn = {};
-		};
 
 		SOCKET m_listening;
 		bool m_isRunning;
@@ -30,6 +22,15 @@ namespace network
 		tsQueue<owned_message<T>> m_qMessagesOut;
 
 	protected:
+		struct SOCKET_INFORMATION
+		{
+			uint64_t handshakeIn = 0;
+			uint64_t handshakeOut = 0;
+			uint64_t handshakeResult = 0;
+			SOCKET Socket = {};
+			uint32_t clientID;
+			message<T> msgTempIn = {};
+		};
 		std::unordered_map<uint32_t, SOCKET> connections;
 		std::function<void(message<T>&)> messageReceivedHandler;
 		CRITICAL_SECTION lock;
@@ -39,11 +40,11 @@ namespace network
 		// Called once when a client connects
 		virtual void OnClientConnect(std::string&& ip, const uint16_t& port) = 0;
 		// Called once when a client connects
-		virtual void OnClientDisconnect() = 0;
+		virtual void OnClientDisconnect(const SOCKET& socket) = 0;
 		// Called once when a message is received
 		virtual void OnMessageReceived(message<T>& msg) = 0;
 		// Client has solved the puzzle from the server and is now validated
-		virtual void OnClientValidated(const SOCKET& socket) = 0;
+		virtual void OnClientValidated(SOCKET_INFORMATION*& SI) = 0;
 
 	private:
 		DWORD WINAPI ServerWorkerThread();
@@ -255,13 +256,14 @@ namespace network
 		if (SI->handshakeIn == SI->handshakeResult)
 		{
 			EnterCriticalSection(&lock);
-			this->OnClientValidated(SI->Socket);
+			this->OnClientValidated(SI);
 			LeaveCriticalSection(&lock);
 			this->PrimeReadHeader(SI);
 		}
 		else
 		{
 			EnterCriticalSection(&lock);
+			// Legal because unordered_map will return 0 if nothing was erased
 			this->DisconnectClient(SI);
 			LOG_NETWORK("Client failed validation");
 			LeaveCriticalSection(&lock);
@@ -353,10 +355,13 @@ namespace network
 		EnterCriticalSection(&lock);
 		if (SI != NULL)
 		{
+			SOCKET socket = SI->Socket;
 			closesocket(SI->Socket);
+			connections.erase(SI->clientID);
 			delete SI;
 			SI = nullptr;
-			this->OnClientDisconnect();
+
+			this->OnClientDisconnect(socket);
 		}
 		LeaveCriticalSection(&lock);
 	}

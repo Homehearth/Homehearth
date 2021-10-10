@@ -11,7 +11,6 @@ DemoScene::DemoScene(Engine& engine, Client& client, uint32_t* playerID, uint32_
 	m_player = CreatePlayerEntity();
 	SetUpCamera();
 
-
 	// Define what scene does on update
 	m_scene.on<ESceneUpdate>([&](const ESceneUpdate& e, Scene& scene)
 		{
@@ -35,7 +34,7 @@ DemoScene::DemoScene(Engine& engine, Client& client, uint32_t* playerID, uint32_
 				scene.m_currentCamera.get()->Update(e.dt);
 				accumulator += e.dt;
 			}
-			if ((m_client.IsConnected() && *m_gameID != UINT32_MAX) && (ver || hor) && (accumulator > (1.f / 60.f)))
+			if ((m_client.IsConnected() && *m_gameID != UINT32_MAX) && (accumulator > (1.f / 60.f)))
 			{
 				// send updated player position
 				network::message<GameMsg> msg;
@@ -63,7 +62,6 @@ void DemoScene::SetUpCamera()
 
 void DemoScene::CameraUpdate(float deltaTime)
 {
-	//m_scene.m_currentCamera->Update(deltaTime);
 	CAMERATYPE test = m_scene.m_currentCamera->GetCameraType();
 
 #ifdef _DEBUG
@@ -96,7 +94,6 @@ Entity DemoScene::CreatePlayerEntity()
 	comp::Velocity* playerVelocity = playerEntity.AddComponent<comp::Velocity>();
 	comp::Renderable* renderable = playerEntity.AddComponent<comp::Renderable>();
 	playerEntity.AddComponent<comp::Player>()->runSpeed = 10.f;
-	//comp::Network* network = playerEntity.AddComponent<comp::Network>();
 	renderable->model = ResourceManager::Get().GetResource<RModel>("cube.obj");
 
 	m_gameCamera.SetFollowVelocity(playerVelocity);

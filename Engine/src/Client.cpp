@@ -3,11 +3,11 @@
 
 void Client::OnDisconnect()
 {
-	LOG_INFO("Disconnected from the server!");
+	this->onDisconnectHandler();
 }
 
-Client::Client(std::function<void(message<GameMsg>&)> handler)
-	:client_interface<GameMsg>(handler)
+Client::Client(std::function<void(message<GameMsg>&)> handler, std::function<void()> OnDisconnectFunc)
+	:client_interface<GameMsg>(handler), onDisconnectHandler(OnDisconnectFunc)
 {
 }
 

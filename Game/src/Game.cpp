@@ -3,7 +3,7 @@
 using namespace std::placeholders;
 
 Game::Game()
-	: m_client(std::bind(&Game::CheckIncoming, this, _1))
+	: m_client(std::bind(&Game::CheckIncoming, this, _1), std::bind(&Game::OnClientDisconnect, this))
 	, Engine()
 {
 	this->m_localPID = -1;
@@ -32,7 +32,7 @@ bool Game::OnStartup()
 void Game::OnUserUpdate(float deltaTime)
 {
 	IMGUI(
-	ImGui::Begin("Test");
+		ImGui::Begin("Test");
 
 	if (m_client.IsConnected())
 	{
@@ -143,6 +143,19 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		LOG_WARNING("Request denied: Invalid lobby");
 		break;
 	}
+	case GameMsg::Game_RemovePlayer:
+	{
+		uint32_t playerID;
+		msg >> playerID;
+
+		if (m_players.find(playerID) != m_players.end())
+		{
+			m_players[playerID].Destroy();
+			m_players.erase(playerID);
+			LOG_INFO("Removed player!");
+		}
+		break;
+	}
 	}
 }
 
@@ -184,6 +197,20 @@ void Game::CreateLobby()
 	else
 	{
 		LOG_WARNING("Request denied: You are already in a lobby");
+	}
+}
+
+void Game::OnClientDisconnect()
+{
+	LOG_INFO("Disconnected from server!");
+
+	this->m_gameID = -1;
+	this->m_localPID = -1;
+	auto it = m_players.begin();
+	while (it != m_players.end())
+	{
+		it->second.Destroy();
+		it = m_players.erase(it);
 	}
 }
 
