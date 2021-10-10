@@ -30,14 +30,14 @@ void Camera::Initialize(sm::Vector3 pos, sm::Vector3 target, sm::Vector3 up, sm:
     m_position = pos;
     m_target = target;
     m_forward = dx::XMVector3Normalize(m_target);
-    m_up = up;
+    m_up = dx::XMVector3Normalize(up);
     m_windowHeight = windowSize.y;
     m_windowWidth = windowSize.x;
     m_aspectRatio = m_windowWidth / m_windowHeight;
     m_type = type;
 
-    m_defaultForward = { 0.0f, 0.0f, -1.0f };
-    m_defaultRight = { -1.0f, 0.0f, 0.0f };
+    m_defaultForward = m_forward;
+    m_defaultRight = dx::XMVector3Normalize(dx::XMVector3Cross(m_up, m_forward));
 
     m_view = dx::XMMatrixLookAtLH(m_position, m_target, m_up);
     m_projection = dx::XMMatrixPerspectiveFovLH(m_FOV * m_zoomValue, m_aspectRatio, m_nearPlane, m_farPlane);
@@ -98,8 +98,8 @@ void Camera::Update(float deltaTime)
         {
             m_move.y += m_movingSepeed * deltaTime;
         }
-        m_move.x = -InputSystem::Get().GetAxis(Axis::HORIZONTAL) * m_movingSepeed * deltaTime;
-        m_move.z = -InputSystem::Get().GetAxis(Axis::VERTICAL) * m_movingSepeed * deltaTime;
+        m_move.x = InputSystem::Get().GetAxis(Axis::HORIZONTAL) * m_movingSepeed * deltaTime;
+        m_move.z = InputSystem::Get().GetAxis(Axis::VERTICAL) * m_movingSepeed * deltaTime;
 
         //Update camera values
         m_right = dx::XMVector3TransformNormal(m_defaultRight, m_rotationMatrix);

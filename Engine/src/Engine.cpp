@@ -204,7 +204,7 @@ void Engine::drawImGUI() const
 				ImGui::Text("Entity: %d", static_cast<int>((entt::entity)e));
 				ImGui::DragFloat3(("Position##" + std::to_string(static_cast<int>((entt::entity)e))).c_str(), (float*)&transform.position);
 				ImGui::DragFloat3(("Rotation##" + std::to_string(static_cast<int>((entt::entity)e))).c_str(), (float*)&transform.rotation, dx::XMConvertToRadians(1.f));
-				
+
 				ImGui::Text("Change 'mtl-file'");
 				static char str[30] = "";
 				ImGui::InputText("", str, IM_ARRAYSIZE(str));
@@ -212,8 +212,8 @@ void Engine::drawImGUI() const
 				{
 					renderable.model->ChangeMaterial(str);
 				}
-				
-				if(ImGui::Button(("Remove##" + std::to_string(static_cast<int>((entt::entity)e))).c_str()))
+
+				if (ImGui::Button(("Remove##" + std::to_string(static_cast<int>((entt::entity)e))).c_str()))
 				{
 					e.Destroy();
 				}

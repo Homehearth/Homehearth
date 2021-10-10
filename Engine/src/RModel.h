@@ -6,8 +6,8 @@ struct aiMesh;
 /*
 	Load in a model/scene of multiple meshes with Assimp 5.0.1
 	Formats supported:
-		* FBX
-		* OBJ
+	* FBX
+	* OBJ
 
 	Supports files with multiple submeshes and multiple materials
 	Combines all the submeshes with same material to one.
@@ -35,7 +35,7 @@ private:
 	};
 	std::vector<submesh_t>				m_meshes;
 	std::vector<light_t>				m_lights;
-
+	
 	//Save the skeleton in a structure: rootbone --> other parts
 
 private:
