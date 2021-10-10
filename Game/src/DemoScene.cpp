@@ -15,6 +15,7 @@ DemoScene::DemoScene(Engine& engine, Client& client, uint32_t* playerID, uint32_
 	// Define what scene does on update
 	m_scene.on<ESceneUpdate>([&](const ESceneUpdate& e, Scene& scene)
 		{
+			static float accumulator = 0.f;
 			//System responding to user input
 			GameSystems::MRayIntersectBoxSystem(scene);
 
@@ -32,9 +33,9 @@ DemoScene::DemoScene(Engine& engine, Client& client, uint32_t* playerID, uint32_
 					Systems::MovementSystem(scene, e.dt);
 				}
 				scene.m_currentCamera.get()->Update(e.dt);
+				accumulator += e.dt;
 			}
-
-			if ((m_client.IsConnected() && *m_gameID != UINT32_MAX) && (ver || hor))
+			if ((m_client.IsConnected() && *m_gameID != UINT32_MAX) && (ver || hor) && (accumulator > (1.f / 60.f)))
 			{
 				// send updated player position
 				network::message<GameMsg> msg;
@@ -42,6 +43,8 @@ DemoScene::DemoScene(Engine& engine, Client& client, uint32_t* playerID, uint32_
 				comp::Transform t = *m_player.GetComponent<comp::Transform>();
 				msg << t << *m_playerID << *m_gameID;
 				m_client.Send(msg);
+				LOG_INFO("%f", accumulator);
+				accumulator = 0.f;
 			}
 		});
 }
