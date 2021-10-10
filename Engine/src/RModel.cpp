@@ -274,6 +274,29 @@ bool RModel::Create(const std::string& filename)
         importer.FreeScene();
         return false;
     }
+    
+    /*
+        Load in the lights
+    */
+    if (scene->HasLights())
+    {
+        for (UINT i = 0; i < scene->mNumLights; i++)
+        {
+            const aiLight* ailight = scene->mLights[i];
+            light_t light;
+            light.position  = { ailight->mPosition.x,       ailight->mPosition.y,       ailight->mPosition.z,       0.0f };
+            light.direction = { ailight->mDirection.x,      ailight->mDirection.y,      ailight->mDirection.z,      0.0f };
+            light.color     = { ailight->mColorAmbient.r,   ailight->mColorAmbient.g,   ailight->mColorAmbient.b,   0.0f };
+            
+            if (ailight->mType == aiLightSourceType::aiLightSource_POINT)
+                light.type = 1;
+            else if (ailight->mType == aiLightSourceType::aiLightSource_DIRECTIONAL)
+                light.type = 0;
+
+            light.enabled = true;
+            //light.range = ailight->mSize
+        }
+    }
 
     std::string fileformat = GetFileFormat(filename);
 

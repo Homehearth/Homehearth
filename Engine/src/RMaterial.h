@@ -88,6 +88,7 @@ private:
 private:
 	//Split the path to only get the filename
 	const std::string GetFilename(const std::string& path) const;
+	bool LoadTexture(const ETextureType& type, const std::string& filename);
 	bool CreateConstBuf(const matConstants_t& mat);
 	bool CreateConstBuf(const properties_t& mat);
 

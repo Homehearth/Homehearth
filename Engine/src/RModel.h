@@ -33,6 +33,8 @@ private:
 	};
 	std::vector<submesh_t>				m_meshes;
 	
+	std::vector<light_t>				m_lights;
+
 	//Save the skeleton in a structure: rootbone --> other parts
 
 private:

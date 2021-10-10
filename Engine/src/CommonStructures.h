@@ -7,7 +7,6 @@ struct Ray_t
 
 /*
 	Basic objects like static meshes
-	//[TODO] Discuss bitanget?
 */
 ALIGN16
 struct simple_vertex_t
@@ -52,10 +51,11 @@ struct camera_Matrix_t
 ALIGN16
 struct light_t
 {
-	sm::Vector4 position;
-	sm::Vector4 direction;
-	sm::Vector4 color;
-	float		range;
-	UINT		type;	 // 0 = Directional, 1 = Point
-	UINT		enabled; // 0 = Off, 1 = On
+	sm::Vector4 position	= {};
+	sm::Vector4 direction	= {};
+	sm::Vector4 color		= {};
+	float		range		= 0.0f;
+	UINT		type		= 1;	// 0 = Directional, 1 = Point
+	UINT		enabled		= 1;	// 0 = Off, 1 = On
+	float		padding;
 };
