@@ -63,7 +63,7 @@ namespace network
 		void ReadValidation(SOCKET_INFORMATION*& SI, PER_IO_DATA* context);
 		void ReadHeader(SOCKET_INFORMATION*& SI, PER_IO_DATA* context);
 		void ReadPayload(SOCKET_INFORMATION*& SI, PER_IO_DATA* context);
-		void WriteMessage();
+		void WriteMessage(owned_message<T>& msg);
 		void PrimeReadHeader(SOCKET_INFORMATION*& SI);
 		void PrimeReadPayload(SOCKET_INFORMATION*& SI);
 		void PrimeReadValidation(SOCKET_INFORMATION*& SI);
@@ -221,9 +221,8 @@ namespace network
 	}
 
 	template <typename T>
-	void server_interface<T>::WriteMessage()
+	void server_interface<T>::WriteMessage(owned_message<T>& msg)
 	{
-		owned_message<T> msg = m_qMessagesOut.front();
 		PER_IO_DATA* context = new PER_IO_DATA;
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
 		char buffer[BUFFER_SIZE] = {};
@@ -397,15 +396,7 @@ namespace network
 			owned_message<T> message;
 			message.msg = msg;
 			message.remote = socket;
-			EnterCriticalSection(&lock);
-			bool writingMessage = !m_qMessagesOut.empty();
-			m_qMessagesOut.push_back(message);
-			if (!writingMessage)
-			{
-				int threadID = rand() % nrOfThreads;
-				QueueUserAPC((PAPCFUNC)&server_interface<T>::AsyncWriteMessage, workerThreads[threadID].native_handle(), (ULONG_PTR)this);
-			}
-			LeaveCriticalSection(&lock);
+			WriteMessage(message);
 		}
 	}
 
@@ -734,16 +725,6 @@ namespace network
 						}
 						case NetState::WRITE_MESSAGE:
 						{
-							EnterCriticalSection(&lock);
-							if (!m_qMessagesOut.empty())
-							{
-								m_qMessagesOut.pop_front();
-								if (!m_qMessagesOut.empty())
-								{
-									this->WriteMessage();
-								}
-							}
-							LeaveCriticalSection(&lock);
 							break;
 						}
 						case NetState::WRITE_VALIDATION:
