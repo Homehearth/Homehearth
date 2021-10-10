@@ -3,8 +3,6 @@
 #include <omp.h>
 #include "Camera.h"
 
-#include "RMesh.h"
-
 bool Engine::s_safeExit = false;
 
 Engine::Engine()
@@ -200,13 +198,22 @@ void Engine::drawImGUI() const
 	ImGui::Begin("Components");
 	if (ImGui::CollapsingHeader("Transform"))
 	{
-		GetCurrentScene()->ForEachComponent<comp::Transform>([&](Entity& e, comp::Transform& transform)
+		GetCurrentScene()->ForEachComponent<comp::Transform, comp::Renderable>([&](Entity& e, comp::Transform& transform, comp::Renderable& renderable)
 			{
 				ImGui::Separator();
 				ImGui::Text("Entity: %d", static_cast<int>((entt::entity)e));
 				ImGui::DragFloat3(("Position##" + std::to_string(static_cast<int>((entt::entity)e))).c_str(), (float*)&transform.position);
 				ImGui::DragFloat3(("Rotation##" + std::to_string(static_cast<int>((entt::entity)e))).c_str(), (float*)&transform.rotation, dx::XMConvertToRadians(1.f));
-				if(ImGui::Button(("Remove##" + std::to_string(static_cast<int>((entt::entity)e))).c_str()))
+
+				ImGui::Text("Change 'mtl-file'");
+				static char str[30] = "";
+				ImGui::InputText("", str, IM_ARRAYSIZE(str));
+				if (ImGui::IsKeyPressedMap(ImGuiKey_Enter))
+				{
+					renderable.model->ChangeMaterial(str);
+				}
+
+				if (ImGui::Button(("Remove##" + std::to_string(static_cast<int>((entt::entity)e))).c_str()))
 				{
 					e.Destroy();
 				}

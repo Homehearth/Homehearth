@@ -2,6 +2,11 @@
 #include "RTexture.h"
 #include <assimp/material.h>
 
+//Slots to bind to on shader-side
+const UINT CB_MAT_SLOT			= 0;
+const UINT CB_PROPERTIES_SLOT	= 2;
+const UINT T2D_STARTSLOT		= 1;
+
 /*
 	---MTL-Standard---
 	make sure that the obj-file has a link to material
@@ -43,6 +48,7 @@ private:
 		Constantbuffer with constants for the material
 		Size: 48 bytes
 	*/
+	ALIGN16
 	struct matConstants_t
 	{
 		sm::Vector3	 ambient	= {};		//12 bytes
@@ -60,6 +66,7 @@ private:
 		Size: 32 bytes
 		Optimization: save memory with bitwise? send only one number
 	*/
+	ALIGN16
 	struct properties_t
 	{
 		int 	hasAlbedo	 = 0;	//4 byte
@@ -96,6 +103,9 @@ public:
 
 	//Loaded from assimp
 	bool Create(aiMaterial* aiMat, const std::string& fileformat);
+
+	//Load a part of a mtl-file. Text = "newmtl ..."
+	bool CreateFromMTL(std::string& text);
 
 	// Inherited via GResource
 	// Load material with file - mtl files
