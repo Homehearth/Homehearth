@@ -54,8 +54,8 @@ struct light_t
 	sm::Vector4 position	= {};
 	sm::Vector4 direction	= {};
 	sm::Vector4 color		= {};
-	float		range		= 0.0f;
+	float		attenuation = 0.0f;	//Quadratic from assimp
 	UINT		type		= 1;	// 0 = Directional, 1 = Point
 	UINT		enabled		= 1;	// 0 = Off, 1 = On
-	float		padding;
+	float		range		= 0.0f;	//Not available from assimp
 };

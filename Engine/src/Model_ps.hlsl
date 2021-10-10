@@ -123,7 +123,7 @@ float4 main(PixelIn input) : SV_TARGET
     
     for (int i = 0; i < NR_LIGHTS; i++)
     {
-        if(L[i].enabled = 1)
+        if(L[i].enabled == 1)
         {
             switch (L[i].type)
             {

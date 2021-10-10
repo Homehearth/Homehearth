@@ -284,9 +284,12 @@ bool RModel::Create(const std::string& filename)
         {
             const aiLight* ailight = scene->mLights[i];
             light_t light;
-            light.position  = { ailight->mPosition.x,       ailight->mPosition.y,       ailight->mPosition.z,       0.0f };
-            light.direction = { ailight->mDirection.x,      ailight->mDirection.y,      ailight->mDirection.z,      0.0f };
-            light.color     = { ailight->mColorAmbient.r,   ailight->mColorAmbient.g,   ailight->mColorAmbient.b,   0.0f };
+
+            aiVector3D aiRot, aiScl, aiPos;
+            scene->mRootNode->FindNode(ailight->mName)->mTransformation.Decompose(aiScl, aiRot, aiPos);
+            light.position  = { aiPos.x + ailight->mPosition.x, aiPos.y + ailight->mPosition.y, aiPos.z + ailight->mPosition.z, 0.0f };
+            light.direction = { ailight->mDirection.x,          ailight->mDirection.y,          ailight->mDirection.z,          0.0f };
+            light.color     = { ailight->mColorDiffuse.r,       ailight->mColorDiffuse.g,       ailight->mColorDiffuse.b,       0.0f };
             
             if (ailight->mType == aiLightSourceType::aiLightSource_POINT)
                 light.type = 1;
@@ -294,15 +297,16 @@ bool RModel::Create(const std::string& filename)
                 light.type = 0;
 
             light.enabled = true;
-            //light.range = ailight->mSize
+            light.attenuation = ailight->mAttenuationQuadratic;
+            m_lights.push_back(light);
         }
+        m_lights.shrink_to_fit();
     }
-
-    std::string fileformat = GetFileFormat(filename);
 
     /*
         Links together a material to multiple submeshes
     */
+    std::string fileformat = GetFileFormat(filename);
     std::unordered_map<UINT, std::vector<aiMesh*>> matSet;
     //Creating all the sets
     for (UINT i = 0; i < scene->mNumMeshes; i++)

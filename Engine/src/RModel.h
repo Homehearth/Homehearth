@@ -5,9 +5,9 @@ struct aiMesh;
 
 /*
 	Load in a model/scene of multiple meshes with Assimp 5.0.1
-	Format supported:
-	* FBX
-	* OBJ
+	Formats supported:
+		* FBX
+		* OBJ
 
 	Supports files with multiple submeshes and multiple materials
 	Combines all the submeshes with same material to one.
@@ -15,6 +15,8 @@ struct aiMesh;
 
 	The model can change material to any other mtl-file.
 	Order in the mtl-file is important.
+
+	Can load in lights from the FBX-format.
 
 	TODO:
 	* Fix loading in bones
@@ -32,7 +34,6 @@ private:
 		std::shared_ptr<RMaterial>		material;
 	};
 	std::vector<submesh_t>				m_meshes;
-	
 	std::vector<light_t>				m_lights;
 
 	//Save the skeleton in a structure: rootbone --> other parts
@@ -54,6 +55,9 @@ private:
 public:
 	RModel();
 	~RModel();
+
+	//Get the vector of lights
+	const std::vector<light_t>& GetLights() const { return m_lights; }
 
 	/*
 		Change the material to other. Uses a mtlfile.

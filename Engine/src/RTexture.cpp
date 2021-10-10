@@ -79,7 +79,7 @@ bool RTexture::Create(const std::string& filename)
 	textureDesc.SampleDesc.Count = 1;
 	textureDesc.SampleDesc.Quality = 0;
 	textureDesc.Usage = D3D11_USAGE_DEFAULT;
-	textureDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+	textureDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;	//D3D11_BIND_RENDER_TARGET
 	textureDesc.CPUAccessFlags = 0;
 
 	if (m_format == ETextureChannelType::oneChannel)
