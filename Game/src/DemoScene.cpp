@@ -9,7 +9,7 @@ DemoScene::DemoScene(Engine& engine, Client& client, uint32_t* playerID, uint32_
 	Entity box = m_scene.CreateEntity();
 	box.AddComponent<comp::Transform>()->position.z = -5.0f;
 	comp::BoundingOrientedBox* obb = box.AddComponent<comp::BoundingOrientedBox>();
-	obb->Center = sm::Vector3(0.0f, 0.0f, -10.0f);
+	obb->Center = sm::Vector3(0.0f, 0.0f, -5.0f);
 	obb->Extents = sm::Vector3(1.0f, 1.0f, 1.0f);
 	comp::Renderable* boxRender = box.AddComponent<comp::Renderable>();
 	boxRender->mesh = ResourceManager::Get().GetResource<RMesh>("Cube.fbx");
@@ -18,10 +18,16 @@ DemoScene::DemoScene(Engine& engine, Client& client, uint32_t* playerID, uint32_
 	//Initialize player entity
 	SetUpCamera();
 	m_player = CreatePlayerEntity();
-
+	
+	
+	
 	// Define what scene does on update
 	m_scene.on<ESceneUpdate>([&](const ESceneUpdate& e, Scene& scene)
 		{
+			if(CollisionSystem::Get().IsColliding(box, m_player))
+			{
+				LOG_INFO("Player is Colliding with box...");
+			}
 			//System responding to user input
 			GameSystems::MRayIntersectBoxSystem(scene);
 
@@ -58,7 +64,7 @@ DemoScene::DemoScene(Engine& engine, Client& client, uint32_t* playerID, uint32_
 
 	m_scene.on<ESceneCollision>([&](const ESceneCollision& e, Scene& scene)
 		{
-			LOG_INFO("COLLISION DETECTED");
+			CollisionSystem::Get().AddPair(e.obj1, e.obj2);
 		});
 }
 

@@ -14,8 +14,8 @@ struct ESceneUpdate
 
 struct ESceneCollision
 {
-	Entity obj1;
-	Entity obj2;
+	entt::entity obj1;
+	entt::entity obj2;
 };
 
 struct ESceneRender {};

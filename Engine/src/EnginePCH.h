@@ -80,6 +80,7 @@ namespace sm = dx::SimpleMath;
 
 //Entity systems
 #include "Systems.h"
+#include "CollisionSystem.h"
 
 // imGUI
 #include <imgui.h>

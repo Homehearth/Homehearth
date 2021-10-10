@@ -2,21 +2,19 @@
 class CollisionSystem
 {
 private:
-    struct pair_hash
-    {
-        template <class T1, class T2>
-        std::size_t operator () (std::pair<T1, T2> const& pair) const
-        {
-            //std::size_t h1 = std::hash<T1>()(pair->first);
-            //std::size_t h2 = std::hash<T2>()(pair->second);
+    std::set<std::pair<entt::entity, entt::entity>> m_CollisionPairs;
+	CollisionSystem() = default;
 
-            //return h1 ^ h2;
-        }
-    };
-	std::unordered_set<std::pair<Entity, Entity>, pair_hash> m_CollisionPairs;
 public:
-	const std::unordered_set<std::pair<Entity, Entity>, pair_hash>& getCollisions() const;
-	void addPair(const Entity e1, const Entity e2);
-
+	~CollisionSystem() = default;
+	static auto& Get()
+	{
+		static CollisionSystem s_instance;
+		return s_instance;
+	}
+	const std::set<std::pair<entt::entity, entt::entity>>& GetCollisions() const;
+	void AddPair(const entt::entity e1, const entt::entity e2);
+	void RemovePair(const entt::entity e1, const entt::entity e2);
+	bool IsColliding(const entt::entity e1, const entt::entity e2);
 };
 
