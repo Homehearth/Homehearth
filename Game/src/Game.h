@@ -19,6 +19,7 @@ private:
 	virtual bool OnStartup() override;
 	virtual void OnUserUpdate(float deltaTime) override;
 	virtual void OnShutdown() override;
+	virtual void UpdateNetwork(float deltaTime) override;
 
 	// User defined function to check messages which must comply with the function pointer arguments from Client
 	void CheckIncoming(message<GameMsg>& msg);
@@ -30,4 +31,6 @@ private:
 public:
 	Game();
 	virtual ~Game();
+
+	// Inherited via Engine
 };

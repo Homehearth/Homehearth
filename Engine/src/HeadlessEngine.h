@@ -9,6 +9,11 @@ private:
 	
 	std::unordered_map<std::string, Scene> m_scenes;
 	Scene* m_currentScene;
+
+	virtual void UpdateNetwork(float deltaTime) = 0;
+	virtual bool OnStartup() = 0;
+	virtual void OnUserUpdate(float deltaTime) = 0;
+	virtual void OnShutdown() = 0;
 	
 protected:
 
@@ -20,12 +25,6 @@ protected:
 
 	// Updates the current scene.
 	virtual void Update(float dt);
-	
-	
-	virtual bool OnStartup() = 0;
-	virtual void OnUserUpdate(float deltaTime) = 0;
-	virtual void OnShutdown() = 0;
-
 
 public:
 	HeadlessEngine();

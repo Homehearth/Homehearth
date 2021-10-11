@@ -18,10 +18,37 @@ Game::~Game()
 	}
 }
 
+void Game::UpdateNetwork(float deltaTime)
+{
+	static float pingCheck = 0.f;
+	const float TARGET_PING_TIME = 5.0f;
+	if (m_client.IsConnected())
+	{
+		m_client.Update();
+		if (m_gameID != UINT32_MAX)
+		{
+			// send updated player position
+			network::message<GameMsg> msg;
+			msg.header.id = GameMsg::Game_Update;
+			comp::Transform t = *m_demoScene->m_player.GetComponent<comp::Transform>();
+			msg << t << this->m_localPID << m_gameID;
+			m_client.Send(msg);
+		}
+
+		pingCheck += deltaTime;
+
+		if (pingCheck > TARGET_PING_TIME)
+		{
+			this->PingServer();
+			pingCheck -= TARGET_PING_TIME;
+		}
+	}
+}
+
 bool Game::OnStartup()
 {
 	// Scene logic
-	m_demoScene = std::make_unique<DemoScene>(*this, m_client, &this->m_localPID, &this->m_gameID);
+	m_demoScene = std::make_unique<DemoScene>(*this);
 
 	//Set as current scene
 	SetScene(m_demoScene->GetScene());
@@ -31,31 +58,43 @@ bool Game::OnStartup()
 
 void Game::OnUserUpdate(float deltaTime)
 {
+	static float pingCheck = 0.f;
 	IMGUI(
-		ImGui::Begin("Test");
+		ImGui::Begin("Network");
 
 	if (m_client.IsConnected())
 	{
-		if (ImGui::Button("Ping"))
-		{
-			PingServer();
-		}
-		if (ImGui::Button("Create Lobby"))
-		{
-			this->CreateLobby();
-		}
-
-		static uint32_t lobbyID = 0;
-		ImGui::InputInt("LobbyID", (int*)&lobbyID);
-		ImGui::SameLine();
-
-		if (ImGui::Button("Join"))
-		{
-			this->JoinLobby(lobbyID);
-		}
 		if (ImGui::Button("Disconnect"))
 		{
 			this->m_client.Disconnect();
+		}
+		if (m_client.m_latency > 0)
+		{
+			ImGui::Text(std::string("Latency: " + std::to_string(m_client.m_latency) + "ms").c_str());
+		}
+		else
+		{
+			ImGui::Text(std::string("Latency: <1 ms").c_str());
+		}
+
+		if (m_gameID == UINT32_MAX)
+		{
+			if (ImGui::Button("Create Lobby"))
+			{
+				this->CreateLobby();
+			}
+			static uint32_t lobbyID = 0;
+			ImGui::InputInt("LobbyID", (int*)&lobbyID);
+			ImGui::SameLine();
+
+			if (ImGui::Button("Join"))
+			{
+				this->JoinLobby(lobbyID);
+			}
+		}
+		else
+		{
+			ImGui::Text(std::string("Game ID: " + std::to_string(m_gameID)).c_str());
 		}
 	}
 	else
@@ -72,11 +111,6 @@ void Game::OnUserUpdate(float deltaTime)
 	}
 	ImGui::End();
 	);
-
-	if (m_client.IsConnected())
-	{
-		m_client.Update();
-	}
 }
 
 
@@ -92,8 +126,8 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	case GameMsg::Server_GetPing:
 	{
 		std::chrono::system_clock::time_point timeNow = std::chrono::system_clock::now();
-
-		LOG_INFO("Ping: %fs", std::chrono::duration<double>(timeNow - this->m_timeThen).count());
+		m_client.m_latency = int(std::chrono::duration<double>(timeNow - this->m_timeThen).count() * 1000);
+		//LOG_INFO("Ping: %fs", std::chrono::duration<double>(timeNow - this->m_timeThen).count());
 		break;
 	}
 	case GameMsg::Server_AssignID:

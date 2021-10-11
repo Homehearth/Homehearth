@@ -9,6 +9,7 @@ void Client::OnDisconnect()
 Client::Client(std::function<void(message<GameMsg>&)> handler, std::function<void()> OnDisconnectFunc)
 	:client_interface<GameMsg>(handler), onDisconnectHandler(OnDisconnectFunc)
 {
+	m_latency = 0;
 }
 
 Client::~Client()

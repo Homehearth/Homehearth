@@ -19,6 +19,8 @@ private:
 
 	bool CreateSimulation(uint32_t playerID);
 
+	// Inherited via HeadlessEngine
+	virtual void UpdateNetwork(float deltaTime) override;
 public:
 	ServerGame();
 	virtual ~ServerGame();
@@ -29,5 +31,6 @@ public:
 	virtual bool OnStartup() override;
 	virtual void OnUserUpdate(float deltaTime) override;
 	virtual void OnShutdown() override;
+
 };
 

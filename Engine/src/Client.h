@@ -23,4 +23,6 @@ public:
 
 	void Update(size_t nMaxMessage = -1);
 	virtual void OnMessageReceived(message<GameMsg>& msg) override;
+
+	int m_latency;
 };

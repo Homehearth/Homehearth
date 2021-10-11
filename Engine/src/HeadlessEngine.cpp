@@ -81,8 +81,10 @@ void HeadlessEngine::Run()
 	double currentFrame = 0.f;
 	double lastFrame = omp_get_wtime();
 	float deltaTime = 0.f;
-	float accumulator = 0.f;
-	const float targetDelta = 1 / 10000.0f;
+	float update_time = 0.f;
+	float network_time = 0.f;
+	const float TARGET_UPDATE = 1 / 10000.0f;
+	const float NETWORK_TARGET_DELTA = 1.f / 60.f;
 
 	while (IsRunning())
 	{
@@ -91,14 +93,19 @@ void HeadlessEngine::Run()
 		currentFrame = omp_get_wtime();
 		deltaTime = static_cast<float>(currentFrame - lastFrame);
 
-		if (accumulator >= targetDelta)
+		if (update_time >= TARGET_UPDATE)
 		{
-			Update(accumulator);
-			accumulator = 0.f;
+			Update(TARGET_UPDATE);
+			update_time -= TARGET_UPDATE;
 		}
-		accumulator += deltaTime;
+		if (network_time >= NETWORK_TARGET_DELTA)
+		{
+			UpdateNetwork(NETWORK_TARGET_DELTA);
+			network_time -= NETWORK_TARGET_DELTA;
+		}
+		network_time += deltaTime;
+		update_time += deltaTime;
 		lastFrame = currentFrame;
-
 	}
 
 }

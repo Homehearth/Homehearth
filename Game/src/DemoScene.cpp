@@ -1,10 +1,7 @@
 #include "DemoScene.h"
 
-DemoScene::DemoScene(Engine& engine, Client& client, uint32_t* playerID, uint32_t* gameID)
+DemoScene::DemoScene(Engine& engine)
 	: SceneBuilder(engine)
-	, m_gameID(gameID)
-	, m_playerID(playerID)
-	, m_client(client)
 {
 	m_engine = &engine;
 	//Initialize player entity
@@ -14,7 +11,6 @@ DemoScene::DemoScene(Engine& engine, Client& client, uint32_t* playerID, uint32_
 	// Define what scene does on update
 	m_scene.on<ESceneUpdate>([&](const ESceneUpdate& e, Scene& scene)
 		{
-			static float accumulator = 0.f;
 			//System responding to user input
 			GameSystems::MRayIntersectBoxSystem(scene);
 
@@ -26,24 +22,8 @@ DemoScene::DemoScene(Engine& engine, Client& client, uint32_t* playerID, uint32_
 				m_player.GetComponent<comp::Velocity>()->vel.z = ver * m_player.GetComponent<comp::Player>()->runSpeed;
 				m_player.GetComponent<comp::Velocity>()->vel.x = hor * m_player.GetComponent<comp::Player>()->runSpeed;
 
-				// Updates the position based on input from player
-				if (hor || ver)
-				{
-					Systems::MovementSystem(scene, e.dt);
-				}
+				Systems::MovementSystem(scene, e.dt);
 				scene.m_currentCamera.get()->Update(e.dt);
-				accumulator += e.dt;
-			}
-			if ((m_client.IsConnected() && *m_gameID != UINT32_MAX) && (accumulator > (1.f / 60.f)))
-			{
-				// send updated player position
-				network::message<GameMsg> msg;
-				msg.header.id = GameMsg::Game_Update;
-				comp::Transform t = *m_player.GetComponent<comp::Transform>();
-				msg << t << *m_playerID << *m_gameID;
-				m_client.Send(msg);
-				LOG_INFO("%f", accumulator);
-				accumulator = 0.f;
 			}
 		});
 }

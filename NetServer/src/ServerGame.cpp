@@ -51,6 +51,10 @@ void ServerGame::OnShutdown()
 	m_inputThread.join();
 }
 
+void ServerGame::UpdateNetwork(float deltaTime)
+{
+}
+
 void ServerGame::CheckIncoming(message<GameMsg>& msg)
 {
 	switch (msg.header.id)
