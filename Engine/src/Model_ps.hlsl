@@ -58,13 +58,13 @@ float4 main(PixelIn input) : SV_TARGET
     //TEMP
     Light L[2];
     L[0].position = float4(0.f, 8.f, 10.f, 1.f);
-    L[0].color = 300.f;
+    L[0].color = 10.f;
     L[0].direction = float4(0.f, -1.f, 1.f, 0.f);
     L[0].range = 75.f;
     L[0].type = 0;
     L[0].enabled = 1;
     
-    L[1].position = float4(0.f, 8.f, -10.f, 1.f);
+    L[1].position = float4(0.f, 0.f, -10.f, 1.f);
     L[1].color = 300.f;
     L[1].direction = float4(0.f, -1.f, -1.f, 0.f);
     L[1].range = 75.f;
@@ -72,14 +72,13 @@ float4 main(PixelIn input) : SV_TARGET
     L[1].enabled = 1;
     
     
-    //If an object has a texture sample from it, else use default values.
+    //If an object has a texture, sample from it else use default values.
     if(c_hasAlbedo == 1)
     {
-        albedo = pow(max(T_albedo.Sample(samp, input.uv).rgb, 0.0f), 2.2f); //Power the albedo by 2.2f to get it to linear space.
-        
+        albedo = pow(max(T_albedo.Sample(samp, input.uv).rgb, 0.0f), 2.2f); //Power the albedo by 2.2f to get it to linear space.        
     }
     
-    if(c_hasNormal == 1)
+    if (c_hasNormal == 1)
     {
         float3 normalMap = T_normal.Sample(samp, input.uv).rgb;
         normalMap = normalMap * 2.0f - 1.0f;
@@ -92,7 +91,7 @@ float4 main(PixelIn input) : SV_TARGET
     }
     
     if(c_hasMetalness == 1)
-    {
+    { 
         metallic = T_metalness.Sample(samp, input.uv).r;
     }
     
@@ -142,7 +141,7 @@ float4 main(PixelIn input) : SV_TARGET
     
 	
     //Ambient lighting
-    float3 ambient = float3(0.03f, 0.03f, 0.03f) * albedo * ao;
+    float3 ambient = float3(0.4f, 0.4f, 0.4f) * albedo * ao;
     float3 color = ambient + Lo;
     
     //HDR tonemapping
