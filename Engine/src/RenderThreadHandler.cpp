@@ -1,23 +1,12 @@
 #include "EnginePCH.h"
 #include "RenderThreadHandler.h"
 #include "multi_thread_manager.h"
-#include <tgmath.h>
-
-
-/*
-	Crash info:
-	Lambda funktionen när den vill ska tas ut returnerar empty ibland.
-	Anledningen är funktionen RenderDeferred på model.
-	Varför vet jag inte.
-*/
 
 #define INSTANCE thread::RenderThreadHandler::Get()
 #define CONTEXT D3D11Core::Get().DeviceContext()
 
 CRITICAL_SECTION criticalSection;
 std::condition_variable cv;
-std::mutex thread_mutex;
-std::mutex job_mutex;
 bool shouldRender = true;
 
 bool ShouldContinue();
@@ -112,13 +101,6 @@ std::function<void(void*, void*, void*)> thread::RenderThreadHandler::GetJob()
 	}
 	
 	const int size = (int)INSTANCE.m_jobs.size() - 1;
-	
-	/*
-	if (!INSTANCE.m_jobs[size])
-	{
-		return nullptr;
-	}
-	*/
 
 	return INSTANCE.m_jobs[size];
 }
@@ -146,13 +128,12 @@ void thread::RenderThreadHandler::Setup(const int& amount)
 
 const int thread::RenderThreadHandler::Launch(const int& amount_of_objects)
 {
-	const unsigned int objects_per_thread = (unsigned int)ceil((double)amount_of_objects / (double)INSTANCE.m_amount);
+	const unsigned int objects_per_thread = (unsigned int)(amount_of_objects / (double)INSTANCE.m_amount) + 1;
 	if (objects_per_thread >= thread::threshold)
 	{
 		// Launch Threads
 		if (INSTANCE.m_isPooled)
 		{
-
 			for (unsigned int i = 0; i < INSTANCE.m_amount; i++)
 			{
 				// Prepare job for threads.
@@ -287,6 +268,7 @@ void RenderMain(const unsigned int id)
 	// On Update
 	while (INSTANCE.GetHandlerStatus())
 	{
+		// Sleep until called upon.
 		cv.wait(uqmtx, ShouldContinue);
 		if (!INSTANCE.GetHandlerStatus())
 		{
@@ -304,9 +286,7 @@ void RenderMain(const unsigned int id)
 			LeaveCriticalSection(&criticalSection);
 
 			// Run render.
-			//std::cout << "I started working! ID: " << t_id << "\n";
 			func(&m_privateBuffer, deferred_context, &pipeManager);
-			//std::cout << "I stopped working! ID: " << t_id << "\n";
 		}
 		else
 		{

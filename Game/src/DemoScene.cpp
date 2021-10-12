@@ -10,10 +10,6 @@ DemoScene::DemoScene(Engine& engine, Client& client, uint32_t* playerID, uint32_
 	//Initialize player entity
 	m_player = CreatePlayerEntity();
 	SetUpCamera();
-	for (int i = 0; i < 250; i++)
-	{
-		CreatePlayerEntity();
-	}
 
 
 	// Define what scene does on update
