@@ -13,7 +13,7 @@ void BasePass::PreRender()
 
 	DC->VSSetConstantBuffers(1, 1, CAMERA->m_viewConstantBuffer.GetAddressOf()); 
     
-    DC->PSSetShaderResources(10, 1, PM->m_depthBufferSRV.GetAddressOf());   // DepthBuffer.
+    DC->PSSetShaderResources(6, 1, PM->m_depthBufferSRV.GetAddressOf());   // DepthBuffer.
 
     DC->PSSetSamplers(0, 1, PM->m_linearSamplerState.GetAddressOf());
     DC->PSSetSamplers(1, 1, PM->m_pointSamplerState.GetAddressOf());
@@ -33,6 +33,6 @@ void BasePass::PostRender()
 {
 	// Cleanup.
     ID3D11ShaderResourceView* nullSRV[] = { nullptr };
-	DC->PSSetShaderResources(10, 1, nullSRV);
+	DC->PSSetShaderResources(6, 1, nullSRV);
 }
 

@@ -26,6 +26,7 @@ public:
 	ComPtr<ID3D11DepthStencilView>	m_depthStencilView;
 	ComPtr<ID3D11ShaderResourceView>m_depthBufferSRV;
 	
+	ComPtr<ID3D11DepthStencilState>	m_depthStencilStateLess;
 	ComPtr<ID3D11DepthStencilState>	m_depthStencilStateLessEqual;
 	ComPtr<ID3D11DepthStencilState> m_depthStencilStateGreater;
 	ComPtr<ID3D11DepthStencilState> m_depthStencilStateEqualAndDisableDepthWrite;

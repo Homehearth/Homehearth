@@ -1,12 +1,12 @@
 #include "PBR.hlsli"
 
-Texture2D T_albedo    : register(t0);
-Texture2D T_normal    : register(t1);
-Texture2D T_metalness : register(t2);
-Texture2D T_roughness : register(t3);
-Texture2D T_aomap     : register(t4);
-Texture2D T_displace  : register(t5);
-Texture2D<float> T_depth : register(t10);
+Texture2D T_albedo      : register(t0);
+Texture2D T_normal      : register(t1);
+Texture2D T_metalness   : register(t2);
+Texture2D T_roughness   : register(t3);
+Texture2D T_aomap       : register(t4);
+Texture2D T_displace    : register(t5);
+Texture2D T_depth       : register(t6);
 
 SamplerState LinearSampler : register(s0); 
 SamplerState PointSampler : register(s1);
@@ -46,8 +46,10 @@ cbuffer properties_t : register(b3)
 
 float4 main(PixelIn input) : SV_TARGET
 {
-    float depth = T_depth.Sample(PointSampler, input.uv).r;
-	return float4(depth, depth, depth, 1.0);
+	// Depth Buffer.
+    const int3 posCoords = int3(input.pos.xy, 0);
+	const float depth = T_depth.Load(posCoords).x;
+	//return float4(depth, depth, depth, 1.0f);
 	
     float3 camPos = cameraPosition.xyz;
     float ao = 1.0f;

@@ -97,7 +97,7 @@ bool PipelineManager::CreateDepthBuffer()
     depthBufferDesc.Height = m_window->GetHeight();
     depthBufferDesc.MipLevels = 1;
     depthBufferDesc.ArraySize = 1;
-    depthBufferDesc.Format = DXGI_FORMAT_R24G8_TYPELESS;
+    depthBufferDesc.Format = DXGI_FORMAT_R32_TYPELESS;
     depthBufferDesc.SampleDesc.Count = 1;
     depthBufferDesc.SampleDesc.Quality = 0;
     depthBufferDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -110,7 +110,7 @@ bool PipelineManager::CreateDepthBuffer()
 
     D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc;
     ZeroMemory(&depthStencilViewDesc, sizeof(D3D11_DEPTH_STENCIL_VIEW_DESC));
-    depthStencilViewDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+    depthStencilViewDesc.Format = DXGI_FORMAT_D32_FLOAT;
     depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
     depthStencilViewDesc.Texture2D.MipSlice = 0;
     hr = m_d3d11->Device()->CreateDepthStencilView(m_depthStencilTexture.Get(), &depthStencilViewDesc, m_depthStencilView.GetAddressOf());
@@ -118,7 +118,7 @@ bool PipelineManager::CreateDepthBuffer()
         return false;
 
     D3D11_SHADER_RESOURCE_VIEW_DESC shaderResourceViewDesc;
-    shaderResourceViewDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
+    shaderResourceViewDesc.Format = DXGI_FORMAT_R32_FLOAT;
     shaderResourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
     shaderResourceViewDesc.Texture2D.MostDetailedMip = 0;
     shaderResourceViewDesc.Texture2D.MipLevels = 1;
@@ -136,7 +136,7 @@ bool PipelineManager::CreateDepthStencilStates()
     // Set up the description of the stencil state (Less).
     depthStencilDesc.DepthEnable = true;
     depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-    depthStencilDesc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
+    depthStencilDesc.DepthFunc = D3D11_COMPARISON_LESS;
     depthStencilDesc.StencilEnable = true;
     depthStencilDesc.StencilReadMask = D3D11_DEFAULT_STENCIL_READ_MASK;
     depthStencilDesc.StencilWriteMask = D3D11_DEFAULT_STENCIL_WRITE_MASK;
@@ -153,8 +153,14 @@ bool PipelineManager::CreateDepthStencilStates()
     depthStencilDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
     depthStencilDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
 
+    // Create m_depthStencilStateLess.
+    HRESULT hr = m_d3d11->Device()->CreateDepthStencilState(&depthStencilDesc, m_depthStencilStateLess.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+
     // Create m_depthStencilStateLessEqual.
-    HRESULT hr = m_d3d11->Device()->CreateDepthStencilState(&depthStencilDesc, m_depthStencilStateLessEqual.GetAddressOf());
+    depthStencilDesc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
+    hr = m_d3d11->Device()->CreateDepthStencilState(&depthStencilDesc, m_depthStencilStateLessEqual.GetAddressOf());
     if (FAILED(hr))
         return false;
 
