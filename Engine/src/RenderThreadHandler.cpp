@@ -16,13 +16,12 @@
 
 CRITICAL_SECTION criticalSection;
 std::condition_variable cv;
-std::mutex render_mutex;
 std::mutex thread_mutex;
 std::mutex job_mutex;
 bool shouldRender = true;
 
 bool ShouldContinue();
-void RenderMain(const unsigned int& id);
+void RenderMain(const unsigned int id);
 void RenderJob(const unsigned int start, unsigned int stop, void* buffer, void* context, void* pipe);
 
 thread::RenderThreadHandler::RenderThreadHandler()
@@ -34,6 +33,7 @@ thread::RenderThreadHandler::RenderThreadHandler()
 	m_statuses = nullptr;
 	m_objects = nullptr;
 	m_isRunning = false;
+	m_isActive = false;
 	InitializeCriticalSection(&criticalSection);
 }
 
@@ -63,29 +63,35 @@ thread::RenderThreadHandler::~RenderThreadHandler()
 
 void thread::RenderThreadHandler::Finish()
 {
-	if (!INSTANCE.m_isPooled)
+	if (INSTANCE.m_isActive)
 	{
-		for (int i = 0; i < (int)INSTANCE.m_amount; i++)
+		if (!INSTANCE.m_isPooled)
 		{
-			INSTANCE.m_workerThreads[i].join();
+			for (int i = 0; i < (int)INSTANCE.m_amount; i++)
+			{
+				INSTANCE.m_workerThreads[i].join();
+			}
+		}
+		else
+		{
+			// Block until all threads have gotten their jobs.
+			while ((int)INSTANCE.m_commands.size() != INSTANCE.m_amount) {
+			};
+
+			/*
+			// Block until all threads have stopped working.
+			for (int i = 0; i < (int)INSTANCE.m_amount; i++)
+			{
+				if (INSTANCE.m_statuses[i] != thread::thread_running)
+				{
+					i = 0;
+				}
+			}
+			*/
 		}
 	}
 	else
-	{
-		// Block until all threads have gotten their jobs.
-		while (INSTANCE.m_jobs.size() > 0) { 
-			//std::cout << "Size: " << INSTANCE.m_jobs.size() << "\n";
-		};
-
-		// Block until all threads have stopped working.
-		for (int i = 0; i < (int)INSTANCE.m_amount; i++)
-		{
-			if (INSTANCE.m_statuses[i] != thread::thread_running)
-			{
-				i = 0;
-			}
-		}
-	}
+		return;
 }
 
 const int thread::RenderThreadHandler::GetStatus(const unsigned int& id)
@@ -104,7 +110,15 @@ std::function<void(void*, void*, void*)> thread::RenderThreadHandler::GetJob()
 	{
 		return nullptr;
 	}
+	
 	const int size = (int)INSTANCE.m_jobs.size() - 1;
+	
+	/*
+	if (!INSTANCE.m_jobs[size])
+	{
+		return nullptr;
+	}
+	*/
 
 	return INSTANCE.m_jobs[size];
 }
@@ -132,7 +146,7 @@ void thread::RenderThreadHandler::Setup(const int& amount)
 
 const int thread::RenderThreadHandler::Launch(const int& amount_of_objects)
 {
-	const unsigned int objects_per_thread = (unsigned int)ceil(amount_of_objects / INSTANCE.m_amount) + 1;
+	const unsigned int objects_per_thread = (unsigned int)ceil((double)amount_of_objects / (double)INSTANCE.m_amount);
 	if (objects_per_thread >= thread::threshold)
 	{
 		// Launch Threads
@@ -142,7 +156,7 @@ const int thread::RenderThreadHandler::Launch(const int& amount_of_objects)
 			for (unsigned int i = 0; i < INSTANCE.m_amount; i++)
 			{
 				// Prepare job for threads.
-				const auto& f = [=](void* buffer, void* context, void* pipe)
+				auto f = [=](void* buffer, void* context, void* pipe)
 				{
 					const int start = i * objects_per_thread;
 					const int stop = (i + 1) * objects_per_thread;
@@ -154,9 +168,11 @@ const int thread::RenderThreadHandler::Launch(const int& amount_of_objects)
 			cv.notify_all();
 		}
 
+		INSTANCE.m_isActive = true;
 		return 0;
 	}
 
+	INSTANCE.m_isActive = false;
 	return 1;
 }
 
@@ -211,8 +227,8 @@ void thread::RenderThreadHandler::ExecuteCommandLists()
 	{
 		if (INSTANCE.m_commands[i])
 		{
-			//int j = INSTANCE.m_commands.size();
-			D3D11Core::Get().DeviceContext()->ExecuteCommandList(INSTANCE.m_commands[i], true);
+			int j = (int)INSTANCE.m_commands.size();
+			D3D11Core::Get().DeviceContext()->ExecuteCommandList(INSTANCE.m_commands[i], 1);
 			INSTANCE.m_commands[i]->Release();
 			INSTANCE.m_commands[i] = nullptr;
 		}
@@ -221,6 +237,7 @@ void thread::RenderThreadHandler::ExecuteCommandLists()
 
 	// Remove all traces of evidence.
 	INSTANCE.m_commands.clear();
+	int j = (int)INSTANCE.m_commands.size();
 }
 
 void thread::RenderThreadHandler::SetObjectsBuffer(void* objects)
@@ -244,14 +261,15 @@ bool ShouldContinue()
 	return false;
 }
 
-void RenderMain(const unsigned int& id)
+void RenderMain(const unsigned int id)
 {
 	// On start
 	PipelineManager pipeManager;
 	ID3D11DeviceContext* deferred_context = nullptr;
 	dx::ConstantBuffer<basic_model_matrix_t> m_privateBuffer;
 	unsigned int t_id = id;
-	std::unique_lock<std::mutex> uqmtx(render_mutex);
+	std::mutex mtx;
+	std::unique_lock<std::mutex> uqmtx(mtx);
 
 	// Create deferred context
 	D3D11Core::Get().CreateDeferredContext(&deferred_context);
@@ -277,7 +295,6 @@ void RenderMain(const unsigned int& id)
 		}
 
 		EnterCriticalSection(&criticalSection);
-		//std::cout << "I entered the critical section! ID: " << t_id << "\n";
 		thread::RenderThreadHandler::Get().UpdateStatus(t_id, thread::thread_working);
 		// Look for job.
 		std::function<void(void*, void*, void*)> func = thread::RenderThreadHandler::Get().GetJob();
@@ -285,16 +302,16 @@ void RenderMain(const unsigned int& id)
 		{
 			thread::RenderThreadHandler::Get().PopJob();
 			LeaveCriticalSection(&criticalSection);
-			//std::cout << "I left the critical section! ID: " << t_id << "\n";
 
 			// Run render.
+			//std::cout << "I started working! ID: " << t_id << "\n";
 			func(&m_privateBuffer, deferred_context, &pipeManager);
-			thread::RenderThreadHandler::Get().UpdateStatus(t_id, thread::thread_running);
-
-			continue;
+			//std::cout << "I stopped working! ID: " << t_id << "\n";
 		}
-		LeaveCriticalSection(&criticalSection);
-		//std::cout << "I left the critical section! ID: " << t_id << "\n";
+		else
+		{
+			LeaveCriticalSection(&criticalSection);
+		}
 		thread::RenderThreadHandler::Get().UpdateStatus(t_id, thread::thread_running);
 	}
 	thread::RenderThreadHandler::UpdateStatus(t_id, thread::thread_done);
@@ -318,36 +335,31 @@ void RenderJob(const unsigned int start,
 
 		pass->PreRender(m_context, m_pipeManager);
 
-		
 		// Make sure not to go out of range
-		if (stop > (*m_objects)[1].size())
+		if (stop > (unsigned int)(*m_objects)[1].size())
 			stop = (unsigned int)(*m_objects)[1].size();
 		
+		ID3D11Buffer* buffers[1];
 		// On Render
 		for (unsigned int i = start; i < stop; i++)
 		{
 			comp::Renderable* it = &(*m_objects)[1][i];
-			if (it)
+			buffers[0] =
 			{
-				ID3D11Buffer* buffers[1] =
-				{
-					m_buffer->GetBuffer()
-				};
+				m_buffer->GetBuffer()
+			};
 
-				m_buffer->SetData(m_context, it->data);
-				m_context->VSSetConstantBuffers(0, 1, buffers);
-				it->model->RenderDeferred(m_context);
-			}
+			m_buffer->SetData(m_context, it->data);
+			m_context->VSSetConstantBuffers(0, 1, buffers);
+			it->model->RenderDeferred(m_context);
 		}
 
 		// On Render Finish
-		pass->PostRender(m_context);
-
-		HRESULT hr = m_context->FinishCommandList(true, &command_list);
+		HRESULT hr = m_context->FinishCommandList(0, &command_list);
 
 		EnterCriticalSection(&criticalSection);
 		if (SUCCEEDED(hr))
-			thread::RenderThreadHandler::Get().InsertCommandList(command_list);
+			thread::RenderThreadHandler::Get().InsertCommandList(std::move(command_list));
 		LeaveCriticalSection(&criticalSection);
 	}
 

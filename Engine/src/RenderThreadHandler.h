@@ -11,7 +11,7 @@ struct thread_instructions_t
 namespace thread
 {
 	// The must-meet threshold for divided rendering.
-	const int threshold = 10;
+	const int threshold = 100;
 
 	class RenderThreadHandler
 	{
@@ -25,6 +25,7 @@ namespace thread
 		bool m_isRunning;
 		bool m_isPooled = false;
 		void* m_objects;
+		bool m_isActive;
 
 		unsigned int m_amount;
 		RenderThreadHandler();

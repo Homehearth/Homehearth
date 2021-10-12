@@ -10,7 +10,7 @@ DemoScene::DemoScene(Engine& engine, Client& client, uint32_t* playerID, uint32_
 	//Initialize player entity
 	SetUpCamera();
 	m_player = CreatePlayerEntity();
-	for (int i = 0; i < 52; i++)
+	for (int i = 0; i < 250; i++)
 	{
 		CreatePlayerEntity();
 	}
