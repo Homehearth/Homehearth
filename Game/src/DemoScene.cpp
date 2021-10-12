@@ -56,6 +56,7 @@ DemoScene::DemoScene(Engine& engine, Client& client, uint32_t* playerID, uint32_
 			GameSystems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingSphere>(scene);
 		});
 
+	//On collision event add entitys as pair in the collision system
 	m_scene.on<ESceneCollision>([&](const ESceneCollision& e, Scene& scene)
 		{
 			if(e.obj1 != e.obj2)
