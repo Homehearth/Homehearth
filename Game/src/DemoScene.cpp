@@ -8,12 +8,13 @@ DemoScene::DemoScene(Engine& engine, Client& client, uint32_t* playerID, uint32_
 {
 	m_engine = &engine;
 	//Initialize player entity
-	SetUpCamera();
 	m_player = CreatePlayerEntity();
+	SetUpCamera();
 	for (int i = 0; i < 250; i++)
 	{
 		CreatePlayerEntity();
 	}
+
 
 	// Define what scene does on update
 	m_scene.on<ESceneUpdate>([&](const ESceneUpdate& e, Scene& scene)
@@ -47,12 +48,12 @@ DemoScene::DemoScene(Engine& engine, Client& client, uint32_t* playerID, uint32_
 
 void DemoScene::SetUpCamera()
 {
-	m_gameCamera.Initialize(sm::Vector3(0, 0, 1), sm::Vector3(0, 0, 0), sm::Vector3(0, 1, 0), sm::Vector2((float)m_engine->GetWindow()->GetWidth(), (float)m_engine->GetWindow()->GetHeight()), CAMERATYPE::PLAY);
-	//scene.m_currentCamera = std::make_unique<Camera>(m_gameCamera);
+	m_gameCamera.Initialize(sm::Vector3(0, 0, -10), sm::Vector3(0, 0, 1), sm::Vector3(0, 1, 0), sm::Vector2((float)m_engine->GetWindow()->GetWidth(), (float)m_engine->GetWindow()->GetHeight()), CAMERATYPE::PLAY);
+	m_scene.m_currentCamera = std::make_unique<Camera>(m_gameCamera);
 
 #ifdef _DEBUG
-	m_debugCamera.Initialize(sm::Vector3(0, 0, 1), sm::Vector3(0, 0, 0), sm::Vector3(0, 1, 0), sm::Vector2((float)m_engine->GetWindow()->GetWidth(), (float)m_engine->GetWindow()->GetHeight()), CAMERATYPE::DEBUG);
-	m_scene.m_currentCamera = std::make_unique<Camera>(m_debugCamera);
+	m_debugCamera.Initialize(sm::Vector3(0, 0, -20), sm::Vector3(0, 0, 1), sm::Vector3(0, 1, 0), sm::Vector2((float)m_engine->GetWindow()->GetWidth(), (float)m_engine->GetWindow()->GetHeight()), CAMERATYPE::DEBUG);
+	//m_scene.m_currentCamera = std::make_unique<Camera>(m_debugCamera);
 
 #endif // DEBUG
 }
@@ -89,15 +90,25 @@ Entity DemoScene::CreatePlayerEntity()
 {
 
 	Entity playerEntity = m_scene.CreateEntity();
-	playerEntity.AddComponent<comp::Transform>()->position.z = -17.0f;
-
+	playerEntity.AddComponent<comp::Transform>();
 	comp::Velocity* playeerVelocity = playerEntity.AddComponent<comp::Velocity>();
 	comp::Renderable* renderable = playerEntity.AddComponent<comp::Renderable>();
 	playerEntity.AddComponent<comp::Player>()->runSpeed = 10.f;
 
-	renderable->model = ResourceManager::Get().GetResource<RModel>("Chest.obj");
+	renderable->model = ResourceManager::Get().GetResource<RModel>("cube.obj");
 
 	m_gameCamera.SetFollowVelocity(playeerVelocity);
+
+
+	Entity chest = m_scene.CreateEntity();
+	chest.AddComponent<comp::Transform>()->position.z = 5;
+
+	comp::Velocity* chestVelocity = chest.AddComponent<comp::Velocity>();
+	comp::Renderable* renderable2 = chest.AddComponent<comp::Renderable>();
+	chest.AddComponent<comp::Player>()->runSpeed = 10.f;
+
+	renderable2->model = ResourceManager::Get().GetResource<RModel>("Chest.obj");
+
 
 	return playerEntity;
 }
