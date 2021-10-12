@@ -6,7 +6,7 @@ private:
 	entt::registry* m_registry;
 	entt::entity m_entity;
 	
-	friend class Scene;
+	friend class HeadlessScene;
 	Entity(entt::registry& registry);
 	Entity(entt::registry& registry, entt::entity id);
 public:

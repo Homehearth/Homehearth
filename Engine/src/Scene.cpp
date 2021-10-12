@@ -6,17 +6,13 @@ Scene::Scene()
 	m_publicBuffer.Create(D3D11Core::Get().Device());
 }
 
-Entity Scene::CreateEntity()
-{
-	return Entity(m_registry);
-}
-
 void Scene::Update(float dt)
 {
 	PROFILE_FUNCTION();
 
 	// Emit event
-	publish<ESceneUpdate>(dt);
+	HeadlessScene::Update(dt);
+
 	if (!m_renderableCopies.IsSwapped())
 	{
 		PROFILE_SCOPE("Copy Transforms");

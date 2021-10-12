@@ -26,12 +26,12 @@ void HeadlessEngine::SetScene(Scene& scene)
 	}
 	m_currentScene = &scene;
 
-	m_currentScene->on<EShutdown>([&](const EShutdown& e, Scene& scene)
+	m_currentScene->on<EShutdown>([&](const EShutdown& e, HeadlessScene& scene)
 		{
 			Shutdown();
 		});
 
-	m_currentScene->on<ESceneChange>([&](const ESceneChange& e, Scene& scene)
+	m_currentScene->on<ESceneChange>([&](const ESceneChange& e, HeadlessScene& scene)
 		{
 			SetScene(e.newScene);
 		});

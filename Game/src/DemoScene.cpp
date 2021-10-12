@@ -9,21 +9,21 @@ DemoScene::DemoScene(Engine& engine)
 	SetUpCamera();
 
 	// Define what scene does on update
-	m_scene.on<ESceneUpdate>([&](const ESceneUpdate& e, Scene& scene)
+	m_scene.on<ESceneUpdate>([&](const ESceneUpdate& e, HeadlessScene& scene)
 		{
 			//System responding to user input
-			GameSystems::MRayIntersectBoxSystem(scene);
+			GameSystems::MRayIntersectBoxSystem(m_scene);
 
 			int ver = InputSystem::Get().GetAxis(Axis::VERTICAL);
 			int hor = InputSystem::Get().GetAxis(Axis::HORIZONTAL);
 
-			if (scene.m_currentCamera.get()->GetCameraType() == CAMERATYPE::PLAY)
+			if (m_scene.m_currentCamera.get()->GetCameraType() == CAMERATYPE::PLAY)
 			{
 				m_player.GetComponent<comp::Velocity>()->vel.z = ver * m_player.GetComponent<comp::Player>()->runSpeed;
 				m_player.GetComponent<comp::Velocity>()->vel.x = hor * m_player.GetComponent<comp::Player>()->runSpeed;
 
-				Systems::MovementSystem(scene, e.dt);
-				scene.m_currentCamera.get()->Update(e.dt);
+				Systems::MovementSystem(m_scene, e.dt);
+				m_scene.m_currentCamera.get()->Update(e.dt);
 			}
 		});
 }
