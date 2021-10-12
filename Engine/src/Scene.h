@@ -28,8 +28,12 @@ public:
 	void ForEachComponent(std::function<void(T&...)> func);
 	
 	template<typename ...T>
-	void ForEachComponent(std::function<void(Entity, T&...)> func); 
+	void ForEachComponent(std::function<void(Entity, T&...)> func);
+
+	template<typename... Ts, typename F>
+	void ForEachOrComponent(F&& f);
 	
+	entt::basic_registry<entt::entity>* GetRegistry();
 
 	// Emit update event and update constant buffers
 	void Update(float dt);
@@ -45,7 +49,11 @@ public:
 	DoubleBuffer<std::vector<comp::Renderable>>* GetBuffers();
 };
 
-
+template<typename ...Ts, typename F>
+inline void Scene::ForEachOrComponent(F &&f)
+{
+	(m_registry.view<Ts>().each(f), ...);
+}
 
 template<typename ...T>
 inline void Scene::ForEachComponent(std::function<void(T&...)> func) {

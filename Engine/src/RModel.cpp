@@ -245,7 +245,7 @@ bool RModel::Create(const std::string& filename)
         aiProcess_FlipUVs                   //Flips the textures to fit directX-style
     );
 
-    //Check if readfile was successful
+    //CheckCollisions if readfile was successful
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
     {
 #ifdef _DEBUG

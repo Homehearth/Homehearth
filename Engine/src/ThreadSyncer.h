@@ -184,7 +184,7 @@ namespace thread
 		const bool SwapBuffers();
 
 		/*
-			Check if the buffers are swapped.
+			CheckCollisions if the buffers are swapped.
 			True if it is, False if not.
 		*/
 		const bool IsSwapped();

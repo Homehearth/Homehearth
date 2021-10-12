@@ -24,7 +24,7 @@ namespace rtd
 		Picture* GetPicture();
 		Canvas* GetCanvas();
 
-		// Check if the button is clicked.
+		// CheckCollisions if the button is clicked.
 		const bool CheckClicked() const;
 
 		// Inherited via Element2D
