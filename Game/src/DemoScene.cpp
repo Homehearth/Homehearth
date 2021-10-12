@@ -6,7 +6,15 @@ DemoScene::DemoScene(Engine& engine)
 	m_engine = &engine;
 	//Initialize player entity
 	m_player = CreatePlayerEntity();
+	m_gameCamera.SetFollowVelocity(m_player.GetComponent<comp::Velocity>());  
 	SetUpCamera();
+
+
+	Entity chest = m_scene.CreateEntity();
+	chest.AddComponent<comp::Transform>()->position.z = 5;
+	comp::Renderable* renderable2 = chest.AddComponent<comp::Renderable>();
+
+	renderable2->model = ResourceManager::Get().GetResource<RModel>("Chest.obj");
 
 	// Define what scene does on update
 	m_scene.on<ESceneUpdate>([&](const ESceneUpdate& e, Scene& scene)
@@ -75,14 +83,6 @@ Entity DemoScene::CreatePlayerEntity()
 	comp::Renderable* renderable = playerEntity.AddComponent<comp::Renderable>();
 	playerEntity.AddComponent<comp::Player>()->runSpeed = 10.f;
 	renderable->model = ResourceManager::Get().GetResource<RModel>("cube.obj");
-
-	m_gameCamera.SetFollowVelocity(playerVelocity);
-
-	Entity chest = m_scene.CreateEntity();
-	chest.AddComponent<comp::Transform>()->position.z = 5;
-	comp::Renderable* renderable2 = chest.AddComponent<comp::Renderable>();
-
-	renderable2->model = ResourceManager::Get().GetResource<RModel>("Chest.obj");
 
 	return playerEntity;
 }

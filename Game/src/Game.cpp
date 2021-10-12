@@ -132,7 +132,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	{
 		std::chrono::system_clock::time_point timeNow = std::chrono::system_clock::now();
 		m_client.m_latency = int(std::chrono::duration<double>(timeNow - this->m_timeThen).count() * 1000);
-		//LOG_INFO("Ping: %fs", std::chrono::duration<double>(timeNow - this->m_timeThen).count());
 		break;
 	}
 	case GameMsg::Server_AssignID:
