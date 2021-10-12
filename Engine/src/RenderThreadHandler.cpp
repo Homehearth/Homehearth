@@ -1,11 +1,13 @@
 #include "EnginePCH.h"
 #include "RenderThreadHandler.h"
 #include "multi_thread_manager.h"
+#include <omp.h>
 
 #define INSTANCE thread::RenderThreadHandler::Get()
 #define CONTEXT D3D11Core::Get().DeviceContext()
 
 CRITICAL_SECTION criticalSection;
+CRITICAL_SECTION pushSection;
 std::condition_variable cv;
 bool shouldRender = true;
 
@@ -24,6 +26,7 @@ thread::RenderThreadHandler::RenderThreadHandler()
 	m_isRunning = false;
 	m_isActive = false;
 	InitializeCriticalSection(&criticalSection);
+	InitializeCriticalSection(&pushSection);
 }
 
 thread::RenderThreadHandler::~RenderThreadHandler()
@@ -126,9 +129,11 @@ void thread::RenderThreadHandler::Setup(const int& amount)
 	INSTANCE.m_isPooled = true;
 }
 
-const int thread::RenderThreadHandler::Launch(const int& amount_of_objects)
+const render_instructions_t thread::RenderThreadHandler::Launch(const int& amount_of_objects)
 {
-	const unsigned int objects_per_thread = (unsigned int)(amount_of_objects / (double)INSTANCE.m_amount) + 1;
+	render_instructions_t inst;
+	const unsigned int objects_per_thread = (unsigned int)(amount_of_objects / (INSTANCE.m_amount + 1)) + 1;
+	int main_start = 0;
 	if (objects_per_thread >= thread::threshold)
 	{
 		// Launch Threads
@@ -136,25 +141,29 @@ const int thread::RenderThreadHandler::Launch(const int& amount_of_objects)
 		{
 			for (unsigned int i = 0; i < INSTANCE.m_amount; i++)
 			{
+				const int start = i * objects_per_thread;
+				const int stop = (i + 1) * objects_per_thread - 1;
 				// Prepare job for threads.
 				auto f = [=](void* buffer, void* context, void* pipe)
 				{
-					const int start = i * objects_per_thread;
-					const int stop = (i + 1) * objects_per_thread;
+					
 					RenderJob(start, stop, buffer, context, pipe);
 				};
 
 				INSTANCE.m_jobs.push_back(f);
+				main_start = stop + 1;
 			}
 			cv.notify_all();
 		}
 
+		inst.start = main_start;
+		inst.stop = amount_of_objects;
 		INSTANCE.m_isActive = true;
-		return 0;
+		return inst;
 	}
 
 	INSTANCE.m_isActive = false;
-	return 1;
+	return inst;
 }
 
 const bool thread::RenderThreadHandler::GetHandlerStatus()
@@ -209,7 +218,7 @@ void thread::RenderThreadHandler::ExecuteCommandLists()
 		if (INSTANCE.m_commands[i])
 		{
 			int j = (int)INSTANCE.m_commands.size();
-			D3D11Core::Get().DeviceContext()->ExecuteCommandList(INSTANCE.m_commands[i], 1);
+			D3D11Core::Get().DeviceContext()->ExecuteCommandList(INSTANCE.m_commands[i], 0);
 			INSTANCE.m_commands[i]->Release();
 			INSTANCE.m_commands[i] = nullptr;
 		}
@@ -265,11 +274,13 @@ void RenderMain(const unsigned int id)
 	m_privateBuffer.Create(D3D11Core::Get().Device());
 	thread::RenderThreadHandler::UpdateStatus(t_id, thread::thread_running);
 
+	
 	// On Update
 	while (INSTANCE.GetHandlerStatus())
 	{
 		// Sleep until called upon.
 		cv.wait(uqmtx, ShouldContinue);
+
 		if (!INSTANCE.GetHandlerStatus())
 		{
 			cv.notify_all();
@@ -282,11 +293,15 @@ void RenderMain(const unsigned int id)
 		std::function<void(void*, void*, void*)> func = thread::RenderThreadHandler::Get().GetJob();
 		if (func)
 		{
+			cv.notify_all();
 			thread::RenderThreadHandler::Get().PopJob();
 			LeaveCriticalSection(&criticalSection);
 
 			// Run render.
+			//double start = omp_get_wtime();
 			func(&m_privateBuffer, deferred_context, &pipeManager);
+			//double end = omp_get_wtime() - start;
+			//std::cout << "Preparation for render took: " << end << "\n";
 		}
 		else
 		{
@@ -313,6 +328,7 @@ void RenderJob(const unsigned int start,
 		ID3D11CommandList* command_list = nullptr;
 		IRenderPass* pass = thread::RenderThreadHandler::Get().GetRenderer()->GetCurrentPass();
 
+		m_context->ClearDepthStencilView(m_pipeManager->m_depthStencilView.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 		pass->PreRender(m_context, m_pipeManager);
 
 		// Make sure not to go out of range
@@ -334,13 +350,16 @@ void RenderJob(const unsigned int start,
 			it->model->RenderDeferred(m_context);
 		}
 
+		ID3D11RenderTargetView* nullTarget = nullptr;
+		ID3D11DepthStencilView* nullDepth = nullptr;
+		m_context->OMSetRenderTargets(0, &nullTarget, nullDepth);
 		// On Render Finish
 		HRESULT hr = m_context->FinishCommandList(0, &command_list);
 
-		EnterCriticalSection(&criticalSection);
+		EnterCriticalSection(&pushSection);
 		if (SUCCEEDED(hr))
 			thread::RenderThreadHandler::Get().InsertCommandList(std::move(command_list));
-		LeaveCriticalSection(&criticalSection);
+		LeaveCriticalSection(&pushSection);
 	}
 
 	return;

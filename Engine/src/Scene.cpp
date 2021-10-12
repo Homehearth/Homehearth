@@ -1,5 +1,6 @@
 #include "EnginePCH.h"
 #include "Scene.h"
+#include <omp.h>
 
 Scene::Scene()
 {	
@@ -36,8 +37,11 @@ void Scene::Render()
 {
 	PROFILE_FUNCTION();
 
+	
+	//double start = omp_get_wtime();
 	// Renders on one thread if Launch returns 1. else everything already rendered.
-	if ((bool)thread::RenderThreadHandler::Get().Launch(m_renderableCopies[1].size()))
+	const render_instructions_t inst = thread::RenderThreadHandler::Get().Launch(m_renderableCopies[1].size());
+	if((inst.start | inst.stop) == 0)
 	{
 		ID3D11Buffer* buffers[1] =
 		{
@@ -52,10 +56,29 @@ void Scene::Render()
 			it.model->Render();
 		}
 	}
+	else
+	{
+		// Render third part of the game with immediate context
+
+		ID3D11Buffer* buffers[1] =
+		{
+			m_publicBuffer.GetBuffer()
+		};
+
+		D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, buffers);
+		// System that renders Renderable component
+		for (int i = inst.start; i < inst.stop; i++)
+		{
+			const auto& it = m_renderableCopies[1][i];
+			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
+			it.model->Render();
+		}
+	}
 
 	// Run any available Command lists from worker threads.
 	thread::RenderThreadHandler::ExecuteCommandLists();
-	
+	//double end = omp_get_wtime() - start;
+	//std::cout << "Time: " << end << "\n";
 	// Emit event
 	publish<ESceneRender>();
 

@@ -2,16 +2,16 @@
 #include <thread>
 #include "Renderer.h"
 
-struct thread_instructions_t
+struct render_instructions_t
 {
-	int start;
-	int stop;
+	int start = 0;
+	int stop = 0;
 };
 
 namespace thread
 {
 	// The must-meet threshold for divided rendering.
-	const int threshold = 100;
+	const int threshold = 1000;
 
 	class RenderThreadHandler
 	{
@@ -62,7 +62,7 @@ namespace thread
 			1/true - Render on same thread.
 			0/false - Rendered on separate threads.
 		*/
-		static const int Launch(const int& amount_of_objects);
+		static const render_instructions_t Launch(const int& amount_of_objects);
 
 		/*
 			Returns a bool that tells if the handler is currently running

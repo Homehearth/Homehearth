@@ -351,7 +351,7 @@ void Engine::Render(float& dt)
 		D2D1Core::Present();
 	}
 
-	//thread::RenderThreadHandler::ExecuteCommandLists();
+	
 
 	{
 		PROFILE_SCOPE("Present");
