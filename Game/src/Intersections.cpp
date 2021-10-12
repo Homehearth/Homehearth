@@ -1,7 +1,7 @@
 #include "EnginePCH.h"
 #include "Intersections.h"
 
-//Check if the ray intersects with a box collider.
+//CheckCollisions if the ray intersects with a box collider.
 const bool Intersect::RayIntersectBox(const Ray_t& ray, const comp::BoundingOrientedBox& boxCollider, float& t)
 {
 	/**
@@ -37,7 +37,7 @@ const bool Intersect::RayIntersectBox(const Ray_t& ray, const comp::BoundingOrie
 		const float e = norms[i].x * p.x + norms[i].y * p.y + norms[i].z * p.z;
 		const float f = norms[i].x * rayDir.x + norms[i].y * rayDir.y + norms[i].z * rayDir.z;
 
-		//Check normal face is not ortogonal to ray direction
+		//CheckCollisions normal face is not ortogonal to ray direction
 		if (abs(f) > 0.00001f)
 		{
 			float t1 = (e + halfSize[i]) / f;

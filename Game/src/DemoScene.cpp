@@ -49,8 +49,11 @@ DemoScene::DemoScene(Engine& engine, Client& client, uint32_t* playerID, uint32_
 				msg << t << *m_playerID << *m_gameID;
 				m_client.Send(msg);
 			}
+		
 			GameSystems::MRayIntersectBoxSystem(scene);
-			GameSystems::CollisionCheckSystem(scene);
+
+			GameSystems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(scene);
+			GameSystems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingSphere>(scene);
 		});
 
 	m_scene.on<ESceneCollision>([&](const ESceneCollision& e, Scene& scene)
@@ -123,7 +126,7 @@ Entity DemoScene::CreatePlayerEntity()
 	comp::Velocity* chestVelocity = m_chest.AddComponent<comp::Velocity>();
 	comp::BoundingSphere* obb = m_chest.AddComponent<comp::BoundingSphere>();
 	obb->Center = transform->position;
-	obb->Radius = 2.0f;//sm::Vector3{1.f,1.f,1.f};
+	obb->Radius = 2.0f;
 	comp::Renderable* renderable2 = m_chest.AddComponent<comp::Renderable>();
 
 	renderable2->model = ResourceManager::Get().GetResource<RModel>("Chest.obj");

@@ -68,7 +68,7 @@ void rtd::Canvas::OnHover()
 
 const bool rtd::Canvas::CheckClick()
 {
-	// Check if mouse key is pressed.
+	// CheckCollisions if mouse key is pressed.
 	if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED))
 	{
 		// Is within bounds?
