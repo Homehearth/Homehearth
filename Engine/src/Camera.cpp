@@ -82,7 +82,7 @@ void Camera::Update(float deltaTime)
         if (m_currentMousePosition.x != m_lastMousePosition.x || m_currentMousePosition.y != m_lastMousePosition.y)
         {
             m_rollPitchYaw.z += m_lastMousePosition.x * m_rotationSpeed * deltaTime;
-            m_rollPitchYaw.y -= m_lastMousePosition.y * m_rotationSpeed * deltaTime;
+            m_rollPitchYaw.y += m_lastMousePosition.y * m_rotationSpeed * deltaTime;
             m_lastMousePosition = m_currentMousePosition;
         }
 
