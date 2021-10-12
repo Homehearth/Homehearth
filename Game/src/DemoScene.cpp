@@ -103,7 +103,7 @@ Entity DemoScene::CreatePlayerEntity()
 	comp::Renderable* renderable2 = chest.AddComponent<comp::Renderable>();
 	chest.AddComponent<comp::Player>()->runSpeed = 10.f;
 
-	renderable2->model = ResourceManager::Get().GetResource<RModel>("Chest.obj");
+	renderable2->model = ResourceManager::Get().GetResource<RModel>("Chest.obj");	//"Tree2.obj"
 
 
 	return playerEntity;

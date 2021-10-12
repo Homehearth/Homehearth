@@ -1,0 +1,6 @@
+newmtl ironCartoonMaterial
+map_Kd IronCartoon_Albedo.png
+map_Kn IronCartoon_Normal.png
+map_ns IronCartoon_Metalness.png
+map_Ks IronCartoon_Roughness.png
+map_Ka IronCartoon_AO.png

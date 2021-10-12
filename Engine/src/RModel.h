@@ -54,13 +54,14 @@ private:
 	bool CreateIndexBuffer(const std::vector<UINT>& indices, submesh_t& mesh);
 
 	void LoadLights(const aiScene* scene);
+	void LoadMaterial(const aiScene* scene, const UINT& matIndex, bool& useMTL, submesh_t& inoutMesh) const;
 
 public:
 	RModel();
 	~RModel();
 
 	//Get the vector of lights
-	const std::vector<light_t>& GetLights() const { return m_lights; }
+	const std::vector<light_t>& GetLights() const;
 
 	/*
 		Change the material to other. Uses a mtlfile.
