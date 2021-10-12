@@ -64,10 +64,6 @@ void Game::OnUserUpdate(float deltaTime)
 
 	if (m_client.IsConnected())
 	{
-		if (ImGui::Button("Disconnect"))
-		{
-			this->m_client.Disconnect();
-		}
 		if (m_client.m_latency > 0)
 		{
 			ImGui::Text(std::string("Latency: " + std::to_string(m_client.m_latency) + "ms").c_str());
@@ -95,6 +91,15 @@ void Game::OnUserUpdate(float deltaTime)
 		else
 		{
 			ImGui::Text(std::string("Game ID: " + std::to_string(m_gameID)).c_str());
+
+			if (ImGui::Button("Leave Game"))
+			{	
+				// TODO
+			}
+		}
+		if (ImGui::Button("Disconnect"))
+		{
+			this->m_client.Disconnect();
 		}
 	}
 	else

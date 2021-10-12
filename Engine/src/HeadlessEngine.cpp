@@ -83,7 +83,7 @@ void HeadlessEngine::Run()
 	float deltaTime = 0.f;
 	float update_time = 0.f;
 	float network_time = 0.f;
-	const float TARGET_UPDATE = 1 / 10000.0f;
+	const float TARGET_UPDATE = 1.f / 144.f;
 	const float NETWORK_TARGET_DELTA = 1.f / 60.f;
 
 	while (IsRunning())
@@ -95,13 +95,13 @@ void HeadlessEngine::Run()
 
 		if (update_time >= TARGET_UPDATE)
 		{
-			Update(TARGET_UPDATE);
 			update_time -= TARGET_UPDATE;
+			Update(TARGET_UPDATE);
 		}
 		if (network_time >= NETWORK_TARGET_DELTA)
 		{
-			UpdateNetwork(NETWORK_TARGET_DELTA);
 			network_time -= NETWORK_TARGET_DELTA;
+			UpdateNetwork(NETWORK_TARGET_DELTA);
 		}
 		network_time += deltaTime;
 		update_time += deltaTime;
