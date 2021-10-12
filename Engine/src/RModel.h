@@ -2,6 +2,7 @@
 #include "CommonStructures.h"
 #include "RMaterial.h"
 struct aiMesh;
+struct aiScene;
 
 /*
 	Load in a model/scene of multiple meshes with Assimp 5.0.1
@@ -51,6 +52,8 @@ private:
 	//Creating buffers
 	bool CreateVertexBuffer(const std::vector<simple_vertex_t>& vertices, submesh_t& mesh);
 	bool CreateIndexBuffer(const std::vector<UINT>& indices, submesh_t& mesh);
+
+	void LoadLights(const aiScene* scene);
 
 public:
 	RModel();

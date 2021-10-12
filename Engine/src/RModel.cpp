@@ -211,6 +211,32 @@ bool RModel::CreateIndexBuffer(const std::vector<UINT>& indices, submesh_t& mesh
     return !FAILED(hr);
 }
 
+void RModel::LoadLights(const aiScene* scene)
+{
+    for (UINT i = 0; i < scene->mNumLights; i++)
+    {
+        const aiLight* ailight = scene->mLights[i];
+        light_t light;
+
+        aiVector3D aiRot, aiScl, aiPos;
+        scene->mRootNode->FindNode(ailight->mName)->mTransformation.Decompose(aiScl, aiRot, aiPos);
+        light.position  = { aiPos.x + ailight->mPosition.x, aiPos.y + ailight->mPosition.y, aiPos.z + ailight->mPosition.z, 0.0f };
+        light.direction = { ailight->mDirection.x,          ailight->mDirection.y,          ailight->mDirection.z,          0.0f };
+        light.color     = { ailight->mColorDiffuse.r,       ailight->mColorDiffuse.g,       ailight->mColorDiffuse.b,       0.0f };
+
+        if (ailight->mType == aiLightSourceType::aiLightSource_POINT)
+            light.type = 1;
+        else if (ailight->mType == aiLightSourceType::aiLightSource_DIRECTIONAL)
+            light.type = 0;
+
+        light.enabled = true;
+        light.attenuation = ailight->mAttenuationQuadratic;
+        m_lights.push_back(light);
+    }
+    m_lights.shrink_to_fit();
+
+}
+
 void RModel::Render() const
 {
     UINT offset = 0;
@@ -274,34 +300,8 @@ bool RModel::Create(const std::string& filename)
         importer.FreeScene();
         return false;
     }
-    
-    /*
-        Load in the lights
-    */
-    if (scene->HasLights())
-    {
-        for (UINT i = 0; i < scene->mNumLights; i++)
-        {
-            const aiLight* ailight = scene->mLights[i];
-            light_t light;
 
-            aiVector3D aiRot, aiScl, aiPos;
-            scene->mRootNode->FindNode(ailight->mName)->mTransformation.Decompose(aiScl, aiRot, aiPos);
-            light.position  = { aiPos.x + ailight->mPosition.x, aiPos.y + ailight->mPosition.y, aiPos.z + ailight->mPosition.z, 0.0f };
-            light.direction = { ailight->mDirection.x,          ailight->mDirection.y,          ailight->mDirection.z,          0.0f };
-            light.color     = { ailight->mColorDiffuse.r,       ailight->mColorDiffuse.g,       ailight->mColorDiffuse.b,       0.0f };
-            
-            if (ailight->mType == aiLightSourceType::aiLightSource_POINT)
-                light.type = 1;
-            else if (ailight->mType == aiLightSourceType::aiLightSource_DIRECTIONAL)
-                light.type = 0;
-
-            light.enabled = true;
-            light.attenuation = ailight->mAttenuationQuadratic;
-            m_lights.push_back(light);
-        }
-        m_lights.shrink_to_fit();
-    }
+    LoadLights(scene);
 
     /*
         Links together a material to multiple submeshes
