@@ -9,10 +9,14 @@ DemoScene::DemoScene(Engine& engine)
 	m_gameCamera.SetFollowVelocity(m_player.GetComponent<comp::Velocity>());  
 	SetUpCamera();
 
-
-	Entity chest = m_scene.CreateEntity();
-	chest.AddComponent<comp::Transform>()->position.z = 5;
-	comp::Renderable* renderable2 = chest.AddComponent<comp::Renderable>();
+	m_chest = m_scene.CreateEntity();
+	comp::Transform* transform = m_chest.AddComponent<comp::Transform>();
+	transform->position.z = 5;
+	comp::Velocity* chestVelocity = m_chest.AddComponent<comp::Velocity>();
+	comp::BoundingSphere* obb = m_chest.AddComponent<comp::BoundingSphere>();
+	obb->Center = transform->position;
+	obb->Radius = 2.0f;
+	comp::Renderable* renderable2 = m_chest.AddComponent<comp::Renderable>();
 
 	renderable2->model = ResourceManager::Get().GetResource<RModel>("Chest.obj");
 
@@ -35,22 +39,7 @@ DemoScene::DemoScene(Engine& engine)
 				m_player.GetComponent<comp::Velocity>()->vel.x = hor * m_player.GetComponent<comp::Player>()->runSpeed;
 
 				Systems::MovementSystem(scene, e.dt);
-				//System responding to user input
-				GameSystems::UserInputSystem(scene, client);
-
-				
-				//m_player.GetComponent<comp::Velocity>()->vel.z = InputSystem::Get().GetAxis(Axis::VERTICAL) * m_player.GetComponent<comp::Player>()->runSpeed;
-				//m_player.GetComponent<comp::Velocity>()->vel.x = InputSystem::Get().GetAxis(Axis::HORIZONTAL) * m_player.GetComponent<comp::Player>()->runSpeed;
-			}
-
-			if (m_client.IsConnected() && *m_gameID != UINT32_MAX)
-			{
-				// send updated player position
-				network::message<GameMsg> msg;
-				msg.header.id = GameMsg::Game_Update;
-				comp::Transform t = *m_player.GetComponent<comp::Transform>();
-				msg << t << *m_playerID << *m_gameID;
-				m_client.Send(msg);
+				scene.m_currentCamera.get()->Update(e.dt);
 			}
 		
 			GameSystems::MRayIntersectBoxSystem(scene);
@@ -118,21 +107,6 @@ Entity DemoScene::CreatePlayerEntity()
 	playerEntity.AddComponent<comp::Player>()->runSpeed = 10.f;
 	
 	renderable->model = ResourceManager::Get().GetResource<RModel>("cube.obj");
-
-	m_gameCamera.SetFollowVelocity(playeerVelocity);
-
-
-	this->m_chest = m_scene.CreateEntity();
-	comp::Transform* transform = m_chest.AddComponent<comp::Transform>();
-	transform->position.z = 5;
-
-	comp::Velocity* chestVelocity = m_chest.AddComponent<comp::Velocity>();
-	comp::BoundingSphere* obb = m_chest.AddComponent<comp::BoundingSphere>();
-	obb->Center = transform->position;
-	obb->Radius = 2.0f;
-	comp::Renderable* renderable2 = m_chest.AddComponent<comp::Renderable>();
-
-	renderable2->model = ResourceManager::Get().GetResource<RModel>("Chest.obj");
 
 	return playerEntity;
 }
