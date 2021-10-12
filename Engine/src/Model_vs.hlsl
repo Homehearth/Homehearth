@@ -41,7 +41,7 @@ VertexOut main(VertexIn input)
     output.pos = mul(view, output.pos);
     output.pos = mul(projection, output.pos);
 
-    output.normal = mul(input.normal, (float3x3) world);
+    output.normal = mul((float3x3) world, input.normal);
     output.uv = input.uv;
     output.tangent = input.tangent;
     output.biTangent = input.biTangent;
