@@ -132,7 +132,7 @@ void thread::RenderThreadHandler::Setup(const int& amount)
 const render_instructions_t thread::RenderThreadHandler::Launch(const int& amount_of_objects)
 {
 	render_instructions_t inst;
-	const unsigned int objects_per_thread = (unsigned int)(amount_of_objects / (INSTANCE.m_amount + 1)) + 1;
+	const unsigned int objects_per_thread = (unsigned int)std::ceil((float)amount_of_objects / (float)(INSTANCE.m_amount + 1));
 	int main_start = 0;
 	if (objects_per_thread >= thread::threshold)
 	{
@@ -142,16 +142,15 @@ const render_instructions_t thread::RenderThreadHandler::Launch(const int& amoun
 			for (unsigned int i = 0; i < INSTANCE.m_amount; i++)
 			{
 				const int start = i * objects_per_thread;
-				const int stop = (i + 1) * objects_per_thread - 1;
+				const int stop = start + objects_per_thread;
 				// Prepare job for threads.
 				auto f = [=](void* buffer, void* context, void* pipe)
 				{
-					
 					RenderJob(start, stop, buffer, context, pipe);
 				};
 
 				INSTANCE.m_jobs.push_back(f);
-				main_start = stop + 1;
+				main_start = stop;
 			}
 			cv.notify_all();
 		}
@@ -208,7 +207,6 @@ void thread::RenderThreadHandler::InsertCommandList(ID3D11CommandList* list)
 
 void thread::RenderThreadHandler::ExecuteCommandLists()
 {
-
 	// Join Threads
 	INSTANCE.Finish();
 
@@ -270,7 +268,7 @@ void RenderMain(const unsigned int id)
 	}
 
 	// Setup pipeline.
-	pipeManager.Initialize(INSTANCE.GetWindow(), deferred_context);
+	pipeManager = *INSTANCE.GetRenderer()->GetPipelineManager();
 	m_privateBuffer.Create(D3D11Core::Get().Device());
 	thread::RenderThreadHandler::UpdateStatus(t_id, thread::thread_running);
 
@@ -328,19 +326,20 @@ void RenderJob(const unsigned int start,
 		ID3D11CommandList* command_list = nullptr;
 		IRenderPass* pass = thread::RenderThreadHandler::Get().GetRenderer()->GetCurrentPass();
 
-		m_context->ClearDepthStencilView(m_pipeManager->m_depthStencilView.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
+		//m_context->ClearDepthStencilView(m_pipeManager->m_depthStencilView.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
+		
 		pass->PreRender(m_context, m_pipeManager);
 
 		// Make sure not to go out of range
 		if (stop > (unsigned int)(*m_objects)[1].size())
 			stop = (unsigned int)(*m_objects)[1].size();
 		
-		ID3D11Buffer* buffers[1];
+		
 		// On Render
 		for (unsigned int i = start; i < stop; i++)
 		{
 			comp::Renderable* it = &(*m_objects)[1][i];
-			buffers[0] =
+			ID3D11Buffer* const buffers[1] =
 			{
 				m_buffer->GetBuffer()
 			};
@@ -350,9 +349,6 @@ void RenderJob(const unsigned int start,
 			it->model->RenderDeferred(m_context);
 		}
 
-		ID3D11RenderTargetView* nullTarget = nullptr;
-		ID3D11DepthStencilView* nullDepth = nullptr;
-		m_context->OMSetRenderTargets(0, &nullTarget, nullDepth);
 		// On Render Finish
 		HRESULT hr = m_context->FinishCommandList(0, &command_list);
 

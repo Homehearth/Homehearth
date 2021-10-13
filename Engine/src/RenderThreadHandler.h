@@ -10,8 +10,11 @@ struct render_instructions_t
 
 namespace thread
 {
-	// The must-meet threshold for divided rendering.
-	const int threshold = 1000;
+	/*
+	The must-meet threshold for divided rendering.
+		.Per thread object render.
+	*/
+	const int threshold = 1;
 
 	class RenderThreadHandler
 	{
@@ -112,8 +115,14 @@ namespace thread
 		*/
 		static void ExecuteCommandLists();
 
+		/*
+			Set the reference to the buffer containing all the objects.
+		*/
 		static void SetObjectsBuffer(void* objects);
 
+		/*
+			Get the object buffer.
+		*/
 		static void* GetObjectsBuffer();
 	};
 }

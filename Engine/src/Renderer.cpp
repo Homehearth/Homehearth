@@ -59,6 +59,11 @@ IRenderPass* Renderer::GetCurrentPass() const
     return m_passes[m_currentPass];
 }
 
+PipelineManager* Renderer::GetPipelineManager()
+{
+    return &m_pipelineManager;
+}
+
 void Renderer::AddPass(IRenderPass* pass)
 {
     m_passes.emplace_back(pass);

@@ -38,12 +38,13 @@ void Scene::Render()
 	PROFILE_FUNCTION();
 
 	
-	//double start = omp_get_wtime();
-	// Renders on one thread if Launch returns 1. else everything already rendered.
+	double start = omp_get_wtime();
+	// Divides up work between threads.
 	const render_instructions_t inst = thread::RenderThreadHandler::Get().Launch(m_renderableCopies[1].size());
 	if((inst.start | inst.stop) == 0)
 	{
-		ID3D11Buffer* buffers[1] =
+		// Render everything on same thread.
+		ID3D11Buffer* const buffers[1] =
 		{
 			m_publicBuffer.GetBuffer()
 		};
@@ -58,9 +59,8 @@ void Scene::Render()
 	}
 	else
 	{
-		// Render third part of the game with immediate context
-
-		ID3D11Buffer* buffers[1] =
+		// Render third part of the scene with immediate context
+		ID3D11Buffer* const buffers[1] =
 		{
 			m_publicBuffer.GetBuffer()
 		};
@@ -77,8 +77,8 @@ void Scene::Render()
 
 	// Run any available Command lists from worker threads.
 	thread::RenderThreadHandler::ExecuteCommandLists();
-	//double end = omp_get_wtime() - start;
-	//std::cout << "Time: " << end << "\n";
+	double end = omp_get_wtime() - start;
+	std::cout << "Time: " << end << "\n";
 	// Emit event
 	publish<ESceneRender>();
 

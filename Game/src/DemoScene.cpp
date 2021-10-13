@@ -8,7 +8,7 @@ DemoScene::DemoScene(Engine& engine, Client& client, uint32_t* playerID, uint32_
 {
 	m_engine = &engine;
 	//Initialize player entity
-	for(int i = 0; i < 10000; i++)
+	for(int i = 0; i < 3; i++)
 		m_player = CreatePlayerEntity();
 
 	SetUpCamera();
@@ -86,7 +86,6 @@ void DemoScene::CameraUpdate(float deltaTime)
 
 Entity DemoScene::CreatePlayerEntity()
 {
-
 	Entity playerEntity = m_scene.CreateEntity();
 	playerEntity.AddComponent<comp::Transform>();
 	comp::Velocity* playeerVelocity = playerEntity.AddComponent<comp::Velocity>();
@@ -97,7 +96,6 @@ Entity DemoScene::CreatePlayerEntity()
 
 	m_gameCamera.SetFollowVelocity(playeerVelocity);
 
-
 	Entity chest = m_scene.CreateEntity();
 	chest.AddComponent<comp::Transform>()->position.z = 5;
 
@@ -106,7 +104,6 @@ Entity DemoScene::CreatePlayerEntity()
 	chest.AddComponent<comp::Player>()->runSpeed = 10.f;
 
 	renderable2->model = ResourceManager::Get().GetResource<RModel>("Chest.obj");
-
 
 	return playerEntity;
 }

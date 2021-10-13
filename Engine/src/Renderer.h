@@ -36,5 +36,6 @@ public:
 	void Render(Scene* pScene);
 
 	IRenderPass* GetCurrentPass() const;
+	PipelineManager* GetPipelineManager();
 };
 
