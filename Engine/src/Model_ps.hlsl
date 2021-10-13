@@ -1,5 +1,6 @@
 #include "PBR.hlsli"
 
+Texture2D T_depth     : register(t0);
 Texture2D T_albedo    : register(t1);
 Texture2D T_normal    : register(t2);
 Texture2D T_metalness : register(t3);
@@ -10,6 +11,19 @@ Texture2D T_displace  : register(t6);
 SamplerState LinearSampler : register(s0); 
 SamplerState PointSampler : register(s1);
 
+/*
+    Material constant buffers
+*/
+
+cbuffer matConstants_t : register(b0)
+{
+    float3 c_ambient;
+    float  c_shiniess;
+    float3 c_diffuse;
+    float  c_opacity;
+    float3 c_specular;
+};
+
 cbuffer Camera : register(b1)
 {
     float4 cameraPosition;
@@ -19,20 +33,7 @@ cbuffer Camera : register(b1)
     float4x4 view;
 }
 
-/*
-    Material constant buffers
-*/
-
-cbuffer matConstants_t : register(b2)
-{
-    float3 c_ambient;
-    float  c_shiniess;
-    float3 c_diffuse;
-    float  c_opacity;
-    float3 c_specular;
-};
-
-cbuffer properties_t : register(b3)
+cbuffer properties_t : register(b2)
 {
     //If a texture is set this will be 1
     int c_hasAlbedo;

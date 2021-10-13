@@ -3,7 +3,7 @@
 #include "PipelineManager.h"
 #include "RModel.h"
 
-void DepthPass::PreRender()
+void DepthPass::PreRender(ID3D11DeviceContext* pDeviceContext)
 {
 	// Set DepthBuffer.
     ID3D11RenderTargetView* nullRTV[] = { nullptr };
@@ -24,7 +24,7 @@ void DepthPass::Render(Scene* pScene)
    pScene->Render(); 
 }
 
-void DepthPass::PostRender()
+void DepthPass::PostRender(ID3D11DeviceContext* pDeviceContext)
 {
 	// Cleanup.
     ID3D11DepthStencilView* nullDSV = { nullptr };

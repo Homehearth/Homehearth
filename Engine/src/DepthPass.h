@@ -12,11 +12,11 @@ public:
 	DepthPass() = default;
 	virtual ~DepthPass() = default;
 
-	void PreRender() override;
+	void PreRender(ID3D11DeviceContext* pDeviceContext = D3D11Core::Get().DeviceContext()) override;
 
 	void Render(Scene* pScene) override;
 
-	void PostRender() override;
+	void PostRender(ID3D11DeviceContext* pDeviceContext = D3D11Core::Get().DeviceContext()) override;
 
 };
 

@@ -4,7 +4,7 @@
 #include "PipelineManager.h"
 #include "RModel.h"
 
-void BasePass::PreRender()
+void BasePass::PreRender(ID3D11DeviceContext* pDeviceContext)
 {	
 	DC->IASetInputLayout(PM->m_defaultInputLayout.Get());
     
@@ -13,14 +13,14 @@ void BasePass::PreRender()
 
 	DC->VSSetConstantBuffers(1, 1, CAMERA->m_viewConstantBuffer.GetAddressOf()); 
     
-    DC->PSSetShaderResources(6, 1, PM->m_depthBufferSRV.GetAddressOf());   // DepthBuffer.
+   // DC->PSSetShaderResources(0, 1, PM->m_depthBufferSRV.GetAddressOf());   // DepthBuffer.
 
     DC->PSSetSamplers(0, 1, PM->m_linearSamplerState.GetAddressOf());
     DC->PSSetSamplers(1, 1, PM->m_pointSamplerState.GetAddressOf());
     
     DC->RSSetState(PM->m_rasterState.Get());
 
-    DC->OMSetRenderTargets(1, PM->m_backBuffer.GetAddressOf(), nullptr);
+    DC->OMSetRenderTargets(1, PM->m_backBuffer.GetAddressOf(), PM->m_depthStencilView.Get());
     DC->OMSetDepthStencilState(PM->m_depthStencilStateEqualAndDisableDepthWrite.Get(), 0);
 }
 
@@ -29,10 +29,10 @@ void BasePass::Render(Scene* pScene)
     pScene->Render();
 }
 
-void BasePass::PostRender()
+void BasePass::PostRender(ID3D11DeviceContext* pDeviceContext)
 {
 	// Cleanup.
-    ID3D11ShaderResourceView* nullSRV[] = { nullptr };
-	DC->PSSetShaderResources(6, 1, nullSRV);
+	//ID3D11ShaderResourceView* nullSRV[] = { nullptr };
+	//DC->PSSetShaderResources(0, 1, nullSRV);
 }
 

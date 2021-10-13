@@ -220,17 +220,13 @@ void RModel::Render() const
         if (m_meshes[m].material)
             m_meshes[m].material->BindMaterial();
         
-
-        if (m_materials[m])
-			m_materials[m]->BindMaterial();
-
         D3D11Core::Get().DeviceContext()->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
         D3D11Core::Get().DeviceContext()->IASetVertexBuffers(0, 1, m_meshes[m].vertexBuffer.GetAddressOf(), &stride, &offset);
         D3D11Core::Get().DeviceContext()->IASetIndexBuffer(m_meshes[m].indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
         D3D11Core::Get().DeviceContext()->DrawIndexed(m_meshes[m].indexCount, 0, 0);
 
-		if (m_materials[m])
-			m_materials[m]->UnBindMaterial();
+		if (m_meshes[m].material)
+            m_meshes[m].material->UnBindMaterial();
     }
 }
 
