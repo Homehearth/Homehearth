@@ -38,6 +38,8 @@ bool ServerGame::OnStartup()
 
 	m_inputThread = std::thread(&ServerGame::InputThread, this);
 
+	HeadlessScene& demo = GetScene("Demo");
+
 	return true;
 }
 

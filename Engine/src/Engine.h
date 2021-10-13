@@ -4,7 +4,7 @@
 #include "Window.h"
 #include "Renderer.h"
 
-class Engine : public HeadlessEngine
+class Engine : public HeadlessEngine<Scene>
 {
 private:
 	static bool s_safeExit;

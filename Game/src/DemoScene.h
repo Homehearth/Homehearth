@@ -3,7 +3,7 @@
 #include "GameSystems.h"
 #include "Engine.h"
 
-class DemoScene : public SceneBuilder<DemoScene>
+class DemoScene : public SceneBuilder<DemoScene, Scene>
 {
 private:
 	Engine* m_engine;
