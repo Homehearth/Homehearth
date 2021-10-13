@@ -42,8 +42,6 @@ void Scene::Render()
 {
 	PROFILE_FUNCTION();
 
-	
-	double start = omp_get_wtime();
 	// Divides up work between threads.
 	const render_instructions_t inst = thread::RenderThreadHandler::Get().Launch(m_renderableCopies[1].size());
 	if((inst.start | inst.stop) == 0)
@@ -82,8 +80,7 @@ void Scene::Render()
 
 	// Run any available Command lists from worker threads.
 	thread::RenderThreadHandler::ExecuteCommandLists();
-	double end = omp_get_wtime() - start;
-	std::cout << "Time: " << end << "\n";
+
 	// Emit event
 	publish<ESceneRender>();
 
