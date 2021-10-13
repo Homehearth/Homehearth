@@ -220,12 +220,31 @@ void RModel::Render() const
         if (m_meshes[m].material)
             m_meshes[m].material->BindMaterial();
         
+        D3D11Core::Get().DeviceContext()->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
         D3D11Core::Get().DeviceContext()->IASetVertexBuffers(0, 1, m_meshes[m].vertexBuffer.GetAddressOf(), &stride, &offset);
         D3D11Core::Get().DeviceContext()->IASetIndexBuffer(m_meshes[m].indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
         D3D11Core::Get().DeviceContext()->DrawIndexed(m_meshes[m].indexCount, 0, 0);
-        
-        if (m_meshes[m].material)
+
+		if (m_meshes[m].material)
             m_meshes[m].material->UnBindMaterial();
+    }
+}
+
+void RModel::RenderDeferred(ID3D11DeviceContext* context)
+{
+    UINT offset = 0;
+    UINT stride = sizeof(simple_vertex_t);
+    for (size_t m = 0; m < m_meshes.size(); m++)
+    {
+        if (m_meshes[m].material)
+            m_meshes[m].material->BindDeferredMaterial(context);
+
+        context->IASetVertexBuffers(0, 1, m_meshes[m].vertexBuffer.GetAddressOf(), &stride, &offset);
+        context->IASetIndexBuffer(m_meshes[m].indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
+        context->DrawIndexed(m_meshes[m].indexCount, 0, 0);
+
+        if (m_meshes[m].material)
+            m_meshes[m].material->UnBindDeferredMaterial(context);
     }
 }
 

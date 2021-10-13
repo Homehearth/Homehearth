@@ -10,12 +10,17 @@ class Renderer
 {
 private:
 	D3D11Core* m_d3d11;
+	Camera* m_camera;
 	PipelineManager m_pipelineManager;
 	std::vector<IRenderPass*> m_passes;
 	
-	BasePass m_basePass;	// Forward Rendering.
-	DepthPass m_depthPass;	// Forward Plus (1st pass).
-	DebugPass m_debugPass;	// Debug pass (Render Colliders)
+	BasePass m_basePass;	
+	DepthPass m_depthPass;
+	DebugPass m_debugPass;
+	unsigned int m_currentPass = 0;
+
+	// Update per frame related resources.
+	void UpdatePerFrame();
 	
 	// Add a pass to the list.
 	void AddPass(IRenderPass* pass);
@@ -26,14 +31,10 @@ public:
 
 	void Initialize(Window* pWindow);
 
-	// Clears the screen.
 	void ClearFrame();
 
-	// Call this each frame to render all passes:
-	//	PreRender(): set pipeline.
-	//	Render(): render all objects.
-	//	PostRender(): clear pipeline settings.
 	void Render(Scene* pScene);
 
+	IRenderPass* GetCurrentPass() const;
 };
 
