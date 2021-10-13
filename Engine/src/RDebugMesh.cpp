@@ -27,12 +27,6 @@ RDebugMesh::RDebugMesh()
 	m_nrOfVertices = 0;
 }
 
-RDebugMesh::RDebugMesh(const dx::BoundingOrientedBox& bob)
-{
-    m_nrOfVertices = 0;
-    Create(bob);
-}
-
 RDebugMesh::~RDebugMesh()
 {
 }

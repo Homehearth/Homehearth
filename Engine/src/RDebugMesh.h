@@ -12,7 +12,6 @@ private:
 
 public:
 	RDebugMesh();
-	RDebugMesh(const dx::BoundingOrientedBox& bob);
 	~RDebugMesh();
 
 	//Render with vertexbuffer

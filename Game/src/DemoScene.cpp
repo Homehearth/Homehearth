@@ -112,15 +112,16 @@ Entity DemoScene::CreatePlayerEntity()
 	playerEntity.AddComponent<comp::Transform>();
 	
 	comp::BoundingOrientedBox* playerObb = playerEntity.AddComponent<comp::BoundingOrientedBox>();
-	//playerObb->obb.Extents = sm::Vector3{ 1.f,1.f,1.f };
+	playerObb->Extents = sm::Vector3{ 1.f,1.f,1.f };
+
+	comp::Renderable* renderable = playerEntity.AddComponent<comp::Renderable>();
+	renderable->model = ResourceManager::Get().GetResource<RModel>("Cube.obj");
 #ifdef _DEBUG
-	//playerObb->mesh = std::make_shared<RDebugMesh>(playerObb->obb);
+	renderable->collider = std::make_shared<RDebugMesh>();
+	renderable->collider->Create(*playerObb);
 #endif // _DEBUG
 
 	playerEntity.AddComponent<comp::Player>()->runSpeed = 10.f;
-
-	comp::Renderable* renderable = playerEntity.AddComponent<comp::Renderable>();
-	renderable->model = ResourceManager::Get().GetResource<RModel>("Test/LightTestScene.fbx");
 
 	comp::Velocity* playeerVelocity = playerEntity.AddComponent<comp::Velocity>();
 	m_gameCamera.SetFollowVelocity(playeerVelocity);
