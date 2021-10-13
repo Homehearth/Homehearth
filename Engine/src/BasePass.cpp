@@ -2,7 +2,7 @@
 #include "BasePass.h"
 
 #include "PipelineManager.h"
-#include "RMesh.h"
+#include "RModel.h"
 
 void BasePass::PreRender()
 {	

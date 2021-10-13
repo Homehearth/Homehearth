@@ -1,12 +1,11 @@
 #include "PBR.hlsli"
 
-Texture2D T_albedo      : register(t0);
-Texture2D T_normal      : register(t1);
-Texture2D T_metalness   : register(t2);
-Texture2D T_roughness   : register(t3);
-Texture2D T_aomap       : register(t4);
-Texture2D T_displace    : register(t5);
-Texture2D T_depth       : register(t6);
+Texture2D T_albedo    : register(t1);
+Texture2D T_normal    : register(t2);
+Texture2D T_metalness : register(t3);
+Texture2D T_roughness : register(t4);
+Texture2D T_aomap     : register(t5);
+Texture2D T_displace  : register(t6);
 
 SamplerState LinearSampler : register(s0); 
 SamplerState PointSampler : register(s1);
@@ -66,12 +65,12 @@ float4 main(PixelIn input) : SV_TARGET
     Light L[2];
     L[0].position = float4(0.f, 8.f, 10.f, 1.f);
     L[0].color = 300.f;
-    L[0].direction = float4(0.f, -1.f, -1.f, 0.f);
+    L[0].direction = float4(0.f, -1.f, 1.f, 0.f);
     L[0].range = 75.f;
     L[0].type = 0;
     L[0].enabled = 1;
     
-    L[1].position = float4(0.f, 8.f, 10.f, 1.f);
+    L[1].position = float4(0.f, 8.f, -10.f, 1.f);
     L[1].color = 300.f;
     L[1].direction = float4(0.f, -1.f, -1.f, 0.f);
     L[1].range = 75.f;

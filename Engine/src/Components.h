@@ -1,11 +1,15 @@
 #pragma once
-#include "RMesh.h"
 #include "net_common.h"
 #include "net_message.h"
+#include "RModel.h"
 
 namespace ecs
 {
 	namespace component {
+
+		//Collider components
+		using DirectX::BoundingOrientedBox;
+		using DirectX::BoundingSphere;
 		
 		struct Transform
 		{
@@ -16,7 +20,7 @@ namespace ecs
 
 		struct Renderable
 		{
-			std::shared_ptr<RMesh> mesh;
+			std::shared_ptr<RModel> model;
 			 basic_model_matrix_t data;
 		};
 
@@ -28,18 +32,6 @@ namespace ecs
 		struct Player
 		{
 			float runSpeed;
-		};
-
-		struct BoxCollider
-		{
-			sm::Vector3 center;
-			sm::Vector3 norm[3];
-			float halfSize[3];
-		};
-		struct SphereCollider
-		{
-			sm::Vector3 center;
-			float radius;
 		};
 	};
 

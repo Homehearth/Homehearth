@@ -11,6 +11,11 @@ Entity Scene::CreateEntity()
 	return Entity(m_registry);
 }
 
+entt::basic_registry<entt::entity>* Scene::GetRegistry()
+{
+	return &this->m_registry;
+}
+
 void Scene::Update(float dt)
 {
 	PROFILE_FUNCTION();
@@ -46,7 +51,8 @@ void Scene::Render()
 	for (const auto& it : m_renderableCopies[1])
 	{
 		m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
-		it.mesh->Render();
+		if (it.model)
+			it.model->Render();	
 	}
 	
 	// Emit event
