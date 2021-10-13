@@ -23,10 +23,10 @@ private:
 	ComPtr<IDXGISwapChain>		m_swapChain;
 
 	// TODO:
-	ComPtr<IDXGIDevice>			m_dxgiDevice;	// 1 2 
-	ComPtr<IDXGIAdapter>		m_dxgiAdapter;	// 1 2
-	ComPtr<IDXGIAdapter4>		m_dxgiAdapter4;	// 1 2
-	ComPtr<IDXGIFactory>		m_dxgiFacory;	// 1 2
+	ComPtr<IDXGIDevice>			m_dxgiDevice;	
+	ComPtr<IDXGIAdapter>		m_dxgiAdapter;	
+	ComPtr<IDXGIAdapter4>		m_dxgiAdapter4;	
+	ComPtr<IDXGIFactory>		m_dxgiFacory;	
 
 	bool createDeviceAndSwapChain();
 

@@ -38,7 +38,7 @@ void Scene::Update(float dt)
 	}
 }
 
-void Scene::Render() 
+void Scene::Render()
 {
 	PROFILE_FUNCTION();
 
@@ -83,13 +83,16 @@ void Scene::Render()
 
 	// Emit event
 	publish<ESceneRender>();
-
-	m_renderableCopies.ReadyForSwap();
 }
 
 const bool Scene::IsRenderReady() const
 {
 	return m_renderableCopies.IsSwapped();
+}
+
+void Scene::ReadyForSwap()
+{
+	m_renderableCopies.ReadyForSwap();
 }
 
 Camera* Scene::GetCamera()
