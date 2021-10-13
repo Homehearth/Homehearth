@@ -25,12 +25,8 @@ public:
 	template<typename ...Ts, typename F>
 	void ForEachOrComponent(F&& f);
 
-	template<typename ...T>
-	void ForEachComponent(std::function<void(T&...)> func);
-
-	template<typename ...T>
-	void ForEachComponent(std::function<void(Entity, T&...)> func);
-
+	template<typename ...T, typename F>
+	void ForEachComponent(F func);
 
 	// Emit update event and update constant buffers
 	virtual void Update(float dt);
@@ -39,21 +35,23 @@ public:
 
 
 template<typename ...Ts, typename F>
-inline void HeadlessScene::ForEachOrComponent(F&& f)
+void HeadlessScene::ForEachOrComponent(F&& f)
 {
 	(m_registry.view<Ts>().each(f), ...);
 }
 
-template<typename ...T>
-inline void HeadlessScene::ForEachComponent(std::function<void(T&...)> func) {
-	m_registry.view<T...>().each(func);
-}
+template<typename ...T, typename F>
+void HeadlessScene::ForEachComponent(F func) {
+	if constexpr (std::is_assignable_v<std::function<void(Entity, T&...)>, F>) {
+		m_registry.view<T...>().each([&](entt::entity e, T&... comp)
+			{
+				Entity entity(m_registry, e);
+				func(entity, comp...);
+			});
+	}
+	else
+	{
+		m_registry.view<T...>().each(func);
+	}
 
-template<typename ...T>
-inline void HeadlessScene::ForEachComponent(std::function<void(Entity, T&...)> func) {
-	m_registry.view<T...>().each([&](entt::entity e, T&... comp)
-		{
-			Entity entity(m_registry, e);
-			func(entity, comp...);
-		});
 }
