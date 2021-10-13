@@ -73,7 +73,7 @@ void rtd::Button::OnHover()
 const bool rtd::Button::CheckClick()
 {
 	m_isClicked = false;
-	// Check if mouse key is pressed.
+	// CheckCollisions if mouse key is pressed.
 	if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED))
 	{
 		// Is within bounds?

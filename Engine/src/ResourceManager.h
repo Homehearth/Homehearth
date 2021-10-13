@@ -89,7 +89,7 @@ public:
 template<class T>
 inline std::shared_ptr<T> ResourceManager::GetResource(const std::string& key, bool createIfFailed)
 {
-	//Check if the resource exists
+	//CheckCollisions if the resource exists
 	auto f = m_resources.find(key);
 	
 	//Return the resource if it exists

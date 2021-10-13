@@ -99,7 +99,7 @@ public:
 	void BindMaterial() const;
 	void UnBindMaterial() const;
 	
-	//Check if a material has a specific texture
+	//CheckCollisions if a material has a specific texture
 	bool HasTexture(const ETextureType& type) const;
 
 	//Loaded from assimp
