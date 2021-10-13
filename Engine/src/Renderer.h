@@ -1,6 +1,7 @@
 #pragma once
 #include "BasePass.h"
 #include "DepthPass.h"
+#include "DebugPass.h"
 #include "IRenderPass.h"
 #include "PipelineManager.h"
 
@@ -14,7 +15,7 @@ private:
 	
 	BasePass m_basePass;	// Forward Rendering.
 	DepthPass m_depthPass;	// Forward Plus (1st pass).
-
+	DebugPass m_debugPass;	// Debug pass (Render Colliders)
 	
 	// Add a pass to the list.
 	void AddPass(IRenderPass* pass);

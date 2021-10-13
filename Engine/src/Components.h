@@ -21,9 +21,15 @@ namespace ecs
 		struct Renderable
 		{
 			std::shared_ptr<RModel> model;
-			 basic_model_matrix_t data;
+			basic_model_matrix_t data;
 		};
-
+		
+		struct RenderableDebug
+		{
+			std::shared_ptr<RModel> model;
+			basic_model_matrix_t data;
+		};
+		
 		struct Velocity
 		{
 			sm::Vector3 vel;

@@ -15,10 +15,13 @@ DemoScene::DemoScene(Engine& engine, Client& client, uint32_t* playerID, uint32_
 	// Define what scene does on update
 	m_scene.on<ESceneUpdate>([&](const ESceneUpdate& e, Scene& scene)
 		{
-			if(CollisionSystem::Get().IsColliding(m_chest, m_player))
+			if (CollisionSystem::Get().IsColliding(m_chest, m_player))
 			{
 				LOG_INFO("Player is Colliding with box...");
+				m_chest.GetComponent<comp::Transform>()->scale = sm::Vector3{2.0f, 2.0f, 2.0f};
 			}
+			else
+				m_chest.GetComponent<comp::Transform>()->scale = sm::Vector3{ 1.0f, 1.0f, 1.0f };
 			//System responding to user input
 			GameSystems::MRayIntersectBoxSystem(scene);
 
@@ -54,6 +57,7 @@ DemoScene::DemoScene(Engine& engine, Client& client, uint32_t* playerID, uint32_
 
 			GameSystems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(scene);
 			GameSystems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingSphere>(scene);
+			GameSystems::CheckCollisions<comp::BoundingSphere, comp::BoundingSphere>(scene);
 		});
 
 	//On collision event add entitys as pair in the collision system
@@ -112,7 +116,7 @@ Entity DemoScene::CreatePlayerEntity()
 	comp::BoundingOrientedBox* playerObb = playerEntity.AddComponent<comp::BoundingOrientedBox>();
 	playerObb->Extents = sm::Vector3{ 1.f,1.f,1.f };
 	comp::Velocity* playeerVelocity = playerEntity.AddComponent<comp::Velocity>();
-	comp::Renderable* renderable = playerEntity.AddComponent<comp::Renderable>();
+	comp::RenderableDebug* renderable = playerEntity.AddComponent<comp::RenderableDebug>();
 	playerEntity.AddComponent<comp::Player>()->runSpeed = 10.f;
 	
 	renderable->model = ResourceManager::Get().GetResource<RModel>("cube.obj");
@@ -128,7 +132,7 @@ Entity DemoScene::CreatePlayerEntity()
 	comp::BoundingSphere* obb = m_chest.AddComponent<comp::BoundingSphere>();
 	obb->Center = transform->position;
 	obb->Radius = 2.0f;
-	comp::Renderable* renderable2 = m_chest.AddComponent<comp::Renderable>();
+	comp::RenderableDebug* renderable2 = m_chest.AddComponent<comp::RenderableDebug>();
 
 	renderable2->model = ResourceManager::Get().GetResource<RModel>("Chest.obj");
 

@@ -4,8 +4,8 @@ namespace ecs {
 
     sm::Matrix GetMatrix(const component::Transform& transform)
     {
-        sm::Matrix mat = sm::Matrix::CreateWorld(transform.position, GetForward(transform), GetUp(transform));
-        mat *= sm::Matrix::CreateScale(transform.scale);
+        sm::Matrix mat = sm::Matrix::CreateScale(transform.scale);
+        mat *= sm::Matrix::CreateWorld(transform.position, GetForward(transform), GetUp(transform));
         return mat;
     }
 

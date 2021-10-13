@@ -14,8 +14,10 @@ void Renderer::Initialize(Window* pWindow)
     m_d3d11 = &D3D11Core::Get();
     m_basePass.SetEnable(true);
     m_depthPass.SetEnable(true);
+    m_debugPass.SetEnable(true);
     //AddPass(&m_depthPass);
     AddPass(&m_basePass);
+    AddPass(&m_debugPass);
 
     LOG_INFO("Number of rendering passes: %d", static_cast<int>(m_passes.size()));
 }
@@ -36,7 +38,11 @@ void Renderer::Render(Scene* pScene)
         {
             m_basePass.SetCamera(pScene->GetCamera());
         }
-
+        if (!m_debugPass.HasCamera())
+        {
+            m_debugPass.SetCamera(pScene->GetCamera());
+        }
+    	
         if (!m_passes.empty())
         {
             for (const auto& pass : m_passes)
