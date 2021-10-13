@@ -34,6 +34,11 @@ namespace ecs
 			}
 		};
 
+		struct Network
+		{
+			uint32_t key;
+		};
+
 		struct Renderable
 		{
 			std::shared_ptr<RModel> model;

@@ -4,29 +4,22 @@ DemoScene::DemoScene(Engine& engine)
 	: SceneBuilder(engine)
 {
 	m_engine = &engine;
-	//Initialize player entity
-	m_player = CreatePlayerEntity();
-	m_gameCamera.SetFollowVelocity(m_player.GetComponent<comp::Velocity>());  
 	SetUpCamera();
 
-	m_chest = m_scene.CreateEntity();
-	comp::Transform* transform = m_chest.AddComponent<comp::Transform>();
+	Entity chest = m_scene.CreateEntity();
+	comp::Transform* transform = chest.AddComponent<comp::Transform>();
 	transform->position.z = 5;
-	comp::Velocity* chestVelocity = m_chest.AddComponent<comp::Velocity>();
-	comp::BoundingSphere* obb = m_chest.AddComponent<comp::BoundingSphere>();
+	comp::Velocity* chestVelocity = chest.AddComponent<comp::Velocity>();
+	comp::BoundingSphere* obb = chest.AddComponent<comp::BoundingSphere>();
 	obb->Center = transform->position;
 	obb->Radius = 2.0f;
-	comp::Renderable* renderable2 = m_chest.AddComponent<comp::Renderable>();
+	comp::Renderable* renderable2 = chest.AddComponent<comp::Renderable>();
 
 	renderable2->model = ResourceManager::Get().GetResource<RModel>("Chest.obj");
 
 	// Define what scene does on update
 	m_scene.on<ESceneUpdate>([&](const ESceneUpdate& e, Scene& scene)
 		{
-			if(CollisionSystem::Get().IsColliding(m_chest, m_player))
-			{
-				LOG_INFO("Player is Colliding with box...");
-			}
 			//System responding to user input
 			GameSystems::MRayIntersectBoxSystem(scene);
 
@@ -35,17 +28,15 @@ DemoScene::DemoScene(Engine& engine)
 
 			if (scene.m_currentCamera.get()->GetCameraType() == CAMERATYPE::PLAY)
 			{
-				m_player.GetComponent<comp::Velocity>()->vel.z = ver * m_player.GetComponent<comp::Player>()->runSpeed;
-				m_player.GetComponent<comp::Velocity>()->vel.x = hor * m_player.GetComponent<comp::Player>()->runSpeed;
-
 				Systems::MovementSystem(scene, e.dt);
-				scene.m_currentCamera.get()->Update(e.dt);
+				scene.m_currentCamera->Update(e.dt);
 			}
 		
 			GameSystems::MRayIntersectBoxSystem(scene);
 
 			GameSystems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(scene);
 			GameSystems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingSphere>(scene);
+			CameraUpdate(e.dt);
 		});
 
 	//On collision event add entitys as pair in the collision system
@@ -59,11 +50,11 @@ DemoScene::DemoScene(Engine& engine)
 void DemoScene::SetUpCamera()
 {
 	m_gameCamera.Initialize(sm::Vector3(0, 0, -10), sm::Vector3(0, 0, 1), sm::Vector3(0, 1, 0), sm::Vector2((float)m_engine->GetWindow()->GetWidth(), (float)m_engine->GetWindow()->GetHeight()), CAMERATYPE::PLAY);
-	m_scene.m_currentCamera = std::make_unique<Camera>(m_gameCamera);
+	//m_scene.m_currentCamera = std::make_unique<Camera>(m_gameCamera);
 
 #ifdef _DEBUG
 	m_debugCamera.Initialize(sm::Vector3(0, 0, -20), sm::Vector3(0, 0, 1), sm::Vector3(0, 1, 0), sm::Vector2((float)m_engine->GetWindow()->GetWidth(), (float)m_engine->GetWindow()->GetHeight()), CAMERATYPE::DEBUG);
-	//m_scene.m_currentCamera = std::make_unique<Camera>(m_debugCamera);
+	m_scene.m_currentCamera = std::make_unique<Camera>(m_debugCamera);
 
 #endif // DEBUG
 	InputSystem::Get().SetCamera(m_scene.m_currentCamera.get());
@@ -78,17 +69,17 @@ void DemoScene::CameraUpdate(float deltaTime)
 	{
 		if (m_scene.m_currentCamera->GetCameraType() == CAMERATYPE::DEBUG)
 		{
-			m_oldDebugCameraPosition = m_scene.m_currentCamera.get()->GetPosition();
-			*m_scene.m_currentCamera = m_gameCamera;
-			m_scene.m_currentCamera.get()->SetPosition(m_oldGameCameraPosition);
+			m_oldDebugCameraPosition = m_scene.m_currentCamera->GetPosition();
+			m_scene.m_currentCamera = m_gameCamera;
+			m_scene.m_currentCamera->SetPosition(m_oldGameCameraPosition);
 
 			LOG_INFO("Game Camera selected");
 		}
 		else if (m_scene.m_currentCamera->GetCameraType() == CAMERATYPE::PLAY)
 		{
-			m_oldGameCameraPosition = m_scene.m_currentCamera.get()->GetPosition();
+			m_oldGameCameraPosition = m_scene.m_currentCamera->GetPosition();
 			*m_scene.m_currentCamera = m_debugCamera;
-			m_scene.m_currentCamera.get()->SetPosition(m_oldDebugCameraPosition);
+			m_scene.m_currentCamera->SetPosition(m_oldDebugCameraPosition);
 
 			LOG_INFO("Debugg Camera selected");
 		}
@@ -96,7 +87,7 @@ void DemoScene::CameraUpdate(float deltaTime)
 #endif // DEBUG
 }
 
-Entity DemoScene::CreatePlayerEntity()
+Entity DemoScene::CreatePlayerEntity(uint32_t playerID)
 {
 	Entity playerEntity = m_scene.CreateEntity();
 	playerEntity.AddComponent<comp::Transform>();
@@ -105,6 +96,7 @@ Entity DemoScene::CreatePlayerEntity()
 	comp::Velocity* playeerVelocity = playerEntity.AddComponent<comp::Velocity>();
 	comp::Renderable* renderable = playerEntity.AddComponent<comp::Renderable>();
 	playerEntity.AddComponent<comp::Player>()->runSpeed = 10.f;
+	playerEntity.AddComponent<comp::Network>()->key = playerID;
 	
 	renderable->model = ResourceManager::Get().GetResource<RModel>("cube.obj");
 

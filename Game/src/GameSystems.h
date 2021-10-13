@@ -34,6 +34,7 @@ namespace GameSystems
 					
 					if(collider1.Intersects(collider2))
 					{
+						LOG_INFO("Collision detected!");
 						scene.publish<ESceneCollision>(*entity1, *entity2);
 					}
 					else
