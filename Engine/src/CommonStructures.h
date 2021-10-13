@@ -52,10 +52,10 @@ struct camera_Matrix_t
 ALIGN16
 struct light_t
 {
-	sm::Vector4 position; //Only in use on Point Lights
-	sm::Vector4 direction; //Only in use on Directional Lights
-	sm::Vector4 color; //Color and Intensity of the Lamp
-	float		range; //Only in use on Point Lights
-	UINT		type;	 // 0 = Directional, 1 = Point
-	UINT		enabled; // 0 = Off, 1 = On
+	sm::Vector4 position;	//Only in use on Point Lights
+	sm::Vector4 direction;	//Only in use on Directional Lights
+	sm::Vector4 color;		//Color and Intensity of the Lamp
+	float		range;		//Only in use on Point Lights
+	UINT		type;		// 0 = Directional, 1 = Point
+	UINT		enabled;	// 0 = Off, 1 = On
 };
