@@ -216,7 +216,11 @@ void thread::RenderThreadHandler::ExecuteCommandLists()
 		if (INSTANCE.m_commands[i])
 		{
 			int j = (int)INSTANCE.m_commands.size();
+#if RENDER_IMGUI
+			D3D11Core::Get().DeviceContext()->ExecuteCommandList(INSTANCE.m_commands[i], 1);
+#else
 			D3D11Core::Get().DeviceContext()->ExecuteCommandList(INSTANCE.m_commands[i], 0);
+#endif
 			INSTANCE.m_commands[i]->Release();
 			INSTANCE.m_commands[i] = nullptr;
 		}

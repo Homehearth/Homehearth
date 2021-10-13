@@ -337,9 +337,9 @@ void Engine::Render(float& dt)
 		PROFILE_SCOPE("Render ImGui");
 		IMGUI(
 			m_imguiMutex.lock();
-			ImGui::Render();
-			ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
-			m_imguiMutex.unlock();
+		ImGui::Render();
+		ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+		m_imguiMutex.unlock();
 		);
 	}
 
