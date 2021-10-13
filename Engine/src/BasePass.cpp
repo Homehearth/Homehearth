@@ -7,7 +7,7 @@
 void BasePass::PreRender(ID3D11DeviceContext* pDeviceContext)
 {	
 	DC->IASetInputLayout(PM->m_defaultInputLayout.Get());
-    
+	
     DC->VSSetShader(PM->m_defaultVertexShader.Get(), nullptr, 0);
     DC->PSSetShader(PM->m_defaultPixelShader.Get(), nullptr, 0);
 
