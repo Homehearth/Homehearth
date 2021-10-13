@@ -8,6 +8,9 @@ class DemoScene : public SceneBuilder<DemoScene, Scene>
 private:
 	Engine* m_engine;
 
+
+	Entity m_chest;
+
 	Camera m_gameCamera;
 	Camera m_debugCamera;
 	sm::Vector3 m_oldGameCameraPosition;

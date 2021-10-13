@@ -6,11 +6,27 @@ DemoScene::DemoScene(Engine& engine)
 	m_engine = &engine;
 	//Initialize player entity
 	m_player = CreatePlayerEntity();
+	m_gameCamera.SetFollowVelocity(m_player.GetComponent<comp::Velocity>());  
 	SetUpCamera();
+
+	m_chest = m_scene.CreateEntity();
+	comp::Transform* transform = m_chest.AddComponent<comp::Transform>();
+	transform->position.z = 5;
+	comp::Velocity* chestVelocity = m_chest.AddComponent<comp::Velocity>();
+	comp::BoundingSphere* obb = m_chest.AddComponent<comp::BoundingSphere>();
+	obb->Center = transform->position;
+	obb->Radius = 2.0f;
+	comp::Renderable* renderable2 = m_chest.AddComponent<comp::Renderable>();
+
+	renderable2->model = ResourceManager::Get().GetResource<RModel>("Chest.obj");
 
 	// Define what scene does on update
 	m_scene.on<ESceneUpdate>([&](const ESceneUpdate& e, HeadlessScene& scene)
 		{
+			if(CollisionSystem::Get().IsColliding(m_chest, m_player))
+			{
+				LOG_INFO("Player is Colliding with box...");
+			}
 			//System responding to user input
 			GameSystems::MRayIntersectBoxSystem(m_scene);
 
@@ -25,6 +41,18 @@ DemoScene::DemoScene(Engine& engine)
 				Systems::MovementSystem(m_scene, e.dt);
 				m_scene.m_currentCamera.get()->Update(e.dt);
 			}
+		
+			GameSystems::MRayIntersectBoxSystem(scene);
+
+			GameSystems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(scene);
+			GameSystems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingSphere>(scene);
+		});
+
+	//On collision event add entitys as pair in the collision system
+	m_scene.on<ESceneCollision>([&](const ESceneCollision& e, Scene& scene)
+		{
+			if(e.obj1 != e.obj2)
+				CollisionSystem::Get().AddPair(e.obj1, e.obj2);
 		});
 }
 
@@ -38,6 +66,7 @@ void DemoScene::SetUpCamera()
 	//m_scene.m_currentCamera = std::make_unique<Camera>(m_debugCamera);
 
 #endif // DEBUG
+	InputSystem::Get().SetCamera(m_scene.m_currentCamera.get());
 }
 
 void DemoScene::CameraUpdate(float deltaTime)
@@ -71,18 +100,13 @@ Entity DemoScene::CreatePlayerEntity()
 {
 	Entity playerEntity = m_scene.CreateEntity();
 	playerEntity.AddComponent<comp::Transform>();
-	comp::Velocity* playerVelocity = playerEntity.AddComponent<comp::Velocity>();
+	comp::BoundingOrientedBox* playerObb = playerEntity.AddComponent<comp::BoundingOrientedBox>();
+	playerObb->Extents = sm::Vector3{ 1.f,1.f,1.f };
+	comp::Velocity* playeerVelocity = playerEntity.AddComponent<comp::Velocity>();
 	comp::Renderable* renderable = playerEntity.AddComponent<comp::Renderable>();
 	playerEntity.AddComponent<comp::Player>()->runSpeed = 10.f;
+	
 	renderable->model = ResourceManager::Get().GetResource<RModel>("cube.obj");
-
-	m_gameCamera.SetFollowVelocity(playerVelocity);
-
-	Entity chest = m_scene.CreateEntity();
-	chest.AddComponent<comp::Transform>()->position.z = 5;
-	comp::Renderable* renderable2 = chest.AddComponent<comp::Renderable>();
-
-	renderable2->model = ResourceManager::Get().GetResource<RModel>("Chest.obj");
 
 	return playerEntity;
 }

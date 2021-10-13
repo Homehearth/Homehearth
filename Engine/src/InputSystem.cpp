@@ -28,7 +28,7 @@ void InputSystem::SetCamera(Camera* camera)
 		this->m_currentCamera = camera;
 	else
 	{
-		LOG_WARNING("Tried to set camera as nullptr...");
+		LOG_WARNING("Tried to set camera with nullptr...");
 	}
 }
 

@@ -14,17 +14,13 @@ void GameSystems::UserInputSystem(Scene& scene, Client& client)
 void GameSystems::MRayIntersectBoxSystem(Scene& scene)
 {
 	float t = 0;
-	scene.ForEachComponent<comp::BoxCollider, comp::Transform>([&](comp::BoxCollider& boxCollider, comp::Transform& transform)
-	{
+	
+	scene.ForEachComponent<comp::BoundingOrientedBox, comp::Transform>([&](Entity entity, comp::BoundingOrientedBox& boxCollider, comp::Transform& transform)
+    {
 		//Collided with mouse TODO make it do someting?
 		if(Intersect::RayIntersectBox(InputSystem::Get().GetMouseRay(), boxCollider, t))
 		{
-			LOG_INFO("Mouse position %f, %f, %f", InputSystem::Get().GetMouseRay().rayPos.x, InputSystem::Get().GetMouseRay().rayPos.y, InputSystem::Get().GetMouseRay().rayPos.z);
-			LOG_INFO("Transform position %f, %f, %f", transform.position.x, transform.position.y, transform.position.z);
-			//transform.scale = sm::Vector3(1.5f, 1.5f, 1.5f);
+			LOG_INFO("Mouseray HIT box detected!");
 		}
-		else
-			transform.scale = sm::Vector3(1.f, 1.f, 1.f);
-		
 	});
 }
