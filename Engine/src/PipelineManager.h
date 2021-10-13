@@ -10,14 +10,13 @@ class PipelineManager
 private:
 	Window*							m_window;
 	D3D11Core*						m_d3d11;
-	ID3D11DeviceContext*			m_context;
 	
 public:
 	PipelineManager();
 	virtual ~PipelineManager() = default;
 
 	// Initialize PipelineManager.
-	void Initialize(Window* pWindow, ID3D11DeviceContext* context = D3D11Core::Get().DeviceContext());
+	void Initialize(Window* pWindow);
 
 	
 	// PUBLIC AVAILABLE DATA.

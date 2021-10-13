@@ -10,13 +10,8 @@ PipelineManager::PipelineManager()
 {
 }
 
-void PipelineManager::Initialize(Window* pWindow, ID3D11DeviceContext* context)
+void PipelineManager::Initialize(Window* pWindow)
 {
-    if (context)
-        m_context = context;
-    else
-        m_context = nullptr;
-
     if (m_window == nullptr)
         m_window = pWindow;
 
@@ -327,10 +322,7 @@ void PipelineManager::SetViewport()
     m_viewport.MaxDepth = 1.0f;
 
     // Set viewport.
-    if (m_context)
-        m_context->RSSetViewports(1, &m_viewport);
-    else
-        m_d3d11->DeviceContext()->RSSetViewports(1, &m_viewport);
+    m_d3d11->DeviceContext()->RSSetViewports(1, &m_viewport);
 }
 
 bool PipelineManager::CreateInputLayouts()

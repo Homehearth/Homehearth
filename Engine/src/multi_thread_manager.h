@@ -159,8 +159,6 @@ namespace thread
 		static const bool IsActive();
 
 		static const int GetAmountOfJobs();
-
-		static const int GetAmountOfThreads();
 	};
 
 

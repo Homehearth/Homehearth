@@ -350,11 +350,6 @@ const int MultiThreader::GetAmountOfJobs()
 	return 0;
 }
 
-const int thread::MultiThreader::GetAmountOfThreads()
-{
-	return MultiThreader::instance->activeThreads;
-}
-
 const bool thread::IsThreadActive()
 {
 	if (MultiThreader::instance)
@@ -362,5 +357,3 @@ const bool thread::IsThreadActive()
 	else
 		return false;
 }
-
-

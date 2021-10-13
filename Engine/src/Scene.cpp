@@ -1,11 +1,9 @@
 #include "EnginePCH.h"
 #include "Scene.h"
-#include <omp.h>
 
 Scene::Scene()
 {	
 	m_publicBuffer.Create(D3D11Core::Get().Device());
-	thread::RenderThreadHandler::Get().SetObjectsBuffer(&m_renderableCopies);
 }
 
 Entity Scene::CreateEntity()
@@ -42,45 +40,21 @@ void Scene::Render()
 {
 	PROFILE_FUNCTION();
 
-	// Divides up work between threads.
-	const render_instructions_t inst = thread::RenderThreadHandler::Get().Launch(m_renderableCopies[1].size());
-	if((inst.start | inst.stop) == 0)
+	// System that renders Renderable component
+
+	ID3D11Buffer* buffers[1] =
 	{
-		// Render everything on same thread.
-		ID3D11Buffer* const buffers[1] =
-		{
-			m_publicBuffer.GetBuffer()
-		};
+		m_publicBuffer.GetBuffer()
+	};
 
-		D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, buffers);
-		// System that renders Renderable component
-		for (const auto& it : m_renderableCopies[1])
-		{
-			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
-			it.model->Render();
-		}
-	}
-	else
+	D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, buffers);
+	for (const auto& it : m_renderableCopies[1])
 	{
-		// Render third part of the scene with immediate context
-		ID3D11Buffer* const buffers[1] =
-		{
-			m_publicBuffer.GetBuffer()
-		};
-
-		D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, buffers);
-		// System that renders Renderable component
-		for (int i = inst.start; i < inst.stop; i++)
-		{
-			const auto& it = m_renderableCopies[1][i];
-			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
-			it.model->Render();
-		}
+		m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
+		if (it.model)
+			it.model->Render();	
 	}
-
-	// Run any available Command lists from worker threads.
-	thread::RenderThreadHandler::ExecuteCommandLists();
-
+	
 	// Emit event
 	publish<ESceneRender>();
 }

@@ -15,7 +15,6 @@ private:
 	
 	BasePass m_basePass;	
 	DepthPass m_depthPass;
-	unsigned int m_currentPass = 0;
 
 	// Update per frame related resources.
 	void UpdatePerFrame();
@@ -33,6 +32,5 @@ public:
 
 	void Render(Scene* pScene);
 
-	IRenderPass* GetCurrentPass() const;
 };
 
