@@ -1,5 +1,7 @@
 #include "DemoScene.h"
 
+#include "RDebugMesh.h"	//****
+
 DemoScene::DemoScene(Engine& engine, Client& client, uint32_t* playerID, uint32_t* gameID)
 	: SceneBuilder(engine)
 	, m_gameID(gameID)
@@ -84,6 +86,14 @@ void DemoScene::CameraUpdate(float deltaTime)
 
 Entity DemoScene::CreatePlayerEntity()
 {
+	/*
+ 	std::shared_ptr<RDebugMesh> debugMesh = std::make_shared<RDebugMesh>();
+	dx::BoundingOrientedBox bob;
+	bob.Center = { 0,0,0 };
+	bob.Extents = { 1,1,1 };
+	debugMesh->Create(bob);
+	ResourceManager::Get().AddResource("bob", debugMesh);
+	*/
 
 	Entity playerEntity = m_scene.CreateEntity();
 	playerEntity.AddComponent<comp::Transform>();
@@ -103,7 +113,7 @@ Entity DemoScene::CreatePlayerEntity()
 	comp::Renderable* renderable2 = chest.AddComponent<comp::Renderable>();
 	chest.AddComponent<comp::Player>()->runSpeed = 10.f;
 
-	renderable2->model = ResourceManager::Get().GetResource<RModel>("Chest.obj");	//"Tree2.obj"
+	renderable2->model = ResourceManager::Get().GetResource<RModel>("Tree2.obj");
 
 
 	return playerEntity;

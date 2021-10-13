@@ -159,7 +159,7 @@ bool RModel::CombineMeshes(std::vector<aiMesh*>& submeshes, submesh_t& submesh)
         !CreateIndexBuffer(indices, submesh))
     {
 #ifdef _DEBUG
-        LOG_WARNING("Failed to load vertex- or indexbuffer...");
+        LOG_ERROR("Failed to load vertex- or indexbuffer...");
 #endif
         success = false;
     }
