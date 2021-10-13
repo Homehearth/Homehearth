@@ -9,6 +9,8 @@ Texture2D T_displace  : register(t6);
 
 SamplerState samp : register(s0);
 
+StructuredBuffer<Light> S_Lights : register(t7);
+
 /*
     Material constant buffers
 */
@@ -42,6 +44,11 @@ cbuffer Camera : register(b1)
     float4x4 view;
 }
 
+cbuffer LightsInfo : register(b3)
+{
+    float4 info;
+}
+
 float4 main(PixelIn input) : SV_TARGET
 {
     float3 camPos = cameraPosition.xyz;
@@ -56,20 +63,20 @@ float4 main(PixelIn input) : SV_TARGET
     float3 V = normalize(camPos - input.worldPos.xyz);
     
     //TEMP
-    Light L[2];
-    L[0].position = float4(0.f, 8.f, 10.f, 1.f);
-    L[0].color = 10.f;
-    L[0].direction = float4(0.f, -1.f, 1.f, 0.f);
-    L[0].range = 75.f;
-    L[0].type = 0;
-    L[0].enabled = 1;
+    //Light L[2];
+    //L[0].position = float4(0.f, 8.f, 10.f, 1.f);
+    //L[0].color = 10.f;
+    //L[0].direction = float4(0.f, -1.f, 1.f, 0.f);
+    //L[0].range = 75.f;
+    //L[0].type = 0;
+    //L[0].enabled = 1;
     
-    L[1].position = float4(0.f, 0.f, -10.f, 1.f);
-    L[1].color = 300.f;
-    L[1].direction = float4(0.f, -1.f, -1.f, 0.f);
-    L[1].range = 75.f;
-    L[1].type = 1;
-    L[1].enabled = 1;
+    //L[1].position = float4(0.f, 0.f, -10.f, 1.f);
+    //L[1].color = 300.f;
+    //L[1].direction = float4(0.f, -1.f, -1.f, 0.f);
+    //L[1].range = 75.f;
+    //L[1].type = 1;
+    //L[1].enabled = 1;
     
     
     //If an object has a texture, sample from it else use default values.
@@ -118,25 +125,24 @@ float4 main(PixelIn input) : SV_TARGET
     float3 rad = 0.f;
     float3 lightCol = 0.f;
     
-    for (int i = 0; i < NR_LIGHTS; i++)
+    for (int i = 0; i < info.x; i++)
     {
-        if(L[i].enabled = 1)
-        {
-            switch (L[i].type)
+        
+            switch (S_Lights[i].type)
             {
                 case 0:
-                    lightCol += DoDirectionlight(L[i], N);
+                    lightCol += DoDirectionlight(S_Lights[i], N);
                     break;
                 case 1:
-                    lightCol += DoPointlight(L[i], input, N);
+                    lightCol += DoPointlight(S_Lights[i], input, N);
                     break;
                 default:
                     break;
             }
         
-            CalcRadiance(input, V, N, roughness, metallic, albedo, L[i].position.xyz, lightCol, F0, rad);
+            CalcRadiance(input, V, N, roughness, metallic, albedo, S_Lights[i].position.xyz, lightCol, F0, rad);
             Lo += rad;
-        }
+        
     }
     
 	

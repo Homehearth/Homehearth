@@ -2,6 +2,7 @@
 #include "EnginePCH.h"
 #include "GameSystems.h"
 #include "Engine.h"
+#include "Lights.h"
 
 class DemoScene : public SceneBuilder<DemoScene>
 {
@@ -13,6 +14,7 @@ private:
 
 	Camera m_gameCamera;
 	Camera m_debugCamera;
+	Lights m_lights;
 	sm::Vector3 m_oldGameCameraPosition;
 	sm::Vector3 m_oldDebugCameraPosition;
 	uint32_t* m_playerID, *m_gameID;

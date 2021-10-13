@@ -24,7 +24,7 @@ struct PixelIn
 };
 
 static const float PI = 3.14159265359;
-static const int NR_LIGHTS = 2; //TEMP
+//static const int NR_LIGHTS = 2; //TEMP
 
 /*
 ---------------------------------Normal distribution function---------------------------------
