@@ -1,7 +1,5 @@
 #include "DemoScene.h"
 
-#include "RDebugMesh.h"	//****
-
 DemoScene::DemoScene(Engine& engine, Client& client, uint32_t* playerID, uint32_t* gameID)
 	: SceneBuilder(engine)
 	, m_gameID(gameID)
@@ -109,28 +107,26 @@ void DemoScene::CameraUpdate(float deltaTime)
 
 Entity DemoScene::CreatePlayerEntity()
 {
-	/*
- 	std::shared_ptr<RDebugMesh> debugMesh = std::make_shared<RDebugMesh>();
-	dx::BoundingOrientedBox bob;
-	bob.Center = { 0,0,0 };
-	bob.Extents = { 1,1,1 };
-	debugMesh->Create(bob);
-	ResourceManager::Get().AddResource("bob", debugMesh);
-	*/
-
+	//Player
 	Entity playerEntity = m_scene.CreateEntity();
 	playerEntity.AddComponent<comp::Transform>();
+	
 	comp::BoundingOrientedBox* playerObb = playerEntity.AddComponent<comp::BoundingOrientedBox>();
-	playerObb->Extents = sm::Vector3{ 1.f,1.f,1.f };
-	comp::Velocity* playeerVelocity = playerEntity.AddComponent<comp::Velocity>();
-	comp::Renderable* renderable = playerEntity.AddComponent<comp::Renderable>();
+	//playerObb->obb.Extents = sm::Vector3{ 1.f,1.f,1.f };
+#ifdef _DEBUG
+	//playerObb->mesh = std::make_shared<RDebugMesh>(playerObb->obb);
+#endif // _DEBUG
+
 	playerEntity.AddComponent<comp::Player>()->runSpeed = 10.f;
 
+	comp::Renderable* renderable = playerEntity.AddComponent<comp::Renderable>();
 	renderable->model = ResourceManager::Get().GetResource<RModel>("Test/LightTestScene.fbx");
 
+	comp::Velocity* playeerVelocity = playerEntity.AddComponent<comp::Velocity>();
 	m_gameCamera.SetFollowVelocity(playeerVelocity);
 
 
+	//Second object
 	this->m_chest = m_scene.CreateEntity();
 	comp::Transform* transform = m_chest.AddComponent<comp::Transform>();
 	transform->position.z = 5;
