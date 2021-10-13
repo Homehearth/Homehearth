@@ -47,6 +47,9 @@ public:
 	std::shared_ptr<Camera> m_currentCamera;
 
 	DoubleBuffer<std::vector<comp::Renderable>>* GetBuffers();
+	void ReadyForSwap();
+	
+	DoubleBuffer<std::vector<comp::Renderable>>* GetDoubleBuffers();
 };
 
 template<typename ...Ts, typename F>
