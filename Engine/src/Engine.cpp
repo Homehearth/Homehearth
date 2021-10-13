@@ -6,7 +6,7 @@
 bool Engine::s_safeExit = false;
 
 Engine::Engine()
-	: HeadlessEngine()
+	: BasicEngine()
 	, m_frameTime()
 {
 	LOG_INFO("Engine(): " __TIMESTAMP__);
@@ -78,7 +78,7 @@ void Engine::Startup()
 	rtd::Handler2D::InsertElement(test4);
 #endif
 	
-	HeadlessEngine::Startup();
+	BasicEngine::Startup();
 }
 
 void Engine::Run()
@@ -86,7 +86,7 @@ void Engine::Run()
 	if (thread::IsThreadActive())
 		T_CJOB(Engine, RenderThread);
 
-	HeadlessEngine::Run();
+	BasicEngine::Run();
 	// Wait for the rendering thread to exit its last render cycle and shutdown
 #if _DEBUG
 	// This is debug since it catches release in endless loop.
@@ -222,18 +222,26 @@ void Engine::drawImGUI() const
 	}
 	ImGui::End();
 	
+
 	ImGui::Begin("Camera");
 	{
 		Camera* currentCam = GetCurrentScene()->GetCurrentCamera();
-		const std::string position = "Position: " + std::to_string(currentCam->GetPosition().x)+ " " + std::to_string(currentCam->GetPosition().y) + " " + std::to_string(currentCam->GetPosition().z);
-		ImGui::Separator();
-		ImGui::Text(position.c_str());
-		ImGui::DragFloat("Zoom: ", &currentCam->m_zoomValue, 0.01f, 0.0001f, 1.0f);
-		ImGui::DragFloat("Near Plane : ", &currentCam->m_nearPlane, 0.1f , 0.0001f, currentCam->m_farPlane-1);
-		ImGui::DragFloat("Far Plane: ", &currentCam->m_farPlane, 0.1f, currentCam->m_nearPlane+1);
-		ImGui::DragFloat3("Position: ", (float*)&currentCam->m_position, 0.1f);
-		ImGui::DragFloat3("Rotation: ", (float*)&currentCam->m_rollPitchYaw, 0.1f, 0.0f);
-		ImGui::Spacing();
+		if (currentCam)
+		{
+			const std::string position = "Position: " + std::to_string(currentCam->GetPosition().x)+ " " + std::to_string(currentCam->GetPosition().y) + " " + std::to_string(currentCam->GetPosition().z);
+			ImGui::Separator();
+			ImGui::Text(position.c_str());
+			ImGui::DragFloat("Zoom: ", &currentCam->m_zoomValue, 0.01f, 0.0001f, 1.0f);
+			ImGui::DragFloat("Near Plane : ", &currentCam->m_nearPlane, 0.1f , 0.0001f, currentCam->m_farPlane-1);
+			ImGui::DragFloat("Far Plane: ", &currentCam->m_farPlane, 0.1f, currentCam->m_nearPlane+1);
+			ImGui::DragFloat3("Position: ", (float*)&currentCam->m_position, 0.1f);
+			ImGui::DragFloat3("Rotation: ", (float*)&currentCam->m_rollPitchYaw, 0.1f, 0.0f);
+			ImGui::Spacing();
+		}
+		else
+		{
+			ImGui::Text("No Camera");
+		}
 	};
 	ImGui::End();
 }
@@ -300,7 +308,7 @@ void Engine::Update(float dt)
 		);
 	}
 
-	HeadlessEngine::Update(dt);
+	BasicEngine::Update(dt);
 
 	{
 		PROFILE_SCOPE("Ending ImGui");

@@ -2,6 +2,7 @@
 #include "Scene.h"
 
 Scene::Scene()
+	: m_currentCamera(nullptr)
 {	
 	m_publicBuffer.Create(D3D11Core::Get().Device());
 }

@@ -13,18 +13,18 @@ template<typename T, typename SceneType>
 class SceneBuilder
 {
 protected:
-	HeadlessEngine<SceneType>& m_headlessEngine;
+	BasicEngine<SceneType>& m_headlessEngine;
 	SceneType& m_scene;
 	std::string m_sceneName;
 public:
-	SceneBuilder(HeadlessEngine<SceneType>& m_engine);
+	SceneBuilder(BasicEngine<SceneType>& m_engine);
 
 	SceneType& GetScene() const;
 
 };
 
 template<typename T, typename SceneType>
-inline SceneBuilder<T, SceneType>::SceneBuilder(HeadlessEngine<SceneType>& engine)
+inline SceneBuilder<T, SceneType>::SceneBuilder(BasicEngine<SceneType>& engine)
 	: m_headlessEngine(engine)
 	, m_scene(engine.GetScene(GetTypeName<T>()))
 	, m_sceneName(GetTypeName<T>())

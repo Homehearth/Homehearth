@@ -36,7 +36,7 @@ namespace ecs
 
 		struct Network
 		{
-			uint32_t key;
+			uint32_t playerID;
 		};
 
 		struct Renderable

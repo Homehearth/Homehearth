@@ -5,7 +5,7 @@
 #include <omp.h>
 
 template<typename SceneType>
-class HeadlessEngine
+class BasicEngine
 {
 private:
 	std::atomic<bool> m_isEngineRunning;
@@ -30,12 +30,12 @@ protected:
 	virtual void Update(float dt);
 
 public:
-	HeadlessEngine();
-	HeadlessEngine(const HeadlessEngine& other) = delete;
-	HeadlessEngine(HeadlessEngine&& other) = delete;
-	HeadlessEngine& operator=(const HeadlessEngine& other) = delete;
-	HeadlessEngine& operator=(HeadlessEngine&& other) = delete;
-	virtual ~HeadlessEngine() = default;
+	BasicEngine();
+	BasicEngine(const BasicEngine& other) = delete;
+	BasicEngine(BasicEngine&& other) = delete;
+	BasicEngine& operator=(const BasicEngine& other) = delete;
+	BasicEngine& operator=(BasicEngine&& other) = delete;
+	virtual ~BasicEngine() = default;
 
 	bool IsRunning() const;
 
@@ -52,45 +52,31 @@ public:
 
 
 template<typename SceneType>
-SceneType& HeadlessEngine<SceneType>::GetScene(const std::string& name)
+SceneType& BasicEngine<SceneType>::GetScene(const std::string& name)
 {
 	return m_scenes[name];
 }
 
 template<typename SceneType>
-SceneType* HeadlessEngine<SceneType>::GetCurrentScene() const
+SceneType* BasicEngine<SceneType>::GetCurrentScene() const
 {
 	return m_currentScene;
 }
 
 template<typename SceneType>
-void HeadlessEngine<SceneType>::SetScene(const std::string& name)
+void BasicEngine<SceneType>::SetScene(const std::string& name)
 {
 	SetScene(m_scenes.at(name));
 }
 
 template<typename SceneType>
-void HeadlessEngine<SceneType>::SetScene(SceneType& scene)
-{
-	if (m_currentScene)
-	{
-		m_currentScene->clear();
-	}
+void BasicEngine<SceneType>::SetScene(SceneType& scene)
+{	
 	m_currentScene = &scene;
-
-	m_currentScene->on<EShutdown>([&](const EShutdown& e, HeadlessScene& scene)
-		{
-			Shutdown();
-		});
-
-	m_currentScene->on<ESceneChange>([&](const ESceneChange& e, HeadlessScene& scene)
-		{
-			SetScene(e.newScene);
-		});
 }
 
 template<typename SceneType>
-void HeadlessEngine<SceneType>::Start()
+void BasicEngine<SceneType>::Start()
 {
 	this->Startup();
 	m_isEngineRunning = true;
@@ -99,7 +85,7 @@ void HeadlessEngine<SceneType>::Start()
 }
 
 template<typename SceneType>
-void HeadlessEngine<SceneType>::Startup()
+void BasicEngine<SceneType>::Startup()
 {
 	// Sets up the game specific information
 	if (!this->OnStartup())
@@ -110,14 +96,14 @@ void HeadlessEngine<SceneType>::Startup()
 }
 
 template<typename SceneType>
-HeadlessEngine<SceneType>::HeadlessEngine()
+BasicEngine<SceneType>::BasicEngine()
 	: m_scenes({ 0 })
 	, m_currentScene(nullptr)
 {
 }
 
 template<typename SceneType>
-void HeadlessEngine<SceneType>::Update(float dt)
+void BasicEngine<SceneType>::Update(float dt)
 {
 	PROFILE_FUNCTION();
 
@@ -132,7 +118,7 @@ void HeadlessEngine<SceneType>::Update(float dt)
 }
 
 template<typename SceneType>
-void HeadlessEngine<SceneType>::Run()
+void BasicEngine<SceneType>::Run()
 {
 	double currentFrame = 0.f;
 	double lastFrame = omp_get_wtime();
@@ -167,13 +153,16 @@ void HeadlessEngine<SceneType>::Run()
 }
 
 template<typename SceneType>
-void HeadlessEngine<SceneType>::Shutdown()
+void BasicEngine<SceneType>::Shutdown()
 {
 	m_isEngineRunning = false;
 }
 
 template<typename SceneType>
-bool HeadlessEngine<SceneType>::IsRunning() const
+bool BasicEngine<SceneType>::IsRunning() const
 {
 	return m_isEngineRunning;
 }
+
+
+typedef BasicEngine<HeadlessScene> HeadlessEngine;
