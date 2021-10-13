@@ -14,7 +14,7 @@ namespace thread
 	The must-meet threshold for divided rendering.
 		.Per thread object render.
 	*/
-	const int THRESHOLD = 999999;
+	const int THRESHOLD = 1;
 
 	class RenderThreadHandler
 	{
