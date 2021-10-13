@@ -69,17 +69,6 @@ void thread::RenderThreadHandler::Finish()
 			// Block until all threads have gotten their jobs.
 			while ((int)INSTANCE.m_commands.size() != INSTANCE.m_amount) {
 			};
-
-			/*
-			// Block until all threads have stopped working.
-			for (int i = 0; i < (int)INSTANCE.m_amount; i++)
-			{
-				if (INSTANCE.m_statuses[i] != thread::thread_running)
-				{
-					i = 0;
-				}
-			}
-			*/
 		}
 	}
 	else
@@ -134,7 +123,7 @@ const render_instructions_t thread::RenderThreadHandler::Launch(const int& amoun
 	render_instructions_t inst;
 	const unsigned int objects_per_thread = (unsigned int)std::ceil((float)amount_of_objects / (float)(INSTANCE.m_amount + 1));
 	int main_start = 0;
-	if (objects_per_thread >= thread::threshold)
+	if (objects_per_thread >= thread::THRESHOLD)
 	{
 		// Launch Threads
 		if (INSTANCE.m_isPooled)
