@@ -289,6 +289,24 @@ void RModel::Render() const
     }
 }
 
+void RModel::RenderDeferred(ID3D11DeviceContext* context)
+{
+    UINT offset = 0;
+    UINT stride = sizeof(simple_vertex_t);
+    for (size_t m = 0; m < m_meshes.size(); m++)
+    {
+        if (m_meshes[m].material)
+            m_meshes[m].material->BindDeferredMaterial(context);
+
+        context->IASetVertexBuffers(0, 1, m_meshes[m].vertexBuffer.GetAddressOf(), &stride, &offset);
+        context->IASetIndexBuffer(m_meshes[m].indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
+        context->DrawIndexed(m_meshes[m].indexCount, 0, 0);
+
+        if (m_meshes[m].material)
+            m_meshes[m].material->UnBindDeferredMaterial(context);
+    }
+}
+
 bool RModel::Create(const std::string& filename)
 {
     std::string filepath = MODELPATH + filename;

@@ -76,6 +76,7 @@ public:
 		Render all of the submeshes in the RModel with correct material
 	*/
 	void Render() const;
+	void RenderDeferred(ID3D11DeviceContext* context);
 
 	// Inherited via GResource
 	virtual bool Create(const std::string& filename) override;

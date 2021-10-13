@@ -34,6 +34,7 @@ void Engine::Startup()
 
 	m_renderer.Initialize(&m_window);
 
+
 	// Thread should be launched after s_engineRunning is set to true and D3D11 is initialized.
 	//
 	// AUDIO - we supposed to use other audio engine
@@ -60,6 +61,12 @@ void Engine::Startup()
 		ImGui_ImplDX11_CreateDeviceObjects(); // uses device, therefore has to be called before render thread starts
 		LOG_INFO("ImGui was successfully initialized");
 	);
+
+	// Thread Startup.
+	thread::RenderThreadHandler::Get().SetRenderer(&m_renderer);
+	thread::RenderThreadHandler::Get().SetWindow(&m_window);
+	//thread::RenderThreadHandler::Get().Setup(1);
+	thread::RenderThreadHandler::Get().Setup(T_REC - thread::MultiThreader::GetAmountOfThreads());
 
 	InputSystem::Get().SetMouseWindow(m_window.GetHWnd(), m_window.GetWidth(), m_window.GetHeight());
 
@@ -320,19 +327,22 @@ void Engine::Render(float& dt)
 {
 	PROFILE_FUNCTION();
 
-	/*
-		Render 3D
-	*/
-	m_renderer.ClearFrame();
-	m_renderer.Render(GetCurrentScene());
+	{
+		PROFILE_SCOPE("Render D3D11");
+		/*
+			Render 3D
+		*/
+		m_renderer.ClearFrame();
+		m_renderer.Render(GetCurrentScene());
+	}
 
 	{
 		PROFILE_SCOPE("Render ImGui");
 		IMGUI(
 			m_imguiMutex.lock();
-			ImGui::Render();
-			ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
-			m_imguiMutex.unlock();
+		ImGui::Render();
+		ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+		m_imguiMutex.unlock();
 		);
 	}
 
@@ -343,8 +353,12 @@ void Engine::Render(float& dt)
 		D2D1Core::Present();
 	}
 
+	
+
 	{
 		PROFILE_SCOPE("Present");
 		D3D11Core::Get().SwapChain()->Present(0, 0);
 	}
+
+
 }

@@ -45,6 +45,7 @@
 #include <array>
 #include <set>
 #include <queue>
+#include <condition_variable>
 
 
 #include <functional>
@@ -109,6 +110,7 @@ namespace sm = dx::SimpleMath;
 #include "BackBuffer.h"
 #include "Components.h"
 #include "SceneBuilder.h"
+#include "RenderThreadHandler.h"
 
 // Network
 #include "Client.h"

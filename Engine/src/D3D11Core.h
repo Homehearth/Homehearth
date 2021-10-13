@@ -47,6 +47,7 @@ public:
 
 
 	DXGI_QUERY_VIDEO_MEMORY_INFO GetVideoMemoryInfo();
+	void CreateDeferredContext(ID3D11DeviceContext** context);
 
 	// No copying.
 	D3D11Core(const D3D11Core& other) = delete;
