@@ -6,6 +6,10 @@
 namespace ecs
 {
 	namespace component {
+
+		//Collider components
+		using DirectX::BoundingOrientedBox;
+		using DirectX::BoundingSphere;
 		
 		struct Transform
 		{
@@ -28,18 +32,6 @@ namespace ecs
 		struct Player
 		{
 			float runSpeed;
-		};
-
-		struct BoxCollider
-		{
-			sm::Vector3 center;
-			sm::Vector3 norm[3];
-			float halfSize[3];
-		};
-		struct SphereCollider
-		{
-			sm::Vector3 center;
-			float radius;
 		};
 	};
 

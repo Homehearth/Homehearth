@@ -228,7 +228,7 @@ void Engine::drawImGUI() const
 			});
 	}
 	ImGui::End();
-
+	
 	ImGui::Begin("Camera");
 	{
 		const std::string position = "Position: " + std::to_string(GetCurrentScene()->m_currentCamera->GetPosition().x)+ " " + std::to_string(GetCurrentScene()->m_currentCamera->GetPosition().y) + " " + std::to_string(GetCurrentScene()->m_currentCamera->GetPosition().z);
@@ -240,7 +240,6 @@ void Engine::drawImGUI() const
 		ImGui::DragFloat3("Position: ", (float*)&GetCurrentScene()->m_currentCamera->m_position, 0.1f);
 		ImGui::DragFloat3("Rotation: ", (float*)&GetCurrentScene()->m_currentCamera->m_rollPitchYaw, 0.1f, 0.0f);
 		ImGui::Spacing();
-
 	};
 	ImGui::End();
 }

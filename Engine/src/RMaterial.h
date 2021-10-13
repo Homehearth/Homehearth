@@ -100,7 +100,7 @@ public:
 	void BindDeferredMaterial(ID3D11DeviceContext* context);
 	void UnBindDeferredMaterial(ID3D11DeviceContext* context);
 	
-	//Check if a material has a specific texture
+	//CheckCollisions if a material has a specific texture
 	bool HasTexture(const ETextureType& type) const;
 
 	//Loaded from assimp
