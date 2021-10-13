@@ -5,7 +5,7 @@
 #include "Simulation.h"
 
 
-class ServerGame : public HeadlessEngine 
+class ServerGame : public HeadlessEngine<HeadlessScene>
 {
 private:
 	Server m_server;
