@@ -114,6 +114,19 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 		}
 		break;
 	}
+	case GameMsg::Game_MovePlayer:
+	{
+		int x;
+		int y;
+
+		msg >> y >> x;
+
+		if (x || y)
+		{
+			LOG_INFO("Player is moving in X: %d Y: %d", x, y);
+		}
+		break;
+	}
 	}
 }
 

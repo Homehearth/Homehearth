@@ -25,15 +25,6 @@ void Game::UpdateNetwork(float deltaTime)
 	if (m_client.IsConnected())
 	{
 		m_client.Update();
-		if (m_gameID != UINT32_MAX)
-		{
-			// send updated player position
-			network::message<GameMsg> msg;
-			msg.header.id = GameMsg::Game_Update;
-			comp::Transform t = *m_demoScene->m_player.GetComponent<comp::Transform>();
-			msg << t << this->m_localPID << m_gameID;
-			m_client.Send(msg);
-		}
 
 		pingCheck += deltaTime;
 
@@ -41,6 +32,18 @@ void Game::UpdateNetwork(float deltaTime)
 		{
 			this->PingServer();
 			pingCheck -= TARGET_PING_TIME;
+		}
+
+		// TODO MAKE THIS BETTER
+		if (m_gameID != UINT32_MAX)
+		{
+			message<GameMsg> msg;
+			msg.header.id = GameMsg::Game_MovePlayer;
+			int x = InputSystem::Get().GetAxis(Axis::HORIZONTAL);
+			int y = InputSystem::Get().GetAxis(Axis::VERTICAL);
+			msg << x << y;
+
+			m_client.Send(msg);
 		}
 	}
 }
@@ -93,7 +96,7 @@ void Game::OnUserUpdate(float deltaTime)
 			ImGui::Text(std::string("Game ID: " + std::to_string(m_gameID)).c_str());
 
 			if (ImGui::Button("Leave Game"))
-			{	
+			{
 				// TODO
 			}
 		}
@@ -141,6 +144,12 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		LOG_INFO("YOUR ID IS: %lu", this->m_localPID);
 		break;
 	}
+	case GameMsg::Game_Snapshot:
+	{
+
+
+		break;
+	}
 	case GameMsg::Game_AddPlayer:
 	{
 		uint32_t count; // Could be more than one player
@@ -150,11 +159,13 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			uint32_t remotePlayerID;
 			msg >> remotePlayerID;
 			LOG_INFO("Player with ID: %ld has joined the game!", remotePlayerID);
-			m_players.insert(std::make_pair(remotePlayerID, m_demoScene->CreatePlayerEntity()));
+			Entity e = m_demoScene->CreatePlayerEntity(remotePlayerID);
+			if (this->m_gameID == (uint32_t)-1 && m_localPID == remotePlayerID)
+			{
+				m_demoScene->InitializeGameCam();
+				m_demoScene->m_gameCamera.SetFollowVelocity(e.GetComponent<comp::Velocity>());
+			}
 		}
-
-		message<GameMsg> message;
-		message.header.id = GameMsg::Lobby_Accepted;
 
 		break;
 	}
@@ -162,18 +173,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	{
 		msg >> m_gameID;
 		LOG_INFO("You are now in lobby: %lu", m_gameID);
-		break;
-	}
-	case GameMsg::Game_Update:
-	{
-		uint32_t playerID;
-		msg >> playerID;
-		if (m_players.find(playerID) != m_players.end())
-		{
-			comp::Transform t;
-			msg >> t;
-			*m_players.at(playerID).GetComponent<comp::Transform>() = t;
-		}
 		break;
 	}
 	case GameMsg::Lobby_Invalid:
@@ -186,12 +185,16 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		uint32_t playerID;
 		msg >> playerID;
 
-		if (m_players.find(playerID) != m_players.end())
-		{
-			m_players[playerID].Destroy();
-			m_players.erase(playerID);
-			LOG_INFO("Removed player!");
-		}
+		// TODO Remove the entity of the player that matches ID
+
+		m_demoScene->GetScene().ForEachComponent<comp::Network>([playerID](Entity& e, comp::Network& net)
+			{
+				if (playerID == net.key)
+				{
+					e.Destroy();
+				}
+			}
+		);
 		break;
 	}
 	}
@@ -244,12 +247,12 @@ void Game::OnClientDisconnect()
 
 	this->m_gameID = -1;
 	this->m_localPID = -1;
-	auto it = m_players.begin();
-	while (it != m_players.end())
-	{
-		it->second.Destroy();
-		it = m_players.erase(it);
-	}
+
+	m_demoScene->GetScene().ForEachComponent<comp::Network>([](Entity& e, comp::Network& net)
+		{
+			e.Destroy();
+		}
+	);
 }
 
 void Game::OnShutdown()

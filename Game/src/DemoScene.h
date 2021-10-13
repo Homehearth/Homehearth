@@ -8,21 +8,15 @@ class DemoScene : public SceneBuilder<DemoScene, Scene>
 private:
 	Engine* m_engine;
 
-
-	Entity m_chest;
-
-	Camera m_gameCamera;
-	Camera m_debugCamera;
-	sm::Vector3 m_oldGameCameraPosition;
-	sm::Vector3 m_oldDebugCameraPosition;
-
 public:
 	DemoScene(Engine& engine);
 	
-	Entity CreatePlayerEntity();
-	Entity m_player;
+	Entity CreatePlayerEntity(uint32_t playerID);
 
 	//Camera
 	void SetUpCamera();
-	void CameraUpdate(float deltaTime);
+	void CheckIfSwappedCamera();
+	void InitializeGameCam();
+	Camera m_gameCamera;
+	Camera m_debugCamera;
 };

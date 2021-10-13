@@ -9,8 +9,6 @@ class Game : public Engine
 private:
 	std::chrono::system_clock::time_point m_timeThen;
 	Client m_client;
-	// Maybe move this later
-	std::unordered_map<uint32_t, Entity> m_players;
 	uint32_t m_localPID;
 	uint32_t m_gameID;
 

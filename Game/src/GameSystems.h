@@ -30,15 +30,18 @@ namespace GameSystems
 				
 				for(auto entity2 = begin; entity2 != end2; ++entity2)
 				{
-					Collider2 collider2 = scene.GetRegistry()->get<Collider2>(*entity2);;
+					Collider2 collider2 = scene.GetRegistry()->get<Collider2>(*entity2);
 					
-					if(collider1.Intersects(collider2))
+					if (*entity1 != *entity2)
 					{
-						scene.publish<ESceneCollision>(*entity1, *entity2);
-					}
-					else
-					{
-						CollisionSystem::Get().RemovePair(*entity1, *entity2);
+						if (collider1.Intersects(collider2))
+						{
+							scene.publish<ESceneCollision>(*entity1, *entity2);
+						}
+						else
+						{
+							CollisionSystem::Get().RemovePair(*entity1, *entity2);
+						}
 					}
 				}
 			}
