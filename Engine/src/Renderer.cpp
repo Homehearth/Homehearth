@@ -36,21 +36,23 @@ void Renderer::Render(Scene* pScene)
     {    	
         if (!m_passes.empty())
         {
-            UpdatePerFrame(); // once per frame.
-            for (const auto& pass : m_passes)
+            UpdatePerFrame();
+            for (int i = 0; i < m_passes.size(); i++)
             {
+                m_currentPass = i;
+                IRenderPass* pass = m_passes[i];
                 if (pass->IsEnabled())
                 {
                     pass->PreRender();
-                    pass->Render(pScene);
-                    pass->PostRender(); 
+                    pass->Render(pScene);     // args? currently does nothing.
+                    pass->PostRender(); // args? currently does nothing.
                 }
             }
 
-            pScene->ReadyForSwap(); 
+            pScene->ReadyForSwap();
         }
     }
-    else if(!m_camera)
+    else if (!m_camera)
     {
         m_camera = pScene->GetCamera();
         for (auto& pass : m_passes)
@@ -60,14 +62,18 @@ void Renderer::Render(Scene* pScene)
     }
 }
 
-void Renderer::UpdatePerFrame()
+IRenderPass* Renderer::GetCurrentPass() const
 {
-	// Update Camera constant buffer.
-    m_d3d11->DeviceContext()->UpdateSubresource(m_camera->m_viewConstantBuffer.Get(), 0, nullptr, m_camera->GetCameraMatrixes(), 0, 0);
+    return m_passes[m_currentPass];
 }
-
 
 void Renderer::AddPass(IRenderPass* pass)
 {
     m_passes.emplace_back(pass);
+}
+
+void Renderer::UpdatePerFrame()
+{
+    // Update Camera constant buffer.
+    m_d3d11->DeviceContext()->UpdateSubresource(m_camera->m_viewConstantBuffer.Get(), 0, nullptr, m_camera->GetCameraMatrixes(), 0, 0);
 }
