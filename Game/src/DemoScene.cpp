@@ -42,14 +42,14 @@ DemoScene::DemoScene(Engine& engine)
 				m_scene.m_currentCamera.get()->Update(e.dt);
 			}
 		
-			GameSystems::MRayIntersectBoxSystem(scene);
+			GameSystems::MRayIntersectBoxSystem(m_scene);
 
-			GameSystems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(scene);
-			GameSystems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingSphere>(scene);
+			GameSystems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(m_scene);
+			GameSystems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingSphere>(m_scene);
 		});
 
 	//On collision event add entitys as pair in the collision system
-	m_scene.on<ESceneCollision>([&](const ESceneCollision& e, Scene& scene)
+	m_scene.on<ESceneCollision>([&](const ESceneCollision& e, HeadlessScene& scene)
 		{
 			if(e.obj1 != e.obj2)
 				CollisionSystem::Get().AddPair(e.obj1, e.obj2);
