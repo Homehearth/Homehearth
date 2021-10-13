@@ -3,7 +3,7 @@
 #include <omp.h>
 
 Scene::Scene()
-{	
+{
 	m_publicBuffer.Create(D3D11Core::Get().Device());
 	thread::RenderThreadHandler::Get().SetObjectsBuffer(&m_renderableCopies);
 }
@@ -104,13 +104,13 @@ void Scene::RenderDebug()
 
 	ID3D11Buffer* buffers[1] =
 	{
-		m_debugPublicBuffer.GetBuffer()
+		m_publicBuffer.GetBuffer()
 	};
 
 	D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, buffers);
 	for (const auto& it : m_debugRenderableCopies[1])
 	{
-		m_debugPublicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
+		m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
 		if (it.model)
 			it.model->Render();
 	}

@@ -16,7 +16,6 @@ private:
 	dx::ConstantBuffer<basic_model_matrix_t> m_publicBuffer;
 	//Debug renderables
 	DoubleBuffer<std::vector<comp::RenderableDebug>> m_debugRenderableCopies;
-	dx::ConstantBuffer<basic_model_matrix_t> m_debugPublicBuffer;
 public:
 
 	Scene();
