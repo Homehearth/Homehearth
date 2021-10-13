@@ -8,7 +8,6 @@ class DemoScene : public SceneBuilder<DemoScene, Scene>
 private:
 	Engine* m_engine;
 
-
 public:
 	DemoScene(Engine& engine);
 	
@@ -16,9 +15,8 @@ public:
 
 	//Camera
 	void SetUpCamera();
-	void CameraUpdate(float deltaTime);
+	void CheckIfSwappedCamera();
+	void InitializeGameCam();
 	Camera m_gameCamera;
 	Camera m_debugCamera;
-	sm::Vector3 m_oldGameCameraPosition;
-	sm::Vector3 m_oldDebugCameraPosition;
 };

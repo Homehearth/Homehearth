@@ -7,11 +7,10 @@ private:
 
 	DoubleBuffer<std::vector<comp::Renderable>> m_renderableCopies;
 	dx::ConstantBuffer<basic_model_matrix_t> m_publicBuffer;
+	Camera* m_currentCamera;
 
 public:
-
 	Scene();
-
 
 	// Emit update event and update constant buffers
 	virtual void Update(float dt) override;
@@ -21,8 +20,8 @@ public:
 
 	const bool IsRenderReady() const;
 
-	Camera* GetCamera();
-	std::shared_ptr<Camera> m_currentCamera;
+	Camera* GetCurrentCamera()const;
+	void SetCurrentCamera(Camera* pCamera);
 
 	DoubleBuffer<std::vector<comp::Renderable>>* GetBuffers();
 };

@@ -162,7 +162,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			Entity e = m_demoScene->CreatePlayerEntity(remotePlayerID);
 			if (this->m_gameID == (uint32_t)-1 && m_localPID == remotePlayerID)
 			{
-				*m_demoScene->GetScene().m_currentCamera = m_demoScene->m_gameCamera;
+				m_demoScene->InitializeGameCam();
 				m_demoScene->m_gameCamera.SetFollowVelocity(e.GetComponent<comp::Velocity>());
 			}
 		}

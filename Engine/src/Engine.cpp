@@ -224,14 +224,15 @@ void Engine::drawImGUI() const
 	
 	ImGui::Begin("Camera");
 	{
-		const std::string position = "Position: " + std::to_string(GetCurrentScene()->m_currentCamera->GetPosition().x)+ " " + std::to_string(GetCurrentScene()->m_currentCamera->GetPosition().y) + " " + std::to_string(GetCurrentScene()->m_currentCamera->GetPosition().z);
+		Camera* currentCam = GetCurrentScene()->GetCurrentCamera();
+		const std::string position = "Position: " + std::to_string(currentCam->GetPosition().x)+ " " + std::to_string(currentCam->GetPosition().y) + " " + std::to_string(currentCam->GetPosition().z);
 		ImGui::Separator();
 		ImGui::Text(position.c_str());
-		ImGui::DragFloat("Zoom: ", &GetCurrentScene()->m_currentCamera->m_zoomValue, 0.01f, 0.0001f, 1.0f);
-		ImGui::DragFloat("Near Plane : ", &GetCurrentScene()->m_currentCamera->m_nearPlane, 0.1f , 0.0001f, GetCurrentScene()->m_currentCamera->m_farPlane-1);
-		ImGui::DragFloat("Far Plane: ", &GetCurrentScene()->m_currentCamera->m_farPlane, 0.1f, GetCurrentScene()->m_currentCamera->m_nearPlane+1);
-		ImGui::DragFloat3("Position: ", (float*)&GetCurrentScene()->m_currentCamera->m_position, 0.1f);
-		ImGui::DragFloat3("Rotation: ", (float*)&GetCurrentScene()->m_currentCamera->m_rollPitchYaw, 0.1f, 0.0f);
+		ImGui::DragFloat("Zoom: ", &currentCam->m_zoomValue, 0.01f, 0.0001f, 1.0f);
+		ImGui::DragFloat("Near Plane : ", &currentCam->m_nearPlane, 0.1f , 0.0001f, currentCam->m_farPlane-1);
+		ImGui::DragFloat("Far Plane: ", &currentCam->m_farPlane, 0.1f, currentCam->m_nearPlane+1);
+		ImGui::DragFloat3("Position: ", (float*)&currentCam->m_position, 0.1f);
+		ImGui::DragFloat3("Rotation: ", (float*)&currentCam->m_rollPitchYaw, 0.1f, 0.0f);
 		ImGui::Spacing();
 	};
 	ImGui::End();

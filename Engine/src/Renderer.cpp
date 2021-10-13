@@ -34,7 +34,7 @@ void Renderer::Render(Scene* pScene)
     {
         if (!m_basePass.HasCamera())
         {
-            m_basePass.SetCamera(pScene->GetCamera());
+            m_basePass.SetCamera(pScene->GetCurrentCamera());
         }
 
         if (!m_passes.empty())

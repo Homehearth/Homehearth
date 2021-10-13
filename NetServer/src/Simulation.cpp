@@ -52,9 +52,12 @@ bool Simulation::AddPlayer(uint32_t playerID)
 	msg1.header.id = GameMsg::Game_AddPlayer;
 	for (auto con : m_connections)
 	{
-		msg1 << con.first;
+		if (playerID != con.first)
+		{
+			msg1 << con.first;
+		}
 	}
-	msg1 << static_cast<uint32_t>(m_connections.size());
+	msg1 << static_cast<uint32_t>(m_connections.size() - 1);
 	m_server->SendToClient(m_server->GetConnection(playerID), msg1);
 
 	return true;
@@ -95,7 +98,7 @@ void Simulation::Broadcast(network::message<GameMsg>& msg, uint32_t exclude)
 		{
 			uint32_t playerID = it->first;
 			it = m_connections.erase(it);
- 			this->RemovePlayer(playerID);
+			this->RemovePlayer(playerID);
 		}
 	}
 }
