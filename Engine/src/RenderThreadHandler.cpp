@@ -13,7 +13,7 @@ bool shouldRender = true;
 
 bool ShouldContinue();
 void RenderMain(const unsigned int id);
-void RenderJob(const unsigned int start, unsigned int stop, void* buffer, void* context, void* pipe);
+void RenderJob(const unsigned int start, unsigned int stop, void* buffer, void* context);
 
 thread::RenderThreadHandler::RenderThreadHandler()
 {
@@ -80,12 +80,12 @@ const int thread::RenderThreadHandler::GetStatus(const unsigned int& id)
 	return INSTANCE.m_statuses[id];
 }
 
-void thread::RenderThreadHandler::InsertRenderJob(std::function<void(void*, void*, void*)> job)
+void thread::RenderThreadHandler::InsertRenderJob(std::function<void(void*, void*)> job)
 {
 	INSTANCE.Get().m_jobs.push_back(job);
 }
 
-std::function<void(void*, void*, void*)> thread::RenderThreadHandler::GetJob()
+std::function<void(void*, void*)> thread::RenderThreadHandler::GetJob()
 {
 	if ((int)INSTANCE.m_jobs.size() <= 0)
 	{
@@ -133,9 +133,9 @@ const render_instructions_t thread::RenderThreadHandler::Launch(const int& amoun
 				const int start = i * objects_per_thread;
 				const int stop = start + objects_per_thread;
 				// Prepare job for threads.
-				auto f = [=](void* buffer, void* context, void* pipe)
+				auto f = [=](void* buffer, void* context)
 				{
-					RenderJob(start, stop, buffer, context, pipe);
+					RenderJob(start, stop, buffer, context);
 				};
 
 				INSTANCE.m_jobs.push_back(f);
@@ -245,7 +245,6 @@ bool ShouldContinue()
 void RenderMain(const unsigned int id)
 {
 	// On start
-	PipelineManager pipeManager;
 	ID3D11DeviceContext* deferred_context = nullptr;
 	dx::ConstantBuffer<basic_model_matrix_t> m_privateBuffer;
 	unsigned int t_id = id;
@@ -259,9 +258,6 @@ void RenderMain(const unsigned int id)
 		thread::RenderThreadHandler::UpdateStatus(t_id, thread::thread_done);
 		return;
 	}
-
-	// Setup pipeline.
-	pipeManager = *INSTANCE.GetRenderer()->GetPipelineManager();
 	m_privateBuffer.Create(D3D11Core::Get().Device());
 	thread::RenderThreadHandler::UpdateStatus(t_id, thread::thread_running);
 
@@ -281,7 +277,7 @@ void RenderMain(const unsigned int id)
 		EnterCriticalSection(&criticalSection);
 		thread::RenderThreadHandler::Get().UpdateStatus(t_id, thread::thread_working);
 		// Look for job.
-		std::function<void(void*, void*, void*)> func = thread::RenderThreadHandler::Get().GetJob();
+		std::function<void(void*, void*)> func = thread::RenderThreadHandler::Get().GetJob();
 		if (func)
 		{
 			cv.notify_all();
@@ -290,7 +286,7 @@ void RenderMain(const unsigned int id)
 
 			// Run render.
 			//double start = omp_get_wtime();
-			func(&m_privateBuffer, deferred_context, &pipeManager);
+			func(&m_privateBuffer, deferred_context);
 			//double end = omp_get_wtime() - start;
 			//std::cout << "Preparation for render took: " << end << "\n";
 		}
@@ -307,21 +303,18 @@ void RenderMain(const unsigned int id)
 }
 
 void RenderJob(const unsigned int start,
-	unsigned int stop, void* buffer, void* context, void* pipe)
+	unsigned int stop, void* buffer, void* context)
 {
 	DoubleBuffer<std::vector<comp::Renderable>>* m_objects = (DoubleBuffer<std::vector<comp::Renderable>>*)thread::RenderThreadHandler::GetObjectsBuffer();
 	dx::ConstantBuffer<basic_model_matrix_t>* m_buffer = (dx::ConstantBuffer<basic_model_matrix_t>*)buffer;
 	ID3D11DeviceContext* m_context = (ID3D11DeviceContext*)context;
-	PipelineManager* m_pipeManager = (PipelineManager*)pipe;
 	if (m_objects)
 	{
 		// On Render Start
 		ID3D11CommandList* command_list = nullptr;
 		IRenderPass* pass = thread::RenderThreadHandler::Get().GetRenderer()->GetCurrentPass();
 
-		//m_context->ClearDepthStencilView(m_pipeManager->m_depthStencilView.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
-		
-		pass->PreRender(m_context, m_pipeManager);
+		pass->PreRender(m_context);
 
 		// Make sure not to go out of range
 		if (stop > (unsigned int)(*m_objects)[1].size())
@@ -341,6 +334,8 @@ void RenderJob(const unsigned int start,
 			m_context->VSSetConstantBuffers(0, 1, buffers);
 			it->model->RenderDeferred(m_context);
 		}
+
+		pass->PostRender(m_context);
 
 		// On Render Finish
 		HRESULT hr = m_context->FinishCommandList(0, &command_list);

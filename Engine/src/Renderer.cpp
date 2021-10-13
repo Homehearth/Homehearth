@@ -36,6 +36,7 @@ void Renderer::Render(Scene* pScene)
     {    	
         if (!m_passes.empty())
         {
+            UpdatePerFrame();
             for (int i = 0; i < m_passes.size(); i++)
             {
                 m_currentPass = i;
@@ -47,15 +48,17 @@ void Renderer::Render(Scene* pScene)
                     pass->PostRender(); // args? currently does nothing.
                 }
             }
-        else if (!m_camera)
-        {
-            m_camera = pScene->GetCamera();
-            for (auto& pass : m_passes)
-            {
-                pass->Initialize(m_camera, m_d3d11->DeviceContext(), &m_pipelineManager);
-            }
+
+            pScene->ReadyForSwap();
         }
-      }
+    }
+    else if (!m_camera)
+    {
+        m_camera = pScene->GetCamera();
+        for (auto& pass : m_passes)
+        {
+            pass->Initialize(m_camera, m_d3d11->DeviceContext(), &m_pipelineManager);
+        }
     }
 }
 
@@ -64,13 +67,13 @@ IRenderPass* Renderer::GetCurrentPass() const
     return m_passes[m_currentPass];
 }
 
-PipelineManager* Renderer::GetPipelineManager()
-{
-    return &m_pipelineManager;
-}
-
-
 void Renderer::AddPass(IRenderPass* pass)
 {
     m_passes.emplace_back(pass);
+}
+
+void Renderer::UpdatePerFrame()
+{
+    // Update Camera constant buffer.
+    m_d3d11->DeviceContext()->UpdateSubresource(m_camera->m_viewConstantBuffer.Get(), 0, nullptr, m_camera->GetCameraMatrixes(), 0, 0);
 }
