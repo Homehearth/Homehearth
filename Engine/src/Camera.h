@@ -12,9 +12,6 @@ enum class CAMERATYPE
 class Camera
 {
 private:
-	sm::Vector2 m_currentMousePosition;
-	sm::Vector2 m_lastMousePosition;
-
 	sm::Vector3 m_up;
 	sm::Vector3 m_target;
 	sm::Vector3 m_forward;
@@ -36,7 +33,7 @@ private:
 	float m_aspectRatio;
 
 	float m_rotationSpeed;
-	float m_movingSepeed;
+	float m_movingSpeed;
 
 	camera_Matrix_t m_cameraMat;
 	sm::Quaternion quaterion;
@@ -61,7 +58,7 @@ public:
 	sm::Vector3 GetTarget() const;
 	sm::Vector3 GetUp() const;
 	camera_Matrix_t* GetCameraMatrixes();
-	CAMERATYPE GetCameraType();
+	CAMERATYPE GetCameraType()const;
 
 	//Set Functions
 	void SetPosition(sm::Vector3 newPosition);

@@ -35,7 +35,7 @@ void Game::UpdateNetwork(float deltaTime)
 		}
 
 		// TODO MAKE THIS BETTER
-		if (m_gameID != UINT32_MAX)
+		if (m_gameID != UINT32_MAX && m_demoScene->GetScene().GetCurrentCamera()->GetCameraType() == CAMERATYPE::PLAY)
 		{
 			message<GameMsg> msg;
 			msg.header.id = GameMsg::Game_MovePlayer;

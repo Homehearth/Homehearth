@@ -54,11 +54,13 @@ void DemoScene::CheckIfSwappedCamera()
 	{
 		if (m_scene.GetCurrentCamera()->GetCameraType() == CAMERATYPE::DEBUG)
 		{
+			InputSystem::Get().SwitchMouseMode();
 			m_scene.SetCurrentCamera(&m_gameCamera);
 			LOG_INFO("Game Camera selected");
 		}
 		else if (m_scene.GetCurrentCamera()->GetCameraType() == CAMERATYPE::PLAY)
 		{
+			InputSystem::Get().SwitchMouseMode();
 			m_scene.SetCurrentCamera(&m_debugCamera);
 			LOG_INFO("Debug Camera selected");
 		}
@@ -68,7 +70,7 @@ void DemoScene::CheckIfSwappedCamera()
 
 void DemoScene::InitializeGameCam()
 {
-	m_gameCamera.Initialize(sm::Vector3(0, 0, -10), sm::Vector3(0, 0, 1), sm::Vector3(0, 1, 0), sm::Vector2((float)m_engine->GetWindow()->GetWidth(), (float)m_engine->GetWindow()->GetHeight()), CAMERATYPE::PLAY);
+	m_gameCamera.Initialize(sm::Vector3(0, 2.5f, -10), sm::Vector3(0, 0, 1), sm::Vector3(0, 1, 0), sm::Vector2((float)m_engine->GetWindow()->GetWidth(), (float)m_engine->GetWindow()->GetHeight()), CAMERATYPE::PLAY);
 	m_scene.SetCurrentCamera(&m_gameCamera);
 	InputSystem::Get().SetCamera(m_scene.GetCurrentCamera());
 }
