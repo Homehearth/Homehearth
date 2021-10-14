@@ -42,16 +42,21 @@ void HeadlessScene::ForEachOrComponent(F&& f)
 
 template<typename ...T, typename F>
 void HeadlessScene::ForEachComponent(F func) {
-	if constexpr (std::is_assignable_v<std::function<void(Entity, T&...)>, F>) {
+	if constexpr (std::is_assignable_v<std::function<void(Entity, T&...)>, F>) 
+	{
 		m_registry.view<T...>().each([&](entt::entity e, T&... comp)
 			{
 				Entity entity(m_registry, e);
 				func(entity, comp...);
 			});
 	}
-	else
+	else if constexpr (std::is_assignable_v<std::function<void(T&...)>, F>)
 	{
 		m_registry.view<T...>().each(func);
+	}
+	else
+	{
+		throw std::runtime_error("No valid function argument");
 	}
 
 }

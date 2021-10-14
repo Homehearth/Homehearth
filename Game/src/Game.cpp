@@ -41,7 +41,7 @@ void Game::UpdateNetwork(float deltaTime)
 			msg.header.id = GameMsg::Game_MovePlayer;
 			int x = InputSystem::Get().GetAxis(Axis::HORIZONTAL);
 			int y = InputSystem::Get().GetAxis(Axis::VERTICAL);
-			msg << x << y;
+			msg << this->m_localPID << m_gameID << x << y;
 
 			m_client.Send(msg);
 		}
@@ -55,7 +55,42 @@ bool Game::OnStartup()
 
 	//Set as current scene
 	SetScene(m_demoScene->GetScene());
+	Scene& mainMenuScene = GetScene("MainMenu");
+	mainMenuScene.on<ESceneUpdate>([](const ESceneUpdate& e, HeadlessScene& scene)
+		{
 
+			IMGUI(
+				ImGui::Begin("Scene");
+				ImGui::Text("MainMenu");
+				ImGui::End();
+			);
+		});
+
+	Scene& lobbyScene = GetScene("Lobby");
+	lobbyScene.on<ESceneUpdate>([](const ESceneUpdate& e, HeadlessScene& scene) 
+		{
+			IMGUI(
+				ImGui::Begin("Scene");
+				ImGui::Text("Lobby");
+				ImGui::End();
+			);
+		});
+
+	Scene& gameScene = GetScene("Game");
+	gameScene.on<ESceneUpdate>([](const ESceneUpdate& e, HeadlessScene& scene)
+		{
+			IMGUI(
+				ImGui::Begin("Scene");
+				ImGui::Text("Game");
+				ImGui::End();
+			);
+
+		});
+
+//	SetScene(mainMenuScene);
+	SetScene("MainMenu");
+
+	
 	return true;
 }
 
@@ -146,7 +181,37 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	}
 	case GameMsg::Game_Snapshot:
 	{
+		uint32_t count;
+		msg >> count;
+		
+		std::unordered_map<uint32_t, comp::Transform> transforms;
+		std::set<uint32_t> found;
 
+
+		for (uint32_t i = 0; i < count; i++)
+		{
+			uint32_t playerID;
+			comp::Transform t;
+			msg >> playerID >> t;
+			transforms[playerID] = t;
+		}
+		// TODO MAKE BETTER
+		m_demoScene->GetScene().ForEachComponent<comp::Network, comp::Transform>([&](comp::Network& n, comp::Transform& t)
+			{
+				if (transforms.find(n.id) != transforms.end())
+				{
+					t = transforms.at(n.id);
+					found.insert(n.id);
+				}
+			});
+
+		for (const auto& t : transforms) {
+			if (found.find(t.first) == found.end())
+			{
+				Entity e = this->m_demoScene->CreatePlayerEntity(t.first);
+				*e.GetComponent<comp::Transform>() = t.second;
+			}
+		}
 
 		break;
 	}
@@ -172,6 +237,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	case GameMsg::Lobby_Accepted:
 	{
 		msg >> m_gameID;
+		SetScene(m_demoScene->GetScene());
 		LOG_INFO("You are now in lobby: %lu", m_gameID);
 		break;
 	}
@@ -189,7 +255,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 
 		m_demoScene->GetScene().ForEachComponent<comp::Network>([playerID](Entity& e, comp::Network& net)
 			{
-				if (playerID == net.key)
+ 				if (playerID == net.id)
 				{
 					e.Destroy();
 				}
@@ -243,7 +309,6 @@ void Game::CreateLobby()
 
 void Game::OnClientDisconnect()
 {
-	LOG_INFO("Disconnected from server!");
 
 	this->m_gameID = -1;
 	this->m_localPID = -1;
@@ -253,6 +318,10 @@ void Game::OnClientDisconnect()
 			e.Destroy();
 		}
 	);
+
+	SetScene("MainMenu");
+
+	LOG_INFO("Disconnected from server!");
 }
 
 void Game::OnShutdown()

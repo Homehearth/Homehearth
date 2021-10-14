@@ -25,6 +25,18 @@ void ServerGame::InputThread()
 			this->Shutdown();
 			break;
 		}
+		else if (input == "/info")
+		{
+			LOG_INFO("INFO:")
+			for (const auto& sim : m_simulations)
+			{
+				LOG_INFO("LOBBY SCENE:");
+				LOG_INFO("Entity Count: %u", sim.second->GetLobbyScene()->GetRegistry()->size());
+				LOG_INFO("GAME SCENE:");
+				LOG_INFO("Entity Count: %u\n", sim.second->GetGameScene()->GetRegistry()->size());
+
+			}
+		}
 	}
 }
 
@@ -38,14 +50,18 @@ bool ServerGame::OnStartup()
 
 	m_inputThread = std::thread(&ServerGame::InputThread, this);
 
-	HeadlessScene& demo = GetScene("Demo");
-
 	return true;
 }
 
 void ServerGame::OnUserUpdate(float deltaTime)
 {
 	this->m_server.Update();
+
+	for (const auto& sim : m_simulations)
+	{
+		sim.second->Update(deltaTime);
+	}
+
 }
 
 void ServerGame::OnShutdown()
@@ -55,6 +71,10 @@ void ServerGame::OnShutdown()
 
 void ServerGame::UpdateNetwork(float deltaTime)
 {
+	for (const auto& sim : m_simulations)
+	{
+		sim.second->SendSnapshot();
+	}
 }
 
 void ServerGame::CheckIncoming(message<GameMsg>& msg)
@@ -90,9 +110,9 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 		uint32_t playerID;
 		msg >> playerID;
 		LOG_INFO("Player %d trying to join lobby %d", playerID, gameID);
-		if (games.find(gameID) != games.end())
+		if (m_simulations.find(gameID) != m_simulations.end())
 		{
-			games[gameID]->JoinLobby(playerID, gameID);
+			m_simulations[gameID]->JoinLobby(playerID, gameID);
 		}
 		else
 		{
@@ -103,28 +123,24 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 		}
 		break;
 	}
-	case GameMsg::Game_Update:
-	{
-		uint32_t gameID;
-		uint32_t playerID;
-		msg >> gameID >> playerID;
-		if (games.find(gameID) != games.end())
-		{
-			games[gameID]->UpdatePlayer(playerID, msg);
-		}
-		break;
-	}
 	case GameMsg::Game_MovePlayer:
 	{
 		int x;
 		int y;
+		uint32_t playerID;
+		uint32_t gameID;
 
-		msg >> y >> x;
+		msg >> y >> x >> gameID >> playerID;
 
-		if (x || y)
-		{
-			LOG_INFO("Player is moving in X: %d Y: %d", x, y);
-		}
+		LOG_INFO("Player is moving in X: %d Y: %d", x, y);
+		m_simulations.at(gameID)->GetGameScene()->ForEachComponent<comp::Network, comp::Velocity>([=](comp::Network& net, comp::Velocity& vel) 
+			{
+				if (net.id == playerID)
+				{
+					vel.vel	= sm::Vector3(x, 0, y);
+				}
+			});
+		
 		break;
 	}
 	}
@@ -132,10 +148,10 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 
 bool ServerGame::CreateSimulation(uint32_t playerID)
 {
-	games[m_nGameID] = std::make_unique<Simulation>(&m_server);
-	if (!games[m_nGameID]->CreateLobby(playerID, m_nGameID))
+	m_simulations[m_nGameID] = std::make_unique<Simulation>(&m_server, this);
+	if (!m_simulations[m_nGameID]->Create(playerID, m_nGameID))
 	{
-		games.erase(m_nGameID);
+		m_simulations.erase(m_nGameID);
 		return false;
 	}
 

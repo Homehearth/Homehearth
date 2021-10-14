@@ -71,7 +71,7 @@ void DemoScene::CheckIfSwappedCamera()
 		else if (m_scene.GetCurrentCamera()->GetCameraType() == CAMERATYPE::PLAY)
 		{
 			m_scene.SetCurrentCamera(&m_debugCamera);
-			LOG_INFO("Debugg Camera selected");
+			LOG_INFO("Debug Camera selected");
 		}
 	}
 #endif // DEBUG
@@ -92,7 +92,7 @@ Entity DemoScene::CreatePlayerEntity(uint32_t playerID)
 	comp::Velocity* playerVelocity = playerEntity.AddComponent<comp::Velocity>();
 	comp::Renderable* renderable = playerEntity.AddComponent<comp::Renderable>();
 	playerEntity.AddComponent<comp::Player>()->runSpeed = 10.f;
-	playerEntity.AddComponent<comp::Network>()->key = playerID;
+	playerEntity.AddComponent<comp::Network>()->id = playerID;
 
 	renderable->model = ResourceManager::Get().GetResource<RModel>("cube.obj");
 

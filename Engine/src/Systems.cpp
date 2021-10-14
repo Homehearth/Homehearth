@@ -1,7 +1,7 @@
 #include "EnginePCH.h"
 #include "Systems.h"
 
-void Systems::MovementSystem(Scene& scene, float dt)
+void Systems::MovementSystem(HeadlessScene& scene, float dt)
 {
 	//Transform
 	scene.ForEachComponent<comp::Transform, comp::Velocity>([&, dt](comp::Transform& transform, comp::Velocity& velocity)

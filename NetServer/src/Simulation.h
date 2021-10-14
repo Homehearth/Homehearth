@@ -1,5 +1,7 @@
 #pragma once
 #include "Server.h"
+#include "HeadlessEngine.h"
+
 /* 
 		Simulation defines each ongoing simulation from the perspective of the server
 		gameID identifies the simulation which each player has to give the server to keep track
@@ -9,13 +11,14 @@
 class Simulation
 {
 private:
-	Server* m_server;
+	Server* m_pServer;
+	HeadlessEngine* m_pEngine;
 	uint32_t m_gameID;
-	/*
-	TODO : Add scenes to incorporate ECS and a structure to update the simulation
-	*/
-	//Scene Lobby;
-	//Scene Game;
+	
+	HeadlessScene* m_pLobbyScene;
+	HeadlessScene* m_pGameScene;
+	HeadlessScene* m_pCurrentScene;
+	
 	std::unordered_map<uint32_t, entt::entity> m_players;
 	std::unordered_map<uint32_t, SOCKET> m_connections;
 
@@ -23,13 +26,19 @@ private:
 	bool RemovePlayer(uint32_t playerID);
 
 public:
-	Simulation(Server* server);
+	Simulation(Server* pServer, HeadlessEngine* pEngine);
 	virtual ~Simulation() = default;
 
 	bool JoinLobby(uint32_t playerID, uint32_t gameID);
-	bool CreateLobby(uint32_t playerID, uint32_t gameID);
-	void UpdatePlayer(const uint32_t& playerID, message<GameMsg>& msg);
+	bool Create(uint32_t playerID, uint32_t gameID);
+	void SendSnapshot();
+
+	void Update(float dt);
 
 	// -1 will be defaulted to max value of unsigned 32 bit integer
 	void Broadcast(network::message<GameMsg>& msg, uint32_t exclude = -1);
+
+	HeadlessScene* GetLobbyScene() const;
+	HeadlessScene* GetGameScene() const;
+
 };
