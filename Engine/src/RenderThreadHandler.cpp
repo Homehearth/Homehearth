@@ -305,7 +305,7 @@ void RenderMain(const unsigned int id)
 void RenderJob(const unsigned int start,
 	unsigned int stop, void* buffer, void* context)
 {
-	DoubleBuffer<std::vector<comp::Renderable>>* m_objects = (DoubleBuffer<std::vector<comp::Renderable>>*)thread::RenderThreadHandler::GetObjectsBuffer();
+	TripleBuffer<std::vector<comp::Renderable>>* m_objects = (TripleBuffer<std::vector<comp::Renderable>>*)thread::RenderThreadHandler::GetObjectsBuffer();
 	dx::ConstantBuffer<basic_model_matrix_t>* m_buffer = (dx::ConstantBuffer<basic_model_matrix_t>*)buffer;
 	ID3D11DeviceContext* m_context = (ID3D11DeviceContext*)context;
 	if (m_objects)
@@ -317,14 +317,14 @@ void RenderJob(const unsigned int start,
 		pass->PreRender(m_context);
 
 		// Make sure not to go out of range
-		if (stop > (unsigned int)(*m_objects)[1].size())
-			stop = (unsigned int)(*m_objects)[1].size();
+		if (stop > (unsigned int)(*m_objects)[2].size())
+			stop = (unsigned int)(*m_objects)[2].size();
 		
 		
 		// On Render
 		for (unsigned int i = start; i < stop; i++)
 		{
-			comp::Renderable* it = &(*m_objects)[1][i];
+			comp::Renderable* it = &(*m_objects)[2][i];
 			ID3D11Buffer* const buffers[1] =
 			{
 				m_buffer->GetBuffer()

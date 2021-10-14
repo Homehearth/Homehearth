@@ -36,6 +36,7 @@ void Renderer::Render(Scene* pScene)
     {    	
         if (!m_passes.empty())
         {
+            
             UpdatePerFrame();
             for (int i = 0; i < m_passes.size(); i++)
             {
@@ -48,7 +49,6 @@ void Renderer::Render(Scene* pScene)
                     pass->PostRender(); // args? currently does nothing.
                 }
             }
-
             pScene->ReadyForSwap();
         }
     }

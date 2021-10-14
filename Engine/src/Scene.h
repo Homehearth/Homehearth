@@ -12,7 +12,8 @@ private:
 	// Registry handles all ecs data
 	entt::registry m_registry;
 
-	DoubleBuffer<std::vector<comp::Renderable>> m_renderableCopies;
+	//DoubleBuffer<std::vector<comp::Renderable>> m_renderableCopies;
+	TripleBuffer<std::vector<comp::Renderable>> m_renderableCopies;
 	dx::ConstantBuffer<basic_model_matrix_t> m_publicBuffer;
 
 public:
@@ -46,10 +47,10 @@ public:
 	Camera* GetCamera();
 	std::shared_ptr<Camera> m_currentCamera;
 
-	DoubleBuffer<std::vector<comp::Renderable>>* GetBuffers();
+	//DoubleBuffer<std::vector<comp::Renderable>>* GetBuffers();
 	void ReadyForSwap();
 	
-	DoubleBuffer<std::vector<comp::Renderable>>* GetDoubleBuffers();
+	//DoubleBuffer<std::vector<comp::Renderable>>* GetDoubleBuffers();
 };
 
 template<typename ...Ts, typename F>

@@ -65,6 +65,7 @@ void Engine::Startup()
 	thread::RenderThreadHandler::Get().SetRenderer(&m_renderer);
 	thread::RenderThreadHandler::Get().SetWindow(&m_window);
 	thread::RenderThreadHandler::Get().Setup(T_REC - thread::MultiThreader::GetAmountOfThreads());
+	//thread::RenderThreadHandler::Get().Setup(14);
 
 	InputSystem::Get().SetMouseWindow(m_window.GetHWnd(), m_window.GetWidth(), m_window.GetHeight());
 
@@ -248,19 +249,16 @@ void Engine::RenderThread()
 {
 	double currentFrame = 0.f, lastFrame = omp_get_wtime();
 	float deltaTime = 0.f, deltaSum = 0.f;
-	const float targetDelta = 1 / 10000.0f; 	// Desired FPS
+	const float targetDelta = 1 / 144.0f; 	// Desired FPS
 	while (IsRunning())
 	{
 		currentFrame = omp_get_wtime();
 		deltaTime = static_cast<float>(currentFrame - lastFrame);
 		if (deltaSum >= targetDelta)
 		{
-			if (GetCurrentScene()->IsRenderReady() && rtd::Handler2D::Get().IsRenderReady())
-			{
-				Render(deltaSum);
-				m_frameTime.render = deltaSum;
-				deltaSum = 0.f;
-			}
+			Render(deltaSum);
+			m_frameTime.render = deltaSum;
+			deltaSum = 0.f;
 		}
 		deltaSum += deltaTime;
 		lastFrame = currentFrame;
@@ -293,9 +291,6 @@ void Engine::Update(float dt)
 	if (InputSystem::Get().CheckMouseKey(MouseKey::RIGHT, KeyState::PRESSED))
 	{
 		InputSystem::Get().SwitchMouseMode();
-
-		//if(rtd::Handler2D::Get().GetElement<rtd::Text>("welcome_text"))
-			//rtd::Handler2D::Get().GetElement<rtd::Text>("welcome_text")->Release();
 
 		LOG_INFO("Switched mouse Mode");
 	}
@@ -349,16 +344,16 @@ void Engine::Render(float& dt)
 
 	{
 		PROFILE_SCOPE("Render D2D1");
-		D2D1Core::Begin();
-		rtd::Handler2D::Get().Render();
-		D2D1Core::Present();
+		//D2D1Core::Begin();
+		//rtd::Handler2D::Get().Render();
+		//D2D1Core::Present();
 	}
 
 	
 
 	{
 		PROFILE_SCOPE("Present");
-		D3D11Core::Get().SwapChain()->Present(0, 0);
+		D3D11Core::Get().SwapChain()->Present(1, 0);
 	}
 
 

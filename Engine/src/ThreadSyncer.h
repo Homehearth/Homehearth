@@ -1,3 +1,4 @@
+#include "DoubleBuffer.h"
 #pragma once
 
 namespace thread
@@ -27,6 +28,8 @@ namespace thread
 	/*
 		Handles the triple buffering for the draw and update thread.
 	*/
+
+	/*
 	template<class T>
 	class TripleBuffer
 	{
@@ -43,37 +46,37 @@ namespace thread
 
 		/*
 			Allocate up spots for the buffers.
-		*/
+		
 		const bool AllocateBuffers();
 		/*
 			Copies the parameter buffer into indexed buffer spot.
 			If data was previously allocated to this buffer it will be deleted.
-		*/
+		
 		const bool SetUpBuffer(const int&& index, T&& p_buffer);
 		/*
 			Swap the buffer pointers between _first and _second
-		*/
+		
 		void SwapBuffers(const int&& _first, const int&& _second);
 
 		/*
 			Return a pointer to the buffer at indexed spot.
-		*/
+		
 		const bool GetBuffer(const int&& index, T ** p_pointer);
 
 		/*
 			Get the pointer to a buffer.
-		*/
+		
 		T* GetBufferUnSafe(const int&& index);
 
 		/*
 			Set the buffer at position index to the preallocated pointer address.
-		*/
+		
 		const bool SetPreAllocatedBuffer(const int&& index, T* p_pointer);
 	};
 
 	/*
 		Triplebuffer class functions
-	*/
+	
 	template<class T>
 	inline TripleBuffer<T>::TripleBuffer()
 	{
@@ -154,6 +157,8 @@ namespace thread
 
 		return true;
 	}
+
+	*/
 
 	/*
 	template <class T>

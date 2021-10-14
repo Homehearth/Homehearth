@@ -1,7 +1,6 @@
 #include "EnginePCH.h"
 #include "Scene.h"
 #include <omp.h>
-
 Scene::Scene()
 {	
 	m_publicBuffer.Create(D3D11Core::Get().Device());
@@ -24,7 +23,6 @@ void Scene::Update(float dt)
 
 	// Emit event
 	publish<ESceneUpdate>(dt);
-	if (!m_renderableCopies.IsSwapped())
 	{
 		PROFILE_SCOPE("Copy Transforms");
 		m_renderableCopies[0].clear();
@@ -33,17 +31,16 @@ void Scene::Update(float dt)
 			r.data.worldMatrix = ecs::GetMatrix(t);
 			m_renderableCopies[0].push_back(r);
 		});
-		
-		m_renderableCopies.Swap();
+
+		m_renderableCopies.Swap(0, 1);
 	}
 }
 
 void Scene::Render()
 {
 	PROFILE_FUNCTION();
-
 	// Divides up work between threads.
-	const render_instructions_t inst = thread::RenderThreadHandler::Get().Launch((unsigned int)m_renderableCopies[1].size());
+	const render_instructions_t inst = thread::RenderThreadHandler::Get().Launch((unsigned int)m_renderableCopies[2].size());
 	if((inst.start | inst.stop) == 0)
 	{
 		// Render everything on same thread.
@@ -54,7 +51,7 @@ void Scene::Render()
 
 		D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, buffers);
 		// System that renders Renderable component
-		for (const auto& it : m_renderableCopies[1])
+		for (const auto& it : m_renderableCopies[2])
 		{
 			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
 			it.model->Render();
@@ -72,7 +69,7 @@ void Scene::Render()
 		// System that renders Renderable component
 		for (int i = inst.start; i < inst.stop; i++)
 		{
-			const auto& it = m_renderableCopies[1][i];
+			const auto& it = m_renderableCopies[2][i];
 			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
 			it.model->Render();
 		}
@@ -85,22 +82,28 @@ void Scene::Render()
 	publish<ESceneRender>();
 }
 
+/*
 const bool Scene::IsRenderReady() const
 {
 	return m_renderableCopies.IsSwapped();
 }
+*/
 
 void Scene::ReadyForSwap()
 {
-	m_renderableCopies.ReadyForSwap();
+	if(m_renderableCopies.IsSwapped())
+	m_renderableCopies.Swap(1, 2);
 }
+
 
 Camera* Scene::GetCamera()
 {
 	return m_currentCamera.get();
 }
 
+/*
 DoubleBuffer<std::vector<comp::Renderable>>* Scene::GetBuffers()
 {
 	return &m_renderableCopies;
 }
+*/
