@@ -225,7 +225,7 @@ namespace network
 	{
 		if (tempMsgIn.header.size > sizeof(msg_header<T>))
 		{
-			if (tempMsgIn.header.size > 100)
+			if (tempMsgIn.header.size > 30000)
 			{
 				EnterCriticalSection(&lock);
 				LOG_ERROR("Allocating to much memory! THIS IS BAD");
