@@ -9,7 +9,7 @@ struct Light
     float4 direction;   //Only in use on Directional Lights
     float4 color;       //Color and Intensity of the Lamp
     float  range;       //Only in use on Point Lights
-    uint   type;        // 0 = Directional, 1 = Point
+    int    type;        // 0 = Directional, 1 = Point
     uint   enabled;     // 0 = Off, 1 = On
 };
 

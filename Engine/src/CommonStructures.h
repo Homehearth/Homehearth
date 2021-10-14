@@ -1,5 +1,11 @@
 #pragma once
 
+enum class TypeLight
+{
+	DIRECTIONAL,
+	POINT
+};
+
 struct Ray_t
 {
 	sm::Vector3 rayPos, rayDir;
@@ -56,6 +62,6 @@ struct light_t
 	sm::Vector4 direction	= {};	//Only in use on Directional Lights
 	sm::Vector4 color		= {};	//Color and Intensity of the Lamp
 	float		range		= 0;	//Only in use on Point Lights
-	UINT		type		= 0;	// 0 = Directional, 1 = Point
+	int	type		= 0;	// 0 = Directional, 1 = Point
 	UINT		enabled		= 0;	// 0 = Off, 1 = On
 };

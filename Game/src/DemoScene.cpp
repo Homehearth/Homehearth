@@ -10,7 +10,6 @@ DemoScene::DemoScene(Engine& engine, Client& client, uint32_t* playerID, uint32_
 	//Initialize player entity
 	m_player = CreatePlayerEntity();
 	SetUpCamera();
-	m_lights.Initialize();
 	
 
 
@@ -56,7 +55,6 @@ DemoScene::DemoScene(Engine& engine, Client& client, uint32_t* playerID, uint32_
 
 			GameSystems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(scene);
 			GameSystems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingSphere>(scene);
-			m_lights.Render();
 		});
 
 	//On collision event add entitys as pair in the collision system

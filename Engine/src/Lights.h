@@ -6,12 +6,6 @@ struct light_info_t
 	dx::XMFLOAT4 nrOfLights;
 };
 
-enum class LIGHTTYPE
-{
-	DIRECTIONAL,
-	POINT
-};
-
 class Lights
 {
 private:

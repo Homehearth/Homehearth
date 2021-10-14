@@ -83,7 +83,7 @@ bool Lights::Initialize()
     L.color = sm::Vector4(300.f, 300.f, 300.f, 300.f);
     L.range = 75.f;
     L.enabled = 1;
-    L.type = 1;
+    L.type = 0;
 
     m_lights.push_back(L);
 
@@ -92,15 +92,12 @@ bool Lights::Initialize()
     if (!SetupInfoBuffer())
         return false;
 
-
     return true;
 }
 
 void Lights::Render()
 {
-    SetupLightBuffer();
-    SetupInfoBuffer();
-    UpdateInfoBuffer();
+    //UpdateInfoBuffer();
     D3D11Core::Get().DeviceContext()->PSSetConstantBuffers(3, 1, &m_lightInfoBuffer);
     D3D11Core::Get().DeviceContext()->PSSetShaderResources(7, 1, &m_lightShaderView);
 }
