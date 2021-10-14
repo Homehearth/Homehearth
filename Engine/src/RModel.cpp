@@ -11,6 +11,11 @@ RModel::~RModel()
     m_meshes.clear();
 }
 
+const std::vector<light_t>& RModel::GetLights() const
+{
+    return m_lights;
+}
+
 bool RModel::ChangeMaterial(const std::string& mtlfile)
 {
     const std::string filepath = MATERIALPATH + mtlfile;
@@ -154,7 +159,7 @@ bool RModel::CombineMeshes(std::vector<aiMesh*>& submeshes, submesh_t& submesh)
         !CreateIndexBuffer(indices, submesh))
     {
 #ifdef _DEBUG
-        LOG_WARNING("Failed to load vertex- or indexbuffer...");
+        LOG_ERROR("Failed to load vertex- or indexbuffer...");
 #endif
         success = false;
     }
@@ -209,6 +214,60 @@ bool RModel::CreateIndexBuffer(const std::vector<UINT>& indices, submesh_t& mesh
     mesh.indexCount = (UINT)indices.size();
     HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&indexBufferDesc, &subresData, mesh.indexBuffer.GetAddressOf());
     return !FAILED(hr);
+}
+
+void RModel::LoadLights(const aiScene* scene)
+{
+    for (UINT i = 0; i < scene->mNumLights; i++)
+    {
+        const aiLight* ailight = scene->mLights[i];
+        light_t light;
+
+        aiVector3D aiRot, aiScl, aiPos;
+        scene->mRootNode->FindNode(ailight->mName)->mTransformation.Decompose(aiScl, aiRot, aiPos);
+        light.position  = { aiPos.x + ailight->mPosition.x, aiPos.y + ailight->mPosition.y, aiPos.z + ailight->mPosition.z, 0.0f };
+        light.direction = { ailight->mDirection.x,          ailight->mDirection.y,          ailight->mDirection.z,          0.0f };
+        light.color     = { ailight->mColorDiffuse.r,       ailight->mColorDiffuse.g,       ailight->mColorDiffuse.b,       0.0f };
+
+        if (ailight->mType == aiLightSourceType::aiLightSource_POINT)
+        {
+            light.type = 1;
+            light.attenuation = ailight->mAttenuationQuadratic;
+        }
+        else if (ailight->mType == aiLightSourceType::aiLightSource_DIRECTIONAL)
+        {
+            light.type = 0;
+            light.attenuation = ailight->mAttenuationConstant;
+        }
+        light.enabled = true;
+        m_lights.push_back(light);
+    }
+    m_lights.shrink_to_fit();
+}
+
+void RModel::LoadMaterial(const aiScene* scene, const UINT& matIndex, bool& useMTL, submesh_t& inoutMesh) const
+{
+    //Get name of the material
+    aiString matName;
+    scene->mMaterials[matIndex]->Get(AI_MATKEY_NAME, matName);
+
+    //Check if the material exists
+    std::shared_ptr<RMaterial> material = ResourceManager::Get().GetResource<RMaterial>(matName.C_Str(), false);
+    if (!material)
+    {
+        material = std::make_shared<RMaterial>();
+        //Add the material to the resourcemanager if it was successfully created
+        if (material->Create(scene->mMaterials[matIndex], useMTL))
+        {
+            ResourceManager::Get().AddResource(matName.C_Str(), material);
+            inoutMesh.material = material;
+        }
+        //Else - failed an therefore we shall not link it to the submesh
+    }
+    else
+    {
+        inoutMesh.material = material;
+    }
 }
 
 void RModel::Render() const
@@ -275,7 +334,7 @@ bool RModel::Create(const std::string& filename)
     }
 
     /*
-        The model has to have meshes and materials for this to work
+        The model has to have meshes for this to work
     */
     if (!scene->HasMeshes())
     {
@@ -285,27 +344,23 @@ bool RModel::Create(const std::string& filename)
         importer.FreeScene();
         return false;
     }
-    if (!scene->HasMaterials())
-    {
-#ifdef _DEBUG
-        LOG_WARNING("The model has no materials...");
-#endif 
-        importer.FreeScene();
-        return false;
-    }
 
-    std::string fileformat = GetFileFormat(filename);
+    LoadLights(scene);
 
     /*
-        Links together a material to multiple submeshes
+        Links together a material to multiple submeshes - a set
     */
     std::unordered_map<UINT, std::vector<aiMesh*>> matSet;
-    //Creating all the sets
     for (UINT i = 0; i < scene->mNumMeshes; i++)
     {
         UINT matIndex = scene->mMeshes[i]->mMaterialIndex;
         matSet[matIndex].push_back(scene->mMeshes[i]);
     }
+
+    //.fbx uses default material, and .obj uses mtl
+    bool useMTL = false;
+    if (GetFileFormat(filename) == ".obj")
+        useMTL = true;
 
     /*
         Loads in each material and then combine
@@ -313,23 +368,10 @@ bool RModel::Create(const std::string& filename)
     */
     for (auto& mat : matSet)
     {
-        UINT matIndex = mat.first;
-        //Get name of the material
-        aiString matName;
-        scene->mMaterials[matIndex]->Get(AI_MATKEY_NAME, matName);
-
-        //Load in the materials
-        std::shared_ptr<RMaterial> material = std::make_shared<RMaterial>();
-        if (!material->Create(scene->mMaterials[matIndex], fileformat))
-        {
-            importer.FreeScene();
-            return false;
-        }
-
-        //Add the material
-        ResourceManager::Get().AddResource(matName.C_Str(), material);
         submesh_t submesh;
-        submesh.material = material;
+        
+        //Load in the material at index and with mtl-format or default
+        LoadMaterial(scene, mat.first, useMTL, submesh);
 
         /*
             Load in vertex- and index-data and combines all the meshes in a set to one
@@ -343,8 +385,10 @@ bool RModel::Create(const std::string& filename)
         //Add the submesh to the vector
         m_meshes.push_back(submesh);
     }
+    m_meshes.shrink_to_fit();
 
-    matSet.clear(); 
+    //Freeing memory
+    matSet.clear();
     importer.FreeScene();
     return true;
 }

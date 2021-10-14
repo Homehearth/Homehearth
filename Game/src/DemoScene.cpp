@@ -113,19 +113,23 @@ void DemoScene::CameraUpdate(float deltaTime)
 
 Entity DemoScene::CreatePlayerEntity()
 {
+	//Player
 	Entity playerEntity = m_scene.CreateEntity();
 	playerEntity.AddComponent<comp::Transform>();
+	
 	comp::BoundingOrientedBox* playerObb = playerEntity.AddComponent<comp::BoundingOrientedBox>();
 	playerObb->Extents = sm::Vector3{ 1.f,1.f,1.f };
-	comp::Velocity* playeerVelocity = playerEntity.AddComponent<comp::Velocity>();
-	comp::RenderableDebug* renderable = playerEntity.AddComponent<comp::RenderableDebug>();
-	playerEntity.AddComponent<comp::Player>()->runSpeed = 10.f;
-	
-	renderable->model = ResourceManager::Get().GetResource<RModel>("cube.obj");
 
+	comp::Renderable* renderable = playerEntity.AddComponent<comp::Renderable>();
+	renderable->model = ResourceManager::Get().GetResource<RModel>("Cube.obj");
+
+	playerEntity.AddComponent<comp::Player>()->runSpeed = 10.f;
+
+	comp::Velocity* playeerVelocity = playerEntity.AddComponent<comp::Velocity>();
 	m_gameCamera.SetFollowVelocity(playeerVelocity);
 
 
+	//Second object
 	this->m_chest = m_scene.CreateEntity();
 	comp::Transform* transform = m_chest.AddComponent<comp::Transform>();
 	transform->position.z = 5;

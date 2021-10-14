@@ -88,6 +88,7 @@ private:
 private:
 	//Split the path to only get the filename
 	const std::string GetFilename(const std::string& path) const;
+	bool LoadTexture(const ETextureType& type, const std::string& filename);
 	bool CreateConstBuf(const matConstants_t& mat);
 	bool CreateConstBuf(const properties_t& mat);
 
@@ -104,7 +105,7 @@ public:
 	bool HasTexture(const ETextureType& type) const;
 
 	//Loaded from assimp
-	bool Create(aiMaterial* aiMat, const std::string& fileformat);
+	bool Create(aiMaterial* aiMat, bool& useMTL);
 
 	//Load a part of a mtl-file. Text = "newmtl ..."
 	bool CreateFromMTL(std::string& text);
