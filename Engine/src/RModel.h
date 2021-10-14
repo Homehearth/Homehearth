@@ -53,6 +53,7 @@ private:
 	bool CreateVertexBuffer(const std::vector<simple_vertex_t>& vertices, submesh_t& mesh);
 	bool CreateIndexBuffer(const std::vector<UINT>& indices, submesh_t& mesh);
 
+	//Loading data from assimp
 	void LoadLights(const aiScene* scene);
 	void LoadMaterial(const aiScene* scene, const UINT& matIndex, bool& useMTL, submesh_t& inoutMesh) const;
 
