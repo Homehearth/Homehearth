@@ -39,8 +39,10 @@ void Game::UpdateNetwork(float deltaTime)
 		{
 			message<GameMsg> msg;
 			msg.header.id = GameMsg::Game_MovePlayer;
-			int x = InputSystem::Get().GetAxis(Axis::HORIZONTAL);
-			int y = InputSystem::Get().GetAxis(Axis::VERTICAL);
+			int8_t x = InputSystem::Get().GetAxis(Axis::HORIZONTAL);
+			int8_t y = InputSystem::Get().GetAxis(Axis::VERTICAL);
+
+
 			msg << this->m_localPID << m_gameID << x << y;
 
 			m_client.Send(msg);
@@ -87,9 +89,7 @@ bool Game::OnStartup()
 
 		});
 
-//	SetScene(mainMenuScene);
-	SetScene("MainMenu");
-
+	SetScene(mainMenuScene);
 	
 	return true;
 }
@@ -190,12 +190,13 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 
 		for (uint32_t i = 0; i < count; i++)
 		{
-			uint32_t playerID;
+			uint32_t entityID;
 			comp::Transform t;
-			msg >> playerID >> t;
-			transforms[playerID] = t;
+			msg >> entityID >> t;
+			transforms[entityID] = t;
 		}
 		// TODO MAKE BETTER
+		// Update entities with new transforms
 		m_demoScene->GetScene().ForEachComponent<comp::Network, comp::Transform>([&](comp::Network& n, comp::Transform& t)
 			{
 				if (transforms.find(n.id) != transforms.end())
@@ -204,12 +205,18 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 					found.insert(n.id);
 				}
 			});
-
+		// create new Entities
 		for (const auto& t : transforms) {
 			if (found.find(t.first) == found.end())
 			{
 				Entity e = this->m_demoScene->CreatePlayerEntity(t.first);
 				*e.GetComponent<comp::Transform>() = t.second;
+				
+				if (this->m_gameID == (uint32_t)-1 && m_localPID == t.first)
+				{
+					m_demoScene->InitializeGameCam();
+					m_demoScene->m_gameCamera.SetFollowVelocity(e.GetComponent<comp::Velocity>());
+				}
 			}
 		}
 

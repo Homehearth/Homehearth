@@ -28,16 +28,17 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 	this->m_gameID = gameID;
 	// Create Scenes associated with this Simulation
 	m_pLobbyScene = &m_pEngine->GetScene("Lobby_" + std::to_string(gameID));
-	m_pLobbyScene->on<ESceneUpdate>([gameID](const ESceneUpdate& e, HeadlessScene& scene) 
+	m_pLobbyScene->on<ESceneUpdate>([=](const ESceneUpdate& e, HeadlessScene& scene) 
 		{
-			LOG_INFO("LOBBY Scene %d", gameID);
+			//LOG_INFO("LOBBY Scene %d", gameID);
+
 		});
 
 	m_pGameScene = &m_pEngine->GetScene("Game_" + std::to_string(gameID));
-	m_pGameScene->on<ESceneUpdate>([&](const ESceneUpdate& e, HeadlessScene& scene)
+	m_pGameScene->on<ESceneUpdate>([=](const ESceneUpdate& e, HeadlessScene& scene)
 		{
 			Systems::MovementSystem(scene, e.dt);
-			LOG_INFO("GAME Scene %d", gameID);
+			//LOG_INFO("GAME Scene %d", m_gameID);
 		});
 
 	m_pCurrentScene = m_pGameScene; // todo temp
@@ -89,9 +90,7 @@ bool Simulation::RemovePlayer(uint32_t playerID)
 			if (n.id == playerID)
 			{
 				e.Destroy();
-				return false;
 			}
-			return true;
 		});
 
 	m_pGameScene->ForEachComponent<comp::Network>([playerID](Entity e, comp::Network& n)

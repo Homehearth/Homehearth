@@ -125,8 +125,8 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 	}
 	case GameMsg::Game_MovePlayer:
 	{
-		int x;
-		int y;
+		int8_t x;
+		int8_t y;
 		uint32_t playerID;
 		uint32_t gameID;
 

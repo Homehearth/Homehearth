@@ -21,21 +21,12 @@ DemoScene::DemoScene(Engine& engine)
 	m_scene.on<ESceneUpdate>([&](const ESceneUpdate& e, HeadlessScene& scene)
 		{
 			//System responding to user input
-			GameSystems::MRayIntersectBoxSystem(m_scene);
+			//GameSystems::MRayIntersectBoxSystem(m_scene);
 
-			int ver = InputSystem::Get().GetAxis(Axis::VERTICAL);
-			int hor = InputSystem::Get().GetAxis(Axis::HORIZONTAL);
-
-			if (m_scene.GetCurrentCamera()->GetCameraType() == CAMERATYPE::PLAY)
-			{
-				Systems::MovementSystem(m_scene, e.dt);
-			}
 			m_scene.GetCurrentCamera()->Update(e.dt);
 
-			GameSystems::MRayIntersectBoxSystem(m_scene);
-
-			GameSystems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(m_scene);
-			GameSystems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingSphere>(m_scene);
+			//GameSystems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(m_scene);
+			//GameSystems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingSphere>(m_scene);
 			this->CheckIfSwappedCamera();
 		});
 
