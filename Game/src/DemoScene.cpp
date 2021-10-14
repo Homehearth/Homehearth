@@ -136,7 +136,7 @@ Entity DemoScene::CreatePlayerEntity()
 	obb->Radius = 2.0f;
 	comp::Renderable* renderable2 = m_chest.AddComponent<comp::Renderable>();
 
-	renderable2->model = ResourceManager::Get().GetResource<RModel>("Tree2.obj");
+	renderable2->model = ResourceManager::Get().GetResource<RModel>("Chest.obj");
 
 	return playerEntity;
 }
