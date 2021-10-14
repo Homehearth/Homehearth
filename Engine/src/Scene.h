@@ -8,6 +8,7 @@ private:
 	DoubleBuffer<std::vector<comp::Renderable>> m_renderableCopies;
 	dx::ConstantBuffer<basic_model_matrix_t> m_publicBuffer;
 	Camera* m_currentCamera;
+	Camera m_defaultCamera;
 public:
 	Scene();
 
