@@ -42,7 +42,10 @@ void Scene::Update(float dt)
 		m_debugRenderableCopies[0].clear();
 		m_registry.view<comp::RenderableDebug, comp::Transform>().each([&](comp::RenderableDebug& r, comp::Transform& t)
 			{
-				r.data.worldMatrix = ecs::GetMatrix(t);
+				sm::Matrix mat = sm::Matrix::CreateScale(r.scale);
+				mat *= sm::Matrix::CreateWorld(t.position, ecs::GetForward(t), ecs::GetUp(t));
+			
+				r.data.worldMatrix = mat;
 				m_debugRenderableCopies[0].push_back(r);
 			});
 		
