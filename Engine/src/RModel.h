@@ -2,10 +2,11 @@
 #include "CommonStructures.h"
 #include "RMaterial.h"
 struct aiMesh;
+struct aiScene;
 
 /*
 	Load in a model/scene of multiple meshes with Assimp 5.0.1
-	Format supported:
+	Formats supported:
 	* FBX
 	* OBJ
 
@@ -15,6 +16,8 @@ struct aiMesh;
 
 	The model can change material to any other mtl-file.
 	Order in the mtl-file is important.
+
+	Can load in lights from the FBX-format.
 
 	TODO:
 	* Fix loading in bones
@@ -32,6 +35,7 @@ private:
 		std::shared_ptr<RMaterial>		material;
 	};
 	std::vector<submesh_t>				m_meshes;
+	std::vector<light_t>				m_lights;
 	
 	//Save the skeleton in a structure: rootbone --> other parts
 
@@ -49,9 +53,16 @@ private:
 	bool CreateVertexBuffer(const std::vector<simple_vertex_t>& vertices, submesh_t& mesh);
 	bool CreateIndexBuffer(const std::vector<UINT>& indices, submesh_t& mesh);
 
+	//Loading data from assimp
+	void LoadLights(const aiScene* scene);
+	void LoadMaterial(const aiScene* scene, const UINT& matIndex, bool& useMTL, submesh_t& inoutMesh) const;
+
 public:
 	RModel();
 	~RModel();
+
+	//Get the vector of lights
+	const std::vector<light_t>& GetLights() const;
 
 	/*
 		Change the material to other. Uses a mtlfile.
@@ -66,6 +77,7 @@ public:
 		Render all of the submeshes in the RModel with correct material
 	*/
 	void Render() const;
+	void RenderDeferred(ID3D11DeviceContext* context);
 
 	// Inherited via GResource
 	virtual bool Create(const std::string& filename) override;

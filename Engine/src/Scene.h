@@ -23,4 +23,7 @@ public:
 	void SetCurrentCamera(Camera* pCamera);
 
 	DoubleBuffer<std::vector<comp::Renderable>>* GetBuffers();
+	void ReadyForSwap();
+	
+	DoubleBuffer<std::vector<comp::Renderable>>* GetDoubleBuffers();
 };

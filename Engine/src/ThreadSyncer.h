@@ -155,6 +155,7 @@ namespace thread
 		return true;
 	}
 
+	/*
 	template <class T>
 	class DoubleBuffer
 	{
@@ -169,29 +170,14 @@ namespace thread
 		DoubleBuffer();
 		~DoubleBuffer();
 
-		/*
-			Allocate memory for the buffers.
-		*/
 		const bool AllocateBuffers();
-		/*
-			Get the buffer at index spot.
-		*/
+
 		T* GetBuffer(const int&& index);
 
-		/*
-			Swap the position of the two buffers.
-		*/
 		const bool SwapBuffers();
 
-		/*
-			CheckCollisions if the buffers are swapped.
-			True if it is, False if not.
-		*/
 		const bool IsSwapped();
 
-		/*
-		* Set m_isSwapped to false.
-		*/
 		void ReadySwap();
 	};
 
@@ -253,4 +239,5 @@ namespace thread
 	{
 		m_isSwapped = false;
 	}
+	*/
 }

@@ -1,10 +1,12 @@
 #include "EnginePCH.h"
 #include "Scene.h"
+#include <omp.h>
 
 Scene::Scene()
 	: m_currentCamera(nullptr)
 {	
 	m_publicBuffer.Create(D3D11Core::Get().Device());
+	thread::RenderThreadHandler::Get().SetObjectsBuffer(&m_renderableCopies);
 }
 
 void Scene::Update(float dt)
@@ -28,29 +30,51 @@ void Scene::Update(float dt)
 	}
 }
 
-void Scene::Render() 
+void Scene::Render()
 {
 	PROFILE_FUNCTION();
 
-	// System that renders Renderable component
-
-	ID3D11Buffer* buffers[1] =
+	// Divides up work between threads.
+	const render_instructions_t inst = thread::RenderThreadHandler::Get().Launch(m_renderableCopies[1].size());
+	if((inst.start | inst.stop) == 0)
 	{
-		m_publicBuffer.GetBuffer()
-	};
+		// Render everything on same thread.
+		ID3D11Buffer* const buffers[1] =
+		{
+			m_publicBuffer.GetBuffer()
+		};
 
-	D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, buffers);
-	for (const auto& it : m_renderableCopies[1])
-	{
-		m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
-		if (it.model)
-			it.model->Render();	
+		D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, buffers);
+		// System that renders Renderable component
+		for (const auto& it : m_renderableCopies[1])
+		{
+			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
+			it.model->Render();
+		}
 	}
-	
+	else
+	{
+		// Render third part of the scene with immediate context
+		ID3D11Buffer* const buffers[1] =
+		{
+			m_publicBuffer.GetBuffer()
+		};
+
+		D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, buffers);
+		// System that renders Renderable component
+		for (int i = inst.start; i < inst.stop; i++)
+		{
+			const auto& it = m_renderableCopies[1][i];
+			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
+			it.model->Render();
+		}
+	}
+
+	// Run any available Command lists from worker threads.
+	thread::RenderThreadHandler::ExecuteCommandLists();
+
 	// Emit event
 	publish<ESceneRender>();
-
-	m_renderableCopies.ReadyForSwap();
 }
 
 const bool Scene::IsRenderReady() const
@@ -58,9 +82,9 @@ const bool Scene::IsRenderReady() const
 	return m_renderableCopies.IsSwapped();
 }
 
-Camera* Scene::GetCurrentCamera() const
+void Scene::ReadyForSwap()
 {
-	return m_currentCamera;
+	m_renderableCopies.ReadyForSwap();
 }
 
 void Scene::SetCurrentCamera(Camera* pCamera)
