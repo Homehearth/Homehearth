@@ -38,6 +38,15 @@ void Renderer::Render(Scene* pScene)
     {    	
         if (!m_passes.empty())
         {
+            if(*pScene->GetIsRenderingColliders())
+            {
+                m_debugPass.SetEnable(true);
+            }
+            else
+            {
+                m_debugPass.SetEnable(false);
+            }
+        	
             UpdatePerFrame();
             for (int i = 0; i < m_passes.size(); i++)
             {

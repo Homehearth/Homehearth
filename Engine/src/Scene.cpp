@@ -4,6 +4,7 @@
 
 Scene::Scene()
 {
+	m_IsRenderingColliders = true;
 	m_publicBuffer.Create(D3D11Core::Get().Device());
 	thread::RenderThreadHandler::Get().SetObjectsBuffer(&m_renderableCopies);
 }
@@ -139,6 +140,11 @@ void Scene::ReadyForSwap()
 Camera* Scene::GetCamera()
 {
 	return m_currentCamera.get();
+}
+
+bool* Scene::GetIsRenderingColliders()
+{
+	return &m_IsRenderingColliders;
 }
 
 DoubleBuffer<std::vector<comp::Renderable>>* Scene::GetBuffers()

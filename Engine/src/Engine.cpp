@@ -242,6 +242,14 @@ void Engine::drawImGUI() const
 		ImGui::Spacing();
 	};
 	ImGui::End();
+
+
+	ImGui::Begin("Render Pass");
+	{
+		ImGui::Checkbox("RenderColliders", GetCurrentScene()->GetIsRenderingColliders());
+	};
+	ImGui::End();
+	
 }
 
 void Engine::RenderThread()

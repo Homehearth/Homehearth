@@ -11,7 +11,8 @@ private:
 
 	// Registry handles all ecs data
 	entt::registry m_registry;
-
+	bool m_IsRenderingColliders;
+	
 	DoubleBuffer<std::vector<comp::Renderable>> m_renderableCopies;
 	dx::ConstantBuffer<basic_model_matrix_t> m_publicBuffer;
 	//Debug renderables
@@ -45,9 +46,13 @@ public:
 
 	const bool IsRenderReady() const;
 	const bool IsRenderDebugReady() const;
+	
 	Camera* GetCamera();
 	std::shared_ptr<Camera> m_currentCamera;
 
+	//ImGui data for disable/enable 
+	bool* GetIsRenderingColliders();
+	
 	DoubleBuffer<std::vector<comp::Renderable>>* GetBuffers();
 	DoubleBuffer<std::vector<comp::RenderableDebug>>* GetDebugBuffers();
 	void ReadyForSwap();
