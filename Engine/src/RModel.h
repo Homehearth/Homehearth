@@ -3,6 +3,7 @@
 #include "RMaterial.h"
 struct aiMesh;
 struct aiScene;
+struct aiNode;
 
 /*
 	Load in a model/scene of multiple meshes with Assimp 5.0.1
@@ -26,7 +27,9 @@ struct aiScene;
 class RModel : public resource::GResource
 {
 private:
-	//Each submesh has some data
+	/*
+		Default data for model 
+	*/
 	struct submesh_t
 	{
 		ComPtr<ID3D11Buffer>			vertexBuffer;
@@ -37,7 +40,31 @@ private:
 	std::vector<submesh_t>				m_meshes;
 	std::vector<light_t>				m_lights;
 	
-	//Save the skeleton in a structure: rootbone --> other parts
+	/*
+		Model that has skeleton
+	*/
+	bool								m_hasSkeleton;
+	struct bone_t
+	{
+		std::string name		= "";
+		sm::Matrix	inverseBind = {};
+		UINT		parentIndex = 0;
+	};
+	std::vector<bone_t>					m_allBones;
+
+	/*
+	Read from bones when doing update
+	for (i = 0; i < bones.size(); i++)
+		if (parent == -1)
+			modelMatrix[i] = local;
+		else
+			modelMatrix[i] = modelMatrix[parent] * local;
+		
+		finalMatrix[i] = modelMatrix[i] * bones[i].inverse;
+	*/
+
+	//Need to have different vertexshaders for default or skeletal 
+	//std::shared_ptr<Shaders::VertexShader> m_vertexShader;	//Get from the resourcemanager
 
 private:
 	//Get the end of file. Searches for "."
@@ -47,9 +74,10 @@ private:
 		Combines multiple submeshes that uses the same material to one.
 		This is to avoid to many drawcalls per RModel.
 	*/
-	bool CombineMeshes(std::vector<aiMesh*>& submeshes, submesh_t& submesh);
+	bool CombineMeshes(std::vector<aiMesh*>& submeshes, const aiNode* root, submesh_t& submesh);
 
 	//Creating buffers
+	bool CreateVertexBuffer(const std::vector<anim_vertex_t>&	vertices, submesh_t& mesh);
 	bool CreateVertexBuffer(const std::vector<simple_vertex_t>& vertices, submesh_t& mesh);
 	bool CreateIndexBuffer(const std::vector<UINT>& indices, submesh_t& mesh);
 
@@ -60,6 +88,9 @@ private:
 public:
 	RModel();
 	~RModel();
+
+	//Get function to check if the model has loaded in any bones
+	bool HasSkeleton() const;
 
 	//Get the vector of lights
 	const std::vector<light_t>& GetLights() const;

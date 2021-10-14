@@ -7,6 +7,7 @@ Texture2D T_metalness : register(t3);
 Texture2D T_roughness : register(t4);
 Texture2D T_aomap     : register(t5);
 Texture2D T_displace  : register(t6);
+Texture2D T_opacity   : register(t7);
 
 SamplerState LinearSampler : register(s0); 
 SamplerState PointSampler : register(s1);
@@ -42,6 +43,7 @@ cbuffer properties_t : register(b2)
     int c_hasRoughness;
     int c_hasAoMap;
     int c_hasDisplace;
+    int c_hasOpacity;
 };
 
 float4 main(PixelIn input) : SV_TARGET

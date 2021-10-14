@@ -4,11 +4,17 @@
 
 RModel::RModel()
 {
+    m_hasSkeleton = false;
 }
 
 RModel::~RModel()
 {
     m_meshes.clear();
+}
+
+bool RModel::HasSkeleton() const
+{
+    return m_hasSkeleton;
 }
 
 const std::vector<light_t>& RModel::GetLights() const
@@ -103,9 +109,10 @@ const std::string RModel::GetFileFormat(const std::string& filename) const
     return filename.substr(startIndex);
 }
 
-bool RModel::CombineMeshes(std::vector<aiMesh*>& submeshes, submesh_t& submesh)
+bool RModel::CombineMeshes(std::vector<aiMesh*>& submeshes, const aiNode* root, submesh_t& submesh)
 {
-    std::vector<simple_vertex_t> vertices;
+    std::vector<simple_vertex_t> simpleVertices;
+    std::vector<anim_vertex_t> skeletonVertices;
     std::vector<UINT> indices;
     //Offset when moving between different submeshes
     UINT indexOffset = 0;
@@ -124,9 +131,9 @@ bool RModel::CombineMeshes(std::vector<aiMesh*>& submeshes, submesh_t& submesh)
             vert.normal     = { aimesh->mNormals[v].x,          aimesh->mNormals[v].y,        aimesh->mNormals[v].z     };
             vert.tangent    = { aimesh->mTangents[v].x,         aimesh->mTangents[v].y,       aimesh->mTangents[v].z    };
             vert.bitanget   = { aimesh->mBitangents[v].x,       aimesh->mBitangents[v].y,     aimesh->mBitangents[v].z  };
-            vertices.push_back(vert);
+            simpleVertices.push_back(vert);
         }
-
+        
         //Max index so that we know how much to step to reach next vertices-set
         UINT localMaxIndex = 0;
         //Going through all the indices
@@ -147,33 +154,113 @@ bool RModel::CombineMeshes(std::vector<aiMesh*>& submeshes, submesh_t& submesh)
         }
         //Adding to the offset
         indexOffset += (localMaxIndex+1);
+
+        if (aimesh->HasBones())
+        {
+            m_hasSkeleton = true;
+            
+            //Save down the bones temporarly
+            //std::unordered_map<std::string, std::pair<UINT, sm::Matrix>> tempBoneMap;
+
+            //Load the tempary map of the bones
+            //animVertices.push_back()
+
+            std::unordered_map<std::string, UINT> nameToIndex;
+
+            //Go through all the bones
+            for (UINT b = 0; b < aimesh->mNumBones; b++)
+            {
+                const aiBone* aibone = aimesh->mBones[b];
+                nameToIndex[aibone->mName.C_Str()] = b;
+                
+                //Load the temp bonemap with index (same as ID) and matrices 
+                /*tempBoneMap[aibone->mName.C_Str()] = { b, sm::Matrix(&aibone->mOffsetMatrix.a1) };
+                this->boneMap[bone->mName.C_Str()] = i;
+                this->boneNames.push_back(bone->mName.C_Str());*/
+                
+                //Load all the weights and indices?
+
+
+                //Create the bone and find the parent index
+                bone_t bone;
+                bone.name = aibone->mName.C_Str();
+                bone.inverseBind = sm::Matrix(&aibone->mOffsetMatrix.a1);
+                std::string parentName = root->FindNode(bone.name.c_str())->mParent->mName.C_Str();
+                if (!parentName.empty())
+                    bone.parentIndex = nameToIndex[parentName];
+                m_allBones.push_back(bone);
+            }
+        }
+
     }
 
     //Have to shrink the vectors
-    vertices.shrink_to_fit();
+    simpleVertices.shrink_to_fit();
+    skeletonVertices.shrink_to_fit();
     indices.shrink_to_fit();
 
-    //Create vertex and indexbuffer
-    bool success = true;
-    if (!CreateVertexBuffer(vertices, submesh) ||
-        !CreateIndexBuffer(indices, submesh))
+    /*
+        Creating buffers
+    */
+    if (!CreateIndexBuffer(indices, submesh))
     {
 #ifdef _DEBUG
-        LOG_ERROR("Failed to load vertex- or indexbuffer...");
+        LOG_ERROR("Failed to create indexbuffer...");
 #endif
-        success = false;
+        return false;
     }
-
-    //Cleaning
-    vertices.clear();
     indices.clear();
-    return success;
+
+    //We have bones - then create vertexbuffer with that structure
+    if (m_hasSkeleton)
+    {
+        if (!CreateVertexBuffer(skeletonVertices, submesh))
+        {
+#ifdef _DEBUG
+            LOG_ERROR("Failed to create vertexbuffer for skeleton...");
+#endif
+            return false;
+        }
+    }
+    else
+    {
+        if (!CreateVertexBuffer(simpleVertices, submesh))
+        {
+#ifdef _DEBUG
+            LOG_ERROR("Failed to create vertexbuffer...");
+#endif
+            return false;
+        }
+    }
+    simpleVertices.clear();
+    skeletonVertices.clear();
+    return true;
+}
+
+bool RModel::CreateVertexBuffer(const std::vector<anim_vertex_t>& vertices, submesh_t& mesh)
+{
+    D3D11_BUFFER_DESC bufferDesc = {};
+
+    bufferDesc.ByteWidth = static_cast<UINT>(sizeof(anim_vertex_t) * vertices.size());
+    bufferDesc.Usage = D3D11_USAGE::D3D11_USAGE_DEFAULT;
+    bufferDesc.BindFlags = D3D11_BIND_FLAG::D3D11_BIND_VERTEX_BUFFER;
+    bufferDesc.CPUAccessFlags = 0;
+    bufferDesc.MiscFlags = 0;
+    bufferDesc.StructureByteStride = 0;
+
+    D3D11_SUBRESOURCE_DATA subresData = {};
+
+    subresData.pSysMem = &vertices[0];
+    subresData.SysMemPitch = 0;
+    subresData.SysMemSlicePitch = 0;
+
+    HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&bufferDesc, &subresData, mesh.vertexBuffer.GetAddressOf());
+    return !FAILED(hr);
 }
 
 bool RModel::CreateVertexBuffer(const std::vector<simple_vertex_t>& vertices, submesh_t& mesh)
 {
-    D3D11_BUFFER_DESC bufferDesc;
-    ZeroMemory(&bufferDesc, sizeof(D3D11_BUFFER_DESC));
+    D3D11_BUFFER_DESC bufferDesc = {};
 
     bufferDesc.ByteWidth = static_cast<UINT>(sizeof(simple_vertex_t) * vertices.size());
     bufferDesc.Usage = D3D11_USAGE::D3D11_USAGE_DEFAULT;
@@ -182,8 +269,7 @@ bool RModel::CreateVertexBuffer(const std::vector<simple_vertex_t>& vertices, su
     bufferDesc.MiscFlags = 0;
     bufferDesc.StructureByteStride = 0;
 
-    D3D11_SUBRESOURCE_DATA subresData;
-    ZeroMemory(&subresData, sizeof(D3D11_SUBRESOURCE_DATA));
+    D3D11_SUBRESOURCE_DATA subresData = {};
 
     subresData.pSysMem = &vertices[0];
     subresData.SysMemPitch = 0;
@@ -376,7 +462,7 @@ bool RModel::Create(const std::string& filename)
         /*
             Load in vertex- and index-data and combines all the meshes in a set to one
         */
-        if (!CombineMeshes(mat.second, submesh))
+        if (!CombineMeshes(mat.second, scene->mRootNode, submesh))
         {
             importer.FreeScene();
             return false;
