@@ -37,7 +37,6 @@ DemoScene::DemoScene(Engine& engine)
 			GameSystems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(m_scene);
 			GameSystems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingSphere>(m_scene);
 			this->CheckIfSwappedCamera();
-			LOG_INFO("%u", m_scene.GetRegistry()->size());
 		});
 
 	//On collision event add entities as pair in the collision system
