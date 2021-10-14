@@ -117,7 +117,6 @@ void Scene::RenderDebug()
 
 	// Emit event
 	publish<ESceneRender>();
-
 	m_debugRenderableCopies.ReadyForSwap();
 }
 
@@ -126,9 +125,15 @@ const bool Scene::IsRenderReady() const
 	return m_renderableCopies.IsSwapped();
 }
 
+const bool Scene::IsRenderDebugReady() const
+{
+	return m_debugRenderableCopies.IsSwapped();
+}
+
 void Scene::ReadyForSwap()
 {
 	m_renderableCopies.ReadyForSwap();
+	m_debugRenderableCopies.ReadyForSwap();
 }
 
 Camera* Scene::GetCamera()

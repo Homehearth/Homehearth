@@ -13,12 +13,12 @@ void Renderer::Initialize(Window* pWindow)
 	m_pipelineManager.Initialize(pWindow);
     m_d3d11 = &D3D11Core::Get();
 	
-    AddPass(&m_depthPass);  // 1
+    //AddPass(&m_depthPass);  // 1
     AddPass(&m_basePass);   // 2
 	AddPass(&m_debugPass);  // 3
-    m_depthPass.SetEnable(true);
-    m_debugPass.SetEnable(true);
+    //m_depthPass.SetEnable(true);
     m_basePass.SetEnable(true);
+    m_debugPass.SetEnable(true);
 	
     LOG_INFO("Number of rendering passes: %d", static_cast<int>(m_passes.size()));
 }
@@ -29,6 +29,7 @@ void Renderer::ClearFrame()
     const float m_clearColor[4] = { 0.5f, 0.5f, 0.5f, 1.0f };
     m_d3d11->DeviceContext()->ClearRenderTargetView(m_pipelineManager.m_backBuffer.Get(), m_clearColor);
     m_d3d11->DeviceContext()->ClearDepthStencilView(m_pipelineManager.m_depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+    m_d3d11->DeviceContext()->ClearDepthStencilView(m_pipelineManager.m_debugDepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 }
 
 void Renderer::Render(Scene* pScene)
@@ -51,6 +52,7 @@ void Renderer::Render(Scene* pScene)
             }
 
             pScene->ReadyForSwap();
+        	
         }
     }
     else if (!m_camera)

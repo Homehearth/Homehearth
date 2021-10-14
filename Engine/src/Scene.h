@@ -44,7 +44,7 @@ public:
 	void RenderDebug();
 
 	const bool IsRenderReady() const;
-
+	const bool IsRenderDebugReady() const;
 	Camera* GetCamera();
 	std::shared_ptr<Camera> m_currentCamera;
 

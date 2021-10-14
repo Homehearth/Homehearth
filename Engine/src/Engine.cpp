@@ -255,7 +255,7 @@ void Engine::RenderThread()
 		deltaTime = static_cast<float>(currentFrame - lastFrame);
 		if (deltaSum >= targetDelta)
 		{
-			if (GetCurrentScene()->IsRenderReady() && rtd::Handler2D::Get()->IsRenderReady())
+			if (GetCurrentScene()->IsRenderReady() && GetCurrentScene()->IsRenderDebugReady() && rtd::Handler2D::Get()->IsRenderReady())
 			{
 				Render(deltaSum);
 				m_frameTime.render = deltaSum;

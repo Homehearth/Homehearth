@@ -28,7 +28,6 @@ namespace thread
 		bool m_isRunning;
 		bool m_isPooled = false;
 		void* m_objects;
-		void* m_debugObjects;
 		bool m_isActive;
 
 		unsigned int m_amount;

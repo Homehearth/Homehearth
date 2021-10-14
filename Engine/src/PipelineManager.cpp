@@ -112,7 +112,11 @@ bool PipelineManager::CreateDepthBuffer()
     HRESULT hr = m_d3d11->Device()->CreateTexture2D(&depthBufferDesc, nullptr, m_depthStencilTexture.GetAddressOf());
     if (FAILED(hr))
         return false;
-
+	
+    hr = m_d3d11->Device()->CreateTexture2D(&depthBufferDesc, nullptr, m_debugDepthStencilTexture.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+	
     D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc;
     ZeroMemory(&depthStencilViewDesc, sizeof(D3D11_DEPTH_STENCIL_VIEW_DESC));
     depthStencilViewDesc.Format = DXGI_FORMAT_D32_FLOAT;
@@ -122,12 +126,22 @@ bool PipelineManager::CreateDepthBuffer()
     if (FAILED(hr))
         return false;
 
+	//Depth for debug render
+    hr = m_d3d11->Device()->CreateDepthStencilView(m_debugDepthStencilTexture.Get(), &depthStencilViewDesc, m_debugDepthStencilView.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+	
     D3D11_SHADER_RESOURCE_VIEW_DESC shaderResourceViewDesc;
     shaderResourceViewDesc.Format = DXGI_FORMAT_R32_FLOAT;
     shaderResourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
     shaderResourceViewDesc.Texture2D.MostDetailedMip = 0;
     shaderResourceViewDesc.Texture2D.MipLevels = 1;
+	
     hr = m_d3d11->Device()->CreateShaderResourceView(m_depthStencilTexture.Get(), &shaderResourceViewDesc, m_depthBufferSRV.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+	
+    hr = m_d3d11->Device()->CreateShaderResourceView(m_debugDepthStencilTexture.Get(), &shaderResourceViewDesc, m_debugDepthBufferSRV.GetAddressOf());
 	
     return !FAILED(hr);
 }
@@ -377,5 +391,11 @@ bool PipelineManager::CreateShaders()
         return false;
     }
 
+    if (!m_debugPixelShader.Create("Debug_ps"))
+    {
+        LOG_WARNING("failed creating Debug_ps.");
+        return false;
+    }
+	
     return true;
 }                         

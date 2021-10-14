@@ -8,7 +8,7 @@ DemoScene::DemoScene(Engine& engine, Client& client, uint32_t* playerID, uint32_
 {
 	m_engine = &engine;
 	//Initialize player entity
-	for(int i = 0; i < 3; i++)
+	//for(int i = 0; i < 3; i++)
 		m_player = CreatePlayerEntity();
 
 	SetUpCamera();
@@ -134,7 +134,7 @@ Entity DemoScene::CreatePlayerEntity()
 	comp::BoundingSphere* obb = m_chest.AddComponent<comp::BoundingSphere>();
 	obb->Center = transform->position;
 	obb->Radius = 2.0f;
-	comp::RenderableDebug* renderable2 = m_chest.AddComponent<comp::RenderableDebug>();
+	comp::Renderable* renderable2 = m_chest.AddComponent<comp::Renderable>();
 
 	renderable2->model = ResourceManager::Get().GetResource<RModel>("Chest.obj");
 
