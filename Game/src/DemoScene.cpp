@@ -24,6 +24,21 @@ DemoScene::DemoScene(Engine& engine, Client& client, uint32_t* playerID, uint32_
 			//System responding to user input
 			GameSystems::MRayIntersectBoxSystem(scene);
 
+			/*
+				Logic for buttons.
+			*/
+
+			if (rtd::Handler2D::Get().GetElement<rtd::Button>("startGameButton")->IsClicked())
+			{
+				//rtd::Handler2D::Get().GetElement<rtd::Text>("welcome_text")->Release();
+				std::cout << "You started the game! :D\n";
+			}
+
+			if (rtd::Handler2D::Get().GetElement<rtd::Button>("exitGameButton")->IsClicked())
+			{
+				std::cout << "You exit the game! :)\n";
+			}
+
 			int ver = InputSystem::Get().GetAxis(Axis::VERTICAL);
 			int hor = InputSystem::Get().GetAxis(Axis::HORIZONTAL);
 
@@ -64,6 +79,29 @@ DemoScene::DemoScene(Engine& engine, Client& client, uint32_t* playerID, uint32_
 			if(e.obj1 != e.obj2)
 				CollisionSystem::Get().AddPair(e.obj1, e.obj2);
 		});
+
+	// Setup main menu scene.
+	rtd::Text* welcomeText = new rtd::Text("Welcome To Homehearth!", draw_text_t(575.0f, 50.0f, 300.0f, 100.0f));
+	rtd::Handler2D::Get().InsertElement(welcomeText);
+	welcomeText->SetName("welcome_text");
+
+	rtd::Text* gameInfoText = new rtd::Text("In this game you will face against very dangerous foes while defending the righteous village from its dark fate! Take up arms and fight your way to victory champion! Join our discord and twitter to get official news about the new upcoming technological wonder game! Sign up for RTX exclusive version at our website!", draw_text_t(550.0f, 0.0f, 350.0f, 550.0f));
+	rtd::Handler2D::Get().InsertElement(gameInfoText);
+	gameInfoText->SetName("gameInfoText");
+
+	rtd::Button* startGameButton = new rtd::Button("demo_start_game_button.png", draw_t(100.0f, 100.0f, 350.0f, 150.0f));
+	rtd::Handler2D::Get().InsertElement(startGameButton);
+	startGameButton->SetName("startGameButton");
+	startGameButton->GetBorder()->SetColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
+
+	rtd::Button* exitGameButton = new rtd::Button("demo_exit_button.png", draw_t(100.0f, 325.0f, 350.0f, 150.0f));
+	rtd::Handler2D::Get().InsertElement(exitGameButton);
+	exitGameButton->SetName("exitGameButton");
+	exitGameButton->GetBorder()->SetColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
+
+	//rtd::Picture* picture = new rtd::Picture("Leafs3.png", draw_t(0.0f, 0.0f, 960.0f, 540.0f));
+	//rtd::Handler2D::Get().InsertElement(picture);
+
 }
 
 void DemoScene::SetUpCamera()

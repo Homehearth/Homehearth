@@ -17,6 +17,7 @@ private:
 	sm::Vector3 m_oldDebugCameraPosition;
 	uint32_t* m_playerID, *m_gameID;
 	Client& m_client;
+
 public:
 	DemoScene(Engine& engine, Client& client, uint32_t* playerID, uint32_t* gameID);
 	

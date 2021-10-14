@@ -14,6 +14,12 @@
 #include <type_traits>
 
 /*
+	Defines for ease of use.
+*/
+
+#define GET_ELEMENT(name, type) rtd::Handler2D::Get().GetElement<type>(name)
+
+/*
 	WIKI:
 	Handler2D is a singleton class used to render and update each element.
 	It is as well used for fetching elements through their m_name string.
@@ -55,10 +61,9 @@ namespace rtd
 	private:
 
 		// Double buffer
-		static std::vector<Element2D*> m_elements;
+		std::vector<Element2D*> m_elements;
 
-		static DoubleBuffer<std::vector<Element2D**>> m_drawBuffers;
-		static Handler2D* instance;
+		DoubleBuffer<std::vector<Element2D**>> m_drawBuffers;
 		Handler2D();
 		~Handler2D();
 
@@ -66,11 +71,9 @@ namespace rtd
 
 		static auto& Get()
 		{
-			return Handler2D::instance;
+			static Handler2D instance;
+			return instance;
 		}
-
-		static void Initialize();
-		static void Destroy();
 
 		// Insert an element into the rendering system.
 		static void InsertElement(Element2D* element);
@@ -102,7 +105,7 @@ namespace rtd
 	template<class T>
 	inline T* rtd::Handler2D::GetElement(const std::string& element_name)
 	{
-		for (auto elem : Handler2D::instance->m_elements)
+		for (auto elem : Handler2D::Get().m_elements)
 		{
 			if (elem)
 			{
