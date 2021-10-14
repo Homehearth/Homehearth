@@ -246,7 +246,7 @@ void Engine::drawImGUI() const
 
 	ImGui::Begin("Render Pass");
 	{
-		ImGui::Checkbox("RenderColliders", GetCurrentScene()->GetIsRenderingColliders());
+		ImGui::Checkbox("Render Colliders", GetCurrentScene()->GetIsRenderingColliders());
 	};
 	ImGui::End();
 	
