@@ -138,7 +138,7 @@ Entity DemoScene::CreatePlayerEntity()
 	comp::BoundingSphere* obb = m_chest.AddComponent<comp::BoundingSphere>();
 	obb->Center = transform->position;
 	obb->Radius = 2.0f;
-	comp::Renderable* renderable2 = m_chest.AddComponent<comp::Renderable>();
+	comp::RenderableDebug* renderable2 = m_chest.AddComponent<comp::RenderableDebug>();
 
 	renderable2->model = ResourceManager::Get().GetResource<RModel>("Chest.obj");
 
