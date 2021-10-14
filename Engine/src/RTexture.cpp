@@ -6,6 +6,20 @@
 #include <stb_image.h>
 #pragma warning(pop)
 
+RTexture::RTexture()
+{
+	m_format = ETextureChannelType::fourChannels;
+	m_texture = nullptr;
+	m_shaderView = nullptr;
+}
+
+RTexture::RTexture(ETextureChannelType format)
+{
+	m_format = format;
+	m_texture = nullptr;
+	m_shaderView = nullptr;
+}
+
 RTexture::~RTexture()
 {
 	if (m_texture)
@@ -17,18 +31,22 @@ RTexture::~RTexture()
 bool RTexture::Create(const std::string& filename)
 {
 	std::string filepath = TEXTUREPATH + filename;
-	int width;
-	int height;
-	int comp;
+	int width = 0;
+	int height = 0;
+	int comp = 0;
+	unsigned char* image = nullptr;
 
 	//Load in image
-	unsigned char* image = stbi_load(filepath.c_str(), &width, &height, &comp, STBI_rgb_alpha);
-	if (!image)
+	if (m_format == ETextureChannelType::oneChannel)
+		image = stbi_load(filepath.c_str(), &width, &height, &comp, STBI_grey);
+	else
+		image = stbi_load(filepath.c_str(), &width, &height, &comp, STBI_rgb_alpha);
+
+	if (image == nullptr)
 	{
 #ifdef _DEBUG
 		LOG_WARNING("[Texture] Failed to load image: %s", filepath.c_str());
 #endif 
-		stbi_image_free(image);
 		return false;
 	}
 
@@ -44,8 +62,12 @@ bool RTexture::Create(const std::string& filename)
 
 	D3D11_SUBRESOURCE_DATA data = {};
 	data.pSysMem = (void*)image;
-	data.SysMemPitch = static_cast<UINT>(width * 4);
 	data.SysMemSlicePitch = 0;
+
+	if (m_format == ETextureChannelType::oneChannel)
+		data.SysMemPitch = static_cast<UINT>(width * 1);
+	else if (m_format == ETextureChannelType::fourChannels)
+		data.SysMemPitch = static_cast<UINT>(width * 4);
 
 	//Setup the texturebuffer
 	D3D11_TEXTURE2D_DESC textureDesc = {};
@@ -57,9 +79,13 @@ bool RTexture::Create(const std::string& filename)
 	textureDesc.SampleDesc.Count = 1;
 	textureDesc.SampleDesc.Quality = 0;
 	textureDesc.Usage = D3D11_USAGE_DEFAULT;
-	textureDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+	textureDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;	//D3D11_BIND_RENDER_TARGET
 	textureDesc.CPUAccessFlags = 0;
-	textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+
+	if (m_format == ETextureChannelType::oneChannel)
+		textureDesc.Format = DXGI_FORMAT_R8_UNORM;
+	else if (m_format == ETextureChannelType::fourChannels)
+		textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 
 	HRESULT hr = D3D11Core::Get().Device()->CreateTexture2D(&textureDesc, &data, &m_texture);
 	if (FAILED(hr))

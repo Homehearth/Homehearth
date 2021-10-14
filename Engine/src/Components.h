@@ -2,6 +2,7 @@
 #include "net_common.h"
 #include "net_message.h"
 #include "RModel.h"
+#include "RDebugMesh.h"
 
 namespace ecs
 {
@@ -20,8 +21,8 @@ namespace ecs
 
 		struct Renderable
 		{
-			std::shared_ptr<RModel> model;
-			 basic_model_matrix_t data;
+			std::shared_ptr<RModel>		model;
+			basic_model_matrix_t		data;
 		};
 
 		struct Velocity

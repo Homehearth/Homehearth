@@ -2,17 +2,22 @@
 #include "GResource.h"
 const UINT MAXSIZE = 4096;
 
-// RTexture -> (RESOURCE)Texture
+enum class ETextureChannelType
+{
+	oneChannel,
+	fourChannels
+};
 
 class RTexture : public resource::GResource
 {
 private:
-	ID3D11Texture2D* m_texture = nullptr;
-	ID3D11ShaderResourceView* m_shaderView = nullptr;
+	ETextureChannelType			m_format;
+	ID3D11Texture2D*			m_texture;
+	ID3D11ShaderResourceView*	m_shaderView;
 
 public:
-
-	RTexture() {};
+	RTexture();
+	RTexture(ETextureChannelType format);
 	~RTexture();
 
 	// Inherited via GResource

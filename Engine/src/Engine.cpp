@@ -202,16 +202,19 @@ void Engine::drawImGUI() const
 	ImGui::Begin("Components");
 	if (ImGui::CollapsingHeader("Transform"))
 	{
+		
 		GetCurrentScene()->ForEachComponent<comp::Transform, comp::Renderable>([&](Entity& e, comp::Transform& transform, comp::Renderable& renderable)
 			{
+				std::string entityname = "Entity: " + std::to_string(static_cast<int>((entt::entity)e));
+				
 				ImGui::Separator();
-				ImGui::Text("Entity: %d", static_cast<int>((entt::entity)e));
+				ImGui::Text(entityname.c_str());
 				ImGui::DragFloat3(("Position##" + std::to_string(static_cast<int>((entt::entity)e))).c_str(), (float*)&transform.position);
 				ImGui::DragFloat3(("Rotation##" + std::to_string(static_cast<int>((entt::entity)e))).c_str(), (float*)&transform.rotation, dx::XMConvertToRadians(1.f));
 
 				ImGui::Text("Change 'mtl-file'");
-				static char str[30] = "";
-				ImGui::InputText("", str, IM_ARRAYSIZE(str));
+				char str[30] = "";
+				ImGui::InputText(entityname.c_str(), str, IM_ARRAYSIZE(str));
 				if (ImGui::IsKeyPressedMap(ImGuiKey_Enter))
 				{
 					renderable.model->ChangeMaterial(str);
