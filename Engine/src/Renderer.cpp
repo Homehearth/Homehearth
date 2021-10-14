@@ -16,7 +16,7 @@ void Renderer::Initialize(Window* pWindow)
     AddPass(&m_depthPass);  // 1
     AddPass(&m_basePass);   // 2
 	
-    m_depthPass.SetEnable(true);
+   m_depthPass.SetEnable(true);
     m_basePass.SetEnable(true);
 	
     LOG_INFO("Number of rendering passes: %d", static_cast<int>(m_passes.size()));
@@ -52,9 +52,9 @@ void Renderer::Render(Scene* pScene)
             pScene->ReadyForSwap();
         }
     }
-    else if (!m_camera)
+    else if (pScene && !m_camera)
     {
-        m_camera = pScene->GetCamera();
+        m_camera = pScene->GetCurrentCamera();
         for (auto& pass : m_passes)
         {
             pass->Initialize(m_camera, m_d3d11->DeviceContext(), &m_pipelineManager);

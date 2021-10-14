@@ -31,9 +31,9 @@ void ServerGame::InputThread()
 			for (const auto& sim : m_simulations)
 			{
 				LOG_INFO("LOBBY SCENE:");
-				LOG_INFO("Entity Count: %u", sim.second->GetLobbyScene()->GetRegistry()->size());
+				LOG_INFO("Entity Count: %u", (unsigned int)sim.second->GetLobbyScene()->GetRegistry()->size());
 				LOG_INFO("GAME SCENE:");
-				LOG_INFO("Entity Count: %u\n", sim.second->GetGameScene()->GetRegistry()->size());
+				LOG_INFO("Entity Count: %u\n", (unsigned int)sim.second->GetGameScene()->GetRegistry()->size());
 
 			}
 		}
@@ -132,12 +132,11 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 
 		msg >> y >> x >> gameID >> playerID;
 
-		LOG_INFO("Player is moving in X: %d Y: %d", x, y);
 		m_simulations.at(gameID)->GetGameScene()->ForEachComponent<comp::Network, comp::Velocity>([=](comp::Network& net, comp::Velocity& vel) 
 			{
 				if (net.id == playerID)
 				{
-					vel.vel	= sm::Vector3(x, 0, y);
+					vel.vel	= sm::Vector3(x, 0, y) * 10.f;
 				}
 			});
 		

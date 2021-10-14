@@ -89,7 +89,7 @@ bool Game::OnStartup()
 
 		});
 
-	SetScene(mainMenuScene);
+	//SetScene(mainMenuScene);
 	
 	return true;
 }
@@ -212,7 +212,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 				Entity e = this->m_demoScene->CreatePlayerEntity(t.first);
 				*e.GetComponent<comp::Transform>() = t.second;
 				
-				if (this->m_gameID == (uint32_t)-1 && m_localPID == t.first)
+				if (m_localPID == t.first)
 				{
 					m_demoScene->InitializeGameCam();
 					m_demoScene->m_gameCamera.SetFollowVelocity(e.GetComponent<comp::Velocity>());

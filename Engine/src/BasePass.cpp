@@ -12,7 +12,6 @@ void BasePass::PreRender(ID3D11DeviceContext* pDeviceContext)
     DC->VSSetShader(PM->m_defaultVertexShader.Get(), nullptr, 0);
     DC->PSSetShader(PM->m_defaultPixelShader.Get(), nullptr, 0);
    
-
 	DC->VSSetConstantBuffers(1, 1, CAMERA->m_viewConstantBuffer.GetAddressOf()); 
     
    // DC->PSSetShaderResources(0, 1, PM->m_depthBufferSRV.GetAddressOf());   // DepthBuffer.
@@ -24,7 +23,7 @@ void BasePass::PreRender(ID3D11DeviceContext* pDeviceContext)
     DC->RSSetState(PM->m_rasterState.Get());
 
     DC->OMSetRenderTargets(1, PM->m_backBuffer.GetAddressOf(), PM->m_depthStencilView.Get());
-    DC->OMSetDepthStencilState(PM->m_depthStencilStateEqualAndDisableDepthWrite.Get(), 0);
+    DC->OMSetDepthStencilState(PM->m_depthStencilStateLessEqual.Get(), 0);
 }
 
 void BasePass::Render(Scene* pScene)
