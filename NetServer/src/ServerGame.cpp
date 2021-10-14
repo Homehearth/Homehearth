@@ -136,7 +136,9 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 			{
 				if (net.id == playerID)
 				{
-					vel.vel	= sm::Vector3(x, 0, y) * 10.f;
+					sm::Vector3 input(x, 0, y);
+					input.Normalize(input);
+					vel.vel	= input * 10.f;
 				}
 			});
 		

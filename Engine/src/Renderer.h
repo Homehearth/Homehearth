@@ -9,16 +9,15 @@ class Renderer
 {
 private:
 	D3D11Core* m_d3d11;
-	Camera* m_camera;
 	PipelineManager m_pipelineManager;
 	std::vector<IRenderPass*> m_passes;
-	
+
 	BasePass m_basePass;	
 	DepthPass m_depthPass;
 	unsigned int m_currentPass = 0;
 
 	// Update per frame related resources.
-	void UpdatePerFrame();
+	void UpdatePerFrame(Camera* pCam);
 	
 	// Add a pass to the list.
 	void AddPass(IRenderPass* pass);

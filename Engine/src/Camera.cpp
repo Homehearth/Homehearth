@@ -17,6 +17,7 @@ Camera::Camera()
     m_rotationSpeed = 5.0f;
     m_movingSepeed = 15.0f;
     m_targetVelocity = NULL;
+    m_targetTransform = NULL;
     m_type = CAMERATYPE::DEFAULT;
 }
 
@@ -27,6 +28,7 @@ Camera::~Camera()
 
 void Camera::Initialize(sm::Vector3 pos, sm::Vector3 target, sm::Vector3 up, sm::Vector2 windowSize, CAMERATYPE type)
 {
+    m_defaultPos = pos;
     m_position = pos;
     m_target = target;
     m_forward = dx::XMVector3Normalize(m_target);
@@ -125,8 +127,10 @@ void Camera::Update(float deltaTime)
         quaterion = sm::Quaternion::CreateFromYawPitchRoll(m_rollPitchYaw.z, m_rollPitchYaw.y, m_rollPitchYaw.x);
         m_rotationMatrix = dx::XMMatrixRotationRollPitchYaw(m_rollPitchYaw.y, m_rollPitchYaw.z, m_rollPitchYaw.x);
 
-        m_position.x += m_targetVelocity->vel.x * deltaTime;
-        m_position.z += m_targetVelocity->vel.z * deltaTime;
+        sm::Vector3 rot = m_targetTransform->rotation;
+        sm::Matrix transformed = sm::Matrix::CreateFromYawPitchRoll(rot.y, rot.x, rot.z) * sm::Matrix::CreateTranslation(m_targetTransform->position);
+
+        m_position = sm::Vector3::Transform(m_defaultPos, transformed);
 
         m_right = dx::XMVector3TransformNormal(m_defaultRight, m_rotationMatrix);
         m_forward = dx::XMVector3TransformNormal(m_defaultForward, m_rotationMatrix);
@@ -141,8 +145,9 @@ void Camera::Update(float deltaTime)
         m_move = { 0.0f, 0.0f, 0.0f };
         m_forward = m_target;
 
-        m_target = dx::XMVectorAdd(m_target, m_position);
-        m_view = dx::XMMatrixLookAtLH(m_position, m_target, m_up);
+        //m_target = dx::XMVectorAdd(m_target, m_position);
+        m_target = m_targetTransform->position - m_position;
+        m_view = dx::XMMatrixLookToLH(m_position, m_target, m_up);
 
         UpdateProjection();
     }
@@ -160,6 +165,11 @@ void Camera::Update(float deltaTime)
 void Camera::SetFollowVelocity(comp::Velocity* target)
 {
     m_targetVelocity = target;
+}
+
+void Camera::SetFollowTransform(comp::Transform* target)
+{
+    m_targetTransform = target;
 }
 
 //Get functions

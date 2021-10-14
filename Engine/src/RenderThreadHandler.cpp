@@ -314,7 +314,7 @@ void RenderJob(const unsigned int start,
 		ID3D11CommandList* command_list = nullptr;
 		IRenderPass* pass = thread::RenderThreadHandler::Get().GetRenderer()->GetCurrentPass();
 
-		pass->PreRender(m_context);
+		//pass->PreRender(m_context);
 
 		// Make sure not to go out of range
 		if (stop > (unsigned int)(*m_objects)[1].size())

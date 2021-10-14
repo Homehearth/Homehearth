@@ -14,7 +14,7 @@ public:
 	Entity CreatePlayerEntity(uint32_t playerID);
 
 	//Camera
-	void SetUpCamera();
+	void SetupCamera();
 	void CheckIfSwappedCamera();
 	void InitializeGameCam();
 	Camera m_gameCamera;

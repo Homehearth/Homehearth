@@ -4,7 +4,6 @@
 
 Renderer::Renderer()
 	: m_d3d11(nullptr)
-	, m_camera(nullptr)
 {
 }
 
@@ -16,10 +15,15 @@ void Renderer::Initialize(Window* pWindow)
     AddPass(&m_depthPass);  // 1
     AddPass(&m_basePass);   // 2
 	
-   m_depthPass.SetEnable(true);
+    m_depthPass.SetEnable(true);
     m_basePass.SetEnable(true);
 	
     LOG_INFO("Number of rendering passes: %d", static_cast<int>(m_passes.size()));
+
+    for (auto& pass : m_passes)
+    {
+        pass->Initialize(m_d3d11->DeviceContext(), &m_pipelineManager);
+    }
 }
 
 void Renderer::ClearFrame()
@@ -32,18 +36,18 @@ void Renderer::ClearFrame()
 
 void Renderer::Render(Scene* pScene)
 {
-    if (pScene && m_camera)
+    if (pScene)
     {    	
         if (!m_passes.empty())
         {
-            UpdatePerFrame();
+            this->UpdatePerFrame(pScene->GetCurrentCamera());
             for (int i = 0; i < m_passes.size(); i++)
             {
                 m_currentPass = i;
                 IRenderPass* pass = m_passes[i];
                 if (pass->IsEnabled())
                 {
-                    pass->PreRender();
+                    pass->PreRender(pScene->GetCurrentCamera());
                     pass->Render(pScene);     // args? currently does nothing.
                     pass->PostRender(); // args? currently does nothing.
                 }
@@ -52,14 +56,13 @@ void Renderer::Render(Scene* pScene)
             pScene->ReadyForSwap();
         }
     }
-    else if (pScene && !m_camera)
-    {
-        m_camera = pScene->GetCurrentCamera();
-        for (auto& pass : m_passes)
-        {
-            pass->Initialize(m_camera, m_d3d11->DeviceContext(), &m_pipelineManager);
-        }
-    }
+    //else if (pScene && !m_camera)
+    //{
+    //    for (auto& pass : m_passes)
+    //    {
+    //        pass->Initialize(m_d3d11->DeviceContext(), &m_pipelineManager);
+    //    }
+    //}
 }
 
 IRenderPass* Renderer::GetCurrentPass() const
@@ -72,8 +75,8 @@ void Renderer::AddPass(IRenderPass* pass)
     m_passes.emplace_back(pass);
 }
 
-void Renderer::UpdatePerFrame()
+void Renderer::UpdatePerFrame(Camera* pCam)
 {
     // Update Camera constant buffer.
-    m_d3d11->DeviceContext()->UpdateSubresource(m_camera->m_viewConstantBuffer.Get(), 0, nullptr, m_camera->GetCameraMatrixes(), 0, 0);
+    m_d3d11->DeviceContext()->UpdateSubresource(pCam->m_viewConstantBuffer.Get(), 0, nullptr, pCam->GetCameraMatrixes(), 0, 0);
 }

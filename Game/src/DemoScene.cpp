@@ -4,8 +4,7 @@ DemoScene::DemoScene(Engine& engine)
 	: SceneBuilder(engine)
 {
 	m_engine = &engine;
-	SetUpCamera();
-
+	SetupCamera();
 	Entity chest = m_scene.CreateEntity();
 	comp::Transform* transform = chest.AddComponent<comp::Transform>();
 	transform->position.z = 5;
@@ -38,7 +37,7 @@ DemoScene::DemoScene(Engine& engine)
 		});
 }
 
-void DemoScene::SetUpCamera()
+void DemoScene::SetupCamera()
 {
 	m_debugCamera.Initialize(sm::Vector3(0, 0, -20), sm::Vector3(0, 0, 1), sm::Vector3(0, 1, 0), sm::Vector2((float)m_engine->GetWindow()->GetWidth(), (float)m_engine->GetWindow()->GetHeight()), CAMERATYPE::DEBUG);
 	m_scene.SetCurrentCamera(&m_debugCamera);
@@ -71,6 +70,7 @@ void DemoScene::InitializeGameCam()
 {
 	m_gameCamera.Initialize(sm::Vector3(0, 0, -10), sm::Vector3(0, 0, 1), sm::Vector3(0, 1, 0), sm::Vector2((float)m_engine->GetWindow()->GetWidth(), (float)m_engine->GetWindow()->GetHeight()), CAMERATYPE::PLAY);
 	m_scene.SetCurrentCamera(&m_gameCamera);
+	InputSystem::Get().SetCamera(m_scene.GetCurrentCamera());
 }
 
 Entity DemoScene::CreatePlayerEntity(uint32_t playerID)

@@ -187,7 +187,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		std::unordered_map<uint32_t, comp::Transform> transforms;
 		std::set<uint32_t> found;
 
-
 		for (uint32_t i = 0; i < count; i++)
 		{
 			uint32_t entityID;
@@ -215,7 +214,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 				if (m_localPID == t.first)
 				{
 					m_demoScene->InitializeGameCam();
-					m_demoScene->m_gameCamera.SetFollowVelocity(e.GetComponent<comp::Velocity>());
+					m_demoScene->m_gameCamera.SetFollowTransform(e.GetComponent<comp::Transform>());
 				}
 			}
 		}
