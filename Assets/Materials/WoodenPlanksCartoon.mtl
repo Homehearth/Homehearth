@@ -1,0 +1,6 @@
+newmtl WoodenPlanksCartoonMaterial
+map_Kd WoodenPlanksCartoon_Albedo.png
+map_Kn WoodenPlanksCartoon_Normal.png
+map_ns WoodenPlanksCartoon_Metalness.png
+map_Ks WoodenPlanksCartoon_Roughness.png
+map_Ka WoodenPlanksCartoon_AO.png

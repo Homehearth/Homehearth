@@ -26,6 +26,10 @@ Men helst inte, typ, globalt? (Rikard får förklara)
 		sm::Matrix view;
 	};
 
+CPU/GPU:
+Behövs ingen transponering på CPU:n 
+På GPU är det därför viktigt att vi kör nyVektor = mul(inMatris, inVektor); 
+
 -Bool
 	- isDoingSomething
 	- hasDoneSomething

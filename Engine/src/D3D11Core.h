@@ -23,10 +23,10 @@ private:
 	ComPtr<IDXGISwapChain>		m_swapChain;
 
 	// TODO:
-	ComPtr<IDXGIDevice>			m_dxgiDevice;	// 1 2 
-	ComPtr<IDXGIAdapter>		m_dxgiAdapter;	// 1 2
-	ComPtr<IDXGIAdapter4>		m_dxgiAdapter4;	// 1 2
-	ComPtr<IDXGIFactory>		m_dxgiFacory;	// 1 2
+	ComPtr<IDXGIDevice>			m_dxgiDevice;	
+	ComPtr<IDXGIAdapter>		m_dxgiAdapter;	
+	ComPtr<IDXGIAdapter4>		m_dxgiAdapter4;	
+	ComPtr<IDXGIFactory>		m_dxgiFacory;	
 
 	bool createDeviceAndSwapChain();
 
@@ -47,6 +47,7 @@ public:
 
 
 	DXGI_QUERY_VIDEO_MEMORY_INFO GetVideoMemoryInfo();
+	void CreateDeferredContext(ID3D11DeviceContext** context);
 
 	// No copying.
 	D3D11Core(const D3D11Core& other) = delete;

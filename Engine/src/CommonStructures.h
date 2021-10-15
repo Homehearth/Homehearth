@@ -13,7 +13,6 @@ struct Ray_t
 
 /*
 	Basic objects like static meshes
-	//[TODO] Discuss bitanget?
 */
 ALIGN16
 struct simple_vertex_t
@@ -25,6 +24,14 @@ struct simple_vertex_t
 	sm::Vector3 bitanget = {};
 };
 
+/*
+	Debugging with collision boxes
+*/
+struct debug_vertex_t
+{
+	sm::Vector3 position = {};
+	//sm::Vector3 color = {}; could be implemented if needed
+};
 
 /*
 	Skeletal animated meshes

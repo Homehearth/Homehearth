@@ -1,5 +1,6 @@
 #pragma once
 #include "GResource.h"
+#include "Logger.h"
 
 /*
 	Resourcemanager is a singleton and can be used everywhere
@@ -58,13 +59,13 @@ public:
 
 	/*
 		Retrieve any resource with the name (key).
-		Creates a resource if it does not exist.
-		Uses the GResource::Create()-function 
+		Second parameter is an option to if you want to create
+		the resource if it does not exist. Uses: GResource::Create().
 		Uses the appropiate T class when retrieving a resource.
-		Returns a shared_ptr that is nullptr if it failed to create
+		Returns a shared_ptr that is nullptr if failed
 	*/
 	template <class T>
-	std::shared_ptr<T> GetResource(const std::string& key);
+	std::shared_ptr<T> GetResource(const std::string& key, bool createIfFailed = true);
 
 	/*
 		Removes every resource from the the manager.
@@ -87,7 +88,7 @@ public:
 * 
 */
 template<class T>
-inline std::shared_ptr<T> ResourceManager::GetResource(const std::string& key)
+inline std::shared_ptr<T> ResourceManager::GetResource(const std::string& key, bool createIfFailed)
 {
 	//CheckCollisions if the resource exists
 	auto f = m_resources.find(key);
@@ -100,7 +101,7 @@ inline std::shared_ptr<T> ResourceManager::GetResource(const std::string& key)
 		return std::dynamic_pointer_cast<T>(f->second);
 	}
 	//Create a new resource of this type
-	else
+	else if (createIfFailed)
 	{
 		std::shared_ptr<T> resource = std::make_shared<T>();
 
@@ -116,5 +117,9 @@ inline std::shared_ptr<T> ResourceManager::GetResource(const std::string& key)
 		{
 			return std::shared_ptr<T>(nullptr);
 		}
+	}
+	else
+	{
+		return std::shared_ptr<T>(nullptr);
 	}
 }

@@ -1,6 +1,7 @@
 #pragma once
 #include "BasePass.h"
 #include "DepthPass.h"
+#include "DebugPass.h"
 #include "IRenderPass.h"
 #include "PipelineManager.h"
 
@@ -11,10 +12,14 @@ private:
 	D3D11Core* m_d3d11;
 	PipelineManager m_pipelineManager;
 	std::vector<IRenderPass*> m_passes;
-	
-	BasePass m_basePass;	// Forward Rendering.
-	DepthPass m_depthPass;	// Forward Plus (1st pass).
 
+	BasePass m_basePass;	
+	DepthPass m_depthPass;
+	DebugPass m_debugPass;
+	unsigned int m_currentPass = 0;
+
+	// Update per frame related resources.
+	void UpdatePerFrame(Camera* pCam);
 	
 	// Add a pass to the list.
 	void AddPass(IRenderPass* pass);
@@ -25,14 +30,10 @@ public:
 
 	void Initialize(Window* pWindow);
 
-	// Clears the screen.
 	void ClearFrame();
 
-	// Call this each frame to render all passes:
-	//	PreRender(): set pipeline.
-	//	Render(): render all objects.
-	//	PostRender(): clear pipeline settings.
 	void Render(Scene* pScene);
 
+	IRenderPass* GetCurrentPass() const;
 };
 
