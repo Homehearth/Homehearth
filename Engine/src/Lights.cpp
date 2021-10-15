@@ -123,4 +123,36 @@ void Lights::Render(ID3D11DeviceContext* dc)
 void Lights::Add(const light_t& light)
 {
     m_lights.push_back(light);
+    m_currentLight = m_lights.size() - 1;
+}
+
+light_t& Lights::EditLight(const int& index)
+{
+    if (index == -1 && m_currentLight >= 0)
+    {
+        return m_lights[m_currentLight];
+    }
+    else if (index < (int)m_lights.size() && index >= 0)
+    {
+        return m_lights[index];
+    }
+}
+
+void Lights::EditLight(light_t L, const int& index)
+{
+    if (index == -1 && m_currentLight >= 0)
+    {
+        m_lights[m_currentLight] = L;
+    }
+    else if (index < (int)m_lights.size() && index >= 0)
+    {
+        m_lights[index] = L;
+    }
+}
+
+void Lights::AddFromComp(entt::registry& reg, entt::entity ent)
+{
+    reg.get<comp::Light>(ent).index = (int)m_lights.size();
+    m_lights.push_back(reg.get<comp::Light>(ent).lightData);
+    m_currentLight = m_lights.size() - 1;
 }

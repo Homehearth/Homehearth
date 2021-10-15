@@ -11,6 +11,8 @@ private:
 
 	Entity m_player;
 	Entity m_chest;
+	Entity m_directionalLight;
+	Entity m_pointLight;
 
 	Camera m_gameCamera;
 	Camera m_debugCamera;
@@ -23,6 +25,8 @@ public:
 	DemoScene(Engine& engine, Client& client, uint32_t* playerID, uint32_t* gameID);
 	
 	Entity CreatePlayerEntity();
+
+	Entity CreateLight(sm::Vector4 pos, sm::Vector4 dir, sm::Vector4 col, float range, TypeLight type, UINT enabled);
 
 	//Camera
 	void SetUpCamera();

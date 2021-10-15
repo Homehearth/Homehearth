@@ -21,3 +21,12 @@ void Systems::MovementSystem(Scene& scene, float dt)
 			sphere.Center = transform.position;
 		});
 }
+
+void Systems::LightSystem(Scene& scene)
+{
+	//Light Update
+	scene.ForEachComponent<comp::Light>([&](comp::Light light)
+		{
+			scene.GetLights()->EditLight(light.lightData, light.index);
+		});
+}

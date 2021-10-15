@@ -64,5 +64,5 @@ struct light_t
 	float		range		= 0;	//Only in use on Point Lights
 	TypeLight	type		= TypeLight::DIRECTIONAL;	// 0 = Directional, 1 = Point
 	UINT		enabled		= 0;	// 0 = Off, 1 = On
-	float		padding = 0;
+	float		padding		= 0;
 };

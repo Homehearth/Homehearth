@@ -6,25 +6,17 @@ DemoScene::DemoScene(Engine& engine, Client& client, uint32_t* playerID, uint32_
 	, m_playerID(playerID)
 	, m_client(client)
 {
+	m_scene.GetRegistry()->on_construct<comp::Light>().connect<&Lights::AddFromComp>(m_scene.GetLights());
+
 	m_engine = &engine;
 	//Initialize player entity
 	m_player = CreatePlayerEntity();
 	SetUpCamera();
 
-	light_t L;
-	L.type = TypeLight::DIRECTIONAL;
-	L.direction = sm::Vector4(1.f, -1.f, 0.f, 0.f);
-	L.color = sm::Vector4(10.f);
-	L.position = sm::Vector4(0.f, 0.f, -10.f, 1.f);
-	L.range = 75.f;
-	L.enabled = 1;
+	m_directionalLight = CreateLight({ 0.f, 0.f, 0.f, 0.f }, { 1.f, -1.f, 0.f, 0.f }, { 10.f, 10.f, 10.f, 10.f }, 0, TypeLight::DIRECTIONAL, 1);
+	m_pointLight = CreateLight({ 0.f, 8.f, -10.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 300.f, 300.f, 300.f, 300.f }, 75.f, TypeLight::POINT, 1);
 
-	m_scene.GetLights()->Add(L);
-
-	L.color = sm::Vector4(300.f);
-	L.type = TypeLight::POINT;
-
-	m_scene.GetLights()->Add(L);
+	
 
 
 	// Define what scene does on update
@@ -69,6 +61,8 @@ DemoScene::DemoScene(Engine& engine, Client& client, uint32_t* playerID, uint32_
 
 			GameSystems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(scene);
 			GameSystems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingSphere>(scene);
+			
+			Systems::LightSystem(scene);
 		});
 
 	//On collision event add entitys as pair in the collision system
@@ -148,4 +142,19 @@ Entity DemoScene::CreatePlayerEntity()
 	renderable2->model = ResourceManager::Get().GetResource<RModel>("Chest.obj");
 
 	return playerEntity;
+}
+
+Entity DemoScene::CreateLight(sm::Vector4 pos, sm::Vector4 dir, sm::Vector4 col, float range, TypeLight type, UINT enabled)
+{
+	Entity lightEntity = m_scene.CreateEntity();
+
+	lightEntity.AddComponent<comp::Light>();
+	lightEntity.GetComponent<comp::Light>()->lightData.position = pos;
+	lightEntity.GetComponent<comp::Light>()->lightData.direction = dir;
+	lightEntity.GetComponent<comp::Light>()->lightData.color = col;
+	lightEntity.GetComponent<comp::Light>()->lightData.range = range;
+	lightEntity.GetComponent<comp::Light>()->lightData.type = type;
+	lightEntity.GetComponent<comp::Light>()->lightData.enabled = enabled;
+	
+	return lightEntity;
 }

@@ -37,6 +37,7 @@ namespace ecs
 		struct Light
 		{
 			light_t lightData;
+			int index;
 		};
 	};
 

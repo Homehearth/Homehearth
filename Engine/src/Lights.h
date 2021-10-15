@@ -10,6 +10,9 @@ class Lights
 {
 private:
 
+	bool m_isInit = false;
+	int m_currentLight = -1;
+
 	std::vector<light_t> m_lights;
 	ComPtr<ID3D11Buffer> m_lightBuffer;
 	ComPtr<ID3D11ShaderResourceView> m_lightShaderView;
@@ -20,7 +23,6 @@ private:
 	const bool UpdateLightBuffer();
 	const bool UpdateInfoBuffer();
 
-	bool m_isInit = false;
 
 public:
 
@@ -31,4 +33,7 @@ public:
 	const bool IsInitialize() const;
 	void Render(ID3D11DeviceContext* dc);
 	void Add(const light_t& light);
+	void EditLight(light_t L, const int& index = -1);
+
+	void AddFromComp(entt::registry& reg, entt::entity ent);
 };
