@@ -11,7 +11,6 @@ class Lights
 private:
 
 	bool m_isInit = false;
-	int m_currentLight = -1;
 
 	std::vector<light_t> m_lights;
 	ComPtr<ID3D11Buffer> m_lightBuffer;

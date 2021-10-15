@@ -3,7 +3,7 @@
 
 const bool Lights::SetupLightBuffer()
 {
-    int size = m_lights.size() > 0 ? m_lights.size():1;
+    int size = (int)m_lights.size() > 0 ? (int)m_lights.size():1;
     HRESULT hr;
 
     D3D11_BUFFER_DESC desc = {};
@@ -63,7 +63,7 @@ const bool Lights::UpdateLightBuffer()
 const bool Lights::UpdateInfoBuffer()
 {
     light_info_t newInfo = {};
-    newInfo.nrOfLights = dx::XMFLOAT4(m_lights.size(), 0.f, 0.f, 0.f);
+    newInfo.nrOfLights = dx::XMFLOAT4((float)m_lights.size(), 0.f, 0.f, 0.f);
 
     HRESULT hr;
     D3D11_MAPPED_SUBRESOURCE submap;
@@ -122,11 +122,7 @@ void Lights::Render(ID3D11DeviceContext* dc)
 
 void Lights::EditLight(light_t L, const int& index)
 {
-    if (index == -1 && m_currentLight >= 0)
-    {
-        m_lights[m_currentLight] = L;
-    }
-    else if (index < (int)m_lights.size() && index >= 0)
+    if (index < (int)m_lights.size() && index >= 0)
     {
         m_lights[index] = L;
     }
@@ -136,5 +132,4 @@ void Lights::Add(entt::registry& reg, entt::entity ent)
 {
     reg.get<comp::Light>(ent).index = (int)m_lights.size();
     m_lights.push_back(reg.get<comp::Light>(ent).lightData);
-    m_currentLight = m_lights.size() - 1;
 }

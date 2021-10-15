@@ -31,21 +31,21 @@ float4 main(PixelIn input) : SV_TARGET
     
     for (int i = 0; i < c_info.x; i++)
     {
-        if(S_Lights[i].enabled == 1)
+        if(s_Lights[i].enabled == 1)
         {
-            switch (S_Lights[i].type)
+            switch (s_Lights[i].type)
             {
                 case 0:
-                    lightCol += DoDirectionlight(S_Lights[i], N);
+                    lightCol += DoDirectionlight(s_Lights[i], N);
                     break;
                 case 1:
-                    lightCol += DoPointlight(S_Lights[i], input, N);
+                    lightCol += DoPointlight(s_Lights[i], input, N);
                     break;
                 default:
                     break;
             }
         
-            CalcRadiance(input, V, N, roughness, metallic, albedo, S_Lights[i].position.xyz, lightCol, F0, rad);
+            CalcRadiance(input, V, N, roughness, metallic, albedo, s_Lights[i].position.xyz, lightCol, F0, rad);
             Lo += rad;
         }
         

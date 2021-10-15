@@ -2,12 +2,12 @@
 ---------------------------------Textures and SamplerState---------------------------------
 */
 
-Texture2D T_albedo : register(t1);
-Texture2D T_normal : register(t2);
-Texture2D T_metalness : register(t3);
-Texture2D T_roughness : register(t4);
-Texture2D T_aomap : register(t5);
-Texture2D T_displace : register(t6);
+Texture2D t_albedo : register(t1);
+Texture2D t_normal : register(t2);
+Texture2D t_metalness : register(t3);
+Texture2D t_roughness : register(t4);
+Texture2D t_aomap : register(t5);
+Texture2D t_displace : register(t6);
 
 SamplerState samp : register(s0);
 
@@ -42,7 +42,7 @@ static const float PI = 3.14159265359;
 ---------------------------------Buffers---------------------------------
 */
 
-StructuredBuffer<Light> S_Lights : register(t7);
+StructuredBuffer<Light> s_Lights : register(t7);
 /*
     Material constant buffers
 */
@@ -235,13 +235,13 @@ void SampleTextures(PixelIn input, inout float3 albedo, inout float3 N, inout fl
     //If albedo texture exists, sample from it
     if(c_hasAlbedo == 1)
     {
-        albedo = pow(max(T_albedo.Sample(samp, input.uv).rgb, 0.0f), 2.2f); //Power the albedo by 2.2f to get it to linear space.
+        albedo = pow(max(t_albedo.Sample(samp, input.uv).rgb, 0.0f), 2.2f); //Power the albedo by 2.2f to get it to linear space.
     }
     
     //If normal texture exists, sample from it
     if(c_hasNormal == 1)
     {
-        float3 normalMap = T_normal.Sample(samp, input.uv).rgb;
+        float3 normalMap = t_normal.Sample(samp, input.uv).rgb;
         normalMap = normalMap * 2.0f - 1.0f;
         
         float3 tangent = normalize(input.tangent.xyz);
@@ -254,18 +254,18 @@ void SampleTextures(PixelIn input, inout float3 albedo, inout float3 N, inout fl
     //If metallic texture exists, sample from it
     if(c_hasMetalness == 1)
     {
-        metallic = T_metalness.Sample(samp, input.uv).r;
+        metallic = t_metalness.Sample(samp, input.uv).r;
     }
     
     //If roughness texture exists, sample from it
     if(c_hasRoughness == 1)
     {
-        roughness = T_roughness.Sample(samp, input.uv).r;
+        roughness = t_roughness.Sample(samp, input.uv).r;
     }
     
     //If ao texture exists, sample from it
     if(c_hasAoMap == 1)
     {
-        ao = T_aomap.Sample(samp, input.uv).r;
+        ao = t_aomap.Sample(samp, input.uv).r;
     }
 }
