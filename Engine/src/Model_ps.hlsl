@@ -1,13 +1,6 @@
 #include "PBR.hlsli"
 
-Texture2D T_albedo    : register(t1);
-Texture2D T_normal    : register(t2);
-Texture2D T_metalness : register(t3);
-Texture2D T_roughness : register(t4);
-Texture2D T_aomap     : register(t5);
-Texture2D T_displace  : register(t6);
 
-SamplerState samp : register(s0);
 
 StructuredBuffer<Light> S_Lights : register(t7);
 
@@ -63,37 +56,9 @@ float4 main(PixelIn input) : SV_TARGET
     float3 V = normalize(camPos - input.worldPos.xyz);    
     
     //If an object has a texture, sample from it else use default values.
-    if(c_hasAlbedo == 1)
-    {
-        albedo = pow(max(T_albedo.Sample(samp, input.uv).rgb, 0.0f), 2.2f); //Power the albedo by 2.2f to get it to linear space.        
-    }
-    
-    if (c_hasNormal == 1)
-    {
-        float3 normalMap = T_normal.Sample(samp, input.uv).rgb;
-        normalMap = normalMap * 2.0f - 1.0f;
-        
-        float3 tangent = normalize(input.tangent.xyz);
-        float3 biTangent = normalize(input.biTangent);
-        float3x3 TBN = float3x3(tangent, biTangent, input.normal);
-        
-        N = normalize(mul(normalMap, TBN));
-    }
-    
-    if(c_hasMetalness == 1)
-    { 
-        metallic = T_metalness.Sample(samp, input.uv).r;
-    }
-    
-    if(c_hasRoughness == 1)
-    {
-        roughness = T_roughness.Sample(samp, input.uv).r;
-    }
-    
-    if(c_hasAoMap == 1)
-    {
-        ao = T_aomap.Sample(samp, input.uv).r;        
-    }    
+    float3 ANM = float3(c_hasAlbedo, c_hasNormal, c_hasMetalness);
+    float RAD = float3(c_hasRoughness, c_hasAoMap, c_hasDisplace);
+    SampleTextures(input, ANM, RAD, albedo, N, roughness, metallic, ao);
     
 
     //---------------------------------PBR-Shading Calculations---------------------------------

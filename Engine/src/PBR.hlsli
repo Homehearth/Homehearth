@@ -1,3 +1,15 @@
+/*
+---------------------------------Textures and SamplerState---------------------------------
+*/
+
+Texture2D T_albedo : register(t1);
+Texture2D T_normal : register(t2);
+Texture2D T_metalness : register(t3);
+Texture2D T_roughness : register(t4);
+Texture2D T_aomap : register(t5);
+Texture2D T_displace : register(t6);
+
+SamplerState samp : register(s0);
 
 /*
 ---------------------------------Shader Struct & Const Variables---------------------------------
@@ -25,6 +37,7 @@ struct PixelIn
 };
 
 static const float PI = 3.14159265359;
+
 /*
 ---------------------------------Normal distribution function---------------------------------
 Approximates the amount the surface's microfacets are aligned to the halfway vector, 
@@ -172,4 +185,44 @@ void CalcRadiance(PixelIn input, float3 V, float3 N, float roughness, float meta
     
     float NdotL = max(dot(N, lightDir), 0.0f);
     rad = (((kD * albedo / PI) + specular) * radiance * NdotL);
+}
+
+void SampleTextures(PixelIn input, float3 ANM, float3 RAD, inout float3 albedo, inout float3 N, inout float roughness, inout float metallic, inout float ao)
+{
+    //If albedo texture exists, sample from it
+    if(ANM.x == 1)
+    {
+        albedo = pow(max(T_albedo.Sample(samp, input.uv).rgb, 0.0f), 2.2f); //Power the albedo by 2.2f to get it to linear space.
+    }
+    
+    //If normal texture exists, sample from it
+    if(ANM.y == 1)
+    {
+        float3 normalMap = T_normal.Sample(samp, input.uv).rgb;
+        normalMap = normalMap * 2.0f - 1.0f;
+        
+        float3 tangent = normalize(input.tangent.xyz);
+        float3 biTangent = normalize(input.biTangent);
+        float3x3 TBN = float3x3(tangent, biTangent, input.normal);
+        
+        N = normalize(mul(normalMap, TBN));
+    }
+    
+    //If metallic texture exists, sample from it
+    if(ANM.z == 1)
+    {
+        metallic = T_metalness.Sample(samp, input.uv).r;
+    }
+    
+    //If roughness texture exists, sample from it
+    if(RAD.x == 1)
+    {
+        roughness = T_roughness.Sample(samp, input.uv).r;
+    }
+    
+    //If ao texture exists, sample from it
+    if(RAD.y == 1)
+    {
+        ao = T_aomap.Sample(samp, input.uv).r;
+    }
 }
