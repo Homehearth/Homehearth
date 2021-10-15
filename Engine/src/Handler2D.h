@@ -8,6 +8,7 @@
 #include "Border.h"
 #include "Button.h"
 #include "Text.h"
+#include "Slider.h"
 
 // std
 #include <set>

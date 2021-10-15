@@ -18,6 +18,8 @@ private:
 	uint32_t* m_playerID, *m_gameID;
 	Client& m_client;
 
+	float test = 5.0f;
+
 public:
 	DemoScene(Engine& engine, Client& client, uint32_t* playerID, uint32_t* gameID);
 	

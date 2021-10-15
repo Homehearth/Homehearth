@@ -29,6 +29,12 @@ rtd::Canvas::~Canvas()
 
 }
 
+void rtd::Canvas::SetPosition(const float& x, const float& y)
+{
+	m_drawOpts.x_pos = x;
+	m_drawOpts.y_pos = y;
+}
+
 void rtd::Canvas::SetColor(const D2D1_COLOR_F& new_color)
 {
 	m_color = new_color;

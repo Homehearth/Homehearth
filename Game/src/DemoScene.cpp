@@ -29,6 +29,8 @@ DemoScene::DemoScene(Engine& engine, Client& client, uint32_t* playerID, uint32_
 			//System responding to user input
 			GameSystems::MRayIntersectBoxSystem(scene);
 
+			std::cout << "Value: " << test << "\n";
+
 			/*
 				Logic for buttons.
 			*/
@@ -45,19 +47,20 @@ DemoScene::DemoScene(Engine& engine, Client& client, uint32_t* playerID, uint32_
 			}
 			*/
 
-			/*
 			if (GET_ELEMENT("mage_button", rtd::Button)->IsClicked())
 			{
 				GET_ELEMENT("warrior_text", rtd::Text)->SetVisibility(false);
 				GET_ELEMENT("mage_text", rtd::Text)->SetVisibility(true);
+				GET_ELEMENT("player1_symbol", rtd::Picture)->SetTexture("mageIconDemo.png");
 			}
 
 			if (GET_ELEMENT("warrior_button", rtd::Button)->IsClicked())
 			{
 				GET_ELEMENT("warrior_text", rtd::Text)->SetVisibility(true);
 				GET_ELEMENT("mage_text", rtd::Text)->SetVisibility(false);
+				GET_ELEMENT("player1_symbol", rtd::Picture)->SetTexture("warriorIconDemo.png");
 			}
-			*/
+
 
 			int ver = InputSystem::Get().GetAxis(Axis::VERTICAL);
 			int hor = InputSystem::Get().GetAxis(Axis::HORIZONTAL);
@@ -102,7 +105,11 @@ DemoScene::DemoScene(Engine& engine, Client& client, uint32_t* playerID, uint32_
 
 	//SetupMainMenuScreen();
 	//SetupInGameScreen();
-	//SetupInLobbyScreen();
+	SetupInLobbyScreen();
+
+
+	rtd::Slider* tempValSlider = new rtd::Slider(D2D1::ColorF(0.0f, 0.0f, 0.0f), draw_t(300.0f, 300.0f, 100.0f, 75.0f), &test);;
+	rtd::Handler2D::Get().InsertElement(tempValSlider);
 }
 
 void DemoScene::SetUpCamera()
@@ -332,11 +339,27 @@ void SetupInLobbyScreen()
 	for (int i = 0; i < 2; i++)
 	{
 		const std::string& playerString = "Player " + std::to_string(i + 1);
-		rtd::Text* playerText = new rtd::Text(playerString, draw_text_t(0.0f, (i + 1) * 100.0f + ((i + 1) * 25.0f), 300.0f, 100.0f));
-		rtd::Canvas* playerCanvas = new rtd::Canvas(D2D1::ColorF(0.7f, 0.5f, 0.2f), draw_t(25.0f, (i + 1) * 100.0f + ((i + 1) * 25.0f), 300.0f, 100.0f));
+		rtd::Text* playerText = new rtd::Text(playerString, draw_text_t(0.0f, (i + 1) * 100.0f + ((i + 1) * 25.0f), playerString.length() * 24.0f, 64.0f));
+		rtd::Canvas* playerCanvas = new rtd::Canvas(D2D1::ColorF(0.7f, 0.5f, 0.2f), draw_t(25.0f, (i + 1) * 100.0f + ((i + 1) * 25.0f), 300.0f, 64.0f));
 		rtd::Handler2D::Get().InsertElement(playerCanvas);
 		rtd::Handler2D::Get().InsertElement(playerText);
 	}
+
+	rtd::Picture* player1Symbol = new rtd::Picture("warriorIconDemo.png", draw_t(350.0f, 125.0f, 64.0f, 64.0f));
+	rtd::Handler2D::Get().InsertElement(player1Symbol);
+	player1Symbol->SetName("player1_symbol");
+
+	rtd::Picture* host = new rtd::Picture("demoHost.png", draw_t(424.0f, 125.0f, 64.0f, 64.0f));
+	rtd::Handler2D::Get().InsertElement(host);
+	host->SetName("host_symbol");
+
+	rtd::Picture* player2Symbol = new rtd::Picture("warriorIconDemo.png", draw_t(350.0f, 250.0f, 64.0f, 64.0f));
+	rtd::Handler2D::Get().InsertElement(player2Symbol);
+	player2Symbol->SetName("player2_symbol");
+
+	rtd::Text* homehearthText = new rtd::Text("Homehearth", draw_text_t(25.0f, 25.0f, 200.0f, 50.0f));
+	rtd::Handler2D::Get().InsertElement(homehearthText);
+
 }
 
 void SetupOptionsScreen()
