@@ -31,6 +31,8 @@ public:
 	// Emit update event and update constant buffers
 	virtual void Update(float dt);
 
+	void Clear();
+
 };
 
 

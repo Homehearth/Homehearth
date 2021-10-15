@@ -2,25 +2,25 @@
 
 Entity::Entity(entt::registry& registry)
 {
-	m_registry = &registry;
-	m_entity = m_registry->create();
+	m_pRegistry = &registry;
+	m_entity = m_pRegistry->create();
 }
 
 Entity::Entity(entt::registry& registry, entt::entity id)
 {
-	m_registry = &registry;
+	m_pRegistry = &registry;
 	m_entity = id;
 }
 
 Entity::Entity()
 {
-	m_registry = nullptr;
+	m_pRegistry = nullptr;
 	m_entity = entt::null;
 }
 
 void Entity::Destroy() 
 {
-	m_registry->destroy(m_entity);
+	m_pRegistry->destroy(m_entity);
 }
 
 

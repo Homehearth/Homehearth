@@ -121,8 +121,13 @@ void Camera::Update(float deltaTime)
 		quaterion = sm::Quaternion::CreateFromYawPitchRoll(m_rollPitchYaw.z, m_rollPitchYaw.y, m_rollPitchYaw.x);
 		m_rotationMatrix = dx::XMMatrixRotationRollPitchYaw(m_rollPitchYaw.y, m_rollPitchYaw.z, m_rollPitchYaw.x);
 
-		sm::Vector3 rot = m_targetTransform->rotation;
-		sm::Matrix transformed = sm::Matrix::CreateFromYawPitchRoll(rot.y, rot.x, rot.z) * sm::Matrix::CreateTranslation(m_targetTransform->position);
+		sm::Matrix transformed = sm::Matrix::Identity;
+		if (m_targetTransform)
+		{
+			sm::Vector3 rot = m_targetTransform->rotation;
+			transformed = sm::Matrix::CreateFromYawPitchRoll(rot.y, rot.x, rot.z) * sm::Matrix::CreateTranslation(m_targetTransform->position);
+
+		}
 
 		m_position = sm::Vector3::Transform(m_defaultPos, transformed);
 
@@ -140,7 +145,14 @@ void Camera::Update(float deltaTime)
 		//m_forward = m_target;
 
 		//m_target = dx::XMVectorAdd(m_target, m_position);
-		m_target = m_targetTransform->position - m_position;
+		if (m_targetTransform)
+		{
+			m_target = m_targetTransform->position - m_position;
+		}
+		else
+		{
+			m_target = m_position + m_defaultForward;
+		}
 		m_view = dx::XMMatrixLookToLH(m_position, m_target, m_up);
 
 		UpdateProjection();

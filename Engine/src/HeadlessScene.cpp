@@ -24,3 +24,8 @@ void HeadlessScene::Update(float dt)
 	publish<ESceneUpdate>(dt);
 }
 
+void HeadlessScene::Clear()
+{
+	m_registry.clear();
+}
+
