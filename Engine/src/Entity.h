@@ -24,6 +24,8 @@ public:
 
 	void Destroy();
 
+	bool IsNull() const;
+
 	operator entt::entity()
 	{
 		return m_entity;

@@ -1,31 +1,45 @@
 #include "NetServerPCH.h"
 #include "Simulation.h"
 
-void Simulation::SendAllEntities(uint32_t playerID)
+void Simulation::InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg)
+{
+	msg << entity.GetComponent<comp::Network>()->id << 'N';
+	comp::Transform* t = entity.GetComponent<comp::Transform>();
+	if (t)
+	{
+		msg << *t << 'T';
+	}
+	comp::MeshName* m = entity.GetComponent<comp::MeshName>();
+	if (m)
+	{
+		msg << m->name << 'M';
+	}
+}
+
+message<GameMsg> Simulation::AllEntitiesMessage()
 {
 	message<GameMsg> msg;
 	msg.header.id = GameMsg::Game_AddEntity;
 	uint32_t count = 0;
 	m_pGameScene->ForEachComponent<comp::Network>([&](Entity e, comp::Network& n)
 		{
-			msg << n.id << 'N';
-			// TODO insert all components
-			comp::Transform* t = e.GetComponent<comp::Transform>();
-			if (t)
-			{
-				msg << *t << 'T';
-			}
-			comp::MeshName* m = e.GetComponent<comp::MeshName>();
-			if (m)
-			{
-				msg << m->name << 'M';
-			}
-
+			InsertEntityIntoMessage(e, msg);
 			count++;
 		});
 	msg << count;
-	LOG_INFO("Sent %u entities", count);
-	m_pServer->SendToClient(m_pServer->GetConnection(playerID), msg);
+	return msg;
+}
+
+message<GameMsg> Simulation::SingleEntityMessage(Entity entity)
+{
+	message<GameMsg> msg;
+	msg.header.id = GameMsg::Game_AddEntity;
+
+	InsertEntityIntoMessage(entity, msg);
+
+	msg << 1U;
+
+	return msg;
 }
 
 Simulation::Simulation(Server* pServer, HeadlessEngine* pEngine)
@@ -100,7 +114,7 @@ bool Simulation::AddPlayer(uint32_t playerID)
 {
 	LOG_INFO("Player with ID: %ld added to the game!", playerID);
 	m_connections[playerID] = m_pServer->GetConnection(playerID);
-
+	/*
 	message<GameMsg> addNewPlayerMsg;
 	addNewPlayerMsg.header.id = GameMsg::Game_AddPlayer;
 	addNewPlayerMsg << playerID << 1U;
@@ -114,25 +128,29 @@ bool Simulation::AddPlayer(uint32_t playerID)
 	}
 	addOldPlayersMsg << (uint32_t)m_connections.size();
 	m_pServer->SendToClient(m_pServer->GetConnection(playerID), addOldPlayersMsg);
+	*/
 
-	// Send all entities in Game Scene
-	SendAllEntities(playerID);
-	
 	// Create Player entity in Game scene
 	Entity player = m_pGameScene->CreateEntity();
 	player.AddComponent<comp::Transform>();
 	player.AddComponent<comp::Velocity>();
 	player.AddComponent<comp::MeshName>()->name = "cube.obj";
 	player.AddComponent<comp::Network>()->id = playerID;
-	
+
+	// Send all entities in Game Scene to new player
+	m_pServer->SendToClient(m_pServer->GetConnection(playerID), AllEntitiesMessage());
+
+	// send new Player to all other clients
+	Broadcast(SingleEntityMessage(player), playerID);
+
 	return true;
 }
 
 bool Simulation::RemovePlayer(uint32_t playerID)
 {
 	message<GameMsg> msg;
-	msg.header.id = GameMsg::Game_RemovePlayer;
-	msg << playerID;
+	msg.header.id = GameMsg::Game_RemoveEntity;
+	msg << playerID << 1U;
 
 	this->Broadcast(msg);
 

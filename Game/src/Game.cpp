@@ -199,32 +199,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 
 		break;
 	}
-	case GameMsg::Game_AddPlayer:
-	{
-		uint32_t count; // Could be more than one player
-		msg >> count;
-		for (uint32_t i = 0; i < count; i++)
-		{
-			uint32_t remotePlayerID;
-			msg >> remotePlayerID;
-			LOG_INFO("Player with ID: %ld has joined the game!", remotePlayerID);
-			Entity entity = sceneHelp::CreatePlayerEntity(GetScene("Game"), remotePlayerID);
-			
-			if (m_localPID == remotePlayerID)
-			{
-				GetScene("Game").ForEachComponent<comp::Tag<CAMERA>>([&](Entity e, comp::Tag<CAMERA>& t)
-					{
-						comp::Camera3D* c = e.GetComponent<comp::Camera3D>();
-						if (c)
-						{
-							c->camera.SetFollowTransform(entity.GetComponent<comp::Transform>());
-						}
-					});
-			}
-		}
-
-		break;
-	}
 	case GameMsg::Game_AddEntity:
 	{
 		uint32_t count; // Could be more than one Entity
@@ -241,7 +215,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 				{
 				case 'T':
 				{
-
 					comp::Transform t;
 					msg >> t;
 					*e.AddComponent<comp::Transform>() = t;
@@ -263,7 +236,43 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 				}
 				}
 			} while (type != 'N');
+
+			LOG_INFO("Added entity %u", e.GetComponent<comp::Network>()->id);
+
+			if (e.GetComponent<comp::Network>()->id == m_localPID)
+			{
+				LOG_INFO("This player added");
+				GetScene("Game").ForEachComponent<comp::Tag<CAMERA>>([&](Entity entt, comp::Tag<CAMERA>& t)
+					{
+						comp::Camera3D* c = entt.GetComponent<comp::Camera3D>();
+						if (c)
+						{
+							c->camera.SetFollowEntity(e);
+						}
+					});
+			}
 		}
+
+		break;
+	}
+	case GameMsg::Game_RemoveEntity:
+	{
+		uint32_t count;
+		msg >> count;
+		std::vector<uint32_t> ids(count);
+		for (int i = 0; i < count; i++)
+		{
+			msg >> ids[i];
+		}
+
+		GetScene("Game").ForEachComponent<comp::Network>([&](Entity& e, comp::Network& net)
+			{
+				if (std::find(ids.begin(), ids.end(), net.id) != ids.end())
+				{
+					LOG_INFO("Removed Entity %u", net.id);
+					e.Destroy();
+				}
+			});
 
 		break;
 	}
@@ -279,23 +288,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		LOG_WARNING("Request denied: Invalid lobby");
 		break;
 	}
-	case GameMsg::Game_RemovePlayer:
-	{
-		uint32_t playerID;
-		msg >> playerID;
-
-		// TODO Remove the entity of the player that matches ID
-		GetScene("Game").ForEachComponent<comp::Network>([playerID](Entity& e, comp::Network& net)
-			{
- 				if (playerID == net.id)
-				{
-					LOG_INFO("Removed player %u", net.id);
-					e.Destroy();
-				}
-			}
-		);
-		break;
-	}
+	
 	}
 }
 
@@ -348,7 +341,7 @@ void Game::OnClientDisconnect()
 	// remove all network entities
 	GetScene("Game").ForEachComponent<comp::Network>([](Entity& e, comp::Network& net)
 		{
-			LOG_INFO("Removed entity %u", net.id);
+			LOG_INFO("Removed entity %u on disconnect", net.id);
 			e.Destroy();
 		}
 	);
