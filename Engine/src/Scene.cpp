@@ -3,20 +3,13 @@
 #include <omp.h>
 
 Scene::Scene()
+:m_currentCamera(nullptr),
+m_IsRenderingColliders(true)
 {
-	m_IsRenderingColliders = true;
 	m_publicBuffer.Create(D3D11Core::Get().Device());
 	thread::RenderThreadHandler::Get().SetObjectsBuffer(&m_renderableCopies);
-}
-
-Entity Scene::CreateEntity()
-{
-	return Entity(m_registry);
-}
-
-entt::basic_registry<entt::entity>* Scene::GetRegistry()
-{
-	return &this->m_registry;
+	m_defaultCamera.Initialize(sm::Vector3(0, 0, 0), sm::Vector3(0, 0, 1), sm::Vector3(0, 1, 0), sm::Vector2(1000, 1000), CAMERATYPE::DEFAULT);
+	m_currentCamera = &m_defaultCamera;
 }
 
 void Scene::Update(float dt)
@@ -24,7 +17,8 @@ void Scene::Update(float dt)
 	PROFILE_FUNCTION();
 
 	// Emit event
-	publish<ESceneUpdate>(dt);
+	HeadlessScene::Update(dt);
+
 	if (!m_renderableCopies.IsSwapped())
 	{
 		PROFILE_SCOPE("Copy Transforms");
@@ -134,15 +128,20 @@ const bool Scene::IsRenderDebugReady() const
 	return m_debugRenderableCopies.IsSwapped();
 }
 
+Camera* Scene::GetCurrentCamera() const
+{
+	return m_currentCamera;
+}
+
 void Scene::ReadyForSwap()
 {
 	m_renderableCopies.ReadyForSwap();
 	m_debugRenderableCopies.ReadyForSwap();
 }
 
-Camera* Scene::GetCamera()
+void Scene::SetCurrentCamera(Camera* pCamera)
 {
-	return m_currentCamera.get();
+	m_currentCamera = pCamera;
 }
 
 bool* Scene::GetIsRenderingColliders()
