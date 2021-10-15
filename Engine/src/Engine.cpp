@@ -64,7 +64,7 @@ void Engine::Startup()
 	// Thread Startup.
 	thread::RenderThreadHandler::Get().SetRenderer(&m_renderer);
 	thread::RenderThreadHandler::Get().SetWindow(&m_window);
-	thread::RenderThreadHandler::Get().Setup(T_REC - thread::MultiThreader::GetAmountOfThreads());
+	thread::RenderThreadHandler::Get().Setup(2);
 
 	InputSystem::Get().SetMouseWindow(m_window.GetHWnd(), m_window.GetWidth(), m_window.GetHeight());
 
