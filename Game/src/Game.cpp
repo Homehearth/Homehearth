@@ -79,16 +79,7 @@ bool Game::OnStartup()
 			);
 		});
 
-	Scene& gameScene = GetScene("Game");
-	gameScene.on<ESceneUpdate>([](const ESceneUpdate& e, HeadlessScene& scene)
-		{
-			IMGUI(
-				ImGui::Begin("Scene");
-				ImGui::Text("Game");
-				ImGui::End();
-			);
-
-		});
+	sceneHelp::CreateGameScene(*this);
 
 	SetScene(mainMenuScene);
 	
@@ -130,6 +121,7 @@ void Game::OnUserUpdate(float deltaTime)
 		else
 		{
 			ImGui::Text(std::string("Game ID: " + std::to_string(m_gameID)).c_str());
+			ImGui::Text(std::string("Local player ID: " + std::to_string(m_localPID)).c_str());
 
 			if (ImGui::Button("Leave Game"))
 			{
@@ -186,8 +178,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		msg >> count;
 		
 		std::unordered_map<uint32_t, comp::Transform> transforms;
-		std::set<uint32_t> found;
-
+		
 		for (uint32_t i = 0; i < count; i++)
 		{
 			uint32_t entityID;
@@ -197,39 +188,13 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		}
 		// TODO MAKE BETTER
 		// Update entities with new transforms
-		m_demoScene->GetScene().ForEachComponent<comp::Network, comp::Transform>([&](comp::Network& n, comp::Transform& t)
+		GetScene("Game").ForEachComponent<comp::Network, comp::Transform>([&](comp::Network& n, comp::Transform& t)
 			{
 				if (transforms.find(n.id) != transforms.end())
 				{
 					t = transforms.at(n.id);
-					found.insert(n.id);
 				}
 			});
-
-		// create new Entities
-		for (const auto& t : transforms) {
-			if (found.find(t.first) == found.end())
-			{
-				Entity entity = this->m_demoScene->CreatePlayerEntity(t.first);
-				*entity.GetComponent<comp::Transform>() = t.second;
-				
-				if (m_localPID == t.first)
-				{
-
-					m_demoScene->GetScene().ForEachComponent<comp::Tag<CAMERA>>([&](Entity e, comp::Tag<CAMERA>& t)
-						{
-							comp::Camera3D* c = e.GetComponent<comp::Camera3D>();
-							if (c)
-							{
-								if (c->camera.GetCameraType() == CAMERATYPE::PLAY)
-								{
-									c->camera.SetFollowTransform(entity.GetComponent<comp::Transform>());
-								}
-							}
-						});
-				}
-			}
-		}
 
 		break;
 	}
@@ -242,16 +207,33 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			uint32_t remotePlayerID;
 			msg >> remotePlayerID;
 			LOG_INFO("Player with ID: %ld has joined the game!", remotePlayerID);
-			Entity e = m_demoScene->CreatePlayerEntity(remotePlayerID);
+			Entity entity = sceneHelp::CreatePlayerEntity(GetScene("Game"), remotePlayerID);
 			
+			if (m_localPID == remotePlayerID)
+			{
+				GetScene("Game").ForEachComponent<comp::Tag<CAMERA>>([&](Entity e, comp::Tag<CAMERA>& t)
+					{
+						comp::Camera3D* c = e.GetComponent<comp::Camera3D>();
+						if (c)
+						{
+							c->camera.SetFollowTransform(entity.GetComponent<comp::Transform>());
+						}
+					});
+			}
 		}
+
+		break;
+	}
+	case GameMsg::Game_AddEntity:
+	{
+		
 
 		break;
 	}
 	case GameMsg::Lobby_Accepted:
 	{
 		msg >> m_gameID;
-		SetScene(m_demoScene->GetScene());
+		SetScene("Game");
 		LOG_INFO("You are now in lobby: %lu", m_gameID);
 		break;
 	}
@@ -266,11 +248,11 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		msg >> playerID;
 
 		// TODO Remove the entity of the player that matches ID
-
-		m_demoScene->GetScene().ForEachComponent<comp::Network>([playerID](Entity& e, comp::Network& net)
+		GetScene("Game").ForEachComponent<comp::Network>([playerID](Entity& e, comp::Network& net)
 			{
  				if (playerID == net.id)
 				{
+					LOG_INFO("Removed player %u", net.id);
 					e.Destroy();
 				}
 			}
@@ -323,12 +305,13 @@ void Game::CreateLobby()
 
 void Game::OnClientDisconnect()
 {
-
 	this->m_gameID = -1;
 	this->m_localPID = -1;
 
-	m_demoScene->GetScene().ForEachComponent<comp::Network>([](Entity& e, comp::Network& net)
+	// remove all network entities
+	GetScene("Game").ForEachComponent<comp::Network>([](Entity& e, comp::Network& net)
 		{
+			LOG_INFO("Removed entity %u", net.id);
 			e.Destroy();
 		}
 	);

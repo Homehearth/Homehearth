@@ -88,6 +88,7 @@ namespace network
 		Server_GetPing,
 		Game_Snapshot,
 		Game_AddPlayer,
+		Game_AddEntity,
 		Game_RemovePlayer,
 		Game_Update,
 		Game_MovePlayer

@@ -30,10 +30,22 @@ void ServerGame::InputThread()
 			LOG_INFO("INFO:")
 			for (const auto& sim : m_simulations)
 			{
+				LOG_INFO("-------Simulation %u-------", sim.first);
 				LOG_INFO("LOBBY SCENE:");
-				LOG_INFO("Entity Count: %u", (unsigned int)sim.second->GetLobbyScene()->GetRegistry()->size());
+				LOG_INFO("\tEntity Count: %u", (unsigned int)sim.second->GetLobbyScene()->GetRegistry()->size());
+				sim.second->GetLobbyScene()->ForEachComponent<comp::Network>([](Entity e, comp::Network& n)
+					{
+						LOG_INFO("\tEntity: %d", (entt::entity)e);
+						LOG_INFO("\tNetwork id: %u", n.id);
+					});
+
 				LOG_INFO("GAME SCENE:");
-				LOG_INFO("Entity Count: %u\n", (unsigned int)sim.second->GetGameScene()->GetRegistry()->size());
+				LOG_INFO("\tEntity Count: %u\n", (unsigned int)sim.second->GetGameScene()->GetRegistry()->size());
+				sim.second->GetGameScene()->ForEachComponent<comp::Network>([](Entity e, comp::Network& n)
+					{
+						LOG_INFO("\tEntity: %d", (entt::entity)e);
+						LOG_INFO("\tNetwork id: %u", n.id);
+					});
 
 			}
 		}
@@ -69,11 +81,21 @@ void ServerGame::OnShutdown()
 	m_inputThread.join();
 }
 
+
 void ServerGame::UpdateNetwork(float deltaTime)
 {
-	for (const auto& sim : m_simulations)
+	for (auto it = m_simulations.begin(); it != m_simulations.end();)
 	{
-		sim.second->SendSnapshot();
+		if (it->second->IsEmpty())
+		{
+			it->second->Destroy();
+			LOG_INFO("Destroyed empty lobby %d", it->first);
+			it = m_simulations.erase(it);
+		}
+		else {
+			it->second->SendSnapshot();
+			it++;
+		}
 	}
 }
 

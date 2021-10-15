@@ -42,17 +42,22 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 		});
 
 	m_pCurrentScene = m_pGameScene; // todo temp
-
-	// Add player that created Lobby
-	AddPlayer(playerID);
-
-	// Send back gameID so Client knows what game it is in
-	message<GameMsg> msg;
-	msg.header.id = GameMsg::Lobby_Accepted;
-	msg << m_gameID;
-	m_pServer->SendToClient(m_connections[playerID], msg);
+	
+	// Automatically join created lobby
+	JoinLobby(playerID, gameID);
 
 	return true;
+}
+
+void Simulation::Destroy()
+{
+	m_pGameScene->Clear();
+	m_pLobbyScene->Clear();
+}
+
+bool Simulation::IsEmpty() const
+{
+	return m_connections.empty();
 }
 
 // TODO ADD PLAYER FUNCTIONALITY
@@ -61,8 +66,21 @@ bool Simulation::AddPlayer(uint32_t playerID)
 	LOG_INFO("Player with ID: %ld added to the game!", playerID);
 	m_connections[playerID] = m_pServer->GetConnection(playerID);
 
+	message<GameMsg> addNewPlayerMsg;
+	addNewPlayerMsg.header.id = GameMsg::Game_AddPlayer;
+	addNewPlayerMsg << playerID << 1U;
+	Broadcast(addNewPlayerMsg, playerID);
 
-	
+	message<GameMsg> addOldPlayersMsg;
+	addOldPlayersMsg.header.id = GameMsg::Game_AddPlayer;
+	for (const auto& con : m_connections)
+	{
+		addOldPlayersMsg << con.first;
+	}
+	addOldPlayersMsg << (uint32_t)m_connections.size();
+	m_pServer->SendToClient(m_pServer->GetConnection(playerID), addOldPlayersMsg);
+
+
 	// Create Player entity in Game scene
 	Entity player = m_pGameScene->CreateEntity();
 	player.AddComponent<comp::Transform>();
@@ -89,6 +107,7 @@ bool Simulation::RemovePlayer(uint32_t playerID)
 		{
 			if (n.id == playerID)
 			{
+				LOG_INFO("Removed player %u from Game scene", n.id);
 				e.Destroy();
 			}
 		});
@@ -97,10 +116,12 @@ bool Simulation::RemovePlayer(uint32_t playerID)
 		{
 			if (n.id == playerID)
 			{
+				LOG_INFO("Removed player %u from Lobby scene", n.id);
 				e.Destroy();
 			}
 		});
 
+	m_connections.erase(playerID);
 
 	return true;
 }

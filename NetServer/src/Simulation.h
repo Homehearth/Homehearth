@@ -22,15 +22,19 @@ private:
 	std::unordered_map<uint32_t, entt::entity> m_players;
 	std::unordered_map<uint32_t, SOCKET> m_connections;
 
-	bool AddPlayer(uint32_t playerID);
-	bool RemovePlayer(uint32_t playerID);
-
 public:
 	Simulation(Server* pServer, HeadlessEngine* pEngine);
 	virtual ~Simulation() = default;
 
+	bool AddPlayer(uint32_t playerID);
+	bool RemovePlayer(uint32_t playerID);
+	
 	bool JoinLobby(uint32_t playerID, uint32_t gameID);
 	bool Create(uint32_t playerID, uint32_t gameID);
+	void Destroy();
+
+	bool IsEmpty() const;
+
 	void SendSnapshot();
 
 	void Update(float dt);
