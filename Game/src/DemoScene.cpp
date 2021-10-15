@@ -47,6 +47,7 @@ DemoScene::DemoScene(Engine& engine, Client& client, uint32_t* playerID, uint32_
 			}
 			*/
 
+			/*
 			if (GET_ELEMENT("mage_button", rtd::Button)->IsClicked())
 			{
 				GET_ELEMENT("warrior_text", rtd::Text)->SetVisibility(false);
@@ -60,6 +61,7 @@ DemoScene::DemoScene(Engine& engine, Client& client, uint32_t* playerID, uint32_
 				GET_ELEMENT("mage_text", rtd::Text)->SetVisibility(false);
 				GET_ELEMENT("player1_symbol", rtd::Picture)->SetTexture("warriorIconDemo.png");
 			}
+			*/
 
 
 			int ver = InputSystem::Get().GetAxis(Axis::VERTICAL);
@@ -105,10 +107,10 @@ DemoScene::DemoScene(Engine& engine, Client& client, uint32_t* playerID, uint32_
 
 	//SetupMainMenuScreen();
 	//SetupInGameScreen();
-	SetupInLobbyScreen();
+	//SetupInLobbyScreen();
 
 
-	rtd::Slider* tempValSlider = new rtd::Slider(D2D1::ColorF(0.0f, 0.0f, 0.0f), draw_t(300.0f, 300.0f, 100.0f, 75.0f), &test);;
+	rtd::Slider* tempValSlider = new rtd::Slider(D2D1::ColorF(0.0f, 0.0f, 0.0f), draw_t(300.0f, 300.0f, 100.0f, 25.0f), &test);;
 	rtd::Handler2D::Get().InsertElement(tempValSlider);
 }
 
@@ -307,7 +309,7 @@ void SetupInLobbyScreen()
 	rtd::Handler2D::Get().InsertElement(textCanvas);
 
 	const std::string& dt = "##--Description--##";
-	rtd::Text* descText = new rtd::Text(dt, draw_text_t(530.0f, 20.0f, dt.length() * 24, 24));
+	rtd::Text* descText = new rtd::Text(dt, draw_text_t(530.0f, 20.0f, dt.length() * 24.0f, 24));
 	rtd::Handler2D::Get().InsertElement(descText);
 
 	rtd::Text* warriorText = new rtd::Text(warriorString, draw_text_t(580.0f, 30.0f, 350.0f, 370.0f));

@@ -9,6 +9,8 @@ namespace rtd
 
 		std::unique_ptr<Border> m_border;
 		std::unique_ptr<Canvas> m_slider;
+		std::unique_ptr<Text> m_valueText;
+		std::string m_valueString;
 		float* m_value;
 		draw_t m_drawOpts;
 		bool m_isHeld = false;
