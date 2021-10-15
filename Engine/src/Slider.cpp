@@ -88,10 +88,16 @@ void Slider::OnClick()
 		auto length = std::snprintf(&m_valueString[0], m_valueString.size(), "%.2f", *m_value);
 		m_valueString.resize(length);
 		m_valueText.get()->SetText(m_valueString);
-		if(m_isHorizontal)
-			*m_value = (m_maxPos.x - m_drawOpts.x_pos) * 0.01f * m_maxVal;
+		if (m_isHorizontal)
+		{
+			float old_range = (m_drawOpts.x_pos - m_minPos.x) / (m_maxPos.x - m_minPos.x);
+			*m_value = ((m_maxVal - m_minVal) * old_range) + m_minVal;
+		}
 		else
-			*m_value = (m_maxPos.y - m_drawOpts.y_pos) * 0.01f * m_maxVal;
+		{
+			float old_range = (m_drawOpts.y_pos - m_minPos.y) / (m_maxPos.y - m_minPos.y);
+			*m_value = ((m_maxVal - m_minVal) * old_range) + m_minVal;
+		}
 	}
 }
 
