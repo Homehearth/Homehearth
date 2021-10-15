@@ -84,3 +84,4 @@ struct light_t
 	UINT		enabled		= 1;	// 0 = Off, 1 = On
 	float		range		= 0.0f;	// Not available from assimp
 };
+

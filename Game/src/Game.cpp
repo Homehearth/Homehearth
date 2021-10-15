@@ -94,6 +94,8 @@ void Game::OnUserUpdate(float deltaTime)
 
 	if (m_client.IsConnected())
 	{
+		ImGui::Text(std::string("Local Client ID: " + std::to_string(m_localPID)).c_str());
+
 		if (m_client.m_latency > 0)
 		{
 			ImGui::Text(std::string("Latency: " + std::to_string(m_client.m_latency) + "ms").c_str());
@@ -121,7 +123,6 @@ void Game::OnUserUpdate(float deltaTime)
 		else
 		{
 			ImGui::Text(std::string("Game ID: " + std::to_string(m_gameID)).c_str());
-			ImGui::Text(std::string("Local player ID: " + std::to_string(m_localPID)).c_str());
 
 			if (ImGui::Button("Leave Game"))
 			{
@@ -226,7 +227,43 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	}
 	case GameMsg::Game_AddEntity:
 	{
-		
+		uint32_t count; // Could be more than one Entity
+		msg >> count;
+		LOG_INFO("Received %u entities", count);
+
+		for (uint32_t i = 0; i < count; i++)
+		{
+			Entity e = GetScene("Game").CreateEntity();
+			char type;
+			do {
+				msg >> type;
+				switch (type)
+				{
+				case 'T':
+				{
+
+					comp::Transform t;
+					msg >> t;
+					*e.AddComponent<comp::Transform>() = t;
+					break;
+				}
+				case 'N':
+				{
+					uint32_t id;
+					msg >> id;
+					e.AddComponent<comp::Network>()->id = id;
+					break;
+				}
+				case 'M':
+				{
+					std::string name;
+					msg >> name;
+					e.AddComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>(name);
+					break;
+				}
+				}
+			} while (type != 'N');
+		}
 
 		break;
 	}

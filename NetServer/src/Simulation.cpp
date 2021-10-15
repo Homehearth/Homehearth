@@ -1,6 +1,33 @@
 #include "NetServerPCH.h"
 #include "Simulation.h"
 
+void Simulation::SendAllEntities(uint32_t playerID)
+{
+	message<GameMsg> msg;
+	msg.header.id = GameMsg::Game_AddEntity;
+	uint32_t count = 0;
+	m_pGameScene->ForEachComponent<comp::Network>([&](Entity e, comp::Network& n)
+		{
+			msg << n.id << 'N';
+			// TODO insert all components
+			comp::Transform* t = e.GetComponent<comp::Transform>();
+			if (t)
+			{
+				msg << *t << 'T';
+			}
+			comp::MeshName* m = e.GetComponent<comp::MeshName>();
+			if (m)
+			{
+				msg << m->name << 'M';
+			}
+
+			count++;
+		});
+	msg << count;
+	LOG_INFO("Sent %u entities", count);
+	m_pServer->SendToClient(m_pServer->GetConnection(playerID), msg);
+}
+
 Simulation::Simulation(Server* pServer, HeadlessEngine* pEngine)
 	: m_pServer(pServer)
 	, m_pEngine(pEngine)
@@ -41,7 +68,15 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 			//LOG_INFO("GAME Scene %d", m_gameID);
 		});
 
-	m_pCurrentScene = m_pGameScene; // todo temp
+	// ---DEBUG ENTITY---
+	Entity e = m_pGameScene->CreateEntity();
+	e.AddComponent<comp::Network>()->id = m_pServer->PopNextUniqueID();
+	e.AddComponent<comp::Transform>()->position = sm::Vector3(5, 2, 0);
+	e.AddComponent<comp::MeshName>()->name = "Chest.obj";
+	e.AddComponent<comp::Velocity>()->vel = sm::Vector3(0, -0.2f, 0);
+	// ---END OF DEBUG---
+
+	m_pCurrentScene = m_pGameScene; // todo Should be lobbyScene
 	
 	// Automatically join created lobby
 	JoinLobby(playerID, gameID);
@@ -80,18 +115,16 @@ bool Simulation::AddPlayer(uint32_t playerID)
 	addOldPlayersMsg << (uint32_t)m_connections.size();
 	m_pServer->SendToClient(m_pServer->GetConnection(playerID), addOldPlayersMsg);
 
-
+	// Send all entities in Game Scene
+	SendAllEntities(playerID);
+	
 	// Create Player entity in Game scene
 	Entity player = m_pGameScene->CreateEntity();
 	player.AddComponent<comp::Transform>();
 	player.AddComponent<comp::Velocity>();
+	player.AddComponent<comp::MeshName>()->name = "cube.obj";
 	player.AddComponent<comp::Network>()->id = playerID;
-	player.AddComponent<comp::Player>()->runSpeed = 10.f;
 	
-	// Create Entity to symbolize player in Lobby scene
-	player = m_pLobbyScene->CreateEntity();
-	player.AddComponent<comp::Network>()->id = playerID;
-
 	return true;
 }
 
@@ -103,20 +136,11 @@ bool Simulation::RemovePlayer(uint32_t playerID)
 
 	this->Broadcast(msg);
 
-	m_pLobbyScene->ForEachComponent<comp::Network>([playerID](Entity e, comp::Network& n) 
-		{
-			if (n.id == playerID)
-			{
-				LOG_INFO("Removed player %u from Game scene", n.id);
-				e.Destroy();
-			}
-		});
-
 	m_pGameScene->ForEachComponent<comp::Network>([playerID](Entity e, comp::Network& n)
 		{
 			if (n.id == playerID)
 			{
-				LOG_INFO("Removed player %u from Lobby scene", n.id);
+				LOG_INFO("Removed player %u from game scene", n.id);
 				e.Destroy();
 			}
 		});

@@ -22,6 +22,8 @@ private:
 	std::unordered_map<uint32_t, entt::entity> m_players;
 	std::unordered_map<uint32_t, SOCKET> m_connections;
 
+	void SendAllEntities(uint32_t playerID);
+
 public:
 	Simulation(Server* pServer, HeadlessEngine* pEngine);
 	virtual ~Simulation() = default;

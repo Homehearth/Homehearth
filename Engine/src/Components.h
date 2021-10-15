@@ -19,17 +19,13 @@ namespace ecs
 
 			friend network::message<GameMsg>& operator<<(network::message<GameMsg>& msg, const ecs::component::Transform& data)
 			{
-				msg << data.position.x << data.position.y << data.position.z;
-				msg << data.rotation.x << data.rotation.y << data.rotation.z;
-				msg << data.scale.x << data.scale.y << data.scale.z;
+				msg << data.position << data.rotation << data.scale;
 				return msg;
 			}
 
 			friend network::message<GameMsg>& operator >> (network::message<GameMsg>& msg, ecs::component::Transform& data)
 			{
-				msg >> data.scale.z >> data.scale.y >> data.scale.x;
-				msg >> data.rotation.z >> data.rotation.y >> data.rotation.x;
-				msg >> data.position.z >> data.position.y >> data.position.x;
+				msg >> data.scale >> data.rotation >> data.position;
 				return msg;
 			}
 		};
@@ -43,6 +39,12 @@ namespace ecs
 		{
 			std::shared_ptr<RModel>		model;
 			basic_model_matrix_t		data;
+		};
+
+		// Used on server side
+		struct MeshName 
+		{
+			std::string name;
 		};
 
 		struct Velocity
@@ -67,5 +69,9 @@ namespace ecs
 	sm::Vector3 GetForward(const component::Transform& transform);
 	sm::Vector3 GetUp(const component::Transform& transform);
 };
+
+network::message<GameMsg>& operator<<(network::message<GameMsg>& msg, const sm::Vector3& data);
+
+network::message<GameMsg>& operator >> (network::message<GameMsg>& msg, sm::Vector3& data);
 
 namespace comp = ecs::component;

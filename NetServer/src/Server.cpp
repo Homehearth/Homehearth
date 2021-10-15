@@ -36,6 +36,15 @@ SOCKET Server::GetConnection(uint32_t playerID) const
 	}
 }
 
+uint32_t Server::PopNextUniqueID()
+{
+	uint32_t id = m_uniqueID;
+	EnterCriticalSection(&lock);
+	m_uniqueID++;
+	LeaveCriticalSection(&lock);
+	return id;
+}
+
 void Server::OnClientConnect(std::string&& ip, const uint16_t& port)
 {
 	EnterCriticalSection(&lock);
@@ -55,14 +64,12 @@ void Server::OnMessageReceived(message<GameMsg>& msg)
 
 void Server::OnClientValidated(SOCKET_INFORMATION*& SI)
 {
-	EnterCriticalSection(&lock);
-	m_uniqueID++;
-	LeaveCriticalSection(&lock);
+	uint32_t id = this->PopNextUniqueID();
 	message<GameMsg> msg = {};
-	msg << m_uniqueID;
+	msg << id;
 	msg.header.id = GameMsg::Server_AssignID;
-	connections[m_uniqueID] = SI->Socket;
-	SI->clientID = m_uniqueID;
+	connections[id] = SI->Socket;
+	SI->clientID = id;
 	this->SendToClient(SI->Socket, msg);
 
 	LOG_INFO("Client has been validated on socket %lld", SI->Socket);
