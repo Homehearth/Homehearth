@@ -105,6 +105,15 @@ void rtd::Handler2D::RemoveAll()
 	}
 }
 
+void rtd::Handler2D::DereferenceAllOnce()
+{
+	for (auto& elem : INSTANCE.m_elements)
+	{
+		if (elem->GetRef() > 0)
+			elem->Release();
+	}
+}
+
 const bool rtd::Handler2D::IsRenderReady()
 {
 	return INSTANCE.m_drawBuffers.IsSwapped();

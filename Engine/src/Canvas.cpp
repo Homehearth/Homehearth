@@ -58,7 +58,7 @@ void Canvas::Draw()
 
 void rtd::Canvas::OnClick()
 {
-	m_color = D2D1::ColorF(FLOAT(rand() % 255), FLOAT(rand() % 255), FLOAT(rand() % 255));
+
 }
 
 void rtd::Canvas::OnHover()

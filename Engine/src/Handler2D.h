@@ -98,6 +98,9 @@ namespace rtd
 		// Remove all pointers without deallocation.
 		static void RemoveAll();
 
+		// This removes one reference from all the elements. Use this if you want safe release of all objects that has 1 reference.
+		static void DereferenceAllOnce();
+
 		static const bool IsRenderReady();
 	};
 

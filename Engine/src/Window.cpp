@@ -119,11 +119,13 @@ bool Window::Initialize(const Desc& desc)
 	const int posX = ((desktop.right / 2) - (desc.width / 2));
 	const int posY = ((desktop.bottom / 2) - (desc.height / 2));
 
+	// Temp changed so that we have always 960x540 window for demo.
+
 	RECT rect;
 	rect.left = posX;
-	rect.right = posX + desc.width;
+	rect.right = posX + 960;
 	rect.top = posY;
-	rect.bottom = posY + desc.height;
+	rect.bottom = posY + 540;
 
 	AdjustWindowRect(&rect, WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE, FALSE);
 	const int width = rect.right - rect.left;

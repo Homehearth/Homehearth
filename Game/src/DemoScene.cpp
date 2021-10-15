@@ -45,6 +45,20 @@ DemoScene::DemoScene(Engine& engine, Client& client, uint32_t* playerID, uint32_
 			}
 			*/
 
+			/*
+			if (GET_ELEMENT("mage_button", rtd::Button)->IsClicked())
+			{
+				GET_ELEMENT("warrior_text", rtd::Text)->SetVisibility(false);
+				GET_ELEMENT("mage_text", rtd::Text)->SetVisibility(true);
+			}
+
+			if (GET_ELEMENT("warrior_button", rtd::Button)->IsClicked())
+			{
+				GET_ELEMENT("warrior_text", rtd::Text)->SetVisibility(true);
+				GET_ELEMENT("mage_text", rtd::Text)->SetVisibility(false);
+			}
+			*/
+
 			int ver = InputSystem::Get().GetAxis(Axis::VERTICAL);
 			int hor = InputSystem::Get().GetAxis(Axis::HORIZONTAL);
 
@@ -86,8 +100,9 @@ DemoScene::DemoScene(Engine& engine, Client& client, uint32_t* playerID, uint32_
 				CollisionSystem::Get().AddPair(e.obj1, e.obj2);
 		});
 
-	SetupMainMenuScreen();
+	//SetupMainMenuScreen();
 	//SetupInGameScreen();
+	//SetupInLobbyScreen();
 }
 
 void DemoScene::SetUpCamera()
@@ -271,6 +286,57 @@ void SetupInGameScreen()
 
 void SetupInLobbyScreen()
 {
+	const std::string& warriorString = "Warrior\nThe Warrior specializes in destroying noobs.";
+	const std::string& mageString = "Mage\nThis weak character is good for nothing please choose the warrior instead.";
+
+	rtd::Canvas* backgroundCanvas = new rtd::Canvas(D2D1::ColorF(.2f, .2f, .2f), draw_t(0.0f, 0.0f, 3000.0f, 3000.0f));
+	rtd::Handler2D::Get().InsertElement(backgroundCanvas);
+
+	rtd::Button* startGameButton = new rtd::Button("demo_start_game_button.png", draw_t(625.0f, 420.0f, 250.0f, 100.0f), true);
+	rtd::Handler2D::Get().InsertElement(startGameButton);
+	startGameButton->GetBorder()->SetColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
+
+	rtd::Canvas* textCanvas = new rtd::Canvas(D2D1::ColorF(0.0f, 0.0f, 0.0f), draw_t(580.0f, 10.0f, 350.0f, 400.0f));
+	rtd::Handler2D::Get().InsertElement(textCanvas);
+
+	const std::string& dt = "##--Description--##";
+	rtd::Text* descText = new rtd::Text(dt, draw_text_t(530.0f, 20.0f, dt.length() * 24, 24));
+	rtd::Handler2D::Get().InsertElement(descText);
+
+	rtd::Text* warriorText = new rtd::Text(warriorString, draw_text_t(580.0f, 30.0f, 350.0f, 370.0f));
+	rtd::Handler2D::Get().InsertElement(warriorText);
+	warriorText->SetName("warrior_text");
+
+	// Init mage text but set it to no render.
+	rtd::Text* mageText = new rtd::Text(mageString, draw_text_t(580.0f, 30.0f, 350.0f, 370.0f));
+	rtd::Handler2D::Get().InsertElement(mageText);
+	mageText->SetVisibility(false);
+	mageText->SetName("mage_text");
+
+	rtd::Canvas* lobbyIdCanvas = new rtd::Canvas(D2D1::ColorF(0.0f, 0.0f, 0.0f), draw_t(30.0f, 420.0f, 275.0f, 100.0f));
+	rtd::Handler2D::Get().InsertElement(lobbyIdCanvas);
+
+	const std::string& lobbyString = "Lobby ID: XYZW";
+	rtd::Text* lobbyIdText = new rtd::Text(lobbyString, draw_text_t(0.0f, 460.0f, lobbyString.length() * 24.0f, 24.0f));
+	rtd::Handler2D::Get().InsertElement(lobbyIdText);
+
+	rtd::Button* mageButton = new rtd::Button("mageIconDemo.png", draw_t(350.0f, 454.0f, 32.0f, 32.0f));
+	rtd::Handler2D::Get().InsertElement(mageButton);
+	mageButton->SetName("mage_button");
+
+	rtd::Button* warriorButton = new rtd::Button("warriorIconDemo.png", draw_t(392.0f, 454.0f, 32.0f, 32.0f));
+	rtd::Handler2D::Get().InsertElement(warriorButton);
+	warriorButton->SetName("warrior_button");
+
+	// Player slots
+	for (int i = 0; i < 2; i++)
+	{
+		const std::string& playerString = "Player " + std::to_string(i + 1);
+		rtd::Text* playerText = new rtd::Text(playerString, draw_text_t(0.0f, (i + 1) * 100.0f + ((i + 1) * 25.0f), 300.0f, 100.0f));
+		rtd::Canvas* playerCanvas = new rtd::Canvas(D2D1::ColorF(0.7f, 0.5f, 0.2f), draw_t(25.0f, (i + 1) * 100.0f + ((i + 1) * 25.0f), 300.0f, 100.0f));
+		rtd::Handler2D::Get().InsertElement(playerCanvas);
+		rtd::Handler2D::Get().InsertElement(playerText);
+	}
 }
 
 void SetupOptionsScreen()
