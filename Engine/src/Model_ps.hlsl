@@ -125,7 +125,7 @@ float4 main(PixelIn input) : SV_TARGET
     float3 rad = 0.f;
     float3 lightCol = 0.f;
     
-    for (int i = 0; i < info.x; i++)
+    for (int i = 0; i < 1; i++)
     {
         
             switch (S_Lights[i].type)

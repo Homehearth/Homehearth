@@ -54,12 +54,8 @@ const bool Lights::UpdateInfoBuffer()
     light_info_t newInfo = {};
     newInfo.nrOfLights = dx::XMFLOAT4(m_lights.size(), 0.f, 0.f, 0.f);
 
-    D3D11_MAPPED_SUBRESOURCE submap;
-    HRESULT hr;
-    hr = D3D11Core::Get().DeviceContext()->Map(m_lightInfoBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &submap);
-    memcpy(submap.pData, &newInfo, sizeof(int));
-    D3D11Core::Get().DeviceContext()->Unmap(m_lightInfoBuffer.Get(), 0);
-    return !FAILED(hr);
+    D3D11Core::Get().DeviceContext()->UpdateSubresource(m_lightInfoBuffer.Get(), 3, NULL, &newInfo, 0, 0);
+    return true;
 }
 
 Lights::Lights()
@@ -97,7 +93,7 @@ bool Lights::Initialize()
 
 void Lights::Render()
 {
-    //UpdateInfoBuffer();
+    UpdateInfoBuffer();
     D3D11Core::Get().DeviceContext()->PSSetConstantBuffers(3, 1, &m_lightInfoBuffer);
     D3D11Core::Get().DeviceContext()->PSSetShaderResources(7, 1, &m_lightShaderView);
 }
