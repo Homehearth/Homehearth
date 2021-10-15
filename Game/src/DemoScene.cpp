@@ -47,11 +47,13 @@ DemoScene::DemoScene(Engine& engine)
 				if (m_scene.GetCurrentCamera()->GetCameraType() == CAMERATYPE::DEBUG)
 				{
 					m_scene.SetCurrentCamera(&cameraEntity.GetComponent<comp::Camera3D>()->camera);
+					InputSystem::Get().SwitchMouseMode();
 					LOG_INFO("Game Camera selected");
 				}
 				else if (m_scene.GetCurrentCamera()->GetCameraType() == CAMERATYPE::PLAY)
 				{
 					m_scene.SetCurrentCamera(&debugCameraEntity.GetComponent<comp::Camera3D>()->camera);
+					InputSystem::Get().SwitchMouseMode();
 					LOG_INFO("Debug Camera selected");
 				}
 			}
