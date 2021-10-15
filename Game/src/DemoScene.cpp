@@ -78,7 +78,7 @@ Entity DemoScene::CreatePlayerEntity(uint32_t playerID)
 	playerObb->Extents = sm::Vector3{ 1.f,1.f,1.f };
 	comp::Velocity* playerVelocity = playerEntity.AddComponent<comp::Velocity>();
 	comp::Renderable* renderable = playerEntity.AddComponent<comp::Renderable>();
-	renderable->model = ResourceManager::Get().GetResource<RModel>("Cube.obj");
+	renderable->model = ResourceManager::Get().GetResource<RModel>("Player_Skeleton.fbx");
 
 	playerEntity.AddComponent<comp::Player>()->runSpeed = 10.f;
 	playerEntity.AddComponent<comp::Network>()->id = playerID;

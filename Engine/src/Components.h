@@ -56,7 +56,7 @@ namespace ecs
 				BoundingSphere* sphere = reg.try_get<BoundingSphere>(curr);
 				if(obb != nullptr)
 				{
-					model = ResourceManager::Get().GetResource<RModel>("cube.obj");
+					model = ResourceManager::Get().GetResource<RModel>("Cube.obj");
 				}
 				else if(sphere != nullptr)
 				{
