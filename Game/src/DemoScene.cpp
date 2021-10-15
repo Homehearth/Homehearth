@@ -40,7 +40,6 @@ DemoScene::DemoScene(Engine& engine)
 void DemoScene::SetupCamera()
 {
 	m_debugCamera.Initialize(sm::Vector3(0, 0, -20), sm::Vector3(0, 0, 1), sm::Vector3(0, 1, 0), sm::Vector2((float)m_engine->GetWindow()->GetWidth(), (float)m_engine->GetWindow()->GetHeight()), CAMERATYPE::DEBUG);
-	m_scene.SetCurrentCamera(&m_debugCamera);
 
 	InputSystem::Get().SetCamera(m_scene.GetCurrentCamera());
 }
