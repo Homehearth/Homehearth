@@ -150,6 +150,25 @@ bool* Scene::GetIsRenderingColliders()
 	return &m_IsRenderingColliders;
 }
 
+//Add collider mesh to all entitys with an OBB & Sphere Collider
+void Scene::InitRenderableColliders()
+{
+	this->ForEachComponent<comp::BoundingOrientedBox, comp::Transform>([&](Entity entity, comp::BoundingOrientedBox& boxCollider, comp::Transform& transform)
+		{
+			comp::RenderableDebug* renderableDebug = entity.AddComponent<comp::RenderableDebug>();
+			renderableDebug->scale = boxCollider.Extents;
+			renderableDebug->model = ResourceManager::Get().GetResource<RModel>("Cube.obj");
+		});
+
+
+	this->ForEachComponent<comp::BoundingSphere, comp::Transform>([&](Entity entity, comp::BoundingSphere& sphere, comp::Transform& transform)
+		{
+			comp::RenderableDebug* renderableDebug = entity.AddComponent<comp::RenderableDebug>();
+			renderableDebug->scale = sm::Vector3(sphere.Radius, sphere.Radius, sphere.Radius);
+			renderableDebug->model = ResourceManager::Get().GetResource<RModel>("Sphere.obj");
+		});
+}
+
 DoubleBuffer<std::vector<comp::Renderable>>* Scene::GetBuffers()
 {
 	return &m_renderableCopies;

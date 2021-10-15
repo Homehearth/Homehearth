@@ -66,6 +66,11 @@ DemoScene::DemoScene(Engine& engine, Client& client, uint32_t* playerID, uint32_
 			if(e.obj1 != e.obj2)
 				CollisionSystem::Get().AddPair(e.obj1, e.obj2);
 		});
+
+#ifdef _DEBUG
+	this->GetScene().InitRenderableColliders();
+#endif
+
 }
 
 void DemoScene::SetUpCamera()
@@ -117,11 +122,6 @@ Entity DemoScene::CreatePlayerEntity()
 	
 	comp::BoundingOrientedBox* playerObb = playerEntity.AddComponent<comp::BoundingOrientedBox>();
 	playerObb->Extents = sm::Vector3{ 1.f,1.f,1.f };
-	
-	//Adding BoundingOrientedBox collider mesh for rendering
-	comp::RenderableDebug* renderableDebug = playerEntity.AddComponent<comp::RenderableDebug>();
-	renderableDebug->scale = playerObb->Extents;
-	renderableDebug->model = ResourceManager::Get().GetResource<RModel>("Cube.obj");
 
 	comp::Renderable* renderable = playerEntity.AddComponent<comp::Renderable>();
 	renderable->model = ResourceManager::Get().GetResource<RModel>("Cube.obj");
@@ -141,10 +141,6 @@ Entity DemoScene::CreatePlayerEntity()
 	comp::BoundingSphere* obb = m_chest.AddComponent<comp::BoundingSphere>();
 	obb->Center = transform->position;
 	obb->Radius = 2.0f;
-	//Adding Sphere collider mesh for rendering
-	comp::RenderableDebug* renderableDebug2 = m_chest.AddComponent<comp::RenderableDebug>();
-	renderableDebug2->scale = sm::Vector3(obb->Radius, obb->Radius, obb->Radius);
-	renderableDebug2->model = ResourceManager::Get().GetResource<RModel>("Sphere.obj");
 	
 	comp::Renderable* renderable2 = m_chest.AddComponent<comp::Renderable>();
 
