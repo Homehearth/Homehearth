@@ -96,26 +96,30 @@ void Scene::Render()
 
 void Scene::RenderDebug()
 {
-	PROFILE_FUNCTION();
-
-	// System that renders Renderable component
-
-	ID3D11Buffer* buffers[1] =
+	if(m_IsRenderingColliders)
 	{
-		m_publicBuffer.GetBuffer()
-	};
+		PROFILE_FUNCTION();
 
-	D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, buffers);
-	for (const auto& it : m_debugRenderableCopies[1])
-	{
-		m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
-		if (it.model)
-			it.model->Render();
+		// System that renders Renderable component
+
+		ID3D11Buffer* buffers[1] =
+		{
+			m_publicBuffer.GetBuffer()
+		};
+
+		D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, buffers);
+		for (const auto& it : m_debugRenderableCopies[1])
+		{
+			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
+			if (it.model)
+				it.model->Render();
+		}
+
+		// Emit event
+		publish<ESceneRender>();
+		m_debugRenderableCopies.ReadyForSwap();
 	}
 
-	// Emit event
-	publish<ESceneRender>();
-	m_debugRenderableCopies.ReadyForSwap();
 }
 
 const bool Scene::IsRenderReady() const

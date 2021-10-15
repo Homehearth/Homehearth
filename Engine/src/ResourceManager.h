@@ -1,5 +1,6 @@
 #pragma once
 #include "GResource.h"
+#include "Logger.h"
 
 /*
 	Resourcemanager is a singleton and can be used everywhere

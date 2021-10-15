@@ -14,8 +14,11 @@ DemoScene::DemoScene(Engine& engine)
 
 	InputSystem::Get().SetCamera(m_scene.GetCurrentCamera());
 
+	//Construct collider meshes if colliders are added.
+	m_scene.GetRegistry()->on_construct<comp::RenderableDebug>().connect<entt::invoke<&comp::RenderableDebug::initRenderable>>();
+	m_scene.GetRegistry()->on_construct<comp::BoundingOrientedBox>().connect<&entt::registry::emplace_or_replace<comp::RenderableDebug>>();
+	
 	// Debug Chest
-
 	Entity chest = m_scene.CreateEntity();
 	comp::Transform* transform = chest.AddComponent<comp::Transform>();
 	transform->position.z = 5;
@@ -57,15 +60,13 @@ DemoScene::DemoScene(Engine& engine)
 			}
 #endif // DEBUG
 		});
-
+	
 	//On collision event add entities as pair in the collision system
 	m_scene.on<ESceneCollision>([&](const ESceneCollision& e, HeadlessScene& scene)
 		{
 			LOG_INFO("Collision detected!");
 			CollisionSystem::Get().AddPair(e.obj1, e.obj2);
 		});
-
-
 #ifdef _DEBUG
 	this->GetScene().InitRenderableColliders();
 #endif
