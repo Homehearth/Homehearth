@@ -105,13 +105,15 @@ DemoScene::DemoScene(Engine& engine, Client& client, uint32_t* playerID, uint32_
 				CollisionSystem::Get().AddPair(e.obj1, e.obj2);
 		});
 
+	// Uncomment any of these to see the different demo scenes.
+
 	//SetupMainMenuScreen();
 	//SetupInGameScreen();
 	//SetupInLobbyScreen();
 
 
-	rtd::Slider* tempValSlider = new rtd::Slider(D2D1::ColorF(0.0f, 0.0f, 0.0f), draw_t(300.0f, 300.0f, 100.0f, 25.0f), &test);;
-	rtd::Handler2D::Get().InsertElement(tempValSlider);
+	//rtd::Slider* tempValSlider = new rtd::Slider(D2D1::ColorF(0.0f, 0.0f, 0.0f), draw_t(300.0f, 300.0f, 100.0f, 25.0f), &test);;
+	//rtd::Handler2D::Get().InsertElement(tempValSlider);
 }
 
 void DemoScene::SetUpCamera()
