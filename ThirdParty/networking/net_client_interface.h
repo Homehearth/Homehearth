@@ -58,6 +58,10 @@ namespace network
 			LOG_INFO("Thread was alerted!");
 		}
 
+		static VOID CALLBACK AsyncWriteMessage(ULONG_PTR param)
+		{
+		}
+
 	protected:
 		// Functions that runs once when an event happens
 		virtual void OnMessageReceived(message<T>& msg) = 0;
@@ -81,7 +85,17 @@ namespace network
 			this->m_workerThread = nullptr;
 		}
 
-		client_interface() = default;
+		client_interface()
+		{
+			m_socket = INVALID_SOCKET;
+			m_endpointLen = sizeof(m_endpoint);
+			ZeroMemory(&m_endpoint, m_endpointLen);
+			m_handshakeIn = 0;
+			m_handshakeOut = 0;
+
+			InitWinsock();
+			this->m_workerThread = nullptr;
+		}
 
 		client_interface<T>& operator=(const client_interface<T>& other) = delete;
 		client_interface(const client_interface<T>& other) = delete;
@@ -97,7 +111,7 @@ namespace network
 		}
 	public:
 		// Given IP and port establish a connection to the server
-		bool Connect(const char* ip, uint16_t& port);
+		bool Connect(const char* ip, uint16_t port);
 		// Disconnect from the server (THREAD SAFE)
 		void Disconnect();
 		// Check to see if client is connected to a server (THREAD SAFE)
@@ -211,13 +225,16 @@ namespace network
 	{
 		if (tempMsgIn.header.size > sizeof(msg_header<T>))
 		{
-			if (tempMsgIn.header.size > 3000)
+			if (tempMsgIn.header.size > 30000)
 			{
 				EnterCriticalSection(&lock);
 				LOG_ERROR("Allocating to much memory! THIS IS BAD");
 				LeaveCriticalSection(&lock);
 			}
-			this->PrimeReadPayload(tempMsgIn.header.size - sizeof(msg_header<T>));
+			else
+			{
+				this->PrimeReadPayload(tempMsgIn.header.size - sizeof(msg_header<T>));
+			}
 		}
 		else
 		{
@@ -231,7 +248,7 @@ namespace network
 	{
 		PER_IO_DATA* context = new PER_IO_DATA;
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
-		char buffer[BUFFER_SIZE];
+		char buffer[BUFFER_SIZE] = {};
 		memcpy(&buffer[0], &msg.header, sizeof(msg_header<T>));
 		if (msg.header.size > 0)
 		{
@@ -310,83 +327,6 @@ namespace network
 		setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, &enable, sizeof(enable));
 
 		return sock;
-	}
-
-	template <typename T>
-	DWORD client_interface<T>::ProcessIO()
-	{
-		DWORD BytesTransferred = 0;
-		DWORD flags = 0;
-		PER_IO_DATA* context = nullptr;
-		const DWORD CAP = 10;
-		OVERLAPPED_ENTRY Entries[CAP];
-		ULONG EntriesRemoved = 0;
-
-		while (IsConnected())
-		{
-			memset(Entries, 0, sizeof(Entries));
-			if (!GetQueuedCompletionStatusEx(m_CompletionPort, Entries, CAP, &EntriesRemoved, WSA_INFINITE, TRUE))
-			{
-				DWORD LastError = GetLastError();
-				if (LastError != ERROR_EXE_MARKED_INVALID)
-				{
-					LOG_ERROR("%d", LastError);
-				}
-
-				continue;
-			}
-
-			for (int i = 0; i < (int)EntriesRemoved; i++)
-			{
-				context = (PER_IO_DATA*)Entries[i].lpOverlapped;
-
-				if (Entries[i].dwNumberOfBytesTransferred == 0)
-				{
-					delete context;
-					this->Disconnect();
-					continue;
-				}
-				// I/O has completed, process it
-				if (HasOverlappedIoCompleted(Entries[i].lpOverlapped))
-				{
-					switch (context->state)
-					{
-					case NetState::READ_VALIDATION:
-					{
-						this->OnConnect();
-						this->ReadValidation(context);
-						break;
-					}
-					case NetState::WRITE_VALIDATION:
-					{
-						this->PrimeReadHeader();
-						break;
-					}
-					case NetState::READ_HEADER:
-					{
-						this->ReadHeader(context);
-						break;
-					}
-					case NetState::READ_PAYLOAD:
-					{
-						this->ReadPayload(context);
-						break;
-					}
-					case NetState::WRITE_MESSAGE:
-					{
-						// NOT YET USED FOR ANYTHING
-						break;
-					}
-					}
-
-					if (context)
-					{
-						delete context;
-					}
-				}
-			}
-		}
-		return 0;
 	}
 
 	template<typename T>
@@ -469,7 +409,7 @@ namespace network
 	}
 
 	template<typename T>
-	inline bool client_interface<T>::Connect(const char* ip, uint16_t& port)
+	inline bool client_interface<T>::Connect(const char* ip, uint16_t port)
 	{
 		if (IsConnected())
 		{
@@ -542,5 +482,81 @@ namespace network
 		}
 		LeaveCriticalSection(&lock);
 		return isConnected;
+	}
+	template <typename T>
+	DWORD client_interface<T>::ProcessIO()
+	{
+		DWORD BytesTransferred = 0;
+		DWORD flags = 0;
+		PER_IO_DATA* context = nullptr;
+		const DWORD CAP = 50;
+		OVERLAPPED_ENTRY Entries[CAP];
+		ULONG EntriesRemoved = 0;
+
+		while (IsConnected())
+		{
+			memset(Entries, 0, sizeof(Entries));
+			if (!GetQueuedCompletionStatusEx(m_CompletionPort, Entries, CAP, &EntriesRemoved, WSA_INFINITE, TRUE))
+			{
+				DWORD LastError = GetLastError();
+				if (LastError != ERROR_EXE_MARKED_INVALID)
+				{
+					LOG_ERROR("%d", LastError);
+				}
+			}
+
+			for (int i = 0; i < (int)EntriesRemoved; i++)
+			{
+				if (Entries[i].lpOverlapped != NULL)
+				{
+					context = (PER_IO_DATA*)Entries[i].lpOverlapped;
+
+					if (Entries[i].dwNumberOfBytesTransferred == 0)
+					{
+						delete context;
+						this->Disconnect();
+						continue;
+					}
+					// I/O has completed, process it
+					if (HasOverlappedIoCompleted(Entries[i].lpOverlapped))
+					{
+						switch (context->state)
+						{
+						case NetState::READ_VALIDATION:
+						{
+							this->OnConnect();
+							this->ReadValidation(context);
+							break;
+						}
+						case NetState::WRITE_VALIDATION:
+						{
+							this->PrimeReadHeader();
+							break;
+						}
+						case NetState::READ_HEADER:
+						{
+							this->ReadHeader(context);
+							break;
+						}
+						case NetState::READ_PAYLOAD:
+						{
+							this->ReadPayload(context);
+							break;
+						}
+						case NetState::WRITE_MESSAGE:
+						{
+							break;
+						}
+						}
+
+						if (context)
+						{
+							delete context;
+						}
+					}
+				}
+			}
+		}
+		return 0;
 	}
 }

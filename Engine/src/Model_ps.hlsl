@@ -48,6 +48,7 @@ cbuffer properties_t : register(b2)
 
 float4 main(PixelIn input) : SV_TARGET
 {
+
 	// Depth Buffer.
     const int3 posCoords = int3(input.pos.xy, 0);
 	const float depth = T_depth.Load(posCoords).x;
