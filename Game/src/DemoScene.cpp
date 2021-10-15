@@ -86,8 +86,8 @@ DemoScene::DemoScene(Engine& engine, Client& client, uint32_t* playerID, uint32_
 				CollisionSystem::Get().AddPair(e.obj1, e.obj2);
 		});
 
-	//SetupMainMenuScreen();
-	SetupInGameScreen();
+	SetupMainMenuScreen();
+	//SetupInGameScreen();
 }
 
 void DemoScene::SetUpCamera()
@@ -198,8 +198,12 @@ void SetupMainMenuScreen()
 
 void SetupInGameScreen()
 {
+	// Temp textures
 	const std::string& texture1 = "Leafs3.png";
 	const std::string& texture2 = "LampFlowerLeafs.png";
+	const std::string& texture3 = "LeafsDark.png";
+	const std::string& texture4 = "Light.png";
+
 	// Player 1
 	// Temp 'heart' displayed as leaf
 	rtd::Picture* heart1 = new rtd::Picture(texture1, draw_t(90.0f, 10.0f, 64.0f, 64.0f));
@@ -211,7 +215,7 @@ void SetupInGameScreen()
 	rtd::Picture* heart3 = new rtd::Picture(texture1, draw_t(258.0f, 10.0f, 64.0f, 64.0f));
 	rtd::Handler2D::Get().InsertElement(heart3);
 
-	rtd::Text* youText = new rtd::Text("You:", draw_text_t(10.0f, 30.0f, 60.0f, 20.0f));
+	rtd::Text* youText = new rtd::Text("You:", draw_text_t(5.0f, 30.0f, 60.0f, 20.0f));
 	rtd::Handler2D::Get().InsertElement(youText);
 
 	// Player 2
@@ -224,23 +228,45 @@ void SetupInGameScreen()
 	rtd::Picture* heart6 = new rtd::Picture(texture1, draw_t(258.0f, 72.0f, 64.0f, 64.0f));
 	rtd::Handler2D::Get().InsertElement(heart6);
 
-	rtd::Text* friendText = new rtd::Text("Friend:", draw_text_t(10.0f, 95.0f, 84.0f, 20.0f));
+	rtd::Text* friendText = new rtd::Text("Friend:", draw_text_t(5.0f, 95.0f, 84.0f, 20.0f));
 	rtd::Handler2D::Get().InsertElement(friendText);
 
 	//Timer text
 	const std::string& timerText = "1:20";
-	rtd::Text* timer = new rtd::Text(timerText, draw_text_t(444.0f, 24.0f, 96.0f, 24.0f));
+	rtd::Text* timer = new rtd::Text(timerText, draw_text_t(436.0f, 24.0f, 96.0f, 24.0f));
 	rtd::Handler2D::Get().InsertElement(timer);
 
 	// Attacks
-	rtd::Text* attacksText = new rtd::Text("Attacks!", draw_text_t(24.0f, 420.0f, 96.0f, 24.0f));
+	rtd::Text* attacksText = new rtd::Text("Attacks!", draw_text_t(24.0f, 412.0f, 96.0f, 24.0f));
 	rtd::Handler2D::Get().InsertElement(attacksText);
 
 	rtd::Picture* attack1 = new rtd::Picture(texture2, draw_t(24.f, 448.0f, 64.0f, 64.0f));
 	rtd::Handler2D::Get().InsertElement(attack1);
 
-	rtd::Picture* attack2 = new rtd::Picture(texture2, draw_t(98.f, 448.0f, 64.0f, 64.0f));
+	rtd::Picture* attack2 = new rtd::Picture(texture3, draw_t(98.f, 448.0f, 64.0f, 64.0f));
 	rtd::Handler2D::Get().InsertElement(attack2);
+
+	rtd::Picture* attack3 = new rtd::Picture(texture4, draw_t(172.f, 448.0f, 64.0f, 64.0f));
+	rtd::Handler2D::Get().InsertElement(attack3);
+	attack3->GetBorder()->SetColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
+	attack2->GetBorder()->SetColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
+	attack1->GetBorder()->SetColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
+
+	// Builds
+	rtd::Text* buildText = new rtd::Text("Builds!", draw_text_t(700.0f, 412.0f, 96.0f, 24.0f));
+	rtd::Handler2D::Get().InsertElement(buildText);
+
+	rtd::Picture* build1 = new rtd::Picture(texture2, draw_t(700.f, 448.0f, 64.0f, 64.0f));
+	rtd::Handler2D::Get().InsertElement(build1);
+
+	rtd::Picture* build2 = new rtd::Picture(texture3, draw_t(774.f, 448.0f, 64.0f, 64.0f));
+	rtd::Handler2D::Get().InsertElement(build2);
+
+	rtd::Picture* build3 = new rtd::Picture(texture4, draw_t(848.f, 448.0f, 64.0f, 64.0f));
+	rtd::Handler2D::Get().InsertElement(build3);
+	build3->GetBorder()->SetColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
+	build2->GetBorder()->SetColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
+	build1->GetBorder()->SetColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
 }
 
 void SetupInLobbyScreen()
