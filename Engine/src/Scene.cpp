@@ -34,11 +34,20 @@ void Scene::Update(float dt)
 	if(!m_debugRenderableCopies.IsSwapped())
 	{
 		m_debugRenderableCopies[0].clear();
-		m_registry.view<comp::RenderableDebug, comp::Transform>().each([&](comp::RenderableDebug& r, comp::Transform& t)
+		m_registry.view<comp::RenderableDebug, comp::Transform>().each([&](entt::entity entity, comp::RenderableDebug& r, comp::Transform& t)
 			{
-				sm::Matrix mat = sm::Matrix::CreateScale(r.scale);
+				sm::Matrix mat;
+				comp::BoundingOrientedBox* obb = m_registry.try_get<comp::BoundingOrientedBox>(entity);
+				comp::BoundingSphere* sphere = m_registry.try_get<comp::BoundingSphere>(entity);
+				if(obb != nullptr)
+				{
+					mat = sm::Matrix::CreateScale(obb->Extents);
+				}
+				else if(sphere != nullptr)
+				{
+					mat = sm::Matrix::CreateScale(sm::Vector3(sphere->Radius, sphere->Radius, sphere->Radius));
+				}
 				mat *= sm::Matrix::CreateWorld(t.position, ecs::GetForward(t), ecs::GetUp(t));
-			
 				r.data.worldMatrix = mat;
 				m_debugRenderableCopies[0].push_back(r);
 			});
@@ -151,25 +160,6 @@ void Scene::SetCurrentCamera(Camera* pCamera)
 bool* Scene::GetIsRenderingColliders()
 {
 	return &m_IsRenderingColliders;
-}
-
-//Add collider mesh to all entitys with an OBB & Sphere Collider
-void Scene::InitRenderableColliders()
-{
-	this->ForEachComponent<comp::BoundingOrientedBox, comp::Transform>([&](Entity entity, comp::BoundingOrientedBox& boxCollider, comp::Transform& transform)
-		{
-			comp::RenderableDebug* renderableDebug = entity.AddComponent<comp::RenderableDebug>();
-			renderableDebug->scale = boxCollider.Extents;
-			renderableDebug->model = ResourceManager::Get().GetResource<RModel>("Cube.obj");
-		});
-
-
-	this->ForEachComponent<comp::BoundingSphere, comp::Transform>([&](Entity entity, comp::BoundingSphere& sphere, comp::Transform& transform)
-		{
-			comp::RenderableDebug* renderableDebug = entity.AddComponent<comp::RenderableDebug>();
-			renderableDebug->scale = sm::Vector3(sphere.Radius, sphere.Radius, sphere.Radius);
-			renderableDebug->model = ResourceManager::Get().GetResource<RModel>("Sphere.obj");
-		});
 }
 
 DoubleBuffer<std::vector<comp::Renderable>>* Scene::GetBuffers()

@@ -51,19 +51,16 @@ namespace ecs
 		{
 			std::shared_ptr<RModel> 	model;
 			basic_model_matrix_t 		data;
-			sm::Vector3                 scale;
-			void initRenderable(entt::registry& reg, const entt::entity curr)
+			void InitRenderable(entt::registry& reg, const entt::entity curr)
 			{
 				BoundingOrientedBox* obb = reg.try_get<BoundingOrientedBox>(curr);
 				BoundingSphere* sphere = reg.try_get<BoundingSphere>(curr);
 				if(obb != nullptr)
 				{
-					scale = obb->Extents;
 					model = ResourceManager::Get().GetResource<RModel>("cube.obj");
 				}
 				else if(sphere != nullptr)
 				{
-					scale = sm::Vector3(sphere->Radius, sphere->Radius, sphere->Radius);
 					model = ResourceManager::Get().GetResource<RModel>("Sphere.obj");
 				}
 			}

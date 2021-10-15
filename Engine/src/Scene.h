@@ -28,7 +28,6 @@ public:
 
 	//ImGui data for disable/enable 
 	bool* GetIsRenderingColliders();
-	void InitRenderableColliders();
 	
 	DoubleBuffer<std::vector<comp::Renderable>>* GetBuffers();
 	DoubleBuffer<std::vector<comp::RenderableDebug>>* GetDebugBuffers();

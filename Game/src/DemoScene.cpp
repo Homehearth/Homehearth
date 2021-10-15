@@ -15,17 +15,18 @@ DemoScene::DemoScene(Engine& engine)
 	InputSystem::Get().SetCamera(m_scene.GetCurrentCamera());
 
 	//Construct collider meshes if colliders are added.
-	m_scene.GetRegistry()->on_construct<comp::RenderableDebug>().connect<entt::invoke<&comp::RenderableDebug::initRenderable>>();
+	m_scene.GetRegistry()->on_construct<comp::RenderableDebug>().connect<entt::invoke<&comp::RenderableDebug::InitRenderable>>();
 	m_scene.GetRegistry()->on_construct<comp::BoundingOrientedBox>().connect<&entt::registry::emplace_or_replace<comp::RenderableDebug>>();
+	m_scene.GetRegistry()->on_construct<comp::BoundingSphere>().connect<&entt::registry::emplace_or_replace<comp::RenderableDebug>>();
 	
 	// Debug Chest
 	Entity chest = m_scene.CreateEntity();
 	comp::Transform* transform = chest.AddComponent<comp::Transform>();
 	transform->position.z = 5;
 	comp::Velocity* chestVelocity = chest.AddComponent<comp::Velocity>();
-	comp::BoundingSphere* obb = chest.AddComponent<comp::BoundingSphere>();
-	obb->Center = transform->position;
-	obb->Radius = 2.0f;
+	comp::BoundingSphere* sphere = chest.AddComponent<comp::BoundingSphere>();
+	sphere->Center = transform->position;
+	sphere->Radius = 2.0f;
 	comp::Renderable* renderable2 = chest.AddComponent<comp::Renderable>();
 
 	renderable2->model = ResourceManager::Get().GetResource<RModel>("Chest.obj");
@@ -67,9 +68,6 @@ DemoScene::DemoScene(Engine& engine)
 			LOG_INFO("Collision detected!");
 			CollisionSystem::Get().AddPair(e.obj1, e.obj2);
 		});
-#ifdef _DEBUG
-	this->GetScene().InitRenderableColliders();
-#endif
 }
 
 Entity DemoScene::CreatePlayerEntity(uint32_t playerID)
