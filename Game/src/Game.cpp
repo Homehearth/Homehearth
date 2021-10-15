@@ -223,6 +223,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 							{
 								if (c->camera.GetCameraType() == CAMERATYPE::PLAY)
 								{
+									m_demoScene->GetScene().SetCurrentCamera(&c->camera);
 									c->camera.SetFollowTransform(entity.GetComponent<comp::Transform>());
 								}
 							}
