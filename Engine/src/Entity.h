@@ -3,7 +3,7 @@
 class Entity
 {
 private:
-	entt::registry* m_registry;
+	entt::registry* m_pRegistry;
 	entt::entity m_entity;
 	
 	friend class HeadlessScene;
@@ -37,7 +37,7 @@ inline T* Entity::GetComponent() const
 	{
 		throw std::runtime_error("Entity was a null entity");
 	}
-	return m_registry->try_get<T>(m_entity);
+	return m_pRegistry->try_get<T>(m_entity);
 }
 
 template<typename T>
@@ -47,7 +47,7 @@ inline T* Entity::AddComponent()
 	{
 		throw std::runtime_error("Entity was a null entity");
 	}	
-	return &m_registry->emplace_or_replace<T>(m_entity);
+	return &m_pRegistry->emplace_or_replace<T>(m_entity);
 }
 
 template<typename T>
@@ -57,5 +57,5 @@ inline void Entity::RemoveComponent()
 	{
 		throw std::runtime_error("Entity was a null entity");
 	}	
-	m_registry->erase<T>(m_entity);
+	m_pRegistry->erase<T>(m_entity);
 }
