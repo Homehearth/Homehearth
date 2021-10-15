@@ -6,6 +6,7 @@ class Scene : public HeadlessScene
 private:
 	bool m_IsRenderingColliders;
 	DoubleBuffer<std::vector<comp::Renderable>> m_renderableCopies;
+	DoubleBuffer<std::vector<comp::RenderableDebug>> m_debugRenderableCopies;
 	dx::ConstantBuffer<basic_model_matrix_t> m_publicBuffer;
 	Camera* m_currentCamera;
 	Camera m_defaultCamera;

@@ -3,8 +3,8 @@
 #include <omp.h>
 
 Scene::Scene()
-:m_currentCamera(nullptr),
-m_IsRenderingColliders(true)
+: m_IsRenderingColliders(true),
+m_currentCamera(nullptr)
 {
 	m_publicBuffer.Create(D3D11Core::Get().Device());
 	thread::RenderThreadHandler::Get().SetObjectsBuffer(&m_renderableCopies);
