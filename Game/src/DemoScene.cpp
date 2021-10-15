@@ -12,8 +12,6 @@ DemoScene::DemoScene(Engine& engine)
 	cameraEntity.AddComponent<comp::Camera3D>()->camera.Initialize(sm::Vector3(0, 0, -10), sm::Vector3(0, 0, 1), sm::Vector3(0, 1, 0), sm::Vector2((float)engine.GetWindow()->GetWidth(), (float)engine.GetWindow()->GetHeight()), CAMERATYPE::PLAY);
 	cameraEntity.AddComponent<comp::Tag<CAMERA>>();
 
-
-	m_scene.SetCurrentCamera(&debugCameraEntity.GetComponent<comp::Camera3D>()->camera);
 	InputSystem::Get().SetCamera(m_scene.GetCurrentCamera());
 
 	// Debug Chest
