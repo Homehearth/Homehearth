@@ -33,6 +33,11 @@ namespace ecs
 		{
 			float runSpeed;
 		};
+
+		struct Light
+		{
+			light_t lightData;
+		};
 	};
 
 	sm::Matrix GetMatrix(const component::Transform& transform);

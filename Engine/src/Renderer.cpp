@@ -13,6 +13,7 @@ void Renderer::Initialize(Window* pWindow)
 
     m_d3d11 = &D3D11Core::Get();
     m_basePass.SetEnable(true);
+    m_basePass.Initialize();
     m_depthPass.SetEnable(true);
     //AddPass(&m_depthPass);
     AddPass(&m_basePass);
@@ -43,6 +44,7 @@ void Renderer::Render(Scene* pScene)
             {
                 if (pass->IsEnabled())
                 {
+                    pass->SetLights(pScene->GetLights());
                     pass->PreRender(m_d3d11->DeviceContext(), &m_pipelineManager);
                     pass->Render(pScene);     // args? currently does nothing.
                     pass->PostRender(); // args? currently does nothing.

@@ -4,6 +4,7 @@
 #include "DoubleBuffer.h"
 #include "Entity.h"
 #include "Camera.h"
+#include "Lights.h"
 
 class Scene : public entt::emitter<Scene>
 {
@@ -14,6 +15,8 @@ private:
 
 	DoubleBuffer<std::vector<comp::Renderable>> m_renderableCopies;
 	dx::ConstantBuffer<basic_model_matrix_t> m_publicBuffer;
+
+	Lights m_lights;
 
 public:
 
@@ -45,6 +48,8 @@ public:
 
 	Camera* GetCamera();
 	std::shared_ptr<Camera> m_currentCamera;
+
+	Lights* GetLights();
 
 	DoubleBuffer<std::vector<comp::Renderable>>* GetBuffers();
 };

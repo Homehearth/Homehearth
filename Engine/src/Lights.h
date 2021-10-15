@@ -17,7 +17,10 @@ private:
 
 	const bool SetupLightBuffer();
 	const bool SetupInfoBuffer();
+	const bool UpdateLightBuffer();
 	const bool UpdateInfoBuffer();
+
+	bool m_isInit = false;
 
 public:
 
@@ -25,5 +28,7 @@ public:
 	~Lights();
 
 	bool Initialize();
-	void Render();
+	const bool IsInitialize() const;
+	void Render(ID3D11DeviceContext* dc);
+	void Add(const light_t& light);
 };

@@ -1,5 +1,6 @@
 #pragma once
 #include "IRenderPass.h"
+#include "Lights.h"
 
 //--------------------------------------
 // Forward Rendering, or GeometryPass.

@@ -11,6 +11,7 @@ struct Light
     float  range;       //Only in use on Point Lights
     int    type;        // 0 = Directional, 1 = Point
     uint   enabled;     // 0 = Off, 1 = On
+    float  padding;
 };
 
 struct PixelIn
@@ -24,8 +25,6 @@ struct PixelIn
 };
 
 static const float PI = 3.14159265359;
-//static const int NR_LIGHTS = 2; //TEMP
-
 /*
 ---------------------------------Normal distribution function---------------------------------
 Approximates the amount the surface's microfacets are aligned to the halfway vector, 

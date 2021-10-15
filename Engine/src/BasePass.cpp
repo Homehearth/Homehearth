@@ -42,6 +42,7 @@ void BasePass::PreRender(ID3D11DeviceContext* dc, PipelineManager* pm)
         dc->PSSetShaderResources(0, 0, nullptr);
         dc->VSSetShaderResources(0, 0, nullptr);
         dc->PSSetSamplers(0, 1, pm->m_linearSamplerState.GetAddressOf());
+        m_lights->Render(dc);
     }
 
     // RASTERIZER.

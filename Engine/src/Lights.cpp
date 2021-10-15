@@ -7,7 +7,7 @@ const bool Lights::SetupLightBuffer()
 
     D3D11_BUFFER_DESC desc = {};
     desc.Usage = D3D11_USAGE_DYNAMIC;
-    desc.ByteWidth = sizeof(light_t) * (UINT)m_lights.size();
+    desc.ByteWidth = sizeof(light_t);
     desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
     desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
     desc.StructureByteStride = sizeof(light_t);
@@ -49,13 +49,27 @@ const bool Lights::SetupInfoBuffer()
     return !FAILED(hr);
 }
 
+const bool Lights::UpdateLightBuffer()
+{
+    HRESULT hr;
+    D3D11_MAPPED_SUBRESOURCE submap;
+    hr = D3D11Core::Get().DeviceContext()->Map(m_lightBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &submap);
+    memcpy(submap.pData, &(m_lights[0]), sizeof(light_t) * m_lights.size());
+    D3D11Core::Get().DeviceContext()->Unmap(m_lightBuffer.Get(), 0);
+    return !FAILED(hr);
+}
+
 const bool Lights::UpdateInfoBuffer()
 {
     light_info_t newInfo = {};
     newInfo.nrOfLights = dx::XMFLOAT4(m_lights.size(), 0.f, 0.f, 0.f);
 
-    D3D11Core::Get().DeviceContext()->UpdateSubresource(m_lightInfoBuffer.Get(), 3, NULL, &newInfo, 0, 0);
-    return true;
+    HRESULT hr;
+    D3D11_MAPPED_SUBRESOURCE submap;
+    hr = D3D11Core::Get().DeviceContext()->Map(m_lightInfoBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &submap);
+    memcpy(submap.pData, &newInfo, sizeof(light_info_t));
+    D3D11Core::Get().DeviceContext()->Unmap(m_lightInfoBuffer.Get(), 0);
+    return !FAILED(hr);
 }
 
 Lights::Lights()
@@ -73,27 +87,39 @@ Lights::~Lights()
 
 bool Lights::Initialize()
 {
-    light_t L;
-    L.position = sm::Vector4(0.f, 8.f, -10.f, 1.f);
-    L.direction = sm::Vector4(0.f, -1.f, 1.f, 0.f);
-    L.color = sm::Vector4(300.f, 300.f, 300.f, 300.f);
-    L.range = 75.f;
-    L.enabled = 1;
-    L.type = 0;
-
-    m_lights.push_back(L);
-
     if (!SetupLightBuffer())
+    {
         return false;
-    if (!SetupInfoBuffer())
-        return false;
+    }
 
-    return true;
+    if (!SetupInfoBuffer())
+    {
+        return false;
+    }
+
+    m_isInit = true;
+
+    return m_isInit;
 }
 
-void Lights::Render()
+const bool Lights::IsInitialize() const
 {
-    UpdateInfoBuffer();
-    D3D11Core::Get().DeviceContext()->PSSetConstantBuffers(3, 1, &m_lightInfoBuffer);
-    D3D11Core::Get().DeviceContext()->PSSetShaderResources(7, 1, &m_lightShaderView);
+    return m_isInit;
+}
+
+void Lights::Render(ID3D11DeviceContext* dc)
+{
+    if (dc == D3D11Core::Get().DeviceContext())
+    {
+        UpdateInfoBuffer();
+        UpdateLightBuffer();
+    }
+
+    dc->PSSetConstantBuffers(3, 1, m_lightInfoBuffer.GetAddressOf());
+    dc->PSSetShaderResources(7, 1, m_lightShaderView.GetAddressOf());
+}
+
+void Lights::Add(const light_t& light)
+{
+    m_lights.push_back(light);
 }

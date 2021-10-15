@@ -71,6 +71,11 @@ Camera* Scene::GetCamera()
 	return m_currentCamera.get();
 }
 
+Lights* Scene::GetLights()
+{
+	return &m_lights;
+}
+
 DoubleBuffer<std::vector<comp::Renderable>>* Scene::GetBuffers()
 {
 	return &m_renderableCopies;

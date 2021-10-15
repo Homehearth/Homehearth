@@ -10,7 +10,16 @@ DemoScene::DemoScene(Engine& engine, Client& client, uint32_t* playerID, uint32_
 	//Initialize player entity
 	m_player = CreatePlayerEntity();
 	SetUpCamera();
-	m_lights.Initialize();
+
+	light_t L;
+	L.type = TypeLight::DIRECTIONAL;
+	L.direction = sm::Vector4(0.f, -1.f, 1.f, 0.f);
+	L.color = sm::Vector4(10.f);
+	L.position = sm::Vector4(0.f, 0.f, -10.f, 1.f);
+	L.range = 75.f;
+	L.enabled = 1;
+
+	m_scene.GetLights()->Add(L);
 
 
 	// Define what scene does on update
@@ -55,8 +64,6 @@ DemoScene::DemoScene(Engine& engine, Client& client, uint32_t* playerID, uint32_
 
 			GameSystems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(scene);
 			GameSystems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingSphere>(scene);
-
-			m_lights.Render();
 		});
 
 	//On collision event add entitys as pair in the collision system

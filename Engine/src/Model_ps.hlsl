@@ -37,21 +37,21 @@ cbuffer properties_t : register(b2)
 
 cbuffer Camera : register(b1)
 {
-    float4 cameraPosition;
-    float4 cameraTarget;
+    float4 c_cameraPosition;
+    float4 c_cameraTarget;
     
-    float4x4 projection;
-    float4x4 view;
+    float4x4 c_projection;
+    float4x4 c_view;
 }
 
 cbuffer LightsInfo : register(b3)
 {
-    float4 info;
+    float4 c_info = float4(0.f, 0.f, 0.f, 0.f);
 }
 
 float4 main(PixelIn input) : SV_TARGET
 {
-    float3 camPos = cameraPosition.xyz;
+    float3 camPos = c_cameraPosition.xyz;
     float ao = 1.0f;
     float3 albedo = 1.f;
     float metallic = 0.5f;
@@ -60,24 +60,7 @@ float4 main(PixelIn input) : SV_TARGET
     //Normal Vector
     float3 N = normalize(input.normal);
     //View Direction Vector
-    float3 V = normalize(camPos - input.worldPos.xyz);
-    
-    //TEMP
-    //Light L[2];
-    //L[0].position = float4(0.f, 8.f, 10.f, 1.f);
-    //L[0].color = 10.f;
-    //L[0].direction = float4(0.f, -1.f, 1.f, 0.f);
-    //L[0].range = 75.f;
-    //L[0].type = 0;
-    //L[0].enabled = 1;
-    
-    //L[1].position = float4(0.f, 0.f, -10.f, 1.f);
-    //L[1].color = 300.f;
-    //L[1].direction = float4(0.f, -1.f, -1.f, 0.f);
-    //L[1].range = 75.f;
-    //L[1].type = 1;
-    //L[1].enabled = 1;
-    
+    float3 V = normalize(camPos - input.worldPos.xyz);    
     
     //If an object has a texture, sample from it else use default values.
     if(c_hasAlbedo == 1)
@@ -125,9 +108,10 @@ float4 main(PixelIn input) : SV_TARGET
     float3 rad = 0.f;
     float3 lightCol = 0.f;
     
-    for (int i = 0; i < 1; i++)
+    for (int i = 0; i < c_info.x; i++)
     {
-        
+        if(S_Lights[i].enabled == 1)
+        {
             switch (S_Lights[i].type)
             {
                 case 0:
@@ -142,6 +126,7 @@ float4 main(PixelIn input) : SV_TARGET
         
             CalcRadiance(input, V, N, roughness, metallic, albedo, S_Lights[i].position.xyz, lightCol, F0, rad);
             Lo += rad;
+        }
         
     }
     
