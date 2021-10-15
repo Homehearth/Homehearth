@@ -2,7 +2,6 @@
 #include "net_common.h"
 #include "net_message.h"
 #include "RModel.h"
-#include "RDebugMesh.h"
 
 namespace ecs
 {

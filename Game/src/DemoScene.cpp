@@ -8,7 +8,7 @@ DemoScene::DemoScene(Engine& engine, Client& client, uint32_t* playerID, uint32_
 {
 	m_engine = &engine;
 	//Initialize player entity
-	for(int i = 0; i < 3; i++)
+	//for(int i = 0; i < 3; i++)
 		m_player = CreatePlayerEntity();
 
 	SetUpCamera();
@@ -117,7 +117,7 @@ Entity DemoScene::CreatePlayerEntity()
 	playerObb->Extents = sm::Vector3{ 1.f,1.f,1.f };
 
 	comp::Renderable* renderable = playerEntity.AddComponent<comp::Renderable>();
-	renderable->model = ResourceManager::Get().GetResource<RModel>("Player_Skeleton.fbx");	//Cube.obj
+	renderable->model = ResourceManager::Get().GetResource<RModel>("Player_Skeleton.fbx"); 	//Cube.obj
 
 	playerEntity.AddComponent<comp::Player>()->runSpeed = 10.f;
 

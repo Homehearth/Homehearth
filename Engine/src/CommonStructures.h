@@ -19,25 +19,16 @@ struct simple_vertex_t
 };
 
 /*
-	Debugging with collision boxes
-*/
-struct debug_vertex_t
-{
-	sm::Vector3 position = {};
-	//sm::Vector3 color = {}; could be implemented if needed
-};
-
-/*
-	Skeletal animated meshes
-	Uses 3 bones per vertex which is cheaper than 4 
-	without much of a noticeable difference
+	Skeletal animated model.
+	Uses 4 bones per vertex for now.
+	If optimization is needed, consider lowering to 3.
 */
 ALIGN16
 struct anim_vertex_t
 {
-	simple_vertex_t vertex	   = {};
-	dx::XMUINT3		boneID	   = {};
-	sm::Vector3		boneWeight = {};
+	simple_vertex_t vertex	    = {};
+	dx::XMUINT4		boneIDs	    = {};
+	sm::Vector4		boneWeights = {};
 };
 
 ALIGN16

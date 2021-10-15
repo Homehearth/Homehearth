@@ -1,28 +1,38 @@
 #pragma once
 #include "CommonStructures.h"
 #include "RMaterial.h"
+
+/*
+	Load in a model/scene of multiple meshes with Assimp 5.0.1
+	
+	*  Formats supported: FBX and OBJ
+
+	*  Supports files with multiple submeshes and multiple materials.
+	   Combines all the submeshes with same material to one.
+	   This is to optimized and lower the amount of drawcalls.
+
+	*  The model can change material to any other mtl-file.
+	   Order in the mtl-file is important for best result.
+
+	*  Supports loading in lights from the FBX-format.
+
+	*  Loads a skeleton, which is a hierchi of bones/joints
+	   that can affect the model.
+
+	*  Need an animator to do animations
+*/
+
+//Define structs to avoid warnings
 struct aiMesh;
 struct aiScene;
 struct aiNode;
 
-/*
-	Load in a model/scene of multiple meshes with Assimp 5.0.1
-	Formats supported:
-	* FBX
-	* OBJ
-
-	Supports files with multiple submeshes and multiple materials
-	Combines all the submeshes with same material to one.
-	This is to optimized and lower the amount of drawcalls.
-
-	The model can change material to any other mtl-file.
-	Order in the mtl-file is important.
-
-	Can load in lights from the FBX-format.
-
-	TODO:
-	* Fix loading in bones
-*/
+struct bone_t
+{
+	std::string name = "";
+	sm::Matrix	inverseBind = {};
+	int			parentIndex = -1;
+};
 
 class RModel : public resource::GResource
 {
@@ -41,27 +51,10 @@ private:
 	std::vector<light_t>				m_lights;
 	
 	/*
-		Model that has skeleton
+		Skeleton information
 	*/
 	bool								m_hasSkeleton;
-	struct bone_t
-	{
-		std::string name		= "";
-		sm::Matrix	inverseBind = {};
-		UINT		parentIndex = 0;
-	};
 	std::vector<bone_t>					m_allBones;
-
-	/*
-	Read from bones when doing update
-	for (i = 0; i < bones.size(); i++)
-		if (parent == -1)
-			modelMatrix[i] = local;
-		else
-			modelMatrix[i] = modelMatrix[parent] * local;
-		
-		finalMatrix[i] = modelMatrix[i] * bones[i].inverse;
-	*/
 
 	//Need to have different vertexshaders for default or skeletal 
 	//std::shared_ptr<Shaders::VertexShader> m_vertexShader;	//Get from the resourcemanager
@@ -84,6 +77,7 @@ private:
 	//Loading data from assimp
 	void LoadLights(const aiScene* scene);
 	void LoadMaterial(const aiScene* scene, const UINT& matIndex, bool& useMTL, submesh_t& inoutMesh) const;
+	bool LoadBones(const aiMesh* aimesh, const aiNode* root, std::vector<anim_vertex_t>& vertices);
 
 public:
 	RModel();
@@ -91,6 +85,9 @@ public:
 
 	//Get function to check if the model has loaded in any bones
 	bool HasSkeleton() const;
+
+	//Get all the bones for the model - Most useful for the animator
+	const std::vector<bone_t>& GetSkeleton() const;
 
 	//Get the vector of lights
 	const std::vector<light_t>& GetLights() const;
@@ -112,5 +109,4 @@ public:
 
 	// Inherited via GResource
 	virtual bool Create(const std::string& filename) override;
-
 };
