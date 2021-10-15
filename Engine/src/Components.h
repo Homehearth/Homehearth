@@ -1,5 +1,4 @@
 #pragma once
-#include "net_common.h"
 #include "net_message.h"
 #include "RModel.h"
 #include "RDebugMesh.h"
@@ -18,7 +17,7 @@ namespace ecs
 			sm::Vector3 rotation;
 			sm::Vector3 scale = sm::Vector3(1);
 
-			friend network::message<network::GameMsg>& operator<<(network::message<network::GameMsg>& msg, const ecs::component::Transform& data)
+			friend network::message<GameMsg>& operator<<(network::message<GameMsg>& msg, const ecs::component::Transform& data)
 			{
 				msg << data.position.x << data.position.y << data.position.z;
 				msg << data.rotation.x << data.rotation.y << data.rotation.z;
@@ -26,7 +25,7 @@ namespace ecs
 				return msg;
 			}
 
-			friend network::message<network::GameMsg>& operator >> (network::message<network::GameMsg>& msg, ecs::component::Transform& data)
+			friend network::message<GameMsg>& operator >> (network::message<GameMsg>& msg, ecs::component::Transform& data)
 			{
 				msg >> data.scale.z >> data.scale.y >> data.scale.x;
 				msg >> data.rotation.z >> data.rotation.y >> data.rotation.x;

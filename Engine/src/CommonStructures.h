@@ -5,6 +5,23 @@ struct Ray_t
 	sm::Vector3 rayPos, rayDir;
 };
 
+enum class GameMsg : uint8_t
+{
+	Client_Accepted,
+	Lobby_Create,
+	Lobby_Join,
+	Lobby_Accepted,
+	Lobby_Invalid,
+	Server_AssignID,
+	Server_GetPing,
+	Game_Snapshot,
+	Game_AddPlayer,
+	Game_AddEntity,
+	Game_RemovePlayer,
+	Game_Update,
+	Game_MovePlayer
+};
+
 /*
 	Basic objects like static meshes
 */
