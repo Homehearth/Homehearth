@@ -210,8 +210,8 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		for (const auto& t : transforms) {
 			if (found.find(t.first) == found.end())
 			{
-				Entity e = this->m_demoScene->CreatePlayerEntity(t.first);
-				*e.GetComponent<comp::Transform>() = t.second;
+				Entity entity = this->m_demoScene->CreatePlayerEntity(t.first);
+				*entity.GetComponent<comp::Transform>() = t.second;
 				
 				if (m_localPID == t.first)
 				{
@@ -223,7 +223,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 							{
 								if (c->camera.GetCameraType() == CAMERATYPE::PLAY)
 								{
-									c->camera.SetFollowVelocity(e.GetComponent<comp::Velocity>());
+									c->camera.SetFollowTransform(entity.GetComponent<comp::Transform>());
 								}
 							}
 						});
