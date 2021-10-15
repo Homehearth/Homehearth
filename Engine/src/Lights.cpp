@@ -3,11 +3,12 @@
 
 const bool Lights::SetupLightBuffer()
 {
+    int size = m_lights.size() > 0 ? m_lights.size():1;
     HRESULT hr;
 
     D3D11_BUFFER_DESC desc = {};
     desc.Usage = D3D11_USAGE_DYNAMIC;
-    desc.ByteWidth = sizeof(light_t);
+    desc.ByteWidth = sizeof(light_t) * size;
     desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
     desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
     desc.StructureByteStride = sizeof(light_t);
@@ -15,7 +16,7 @@ const bool Lights::SetupLightBuffer()
 
     D3D11_SUBRESOURCE_DATA data = {};
     data.pSysMem = &m_lights[0];
-    hr = D3D11Core::Get().Device()->CreateBuffer(&desc, &data, &m_lightBuffer);
+    hr = D3D11Core::Get().Device()->CreateBuffer(&desc, &data, m_lightBuffer.GetAddressOf());
     
     if (!(FAILED(hr)))
     {
@@ -26,7 +27,7 @@ const bool Lights::SetupLightBuffer()
         srvDesc.BufferEx.Flags = 0;
         srvDesc.BufferEx.NumElements = (UINT)m_lights.size();
 
-        hr = D3D11Core::Get().Device()->CreateShaderResourceView(m_lightBuffer.Get(), &srvDesc, &m_lightShaderView);
+        hr = D3D11Core::Get().Device()->CreateShaderResourceView(m_lightBuffer.Get(), &srvDesc, m_lightShaderView.GetAddressOf());
 
         return !FAILED(hr);
     }
@@ -45,7 +46,7 @@ const bool Lights::SetupInfoBuffer()
     infoDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
     infoDesc.MiscFlags = 0;
 
-    hr = D3D11Core::Get().Device()->CreateBuffer(&infoDesc, NULL, &m_lightInfoBuffer);
+    hr = D3D11Core::Get().Device()->CreateBuffer(&infoDesc, NULL, m_lightInfoBuffer.GetAddressOf());
     return !FAILED(hr);
 }
 

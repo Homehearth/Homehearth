@@ -13,11 +13,16 @@ DemoScene::DemoScene(Engine& engine, Client& client, uint32_t* playerID, uint32_
 
 	light_t L;
 	L.type = TypeLight::DIRECTIONAL;
-	L.direction = sm::Vector4(0.f, -1.f, 1.f, 0.f);
+	L.direction = sm::Vector4(1.f, -1.f, 0.f, 0.f);
 	L.color = sm::Vector4(10.f);
 	L.position = sm::Vector4(0.f, 0.f, -10.f, 1.f);
 	L.range = 75.f;
 	L.enabled = 1;
+
+	m_scene.GetLights()->Add(L);
+
+	L.color = sm::Vector4(300.f);
+	L.type = TypeLight::POINT;
 
 	m_scene.GetLights()->Add(L);
 
