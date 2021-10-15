@@ -114,22 +114,7 @@ bool Simulation::AddPlayer(uint32_t playerID)
 {
 	LOG_INFO("Player with ID: %ld added to the game!", playerID);
 	m_connections[playerID] = m_pServer->GetConnection(playerID);
-	/*
-	message<GameMsg> addNewPlayerMsg;
-	addNewPlayerMsg.header.id = GameMsg::Game_AddPlayer;
-	addNewPlayerMsg << playerID << 1U;
-	Broadcast(addNewPlayerMsg, playerID);
-
-	message<GameMsg> addOldPlayersMsg;
-	addOldPlayersMsg.header.id = GameMsg::Game_AddPlayer;
-	for (const auto& con : m_connections)
-	{
-		addOldPlayersMsg << con.first;
-	}
-	addOldPlayersMsg << (uint32_t)m_connections.size();
-	m_pServer->SendToClient(m_pServer->GetConnection(playerID), addOldPlayersMsg);
-	*/
-
+	
 	// Create Player entity in Game scene
 	Entity player = m_pGameScene->CreateEntity();
 	player.AddComponent<comp::Transform>();
