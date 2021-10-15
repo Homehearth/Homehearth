@@ -100,12 +100,19 @@ bool PipelineManager::CreateRenderTargetView()
 
     // Create the renderTargetView with the back buffer pointer.
     HRESULT hr = m_d3d11->Device()->CreateRenderTargetView(pBackBuffer, nullptr, m_renderTargetView.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+
+    hr = m_d3d11->Device()->CreateRenderTargetView(pBackBuffer, nullptr, m_RTV_TextureEffectDiffuseMap.GetAddressOf());
+    if (FAILED(hr))
+        return false;
 
     // Release pointer to the back buffer.
     pBackBuffer->Release();
 
     return !FAILED(hr);
 }
+
 
 bool PipelineManager::CreateDepthStencilTexture()
 {
@@ -374,6 +381,16 @@ bool PipelineManager::CreateInputLayouts()
     }
 
     return !FAILED(hr);
+}
+
+bool PipelineManager::CreateRTextures()
+{
+    //TODO: Här läggs alla texturer som skall få vatteneffekten på sig skapas.(Ska dem uppdatera texturen eller ska jag ha en sånhär för varje textur?)
+    //Dessa behöver filvägen till texturen dem ska ha. 
+    //m_TextureEffectDiffuseMap.Create()
+    //m_TextureEffectDisplacementMap.Create();
+
+    return false;
 }
 
 bool PipelineManager::CreateDefaultConstantBuffer()
