@@ -6,7 +6,7 @@ DemoScene::DemoScene(Engine& engine, Client& client, uint32_t* playerID, uint32_
 	, m_playerID(playerID)
 	, m_client(client)
 {
-	m_scene.GetRegistry()->on_construct<comp::Light>().connect<&Lights::AddFromComp>(m_scene.GetLights());
+	m_scene.GetRegistry()->on_construct<comp::Light>().connect<&Lights::Add>(m_scene.GetLights());
 
 	m_engine = &engine;
 	//Initialize player entity
@@ -15,9 +15,7 @@ DemoScene::DemoScene(Engine& engine, Client& client, uint32_t* playerID, uint32_
 
 	m_directionalLight = CreateLight({ 0.f, 0.f, 0.f, 0.f }, { 1.f, -1.f, 0.f, 0.f }, { 10.f, 10.f, 10.f, 10.f }, 0, TypeLight::DIRECTIONAL, 1);
 	m_pointLight = CreateLight({ 0.f, 8.f, -10.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 300.f, 300.f, 300.f, 300.f }, 75.f, TypeLight::POINT, 1);
-
 	
-
 
 	// Define what scene does on update
 	m_scene.on<ESceneUpdate>([&](const ESceneUpdate& e, Scene& scene)
@@ -62,7 +60,7 @@ DemoScene::DemoScene(Engine& engine, Client& client, uint32_t* playerID, uint32_
 			GameSystems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(scene);
 			GameSystems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingSphere>(scene);
 			
-			Systems::LightSystem(scene);
+			Systems::LightSystem(scene, e.dt);
 		});
 
 	//On collision event add entitys as pair in the collision system

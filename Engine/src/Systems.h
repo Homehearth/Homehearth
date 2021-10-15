@@ -3,5 +3,5 @@
 namespace Systems
 {
 	void MovementSystem(Scene& scene, float dt);
-	void LightSystem(Scene& scene);
+	void LightSystem(Scene& scene, float dt);
 }
