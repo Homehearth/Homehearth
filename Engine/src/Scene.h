@@ -30,6 +30,7 @@ public:
 	template<typename ...T>
 	void ForEachComponent(std::function<void(Entity, T&...)> func); 
 	
+	void ReadyForSwap();
 
 	// Emit update event and update constant buffers
 	void Update(float dt);

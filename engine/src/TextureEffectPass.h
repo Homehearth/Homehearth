@@ -29,6 +29,6 @@ public:
 
 	void PostRender() override;
 
-
+	void CreateViews();
 };
 

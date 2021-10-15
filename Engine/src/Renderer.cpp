@@ -15,6 +15,7 @@ void Renderer::Initialize(Window* pWindow)
     m_basePass.SetEnable(true);
     m_depthPass.SetEnable(true);
     m_textureEffectPass.SetEnable(true);
+
     //AddPass(&m_depthPass);
     AddPass(&m_basePass);
     AddPass(&m_textureEffectPass);
@@ -51,6 +52,9 @@ void Renderer::Render(Scene* pScene)
                     pass->PostRender(); // args? currently does nothing.
                 }
             }
+
+            //Tells the threads that its done.
+            pScene->ReadyForSwap();
         }
     }
 }

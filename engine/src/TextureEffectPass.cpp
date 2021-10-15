@@ -36,14 +36,14 @@ void TextureEffectPass::PreRender(ID3D11DeviceContext* dc, PipelineManager* pm)
         dc->PSSetConstantBuffers(0, 0, nullptr);
         dc->VSSetConstantBuffers(0, 0, nullptr);
         dc->VSSetConstantBuffers(0, 0, nullptr);
-        dc->CSSetConstantBuffers(0, 1, pm->m_textureEffectConstantBuffer.GetAddressOf());
+        dc->CSSetConstantBuffers(3, 1, pm->m_textureEffectConstantBuffer.GetAddressOf());
     }
 
     // SHADER RESOURCES.
     {
         dc->PSSetShaderResources(0, 0, nullptr);
         dc->VSSetShaderResources(0, 0, nullptr);
-        dc->PSSetSamplers(0, 1, pm->m_linearSamplerState.GetAddressOf());
+        dc->PSSetSamplers(1, 1, pm->m_pointSamplerState.GetAddressOf());
     }
 
     // OUTPUT MERGER.
@@ -58,11 +58,28 @@ void TextureEffectPass::Render(Scene* pScene)
 {
     // Render objects.
     pScene->Render();
+    m_camera = pScene->GetCamera();
 }
 
 void TextureEffectPass::PostRender()
 {
     // Update constantbuffer here!
-    //D3D11Core::Get().DeviceContext()->UpdateSubresource(m_pm->m_textureEffectConstantBuffer.Get(), 0, nullptr, &m_CBuffer, 0, 0);
+    m_CBuffer.deltaTime  = *m_camera->GetDeltaTime();
+    m_CBuffer.direction  = 45;
+    m_CBuffer.radious    = 10;
+    D3D11Core::Get().DeviceContext()->UpdateSubresource(m_pm->m_textureEffectConstantBuffer.Get(), 0, nullptr, &m_CBuffer, 0, 0);
+}
+
+void TextureEffectPass::CreateViews()
+{
+    D3D11_SHADER_RESOURCE_VIEW_DESC shaderResourceViewDesc;
+    shaderResourceViewDesc.Format = textureDesc.Format;
+    shaderResourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+    shaderResourceViewDesc.Texture2D.MostDetailedMip = 0;
+    shaderResourceViewDesc.Texture2D.MipLevels = 1;
+
+    HRESULT result = device->CreateShaderResourceView(normalData.Get(), &shaderResourceViewDesc, normalResourceView.GetAddressOf());
+    if (FAILED(result)) { return false; };
+
 }
 

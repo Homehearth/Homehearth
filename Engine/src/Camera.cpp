@@ -48,6 +48,8 @@ void Camera::Initialize(sm::Vector3 pos, sm::Vector3 target, sm::Vector3 up, sm:
     m_cameraMat.projection = m_projection;
     m_cameraMat.view = m_view;
 
+    m_deltaTime = 0.0f;
+
     //Constant buffer
     D3D11_BUFFER_DESC desc;
     desc.ByteWidth = sizeof(camera_Matrix_t);
@@ -70,6 +72,7 @@ void Camera::Initialize(sm::Vector3 pos, sm::Vector3 target, sm::Vector3 up, sm:
 
 void Camera::Update(float deltaTime)
 { 
+    m_deltaTime = deltaTime;
     //dx::XMConvertToRadians(m_rollPitchYaw.x);
     //dx::XMConvertToRadians(m_rollPitchYaw.y);
     //dx::XMConvertToRadians(m_rollPitchYaw.z);
@@ -196,6 +199,11 @@ camera_Matrix_t* Camera::GetCameraMatrixes()
 CAMERATYPE Camera::GetCameraType()
 {
     return m_type;
+}
+
+float* Camera::GetDeltaTime()
+{
+    return &m_deltaTime;
 }
 
 void Camera::SetPosition(sm::Vector3 newPosition)

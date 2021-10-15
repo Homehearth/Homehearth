@@ -40,6 +40,9 @@ private:
 	sm::Quaternion quaterion;
 	CAMERATYPE m_type;
 
+	//Nikkis stuff
+	float m_deltaTime;
+
 	/*Run in all the set functions*/
 	void UpdateProjection();
 
@@ -59,6 +62,7 @@ public:
 	sm::Vector3 GetUp() const;
 	camera_Matrix_t* GetCameraMatrixes();
 	CAMERATYPE GetCameraType();
+	float* GetDeltaTime();
 
 	//Set Functions
 	void SetPosition(sm::Vector3 newPosition);

@@ -11,6 +11,11 @@ Entity Scene::CreateEntity()
 	return Entity(m_registry);
 }
 
+void Scene::ReadyForSwap()
+{
+	m_renderableCopies.ReadyForSwap();
+}
+
 void Scene::Update(float dt)
 {
 	PROFILE_FUNCTION();
@@ -52,7 +57,6 @@ void Scene::Render()
 	// Emit event
 	publish<ESceneRender>();
 
-	m_renderableCopies.ReadyForSwap();
 }
 
 const bool Scene::IsRenderReady() const

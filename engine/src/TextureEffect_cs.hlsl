@@ -1,4 +1,8 @@
-cbuffer textureEffectBuffer : register(b0)
+Texture2D diffuseTexture : register(t13);
+Texture2D dissplacementTexture : register(t14);
+SamplerState pointSampler : register(s1);
+
+cbuffer textureEffectBuffer : register(b3)
 {
     float deltaTime;
     float direction;
@@ -8,4 +12,7 @@ cbuffer textureEffectBuffer : register(b0)
 [numthreads(1, 1, 1)]
 void main( uint3 DTid : SV_DispatchThreadID )
 {
+    
+    
+    
 }

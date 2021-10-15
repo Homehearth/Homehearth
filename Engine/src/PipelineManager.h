@@ -20,45 +20,53 @@ public:
 
 	
 	// PUBLIC AVAILABLE DATA.
-	ComPtr<ID3D11RenderTargetView>	m_renderTargetView;
+	ComPtr<ID3D11RenderTargetView>	  m_renderTargetView;
+	ComPtr<ID3D11RenderTargetView>    m_RTV_TextureEffectDiffuseMap;
 
-	ComPtr<ID3D11Texture2D>			m_depthStencilTexture;
+	ComPtr<ID3D11Texture2D>			  m_depthStencilTexture;
+	//ComPtr<ID3D11Texture2D>			  m_TextureEffectDiffuseMap; 
+	//ComPtr<ID3D11Texture2D>			  m_TextureEffectDisplacementMap;
+
+	ComPtr<ID3D11DepthStencilView>	  m_depthStencilView;
+
+	//ComPtr<ID3D11ShaderResourceView>  m_SRV_TextureEffectDisplacementMap;
+	ComPtr<ID3D11ShaderResourceView>  m_depthStencilSRV;
+
+	ComPtr<ID3D11DepthStencilState>   m_depthStencilStateLess;
+	ComPtr<ID3D11DepthStencilState>   m_depthStencilStateGreater;
+	ComPtr<ID3D11DepthStencilState>   m_depthStencilStateEqualAndDisableDepthWrite;
+
+	ComPtr<ID3D11RasterizerState>     m_rasterState;
+	ComPtr<ID3D11RasterizerState>	  m_rasterStateNoCulling;
+	ComPtr<ID3D11RasterizerState>	  m_rasterStateWireframe;
+
+	ComPtr<ID3D11BlendState>		  m_blendStatepOpaque;
+	ComPtr<ID3D11BlendState>		  m_blendStatepDepthOnlyAlphaTest;
+	ComPtr<ID3D11BlendState>		  m_blendStateDepthOnlyAlphaToCoverage;;
 	
-	ComPtr<ID3D11DepthStencilView>	m_depthStencilView;
-	ComPtr<ID3D11ShaderResourceView>m_depthStencilSRV;
+	ComPtr<ID3D11SamplerState>		  m_linearSamplerState;
+	ComPtr<ID3D11SamplerState>		  m_pointSamplerState;
+
+	ComPtr<ID3D11InputLayout>		  m_defaultInputLayout;
+	ComPtr<ID3D11InputLayout>		  m_positionOnlyInputLayout;
 	
-	ComPtr<ID3D11DepthStencilState>	m_depthStencilStateLess;
-	ComPtr<ID3D11DepthStencilState> m_depthStencilStateGreater;
-	ComPtr<ID3D11DepthStencilState> m_depthStencilStateEqualAndDisableDepthWrite;
+	ComPtr<ID3D11Buffer>			  m_defaultModelConstantBuffer;	// TODO: maybe put in Camera class or update from Camera class
+	ComPtr<ID3D11Buffer>			  m_textureEffectConstantBuffer; // Nikki's water effect constant buffer (Only has delta time) 
 
-	ComPtr<ID3D11RasterizerState>	m_rasterState;
-	ComPtr<ID3D11RasterizerState>	m_rasterStateNoCulling;
-	ComPtr<ID3D11RasterizerState>	m_rasterStateWireframe;
+	Shaders::VertexShader			  m_defaultVertexShader;
+	Shaders::VertexShader			  m_positionOnlyVertexShader;
 
-	ComPtr<ID3D11BlendState>		m_blendStatepOpaque;
-	ComPtr<ID3D11BlendState>		m_blendStatepDepthOnlyAlphaTest;
-	ComPtr<ID3D11BlendState>		m_blendStateDepthOnlyAlphaToCoverage;;
-	
-	ComPtr<ID3D11SamplerState>		m_linearSamplerState;
-	ComPtr<ID3D11SamplerState>		m_pointSamplerState;
-
-	ComPtr<ID3D11InputLayout>		m_defaultInputLayout;
-	ComPtr<ID3D11InputLayout>		m_positionOnlyInputLayout;
-	
-	ComPtr<ID3D11Buffer>			m_defaultModelConstantBuffer;	// TODO: maybe put in Camera class or update from Camera class
-	ComPtr<ID3D11Buffer>			m_textureEffectConstantBuffer; // Nikki's water effect constant buffer (Only has delta time) 
-
-	Shaders::VertexShader			m_defaultVertexShader;
-	Shaders::VertexShader			m_positionOnlyVertexShader;
-
-	Shaders::PixelShader			m_defaultPixelShader;
+	Shaders::PixelShader			  m_defaultPixelShader;
 
 	// Nikkis Texture Effect shaders.
-	Shaders::VertexShader           m_textureEffectVertexShader;  // Nikki's dummy water effect vertex shader.
-	Shaders::PixelShader            m_textureEffectPixelShader;   // Nikki's water effect pixel shader.
-	Shaders::ComputeShader          m_textureEffectComputeShader; // Nikki's water effect compute shader.
+	Shaders::VertexShader             m_textureEffectVertexShader;  // Nikki's dummy water effect vertex shader.
+	Shaders::PixelShader              m_textureEffectPixelShader;   // Nikki's water effect pixel shader.
+	Shaders::ComputeShader            m_textureEffectComputeShader; // Nikki's water effect compute shader.
 
-	D3D11_VIEWPORT					m_viewport;
+	RTexture m_TextureEffectDiffuseMap;
+	RTexture m_TextureEffectDisplacementMap;
+
+	D3D11_VIEWPORT					  m_viewport;
 
 	
 
@@ -74,6 +82,7 @@ private:
 	bool CreateBlendStates();
 	bool CreateShaders();
 	bool CreateInputLayouts();	
+	bool CreateRTextures();
 	void SetViewport();
 
 	bool CreateDefaultConstantBuffer();	// TODO: maybe put in Camera class or update from Camera class
