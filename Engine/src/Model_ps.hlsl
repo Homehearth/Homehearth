@@ -1,47 +1,5 @@
 #include "PBR.hlsli"
 
-
-
-StructuredBuffer<Light> S_Lights : register(t7);
-
-/*
-    Material constant buffers
-*/
-
-cbuffer matConstants_t : register(b0)
-{
-    float3 c_ambient;
-    float  c_shiniess;
-    float3 c_diffuse;
-    float  c_opacity;
-    float3 c_specular;
-};
-
-cbuffer properties_t : register(b2)
-{
-    //If a texture is set this will be 1
-    int c_hasAlbedo;
-    int c_hasNormal;
-    int c_hasMetalness;
-    int c_hasRoughness;
-    int c_hasAoMap;
-    int c_hasDisplace;
-};
-
-cbuffer Camera : register(b1)
-{
-    float4 c_cameraPosition;
-    float4 c_cameraTarget;
-    
-    float4x4 c_projection;
-    float4x4 c_view;
-}
-
-cbuffer LightsInfo : register(b3)
-{
-    float4 c_info = float4(0.f, 0.f, 0.f, 0.f);
-}
-
 float4 main(PixelIn input) : SV_TARGET
 {
     float3 camPos = c_cameraPosition.xyz;
@@ -56,9 +14,7 @@ float4 main(PixelIn input) : SV_TARGET
     float3 V = normalize(camPos - input.worldPos.xyz);    
     
     //If an object has a texture, sample from it else use default values.
-    float3 ANM = float3(c_hasAlbedo, c_hasNormal, c_hasMetalness);
-    float RAD = float3(c_hasRoughness, c_hasAoMap, c_hasDisplace);
-    SampleTextures(input, ANM, RAD, albedo, N, roughness, metallic, ao);
+    SampleTextures(input, albedo, N, roughness, metallic, ao);
     
 
     //---------------------------------PBR-Shading Calculations---------------------------------

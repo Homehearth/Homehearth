@@ -39,6 +39,49 @@ struct PixelIn
 static const float PI = 3.14159265359;
 
 /*
+---------------------------------Buffers---------------------------------
+*/
+
+StructuredBuffer<Light> S_Lights : register(t7);
+/*
+    Material constant buffers
+*/
+
+cbuffer matConstants_t : register(b0)
+{
+    float3 c_ambient;
+    float c_shiniess;
+    float3 c_diffuse;
+    float c_opacity;
+    float3 c_specular;
+};
+
+cbuffer properties_t : register(b2)
+{
+    //If a texture is set this will be 1
+    int c_hasAlbedo;
+    int c_hasNormal;
+    int c_hasMetalness;
+    int c_hasRoughness;
+    int c_hasAoMap;
+    int c_hasDisplace;
+};
+
+cbuffer Camera : register(b1)
+{
+    float4 c_cameraPosition;
+    float4 c_cameraTarget;
+    
+    float4x4 c_projection;
+    float4x4 c_view;
+}
+
+cbuffer LightsInfo : register(b3)
+{
+    float4 c_info = float4(0.f, 0.f, 0.f, 0.f);
+}
+
+/*
 ---------------------------------Normal distribution function---------------------------------
 Approximates the amount the surface's microfacets are aligned to the halfway vector, 
 influenced by the roughness of the surface; 
@@ -187,16 +230,16 @@ void CalcRadiance(PixelIn input, float3 V, float3 N, float roughness, float meta
     rad = (((kD * albedo / PI) + specular) * radiance * NdotL);
 }
 
-void SampleTextures(PixelIn input, float3 ANM, float3 RAD, inout float3 albedo, inout float3 N, inout float roughness, inout float metallic, inout float ao)
+void SampleTextures(PixelIn input, inout float3 albedo, inout float3 N, inout float roughness, inout float metallic, inout float ao)
 {
     //If albedo texture exists, sample from it
-    if(ANM.x == 1)
+    if(c_hasAlbedo == 1)
     {
         albedo = pow(max(T_albedo.Sample(samp, input.uv).rgb, 0.0f), 2.2f); //Power the albedo by 2.2f to get it to linear space.
     }
     
     //If normal texture exists, sample from it
-    if(ANM.y == 1)
+    if(c_hasNormal == 1)
     {
         float3 normalMap = T_normal.Sample(samp, input.uv).rgb;
         normalMap = normalMap * 2.0f - 1.0f;
@@ -209,19 +252,19 @@ void SampleTextures(PixelIn input, float3 ANM, float3 RAD, inout float3 albedo, 
     }
     
     //If metallic texture exists, sample from it
-    if(ANM.z == 1)
+    if(c_hasMetalness == 1)
     {
         metallic = T_metalness.Sample(samp, input.uv).r;
     }
     
     //If roughness texture exists, sample from it
-    if(RAD.x == 1)
+    if(c_hasRoughness == 1)
     {
         roughness = T_roughness.Sample(samp, input.uv).r;
     }
     
     //If ao texture exists, sample from it
-    if(RAD.y == 1)
+    if(c_hasAoMap == 1)
     {
         ao = T_aomap.Sample(samp, input.uv).r;
     }
