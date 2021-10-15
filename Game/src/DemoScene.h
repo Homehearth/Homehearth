@@ -3,20 +3,14 @@
 #include "GameSystems.h"
 #include "Engine.h"
 
+#include "Tags.h"
+
 class DemoScene : public SceneBuilder<DemoScene, Scene>
 {
 private:
-	Engine* m_engine;
 
 public:
 	DemoScene(Engine& engine);
 	
 	Entity CreatePlayerEntity(uint32_t playerID);
-
-	//Camera
-	void SetupCamera();
-	void CheckIfSwappedCamera();
-	void InitializeGameCam();
-	Camera m_gameCamera;
-	Camera m_debugCamera;
 };

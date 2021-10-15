@@ -35,7 +35,7 @@ void Game::UpdateNetwork(float deltaTime)
 		}
 
 		// TODO MAKE THIS BETTER
-		if (m_gameID != UINT32_MAX && m_demoScene->GetScene().GetCurrentCamera()->GetCameraType() == CAMERATYPE::PLAY)
+		if (m_gameID != UINT32_MAX && GetCurrentScene()->GetCurrentCamera()->GetCameraType() == CAMERATYPE::PLAY)
 		{
 			message<GameMsg> msg;
 			msg.header.id = GameMsg::Game_MovePlayer;
@@ -57,6 +57,7 @@ bool Game::OnStartup()
 
 	//Set as current scene
 	SetScene(m_demoScene->GetScene());
+
 	Scene& mainMenuScene = GetScene("MainMenu");
 	mainMenuScene.on<ESceneUpdate>([](const ESceneUpdate& e, HeadlessScene& scene)
 		{
@@ -89,7 +90,7 @@ bool Game::OnStartup()
 
 		});
 
-	//SetScene(mainMenuScene);
+	SetScene(mainMenuScene);
 	
 	return true;
 }
@@ -204,6 +205,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 					found.insert(n.id);
 				}
 			});
+
 		// create new Entities
 		for (const auto& t : transforms) {
 			if (found.find(t.first) == found.end())
@@ -213,8 +215,18 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 				
 				if (m_localPID == t.first)
 				{
-					m_demoScene->InitializeGameCam();
-					m_demoScene->m_gameCamera.SetFollowTransform(e.GetComponent<comp::Transform>());
+
+					m_demoScene->GetScene().ForEachComponent<comp::Tag<CAMERA>>([&](Entity e, comp::Tag<CAMERA>& t)
+						{
+							comp::Camera3D* c = e.GetComponent<comp::Camera3D>();
+							if (c)
+							{
+								if (c->camera.GetCameraType() == CAMERATYPE::PLAY)
+								{
+									c->camera.SetFollowVelocity(e.GetComponent<comp::Velocity>());
+								}
+							}
+						});
 				}
 			}
 		}
@@ -231,11 +243,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			msg >> remotePlayerID;
 			LOG_INFO("Player with ID: %ld has joined the game!", remotePlayerID);
 			Entity e = m_demoScene->CreatePlayerEntity(remotePlayerID);
-			if (this->m_gameID == (uint32_t)-1 && m_localPID == remotePlayerID)
-			{
-				m_demoScene->InitializeGameCam();
-				m_demoScene->m_gameCamera.SetFollowVelocity(e.GetComponent<comp::Velocity>());
-			}
+			
 		}
 
 		break;

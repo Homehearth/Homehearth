@@ -55,6 +55,13 @@ namespace ecs
 		{
 			float runSpeed;
 		};
+
+		template<uint8_t ID>
+		struct Tag
+		{
+			uint8_t id = ID;
+		};
+
 	};
 
 	sm::Matrix GetMatrix(const component::Transform& transform);

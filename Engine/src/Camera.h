@@ -80,3 +80,11 @@ public:
 	sm::Vector3 m_rollPitchYaw;
 	sm::Vector3 m_position;
 };
+
+
+// component version
+namespace ecs::component {
+	struct Camera3D {
+		Camera camera;
+	};
+}

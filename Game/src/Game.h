@@ -3,7 +3,6 @@
 #include <Engine.h>
 #include <DemoScene.h>
 
-
 class Game : public Engine
 {
 private:

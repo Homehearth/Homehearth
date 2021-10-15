@@ -3,8 +3,21 @@
 DemoScene::DemoScene(Engine& engine)
 	: SceneBuilder(engine)
 {
-	m_engine = &engine;
-	SetupCamera();
+	// Setup Cameras
+	Entity debugCameraEntity = m_scene.CreateEntity();
+	debugCameraEntity.AddComponent<comp::Camera3D>()->camera.Initialize(sm::Vector3(0, 0, -20), sm::Vector3(0, 0, 1), sm::Vector3(0, 1, 0), sm::Vector2((float)engine.GetWindow()->GetWidth(), (float)engine.GetWindow()->GetHeight()), CAMERATYPE::DEBUG);
+	debugCameraEntity.AddComponent<comp::Tag<DEBUGCAMERA>>();
+
+	Entity cameraEntity = m_scene.CreateEntity();
+	cameraEntity.AddComponent<comp::Camera3D>()->camera.Initialize(sm::Vector3(0, 0, -10), sm::Vector3(0, 0, 1), sm::Vector3(0, 1, 0), sm::Vector2((float)engine.GetWindow()->GetWidth(), (float)engine.GetWindow()->GetHeight()), CAMERATYPE::PLAY);
+	cameraEntity.AddComponent<comp::Tag<CAMERA>>();
+
+
+	m_scene.SetCurrentCamera(&debugCameraEntity.GetComponent<comp::Camera3D>()->camera);
+	InputSystem::Get().SetCamera(m_scene.GetCurrentCamera());
+
+	// Debug Chest
+
 	Entity chest = m_scene.CreateEntity();
 	comp::Transform* transform = chest.AddComponent<comp::Transform>();
 	transform->position.z = 5;
@@ -16,8 +29,9 @@ DemoScene::DemoScene(Engine& engine)
 
 	renderable2->model = ResourceManager::Get().GetResource<RModel>("Chest.obj");
 
+
 	// Define what scene does on update
-	m_scene.on<ESceneUpdate>([&](const ESceneUpdate& e, HeadlessScene& scene)
+	m_scene.on<ESceneUpdate>([&, cameraEntity, debugCameraEntity](const ESceneUpdate& e, HeadlessScene& scene)
 		{
 			//System responding to user input
 			//GameSystems::MRayIntersectBoxSystem(m_scene);
@@ -26,7 +40,22 @@ DemoScene::DemoScene(Engine& engine)
 
 			//GameSystems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(m_scene);
 			//GameSystems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingSphere>(m_scene);
-			this->CheckIfSwappedCamera();
+			//this->CheckIfSwappedCamera();
+#ifdef _DEBUG
+			if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Space, KeyState::RELEASED))
+			{
+				if (m_scene.GetCurrentCamera()->GetCameraType() == CAMERATYPE::DEBUG)
+				{
+					m_scene.SetCurrentCamera(&cameraEntity.GetComponent<comp::Camera3D>()->camera);
+					LOG_INFO("Game Camera selected");
+				}
+				else if (m_scene.GetCurrentCamera()->GetCameraType() == CAMERATYPE::PLAY)
+				{
+					m_scene.SetCurrentCamera(&debugCameraEntity.GetComponent<comp::Camera3D>()->camera);
+					LOG_INFO("Debug Camera selected");
+				}
+			}
+#endif // DEBUG
 		});
 
 	//On collision event add entities as pair in the collision system
@@ -35,44 +64,6 @@ DemoScene::DemoScene(Engine& engine)
 			LOG_INFO("Collision detected!");
 			CollisionSystem::Get().AddPair(e.obj1, e.obj2);
 		});
-}
-
-void DemoScene::SetupCamera()
-{
-	m_debugCamera.Initialize(sm::Vector3(0, 0, -20), sm::Vector3(0, 0, 1), sm::Vector3(0, 1, 0), sm::Vector2((float)m_engine->GetWindow()->GetWidth(), (float)m_engine->GetWindow()->GetHeight()), CAMERATYPE::DEBUG);
-	m_scene.SetCurrentCamera(&m_debugCamera);
-
-	InputSystem::Get().SetCamera(m_scene.GetCurrentCamera());
-}
-
-void DemoScene::CheckIfSwappedCamera()
-{
-	CAMERATYPE test = m_scene.GetCurrentCamera()->GetCameraType();
-
-#ifdef _DEBUG
-	if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Space, KeyState::RELEASED))
-	{
-		if (m_scene.GetCurrentCamera()->GetCameraType() == CAMERATYPE::DEBUG)
-		{
-			InputSystem::Get().SwitchMouseMode();
-			m_scene.SetCurrentCamera(&m_gameCamera);
-			LOG_INFO("Game Camera selected");
-		}
-		else if (m_scene.GetCurrentCamera()->GetCameraType() == CAMERATYPE::PLAY)
-		{
-			InputSystem::Get().SwitchMouseMode();
-			m_scene.SetCurrentCamera(&m_debugCamera);
-			LOG_INFO("Debug Camera selected");
-		}
-	}
-#endif // DEBUG
-}
-
-void DemoScene::InitializeGameCam()
-{
-	m_gameCamera.Initialize(sm::Vector3(0, 2.5f, -10), sm::Vector3(0, 0, 1), sm::Vector3(0, 1, 0), sm::Vector2((float)m_engine->GetWindow()->GetWidth(), (float)m_engine->GetWindow()->GetHeight()), CAMERATYPE::PLAY);
-	m_scene.SetCurrentCamera(&m_gameCamera);
-	InputSystem::Get().SetCamera(m_scene.GetCurrentCamera());
 }
 
 Entity DemoScene::CreatePlayerEntity(uint32_t playerID)
