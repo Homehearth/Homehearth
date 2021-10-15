@@ -28,7 +28,7 @@ public:
 	
 	Entity CreatePlayerEntity();
 
-	Entity CreateLight(sm::Vector4 pos, sm::Vector4 dir, sm::Vector4 col, float range, TypeLight type, UINT enabled);
+	Entity CreateLightEntity(sm::Vector4 pos, sm::Vector4 dir, sm::Vector4 col, float range, TypeLight type, UINT enabled);
 
 	//Camera
 	void SetUpCamera();

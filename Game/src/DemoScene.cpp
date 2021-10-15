@@ -13,8 +13,8 @@ DemoScene::DemoScene(Engine& engine, Client& client, uint32_t* playerID, uint32_
 	m_player = CreatePlayerEntity();
 	SetUpCamera();
 
-	m_directionalLight = CreateLight({ 0.f, 0.f, 0.f, 0.f }, { 1.f, -1.f, 0.f, 0.f }, { 10.f, 10.f, 10.f, 10.f }, 0, TypeLight::DIRECTIONAL, 1);
-	m_pointLight = CreateLight({ 0.f, 8.f, -10.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 300.f, 300.f, 300.f, 300.f }, 75.f, TypeLight::POINT, 1);
+	m_directionalLight = CreateLightEntity({ 0.f, 0.f, 0.f, 0.f }, { 1.f, -1.f, 0.f, 0.f }, { 10.f, 10.f, 10.f, 10.f }, 0, TypeLight::DIRECTIONAL, 1);
+	m_pointLight = CreateLightEntity({ 0.f, 8.f, -10.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 300.f, 300.f, 300.f, 300.f }, 75.f, TypeLight::POINT, 1);
 	
 
 	// Define what scene does on update
@@ -142,7 +142,7 @@ Entity DemoScene::CreatePlayerEntity()
 	return playerEntity;
 }
 
-Entity DemoScene::CreateLight(sm::Vector4 pos, sm::Vector4 dir, sm::Vector4 col, float range, TypeLight type, UINT enabled)
+Entity DemoScene::CreateLightEntity(sm::Vector4 pos, sm::Vector4 dir, sm::Vector4 col, float range, TypeLight type, UINT enabled)
 {
 	Entity lightEntity = m_scene.CreateEntity();
 
