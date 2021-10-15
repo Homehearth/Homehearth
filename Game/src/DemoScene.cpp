@@ -4,6 +4,7 @@ DemoScene::DemoScene(Engine& engine)
 	: SceneBuilder(engine)
 {
 	m_scene.GetRegistry()->on_construct<comp::Light>().connect<&Lights::Add>(m_scene.GetLights());
+
 	// Setup Cameras
 	Entity debugCameraEntity = m_scene.CreateEntity();
 	debugCameraEntity.AddComponent<comp::Camera3D>()->camera.Initialize(sm::Vector3(0, 0, -20), sm::Vector3(0, 0, 1), sm::Vector3(0, 1, 0), sm::Vector2((float)engine.GetWindow()->GetWidth(), (float)engine.GetWindow()->GetHeight()), CAMERATYPE::DEBUG);
@@ -44,7 +45,7 @@ DemoScene::DemoScene(Engine& engine)
 			//GameSystems::MRayIntersectBoxSystem(m_scene);
 
 			m_scene.GetCurrentCamera()->Update(e.dt);
-			Systems::LightSystem(scene, e.dt);
+			//Systems::LightSystem(scene, e.dt);
 
 			//GameSystems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(m_scene);
 			//GameSystems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingSphere>(m_scene);
@@ -104,5 +105,7 @@ Entity DemoScene::CreateLightEntity(sm::Vector4 pos, sm::Vector4 dir, sm::Vector
 	lightEntity.GetComponent<comp::Light>()->lightData.type = type;
 	lightEntity.GetComponent<comp::Light>()->lightData.enabled = enabled;
 	
+	m_scene.GetLights()->EditLight(lightEntity.GetComponent<comp::Light>()->lightData, lightEntity.GetComponent<comp::Light>()->index);
+
 	return lightEntity;
 }

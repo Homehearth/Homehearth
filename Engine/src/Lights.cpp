@@ -14,9 +14,14 @@ const bool Lights::SetupLightBuffer()
     desc.StructureByteStride = sizeof(light_t);
     desc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
 
-    D3D11_SUBRESOURCE_DATA data = {};
-    data.pSysMem = &m_lights[0];
-    hr = D3D11Core::Get().Device()->CreateBuffer(&desc, &data, m_lightBuffer.GetAddressOf());
+    if (!m_lights.empty())
+    {
+        D3D11_SUBRESOURCE_DATA data = {};
+        data.pSysMem = &m_lights[0];
+        hr = D3D11Core::Get().Device()->CreateBuffer(&desc, &data, m_lightBuffer.GetAddressOf());
+    }
+    else
+        return false;
     
     if (!(FAILED(hr)))
     {
@@ -110,7 +115,7 @@ const bool Lights::IsInitialize() const
 
 void Lights::Render(ID3D11DeviceContext* dc)
 {
-    if (dc == D3D11Core::Get().DeviceContext())
+    if (dc == D3D11Core::Get().DeviceContext() && m_isInit)
     {
         UpdateInfoBuffer();
         UpdateLightBuffer();
