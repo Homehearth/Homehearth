@@ -1,6 +1,7 @@
 #pragma once
 #include "BasePass.h"
 #include "DepthPass.h"
+#include "DebugPass.h"
 #include "IRenderPass.h"
 #include "PipelineManager.h"
 
@@ -14,6 +15,7 @@ private:
 
 	BasePass m_basePass;	
 	DepthPass m_depthPass;
+	DebugPass m_debugPass;
 	unsigned int m_currentPass = 0;
 
 	// Update per frame related resources.

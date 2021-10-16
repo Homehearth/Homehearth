@@ -227,9 +227,12 @@ void Engine::drawImGUI() const
 	
 	if (ImGui::CollapsingHeader("Renderable"))
 	{
-		GetCurrentScene()->ForEachComponent<comp::Renderable>([&](comp::Renderable& renderable)
+		GetCurrentScene()->ForEachComponent<comp::Renderable>([&](Entity& e, comp::Renderable& renderable)
 			{
+				std::string entityname = "Entity: " + std::to_string(static_cast<int>((entt::entity)e));
 
+				ImGui::Separator();
+				ImGui::Text(entityname.c_str());
 				ImGui::Text("Change 'mtl-file'");
 				char str[30] = "";
 				ImGui::InputText("New material", str, IM_ARRAYSIZE(str));
@@ -240,6 +243,24 @@ void Engine::drawImGUI() const
 				ImGui::Spacing();
 			});
 	}
+	if (ImGui::CollapsingHeader("Light"))
+	{
+
+		GetCurrentScene()->ForEachComponent<comp::Light>([&](Entity& e, comp::Light& light)
+			{
+				std::string entityname = "Entity: " + std::to_string(static_cast<int>((entt::entity)e));
+
+				ImGui::Separator();
+				ImGui::Text(entityname.c_str());
+				
+				ImGui::Text("Display light data here");
+
+				ImGui::Spacing();
+			});
+
+
+	}
+
 	ImGui::End();
 
 	ImGui::Begin("Camera");
@@ -263,6 +284,14 @@ void Engine::drawImGUI() const
 		}
 	};
 	ImGui::End();
+
+
+	ImGui::Begin("Render Pass");
+	{
+		ImGui::Checkbox("Render Colliders", GetCurrentScene()->GetIsRenderingColliders());
+	};
+	ImGui::End();
+	
 }
 
 void Engine::RenderThread()
@@ -276,7 +305,7 @@ void Engine::RenderThread()
 		deltaTime = static_cast<float>(currentFrame - lastFrame);
 		if (deltaSum >= targetDelta)
 		{
-			if (GetCurrentScene()->IsRenderReady() && rtd::Handler2D::Get()->IsRenderReady())
+			if (GetCurrentScene()->IsRenderReady() && GetCurrentScene()->IsRenderDebugReady() && rtd::Handler2D::Get()->IsRenderReady())
 			{
 				Render(deltaSum);
 				m_frameTime.render = deltaSum;

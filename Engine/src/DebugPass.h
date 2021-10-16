@@ -1,20 +1,19 @@
 #pragma once
 #include "IRenderPass.h"
-#include "Lights.h"
 
 //--------------------------------------
 // Forward Rendering, or GeometryPass.
 //--------------------------------------
-class BasePass : public IRenderPass
+class DebugPass : public IRenderPass
 {
 public:
-	BasePass() = default;
-	virtual ~BasePass() = default;
+	DebugPass() = default;
+	virtual ~DebugPass() = default;
 
 	void PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext = D3D11Core::Get().DeviceContext()) override;
-	
+
 	void Render(Scene* pScene) override;
-	
+
 	void PostRender(ID3D11DeviceContext* pDeviceContext = D3D11Core::Get().DeviceContext()) override;
 };
 

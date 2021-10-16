@@ -2,6 +2,7 @@
 #include "net_message.h"
 #include "RModel.h"
 #include "RDebugMesh.h"
+#include "ResourceManager.h"
 
 namespace ecs
 {
@@ -47,6 +48,26 @@ namespace ecs
 			std::string name;
 		};
 
+		
+		struct RenderableDebug
+		{
+			std::shared_ptr<RModel> 	model;
+			basic_model_matrix_t 		data;
+			void InitRenderable(entt::registry& reg, const entt::entity curr)
+			{
+				BoundingOrientedBox* obb = reg.try_get<BoundingOrientedBox>(curr);
+				BoundingSphere* sphere = reg.try_get<BoundingSphere>(curr);
+				if(obb != nullptr)
+				{
+					model = ResourceManager::Get().GetResource<RModel>("cube.obj");
+				}
+				else if(sphere != nullptr)
+				{
+					model = ResourceManager::Get().GetResource<RModel>("Sphere.obj");
+				}
+			}
+		};
+		
 		struct Velocity
 		{
 			sm::Vector3 vel;
@@ -55,6 +76,12 @@ namespace ecs
 		struct Player
 		{
 			float runSpeed;
+		};
+
+		struct Light
+		{
+			light_t lightData;
+			int index;
 		};
 
 		template<uint8_t ID>

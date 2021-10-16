@@ -3,4 +3,5 @@
 namespace Systems
 {
 	void MovementSystem(HeadlessScene& scene, float dt);
+	void LightSystem(Scene& scene, float dt);
 }
