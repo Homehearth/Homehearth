@@ -13,6 +13,8 @@ private:
 
 	std::unique_ptr<DemoScene> m_demoScene;
 
+	bool m_isLeavingLobby;
+
 	// Inherited via Engine
 	virtual bool OnStartup() override;
 	virtual void OnUserUpdate(float deltaTime) override;

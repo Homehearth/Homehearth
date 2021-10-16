@@ -8,21 +8,22 @@ struct Ray_t
 enum class GameMsg : uint8_t
 {
 	Client_Accepted,
+
 	Lobby_Create,
 	Lobby_Join,
+	Lobby_Leave,
 	Lobby_Accepted,
+	Lobby_AcceptedLeave,
 	Lobby_Invalid,
 
 	Server_AssignID,
 	Server_GetPing,
 	
 	Game_Snapshot,
-	Game_AddPlayer,
 	Game_AddEntity,
-	Game_RemovePlayer,
 	Game_RemoveEntity,
-	Game_Update,
-	Game_MovePlayer
+
+	Game_PlayerInput
 };
 
 /*

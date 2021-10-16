@@ -8,6 +8,7 @@ Game::Game()
 {
 	this->m_localPID = -1;
 	this->m_gameID = -1;
+	this->m_isLeavingLobby = false;
 }
 
 Game::~Game()
@@ -38,7 +39,7 @@ void Game::UpdateNetwork(float deltaTime)
 		if (m_gameID != UINT32_MAX && GetCurrentScene()->GetCurrentCamera()->GetCameraType() == CAMERATYPE::PLAY)
 		{
 			message<GameMsg> msg;
-			msg.header.id = GameMsg::Game_MovePlayer;
+			msg.header.id = GameMsg::Game_PlayerInput;
 			int8_t x = InputSystem::Get().GetAxis(Axis::HORIZONTAL);
 			int8_t y = InputSystem::Get().GetAxis(Axis::VERTICAL);
 
@@ -124,10 +125,22 @@ void Game::OnUserUpdate(float deltaTime)
 		{
 			ImGui::Text(std::string("Game ID: " + std::to_string(m_gameID)).c_str());
 
-			if (ImGui::Button("Leave Game"))
+			if (m_isLeavingLobby)
 			{
-				// TODO
+				ImGui::BeginDisabled();
+				ImGui::Button("Leave Game");
+				ImGui::EndDisabled();
+				
 			}
+			else if (ImGui::Button("Leave Game"))
+			{
+				message<GameMsg> msg;
+				msg.header.id = GameMsg::Lobby_Leave;
+				msg << m_localPID << m_gameID;
+				m_client.Send(msg);
+				m_isLeavingLobby = true;
+			}
+			
 		}
 		if (ImGui::Button("Disconnect"))
 		{
@@ -148,6 +161,7 @@ void Game::OnUserUpdate(float deltaTime)
 	}
 	ImGui::End();
 	);
+
 }
 
 
@@ -285,10 +299,19 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	}
 	case GameMsg::Lobby_Invalid:
 	{
-		LOG_WARNING("Request denied: Invalid lobby");
+		std::string err;
+		msg >> err;
+		LOG_WARNING("Request denied: %s", err.c_str());
 		break;
 	}
-	
+	case GameMsg::Lobby_AcceptedLeave:
+	{
+		LOG_WARNING("Left Lobby %u", m_gameID);
+		m_isLeavingLobby = false;
+		m_gameID = -1;
+		SetScene("MainMenu");
+		break;
+	}
 	}
 }
 

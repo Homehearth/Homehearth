@@ -34,6 +34,8 @@ public:
 	bool RemovePlayer(uint32_t playerID);
 	
 	bool JoinLobby(uint32_t playerID, uint32_t gameID);
+	bool LeaveLobby(uint32_t playerID, uint32_t gameID);
+
 	bool Create(uint32_t playerID, uint32_t gameID);
 	void Destroy();
 

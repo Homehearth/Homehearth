@@ -64,6 +64,27 @@ bool Simulation::JoinLobby(uint32_t playerID, uint32_t gameID)
 	return true;
 }
 
+bool Simulation::LeaveLobby(uint32_t playerID, uint32_t gameID)
+{
+	this->RemovePlayer(playerID);
+
+	message<GameMsg> msg;
+	msg.header.id = GameMsg::Game_RemoveEntity;
+	
+	uint32_t count = 0;
+	m_pGameScene->ForEachComponent<comp::Network>([&](comp::Network& n)
+		{
+			msg << n.id;
+			count++;
+		});
+	msg << count;
+
+	m_pServer->SendToClient(m_pServer->GetConnection(playerID), msg);
+
+	return true;
+}
+
+
 bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 {
 	this->m_gameID = gameID;
@@ -115,6 +136,9 @@ bool Simulation::AddPlayer(uint32_t playerID)
 	LOG_INFO("Player with ID: %ld added to the game!", playerID);
 	m_connections[playerID] = m_pServer->GetConnection(playerID);
 	
+	// Send all entities in Game Scene to new player
+	m_pServer->SendToClient(m_pServer->GetConnection(playerID), AllEntitiesMessage());
+
 	// Create Player entity in Game scene
 	Entity player = m_pGameScene->CreateEntity();
 	player.AddComponent<comp::Transform>();
@@ -122,11 +146,8 @@ bool Simulation::AddPlayer(uint32_t playerID)
 	player.AddComponent<comp::MeshName>()->name = "cube.obj";
 	player.AddComponent<comp::Network>()->id = playerID;
 
-	// Send all entities in Game Scene to new player
-	m_pServer->SendToClient(m_pServer->GetConnection(playerID), AllEntitiesMessage());
-
 	// send new Player to all other clients
-	Broadcast(SingleEntityMessage(player), playerID);
+	Broadcast(SingleEntityMessage(player));
 
 	return true;
 }

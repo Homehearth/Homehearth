@@ -140,12 +140,40 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 		{
 			message<GameMsg> invalidLobbyMsg;
 			invalidLobbyMsg.header.id = GameMsg::Lobby_Invalid;
+			invalidLobbyMsg << std::string("Player trying to join invalid Lobby");
 			LOG_WARNING("Request denied: Player trying to join invalid Lobby");
 			m_server.SendToClient(m_server.GetConnection(playerID), invalidLobbyMsg);
 		}
 		break;
 	}
-	case GameMsg::Game_MovePlayer:
+	case GameMsg::Lobby_Leave:
+	{
+		uint32_t gameID;
+		msg >> gameID;
+		uint32_t playerID;
+		msg >> playerID;
+		if (m_simulations.find(gameID) != m_simulations.end())
+		{
+			if (m_simulations[gameID]->LeaveLobby(playerID, gameID)) {
+
+				// Send to client the message with the new game ID
+				message<GameMsg> accMsg;
+				accMsg.header.id = GameMsg::Lobby_AcceptedLeave;
+
+				m_server.SendToClient(m_server.GetConnection(playerID), accMsg);
+				break;
+			}
+		}
+		
+		message<GameMsg> invalidLobbyMsg;
+		invalidLobbyMsg.header.id = GameMsg::Lobby_Invalid;
+		invalidLobbyMsg << std::string("Player could not leave Lobby");
+		LOG_WARNING("Request denied: Player could not leave Lobby");
+		m_server.SendToClient(m_server.GetConnection(playerID), invalidLobbyMsg);
+		
+		break;
+	}
+	case GameMsg::Game_PlayerInput:
 	{
 		int8_t x;
 		int8_t y;
