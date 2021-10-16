@@ -29,7 +29,7 @@ DemoScene::DemoScene(Engine& engine)
 	renderable2->model = ResourceManager::Get().GetResource<RModel>("Chest.obj");
 
 	// Define what scene does on update
-	m_scene.on<ESceneUpdate>([&, cameraEntity, debugCameraEntity](const ESceneUpdate& e, HeadlessScene& scene)
+	m_scene.on<ESceneUpdate>([&, cameraEntity, debugCameraEntity](const ESceneUpdate& e, Scene& scene)
 		{
 			//System responding to user input
 			//GameSystems::MRayIntersectBoxSystem(m_scene);
@@ -59,7 +59,7 @@ DemoScene::DemoScene(Engine& engine)
 		});
 
 	//On collision event add entities as pair in the collision system
-	m_scene.on<ESceneCollision>([&](const ESceneCollision& e, HeadlessScene& scene)
+	m_scene.on<ESceneCollision>([&](const ESceneCollision& e, Scene& scene)
 		{
 			LOG_INFO("Collision detected!");
 			CollisionSystem::Get().AddPair(e.obj1, e.obj2);
@@ -139,7 +139,7 @@ namespace sceneHelp
 
 
 
-		gameScene.on<ESceneUpdate>([&, cameraEntity, debugCameraEntity](const ESceneUpdate& e, HeadlessScene& scene)
+		gameScene.on<ESceneUpdate>([&, cameraEntity, debugCameraEntity](const ESceneUpdate& e, Scene& scene)
 			{
 				gameScene.GetCurrentCamera()->Update(e.dt);
 

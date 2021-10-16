@@ -60,7 +60,7 @@ bool Game::OnStartup()
 	SetScene(m_demoScene->GetScene());
 
 	Scene& mainMenuScene = GetScene("MainMenu");
-	mainMenuScene.on<ESceneUpdate>([](const ESceneUpdate& e, HeadlessScene& scene)
+	mainMenuScene.on<ESceneUpdate>([](const ESceneUpdate& e, Scene& scene)
 		{
 
 			IMGUI(
@@ -71,7 +71,7 @@ bool Game::OnStartup()
 		});
 
 	Scene& lobbyScene = GetScene("Lobby");
-	lobbyScene.on<ESceneUpdate>([](const ESceneUpdate& e, HeadlessScene& scene) 
+	lobbyScene.on<ESceneUpdate>([](const ESceneUpdate& e, Scene& scene)
 		{
 			IMGUI(
 				ImGui::Begin("Scene");

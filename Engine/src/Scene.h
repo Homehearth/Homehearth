@@ -1,7 +1,7 @@
 #pragma once
 #include "HeadlessScene.h"
 
-class Scene : public HeadlessScene
+class Scene : public BasicScene<Scene>
 {
 private:
 

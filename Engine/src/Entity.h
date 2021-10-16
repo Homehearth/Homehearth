@@ -6,10 +6,10 @@ private:
 	entt::registry* m_pRegistry;
 	entt::entity m_entity;
 	
-	friend class HeadlessScene;
+
+public:
 	Entity(entt::registry& registry);
 	Entity(entt::registry& registry, entt::entity id);
-public:
 	Entity();
 	virtual ~Entity() = default;
 

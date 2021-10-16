@@ -16,7 +16,7 @@ void Scene::Update(float dt)
 	PROFILE_FUNCTION();
 
 	// Emit event
-	HeadlessScene::Update(dt);
+	BasicScene::Update(dt);
 
 	if (!m_renderableCopies.IsSwapped())
 	{
