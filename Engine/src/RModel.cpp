@@ -231,13 +231,11 @@ void RModel::LoadLights(const aiScene* scene)
 
         if (ailight->mType == aiLightSourceType::aiLightSource_POINT)
         {
-            light.type = 1;
-            light.attenuation = ailight->mAttenuationQuadratic;
+            light.type = TypeLight::POINT;
         }
         else if (ailight->mType == aiLightSourceType::aiLightSource_DIRECTIONAL)
         {
-            light.type = 0;
-            light.attenuation = ailight->mAttenuationConstant;
+            light.type = TypeLight::DIRECTIONAL;
         }
         light.enabled = true;
         m_lights.push_back(light);

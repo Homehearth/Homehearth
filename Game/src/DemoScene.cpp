@@ -3,7 +3,8 @@
 DemoScene::DemoScene(Engine& engine)
 	: SceneBuilder(engine)
 {
-	
+	m_scene.GetRegistry()->on_construct<comp::Light>().connect<&Lights::Add>(m_scene.GetLights());
+
 	// Setup Cameras
 	Entity debugCameraEntity = m_scene.CreateEntity();
 	debugCameraEntity.AddComponent<comp::Camera3D>()->camera.Initialize(sm::Vector3(0, 0, -20), sm::Vector3(0, 0, 1), sm::Vector3(0, 1, 0), sm::Vector2((float)engine.GetWindow()->GetWidth(), (float)engine.GetWindow()->GetHeight()), CAMERATYPE::DEBUG);
@@ -12,6 +13,10 @@ DemoScene::DemoScene(Engine& engine)
 	Entity cameraEntity = m_scene.CreateEntity();
 	cameraEntity.AddComponent<comp::Camera3D>()->camera.Initialize(sm::Vector3(0, 0, -10), sm::Vector3(0, 0, 1), sm::Vector3(0, 1, 0), sm::Vector2((float)engine.GetWindow()->GetWidth(), (float)engine.GetWindow()->GetHeight()), CAMERATYPE::PLAY);
 	cameraEntity.AddComponent<comp::Tag<CAMERA>>();
+
+	m_directionalLight = CreateLightEntity({ 0.f, 0.f, 0.f, 0.f }, { 1.f, -1.f, 0.f, 0.f }, { 10.f, 10.f, 10.f, 10.f }, 0, TypeLight::DIRECTIONAL, 1);
+	m_pointLight = CreateLightEntity({ 0.f, 8.f, -10.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 300.f, 300.f, 300.f, 300.f }, 75.f, TypeLight::POINT, 1);
+	
 
 	InputSystem::Get().SetCamera(m_scene.GetCurrentCamera());
 
@@ -44,6 +49,7 @@ DemoScene::DemoScene(Engine& engine)
 			GameSystems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(m_scene);
 			GameSystems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingSphere>(m_scene);
 			GameSystems::CheckCollisions<comp::BoundingSphere, comp::BoundingSphere>(m_scene);
+			//Systems::LightSystem(scene, e.dt);
 			//this->CheckIfSwappedCamera();
 #ifdef _DEBUG
 			if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Space, KeyState::RELEASED))
@@ -85,4 +91,21 @@ Entity DemoScene::CreatePlayerEntity(uint32_t playerID)
 	renderable->model = ResourceManager::Get().GetResource<RModel>("cube.obj");
 
 	return playerEntity;
+}
+
+Entity DemoScene::CreateLightEntity(sm::Vector4 pos, sm::Vector4 dir, sm::Vector4 col, float range, TypeLight type, UINT enabled)
+{
+	Entity lightEntity = m_scene.CreateEntity();
+
+	lightEntity.AddComponent<comp::Light>();
+	lightEntity.GetComponent<comp::Light>()->lightData.position = pos;
+	lightEntity.GetComponent<comp::Light>()->lightData.direction = dir;
+	lightEntity.GetComponent<comp::Light>()->lightData.color = col;
+	lightEntity.GetComponent<comp::Light>()->lightData.range = range;
+	lightEntity.GetComponent<comp::Light>()->lightData.type = type;
+	lightEntity.GetComponent<comp::Light>()->lightData.enabled = enabled;
+	
+	m_scene.GetLights()->EditLight(lightEntity.GetComponent<comp::Light>()->lightData, lightEntity.GetComponent<comp::Light>()->index);
+
+	return lightEntity;
 }

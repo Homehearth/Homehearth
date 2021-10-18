@@ -1,5 +1,6 @@
 #pragma once
 #include "HeadlessScene.h"
+#include "Lights.h"
 
 class Scene : public HeadlessScene
 {
@@ -11,6 +12,9 @@ private:
 	dx::ConstantBuffer<collider_hit_t> m_ColliderHitBuffer;
 	Camera* m_currentCamera;
 	Camera m_defaultCamera;
+
+	Lights m_lights;
+
 public:
 	Scene();
 
@@ -29,6 +33,7 @@ public:
 
 	//ImGui data for disable/enable 
 	bool* GetIsRenderingColliders();
+	Lights* GetLights();
 	
 	DoubleBuffer<std::vector<comp::Renderable>>* GetBuffers();
 	DoubleBuffer<std::vector<comp::RenderableDebug>>* GetDebugBuffers();

@@ -77,6 +77,12 @@ namespace ecs
 			float runSpeed;
 		};
 
+		struct Light
+		{
+			light_t lightData;
+			int index;
+		};
+
 		template<uint8_t ID>
 		struct Tag
 		{
