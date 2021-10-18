@@ -47,6 +47,12 @@ struct basic_model_matrix_t
 };
 
 ALIGN16
+struct collider_hit_t
+{
+	int hit;
+};
+
+ALIGN16
 struct camera_Matrix_t
 {
 	sm::Vector4 position;

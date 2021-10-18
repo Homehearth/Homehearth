@@ -51,6 +51,7 @@ namespace ecs
 		{
 			std::shared_ptr<RModel> 	model;
 			basic_model_matrix_t 		data;
+			collider_hit_t				isColliding;
 			void InitRenderable(entt::registry& reg, const entt::entity curr)
 			{
 				BoundingOrientedBox* obb = reg.try_get<BoundingOrientedBox>(curr);

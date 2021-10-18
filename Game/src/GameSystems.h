@@ -36,10 +36,18 @@ namespace GameSystems
 					{
 						if (collider1.Intersects(collider2))
 						{
+#ifdef _DEBUG
+							scene.GetRegistry()->try_get<comp::RenderableDebug>(*entity1)->isColliding.hit = 1;
+							scene.GetRegistry()->try_get<comp::RenderableDebug>(*entity2)->isColliding.hit = 1;
+#endif
 							scene.publish<ESceneCollision>(*entity1, *entity2);
 						}
 						else
 						{
+#ifdef _DEBUG
+							scene.GetRegistry()->try_get<comp::RenderableDebug>(*entity1)->isColliding.hit = 0;
+							scene.GetRegistry()->try_get<comp::RenderableDebug>(*entity2)->isColliding.hit = 0;
+#endif
 							CollisionSystem::Get().RemovePair(*entity1, *entity2);
 						}
 					}

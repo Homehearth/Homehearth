@@ -3,6 +3,7 @@
 DemoScene::DemoScene(Engine& engine)
 	: SceneBuilder(engine)
 {
+	
 	// Setup Cameras
 	Entity debugCameraEntity = m_scene.CreateEntity();
 	debugCameraEntity.AddComponent<comp::Camera3D>()->camera.Initialize(sm::Vector3(0, 0, -20), sm::Vector3(0, 0, 1), sm::Vector3(0, 1, 0), sm::Vector2((float)engine.GetWindow()->GetWidth(), (float)engine.GetWindow()->GetHeight()), CAMERATYPE::DEBUG);
@@ -24,13 +25,12 @@ DemoScene::DemoScene(Engine& engine)
 	comp::Transform* transform = chest.AddComponent<comp::Transform>();
 	transform->position.z = 5;
 	comp::Velocity* chestVelocity = chest.AddComponent<comp::Velocity>();
-	comp::BoundingSphere* sphere = chest.AddComponent<comp::BoundingSphere>();
+	comp::BoundingOrientedBox* sphere = chest.AddComponent<comp::BoundingOrientedBox>();
 	sphere->Center = transform->position;
-	sphere->Radius = 2.0f;
+	sphere->Extents = sm::Vector3(2.0f);
 	comp::Renderable* renderable2 = chest.AddComponent<comp::Renderable>();
 
 	renderable2->model = ResourceManager::Get().GetResource<RModel>("Chest.obj");
-
 
 	// Define what scene does on update
 	m_scene.on<ESceneUpdate>([&, cameraEntity, debugCameraEntity](const ESceneUpdate& e, HeadlessScene& scene)
@@ -39,9 +39,11 @@ DemoScene::DemoScene(Engine& engine)
 			//GameSystems::MRayIntersectBoxSystem(m_scene);
 
 			m_scene.GetCurrentCamera()->Update(e.dt);
-
-			//GameSystems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(m_scene);
-			//GameSystems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingSphere>(m_scene);
+		
+			Systems::UpdateColliderPosSystem(scene, e.dt);
+			GameSystems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(m_scene);
+			GameSystems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingSphere>(m_scene);
+			GameSystems::CheckCollisions<comp::BoundingSphere, comp::BoundingSphere>(m_scene);
 			//this->CheckIfSwappedCamera();
 #ifdef _DEBUG
 			if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Space, KeyState::RELEASED))
@@ -65,7 +67,6 @@ DemoScene::DemoScene(Engine& engine)
 	//On collision event add entities as pair in the collision system
 	m_scene.on<ESceneCollision>([&](const ESceneCollision& e, HeadlessScene& scene)
 		{
-			LOG_INFO("Collision detected!");
 			CollisionSystem::Get().AddPair(e.obj1, e.obj2);
 		});
 }

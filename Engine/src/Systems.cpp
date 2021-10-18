@@ -8,13 +8,16 @@ void Systems::MovementSystem(HeadlessScene& scene, float dt)
 		{
 			transform.position += velocity.vel * dt;
 		});
+}
 
+void Systems::UpdateColliderPosSystem(HeadlessScene& scene, float dt)
+{
 	//BoundingOrientedBox
 	scene.ForEachComponent<comp::Transform, comp::BoundingOrientedBox>([&, dt](comp::Transform& transform, comp::BoundingOrientedBox& obb)
 		{
 			obb.Center = transform.position;
 		});
-	
+
 	//BoundingSphere
 	scene.ForEachComponent<comp::Transform, comp::BoundingSphere>([&, dt](comp::Transform& transform, comp::BoundingSphere& sphere)
 		{
