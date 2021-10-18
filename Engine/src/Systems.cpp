@@ -10,7 +10,7 @@ void Systems::MovementSystem(HeadlessScene& scene, float dt)
 		});
 }
 
-void Systems::UpdateColliderPosSystem(HeadlessScene& scene, float dt)
+void Systems::MovementColliderSystem(HeadlessScene& scene, float dt)
 {
 	//BoundingOrientedBox
 	scene.ForEachComponent<comp::Transform, comp::BoundingOrientedBox>([&, dt](comp::Transform& transform, comp::BoundingOrientedBox& obb)

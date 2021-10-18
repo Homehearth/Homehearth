@@ -24,19 +24,20 @@ DemoScene::DemoScene(Engine& engine)
 	m_scene.GetRegistry()->on_construct<comp::RenderableDebug>().connect<entt::invoke<&comp::RenderableDebug::InitRenderable>>();
 	m_scene.GetRegistry()->on_construct<comp::BoundingOrientedBox>().connect<&entt::registry::emplace_or_replace<comp::RenderableDebug>>();
 	m_scene.GetRegistry()->on_construct<comp::BoundingSphere>().connect<&entt::registry::emplace_or_replace<comp::RenderableDebug>>();
-	
-	// Debug Chest
-	Entity chest = m_scene.CreateEntity();
-	comp::Transform* transform = chest.AddComponent<comp::Transform>();
-	transform->position.z = 5;
-	comp::Velocity* chestVelocity = chest.AddComponent<comp::Velocity>();
-	comp::BoundingOrientedBox* sphere = chest.AddComponent<comp::BoundingOrientedBox>();
-	sphere->Center = transform->position;
-	sphere->Extents = sm::Vector3(2.0f);
-	comp::Renderable* renderable2 = chest.AddComponent<comp::Renderable>();
+	for (int i = 0; i < 3; i++)
+	{
+		// Debug Chest
+		Entity chest = m_scene.CreateEntity();
+		comp::Transform* transform = chest.AddComponent<comp::Transform>();
+		transform->position.z = 5 * i;
+		comp::Velocity* chestVelocity = chest.AddComponent<comp::Velocity>();
+		comp::BoundingOrientedBox* sphere = chest.AddComponent<comp::BoundingOrientedBox>();
+		sphere->Center = transform->position;
+		sphere->Extents = sm::Vector3(2.0f);
+		comp::Renderable* renderable2 = chest.AddComponent<comp::Renderable>();
 
-	renderable2->model = ResourceManager::Get().GetResource<RModel>("Chest.obj");
-
+		renderable2->model = ResourceManager::Get().GetResource<RModel>("Chest.obj");
+	}
 	// Define what scene does on update
 	m_scene.on<ESceneUpdate>([&, cameraEntity, debugCameraEntity](const ESceneUpdate& e, HeadlessScene& scene)
 		{
@@ -45,13 +46,16 @@ DemoScene::DemoScene(Engine& engine)
 
 			m_scene.GetCurrentCamera()->Update(e.dt);
 		
-			Systems::UpdateColliderPosSystem(scene, e.dt);
+			Systems::MovementColliderSystem(scene, e.dt);
 			GameSystems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(m_scene);
-			GameSystems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingSphere>(m_scene);
-			GameSystems::CheckCollisions<comp::BoundingSphere, comp::BoundingSphere>(m_scene);
+		
+			//GameSystems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingSphere>(m_scene);
+			//GameSystems::CheckCollisions<comp::BoundingSphere, comp::BoundingSphere>(m_scene);
 			//Systems::LightSystem(scene, e.dt);
 			//this->CheckIfSwappedCamera();
 #ifdef _DEBUG
+			GameSystems::RenderIsCollidingSystem(m_scene);
+		
 			if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Space, KeyState::RELEASED))
 			{
 				if (m_scene.GetCurrentCamera()->GetCameraType() == CAMERATYPE::DEBUG)

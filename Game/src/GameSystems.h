@@ -6,13 +6,13 @@ namespace GameSystems
 {
 	void UserInputSystem(Scene& scene, Client& client);
 	void MRayIntersectBoxSystem(Scene& scene);
-
+	void RenderIsCollidingSystem(Scene& scene);
 	template<typename Collider1, typename Collider2>
 	void CheckCollisions(Scene& scene)
 	{
 			auto view1 = scene.GetRegistry()->view<Collider1>();
 			auto view2 = scene.GetRegistry()->view<Collider2>();
-			for(auto entity1 = view1.begin(), end = view1.end(); entity1 != end; ++entity1)
+			for(auto& entity1 = view1.begin(), end = view1.end(); entity1 != end; ++entity1)
 			{
 				Collider1 collider1 = scene.GetRegistry()->get<Collider1>(*entity1);
 
@@ -28,7 +28,7 @@ namespace GameSystems
 					}
 				}();
 				
-				for(auto entity2 = begin; entity2 != end2; ++entity2)
+				for(auto& entity2 = begin; entity2 != end2; ++entity2)
 				{
 					Collider2 collider2 = scene.GetRegistry()->get<Collider2>(*entity2);
 					
@@ -36,18 +36,10 @@ namespace GameSystems
 					{
 						if (collider1.Intersects(collider2))
 						{
-#ifdef _DEBUG
-							scene.GetRegistry()->try_get<comp::RenderableDebug>(*entity1)->isColliding.hit = 1;
-							scene.GetRegistry()->try_get<comp::RenderableDebug>(*entity2)->isColliding.hit = 1;
-#endif
 							scene.publish<ESceneCollision>(*entity1, *entity2);
 						}
 						else
 						{
-#ifdef _DEBUG
-							scene.GetRegistry()->try_get<comp::RenderableDebug>(*entity1)->isColliding.hit = 0;
-							scene.GetRegistry()->try_get<comp::RenderableDebug>(*entity2)->isColliding.hit = 0;
-#endif
 							CollisionSystem::Get().RemovePair(*entity1, *entity2);
 						}
 					}
