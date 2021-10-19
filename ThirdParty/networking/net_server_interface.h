@@ -168,7 +168,7 @@ namespace network
 		DWORD BytesReceived = 0;
 		DWORD flags = 0;
 
-		if (WSARecv(SI->Socket, &context->DataBuf, 1, &BytesReceived, &flags, &context->Overlapped, test) == SOCKET_ERROR)
+		if (WSARecv(SI->Socket, &context->DataBuf, 1, &BytesReceived, &flags, &context->Overlapped, NULL) == SOCKET_ERROR)
 		{
 			if (GetLastError() != WSA_IO_PENDING)
 			{
