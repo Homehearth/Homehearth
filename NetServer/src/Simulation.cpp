@@ -48,6 +48,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 	m_pGameScene->on<ESceneCollision>([&](const ESceneCollision& e, HeadlessScene& scene)
 		{
 			CollisionSystem::Get().AddPair(e.obj1, e.obj2);
+			CollisionSystem::Get().OnCollision(e.obj1, e.obj2);
 		});
 
 	m_pCurrentScene = m_pGameScene; // todo temp
@@ -79,6 +80,15 @@ bool Simulation::AddPlayer(uint32_t playerID)
 	player.AddComponent<comp::Network>()->id = playerID;
 	player.AddComponent<comp::Player>()->runSpeed = 10.f;
 	player.AddComponent<comp::BoundingOrientedBox>();
+
+	CollisionSystem::Get().AddOnCollision(player, [&](entt::entity player2)
+		{
+			comp::Player* otherPlayer = m_pCurrentScene->GetRegistry()->try_get<comp::Player>(player2);
+			if(otherPlayer != nullptr)
+			{
+				LOG_INFO("PLAAAAYER COLISSION :D");
+			}
+		});
 	
 	// Create Entity to symbolize player in Lobby scene
 	player = m_pLobbyScene->CreateEntity();
