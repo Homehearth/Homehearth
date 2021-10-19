@@ -310,9 +310,6 @@ void Engine::Update(float dt)
 	{
 		InputSystem::Get().SwitchMouseMode();
 
-		//if(rtd::Handler2D::Get().GetElement<rtd::Text>("welcome_text"))
-			//rtd::Handler2D::Get().GetElement<rtd::Text>("welcome_text")->Release();
-
 		LOG_INFO("Switched mouse Mode");
 	}
 
