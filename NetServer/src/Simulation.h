@@ -14,6 +14,7 @@ private:
 	Server* m_pServer;
 	HeadlessEngine* m_pEngine;
 	uint32_t m_gameID;
+	uint32_t m_tick;
 	
 	HeadlessScene* m_pLobbyScene;
 	HeadlessScene* m_pGameScene;

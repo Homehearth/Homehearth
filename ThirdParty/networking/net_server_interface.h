@@ -28,7 +28,7 @@ namespace network
 			uint64_t handshakeOut = 0;
 			uint64_t handshakeResult = 0;
 			SOCKET Socket = {};
-			uint32_t clientID;
+			uint32_t clientID = 0;
 			message<T> msgTempIn = {};
 		};
 		std::unordered_map<uint32_t, SOCKET> connections;
@@ -73,7 +73,6 @@ namespace network
 		static void CALLBACK AsyncWriteMessage(ULONG_PTR param);
 
 	public:
-		// Constructor and Deconstructor
 		server_interface() = default;
 		server_interface(std::function<void(message<T>&)> handler)
 			:messageReceivedHandler(handler)
@@ -96,6 +95,7 @@ namespace network
 		}
 
 	public:
+		static void CALLBACK test(DWORD dwError, DWORD cbTransferred, LPWSAOVERLAPPED lpOverlapped, DWORD dwFlags);
 		bool Start(const uint16_t& port);
 		void Stop();
 		void Broadcast(message<T>& msg);
@@ -103,6 +103,12 @@ namespace network
 		bool IsRunning();
 		bool isClientConnected(const SOCKET& socket)const;
 	};
+
+	template <typename T>
+	void CALLBACK server_interface<T>::test(DWORD dwError, DWORD cbTransferred, LPWSAOVERLAPPED lpOverlapped, DWORD dwFlags)
+	{
+		LOG_INFO("rumpa");
+	}
 
 	template <typename T>
 	bool server_interface<T>::isClientConnected(const SOCKET& socket)const
@@ -155,13 +161,14 @@ namespace network
 	{
 		PER_IO_DATA* context = new PER_IO_DATA;
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
+		//context->Overlapped.hEvent = this;
 		context->DataBuf.buf = (CHAR*)&SI->msgTempIn.header;
 		context->DataBuf.len = sizeof(msg_header<T>);
 		context->state = NetState::READ_HEADER;
 		DWORD BytesReceived = 0;
 		DWORD flags = 0;
 
-		if (WSARecv(SI->Socket, &context->DataBuf, 1, &BytesReceived, &flags, &context->Overlapped, NULL) == SOCKET_ERROR)
+		if (WSARecv(SI->Socket, &context->DataBuf, 1, &BytesReceived, &flags, &context->Overlapped, test) == SOCKET_ERROR)
 		{
 			if (GetLastError() != WSA_IO_PENDING)
 			{

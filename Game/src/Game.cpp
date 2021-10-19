@@ -274,7 +274,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		uint32_t count;
 		msg >> count;
 		std::vector<uint32_t> ids(count);
-		for (int i = 0; i < count; i++)
+		for (uint32_t i = 0; i < count; i++)
 		{
 			msg >> ids[i];
 		}
