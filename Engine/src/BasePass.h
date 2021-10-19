@@ -1,5 +1,6 @@
 #pragma once
 #include "IRenderPass.h"
+#include "Lights.h"
 
 //--------------------------------------
 // Forward Rendering, or GeometryPass.
@@ -10,7 +11,7 @@ public:
 	BasePass() = default;
 	virtual ~BasePass() = default;
 
-	void PreRender(ID3D11DeviceContext* pDeviceContext = D3D11Core::Get().DeviceContext()) override;
+	void PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext = D3D11Core::Get().DeviceContext()) override;
 	
 	void Render(Scene* pScene) override;
 	

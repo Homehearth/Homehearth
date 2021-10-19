@@ -3,7 +3,7 @@
 #include "PipelineManager.h"
 #include "RModel.h"
 
-void DepthPass::PreRender(ID3D11DeviceContext* pDeviceContext)
+void DepthPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 {
 	// Set DepthBuffer.
     ID3D11RenderTargetView* nullRTV[] = { nullptr };
@@ -12,10 +12,11 @@ void DepthPass::PreRender(ID3D11DeviceContext* pDeviceContext)
     DC->OMSetDepthStencilState(PM->m_depthStencilStateLessEqual.Get(), 0);
 
     DC->RSSetViewports(1, &PM->m_viewport);
+    DC->RSSetState(PM->m_rasterState.Get());
 	// Set InputLayout, ConstantBuffers and Shaders.
 	DC->IASetInputLayout(PM->m_defaultInputLayout.Get());
 	
-    DC->VSSetConstantBuffers(1, 1, CAMERA->m_viewConstantBuffer.GetAddressOf());
+    DC->VSSetConstantBuffers(1, 1, pCam->m_viewConstantBuffer.GetAddressOf());
 	
     DC->VSSetShader(PM->m_depthPassVertexShader.Get(), nullptr, 0);
     DC->PSSetShader(nullptr, nullptr, 0);
@@ -23,12 +24,12 @@ void DepthPass::PreRender(ID3D11DeviceContext* pDeviceContext)
 
 void DepthPass::Render(Scene* pScene)
 {
-   pScene->Render(); 
+   pScene->Render();
 }
 
 void DepthPass::PostRender(ID3D11DeviceContext* pDeviceContext)
 {
 	// Cleanup.
-    ID3D11DepthStencilView* nullDSV = { nullptr };
-    DC->OMSetRenderTargets(0, nullptr, nullDSV);
+    //ID3D11DepthStencilView* nullDSV = { nullptr };
+    //DC->OMSetRenderTargets(0, nullptr, nullDSV);
 }

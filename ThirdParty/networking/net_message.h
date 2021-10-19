@@ -1,4 +1,6 @@
 #pragma once
+#include <string>
+#include <iostream>
 
 namespace network
 {
@@ -35,34 +37,72 @@ namespace network
 		template<typename DataType>
 		friend message<T>& operator << (message<T>& msg, const DataType& data)
 		{
-			static_assert(std::is_standard_layout<DataType>::value, "Data is too complex to serialize");
+			if constexpr (std::is_same<DataType, std::string>::value)
+			{
+				std::string str = data;
+				// Cache the size to offset where we in memory want to copy data into
+				size_t i = msg.payload.size();
 
-			// Cache the size to offset where we in memory want to copy data into
-			size_t i = msg.payload.size();
+				msg.payload.resize(msg.payload.size() + str.size());
 
-			msg.payload.resize(msg.payload.size() + sizeof(DataType));
+				std::memcpy(msg.payload.data() + i, str.data(), str.size());
 
-			std::memcpy(msg.payload.data() + i, &data, sizeof(DataType));
+				msg << str.size();
 
-			msg.header.size = static_cast<uint32_t>(msg.size());
+				msg.header.size = static_cast<uint32_t>(msg.size());
 
-			return msg;
+				return msg;
+			}
+			else
+			{
+				static_assert(std::is_standard_layout<DataType>::value, "Data is too complex to serialize");
+
+				// Cache the size to offset where we in memory want to copy data into
+				size_t i = msg.payload.size();
+
+				msg.payload.resize(msg.payload.size() + sizeof(DataType));
+
+				std::memcpy(msg.payload.data() + i, &data, sizeof(DataType));
+
+				msg.header.size = static_cast<uint32_t>(msg.size());
+
+				return msg;
+			}
 		}
 
 		template<typename DataType>
 		friend message<T>& operator >> (message<T>& msg, DataType& data)
 		{
-			static_assert(std::is_standard_layout<DataType>::value, "Data is too complex to deserialize");
+			if constexpr (std::is_same<DataType, std::string>::value)
+			{
+				std::string* str = &data;
+				size_t size;
+				msg >> size;
 
-			size_t i = msg.payload.size() - sizeof(DataType);
+				size_t i = msg.payload.size() - size;
+				str->resize(size);
+				std::memcpy(str->data(), msg.payload.data() + i, size);
 
-			std::memcpy(&data, msg.payload.data() + i, sizeof(DataType));
+				msg.payload.resize(i);
 
-			msg.payload.resize(i);
+				msg.header.size = static_cast<uint32_t>(msg.size());
 
-			msg.header.size = static_cast<uint32_t>(msg.size());
+				return msg;
+			}
+			else
+			{
+				static_assert(std::is_standard_layout<DataType>::value, "Data is too complex to deserialize");
 
-			return msg;
+				size_t i = msg.payload.size() - sizeof(DataType);
+
+				std::memcpy(&data, msg.payload.data() + i, sizeof(DataType));
+
+				msg.payload.resize(i);
+
+				msg.header.size = static_cast<uint32_t>(msg.size());
+
+				return msg;
+			}
 		}
 	};
 

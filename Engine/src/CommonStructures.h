@@ -1,5 +1,11 @@
 #pragma once
 
+enum class TypeLight : UINT
+{
+	DIRECTIONAL,
+	POINT
+};
+
 struct Ray_t
 {
 	sm::Vector3 rayPos, rayDir;
@@ -47,6 +53,12 @@ struct basic_model_matrix_t
 };
 
 ALIGN16
+struct collider_hit_t
+{
+	int hit;
+};
+
+ALIGN16
 struct camera_Matrix_t
 {
 	sm::Vector4 position;
@@ -59,11 +71,11 @@ struct camera_Matrix_t
 ALIGN16
 struct light_t
 {
-	sm::Vector4 position	= {};
-	sm::Vector4 direction	= {};
-	sm::Vector4 color		= {};
-	float		attenuation = 0.0f;	// Point has Quadratic while Directional has Constant - assimp 
-	UINT		type		= 1;	// 0 = Directional, 1 = Point
-	UINT		enabled		= 1;	// 0 = Off, 1 = On
-	float		range		= 0.0f;	// Not available from assimp
+	sm::Vector4 position	= {};	//Only in use on Point Lights
+	sm::Vector4 direction	= {};	//Only in use on Directional Lights
+	sm::Vector4 color		= {};	//Color and Intensity of the Lamp
+	float		range		= 0;	//Only in use on Point Lights
+	TypeLight	type		= TypeLight::DIRECTIONAL;	// 0 = Directional, 1 = Point
+	UINT		enabled		= 0;	// 0 = Off, 1 = On
+	float		padding		= 0;
 };

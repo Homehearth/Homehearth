@@ -9,22 +9,22 @@ std::string GetTypeName()
 	return name;
 }
 
-template<typename T>
+template<typename T, typename SceneType>
 class SceneBuilder
 {
 protected:
-	HeadlessEngine& m_headlessEngine;
-	Scene& m_scene;
+	BasicEngine<SceneType>& m_headlessEngine;
+	SceneType& m_scene;
 	std::string m_sceneName;
 public:
-	SceneBuilder(HeadlessEngine& m_engine);
+	SceneBuilder(BasicEngine<SceneType>& m_engine);
 
-	Scene& GetScene() const;
+	SceneType& GetScene() const;
 
 };
 
-template<typename T>
-inline SceneBuilder<T>::SceneBuilder(HeadlessEngine& engine)
+template<typename T, typename SceneType>
+inline SceneBuilder<T, SceneType>::SceneBuilder(BasicEngine<SceneType>& engine)
 	: m_headlessEngine(engine)
 	, m_scene(engine.GetScene(GetTypeName<T>()))
 	, m_sceneName(GetTypeName<T>())
@@ -33,8 +33,8 @@ inline SceneBuilder<T>::SceneBuilder(HeadlessEngine& engine)
 
 }
 
-template<typename T>
-inline Scene& SceneBuilder<T>::GetScene() const
+template<typename T, typename SceneType>
+inline SceneType& SceneBuilder<T, SceneType>::GetScene() const
 {
 	return m_scene;
 }

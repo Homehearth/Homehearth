@@ -2,6 +2,7 @@
 #include "net_tsqueue.h"
 #include "net_message.h"
 #include "net_common.h"
+#include <future>
 #define PRINT_NETWORK_DEBUG
 
 namespace network
@@ -11,14 +12,6 @@ namespace network
 	{
 	private:
 		// Information regarding every connection
-		struct SOCKET_INFORMATION
-		{
-			uint64_t handshakeIn = 0;
-			uint64_t handshakeOut = 0;
-			uint64_t handshakeResult = 0;
-			SOCKET Socket = {};
-			message<T> msgTempIn = {};
-		};
 
 		SOCKET m_listening;
 		bool m_isRunning;
@@ -26,8 +19,18 @@ namespace network
 		std::thread* workerThreads;
 		std::thread acceptThread;
 		int nrOfThreads;
+		tsQueue<owned_message<T>> m_qMessagesOut;
 
 	protected:
+		struct SOCKET_INFORMATION
+		{
+			uint64_t handshakeIn = 0;
+			uint64_t handshakeOut = 0;
+			uint64_t handshakeResult = 0;
+			SOCKET Socket = {};
+			uint32_t clientID;
+			message<T> msgTempIn = {};
+		};
 		std::unordered_map<uint32_t, SOCKET> connections;
 		std::function<void(message<T>&)> messageReceivedHandler;
 		CRITICAL_SECTION lock;
@@ -37,11 +40,11 @@ namespace network
 		// Called once when a client connects
 		virtual void OnClientConnect(std::string&& ip, const uint16_t& port) = 0;
 		// Called once when a client connects
-		virtual void OnClientDisconnect() = 0;
+		virtual void OnClientDisconnect(const SOCKET& socket) = 0;
 		// Called once when a message is received
 		virtual void OnMessageReceived(message<T>& msg) = 0;
 		// Client has solved the puzzle from the server and is now validated
-		virtual void OnClientValidated(const SOCKET& socket) = 0;
+		virtual void OnClientValidated(SOCKET_INFORMATION*& SI) = 0;
 
 	private:
 		DWORD WINAPI ServerWorkerThread();
@@ -61,12 +64,13 @@ namespace network
 		void ReadValidation(SOCKET_INFORMATION*& SI, PER_IO_DATA* context);
 		void ReadHeader(SOCKET_INFORMATION*& SI, PER_IO_DATA* context);
 		void ReadPayload(SOCKET_INFORMATION*& SI, PER_IO_DATA* context);
-		void WriteMessage(const SOCKET& socket, message<T>& msg);
+		void WriteMessage(owned_message<T>& msg);
 		void PrimeReadHeader(SOCKET_INFORMATION*& SI);
 		void PrimeReadPayload(SOCKET_INFORMATION*& SI);
 		void PrimeReadValidation(SOCKET_INFORMATION*& SI);
 
 		static void AlertThread();
+		static void CALLBACK AsyncWriteMessage(ULONG_PTR param);
 
 	public:
 		// Constructor and Deconstructor
@@ -97,7 +101,27 @@ namespace network
 		void Broadcast(message<T>& msg);
 		void SendToClient(const SOCKET& socket, message<T>& msg);
 		bool IsRunning();
+		bool isClientConnected(const SOCKET& socket)const;
 	};
+
+	template <typename T>
+	bool server_interface<T>::isClientConnected(const SOCKET& socket)const
+	{
+		bool isConnected = false;
+
+		if (socket != INVALID_SOCKET)
+		{
+			isConnected = true;
+		}
+		return isConnected;
+	}
+
+	template <typename T>
+	void server_interface<T>::AsyncWriteMessage(ULONG_PTR param)
+	{
+		server_interface<T>* s = (server_interface<T>*)param;
+		s->WriteMessage();
+	}
 
 	template <typename T>
 	void server_interface<T>::AlertThread()
@@ -183,6 +207,10 @@ namespace network
 	{
 		if (SI->msgTempIn.header.size > 0)
 		{
+			if (SI->msgTempIn.header.size > 3000)
+			{
+				LOG_ERROR("Allocating to much memory!");
+			}
 			this->PrimeReadPayload(SI);
 		}
 		else
@@ -194,23 +222,23 @@ namespace network
 	}
 
 	template <typename T>
-	void server_interface<T>::WriteMessage(const SOCKET& socket, message<T>& msg)
+	void server_interface<T>::WriteMessage(owned_message<T>& msg)
 	{
 		PER_IO_DATA* context = new PER_IO_DATA;
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
-		char buffer[BUFFER_SIZE];
-		memcpy(&buffer[0], &msg.header, sizeof(msg_header<T>));
-		if (msg.header.size > 0)
+		char buffer[BUFFER_SIZE] = {};
+		memcpy(&buffer[0], &msg.msg.header, sizeof(msg_header<T>));
+		if (msg.msg.header.size > 0)
 		{
-			memcpy(&buffer[sizeof(msg_header<T>)], msg.payload.data(), msg.payload.size());
+			memcpy(&buffer[sizeof(msg_header<T>)], msg.msg.payload.data(), msg.msg.payload.size());
 		}
 		context->DataBuf.buf = (CHAR*)buffer;
-		context->DataBuf.len = ULONG(sizeof(msg_header<T>) + msg.payload.size());
+		context->DataBuf.len = ULONG(sizeof(msg_header<T>) + msg.msg.payload.size());
 		context->state = NetState::WRITE_MESSAGE;
 		DWORD BytesSent = 0;
 		DWORD flags = 0;
 
-		if (WSASend(socket, &context->DataBuf, 1, &BytesSent, flags, &context->Overlapped, NULL) == SOCKET_ERROR)
+		if (WSASend(msg.remote, &context->DataBuf, 1, &BytesSent, flags, &context->Overlapped, NULL) == SOCKET_ERROR)
 		{
 			if (GetLastError() != WSA_IO_PENDING)
 			{
@@ -228,13 +256,14 @@ namespace network
 		if (SI->handshakeIn == SI->handshakeResult)
 		{
 			EnterCriticalSection(&lock);
-			this->OnClientValidated(SI->Socket);
+			this->OnClientValidated(SI);
 			LeaveCriticalSection(&lock);
 			this->PrimeReadHeader(SI);
 		}
 		else
 		{
 			EnterCriticalSection(&lock);
+			// Legal because unordered_map will return 0 if nothing was erased
 			this->DisconnectClient(SI);
 			LOG_NETWORK("Client failed validation");
 			LeaveCriticalSection(&lock);
@@ -326,10 +355,13 @@ namespace network
 		EnterCriticalSection(&lock);
 		if (SI != NULL)
 		{
+			SOCKET socket = SI->Socket;
 			closesocket(SI->Socket);
+			connections.erase(SI->clientID);
 			delete SI;
 			SI = nullptr;
-			this->OnClientDisconnect();
+
+			this->OnClientDisconnect(socket);
 		}
 		LeaveCriticalSection(&lock);
 	}
@@ -366,7 +398,10 @@ namespace network
 	{
 		if (ClientIsConnected(socket))
 		{
-			this->WriteMessage(socket, msg);
+			owned_message<T> message;
+			message.msg = msg;
+			message.remote = socket;
+			WriteMessage(message);
 		}
 	}
 
@@ -641,7 +676,7 @@ namespace network
 		SOCKET_INFORMATION* SI = nullptr;
 		PER_IO_DATA* context;
 		DWORD bytesReceived = 0;
-		const DWORD CAP = 10;
+		const DWORD CAP = 1;
 		OVERLAPPED_ENTRY Entries[CAP];
 		ULONG EntriesRemoved = 0;
 		BOOL ShouldShutdown = false;
@@ -695,7 +730,6 @@ namespace network
 						}
 						case NetState::WRITE_MESSAGE:
 						{
-							// Not yet used for anything
 							break;
 						}
 						case NetState::WRITE_VALIDATION:
@@ -704,8 +738,8 @@ namespace network
 							break;
 						}
 						}
-						// Since PER_IO_DATA is created for EVERY I/O that comes in we need to 
-						// delete that data struct after I/O has completed
+						// Since PER_IO_DATA is created with new for EVERY I/O we need to 
+						// de-allocate that data after I/O has completed
 						if (context)
 						{
 							delete context;
