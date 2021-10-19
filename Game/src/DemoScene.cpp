@@ -84,6 +84,8 @@ DemoScene::DemoScene(Engine& engine)
 		{
 			CollisionSystem::Get().AddPair(e.obj1, e.obj2);
 		});
+
+	//SetupMainMenuScreen();
 }
 
 Entity DemoScene::CreatePlayerEntity(uint32_t playerID)
@@ -115,6 +117,8 @@ Entity DemoScene::CreateLightEntity(sm::Vector4 pos, sm::Vector4 dir, sm::Vector
 	lightEntity.GetComponent<comp::Light>()->lightData.enabled = enabled;
 	
 	m_scene.GetLights()->EditLight(lightEntity.GetComponent<comp::Light>()->lightData, lightEntity.GetComponent<comp::Light>()->index);
+
+	return lightEntity;
 }
 
 void SetupMainMenuScreen()

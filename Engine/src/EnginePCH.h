@@ -1,6 +1,6 @@
 #pragma once
 
-#define RENDER_IMGUI 0
+#define RENDER_IMGUI 1
 #define PROFILER 1
 
 // Turn this to 1 if you want to see the very beautiful demo menu
