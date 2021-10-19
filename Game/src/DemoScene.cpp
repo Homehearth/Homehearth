@@ -24,7 +24,7 @@ DemoScene::DemoScene(Engine& engine)
 	m_scene.GetRegistry()->on_construct<comp::RenderableDebug>().connect<entt::invoke<&comp::RenderableDebug::InitRenderable>>();
 	m_scene.GetRegistry()->on_construct<comp::BoundingOrientedBox>().connect<&entt::registry::emplace_or_replace<comp::RenderableDebug>>();
 	m_scene.GetRegistry()->on_construct<comp::BoundingSphere>().connect<&entt::registry::emplace_or_replace<comp::RenderableDebug>>();
-	for (int i = 0; i < 3; i++)
+	for (int i = 0; i < 1; i++)
 	{
 		// Debug Chest
 		Entity chest = m_scene.CreateEntity();
@@ -45,10 +45,7 @@ DemoScene::DemoScene(Engine& engine)
 			//GameSystems::MRayIntersectBoxSystem(m_scene);
 
 			m_scene.GetCurrentCamera()->Update(e.dt);
-		
-			Systems::MovementColliderSystem(scene, e.dt);
-			GameSystems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(m_scene);
-		
+
 			//GameSystems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingSphere>(m_scene);
 			//GameSystems::CheckCollisions<comp::BoundingSphere, comp::BoundingSphere>(m_scene);
 			//Systems::LightSystem(scene, e.dt);
@@ -72,12 +69,6 @@ DemoScene::DemoScene(Engine& engine)
 				}
 			}
 #endif // DEBUG
-		});
-	
-	//On collision event add entities as pair in the collision system
-	m_scene.on<ESceneCollision>([&](const ESceneCollision& e, HeadlessScene& scene)
-		{
-			CollisionSystem::Get().AddPair(e.obj1, e.obj2);
 		});
 }
 
