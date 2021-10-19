@@ -123,7 +123,7 @@ const render_instructions_t thread::RenderThreadHandler::Launch(const int& amoun
 	render_instructions_t inst;
 	const unsigned int objects_per_thread = (unsigned int)std::ceil((float)amount_of_objects / (float)(INSTANCE.m_amount + 1));
 	int main_start = 0;
-	if (objects_per_thread >= thread::THRESHOLD)
+	if (objects_per_thread >= thread::THRESHOLD && amount_of_objects >= INSTANCE.m_amount)
 	{
 		// Launch Threads
 		if (INSTANCE.m_isPooled)
