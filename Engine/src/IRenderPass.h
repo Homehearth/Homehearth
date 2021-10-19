@@ -1,5 +1,6 @@
 #pragma once
 #include "PipelineManager.h"
+#include "Lights.h"
 
 // Only to be used inside a RenderPass (!).
 #define DC pDeviceContext
@@ -15,6 +16,8 @@ private:
 	PipelineManager* m_pipelineManager = nullptr;
 	bool m_isEnable = false;
 
+protected:
+	Lights* m_lights;
 public:
 	virtual ~IRenderPass() = default;
 	
@@ -33,4 +36,5 @@ public:
 	virtual void PreRender(Camera* pCam = nullptr, ID3D11DeviceContext * pDeviceContext = D3D11Core::Get().DeviceContext()) = 0;
 	virtual void Render(Scene* pScene) = 0;
 	virtual void PostRender(ID3D11DeviceContext* pDeviceContext = D3D11Core::Get().DeviceContext()) = 0;
+	virtual void SetLights(Lights* light);
 };

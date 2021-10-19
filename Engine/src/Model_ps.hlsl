@@ -1,60 +1,8 @@
 #include "PBR.hlsli"
 
-Texture2D T_depth     : register(t0);
-Texture2D T_albedo    : register(t1);
-Texture2D T_normal    : register(t2);
-Texture2D T_metalness : register(t3);
-Texture2D T_roughness : register(t4);
-Texture2D T_aomap     : register(t5);
-Texture2D T_displace  : register(t6);
-Texture2D T_opacity   : register(t7);
-
-SamplerState LinearSampler : register(s0); 
-SamplerState PointSampler : register(s1);
-
-/*
-    Material constant buffers
-*/
-
-cbuffer matConstants_t : register(b0)
-{
-    float3 c_ambient;
-    float  c_shiniess;
-    float3 c_diffuse;
-    float  c_opacity;
-    float3 c_specular;
-};
-
-cbuffer Camera : register(b1)
-{
-    float4 cameraPosition;
-    float4 cameraTarget;
-
-    float4x4 projection;
-    float4x4 view;
-}
-
-cbuffer properties_t : register(b2)
-{
-    //If a texture is set this will be 1
-    int c_hasAlbedo;
-    int c_hasNormal;
-    int c_hasMetalness;
-    int c_hasRoughness;
-    int c_hasAoMap;
-    int c_hasDisplace;
-    int c_hasOpacity;
-};
-
 float4 main(PixelIn input) : SV_TARGET
 {
-
-	// Depth Buffer.
-    const int3 posCoords = int3(input.pos.xy, 0);
-	const float depth = T_depth.Load(posCoords).x;
-	//return float4(depth, depth, depth, 1.0f);
-	
-    float3 camPos = cameraPosition.xyz;
+    float3 camPos = c_cameraPosition.xyz;
     float ao = 1.0f;
     float3 albedo = 1.f;
     float metallic = 0.5f;
@@ -63,60 +11,10 @@ float4 main(PixelIn input) : SV_TARGET
     //Normal Vector
     float3 N = normalize(input.normal);
     //View Direction Vector
-    float3 V = normalize(camPos - input.worldPos.xyz);
+    float3 V = normalize(camPos - input.worldPos.xyz);    
     
-    //TEMP
-    Light L[2];
-    L[0].position = float4(0.f, 8.f, 10.f, 1.f);
-    L[0].color = 300.f;
-    L[0].direction = float4(0.f, -1.f, 1.f, 0.f);
-    L[0].range = 75.f;
-    L[0].type = 0;
-    L[0].enabled = 1;
-    
-    L[1].position = float4(0.f, 8.f, -10.f, 1.f);
-    L[1].color = 300.f;
-    L[1].direction = float4(0.f, -1.f, -1.f, 0.f);
-    L[1].range = 75.f;
-    L[1].type = 1;
-    L[1].enabled = 1;
-    
-    
-    //If an object has a texture sample from it, else use default values.
-    if(c_hasAlbedo == 1)
-    {
-        float4 albedoSamp = T_albedo.Sample(PointSampler, input.uv);
-        //Alpha test: If the alpha is lower than 0.1f we shall ignore this pixel
-        clip(albedoSamp.a < 0.1f ? -1 : 1);             //Why not work???
-        albedo = pow(max(albedoSamp.rgb, 0.0f), 2.2f); //Power the albedo by 2.2f to get it to linear space.
-    }
-    
-    if(c_hasNormal == 1)
-    {
-        float3 normalMap = T_normal.Sample(LinearSampler, input.uv).rgb;
-        normalMap = normalMap * 2.0f - 1.0f;
-        
-        float3 tangent = normalize(input.tangent.xyz);
-        float3 biTangent = normalize(input.biTangent);
-        float3x3 TBN = float3x3(tangent, biTangent, input.normal);
-        
-        N = normalize(mul(normalMap, TBN));
-    }
-    
-    if(c_hasMetalness == 1)
-    {
-        metallic = T_metalness.Sample(LinearSampler, input.uv).r;
-    }
-    
-    if(c_hasRoughness == 1)
-    {
-        roughness = T_roughness.Sample(LinearSampler, input.uv).r;
-    }
-    
-    if(c_hasAoMap == 1)
-    {
-        ao = T_aomap.Sample(LinearSampler, input.uv).r;
-    }    
+    //If an object has a texture, sample from it else use default values.
+    SampleTextures(input, albedo, N, roughness, metallic, ao);
     
 
     //---------------------------------PBR-Shading Calculations---------------------------------
@@ -131,30 +29,31 @@ float4 main(PixelIn input) : SV_TARGET
     float3 rad = 0.f;
     float3 lightCol = 0.f;
     
-    for (int i = 0; i < NR_LIGHTS; i++)
+    for (int i = 0; i < c_info.x; i++)
     {
-        if(L[i].enabled == 1)
+        if(s_Lights[i].enabled == 1)
         {
-            switch (L[i].type)
+            switch (s_Lights[i].type)
             {
                 case 0:
-                    lightCol += DoDirectionlight(L[i], N);
+                    lightCol += DoDirectionlight(s_Lights[i], N);
                     break;
                 case 1:
-                    lightCol += DoPointlight(L[i], input, N);
+                    lightCol += DoPointlight(s_Lights[i], input, N);
                     break;
                 default:
                     break;
             }
         
-            CalcRadiance(input, V, N, roughness, metallic, albedo, L[i].position.xyz, lightCol, F0, rad);
+            CalcRadiance(input, V, N, roughness, metallic, albedo, s_Lights[i].position.xyz, lightCol, F0, rad);
             Lo += rad;
         }
+        
     }
     
 	
     //Ambient lighting
-    float3 ambient = float3(0.03f, 0.03f, 0.03f) * albedo * ao;
+    float3 ambient = float3(0.4f, 0.4f, 0.4f) * albedo * ao;
     float3 color = ambient + Lo;
     
     //HDR tonemapping

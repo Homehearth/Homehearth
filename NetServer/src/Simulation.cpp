@@ -3,7 +3,7 @@
 
 Simulation::Simulation(Server* pServer, HeadlessEngine* pEngine)
 	: m_pServer(pServer)
-	, m_pEngine(pEngine)
+	  , m_pEngine(pEngine), m_pLobbyScene(nullptr), m_pGameScene(nullptr), m_pCurrentScene(nullptr)
 {
 	this->m_gameID = 0;
 }
@@ -38,7 +38,16 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 	m_pGameScene->on<ESceneUpdate>([=](const ESceneUpdate& e, HeadlessScene& scene)
 		{
 			Systems::MovementSystem(scene, e.dt);
+			Systems::MovementColliderSystem(scene, e.dt);
+
+			Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(scene);
 			//LOG_INFO("GAME Scene %d", m_gameID);
+		});
+
+	//On collision event add entities as pair in the collision system
+	m_pGameScene->on<ESceneCollision>([&](const ESceneCollision& e, HeadlessScene& scene)
+		{
+			CollisionSystem::Get().AddPair(e.obj1, e.obj2);
 		});
 
 	m_pCurrentScene = m_pGameScene; // todo temp
@@ -69,6 +78,7 @@ bool Simulation::AddPlayer(uint32_t playerID)
 	player.AddComponent<comp::Velocity>();
 	player.AddComponent<comp::Network>()->id = playerID;
 	player.AddComponent<comp::Player>()->runSpeed = 10.f;
+	player.AddComponent<comp::BoundingOrientedBox>();
 	
 	// Create Entity to symbolize player in Lobby scene
 	player = m_pLobbyScene->CreateEntity();

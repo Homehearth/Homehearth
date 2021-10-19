@@ -53,6 +53,7 @@ void Renderer::Render(Scene* pScene)
 				IRenderPass* pass = m_passes[i];
 				if (pass->IsEnabled())
 				{
+					pass->SetLights(pScene->GetLights());
 					pass->PreRender(pScene->GetCurrentCamera());
 					pass->Render(pScene);
 					pass->PostRender();

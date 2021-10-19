@@ -19,7 +19,6 @@ entt::registry* HeadlessScene::GetRegistry()
 void HeadlessScene::Update(float dt)
 {
 	PROFILE_FUNCTION();
-
 	// Emit event
 	publish<ESceneUpdate>(dt);
 }
