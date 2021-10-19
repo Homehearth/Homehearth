@@ -21,7 +21,8 @@ public:
 	
 	// PUBLIC AVAILABLE DATA.
 	ComPtr<ID3D11RenderTargetView>	m_backBuffer;
-
+	ComPtr<ID3D11RenderTargetView>  m_depthOnlyRenderTarget;
+	
 	ComPtr<ID3D11Texture2D>			m_depthStencilTexture;
 	ComPtr<ID3D11DepthStencilView>	m_depthStencilView;
 	ComPtr<ID3D11ShaderResourceView>m_depthBufferSRV;
@@ -51,8 +52,10 @@ public:
 
 	D3D11_VIEWPORT					m_viewport;
 
-	
 
+	// View space frustums for the grid cells used in ForwardPlus rendering.
+	ComPtr<ID3D11Buffer>				m_gridFrustum;
+	ComPtr<ID3D11ShaderResourceView>	m_gridFrustumSRV;
 private:
 	// INITIALIZE METHODS.
 	

@@ -2,7 +2,8 @@
 
 struct Ray_t
 {
-	sm::Vector3 rayPos, rayDir;
+	sm::Vector3 rayPos;
+	sm::Vector3 rayDir;
 };
 
 /*
@@ -54,6 +55,9 @@ struct camera_Matrix_t
 
 	sm::Matrix projection;
 	sm::Matrix view;
+
+	// inverseProjection
+	// screenDimensions
 };
 
 ALIGN16
@@ -67,3 +71,33 @@ struct light_t
 	UINT		enabled		= 1;	// 0 = Off, 1 = On
 	float		range		= 0.0f;	// Not available from assimp
 };
+
+/*
+	The number of different lights used in the scene.
+ */
+ALIGN16
+struct light_counts_t
+{
+	uint32_t NumPointLights;
+	uint32_t NumDirectionalLights;
+};
+
+/*
+	Grid frustums for light culling.
+ */
+ALIGN16
+struct frustum_t
+{
+	sm::Vector4 Planes[4];
+};
+
+/*
+	Dispatch params used for compute shaders.
+ */
+ALIGN16
+struct dispatch_params_t
+{
+	dx::XMUINT3 NumThreadGroups;
+	dx::XMUINT3 NumThreads;
+};
+

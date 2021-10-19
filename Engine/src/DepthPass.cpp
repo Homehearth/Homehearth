@@ -5,7 +5,6 @@
 
 void DepthPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 {
-	// Set DepthBuffer.
     ID3D11RenderTargetView* nullRTV[] = { nullptr };
     DC->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     DC->OMSetRenderTargets(ARRAYSIZE(nullRTV), nullRTV, PM->m_depthStencilView.Get());
