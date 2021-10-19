@@ -149,8 +149,8 @@ void Game::OnUserUpdate(float deltaTime)
 	}
 	else
 	{
-		static char buffer[IPV6_ADDRSTRLEN];
-		strcpy(buffer, "127.0.0.1");
+		static char buffer[IPV6_ADDRSTRLEN] = "127.0.0.1";
+		//strcpy(buffer, "127.0.0.1");
 		ImGui::InputText("IP", buffer, IPV6_ADDRSTRLEN);
 		static uint16_t port = 4950;
 		ImGui::InputInt("Port", (int*)&port);
