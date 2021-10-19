@@ -8,6 +8,11 @@ void GameSystems::UserInputSystem(Scene& scene, Client& client)
 			velocity.vel.z = InputSystem::Get().GetAxis(Axis::VERTICAL) * player.runSpeed;
 			velocity.vel.x = InputSystem::Get().GetAxis(Axis::HORIZONTAL) * player.runSpeed;
 		});
+
+	scene.ForEachComponent<comp::Attack>([&](comp::Attack attacker)
+		{
+			attacker.isAttacking = InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED);
+		});
 }
 
 //System check if mouse ray intersects any of the box collider components in scene
@@ -23,6 +28,14 @@ void GameSystems::MRayIntersectBoxSystem(Scene& scene)
 			LOG_INFO("Mouseray HIT box detected!");
 		}
 	});
+}
+
+void GameSystems::CombatSystem(HeadlessScene& scene, float dt)
+{
+	//Vi måste separera spelare från enemies.
+	//Gå igenom alla enemies för varje spelare.
+	//Kolla om attacken landar. Bounding box eller en sfär range? Cone range?
+	//Sänka HP. Check om CurrentHp är under 0?
 }
 
 //System to render collider mesh red if collider is colliding with another collider

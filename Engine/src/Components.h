@@ -83,6 +83,22 @@ namespace ecs
 			int index;
 		};
 
+		struct Health
+		{
+			float currentHealth;
+			float maxHealth;
+			bool isAlive;
+		};
+
+		struct Attack
+		{
+			float attackSpeed;
+			float attackDamage;
+			float attackRange;
+			bool isRanged;
+			bool isAttacking;
+		};
+
 		template<uint8_t ID>
 		struct Tag
 		{
