@@ -3,17 +3,67 @@
 
 void Simulation::InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg)
 {
-	msg << entity.GetComponent<comp::Network>()->id << 'N';
-	comp::Transform* t = entity.GetComponent<comp::Transform>();
-	if (t)
+	std::bitset<ecs::Component::COMPONENT_MAX> compSet;
+
+	for (uint32_t i = 0; i < ecs::Component::COMPONENT_COUNT; i++)
 	{
-		msg << *t << 'T';
+		switch (i)
+		{
+		case ecs::Component::NETWORK:
+		{
+			compSet.set(ecs::Component::NETWORK);
+			msg << entity.GetComponent<comp::Network>()->id;
+			break;
+		}
+		case ecs::Component::TRANSFORM:
+		{
+			comp::Transform* t = entity.GetComponent<comp::Transform>();
+			if (t)
+			{
+				compSet.set(ecs::Component::TRANSFORM);
+				msg << *t;
+			}
+			break;
+		}
+		case ecs::Component::MESH_NAME:
+		{
+			comp::MeshName* m = entity.GetComponent<comp::MeshName>();
+			if (m)
+			{
+				compSet.set(ecs::Component::MESH_NAME);
+				msg << m->name;
+			}
+			break;
+		}
+		case ecs::Component::BOUNDING_ORIENTED_BOX:
+		{
+			comp::BoundingOrientedBox* b = entity.GetComponent<comp::BoundingOrientedBox>();
+			if (b)
+			{
+				compSet.set(ecs::Component::BOUNDING_ORIENTED_BOX);
+				msg << b->Center << b->Extents << b->Orientation;
+			}
+			break;
+		}
+		case ecs::Component::BOUNDING_SPHERE:
+		{
+			comp::BoundingSphere* bs = entity.GetComponent<comp::BoundingSphere>();
+			if (bs)
+			{
+				compSet.set(ecs::Component::BOUNDING_SPHERE);
+				msg << bs->Center << bs->Radius;
+			}
+			break;
+		}
+		default:
+			LOG_WARNING("Trying to send unimplemented component %u", i);
+			break;
+		}
 	}
-	comp::MeshName* m = entity.GetComponent<comp::MeshName>();
-	if (m)
-	{
-		msg << m->name << 'M';
-	}
+
+	msg << static_cast<uint32_t>(compSet.to_ulong());
+
+
 }
 
 message<GameMsg> Simulation::AllEntitiesMessage()

@@ -165,6 +165,12 @@ void Game::OnUserUpdate(float deltaTime)
 }
 
 
+void Game::OnShutdown()
+{
+
+}
+
+
 void Game::CheckIncoming(message<GameMsg>& msg)
 {
 	switch (msg.header.id)
@@ -221,35 +227,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 
 		for (uint32_t i = 0; i < count; i++)
 		{
-			Entity e = GetScene("Game").CreateEntity();
-			char type;
-			do {
-				msg >> type;
-				switch (type)
-				{
-				case 'T':
-				{
-					comp::Transform t;
-					msg >> t;
-					*e.AddComponent<comp::Transform>() = t;
-					break;
-				}
-				case 'N':
-				{
-					uint32_t id;
-					msg >> id;
-					e.AddComponent<comp::Network>()->id = id;
-					break;
-				}
-				case 'M':
-				{
-					std::string name;
-					msg >> name;
-					e.AddComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>(name);
-					break;
-				}
-				}
-			} while (type != 'N');
+			Entity e = CreateEntityFromMessage(msg);
 
 			LOG_INFO("Added entity %u", e.GetComponent<comp::Network>()->id);
 
@@ -374,7 +352,63 @@ void Game::OnClientDisconnect()
 	LOG_INFO("Disconnected from server!");
 }
 
-void Game::OnShutdown()
+Entity Game::CreateEntityFromMessage(message<GameMsg>& msg)
 {
 
+	Entity e = GetScene("Game").CreateEntity();
+	uint32_t bits;
+	msg >> bits;
+	std::bitset<ecs::Component::COMPONENT_MAX> compSet(bits);
+
+	for (int i = ecs::Component::COMPONENT_COUNT - 1; i >= 0; i--)
+	{
+		if (compSet.test(i))
+		{
+			switch (i)
+			{
+			case ecs::Component::NETWORK:
+			{
+				uint32_t id;
+				msg >> id;
+				e.AddComponent<comp::Network>()->id = id;
+				break;
+			}
+			case ecs::Component::TRANSFORM:
+			{
+				comp::Transform t;
+				msg >> t;
+				*e.AddComponent<comp::Transform>() = t;
+				break;
+			}
+			case ecs::Component::MESH_NAME:
+			{
+				std::string name;
+				msg >> name;
+				e.AddComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>(name);
+				break;
+			}
+			case ecs::Component::BOUNDING_ORIENTED_BOX:
+			{
+				comp::BoundingOrientedBox box;
+				msg >> box.Orientation >> box.Extents >> box.Center;
+				*e.AddComponent<comp::BoundingOrientedBox>() = box;
+				break;
+			}
+			case ecs::Component::BOUNDING_SPHERE:
+			{
+				comp::BoundingSphere s;
+				msg >> s.Radius >> s.Center;
+				*e.AddComponent<comp::BoundingSphere>() = s;
+				break;
+			}
+			default:
+				LOG_WARNING("Retrieved unimplemented component %u", i)
+				break;
+			}
+		}
+	}
+	
+	
+	return e;
 }
+

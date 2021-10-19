@@ -27,6 +27,8 @@ private:
 	void JoinLobby(uint32_t lobbyID);
 	void CreateLobby();
 	void OnClientDisconnect();
+	
+	Entity CreateEntityFromMessage(message<GameMsg>& msg);
 
 public:
 	Game();

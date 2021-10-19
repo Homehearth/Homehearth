@@ -6,6 +6,17 @@
 
 namespace ecs
 {
+	enum Component : uint32_t
+	{
+		NETWORK,
+		TRANSFORM,
+		MESH_NAME,
+		BOUNDING_ORIENTED_BOX,
+		BOUNDING_SPHERE,
+		COMPONENT_COUNT,
+		COMPONENT_MAX = 32
+	};
+
 	namespace component {
 
 		//Collider components
@@ -99,6 +110,11 @@ namespace ecs
 
 network::message<GameMsg>& operator<<(network::message<GameMsg>& msg, const sm::Vector3& data);
 
-network::message<GameMsg>& operator >> (network::message<GameMsg>& msg, sm::Vector3& data);
+network::message<GameMsg>& operator>>(network::message<GameMsg>& msg, sm::Vector3& data);
+
+network::message<GameMsg>& operator<<(network::message<GameMsg>& msg, const sm::Vector4& data);
+
+network::message<GameMsg>& operator>>(network::message<GameMsg>& msg, sm::Vector4& data);
+
 
 namespace comp = ecs::component;

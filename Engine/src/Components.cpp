@@ -39,3 +39,15 @@ network::message<GameMsg>& operator >> (network::message<GameMsg>& msg, sm::Vect
     msg >> data.z >> data.y >> data.x;
     return msg;
 }
+
+network::message<GameMsg>& operator<<(network::message<GameMsg>& msg, const sm::Vector4& data)
+{
+    msg << data.x << data.y << data.z << data.w;
+    return msg;
+}
+
+network::message<GameMsg>& operator>>(network::message<GameMsg>& msg, sm::Vector4& data) 
+{
+    msg >> data.w >> data.z >> data.y >> data.x;
+    return msg;
+}
