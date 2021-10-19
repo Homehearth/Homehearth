@@ -95,7 +95,6 @@ namespace network
 		}
 
 	public:
-		static void CALLBACK test(DWORD dwError, DWORD cbTransferred, LPWSAOVERLAPPED lpOverlapped, DWORD dwFlags);
 		bool Start(const uint16_t& port);
 		void Stop();
 		void Broadcast(message<T>& msg);
@@ -103,12 +102,6 @@ namespace network
 		bool IsRunning();
 		bool isClientConnected(const SOCKET& socket)const;
 	};
-
-	template <typename T>
-	void CALLBACK server_interface<T>::test(DWORD dwError, DWORD cbTransferred, LPWSAOVERLAPPED lpOverlapped, DWORD dwFlags)
-	{
-		LOG_INFO("rumpa");
-	}
 
 	template <typename T>
 	bool server_interface<T>::isClientConnected(const SOCKET& socket)const
