@@ -19,6 +19,7 @@ thread::RenderThreadHandler::RenderThreadHandler()
 {
 	m_workerThreads = nullptr;
 	m_amount = 0;
+	m_camera = nullptr;
 	m_renderer = nullptr;
 	m_window = nullptr;
 	m_statuses = nullptr;
@@ -123,7 +124,7 @@ const render_instructions_t thread::RenderThreadHandler::Launch(const int& amoun
 	render_instructions_t inst;
 	const unsigned int objects_per_thread = (unsigned int)std::floor((float)amount_of_objects / (float)(INSTANCE.m_amount + 1));
 	int main_start = 0;
-	if (objects_per_thread >= thread::THRESHOLD && amount_of_objects >= (INSTANCE.m_amount + 1))
+	if (objects_per_thread >= thread::THRESHOLD && amount_of_objects >= (int)(INSTANCE.m_amount + 1))
 	{
 		// Launch Threads
 		if (INSTANCE.m_isPooled)

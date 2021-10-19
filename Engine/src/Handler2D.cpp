@@ -49,7 +49,7 @@ void rtd::Handler2D::Update()
 		Element2D* elem = INSTANCE.m_elements[i];
 		if (elem != nullptr)
 		{
-			if (elem->GetRef() > 0)
+			if (elem->GetRef() > 0 && elem->IsVisible())
 			{
 				if (elem->CheckClick())
 					elem->OnClick();

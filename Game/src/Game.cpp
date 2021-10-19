@@ -98,6 +98,46 @@ bool Game::OnStartup()
 void Game::OnUserUpdate(float deltaTime)
 {
 	static float pingCheck = 0.f;
+
+#if RENDER_IMGUI == 0
+	rtd::TextField* ip_text = GET_ELEMENT("ipBuffer", rtd::TextField);
+	if (ip_text)
+	{
+		if (ip_text->GetBuffer(m_ipBuffer))
+		{
+			if (m_client.Connect(m_ipBuffer->c_str(), 4950))
+			{
+				ip_text->SetVisibility(false);
+			}
+		}
+	}
+
+	if (m_client.IsConnected())
+	{
+		rtd::TextField* lobby_text = GET_ELEMENT("lobbyBuffer", rtd::TextField);
+		if (lobby_text)
+		{
+			lobby_text->SetVisibility(true);
+			if (lobby_text->GetBuffer(m_lobbyBuffer))
+			{
+				this->JoinLobby(std::stoi(*m_lobbyBuffer));
+				rtd::Handler2D::Get().DereferenceAllOnce();
+			}
+		}
+
+		rtd::Button* host_lobby_button = GET_ELEMENT("hostLobby", rtd::Button);
+		if (host_lobby_button)
+		{
+			host_lobby_button->SetVisibility(true);
+			if (host_lobby_button->IsClicked())
+			{
+				rtd::Handler2D::Get().DereferenceAllOnce();
+				this->CreateLobby();
+			}
+		}
+	}
+#endif
+
 	IMGUI(
 		ImGui::Begin("Network");
 

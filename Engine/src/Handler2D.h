@@ -8,6 +8,7 @@
 #include "Border.h"
 #include "Button.h"
 #include "Text.h"
+#include "TextField.h"
 #include "Slider.h"
 
 // std
