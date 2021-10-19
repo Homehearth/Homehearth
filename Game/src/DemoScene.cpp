@@ -1,5 +1,7 @@
 #include "DemoScene.h"
 
+#include "RAnimation.h"	//***temp***
+
 DemoScene::DemoScene(Engine& engine)
 	: SceneBuilder(engine)
 {
@@ -82,6 +84,11 @@ Entity DemoScene::CreatePlayerEntity(uint32_t playerID)
 
 	playerEntity.AddComponent<comp::Player>()->runSpeed = 10.f;
 	playerEntity.AddComponent<comp::Network>()->id = playerID;
+
+	RAnimation test;
+	test.Create("Player_Idle.fbx");
+	std::array<UINT, 3> lastKeys = { 0,0,0 };
+	sm::Matrix testmat = test.GetMatrix("QuickRigCharacter_Hips", 0.01, 0.02, lastKeys, true);
 
 	return playerEntity;
 }

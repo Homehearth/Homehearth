@@ -2,6 +2,11 @@
 #include "CommonStructures.h"
 #include "RMaterial.h"
 
+//Define structs to avoid 
+struct aiMesh;
+struct aiScene;
+struct aiNode;
+
 /*
 	Load in a model/scene of multiple meshes with Assimp 5.0.1
 	
@@ -21,11 +26,6 @@
 
 	*  Need an animator to do animations
 */
-
-//Define structs to avoid warnings
-struct aiMesh;
-struct aiScene;
-struct aiNode;
 
 struct bone_t
 {
@@ -53,8 +53,8 @@ private:
 	/*
 		Skeleton information
 	*/
-	bool								m_hasSkeleton;
-	std::vector<bone_t>					m_allBones;
+	bool									m_hasSkeleton;
+	std::vector<bone_t>						m_allBones;
 
 	//Need to have different vertexshaders for default or skeletal 
 	//std::shared_ptr<Shaders::VertexShader> m_vertexShader;	//Get from the resourcemanager

@@ -501,7 +501,7 @@ bool RModel::Create(const std::string& filename)
         aiProcess_LimitBoneWeights 		    //Limits by default to 4 weights per vertex
     );
 
-    //CheckCollisions if readfile was successful
+    //Check if readfile was successful
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
     {
 #ifdef _DEBUG

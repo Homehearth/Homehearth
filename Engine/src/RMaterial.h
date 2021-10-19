@@ -1,6 +1,6 @@
 #pragma once
 #include "RTexture.h"
-#include <assimp/material.h>
+struct aiMaterial;
 
 //Slots to bind to on shader-side
 const UINT CB_MAT_SLOT			= 0;
