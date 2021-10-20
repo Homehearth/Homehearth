@@ -6,7 +6,7 @@ using namespace std::placeholders;
 ServerGame::ServerGame()
 	:m_server(std::bind(&ServerGame::CheckIncoming, this, _1))
 {
-	m_nGameID = 10000;
+	m_nGameID = 0;
 }
 
 ServerGame::~ServerGame()

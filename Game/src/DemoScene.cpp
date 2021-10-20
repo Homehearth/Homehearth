@@ -135,8 +135,10 @@ namespace sceneHelp
 
 	void CreateGameScene(Engine& engine)
 	{
-
 		Scene& gameScene = engine.GetScene("Game");
+		gameScene.GetRegistry()->on_construct<comp::RenderableDebug>().connect<entt::invoke<&comp::RenderableDebug::InitRenderable>>();
+		gameScene.GetRegistry()->on_construct<comp::BoundingOrientedBox>().connect<&entt::registry::emplace_or_replace<comp::RenderableDebug>>();
+		gameScene.GetRegistry()->on_construct<comp::BoundingSphere>().connect<&entt::registry::emplace_or_replace<comp::RenderableDebug>>();
 		// Setup Cameras
 		Entity debugCameraEntity = gameScene.CreateEntity();
 		debugCameraEntity.AddComponent<comp::Camera3D>()->camera.Initialize(sm::Vector3(0, 0, -20), sm::Vector3(0, 0, 1), sm::Vector3(0, 1, 0),
@@ -164,14 +166,15 @@ namespace sceneHelp
 		CreateLightEntity(gameScene, { 0.f, 0.f, 0.f, 0.f }, { 1.f, -1.f, 0.f, 0.f }, { 10.f, 10.f, 10.f, 10.f }, 0, TypeLight::DIRECTIONAL, 1);
 		CreateLightEntity(gameScene, { 0.f, 8.f, -10.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 300.f, 300.f, 300.f, 300.f }, 75.f, TypeLight::POINT, 1);
 
+
 		gameScene.on<ESceneUpdate>([&, cameraEntity, debugCameraEntity](const ESceneUpdate& e, Scene& scene)
 			{
 				gameScene.GetCurrentCamera()->Update(e.dt);
 
 				IMGUI(
 					ImGui::Begin("Scene");
-				ImGui::Text("Game");
-				ImGui::End();
+					ImGui::Text("Game");
+					ImGui::End();
 				);
 
 #ifdef _DEBUG

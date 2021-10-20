@@ -97,6 +97,7 @@ Simulation::Simulation(Server* pServer, HeadlessEngine* pEngine)
 	  , m_pEngine(pEngine), m_pLobbyScene(nullptr), m_pGameScene(nullptr), m_pCurrentScene(nullptr)
 {
 	this->m_gameID = 0;
+	this->m_tick = 0;
 }
 
 bool Simulation::JoinLobby(uint32_t playerID, uint32_t gameID)
@@ -169,6 +170,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 	e.AddComponent<comp::Transform>()->position = sm::Vector3(5, 2, 0);
 	e.AddComponent<comp::MeshName>()->name = "Chest.obj";
 	e.AddComponent<comp::Velocity>()->vel = sm::Vector3(0, -0.2f, 0);
+	e.AddComponent<comp::BoundingSphere>();
 	// ---END OF DEBUG---
 
 	m_pCurrentScene = m_pGameScene; // todo Should be lobbyScene
@@ -211,10 +213,10 @@ bool Simulation::AddPlayer(uint32_t playerID)
 	CollisionSystem::Get().AddOnCollision(player, [&](entt::entity player2)
 		{
 			comp::Player* otherPlayer = m_pCurrentScene->GetRegistry()->try_get<comp::Player>(player2);
-			if(otherPlayer != nullptr)
-			{
-				LOG_INFO("PLAAAAYER COLISSION :D");
-			}
+			//if(otherPlayer != nullptr)
+			//{
+			//	LOG_INFO("Collision!");
+			//}
 		});
 
 	// send new Player to all other clients
