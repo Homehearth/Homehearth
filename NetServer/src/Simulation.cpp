@@ -212,7 +212,7 @@ bool Simulation::AddPlayer(uint32_t playerID)
 
 	CollisionSystem::Get().AddOnCollision(player, [&](Entity player2)
 		{
-			comp::Player* otherPlayer = m_pCurrentScene->GetRegistry()->try_get<comp::Player>(player2);
+			comp::Player* otherPlayer = player2.GetComponent<comp::Player>();
 			if(otherPlayer != nullptr)
 			{
 				LOG_INFO("Collision!");
