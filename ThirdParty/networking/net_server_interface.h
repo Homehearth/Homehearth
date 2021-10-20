@@ -699,6 +699,10 @@ namespace network
 				if (Entries[i].lpOverlapped != NULL)
 				{
 					SI = (SOCKET_INFORMATION*)Entries[i].lpCompletionKey;
+					if (SI == NULL)
+					{
+						continue;
+					}
 					context = (PER_IO_DATA*)Entries[i].lpOverlapped;
 					if (Entries[i].dwNumberOfBytesTransferred == 0)
 					{

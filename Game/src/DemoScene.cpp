@@ -11,7 +11,7 @@ DemoScene::DemoScene(Engine& engine)
 	debugCameraEntity.AddComponent<comp::Tag<DEBUGCAMERA>>();
 
 	Entity cameraEntity = m_scene.CreateEntity();
-	cameraEntity.AddComponent<comp::Camera3D>()->camera.Initialize(sm::Vector3(0, 0, -10), sm::Vector3(0, 0, 1), sm::Vector3(0, 1, 0), sm::Vector2((float)engine.GetWindow()->GetWidth(), (float)engine.GetWindow()->GetHeight()), CAMERATYPE::PLAY);
+	cameraEntity.AddComponent<comp::Camera3D>()->camera.Initialize(sm::Vector3(0, 2.8f, -10), sm::Vector3(0, 0, 1), sm::Vector3(0, 1, 0), sm::Vector2((float)engine.GetWindow()->GetWidth(), (float)engine.GetWindow()->GetHeight()), CAMERATYPE::PLAY);
 	cameraEntity.AddComponent<comp::Tag<CAMERA>>();
 
 	m_scene.SetCurrentCamera(&debugCameraEntity.GetComponent<comp::Camera3D>()->camera);
@@ -148,7 +148,7 @@ namespace sceneHelp
 		debugCameraEntity.AddComponent<comp::Tag<DEBUGCAMERA>>();
 
 		Entity cameraEntity = gameScene.CreateEntity();
-		cameraEntity.AddComponent<comp::Camera3D>()->camera.Initialize(sm::Vector3(0, 0, -10), sm::Vector3(0, 0, 1), sm::Vector3(0, 1, 0),
+		cameraEntity.AddComponent<comp::Camera3D>()->camera.Initialize(sm::Vector3(0, 2.8f, -10), sm::Vector3(0, 0, 1), sm::Vector3(0, 1, 0),
 			sm::Vector2((float)engine.GetWindow()->GetWidth(), (float)engine.GetWindow()->GetHeight()), CAMERATYPE::PLAY);
 		cameraEntity.AddComponent<comp::Tag<CAMERA>>();
 

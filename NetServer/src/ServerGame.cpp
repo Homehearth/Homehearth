@@ -28,26 +28,26 @@ void ServerGame::InputThread()
 		else if (input == "/info")
 		{
 			LOG_INFO("INFO:")
-			for (const auto& sim : m_simulations)
-			{
-				LOG_INFO("-------Simulation %u-------", sim.first);
-				LOG_INFO("LOBBY SCENE:");
-				LOG_INFO("\tEntity Count: %u", (unsigned int)sim.second->GetLobbyScene()->GetRegistry()->size());
-				sim.second->GetLobbyScene()->ForEachComponent<comp::Network>([](Entity e, comp::Network& n)
-					{
-						LOG_INFO("\tEntity: %d", (entt::entity)e);
-						LOG_INFO("\tNetwork id: %u", n.id);
-					});
+				for (const auto& sim : m_simulations)
+				{
+					LOG_INFO("-------Simulation %u-------", sim.first);
+					LOG_INFO("LOBBY SCENE:");
+					LOG_INFO("\tEntity Count: %u", (unsigned int)sim.second->GetLobbyScene()->GetRegistry()->size());
+					sim.second->GetLobbyScene()->ForEachComponent<comp::Network>([](Entity e, comp::Network& n)
+						{
+							LOG_INFO("\tEntity: %d", (entt::entity)e);
+							LOG_INFO("\tNetwork id: %u", n.id);
+						});
 
-				LOG_INFO("GAME SCENE:");
-				LOG_INFO("\tEntity Count: %u\n", (unsigned int)sim.second->GetGameScene()->GetRegistry()->size());
-				sim.second->GetGameScene()->ForEachComponent<comp::Network>([](Entity e, comp::Network& n)
-					{
-						LOG_INFO("\tEntity: %d", (entt::entity)e);
-						LOG_INFO("\tNetwork id: %u", n.id);
-					});
+					LOG_INFO("GAME SCENE:");
+					LOG_INFO("\tEntity Count: %u\n", (unsigned int)sim.second->GetGameScene()->GetRegistry()->size());
+					sim.second->GetGameScene()->ForEachComponent<comp::Network>([](Entity e, comp::Network& n)
+						{
+							LOG_INFO("\tEntity: %d", (entt::entity)e);
+							LOG_INFO("\tNetwork id: %u", n.id);
+						});
 
-			}
+				}
 		}
 	}
 }
@@ -98,7 +98,7 @@ void ServerGame::UpdateNetwork(float deltaTime)
 {
 	for (const auto& sim : m_simulations)
 	{
-		sim.second->SendSnapshot();	
+		sim.second->SendSnapshot();
 	}
 }
 
@@ -167,13 +167,13 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 				break;
 			}
 		}
-		
+
 		message<GameMsg> invalidLobbyMsg;
 		invalidLobbyMsg.header.id = GameMsg::Lobby_Invalid;
 		invalidLobbyMsg << std::string("Player could not leave Lobby");
 		LOG_WARNING("Request denied: Player could not leave Lobby");
 		m_server.SendToClient(m_server.GetConnection(playerID), invalidLobbyMsg);
-		
+
 		break;
 	}
 	case GameMsg::Game_PlayerInput:
@@ -185,16 +185,23 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 
 		msg >> y >> x >> gameID >> playerID;
 
-		m_simulations.at(gameID)->GetGameScene()->ForEachComponent<comp::Network, comp::Velocity>([=](comp::Network& net, comp::Velocity& vel) 
-			{
-				if (net.id == playerID)
+		if (m_simulations.find(gameID) != m_simulations.end())
+		{
+			m_simulations.at(gameID)->GetGameScene()->ForEachComponent<comp::Network, comp::Velocity>([=](comp::Network& net, comp::Velocity& vel)
 				{
-					sm::Vector3 input(x, 0, y);
-					input.Normalize(input);
-					vel.vel	= input * 10.f;
-				}
-			});
-		
+					if (net.id == playerID)
+					{
+						sm::Vector3 input(x, 0, y);
+						input.Normalize(input);
+						vel.vel = input * 10.f;
+					}
+				});
+		}
+		else
+		{
+			LOG_WARNING("Invalid GameID for player input message");
+		}
+
 		break;
 	}
 	}
