@@ -131,11 +131,10 @@ void SetupMainMenuScreen()
 	gameInfoText->SetName("gameInfoText");
 
 	// Adds a button and names it start game button.
-	rtd::Button* startGameButton = new rtd::Button("demo_start_game_button.png", draw_t(100.0f, 100.0f, 350.0f, 150.0f));
+	rtd::Button* startGameButton = new rtd::Button("StartButton.png", draw_t(100.0f, 100.0f, 350.0f, 150.0f));
 	rtd::Handler2D::Get().InsertElement(startGameButton);
 	startGameButton->SetName("startGameButton");
 	// Adds a border around the button and sets the color to black.
-	startGameButton->GetBorder()->SetColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
 
 	// Adds a button and names it exit game button.
 	rtd::Button* exitGameButton = new rtd::Button("demo_exit_button.png", draw_t(100.0f, 325.0f, 350.0f, 150.0f));
@@ -228,7 +227,7 @@ void SetupInLobbyScreen()
 	rtd::Canvas* backgroundCanvas = new rtd::Canvas(D2D1::ColorF(.2f, .2f, .2f), draw_t(0.0f, 0.0f, 3000.0f, 3000.0f));
 	rtd::Handler2D::Get().InsertElement(backgroundCanvas);
 
-	rtd::Button* startGameButton = new rtd::Button("demo_start_game_button.png", draw_t(625.0f, 420.0f, 250.0f, 100.0f), true);
+	rtd::Button* startGameButton = new rtd::Button("StartButton.png", draw_t(625.0f, 420.0f, 250.0f, 100.0f), true);
 	rtd::Handler2D::Get().InsertElement(startGameButton);
 	startGameButton->GetBorder()->SetColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
 
@@ -298,6 +297,7 @@ void SetupOptionsScreen()
 void SetupLobbyJoinScreen()
 {
 	rtd::TextField* ipField = new rtd::TextField(draw_text_t(100.0f, 100.0f, 200.0f, 35.0f));
+	//rtd::TextField* ipField = new rtd::TextField(draw_text_t((float)(rand() % 1000) / 2, (float)(rand() % 1000) / 4, 200.0f, 35.0f));
 	ipField->GetBorder()->SetColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
 	rtd::Handler2D::Get().InsertElement(ipField);
 	ipField->SetName("ipBuffer");
@@ -305,13 +305,15 @@ void SetupLobbyJoinScreen()
 	ipField->SetVisibility(false);
 
 	rtd::TextField* lobbyField = new rtd::TextField(draw_text_t(100.0f, 300.0f, 200.0f, 35.0f));
+	//rtd::TextField * lobbyField = new rtd::TextField(draw_text_t((float)(rand() % 1000) / 2, (float)(rand() % 1000) / 4, 200.0f, 35.0f));
 	lobbyField->GetBorder()->SetColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
 	rtd::Handler2D::Get().InsertElement(lobbyField);
 	lobbyField->SetName("lobbyBuffer");
 	lobbyField->GetText()->SetText("Input Lobby ID");
 	lobbyField->SetVisibility(false);
 
-	rtd::Button* hostLobbyButton = new rtd::Button("demo_start_game_button.png", draw_t(500.0f, 300.0f, 300.0f, 75.0f));
+	rtd::Button* hostLobbyButton = new rtd::Button("StartButton.png", draw_t(500.0f, 300.0f, 300.0f, 125.0f));
+	//rtd::Button* hostLobbyButton = new rtd::Button("StartButton.png", draw_t((float)(rand() % 1000) / 2, (float)(rand() % 1000) / 4, 300.0f, 125.0f));
 	rtd::Handler2D::Get().InsertElement(hostLobbyButton);
 	hostLobbyButton->SetName("hostLobby");
 	hostLobbyButton->SetVisibility(false);
