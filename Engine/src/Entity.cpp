@@ -25,7 +25,7 @@ void Entity::Destroy()
 
 bool Entity::IsNull() const
 {
-	return m_entity == entt::null;
+	return m_entity == entt::null || !m_pRegistry->valid(m_entity);
 }
 
 
