@@ -1,5 +1,6 @@
 #pragma once
 #include "CommonStructures.h"
+#include "AnimStructures.h"
 #include "RMaterial.h"
 
 //Define structs to avoid 
@@ -27,13 +28,6 @@ struct aiNode;
 	*  Need an animator to do animations
 */
 
-struct bone_t
-{
-	std::string name = "";
-	sm::Matrix	inverseBind = {};
-	int			parentIndex = -1;
-};
-
 class RModel : public resource::GResource
 {
 private:
@@ -42,22 +36,19 @@ private:
 	*/
 	struct submesh_t
 	{
-		ComPtr<ID3D11Buffer>			vertexBuffer;
-		ComPtr<ID3D11Buffer>			indexBuffer;
-		UINT							indexCount = 0;
-		std::shared_ptr<RMaterial>		material;
+		ComPtr<ID3D11Buffer>		vertexBuffer;
+		ComPtr<ID3D11Buffer>		indexBuffer;
+		UINT						indexCount = 0;
+		std::shared_ptr<RMaterial>	material;
 	};
-	std::vector<submesh_t>				m_meshes;
-	std::vector<light_t>				m_lights;
+	std::vector<submesh_t>			m_meshes;
+	std::vector<light_t>			m_lights;
 	
 	/*
 		Skeleton information
 	*/
-	bool									m_hasSkeleton;
-	std::vector<bone_t>						m_allBones;
-
-	//Need to have different vertexshaders for default or skeletal 
-	//std::shared_ptr<Shaders::VertexShader> m_vertexShader;	//Get from the resourcemanager
+	bool							m_hasSkeleton;
+	std::vector<bone_t>				m_allBones;
 
 private:
 	//Get the end of file. Searches for "."

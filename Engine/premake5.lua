@@ -57,8 +57,9 @@ project "Engine"
 			
 			["src/Network"] = { "**Client.*" },
 
-        ["src/Engine/Resources"] = { "**ResourceManager.*", "**GResource.*", "**RModel.*", "**RTexture.*", "**RMaterial.*", "**RAnimation.*" },
+        ["src/Engine/Resources"] = { "**ResourceManager.*", "**GResource.*", "**RModel.*", "**RTexture.*", "**RMaterial.*"},
             ["src/Engine/Resources/Shaders"] = { "**.hlsl", "**.hlsli", "**Shader.*" },
+			["src/Engine/Resources/Animation"] = {"**RAnimation.*", "**Animator.*", "**AnimStructures.*"},
 
         ["src/Engine/Audio"] = {  },
         ["src/Engine/Physics"] = {  },

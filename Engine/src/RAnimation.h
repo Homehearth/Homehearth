@@ -1,4 +1,5 @@
 #pragma once
+#include "AnimStructures.h"
 
 /*
 	Load in one animation from file.
@@ -15,16 +16,15 @@ private:
 	double	m_duration;
 	bool	m_isLoopable;
 
-	struct Translations
+	struct KeyFrames
 	{
-		//Time and value
-		std::vector<std::pair<double, sm::Vector3>>		position;
-		std::vector<std::pair<double, sm::Vector3>>		scale;
-		std::vector<std::pair<double, sm::Quaternion>>	rotation;
+		std::vector<positionKey_t>	position;
+		std::vector<scaleKey_t>		scale;
+		std::vector<rotationKey_t>	rotation;
 	};
 
 	//Each bone has a list of translations
-	std::unordered_map<std::string, Translations> m_translations;
+	std::unordered_map<std::string, KeyFrames> m_keyFrames;
 
 private:
 	const sm::Vector3 GetPosition(const std::string& bonename, const double& currentFrame, const double& nextFrame, UINT& lastKey, bool interpolate) const;

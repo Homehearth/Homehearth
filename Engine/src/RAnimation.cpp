@@ -10,13 +10,13 @@ RAnimation::RAnimation()
 
 RAnimation::~RAnimation()
 {
-	for (auto& translation : m_translations)
+	for (auto& translation : m_keyFrames)
 	{
 		translation.second.position.clear();
 		translation.second.scale.clear();
 		translation.second.rotation.clear();
 	}
-	m_translations.clear();
+	m_keyFrames.clear();
 }
 
 const sm::Vector3 RAnimation::GetPosition(const std::string& bonename, const double& currentFrame, const double& nextFrame, UINT& lastKey, bool interpolate) const
@@ -24,26 +24,26 @@ const sm::Vector3 RAnimation::GetPosition(const std::string& bonename, const dou
 	sm::Vector3 finalVec;
 	UINT nextKey = lastKey + 1;
 	//Next key should not go out of range
-	if (nextKey >= m_translations.at(bonename).position.size())
+	if (nextKey >= m_keyFrames.at(bonename).position.size())
 		nextKey = 0;
 
-	const double secondTime = m_translations.at(bonename).position[nextKey].first;
+	const double secondTime = m_keyFrames.at(bonename).position[nextKey].time;
 
 	if (interpolate)
 	{
-		const double firstTime = m_translations.at(bonename).position[lastKey].first;
+		const double firstTime = m_keyFrames.at(bonename).position[lastKey].time;
 
 		//Gets a value between 0.0f to 1.0f of how much to interpolate
 		float lerpTime = float((currentFrame - firstTime) / (secondTime - firstTime));
 
-		const sm::Vector3 firstPos = m_translations.at(bonename).position[lastKey].second;
-		const sm::Vector3 secondPos = m_translations.at(bonename).position[nextKey].second;
+		const sm::Vector3 firstPos = m_keyFrames.at(bonename).position[lastKey].val;
+		const sm::Vector3 secondPos = m_keyFrames.at(bonename).position[nextKey].val;
 
 		finalVec = sm::Vector3::Lerp(firstPos, secondPos, lerpTime);
 	}
 	else
 	{
-		finalVec = m_translations.at(bonename).position[lastKey].second;
+		finalVec = m_keyFrames.at(bonename).position[lastKey].val;
 	}
 
 	//Update the lastkey to new value
@@ -58,26 +58,26 @@ const sm::Vector3 RAnimation::GetScale(const std::string& bonename, const double
 	sm::Vector3 finalVec;
 	UINT nextKey = lastKey + 1;
 	//Next key should not go out of range
-	if (nextKey >= m_translations.at(bonename).scale.size())
+	if (nextKey >= m_keyFrames.at(bonename).scale.size())
 		nextKey = 0;
 
-	const double secondTime = m_translations.at(bonename).scale[nextKey].first;
+	const double secondTime = m_keyFrames.at(bonename).scale[nextKey].time;
 
 	if (interpolate)
 	{
-		const double firstTime = m_translations.at(bonename).scale[lastKey].first;
+		const double firstTime = m_keyFrames.at(bonename).scale[lastKey].time;
 
 		//Gets a value between 0.0f to 1.0f of how much to interpolate
 		float lerpTime = float((currentFrame - firstTime) / (secondTime - firstTime));
 
-		const sm::Vector3 firstScl = m_translations.at(bonename).scale[lastKey].second;
-		const sm::Vector3 secondScl = m_translations.at(bonename).scale[nextKey].second;
+		const sm::Vector3 firstScl = m_keyFrames.at(bonename).scale[lastKey].val;
+		const sm::Vector3 secondScl = m_keyFrames.at(bonename).scale[nextKey].val;
 
 		finalVec = sm::Vector3::Lerp(firstScl, secondScl, lerpTime);
 	}
 	else
 	{
-		finalVec = m_translations.at(bonename).scale[lastKey].second;
+		finalVec = m_keyFrames.at(bonename).scale[lastKey].val;
 	}
 
 	//Update the lastkey to new value
@@ -92,27 +92,27 @@ const sm::Quaternion RAnimation::GetRotation(const std::string& bonename, const 
 	sm::Quaternion finalQuat;
 	UINT nextKey = lastKey + 1;
 	//Next key should not go out of range
-	if (nextKey >= m_translations.at(bonename).rotation.size())
+	if (nextKey >= m_keyFrames.at(bonename).rotation.size())
 		nextKey = 0;
 
-	const double secondTime = m_translations.at(bonename).rotation[nextKey].first;
+	const double secondTime = m_keyFrames.at(bonename).rotation[nextKey].time;
 
 	if (interpolate)
 	{
-		const double firstTime = m_translations.at(bonename).rotation[lastKey].first;
+		const double firstTime = m_keyFrames.at(bonename).rotation[lastKey].time;
 
 		//Gets a value between 0.0f to 1.0f of how much to interpolate
 		float lerpTime = float((currentFrame - firstTime) / (secondTime - firstTime));
 
-		const sm::Quaternion firstQuat = m_translations.at(bonename).rotation[lastKey].second;
-		const sm::Quaternion secondQuat = m_translations.at(bonename).rotation[nextKey].second;
+		const sm::Quaternion firstQuat = m_keyFrames.at(bonename).rotation[lastKey].val;
+		const sm::Quaternion secondQuat = m_keyFrames.at(bonename).rotation[nextKey].val;
 
 		finalQuat = sm::Quaternion::Slerp(firstQuat, secondQuat, lerpTime);
 		finalQuat.Normalize();
 	}
 	else
 	{
-		finalQuat = m_translations.at(bonename).rotation[lastKey].second;
+		finalQuat = m_keyFrames.at(bonename).rotation[lastKey].val;
 	}
 
 	//Update the lastkey to new value
@@ -142,7 +142,7 @@ const sm::Matrix RAnimation::GetMatrix(const std::string& bonename, const double
 	sm::Matrix finalMatrix = sm::Matrix::Identity;
 
 	//Bone has to exist otherwise return identity matrix
-	if (m_translations.find(bonename) != m_translations.end())
+	if (m_keyFrames.find(bonename) != m_keyFrames.end())
 	{
 		sm::Vector3 pos = GetPosition(bonename, currentFrame, nextFrame, lastKeys[0], interpolate);
 		sm::Vector3 scl = GetScale(bonename, currentFrame, nextFrame, lastKeys[1], interpolate);
@@ -191,41 +191,42 @@ bool RAnimation::Create(const std::string& filename)
 	for (UINT i = 0; i < animation->mNumChannels; i++)
 	{
 		const std::string boneName = animation->mChannels[i]->mNodeName.C_Str();
-		Translations						translations;
-		std::pair<double, sm::Vector3>		pair;
-		std::pair<double, sm::Quaternion>	pairQ;
+		KeyFrames		keyframes;
+		positionKey_t	pos;
+		scaleKey_t		scl;
+		rotationKey_t	rot;
 
 		//Load in all the positions
-		translations.position.reserve(size_t(animation->mChannels[i]->mNumPositionKeys));
+		keyframes.position.reserve(size_t(animation->mChannels[i]->mNumPositionKeys));
 		for (UINT p = 0; p < animation->mChannels[i]->mNumPositionKeys; p++)
 		{
-			pair.first = animation->mChannels[i]->mPositionKeys[p].mTime;
+			pos.time = animation->mChannels[i]->mPositionKeys[p].mTime;
 			const aiVector3D aiPos = animation->mChannels[i]->mPositionKeys[p].mValue;
-			pair.second = { aiPos.x, aiPos.y, aiPos.z };
-			translations.position.push_back(pair);
+			pos.val = { aiPos.x, aiPos.y, aiPos.z };
+			keyframes.position.push_back(pos);
 		}
 
 		//Load in all the scales
-		translations.scale.reserve(size_t(animation->mChannels[i]->mNumScalingKeys));
+		keyframes.scale.reserve(size_t(animation->mChannels[i]->mNumScalingKeys));
 		for (UINT s = 0; s < animation->mChannels[i]->mNumScalingKeys; s++)
 		{
-			pair.first = animation->mChannels[i]->mScalingKeys[s].mTime;
+			scl.time = animation->mChannels[i]->mScalingKeys[s].mTime;
 			const aiVector3D aiScl = animation->mChannels[i]->mScalingKeys[s].mValue;
-			pair.second = { aiScl.x, aiScl.y, aiScl.z };
-			translations.scale.push_back(pair);
+			scl.val = { aiScl.x, aiScl.y, aiScl.z };
+			keyframes.scale.push_back(scl);
 		}
 
 		//Load in all the rotations
-		translations.rotation.reserve(size_t(animation->mChannels[i]->mNumRotationKeys));
+		keyframes.rotation.reserve(size_t(animation->mChannels[i]->mNumRotationKeys));
 		for (UINT r = 0; r < animation->mChannels[i]->mNumRotationKeys; r++)
 		{
-			pairQ.first = animation->mChannels[i]->mRotationKeys[r].mTime;
+			rot.time = animation->mChannels[i]->mRotationKeys[r].mTime;
 			const aiQuaternion aiRot = animation->mChannels[i]->mRotationKeys[r].mValue;
-			pairQ.second = { aiRot.x, aiRot.y, aiRot.z, aiRot.w };
-			translations.rotation.push_back(pairQ);
+			rot.val = { aiRot.x, aiRot.y, aiRot.z, aiRot.w };
+			keyframes.rotation.push_back(rot);
 		}
 
-		m_translations[boneName] = translations;
+		m_keyFrames[boneName] = keyframes;
 	}
 	
 #ifdef _DEBUG

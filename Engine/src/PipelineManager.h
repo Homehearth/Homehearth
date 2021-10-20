@@ -46,12 +46,17 @@ public:
 	ComPtr<ID3D11SamplerState>		m_pointSamplerState;
 
 	ComPtr<ID3D11InputLayout>		m_defaultInputLayout;
-		
-	Shaders::VertexShader			m_defaultVertexShader;
-	Shaders::VertexShader			m_depthPassVertexShader;
+	ComPtr<ID3D11InputLayout>		m_animationInputLayout;
+	
+	/*
+		Added to resourcemanager
+	*/
+	std::shared_ptr<Shaders::VertexShader>	m_defaultVertexShader;
+	std::shared_ptr<Shaders::VertexShader>	m_depthPassVertexShader;
+	std::shared_ptr<Shaders::VertexShader>	m_animationVertexShader;
 
-	Shaders::PixelShader			m_defaultPixelShader;
-	Shaders::PixelShader			m_debugPixelShader;
+	std::shared_ptr<Shaders::PixelShader>	m_defaultPixelShader;
+	std::shared_ptr<Shaders::PixelShader>	m_debugPixelShader;
 	
 	D3D11_VIEWPORT					m_viewport;
 

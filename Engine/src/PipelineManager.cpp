@@ -352,7 +352,7 @@ bool PipelineManager::CreateInputLayouts()
     HRESULT hr = S_FALSE;
 
 	// Create m_defaultInputLayout.
-	std::string shaderByteCode = m_defaultVertexShader.GetShaderByteCode();
+	std::string shaderByteCode = m_defaultVertexShader->GetShaderByteCode();
     D3D11_INPUT_ELEMENT_DESC defaultVertexShaderDesc[] =
     {
         {"POSITION",    0, DXGI_FORMAT_R32G32B32_FLOAT,    0,                0,                   D3D11_INPUT_PER_VERTEX_DATA, 0},
@@ -368,34 +368,63 @@ bool PipelineManager::CreateInputLayouts()
         return false;
     }
 
+    shaderByteCode = m_animationVertexShader->GetShaderByteCode();
+    D3D11_INPUT_ELEMENT_DESC animationVertexShaderDesc[] =
+    {
+        {"POSITION",    0, DXGI_FORMAT_R32G32B32_FLOAT,    0,                0,                   D3D11_INPUT_PER_VERTEX_DATA, 0},
+        {"TEXCOORD",    0, DXGI_FORMAT_R32G32_FLOAT,       0,    D3D11_APPEND_ALIGNED_ELEMENT,    D3D11_INPUT_PER_VERTEX_DATA, 0},
+        {"NORMAL",      0, DXGI_FORMAT_R32G32B32_FLOAT,    0,    D3D11_APPEND_ALIGNED_ELEMENT,    D3D11_INPUT_PER_VERTEX_DATA, 0},
+        {"TANGENT",     0, DXGI_FORMAT_R32G32B32_FLOAT,    0,    D3D11_APPEND_ALIGNED_ELEMENT,    D3D11_INPUT_PER_VERTEX_DATA, 0},
+        {"BINORMAL",    0, DXGI_FORMAT_R32G32B32_FLOAT,    0,    D3D11_APPEND_ALIGNED_ELEMENT,    D3D11_INPUT_PER_VERTEX_DATA, 0},
+        {"BONEIDS",     0, DXGI_FORMAT_R32G32B32A32_UINT,  0,    D3D11_APPEND_ALIGNED_ELEMENT,    D3D11_INPUT_PER_VERTEX_DATA, 0},
+        {"BONEWEIGHTS", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,    D3D11_APPEND_ALIGNED_ELEMENT,    D3D11_INPUT_PER_VERTEX_DATA, 0}
+    };
+
+    if (FAILED(hr = D3D11Core::Get().Device()->CreateInputLayout(animationVertexShaderDesc, ARRAYSIZE(animationVertexShaderDesc), shaderByteCode.c_str(), shaderByteCode.length(), &m_animationInputLayout)))
+    {
+        LOG_WARNING("failed creating m_animationInputLayout.");
+        return false;
+    }
+
     return !FAILED(hr);
 }
 
 bool PipelineManager::CreateShaders()
 {	
-    if (!m_defaultVertexShader.Create("Model_vs"))
+    m_defaultVertexShader = ResourceManager::Get().GetResource<Shaders::VertexShader>("Model_vs");
+    if (!m_defaultVertexShader)
     {
         LOG_WARNING("failed creating Model_vs.");
 		return false;
     }
-
-    if (!m_depthPassVertexShader.Create("Depth_vs"))
+    
+    m_depthPassVertexShader = ResourceManager::Get().GetResource<Shaders::VertexShader>("Depth_vs");
+    if (!m_depthPassVertexShader)
     {
         LOG_WARNING("failed creating Depth_vs.");
         return false;
     }
+
+    m_animationVertexShader = ResourceManager::Get().GetResource<Shaders::VertexShader>("AnimModel_vs");
+    if (!m_animationVertexShader)
+    {
+        LOG_WARNING("failed creating AnimModel_vs.");
+        return false;
+    }
 	
-    if(!m_defaultPixelShader.Create("Model_ps"))
+    m_defaultPixelShader = ResourceManager::Get().GetResource<Shaders::PixelShader>("Model_ps");
+    if(!m_defaultPixelShader)
     {
         LOG_WARNING("failed creating Model_ps.");
         return false;
     }
 
-    if (!m_debugPixelShader.Create("Debug_ps"))
+    m_debugPixelShader = ResourceManager::Get().GetResource<Shaders::PixelShader>("Debug_ps");
+    if (!m_debugPixelShader)
     {
         LOG_WARNING("failed creating Debug_ps.");
         return false;
     }
-	
+
     return true;
 }                         
