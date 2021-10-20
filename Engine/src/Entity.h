@@ -26,9 +26,14 @@ public:
 
 	bool IsNull() const;
 
-	operator entt::entity()
+	operator entt::entity()const
 	{
 		return m_entity;
+	}
+
+	bool operator >(const Entity& other) const
+	{
+		return m_entity > other.m_entity;
 	}
 };
 
@@ -60,4 +65,15 @@ inline void Entity::RemoveComponent()
 		throw std::runtime_error("Entity was a null entity");
 	}	
 	m_pRegistry->erase<T>(m_entity);
+}
+
+namespace std
+{
+	template <> struct hash<Entity>
+	{
+		size_t operator()(const Entity& other)const
+		{
+			return std::hash<entt::entity>()((entt::entity)other);
+		}
+	};
 }

@@ -210,13 +210,13 @@ bool Simulation::AddPlayer(uint32_t playerID)
 	player.AddComponent<comp::Player>()->runSpeed = 10.f;
 	player.AddComponent<comp::BoundingOrientedBox>();
 
-	CollisionSystem::Get().AddOnCollision(player, [&](entt::entity player2)
+	CollisionSystem::Get().AddOnCollision(player, [&](Entity player2)
 		{
 			comp::Player* otherPlayer = m_pCurrentScene->GetRegistry()->try_get<comp::Player>(player2);
-			//if(otherPlayer != nullptr)
-			//{
-			//	LOG_INFO("Collision!");
-			//}
+			if(otherPlayer != nullptr)
+			{
+				LOG_INFO("Collision!");
+			}
 		});
 
 	// send new Player to all other clients
