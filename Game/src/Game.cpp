@@ -100,6 +100,8 @@ void Game::OnUserUpdate(float deltaTime)
 	static float pingCheck = 0.f;
 
 #if RENDER_IMGUI == 0
+
+
 	rtd::TextField* ip_text = GET_ELEMENT("ipBuffer", rtd::TextField);
 	if (ip_text)
 	{
@@ -107,8 +109,27 @@ void Game::OnUserUpdate(float deltaTime)
 		{
 			if (m_client.Connect(m_ipBuffer->c_str(), 4950))
 			{
-				ip_text->SetVisibility(false);
+				rtd::Handler2D::SetVisibilityAll(false);
 			}
+		}
+	}
+	
+	rtd::Button* exit_button = GET_ELEMENT("exitGameButton", rtd::Button);
+	if (exit_button)
+	{
+		if (exit_button->IsClicked())
+		{
+			std::cout << "IMPLEMENT CLEAN SHUT DOWN HERE!\n";
+		}
+	}
+
+	rtd::Button* start_button = GET_ELEMENT("startGameButton", rtd::Button);
+	if (start_button)
+	{
+		if (start_button->IsClicked())
+		{
+			rtd::Handler2D::SetVisibilityAll(false);
+			ip_text->SetVisibility(true);
 		}
 	}
 

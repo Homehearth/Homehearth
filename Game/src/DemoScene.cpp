@@ -86,8 +86,10 @@ DemoScene::DemoScene(Engine& engine)
 			CollisionSystem::Get().AddPair(e.obj1, e.obj2);
 		});
 
-	//SetupMainMenuScreen();
+#if RENDER_IMGUI == 0
+	SetupMainMenuScreen();
 	SetupLobbyJoinScreen();
+#endif
 }
 
 Entity DemoScene::CreatePlayerEntity(uint32_t playerID)
@@ -304,21 +306,22 @@ void SetupOptionsScreen()
 
 void SetupLobbyJoinScreen()
 {
-#if RENDER_IMGUI == 0
-	rtd::TextField* ipField = new rtd::TextField(draw_text_t(100.0f, 100.0f, 200.0f, 75.0f));
+	rtd::TextField* ipField = new rtd::TextField(draw_text_t(100.0f, 100.0f, 200.0f, 35.0f));
 	ipField->GetBorder()->SetColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
 	rtd::Handler2D::Get().InsertElement(ipField);
 	ipField->SetName("ipBuffer");
+	ipField->GetText()->SetText("Input IP adress");
+	ipField->SetVisibility(false);
 
-	rtd::TextField* lobbyField = new rtd::TextField(draw_text_t(100.0f, 300.0f, 200.0f, 75.0f));
+	rtd::TextField* lobbyField = new rtd::TextField(draw_text_t(100.0f, 300.0f, 200.0f, 35.0f));
 	lobbyField->GetBorder()->SetColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
 	rtd::Handler2D::Get().InsertElement(lobbyField);
 	lobbyField->SetName("lobbyBuffer");
+	lobbyField->GetText()->SetText("Input Lobby ID");
 	lobbyField->SetVisibility(false);
 
-	rtd::Button* hostLobbyButton = new rtd::Button("demo_start_game_button.png", draw_t(0.0f, 0.0f, 300.0f, 75.0f));
+	rtd::Button* hostLobbyButton = new rtd::Button("demo_start_game_button.png", draw_t(500.0f, 300.0f, 300.0f, 75.0f));
 	rtd::Handler2D::Get().InsertElement(hostLobbyButton);
 	hostLobbyButton->SetName("hostLobby");
 	hostLobbyButton->SetVisibility(false);
-#endif
 }

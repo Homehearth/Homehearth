@@ -25,7 +25,7 @@ void rtd::TextField::Update()
     }
 
     // Remove with the backspace
-    if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Keys::Back, KeyState::PRESSED))
+    if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Keys::Back, KeyState::PRESSED) && m_stringText.length() > 0)
     {
         m_stringText.pop_back();
     }
@@ -46,11 +46,12 @@ rtd::TextField::TextField(const draw_text_t& opts)
     m_opts = opts;
     m_isUsed = false;
     m_stringText = "";
+    m_infoText = std::make_unique<Text>("Explanation Text", draw_text_t(opts.x_pos, opts.y_pos - 50.0f, opts.x_stretch, opts.y_stretch));
 }
 
 Text* rtd::TextField::GetText()
 {
-    return m_text.get();
+    return m_infoText.get();
 }
 
 Border* rtd::TextField::GetBorder()
@@ -82,6 +83,8 @@ void rtd::TextField::Draw()
         m_border->Draw();
     if (m_text)
         m_text->Draw();
+    if (m_infoText)
+        m_infoText->Draw();
 }
 
 void rtd::TextField::OnClick()

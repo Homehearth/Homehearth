@@ -114,6 +114,15 @@ void rtd::Handler2D::DereferenceAllOnce()
 	}
 }
 
+void rtd::Handler2D::SetVisibilityAll(const bool& toggle)
+{
+	for (auto& elem : INSTANCE.m_elements)
+	{
+		if (elem->GetRef() > 0)
+			elem->SetVisibility(toggle);
+	}
+}
+
 const bool rtd::Handler2D::IsRenderReady()
 {
 	return INSTANCE.m_drawBuffers.IsSwapped();

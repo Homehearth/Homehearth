@@ -103,6 +103,9 @@ namespace rtd
 		// This removes one reference from all the elements. Use this if you want safe release of all objects that has 1 reference.
 		static void DereferenceAllOnce();
 
+		// Set the visibility of all elements to boolean.
+		static void SetVisibilityAll(const bool& toggle);
+
 		static const bool IsRenderReady();
 	};
 
