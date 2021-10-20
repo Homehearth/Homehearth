@@ -45,7 +45,8 @@ DemoScene::DemoScene(Engine& engine)
 			//GameSystems::MRayIntersectBoxSystem(m_scene);
 
 			m_scene.GetCurrentCamera()->Update(e.dt);
-
+			GameSystems::CombatSystem(scene, e.dt);
+		
 			//GameSystems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingSphere>(m_scene);
 			//GameSystems::CheckCollisions<comp::BoundingSphere, comp::BoundingSphere>(m_scene);
 			//Systems::LightSystem(scene, e.dt);

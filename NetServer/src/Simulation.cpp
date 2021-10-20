@@ -71,7 +71,6 @@ bool Simulation::AddPlayer(uint32_t playerID)
 	LOG_INFO("Player with ID: %ld added to the game!", playerID);
 	m_connections[playerID] = m_pServer->GetConnection(playerID);
 
-
 	
 	// Create Player entity in Game scene
 	Entity player = m_pGameScene->CreateEntity();
@@ -81,6 +80,12 @@ bool Simulation::AddPlayer(uint32_t playerID)
 	player.AddComponent<comp::Player>()->runSpeed = 10.f;
 	player.AddComponent<comp::BoundingOrientedBox>();
 
+	// CombatSystem Test.
+	const unsigned char GOOD = 4;
+	*player.AddComponent<comp::Attack>() = { 10.f, 0.f, 0.f, true, true };
+	player.AddComponent<comp::Tag<GOOD>>();
+
+	
 	CollisionSystem::Get().AddOnCollision(player, [&](entt::entity player2)
 		{
 			comp::Player* otherPlayer = m_pCurrentScene->GetRegistry()->try_get<comp::Player>(player2);
@@ -94,6 +99,18 @@ bool Simulation::AddPlayer(uint32_t playerID)
 	player = m_pLobbyScene->CreateEntity();
 	player.AddComponent<comp::Network>()->id = playerID;
 
+	return true;
+}
+
+bool Simulation::AddEnemy()
+{
+	// Create Enemy entity in Game scene.
+	Entity enemy = m_pGameScene->CreateEntity();
+	enemy.AddComponent<comp::Transform>();
+	enemy.AddComponent<comp::Network>()->id = 100000;
+	const unsigned char BAD = 8;
+	enemy.AddComponent<comp::Tag<BAD>>();
+	
 	return true;
 }
 

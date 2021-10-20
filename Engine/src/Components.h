@@ -77,6 +77,11 @@ namespace ecs
 			float runSpeed;
 		};
 
+		struct Enemy
+		{
+			
+		};
+		
 		struct Light
 		{
 			light_t lightData;

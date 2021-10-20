@@ -23,6 +23,7 @@ private:
 	std::unordered_map<uint32_t, SOCKET> m_connections;
 
 	bool AddPlayer(uint32_t playerID);
+	bool AddEnemy();
 	bool RemovePlayer(uint32_t playerID);
 
 public:
