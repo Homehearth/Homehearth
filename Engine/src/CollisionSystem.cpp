@@ -90,3 +90,23 @@ bool CollisionSystem::IsColliding(const entt::entity e1, const entt::entity e2)
 	
 	return true;
 }
+
+void CollisionSystem::AddOnCollision(entt::entity entity1, std::function<void(entt::entity)> func)
+{
+	if(m_OnCollision.find(entity1) == m_OnCollision.end())
+	{
+		m_OnCollision.insert(std::make_pair(entity1, func));
+	}
+}
+
+void CollisionSystem::OnCollision(entt::entity entity1, entt::entity entity2)
+{
+	if(m_OnCollision.find(entity1) != m_OnCollision.end())
+	{
+		m_OnCollision.at(entity1)(entity2);
+	}
+	if (m_OnCollision.find(entity2) != m_OnCollision.end())
+	{
+		m_OnCollision.at(entity2)(entity1);
+	}
+}

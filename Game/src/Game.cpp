@@ -204,6 +204,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 					t = transforms.at(n.id);
 					found.insert(n.id);
 				}
+				
 			});
 
 		// create new Entities
