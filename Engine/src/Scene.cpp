@@ -3,14 +3,15 @@
 #include <omp.h>
 
 Scene::Scene()
-: m_IsRenderingColliders(true),
-m_currentCamera(nullptr)
+	: m_IsRenderingColliders(true)
 {
 	m_publicBuffer.Create(D3D11Core::Get().Device());
 	m_ColliderHitBuffer.Create(D3D11Core::Get().Device());
 	thread::RenderThreadHandler::Get().SetObjectsBuffer(&m_renderableCopies);
-	m_defaultCamera.Initialize(sm::Vector3(0, 0, 0), sm::Vector3(0, 0, 1), sm::Vector3(0, 1, 0), sm::Vector2(1000, 1000), CAMERATYPE::DEFAULT);
-	m_currentCamera = &m_defaultCamera;
+
+	m_defaultCamera = CreateEntity();
+	m_defaultCamera.AddComponent<comp::Camera3D>()->camera.Initialize(sm::Vector3(0, 0, 0), sm::Vector3(0, 0, 1), sm::Vector3(0, 1, 0), sm::Vector2(1000, 1000), CAMERATYPE::DEFAULT);
+	SetCurrentCameraEntity(m_defaultCamera);
 }
 
 void Scene::Update(float dt)
@@ -153,7 +154,7 @@ const bool Scene::IsRenderDebugReady() const
 
 Camera* Scene::GetCurrentCamera() const
 {
-	return m_currentCamera;
+	return &m_currentCamera.GetComponent<comp::Camera3D>()->camera;
 }
 
 void Scene::ReadyForSwap()
@@ -162,9 +163,16 @@ void Scene::ReadyForSwap()
 	m_debugRenderableCopies.ReadyForSwap();
 }
 
-void Scene::SetCurrentCamera(Camera* pCamera)
+void Scene::SetCurrentCameraEntity(Entity cameraEntity)
 {
-	m_currentCamera = pCamera;
+	if (!cameraEntity.IsNull() && cameraEntity.GetComponent<comp::Camera3D>())
+	{
+		m_currentCamera = cameraEntity;
+	}
+	else
+	{
+		LOG_ERROR("Entity does not have a Camera3D component!");
+	}
 }
 
 bool* Scene::GetIsRenderingColliders()

@@ -53,11 +53,6 @@ void Game::UpdateNetwork(float deltaTime)
 bool Game::OnStartup()
 {
 	// Scene logic
-	m_demoScene = std::make_unique<DemoScene>(*this);
-
-	//Set as current scene
-	SetScene(m_demoScene->GetScene());
-
 	Scene& mainMenuScene = GetScene("MainMenu");
 	mainMenuScene.on<ESceneUpdate>([](const ESceneUpdate& e, Scene& scene)
 		{
@@ -81,6 +76,7 @@ bool Game::OnStartup()
 
 	sceneHelp::CreateGameScene(*this);
 
+	// Set Current Scene
 	SetScene(mainMenuScene);
 	
 	return true;

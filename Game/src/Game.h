@@ -11,8 +11,6 @@ private:
 	uint32_t m_localPID;
 	uint32_t m_gameID;
 
-	std::unique_ptr<DemoScene> m_demoScene;
-
 	bool m_isLeavingLobby;
 
 	// Inherited via Engine

@@ -35,7 +35,7 @@ public:
 template<typename T>
 inline T* Entity::GetComponent() const
 {
-	if (m_entity == entt::null)
+	if (this->IsNull())
 	{
 		throw std::runtime_error("Entity was a null entity");
 	}
@@ -45,7 +45,7 @@ inline T* Entity::GetComponent() const
 template<typename T>
 inline T* Entity::AddComponent()
 {
-	if (m_entity == entt::null)
+	if (this->IsNull())
 	{
 		throw std::runtime_error("Entity was a null entity");
 	}	
@@ -55,7 +55,7 @@ inline T* Entity::AddComponent()
 template<typename T>
 inline void Entity::RemoveComponent()
 {
-	if (m_entity == entt::null)
+	if (this->IsNull())
 	{
 		throw std::runtime_error("Entity was a null entity");
 	}	
