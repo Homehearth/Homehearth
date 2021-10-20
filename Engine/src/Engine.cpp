@@ -203,7 +203,7 @@ void Engine::drawImGUI() const
 	if (ImGui::CollapsingHeader("Transform"))
 	{
 		
-		GetCurrentScene()->ForEachComponent<comp::Transform, comp::Renderable>([&](Entity& e, comp::Transform& transform, comp::Renderable& renderable)
+		GetCurrentScene()->ForEachComponent<comp::Transform>([&](Entity& e, comp::Transform& transform)
 			{
 				std::string entityname = "Entity: " + std::to_string(static_cast<int>((entt::entity)e));
 				
@@ -212,23 +212,53 @@ void Engine::drawImGUI() const
 				ImGui::DragFloat3(("Position##" + std::to_string(static_cast<int>((entt::entity)e))).c_str(), (float*)&transform.position);
 				ImGui::DragFloat3(("Rotation##" + std::to_string(static_cast<int>((entt::entity)e))).c_str(), (float*)&transform.rotation, dx::XMConvertToRadians(1.f));
 
-				ImGui::Text("Change 'mtl-file'");
-				char str[30] = "";
-				ImGui::InputText(entityname.c_str(), str, IM_ARRAYSIZE(str));
-				if (ImGui::IsKeyPressedMap(ImGuiKey_Enter))
-				{
-					renderable.model->ChangeMaterial(str);
-				}
-
 				if (ImGui::Button(("Remove##" + std::to_string(static_cast<int>((entt::entity)e))).c_str()))
 				{
 					e.Destroy();
 				}
 				ImGui::Spacing();
 			});
+
+		
 	}
-	ImGui::End();
 	
+	if (ImGui::CollapsingHeader("Renderable"))
+	{
+		GetCurrentScene()->ForEachComponent<comp::Renderable>([&](Entity& e, comp::Renderable& renderable)
+			{
+				std::string entityname = "Entity: " + std::to_string(static_cast<int>((entt::entity)e));
+
+				ImGui::Separator();
+				ImGui::Text(entityname.c_str());
+				ImGui::Text("Change 'mtl-file'");
+				char str[30] = "";
+				ImGui::InputText("New material", str, IM_ARRAYSIZE(str));
+				if (ImGui::IsKeyPressedMap(ImGuiKey_Enter))
+				{
+					renderable.model->ChangeMaterial(str);
+				}
+				ImGui::Spacing();
+			});
+	}
+	if (ImGui::CollapsingHeader("Light"))
+	{
+
+		GetCurrentScene()->ForEachComponent<comp::Light>([&](Entity& e, comp::Light& light)
+			{
+				std::string entityname = "Entity: " + std::to_string(static_cast<int>((entt::entity)e));
+
+				ImGui::Separator();
+				ImGui::Text(entityname.c_str());
+				
+				ImGui::Text("Display light data here");
+
+				ImGui::Spacing();
+			});
+
+
+	}
+
+	ImGui::End();
 
 	ImGui::Begin("Camera");
 	{
