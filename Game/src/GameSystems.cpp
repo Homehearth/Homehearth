@@ -14,6 +14,7 @@ void GameSystems::UserInputSystem(Scene& scene, Client& client)
 	scene.ForEachComponent<comp::Attack>([&](comp::Attack attacker)
 		{
 			attacker.isAttacking = InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED);
+			LOG_INFO("'Attack' input detected.");
 		});
 }
 
