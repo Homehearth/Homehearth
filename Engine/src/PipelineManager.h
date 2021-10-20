@@ -49,7 +49,7 @@ public:
 	ComPtr<ID3D11InputLayout>		m_animationInputLayout;
 	
 	/*
-		Added to resourcemanager
+		Added to resourcemanager - maybe not needed if I use a separate pass
 	*/
 	std::shared_ptr<Shaders::VertexShader>	m_defaultVertexShader;
 	std::shared_ptr<Shaders::VertexShader>	m_depthPassVertexShader;

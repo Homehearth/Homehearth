@@ -79,7 +79,7 @@ namespace sceneHelp
 			sphere->Extents = sm::Vector3(2.0f);
 			comp::Renderable* renderable2 = chest.AddComponent<comp::Renderable>();
 
-			renderable2->model = ResourceManager::Get().GetResource<RModel>("Chest.obj");
+			renderable2->model = ResourceManager::Get().GetResource<RModel>("Player_Skeleton.fbx");
 		}
 
 		CreateLightEntity(gameScene, { 0.f, 0.f, 0.f, 0.f }, { 1.f, -1.f, 0.f, 0.f }, { 10.f, 10.f, 10.f, 10.f }, 0, TypeLight::DIRECTIONAL, 1);

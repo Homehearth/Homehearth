@@ -443,7 +443,7 @@ void RModel::Render() const
 {
     //Bind vertexshader
     //Bind inputlayout
-
+    //D3D11Core::Get().DeviceContext()->VSSetShader(m_vertexShader->Get(), 0, 0);
 
     UINT offset = 0;
     UINT stride = sizeof(simple_vertex_t);
