@@ -81,12 +81,14 @@ bool Simulation::AddPlayer(uint32_t playerID)
 	player.AddComponent<comp::Player>()->runSpeed = 10.f;
 	player.AddComponent<comp::BoundingOrientedBox>();
 
-	CollisionSystem::Get().AddOnCollision(player, [&](entt::entity player2)
+	CollisionSystem::Get().AddOnCollision(player, [=](entt::entity player2)
 		{
 			comp::Player* otherPlayer = m_pCurrentScene->GetRegistry()->try_get<comp::Player>(player2);
 			if(otherPlayer != nullptr)
 			{
-				LOG_INFO("PLAAAAYER COLISSION :D");
+			    comp::Velocity* otherPlayerVel = m_pCurrentScene->GetRegistry()->try_get<comp::Velocity>(player2);
+				otherPlayerVel->vel = sm::Vector3(-otherPlayerVel->vel.x, -otherPlayerVel->vel.y, -otherPlayerVel->vel.z)* 1.1f;
+				player.GetComponent<comp::Velocity>();
 			}
 		});
 	
