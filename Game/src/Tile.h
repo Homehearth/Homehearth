@@ -25,4 +25,6 @@ public:
 	~Tile();
 
 	void Initialize(sm::Vector2 size, sm::Vector2 gridID, sm::Vector3 poisition, TileType type);
+
+	sm::Vector2 GetGridID();
 };

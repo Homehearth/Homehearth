@@ -52,6 +52,11 @@ void Game::UpdateNetwork(float deltaTime)
 
 bool Game::OnStartup()
 {
+	//TODO: Remove grid stuff
+	GridSystem grid;
+	grid.Initialize();
+
+
 	// Scene logic
 	m_demoScene = std::make_unique<DemoScene>(*this);
 

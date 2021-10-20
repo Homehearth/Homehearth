@@ -3,6 +3,9 @@
 #include <Engine.h>
 #include <DemoScene.h>
 
+//TODO: remove inlcude
+#include "GridSystem.h"
+
 class Game : public Engine
 {
 private:

@@ -6,7 +6,7 @@ class GridSystem
 {
 private:
 	sm::Vector2 m_mapSize;	//Width x length in, ingame units
-	sm::Vector3 m_gridSize;	//Tiles x tiles
+	sm::Vector2 m_gridSize;	//Tiles x tiles
 	sm::Vector2 m_position;
 	
 	std::vector<Tile> tiles;

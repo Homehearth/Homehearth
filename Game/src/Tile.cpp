@@ -19,3 +19,8 @@ void Tile::Initialize(sm::Vector2 size, sm::Vector2 gridID, sm::Vector3 poisitio
 	m_halfWidth = m_size.x * 0.5f;
 	m_halfHeight = m_size.y * 0.5f;
 }
+
+sm::Vector2 Tile::GetGridID()
+{
+	return m_gridID;
+}

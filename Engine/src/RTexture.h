@@ -14,6 +14,8 @@ private:
 	ETextureChannelType			m_format;
 	ID3D11Texture2D*			m_texture;
 	ID3D11ShaderResourceView*	m_shaderView;
+	unsigned char*				m_image;
+	sm::Vector2					m_size;
 
 public:
 	RTexture();
@@ -23,6 +25,8 @@ public:
 	// Inherited via GResource
 	virtual bool Create(const std::string& filename) override;
 	ID3D11ShaderResourceView*& GetShaderView();
+	unsigned char* GetImageData();
+	sm::Vector2 GetSize();
 };
 
 class RBitMap : public resource::GResource
