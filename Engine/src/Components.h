@@ -88,6 +88,11 @@ namespace ecs
 		{
 			uint8_t id = ID;
 		};
+		struct PotentialField
+		{
+			float chargeAmount;
+			bool positive;
+		};
 
 	};
 
