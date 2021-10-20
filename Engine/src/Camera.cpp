@@ -16,8 +16,6 @@ Camera::Camera()
 	m_windowWidth = 0;
 	m_rotationSpeed = 2.5f;
 	m_movingSpeed = 15.0f;
-	m_targetVelocity = NULL;
-	m_targetTransform = NULL;
 	m_type = CAMERATYPE::DEFAULT;
 }
 
@@ -121,8 +119,19 @@ void Camera::Update(float deltaTime)
 		quaterion = sm::Quaternion::CreateFromYawPitchRoll(m_rollPitchYaw.z, m_rollPitchYaw.y, m_rollPitchYaw.x);
 		m_rotationMatrix = dx::XMMatrixRotationRollPitchYaw(m_rollPitchYaw.y, m_rollPitchYaw.z, m_rollPitchYaw.x);
 
-		sm::Vector3 rot = m_targetTransform->rotation;
-		sm::Matrix transformed = sm::Matrix::CreateFromYawPitchRoll(rot.y, rot.x, rot.z) * sm::Matrix::CreateTranslation(m_targetTransform->position);
+		sm::Matrix transformed = sm::Matrix::Identity;
+		comp::Transform* targetTransform = nullptr;
+		if (!m_targetEntity.IsNull())
+		{
+			targetTransform = m_targetEntity.GetComponent<comp::Transform>();
+		}
+
+		if (targetTransform)
+		{
+			sm::Vector3 rot = targetTransform->rotation;
+			transformed = sm::Matrix::CreateFromYawPitchRoll(rot.y, rot.x, rot.z) * sm::Matrix::CreateTranslation(targetTransform->position);
+		}
+
 
 		m_position = sm::Vector3::Transform(m_defaultPos, transformed);
 
@@ -140,7 +149,14 @@ void Camera::Update(float deltaTime)
 		//m_forward = m_target;
 
 		//m_target = dx::XMVectorAdd(m_target, m_position);
-		m_target = m_targetTransform->position - m_position;
+		if (targetTransform)
+		{
+			m_target = targetTransform->position - m_position;
+		}
+		else
+		{
+			m_target = m_position + m_defaultForward;
+		}
 		m_view = dx::XMMatrixLookToLH(m_position, m_target, m_up);
 
 		UpdateProjection();
@@ -156,15 +172,11 @@ void Camera::Update(float deltaTime)
 	m_cameraMat.view = m_view;
 }
 
-void Camera::SetFollowVelocity(comp::Velocity* target)
+void Camera::SetFollowEntity(const Entity& entity)
 {
-	m_targetVelocity = target;
+	m_targetEntity = entity;
 }
 
-void Camera::SetFollowTransform(comp::Transform* target)
-{
-	m_targetTransform = target;
-}
 
 //Get functions
 sm::Matrix Camera::GetView() const

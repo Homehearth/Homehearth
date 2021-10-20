@@ -5,7 +5,8 @@
 #include "Entity.h"
 #include "Camera.h"
 
-class HeadlessScene : public entt::emitter<HeadlessScene>
+template<typename Inheriter>
+class BasicScene : public entt::emitter<Inheriter>
 {
 protected:
 
@@ -14,10 +15,10 @@ protected:
 
 public:
 
-	HeadlessScene();
-	virtual ~HeadlessScene() = default;
-	HeadlessScene(const HeadlessScene&) = delete;
-	void operator=(const HeadlessScene&) = delete;
+	BasicScene();
+	virtual ~BasicScene() = default;
+	BasicScene(const BasicScene&) = delete;
+	void operator=(const BasicScene&) = delete;
 
 	Entity CreateEntity();
 	entt::registry* GetRegistry();
@@ -31,17 +32,54 @@ public:
 	// Emit update event and update constant buffers
 	virtual void Update(float dt);
 
+	void Clear();
+
 };
 
+template<typename Inheriter>
+BasicScene<Inheriter>::BasicScene()
+{
 
+}
+
+template<typename Inheriter>
+Entity BasicScene<Inheriter>::CreateEntity()
+{
+	return Entity(m_registry);
+}
+
+template<typename Inheriter>
+entt::registry* BasicScene<Inheriter>::GetRegistry()
+{
+	return &this->m_registry;
+}
+
+template<typename Inheriter>
+void BasicScene<Inheriter>::Update(float dt)
+{
+	//PROFILE_FUNCTION();
+
+	// Emit event
+	publish<ESceneUpdate>(dt);
+}
+
+template<typename Inheriter>
+void BasicScene<Inheriter>::Clear()
+{
+	m_registry.clear();
+}
+
+
+template<typename Inheriter>
 template<typename ...Ts, typename F>
-void HeadlessScene::ForEachOrComponent(F&& f)
+void BasicScene<Inheriter>::ForEachOrComponent(F&& f)
 {
 	(m_registry.view<Ts>().each(f), ...);
 }
 
+template<typename Inheriter>
 template<typename ...T, typename F>
-void HeadlessScene::ForEachComponent(F func) {
+void BasicScene<Inheriter>::ForEachComponent(F func) {
 	if constexpr (std::is_assignable_v<std::function<void(Entity, T&...)>, F>) 
 	{
 		m_registry.view<T...>().each([&](entt::entity e, T&... comp)
@@ -60,3 +98,8 @@ void HeadlessScene::ForEachComponent(F func) {
 	}
 
 }
+
+class HeadlessScene : public BasicScene<HeadlessScene>
+{
+
+};

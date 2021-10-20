@@ -18,7 +18,7 @@ private:
 	void CheckIncoming(message<GameMsg>& msg);
 
 	bool CreateSimulation(uint32_t playerID);
-
+	
 	// Inherited via HeadlessEngine
 	virtual void UpdateNetwork(float deltaTime) override;
 
