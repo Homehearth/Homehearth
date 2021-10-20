@@ -45,6 +45,14 @@ void Game::UpdateNetwork(float deltaTime)
 
 			msg << this->m_localPID << m_gameID << x << y;
 
+			m_client.Send(msg);			
+		}
+		
+		if(m_gameID != UINT32_MAX && InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED))
+		{
+			message<GameMsg> msg;
+			msg.header.id = GameMsg::Game_PlayerAttack;
+			msg << this->m_localPID << m_gameID << true;
 			m_client.Send(msg);
 		}
 	}
@@ -246,6 +254,18 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			LOG_INFO("Player with ID: %ld has joined the game!", remotePlayerID);
 			Entity e = m_demoScene->CreatePlayerEntity(remotePlayerID);
 			
+		}
+
+		break;
+	}
+	case GameMsg::Game_AddEnemy:
+	{
+		uint32_t count; // Could be more than one enemy
+		msg >> count;
+		for (uint32_t i = 0; i < count; i++)
+		{
+			LOG_INFO("A wild enemy has appeared!");
+			Entity e = m_demoScene->CreateEnemy();
 		}
 
 		break;

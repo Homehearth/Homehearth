@@ -1,7 +1,5 @@
 #include "GameSystems.h"
 
-#include "Tags.h"
-
 using namespace network;
 void GameSystems::UserInputSystem(Scene& scene, Client& client)
 {
@@ -31,39 +29,6 @@ void GameSystems::MRayIntersectBoxSystem(Scene& scene)
 			LOG_INFO("Mouseray HIT box detected!");
 		}
 	});
-}
-
-void GameSystems::CombatSystem(HeadlessScene& scene, float dt)
-{
-	// For Each Good Guy.
-	scene.ForEachComponent<comp::Attack, comp::Health, comp::Transform, comp::Tag<GOOD>>([&](Entity& player, comp::Attack& playerAttack, comp::Health& playerHealth, comp::Transform& playerTransform, comp::Tag<GOOD>&)
-		{
-			// For Each Bad Guy.
-			scene.ForEachComponent<comp::Attack, comp::Health, comp::Transform, comp::Tag<BAD>>([&](entt::entity enemy, comp::Attack& enemyAttack, comp::Health& enemyHealth, comp::Transform& enemyTransform, comp::Tag<BAD>&)
-			{
-				// Calculate the distance between player and enemy.
-				const auto dist = (playerTransform.position - enemyTransform.position).Length();
-
-				// Check if attack is in range.
-				if(playerAttack.attackRange >= dist)
-				{
-					LOG_INFO("Player/Enemy is in attack range.");
-
-					// Perform battle logic.
-					if((enemyAttack.isAttacking & enemyHealth.isAlive) == TRUE)
-					{
-						playerHealth.currentHealth -= enemyAttack.attackDamage;
-						LOG_INFO("Enemy attacked.");
-					}
-
-					if((playerAttack.isAttacking & playerHealth.isAlive) == TRUE)
-					{
-						enemyHealth.currentHealth -= playerAttack.attackDamage;
-						LOG_INFO("Player attacked.");
-					}
-				}
-			});
-		});
 }
 
 //System to render collider mesh red if collider is colliding with another collider

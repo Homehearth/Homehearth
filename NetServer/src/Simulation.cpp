@@ -39,7 +39,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 		{
 			Systems::MovementSystem(scene, e.dt);
 			Systems::MovementColliderSystem(scene, e.dt);
-
+			Systems::CombatSystem(scene, e.dt);
 			Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(scene);
 			//LOG_INFO("GAME Scene %d", m_gameID);
 		});
@@ -82,7 +82,7 @@ bool Simulation::AddPlayer(uint32_t playerID)
 
 	// CombatSystem Test.
 	const unsigned char GOOD = 4;
-	*player.AddComponent<comp::Attack>() = { 10.f, 0.f, 0.f, true, true };
+	*player.AddComponent<comp::Attack>() = { 10.f, 0.f, 0.f, false, false };
 	player.AddComponent<comp::Tag<GOOD>>();
 
 	

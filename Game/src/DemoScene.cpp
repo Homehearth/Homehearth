@@ -45,7 +45,7 @@ DemoScene::DemoScene(Engine& engine)
 			//GameSystems::MRayIntersectBoxSystem(m_scene);
 
 			m_scene.GetCurrentCamera()->Update(e.dt);
-			GameSystems::CombatSystem(scene, e.dt);
+
 		
 			//GameSystems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingSphere>(m_scene);
 			//GameSystems::CheckCollisions<comp::BoundingSphere, comp::BoundingSphere>(m_scene);
@@ -87,6 +87,23 @@ Entity DemoScene::CreatePlayerEntity(uint32_t playerID)
 	renderable->model = ResourceManager::Get().GetResource<RModel>("cube.obj");
 
 	return playerEntity;
+}
+
+Entity DemoScene::CreateEnemy()
+{
+	Entity enemyEntity = m_scene.CreateEntity();
+	auto position = enemyEntity.AddComponent<comp::Transform>()->position;
+
+	position.x = (float)(rand() % 100);
+	position.y = (float)(rand() % 100);
+	position.z = (float)(rand() % 100);
+	
+	comp::Renderable* renderable = enemyEntity.AddComponent<comp::Renderable>();
+	enemyEntity.AddComponent<comp::Player>()->runSpeed = 10.f;
+
+	renderable->model = ResourceManager::Get().GetResource<RModel>("Chest.obj");
+
+	return enemyEntity;
 }
 
 Entity DemoScene::CreateLightEntity(sm::Vector4 pos, sm::Vector4 dir, sm::Vector4 col, float range, TypeLight type, UINT enabled)

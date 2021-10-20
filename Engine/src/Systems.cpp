@@ -1,6 +1,44 @@
 #include "EnginePCH.h"
 #include "Systems.h"
 
+// TODO:
+//#include "Tags.h"
+const unsigned char GOOD = 4;
+const unsigned char BAD = 8;
+
+void Systems::CombatSystem(HeadlessScene& scene, float dt)
+{
+	// For Each Good Guy.
+	scene.ForEachComponent<comp::Attack, comp::Health, comp::Transform, comp::Tag<GOOD>>([&](Entity& player, comp::Attack& playerAttack, comp::Health& playerHealth, comp::Transform& playerTransform, comp::Tag<GOOD>&)
+		{
+			// For Each Bad Guy.
+			scene.ForEachComponent<comp::Attack, comp::Health, comp::Transform, comp::Tag<BAD>>([&](Entity& enemy, comp::Attack& enemyAttack, comp::Health& enemyHealth, comp::Transform& enemyTransform, comp::Tag<BAD>&)
+				{
+					// Calculate the distance between player and enemy.
+					const auto dist = (playerTransform.position - enemyTransform.position).Length();
+
+					// Check if attack is in range.
+					if (playerAttack.attackRange >= dist)
+					{
+						LOG_INFO("Player/Enemy is in attack range.");
+
+						// Perform battle logic.
+						if ((enemyAttack.isAttacking & enemyHealth.isAlive) == TRUE)
+						{
+							playerHealth.currentHealth -= enemyAttack.attackDamage;
+							LOG_INFO("Enemy attacked.");
+						}
+
+						if ((playerAttack.isAttacking & playerHealth.isAlive) == TRUE)
+						{
+							enemyHealth.currentHealth -= playerAttack.attackDamage;
+							LOG_INFO("Player attacked.");
+						}
+					}
+				});
+		});
+}
+
 void Systems::MovementSystem(HeadlessScene& scene, float dt)
 {
 	//Transform

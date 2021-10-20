@@ -144,6 +144,24 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 		
 		break;
 	}
+	case GameMsg::Game_PlayerAttack:
+	{
+		bool isAttacking = false;
+		uint32_t playerID;
+		uint32_t gameID;
+		msg >> isAttacking >> gameID >> playerID;
+
+		m_simulations.at(gameID)->GetGameScene()->ForEachComponent<comp::Network, comp::Attack>([=](comp::Network& net, comp::Attack& attack)
+			{
+				if (net.id == playerID)
+				{
+					attack.isAttacking = isAttacking;
+					LOG_INFO("PlayerID [%u] is attacking.", playerID);
+				}
+			});
+
+		break;
+	}
 	}
 }
 
