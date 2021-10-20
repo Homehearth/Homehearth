@@ -1,7 +1,6 @@
 #pragma once
 
-// TODO enum class.
-const unsigned char CAMERA = 1;
-const unsigned char DEBUGCAMERA = 2;
-const unsigned char GOOD = 4;
-const unsigned char BAD = 8;
+const uint8_t CAMERA = (1 << 0);
+const uint8_t DEBUGCAMERA = (1 << 1);
+const uint8_t GOOD = (1 << 2);
+const uint8_t BAD = (1 << 3);
