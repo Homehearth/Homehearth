@@ -24,3 +24,20 @@ void GameSystems::MRayIntersectBoxSystem(Scene& scene)
 		}
 	});
 }
+
+//System to render collider mesh red if collider is colliding with another collider
+void GameSystems::RenderIsCollidingSystem(Scene& scene)
+{
+	scene.ForEachComponent<comp::RenderableDebug>([&](entt::entity entity, comp::RenderableDebug& renderableDebug)
+		{
+			//Collided with mouse TODO make it do someting?
+			if(CollisionSystem::Get().getCollisionCounts(entity) > 0)
+			{
+				renderableDebug.isColliding.hit = 1;
+			}
+			else
+			{
+				renderableDebug.isColliding.hit = 0;
+			}
+		});
+}

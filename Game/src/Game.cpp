@@ -214,6 +214,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 				{
 					t = transforms.at(n.id);
 				}
+				
 			});
 
 		break;

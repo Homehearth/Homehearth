@@ -7,6 +7,7 @@ Scene::Scene()
 m_currentCamera(nullptr)
 {
 	m_publicBuffer.Create(D3D11Core::Get().Device());
+	m_ColliderHitBuffer.Create(D3D11Core::Get().Device());
 	thread::RenderThreadHandler::Get().SetObjectsBuffer(&m_renderableCopies);
 	m_defaultCamera.Initialize(sm::Vector3(0, 0, 0), sm::Vector3(0, 0, 1), sm::Vector3(0, 1, 0), sm::Vector2(1000, 1000), CAMERATYPE::DEFAULT);
 	m_currentCamera = &m_defaultCamera;
@@ -48,6 +49,8 @@ void Scene::Update(float dt)
 					mat = sm::Matrix::CreateScale(sm::Vector3(sphere->Radius, sphere->Radius, sphere->Radius));
 				}
 				mat *= sm::Matrix::CreateWorld(t.position, ecs::GetForward(t), ecs::GetUp(t));
+				
+				
 				r.data.worldMatrix = mat;
 				m_debugRenderableCopies[0].push_back(r);
 			});
@@ -61,7 +64,7 @@ void Scene::Render()
 	PROFILE_FUNCTION();
 
 	// Divides up work between threads.
-	const render_instructions_t inst = thread::RenderThreadHandler::Get().Launch(m_renderableCopies[1].size());
+	const render_instructions_t inst = thread::RenderThreadHandler::Get().Launch(static_cast<int>(m_renderableCopies[1].size()));
 	if((inst.start | inst.stop) == 0)
 	{
 		// Render everything on same thread.
@@ -113,13 +116,20 @@ void Scene::RenderDebug()
 
 		ID3D11Buffer* buffers[1] =
 		{
-			m_publicBuffer.GetBuffer()
+			m_publicBuffer.GetBuffer(),
 		};
-
+		ID3D11Buffer* buffer2[1] =
+		{
+			m_ColliderHitBuffer.GetBuffer(),
+		};
+		
 		D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, buffers);
+		D3D11Core::Get().DeviceContext()->PSSetConstantBuffers(3, 1, buffer2);
 		for (const auto& it : m_debugRenderableCopies[1])
 		{
 			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
+			m_ColliderHitBuffer.SetData(D3D11Core::Get().DeviceContext(), it.isColliding);
+			
 			if (it.model)
 				it.model->Render();
 		}
