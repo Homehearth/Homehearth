@@ -64,7 +64,7 @@ void Scene::Render()
 	PROFILE_FUNCTION();
 
 	// Divides up work between threads.
-	const render_instructions_t inst = thread::RenderThreadHandler::Get().Launch(m_renderableCopies[1].size());
+	const render_instructions_t inst = thread::RenderThreadHandler::Get().Launch(static_cast<int>(m_renderableCopies[1].size()));
 	if((inst.start | inst.stop) == 0)
 	{
 		// Render everything on same thread.

@@ -29,7 +29,7 @@ DemoScene::DemoScene(Engine& engine)
 		// Debug Chest
 		Entity chest = m_scene.CreateEntity();
 		comp::Transform* transform = chest.AddComponent<comp::Transform>();
-		transform->position.z = 5 * i;
+		transform->position.z = 5.0f * static_cast<float>(i);
 		comp::Velocity* chestVelocity = chest.AddComponent<comp::Velocity>();
 		comp::BoundingOrientedBox* sphere = chest.AddComponent<comp::BoundingOrientedBox>();
 		sphere->Center = transform->position;
