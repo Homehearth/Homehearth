@@ -36,13 +36,12 @@ void Game::UpdateNetwork(float deltaTime)
 		}
 
 		// TODO MAKE THIS BETTER
-		if (m_gameID != UINT32_MAX && GetCurrentScene()->GetCurrentCamera()->GetCameraType() == CAMERATYPE::PLAY)
+		if (m_gameID != UINT32_MAX && GetCurrentScene()->GetCurrentCamera()->GetCameraType() == CAMERATYPE::PLAY && !m_isLeavingLobby)
 		{
 			message<GameMsg> msg;
 			msg.header.id = GameMsg::Game_PlayerInput;
 			int8_t x = InputSystem::Get().GetAxis(Axis::HORIZONTAL);
 			int8_t y = InputSystem::Get().GetAxis(Axis::VERTICAL);
-
 
 			msg << this->m_localPID << m_gameID << x << y;
 
@@ -134,11 +133,11 @@ void Game::OnUserUpdate(float deltaTime)
 			}
 			else if (ImGui::Button("Leave Game"))
 			{
+				m_isLeavingLobby = true;
 				message<GameMsg> msg;
 				msg.header.id = GameMsg::Lobby_Leave;
 				msg << m_localPID << m_gameID;
 				m_client.Send(msg);
-				m_isLeavingLobby = true;
 			}
 			
 		}
