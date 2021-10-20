@@ -1,5 +1,4 @@
 #pragma once
-#include "net_common.h"
 #include "net_message.h"
 #include "RModel.h"
 #include "RDebugMesh.h"
@@ -7,6 +6,17 @@
 
 namespace ecs
 {
+	enum Component : uint32_t
+	{
+		NETWORK,
+		TRANSFORM,
+		MESH_NAME,
+		BOUNDING_ORIENTED_BOX,
+		BOUNDING_SPHERE,
+		COMPONENT_COUNT,
+		COMPONENT_MAX = 32
+	};
+
 	namespace component {
 
 		//Collider components
@@ -19,19 +29,15 @@ namespace ecs
 			sm::Vector3 rotation;
 			sm::Vector3 scale = sm::Vector3(1);
 
-			friend network::message<network::GameMsg>& operator<<(network::message<network::GameMsg>& msg, const ecs::component::Transform& data)
+			friend network::message<GameMsg>& operator<<(network::message<GameMsg>& msg, const ecs::component::Transform& data)
 			{
-				msg << data.position.x << data.position.y << data.position.z;
-				msg << data.rotation.x << data.rotation.y << data.rotation.z;
-				msg << data.scale.x << data.scale.y << data.scale.z;
+				msg << data.position << data.rotation << data.scale;
 				return msg;
 			}
 
-			friend network::message<network::GameMsg>& operator >> (network::message<network::GameMsg>& msg, ecs::component::Transform& data)
+			friend network::message<GameMsg>& operator >> (network::message<GameMsg>& msg, ecs::component::Transform& data)
 			{
-				msg >> data.scale.z >> data.scale.y >> data.scale.x;
-				msg >> data.rotation.z >> data.rotation.y >> data.rotation.x;
-				msg >> data.position.z >> data.position.y >> data.position.x;
+				msg >> data.scale >> data.rotation >> data.position;
 				return msg;
 			}
 		};
@@ -46,6 +52,13 @@ namespace ecs
 			std::shared_ptr<RModel>		model;
 			basic_model_matrix_t		data;
 		};
+
+		// Used on server side
+		struct MeshName 
+		{
+			std::string name;
+		};
+
 		
 		struct RenderableDebug
 		{
@@ -95,5 +108,14 @@ namespace ecs
 	sm::Vector3 GetForward(const component::Transform& transform);
 	sm::Vector3 GetUp(const component::Transform& transform);
 };
+
+network::message<GameMsg>& operator<<(network::message<GameMsg>& msg, const sm::Vector3& data);
+
+network::message<GameMsg>& operator>>(network::message<GameMsg>& msg, sm::Vector3& data);
+
+network::message<GameMsg>& operator<<(network::message<GameMsg>& msg, const sm::Vector4& data);
+
+network::message<GameMsg>& operator>>(network::message<GameMsg>& msg, sm::Vector4& data);
+
 
 namespace comp = ecs::component;

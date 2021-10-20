@@ -28,7 +28,7 @@ namespace network
 			uint64_t handshakeOut = 0;
 			uint64_t handshakeResult = 0;
 			SOCKET Socket = {};
-			uint32_t clientID;
+			uint32_t clientID = 0;
 			message<T> msgTempIn = {};
 		};
 		std::unordered_map<uint32_t, SOCKET> connections;
@@ -73,7 +73,6 @@ namespace network
 		static void CALLBACK AsyncWriteMessage(ULONG_PTR param);
 
 	public:
-		// Constructor and Deconstructor
 		server_interface() = default;
 		server_interface(std::function<void(message<T>&)> handler)
 			:messageReceivedHandler(handler)
@@ -155,6 +154,7 @@ namespace network
 	{
 		PER_IO_DATA* context = new PER_IO_DATA;
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
+		//context->Overlapped.hEvent = this;
 		context->DataBuf.buf = (CHAR*)&SI->msgTempIn.header;
 		context->DataBuf.len = sizeof(msg_header<T>);
 		context->state = NetState::READ_HEADER;
@@ -699,6 +699,10 @@ namespace network
 				if (Entries[i].lpOverlapped != NULL)
 				{
 					SI = (SOCKET_INFORMATION*)Entries[i].lpCompletionKey;
+					if (SI == NULL)
+					{
+						continue;
+					}
 					context = (PER_IO_DATA*)Entries[i].lpOverlapped;
 					if (Entries[i].dwNumberOfBytesTransferred == 0)
 					{

@@ -2,7 +2,7 @@
 #include "HeadlessScene.h"
 #include "Lights.h"
 
-class Scene : public HeadlessScene
+class Scene : public BasicScene<Scene>
 {
 private:
 	bool m_IsRenderingColliders;
@@ -10,8 +10,8 @@ private:
 	DoubleBuffer<std::vector<comp::RenderableDebug>> m_debugRenderableCopies;
 	dx::ConstantBuffer<basic_model_matrix_t> m_publicBuffer;
 	dx::ConstantBuffer<collider_hit_t> m_ColliderHitBuffer;
-	Camera* m_currentCamera;
-	Camera m_defaultCamera;
+	Entity m_currentCamera;
+	Entity m_defaultCamera;
 
 	Lights m_lights;
 
@@ -29,7 +29,7 @@ public:
 	const bool IsRenderDebugReady() const;
 
 	Camera* GetCurrentCamera()const;
-	void SetCurrentCamera(Camera* pCamera);
+	void SetCurrentCameraEntity(Entity cameraEntity);
 
 	//ImGui data for disable/enable 
 	bool* GetIsRenderingColliders();
