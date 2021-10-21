@@ -173,7 +173,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 	e.AddComponent<comp::BoundingSphere>();
 	// ---END OF DEBUG---
 
-	m_pCurrentScene = m_pGameScene; // todo Should be lobbyScene
+	m_pCurrentScene = m_pLobbyScene; // todo Should be lobbyScene
 	
 	// Automatically join created lobby
 	JoinLobby(playerID, gameID);
@@ -185,6 +185,32 @@ void Simulation::Destroy()
 {
 	m_pGameScene->Clear();
 	m_pLobbyScene->Clear();
+}
+
+void Simulation::UpdateLobby(const uint32_t& playerID, const bool& decision)
+{
+	if (m_pCurrentScene == m_pLobbyScene)
+	{
+		if (playerID == m_playerDecisions[0].playerID)
+		{
+			m_playerDecisions[0].isWantToStart = decision;
+		}
+		else if (playerID == m_playerDecisions[1].playerID)
+		{
+			m_playerDecisions[1].isWantToStart = decision;
+		}
+
+		if ((m_playerDecisions[1].isWantToStart & m_playerDecisions[0].isWantToStart) == true)
+		{
+			m_pCurrentScene = m_pGameScene;
+
+			// Start the game.
+			network::message<GameMsg> msg;
+			msg.header.id = GameMsg::Game_Start;
+			msg << true;
+			this->Broadcast(msg);
+		}
+	}
 }
 
 bool Simulation::IsEmpty() const
@@ -218,6 +244,16 @@ bool Simulation::AddPlayer(uint32_t playerID)
 				LOG_INFO("Collision!");
 			}
 		});
+
+	// Setup players temp...
+	for (int i = 0; i < 2; i++)
+	{
+		if (m_playerDecisions[i].playerID == -1)
+		{
+			m_playerDecisions[i].playerID = playerID;
+			break;
+		}
+	}
 
 	// send new Player to all other clients
 	Broadcast(SingleEntityMessage(player));

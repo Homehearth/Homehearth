@@ -70,66 +70,93 @@ void Game::OnUserUpdate(float deltaTime)
 
 #if RENDER_IMGUI == 0
 
-	rtd::TextField* port_text = GET_ELEMENT("portBuffer", rtd::TextField);
-	rtd::TextField* ip_text = GET_ELEMENT("ipBuffer", rtd::TextField);
-	if (ip_text && port_text)
+	switch (m_internalState)
 	{
-		ip_text->GetBuffer(m_ipBuffer);
-		port_text->GetBuffer(m_portBuffer);
-		if(m_ipBuffer && m_portBuffer)
+	case 0:
+	{
+		rtd::TextField* port_text = GET_ELEMENT("portBuffer", rtd::TextField);
+		rtd::TextField* ip_text = GET_ELEMENT("ipBuffer", rtd::TextField);
+		if (ip_text && port_text)
 		{
-			if (m_client.Connect(m_ipBuffer->c_str(), std::stoi(*m_portBuffer)))
+			ip_text->GetBuffer(m_ipBuffer);
+			port_text->GetBuffer(m_portBuffer);
+			if (m_ipBuffer && m_portBuffer)
+			{
+				if (m_client.Connect(m_ipBuffer->c_str(), std::stoi(*m_portBuffer)))
+				{
+					rtd::Handler2D::SetVisibilityAll(false);
+					m_ipBuffer = nullptr;
+					m_portBuffer = nullptr;
+				}
+			}
+		}
+
+		rtd::Button* exit_button = GET_ELEMENT("exitGameButton", rtd::Button);
+		if (exit_button)
+		{
+			if (exit_button->IsClicked())
+			{
+				std::cout << "IMPLEMENT CLEAN SHUT DOWN HERE!\n";
+			}
+		}
+
+		rtd::Button* start_button = GET_ELEMENT("startGameButton", rtd::Button);
+		if (start_button)
+		{
+			if (start_button->IsClicked())
 			{
 				rtd::Handler2D::SetVisibilityAll(false);
-				m_ipBuffer = nullptr;
-				m_portBuffer = nullptr;
+				ip_text->SetVisibility(true);
+				port_text->SetVisibility(true);
 			}
 		}
-	}
-	
-	rtd::Button* exit_button = GET_ELEMENT("exitGameButton", rtd::Button);
-	if (exit_button)
-	{
-		if (exit_button->IsClicked())
-		{
-			std::cout << "IMPLEMENT CLEAN SHUT DOWN HERE!\n";
-		}
-	}
 
-	rtd::Button* start_button = GET_ELEMENT("startGameButton", rtd::Button);
-	if (start_button)
-	{
-		if (start_button->IsClicked())
+		if (m_client.IsConnected())
 		{
-			rtd::Handler2D::SetVisibilityAll(false);
-			ip_text->SetVisibility(true);
-			port_text->SetVisibility(true);
-		}
-	}
-
-	if (m_client.IsConnected())
-	{
-		rtd::TextField* lobby_text = GET_ELEMENT("lobbyBuffer", rtd::TextField);
-		if (lobby_text)
-		{
-			lobby_text->SetVisibility(true);
-			if (lobby_text->GetBuffer(m_lobbyBuffer))
+			rtd::TextField* lobby_text = GET_ELEMENT("lobbyBuffer", rtd::TextField);
+			if (lobby_text)
 			{
-				this->JoinLobby(std::stoi(*m_lobbyBuffer));
-				rtd::Handler2D::Get().DereferenceAllOnce();
+				lobby_text->SetVisibility(true);
+				if (lobby_text->GetBuffer(m_lobbyBuffer))
+				{
+					this->JoinLobby(std::stoi(*m_lobbyBuffer));
+					rtd::Handler2D::Get().DereferenceAllOnce();
+					m_internalState = 1;
+				}
+			}
+
+			rtd::Button* host_lobby_button = GET_ELEMENT("hostLobby", rtd::Button);
+			if (host_lobby_button)
+			{
+				host_lobby_button->SetVisibility(true);
+				if (host_lobby_button->IsClicked())
+				{
+					rtd::Handler2D::Get().DereferenceAllOnce();
+					this->CreateLobby();
+					m_internalState = 1;
+				}
+			}
+		}
+		break;
+	}
+	case 1:
+	{
+		rtd::Button* ready_button = GET_ELEMENT("readyButton", rtd::Button);
+		if (ready_button)
+		{
+			if (ready_button->IsClicked())
+			{
+				LOG_INFO("PRESSED READY!")
+				this->SendStartGame();
 			}
 		}
 
-		rtd::Button* host_lobby_button = GET_ELEMENT("hostLobby", rtd::Button);
-		if (host_lobby_button)
-		{
-			host_lobby_button->SetVisibility(true);
-			if (host_lobby_button->IsClicked())
-			{
-				rtd::Handler2D::Get().DereferenceAllOnce();
-				this->CreateLobby();
-			}
-		}
+		break;
+	}
+	default:
+	{
+		break;
+	}
 	}
 #endif
 
@@ -315,7 +342,9 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	case GameMsg::Lobby_Accepted:
 	{
 		msg >> m_gameID;
-		SetScene("Game");
+		rtd::Handler2D::Get().DereferenceAllOnce();
+		sceneHelp::SetupInLobbyScreen();
+		SetScene("Lobby");
 		LOG_INFO("You are now in lobby: %lu", m_gameID);
 		break;
 	}
@@ -332,6 +361,18 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		m_isLeavingLobby = false;
 		m_gameID = -1;
 		SetScene("MainMenu");
+		break;
+	}
+	case GameMsg::Game_Start:
+	{
+		bool isStart = false;
+		msg >> isStart;
+		if (isStart)
+		{
+			m_internalState = 2;
+			rtd::Handler2D::DereferenceAllOnce();
+			SetScene("Game");
+		}
 		break;
 	}
 	}
@@ -394,6 +435,14 @@ void Game::OnClientDisconnect()
 	SetScene("MainMenu");
 
 	LOG_INFO("Disconnected from server!");
+}
+
+void Game::SendStartGame()
+{
+	network::message<GameMsg> msg;
+	msg.header.id = GameMsg::Game_PlayerReady;
+	msg << m_localPID << m_gameID << true;
+	m_client.Send(msg);
 }
 
 Entity Game::CreateEntityFromMessage(message<GameMsg>& msg)

@@ -204,6 +204,20 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 
 		break;
 	}
+	case GameMsg::Game_PlayerReady:
+	{
+		bool decision;
+		uint32_t playerID;
+		uint32_t gameID;
+		msg >> decision >> gameID >> playerID;
+
+		if (m_simulations.find(gameID) != m_simulations.end())
+		{
+			m_simulations.at(gameID)->UpdateLobby(playerID, decision);
+		}
+
+		break;
+	}
 	}
 }
 

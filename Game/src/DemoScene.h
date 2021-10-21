@@ -15,4 +15,9 @@ namespace sceneHelp
 	void CreateLobbyScene(Engine& engine);
 	void CreateGameScene(Engine& engine);
 
+	void SetupMainMenuScreen();
+	void SetupLobbyJoinScreen();
+	void SetupInLobbyScreen();
+	void SetupInGameScreen();
+	void SetupOptionsScreen();
 }

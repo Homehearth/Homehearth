@@ -1,11 +1,5 @@
 #include "DemoScene.h"
 
-void SetupMainMenuScreen();
-void SetupLobbyJoinScreen();
-void SetupInLobbyScreen();
-void SetupInGameScreen();
-void SetupOptionsScreen();
-
 namespace sceneHelp
 {
 	Entity CreatePlayerEntity(HeadlessScene& scene, uint32_t playerID)
@@ -180,7 +174,7 @@ Entity CreateLightEntity(Scene& scene, sm::Vector4 pos, sm::Vector4 dir, sm::Vec
 	return lightEntity;
 }
 
-void SetupMainMenuScreen()
+void sceneHelp::SetupMainMenuScreen()
 {
 #if RENDER_IMGUI == 0
 	// Setup main menu scene.
@@ -210,7 +204,7 @@ void SetupMainMenuScreen()
 #endif
 }
 
-void SetupInGameScreen()
+void sceneHelp::SetupInGameScreen()
 {
 #if RENDER_IMGUI == 0
 	// Temp textures
@@ -285,7 +279,7 @@ void SetupInGameScreen()
 #endif
 }
 
-void SetupInLobbyScreen()
+void sceneHelp::SetupInLobbyScreen()
 {
 #if RENDER_IMGUI == 0
 	const std::string& warriorString = "Warrior\nThe Warrior specializes in destroying noobs.";
@@ -294,9 +288,9 @@ void SetupInLobbyScreen()
 	rtd::Canvas* backgroundCanvas = new rtd::Canvas(D2D1::ColorF(.2f, .2f, .2f), draw_t(0.0f, 0.0f, 3000.0f, 3000.0f));
 	rtd::Handler2D::Get().InsertElement(backgroundCanvas);
 
-	rtd::Button* startGameButton = new rtd::Button("StartButton.png", draw_t(625.0f, 420.0f, 250.0f, 100.0f), true);
+	rtd::Button* startGameButton = new rtd::Button("StartButton.png", draw_t(625.0f, 420.0f, 250.0f, 100.0f), false);
 	rtd::Handler2D::Get().InsertElement(startGameButton);
-	startGameButton->GetBorder()->SetColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
+	startGameButton->SetName("readyButton");
 
 	rtd::Canvas* textCanvas = new rtd::Canvas(D2D1::ColorF(0.0f, 0.0f, 0.0f), draw_t(580.0f, 10.0f, 350.0f, 400.0f));
 	rtd::Handler2D::Get().InsertElement(textCanvas);
@@ -357,11 +351,11 @@ void SetupInLobbyScreen()
 #endif
 }
 
-void SetupOptionsScreen()
+void sceneHelp::SetupOptionsScreen()
 {
 }
 
-void SetupLobbyJoinScreen()
+void sceneHelp::SetupLobbyJoinScreen()
 {
 #if RENDER_IMGUI == 0
 	rtd::TextField* ipField = new rtd::TextField(draw_text_t(100.0f, 100.0f, 200.0f, 35.0f));
@@ -369,7 +363,7 @@ void SetupLobbyJoinScreen()
 	ipField->GetBorder()->SetColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
 	rtd::Handler2D::Get().InsertElement(ipField);
 	ipField->SetName("ipBuffer");
-	ipField->GetText()->SetText("Input IP adress");
+	ipField->GetText()->SetText("Input IP address");
 	ipField->SetVisibility(false);
 
 	rtd::TextField* portField = new rtd::TextField(draw_text_t(500.0f, 100.0f, 200.0f, 35.0f));

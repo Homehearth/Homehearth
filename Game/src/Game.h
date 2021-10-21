@@ -13,6 +13,7 @@ private:
 	std::string* m_ipBuffer = nullptr;
 	std::string* m_lobbyBuffer = nullptr;
 	std::string* m_portBuffer = nullptr;
+	uint8_t m_internalState = 0;
 
 	bool m_isLeavingLobby;
 
@@ -28,6 +29,7 @@ private:
 	void JoinLobby(uint32_t lobbyID);
 	void CreateLobby();
 	void OnClientDisconnect();
+	void SendStartGame();
 	
 	Entity CreateEntityFromMessage(message<GameMsg>& msg);
 

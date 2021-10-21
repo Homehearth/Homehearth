@@ -15,6 +15,12 @@ private:
 	HeadlessEngine* m_pEngine;
 	uint32_t m_gameID;
 	uint32_t m_tick;
+
+	struct pDecision_t
+	{
+		uint32_t playerID = -1;
+		bool isWantToStart = false;
+	}m_playerDecisions[2];
 	
 	HeadlessScene* m_pLobbyScene;
 	HeadlessScene* m_pGameScene;
@@ -39,6 +45,9 @@ public:
 
 	bool Create(uint32_t playerID, uint32_t gameID);
 	void Destroy();
+
+	// Updates the lobby.
+	void UpdateLobby(const uint32_t& playerID, const bool& decision);
 
 	bool IsEmpty() const;
 
