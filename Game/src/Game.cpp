@@ -8,6 +8,7 @@ Game::Game()
 {
 	this->m_localPID = -1;
 	this->m_gameID = -1;
+	this->m_isLeavingLobby = false;
 }
 
 Game::~Game()
@@ -35,13 +36,12 @@ void Game::UpdateNetwork(float deltaTime)
 		}
 
 		// TODO MAKE THIS BETTER
-		if (m_gameID != UINT32_MAX && GetCurrentScene()->GetCurrentCamera()->GetCameraType() == CAMERATYPE::PLAY)
+		if (m_gameID != UINT32_MAX && GetCurrentScene()->GetCurrentCamera()->GetCameraType() == CAMERATYPE::PLAY && !m_isLeavingLobby)
 		{
 			message<GameMsg> msg;
-			msg.header.id = GameMsg::Game_MovePlayer;
+			msg.header.id = GameMsg::Game_PlayerInput;
 			int8_t x = InputSystem::Get().GetAxis(Axis::HORIZONTAL);
 			int8_t y = InputSystem::Get().GetAxis(Axis::VERTICAL);
-
 
 			msg << this->m_localPID << m_gameID << x << y;
 
@@ -51,44 +51,18 @@ void Game::UpdateNetwork(float deltaTime)
 }
 
 bool Game::OnStartup()
-{
+{	
+	sceneHelp::CreateLobbyScene(*this);
+	rtd::Handler2D::Get().SetVisibilityAll(false);
+	sceneHelp::CreateGameScene(*this);
+	sceneHelp::CreateMainMenuScene(*this);
+
 	//TODO: Remove grid stuff
 	GridSystem grid;
 	grid.Initialize();
 
-	Scene& mainMenuScene = GetScene("MainMenu");
-	mainMenuScene.on<ESceneUpdate>([](const ESceneUpdate& e, HeadlessScene& scene)
-		{
-
-			IMGUI(
-				ImGui::Begin("Scene");
-				ImGui::Text("MainMenu");
-				ImGui::End();
-			);
-		});
-
-	Scene& lobbyScene = GetScene("Lobby");
-	lobbyScene.on<ESceneUpdate>([](const ESceneUpdate& e, HeadlessScene& scene) 
-		{
-			IMGUI(
-				ImGui::Begin("Scene");
-				ImGui::Text("Lobby");
-				ImGui::End();
-			);
-		});
-
-	Scene& gameScene = GetScene("Game");
-	gameScene.on<ESceneUpdate>([](const ESceneUpdate& e, HeadlessScene& scene)
-		{
-			IMGUI(
-				ImGui::Begin("Scene");
-				ImGui::Text("Game");
-				ImGui::End();
-			);
-
-		});
-
-	SetScene(mainMenuScene);
+	// Set Current Scene
+	SetScene("MainMenu");
 	
 	return true;
 }
@@ -96,11 +70,79 @@ bool Game::OnStartup()
 void Game::OnUserUpdate(float deltaTime)
 {
 	static float pingCheck = 0.f;
+
+#if RENDER_IMGUI == 0
+
+	rtd::TextField* port_text = GET_ELEMENT("portBuffer", rtd::TextField);
+	rtd::TextField* ip_text = GET_ELEMENT("ipBuffer", rtd::TextField);
+	if (ip_text && port_text)
+	{
+		ip_text->GetBuffer(m_ipBuffer);
+		port_text->GetBuffer(m_portBuffer);
+		if(m_ipBuffer && m_portBuffer)
+		{
+			if (m_client.Connect(m_ipBuffer->c_str(), std::stoi(*m_portBuffer)))
+			{
+				rtd::Handler2D::SetVisibilityAll(false);
+				m_ipBuffer = nullptr;
+				m_portBuffer = nullptr;
+			}
+		}
+	}
+	
+	rtd::Button* exit_button = GET_ELEMENT("exitGameButton", rtd::Button);
+	if (exit_button)
+	{
+		if (exit_button->IsClicked())
+		{
+			std::cout << "IMPLEMENT CLEAN SHUT DOWN HERE!\n";
+		}
+	}
+
+	rtd::Button* start_button = GET_ELEMENT("startGameButton", rtd::Button);
+	if (start_button)
+	{
+		if (start_button->IsClicked())
+		{
+			rtd::Handler2D::SetVisibilityAll(false);
+			ip_text->SetVisibility(true);
+			port_text->SetVisibility(true);
+		}
+	}
+
+	if (m_client.IsConnected())
+	{
+		rtd::TextField* lobby_text = GET_ELEMENT("lobbyBuffer", rtd::TextField);
+		if (lobby_text)
+		{
+			lobby_text->SetVisibility(true);
+			if (lobby_text->GetBuffer(m_lobbyBuffer))
+			{
+				this->JoinLobby(std::stoi(*m_lobbyBuffer));
+				rtd::Handler2D::Get().DereferenceAllOnce();
+			}
+		}
+
+		rtd::Button* host_lobby_button = GET_ELEMENT("hostLobby", rtd::Button);
+		if (host_lobby_button)
+		{
+			host_lobby_button->SetVisibility(true);
+			if (host_lobby_button->IsClicked())
+			{
+				rtd::Handler2D::Get().DereferenceAllOnce();
+				this->CreateLobby();
+			}
+		}
+	}
+#endif
+
 	IMGUI(
 		ImGui::Begin("Network");
 
 	if (m_client.IsConnected())
 	{
+		ImGui::Text(std::string("Local Client ID: " + std::to_string(m_localPID)).c_str());
+
 		if (m_client.m_latency > 0)
 		{
 			ImGui::Text(std::string("Latency: " + std::to_string(m_client.m_latency) + "ms").c_str());
@@ -129,10 +171,22 @@ void Game::OnUserUpdate(float deltaTime)
 		{
 			ImGui::Text(std::string("Game ID: " + std::to_string(m_gameID)).c_str());
 
-			if (ImGui::Button("Leave Game"))
+			if (m_isLeavingLobby)
 			{
-				// TODO
+				ImGui::BeginDisabled();
+				ImGui::Button("Leave Game");
+				ImGui::EndDisabled();
+				
 			}
+			else if (ImGui::Button("Leave Game"))
+			{
+				m_isLeavingLobby = true;
+				message<GameMsg> msg;
+				msg.header.id = GameMsg::Lobby_Leave;
+				msg << m_localPID << m_gameID;
+				m_client.Send(msg);
+			}
+			
 		}
 		if (ImGui::Button("Disconnect"))
 		{
@@ -141,8 +195,8 @@ void Game::OnUserUpdate(float deltaTime)
 	}
 	else
 	{
-		static char buffer[IPV6_ADDRSTRLEN];
-		strcpy(buffer, "127.0.0.1");
+		static char buffer[IPV6_ADDRSTRLEN] = "127.0.0.1";
+		//strcpy(buffer, "127.0.0.1");
 		ImGui::InputText("IP", buffer, IPV6_ADDRSTRLEN);
 		static uint16_t port = 4950;
 		ImGui::InputInt("Port", (int*)&port);
@@ -153,6 +207,13 @@ void Game::OnUserUpdate(float deltaTime)
 	}
 	ImGui::End();
 	);
+
+}
+
+
+void Game::OnShutdown()
+{
+
 }
 
 
@@ -184,8 +245,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		msg >> count;
 		
 		std::unordered_map<uint32_t, comp::Transform> transforms;
-		std::set<uint32_t> found;
-
+		
 		for (uint32_t i = 0; i < count; i++)
 		{
 			uint32_t entityID;
@@ -195,85 +255,86 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		}
 		// TODO MAKE BETTER
 		// Update entities with new transforms
-		m_demoScene->GetScene().ForEachComponent<comp::Network, comp::Transform>([&](comp::Network& n, comp::Transform& t)
+		GetScene("Game").ForEachComponent<comp::Network, comp::Transform>([&](comp::Network& n, comp::Transform& t)
 			{
 				if (transforms.find(n.id) != transforms.end())
 				{
 					t = transforms.at(n.id);
-					found.insert(n.id);
 				}
+				
 			});
 
-		// create new Entities
-		for (const auto& t : transforms) {
-			if (found.find(t.first) == found.end())
-			{
-				Entity entity = this->m_demoScene->CreatePlayerEntity(t.first);
-				*entity.GetComponent<comp::Transform>() = t.second;
-				
-				if (m_localPID == t.first)
-				{
+		break;
+	}
+	case GameMsg::Game_AddEntity:
+	{
+		uint32_t count; // Could be more than one Entity
+		msg >> count;
+		LOG_INFO("Received %u entities", count);
 
-					m_demoScene->GetScene().ForEachComponent<comp::Tag<CAMERA>>([&](Entity e, comp::Tag<CAMERA>& t)
+		for (uint32_t i = 0; i < count; i++)
+		{
+			Entity e = CreateEntityFromMessage(msg);
+
+			LOG_INFO("Added entity %u", e.GetComponent<comp::Network>()->id);
+
+			if (e.GetComponent<comp::Network>()->id == m_localPID)
+			{
+				LOG_INFO("This player added");
+				GetScene("Game").ForEachComponent<comp::Tag<CAMERA>>([&](Entity entt, comp::Tag<CAMERA>& t)
+					{
+						comp::Camera3D* c = entt.GetComponent<comp::Camera3D>();
+						if (c)
 						{
-							comp::Camera3D* c = e.GetComponent<comp::Camera3D>();
-							if (c)
-							{
-								if (c->camera.GetCameraType() == CAMERATYPE::PLAY)
-								{
-									m_demoScene->GetScene().SetCurrentCamera(&c->camera);
-									c->camera.SetFollowTransform(entity.GetComponent<comp::Transform>());
-								}
-							}
-						});
-				}
+							c->camera.SetFollowEntity(e);
+						}
+					});
 			}
 		}
 
 		break;
 	}
-	case GameMsg::Game_AddPlayer:
+	case GameMsg::Game_RemoveEntity:
 	{
-		uint32_t count; // Could be more than one player
+		uint32_t count;
 		msg >> count;
+		std::vector<uint32_t> ids(count);
 		for (uint32_t i = 0; i < count; i++)
 		{
-			uint32_t remotePlayerID;
-			msg >> remotePlayerID;
-			LOG_INFO("Player with ID: %ld has joined the game!", remotePlayerID);
-			Entity e = m_demoScene->CreatePlayerEntity(remotePlayerID);
-			
+			msg >> ids[i];
 		}
+
+		GetScene("Game").ForEachComponent<comp::Network>([&](Entity& e, comp::Network& net)
+			{
+				if (std::find(ids.begin(), ids.end(), net.id) != ids.end())
+				{
+					LOG_INFO("Removed Entity %u", net.id);
+					e.Destroy();
+				}
+			});
 
 		break;
 	}
 	case GameMsg::Lobby_Accepted:
 	{
 		msg >> m_gameID;
-		SetScene(m_demoScene->GetScene());
+		SetScene("Game");
 		LOG_INFO("You are now in lobby: %lu", m_gameID);
 		break;
 	}
 	case GameMsg::Lobby_Invalid:
 	{
-		LOG_WARNING("Request denied: Invalid lobby");
+		std::string err;
+		msg >> err;
+		LOG_WARNING("Request denied: %s", err.c_str());
 		break;
 	}
-	case GameMsg::Game_RemovePlayer:
+	case GameMsg::Lobby_AcceptedLeave:
 	{
-		uint32_t playerID;
-		msg >> playerID;
-
-		// TODO Remove the entity of the player that matches ID
-
-		m_demoScene->GetScene().ForEachComponent<comp::Network>([playerID](Entity& e, comp::Network& net)
-			{
- 				if (playerID == net.id)
-				{
-					e.Destroy();
-				}
-			}
-		);
+		LOG_WARNING("Left Lobby %u", m_gameID);
+		m_isLeavingLobby = false;
+		m_gameID = -1;
+		SetScene("MainMenu");
 		break;
 	}
 	}
@@ -322,12 +383,13 @@ void Game::CreateLobby()
 
 void Game::OnClientDisconnect()
 {
-
 	this->m_gameID = -1;
 	this->m_localPID = -1;
 
-	m_demoScene->GetScene().ForEachComponent<comp::Network>([](Entity& e, comp::Network& net)
+	// remove all network entities
+	GetScene("Game").ForEachComponent<comp::Network>([](Entity& e, comp::Network& net)
 		{
+			LOG_INFO("Removed entity %u on disconnect", net.id);
 			e.Destroy();
 		}
 	);
@@ -337,7 +399,63 @@ void Game::OnClientDisconnect()
 	LOG_INFO("Disconnected from server!");
 }
 
-void Game::OnShutdown()
+Entity Game::CreateEntityFromMessage(message<GameMsg>& msg)
 {
 
+	Entity e = GetScene("Game").CreateEntity();
+	uint32_t bits;
+	msg >> bits;
+	std::bitset<ecs::Component::COMPONENT_MAX> compSet(bits);
+
+	for (int i = ecs::Component::COMPONENT_COUNT - 1; i >= 0; i--)
+	{
+		if (compSet.test(i))
+		{
+			switch (i)
+			{
+			case ecs::Component::NETWORK:
+			{
+				uint32_t id;
+				msg >> id;
+				e.AddComponent<comp::Network>()->id = id;
+				break;
+			}
+			case ecs::Component::TRANSFORM:
+			{
+				comp::Transform t;
+				msg >> t;
+				*e.AddComponent<comp::Transform>() = t;
+				break;
+			}
+			case ecs::Component::MESH_NAME:
+			{
+				std::string name;
+				msg >> name;
+				e.AddComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>(name);
+				break;
+			}
+			case ecs::Component::BOUNDING_ORIENTED_BOX:
+			{
+				comp::BoundingOrientedBox box;
+				msg >> box.Orientation >> box.Extents >> box.Center;
+				*e.AddComponent<comp::BoundingOrientedBox>() = box;
+				break;
+			}
+			case ecs::Component::BOUNDING_SPHERE:
+			{
+				comp::BoundingSphere s;
+				msg >> s.Radius >> s.Center;
+				*e.AddComponent<comp::BoundingSphere>() = s;
+				break;
+			}
+			default:
+				LOG_WARNING("Retrieved unimplemented component %u", i)
+				break;
+			}
+		}
+	}
+	
+	
+	return e;
 }
+

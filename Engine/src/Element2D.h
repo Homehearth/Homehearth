@@ -80,6 +80,9 @@ public:
 	// Set the layer at which to draw at.
 	void SetLayer(const unsigned int layer);
 	const unsigned int GetLayer() const;
+
+	// Set the visibility.
+	void SetVisibility(const bool& boolean);
 	const bool IsVisible() const;
 
 	virtual void Draw() = 0;

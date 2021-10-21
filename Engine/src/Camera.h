@@ -21,8 +21,7 @@ private:
 	sm::Vector3 m_defaultPos;
 	sm::Vector3 m_move;
 
-	comp::Velocity* m_targetVelocity;
-	comp::Transform* m_targetTransform;
+	Entity m_targetEntity;
 
 	sm::Matrix  m_view;
 	sm::Matrix  m_projection;
@@ -48,8 +47,8 @@ public:
 	/* Position, Target, up, windowSize = (window width, window height) */
 	void Initialize(sm::Vector3 pos, sm::Vector3 target, sm::Vector3 up, sm::Vector2 windowSize, CAMERATYPE type) ;
 	void Update(float deltaTime);
-	void SetFollowVelocity(comp::Velocity* target);
-	void SetFollowTransform(comp::Transform* target);
+	void SetFollowEntity(const Entity& entity);
+
 
 	//Get Functions
 	sm::Matrix GetView() const;

@@ -19,6 +19,7 @@ thread::RenderThreadHandler::RenderThreadHandler()
 {
 	m_workerThreads = nullptr;
 	m_amount = 0;
+	m_camera = nullptr;
 	m_renderer = nullptr;
 	m_window = nullptr;
 	m_statuses = nullptr;
@@ -121,9 +122,9 @@ void thread::RenderThreadHandler::Setup(const int& amount)
 const render_instructions_t thread::RenderThreadHandler::Launch(const int& amount_of_objects)
 {
 	render_instructions_t inst;
-	const unsigned int objects_per_thread = (unsigned int)std::ceil((float)amount_of_objects / (float)(INSTANCE.m_amount + 1));
+	const unsigned int objects_per_thread = (unsigned int)std::floor((float)amount_of_objects / (float)(INSTANCE.m_amount + 1));
 	int main_start = 0;
-	if (objects_per_thread >= thread::THRESHOLD)
+	if (objects_per_thread >= thread::THRESHOLD && amount_of_objects >= (int)(INSTANCE.m_amount + 1))
 	{
 		// Launch Threads
 		if (INSTANCE.m_isPooled)
@@ -231,6 +232,16 @@ void* thread::RenderThreadHandler::GetObjectsBuffer()
 	return INSTANCE.m_objects;
 }
 
+void thread::RenderThreadHandler::SetCamera(void* camera)
+{
+	INSTANCE.m_camera = camera;
+}
+
+void* thread::RenderThreadHandler::GetCamera()
+{
+	return INSTANCE.m_camera;
+}
+
 bool ShouldContinue()
 {
 	if (!INSTANCE.GetHandlerStatus())
@@ -313,8 +324,9 @@ void RenderJob(const unsigned int start,
 		// On Render Start
 		ID3D11CommandList* command_list = nullptr;
 		IRenderPass* pass = thread::RenderThreadHandler::Get().GetRenderer()->GetCurrentPass();
+		Camera* cam = (Camera*)INSTANCE.Get().GetCamera();
 
-		//pass->PreRender(m_context);
+		pass->PreRender(cam, m_context);
 
 		// Make sure not to go out of range
 		if (stop > (unsigned int)(*m_objects)[1].size())
