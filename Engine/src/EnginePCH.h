@@ -46,7 +46,7 @@
 #include <set>
 #include <queue>
 #include <condition_variable>
-
+#include <bitset>
 
 #include <functional>
 

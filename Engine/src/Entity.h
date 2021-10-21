@@ -3,13 +3,13 @@
 class Entity
 {
 private:
-	entt::registry* m_registry;
+	entt::registry* m_pRegistry;
 	entt::entity m_entity;
 	
-	friend class HeadlessScene;
+
+public:
 	Entity(entt::registry& registry);
 	Entity(entt::registry& registry, entt::entity id);
-public:
 	Entity();
 	virtual ~Entity() = default;
 
@@ -24,38 +24,56 @@ public:
 
 	void Destroy();
 
-	operator entt::entity()
+	bool IsNull() const;
+
+	operator entt::entity()const
 	{
 		return m_entity;
+	}
+
+	bool operator >(const Entity& other) const
+	{
+		return m_entity > other.m_entity;
 	}
 };
 
 template<typename T>
 inline T* Entity::GetComponent() const
 {
-	if (m_entity == entt::null)
+	if (this->IsNull())
 	{
 		throw std::runtime_error("Entity was a null entity");
 	}
-	return m_registry->try_get<T>(m_entity);
+	return m_pRegistry->try_get<T>(m_entity);
 }
 
 template<typename T>
 inline T* Entity::AddComponent()
 {
-	if (m_entity == entt::null)
+	if (this->IsNull())
 	{
 		throw std::runtime_error("Entity was a null entity");
 	}	
-	return &m_registry->emplace_or_replace<T>(m_entity);
+	return &m_pRegistry->emplace_or_replace<T>(m_entity);
 }
 
 template<typename T>
 inline void Entity::RemoveComponent()
 {
-	if (m_entity == entt::null)
+	if (this->IsNull())
 	{
 		throw std::runtime_error("Entity was a null entity");
 	}	
-	m_registry->erase<T>(m_entity);
+	m_pRegistry->erase<T>(m_entity);
+}
+
+namespace std
+{
+	template <> struct hash<Entity>
+	{
+		size_t operator()(const Entity& other)const
+		{
+			return std::hash<entt::entity>()((entt::entity)other);
+		}
+	};
 }

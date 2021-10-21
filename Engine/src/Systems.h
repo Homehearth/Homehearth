@@ -36,13 +36,15 @@ namespace Systems
 
 				if (*entity1 != *entity2)
 				{
+					Entity e1(*scene.GetRegistry(), *entity1);
+					Entity e2(*scene.GetRegistry(), *entity2);
 					if (collider1.Intersects(collider2))
 					{
-						scene.publish<ESceneCollision>(*entity1, *entity2);
+						scene.publish<ESceneCollision>(e1, e2);
 					}
 					else
 					{
-						CollisionSystem::Get().RemovePair(*entity1, *entity2);
+						CollisionSystem::Get().RemovePair(e1, e2);
 					}
 				}
 			}

@@ -43,7 +43,7 @@ public:
 	SceneType* GetCurrentScene() const;
 	void SetScene(const std::string& name);
 	void SetScene(SceneType& scene);
-
+	
 	void Start();
 
 	void Shutdown();
@@ -66,7 +66,7 @@ SceneType* BasicEngine<SceneType>::GetCurrentScene() const
 template<typename SceneType>
 void BasicEngine<SceneType>::SetScene(const std::string& name)
 {
-	SetScene(m_scenes.at(name));
+	SetScene(GetScene(name));
 }
 
 template<typename SceneType>
