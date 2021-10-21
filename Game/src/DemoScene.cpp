@@ -204,6 +204,8 @@ void SetupServerConnectScreen(Window* pWindow)
 	
 	rtd::Button* connectButton = new rtd::Button("StartButton.png", draw_t(width / 2 - 150.f, height - height / 3, 300.0f, 100.0f));
 	rtd::Handler2D::Get().InsertElement(connectButton);
+	connectButton->GetText()->SetText("Hello World");
+
 	connectButton->SetName("connectButton");
 #endif
 }

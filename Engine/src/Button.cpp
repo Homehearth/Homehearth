@@ -49,6 +49,21 @@ Canvas* rtd::Button::GetCanvas()
 	return m_canvas.get();
 }
 
+Text* rtd::Button::GetText()
+{
+	if (!m_text)
+	{
+		m_text = std::make_unique<Text>("", 
+			draw_text_t(
+				m_drawOpts.x_pos,
+				m_drawOpts.y_pos,
+				m_drawOpts.width, 
+				m_drawOpts.height));
+
+	}
+	return m_text.get();
+}
+
 const bool Button::CheckClicked() const
 {
     return m_isClicked;
@@ -63,6 +78,9 @@ void Button::Draw()
 		m_picture->Draw();
 	if (m_canvas)
 		m_canvas->Draw();
+	if (m_text)
+		m_text->Draw();
+
 }
 
 void rtd::Button::OnHover()

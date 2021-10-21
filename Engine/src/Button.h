@@ -1,6 +1,7 @@
 #pragma once
 #include "Element2D.h"
 #include "Border.h"
+#include "Text.h"
 
 namespace rtd
 {
@@ -13,6 +14,8 @@ namespace rtd
 		std::unique_ptr<Border> m_border = nullptr;
 		std::unique_ptr<Picture> m_picture = nullptr;
 		std::unique_ptr<Canvas> m_canvas = nullptr;
+		std::unique_ptr<Text> m_text = nullptr;
+
 
 	public:
 
@@ -23,6 +26,8 @@ namespace rtd
 		Border* GetBorder();
 		Picture* GetPicture();
 		Canvas* GetCanvas();
+		Text* GetText();
+
 
 		// CheckCollisions if the button is clicked.
 		const bool CheckClicked() const;
