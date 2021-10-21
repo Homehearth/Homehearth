@@ -1,4 +1,8 @@
 #pragma once
 
-const unsigned char CAMERA = 1;
-const unsigned char DEBUGCAMERA = 2;
+enum TagType : uint8_t
+{
+	CAMERA = 1,
+	DEBUG_CAMERA = 2,
+	LOCAL_PLAYER = 4
+};

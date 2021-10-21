@@ -94,15 +94,6 @@ void ServerGame::UpdateNetwork(float deltaTime)
 			it++;
 		}
 	}
-	
-	/* 
-			MOVED TO FIRST LOOP, IF CRASH MOVE BACK
-
-	for (const auto& sim : m_simulations)
-	{
-		sim.second->Update(deltaTime);
-	}
-	*/
 }
 
 void ServerGame::CheckIncoming(message<GameMsg>& msg)

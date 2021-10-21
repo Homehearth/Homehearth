@@ -38,12 +38,20 @@ void Game::UpdateNetwork(float deltaTime)
 		// TODO MAKE THIS BETTER
 		if (m_gameID != UINT32_MAX && GetCurrentScene()->GetCurrentCamera()->GetCameraType() == CAMERATYPE::PLAY && !m_isLeavingLobby)
 		{
+			int8_t x = InputSystem::Get().GetAxis(Axis::HORIZONTAL);
+			int8_t z = InputSystem::Get().GetAxis(Axis::VERTICAL);
+
+			GetScene("Game").ForEachComponent<comp::Transform, comp::Tag<TagType::LOCAL_PLAYER>>([&]
+			(comp::Transform& t, comp::Tag<TagType::LOCAL_PLAYER>& tag)
+				{
+					t.position.x += x * 10.f * deltaTime;
+					t.position.z += z * 10.f * deltaTime;
+				}
+			);
 			message<GameMsg> msg;
 			msg.header.id = GameMsg::Game_PlayerInput;
-			int8_t x = InputSystem::Get().GetAxis(Axis::HORIZONTAL);
-			int8_t y = InputSystem::Get().GetAxis(Axis::VERTICAL);
 
-			msg << this->m_localPID << m_gameID << x << y;
+			msg << this->m_localPID << m_gameID << x << z;
 
 			m_client.Send(msg);
 		}
@@ -59,8 +67,8 @@ bool Game::OnStartup()
 
 			IMGUI(
 				ImGui::Begin("Scene");
-				ImGui::Text("MainMenu");
-				ImGui::End();
+			ImGui::Text("MainMenu");
+			ImGui::End();
 			);
 		});
 
@@ -69,8 +77,8 @@ bool Game::OnStartup()
 		{
 			IMGUI(
 				ImGui::Begin("Scene");
-				ImGui::Text("Lobby");
-				ImGui::End();
+			ImGui::Text("Lobby");
+			ImGui::End();
 			);
 		});
 
@@ -78,7 +86,7 @@ bool Game::OnStartup()
 
 	// Set Current Scene
 	SetScene(mainMenuScene);
-	
+
 	return true;
 }
 
@@ -125,7 +133,7 @@ void Game::OnUserUpdate(float deltaTime)
 				ImGui::BeginDisabled();
 				ImGui::Button("Leave Game");
 				ImGui::EndDisabled();
-				
+
 			}
 			else if (ImGui::Button("Leave Game"))
 			{
@@ -135,7 +143,7 @@ void Game::OnUserUpdate(float deltaTime)
 				msg << m_localPID << m_gameID;
 				m_client.Send(msg);
 			}
-			
+
 		}
 		if (ImGui::Button("Disconnect"))
 		{
@@ -192,9 +200,9 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	{
 		uint32_t count;
 		msg >> count;
-		
+
 		std::unordered_map<uint32_t, comp::Transform> transforms;
-		
+
 		for (uint32_t i = 0; i < count; i++)
 		{
 			uint32_t entityID;
@@ -210,7 +218,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 				{
 					t = transforms.at(n.id);
 				}
-				
+
 			});
 
 		break;
@@ -230,7 +238,9 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			if (e.GetComponent<comp::Network>()->id == m_localPID)
 			{
 				LOG_INFO("This player added");
-				GetScene("Game").ForEachComponent<comp::Tag<CAMERA>>([&](Entity entt, comp::Tag<CAMERA>& t)
+				e.AddComponent<comp::Tag<TagType::LOCAL_PLAYER>>();
+
+				GetScene("Game").ForEachComponent<comp::Tag<TagType::CAMERA>>([&](Entity entt, comp::Tag<TagType::CAMERA>& t)
 					{
 						comp::Camera3D* c = entt.GetComponent<comp::Camera3D>();
 						if (c)
@@ -350,7 +360,6 @@ void Game::OnClientDisconnect()
 
 Entity Game::CreateEntityFromMessage(message<GameMsg>& msg)
 {
-
 	Entity e = GetScene("Game").CreateEntity();
 	uint32_t bits;
 	msg >> bits;
@@ -399,12 +408,12 @@ Entity Game::CreateEntityFromMessage(message<GameMsg>& msg)
 			}
 			default:
 				LOG_WARNING("Retrieved unimplemented component %u", i)
-				break;
+					break;
 			}
 		}
 	}
-	
-	
+
+
 	return e;
 }
 
