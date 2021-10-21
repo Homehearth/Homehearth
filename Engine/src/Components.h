@@ -103,9 +103,9 @@ namespace ecs
 
 		struct Health
 		{
-			float currentHealth;
-			float maxHealth;
-			bool isAlive;
+			float maxHealth = 100.f;
+			float currentHealth = 100.f;
+			bool isAlive = true;
 		};
 
 		struct Attack
@@ -115,6 +115,7 @@ namespace ecs
 			float attackRange;
 			bool isRanged;
 			bool isAttacking;
+			float cooldownTimer = 0.f;
 		};
 
 		template<uint8_t ID>

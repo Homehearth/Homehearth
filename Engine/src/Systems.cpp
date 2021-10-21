@@ -16,23 +16,38 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 				{
 					// Calculate the distance between player and enemy.
 					const auto dist = (playerTransform.position - enemyTransform.position).Length();
+					
+					//Decreases cooldown between attacks
+					if (playerAttack.cooldownTimer > 0.f)
+						playerAttack.cooldownTimer -= 1.f * dt;
+					if (enemyAttack.cooldownTimer > 0.f)
+						enemyAttack.cooldownTimer -= 1.f * dt;
 
 					// Check if attack is in range.
-					if (playerAttack.attackRange >= dist)
+					if (playerAttack.attackRange >= dist && playerAttack.cooldownTimer < 0.f)
 					{
-						LOG_INFO("Player/Enemy is in attack range.");
+						LOG_INFO("Player is in attack range.");
+
+						// Perform battle logic.
+						if ((playerAttack.isAttacking & playerHealth.isAlive) == TRUE)
+						{
+							playerAttack.cooldownTimer = playerAttack.attackSpeed;
+							enemyHealth.currentHealth -= playerAttack.attackDamage;
+							LOG_INFO("Player attacked.");
+						}
+					}
+
+					// Check if attack is in range.
+					if (enemyAttack.attackRange >= dist && enemyAttack.cooldownTimer < 0.f)
+					{
+						LOG_INFO("Enemy is in attack range.");
 
 						// Perform battle logic.
 						if ((enemyAttack.isAttacking & enemyHealth.isAlive) == TRUE)
 						{
+							enemyAttack.cooldownTimer = enemyAttack.attackSpeed;
 							playerHealth.currentHealth -= enemyAttack.attackDamage;
 							LOG_INFO("Enemy attacked.");
-						}
-
-						if ((playerAttack.isAttacking & playerHealth.isAlive) == TRUE)
-						{
-							enemyHealth.currentHealth -= playerAttack.attackDamage;
-							LOG_INFO("Player attacked.");
 						}
 					}
 				});
