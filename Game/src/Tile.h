@@ -4,8 +4,9 @@
 enum class TileType
 {
 	DEFAULT,
-	OCCUPIED,
-	BUILDING
+	EMPTY,
+	BUILDING, 
+	DEFENCE
 };
 
 class Tile
@@ -16,7 +17,6 @@ private:
 	sm::Vector3 m_poisition;
 
 	float m_halfWidth;
-	float m_halfHeight;
 
 	TileType m_type;
 
@@ -27,4 +27,7 @@ public:
 	void Initialize(sm::Vector2 size, sm::Vector2 gridID, sm::Vector3 poisition, TileType type);
 
 	sm::Vector2 GetGridID();
+	float GetHalfWidth();
+
+
 };

@@ -56,13 +56,6 @@ bool Game::OnStartup()
 	GridSystem grid;
 	grid.Initialize();
 
-
-	// Scene logic
-	m_demoScene = std::make_unique<DemoScene>(*this);
-
-	//Set as current scene
-	SetScene(m_demoScene->GetScene());
-
 	Scene& mainMenuScene = GetScene("MainMenu");
 	mainMenuScene.on<ESceneUpdate>([](const ESceneUpdate& e, HeadlessScene& scene)
 		{

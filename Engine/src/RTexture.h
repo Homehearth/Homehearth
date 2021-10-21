@@ -17,6 +17,12 @@ private:
 	unsigned char*				m_image;
 	sm::Vector2					m_size;
 
+	std::string					m_filepath;
+	int							m_width;
+	int							m_height;
+	int							m_comp;
+	bool						m_isFree = true;
+
 public:
 	RTexture();
 	RTexture(ETextureChannelType format);

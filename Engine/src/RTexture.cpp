@@ -18,6 +18,7 @@ RTexture::RTexture(ETextureChannelType format)
 	m_format = format;
 	m_texture = nullptr;
 	m_shaderView = nullptr;
+	m_image = nullptr;
 }
 
 RTexture::~RTexture()
@@ -26,6 +27,8 @@ RTexture::~RTexture()
 		m_texture->Release();
 	if (m_shaderView)
 		m_shaderView->Release();
+	if (!m_isFree)					//Is to free only when getImageData was called
+		stbi_image_free(m_image);
 }
 
 sm::Vector2 RTexture::GetSize()
@@ -35,55 +38,61 @@ sm::Vector2 RTexture::GetSize()
 
 unsigned char* RTexture::GetImageData()
 {
+	if (m_format == ETextureChannelType::oneChannel)
+		m_image = stbi_load(m_filepath.c_str(), &m_width, &m_height, &m_comp, STBI_grey);
+	else
+		m_image = stbi_load(m_filepath.c_str(), &m_width, &m_height, &m_comp, STBI_rgb_alpha);
+
+	m_isFree = false;
 	return m_image;
 }
 
 bool RTexture::Create(const std::string& filename)
 {
-	std::string filepath = TEXTUREPATH + filename;
-	int width = 0;
-	int height = 0;
-	int comp = 0;
-	 m_image = nullptr;
+	m_filepath = TEXTUREPATH + filename;
+	m_width = 0;
+	m_height = 0;
+	m_comp = 0;
+	unsigned char* image = nullptr;
 
 	//Load in image
 	if (m_format == ETextureChannelType::oneChannel)
-		m_image = stbi_load(filepath.c_str(), &width, &height, &comp, STBI_grey);
+		image = stbi_load(m_filepath.c_str(), &m_width, &m_height, &m_comp, STBI_grey);
 	else
-		m_image = stbi_load(filepath.c_str(), &width, &height, &comp, STBI_rgb_alpha);
+		image = stbi_load(m_filepath.c_str(), &m_width, &m_height, &m_comp, STBI_rgb_alpha);
 
-	if (m_image == nullptr)
+	if (image == nullptr)
 	{
 #ifdef _DEBUG
-		LOG_WARNING("[Texture] Failed to load image: %s", filepath.c_str());
+		LOG_WARNING("[Texture] Failed to load image: %s", m_filepath.c_str());
 #endif 
 		return false;
 	}
 
 	//The texture is to large for the engine
-	if (width > MAXSIZE || height > MAXSIZE)
+	if (m_width > MAXSIZE || m_height > MAXSIZE)
 	{
 #ifdef _DEBUG
-		LOG_WARNING("[Texture] %s is too large (%d x %d)", filename.c_str(), width, height);
+		LOG_WARNING("[Texture] %s is too large (%d x %d)", filename.c_str(), m_width, m_height);
 #endif
-		stbi_image_free(m_image);
+		stbi_image_free(image);
 		return false;
 	}
-	m_size = { (float)width, (float)height };
+	m_size = { (float)m_width, (float)m_height };
 
 	D3D11_SUBRESOURCE_DATA data = {};
-	data.pSysMem = (void*)m_image;
+	data.pSysMem = (void*)image;
 	data.SysMemSlicePitch = 0;
 
 	if (m_format == ETextureChannelType::oneChannel)
-		data.SysMemPitch = static_cast<UINT>(width * 1);
+		data.SysMemPitch = static_cast<UINT>(m_width * 1);
 	else if (m_format == ETextureChannelType::fourChannels)
-		data.SysMemPitch = static_cast<UINT>(width * 4);
+		data.SysMemPitch = static_cast<UINT>(m_width * 4);
 
 	//Setup the texturebuffer
 	D3D11_TEXTURE2D_DESC textureDesc = {};
-	textureDesc.Width = (UINT)width;
-	textureDesc.Height = (UINT)height;
+	textureDesc.Width = (UINT)m_width;
+	textureDesc.Height = (UINT)m_height;
 	textureDesc.MiscFlags = 0;
 	textureDesc.MipLevels = 1;
 	textureDesc.ArraySize = 1;
@@ -104,7 +113,7 @@ bool RTexture::Create(const std::string& filename)
 #ifdef _DEBUG
 		LOG_WARNING("[Texture2D] Failed to create Texture2D!");
 #endif
-		stbi_image_free(m_image);
+		stbi_image_free(image);
 		return false;
 	}
 
@@ -114,11 +123,11 @@ bool RTexture::Create(const std::string& filename)
 #ifdef _DEBUG
 		LOG_WARNING("[Texture2D] Failed to create ShaderResourceView!");
 #endif
-		stbi_image_free(m_image);
+		stbi_image_free(image);
 		return false;
 	}
 
-	stbi_image_free(m_image);
+	stbi_image_free(image);
 	return true;
 }
 

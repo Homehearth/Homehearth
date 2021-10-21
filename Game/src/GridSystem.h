@@ -9,13 +9,14 @@ private:
 	sm::Vector2 m_gridSize;	//Tiles x tiles
 	sm::Vector2 m_position;
 	
-	std::vector<Tile> tiles;
+	std::vector<Tile> m_tiles;
+	std::vector<sm::Vector3> m_tilePosiitons;
 
 public:
 	GridSystem();
 	~GridSystem();
 
 	void Initialize();
-
+	std::vector<sm::Vector3>* GetTilePositions();
 
 };
