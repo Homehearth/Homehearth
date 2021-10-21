@@ -70,13 +70,13 @@ void Game::OnUserUpdate(float deltaTime)
 
 #if RENDER_IMGUI == 0
 
-
+	rtd::TextField* port_text = GET_ELEMENT("portBuffer", rtd::TextField);
 	rtd::TextField* ip_text = GET_ELEMENT("ipBuffer", rtd::TextField);
-	if (ip_text)
+	if (ip_text && port_text)
 	{
-		if (ip_text->GetBuffer(m_ipBuffer))
+		if (ip_text->GetBuffer(m_ipBuffer) && port_text->GetBuffer(m_portBuffer))
 		{
-			if (m_client.Connect(m_ipBuffer->c_str(), 4950))
+			if (m_client.Connect(m_ipBuffer->c_str(), std::stoi(*m_portBuffer)))
 			{
 				rtd::Handler2D::SetVisibilityAll(false);
 			}
@@ -99,6 +99,7 @@ void Game::OnUserUpdate(float deltaTime)
 		{
 			rtd::Handler2D::SetVisibilityAll(false);
 			ip_text->SetVisibility(true);
+			port_text->SetVisibility(true);
 		}
 	}
 

@@ -368,6 +368,13 @@ void SetupLobbyJoinScreen()
 	ipField->GetText()->SetText("Input IP adress");
 	ipField->SetVisibility(false);
 
+	rtd::TextField* portField = new rtd::TextField(draw_text_t(500.0f, 100.0f, 200.0f, 35.0f));
+	portField->GetBorder()->SetColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
+	rtd::Handler2D::Get().InsertElement(portField);
+	portField->SetName("portBuffer");
+	portField->GetText()->SetText("Input PORT");
+	portField->SetVisibility(false);
+
 	rtd::TextField* lobbyField = new rtd::TextField(draw_text_t(100.0f, 300.0f, 200.0f, 35.0f));
 	//rtd::TextField * lobbyField = new rtd::TextField(draw_text_t((float)(rand() % 1000) / 2, (float)(rand() % 1000) / 4, 200.0f, 35.0f));
 	lobbyField->GetBorder()->SetColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
