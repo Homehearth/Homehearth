@@ -60,38 +60,38 @@ bool Game::OnStartup()
 
 	Scene& mainMenuScene = GetScene("MainMenu");
 	mainMenuScene.on<ESceneUpdate>([](const ESceneUpdate& e, HeadlessScene& scene)
-		{
+	{
 
-			IMGUI(
-				ImGui::Begin("Scene");
-				ImGui::Text("MainMenu");
-				ImGui::End();
-			);
-		});
+		IMGUI(
+			ImGui::Begin("Scene");
+		ImGui::Text("MainMenu");
+		ImGui::End();
+		);
+	});
 
 	Scene& lobbyScene = GetScene("Lobby");
-	lobbyScene.on<ESceneUpdate>([](const ESceneUpdate& e, HeadlessScene& scene) 
-		{
-			IMGUI(
-				ImGui::Begin("Scene");
-				ImGui::Text("Lobby");
-				ImGui::End();
-			);
-		});
+	lobbyScene.on<ESceneUpdate>([](const ESceneUpdate& e, HeadlessScene& scene)
+	{
+		IMGUI(
+			ImGui::Begin("Scene");
+		ImGui::Text("Lobby");
+		ImGui::End();
+		);
+	});
 
 	Scene& gameScene = GetScene("Game");
 	gameScene.on<ESceneUpdate>([](const ESceneUpdate& e, HeadlessScene& scene)
-		{
-			IMGUI(
-				ImGui::Begin("Scene");
-				ImGui::Text("Game");
-				ImGui::End();
-			);
+	{
+		IMGUI(
+			ImGui::Begin("Scene");
+		ImGui::Text("Game");
+		ImGui::End();
+		);
 
-		});
+	});
 
 	SetScene(mainMenuScene);
-	
+
 	return true;
 }
 
@@ -184,7 +184,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	{
 		uint32_t count;
 		msg >> count;
-		
+
 		std::unordered_map<uint32_t, comp::Transform> transforms;
 		std::set<uint32_t> found;
 
@@ -198,14 +198,14 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		// TODO MAKE BETTER
 		// Update entities with new transforms
 		m_demoScene->GetScene().ForEachComponent<comp::Network, comp::Transform>([&](comp::Network& n, comp::Transform& t)
+		{
+			if (transforms.find(n.id) != transforms.end())
 			{
-				if (transforms.find(n.id) != transforms.end())
-				{
-					t = transforms.at(n.id);
-					found.insert(n.id);
-				}
-				
-			});
+				t = transforms.at(n.id);
+				found.insert(n.id);
+			}
+
+		});
 
 		// create new Entities
 		for (const auto& t : transforms) {
@@ -213,22 +213,22 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			{
 				Entity entity = this->m_demoScene->CreatePlayerEntity(t.first);
 				*entity.GetComponent<comp::Transform>() = t.second;
-				
+
 				if (m_localPID == t.first)
 				{
 
 					m_demoScene->GetScene().ForEachComponent<comp::Tag<CAMERA>>([&](Entity e, comp::Tag<CAMERA>& t)
+					{
+						comp::Camera3D* c = e.GetComponent<comp::Camera3D>();
+						if (c)
 						{
-							comp::Camera3D* c = e.GetComponent<comp::Camera3D>();
-							if (c)
+							if (c->camera.GetCameraType() == CAMERATYPE::PLAY)
 							{
-								if (c->camera.GetCameraType() == CAMERATYPE::PLAY)
-								{
-									m_demoScene->GetScene().SetCurrentCamera(&c->camera);
-									c->camera.SetFollowTransform(entity.GetComponent<comp::Transform>());
-								}
+								m_demoScene->GetScene().SetCurrentCamera(&c->camera);
+								c->camera.SetFollowTransform(entity.GetComponent<comp::Transform>());
 							}
-						});
+						}
+					});
 				}
 			}
 		}
@@ -245,7 +245,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			msg >> remotePlayerID;
 			LOG_INFO("Player with ID: %ld has joined the game!", remotePlayerID);
 			Entity e = m_demoScene->CreatePlayerEntity(remotePlayerID);
-			
+
 		}
 
 		break;
@@ -270,13 +270,34 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		// TODO Remove the entity of the player that matches ID
 
 		m_demoScene->GetScene().ForEachComponent<comp::Network>([playerID](Entity& e, comp::Network& net)
+		{
+			if (playerID == net.id)
 			{
- 				if (playerID == net.id)
-				{
-					e.Destroy();
-				}
+				e.Destroy();
 			}
+		}
 		);
+		break;
+	}
+	case GameMsg::Game_AddAI:
+	{
+		break;
+	}
+	case GameMsg::Game_MoveAI:
+	{
+		break;
+	}
+	case GameMsg::Game_RemoveAI:
+	{
+		uint32_t id;
+		msg >> id;
+		m_demoScene->GetScene().ForEachComponent<comp::NPC>([id](Entity& e, comp::Network& net)
+		{
+			if (id == net.id)
+			{
+				e.Destroy();
+			}
+		});
 		break;
 	}
 	}
@@ -330,9 +351,9 @@ void Game::OnClientDisconnect()
 	this->m_localPID = -1;
 
 	m_demoScene->GetScene().ForEachComponent<comp::Network>([](Entity& e, comp::Network& net)
-		{
-			e.Destroy();
-		}
+	{
+		e.Destroy();
+	}
 	);
 
 	SetScene("MainMenu");

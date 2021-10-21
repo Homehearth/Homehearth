@@ -90,6 +90,9 @@ namespace network
 		Game_AddPlayer,
 		Game_RemovePlayer,
 		Game_Update,
-		Game_MovePlayer
+		Game_MovePlayer,
+		Game_AddAI,
+		Game_RemoveAI,
+		Game_MoveAI
 	};
 }
