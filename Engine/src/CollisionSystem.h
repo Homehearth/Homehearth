@@ -22,5 +22,7 @@ public:
 	bool IsColliding(const Entity e1, const Entity e2);
 	void AddOnCollision(Entity entity1, std::function<void(Entity)> func);
 	void OnCollision(Entity entity1, Entity entity2);
+
+    MinMaxProj_t GetMinMax(std::vector<sm::Vector3> boxVectors, sm::Vector3 boxAxis);
 };
 

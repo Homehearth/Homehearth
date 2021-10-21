@@ -124,3 +124,32 @@ void CollisionSystem::OnCollision(Entity entity1, Entity entity2)
 		}
 	}
 }
+
+MinMaxProj_t CollisionSystem::GetMinMax(std::vector<sm::Vector3> boxVectors, sm::Vector3 boxAxis)
+{
+	MinMaxProj_t minMaxProj;
+
+	minMaxProj.minProj = boxVectors.at(0).Dot(boxAxis);
+	minMaxProj.maxProj = boxVectors.at(0).Dot(boxAxis);
+	minMaxProj.minInxed = 0;
+	minMaxProj.maxIndex = 0;
+
+	for(int i = 1; i < boxVectors.size(); i++)
+	{
+		float currentProj = boxVectors[i].Dot(boxAxis);
+		//select the maximum projection on axis to corresponding box corners
+		if(minMaxProj.minProj > currentProj)
+		{
+			minMaxProj.minProj = currentProj;
+			minMaxProj.minInxed = i;
+		}
+		//select the minimum projection on axis to corresponding box corners
+		if(currentProj > minMaxProj.maxProj)
+		{
+			minMaxProj.maxProj = currentProj;
+			minMaxProj.maxIndex = i;
+		}
+	}
+
+	return minMaxProj;		
+}
