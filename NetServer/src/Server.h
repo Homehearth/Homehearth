@@ -6,15 +6,12 @@ using namespace network;
 class Server : public server_interface<GameMsg>
 {
 private:
-
-private:
 	// Inherited via server_interface
 	virtual void OnClientConnect(std::string&& ip, const uint16_t& port) override;
 	virtual void OnClientDisconnect(const SOCKET& socket) override;
 	virtual void OnMessageReceived(message<GameMsg>& msg) override;
 	virtual void OnClientValidated(SOCKET_INFORMATION*& SI) override;
 
-public:
 	uint32_t m_uniqueID;
 	
 public:
@@ -28,4 +25,6 @@ public:
 	// Defaulted to -1 which is translated to a huge nr (recall size_t is unsigned)
 	void Update(size_t nMaxMessage = -1);
 	SOCKET GetConnection(uint32_t playerID)const;
+
+	uint32_t PopNextUniqueID();
 };

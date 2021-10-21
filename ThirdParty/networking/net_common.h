@@ -76,23 +76,4 @@ namespace network
 
 		return output;
 	}
-	
-	enum class GameMsg : uint8_t
-	{
-		Client_Accepted,
-		Lobby_Create,
-		Lobby_Join,
-		Lobby_Accepted,
-		Lobby_Invalid,
-		Server_AssignID,
-		Server_GetPing,
-		Game_Snapshot,
-		Game_AddPlayer,
-		Game_RemovePlayer,
-		Game_Update,
-		Game_MovePlayer,
-		Game_AddAI,
-		Game_RemoveAI,
-		Game_MoveAI
-	};
 }
