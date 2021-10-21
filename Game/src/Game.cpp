@@ -74,11 +74,15 @@ void Game::OnUserUpdate(float deltaTime)
 	rtd::TextField* ip_text = GET_ELEMENT("ipBuffer", rtd::TextField);
 	if (ip_text && port_text)
 	{
-		if (ip_text->GetBuffer(m_ipBuffer) && port_text->GetBuffer(m_portBuffer))
+		ip_text->GetBuffer(m_ipBuffer);
+		port_text->GetBuffer(m_portBuffer);
+		if(m_ipBuffer && m_portBuffer)
 		{
 			if (m_client.Connect(m_ipBuffer->c_str(), std::stoi(*m_portBuffer)))
 			{
 				rtd::Handler2D::SetVisibilityAll(false);
+				m_ipBuffer = nullptr;
+				m_portBuffer = nullptr;
 			}
 		}
 	}
