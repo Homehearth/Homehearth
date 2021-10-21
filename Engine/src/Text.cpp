@@ -54,7 +54,7 @@ const bool Text::CheckHover()
     return false;
 }
 
-const bool Text::CheckClick()
+const bool Text::Update()
 {
     return false;
 }

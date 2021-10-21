@@ -66,7 +66,7 @@ void rtd::Picture::OnHover()
 {
 }
 
-const bool rtd::Picture::CheckClick()
+const bool rtd::Picture::Update()
 {
 	return false;
 }

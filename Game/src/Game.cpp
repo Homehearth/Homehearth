@@ -59,17 +59,34 @@ void Game::UpdateNetwork(float deltaTime)
 }
 
 bool Game::OnStartup()
-{	
-	sceneHelp::CreateLobbyScene(*this);
-	rtd::Handler2D::Get().SetVisibilityAll(false);
-	sceneHelp::CreateGameScene(*this);
-	sceneHelp::CreateMainMenuScene(*this);
+{
+	// Scene logic
+	Scene& mainMenuScene = GetScene("MainMenu");
+	mainMenuScene.on<ESceneUpdate>([](const ESceneUpdate& e, Scene& scene)
+		{
 
+			IMGUI(
+				ImGui::Begin("Scene");
+			ImGui::Text("MainMenu");
+			ImGui::End();
+			);
+		});
+
+	Scene& lobbyScene = GetScene("Lobby");
+	lobbyScene.on<ESceneUpdate>([](const ESceneUpdate& e, Scene& scene)
+		{
+			IMGUI(
+				ImGui::Begin("Scene");
+			ImGui::Text("Lobby");
+			ImGui::End();
+			);
+		});
+
+	sceneHelp::CreateGameScene(*this);
 
 	// Set Current Scene
+	SetScene(mainMenuScene);
 
-	SetScene("MainMenu");
-	
 	return true;
 }
 
@@ -78,67 +95,140 @@ void Game::OnUserUpdate(float deltaTime)
 	static float pingCheck = 0.f;
 
 #if RENDER_IMGUI == 0
-
+	// Connect Screen
 	rtd::TextField* port_text = GET_ELEMENT("portBuffer", rtd::TextField);
 	rtd::TextField* ip_text = GET_ELEMENT("ipBuffer", rtd::TextField);
 	if (ip_text && port_text)
 	{
-		ip_text->GetBuffer(m_ipBuffer);
-		port_text->GetBuffer(m_portBuffer);
-		if(m_ipBuffer && m_portBuffer)
+		if (ip_text->IsHovered())
 		{
-			if (m_client.Connect(m_ipBuffer->c_str(), std::stoi(*m_portBuffer)))
+			ip_text->GetBorder()->SetColor({ 1.0f, 1.0f, 0.0f, 1.0f });
+		}
+		else
+		{
+			ip_text->GetBorder()->SetColor({ 0.0f, 0.0f, 0.0f, 1.0f });
+		}
+		std::string* ipBuffer = nullptr;
+		std::string* portBuffer = nullptr;
+		ip_text->GetBuffer(ipBuffer);
+		port_text->GetBuffer(portBuffer);
+
+		if (ip_text->GetIsUsed() || port_text->GetIsUsed())
+		{
+			if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Enter, KeyState::PRESSED))
+			{
+				ip_text->SetIsUsed(false);
+				port_text->SetIsUsed(false);
+
+				int port = 0;
+				try {
+					port = std::stoi(*portBuffer);
+				}
+				catch (const std::exception& e) {
+					LOG_ERROR("Invalid port");
+				}
+				if (!portBuffer->empty() && !ipBuffer->empty() && m_client.Connect(ipBuffer->c_str(), port))
+				{
+					rtd::Handler2D::SetVisibilityAll(false);
+					GET_ELEMENT("welcome_text", rtd::Text)->SetVisibility(true);
+					GET_ELEMENT("gameInfoText", rtd::Text)->SetVisibility(true);
+					GET_ELEMENT("joinButton", rtd::Button)->SetVisibility(true);
+					GET_ELEMENT("hostButton", rtd::Button)->SetVisibility(true);
+					GET_ELEMENT("lobbyBuffer", rtd::TextField)->SetVisibility(true);
+					GET_ELEMENT("exitGameButton", rtd::Button)->SetVisibility(true);
+				}
+			}
+		}
+		
+	}
+
+	rtd::Button* connectButton = GET_ELEMENT("connectButton", rtd::Button);
+	if (connectButton)
+	{
+		if (connectButton->IsClicked())
+		{
+			std::string* ipBuffer = nullptr;
+			std::string* portBuffer = nullptr;
+
+			ip_text->GetBuffer(ipBuffer);
+			ip_text->SetIsUsed(false);
+
+			port_text->GetBuffer(portBuffer);
+			port_text->SetIsUsed(false);
+
+			int port = 0;
+			try {
+				port = std::stoi(*portBuffer);
+			}
+			catch (const std::exception& e) {
+				LOG_ERROR("Invalid port");
+			}
+
+			if (m_client.Connect(ipBuffer->c_str(), port))
 			{
 				rtd::Handler2D::SetVisibilityAll(false);
-				m_ipBuffer = nullptr;
-				m_portBuffer = nullptr;
+				GET_ELEMENT("welcome_text", rtd::Text)->SetVisibility(true);
+				GET_ELEMENT("gameInfoText", rtd::Text)->SetVisibility(true);
+				GET_ELEMENT("joinButton", rtd::Button)->SetVisibility(true);
+				GET_ELEMENT("hostButton", rtd::Button)->SetVisibility(true);
+				GET_ELEMENT("lobbyBuffer", rtd::TextField)->SetVisibility(true);
+				GET_ELEMENT("exitGameButton", rtd::Button)->SetVisibility(true);
+
 			}
 		}
 	}
 	
+	// Main Menu Screen
 	rtd::Button* exit_button = GET_ELEMENT("exitGameButton", rtd::Button);
 	if (exit_button)
 	{
 		if (exit_button->IsClicked())
 		{
-			std::cout << "IMPLEMENT CLEAN SHUT DOWN HERE!\n";
-		}
-	}
-
-	rtd::Button* start_button = GET_ELEMENT("startGameButton", rtd::Button);
-	if (start_button)
-	{
-		if (start_button->IsClicked())
-		{
-			rtd::Handler2D::SetVisibilityAll(false);
-			ip_text->SetVisibility(true);
-			port_text->SetVisibility(true);
+			Shutdown();
 		}
 	}
 
 	if (m_client.IsConnected())
 	{
-		rtd::TextField* lobby_text = GET_ELEMENT("lobbyBuffer", rtd::TextField);
-		if (lobby_text)
+		rtd::Button* hostButton = GET_ELEMENT("hostButton", rtd::Button);
+		if (hostButton)
 		{
-			lobby_text->SetVisibility(true);
-			if (lobby_text->GetBuffer(m_lobbyBuffer))
+			if (hostButton->IsClicked())
 			{
-				this->JoinLobby(std::stoi(*m_lobbyBuffer));
-				rtd::Handler2D::Get().DereferenceAllOnce();
-			}
-		}
-
-		rtd::Button* host_lobby_button = GET_ELEMENT("hostLobby", rtd::Button);
-		if (host_lobby_button)
-		{
-			host_lobby_button->SetVisibility(true);
-			if (host_lobby_button->IsClicked())
-			{
-				rtd::Handler2D::Get().DereferenceAllOnce();
 				this->CreateLobby();
 			}
 		}
+
+		std::string* lobbyBuffer = nullptr;
+		rtd::TextField* lobby_text = GET_ELEMENT("lobbyBuffer", rtd::TextField);
+		if (lobby_text)
+		{
+			lobby_text->GetBuffer(lobbyBuffer);
+		}
+
+		rtd::Button* joinButton = GET_ELEMENT("joinButton", rtd::Button);
+		if (joinButton)
+		{
+			if (joinButton->IsClicked())
+			{
+				int lobbyID = 0;
+				if (lobbyBuffer)
+				{
+					try {
+						lobbyID = std::stoi(*lobbyBuffer);
+					}
+					catch (const std::exception& e) {
+						LOG_ERROR("Invalid lobby ID");
+					}
+				}
+				this->JoinLobby(lobbyID);
+
+			}
+		}
+
+		
+
+		
 	}
 #endif
 

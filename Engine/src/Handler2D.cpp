@@ -51,10 +51,7 @@ void rtd::Handler2D::Update()
 		{
 			if (elem->GetRef() > 0 && elem->IsVisible())
 			{
-				if (elem->CheckClick())
-					elem->OnClick();
-				if (elem->CheckHover())
-					elem->OnHover();
+				elem->Update();
 			}
 			else
 				shouldErase = true;

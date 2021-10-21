@@ -53,7 +53,7 @@ namespace rtd
 
 		virtual const bool CheckHover() override;
 
-		virtual const bool CheckClick() override;
+		virtual const bool Update() override;
 
 	};
 }

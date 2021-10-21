@@ -19,10 +19,12 @@ namespace rtd
 		std::unique_ptr<Border> m_border;
 		draw_text_t m_opts;
 		bool m_isUsed;
-		bool m_finalInput = false;
+		
+		Timer m_timerForInputMarker;
+		bool m_isMarkerVisible;
 
 		// Update the text on text field
-		void Update();
+		void UpdateInput();
 
 	public:
 
@@ -33,6 +35,9 @@ namespace rtd
 
 		// Returns the border surrounding the text field.
 		Border* GetBorder();
+
+		void SetIsUsed(bool used);
+		bool GetIsUsed() const;
 
 		// Returns true if output is ready to be taken out.
 		const bool GetBuffer(std::string*& output);
@@ -46,7 +51,7 @@ namespace rtd
 
 		virtual const bool CheckHover() override;
 
-		virtual const bool CheckClick() override;
+		virtual const bool Update() override;
 
 	};
 }

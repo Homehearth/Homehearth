@@ -19,7 +19,7 @@
 	want something outside of the button to happen on click refer to
 	IsClicked.
 
-	CheckClick:
+	Update:
 	Here you put your logic over how to detect any clicks from user.
 	Make sure you put m_isClicked to true when element is clicked and
 	m_isClicked to false when not.
@@ -117,7 +117,7 @@ public:
 	Function used for Handler2D to call on OnClick.
 	Write the logic for detecting if anyone has clicked the element.
 	*/
-	virtual const bool CheckClick() = 0;
+	virtual const bool Update() = 0;
 
 	/*
 		Add a reference to the element.

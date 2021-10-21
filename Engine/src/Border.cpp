@@ -51,7 +51,7 @@ void rtd::Border::OnHover()
 {
 }
 
-const bool rtd::Border::CheckClick()
+const bool rtd::Border::Update()
 {
 	return false;
 }

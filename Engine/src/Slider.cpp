@@ -107,21 +107,29 @@ void Slider::OnHover()
 
 const bool Slider::CheckHover()
 {
-	return false;
+	m_isHovering = false;
+	// Is within bounds?
+	if (InputSystem::Get().GetMousePos().x > m_drawOpts.x_pos &&
+		InputSystem::Get().GetMousePos().x < m_drawOpts.x_pos + m_drawOpts.width &&
+		InputSystem::Get().GetMousePos().y > m_drawOpts.y_pos &&
+		InputSystem::Get().GetMousePos().y < m_drawOpts.y_pos + m_drawOpts.height)
+	{
+		m_isHovering = true;
+	}
+	return m_isHovering;
 }
 
-const bool Slider::CheckClick()
+const bool Slider::Update()
 {
 	m_isHeld = false;
-	// CheckCollisions if mouse key is pressed.
-	if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::HELD))
+	// Is within bounds?
+	if (CheckHover())
 	{
-		// Is within bounds?
-		if (InputSystem::Get().GetMousePos().x > m_drawOpts.x_pos &&
-			InputSystem::Get().GetMousePos().x < m_drawOpts.x_pos + m_drawOpts.width &&
-			InputSystem::Get().GetMousePos().y > m_drawOpts.y_pos &&
-			InputSystem::Get().GetMousePos().y < m_drawOpts.y_pos + m_drawOpts.height)
+		OnHover();
+		// CheckCollisions if mouse key is pressed.
+		if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::HELD))
 		{
+			OnClick();
 			m_isHeld = true;
 		}
 	}

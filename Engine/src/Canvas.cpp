@@ -72,18 +72,18 @@ void rtd::Canvas::OnHover()
 
 }
 
-const bool rtd::Canvas::CheckClick()
+const bool rtd::Canvas::Update()
 {
 	// CheckCollisions if mouse key is pressed.
-	if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED))
+	// Is within bounds?
+	m_isClicked = false;
+	if (CheckHover())
 	{
-		// Is within bounds?
-		if (InputSystem::Get().GetMousePos().x > m_drawOpts.x_pos &&
-			InputSystem::Get().GetMousePos().x < m_drawOpts.x_pos + m_drawOpts.width &&
-			InputSystem::Get().GetMousePos().y > m_drawOpts.y_pos &&
-			InputSystem::Get().GetMousePos().y < m_drawOpts.y_pos + m_drawOpts.height)
+		OnHover();
+		if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED))
 		{
-			return true;
+			OnClick();
+			m_isClicked = true;
 		}
 	}
 	return false;
@@ -91,5 +91,14 @@ const bool rtd::Canvas::CheckClick()
 
 const bool rtd::Canvas::CheckHover()
 {
+	if (InputSystem::Get().GetMousePos().x > m_drawOpts.x_pos &&
+		InputSystem::Get().GetMousePos().x < m_drawOpts.x_pos + m_drawOpts.width &&
+		InputSystem::Get().GetMousePos().y > m_drawOpts.y_pos &&
+		InputSystem::Get().GetMousePos().y < m_drawOpts.y_pos + m_drawOpts.height)
+	{
+		m_isHovering = true;
+		return true;
+	}
+	m_isHovering = false;
 	return false;
 }
