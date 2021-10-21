@@ -182,6 +182,7 @@ Entity CreateLightEntity(Scene& scene, sm::Vector4 pos, sm::Vector4 dir, sm::Vec
 
 void SetupMainMenuScreen()
 {
+#if RENDER_IMGUI == 0
 	// Setup main menu scene.
 
 	// Adds text to the menu screen.
@@ -206,12 +207,12 @@ void SetupMainMenuScreen()
 	exitGameButton->SetName("exitGameButton");
 	// Adds a border around the button and sets the color to black.
 	exitGameButton->GetBorder()->SetColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
-
-
+#endif
 }
 
 void SetupInGameScreen()
 {
+#if RENDER_IMGUI == 0
 	// Temp textures
 	const std::string& texture1 = "Leafs3.png";
 	const std::string& texture2 = "LampFlowerLeafs.png";
@@ -281,10 +282,12 @@ void SetupInGameScreen()
 	build3->GetBorder()->SetColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
 	build2->GetBorder()->SetColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
 	build1->GetBorder()->SetColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
+#endif
 }
 
 void SetupInLobbyScreen()
 {
+#if RENDER_IMGUI == 0
 	const std::string& warriorString = "Warrior\nThe Warrior specializes in destroying noobs.";
 	const std::string& mageString = "Mage\nThis weak character is good for nothing please choose the warrior instead.";
 
@@ -351,7 +354,7 @@ void SetupInLobbyScreen()
 
 	rtd::Text* homehearthText = new rtd::Text("Homehearth", draw_text_t(25.0f, 25.0f, 200.0f, 50.0f));
 	rtd::Handler2D::Get().InsertElement(homehearthText);
-
+#endif
 }
 
 void SetupOptionsScreen()
@@ -360,6 +363,7 @@ void SetupOptionsScreen()
 
 void SetupLobbyJoinScreen()
 {
+#if RENDER_IMGUI == 0
 	rtd::TextField* ipField = new rtd::TextField(draw_text_t(100.0f, 100.0f, 200.0f, 35.0f));
 	//rtd::TextField* ipField = new rtd::TextField(draw_text_t((float)(rand() % 1000) / 2, (float)(rand() % 1000) / 4, 200.0f, 35.0f));
 	ipField->GetBorder()->SetColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
@@ -394,4 +398,5 @@ void SetupLobbyJoinScreen()
 	rtd::Slider* test = new rtd::Slider(D2D1::ColorF(0.0f, 0.0f, 0.0f), draw_t(300.0f, 300.0f, 100.0f, 50.0f), test1, 2.0f, 0.0f, true);
 	rtd::Handler2D::Get().InsertElement(test);
 	*/
+#endif
 }
