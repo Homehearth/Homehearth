@@ -10,6 +10,9 @@ private:
 	Client m_client;
 	uint32_t m_localPID;
 	uint32_t m_gameID;
+	std::string* m_ipBuffer = nullptr;
+	std::string* m_lobbyBuffer = nullptr;
+	std::string* m_portBuffer = nullptr;
 
 	bool m_isLeavingLobby;
 

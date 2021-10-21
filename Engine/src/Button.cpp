@@ -109,5 +109,5 @@ const bool rtd::Button::CheckHover()
 
 void Button::OnClick()
 {
-	std::cout << "CLICKED!\n";
+	//std::cout << "CLICKED!\n";
 }

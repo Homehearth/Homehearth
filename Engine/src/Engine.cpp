@@ -29,7 +29,6 @@ void Engine::Startup()
 	// DirectX Startup:
 	D3D11Core::Get().Initialize(&m_window);
 	D2D1Core::Initialize(&m_window);
-	rtd::Handler2D::Get()->Initialize();
 	BackBuffer::Initialize();
 
 	m_renderer.Initialize(&m_window);
@@ -65,8 +64,7 @@ void Engine::Startup()
 	// Thread Startup.
 	thread::RenderThreadHandler::Get().SetRenderer(&m_renderer);
 	thread::RenderThreadHandler::Get().SetWindow(&m_window);
-	//thread::RenderThreadHandler::Get().Setup(1);
-	thread::RenderThreadHandler::Get().Setup(T_REC - thread::MultiThreader::GetAmountOfThreads());
+	thread::RenderThreadHandler::Get().Setup(2);
 
 	InputSystem::Get().SetMouseWindow(m_window.GetHWnd(), m_window.GetWidth(), m_window.GetHeight());
 
@@ -110,7 +108,6 @@ void Engine::Run()
     T_DESTROY();
     D2D1Core::Destroy();
 	ResourceManager::Get().Destroy();
-	rtd::Handler2D::Get()->Destroy();
 	BackBuffer::Destroy();
 }
 
@@ -305,7 +302,7 @@ void Engine::RenderThread()
 		deltaTime = static_cast<float>(currentFrame - lastFrame);
 		if (deltaSum >= targetDelta)
 		{
-			if (GetCurrentScene()->IsRenderReady() && GetCurrentScene()->IsRenderDebugReady() && rtd::Handler2D::Get()->IsRenderReady())
+			if (GetCurrentScene()->IsRenderReady() && GetCurrentScene()->IsRenderDebugReady() && rtd::Handler2D::Get().IsRenderReady())
 			{
 				Render(deltaSum);
 				m_frameTime.render = deltaSum;
@@ -342,6 +339,7 @@ void Engine::Update(float dt)
 	if (InputSystem::Get().CheckMouseKey(MouseKey::RIGHT, KeyState::PRESSED))
 	{
 		InputSystem::Get().SwitchMouseMode();
+
 		LOG_INFO("Switched mouse Mode");
 	}
 
@@ -396,7 +394,7 @@ void Engine::Render(float& dt)
 	{
 		PROFILE_SCOPE("Render D2D1");
 		D2D1Core::Begin();
-		rtd::Handler2D::Get()->Render();
+		rtd::Handler2D::Get().Render();
 		D2D1Core::Present();
 	}
 
