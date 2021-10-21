@@ -356,6 +356,7 @@ void Engine::Update(float dt)
 		);
 	}
 
+	OnUserUpdate(dt);
 	BasicEngine::Update(dt);
 
 	{

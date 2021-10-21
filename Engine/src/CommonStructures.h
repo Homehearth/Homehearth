@@ -6,6 +6,11 @@ enum class TypeLight : UINT
 	POINT
 };
 
+struct Commands
+{
+
+};
+
 struct Ray_t
 {
 	sm::Vector3 rayPos, rayDir;

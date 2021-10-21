@@ -65,29 +65,6 @@ bool ServerGame::OnStartup()
 	return true;
 }
 
-void ServerGame::OnUserUpdate(float deltaTime)
-{
-	this->m_server.Update();
-
-	for (auto it = m_simulations.begin(); it != m_simulations.end();)
-	{
-		if (it->second->IsEmpty())
-		{
-			it->second->Destroy();
-			LOG_INFO("Destroyed empty lobby %d", it->first);
-			it = m_simulations.erase(it);
-		}
-		else {
-			it++;
-		}
-	}
-
-	for (const auto& sim : m_simulations)
-	{
-		sim.second->Update(deltaTime);
-	}
-}
-
 void ServerGame::OnShutdown()
 {
 	m_inputThread.join();
@@ -96,10 +73,36 @@ void ServerGame::OnShutdown()
 
 void ServerGame::UpdateNetwork(float deltaTime)
 {
+	// Check incoming messages
+	this->m_server.Update();
+
+	// Update the simulations
+	for (auto it = m_simulations.begin(); it != m_simulations.end();)
+	{
+		if (it->second->IsEmpty())
+		{
+			it->second->Destroy();
+			LOG_INFO("Destroyed empty lobby %d", it->first);
+			it = m_simulations.erase(it);
+		}
+		else 
+		{
+			// Update the simulation
+			it->second->Update(deltaTime);
+			// Send the snapshot of the updated simulation to all clients in the sim
+			it->second->SendSnapshot();
+			it++;
+		}
+	}
+	
+	/* 
+			MOVED TO FIRST LOOP, IF CRASH MOVE BACK
+
 	for (const auto& sim : m_simulations)
 	{
-		sim.second->SendSnapshot();
+		sim.second->Update(deltaTime);
 	}
+	*/
 }
 
 void ServerGame::CheckIncoming(message<GameMsg>& msg)

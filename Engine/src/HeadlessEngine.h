@@ -15,7 +15,6 @@ private:
 
 	virtual void UpdateNetwork(float deltaTime) = 0;
 	virtual bool OnStartup() = 0;
-	virtual void OnUserUpdate(float deltaTime) = 0;
 	virtual void OnShutdown() = 0;
 	
 protected:
@@ -106,8 +105,6 @@ template<typename SceneType>
 void BasicEngine<SceneType>::Update(float dt)
 {
 	PROFILE_FUNCTION();
-
-	this->OnUserUpdate(dt);
 
 	// Update elements in the scene.
 	if (m_currentScene)

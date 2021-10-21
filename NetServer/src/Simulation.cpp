@@ -195,8 +195,13 @@ bool Simulation::IsEmpty() const
 // TODO ADD PLAYER FUNCTIONALITY
 bool Simulation::AddPlayer(uint32_t playerID)
 {
-	LOG_INFO("Player with ID: %ld added to the game!", playerID);
-	m_connections[playerID] = m_pServer->GetConnection(playerID);
+	SOCKET con = m_pServer->GetConnection(playerID);
+	if (con == INVALID_SOCKET)
+	{
+		LOG_ERROR("Addplayer: Player has an invalid socket!");
+		return false;
+	}
+	m_connections[playerID] = con;
 	
 	// Send all entities in Game Scene to new player
 	m_pServer->SendToClient(m_pServer->GetConnection(playerID), AllEntitiesMessage());
@@ -219,6 +224,7 @@ bool Simulation::AddPlayer(uint32_t playerID)
 			}
 		});
 
+	LOG_INFO("Player with ID: %ld added to the game!", playerID);
 	// send new Player to all other clients
 	Broadcast(SingleEntityMessage(player));
 
@@ -267,6 +273,7 @@ void Simulation::Update(float dt)
 {
 	if(m_pCurrentScene)
 		m_pCurrentScene->Update(dt);
+	m_tick++;
 }
 
 void Simulation::Broadcast(network::message<GameMsg>& msg, uint32_t exclude)
