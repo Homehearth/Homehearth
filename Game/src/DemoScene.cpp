@@ -12,7 +12,7 @@ namespace sceneHelp
 	{
 		Entity playerEntity = scene.CreateEntity();
 		playerEntity.AddComponent<comp::Transform>();
-	
+
 		comp::BoundingOrientedBox* playerObb = playerEntity.AddComponent<comp::BoundingOrientedBox>();
 		playerObb->Extents = sm::Vector3{ 1.f,1.f,1.f };
 
@@ -49,13 +49,13 @@ namespace sceneHelp
 		// Scene logic
 		Scene& mainMenuScene = engine.GetScene("MainMenu");
 		mainMenuScene.on<ESceneUpdate>([](const ESceneUpdate& e, Scene& scene)
-		{
-			IMGUI(
-				ImGui::Begin("Scene");
-			ImGui::Text("MainMenu");
-			ImGui::End();
-			);
-		});
+			{
+				IMGUI(
+					ImGui::Begin("Scene");
+				ImGui::Text("MainMenu");
+				ImGui::End();
+				);
+			});
 	}
 
 	void CreateLobbyScene(Engine& engine)
@@ -66,7 +66,7 @@ namespace sceneHelp
 	void CreateGameScene(Engine& engine)
 	{
 		Scene& gameScene = engine.GetScene("Game");
-		
+
 		//Construct collider meshes if colliders are added.
 		gameScene.GetRegistry()->on_construct<comp::RenderableDebug>().connect<entt::invoke<&comp::RenderableDebug::InitRenderable>>();
 		gameScene.GetRegistry()->on_construct<comp::BoundingOrientedBox>().connect<&entt::registry::emplace_or_replace<comp::RenderableDebug>>();
@@ -119,8 +119,8 @@ namespace sceneHelp
 
 				IMGUI(
 					ImGui::Begin("Scene");
-					ImGui::Text("Game");
-					ImGui::End();
+				ImGui::Text("Game");
+				ImGui::End();
 				);
 
 				GameSystems::RenderIsCollidingSystem(scene);
@@ -142,6 +142,11 @@ namespace sceneHelp
 					}
 				}
 #endif // DEBUG
+
+			});
+	}
+
+}
 
 Entity CreatePlayerEntity(HeadlessScene& scene, uint32_t playerID)
 {
@@ -179,6 +184,8 @@ Entity CreateLightEntity(Scene& scene, sm::Vector4 pos, sm::Vector4 dir, sm::Vec
 
 void SetupServerConnectScreen(Window* pWindow)
 {
+#if RENDER_IMGUI == 0
+
 	const unsigned int width = pWindow->GetWidth(), height = pWindow->GetHeight();
 	
 
@@ -198,6 +205,7 @@ void SetupServerConnectScreen(Window* pWindow)
 	rtd::Button* connectButton = new rtd::Button("StartButton.png", draw_t(width / 2 - 150.f, height - height / 3, 300.0f, 100.0f));
 	rtd::Handler2D::Get().InsertElement(connectButton);
 	connectButton->SetName("connectButton");
+#endif
 }
 
 void SetupMainMenuScreen(Window* pWindow)
