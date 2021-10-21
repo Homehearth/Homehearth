@@ -47,16 +47,13 @@ public:
 
 	ComPtr<ID3D11InputLayout>		m_defaultInputLayout;
 	ComPtr<ID3D11InputLayout>		m_animationInputLayout;
-	
-	/*
-		Added to resourcemanager - maybe not needed if I use a separate pass
-	*/
-	std::shared_ptr<Shaders::VertexShader>	m_defaultVertexShader;
-	std::shared_ptr<Shaders::VertexShader>	m_depthPassVertexShader;
-	std::shared_ptr<Shaders::VertexShader>	m_animationVertexShader;
 
-	std::shared_ptr<Shaders::PixelShader>	m_defaultPixelShader;
-	std::shared_ptr<Shaders::PixelShader>	m_debugPixelShader;
+	Shaders::VertexShader			m_defaultVertexShader;
+	Shaders::VertexShader			m_depthPassVertexShader;
+	Shaders::VertexShader			m_animationVertexShader;
+
+	Shaders::PixelShader			m_defaultPixelShader;
+	Shaders::PixelShader			m_debugPixelShader;
 	
 	D3D11_VIEWPORT					m_viewport;
 

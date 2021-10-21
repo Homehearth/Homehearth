@@ -1,0 +1,18 @@
+//Skeleton - RModel
+TestPlayer.fbx
+
+//List of animations
+"idle" 			Player_Idle.fbx
+"walkForward" 	Player_WalkForward.fbx
+"walkBack" 		Player_WalkBackward.fbx
+...
+
+
+//States between animations
+... Idle --> WalkForward
+Blendtime: 1.0s
+
+... Walk --> Idle
+Blendtime: 2.0s;
+
+...

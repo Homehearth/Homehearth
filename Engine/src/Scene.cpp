@@ -33,6 +33,22 @@ void Scene::Update(float dt)
 		
 		m_renderableCopies.Swap();
 	}
+
+	
+	if (!m_renderableAnimCopies.IsSwapped())
+	{
+		m_renderableAnimCopies[0].clear();
+		m_registry.view<comp::RenderableAnimation, comp::Transform>().each([&](comp::RenderableAnimation& r, comp::Transform& t)
+		{
+			r.data.worldMatrix = ecs::GetMatrix(t);
+			m_renderableAnimCopies[0].push_back(r);
+
+		});
+
+		m_renderableAnimCopies.Swap();
+	}
+
+
 	if(!m_debugRenderableCopies.IsSwapped())
 	{
 		m_debugRenderableCopies[0].clear();
@@ -58,6 +74,7 @@ void Scene::Update(float dt)
 		
 		m_debugRenderableCopies.Swap();
 	}
+
 }
 
 void Scene::Render()
@@ -142,6 +159,54 @@ void Scene::RenderDebug()
 
 }
 
+void Scene::RenderAnimation()
+{
+	PROFILE_FUNCTION();
+
+	// Divides up work between threads.
+	const render_instructions_t inst = thread::RenderThreadHandler::Get().Launch(static_cast<int>(m_renderableAnimCopies[1].size()));
+	if ((inst.start | inst.stop) == 0)
+	{
+		// Render everything on same thread.
+		ID3D11Buffer* const buffers[1] =
+		{
+			m_publicBuffer.GetBuffer()
+		};
+
+		D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, buffers);
+		// System that renders Renderable component
+		for (auto& it : m_renderableAnimCopies[1])
+		{
+			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
+			it.animator.Render();
+		}
+	}
+	else
+	{
+		// Render third part of the scene with immediate context
+		ID3D11Buffer* const buffers[1] =
+		{
+			m_publicBuffer.GetBuffer()
+		};
+
+		D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, buffers);
+		// System that renders Renderable Animation component
+		for (int i = inst.start; i < inst.stop; i++)
+		{
+			auto& it = m_renderableAnimCopies[1][i];
+			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
+			it.animator.Render();
+		}
+	}
+
+	// Run any available Command lists from worker threads.
+	thread::RenderThreadHandler::ExecuteCommandLists();
+
+	// Emit event
+	publish<ESceneRender>();
+
+}
+
 const bool Scene::IsRenderReady() const
 {
 	return m_renderableCopies.IsSwapped();
@@ -150,6 +215,11 @@ const bool Scene::IsRenderReady() const
 const bool Scene::IsRenderDebugReady() const
 {
 	return m_debugRenderableCopies.IsSwapped();
+}
+
+const bool Scene::IsAnimRenderReady() const
+{
+	return m_renderableAnimCopies.IsSwapped();
 }
 
 Camera* Scene::GetCurrentCamera() const
@@ -161,6 +231,7 @@ void Scene::ReadyForSwap()
 {
 	m_renderableCopies.ReadyForSwap();
 	m_debugRenderableCopies.ReadyForSwap();
+	m_renderableAnimCopies.ReadyForSwap();
 }
 
 void Scene::SetCurrentCameraEntity(Entity cameraEntity)
@@ -193,4 +264,9 @@ DoubleBuffer<std::vector<comp::Renderable>>* Scene::GetBuffers()
 DoubleBuffer<std::vector<comp::RenderableDebug>>* Scene::GetDebugBuffers()
 {
 	return &m_debugRenderableCopies;
+}
+
+DoubleBuffer<std::vector<comp::RenderableAnimation>>* Scene::GetAnimationBuffers()
+{
+	return &m_renderableAnimCopies;
 }

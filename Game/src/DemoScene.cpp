@@ -67,6 +67,15 @@ namespace sceneHelp
 
 		gameScene.SetCurrentCameraEntity(cameraEntity);
 
+		/*
+		* Testing
+		*/ 
+		Entity testAnim = gameScene.CreateEntity();
+		comp::Transform* transform = testAnim.AddComponent<comp::Transform>();
+		comp::RenderableAnimation* animRender = testAnim.AddComponent<comp::RenderableAnimation>();
+		animRender->animator.Create("test");
+		
+
 		for (int i = 0; i < 5; i++)
 		{
 			// Debug Chest
@@ -79,7 +88,7 @@ namespace sceneHelp
 			sphere->Extents = sm::Vector3(2.0f);
 			comp::Renderable* renderable2 = chest.AddComponent<comp::Renderable>();
 
-			renderable2->model = ResourceManager::Get().GetResource<RModel>("Player_Skeleton.fbx");
+			renderable2->model = ResourceManager::Get().GetResource<RModel>("Chest.obj");
 		}
 
 		CreateLightEntity(gameScene, { 0.f, 0.f, 0.f, 0.f }, { 1.f, -1.f, 0.f, 0.f }, { 10.f, 10.f, 10.f, 10.f }, 0, TypeLight::DIRECTIONAL, 1);

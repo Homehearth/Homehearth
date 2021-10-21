@@ -441,10 +441,6 @@ bool RModel::LoadBones(const aiMesh* aimesh, const aiNode* root, std::vector<ani
 
 void RModel::Render() const
 {
-    //Bind vertexshader
-    //Bind inputlayout
-    //D3D11Core::Get().DeviceContext()->VSSetShader(m_vertexShader->Get(), 0, 0);
-
     UINT offset = 0;
     UINT stride = sizeof(simple_vertex_t);
     if (m_hasSkeleton)
@@ -463,10 +459,6 @@ void RModel::Render() const
 		if (m_meshes[m].material)
             m_meshes[m].material->UnBindMaterial();
     }
-
-
-    //Unbind vertexshader
-    //Unbind inputlayout
 }
 
 void RModel::RenderDeferred(ID3D11DeviceContext* context)

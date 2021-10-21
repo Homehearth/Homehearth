@@ -1,7 +1,6 @@
 #include "EnginePCH.h"
 #include "DepthPass.h"
 #include "PipelineManager.h"
-#include "RModel.h"
 
 void DepthPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 {
@@ -18,7 +17,7 @@ void DepthPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 	
     DC->VSSetConstantBuffers(1, 1, pCam->m_viewConstantBuffer.GetAddressOf());
 	
-    DC->VSSetShader(PM->m_depthPassVertexShader->Get(), nullptr, 0);
+    DC->VSSetShader(PM->m_depthPassVertexShader.Get(), nullptr, 0);
     DC->PSSetShader(nullptr, nullptr, 0);
 }
 

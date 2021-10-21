@@ -11,43 +11,92 @@ Animator::Animator()
 Animator::~Animator()
 {
 	m_bones.clear();
+	m_finalMatrix.clear();
 	m_animations.clear();
 }
 
-void Animator::SetBones(const std::vector<bone_t>& bones)
+bool Animator::LoadModel(const std::string& filename)
 {
-	m_bones = bones;
-	m_bones.shrink_to_fit();
-	m_finalMatrix.reserve(m_bones.size());
+	bool loaded = false;
+	m_model = ResourceManager::Get().GetResource<RModel>(filename);
+
+	if (m_model)
+	{
+		std::vector<bone_t> allBones = m_model->GetSkeleton();
+		for (size_t i = 0; i < allBones.size(); i++)
+		{
+			bone_keyFrames_t bone;
+			bone.name = allBones[i].name;
+			bone.inverseBind = allBones[i].inverseBind;
+			bone.parentIndex = allBones[i].parentIndex;
+			m_bones.push_back(bone);
+		}
+		allBones.clear();
+
+		m_finalMatrix.resize(m_bones.size(), sm::Matrix::Identity);
+		loaded = true;
+	}
+	return loaded;
 }
 
-void Animator::Update()
+bool Animator::Create(const std::string& filename)
 {
-	if (!m_bones.empty())
+	/*
+		Testing with hardcoded values for now...
+	*/
+
+	m_currentAnim = "Player_Idle.fbx";
+	if (!LoadModel("Player_Skeleton.fbx"))
+		return false;
+
+	m_animations[m_currentAnim] = ResourceManager::Get().GetResource<RAnimation>(m_currentAnim);
+
+
+	return true;
+}
+
+void Animator::Render()
+{
+	//Unnecessary to the render if the model does not exist
+	if (m_model)
 	{
-		//double tickDT = m_animations[m_currentAnim]->GetTicksPerFrame() * 
-		//m_frameTime +=  m_animations[m_currentAnim]->GetTicksPerFrame();
-		//double nextFrameTime = 
+		/*
+			Update the bones for the model
+		*/
 
-		std::vector<sm::Matrix> modelMatrices;
-
-		for (size_t i = 0; i < m_bones.size(); i++)
+		if (!m_bones.empty())
 		{
-			sm::Matrix localMatrix; //= m_animations[m_currentAnim]->GetMatrix(m_bones[i].name, );
+			//double tickDT = m_animations[m_currentAnim]->GetTicksPerFrame() * 
+			//m_frameTime +=  m_animations[m_currentAnim]->GetTicksPerFrame();
+			//double nextFrameTime = 
 
-			if (m_bones[i].parentIndex == -1)
+			std::vector<sm::Matrix> modelMatrices;
+			modelMatrices.resize(m_bones.size(), sm::Matrix::Identity);
+
+			for (size_t i = 0; i < m_bones.size(); i++)
 			{
-				modelMatrices[i] = localMatrix;
-			}
-			else
-			{
-				modelMatrices[i] = modelMatrices[m_bones[i].parentIndex] * localMatrix;
+				sm::Matrix localMatrix = m_animations[m_currentAnim]->GetMatrix(m_bones[i].name, 0.1, 0.2, m_bones[i].lastKeys);
+
+				if (m_bones[i].parentIndex == -1)
+				{
+					modelMatrices[i] = localMatrix;
+				}
+				else
+				{
+					modelMatrices[i] = modelMatrices[m_bones[i].parentIndex] * localMatrix;
+				}
+
+				m_finalMatrix[i] = modelMatrices[i] * m_bones[i].inverseBind;
 			}
 
-			m_finalMatrix[i] = modelMatrices[i] * m_bones[i].inverseBind;
+			modelMatrices.clear();
+
+			//Update the buffer for the GPU
 		}
 
-		//Update the buffer for the GPU
+		/*
+			Finally render the model at the current pose
+		*/
+		m_model->Render();
 	}
-	
 }

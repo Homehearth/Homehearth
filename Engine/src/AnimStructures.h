@@ -5,9 +5,21 @@
 */
 struct bone_t
 {
-	std::string name = "";
+	std::string name		= "";
 	sm::Matrix	inverseBind = {};
 	int			parentIndex = -1;
+};
+
+/*
+	Also holds when the last 
+	keyframes was for that bone
+*/
+struct bone_keyFrames_t
+{
+	std::string name		= "";
+	sm::Matrix	inverseBind = {};
+	int			parentIndex = -1;
+	UINT		lastKeys[3] = {0};
 };
 
 /*

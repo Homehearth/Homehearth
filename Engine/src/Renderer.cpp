@@ -14,12 +14,14 @@ void Renderer::Initialize(Window* pWindow)
 
 	AddPass(&m_depthPass);  // 1
 	AddPass(&m_basePass);   // 2
+	AddPass(&m_animPass);	// 3
 
 	m_depthPass.SetEnable(true);
 	m_basePass.SetEnable(true);
+	m_animPass.SetEnable(true);
 
 #ifdef _DEBUG
-	AddPass(&m_debugPass);  // 3
+	AddPass(&m_debugPass);  // 4
     m_debugPass.SetEnable(true);
 #endif
 

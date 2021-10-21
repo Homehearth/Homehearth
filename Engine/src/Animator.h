@@ -1,6 +1,9 @@
 #pragma once
 #include "AnimStructures.h"
+#include "RModel.h"
 #include "RAnimation.h"
+
+const UINT T2D_BONESLOT = 11;
 
 /*
 	Loads in an animator from our custom format ".anim"
@@ -13,38 +16,29 @@
 class Animator
 {
 private:
-	double		m_frameTime;
-	std::string m_currentAnim;	//optimize by ints instead?
-	std::string m_nextAnim;
+	double					m_frameTime;
+	std::string				m_currentAnim;	//optimize by ints instead?
+	std::string				m_nextAnim;
 
-	
-	std::vector<bone_t>	m_bones;
+	std::shared_ptr<RModel>			m_model;
+	std::vector<bone_keyFrames_t>	m_bones;
+	std::vector<sm::Matrix>			m_finalMatrix;
 	std::unordered_map<std::string, std::shared_ptr<RAnimation>> m_animations;
-	//std::array<UINT, 3> lastKeys;
 
-	std::vector<sm::Matrix> m_finalMatrix;
+
 	//Structure that is going up to gpu
 
-	
-
-	//Need to have different vertexshaders for default or skeletal 
-	//std::shared_ptr<Shaders::VertexShader> m_vertexShader;	//Get from the resourcemanager
+private:
+	bool LoadModel(const std::string& filename);
+	void LoadAnimations(const std::vector<std::string>& animNames);
 
 public:
 	Animator();
 	~Animator();
 
 	//Create from a custom file - something.anim
-	//Create()
+	bool Create(const std::string& filename);
 
-	//Set what bones to use from an model
-	void SetBones(const std::vector<bone_t>& bones);
-
-
-	void Update();
-
-	//Bind()
-
-	//Unbind()
+	void Render();
 
 };

@@ -1,12 +1,14 @@
 #pragma once
 #include "AnimStructures.h"
+struct aiAnimation;
 
 /*
 	Load in one animation from file.
 	Tested formats: fbx
 
-	Create(): load from file
-	GetMatrix(): Get the matrix for specific time
+	Create(aiAnimation): Load an animation from assimpformat
+	Create(filename):	 Load an animation from file
+	GetMatrix():		 Get the matrix for specific time
 */
 
 class RAnimation : public resource::GResource
@@ -27,6 +29,7 @@ private:
 	std::unordered_map<std::string, KeyFrames> m_keyFrames;
 
 private:
+	void LoadKeyframes(const aiAnimation* animation);
 	const sm::Vector3 GetPosition(const std::string& bonename, const double& currentFrame, const double& nextFrame, UINT& lastKey, bool interpolate) const;
 	const sm::Vector3 GetScale(const std::string& bonename, const double& currentFrame, const double& nextFrame, UINT& lastKey, bool interpolate) const;
 	const sm::Quaternion GetRotation(const std::string& bonename, const double& currentFrame, const double& nextFrame, UINT& lastKey, bool interpolate) const;
@@ -50,8 +53,11 @@ public:
 	const sm::Matrix GetMatrix(const std::string& bonename, 
 								const double& currentFrame, 
 								const double& nextFrame, 
-								std::array<UINT,3>& lastKeys, 
+								UINT* lastKeys, 
 								bool interpolate = true);
+
+	//Create from a assimp-animation if needed
+	void Create(const aiAnimation* animation);
 
 	// Inherited via GResource
 	virtual bool Create(const std::string& filename) override;

@@ -49,15 +49,14 @@ namespace ecs
 
 		struct Renderable
 		{
-			std::shared_ptr<RModel>		model;
-			basic_model_matrix_t		data;
+			std::shared_ptr<RModel>	model;
+			basic_model_matrix_t	data;
 		};
 
 		struct RenderableAnimation
 		{
-			std::shared_ptr<RModel>		model;
-			Animator					animator;
-			basic_model_matrix_t		data;
+			Animator				animator;
+			basic_model_matrix_t	data;
 		};
 
 		// Used on server side

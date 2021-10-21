@@ -352,7 +352,7 @@ bool PipelineManager::CreateInputLayouts()
     HRESULT hr = S_FALSE;
 
 	// Create m_defaultInputLayout.
-	std::string shaderByteCode = m_defaultVertexShader->GetShaderByteCode();
+	std::string shaderByteCode = m_defaultVertexShader.GetShaderByteCode();
     D3D11_INPUT_ELEMENT_DESC defaultVertexShaderDesc[] =
     {
         {"POSITION",    0, DXGI_FORMAT_R32G32B32_FLOAT,    0,                0,                   D3D11_INPUT_PER_VERTEX_DATA, 0},
@@ -368,7 +368,7 @@ bool PipelineManager::CreateInputLayouts()
         return false;
     }
 
-    shaderByteCode = m_animationVertexShader->GetShaderByteCode();
+    shaderByteCode = m_animationVertexShader.GetShaderByteCode();
     D3D11_INPUT_ELEMENT_DESC animationVertexShaderDesc[] =
     {
         {"POSITION",    0, DXGI_FORMAT_R32G32B32_FLOAT,    0,                0,                   D3D11_INPUT_PER_VERTEX_DATA, 0},
@@ -391,36 +391,31 @@ bool PipelineManager::CreateInputLayouts()
 
 bool PipelineManager::CreateShaders()
 {	
-    m_defaultVertexShader = ResourceManager::Get().GetResource<Shaders::VertexShader>("Model_vs");
-    if (!m_defaultVertexShader)
+    if (!m_defaultVertexShader.Create("Model_vs"))
     {
         LOG_WARNING("failed creating Model_vs.");
-		return false;
+        return false;
     }
-    
-    m_depthPassVertexShader = ResourceManager::Get().GetResource<Shaders::VertexShader>("Depth_vs");
-    if (!m_depthPassVertexShader)
+
+    if (!m_depthPassVertexShader.Create("Depth_vs"))
     {
         LOG_WARNING("failed creating Depth_vs.");
         return false;
     }
 
-    m_animationVertexShader = ResourceManager::Get().GetResource<Shaders::VertexShader>("AnimModel_vs");
-    if (!m_animationVertexShader)
+    if (!m_animationVertexShader.Create("AnimModel_vs"))
     {
         LOG_WARNING("failed creating AnimModel_vs.");
         return false;
     }
-	
-    m_defaultPixelShader = ResourceManager::Get().GetResource<Shaders::PixelShader>("Model_ps");
-    if(!m_defaultPixelShader)
+
+    if (!m_defaultPixelShader.Create("Model_ps"))
     {
         LOG_WARNING("failed creating Model_ps.");
         return false;
     }
 
-    m_debugPixelShader = ResourceManager::Get().GetResource<Shaders::PixelShader>("Debug_ps");
-    if (!m_debugPixelShader)
+    if (!m_debugPixelShader.Create("Debug_ps"))
     {
         LOG_WARNING("failed creating Debug_ps.");
         return false;

@@ -19,6 +19,51 @@ RAnimation::~RAnimation()
 	m_keyFrames.clear();
 }
 
+void RAnimation::LoadKeyframes(const aiAnimation* animation)
+{
+	//Go through all the bones
+	for (UINT i = 0; i < animation->mNumChannels; i++)
+	{
+		const std::string boneName = animation->mChannels[i]->mNodeName.C_Str();
+		KeyFrames		keyframes;
+		positionKey_t	pos;
+		scaleKey_t		scl;
+		rotationKey_t	rot;
+
+		//Load in all the positions
+		keyframes.position.reserve(size_t(animation->mChannels[i]->mNumPositionKeys));
+		for (UINT p = 0; p < animation->mChannels[i]->mNumPositionKeys; p++)
+		{
+			pos.time = animation->mChannels[i]->mPositionKeys[p].mTime;
+			const aiVector3D aiPos = animation->mChannels[i]->mPositionKeys[p].mValue;
+			pos.val = { aiPos.x, aiPos.y, aiPos.z };
+			keyframes.position.push_back(pos);
+		}
+
+		//Load in all the scales
+		keyframes.scale.reserve(size_t(animation->mChannels[i]->mNumScalingKeys));
+		for (UINT s = 0; s < animation->mChannels[i]->mNumScalingKeys; s++)
+		{
+			scl.time = animation->mChannels[i]->mScalingKeys[s].mTime;
+			const aiVector3D aiScl = animation->mChannels[i]->mScalingKeys[s].mValue;
+			scl.val = { aiScl.x, aiScl.y, aiScl.z };
+			keyframes.scale.push_back(scl);
+		}
+
+		//Load in all the rotations
+		keyframes.rotation.reserve(size_t(animation->mChannels[i]->mNumRotationKeys));
+		for (UINT r = 0; r < animation->mChannels[i]->mNumRotationKeys; r++)
+		{
+			rot.time = animation->mChannels[i]->mRotationKeys[r].mTime;
+			const aiQuaternion aiRot = animation->mChannels[i]->mRotationKeys[r].mValue;
+			rot.val = { aiRot.x, aiRot.y, aiRot.z, aiRot.w };
+			keyframes.rotation.push_back(rot);
+		}
+
+		m_keyFrames[boneName] = keyframes;
+	}
+}
+
 const sm::Vector3 RAnimation::GetPosition(const std::string& bonename, const double& currentFrame, const double& nextFrame, UINT& lastKey, bool interpolate) const
 {
 	sm::Vector3 finalVec;
@@ -137,20 +182,37 @@ const double RAnimation::GetTicksPerFrame() const
 	return m_ticksPerFrame;
 }
 
-const sm::Matrix RAnimation::GetMatrix(const std::string& bonename, const double& currentFrame, const double& nextFrame, std::array<UINT, 3>& lastKeys, bool interpolate)
+const sm::Matrix RAnimation::GetMatrix(const std::string& bonename, const double& currentFrame, const double& nextFrame, UINT* lastKeys, bool interpolate)
 {
 	sm::Matrix finalMatrix = sm::Matrix::Identity;
 
 	//Bone has to exist otherwise return identity matrix
 	if (m_keyFrames.find(bonename) != m_keyFrames.end())
 	{
-		sm::Vector3 pos = GetPosition(bonename, currentFrame, nextFrame, lastKeys[0], interpolate);
-		sm::Vector3 scl = GetScale(bonename, currentFrame, nextFrame, lastKeys[1], interpolate);
-		sm::Quaternion rot = GetRotation(bonename, currentFrame, nextFrame, lastKeys[2], interpolate);
-		finalMatrix = sm::Matrix::CreateScale(scl) * sm::Matrix::CreateFromQuaternion(rot) * sm::Matrix::CreateTranslation(pos);	
+		//Last keys have to be 3 values
+		if (sizeof(lastKeys) / sizeof(lastKeys[0]) == 3)
+		{
+			sm::Vector3 pos = GetPosition(bonename, currentFrame, nextFrame, lastKeys[0], interpolate);
+			sm::Vector3 scl = GetScale(bonename, currentFrame, nextFrame, lastKeys[1], interpolate);
+			sm::Quaternion rot = GetRotation(bonename, currentFrame, nextFrame, lastKeys[2], interpolate);
+			finalMatrix = sm::Matrix::CreateScale(scl) * sm::Matrix::CreateFromQuaternion(rot) * sm::Matrix::CreateTranslation(pos);
+		}
 	}
 
 	return finalMatrix;
+}
+
+void RAnimation::Create(const aiAnimation* animation)
+{
+	m_duration = animation->mDuration;
+	m_ticksPerFrame = animation->mTicksPerSecond;
+	
+	//Load in all the keyframes
+	LoadKeyframes(animation);
+
+#ifdef _DEBUG
+		LOG_INFO("Loaded animation: %s\n", animation->mName.C_Str());
+#endif // _DEBUG
 }
 
 bool RAnimation::Create(const std::string& filename)
@@ -184,50 +246,13 @@ bool RAnimation::Create(const std::string& filename)
 
 	//Only supports to load in the first animation
 	const aiAnimation* animation = scene->mAnimations[0];
+
 	m_duration = animation->mDuration;
 	m_ticksPerFrame = animation->mTicksPerSecond;
 	
-	//Go through all the bones
-	for (UINT i = 0; i < animation->mNumChannels; i++)
-	{
-		const std::string boneName = animation->mChannels[i]->mNodeName.C_Str();
-		KeyFrames		keyframes;
-		positionKey_t	pos;
-		scaleKey_t		scl;
-		rotationKey_t	rot;
-
-		//Load in all the positions
-		keyframes.position.reserve(size_t(animation->mChannels[i]->mNumPositionKeys));
-		for (UINT p = 0; p < animation->mChannels[i]->mNumPositionKeys; p++)
-		{
-			pos.time = animation->mChannels[i]->mPositionKeys[p].mTime;
-			const aiVector3D aiPos = animation->mChannels[i]->mPositionKeys[p].mValue;
-			pos.val = { aiPos.x, aiPos.y, aiPos.z };
-			keyframes.position.push_back(pos);
-		}
-
-		//Load in all the scales
-		keyframes.scale.reserve(size_t(animation->mChannels[i]->mNumScalingKeys));
-		for (UINT s = 0; s < animation->mChannels[i]->mNumScalingKeys; s++)
-		{
-			scl.time = animation->mChannels[i]->mScalingKeys[s].mTime;
-			const aiVector3D aiScl = animation->mChannels[i]->mScalingKeys[s].mValue;
-			scl.val = { aiScl.x, aiScl.y, aiScl.z };
-			keyframes.scale.push_back(scl);
-		}
-
-		//Load in all the rotations
-		keyframes.rotation.reserve(size_t(animation->mChannels[i]->mNumRotationKeys));
-		for (UINT r = 0; r < animation->mChannels[i]->mNumRotationKeys; r++)
-		{
-			rot.time = animation->mChannels[i]->mRotationKeys[r].mTime;
-			const aiQuaternion aiRot = animation->mChannels[i]->mRotationKeys[r].mValue;
-			rot.val = { aiRot.x, aiRot.y, aiRot.z, aiRot.w };
-			keyframes.rotation.push_back(rot);
-		}
-
-		m_keyFrames[boneName] = keyframes;
-	}
+	//Load in all the keyframes - works with only one animation at time
+	//Takes the first
+	LoadKeyframes(animation);
 	
 #ifdef _DEBUG
 	LOG_INFO("Loaded animation: %s\n", filename.c_str());

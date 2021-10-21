@@ -1,7 +1,7 @@
-/*cbuffer Matrices : register(b0)
+cbuffer Matrices : register(b0) //Not needed later
 {
     float4x4 c_world;
-}*/
+}
 
 cbuffer Camera : register(b1)
 {
@@ -40,15 +40,19 @@ VertexOut main(VertexIn input)
     VertexOut output;
     
     float4x4 world;
-    for (int i = 0; i < 4; i++)
-    {
-        world += s_boneTransforms[input.boneIDs[i]] * input.boneWeights[i];
-    }
+    //for (int i = 0; i < 4; i++)
+    //{
+    //    world += s_boneTransforms[input.boneIDs[i]] * input.boneWeights[i];
+    //}
+    world = c_world;
     
-    float4x4 wvp = mul(world, mul(c_view, c_projection));
+    //Positions and worldpos
+    output.pos = float4(input.pos, 1.0f);
+    output.pos = mul(world, output.pos);
+    output.worldPos = output.pos;
+    output.pos = mul(c_view, output.pos);
+    output.pos = mul(c_projection, output.pos);
     
-    output.worldPos = mul(float4(input.pos, 1.0f), world);
-    output.pos = mul(float4(input.pos, 1.0f), wvp);  
     output.normal = mul((float3x3) world, input.normal);
     
     //Same as before
