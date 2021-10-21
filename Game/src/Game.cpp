@@ -51,33 +51,15 @@ void Game::UpdateNetwork(float deltaTime)
 }
 
 bool Game::OnStartup()
-{
-	// Scene logic
-	Scene& mainMenuScene = GetScene("MainMenu");
-	mainMenuScene.on<ESceneUpdate>([](const ESceneUpdate& e, Scene& scene)
-		{
-
-			IMGUI(
-				ImGui::Begin("Scene");
-				ImGui::Text("MainMenu");
-				ImGui::End();
-			);
-		});
-
-	Scene& lobbyScene = GetScene("Lobby");
-	lobbyScene.on<ESceneUpdate>([](const ESceneUpdate& e, Scene& scene)
-		{
-			IMGUI(
-				ImGui::Begin("Scene");
-				ImGui::Text("Lobby");
-				ImGui::End();
-			);
-		});
-
+{	
+	sceneHelp::CreateLobbyScene(*this);
+	rtd::Handler2D::Get().SetVisibilityAll(false);
 	sceneHelp::CreateGameScene(*this);
+	sceneHelp::CreateMainMenuScene(*this);
+
 
 	// Set Current Scene
-	SetScene(mainMenuScene);
+	SetScene("MainMenu");
 	
 	return true;
 }

@@ -1,5 +1,11 @@
 #include "DemoScene.h"
 
+void SetupMainMenuScreen();
+void SetupLobbyJoinScreen();
+void SetupInLobbyScreen();
+void SetupInGameScreen();
+void SetupOptionsScreen();
+
 namespace sceneHelp
 {
 	Entity CreatePlayerEntity(HeadlessScene& scene, uint32_t playerID)
@@ -36,12 +42,32 @@ namespace sceneHelp
 
 	void CreateMainMenuScene(Engine& engine)
 	{
-
+		SetupMainMenuScreen();
+		SetupLobbyJoinScreen();
+		// Scene logic
+		Scene& mainMenuScene = engine.GetScene("MainMenu");
+		mainMenuScene.on<ESceneUpdate>([](const ESceneUpdate& e, Scene& scene)
+		{
+			IMGUI(
+				ImGui::Begin("Scene");
+			ImGui::Text("MainMenu");
+			ImGui::End();
+			);
+		});
 	}
 
 	void CreateLobbyScene(Engine& engine)
 	{
-
+		SetupInLobbyScreen();
+		Scene& lobbyScene = engine.GetScene("Lobby");
+		lobbyScene.on<ESceneUpdate>([](const ESceneUpdate& e, Scene& scene)
+		{
+			IMGUI(
+				ImGui::Begin("Scene");
+			ImGui::Text("Lobby");
+			ImGui::End();
+			);
+		});
 	}
 
 	void CreateGameScene(Engine& engine)
@@ -355,4 +381,10 @@ void SetupLobbyJoinScreen()
 	rtd::Handler2D::Get().InsertElement(hostLobbyButton);
 	hostLobbyButton->SetName("hostLobby");
 	hostLobbyButton->SetVisibility(false);
+
+	/*
+	float* test1 = new float(5.0f);
+	rtd::Slider* test = new rtd::Slider(D2D1::ColorF(0.0f, 0.0f, 0.0f), draw_t(300.0f, 300.0f, 100.0f, 50.0f), test1, 2.0f, 0.0f, true);
+	rtd::Handler2D::Get().InsertElement(test);
+	*/
 }
