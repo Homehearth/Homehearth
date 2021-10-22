@@ -200,10 +200,10 @@ bool Simulation::AddPlayer(uint32_t playerID)
 	
 	// Send all entities in Game Scene to new player
 	m_pServer->SendToClient(m_pServer->GetConnection(playerID), AllEntitiesMessage());
-
+	static int count = 0;
 	// Create Player entity in Game scene
 	Entity player = m_pGameScene->CreateEntity();
-	player.AddComponent<comp::Transform>();
+	player.AddComponent<comp::Transform>()->position.y = count+=1;
 	player.AddComponent<comp::Velocity>();
 	player.AddComponent<comp::MeshName>()->name = "cube.obj";
 	player.AddComponent<comp::Network>()->id = playerID;
@@ -218,30 +218,35 @@ bool Simulation::AddPlayer(uint32_t playerID)
 				comp::BoundingOrientedBox* p2Obb = m_pCurrentScene->GetRegistry()->try_get<comp::BoundingOrientedBox>(player2);
 				comp::BoundingOrientedBox* p1Obb = m_pCurrentScene->GetRegistry()->try_get<comp::BoundingOrientedBox>(player);
 				
-				sm::Vector3* p2Corners = new sm::Vector3[8];
-				sm::Vector3* p1Corners = new sm::Vector3[8];
+				sm::Vector3 p2Corners[8];
+				sm::Vector3 p1Corners[8];
 				p2Obb->GetCorners(p2Corners);
 				p1Obb->GetCorners(p1Corners);
 				
 				//Box1
-				sm::Vector3* p1normalAxis = new sm::Vector3[3];
-				sm::Vector3* p2normalAxis = new sm::Vector3[3];
+				sm::Vector3 p1normalAxis[3];
+				sm::Vector3 p2normalAxis[3];
+
+				p1Corners[0];
+				p1Corners[1];
+				p1Corners[2];
+				p1Corners[4];
 				
 				//Get the 3 AXIS from box1 needed to do the projection on
 				p1normalAxis[0] = (p1Corners[1] - p1Corners[0]);
-				sm::Vector3().Normalize(p1normalAxis[0]);
+				p1normalAxis[0].Normalize();
 				p1normalAxis[1] = (p1Corners[2] - p1Corners[1]);
-				sm::Vector3().Normalize(p1normalAxis[1]);
+				p1normalAxis[1].Normalize();
 				p1normalAxis[2] = (p1Corners[4] - p1Corners[0]);
-				sm::Vector3().Normalize(p1normalAxis[2]);
+				p1normalAxis[2].Normalize();
 				
 				//Get the 3 AXIS from box2 needed to do the projection on
 				p2normalAxis[0] = (p2Corners[1] - p2Corners[0]);
-				sm::Vector3().Normalize(p2normalAxis[0]);
+				p2normalAxis[0].Normalize();
 				p2normalAxis[1] = (p2Corners[2] - p2Corners[1]);
-				sm::Vector3().Normalize(p2normalAxis[1]);
+				p2normalAxis[1].Normalize();
 				p2normalAxis[2] = (p2Corners[4] - p2Corners[0]);
-				sm::Vector3().Normalize(p2normalAxis[2]);
+				p2normalAxis[2].Normalize();
 
 				std::vector<sm::Vector3> p1Vectors;
 				std::vector<sm::Vector3> p2Vectors;
@@ -253,48 +258,98 @@ bool Simulation::AddPlayer(uint32_t playerID)
 						p1Vectors.emplace_back(p1Corners[i]);
 						p2Vectors.emplace_back(p2Corners[i]);
 					}
-					else
-					{
-						p1Vectors.emplace_back(p1Obb->Center);
-						p2Vectors.emplace_back(p2Obb->Center);
-					}
+					//else
+					//{
+					//	p1Vectors.emplace_back(p1Obb->Center);
+					//	p2Vectors.emplace_back(p2Obb->Center);
+					//}
 				}
 				
 				//Get min-max for the axis for the box
-				MinMaxProj_t P1 = CollisionSystem::Get().GetMinMax(p1Vectors, p1normalAxis[1]);
-				MinMaxProj_t P2 = CollisionSystem::Get().GetMinMax(p2Vectors, p1normalAxis[1]);
+				std::vector<MinMaxProj_t> minMaxProj;
+				minMaxProj.push_back(CollisionSystem::Get().GetMinMax(p1Vectors, p1normalAxis[1]));
+				minMaxProj.push_back(CollisionSystem::Get().GetMinMax(p2Vectors, p1normalAxis[1]));
 
-				MinMaxProj_t Q1 = CollisionSystem::Get().GetMinMax(p1Vectors, p1normalAxis[0]);
-				MinMaxProj_t Q2 = CollisionSystem::Get().GetMinMax(p2Vectors, p1normalAxis[0]);
+				minMaxProj.push_back(CollisionSystem::Get().GetMinMax(p1Vectors, p1normalAxis[0]));
+				minMaxProj.push_back(CollisionSystem::Get().GetMinMax(p2Vectors, p1normalAxis[0]));
 
-				MinMaxProj_t R1 = CollisionSystem::Get().GetMinMax(p1Vectors, p1normalAxis[2]);
-				MinMaxProj_t R2 = CollisionSystem::Get().GetMinMax(p2Vectors, p1normalAxis[2]);
+				minMaxProj.push_back(CollisionSystem::Get().GetMinMax(p1Vectors, p1normalAxis[2]));
+				minMaxProj.push_back(CollisionSystem::Get().GetMinMax(p2Vectors, p1normalAxis[2]));
 
-				MinMaxProj_t T1 = CollisionSystem::Get().GetMinMax(p1Vectors, p2normalAxis[1]);
-				MinMaxProj_t T2 = CollisionSystem::Get().GetMinMax(p2Vectors, p2normalAxis[1]);
-																			   
-				MinMaxProj_t Y1 = CollisionSystem::Get().GetMinMax(p1Vectors, p2normalAxis[0]);
-				MinMaxProj_t Y2 = CollisionSystem::Get().GetMinMax(p2Vectors, p2normalAxis[0]);
-																			   
-				MinMaxProj_t U1 = CollisionSystem::Get().GetMinMax(p1Vectors, p2normalAxis[2]);
-				MinMaxProj_t U2 = CollisionSystem::Get().GetMinMax(p2Vectors, p2normalAxis[2]);
+				minMaxProj.push_back(CollisionSystem::Get().GetMinMax(p1Vectors, p2normalAxis[1]));
+				minMaxProj.push_back(CollisionSystem::Get().GetMinMax(p2Vectors, p2normalAxis[1]));
+												   
+				minMaxProj.push_back(CollisionSystem::Get().GetMinMax(p1Vectors, p2normalAxis[0]));
+				minMaxProj.push_back(CollisionSystem::Get().GetMinMax(p2Vectors, p2normalAxis[0]));
+											   
+				minMaxProj.push_back(CollisionSystem::Get().GetMinMax(p1Vectors, p2normalAxis[2]));
+				minMaxProj.push_back(CollisionSystem::Get().GetMinMax(p2Vectors, p2normalAxis[2]));
 
-				bool separatP = P1.maxProj < P2.minProj || P2.maxProj < P1.minProj;
-				bool separatQ = Q1.maxProj < Q2.minProj || Q2.maxProj < Q1.minProj;
-				bool separatR = R1.maxProj < R2.minProj || R2.maxProj < R1.minProj;
-				bool separatT = T1.maxProj < T2.minProj || T2.maxProj < T1.minProj;
-				bool separatY = Y1.maxProj < Y2.minProj || Y2.maxProj < Y1.minProj;
-				bool separatU = U1.maxProj < U2.minProj || U2.maxProj < U1.minProj;
-
-				bool isSeparated = separatP || separatQ || separatR || separatT || separatY || separatU;
-				if(isSeparated)
+				float depth = 99999.f;
+				sm::Vector3 box1Corner;
+				sm::Vector3 box2Corner;
+				for (int i = 0; i < minMaxProj.size() - 1; i += 2)
 				{
-					LOG_INFO("isSeparated");
+					sm::Vector3 gap = p2Vectors[minMaxProj[i+1].minInxed] - p1Vectors[minMaxProj[i].maxIndex];
+					//sm::Vector3 gap2 = p1Vectors[minMaxProj[i].minInxed] - p2Vectors[minMaxProj[i+1].maxIndex];
+					//float test1 = gap.Length();
+					float test2 = gap.Length();
+					if(gap.Length() < depth)
+					{
+
+						sm::Vector3 centerToCenter = (sm::Vector3(p2Obb->Center) - sm::Vector3(p1Obb->Center));
+						centerToCenter.Normalize();
+						depth = gap.Dot(centerToCenter);
+
+
+						
+						box1Corner = p1Vectors[minMaxProj[i].maxIndex];
+						box2Corner = p2Vectors[minMaxProj[i + 1].minInxed];
+
+					}
+					
 				}
-				else
-				{
-					LOG_INFO("COLLIDING!");
-				}
+
+
+
+				//
+				//for(int i = 0; i < minMaxProj.size()-1; i+=2)
+				//{
+				//	if(minMaxProj[i].maxProj > minMaxProj[i + 1].minProj)
+				//	{
+				//		float value = minMaxProj[i].maxProj - minMaxProj[i + 1].minProj;
+				//		if (depth < value)
+				//			depth = value;
+				//	}
+				//	else if (minMaxProj[i + 1].maxProj > minMaxProj[i].minProj)
+				//	{
+				//		float value = minMaxProj[i + 1].maxProj - minMaxProj[i].minProj;
+				//		if (depth < value)
+				//			depth = value;
+				//	}
+				//}
+
+
+				LOG_INFO("Depth %f point1(%f, %f, %f) - point2(%f, %f, %f)", depth, box1Corner.x, box1Corner.y, box1Corner.z, box2Corner.x, box2Corner.y, box2Corner.z);
+				//bool separatP = P1.maxProj < P2.minProj || P2.maxProj < P1.minProj;
+				//bool separatQ = Q1.maxProj < Q2.minProj || Q2.maxProj < Q1.minProj;
+				//bool separatR = R1.maxProj < R2.minProj || R2.maxProj < R1.minProj;
+				//bool separatT = T1.maxProj < T2.minProj || T2.maxProj < T1.minProj;
+				//bool separatY = Y1.maxProj < Y2.minProj || Y2.maxProj < Y1.minProj;
+				//bool separatU = U1.maxProj < U2.minProj || U2.maxProj < U1.minProj;
+
+
+				//Get the deepest depth.
+				//bool isSeparated = separatP || separatQ || separatR || separatT || separatY || separatU;
+				//if(isSeparated)
+				//{
+				//	LOG_INFO("isSeparated");
+				//}
+				//else
+				//{
+				//	
+				//	LOG_INFO("COLLIDING!");
+				//}
 
 			}
 		});

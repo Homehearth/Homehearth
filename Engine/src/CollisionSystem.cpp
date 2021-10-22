@@ -133,7 +133,8 @@ MinMaxProj_t CollisionSystem::GetMinMax(std::vector<sm::Vector3> boxVectors, sm:
 	minMaxProj.maxProj = boxVectors.at(0).Dot(boxAxis);
 	minMaxProj.minInxed = 0;
 	minMaxProj.maxIndex = 0;
-
+	minMaxProj.axisProjectOn = boxAxis;
+	
 	for(int i = 1; i < boxVectors.size(); i++)
 	{
 		float currentProj = boxVectors[i].Dot(boxAxis);

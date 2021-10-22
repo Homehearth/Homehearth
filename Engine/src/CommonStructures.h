@@ -6,6 +6,7 @@ struct MinMaxProj_t
 	float maxProj;
 	int minInxed;
 	int maxIndex;
+	sm::Vector3 axisProjectOn;
 };
 
 enum class TypeLight : UINT
