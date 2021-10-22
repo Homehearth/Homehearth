@@ -223,7 +223,7 @@ bool Simulation::IsEmpty() const
 bool Simulation::AddPlayer(uint32_t playerID)
 {
 	// Stop players from joining full lobbies
-	if (m_players.size() >= 2)
+	if (m_players.size() >= MAX_PLAYER_PER_LOBBY)
 	{
 		network::message<GameMsg> msg;
 		msg.header.id = GameMsg::Lobby_Invalid;
@@ -267,6 +267,7 @@ bool Simulation::AddPlayer(uint32_t playerID)
 		}
 	}
 
+	m_players.emplace(playerID, player);
 	// send new Player to all other clients
 	Broadcast(SingleEntityMessage(player));
 

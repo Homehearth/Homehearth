@@ -2,6 +2,8 @@
 #include "Server.h"
 #include "HeadlessEngine.h"
 
+constexpr int MAX_PLAYER_PER_LOBBY = 2;
+
 /* 
 		Simulation defines each ongoing simulation from the perspective of the server
 		gameID identifies the simulation which each player has to give the server to keep track
