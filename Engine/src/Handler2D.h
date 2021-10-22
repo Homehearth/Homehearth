@@ -112,7 +112,11 @@ namespace rtd
 
 		static const bool IsRenderReady();
 
-		// Clean up function to remove all elements until next draw call.
+		/*
+			Cleans up the elements from the handler and returns to a clean slate where no element is present.
+			All allocated memory will be released and elements will be removed.
+			Use this if you want to completely wipe the Handler2D from elements.
+		*/
 		static void Cleanup();
 	};
 

@@ -21,7 +21,8 @@ void rtd::Handler2D::CleanHandler()
 {
 	for (auto& elem : m_elements)
 	{
-		delete elem;
+		if(elem)
+			delete elem;
 	}
 	m_elements.clear();
 }
