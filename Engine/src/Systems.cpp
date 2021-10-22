@@ -38,7 +38,7 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 							{
 								playerAttack.cooldownTimer = playerAttack.attackSpeed; //Set attacker on cooldown
 								enemyHealth.currentHealth -= playerAttack.attackDamage; //Decrease health by the attackdamage
-								LOG_INFO("Player attack landed.");
+								LOG_INFO("Player %u: Attack landed.", player.GetComponent<comp::Network>()->id);
 							}
 						}
 
@@ -73,6 +73,8 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 				});
 		});
 
+
+	//Health System
 	scene.ForEachComponent<comp::Health>([&](Entity& Entity, comp::Health& Health)
 		{
 			//Check if something should be dead, and if so set isAlive to false
