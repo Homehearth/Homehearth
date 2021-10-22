@@ -62,10 +62,10 @@ namespace rtd
 	{
 	private:
 
-		// Double buffer
 		std::vector<Element2D*> m_elements;
 		bool m_shouldClean;
 
+		// Doublebuffer holding references to elements.
 		DoubleBuffer<std::vector<Element2D**>> m_drawBuffers;
 		Handler2D();
 		~Handler2D();
