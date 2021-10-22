@@ -14,41 +14,55 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 			// For Each Bad Guy.
 			scene.ForEachComponent<comp::Attack, comp::Health, comp::Transform, comp::Tag<BAD>>([&](Entity& enemy, comp::Attack& enemyAttack, comp::Health& enemyHealth, comp::Transform& enemyTransform, comp::Tag<BAD>&)
 				{
-					// Calculate the distance between player and enemy.
-					const auto dist = (playerTransform.position - enemyTransform.position).Length();
+
+					//TODO: Change it from being sphere range check to be OBB hit detection
 					
-					//Decreases cooldown between attacks
-					if (playerAttack.cooldownTimer > 0.f)
-						playerAttack.cooldownTimer -= 1.f * dt;
-					if (enemyAttack.cooldownTimer > 0.f)
-						enemyAttack.cooldownTimer -= 1.f * dt;
-
-					// Check if attack is in range.
-					if (playerAttack.attackRange >= dist && playerAttack.cooldownTimer <= 0.f && enemyHealth.isAlive)
+					//CQC
+					if (!playerAttack.isRanged || !enemyAttack.isRanged)
 					{
-						//LOG_INFO("Player is in attack range.");
+						// Calculate the distance between player and enemy.
+						const auto dist = (playerTransform.position - enemyTransform.position).Length();
+					
+						//Decreases cooldown between attacks
+						if (playerAttack.cooldownTimer > 0.f)
+							playerAttack.cooldownTimer -= 1.f * dt;
+						if (enemyAttack.cooldownTimer > 0.f)
+							enemyAttack.cooldownTimer -= 1.f * dt;
 
-						// Perform battle logic.
-						if ((playerAttack.isAttacking & playerHealth.isAlive) == TRUE)
+						// Check if attack is in range.
+						if (playerAttack.attackRange >= dist && playerAttack.cooldownTimer <= 0.f && enemyHealth.isAlive)
 						{
-							playerAttack.cooldownTimer = playerAttack.attackSpeed; //Set attacker on cooldown
-							enemyHealth.currentHealth -= playerAttack.attackDamage; //Decrease health by the attackdamage
-							LOG_INFO("Player attack landed.");
+
+							// Perform battle logic.
+							if ((playerAttack.isAttacking & playerHealth.isAlive) == TRUE)
+							{
+								playerAttack.cooldownTimer = playerAttack.attackSpeed; //Set attacker on cooldown
+								enemyHealth.currentHealth -= playerAttack.attackDamage; //Decrease health by the attackdamage
+								LOG_INFO("Player attack landed.");
+							}
+						}
+
+						// Check if attack is in range.
+						if (enemyAttack.attackRange >= dist && enemyAttack.cooldownTimer <= 0.f && playerHealth.isAlive)
+						{
+
+							// Perform battle logic.
+							if ((enemyAttack.isAttacking & enemyHealth.isAlive) == TRUE)
+							{
+								enemyAttack.cooldownTimer = enemyAttack.attackSpeed; //Set attacker on cooldown
+								playerHealth.currentHealth -= enemyAttack.attackDamage; //Decrease health by the attackdamage
+								LOG_INFO("Enemy attack landed.");
+							}
 						}
 					}
 
-					// Check if attack is in range.
-					if (enemyAttack.attackRange >= dist && enemyAttack.cooldownTimer <= 0.f && playerHealth.isAlive)
+					//Ranged Combat
+					else
 					{
-						//LOG_INFO("Enemy is in attack range.");
-
-						// Perform battle logic.
-						if ((enemyAttack.isAttacking & enemyHealth.isAlive) == TRUE)
-						{
-							enemyAttack.cooldownTimer = enemyAttack.attackSpeed; //Set attacker on cooldown
-							playerHealth.currentHealth -= enemyAttack.attackDamage; //Decrease health by the attackdamage
-							LOG_INFO("Enemy attack landed.");
-						}
+						//Spawn a projectile
+						//Check if it hits
+						//Do damage calcs
+						//Delete projectile when hit?
 					}
 
 					//Reset to non attacking state
