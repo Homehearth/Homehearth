@@ -19,9 +19,10 @@ rtd::Handler2D::~Handler2D()
 	m_elements.clear();
 }
 
-void rtd::Handler2D::InsertElement(Element2D* element)
+void rtd::Handler2D::InsertElement(Element2D* element, const std::string& groupName)
 {
 	INSTANCE.m_elements.push_back(element);
+	INSTANCE.m_groups[groupName].push_back(element);
 }
 
 void rtd::Handler2D::Render()
@@ -117,6 +118,18 @@ void rtd::Handler2D::SetVisibilityAll(const bool& toggle)
 	{
 		if (elem->GetRef() > 0)
 			elem->SetVisibility(toggle);
+	}
+}
+
+void rtd::Handler2D::SetVisibilityGroup(const std::string& group, bool visible) 
+{
+	if (INSTANCE.m_groups.find(group) != INSTANCE.m_groups.end())
+	{
+		for (auto& elem : INSTANCE.m_groups[group])
+		{
+			if (elem->GetRef() > 0)
+				elem->SetVisibility(visible);
+		}
 	}
 }
 

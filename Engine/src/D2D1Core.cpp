@@ -166,8 +166,6 @@ void D2D1Core::DrawF(const draw_t& fig, const draw_shape_t& shape)
 
 	ID2D1PathGeometry* geometry = nullptr;
 
-	INSTANCE->m_renderTarget->SetTransform(D2D1::IdentityMatrix());
-
 	// Determine which shape to render.
 	switch (shape.shape)
 	{
