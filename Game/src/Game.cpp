@@ -391,7 +391,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	case GameMsg::Game_Start:
 	{
 		m_internalState = 2;
-		rtd::Handler2D::DereferenceAllOnce();
+		rtd::Handler2D::Get().DereferenceAllOnce();
 		SetScene("Game");
 		break;
 	}

@@ -130,8 +130,24 @@ bool Simulation::LeaveLobby(uint32_t playerID, uint32_t gameID)
 {
 	this->RemovePlayer(playerID);
 
+	// Reset Lobby player.
+	if (m_playerDecisions[0].playerID == playerID)
+	{
+		m_playerDecisions[0].playerID = -1;
+		m_playerDecisions[0].isWantToStart = false;
+	}
+	else if (m_playerDecisions[1].playerID == playerID)
+	{
+		m_playerDecisions[1].playerID = -1;
+		m_playerDecisions[1].isWantToStart = false;
+	}
+
 	message<GameMsg> msg;
 	msg.header.id = GameMsg::Game_RemoveEntity;
+
+	// Remove from game.
+	m_players.erase(m_players.find(playerID));
+
 	
 	uint32_t count = 0;
 	m_pGameScene->ForEachComponent<comp::Network>([&](comp::Network& n)
