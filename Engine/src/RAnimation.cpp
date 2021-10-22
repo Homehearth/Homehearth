@@ -92,8 +92,8 @@ const sm::Vector3 RAnimation::GetPosition(const std::string& bonename, const dou
 	}
 
 	//Update the lastkey to new value
-	if (nextFrame >= secondTime)
-		lastKey = nextKey;
+	/*if (nextFrame >= secondTime)
+		lastKey = nextKey;*/
 
 	return finalVec;
 }
@@ -126,8 +126,8 @@ const sm::Vector3 RAnimation::GetScale(const std::string& bonename, const double
 	}
 
 	//Update the lastkey to new value
-	if (nextFrame >= secondTime)
-		lastKey = nextKey;
+	/*if (nextFrame >= secondTime)
+		lastKey = nextKey;*/
 
 	return finalVec;
 }
@@ -161,8 +161,8 @@ const sm::Quaternion RAnimation::GetRotation(const std::string& bonename, const 
 	}
 
 	//Update the lastkey to new value
-	if (nextFrame >= secondTime)
-		lastKey = nextKey;
+	/*if (nextFrame >= secondTime)
+		lastKey = nextKey;*/
 
 	return finalQuat;
 }

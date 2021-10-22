@@ -22,15 +22,27 @@ private:
 
 	std::shared_ptr<RModel>			m_model;
 	std::vector<bone_keyFrames_t>	m_bones;
-	std::vector<sm::Matrix>			m_finalMatrix;
 	std::unordered_map<std::string, std::shared_ptr<RAnimation>> m_animations;
 
 
 	//Structure that is going up to gpu
+	//ComPtr<ID3D11Buffer> m_nrOfBonesBuffer;
+
+	std::vector<sm::Matrix>			 m_finalMatrices;
+	ComPtr<ID3D11Buffer>			 m_bonesSB_Buffer;
+	ComPtr<ID3D11ShaderResourceView> m_bonesSB_RSV;		//structurebuffer
 
 private:
 	bool LoadModel(const std::string& filename);
 	void LoadAnimations(const std::vector<std::string>& animNames);
+
+	bool CreateBonesSB();
+
+	//bool UpdateNrOfBones();
+	void UpdateStructureBuffer();
+	void UpdateBones();
+	void Bind() const;
+	void Unbind() const;
 
 public:
 	Animator();

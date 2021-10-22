@@ -12,6 +12,11 @@ cbuffer Camera : register(b1)
     float4x4 c_view;
 }
 
+//cbuffer BonesInfo : register(b2)
+//{
+//    uint c_nrOfBones;
+//};
+
 StructuredBuffer<float4x4> s_boneTransforms : register(t11);
 
 struct VertexIn
@@ -40,11 +45,13 @@ VertexOut main(VertexIn input)
     VertexOut output;
     
     float4x4 world;
-    //for (int i = 0; i < 4; i++)
-    //{
-    //    world += s_boneTransforms[input.boneIDs[i]] * input.boneWeights[i];
-    //}
-    world = c_world;
+    for (int i = 0; i < 4; i++)
+    {
+        //uint id = input.boneIDs[i];
+        //if (id < c_nrOfBones)
+        world += s_boneTransforms[input.boneIDs[i]] * input.boneWeights[i];
+    }
+    //world = c_world;
     
     //Positions and worldpos
     output.pos = float4(input.pos, 1.0f);
