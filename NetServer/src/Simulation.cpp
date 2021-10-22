@@ -238,7 +238,7 @@ bool Simulation::AddPlayer(uint32_t playerID)
 				p1normalAxis[0].Normalize();
 				p1normalAxis[1] = (p1Corners[2] - p1Corners[1]);
 				p1normalAxis[1].Normalize();
-				p1normalAxis[2] = (p1Corners[4] - p1Corners[0]);
+				p1normalAxis[2] = (p1Corners[0] - p1Corners[4]);
 				p1normalAxis[2].Normalize();
 				
 				//Get the 3 AXIS from box2 needed to do the projection on
@@ -246,7 +246,7 @@ bool Simulation::AddPlayer(uint32_t playerID)
 				p2normalAxis[0].Normalize();
 				p2normalAxis[1] = (p2Corners[2] - p2Corners[1]);
 				p2normalAxis[1].Normalize();
-				p2normalAxis[2] = (p2Corners[4] - p2Corners[0]);
+				p2normalAxis[2] = (p2Corners[0] - p2Corners[4]);
 				p2normalAxis[2].Normalize();
 
 				std::vector<sm::Vector3> p1Vectors;
@@ -289,16 +289,23 @@ bool Simulation::AddPlayer(uint32_t playerID)
 				float depth = 99999.f;
 				sm::Vector3 smallestVec(9999.f,9999.f,9999.f);
 				float smallestDepth;
+				bool p1First = false;
 				for (int i = 0; i < minMaxProj.size() - 1; i += 2)
 				{
 					sm::Vector3 gap;
-					if (minMaxProj[i].maxProj > minMaxProj[i + 1].minProj)
+					if (minMaxProj[i].maxProj < minMaxProj[i + 1].maxProj)
 					{
 						gap = p2Vectors[minMaxProj[i + 1].minInxed] - p1Vectors[minMaxProj[i].maxIndex];
+						p1First = true;
 					}	
+					else if(minMaxProj[i].maxProj > minMaxProj[i + 1].maxProj)
+					{
+						gap = p1Vectors[minMaxProj[i].minInxed]- p2Vectors[minMaxProj[i + 1].maxIndex];
+						p1First = false;
+					}
 					else
 					{
-						gap = p1Vectors[minMaxProj[i].maxIndex] - p2Vectors[minMaxProj[i + 1].minInxed];
+						continue; // should not happend?
 					}
 					//sm::Vector3 gap2 = p1Vectors[minMaxProj[i].minInxed] - p2Vectors[minMaxProj[i+1].maxIndex];
 					//float test1 = gap.Length();
@@ -319,8 +326,18 @@ bool Simulation::AddPlayer(uint32_t playerID)
 					
 				}
 
-				p1transform->position += (smallestVec / 2.0f);
-				p2transform->position += -(smallestVec / 2.0f);
+				if(p1First)
+				{
+					p1transform->position += (smallestVec / 2.0f);
+					p2transform->position += -(smallestVec / 2.0f);
+				}
+				else
+				{
+					p1transform->position += -(smallestVec / 2.0f);
+					p2transform->position += (smallestVec / 2.0f);
+				}
+
+				LOG_INFO("SmallestVec (%f, %f, %f)", smallestVec.x, smallestVec.y, smallestVec.z);
 
 				//if (abs(smallestVec.x) < abs(smallestVec.y) && abs(smallestVec.x) < abs(smallestVec.z))
 				//{
