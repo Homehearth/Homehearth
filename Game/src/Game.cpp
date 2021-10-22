@@ -125,7 +125,8 @@ void Game::OnUserUpdate(float deltaTime)
 				if (lobby_text->GetBuffer(m_lobbyBuffer))
 				{
 					this->JoinLobby(std::stoi(*m_lobbyBuffer));
-					rtd::Handler2D::Get().DereferenceAllOnce();
+					//rtd::Handler2D::Get().DereferenceAllOnce();
+					rtd::Handler2D::Get().Cleanup();
 					m_internalState = 1;
 				}
 			}
@@ -136,7 +137,8 @@ void Game::OnUserUpdate(float deltaTime)
 				host_lobby_button->SetVisibility(true);
 				if (host_lobby_button->IsClicked())
 				{
-					rtd::Handler2D::Get().SetVisibilityAll(false);
+					//rtd::Handler2D::Get().SetVisibilityAll(false);
+					rtd::Handler2D::Get().Cleanup();
 					this->CreateLobby();
 					m_internalState = 1;
 				}
@@ -168,7 +170,7 @@ void Game::OnUserUpdate(float deltaTime)
 				msg.header.id = GameMsg::Lobby_Leave;
 				msg << m_localPID << m_gameID;
 				m_client.Send(msg);
-				rtd::Handler2D::DereferenceAllOnce();
+				rtd::Handler2D::Get().Cleanup();
 				sceneHelp::SetupLobbyJoinScreen();
 				m_internalState = 0;
 			}
@@ -365,7 +367,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	case GameMsg::Lobby_Accepted:
 	{
 		msg >> m_gameID;
-		rtd::Handler2D::Get().DereferenceAllOnce();
+		//rtd::Handler2D::Get().DereferenceAllOnce();
 		sceneHelp::SetupInLobbyScreen();
 		SetScene("Lobby");
 		LOG_INFO("You are now in lobby: %lu", m_gameID);
@@ -376,7 +378,8 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		std::string err;
 		msg >> err;
 		SetScene("MainMenu");
-		rtd::Handler2D::Get().DereferenceAllOnce();
+		//rtd::Handler2D::Get().DereferenceAllOnce();
+		rtd::Handler2D::Get().Cleanup();
 		m_internalState = 0;
 		LOG_WARNING("Request denied: %s", err.c_str());
 		break;
@@ -392,8 +395,9 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	case GameMsg::Game_Start:
 	{
 		m_internalState = 2;
-		rtd::Handler2D::SetVisibilityAll(false);
-		rtd::Handler2D::Get().DereferenceAllOnce();
+		rtd::Handler2D::Get().SetVisibilityAll(false);
+		rtd::Handler2D::Get().Cleanup();
+		//rtd::Handler2D::Get().DereferenceAllOnce();
 		SetScene("Game");
 		break;
 	}

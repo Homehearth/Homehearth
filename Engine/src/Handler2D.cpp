@@ -5,10 +5,19 @@ using namespace rtd;
 
 rtd::Handler2D::Handler2D()
 {
-
+	m_shouldClean = false;
 }
 
 rtd::Handler2D::~Handler2D()
+{
+	for (auto& elem : m_elements)
+	{
+		delete elem;
+	}
+	m_elements.clear();
+}
+
+void rtd::Handler2D::CleanHandler()
 {
 	for (auto& elem : m_elements)
 	{
@@ -69,6 +78,11 @@ void rtd::Handler2D::Update()
 
 	if (!INSTANCE.m_drawBuffers.IsSwapped())
 	{
+		if (INSTANCE.m_shouldClean)
+		{
+			INSTANCE.CleanHandler();
+			INSTANCE.m_shouldClean = false;
+		}
 		INSTANCE.m_drawBuffers[0].clear();
 		for (int i = 0; i < INSTANCE.m_elements.size(); i++)
 		{
@@ -124,4 +138,9 @@ void rtd::Handler2D::SetVisibilityAll(const bool& toggle)
 const bool rtd::Handler2D::IsRenderReady()
 {
 	return INSTANCE.m_drawBuffers.IsSwapped();
+}
+
+void rtd::Handler2D::Cleanup()
+{
+	INSTANCE.m_shouldClean = true;
 }

@@ -64,10 +64,14 @@ namespace rtd
 
 		// Double buffer
 		std::vector<Element2D*> m_elements;
+		bool m_shouldClean;
 
 		DoubleBuffer<std::vector<Element2D**>> m_drawBuffers;
 		Handler2D();
 		~Handler2D();
+
+		// Internal clean up of all elements.
+		void CleanHandler();
 
 	public:
 
@@ -107,6 +111,9 @@ namespace rtd
 		static void SetVisibilityAll(const bool& toggle);
 
 		static const bool IsRenderReady();
+
+		// Clean up function to remove all elements until next draw call.
+		static void Cleanup();
 	};
 
 
