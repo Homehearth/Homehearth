@@ -349,6 +349,10 @@ void sceneHelp::SetupInLobbyScreen()
 
 	rtd::Text* homehearthText = new rtd::Text("Homehearth", draw_text_t(25.0f, 25.0f, 200.0f, 50.0f));
 	rtd::Handler2D::Get().InsertElement(homehearthText);
+
+	rtd::Button* exitToMainMenu = new rtd::Button("demoExitButton.png", draw_t(0.0f, 0.0f, 64.0f, 64.0f), false);
+	exitToMainMenu->SetName("exitToMainButton");
+	rtd::Handler2D::Get().InsertElement(exitToMainMenu);
 #endif
 }
 

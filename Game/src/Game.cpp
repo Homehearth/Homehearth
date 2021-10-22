@@ -146,8 +146,26 @@ void Game::OnUserUpdate(float deltaTime)
 		{
 			if (ready_button->IsClicked())
 			{
-				LOG_INFO("PRESSED READY!")
+				// Ready for game start.
+				LOG_INFO("You have pressed [READY] Button.");
 				this->SendStartGame();
+			}
+		}
+
+		rtd::Button* leave_button = GET_ELEMENT("exitToMainButton", rtd::Button);
+		if (leave_button)
+		{
+			// Leave lobby.
+			if (leave_button->IsClicked())
+			{
+				m_isLeavingLobby = true;
+				message<GameMsg> msg;
+				msg.header.id = GameMsg::Lobby_Leave;
+				msg << m_localPID << m_gameID;
+				m_client.Send(msg);
+				rtd::Handler2D::DereferenceAllOnce();
+				sceneHelp::SetupLobbyJoinScreen();
+				m_internalState = 0;
 			}
 		}
 

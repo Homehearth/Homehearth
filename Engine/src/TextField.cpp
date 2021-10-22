@@ -115,6 +115,8 @@ const bool rtd::TextField::CheckClick()
         {
             return true;
         }
+        else
+            m_isUsed = false;
     }
 
     return false;

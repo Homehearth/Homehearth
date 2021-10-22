@@ -2,8 +2,6 @@
 
 using namespace rtd;
 #define INSTANCE rtd::Handler2D::Get()
-//std::vector<Element2D*> rtd::Handler2D::m_elements = {};
-//DoubleBuffer<std::vector<Element2D**>> rtd::Handler2D::m_drawBuffers;
 
 rtd::Handler2D::Handler2D()
 {
