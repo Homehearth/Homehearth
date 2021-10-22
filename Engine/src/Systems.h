@@ -10,7 +10,7 @@ namespace Systems
 	template<typename Collider1, typename Collider2>
 	void CheckCollisions(HeadlessScene& scene)
 	{
-		
+
 		auto view1 = scene.GetRegistry()->view<Collider1>();
 		auto view2 = scene.GetRegistry()->view<Collider2>();
 		for (auto& entity1 = view1.begin(), end = view1.end(); entity1 != end; ++entity1)
@@ -48,5 +48,7 @@ namespace Systems
 				}
 			}
 		}
-	}
+	};
+
+	void AISystem(HeadlessScene& scene);
 }

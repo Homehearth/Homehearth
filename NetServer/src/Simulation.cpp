@@ -155,6 +155,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 		Systems::MovementColliderSystem(scene, e.dt);
 
 		Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(scene);
+		Systems::AISystem(scene);
 		//LOG_INFO("GAME Scene %d", m_gameID);
 	});
 
@@ -164,7 +165,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 		CollisionSystem::Get().AddPair(e.obj1, e.obj2);
 		CollisionSystem::Get().OnCollision(e.obj1, e.obj2);
 	});
-
+	
 	// ---DEBUG ENTITY---
 	Entity e = m_pGameScene->CreateEntity();
 	e.AddComponent<comp::Network>()->id = m_pServer->PopNextUniqueID();
