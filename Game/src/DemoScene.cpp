@@ -124,7 +124,7 @@ namespace sceneHelp
 				);
 
 				GameSystems::RenderIsCollidingSystem(scene);
-
+				Systems::LightSystem(scene, e.dt);
 #ifdef _DEBUG
 				if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Space, KeyState::RELEASED))
 				{
