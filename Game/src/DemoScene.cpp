@@ -184,10 +184,8 @@ Entity CreateLightEntity(Scene& scene, sm::Vector4 pos, sm::Vector4 dir, sm::Vec
 
 void SetupServerConnectScreen(Window* pWindow)
 {
-#if RENDER_IMGUI == 0
-
 	const unsigned int width = pWindow->GetWidth(), height = pWindow->GetHeight();
-	
+#if RENDER_IMGUI == 0
 
 
 	rtd::TextField* ipField = new rtd::TextField(draw_text_t(width / 3 - 50.f, 100.0f, 200.0f, 35.0f));
@@ -202,10 +200,9 @@ void SetupServerConnectScreen(Window* pWindow)
 	portField->SetName("portBuffer");
 	portField->GetText()->SetText("Input PORT");
 	
+
 	rtd::Button* connectButton = new rtd::Button("StartButton.png", draw_t(width / 2 - 150.f, height - height / 3, 300.0f, 100.0f));
 	rtd::Handler2D::Get().InsertElement(connectButton);
-	connectButton->GetText()->SetText("Hello World");
-
 	connectButton->SetName("connectButton");
 #endif
 }

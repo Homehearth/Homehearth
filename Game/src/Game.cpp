@@ -66,6 +66,7 @@ bool Game::OnStartup()
 	sceneHelp::CreateMainMenuScene(*this);
 	sceneHelp::CreateGameScene(*this);
 
+
 	// Set Current Scene
 	SetScene("MainMenu");
 

@@ -98,6 +98,8 @@ struct draw_text_t
 	float x_stretch = 100.0f;
 	float y_stretch = 100.0f;
 
+	float scale = 1.0f;
+
 	draw_text_t() = default;
 
 	draw_text_t(IDWriteTextFormat* format, float x, float y, float x_stretch, float y_stretch)

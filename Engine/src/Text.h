@@ -37,6 +37,12 @@ namespace rtd
 		void SetPosition(const float& x, const float& y);
 
 		/*
+			Set the scale of the text.
+		*/
+		void SetScale(float scale);
+
+
+		/*
 			Create a custom format to use for this text element.
 		*/
 		const bool SetFormat(const WCHAR* fontName,

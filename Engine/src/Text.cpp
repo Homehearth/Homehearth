@@ -25,6 +25,11 @@ void rtd::Text::SetPosition(const float& x, const float& y)
     m_opts.y_pos = y;
 }
 
+void rtd::Text::SetScale(float scale)
+{
+    m_opts.scale = scale;
+}
+
 const bool Text::SetFormat(const WCHAR* fontName, 
     IDWriteFontCollection* fontCollection, 
     const DWRITE_FONT_WEIGHT& weight, const DWRITE_FONT_STYLE& style, 

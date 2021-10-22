@@ -129,8 +129,8 @@ void D2D1Core::DrawT(const std::string& text, const draw_text_t& opt)
 		D2D1_RECT_F layoutRect = D2D1::RectF(
 			opt.x_pos,
 			opt.y_pos,
-			opt.x_pos + opt.x_stretch,
-			opt.y_pos + opt.y_stretch
+			opt.x_pos + opt.x_stretch / opt.scale,
+			opt.y_pos + opt.y_stretch / opt.scale
 		);
 
 		/*
@@ -142,7 +142,8 @@ void D2D1Core::DrawT(const std::string& text, const draw_text_t& opt)
 		pwcsName = new WCHAR[nChars];
 		MultiByteToWideChar(CP_ACP, 0, t, -1, (LPWSTR)pwcsName, nChars);
 		
-		INSTANCE->m_renderTarget->SetTransform(D2D1::IdentityMatrix());
+		INSTANCE->m_renderTarget->SetTransform(D2D1::Matrix3x2F::Scale(D2D1::SizeF(opt.scale, opt.scale), D2D1::Point2F(opt.x_pos, opt.y_pos)));
+
 		INSTANCE->m_renderTarget->DrawTextW(pwcsName,
 			(UINT32)text.length(),
 			current_format,
@@ -164,6 +165,8 @@ void D2D1Core::DrawF(const draw_t& fig, const draw_shape_t& shape)
 	INSTANCE->m_solidBrush->SetColor(shape.color);
 
 	ID2D1PathGeometry* geometry = nullptr;
+
+	INSTANCE->m_renderTarget->SetTransform(D2D1::IdentityMatrix());
 
 	// Determine which shape to render.
 	switch (shape.shape)
@@ -206,7 +209,9 @@ void D2D1Core::DrawP(const draw_t& fig, ID2D1Bitmap* texture)
 {
 	if (texture == nullptr)
 		return;
-	
+
+	INSTANCE->m_renderTarget->SetTransform(D2D1::IdentityMatrix());
+
 	D2D1_SIZE_F size = texture->GetSize();
 	D2D1_POINT_2F upperLeftCorner = D2D1::Point2F(fig.x_pos, fig.y_pos);
 
