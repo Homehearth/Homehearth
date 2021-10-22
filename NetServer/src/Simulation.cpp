@@ -200,10 +200,9 @@ bool Simulation::AddPlayer(uint32_t playerID)
 	
 	// Send all entities in Game Scene to new player
 	m_pServer->SendToClient(m_pServer->GetConnection(playerID), AllEntitiesMessage());
-	static int count = 0;
 	// Create Player entity in Game scene
 	Entity player = m_pGameScene->CreateEntity();
-	player.AddComponent<comp::Transform>()->position.y = count+=1;
+	player.AddComponent<comp::Transform>();
 	player.AddComponent<comp::Velocity>();
 	player.AddComponent<comp::MeshName>()->name = "cube.obj";
 	player.AddComponent<comp::Network>()->id = playerID;
@@ -217,6 +216,8 @@ bool Simulation::AddPlayer(uint32_t playerID)
 			{
 				comp::BoundingOrientedBox* p2Obb = m_pCurrentScene->GetRegistry()->try_get<comp::BoundingOrientedBox>(player2);
 				comp::BoundingOrientedBox* p1Obb = m_pCurrentScene->GetRegistry()->try_get<comp::BoundingOrientedBox>(player);
+				comp::Transform* p2transform = m_pCurrentScene->GetRegistry()->try_get<comp::Transform>(player2);
+				comp::Transform* p1transform = m_pCurrentScene->GetRegistry()->try_get<comp::Transform>(player);
 				
 				sm::Vector3 p2Corners[8];
 				sm::Vector3 p1Corners[8];
@@ -286,31 +287,59 @@ bool Simulation::AddPlayer(uint32_t playerID)
 				minMaxProj.push_back(CollisionSystem::Get().GetMinMax(p2Vectors, p2normalAxis[2]));
 
 				float depth = 99999.f;
-				sm::Vector3 box1Corner;
-				sm::Vector3 box2Corner;
+				sm::Vector3 smallestVec(9999.f,9999.f,9999.f);
+				float smallestDepth;
 				for (int i = 0; i < minMaxProj.size() - 1; i += 2)
 				{
-					sm::Vector3 gap = p2Vectors[minMaxProj[i+1].minInxed] - p1Vectors[minMaxProj[i].maxIndex];
+					sm::Vector3 gap;
+					if (minMaxProj[i].maxProj > minMaxProj[i + 1].minProj)
+					{
+						gap = p2Vectors[minMaxProj[i + 1].minInxed] - p1Vectors[minMaxProj[i].maxIndex];
+					}	
+					else
+					{
+						gap = p1Vectors[minMaxProj[i].maxIndex] - p2Vectors[minMaxProj[i + 1].minInxed];
+					}
 					//sm::Vector3 gap2 = p1Vectors[minMaxProj[i].minInxed] - p2Vectors[minMaxProj[i+1].maxIndex];
 					//float test1 = gap.Length();
-					float test2 = gap.Length();
+					float test2 = 0.0f;
 					if(gap.Length() < depth)
 					{
+						depth = gap.Length();
 
-						sm::Vector3 centerToCenter = (sm::Vector3(p2Obb->Center) - sm::Vector3(p1Obb->Center));
-						centerToCenter.Normalize();
-						depth = gap.Dot(centerToCenter);
+						smallestVec = gap;
 
-
-						
-						box1Corner = p1Vectors[minMaxProj[i].maxIndex];
-						box2Corner = p2Vectors[minMaxProj[i + 1].minInxed];
-
+						if (abs(gap.x) < abs(gap.y) && abs(gap.x) < abs(gap.z))
+							smallestDepth = gap.x;
+						else if (abs(gap.y) < abs(gap.x) && abs(gap.y) < abs(gap.z))
+							smallestDepth = gap.y;
+						else if (abs(gap.z) < abs(gap.x) && abs(gap.z) < abs(gap.y))
+							smallestDepth = gap.z;
 					}
 					
 				}
 
+				p1transform->position += (smallestVec / 2.0f);
+				p2transform->position += -(smallestVec / 2.0f);
 
+				//if (abs(smallestVec.x) < abs(smallestVec.y) && abs(smallestVec.x) < abs(smallestVec.z))
+				//{
+				//	p1transform->position.x += (smallestVec.x / 2.0f);
+				//	p2transform->position.x += -(smallestVec.x / 2.0f);
+				//	LOG_INFO("pushing on X!: %f", (smallestVec.x/2.0f));
+				//}
+				//else if (abs(smallestVec.y) < abs(smallestVec.x) && abs(smallestVec.y) < abs(smallestVec.z))
+				//{
+				//	p1transform->position.y += (smallestVec.y / 2.0f);
+				//	p2transform->position.y += -(smallestVec.y / 2.0f);
+				//	LOG_INFO("pushing on y!: %f", (smallestVec.y / 2.0f));
+				//}
+				//else if (abs(smallestVec.z) < abs(smallestVec.x) && abs(smallestVec.z) < abs(smallestVec.y))
+				//{
+				//	p1transform->position.z += (smallestVec.z / 2.0f);
+				//	p2transform->position.z += -(smallestVec.z / 2.0f);
+				//	LOG_INFO("pushing on z!: %f", (smallestVec.z / 2.0f));
+				//}
 
 				//
 				//for(int i = 0; i < minMaxProj.size()-1; i+=2)
@@ -329,8 +358,8 @@ bool Simulation::AddPlayer(uint32_t playerID)
 				//	}
 				//}
 
-
-				LOG_INFO("Depth %f point1(%f, %f, %f) - point2(%f, %f, %f)", depth, box1Corner.x, box1Corner.y, box1Corner.z, box2Corner.x, box2Corner.y, box2Corner.z);
+				
+				//LOG_INFO("Depth %f smallestdepth (%f)", depth, smallestDepth);
 				//bool separatP = P1.maxProj < P2.minProj || P2.maxProj < P1.minProj;
 				//bool separatQ = Q1.maxProj < Q2.minProj || Q2.maxProj < Q1.minProj;
 				//bool separatR = R1.maxProj < R2.minProj || R2.maxProj < R1.minProj;

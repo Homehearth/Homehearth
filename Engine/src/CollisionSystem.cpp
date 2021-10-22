@@ -112,17 +112,17 @@ void CollisionSystem::OnCollision(Entity entity1, Entity entity2)
 			m_OnCollision.erase(entity1);
 		}
 	}
-	if (m_OnCollision.find(entity2) != m_OnCollision.end())
-	{
-		if (!entity2.IsNull())
-		{
-			m_OnCollision.at(entity2)(entity1);
-		}
-		else
-		{
-			m_OnCollision.erase(entity2);
-		}
-	}
+	//if (m_OnCollision.find(entity2) != m_OnCollision.end())
+	//{
+	//	if (!entity2.IsNull())
+	//	{
+	//		m_OnCollision.at(entity2)(entity1);
+	//	}
+	//	else
+	//	{
+	//		m_OnCollision.erase(entity2);
+	//	}
+	//}
 }
 
 MinMaxProj_t CollisionSystem::GetMinMax(std::vector<sm::Vector3> boxVectors, sm::Vector3 boxAxis)
