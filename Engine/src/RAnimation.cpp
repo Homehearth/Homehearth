@@ -189,17 +189,13 @@ const sm::Matrix RAnimation::GetMatrix(const std::string& bonename, const double
 	//Bone has to exist otherwise return identity matrix
 	if (m_keyFrames.find(bonename) != m_keyFrames.end())
 	{
-		//Last keys have to be 3 values
-		if (sizeof(lastKeys) / sizeof(lastKeys[0]) == 3)
-		{
-			sm::Vector3 pos = GetPosition(bonename, currentFrame, nextFrame, lastKeys[0], interpolate);
-			sm::Vector3 scl = GetScale(bonename, currentFrame, nextFrame, lastKeys[1], interpolate);
-			sm::Quaternion rot = GetRotation(bonename, currentFrame, nextFrame, lastKeys[2], interpolate);
-			finalMatrix = sm::Matrix::CreateScale(scl) * sm::Matrix::CreateFromQuaternion(rot) * sm::Matrix::CreateTranslation(pos);
-		}
+		sm::Vector3 pos = GetPosition(bonename, currentFrame, nextFrame, lastKeys[0], interpolate);
+		sm::Vector3 scl = GetScale(bonename, currentFrame, nextFrame, lastKeys[1], interpolate);
+		sm::Quaternion rot = GetRotation(bonename, currentFrame, nextFrame, lastKeys[2], interpolate);
+		finalMatrix = sm::Matrix::CreateScale(scl) * sm::Matrix::CreateFromQuaternion(rot) * sm::Matrix::CreateTranslation(pos);
 	}
 
-	return finalMatrix;
+	return finalMatrix.Transpose();
 }
 
 void RAnimation::Create(const aiAnimation* animation)

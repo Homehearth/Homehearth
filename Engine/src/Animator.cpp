@@ -106,11 +106,11 @@ void Animator::UpdateBones()
 
 		for (size_t i = 0; i < m_bones.size(); i++)
 		{
-			sm::Matrix localMatrix = m_animations[m_currentAnim]->GetMatrix(m_bones[i].name, 0.0, 0.002, m_bones[i].lastKeys);
+			sm::Matrix localMatrix = m_animations[m_currentAnim]->GetMatrix(m_bones[i].name, 0.0, 0.02, m_bones[i].lastKeys, false);
 
 			if (m_bones[i].parentIndex == -1)
 			{
-				modelMatrices[i] = sm::Matrix::Identity * localMatrix;
+				modelMatrices[i] = localMatrix;
 			}
 			else
 			{
@@ -118,7 +118,7 @@ void Animator::UpdateBones()
 			}
 
 			m_finalMatrices[i] = modelMatrices[i] * m_bones[i].inverseBind;
-			m_finalMatrices[i] = m_finalMatrices[i].Transpose();
+			//m_finalMatrices[i] = m_finalMatrices[i].Transpose();
 		}
 
 		modelMatrices.clear();
