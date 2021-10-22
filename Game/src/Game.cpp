@@ -52,7 +52,7 @@ void Game::UpdateNetwork(float deltaTime)
 		{
 			message<GameMsg> msg;
 			msg.header.id = GameMsg::Game_PlayerAttack;
-			msg << this->m_localPID << m_gameID << true;
+			msg << this->m_localPID << m_gameID;
 			m_client.Send(msg);
 		}
 	}
