@@ -53,9 +53,13 @@ struct simple_vertex_t
 ALIGN16
 struct anim_vertex_t
 {
-	simple_vertex_t vertex	    = {};
-	dx::XMUINT4		boneIDs	    = {};
-	sm::Vector4		boneWeights = {};
+	sm::Vector3 position	= {};
+	sm::Vector2	uv			= {};
+	sm::Vector3	normal		= {};
+	sm::Vector3	tangent		= {};
+	sm::Vector3	bitanget	= {};
+	dx::XMUINT4	boneIDs	    = {};
+	sm::Vector4	boneWeights = {};
 };
 
 ALIGN16

@@ -124,8 +124,6 @@ void Animator::UpdateBones()
 		modelMatrices.clear();
 	
 		UpdateStructureBuffer();
-		//Update structurebuffer for matrices
-		//Update cbuffer with nr of bones 
 	}
 }
 

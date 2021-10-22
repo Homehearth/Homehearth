@@ -197,7 +197,7 @@ const sm::Matrix RAnimation::GetMatrix(const std::string& bonename, const double
 		finalMatrix = sm::Matrix::CreateScale(scl) * sm::Matrix::CreateFromQuaternion(rot) * sm::Matrix::CreateTranslation(pos);
 	}
 
-	return finalMatrix;		//.Transpose();
+	return finalMatrix.Transpose();
 }
 
 void RAnimation::Create(const aiAnimation* animation)

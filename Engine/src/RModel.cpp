@@ -143,7 +143,11 @@ bool RModel::CombineMeshes(std::vector<aiMesh*>& submeshes, const aiNode* root, 
             if (aimesh->HasBones())
             {
                 anim_vertex_t animVert = {};
-                animVert.vertex = vert;
+                animVert.position   = vert.position;
+                animVert.uv         = vert.uv;
+                animVert.normal     = vert.normal;
+                animVert.tangent    = vert.tangent;
+                animVert.bitanget   = vert.bitanget;
                 skeletonVertices.push_back(animVert);
             }
         }
@@ -360,7 +364,7 @@ bool RModel::LoadBones(const aiMesh* aimesh, const aiNode* root, std::vector<ani
     std::vector<UINT> boneCounter;
     boneCounter.resize(skeletonVertices.size(), 0);
 
-    //OffSet if the mesh has multiple armatures
+    //OffSet if there is bones in other meshes
     UINT boneOffSet = 0;
     if (!m_allBones.empty())
         boneOffSet = static_cast<UINT>(m_allBones.size());
@@ -421,8 +425,6 @@ bool RModel::LoadBones(const aiMesh* aimesh, const aiNode* root, std::vector<ani
         //Create the bone and find the parent index
         bone_t bone;
         bone.name = aibone->mName.C_Str();
-        //aibone->mOffsetMatrix.a1;
-        //bone.inverseBind._
         bone.inverseBind = sm::Matrix(&aibone->mOffsetMatrix.a1);
         std::string parentName = root->FindNode(bone.name.c_str())->mParent->mName.C_Str();
         
@@ -437,7 +439,6 @@ bool RModel::LoadBones(const aiMesh* aimesh, const aiNode* root, std::vector<ani
     //Freeing up space
     nameToIndex.clear();
     boneCounter.clear();
-
     return true;
 }
 

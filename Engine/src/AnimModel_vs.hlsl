@@ -48,8 +48,8 @@ VertexOut main(VertexIn input)
     for (int i = 0; i < 4; i++)
     {
         //uint id = input.boneIDs[i];
-        //if (id < c_nrOfBones)
-        world += s_boneTransforms[input.boneIDs[i]] * input.boneWeights[i];
+        //if (id < somesize)
+            world += s_boneTransforms[input.boneIDs[i]] * input.boneWeights[i];
     }
 
     //world = c_world;
