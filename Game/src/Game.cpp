@@ -100,7 +100,8 @@ void Game::OnUserUpdate(float deltaTime)
 		{
 			if (exit_button->IsClicked())
 			{
-				std::cout << "IMPLEMENT CLEAN SHUT DOWN HERE!\n";
+				//std::cout << "IMPLEMENT CLEAN SHUT DOWN HERE!\n";
+				this->Shutdown();
 			}
 		}
 
