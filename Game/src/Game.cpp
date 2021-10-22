@@ -90,6 +90,10 @@ void Game::OnUserUpdate(float deltaTime)
 				}
 			}
 		}
+		else
+		{
+			sceneHelp::SetupLobbyJoinScreen();
+		}
 
 		rtd::Button* exit_button = GET_ELEMENT("exitGameButton", rtd::Button);
 		if (exit_button)
@@ -370,6 +374,9 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	{
 		std::string err;
 		msg >> err;
+		SetScene("MainMenu");
+		rtd::Handler2D::Get().DereferenceAllOnce();
+		m_internalState = 0;
 		LOG_WARNING("Request denied: %s", err.c_str());
 		break;
 	}

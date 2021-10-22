@@ -103,14 +103,25 @@ Simulation::Simulation(Server* pServer, HeadlessEngine* pEngine)
 bool Simulation::JoinLobby(uint32_t playerID, uint32_t gameID)
 {
 	// Send to client the message with the new game ID
-	message<GameMsg> msg;
-	msg.header.id = GameMsg::Lobby_Accepted;
-	msg << gameID;
+	if (m_players.size() < MAX_PLAYER_PER_LOBBY)
+	{
+		message<GameMsg> msg;
+		msg.header.id = GameMsg::Lobby_Accepted;
+		msg << gameID;
 
-	m_pServer->SendToClient(m_pServer->GetConnection(playerID), msg);
+		m_pServer->SendToClient(m_pServer->GetConnection(playerID), msg);
 
-	// Add the players to the simulation on that specific client
-	this->AddPlayer(playerID);
+		// Add the players to the simulation on that specific client
+		this->AddPlayer(playerID);
+	}
+	else
+	{
+		network::message<GameMsg> msg;
+		msg.header.id = GameMsg::Lobby_Invalid;
+		std::string fullLobby = "This lobby was full!";
+		msg << fullLobby;
+		m_pServer->SendToClient(m_pServer->GetConnection(playerID), msg);
+	}
 
 	return true;
 }
@@ -222,16 +233,6 @@ bool Simulation::IsEmpty() const
 // TODO ADD PLAYER FUNCTIONALITY
 bool Simulation::AddPlayer(uint32_t playerID)
 {
-	// Stop players from joining full lobbies
-	if (m_players.size() >= MAX_PLAYER_PER_LOBBY)
-	{
-		network::message<GameMsg> msg;
-		msg.header.id = GameMsg::Lobby_Invalid;
-		std::string fullLobby = "This lobby was full!";
-		msg << fullLobby;
-		m_pServer->SendToClient(m_pServer->GetConnection(playerID), msg);
-		return false;
-	}
 
 	LOG_INFO("Player with ID: %ld added to the game!", playerID);
 	m_connections[playerID] = m_pServer->GetConnection(playerID);
