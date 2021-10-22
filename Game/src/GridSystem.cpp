@@ -12,17 +12,17 @@ GridSystem::~GridSystem()
 {
 }
 
-void GridSystem::Initialize()
+void GridSystem::Initialize(std::string fileName)
 {
-	std::shared_ptr<RTexture> texture = ResourceManager::Get().GetResource<RTexture>("GridMap.png");
-	unsigned char* pixels = texture->GetImageData();
+	std::shared_ptr<RTexture> texture = ResourceManager::Get().GetResource<RTexture>(fileName);
+	unsigned char* pixelsData = texture->GetImageData();
 	std::vector<int> pixelValues;
 	m_gridSize = texture->GetSize();
 
-	for (int i = 0; i < m_gridSize.x * m_gridSize.y * 4; i+=4)
+	for (int i = 0; i < m_gridSize.x * m_gridSize.y * 4; i++)
 	{
-		//std::cout << "Nr: " << i/4 << " " <<(int)pixels[i] << std::endl;
-		pixelValues.push_back(pixels[i]);
+		pixelValues.push_back(pixelsData[i]);
+		//std::cout << (int)pixelsData[i] << "  " << (int)pixelsData[i + 1] << "  " << (int)pixelsData[i + 2] << "  " << (int)pixelsData[i+3] << std::endl;
 	}
 
 	//Initialize all tiles
@@ -31,17 +31,36 @@ void GridSystem::Initialize()
 		for (int row = 0; row < m_gridSize.x; row++)
 		{
 			TileType tileTypeTemp = TileType::DEFAULT;
-			float temp = (pixelValues.at((float)row + ((float)col * m_gridSize.y)));
 
-			if (temp == 0) // If r channel is 0 
+			sm::Vector4 rgba; 
+			/*float rgbaIndex[4]; 
+
+			rgbaIndex[0] = (0 + (row + (col * m_gridSize.y))*4);
+			rgbaIndex[1] = (1 + (row + (col * m_gridSize.y))*4);
+			rgbaIndex[2] = (2 + (row + (col * m_gridSize.y))*4);
+			rgbaIndex[3] = (3 + (row + (col * m_gridSize.y))*4);
+			*/
+			rgba.x = pixelValues.at(0 + (row + (col * m_gridSize.y)) * 4);
+			rgba.y = pixelValues.at(1 + (row + (col * m_gridSize.y)) * 4);
+			rgba.z = pixelValues.at(2 + (row + (col * m_gridSize.y)) * 4);
+			rgba.w = pixelValues.at(3 + (row + (col * m_gridSize.y)) * 4);
+
+			//std::cout << "RGBA: " << rgba.x << " " << rgba.y << " " << rgba.z << " " << rgba.w << std::endl;
+
+			if (rgba == sm::Vector4{0, 255, 0, 255}) // If Green
 			{
 				tileTypeTemp = TileType::EMPTY;
-				std::cout << "  Empty    tile on: " << (float)row << " " << (float)col << "   with " << temp << std::endl;
+				std::cout << "  Empty    tile on: " << (float)row << " " << (float)col << "   with " << ", RGBA: " << rgba.x << " " << rgba.y << " " << rgba.z << " " << rgba.w << std::endl;
 			}
-			else if (temp == 255) // if r channel is 255
+			if (rgba == sm::Vector4{ 255, 0, 0, 255 }) // if Red
 			{
 				tileTypeTemp = TileType::BUILDING;
-				std::cout << " Building  tile on: " << (float)row << " " << (float)col << "   with " << temp << std::endl;
+				std::cout << " Building  tile on: " << (float)row << " " << (float)col << "   with " << ", RGBA: " << rgba.x << " " << rgba.y << " " << rgba.z << " " << rgba.w << std::endl;
+			}
+			if (rgba == sm::Vector4{ 0, 0, 255, 255 }) // if Blue
+			{
+				tileTypeTemp = TileType::DEFENCE;
+				std::cout << " Defence  tile on: " << (float)row << " " << (float)col << "   with " << ", RGBA: " << rgba.x << " " << rgba.y << " " << rgba.z << " " << rgba.w << std::endl;
 			}
 
 			Tile tileTemp;
@@ -64,4 +83,9 @@ std::vector<sm::Vector3>* GridSystem::GetTilePositions()
 std::vector<Tile>* GridSystem::GetTiles()
 {
 	return &m_tiles;
+}
+
+bool GridSystem::GetIsRendering()
+{
+	return &m_isRenderingGrid;
 }
