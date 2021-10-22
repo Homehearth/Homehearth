@@ -187,19 +187,21 @@ void Simulation::Destroy()
 	m_pLobbyScene->Clear();
 }
 
-void Simulation::UpdateLobby(const uint32_t& playerID, const bool& decision)
+void Simulation::UpdateLobby(const uint32_t& playerID)
 {
 	if (m_pCurrentScene == m_pLobbyScene)
 	{
+		// Update decisions.
 		if (playerID == m_playerDecisions[0].playerID)
 		{
-			m_playerDecisions[0].isWantToStart = decision;
+			m_playerDecisions[0].isWantToStart = !m_playerDecisions[0].isWantToStart;
 		}
 		else if (playerID == m_playerDecisions[1].playerID)
 		{
-			m_playerDecisions[1].isWantToStart = decision;
+			m_playerDecisions[1].isWantToStart = !m_playerDecisions[1].isWantToStart;
 		}
 
+		// Start game when both wants to start game.
 		if ((m_playerDecisions[1].isWantToStart & m_playerDecisions[0].isWantToStart) == true)
 		{
 			m_pCurrentScene = m_pGameScene;
@@ -207,7 +209,6 @@ void Simulation::UpdateLobby(const uint32_t& playerID, const bool& decision)
 			// Start the game.
 			network::message<GameMsg> msg;
 			msg.header.id = GameMsg::Game_Start;
-			msg << true;
 			this->Broadcast(msg);
 		}
 	}
@@ -221,6 +222,17 @@ bool Simulation::IsEmpty() const
 // TODO ADD PLAYER FUNCTIONALITY
 bool Simulation::AddPlayer(uint32_t playerID)
 {
+	// Stop players from joining full lobbies
+	if (m_players.size() >= 2)
+	{
+		network::message<GameMsg> msg;
+		msg.header.id = GameMsg::Lobby_Invalid;
+		std::string fullLobby = "This lobby was full!";
+		msg << fullLobby;
+		m_pServer->SendToClient(m_pServer->GetConnection(playerID), msg);
+		return false;
+	}
+
 	LOG_INFO("Player with ID: %ld added to the game!", playerID);
 	m_connections[playerID] = m_pServer->GetConnection(playerID);
 	
@@ -241,7 +253,7 @@ bool Simulation::AddPlayer(uint32_t playerID)
 			comp::Player* otherPlayer = m_pCurrentScene->GetRegistry()->try_get<comp::Player>(player2);
 			if(otherPlayer != nullptr)
 			{
-				LOG_INFO("Collision!");
+				//LOG_INFO("Collision!");
 			}
 		});
 

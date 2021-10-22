@@ -47,7 +47,7 @@ public:
 	void Destroy();
 
 	// Updates the lobby.
-	void UpdateLobby(const uint32_t& playerID, const bool& decision);
+	void UpdateLobby(const uint32_t& playerID);
 
 	bool IsEmpty() const;
 

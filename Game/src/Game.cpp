@@ -365,14 +365,9 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	}
 	case GameMsg::Game_Start:
 	{
-		bool isStart = false;
-		msg >> isStart;
-		if (isStart)
-		{
-			m_internalState = 2;
-			rtd::Handler2D::DereferenceAllOnce();
-			SetScene("Game");
-		}
+		m_internalState = 2;
+		rtd::Handler2D::DereferenceAllOnce();
+		SetScene("Game");
 		break;
 	}
 	}
@@ -441,7 +436,7 @@ void Game::SendStartGame()
 {
 	network::message<GameMsg> msg;
 	msg.header.id = GameMsg::Game_PlayerReady;
-	msg << m_localPID << m_gameID << true;
+	msg << m_localPID << m_gameID;
 	m_client.Send(msg);
 }
 

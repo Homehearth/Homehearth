@@ -184,8 +184,9 @@ void sceneHelp::SetupMainMenuScreen()
 	rtd::Handler2D::Get().InsertElement(welcomeText);
 	welcomeText->SetName("welcome_text");
 
+	std::string welcomeString = "In this game you will face against very dangerous foes while defending the righteous village from its dark fate! Take up arms and fight your way to victory champion! Join our discord and twitter to get official news about the new upcoming technological wonder game! Sign up for RTX exclusive version at our website!";
 	// Adds text to the menu screen.
-	rtd::Text* gameInfoText = new rtd::Text("In this game you will face against very dangerous foes while defending the righteous village from its dark fate! Take up arms and fight your way to victory champion! Join our discord and twitter to get official news about the new upcoming technological wonder game! Sign up for RTX exclusive version at our website!", draw_text_t(550.0f, 0.0f, 350.0f, 550.0f));
+	rtd::Text* gameInfoText = new rtd::Text(".", draw_text_t(550.0f, 0.0f, 350.0f, 550.0f));
 	rtd::Handler2D::Get().InsertElement(gameInfoText);
 	gameInfoText->SetName("gameInfoText");
 
@@ -282,7 +283,7 @@ void sceneHelp::SetupInGameScreen()
 void sceneHelp::SetupInLobbyScreen()
 {
 #if RENDER_IMGUI == 0
-	const std::string& warriorString = "Warrior\nThe Warrior specializes in destroying noobs.";
+	const std::string& warriorString = "Warrior\nThe Warrior specializes in CQ Combat.";
 	const std::string& mageString = "Mage\nThis weak character is good for nothing please choose the warrior instead.";
 
 	rtd::Canvas* backgroundCanvas = new rtd::Canvas(D2D1::ColorF(.2f, .2f, .2f), draw_t(0.0f, 0.0f, 3000.0f, 3000.0f));
