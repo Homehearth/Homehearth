@@ -136,7 +136,7 @@ void Game::OnUserUpdate(float deltaTime)
 				host_lobby_button->SetVisibility(true);
 				if (host_lobby_button->IsClicked())
 				{
-					rtd::Handler2D::Get().DereferenceAllOnce();
+					rtd::Handler2D::Get().SetVisibilityAll(false);
 					this->CreateLobby();
 					m_internalState = 1;
 				}
