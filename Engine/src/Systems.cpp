@@ -24,33 +24,50 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 						enemyAttack.cooldownTimer -= 1.f * dt;
 
 					// Check if attack is in range.
-					if (playerAttack.attackRange >= dist && playerAttack.cooldownTimer < 0.f)
+					if (playerAttack.attackRange >= dist && playerAttack.cooldownTimer <= 0.f && enemyHealth.isAlive)
 					{
-						LOG_INFO("Player is in attack range.");
+						//LOG_INFO("Player is in attack range.");
 
 						// Perform battle logic.
 						if ((playerAttack.isAttacking & playerHealth.isAlive) == TRUE)
 						{
-							playerAttack.cooldownTimer = playerAttack.attackSpeed;
-							enemyHealth.currentHealth -= playerAttack.attackDamage;
-							LOG_INFO("Player attacked.");
+							playerAttack.cooldownTimer = playerAttack.attackSpeed; //Set attacker on cooldown
+							enemyHealth.currentHealth -= playerAttack.attackDamage; //Decrease health by the attackdamage
+							LOG_INFO("Player attack landed.");
 						}
 					}
 
 					// Check if attack is in range.
-					if (enemyAttack.attackRange >= dist && enemyAttack.cooldownTimer < 0.f)
+					if (enemyAttack.attackRange >= dist && enemyAttack.cooldownTimer <= 0.f && playerHealth.isAlive)
 					{
-						LOG_INFO("Enemy is in attack range.");
+						//LOG_INFO("Enemy is in attack range.");
 
 						// Perform battle logic.
 						if ((enemyAttack.isAttacking & enemyHealth.isAlive) == TRUE)
 						{
-							enemyAttack.cooldownTimer = enemyAttack.attackSpeed;
-							playerHealth.currentHealth -= enemyAttack.attackDamage;
-							LOG_INFO("Enemy attacked.");
+							enemyAttack.cooldownTimer = enemyAttack.attackSpeed; //Set attacker on cooldown
+							playerHealth.currentHealth -= enemyAttack.attackDamage; //Decrease health by the attackdamage
+							LOG_INFO("Enemy attack landed.");
 						}
 					}
+
+					//Reset to non attacking state
+					if (playerAttack.isAttacking)
+						playerAttack.isAttacking = false;
+					if (enemyAttack.isAttacking)
+						enemyAttack.isAttacking = false;
 				});
+		});
+
+	scene.ForEachComponent<comp::Health>([&](Entity& Entity, comp::Health& Health)
+		{
+			//Check if something should be dead, and if so set isAlive to false
+			if (Health.currentHealth <= 0)
+			{
+				LOG_INFO("Entity died");
+				Health.isAlive = false;
+				Entity.Destroy(); //Don't really know if this should be called here
+			}
 		});
 }
 

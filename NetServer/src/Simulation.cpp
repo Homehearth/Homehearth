@@ -216,7 +216,7 @@ bool Simulation::AddPlayer(uint32_t playerID)
 
 	// CombatSystem Test.
 	const unsigned char GOOD = 4;
-	*player.AddComponent<comp::Attack>() = { 50.f, 0.f, 50.f, false, false };
+	*player.AddComponent<comp::Attack>() = { 1.f, 20.f, 5.f, false, false };
 	player.AddComponent<comp::Tag<GOOD>>();
 	*player.AddComponent<comp::Health>() = { 100.f, 100.f, true };
 

@@ -216,7 +216,7 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 				if (net.id == playerID)
 				{
 					attack.isAttacking = isAttacking;
-					LOG_INFO("PlayerID [%u] is attacking.", playerID);
+					LOG_INFO("PlayerID [%u] tried to attack.", playerID);
 				}
 			});
 
