@@ -110,11 +110,11 @@ namespace ecs
 
 		struct Attack
 		{
-			float attackSpeed;
-			float attackDamage;
-			float attackRange;
-			bool isRanged;
-			bool isAttacking;
+			float attackSpeed = 1.f;
+			float attackDamage = 5.f;
+			float attackRange = 5.f;
+			bool isRanged = false;
+			bool isAttacking = false;
 			float cooldownTimer = 0.f;
 		};
 
