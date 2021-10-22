@@ -641,8 +641,13 @@ namespace network
 
 		if (m_listening != INVALID_SOCKET)
 		{
-			SYSTEM_INFO SystemInfo;
-			GetSystemInfo(&SystemInfo);
+			for (int i = 0; i < nrOfThreads; i++)
+			{
+				QueueUserAPC((PAPCFUNC)server_interface<T>::AlertThread, (HANDLE)workerThreads[i].native_handle(), NULL);
+				workerThreads[i].join();
+			}
+			QueueUserAPC((PAPCFUNC)server_interface<T>::AlertThread, (HANDLE)acceptThread.native_handle(), NULL);
+			acceptThread.join();
 
 			for (auto con : connections)
 			{
@@ -655,18 +660,10 @@ namespace network
 					LOG_INFO("Didnt cancel IO: %d", GetLastError());
 				}
 			}
-			LeaveCriticalSection(&lock);
-			for (int i = 0; i < nrOfThreads; i++)
-			{
-				QueueUserAPC((PAPCFUNC)server_interface<T>::AlertThread, (HANDLE)workerThreads[i].native_handle(), NULL);
-				workerThreads[i].join();
-			}
-
-			QueueUserAPC((PAPCFUNC)server_interface<T>::AlertThread, (HANDLE)acceptThread.native_handle(), NULL);
-			acceptThread.join();
-			return;
+			
 		}
 		LeaveCriticalSection(&lock);
+		
 	}
 
 	template <typename T>
