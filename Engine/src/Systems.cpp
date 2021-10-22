@@ -36,6 +36,10 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 							// Perform battle logic.
 							if ((playerAttack.isAttacking & playerHealth.isAlive) == TRUE)
 							{
+								dx::BoundingOrientedBox attackOBB;
+								attackOBB.Center = playerTransform.position + sm::Vector3(0.f, 0.f, 1.f);
+								if (attackOBB.Contains(enemyTransform.position) != dx::ContainmentType::DISJOINT)
+									LOG_INFO("OBB intersects with enemy");
 								playerAttack.cooldownTimer = playerAttack.attackSpeed; //Set attacker on cooldown
 								enemyHealth.currentHealth -= playerAttack.attackDamage; //Decrease health by the attackdamage
 								LOG_INFO("Player %u: Attack landed.", player.GetComponent<comp::Network>()->id);
