@@ -6,6 +6,9 @@
 
 #include "Tags.h"
 
+//TODO: remove inlcude
+#include "GridSystem.h"
+
 namespace sceneHelp
 {
 	Entity CreatePlayerEntity(HeadlessScene& scene, uint32_t playerID);

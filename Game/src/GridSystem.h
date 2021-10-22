@@ -18,5 +18,6 @@ public:
 
 	void Initialize();
 	std::vector<sm::Vector3>* GetTilePositions();
+	std::vector<Tile>* GetTiles();
 
 };

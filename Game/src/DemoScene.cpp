@@ -19,7 +19,7 @@ namespace sceneHelp
 		comp::Renderable* renderable = playerEntity.AddComponent<comp::Renderable>();
 		playerEntity.AddComponent<comp::Network>()->id = playerID;
 
-		renderable->model = ResourceManager::Get().GetResource<RModel>("cube.obj");
+		renderable->model = ResourceManager::Get().GetResource<RModel>("Chest.obj");
 		return playerEntity;
 	}
 
@@ -92,6 +92,37 @@ namespace sceneHelp
 		cameraEntity.AddComponent<comp::Tag<CAMERA>>();
 
 		gameScene.SetCurrentCameraEntity(cameraEntity);
+
+		//TODO: Remove grid stuff
+		GridSystem grid;
+		grid.Initialize();
+
+		for (int i = 0; i < grid.GetTilePositions()->size(); i++)
+		{
+			if (grid.GetTiles()->at(i).GetType() == TileType::EMPTY)
+			{
+
+				Entity tile1 = gameScene.CreateEntity();
+				comp::Transform* transformt1 = tile1.AddComponent<comp::Transform>();
+				transformt1->position = grid.GetTilePositions()->at(i);
+				transformt1->scale = { 10.0f, 10.0f, 10.0f };
+				comp::Renderable* renderablet1 = tile1.AddComponent<comp::Renderable>();
+				renderablet1->model = ResourceManager::Get().GetResource<RModel>("Cube.obj");
+				renderablet1->model->ChangeMaterial("TileEmpty.mtl");
+			}
+	
+			else if (grid.GetTiles()->at(i).GetType() == TileType::BUILDING)
+			{
+				Entity tile2 = gameScene.CreateEntity();
+				comp::Transform* transformt2 = tile2.AddComponent<comp::Transform>();
+				transformt2->position = grid.GetTilePositions()->at(i);
+				transformt2->scale = { 10.0f, 10.0f, 10.0f };
+				comp::Renderable* renderablet2 = tile2.AddComponent<comp::Renderable>();
+				renderablet2->model = ResourceManager::Get().GetResource<RModel>("Cube1.obj");
+				renderablet2->model->ChangeMaterial("TileBuilding.mtl");
+			}
+
+		}
 
 		for (int i = 0; i < 5; i++)
 		{

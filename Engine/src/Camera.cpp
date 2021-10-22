@@ -8,7 +8,7 @@ Camera::Camera()
 	m_FOV				= dx::XMConvertToRadians(90.f); //0.4f * 3.14f;
 	m_zoomValue			= 1;
 	m_nearPlane			= 0.1f; // 1.0f;
-	m_farPlane			= 100.0; // 1000.0f
+	m_farPlane			= 1000.0; // 1000.0f
 	m_rollPitchYaw		= { 0.0f, 0.0f, 0.0f };
 	m_move				= { 0.0f, 0.0f, 0.0f };
 	m_aspectRatio		= 0;
@@ -29,7 +29,7 @@ void Camera::Initialize(sm::Vector3 pos, sm::Vector3 target, sm::Vector3 up, sm:
 	m_defaultPos = pos;
 	m_position = pos;
 	m_target = target;
-	m_forward = dx::XMVector3Normalize(m_target);
+	m_forward = dx::XMVector3Normalize(m_target - m_position);
 	m_up = dx::XMVector3Normalize(up);
 	m_windowHeight = windowSize.y;
 	m_windowWidth = windowSize.x;

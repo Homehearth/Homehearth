@@ -57,9 +57,6 @@ bool Game::OnStartup()
 	sceneHelp::CreateGameScene(*this);
 	sceneHelp::CreateMainMenuScene(*this);
 
-	//TODO: Remove grid stuff
-	GridSystem grid;
-	grid.Initialize();
 
 	// Set Current Scene
 	SetScene("MainMenu");
