@@ -46,6 +46,10 @@ public:
 
 	void Update(float dt);
 
+	void NextTick();
+
+	uint32_t GetTick()const;
+
 	// -1 will be defaulted to max value of unsigned 32 bit integer
 	void Broadcast(network::message<GameMsg>& msg, uint32_t exclude = -1);
 

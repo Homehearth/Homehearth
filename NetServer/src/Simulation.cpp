@@ -266,6 +266,7 @@ void Simulation::SendSnapshot()
 		});
 	msg << i;
 
+	msg << this->GetTick();
 	this->Broadcast(msg);
 }
 
@@ -273,7 +274,16 @@ void Simulation::Update(float dt)
 {
 	if(m_pCurrentScene)
 		m_pCurrentScene->Update(dt);
-	m_tick++;
+}
+
+void Simulation::NextTick()
+{
+	this->m_tick++;
+}
+
+uint32_t Simulation::GetTick() const
+{
+	return this->m_tick;
 }
 
 void Simulation::Broadcast(network::message<GameMsg>& msg, uint32_t exclude)

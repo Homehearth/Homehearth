@@ -48,8 +48,6 @@ public:
 	void Shutdown();
 };
 
-
-
 template<typename SceneType>
 SceneType& BasicEngine<SceneType>::GetScene(const std::string& name)
 {

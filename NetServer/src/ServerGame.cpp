@@ -73,6 +73,9 @@ void ServerGame::OnShutdown()
 
 void ServerGame::UpdateNetwork(float deltaTime)
 {
+	// REMOVE LATER SIMULATED LAG
+	//Sleep(100);
+	//deltaTime += 0.1;
 	// Check incoming messages
 	this->m_server.Update();
 
@@ -85,12 +88,13 @@ void ServerGame::UpdateNetwork(float deltaTime)
 			LOG_INFO("Destroyed empty lobby %d", it->first);
 			it = m_simulations.erase(it);
 		}
-		else 
+		else
 		{
 			// Update the simulation
 			it->second->Update(deltaTime);
 			// Send the snapshot of the updated simulation to all clients in the sim
 			it->second->SendSnapshot();
+			it->second->NextTick();
 			it++;
 		}
 	}
