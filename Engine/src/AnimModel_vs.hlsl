@@ -51,8 +51,9 @@ VertexOut main(VertexIn input)
         //if (id < c_nrOfBones)
         world += s_boneTransforms[input.boneIDs[i]] * input.boneWeights[i];
     }
+
     //world = c_world;
-    
+
     //Positions and worldpos
     output.pos = float4(input.pos, 1.0f);
     output.pos = mul(world, output.pos);
