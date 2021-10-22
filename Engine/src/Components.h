@@ -91,7 +91,9 @@ namespace ecs
 		};
 		struct NPC
 		{
-
+			float movementSpeed;
+			float attackRange;
+			bool hostile;
 		};
 		struct Light
 		{

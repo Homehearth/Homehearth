@@ -194,7 +194,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		msg >> count;
 
 		std::unordered_map<uint32_t, comp::Transform> transforms;
-		
+
 		for (uint32_t i = 0; i < count; i++)
 		{
 			uint32_t entityID;
@@ -205,13 +205,13 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		// TODO MAKE BETTER
 		// Update entities with new transforms
 		GetScene("Game").ForEachComponent<comp::Network, comp::Transform>([&](comp::Network& n, comp::Transform& t)
+		{
+			if (transforms.find(n.id) != transforms.end())
 			{
-				if (transforms.find(n.id) != transforms.end())
-				{
-					t = transforms.at(n.id);
-				}
-				
-			});
+				t = transforms.at(n.id);
+			}
+
+		});
 
 		break;
 	}
@@ -231,13 +231,13 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			{
 				LOG_INFO("This player added");
 				GetScene("Game").ForEachComponent<comp::Tag<CAMERA>>([&](Entity entt, comp::Tag<CAMERA>& t)
+				{
+					comp::Camera3D* c = entt.GetComponent<comp::Camera3D>();
+					if (c)
 					{
-						comp::Camera3D* c = entt.GetComponent<comp::Camera3D>();
-						if (c)
-						{
-							c->camera.SetFollowEntity(e);
-						}
-					});
+						c->camera.SetFollowEntity(e);
+					}
+				});
 			}
 		}
 
@@ -254,13 +254,13 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		}
 
 		GetScene("Game").ForEachComponent<comp::Network>([&](Entity& e, comp::Network& net)
+		{
+			if (std::find(ids.begin(), ids.end(), net.id) != ids.end())
 			{
-				if (std::find(ids.begin(), ids.end(), net.id) != ids.end())
-				{
-					LOG_INFO("Removed Entity %u", net.id);
-					e.Destroy();
-				}
-			});
+				LOG_INFO("Removed Entity %u", net.id);
+				e.Destroy();
+			}
+		});
 
 		break;
 	}
@@ -284,47 +284,11 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		m_isLeavingLobby = false;
 		m_gameID = -1;
 		SetScene("MainMenu");
-	case GameMsg::Game_RemovePlayer:
-	{
-		uint32_t playerID;
-		msg >> playerID;
+		break;
 
-		// TODO Remove the entity of the player that matches ID
-
-		m_demoScene->GetScene().ForEachComponent<comp::Network>([playerID](Entity& e, comp::Network& net)
-		{
-			if (playerID == net.id)
-			{
-				e.Destroy();
-			}
-		}
-		);
-		break;
-	}
-	case GameMsg::Game_AddAI:
-	{
-		break;
-	}
-	case GameMsg::Game_MoveAI:
-	{
-		break;
-	}
-	case GameMsg::Game_RemoveAI:
-	{
-		uint32_t id;
-		msg >> id;
-		m_demoScene->GetScene().ForEachComponent<comp::NPC>([id](Entity& e, comp::Network& net)
-		{
-			if (id == net.id)
-			{
-				e.Destroy();
-			}
-		});
-		break;
 	}
 	}
 }
-
 void Game::PingServer()
 {
 	message<GameMsg> msg = {};

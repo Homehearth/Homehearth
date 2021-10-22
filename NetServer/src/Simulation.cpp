@@ -72,10 +72,10 @@ message<GameMsg> Simulation::AllEntitiesMessage()
 	msg.header.id = GameMsg::Game_AddEntity;
 	uint32_t count = 0;
 	m_pGameScene->ForEachComponent<comp::Network>([&](Entity e, comp::Network& n)
-		{
-			InsertEntityIntoMessage(e, msg);
-			count++;
-		});
+	{
+		InsertEntityIntoMessage(e, msg);
+		count++;
+	});
 	msg << count;
 	return msg;
 }
@@ -94,7 +94,7 @@ message<GameMsg> Simulation::SingleEntityMessage(Entity entity)
 
 Simulation::Simulation(Server* pServer, HeadlessEngine* pEngine)
 	: m_pServer(pServer)
-	  , m_pEngine(pEngine), m_pLobbyScene(nullptr), m_pGameScene(nullptr), m_pCurrentScene(nullptr)
+	, m_pEngine(pEngine), m_pLobbyScene(nullptr), m_pGameScene(nullptr), m_pCurrentScene(nullptr)
 {
 	this->m_gameID = 0;
 	this->m_tick = 0;
@@ -121,13 +121,14 @@ bool Simulation::LeaveLobby(uint32_t playerID, uint32_t gameID)
 
 	message<GameMsg> msg;
 	msg.header.id = GameMsg::Game_RemoveEntity;
-	
+
 	uint32_t count = 0;
+
 	m_pGameScene->ForEachComponent<comp::Network>([&](comp::Network& n)
-		{
-			msg << n.id;
-			count++;
-		});
+	{
+		msg << n.id;
+		count++;
+	});
 	msg << count;
 
 	m_pServer->SendToClient(m_pServer->GetConnection(playerID), msg);
@@ -141,28 +142,28 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 	this->m_gameID = gameID;
 	// Create Scenes associated with this Simulation
 	m_pLobbyScene = &m_pEngine->GetScene("Lobby_" + std::to_string(gameID));
-	m_pLobbyScene->on<ESceneUpdate>([=](const ESceneUpdate& e, HeadlessScene& scene) 
-		{
-			//LOG_INFO("LOBBY Scene %d", gameID);
+	m_pLobbyScene->on<ESceneUpdate>([=](const ESceneUpdate& e, HeadlessScene& scene)
+	{
+		//LOG_INFO("LOBBY Scene %d", gameID);
 
-		});
+	});
 
 	m_pGameScene = &m_pEngine->GetScene("Game_" + std::to_string(gameID));
 	m_pGameScene->on<ESceneUpdate>([=](const ESceneUpdate& e, HeadlessScene& scene)
-		{
-			Systems::MovementSystem(scene, e.dt);
-			Systems::MovementColliderSystem(scene, e.dt);
+	{
+		Systems::MovementSystem(scene, e.dt);
+		Systems::MovementColliderSystem(scene, e.dt);
 
-			Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(scene);
-			//LOG_INFO("GAME Scene %d", m_gameID);
-		});
+		Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(scene);
+		//LOG_INFO("GAME Scene %d", m_gameID);
+	});
 
 	//On collision event add entities as pair in the collision system
 	m_pGameScene->on<ESceneCollision>([&](const ESceneCollision& e, HeadlessScene& scene)
-		{
-			CollisionSystem::Get().AddPair(e.obj1, e.obj2);
-			CollisionSystem::Get().OnCollision(e.obj1, e.obj2);
-		});
+	{
+		CollisionSystem::Get().AddPair(e.obj1, e.obj2);
+		CollisionSystem::Get().OnCollision(e.obj1, e.obj2);
+	});
 
 	// ---DEBUG ENTITY---
 	Entity e = m_pGameScene->CreateEntity();
@@ -174,7 +175,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 	// ---END OF DEBUG---
 
 	m_pCurrentScene = m_pGameScene; // todo Should be lobbyScene
-	
+
 	// Automatically join created lobby
 	JoinLobby(playerID, gameID);
 
@@ -197,7 +198,7 @@ bool Simulation::AddPlayer(uint32_t playerID)
 {
 	LOG_INFO("Player with ID: %ld added to the game!", playerID);
 	m_connections[playerID] = m_pServer->GetConnection(playerID);
-	
+
 	// Send all entities in Game Scene to new player
 	m_pServer->SendToClient(m_pServer->GetConnection(playerID), AllEntitiesMessage());
 
@@ -211,13 +212,13 @@ bool Simulation::AddPlayer(uint32_t playerID)
 	player.AddComponent<comp::BoundingOrientedBox>();
 
 	CollisionSystem::Get().AddOnCollision(player, [&](Entity player2)
+	{
+		comp::Player* otherPlayer = m_pCurrentScene->GetRegistry()->try_get<comp::Player>(player2);
+		if (otherPlayer != nullptr)
 		{
-			comp::Player* otherPlayer = m_pCurrentScene->GetRegistry()->try_get<comp::Player>(player2);
-			if(otherPlayer != nullptr)
-			{
-				LOG_INFO("Collision!");
-			}
-		});
+			LOG_INFO("Collision!");
+		}
+	});
 
 	// send new Player to all other clients
 	Broadcast(SingleEntityMessage(player));
@@ -234,38 +235,76 @@ bool Simulation::RemovePlayer(uint32_t playerID)
 	this->Broadcast(msg);
 
 	m_pGameScene->ForEachComponent<comp::Network>([playerID](Entity e, comp::Network& n)
+	{
+		if (n.id == playerID)
 		{
-			if (n.id == playerID)
-			{
-				LOG_INFO("Removed player %u from game scene", n.id);
-				e.Destroy();
-			}
-		});
+			LOG_INFO("Removed player %u from game scene", n.id);
+			e.Destroy();
+		}
+	});
 
 	m_connections.erase(playerID);
 
 	return true;
 }
+bool Simulation::AddNPC(uint32_t npcId)
+{
+	LOG_INFO("NPC with ID: %ld added to game!", npcId);
 
+	Entity npc = m_pGameScene->CreateEntity();
+	npc.AddComponent<comp::Transform>()->position = sm::Vector3(10.f,0.f,10.f);
+	npc.AddComponent<comp::Velocity>();
+	npc.AddComponent<comp::MeshName>()->name = "Test/monster.fbx";
+	npc.AddComponent<comp::NPC>();
+	npc.AddComponent<comp::Network>()->id = npcId;
+	npc.AddComponent<comp::BoundingOrientedBox>();
+
+	CollisionSystem::Get().AddOnCollision(npc, [&](Entity other)
+	{
+		comp::NPC* otherNPC = m_pCurrentScene->GetRegistry()->try_get<comp::NPC>(other);
+		if (otherNPC)
+		{
+			LOG_INFO("NPC COLLISION!");
+		}
+	});
+	Broadcast(SingleEntityMessage(npc));
+	return true;
+}
+bool Simulation::RemoveNPC(uint32_t npcId)
+{
+	message<GameMsg> msg;
+	msg.header.id = GameMsg::Game_RemoveEntity;
+	msg << npcId << 1U;
+	this->Broadcast(msg);
+	m_pGameScene->ForEachComponent<comp::Network>([npcId](Entity e, comp::Network& n)
+	{
+		if (n.id == npcId)
+		{
+			LOG_INFO("Removed NPC %u from game scene", n.id);
+			e.Destroy();
+		}
+	});
+	return true;
+}
 void Simulation::SendSnapshot()
 {
 	network::message<GameMsg> msg;
 	msg.header.id = GameMsg::Game_Snapshot;
 
 	uint32_t i = 0;
-	m_pCurrentScene->ForEachComponent<comp::Network, comp::Transform>([&](Entity e, comp::Network& n, comp::Transform& t) 
-		{
-			msg << t << n.id;
-			i++;
-		});
+	m_pCurrentScene->ForEachComponent<comp::Network, comp::Transform>([&](Entity e, comp::Network& n, comp::Transform& t)
+	{
+		msg << t << n.id;
+		i++;
+	});
 	msg << i;
 
 	this->Broadcast(msg);
 }
 
-void Simulation::Update(float dt) 
+void Simulation::Update(float dt)
 {
-	if(m_pCurrentScene)
+	if (m_pCurrentScene)
 		m_pCurrentScene->Update(dt);
 }
 
