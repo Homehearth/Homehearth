@@ -202,12 +202,12 @@ bool Simulation::AddPlayer(uint32_t playerID)
 	m_pServer->SendToClient(m_pServer->GetConnection(playerID), AllEntitiesMessage());
 	// Create Player entity in Game scene
 	Entity player = m_pGameScene->CreateEntity();
-	player.AddComponent<comp::Transform>()->rotation = sm::Vector3{57.2958f,0.f,0.f};
+	player.AddComponent<comp::Transform>();
 	player.AddComponent<comp::Velocity>();
 	player.AddComponent<comp::MeshName>()->name = "cube.obj";
 	player.AddComponent<comp::Network>()->id = playerID;
 	player.AddComponent<comp::Player>()->runSpeed = 10.f;
-	player.AddComponent<comp::BoundingOrientedBox>()->Orientation = sm::Quaternion::CreateFromAxisAngle(sm::Vector3(1.0f,0.0f,0.0f), 1.0f);
+	player.AddComponent<comp::BoundingOrientedBox>();
 
 	CollisionSystem::Get().AddOnCollision(player, [=](entt::entity player2)
 		{
@@ -254,11 +254,6 @@ bool Simulation::AddPlayer(uint32_t playerID)
 						p1Vectors.emplace_back(p1Corners[i]);
 						p2Vectors.emplace_back(p2Corners[i]);
 					}
-					//else
-					//{
-					//	p1Vectors.emplace_back(p1Obb->Center);
-					//	p2Vectors.emplace_back(p2Obb->Center);
-					//}
 				}
 				
 				//Get min-max for the axis for the box
@@ -283,6 +278,7 @@ bool Simulation::AddPlayer(uint32_t playerID)
 
 				float depth = FLT_MAX;
 				sm::Vector3 smallestVec(FLT_MAX, FLT_MAX, FLT_MAX);
+				bool isValueSet = false;
 				for (int i = 0; i < minMaxProj.size() - 1; i += 2)
 				{
 					sm::Vector3 gap;
@@ -302,42 +298,44 @@ bool Simulation::AddPlayer(uint32_t playerID)
 					{
 						depth = gap.Length();
 						smallestVec = gap;
-						
+						isValueSet = true;
 					}
-					
 				}
-				float length = smallestVec.Dot(p1normalAxis[0]);
-				int bestIndex = 0;
+
+				//Reset to 0.001 (happens if boxes share exactly the same corners pos)
+				if(!isValueSet)
+				{
+					smallestVec = sm::Vector3(0.01f, 0.01f, 0.01f);
+				}
+				
+				float lengthVec = smallestVec.Dot(p1normalAxis[0]);
+				int indexForLowestVec = 0;
 				for(int i = 1; i < 3; i++)
 				{
-					if(abs(smallestVec.Dot(p1normalAxis[i])) > 0.000f && abs(smallestVec.Dot(p1normalAxis[i])) < abs(length) || length < 0.0001f && length > -0.00001f)
+					if(abs(smallestVec.Dot(p1normalAxis[i])) > 0.000f && abs(smallestVec.Dot(p1normalAxis[i])) < abs(lengthVec) || lengthVec < 0.0001f && lengthVec > -0.00001f)
 					{
-						length = smallestVec.Dot(p1normalAxis[i]);
-						bestIndex = i;
+						lengthVec = smallestVec.Dot(p1normalAxis[i]);
+						indexForLowestVec = i;
 					}
 				}
 				for (int i = 0; i < 3; i++)
 				{
-					if (abs(smallestVec.Dot(p2normalAxis[i])) > 0.000f && abs(smallestVec.Dot(p2normalAxis[i])) < abs(length) || length < 0.0001f && length > -0.00001f)
+					if (abs(smallestVec.Dot(p2normalAxis[i])) > 0.000f && abs(smallestVec.Dot(p2normalAxis[i])) < abs(lengthVec) || lengthVec < 0.0001f && lengthVec > -0.00001f)
 					{
-						length = smallestVec.Dot(p2normalAxis[i]);
-						bestIndex = i;
+						lengthVec = smallestVec.Dot(p2normalAxis[i]);
+						indexForLowestVec = i;
 					}
 				}
 				
-				length = length * 1.3f;
-				const sm::Vector3 moveVec = ((p1normalAxis[bestIndex] * length) / 2.0f);
-				const sm::Vector3 transformToTransform = (p2transform->position - p1transform->position);
-				
-				if((p2transform->position - (p1transform->position + moveVec)).Length() > transformToTransform.Length())
+				lengthVec *= 1.2f;
+				const sm::Vector3 moveVec = ((p1normalAxis[indexForLowestVec] * lengthVec) / 2.0f);
+				if((p2transform->position - (p1transform->position + moveVec)).Length() > (p2transform->position - p1transform->position).Length())
 				{
 					p1transform->position += (moveVec);
-					p2transform->position += (moveVec * -1.0f);
 				}
 				else
 				{
 					p1transform->position += (moveVec * -1.0f);
-					p2transform->position += (moveVec);
 				}
 			}
 		});
