@@ -489,9 +489,9 @@ Entity Game::CreateEntityFromMessage(message<GameMsg>& msg)
 			{
 			case ecs::Component::NETWORK:
 			{
-				uint32_t id;
-				msg >> id;
-				e.AddComponent<comp::Network>()->id = id;
+				comp::Network n;
+				msg >> n;
+				*e.AddComponent<comp::Network>() = n;
 				break;
 			}
 			case ecs::Component::TRANSFORM:
@@ -511,15 +511,22 @@ Entity Game::CreateEntityFromMessage(message<GameMsg>& msg)
 			case ecs::Component::BOUNDING_ORIENTED_BOX:
 			{
 				comp::BoundingOrientedBox box;
-				msg >> box.Orientation >> box.Extents >> box.Center;
+				msg >> box;
 				*e.AddComponent<comp::BoundingOrientedBox>() = box;
 				break;
 			}
 			case ecs::Component::BOUNDING_SPHERE:
 			{
 				comp::BoundingSphere s;
-				msg >> s.Radius >> s.Center;
+				msg >> s;
 				*e.AddComponent<comp::BoundingSphere>() = s;
+				break;
+			}
+			case ecs::Component::LIGHT:
+			{
+				comp::Light l;
+				msg >> l;
+				*e.AddComponent<comp::Light>() = l;
 				break;
 			}
 			default:
