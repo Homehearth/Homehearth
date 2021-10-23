@@ -204,7 +204,7 @@ void SetupServerConnectScreen(Window* pWindow)
 	portField->GetText()->SetText("Input PORT");
 	
 
-	rtd::Button* connectButton = new rtd::Button("StartButton.png", draw_t(width / 2 - 150.f, height - height / 3, 300.0f, 100.0f));
+	rtd::Button* connectButton = new rtd::Button("StartButton.png", draw_t((float)width / 2 - 150.f, (float)height - (float)height / 3, 300.0f, 100.0f));
 	rtd::Handler2D::Get().InsertElement(connectButton, "serverConnect");
 	connectButton->SetName("connectButton");
 #endif

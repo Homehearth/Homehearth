@@ -132,12 +132,12 @@ void BasicEngine<SceneType>::Run()
 
 		if (update_time >= TARGET_UPDATE)
 		{
-			Update(update_time);
+			Update(TARGET_UPDATE);
 			update_time -= TARGET_UPDATE;
 		}
 		if (network_time >= NETWORK_TARGET_DELTA)
 		{
-			UpdateNetwork(network_time);
+			UpdateNetwork(NETWORK_TARGET_DELTA);
 			network_time -= NETWORK_TARGET_DELTA;
 		}
 		network_time += deltaTime;
