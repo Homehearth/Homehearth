@@ -62,9 +62,10 @@ namespace rtd
 	{
 	private:
 
-		// Double buffer
 		std::vector<Element2D*> m_elements;
+		std::unordered_map<std::string, std::vector<Element2D*>> m_groups;
 
+		// Double buffer
 		DoubleBuffer<std::vector<Element2D**>> m_drawBuffers;
 		Handler2D();
 		~Handler2D();
@@ -78,7 +79,7 @@ namespace rtd
 		}
 
 		// Insert an element into the rendering system.
-		static void InsertElement(Element2D* element);
+		static void InsertElement(Element2D* element, const std::string& groupName = "general");
 
 		/*
 			Get an Element by its assigned name.
@@ -105,6 +106,8 @@ namespace rtd
 
 		// Set the visibility of all elements to boolean.
 		static void SetVisibilityAll(const bool& toggle);
+
+		static void SetVisibilityGroup(const std::string& group, bool visible);
 
 		static const bool IsRenderReady();
 	};

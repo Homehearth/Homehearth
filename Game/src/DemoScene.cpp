@@ -65,7 +65,10 @@ namespace sceneHelp
 
 	void CreateGameScene(Engine& engine)
 	{
+
+
 		Scene& gameScene = engine.GetScene("Game");
+		SetupInGameScreen();
 
 		//Construct collider meshes if colliders are added.
 		gameScene.GetRegistry()->on_construct<comp::RenderableDebug>().connect<entt::invoke<&comp::RenderableDebug::InitRenderable>>();
@@ -124,7 +127,7 @@ namespace sceneHelp
 				);
 
 				GameSystems::RenderIsCollidingSystem(scene);
-
+				Systems::LightSystem(scene, e.dt);
 #ifdef _DEBUG
 				if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Space, KeyState::RELEASED))
 				{
@@ -190,19 +193,19 @@ void SetupServerConnectScreen(Window* pWindow)
 
 	rtd::TextField* ipField = new rtd::TextField(draw_text_t(width / 3 - 50.f, 100.0f, 200.0f, 35.0f));
 	ipField->GetBorder()->SetColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
-	rtd::Handler2D::Get().InsertElement(ipField);
+	rtd::Handler2D::Get().InsertElement(ipField, "serverConnect");
 	ipField->SetName("ipBuffer");
 	ipField->GetText()->SetText("Input IP adress");
 	
 	rtd::TextField* portField = new rtd::TextField(draw_text_t(width / 3 + 200.f, 100.0f, 100.0f, 35.0f));
 	portField->GetBorder()->SetColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
-	rtd::Handler2D::Get().InsertElement(portField);
+	rtd::Handler2D::Get().InsertElement(portField, "serverConnect");
 	portField->SetName("portBuffer");
 	portField->GetText()->SetText("Input PORT");
 	
 
 	rtd::Button* connectButton = new rtd::Button("StartButton.png", draw_t(width / 2 - 150.f, height - height / 3, 300.0f, 100.0f));
-	rtd::Handler2D::Get().InsertElement(connectButton);
+	rtd::Handler2D::Get().InsertElement(connectButton, "serverConnect");
 	connectButton->SetName("connectButton");
 #endif
 }
@@ -218,38 +221,37 @@ void SetupMainMenuScreen(Window* pWindow)
 
 	// Adds text to the menu screen.
 	rtd::Text* welcomeText = new rtd::Text("Welcome To Homehearth!", draw_text_t(575.0f, 50.0f, 300.0f, 100.0f));
-	rtd::Handler2D::Get().InsertElement(welcomeText);
+	rtd::Handler2D::Get().InsertElement(welcomeText, "mainMenu");
 	welcomeText->SetName("welcome_text");
 	
 	// Adds text to the menu screen.
 	rtd::Text* gameInfoText = new rtd::Text("In this game you will face against very dangerous foes while defending the righteous village from its dark fate! Take up arms and fight your way to victory champion! Join our discord and twitter to get official news about the new upcoming technological wonder game! Sign up for RTX exclusive version at our website!", draw_text_t(550.0f, 0.0f, 350.0f, 550.0f));
-	rtd::Handler2D::Get().InsertElement(gameInfoText);
+	rtd::Handler2D::Get().InsertElement(gameInfoText, "mainMenu");
 	gameInfoText->SetName("gameInfoText");
 
 	// Adds a button and names it joinButton.
 	rtd::Button* joinButton = new rtd::Button("StartButton.png", draw_t(buttonsLeft, 100.0f, buttonWidth, buttonHeight));
-	rtd::Handler2D::Get().InsertElement(joinButton);
+	rtd::Handler2D::Get().InsertElement(joinButton, "mainMenu");
 	joinButton->SetName("joinButton");
 
 	rtd::TextField* lobbyField = new rtd::TextField(draw_text_t(buttonsLeft + buttonWidth + 10.f, 117.5f, 100.0f, 35.0f));
-	//rtd::TextField * lobbyField = new rtd::TextField(draw_text_t((float)(rand() % 1000) / 2, (float)(rand() % 1000) / 4, 200.0f, 35.0f));
+	// Adds a border around the element and sets the color to black.
 	lobbyField->GetBorder()->SetColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
-	rtd::Handler2D::Get().InsertElement(lobbyField);
+	rtd::Handler2D::Get().InsertElement(lobbyField, "mainMenu");
 	lobbyField->SetName("lobbyBuffer");
 	lobbyField->GetText()->SetText("Input Lobby ID");
 
-	// Adds a border around the button and sets the color to black.
 	
 	// Adds a button and names it start game button.
 	rtd::Button* hostButton = new rtd::Button("StartButton.png", draw_t(buttonsLeft, 185.0f, buttonWidth, buttonHeight));
-	rtd::Handler2D::Get().InsertElement(hostButton);
+	rtd::Handler2D::Get().InsertElement(hostButton, "mainMenu");
 	hostButton->SetName("hostButton");
 	// Adds a border around the button and sets the color to black.
 
 
 	// Adds a button and names it exit game button.
 	rtd::Button* exitGameButton = new rtd::Button("demo_exit_button.png", draw_t(buttonsLeft, 325.0f, buttonWidth, buttonHeight));
-	rtd::Handler2D::Get().InsertElement(exitGameButton);
+	rtd::Handler2D::Get().InsertElement(exitGameButton, "mainMenu");
 	exitGameButton->SetName("exitGameButton");
 	// Adds a border around the button and sets the color to black.
 	exitGameButton->GetBorder()->SetColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
@@ -268,63 +270,63 @@ void SetupInGameScreen()
 	// Player 1
 	// Temp 'heart' displayed as leaf
 	rtd::Picture* heart1 = new rtd::Picture(texture1, draw_t(90.0f, 10.0f, 64.0f, 64.0f));
-	rtd::Handler2D::Get().InsertElement(heart1);
+	rtd::Handler2D::Get().InsertElement(heart1, "inGame");
 
 	rtd::Picture* heart2 = new rtd::Picture(texture1, draw_t(174.0f, 10.0f, 64.0f, 64.0f));
-	rtd::Handler2D::Get().InsertElement(heart2);
+	rtd::Handler2D::Get().InsertElement(heart2, "inGame");
 
 	rtd::Picture* heart3 = new rtd::Picture(texture1, draw_t(258.0f, 10.0f, 64.0f, 64.0f));
-	rtd::Handler2D::Get().InsertElement(heart3);
+	rtd::Handler2D::Get().InsertElement(heart3, "inGame");
 
 	rtd::Text* youText = new rtd::Text("You:", draw_text_t(5.0f, 30.0f, 60.0f, 20.0f));
-	rtd::Handler2D::Get().InsertElement(youText);
+	rtd::Handler2D::Get().InsertElement(youText, "inGame");
 
 	// Player 2
 	rtd::Picture* heart4 = new rtd::Picture(texture1, draw_t(90.0f, 72.0f, 64.0f, 64.0f));
-	rtd::Handler2D::Get().InsertElement(heart4);
+	rtd::Handler2D::Get().InsertElement(heart4, "inGame");
 
 	rtd::Picture* heart5 = new rtd::Picture(texture1, draw_t(174.0f, 72.0f, 64.0f, 64.0f));
-	rtd::Handler2D::Get().InsertElement(heart5);
+	rtd::Handler2D::Get().InsertElement(heart5, "inGame");
 
 	rtd::Picture* heart6 = new rtd::Picture(texture1, draw_t(258.0f, 72.0f, 64.0f, 64.0f));
-	rtd::Handler2D::Get().InsertElement(heart6);
+	rtd::Handler2D::Get().InsertElement(heart6, "inGame");
 
 	rtd::Text* friendText = new rtd::Text("Friend:", draw_text_t(5.0f, 95.0f, 84.0f, 20.0f));
-	rtd::Handler2D::Get().InsertElement(friendText);
+	rtd::Handler2D::Get().InsertElement(friendText, "inGame");
 
 	//Timer text
 	const std::string& timerText = "1:20";
 	rtd::Text* timer = new rtd::Text(timerText, draw_text_t(436.0f, 24.0f, 96.0f, 24.0f));
-	rtd::Handler2D::Get().InsertElement(timer);
+	rtd::Handler2D::Get().InsertElement(timer, "inGame");
 
 	// Attacks
 	rtd::Text* attacksText = new rtd::Text("Attacks!", draw_text_t(24.0f, 412.0f, 96.0f, 24.0f));
-	rtd::Handler2D::Get().InsertElement(attacksText);
+	rtd::Handler2D::Get().InsertElement(attacksText, "inGame");
 
 	rtd::Picture* attack1 = new rtd::Picture(texture2, draw_t(24.f, 448.0f, 64.0f, 64.0f));
-	rtd::Handler2D::Get().InsertElement(attack1);
+	rtd::Handler2D::Get().InsertElement(attack1, "inGame");
 
 	rtd::Picture* attack2 = new rtd::Picture(texture3, draw_t(98.f, 448.0f, 64.0f, 64.0f));
-	rtd::Handler2D::Get().InsertElement(attack2);
+	rtd::Handler2D::Get().InsertElement(attack2, "inGame");
 
 	rtd::Picture* attack3 = new rtd::Picture(texture4, draw_t(172.f, 448.0f, 64.0f, 64.0f));
-	rtd::Handler2D::Get().InsertElement(attack3);
+	rtd::Handler2D::Get().InsertElement(attack3, "inGame");
 	attack3->GetBorder()->SetColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
 	attack2->GetBorder()->SetColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
 	attack1->GetBorder()->SetColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
 
 	// Builds
 	rtd::Text* buildText = new rtd::Text("Builds!", draw_text_t(700.0f, 412.0f, 96.0f, 24.0f));
-	rtd::Handler2D::Get().InsertElement(buildText);
+	rtd::Handler2D::Get().InsertElement(buildText, "inGame");
 
 	rtd::Picture* build1 = new rtd::Picture(texture2, draw_t(700.f, 448.0f, 64.0f, 64.0f));
-	rtd::Handler2D::Get().InsertElement(build1);
+	rtd::Handler2D::Get().InsertElement(build1, "inGame");
 
 	rtd::Picture* build2 = new rtd::Picture(texture3, draw_t(774.f, 448.0f, 64.0f, 64.0f));
-	rtd::Handler2D::Get().InsertElement(build2);
+	rtd::Handler2D::Get().InsertElement(build2, "inGame");
 
 	rtd::Picture* build3 = new rtd::Picture(texture4, draw_t(848.f, 448.0f, 64.0f, 64.0f));
-	rtd::Handler2D::Get().InsertElement(build3);
+	rtd::Handler2D::Get().InsertElement(build3, "inGame");
 	build3->GetBorder()->SetColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
 	build2->GetBorder()->SetColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
 	build1->GetBorder()->SetColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));

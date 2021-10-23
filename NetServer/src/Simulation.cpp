@@ -12,7 +12,7 @@ void Simulation::InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg)
 		case ecs::Component::NETWORK:
 		{
 			compSet.set(ecs::Component::NETWORK);
-			msg << entity.GetComponent<comp::Network>()->id;
+			msg << *entity.GetComponent<comp::Network>();
 			break;
 		}
 		case ecs::Component::TRANSFORM:
@@ -41,7 +41,7 @@ void Simulation::InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg)
 			if (b)
 			{
 				compSet.set(ecs::Component::BOUNDING_ORIENTED_BOX);
-				msg << b->Center << b->Extents << b->Orientation;
+				msg << *b;
 			}
 			break;
 		}
@@ -51,7 +51,17 @@ void Simulation::InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg)
 			if (bs)
 			{
 				compSet.set(ecs::Component::BOUNDING_SPHERE);
-				msg << bs->Center << bs->Radius;
+				msg << *bs;
+			}
+			break;
+		}
+		case ecs::Component::LIGHT:
+		{
+			comp::Light* l = entity.GetComponent<comp::Light>();
+			if (l)
+			{
+				compSet.set(ecs::Component::LIGHT);
+				msg << *l;
 			}
 			break;
 		}
@@ -152,7 +162,6 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 		{
 			Systems::MovementSystem(scene, e.dt);
 			Systems::MovementColliderSystem(scene, e.dt);
-
 			Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(scene);
 			//LOG_INFO("GAME Scene %d", m_gameID);
 		});
@@ -171,7 +180,10 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 	e.AddComponent<comp::MeshName>()->name = "Chest.obj";
 	e.AddComponent<comp::Velocity>()->vel = sm::Vector3(0, -0.2f, 0);
 	e.AddComponent<comp::BoundingSphere>();
+
 	// ---END OF DEBUG---
+
+
 
 	m_pCurrentScene = m_pGameScene; // todo Should be lobbyScene
 	

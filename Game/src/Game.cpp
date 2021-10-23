@@ -58,13 +58,14 @@ bool Game::OnStartup()
 {
 	// Scene logic
 	sceneHelp::CreateLobbyScene(*this);
-	rtd::Handler2D::Get().SetVisibilityAll(false);
 	sceneHelp::CreateMainMenuScene(*this);
 	sceneHelp::CreateGameScene(*this);
-
+	rtd::Handler2D::Get().SetVisibilityAll(false);
 
 	// Set Current Scene
 	SetScene("MainMenu");
+
+	rtd::Handler2D::Get().SetVisibilityGroup("serverConnect", true);
 
 	return true;
 }
@@ -109,12 +110,7 @@ void Game::OnUserUpdate(float deltaTime)
 				if (!portBuffer->empty() && !ipBuffer->empty() && m_client.Connect(ipBuffer->c_str(), port))
 				{
 					rtd::Handler2D::SetVisibilityAll(false);
-					GET_ELEMENT("welcome_text", rtd::Text)->SetVisibility(true);
-					GET_ELEMENT("gameInfoText", rtd::Text)->SetVisibility(true);
-					GET_ELEMENT("joinButton", rtd::Button)->SetVisibility(true);
-					GET_ELEMENT("hostButton", rtd::Button)->SetVisibility(true);
-					GET_ELEMENT("lobbyBuffer", rtd::TextField)->SetVisibility(true);
-					GET_ELEMENT("exitGameButton", rtd::Button)->SetVisibility(true);
+					rtd::Handler2D::SetVisibilityGroup("mainMenu", true);
 				}
 			}
 		}
@@ -146,12 +142,7 @@ void Game::OnUserUpdate(float deltaTime)
 			if (m_client.Connect(ipBuffer->c_str(), port))
 			{
 				rtd::Handler2D::SetVisibilityAll(false);
-				GET_ELEMENT("welcome_text", rtd::Text)->SetVisibility(true);
-				GET_ELEMENT("gameInfoText", rtd::Text)->SetVisibility(true);
-				GET_ELEMENT("joinButton", rtd::Button)->SetVisibility(true);
-				GET_ELEMENT("hostButton", rtd::Button)->SetVisibility(true);
-				GET_ELEMENT("lobbyBuffer", rtd::TextField)->SetVisibility(true);
-				GET_ELEMENT("exitGameButton", rtd::Button)->SetVisibility(true);
+				rtd::Handler2D::SetVisibilityGroup("mainMenu", true);
 
 			}
 		}
@@ -175,6 +166,7 @@ void Game::OnUserUpdate(float deltaTime)
 			if (hostButton->IsClicked())
 			{
 				this->CreateLobby();
+
 			}
 		}
 
@@ -195,19 +187,16 @@ void Game::OnUserUpdate(float deltaTime)
 				{
 					try {
 						lobbyID = std::stoi(*lobbyBuffer);
+						this->JoinLobby(lobbyID);
 					}
 					catch (const std::exception& e) {
 						LOG_ERROR("Invalid lobby ID");
 					}
 				}
-				this->JoinLobby(lobbyID);
 
 			}
 		}
-
-
-
-
+		
 	}
 #endif
 
@@ -416,6 +405,8 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	{
 		msg >> m_gameID;
 		SetScene("Game");
+		rtd::Handler2D::Get().SetVisibilityAll(false);
+		rtd::Handler2D::Get().SetVisibilityGroup("inGame", true);
 		LOG_INFO("You are now in lobby: %lu", m_gameID);
 		break;
 	}
@@ -432,6 +423,9 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		m_isLeavingLobby = false;
 		m_gameID = -1;
 		SetScene("MainMenu");
+		rtd::Handler2D::Get().SetVisibilityAll(false);
+		rtd::Handler2D::Get().SetVisibilityGroup("mainMenu", true);
+
 		break;
 	}
 	}
@@ -511,9 +505,9 @@ Entity Game::CreateEntityFromMessage(message<GameMsg>& msg)
 			{
 			case ecs::Component::NETWORK:
 			{
-				uint32_t id;
-				msg >> id;
-				e.AddComponent<comp::Network>()->id = id;
+				comp::Network n;
+				msg >> n;
+				*e.AddComponent<comp::Network>() = n;
 				break;
 			}
 			case ecs::Component::TRANSFORM:
@@ -533,15 +527,22 @@ Entity Game::CreateEntityFromMessage(message<GameMsg>& msg)
 			case ecs::Component::BOUNDING_ORIENTED_BOX:
 			{
 				comp::BoundingOrientedBox box;
-				msg >> box.Orientation >> box.Extents >> box.Center;
+				msg >> box;
 				*e.AddComponent<comp::BoundingOrientedBox>() = box;
 				break;
 			}
 			case ecs::Component::BOUNDING_SPHERE:
 			{
 				comp::BoundingSphere s;
-				msg >> s.Radius >> s.Center;
+				msg >> s;
 				*e.AddComponent<comp::BoundingSphere>() = s;
+				break;
+			}
+			case ecs::Component::LIGHT:
+			{
+				comp::Light l;
+				msg >> l;
+				*e.AddComponent<comp::Light>() = l;
 				break;
 			}
 			default:
