@@ -202,12 +202,12 @@ bool Simulation::AddPlayer(uint32_t playerID)
 	m_pServer->SendToClient(m_pServer->GetConnection(playerID), AllEntitiesMessage());
 	// Create Player entity in Game scene
 	Entity player = m_pGameScene->CreateEntity();
-	player.AddComponent<comp::Transform>();
+	player.AddComponent<comp::Transform>()->rotation = sm::Vector3{57.2958f,0.f,0.f};
 	player.AddComponent<comp::Velocity>();
 	player.AddComponent<comp::MeshName>()->name = "cube.obj";
 	player.AddComponent<comp::Network>()->id = playerID;
 	player.AddComponent<comp::Player>()->runSpeed = 10.f;
-	player.AddComponent<comp::BoundingOrientedBox>();
+	player.AddComponent<comp::BoundingOrientedBox>()->Orientation = sm::Quaternion::CreateFromAxisAngle(sm::Vector3(1.0f,0.0f,0.0f), 1.0f);
 
 	CollisionSystem::Get().AddOnCollision(player, [=](entt::entity player2)
 		{
@@ -227,11 +227,6 @@ bool Simulation::AddPlayer(uint32_t playerID)
 				//Box1
 				sm::Vector3 p1normalAxis[3];
 				sm::Vector3 p2normalAxis[3];
-
-				p1Corners[0];
-				p1Corners[1];
-				p1Corners[2];
-				p1Corners[4];
 				
 				//Get the 3 AXIS from box1 needed to do the projection on
 				p1normalAxis[0] = (p1Corners[1] - p1Corners[0]);
@@ -286,117 +281,64 @@ bool Simulation::AddPlayer(uint32_t playerID)
 				minMaxProj.push_back(CollisionSystem::Get().GetMinMax(p1Vectors, p2normalAxis[2]));
 				minMaxProj.push_back(CollisionSystem::Get().GetMinMax(p2Vectors, p2normalAxis[2]));
 
-				float depth = 99999.f;
-				sm::Vector3 smallestVec(9999.f,9999.f,9999.f);
-				float smallestDepth;
-				bool p1First = false;
+				float depth = FLT_MAX;
+				sm::Vector3 smallestVec(FLT_MAX, FLT_MAX, FLT_MAX);
 				for (int i = 0; i < minMaxProj.size() - 1; i += 2)
 				{
 					sm::Vector3 gap;
 					if (minMaxProj[i].maxProj < minMaxProj[i + 1].maxProj)
 					{
 						gap = p2Vectors[minMaxProj[i + 1].minInxed] - p1Vectors[minMaxProj[i].maxIndex];
-						p1First = true;
 					}	
 					else if(minMaxProj[i].maxProj > minMaxProj[i + 1].maxProj)
 					{
 						gap = p1Vectors[minMaxProj[i].minInxed]- p2Vectors[minMaxProj[i + 1].maxIndex];
-						p1First = false;
 					}
 					else
 					{
 						continue; // should not happend?
 					}
-					//sm::Vector3 gap2 = p1Vectors[minMaxProj[i].minInxed] - p2Vectors[minMaxProj[i+1].maxIndex];
-					//float test1 = gap.Length();
-					float test2 = 0.0f;
 					if(gap.Length() < depth)
 					{
 						depth = gap.Length();
-
 						smallestVec = gap;
-
-						if (abs(gap.x) < abs(gap.y) && abs(gap.x) < abs(gap.z))
-							smallestDepth = gap.x;
-						else if (abs(gap.y) < abs(gap.x) && abs(gap.y) < abs(gap.z))
-							smallestDepth = gap.y;
-						else if (abs(gap.z) < abs(gap.x) && abs(gap.z) < abs(gap.y))
-							smallestDepth = gap.z;
+						
 					}
 					
 				}
-
-				if(p1First)
+				float length = smallestVec.Dot(p1normalAxis[0]);
+				int bestIndex = 0;
+				for(int i = 1; i < 3; i++)
 				{
-					p1transform->position += (smallestVec / 2.0f);
-					p2transform->position += -(smallestVec / 2.0f);
+					if(abs(smallestVec.Dot(p1normalAxis[i])) > 0.000f && abs(smallestVec.Dot(p1normalAxis[i])) < abs(length) || length < 0.0001f && length > -0.00001f)
+					{
+						length = smallestVec.Dot(p1normalAxis[i]);
+						bestIndex = i;
+					}
+				}
+				for (int i = 0; i < 3; i++)
+				{
+					if (abs(smallestVec.Dot(p2normalAxis[i])) > 0.000f && abs(smallestVec.Dot(p2normalAxis[i])) < abs(length) || length < 0.0001f && length > -0.00001f)
+					{
+						length = smallestVec.Dot(p2normalAxis[i]);
+						bestIndex = i;
+					}
+				}
+				
+				length = length * 1.3f;
+				const sm::Vector3 moveVec = ((p1normalAxis[bestIndex] * length) / 2.0f);
+				const sm::Vector3 transformToTransform = (p2transform->position - p1transform->position);
+				
+				if((p2transform->position - (p1transform->position + moveVec)).Length() > transformToTransform.Length())
+				{
+					p1transform->position += (moveVec);
+					p2transform->position += (moveVec * -1.0f);
 				}
 				else
 				{
-					p1transform->position += -(smallestVec / 2.0f);
-					p2transform->position += (smallestVec / 2.0f);
+					p1transform->position += (moveVec * -1.0f);
+					p2transform->position += (moveVec);
 				}
-
-				LOG_INFO("SmallestVec (%f, %f, %f)", smallestVec.x, smallestVec.y, smallestVec.z);
-
-				//if (abs(smallestVec.x) < abs(smallestVec.y) && abs(smallestVec.x) < abs(smallestVec.z))
-				//{
-				//	p1transform->position.x += (smallestVec.x / 2.0f);
-				//	p2transform->position.x += -(smallestVec.x / 2.0f);
-				//	LOG_INFO("pushing on X!: %f", (smallestVec.x/2.0f));
-				//}
-				//else if (abs(smallestVec.y) < abs(smallestVec.x) && abs(smallestVec.y) < abs(smallestVec.z))
-				//{
-				//	p1transform->position.y += (smallestVec.y / 2.0f);
-				//	p2transform->position.y += -(smallestVec.y / 2.0f);
-				//	LOG_INFO("pushing on y!: %f", (smallestVec.y / 2.0f));
-				//}
-				//else if (abs(smallestVec.z) < abs(smallestVec.x) && abs(smallestVec.z) < abs(smallestVec.y))
-				//{
-				//	p1transform->position.z += (smallestVec.z / 2.0f);
-				//	p2transform->position.z += -(smallestVec.z / 2.0f);
-				//	LOG_INFO("pushing on z!: %f", (smallestVec.z / 2.0f));
-				//}
-
-				//
-				//for(int i = 0; i < minMaxProj.size()-1; i+=2)
-				//{
-				//	if(minMaxProj[i].maxProj > minMaxProj[i + 1].minProj)
-				//	{
-				//		float value = minMaxProj[i].maxProj - minMaxProj[i + 1].minProj;
-				//		if (depth < value)
-				//			depth = value;
-				//	}
-				//	else if (minMaxProj[i + 1].maxProj > minMaxProj[i].minProj)
-				//	{
-				//		float value = minMaxProj[i + 1].maxProj - minMaxProj[i].minProj;
-				//		if (depth < value)
-				//			depth = value;
-				//	}
-				//}
-
-				
-				//LOG_INFO("Depth %f smallestdepth (%f)", depth, smallestDepth);
-				//bool separatP = P1.maxProj < P2.minProj || P2.maxProj < P1.minProj;
-				//bool separatQ = Q1.maxProj < Q2.minProj || Q2.maxProj < Q1.minProj;
-				//bool separatR = R1.maxProj < R2.minProj || R2.maxProj < R1.minProj;
-				//bool separatT = T1.maxProj < T2.minProj || T2.maxProj < T1.minProj;
-				//bool separatY = Y1.maxProj < Y2.minProj || Y2.maxProj < Y1.minProj;
-				//bool separatU = U1.maxProj < U2.minProj || U2.maxProj < U1.minProj;
-
-
-				//Get the deepest depth.
-				//bool isSeparated = separatP || separatQ || separatR || separatT || separatY || separatU;
-				//if(isSeparated)
-				//{
-				//	LOG_INFO("isSeparated");
-				//}
-				//else
-				//{
-				//	
-				//	LOG_INFO("COLLIDING!");
-				//}
-
 			}
 		});
 
