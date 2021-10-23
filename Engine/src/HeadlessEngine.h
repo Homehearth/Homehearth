@@ -132,19 +132,18 @@ void BasicEngine<SceneType>::Run()
 
 		if (update_time >= TARGET_UPDATE)
 		{
+			Update(update_time);
 			update_time -= TARGET_UPDATE;
-			Update(TARGET_UPDATE);
 		}
 		if (network_time >= NETWORK_TARGET_DELTA)
 		{
+			UpdateNetwork(network_time);
 			network_time -= NETWORK_TARGET_DELTA;
-			UpdateNetwork(NETWORK_TARGET_DELTA);
 		}
 		network_time += deltaTime;
 		update_time += deltaTime;
 		lastFrame = currentFrame;
 	}
-
 }
 
 template<typename SceneType>

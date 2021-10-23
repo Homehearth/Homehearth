@@ -62,15 +62,14 @@ void Server::OnMessageReceived(message<GameMsg>& msg)
 	this->messageReceivedHandler(msg);
 }
 
-void Server::OnClientValidated(SOCKET_INFORMATION*& SI)
+void Server::OnClientValidated(const SOCKET& socket)
 {
 	uint32_t id = this->PopNextUniqueID();
 	message<GameMsg> msg = {};
 	msg << id;
 	msg.header.id = GameMsg::Server_AssignID;
-	connections[id] = SI->Socket;
-	SI->clientID = id;
-	this->SendToClient(SI->Socket, msg);
+	connections[id] = socket;
+	this->SendToClient(socket, msg);
 
-	LOG_INFO("Client has been validated on socket %lld", SI->Socket);
+	LOG_INFO("Client has been validated on socket %lld", socket);
 }

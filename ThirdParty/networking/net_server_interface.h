@@ -12,13 +12,12 @@ namespace network
 	{
 	private:
 		// Information regarding every connection
-
 		SOCKET m_listening;
 		bool m_isRunning;
 		HANDLE m_CompletionPort;
-		std::thread* workerThreads;
-		std::thread acceptThread;
-		int nrOfThreads;
+		std::thread* m_workerThreads;
+		std::thread m_acceptThread;
+		int m_nrOfThreads;
 		tsQueue<owned_message<T>> m_qMessagesOut;
 
 	protected:
@@ -44,7 +43,7 @@ namespace network
 		// Called once when a message is received
 		virtual void OnMessageReceived(message<T>& msg) = 0;
 		// Client has solved the puzzle from the server and is now validated
-		virtual void OnClientValidated(SOCKET_INFORMATION*& SI) = 0;
+		virtual void OnClientValidated(const SOCKET& socket) = 0;
 
 	private:
 		DWORD WINAPI ServerWorkerThread();
@@ -81,8 +80,8 @@ namespace network
 			m_isRunning = false;
 			lock = {};
 			m_CompletionPort = {};
-			workerThreads = nullptr;
-			nrOfThreads = 0;
+			m_workerThreads = nullptr;
+			m_nrOfThreads = 0;
 		}
 		server_interface<T>& operator=(const server_interface<T>& other) = delete;
 		server_interface(const server_interface<T>& other) = delete;
@@ -91,7 +90,7 @@ namespace network
 		{
 			WSACleanup();
 			DeleteCriticalSection(&lock);
-			delete[] workerThreads;
+			delete[] m_workerThreads;
 		}
 
 	public:
@@ -125,7 +124,7 @@ namespace network
 	template <typename T>
 	void server_interface<T>::AlertThread()
 	{
-		LOG_INFO("Thread id: %lu alerted!", GetCurrentThreadId());
+		//LOG_INFO("Thread id: %lu alerted!", GetCurrentThreadId());
 	}
 
 	template <typename T>
@@ -256,7 +255,7 @@ namespace network
 		if (SI->handshakeIn == SI->handshakeResult)
 		{
 			EnterCriticalSection(&lock);
-			this->OnClientValidated(SI);
+			this->OnClientValidated(SI->Socket);
 			LeaveCriticalSection(&lock);
 			this->PrimeReadHeader(SI);
 		}
@@ -357,6 +356,7 @@ namespace network
 		{
 			SOCKET socket = SI->Socket;
 			closesocket(SI->Socket);
+			SI->Socket = INVALID_SOCKET;
 			connections.erase(SI->clientID);
 			delete SI;
 			SI = nullptr;
@@ -615,19 +615,19 @@ namespace network
 		}
 		WSAEventSelect(m_listening, acceptEvent, FD_ACCEPT);
 
-		acceptThread = std::thread(&server_interface<T>::ProcessIncomingConnections, this, acceptEvent);
+		m_acceptThread = std::thread(&server_interface<T>::ProcessIncomingConnections, this, acceptEvent);
 
 		// Determine how many processors are on the system
 		GetSystemInfo(&SystemInfo);
-		nrOfThreads = (int)SystemInfo.dwNumberOfProcessors;
-		workerThreads = new std::thread[nrOfThreads];
+		m_nrOfThreads = (int)SystemInfo.dwNumberOfProcessors;
+		m_workerThreads = new std::thread[m_nrOfThreads];
 
 		m_isRunning = true;
 		// Create worker threads based on the number of processors available on the
 		// system. Create two worker threads for each processor
-		for (size_t i = 0; i < nrOfThreads; i++)
+		for (size_t i = 0; i < m_nrOfThreads; i++)
 		{
-			workerThreads[i] = std::thread(&server_interface<T>::ServerWorkerThread, this);
+			m_workerThreads[i] = std::thread(&server_interface<T>::ServerWorkerThread, this);
 		}
 
 		return true;
@@ -638,32 +638,29 @@ namespace network
 	{
 		EnterCriticalSection(&lock);
 		m_isRunning = false;
-
+		LOG_INFO("Shutting down server!");
 		if (m_listening != INVALID_SOCKET)
 		{
-			for (int i = 0; i < nrOfThreads; i++)
-			{
-				QueueUserAPC((PAPCFUNC)server_interface<T>::AlertThread, (HANDLE)workerThreads[i].native_handle(), NULL);
-				workerThreads[i].join();
-			}
-			QueueUserAPC((PAPCFUNC)server_interface<T>::AlertThread, (HANDLE)acceptThread.native_handle(), NULL);
-			acceptThread.join();
-
 			for (auto con : connections)
 			{
 				if (CancelIoEx((HANDLE)con.second, NULL))
 				{
-					LOG_INFO("Cancelled all IO");
+					LOG_INFO("Cancelled all IO for client: %lld Checking error code: %d", con.second, GetLastError());
 				}
 				else
 				{
-					LOG_INFO("Didnt cancel IO: %d", GetLastError());
+					LOG_INFO("Cancel I/O failed: %d", GetLastError());
 				}
 			}
-			
+			LeaveCriticalSection(&lock);
+			for (int i = 0; i < m_nrOfThreads; i++)
+			{
+				QueueUserAPC((PAPCFUNC)server_interface<T>::AlertThread, (HANDLE)m_workerThreads[i].native_handle(), NULL);
+				m_workerThreads[i].join();
+			}
+			QueueUserAPC((PAPCFUNC)server_interface<T>::AlertThread, (HANDLE)m_acceptThread.native_handle(), NULL);
+			m_acceptThread.join();
 		}
-		LeaveCriticalSection(&lock);
-		
 	}
 
 	template <typename T>

@@ -15,6 +15,8 @@ private:
 	std::string* m_portBuffer = nullptr;
 
 	bool m_isLeavingLobby;
+	comp::Transform test;
+	float m_predictionThreshhold;
 
 	// Inherited via Engine
 	virtual bool OnStartup() override;

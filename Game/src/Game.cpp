@@ -9,6 +9,7 @@ Game::Game()
 	this->m_localPID = -1;
 	this->m_gameID = -1;
 	this->m_isLeavingLobby = false;
+	this->m_predictionThreshhold = 0.001f;
 }
 
 Game::~Game()
@@ -35,25 +36,20 @@ void Game::UpdateNetwork(float deltaTime)
 			pingCheck -= TARGET_PING_TIME;
 		}
 
-		// TODO MAKE THIS BETTER
-		if (m_gameID != UINT32_MAX && GetCurrentScene()->GetCurrentCamera()->GetCameraType() == CAMERATYPE::PLAY && !m_isLeavingLobby)
+		if (GetCurrentScene() == &GetScene("Game") && !m_isLeavingLobby)
 		{
-			int8_t x = InputSystem::Get().GetAxis(Axis::HORIZONTAL);
-			int8_t z = InputSystem::Get().GetAxis(Axis::VERTICAL);
+			if (GetCurrentScene()->GetCurrentCamera()->GetCameraType() == CAMERATYPE::PLAY)
+			{
+				int8_t x = InputSystem::Get().GetAxis(Axis::HORIZONTAL);
+				int8_t z = InputSystem::Get().GetAxis(Axis::VERTICAL);
 
-			GetScene("Game").ForEachComponent<comp::Transform, comp::Tag<TagType::LOCAL_PLAYER>>([&]
-			(comp::Transform& t, comp::Tag<TagType::LOCAL_PLAYER>& tag)
-				{
-					t.position.x += x * 10.f * deltaTime;
-					t.position.z += z * 10.f * deltaTime;
-				}
-			);
-			message<GameMsg> msg;
-			msg.header.id = GameMsg::Game_PlayerInput;
+				message<GameMsg> msg;
+				msg.header.id = GameMsg::Game_PlayerInput;
 
-			msg << this->m_localPID << m_gameID << x << z;
+				msg << this->m_localPID << m_gameID << x << z;
 
-			m_client.Send(msg);
+				m_client.Send(msg);
+			}
 		}
 	}
 }
@@ -122,7 +118,7 @@ void Game::OnUserUpdate(float deltaTime)
 				}
 			}
 		}
-		
+
 	}
 
 	rtd::Button* connectButton = GET_ELEMENT("connectButton", rtd::Button);
@@ -160,7 +156,7 @@ void Game::OnUserUpdate(float deltaTime)
 			}
 		}
 	}
-	
+
 	// Main Menu Screen
 	rtd::Button* exit_button = GET_ELEMENT("exitGameButton", rtd::Button);
 	if (exit_button)
@@ -209,9 +205,9 @@ void Game::OnUserUpdate(float deltaTime)
 			}
 		}
 
-		
 
-		
+
+
 	}
 #endif
 
@@ -231,7 +227,7 @@ void Game::OnUserUpdate(float deltaTime)
 			ImGui::Text(std::string("Latency: <1 ms").c_str());
 		}
 
-		if (m_gameID == UINT32_MAX)
+		if (GetCurrentScene() != &GetScene("Game"))
 		{
 			if (ImGui::Button("Create Lobby"))
 			{
@@ -275,7 +271,6 @@ void Game::OnUserUpdate(float deltaTime)
 	else
 	{
 		static char buffer[IPV6_ADDRSTRLEN] = "127.0.0.1";
-		//strcpy(buffer, "127.0.0.1");
 		ImGui::InputText("IP", buffer, IPV6_ADDRSTRLEN);
 		static uint16_t port = 4950;
 		ImGui::InputInt("Port", (int*)&port);
@@ -287,6 +282,22 @@ void Game::OnUserUpdate(float deltaTime)
 	ImGui::End();
 	);
 
+	if (GetCurrentScene() == &GetScene("Game") && GetCurrentScene()->GetCurrentCamera()->GetCameraType() == CAMERATYPE::PLAY)
+	{
+		GetCurrentScene()->ForEachComponent<comp::Transform, comp::Tag<TagType::LOCAL_PLAYER>>([&]
+		(comp::Transform& t, comp::Tag<TagType::LOCAL_PLAYER>& tag)
+			{
+				t.position.x += 10.f * deltaTime * InputSystem::Get().GetAxis(Axis::HORIZONTAL);
+				t.position.z += 10.f * deltaTime * InputSystem::Get().GetAxis(Axis::VERTICAL);
+
+				if (sm::Vector3::Distance(t.position, test.position) > m_predictionThreshhold)
+				{
+					t.position.x = test.position.x;
+					t.position.z = test.position.z;
+				}
+			}
+		);
+	}
 }
 
 
@@ -320,6 +331,8 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	}
 	case GameMsg::Game_Snapshot:
 	{
+		uint32_t currentTick;
+		msg >> currentTick;
 		uint32_t count;
 		msg >> count;
 
@@ -339,8 +352,11 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 				if (transforms.find(n.id) != transforms.end())
 				{
 					t = transforms.at(n.id);
+					if (n.id == m_localPID)
+					{
+						test = transforms.at(n.id);
+					}
 				}
-
 			});
 
 		break;
