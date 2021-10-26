@@ -95,8 +95,8 @@ namespace sceneHelp
 
 		//TODO: Remove grid stuff
 		GridSystem grid;
-		grid.Initialize("GridMap.png");
-		sm::Vector3 tileModelSize = { 29.0f, 1.0f, 29.0f };
+		grid.Initialize({ 600, 600 }, {0,0,0}, "GridMapBig.png");
+		sm::Vector3 tileModelSize = { 2, 0.5f, 2 };
 		for (int i = 0; i < grid.GetTilePositions()->size(); i++)
 		{
 			if (grid.GetTiles()->at(i).GetType() == TileType::EMPTY)
@@ -124,11 +124,14 @@ namespace sceneHelp
 				Entity tile3 = gameScene.CreateEntity();
 				comp::Transform* transformt3 = tile3.AddComponent<comp::Transform>();
 				transformt3->position = grid.GetTilePositions()->at(i);
-				transformt3->position.y = 2;
 				transformt3->scale = tileModelSize;
 				comp::Renderable* renderablet3 = tile3.AddComponent<comp::Renderable>();
 				renderablet3->model = ResourceManager::Get().GetResource<RModel>("CubeD.obj");
 				renderablet3->model->ChangeMaterial("TileDefence.mtl");
+			}
+			else 
+			{
+				std::cout << "Couldnt create this tile" << std::endl;
 			}
 		}
 

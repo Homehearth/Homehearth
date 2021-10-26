@@ -2,18 +2,19 @@
 
 GridSystem::GridSystem()
 {
-	//TODO: remove hårdkådning
-	m_gridSize	= { 70.0f,	70.0f };
-	m_mapSize	= { 600.0f, 600.0f };
-	m_position	= { 0.0f,	0.0f };
+
 }
 
 GridSystem::~GridSystem()
 {
 }
 
-void GridSystem::Initialize(std::string fileName)
+void GridSystem::Initialize(sm::Vector2 mapSize, sm::Vector3 position, std::string fileName)
 {
+	m_position = position;
+	m_mapSize = mapSize;
+
+
 	std::shared_ptr<RTexture> texture = ResourceManager::Get().GetResource<RTexture>(fileName);
 	unsigned char* pixelsData = texture->GetImageData();
 	std::vector<int> pixelValues;
@@ -33,13 +34,7 @@ void GridSystem::Initialize(std::string fileName)
 			TileType tileTypeTemp = TileType::DEFAULT;
 
 			sm::Vector4 rgba; 
-			/*float rgbaIndex[4]; 
 
-			rgbaIndex[0] = (0 + (row + (col * m_gridSize.y))*4);
-			rgbaIndex[1] = (1 + (row + (col * m_gridSize.y))*4);
-			rgbaIndex[2] = (2 + (row + (col * m_gridSize.y))*4);
-			rgbaIndex[3] = (3 + (row + (col * m_gridSize.y))*4);
-			*/
 			rgba.x = pixelValues.at(0 + (row + (col * m_gridSize.y)) * 4);
 			rgba.y = pixelValues.at(1 + (row + (col * m_gridSize.y)) * 4);
 			rgba.z = pixelValues.at(2 + (row + (col * m_gridSize.y)) * 4);
@@ -68,7 +63,7 @@ void GridSystem::Initialize(std::string fileName)
 			m_tiles.push_back(tileTemp);
 
 			float tileHalfWidth = tileTemp.GetHalfWidth();
-			sm::Vector3 tilePosition = { tileHalfWidth + tileHalfWidth * row, 0.f, tileHalfWidth + tileHalfWidth * col };
+			sm::Vector3 tilePosition = { tileHalfWidth + tileHalfWidth * row + m_position.x, 0.f + m_position.y, tileHalfWidth + tileHalfWidth * col + m_position.z };
 			m_tilePosiitons.push_back(tilePosition);
 			tileTemp.SetPosition(tilePosition);
 		}
