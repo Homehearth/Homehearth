@@ -164,25 +164,24 @@ void CollisionSystem::CollisionResponsDynamic(Entity entity1, Entity entity2)
 	p2Obb->GetCorners(p2Corners);
 	p1Obb->GetCorners(p1Corners);
 
-	//Box1
-	sm::Vector3 p1normalAxis[3];
-	sm::Vector3 p2normalAxis[3];
+	//normal axis for both colliders
+	std::vector<sm::Vector3> normalAxis;
 
 	//Get the 3 AXIS from box1 needed to do the projection on
-	p1normalAxis[0] = (p1Corners[1] - p1Corners[0]);
-	p1normalAxis[0].Normalize();
-	p1normalAxis[1] = (p1Corners[2] - p1Corners[1]);
-	p1normalAxis[1].Normalize();
-	p1normalAxis[2] = (p1Corners[0] - p1Corners[4]);
-	p1normalAxis[2].Normalize();
+	normalAxis.push_back((p1Corners[1] - p1Corners[0]));
+	normalAxis[0].Normalize();
+	normalAxis.push_back((p1Corners[2] - p1Corners[1]));
+	normalAxis[1].Normalize();
+	normalAxis.push_back((p1Corners[0] - p1Corners[4]));
+	normalAxis[2].Normalize();
 
 	//Get the 3 AXIS from box2 needed to do the projection on
-	p2normalAxis[0] = (p2Corners[1] - p2Corners[0]);
-	p2normalAxis[0].Normalize();
-	p2normalAxis[1] = (p2Corners[2] - p2Corners[1]);
-	p2normalAxis[1].Normalize();
-	p2normalAxis[2] = (p2Corners[0] - p2Corners[4]);
-	p2normalAxis[2].Normalize();
+	normalAxis.push_back((p2Corners[1] - p2Corners[0]));
+	normalAxis[3].Normalize();
+	normalAxis.push_back((p2Corners[2] - p2Corners[1]));
+	normalAxis[4].Normalize();
+	normalAxis.push_back((p2Corners[0] - p2Corners[4]));
+	normalAxis[5].Normalize();
 
 	std::vector<sm::Vector3> p1Vectors;
 	std::vector<sm::Vector3> p2Vectors;
@@ -196,23 +195,11 @@ void CollisionSystem::CollisionResponsDynamic(Entity entity1, Entity entity2)
 
 	//Get min-max for the axis for the box
 	std::vector<MinMaxProj_t> minMaxProj;
-	minMaxProj.push_back(CollisionSystem::Get().GetMinMax(p1Vectors, p1normalAxis[1]));
-	minMaxProj.push_back(CollisionSystem::Get().GetMinMax(p2Vectors, p1normalAxis[1]));
-
-	minMaxProj.push_back(CollisionSystem::Get().GetMinMax(p1Vectors, p1normalAxis[0]));
-	minMaxProj.push_back(CollisionSystem::Get().GetMinMax(p2Vectors, p1normalAxis[0]));
-
-	minMaxProj.push_back(CollisionSystem::Get().GetMinMax(p1Vectors, p1normalAxis[2]));
-	minMaxProj.push_back(CollisionSystem::Get().GetMinMax(p2Vectors, p1normalAxis[2]));
-
-	minMaxProj.push_back(CollisionSystem::Get().GetMinMax(p1Vectors, p2normalAxis[1]));
-	minMaxProj.push_back(CollisionSystem::Get().GetMinMax(p2Vectors, p2normalAxis[1]));
-
-	minMaxProj.push_back(CollisionSystem::Get().GetMinMax(p1Vectors, p2normalAxis[0]));
-	minMaxProj.push_back(CollisionSystem::Get().GetMinMax(p2Vectors, p2normalAxis[0]));
-
-	minMaxProj.push_back(CollisionSystem::Get().GetMinMax(p1Vectors, p2normalAxis[2]));
-	minMaxProj.push_back(CollisionSystem::Get().GetMinMax(p2Vectors, p2normalAxis[2]));
+	for(int i = 0; i < normalAxis.size(); i++)
+	{
+		minMaxProj.push_back(CollisionSystem::Get().GetMinMax(p1Vectors, normalAxis.at(i)));
+		minMaxProj.push_back(CollisionSystem::Get().GetMinMax(p2Vectors, normalAxis.at(i)));
+	}
 
 	float depth = FLT_MAX;
 	sm::Vector3 smallestVec(FLT_MAX, FLT_MAX, FLT_MAX);
@@ -252,23 +239,14 @@ void CollisionSystem::CollisionResponsDynamic(Entity entity1, Entity entity2)
 
 
 	//Finds the smallest gap that exist on all tested axis
-	float lengthVec = smallestVec.Dot(p1normalAxis[0]);
+	float lengthVec = smallestVec.Dot(normalAxis.at(0));
 	int indexForLowestVec = 0;
-	for (int i = 1; i < 3; i++)
+	for (int i = 1; i < normalAxis.size(); i++)
 	{
-		if (abs(smallestVec.Dot(p1normalAxis[i])) > 0.000f && abs(smallestVec.Dot(p1normalAxis[i])) <
+		if (abs(smallestVec.Dot(normalAxis[i])) > 0.000f && abs(smallestVec.Dot(normalAxis[i])) <
 			abs(lengthVec) || lengthVec < 0.0001f && lengthVec > -0.00001f)
 		{
-			lengthVec = smallestVec.Dot(p1normalAxis[i]);
-			indexForLowestVec = i;
-		}
-	}
-	for (int i = 0; i < 3; i++)
-	{
-		if (abs(smallestVec.Dot(p2normalAxis[i])) > 0.000f && abs(smallestVec.Dot(p2normalAxis[i])) <
-			abs(lengthVec) || abs(lengthVec) < 0.0001f)
-		{
-			lengthVec = smallestVec.Dot(p2normalAxis[i]);
+			lengthVec = smallestVec.Dot(normalAxis[i]);
 			indexForLowestVec = i;
 		}
 	}
@@ -277,7 +255,7 @@ void CollisionSystem::CollisionResponsDynamic(Entity entity1, Entity entity2)
 	lengthVec *= 1.2f;
 
 	//Move the entity away from the other entity
-	const sm::Vector3 moveVec = ((p1normalAxis[indexForLowestVec] * lengthVec) / 2.0f);
+	const sm::Vector3 moveVec = ((normalAxis.at(indexForLowestVec) * lengthVec) / 2.0f);
 	if ((p2transform->position - (p1transform->position + moveVec)).Length() > (p2transform->position -
 		p1transform->position).Length())
 	{
