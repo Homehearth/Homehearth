@@ -149,21 +149,23 @@ namespace sceneHelp
 
 }
 
-Entity CreatePlayerEntity(HeadlessScene& scene, uint32_t playerID)
+Entity CreateLightEntity(Scene& scene, sm::Vector4 pos, sm::Vector4 dir, sm::Vector4 col, float range, TypeLight type, UINT enabled)
 {
-	Entity playerEntity = scene.CreateEntity();
-	playerEntity.AddComponent<comp::Transform>();
-	comp::BoundingOrientedBox* playerObb = playerEntity.AddComponent<comp::BoundingOrientedBox>();
-	playerObb->Extents = sm::Vector3{ 1.f,1.f,1.f };
-	comp::Velocity* playerVelocity = playerEntity.AddComponent<comp::Velocity>();
-	comp::Renderable* renderable = playerEntity.AddComponent<comp::Renderable>();
-	playerEntity.AddComponent<comp::Player>()->runSpeed = 10.f;
-	playerEntity.AddComponent<comp::Network>()->id = playerID;
+	Entity lightEntity = scene.CreateEntity();
 
-	renderable->model = ResourceManager::Get().GetResource<RModel>("cube.obj");
+	lightEntity.AddComponent<comp::Light>();
+	lightEntity.GetComponent<comp::Light>()->lightData.position = pos;
+	lightEntity.GetComponent<comp::Light>()->lightData.direction = dir;
+	lightEntity.GetComponent<comp::Light>()->lightData.color = col;
+	lightEntity.GetComponent<comp::Light>()->lightData.range = range;
+	lightEntity.GetComponent<comp::Light>()->lightData.type = type;
+	lightEntity.GetComponent<comp::Light>()->lightData.enabled = enabled;
+	
+	scene.GetLights()->EditLight(lightEntity.GetComponent<comp::Light>()->lightData, lightEntity.GetComponent<comp::Light>()->index);
 
-	return playerEntity;
+	return lightEntity;
 }
+
 
 void SetupServerConnectScreen(Window* pWindow)
 {
