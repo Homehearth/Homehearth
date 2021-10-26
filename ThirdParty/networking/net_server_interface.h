@@ -238,10 +238,14 @@ namespace network
 
 		if (WSASend(msg.remote, &context->DataBuf, 1, &BytesSent, flags, &context->Overlapped, NULL) == SOCKET_ERROR)
 		{
-			if (GetLastError() != WSA_IO_PENDING)
+			DWORD error = GetLastError();
+			if (error != WSA_IO_PENDING)
 			{
 				delete context;
-				LOG_ERROR("WSASend on socket: %lld message with error: %ld", msg.remote, GetLastError());
+				if (error != WSAENOTSOCK)
+				{
+					LOG_ERROR("WSASend on socket: %lld message with error: %ld", msg.remote, error);
+				}
 			}
 		}
 	}
@@ -698,22 +702,25 @@ namespace network
 
 			for (int i = 0; i < (int)EntriesRemoved; i++)
 			{
+				SI = (SOCKET_INFORMATION*)Entries[i].lpCompletionKey;
+				context = (PER_IO_DATA*)Entries[i].lpOverlapped;
+				if (SI == NULL)
+				{
+					continue;
+				}
+				if (Entries[i].dwNumberOfBytesTransferred == 0)
+				{
+					this->DisconnectClient(SI);
+					if (context != NULL)
+					{
+						delete context;
+					}
+					continue;
+				}
 				if (Entries[i].lpOverlapped != NULL)
 				{
-					SI = (SOCKET_INFORMATION*)Entries[i].lpCompletionKey;
-					if (SI == NULL)
-					{
-						continue;
-					}
-					context = (PER_IO_DATA*)Entries[i].lpOverlapped;
 					if (HasOverlappedIoCompleted(Entries[i].lpOverlapped))
 					{
-						if (Entries[i].dwNumberOfBytesTransferred == 0)
-						{
-							this->DisconnectClient(SI);
-							delete context;
-							continue;
-						}
 						// If an I/O was completed but we received no data means a client must've disconnected
 						// Basically a memcpy so we have data in correct structure
 						// I/O has completed, process it

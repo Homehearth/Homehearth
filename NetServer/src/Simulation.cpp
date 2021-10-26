@@ -1,7 +1,7 @@
 #include "NetServerPCH.h"
 #include "Simulation.h"
 
-void Simulation::InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg)
+void Simulation::InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg)const
 {
 	std::bitset<ecs::Component::COMPONENT_MAX> compSet;
 
@@ -72,11 +72,9 @@ void Simulation::InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg)
 	}
 
 	msg << static_cast<uint32_t>(compSet.to_ulong());
-
-
 }
 
-message<GameMsg> Simulation::AllEntitiesMessage()
+message<GameMsg> Simulation::AllEntitiesMessage()const
 {
 	message<GameMsg> msg;
 	msg.header.id = GameMsg::Game_AddEntity;
@@ -90,7 +88,7 @@ message<GameMsg> Simulation::AllEntitiesMessage()
 	return msg;
 }
 
-message<GameMsg> Simulation::SingleEntityMessage(Entity entity)
+message<GameMsg> Simulation::SingleEntityMessage(Entity entity)const
 {
 	message<GameMsg> msg;
 	msg.header.id = GameMsg::Game_AddEntity;
@@ -104,7 +102,7 @@ message<GameMsg> Simulation::SingleEntityMessage(Entity entity)
 
 Simulation::Simulation(Server* pServer, HeadlessEngine* pEngine)
 	: m_pServer(pServer)
-	  , m_pEngine(pEngine), m_pLobbyScene(nullptr), m_pGameScene(nullptr), m_pCurrentScene(nullptr)
+	, m_pEngine(pEngine), m_pLobbyScene(nullptr), m_pGameScene(nullptr), m_pCurrentScene(nullptr)
 {
 	this->m_gameID = 0;
 	this->m_tick = 0;
@@ -131,7 +129,7 @@ bool Simulation::LeaveLobby(uint32_t playerID, uint32_t gameID)
 
 	message<GameMsg> msg;
 	msg.header.id = GameMsg::Game_RemoveEntity;
-	
+
 	uint32_t count = 0;
 	m_pGameScene->ForEachComponent<comp::Network>([&](comp::Network& n)
 		{
@@ -151,7 +149,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 	this->m_gameID = gameID;
 	// Create Scenes associated with this Simulation
 	m_pLobbyScene = &m_pEngine->GetScene("Lobby_" + std::to_string(gameID));
-	m_pLobbyScene->on<ESceneUpdate>([=](const ESceneUpdate& e, HeadlessScene& scene) 
+	m_pLobbyScene->on<ESceneUpdate>([=](const ESceneUpdate& e, HeadlessScene& scene)
 		{
 			//LOG_INFO("LOBBY Scene %d", gameID);
 
@@ -186,7 +184,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 
 
 	m_pCurrentScene = m_pGameScene; // todo Should be lobbyScene
-	
+
 	// Automatically join created lobby
 	JoinLobby(playerID, gameID);
 
@@ -214,7 +212,7 @@ bool Simulation::AddPlayer(uint32_t playerID)
 		return false;
 	}
 	m_connections[playerID] = con;
-	
+
 	// Send all entities in Game Scene to new player
 	m_pServer->SendToClient(m_pServer->GetConnection(playerID), AllEntitiesMessage());
 
@@ -230,15 +228,15 @@ bool Simulation::AddPlayer(uint32_t playerID)
 	CollisionSystem::Get().AddOnCollision(player, [&](Entity player2)
 		{
 			comp::Player* otherPlayer = player2.GetComponent<comp::Player>();
-			if(otherPlayer != nullptr)
+			if (otherPlayer != nullptr)
 			{
-				LOG_INFO("Collision!");
+				/*LOG_INFO("Collision!");*/
 			}
 		});
 
 	LOG_INFO("Player with ID: %ld added to the game!", playerID);
 	// send new Player to all other clients
-	Broadcast(SingleEntityMessage(player));
+	this->Broadcast(SingleEntityMessage(player));
 
 	return true;
 }
@@ -260,8 +258,6 @@ bool Simulation::RemovePlayer(uint32_t playerID)
 			}
 		});
 
-	m_connections.erase(playerID);
-
 	return true;
 }
 
@@ -271,7 +267,7 @@ void Simulation::SendSnapshot()
 	msg.header.id = GameMsg::Game_Snapshot;
 
 	uint32_t i = 0;
-	m_pCurrentScene->ForEachComponent<comp::Network, comp::Transform>([&](Entity e, comp::Network& n, comp::Transform& t) 
+	m_pCurrentScene->ForEachComponent<comp::Network, comp::Transform>([&](Entity e, comp::Network& n, comp::Transform& t)
 		{
 			msg << t << n.id;
 			i++;
@@ -279,12 +275,13 @@ void Simulation::SendSnapshot()
 	msg << i;
 
 	msg << this->GetTick();
+	this->ScanForDisconnects();
 	this->Broadcast(msg);
 }
 
-void Simulation::Update(float dt) 
+void Simulation::Update(float dt)
 {
-	if(m_pCurrentScene)
+	if (m_pCurrentScene)
 		m_pCurrentScene->Update(dt);
 }
 
@@ -304,19 +301,29 @@ void Simulation::Broadcast(network::message<GameMsg>& msg, uint32_t exclude)
 
 	while (it != m_connections.end())
 	{
-		if (m_pServer->GetConnection(it->first) != INVALID_SOCKET)
+		if (exclude != it->first)
 		{
-			if (exclude != it->first)
-			{
-				m_pServer->SendToClient(it->second, msg);
-			}
-			it++;
+			m_pServer->SendToClient(it->second, msg);
 		}
-		else
+		it++;
+	}
+}
+
+void Simulation::ScanForDisconnects()
+{
+	auto it = m_connections.begin();
+
+	while (it != m_connections.end())
+	{
+		if (m_pServer->GetConnection(it->first) == INVALID_SOCKET)
 		{
 			uint32_t playerID = it->first;
 			it = m_connections.erase(it);
 			this->RemovePlayer(playerID);
+		}
+		else
+		{
+			it++;
 		}
 	}
 }
