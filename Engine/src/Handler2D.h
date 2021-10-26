@@ -63,6 +63,7 @@ namespace rtd
 	private:
 
 		std::vector<Element2D*> m_elements;
+		std::vector<Element2D**> m_cleanElements;
 		bool m_shouldClean;
 
 		// Doublebuffer holding references to elements.

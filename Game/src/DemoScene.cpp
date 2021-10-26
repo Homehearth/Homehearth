@@ -316,6 +316,7 @@ void sceneHelp::SetupInLobbyScreen()
 	const std::string& lobbyString = "Lobby ID: XYZW";
 	rtd::Text* lobbyIdText = new rtd::Text(lobbyString, draw_text_t(0.0f, 460.0f, lobbyString.length() * 24.0f, 24.0f));
 	rtd::Handler2D::Get().InsertElement(lobbyIdText);
+	lobbyIdText->SetName("LobbyIdText");
 
 	rtd::Button* mageButton = new rtd::Button("mageIconDemo.png", draw_t(350.0f, 454.0f, 32.0f, 32.0f));
 	rtd::Handler2D::Get().InsertElement(mageButton);
@@ -333,6 +334,14 @@ void sceneHelp::SetupInLobbyScreen()
 		rtd::Canvas* playerCanvas = new rtd::Canvas(D2D1::ColorF(0.7f, 0.5f, 0.2f), draw_t(25.0f, (i + 1) * 100.0f + ((i + 1) * 25.0f), 300.0f, 64.0f));
 		rtd::Handler2D::Get().InsertElement(playerCanvas);
 		rtd::Handler2D::Get().InsertElement(playerText);
+		playerText->SetName("player" + std::to_string(i + 1) + "text");
+		playerCanvas->SetName("player" + std::to_string(i + 1) + "canvas");
+
+		if (i == 1)
+		{
+			playerCanvas->SetVisibility(false);
+			playerText->SetVisibility(false);
+		}
 	}
 
 	rtd::Picture* player1Symbol = new rtd::Picture("warriorIconDemo.png", draw_t(350.0f, 125.0f, 64.0f, 64.0f));
@@ -346,6 +355,7 @@ void sceneHelp::SetupInLobbyScreen()
 	rtd::Picture* player2Symbol = new rtd::Picture("warriorIconDemo.png", draw_t(350.0f, 250.0f, 64.0f, 64.0f));
 	rtd::Handler2D::Get().InsertElement(player2Symbol);
 	player2Symbol->SetName("player2_symbol");
+	player2Symbol->SetVisibility(false);
 
 	rtd::Text* homehearthText = new rtd::Text("Homehearth", draw_text_t(25.0f, 25.0f, 200.0f, 50.0f));
 	rtd::Handler2D::Get().InsertElement(homehearthText);

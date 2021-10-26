@@ -19,12 +19,41 @@ rtd::Handler2D::~Handler2D()
 
 void rtd::Handler2D::CleanHandler()
 {
-	for (auto& elem : m_elements)
+
+	/*
+		Go through snapshot and delete all the pointers.
+	*/
+	for (int i = 0; i < m_cleanElements.size(); i++)
 	{
-		if(elem)
-			delete elem;
+		if (m_cleanElements[i])
+		{
+			delete* m_cleanElements[i];
+			*m_cleanElements[i] = nullptr;
+		}
+		else
+			*m_cleanElements[i] = nullptr;
 	}
-	m_elements.clear();
+	m_cleanElements.clear();
+
+
+	/*
+		Clean up all the nullptr from m_elements before push up to render.
+	*/
+	const bool run = true;
+	int counter = 0;
+	while (run)
+	{
+		if (counter >= (int)m_elements.size())
+			break;
+
+		if (!m_elements[counter])
+		{
+			m_elements.erase(m_elements.begin() + counter);
+			counter = 0;
+		}
+		else
+			counter++;
+	}
 }
 
 void rtd::Handler2D::InsertElement(Element2D* element)
@@ -71,11 +100,11 @@ void rtd::Handler2D::Update()
 
 	/*
 		Cleanup before push up to render
-	*/
 	if (shouldErase)
 	{
 		INSTANCE.EraseAll();
 	}
+	*/
 
 	if (!INSTANCE.m_drawBuffers.IsSwapped())
 	{
@@ -144,4 +173,13 @@ const bool rtd::Handler2D::IsRenderReady()
 void rtd::Handler2D::Cleanup()
 {
 	INSTANCE.m_shouldClean = true;
+
+	/*
+		Save a snapshot of the handler state when cleanup is called.
+	*/
+	INSTANCE.m_cleanElements.clear();
+	for (int i = 0; i < INSTANCE.m_elements.size(); i++)
+	{
+		INSTANCE.m_cleanElements.push_back(&INSTANCE.m_elements[i]);
+	}
 }

@@ -128,6 +128,16 @@ enum class Shapes
 	NR_OF_SHAPES
 };
 
+enum class LineWidth
+{
+	NONE,
+	SMALL,
+	MEDIUM,
+	LARGE,
+	THICK,
+	NR_OF
+};
+
 /*
 	Struct used to draw a shape with a specific color.
 */

@@ -25,7 +25,7 @@ void rtd::TextField::Update()
     }
 
     // Remove with the backspace
-    if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Keys::Back, KeyState::PRESSED) && m_stringText.length() > 0)
+    if ((InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Keys::Back, KeyState::PRESSED) & (m_stringText.length() > 0)) == 1)
     {
         m_stringText.pop_back();
     }
@@ -34,6 +34,8 @@ void rtd::TextField::Update()
     if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Keys::Enter, KeyState::PRESSED))
     {
         m_finalInput = true;
+        m_border->SetColor(m_inactiveColor);
+        m_isUsed = false;
     }
 
     // Update the text
@@ -64,6 +66,19 @@ Border* rtd::TextField::GetBorder()
     return m_border.get();
 }
 
+void rtd::TextField::SetBorderColors(const D2D1_COLOR_F& active, const D2D1_COLOR_F& inactive)
+{
+    m_activeColor = active;
+    m_inactiveColor = inactive;
+}
+
+void rtd::TextField::Reset()
+{
+    m_isUsed = false;
+    m_finalInput = false;
+    //m_stringText.clear();
+}
+
 const bool rtd::TextField::GetBuffer(std::string*& output)
 {
     if (m_finalInput)
@@ -90,6 +105,10 @@ void rtd::TextField::Draw()
 void rtd::TextField::OnClick()
 {
     m_isUsed = !m_isUsed;
+    if (m_isUsed)
+        m_border->SetColor(m_activeColor);
+    else
+        m_border->SetColor(m_inactiveColor);
 }
 
 void rtd::TextField::OnHover()
@@ -116,7 +135,10 @@ const bool rtd::TextField::CheckClick()
             return true;
         }
         else
+        {
             m_isUsed = false;
+            m_border->SetColor(m_inactiveColor);
+        }
     }
 
     return false;

@@ -74,6 +74,8 @@ void Game::OnUserUpdate(float deltaTime)
 	{
 	case 0:
 	{
+		// IN MENU AND CONNECT TO LOBBY STATE!
+
 		rtd::TextField* port_text = GET_ELEMENT("portBuffer", rtd::TextField);
 		rtd::TextField* ip_text = GET_ELEMENT("ipBuffer", rtd::TextField);
 		if (ip_text && port_text)
@@ -87,6 +89,13 @@ void Game::OnUserUpdate(float deltaTime)
 					rtd::Handler2D::SetVisibilityAll(false);
 					m_ipBuffer = nullptr;
 					m_portBuffer = nullptr;
+				}
+				else
+				{
+					m_ipBuffer = nullptr;
+					m_portBuffer = nullptr;
+					ip_text->Reset();
+					port_text->Reset();
 				}
 			}
 		}
@@ -125,7 +134,6 @@ void Game::OnUserUpdate(float deltaTime)
 				if (lobby_text->GetBuffer(m_lobbyBuffer))
 				{
 					this->JoinLobby(std::stoi(*m_lobbyBuffer));
-					//rtd::Handler2D::Get().DereferenceAllOnce();
 					rtd::Handler2D::Get().Cleanup();
 					m_internalState = 1;
 				}
@@ -137,7 +145,6 @@ void Game::OnUserUpdate(float deltaTime)
 				host_lobby_button->SetVisibility(true);
 				if (host_lobby_button->IsClicked())
 				{
-					//rtd::Handler2D::Get().SetVisibilityAll(false);
 					rtd::Handler2D::Get().Cleanup();
 					this->CreateLobby();
 					m_internalState = 1;
@@ -148,6 +155,8 @@ void Game::OnUserUpdate(float deltaTime)
 	}
 	case 1:
 	{
+		// IN LOBBY STATE!
+
 		rtd::Button* ready_button = GET_ELEMENT("readyButton", rtd::Button);
 		if (ready_button)
 		{
@@ -367,10 +376,17 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	case GameMsg::Lobby_Accepted:
 	{
 		msg >> m_gameID;
-		//rtd::Handler2D::Get().DereferenceAllOnce();
 		sceneHelp::SetupInLobbyScreen();
 		SetScene("Lobby");
 		LOG_INFO("You are now in lobby: %lu", m_gameID);
+
+
+		// Update the lobby ID text
+		rtd::Text* lobbyIdText = GET_ELEMENT("LobbyIdText", rtd::Text);
+		if (lobbyIdText)
+		{
+			lobbyIdText->SetText("Lobby ID: " + std::to_string(m_gameID));
+		}
 		break;
 	}
 	case GameMsg::Lobby_Invalid:
@@ -399,6 +415,36 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		rtd::Handler2D::Get().Cleanup();
 		//rtd::Handler2D::Get().DereferenceAllOnce();
 		SetScene("Game");
+		break;
+	}
+	case GameMsg::Lobby_Update:
+	{
+		uint32_t nrOfPlayers = 0;
+		msg >> nrOfPlayers;
+
+		rtd::Text* player2Text = GET_ELEMENT("player2text", rtd::Text);
+		rtd::Canvas* player2Canvas = GET_ELEMENT("player2canvas", rtd::Canvas);
+		rtd::Picture* player2Symbol = GET_ELEMENT("player2_symbol", rtd::Picture);
+
+		// Add second player to UI
+		if (nrOfPlayers == 2)
+		{
+			if (player2Text && player2Canvas && player2Symbol)
+			{
+				player2Canvas->SetVisibility(true);
+				player2Text->SetVisibility(true);
+				player2Symbol->SetVisibility(true);
+			}
+		}
+		else
+		{
+			if (player2Text && player2Canvas && player2Symbol)
+			{
+				player2Canvas->SetVisibility(false);
+				player2Text->SetVisibility(false);
+				player2Symbol->SetVisibility(false);
+			}
+		}
 		break;
 	}
 	}

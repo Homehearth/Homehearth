@@ -21,6 +21,7 @@ enum class GameMsg : uint8_t
 	Lobby_Accepted,
 	Lobby_AcceptedLeave,
 	Lobby_Invalid,
+	Lobby_Update,
 
 	Server_AssignID,
 	Server_GetPing,
