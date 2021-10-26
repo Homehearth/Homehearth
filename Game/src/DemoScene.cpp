@@ -93,21 +93,6 @@ namespace sceneHelp
 
 		gameScene.SetCurrentCameraEntity(cameraEntity);
 
-		for (int i = 0; i < 5; i++)
-		{
-			// Debug Chest
-			Entity chest = gameScene.CreateEntity();
-			comp::Transform* transform = chest.AddComponent<comp::Transform>();
-			transform->position.z = 5.0f * static_cast<float>(i) + 0.2f;
-			comp::Velocity* chestVelocity = chest.AddComponent<comp::Velocity>();
-			comp::BoundingOrientedBox* sphere = chest.AddComponent<comp::BoundingOrientedBox>();
-			sphere->Center = transform->position;
-			sphere->Extents = sm::Vector3(2.0f);
-			comp::Renderable* renderable2 = chest.AddComponent<comp::Renderable>();
-
-			renderable2->model = ResourceManager::Get().GetResource<RModel>("Chest.obj");
-		}
-
 		CreateLightEntity(gameScene, { 0.f, 0.f, 0.f, 0.f }, { 1.f, -1.f, 0.f, 0.f }, { 10.f, 10.f, 10.f, 10.f }, 0, TypeLight::DIRECTIONAL, 1);
 		CreateLightEntity(gameScene, { 0.f, 8.f, -10.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 300.f, 300.f, 300.f, 300.f }, 75.f, TypeLight::POINT, 1);
 

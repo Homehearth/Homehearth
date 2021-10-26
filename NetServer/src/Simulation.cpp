@@ -152,7 +152,6 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 		{
 			Systems::MovementSystem(scene, e.dt);
 			Systems::MovementColliderSystem(scene, e.dt);
-
 			Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(scene);
 			//LOG_INFO("GAME Scene %d", m_gameID);
 		});
@@ -167,11 +166,10 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 	// ---DEBUG ENTITY---
 	Entity e = m_pGameScene->CreateEntity();
 	e.AddComponent<comp::Network>()->id = m_pServer->PopNextUniqueID();
-	e.AddComponent<comp::Transform>()->position = sm::Vector3(5, 2, 0);
+	e.AddComponent<comp::Transform>()->position = sm::Vector3(-5, 0, 0);
 	e.AddComponent<comp::MeshName>()->name = "Chest.obj";
-	e.AddComponent<comp::Velocity>()->vel = sm::Vector3(0, -0.2f, 0);
-	e.AddComponent<comp::BoundingOrientedBox>();
-	e.AddComponent<comp::Tag<STATIC>>();
+	e.AddComponent<comp::BoundingOrientedBox>()->Extents = sm::Vector3(1.f,1.f,1.f);
+	e.AddComponent<comp::Tag<DYNAMIC>>();
 	// ---END OF DEBUG---
 	m_pCurrentScene = m_pGameScene; // todo Should be lobbyScene
 	
