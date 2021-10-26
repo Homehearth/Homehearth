@@ -24,10 +24,7 @@ private:
 	std::vector<bone_keyFrames_t>	m_bones;
 	std::unordered_map<std::string, std::shared_ptr<RAnimation>> m_animations;
 
-
-	//Structure that is going up to gpu
-	//ComPtr<ID3D11Buffer> m_nrOfBonesBuffer;
-
+	//Matrices that is going up to the GPU
 	std::vector<sm::Matrix>			 m_finalMatrices;
 	ComPtr<ID3D11Buffer>			 m_bonesSB_Buffer;
 	ComPtr<ID3D11ShaderResourceView> m_bonesSB_RSV;		//structurebuffer

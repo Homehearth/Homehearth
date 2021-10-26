@@ -1,6 +1,6 @@
-cbuffer Matrices : register(b0) //Not needed later
+cbuffer Matrices : register(b0)
 {
-    float4x4 c_world;
+    float4x4 c_world;       //row major
 }
 
 cbuffer Camera : register(b1)
@@ -11,12 +11,8 @@ cbuffer Camera : register(b1)
     float4x4 c_view;        //row major
 }
 
-//cbuffer BonesInfo : register(b2)
-//{
-//    uint c_nrOfBones;
-//};
-
-StructuredBuffer<Matrix> s_boneTransforms : register(t11);
+//Will read it in, in column major, but is actually a row major
+StructuredBuffer<float4x4> s_boneTransforms : register(t11);
 
 struct VertexIn
 {
@@ -43,21 +39,21 @@ VertexOut main(VertexIn input)
 {
     VertexOut output;
     
-    //column major
     float4x4 world;
     for (int i = 0; i < 4; i++)
     {
         world += s_boneTransforms[input.boneIDs[i]] * input.boneWeights[i];
     }
 
-    //world = mul(world, c_world);
+    //Global world-matrix has to affect the model
+    world = mul(c_world, world);
 
     //Positions and worldpos
-    output.pos = float4(input.pos, 1.0f);
-    output.pos = mul(world, output.pos);
+    output.pos      = float4(input.pos, 1.0f);
+    output.pos      = mul(world, output.pos);
     output.worldPos = output.pos;
-    output.pos = mul(c_view, output.pos);
-    output.pos = mul(c_projection, output.pos);
+    output.pos      = mul(c_view, output.pos);
+    output.pos      = mul(c_projection, output.pos);
     
     output.normal = mul((float3x3) world, input.normal);
     

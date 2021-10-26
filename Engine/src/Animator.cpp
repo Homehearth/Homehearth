@@ -95,13 +95,11 @@ void Animator::UpdateStructureBuffer()
 
 void Animator::Bind() const
 {
-	//Bind the buffers needed
 	D3D11Core::Get().DeviceContext()->VSSetShaderResources(T2D_BONESLOT, 1, m_bonesSB_RSV.GetAddressOf());
 }
 
 void Animator::Unbind() const
 {
-	//Unbind the buffers with nullptrs
 	ID3D11ShaderResourceView* nullSRV = nullptr;
 	D3D11Core::Get().DeviceContext()->VSSetShaderResources(T2D_BONESLOT, 1, &nullSRV);
 }
@@ -140,13 +138,8 @@ void Animator::Update()
 				modelMatrices[i] = localMatrix;
 			else
 				modelMatrices[i] = localMatrix * modelMatrices[m_bones[i].parentIndex];
-
+	
 			m_finalMatrices[i] = m_bones[i].inverseBind * modelMatrices[i];
-
-			//Before we upload to GPU we have to make it column major*****
-
-			//Let it be row major... 
-			//m_finalMatrices[i] = m_finalMatrices[i];
 		}
 
 		modelMatrices.clear();

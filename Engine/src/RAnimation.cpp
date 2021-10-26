@@ -93,8 +93,8 @@ const sm::Vector3 RAnimation::GetPosition(const std::string& bonename, const dou
 	}
 
 	//Update the lastkey to new value
-	/*if (nextFrame >= secondTime)
-		lastKey = nextKey;*/
+	if (nextFrame >= secondTime)
+		lastKey = nextKey;
 
 	return finalVec;
 }
@@ -127,8 +127,8 @@ const sm::Vector3 RAnimation::GetScale(const std::string& bonename, const double
 	}
 
 	//Update the lastkey to new value
-	/*if (nextFrame >= secondTime)
-		lastKey = nextKey;*/
+	if (nextFrame >= secondTime)
+		lastKey = nextKey;
 
 	return finalVec;
 }
@@ -162,8 +162,8 @@ const sm::Quaternion RAnimation::GetRotation(const std::string& bonename, const 
 	}
 
 	//Update the lastkey to new value
-	/*if (nextFrame >= secondTime)
-		lastKey = nextKey;*/
+	if (nextFrame >= secondTime)
+		lastKey = nextKey;
 
 	return finalQuat;
 }
@@ -191,14 +191,13 @@ const sm::Matrix RAnimation::GetMatrix(const std::string& bonename, const double
 	if (m_keyFrames.find(bonename) != m_keyFrames.end())
 	{
 		sm::Vector3 pos		= GetPosition(bonename, currentFrame, nextFrame, lastKeys[0], interpolate);
-		sm::Vector3 scl		= GetScale(bonename, currentFrame, nextFrame, lastKeys[1], interpolate);
+		sm::Vector3 scl		= GetScale(	  bonename, currentFrame, nextFrame, lastKeys[1], interpolate);
 		sm::Quaternion rot	= GetRotation(bonename, currentFrame, nextFrame, lastKeys[2], interpolate);
 
 		//Row major: Scale * Rotation * Translation
 		finalMatrix = sm::Matrix::CreateScale(scl) * sm::Matrix::CreateFromQuaternion(rot) * sm::Matrix::CreateTranslation(pos);
 	}
 
-	//return finalMatrix.Transpose();
 	return finalMatrix;
 }
 
@@ -223,7 +222,9 @@ bool RAnimation::Create(const std::string& filename)
 	//Will remove extra text on bones like: "_$AssimpFbx$_"...
 	importer.SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, false);
 
-    const aiScene* scene = importer.ReadFile(filepath, 0);
+    const aiScene* scene = importer.ReadFile(filepath, 
+											aiProcess_FlipWindingOrder |
+											aiProcess_MakeLeftHanded);
 
     //Check if readfile was successful
     if (!scene || !scene->mRootNode)

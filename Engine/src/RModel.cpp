@@ -381,22 +381,21 @@ bool RModel::LoadBones(const aiMesh* aimesh, const aiNode* root, std::vector<ani
             UINT id         = aibone->mWeights[v].mVertexId;
             float weight    = aibone->mWeights[v].mWeight;
 
-            boneCounter[id]++;
-            switch (boneCounter[id])
+            switch (boneCounter[id]++)
             {
-            case 1:
+            case 0:
                 skeletonVertices[id].boneIDs.x      = b + boneOffSet;
                 skeletonVertices[id].boneWeights.x  = weight;
                 break;
-            case 2:
+            case 1:
                 skeletonVertices[id].boneIDs.y      = b + boneOffSet;
                 skeletonVertices[id].boneWeights.y  = weight;
                 break;
-            case 3:
+            case 2:
                 skeletonVertices[id].boneIDs.z      = b + boneOffSet;
                 skeletonVertices[id].boneWeights.z  = weight;
                 break;
-            case 4:
+            case 3:
                 skeletonVertices[id].boneIDs.w      = b + boneOffSet;
                 skeletonVertices[id].boneWeights.w  = weight;
                 break;
@@ -404,22 +403,6 @@ bool RModel::LoadBones(const aiMesh* aimesh, const aiNode* root, std::vector<ani
                 //Vertex already has 4 bones connected
                 break;
             };
-        }
-
-        //Normalize the values - have to sum up to 1.0
-        for (size_t i = 0; i < skeletonVertices.size(); i++)
-        {
-            sm::Vector4 weights = skeletonVertices[i].boneWeights;
-            //Total weight
-            float total = weights.x + weights.y + weights.z + weights.w;
-            //Avoid devide by 0
-            if (total > 0.0f)
-            {
-                skeletonVertices[i].boneWeights = { weights.x / total, 
-                                                    weights.y / total, 
-                                                    weights.z / total, 
-                                                    weights.w / total };
-            }
         }
 
         //Create the bone and find the parent index
@@ -435,6 +418,22 @@ bool RModel::LoadBones(const aiMesh* aimesh, const aiNode* root, std::vector<ani
         m_allBones.push_back(bone);
     }
     m_allBones.shrink_to_fit();
+
+    //Normalize the weights - have to sum up to 1.0
+    for (size_t i = 0; i < skeletonVertices.size(); i++)
+    {
+        sm::Vector4 weights = skeletonVertices[i].boneWeights;
+        //Total weight
+        float total = weights.x + weights.y + weights.z + weights.w;
+        //Avoid devide by 0
+        if (total > 0.0f)
+        {
+            skeletonVertices[i].boneWeights = { weights.x / total,
+                                                weights.y / total,
+                                                weights.z / total,
+                                                weights.w / total };
+        }
+    }
 
     //Freeing up space
     nameToIndex.clear();
