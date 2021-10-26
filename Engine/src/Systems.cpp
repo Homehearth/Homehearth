@@ -9,72 +9,84 @@ const unsigned char BAD = 8;
 void Systems::CombatSystem(HeadlessScene& scene, float dt)
 {
 	// For Each Good Guy.
-	scene.ForEachComponent<comp::Attack, comp::Health, comp::Transform, comp::Tag<GOOD>>([&](Entity& player, comp::Attack& playerAttack, comp::Health& playerHealth, comp::Transform& playerTransform, comp::Tag<GOOD>&)
+	//scene.ForEachComponent<comp::Attack, comp::Health, comp::Transform, comp::Tag<GOOD>>([&](Entity& player, comp::Attack& playerAttack, comp::Health& playerHealth, comp::Transform& playerTransform, comp::Tag<GOOD>&)
+	//	{
+	//		// For Each Bad Guy.
+	//		scene.ForEachComponent<comp::Attack, comp::Health, comp::Transform, comp::Tag<BAD>>([&](Entity& enemy, comp::Attack& enemyAttack, comp::Health& enemyHealth, comp::Transform& enemyTransform, comp::Tag<BAD>&)
+	//			{
+
+	//				//TODO: Change it from being sphere range check to be OBB hit detection
+	//				
+	//				//CQC
+	//				if (!playerAttack.isRanged || !enemyAttack.isRanged)
+	//				{
+	//					// Calculate the distance between player and enemy.
+	//					const auto dist = (playerTransform.position - enemyTransform.position).Length();
+	//				
+	//					//Decreases cooldown between attacks
+	//					if (playerAttack.cooldownTimer > 0.f)
+	//						playerAttack.cooldownTimer -= 1.f * dt;
+	//					if (enemyAttack.cooldownTimer > 0.f)
+	//						enemyAttack.cooldownTimer -= 1.f * dt;
+
+	//					// Check if attack is in range.
+	//					if (playerAttack.attackRange >= dist && playerAttack.cooldownTimer <= 0.f && enemyHealth.isAlive)
+	//					{
+
+	//						// Perform battle logic.
+	//						if ((playerAttack.isAttacking & playerHealth.isAlive) == TRUE)
+	//						{
+	//							playerAttack.cooldownTimer = playerAttack.attackSpeed; //Set attacker on cooldown
+	//							enemyHealth.currentHealth -= playerAttack.attackDamage; //Decrease health by the attackdamage
+	//							LOG_INFO("Player %u: Attack landed.", player.GetComponent<comp::Network>()->id);
+	//						}
+	//					}
+
+	//					// Check if attack is in range.
+	//					if (enemyAttack.attackRange >= dist && enemyAttack.cooldownTimer <= 0.f && playerHealth.isAlive)
+	//					{
+
+	//						// Perform battle logic.
+	//						if ((enemyAttack.isAttacking & enemyHealth.isAlive) == TRUE)
+	//						{
+	//							enemyAttack.cooldownTimer = enemyAttack.attackSpeed; //Set attacker on cooldown
+	//							playerHealth.currentHealth -= enemyAttack.attackDamage; //Decrease health by the attackdamage
+	//							LOG_INFO("Enemy attack landed.");
+	//						}
+	//					}
+	//				}
+
+	//				//Ranged Combat
+	//				else
+	//				{
+	//					//Spawn a projectile
+	//					//Check if it hits
+	//					//Do damage calcs
+	//					//Delete projectile when hit?
+	//				}
+
+	//				//Reset to non attacking state
+	//				if (playerAttack.isAttacking)
+	//					playerAttack.isAttacking = false;
+	//				if (enemyAttack.isAttacking)
+	//					enemyAttack.isAttacking = false;
+	//			});
+	//	});
+
+	scene.ForEachComponent<comp::Attack>([&](Entity& ent, comp::Attack& atk)
 		{
-			// For Each Bad Guy.
-			scene.ForEachComponent<comp::Attack, comp::Health, comp::Transform, comp::Tag<BAD>>([&](Entity& enemy, comp::Attack& enemyAttack, comp::Health& enemyHealth, comp::Transform& enemyTransform, comp::Tag<BAD>&)
-				{
-
-					//TODO: Change it from being sphere range check to be OBB hit detection
-					
-					//CQC
-					if (!playerAttack.isRanged || !enemyAttack.isRanged)
+			if (atk.isAttacking)
+			{
+				Entity attackBox = scene.CreateEntity();
+				attackBox.AddComponent<comp::BoundingOrientedBox>()->Center = ent.GetComponent<comp::Transform>()->position + ecs::GetForward(*ent.GetComponent<comp::Transform>()) * 1;
+				const auto atkDmg = ent.GetComponent<comp::Attack>()->attackDamage;
+				CollisionSystem::Get().AddOnCollision(attackBox, [&](Entity& ent2) 
 					{
-						// Calculate the distance between player and enemy.
-						const auto dist = (playerTransform.position - enemyTransform.position).Length();
-					
-						//Decreases cooldown between attacks
-						if (playerAttack.cooldownTimer > 0.f)
-							playerAttack.cooldownTimer -= 1.f * dt;
-						if (enemyAttack.cooldownTimer > 0.f)
-							enemyAttack.cooldownTimer -= 1.f * dt;
+						LOG_INFO("STRANGER DANGER!");
+					});
 
-						// Check if attack is in range.
-						if (playerAttack.attackRange >= dist && playerAttack.cooldownTimer <= 0.f && enemyHealth.isAlive)
-						{
-
-							// Perform battle logic.
-							if ((playerAttack.isAttacking & playerHealth.isAlive) == TRUE)
-							{
-								dx::BoundingOrientedBox attackOBB;
-								attackOBB.Center = playerTransform.position + sm::Vector3(0.f, 0.f, 1.f);
-								if (attackOBB.Contains(enemyTransform.position) != dx::ContainmentType::DISJOINT)
-									LOG_INFO("OBB intersects with enemy");
-								playerAttack.cooldownTimer = playerAttack.attackSpeed; //Set attacker on cooldown
-								enemyHealth.currentHealth -= playerAttack.attackDamage; //Decrease health by the attackdamage
-								LOG_INFO("Player %u: Attack landed.", player.GetComponent<comp::Network>()->id);
-							}
-						}
-
-						// Check if attack is in range.
-						if (enemyAttack.attackRange >= dist && enemyAttack.cooldownTimer <= 0.f && playerHealth.isAlive)
-						{
-
-							// Perform battle logic.
-							if ((enemyAttack.isAttacking & enemyHealth.isAlive) == TRUE)
-							{
-								enemyAttack.cooldownTimer = enemyAttack.attackSpeed; //Set attacker on cooldown
-								playerHealth.currentHealth -= enemyAttack.attackDamage; //Decrease health by the attackdamage
-								LOG_INFO("Enemy attack landed.");
-							}
-						}
-					}
-
-					//Ranged Combat
-					else
-					{
-						//Spawn a projectile
-						//Check if it hits
-						//Do damage calcs
-						//Delete projectile when hit?
-					}
-
-					//Reset to non attacking state
-					if (playerAttack.isAttacking)
-						playerAttack.isAttacking = false;
-					if (enemyAttack.isAttacking)
-						enemyAttack.isAttacking = false;
-				});
+				atk.isAttacking = false;
+			}
 		});
 
 
