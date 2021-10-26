@@ -6,9 +6,10 @@ enum class TypeLight : UINT
 	POINT
 };
 
-struct Commands
+struct InputState
 {
-
+	int x, y;
+	uint32_t tick;
 };
 
 struct Ray_t

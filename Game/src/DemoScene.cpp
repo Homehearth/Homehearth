@@ -65,8 +65,6 @@ namespace sceneHelp
 
 	void CreateGameScene(Engine& engine)
 	{
-
-
 		Scene& gameScene = engine.GetScene("Game");
 		SetupInGameScreen();
 
@@ -83,7 +81,7 @@ namespace sceneHelp
 		debugCameraEntity.AddComponent<comp::Tag<TagType::DEBUG_CAMERA>>();
 
 		Entity cameraEntity = gameScene.CreateEntity();
-		cameraEntity.AddComponent<comp::Camera3D>()->camera.Initialize(sm::Vector3(0, 2.8f, -10), sm::Vector3(0, 0, 1), sm::Vector3(0, 1, 0),
+		cameraEntity.AddComponent<comp::Camera3D>()->camera.Initialize(sm::Vector3(0, 15.f, -6), sm::Vector3(0, 0, 1), sm::Vector3(0, 1, 0),
 			sm::Vector2((float)engine.GetWindow()->GetWidth(), (float)engine.GetWindow()->GetHeight()), CAMERATYPE::PLAY);
 		cameraEntity.AddComponent<comp::Tag<TagType::CAMERA>>();
 
@@ -166,24 +164,6 @@ Entity CreatePlayerEntity(HeadlessScene& scene, uint32_t playerID)
 
 	return playerEntity;
 }
-
-Entity CreateLightEntity(Scene& scene, sm::Vector4 pos, sm::Vector4 dir, sm::Vector4 col, float range, TypeLight type, UINT enabled)
-{
-	Entity lightEntity = scene.CreateEntity();
-
-	lightEntity.AddComponent<comp::Light>();
-	lightEntity.GetComponent<comp::Light>()->lightData.position = pos;
-	lightEntity.GetComponent<comp::Light>()->lightData.direction = dir;
-	lightEntity.GetComponent<comp::Light>()->lightData.color = col;
-	lightEntity.GetComponent<comp::Light>()->lightData.range = range;
-	lightEntity.GetComponent<comp::Light>()->lightData.type = type;
-	lightEntity.GetComponent<comp::Light>()->lightData.enabled = enabled;
-	
-	scene.GetLights()->EditLight(lightEntity.GetComponent<comp::Light>()->lightData, lightEntity.GetComponent<comp::Light>()->index);
-
-	return lightEntity;
-}
-
 
 void SetupServerConnectScreen(Window* pWindow)
 {

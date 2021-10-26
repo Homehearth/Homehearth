@@ -104,7 +104,7 @@ void Game::OnUserUpdate(float deltaTime)
 				try {
 					port = std::stoi(*portBuffer);
 				}
-				catch (const std::exception& e) {
+				catch (const std::exception e) {
 					LOG_ERROR("Invalid port");
 				}
 				if (!portBuffer->empty() && !ipBuffer->empty() && m_client.Connect(ipBuffer->c_str(), port))
@@ -135,7 +135,7 @@ void Game::OnUserUpdate(float deltaTime)
 			try {
 				port = std::stoi(*portBuffer);
 			}
-			catch (const std::exception& e) {
+			catch (const std::exception e) {
 				LOG_ERROR("Invalid port");
 			}
 
@@ -189,14 +189,14 @@ void Game::OnUserUpdate(float deltaTime)
 						lobbyID = std::stoi(*lobbyBuffer);
 						this->JoinLobby(lobbyID);
 					}
-					catch (const std::exception& e) {
+					catch (const std::exception e) {
 						LOG_ERROR("Invalid lobby ID");
 					}
 				}
 
 			}
 		}
-		
+
 	}
 #endif
 
@@ -276,14 +276,19 @@ void Game::OnUserUpdate(float deltaTime)
 		GetCurrentScene()->ForEachComponent<comp::Transform, comp::Tag<TagType::LOCAL_PLAYER>>([&]
 		(comp::Transform& t, comp::Tag<TagType::LOCAL_PLAYER>& tag)
 			{
-				t.position.x += 10.f * deltaTime * InputSystem::Get().GetAxis(Axis::HORIZONTAL);
-				t.position.z += 10.f * deltaTime * InputSystem::Get().GetAxis(Axis::VERTICAL);
-
-				if (sm::Vector3::Distance(t.position, test.position) > m_predictionThreshhold)
+				int x = InputSystem::Get().GetAxis(Axis::HORIZONTAL);
+				int z = InputSystem::Get().GetAxis(Axis::VERTICAL);
+				if (x || z)
 				{
-					t.position.x = test.position.x;
-					t.position.z = test.position.z;
+					t.position.x += 10.f * deltaTime * x;
+					t.position.z += 10.f * deltaTime * z;
 				}
+
+				//if (sm::Vector3::Distance(t.position, test.position) > m_predictionThreshhold)
+				//{
+				//	t.position.x = test.position.x;
+				//	t.position.z = test.position.z;
+				//}
 			}
 		);
 	}

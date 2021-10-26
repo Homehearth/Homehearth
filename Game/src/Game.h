@@ -13,6 +13,7 @@ private:
 	std::string* m_ipBuffer = nullptr;
 	std::string* m_lobbyBuffer = nullptr;
 	std::string* m_portBuffer = nullptr;
+	InputState inputs[60];
 
 	bool m_isLeavingLobby;
 	comp::Transform test;
@@ -36,6 +37,4 @@ private:
 public:
 	Game();
 	virtual ~Game();
-
-	// Inherited via Engine
 };

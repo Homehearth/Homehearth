@@ -27,7 +27,6 @@ namespace network
 			uint64_t handshakeOut = 0;
 			uint64_t handshakeResult = 0;
 			SOCKET Socket = {};
-			uint32_t clientID = 0;
 			message<T> msgTempIn = {};
 		};
 		std::unordered_map<uint32_t, SOCKET> connections;
@@ -242,7 +241,7 @@ namespace network
 			if (GetLastError() != WSA_IO_PENDING)
 			{
 				delete context;
-				LOG_ERROR("WSASend message with error: %ld", GetLastError());
+				LOG_ERROR("WSASend on socket: %lld message with error: %ld", msg.remote, GetLastError());
 			}
 		}
 	}
@@ -355,9 +354,18 @@ namespace network
 		if (SI != NULL)
 		{
 			SOCKET socket = SI->Socket;
+			auto it = connections.begin();
+			while (it != connections.end())
+			{
+				if (it->second == socket)
+				{
+					connections.erase(it);
+					break;
+				}
+				it++;
+			}
 			closesocket(SI->Socket);
 			SI->Socket = INVALID_SOCKET;
-			connections.erase(SI->clientID);
 			delete SI;
 			SI = nullptr;
 
@@ -698,17 +706,17 @@ namespace network
 						continue;
 					}
 					context = (PER_IO_DATA*)Entries[i].lpOverlapped;
-					if (Entries[i].dwNumberOfBytesTransferred == 0)
-					{
-						this->DisconnectClient(SI);
-						delete context;
-						continue;
-					}
-					// If an I/O was completed but we received no data means a client must've disconnected
-					// Basically a memcpy so we have data in correct structure
-					// I/O has completed, process it
 					if (HasOverlappedIoCompleted(Entries[i].lpOverlapped))
 					{
+						if (Entries[i].dwNumberOfBytesTransferred == 0)
+						{
+							this->DisconnectClient(SI);
+							delete context;
+							continue;
+						}
+						// If an I/O was completed but we received no data means a client must've disconnected
+						// Basically a memcpy so we have data in correct structure
+						// I/O has completed, process it
 						switch (context->state)
 						{
 						case NetState::READ_HEADER:

@@ -73,9 +73,9 @@ void ServerGame::OnShutdown()
 
 void ServerGame::UpdateNetwork(float deltaTime)
 {
-	// REMOVE LATER SIMULATED LAG
-	//Sleep(100);
-	//deltaTime += 0.1;
+	//// REMOVE LATER SIMULATED LAG
+	//Sleep(10000);
+	//deltaTime += 10.f;
 	// Check incoming messages
 	this->m_server.Update();
 
