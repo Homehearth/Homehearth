@@ -421,7 +421,8 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	{
 		uint32_t nrOfPlayers = 0;
 		uint32_t playerID = -1;
-		msg >> playerID >> nrOfPlayers;
+		uint8_t state = 0;
+		msg >> state >> playerID >> nrOfPlayers;
 
 		rtd::Text* player2Text = GET_ELEMENT("player2text", rtd::Text);
 		rtd::Canvas* player2Canvas = GET_ELEMENT("player2canvas", rtd::Canvas);
@@ -433,9 +434,46 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 
 		if (playerID == 1)
 		{
-			player1Text->SetVisibility(false);
-			player1Canvas->SetVisibility(false);
-			player1Symbol->SetVisibility(false);
+			// Hide or show player1 depending on state.
+			if (state == 2)
+			{
+				player1Text->SetVisibility(false);
+				player1Canvas->SetVisibility(false);
+				player1Symbol->SetVisibility(false);
+			}
+			else if (state == 1)
+			{
+				player1Text->SetVisibility(true);
+				player1Canvas->SetVisibility(true);
+				player1Symbol->SetVisibility(true);
+			}
+		}
+		else if (playerID == 2)
+		{
+			// Hide or show player2 depending on state.
+			if (state == 2)
+			{
+				player2Text->SetVisibility(false);
+				player2Canvas->SetVisibility(false);
+				player2Symbol->SetVisibility(false);
+			}
+			else if (state == 1)
+			{
+				player2Text->SetVisibility(true);
+				player2Canvas->SetVisibility(true);
+				player2Symbol->SetVisibility(true);
+			}
+		}
+
+		// Set all visible.
+		if (nrOfPlayers == 2)
+		{
+			player1Text->SetVisibility(true);
+			player1Canvas->SetVisibility(true);
+			player1Symbol->SetVisibility(true);
+			player2Text->SetVisibility(true);
+			player2Canvas->SetVisibility(true);
+			player2Symbol->SetVisibility(true);
 		}
 
 		break;

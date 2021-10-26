@@ -129,7 +129,7 @@ bool Simulation::JoinLobby(uint32_t playerID, uint32_t gameID)
 		network::message<GameMsg> msg2;
 		msg2.header.id = GameMsg::Lobby_Update;
 		const uint32_t nrOfPlayers = (const uint32_t)m_players.size();
-		msg2 << nrOfPlayers << player;
+		msg2 << nrOfPlayers << player << (uint8_t)1;
 		this->Broadcast(msg2);
 	}
 	else
@@ -184,7 +184,7 @@ bool Simulation::LeaveLobby(uint32_t playerID, uint32_t gameID)
 	network::message<GameMsg> msg2;
 	msg2.header.id = GameMsg::Lobby_Update;
 	const uint32_t nrOfPlayers = (const uint32_t)m_players.size();
-	msg2 << nrOfPlayers << player;
+	msg2 << nrOfPlayers << player << (uint8_t)2;
 	this->Broadcast(msg2);
 
 	return true;
