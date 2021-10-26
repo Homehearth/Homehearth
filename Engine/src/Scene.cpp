@@ -41,6 +41,7 @@ void Scene::Update(float dt)
 		m_registry.view<comp::RenderableAnimation, comp::Transform>().each([&](comp::RenderableAnimation& r, comp::Transform& t)
 		{
 			r.data.worldMatrix = ecs::GetMatrix(t);
+			//r.animator.Update();	//with deltatime
 			m_renderableAnimCopies[0].push_back(r);
 
 		});
@@ -178,6 +179,8 @@ void Scene::RenderAnimation()
 		for (auto& it : m_renderableAnimCopies[1])
 		{
 			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
+			
+			it.animator.Update();	//
 			it.animator.Render();
 		}
 	}

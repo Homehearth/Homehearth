@@ -53,7 +53,7 @@ public:
 	const sm::Matrix GetMatrix(const std::string& bonename, 
 								const double& currentFrame, 
 								const double& nextFrame, 
-								UINT* lastKeys, 
+								std::array<UINT,3>& lastKeys,
 								bool interpolate = true);
 
 	//Create from a assimp-animation if needed

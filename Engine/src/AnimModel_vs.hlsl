@@ -7,9 +7,8 @@ cbuffer Camera : register(b1)
 {
     float4 c_cameraPosition;
     float4 c_cameraTarget;
-    
-    float4x4 c_projection;
-    float4x4 c_view;
+    float4x4 c_projection;  //row major
+    float4x4 c_view;        //row major
 }
 
 //cbuffer BonesInfo : register(b2)
@@ -17,7 +16,7 @@ cbuffer Camera : register(b1)
 //    uint c_nrOfBones;
 //};
 
-StructuredBuffer<float4x4> s_boneTransforms : register(t11);
+StructuredBuffer<Matrix> s_boneTransforms : register(t11);
 
 struct VertexIn
 {
@@ -44,15 +43,14 @@ VertexOut main(VertexIn input)
 {
     VertexOut output;
     
+    //column major
     float4x4 world;
     for (int i = 0; i < 4; i++)
     {
-        //uint id = input.boneIDs[i];
-        //if (id < somesize)
-            world += s_boneTransforms[input.boneIDs[i]] * input.boneWeights[i];
+        world += s_boneTransforms[input.boneIDs[i]] * input.boneWeights[i];
     }
 
-    //world = c_world;
+    //world = mul(world, c_world);
 
     //Positions and worldpos
     output.pos = float4(input.pos, 1.0f);

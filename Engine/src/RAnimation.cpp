@@ -57,6 +57,7 @@ void RAnimation::LoadKeyframes(const aiAnimation* animation)
 			rot.time = animation->mChannels[i]->mRotationKeys[r].mTime;
 			const aiQuaternion aiRot = animation->mChannels[i]->mRotationKeys[r].mValue;
 			rot.val = { aiRot.x, aiRot.y, aiRot.z, aiRot.w };
+			rot.val.Normalize();
 			keyframes.rotation.push_back(rot);
 		}
 
@@ -182,7 +183,7 @@ const double RAnimation::GetTicksPerFrame() const
 	return m_ticksPerFrame;
 }
 
-const sm::Matrix RAnimation::GetMatrix(const std::string& bonename, const double& currentFrame, const double& nextFrame, UINT* lastKeys, bool interpolate)
+const sm::Matrix RAnimation::GetMatrix(const std::string& bonename, const double& currentFrame, const double& nextFrame, std::array<UINT, 3>& lastKeys, bool interpolate)
 {
 	sm::Matrix finalMatrix = sm::Matrix::Identity;
 
@@ -197,7 +198,8 @@ const sm::Matrix RAnimation::GetMatrix(const std::string& bonename, const double
 		finalMatrix = sm::Matrix::CreateScale(scl) * sm::Matrix::CreateFromQuaternion(rot) * sm::Matrix::CreateTranslation(pos);
 	}
 
-	return finalMatrix.Transpose();
+	//return finalMatrix.Transpose();
+	return finalMatrix;
 }
 
 void RAnimation::Create(const aiAnimation* animation)

@@ -89,42 +89,8 @@ void Animator::UpdateStructureBuffer()
 {
 	D3D11_MAPPED_SUBRESOURCE submap;
 	D3D11Core::Get().DeviceContext()->Map(m_bonesSB_Buffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &submap);
-	memcpy(submap.pData, &(m_finalMatrices[0]), sizeof(sm::Matrix) * m_finalMatrices.size());
+	memcpy(submap.pData, &m_finalMatrices[0], sizeof(sm::Matrix) * m_finalMatrices.size());
 	D3D11Core::Get().DeviceContext()->Unmap(m_bonesSB_Buffer.Get(), 0);
-}
-
-void Animator::UpdateBones()
-{
-	if (!m_bones.empty())
-	{
-		//double tickDT = m_animations[m_currentAnim]->GetTicksPerFrame() * 
-		//m_frameTime +=  m_animations[m_currentAnim]->GetTicksPerFrame();
-		//double nextFrameTime = 
-
-		std::vector<sm::Matrix> modelMatrices;
-		modelMatrices.resize(m_bones.size(), sm::Matrix::Identity);
-
-		for (size_t i = 0; i < m_bones.size(); i++)
-		{
-			sm::Matrix localMatrix = m_animations[m_currentAnim]->GetMatrix(m_bones[i].name, 0.0, 0.02, m_bones[i].lastKeys, false);
-
-			if (m_bones[i].parentIndex == -1)
-			{
-				modelMatrices[i] = localMatrix;
-			}
-			else
-			{
-				modelMatrices[i] = modelMatrices[m_bones[i].parentIndex] * localMatrix;
-			}
-
-			m_finalMatrices[i] = modelMatrices[i] * m_bones[i].inverseBind;
-			//m_finalMatrices[i] = m_finalMatrices[i].Transpose();
-		}
-
-		modelMatrices.clear();
-	
-		UpdateStructureBuffer();
-	}
 }
 
 void Animator::Bind() const
@@ -155,16 +121,47 @@ bool Animator::Create(const std::string& filename)
 	return true;
 }
 
+void Animator::Update()
+{
+	if (!m_bones.empty())
+	{
+		//double tickDT = m_animations[m_currentAnim]->GetTicksPerFrame() * 
+		//m_frameTime +=  m_animations[m_currentAnim]->GetTicksPerFrame();
+		//double nextFrameTime = 
+
+		std::vector<sm::Matrix> modelMatrices;
+		modelMatrices.resize(m_bones.size(), sm::Matrix::Identity);
+
+		for (size_t i = 0; i < m_bones.size(); i++)
+		{
+			sm::Matrix localMatrix = m_animations[m_currentAnim]->GetMatrix(m_bones[i].name, 1.0, 0.02, m_bones[i].lastKeys, false);
+
+			if (m_bones[i].parentIndex == -1)
+				modelMatrices[i] = localMatrix;
+			else
+				modelMatrices[i] = localMatrix * modelMatrices[m_bones[i].parentIndex];
+
+			m_finalMatrices[i] = m_bones[i].inverseBind * modelMatrices[i];
+
+			//Before we upload to GPU we have to make it column major*****
+
+			//Let it be row major... 
+			//m_finalMatrices[i] = m_finalMatrices[i];
+		}
+
+		modelMatrices.clear();
+
+		UpdateStructureBuffer();
+	}
+}
+
 void Animator::Render()
 {
 	//Unnecessary to the render if the model does not exist
 	if (m_model)
 	{
-		UpdateBones();
-		//Binding needed buffers
 		Bind();
 		m_model->Render();
-		//Unbinding buffers
 		Unbind();
 	}
 }

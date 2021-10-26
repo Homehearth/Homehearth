@@ -16,10 +16,10 @@ struct bone_t
 */
 struct bone_keyFrames_t
 {
-	std::string name		= "";
-	sm::Matrix	inverseBind = {};
-	int			parentIndex = -1;
-	UINT		lastKeys[3] = {0};
+	std::string			name		= "";
+	sm::Matrix			inverseBind = {};
+	int					parentIndex = -1;
+	std::array<UINT, 3> lastKeys	= {};
 };
 
 /*

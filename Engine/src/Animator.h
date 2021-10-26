@@ -40,7 +40,6 @@ private:
 
 	//bool UpdateNrOfBones();
 	void UpdateStructureBuffer();
-	void UpdateBones();
 	void Bind() const;
 	void Unbind() const;
 
@@ -51,6 +50,10 @@ public:
 	//Create from a custom file - something.anim
 	bool Create(const std::string& filename);
 
+	//Update the animation
+	void Update();
+
+	//Render the current pose
 	void Render();
 
 };

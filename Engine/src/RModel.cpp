@@ -425,7 +425,7 @@ bool RModel::LoadBones(const aiMesh* aimesh, const aiNode* root, std::vector<ani
         //Create the bone and find the parent index
         bone_t bone;
         bone.name = aibone->mName.C_Str();
-        bone.inverseBind = sm::Matrix(&aibone->mOffsetMatrix.a1);
+        bone.inverseBind = sm::Matrix(&aibone->mOffsetMatrix.a1).Transpose();
         std::string parentName = root->FindNode(bone.name.c_str())->mParent->mName.C_Str();
         
         //Root should not add a parent
