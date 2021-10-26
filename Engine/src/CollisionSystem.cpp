@@ -1,6 +1,8 @@
 #include "EnginePCH.h"
 #include "CollisionSystem.h"
 
+
+
 //Returns number of how many colliders the entity is colliding with
 const int CollisionSystem::getCollisionCounts(Entity entity) const
 {
@@ -13,10 +15,16 @@ const int CollisionSystem::getCollisionCounts(Entity entity) const
 	return count;
 }
 
+
+
+
 const std::set<std::pair<Entity, Entity>>& CollisionSystem::GetCollisions() const
 {
 	return m_CollisionPairs;
 }
+
+
+
 
 void CollisionSystem::AddPair(const Entity e1, const Entity e2)
 {
@@ -51,6 +59,9 @@ void CollisionSystem::AddPair(const Entity e1, const Entity e2)
 
 }
 
+
+
+
 void CollisionSystem::RemovePair(const Entity e1, const Entity e2)
 {
 
@@ -79,17 +90,8 @@ void CollisionSystem::RemovePair(const Entity e1, const Entity e2)
 
 }
 
-bool CollisionSystem::IsColliding(const Entity e1, const Entity e2)
-{
-	auto it = m_CollisionPairs.find({ e1,e2 });
-	if (e2 > e1)
-		it = m_CollisionPairs.find({ e2,e1 });
 
-	if (it == m_CollisionPairs.end())
-		return false;
 
-	return true;
-}
 
 void CollisionSystem::AddOnCollision(Entity entity1, std::function<void(Entity)> func)
 {
@@ -106,6 +108,15 @@ void CollisionSystem::OnCollision(Entity entity1, Entity entity2)
 		if (!entity1.IsNull())
 		{
 			m_OnCollision.at(entity1)(entity2);
+
+			if(entity1.GetComponent<comp::Tag<DYNAMIC>>() != nullptr && entity2.GetComponent<comp::Tag<DYNAMIC>>() != nullptr)
+			{
+				this->CollisionResponsDynamic(entity1, entity2);
+			}
+			else if (entity1.GetComponent<comp::Tag<DYNAMIC>>() != nullptr && entity2.GetComponent<comp::Tag<STATIC>>() != nullptr)
+			{
+				this->CollisionResponsStatic(entity1, entity2);
+			}
 		}
 		else
 		{
@@ -117,11 +128,308 @@ void CollisionSystem::OnCollision(Entity entity1, Entity entity2)
 		if (!entity2.IsNull())
 		{
 			m_OnCollision.at(entity2)(entity1);
+			
+			if (entity1.GetComponent<comp::Tag<DYNAMIC>>() != nullptr && entity2.GetComponent<comp::Tag<DYNAMIC>>() != nullptr)
+			{
+				this->CollisionResponsDynamic(entity2, entity1);
+			}
+			else if (entity2.GetComponent<comp::Tag<DYNAMIC>>() != nullptr && entity1.GetComponent<comp::Tag<STATIC>>() != nullptr)
+			{
+				this->CollisionResponsStatic(entity2, entity1);
+			}
 		}
 		else
 		{
 			m_OnCollision.erase(entity2);
 		}
+	}
+}
+
+
+
+//Generates a response when two dynamic objects collide with each other,
+//Will move both objects in different directions depending on how much of
+//each corners crosses each other and take the axis that differs the least.
+void CollisionSystem::CollisionResponsDynamic(Entity entity1, Entity entity2)
+{
+	comp::BoundingOrientedBox* p1Obb = entity1.GetComponent<comp::BoundingOrientedBox>();
+	comp::BoundingOrientedBox* p2Obb = entity2.GetComponent<comp::BoundingOrientedBox>();
+	
+	comp::Transform* p1transform = entity1.GetComponent<comp::Transform>();
+	comp::Transform* p2transform = entity2.GetComponent<comp::Transform>();
+
+
+	sm::Vector3 p2Corners[8];
+	sm::Vector3 p1Corners[8];
+	p2Obb->GetCorners(p2Corners);
+	p1Obb->GetCorners(p1Corners);
+
+	//Box1
+	sm::Vector3 p1normalAxis[3];
+	sm::Vector3 p2normalAxis[3];
+
+	//Get the 3 AXIS from box1 needed to do the projection on
+	p1normalAxis[0] = (p1Corners[1] - p1Corners[0]);
+	p1normalAxis[0].Normalize();
+	p1normalAxis[1] = (p1Corners[2] - p1Corners[1]);
+	p1normalAxis[1].Normalize();
+	p1normalAxis[2] = (p1Corners[0] - p1Corners[4]);
+	p1normalAxis[2].Normalize();
+
+	//Get the 3 AXIS from box2 needed to do the projection on
+	p2normalAxis[0] = (p2Corners[1] - p2Corners[0]);
+	p2normalAxis[0].Normalize();
+	p2normalAxis[1] = (p2Corners[2] - p2Corners[1]);
+	p2normalAxis[1].Normalize();
+	p2normalAxis[2] = (p2Corners[0] - p2Corners[4]);
+	p2normalAxis[2].Normalize();
+
+	std::vector<sm::Vector3> p1Vectors;
+	std::vector<sm::Vector3> p2Vectors;
+
+	//Save all the corners
+	for (int i = 0; i < 8; i++)
+	{
+		p1Vectors.emplace_back(p1Corners[i]);
+		p2Vectors.emplace_back(p2Corners[i]);
+	}
+
+	//Get min-max for the axis for the box
+	std::vector<MinMaxProj_t> minMaxProj;
+	minMaxProj.push_back(CollisionSystem::Get().GetMinMax(p1Vectors, p1normalAxis[1]));
+	minMaxProj.push_back(CollisionSystem::Get().GetMinMax(p2Vectors, p1normalAxis[1]));
+
+	minMaxProj.push_back(CollisionSystem::Get().GetMinMax(p1Vectors, p1normalAxis[0]));
+	minMaxProj.push_back(CollisionSystem::Get().GetMinMax(p2Vectors, p1normalAxis[0]));
+
+	minMaxProj.push_back(CollisionSystem::Get().GetMinMax(p1Vectors, p1normalAxis[2]));
+	minMaxProj.push_back(CollisionSystem::Get().GetMinMax(p2Vectors, p1normalAxis[2]));
+
+	minMaxProj.push_back(CollisionSystem::Get().GetMinMax(p1Vectors, p2normalAxis[1]));
+	minMaxProj.push_back(CollisionSystem::Get().GetMinMax(p2Vectors, p2normalAxis[1]));
+
+	minMaxProj.push_back(CollisionSystem::Get().GetMinMax(p1Vectors, p2normalAxis[0]));
+	minMaxProj.push_back(CollisionSystem::Get().GetMinMax(p2Vectors, p2normalAxis[0]));
+
+	minMaxProj.push_back(CollisionSystem::Get().GetMinMax(p1Vectors, p2normalAxis[2]));
+	minMaxProj.push_back(CollisionSystem::Get().GetMinMax(p2Vectors, p2normalAxis[2]));
+
+	float depth = FLT_MAX;
+	sm::Vector3 smallestVec(FLT_MAX, FLT_MAX, FLT_MAX);
+	bool isValueSet = false;
+
+	//Find the smallest gap between the min and max corners.
+	for (int i = 0; i < minMaxProj.size() - 1; i += 2)
+	{
+		sm::Vector3 gap;
+		//Take projections in the right order depending on entitys position in the world space
+		if (minMaxProj[i].maxProj < minMaxProj[i + 1].maxProj)
+		{
+			gap = p2Vectors[minMaxProj[i + 1].minInxed] - p1Vectors[minMaxProj[i].maxIndex];
+		}
+		else if (minMaxProj[i].maxProj > minMaxProj[i + 1].maxProj)
+		{
+			gap = p1Vectors[minMaxProj[i].minInxed] - p2Vectors[minMaxProj[i + 1].maxIndex];
+		}
+		else
+		{
+			continue; // Skips if 0.0f
+		}
+
+		if (gap.Length() < depth)
+		{
+			depth = gap.Length();
+			smallestVec = gap;
+			isValueSet = true;
+		}
+	}
+
+	//Reset to 0.001 (happens if boxes share exactly the same corners pos)
+	if (!isValueSet)
+	{
+		smallestVec = sm::Vector3(0.01f, 0.01f, 0.01f);
+	}
+
+
+	//Finds the smallest gap that exist on all tested axis
+	float lengthVec = smallestVec.Dot(p1normalAxis[0]);
+	int indexForLowestVec = 0;
+	for (int i = 1; i < 3; i++)
+	{
+		if (abs(smallestVec.Dot(p1normalAxis[i])) > 0.000f && abs(smallestVec.Dot(p1normalAxis[i])) <
+			abs(lengthVec) || lengthVec < 0.0001f && lengthVec > -0.00001f)
+		{
+			lengthVec = smallestVec.Dot(p1normalAxis[i]);
+			indexForLowestVec = i;
+		}
+	}
+	for (int i = 0; i < 3; i++)
+	{
+		if (abs(smallestVec.Dot(p2normalAxis[i])) > 0.000f && abs(smallestVec.Dot(p2normalAxis[i])) <
+			abs(lengthVec) || abs(lengthVec) < 0.0001f)
+		{
+			lengthVec = smallestVec.Dot(p2normalAxis[i]);
+			indexForLowestVec = i;
+		}
+	}
+
+	//Push it out an extra 20% of the length
+	lengthVec *= 1.2f;
+
+	//Move the entity away from the other entity
+	const sm::Vector3 moveVec = ((p1normalAxis[indexForLowestVec] * lengthVec) / 2.0f);
+	if ((p2transform->position - (p1transform->position + moveVec)).Length() > (p2transform->position -
+		p1transform->position).Length())
+	{
+		p1transform->position += (moveVec);
+	}
+	else
+	{
+		p1transform->position += (moveVec * -1.0f);
+	}
+}
+
+
+
+//Generates a response when a dynamic object collides with a static,
+//Will move the dynamic objects in a different directions depending on how much of
+//each corners crosses each other and take the axis that differs the least.
+void CollisionSystem::CollisionResponsStatic(Entity entity1, Entity staticEntity2)
+{
+	comp::BoundingOrientedBox* p1Obb = entity1.GetComponent<comp::BoundingOrientedBox>();
+	comp::BoundingOrientedBox* p2Obb = staticEntity2.GetComponent<comp::BoundingOrientedBox>();
+
+	comp::Transform* p1transform = entity1.GetComponent<comp::Transform>();
+	comp::Transform* p2transform = staticEntity2.GetComponent<comp::Transform>();
+
+
+	sm::Vector3 p2Corners[8];
+	sm::Vector3 p1Corners[8];
+	p2Obb->GetCorners(p2Corners);
+	p1Obb->GetCorners(p1Corners);
+
+	//Box1
+	sm::Vector3 p1normalAxis[3];
+	sm::Vector3 p2normalAxis[3];
+
+	//Get the 3 AXIS from box1 needed to do the projection on
+	p1normalAxis[0] = (p1Corners[1] - p1Corners[0]);
+	p1normalAxis[0].Normalize();
+	p1normalAxis[1] = (p1Corners[2] - p1Corners[1]);
+	p1normalAxis[1].Normalize();
+	p1normalAxis[2] = (p1Corners[0] - p1Corners[4]);
+	p1normalAxis[2].Normalize();
+
+	//Get the 3 AXIS from box2 needed to do the projection on
+	p2normalAxis[0] = (p2Corners[1] - p2Corners[0]);
+	p2normalAxis[0].Normalize();
+	p2normalAxis[1] = (p2Corners[2] - p2Corners[1]);
+	p2normalAxis[1].Normalize();
+	p2normalAxis[2] = (p2Corners[0] - p2Corners[4]);
+	p2normalAxis[2].Normalize();
+
+	std::vector<sm::Vector3> p1Vectors;
+	std::vector<sm::Vector3> p2Vectors;
+
+	//Save all the corners
+	for (int i = 0; i < 8; i++)
+	{
+		p1Vectors.emplace_back(p1Corners[i]);
+		p2Vectors.emplace_back(p2Corners[i]);
+	}
+
+	//Get min-max for the axis for the box
+	std::vector<MinMaxProj_t> minMaxProj;
+	minMaxProj.push_back(CollisionSystem::Get().GetMinMax(p1Vectors, p1normalAxis[1]));
+	minMaxProj.push_back(CollisionSystem::Get().GetMinMax(p2Vectors, p1normalAxis[1]));
+
+	minMaxProj.push_back(CollisionSystem::Get().GetMinMax(p1Vectors, p1normalAxis[0]));
+	minMaxProj.push_back(CollisionSystem::Get().GetMinMax(p2Vectors, p1normalAxis[0]));
+
+	minMaxProj.push_back(CollisionSystem::Get().GetMinMax(p1Vectors, p1normalAxis[2]));
+	minMaxProj.push_back(CollisionSystem::Get().GetMinMax(p2Vectors, p1normalAxis[2]));
+
+	minMaxProj.push_back(CollisionSystem::Get().GetMinMax(p1Vectors, p2normalAxis[1]));
+	minMaxProj.push_back(CollisionSystem::Get().GetMinMax(p2Vectors, p2normalAxis[1]));
+
+	minMaxProj.push_back(CollisionSystem::Get().GetMinMax(p1Vectors, p2normalAxis[0]));
+	minMaxProj.push_back(CollisionSystem::Get().GetMinMax(p2Vectors, p2normalAxis[0]));
+
+	minMaxProj.push_back(CollisionSystem::Get().GetMinMax(p1Vectors, p2normalAxis[2]));
+	minMaxProj.push_back(CollisionSystem::Get().GetMinMax(p2Vectors, p2normalAxis[2]));
+
+	float depth = FLT_MAX;
+	sm::Vector3 smallestVec(FLT_MAX, FLT_MAX, FLT_MAX);
+	bool isValueSet = false;
+
+	//Find the smallest gap between the min and max corners.
+	for (int i = 0; i < minMaxProj.size() - 1; i += 2)
+	{
+		sm::Vector3 gap;
+		//Take projections in the right order depending on entitys position in the world space
+		if (minMaxProj[i].maxProj < minMaxProj[i + 1].maxProj)
+		{
+			gap = p2Vectors[minMaxProj[i + 1].minInxed] - p1Vectors[minMaxProj[i].maxIndex];
+		}
+		else if (minMaxProj[i].maxProj > minMaxProj[i + 1].maxProj)
+		{
+			gap = p1Vectors[minMaxProj[i].minInxed] - p2Vectors[minMaxProj[i + 1].maxIndex];
+		}
+		else
+		{
+			continue; // Skips if 0.0f
+		}
+
+		if (gap.Length() < depth)
+		{
+			depth = gap.Length();
+			smallestVec = gap;
+			isValueSet = true;
+		}
+	}
+
+	//Reset to 0.001 (happens if boxes share exactly the same corners pos)
+	if (!isValueSet)
+	{
+		smallestVec = sm::Vector3(0.01f, 0.01f, 0.01f);
+	}
+
+
+	//Finds the smallest gap that exist on all tested axis
+	float lengthVec = smallestVec.Dot(p1normalAxis[0]);
+	int indexForLowestVec = 0;
+	for (int i = 1; i < 3; i++)
+	{
+		if (abs(smallestVec.Dot(p1normalAxis[i])) > 0.000f && abs(smallestVec.Dot(p1normalAxis[i])) <
+			abs(lengthVec) || lengthVec < 0.0001f && lengthVec > -0.00001f)
+		{
+			lengthVec = smallestVec.Dot(p1normalAxis[i]);
+			indexForLowestVec = i;
+		}
+	}
+	for (int i = 0; i < 3; i++)
+	{
+		if (abs(smallestVec.Dot(p2normalAxis[i])) > 0.000f && abs(smallestVec.Dot(p2normalAxis[i])) <
+			abs(lengthVec) || abs(lengthVec) < 0.0001f)
+		{
+			lengthVec = smallestVec.Dot(p2normalAxis[i]);
+			indexForLowestVec = i;
+		}
+	}
+
+	//Push it out an extra 20% of the length
+	lengthVec *= 1.2f;
+
+	//Move the entity away from the other entity
+	const sm::Vector3 moveVec = ((p1normalAxis[indexForLowestVec] * lengthVec));
+	if ((p2transform->position - (p1transform->position + moveVec)).Length() > (p2transform->position -
+		p1transform->position).Length())
+	{
+		p1transform->position += (moveVec);
+	}
+	else
+	{
+		p1transform->position += (moveVec * -1.0f);
 	}
 }
 

@@ -1,4 +1,5 @@
 #pragma once
+#include "Tags.h"
 class CollisionSystem
 {
 private:
@@ -6,7 +7,9 @@ private:
 	std::unordered_map<Entity, int> m_CollisionCount;
 	std::unordered_map<Entity, std::function<void(Entity)>> m_OnCollision;
 	CollisionSystem() = default;
-
+	
+	void CollisionResponsDynamic(Entity entity1, Entity entity2);
+	void CollisionResponsStatic(Entity entity1, Entity staticEntity2);
 public:
 	~CollisionSystem() = default;
 	static auto& Get()
@@ -19,7 +22,6 @@ public:
 	void AddPair(const Entity e1, const Entity e2);
 	void RemovePair(const Entity e1, const Entity e2);
 	
-	bool IsColliding(const Entity e1, const Entity e2);
 	void AddOnCollision(Entity entity1, std::function<void(Entity)> func);
 	void OnCollision(Entity entity1, Entity entity2);
 
