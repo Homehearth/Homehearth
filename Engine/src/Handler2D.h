@@ -8,10 +8,18 @@
 #include "Border.h"
 #include "Button.h"
 #include "Text.h"
+#include "TextField.h"
+#include "Slider.h"
 
 // std
 #include <set>
 #include <type_traits>
+
+/*
+	Defines for ease of use.
+*/
+
+#define GET_ELEMENT(name, type) rtd::Handler2D::Get().GetElement<type>(name)
 
 /*
 	WIKI:
@@ -55,10 +63,9 @@ namespace rtd
 	private:
 
 		// Double buffer
-		static std::vector<Element2D*> m_elements;
+		std::vector<Element2D*> m_elements;
 
-		static DoubleBuffer<std::vector<Element2D**>> m_drawBuffers;
-		static Handler2D* instance;
+		DoubleBuffer<std::vector<Element2D**>> m_drawBuffers;
 		Handler2D();
 		~Handler2D();
 
@@ -66,11 +73,9 @@ namespace rtd
 
 		static auto& Get()
 		{
-			return Handler2D::instance;
+			static Handler2D instance;
+			return instance;
 		}
-
-		static void Initialize();
-		static void Destroy();
 
 		// Insert an element into the rendering system.
 		static void InsertElement(Element2D* element);
@@ -95,6 +100,12 @@ namespace rtd
 		// Remove all pointers without deallocation.
 		static void RemoveAll();
 
+		// This removes one reference from all the elements. Use this if you want safe release of all objects that has 1 reference.
+		static void DereferenceAllOnce();
+
+		// Set the visibility of all elements to boolean.
+		static void SetVisibilityAll(const bool& toggle);
+
 		static const bool IsRenderReady();
 	};
 
@@ -102,7 +113,7 @@ namespace rtd
 	template<class T>
 	inline T* rtd::Handler2D::GetElement(const std::string& element_name)
 	{
-		for (auto elem : Handler2D::instance->m_elements)
+		for (auto elem : Handler2D::Get().m_elements)
 		{
 			if (elem)
 			{
