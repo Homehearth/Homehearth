@@ -152,7 +152,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 		{
 			Systems::MovementSystem(scene, e.dt);
 			Systems::MovementColliderSystem(scene, e.dt);
-			Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(scene);
+			Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(scene, e.dt);
 			//LOG_INFO("GAME Scene %d", m_gameID);
 		});
 
@@ -160,7 +160,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 	m_pGameScene->on<ESceneCollision>([&](const ESceneCollision& e, HeadlessScene& scene)
 		{
 			CollisionSystem::Get().AddPair(e.obj1, e.obj2);
-			CollisionSystem::Get().OnCollision(e.obj1, e.obj2);
+			CollisionSystem::Get().OnCollision(e.obj1, e.obj2, e.dt);
 		});
 
 	// ---DEBUG ENTITY---

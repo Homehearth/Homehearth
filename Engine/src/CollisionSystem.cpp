@@ -101,26 +101,15 @@ void CollisionSystem::AddOnCollision(Entity entity1, std::function<void(Entity)>
 	}
 }
 
-void CollisionSystem::OnCollision(Entity entity1, Entity entity2)
+void CollisionSystem::OnCollision(Entity entity1, Entity entity2, float dt)
 {
 	if (m_OnCollision.find(entity1) != m_OnCollision.end())
 	{
 		if (!entity1.IsNull())
 		{
 			m_OnCollision.at(entity1)(entity2);
-
-			if(entity1.GetComponent<comp::Tag<DYNAMIC>>() != nullptr && entity2.GetComponent<comp::Tag<DYNAMIC>>() != nullptr)
-			{
-				this->CollisionResponsDynamic(entity1, entity2);
-			}
-			else if (entity1.GetComponent<comp::Tag<DYNAMIC>>() != nullptr && entity2.GetComponent<comp::Tag<STATIC>>() != nullptr)
-			{
-				this->CollisionResponsStatic(entity1, entity2);
-			}
-			else if (entity1.GetComponent<comp::Tag<STATIC>>() != nullptr && entity2.GetComponent<comp::Tag<DYNAMIC>>() != nullptr)
-			{
-				this->CollisionResponsStatic(entity2, entity1);
-			}
+			CollisionRespons(entity1, entity2, dt);
+			
 		}
 		else
 		{
@@ -132,19 +121,7 @@ void CollisionSystem::OnCollision(Entity entity1, Entity entity2)
 		if (!entity2.IsNull())
 		{
 			m_OnCollision.at(entity2)(entity1);
-			
-			if (entity1.GetComponent<comp::Tag<DYNAMIC>>() != nullptr && entity2.GetComponent<comp::Tag<DYNAMIC>>() != nullptr)
-			{
-				this->CollisionResponsDynamic(entity2, entity1);
-			}
-			else if (entity2.GetComponent<comp::Tag<DYNAMIC>>() != nullptr && entity1.GetComponent<comp::Tag<STATIC>>() != nullptr)
-			{
-				this->CollisionResponsStatic(entity2, entity1);
-			}
-			else if (entity2.GetComponent<comp::Tag<STATIC>>() != nullptr && entity1.GetComponent<comp::Tag<DYNAMIC>>() != nullptr)
-			{
-				this->CollisionResponsStatic(entity1, entity2);
-			}
+			CollisionRespons(entity2, entity1, dt);
 		}
 		else
 		{
@@ -153,6 +130,31 @@ void CollisionSystem::OnCollision(Entity entity1, Entity entity2)
 	}
 }
 
+void CollisionSystem::CollisionRespons(Entity entity1, Entity entity2, float dt)
+{
+	comp::Velocity* playerVel1 = entity1.GetComponent<comp::Velocity>();
+	comp::Velocity* playerVel2 = entity2.GetComponent<comp::Velocity>();
+
+	comp::Transform* playerT1 = entity1.GetComponent<comp::Transform>();
+	comp::Transform* playerT2 = entity2.GetComponent<comp::Transform>();
+
+
+	sm::Vector3 vecMove1;
+	sm::Vector3 vecMove2;
+	if(playerVel1 != nullptr)
+	{
+		vecMove1 = playerVel1->vel * dt * -1.0f;
+		playerT1->position += vecMove1;
+	}
+		
+	if(playerVel2 != nullptr)
+	{
+		vecMove2 = playerVel2->vel * dt * -1.0f;
+		playerT2->position += vecMove1 * -1.0f;
+	}
+		
+	
+}
 
 
 //Generates a response when two dynamic objects collide with each other,

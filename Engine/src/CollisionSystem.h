@@ -23,8 +23,8 @@ public:
 	void RemovePair(const Entity e1, const Entity e2);
 	
 	void AddOnCollision(Entity entity1, std::function<void(Entity)> func);
-	void OnCollision(Entity entity1, Entity entity2);
-
+	void OnCollision(Entity entity1, Entity entity2, float dt);
+	void CollisionRespons(Entity entity1, Entity entity2, float dt);
     MinMaxProj_t GetMinMax(std::vector<sm::Vector3> boxVectors, sm::Vector3 boxAxis);
 };
 
