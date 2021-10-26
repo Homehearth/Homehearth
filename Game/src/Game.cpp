@@ -420,31 +420,24 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	case GameMsg::Lobby_Update:
 	{
 		uint32_t nrOfPlayers = 0;
-		msg >> nrOfPlayers;
+		uint32_t playerID = -1;
+		msg >> playerID >> nrOfPlayers;
 
 		rtd::Text* player2Text = GET_ELEMENT("player2text", rtd::Text);
 		rtd::Canvas* player2Canvas = GET_ELEMENT("player2canvas", rtd::Canvas);
 		rtd::Picture* player2Symbol = GET_ELEMENT("player2_symbol", rtd::Picture);
 
-		// Add second player to UI
-		if (nrOfPlayers == 2)
+		rtd::Text* player1Text = GET_ELEMENT("player1text", rtd::Text);
+		rtd::Canvas* player1Canvas = GET_ELEMENT("player1canvas", rtd::Canvas);
+		rtd::Picture* player1Symbol = GET_ELEMENT("player1_symbol", rtd::Picture);
+
+		if (playerID == 1)
 		{
-			if (player2Text && player2Canvas && player2Symbol)
-			{
-				player2Canvas->SetVisibility(true);
-				player2Text->SetVisibility(true);
-				player2Symbol->SetVisibility(true);
-			}
+			player1Text->SetVisibility(false);
+			player1Canvas->SetVisibility(false);
+			player1Symbol->SetVisibility(false);
 		}
-		else
-		{
-			if (player2Text && player2Canvas && player2Symbol)
-			{
-				player2Canvas->SetVisibility(false);
-				player2Text->SetVisibility(false);
-				player2Symbol->SetVisibility(false);
-			}
-		}
+
 		break;
 	}
 	}

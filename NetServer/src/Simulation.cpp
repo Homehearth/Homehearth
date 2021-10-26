@@ -114,11 +114,22 @@ bool Simulation::JoinLobby(uint32_t playerID, uint32_t gameID)
 		// Add the players to the simulation on that specific client
 		this->AddPlayer(playerID);
 
+		uint32_t player = -1;
+		// Reset Lobby player.
+		if (m_playerDecisions[0].playerID == playerID)
+		{
+			player = 1;
+		}
+		else if (m_playerDecisions[1].playerID == playerID)
+		{
+			player = 2;
+		}
+
 		// Update the lobby for players.
 		network::message<GameMsg> msg2;
 		msg2.header.id = GameMsg::Lobby_Update;
 		const uint32_t nrOfPlayers = (const uint32_t)m_players.size();
-		msg2 << nrOfPlayers;
+		msg2 << nrOfPlayers << player;
 		this->Broadcast(msg2);
 	}
 	else
@@ -137,16 +148,19 @@ bool Simulation::LeaveLobby(uint32_t playerID, uint32_t gameID)
 {
 	this->RemovePlayer(playerID);
 
+	uint32_t player = -1;
 	// Reset Lobby player.
 	if (m_playerDecisions[0].playerID == playerID)
 	{
 		m_playerDecisions[0].playerID = -1;
 		m_playerDecisions[0].isWantToStart = false;
+		player = 1;
 	}
 	else if (m_playerDecisions[1].playerID == playerID)
 	{
 		m_playerDecisions[1].playerID = -1;
 		m_playerDecisions[1].isWantToStart = false;
+		player = 2;
 	}
 
 	message<GameMsg> msg;
@@ -170,7 +184,7 @@ bool Simulation::LeaveLobby(uint32_t playerID, uint32_t gameID)
 	network::message<GameMsg> msg2;
 	msg2.header.id = GameMsg::Lobby_Update;
 	const uint32_t nrOfPlayers = (const uint32_t)m_players.size();
-	msg2 << nrOfPlayers;
+	msg2 << nrOfPlayers << player;
 	this->Broadcast(msg2);
 
 	return true;

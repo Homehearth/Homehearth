@@ -62,8 +62,12 @@ namespace rtd
 	{
 	private:
 
+		// active elements.
 		std::vector<Element2D*> m_elements;
+
+		// snapshot of handler2d elements.
 		std::vector<Element2D**> m_cleanElements;
+
 		bool m_shouldClean;
 
 		// Doublebuffer holding references to elements.
