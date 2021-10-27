@@ -110,7 +110,7 @@ void CollisionSystem::OnCollision(Entity entity1, Entity entity2)
 			m_OnCollision.at(entity1)(entity2);
 
 			if(entity1.GetComponent<comp::Tag<DYNAMIC>>())
-				CollisionSystem::Get().CollisionRespons(entity1, entity2);
+				CollisionSystem::Get().CollisionResponse(entity1, entity2);
 		}
 		else
 		{
@@ -124,7 +124,7 @@ void CollisionSystem::OnCollision(Entity entity1, Entity entity2)
 			m_OnCollision.at(entity2)(entity1);
 			
 			if (entity2.GetComponent<comp::Tag<DYNAMIC>>())
-				CollisionSystem::Get().CollisionRespons(entity2, entity1);
+				CollisionSystem::Get().CollisionResponse(entity2, entity1);
 		}
 		else
 		{
@@ -267,7 +267,7 @@ void CollisionSystem::CollisionResponse(Entity entity1, Entity entity2) const
 	//If still colliding should make another iteration through the function to find the other axis
 	if(entity2.GetComponent<comp::Tag<STATIC>>() && p1Obb->Intersects(*p2Obb))
 	{
-		this->CollisionRespons(entity1, entity2);
+		this->CollisionResponse(entity1, entity2);
 	}
 }
 
