@@ -26,6 +26,20 @@ namespace ecs {
         u = sm::Vector3::TransformNormal(u, sm::Matrix::CreateRotationZ(transform.rotation.z));
         return u;
     }
+
+    void StepRotateTo(sm::Vector3& rotation, const sm::Vector3& target, float time)
+    {
+        float targetRotation = atan2(-target.z, target.x);
+
+        float deltaRotation = targetRotation - rotation.y;
+
+        if (std::abs(deltaRotation) > dx::g_XMPi[0])
+        {
+            rotation.y += (rotation.y < 0.0f) ? dx::g_XMTwoPi[0] : -dx::g_XMTwoPi[0];
+        }
+        rotation.y = rotation.y * (1 - time) + targetRotation * time;
+    }
+
 }
 
 network::message<GameMsg>& operator<<(network::message<GameMsg>& msg, const sm::Vector3& data)
