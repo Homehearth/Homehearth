@@ -4,9 +4,11 @@
 
 namespace Systems
 {
-
 	/*
-	 * CombatSystem: handles player and enemy attacks, reduction in health and check 'isAlive'.
+	 * Ideas:
+	 *		MeleeSystem & RangeSystem.
+	 *		CombatSystem with multiple functions.
+	 *		SuperCombatSystem.
 	 */
 	void CombatSystem(HeadlessScene& scene, float dt);
 	void MovementSystem(HeadlessScene& scene, float dt);

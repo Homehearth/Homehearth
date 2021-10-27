@@ -60,9 +60,14 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 								}
 								else 
 								{
-									// Range logic...
+									// Spawn projectile...
+									Entity projectile = scene.CreateEntity();
+									projectile.AddComponent<comp::Transform>()->position = playerTransform.position + ecs::GetForward(playerTransform);
+									projectile.AddComponent<comp::BoundingOrientedBox>()->Center = playerTransform.position + ecs::GetForward(playerTransform);
+									projectile.AddComponent<comp::Velocity>()->vel = ecs::GetForward(playerTransform) * playerAttack.attackSpeed;
+									projectile.AddComponent<comp::Projectile>()->lifeTime = 10.f;
 								}
-
+								
 								playerAttack.isAttacking = false;
 							}
 
@@ -101,7 +106,7 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 								}
 								else
 								{
-									// Range logic...
+									// Spawn projectile...
 								}
 
 								enemyAttack.isAttacking = false;
@@ -111,7 +116,7 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 					});
 			}
 		});
-
+	
 
 	//Health System
 	scene.ForEachComponent<comp::Health>([&](Entity& Entity, comp::Health& Health)

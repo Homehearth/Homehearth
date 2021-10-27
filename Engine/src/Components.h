@@ -94,7 +94,7 @@ namespace ecs
 		{
 			
 		};
-		
+
 		struct Light
 		{
 			light_t lightData;
@@ -116,6 +116,11 @@ namespace ecs
 			bool isRanged = false;
 			bool isAttacking = false;
 			float cooldownTimer = 0.f;
+		};
+
+		struct Projectile
+		{
+			float lifeTime;
 		};
 
 		template<uint8_t ID>
