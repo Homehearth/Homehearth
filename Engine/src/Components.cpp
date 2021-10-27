@@ -27,7 +27,7 @@ namespace ecs {
         return u;
     }
 
-    void StepRotateTo(sm::Vector3& rotation, const sm::Vector3& target, float time)
+    bool StepRotateTo(sm::Vector3& rotation, const sm::Vector3& target, float time)
     {
         float targetRotation = atan2(-target.z, target.x);
 
@@ -38,6 +38,8 @@ namespace ecs {
             rotation.y += (rotation.y < 0.0f) ? dx::g_XMTwoPi[0] : -dx::g_XMTwoPi[0];
         }
         rotation.y = rotation.y * (1 - time) + targetRotation * time;
+
+        return std::abs(rotation.y - targetRotation) < 0.001f;
     }
 
 }

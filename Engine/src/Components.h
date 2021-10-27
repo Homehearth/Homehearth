@@ -89,6 +89,7 @@ namespace ecs
 		struct Player
 		{
 			float runSpeed;
+			bool isTurning;
 		};
 
 		struct Enemy
@@ -135,7 +136,7 @@ namespace ecs
 	sm::Matrix GetMatrix(const component::Transform& transform);
 	sm::Vector3 GetForward(const component::Transform& transform);
 	sm::Vector3 GetUp(const component::Transform& transform);
-	void StepRotateTo(sm::Vector3& rotation, const sm::Vector3& target, float t);
+	bool StepRotateTo(sm::Vector3& rotation, const sm::Vector3& target, float t);
 
 
 };
