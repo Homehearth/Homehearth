@@ -92,6 +92,11 @@ const bool rtd::TextField::GetBuffer(std::string*& output)
     return false;
 }
 
+std::string* rtd::TextField::RawGetBuffer()
+{
+    return &m_stringText;
+}
+
 void rtd::TextField::Draw()
 {
     if (m_border)

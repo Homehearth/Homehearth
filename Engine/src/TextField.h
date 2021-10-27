@@ -49,6 +49,9 @@ namespace rtd
 		// Returns true if output is ready to be taken out.
 		const bool GetBuffer(std::string*& output);
 
+		// Get the buffer from textfield directly.
+		std::string* RawGetBuffer();
+
 		// Inherited via Element2D
 		virtual void Draw() override;
 

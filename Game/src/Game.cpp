@@ -78,30 +78,38 @@ void Game::OnUserUpdate(float deltaTime)
 
 		rtd::TextField* port_text = GET_ELEMENT("portBuffer", rtd::TextField);
 		rtd::TextField* ip_text = GET_ELEMENT("ipBuffer", rtd::TextField);
-		if (ip_text && port_text)
+
+		rtd::Button* connect_button = GET_ELEMENT("connectButton", rtd::Button);
+		if (connect_button)
 		{
-			ip_text->GetBuffer(m_ipBuffer);
-			port_text->GetBuffer(m_portBuffer);
-			if (m_ipBuffer && m_portBuffer)
+			if (connect_button->IsClicked())
 			{
-				if (m_client.Connect(m_ipBuffer->c_str(), std::stoi(*m_portBuffer)))
+				if (port_text && ip_text)
 				{
-					rtd::Handler2D::SetVisibilityAll(false);
-					m_ipBuffer = nullptr;
-					m_portBuffer = nullptr;
-				}
-				else
-				{
-					m_ipBuffer = nullptr;
-					m_portBuffer = nullptr;
-					ip_text->Reset();
-					port_text->Reset();
+					m_ipBuffer = ip_text->RawGetBuffer();
+					m_portBuffer = port_text->RawGetBuffer();
+					if (m_ipBuffer && m_portBuffer)
+					{
+						if (m_client.Connect(m_ipBuffer->c_str(), std::stoi(*m_portBuffer)))
+						{
+							rtd::Handler2D::Get().SetVisibilityAll(false);
+							m_ipBuffer = nullptr;
+							m_portBuffer = nullptr;
+							m_internalState = 2;
+							break;
+						}
+					}
+					else
+					{
+						m_ipBuffer = nullptr;
+						m_portBuffer = nullptr;
+					}
 				}
 			}
 		}
 		else
 		{
-			sceneHelp::SetupLobbyJoinScreen();
+			sceneHelp::SetupLobbyJoinScreen(GetWindow(), 1);
 		}
 
 		rtd::Button* exit_button = GET_ELEMENT("exitGameButton", rtd::Button);
@@ -118,35 +126,12 @@ void Game::OnUserUpdate(float deltaTime)
 		{
 			if (start_button->IsClicked())
 			{
-				rtd::Handler2D::SetVisibilityAll(false);
+				rtd::Handler2D::Get().SetVisibilityAll(false);
 				ip_text->SetVisibility(true);
 				port_text->SetVisibility(true);
-			}
-		}
-
-		if (m_client.IsConnected())
-		{
-			rtd::TextField* lobby_text = GET_ELEMENT("lobbyBuffer", rtd::TextField);
-			if (lobby_text)
-			{
-				lobby_text->SetVisibility(true);
-				if (lobby_text->GetBuffer(m_lobbyBuffer))
+				if (connect_button)
 				{
-					this->JoinLobby(std::stoi(*m_lobbyBuffer));
-					rtd::Handler2D::Get().Cleanup();
-					m_internalState = 1;
-				}
-			}
-
-			rtd::Button* host_lobby_button = GET_ELEMENT("hostLobby", rtd::Button);
-			if (host_lobby_button)
-			{
-				host_lobby_button->SetVisibility(true);
-				if (host_lobby_button->IsClicked())
-				{
-					rtd::Handler2D::Get().Cleanup();
-					this->CreateLobby();
-					m_internalState = 1;
+					connect_button->SetVisibility(true);
 				}
 			}
 		}
@@ -179,8 +164,8 @@ void Game::OnUserUpdate(float deltaTime)
 				msg << m_localPID << m_gameID;
 				m_client.Send(msg);
 				rtd::Handler2D::Get().Cleanup();
-				sceneHelp::SetupLobbyJoinScreen();
-				m_internalState = 0;
+				sceneHelp::SetupLobbyJoinScreen(GetWindow(), 1);
+				m_internalState = 2;
 			}
 		}
 
@@ -188,6 +173,43 @@ void Game::OnUserUpdate(float deltaTime)
 	}
 	default:
 	{
+		break;
+	}
+	case 2:
+	{
+		// JOIN A LOBBY STATE!
+
+		if (m_client.IsConnected())
+		{
+			rtd::TextField* lobby_text = GET_ELEMENT("lobbyBuffer", rtd::TextField);
+			if (lobby_text)
+			{
+				lobby_text->SetVisibility(true);
+			}
+
+			// Either join or host lobby.
+			rtd::Button* host_lobby_button = GET_ELEMENT("hostLobby", rtd::Button);
+			if (host_lobby_button && lobby_text)
+			{
+				host_lobby_button->SetVisibility(true);
+				if (host_lobby_button->IsClicked())
+				{
+					m_lobbyBuffer = lobby_text->RawGetBuffer();
+					if (m_lobbyBuffer->size() <= 0)
+					{
+						rtd::Handler2D::Get().Cleanup();
+						this->CreateLobby();
+						m_internalState = 1;
+					}
+					else
+					{
+						rtd::Handler2D::Get().Cleanup();
+						this->JoinLobby(std::stoi(*m_lobbyBuffer));
+						m_internalState = 1;
+					}
+				}
+			}
+		}
 		break;
 	}
 	}
@@ -393,8 +415,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		std::string err;
 		msg >> err;
 		SetScene("MainMenu");
-		rtd::Handler2D::Get().Cleanup();
-		m_internalState = 0;
+		m_internalState = 2;
 		LOG_WARNING("Request denied: %s", err.c_str());
 		break;
 	}
@@ -409,7 +430,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	case GameMsg::Game_Start:
 	{
 		m_internalState = 2;
-		rtd::Handler2D::Get().SetVisibilityAll(false);
 		rtd::Handler2D::Get().Cleanup();
 		SetScene("Game");
 		break;

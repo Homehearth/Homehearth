@@ -37,7 +37,7 @@ namespace sceneHelp
 	void CreateMainMenuScene(Engine& engine)
 	{
 		SetupMainMenuScreen();
-		SetupLobbyJoinScreen();
+		SetupLobbyJoinScreen(engine.GetWindow(), 3);
 		// Scene logic
 		Scene& mainMenuScene = engine.GetScene("MainMenu");
 		mainMenuScene.on<ESceneUpdate>([](const ESceneUpdate& e, Scene& scene)
@@ -186,7 +186,7 @@ void sceneHelp::SetupMainMenuScreen()
 
 	std::string welcomeString = "In this game you will face against very dangerous foes while defending the righteous village from its dark fate! Take up arms and fight your way to victory champion! Join our discord and twitter to get official news about the new upcoming technological wonder game! Sign up for RTX exclusive version at our website!";
 	// Adds text to the menu screen.
-	rtd::Text* gameInfoText = new rtd::Text(".", draw_text_t(550.0f, 0.0f, 350.0f, 550.0f));
+	rtd::Text* gameInfoText = new rtd::Text(welcomeString, draw_text_t(550.0f, 0.0f, 350.0f, 550.0f));
 	rtd::Handler2D::Get().InsertElement(gameInfoText);
 	gameInfoText->SetName("gameInfoText");
 
@@ -372,23 +372,26 @@ void sceneHelp::SetupOptionsScreen()
 {
 }
 
-void sceneHelp::SetupLobbyJoinScreen()
+void sceneHelp::SetupLobbyJoinScreen(Window* pWindow, int mode)
 {
 #if RENDER_IMGUI == 0
-	rtd::TextField* ipField = new rtd::TextField(draw_text_t(100.0f, 100.0f, 200.0f, 35.0f));
-	//rtd::TextField* ipField = new rtd::TextField(draw_text_t((float)(rand() % 1000) / 2, (float)(rand() % 1000) / 4, 200.0f, 35.0f));
+	const unsigned int width = pWindow->GetWidth(), height = pWindow->GetHeight();
+
+	rtd::TextField* ipField = new rtd::TextField(draw_text_t(width / 3 - 50.f, 100.0f, 200.0f, 35.0f));
 	ipField->GetBorder()->SetColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
 	rtd::Handler2D::Get().InsertElement(ipField);
 	ipField->SetName("ipBuffer");
 	ipField->GetText()->SetText("Input IP address");
-	ipField->SetVisibility(false);
 
-	rtd::TextField* portField = new rtd::TextField(draw_text_t(500.0f, 100.0f, 200.0f, 35.0f));
+	rtd::TextField* portField = new rtd::TextField(draw_text_t(width / 3 + 200.f, 100.0f, 100.0f, 35.0f));
 	portField->GetBorder()->SetColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
 	rtd::Handler2D::Get().InsertElement(portField);
 	portField->SetName("portBuffer");
 	portField->GetText()->SetText("Input PORT");
-	portField->SetVisibility(false);
+
+	rtd::Button* connectButton = new rtd::Button("StartButton.png", draw_t((float)width / 2 - 150.f, (float)height - (float)height / 3, 300.0f, 100.0f));
+	rtd::Handler2D::Get().InsertElement(connectButton);
+	connectButton->SetName("connectButton");
 
 	rtd::TextField* lobbyField = new rtd::TextField(draw_text_t(100.0f, 300.0f, 200.0f, 35.0f));
 	//rtd::TextField * lobbyField = new rtd::TextField(draw_text_t((float)(rand() % 1000) / 2, (float)(rand() % 1000) / 4, 200.0f, 35.0f));
@@ -396,18 +399,32 @@ void sceneHelp::SetupLobbyJoinScreen()
 	rtd::Handler2D::Get().InsertElement(lobbyField);
 	lobbyField->SetName("lobbyBuffer");
 	lobbyField->GetText()->SetText("Input Lobby ID");
-	lobbyField->SetVisibility(false);
-
+	
 	rtd::Button* hostLobbyButton = new rtd::Button("StartButton.png", draw_t(500.0f, 300.0f, 300.0f, 125.0f));
 	//rtd::Button* hostLobbyButton = new rtd::Button("StartButton.png", draw_t((float)(rand() % 1000) / 2, (float)(rand() % 1000) / 4, 300.0f, 125.0f));
 	rtd::Handler2D::Get().InsertElement(hostLobbyButton);
 	hostLobbyButton->SetName("hostLobby");
-	hostLobbyButton->SetVisibility(false);
-
-	/*
-	float* test1 = new float(5.0f);
-	rtd::Slider* test = new rtd::Slider(D2D1::ColorF(0.0f, 0.0f, 0.0f), draw_t(300.0f, 300.0f, 100.0f, 50.0f), test1, 2.0f, 0.0f, true);
-	rtd::Handler2D::Get().InsertElement(test);
-	*/
+	
+	if (mode == 0)
+	{
+		lobbyField->SetVisibility(false);
+		hostLobbyButton->SetVisibility(false);
+	}
+	else if (mode == 1)
+	{
+		// Return to lobby join from lobby screen.
+		ipField->SetVisibility(false);
+		portField->SetVisibility(false);
+		connectButton->SetVisibility(false);
+	}
+	else if (mode == 3)
+	{
+		// Initial setup
+		lobbyField->SetVisibility(false);
+		hostLobbyButton->SetVisibility(false);
+		ipField->SetVisibility(false);
+		portField->SetVisibility(false);
+		connectButton->SetVisibility(false);
+	}
 #endif
 }
