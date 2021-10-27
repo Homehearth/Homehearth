@@ -103,14 +103,16 @@ void CollisionSystem::AddOnCollision(Entity entity1, std::function<void(Entity)>
 
 void CollisionSystem::OnCollision(Entity entity1, Entity entity2)
 {
+	CollisionSystem::Get().CollisionResponse(entity1, entity2);
+	
 	if (m_OnCollision.find(entity1) != m_OnCollision.end())
 	{
 		if (!entity1.IsNull())
 		{
 			m_OnCollision.at(entity1)(entity2);
 
-			if(entity1.GetComponent<comp::Tag<DYNAMIC>>())
-				CollisionSystem::Get().CollisionResponse(entity1, entity2);
+			//if(entity1.GetComponent<comp::Tag<DYNAMIC>>())
+			//	CollisionSystem::Get().CollisionResponse(entity1, entity2);
 		}
 		else
 		{
@@ -123,8 +125,8 @@ void CollisionSystem::OnCollision(Entity entity1, Entity entity2)
 		{
 			m_OnCollision.at(entity2)(entity1);
 			
-			if (entity2.GetComponent<comp::Tag<DYNAMIC>>())
-				CollisionSystem::Get().CollisionResponse(entity2, entity1);
+			//if (entity2.GetComponent<comp::Tag<DYNAMIC>>())
+			//	CollisionSystem::Get().CollisionResponse(entity2, entity1);
 		}
 		else
 		{
@@ -201,14 +203,15 @@ void CollisionSystem::CollisionResponse(Entity entity1, Entity entity2) const
 	for (int i = 0; i < static_cast<int>(minMaxProj.size()) - 1; i += 2)
 	{
 		sm::Vector3 gap;
+		const unsigned int nextIndex = i+1;
 		//Take projections in the right order depending on entitys position in the world space
-		if (minMaxProj[i].maxProj < minMaxProj[i + 1].maxProj)
+		if (minMaxProj[i].maxProj < minMaxProj[nextIndex].maxProj)
 		{
-			gap = p2Vectors[minMaxProj[i + 1].minInxed] - p1Vectors[minMaxProj[i].maxIndex];
+			gap = p2Vectors[minMaxProj[nextIndex].minInxed] - p1Vectors[minMaxProj[i].maxIndex];
 		}
-		else if (minMaxProj[i].maxProj > minMaxProj[i + 1].maxProj)
+		else if (minMaxProj[i].maxProj > minMaxProj[nextIndex].maxProj)
 		{
-			gap = p1Vectors[minMaxProj[i].minInxed] - p2Vectors[minMaxProj[i + 1].maxIndex];
+			gap = p1Vectors[minMaxProj[i].minInxed] - p2Vectors[minMaxProj[nextIndex].maxIndex];
 		}
 		else
 		{
@@ -222,12 +225,13 @@ void CollisionSystem::CollisionResponse(Entity entity1, Entity entity2) const
 			smallestVec = sm::Vector3(gap.x, 0.0f, 0.0f);
 			isValueSet = true;
 		}
-		if (abs(gap.y) < abs(depth) && abs(gap.y) > 0.0001f)
-		{
-			depth = gap.y;
-			smallestVec = sm::Vector3(0.0f, gap.y, 0.0f);
-			isValueSet = true;
-		}
+		//LOCK Y
+		//if (abs(gap.y) < abs(depth) && abs(gap.y) > 0.0001f)
+		//{
+		//	depth = gap.y;
+		//	smallestVec = sm::Vector3(0.0f, gap.y, 0.0f);
+		//	isValueSet = true;
+		//}
 		if (abs(gap.z) < abs(depth) && abs(gap.z) > 0.0001f)
 		{
 			depth = gap.z;
@@ -240,32 +244,38 @@ void CollisionSystem::CollisionResponse(Entity entity1, Entity entity2) const
 	//Reset to 0.001 (happens if boxes share exactly the same corners pos)
 	if (!isValueSet)
 	{
-		smallestVec = sm::Vector3(0.01f, 0.01f, 0.01f);
+		smallestVec = sm::Vector3(0.01f, 0.00f, 0.01f);
 	}
 
 	//Move the entity away from the other entity
-	sm::Vector3 moveVec;
-	
-	if(entity2.GetComponent<comp::Tag<STATIC>>() != nullptr)
-		moveVec = ((smallestVec));
-	else
-		moveVec = ((smallestVec));
-	
-	moveVec *= 1.1f;
+
+	const sm::Vector3 moveVec = smallestVec * 1.1f;
 	if ((p2transform->position - (p1transform->position + moveVec)).Length() > (p2transform->position -
 		p1transform->position).Length())
 	{
 		p1transform->position += (moveVec);
 		p1Obb->Center = p1transform->position;
+		
+		if(entity2.GetComponent<comp::Tag<DYNAMIC>>())
+		{
+			p2transform->position += ((moveVec * -1.0f) / 2.0f);
+			p2Obb->Center = p2transform->position;
+		}
 	}
 	else
 	{
 		p1transform->position += (moveVec * -1.0f);
 		p1Obb->Center = p1transform->position;
+		
+		if (entity2.GetComponent<comp::Tag<DYNAMIC>>())
+		{
+			p2transform->position += ((moveVec) / 2.0f);
+			p2Obb->Center = p2transform->position;
+		}
 	}
 
 	//If still colliding should make another iteration through the function to find the other axis
-	if(entity2.GetComponent<comp::Tag<STATIC>>() && p1Obb->Intersects(*p2Obb))
+	if(p1Obb->Intersects(*p2Obb))
 	{
 		this->CollisionResponse(entity1, entity2);
 	}
@@ -282,7 +292,7 @@ MinMaxProj_t CollisionSystem::GetMinMax(std::vector<sm::Vector3> boxVectors, sm:
 	minMaxProj.maxProj = boxVectors.at(0).Dot(boxAxis);
 	minMaxProj.minInxed = 0;
 	minMaxProj.maxIndex = 0;
-	minMaxProj.axisProjectOn = boxAxis;
+
 	
 	for(int i = 1; i < boxVectors.size(); i++)
 	{
