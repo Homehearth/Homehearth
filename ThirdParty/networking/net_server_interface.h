@@ -29,6 +29,7 @@ namespace network
 			message<T> msgTempIn = {};
 		};
 		std::unordered_map<uint32_t, SOCKET> connections;
+		std::unordered_map<SOCKET, HANDLE> m_sockHandles;
 		std::function<void(message<T>&)> messageReceivedHandler;
 		CRITICAL_SECTION lock;
 		tsQueue<message<T>> m_qMessagesIn;
@@ -60,7 +61,7 @@ namespace network
 		void ReadValidation(SOCKET_INFORMATION*& SI, PER_IO_DATA* context);
 		void ReadHeader(SOCKET_INFORMATION*& SI, PER_IO_DATA* context);
 		void ReadPayload(SOCKET_INFORMATION*& SI, PER_IO_DATA* context);
-		void WriteMessage(SOCKET& socket, message<T>& msg);
+		void PrimeWriteMessage(SOCKET& socket, message<T>& msg);
 		void PrimeReadHeader(SOCKET_INFORMATION*& SI);
 		void PrimeReadPayload(SOCKET_INFORMATION*& SI);
 		void PrimeReadValidation(SOCKET_INFORMATION*& SI);
@@ -145,7 +146,6 @@ namespace network
 	{
 		PER_IO_DATA* context = new PER_IO_DATA;
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
-		//context->Overlapped.hEvent = this;
 		context->DataBuf.buf = (CHAR*)&SI->msgTempIn.header;
 		context->DataBuf.len = sizeof(msg_header<T>);
 		context->state = NetState::READ_HEADER;
@@ -213,7 +213,7 @@ namespace network
 	}
 
 	template <typename T>
-	void server_interface<T>::WriteMessage(SOCKET& socket, message<T>& msg)
+	void server_interface<T>::PrimeWriteMessage(SOCKET& socket, message<T>& msg)
 	{
 		PER_IO_DATA* context = new PER_IO_DATA;
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
@@ -375,14 +375,16 @@ namespace network
 		SI->handshakeIn = 0;
 		SI->handshakeOut = uint64_t(std::chrono::system_clock::now().time_since_epoch().count());
 		SI->handshakeResult = scrambleData(SI->handshakeOut);
+		HANDLE h = CreateIoCompletionPort((HANDLE)SI->Socket, m_CompletionPort, (ULONG_PTR)SI, 0);
 
-		if (CreateIoCompletionPort((HANDLE)SI->Socket, m_CompletionPort, (ULONG_PTR)SI, 0) == NULL)
+		if (h == NULL)
 		{
 			LOG_ERROR("CreateIoCompletionPort() failed with error %d", GetLastError());
 
 			return false;
 		}
 
+		m_sockHandles[SI->Socket] = h;
 		this->WriteValidation(SI->Socket, SI->handshakeOut);
 
 		return true;
@@ -393,8 +395,13 @@ namespace network
 	{
 		if (isClientConnected(id))
 		{
-			SOCKET remote = connections.at(id);
-			WriteMessage(remote, msg);
+			owned_message<T>* remoteMsg = new owned_message<T>;
+			remoteMsg->msg = msg;
+			remoteMsg->remote = connections.at(id);
+			if (!PostQueuedCompletionStatus(m_sockHandles.at(remoteMsg->remote), 1, (ULONG_PTR)remoteMsg, NULL))
+			{
+				LOG_ERROR("PostQueuedCompletionStatus: %d", GetLastError());
+			}
 		}
 		else
 		{
@@ -678,6 +685,19 @@ namespace network
 
 			for (int i = 0; i < (int)EntriesRemoved; i++)
 			{
+				if (Entries[i].lpCompletionKey == NULL)
+				{
+					continue;
+				}
+				// Special case when we we queue a send to remote client
+				if (Entries[i].dwNumberOfBytesTransferred == 1)
+				{
+					owned_message<T>* s = (owned_message<T>*)Entries[i].lpCompletionKey;
+					PrimeWriteMessage(s->remote, s->msg);
+					delete s;
+					continue;
+				}
+
 				SI = (SOCKET_INFORMATION*)Entries[i].lpCompletionKey;
 				context = (PER_IO_DATA*)Entries[i].lpOverlapped;
 				if (SI == NULL)
