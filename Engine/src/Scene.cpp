@@ -179,8 +179,8 @@ void Scene::RenderAnimation()
 		for (auto& it : m_renderableAnimCopies[1])
 		{
 			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
-			it.animator.Update();
-			it.animator.Render();
+			it.animator->Update();
+			it.animator->Render();
 		}
 	}
 	else
@@ -197,8 +197,8 @@ void Scene::RenderAnimation()
 		{
 			auto& it = m_renderableAnimCopies[1][i];
 			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
-			it.animator.Update();
-			it.animator.Render();
+			it.animator->Update();
+			it.animator->Render();
 		}
 	}
 
@@ -208,6 +208,11 @@ void Scene::RenderAnimation()
 	// Emit event
 	publish<ESceneRender>();
 
+}
+
+const bool Scene::IsReadyToRenderAll() const
+{
+	return (IsRenderReady() && IsRenderDebugReady() && IsAnimRenderReady());
 }
 
 const bool Scene::IsRenderReady() const

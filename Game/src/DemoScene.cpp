@@ -73,8 +73,8 @@ namespace sceneHelp
 		Entity testAnim = gameScene.CreateEntity();
 		comp::Transform* transform = testAnim.AddComponent<comp::Transform>();
 		comp::RenderableAnimation* animRender = testAnim.AddComponent<comp::RenderableAnimation>();
-		animRender->animator.Create("test");
-		
+		animRender->animator = ResourceManager::Get().GetResource<RAnimator>("Test.anim");
+
 
 		//for (int i = 0; i < 5; i++)
 		//{

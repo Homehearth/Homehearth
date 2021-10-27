@@ -1,21 +1,21 @@
 #include "EnginePCH.h"
-#include "Animator.h"
+#include "RAnimator.h"
 
-Animator::Animator()
+RAnimator::RAnimator()
 {
 	m_frameTime		= 0;
 	m_currentAnim	= "";
 	m_nextAnim		= "";
 }
 
-Animator::~Animator()
+RAnimator::~RAnimator()
 {
 	m_bones.clear();
 	m_finalMatrices.clear();
 	m_animations.clear();
 }
 
-bool Animator::LoadModel(const std::string& filename)
+bool RAnimator::LoadModel(const std::string& filename)
 {
 	bool loaded = false;
 	m_model = ResourceManager::Get().GetResource<RModel>(filename);
@@ -42,7 +42,7 @@ bool Animator::LoadModel(const std::string& filename)
 	return loaded;
 }
 
-bool Animator::CreateBonesSB()
+bool RAnimator::CreateBonesSB()
 {
 	UINT nrOfMatrices = static_cast<UINT>(m_finalMatrices.size());
 
@@ -85,7 +85,7 @@ bool Animator::CreateBonesSB()
 	return !FAILED(hr);
 }
 
-void Animator::UpdateStructureBuffer()
+void RAnimator::UpdateStructureBuffer()
 {
 	D3D11_MAPPED_SUBRESOURCE submap;
 	D3D11Core::Get().DeviceContext()->Map(m_bonesSB_Buffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &submap);
@@ -93,18 +93,18 @@ void Animator::UpdateStructureBuffer()
 	D3D11Core::Get().DeviceContext()->Unmap(m_bonesSB_Buffer.Get(), 0);
 }
 
-void Animator::Bind() const
+void RAnimator::Bind() const
 {
 	D3D11Core::Get().DeviceContext()->VSSetShaderResources(T2D_BONESLOT, 1, m_bonesSB_RSV.GetAddressOf());
 }
 
-void Animator::Unbind() const
+void RAnimator::Unbind() const
 {
 	ID3D11ShaderResourceView* nullSRV = nullptr;
 	D3D11Core::Get().DeviceContext()->VSSetShaderResources(T2D_BONESLOT, 1, &nullSRV);
 }
 
-bool Animator::Create(const std::string& filename)
+bool RAnimator::Create(const std::string& filename)
 {
 	/*
 		Testing with hardcoded values for now...
@@ -119,13 +119,15 @@ bool Animator::Create(const std::string& filename)
 	return true;
 }
 
-void Animator::Update()
+void RAnimator::Update()
 {
 	if (!m_bones.empty())
 	{
 		//m_frameTime sets to 0 :(
 		double tickDT = m_animations[m_currentAnim]->GetTicksPerFrame() * 0.001f;		//dt;
-		m_frameTime += tickDT;
+
+		m_frameTime = fmod(m_frameTime + tickDT, m_animations[m_currentAnim]->GetDuraction());
+
 		double nextFrameTime = m_frameTime + tickDT;
 
 		std::vector<sm::Matrix> modelMatrices;
@@ -133,7 +135,7 @@ void Animator::Update()
 
 		for (size_t i = 0; i < m_bones.size(); i++)
 		{
-			sm::Matrix localMatrix = m_animations[m_currentAnim]->GetMatrix(m_bones[i].name, m_frameTime, nextFrameTime, m_bones[i].lastKeys, false);
+			sm::Matrix localMatrix = m_animations[m_currentAnim]->GetMatrix(m_bones[i].name, m_frameTime, nextFrameTime, m_bones[i].lastKeys, true);
 
 			if (m_bones[i].parentIndex == -1)
 				modelMatrices[i] = localMatrix;
@@ -149,7 +151,7 @@ void Animator::Update()
 	}
 }
 
-void Animator::Render()
+void RAnimator::Render()
 {
 	//Unnecessary to the render if the model does not exist
 	if (m_model)

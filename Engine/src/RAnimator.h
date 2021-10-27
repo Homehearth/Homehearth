@@ -8,12 +8,15 @@ const UINT T2D_BONESLOT = 11;
 /*
 	Loads in an animator from our custom format ".anim"
 
+	Can be used as an Resource an reused for multiple entities. 
+	But will use the same animation in that case.
+
 	Prefixes:
 	* 
 
 */
 
-class Animator
+class RAnimator : public resource::GResource
 {
 private:
 	double					m_frameTime;
@@ -41,11 +44,12 @@ private:
 	void Unbind() const;
 
 public:
-	Animator();
-	~Animator();
+	RAnimator();
+	~RAnimator();
 
-	//Create from a custom file - something.anim
-	bool Create(const std::string& filename);
+	// Inherited via GResource
+	// Create from a custom file - something.anim
+	virtual bool Create(const std::string& filename) override;
 
 	//Update the animation
 	void Update();

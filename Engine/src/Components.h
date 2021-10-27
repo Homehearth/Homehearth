@@ -1,7 +1,7 @@
 #pragma once
 #include "net_message.h"
 #include "RModel.h"
-#include "Animator.h"
+#include "RAnimator.h"
 #include "ResourceManager.h"
 
 namespace ecs
@@ -55,8 +55,8 @@ namespace ecs
 
 		struct RenderableAnimation
 		{
-			Animator				animator;
-			basic_model_matrix_t	data;
+			std::shared_ptr<RAnimator>	animator;
+			basic_model_matrix_t		data;
 		};
 
 		// Used on server side

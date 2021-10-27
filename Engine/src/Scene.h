@@ -27,6 +27,8 @@ public:
 	void RenderDebug();
 	void RenderAnimation();
 
+	//Checks all of the following underneath
+	const bool IsReadyToRenderAll() const;
 	const bool IsRenderReady() const;
 	const bool IsRenderDebugReady() const;
 	const bool IsAnimRenderReady() const;

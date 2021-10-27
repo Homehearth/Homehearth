@@ -178,9 +178,14 @@ void RAnimation::SetLoopable(bool& enable)
 	m_isLoopable = enable;
 }
 
-const double RAnimation::GetTicksPerFrame() const
+const double& RAnimation::GetTicksPerFrame() const
 {
 	return m_ticksPerFrame;
+}
+
+const double& RAnimation::GetDuraction() const
+{
+	return m_duration;
 }
 
 const sm::Matrix RAnimation::GetMatrix(const std::string& bonename, const double& currentFrame, const double& nextFrame, std::array<UINT, 3>& lastKeys, bool interpolate)

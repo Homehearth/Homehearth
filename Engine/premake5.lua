@@ -59,7 +59,7 @@ project "Engine"
 
         ["src/Engine/Resources"] = { "**ResourceManager.*", "**GResource.*", "**RModel.*", "**RTexture.*", "**RMaterial.*"},
             ["src/Engine/Resources/Shaders"] = { "**.hlsl", "**.hlsli", "**Shader.*" },
-			["src/Engine/Resources/Animation"] = {"**RAnimation.*", "**Animator.*", "**AnimStructures.*"},
+			["src/Engine/Resources/Animation"] = {"**RAnimation.*", "**RAnimator.*", "**AnimStructures.*"},
 
         ["src/Engine/Audio"] = {  },
         ["src/Engine/Physics"] = {  },

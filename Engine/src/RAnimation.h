@@ -43,7 +43,8 @@ public:
 	//Set and get
 	bool IsLoopable() const;
 	void SetLoopable(bool& enable);
-	const double GetTicksPerFrame() const;
+	const double& GetTicksPerFrame() const;
+	const double& GetDuraction() const;
 
 	/*
 		Get translations depending on the bone.
