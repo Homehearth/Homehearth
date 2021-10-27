@@ -8,84 +8,107 @@ const unsigned char BAD = 8;
 
 void Systems::CombatSystem(HeadlessScene& scene, float dt)
 {
-	// For Each Good Guy.
-	//scene.ForEachComponent<comp::Attack, comp::Health, comp::Transform, comp::Tag<GOOD>>([&](Entity& player, comp::Attack& playerAttack, comp::Health& playerHealth, comp::Transform& playerTransform, comp::Tag<GOOD>&)
-	//	{
-	//		// For Each Bad Guy.
-	//		scene.ForEachComponent<comp::Attack, comp::Health, comp::Transform, comp::Tag<BAD>>([&](Entity& enemy, comp::Attack& enemyAttack, comp::Health& enemyHealth, comp::Transform& enemyTransform, comp::Tag<BAD>&)
-	//			{
-
-	//				//TODO: Change it from being sphere range check to be OBB hit detection
-	//				
-	//				//CQC
-	//				if (!playerAttack.isRanged || !enemyAttack.isRanged)
-	//				{
-	//					// Calculate the distance between player and enemy.
-	//					const auto dist = (playerTransform.position - enemyTransform.position).Length();
-	//				
-	//					//Decreases cooldown between attacks
-	//					if (playerAttack.cooldownTimer > 0.f)
-	//						playerAttack.cooldownTimer -= 1.f * dt;
-	//					if (enemyAttack.cooldownTimer > 0.f)
-	//						enemyAttack.cooldownTimer -= 1.f * dt;
-
-	//					// Check if attack is in range.
-	//					if (playerAttack.attackRange >= dist && playerAttack.cooldownTimer <= 0.f && enemyHealth.isAlive)
-	//					{
-
-	//						// Perform battle logic.
-	//						if ((playerAttack.isAttacking & playerHealth.isAlive) == TRUE)
-	//						{
-	//							playerAttack.cooldownTimer = playerAttack.attackSpeed; //Set attacker on cooldown
-	//							enemyHealth.currentHealth -= playerAttack.attackDamage; //Decrease health by the attackdamage
-	//							LOG_INFO("Player %u: Attack landed.", player.GetComponent<comp::Network>()->id);
-	//						}
-	//					}
-
-	//					// Check if attack is in range.
-	//					if (enemyAttack.attackRange >= dist && enemyAttack.cooldownTimer <= 0.f && playerHealth.isAlive)
-	//					{
-
-	//						// Perform battle logic.
-	//						if ((enemyAttack.isAttacking & enemyHealth.isAlive) == TRUE)
-	//						{
-	//							enemyAttack.cooldownTimer = enemyAttack.attackSpeed; //Set attacker on cooldown
-	//							playerHealth.currentHealth -= enemyAttack.attackDamage; //Decrease health by the attackdamage
-	//							LOG_INFO("Enemy attack landed.");
-	//						}
-	//					}
-	//				}
-
-	//				//Ranged Combat
-	//				else
-	//				{
-	//					//Spawn a projectile
-	//					//Check if it hits
-	//					//Do damage calcs
-	//					//Delete projectile when hit?
-	//				}
-
-	//				//Reset to non attacking state
-	//				if (playerAttack.isAttacking)
-	//					playerAttack.isAttacking = false;
-	//				if (enemyAttack.isAttacking)
-	//					enemyAttack.isAttacking = false;
-	//			});
-	//	});
-
-	scene.ForEachComponent<comp::Attack>([&](Entity& ent, comp::Attack& atk)
+	// For Each Good Guy (Player).
+	scene.ForEachComponent<comp::Attack, comp::Health, comp::Transform, comp::Tag<GOOD>>([&](Entity& player, comp::Attack& playerAttack, comp::Health& playerHealth, comp::Transform& playerTransform, comp::Tag<GOOD>&)
 		{
-			if (atk.isAttacking)
+			if (playerHealth.isAlive)
 			{
-				Entity attackBox = scene.CreateEntity();
-				attackBox.AddComponent<comp::BoundingOrientedBox>()->Center = ent.GetComponent<comp::Transform>()->position + ecs::GetForward(*ent.GetComponent<comp::Transform>()) * 1;
-				const auto atkDmg = ent.GetComponent<comp::Attack>()->attackDamage;
-				CollisionSystem::Get().AddOnCollision(attackBox, [&](Entity& ent2) 
-					{
-						LOG_INFO("STRANGER DANGER!");
-					});
+				// Decreases cooldown between attacks.
+				if (playerAttack.cooldownTimer > 0.f)
+					playerAttack.cooldownTimer -= 1.f * dt;
 
-				atk.isAttacking = false;
+				// For Each Bad Guy (Enemy).
+				scene.ForEachComponent<comp::Attack, comp::Health, comp::Transform, comp::Tag<BAD>>([&](Entity& enemy, comp::Attack& enemyAttack, comp::Health& enemyHealth, comp::Transform& enemyTransform, comp::Tag<BAD>&)
+					{
+						if (enemyHealth.isAlive)
+						{
+							// Decreases cooldown between attacks
+							if (enemyAttack.cooldownTimer > 0.f)
+								enemyAttack.cooldownTimer -= 1.f * dt;
+
+							//
+							// PLAYER LOGIC
+							//
+							if (playerAttack.isAttacking)
+							{
+								if (!playerAttack.isRanged)
+								{
+									// Calculate the distance between player and enemy.
+									const auto distToEnemy = (playerTransform.position - enemyTransform.position).Length();
+
+									// Check if attack is in range.
+									if (playerAttack.attackRange >= distToEnemy &&
+										playerAttack.cooldownTimer <= 0.f)
+									{
+										Entity attackBox = scene.CreateEntity();
+										attackBox.AddComponent<comp::BoundingOrientedBox>()->Center = playerTransform.position + ecs::GetForward(playerTransform);
+
+										// Check if attack hit.
+										CollisionSystem::Get().AddPair(attackBox, enemy);
+										if (CollisionSystem::Get().IsColliding(attackBox, enemy))
+										{
+											// Perform battle logic.
+											playerAttack.cooldownTimer = playerAttack.attackSpeed; //Set attacker on cooldown
+											enemyHealth.currentHealth -= playerAttack.attackDamage; //Decrease health by the attackdamage
+											LOG_INFO("Player %u: Attack landed.", player.GetComponent<comp::Network>()->id);
+										}
+
+										// Cleanup.
+										CollisionSystem::Get().RemovePair(attackBox, enemy);
+										attackBox.Destroy();
+									}
+								}
+								else 
+								{
+									// Range logic...
+								}
+
+								playerAttack.isAttacking = false;
+							}
+
+
+							//
+							// ENEMY LOGIC
+							//
+							if (enemyAttack.isAttacking)
+							{
+								if (!enemyAttack.isRanged)
+								{
+									// Calculate the distance between enemy and player.
+									const auto distToPlayer = (enemyTransform.position - playerTransform.position).Length();
+
+									// Check if attack is in range.
+									if (enemyAttack.attackRange >= distToPlayer &&
+										enemyAttack.cooldownTimer <= 0.f)
+									{
+										Entity attackBox = scene.CreateEntity();
+										attackBox.AddComponent<comp::BoundingOrientedBox>()->Center = enemyTransform.position + ecs::GetForward(enemyTransform);
+
+										// Check if attack hit.
+										CollisionSystem::Get().AddPair(attackBox, player);
+										if (CollisionSystem::Get().IsColliding(attackBox, player))
+										{
+											// Perform battle logic.
+											enemyAttack.cooldownTimer = enemyAttack.attackSpeed; //Set attacker on cooldown
+											playerHealth.currentHealth -= enemyAttack.attackDamage; //Decrease health by the attackdamage
+											LOG_INFO("Enemy %u: Attack landed.", enemy.GetComponent<comp::Network>()->id);
+										}
+
+										// Cleanup.
+										CollisionSystem::Get().RemovePair(attackBox, player);
+										attackBox.Destroy();
+									}
+								}
+								else
+								{
+									// Range logic...
+								}
+
+								enemyAttack.isAttacking = false;
+							}
+						}
+
+					});
 			}
 		});
 
