@@ -13,7 +13,7 @@ private:
 	std::string* m_ipBuffer = nullptr;
 	std::string* m_lobbyBuffer = nullptr;
 	std::string* m_portBuffer = nullptr;
-	InputState inputs[60];
+	std::vector<comp::Transform> predictedPositions;
 
 	bool m_isLeavingLobby;
 	comp::Transform test;

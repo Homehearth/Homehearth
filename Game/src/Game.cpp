@@ -280,13 +280,17 @@ void Game::OnUserUpdate(float deltaTime)
 		GetCurrentScene()->ForEachComponent<comp::Transform, comp::Tag<TagType::LOCAL_PLAYER>>([&]
 		(comp::Transform& t, comp::Tag<TagType::LOCAL_PLAYER>& tag)
 			{
-				/*int x = InputSystem::Get().GetAxis(Axis::HORIZONTAL);
+				int x = InputSystem::Get().GetAxis(Axis::HORIZONTAL);
 				int z = InputSystem::Get().GetAxis(Axis::VERTICAL);
 				if (x || z)
 				{
 					t.position.x += 10.f * deltaTime * x;
 					t.position.z += 10.f * deltaTime * z;
-				}*/
+
+					predictedPositions.push_back(t);
+				}
+
+				LOG_INFO("Predicted size: %llu", predictedPositions.size());
 
 				//if (sm::Vector3::Distance(t.position, test.position) > m_predictionThreshhold)
 				//{
@@ -353,6 +357,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 					if (n.id == m_localPID)
 					{
 						test = transforms.at(n.id);
+						predictedPositions.clear();
 					}
 				}
 			});
