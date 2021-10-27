@@ -149,24 +149,6 @@ namespace sceneHelp
 
 }
 
-Entity CreateLightEntity(Scene& scene, sm::Vector4 pos, sm::Vector4 dir, sm::Vector4 col, float range, TypeLight type, UINT enabled)
-{
-	Entity lightEntity = scene.CreateEntity();
-
-	lightEntity.AddComponent<comp::Light>();
-	lightEntity.GetComponent<comp::Light>()->lightData.position = pos;
-	lightEntity.GetComponent<comp::Light>()->lightData.direction = dir;
-	lightEntity.GetComponent<comp::Light>()->lightData.color = col;
-	lightEntity.GetComponent<comp::Light>()->lightData.range = range;
-	lightEntity.GetComponent<comp::Light>()->lightData.type = type;
-	lightEntity.GetComponent<comp::Light>()->lightData.enabled = enabled;
-	
-	scene.GetLights()->EditLight(lightEntity.GetComponent<comp::Light>()->lightData, lightEntity.GetComponent<comp::Light>()->index);
-
-	return lightEntity;
-}
-
-
 void SetupServerConnectScreen(Window* pWindow)
 {
 	const unsigned int width = pWindow->GetWidth(), height = pWindow->GetHeight();

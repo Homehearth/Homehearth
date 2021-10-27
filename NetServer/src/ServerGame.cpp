@@ -108,7 +108,7 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 	{
 		uint32_t playerID;
 		msg >> playerID;
-		this->m_server.SendToClient(m_server.GetConnection(playerID), msg);
+		this->m_server.SendToClient(playerID, msg);
 		LOG_INFO("Client on with ID: %ld is pinging server", playerID);
 		break;
 	}
@@ -143,7 +143,7 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 			invalidLobbyMsg.header.id = GameMsg::Lobby_Invalid;
 			invalidLobbyMsg << std::string("Player trying to join invalid Lobby");
 			LOG_WARNING("Request denied: Player trying to join invalid Lobby");
-			m_server.SendToClient(m_server.GetConnection(playerID), invalidLobbyMsg);
+			m_server.SendToClient(playerID, invalidLobbyMsg);
 		}
 		break;
 	}
@@ -161,7 +161,7 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 				message<GameMsg> accMsg;
 				accMsg.header.id = GameMsg::Lobby_AcceptedLeave;
 
-				m_server.SendToClient(m_server.GetConnection(playerID), accMsg);
+				m_server.SendToClient(playerID, accMsg);
 				break;
 			}
 		}
@@ -170,7 +170,7 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 		invalidLobbyMsg.header.id = GameMsg::Lobby_Invalid;
 		invalidLobbyMsg << std::string("Player could not leave Lobby");
 		LOG_WARNING("Request denied: Player could not leave Lobby");
-		m_server.SendToClient(m_server.GetConnection(playerID), invalidLobbyMsg);
+		m_server.SendToClient(playerID, invalidLobbyMsg);
 
 		break;
 	}
