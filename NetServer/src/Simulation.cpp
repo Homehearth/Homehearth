@@ -205,19 +205,16 @@ bool Simulation::AddPlayer(uint32_t playerID)
 	player.AddComponent<comp::MeshName>()->name = "cube.obj";
 	player.AddComponent<comp::Network>()->id = playerID;
 	player.AddComponent<comp::Player>()->runSpeed = 10.f;
-	player.AddComponent<comp::BoundingOrientedBox>()->Orientation = sm::Quaternion::CreateFromAxisAngle(sm::Vector3(0.0f,1.0f,0.0f), 1.0f);
-
-	
+	player.AddComponent<comp::BoundingOrientedBox>();
 	//Collision will handle this entity as a dynamic one
 	player.AddComponent<comp::Tag<DYNAMIC>>();
 	
 	CollisionSystem::Get().AddOnCollision(player, [=](Entity player2)
 		{
 			comp::Player* otherPlayer = m_pCurrentScene->GetRegistry()->try_get<comp::Player>(player2);
-			CollisionSystem::Get().CollisionRespons(player, player2);
 		});
 
-	// send new Player to all other clients
+	//send new Player to all other clients
 	Broadcast(SingleEntityMessage(player));
 
 	return true;

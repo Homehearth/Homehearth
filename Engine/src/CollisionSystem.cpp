@@ -108,6 +108,9 @@ void CollisionSystem::OnCollision(Entity entity1, Entity entity2)
 		if (!entity1.IsNull())
 		{
 			m_OnCollision.at(entity1)(entity2);
+
+			if(entity1.GetComponent<comp::Tag<DYNAMIC>>())
+				CollisionSystem::Get().CollisionRespons(entity1, entity2);
 		}
 		else
 		{
@@ -119,6 +122,9 @@ void CollisionSystem::OnCollision(Entity entity1, Entity entity2)
 		if (!entity2.IsNull())
 		{
 			m_OnCollision.at(entity2)(entity1);
+			
+			if (entity2.GetComponent<comp::Tag<DYNAMIC>>())
+				CollisionSystem::Get().CollisionRespons(entity2, entity1);
 		}
 		else
 		{
@@ -131,7 +137,7 @@ void CollisionSystem::OnCollision(Entity entity1, Entity entity2)
 //Generates a response when two objects collide with each other,
 //Will move both objects if they are both dynamic in different directions depending on how much of
 //each corners crosses each other and take the axis that differs the least.
-void CollisionSystem::CollisionRespons(Entity entity1, Entity entity2) const
+void CollisionSystem::CollisionResponse(Entity entity1, Entity entity2) const
 {
 	comp::BoundingOrientedBox* p1Obb = entity1.GetComponent<comp::BoundingOrientedBox>();
 	comp::BoundingOrientedBox* p2Obb = entity2.GetComponent<comp::BoundingOrientedBox>();
@@ -192,7 +198,7 @@ void CollisionSystem::CollisionRespons(Entity entity1, Entity entity2) const
 	bool isValueSet = false;
 
 	//Find the smallest gap between the min and max corners.
-	for (int i = 0; i < minMaxProj.size() - 1; i += 2)
+	for (int i = 0; i < static_cast<int>(minMaxProj.size()) - 1; i += 2)
 	{
 		sm::Vector3 gap;
 		//Take projections in the right order depending on entitys position in the world space
