@@ -125,7 +125,7 @@ void BasicEngine<SceneType>::Run()
 	float deltaTime = 0.f;
 	float update_time = 0.f;
 	float network_time = 0.f;
-	const float TARGET_UPDATE = 1.f / 144.f;
+	const float TARGET_UPDATE = 1.f / Stats::GetMaxFPS();
 	const float NETWORK_TARGET_DELTA = 1.f / 60.f;
 
 	while (IsRunning())

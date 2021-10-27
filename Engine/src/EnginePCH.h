@@ -111,6 +111,7 @@ namespace sm = dx::SimpleMath;
 #include "Components.h"
 #include "SceneBuilder.h"
 #include "RenderThreadHandler.h"
+#include "Stats.h"
 
 // Network
 #include "Client.h"

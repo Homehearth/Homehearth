@@ -123,8 +123,7 @@ void RAnimator::Update()
 {
 	if (!m_bones.empty())
 	{
-		//m_frameTime sets to 0 :(
-		double tickDT = m_animations[m_currentAnim]->GetTicksPerFrame() * 0.001f;		//dt;
+		double tickDT = m_animations[m_currentAnim]->GetTicksPerFrame() * Stats::GetDeltaTime();
 
 		m_frameTime = fmod(m_frameTime + tickDT, m_animations[m_currentAnim]->GetDuraction());
 
