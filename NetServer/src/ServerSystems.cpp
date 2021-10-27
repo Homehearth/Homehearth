@@ -10,13 +10,10 @@ namespace systems {
 				{
 					sm::Vector3 vel;
 					v.vel.Normalize(vel);
-					
-					float time = dt * p.runSpeed;
 
+					float time = dt * p.runSpeed;
 					float targetRotation = atan2(-vel.z, vel.x);
 					t.rotation.y = t.rotation.y * (1 - time) + targetRotation * time;
-
-
 				}
 			});
 	}
