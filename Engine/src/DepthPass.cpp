@@ -24,9 +24,6 @@ void DepthPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 void DepthPass::Render(Scene* pScene)
 {
    pScene->Render();
-   //DC->IASetInputLayout(PM->m_defaultInputLayout.Get());
-   //DC-
-   //pScene->RenderAnimation();
 }
 
 void DepthPass::PostRender(ID3D11DeviceContext* pDeviceContext)

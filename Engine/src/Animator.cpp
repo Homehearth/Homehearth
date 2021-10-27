@@ -123,16 +123,17 @@ void Animator::Update()
 {
 	if (!m_bones.empty())
 	{
-		//double tickDT = m_animations[m_currentAnim]->GetTicksPerFrame() * 
-		//m_frameTime +=  m_animations[m_currentAnim]->GetTicksPerFrame();
-		//double nextFrameTime = 
+		//m_frameTime sets to 0 :(
+		double tickDT = m_animations[m_currentAnim]->GetTicksPerFrame() * 0.001f;		//dt;
+		m_frameTime += tickDT;
+		double nextFrameTime = m_frameTime + tickDT;
 
 		std::vector<sm::Matrix> modelMatrices;
 		modelMatrices.resize(m_bones.size(), sm::Matrix::Identity);
 
 		for (size_t i = 0; i < m_bones.size(); i++)
 		{
-			sm::Matrix localMatrix = m_animations[m_currentAnim]->GetMatrix(m_bones[i].name, 1.0, 0.02, m_bones[i].lastKeys, false);
+			sm::Matrix localMatrix = m_animations[m_currentAnim]->GetMatrix(m_bones[i].name, m_frameTime, nextFrameTime, m_bones[i].lastKeys, false);
 
 			if (m_bones[i].parentIndex == -1)
 				modelMatrices[i] = localMatrix;

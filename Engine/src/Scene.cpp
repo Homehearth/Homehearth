@@ -179,8 +179,7 @@ void Scene::RenderAnimation()
 		for (auto& it : m_renderableAnimCopies[1])
 		{
 			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
-			
-			it.animator.Update();	//
+			it.animator.Update();
 			it.animator.Render();
 		}
 	}
@@ -198,6 +197,7 @@ void Scene::RenderAnimation()
 		{
 			auto& it = m_renderableAnimCopies[1][i];
 			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
+			it.animator.Update();
 			it.animator.Render();
 		}
 	}
