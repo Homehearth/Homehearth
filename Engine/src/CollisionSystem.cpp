@@ -128,10 +128,10 @@ void CollisionSystem::OnCollision(Entity entity1, Entity entity2)
 }
 
 
-//Generates a response when two dynamic objects collide with each other,
-//Will move both objects in different directions depending on how much of
+//Generates a response when two objects collide with each other,
+//Will move both objects if they are both dynamic in different directions depending on how much of
 //each corners crosses each other and take the axis that differs the least.
-void CollisionSystem::CollisionResponsDynamic(Entity entity1, Entity entity2)
+void CollisionSystem::CollisionRespons(Entity entity1, Entity entity2) const
 {
 	comp::BoundingOrientedBox* p1Obb = entity1.GetComponent<comp::BoundingOrientedBox>();
 	comp::BoundingOrientedBox* p2Obb = entity2.GetComponent<comp::BoundingOrientedBox>();
@@ -144,7 +144,6 @@ void CollisionSystem::CollisionResponsDynamic(Entity entity1, Entity entity2)
 		LOG_ERROR("Attempt to perform collision response with or against an entity that does not have a collider component");
 		return;
 	}
-
 
 	sm::Vector3 p2Corners[8];
 	sm::Vector3 p1Corners[8];
@@ -210,6 +209,7 @@ void CollisionSystem::CollisionResponsDynamic(Entity entity1, Entity entity2)
 			continue; // Skips if 0.0f
 		}
 
+		//Find the axis with lowest difference
 		if (abs(gap.x) < abs(depth) && abs(gap.x) > 0.0001f)
 		{
 			depth = gap.x;
@@ -244,10 +244,6 @@ void CollisionSystem::CollisionResponsDynamic(Entity entity1, Entity entity2)
 		moveVec = ((smallestVec));
 	else
 		moveVec = ((smallestVec));
-	if (abs(moveVec.z) > 0.001f)
-	{
-		//std::cout << "hej\n";
-	}
 	
 	moveVec *= 1.1f;
 	if ((p2transform->position - (p1transform->position + moveVec)).Length() > (p2transform->position -
@@ -262,11 +258,11 @@ void CollisionSystem::CollisionResponsDynamic(Entity entity1, Entity entity2)
 		p1Obb->Center = p1transform->position;
 	}
 
+	//If still colliding should make another iteration through the function to find the other axis
 	if(entity2.GetComponent<comp::Tag<STATIC>>() && p1Obb->Intersects(*p2Obb))
 	{
-		this->CollisionResponsDynamic(entity1, entity2);
+		this->CollisionRespons(entity1, entity2);
 	}
-	
 }
 
 

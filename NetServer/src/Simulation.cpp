@@ -214,7 +214,7 @@ bool Simulation::AddPlayer(uint32_t playerID)
 	CollisionSystem::Get().AddOnCollision(player, [=](Entity player2)
 		{
 			comp::Player* otherPlayer = m_pCurrentScene->GetRegistry()->try_get<comp::Player>(player2);
-			CollisionSystem::Get().CollisionResponsDynamic(player, player2);
+			CollisionSystem::Get().CollisionRespons(player, player2);
 		});
 
 	// send new Player to all other clients
