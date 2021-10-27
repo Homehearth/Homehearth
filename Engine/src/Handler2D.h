@@ -62,13 +62,21 @@ namespace rtd
 	{
 	private:
 
+		// active elements.
 		std::vector<Element2D*> m_elements;
-		std::unordered_map<std::string, std::vector<Element2D*>> m_groups;
 
-		// Double buffer
+		// snapshot of handler2d elements.
+		std::vector<Element2D**> m_cleanElements;
+
+		bool m_shouldClean;
+
+		// Doublebuffer holding references to elements.
 		DoubleBuffer<std::vector<Element2D**>> m_drawBuffers;
 		Handler2D();
 		~Handler2D();
+
+		// Internal clean up of all elements.
+		void CleanHandler();
 
 	public:
 
@@ -79,7 +87,7 @@ namespace rtd
 		}
 
 		// Insert an element into the rendering system.
-		static void InsertElement(Element2D* element, const std::string& groupName = "general");
+		static void InsertElement(Element2D* element);
 
 		/*
 			Get an Element by its assigned name.
@@ -107,9 +115,14 @@ namespace rtd
 		// Set the visibility of all elements to boolean.
 		static void SetVisibilityAll(const bool& toggle);
 
-		static void SetVisibilityGroup(const std::string& group, bool visible);
-
 		static const bool IsRenderReady();
+
+		/*
+		* Saves a snapshot of the elements when function is called.
+		* Before next render it will remove all elements in that snapshot.
+		* If cleanup is called consecutively only the latest snapshot will be used.
+		*/
+		static void Cleanup();
 	};
 
 

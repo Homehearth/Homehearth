@@ -2,12 +2,10 @@
 
 using namespace rtd;
 #define INSTANCE rtd::Handler2D::Get()
-//std::vector<Element2D*> rtd::Handler2D::m_elements = {};
-//DoubleBuffer<std::vector<Element2D**>> rtd::Handler2D::m_drawBuffers;
 
 rtd::Handler2D::Handler2D()
 {
-
+	m_shouldClean = false;
 }
 
 rtd::Handler2D::~Handler2D()
@@ -19,10 +17,48 @@ rtd::Handler2D::~Handler2D()
 	m_elements.clear();
 }
 
-void rtd::Handler2D::InsertElement(Element2D* element, const std::string& groupName)
+void rtd::Handler2D::CleanHandler()
+{
+
+	/*
+		Go through snapshot and delete all the pointers.
+	*/
+	for (int i = 0; i < m_cleanElements.size(); i++)
+	{
+		if (m_cleanElements[i])
+		{
+			delete* m_cleanElements[i];
+			*m_cleanElements[i] = nullptr;
+		}
+		else
+			*m_cleanElements[i] = nullptr;
+	}
+	m_cleanElements.clear();
+
+
+	/*
+		Clean up all the nullptr from m_elements before push up to render.
+	*/
+	const bool run = true;
+	int counter = 0;
+	while (run)
+	{
+		if (counter >= (int)m_elements.size())
+			break;
+
+		if (!m_elements[counter])
+		{
+			m_elements.erase(m_elements.begin() + counter);
+			counter = 0;
+		}
+		else
+			counter++;
+	}
+}
+
+void rtd::Handler2D::InsertElement(Element2D* element)
 {
 	INSTANCE.m_elements.push_back(element);
-	INSTANCE.m_groups[groupName].push_back(element);
 }
 
 void rtd::Handler2D::Render()
@@ -52,7 +88,10 @@ void rtd::Handler2D::Update()
 		{
 			if (elem->GetRef() > 0 && elem->IsVisible())
 			{
-				elem->Update();
+				if (elem->CheckClick())
+					elem->OnClick();
+				if (elem->CheckHover())
+					elem->OnHover();
 			}
 			else
 				shouldErase = true;
@@ -61,14 +100,19 @@ void rtd::Handler2D::Update()
 
 	/*
 		Cleanup before push up to render
-	*/
 	if (shouldErase)
 	{
 		INSTANCE.EraseAll();
 	}
+	*/
 
 	if (!INSTANCE.m_drawBuffers.IsSwapped())
 	{
+		if (INSTANCE.m_shouldClean)
+		{
+			INSTANCE.CleanHandler();
+			INSTANCE.m_shouldClean = false;
+		}
 		INSTANCE.m_drawBuffers[0].clear();
 		for (int i = 0; i < INSTANCE.m_elements.size(); i++)
 		{
@@ -121,19 +165,21 @@ void rtd::Handler2D::SetVisibilityAll(const bool& toggle)
 	}
 }
 
-void rtd::Handler2D::SetVisibilityGroup(const std::string& group, bool visible) 
-{
-	if (INSTANCE.m_groups.find(group) != INSTANCE.m_groups.end())
-	{
-		for (auto& elem : INSTANCE.m_groups[group])
-		{
-			if (elem->GetRef() > 0)
-				elem->SetVisibility(visible);
-		}
-	}
-}
-
 const bool rtd::Handler2D::IsRenderReady()
 {
 	return INSTANCE.m_drawBuffers.IsSwapped();
+}
+
+void rtd::Handler2D::Cleanup()
+{
+	INSTANCE.m_shouldClean = true;
+
+	/*
+		Save a snapshot of the handler state when cleanup is called.
+	*/
+	INSTANCE.m_cleanElements.clear();
+	for (int i = 0; i < INSTANCE.m_elements.size(); i++)
+	{
+		INSTANCE.m_cleanElements.push_back(&INSTANCE.m_elements[i]);
+	}
 }

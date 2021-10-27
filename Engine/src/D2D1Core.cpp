@@ -250,10 +250,7 @@ const bool D2D1Core::CreateImage(const std::string& filename, ID2D1Bitmap** p_po
 	HRESULT hr = INSTANCE->LoadBitMap(pwcsName, p_pointer);
 
 	delete[] pwcsName;
-	if (SUCCEEDED(hr))
-		return true;
-	else
-		return false;
+	return (SUCCEEDED(hr));
 }
 
 const bool D2D1Core::CreateTextFormat(const WCHAR* fontName, 
