@@ -200,7 +200,7 @@ bool Simulation::AddPlayer(uint32_t playerID)
 	m_pServer->SendToClient(m_pServer->GetConnection(playerID), AllEntitiesMessage());
 	// Create Player entity in Game scene
 	Entity player = m_pGameScene->CreateEntity();
-	player.AddComponent<comp::Transform>();
+	player.AddComponent<comp::Transform>()->rotation = sm::Vector3(0.0f, 56.7f,0.0f);
 	player.AddComponent<comp::Velocity>();
 	player.AddComponent<comp::MeshName>()->name = "cube.obj";
 	player.AddComponent<comp::Network>()->id = playerID;

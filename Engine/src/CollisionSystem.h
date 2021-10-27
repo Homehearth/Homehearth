@@ -8,8 +8,6 @@ private:
 	std::unordered_map<Entity, std::function<void(Entity)>> m_OnCollision;
 	CollisionSystem() = default;
 	
-	void CollisionResponsDynamic(Entity entity1, Entity entity2);
-	void CollisionResponsStatic(Entity entity1, Entity staticEntity2);
 public:
 	~CollisionSystem() = default;
 	static auto& Get()
@@ -23,8 +21,10 @@ public:
 	void RemovePair(const Entity e1, const Entity e2);
 	
 	void AddOnCollision(Entity entity1, std::function<void(Entity)> func);
-	void OnCollision(Entity entity1, Entity entity2, float dt);
-	void CollisionRespons(Entity entity1, Entity entity2, float dt);
+	void OnCollision(Entity entity1, Entity entity2);
+
+	void CollisionResponsDynamic(Entity entity1, Entity entity2);
+	
     MinMaxProj_t GetMinMax(std::vector<sm::Vector3> boxVectors, sm::Vector3 boxAxis);
 };
 
