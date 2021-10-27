@@ -4,13 +4,20 @@
 #include <stdio.h>
 using namespace rtd;
 
-
 void rtd::TextField::Update()
 {
-    // Checks the 0-9 to A-Z
-    for (int i = 0x30; i <= 0x5A; i++)
+    for (int i = dx::Keyboard::Keys::D0; i != dx::Keyboard::Keys::Z; i++)
     {
-        if ((GetAsyncKeyState(i) & WM_KEYUP) > 0)
+        if (InputSystem::Get().CheckKeyboardKey(static_cast<dx::Keyboard::Keys>(i), KeyState::PRESSED))
+        {
+            const char c = static_cast<char>(i);
+            m_stringText.push_back(c);
+        }
+    }
+
+    for (int i = dx::Keyboard::Keys::NumPad0; i != dx::Keyboard::Keys::NumPad9; i++)
+    {
+        if (InputSystem::Get().CheckKeyboardKey(static_cast<dx::Keyboard::Keys>(i), KeyState::PRESSED))
         {
             const char c = static_cast<char>(i);
             m_stringText.push_back(c);
@@ -18,7 +25,7 @@ void rtd::TextField::Update()
     }
 
     // Checks '.' press
-    if ((GetAsyncKeyState(0xBE) & WM_KEYUP) > 0)
+    if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Keys::OemPeriod, KeyState::PRESSED))
     {
         const char c = static_cast<char>(0x2E);
         m_stringText.push_back(c);
