@@ -74,7 +74,7 @@ void Game::OnUserUpdate(float deltaTime)
 	{
 	case 0:
 	{
-		// IN MENU AND CONNECT TO LOBBY STATE!
+		// IN MENU!
 
 		rtd::TextField* port_text = GET_ELEMENT("portBuffer", rtd::TextField);
 		rtd::TextField* ip_text = GET_ELEMENT("ipBuffer", rtd::TextField);
