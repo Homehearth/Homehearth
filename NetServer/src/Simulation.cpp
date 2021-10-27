@@ -163,6 +163,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 			Systems::MovementSystem(scene, e.dt);
 			Systems::MovementColliderSystem(scene, e.dt);
 			Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(scene);
+			systems::CharacterMovement(scene, e.dt);
 			//LOG_INFO("GAME Scene %d", m_gameID);
 		});
 
@@ -222,7 +223,7 @@ bool Simulation::AddPlayer(uint32_t playerID)
 	Entity player = m_pGameScene->CreateEntity();
 	player.AddComponent<comp::Transform>();
 	player.AddComponent<comp::Velocity>();
-	player.AddComponent<comp::MeshName>()->name = "cube.obj";
+	player.AddComponent<comp::MeshName>()->name = "Arrow.fbx";
 	player.AddComponent<comp::Network>()->id = playerID;
 	player.AddComponent<comp::Player>()->runSpeed = 10.f;
 	player.AddComponent<comp::BoundingOrientedBox>();

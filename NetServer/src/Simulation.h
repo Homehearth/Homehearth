@@ -1,6 +1,7 @@
 #pragma once
 #include "Server.h"
 #include "HeadlessEngine.h"
+#include "ServerSystems.h"
 
 /* 
 		Simulation defines each ongoing simulation from the perspective of the server

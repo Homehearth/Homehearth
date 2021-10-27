@@ -40,13 +40,17 @@ void Game::UpdateNetwork(float deltaTime)
 		{
 			if (GetCurrentScene()->GetCurrentCamera()->GetCameraType() == CAMERATYPE::PLAY)
 			{
-				int8_t x = InputSystem::Get().GetAxis(Axis::HORIZONTAL);
-				int8_t z = InputSystem::Get().GetAxis(Axis::VERTICAL);
-
+				
 				message<GameMsg> msg;
 				msg.header.id = GameMsg::Game_PlayerInput;
 
-				msg << this->m_localPID << m_gameID << x << z;
+				InputState input;
+				input.axisX = InputSystem::Get().GetAxis(Axis::HORIZONTAL);
+				input.axisY = InputSystem::Get().GetAxis(Axis::VERTICAL);
+
+				input.tick = 0; // todo
+
+				msg << this->m_localPID << m_gameID << input;
 
 				m_client.Send(msg);
 			}
@@ -276,13 +280,13 @@ void Game::OnUserUpdate(float deltaTime)
 		GetCurrentScene()->ForEachComponent<comp::Transform, comp::Tag<TagType::LOCAL_PLAYER>>([&]
 		(comp::Transform& t, comp::Tag<TagType::LOCAL_PLAYER>& tag)
 			{
-				int x = InputSystem::Get().GetAxis(Axis::HORIZONTAL);
+				/*int x = InputSystem::Get().GetAxis(Axis::HORIZONTAL);
 				int z = InputSystem::Get().GetAxis(Axis::VERTICAL);
 				if (x || z)
 				{
 					t.position.x += 10.f * deltaTime * x;
 					t.position.z += 10.f * deltaTime * z;
-				}
+				}*/
 
 				//if (sm::Vector3::Distance(t.position, test.position) > m_predictionThreshhold)
 				//{

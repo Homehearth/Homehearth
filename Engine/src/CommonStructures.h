@@ -8,7 +8,9 @@ enum class TypeLight : UINT
 
 struct InputState
 {
-	int x, y;
+	int axisX : 2;
+	int axisY : 2;
+	
 	uint32_t tick;
 };
 
