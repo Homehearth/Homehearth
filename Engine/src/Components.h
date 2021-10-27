@@ -91,10 +91,37 @@ namespace ecs
 			float runSpeed;
 		};
 
+		struct Enemy
+		{
+			
+		};
+
 		struct Light
 		{
 			light_t lightData;
 			int index;
+		};
+
+		struct Health
+		{
+			float maxHealth = 100.f;
+			float currentHealth = 100.f;
+			bool isAlive = true;
+		};
+
+		struct Attack
+		{
+			float attackSpeed = 1.f;
+			float attackDamage = 5.f;
+			float attackRange = 5.f;
+			bool isRanged = false;
+			bool isAttacking = false;
+			float cooldownTimer = 0.f;
+		};
+
+		struct Projectile
+		{
+			float lifeTime;
 		};
 
 		template<uint8_t ID>

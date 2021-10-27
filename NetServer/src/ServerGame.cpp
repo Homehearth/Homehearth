@@ -198,6 +198,23 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 
 		break;
 	}
+	case GameMsg::Game_PlayerAttack:
+	{
+		uint32_t playerID;
+		uint32_t gameID;
+		msg >> gameID >> playerID;
+
+		m_simulations.at(gameID)->GetGameScene()->ForEachComponent<comp::Network, comp::Attack>([=](comp::Network& net, comp::Attack& attack)
+			{
+				if (net.id == playerID)
+				{
+					attack.isAttacking = true;
+					LOG_INFO("PlayerID [%u] tried to attack.", playerID);
+				}
+			});
+
+		break;
+	}
 	}
 }
 

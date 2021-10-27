@@ -8,6 +8,12 @@ void GameSystems::UserInputSystem(Scene& scene, Client& client)
 			velocity.vel.z = InputSystem::Get().GetAxis(Axis::VERTICAL) * player.runSpeed;
 			velocity.vel.x = InputSystem::Get().GetAxis(Axis::HORIZONTAL) * player.runSpeed;
 		});
+
+	scene.ForEachComponent<comp::Attack>([&](comp::Attack attacker)
+		{
+			attacker.isAttacking = InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED);
+			LOG_INFO("'Attack' input detected.");
+		});
 }
 
 //System check if mouse ray intersects any of the box collider components in scene

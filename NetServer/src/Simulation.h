@@ -3,6 +3,7 @@
 #include "HeadlessEngine.h"
 #include "ServerSystems.h"
 
+
 /* 
 		Simulation defines each ongoing simulation from the perspective of the server
 		gameID identifies the simulation which each player has to give the server to keep track
@@ -28,9 +29,7 @@ private:
 	message<GameMsg> SingleEntityMessage(Entity entity)const;
 
 	uint32_t GetTick()const;
-	bool AddPlayer(uint32_t playerID);
-	bool RemovePlayer(uint32_t playerID);
-
+	
 	// -1 will be defaulted to max value of unsigned 32 bit integer
 	void Broadcast(message<GameMsg>& msg, uint32_t exclude = -1);
 	void ScanForDisconnects();
@@ -39,6 +38,10 @@ public:
 	Simulation(Server* pServer, HeadlessEngine* pEngine);
 	virtual ~Simulation() = default;
 
+	bool AddPlayer(uint32_t playerID);
+	bool RemovePlayer(uint32_t playerID);
+	bool AddEnemy();
+	
 	void SendSnapshot();
 	bool JoinLobby(uint32_t playerID, uint32_t gameID);
 	bool LeaveLobby(uint32_t playerID, uint32_t gameID);

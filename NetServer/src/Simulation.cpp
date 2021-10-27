@@ -160,6 +160,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 		{
 			Systems::MovementSystem(scene, e.dt);
 			Systems::MovementColliderSystem(scene, e.dt);
+			Systems::CombatSystem(scene, e.dt);
 			Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(scene);
 			systems::CharacterMovement(scene, e.dt);
 			//LOG_INFO("GAME Scene %d", m_gameID);
@@ -179,7 +180,10 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 	e.AddComponent<comp::MeshName>()->name = "Chest.obj";
 	e.AddComponent<comp::Velocity>()->vel = sm::Vector3(0, -0.2f, 0);
 	e.AddComponent<comp::BoundingSphere>();
-
+	e.AddComponent<comp::Attack>();
+	e.AddComponent<comp::Health>();
+	const unsigned char BAD = 8;
+	e.AddComponent<comp::Tag<BAD>>();
 	// ---END OF DEBUG---
 
 
@@ -222,6 +226,13 @@ bool Simulation::AddPlayer(uint32_t playerID)
 	player.AddComponent<comp::Player>()->runSpeed = 10.f;
 	player.AddComponent<comp::BoundingOrientedBox>();
 
+	// CombatSystem Test.
+	const unsigned char GOOD = 4;
+	*player.AddComponent<comp::Attack>() = { 1.f, 20.f, 5.f, false, false };
+	player.AddComponent<comp::Tag<GOOD>>();
+	*player.AddComponent<comp::Health>() = { 100.f, 100.f, true };
+
+	
 	CollisionSystem::Get().AddOnCollision(player, [&](Entity player2)
 		{
 			comp::Player* otherPlayer = player2.GetComponent<comp::Player>();
@@ -236,6 +247,19 @@ bool Simulation::AddPlayer(uint32_t playerID)
 	m_players[playerID] = player;
 	this->Broadcast(SingleEntityMessage(player));
 
+	return true;
+}
+
+bool Simulation::AddEnemy()
+{
+	// Create Enemy entity in Game scene.
+	Entity enemy = m_pGameScene->CreateEntity();
+	enemy.AddComponent<comp::Transform>();
+	enemy.AddComponent<comp::Network>()->id = m_pServer->PopNextUniqueID();
+	const unsigned char BAD = 8;
+	enemy.AddComponent<comp::Tag<BAD>>();
+	enemy.AddComponent<comp::Health>();
+	
 	return true;
 }
 

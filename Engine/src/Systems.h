@@ -4,6 +4,13 @@
 
 namespace Systems
 {
+	/*
+	 * Ideas:
+	 *		MeleeSystem & RangeSystem.
+	 *		CombatSystem with multiple functions.
+	 *		SuperCombatSystem.
+	 */
+	void CombatSystem(HeadlessScene& scene, float dt);
 	void MovementSystem(HeadlessScene& scene, float dt);
 	void MovementColliderSystem(HeadlessScene& scene, float dt);
 	void LightSystem(Scene& scene, float dt);
