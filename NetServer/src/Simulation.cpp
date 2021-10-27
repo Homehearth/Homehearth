@@ -115,7 +115,7 @@ bool Simulation::JoinLobby(uint32_t playerID, uint32_t gameID)
 	msg.header.id = GameMsg::Lobby_Accepted;
 	msg << gameID;
 
-	m_pServer->SendToClient(m_pServer->GetConnection(playerID), msg);
+	m_pServer->SendToClient(playerID, msg);
 
 	// Add the players to the simulation on that specific client
 	this->AddPlayer(playerID);
@@ -138,7 +138,7 @@ bool Simulation::LeaveLobby(uint32_t playerID, uint32_t gameID)
 		});
 	msg << count;
 
-	m_pServer->SendToClient(m_pServer->GetConnection(playerID), msg);
+	m_pServer->SendToClient(playerID, msg);
 
 	return true;
 }
@@ -199,22 +199,18 @@ void Simulation::Destroy()
 
 bool Simulation::IsEmpty() const
 {
-	return m_connections.empty();
+	return m_players.empty();
 }
 
-// TODO ADD PLAYER FUNCTIONALITY
 bool Simulation::AddPlayer(uint32_t playerID)
 {
-	SOCKET con = m_pServer->GetConnection(playerID);
-	if (con == INVALID_SOCKET)
+	if (!m_pServer->isClientConnected(playerID))
 	{
-		LOG_ERROR("Addplayer: Player has an invalid socket!");
 		return false;
 	}
-	m_connections[playerID] = con;
 
 	// Send all entities in Game Scene to new player
-	m_pServer->SendToClient(m_pServer->GetConnection(playerID), AllEntitiesMessage());
+	m_pServer->SendToClient(playerID, AllEntitiesMessage());
 
 	// Create Player entity in Game scene
 	Entity player = m_pGameScene->CreateEntity();
@@ -236,6 +232,7 @@ bool Simulation::AddPlayer(uint32_t playerID)
 
 	LOG_INFO("Player with ID: %ld added to the game!", playerID);
 	// send new Player to all other clients
+	m_players[playerID] = player;
 	this->Broadcast(SingleEntityMessage(player));
 
 	return true;
@@ -243,20 +240,12 @@ bool Simulation::AddPlayer(uint32_t playerID)
 
 bool Simulation::RemovePlayer(uint32_t playerID)
 {
-	message<GameMsg> msg;
-	msg.header.id = GameMsg::Game_RemoveEntity;
-	msg << playerID << 1U;
+	if (m_players.at(playerID).Destroy())
+	{
+		return false;
+	}
 
-	this->Broadcast(msg);
-
-	m_pGameScene->ForEachComponent<comp::Network>([playerID](Entity e, comp::Network& n)
-		{
-			if (n.id == playerID)
-			{
-				LOG_INFO("Removed player %u from game scene", n.id);
-				e.Destroy();
-			}
-		});
+	LOG_INFO("Removed player %u from scene", playerID);
 
 	return true;
 }
@@ -297,13 +286,13 @@ uint32_t Simulation::GetTick() const
 
 void Simulation::Broadcast(network::message<GameMsg>& msg, uint32_t exclude)
 {
-	auto it = m_connections.begin();
+	auto it = m_players.begin();
 
-	while (it != m_connections.end())
+	while (it != m_players.end())
 	{
 		if (exclude != it->first)
 		{
-			m_pServer->SendToClient(it->second, msg);
+			m_pServer->SendToClient(it->first, msg);
 		}
 		it++;
 	}
@@ -311,15 +300,20 @@ void Simulation::Broadcast(network::message<GameMsg>& msg, uint32_t exclude)
 
 void Simulation::ScanForDisconnects()
 {
-	auto it = m_connections.begin();
+	auto it = m_players.begin();
 
-	while (it != m_connections.end())
+	while (it != m_players.end())
 	{
-		if (m_pServer->GetConnection(it->first) == INVALID_SOCKET)
+		if (!m_pServer->isClientConnected(it->first))
 		{
-			uint32_t playerID = it->first;
-			it = m_connections.erase(it);
-			this->RemovePlayer(playerID);
+			this->RemovePlayer(it->first);
+
+			message<GameMsg> msg;
+			msg.header.id = GameMsg::Game_RemoveEntity;
+			msg << it->first << 1U;
+
+			it = m_players.erase(it);
+			this->Broadcast(msg);
 		}
 		else
 		{

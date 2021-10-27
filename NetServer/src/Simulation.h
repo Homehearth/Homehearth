@@ -20,8 +20,7 @@ private:
 	HeadlessScene* m_pGameScene;
 	HeadlessScene* m_pCurrentScene;
 	
-	std::unordered_map<uint32_t, entt::entity> m_players;
-	std::unordered_map<uint32_t, SOCKET> m_connections;
+	std::unordered_map<uint32_t, Entity> m_players;
 
 	void InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg)const;
 	message<GameMsg> AllEntitiesMessage()const;
@@ -39,7 +38,6 @@ public:
 	Simulation(Server* pServer, HeadlessEngine* pEngine);
 	virtual ~Simulation() = default;
 
-	
 	void SendSnapshot();
 	bool JoinLobby(uint32_t playerID, uint32_t gameID);
 	bool LeaveLobby(uint32_t playerID, uint32_t gameID);

@@ -13,7 +13,7 @@ private:
 	virtual void OnClientValidated(const SOCKET& socket) override;
 
 	uint32_t m_uniqueID;
-	
+	 
 public:
 	Server(std::function<void(message<GameMsg>&)> handler);
 	Server() = default;

@@ -22,7 +22,7 @@ public:
 	template<typename T>
 	void RemoveComponent();
 
-	void Destroy();
+	bool Destroy();
 
 	bool IsNull() const;
 

@@ -69,7 +69,7 @@ void Server::OnClientValidated(const SOCKET& socket)
 	msg << id;
 	msg.header.id = GameMsg::Server_AssignID;
 	connections[id] = socket;
-	this->SendToClient(socket, msg);
+	this->SendToClient(id, msg);
 
 	LOG_INFO("Client has been validated on socket %lld", socket);
 }

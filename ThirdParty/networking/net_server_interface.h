@@ -18,7 +18,6 @@ namespace network
 		std::thread* m_workerThreads;
 		std::thread m_acceptThread;
 		int m_nrOfThreads;
-		tsQueue<owned_message<T>> m_qMessagesOut;
 
 	protected:
 		struct SOCKET_INFORMATION
@@ -54,7 +53,6 @@ namespace network
 		void InitWinsock();
 		bool CreateSocketInformation(SOCKET& s);
 		void DisconnectClient(SOCKET_INFORMATION*& SI);
-		bool ClientIsConnected(const SOCKET& socket);
 		SOCKET WaitForConnection();
 
 		// FUNCTIONS TO EASIER HANDLE DATA IN AND OUT FROM SERVER
@@ -62,13 +60,12 @@ namespace network
 		void ReadValidation(SOCKET_INFORMATION*& SI, PER_IO_DATA* context);
 		void ReadHeader(SOCKET_INFORMATION*& SI, PER_IO_DATA* context);
 		void ReadPayload(SOCKET_INFORMATION*& SI, PER_IO_DATA* context);
-		void WriteMessage(owned_message<T>& msg);
+		void WriteMessage(SOCKET& socket, message<T>& msg);
 		void PrimeReadHeader(SOCKET_INFORMATION*& SI);
 		void PrimeReadPayload(SOCKET_INFORMATION*& SI);
 		void PrimeReadValidation(SOCKET_INFORMATION*& SI);
 
 		static void AlertThread();
-		static void CALLBACK AsyncWriteMessage(ULONG_PTR param);
 
 	public:
 		server_interface() = default;
@@ -95,29 +92,25 @@ namespace network
 	public:
 		bool Start(const uint16_t& port);
 		void Stop();
-		void Broadcast(message<T>& msg);
-		void SendToClient(const SOCKET& socket, message<T>& msg);
+		void SendToClient(const uint32_t& id, message<T>& msg);
 		bool IsRunning();
-		bool isClientConnected(const SOCKET& socket)const;
+		bool isClientConnected(const uint32_t& ID)const;
 	};
 
 	template <typename T>
-	bool server_interface<T>::isClientConnected(const SOCKET& socket)const
+	bool server_interface<T>::isClientConnected(const uint32_t& ID)const
 	{
 		bool isConnected = false;
 
-		if (socket != INVALID_SOCKET)
+		if (connections.find(ID) != connections.end())
 		{
-			isConnected = true;
+			if (connections.at(ID) != INVALID_SOCKET)
+			{
+				isConnected = true;
+			}
 		}
-		return isConnected;
-	}
 
-	template <typename T>
-	void server_interface<T>::AsyncWriteMessage(ULONG_PTR param)
-	{
-		server_interface<T>* s = (server_interface<T>*)param;
-		s->WriteMessage();
+		return isConnected;
 	}
 
 	template <typename T>
@@ -220,31 +213,36 @@ namespace network
 	}
 
 	template <typename T>
-	void server_interface<T>::WriteMessage(owned_message<T>& msg)
+	void server_interface<T>::WriteMessage(SOCKET& socket, message<T>& msg)
 	{
 		PER_IO_DATA* context = new PER_IO_DATA;
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
 		char buffer[BUFFER_SIZE] = {};
-		memcpy(&buffer[0], &msg.msg.header, sizeof(msg_header<T>));
-		if (msg.msg.header.size > 0)
+		memcpy(&buffer[0], &msg.header, sizeof(msg_header<T>));
+		if (msg.header.size > 0)
 		{
-			memcpy(&buffer[sizeof(msg_header<T>)], msg.msg.payload.data(), msg.msg.payload.size());
+			memcpy(&buffer[sizeof(msg_header<T>)], msg.payload.data(), msg.payload.size());
 		}
 		context->DataBuf.buf = (CHAR*)buffer;
-		context->DataBuf.len = ULONG(sizeof(msg_header<T>) + msg.msg.payload.size());
+		context->DataBuf.len = ULONG(sizeof(msg_header<T>) + msg.payload.size());
 		context->state = NetState::WRITE_MESSAGE;
 		DWORD BytesSent = 0;
 		DWORD flags = 0;
 
-		if (WSASend(msg.remote, &context->DataBuf, 1, &BytesSent, flags, &context->Overlapped, NULL) == SOCKET_ERROR)
+		if (WSASend(socket, &context->DataBuf, 1, &BytesSent, flags, &context->Overlapped, NULL) == SOCKET_ERROR)
 		{
 			DWORD error = GetLastError();
 			if (error != WSA_IO_PENDING)
 			{
+				if (error == WSAECONNRESET)
+				{
+					closesocket(socket);
+					socket = INVALID_SOCKET;
+				}
 				delete context;
 				if (error != WSAENOTSOCK)
 				{
-					LOG_ERROR("WSASend on socket: %lld message with error: %ld", msg.remote, error);
+					LOG_ERROR("WSASend on socket: %lld message with error: %ld", socket, error);
 				}
 			}
 		}
@@ -336,21 +334,6 @@ namespace network
 		return 0;
 	}
 
-	template <typename T>
-	bool server_interface<T>::ClientIsConnected(const SOCKET& socket)
-	{
-		EnterCriticalSection(&lock);
-		bool isConnected = false;
-
-		if (socket != INVALID_SOCKET)
-		{
-			isConnected = true;
-		}
-		LeaveCriticalSection(&lock);
-
-		return isConnected;
-	}
-
 	template<typename T>
 	void server_interface<T>::DisconnectClient(SOCKET_INFORMATION*& SI)
 	{
@@ -406,24 +389,17 @@ namespace network
 	}
 
 	template <typename T>
-	void server_interface<T>::SendToClient(const SOCKET& socket, message<T>& msg)
+	void server_interface<T>::SendToClient(const uint32_t& id, message<T>& msg)
 	{
-		if (ClientIsConnected(socket))
+		if (isClientConnected(id))
 		{
-			owned_message<T> message;
-			message.msg = msg;
-			message.remote = socket;
-			WriteMessage(message);
+			SOCKET remote = connections.at(id);
+			WriteMessage(remote, msg);
 		}
-	}
-
-	template <typename T>
-	void server_interface<T>::Broadcast(message<T>& msg)
-	{
-		//for (auto& c : connections)
-		//{
-		//	Send(c.second, buffer, bytesToSend);
-		//}
+		else
+		{
+			LOG_WARNING("SendToClient: Client not connected!");
+		}
 	}
 
 	template <typename T>
