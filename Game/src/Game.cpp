@@ -203,7 +203,6 @@ void Game::OnUserUpdate(float deltaTime)
 					}
 					else
 					{
-						rtd::Handler2D::Get().Cleanup();
 						this->JoinLobby(std::stoi(*m_lobbyBuffer));
 						m_internalState = 1;
 					}
@@ -397,6 +396,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	case GameMsg::Lobby_Accepted:
 	{
 		msg >> m_gameID;
+		rtd::Handler2D::Get().Cleanup();
 		sceneHelp::SetupInLobbyScreen();
 		SetScene("Lobby");
 		LOG_INFO("You are now in lobby: %lu", m_gameID);
