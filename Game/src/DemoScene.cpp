@@ -348,9 +348,11 @@ void sceneHelp::SetupInLobbyScreen()
 	rtd::Handler2D::Get().InsertElement(player1Symbol);
 	player1Symbol->SetName("player1_symbol");
 
+	/*
 	rtd::Picture* host = new rtd::Picture("demoHost.png", draw_t(424.0f, 125.0f, 64.0f, 64.0f));
 	rtd::Handler2D::Get().InsertElement(host);
 	host->SetName("host_symbol");
+	*/
 
 	rtd::Picture* player2Symbol = new rtd::Picture("warriorIconDemo.png", draw_t(350.0f, 250.0f, 64.0f, 64.0f));
 	rtd::Handler2D::Get().InsertElement(player2Symbol);

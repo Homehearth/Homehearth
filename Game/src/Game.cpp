@@ -109,7 +109,6 @@ void Game::OnUserUpdate(float deltaTime)
 		{
 			if (exit_button->IsClicked())
 			{
-				//std::cout << "IMPLEMENT CLEAN SHUT DOWN HERE!\n";
 				this->Shutdown();
 			}
 		}
@@ -394,7 +393,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		std::string err;
 		msg >> err;
 		SetScene("MainMenu");
-		//rtd::Handler2D::Get().DereferenceAllOnce();
 		rtd::Handler2D::Get().Cleanup();
 		m_internalState = 0;
 		LOG_WARNING("Request denied: %s", err.c_str());
@@ -413,7 +411,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		m_internalState = 2;
 		rtd::Handler2D::Get().SetVisibilityAll(false);
 		rtd::Handler2D::Get().Cleanup();
-		//rtd::Handler2D::Get().DereferenceAllOnce();
 		SetScene("Game");
 		break;
 	}

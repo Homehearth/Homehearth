@@ -118,9 +118,9 @@ namespace rtd
 		static const bool IsRenderReady();
 
 		/*
-			Cleans up the elements from the handler and returns to a clean slate where no element is present.
-			All allocated memory will be released and elements will be removed.
-			Use this if you want to completely wipe the Handler2D from elements.
+		* Saves a snapshot of the elements when function is called.
+		* Before next render it will remove all elements in that snapshot.
+		* If cleanup is called consecutively only the latest snapshot will be used.
 		*/
 		static void Cleanup();
 	};

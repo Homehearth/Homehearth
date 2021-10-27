@@ -256,6 +256,15 @@ void Simulation::UpdateLobby(const uint32_t& playerID)
 			m_playerDecisions[1].isWantToStart = !m_playerDecisions[1].isWantToStart;
 		}
 
+#ifdef _DEBUG
+		// Debugging allow only one player to start.
+		m_pCurrentScene = m_pGameScene;
+		// Start the game.
+		network::message<GameMsg> msg;
+		msg.header.id = GameMsg::Game_Start;
+		this->Broadcast(msg);
+#endif
+
 		// Start game when both wants to start game.
 		if ((m_playerDecisions[1].isWantToStart & m_playerDecisions[0].isWantToStart) == true)
 		{
