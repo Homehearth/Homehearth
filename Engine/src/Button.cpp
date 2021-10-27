@@ -88,7 +88,7 @@ void rtd::Button::OnHover()
 
 }
 
-const bool rtd::Button::Update()
+const bool rtd::Button::CheckClick()
 {
 	m_isClicked = false;
 	if (CheckHover())

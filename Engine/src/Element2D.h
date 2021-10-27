@@ -117,7 +117,7 @@ public:
 	Function used for Handler2D to call on OnClick.
 	Write the logic for detecting if anyone has clicked the element.
 	*/
-	virtual const bool Update() = 0;
+	virtual const bool CheckClick() = 0;
 
 	/*
 		Add a reference to the element.

@@ -58,9 +58,11 @@ bool Game::OnStartup()
 {
 	// Scene logic
 	sceneHelp::CreateLobbyScene(*this);
-	sceneHelp::CreateMainMenuScene(*this);
-	sceneHelp::CreateGameScene(*this);
 	rtd::Handler2D::Get().SetVisibilityAll(false);
+	sceneHelp::CreateGameScene(*this);
+	sceneHelp::CreateMainMenuScene(*this);
+
+
 
 	// Set Current Scene
 	SetScene("MainMenu");
@@ -113,7 +115,7 @@ void Game::OnUserUpdate(float deltaTime)
 		}
 		else
 		{
-			sceneHelp::SetupLobbyJoinScreen(GetWindow(), 1);
+			//sceneHelp::SetupLobbyJoinScreen(GetWindow(), 1);
 		}
 
 		rtd::Button* exit_button = GET_ELEMENT("exitGameButton", rtd::Button);
@@ -196,19 +198,24 @@ void Game::OnUserUpdate(float deltaTime)
 			if (host_lobby_button && lobby_text)
 			{
 				host_lobby_button->SetVisibility(true);
+				std::string* lobby = nullptr;
 				if (host_lobby_button->IsClicked())
 				{
-					m_lobbyBuffer = lobby_text->RawGetBuffer();
-					if (m_lobbyBuffer->size() <= 0)
+					lobby = lobby_text->RawGetBuffer();
+					if (lobby->size() <= 0)
 					{
 						rtd::Handler2D::Get().Cleanup();
 						this->CreateLobby();
 						m_internalState = 1;
+						m_lobbyBuffer = nullptr;
 					}
 					else
 					{
-						this->JoinLobby(std::stoi(*m_lobbyBuffer));
+						int port = std::stoi(*lobby);
+						this->JoinLobby(port);
 						m_internalState = 1;
+						m_lobbyBuffer = nullptr;
+						rtd::Handler2D::Get().Cleanup();
 					}
 				}
 			}
@@ -289,6 +296,7 @@ void Game::OnUserUpdate(float deltaTime)
 	ImGui::End();
 	);
 
+	
 	if (GetCurrentScene() == &GetScene("Game") && GetCurrentScene()->GetCurrentCamera()->GetCameraType() == CAMERATYPE::PLAY)
 	{
 		GetCurrentScene()->ForEachComponent<comp::Transform, comp::Tag<TagType::LOCAL_PLAYER>>([&]
@@ -432,8 +440,8 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	case GameMsg::Lobby_Accepted:
 	{
 		msg >> m_gameID;
-		rtd::Handler2D::Get().Cleanup();
 		sceneHelp::SetupInLobbyScreen();
+		m_internalState = 1;
 		SetScene("Lobby");
 		LOG_INFO("You are now in lobby: %lu", m_gameID);
 
@@ -460,6 +468,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		LOG_WARNING("Left Lobby %u", m_gameID);
 		m_isLeavingLobby = false;
 		m_gameID = -1;
+		m_internalState = 2;
 		SetScene("MainMenu");
 		rtd::Handler2D::Get().SetVisibilityAll(false);
 
@@ -467,7 +476,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	}
 	case GameMsg::Game_Start:
 	{
-		m_internalState = 2;
+		m_internalState = 3;
 		rtd::Handler2D::Get().Cleanup();
 		SetScene("Game");
 		break;
@@ -486,6 +495,9 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		rtd::Text* player1Text = GET_ELEMENT("player1text", rtd::Text);
 		rtd::Canvas* player1Canvas = GET_ELEMENT("player1canvas", rtd::Canvas);
 		rtd::Picture* player1Symbol = GET_ELEMENT("player1_symbol", rtd::Picture);
+
+		if (!player2Text || !player2Canvas || !player2Symbol || !player1Text || !player1Canvas || !player1Symbol)
+			break;
 
 		if (player == 1)
 		{

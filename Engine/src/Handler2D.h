@@ -65,18 +65,13 @@ namespace rtd
 		// active elements.
 		std::vector<Element2D*> m_elements;
 
-		// snapshot of handler2d elements.
-		std::vector<Element2D**> m_cleanElements;
-
 		bool m_shouldClean;
+		bool m_ready;
 
 		// Doublebuffer holding references to elements.
 		DoubleBuffer<std::vector<Element2D**>> m_drawBuffers;
 		Handler2D();
 		~Handler2D();
-
-		// Internal clean up of all elements.
-		void CleanHandler();
 
 	public:
 
@@ -123,6 +118,11 @@ namespace rtd
 		* If cleanup is called consecutively only the latest snapshot will be used.
 		*/
 		static void Cleanup();
+
+		/*
+			Ignore this!!
+		*/
+		static void SetReady(const bool& toggle);
 	};
 
 

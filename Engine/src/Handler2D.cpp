@@ -13,47 +13,9 @@ rtd::Handler2D::~Handler2D()
 	for (auto& elem : m_elements)
 	{
 		delete elem;
+		elem = nullptr;
 	}
 	m_elements.clear();
-}
-
-void rtd::Handler2D::CleanHandler()
-{
-
-	/*
-		Go through snapshot and delete all the pointers.
-	*/
-	for (int i = 0; i < m_cleanElements.size(); i++)
-	{
-		if (m_cleanElements[i])
-		{
-			delete* m_cleanElements[i];
-			*m_cleanElements[i] = nullptr;
-		}
-		else
-			*m_cleanElements[i] = nullptr;
-	}
-	m_cleanElements.clear();
-
-
-	/*
-		Clean up all the nullptr from m_elements before push up to render.
-	*/
-	const bool run = true;
-	int counter = 0;
-	while (run)
-	{
-		if (counter >= (int)m_elements.size())
-			break;
-
-		if (!m_elements[counter])
-		{
-			m_elements.erase(m_elements.begin() + counter);
-			counter = 0;
-		}
-		else
-			counter++;
-	}
 }
 
 void rtd::Handler2D::InsertElement(Element2D* element)
@@ -108,11 +70,6 @@ void rtd::Handler2D::Update()
 
 	if (!INSTANCE.m_drawBuffers.IsSwapped())
 	{
-		if (INSTANCE.m_shouldClean)
-		{
-			INSTANCE.CleanHandler();
-			INSTANCE.m_shouldClean = false;
-		}
 		INSTANCE.m_drawBuffers[0].clear();
 		for (int i = 0; i < INSTANCE.m_elements.size(); i++)
 		{
@@ -131,6 +88,7 @@ void rtd::Handler2D::EraseAll()
 		if (INSTANCE.m_elements[i]->GetRef() <= 0)
 		{
 			delete INSTANCE.m_elements[i];
+			INSTANCE.m_elements[i] = nullptr;
 			INSTANCE.m_elements.erase(INSTANCE.m_elements.begin() + i);
 		}
 	}
@@ -172,14 +130,18 @@ const bool rtd::Handler2D::IsRenderReady()
 
 void rtd::Handler2D::Cleanup()
 {
-	INSTANCE.m_shouldClean = true;
+	// Block until new frame is ready.
+	while (!INSTANCE.m_ready) {};
 
-	/*
-		Save a snapshot of the handler state when cleanup is called.
-	*/
-	INSTANCE.m_cleanElements.clear();
-	for (int i = 0; i < INSTANCE.m_elements.size(); i++)
+	while (INSTANCE.m_elements.size() > 0)
 	{
-		INSTANCE.m_cleanElements.push_back(&INSTANCE.m_elements[i]);
+		delete INSTANCE.m_elements[(int)INSTANCE.m_elements.size() - 1];
+		INSTANCE.m_elements[(int)INSTANCE.m_elements.size() - 1] = nullptr;
+		INSTANCE.m_elements.pop_back();
 	}
+}
+
+void rtd::Handler2D::SetReady(const bool& toggle)
+{
+	INSTANCE.m_ready = toggle;
 }

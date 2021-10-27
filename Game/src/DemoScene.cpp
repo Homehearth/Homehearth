@@ -52,7 +52,7 @@ namespace sceneHelp
 
 	void CreateLobbyScene(Engine& engine)
 	{
-		SetupInLobbyScreen();
+		//SetupInLobbyScreen();
 		Scene& lobbyScene = engine.GetScene("Lobby");
 		lobbyScene.on<ESceneUpdate>([](const ESceneUpdate& e, Scene& scene)
 		{
@@ -78,12 +78,12 @@ namespace sceneHelp
 		Entity debugCameraEntity = gameScene.CreateEntity();
 		debugCameraEntity.AddComponent<comp::Camera3D>()->camera.Initialize(sm::Vector3(0, 0, -20), sm::Vector3(0, 0, 1), sm::Vector3(0, 1, 0),
 			sm::Vector2((float)engine.GetWindow()->GetWidth(), (float)engine.GetWindow()->GetHeight()), CAMERATYPE::DEBUG);
-		debugCameraEntity.AddComponent<comp::Tag<DEBUGCAMERA>>();
+		debugCameraEntity.AddComponent<comp::Tag<TagType::DEBUG_CAMERA>>();
 
 		Entity cameraEntity = gameScene.CreateEntity();
 		cameraEntity.AddComponent<comp::Camera3D>()->camera.Initialize(sm::Vector3(0, 2.8f, -10), sm::Vector3(0, 0, 1), sm::Vector3(0, 1, 0),
 			sm::Vector2((float)engine.GetWindow()->GetWidth(), (float)engine.GetWindow()->GetHeight()), CAMERATYPE::PLAY);
-		cameraEntity.AddComponent<comp::Tag<CAMERA>>();
+		cameraEntity.AddComponent<comp::Tag<TagType::CAMERA>>();
 
 		gameScene.SetCurrentCameraEntity(cameraEntity);
 
@@ -155,23 +155,6 @@ Entity CreatePlayerEntity(HeadlessScene& scene, uint32_t playerID)
 	renderable->model = ResourceManager::Get().GetResource<RModel>("cube.obj");
 
 	return playerEntity;
-}
-
-Entity CreateLightEntity(Scene& scene, sm::Vector4 pos, sm::Vector4 dir, sm::Vector4 col, float range, TypeLight type, UINT enabled)
-{
-	Entity lightEntity = scene.CreateEntity();
-
-	lightEntity.AddComponent<comp::Light>();
-	lightEntity.GetComponent<comp::Light>()->lightData.position = pos;
-	lightEntity.GetComponent<comp::Light>()->lightData.direction = dir;
-	lightEntity.GetComponent<comp::Light>()->lightData.color = col;
-	lightEntity.GetComponent<comp::Light>()->lightData.range = range;
-	lightEntity.GetComponent<comp::Light>()->lightData.type = type;
-	lightEntity.GetComponent<comp::Light>()->lightData.enabled = enabled;
-	
-	scene.GetLights()->EditLight(lightEntity.GetComponent<comp::Light>()->lightData, lightEntity.GetComponent<comp::Light>()->index);
-
-	return lightEntity;
 }
 
 void sceneHelp::SetupMainMenuScreen()
@@ -347,12 +330,6 @@ void sceneHelp::SetupInLobbyScreen()
 	rtd::Picture* player1Symbol = new rtd::Picture("warriorIconDemo.png", draw_t(350.0f, 125.0f, 64.0f, 64.0f));
 	rtd::Handler2D::Get().InsertElement(player1Symbol);
 	player1Symbol->SetName("player1_symbol");
-
-	/*
-	rtd::Picture* host = new rtd::Picture("demoHost.png", draw_t(424.0f, 125.0f, 64.0f, 64.0f));
-	rtd::Handler2D::Get().InsertElement(host);
-	host->SetName("host_symbol");
-	*/
 
 	rtd::Picture* player2Symbol = new rtd::Picture("warriorIconDemo.png", draw_t(350.0f, 250.0f, 64.0f, 64.0f));
 	rtd::Handler2D::Get().InsertElement(player2Symbol);
