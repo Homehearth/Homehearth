@@ -27,6 +27,7 @@ bool Entity::Destroy()
 
 	LOG_INFO("Entity with ID: %u was destroyed", m_entity);
 	m_pRegistry->destroy(m_entity);
+	return true;
 }
 
 bool Entity::IsNull() const
