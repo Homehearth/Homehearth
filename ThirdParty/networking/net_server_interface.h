@@ -647,6 +647,7 @@ namespace network
 					LOG_INFO("Cancel I/O failed: %d", GetLastError());
 				}
 			}
+			m_sockHandles.clear();
 			LeaveCriticalSection(&lock);
 			for (int i = 0; i < m_nrOfThreads; i++)
 			{

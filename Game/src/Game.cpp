@@ -282,7 +282,11 @@ void Game::OnUserUpdate(float deltaTime)
 				{
 					t.position.x += 10.f * deltaTime * x;
 					t.position.z += 10.f * deltaTime * z;
+
+					predictedPositions.push_back(t);
 				}
+
+				LOG_INFO("Predicted size: %llu", predictedPositions.size());
 
 				//if (sm::Vector3::Distance(t.position, test.position) > m_predictionThreshhold)
 				//{
@@ -349,6 +353,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 					if (n.id == m_localPID)
 					{
 						test = transforms.at(n.id);
+						predictedPositions.clear();
 					}
 				}
 			});

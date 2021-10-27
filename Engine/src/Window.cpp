@@ -123,9 +123,9 @@ bool Window::Initialize(const Desc& desc)
 
 	RECT rect;
 	rect.left = posX;
-	rect.right = posX + 960;
+	rect.right = posX + desc.width;
 	rect.top = posY;
-	rect.bottom = posY + 540;
+	rect.bottom = posY + desc.height;
 
 	AdjustWindowRect(&rect, WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE, FALSE);
 	const int width = rect.right - rect.left;
