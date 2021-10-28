@@ -39,7 +39,7 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 								//If the attack is ranged add a velocity to the entity.
 								if (playerStats.isRanged)
 								{
-									sm::Vector3 vel = ecs::GetForward(playerTransform) * -10.f;
+									sm::Vector3 vel = ecs::GetForward(playerTransform) * -10.f; //CHANGE HERE WHEN FORWARD GETS FIXED!!!!!!
 									attackCollider.AddComponent<comp::Velocity>()->vel = vel;
 								}
 
@@ -79,7 +79,7 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 								//If the attack is ranged add a velocity to the entity.
 								if (enemyStats.isRanged)
 								{
-									sm::Vector3 vel = ecs::GetForward(enemyTransform) * -10.f;
+									sm::Vector3 vel = ecs::GetForward(enemyTransform) * -10.f; //CHANGE HERE WHEN FORWARD GETS FIXED!!!!!!
 									attackCollider.AddComponent<comp::Velocity>()->vel = vel;
 								}
 
