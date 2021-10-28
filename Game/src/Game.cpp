@@ -311,19 +311,18 @@ void Game::OnUserUpdate(float deltaTime)
 	
 	if (GetCurrentScene() == &GetScene("Game") && GetCurrentScene()->GetCurrentCamera()->GetCameraType() == CAMERATYPE::PLAY)
 	{
-		GetCurrentScene()->ForEachComponent<comp::Transform, comp::Tag<TagType::LOCAL_PLAYER>>([&]
-		(comp::Transform& t, comp::Tag<TagType::LOCAL_PLAYER>& tag)
+		GetCurrentScene()->ForEachComponent<comp::Transform, comp::Velocity, comp::Player, comp::Tag<TagType::LOCAL_PLAYER>>([&]
+		(comp::Transform& t, comp::Velocity& v, comp::Player& p, comp::Tag<TagType::LOCAL_PLAYER>& tag)
 			{
 				int x = InputSystem::Get().GetAxis(Axis::HORIZONTAL);
 				int z = InputSystem::Get().GetAxis(Axis::VERTICAL);
-				if (x || z)
-				{
-					t.position.x += 10.f * deltaTime * x;
-					t.position.z += 10.f * deltaTime * z;
+			
 
-					predictedPositions.push_back(t);
-				}
-
+				v.vel = sm::Vector3(x, 0, z) * p.runSpeed;
+				t.position += v.vel * deltaTime;
+				
+				predictedPositions.push_back(t);
+			
 				LOG_INFO("Predicted size: %llu", predictedPositions.size());
 
 				//if (sm::Vector3::Distance(t.position, test.position) > m_predictionThreshhold)
@@ -666,6 +665,13 @@ Entity Game::CreateEntityFromMessage(message<GameMsg>& msg)
 				*e.AddComponent<comp::Transform>() = t;
 				break;
 			}
+			case ecs::Component::VELOCITY:
+			{
+				comp::Velocity v;
+				msg >> v;
+				*e.AddComponent<comp::Velocity>() = v;
+				break;
+			}
 			case ecs::Component::MESH_NAME:
 			{
 				std::string name;
@@ -692,6 +698,13 @@ Entity Game::CreateEntityFromMessage(message<GameMsg>& msg)
 				comp::Light l;
 				msg >> l;
 				*e.AddComponent<comp::Light>() = l;
+				break;
+			}
+			case ecs::Component::PLAYER:
+			{
+				comp::Player p;
+				msg >> p;
+				*e.AddComponent<comp::Player>() = p;
 				break;
 			}
 			default:

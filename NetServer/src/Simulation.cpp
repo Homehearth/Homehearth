@@ -25,6 +25,16 @@ void Simulation::InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg)co
 			}
 			break;
 		}
+		case ecs::Component::VELOCITY:
+		{
+			comp::Velocity* v = entity.GetComponent<comp::Velocity>();
+			if (v)
+			{
+				compSet.set(ecs::Component::VELOCITY);
+				msg << *v;
+			}
+			break;
+		}
 		case ecs::Component::MESH_NAME:
 		{
 			comp::MeshName* m = entity.GetComponent<comp::MeshName>();
@@ -62,6 +72,16 @@ void Simulation::InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg)co
 			{
 				compSet.set(ecs::Component::LIGHT);
 				msg << *l;
+			}
+			break;
+		}
+		case ecs::Component::PLAYER:
+		{
+			comp::Player* p = entity.GetComponent<comp::Player>();
+			if (p)
+			{
+				compSet.set(ecs::Component::PLAYER);
+				msg << *p;
 			}
 			break;
 		}
