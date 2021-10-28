@@ -34,7 +34,7 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 								attackCollider.AddComponent<comp::Attack>()->lifeTime = playerStats.attackLifeTime;
 								attackCollider.GetComponent<comp::Attack>()->damage = playerStats.attackDamage;
 
-								LOG_INFO("Projectile Created!");
+								LOG_INFO("Attack Collider Created!");
 
 								//If the attack is ranged add a velocity to the entity.
 								if (playerStats.isRanged)
@@ -51,9 +51,9 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 
 										if (enemyHealth && atk && enemyTag)
 										{
-											enemyCol.GetComponent<comp::Health>()->currentHealth -= attackCollider.GetComponent<comp::Attack>()->damage;
-											LOG_INFO("PROJECTILE HIT BAD GUY!");
-											attackCollider.GetComponent<comp::Attack>()->lifeTime -= 10.f;
+											enemyHealth->currentHealth -= atk->damage;
+											LOG_INFO("ATTACK COLLIDER HIT BAD GUY!");
+											atk->lifeTime = 0.f;
 										}
 									});
 
@@ -74,7 +74,7 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 								attackCollider.AddComponent<comp::Attack>()->lifeTime = enemyStats.attackLifeTime;
 								attackCollider.GetComponent<comp::Attack>()->damage = enemyStats.attackDamage;
 								
-								LOG_INFO("Projectile Created!");
+								LOG_INFO("Attack Collider Created!");
 
 								//If the attack is ranged add a velocity to the entity.
 								if (enemyStats.isRanged)
@@ -91,9 +91,9 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 
 										if (playerHealth && atk && playerTag)
 										{
-											playerCol.GetComponent<comp::Health>()->currentHealth -= attackCollider.GetComponent<comp::Attack>()->damage;
-											LOG_INFO("PROJECTILE HIT GOOD GUY!");
-											attackCollider.GetComponent<comp::Attack>()->lifeTime -= 10.f;
+											playerHealth->currentHealth -= atk->damage;
+											LOG_INFO("ATTACK COLLIDER HIT GOOD GUY!");
+											atk->lifeTime = 0.f;
 										}
 									});
 
@@ -126,7 +126,7 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 
 			if (Projectile.lifeTime <= 0)
 			{
-				LOG_INFO("Projectile Destroyed");
+				LOG_INFO("Attack Collider Destroyed");
 				ent.Destroy();
 			}
 		});
