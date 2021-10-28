@@ -54,10 +54,10 @@ namespace ecs
 			basic_model_matrix_t		data;
 		};
 
-		struct Animator
+		/*struct Animator
 		{
 			std::shared_ptr<RAnimator> animator;
-		};
+		};*/
 
 		struct RenderableAnimation
 		{

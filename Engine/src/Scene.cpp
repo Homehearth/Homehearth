@@ -112,8 +112,8 @@ void Scene::Render()
 			////}
 			////else
 			//	it.model->Render();
-
-			it.model->Render();
+			if (it.model)
+				it.model->Render();
 		}
 	}
 	else
