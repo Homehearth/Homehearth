@@ -2,6 +2,7 @@
 #include "Engine.h"
 #include <omp.h>
 #include "Camera.h"
+#include "GridSystem.h"
 
 bool Engine::s_safeExit = false;
 
@@ -32,7 +33,6 @@ void Engine::Startup()
 	BackBuffer::Initialize();
 
 	m_renderer.Initialize(&m_window);
-
 
 	// Thread should be launched after s_engineRunning is set to true and D3D11 is initialized.
 	//

@@ -36,13 +36,27 @@ sm::Vector2 RTexture::GetSize()
 	return m_size;
 }
 
-unsigned char* RTexture::GetImageData()
+unsigned char* RTexture::GetImageData(std::string fileName)
 {
-	if (m_format == ETextureChannelType::oneChannel)
-		m_image = stbi_load(m_filepath.c_str(), &m_width, &m_height, &m_comp, STBI_grey);
-	else
-		m_image = stbi_load(m_filepath.c_str(), &m_width, &m_height, &m_comp, STBI_rgb_alpha);
+	m_filepath = TEXTUREPATH + fileName;
+	m_width = 0;
+	m_height = 0;
+	m_comp = 0;
+	unsigned char* image = nullptr;
 
+	if (m_format == ETextureChannelType::oneChannel)
+		image = stbi_load(m_filepath.c_str(), &m_width, &m_height, &m_comp, STBI_grey);
+	else
+		image = stbi_load(m_filepath.c_str(), &m_width, &m_height, &m_comp, STBI_rgb_alpha);
+
+	if (image == nullptr)
+	{
+#ifdef _DEBUG
+		LOG_WARNING("[Texture] Failed to load image: %s", m_filepath.c_str());
+#endif 
+	}
+
+	m_size = { (float)m_width, (float)m_height };
 	m_isFree = false;
 	return m_image;
 }

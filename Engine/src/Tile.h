@@ -5,7 +5,7 @@ enum class TileType
 {
 	DEFAULT,
 	EMPTY,
-	BUILDING, 
+	BUILDING,
 	DEFENCE
 };
 

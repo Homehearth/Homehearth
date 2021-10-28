@@ -173,10 +173,15 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 	e.AddComponent<comp::BoundingSphere>();
 	// ---END OF DEBUG---
 
+	//Gridsystem
+	GridSystem grid;
+	grid.Initialize({ 600, 600 }, { 0,0,0 }, "GridMap.png");
+
 	m_pCurrentScene = m_pGameScene; // todo Should be lobbyScene
 	
 	// Automatically join created lobby
 	JoinLobby(playerID, gameID);
+
 
 	return true;
 }

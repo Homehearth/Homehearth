@@ -31,7 +31,7 @@ public:
 	// Inherited via GResource
 	virtual bool Create(const std::string& filename) override;
 	ID3D11ShaderResourceView*& GetShaderView();
-	unsigned char* GetImageData();
+	unsigned char* GetImageData(std::string fileName);
 	sm::Vector2 GetSize();
 };
 

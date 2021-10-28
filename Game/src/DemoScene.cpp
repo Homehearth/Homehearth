@@ -94,7 +94,7 @@ namespace sceneHelp
 		gameScene.SetCurrentCameraEntity(cameraEntity);
 
 		//TODO: Remove grid stuff
-		GridSystem grid;
+		/*GridSystem grid;
 		grid.Initialize({ 600, 600 }, {0,0,0}, "GridMapBig.png");
 		sm::Vector3 tileModelSize = { 2, 0.5f, 2 };
 		for (int i = 0; i < grid.GetTilePositions()->size(); i++)
@@ -133,7 +133,7 @@ namespace sceneHelp
 			{
 				std::cout << "Couldnt create this tile" << std::endl;
 			}
-		}
+		}*/
 
 		for (int i = 0; i < 5; i++)
 		{
