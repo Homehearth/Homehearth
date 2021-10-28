@@ -153,6 +153,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 			Systems::MovementSystem(scene, e.dt);
 			Systems::MovementColliderSystem(scene, e.dt);
 			Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(scene, e.dt);
+			Systems::CombatSystem(scene, e.dt);
 			//LOG_INFO("GAME Scene %d", m_gameID);
 		});
 
@@ -169,6 +170,9 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 	e.AddComponent<comp::Transform>()->position = sm::Vector3(-5, 0, 0);
 	e.AddComponent<comp::MeshName>()->name = "Chest.obj";
 	e.AddComponent<comp::BoundingOrientedBox>()->Extents = sm::Vector3(2.f,2.f,2.f);
+	e.AddComponent<comp::Enemy>();
+	e.AddComponent<comp::Health>();
+	*e.AddComponent<comp::CombatStats>() = { 1.0f, 20.f, 1.0f, false, false };
 	e.AddComponent<comp::Tag<STATIC>>();
 	// ---END OF DEBUG---
 	m_pCurrentScene = m_pGameScene; // todo Should be lobbyScene
@@ -198,6 +202,7 @@ bool Simulation::AddPlayer(uint32_t playerID)
 	
 	// Send all entities in Game Scene to new player
 	m_pServer->SendToClient(m_pServer->GetConnection(playerID), AllEntitiesMessage());
+
 	// Create Player entity in Game scene
 	Entity player = m_pGameScene->CreateEntity();
 	player.AddComponent<comp::Transform>();
@@ -205,7 +210,10 @@ bool Simulation::AddPlayer(uint32_t playerID)
 	player.AddComponent<comp::MeshName>()->name = "cube.obj";
 	player.AddComponent<comp::Network>()->id = playerID;
 	player.AddComponent<comp::Player>()->runSpeed = 10.f;
+	*player.AddComponent<comp::CombatStats>() = { 1.0f, 20.f, 1.0f, false, false };
+	player.AddComponent<comp::Health>();
 	player.AddComponent<comp::BoundingOrientedBox>();
+
 	//Collision will handle this entity as a dynamic one
 	player.AddComponent<comp::Tag<DYNAMIC>>();
 	
