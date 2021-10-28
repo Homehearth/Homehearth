@@ -236,8 +236,9 @@ void SampleTextures(PixelIn input, inout float3 albedo, inout float3 N, inout fl
     if(c_hasAlbedo == 1)
     {
         float4 albedoSamp = t_albedo.Sample(samp, input.uv);
-        clip(albedo.a < 0.1f ? -1 : 1);
-        albedo = pow(max(albedo, 0.0f), 2.2f); //Power the albedo by 2.2f to get it to linear space.
+        //Alpha-test
+        clip(albedoSamp.a < 0.5f ? -1 : 1);
+        albedo = pow(max(albedoSamp.rgb, 0.0f), 2.2f); //Power the albedo by 2.2f to get it to linear space.
     }
     
     //If normal texture exists, sample from it
