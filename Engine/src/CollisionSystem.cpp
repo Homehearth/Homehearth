@@ -103,16 +103,18 @@ void CollisionSystem::AddOnCollision(Entity entity1, std::function<void(Entity)>
 
 void CollisionSystem::OnCollision(Entity entity1, Entity entity2)
 {
-	CollisionSystem::Get().CollisionResponse(entity1, entity2);
-	
+	if(entity1.GetComponent<comp::Tag<DYNAMIC>>() && entity2.GetComponent<comp::Tag<DYNAMIC>>() 
+		|| entity1.GetComponent<comp::Tag<DYNAMIC>>() && entity2.GetComponent<comp::Tag<STATIC>>()
+		|| entity1.GetComponent<comp::Tag<STATIC>>() && entity2.GetComponent<comp::Tag<DYNAMIC>>())
+	{
+		CollisionSystem::Get().CollisionResponse(entity1, entity2);
+	}
+
 	if (m_OnCollision.find(entity1) != m_OnCollision.end())
 	{
 		if (!entity1.IsNull())
 		{
 			m_OnCollision.at(entity1)(entity2);
-
-			//if(entity1.GetComponent<comp::Tag<DYNAMIC>>())
-			//	CollisionSystem::Get().CollisionResponse(entity1, entity2);
 		}
 		else
 		{
@@ -124,9 +126,6 @@ void CollisionSystem::OnCollision(Entity entity1, Entity entity2)
 		if (!entity2.IsNull())
 		{
 			m_OnCollision.at(entity2)(entity1);
-			
-			//if (entity2.GetComponent<comp::Tag<DYNAMIC>>())
-			//	CollisionSystem::Get().CollisionResponse(entity2, entity1);
 		}
 		else
 		{
