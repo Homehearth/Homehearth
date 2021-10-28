@@ -68,14 +68,41 @@ bool Game::OnStartup()
 	// Set Current Scene
 	SetScene("MainMenu");
 
+	Scene& connectMenu = GetScene("ConnectMenu");
 	// Connect Button logic.
-	GetScene("ConnectMenu").GetElement<rtd::Button>("connectButton")->SetFunction([&] 
+	connectMenu.GetElement<rtd::Button>("connectButton")->SetFunction([&]
 		{
-			std::string* portString = GetScene("ConnectMenu").GetElement<rtd::TextField>("portField")->RawGetBuffer();
-			std::string* ipString = GetScene("ConnectMenu").GetElement<rtd::TextField>("ipField")->RawGetBuffer();
+			std::string* portString = connectMenu.GetElement<rtd::TextField>("portField")->RawGetBuffer();
+			std::string* ipString = connectMenu.GetElement<rtd::TextField>("ipField")->RawGetBuffer();
 			
 			if(portString && ipString)
 				m_client.Connect(ipString->c_str(), std::stoi(*portString));
+
+			if (m_client.IsConnected())
+			{
+				SetScene("JoinLobby");
+			}
+		});
+
+	Scene& joinScene = GetScene("JoinLobby");
+	// Start or Join Lobby
+	joinScene.GetElement<rtd::Button>("startLobby")->SetFunction([&] 
+		{
+			std::string* lobbyString = joinScene.GetElement<rtd::TextField>("lobbyField")->RawGetBuffer();
+
+			if (lobbyString)
+			{
+				if ((int)lobbyString->size() <= 0)
+				{
+					CreateLobby();
+					SetScene("Lobby");
+				}
+				else
+				{
+					JoinLobby(std::stoi(*lobbyString));
+					SetScene("Lobby");
+				}
+			}
 		});
 	
 	return true;

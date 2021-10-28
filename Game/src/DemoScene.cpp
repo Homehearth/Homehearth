@@ -367,9 +367,9 @@ void sceneHelp::SetupLobbyJoinScreen(Scene& scene, Window* pWindow)
 	//rtd::TextField * lobbyField = new rtd::TextField(draw_text_t((float)(rand() % 1000) / 2, (float)(rand() % 1000) / 4, 200.0f, 35.0f));
 	lobbyField->GetBorder()->SetColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
 	lobbyField->GetText()->SetText("Input Lobby ID");
-	scene.Insert2DElement(lobbyField);
+	scene.Insert2DElement(lobbyField, "lobbyField");
 	rtd::Button* hostLobbyButton = new rtd::Button("StartButton.png", draw_t(500.0f, 300.0f, 300.0f, 125.0f));
 	//rtd::Button* hostLobbyButton = new rtd::Button("StartButton.png", draw_t((float)(rand() % 1000) / 2, (float)(rand() % 1000) / 4, 300.0f, 125.0f));
-	scene.Insert2DElement(hostLobbyButton);
+	scene.Insert2DElement(hostLobbyButton, "startLobby");
 #endif
 }
