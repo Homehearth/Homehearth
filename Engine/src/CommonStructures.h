@@ -1,5 +1,13 @@
 #pragma once
 
+struct MinMaxProj_t
+{
+	float minProj;
+	float maxProj;
+	int minInxed;
+	int maxIndex;
+};
+
 enum class TypeLight : UINT
 {
 	DIRECTIONAL,
