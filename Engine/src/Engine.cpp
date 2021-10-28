@@ -383,7 +383,7 @@ void Engine::RenderThread()
 		if (frameTime >= targetDelta)
 		{
 			if (GetCurrentScene()->IsReadyToRenderAll() && 
-				rtd::Handler2D::Get()->IsRenderReady())
+				rtd::Handler2D::Get().IsRenderReady())
 			{
 				Stats::SetDeltaTime(frameTime);
 				Render(frameTime);
