@@ -14,9 +14,29 @@ struct InputState
 	uint32_t tick;
 };
 
+struct Plane_t
+{
+	sm::Vector3 point, normal;
+};
+
 struct Ray_t
 {
 	sm::Vector3 rayPos, rayDir;
+	bool Intersects(Plane_t plane, sm::Vector3& outIntersectPoint)
+	{
+		rayDir.Normalize(rayDir);
+		float dotAngle = plane.normal.Dot(rayDir);
+		if (std::abs(dotAngle) < 0.001f)
+			return false;
+
+		sm::Vector3 p = plane.point - rayPos;
+		float t = p.Dot(plane.normal);
+		if (t < 0)
+			return false;
+
+		outIntersectPoint = rayPos + rayDir * t;
+		return true;
+	}
 };
 
 enum class GameMsg : uint8_t

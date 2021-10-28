@@ -90,8 +90,15 @@ namespace ecs
 
 		struct Player
 		{
+			enum class State
+			{
+				IDLE,
+				ATTACK,
+				TURN
+			} state;
+
 			float runSpeed;
-			bool isTurning;
+			sm::Vector3 targetForward;
 		};
 
 		struct Enemy

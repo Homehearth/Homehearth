@@ -1,6 +1,6 @@
 #pragma once
 
-namespace systems {
+namespace Systems {
 	void CharacterMovement(HeadlessScene& scene, float dt);
 
 };
