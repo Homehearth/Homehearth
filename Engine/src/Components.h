@@ -127,6 +127,7 @@ namespace ecs
 			bool isRanged = false;
 			bool isAttacking = false;
 			float cooldownTimer = 0.f;
+			Ray_t targetRay;
 		};
 
 		struct Projectile
@@ -149,14 +150,5 @@ namespace ecs
 
 
 };
-
-network::message<GameMsg>& operator<<(network::message<GameMsg>& msg, const sm::Vector3& data);
-
-network::message<GameMsg>& operator>>(network::message<GameMsg>& msg, sm::Vector3& data);
-
-network::message<GameMsg>& operator<<(network::message<GameMsg>& msg, const sm::Vector4& data);
-
-network::message<GameMsg>& operator>>(network::message<GameMsg>& msg, sm::Vector4& data);
-
 
 namespace comp = ecs::component;

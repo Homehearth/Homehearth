@@ -9,7 +9,6 @@ namespace Systems {
 				if (a.isAttacking) // Should only be done one frame
 				{
 
-					Ray_t ray = InputSystem::Get().GetMouseRay();
 					Plane_t plane;
 					plane.normal = sm::Vector3(0, 1, 0);
 					plane.point = t.position;
@@ -17,7 +16,7 @@ namespace Systems {
 					sm::Vector3 point(0, 0, 0);
 					sm::Vector3 targetDir(1, 0, 0);
 
-					if (ray.Intersects(plane, point))
+					if (a.targetRay.Intersects(plane, point))
 					{
 						targetDir = point - t.position;
 						targetDir.Normalize(targetDir);

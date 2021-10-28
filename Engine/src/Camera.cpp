@@ -126,8 +126,11 @@ void Camera::Update(float deltaTime)
 			targetTransform = m_targetEntity.GetComponent<comp::Transform>();
 		}
 
-		m_position = m_defaultPos + targetTransform->position;
-
+		if (targetTransform)
+		{
+			m_position = m_defaultPos + targetTransform->position;
+		}
+			
 		m_right = dx::XMVector3TransformNormal(m_defaultRight, m_rotationMatrix);
 		m_forward = dx::XMVector3TransformNormal(m_defaultForward, m_rotationMatrix);
 

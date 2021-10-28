@@ -55,11 +55,13 @@ void Game::UpdateNetwork(float deltaTime)
 				m_client.Send(msg);
 			}
 
-			if (m_gameID != UINT32_MAX && InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED))
+			if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED))
 			{
 				message<GameMsg> msg;
 				msg.header.id = GameMsg::Game_PlayerAttack;
-				msg << this->m_localPID << m_gameID;
+				Ray_t ray = InputSystem::Get().GetMouseRay();
+				msg << ray << this->m_localPID << m_gameID;
+				
 				m_client.Send(msg);
 			}
 		}
@@ -323,8 +325,8 @@ void Game::OnUserUpdate(float deltaTime)
 				
 				predictedPositions.push_back(t);
 			
-				LOG_INFO("Predicted size: %llu", predictedPositions.size());
 
+				//LOG_INFO("Predicted size: %llu", predictedPositions.size());
 				//if (sm::Vector3::Distance(t.position, test.position) > m_predictionThreshhold)
 				//{
 				//	t.position.x = test.position.x;

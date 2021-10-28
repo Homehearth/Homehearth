@@ -44,26 +44,3 @@ namespace ecs {
 
 }
 
-network::message<GameMsg>& operator<<(network::message<GameMsg>& msg, const sm::Vector3& data)
-{
-    msg << data.x << data.y << data.z;
-    return msg;
-}
-
-network::message<GameMsg>& operator >> (network::message<GameMsg>& msg, sm::Vector3& data)
-{
-    msg >> data.z >> data.y >> data.x;
-    return msg;
-}
-
-network::message<GameMsg>& operator<<(network::message<GameMsg>& msg, const sm::Vector4& data)
-{
-    msg << data.x << data.y << data.z << data.w;
-    return msg;
-}
-
-network::message<GameMsg>& operator>>(network::message<GameMsg>& msg, sm::Vector4& data) 
-{
-    msg >> data.w >> data.z >> data.y >> data.x;
-    return msg;
-}

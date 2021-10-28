@@ -11,6 +11,7 @@ struct InputState
 	int axisX : 2;
 	int axisY : 2;
 	
+
 	uint32_t tick;
 };
 
@@ -30,7 +31,7 @@ struct Ray_t
 			return false;
 
 		sm::Vector3 p = plane.point - rayPos;
-		float t = p.Dot(plane.normal);
+		float t = p.Dot(plane.normal) / dotAngle;
 		if (t < 0)
 			return false;
 
