@@ -171,10 +171,10 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 	e.AddComponent<comp::MeshName>()->name = "Chest.obj";
 	e.AddComponent<comp::Velocity>()->vel = sm::Vector3(0, -0.2f, 0);
 	e.AddComponent<comp::BoundingSphere>();
-	e.AddComponent<comp::Attack>();
+	e.AddComponent<comp::BoundingOrientedBox>();
+	e.AddComponent<comp::CombatStats>();
 	e.AddComponent<comp::Health>();
-	const unsigned char BAD = 8;
-	e.AddComponent<comp::Tag<BAD>>();
+	e.AddComponent<comp::Enemy>();
 	// ---END OF DEBUG---
 
 	m_pCurrentScene = m_pGameScene; // todo Should be lobbyScene
@@ -215,9 +215,7 @@ bool Simulation::AddPlayer(uint32_t playerID)
 	player.AddComponent<comp::BoundingOrientedBox>();
 
 	// CombatSystem Test.
-	const unsigned char GOOD = 4;
-	*player.AddComponent<comp::Attack>() = { 1.f, 20.f, 5.f, false, false };
-	player.AddComponent<comp::Tag<GOOD>>();
+	*player.AddComponent<comp::CombatStats>() = { 1.f, 20.f, 1.f, false };
 	*player.AddComponent<comp::Health>() = { 100.f, 100.f, true };
 
 	
@@ -242,9 +240,8 @@ bool Simulation::AddEnemy()
 	Entity enemy = m_pGameScene->CreateEntity();
 	enemy.AddComponent<comp::Transform>();
 	enemy.AddComponent<comp::Network>()->id = m_pServer->PopNextUniqueID();
-	const unsigned char BAD = 8;
-	enemy.AddComponent<comp::Tag<BAD>>();
 	enemy.AddComponent<comp::Health>();
+	enemy.AddComponent<comp::Enemy>();
 	
 	return true;
 }

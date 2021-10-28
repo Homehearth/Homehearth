@@ -9,7 +9,7 @@ void GameSystems::UserInputSystem(Scene& scene, Client& client)
 			velocity.vel.x = InputSystem::Get().GetAxis(Axis::HORIZONTAL) * player.runSpeed;
 		});
 
-	scene.ForEachComponent<comp::Attack>([&](comp::Attack attacker)
+	scene.ForEachComponent<comp::CombatStats>([&](comp::CombatStats attacker)
 		{
 			attacker.isAttacking = InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED);
 			LOG_INFO("'Attack' input detected.");

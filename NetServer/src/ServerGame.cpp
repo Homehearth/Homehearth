@@ -210,7 +210,7 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 		uint32_t gameID;
 		msg >> gameID >> playerID;
 
-		m_simulations.at(gameID)->GetGameScene()->ForEachComponent<comp::Network, comp::Attack>([=](comp::Network& net, comp::Attack& attack)
+		m_simulations.at(gameID)->GetGameScene()->ForEachComponent<comp::Network, comp::CombatStats>([=](comp::Network& net, comp::CombatStats& attack)
 			{
 				if (net.id == playerID)
 				{
