@@ -33,6 +33,7 @@ public:
 
 	bool AddPlayer(uint32_t playerID);
 	bool RemovePlayer(uint32_t playerID);
+	bool AddEnemy();
 	
 	bool JoinLobby(uint32_t playerID, uint32_t gameID);
 	bool LeaveLobby(uint32_t playerID, uint32_t gameID);
