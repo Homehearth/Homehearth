@@ -1,5 +1,5 @@
 #pragma once
-#include "D2D1Core.h"
+#include <memory>
 
 /*
 	WIKI:
@@ -49,18 +49,9 @@ class Element2D
 {
 private:
 
-	// Which layer this element should be rendered at.
-	unsigned int m_layer = 0;
-
-	// Name for get() Element from Handler2D
-	std::string m_name = "";
-
 	unsigned int m_references = 1;
 
 protected:
-
-	// Set the visibilty
-	bool m_isVisible = true;
 
 	// check to see if element is clicked.
 	bool m_isClicked = false;
@@ -70,27 +61,10 @@ protected:
 
 public:
 
-	// Set the identifying name of Element.
-	void SetName(const std::string& name);
-	const std::string& GetName() const;
-
 	Element2D() = default;
 	virtual ~Element2D() = default;
 
-	// Set the layer at which to draw at.
-	void SetLayer(const unsigned int layer);
-	const unsigned int GetLayer() const;
-
-	// Set the visibility.
-	void SetVisibility(const bool& boolean);
-	const bool IsVisible() const;
-
 	virtual void Draw() = 0;
-
-	/*
-		Returns true if clicked, false if not.
-	*/
-	const bool IsClicked() const;
 
 	/*
 		Logic for what happens with the element if it is clicked.

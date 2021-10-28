@@ -1,4 +1,11 @@
 #include "DemoScene.h"
+#include "Canvas.h"
+#include "Picture.h"
+#include "Border.h"
+#include "Button.h"
+#include "Text.h"
+#include "TextField.h"
+#include "Slider.h"
 
 namespace sceneHelp
 {
@@ -36,10 +43,10 @@ namespace sceneHelp
 
 	void CreateMainMenuScene(Engine& engine)
 	{
-		SetupMainMenuScreen();
-		SetupLobbyJoinScreen(engine.GetWindow(), 3);
+
 		// Scene logic
 		Scene& mainMenuScene = engine.GetScene("MainMenu");
+		SetupMainMenuScreen(engine, mainMenuScene);
 		mainMenuScene.on<ESceneUpdate>([](const ESceneUpdate& e, Scene& scene)
 		{
 			IMGUI(
@@ -52,8 +59,8 @@ namespace sceneHelp
 
 	void CreateLobbyScene(Engine& engine)
 	{
-		//SetupInLobbyScreen();
 		Scene& lobbyScene = engine.GetScene("Lobby");
+		SetupInLobbyScreen(lobbyScene);
 		lobbyScene.on<ESceneUpdate>([](const ESceneUpdate& e, Scene& scene)
 		{
 			IMGUI(
@@ -64,9 +71,22 @@ namespace sceneHelp
 		});
 	}
 
+	void CreateConnectScene(Engine& engine)
+	{
+		Scene& connectScene = engine.GetScene("ConnectMenu");
+		SetupConnectScreen(connectScene, engine.GetWindow());
+	}
+
+	void CreateJoinLobbyScene(Engine& engine)
+	{
+		Scene& joinLobbyScene = engine.GetScene("JoinLobby");
+		SetupLobbyJoinScreen(joinLobbyScene, engine.GetWindow());
+	}
+
 	void CreateGameScene(Engine& engine)
 	{
 		Scene& gameScene = engine.GetScene("Game");
+		SetupInGameScreen(gameScene);
 
 		//Construct collider meshes if colliders are added.
 		gameScene.GetRegistry()->on_construct<comp::RenderableDebug>().connect<entt::invoke<&comp::RenderableDebug::InitRenderable>>();
@@ -139,6 +159,7 @@ namespace sceneHelp
 #endif // DEBUG
 		});
 	}
+
 }
 
 Entity CreatePlayerEntity(HeadlessScene& scene, uint32_t playerID)
@@ -157,38 +178,35 @@ Entity CreatePlayerEntity(HeadlessScene& scene, uint32_t playerID)
 	return playerEntity;
 }
 
-void sceneHelp::SetupMainMenuScreen()
+void sceneHelp::SetupMainMenuScreen(Engine& engine, Scene& scene)
 {
 #if RENDER_IMGUI == 0
 	// Setup main menu scene.
 
 	// Adds text to the menu screen.
 	rtd::Text* welcomeText = new rtd::Text("Welcome To Homehearth!", draw_text_t(575.0f, 50.0f, 300.0f, 100.0f));
-	rtd::Handler2D::Get().InsertElement(welcomeText);
-	welcomeText->SetName("welcome_text");
-
+	scene.Insert2DElement(welcomeText);
 	std::string welcomeString = "In this game you will face against very dangerous foes while defending the righteous village from its dark fate! Take up arms and fight your way to victory champion! Join our discord and twitter to get official news about the new upcoming technological wonder game! Sign up for RTX exclusive version at our website!";
+	
 	// Adds text to the menu screen.
 	rtd::Text* gameInfoText = new rtd::Text(welcomeString, draw_text_t(550.0f, 0.0f, 350.0f, 550.0f));
-	rtd::Handler2D::Get().InsertElement(gameInfoText);
-	gameInfoText->SetName("gameInfoText");
-
+	scene.Insert2DElement(gameInfoText);
 	// Adds a button and names it start game button.
 	rtd::Button* startGameButton = new rtd::Button("StartButton.png", draw_t(100.0f, 100.0f, 350.0f, 150.0f));
-	rtd::Handler2D::Get().InsertElement(startGameButton);
-	startGameButton->SetName("startGameButton");
-	// Adds a border around the button and sets the color to black.
+	scene.Insert2DElement(startGameButton);
+
+	startGameButton->SetFunction([&] { engine.SetScene("ConnectMenu"); });
 
 	// Adds a button and names it exit game button.
 	rtd::Button* exitGameButton = new rtd::Button("demo_exit_button.png", draw_t(100.0f, 325.0f, 350.0f, 150.0f));
-	rtd::Handler2D::Get().InsertElement(exitGameButton);
-	exitGameButton->SetName("exitGameButton");
 	// Adds a border around the button and sets the color to black.
 	exitGameButton->GetBorder()->SetColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
+	scene.Insert2DElement(exitGameButton);
+	exitGameButton->SetFunction([&] {engine.Shutdown(); });
 #endif
 }
 
-void sceneHelp::SetupInGameScreen()
+void sceneHelp::SetupInGameScreen(Scene& scene)
 {
 #if RENDER_IMGUI == 0
 	// Temp textures
@@ -200,208 +218,158 @@ void sceneHelp::SetupInGameScreen()
 	// Player 1
 	// Temp 'heart' displayed as leaf
 	rtd::Picture* heart1 = new rtd::Picture(texture1, draw_t(90.0f, 10.0f, 64.0f, 64.0f));
-	rtd::Handler2D::Get().InsertElement(heart1);
+	scene.Insert2DElement(heart1);
 
 	rtd::Picture* heart2 = new rtd::Picture(texture1, draw_t(174.0f, 10.0f, 64.0f, 64.0f));
-	rtd::Handler2D::Get().InsertElement(heart2);
+	scene.Insert2DElement(heart2);
 
 	rtd::Picture* heart3 = new rtd::Picture(texture1, draw_t(258.0f, 10.0f, 64.0f, 64.0f));
-	rtd::Handler2D::Get().InsertElement(heart3);
+	scene.Insert2DElement(heart3);
 
 	rtd::Text* youText = new rtd::Text("You:", draw_text_t(5.0f, 30.0f, 60.0f, 20.0f));
-	rtd::Handler2D::Get().InsertElement(youText);
+	scene.Insert2DElement(youText);
 
 	// Player 2
 	rtd::Picture* heart4 = new rtd::Picture(texture1, draw_t(90.0f, 72.0f, 64.0f, 64.0f));
-	rtd::Handler2D::Get().InsertElement(heart4);
+	scene.Insert2DElement(heart4);
 
 	rtd::Picture* heart5 = new rtd::Picture(texture1, draw_t(174.0f, 72.0f, 64.0f, 64.0f));
-	rtd::Handler2D::Get().InsertElement(heart5);
+	scene.Insert2DElement(heart5);
 
 	rtd::Picture* heart6 = new rtd::Picture(texture1, draw_t(258.0f, 72.0f, 64.0f, 64.0f));
-	rtd::Handler2D::Get().InsertElement(heart6);
+	scene.Insert2DElement(heart6);
 
 	rtd::Text* friendText = new rtd::Text("Friend:", draw_text_t(5.0f, 95.0f, 84.0f, 20.0f));
-	rtd::Handler2D::Get().InsertElement(friendText);
+	scene.Insert2DElement(friendText);
 
 	//Timer text
 	const std::string& timerText = "1:20";
 	rtd::Text* timer = new rtd::Text(timerText, draw_text_t(436.0f, 24.0f, 96.0f, 24.0f));
-	rtd::Handler2D::Get().InsertElement(timer);
+	scene.Insert2DElement(timer);
 
 	// Attacks
 	rtd::Text* attacksText = new rtd::Text("Attacks!", draw_text_t(24.0f, 412.0f, 96.0f, 24.0f));
-	rtd::Handler2D::Get().InsertElement(attacksText);
+	scene.Insert2DElement(attacksText);
 
 	rtd::Picture* attack1 = new rtd::Picture(texture2, draw_t(24.f, 448.0f, 64.0f, 64.0f));
-	rtd::Handler2D::Get().InsertElement(attack1);
+	scene.Insert2DElement(attack1);
 
 	rtd::Picture* attack2 = new rtd::Picture(texture3, draw_t(98.f, 448.0f, 64.0f, 64.0f));
-	rtd::Handler2D::Get().InsertElement(attack2);
+	scene.Insert2DElement(attack2);
 
 	rtd::Picture* attack3 = new rtd::Picture(texture4, draw_t(172.f, 448.0f, 64.0f, 64.0f));
-	rtd::Handler2D::Get().InsertElement(attack3);
 	attack3->GetBorder()->SetColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
 	attack2->GetBorder()->SetColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
 	attack1->GetBorder()->SetColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
-
+	scene.Insert2DElement(attack3);
+	
 	// Builds
 	rtd::Text* buildText = new rtd::Text("Builds!", draw_text_t(700.0f, 412.0f, 96.0f, 24.0f));
-	rtd::Handler2D::Get().InsertElement(buildText);
-
+	scene.Insert2DElement(buildText);
+	
 	rtd::Picture* build1 = new rtd::Picture(texture2, draw_t(700.f, 448.0f, 64.0f, 64.0f));
-	rtd::Handler2D::Get().InsertElement(build1);
+	scene.Insert2DElement(build1);
 
 	rtd::Picture* build2 = new rtd::Picture(texture3, draw_t(774.f, 448.0f, 64.0f, 64.0f));
-	rtd::Handler2D::Get().InsertElement(build2);
-
+	scene.Insert2DElement(build2);
 	rtd::Picture* build3 = new rtd::Picture(texture4, draw_t(848.f, 448.0f, 64.0f, 64.0f));
-	rtd::Handler2D::Get().InsertElement(build3);
 	build3->GetBorder()->SetColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
 	build2->GetBorder()->SetColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
 	build1->GetBorder()->SetColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
+	scene.Insert2DElement(build3);
 #endif
 }
 
-void sceneHelp::SetupInLobbyScreen()
+void sceneHelp::SetupInLobbyScreen(Scene& scene)
 {
 #if RENDER_IMGUI == 0
 	const std::string& warriorString = "Warrior\nThe Warrior specializes in CQ Combat.";
 	const std::string& mageString = "Mage\nThis weak character is good for nothing please choose the warrior instead.";
 
 	rtd::Canvas* backgroundCanvas = new rtd::Canvas(D2D1::ColorF(.2f, .2f, .2f), draw_t(0.0f, 0.0f, 3000.0f, 3000.0f));
-	rtd::Handler2D::Get().InsertElement(backgroundCanvas);
+	scene.Insert2DElement(backgroundCanvas);
 
 	rtd::Button* startGameButton = new rtd::Button("StartButton.png", draw_t(625.0f, 420.0f, 250.0f, 100.0f), false);
-	rtd::Handler2D::Get().InsertElement(startGameButton);
-	startGameButton->SetName("readyButton");
+	scene.Insert2DElement(startGameButton);
 
 	rtd::Canvas* textCanvas = new rtd::Canvas(D2D1::ColorF(0.0f, 0.0f, 0.0f), draw_t(580.0f, 10.0f, 350.0f, 400.0f));
-	rtd::Handler2D::Get().InsertElement(textCanvas);
+	scene.Insert2DElement(textCanvas);
 
 	const std::string& dt = "##--Description--##";
 	rtd::Text* descText = new rtd::Text(dt, draw_text_t(530.0f, 20.0f, dt.length() * 24.0f, 24));
-	rtd::Handler2D::Get().InsertElement(descText);
+	scene.Insert2DElement(descText);
 
 	rtd::Text* warriorText = new rtd::Text(warriorString, draw_text_t(580.0f, 30.0f, 350.0f, 370.0f));
-	rtd::Handler2D::Get().InsertElement(warriorText);
-	warriorText->SetName("warrior_text");
-
+	scene.Insert2DElement(warriorText);
 	// Init mage text but set it to no render.
 	rtd::Text* mageText = new rtd::Text(mageString, draw_text_t(580.0f, 30.0f, 350.0f, 370.0f));
-	rtd::Handler2D::Get().InsertElement(mageText);
-	mageText->SetVisibility(false);
-	mageText->SetName("mage_text");
+	scene.Insert2DElement(mageText);
 
 	rtd::Canvas* lobbyIdCanvas = new rtd::Canvas(D2D1::ColorF(0.0f, 0.0f, 0.0f), draw_t(30.0f, 420.0f, 275.0f, 100.0f));
-	rtd::Handler2D::Get().InsertElement(lobbyIdCanvas);
-
+	scene.Insert2DElement(lobbyIdCanvas);
 	const std::string& lobbyString = "Lobby ID: XYZW";
 	rtd::Text* lobbyIdText = new rtd::Text(lobbyString, draw_text_t(0.0f, 460.0f, lobbyString.length() * 24.0f, 24.0f));
-	rtd::Handler2D::Get().InsertElement(lobbyIdText);
-	lobbyIdText->SetName("LobbyIdText");
-
+	scene.Insert2DElement(lobbyIdText);
 	rtd::Button* mageButton = new rtd::Button("mageIconDemo.png", draw_t(350.0f, 454.0f, 32.0f, 32.0f));
-	rtd::Handler2D::Get().InsertElement(mageButton);
-	mageButton->SetName("mage_button");
-
+	scene.Insert2DElement(mageButton);
+	
 	rtd::Button* warriorButton = new rtd::Button("warriorIconDemo.png", draw_t(392.0f, 454.0f, 32.0f, 32.0f));
-	rtd::Handler2D::Get().InsertElement(warriorButton);
-	warriorButton->SetName("warrior_button");
-
+	scene.Insert2DElement(warriorButton);
 	// Player slots
 	for (int i = 0; i < 2; i++)
 	{
 		const std::string& playerString = "Player " + std::to_string(i + 1);
 		rtd::Text* playerText = new rtd::Text(playerString, draw_text_t(0.0f, (i + 1) * 100.0f + ((i + 1) * 25.0f), playerString.length() * 24.0f, 64.0f));
 		rtd::Canvas* playerCanvas = new rtd::Canvas(D2D1::ColorF(0.7f, 0.5f, 0.2f), draw_t(25.0f, (i + 1) * 100.0f + ((i + 1) * 25.0f), 300.0f, 64.0f));
-		rtd::Handler2D::Get().InsertElement(playerCanvas);
-		rtd::Handler2D::Get().InsertElement(playerText);
-		playerText->SetName("player" + std::to_string(i + 1) + "text");
-		playerCanvas->SetName("player" + std::to_string(i + 1) + "canvas");
-
-		if (i == 1)
-		{
-			playerCanvas->SetVisibility(false);
-			playerText->SetVisibility(false);
-		}
+		scene.Insert2DElement(playerText);
+		scene.Insert2DElement(playerCanvas);
 	}
 
 	rtd::Picture* player1Symbol = new rtd::Picture("warriorIconDemo.png", draw_t(350.0f, 125.0f, 64.0f, 64.0f));
-	rtd::Handler2D::Get().InsertElement(player1Symbol);
-	player1Symbol->SetName("player1_symbol");
+	scene.Insert2DElement(player1Symbol);
 
 	rtd::Picture* player2Symbol = new rtd::Picture("warriorIconDemo.png", draw_t(350.0f, 250.0f, 64.0f, 64.0f));
-	rtd::Handler2D::Get().InsertElement(player2Symbol);
-	player2Symbol->SetName("player2_symbol");
-	player2Symbol->SetVisibility(false);
-
+	scene.Insert2DElement(player2Symbol);
 	rtd::Text* homehearthText = new rtd::Text("Homehearth", draw_text_t(25.0f, 25.0f, 200.0f, 50.0f));
-	rtd::Handler2D::Get().InsertElement(homehearthText);
-
+	scene.Insert2DElement(homehearthText);
 	rtd::Button* exitToMainMenu = new rtd::Button("demoExitButton.png", draw_t(0.0f, 0.0f, 32.0f, 32.0f), false);
-	exitToMainMenu->SetName("exitToMainButton");
-	rtd::Handler2D::Get().InsertElement(exitToMainMenu);
+	scene.Insert2DElement(exitToMainMenu);
 #endif
 }
 
-void sceneHelp::SetupOptionsScreen()
+void sceneHelp::SetupOptionsScreen(Scene& scene)
 {
 }
 
-void sceneHelp::SetupLobbyJoinScreen(Window* pWindow, int mode)
+void sceneHelp::SetupConnectScreen(Scene& scene, Window* pWindow)
 {
-#if RENDER_IMGUI == 0
 	const unsigned int width = pWindow->GetWidth(), height = pWindow->GetHeight();
 
 	rtd::TextField* ipField = new rtd::TextField(draw_text_t(width / 3 - 50.f, 100.0f, 200.0f, 35.0f));
 	ipField->GetBorder()->SetColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
-	rtd::Handler2D::Get().InsertElement(ipField);
-	ipField->SetName("ipBuffer");
+	scene.Insert2DElement(ipField, "ipField");
 	ipField->GetText()->SetText("Input IP address");
 
 	rtd::TextField* portField = new rtd::TextField(draw_text_t(width / 3 + 200.f, 100.0f, 100.0f, 35.0f));
 	portField->GetBorder()->SetColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
-	rtd::Handler2D::Get().InsertElement(portField);
-	portField->SetName("portBuffer");
+	scene.Insert2DElement(portField, "portField");
 	portField->GetText()->SetText("Input PORT");
 
 	rtd::Button* connectButton = new rtd::Button("StartButton.png", draw_t((float)width / 2 - 150.f, (float)height - (float)height / 3, 300.0f, 100.0f));
-	rtd::Handler2D::Get().InsertElement(connectButton);
-	connectButton->SetName("connectButton");
+	scene.Insert2DElement(connectButton, "connectButton");
+}
+
+void sceneHelp::SetupLobbyJoinScreen(Scene& scene, Window* pWindow)
+{
+#if RENDER_IMGUI == 0
 
 	rtd::TextField* lobbyField = new rtd::TextField(draw_text_t(100.0f, 300.0f, 200.0f, 35.0f));
 	//rtd::TextField * lobbyField = new rtd::TextField(draw_text_t((float)(rand() % 1000) / 2, (float)(rand() % 1000) / 4, 200.0f, 35.0f));
 	lobbyField->GetBorder()->SetColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
-	rtd::Handler2D::Get().InsertElement(lobbyField);
-	lobbyField->SetName("lobbyBuffer");
 	lobbyField->GetText()->SetText("Input Lobby ID");
-	
+	scene.Insert2DElement(lobbyField);
 	rtd::Button* hostLobbyButton = new rtd::Button("StartButton.png", draw_t(500.0f, 300.0f, 300.0f, 125.0f));
 	//rtd::Button* hostLobbyButton = new rtd::Button("StartButton.png", draw_t((float)(rand() % 1000) / 2, (float)(rand() % 1000) / 4, 300.0f, 125.0f));
-	rtd::Handler2D::Get().InsertElement(hostLobbyButton);
-	hostLobbyButton->SetName("hostLobby");
-	
-	if (mode == 0)
-	{
-		lobbyField->SetVisibility(false);
-		hostLobbyButton->SetVisibility(false);
-	}
-	else if (mode == 1)
-	{
-		// Return to lobby join from lobby screen.
-		ipField->SetVisibility(false);
-		portField->SetVisibility(false);
-		connectButton->SetVisibility(false);
-	}
-	else if (mode == 3)
-	{
-		// Initial setup
-		lobbyField->SetVisibility(false);
-		hostLobbyButton->SetVisibility(false);
-		ipField->SetVisibility(false);
-		portField->SetVisibility(false);
-		connectButton->SetVisibility(false);
-	}
+	scene.Insert2DElement(hostLobbyButton);
 #endif
 }

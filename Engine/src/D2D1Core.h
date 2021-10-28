@@ -1,7 +1,6 @@
 #pragma once
-#include <EnginePCH.h>
 #include "RTexture.h"
-
+#include "Window.h"
 /*
 	Is this your first time in this .h Header file?
 	WIKI:

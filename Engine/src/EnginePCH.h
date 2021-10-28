@@ -106,8 +106,6 @@ namespace sm = dx::SimpleMath;
 #include "D2D1Core.h"
 #include "Profiler.h"
 #include "ThreadSyncer.h"
-#include "Handler2D.h"
-#include "BackBuffer.h"
 #include "Components.h"
 #include "SceneBuilder.h"
 #include "RenderThreadHandler.h"

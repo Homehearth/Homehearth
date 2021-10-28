@@ -1,25 +1,12 @@
 #pragma once
-#include "Element2D.h"
 #include "DoubleBuffer.h"
 
 // Elements
-#include "Canvas.h"
-#include "Picture.h"
-#include "Border.h"
-#include "Button.h"
-#include "Text.h"
-#include "TextField.h"
-#include "Slider.h"
-
-// std
-#include <set>
-#include <type_traits>
+#include "Element2D.h"
 
 /*
 	Defines for ease of use.
 */
-
-#define GET_ELEMENT(name, type) rtd::Handler2D::Get().GetElement<type>(name)
 
 /*
 	WIKI:
@@ -46,43 +33,30 @@
 	Functions to ignore:
 	Render();
 	Update();
-	Initialize();
-	Destroy();
 	IsRenderReady();
 */
 
 
-/*
-	rtd -> Render *Two* Dee [Render2D]
-*/
-namespace rtd
-{
-	// Singleton class used to render and update each element.
+	// class used to render and update each element.
 	class Handler2D
 	{
 	private:
 
-		// active elements.
-		std::vector<Element2D*> m_elements;
-
-		bool m_shouldClean;
-		bool m_ready;
+		/*
+			Unordered map containing the group and name as key.
+		*/
+		std::unordered_map<std::string, Element2D*> m_elements;
 
 		// Doublebuffer holding references to elements.
 		DoubleBuffer<std::vector<Element2D**>> m_drawBuffers;
-		Handler2D();
-		~Handler2D();
 
 	public:
 
-		static auto& Get()
-		{
-			static Handler2D instance;
-			return instance;
-		}
+		Handler2D();
+		~Handler2D();
 
 		// Insert an element into the rendering system.
-		static void InsertElement(Element2D* element);
+		void InsertElement(Element2D* element, std::string& name);
 
 		/*
 			Get an Element by its assigned name.
@@ -90,54 +64,26 @@ namespace rtd
 			element couldn't be casted to Template.
 		*/
 		template<class T>
-		static T* GetElement(const std::string& element_name);
+		T* GetElement(const std::string& element_name) const;
 
 		// Render all elements.
-		static void Render();
+		void Render();
 
 		// Update the states of all buttons.
-		static void Update();
+		void Update();
 
-		// Deallocate all pointers.
-		static void EraseAll();
+		bool IsRenderReady() const;
 
-		// Remove all pointers without deallocation.
-		static void RemoveAll();
-
-		// This removes one reference from all the elements. Use this if you want safe release of all objects that has 1 reference.
-		static void DereferenceAllOnce();
-
-		// Set the visibility of all elements to boolean.
-		static void SetVisibilityAll(const bool& toggle);
-
-		static const bool IsRenderReady();
-
-		/*
-		* Saves a snapshot of the elements when function is called.
-		* Before next render it will remove all elements in that snapshot.
-		* If cleanup is called consecutively only the latest snapshot will be used.
-		*/
-		static void Cleanup();
-
-		/*
-			Ignore this!!
-		*/
-		static void SetReady(const bool& toggle);
 	};
 
 
 	template<class T>
-	inline T* rtd::Handler2D::GetElement(const std::string& element_name)
+	inline T* Handler2D::GetElement(const std::string& element_name) const
 	{
-		for (auto elem : Handler2D::Get().m_elements)
+		if (m_elements.find(element_name) != m_elements.end())
 		{
-			if (elem)
-			{
-				if (elem->GetName() == element_name)
-					return dynamic_cast<T*>(elem);
-			}
+			return dynamic_cast<T*>(m_elements.at(element_name));
 		}
 
 		return nullptr;
 	}
-}

@@ -14,7 +14,6 @@ private:
 	std::string* m_ipBuffer = nullptr;
 	std::string* m_lobbyBuffer = nullptr;
 	std::string* m_portBuffer = nullptr;
-	uint8_t m_internalState = 0;
 	std::vector<comp::Transform> predictedPositions;
 
 	bool m_isLeavingLobby;

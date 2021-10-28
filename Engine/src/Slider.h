@@ -1,5 +1,8 @@
 #pragma once
 #include "Handler2D.h"
+#include "Border.h"
+#include "Canvas.h"
+#include "Text.h"
 
 namespace rtd
 {

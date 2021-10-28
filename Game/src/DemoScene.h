@@ -14,10 +14,13 @@ namespace sceneHelp
 	void CreateMainMenuScene(Engine& engine);
 	void CreateLobbyScene(Engine& engine);
 	void CreateGameScene(Engine& engine);
+	void CreateConnectScene(Engine& engine);
+	void CreateJoinLobbyScene(Engine& engine);
 
-	void SetupMainMenuScreen();
-	void SetupLobbyJoinScreen(Window* pWindow, int mode = 0);
-	void SetupInLobbyScreen();
-	void SetupInGameScreen();
-	void SetupOptionsScreen();
+	void SetupMainMenuScreen(Engine& engine, Scene& scene);
+	void SetupLobbyJoinScreen(Scene& scene, Window* pWindow);
+	void SetupInLobbyScreen(Scene& scene);
+	void SetupInGameScreen(Scene& scene);
+	void SetupOptionsScreen(Scene& scene);
+	void SetupConnectScreen(Scene& scene, Window* pWindow);
 }

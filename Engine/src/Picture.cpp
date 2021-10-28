@@ -8,7 +8,6 @@ Picture::Picture(const std::string& fileName, const draw_t& opts)
 	m_texture = ResourceManager::Get().GetResource<RBitMap>(fileName);
 	m_drawOpts = opts;
 	m_border = nullptr;
-	this->SetLayer(m_drawOpts.layer);
 }
 
 rtd::Picture::Picture()

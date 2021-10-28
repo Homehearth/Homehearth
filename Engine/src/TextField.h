@@ -1,5 +1,6 @@
 #pragma once
 #include "Text.h"
+#include "Border.h"
 
 namespace rtd
 {

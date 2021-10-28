@@ -64,6 +64,11 @@ Text* rtd::Button::GetText()
 	return m_text.get();
 }
 
+void rtd::Button::SetFunction(const std::function<void()>& func)
+{
+	m_function = func;
+}
+
 const bool Button::CheckClicked() const
 {
     return m_isClicked;
@@ -93,12 +98,9 @@ const bool rtd::Button::CheckClick()
 	m_isClicked = false;
 	if (CheckHover())
 	{
-		OnHover();
 		// CheckCollisions if mouse key is pressed.
 		if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED))
 		{
-			// Is within bounds?
-			OnClick();
 			m_isClicked = true;
 		}
 	}
@@ -122,5 +124,6 @@ const bool rtd::Button::CheckHover()
 
 void Button::OnClick()
 {
-	//std::cout << "CLICKED!\n";
+	if(m_function)
+		m_function();
 }
