@@ -167,7 +167,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 	Entity e = m_pGameScene->CreateEntity();
 	e.AddComponent<comp::Network>()->id = m_pServer->PopNextUniqueID();
 	e.AddComponent<comp::Transform>()->position = sm::Vector3(-5, 0, 0);
-	e.AddComponent<comp::MeshName>()->name = "Chest.obj";
+	e.AddComponent<comp::MeshName>()->name = "GameScene.obj";
 	e.AddComponent<comp::BoundingOrientedBox>()->Extents = sm::Vector3(2.f,2.f,2.f);
 	e.AddComponent<comp::Tag<STATIC>>();
 	// ---END OF DEBUG---
