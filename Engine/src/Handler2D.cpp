@@ -35,7 +35,8 @@ void Handler2D::Render()
 		Element2D* elem = *m_drawBuffers[1][i];
 		if (elem)
 		{
-			elem->Draw();
+			if(elem->IsVisible())
+				elem->Draw();
 
 			elem->Release();
 		}
@@ -50,10 +51,13 @@ void Handler2D::Update()
 	{
 		if (it.second)
 		{
-			if (it.second->CheckClick())
-				it.second->OnClick();
-			if (it.second->CheckHover())
-				it.second->OnHover();
+			if (it.second->IsVisible())
+			{
+				if (it.second->CheckClick())
+					it.second->OnClick();
+				if (it.second->CheckHover())
+					it.second->OnHover();
+			}
 		}
 	}
 
