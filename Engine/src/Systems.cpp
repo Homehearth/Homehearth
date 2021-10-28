@@ -29,8 +29,8 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 							{
 								//Creates an entity that's used to check collision if an attack lands.
 								Entity attackCollider = scene.CreateEntity();
-								attackCollider.AddComponent<comp::Transform>()->position = playerTransform.position + ecs::GetForward(playerTransform);
-								attackCollider.AddComponent<comp::BoundingOrientedBox>()->Center = playerTransform.position + ecs::GetForward(playerTransform);
+								attackCollider.AddComponent<comp::Transform>()->position = playerTransform.position + ecs::GetForward(playerTransform) * -1;
+								attackCollider.AddComponent<comp::BoundingOrientedBox>()->Center = playerTransform.position + ecs::GetForward(playerTransform) * -1;
 								attackCollider.AddComponent<comp::Attack>()->lifeTime = playerStats.attackLifeTime;
 								attackCollider.GetComponent<comp::Attack>()->damage = playerStats.attackDamage;
 
