@@ -110,9 +110,6 @@ void CollisionSystem::OnCollision(Entity entity1, Entity entity2)
 		if (!entity1.IsNull())
 		{
 			m_OnCollision.at(entity1)(entity2);
-
-			//if(entity1.GetComponent<comp::Tag<DYNAMIC>>())
-			//	CollisionSystem::Get().CollisionResponse(entity1, entity2);
 		}
 		else
 		{
@@ -124,9 +121,6 @@ void CollisionSystem::OnCollision(Entity entity1, Entity entity2)
 		if (!entity2.IsNull())
 		{
 			m_OnCollision.at(entity2)(entity1);
-			
-			//if (entity2.GetComponent<comp::Tag<DYNAMIC>>())
-			//	CollisionSystem::Get().CollisionResponse(entity2, entity1);
 		}
 		else
 		{
