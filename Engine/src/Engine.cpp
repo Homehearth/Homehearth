@@ -377,16 +377,19 @@ void Engine::RenderThread()
 		deltaTime = static_cast<float>(currentFrame - lastFrame);
 		if (deltaSum >= targetDelta)
 		{
+			rtd::Handler2D::Get().SetReady(false);
 			if (GetCurrentScene()->IsRenderReady() && GetCurrentScene()->IsRenderDebugReady() && rtd::Handler2D::Get().IsRenderReady())
 			{
+
 				Render(deltaSum);
 				m_frameTime.render = deltaSum;
 				deltaSum = 0.f;
 			}
+			rtd::Handler2D::Get().SetReady(true);
 		}
 		deltaSum += deltaTime;
 		lastFrame = currentFrame;
-
+		
 	}
 
 	s_safeExit = true;

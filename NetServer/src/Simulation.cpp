@@ -111,14 +111,43 @@ Simulation::Simulation(Server* pServer, HeadlessEngine* pEngine)
 bool Simulation::JoinLobby(uint32_t playerID, uint32_t gameID)
 {
 	// Send to client the message with the new game ID
-	message<GameMsg> msg;
-	msg.header.id = GameMsg::Lobby_Accepted;
-	msg << gameID;
+	if (m_players.size() < MAX_PLAYER_PER_LOBBY)
+	{
+		message<GameMsg> msg;
+		msg.header.id = GameMsg::Lobby_Accepted;
+		msg << gameID;
 
 	m_pServer->SendToClient(playerID, msg);
 
-	// Add the players to the simulation on that specific client
-	this->AddPlayer(playerID);
+		// Add the players to the simulation on that specific client
+		this->AddPlayer(playerID);
+
+		uint32_t player = -1;
+		// Reset Lobby player.
+		if (m_playerDecisions[0].playerID == playerID)
+		{
+			player = 1;
+		}
+		else if (m_playerDecisions[1].playerID == playerID)
+		{
+			player = 2;
+		}
+
+		// Update the lobby for players.
+		network::message<GameMsg> msg2;
+		msg2.header.id = GameMsg::Lobby_Update;
+		const uint32_t nrOfPlayers = (const uint32_t)m_players.size();
+		msg2 << nrOfPlayers << player << (uint8_t)1;
+		this->Broadcast(msg2);
+	}
+	else
+	{
+		network::message<GameMsg> msg;
+		msg.header.id = GameMsg::Lobby_Invalid;
+		std::string fullLobby = "This lobby was full!";
+		msg << fullLobby;
+		m_pServer->SendToClient(playerID, msg);
+	}
 
 	return true;
 }
@@ -126,6 +155,21 @@ bool Simulation::JoinLobby(uint32_t playerID, uint32_t gameID)
 bool Simulation::LeaveLobby(uint32_t playerID, uint32_t gameID)
 {
 	this->RemovePlayer(playerID);
+
+	uint32_t player = -1;
+	// Reset Lobby player.
+	if (m_playerDecisions[0].playerID == playerID)
+	{
+		m_playerDecisions[0].playerID = -1;
+		m_playerDecisions[0].isWantToStart = false;
+		player = 1;
+	}
+	else if (m_playerDecisions[1].playerID == playerID)
+	{
+		m_playerDecisions[1].playerID = -1;
+		m_playerDecisions[1].isWantToStart = false;
+		player = 2;
+	}
 
 	message<GameMsg> msg;
 	msg.header.id = GameMsg::Game_RemoveEntity;
@@ -139,6 +183,13 @@ bool Simulation::LeaveLobby(uint32_t playerID, uint32_t gameID)
 	msg << count;
 
 	m_pServer->SendToClient(playerID, msg);
+
+	// Update the lobby for players.
+	network::message<GameMsg> msg2;
+	msg2.header.id = GameMsg::Lobby_Update;
+	const uint32_t nrOfPlayers = (const uint32_t)m_players.size();
+	msg2 << nrOfPlayers << player << (uint8_t)2;
+	this->Broadcast(msg2);
 
 	return true;
 }
@@ -186,10 +237,8 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 	e.AddComponent<comp::Tag<BAD>>();
 	// ---END OF DEBUG---
 
-
-
-	m_pCurrentScene = m_pGameScene; // todo Should be lobbyScene
-
+	m_pCurrentScene = m_pLobbyScene;
+	
 	// Automatically join created lobby
 	JoinLobby(playerID, gameID);
 
@@ -200,6 +249,42 @@ void Simulation::Destroy()
 {
 	m_pGameScene->Clear();
 	m_pLobbyScene->Clear();
+}
+
+void Simulation::UpdateLobby(const uint32_t& playerID)
+{
+	if (m_pCurrentScene == m_pLobbyScene)
+	{
+		// Update decisions.
+		if (playerID == m_playerDecisions[0].playerID)
+		{
+			m_playerDecisions[0].isWantToStart = !m_playerDecisions[0].isWantToStart;
+		}
+		else if (playerID == m_playerDecisions[1].playerID)
+		{
+			m_playerDecisions[1].isWantToStart = !m_playerDecisions[1].isWantToStart;
+		}
+
+#ifdef _DEBUG
+		// Debugging allow only one player to start.
+		m_pCurrentScene = m_pGameScene;
+		// Start the game.
+		network::message<GameMsg> msg;
+		msg.header.id = GameMsg::Game_Start;
+		this->Broadcast(msg);
+#endif
+
+		// Start game when both wants to start game.
+		if ((m_playerDecisions[1].isWantToStart & m_playerDecisions[0].isWantToStart) == true)
+		{
+			m_pCurrentScene = m_pGameScene;
+
+			// Start the game.
+			network::message<GameMsg> msg;
+			msg.header.id = GameMsg::Game_Start;
+			this->Broadcast(msg);
+		}
+	}
 }
 
 bool Simulation::IsEmpty() const
@@ -242,7 +327,15 @@ bool Simulation::AddPlayer(uint32_t playerID)
 			}
 		});
 
-	LOG_INFO("Player with ID: %ld added to the game!", playerID);
+	// Setup players temp...
+	for (int i = 0; i < 2; i++)
+	{
+		if (m_playerDecisions[i].playerID == -1)
+		{
+			m_playerDecisions[i].playerID = playerID;
+			break;
+		}
+	}
 	// send new Player to all other clients
 	m_players[playerID] = player;
 	this->Broadcast(SingleEntityMessage(player));

@@ -119,7 +119,7 @@ const bool Slider::CheckHover()
 	return m_isHovering;
 }
 
-const bool Slider::Update()
+const bool Slider::CheckClick()
 {
 	m_isHeld = false;
 	// Is within bounds?

@@ -4,50 +4,49 @@
 #include <stdio.h>
 using namespace rtd;
 
-
-void rtd::TextField::UpdateInput()
+void rtd::TextField::Update()
 {
-    // Checks the 0-9 to A-Z
-    for (int i = 0x30; i <= 0x5A; i++)
+    for (int i = dx::Keyboard::Keys::D0; i != dx::Keyboard::Keys::Z; i++)
     {
-        if ((GetAsyncKeyState(i) & WM_KEYUP) > 0)
+        if (InputSystem::Get().CheckKeyboardKey(static_cast<dx::Keyboard::Keys>(i), KeyState::PRESSED))
         {
             const char c = static_cast<char>(i);
-            m_stringText.push_back(c);   
+            m_stringText.push_back(c);
+        }
+    }
+
+    for (int i = dx::Keyboard::Keys::NumPad0; i != dx::Keyboard::Keys::NumPad9; i++)
+    {
+        if (InputSystem::Get().CheckKeyboardKey(static_cast<dx::Keyboard::Keys>(i), KeyState::PRESSED))
+        {
+            const char c = static_cast<char>(i);
+            m_stringText.push_back(c);
         }
     }
 
     // Checks '.' press
-    if ((GetAsyncKeyState(0xBE) & WM_KEYUP) > 0)
+    if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Keys::OemPeriod, KeyState::PRESSED))
     {
         const char c = static_cast<char>(0x2E);
-        m_stringText.push_back(c);   
+        m_stringText.push_back(c);
     }
 
     // Remove with the backspace
-    if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Keys::Back, KeyState::PRESSED) && m_stringText.length() > 0)
+    if ((InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Keys::Back, KeyState::PRESSED) & (m_stringText.length() > 0)) == 1)
     {
         m_stringText.pop_back();
     }
 
-    if (m_timerForInputMarker.GetElapsedTime<std::chrono::milliseconds>() > 300)
+    // Set output to be ready to be taken out.
+    if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Keys::Enter, KeyState::PRESSED))
     {
-        m_isMarkerVisible = !m_isMarkerVisible;
-        m_timerForInputMarker.Start();
+        m_finalInput = true;
+        m_border->SetColor(m_inactiveColor);
+        m_isUsed = false;
     }
-    
-    if (m_isMarkerVisible)
-    {
-        m_stringText.push_back('|');
-    }
+
     // Update the text
     m_text.get()->SetText(m_stringText);
-
-    if (m_isMarkerVisible)
-    {
-        m_stringText.pop_back();
-    }
-
 }
 
 rtd::TextField::TextField(const draw_text_t& opts)
@@ -57,8 +56,6 @@ rtd::TextField::TextField(const draw_text_t& opts)
     m_isUsed = false;
     m_stringText = "";
     m_infoText = std::make_unique<Text>("Explanation Text", draw_text_t(opts.x_pos, opts.y_pos - 50.0f, opts.x_stretch, opts.y_stretch));
-
-    m_isMarkerVisible = false;
 }
 
 Text* rtd::TextField::GetText()
@@ -76,21 +73,35 @@ Border* rtd::TextField::GetBorder()
     return m_border.get();
 }
 
-void rtd::TextField::SetIsUsed(bool used)
+void rtd::TextField::SetBorderColors(const D2D1_COLOR_F& active, const D2D1_COLOR_F& inactive)
 {
-    m_isUsed = used;
-    m_text.get()->SetText(m_stringText);
+    m_activeColor = active;
+    m_inactiveColor = inactive;
 }
 
-bool rtd::TextField::GetIsUsed() const
+void rtd::TextField::Reset()
 {
-    return m_isUsed;
+    m_isUsed = false;
+    m_finalInput = false;
+    //m_stringText.clear();
 }
 
 const bool rtd::TextField::GetBuffer(std::string*& output)
-{    
-    output = &m_stringText;
-    return true;
+{
+    if (m_finalInput)
+    {
+        output = &m_stringText;
+        m_finalInput = !m_finalInput;
+        m_isUsed = false;
+        return true;
+    }
+
+    return false;
+}
+
+std::string* rtd::TextField::RawGetBuffer()
+{
+    return &m_stringText;
 }
 
 void rtd::TextField::Draw()
@@ -105,60 +116,42 @@ void rtd::TextField::Draw()
 
 void rtd::TextField::OnClick()
 {
-    SetIsUsed(!GetIsUsed());
-    if (GetIsUsed()) 
-    {
-        m_timerForInputMarker.Start();
-    }
+    m_isUsed = !m_isUsed;
+    if (m_isUsed)
+        m_border->SetColor(m_activeColor);
     else
-    {
-        m_text.get()->SetText(m_stringText);
-    }
+        m_border->SetColor(m_inactiveColor);
 }
 
 void rtd::TextField::OnHover()
 {
-   
+    if(m_isUsed)
+        this->Update();
 }
 
 const bool rtd::TextField::CheckHover()
 {
-    // Is within bounds?
-    if (InputSystem::Get().GetMousePos().x > m_opts.x_pos &&
-        InputSystem::Get().GetMousePos().x < m_opts.x_pos + m_opts.x_stretch &&
-        InputSystem::Get().GetMousePos().y > m_opts.y_pos &&
-        InputSystem::Get().GetMousePos().y < m_opts.y_pos + m_opts.y_stretch)
-    {
-        m_isHovering = true;
-        return true;
-    }
-    m_isHovering = false;
-    return false;
+    return true;
 }
 
-const bool rtd::TextField::Update()
+const bool rtd::TextField::CheckClick()
 {
-
-    m_isClicked = false;
-    // Is within bounds?
-    if (CheckHover())
-    {
-        OnHover();
-    }
     if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED))
     {
-        if (m_isHovering)
+        // Is within bounds?
+        if (InputSystem::Get().GetMousePos().x > m_opts.x_pos &&
+            InputSystem::Get().GetMousePos().x < m_opts.x_pos + m_opts.x_stretch &&
+            InputSystem::Get().GetMousePos().y > m_opts.y_pos &&
+            InputSystem::Get().GetMousePos().y < m_opts.y_pos + m_opts.y_stretch)
         {
-            OnClick();
-            m_isClicked = true;
+            return true;
         }
         else
         {
-            SetIsUsed(false);
+            m_isUsed = false;
+            m_border->SetColor(m_inactiveColor);
         }
     }
-    if (GetIsUsed())
-        this->UpdateInput();
 
-    return true;
+    return false;
 }

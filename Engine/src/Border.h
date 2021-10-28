@@ -30,7 +30,7 @@ namespace rtd
 		virtual void Draw() override;
 		virtual void OnClick() override;
 		virtual void OnHover() override;
-		virtual const bool Update() override;
+		virtual const bool CheckClick() override;
 
 
 		// Inherited via Element2D

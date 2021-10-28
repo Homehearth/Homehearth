@@ -2,12 +2,10 @@
 
 using namespace rtd;
 #define INSTANCE rtd::Handler2D::Get()
-//std::vector<Element2D*> rtd::Handler2D::m_elements = {};
-//DoubleBuffer<std::vector<Element2D**>> rtd::Handler2D::m_drawBuffers;
 
 rtd::Handler2D::Handler2D()
 {
-
+	m_shouldClean = false;
 }
 
 rtd::Handler2D::~Handler2D()
@@ -15,14 +13,14 @@ rtd::Handler2D::~Handler2D()
 	for (auto& elem : m_elements)
 	{
 		delete elem;
+		elem = nullptr;
 	}
 	m_elements.clear();
 }
 
-void rtd::Handler2D::InsertElement(Element2D* element, const std::string& groupName)
+void rtd::Handler2D::InsertElement(Element2D* element)
 {
 	INSTANCE.m_elements.push_back(element);
-	INSTANCE.m_groups[groupName].push_back(element);
 }
 
 void rtd::Handler2D::Render()
@@ -52,7 +50,10 @@ void rtd::Handler2D::Update()
 		{
 			if (elem->GetRef() > 0 && elem->IsVisible())
 			{
-				elem->Update();
+				if (elem->CheckClick())
+					elem->OnClick();
+				if (elem->CheckHover())
+					elem->OnHover();
 			}
 			else
 				shouldErase = true;
@@ -61,11 +62,11 @@ void rtd::Handler2D::Update()
 
 	/*
 		Cleanup before push up to render
-	*/
 	if (shouldErase)
 	{
 		INSTANCE.EraseAll();
 	}
+	*/
 
 	if (!INSTANCE.m_drawBuffers.IsSwapped())
 	{
@@ -87,6 +88,7 @@ void rtd::Handler2D::EraseAll()
 		if (INSTANCE.m_elements[i]->GetRef() <= 0)
 		{
 			delete INSTANCE.m_elements[i];
+			INSTANCE.m_elements[i] = nullptr;
 			INSTANCE.m_elements.erase(INSTANCE.m_elements.begin() + i);
 		}
 	}
@@ -121,19 +123,25 @@ void rtd::Handler2D::SetVisibilityAll(const bool& toggle)
 	}
 }
 
-void rtd::Handler2D::SetVisibilityGroup(const std::string& group, bool visible) 
-{
-	if (INSTANCE.m_groups.find(group) != INSTANCE.m_groups.end())
-	{
-		for (auto& elem : INSTANCE.m_groups[group])
-		{
-			if (elem->GetRef() > 0)
-				elem->SetVisibility(visible);
-		}
-	}
-}
-
 const bool rtd::Handler2D::IsRenderReady()
 {
 	return INSTANCE.m_drawBuffers.IsSwapped();
+}
+
+void rtd::Handler2D::Cleanup()
+{
+	// Block until new frame is ready.
+	while (!INSTANCE.m_ready) {};
+
+	while (INSTANCE.m_elements.size() > 0)
+	{
+		delete INSTANCE.m_elements[(int)INSTANCE.m_elements.size() - 1];
+		INSTANCE.m_elements[(int)INSTANCE.m_elements.size() - 1] = nullptr;
+		INSTANCE.m_elements.pop_back();
+	}
+}
+
+void rtd::Handler2D::SetReady(const bool& toggle)
+{
+	INSTANCE.m_ready = toggle;
 }

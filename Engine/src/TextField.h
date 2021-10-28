@@ -18,13 +18,17 @@ namespace rtd
 		std::string m_stringText;
 		std::unique_ptr<Border> m_border;
 		draw_text_t m_opts;
-		bool m_isUsed;
 		
-		Timer m_timerForInputMarker;
-		bool m_isMarkerVisible;
+		// Border color when actively used.
+		D2D1_COLOR_F m_activeColor = {1.0f, 1.0f, 1.0f, 1.0f};
+
+		// Border color when inactive.
+		D2D1_COLOR_F m_inactiveColor = { 0.0f, 0.0f, 0.0f, 1.0f };
+		bool m_isUsed;
+		bool m_finalInput = false;
 
 		// Update the text on text field
-		void UpdateInput();
+		void Update();
 
 	public:
 
@@ -36,11 +40,17 @@ namespace rtd
 		// Returns the border surrounding the text field.
 		Border* GetBorder();
 
-		void SetIsUsed(bool used);
-		bool GetIsUsed() const;
+		// Set the active color and the inactive color.
+		void SetBorderColors(const D2D1_COLOR_F& active, const D2D1_COLOR_F& inactive);
+
+		// Reset the state of the textfield.
+		void Reset();
 
 		// Returns true if output is ready to be taken out.
 		const bool GetBuffer(std::string*& output);
+
+		// Get the buffer from textfield directly.
+		std::string* RawGetBuffer();
 
 		// Inherited via Element2D
 		virtual void Draw() override;
@@ -51,7 +61,7 @@ namespace rtd
 
 		virtual const bool CheckHover() override;
 
-		virtual const bool Update() override;
+		virtual const bool CheckClick() override;
 
 	};
 }

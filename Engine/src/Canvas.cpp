@@ -72,7 +72,7 @@ void rtd::Canvas::OnHover()
 
 }
 
-const bool rtd::Canvas::Update()
+const bool rtd::Canvas::CheckClick()
 {
 	// CheckCollisions if mouse key is pressed.
 	// Is within bounds?

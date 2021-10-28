@@ -59,7 +59,7 @@ const bool Text::CheckHover()
     return false;
 }
 
-const bool Text::Update()
+const bool Text::CheckClick()
 {
     return false;
 }
