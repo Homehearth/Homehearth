@@ -97,6 +97,22 @@ void Scene::Render()
 		for (const auto& it : m_renderableCopies[1])
 		{
 			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
+			///*if (it.animator)
+			//{*/
+			//	//bind vertexshader
+			//	//D3D11Core::Get().DeviceContext()->VSSetShader()
+			//	// 
+			//	//
+			//	//it.animator->Update();
+			//	//it.animator->Bind()
+			//	it.model->Render();
+			//	//it.animator->UnBind()
+			//	//bind back last vertexshader
+
+			////}
+			////else
+			//	it.model->Render();
+
 			it.model->Render();
 		}
 	}

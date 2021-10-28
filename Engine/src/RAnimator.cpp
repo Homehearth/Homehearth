@@ -95,11 +95,15 @@ void RAnimator::UpdateStructureBuffer()
 
 void RAnimator::Bind() const
 {
+	//Bind correct vertexshader
+	//Bind inputlayout
 	D3D11Core::Get().DeviceContext()->VSSetShaderResources(T2D_BONESLOT, 1, m_bonesSB_RSV.GetAddressOf());
 }
 
 void RAnimator::Unbind() const
 {
+	//Unbind the vertexshader to default
+	//Unbind the inputlayout to default
 	ID3D11ShaderResourceView* nullSRV = nullptr;
 	D3D11Core::Get().DeviceContext()->VSSetShaderResources(T2D_BONESLOT, 1, &nullSRV);
 }

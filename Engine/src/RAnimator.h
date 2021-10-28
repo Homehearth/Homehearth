@@ -27,10 +27,10 @@ private:
 	std::vector<bone_keyFrames_t>	m_bones;
 	std::unordered_map<std::string, std::shared_ptr<RAnimation>> m_animations;
 
-	//Matrices that is going up to the GPU
+	//Matrices that is going up to the GPU - structure buffer
 	std::vector<sm::Matrix>			 m_finalMatrices;
 	ComPtr<ID3D11Buffer>			 m_bonesSB_Buffer;
-	ComPtr<ID3D11ShaderResourceView> m_bonesSB_RSV;		//structurebuffer
+	ComPtr<ID3D11ShaderResourceView> m_bonesSB_RSV;
 
 private:
 	bool LoadModel(const std::string& filename);

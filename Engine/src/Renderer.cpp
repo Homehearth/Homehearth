@@ -50,6 +50,8 @@ void Renderer::Render(Scene* pScene)
 		{
 			this->UpdatePerFrame(pScene->GetCurrentCamera());
 			thread::RenderThreadHandler::SetCamera(pScene->GetCurrentCamera());
+			//Render/Update lights once instead of per pass.
+			//Set light
 			for (int i = 0; i < m_passes.size(); i++)
 			{
 				m_currentPass = i;
