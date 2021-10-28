@@ -81,7 +81,7 @@ void Scene::Update(float dt)
 void Scene::Render()
 {
 	PROFILE_FUNCTION();
-
+	thread::RenderThreadHandler::Get().SetObjectsBuffer(&m_renderableCopies);
 	// Divides up work between threads.
 	const render_instructions_t inst = thread::RenderThreadHandler::Get().Launch(static_cast<int>(m_renderableCopies[1].size()));
 	if((inst.start | inst.stop) == 0)

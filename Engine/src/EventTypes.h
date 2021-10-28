@@ -16,6 +16,7 @@ struct ESceneCollision
 {
 	Entity obj1;
 	Entity obj2;
+	float dt;
 };
 
 struct ESceneRender {};
