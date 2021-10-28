@@ -12,9 +12,13 @@ namespace thread
 {
 	/*
 	The must-meet threshold for divided rendering.
-		.Per thread object render.
+		*Per thread object render*
+	
+	This means the amount of objects per thread that needs to be met
+	for it to be considered benefitable to divide up the rendering
+	between threads.
 	*/
-	const int THRESHOLD = 2000;
+	const int THRESHOLD = 1000;
 
 	class RenderThreadHandler
 	{
@@ -28,6 +32,7 @@ namespace thread
 		bool m_isRunning;
 		bool m_isPooled = false;
 		void* m_objects;
+		void* m_camera;
 		bool m_isActive;
 
 		unsigned int m_amount;
@@ -124,5 +129,8 @@ namespace thread
 			Get the object buffer.
 		*/
 		static void* GetObjectsBuffer();
+
+		static void SetCamera(void* camera);
+		static void* GetCamera();
 	};
 }

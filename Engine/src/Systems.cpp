@@ -159,16 +159,16 @@ void Systems::MovementColliderSystem(HeadlessScene& scene, float dt)
 void Systems::LightSystem(Scene& scene, float dt)
 {
 	//If you update the lightData update the info to the GPU
-	scene.ForEachComponent<comp::Light>([&](comp::Light light)
+	scene.ForEachComponent<comp::Light>([&](Entity e, comp::Light light)
 		{
+			//If an Entity has both a Light and Transform component use Transform for position
+			comp::Transform* t = e.GetComponent<comp::Transform>();
+			if (t)
+			{
+				light.lightData.position = sm::Vector4(t->position.x, t->position.y, t->position.z, 1.f);
+			}
 			scene.GetLights()->EditLight(light.lightData, light.index);
 		});
 
-	//If an Entity has both a Light and Transform component use Transform for position
-	scene.ForEachComponent<comp::Transform, comp::Light>([&, dt](comp::Transform& transform, comp::Light& light)
-		{
-			light.lightData.position = sm::Vector4(transform.position.x, transform.position.y, transform.position.z, 1.f);
-			scene.GetLights()->EditLight(light.lightData, light.index);
-		});
 	
 }

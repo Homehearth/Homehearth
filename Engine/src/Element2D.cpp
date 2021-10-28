@@ -20,6 +20,11 @@ const unsigned int Element2D::GetLayer() const
 	return m_layer;
 }
 
+void Element2D::SetVisibility(const bool& boolean)
+{
+	m_isVisible = boolean;
+}
+
 const bool Element2D::IsVisible() const
 {
 	return m_isVisible;

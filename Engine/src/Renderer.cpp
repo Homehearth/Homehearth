@@ -47,6 +47,7 @@ void Renderer::Render(Scene* pScene)
 		if (!m_passes.empty())
 		{
 			this->UpdatePerFrame(pScene->GetCurrentCamera());
+			thread::RenderThreadHandler::SetCamera(pScene->GetCurrentCamera());
 			for (int i = 0; i < m_passes.size(); i++)
 			{
 				m_currentPass = i;
