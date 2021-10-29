@@ -1,8 +1,8 @@
 #pragma once
 #include "EnginePCH.h"
 #include "GameSystems.h"
-#include "Engine.h"
 #include "Lights.h"
+#include "Game.h"
 
 #include "Tags.h"
 
@@ -12,12 +12,15 @@ namespace sceneHelp
 	Entity CreateLightEntity(Scene& scene, sm::Vector4 pos, sm::Vector4 dir, sm::Vector4 col, float range, TypeLight type, UINT enabled);
 
 	void CreateMainMenuScene(Engine& engine);
-	void CreateLobbyScene(Engine& engine);
+	void CreateLobbyScene(Game* game);
 	void CreateGameScene(Engine& engine);
+	void CreateConnectScene(Engine& engine, Client* c);
+	void CreateJoinLobbyScene(Game* game);
 
-	void SetupMainMenuScreen();
-	void SetupLobbyJoinScreen(Window* pWindow, int mode = 0);
-	void SetupInLobbyScreen();
-	void SetupInGameScreen();
-	void SetupOptionsScreen();
+	void SetupMainMenuScreen(Engine& engine, Scene& scene);
+	void SetupLobbyJoinScreen(Game* game);
+	void SetupInLobbyScreen(Game* game);
+	void SetupInGameScreen(Scene& scene);
+	void SetupOptionsScreen(Scene& scene);
+	void SetupConnectScreen(Engine& e, Client* c);
 }

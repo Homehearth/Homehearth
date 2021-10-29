@@ -1,147 +1,79 @@
 #include "EnginePCH.h"
 
-using namespace rtd;
-#define INSTANCE rtd::Handler2D::Get()
-
-rtd::Handler2D::Handler2D()
+Handler2D::Handler2D()
 {
-	m_shouldClean = false;
+
 }
 
-rtd::Handler2D::~Handler2D()
+Handler2D::~Handler2D()
 {
-	for (auto& elem : m_elements)
+	for (auto it : m_elements)
 	{
-		delete elem;
-		elem = nullptr;
+		if (it.second)
+		{
+			delete it.second;
+			it.second = nullptr;
+		}
 	}
+
 	m_elements.clear();
 }
 
-void rtd::Handler2D::InsertElement(Element2D* element)
+void Handler2D::InsertElement(Element2D* element, std::string& name)
 {
-	INSTANCE.m_elements.push_back(element);
+	if (name.size() <= 0)
+	{
+		name.push_back((const char)m_elements.size());
+	}
+	m_elements.emplace(name, element);
 }
 
-void rtd::Handler2D::Render()
+void Handler2D::Render()
 {
-	for (int i = 0; i < (int)INSTANCE.m_drawBuffers[1].size(); i++)
+	for (int i = 0; i < (int)m_drawBuffers[1].size(); i++)
 	{
-		Element2D* elem = *INSTANCE.m_drawBuffers[1][i];
+		Element2D* elem = *m_drawBuffers[1][i];
 		if (elem)
 		{
-			if (elem->IsVisible())
+			if(elem->IsVisible())
 				elem->Draw();
 
 			elem->Release();
 		}
 	}
 
-	INSTANCE.m_drawBuffers.ReadyForSwap();
+	m_drawBuffers.ReadyForSwap();
 }
 
-void rtd::Handler2D::Update()
+void Handler2D::Update()
 {
-	bool shouldErase = false;
-	for (int i = 0; i < INSTANCE.m_elements.size(); i++)
+	for (auto& it : m_elements)
 	{
-		Element2D* elem = INSTANCE.m_elements[i];
-		if (elem != nullptr)
+		if (it.second)
 		{
-			if (elem->GetRef() > 0 && elem->IsVisible())
+			if (it.second->IsVisible())
 			{
-				if (elem->CheckClick())
-					elem->OnClick();
-				if (elem->CheckHover())
-					elem->OnHover();
+				if (it.second->CheckClick())
+					it.second->OnClick();
+				if (it.second->CheckHover())
+					it.second->OnHover();
 			}
-			else
-				shouldErase = true;
 		}
 	}
 
-	/*
-		Cleanup before push up to render
-	if (shouldErase)
+	if (!m_drawBuffers.IsSwapped())
 	{
-		INSTANCE.EraseAll();
-	}
-	*/
-
-	if (!INSTANCE.m_drawBuffers.IsSwapped())
-	{
-		INSTANCE.m_drawBuffers[0].clear();
-		for (int i = 0; i < INSTANCE.m_elements.size(); i++)
+		m_drawBuffers[0].clear();
+		for (auto& it : m_elements)
 		{
-			INSTANCE.m_drawBuffers[0].push_back(&INSTANCE.m_elements[i]);
-			INSTANCE.m_elements[i]->AddRef();
+			m_drawBuffers[0].push_back(&it.second);
+			it.second->AddRef();
 		}
 
-		INSTANCE.m_drawBuffers.Swap();
+		m_drawBuffers.Swap();
 	}
 }
-
-void rtd::Handler2D::EraseAll()
+bool Handler2D::IsRenderReady() const
 {
-	for (int i = 0; i < (int)INSTANCE.m_elements.size(); i++)
-	{
-		if (INSTANCE.m_elements[i]->GetRef() <= 0)
-		{
-			delete INSTANCE.m_elements[i];
-			INSTANCE.m_elements[i] = nullptr;
-			INSTANCE.m_elements.erase(INSTANCE.m_elements.begin() + i);
-		}
-	}
-}
-
-void rtd::Handler2D::RemoveAll()
-{
-	for (int i = 0; i < (int)INSTANCE.m_elements.size(); i++)
-	{
-		if (INSTANCE.m_elements[i]->GetRef() <= 0)
-		{
-			INSTANCE.m_elements.erase(INSTANCE.m_elements.begin() + i);
-		}
-	}
-}
-
-void rtd::Handler2D::DereferenceAllOnce()
-{
-	for (auto& elem : INSTANCE.m_elements)
-	{
-		if (elem->GetRef() > 0)
-			elem->Release();
-	}
-}
-
-void rtd::Handler2D::SetVisibilityAll(const bool& toggle)
-{
-	for (auto& elem : INSTANCE.m_elements)
-	{
-		if (elem->GetRef() > 0)
-			elem->SetVisibility(toggle);
-	}
-}
-
-const bool rtd::Handler2D::IsRenderReady()
-{
-	return INSTANCE.m_drawBuffers.IsSwapped();
-}
-
-void rtd::Handler2D::Cleanup()
-{
-	// Block until new frame is ready.
-	while (!INSTANCE.m_ready) {};
-
-	while (INSTANCE.m_elements.size() > 0)
-	{
-		delete INSTANCE.m_elements[(int)INSTANCE.m_elements.size() - 1];
-		INSTANCE.m_elements[(int)INSTANCE.m_elements.size() - 1] = nullptr;
-		INSTANCE.m_elements.pop_back();
-	}
-}
-
-void rtd::Handler2D::SetReady(const bool& toggle)
-{
-	INSTANCE.m_ready = toggle;
+	return m_drawBuffers.IsSwapped();
 }

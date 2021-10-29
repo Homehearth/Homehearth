@@ -8,7 +8,6 @@ Canvas::Canvas(const D2D1_COLOR_F& color, const draw_t& opts)
 	m_color = color;
 	m_drawOpts = opts;
 	m_border = nullptr;
-	this->SetLayer(m_drawOpts.layer);
 }
 
 rtd::Canvas::Canvas(const draw_t& opts)
@@ -72,7 +71,7 @@ void rtd::Canvas::OnHover()
 
 }
 
-const bool rtd::Canvas::CheckClick()
+bool rtd::Canvas::CheckClick()
 {
 	// CheckCollisions if mouse key is pressed.
 	// Is within bounds?
@@ -89,7 +88,7 @@ const bool rtd::Canvas::CheckClick()
 	return false;
 }
 
-const bool rtd::Canvas::CheckHover()
+bool rtd::Canvas::CheckHover()
 {
 	if (InputSystem::Get().GetMousePos().x > m_drawOpts.x_pos &&
 		InputSystem::Get().GetMousePos().x < m_drawOpts.x_pos + m_drawOpts.width &&

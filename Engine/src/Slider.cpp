@@ -105,7 +105,7 @@ void Slider::OnHover()
 {
 }
 
-const bool Slider::CheckHover()
+bool Slider::CheckHover()
 {
 	m_isHovering = false;
 	// Is within bounds?
@@ -119,7 +119,7 @@ const bool Slider::CheckHover()
 	return m_isHovering;
 }
 
-const bool Slider::CheckClick()
+bool Slider::CheckClick()
 {
 	m_isHeld = false;
 	// Is within bounds?

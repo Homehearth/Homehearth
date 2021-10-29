@@ -144,12 +144,14 @@ void D2D1Core::DrawT(const std::string& text, const draw_text_t& opt)
 		
 		INSTANCE->m_renderTarget->SetTransform(D2D1::Matrix3x2F::Scale(D2D1::SizeF(opt.scale, opt.scale), D2D1::Point2F(opt.x_pos, opt.y_pos)));
 
+		INSTANCE->m_solidBrush.Get()->SetColor({ 0.f, 0.f, 0.f, 1.f });
 		INSTANCE->m_renderTarget->DrawTextW(pwcsName,
 			(UINT32)text.length(),
 			current_format,
 			layoutRect,
 			INSTANCE->m_solidBrush.Get()
 		);
+		INSTANCE->m_solidBrush.Get()->SetColor({ 1.f, 1.f, 1.f, 1.f });
 
 		delete[] pwcsName;
 	}

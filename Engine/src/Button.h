@@ -2,6 +2,8 @@
 #include "Element2D.h"
 #include "Border.h"
 #include "Text.h"
+#include "Picture.h"
+#include "Canvas.h"
 
 namespace rtd
 {
@@ -16,6 +18,7 @@ namespace rtd
 		std::unique_ptr<Canvas> m_canvas = nullptr;
 		std::unique_ptr<Text> m_text = nullptr;
 
+		std::function<void()> m_function = nullptr;
 
 	public:
 
@@ -28,16 +31,17 @@ namespace rtd
 		Canvas* GetCanvas();
 		Text* GetText();
 
+		void SetOnPressedEvent(const std::function<void()>& func);
 
 		// CheckCollisions if the button is clicked.
-		const bool CheckClicked() const;
+		bool CheckClicked() const;
 
 		// Inherited via Element2D
 		virtual void Draw() override;
 		virtual void OnClick() override;
 		virtual void OnHover() override;
-		virtual const bool CheckClick() override;
-		virtual const bool CheckHover() override;
+		virtual bool CheckClick() override;
+		virtual bool CheckHover() override;
 
 	};
 }

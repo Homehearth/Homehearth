@@ -198,11 +198,16 @@ namespace network
 	{
 		if (SI->msgTempIn.header.size > 0)
 		{
-			if (SI->msgTempIn.header.size > 3000)
+			if (SI->msgTempIn.header.size > 30000)
 			{
-				LOG_ERROR("Allocating to much memory!");
+				LOG_ERROR("Message corrupted, skipping over!");
+				ZeroMemory(&SI->msgTempIn.header, sizeof(msg_header<T>));
+				this->PrimeReadHeader(SI);
 			}
-			this->PrimeReadPayload(SI);
+			else
+			{
+				this->PrimeReadPayload(SI);
+			}
 		}
 		else
 		{
@@ -539,6 +544,23 @@ namespace network
 			{
 				continue;
 			}
+
+			// Options to disable Nagle's algorithm (can queue up multiple packets instead of sending 1 by 1)
+			// SO_REUSEADDR will let the server to reuse the port its bound on even if it have not closed 
+			// by the the operating system yet.
+			int enable = 1;
+			if (setsockopt(listener, IPPROTO_TCP, TCP_NODELAY, (char*)&enable, sizeof(int)) != 0)
+			{
+				LOG_ERROR("setsockopt: %d", WSAGetLastError());
+				return false;
+			}
+
+			if (setsockopt(listener, SOL_SOCKET, SO_REUSEADDR, (char*)&enable, sizeof(int)) != 0)
+			{
+				LOG_ERROR("setsockopt: %d", WSAGetLastError());
+				return false;
+			}
+
 			if (bind(listener, p->ai_addr, static_cast<int>(p->ai_addrlen)) != 0)
 			{
 				LOG_ERROR("Bind failed with error: %d", WSAGetLastError());
@@ -576,22 +598,6 @@ namespace network
 		if ((m_CompletionPort = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0)) == NULL)
 		{
 			LOG_ERROR("CreateIoCompletionPort() failed with error %d", GetLastError());
-			return false;
-		}
-
-		// Options to disable Nagle's algorithm (can queue up multiple packets instead of sending 1 by 1)
-		// SO_REUSEADDR will let the server to reuse the port its bound on even if it have not closed 
-		// by the the operating system yet.
-		int enable = 1;
-		if (setsockopt(m_listening, IPPROTO_TCP, TCP_NODELAY, (char*)&enable, sizeof(int)) != 0)
-		{
-			LOG_ERROR("setsockopt: %d", WSAGetLastError());
-			return false;
-		}
-
-		if (setsockopt(m_listening, SOL_SOCKET, SO_REUSEADDR, (char*)&enable, sizeof(int)) != 0)
-		{
-			LOG_ERROR("setsockopt: %d", WSAGetLastError());
 			return false;
 		}
 

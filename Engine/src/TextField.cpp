@@ -6,152 +6,121 @@ using namespace rtd;
 
 void rtd::TextField::Update()
 {
-    for (int i = dx::Keyboard::Keys::D0; i != dx::Keyboard::Keys::Z; i++)
-    {
-        if (InputSystem::Get().CheckKeyboardKey(static_cast<dx::Keyboard::Keys>(i), KeyState::PRESSED))
-        {
-            const char c = static_cast<char>(i);
-            m_stringText.push_back(c);
-        }
-    }
+	if (m_stringText.size() < m_textLimit)
+	{
+		for (int i = dx::Keyboard::Keys::D0; i <= dx::Keyboard::Keys::Z; i++)
+		{
+			if (InputSystem::Get().CheckKeyboardKey(static_cast<dx::Keyboard::Keys>(i), KeyState::PRESSED))
+			{
+				const char c = static_cast<char>(i);
+				m_stringText.push_back(c);
+			}
+		}
 
-    for (int i = dx::Keyboard::Keys::NumPad0; i != dx::Keyboard::Keys::NumPad9; i++)
-    {
-        if (InputSystem::Get().CheckKeyboardKey(static_cast<dx::Keyboard::Keys>(i), KeyState::PRESSED))
-        {
-            const char c = static_cast<char>(i);
-            m_stringText.push_back(c);
-        }
-    }
+		for (int i = dx::Keyboard::Keys::NumPad0; i <= dx::Keyboard::Keys::NumPad9; i++)
+		{
+			if (InputSystem::Get().CheckKeyboardKey(static_cast<dx::Keyboard::Keys>(i), KeyState::PRESSED))
+			{
+				const char c = static_cast<char>(i - dx::Keyboard::Keys::D0);
+				m_stringText.push_back(c);
+			}
+		}
 
-    // Checks '.' press
-    if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Keys::OemPeriod, KeyState::PRESSED))
-    {
-        const char c = static_cast<char>(0x2E);
-        m_stringText.push_back(c);
-    }
+		// Checks '.' press
+		if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Keys::OemPeriod, KeyState::PRESSED))
+		{
+			const char c = static_cast<char>(0x2E);
+			m_stringText.push_back(c);
+		}
 
-    // Remove with the backspace
-    if ((InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Keys::Back, KeyState::PRESSED) & (m_stringText.length() > 0)) == 1)
-    {
-        m_stringText.pop_back();
-    }
+	}
+	// Remove with the backspace
+	if ((InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Keys::Back, KeyState::PRESSED) && (m_stringText.length() > 0)) == 1)
+	{
+		m_stringText.pop_back();
+	}
 
-    // Set output to be ready to be taken out.
-    if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Keys::Enter, KeyState::PRESSED))
-    {
-        m_finalInput = true;
-        m_border->SetColor(m_inactiveColor);
-        m_isUsed = false;
-    }
-
-    // Update the text
-    m_text.get()->SetText(m_stringText);
+	// Update the text
+	m_text->SetText(m_stringText);
 }
 
-rtd::TextField::TextField(const draw_text_t& opts)
+rtd::TextField::TextField(const draw_text_t& opts, size_t textLimit, bool isUsed, D2D1_COLOR_F borderActive)
+	:m_isUsed(isUsed), m_activeColor(borderActive), m_textLimit(textLimit)
 {
-    m_text = std::make_unique<Text>("", opts);
-    m_opts = opts;
-    m_isUsed = false;
-    m_stringText = "";
-    m_infoText = std::make_unique<Text>("Explanation Text", draw_text_t(opts.x_pos, opts.y_pos - 50.0f, opts.x_stretch, opts.y_stretch));
+	m_opts = opts;
+	m_text = std::make_unique<Text>("", m_opts);
+	//m_opts = opts;
+	m_border = std::make_unique<Border>(draw_t(m_opts.x_pos, m_opts.y_pos, m_opts.x_stretch, m_opts.y_stretch));
+	if (m_isUsed)
+	{
+		m_border->SetColor(m_activeColor);
+	}
+	else
+	{
+		m_border->SetColor( { m_activeColor.r, m_activeColor.g, m_activeColor.b, 0.f } );
+	}
+	m_finalInput = false;
+	m_stringText = "";
+	m_infoText = std::make_unique<Text>("Explanation Text", draw_text_t(m_opts.x_pos, m_opts.y_pos - 50.0f, m_opts.x_stretch, m_opts.y_stretch));
+	m_canvas = std::make_unique<Canvas>(D2D1_COLOR_F({ 1.0f, 1.0f, 1.0f, 1.0f }), draw_t(m_opts.x_pos, m_opts.y_pos, m_opts.x_stretch, m_opts.y_stretch));
 }
 
-Text* rtd::TextField::GetText()
+void rtd::TextField::SetDescriptionText(const std::string& displayText)
 {
-    return m_infoText.get();
-}
-
-Border* rtd::TextField::GetBorder()
-{
-    if (!m_border)
-    {
-        m_border = std::make_unique<Border>(draw_t(m_opts.x_pos, m_opts.y_pos, m_opts.x_stretch, m_opts.y_stretch));
-    }
-
-    return m_border.get();
-}
-
-void rtd::TextField::SetBorderColors(const D2D1_COLOR_F& active, const D2D1_COLOR_F& inactive)
-{
-    m_activeColor = active;
-    m_inactiveColor = inactive;
-}
-
-void rtd::TextField::Reset()
-{
-    m_isUsed = false;
-    m_finalInput = false;
-    //m_stringText.clear();
-}
-
-const bool rtd::TextField::GetBuffer(std::string*& output)
-{
-    if (m_finalInput)
-    {
-        output = &m_stringText;
-        m_finalInput = !m_finalInput;
-        m_isUsed = false;
-        return true;
-    }
-
-    return false;
+	m_infoText->SetText(displayText);
 }
 
 std::string* rtd::TextField::RawGetBuffer()
 {
-    return &m_stringText;
+	return &m_stringText;
 }
 
 void rtd::TextField::Draw()
 {
-    if (m_border)
-        m_border->Draw();
-    if (m_text)
-        m_text->Draw();
-    if (m_infoText)
-        m_infoText->Draw();
+	if (m_canvas)
+		m_canvas->Draw();
+	if (m_border)
+		m_border->Draw();
+	if (m_text)
+		m_text->Draw();
+	if (m_infoText)
+		m_infoText->Draw();
 }
 
 void rtd::TextField::OnClick()
 {
-    m_isUsed = !m_isUsed;
-    if (m_isUsed)
-        m_border->SetColor(m_activeColor);
-    else
-        m_border->SetColor(m_inactiveColor);
+	m_isUsed = true;
+	m_border->SetColor(m_activeColor);
 }
 
 void rtd::TextField::OnHover()
 {
-    if(m_isUsed)
-        this->Update();
+	if (m_isUsed)
+		this->Update();
 }
 
-const bool rtd::TextField::CheckHover()
+bool rtd::TextField::CheckHover()
 {
-    return true;
+	return true;
 }
 
-const bool rtd::TextField::CheckClick()
+bool rtd::TextField::CheckClick()
 {
-    if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED))
-    {
-        // Is within bounds?
-        if (InputSystem::Get().GetMousePos().x > m_opts.x_pos &&
-            InputSystem::Get().GetMousePos().x < m_opts.x_pos + m_opts.x_stretch &&
-            InputSystem::Get().GetMousePos().y > m_opts.y_pos &&
-            InputSystem::Get().GetMousePos().y < m_opts.y_pos + m_opts.y_stretch)
-        {
-            return true;
-        }
-        else
-        {
-            m_isUsed = false;
-            m_border->SetColor(m_inactiveColor);
-        }
-    }
-
-    return false;
+	if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED))
+	{
+		// Is within bounds?
+		if (InputSystem::Get().GetMousePos().x > m_opts.x_pos &&
+			InputSystem::Get().GetMousePos().x < m_opts.x_pos + m_opts.x_stretch &&
+			InputSystem::Get().GetMousePos().y > m_opts.y_pos &&
+			InputSystem::Get().GetMousePos().y < m_opts.y_pos + m_opts.y_stretch)
+		{
+			return true;
+		}
+		else
+		{
+			m_isUsed = false;
+			m_border->SetColor({ m_activeColor.r, m_activeColor.g, m_activeColor.b, 0.f });
+		}
+	}
+	return false;
 }

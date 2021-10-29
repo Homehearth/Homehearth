@@ -1,5 +1,7 @@
 #pragma once
 #include "Text.h"
+#include "Border.h"
+#include "Canvas.h"
 
 namespace rtd
 {
@@ -9,45 +11,30 @@ namespace rtd
 	class TextField : public Element2D
 	{
 	private:
-
 		std::unique_ptr<Text> m_text;
 
 		// Text used to explain the text fields purpose.
 		std::unique_ptr<Text> m_infoText;
+		std::unique_ptr<Canvas> m_canvas;
 
 		std::string m_stringText;
+		size_t m_textLimit;
 		std::unique_ptr<Border> m_border;
 		draw_text_t m_opts;
 		
 		// Border color when actively used.
-		D2D1_COLOR_F m_activeColor = {1.0f, 1.0f, 1.0f, 1.0f};
+		D2D1_COLOR_F m_activeColor;
 
-		// Border color when inactive.
-		D2D1_COLOR_F m_inactiveColor = { 0.0f, 0.0f, 0.0f, 1.0f };
 		bool m_isUsed;
-		bool m_finalInput = false;
+		bool m_finalInput;
 
 		// Update the text on text field
 		void Update();
 
 	public:
+		TextField(const draw_text_t& opts, size_t textLimit = -1, bool isUsed = false, D2D1_COLOR_F borderActive = { 0.0f, 0.0f, 0.0f, 1.0f });
 
-		TextField(const draw_text_t& opts);
-
-		// Returns the informational text about the textfield.
-		Text* GetText();
-
-		// Returns the border surrounding the text field.
-		Border* GetBorder();
-
-		// Set the active color and the inactive color.
-		void SetBorderColors(const D2D1_COLOR_F& active, const D2D1_COLOR_F& inactive);
-
-		// Reset the state of the textfield.
-		void Reset();
-
-		// Returns true if output is ready to be taken out.
-		const bool GetBuffer(std::string*& output);
+		void SetDescriptionText(const std::string& displayText);
 
 		// Get the buffer from textfield directly.
 		std::string* RawGetBuffer();
@@ -59,9 +46,9 @@ namespace rtd
 
 		virtual void OnHover() override;
 
-		virtual const bool CheckHover() override;
+		virtual bool CheckHover() override;
 
-		virtual const bool CheckClick() override;
+		virtual bool CheckClick() override;
 
 	};
 }
