@@ -1,5 +1,5 @@
 #pragma once
-#include "Server.h"
+class Simulation;
 //do maybe move this namespace?
 struct WaveInfo
 {
@@ -7,6 +7,7 @@ struct WaveInfo
 	float spawnDistance;
 	int scaleMultiplier;
 	int waveCount;
+	float flankWidth;
 };
 
 namespace EnemyManagement
@@ -25,13 +26,13 @@ namespace EnemyManagement
 		Flank_South,
 	};
 
-	Entity CreateEnemy(HeadlessScene& scene, Server* server, sm::Vector3 spawnP, EnemyType type = EnemyType::Default);
+	Entity CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, EnemyType type = EnemyType::Default);
 
-	void SpawnSwarmWave(HeadlessScene& scene, Server* server, WaveInfo& waveInfo);
+	void SpawnSwarmWave(Simulation* simulation, WaveInfo& waveInfo);
 	
 }
 
 namespace ServerSystems
 {
-	void WaveSystem(HeadlessScene& scene, Server* server, std::vector<EnemyManagement::WaveType> waves);
+	void WaveSystem(Simulation* simulation, std::vector<EnemyManagement::WaveType>& waves);
 }

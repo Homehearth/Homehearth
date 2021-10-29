@@ -214,7 +214,16 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 	this->m_gameID = gameID;
 	
 	//init waves
+	waves.push_back(EnemyManagement::WaveType::Flank_North);
+	waves.push_back(EnemyManagement::WaveType::Flank_South);
+	waves.push_back(EnemyManagement::WaveType::Flank_East);
+	waves.push_back(EnemyManagement::WaveType::Flank_West);
 	waves.push_back(EnemyManagement::WaveType::Swarm);
+	waves.push_back(EnemyManagement::WaveType::Flank_North);
+	waves.push_back(EnemyManagement::WaveType::Flank_South);
+	waves.push_back(EnemyManagement::WaveType::Swarm);
+
+	
 	
 	// Create Scenes associated with this Simulation
 	m_pLobbyScene = &m_pEngine->GetScene("Lobby_" + std::to_string(gameID));
@@ -231,7 +240,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 			Systems::MovementColliderSystem(scene, e.dt);
 			Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(scene, e.dt);
 			Systems::CombatSystem(scene, e.dt);
-			ServerSystems::WaveSystem(scene, m_pServer, waves);
+			ServerSystems::WaveSystem(this, waves);
 			//LOG_INFO("GAME Scene %d", m_gameID);
 		});
 

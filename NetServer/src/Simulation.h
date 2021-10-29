@@ -15,7 +15,6 @@ constexpr int MAX_PLAYER_PER_LOBBY = 2;
 class Simulation
 {
 private:
-	Server* m_pServer;
 	HeadlessEngine* m_pEngine;
 	uint32_t m_gameID;
 	uint32_t m_tick;
@@ -33,21 +32,25 @@ private:
 	std::unordered_map<uint32_t, Entity> m_players;
 
 	void InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg)const;
-	message<GameMsg> AllEntitiesMessage()const;
-	message<GameMsg> SingleEntityMessage(Entity entity)const;
 
 	uint32_t GetTick()const;
 	bool AddPlayer(uint32_t playerID);
 	bool RemovePlayer(uint32_t playerID);
 
-	// -1 will be defaulted to max value of unsigned 32 bit integer
-	void Broadcast(message<GameMsg>& msg, uint32_t exclude = -1);
+
 	void ScanForDisconnects();
 
 	std::vector<EnemyManagement::WaveType> waves;
 public:
+	Server* m_pServer;
 	Simulation(Server* pServer, HeadlessEngine* pEngine);
 	virtual ~Simulation() = default;
+
+	// -1 will be defaulted to max value of unsigned 32 bit integer
+	void Broadcast(message<GameMsg>& msg, uint32_t exclude = -1);
+	
+	message<GameMsg> AllEntitiesMessage()const;
+	message<GameMsg> SingleEntityMessage(Entity entity)const;
 
 	void SendSnapshot();
 	bool JoinLobby(uint32_t playerID, uint32_t gameID);
