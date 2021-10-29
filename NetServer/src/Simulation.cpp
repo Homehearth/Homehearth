@@ -138,7 +138,12 @@ bool Simulation::LeaveLobby(uint32_t playerID, uint32_t gameID)
 
 bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 {
+
 	this->m_gameID = gameID;
+	
+	//init waves
+	waves.push_back(EnemyManagement::WaveType::Swarm);
+	
 	// Create Scenes associated with this Simulation
 	m_pLobbyScene = &m_pEngine->GetScene("Lobby_" + std::to_string(gameID));
 	m_pLobbyScene->on<ESceneUpdate>([=](const ESceneUpdate& e, HeadlessScene& scene) 
@@ -154,6 +159,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 			Systems::MovementColliderSystem(scene, e.dt);
 			Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(scene, e.dt);
 			Systems::CombatSystem(scene, e.dt);
+			ServerSystems::WaveSystem(scene, m_pServer, waves);
 			//LOG_INFO("GAME Scene %d", m_gameID);
 		});
 

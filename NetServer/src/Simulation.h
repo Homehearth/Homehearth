@@ -1,6 +1,8 @@
 #pragma once
 #include "Server.h"
 #include "HeadlessEngine.h"
+#include "ServerSystems.h"
+#include <GameSystems.h>
 
 /* 
 		Simulation defines each ongoing simulation from the perspective of the server
@@ -27,6 +29,7 @@ private:
 	message<GameMsg> AllEntitiesMessage();
 	message<GameMsg> SingleEntityMessage(Entity entity);
 
+	std::vector<EnemyManagement::WaveType> waves;
 public:
 	Simulation(Server* pServer, HeadlessEngine* pEngine);
 	virtual ~Simulation() = default;

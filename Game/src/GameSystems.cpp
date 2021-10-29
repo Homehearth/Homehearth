@@ -1,4 +1,5 @@
 #include "GameSystems.h"
+#include "EnginePCH.h"
 
 using namespace network;
 void GameSystems::UserInputSystem(Scene& scene, Client& client)
@@ -41,3 +42,4 @@ void GameSystems::RenderIsCollidingSystem(Scene& scene)
 			}
 		});
 }
+
