@@ -326,7 +326,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	{
 		std::string err;
 		msg >> err;
-		SetScene("MainMenu");
+		SetScene("JoinLobby");
 		LOG_WARNING("Request denied: %s", err.c_str());
 		break;
 	}
