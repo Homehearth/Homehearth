@@ -228,21 +228,43 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 	this->m_gameID = gameID;
 	// Create Scenes associated with this Simulation
 	m_pLobbyScene = &m_pEngine->GetScene("Lobby_" + std::to_string(gameID));
-	m_pLobbyScene->on<ESceneUpdate>([=](const ESceneUpdate& e, HeadlessScene& scene)
+	m_pLobbyScene->on<ESceneUpdate>([&](const ESceneUpdate& e, HeadlessScene& scene)
 		{
 			//LOG_INFO("LOBBY Scene %d", gameID);
 
 		});
 
 	m_pGameScene = &m_pEngine->GetScene("Game_" + std::to_string(gameID));
-	m_pGameScene->on<ESceneUpdate>([=](const ESceneUpdate& e, HeadlessScene& scene)
+	m_pGameScene->on<ESceneUpdate>([&](const ESceneUpdate& e, HeadlessScene& scene)
 		{
+			// update components with input
+			for (const auto& pair : m_playerInputs)
+			{
+				Entity e = pair.first;
+				InputState input = pair.second;
+				// update velocity
+				e.GetComponent<comp::Velocity>()->vel = sm::Vector3(input.axisHorizontal, 0, input.axisVertical) * e.GetComponent<comp::Player>()->runSpeed;
+
+				// check if attacking
+				if (input.leftMouse)
+				{
+					comp::CombatStats* stats = e.GetComponent<comp::CombatStats>();
+					if (stats->cooldownTimer <= 0.0f)
+					{
+						stats->isAttacking = true;
+						stats->targetRay = input.mouseRay;
+					}
+				}
+			}
+
+			//  run all game logic systems
 			Systems::CharacterMovement(scene, e.dt);
 			Systems::MovementSystem(scene, e.dt);
 			Systems::MovementColliderSystem(scene, e.dt);
 			Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(scene, e.dt);
+			Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingSphere>(scene, e.dt);
 			Systems::CombatSystem(scene, e.dt);
-			//LOG_INFO("GAME Scene %d", m_gameID);
+			
 		});
 
 	//On collision event add entities as pair in the collision system
@@ -411,6 +433,17 @@ void Simulation::Update(float dt)
 {
 	if (m_pCurrentScene)
 		m_pCurrentScene->Update(dt);
+}
+
+void Simulation::UpdateInput(InputState state, uint32_t playerID)
+{
+	if (m_players.find(playerID) == m_players.end())
+	{
+		LOG_ERROR("Invalid Player ID when updating input: %u", playerID);
+		return;
+	}
+
+	m_playerInputs[m_players.at(playerID)] = state;
 }
 
 void Simulation::NextTick()

@@ -181,39 +181,12 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 
 		if (m_simulations.find(gameID) != m_simulations.end())
 		{
-			m_simulations.at(gameID)->GetGameScene()->ForEachComponent<comp::Network, comp::Velocity, comp::Player>([=](comp::Network& net, comp::Velocity& vel, comp::Player& player)
-				{
-					if (net.id == playerID)
-					{
-						sm::Vector3 axisInput(input.axisX, 0, input.axisY);
-						axisInput.Normalize(axisInput);
-						vel.vel = axisInput * player.runSpeed;
-					}
-				});
+			m_simulations.at(gameID)->UpdateInput(input, playerID);
 		}
 		else
 		{
 			LOG_WARNING("Invalid GameID for player input message");
 		}
-
-		break;
-	}
-	case GameMsg::Game_PlayerAttack:
-	{
-		uint32_t playerID;
-		uint32_t gameID;
-		Ray_t ray;
-		msg >> ray >> gameID >> playerID;
-
-		m_simulations.at(gameID)->GetGameScene()->ForEachComponent<comp::Network, comp::CombatStats>([=](comp::Network& net, comp::CombatStats& attack)
-			{
-				if (net.id == playerID)
-				{
-					attack.isAttacking = true;
-					attack.targetRay = ray;
-					LOG_INFO("PlayerID [%u] tried to attack.", playerID);
-				}
-			});
 
 		break;
 	}

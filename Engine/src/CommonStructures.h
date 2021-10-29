@@ -14,14 +14,6 @@ enum class TypeLight : UINT
 	POINT
 };
 
-struct InputState
-{
-	int axisX : 2;
-	int axisY : 2;
-	
-
-	uint32_t tick;
-};
 
 struct Plane_t
 {
@@ -48,6 +40,17 @@ struct Ray_t
 	}
 };
 
+struct InputState
+{
+	int axisHorizontal : 2;
+	int axisVertical : 2;
+	bool leftMouse : 1;
+
+	Ray_t mouseRay;
+
+	uint32_t tick;
+};
+
 enum class GameMsg : uint8_t
 {
 	Client_Accepted,
@@ -69,8 +72,7 @@ enum class GameMsg : uint8_t
 	Game_AddEntity,
 	Game_RemoveEntity,
 
-	Game_PlayerInput,
-	Game_PlayerAttack
+	Game_PlayerInput
 };
 
 /*

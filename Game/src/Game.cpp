@@ -47,23 +47,13 @@ void Game::UpdateNetwork(float deltaTime)
 				message<GameMsg> msg;
 				msg.header.id = GameMsg::Game_PlayerInput;
 
-				InputState input;
-				input.axisX = InputSystem::Get().GetAxis(Axis::HORIZONTAL);
-				input.axisY = InputSystem::Get().GetAxis(Axis::VERTICAL);
-
-				input.tick = 0; // todo
-
-				msg << this->m_localPID << m_gameID << input;
+				
+				msg << this->m_localPID << m_gameID << m_inputState;
 
 				m_client.Send(msg);
 
-				if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED))
-				{
-					message<GameMsg> msg2;
-					msg2.header.id = GameMsg::Game_PlayerAttack;
-					msg2 << this->m_localPID << m_gameID << InputSystem::Get().GetMouseRay();
-					m_client.Send(msg2);
-				}
+				//reset input
+				m_inputState.leftMouse = false;
 			}
 		}
 	}
@@ -188,6 +178,10 @@ void Game::OnUserUpdate(float deltaTime)
 			}
 		);
 	}
+	
+	//Update InputState
+	this->UpdateInput();
+
 }
 
 
@@ -505,5 +499,16 @@ Entity Game::CreateEntityFromMessage(message<GameMsg>& msg)
 
 
 	return e;
+}
+
+void Game::UpdateInput()
+{
+	m_inputState.axisHorizontal = InputSystem::Get().GetAxis(Axis::HORIZONTAL);
+	m_inputState.axisVertical = InputSystem::Get().GetAxis(Axis::VERTICAL);
+	if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED))
+	{
+		m_inputState.leftMouse = true;
+		m_inputState.mouseRay = InputSystem::Get().GetMouseRay();
+	}
 }
 

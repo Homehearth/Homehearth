@@ -31,6 +31,8 @@ private:
 	HeadlessScene* m_pCurrentScene;
 	
 	std::unordered_map<uint32_t, Entity> m_players;
+	std::unordered_map<Entity, InputState> m_playerInputs;
+
 
 	void InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg)const;
 	message<GameMsg> AllEntitiesMessage()const;
@@ -65,6 +67,8 @@ public:
 	void NextTick();
 
 	void Update(float dt);
+	void UpdateInput(InputState state, uint32_t playerID);
+	
 	HeadlessScene* GetLobbyScene() const;
 	HeadlessScene* GetGameScene() const;
 };
