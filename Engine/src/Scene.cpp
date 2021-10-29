@@ -25,14 +25,44 @@ void Scene::Update(float dt)
 	{
 		PROFILE_SCOPE("Copy Transforms");
 		m_renderableCopies[0].clear();
+
 		m_registry.group<comp::Renderable, comp::Transform>().each([&](comp::Renderable& r, comp::Transform& t)
+			{
+				r.data.worldMatrix = ecs::GetMatrix(t);
+				m_renderableCopies[0].push_back(r);
+			});
+
+		m_renderableCopies.Swap();
+	}
+
+	/*if (!m_renderableCopies.IsSwapped() &&
+		!m_renderableAnimCopies.IsSwapped())
+	{
+		PROFILE_SCOPE("Copy Transforms");
+		m_renderableCopies[0].clear();
+		m_renderableAnimCopies[0].clear();
+
+		m_registry.view<comp::Renderable, comp::Transform>().each([&](entt::entity entity, comp::Renderable& r, comp::Transform& t)
 		{
 			r.data.worldMatrix = ecs::GetMatrix(t);
-			m_renderableCopies[0].push_back(r);
+			
+			comp::Animator* anim = m_registry.try_get<comp::Animator>(entity);
+			if (anim != nullptr)
+			{
+				RenderableAnimation rendAnim;
+				rendAnim.animator = *anim;
+				rendAnim.renderable = r;
+				m_renderableAnimCopies[0].push_back(rendAnim);
+			}
+			else
+			{
+				m_renderableCopies[0].push_back(r);
+			}
 		});
 		
 		m_renderableCopies.Swap();
-	}
+		m_renderableAnimCopies.Swap();
+	}*/
 
 	
 	if (!m_renderableAnimCopies.IsSwapped())
