@@ -52,6 +52,14 @@ void Game::UpdateNetwork(float deltaTime)
 				msg << this->m_localPID << m_gameID << x << z;
 
 				m_client.Send(msg);
+
+				if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED))
+				{
+					message<GameMsg> msg2;
+					msg2.header.id = GameMsg::Game_PlayerAttack;
+					msg2 << this->m_localPID << m_gameID;
+					m_client.Send(msg2);
+				}
 			}
 		}
 	}
@@ -292,6 +300,18 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 
 		break;
 	}
+	//case GameMsg::Game_AddEnemy:
+	//{
+	//	uint32_t count; // Could be more than one enemy
+	//	msg >> count;
+	//	for (uint32_t i = 0; i < count; i++)
+	//	{
+	//		LOG_INFO("A wild enemy has appeared!");
+	//		Entity e = m_demoScene->CreateEnemy();
+	//	}
+
+	//	break;
+	//}
 	case GameMsg::Lobby_Accepted:
 	{
 		msg >> m_gameID;

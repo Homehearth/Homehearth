@@ -1,5 +1,6 @@
 #pragma once
 
+enum class GameState;
 /*
 	The knowledger and controller for different game states.
 	States such as, In Menu, In Game, and more helps the game
