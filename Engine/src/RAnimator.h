@@ -19,14 +19,11 @@ const UINT T2D_BONESLOT = 11;
 class RAnimator : public resource::GResource
 {
 private:
-	double					m_frameTime;
-	std::string				m_currentAnim;	//optimize by ints instead?
-	std::string				m_nextAnim;
-
+	double							m_frameTime;
 	std::vector<bone_keyFrames_t>	m_bones;
 	std::unordered_map<std::string, std::shared_ptr<RAnimation>> m_animations;
 
-	//std::shared_ptr<RAnimation> m_currentAnim;
+	std::shared_ptr<RAnimation> m_currentAnim;
 	//std::shared_ptr<RAnimation> m_nextAnim;
 
 	//Matrices that is going up to the GPU - structure buffer
@@ -38,7 +35,6 @@ private:
 	void LoadAnimations(const std::vector<std::string>& animNames);
 
 	bool CreateBonesSB();
-
 	void UpdateStructureBuffer();
 
 public:

@@ -3,9 +3,7 @@
 
 RAnimator::RAnimator()
 {
-	m_frameTime		= 0;
-	m_currentAnim	= "";
-	m_nextAnim		= "";
+	m_frameTime = 0;
 }
 
 RAnimator::~RAnimator()
@@ -15,7 +13,6 @@ RAnimator::~RAnimator()
 	m_animations.clear();
 }
 
-//bool RAnimator::LoadSkeleton(const std::shared_ptr<RModel>& model)
 bool RAnimator::LoadSkeleton(const std::vector<bone_t>& skeleton)
 {
 	bool loaded = false;
@@ -96,9 +93,9 @@ bool RAnimator::Create(const std::string& filename)
 		Testing with hardcoded values for now...
 	*/
 
-	m_currentAnim = "Player_Idle.fbx";
+	//Load in all the animations needed
 
-	m_animations[m_currentAnim] = ResourceManager::Get().GetResource<RAnimation>(m_currentAnim);
+	m_currentAnim = ResourceManager::Get().GetResource<RAnimation>("Player_Idle.fbx");
 
 	return true;
 }
@@ -107,10 +104,8 @@ void RAnimator::Update()
 {
 	if (!m_bones.empty())
 	{
-		double tickDT = m_animations[m_currentAnim]->GetTicksPerFrame() * Stats::GetDeltaTime();
-
-		m_frameTime = fmod(m_frameTime + tickDT, m_animations[m_currentAnim]->GetDuraction());
-
+		double tickDT = m_currentAnim->GetTicksPerFrame() * Stats::GetDeltaTime();
+		m_frameTime = fmod(m_frameTime + tickDT, m_currentAnim->GetDuraction());
 		double nextFrameTime = m_frameTime + tickDT;
 
 		std::vector<sm::Matrix> modelMatrices;
@@ -118,7 +113,7 @@ void RAnimator::Update()
 
 		for (size_t i = 0; i < m_bones.size(); i++)
 		{
-			sm::Matrix localMatrix = m_animations[m_currentAnim]->GetMatrix(m_bones[i].name, m_frameTime, nextFrameTime, m_bones[i].lastKeys, true);
+			sm::Matrix localMatrix = m_currentAnim->GetMatrix(m_bones[i].name, m_frameTime, nextFrameTime, m_bones[i].lastKeys, false);
 
 			if (m_bones[i].parentIndex == -1)
 				modelMatrices[i] = localMatrix;

@@ -4,7 +4,7 @@
 Stats::Stats()
 {
 	m_deltaTime	= 0.0f;
-	m_maxFPS	= 2000.0f;
+	m_maxFPS	= 140.0f;
 }
 
 const float& Stats::IGetDeltaTime() const

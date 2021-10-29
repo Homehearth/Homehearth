@@ -98,21 +98,18 @@ namespace sceneHelp
 		*/ 
 		Entity testAnimEnt = gameScene.CreateEntity();
 		testAnimEnt.AddComponent<comp::Transform>();
+		//Add model
 		comp::Renderable* testRenderable = testAnimEnt.AddComponent<comp::Renderable>();
 		testRenderable->model = ResourceManager::Get().GetResource<RModel>("Player_Skeleton.fbx");
+		//Add animator - remove component if it did not work - will still render model
 		comp::Animator* testAnimator = testAnimEnt.AddComponent<comp::Animator>();
-		testAnimator->data = ResourceManager::Get().GetResource<RAnimator>("Test.anim");
-		testAnimator->data->LoadSkeleton(testRenderable->model->GetSkeleton());
+		testAnimator->animator = ResourceManager::Get().GetResource<RAnimator>("Test.anim");
+		if (!testAnimator->animator->LoadSkeleton(testRenderable->model->GetSkeleton()))
+			testAnimEnt.RemoveComponent<comp::Animator>();
 
-
-		//comp::RenderableAnimation* renderableAnim = testAnimEnt.AddComponent<comp::RenderableAnimation>();
-		//renderableAnim->model = ResourceManager::Get().GetResource<RModel>("Player_Skeleton.fbx");
-		//renderableAnim->animator = ResourceManager::Get().GetResource<RAnimator>("Test.anim");
-		//renderableAnim->animator->LoadSkeleton(renderableAnim->model->GetSkeleton());
 
 		CreateLightEntity(gameScene, { 0.f, 0.f, 0.f, 0.f }, { 1.f, -1.f, 0.f, 0.f }, { 10.f, 10.f, 10.f, 10.f }, 0, TypeLight::DIRECTIONAL, 1);
 		CreateLightEntity(gameScene, { 0.f, 8.f, -10.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 300.f, 300.f, 300.f, 300.f }, 75.f, TypeLight::POINT, 1);
-
 		InputSystem::Get().SetCamera(gameScene.GetCurrentCamera());
 
 

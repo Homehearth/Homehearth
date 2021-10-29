@@ -53,15 +53,9 @@ namespace ecs
 			basic_model_matrix_t		data;
 		};
 
-		/*struct RenderableAnimation
-		{
-			Renderable					renderable;
-			std::shared_ptr<RAnimator>	animator;
-		};*/
-
 		struct Animator
 		{
-			std::shared_ptr<RAnimator> data;
+			std::shared_ptr<RAnimator> animator;
 		};
 
 		// Used on server side
