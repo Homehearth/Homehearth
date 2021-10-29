@@ -262,16 +262,16 @@ bool Simulation::AddNPC(uint32_t npcId)
 	npc.AddComponent<comp::MeshName>()->name = "Test/monster.fbx";
 	npc.AddComponent<comp::NPC>();
 	npc.AddComponent<comp::Network>()->id = npcId;
-	npc.AddComponent<comp::BoundingOrientedBox>();
+	//npc.AddComponent<comp::BoundingOrientedBox>();
 
-	CollisionSystem::Get().AddOnCollision(npc, [&](Entity other)
-	{
-		comp::NPC* otherNPC = m_pCurrentScene->GetRegistry()->try_get<comp::NPC>(other);
-		if (otherNPC)
-		{
-			LOG_INFO("NPC COLLISION!");
-		}
-	});
+	//CollisionSystem::Get().AddOnCollision(npc, [&](Entity other)
+	//{
+	//	comp::NPC* otherNPC = m_pCurrentScene->GetRegistry()->try_get<comp::NPC>(other);
+	//	if (otherNPC)
+	//	{
+	//		LOG_INFO("NPC COLLISION!");
+	//	}
+	//});
 	Broadcast(SingleEntityMessage(npc));
 	return true;
 }

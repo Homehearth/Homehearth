@@ -176,19 +176,37 @@ void Systems::AISystem(HeadlessScene& scene)
 {
 	scene.ForEachComponent<comp::NPC>([&](Entity entity, comp::NPC& npc)
 	{
-		comp::Transform* transform = entity.GetComponent<comp::Transform>();
+		comp::Transform* transformNPC = entity.GetComponent<comp::Transform>();
 		Entity* currentClosestPlayer = nullptr;
 		scene.ForEachComponent < comp::Player>([&](Entity playerEntity, comp::Player& player)
 		{
 			if (currentClosestPlayer)
 			{
-
+				comp::Transform* transformPlayer = playerEntity.GetComponent<comp::Transform>();
+				comp::Transform* transformCurrentClosestPlayer = playerEntity.GetComponent<comp::Transform>();
+				if (sm::Vector3::Distance(transformPlayer->position, transformNPC->position) < sm::Vector3::Distance(transformCurrentClosestPlayer->position, transformNPC->position))
+				{
+					currentClosestPlayer = &playerEntity;
+				}
 			}
 			else
 			{
 				currentClosestPlayer = &playerEntity;
 			}
 		});
-		//transform->position += sm::Vector3(0.01f, 0.f, 1.f);
+		comp::Transform* transformCurrentClosestPlayer = currentClosestPlayer->GetComponent<comp::Transform>();
+		comp::Velocity* velocityTowardsPlayer = entity.GetComponent<comp::Velocity>();
+		if (velocityTowardsPlayer)
+		{
+			velocityTowardsPlayer->vel = transformCurrentClosestPlayer->position - transformNPC->position;
+			velocityTowardsPlayer->vel.Normalize();
+			velocityTowardsPlayer->vel *= npc.movementSpeed;
+
+		}
+		/*if (sm::Vector3::Distance(transformCurrentClosestPlayer->position, transformNPC->position) > npc.attackRange)
+		{
+
+		}*/
+
 	});
 }

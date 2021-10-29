@@ -91,7 +91,7 @@ namespace ecs
 		};
 		struct NPC
 		{
-			float movementSpeed;
+			float movementSpeed = 8.f;
 			float attackRange;
 			bool hostile;
 		};
