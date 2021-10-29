@@ -227,9 +227,8 @@ namespace network
 		{
 			if (tempMsgIn.header.size > 30000)
 			{
-				EnterCriticalSection(&lock);
-				LOG_ERROR("Allocating to much memory! THIS IS BAD");
-				LeaveCriticalSection(&lock);
+				LOG_ERROR("Message corrupted, ignoring read!");
+				this->PrimeReadHeader();
 			}
 			else
 			{

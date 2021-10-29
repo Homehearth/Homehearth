@@ -198,11 +198,16 @@ namespace network
 	{
 		if (SI->msgTempIn.header.size > 0)
 		{
-			if (SI->msgTempIn.header.size > 3000)
+			if (SI->msgTempIn.header.size > 30000)
 			{
-				LOG_ERROR("Allocating to much memory!");
+				LOG_ERROR("Message corrupted, skipping over!");
+				ZeroMemory(&SI->msgTempIn.header, sizeof(msg_header<T>));
+				this->PrimeReadHeader(SI);
 			}
-			this->PrimeReadPayload(SI);
+			else
+			{
+				this->PrimeReadPayload(SI);
+			}
 		}
 		else
 		{

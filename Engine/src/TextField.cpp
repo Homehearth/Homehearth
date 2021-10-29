@@ -8,7 +8,7 @@ void rtd::TextField::Update()
 {
 	if (m_stringText.size() < m_textLimit)
 	{
-		for (int i = dx::Keyboard::Keys::D0; i != dx::Keyboard::Keys::Z; i++)
+		for (int i = dx::Keyboard::Keys::D0; i <= dx::Keyboard::Keys::Z; i++)
 		{
 			if (InputSystem::Get().CheckKeyboardKey(static_cast<dx::Keyboard::Keys>(i), KeyState::PRESSED))
 			{
@@ -17,11 +17,11 @@ void rtd::TextField::Update()
 			}
 		}
 
-		for (int i = dx::Keyboard::Keys::NumPad0; i != dx::Keyboard::Keys::NumPad9; i++)
+		for (int i = dx::Keyboard::Keys::NumPad0; i <= dx::Keyboard::Keys::NumPad9; i++)
 		{
 			if (InputSystem::Get().CheckKeyboardKey(static_cast<dx::Keyboard::Keys>(i), KeyState::PRESSED))
 			{
-				const char c = static_cast<char>(i);
+				const char c = static_cast<char>(i - dx::Keyboard::Keys::D0);
 				m_stringText.push_back(c);
 			}
 		}
@@ -51,7 +51,14 @@ rtd::TextField::TextField(const draw_text_t& opts, size_t textLimit, bool isUsed
 	m_text = std::make_unique<Text>("", m_opts);
 	//m_opts = opts;
 	m_border = std::make_unique<Border>(draw_t(m_opts.x_pos, m_opts.y_pos, m_opts.x_stretch, m_opts.y_stretch));
-	m_border->SetColor(m_activeColor);
+	if (m_isUsed)
+	{
+		m_border->SetColor(m_activeColor);
+	}
+	else
+	{
+		m_border->SetColor( { m_activeColor.r, m_activeColor.g, m_activeColor.b, 0.f } );
+	}
 	m_finalInput = false;
 	m_stringText = "";
 	m_infoText = std::make_unique<Text>("Explanation Text", draw_text_t(m_opts.x_pos, m_opts.y_pos - 50.0f, m_opts.x_stretch, m_opts.y_stretch));

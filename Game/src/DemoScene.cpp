@@ -73,8 +73,7 @@ namespace sceneHelp
 
 	void CreateConnectScene(Engine& engine, Client* c)
 	{
-		Scene& connectScene = engine.GetScene("ConnectMenu");
-		SetupConnectScreen(engine, connectScene, engine.GetWindow(), c);
+		SetupConnectScreen(engine, c);
 	}
 
 	void CreateJoinLobbyScene(Engine& engine)
@@ -341,22 +340,24 @@ void sceneHelp::SetupOptionsScreen(Scene& scene)
 {
 }
 
-void sceneHelp::SetupConnectScreen(Engine& e, Scene& scene, Window* pWindow, Client* c)
+void sceneHelp::SetupConnectScreen(Engine& e, Client* c)
 {
-	const unsigned int width = pWindow->GetWidth(), height = pWindow->GetHeight();
+	Scene& connectScene = e.GetScene("ConnectMenu");
+
+	const unsigned int width = e.GetWindow()->GetWidth(), height = e.GetWindow()->GetHeight();
 
 	rtd::TextField* ipField = new rtd::TextField(draw_text_t(width / 3 - 50.f, 100.0f, 200.0f, 35.0f), 12, true);
-	scene.Insert2DElement(ipField, "ipField");
+	connectScene.Insert2DElement(ipField, "ipField");
 	ipField->SetDescriptionText("IP address:");
 
 	rtd::TextField* portField = new rtd::TextField(draw_text_t(width / 3 + 200.f, 100.0f, 100.0f, 35.0f), 6);
-	scene.Insert2DElement(portField, "portField");
+	connectScene.Insert2DElement(portField, "portField");
 	portField->SetDescriptionText("Port:");
 	const char* t = ipField->RawGetBuffer()->c_str();
 	const char* p = portField->RawGetBuffer()->c_str();
 
 	rtd::Button* connectButton = new rtd::Button("StartButton.png", draw_t((float)width / 2 - 150.f, (float)height - (float)height / 3, 300.0f, 100.0f));
-	scene.Insert2DElement(connectButton, "connectButton");
+	connectScene.Insert2DElement(connectButton, "connectButton");
 	connectButton->SetOnPressedEvent([=, &e]()
 		{
 			std::string* ip = ipField->RawGetBuffer();
