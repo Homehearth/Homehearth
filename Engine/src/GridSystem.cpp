@@ -20,16 +20,17 @@ void GridSystem::Initialize(sm::Vector2 mapSize, sm::Vector3 position, std::stri
 	int width = 0;
 	int height = 0;
 	int comp = 0;
+
 	//std::shared_ptr<RTexture> texture = ResourceManager::Get().GetResource<RTexture>(fileName);
-	unsigned char* image = stbi_load(m_filepath.c_str(), &width, &height, &comp, STBI_rgb_alpha); //TODO: find out what to do with this
-
-	//std::shared_ptr<RTexture> texture = std::make_shared<RTexture>();
-	unsigned char* pixelsData = image;//texture->GetImageData(fileName);
-
 	//bool added = ResourceManager::Get().AddResource(fileName, texture);
+	//std::shared_ptr<RTexture> texture = std::make_shared<RTexture>();
+	//texture->GetImageData(fileName);
+	//texture->GetSize();
+
+	unsigned char* pixelsData = stbi_load(m_filepath.c_str(), &width, &height, &comp, STBI_rgb_alpha); //TODO: find out what to do with this
 
 	std::vector<int> pixelValues;
-	m_gridSize = { (float)width, (float)height };//texture->GetSize();
+	m_gridSize = { (float)width, (float)height };
 
 	for (int i = 0; i < m_gridSize.x * m_gridSize.y * 4; i++)
 	{
@@ -56,17 +57,17 @@ void GridSystem::Initialize(sm::Vector2 mapSize, sm::Vector3 position, std::stri
 			if (rgba == sm::Vector4{ 0, 255, 0, 255 }) // If Green
 			{
 				tileTypeTemp = TileType::EMPTY;
-				std::cout << "  Empty    tile on: " << (float)row << " " << (float)col << "   with " << ", RGBA: " << rgba.x << " " << rgba.y << " " << rgba.z << " " << rgba.w << std::endl;
+				//std::cout << "  Empty    tile on: " << (float)row << " " << (float)col << "   with " << ", RGBA: " << rgba.x << " " << rgba.y << " " << rgba.z << " " << rgba.w << std::endl;
 			}
 			if (rgba == sm::Vector4{ 255, 0, 0, 255 }) // if Red
 			{
 				tileTypeTemp = TileType::BUILDING;
-				std::cout << " Building  tile on: " << (float)row << " " << (float)col << "   with " << ", RGBA: " << rgba.x << " " << rgba.y << " " << rgba.z << " " << rgba.w << std::endl;
+				//std::cout << " Building  tile on: " << (float)row << " " << (float)col << "   with " << ", RGBA: " << rgba.x << " " << rgba.y << " " << rgba.z << " " << rgba.w << std::endl;
 			}
 			if (rgba == sm::Vector4{ 0, 0, 255, 255 }) // if Blue
 			{
 				tileTypeTemp = TileType::DEFENCE;
-				std::cout << " Defence  tile on: " << (float)row << " " << (float)col << "   with " << ", RGBA: " << rgba.x << " " << rgba.y << " " << rgba.z << " " << rgba.w << std::endl;
+				//std::cout << " Defence  tile on: " << (float)row << " " << (float)col << "   with " << ", RGBA: " << rgba.x << " " << rgba.y << " " << rgba.z << " " << rgba.w << std::endl;
 			}
 
 			Tile tileTemp;

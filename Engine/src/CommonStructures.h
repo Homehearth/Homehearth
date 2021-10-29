@@ -125,13 +125,4 @@ static struct GridProperties_t
 	sm::Vector2 mapSize;
 	std::string fileName;
 
-	GridProperties_t Get() 
-	{
-		GridProperties_t grid;
-		grid.position = sm::Vector3(0, 0, 0);
-		grid.mapSize  = { 600,600 };
-		grid.fileName = "GridMapBig.png";
-
-		return grid;
-	}
-};
+} Options = { {0,0,0},{600,600} ,"GridMapBig.png"};
