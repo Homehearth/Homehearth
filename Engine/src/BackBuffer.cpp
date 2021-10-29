@@ -1,5 +1,6 @@
 #include "EnginePCH.h"
 
+/*
 #define INSTANCE BackBuffer::instance
 BackBuffer* INSTANCE = nullptr;
 
@@ -21,3 +22,4 @@ DoubleBuffer<std::unordered_map<entt::entity, comp::Renderable>>* BackBuffer::Ge
 {
     return &INSTANCE->m_buffers;
 }
+*/

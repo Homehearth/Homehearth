@@ -7,8 +7,8 @@ Camera::Camera()
 {
 	m_FOV = dx::XMConvertToRadians(90.f); //0.4f * 3.14f;
 	m_zoomValue = 1;
-	m_nearPlane = 0.1f; // 1.0f;
-	m_farPlane = 100.0; // 1000.0f
+	m_nearPlane = 0.01f; // 1.0f;
+	m_farPlane = 1000.0; // 1000.0f
 	m_rollPitchYaw = { 0.0f, 0.0f, 0.0f };
 	m_move = { 0.0f, 0.0f, 0.0f };
 	m_aspectRatio = 0;
@@ -92,8 +92,8 @@ void Camera::Update(float deltaTime)
 		{
 			m_move.y += m_movingSpeed * deltaTime;
 		}
-		m_move.x = InputSystem::Get().GetAxis(Axis::HORIZONTAL) * m_movingSpeed * deltaTime;
-		m_move.z = InputSystem::Get().GetAxis(Axis::VERTICAL) * m_movingSpeed * deltaTime;
+		m_move.x = static_cast<float>(InputSystem::Get().GetAxis(Axis::HORIZONTAL));
+		m_move.z = static_cast<float>(InputSystem::Get().GetAxis(Axis::VERTICAL));
 
 		//Update camera values
 		m_right = dx::XMVector3TransformNormal(m_defaultRight, m_rotationMatrix);
@@ -107,7 +107,7 @@ void Camera::Update(float deltaTime)
 
 		m_move = sm::Vector3::Transform(m_move, quaterion);
 
-		m_position += m_move;
+		m_position += m_move * m_movingSpeed * deltaTime;
 		m_move = { 0.0f, 0.0f, 0.0f };
 		m_forward = m_target;
 

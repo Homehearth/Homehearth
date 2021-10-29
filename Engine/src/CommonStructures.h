@@ -14,6 +14,12 @@ enum class TypeLight : UINT
 	POINT
 };
 
+struct InputState
+{
+	int x, y;
+	uint32_t tick;
+};
+
 struct Ray_t
 {
 	sm::Vector3 rayPos, rayDir;
@@ -29,10 +35,13 @@ enum class GameMsg : uint8_t
 	Lobby_Accepted,
 	Lobby_AcceptedLeave,
 	Lobby_Invalid,
+	Lobby_Update,
 
 	Server_AssignID,
 	Server_GetPing,
 	
+	Game_PlayerReady,
+	Game_Start,
 	Game_Snapshot,
 	Game_AddEntity,
 	Game_RemoveEntity,

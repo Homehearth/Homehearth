@@ -10,10 +10,10 @@ private:
 	virtual void OnClientConnect(std::string&& ip, const uint16_t& port) override;
 	virtual void OnClientDisconnect(const SOCKET& socket) override;
 	virtual void OnMessageReceived(message<GameMsg>& msg) override;
-	virtual void OnClientValidated(SOCKET_INFORMATION*& SI) override;
+	virtual void OnClientValidated(const SOCKET& socket) override;
 
 	uint32_t m_uniqueID;
-	
+	 
 public:
 	Server(std::function<void(message<GameMsg>&)> handler);
 	Server() = default;

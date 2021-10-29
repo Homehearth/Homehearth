@@ -1,7 +1,6 @@
 #pragma once
-#include <EnginePCH.h>
 #include "RTexture.h"
-
+#include "Window.h"
 /*
 	Is this your first time in this .h Header file?
 	WIKI:
@@ -98,6 +97,8 @@ struct draw_text_t
 	float x_stretch = 100.0f;
 	float y_stretch = 100.0f;
 
+	float scale = 1.0f;
+
 	draw_text_t() = default;
 
 	draw_text_t(IDWriteTextFormat* format, float x, float y, float x_stretch, float y_stretch)
@@ -126,6 +127,16 @@ enum class Shapes
 	TRIANGLE_FILLED,
 	TRIANGLE_OUTLINED,
 	NR_OF_SHAPES
+};
+
+enum class LineWidth
+{
+	NONE,
+	SMALL,
+	MEDIUM,
+	LARGE,
+	THICK,
+	NR_OF
 };
 
 /*
