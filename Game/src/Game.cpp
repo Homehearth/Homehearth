@@ -336,7 +336,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	{
 		std::string err;
 		msg >> err;
-		SetScene("MainMenu");
+		SetScene("JoinLobby");
 		LOG_WARNING("Request denied: %s", err.c_str());
 		break;
 	}
@@ -360,6 +360,37 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		uint32_t player = -1;
 		uint8_t state = 0;
 		msg >> state >> player >> nrOfPlayers;
+
+		Scene& lobbyScene = GetScene("Lobby");
+		if (player == 2 && state == 2)
+		{
+			lobbyScene.GetElement<rtd::Text>("PlayerText2")->SetVisiblity(false);
+			lobbyScene.GetElement<rtd::Canvas>("Canvas5")->SetVisiblity(false);
+		}
+		else if (player == 2 && state == 1)
+		{
+			lobbyScene.GetElement<rtd::Text>("PlayerText2")->SetVisiblity(true);
+			lobbyScene.GetElement<rtd::Canvas>("Canvas5")->SetVisiblity(true);
+		}
+		
+		if (player == 1 && state == 2)
+		{
+			lobbyScene.GetElement<rtd::Text>("PlayerText1")->SetVisiblity(false);
+			lobbyScene.GetElement<rtd::Canvas>("Canvas4")->SetVisiblity(false);
+		}
+		else if (player == 1 && state == 1)
+		{
+			lobbyScene.GetElement<rtd::Text>("PlayerText1")->SetVisiblity(true);
+			lobbyScene.GetElement<rtd::Canvas>("Canvas4")->SetVisiblity(true);
+		}
+
+		if (nrOfPlayers == 2)
+		{
+			lobbyScene.GetElement<rtd::Text>("PlayerText1")->SetVisiblity(true);
+			lobbyScene.GetElement<rtd::Canvas>("Canvas4")->SetVisiblity(true);
+			lobbyScene.GetElement<rtd::Text>("PlayerText2")->SetVisiblity(true);
+			lobbyScene.GetElement<rtd::Canvas>("Canvas5")->SetVisiblity(true);
+		}
 
 		break;
 	}
