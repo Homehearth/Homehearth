@@ -44,6 +44,10 @@ void rtd::TextField::Update()
 		InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Keys::V, KeyState::PRESSED)) 
 	{
 		m_stringText = InputSystem::Get().GetClipboard();
+		if (m_stringText.length() > m_textLimit)
+		{
+			m_stringText = m_stringText.substr(0, m_textLimit);
+		}
 	}
 
 	// Update the text

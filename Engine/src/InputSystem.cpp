@@ -146,13 +146,13 @@ std::string InputSystem::GetClipboard()
 {
 	if (!OpenClipboard(NULL))
 	{
-		LOG_WARNING("Failed to open clipboard");
+		LOG_WARNING("Failed to open clipboard %d", GetLastError());
 		return "";
 	}
 	HANDLE handle = GetClipboardData(CF_TEXT);
 	if (!handle)
 	{
-		LOG_WARNING("Failed to get clipboard handle");
+		LOG_WARNING("Failed to get clipboard handle %d", GetLastError());
 		return "";
 	}
 
