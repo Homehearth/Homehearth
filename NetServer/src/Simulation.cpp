@@ -237,9 +237,9 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 	m_pGameScene = &m_pEngine->GetScene("Game_" + std::to_string(gameID));
 	m_pGameScene->on<ESceneUpdate>([=](const ESceneUpdate& e, HeadlessScene& scene)
 		{
+			Systems::CharacterMovement(scene, e.dt);
 			Systems::MovementSystem(scene, e.dt);
 			Systems::MovementColliderSystem(scene, e.dt);
-			Systems::CharacterMovement(scene, e.dt);
 			Systems::CombatSystem(scene, e.dt);
 			Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(scene);
 			//LOG_INFO("GAME Scene %d", m_gameID);
