@@ -296,16 +296,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		msg >> m_gameID;
 		SetScene("Lobby");
 		LOG_INFO("You are now in lobby: %lu", m_gameID);
-
-
-		/*
-		// Update the lobby ID text
-		rtd::Text* lobbyIdText = GET_ELEMENT("LobbyIdText", rtd::Text);
-		if (lobbyIdText)
-		{
-			lobbyIdText->SetText("Lobby ID: " + std::to_string(m_gameID));
-		}
-		*/
 		break;
 	}
 	case GameMsg::Lobby_Invalid:
@@ -322,13 +312,11 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		m_isLeavingLobby = false;
 		m_gameID = -1;
 		SetScene("MainMenu");
-		//rtd::Handler2D::Get().SetVisibilityAll(false);
 
 		break;
 	}
 	case GameMsg::Game_Start:
 	{
-		//rtd::Handler2D::Get().Cleanup();
 		SetScene("Game");
 		break;
 	}
@@ -339,62 +327,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		uint8_t state = 0;
 		msg >> state >> player >> nrOfPlayers;
 
-		/*
-		rtd::Text* player2Text = GET_ELEMENT("player2text", rtd::Text);
-		rtd::Canvas* player2Canvas = GET_ELEMENT("player2canvas", rtd::Canvas);
-		rtd::Picture* player2Symbol = GET_ELEMENT("player2_symbol", rtd::Picture);
 
-		rtd::Text* player1Text = GET_ELEMENT("player1text", rtd::Text);
-		rtd::Canvas* player1Canvas = GET_ELEMENT("player1canvas", rtd::Canvas);
-		rtd::Picture* player1Symbol = GET_ELEMENT("player1_symbol", rtd::Picture);
-
-		if (!player2Text || !player2Canvas || !player2Symbol || !player1Text || !player1Canvas || !player1Symbol)
-			break;
-
-		if (player == 1)
-		{
-			// Hide or show player1 depending on state.
-			if (state == 2)
-			{
-				player1Text->SetVisibility(false);
-				player1Canvas->SetVisibility(false);
-				player1Symbol->SetVisibility(false);
-			}
-			else if (state == 1)
-			{
-				player1Text->SetVisibility(true);
-				player1Canvas->SetVisibility(true);
-				player1Symbol->SetVisibility(true);
-			}
-		}
-		else if (player == 2)
-		{
-			// Hide or show player2 depending on state.
-			if (state == 2)
-			{
-				player2Text->SetVisibility(false);
-				player2Canvas->SetVisibility(false);
-				player2Symbol->SetVisibility(false);
-			}
-			else if (state == 1)
-			{
-				player2Text->SetVisibility(true);
-				player2Canvas->SetVisibility(true);
-				player2Symbol->SetVisibility(true);
-			}
-		}
-
-		// Set all visible.
-		if (nrOfPlayers == 2)
-		{
-			player1Text->SetVisibility(true);
-			player1Canvas->SetVisibility(true);
-			player1Symbol->SetVisibility(true);
-			player2Text->SetVisibility(true);
-			player2Canvas->SetVisibility(true);
-			player2Symbol->SetVisibility(true);
-		}
-		*/
 		break;
 	}
 	}

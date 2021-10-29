@@ -56,6 +56,8 @@ protected:
 	// check to see if element is clicked.
 	bool m_isClicked = false;
 
+	bool m_isVisible = true;
+
 	// check to see if element is being hovered over.
 	bool m_isHovering = false;
 
@@ -63,6 +65,9 @@ public:
 
 	Element2D() = default;
 	virtual ~Element2D() = default;
+
+	bool IsVisible() const;
+	void SetVisiblity(const bool& toggle);
 
 	virtual void Draw() = 0;
 
