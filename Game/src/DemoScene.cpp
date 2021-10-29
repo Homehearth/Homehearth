@@ -349,7 +349,7 @@ void sceneHelp::SetupConnectScreen(Engine& e, Client* c)
 
 	const unsigned int width = e.GetWindow()->GetWidth(), height = e.GetWindow()->GetHeight();
 
-	rtd::TextField* ipField = new rtd::TextField(draw_text_t(width / 3 - 50.f, 100.0f, 200.0f, 35.0f), 12, true);
+	rtd::TextField* ipField = new rtd::TextField(draw_text_t(width / 3 - 50.f, 100.0f, 200.0f, 35.0f), 15, true);
 	connectScene.Insert2DElement(ipField, "ipField");
 	ipField->SetDescriptionText("IP address:");
 
