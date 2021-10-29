@@ -13,6 +13,7 @@ namespace ecs
 		MESH_NAME,
 		BOUNDING_ORIENTED_BOX,
 		BOUNDING_SPHERE,
+		LIGHT,
 		COMPONENT_COUNT,
 		COMPONENT_MAX = 32
 	};
@@ -135,6 +136,7 @@ namespace ecs
 	sm::Matrix GetMatrix(const component::Transform& transform);
 	sm::Vector3 GetForward(const component::Transform& transform);
 	sm::Vector3 GetUp(const component::Transform& transform);
+
 };
 
 network::message<GameMsg>& operator<<(network::message<GameMsg>& msg, const sm::Vector3& data);
