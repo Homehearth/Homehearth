@@ -76,7 +76,7 @@ bool Game::OnStartup()
 
 	// Set Current Scene
 	SetScene("MainMenu");
-	
+
 	return true;
 }
 
@@ -159,38 +159,38 @@ void Game::OnUserUpdate(float deltaTime)
 	ImGui::End();
 	);
 
-	
+
 	if (GetCurrentScene() == &GetScene("Game") && GetCurrentScene()->GetCurrentCamera()->GetCameraType() == CAMERATYPE::PLAY)
 	{
-		GetCurrentScene()->ForEachComponent<comp::Transform, comp::Tag<TagType::LOCAL_PLAYER>>([&]
-		(comp::Transform& t, comp::Tag<TagType::LOCAL_PLAYER>& tag)
+		if (m_players.find(m_localPID) != m_players.end())
+		{
+			comp::Transform* t = m_players.at(m_localPID).GetComponent<comp::Transform>();
+
+			int x = InputSystem::Get().GetAxis(Axis::HORIZONTAL);
+			int z = InputSystem::Get().GetAxis(Axis::VERTICAL);
+			if (x || z)
 			{
-				//int x = InputSystem::Get().GetAxis(Axis::HORIZONTAL);
-				//int z = InputSystem::Get().GetAxis(Axis::VERTICAL);
-				//if (x || z)
-				//{
-				//	t.position.x += 10.f * deltaTime * x;
-				//	t.position.z += 10.f * deltaTime * z;
+				t->position.x += 10.f * deltaTime * x;
+				t->position.z += 10.f * deltaTime * z;
 
-				//	predictedPositions.push_back(t);
-				//}
-
-				//LOG_INFO("Predicted size: %llu", predictedPositions.size());
-
-				//if (sm::Vector3::Distance(t.position, test.position) > m_predictionThreshhold)
-				//{
-				//	t.position.x = test.position.x;
-				//	t.position.z = test.position.z;
-				//}
+				predictedPositions.push_back(*t);
 			}
-		);
+
+			LOG_INFO("Predicted size: %llu", predictedPositions.size());
+
+			if (sm::Vector3::Distance(t->position, test.position) > m_predictionThreshhold)
+			{
+				t->position.x = test.position.x;
+				t->position.z = test.position.z;
+			}
+		}
 	}
 }
 
 
 void Game::OnShutdown()
 {
-
+	m_players.clear();
 }
 
 
@@ -264,7 +264,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			if (e.GetComponent<comp::Network>()->id == m_localPID)
 			{
 				LOG_INFO("This player added");
-				e.AddComponent<comp::Tag<TagType::LOCAL_PLAYER>>();
+				m_players[m_localPID] = e;
 
 				GetScene("Game").ForEachComponent<comp::Tag<TagType::CAMERA>>([&](Entity entt, comp::Tag<TagType::CAMERA>& t)
 					{
@@ -274,6 +274,10 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 							c->camera.SetFollowEntity(e);
 						}
 					});
+			}
+			else
+			{
+				m_players[e.GetComponent<comp::Network>()->id] = e;
 			}
 		}
 
@@ -291,8 +295,14 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 
 		GetScene("Game").ForEachComponent<comp::Network>([&](Entity& e, comp::Network& net)
 			{
+				// Do we have this entity?
 				if (std::find(ids.begin(), ids.end(), net.id) != ids.end())
 				{
+					// Was the entity a player?
+					if (m_players.find(net.id) != m_players.end())
+					{
+						m_players.erase(net.id);
+					}
 					LOG_INFO("Removed Entity %u", net.id);
 					e.Destroy();
 				}
@@ -350,7 +360,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		uint32_t player = -1;
 		uint8_t state = 0;
 		msg >> state >> player >> nrOfPlayers;
-
 
 		break;
 	}

@@ -11,6 +11,7 @@ private:
 	std::string* m_lobbyBuffer = nullptr;
 	std::string* m_portBuffer = nullptr;
 	std::vector<comp::Transform> predictedPositions;
+	std::unordered_map<uint32_t, Entity> m_players;
 
 	bool m_isLeavingLobby;
 	comp::Transform test;
