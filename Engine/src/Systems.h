@@ -4,18 +4,12 @@
 
 namespace Systems
 {
-	/*
-	 * Ideas:
-	 *		MeleeSystem & RangeSystem.
-	 *		CombatSystem with multiple functions.
-	 *		SuperCombatSystem.
-	 */
 	void CombatSystem(HeadlessScene& scene, float dt);
 	void MovementSystem(HeadlessScene& scene, float dt);
 	void MovementColliderSystem(HeadlessScene& scene, float dt);
 	void LightSystem(Scene& scene, float dt);
 	template<typename Collider1, typename Collider2>
-	void CheckCollisions(HeadlessScene& scene)
+	void CheckCollisions(HeadlessScene& scene, float dt)
 	{
 		
 		auto view1 = scene.GetRegistry()->view<Collider1>();
@@ -46,7 +40,7 @@ namespace Systems
 					Entity e2(*scene.GetRegistry(), *entity2);
 					if (collider1.Intersects(collider2))
 					{
-						scene.publish<ESceneCollision>(e1, e2);
+						scene.publish<ESceneCollision>(e1, e2, dt);
 					}
 					else
 					{

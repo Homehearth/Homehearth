@@ -240,8 +240,8 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 			Systems::CharacterMovement(scene, e.dt);
 			Systems::MovementSystem(scene, e.dt);
 			Systems::MovementColliderSystem(scene, e.dt);
+			Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(scene, e.dt);
 			Systems::CombatSystem(scene, e.dt);
-			Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(scene);
 			//LOG_INFO("GAME Scene %d", m_gameID);
 		});
 
@@ -255,14 +255,13 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 	// ---DEBUG ENTITY---
 	Entity e = m_pGameScene->CreateEntity();
 	e.AddComponent<comp::Network>()->id = m_pServer->PopNextUniqueID();
-	e.AddComponent<comp::Transform>()->position = sm::Vector3(5, 2, 0);
+	e.AddComponent<comp::Transform>()->position = sm::Vector3(-5, 0, 0);
 	e.AddComponent<comp::MeshName>()->name = "Chest.obj";
-	e.AddComponent<comp::Velocity>()->vel = sm::Vector3(0, -0.2f, 0);
-	e.AddComponent<comp::BoundingSphere>();
-	e.AddComponent<comp::Attack>();
+	e.AddComponent<comp::BoundingOrientedBox>()->Extents = sm::Vector3(2.f,2.f,2.f);
+	e.AddComponent<comp::Enemy>();
 	e.AddComponent<comp::Health>();
-	const unsigned char BAD = 8;
-	e.AddComponent<comp::Tag<BAD>>();
+	*e.AddComponent<comp::CombatStats>() = { 1.0f, 20.f, 1.0f, false, false };
+	e.AddComponent<comp::Tag<TagType::STATIC>>();
 	// ---END OF DEBUG---
 
 	m_pCurrentScene = m_pLobbyScene;
@@ -337,22 +336,16 @@ bool Simulation::AddPlayer(uint32_t playerID)
 	player.AddComponent<comp::MeshName>()->name = "Arrow.fbx";
 	player.AddComponent<comp::Network>()->id = playerID;
 	player.AddComponent<comp::Player>()->runSpeed = 10.f;
+	*player.AddComponent<comp::CombatStats>() = { 1.0f, 20.f, 1.0f, false, false };
+	player.AddComponent<comp::Health>();
 	player.AddComponent<comp::BoundingOrientedBox>();
 
-	// CombatSystem Test.
-	const unsigned char GOOD = 4;
-	*player.AddComponent<comp::Attack>() = { 1.f, 20.f, 5.f, false, false };
-	player.AddComponent<comp::Tag<GOOD>>();
-	*player.AddComponent<comp::Health>() = { 100.f, 100.f, true };
-
+	//Collision will handle this entity as a dynamic one
+	player.AddComponent<comp::Tag<TagType::DYNAMIC>>();
 	
-	CollisionSystem::Get().AddOnCollision(player, [&](Entity player2)
+	CollisionSystem::Get().AddOnCollision(player, [=](Entity player2)
 		{
-			comp::Player* otherPlayer = player2.GetComponent<comp::Player>();
-			if (otherPlayer != nullptr)
-			{
-				/*LOG_INFO("Collision!");*/
-			}
+			comp::Player* otherPlayer = m_pCurrentScene->GetRegistry()->try_get<comp::Player>(player2);
 		});
 
 	// Setup players temp...

@@ -103,7 +103,7 @@ namespace ecs
 
 		struct Enemy
 		{
-			
+			float temp = 0;
 		};
 
 		struct Light
@@ -119,20 +119,20 @@ namespace ecs
 			bool isAlive = true;
 		};
 
-		struct Attack
+		struct CombatStats
 		{
 			float attackSpeed = 1.f;
 			float attackDamage = 5.f;
-			float attackRange = 5.f;
+			float attackLifeTime = 5.f;
 			bool isRanged = false;
 			bool isAttacking = false;
 			float cooldownTimer = 0.f;
-			Ray_t targetRay;
 		};
 
-		struct Projectile
+		struct Attack
 		{
 			float lifeTime;
+			float damage;
 		};
 
 		template<uint8_t ID>
