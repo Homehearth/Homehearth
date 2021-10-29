@@ -148,7 +148,7 @@ namespace ecs
 	sm::Vector3 GetForward(const component::Transform& transform);
 	sm::Vector3 GetUp(const component::Transform& transform);
 	bool StepRotateTo(sm::Vector3& rotation, const sm::Vector3& target, float t);
-
+	bool StepTranslateTo(sm::Vector3& translation, const sm::Vector3& target, float t);
 
 };
 

@@ -119,8 +119,8 @@ void Camera::Update(float deltaTime)
 		quaterion = sm::Quaternion::CreateFromYawPitchRoll(m_rollPitchYaw.z, m_rollPitchYaw.y, m_rollPitchYaw.x);
 		m_rotationMatrix = dx::XMMatrixRotationRollPitchYaw(m_rollPitchYaw.y, m_rollPitchYaw.z, m_rollPitchYaw.x);
 
-		sm::Matrix transformed = sm::Matrix::Identity;
 		comp::Transform* targetTransform = nullptr;
+		
 		if (!m_targetEntity.IsNull())
 		{
 			targetTransform = m_targetEntity.GetComponent<comp::Transform>();

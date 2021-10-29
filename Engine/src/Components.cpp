@@ -39,7 +39,13 @@ namespace ecs {
         }
         rotation.y = rotation.y * (1 - time) + targetRotation * time;
 
-        return std::abs(rotation.y - targetRotation) < 0.001f;
+        return std::abs(rotation.y - targetRotation) < 0.01f;
+    }
+
+    bool StepTranslateTo(sm::Vector3& translation, const sm::Vector3& target, float t)
+    {
+        translation = translation * (1 - t) + target * t;
+        return sm::Vector3::Distance(translation, target) < 0.01f;
     }
 
 }

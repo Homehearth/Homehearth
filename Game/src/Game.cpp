@@ -159,6 +159,9 @@ void Game::OnUserUpdate(float deltaTime)
 		GetCurrentScene()->ForEachComponent<comp::Transform, comp::Velocity, comp::Player, comp::Tag<TagType::LOCAL_PLAYER>>([&]
 		(comp::Transform& t, comp::Velocity& v, comp::Player& p, comp::Tag<TagType::LOCAL_PLAYER>& tag)
 			{
+
+				v.vel = sm::Vector3(m_inputState.axisHorizontal, 0, m_inputState.axisVertical) * p.runSpeed;
+
 				//int x = InputSystem::Get().GetAxis(Axis::HORIZONTAL);
 				//int z = InputSystem::Get().GetAxis(Axis::VERTICAL);
 				//if (x || z)
@@ -297,18 +300,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 
 		break;
 	}
-	//case GameMsg::Game_AddEnemy:
-	//{
-	//	uint32_t count; // Could be more than one enemy
-	//	msg >> count;
-	//	for (uint32_t i = 0; i < count; i++)
-	//	{
-	//		LOG_INFO("A wild enemy has appeared!");
-	//		Entity e = m_demoScene->CreateEnemy();
-	//	}
-
-	//	break;
-	//}
 	case GameMsg::Lobby_Accepted:
 	{
 		msg >> m_gameID;
