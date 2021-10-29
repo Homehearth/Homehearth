@@ -225,7 +225,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 				Entity e = pair.first;
 				InputState input = pair.second;
 				// update velocity
-				e.GetComponent<comp::Velocity>()->vel = sm::Vector3(input.axisHorizontal, 0, input.axisVertical) * e.GetComponent<comp::Player>()->runSpeed;
+				e.GetComponent<comp::Velocity>()->vel = sm::Vector3(static_cast<float>(input.axisHorizontal), 0, static_cast<float>(input.axisVertical)) * e.GetComponent<comp::Player>()->runSpeed;
 
 				// check if attacking
 				if (input.leftMouse)
