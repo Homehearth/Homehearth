@@ -401,11 +401,16 @@ bool Simulation::AddEnemy()
 
 bool Simulation::RemovePlayer(uint32_t playerID)
 {
-	if (!m_players.at(playerID).Destroy())
+	Entity player = m_players.at(playerID);
+	if (m_playerInputs.find(player) != m_playerInputs.end())
+	{
+		m_playerInputs.erase(player);
+	}
+	if (!player.Destroy())
 	{
 		return false;
 	}
-
+	
 	LOG_INFO("Removed player %u from scene", playerID);
 
 	return true;

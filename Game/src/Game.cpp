@@ -155,6 +155,7 @@ void Game::OnUserUpdate(float deltaTime)
 	);
 
 
+			/*
 	if (GetCurrentScene() == &GetScene("Game") && GetCurrentScene()->GetCurrentCamera()->GetCameraType() == CAMERATYPE::PLAY)
 	{
 		if (m_players.find(m_localPID) != m_players.end())
@@ -172,7 +173,6 @@ void Game::OnUserUpdate(float deltaTime)
 			}
 
 			//LOG_INFO("Predicted size: %llu", predictedPositions.size());
-
 			if (sm::Vector3::Distance(t->position, test.position) > m_predictionThreshhold)
 			{
 				t->position.x = test.position.x;
@@ -180,6 +180,7 @@ void Game::OnUserUpdate(float deltaTime)
 			}
 		}
 	}
+			*/
 	
 	//Update InputState
 	this->UpdateInput();
