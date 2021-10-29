@@ -47,8 +47,19 @@ namespace sceneHelp
 		// Scene logic
 		Scene& mainMenuScene = engine.GetScene("MainMenu");
 		SetupMainMenuScreen(engine, mainMenuScene);
-		mainMenuScene.on<ESceneUpdate>([](const ESceneUpdate& e, Scene& scene)
+
+		Entity backgroundScene = mainMenuScene.CreateEntity();
+		backgroundScene.AddComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>("Tree1.obj");
+		backgroundScene.AddComponent<comp::Transform>();
+
+		mainMenuScene.GetCurrentCamera()->Initialize(sm::Vector3(0, 60, -60), sm::Vector3(0, 0, 1), sm::Vector3(0, 1, 0),
+			sm::Vector2((float)engine.GetWindow()->GetWidth(), (float)engine.GetWindow()->GetHeight()), CAMERATYPE::PLAY);
+		mainMenuScene.GetCurrentCamera()->SetFollowEntity(backgroundScene);
+
+		mainMenuScene.on<ESceneUpdate>([backgroundScene](const ESceneUpdate& e, Scene& scene)
 			{
+				backgroundScene.GetComponent<comp::Transform>()->rotation.y += e.dt;
+
 				IMGUI(
 					ImGui::Begin("Scene");
 				ImGui::Text("MainMenu");
@@ -114,7 +125,6 @@ namespace sceneHelp
 
 		gameScene.on<ESceneUpdate>([cameraEntity, debugCameraEntity](const ESceneUpdate& e, Scene& scene)
 			{
-				scene.GetCurrentCamera()->Update(e.dt);
 
 				IMGUI(
 					ImGui::Begin("Scene");
