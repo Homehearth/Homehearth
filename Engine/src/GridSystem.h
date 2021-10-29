@@ -1,6 +1,7 @@
 #pragma once
 #include "EnginePCH.h"
 #include "Tile.h"
+#include <stb_image.h>
 
 class GridSystem
 {

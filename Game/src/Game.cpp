@@ -57,7 +57,7 @@ bool Game::OnStartup()
 	sceneHelp::CreateGameScene(*this);
 	sceneHelp::CreateMainMenuScene(*this);
 
-
+	CreateGridSystem();
 	// Set Current Scene
 	SetScene("MainMenu");
 	
@@ -394,6 +394,50 @@ void Game::OnClientDisconnect()
 	SetScene("MainMenu");
 
 	LOG_INFO("Disconnected from server!");
+}
+
+void Game::CreateGridSystem()
+{
+
+	m_grid.Initialize({ 600,600 }, {0,0,0}, "GridMapBig.png");
+	sm::Vector3 tileModelSize = { 2, 0.5f, 2 };
+	for (int i = 0; i < m_grid.GetTilePositions()->size(); i++)
+	{
+		if (m_grid.GetTiles()->at(i).GetType() == TileType::EMPTY)
+		{
+			Entity tile1 = GetScene("Game").CreateEntity();
+			comp::Transform* transformt1 = tile1.AddComponent<comp::Transform>();
+			transformt1->position = m_grid.GetTilePositions()->at(i);
+			transformt1->scale = tileModelSize;
+			comp::Renderable* renderablet1 = tile1.AddComponent<comp::Renderable>();
+			renderablet1->model = ResourceManager::Get().GetResource<RModel>("Cube.obj");
+			renderablet1->model->ChangeMaterial("TileEmpty.mtl");
+		}
+		else if (m_grid.GetTiles()->at(i).GetType() == TileType::BUILDING)
+		{
+			Entity tile2 = GetScene("Game").CreateEntity();
+			comp::Transform* transformt2 = tile2.AddComponent<comp::Transform>();
+			transformt2->position = m_grid.GetTilePositions()->at(i);
+			transformt2->scale = tileModelSize;
+			comp::Renderable* renderablet2 = tile2.AddComponent<comp::Renderable>();
+			renderablet2->model = ResourceManager::Get().GetResource<RModel>("Cube1.obj");
+			renderablet2->model->ChangeMaterial("TileBuilding.mtl");
+		}
+		else if (m_grid.GetTiles()->at(i).GetType() == TileType::DEFENCE)
+		{
+			Entity tile3 = GetScene("Game").CreateEntity();
+			comp::Transform* transformt3 = tile3.AddComponent<comp::Transform>();
+			transformt3->position = m_grid.GetTilePositions()->at(i);
+			transformt3->scale = tileModelSize;
+			comp::Renderable* renderablet3 = tile3.AddComponent<comp::Renderable>();
+			renderablet3->model = ResourceManager::Get().GetResource<RModel>("CubeD.obj");
+			renderablet3->model->ChangeMaterial("TileDefence.mtl");
+		}
+		else
+		{
+			std::cout << "Couldnt create this tile" << std::endl;
+		}
+	}
 }
 
 Entity Game::CreateEntityFromMessage(message<GameMsg>& msg)

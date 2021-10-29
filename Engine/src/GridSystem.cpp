@@ -1,5 +1,6 @@
 #include "EnginePCH.h"
 #include "GridSystem.h"
+#define STB_IMAGE_IMPLEMENTATION
 
 GridSystem::GridSystem()
 {
@@ -15,15 +16,20 @@ void GridSystem::Initialize(sm::Vector2 mapSize, sm::Vector3 position, std::stri
 	m_position = position;
 	m_mapSize = mapSize;
 
+	std::string m_filepath = TEXTUREPATH + fileName;
+	int width = 0;
+	int height = 0;
+	int comp = 0;
 	//std::shared_ptr<RTexture> texture = ResourceManager::Get().GetResource<RTexture>(fileName);
+	unsigned char* image = stbi_load(m_filepath.c_str(), &width, &height, &comp, STBI_rgb_alpha); //TODO: find out what to do with this
 
-	std::shared_ptr<RTexture> texture = std::make_shared<RTexture>();
-	unsigned char* pixelsData = texture->GetImageData(fileName);
+	//std::shared_ptr<RTexture> texture = std::make_shared<RTexture>();
+	unsigned char* pixelsData = image;//texture->GetImageData(fileName);
 
-	bool added = ResourceManager::Get().AddResource(fileName, texture);
+	//bool added = ResourceManager::Get().AddResource(fileName, texture);
 
 	std::vector<int> pixelValues;
-	m_gridSize = texture->GetSize();
+	m_gridSize = { (float)width, (float)height };//texture->GetSize();
 
 	for (int i = 0; i < m_gridSize.x * m_gridSize.y * 4; i++)
 	{

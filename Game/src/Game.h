@@ -2,7 +2,7 @@
 #include <EnginePCH.h>
 #include <Engine.h>
 #include <DemoScene.h>
-
+#include <GridSystem.h>
 
 class Game : public Engine
 {
@@ -14,6 +14,9 @@ private:
 	std::string* m_ipBuffer = nullptr;
 	std::string* m_lobbyBuffer = nullptr;
 	std::string* m_portBuffer = nullptr;
+
+	GridSystem m_grid;
+
 
 	bool m_isLeavingLobby;
 
@@ -29,6 +32,7 @@ private:
 	void JoinLobby(uint32_t lobbyID);
 	void CreateLobby();
 	void OnClientDisconnect();
+	void CreateGridSystem();
 	
 	Entity CreateEntityFromMessage(message<GameMsg>& msg);
 

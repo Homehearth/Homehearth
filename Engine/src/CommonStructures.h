@@ -108,3 +108,20 @@ struct light_t
 	UINT		enabled		= 0;	// 0 = Off, 1 = On
 	float		padding		= 0;
 };
+
+static struct GridProperties_t 
+{
+	sm::Vector3 position;
+	sm::Vector2 mapSize;
+	std::string fileName;
+
+	GridProperties_t Get() 
+	{
+		GridProperties_t grid;
+		grid.position = sm::Vector3(0, 0, 0);
+		grid.mapSize  = { 600,600 };
+		grid.fileName = "GridMapBig.png";
+
+		return grid;
+	}
+};
