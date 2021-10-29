@@ -227,14 +227,9 @@ void Scene::RenderAnimation()
 
 }
 
-const bool Scene::IsReadyToRenderAll() const
+bool Scene::IsRender3DReady() const
 {
-	return (IsRenderReady() && IsRenderDebugReady() && IsAnimRenderReady());
-}
-
-const bool Scene::IsRenderReady() const
-{
-	return m_renderableCopies.IsSwapped();
+	return m_renderableCopies.IsSwapped() && m_renderableAnimCopies.IsSwapped();
 }
 
 bool Scene::IsRenderDebugReady() const
