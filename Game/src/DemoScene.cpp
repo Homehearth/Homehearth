@@ -398,7 +398,8 @@ void sceneHelp::SetupConnectScreen(Game* game)
 void sceneHelp::SetupLoadingScene(Game* game)
 {
 	Scene& scene = game->GetScene("Loading");
-	rtd::Picture* background = new rtd::Picture("oohstonefigures.jpg", draw_t(0.0f, 0.0f, game->GetWindow()->GetWidth(), game->GetWindow()->GetHeight()));
+	rtd::Picture* background = new rtd::Picture("oohstonefigures.jpg", draw_t(0.0f, 0.0f, 
+		static_cast<float>(game->GetWindow()->GetWidth()), static_cast<float>(game->GetWindow()->GetHeight())));
 	scene.Insert2DElement(background, "Background");
 
 	
