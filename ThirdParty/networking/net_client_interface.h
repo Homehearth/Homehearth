@@ -295,7 +295,7 @@ namespace network
 		if (rv != 0)
 		{
 			LOG_ERROR("Addrinfo: %ld", WSAGetLastError());
-			return false;
+			return INVALID_SOCKET;
 		}
 
 		// Loop through linked list of possible network structures
@@ -417,6 +417,11 @@ namespace network
 		}
 
 		m_socket = CreateSocket(ip, port);
+
+		if(m_socket == INVALID_SOCKET)
+		{
+			return false;
+		}
 
 		if (connect(m_socket, (struct sockaddr*)&m_endpoint, m_endpointLen) != 0)
 		{

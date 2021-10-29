@@ -14,7 +14,7 @@ namespace sceneHelp
 	void CreateMainMenuScene(Engine& engine);
 	void CreateLobbyScene(Engine& engine);
 	void CreateGameScene(Engine& engine);
-	void CreateConnectScene(Engine& engine);
+	void CreateConnectScene(Engine& engine, Client* c);
 	void CreateJoinLobbyScene(Engine& engine);
 
 	void SetupMainMenuScreen(Engine& engine, Scene& scene);
@@ -22,5 +22,5 @@ namespace sceneHelp
 	void SetupInLobbyScreen(Scene& scene);
 	void SetupInGameScreen(Scene& scene);
 	void SetupOptionsScreen(Scene& scene);
-	void SetupConnectScreen(Scene& scene, Window* pWindow);
+	void SetupConnectScreen(Engine& e, Scene& scene, Window* pWindow, Client* c);
 }

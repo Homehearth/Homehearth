@@ -13,7 +13,7 @@ namespace sceneHelp
 	{
 		Entity playerEntity = scene.CreateEntity();
 		playerEntity.AddComponent<comp::Transform>();
-	
+
 		comp::BoundingOrientedBox* playerObb = playerEntity.AddComponent<comp::BoundingOrientedBox>();
 		playerObb->Extents = sm::Vector3{ 1.f,1.f,1.f };
 
@@ -48,13 +48,13 @@ namespace sceneHelp
 		Scene& mainMenuScene = engine.GetScene("MainMenu");
 		SetupMainMenuScreen(engine, mainMenuScene);
 		mainMenuScene.on<ESceneUpdate>([](const ESceneUpdate& e, Scene& scene)
-		{
-			IMGUI(
-				ImGui::Begin("Scene");
-			ImGui::Text("MainMenu");
-			ImGui::End();
-			);
-		});
+			{
+				IMGUI(
+					ImGui::Begin("Scene");
+				ImGui::Text("MainMenu");
+				ImGui::End();
+				);
+			});
 	}
 
 	void CreateLobbyScene(Engine& engine)
@@ -62,19 +62,19 @@ namespace sceneHelp
 		Scene& lobbyScene = engine.GetScene("Lobby");
 		SetupInLobbyScreen(lobbyScene);
 		lobbyScene.on<ESceneUpdate>([](const ESceneUpdate& e, Scene& scene)
-		{
-			IMGUI(
-				ImGui::Begin("Scene");
-			ImGui::Text("Lobby");
-			ImGui::End();
-			);
-		});
+			{
+				IMGUI(
+					ImGui::Begin("Scene");
+				ImGui::Text("Lobby");
+				ImGui::End();
+				);
+			});
 	}
 
-	void CreateConnectScene(Engine& engine)
+	void CreateConnectScene(Engine& engine, Client* c)
 	{
 		Scene& connectScene = engine.GetScene("ConnectMenu");
-		SetupConnectScreen(connectScene, engine.GetWindow());
+		SetupConnectScreen(engine, connectScene, engine.GetWindow(), c);
 	}
 
 	void CreateJoinLobbyScene(Engine& engine)
@@ -129,35 +129,35 @@ namespace sceneHelp
 
 
 		gameScene.on<ESceneUpdate>([cameraEntity, debugCameraEntity](const ESceneUpdate& e, Scene& scene)
-		{
-			scene.GetCurrentCamera()->Update(e.dt);
+			{
+				scene.GetCurrentCamera()->Update(e.dt);
 
-			IMGUI(
-				ImGui::Begin("Scene");
-			ImGui::Text("Game");
-			ImGui::End();
-			);
+				IMGUI(
+					ImGui::Begin("Scene");
+				ImGui::Text("Game");
+				ImGui::End();
+				);
 
-			GameSystems::RenderIsCollidingSystem(scene);
+				GameSystems::RenderIsCollidingSystem(scene);
 
 #ifdef _DEBUG
-			if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Space, KeyState::RELEASED))
-			{
-				if (scene.GetCurrentCamera()->GetCameraType() == CAMERATYPE::DEBUG)
+				if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Space, KeyState::RELEASED))
 				{
-					scene.SetCurrentCameraEntity(cameraEntity);
-					InputSystem::Get().SwitchMouseMode();
-					LOG_INFO("Game Camera selected");
+					if (scene.GetCurrentCamera()->GetCameraType() == CAMERATYPE::DEBUG)
+					{
+						scene.SetCurrentCameraEntity(cameraEntity);
+						InputSystem::Get().SwitchMouseMode();
+						LOG_INFO("Game Camera selected");
+					}
+					else if (scene.GetCurrentCamera()->GetCameraType() == CAMERATYPE::PLAY)
+					{
+						scene.SetCurrentCameraEntity(debugCameraEntity);
+						InputSystem::Get().SwitchMouseMode();
+						LOG_INFO("Debug Camera selected");
+					}
 				}
-				else if (scene.GetCurrentCamera()->GetCameraType() == CAMERATYPE::PLAY)
-				{
-					scene.SetCurrentCameraEntity(debugCameraEntity);
-					InputSystem::Get().SwitchMouseMode();
-					LOG_INFO("Debug Camera selected");
-				}
-			}
 #endif // DEBUG
-		});
+			});
 	}
 
 }
@@ -187,7 +187,7 @@ void sceneHelp::SetupMainMenuScreen(Engine& engine, Scene& scene)
 	rtd::Text* welcomeText = new rtd::Text("Welcome To Homehearth!", draw_text_t(575.0f, 50.0f, 300.0f, 100.0f));
 	scene.Insert2DElement(welcomeText);
 	std::string welcomeString = "In this game you will face against very dangerous foes while defending the righteous village from its dark fate! Take up arms and fight your way to victory champion! Join our discord and twitter to get official news about the new upcoming technological wonder game! Sign up for RTX exclusive version at our website!";
-	
+
 	// Adds text to the menu screen.
 	rtd::Text* gameInfoText = new rtd::Text(welcomeString, draw_text_t(550.0f, 0.0f, 350.0f, 550.0f));
 	scene.Insert2DElement(gameInfoText);
@@ -195,14 +195,14 @@ void sceneHelp::SetupMainMenuScreen(Engine& engine, Scene& scene)
 	rtd::Button* startGameButton = new rtd::Button("StartButton.png", draw_t(100.0f, 100.0f, 350.0f, 150.0f));
 	scene.Insert2DElement(startGameButton);
 
-	startGameButton->SetFunction([&] { engine.SetScene("ConnectMenu"); });
+	startGameButton->SetOnPressedEvent([&] { engine.SetScene("ConnectMenu"); });
 
 	// Adds a button and names it exit game button.
 	rtd::Button* exitGameButton = new rtd::Button("demo_exit_button.png", draw_t(100.0f, 325.0f, 350.0f, 150.0f));
 	// Adds a border around the button and sets the color to black.
 	exitGameButton->GetBorder()->SetColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
 	scene.Insert2DElement(exitGameButton);
-	exitGameButton->SetFunction([&] {engine.Shutdown(); });
+	exitGameButton->SetOnPressedEvent([&] { engine.Shutdown(); });
 #endif
 }
 
@@ -262,11 +262,11 @@ void sceneHelp::SetupInGameScreen(Scene& scene)
 	attack2->GetBorder()->SetColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
 	attack1->GetBorder()->SetColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
 	scene.Insert2DElement(attack3);
-	
+
 	// Builds
 	rtd::Text* buildText = new rtd::Text("Builds!", draw_text_t(700.0f, 412.0f, 96.0f, 24.0f));
 	scene.Insert2DElement(buildText);
-	
+
 	rtd::Picture* build1 = new rtd::Picture(texture2, draw_t(700.f, 448.0f, 64.0f, 64.0f));
 	scene.Insert2DElement(build1);
 
@@ -312,7 +312,7 @@ void sceneHelp::SetupInLobbyScreen(Scene& scene)
 	scene.Insert2DElement(lobbyIdText);
 	rtd::Button* mageButton = new rtd::Button("mageIconDemo.png", draw_t(350.0f, 454.0f, 32.0f, 32.0f));
 	scene.Insert2DElement(mageButton);
-	
+
 	rtd::Button* warriorButton = new rtd::Button("warriorIconDemo.png", draw_t(392.0f, 454.0f, 32.0f, 32.0f));
 	scene.Insert2DElement(warriorButton);
 	// Player slots
@@ -341,22 +341,39 @@ void sceneHelp::SetupOptionsScreen(Scene& scene)
 {
 }
 
-void sceneHelp::SetupConnectScreen(Scene& scene, Window* pWindow)
+void sceneHelp::SetupConnectScreen(Engine& e, Scene& scene, Window* pWindow, Client* c)
 {
 	const unsigned int width = pWindow->GetWidth(), height = pWindow->GetHeight();
 
-	rtd::TextField* ipField = new rtd::TextField(draw_text_t(width / 3 - 50.f, 100.0f, 200.0f, 35.0f));
-	ipField->GetBorder()->SetColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
+	rtd::TextField* ipField = new rtd::TextField(draw_text_t(width / 3 - 50.f, 100.0f, 200.0f, 35.0f), 12, true);
 	scene.Insert2DElement(ipField, "ipField");
-	ipField->GetText()->SetText("Input IP address");
+	ipField->SetDescriptionText("IP address:");
 
-	rtd::TextField* portField = new rtd::TextField(draw_text_t(width / 3 + 200.f, 100.0f, 100.0f, 35.0f));
-	portField->GetBorder()->SetColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
+	rtd::TextField* portField = new rtd::TextField(draw_text_t(width / 3 + 200.f, 100.0f, 100.0f, 35.0f), 6);
 	scene.Insert2DElement(portField, "portField");
-	portField->GetText()->SetText("Input PORT");
+	portField->SetDescriptionText("Port:");
+	const char* t = ipField->RawGetBuffer()->c_str();
+	const char* p = portField->RawGetBuffer()->c_str();
 
 	rtd::Button* connectButton = new rtd::Button("StartButton.png", draw_t((float)width / 2 - 150.f, (float)height - (float)height / 3, 300.0f, 100.0f));
 	scene.Insert2DElement(connectButton, "connectButton");
+	connectButton->SetOnPressedEvent([=, &e]()
+		{
+			std::string* ip = ipField->RawGetBuffer();
+			std::string* port = portField->RawGetBuffer();
+			if (ip->length() > 0 && port->length() > 0)
+			{
+				if (c->Connect(ip->c_str(), std::stoi(port->c_str())))
+				{
+					e.SetScene("JoinLobby");
+				}
+			}
+			else
+			{
+				LOG_WARNING("Please enter a valid ip/port");
+			}
+		});
+
 }
 
 void sceneHelp::SetupLobbyJoinScreen(Scene& scene, Window* pWindow)
@@ -365,8 +382,7 @@ void sceneHelp::SetupLobbyJoinScreen(Scene& scene, Window* pWindow)
 
 	rtd::TextField* lobbyField = new rtd::TextField(draw_text_t(100.0f, 300.0f, 200.0f, 35.0f));
 	//rtd::TextField * lobbyField = new rtd::TextField(draw_text_t((float)(rand() % 1000) / 2, (float)(rand() % 1000) / 4, 200.0f, 35.0f));
-	lobbyField->GetBorder()->SetColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
-	lobbyField->GetText()->SetText("Input Lobby ID");
+	lobbyField->SetDescriptionText("Input Lobby ID");
 	scene.Insert2DElement(lobbyField);
 	rtd::Button* hostLobbyButton = new rtd::Button("StartButton.png", draw_t(500.0f, 300.0f, 300.0f, 125.0f));
 	//rtd::Button* hostLobbyButton = new rtd::Button("StartButton.png", draw_t((float)(rand() % 1000) / 2, (float)(rand() % 1000) / 4, 300.0f, 125.0f));

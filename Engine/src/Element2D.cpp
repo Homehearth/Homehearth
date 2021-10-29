@@ -1,6 +1,6 @@
 #include "EnginePCH.h"
 
-const bool Element2D::IsHovered() const
+bool Element2D::IsHovered() const
 {
 	return m_isHovering;
 }
@@ -18,7 +18,7 @@ void Element2D::Release()
 	m_references -= 1;
 }
 
-const unsigned int Element2D::GetRef() const
+unsigned int Element2D::GetRef() const
 {
 	return m_references;
 }

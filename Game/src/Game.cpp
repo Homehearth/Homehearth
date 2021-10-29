@@ -62,21 +62,11 @@ bool Game::OnStartup()
 	sceneHelp::CreateLobbyScene(*this);
 	sceneHelp::CreateGameScene(*this);
 	sceneHelp::CreateMainMenuScene(*this);
-	sceneHelp::CreateConnectScene(*this);
+	sceneHelp::CreateConnectScene(*this, &m_client);
 	sceneHelp::CreateJoinLobbyScene(*this);
 
 	// Set Current Scene
 	SetScene("MainMenu");
-
-	// Connect Button logic.
-	GetScene("ConnectMenu").GetElement<rtd::Button>("connectButton")->SetFunction([&] 
-		{
-			std::string* portString = GetScene("ConnectMenu").GetElement<rtd::TextField>("portField")->RawGetBuffer();
-			std::string* ipString = GetScene("ConnectMenu").GetElement<rtd::TextField>("ipField")->RawGetBuffer();
-			
-			if(portString && ipString)
-				m_client.Connect(ipString->c_str(), std::stoi(*portString));
-		});
 	
 	return true;
 }

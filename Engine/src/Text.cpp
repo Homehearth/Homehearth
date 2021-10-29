@@ -30,7 +30,7 @@ void rtd::Text::SetScale(float scale)
     m_opts.scale = scale;
 }
 
-const bool Text::SetFormat(const WCHAR* fontName, 
+bool Text::SetFormat(const WCHAR* fontName, 
     IDWriteFontCollection* fontCollection, 
     const DWRITE_FONT_WEIGHT& weight, const DWRITE_FONT_STYLE& style, 
     const DWRITE_FONT_STRETCH& stretch, const FLOAT& fontSize,
@@ -54,12 +54,12 @@ void Text::OnHover()
 
 }
 
-const bool Text::CheckHover()
+bool Text::CheckHover()
 {
     return false;
 }
 
-const bool Text::CheckClick()
+bool Text::CheckClick()
 {
     return false;
 }

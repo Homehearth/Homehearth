@@ -64,12 +64,12 @@ Text* rtd::Button::GetText()
 	return m_text.get();
 }
 
-void rtd::Button::SetFunction(const std::function<void()>& func)
+void rtd::Button::SetOnPressedEvent(const std::function<void()>& func)
 {
 	m_function = func;
 }
 
-const bool Button::CheckClicked() const
+bool Button::CheckClicked() const
 {
     return m_isClicked;
 }
@@ -93,7 +93,7 @@ void rtd::Button::OnHover()
 
 }
 
-const bool rtd::Button::CheckClick()
+bool rtd::Button::CheckClick()
 {
 	m_isClicked = false;
 	if (CheckHover())
@@ -108,7 +108,7 @@ const bool rtd::Button::CheckClick()
 	return m_isClicked;
 }
 
-const bool rtd::Button::CheckHover()
+bool rtd::Button::CheckHover()
 {
 	m_isHovering = false;
 	// Is within bounds?

@@ -80,18 +80,18 @@ public:
 		Function used for Handler2D to call on OnHover.
 		Write logic for detecting if anyone is hovering over the element.
 	*/
-	virtual const bool CheckHover() = 0;
+	virtual bool CheckHover() = 0;
 
 	/*
 		Returns true if hovered over, false if not.
 	*/
-	const bool IsHovered() const;
+	bool IsHovered() const;
 
 	/*
 	Function used for Handler2D to call on OnClick.
 	Write the logic for detecting if anyone has clicked the element.
 	*/
-	virtual const bool CheckClick() = 0;
+	virtual bool CheckClick() = 0;
 
 	/*
 		Add a reference to the element.
@@ -106,5 +106,5 @@ public:
 	/*
 		Get the amount of references to this element.
 	*/
-	const unsigned int GetRef() const;
+	unsigned int GetRef() const;
 };
