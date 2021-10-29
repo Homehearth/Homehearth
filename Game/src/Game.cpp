@@ -167,7 +167,7 @@ void Game::OnUserUpdate(float deltaTime)
 					predictedPositions.push_back(t);
 				}
 
-				LOG_INFO("Predicted size: %llu", predictedPositions.size());
+				//LOG_INFO("Predicted size: %llu", predictedPositions.size());
 
 				//if (sm::Vector3::Distance(t.position, test.position) > m_predictionThreshhold)
 				//{
