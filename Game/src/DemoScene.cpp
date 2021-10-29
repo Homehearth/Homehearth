@@ -229,7 +229,7 @@ void sceneHelp::SetupInGameScreen(Scene& scene)
 	//Timer text
 	const std::string& timerText = "1:20";
 	rtd::Text* timer = new rtd::Text(timerText, draw_text_t(436.0f, 24.0f, 96.0f, 24.0f));
-	scene.Insert2DElement(timer);
+	scene.Insert2DElement(timer, "TimerText");
 
 	// Attacks
 	rtd::Text* attacksText = new rtd::Text("Attacks!", draw_text_t(24.0f, 412.0f, 96.0f, 24.0f));
@@ -290,7 +290,7 @@ void sceneHelp::SetupInLobbyScreen(Game* game)
 
 	const std::string& dt = "##--Description--##";
 	rtd::Text* descText = new rtd::Text(dt, draw_text_t(530.0f, 20.0f, dt.length() * 24.0f, 24));
-	scene.Insert2DElement(descText);
+	scene.Insert2DElement(descText, "DescriptionText");
 
 
 	rtd::Text* warriorText = new rtd::Text(warriorString, draw_text_t(580.0f, 30.0f, 350.0f, 370.0f));
@@ -317,6 +317,13 @@ void sceneHelp::SetupInLobbyScreen(Game* game)
 		rtd::Canvas* playerCanvas = new rtd::Canvas(D2D1::ColorF(0.7f, 0.5f, 0.2f), draw_t(25.0f, (i + 1) * 100.0f + ((i + 1) * 25.0f), 300.0f, 64.0f));
 		scene.Insert2DElement(playerCanvas, "Canvas" + std::to_string(i + 4));
 		scene.Insert2DElement(playerText, "PlayerText" + std::to_string(i + 1));
+
+		// Hide the other player at the start of game.
+		if (i == 1)
+		{
+			playerText->SetVisiblity(false);
+			playerCanvas->SetVisiblity(false);
+		}
 	}
 
 	rtd::Picture* player1Symbol = new rtd::Picture("warriorIconDemo.png", draw_t(350.0f, 125.0f, 64.0f, 64.0f));
