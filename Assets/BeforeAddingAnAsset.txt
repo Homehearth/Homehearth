@@ -1,0 +1,21 @@
+There is some things to concider when adding an asset.
+Assimp is a bit picky when reading in everything, especially .obj with .mtl...
+
+---- OBJ & MTL ----
+
+Models:
+	Check the path for the material. Has to be relative to the .obj-file
+	Example: "mtllib ../Materials/myMaterial.mtl"
+
+Materials with PBR:
+	Albedo: 		"map_Kd   example_Albedo.png"
+	Normalmap:		"map_Kn   example_Normal.png"
+	Metalness:		"map_ns   example_Metalness.png"
+	Roughness:		"map_Ks   example_Roughness.png"
+	Ambient occlusion: 	"map_Ka   example_AO.png"
+	Displacement:		"map_disp example_Displace.png"
+	Opacitymask		"map_d    example_Opacity.png"	(feature is not up on master yet)
+
+//Filip 
+
+
