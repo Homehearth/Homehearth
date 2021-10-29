@@ -1,6 +1,7 @@
 #include "Game.h"
 #include "Button.h"
 #include "TextField.h"
+#include <DemoScene.h>
 
 using namespace std::placeholders;
 
@@ -59,11 +60,11 @@ void Game::UpdateNetwork(float deltaTime)
 bool Game::OnStartup()
 {
 	// Scene logic
-	sceneHelp::CreateLobbyScene(*this);
+	sceneHelp::CreateLobbyScene(this);
 	sceneHelp::CreateGameScene(*this);
 	sceneHelp::CreateMainMenuScene(*this);
 	sceneHelp::CreateConnectScene(*this, &m_client);
-	sceneHelp::CreateJoinLobbyScene(*this);
+	sceneHelp::CreateJoinLobbyScene(this);
 
 	// Set Current Scene
 	SetScene("MainMenu");
@@ -296,6 +297,9 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		msg >> m_gameID;
 		SetScene("Lobby");
 		LOG_INFO("You are now in lobby: %lu", m_gameID);
+
+		GetScene("Lobby").GetElement<rtd::Text>("lobbyID")->SetText("Lobby ID: " + std::to_string(m_gameID));
+
 		break;
 	}
 	case GameMsg::Lobby_Invalid:
@@ -311,7 +315,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		LOG_WARNING("Left Lobby %u", m_gameID);
 		m_isLeavingLobby = false;
 		m_gameID = -1;
-		SetScene("MainMenu");
+		SetScene("JoinLobby");
 
 		break;
 	}

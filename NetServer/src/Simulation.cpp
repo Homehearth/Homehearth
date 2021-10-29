@@ -117,7 +117,7 @@ bool Simulation::JoinLobby(uint32_t playerID, uint32_t gameID)
 		msg.header.id = GameMsg::Lobby_Accepted;
 		msg << gameID;
 
-	m_pServer->SendToClient(playerID, msg);
+		m_pServer->SendToClient(playerID, msg);
 
 		// Add the players to the simulation on that specific client
 		this->AddPlayer(playerID);
@@ -131,6 +131,14 @@ bool Simulation::JoinLobby(uint32_t playerID, uint32_t gameID)
 		else if (m_playerDecisions[1].playerID == playerID)
 		{
 			player = 2;
+		}
+
+		// Any late joining players that join a lobby that is already inside game will be directed onto game scene.
+		if (m_pCurrentScene == m_pGameScene)
+		{
+			network::message<GameMsg> msg3;
+			msg.header.id = GameMsg::Game_Start;
+			m_pServer->SendToClient(playerID, msg3);
 		}
 
 		// Update the lobby for players.
