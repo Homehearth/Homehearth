@@ -162,7 +162,12 @@ bool Simulation::JoinLobby(uint32_t playerID, uint32_t gameID)
 
 bool Simulation::LeaveLobby(uint32_t playerID, uint32_t gameID)
 {
-	this->RemovePlayer(playerID);
+	if(!this->RemovePlayer(playerID))
+	{
+		return false;
+	}
+
+	m_players.erase(playerID);
 
 	uint32_t player = -1;
 	// Reset Lobby player.
@@ -236,7 +241,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 	e.AddComponent<comp::Network>()->id = m_pServer->PopNextUniqueID();
 	e.AddComponent<comp::Transform>()->position = sm::Vector3(-5, 0, 0);
 	e.AddComponent<comp::MeshName>()->name = "Chest.obj";
-	e.AddComponent<comp::BoundingOrientedBox>()->Extents = sm::Vector3(2.f,2.f,2.f);
+	e.AddComponent<comp::BoundingOrientedBox>()->Extents = sm::Vector3(2.f, 2.f, 2.f);
 	e.AddComponent<comp::Enemy>();
 	e.AddComponent<comp::Health>();
 	*e.AddComponent<comp::CombatStats>() = { 1.0f, 20.f, 1.0f, false, false };
@@ -244,7 +249,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 	// ---END OF DEBUG---
 
 	m_pCurrentScene = m_pLobbyScene;
-	
+
 	// Automatically join created lobby
 	JoinLobby(playerID, gameID);
 
@@ -321,11 +326,6 @@ bool Simulation::AddPlayer(uint32_t playerID)
 
 	//Collision will handle this entity as a dynamic one
 	player.AddComponent<comp::Tag<TagType::DYNAMIC>>();
-	
-	CollisionSystem::Get().AddOnCollision(player, [=](Entity player2)
-		{
-			comp::Player* otherPlayer = m_pCurrentScene->GetRegistry()->try_get<comp::Player>(player2);
-		});
 
 	// Setup players temp...
 	for (int i = 0; i < 2; i++)
@@ -345,7 +345,7 @@ bool Simulation::AddPlayer(uint32_t playerID)
 
 bool Simulation::RemovePlayer(uint32_t playerID)
 {
-	if (m_players.at(playerID).Destroy())
+	if (!m_players.at(playerID).Destroy())
 	{
 		return false;
 	}
