@@ -1,6 +1,9 @@
 #include "EnginePCH.h"
 
 bool Element2D::IsHovered() const
+{
+	return m_isHovering;
+}
 bool Element2D::IsVisible() const
 {
 	return m_isVisible;
@@ -9,11 +12,6 @@ bool Element2D::IsVisible() const
 void Element2D::SetVisiblity(const bool& toggle)
 {
 	m_isVisible = toggle;
-}
-
-const bool Element2D::IsHovered() const
-{
-	return m_isHovering;
 }
 
 void Element2D::AddRef()
