@@ -54,6 +54,7 @@ namespace ecs
 		{
 			std::shared_ptr<RModel>		model;
 			basic_model_matrix_t		data;
+			bool						visible = true;
 		};
 
 		// Used on server side

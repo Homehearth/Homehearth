@@ -30,8 +30,12 @@ void Scene::Update(float dt)
 		m_renderableCopies[0].clear();
 		m_registry.group<comp::Renderable, comp::Transform>().each([&](comp::Renderable& r, comp::Transform& t)
 		{
-			r.data.worldMatrix = ecs::GetMatrix(t);
-			m_renderableCopies[0].push_back(r);
+				// Only push up visible objects to render.
+				if (r.visible)
+				{
+					r.data.worldMatrix = ecs::GetMatrix(t);
+					m_renderableCopies[0].push_back(r);
+				}
 		});
 		
 		m_renderableCopies.Swap();
