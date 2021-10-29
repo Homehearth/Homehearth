@@ -10,10 +10,12 @@ namespace ecs
 	{
 		NETWORK,
 		TRANSFORM,
+		VELOCITY,
 		MESH_NAME,
 		BOUNDING_ORIENTED_BOX,
 		BOUNDING_SPHERE,
 		LIGHT,
+		PLAYER,
 		COMPONENT_COUNT,
 		COMPONENT_MAX = 32
 	};
@@ -88,7 +90,15 @@ namespace ecs
 
 		struct Player
 		{
+			enum class State
+			{
+				IDLE,
+				ATTACK,
+				TURN
+			} state;
+
 			float runSpeed;
+			sm::Vector3 targetForward;
 		};
 
 		struct Enemy
@@ -117,6 +127,7 @@ namespace ecs
 			bool isRanged = false;
 			bool isAttacking = false;
 			float cooldownTimer = 0.f;
+			Ray_t targetRay;
 		};
 
 		struct Attack
@@ -136,16 +147,9 @@ namespace ecs
 	sm::Matrix GetMatrix(const component::Transform& transform);
 	sm::Vector3 GetForward(const component::Transform& transform);
 	sm::Vector3 GetUp(const component::Transform& transform);
+	bool StepRotateTo(sm::Vector3& rotation, const sm::Vector3& target, float t);
+	bool StepTranslateTo(sm::Vector3& translation, const sm::Vector3& target, float t);
 
 };
-
-network::message<GameMsg>& operator<<(network::message<GameMsg>& msg, const sm::Vector3& data);
-
-network::message<GameMsg>& operator>>(network::message<GameMsg>& msg, sm::Vector3& data);
-
-network::message<GameMsg>& operator<<(network::message<GameMsg>& msg, const sm::Vector4& data);
-
-network::message<GameMsg>& operator>>(network::message<GameMsg>& msg, sm::Vector4& data);
-
 
 namespace comp = ecs::component;

@@ -17,6 +17,8 @@ private:
 	comp::Transform test;
 	float m_predictionThreshhold;
 
+	InputState m_inputState;
+
 	// Inherited via Engine
 	virtual bool OnStartup() override;
 	virtual void OnUserUpdate(float deltaTime) override;
@@ -28,6 +30,8 @@ private:
 	void PingServer();
 	void OnClientDisconnect();
 	Entity CreateEntityFromMessage(message<GameMsg>& msg);
+
+	void UpdateInput();
 
 public:
 	Client m_client;

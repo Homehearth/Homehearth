@@ -43,23 +43,17 @@ void Game::UpdateNetwork(float deltaTime)
 		{
 			if (GetCurrentScene()->GetCurrentCamera()->GetCameraType() == CAMERATYPE::PLAY)
 			{
-				int8_t x = InputSystem::Get().GetAxis(Axis::HORIZONTAL);
-				int8_t z = InputSystem::Get().GetAxis(Axis::VERTICAL);
-
+				
 				message<GameMsg> msg;
 				msg.header.id = GameMsg::Game_PlayerInput;
 
-				msg << this->m_localPID << m_gameID << x << z;
+				
+				msg << this->m_localPID << m_gameID << m_inputState;
 
 				m_client.Send(msg);
 
-				if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED))
-				{
-					message<GameMsg> msg2;
-					msg2.header.id = GameMsg::Game_PlayerAttack;
-					msg2 << this->m_localPID << m_gameID;
-					m_client.Send(msg2);
-				}
+				//reset input
+				m_inputState.leftMouse = false;
 			}
 		}
 	}
@@ -161,6 +155,7 @@ void Game::OnUserUpdate(float deltaTime)
 	);
 
 
+			/*
 	if (GetCurrentScene() == &GetScene("Game") && GetCurrentScene()->GetCurrentCamera()->GetCameraType() == CAMERATYPE::PLAY)
 	{
 		if (m_players.find(m_localPID) != m_players.end())
@@ -177,8 +172,7 @@ void Game::OnUserUpdate(float deltaTime)
 				predictedPositions.push_back(*t);
 			}
 
-			LOG_INFO("Predicted size: %llu", predictedPositions.size());
-
+			//LOG_INFO("Predicted size: %llu", predictedPositions.size());
 			if (sm::Vector3::Distance(t->position, test.position) > m_predictionThreshhold)
 			{
 				t->position.x = test.position.x;
@@ -186,6 +180,11 @@ void Game::OnUserUpdate(float deltaTime)
 			}
 		}
 	}
+			*/
+	
+	//Update InputState
+	this->UpdateInput();
+
 }
 
 
@@ -311,18 +310,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 
 		break;
 	}
-	//case GameMsg::Game_AddEnemy:
-	//{
-	//	uint32_t count; // Could be more than one enemy
-	//	msg >> count;
-	//	for (uint32_t i = 0; i < count; i++)
-	//	{
-	//		LOG_INFO("A wild enemy has appeared!");
-	//		Entity e = m_demoScene->CreateEnemy();
-	//	}
-
-	//	break;
-	//}
 	case GameMsg::Lobby_Accepted:
 	{
 		msg >> m_gameID;
@@ -498,6 +485,13 @@ Entity Game::CreateEntityFromMessage(message<GameMsg>& msg)
 				*e.AddComponent<comp::Transform>() = t;
 				break;
 			}
+			case ecs::Component::VELOCITY:
+			{
+				comp::Velocity v;
+				msg >> v;
+				*e.AddComponent<comp::Velocity>() = v;
+				break;
+			}
 			case ecs::Component::MESH_NAME:
 			{
 				std::string name;
@@ -526,6 +520,13 @@ Entity Game::CreateEntityFromMessage(message<GameMsg>& msg)
 				*e.AddComponent<comp::Light>() = l;
 				break;
 			}
+			case ecs::Component::PLAYER:
+			{
+				comp::Player p;
+				msg >> p;
+				*e.AddComponent<comp::Player>() = p;
+				break;
+			}
 			default:
 				LOG_WARNING("Retrieved unimplemented component %u", i)
 					break;
@@ -535,5 +536,16 @@ Entity Game::CreateEntityFromMessage(message<GameMsg>& msg)
 
 
 	return e;
+}
+
+void Game::UpdateInput()
+{
+	m_inputState.axisHorizontal = InputSystem::Get().GetAxis(Axis::HORIZONTAL);
+	m_inputState.axisVertical = InputSystem::Get().GetAxis(Axis::VERTICAL);
+	if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED))
+	{
+		m_inputState.leftMouse = true;
+		m_inputState.mouseRay = InputSystem::Get().GetMouseRay();
+	}
 }
 

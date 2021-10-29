@@ -1,6 +1,8 @@
 #pragma once
 #include "Server.h"
 #include "HeadlessEngine.h"
+#include "ServerSystems.h"
+
 
 constexpr int MAX_PLAYER_PER_LOBBY = 2;
 
@@ -29,23 +31,26 @@ private:
 	HeadlessScene* m_pCurrentScene;
 	
 	std::unordered_map<uint32_t, Entity> m_players;
+	std::unordered_map<Entity, InputState> m_playerInputs;
+
 
 	void InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg)const;
 	message<GameMsg> AllEntitiesMessage()const;
-	message<GameMsg> SingleEntityMessage(Entity entity)const;
 
 	uint32_t GetTick()const;
-	bool AddPlayer(uint32_t playerID);
-	bool RemovePlayer(uint32_t playerID);
-
+	
 	// -1 will be defaulted to max value of unsigned 32 bit integer
-	void Broadcast(message<GameMsg>& msg, uint32_t exclude = -1);
+	void Broadcast(message<GameMsg>& msg, uint32_t exclude = -1)const;
 	void ScanForDisconnects();
 
 public:
 	Simulation(Server* pServer, HeadlessEngine* pEngine);
 	virtual ~Simulation() = default;
 
+	bool AddPlayer(uint32_t playerID);
+	bool RemovePlayer(uint32_t playerID);
+	bool AddEnemy();
+	
 	void SendSnapshot();
 	bool JoinLobby(uint32_t playerID, uint32_t gameID);
 	bool LeaveLobby(uint32_t playerID, uint32_t gameID);
@@ -61,6 +66,16 @@ public:
 	void NextTick();
 
 	void Update(float dt);
+	void UpdateInput(InputState state, uint32_t playerID);
+	
 	HeadlessScene* GetLobbyScene() const;
 	HeadlessScene* GetGameScene() const;
+
+	void SendEntity(Entity e)const;
+	void SendAllEntitiesToPlayer(uint32_t playerID)const;
+	void SendRemoveAllEntitiesToPlayer(uint32_t playerID)const;
+	void SendRemoveSingleEntity(Entity e)const;
+	void SendRemoveEntities(message<GameMsg>& msg)const;
+
+	uint32_t GetUniqueID();
 };

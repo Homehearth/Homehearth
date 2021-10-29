@@ -31,6 +31,11 @@ public:
 		return m_entity;
 	}
 
+	operator uint32_t()
+	{
+		return (uint32_t)m_entity;
+	}
+
 	bool operator >(const Entity& other) const
 	{
 		return m_entity > other.m_entity;

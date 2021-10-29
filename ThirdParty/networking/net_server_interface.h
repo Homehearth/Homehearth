@@ -532,11 +532,9 @@ namespace network
 		// Loop through linked list of possible network structures
 		for (p = servinfo; p != nullptr; p = p->ai_next)
 		{
-#ifdef _DEBUG
 			EnterCriticalSection(&lock);
 			LOG_NETWORK(PrintSocketData(p).c_str());
 			LeaveCriticalSection(&lock);
-#endif
 
 			listener = WSASocket(p->ai_family, p->ai_socktype, p->ai_protocol, NULL, 0, WSA_FLAG_OVERLAPPED);
 
