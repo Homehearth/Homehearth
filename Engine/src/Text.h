@@ -32,6 +32,11 @@ namespace rtd
 		void SetText(const std::string& displayText);
 
 		/*
+			Set the position of the text.
+		*/
+		void SetPosition(const float& x, const float& y);
+
+		/*
 			Create a custom format to use for this text element.
 		*/
 		const bool SetFormat(const WCHAR* fontName,

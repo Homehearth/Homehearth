@@ -234,7 +234,7 @@ const bool D2D1Core::CreateImage(const std::string& filename, ID2D1Bitmap** p_po
 		Setup searchpath, convert char* to WCHAR*
 		Load Bitmap from file.
 	*/
-	std::string searchPath = "../Assets/Textures/";
+	std::string searchPath = TEXTUREPATH;
 	searchPath.append(filename);
 	const char* t = searchPath.c_str();
 	const WCHAR* pwcsName;
@@ -310,7 +310,7 @@ HRESULT D2D1Core::LoadBitMap(const LPCWSTR& filePath, ID2D1Bitmap** bitMap)
 			bitMap
 		);
 
-		LOG_INFO("Creating bitmap success!\n");
+		LOG_INFO("Creating bitmap success!");
 
 		// Release
 		if (convert)
@@ -326,7 +326,7 @@ HRESULT D2D1Core::LoadBitMap(const LPCWSTR& filePath, ID2D1Bitmap** bitMap)
 			return E_FAIL;
 	}
 
-	LOG_WARNING("Creating: bitmap texture failed.\n");
+	LOG_WARNING("Creating: bitmap texture failed.");
 
 	// Release if anything failed.
 	if(convert)

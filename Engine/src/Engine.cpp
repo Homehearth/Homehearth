@@ -29,7 +29,6 @@ void Engine::Startup()
 	// DirectX Startup:
 	D3D11Core::Get().Initialize(&m_window);
 	D2D1Core::Initialize(&m_window);
-	rtd::Handler2D::Get()->Initialize();
 	BackBuffer::Initialize();
 
 	m_renderer.Initialize(&m_window);
@@ -65,8 +64,7 @@ void Engine::Startup()
 	// Thread Startup.
 	thread::RenderThreadHandler::Get().SetRenderer(&m_renderer);
 	thread::RenderThreadHandler::Get().SetWindow(&m_window);
-	//thread::RenderThreadHandler::Get().Setup(1);
-	thread::RenderThreadHandler::Get().Setup(T_REC - thread::MultiThreader::GetAmountOfThreads());
+	thread::RenderThreadHandler::Get().Setup(2);
 
 	InputSystem::Get().SetMouseWindow(m_window.GetHWnd(), m_window.GetWidth(), m_window.GetHeight());
 
@@ -110,7 +108,6 @@ void Engine::Run()
     T_DESTROY();
     D2D1Core::Destroy();
 	ResourceManager::Get().Destroy();
-	rtd::Handler2D::Get()->Destroy();
 	BackBuffer::Destroy();
 }
 
@@ -249,15 +246,90 @@ void Engine::drawImGUI() const
 		GetCurrentScene()->ForEachComponent<comp::Light>([&](Entity& e, comp::Light& light)
 			{
 				std::string entityname = "Entity: " + std::to_string(static_cast<int>((entt::entity)e));
-
+				
 				ImGui::Separator();
 				ImGui::Text(entityname.c_str());
+				ImGui::SameLine();
+				std::string index = std::to_string(light.index);
+				ImGui::Text("Light index: %d", light.index);
+				bool edited = false;
+				if (ImGui::ColorEdit4(("Color##" + index).c_str(), (float*)&light.lightData.color)) 
+					edited = true;
 				
-				ImGui::Text("Display light data here");
+				if (ImGui::DragFloat3(("Direction##" + index).c_str(), (float*)&light.lightData.direction))
+					edited = true;
+
+				if (ImGui::Checkbox(("Enabled##" + index).c_str(), (bool*)&light.lightData.enabled))
+					edited = true;
+
+				if (ImGui::DragFloat3(("Position##" + index).c_str(), (float*)&light.lightData.position))
+					edited = true;
+				
+				if (ImGui::InputFloat(("Range##" + index).c_str(), &light.lightData.range))
+					edited = true;
+				
+				const char* const items[2] = { "Directional", "Point" };
+				if (ImGui::ListBox(("Type##" + index).c_str(), (int*)&light.lightData.type, items, 2))
+					edited = true;
+				
+				if (edited)
+				{
+					GetCurrentScene()->GetLights()->EditLight(light.lightData, light.index);
+				}
 
 				ImGui::Spacing();
 			});
 
+	}
+	if (ImGui::CollapsingHeader("Network"))
+	{
+
+		GetCurrentScene()->ForEachComponent<comp::Network>([&](Entity& e, comp::Network& net)
+			{
+				std::string entityname = "Entity: " + std::to_string(static_cast<int>((entt::entity)e));
+				std::string netID = "Network ID: " + std::to_string(net.id);
+
+				ImGui::Separator();
+				ImGui::Text(entityname.c_str());
+				ImGui::Text(netID.c_str());
+
+				ImGui::Spacing();
+			});
+
+	}
+	if (ImGui::CollapsingHeader("Colliders"))
+	{
+		ImGui::Text("Bounding Oriented Box");
+		ImGui::Spacing();
+
+		GetCurrentScene()->ForEachComponent<comp::BoundingOrientedBox>([&](Entity& e, comp::BoundingOrientedBox& box)
+			{
+				std::string id = std::to_string(static_cast<int>((entt::entity)e));
+				
+				ImGui::Text("Entity: %d", (entt::entity)e);
+				
+				ImGui::DragFloat3(("Center##" + id).c_str(), (float*)&box.Center);
+				ImGui::DragFloat3(("Extents##" + id).c_str(), (float*)&box.Extents);
+				ImGui::DragFloat3(("Orientation##" + id).c_str(), (float*)&box.Orientation);
+
+				ImGui::Spacing();
+				ImGui::Separator();
+			});
+
+		ImGui::Text("Bounding Sphere");
+		ImGui::Spacing();
+		GetCurrentScene()->ForEachComponent<comp::BoundingSphere>([&](Entity& e, comp::BoundingSphere& s)
+			{
+				std::string id = std::to_string(static_cast<int>((entt::entity)e));
+
+				ImGui::Text("Entity: %d", (entt::entity)e);
+
+				ImGui::DragFloat3(("Center##" + id).c_str(), (float*)&s.Center);
+				ImGui::DragFloat(("Radius##" + id).c_str(), (float*)&s.Radius, 0.1f);
+
+				ImGui::Spacing();
+				ImGui::Separator();
+			});
 
 	}
 
@@ -305,7 +377,7 @@ void Engine::RenderThread()
 		deltaTime = static_cast<float>(currentFrame - lastFrame);
 		if (deltaSum >= targetDelta)
 		{
-			if (GetCurrentScene()->IsRenderReady() && GetCurrentScene()->IsRenderDebugReady() && rtd::Handler2D::Get()->IsRenderReady())
+			if (GetCurrentScene()->IsRenderReady() && GetCurrentScene()->IsRenderDebugReady() && rtd::Handler2D::Get().IsRenderReady())
 			{
 				Render(deltaSum);
 				m_frameTime.render = deltaSum;
@@ -342,6 +414,7 @@ void Engine::Update(float dt)
 	if (InputSystem::Get().CheckMouseKey(MouseKey::RIGHT, KeyState::PRESSED))
 	{
 		InputSystem::Get().SwitchMouseMode();
+
 		LOG_INFO("Switched mouse Mode");
 	}
 
@@ -395,7 +468,7 @@ void Engine::Render(float& dt)
 	{
 		PROFILE_SCOPE("Render D2D1");
 		D2D1Core::Begin();
-		rtd::Handler2D::Get()->Render();
+		rtd::Handler2D::Get().Render();
 		D2D1Core::Present();
 	}
 

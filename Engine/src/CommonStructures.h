@@ -1,5 +1,13 @@
 #pragma once
 
+struct MinMaxProj_t
+{
+	float minProj;
+	float maxProj;
+	int minInxed;
+	int maxIndex;
+};
+
 enum class TypeLight : UINT
 {
 	DIRECTIONAL,
@@ -29,6 +37,8 @@ enum class GameMsg : uint8_t
 	Game_AddEntity,
 	Game_RemoveEntity,
 
+	Game_PlayerInput,
+	Game_PlayerAttack
 	Game_AddNPC,
 	Game_RemoveNPC,
 

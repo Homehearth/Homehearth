@@ -45,46 +45,102 @@ void Game::UpdateNetwork(float deltaTime)
 
 			msg << this->m_localPID << m_gameID << x << y;
 
+			m_client.Send(msg);			
+		}
+		
+		if(m_gameID != UINT32_MAX && InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED))
+		{
+			message<GameMsg> msg;
+			msg.header.id = GameMsg::Game_PlayerAttack;
+			msg << this->m_localPID << m_gameID;
 			m_client.Send(msg);
 		}
 	}
 }
 
 bool Game::OnStartup()
-{
-	// Scene logic
-	Scene& mainMenuScene = GetScene("MainMenu");
-	mainMenuScene.on<ESceneUpdate>([](const ESceneUpdate& e, Scene& scene)
-		{
-
-		IMGUI(
-			ImGui::Begin("Scene");
-		ImGui::Text("MainMenu");
-		ImGui::End();
-		);
-	});
-
-	Scene& lobbyScene = GetScene("Lobby");
-	lobbyScene.on<ESceneUpdate>([](const ESceneUpdate& e, Scene& scene)
-		{
-			IMGUI(
-				ImGui::Begin("Scene");
-				ImGui::Text("Lobby");
-				ImGui::End();
-			);
-		});
-
+{	
+	sceneHelp::CreateLobbyScene(*this);
+	rtd::Handler2D::Get().SetVisibilityAll(false);
 	sceneHelp::CreateGameScene(*this);
+	sceneHelp::CreateMainMenuScene(*this);
+
 
 	// Set Current Scene
-	SetScene(mainMenuScene);
-
+	SetScene("MainMenu");
+	
 	return true;
 }
 
 void Game::OnUserUpdate(float deltaTime)
 {
 	static float pingCheck = 0.f;
+
+#if RENDER_IMGUI == 0
+
+	rtd::TextField* port_text = GET_ELEMENT("portBuffer", rtd::TextField);
+	rtd::TextField* ip_text = GET_ELEMENT("ipBuffer", rtd::TextField);
+	if (ip_text && port_text)
+	{
+		ip_text->GetBuffer(m_ipBuffer);
+		port_text->GetBuffer(m_portBuffer);
+		if(m_ipBuffer && m_portBuffer)
+		{
+			if (m_client.Connect(m_ipBuffer->c_str(), std::stoi(*m_portBuffer)))
+			{
+				rtd::Handler2D::SetVisibilityAll(false);
+				m_ipBuffer = nullptr;
+				m_portBuffer = nullptr;
+			}
+		}
+	}
+	
+	rtd::Button* exit_button = GET_ELEMENT("exitGameButton", rtd::Button);
+	if (exit_button)
+	{
+		if (exit_button->IsClicked())
+		{
+			std::cout << "IMPLEMENT CLEAN SHUT DOWN HERE!\n";
+		}
+	}
+
+	rtd::Button* start_button = GET_ELEMENT("startGameButton", rtd::Button);
+	if (start_button)
+	{
+		if (start_button->IsClicked())
+		{
+			rtd::Handler2D::SetVisibilityAll(false);
+			ip_text->SetVisibility(true);
+			port_text->SetVisibility(true);
+		}
+	}
+
+	if (m_client.IsConnected())
+	{
+		rtd::TextField* lobby_text = GET_ELEMENT("lobbyBuffer", rtd::TextField);
+		if (lobby_text)
+		{
+			lobby_text->SetVisibility(true);
+			if (lobby_text->GetBuffer(m_lobbyBuffer))
+			{
+				this->JoinLobby(std::stoi(*m_lobbyBuffer));
+				rtd::Handler2D::Get().DereferenceAllOnce();
+			}
+		}
+
+		rtd::Button* host_lobby_button = GET_ELEMENT("hostLobby", rtd::Button);
+		if (host_lobby_button)
+		{
+			host_lobby_button->SetVisibility(true);
+			if (host_lobby_button->IsClicked())
+			{
+				rtd::Handler2D::Get().DereferenceAllOnce();
+				this->CreateLobby();
+			}
+		}
+	}
+#endif
+
 	IMGUI(
 		ImGui::Begin("Network");
 
@@ -264,6 +320,18 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 
 		break;
 	}
+	//case GameMsg::Game_AddEnemy:
+	//{
+	//	uint32_t count; // Could be more than one enemy
+	//	msg >> count;
+	//	for (uint32_t i = 0; i < count; i++)
+	//	{
+	//		LOG_INFO("A wild enemy has appeared!");
+	//		Entity e = m_demoScene->CreateEnemy();
+	//	}
+
+	//	break;
+	//}
 	case GameMsg::Lobby_Accepted:
 	{
 		msg >> m_gameID;

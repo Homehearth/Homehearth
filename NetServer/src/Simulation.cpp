@@ -150,14 +150,15 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 
 	m_pGameScene = &m_pEngine->GetScene("Game_" + std::to_string(gameID));
 	m_pGameScene->on<ESceneUpdate>([=](const ESceneUpdate& e, HeadlessScene& scene)
-	{
-		Systems::MovementSystem(scene, e.dt);
-		Systems::MovementColliderSystem(scene, e.dt);
+		{
+			Systems::MovementSystem(scene, e.dt);
+			Systems::MovementColliderSystem(scene, e.dt);
+			Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(scene, e.dt);
+			Systems::CombatSystem(scene, e.dt);
+			Systems::AISystem(scene);
 
-		Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(scene);
-		Systems::AISystem(scene);
-		//LOG_INFO("GAME Scene %d", m_gameID);
-	});
+			//LOG_INFO("GAME Scene %d", m_gameID);
+		});
 
 	//On collision event add entities as pair in the collision system
 	m_pGameScene->on<ESceneCollision>([&](const ESceneCollision& e, HeadlessScene& scene)
@@ -169,12 +170,14 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 	// ---DEBUG ENTITY---
 	Entity e = m_pGameScene->CreateEntity();
 	e.AddComponent<comp::Network>()->id = m_pServer->PopNextUniqueID();
-	e.AddComponent<comp::Transform>()->position = sm::Vector3(5, 2, 0);
+	e.AddComponent<comp::Transform>()->position = sm::Vector3(-5, 0, 0);
 	e.AddComponent<comp::MeshName>()->name = "Chest.obj";
-	e.AddComponent<comp::Velocity>()->vel = sm::Vector3(0, -0.2f, 0);
-	e.AddComponent<comp::BoundingSphere>();
+	e.AddComponent<comp::BoundingOrientedBox>()->Extents = sm::Vector3(2.f,2.f,2.f);
+	e.AddComponent<comp::Enemy>();
+	e.AddComponent<comp::Health>();
+	*e.AddComponent<comp::CombatStats>() = { 1.0f, 20.f, 1.0f, false, false };
+	e.AddComponent<comp::Tag<STATIC>>();
 	// ---END OF DEBUG---
-
 	m_pCurrentScene = m_pGameScene; // todo Should be lobbyScene
 
 	// Automatically join created lobby
@@ -210,18 +213,19 @@ bool Simulation::AddPlayer(uint32_t playerID)
 	player.AddComponent<comp::MeshName>()->name = "cube.obj";
 	player.AddComponent<comp::Network>()->id = playerID;
 	player.AddComponent<comp::Player>()->runSpeed = 10.f;
+	*player.AddComponent<comp::CombatStats>() = { 1.0f, 20.f, 1.0f, false, false };
+	player.AddComponent<comp::Health>();
 	player.AddComponent<comp::BoundingOrientedBox>();
 
-	CollisionSystem::Get().AddOnCollision(player, [&](Entity player2)
-	{
-		comp::Player* otherPlayer = m_pCurrentScene->GetRegistry()->try_get<comp::Player>(player2);
-		if (otherPlayer != nullptr)
+	//Collision will handle this entity as a dynamic one
+	player.AddComponent<comp::Tag<DYNAMIC>>();
+	
+	CollisionSystem::Get().AddOnCollision(player, [=](Entity player2)
 		{
-			LOG_INFO("Collision!");
-		}
-	});
+			comp::Player* otherPlayer = m_pCurrentScene->GetRegistry()->try_get<comp::Player>(player2);
+		});
 
-	// send new Player to all other clients
+	//send new Player to all other clients
 	Broadcast(SingleEntityMessage(player));
 
 	return true;
