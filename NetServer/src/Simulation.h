@@ -33,11 +33,12 @@ private:
 
 
 	void InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg)const;
+	message<GameMsg> AllEntitiesMessage()const;
 
 	uint32_t GetTick()const;
 	
 	// -1 will be defaulted to max value of unsigned 32 bit integer
-	void Broadcast(message<GameMsg>& msg, uint32_t exclude = -1);
+	void Broadcast(message<GameMsg>& msg, uint32_t exclude = -1)const;
 	void ScanForDisconnects();
 
 	std::queue<std::pair<EnemyManagement::WaveType, sm::Vector2>> waveQueue;
@@ -69,4 +70,12 @@ public:
 	
 	HeadlessScene* GetLobbyScene() const;
 	HeadlessScene* GetGameScene() const;
+
+	void SendEntity(Entity e)const;
+	void SendAllEntitiesToPlayer(uint32_t playerID)const;
+	void SendRemoveAllEntitiesToPlayer(uint32_t playerID)const;
+	void SendRemoveSingleEntity(Entity e)const;
+	void SendRemoveEntities(message<GameMsg>& msg)const;
+
+	uint32_t GetUniqueID();
 };
