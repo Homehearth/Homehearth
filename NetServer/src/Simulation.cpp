@@ -251,6 +251,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 	// --- WORLD ---
 	Entity e2 = m_pGameScene->CreateEntity();
 	e2.AddComponent<comp::Network>()->id = m_pServer->PopNextUniqueID();
+	e2.AddComponent<comp::Transform>()->position = { -250, -2, 300 };
 	e2.AddComponent<comp::MeshName>()->name = "GameScene.obj";
 	e2.AddComponent<comp::Tag<TagType::STATIC>>();
 	// --- END OF THE WORLD ---
