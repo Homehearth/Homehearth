@@ -37,8 +37,7 @@ enum class GameMsg : uint8_t
 	Game_AddEntity,
 	Game_RemoveEntity,
 
-	Game_PlayerInput,
-	Game_PlayerAttack
+	Game_PlayerAttack,
 	Game_AddNPC,
 	Game_RemoveNPC,
 

@@ -173,7 +173,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 	e.AddComponent<comp::Transform>()->position = sm::Vector3(-5, 0, 0);
 	e.AddComponent<comp::MeshName>()->name = "Chest.obj";
 	e.AddComponent<comp::BoundingOrientedBox>()->Extents = sm::Vector3(2.f,2.f,2.f);
-	e.AddComponent<comp::Enemy>();
+	e.AddComponent<comp::NPC>();
 	e.AddComponent<comp::Health>();
 	*e.AddComponent<comp::CombatStats>() = { 1.0f, 20.f, 1.0f, false, false };
 	e.AddComponent<comp::Tag<STATIC>>();
