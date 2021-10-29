@@ -355,31 +355,31 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		if (player == 2 && state == 2)
 		{
 			lobbyScene.GetElement<rtd::Text>("PlayerText2")->SetVisiblity(false);
-			lobbyScene.GetElement<rtd::Canvas>("Canvas2")->SetVisiblity(false);
+			lobbyScene.GetElement<rtd::Canvas>("Canvas5")->SetVisiblity(false);
 		}
 		else if (player == 2 && state == 1)
 		{
 			lobbyScene.GetElement<rtd::Text>("PlayerText2")->SetVisiblity(true);
-			lobbyScene.GetElement<rtd::Canvas>("Canvas2")->SetVisiblity(true);
+			lobbyScene.GetElement<rtd::Canvas>("Canvas5")->SetVisiblity(true);
 		}
 		
 		if (player == 1 && state == 2)
 		{
 			lobbyScene.GetElement<rtd::Text>("PlayerText1")->SetVisiblity(false);
-			lobbyScene.GetElement<rtd::Canvas>("Canvas1")->SetVisiblity(false);
+			lobbyScene.GetElement<rtd::Canvas>("Canvas4")->SetVisiblity(false);
 		}
 		else if (player == 1 && state == 1)
 		{
 			lobbyScene.GetElement<rtd::Text>("PlayerText1")->SetVisiblity(true);
-			lobbyScene.GetElement<rtd::Canvas>("Canvas1")->SetVisiblity(true);
+			lobbyScene.GetElement<rtd::Canvas>("Canvas4")->SetVisiblity(true);
 		}
 
 		if (nrOfPlayers == 2)
 		{
 			lobbyScene.GetElement<rtd::Text>("PlayerText1")->SetVisiblity(true);
-			lobbyScene.GetElement<rtd::Canvas>("Canvas1")->SetVisiblity(true);
+			lobbyScene.GetElement<rtd::Canvas>("Canvas4")->SetVisiblity(true);
 			lobbyScene.GetElement<rtd::Text>("PlayerText2")->SetVisiblity(true);
-			lobbyScene.GetElement<rtd::Canvas>("Canvas2")->SetVisiblity(true);
+			lobbyScene.GetElement<rtd::Canvas>("Canvas5")->SetVisiblity(true);
 		}
 
 		break;

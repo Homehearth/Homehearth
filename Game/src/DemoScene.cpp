@@ -401,8 +401,6 @@ void sceneHelp::SetupLobbyJoinScreen(Game* game)
 	//rtd::Button* hostLobbyButton = new rtd::Button("StartButton.png", draw_t((float)(rand() % 1000) / 2, (float)(rand() % 1000) / 4, 300.0f, 125.0f));
 	joinScene.Insert2DElement(hostLobbyButton, "startLobby");
 
-	
-
 	// Start or Join Lobby
 	joinScene.GetElement<rtd::Button>("startLobby")->SetOnPressedEvent([=]
 		{
