@@ -25,6 +25,16 @@ void Simulation::InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg)co
 			}
 			break;
 		}
+		case ecs::Component::VELOCITY:
+		{
+			comp::Velocity* v = entity.GetComponent<comp::Velocity>();
+			if (v)
+			{
+				compSet.set(ecs::Component::VELOCITY);
+				msg << *v;
+			}
+			break;
+		}
 		case ecs::Component::MESH_NAME:
 		{
 			comp::MeshName* m = entity.GetComponent<comp::MeshName>();
@@ -62,6 +72,16 @@ void Simulation::InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg)co
 			{
 				compSet.set(ecs::Component::LIGHT);
 				msg << *l;
+			}
+			break;
+		}
+		case ecs::Component::PLAYER:
+		{
+			comp::Player* p = entity.GetComponent<comp::Player>();
+			if (p)
+			{
+				compSet.set(ecs::Component::PLAYER);
+				msg << *p;
 			}
 			break;
 		}
@@ -226,18 +246,41 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 	
 	// Create Scenes associated with this Simulation
 	m_pLobbyScene = &m_pEngine->GetScene("Lobby_" + std::to_string(gameID));
-	m_pLobbyScene->on<ESceneUpdate>([=](const ESceneUpdate& e, HeadlessScene& scene)
+	m_pLobbyScene->on<ESceneUpdate>([&](const ESceneUpdate& e, HeadlessScene& scene)
 		{
 			//LOG_INFO("LOBBY Scene %d", gameID);
 
 		});
 
 	m_pGameScene = &m_pEngine->GetScene("Game_" + std::to_string(gameID));
-	m_pGameScene->on<ESceneUpdate>([=](const ESceneUpdate& e, HeadlessScene& scene)
+	m_pGameScene->on<ESceneUpdate>([&](const ESceneUpdate& e, HeadlessScene& scene)
 		{
+			// update components with input
+			for (const auto& pair : m_playerInputs)
+			{
+				Entity e = pair.first;
+				InputState input = pair.second;
+				// update velocity
+				e.GetComponent<comp::Velocity>()->vel = sm::Vector3(input.axisHorizontal, 0, input.axisVertical) * e.GetComponent<comp::Player>()->runSpeed;
+
+				// check if attacking
+				if (input.leftMouse)
+				{
+					comp::CombatStats* stats = e.GetComponent<comp::CombatStats>();
+					if (stats->cooldownTimer <= 0.0f)
+					{
+						stats->isAttacking = true;
+						stats->targetRay = input.mouseRay;
+					}
+				}
+			}
+
+			//  run all game logic systems
+			Systems::CharacterMovement(scene, e.dt);
 			Systems::MovementSystem(scene, e.dt);
 			Systems::MovementColliderSystem(scene, e.dt);
 			Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(scene, e.dt);
+			Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingSphere>(scene, e.dt);
 			Systems::CombatSystem(scene, e.dt);
 			ServerSystems::WaveSystem(this, waveQueue);
 			//LOG_INFO("GAME Scene %d", m_gameID);
@@ -339,7 +382,7 @@ bool Simulation::AddPlayer(uint32_t playerID)
 	Entity player = m_pGameScene->CreateEntity();
 	player.AddComponent<comp::Transform>();
 	player.AddComponent<comp::Velocity>();
-	player.AddComponent<comp::MeshName>()->name = "cube.obj";
+	player.AddComponent<comp::MeshName>()->name = "Arrow.fbx";
 	player.AddComponent<comp::Network>()->id = playerID;
 	player.AddComponent<comp::Player>()->runSpeed = 10.f;
 	*player.AddComponent<comp::CombatStats>() = { 1.0f, 20.f, 1.0f, false, false };
@@ -365,13 +408,31 @@ bool Simulation::AddPlayer(uint32_t playerID)
 	return true;
 }
 
+bool Simulation::AddEnemy()
+{
+	// Create Enemy entity in Game scene.
+	Entity enemy = m_pGameScene->CreateEntity();
+	enemy.AddComponent<comp::Transform>();
+	enemy.AddComponent<comp::Network>()->id = m_pServer->PopNextUniqueID();
+	const unsigned char BAD = 8;
+	enemy.AddComponent<comp::Tag<BAD>>();
+	enemy.AddComponent<comp::Health>();
+	
+	return true;
+}
+
 bool Simulation::RemovePlayer(uint32_t playerID)
 {
-	if (!m_players.at(playerID).Destroy())
+	Entity player = m_players.at(playerID);
+	if (m_playerInputs.find(player) != m_playerInputs.end())
+	{
+		m_playerInputs.erase(player);
+	}
+	if (!player.Destroy())
 	{
 		return false;
 	}
-
+	
 	LOG_INFO("Removed player %u from scene", playerID);
 
 	return true;
@@ -399,6 +460,17 @@ void Simulation::Update(float dt)
 {
 	if (m_pCurrentScene)
 		m_pCurrentScene->Update(dt);
+}
+
+void Simulation::UpdateInput(InputState state, uint32_t playerID)
+{
+	if (m_players.find(playerID) == m_players.end())
+	{
+		LOG_ERROR("Invalid Player ID when updating input: %u", playerID);
+		return;
+	}
+
+	m_playerInputs[m_players.at(playerID)] = state;
 }
 
 void Simulation::NextTick()

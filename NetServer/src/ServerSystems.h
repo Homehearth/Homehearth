@@ -36,3 +36,8 @@ namespace ServerSystems
 {
 	void WaveSystem(Simulation* simulation, std::queue<std::pair<EnemyManagement::WaveType, sm::Vector2>>& waves);
 }
+
+namespace Systems {
+	void CharacterMovement(HeadlessScene& scene, float dt);
+
+};
