@@ -65,29 +65,6 @@ bool ServerGame::OnStartup()
 	return true;
 }
 
-void ServerGame::OnUserUpdate(float deltaTime)
-{
-	this->m_server.Update();
-
-	for (auto it = m_simulations.begin(); it != m_simulations.end();)
-	{
-		if (it->second->IsEmpty())
-		{
-			it->second->Destroy();
-			LOG_INFO("Destroyed empty lobby %d", it->first);
-			it = m_simulations.erase(it);
-		}
-		else {
-			it++;
-		}
-	}
-
-	for (const auto& sim : m_simulations)
-	{
-		sim.second->Update(deltaTime);
-	}
-}
-
 void ServerGame::OnShutdown()
 {
 	m_inputThread.join();
@@ -96,9 +73,27 @@ void ServerGame::OnShutdown()
 
 void ServerGame::UpdateNetwork(float deltaTime)
 {
-	for (const auto& sim : m_simulations)
+	// Check incoming messages
+	this->m_server.Update();
+
+	// Update the simulations
+	for (auto it = m_simulations.begin(); it != m_simulations.end();)
 	{
-		sim.second->SendSnapshot();
+		if (it->second->IsEmpty())
+		{
+			it->second->Destroy();
+			LOG_INFO("Destroyed empty lobby %d", it->first);
+			it = m_simulations.erase(it);
+		}
+		else
+		{
+			// Update the simulation
+			it->second->Update(deltaTime);
+			// Send the snapshot of the updated simulation to all clients in the sim
+			it->second->SendSnapshot();
+			it->second->NextTick();
+			it++;
+		}
 	}
 }
 
@@ -110,7 +105,7 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 	{
 		uint32_t playerID;
 		msg >> playerID;
-		this->m_server.SendToClient(m_server.GetConnection(playerID), msg);
+		this->m_server.SendToClient(playerID, msg);
 		LOG_INFO("Client on with ID: %ld is pinging server", playerID);
 		break;
 	}
@@ -145,7 +140,7 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 			invalidLobbyMsg.header.id = GameMsg::Lobby_Invalid;
 			invalidLobbyMsg << std::string("Player trying to join invalid Lobby");
 			LOG_WARNING("Request denied: Player trying to join invalid Lobby");
-			m_server.SendToClient(m_server.GetConnection(playerID), invalidLobbyMsg);
+			m_server.SendToClient(playerID, invalidLobbyMsg);
 		}
 		break;
 	}
@@ -163,7 +158,7 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 				message<GameMsg> accMsg;
 				accMsg.header.id = GameMsg::Lobby_AcceptedLeave;
 
-				m_server.SendToClient(m_server.GetConnection(playerID), accMsg);
+				m_server.SendToClient(playerID, accMsg);
 				break;
 			}
 		}
@@ -172,7 +167,7 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 		invalidLobbyMsg.header.id = GameMsg::Lobby_Invalid;
 		invalidLobbyMsg << std::string("Player could not leave Lobby");
 		LOG_WARNING("Request denied: Player could not leave Lobby");
-		m_server.SendToClient(m_server.GetConnection(playerID), invalidLobbyMsg);
+		m_server.SendToClient(playerID, invalidLobbyMsg);
 
 		break;
 	}
@@ -200,6 +195,36 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 		else
 		{
 			LOG_WARNING("Invalid GameID for player input message");
+		}
+
+		break;
+	}
+	case GameMsg::Game_PlayerAttack:
+	{
+		uint32_t playerID;
+		uint32_t gameID;
+		msg >> gameID >> playerID;
+
+		m_simulations.at(gameID)->GetGameScene()->ForEachComponent<comp::Network, comp::CombatStats>([=](comp::Network& net, comp::CombatStats& attack)
+			{
+				if (net.id == playerID)
+				{
+					attack.isAttacking = true;
+					LOG_INFO("PlayerID [%u] tried to attack.", playerID);
+				}
+			});
+
+		break;
+	}
+	case GameMsg::Game_PlayerReady:
+	{
+		uint32_t playerID;
+		uint32_t gameID;
+		msg >> gameID >> playerID;
+
+		if (m_simulations.find(gameID) != m_simulations.end())
+		{
+			m_simulations.at(gameID)->UpdateLobby(playerID);
 		}
 
 		break;

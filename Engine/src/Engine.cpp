@@ -30,7 +30,6 @@ void Engine::Startup()
 	// DirectX Startup:
 	D3D11Core::Get().Initialize(&m_window);
 	D2D1Core::Initialize(&m_window);
-	BackBuffer::Initialize();
 
 	m_renderer.Initialize(&m_window);
 
@@ -108,7 +107,6 @@ void Engine::Run()
     T_DESTROY();
     D2D1Core::Destroy();
 	ResourceManager::Get().Destroy();
-	BackBuffer::Destroy();
 }
 
 
@@ -377,7 +375,7 @@ void Engine::RenderThread()
 		deltaTime = static_cast<float>(currentFrame - lastFrame);
 		if (deltaSum >= targetDelta)
 		{
-			if (GetCurrentScene()->IsRenderReady() && GetCurrentScene()->IsRenderDebugReady() && rtd::Handler2D::Get().IsRenderReady())
+			if (GetCurrentScene()->IsRenderReady())
 			{
 				Render(deltaSum);
 				m_frameTime.render = deltaSum;
@@ -386,7 +384,7 @@ void Engine::RenderThread()
 		}
 		deltaSum += deltaTime;
 		lastFrame = currentFrame;
-
+		
 	}
 
 	s_safeExit = true;
@@ -398,7 +396,6 @@ void Engine::Update(float dt)
 	m_frameTime.update = dt;
 
 	InputSystem::Get().UpdateEvents();
-	rtd::Handler2D::Update();
 
 	MSG msg = { nullptr };
 	while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
@@ -429,6 +426,7 @@ void Engine::Update(float dt)
 		);
 	}
 
+	OnUserUpdate(dt);
 	BasicEngine::Update(dt);
 
 	{
@@ -468,7 +466,7 @@ void Engine::Render(float& dt)
 	{
 		PROFILE_SCOPE("Render D2D1");
 		D2D1Core::Begin();
-		rtd::Handler2D::Get().Render();
+		GetCurrentScene()->Render2D();
 		D2D1Core::Present();
 	}
 
