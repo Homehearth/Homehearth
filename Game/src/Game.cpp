@@ -65,8 +65,9 @@ bool Game::OnStartup()
 	sceneHelp::CreateLobbyScene(this);
 	sceneHelp::CreateGameScene(*this);
 	sceneHelp::CreateMainMenuScene(*this);
-	sceneHelp::CreateConnectScene(*this, &m_client);
+	sceneHelp::CreateConnectScene(this);
 	sceneHelp::CreateJoinLobbyScene(this);
+	sceneHelp::CreateLoadingScene(this);
 
 	// Set Current Scene
 	SetScene("MainMenu");
@@ -170,7 +171,7 @@ void Game::OnUserUpdate(float deltaTime)
 				predictedPositions.push_back(*t);
 			}
 
-			LOG_INFO("Predicted size: %llu", predictedPositions.size());
+			//LOG_INFO("Predicted size: %llu", predictedPositions.size());
 
 			if (sm::Vector3::Distance(t->position, test.position) > m_predictionThreshhold)
 			{
@@ -352,22 +353,26 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		{
 			lobbyScene.GetElement<rtd::Text>("PlayerText2")->SetVisiblity(false);
 			lobbyScene.GetElement<rtd::Canvas>("Canvas5")->SetVisiblity(false);
+			lobbyScene.GetElement<rtd::Picture>("player2Symbol")->SetVisiblity(false);
 		}
 		else if (player == 2 && state == 1)
 		{
 			lobbyScene.GetElement<rtd::Text>("PlayerText2")->SetVisiblity(true);
 			lobbyScene.GetElement<rtd::Canvas>("Canvas5")->SetVisiblity(true);
+			lobbyScene.GetElement<rtd::Picture>("player2Symbol")->SetVisiblity(true);
 		}
 		
 		if (player == 1 && state == 2)
 		{
 			lobbyScene.GetElement<rtd::Text>("PlayerText1")->SetVisiblity(false);
 			lobbyScene.GetElement<rtd::Canvas>("Canvas4")->SetVisiblity(false);
+			lobbyScene.GetElement<rtd::Picture>("player1Symbol")->SetVisiblity(false);
 		}
 		else if (player == 1 && state == 1)
 		{
 			lobbyScene.GetElement<rtd::Text>("PlayerText1")->SetVisiblity(true);
 			lobbyScene.GetElement<rtd::Canvas>("Canvas4")->SetVisiblity(true);
+			lobbyScene.GetElement<rtd::Picture>("player1Symbol")->SetVisiblity(true);
 		}
 
 		if (nrOfPlayers == 2)
@@ -376,6 +381,8 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			lobbyScene.GetElement<rtd::Canvas>("Canvas4")->SetVisiblity(true);
 			lobbyScene.GetElement<rtd::Text>("PlayerText2")->SetVisiblity(true);
 			lobbyScene.GetElement<rtd::Canvas>("Canvas5")->SetVisiblity(true);
+			lobbyScene.GetElement<rtd::Picture>("player1Symbol")->SetVisiblity(true);
+			lobbyScene.GetElement<rtd::Picture>("player2Symbol")->SetVisiblity(true);
 		}
 
 		break;

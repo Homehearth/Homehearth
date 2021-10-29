@@ -82,15 +82,21 @@ namespace sceneHelp
 			});
 	}
 
-	void CreateConnectScene(Engine& engine, Client* c)
+	void CreateConnectScene(Game* game)
 	{
-		SetupConnectScreen(engine, c);
+		SetupConnectScreen(game);
 	}
 
 	void CreateJoinLobbyScene(Game* game)
 	{
 		Scene& joinLobbyScene = game->GetScene("JoinLobby");
 		SetupLobbyJoinScreen(game);
+	}
+
+	void CreateLoadingScene(Game* game)
+	{
+		Scene& loadingScene = game->GetScene("Loading");
+		SetupLoadingScene(game);
 	}
 
 	void CreateGameScene(Engine& engine)
@@ -341,6 +347,8 @@ void sceneHelp::SetupInLobbyScreen(Game* game)
 
 	rtd::Picture* player2Symbol = new rtd::Picture("warriorIconDemo.png", draw_t(350.0f, 250.0f, 64.0f, 64.0f));
 	scene.Insert2DElement(player2Symbol, "player2Symbol");
+	player2Symbol->SetVisiblity(false);
+
 	rtd::Text* homehearthText = new rtd::Text("Homehearth", draw_text_t(25.0f, 25.0f, 200.0f, 50.0f));
 	scene.Insert2DElement(homehearthText, "TextHomeHearth");
 	rtd::Button* exitToMainMenu = new rtd::Button("demoExitButton.png", draw_t(0.0f, 0.0f, 32.0f, 32.0f), false);
@@ -360,11 +368,11 @@ void sceneHelp::SetupOptionsScreen(Scene& scene)
 {
 }
 
-void sceneHelp::SetupConnectScreen(Engine& e, Client* c)
+void sceneHelp::SetupConnectScreen(Game* game)
 {
-	Scene& connectScene = e.GetScene("ConnectMenu");
+	Scene& connectScene = game->GetScene("ConnectMenu");
 
-	const unsigned int width = e.GetWindow()->GetWidth(), height = e.GetWindow()->GetHeight();
+	const unsigned int width = game->GetWindow()->GetWidth(), height = game->GetWindow()->GetHeight();
 
 	rtd::TextField* ipField = new rtd::TextField(draw_text_t(width / 3 - 50.f, 100.0f, 200.0f, 35.0f), 15, true);
 	connectScene.Insert2DElement(ipField, "ipField");
@@ -378,15 +386,15 @@ void sceneHelp::SetupConnectScreen(Engine& e, Client* c)
 
 	rtd::Button* connectButton = new rtd::Button("StartButton.png", draw_t((float)width / 2 - 150.f, (float)height - (float)height / 3, 300.0f, 100.0f));
 	connectScene.Insert2DElement(connectButton, "connectButton");
-	connectButton->SetOnPressedEvent([=, &e]()
+	connectButton->SetOnPressedEvent([=]()
 		{
 			std::string* ip = ipField->RawGetBuffer();
 			std::string* port = portField->RawGetBuffer();
 			if (ip->length() > 0 && port->length() > 0)
 			{
-				if (c->Connect(ip->c_str(), std::stoi(port->c_str())))
+				if (game->m_client.Connect(ip->c_str(), std::stoi(port->c_str())))
 				{
-					e.SetScene("JoinLobby");
+					game->SetScene("JoinLobby");
 				}
 			}
 			else
@@ -394,6 +402,19 @@ void sceneHelp::SetupConnectScreen(Engine& e, Client* c)
 				LOG_WARNING("Please enter a valid ip/port");
 			}
 		});
+
+}
+
+void sceneHelp::SetupLoadingScene(Game* game)
+{
+	Scene& scene = game->GetScene("Loading");
+	rtd::Picture* background = new rtd::Picture("oohstonefigures.jpg", draw_t(0.0f, 0.0f, 
+		static_cast<float>(game->GetWindow()->GetWidth()), static_cast<float>(game->GetWindow()->GetHeight())));
+	scene.Insert2DElement(background, "Background");
+
+	
+	rtd::Text* loadingText = new rtd::Text("LOADING...", draw_text_t(game->GetWindow()->GetWidth() / 2.0f, game->GetWindow()->GetHeight() / 2.0f, 100.0f, 25.0f));
+	scene.Insert2DElement(loadingText, "LoadingText");
 
 }
 
@@ -422,10 +443,12 @@ void sceneHelp::SetupLobbyJoinScreen(Game* game)
 				if ((int)lobbyString->size() <= 0)
 				{
 					game->CreateLobby();
+					game->SetScene("Loading");
 				}
 				else
 				{
 					game->JoinLobby(std::stoi(*lobbyString));
+					game->SetScene("Loading");
 				}
 			}
 		});
