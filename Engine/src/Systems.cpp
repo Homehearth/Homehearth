@@ -178,23 +178,25 @@ void Systems::AISystem(HeadlessScene& scene)
 	{
 		comp::Transform* transformNPC = entity.GetComponent<comp::Transform>();
 		Entity* currentClosestPlayer = nullptr;
+		comp::Transform* transformCurrentClosestPlayer = nullptr;
 		scene.ForEachComponent < comp::Player>([&](Entity playerEntity, comp::Player& player)
 		{
 			if (currentClosestPlayer)
 			{
 				comp::Transform* transformPlayer = playerEntity.GetComponent<comp::Transform>();
-				comp::Transform* transformCurrentClosestPlayer = playerEntity.GetComponent<comp::Transform>();
 				if (sm::Vector3::Distance(transformPlayer->position, transformNPC->position) < sm::Vector3::Distance(transformCurrentClosestPlayer->position, transformNPC->position))
 				{
+					LOG_INFO("Switching player");
 					currentClosestPlayer = &playerEntity;
+					transformCurrentClosestPlayer = currentClosestPlayer->GetComponent<comp::Transform>();
 				}
 			}
 			else
 			{
 				currentClosestPlayer = &playerEntity;
+				transformCurrentClosestPlayer = currentClosestPlayer->GetComponent<comp::Transform>();
 			}
 		});
-		comp::Transform* transformCurrentClosestPlayer = currentClosestPlayer->GetComponent<comp::Transform>();
 		comp::Velocity* velocityTowardsPlayer = entity.GetComponent<comp::Velocity>();
 		if (velocityTowardsPlayer)
 		{
