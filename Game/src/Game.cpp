@@ -165,15 +165,15 @@ void Game::OnUserUpdate(float deltaTime)
 		GetCurrentScene()->ForEachComponent<comp::Transform, comp::Tag<TagType::LOCAL_PLAYER>>([&]
 		(comp::Transform& t, comp::Tag<TagType::LOCAL_PLAYER>& tag)
 			{
-				int x = InputSystem::Get().GetAxis(Axis::HORIZONTAL);
-				int z = InputSystem::Get().GetAxis(Axis::VERTICAL);
-				if (x || z)
-				{
-					t.position.x += 10.f * deltaTime * x;
-					t.position.z += 10.f * deltaTime * z;
+				//int x = InputSystem::Get().GetAxis(Axis::HORIZONTAL);
+				//int z = InputSystem::Get().GetAxis(Axis::VERTICAL);
+				//if (x || z)
+				//{
+				//	t.position.x += 10.f * deltaTime * x;
+				//	t.position.z += 10.f * deltaTime * z;
 
-					predictedPositions.push_back(t);
-				}
+				//	predictedPositions.push_back(t);
+				//}
 
 				//LOG_INFO("Predicted size: %llu", predictedPositions.size());
 
