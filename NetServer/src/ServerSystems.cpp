@@ -4,7 +4,7 @@
 namespace Systems {
 	void CharacterMovement(HeadlessScene& scene, float dt)
 	{
-		scene.ForEachComponent<comp::Player, comp::Attack, comp::Velocity, comp::Transform>([&](comp::Player& p, comp::Attack& a, comp::Velocity& v, comp::Transform& t)
+		scene.ForEachComponent<comp::Player, comp::CombatStats, comp::Velocity, comp::Transform>([&](comp::Player& p, comp::CombatStats& a, comp::Velocity& v, comp::Transform& t)
 			{
 				if (a.isAttacking) // should only happen one frame
 				{

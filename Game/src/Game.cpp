@@ -61,7 +61,7 @@ void Game::UpdateNetwork(float deltaTime)
 				{
 					message<GameMsg> msg2;
 					msg2.header.id = GameMsg::Game_PlayerAttack;
-					msg2 << this->m_localPID << m_gameID;
+					msg2 << this->m_localPID << m_gameID << InputSystem::Get().GetMouseRay();
 					m_client.Send(msg2);
 				}
 			}

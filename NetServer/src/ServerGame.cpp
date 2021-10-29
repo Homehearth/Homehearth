@@ -203,31 +203,14 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 		uint32_t playerID;
 		uint32_t gameID;
 		Ray_t ray;
-		msg >> gameID >> playerID >> ray;
-
-		m_simulations.at(gameID)->GetGameScene()->ForEachComponent<comp::Network, comp::Attack>([=](comp::Network& net, comp::Attack& attack)
-			{
-				if (net.id == playerID)
-				{
-					attack.isAttacking = true;
-					attack.targetRay = ray;
-					LOG_INFO("PlayerID [%u] tried to attack.", playerID);
-				}
-			});
-
-		break;
-	}
-	case GameMsg::Game_PlayerAttack:
-	{
-		uint32_t playerID;
-		uint32_t gameID;
-		msg >> gameID >> playerID;
+		msg >> ray >> gameID >> playerID;
 
 		m_simulations.at(gameID)->GetGameScene()->ForEachComponent<comp::Network, comp::CombatStats>([=](comp::Network& net, comp::CombatStats& attack)
 			{
 				if (net.id == playerID)
 				{
 					attack.isAttacking = true;
+					attack.targetRay = ray;
 					LOG_INFO("PlayerID [%u] tried to attack.", playerID);
 				}
 			});

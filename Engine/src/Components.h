@@ -127,6 +127,7 @@ namespace ecs
 			bool isRanged = false;
 			bool isAttacking = false;
 			float cooldownTimer = 0.f;
+			Ray_t targetRay;
 		};
 
 		struct Attack
