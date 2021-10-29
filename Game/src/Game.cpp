@@ -70,7 +70,7 @@ bool Game::OnStartup()
 	// Scene logic
 	sceneHelp::CreateLobbyScene(this);
 	sceneHelp::CreateGameScene(*this);
-	sceneHelp::CreateMainMenuScene(*this);
+	sceneHelp::CreateMainMenuScene(this);
 	sceneHelp::CreateConnectScene(this);
 	sceneHelp::CreateJoinLobbyScene(this);
 	sceneHelp::CreateLoadingScene(this);
