@@ -8,6 +8,7 @@ struct WaveInfo
 	int scaleMultiplier;
 	int waveCount;
 	float flankWidth;
+	sm::Vector2 origo;
 };
 
 namespace EnemyManagement
@@ -19,6 +20,7 @@ namespace EnemyManagement
 
 	enum class WaveType : UINT8
 	{
+		Zone,
 		Swarm,
 		Flank_West,
 		Flank_East,
@@ -27,12 +29,10 @@ namespace EnemyManagement
 	};
 
 	Entity CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, EnemyType type = EnemyType::Default);
-
-	void SpawnSwarmWave(Simulation* simulation, WaveInfo& waveInfo);
 	
 }
 
 namespace ServerSystems
 {
-	void WaveSystem(Simulation* simulation, std::vector<EnemyManagement::WaveType>& waves);
+	void WaveSystem(Simulation* simulation, std::queue<std::pair<EnemyManagement::WaveType, sm::Vector2>>& waves);
 }

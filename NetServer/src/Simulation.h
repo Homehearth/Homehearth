@@ -40,7 +40,7 @@ private:
 
 	void ScanForDisconnects();
 
-	std::vector<EnemyManagement::WaveType> waves;
+	std::queue<std::pair<EnemyManagement::WaveType, sm::Vector2>> waveQueue;
 public:
 	Server* m_pServer;
 	Simulation(Server* pServer, HeadlessEngine* pEngine);

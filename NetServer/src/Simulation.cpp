@@ -213,15 +213,14 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 
 	this->m_gameID = gameID;
 	
-	//init waves
-	waves.push_back(EnemyManagement::WaveType::Flank_North);
-	waves.push_back(EnemyManagement::WaveType::Flank_South);
-	waves.push_back(EnemyManagement::WaveType::Flank_East);
-	waves.push_back(EnemyManagement::WaveType::Flank_West);
-	waves.push_back(EnemyManagement::WaveType::Swarm);
-	waves.push_back(EnemyManagement::WaveType::Flank_North);
-	waves.push_back(EnemyManagement::WaveType::Flank_South);
-	waves.push_back(EnemyManagement::WaveType::Swarm);
+	//init waveQueue
+	waveQueue.emplace(std::make_pair(EnemyManagement::WaveType::Zone, sm::Vector2{80.0,0.0}));
+	waveQueue.emplace(std::make_pair(EnemyManagement::WaveType::Zone, sm::Vector2{ -80.0,0.0 }));
+	waveQueue.emplace(std::make_pair(EnemyManagement::WaveType::Flank_South, sm::Vector2{0.0,0.0}));
+	waveQueue.emplace(std::make_pair(EnemyManagement::WaveType::Flank_East, sm::Vector2{0.0,0.0}));
+	waveQueue.emplace(std::make_pair(EnemyManagement::WaveType::Flank_West, sm::Vector2{0.0,0.0}));
+	waveQueue.emplace(std::make_pair(EnemyManagement::WaveType::Swarm, sm::Vector2{0.0,0.0}));
+	waveQueue.emplace(std::make_pair(EnemyManagement::WaveType::Flank_North, sm::Vector2{0.0,0.0}));
 
 	
 	
@@ -240,7 +239,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 			Systems::MovementColliderSystem(scene, e.dt);
 			Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(scene, e.dt);
 			Systems::CombatSystem(scene, e.dt);
-			ServerSystems::WaveSystem(this, waves);
+			ServerSystems::WaveSystem(this, waveQueue);
 			//LOG_INFO("GAME Scene %d", m_gameID);
 		});
 
