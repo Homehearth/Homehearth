@@ -161,7 +161,7 @@ void Game::OnUserUpdate(float deltaTime)
 	);
 
 
-	if (GetCurrentScene() == &GetScene("Game") && GetCurrentScene()->GetCurrentCamera()->GetCameraType() == CAMERATYPE::PLAY)
+	/*if (GetCurrentScene() == &GetScene("Game") && GetCurrentScene()->GetCurrentCamera()->GetCameraType() == CAMERATYPE::PLAY)
 	{
 		if (m_players.find(m_localPID) != m_players.end())
 		{
@@ -185,7 +185,7 @@ void Game::OnUserUpdate(float deltaTime)
 				t->position.z = test.position.z;
 			}
 		}
-	}
+	}*/
 }
 
 

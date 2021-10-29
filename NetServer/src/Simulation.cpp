@@ -88,18 +88,6 @@ message<GameMsg> Simulation::AllEntitiesMessage()const
 	return msg;
 }
 
-message<GameMsg> Simulation::SingleEntityMessage(Entity entity)const
-{
-	message<GameMsg> msg;
-	msg.header.id = GameMsg::Game_AddEntity;
-
-	InsertEntityIntoMessage(entity, msg);
-
-	msg << 1U;
-
-	return msg;
-}
-
 Simulation::Simulation(Server* pServer, HeadlessEngine* pEngine)
 	: m_pServer(pServer)
 	, m_pEngine(pEngine), m_pLobbyScene(nullptr), m_pGameScene(nullptr), m_pCurrentScene(nullptr)
@@ -184,18 +172,7 @@ bool Simulation::LeaveLobby(uint32_t playerID, uint32_t gameID)
 		player = 2;
 	}
 
-	message<GameMsg> msg;
-	msg.header.id = GameMsg::Game_RemoveEntity;
-
-	uint32_t count = 0;
-	m_pGameScene->ForEachComponent<comp::Network>([&](comp::Network& n)
-		{
-			msg << n.id;
-			count++;
-		});
-	msg << count;
-
-	m_pServer->SendToClient(playerID, msg);
+	this->SendRemoveAllEntitiesToPlayer(playerID);
 
 	// Update the lobby for players.
 	network::message<GameMsg> msg2;
@@ -311,7 +288,7 @@ bool Simulation::AddPlayer(uint32_t playerID)
 	}
 
 	// Send all entities in Game Scene to new player
-	m_pServer->SendToClient(playerID, AllEntitiesMessage());
+	this->SendAllEntitiesToPlayer(playerID);
 
 	// Create Player entity in Game scene
 	Entity player = m_pGameScene->CreateEntity();
@@ -338,7 +315,7 @@ bool Simulation::AddPlayer(uint32_t playerID)
 	}
 	// send new Player to all other clients
 	m_players[playerID] = player;
-	this->Broadcast(SingleEntityMessage(player));
+	this->SendEntity(player);
 
 	return true;
 }
@@ -389,7 +366,7 @@ uint32_t Simulation::GetTick() const
 	return this->m_tick;
 }
 
-void Simulation::Broadcast(network::message<GameMsg>& msg, uint32_t exclude)
+void Simulation::Broadcast(network::message<GameMsg>& msg, uint32_t exclude)const
 {
 	auto it = m_players.begin();
 
@@ -435,4 +412,67 @@ HeadlessScene* Simulation::GetLobbyScene() const
 HeadlessScene* Simulation::GetGameScene() const
 {
 	return m_pGameScene;
+}
+
+void Simulation::SendEntity(Entity e)const
+{
+	message<GameMsg> msg;
+	msg.header.id = GameMsg::Game_AddEntity;
+
+	InsertEntityIntoMessage(e, msg);
+
+	msg << 1U;
+
+	this->Broadcast(msg);
+}
+
+void Simulation::SendAllEntitiesToPlayer(uint32_t playerID) const
+{
+	message<GameMsg> msg;
+	msg.header.id = GameMsg::Game_AddEntity;
+	uint32_t count = 0;
+	m_pGameScene->ForEachComponent<comp::Network>([&](Entity e, comp::Network& n)
+		{
+			InsertEntityIntoMessage(e, msg);
+			count++;
+		});
+	msg << count;
+
+	this->m_pServer->SendToClient(playerID, msg);
+}
+
+void Simulation::SendRemoveAllEntitiesToPlayer(uint32_t playerID) const
+{
+	message<GameMsg> msg;
+	msg.header.id = GameMsg::Game_RemoveEntity;
+
+	uint32_t count = 0;
+	m_pGameScene->ForEachComponent<comp::Network>([&](comp::Network& n)
+		{
+			msg << n.id;
+			count++;
+		});
+	msg << count;
+
+	m_pServer->SendToClient(playerID, msg);
+}
+
+void Simulation::SendRemoveSingleEntity(Entity e) const
+{
+	message<GameMsg> msg;
+	msg.header.id = GameMsg::Game_RemoveEntity;
+
+	msg << (uint32_t)e << 1U;
+
+	this->Broadcast(msg);
+}
+
+void Simulation::SendRemoveEntities(message<GameMsg>& msg)const
+{
+	this->Broadcast(msg);
+}
+
+uint32_t Simulation::GetUniqueID()
+{
+	return m_pServer->PopNextUniqueID();
 }
