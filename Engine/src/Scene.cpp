@@ -38,13 +38,20 @@ void Scene::Update(float dt)
 	if (!m_renderableAnimCopies.IsSwapped())
 	{
 		m_renderableAnimCopies[0].clear();
-		m_registry.view<comp::RenderableAnimation, comp::Transform>().each([&](comp::RenderableAnimation& r, comp::Transform& t)
+		m_registry.view<comp::Renderable, comp::Transform, comp::Animator>().each([&](comp::Renderable& r, comp::Transform& t, comp::Animator& a)
+			{
+				r.data.worldMatrix = ecs::GetMatrix(t);
+				RenderableAnimation anim;
+				anim.renderable = r;
+				anim.animator = a;
+				m_renderableAnimCopies[0].push_back(anim);
+			});
+		
+		/*m_registry.view<comp::RenderableAnimation, comp::Transform>().each([&](comp::RenderableAnimation& r, comp::Transform& t)
 		{
 			r.data.worldMatrix = ecs::GetMatrix(t);
-			//r.animator.Update();	//with deltatime
 			m_renderableAnimCopies[0].push_back(r);
-
-		});
+		});*/
 
 		m_renderableAnimCopies.Swap();
 	}
@@ -97,21 +104,6 @@ void Scene::Render()
 		for (const auto& it : m_renderableCopies[1])
 		{
 			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
-			///*if (it.animator)
-			//{*/
-			//	//bind vertexshader
-			//	//D3D11Core::Get().DeviceContext()->VSSetShader()
-			//	// 
-			//	//
-			//	//it.animator->Update();
-			//	//it.animator->Bind()
-			//	it.model->Render();
-			//	//it.animator->UnBind()
-			//	//bind back last vertexshader
-
-			////}
-			////else
-			//	it.model->Render();
 			if (it.model)
 				it.model->Render();
 		}
@@ -130,7 +122,8 @@ void Scene::Render()
 		{
 			const auto& it = m_renderableCopies[1][i];
 			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
-			it.model->Render();
+			if (it.model)
+				it.model->Render();
 		}
 	}
 
@@ -194,9 +187,11 @@ void Scene::RenderAnimation()
 		// System that renders Renderable component
 		for (auto& it : m_renderableAnimCopies[1])
 		{
-			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
-			it.animator->Update();
-			it.animator->Render();
+			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.renderable.data);
+			it.animator.data->Update();
+			it.animator.data->Bind();
+			it.renderable.model->Render();
+			it.animator.data->Unbind();
 		}
 	}
 	else
@@ -212,9 +207,11 @@ void Scene::RenderAnimation()
 		for (int i = inst.start; i < inst.stop; i++)
 		{
 			auto& it = m_renderableAnimCopies[1][i];
-			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
-			it.animator->Update();
-			it.animator->Render();
+			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.renderable.data);
+			it.animator.data->Update();
+			it.animator.data->Bind();
+			it.renderable.model->Render();
+			it.animator.data->Unbind();
 		}
 	}
 
@@ -290,7 +287,7 @@ DoubleBuffer<std::vector<comp::RenderableDebug>>* Scene::GetDebugBuffers()
 	return &m_debugRenderableCopies;
 }
 
-DoubleBuffer<std::vector<comp::RenderableAnimation>>* Scene::GetAnimationBuffers()
+DoubleBuffer<std::vector<RenderableAnimation>>* Scene::GetAnimationBuffers()
 {
 	return &m_renderableAnimCopies;
 }

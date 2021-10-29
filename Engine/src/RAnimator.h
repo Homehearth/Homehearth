@@ -23,9 +23,11 @@ private:
 	std::string				m_currentAnim;	//optimize by ints instead?
 	std::string				m_nextAnim;
 
-	std::shared_ptr<RModel>			m_model;
 	std::vector<bone_keyFrames_t>	m_bones;
 	std::unordered_map<std::string, std::shared_ptr<RAnimation>> m_animations;
+
+	//std::shared_ptr<RAnimation> m_currentAnim;
+	//std::shared_ptr<RAnimation> m_nextAnim;
 
 	//Matrices that is going up to the GPU - structure buffer
 	std::vector<sm::Matrix>			 m_finalMatrices;
@@ -33,19 +35,18 @@ private:
 	ComPtr<ID3D11ShaderResourceView> m_bonesSB_RSV;
 
 private:
-	bool LoadModel(const std::string& filename);
 	void LoadAnimations(const std::vector<std::string>& animNames);
 
 	bool CreateBonesSB();
 
-	//bool UpdateNrOfBones();
 	void UpdateStructureBuffer();
-	void Bind() const;
-	void Unbind() const;
 
 public:
 	RAnimator();
 	~RAnimator();
+
+	//Load in the skeleton from a model
+	bool LoadSkeleton(const std::vector<bone_t>& skeleton);
 
 	// Inherited via GResource
 	// Create from a custom file - something.anim
@@ -54,7 +55,10 @@ public:
 	//Update the animation
 	void Update();
 
-	//Render the current pose
-	void Render();
+	//Bind the bones matrices structured buffer
+	void Bind() const;
+
+	//Unbind the bones matrices structured buffer
+	void Unbind() const;
 
 };

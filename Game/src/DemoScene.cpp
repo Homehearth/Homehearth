@@ -94,12 +94,21 @@ namespace sceneHelp
 		gameScene.SetCurrentCameraEntity(cameraEntity);
 
 		/*
-		* Testing
+		* Testing to add a model with an animator
 		*/ 
-		Entity testAnim = gameScene.CreateEntity();
-		comp::Transform* transform = testAnim.AddComponent<comp::Transform>();
-		comp::RenderableAnimation* animRender = testAnim.AddComponent<comp::RenderableAnimation>();
-		animRender->animator = ResourceManager::Get().GetResource<RAnimator>("Test.anim");
+		Entity testAnimEnt = gameScene.CreateEntity();
+		testAnimEnt.AddComponent<comp::Transform>();
+		comp::Renderable* testRenderable = testAnimEnt.AddComponent<comp::Renderable>();
+		testRenderable->model = ResourceManager::Get().GetResource<RModel>("Player_Skeleton.fbx");
+		comp::Animator* testAnimator = testAnimEnt.AddComponent<comp::Animator>();
+		testAnimator->data = ResourceManager::Get().GetResource<RAnimator>("Test.anim");
+		testAnimator->data->LoadSkeleton(testRenderable->model->GetSkeleton());
+
+
+		//comp::RenderableAnimation* renderableAnim = testAnimEnt.AddComponent<comp::RenderableAnimation>();
+		//renderableAnim->model = ResourceManager::Get().GetResource<RModel>("Player_Skeleton.fbx");
+		//renderableAnim->animator = ResourceManager::Get().GetResource<RAnimator>("Test.anim");
+		//renderableAnim->animator->LoadSkeleton(renderableAnim->model->GetSkeleton());
 
 		CreateLightEntity(gameScene, { 0.f, 0.f, 0.f, 0.f }, { 1.f, -1.f, 0.f, 0.f }, { 10.f, 10.f, 10.f, 10.f }, 0, TypeLight::DIRECTIONAL, 1);
 		CreateLightEntity(gameScene, { 0.f, 8.f, -10.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 300.f, 300.f, 300.f, 300.f }, 75.f, TypeLight::POINT, 1);

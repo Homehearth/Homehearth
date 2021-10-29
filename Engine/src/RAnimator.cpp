@@ -15,23 +15,20 @@ RAnimator::~RAnimator()
 	m_animations.clear();
 }
 
-bool RAnimator::LoadModel(const std::string& filename)
+//bool RAnimator::LoadSkeleton(const std::shared_ptr<RModel>& model)
+bool RAnimator::LoadSkeleton(const std::vector<bone_t>& skeleton)
 {
 	bool loaded = false;
-	m_model = ResourceManager::Get().GetResource<RModel>(filename);
-
-	if (m_model)
+	if (!skeleton.empty())
 	{
-		std::vector<bone_t> allBones = m_model->GetSkeleton();
-		for (size_t i = 0; i < allBones.size(); i++)
+		for (size_t i = 0; i < skeleton.size(); i++)
 		{
 			bone_keyFrames_t bone;
-			bone.name = allBones[i].name;
-			bone.inverseBind = allBones[i].inverseBind;
-			bone.parentIndex = allBones[i].parentIndex;
+			bone.name = skeleton[i].name;
+			bone.inverseBind = skeleton[i].inverseBind;
+			bone.parentIndex = skeleton[i].parentIndex;
 			m_bones.push_back(bone);
 		}
-		allBones.clear();
 
 		m_finalMatrices.resize(m_bones.size(), sm::Matrix::Identity);
 
@@ -93,21 +90,6 @@ void RAnimator::UpdateStructureBuffer()
 	D3D11Core::Get().DeviceContext()->Unmap(m_bonesSB_Buffer.Get(), 0);
 }
 
-void RAnimator::Bind() const
-{
-	//Bind correct vertexshader
-	//Bind inputlayout
-	D3D11Core::Get().DeviceContext()->VSSetShaderResources(T2D_BONESLOT, 1, m_bonesSB_RSV.GetAddressOf());
-}
-
-void RAnimator::Unbind() const
-{
-	//Unbind the vertexshader to default
-	//Unbind the inputlayout to default
-	ID3D11ShaderResourceView* nullSRV = nullptr;
-	D3D11Core::Get().DeviceContext()->VSSetShaderResources(T2D_BONESLOT, 1, &nullSRV);
-}
-
 bool RAnimator::Create(const std::string& filename)
 {
 	/*
@@ -115,8 +97,6 @@ bool RAnimator::Create(const std::string& filename)
 	*/
 
 	m_currentAnim = "Player_Idle.fbx";
-	if (!LoadModel("Player_Skeleton.fbx"))
-		return false;
 
 	m_animations[m_currentAnim] = ResourceManager::Get().GetResource<RAnimation>(m_currentAnim);
 
@@ -154,13 +134,13 @@ void RAnimator::Update()
 	}
 }
 
-void RAnimator::Render()
+void RAnimator::Bind() const
 {
-	//Unnecessary to the render if the model does not exist
-	if (m_model)
-	{
-		Bind();
-		m_model->Render();
-		Unbind();
-	}
+	D3D11Core::Get().DeviceContext()->VSSetShaderResources(T2D_BONESLOT, 1, m_bonesSB_RSV.GetAddressOf());
+}
+
+void RAnimator::Unbind() const
+{
+	ID3D11ShaderResourceView* nullSRV = nullptr;
+	D3D11Core::Get().DeviceContext()->VSSetShaderResources(T2D_BONESLOT, 1, &nullSRV);
 }
