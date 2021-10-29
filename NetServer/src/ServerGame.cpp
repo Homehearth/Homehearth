@@ -173,46 +173,20 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 	}
 	case GameMsg::Game_PlayerInput:
 	{
-		int8_t x;
-		int8_t y;
+		InputState input;
 		uint32_t playerID;
 		uint32_t gameID;
 
-		msg >> y >> x >> gameID >> playerID;
+		msg >> input >> gameID >> playerID;
 
 		if (m_simulations.find(gameID) != m_simulations.end())
 		{
-			m_simulations.at(gameID)->GetGameScene()->ForEachComponent<comp::Network, comp::Velocity>([=](comp::Network& net, comp::Velocity& vel)
-				{
-					if (net.id == playerID)
-					{
-						sm::Vector3 input(x, 0, y);
-						input.Normalize(input);
-						vel.vel = input * 10.f;
-					}
-				});
+			m_simulations.at(gameID)->UpdateInput(input, playerID);
 		}
 		else
 		{
 			LOG_WARNING("Invalid GameID for player input message");
 		}
-
-		break;
-	}
-	case GameMsg::Game_PlayerAttack:
-	{
-		uint32_t playerID;
-		uint32_t gameID;
-		msg >> gameID >> playerID;
-
-		m_simulations.at(gameID)->GetGameScene()->ForEachComponent<comp::Network, comp::CombatStats>([=](comp::Network& net, comp::CombatStats& attack)
-			{
-				if (net.id == playerID)
-				{
-					attack.isAttacking = true;
-					LOG_INFO("PlayerID [%u] tried to attack.", playerID);
-				}
-			});
 
 		break;
 	}

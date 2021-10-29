@@ -20,6 +20,8 @@ void Scene::Update(float dt)
 	PROFILE_FUNCTION();
 
 	// Emit event
+
+	GetCurrentCamera()->Update(dt);
 	BasicScene::Update(dt);
 
 	if (!m_renderableCopies.IsSwapped())

@@ -26,28 +26,27 @@ namespace ecs {
         u = sm::Vector3::TransformNormal(u, sm::Matrix::CreateRotationZ(transform.rotation.z));
         return u;
     }
+
+    bool StepRotateTo(sm::Vector3& rotation, const sm::Vector3& target, float time)
+    {
+        float targetRotation = atan2(-target.z, target.x);
+
+        float deltaRotation = targetRotation - rotation.y;
+
+        if (std::abs(deltaRotation) > dx::g_XMPi[0])
+        {
+            rotation.y += (rotation.y < 0.0f) ? dx::g_XMTwoPi[0] : -dx::g_XMTwoPi[0];
+        }
+        rotation.y = rotation.y * (1 - time) + targetRotation * time;
+
+        return std::abs(rotation.y - targetRotation) < 0.01f;
+    }
+
+    bool StepTranslateTo(sm::Vector3& translation, const sm::Vector3& target, float t)
+    {
+        translation = translation * (1 - t) + target * t;
+        return sm::Vector3::Distance(translation, target) < 0.01f;
+    }
+
 }
 
-network::message<GameMsg>& operator<<(network::message<GameMsg>& msg, const sm::Vector3& data)
-{
-    msg << data.x << data.y << data.z;
-    return msg;
-}
-
-network::message<GameMsg>& operator >> (network::message<GameMsg>& msg, sm::Vector3& data)
-{
-    msg >> data.z >> data.y >> data.x;
-    return msg;
-}
-
-network::message<GameMsg>& operator<<(network::message<GameMsg>& msg, const sm::Vector4& data)
-{
-    msg << data.x << data.y << data.z << data.w;
-    return msg;
-}
-
-network::message<GameMsg>& operator>>(network::message<GameMsg>& msg, sm::Vector4& data) 
-{
-    msg >> data.w >> data.z >> data.y >> data.x;
-    return msg;
-}
