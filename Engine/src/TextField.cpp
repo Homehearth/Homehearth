@@ -40,6 +40,12 @@ void rtd::TextField::Update()
 		m_stringText.pop_back();
 	}
 
+	if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Keys::LeftControl, KeyState::HELD) &&
+		InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Keys::V, KeyState::PRESSED)) 
+	{
+		m_stringText = InputSystem::Get().GetClipboard();
+	}
+
 	// Update the text
 	m_text->SetText(m_stringText);
 }

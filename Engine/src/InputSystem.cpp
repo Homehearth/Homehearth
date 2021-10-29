@@ -142,6 +142,33 @@ const MousePos& InputSystem::GetMousePos() const
 	return m_mousePos;
 }
 
+std::string InputSystem::GetClipboard()
+{
+	if (!OpenClipboard(NULL))
+	{
+		LOG_WARNING("Failed to open clipboard");
+		return "";
+	}
+	HANDLE handle = GetClipboardData(CF_TEXT);
+	if (!handle)
+	{
+		LOG_WARNING("Failed to get clipboard handle");
+		return "";
+	}
+
+	char* str = static_cast<char*>(GlobalLock(handle));
+	if (!str)
+	{
+		LOG_WARNING("Failed to get clipboard string");
+		return "";
+	}
+	
+	GlobalUnlock(handle);
+	CloseClipboard();
+
+	return str;
+}
+
 void InputSystem::ToggleMouseVisibility() const
 {
 	if (m_mouseState.positionMode == dx::Mouse::MODE_ABSOLUTE)
