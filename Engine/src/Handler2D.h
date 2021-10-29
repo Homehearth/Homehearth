@@ -45,7 +45,7 @@
 		/*
 			Unordered map containing the group and name as key.
 		*/
-		std::unordered_map<std::string, Element2D*> m_elements;
+		std::map<std::string, Element2D*> m_elements;
 
 		// Doublebuffer holding references to elements.
 		DoubleBuffer<std::vector<Element2D**>> m_drawBuffers;
