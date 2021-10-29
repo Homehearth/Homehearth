@@ -35,6 +35,8 @@ private:
 	// IMGUI
 	void drawImGUI() const;
 
+	virtual void OnUserUpdate(float deltaTime) = 0;
+
 public:
 	Engine();
 	Engine(const Engine& other) = delete;

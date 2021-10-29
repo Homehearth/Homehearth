@@ -241,8 +241,8 @@ void SampleTextures(PixelIn input, inout float3 albedo, inout float3 N, inout fl
     if(c_hasAlbedo == 1)
     {
         float4 albedoSamp = t_albedo.Sample(s_linearSampler, input.uv);
-        //Alpha test: If the alpha is lower than 0.1f we shall ignore this pixel
-        clip(albedoSamp.a < 0.1f ? -1 : 1); //Why not work???
+        //Alpha-test
+        clip(albedoSamp.a < 0.5f ? -1 : 1);
         albedo = pow(max(albedoSamp.rgb, 0.0f), 2.2f); //Power the albedo by 2.2f to get it to linear space.
     }
     

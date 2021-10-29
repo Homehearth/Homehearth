@@ -16,6 +16,7 @@ Scene::Scene()
 
 void Scene::Update(float dt)
 {
+	m_2dHandler.Update();
 	PROFILE_FUNCTION();
 
 	// Emit event
@@ -158,6 +159,26 @@ void Scene::RenderDebug()
 
 }
 
+void Scene::Render2D()
+{
+	m_2dHandler.Render();
+}
+
+bool Scene::IsRenderReady() const
+{
+	return (IsRender2DReady() && IsRender3DReady() && IsRenderDebugReady());
+}
+
+void Scene::Insert2DElement(Element2D* element, std::string& name)
+{
+	m_2dHandler.InsertElement(element, name);
+}
+
+void Scene::Insert2DElement(Element2D* element, std::string&& name)
+{
+	m_2dHandler.InsertElement(element, name);
+}
+
 void Scene::RenderAnimation()
 {
 	PROFILE_FUNCTION();
@@ -216,14 +237,14 @@ const bool Scene::IsRenderReady() const
 	return m_renderableCopies.IsSwapped();
 }
 
-const bool Scene::IsRenderDebugReady() const
+bool Scene::IsRenderDebugReady() const
 {
 	return m_debugRenderableCopies.IsSwapped();
 }
 
-const bool Scene::IsAnimRenderReady() const
+bool Scene::IsRender2DReady() const
 {
-	return m_renderableAnimCopies.IsSwapped();
+	return m_2dHandler.IsRenderReady();
 }
 
 Camera* Scene::GetCurrentCamera() const

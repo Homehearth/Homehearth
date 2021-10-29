@@ -12,11 +12,14 @@ void Renderer::Initialize(Window* pWindow)
 	m_pipelineManager.Initialize(pWindow);
 	m_d3d11 = &D3D11Core::Get();
 
-	AddPass(&m_depthPass);  // 1
+	/*
+		Had to disable the depth pass to get alpha testing to work correctly... -Filip
+	*/
+	//AddPass(&m_depthPass);  // 1
 	AddPass(&m_basePass);   // 2
 	AddPass(&m_animPass);	// 3
 
-	m_depthPass.SetEnable(true);
+	//m_depthPass.SetEnable(true);
 	m_basePass.SetEnable(true);
 	m_animPass.SetEnable(true);
 
