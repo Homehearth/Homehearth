@@ -17,6 +17,7 @@ Camera::Camera()
 	m_rotationSpeed = 2.5f;
 	m_movingSpeed = 15.0f;
 	m_type = CAMERATYPE::DEFAULT;
+	m_viewConstantBuffer = nullptr;
 }
 
 Camera::~Camera()
@@ -48,7 +49,14 @@ void Camera::Initialize(sm::Vector3 pos, sm::Vector3 target, sm::Vector3 up, sm:
 	m_cameraMat.projection = m_projection;
 	m_cameraMat.view = m_view;
 
-	//Constant buffer
+	//Constant buffer already created
+	if (m_viewConstantBuffer != nullptr)
+	{
+		D3D11Core::Get().DeviceContext()->UpdateSubresource(m_viewConstantBuffer.Get(), 0, nullptr, &m_cameraMat, 0, 0);
+		return;
+	}
+	
+	// Create new Constant buffer
 	D3D11_BUFFER_DESC desc;
 	desc.ByteWidth = sizeof(camera_Matrix_t);
 	desc.Usage = D3D11_USAGE_DEFAULT;
@@ -60,7 +68,6 @@ void Camera::Initialize(sm::Vector3 pos, sm::Vector3 target, sm::Vector3 up, sm:
 	data.pSysMem = &m_cameraMat;
 	data.SysMemPitch = 0;
 	data.SysMemSlicePitch = 0;
-
 	HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&desc, &data, m_viewConstantBuffer.GetAddressOf());
 	if (FAILED(hr))
 	{
