@@ -3,9 +3,6 @@
 #include "HeadlessEngine.h"
 #include "ServerSystems.h"
 
-
-constexpr int MAX_PLAYER_PER_LOBBY = 2;
-
 /* 
 		Simulation defines each ongoing simulation from the perspective of the server
 		gameID identifies the simulation which each player has to give the server to keep track
@@ -19,12 +16,6 @@ private:
 	HeadlessEngine* m_pEngine;
 	uint32_t m_gameID;
 	uint32_t m_tick;
-
-	struct pDecision_t
-	{
-		uint32_t playerID = -1;
-		bool isWantToStart = false;
-	}m_playerDecisions[MAX_PLAYER_PER_LOBBY];
 	
 	HeadlessScene* m_pLobbyScene;
 	HeadlessScene* m_pGameScene;
@@ -59,7 +50,7 @@ public:
 	void Destroy();
 
 	// Updates the lobby.
-	void UpdateLobby(const uint32_t& playerID);
+	void ReadyCheck(const uint32_t& playerID);
 
 	bool IsEmpty() const;
 

@@ -11,7 +11,7 @@ Game::Game()
 {
 	this->m_localPID = -1;
 	this->m_gameID = -1;
-	this->m_isLeavingLobby = false;
+	//this->m_isLeavingLobby = false;
 	this->m_predictionThreshhold = 0.001f;
 }
 
@@ -25,21 +25,21 @@ Game::~Game()
 
 void Game::UpdateNetwork(float deltaTime)
 {
-	static float pingCheck = 0.f;
-	const float TARGET_PING_TIME = 5.0f;
+	//static float pingCheck = 0.f;
+	//const float TARGET_PING_TIME = 5.0f;
 	if (m_client.IsConnected())
 	{
 		m_client.Update();
 
-		pingCheck += deltaTime;
+		//pingCheck += deltaTime;
 
-		if (pingCheck > TARGET_PING_TIME)
-		{
-			this->PingServer();
-			pingCheck -= TARGET_PING_TIME;
-		}
+		//if (pingCheck > TARGET_PING_TIME)
+		//{
+		//	this->PingServer();
+		//	pingCheck -= TARGET_PING_TIME;
+		//}
 
-		if (GetCurrentScene() == &GetScene("Game") && !m_isLeavingLobby)
+		if (GetCurrentScene() == &GetScene("Game") /*&& !m_isLeavingLobby*/)
 		{
 			if (GetCurrentScene()->GetCurrentCamera()->GetCameraType() == CAMERATYPE::PLAY)
 			{
@@ -65,7 +65,6 @@ bool Game::OnStartup()
 	sceneHelp::CreateLobbyScene(this);
 	sceneHelp::CreateGameScene(*this);
 	sceneHelp::CreateMainMenuScene(this);
-	sceneHelp::CreateConnectScene(this);
 	sceneHelp::CreateJoinLobbyScene(this);
 	sceneHelp::CreateLoadingScene(this);
 
@@ -316,7 +315,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		SetScene("Lobby");
 		LOG_INFO("You are now in lobby: %lu", m_gameID);
 
-		GetScene("Lobby").GetElement<rtd::Text>("lobbyID")->SetText("Lobby ID: " + std::to_string(m_gameID));
+		//GetScene("Lobby").GetElement<rtd::Text>("lobbyID")->SetText("Lobby ID: " + std::to_string(m_gameID));
 
 		break;
 	}
@@ -325,16 +324,20 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		std::string err;
 		msg >> err;
 		SetScene("JoinLobby");
-		LOG_WARNING("Request denied: %s", err.c_str());
+		LOG_WARNING("%s", err.c_str());
 		break;
 	}
 	case GameMsg::Lobby_AcceptedLeave:
 	{
 		LOG_WARNING("Left Lobby %u", m_gameID);
-		m_isLeavingLobby = false;
+		//m_isLeavingLobby = false;
 		m_gameID = -1;
 		SetScene("JoinLobby");
 
+		break;
+	}
+	case GameMsg::Lobby_PlayerJoin:
+	{
 		break;
 	}
 	case GameMsg::Game_Start:
@@ -342,50 +345,16 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		SetScene("Game");
 		break;
 	}
-	case GameMsg::Lobby_Update:
+	case GameMsg::Lobby_PlayerLeft:
 	{
-		uint32_t nrOfPlayers = 0;
-		uint32_t player = -1;
-		uint8_t state = 0;
-		msg >> state >> player >> nrOfPlayers;
+		uint32_t playerID;
+		msg >> playerID;
 
-		Scene& lobbyScene = GetScene("Lobby");
-		if (player == 2 && state == 2)
+		if (m_players.find(playerID) != m_players.end())
 		{
-			lobbyScene.GetElement<rtd::Text>("PlayerText2")->SetVisiblity(false);
-			lobbyScene.GetElement<rtd::Canvas>("Canvas5")->SetVisiblity(false);
-			lobbyScene.GetElement<rtd::Picture>("player2Symbol")->SetVisiblity(false);
+			m_players.at(playerID).Destroy();
+			m_players.erase(playerID);
 		}
-		else if (player == 2 && state == 1)
-		{
-			lobbyScene.GetElement<rtd::Text>("PlayerText2")->SetVisiblity(true);
-			lobbyScene.GetElement<rtd::Canvas>("Canvas5")->SetVisiblity(true);
-			lobbyScene.GetElement<rtd::Picture>("player2Symbol")->SetVisiblity(true);
-		}
-		
-		if (player == 1 && state == 2)
-		{
-			lobbyScene.GetElement<rtd::Text>("PlayerText1")->SetVisiblity(false);
-			lobbyScene.GetElement<rtd::Canvas>("Canvas4")->SetVisiblity(false);
-			lobbyScene.GetElement<rtd::Picture>("player1Symbol")->SetVisiblity(false);
-		}
-		else if (player == 1 && state == 1)
-		{
-			lobbyScene.GetElement<rtd::Text>("PlayerText1")->SetVisiblity(true);
-			lobbyScene.GetElement<rtd::Canvas>("Canvas4")->SetVisiblity(true);
-			lobbyScene.GetElement<rtd::Picture>("player1Symbol")->SetVisiblity(true);
-		}
-
-		if (nrOfPlayers == 2)
-		{
-			lobbyScene.GetElement<rtd::Text>("PlayerText1")->SetVisiblity(true);
-			lobbyScene.GetElement<rtd::Canvas>("Canvas4")->SetVisiblity(true);
-			lobbyScene.GetElement<rtd::Text>("PlayerText2")->SetVisiblity(true);
-			lobbyScene.GetElement<rtd::Canvas>("Canvas5")->SetVisiblity(true);
-			lobbyScene.GetElement<rtd::Picture>("player1Symbol")->SetVisiblity(true);
-			lobbyScene.GetElement<rtd::Picture>("player2Symbol")->SetVisiblity(true);
-		}
-
 		break;
 	}
 	}

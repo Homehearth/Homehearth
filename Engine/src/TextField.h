@@ -19,11 +19,7 @@ namespace rtd
 
 		std::string m_stringText;
 		size_t m_textLimit;
-		std::unique_ptr<Border> m_border;
 		draw_text_t m_opts;
-		
-		// Border color when actively used.
-		D2D1_COLOR_F m_activeColor;
 
 		bool m_isUsed;
 		bool m_finalInput;
@@ -32,7 +28,7 @@ namespace rtd
 		void Update();
 
 	public:
-		TextField(const draw_text_t& opts, size_t textLimit = -1, bool isUsed = false, D2D1_COLOR_F borderActive = { 0.0f, 0.0f, 0.0f, 1.0f });
+		TextField(const draw_text_t& opts, size_t textLimit = -1, bool isUsed = false, D2D1_COLOR_F borderColor = {0.0f, 0.0f, 0.0f, 1.0f});
 
 		void SetDescriptionText(const std::string& displayText);
 

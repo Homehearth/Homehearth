@@ -23,6 +23,5 @@ namespace sceneHelp
 	void SetupInLobbyScreen(Game* game);
 	void SetupInGameScreen(Scene& scene);
 	void SetupOptionsScreen(Scene& scene);
-	void SetupConnectScreen(Game* game);
 	void SetupLoadingScene(Game* game);
 }

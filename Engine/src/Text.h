@@ -7,13 +7,11 @@ namespace rtd
 	{
 	private:
 
-		// Text to be rendered.
-		std::string m_text;
-
+	public:
 		// Pointer to format as well as position, stretch area.
 		draw_text_t m_opts;
-
-	public:
+		// Text to be rendered.
+		std::string m_text;
 
 		/*
 			Using this construct will use the default text format defined in

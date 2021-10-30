@@ -118,8 +118,18 @@ Simulation::Simulation(Server* pServer, HeadlessEngine* pEngine)
 
 bool Simulation::JoinLobby(uint32_t playerID, uint32_t gameID)
 {
+	if (m_pCurrentScene == m_pGameScene)
+	{
+		message<GameMsg> msg;
+		msg.header.id = GameMsg::Lobby_Invalid;
+		msg << std::string("Request denied: Game has already started!");
+
+		m_pServer->SendToClient(playerID, msg);
+
+		return false;
+	}
 	// Send to client the message with the new game ID
-	if (m_players.size() < MAX_PLAYER_PER_LOBBY)
+	if (m_players.size() < MAX_PLAYERS_PER_LOBBY)
 	{
 		message<GameMsg> msg;
 		msg.header.id = GameMsg::Lobby_Accepted;
@@ -130,76 +140,43 @@ bool Simulation::JoinLobby(uint32_t playerID, uint32_t gameID)
 		// Add the players to the simulation on that specific client
 		this->AddPlayer(playerID);
 
-		uint32_t player = -1;
-		// Reset Lobby player.
-		if (m_playerDecisions[0].playerID == playerID)
-		{
-			player = 1;
-		}
-		else if (m_playerDecisions[1].playerID == playerID)
-		{
-			player = 2;
-		}
+		message<GameMsg> msg2;
+		msg2.header.id = GameMsg::Lobby_PlayerJoin;
+		msg << playerID;
 
-		// Any late joining players that join a lobby that is already inside game will be directed onto game scene.
-		if (m_pCurrentScene == m_pGameScene)
-		{
-			network::message<GameMsg> msg3;
-			msg.header.id = GameMsg::Game_Start;
-			m_pServer->SendToClient(playerID, msg3);
-		}
-
-		// Update the lobby for players.
-		network::message<GameMsg> msg2;
-		msg2.header.id = GameMsg::Lobby_Update;
-		const uint32_t nrOfPlayers = (const uint32_t)m_players.size();
-		msg2 << nrOfPlayers << player << (uint8_t)1;
 		this->Broadcast(msg2);
 	}
 	else
 	{
 		network::message<GameMsg> msg;
 		msg.header.id = GameMsg::Lobby_Invalid;
-		std::string fullLobby = "This lobby was full!";
+		std::string fullLobby = "Request denied: This lobby was full!";
 		msg << fullLobby;
 		m_pServer->SendToClient(playerID, msg);
+
+		return false;
 	}
 
+	LOG_INFO("Player %d joined lobby: %d", playerID, gameID);
 	return true;
 }
 
 bool Simulation::LeaveLobby(uint32_t playerID, uint32_t gameID)
 {
-	if(!this->RemovePlayer(playerID))
+	if (!this->RemovePlayer(playerID))
 	{
 		return false;
 	}
 
 	m_players.erase(playerID);
 
-	uint32_t player = -1;
-	// Reset Lobby player.
-	if (m_playerDecisions[0].playerID == playerID)
-	{
-		m_playerDecisions[0].playerID = -1;
-		m_playerDecisions[0].isWantToStart = false;
-		player = 1;
-	}
-	else if (m_playerDecisions[1].playerID == playerID)
-	{
-		m_playerDecisions[1].playerID = -1;
-		m_playerDecisions[1].isWantToStart = false;
-		player = 2;
-	}
-
 	this->SendRemoveAllEntitiesToPlayer(playerID);
 
 	// Update the lobby for players.
-	network::message<GameMsg> msg2;
-	msg2.header.id = GameMsg::Lobby_Update;
-	const uint32_t nrOfPlayers = (const uint32_t)m_players.size();
-	msg2 << nrOfPlayers << player << (uint8_t)2;
-	this->Broadcast(msg2);
+	network::message<GameMsg> msg;
+	msg.header.id = GameMsg::Lobby_PlayerLeft;
+	msg << playerID;
+	this->Broadcast(msg);
 
 	return true;
 }
@@ -246,7 +223,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 			Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(scene, e.dt);
 			Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingSphere>(scene, e.dt);
 			Systems::CombatSystem(scene, e.dt);
-			
+
 		});
 
 	//On collision event add entities as pair in the collision system
@@ -290,38 +267,44 @@ void Simulation::Destroy()
 	m_pLobbyScene->Clear();
 }
 
-void Simulation::UpdateLobby(const uint32_t& playerID)
+void Simulation::ReadyCheck(const uint32_t& playerID)
 {
 	if (m_pCurrentScene == m_pLobbyScene)
 	{
-		// Update decisions.
-		if (playerID == m_playerDecisions[0].playerID)
+		if (m_players.find(playerID) != m_players.end())
 		{
-			m_playerDecisions[0].isWantToStart = !m_playerDecisions[0].isWantToStart;
-		}
-		else if (playerID == m_playerDecisions[1].playerID)
-		{
-			m_playerDecisions[1].isWantToStart = !m_playerDecisions[1].isWantToStart;
-		}
+			m_players.at(playerID).GetComponent<comp::Player>()->isReady = true;
 
 #ifdef _DEBUG
-		// Debugging allow only one player to start.
-		m_pCurrentScene = m_pGameScene;
-		// Start the game.
-		network::message<GameMsg> msg;
-		msg.header.id = GameMsg::Game_Start;
-		this->Broadcast(msg);
-#endif
-
-		// Start game when both wants to start game.
-		if ((m_playerDecisions[1].isWantToStart & m_playerDecisions[0].isWantToStart) == true)
-		{
+			// Debugging allow only one player to start.
 			m_pCurrentScene = m_pGameScene;
-
 			// Start the game.
 			network::message<GameMsg> msg;
 			msg.header.id = GameMsg::Game_Start;
 			this->Broadcast(msg);
+			return;
+#endif
+			auto it = m_players.begin();
+			
+			uint32_t readyCount = 0;
+			while (it != m_players.end())
+			{
+				if (it->second.GetComponent<comp::Player>()->isReady)
+				{
+					readyCount++;
+				}
+				it++;
+			}
+			
+			// Start game when all players are marked ready
+			if (readyCount == MAX_PLAYERS_PER_LOBBY)
+			{
+				m_pCurrentScene = m_pGameScene;
+				// Start the game.
+				network::message<GameMsg> msg;
+				msg.header.id = GameMsg::Game_Start;
+				this->Broadcast(msg);
+			}
 		}
 	}
 }
@@ -355,15 +338,6 @@ bool Simulation::AddPlayer(uint32_t playerID)
 	//Collision will handle this entity as a dynamic one
 	player.AddComponent<comp::Tag<TagType::DYNAMIC>>();
 
-	// Setup players temp...
-	for (int i = 0; i < 2; i++)
-	{
-		if (m_playerDecisions[i].playerID == -1)
-		{
-			m_playerDecisions[i].playerID = playerID;
-			break;
-		}
-	}
 	// send new Player to all other clients
 	m_players[playerID] = player;
 	this->SendEntity(player);
@@ -380,7 +354,7 @@ bool Simulation::AddEnemy()
 	const unsigned char BAD = 8;
 	enemy.AddComponent<comp::Tag<BAD>>();
 	enemy.AddComponent<comp::Health>();
-	
+
 	return true;
 }
 
@@ -395,7 +369,7 @@ bool Simulation::RemovePlayer(uint32_t playerID)
 	{
 		return false;
 	}
-	
+
 	LOG_INFO("Removed player %u from scene", playerID);
 
 	return true;

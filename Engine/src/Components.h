@@ -100,6 +100,7 @@ namespace ecs
 
 			float runSpeed;
 			sm::Vector3 targetForward;
+			bool isReady = false;
 		};
 
 		struct Enemy

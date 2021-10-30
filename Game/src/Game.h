@@ -13,7 +13,7 @@ private:
 	std::vector<comp::Transform> predictedPositions;
 	std::unordered_map<uint32_t, Entity> m_players;
 
-	bool m_isLeavingLobby;
+	//bool m_isLeavingLobby;
 	comp::Transform test;
 	float m_predictionThreshhold;
 
@@ -37,6 +37,7 @@ public:
 	Client m_client;
 	uint32_t m_localPID;
 	uint32_t m_gameID;
+
 	Game();
 	virtual ~Game();
 	void JoinLobby(uint32_t lobbyID);

@@ -29,18 +29,18 @@ void Scene::Update(float dt)
 		PROFILE_SCOPE("Copy Transforms");
 		m_renderableCopies[0].clear();
 		m_registry.group<comp::Renderable, comp::Transform>().each([&](comp::Renderable& r, comp::Transform& t)
-		{
+			{
 				// Only push up visible objects to render.
 				if (r.visible)
 				{
 					r.data.worldMatrix = ecs::GetMatrix(t);
 					m_renderableCopies[0].push_back(r);
 				}
-		});
-		
+			});
+
 		m_renderableCopies.Swap();
 	}
-	if(!m_debugRenderableCopies.IsSwapped())
+	if (!m_debugRenderableCopies.IsSwapped())
 	{
 		m_debugRenderableCopies[0].clear();
 		m_registry.view<comp::RenderableDebug, comp::Transform>().each([&](entt::entity entity, comp::RenderableDebug& r, comp::Transform& t)
@@ -48,21 +48,21 @@ void Scene::Update(float dt)
 				sm::Matrix mat;
 				comp::BoundingOrientedBox* obb = m_registry.try_get<comp::BoundingOrientedBox>(entity);
 				comp::BoundingSphere* sphere = m_registry.try_get<comp::BoundingSphere>(entity);
-				if(obb != nullptr)
+				if (obb != nullptr)
 				{
 					mat = sm::Matrix::CreateScale(obb->Extents);
 				}
-				else if(sphere != nullptr)
+				else if (sphere != nullptr)
 				{
 					mat = sm::Matrix::CreateScale(sm::Vector3(sphere->Radius, sphere->Radius, sphere->Radius));
 				}
 				mat *= sm::Matrix::CreateWorld(t.position, ecs::GetForward(t), ecs::GetUp(t));
-				
-				
+
+
 				r.data.worldMatrix = mat;
 				m_debugRenderableCopies[0].push_back(r);
 			});
-		
+
 		m_debugRenderableCopies.Swap();
 	}
 }
@@ -73,7 +73,7 @@ void Scene::Render()
 	thread::RenderThreadHandler::Get().SetObjectsBuffer(&m_renderableCopies);
 	// Divides up work between threads.
 	const render_instructions_t inst = thread::RenderThreadHandler::Get().Launch(static_cast<int>(m_renderableCopies[1].size()));
-	if((inst.start | inst.stop) == 0)
+	if ((inst.start | inst.stop) == 0)
 	{
 		// Render everything on same thread.
 		ID3D11Buffer* const buffers[1] =
@@ -116,7 +116,7 @@ void Scene::Render()
 
 void Scene::RenderDebug()
 {
-	if(m_IsRenderingColliders)
+	if (m_IsRenderingColliders)
 	{
 		PROFILE_FUNCTION();
 
@@ -130,14 +130,14 @@ void Scene::RenderDebug()
 		{
 			m_ColliderHitBuffer.GetBuffer(),
 		};
-		
+
 		D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, buffers);
 		D3D11Core::Get().DeviceContext()->PSSetConstantBuffers(3, 1, buffer2);
 		for (const auto& it : m_debugRenderableCopies[1])
 		{
 			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
 			m_ColliderHitBuffer.SetData(D3D11Core::Get().DeviceContext(), it.isColliding);
-			
+
 			if (it.model)
 				it.model->Render();
 		}
@@ -159,14 +159,14 @@ bool Scene::IsRenderReady() const
 	return (IsRender2DReady() && IsRender3DReady() && IsRenderDebugReady());
 }
 
-void Scene::Insert2DElement(Element2D* element, std::string& name)
+void Scene::Add2DCollection(Collection2D* collection, std::string& name)
 {
-	m_2dHandler.InsertElement(element, name);
+	m_2dHandler.AddElementCollection(collection, name);
 }
 
-void Scene::Insert2DElement(Element2D* element, std::string&& name)
+void Scene::Add2DCollection(Collection2D* collection, const char* name)
 {
-	m_2dHandler.InsertElement(element, name);
+	m_2dHandler.AddElementCollection(collection, name);
 }
 
 bool Scene::IsRender3DReady() const

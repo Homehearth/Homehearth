@@ -129,7 +129,6 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 		msg >> gameID;
 		uint32_t playerID;
 		msg >> playerID;
-		LOG_INFO("Player %d trying to join lobby %d", playerID, gameID);
 		if (m_simulations.find(gameID) != m_simulations.end())
 		{
 			m_simulations[gameID]->JoinLobby(playerID, gameID);
@@ -138,8 +137,8 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 		{
 			message<GameMsg> invalidLobbyMsg;
 			invalidLobbyMsg.header.id = GameMsg::Lobby_Invalid;
-			invalidLobbyMsg << std::string("Player trying to join invalid Lobby");
-			LOG_WARNING("Request denied: Player trying to join invalid Lobby");
+			invalidLobbyMsg << std::string("Request denied: Invalid Lobby");
+			LOG_WARNING("Request denied: Invalid Lobby");
 			m_server.SendToClient(playerID, invalidLobbyMsg);
 		}
 		break;
@@ -198,7 +197,7 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 
 		if (m_simulations.find(gameID) != m_simulations.end())
 		{
-			m_simulations.at(gameID)->UpdateLobby(playerID);
+			m_simulations.at(gameID)->ReadyCheck(playerID);
 		}
 
 		break;
