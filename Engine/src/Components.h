@@ -96,7 +96,7 @@ namespace ecs
 				IDLE,
 				ATTACK,
 				TURN
-			} state;
+			} state = State::IDLE;
 
 			float runSpeed;
 			sm::Vector3 targetForward;
@@ -138,11 +138,14 @@ namespace ecs
 			float damage;
 		};
 
+
 		template<uint8_t ID>
 		struct Tag
 		{
 			uint8_t id = ID;
 		};
+
+
 
 	};
 

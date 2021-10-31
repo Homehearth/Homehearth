@@ -36,10 +36,21 @@ public:
 		return (uint32_t)m_entity;
 	}
 
-	bool operator >(const Entity& other) const
+	bool operator > (const Entity& other) const
 	{
 		return m_entity > other.m_entity;
 	}
+
+	bool operator == (const Entity& other) const
+	{
+		return m_entity == other.m_entity && m_pRegistry == other.m_pRegistry;
+	}
+	
+	bool operator != (const Entity& other) const
+	{
+		return !(m_entity == other.m_entity && m_pRegistry == other.m_pRegistry);
+	}
+
 };
 
 template<typename T>

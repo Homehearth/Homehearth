@@ -208,7 +208,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 				if (input.leftMouse)
 				{
 					comp::CombatStats* stats = e.GetComponent<comp::CombatStats>();
-					if (stats->cooldownTimer <= 0.0f)
+					if (stats && stats->cooldownTimer <= 0.0f)
 					{
 						stats->isAttacking = true;
 						stats->targetRay = input.mouseRay;
@@ -401,12 +401,15 @@ void Simulation::Update(float dt)
 
 void Simulation::UpdateInput(InputState state, uint32_t playerID)
 {
+	if (m_pCurrentScene != m_pGameScene)
+		return;
+
 	if (m_players.find(playerID) == m_players.end())
 	{
 		LOG_ERROR("Invalid Player ID when updating input: %u", playerID);
 		return;
 	}
-
+	
 	m_playerInputs[m_players.at(playerID)] = state;
 }
 
