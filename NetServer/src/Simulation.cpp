@@ -376,6 +376,7 @@ bool Simulation::RemovePlayer(uint32_t playerID)
 
 	if (!player.Destroy())
 	{
+		LOG_INFO("Player %u entity could not be removed", playerID);
 		return false;
 	}
 	LOG_INFO("Removed player %u from scene", player.GetComponent<comp::Network>()->id);
