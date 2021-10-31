@@ -344,8 +344,8 @@ bool Simulation::AddPlayer(uint32_t playerID)
 	player.AddComponent<comp::Tag<TagType::DYNAMIC>>();
 
 	m_players[playerID] = player;
-	// Network component has to be added last for entire entity to be sent
-	player.AddComponent<comp::Network>(playerID); // send new Player entity to all clients
+	// Network component will make sure the new entity is sent
+	player.AddComponent<comp::Network>(playerID);
 
 	return true;
 }
@@ -358,8 +358,6 @@ bool Simulation::AddEnemy()
 	const unsigned char BAD = 8;
 	enemy.AddComponent<comp::Tag<BAD>>();
 	enemy.AddComponent<comp::Health>();
-
-	// Network component has to be added last for entire entity to be sent
 	enemy.AddComponent<comp::Network>();
 
 	return true;
