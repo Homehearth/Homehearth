@@ -66,6 +66,8 @@ public:
 	void SendAllEntitiesToPlayer(uint32_t playerID)const;
 	void SendRemoveAllEntitiesToPlayer(uint32_t playerID)const;
 	void SendRemoveSingleEntity(Entity e)const;
+	void SendRemoveSingleEntity(uint32_t networkID)const;
+
 	void SendRemoveEntities(message<GameMsg>& msg)const;
 
 	uint32_t GetUniqueID();

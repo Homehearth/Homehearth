@@ -519,10 +519,26 @@ void Simulation::SendRemoveAllEntitiesToPlayer(uint32_t playerID) const
 
 void Simulation::SendRemoveSingleEntity(Entity e) const
 {
+
+	comp::Network* net = e.GetComponent<comp::Network>();
+	if (net)
+	{
+		this->SendRemoveSingleEntity(net->id);
+	}
+	else 
+	{
+		LOG_WARNING("Tried to remove entity without network component");
+		return;
+	}
+
+}
+
+void Simulation::SendRemoveSingleEntity(uint32_t networkID) const
+{
 	message<GameMsg> msg;
 	msg.header.id = GameMsg::Game_RemoveEntity;
 
-	msg << (uint32_t)e << 1U;
+	msg << (uint32_t)networkID << 1U;
 
 	this->Broadcast(msg);
 }
