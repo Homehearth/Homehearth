@@ -47,7 +47,7 @@ namespace ecs
 
 		struct Network
 		{
-			uint32_t id;
+			uint32_t id = UINT32_MAX;
 		};
 
 		struct Renderable

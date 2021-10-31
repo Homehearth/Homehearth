@@ -16,6 +16,13 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 			//
 			if (stats.isAttacking)
 			{
+				for (int i = 0; i < 100; i++)
+				{
+					Entity e = scene.CreateEntity();
+					e.AddComponent<comp::Network>();
+					e.AddComponent<comp::MeshName>("cube.obj");
+					e.AddComponent<comp::Transform>()->position = transform.position + sm::Vector3(i) * 2;
+				}
 				//Creates an entity that's used to check collision if an attack lands.
 				Entity attackCollider = scene.CreateEntity();
 				attackCollider.AddComponent<comp::Transform>()->position = transform.position + ecs::GetForward(transform);
@@ -24,14 +31,17 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 				atk->lifeTime = stats.attackLifeTime;
 				atk->damage = stats.attackDamage;
 
-				LOG_INFO("Attack Collider Created!");
-
 				//If the attack is ranged add a velocity to the entity.
 				if (stats.isRanged)
 				{
 					sm::Vector3 vel = ecs::GetForward(transform) * 10.f; //CHANGE HERE WHEN FORWARD GETS FIXED!!!!!!
 					attackCollider.AddComponent<comp::Velocity>()->vel = vel;
 				}
+
+				//DEBUG
+				LOG_INFO("Attack Collider Created!");
+				attackCollider.AddComponent<comp::Network>();
+				//
 
 				
 				CollisionSystem::Get().AddOnCollision(attackCollider, [=](Entity other)
