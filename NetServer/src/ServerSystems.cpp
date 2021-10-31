@@ -27,7 +27,7 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 				obb->Extents        = sm::Vector3(2.f, 2.f, 2.f);
 				velocity->vel       = sm::Vector3(transform->position * -1.0f);
 				velocity->vel.Normalize();
-				velocity->vel		*= 10.0f;
+				velocity->vel		*= 20.0f;
 				*combatStats        = { 1.0f, 20.f, 1.0f, false, false};
 			}
 	}
@@ -38,156 +38,170 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 void ServerSystems::WaveSystem(Simulation* simulation, std::queue<std::pair<EnemyManagement::WaveType, sm::Vector2>>& waves)
 {
 	int numOfEnemies = 0;
-	
+
 	static WaveInfo waveInfo =
 	{
-		waveInfo.startNumOfEnemies = 3,
+		waveInfo.startNumOfEnemies = 100,
 		waveInfo.spawnDistance = 100.f,
 		waveInfo.scaleMultiplier = 2,
 		waveInfo.waveCount = 0,
 		waveInfo.flankWidth = 100.f
 	};
-	
-	simulation->GetGameScene()->ForEachComponent<comp::Enemy, comp::Transform>([&](Entity entity, comp::Enemy enemy, comp::Transform transform)
+
+	network::message<GameMsg> msg;
+	msg.header.id = GameMsg::Game_RemoveEntity;
+	int count = 0;
+	simulation->GetGameScene()->ForEachComponent<comp::Enemy, comp::Network, comp::Transform>([&](Entity entity, comp::Enemy enemy, comp::Network network, comp::Transform transform)
 		{
-			if(abs(transform.position.x) < 8.f && abs(transform.position.z) < 8.f || abs(transform.position.x) > 500.f || abs(transform.position.z) > 500.f)
+			if (abs(transform.position.x) < 8.f && abs(transform.position.z) < 8.f || abs(transform.position.x) > 100.f || abs(transform.position.z) > 100.f)
 			{
+				msg << network.id;
+				count++;
 				entity.Destroy();
 			}
 			else
 				numOfEnemies++;
 		});
+	
+	if(count > 0)
+	{
+		msg << count;
+		simulation->SendRemoveEntities(msg);
+	}
 
+	
+
+	
 	//initialize a new wave
-	if (numOfEnemies == 0)
+	if (numOfEnemies == 0 && !waves.empty())
 	{
 		const EnemyManagement::WaveType wave = waves.front().first;
 		switch (wave)
 		{
 		case EnemyManagement::WaveType::Zone:
+		{
+			LOG_INFO("[WaveSystem] spawns a zone wave...");
+			const int nrOfEnemies = waveInfo.startNumOfEnemies + (waveInfo.scaleMultiplier * waveInfo.waveCount);
+			int min = 30;
+			int max = 70;
+
+			const float deg2rad = 3.14f / 180.f;
+			const float degree = (rand() % 360) * deg2rad;
+
+			// for each enemy i:
+			for (int i = 0; i < nrOfEnemies; i++)
 			{
-				LOG_INFO("[WaveSystem] spawns a zone wave...");
-				const int nrOfEnemies = waveInfo.startNumOfEnemies + (waveInfo.scaleMultiplier * waveInfo.waveCount);
-				int min = 30;
-				int max = 70;
-				
-				const float deg2rad = 3.14f / 180.f;
-				const float degree = (rand() % 360) * deg2rad;
+				const float distance = (rand() % (max - min)) + min;
 
-				// for each enemy i:
-				for (int i = 0; i < nrOfEnemies; i++)
-				{
-					const float distance = (rand() % (max - min)) + min;
-					
-					float posX = distance * cos(i * degree);
-					float posZ = distance * sin(i * degree);
+				float posX = distance * cos(i * degree);
+				float posZ = distance * sin(i * degree);
 
-					simulation->Broadcast(simulation->SingleEntityMessage(EnemyManagement::CreateEnemy(simulation, { posX, 0.0f, posZ }, EnemyManagement::EnemyType::Default)));
-				}
+				simulation->SendEntity(EnemyManagement::CreateEnemy(simulation, { posX, 0.0f, posZ }, EnemyManagement::EnemyType::Default));
 			}
+		}
 		break;
 		case EnemyManagement::WaveType::Swarm:
+		{
+			LOG_INFO("[WaveSystem] spawns a swarm wave...");
+			const int nrOfEnemies = waveInfo.startNumOfEnemies + (waveInfo.scaleMultiplier * waveInfo.waveCount);
+			const float distance = waveInfo.spawnDistance;
+
+			const float deg2rad = 3.14f / 180.f;
+			const float degree = (360.f / (float)nrOfEnemies) * deg2rad;
+
+			// for each enemy i:
+			for (int i = 0; i < nrOfEnemies; i++)
 			{
-				LOG_INFO("[WaveSystem] spawns a swarm wave...");
-				const int nrOfEnemies = waveInfo.startNumOfEnemies + (waveInfo.scaleMultiplier * waveInfo.waveCount);
-				const float distance = waveInfo.spawnDistance;
+				float posX = distance * cos(i * degree);
+				float posZ = distance * sin(i * degree);
 
-				const float deg2rad = 3.14f / 180.f;
-				const float degree = (360.f / (float)nrOfEnemies) * deg2rad;
-
-				// for each enemy i:
-				for (int i = 0; i < nrOfEnemies; i++)
-				{
-					float posX = distance * cos(i * degree);
-					float posZ = distance * sin(i * degree);
-
-					simulation->Broadcast(simulation->SingleEntityMessage(EnemyManagement::CreateEnemy(simulation, { posX, 0.0f, posZ }, EnemyManagement::EnemyType::Default)));
-				}
+				simulation->SendEntity(EnemyManagement::CreateEnemy(simulation, { posX, 0.0f, posZ }, EnemyManagement::EnemyType::Default));
 			}
-			break;
-			
+		}
+		break;
+
 		case EnemyManagement::WaveType::Flank_West:
+		{
+			LOG_INFO("[WaveSystem] spawns a flank west wave...");
+			const int nrOfEnemies = waveInfo.startNumOfEnemies + (waveInfo.scaleMultiplier * waveInfo.waveCount);
+			const float distance = waveInfo.spawnDistance;
+			const int enemyOffset = waveInfo.flankWidth / nrOfEnemies;
+			for (int i = 0; i < nrOfEnemies; i++)
 			{
-				LOG_INFO("[WaveSystem] spawns a flank west wave...");
-				const int nrOfEnemies = waveInfo.startNumOfEnemies + (waveInfo.scaleMultiplier * waveInfo.waveCount);
-				const float distance = waveInfo.spawnDistance;
-				const int enemyOffset = waveInfo.flankWidth / nrOfEnemies;
-				for (int i = 0; i < nrOfEnemies; i++)
-				{
 
-					float posX = -distance;
-					float posZ = (-1.f * waveInfo.flankWidth / 2) + float(i * enemyOffset);
+				float posX = -distance;
+				float posZ = (-1.f * waveInfo.flankWidth / 2) + float(i * enemyOffset);
 
-					simulation->Broadcast(simulation->SingleEntityMessage(EnemyManagement::CreateEnemy(simulation, { posX, 0.0f, posZ }, EnemyManagement::EnemyType::Default)));
-				}
+				simulation->SendEntity(EnemyManagement::CreateEnemy(simulation, { posX, 0.0f, posZ }, EnemyManagement::EnemyType::Default));
 			}
-			break;
-			
+		}
+		break;
+
 		case EnemyManagement::WaveType::Flank_East:
+		{
+			LOG_INFO("[WaveSystem] spawns a flank east wave...");
+			const int nrOfEnemies = waveInfo.startNumOfEnemies + (waveInfo.scaleMultiplier * waveInfo.waveCount);
+			const float distance = waveInfo.spawnDistance;
+			const int enemyOffset = waveInfo.flankWidth / nrOfEnemies;
+			for (int i = 0; i < nrOfEnemies; i++)
 			{
-				LOG_INFO("[WaveSystem] spawns a flank east wave...");
-				const int nrOfEnemies = waveInfo.startNumOfEnemies + (waveInfo.scaleMultiplier * waveInfo.waveCount);
-				const float distance = waveInfo.spawnDistance;
-				const int enemyOffset = waveInfo.flankWidth / nrOfEnemies;
-				for (int i = 0; i < nrOfEnemies; i++)
-				{
 
-					float posX = distance;
-					float posZ = (-1.f * waveInfo.flankWidth / 2) + float(i * enemyOffset);
+				float posX = distance;
+				float posZ = (-1.f * waveInfo.flankWidth / 2) + float(i * enemyOffset);
 
-					simulation->Broadcast(simulation->SingleEntityMessage(EnemyManagement::CreateEnemy(simulation, { posX, 0.0f, posZ }, EnemyManagement::EnemyType::Default)));
-				}
+				simulation->SendEntity(EnemyManagement::CreateEnemy(simulation, { posX, 0.0f, posZ }, EnemyManagement::EnemyType::Default));
 			}
-			break;
-			
+		}
+		break;
+
 		case EnemyManagement::WaveType::Flank_North:
-			{
-				LOG_INFO("[WaveSystem] spawns a flank north wave...");
-				bool bUniform = false;
-				const int nrOfEnemies = waveInfo.startNumOfEnemies + (waveInfo.scaleMultiplier * waveInfo.waveCount);
-				const float distance = waveInfo.spawnDistance;
-				
-				const int enemyOffset = waveInfo.flankWidth / nrOfEnemies;
-				
-				for (int i = 0; i < nrOfEnemies; i++)
-				{
-					
-					float posX = (-1.f * waveInfo.flankWidth / 2) + float(i * enemyOffset);
-					float posZ = distance;
+		{
+			LOG_INFO("[WaveSystem] spawns a flank north wave...");
+			bool bUniform = false;
+			const int nrOfEnemies = waveInfo.startNumOfEnemies + (waveInfo.scaleMultiplier * waveInfo.waveCount);
+			const float distance = waveInfo.spawnDistance;
 
-					simulation->Broadcast(simulation->SingleEntityMessage(EnemyManagement::CreateEnemy(simulation, { posX, 0.0f, posZ }, EnemyManagement::EnemyType::Default)));
-				}
+			const int enemyOffset = waveInfo.flankWidth / nrOfEnemies;
+
+			for (int i = 0; i < nrOfEnemies; i++)
+			{
+
+				float posX = (-1.f * waveInfo.flankWidth / 2) + float(i * enemyOffset);
+				float posZ = distance;
+
+				simulation->SendEntity(EnemyManagement::CreateEnemy(simulation, { posX, 0.0f, posZ }, EnemyManagement::EnemyType::Default));
 			}
-			break;
-			
+		}
+		break;
+
 		case EnemyManagement::WaveType::Flank_South:
+		{
+			LOG_INFO("[WaveSystem] spawns a flank south wave...");
+			const int nrOfEnemies = waveInfo.startNumOfEnemies + (waveInfo.scaleMultiplier * waveInfo.waveCount);
+			const float distance = waveInfo.spawnDistance;
+			const int enemyOffset = waveInfo.flankWidth / nrOfEnemies;
+			for (int i = 0; i < nrOfEnemies; i++)
 			{
-				LOG_INFO("[WaveSystem] spawns a flank south wave...");
-				const int nrOfEnemies = waveInfo.startNumOfEnemies + (waveInfo.scaleMultiplier * waveInfo.waveCount);
-				const float distance = waveInfo.spawnDistance;
-				const int enemyOffset = waveInfo.flankWidth / nrOfEnemies;
-				for (int i = 0; i < nrOfEnemies; i++)
-				{
 
-					float posX = (-1.f * waveInfo.flankWidth / 2) + float(i * enemyOffset);
-					float posZ = -distance;
+				float posX = (-1.f * waveInfo.flankWidth / 2) + float(i * enemyOffset);
+				float posZ = -distance;
 
-					simulation->Broadcast(simulation->SingleEntityMessage(EnemyManagement::CreateEnemy(simulation, { posX, 0.0f, posZ }, EnemyManagement::EnemyType::Default)));
-				}
+				simulation->SendEntity(EnemyManagement::CreateEnemy(simulation, { posX, 0.0f, posZ }, EnemyManagement::EnemyType::Default));
 			}
-			break;
-			
+		}
+		break;
+
 		default:
-			{
-				
-			}
-			break;
+		{
+
+		}
+		break;
 		}
 
-		
-	
 		waveInfo.waveCount++;
 		waves.pop();
+	}
+}
 
 namespace Systems {
 	void CharacterMovement(HeadlessScene& scene, float dt)

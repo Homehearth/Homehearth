@@ -211,13 +211,16 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 	this->m_gameID = gameID;
 	
 	//init waveQueue
-	waveQueue.emplace(std::make_pair(EnemyManagement::WaveType::Zone, sm::Vector2{80.0,0.0}));
-	waveQueue.emplace(std::make_pair(EnemyManagement::WaveType::Zone, sm::Vector2{ -80.0,0.0 }));
-	waveQueue.emplace(std::make_pair(EnemyManagement::WaveType::Flank_South, sm::Vector2{0.0,0.0}));
-	waveQueue.emplace(std::make_pair(EnemyManagement::WaveType::Flank_East, sm::Vector2{0.0,0.0}));
-	waveQueue.emplace(std::make_pair(EnemyManagement::WaveType::Flank_West, sm::Vector2{0.0,0.0}));
-	waveQueue.emplace(std::make_pair(EnemyManagement::WaveType::Swarm, sm::Vector2{0.0,0.0}));
-	waveQueue.emplace(std::make_pair(EnemyManagement::WaveType::Flank_North, sm::Vector2{0.0,0.0}));
+	for(int i = 0; i < 100; i++)
+	{
+		waveQueue.emplace(std::make_pair(EnemyManagement::WaveType::Swarm, sm::Vector2{ 0.0,0.0 }));
+	}
+	
+	waveQueue.emplace(std::make_pair(EnemyManagement::WaveType::Swarm, sm::Vector2{ 0.0,0.0 }));
+	waveQueue.emplace(std::make_pair(EnemyManagement::WaveType::Swarm, sm::Vector2{ 0.0,0.0 }));
+	waveQueue.emplace(std::make_pair(EnemyManagement::WaveType::Swarm, sm::Vector2{ 0.0,0.0 }));
+	waveQueue.emplace(std::make_pair(EnemyManagement::WaveType::Flank_North, sm::Vector2{ 0.0,0.0 }));
+	waveQueue.emplace(std::make_pair(EnemyManagement::WaveType::Flank_North, sm::Vector2{ 0.0,0.0 }));
 
 	
 	
@@ -270,18 +273,6 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 			CollisionSystem::Get().OnCollision(e.obj1, e.obj2);
 		});
 
-	// ---DEBUG ENTITY---
-	Entity e = m_pGameScene->CreateEntity();
-	e.AddComponent<comp::Network>()->id = m_pServer->PopNextUniqueID();
-	e.AddComponent<comp::Transform>()->position = sm::Vector3(-5, 0, 0);
-	e.AddComponent<comp::MeshName>()->name = "Chest.obj";
-	e.AddComponent<comp::BoundingOrientedBox>()->Extents = sm::Vector3(2.f, 2.f, 2.f);
-	e.AddComponent<comp::Enemy>();
-	e.AddComponent<comp::Health>();
-	*e.AddComponent<comp::CombatStats>() = { 1.0f, 20.f, 1.0f, false, false };
-	e.AddComponent<comp::Tag<TagType::STATIC>>();
-	// ---END OF DEBUG---
-
 	// --- WORLD ---
 	Entity e2 = m_pGameScene->CreateEntity();
 	e2.AddComponent<comp::Network>()->id = m_pServer->PopNextUniqueID();
@@ -326,7 +317,7 @@ void Simulation::UpdateLobby(const uint32_t& playerID)
 		msg.header.id = GameMsg::Game_Start;
 		this->Broadcast(msg);
 #endif
-
+		
 		// Start game when both wants to start game.
 		if ((m_playerDecisions[1].isWantToStart & m_playerDecisions[0].isWantToStart) == true)
 		{
