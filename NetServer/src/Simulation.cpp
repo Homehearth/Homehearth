@@ -377,20 +377,23 @@ bool Simulation::RemovePlayer(uint32_t playerID)
 
 void Simulation::SendSnapshot()
 {
-	network::message<GameMsg> msg;
-	msg.header.id = GameMsg::Game_Snapshot;
+	if (m_pCurrentScene == m_pGameScene)
+	{
+		network::message<GameMsg> msg;
+		msg.header.id = GameMsg::Game_Snapshot;
 
-	uint32_t i = 0;
-	m_pCurrentScene->ForEachComponent<comp::Network, comp::Transform>([&](Entity e, comp::Network& n, comp::Transform& t)
-		{
-			msg << t << n.id;
-			i++;
-		});
-	msg << i;
+		uint32_t i = 0;
+		m_pCurrentScene->ForEachComponent<comp::Network, comp::Transform>([&](Entity e, comp::Network& n, comp::Transform& t)
+			{
+				msg << t << n.id;
+				i++;
+			});
+		msg << i;
 
-	msg << this->GetTick();
-	this->ScanForDisconnects();
-	this->Broadcast(msg);
+		msg << this->GetTick();
+		this->ScanForDisconnects();
+		this->Broadcast(msg);
+	}
 }
 
 void Simulation::Update(float dt)

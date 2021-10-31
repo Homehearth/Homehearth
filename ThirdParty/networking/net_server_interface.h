@@ -2,8 +2,6 @@
 #include "net_tsqueue.h"
 #include "net_message.h"
 #include "net_common.h"
-#include <future>
-#define PRINT_NETWORK_DEBUG
 
 namespace network
 {
@@ -18,6 +16,7 @@ namespace network
 		std::thread* m_workerThreads;
 		std::thread m_acceptThread;
 		int m_nrOfThreads;
+		tsQueue<owned_message<T>> m_qMessagesOut;
 
 	protected:
 		struct SOCKET_INFORMATION
@@ -61,7 +60,8 @@ namespace network
 		void ReadValidation(SOCKET_INFORMATION*& SI, PER_IO_DATA* context);
 		void ReadHeader(SOCKET_INFORMATION*& SI, PER_IO_DATA* context);
 		void ReadPayload(SOCKET_INFORMATION*& SI, PER_IO_DATA* context);
-		void PrimeWriteMessage(SOCKET& socket, message<T>& msg);
+		void WriteHeader();
+		void WritePayload();
 		void PrimeReadHeader(SOCKET_INFORMATION*& SI);
 		void PrimeReadPayload(SOCKET_INFORMATION*& SI);
 		void PrimeReadValidation(SOCKET_INFORMATION*& SI);
@@ -218,36 +218,58 @@ namespace network
 	}
 
 	template <typename T>
-	void server_interface<T>::PrimeWriteMessage(SOCKET& socket, message<T>& msg)
+	void server_interface<T>::WritePayload()
 	{
 		PER_IO_DATA* context = new PER_IO_DATA;
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
-		char buffer[BUFFER_SIZE] = {};
-		memcpy(&buffer[0], &msg.header, sizeof(msg_header<T>));
-		if (msg.header.size > 0)
-		{
-			memcpy(&buffer[sizeof(msg_header<T>)], msg.payload.data(), msg.payload.size());
-		}
-		context->DataBuf.buf = (CHAR*)buffer;
-		context->DataBuf.len = ULONG(sizeof(msg_header<T>) + msg.payload.size());
-		context->state = NetState::WRITE_MESSAGE;
+		context->DataBuf.buf = (CHAR*)m_qMessagesOut.front().msg.payload.data();
+		context->DataBuf.len = ULONG(m_qMessagesOut.front().msg.payload.size());
+		context->state = NetState::WRITE_PAYLOAD;
 		DWORD BytesSent = 0;
 		DWORD flags = 0;
 
-		if (WSASend(socket, &context->DataBuf, 1, &BytesSent, flags, &context->Overlapped, NULL) == SOCKET_ERROR)
+		if (WSASend(m_qMessagesOut.front().remote, &context->DataBuf, 1, &BytesSent, flags, &context->Overlapped, NULL) == SOCKET_ERROR)
 		{
 			DWORD error = GetLastError();
 			if (error != WSA_IO_PENDING)
 			{
 				if (error == WSAECONNRESET)
 				{
-					closesocket(socket);
-					socket = INVALID_SOCKET;
+					closesocket(m_qMessagesOut.front().remote);
 				}
 				delete context;
 				if (error != WSAENOTSOCK)
 				{
-					LOG_ERROR("WSASend on socket: %lld message with error: %ld", socket, error);
+					LOG_ERROR("WSASend on socket: %lld message with error: %ld", m_qMessagesOut.front().remote, error);
+				}
+			}
+		}
+	}
+
+	template <typename T>
+	void server_interface<T>::WriteHeader()
+	{
+		PER_IO_DATA* context = new PER_IO_DATA;
+		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
+		context->DataBuf.buf = (CHAR*)&m_qMessagesOut.front().msg.header;
+		context->DataBuf.len = ULONG(sizeof(msg_header<T>));
+		context->state = NetState::WRITE_HEADER;
+		DWORD BytesSent = 0;
+		DWORD flags = 0;
+
+		if (WSASend(m_qMessagesOut.front().remote, &context->DataBuf, 1, &BytesSent, flags, &context->Overlapped, NULL) == SOCKET_ERROR)
+		{
+			DWORD error = GetLastError();
+			if (error != WSA_IO_PENDING)
+			{
+				if (error == WSAECONNRESET)
+				{
+					closesocket(m_qMessagesOut.front().remote);
+				}
+				delete context;
+				if (error != WSAENOTSOCK && error != WSAECONNRESET)
+				{
+					LOG_ERROR("WSASend on socket: %lld message with error: %ld", m_qMessagesOut.front().remote, error);
 				}
 			}
 		}
@@ -697,9 +719,17 @@ namespace network
 				// Special case when we we queue a send to remote client
 				if (Entries[i].dwNumberOfBytesTransferred == 1)
 				{
+					EnterCriticalSection(&lock);
 					owned_message<T>* s = (owned_message<T>*)Entries[i].lpCompletionKey;
-					PrimeWriteMessage(s->remote, s->msg);
+					bool bWritingMessage = !m_qMessagesOut.empty();
+					m_qMessagesOut.push_back(*s);
+
+					if (!bWritingMessage)
+					{
+						this->WriteHeader();
+					}
 					delete s;
+					LeaveCriticalSection(&lock);
 					continue;
 				}
 
@@ -742,8 +772,35 @@ namespace network
 							this->ReadValidation(SI, context);
 							break;
 						}
-						case NetState::WRITE_MESSAGE:
+						case NetState::WRITE_HEADER:
 						{
+							EnterCriticalSection(&lock);
+							if (m_qMessagesOut.front().msg.payload.size() > 0)
+							{
+								this->WritePayload();
+							}
+							else
+							{
+								m_qMessagesOut.pop_front();
+
+								if (!m_qMessagesOut.empty())
+								{
+									this->WriteHeader();
+								}
+							}
+							LeaveCriticalSection(&lock);
+							break;
+						}
+						case NetState::WRITE_PAYLOAD:
+						{
+							EnterCriticalSection(&lock);
+							m_qMessagesOut.pop_front();
+
+							if (!m_qMessagesOut.empty())
+							{
+								this->WriteHeader();
+							}
+							LeaveCriticalSection(&lock);
 							break;
 						}
 						case NetState::WRITE_VALIDATION:

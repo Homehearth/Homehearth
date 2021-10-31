@@ -9,6 +9,8 @@ namespace network
 	class tsQueue
 	{
 	private:
+		std::mutex mutex;
+		std::deque<T> deqQueue;
 
 	public:
 		tsQueue() = default;
@@ -80,9 +82,5 @@ namespace network
 			deqQueue.pop_back();
 			return t;
 		}
-
-	protected:
-		std::mutex mutex;
-		std::deque<T> deqQueue;
 	};
 }
