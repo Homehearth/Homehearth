@@ -19,4 +19,9 @@ struct ESceneCollision
 	float dt;
 };
 
+struct ESceneEnemiesWiped
+{
+	float dt;
+};
+
 struct ESceneRender {};

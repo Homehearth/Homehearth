@@ -1,7 +1,14 @@
 #include "NetServerPCH.h"
 #include "ServerSystems.h"
 #include "Simulation.h"
-//Creates an entity of enemy type 1
+
+/**Creates an enemy entity.
+ *
+ *@param simulation Creates entity on current scene, and adds the network component
+ *@param spawnP     Specifies the point at which the entity is to be created at
+ *@param type       Specifies the type of enemy to create
+ *@return Entity	returns the enemy that has been created as an Entity
+ */
 Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, EnemyManagement::EnemyType type)
 {
 	Entity entity = simulation->GetGameScene()->CreateEntity();
@@ -16,7 +23,6 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 	comp::Velocity*				velocity    = entity.AddComponent<comp::Velocity>();
 	comp::CombatStats*			combatStats = entity.AddComponent<comp::CombatStats>();
 
-	
 	switch (type)
 	{
 		case EnemyType::Default:
@@ -35,55 +41,29 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 	return entity;
 }
 
-void ServerSystems::WaveSystem(Simulation* simulation, std::queue<std::pair<EnemyManagement::WaveType, sm::Vector2>>& waves)
+
+
+/**Wave system handles enemies spawns in the scene as a "wave", handles several different types of waves that is specified by the input queue.
+ *@param simulation	   Manages sending and removal of entities on the server.
+ *@param waves         Queue containing std::pair that describes which wave type to spawn and which position in the world the wave should be based on.
+ *@param waveInfo      Contains configurations for the wave system.
+ */
+void ServerSystems::WaveSystem(Simulation* simulation, std::queue<std::pair<EnemyManagement::WaveType, sm::Vector2>>& waves, WaveInfo& waveInfo)
 {
-	int numOfEnemies = 0;
-
-	static WaveInfo waveInfo =
-	{
-		waveInfo.startNumOfEnemies = 100,
-		waveInfo.spawnDistance = 100.f,
-		waveInfo.scaleMultiplier = 2,
-		waveInfo.waveCount = 0,
-		waveInfo.flankWidth = 100.f
-	};
-
-	network::message<GameMsg> msg;
-	msg.header.id = GameMsg::Game_RemoveEntity;
-	int count = 0;
-	simulation->GetGameScene()->ForEachComponent<comp::Enemy, comp::Network, comp::Transform>([&](Entity entity, comp::Enemy enemy, comp::Network network, comp::Transform transform)
-		{
-			if (abs(transform.position.x) < 8.f && abs(transform.position.z) < 8.f || abs(transform.position.x) > 100.f || abs(transform.position.z) > 100.f)
-			{
-				msg << network.id;
-				count++;
-				entity.Destroy();
-			}
-			else
-				numOfEnemies++;
-		});
-	
-	if(count > 0)
-	{
-		msg << count;
-		simulation->SendRemoveEntities(msg);
-	}
-
-	
-
-	
 	//initialize a new wave
-	if (numOfEnemies == 0 && !waves.empty())
+	if (!waves.empty())
 	{
 		const EnemyManagement::WaveType wave = waves.front().first;
+
 		switch (wave)
 		{
+		//------------------------- ZONE ---------------------------------------
 		case EnemyManagement::WaveType::Zone:
 		{
 			LOG_INFO("[WaveSystem] spawns a zone wave...");
 			const int nrOfEnemies = waveInfo.startNumOfEnemies + (waveInfo.scaleMultiplier * waveInfo.waveCount);
-			int min = 30;
-			int max = 70;
+			const int min = 30;
+			const int max = 70;
 
 			const float deg2rad = 3.14f / 180.f;
 			const float degree = (rand() % 360) * deg2rad;
@@ -93,13 +73,16 @@ void ServerSystems::WaveSystem(Simulation* simulation, std::queue<std::pair<Enem
 			{
 				const float distance = (rand() % (max - min)) + min;
 
-				float posX = distance * cos(i * degree);
-				float posZ = distance * sin(i * degree);
+				const float posX = distance * cos(i * degree);
+				const float posZ = distance * sin(i * degree);
 
 				simulation->SendEntity(EnemyManagement::CreateEnemy(simulation, { posX, 0.0f, posZ }, EnemyManagement::EnemyType::Default));
 			}
 		}
 		break;
+		//------------------------- END ---------------------------------------
+		
+		//------------------------- Swarm ---------------------------------------
 		case EnemyManagement::WaveType::Swarm:
 		{
 			LOG_INFO("[WaveSystem] spawns a swarm wave...");
@@ -107,19 +90,21 @@ void ServerSystems::WaveSystem(Simulation* simulation, std::queue<std::pair<Enem
 			const float distance = waveInfo.spawnDistance;
 
 			const float deg2rad = 3.14f / 180.f;
-			const float degree = (360.f / (float)nrOfEnemies) * deg2rad;
+			const float degree = (360.f / static_cast<float>(nrOfEnemies)) * deg2rad;
 
 			// for each enemy i:
 			for (int i = 0; i < nrOfEnemies; i++)
 			{
-				float posX = distance * cos(i * degree);
-				float posZ = distance * sin(i * degree);
+				const float posX = distance * cos(i * degree);
+				const float posZ = distance * sin(i * degree);
 
 				simulation->SendEntity(EnemyManagement::CreateEnemy(simulation, { posX, 0.0f, posZ }, EnemyManagement::EnemyType::Default));
 			}
 		}
 		break;
+		//------------------------- END ---------------------------------------
 
+		//------------------------- Flank West ---------------------------------------
 		case EnemyManagement::WaveType::Flank_West:
 		{
 			LOG_INFO("[WaveSystem] spawns a flank west wave...");
@@ -136,7 +121,9 @@ void ServerSystems::WaveSystem(Simulation* simulation, std::queue<std::pair<Enem
 			}
 		}
 		break;
+		//------------------------- END ---------------------------------------
 
+		//------------------------- Flank East ---------------------------------------
 		case EnemyManagement::WaveType::Flank_East:
 		{
 			LOG_INFO("[WaveSystem] spawns a flank east wave...");
@@ -153,7 +140,9 @@ void ServerSystems::WaveSystem(Simulation* simulation, std::queue<std::pair<Enem
 			}
 		}
 		break;
+		//------------------------- END ---------------------------------------
 
+		//------------------------- Flank North ---------------------------------------
 		case EnemyManagement::WaveType::Flank_North:
 		{
 			LOG_INFO("[WaveSystem] spawns a flank north wave...");
@@ -173,7 +162,9 @@ void ServerSystems::WaveSystem(Simulation* simulation, std::queue<std::pair<Enem
 			}
 		}
 		break;
+		//------------------------- END ---------------------------------------
 
+		//------------------------- Flank South ---------------------------------------
 		case EnemyManagement::WaveType::Flank_South:
 		{
 			LOG_INFO("[WaveSystem] spawns a flank south wave...");
@@ -190,16 +181,63 @@ void ServerSystems::WaveSystem(Simulation* simulation, std::queue<std::pair<Enem
 			}
 		}
 		break;
+		//------------------------- END ---------------------------------------
 
+		//------------------------- Default ---------------------------------------
 		default:
 		{
-
+			LOG_WARNING("[ServerSystems]::WaveSystem failed to initialize a wave spawn, [Controll the wave type]");
 		}
 		break;
+		//------------------------- END ---------------------------------------
+			
 		}
 
+		//Add count and pop from queue
 		waveInfo.waveCount++;
 		waves.pop();
+	}
+}
+
+
+
+/**Removes all enemies that has been destroyed and broadcasts the removal to the clients.
+ *@param simulation	   Manages sending and removal of entities on the server.
+ */
+void ServerSystems::RemoveDeadEnemies(Simulation* simulation)
+{
+	network::message<GameMsg> msg;
+	msg.header.id = GameMsg::Game_RemoveEntity;
+	
+	int count = 0;
+	int numOfEnemies = 0;
+	
+	//Summarize all the existing enemy components in the scene
+	simulation->GetGameScene()->ForEachComponent<comp::Enemy, comp::Network, comp::Transform>([&](Entity entity, comp::Enemy enemy, comp::Network network, comp::Transform transform)
+		{
+			if (abs(transform.position.x) < 8.f && abs(transform.position.z) < 8.f || abs(transform.position.x) > 100.f || abs(transform.position.z) > 100.f)
+			{
+				msg << network.id;
+				count++;
+				entity.Destroy();
+			}
+			else
+			{
+				numOfEnemies++;
+			}
+		});
+
+	//Send out which entities have been destroyed to the clients
+	if (count > 0)
+	{
+		msg << count;
+		simulation->SendRemoveEntities(msg);
+	}
+
+	//Publish all enemies have been destroyed
+	if(numOfEnemies == 0)
+	{
+		simulation->GetGameScene()->publish<ESceneEnemiesWiped>(0.0f);
 	}
 }
 

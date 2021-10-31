@@ -209,19 +209,24 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 {
 
 	this->m_gameID = gameID;
+
 	
 	//init waveQueue
-	for(int i = 0; i < 100; i++)
-	{
-		waveQueue.emplace(std::make_pair(EnemyManagement::WaveType::Swarm, sm::Vector2{ 0.0,0.0 }));
-	}
+	waveQueue.emplace(std::make_pair(EnemyManagement::WaveType::Swarm, sm::Vector2{ 0.0,0.0 }));
+	waveQueue.emplace(std::make_pair(EnemyManagement::WaveType::Swarm, sm::Vector2{ 0.0,0.0 }));
+	waveQueue.emplace(std::make_pair(EnemyManagement::WaveType::Swarm, sm::Vector2{ 0.0,0.0 }));
+	waveQueue.emplace(std::make_pair(EnemyManagement::WaveType::Flank_North, sm::Vector2{ 0.0,0.0 }));
+	waveQueue.emplace(std::make_pair(EnemyManagement::WaveType::Flank_North, sm::Vector2{ 0.0,0.0 }));
 	
-	waveQueue.emplace(std::make_pair(EnemyManagement::WaveType::Swarm, sm::Vector2{ 0.0,0.0 }));
-	waveQueue.emplace(std::make_pair(EnemyManagement::WaveType::Swarm, sm::Vector2{ 0.0,0.0 }));
-	waveQueue.emplace(std::make_pair(EnemyManagement::WaveType::Swarm, sm::Vector2{ 0.0,0.0 }));
-	waveQueue.emplace(std::make_pair(EnemyManagement::WaveType::Flank_North, sm::Vector2{ 0.0,0.0 }));
-	waveQueue.emplace(std::make_pair(EnemyManagement::WaveType::Flank_North, sm::Vector2{ 0.0,0.0 }));
-
+	//Setting the configurations for the wave system
+	waveInfo =
+	{
+		waveInfo.startNumOfEnemies = 5,
+		waveInfo.spawnDistance = 100.f,
+		waveInfo.scaleMultiplier = 2,
+		waveInfo.waveCount = 0,
+		waveInfo.flankWidth = 50.f
+	};
 	
 	
 	// Create Scenes associated with this Simulation
@@ -262,10 +267,16 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 			Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(scene, e.dt);
 			Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingSphere>(scene, e.dt);
 			Systems::CombatSystem(scene, e.dt);
-			ServerSystems::WaveSystem(this, waveQueue);
+			ServerSystems::RemoveDeadEnemies(this);
 			//LOG_INFO("GAME Scene %d", m_gameID);
 		});
 
+	//On all enemies wiped, activate the next wave.
+	m_pGameScene->on<ESceneEnemiesWiped>([&](const ESceneEnemiesWiped& dt, HeadlessScene& scene)
+		{
+			ServerSystems::WaveSystem(this, waveQueue, waveInfo);
+		});
+	
 	//On collision event add entities as pair in the collision system
 	m_pGameScene->on<ESceneCollision>([&](const ESceneCollision& e, HeadlessScene& scene)
 		{

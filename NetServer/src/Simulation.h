@@ -41,7 +41,10 @@ private:
 	void Broadcast(message<GameMsg>& msg, uint32_t exclude = -1)const;
 	void ScanForDisconnects();
 
+	//Game play related
+	WaveInfo waveInfo;
 	std::queue<std::pair<EnemyManagement::WaveType, sm::Vector2>> waveQueue;
+	
 public:
 	Server* m_pServer;
 	Simulation(Server* pServer, HeadlessEngine* pEngine);
