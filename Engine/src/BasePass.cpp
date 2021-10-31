@@ -16,7 +16,7 @@ void BasePass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
     
    //DC->PSSetShaderResources(0, 1, PM->m_depthBufferSRV.GetAddressOf());   // DepthBuffer.
 
-    DC->PSSetSamplers(0, 1, PM->m_anisotropicSamplerState.GetAddressOf());   //m_linearSamplerState for low settings
+    DC->PSSetSamplers(0, 1, PM->m_anisotropicSamplerState.GetAddressOf());
     DC->PSSetSamplers(1, 1, PM->m_pointSamplerState.GetAddressOf());
     m_lights->Render(DC);
     

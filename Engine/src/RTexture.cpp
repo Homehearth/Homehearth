@@ -40,8 +40,8 @@ bool RTexture::StandardSetup(unsigned char* image, const UINT& width, const UINT
 	textureDesc.ArraySize = 1;
 	textureDesc.SampleDesc.Count = 1;
 	textureDesc.SampleDesc.Quality = 0;
-	textureDesc.Usage = D3D11_USAGE_DEFAULT;
-	textureDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;	//D3D11_BIND_RENDER_TARGET
+	textureDesc.Usage = D3D11_USAGE_IMMUTABLE; //Only need to read from texture on GPU-side
+	textureDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
 	textureDesc.CPUAccessFlags = 0;
 
 	if (m_format == ETextureChannelType::oneChannel)
@@ -49,7 +49,8 @@ bool RTexture::StandardSetup(unsigned char* image, const UINT& width, const UINT
 	else
 		textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 
-	HRESULT hr = D3D11Core::Get().Device()->CreateTexture2D(&textureDesc, &data, &m_texture);
+	ComPtr<ID3D11Texture2D> texture;
+	HRESULT hr = D3D11Core::Get().Device()->CreateTexture2D(&textureDesc, &data, &texture);
 	if (FAILED(hr))
 	{
 #ifdef _DEBUG
@@ -58,7 +59,7 @@ bool RTexture::StandardSetup(unsigned char* image, const UINT& width, const UINT
 		return false;
 	}
 
-	hr = D3D11Core::Get().Device()->CreateShaderResourceView(m_texture.Get(), 0, &m_shaderView);
+	hr = D3D11Core::Get().Device()->CreateShaderResourceView(texture.Get(), 0, &m_shaderView);
 	if (FAILED(hr))
 	{
 #ifdef _DEBUG
@@ -90,7 +91,8 @@ bool RTexture::GenerateMipMaps(unsigned char* image, const UINT& width, const UI
 	else
 		textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 
-	HRESULT hr = D3D11Core::Get().Device()->CreateTexture2D(&textureDesc, nullptr, &m_texture);
+	ComPtr<ID3D11Texture2D> texture;
+	HRESULT hr = D3D11Core::Get().Device()->CreateTexture2D(&textureDesc, nullptr, &texture);
 	if (FAILED(hr))
 	{
 #ifdef _DEBUG
@@ -106,7 +108,7 @@ bool RTexture::GenerateMipMaps(unsigned char* image, const UINT& width, const UI
 		mempitch = width * 4;
 
 	//Write in data to the first level
-	D3D11Core::Get().DeviceContext()->UpdateSubresource(m_texture.Get(), 0u, nullptr, (void*)image, mempitch, 0u);
+	D3D11Core::Get().DeviceContext()->UpdateSubresource(texture.Get(), 0u, nullptr, (void*)image, mempitch, 0u);
 
 	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 	srvDesc.Format = textureDesc.Format;
@@ -114,7 +116,7 @@ bool RTexture::GenerateMipMaps(unsigned char* image, const UINT& width, const UI
 	srvDesc.Texture2D.MostDetailedMip = 0;
 	srvDesc.Texture2D.MipLevels = -1;
 
-	hr = D3D11Core::Get().Device()->CreateShaderResourceView(m_texture.Get(), &srvDesc, &m_shaderView);
+	hr = D3D11Core::Get().Device()->CreateShaderResourceView(texture.Get(), &srvDesc, &m_shaderView);
 	if (FAILED(hr))
 	{
 #ifdef _DEBUG
@@ -187,12 +189,6 @@ ID3D11ShaderResourceView*& RTexture::GetShaderView()
 	return *m_shaderView.GetAddressOf();
 }
 
-RBitMap::~RBitMap()
-{
-	if (m_texture)
-		m_texture->Release();
-}
-
 bool RBitMap::Create(const std::string& filename)
 {
 	return D2D1Core::CreateImage(filename, &m_texture);
@@ -200,5 +196,5 @@ bool RBitMap::Create(const std::string& filename)
 
 ID2D1Bitmap*& RBitMap::GetTexture()
 {
-	return m_texture;
+	return *m_texture.GetAddressOf();
 }

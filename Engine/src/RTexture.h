@@ -17,7 +17,6 @@ class RTexture : public resource::GResource
 {
 private:
 	ETextureChannelType					m_format;
-	ComPtr<ID3D11Texture2D>				m_texture;
 	ComPtr<ID3D11ShaderResourceView>	m_shaderView;
 
 public:
@@ -36,12 +35,11 @@ public:
 class RBitMap : public resource::GResource
 {
 private:
-	ID2D1Bitmap* m_texture = nullptr;
+	ComPtr<ID2D1Bitmap> m_texture;
 
 public:
-
-	RBitMap() {};
-	~RBitMap();
+	RBitMap() = default;
+	~RBitMap() = default;
 	// Inherited via GResource
 	virtual bool Create(const std::string& filename) override;
 	ID2D1Bitmap*& GetTexture();
