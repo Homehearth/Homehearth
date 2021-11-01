@@ -62,6 +62,9 @@ bool ServerGame::OnStartup()
 
 	m_inputThread = std::thread(&ServerGame::InputThread, this);
 
+	LoadMapColliders("SceneBoundingBoxes.obj");
+	//LoadMapColliders("MapBounds.obj")
+
 	return true;
 }
 
@@ -95,6 +98,62 @@ void ServerGame::UpdateNetwork(float deltaTime)
 			it++;
 		}
 	}
+}
+
+bool ServerGame::LoadMapColliders(const std::string& filename)
+{
+	std::string filepath = BOUNDSPATH + filename;
+	Assimp::Importer importer;
+
+	const aiScene* scene = importer.ReadFile
+	(
+		filepath, 
+		aiProcess_Triangulate			| 
+		aiProcess_JoinIdenticalVertices |
+		aiProcess_FlipWindingOrder		|
+		aiProcess_MakeLeftHanded
+	);
+
+	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
+	{
+#ifdef _DEBUG
+		LOG_WARNING("[Bounds] Assimp error: %s", importer.GetErrorString());
+#endif 
+		importer.FreeScene();
+		return false;
+	}
+
+	if (!scene->HasMeshes())
+	{
+#ifdef _DEBUG
+		LOG_WARNING("[Bounds] has no meshes...");
+#endif 
+		importer.FreeScene();
+		return false;
+	}
+
+	// Go through all the meshes and create boundingboxes for them
+	for (UINT i = 0; i < scene->mNumMeshes; i++)
+	{
+		const aiMesh* mesh = scene->mMeshes[i];
+		size_t count = mesh->mNumVertices;
+		std::vector<dx::XMFLOAT3> vertices;
+		vertices.reserve(count);
+
+		//Go through all the vertices
+		for (UINT v = 0; v < count; v++)
+		{
+			aiVector3D aivec = mesh->mVertices[v];
+			vertices.push_back({ aivec.x, aivec.y, aivec.z });
+		}
+
+		//Create a bob from all the points and the orientation will be calculated and add to vector
+		dx::BoundingOrientedBox bob;
+		dx::BoundingOrientedBox::CreateFromPoints(bob, count, &vertices[0], sizeof(dx::XMFLOAT3));
+		m_mapColliders.push_back(bob);
+	}
+
+	return true;
 }
 
 void ServerGame::CheckIncoming(message<GameMsg>& msg)
