@@ -102,6 +102,13 @@ namespace ecs
 		};
 		struct NPC
 		{
+			enum class State
+			{
+				IDLE,
+				PATROL,
+				CHASE,
+				ATTACK
+			} state;
 			float movementSpeed = 2.f;
 			float attackRange;
 			bool hostile;
@@ -112,6 +119,11 @@ namespace ecs
 			float f = FLT_MAX, g = FLT_MAX, h = FLT_MAX;
 			sm::Vector3 position;
 			uint32_t id;
+			std::vector<Node*> connections;
+			void ResetFGH() 
+			{
+				f = FLT_MAX, g = FLT_MAX, h = FLT_MAX;
+			}
 		};
 		struct Light
 		{
