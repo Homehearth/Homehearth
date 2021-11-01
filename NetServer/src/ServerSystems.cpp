@@ -8,7 +8,6 @@ namespace Systems {
 			{
 				if (p.state == comp::Player::State::ATTACK)
 				{
-					//LOG_INFO("ATTACKIBNG!!");
 					Plane_t plane;
 					plane.normal = sm::Vector3(0, 1, 0);
 					plane.point = t.position;
@@ -52,7 +51,6 @@ namespace Systems {
 					float time = dt * p.runSpeed;
 					if (ecs::StepRotateTo(t.rotation, p.targetForward, time))
 					{
-						LOG_INFO("Set Idle state");
 						p.state = comp::Player::State::IDLE;
 					}
 				}

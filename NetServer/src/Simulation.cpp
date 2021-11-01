@@ -279,6 +279,9 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 		collider.AddComponent<comp::Tag<TagType::STATIC>>();
 	}
 
+	m_addedEntities.clear();
+	m_removedEntities.clear();
+
 	m_pCurrentScene = m_pLobbyScene;
 
 	// Automatically join created lobby
@@ -463,6 +466,7 @@ void Simulation::SendSnapshot()
 
 		this->Broadcast(msg);
 	}
+	
 
 }
 
