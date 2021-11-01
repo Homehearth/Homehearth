@@ -126,6 +126,18 @@ namespace sceneHelp
 		if (!testAnimator->animator->LoadSkeleton(testRenderable->model->GetSkeleton()))
 			testAnimEnt.RemoveComponent<comp::Animator>();
 
+		/*
+			Testing to add second model
+		*/
+		Entity testAnimEnt2 = gameScene.CreateEntity();
+		testAnimEnt2.AddComponent<comp::Transform>()->position = {5,0,0};
+		comp::Renderable* testRenderable2 = testAnimEnt2.AddComponent<comp::Renderable>();
+		testRenderable2->model = ResourceManager::Get().GetResource<RModel>("Player_Skeleton.fbx");
+		comp::Animator* testAnimator2 = testAnimEnt2.AddComponent<comp::Animator>();
+		testAnimator2->animator = ResourceManager::Get().GetResource<RAnimator>("Test.anim");
+		if (!testAnimator2->animator->LoadSkeleton(testRenderable2->model->GetSkeleton()))
+			testAnimEnt2.RemoveComponent<comp::Animator>();
+
 
 		CreateLightEntity(gameScene, { 0.f, 0.f, 0.f, 0.f }, { 1.f, -1.f, 0.f, 0.f }, { 10.f, 10.f, 10.f, 10.f }, 0, TypeLight::DIRECTIONAL, 1);
 		CreateLightEntity(gameScene, { 0.f, 8.f, -10.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 300.f, 300.f, 300.f, 300.f }, 75.f, TypeLight::POINT, 1);
