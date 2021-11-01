@@ -50,14 +50,9 @@ namespace Systems {
 				if (p.state == comp::Player::State::TURN || p.state == comp::Player::State::ATTACK)
 				{
 					float time = dt * p.runSpeed;
-
-					float targetRotation = atan2(-p.targetForward.z, p.targetForward.x);
-					sm::Quaternion targetQuat = sm::Quaternion::CreateFromAxisAngle(sm::Vector3::Up, targetRotation);
-
-					t.rotation = sm::Quaternion::Slerp(t.rotation, targetQuat, time);
-
-					if (std::abs(t.rotation.Length() - targetQuat.Length()) < 0.001f)
+					if (ecs::StepRotateTo(t.rotation, p.targetForward, time))
 					{
+						LOG_INFO("Set Idle state");
 						p.state = comp::Player::State::IDLE;
 					}
 				}

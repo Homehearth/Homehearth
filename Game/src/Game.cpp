@@ -451,6 +451,7 @@ Entity Game::CreateEntityFromMessage(message<GameMsg>& msg)
 			{
 				comp::Transform t;
 				msg >> t;
+				t.rotation.Normalize();
 				*e.AddComponent<comp::Transform>() = t;
 				break;
 			}
@@ -498,7 +499,7 @@ Entity Game::CreateEntityFromMessage(message<GameMsg>& msg)
 			}
 			default:
 				LOG_WARNING("Retrieved unimplemented component %u", i)
-					break;
+				break;
 			}
 		}
 	}

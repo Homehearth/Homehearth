@@ -206,9 +206,11 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 				if (input.leftMouse)
 				{
 					comp::CombatStats* stats = e.GetComponent<comp::CombatStats>();
-					if (stats && stats->cooldownTimer <= 0.0f)
+					if (stats)
 					{
-						stats->isAttacking = true;
+						if(stats->cooldownTimer <= 0.0f)
+							stats->isAttacking = true;
+
 						stats->targetRay = input.mouseRay;
 
 					}

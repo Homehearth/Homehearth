@@ -152,8 +152,8 @@ namespace ecs
 
 	sm::Matrix GetMatrix(const component::Transform& transform);
 	sm::Vector3 GetForward(const component::Transform& transform);
-	sm::Vector3 GetUp(const component::Transform& transform);
-	bool StepRotateTo(sm::Vector3& rotation, const sm::Vector3& target, float t);
+	sm::Vector3 GetRight(const component::Transform& transform);
+	bool StepRotateTo(sm::Quaternion& rotation, const sm::Vector3& targetVector, float t);
 	bool StepTranslateTo(sm::Vector3& translation, const sm::Vector3& target, float t);
 
 };
