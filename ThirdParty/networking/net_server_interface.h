@@ -721,10 +721,10 @@ namespace network
 				{
 					EnterCriticalSection(&lock);
 					owned_message<T>* s = (owned_message<T>*)Entries[i].lpCompletionKey;
-					bool bWritingMessage = !m_qMessagesOut.empty();
-					m_qMessagesOut.push_back(*s);
+					bool write_in_progress = !m_qMessagesOut.empty();
+					m_qMessagesOut.push_back(std::move(*s));
 
-					if (!bWritingMessage)
+					if (!write_in_progress)
 					{
 						this->WriteHeader();
 					}
