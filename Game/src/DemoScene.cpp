@@ -124,12 +124,12 @@ namespace sceneHelp
 			//Add model
 			animEnt.AddComponent<comp::Renderable>();
 			//Copy a model
-			animEnt.GetComponent<comp::Renderable>()->model = ResourceManager::Get().CopyResource<RModel>("RunningAnimation.fbx");
+			animEnt.GetComponent<comp::Renderable>()->model = ResourceManager::Get().CopyResource<RModel>("Skeleton_blender.fbx");
 			if (!animEnt.GetComponent<comp::Renderable>()->model)
-				animEnt.GetComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>("RunningAnimation.fbx");
+				animEnt.GetComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>("Skeleton_blender.fbx");
 			
 			//Change materials
-			animEnt.GetComponent<comp::Renderable>()->model->ChangeMaterial(materials[i]);
+			//animEnt.GetComponent<comp::Renderable>()->model->ChangeMaterial(materials[i]);
 
 			//Add animator - remove component if it did not work - will still render model
 			animEnt.AddComponent<comp::Animator>();

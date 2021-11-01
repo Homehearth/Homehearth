@@ -4,7 +4,6 @@
 
 RModel::RModel()
 {
-    m_hasSkeleton = false;
 }
 
 RModel::~RModel()
@@ -16,7 +15,7 @@ RModel::~RModel()
 
 bool RModel::HasSkeleton() const
 {
-    return m_hasSkeleton;
+    return !m_allBones.empty();
 }
 
 const std::vector<bone_t>& RModel::GetSkeleton() const
@@ -116,7 +115,7 @@ const std::string RModel::GetFileFormat(const std::string& filename) const
     return filename.substr(startIndex);
 }
 
-bool RModel::CombineMeshes(std::vector<aiMesh*>& submeshes, const aiNode* root, submesh_t& submesh)
+bool RModel::CombineMeshes(std::vector<aiMesh*>& submeshes, submesh_t& submesh)
 {
     std::vector<simple_vertex_t> simpleVertices;
     std::vector<anim_vertex_t> skeletonVertices;
@@ -177,10 +176,8 @@ bool RModel::CombineMeshes(std::vector<aiMesh*>& submeshes, const aiNode* root, 
         if (aimesh->HasBones())
         {
             skeletonVertices.shrink_to_fit();
-            if (LoadBones(aimesh, root, skeletonVertices))
-            {
-                m_hasSkeleton = true;
-            }
+            LoadBones(aimesh, skeletonVertices);
+            submesh.hasBones = true;
         }
     }
 
@@ -193,7 +190,6 @@ bool RModel::CombineMeshes(std::vector<aiMesh*>& submeshes, const aiNode* root, 
 #ifdef _DEBUG
         LOG_ERROR("Failed to create indexbuffer...");
 #endif
-        return false;
     }
     indices.clear();
 
@@ -201,7 +197,7 @@ bool RModel::CombineMeshes(std::vector<aiMesh*>& submeshes, const aiNode* root, 
         The model a skeleton / bones, and therefore we create it with that vector.
         Otherwise we use the regular vertexbuffer.
     */
-    if (m_hasSkeleton)
+    if (submesh.hasBones)
     {
         //Finally create the buffer
         skeletonVertices.shrink_to_fit();
@@ -210,17 +206,6 @@ bool RModel::CombineMeshes(std::vector<aiMesh*>& submeshes, const aiNode* root, 
 #ifdef _DEBUG
             LOG_ERROR("Failed to create vertexbuffer for skeleton...");
 #endif
-            return false;
-        }
-        else
-        {
-#ifdef _DEBUG
-            std::cout << "Successfully loaded the skeleton!\nIndex\tParentIndex\t\tName" << std::endl;
-            for (size_t i = 0; i < m_allBones.size(); i++)
-            {
-                std::cout << i << "\t" << m_allBones[i].parentIndex << "\t" << m_allBones[i].name << std::endl;
-            }
-#endif 
         }
     }
     else
@@ -231,7 +216,6 @@ bool RModel::CombineMeshes(std::vector<aiMesh*>& submeshes, const aiNode* root, 
 #ifdef _DEBUG
             LOG_ERROR("Failed to create vertexbuffer...");
 #endif
-            return false;
         }
     }
       
@@ -242,6 +226,9 @@ bool RModel::CombineMeshes(std::vector<aiMesh*>& submeshes, const aiNode* root, 
 
 bool RModel::CreateVertexBuffer(const std::vector<anim_vertex_t>& vertices, submesh_t& mesh)
 {
+    if (vertices.empty())
+        return false;
+
     D3D11_BUFFER_DESC bufferDesc = {};
 
     bufferDesc.ByteWidth = static_cast<UINT>(sizeof(anim_vertex_t) * vertices.size());
@@ -263,6 +250,9 @@ bool RModel::CreateVertexBuffer(const std::vector<anim_vertex_t>& vertices, subm
 
 bool RModel::CreateVertexBuffer(const std::vector<simple_vertex_t>& vertices, submesh_t& mesh)
 {
+    if (vertices.empty())
+        return false;
+
     D3D11_BUFFER_DESC bufferDesc = {};
 
     bufferDesc.ByteWidth = static_cast<UINT>(sizeof(simple_vertex_t) * vertices.size());
@@ -284,6 +274,9 @@ bool RModel::CreateVertexBuffer(const std::vector<simple_vertex_t>& vertices, su
 
 bool RModel::CreateIndexBuffer(const std::vector<UINT>& indices, submesh_t& mesh)
 {
+    if (indices.empty())
+        return false;
+
     D3D11_BUFFER_DESC indexBufferDesc;
     ZeroMemory(&indexBufferDesc, sizeof(D3D11_BUFFER_DESC));
 
@@ -357,17 +350,11 @@ void RModel::LoadMaterial(const aiScene* scene, const UINT& matIndex, bool& useM
     }
 }
 
-bool RModel::LoadBones(const aiMesh* aimesh, const aiNode* root, std::vector<anim_vertex_t>& skeletonVertices)
+bool RModel::LoadBones(const aiMesh* aimesh, std::vector<anim_vertex_t>& skeletonVertices)
 {
     //Data that will be used temporarily for this.
-    //std::unordered_map<std::string, UINT> nameToIndex;
     std::vector<UINT> boneCounter;
     boneCounter.resize(skeletonVertices.size(), 0);
-
-    //OffSet if there is bones in other meshes
-    UINT boneOffSet = 0;
-    if (!m_allBones.empty())
-        boneOffSet = static_cast<UINT>(m_allBones.size());
 
     //Go through all the bones
     for (UINT b = 0; b < aimesh->mNumBones; b++)
@@ -381,17 +368,12 @@ bool RModel::LoadBones(const aiMesh* aimesh, const aiNode* root, std::vector<ani
             bone_t bone;
             bone.name = aibone->mName.C_Str();
             bone.inverseBind = sm::Matrix(&aibone->mOffsetMatrix.a1).Transpose();
-            std::string parentName = root->FindNode(bone.name.c_str())->mParent->mName.C_Str();
             
-            if (m_boneMap.find(parentName) != m_boneMap.end())
-                bone.parentIndex = static_cast<int>(m_boneMap[parentName]);
-
+            m_boneMap[boneName] = static_cast<UINT>(m_allBones.size());
             m_allBones.push_back(bone);
         }
-        else
-        {
-            m_boneMap[boneName] = b + boneOffSet;
-        }
+
+        UINT boneNr = m_boneMap[boneName];
 
         //Go through all the vertices that the bone affect
         for (UINT v = 0; v < aibone->mNumWeights; v++)
@@ -402,19 +384,19 @@ bool RModel::LoadBones(const aiMesh* aimesh, const aiNode* root, std::vector<ani
             switch (boneCounter[id]++)
             {
             case 0:
-                skeletonVertices[id].boneIDs.x      = b + boneOffSet;
+                skeletonVertices[id].boneIDs.x      = boneNr;
                 skeletonVertices[id].boneWeights.x  = weight;
                 break;
             case 1:
-                skeletonVertices[id].boneIDs.y      = b + boneOffSet;
+                skeletonVertices[id].boneIDs.y      = boneNr;
                 skeletonVertices[id].boneWeights.y  = weight;
                 break;
             case 2:
-                skeletonVertices[id].boneIDs.z      = b + boneOffSet;
+                skeletonVertices[id].boneIDs.z      = boneNr;
                 skeletonVertices[id].boneWeights.z  = weight;
                 break;
             case 3:
-                skeletonVertices[id].boneIDs.w      = b + boneOffSet;
+                skeletonVertices[id].boneIDs.w      = boneNr;
                 skeletonVertices[id].boneWeights.w  = weight;
                 break;
             default:
@@ -449,15 +431,20 @@ bool RModel::LoadBones(const aiMesh* aimesh, const aiNode* root, std::vector<ani
 void RModel::Render() const
 {
     UINT offset = 0;
-    UINT stride = sizeof(simple_vertex_t);
-    if (m_hasSkeleton)
-        stride = sizeof(anim_vertex_t);
+    UINT stride = 0; /*= sizeof(simple_vertex_t);
+    if (!m_allBones.empty())
+        stride = sizeof(anim_vertex_t);*/
 
     for (size_t m = 0; m < m_meshes.size(); m++)
     {
         if (m_meshes[m].material)
             m_meshes[m].material->BindMaterial();
         
+        if (m_meshes[m].hasBones)
+            stride = sizeof(anim_vertex_t);
+        else
+            stride = sizeof(simple_vertex_t);
+
         D3D11Core::Get().DeviceContext()->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
         D3D11Core::Get().DeviceContext()->IASetVertexBuffers(0, 1, m_meshes[m].vertexBuffer.GetAddressOf(), &stride, &offset);
         D3D11Core::Get().DeviceContext()->IASetIndexBuffer(m_meshes[m].indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
@@ -471,14 +458,19 @@ void RModel::Render() const
 void RModel::RenderDeferred(ID3D11DeviceContext* context)
 {
     UINT offset = 0;
-    UINT stride = sizeof(simple_vertex_t);
-    if (m_hasSkeleton)
-        stride = sizeof(anim_vertex_t);
+    UINT stride = 0; /*sizeof(simple_vertex_t);
+    if (!m_allBones.empty())
+        stride = sizeof(anim_vertex_t);*/
 
     for (size_t m = 0; m < m_meshes.size(); m++)
     {
         if (m_meshes[m].material)
             m_meshes[m].material->BindDeferredMaterial(context);
+
+        if (m_meshes[m].hasBones)
+            stride = sizeof(anim_vertex_t);
+        else
+            stride = sizeof(simple_vertex_t);
 
         context->IASetVertexBuffers(0, 1, m_meshes[m].vertexBuffer.GetAddressOf(), &stride, &offset);
         context->IASetIndexBuffer(m_meshes[m].indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
@@ -494,6 +486,9 @@ bool RModel::Create(const std::string& filename)
     std::string filepath = MODELPATH + filename;
     Assimp::Importer importer;
 
+    //Will remove extra text on bones like: "_$AssimpFbx$_"...
+    importer.SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, false);
+    
     const aiScene* scene = importer.ReadFile
     (
         filepath,
@@ -559,7 +554,7 @@ bool RModel::Create(const std::string& filename)
         /*
             Load in vertex- and index-data and combines all the meshes in a set to one
         */
-        if (!CombineMeshes(mat.second, scene->mRootNode, submesh))
+        if (!CombineMeshes(mat.second, submesh))
         {
             importer.FreeScene();
             return false;
@@ -569,6 +564,21 @@ bool RModel::Create(const std::string& filename)
         m_meshes.push_back(submesh);
     }
     m_meshes.shrink_to_fit();
+
+    //Set bones parents
+    if (!m_allBones.empty())
+    {
+        std::cout << "Final parent fix" << std::endl;
+        for (size_t i = 0; i < m_allBones.size(); i++)
+        {
+            std::string parentName = scene->mRootNode->FindNode(m_allBones[i].name.c_str())->mParent->mName.C_Str();
+
+            if (m_boneMap.find(parentName) != m_boneMap.end())
+                m_allBones[i].parentIndex = m_boneMap[parentName];
+
+            std::cout << i << "\t" << m_allBones[i].parentIndex << "\t" << m_allBones[i].name << std::endl;
+        }
+    }
 
     //Freeing memory
     matSet.clear();
