@@ -210,23 +210,45 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 
 	this->m_gameID = gameID;
 
+	
+	EnemyManagement::EnemyGroup group1;
+	group1.enemiesPerType.emplace_back(std::make_pair(EnemyManagement::EnemyType::Default, 8));
+	group1.origo = sm::Vector2{ 200.f, 0.0f };
+
+	EnemyManagement::EnemyGroup group2;
+	group2.enemiesPerType.emplace_back(std::make_pair(EnemyManagement::EnemyType::Default, 5));
+	group2.origo = sm::Vector2{ -200.f, 0.0f };
+
+	EnemyManagement::EnemyGroup group3;
+	group1.enemiesPerType.emplace_back(std::make_pair(EnemyManagement::EnemyType::Default, 10));
+	group1.origo = sm::Vector2{ 0.f, -200.f };
+
+	EnemyManagement::EnemyGroup group4;
+	group2.enemiesPerType.emplace_back(std::make_pair(EnemyManagement::EnemyType::Default, 2));
+	group2.origo = sm::Vector2{ 0.f, 200.0f };
+	
 	//Setting the configurations for the wave system
-	waveInfo =
-	{
-		waveInfo.startNumOfEnemies = 5,
-		waveInfo.spawnDistance = 100.f,
-		waveInfo.scaleMultiplier = 2,
-		waveInfo.waveCount = 0,
-		waveInfo.flankWidth = 100.f
-	};
+	WaveInfo wave1;
+	wave1.enemyGroups.emplace_back(group1);
+	wave1.enemyGroups.emplace_back(group2);
+	wave1.timerToFinish = 0;
+	wave1.spawnDistance = 100.f;
+	wave1.flankWidth = 100.f;
+	wave1.timerToFinish = 10.f;
+
+	WaveInfo wave2;
+	wave2.enemyGroups.emplace_back(group3);
+	wave2.enemyGroups.emplace_back(group4);
+	wave2.timerToFinish = 0;
+	wave2.spawnDistance = 100.f;
+	wave2.flankWidth = 100.f;
+	wave2.timerToFinish = 10.f;
 	
 	//init waveQueue
-	waveQueue.emplace(std::make_pair(EnemyManagement::WaveType::Zone, sm::Vector2{ 200.0,0.0 }));
-	waveQueue.emplace(std::make_pair(EnemyManagement::WaveType::Zone, sm::Vector2{ -200.0,0.0 }));
-	waveQueue.emplace(std::make_pair(EnemyManagement::WaveType::Zone, sm::Vector2{ 0.0,200 }));
-	waveQueue.emplace(std::make_pair(EnemyManagement::WaveType::Zone, sm::Vector2{ 0.0,-200 }));
-	waveQueue.emplace(std::make_pair(EnemyManagement::WaveType::Zone, sm::Vector2{ 200.0,200.0 }));
-	
+	waveQueue.emplace(std::make_pair(EnemyManagement::WaveType::Zone, wave1));
+	waveQueue.emplace(std::make_pair(EnemyManagement::WaveType::Zone, wave2));
+	waveQueue.emplace(std::make_pair(EnemyManagement::WaveType::Zone, wave2));
+	waveQueue.emplace(std::make_pair(EnemyManagement::WaveType::Zone, wave2));
 	
 	// Create Scenes associated with this Simulation
 	m_pLobbyScene = &m_pEngine->GetScene("Lobby_" + std::to_string(gameID));
@@ -266,14 +288,17 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 			Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(scene, e.dt);
 			Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingSphere>(scene, e.dt);
 			Systems::CombatSystem(scene, e.dt);
-			ServerSystems::RemoveDeadEnemies(this);
+			if(!waveQueue.empty())
+				ServerSystems::ActivateNextWave(this, waveTimer, waveQueue.front().second.timerToFinish);
 			//LOG_INFO("GAME Scene %d", m_gameID);
 		});
 
 	//On all enemies wiped, activate the next wave.
-	m_pGameScene->on<ESceneEnemiesWiped>([&](const ESceneEnemiesWiped& dt, HeadlessScene& scene)
+	m_pGameScene->on<ESceneCallWaveSystem>([&](const ESceneCallWaveSystem& dt, HeadlessScene& scene)
 		{
-			ServerSystems::WaveSystem(this, waveQueue, waveInfo);
+			waveTimer.Start();
+			ServerSystems::WaveSystem(this, waveQueue);
+		
 		});
 	
 	//On collision event add entities as pair in the collision system

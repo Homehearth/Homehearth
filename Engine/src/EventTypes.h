@@ -19,7 +19,7 @@ struct ESceneCollision
 	float dt;
 };
 
-struct ESceneEnemiesWiped
+struct ESceneCallWaveSystem
 {
 	float dt;
 };

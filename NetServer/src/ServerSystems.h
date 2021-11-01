@@ -1,17 +1,6 @@
 #pragma once
 class Simulation;
 
-/**Configurations for how the waves should behave.**/
-struct WaveInfo
-{
-	int startNumOfEnemies;  ///< number of enemies wave system starts on.
-	float spawnDistance;	///< The distance from the specified starting point the enemies should spawn from.
-	int scaleMultiplier;	///< How the scaling for number of spawning enemies should develop after each wave
-	int waveCount;			///< Keeps track of how many waves the system is up to
-	int flankWidth;			///< Width of the flank
-	sm::Vector2 origo;      ///< The point the wave is based on when spawning enemies
-};
-
 /*! Namespace with functions for managing the creation of enemies and types for identifying the different types of enemies and waves */
 namespace EnemyManagement
 {
@@ -26,13 +15,35 @@ namespace EnemyManagement
 		Swarm,	     ///< Swarm spawns the enemy so that they surround the specified point forming a circle
 	};
 
+	struct EnemyGroup
+	{
+		std::vector<std::pair<EnemyManagement::EnemyType, int>> enemiesPerType;
+		sm::Vector2 origo;      ///< The point the wave is based on when spawning enemies
+	};
+	
 	Entity CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, EnemyType type = EnemyType::Default);
+
 }
+
+
+
+/**Configurations for how the waves should behave.**/
+struct WaveInfo
+{
+	std::vector<EnemyManagement::EnemyGroup> enemyGroups;
+	float timerToFinish;
+	float spawnDistance;	///< The distance from the specified starting point the enemies should spawn from.
+	int flankWidth;			///< Width of the flank
+};
+
+
+
+
 /*! Namespace to manage the server's various ECS systems. */
 namespace ServerSystems
 {
-	void WaveSystem(Simulation* simulation, std::queue<std::pair<EnemyManagement::WaveType, sm::Vector2>>& waves, WaveInfo& waveInfo);
-	void RemoveDeadEnemies(Simulation* simulation);
+	void WaveSystem(Simulation* simulation, std::queue<std::pair<EnemyManagement::WaveType, WaveInfo>>& waves);
+	void ActivateNextWave(Simulation* simulation, Timer& timer, float timeToFinish);
 }
 
 namespace Systems {

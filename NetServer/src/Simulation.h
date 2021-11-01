@@ -42,8 +42,8 @@ private:
 	void ScanForDisconnects();
 
 	//Game play related
-	WaveInfo waveInfo;
-	std::queue<std::pair<EnemyManagement::WaveType, sm::Vector2>> waveQueue;
+	Timer waveTimer;
+	std::queue<std::pair<EnemyManagement::WaveType, WaveInfo>> waveQueue;
 	
 public:
 	Server* m_pServer;

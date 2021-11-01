@@ -52,24 +52,35 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
  *@param point		   This is the point the calculation assumes to spawn the enemy from.
  *@param waveInfo      Contains configurations for the wave system.
  */
-void SpawnZoneWave(Simulation* simulation, const sm::Vector2 point, WaveInfo& waveInfo)
+void SpawnZoneWave(Simulation* simulation, WaveInfo& waveInfo)
 {
 	LOG_INFO("[WaveSystem] spawns a zone wave...");
-	const int nrOfEnemies = waveInfo.startNumOfEnemies + (waveInfo.scaleMultiplier * waveInfo.waveCount);
+	
 	const int min = 30;
 	const int max = 70;
-
 	const float deg2rad = 3.14f / 180.f;
-	const float degree = (rand() % 360) * deg2rad;
+	int nrOfEnemies = 0;
+	float degree = 0.0f;
 
-	// for each enemy i:
-	for (int i = 0; i < nrOfEnemies; i++)
+	for (auto& group : waveInfo.enemyGroups)
 	{
-		const float distance = (rand() % (max - min)) + min;
-		const float posX = distance * cos(i * degree) + point.x;
-		const float posZ = distance * sin(i * degree) + point.y;
-		CreateEnemy(simulation, {posX, 0.0f, posZ},  EnemyManagement::EnemyType::Default);
+		//Go through each enemyType of  group
+		for (auto& enemyType : group.enemiesPerType)
+		{
+			nrOfEnemies = enemyType.second;
+			degree = (360.f / static_cast<float>(nrOfEnemies)) * deg2rad;
+
+			//Spawn enemies of this type
+			for (int i = 0; i < nrOfEnemies; i++)
+			{
+				const float distance = (rand() % (max - min)) + min;
+				const float posX = distance * cos(i * degree) + group.origo.x;
+				const float posZ = distance * sin(i * degree) + group.origo.y;
+				EnemyManagement::CreateEnemy(simulation, { posX, 0.0f, posZ }, enemyType.first);
+			}
+		}
 	}
+	
 }
 
 
@@ -80,22 +91,32 @@ void SpawnZoneWave(Simulation* simulation, const sm::Vector2 point, WaveInfo& wa
  *@param point		   This is the point the calculation assumes to spawn the enemy from.
  *@param waveInfo      Contains configurations for the wave system.
  */
-void SpawnSwarmWave(Simulation* simulation, const sm::Vector2 point, WaveInfo& waveInfo)
+void SpawnSwarmWave(Simulation* simulation, WaveInfo& waveInfo)
 {
 	LOG_INFO("[WaveSystem] spawns a swarm wave...");
-	const int nrOfEnemies = waveInfo.startNumOfEnemies + (waveInfo.scaleMultiplier * waveInfo.waveCount);
+	
 	const float distance = waveInfo.spawnDistance;
-
 	const float deg2rad = 3.14f / 180.f;
-	const float degree = (360.f / static_cast<float>(nrOfEnemies)) * deg2rad;
+	int nrOfEnemies = 0;
 
-	// for each enemy i:
-	for (int i = 0; i < nrOfEnemies; i++)
+	for (auto& group : waveInfo.enemyGroups)
 	{
-		const float posX = distance * cos(i * degree) + point.x;
-		const float posZ = distance * sin(i * degree) + point.y;
-		CreateEnemy(simulation, { posX, 0.0f, posZ }, EnemyManagement::EnemyType::Default);
+		//Go through each enemyType of that group
+		for (auto& enemyType : group.enemiesPerType)
+		{
+			nrOfEnemies = enemyType.second;
+			const float degree = (360.f / static_cast<float>(nrOfEnemies)) * deg2rad;
+
+			//Spawn enemies of this type
+			for(int i = 0; i < nrOfEnemies; i++)
+			{
+				const float posX = distance * cos(i * degree) + group.origo.x;
+				const float posZ = distance * sin(i * degree) + group.origo.y;
+				EnemyManagement::CreateEnemy(simulation, { posX, 0.0f, posZ }, enemyType.first);
+			}
+		}
 	}
+
 }
 
 /**Wave system handles enemies spawns in the scene as a "wave", handles several different types of waves that is specified by the input queue.
@@ -105,7 +126,7 @@ void SpawnSwarmWave(Simulation* simulation, const sm::Vector2 point, WaveInfo& w
  *@param waveInfo      Contains configurations for the wave system.
  */
 void ServerSystems::WaveSystem(Simulation* simulation,
-                               std::queue<std::pair<EnemyManagement::WaveType, sm::Vector2>>& waves, WaveInfo& waveInfo)
+                               std::queue<std::pair<EnemyManagement::WaveType, WaveInfo>>& waves)
 {
 	//initialize a new wave
 	if (!waves.empty())
@@ -116,13 +137,13 @@ void ServerSystems::WaveSystem(Simulation* simulation,
 		{
 		case EnemyManagement::WaveType::Zone:
 			{
-				SpawnZoneWave(simulation, sm::Vector2{waves.front().second.x, waves.front().second.y}, waveInfo);
+				SpawnZoneWave(simulation, waves.front().second);
 			}
 			break;
 
 		case EnemyManagement::WaveType::Swarm:
 			{
-				SpawnSwarmWave(simulation, sm::Vector2{ waves.front().second.x, waves.front().second.y }, waveInfo);
+				SpawnSwarmWave(simulation, waves.front().second);
 			}
 			break;
 
@@ -134,7 +155,6 @@ void ServerSystems::WaveSystem(Simulation* simulation,
 		}
 
 		//Add count and pop from queue
-		waveInfo.waveCount++;
 		waves.pop();
 	}
 }
@@ -143,7 +163,7 @@ void ServerSystems::WaveSystem(Simulation* simulation,
 /**Removes all enemies that has been destroyed and broadcasts the removal to the clients.
  *@param simulation	   Manages sending and removal of entities on the server.
  */
-void ServerSystems::RemoveDeadEnemies(Simulation* simulation)
+void ServerSystems::ActivateNextWave(Simulation* simulation, Timer& timer, float timeToFinish)
 {
 	message<GameMsg> msg;
 	msg.header.id = GameMsg::Game_RemoveEntity;
@@ -175,9 +195,9 @@ void ServerSystems::RemoveDeadEnemies(Simulation* simulation)
 	}
 
 	//Publish all enemies have been destroyed
-	if (numOfEnemies == 0)
+	if (numOfEnemies == 0 && timer.GetElapsedTime() > timeToFinish || timer.GetElapsedTime() > timeToFinish)
 	{
-		simulation->GetGameScene()->publish<ESceneEnemiesWiped>(0.0f);
+		simulation->GetGameScene()->publish<ESceneCallWaveSystem>(0.0f);
 	}
 }
 
