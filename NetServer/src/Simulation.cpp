@@ -210,6 +210,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 					{
 						stats->isAttacking = true;
 						stats->targetRay = input.mouseRay;
+
 					}
 				}
 			}

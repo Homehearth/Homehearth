@@ -13,7 +13,7 @@ namespace Systems {
 					plane.normal = sm::Vector3(0, 1, 0);
 					plane.point = t.position;
 
-					sm::Vector3 point(0, 0, 0);
+					sm::Vector3 point = t.position;
 					sm::Vector3 targetDir(1, 0, 0);
 
 					if (a.targetRay.Intersects(plane, point))
@@ -24,7 +24,7 @@ namespace Systems {
 					else {
 						LOG_WARNING("Mouse click ray missed walking plane. Should not happen...");
 					}
-
+					a.targetDir = targetDir;
 					p.state = comp::Player::State::ATTACK;
 					p.targetForward = targetDir;
 				}

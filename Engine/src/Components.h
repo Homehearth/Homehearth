@@ -130,6 +130,7 @@ namespace ecs
 			bool isAttacking = false;
 			float cooldownTimer = 0.f;
 			Ray_t targetRay;
+			sm::Vector3 targetDir;
 		};
 
 		struct Attack
