@@ -126,6 +126,7 @@ Simulation::Simulation(Server* pServer, HeadlessEngine* pEngine)
 {
 	this->m_gameID = 0;
 	this->m_tick = 0;
+	//this->AICreateNodes();
 }
 
 bool Simulation::JoinLobby(uint32_t playerID, uint32_t gameID)
@@ -364,10 +365,10 @@ bool Simulation::AICreateNodes()
 	int currentIndex = 0;
 	if (file.size() == 0)
 	{
-		std::cout << "Error Opening NodeFile!\n";
+		LOG_ERROR("Error Opening NodeFile!");
 	}
 	//Creating nodes
-	std::cout << "Creating nodes\n";
+	LOG_INFO("Creating nodes");
 	while (file[currentIndex] != "")
 	{
 		std::stringstream ss(file.at(currentIndex));
@@ -379,7 +380,7 @@ bool Simulation::AICreateNodes()
 
 		currentIndex++;
 	}
-	std::cout << "Connecting Nodes\n";
+	LOG_INFO("Connecting Nodes");
 	for (int i = currentIndex + 1; i < file.size(); i++)
 	{
 		std::stringstream ss(file.at(i));
