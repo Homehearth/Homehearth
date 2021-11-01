@@ -62,7 +62,8 @@ bool ServerGame::OnStartup()
 
 	m_inputThread = std::thread(&ServerGame::InputThread, this);
 
-	LoadBoundingBoxes("SceneBoundingBoxes.obj");
+	LoadMapColliders("SceneBoundingBoxes.obj");
+	//LoadMapColliders("MapBounds.obj")
 
 	return true;
 }
@@ -99,7 +100,7 @@ void ServerGame::UpdateNetwork(float deltaTime)
 	}
 }
 
-bool ServerGame::LoadBoundingBoxes(const std::string& filename)
+bool ServerGame::LoadMapColliders(const std::string& filename)
 {
 	std::string filepath = BOUNDSPATH + filename;
 	Assimp::Importer importer;
@@ -110,14 +111,13 @@ bool ServerGame::LoadBoundingBoxes(const std::string& filename)
 		aiProcess_Triangulate			| 
 		aiProcess_JoinIdenticalVertices |
 		aiProcess_FlipWindingOrder		|
-		aiProcess_MakeLeftHanded		|	 
-		aiProcess_GenBoundingBoxes
+		aiProcess_MakeLeftHanded
 	);
 
 	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 	{
 #ifdef _DEBUG
-		LOG_WARNING("Assimp error: %s", importer.GetErrorString());
+		LOG_WARNING("[Bounds] Assimp error: %s", importer.GetErrorString());
 #endif 
 		importer.FreeScene();
 		return false;
@@ -126,7 +126,7 @@ bool ServerGame::LoadBoundingBoxes(const std::string& filename)
 	if (!scene->HasMeshes())
 	{
 #ifdef _DEBUG
-		LOG_WARNING("The model has no meshes...");
+		LOG_WARNING("[Bounds] has no meshes...");
 #endif 
 		importer.FreeScene();
 		return false;
@@ -138,6 +138,7 @@ bool ServerGame::LoadBoundingBoxes(const std::string& filename)
 		const aiMesh* mesh = scene->mMeshes[i];
 		size_t count = mesh->mNumVertices;
 		std::vector<dx::XMFLOAT3> vertices;
+		vertices.reserve(count);
 
 		//Go through all the vertices
 		for (UINT v = 0; v < count; v++)
@@ -146,26 +147,10 @@ bool ServerGame::LoadBoundingBoxes(const std::string& filename)
 			vertices.push_back({ aivec.x, aivec.y, aivec.z });
 		}
 
-		//Create a bob from all the points and the orientation will be calculated
+		//Create a bob from all the points and the orientation will be calculated and add to vector
 		dx::BoundingOrientedBox bob;
 		dx::BoundingOrientedBox::CreateFromPoints(bob, count, &vertices[0], sizeof(dx::XMFLOAT3));
-
-		//OLD - For testing
-		// Makes local aabb... Not the best. Orientation was wrong too
-		/*aiVector3D min = mesh->mAABB.mMin;
-		aiVector3D max = mesh->mAABB.mMax;
-		dx::XMFLOAT3 center = { (max.x - min.x) / 2, (max.y - min.y) / 2, (max.z - min.z) / 2 };
-		dx::XMFLOAT3 extents = { bob.Center.x + (max.x / 2), bob.Center.y + (max.y / 2), bob.Center.z + (max.z / 2) };*/
-		//bob.Orientation = { 0.f, 1.f, 0.f, 0.f };
-		
-		/*aiNode* node = scene->mRootNode->FindNode(mesh->mName);
-		if (node)
-		{
-			dx::FXMMATRIX matrix(&node->mTransformation.a1);
-			bob.Transform(bob, matrix);
-		}*/
-
-		m_boundingBoxes.push_back(bob);
+		m_mapColliders.push_back(bob);
 	}
 
 	return true;
