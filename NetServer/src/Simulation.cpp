@@ -274,6 +274,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 		collider.AddComponent<comp::BoundingOrientedBox>()->Center = mapColliders->at(i).Center;
 		collider.GetComponent<comp::BoundingOrientedBox>()->Extents = mapColliders->at(i).Extents;
 		collider.GetComponent<comp::BoundingOrientedBox>()->Orientation = mapColliders->at(i).Orientation;
+		collider.AddComponent<comp::Network>();
 		collider.AddComponent<comp::Tag<TagType::STATIC>>();
 	}
 
