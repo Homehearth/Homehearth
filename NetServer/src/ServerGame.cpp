@@ -62,6 +62,8 @@ bool ServerGame::OnStartup()
 
 	m_inputThread = std::thread(&ServerGame::InputThread, this);
 
+	LoadBoundingBoxes("SceneBoundingBoxes.obj");
+
 	return true;
 }
 
@@ -95,6 +97,78 @@ void ServerGame::UpdateNetwork(float deltaTime)
 			it++;
 		}
 	}
+}
+
+bool ServerGame::LoadBoundingBoxes(const std::string& filename)
+{
+	std::string filepath = BOUNDSPATH + filename;
+	Assimp::Importer importer;
+
+	const aiScene* scene = importer.ReadFile
+	(
+		filepath, 
+		aiProcess_Triangulate			| 
+		aiProcess_JoinIdenticalVertices |
+		aiProcess_FlipWindingOrder		|
+		aiProcess_MakeLeftHanded		|	 
+		aiProcess_GenBoundingBoxes
+	);
+
+	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
+	{
+#ifdef _DEBUG
+		LOG_WARNING("Assimp error: %s", importer.GetErrorString());
+#endif 
+		importer.FreeScene();
+		return false;
+	}
+
+	if (!scene->HasMeshes())
+	{
+#ifdef _DEBUG
+		LOG_WARNING("The model has no meshes...");
+#endif 
+		importer.FreeScene();
+		return false;
+	}
+
+	// Go through all the meshes and create boundingboxes for them
+	for (UINT i = 0; i < scene->mNumMeshes; i++)
+	{
+		const aiMesh* mesh = scene->mMeshes[i];
+		size_t count = mesh->mNumVertices;
+		std::vector<dx::XMFLOAT3> vertices;
+
+		//Go through all the vertices
+		for (UINT v = 0; v < count; v++)
+		{
+			aiVector3D aivec = mesh->mVertices[v];
+			vertices.push_back({ aivec.x, aivec.y, aivec.z });
+		}
+
+		//Create a bob from all the points and the orientation will be calculated
+		dx::BoundingOrientedBox bob;
+		dx::BoundingOrientedBox::CreateFromPoints(bob, count, &vertices[0], sizeof(dx::XMFLOAT3));
+
+		//OLD - For testing
+		// Makes local aabb... Not the best. Orientation was wrong too
+		/*aiVector3D min = mesh->mAABB.mMin;
+		aiVector3D max = mesh->mAABB.mMax;
+		dx::XMFLOAT3 center = { (max.x - min.x) / 2, (max.y - min.y) / 2, (max.z - min.z) / 2 };
+		dx::XMFLOAT3 extents = { bob.Center.x + (max.x / 2), bob.Center.y + (max.y / 2), bob.Center.z + (max.z / 2) };*/
+		//bob.Orientation = { 0.f, 1.f, 0.f, 0.f };
+		
+		/*aiNode* node = scene->mRootNode->FindNode(mesh->mName);
+		if (node)
+		{
+			dx::FXMMATRIX matrix(&node->mTransformation.a1);
+			bob.Transform(bob, matrix);
+		}*/
+
+		m_boundingBoxes.push_back(bob);
+	}
+
+	return true;
 }
 
 void ServerGame::CheckIncoming(message<GameMsg>& msg)

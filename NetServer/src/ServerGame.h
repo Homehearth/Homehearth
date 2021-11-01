@@ -13,6 +13,9 @@ private:
 
 	uint32_t m_nGameID;
 	std::unordered_map<uint32_t, std::unique_ptr<Simulation>> m_simulations;
+	std::vector<dx::BoundingOrientedBox> m_boundingBoxes;
+
+	bool LoadBoundingBoxes(const std::string& filename);
 
 	// User defined function to check messages which must comply with the function pointer arguments from Server
 	void CheckIncoming(message<GameMsg>& msg);
