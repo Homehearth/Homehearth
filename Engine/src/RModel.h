@@ -49,6 +49,7 @@ private:
 	*/
 	bool							m_hasSkeleton;
 	std::vector<bone_t>				m_allBones;
+	std::unordered_map<std::string, UINT> m_boneMap;
 
 private:
 	//Get the end of file. Searches for "."

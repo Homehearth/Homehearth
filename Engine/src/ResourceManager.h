@@ -21,6 +21,9 @@
 		  if create is succesfull, return resource, otherwise return no resource
 	* std::shared_ptr<RModel> mesh = ResourceManager::Get().GetResource<RModel>("Cube.fbx");
 	
+	copy - will return a copy of a resource from the manager.
+	* std::shared_ptr<RModel> meshCopy = ResourceManager::Get().CopyResource<RModel>("Cube.fbx");
+
 	free - remove any resources that is not in use
 	* ResourceManager::Get().FreeResources();
 
@@ -68,6 +71,13 @@ public:
 	std::shared_ptr<T> GetResource(const std::string& key, bool createIfFailed = true);
 
 	/*
+		Copy a resource with the name (key).
+		Return nullptr if the resource does not exist.
+	*/
+	template <class T>
+	std::shared_ptr<T> CopyResource(const std::string& key);
+
+	/*
 		Removes every resource from the the manager.
 		Each resource that is still being used on other places will
 		keep living and get destroyed when all is gone
@@ -90,7 +100,7 @@ public:
 template<class T>
 inline std::shared_ptr<T> ResourceManager::GetResource(const std::string& key, bool createIfFailed)
 {
-	//CheckCollisions if the resource exists
+	//Check if the resource exists
 	auto f = m_resources.find(key);
 	
 	//Return the resource if it exists
@@ -117,6 +127,26 @@ inline std::shared_ptr<T> ResourceManager::GetResource(const std::string& key, b
 		{
 			return std::shared_ptr<T>(nullptr);
 		}
+	}
+	else
+	{
+		return std::shared_ptr<T>(nullptr);
+	}
+}
+
+template<class T>
+inline std::shared_ptr<T> ResourceManager::CopyResource(const std::string& key)
+{
+	//Check if the resource exists
+	auto f = m_resources.find(key);
+
+	if (f != m_resources.end())
+	{
+		//Get the resource
+		std::shared_ptr<T> resource = std::dynamic_pointer_cast<T>(f->second);
+		//Copy the resource - uses copy constructor
+		std::shared_ptr<T> copy = std::make_shared<T>(*resource);
+		return copy;
 	}
 	else
 	{

@@ -95,7 +95,7 @@ bool RAnimator::Create(const std::string& filename)
 
 	//Load in all the animations needed
 
-	m_currentAnim = ResourceManager::Get().GetResource<RAnimation>("Player_Idle.fbx");
+	m_currentAnim = ResourceManager::Get().GetResource<RAnimation>("RunningAnimation.fbx");
 
 	return true;
 }

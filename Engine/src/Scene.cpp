@@ -192,12 +192,18 @@ void Scene::RenderAnimation()
 	// Render everything on same thread
 	if ((inst.start | inst.stop) == 0)
 	{
+		//Update all the animators
+		if (m_updateAnimation)
+		{
+			m_registry.view<comp::Animator>().each([&](comp::Animator& anim)
+				{
+					anim.animator->Update();
+				});
+		}
+
 		for (auto& it : m_renderableAnimCopies[1])
 		{
 			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.first.data);
-			if (m_updateAnimation)
-				it.second.animator->Update();
-			
 			it.second.animator->Bind();
 			it.first.model->Render();
 			it.second.animator->Unbind();
@@ -208,11 +214,18 @@ void Scene::RenderAnimation()
 	{
 		for (int i = inst.start; i < inst.stop; i++)
 		{
+			//Update all the animators
+			if (m_updateAnimation)
+			{
+				m_registry.view<comp::Animator>().each([&](comp::Animator& anim)
+					{
+						anim.animator->Update();
+					});
+			}
+
 			auto& it = m_renderableAnimCopies[1][i];
 			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.first.data);
-			if (m_updateAnimation)
-				it.second.animator->Update();
-			
+
 			it.second.animator->Bind();
 			it.first.model->Render();
 			it.second.animator->Unbind();

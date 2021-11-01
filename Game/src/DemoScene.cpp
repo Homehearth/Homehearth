@@ -113,31 +113,34 @@ namespace sceneHelp
 		gameScene.SetCurrentCameraEntity(cameraEntity);
 
 		/*
-		* Testing to add a model with an animator
-		*/ 
-		Entity testAnimEnt = gameScene.CreateEntity();
-		testAnimEnt.AddComponent<comp::Transform>();
-		//Add model
-		comp::Renderable* testRenderable = testAnimEnt.AddComponent<comp::Renderable>();
-		testRenderable->model = ResourceManager::Get().GetResource<RModel>("Player_Skeleton.fbx");
-		//Add animator - remove component if it did not work - will still render model
-		comp::Animator* testAnimator = testAnimEnt.AddComponent<comp::Animator>();
-		testAnimator->animator = ResourceManager::Get().GetResource<RAnimator>("Test.anim");
-		if (!testAnimator->animator->LoadSkeleton(testRenderable->model->GetSkeleton()))
-			testAnimEnt.RemoveComponent<comp::Animator>();
-
-		/*
-			Testing to add second model
+			Testing to add models with animators
 		*/
-		Entity testAnimEnt2 = gameScene.CreateEntity();
-		testAnimEnt2.AddComponent<comp::Transform>()->position = {5,0,0};
-		comp::Renderable* testRenderable2 = testAnimEnt2.AddComponent<comp::Renderable>();
-		testRenderable2->model = ResourceManager::Get().GetResource<RModel>("Player_Skeleton.fbx");
-		comp::Animator* testAnimator2 = testAnimEnt2.AddComponent<comp::Animator>();
-		testAnimator2->animator = ResourceManager::Get().GetResource<RAnimator>("Test.anim");
-		if (!testAnimator2->animator->LoadSkeleton(testRenderable2->model->GetSkeleton()))
-			testAnimEnt2.RemoveComponent<comp::Animator>();
+		std::array<std::string, 5> materials = { "Tree1.mtl", "Tree2.mtl", "StreetLamp.mtl", "Cube.mtl", "Bush1.mtl" };
+		for (int i = 0; i < 1; i++)
+		{
+			Entity animEnt = gameScene.CreateEntity();
+			
+			animEnt.AddComponent<comp::Transform>()->position = { i*5.0f,0,0 };
+			//Add model
+			animEnt.AddComponent<comp::Renderable>();
+			//Copy a model
+			animEnt.GetComponent<comp::Renderable>()->model = ResourceManager::Get().CopyResource<RModel>("RunningAnimation.fbx");
+			if (!animEnt.GetComponent<comp::Renderable>()->model)
+				animEnt.GetComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>("RunningAnimation.fbx");
+			
+			//Change materials
+			animEnt.GetComponent<comp::Renderable>()->model->ChangeMaterial(materials[i]);
 
+			//Add animator - remove component if it did not work - will still render model
+			animEnt.AddComponent<comp::Animator>();
+			animEnt.GetComponent<comp::Animator>()->animator = ResourceManager::Get().CopyResource<RAnimator>("Test.anim");
+			if (!animEnt.GetComponent<comp::Animator>()->animator)
+			{
+				animEnt.GetComponent<comp::Animator>()->animator = ResourceManager::Get().GetResource<RAnimator>("Test.anim");
+				if (!animEnt.GetComponent<comp::Animator>()->animator->LoadSkeleton(animEnt.GetComponent<comp::Renderable>()->model->GetSkeleton()))
+					animEnt.RemoveComponent<comp::Animator>();
+			}
+		}
 
 		CreateLightEntity(gameScene, { 0.f, 0.f, 0.f, 0.f }, { 1.f, -1.f, 0.f, 0.f }, { 10.f, 10.f, 10.f, 10.f }, 0, TypeLight::DIRECTIONAL, 1);
 		CreateLightEntity(gameScene, { 0.f, 8.f, -10.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 300.f, 300.f, 300.f, 300.f }, 75.f, TypeLight::POINT, 1);

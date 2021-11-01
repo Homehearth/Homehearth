@@ -360,7 +360,7 @@ void RModel::LoadMaterial(const aiScene* scene, const UINT& matIndex, bool& useM
 bool RModel::LoadBones(const aiMesh* aimesh, const aiNode* root, std::vector<anim_vertex_t>& skeletonVertices)
 {
     //Data that will be used temporarily for this.
-    std::unordered_map<std::string, UINT> nameToIndex;
+    //std::unordered_map<std::string, UINT> nameToIndex;
     std::vector<UINT> boneCounter;
     boneCounter.resize(skeletonVertices.size(), 0);
 
@@ -373,7 +373,25 @@ bool RModel::LoadBones(const aiMesh* aimesh, const aiNode* root, std::vector<ani
     for (UINT b = 0; b < aimesh->mNumBones; b++)
     {
         const aiBone* aibone = aimesh->mBones[b];
-        nameToIndex[aibone->mName.C_Str()] = b + boneOffSet;
+        std::string boneName = aibone->mName.C_Str();
+
+        //Bone does not exist - create it
+        if (m_boneMap.find(boneName) == m_boneMap.end())
+        {
+            bone_t bone;
+            bone.name = aibone->mName.C_Str();
+            bone.inverseBind = sm::Matrix(&aibone->mOffsetMatrix.a1).Transpose();
+            std::string parentName = root->FindNode(bone.name.c_str())->mParent->mName.C_Str();
+            
+            if (m_boneMap.find(parentName) != m_boneMap.end())
+                bone.parentIndex = static_cast<int>(m_boneMap[parentName]);
+
+            m_allBones.push_back(bone);
+        }
+        else
+        {
+            m_boneMap[boneName] = b + boneOffSet;
+        }
 
         //Go through all the vertices that the bone affect
         for (UINT v = 0; v < aibone->mNumWeights; v++)
@@ -404,18 +422,6 @@ bool RModel::LoadBones(const aiMesh* aimesh, const aiNode* root, std::vector<ani
                 break;
             };
         }
-
-        //Create the bone and find the parent index
-        bone_t bone;
-        bone.name = aibone->mName.C_Str();
-        bone.inverseBind = sm::Matrix(&aibone->mOffsetMatrix.a1).Transpose();
-        std::string parentName = root->FindNode(bone.name.c_str())->mParent->mName.C_Str();
-        
-        //Root should not add a parent
-        if (nameToIndex.find(parentName) != nameToIndex.end())
-            bone.parentIndex = static_cast<int>(nameToIndex[parentName]);
-
-        m_allBones.push_back(bone);
     }
     m_allBones.shrink_to_fit();
 
@@ -436,7 +442,6 @@ bool RModel::LoadBones(const aiMesh* aimesh, const aiNode* root, std::vector<ani
     }
 
     //Freeing up space
-    nameToIndex.clear();
     boneCounter.clear();
     return true;
 }
