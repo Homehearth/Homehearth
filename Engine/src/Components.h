@@ -29,7 +29,7 @@ namespace ecs
 		struct Transform
 		{
 			sm::Vector3 position;
-			sm::Vector3 rotation;
+			sm::Quaternion rotation;
 			sm::Vector3 scale = sm::Vector3(1);
 
 			friend network::message<GameMsg>& operator<<(network::message<GameMsg>& msg, const ecs::component::Transform& data)

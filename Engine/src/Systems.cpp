@@ -114,6 +114,7 @@ void Systems::MovementColliderSystem(HeadlessScene& scene, float dt)
 	scene.ForEachComponent<comp::Transform, comp::BoundingOrientedBox>([&, dt](comp::Transform& transform, comp::BoundingOrientedBox& obb)
 		{
 			obb.Center = transform.position;
+			obb.Orientation = transform.rotation;
 		});
 
 	//BoundingSphere

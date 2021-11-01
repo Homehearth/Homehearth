@@ -212,6 +212,12 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 						stats->targetRay = input.mouseRay;
 
 					}
+					comp::Player* player = e.GetComponent<comp::Player>();
+					if (player)
+					{
+						player->state = comp::Player::State::ATTACK;
+						
+					}
 				}
 			}
 
