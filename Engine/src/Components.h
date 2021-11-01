@@ -25,7 +25,7 @@ namespace ecs
 		//Collider components
 		using DirectX::BoundingOrientedBox;
 		using DirectX::BoundingSphere;
-		
+
 		struct Transform
 		{
 			sm::Vector3 position;
@@ -57,12 +57,12 @@ namespace ecs
 		};
 
 		// Used on server side
-		struct MeshName 
+		struct MeshName
 		{
 			std::string name;
 		};
 
-		
+
 		struct RenderableDebug
 		{
 			std::shared_ptr<RModel> 	model;
@@ -72,17 +72,17 @@ namespace ecs
 			{
 				BoundingOrientedBox* obb = reg.try_get<BoundingOrientedBox>(curr);
 				BoundingSphere* sphere = reg.try_get<BoundingSphere>(curr);
-				if(obb != nullptr)
+				if (obb != nullptr)
 				{
 					model = ResourceManager::Get().GetResource<RModel>("cube.obj");
 				}
-				else if(sphere != nullptr)
+				else if (sphere != nullptr)
 				{
 					model = ResourceManager::Get().GetResource<RModel>("Sphere.obj");
 				}
 			}
 		};
-		
+
 		struct Velocity
 		{
 			sm::Vector3 vel;
@@ -105,6 +105,13 @@ namespace ecs
 			float movementSpeed = 2.f;
 			float attackRange;
 			bool hostile;
+			uint32_t currentNodeTarget = static_cast<uint32_t>(-1);
+		};
+		struct Node
+		{
+			float f = FLT_MAX, g = FLT_MAX, h = FLT_MAX;
+			sm::Vector3 position;
+			uint32_t id;
 		};
 		struct Light
 		{

@@ -357,6 +357,45 @@ bool Simulation::IsEmpty() const
 	return m_players.empty();
 }
 
+bool Simulation::AICreateNodes()
+{
+	
+		std::vector<std::string> file = OpenFile("Other/NodeInfo.txt");//replace with actual name
+		int currentIndex = 0;
+		if (file.size() == 0)
+		{
+			std::cout << "Error Opening NodeFile!\n";
+		}
+		//Creating nodes
+		std::cout << "Creating nodes\n";
+		while (file[currentIndex] != "")
+		{
+			std::stringstream ss(file.at(currentIndex));
+			int ID = 0;
+			float posX = 0, posZ = 0;
+			ss >> ID >> posX >> posZ;
+			Entity node;
+			node.AddComponent<comp::Node>();
+
+			currentIndex++;
+		}
+		std::cout << "Connecting Nodes\n";
+		for (int i = currentIndex + 1; i < file.size(); i++)
+		{
+			std::stringstream ss(file.at(i));
+			int ID1 = 0, ID2 = 0;
+			ss >> ID1 >> ID2;
+			//AIHANDLER->ConnectNodes(AIHANDLER->GetNodeByID(ID1), AIHANDLER->GetNodeByID(ID2));
+		}
+	
+	return true;
+}
+
+bool Simulation::AIAStarSearch()
+{
+	return false;
+}
+
 bool Simulation::AddPlayer(uint32_t playerID)
 {
 	if (!m_pServer->isClientConnected(playerID))
@@ -446,7 +485,7 @@ bool Simulation::AddNPC(uint32_t npcId)
 			LOG_INFO("NPC COLLISION!");
 		}
 	});
-	//Broadcast(SingleEntityMessage(npc));
+	Broadcast(SingleEntityMessage(npc));
 	return true;
 }
 bool Simulation::RemoveNPC(uint32_t npcId)
@@ -546,6 +585,25 @@ void Simulation::ScanForDisconnects()
 			it++;
 		}
 	}
+}
+
+std::vector<std::string> Simulation::OpenFile(std::string filePath)
+{
+	std::ifstream nodeFile;
+	nodeFile.open(filePath, std::ios::app);
+	std::string currentLine;
+	std::vector<std::string> allLines;
+	if (nodeFile.is_open())
+	{
+		while (!nodeFile.eof())
+		{
+			std::getline(nodeFile, currentLine);
+			allLines.push_back(currentLine);
+		}
+	}
+	nodeFile.close();
+
+	return allLines;
 }
 
 HeadlessScene* Simulation::GetLobbyScene() const

@@ -44,9 +44,13 @@ private:
 	void Broadcast(message<GameMsg>& msg, uint32_t exclude = -1);
 	void ScanForDisconnects();
 
+	std::vector<std::string> OpenFile(std::string filePath);
+
 public:
 	Simulation(Server* pServer, HeadlessEngine* pEngine);
 	virtual ~Simulation() = default;
+	bool AICreateNodes();
+	bool AIAStarSearch();
 	bool AddPlayer(uint32_t playerID);
 	bool RemovePlayer(uint32_t playerID);
 	bool AddNPC(uint32_t npcId);
