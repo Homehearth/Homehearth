@@ -428,25 +428,25 @@ bool Simulation::RemovePlayer(uint32_t playerID)
 }
 bool Simulation::AddNPC(uint32_t npcId)
 {
-	LOG_INFO("NPC with ID: %ld added to game!", npcId);
+	//LOG_INFO("NPC with ID: %ld added to game!", npcId);
 
 	Entity npc = m_pGameScene->CreateEntity();
-	npc.AddComponent<comp::Transform>()->position = sm::Vector3(10.f,0.f,10.f);
+	npc.AddComponent<comp::Transform>()->position = sm::Vector3(0.f,0.f,0.f);
 	npc.AddComponent<comp::Velocity>();
-	npc.AddComponent<comp::MeshName>()->name = "Test/monster.fbx";
+	npc.AddComponent<comp::MeshName>()->name = "StreetLamp.obj";
 	npc.AddComponent<comp::NPC>();
 	npc.AddComponent<comp::Network>()->id = npcId;
-	//npc.AddComponent<comp::BoundingOrientedBox>();
+	npc.AddComponent<comp::BoundingOrientedBox>();
 
-	//CollisionSystem::Get().AddOnCollision(npc, [&](Entity other)
-	//{
-	//	comp::NPC* otherNPC = m_pCurrentScene->GetRegistry()->try_get<comp::NPC>(other);
-	//	if (otherNPC)
-	//	{
-	//		LOG_INFO("NPC COLLISION!");
-	//	}
-	//});
-	Broadcast(SingleEntityMessage(npc));
+	CollisionSystem::Get().AddOnCollision(npc, [&](Entity other)
+	{
+		comp::NPC* otherNPC = m_pCurrentScene->GetRegistry()->try_get<comp::NPC>(other);
+		if (otherNPC)
+		{
+			LOG_INFO("NPC COLLISION!");
+		}
+	});
+	//Broadcast(SingleEntityMessage(npc));
 	return true;
 }
 bool Simulation::RemoveNPC(uint32_t npcId)
