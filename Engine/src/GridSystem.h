@@ -13,8 +13,6 @@ private:
 	std::vector<Tile> m_tiles;
 	std::vector<sm::Vector3> m_tilePosiitons;
 
-	bool m_isRenderingGrid;
-
 public:
 	GridSystem();
 	~GridSystem();
@@ -23,5 +21,4 @@ public:
 	void Initialize(sm::Vector2 mapSize, sm::Vector3 position, std::string fileName);
 	std::vector<sm::Vector3>* GetTilePositions();
 	std::vector<Tile>* GetTiles();
-	bool GetIsRendering();
 };

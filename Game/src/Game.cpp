@@ -467,8 +467,9 @@ void Game::OnClientDisconnect()
 
 void Game::CreateGridSystem()
 {
+	GridProperties_t options;
 
-	m_grid.Initialize({ 600,600 }, {0,0,0}, "GridMapBig.png");
+	m_grid.Initialize(options.mapSize, options.position, options.fileName);
 	sm::Vector3 tileModelSize = { 2, 0.5f, 2 };
 	for (int i = 0; i < m_grid.GetTilePositions()->size(); i++)
 	{

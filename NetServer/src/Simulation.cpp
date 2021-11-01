@@ -260,8 +260,8 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 
 
 	//Gridsystem
-	//GridProperties_t gridOption = 
-	m_grid.Initialize({ 600, 600 }, { 0,0,0 }, "GridMap.png");
+	GridProperties_t gridOption;
+	m_grid.Initialize(gridOption.mapSize, gridOption.position, gridOption.fileName);
 
 	
 	// Automatically join created lobby

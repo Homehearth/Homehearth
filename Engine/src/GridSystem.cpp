@@ -35,7 +35,6 @@ void GridSystem::Initialize(sm::Vector2 mapSize, sm::Vector3 position, std::stri
 	for (int i = 0; i < m_gridSize.x * m_gridSize.y * 4; i++)
 	{
 		pixelValues.push_back((int)pixelsData[i]);
-		//std::cout << (int)pixelsData[i] << "  " << (int)pixelsData[i + 1] << "  " << (int)pixelsData[i + 2] << "  " << (int)pixelsData[i+3] << std::endl;
 	}
 
 	//Initialize all tiles
@@ -47,27 +46,25 @@ void GridSystem::Initialize(sm::Vector2 mapSize, sm::Vector3 position, std::stri
 
 			sm::Vector4 rgba;
 
-			rgba.x = pixelValues.at(0 + (row + (col * m_gridSize.y)) * 4);
-			rgba.y = pixelValues.at(1 + (row + (col * m_gridSize.y)) * 4);
-			rgba.z = pixelValues.at(2 + (row + (col * m_gridSize.y)) * 4);
-			rgba.w = pixelValues.at(3 + (row + (col * m_gridSize.y)) * 4);
+			rgba.x = (float)pixelValues.at((long)0 + ((row + (col * (int)m_gridSize.y)) * 4));
+			rgba.y = (float)pixelValues.at((long)1 + ((row + (col * (int)m_gridSize.y)) * 4));
+			rgba.z = (float)pixelValues.at((long)2 + ((row + (col * (int)m_gridSize.y)) * 4));
+			rgba.w = (float)pixelValues.at((long)3 + ((row + (col * (int)m_gridSize.y)) * 4));
 
 			//std::cout << "RGBA: " << rgba.x << " " << rgba.y << " " << rgba.z << " " << rgba.w << std::endl;
 
 			if (rgba == sm::Vector4{ 0, 255, 0, 255 }) // If Green
+
 			{
 				tileTypeTemp = TileType::EMPTY;
-				//std::cout << "  Empty    tile on: " << (float)row << " " << (float)col << "   with " << ", RGBA: " << rgba.x << " " << rgba.y << " " << rgba.z << " " << rgba.w << std::endl;
 			}
 			if (rgba == sm::Vector4{ 255, 0, 0, 255 }) // if Red
 			{
 				tileTypeTemp = TileType::BUILDING;
-				//std::cout << " Building  tile on: " << (float)row << " " << (float)col << "   with " << ", RGBA: " << rgba.x << " " << rgba.y << " " << rgba.z << " " << rgba.w << std::endl;
 			}
 			if (rgba == sm::Vector4{ 0, 0, 255, 255 }) // if Blue
 			{
 				tileTypeTemp = TileType::DEFENCE;
-				//std::cout << " Defence  tile on: " << (float)row << " " << (float)col << "   with " << ", RGBA: " << rgba.x << " " << rgba.y << " " << rgba.z << " " << rgba.w << std::endl;
 			}
 
 			Tile tileTemp;
@@ -80,6 +77,8 @@ void GridSystem::Initialize(sm::Vector2 mapSize, sm::Vector3 position, std::stri
 			tileTemp.SetPosition(tilePosition);
 		}
 	}
+
+	stbi_image_free(pixelsData);
 }
 
 std::vector<sm::Vector3>* GridSystem::GetTilePositions()
@@ -90,9 +89,4 @@ std::vector<sm::Vector3>* GridSystem::GetTilePositions()
 std::vector<Tile>* GridSystem::GetTiles()
 {
 	return &m_tiles;
-}
-
-bool GridSystem::GetIsRendering()
-{
-	return &m_isRenderingGrid;
 }

@@ -119,10 +119,10 @@ struct light_t
 	float		padding		= 0;
 };
 
-static struct GridProperties_t 
+static struct GridProperties_t
 {
-	sm::Vector3 position;
-	sm::Vector2 mapSize;
-	std::string fileName;
+	sm::Vector3 position = sm::Vector3(0, 0, 0);
+	sm::Vector2 mapSize = sm::Vector2(600, 600);
+	std::string fileName = "GridMapBig.png";
 
-} Options = { {0,0,0},{600,600} ,"GridMapBig.png"};
+} Options;
