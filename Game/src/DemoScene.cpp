@@ -12,7 +12,7 @@ namespace sceneHelp
 	Entity CreatePlayerEntity(HeadlessScene& scene, uint32_t playerID)
 	{
 		Entity playerEntity = scene.CreateEntity();
-		playerEntity.AddComponent<comp::Transform>();
+		playerEntity.AddComponent<comp::Transform>()->position = { 0,0,1 };
 
 		comp::BoundingOrientedBox* playerObb = playerEntity.AddComponent<comp::BoundingOrientedBox>();
 		playerObb->Extents = sm::Vector3{ 1.f,1.f,1.f };
@@ -112,62 +112,21 @@ namespace sceneHelp
 
 		gameScene.SetCurrentCameraEntity(cameraEntity);
 
-		//TODO: Remove grid stuff
-		/*GridSystem grid;
-		grid.Initialize({ 600, 600 }, {0,0,0}, "GridMapBig.png");
-		sm::Vector3 tileModelSize = { 2, 0.5f, 2 };
-		for (int i = 0; i < grid.GetTilePositions()->size(); i++)
-		{
-			if (grid.GetTiles()->at(i).GetType() == TileType::EMPTY)
-			{
-				Entity tile1 = gameScene.CreateEntity();
-				comp::Transform* transformt1 = tile1.AddComponent<comp::Transform>();
-				transformt1->position = grid.GetTilePositions()->at(i);
-				transformt1->scale = tileModelSize;
-				comp::Renderable* renderablet1 = tile1.AddComponent<comp::Renderable>();
-				renderablet1->model = ResourceManager::Get().GetResource<RModel>("Cube.obj");
-				renderablet1->model->ChangeMaterial("TileEmpty.mtl");
-			}
-			else if (grid.GetTiles()->at(i).GetType() == TileType::BUILDING)
-			{
-				Entity tile2 = gameScene.CreateEntity();
-				comp::Transform* transformt2 = tile2.AddComponent<comp::Transform>();
-				transformt2->position = grid.GetTilePositions()->at(i);
-				transformt2->scale = tileModelSize;
-				comp::Renderable* renderablet2 = tile2.AddComponent<comp::Renderable>();
-				renderablet2->model = ResourceManager::Get().GetResource<RModel>("Cube1.obj");
-				renderablet2->model->ChangeMaterial("TileBuilding.mtl");
-			}
-			else if (grid.GetTiles()->at(i).GetType() == TileType::DEFENCE)
-			{
-				Entity tile3 = gameScene.CreateEntity();
-				comp::Transform* transformt3 = tile3.AddComponent<comp::Transform>();
-				transformt3->position = grid.GetTilePositions()->at(i);
-				transformt3->scale = tileModelSize;
-				comp::Renderable* renderablet3 = tile3.AddComponent<comp::Renderable>();
-				renderablet3->model = ResourceManager::Get().GetResource<RModel>("CubeD.obj");
-				renderablet3->model->ChangeMaterial("TileDefence.mtl");
-			}
-			else 
-			{
-				std::cout << "Couldnt create this tile" << std::endl;
-			}
-		}*/
 
-		for (int i = 0; i < 5; i++)
-		{
-			// Debug Chest
-			Entity chest = gameScene.CreateEntity();
-			comp::Transform* transform = chest.AddComponent<comp::Transform>();
-			transform->position.z = 5.0f * static_cast<float>(i) + 0.2f;
-			comp::Velocity* chestVelocity = chest.AddComponent<comp::Velocity>();
-			comp::BoundingOrientedBox* sphere = chest.AddComponent<comp::BoundingOrientedBox>();
-			sphere->Center = transform->position;
-			sphere->Extents = sm::Vector3(2.0f);
-			comp::Renderable* renderable2 = chest.AddComponent<comp::Renderable>();
-			
-			renderable2->model = ResourceManager::Get().GetResource<RModel>("Chest.obj");
-		}
+		//for (int i = 0; i < 5; i++)
+		//{
+		//	// Debug Chest
+		//	Entity chest = gameScene.CreateEntity();
+		//	comp::Transform* transform = chest.AddComponent<comp::Transform>();
+		//	transform->position.z = 5.0f * static_cast<float>(i) + 0.2f;
+		//	comp::Velocity* chestVelocity = chest.AddComponent<comp::Velocity>();
+		//	comp::BoundingOrientedBox* sphere = chest.AddComponent<comp::BoundingOrientedBox>();
+		//	sphere->Center = transform->position;
+		//	sphere->Extents = sm::Vector3(2.0f);
+		//	comp::Renderable* renderable2 = chest.AddComponent<comp::Renderable>();
+		//	
+		//	renderable2->model = ResourceManager::Get().GetResource<RModel>("Chest.obj");
+		//}
 
 		CreateLightEntity(gameScene, { 0.f, 0.f, 0.f, 0.f }, { 1.f, -1.f, 0.f, 0.f }, { 10.f, 10.f, 10.f, 10.f }, 0, TypeLight::DIRECTIONAL, 1);
 		CreateLightEntity(gameScene, { 0.f, 8.f, -10.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 300.f, 300.f, 300.f, 300.f }, 75.f, TypeLight::POINT, 1);

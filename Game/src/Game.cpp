@@ -468,9 +468,8 @@ void Game::OnClientDisconnect()
 void Game::CreateGridSystem()
 {
 	GridProperties_t options;
-
 	m_grid.Initialize(options.mapSize, options.position, options.fileName);
-	sm::Vector3 tileModelSize = { 2, 0.5f, 2 };
+	sm::Vector3 tileModelSize = { 4.2, 0.5f, 4.2 };
 	for (int i = 0; i < m_grid.GetTilePositions()->size(); i++)
 	{
 		if (m_grid.GetTiles()->at(i).GetType() == TileType::EMPTY)
@@ -483,7 +482,7 @@ void Game::CreateGridSystem()
 			renderablet1->model = ResourceManager::Get().GetResource<RModel>("Cube.obj");
 			renderablet1->model->ChangeMaterial("TileEmpty.mtl");
 		}
-		else if (m_grid.GetTiles()->at(i).GetType() == TileType::BUILDING)
+		else if (m_grid.GetTiles()->at(i).GetType() == TileType::BUILDING || m_grid.GetTiles()->at(i).GetType() == TileType::UNPLACABLE)
 		{
 			Entity tile2 = GetScene("Game").CreateEntity();
 			comp::Transform* transformt2 = tile2.AddComponent<comp::Transform>();
@@ -493,7 +492,7 @@ void Game::CreateGridSystem()
 			renderablet2->model = ResourceManager::Get().GetResource<RModel>("Cube1.obj");
 			renderablet2->model->ChangeMaterial("TileBuilding.mtl");
 		}
-		else if (m_grid.GetTiles()->at(i).GetType() == TileType::DEFENCE)
+		else if (m_grid.GetTiles()->at(i).GetType() == TileType::DEFAULT)
 		{
 			Entity tile3 = GetScene("Game").CreateEntity();
 			comp::Transform* transformt3 = tile3.AddComponent<comp::Transform>();

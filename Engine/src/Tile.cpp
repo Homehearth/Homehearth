@@ -17,7 +17,7 @@ void Tile::Initialize(sm::Vector2 size, sm::Vector2 gridID, sm::Vector3 poisitio
 	m_gridID = gridID;
 	m_poisition = poisition;
 	m_type = type;
-	m_halfWidth = m_size.x * 0.5f;
+	m_halfWidth = m_size.x /2;
 }
 
 void Tile::SetPosition(sm::Vector3 position)

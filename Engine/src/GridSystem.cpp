@@ -46,25 +46,28 @@ void GridSystem::Initialize(sm::Vector2 mapSize, sm::Vector3 position, std::stri
 
 			sm::Vector4 rgba;
 
-			rgba.x = (float)pixelValues.at((long)0 + ((row + (col * (int)m_gridSize.y)) * 4));
-			rgba.y = (float)pixelValues.at((long)1 + ((row + (col * (int)m_gridSize.y)) * 4));
-			rgba.z = (float)pixelValues.at((long)2 + ((row + (col * (int)m_gridSize.y)) * 4));
-			rgba.w = (float)pixelValues.at((long)3 + ((row + (col * (int)m_gridSize.y)) * 4));
+			rgba.x = (float)pixelValues.at(0 + ((row + (col * (int)m_gridSize.y)) * 4));
+			rgba.y = (float)pixelValues.at(1 + ((row + (col * (int)m_gridSize.y)) * 4));
+			rgba.z = (float)pixelValues.at(2 + ((row + (col * (int)m_gridSize.y)) * 4));
+			rgba.w = (float)pixelValues.at(3 + ((row + (col * (int)m_gridSize.y)) * 4));
 
 			//std::cout << "RGBA: " << rgba.x << " " << rgba.y << " " << rgba.z << " " << rgba.w << std::endl;
 
-			if (rgba == sm::Vector4{ 0, 255, 0, 255 }) // If Green
-
+			if (rgba == sm::Vector4{ 100, 100, 100, 255 })
 			{
 				tileTypeTemp = TileType::EMPTY;
 			}
-			if (rgba == sm::Vector4{ 255, 0, 0, 255 }) // if Red
+			if (rgba == sm::Vector4{ 255, 51, 0, 255 })
 			{
 				tileTypeTemp = TileType::BUILDING;
 			}
-			if (rgba == sm::Vector4{ 0, 0, 255, 255 }) // if Blue
+			if (rgba == sm::Vector4{ 255, 234, 0, 255 } || rgba == sm::Vector4{ 0, 21, 255, 255 })
 			{
-				tileTypeTemp = TileType::DEFENCE;
+				tileTypeTemp = TileType::UNPLACABLE;
+			}
+			if (rgba == sm::Vector4{ 0, 0, 0, 255 })
+			{
+				tileTypeTemp = TileType::DEFAULT;
 			}
 
 			Tile tileTemp;
@@ -72,7 +75,7 @@ void GridSystem::Initialize(sm::Vector2 mapSize, sm::Vector3 position, std::stri
 			m_tiles.push_back(tileTemp);
 
 			float tileHalfWidth = tileTemp.GetHalfWidth();
-			sm::Vector3 tilePosition = { tileHalfWidth + tileHalfWidth * row + m_position.x, 0.f + m_position.y, tileHalfWidth + tileHalfWidth * col + m_position.z };
+			sm::Vector3 tilePosition = {m_position.x + (tileHalfWidth * row) + tileHalfWidth/2, m_position.y + 0.f , -(tileHalfWidth * col) - (tileHalfWidth/2) + m_position.z};
 			m_tilePosiitons.push_back(tilePosition);
 			tileTemp.SetPosition(tilePosition);
 		}

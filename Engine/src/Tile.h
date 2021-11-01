@@ -6,6 +6,7 @@ enum class TileType
 	DEFAULT,
 	EMPTY,
 	BUILDING,
+	UNPLACABLE,
 	DEFENCE
 };
 
