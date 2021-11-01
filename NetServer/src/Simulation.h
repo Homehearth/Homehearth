@@ -45,6 +45,8 @@ private:
 	void ScanForDisconnects();
 
 	std::vector<std::string> OpenFile(std::string filePath);
+	void ConnectNodes(comp::Node* node1, comp::Node* node2);
+	comp::Node* GetAINodeById(uint32_t id);
 
 public:
 	Simulation(Server* pServer, HeadlessEngine* pEngine);
