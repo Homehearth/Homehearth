@@ -43,23 +43,27 @@ void Scene::Update(float dt)
 	if (!m_debugRenderableCopies.IsSwapped())
 	{
 		m_debugRenderableCopies[0].clear();
-		m_registry.view<comp::RenderableDebug, comp::Transform>().each([&](entt::entity entity, comp::RenderableDebug& r, comp::Transform& t)
+		m_registry.view<comp::RenderableDebug>().each([&](entt::entity entity, comp::RenderableDebug& r)
 			{
-				sm::Matrix mat;
 				comp::BoundingOrientedBox* obb = m_registry.try_get<comp::BoundingOrientedBox>(entity);
 				comp::BoundingSphere* sphere = m_registry.try_get<comp::BoundingSphere>(entity);
+				
+				comp::Transform transform;
+				transform.rotation = sm::Quaternion::Identity;
+
 				if (obb != nullptr)
 				{
-					mat = sm::Matrix::CreateScale(obb->Extents);
+					transform.scale = sm::Vector3(obb->Extents);
+					transform.position = obb->Center;
+					transform.rotation = obb->Orientation;
 				}
 				else if (sphere != nullptr)
 				{
-					mat = sm::Matrix::CreateScale(sm::Vector3(sphere->Radius, sphere->Radius, sphere->Radius));
+					transform.scale = sm::Vector3(sphere->Radius);
+					transform.position = sphere->Center;
 				}
-				mat *= sm::Matrix::CreateWorld(t.position, ecs::GetForward(t), ecs::GetUp(t));
-
-
-				r.data.worldMatrix = mat;
+				
+				r.data.worldMatrix = ecs::GetMatrix(transform);
 				m_debugRenderableCopies[0].push_back(r);
 			});
 

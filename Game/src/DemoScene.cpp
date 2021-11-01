@@ -58,7 +58,7 @@ namespace sceneHelp
 
 		mainMenuScene.on<ESceneUpdate>([backgroundScene](const ESceneUpdate& e, Scene& scene)
 			{
-				backgroundScene.GetComponent<comp::Transform>()->rotation.y += e.dt;
+				//backgroundScene.GetComponent<comp::Transform>()->rotation.y += e.dt;
 
 				IMGUI(
 					ImGui::Begin("Scene");

@@ -451,6 +451,7 @@ Entity Game::CreateEntityFromMessage(message<GameMsg>& msg)
 			{
 				comp::Transform t;
 				msg >> t;
+				t.rotation.Normalize();
 				*e.AddComponent<comp::Transform>() = t;
 				break;
 			}
@@ -498,7 +499,7 @@ Entity Game::CreateEntityFromMessage(message<GameMsg>& msg)
 			}
 			default:
 				LOG_WARNING("Retrieved unimplemented component %u", i)
-					break;
+				break;
 			}
 		}
 	}
@@ -511,7 +512,7 @@ void Game::UpdateInput()
 {
 	m_inputState.axisHorizontal = InputSystem::Get().GetAxis(Axis::HORIZONTAL);
 	m_inputState.axisVertical = InputSystem::Get().GetAxis(Axis::VERTICAL);
-	if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED))
+	if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::HELD))
 	{
 		m_inputState.leftMouse = true;
 		m_inputState.mouseRay = InputSystem::Get().GetMouseRay();
