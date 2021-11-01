@@ -162,6 +162,21 @@ void Game::OnUserUpdate(float deltaTime)
 	ImGui::End();
 	);
 
+	GridProperties_t options;
+	IMGUI(
+		ImGui::Begin("Gridsystem");
+		ImGui::Checkbox("Hide", &options.isVisible);
+	);
+	//if (!options.isVisible)
+	//{
+	//	std::cout << "STOP" << std::endl;
+
+	//	GetScene("Game").ForEachComponent<comp::Tag<TagType::TILE>>([&](Entity entt, comp::Renderable& rend)
+	//		{
+	//			//TODO: rendable to false on all tiles
+	//			std::cout << "*tile invisible*" << std::endl;
+	//		});
+	//}
 
 	if (GetCurrentScene() == &GetScene("Game") && GetCurrentScene()->GetCurrentCamera()->GetCameraType() == CAMERATYPE::PLAY)
 	{
@@ -481,6 +496,7 @@ void Game::CreateGridSystem()
 			comp::Renderable* renderablet1 = tile1.AddComponent<comp::Renderable>();
 			renderablet1->model = ResourceManager::Get().GetResource<RModel>("Cube.obj");
 			renderablet1->model->ChangeMaterial("TileEmpty.mtl");
+			tile1.AddComponent<comp::Tag<TagType::TILE>>();
 		}
 		else if (m_grid.GetTiles()->at(i).GetType() == TileType::BUILDING || m_grid.GetTiles()->at(i).GetType() == TileType::UNPLACABLE)
 		{
@@ -491,6 +507,7 @@ void Game::CreateGridSystem()
 			comp::Renderable* renderablet2 = tile2.AddComponent<comp::Renderable>();
 			renderablet2->model = ResourceManager::Get().GetResource<RModel>("Cube1.obj");
 			renderablet2->model->ChangeMaterial("TileBuilding.mtl");
+			tile2.AddComponent<comp::Tag<TagType::TILE>>();
 		}
 		else if (m_grid.GetTiles()->at(i).GetType() == TileType::DEFAULT)
 		{
@@ -501,6 +518,7 @@ void Game::CreateGridSystem()
 			comp::Renderable* renderablet3 = tile3.AddComponent<comp::Renderable>();
 			renderablet3->model = ResourceManager::Get().GetResource<RModel>("CubeD.obj");
 			renderablet3->model->ChangeMaterial("TileDefence.mtl");
+			tile3.AddComponent<comp::Tag<TagType::TILE>>();
 		}
 		else
 		{

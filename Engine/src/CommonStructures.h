@@ -124,5 +124,6 @@ static struct GridProperties_t
 	sm::Vector3 position = sm::Vector3(0, 0, 0);
 	sm::Vector2 mapSize = sm::Vector2(1200, 1200);
 	std::string fileName = "GridMap.png";
+	bool isVisible;
 
 } Options;
