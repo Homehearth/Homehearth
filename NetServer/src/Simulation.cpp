@@ -210,14 +210,6 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 
 	this->m_gameID = gameID;
 
-	
-	//init waveQueue
-	waveQueue.emplace(std::make_pair(EnemyManagement::WaveType::Swarm, sm::Vector2{ 0.0,0.0 }));
-	waveQueue.emplace(std::make_pair(EnemyManagement::WaveType::Swarm, sm::Vector2{ 0.0,0.0 }));
-	waveQueue.emplace(std::make_pair(EnemyManagement::WaveType::Swarm, sm::Vector2{ 0.0,0.0 }));
-	waveQueue.emplace(std::make_pair(EnemyManagement::WaveType::Flank_North, sm::Vector2{ 0.0,0.0 }));
-	waveQueue.emplace(std::make_pair(EnemyManagement::WaveType::Flank_North, sm::Vector2{ 0.0,0.0 }));
-	
 	//Setting the configurations for the wave system
 	waveInfo =
 	{
@@ -225,8 +217,15 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 		waveInfo.spawnDistance = 100.f,
 		waveInfo.scaleMultiplier = 2,
 		waveInfo.waveCount = 0,
-		waveInfo.flankWidth = 50.f
+		waveInfo.flankWidth = 100.f
 	};
+	
+	//init waveQueue
+	waveQueue.emplace(std::make_pair(EnemyManagement::WaveType::Zone, sm::Vector2{ 200.0,0.0 }));
+	waveQueue.emplace(std::make_pair(EnemyManagement::WaveType::Zone, sm::Vector2{ -200.0,0.0 }));
+	waveQueue.emplace(std::make_pair(EnemyManagement::WaveType::Zone, sm::Vector2{ 0.0,200 }));
+	waveQueue.emplace(std::make_pair(EnemyManagement::WaveType::Zone, sm::Vector2{ 0.0,-200 }));
+	waveQueue.emplace(std::make_pair(EnemyManagement::WaveType::Zone, sm::Vector2{ 200.0,200.0 }));
 	
 	
 	// Create Scenes associated with this Simulation
