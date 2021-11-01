@@ -63,7 +63,7 @@ bool Game::OnStartup()
 {
 	// Scene logic
 	sceneHelp::CreateLobbyScene(this);
-	sceneHelp::CreateGameScene(*this);
+	sceneHelp::CreateGameScene(this);
 	sceneHelp::CreateMainMenuScene(this);
 	sceneHelp::CreateJoinLobbyScene(this);
 	sceneHelp::CreateLoadingScene(this);
@@ -274,7 +274,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 						}
 					});
 			}
-			else
+			else if(e.GetComponent<comp::Player>())
 			{
 				m_players[e.GetComponent<comp::Network>()->id] = e;
 			}
@@ -315,7 +315,16 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		SetScene("Lobby");
 		LOG_INFO("You are now in lobby: %lu", m_gameID);
 
-		//GetScene("Lobby").GetElement<rtd::Text>("lobbyID")->SetText("Lobby ID: " + std::to_string(m_gameID));
+		// Update the lobby ID visual
+		Element2D* elem = GetScene("Lobby").GetCollection("LobbyDesc")->elements[1].get();
+		if (elem)
+		{
+			rtd::Text* text = dynamic_cast<rtd::Text*>(elem);
+			if (text)
+			{
+				text->SetText("LobbyID: " + std::to_string(m_gameID));
+			}
+		}
 
 		break;
 	}
@@ -333,7 +342,10 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		//m_isLeavingLobby = false;
 		m_gameID = -1;
 		SetScene("JoinLobby");
-
+		for (int i = 0; i < MAX_PLAYERS_PER_LOBBY; i++)
+		{
+			GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i + 1))->Hide();
+		}
 		break;
 	}
 	case GameMsg::Lobby_PlayerJoin:
@@ -354,6 +366,43 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		{
 			m_players.at(playerID).Destroy();
 			m_players.erase(playerID);
+		}
+
+		// Update visuals.
+		for (int i = 0; i < MAX_PLAYERS_PER_LOBBY; i++)
+		{
+			GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i + 1))->Hide();
+		}
+		const int nrOfPlayers = (int)m_players.size();
+		for (int i = 0; i < nrOfPlayers; i++)
+		{
+			GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i + 1))->Show();
+
+		}
+		break;
+	}
+	case GameMsg::Lobby_Update:
+	{
+		uint32_t playerID;
+		std::string playerPlate;
+		msg >> playerPlate;
+		msg >> playerID;
+		if (int i = m_players.find(playerID) != m_players.end())
+		{
+			m_players.at(playerID).GetComponent<comp::NamePlate>()->namePlate = playerPlate;
+			dynamic_cast<rtd::Text*>(GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i + 1))->elements[1].get())->SetText(playerPlate);
+		}
+
+		// Update visiblity of present players.
+		const int nrOfPlayers = (int)m_players.size();
+		for (int i = 0; i < MAX_PLAYERS_PER_LOBBY; i++)
+		{
+			GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i + 1))->Hide();
+		}
+		for (int i = 0; i < nrOfPlayers; i++)
+		{
+			GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i + 1))->Show();
+
 		}
 		break;
 	}
@@ -376,6 +425,7 @@ void Game::JoinLobby(uint32_t lobbyID)
 	{
 		message<GameMsg> msg;
 		msg.header.id = GameMsg::Lobby_Join;
+		msg << m_playerName;
 		msg << this->m_localPID << lobbyID;
 		m_client.Send(msg);
 	}
@@ -392,6 +442,7 @@ void Game::CreateLobby()
 		message<GameMsg> msg;
 
 		msg.header.id = GameMsg::Lobby_Create;
+		msg << m_playerName;
 		msg << this->m_localPID;
 		m_client.Send(msg);
 	}
@@ -466,6 +517,13 @@ Entity Game::CreateEntityFromMessage(message<GameMsg>& msg)
 				std::string name;
 				msg >> name;
 				e.AddComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>(name);
+				break;
+			}
+			case ecs::Component::NAME_PLATE:
+			{
+				std::string name;
+				msg >> name;
+				e.AddComponent<comp::NamePlate>()->namePlate = name;
 				break;
 			}
 			case ecs::Component::BOUNDING_ORIENTED_BOX:

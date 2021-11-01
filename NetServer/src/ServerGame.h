@@ -17,7 +17,7 @@ private:
 	// User defined function to check messages which must comply with the function pointer arguments from Server
 	void CheckIncoming(message<GameMsg>& msg);
 
-	bool CreateSimulation(uint32_t playerID);
+	bool CreateSimulation(uint32_t playerID, const std::string& mainPlayerPlate = "Noobie");
 	
 	// Inherited via HeadlessEngine
 	virtual void UpdateNetwork(float deltaTime) override;

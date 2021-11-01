@@ -169,6 +169,11 @@ void Scene::Add2DCollection(Collection2D* collection, const char* name)
 	m_2dHandler.AddElementCollection(collection, name);
 }
 
+Collection2D* Scene::GetCollection(const std::string& name)
+{
+	return m_2dHandler.GetCollection(name);
+}
+
 bool Scene::IsRender3DReady() const
 {
 	return m_renderableCopies.IsSwapped();

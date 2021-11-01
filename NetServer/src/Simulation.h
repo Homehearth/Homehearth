@@ -38,15 +38,17 @@ public:
 	Simulation(Server* pServer, HeadlessEngine* pEngine);
 	virtual ~Simulation() = default;
 
-	bool AddPlayer(uint32_t playerID);
+	bool AddPlayer(uint32_t playerID, const std::string& namePlate = "Noobie");
 	bool RemovePlayer(uint32_t playerID);
 	bool AddEnemy();
 	
 	void SendSnapshot();
-	bool JoinLobby(uint32_t playerID, uint32_t gameID);
+	bool JoinLobby(uint32_t playerID, uint32_t gameID, const std::string& namePlate = "Noobie");
 	bool LeaveLobby(uint32_t playerID, uint32_t gameID);
+	// Update the visuals to the player.
+	void UpdateLobby();
 
-	bool Create(uint32_t playerID, uint32_t gameID);
+	bool Create(uint32_t playerID, uint32_t gameID, const std::string& namePlate = "Noobie");
 	void Destroy();
 
 	// Updates the lobby.

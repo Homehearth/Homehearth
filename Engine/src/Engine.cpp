@@ -20,6 +20,8 @@ void Engine::Startup()
 
 	// Window Startup:
 	Window::Desc config;
+	//config.height = 1080;
+	//config.width = 1920;
 	config.title = L"Engine";
 	if (!m_window.Initialize(config))
 	{

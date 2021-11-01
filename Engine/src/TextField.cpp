@@ -33,6 +33,12 @@ void rtd::TextField::Update()
 			m_stringText.push_back(c);
 		}
 
+		if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Keys::Space, KeyState::PRESSED))
+		{
+			const char space = ' ';
+			m_stringText.push_back(space);
+		}
+
 	}
 	// Remove with the backspace
 	if ((InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Keys::Back, KeyState::PRESSED) && (m_stringText.length() > 0)) == 1)
@@ -77,12 +83,18 @@ void rtd::TextField::SetDescriptionText(const std::string& displayText)
 {
 	if (!m_infoText)
 	{
-		m_infoText = std::make_unique<Text>(displayText, draw_text_t(m_opts.x_pos, m_opts.y_pos - 50.0f, m_opts.x_stretch, m_opts.y_stretch));
+		m_infoText = std::make_unique<Text>(displayText, draw_text_t(m_opts.x_pos, m_opts.y_pos - D2D1Core::GetDefaultFontSize(), m_opts.x_stretch, m_opts.y_stretch));
 
 		return;
 	}
 
 	m_infoText->SetText(displayText);
+}
+
+void rtd::TextField::SetPresetText(const std::string& displayText)
+{
+	m_text->SetText(displayText);
+	m_stringText = displayText;
 }
 
 std::string* rtd::TextField::RawGetBuffer()

@@ -45,6 +45,16 @@ void Simulation::InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg)co
 			}
 			break;
 		}
+		case ecs::Component::NAME_PLATE:
+		{
+			comp::NamePlate* n = entity.GetComponent<comp::NamePlate>();
+			if (n)
+			{
+				compSet.set(ecs::Component::NAME_PLATE);
+				msg << n->namePlate;
+			}
+			break;
+		}
 		case ecs::Component::BOUNDING_ORIENTED_BOX:
 		{
 			comp::BoundingOrientedBox* b = entity.GetComponent<comp::BoundingOrientedBox>();
@@ -116,7 +126,7 @@ Simulation::Simulation(Server* pServer, HeadlessEngine* pEngine)
 	this->m_tick = 0;
 }
 
-bool Simulation::JoinLobby(uint32_t playerID, uint32_t gameID)
+bool Simulation::JoinLobby(uint32_t playerID, uint32_t gameID, const std::string& namePlate)
 {
 	if (m_pCurrentScene == m_pGameScene)
 	{
@@ -138,13 +148,15 @@ bool Simulation::JoinLobby(uint32_t playerID, uint32_t gameID)
 		m_pServer->SendToClient(playerID, msg);
 
 		// Add the players to the simulation on that specific client
-		this->AddPlayer(playerID);
+		this->AddPlayer(playerID, namePlate);
 
 		message<GameMsg> msg2;
 		msg2.header.id = GameMsg::Lobby_PlayerJoin;
 		msg << playerID;
 
-		this->Broadcast(msg2);
+		this->Broadcast(msg2, playerID);
+
+		UpdateLobby();
 	}
 	else
 	{
@@ -178,11 +190,30 @@ bool Simulation::LeaveLobby(uint32_t playerID, uint32_t gameID)
 	msg << playerID;
 	this->Broadcast(msg);
 
+	UpdateLobby();
+
 	return true;
 }
 
+void Simulation::UpdateLobby()
+{
+	for (auto& player : m_players)
+	{
+		network::message<GameMsg> msg;
+		msg.header.id = GameMsg::Lobby_Update;
+		std::string name = player.second.GetComponent<comp::NamePlate>()->namePlate;
+		// Send ID first.
+		msg << (uint32_t)player.first;
+		// After that name.
+		msg << name;
 
-bool Simulation::Create(uint32_t playerID, uint32_t gameID)
+		// Send message to each other player and skip the current one.
+		this->Broadcast(msg, player.first);
+	}
+}
+
+
+bool Simulation::Create(uint32_t playerID, uint32_t gameID, const std::string& namePlate)
 {
 	this->m_gameID = gameID;
 	// Create Scenes associated with this Simulation
@@ -256,7 +287,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 	m_pCurrentScene = m_pLobbyScene;
 
 	// Automatically join created lobby
-	JoinLobby(playerID, gameID);
+	JoinLobby(playerID, gameID, namePlate);
 
 	return true;
 }
@@ -314,7 +345,7 @@ bool Simulation::IsEmpty() const
 	return m_players.empty();
 }
 
-bool Simulation::AddPlayer(uint32_t playerID)
+bool Simulation::AddPlayer(uint32_t playerID, const std::string& namePlate)
 {
 	if (!m_pServer->isClientConnected(playerID))
 	{
@@ -328,6 +359,7 @@ bool Simulation::AddPlayer(uint32_t playerID)
 	Entity player = m_pGameScene->CreateEntity();
 	player.AddComponent<comp::Transform>();
 	player.AddComponent<comp::Velocity>();
+	player.AddComponent<comp::NamePlate>()->namePlate = namePlate;
 	player.AddComponent<comp::MeshName>()->name = "Arrow.fbx";
 	player.AddComponent<comp::Network>()->id = playerID;
 	player.AddComponent<comp::Player>()->runSpeed = 10.f;

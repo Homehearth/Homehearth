@@ -23,6 +23,7 @@ namespace rtd
 
 		bool m_isUsed;
 		bool m_finalInput;
+		bool m_isRestricted = true;
 
 		// Update the text on text field
 		void Update();
@@ -31,6 +32,7 @@ namespace rtd
 		TextField(const draw_text_t& opts, size_t textLimit = -1, bool isUsed = false, D2D1_COLOR_F borderColor = {0.0f, 0.0f, 0.0f, 1.0f});
 
 		void SetDescriptionText(const std::string& displayText);
+		void SetPresetText(const std::string& preset);
 
 		// Get the buffer from textfield directly.
 		std::string* RawGetBuffer();
