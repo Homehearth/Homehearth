@@ -275,7 +275,8 @@ void Simulation::ReadyCheck(const uint32_t& playerID)
 		{
 			m_players.at(playerID).GetComponent<comp::Player>()->isReady = true;
 
-#ifdef _DEBUG
+			// DEBUG
+//#ifdef _DEBUG
 			// Debugging allow only one player to start.
 			m_pCurrentScene = m_pGameScene;
 			// Start the game.
@@ -283,7 +284,7 @@ void Simulation::ReadyCheck(const uint32_t& playerID)
 			msg.header.id = GameMsg::Game_Start;
 			this->Broadcast(msg);
 			return;
-#endif
+//#endif
 			auto it = m_players.begin();
 			
 			uint32_t readyCount = 0;

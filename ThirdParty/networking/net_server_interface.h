@@ -198,7 +198,7 @@ namespace network
 	{
 		if (SI->msgTempIn.header.size > 0)
 		{
-			if (SI->msgTempIn.header.size > 30000)
+			if (SI->msgTempIn.header.size > 9999999)
 			{
 				LOG_ERROR("Message corrupted, skipping over!");
 				ZeroMemory(&SI->msgTempIn.header, sizeof(msg_header<T>));
@@ -555,7 +555,8 @@ namespace network
 		for (p = servinfo; p != nullptr; p = p->ai_next)
 		{
 			EnterCriticalSection(&lock);
-			LOG_NETWORK(PrintSocketData(p).c_str());
+			std::string socketData = PrintSocketData(p);
+			LOG_NETWORK(socketData.c_str());
 			LeaveCriticalSection(&lock);
 
 			listener = WSASocket(p->ai_family, p->ai_socktype, p->ai_protocol, NULL, 0, WSA_FLAG_OVERLAPPED);
