@@ -260,7 +260,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 
 	// --- WORLD ---
 	Entity e2 = m_pGameScene->CreateEntity();
-	e2.AddComponent<comp::Transform>()->position = { -250, -2, 300 };
+	e2.AddComponent<comp::Transform>();// ->position = { -250, -2, 300 };
 	e2.AddComponent<comp::MeshName>()->name = "GameScene.obj";
 	e2.AddComponent<comp::Tag<TagType::STATIC>>();
 	// send entity
@@ -274,6 +274,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 		collider.AddComponent<comp::BoundingOrientedBox>()->Center = mapColliders->at(i).Center;
 		collider.GetComponent<comp::BoundingOrientedBox>()->Extents = mapColliders->at(i).Extents;
 		collider.GetComponent<comp::BoundingOrientedBox>()->Orientation = mapColliders->at(i).Orientation;
+		//collider.AddComponent<comp::Transform>()->position = mapColliders->at(i).Center;
 		collider.AddComponent<comp::Network>();
 		collider.AddComponent<comp::Tag<TagType::STATIC>>();
 	}
@@ -355,14 +356,20 @@ bool Simulation::AddPlayer(uint32_t playerID)
 	player.AddComponent<comp::Transform>();
 	player.AddComponent<comp::Velocity>();
 	player.AddComponent<comp::MeshName>()->name = "Arrow.fbx";
+#ifdef _DEBUG
+	player.AddComponent<comp::Player>()->runSpeed = 25.f;
+#else
 	player.AddComponent<comp::Player>()->runSpeed = 10.f;
+#endif // _DEBUG
+
+
 	*player.AddComponent<comp::CombatStats>() = { 1.0f, 20.f, 1.0f, false, false };
 	player.AddComponent<comp::Health>();
 	player.AddComponent<comp::BoundingOrientedBox>();
 
 	//Collision will handle this entity as a dynamic one
 	player.AddComponent<comp::Tag<TagType::DYNAMIC>>();
-
+	
 	m_players[playerID] = player;
 	// Network component will make sure the new entity is sent
 	player.AddComponent<comp::Network>(playerID);
