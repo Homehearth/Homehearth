@@ -483,42 +483,26 @@ void Game::OnClientDisconnect()
 void Game::CreateGridSystem()
 {
 	GridProperties_t options;
-	m_grid.Initialize(options.mapSize, options.position, options.fileName);
-	sm::Vector3 tileModelSize = { 4.2, 0.5f, 4.2 };
+	m_grid.Initialize2(options.mapSize, options.position, options.fileName, &GetScene("Game"));
 	for (int i = 0; i < m_grid.GetTilePositions()->size(); i++)
 	{
-		if (m_grid.GetTiles()->at(i).GetType() == TileType::EMPTY)
+		Entity tile = m_grid.GetTiles()->at(i);
+		comp::Renderable* renderable = tile.AddComponent<comp::Renderable>();
+
+		if (m_grid.GetTiles()->at(i).GetComponent<comp::Tile>()->type == TileType::EMPTY)
 		{
-			Entity tile1 = GetScene("Game").CreateEntity();
-			comp::Transform* transformt1 = tile1.AddComponent<comp::Transform>();
-			transformt1->position = m_grid.GetTilePositions()->at(i);
-			transformt1->scale = tileModelSize;
-			comp::Renderable* renderablet1 = tile1.AddComponent<comp::Renderable>();
-			renderablet1->model = ResourceManager::Get().GetResource<RModel>("Cube.obj");
-			renderablet1->model->ChangeMaterial("TileEmpty.mtl");
-			tile1.AddComponent<comp::Tag<TagType::TILE>>();
+			renderable->model = ResourceManager::Get().GetResource<RModel>("Cube.obj");
+			renderable->model->ChangeMaterial("TileEmpty.mtl");
 		}
-		else if (m_grid.GetTiles()->at(i).GetType() == TileType::BUILDING || m_grid.GetTiles()->at(i).GetType() == TileType::UNPLACABLE)
+		else if (m_grid.GetTiles()->at(i).GetComponent<comp::Tile>()->type == TileType::BUILDING || m_grid.GetTiles()->at(i).GetComponent<comp::Tile>()->type == TileType::UNPLACABLE)
 		{
-			Entity tile2 = GetScene("Game").CreateEntity();
-			comp::Transform* transformt2 = tile2.AddComponent<comp::Transform>();
-			transformt2->position = m_grid.GetTilePositions()->at(i);
-			transformt2->scale = tileModelSize;
-			comp::Renderable* renderablet2 = tile2.AddComponent<comp::Renderable>();
-			renderablet2->model = ResourceManager::Get().GetResource<RModel>("Cube1.obj");
-			renderablet2->model->ChangeMaterial("TileBuilding.mtl");
-			tile2.AddComponent<comp::Tag<TagType::TILE>>();
+			renderable->model = ResourceManager::Get().GetResource<RModel>("Cube1.obj");
+			renderable->model->ChangeMaterial("TileBuilding.mtl");
 		}
-		else if (m_grid.GetTiles()->at(i).GetType() == TileType::DEFAULT)
+		else if (m_grid.GetTiles()->at(i).GetComponent<comp::Tile>()->type == TileType::DEFAULT)
 		{
-			Entity tile3 = GetScene("Game").CreateEntity();
-			comp::Transform* transformt3 = tile3.AddComponent<comp::Transform>();
-			transformt3->position = m_grid.GetTilePositions()->at(i);
-			transformt3->scale = tileModelSize;
-			comp::Renderable* renderablet3 = tile3.AddComponent<comp::Renderable>();
-			renderablet3->model = ResourceManager::Get().GetResource<RModel>("CubeD.obj");
-			renderablet3->model->ChangeMaterial("TileDefence.mtl");
-			tile3.AddComponent<comp::Tag<TagType::TILE>>();
+			renderable->model = ResourceManager::Get().GetResource<RModel>("CubeD.obj");
+			renderable->model->ChangeMaterial("TileDefence.mtl");
 		}
 		else
 		{

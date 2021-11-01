@@ -1,6 +1,5 @@
 #pragma once
 #include "EnginePCH.h"
-#include "Tile.h"
 #include <stb_image.h>
 
 class GridSystem
@@ -10,15 +9,16 @@ private:
 	sm::Vector2 m_gridSize;	//Tiles x tiles
 	sm::Vector3 m_position;
 
-	std::vector<Tile> m_tiles;
 	std::vector<sm::Vector3> m_tilePosiitons;
+	std::vector<Entity> m_tiles;
 
 public:
 	GridSystem();
 	~GridSystem();
 
 	/*GridSize is decided by the texture size, how many tiles in x and why, MapSize is how big the world is*/
-	void Initialize(sm::Vector2 mapSize, sm::Vector3 position, std::string fileName);
+	void Initialize(sm::Vector2 mapSize, sm::Vector3 position, std::string fileName, HeadlessScene* scene);
+	void Initialize2(sm::Vector2 mapSize, sm::Vector3 position, std::string fileName, Scene* scene); //TODO: remove when networking branch is in master
 	std::vector<sm::Vector3>* GetTilePositions();
-	std::vector<Tile>* GetTiles();
+	std::vector<Entity>* GetTiles();
 };

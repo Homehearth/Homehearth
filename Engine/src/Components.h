@@ -15,6 +15,7 @@ namespace ecs
 		BOUNDING_SPHERE,
 		LIGHT,
 		COMPONENT_COUNT,
+		TILE,
 		COMPONENT_MAX = 32
 	};
 
@@ -129,6 +130,13 @@ namespace ecs
 		struct Tag
 		{
 			uint8_t id = ID;
+		};
+
+		struct Tile 
+		{
+			TileType type;
+			sm::Vector2 gridID;
+			float halfWidth;
 		};
 
 	};

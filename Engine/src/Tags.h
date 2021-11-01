@@ -6,5 +6,4 @@ enum TagType : uint8_t
 	DEBUG_CAMERA = 2,
 	DYNAMIC = 4,
 	STATIC = 8,
-	TILE = 16
 };
