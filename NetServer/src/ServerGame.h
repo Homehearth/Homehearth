@@ -29,7 +29,6 @@ public:
 	void InputThread();
 
 	virtual bool OnStartup() override;
-	virtual void OnUserUpdate(float deltaTime) override;
 	virtual void OnShutdown() override;
 };
 

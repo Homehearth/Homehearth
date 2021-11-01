@@ -14,9 +14,41 @@ enum class TypeLight : UINT
 	POINT
 };
 
+
+struct Plane_t
+{
+	sm::Vector3 point, normal;
+};
+
 struct Ray_t
 {
 	sm::Vector3 rayPos, rayDir;
+	bool Intersects(Plane_t plane, sm::Vector3& outIntersectPoint)
+	{
+		rayDir.Normalize(rayDir);
+		float dotAngle = plane.normal.Dot(rayDir);
+		if (std::abs(dotAngle) < 0.001f)
+			return false;
+
+		sm::Vector3 p = plane.point - rayPos;
+		float t = p.Dot(plane.normal) / dotAngle;
+		if (t < 0)
+			return false;
+
+		outIntersectPoint = rayPos + rayDir * t;
+		return true;
+	}
+};
+
+struct InputState
+{
+	int axisHorizontal : 2;
+	int axisVertical : 2;
+	bool leftMouse : 1;
+
+	Ray_t mouseRay;
+
+	uint32_t tick;
 };
 
 enum class GameMsg : uint8_t
@@ -29,16 +61,18 @@ enum class GameMsg : uint8_t
 	Lobby_Accepted,
 	Lobby_AcceptedLeave,
 	Lobby_Invalid,
+	Lobby_Update,
 
 	Server_AssignID,
 	Server_GetPing,
 	
+	Game_PlayerReady,
+	Game_Start,
 	Game_Snapshot,
 	Game_AddEntity,
 	Game_RemoveEntity,
 
-	Game_PlayerInput,
-	Game_PlayerAttack
+	Game_PlayerInput
 };
 
 /*

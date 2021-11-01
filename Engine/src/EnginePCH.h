@@ -1,6 +1,6 @@
 #pragma once
 
-#define RENDER_IMGUI 1
+#define RENDER_IMGUI 0
 #define PROFILER 1
 
 // Turn this to 1 if you want to see the very beautiful demo menu
@@ -106,8 +106,6 @@ namespace sm = dx::SimpleMath;
 #include "D2D1Core.h"
 #include "Profiler.h"
 #include "ThreadSyncer.h"
-#include "Handler2D.h"
-#include "BackBuffer.h"
 #include "Components.h"
 #include "SceneBuilder.h"
 #include "RenderThreadHandler.h"

@@ -3,6 +3,7 @@
 #include "Scene.h"
 
 #include <omp.h>
+#define TICK_RATE 1.f / 60.f
 
 template<typename SceneType>
 class BasicEngine
@@ -15,7 +16,6 @@ private:
 
 	virtual void UpdateNetwork(float deltaTime) = 0;
 	virtual bool OnStartup() = 0;
-	virtual void OnUserUpdate(float deltaTime) = 0;
 	virtual void OnShutdown() = 0;
 	
 protected:
@@ -48,8 +48,6 @@ public:
 
 	void Shutdown();
 };
-
-
 
 template<typename SceneType>
 SceneType& BasicEngine<SceneType>::GetScene(const std::string& name)
@@ -107,8 +105,6 @@ void BasicEngine<SceneType>::Update(float dt)
 {
 	PROFILE_FUNCTION();
 
-	this->OnUserUpdate(dt);
-
 	// Update elements in the scene.
 	if (m_currentScene)
 	{
@@ -125,8 +121,7 @@ void BasicEngine<SceneType>::Run()
 	float deltaTime = 0.f;
 	float update_time = 0.f;
 	float network_time = 0.f;
-	const float TARGET_UPDATE = 1.f / 144.f;
-	const float NETWORK_TARGET_DELTA = 1.f / 60.f;
+	const float TARGET_UPDATE = 1.f / 120.f;
 
 	while (IsRunning())
 	{
@@ -137,19 +132,18 @@ void BasicEngine<SceneType>::Run()
 
 		if (update_time >= TARGET_UPDATE)
 		{
+			Update(update_time);
 			update_time -= TARGET_UPDATE;
-			Update(TARGET_UPDATE);
 		}
-		if (network_time >= NETWORK_TARGET_DELTA)
+		if (network_time >= TICK_RATE)
 		{
-			network_time -= NETWORK_TARGET_DELTA;
-			UpdateNetwork(NETWORK_TARGET_DELTA);
+			UpdateNetwork(network_time);
+			network_time -= TICK_RATE;
 		}
 		network_time += deltaTime;
 		update_time += deltaTime;
 		lastFrame = currentFrame;
 	}
-
 }
 
 template<typename SceneType>
