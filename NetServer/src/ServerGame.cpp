@@ -267,7 +267,7 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 bool ServerGame::CreateSimulation(uint32_t playerID)
 {
 	m_simulations[m_nGameID] = std::make_unique<Simulation>(&m_server, this);
-	if (!m_simulations[m_nGameID]->Create(playerID, m_nGameID))
+	if (!m_simulations[m_nGameID]->Create(playerID, m_nGameID, &m_mapColliders))
 	{
 		m_simulations.erase(m_nGameID);
 		return false;

@@ -182,7 +182,7 @@ bool Simulation::LeaveLobby(uint32_t playerID, uint32_t gameID)
 }
 
 
-bool Simulation::Create(uint32_t playerID, uint32_t gameID)
+bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::BoundingOrientedBox>* mapColliders)
 {
 	this->m_gameID = gameID;
 	// Create Scenes associated with this Simulation
@@ -252,6 +252,15 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 	e2.AddComponent<comp::MeshName>()->name = "GameScene.obj";
 	e2.AddComponent<comp::Tag<TagType::STATIC>>();
 	// --- END OF THE WORLD ---
+	Entity collider;
+	for (size_t i = 0; i < mapColliders->size(); i++)
+	{
+		collider = m_pGameScene->CreateEntity();
+		collider.AddComponent<comp::BoundingOrientedBox>()->Center = mapColliders->at(i).Center;
+		collider.GetComponent<comp::BoundingOrientedBox>()->Extents = mapColliders->at(i).Extents;
+		collider.GetComponent<comp::BoundingOrientedBox>()->Orientation = mapColliders->at(i).Orientation;
+		collider.AddComponent<comp::Tag<TagType::STATIC>>();
+	}
 
 	m_pCurrentScene = m_pLobbyScene;
 

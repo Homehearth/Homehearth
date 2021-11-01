@@ -46,7 +46,7 @@ public:
 	bool JoinLobby(uint32_t playerID, uint32_t gameID);
 	bool LeaveLobby(uint32_t playerID, uint32_t gameID);
 
-	bool Create(uint32_t playerID, uint32_t gameID);
+	bool Create(uint32_t playerID, uint32_t gameID, std::vector<dx::BoundingOrientedBox>* mapColliders);
 	void Destroy();
 
 	// Updates the lobby.
