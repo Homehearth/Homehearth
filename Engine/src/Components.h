@@ -112,6 +112,8 @@ namespace ecs
 			float f = FLT_MAX, g = FLT_MAX, h = FLT_MAX;
 			sm::Vector3 position;
 			uint32_t id;
+			comp::Node parent;
+			std::vector<comp::Node*> connectedNodes;
 		};
 		struct Light
 		{
