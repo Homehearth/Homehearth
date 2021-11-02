@@ -212,3 +212,120 @@ void Systems::AISystem(HeadlessScene& scene)
 
 	});
 }
+
+bool AIAStarSearch(Entity& npc, HeadlessScene& scene)
+{
+	comp::NPC* npcComp = npc.GetComponent<comp::NPC>();
+	comp::Node* currentNode = npcComp->currentNode;
+
+	std::vector<comp::Node*> closedList, openList;
+	npcComp->path.clear();
+	comp::Node* startingNode = currentNode, * goalNode = currentNode;
+	openList.push_back(startingNode);
+	startingNode->f = 0.f;
+	startingNode->g = 0.f;
+	startingNode->h = 0.f;
+	startingNode->parent = startingNode;
+
+	while (goalNode == currentNode)
+	{
+		//goalNode = New target node;
+	}
+
+	comp::Node* nodeToAdd = nullptr;
+	int index = 0;
+	while (!openList.empty() && nodeToAdd != goalNode)
+	{
+		nodeToAdd = openList.at(0);
+		int indexToPop = 0;
+		bool stop = false;
+		for (unsigned int i = 0; i < openList.size(); i++)
+		{
+			if (openList.at(i)->f < nodeToAdd->f)
+			{
+				nodeToAdd = openList.at(i);
+				indexToPop = i;
+			}
+		}
+		openList.erase(openList.begin() + indexToPop);
+
+		//Neighbors
+
+		std::vector<comp::Node*> neighbors = nodeToAdd->connections;
+
+		for (comp::Node* neighbor : neighbors)
+		{
+			if (neighbor->parent != nodeToAdd && neighbor != nodeToAdd)
+			{
+				if (!neighbor->parent)
+				{
+					neighbor->parent = nodeToAdd;
+				}
+				if (neighbor == goalNode)
+				{
+					nodeToAdd = goalNode;
+					break;
+				}
+				if (neighbor->f == FLT_MAX)
+				{
+					float tempF = 0, tempG = 0, tempH = 0;
+
+					tempG = nodeToAdd->g + (nodeToAdd->position - neighbor->position).Length();
+					tempH = (goalNode->position - nodeToAdd->position).Length(); //Using euclidean distance
+					tempF = tempG + tempH;
+					neighbor->f = tempF;
+					neighbor->g = tempG;
+					neighbor->h = tempH;
+				}
+				stop = false;
+				for (unsigned int i = 0; i < openList.size() && !stop; i++)
+				{
+					if (openList.at(i)->id == neighbor->id)
+					{
+						stop = true;
+					}
+				}
+				if (closedList.size() > 0)
+				{
+					for (unsigned int i = 0; i < closedList.size() && !stop; i++)
+					{
+						if (closedList.at(i)->id == neighbor->id)
+						{
+							stop = true;
+						}
+					}
+					if (!stop)
+					{
+						openList.push_back(neighbor);
+					}
+				}
+				else
+				{
+					openList.push_back(neighbor);
+				}
+			}
+		}
+
+		closedList.push_back(nodeToAdd);
+
+		index++;
+
+	}
+
+	//TracePath
+
+	while (goalNode != startingNode)
+	{
+		//Insert currentNode to the path
+		npcComp->path.insert(npcComp->path.begin(), currentNode);
+		currentNode = currentNode->parent;
+	}
+
+	scene.ForEachComponent<comp::Node>([&](Entity entity, comp::Node& node)
+		{
+			node.ResetFGH();
+			node.parent = nullptr;
+		});
+
+	return true;
+}

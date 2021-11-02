@@ -101,6 +101,20 @@ namespace ecs
 			float runSpeed;
 			sm::Vector3 targetForward;
 		};
+
+		struct Node
+		{
+			float f = FLT_MAX, g = FLT_MAX, h = FLT_MAX;
+			sm::Vector3 position;
+			uint32_t id;
+			std::vector<Node*> connections;
+			ecs::component::Node* parent;
+			void ResetFGH()
+			{
+				f = FLT_MAX, g = FLT_MAX, h = FLT_MAX;
+			}
+		};
+
 		struct NPC
 		{
 			enum class State
@@ -114,19 +128,10 @@ namespace ecs
 			float attackRange;
 			bool hostile;
 			uint32_t currentNodeTarget = static_cast<uint32_t>(-1);
+			std::vector<ecs::component::Node*> path;
+			ecs::component::Node* currentNode;
 		};
-		struct Node
-		{
-			float f = FLT_MAX, g = FLT_MAX, h = FLT_MAX;
-			sm::Vector3 position;
-			uint32_t id;
-			std::vector<Node*> connections;
-			Node* parent;
-			void ResetFGH() 
-			{
-				f = FLT_MAX, g = FLT_MAX, h = FLT_MAX;
-			}
-		};
+
 		struct Light
 		{
 			light_t lightData;

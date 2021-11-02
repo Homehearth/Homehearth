@@ -410,7 +410,7 @@ bool Simulation::AICreateNodes()
 
 bool Simulation::AIAStarSearch()
 {
-	//TEMP
+	//TEMP, needs to get from Entity
 	comp::Node* currentNode;
 
 	std::vector<comp::Node*> closedList, openList;
@@ -509,7 +509,13 @@ bool Simulation::AIAStarSearch()
 
 	//TracePath
 
-	/*AIHANDLER->TracePath(startingNode, goalNode);
+	while (goalNode != startingNode)
+	{
+		//Insert currentNode to the path
+		currentNode = currentNode->parent;
+	}
+
+	/*
 	for (unsigned int i = 0; i < AIHANDLER->allNodes.size(); i++)
 	{
 		AIHANDLER->allNodes.at(i)->ResetFGH();
