@@ -33,3 +33,6 @@
 // Custom Global includes (Singletons)
 #include "Logger.h"
 #include <EnginePCH.h>
+
+const std::string BOUNDSPATH = "../Assets/Bounds/";
+//const std::string BOUNDSPATH = "../../../../../Assets/Bounds/";

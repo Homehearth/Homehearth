@@ -49,8 +49,6 @@ class Element2D
 {
 private:
 
-	unsigned int m_references = 1;
-
 protected:
 
 	// check to see if element is clicked.
@@ -97,19 +95,4 @@ public:
 	Write the logic for detecting if anyone has clicked the element.
 	*/
 	virtual bool CheckClick() = 0;
-
-	/*
-		Add a reference to the element.
-	*/
-	void AddRef();
-
-	/*
-		Release the object.
-	*/
-	void Release();
-
-	/*
-		Get the amount of references to this element.
-	*/
-	unsigned int GetRef() const;
 };

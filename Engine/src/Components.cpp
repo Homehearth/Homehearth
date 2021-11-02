@@ -5,41 +5,34 @@ namespace ecs {
     sm::Matrix GetMatrix(const component::Transform& transform)
     {
         sm::Matrix mat = sm::Matrix::CreateScale(transform.scale);
-        mat *= sm::Matrix::CreateWorld(transform.position, GetForward(transform), GetUp(transform));
+        mat *= sm::Matrix::CreateFromQuaternion(transform.rotation);
+        mat.Translation(transform.position);
         return mat;
     }
 
     sm::Vector3 GetForward(const component::Transform& transform)
     {
         sm::Vector3 f = sm::Vector3::Forward;
-        f = sm::Vector3::TransformNormal(f, sm::Matrix::CreateRotationX(transform.rotation.x));
-        f = sm::Vector3::TransformNormal(f, sm::Matrix::CreateRotationY(transform.rotation.y));
-        f = sm::Vector3::TransformNormal(f, sm::Matrix::CreateRotationZ(transform.rotation.z));
+        f = sm::Vector3::TransformNormal(f, sm::Matrix::CreateFromQuaternion(transform.rotation));
         return f;
     }
 
-    sm::Vector3 GetUp(const component::Transform& transform) 
+    sm::Vector3 GetRight(const component::Transform& transform) 
     {
-        sm::Vector3 u = sm::Vector3::Up;
-        u = sm::Vector3::TransformNormal(u, sm::Matrix::CreateRotationX(transform.rotation.x));  
-        u = sm::Vector3::TransformNormal(u, sm::Matrix::CreateRotationY(transform.rotation.y));
-        u = sm::Vector3::TransformNormal(u, sm::Matrix::CreateRotationZ(transform.rotation.z));
-        return u;
+        sm::Vector3 r = GetForward(transform).Cross(sm::Vector3::Up);
+        return r;
     }
 
-    bool StepRotateTo(sm::Vector3& rotation, const sm::Vector3& target, float time)
+    bool StepRotateTo(sm::Quaternion& rotation, const sm::Vector3& targetVector, float t)
     {
-        float targetRotation = atan2(-target.z, target.x);
+        
+        float targetRotation = atan2(-targetVector.z, targetVector.x);
+        sm::Quaternion targetQuat = sm::Quaternion::CreateFromAxisAngle(sm::Vector3::Up, targetRotation);
 
-        float deltaRotation = targetRotation - rotation.y;
+        rotation = sm::Quaternion::Slerp(rotation, targetQuat, t);
+        rotation.Normalize();
 
-        if (std::abs(deltaRotation) > dx::g_XMPi[0])
-        {
-            rotation.y += (rotation.y < 0.0f) ? dx::g_XMTwoPi[0] : -dx::g_XMTwoPi[0];
-        }
-        rotation.y = rotation.y * (1 - time) + targetRotation * time;
-
-        return std::abs(rotation.y - targetRotation) < 0.01f;
+        return std::abs(rotation.Dot(targetQuat)) > 1 - 0.001f;
     }
 
     bool StepTranslateTo(sm::Vector3& translation, const sm::Vector3& target, float t)
