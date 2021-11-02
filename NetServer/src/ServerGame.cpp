@@ -76,13 +76,13 @@ void ServerGame::OnShutdown()
 
 void ServerGame::UpdateNetwork(float deltaTime)
 {
-	static float timer = 0.0f;
-	timer += deltaTime;
-	if (timer >= 1.0f)
-	{
-		LOG_INFO("Update: %f", 1.f / deltaTime);
-		timer = 0.0f;
-	}
+	//static float timer = 0.0f;
+	//timer += deltaTime;
+	//if (timer >= 1.0f)
+	//{
+	//	LOG_INFO("Update: %f", 1.f / deltaTime);
+	//	timer = 0.0f;
+	//}
 
 	// Check incoming messages
 	this->m_server.Update();
@@ -146,7 +146,7 @@ bool ServerGame::LoadMapColliders(const std::string& filename)
 		const aiMesh* mesh = scene->mMeshes[i];
 		//Create a bob from all the points and the orientation will be calculated and add to vector
 		dx::BoundingOrientedBox bob;
-		dx::BoundingOrientedBox::CreateFromPoints(bob, mesh->mNumVertices, (DirectX::XMFLOAT3*)mesh->mVertices, sizeof(dx::XMFLOAT3));
+		dx::BoundingOrientedBox::CreateFromPoints(bob, mesh->mNumVertices, (dx::XMFLOAT3*)mesh->mVertices, sizeof(dx::XMFLOAT3));
 		m_mapColliders.push_back(bob);
 	}
 
