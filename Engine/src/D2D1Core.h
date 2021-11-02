@@ -193,6 +193,8 @@ public:
 	// Free up any used memory.
 	static void Destroy();
 
+	static float GetDefaultFontSize();
+
 	/*
 		Draw Text onto the window assigned in the parameter.
 		This is a basic version of drawing text onto screen.

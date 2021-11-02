@@ -13,8 +13,7 @@ namespace sceneHelp
 
 	void CreateMainMenuScene(Game* game);
 	void CreateLobbyScene(Game* game);
-	void CreateGameScene(Engine& engine);
-	void CreateConnectScene(Game* game);
+	void CreateGameScene(Game* engine);
 	void CreateJoinLobbyScene(Game* game);
 	void CreateLoadingScene(Game* game);
 

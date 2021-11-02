@@ -36,6 +36,7 @@ public:
 
 	void Add2DCollection(Collection2D* collection, std::string& name);
 	void Add2DCollection(Collection2D* collection, const char* name);
+	Collection2D* GetCollection(const std::string& name);
 
 	Camera* GetCurrentCamera()const;
 	void SetCurrentCameraEntity(Entity cameraEntity);

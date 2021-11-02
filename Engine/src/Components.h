@@ -12,6 +12,7 @@ namespace ecs
 		TRANSFORM,
 		VELOCITY,
 		MESH_NAME,
+		NAME_PLATE,
 		BOUNDING_ORIENTED_BOX,
 		BOUNDING_SPHERE,
 		LIGHT,
@@ -63,6 +64,10 @@ namespace ecs
 			std::string name;
 		};
 
+		struct NamePlate
+		{
+			std::string namePlate;
+		};
 		
 		struct RenderableDebug
 		{

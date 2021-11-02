@@ -45,17 +45,19 @@ public:
 	Simulation(Server* pServer, HeadlessEngine* pEngine);
 	virtual ~Simulation() = default;
 
-	bool AddPlayer(uint32_t playerID);
+	bool AddPlayer(uint32_t playerID, const std::string& namePlate = "Noobie");
 	bool RemovePlayer(uint32_t playerID);
 	std::unordered_map<uint32_t, Entity>::iterator RemovePlayer(std::unordered_map<uint32_t, Entity>::iterator playerIterator);
 
 	bool AddEnemy();
 	
 	void SendSnapshot();
-	bool JoinLobby(uint32_t playerID, uint32_t gameID);
+	bool JoinLobby(uint32_t playerID, uint32_t gameID, const std::string& namePlate = "Noobie");
 	bool LeaveLobby(uint32_t playerID, uint32_t gameID);
+	// Update the visuals to the player.
+	void UpdateLobby();
 
-	bool Create(uint32_t playerID, uint32_t gameID, std::vector<dx::BoundingOrientedBox>* mapColliders);
+	bool Create(uint32_t playerID, uint32_t gameID, std::vector<dx::BoundingOrientedBox>* mapColliders, const std::string& namePlate = "Noobie");
 	void Destroy();
 
 	// Updates the lobby.
@@ -71,7 +73,7 @@ public:
 	HeadlessScene* GetLobbyScene() const;
 	HeadlessScene* GetGameScene() const;
 
-	void SendEntity(Entity e)const;
+	void SendEntity(Entity e, size_t exclude)const;
 	void SendEntities(const std::vector<Entity>& entities)const;
 
 	void SendAllEntitiesToPlayer(uint32_t playerID)const;
