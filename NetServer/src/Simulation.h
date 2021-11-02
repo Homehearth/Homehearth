@@ -1,6 +1,7 @@
 #pragma once
 #include "Server.h"
 #include "HeadlessEngine.h"
+#include "GridSystem.h"
 #include "ServerSystems.h"
 #include "Wave.h"
 
@@ -18,6 +19,8 @@ private:
 	HeadlessEngine* m_pEngine;
 	uint32_t m_gameID;
 	uint32_t m_tick;
+
+	GridSystem m_grid;
 
 	struct pDecision_t
 	{
