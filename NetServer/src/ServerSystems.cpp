@@ -14,7 +14,7 @@
 Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, EnemyType type)
 {
 	Entity entity = simulation->GetGameScene()->CreateEntity();
-	entity.AddComponent<comp::Network>()->id = simulation->m_pServer->PopNextUniqueID();
+	entity.AddComponent<comp::Network>();
 	entity.AddComponent<comp::Enemy>();
 	entity.AddComponent<comp::Tag<DYNAMIC>>();
 
@@ -55,8 +55,6 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 			LOG_WARNING("Attempted to create unknown EnemyType.")
 		break;
 	}
-
-	simulation->SendEntity(entity);
 
 	return entity;
 }
@@ -191,34 +189,15 @@ void ServerSystems::WaveSystem(Simulation* simulation,
  */
 void ServerSystems::NextWaveConditions(Simulation* simulation, Timer& timer, int timeToFinish)
 {
-	message<GameMsg> msg;
-	msg.header.id = GameMsg::Game_RemoveEntity;
-
-	int count = 0;
-	int numOfEnemies = 0;
-
 	//Summarize all the existing enemy components in the scene
 	simulation->GetGameScene()->ForEachComponent<comp::Enemy, comp::Network, comp::Transform>(
 		[&](Entity entity, comp::Enemy enemy, comp::Network network, comp::Transform transform)
 		{
 			if (abs(transform.position.x) <= 10.f && abs(transform.position.z) <= 10.f)
 			{
-				msg << network.id;
-				count++;
 				entity.Destroy();
 			}
-			else
-			{
-				numOfEnemies++;
-			}
 		});
-
-	//Send out which entities have been destroyed to the clients
-	if (count > 0)
-	{
-		msg << count;
-		simulation->SendRemoveEntities(msg);
-	}
 
 	//Publish event when timeToFinish been exceeded.
 	if (timer.GetElapsedTime() > timeToFinish)
