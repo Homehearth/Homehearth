@@ -34,6 +34,12 @@ void rtd::Canvas::SetPosition(const float& x, const float& y)
 	m_drawOpts.y_pos = y;
 }
 
+void rtd::Canvas::SetScale(const float& x_stretch, const float& y_stretch)
+{
+	m_drawOpts.width = x_stretch;
+	m_drawOpts.height = y_stretch;
+}
+
 void rtd::Canvas::SetColor(const D2D1_COLOR_F& new_color)
 {
 	m_color = new_color;

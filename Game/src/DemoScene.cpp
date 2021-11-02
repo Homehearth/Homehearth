@@ -264,7 +264,7 @@ void sceneHelp::SetupInGameScreen(Game* game)
 		// Initiate 3 healthbars. for each player.
 		for (int j = 0; j < 3; j++)
 		{
-			playerHp->AddElement<rtd::Picture>(texture1, draw_t((j * (width / 12)) + (width / 12), (i * ((height / 12)) + (height / 32)), (width / 16), (height / 12)));
+			playerHp->AddElement<rtd::Picture>(texture1, draw_t((j * (width / 12)) + (width / 12), (i * ((height / 12)) + (height / 32)), (width / 16), (height / 9)));
 		}
 
 		// You and Friend text
@@ -297,15 +297,16 @@ void sceneHelp::SetupInGameScreen(Game* game)
 	buildCollection->AddElement<rtd::Text>("Builds!", draw_text_t(width - (strlen("Builds!") * D2D1Core::GetDefaultFontSize()), height - (height / 6), strlen("Builds!") * D2D1Core::GetDefaultFontSize(), D2D1Core::GetDefaultFontSize()));
 	for (int i = 0; i < 1; i++)
 	{
-		buildCollection->AddElement<rtd::Picture>(texture2, draw_t((width - (width / 12)) - (i * (width / 12)), height - (height / 8), width / 12, height / 8));
+		buildCollection->AddElement<rtd::Picture>(texture2, draw_t((width - (width / 12)) - (i * (width / 12)), height - (height / 8), width / 16, height / 9));
 	}
 	scene.Add2DCollection(buildCollection, "builds");
 
-	//Collection2D* nameCollection = new Collection2D;
-	//for (int i = 0; i < MAX_PLAYERS_PER_LOBBY; i++)
-	//{
-	//	nameCollection->AddElement<rtd::Text>("Player" + std::to_string(i + 1), )
-	//}
+	for (int i = 0; i < MAX_PLAYERS_PER_LOBBY; i++)
+	{
+		Collection2D* nameCollection = new Collection2D;
+		nameCollection->AddElement<rtd::Text>("Player" + std::to_string(i + 1), draw_text_t(0, 0, width / 16, height / 9));
+		scene.Add2DCollection(nameCollection, "player" + std::to_string(i + 1) + "namePlate");
+	}
 }
 
 void sceneHelp::SetupInLobbyScreen(Game* game)
