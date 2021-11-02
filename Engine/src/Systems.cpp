@@ -16,10 +16,11 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 			//
 			if (stats.isAttacking)
 			{
-				
+
 				//Creates an entity that's used to check collision if an attack lands.
 				Entity attackCollider = scene.CreateEntity();
 				attackCollider.AddComponent<comp::Transform>()->position = transform.position + stats.targetDir;
+				attackCollider.AddComponent<comp::Tag<TagType::DYNAMIC>>();
 				attackCollider.AddComponent<comp::BoundingOrientedBox>()->Center = transform.position + stats.targetDir;
 				comp::Attack* atk = attackCollider.AddComponent<comp::Attack>();
 				atk->lifeTime = stats.attackLifeTime;
@@ -105,7 +106,8 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 void Systems::MovementSystem(HeadlessScene& scene, float dt)
 {
 	//Transform
-	scene.ForEachComponent<comp::Transform, comp::Velocity>([&, dt](comp::Transform& transform, comp::Velocity& velocity)
+	scene.ForEachComponent<comp::Transform, comp::Velocity, comp::Tag<TagType::DYNAMIC>>([&, dt]
+	(comp::Transform& transform, comp::Velocity& velocity, comp::Tag<TagType::DYNAMIC>&)
 		{
 			transform.previousPosition = transform.position;
 			transform.position += velocity.vel * dt;
@@ -115,14 +117,16 @@ void Systems::MovementSystem(HeadlessScene& scene, float dt)
 void Systems::MovementColliderSystem(HeadlessScene& scene, float dt)
 {
 	//BoundingOrientedBox
-	scene.ForEachComponent<comp::Transform, comp::BoundingOrientedBox>([&, dt](comp::Transform& transform, comp::BoundingOrientedBox& obb)
+	scene.ForEachComponent<comp::Transform, comp::BoundingOrientedBox>([&, dt]
+	(comp::Transform& transform, comp::BoundingOrientedBox& obb)
 		{
 			obb.Center = transform.position;
 			obb.Orientation = transform.rotation;
 		});
 
 	//BoundingSphere
-	scene.ForEachComponent<comp::Transform, comp::BoundingSphere>([&, dt](comp::Transform& transform, comp::BoundingSphere& sphere)
+	scene.ForEachComponent<comp::Transform, comp::BoundingSphere>([&, dt]
+	(comp::Transform& transform, comp::BoundingSphere& sphere)
 		{
 			sphere.Center = transform.position;
 		});
