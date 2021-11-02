@@ -148,21 +148,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		msg >> count;
 		uint32_t entityID;
 
-		comp::Health h;
-		for (uint32_t i = 0; i < count; i++)
-		{
-			msg >> entityID >> h;
-			if (m_gameEntities.find(entityID) != m_gameEntities.end())
-			{
-				m_gameEntities[entityID].AddComponent<comp::Health>(h);
-			}
-			else
-			{
-				LOG_WARNING("Adding Health: Entity %u not in m_gameEntities, should not happen...", entityID);
-			}
-		}
-		msg >> count;
-
 
 #if DEBUG_SNAPSHOT
 		comp::BoundingOrientedBox b;
@@ -182,6 +167,22 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 
 		msg >> count;
 #endif
+
+		comp::Health h;
+		for (uint32_t i = 0; i < count; i++)
+		{
+			msg >> entityID >> h;
+			if (m_gameEntities.find(entityID) != m_gameEntities.end())
+			{
+				m_gameEntities[entityID].AddComponent<comp::Health>(h);
+			}
+			else
+			{
+				LOG_WARNING("Adding Health: Entity %u not in m_gameEntities, should not happen...", entityID);
+			}
+		}
+		msg >> count;
+
 		comp::Transform t;
 		for (uint32_t i = 0; i < count; i++)
 		{

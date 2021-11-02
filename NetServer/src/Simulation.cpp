@@ -580,20 +580,20 @@ void Simulation::SendSnapshot()
 			});
 		msg << i;
 
+		i = 0;
+		m_pCurrentScene->ForEachComponent<comp::Network, comp::Health>([&](comp::Network& n, comp::Health h)
+			{
+				msg << h << n.id;
+				i++;
+			});
+		msg << i;
+
 #if DEBUG_SNAPSHOT
 		i = 0;
 		m_pCurrentScene->ForEachComponent<comp::Network, comp::BoundingOrientedBox>([&]
 		(comp::Network& n, comp::BoundingOrientedBox& b)
 			{
 				msg << b << n.id;
-				i++;
-			});
-		msg << i;
-
-		i = 0;
-		m_pCurrentScene->ForEachComponent<comp::Network, comp::Health>([&](comp::Network& n, comp::Health h)
-			{
-				msg << h << n.id;
 				i++;
 			});
 		msg << i;
