@@ -51,6 +51,7 @@ void GameSystems::UpdateHealthbar(Scene& scene)
 				healthbar->SetHealthVariable(&health.currentHealth, health.maxHealth);
 			}
 		}
+		i++;
 		});
 }
 
