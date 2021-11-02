@@ -459,7 +459,7 @@ bool Simulation::AddPlayer(uint32_t playerID, const std::string& namePlate)
 
 	// Create Player entity in Game scene
 	Entity player = m_pGameScene->CreateEntity();
-	player.AddComponent<comp::Transform>();// ->position = sm::Vector3(320.f, 0, -310.f);
+	player.AddComponent<comp::Transform>()->position = sm::Vector3(320.f, 0, -310.f);
 	player.AddComponent<comp::Velocity>();
 	player.AddComponent<comp::NamePlate>()->namePlate = namePlate;
 	player.AddComponent<comp::MeshName>()->name = "Arrow.fbx";
@@ -562,7 +562,8 @@ void Simulation::SendSnapshot()
 		
 
 		uint32_t i = 0;
-		m_pCurrentScene->ForEachComponent<comp::Network, comp::Transform>([&](Entity e, comp::Network& n, comp::Transform& t)
+		m_pCurrentScene->ForEachComponent<comp::Network, comp::Transform, comp::Tag<TagType::DYNAMIC>>([&]
+		(comp::Network& n, comp::Transform& t, comp::Tag<TagType::DYNAMIC>&)
 			{
 				msg << t << n.id;
 				i++;
@@ -571,7 +572,8 @@ void Simulation::SendSnapshot()
 
 #if DEBUG_SNAPSHOT
 		i = 0;
-		m_pCurrentScene->ForEachComponent<comp::Network, comp::BoundingOrientedBox>([&](comp::Network& n, comp::BoundingOrientedBox& b)
+		m_pCurrentScene->ForEachComponent<comp::Network, comp::BoundingOrientedBox, comp::Tag<TagType::DYNAMIC>>([&]
+		(comp::Network& n, comp::BoundingOrientedBox& b, comp::Tag<TagType::DYNAMIC>&)
 			{
 				msg << b << n.id;
 				i++;
@@ -655,7 +657,7 @@ void Simulation::OnNetworkEntityCreate(entt::registry& reg, entt::entity entity)
 	comp::Network* net = e.GetComponent<comp::Network>();
 	if (net->id == -1)
 	{
-		net->id = m_pServer->PopNextUniqueID();
+		net->id = GetUniqueID();
 	}
 	m_addedEntities.push_back(e);
 }
