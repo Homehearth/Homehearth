@@ -28,7 +28,6 @@ private:
 	void CheckIncoming(message<GameMsg>& msg);
 	void PingServer();
 	void OnClientDisconnect();
-	void CreateGridSystem();
 	
 	Entity CreateEntityFromMessage(message<GameMsg>& msg);
 

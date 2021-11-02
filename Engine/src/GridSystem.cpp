@@ -70,7 +70,7 @@ void GridSystem::Initialize(sm::Vector2 mapSize, sm::Vector3 position, std::stri
 				tileTypeTemp = TileType::DEFAULT;
 			}
 
-			float tileHalfWidth = (float)(2 / ((m_mapSize.x / m_gridSize.x)));
+			float tileHalfWidth = (float)(((m_mapSize.x / m_gridSize.x)) / 2);
 			sm::Vector3 tilePosition = {m_position.x + (tileHalfWidth * row) + tileHalfWidth/2, m_position.y + 0.f , -(tileHalfWidth * col) - (tileHalfWidth/2) + m_position.z};
 			m_tilePosiitons.push_back(tilePosition);
 
@@ -81,7 +81,12 @@ void GridSystem::Initialize(sm::Vector2 mapSize, sm::Vector3 position, std::stri
 			tile->type = tileTypeTemp;
 			comp::Transform* transform = tileEntity.AddComponent<comp::Transform>();
 			transform->position = tilePosition;
+			transform->position.y = 0.5;
+
 			transform->scale = { 4.2f, 0.5f, 4.2f };
+
+			// Uncomment this if you want to send Tiles to client
+			//tileEntity.AddComponent<comp::Network>();
 
 			m_tiles.push_back(tileEntity);
 		}
