@@ -7,17 +7,12 @@ class Game : public Engine
 {
 private:
 	std::chrono::system_clock::time_point m_timeThen;
-
-	std::string* m_ipBuffer = nullptr;
-	std::string* m_lobbyBuffer = nullptr;
-	std::string* m_portBuffer = nullptr;
 	std::vector<comp::Transform> predictedPositions;
 	std::unordered_map<uint32_t, Entity> m_players;
 
 	GridSystem m_grid;
 
 
-	bool m_isLeavingLobby;
 	comp::Transform test;
 	float m_predictionThreshhold;
 
@@ -33,7 +28,6 @@ private:
 	void CheckIncoming(message<GameMsg>& msg);
 	void PingServer();
 	void OnClientDisconnect();
-	void CreateGridSystem();
 	
 	Entity CreateEntityFromMessage(message<GameMsg>& msg);
 
@@ -43,6 +37,8 @@ public:
 	Client m_client;
 	uint32_t m_localPID;
 	uint32_t m_gameID;
+	std::string m_playerName;
+
 	Game();
 	virtual ~Game();
 	void JoinLobby(uint32_t lobbyID);

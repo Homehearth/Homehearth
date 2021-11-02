@@ -19,4 +19,9 @@ struct ESceneCollision
 	float dt;
 };
 
+struct ESceneCallWaveSystem
+{
+	float dt;
+};
+
 struct ESceneRender {};

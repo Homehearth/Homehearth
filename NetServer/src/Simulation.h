@@ -3,9 +3,7 @@
 #include "HeadlessEngine.h"
 #include "GridSystem.h"
 #include "ServerSystems.h"
-
-
-constexpr int MAX_PLAYER_PER_LOBBY = 2;
+#include "Wave.h"
 
 /*
 		Simulation defines each ongoing simulation from the perspective of the server
@@ -20,14 +18,7 @@ private:
 	HeadlessEngine* m_pEngine;
 	uint32_t m_gameID;
 	uint32_t m_tick;
-
 	GridSystem m_grid;
-
-	struct pDecision_t
-	{
-		uint32_t playerID = -1;
-		bool isWantToStart = false;
-	}m_playerDecisions[MAX_PLAYER_PER_LOBBY];
 
 	HeadlessScene* m_pLobbyScene;
 	HeadlessScene* m_pGameScene;
@@ -36,16 +27,27 @@ private:
 	std::unordered_map<uint32_t, Entity> m_players;
 	std::unordered_map<Entity, InputState> m_playerInputs;
 
+	std::vector<Entity> m_addedEntities;
+	std::vector<uint32_t> m_removedEntities;
+
 
 	void InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg)const;
 	message<GameMsg> AllEntitiesMessage()const;
-	message<GameMsg> SingleEntityMessage(Entity entity)const;
 
 	uint32_t GetTick()const;
 
 	// -1 will be defaulted to max value of unsigned 32 bit integer
-	void Broadcast(message<GameMsg>& msg, uint32_t exclude = -1);
+	void Broadcast(message<GameMsg>& msg, uint32_t exclude = -1)const;
 	void ScanForDisconnects();
+
+	//Game play related
+	Timer waveTimer;
+	std::queue<Wave> waveQueue;
+	void CreateWaves();
+	
+	void OnNetworkEntityCreate(entt::registry& reg, entt::entity entity);
+	void OnNetworkEntityDestroy(entt::registry& reg, entt::entity entity);
+
 
 	std::vector<std::string> OpenFile(std::string filePath);
 	void ConnectNodes(comp::Node* node1, comp::Node* node2);
@@ -56,21 +58,23 @@ public:
 	virtual ~Simulation() = default;
 	bool AICreateNodes();
 	bool AIAStarSearch();
-	bool AddPlayer(uint32_t playerID);
+	bool AddPlayer(uint32_t playerID, const std::string& namePlate = "Noobie");
 	bool RemovePlayer(uint32_t playerID);
-	bool AddNPC(uint32_t npcId);
-	bool RemoveNPC(uint32_t npcId);
+	std::unordered_map<uint32_t, Entity>::iterator RemovePlayer(std::unordered_map<uint32_t, Entity>::iterator playerIterator);
+
 	bool AddEnemy();
 
 	void SendSnapshot();
-	bool JoinLobby(uint32_t playerID, uint32_t gameID);
+	bool JoinLobby(uint32_t playerID, uint32_t gameID, const std::string& namePlate = "Noobie");
 	bool LeaveLobby(uint32_t playerID, uint32_t gameID);
+	// Update the visuals to the player.
+	void UpdateLobby();
 
-	bool Create(uint32_t playerID, uint32_t gameID);
+	bool Create(uint32_t playerID, uint32_t gameID, std::vector<dx::BoundingOrientedBox>* mapColliders, const std::string& namePlate = "Noobie");
 	void Destroy();
 
 	// Updates the lobby.
-	void UpdateLobby(const uint32_t& playerID);
+	void ReadyCheck(const uint32_t& playerID);
 
 	bool IsEmpty() const;
 
@@ -81,4 +85,17 @@ public:
 
 	HeadlessScene* GetLobbyScene() const;
 	HeadlessScene* GetGameScene() const;
+
+	void SendEntity(Entity e, uint32_t exclude = -1)const;
+	void SendEntities(const std::vector<Entity>& entities)const;
+
+	void SendAllEntitiesToPlayer(uint32_t playerID)const;
+	void SendRemoveAllEntitiesToPlayer(uint32_t playerID)const;
+	void SendRemoveSingleEntity(Entity e)const;
+	void SendRemoveSingleEntity(uint32_t networkID)const;
+
+	void SendRemoveEntities(message<GameMsg>& msg)const;
+	void SendRemoveEntities(const std::vector<uint32_t> entitiesNetIDs)const;
+
+	uint32_t GetUniqueID();
 };

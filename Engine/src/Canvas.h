@@ -34,7 +34,9 @@ namespace rtd
 		void SetColor(const D2D1_COLOR_F& new_color);
 		D2D1_COLOR_F& GetColor();
 
-		Border* GetBorder();
+		void SetBorderColor(const D2D1_COLOR_F& new_color);
+		void HideBorder();
+		void ShowBorder();
 
 		// Inherited via Element2D
 		virtual void Draw() override;

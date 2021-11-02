@@ -1,5 +1,8 @@
 #pragma once
 
+constexpr int MAX_PLAYERS_PER_LOBBY = 4;
+constexpr int MAX_HEALTH = 100;
+
 struct MinMaxProj_t
 {
 	float minProj;
@@ -62,6 +65,8 @@ enum class GameMsg : uint8_t
 	Lobby_AcceptedLeave,
 	Lobby_Invalid,
 	Lobby_Update,
+	Lobby_PlayerLeft,
+	Lobby_PlayerJoin,
 
 	Server_AssignID,
 	Server_GetPing,

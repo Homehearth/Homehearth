@@ -4,120 +4,87 @@
 
 void Systems::CombatSystem(HeadlessScene& scene, float dt)
 {
-	// For Each Good Guy (Player).
-	scene.ForEachComponent<comp::CombatStats, comp::Health, comp::Transform, comp::Player>([&](Entity& player, comp::CombatStats& playerStats, comp::Health& playerHealth, comp::Transform& playerTransform, comp::Player&)
-	{
-		if (playerHealth.isAlive)
+	// For Each entity that can attack.
+	scene.ForEachComponent<comp::CombatStats, comp::Transform>([&](Entity entity, comp::CombatStats& stats, comp::Transform& transform)
 		{
 			// Decreases cooldown between attacks.
-			if (playerStats.cooldownTimer > 0.f)
-				playerStats.cooldownTimer -= 1.f * dt;
+			if (stats.cooldownTimer > 0.f)
+				stats.cooldownTimer -= dt;
 
-			// For Each Bad Guy (Enemy).
-			scene.ForEachComponent<comp::CombatStats, comp::Health, comp::Transform, comp::NPC>([&](Entity& enemy, comp::CombatStats& enemyStats, comp::Health& enemyHealth, comp::Transform& enemyTransform, comp::NPC&)
+			//
+			// attack LOGIC
+			//
+			if (stats.isAttacking)
 			{
-				if (enemyHealth.isAlive)
+				/*
+				for (int i = 0; i < 100; i++)
 				{
-					// Decreases cooldown between attacks
-					if (enemyStats.cooldownTimer > 0.f)
-						enemyStats.cooldownTimer -= 1.f * dt;
+					Entity e = scene.CreateEntity();
+					e.AddComponent<comp::Network>();
+					e.AddComponent<comp::MeshName>("cube.obj");
+					e.AddComponent<comp::Transform>()->position = transform.position + sm::Vector3(i) * 2;
+				}
+				*/
+				//Creates an entity that's used to check collision if an attack lands.
+				Entity attackCollider = scene.CreateEntity();
+				attackCollider.AddComponent<comp::Transform>()->position = transform.position + stats.targetDir;
+				attackCollider.AddComponent<comp::BoundingOrientedBox>()->Center = transform.position + stats.targetDir;
+				comp::Attack* atk = attackCollider.AddComponent<comp::Attack>();
+				atk->lifeTime = stats.attackLifeTime;
+				atk->damage = stats.attackDamage;
 
-					//
-					// PLAYER LOGIC
-					//
-					if (playerStats.isAttacking)
-					{
-						//Creates an entity that's used to check collision if an attack lands.
-						Entity attackCollider = scene.CreateEntity();
-						attackCollider.AddComponent<comp::Transform>()->position = playerTransform.position + ecs::GetForward(playerTransform) * -1;
-						attackCollider.AddComponent<comp::BoundingOrientedBox>()->Center = playerTransform.position + ecs::GetForward(playerTransform) * -1;
-						attackCollider.AddComponent<comp::Attack>()->lifeTime = playerStats.attackLifeTime;
-						attackCollider.GetComponent<comp::Attack>()->damage = playerStats.attackDamage;
-
-						LOG_INFO("Attack Collider Created!");
-
-						//If the attack is ranged add a velocity to the entity.
-						if (playerStats.isRanged)
-						{
-							sm::Vector3 vel = ecs::GetForward(playerTransform) * -10.f; //CHANGE HERE WHEN FORWARD GETS FIXED!!!!!!
-							attackCollider.AddComponent<comp::Velocity>()->vel = vel;
-						}
-
-						CollisionSystem::Get().AddOnCollision(attackCollider, [&, attackCollider](Entity& enemyCol)
-						{
-							comp::Health* enemyHealth = enemyCol.GetComponent<comp::Health>();
-							comp::NPC* enemyTag = enemyCol.GetComponent<comp::NPC>();
-							comp::Attack* atk = attackCollider.GetComponent<comp::Attack>();
-
-							if (enemyHealth && atk && enemyTag)
-							{
-								enemyHealth->currentHealth -= atk->damage;
-								LOG_INFO("ATTACK COLLIDER HIT BAD GUY!");
-								atk->lifeTime = 0.f;
-							}
-						});
-
-						playerStats.cooldownTimer = playerStats.attackSpeed;
-						playerStats.isAttacking = false;
-					}
-
-
-					//
-					// ENEMY LOGIC
-					//
-					if (enemyStats.isAttacking)
-					{
-						//Creates an entity that's used to check collision if an attack lands
-						Entity attackCollider = scene.CreateEntity();
-						attackCollider.AddComponent<comp::Transform>()->position = enemyTransform.position + ecs::GetForward(enemyTransform);
-						attackCollider.AddComponent<comp::BoundingOrientedBox>()->Center = enemyTransform.position + ecs::GetForward(enemyTransform);
-						attackCollider.AddComponent<comp::Attack>()->lifeTime = enemyStats.attackLifeTime;
-						attackCollider.GetComponent<comp::Attack>()->damage = enemyStats.attackDamage;
-
-						LOG_INFO("Attack Collider Created!");
-
-						//If the attack is ranged add a velocity to the entity.
-						if (enemyStats.isRanged)
-						{
-							sm::Vector3 vel = ecs::GetForward(enemyTransform) * -10.f; //CHANGE HERE WHEN FORWARD GETS FIXED!!!!!!
-							attackCollider.AddComponent<comp::Velocity>()->vel = vel;
-						}
-
-						CollisionSystem::Get().AddOnCollision(attackCollider, [&, attackCollider](Entity& playerCol)
-						{
-							comp::Health* playerHealth = playerCol.GetComponent<comp::Health>();
-							comp::Player* playerTag = playerCol.GetComponent<comp::Player>();
-							comp::Attack* atk = attackCollider.GetComponent<comp::Attack>();
-
-							if (playerHealth && atk && playerTag)
-							{
-								playerHealth->currentHealth -= atk->damage;
-								LOG_INFO("ATTACK COLLIDER HIT GOOD GUY!");
-								atk->lifeTime = 0.f;
-							}
-						});
-
-						enemyStats.cooldownTimer = enemyStats.attackSpeed;
-						enemyStats.isAttacking = false;
-					}
+				//If the attack is ranged add a velocity to the entity.
+				if (stats.isRanged)
+				{
+					sm::Vector3 vel = stats.targetDir * 10.f; //CHANGE HERE WHEN FORWARD GETS FIXED!!!!!!
+					attackCollider.AddComponent<comp::Velocity>()->vel = vel;
 				}
 
-			});
-		}
-	});
+				//DEBUG
+				LOG_INFO("Attack Collider Created!");
+				attackCollider.AddComponent<comp::Network>();
+				//
 
+				
+				CollisionSystem::Get().AddOnCollision(attackCollider, [=](Entity other)
+					{
+						if (other == entity)
+							return;
+					
+						
+						comp::Health* otherHealth = other.GetComponent<comp::Health>();
+						comp::Attack* atk = attackCollider.GetComponent<comp::Attack>();
+
+						if (otherHealth)
+						{
+							otherHealth->currentHealth -= atk->damage;
+							LOG_INFO("ATTACK COLLIDER HIT BAD GUY!");
+							atk->lifeTime = 0.f;
+						}
+					});
+
+				stats.cooldownTimer = stats.attackSpeed;								
+				stats.isAttacking = false;
+			}
+
+		});
+	
 
 	//Health System
-	scene.ForEachComponent<comp::Health>([&](Entity& Entity, comp::Health& Health)
-	{
-		//Check if something should be dead, and if so set isAlive to false
-		if (Health.currentHealth <= 0)
+	scene.ForEachComponent<comp::Health>([&](Entity& entity, comp::Health& health)
 		{
-			LOG_INFO("Entity died");
-			Health.isAlive = false;
-			Entity.Destroy();
-		}
-	});
+			//Check if something should be dead, and if so set isAlive to false
+			if (health.currentHealth <= 0)
+			{
+				LOG_INFO("Entity died");
+				health.isAlive = false;
+				if (!entity.GetComponent<comp::Player>())
+				{
+					entity.Destroy();
+				}
+
+			}
+		});
 
 	//Projectile Life System
 	scene.ForEachComponent<comp::Attack>([&](Entity& ent, comp::Attack& Projectile)
@@ -136,18 +103,20 @@ void Systems::MovementSystem(HeadlessScene& scene, float dt)
 {
 	//Transform
 	scene.ForEachComponent<comp::Transform, comp::Velocity>([&, dt](comp::Transform& transform, comp::Velocity& velocity)
-	{
-		transform.position += velocity.vel * dt;
-	});
+		{
+			transform.previousPosition = transform.position;
+			transform.position += velocity.vel * dt;
+		});
 }
 
 void Systems::MovementColliderSystem(HeadlessScene& scene, float dt)
 {
 	//BoundingOrientedBox
 	scene.ForEachComponent<comp::Transform, comp::BoundingOrientedBox>([&, dt](comp::Transform& transform, comp::BoundingOrientedBox& obb)
-	{
-		obb.Center = transform.position;
-	});
+		{
+			obb.Center = transform.position;
+			obb.Orientation = transform.rotation;
+		});
 
 	//BoundingSphere
 	scene.ForEachComponent<comp::Transform, comp::BoundingSphere>([&, dt](comp::Transform& transform, comp::BoundingSphere& sphere)
