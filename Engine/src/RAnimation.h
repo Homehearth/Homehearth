@@ -1,6 +1,7 @@
 #pragma once
 #include "AnimStructures.h"
 struct aiAnimation;
+struct aiNodeAnim;
 
 /*
 	Load in one animation from file.
@@ -29,6 +30,10 @@ private:
 	std::unordered_map<std::string, KeyFrames> m_keyFrames;
 
 private:
+	void LoadPositions(const std::string& bonename, aiNodeAnim* channel);
+	void LoadScales(const std::string& bonename, aiNodeAnim* channel);
+	void LoadRotations(const std::string& bonename, aiNodeAnim* channel);
+
 	void LoadKeyframes(const aiAnimation* animation);
 
 	//Make public? Needed for blending two animations?

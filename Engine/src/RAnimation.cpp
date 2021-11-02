@@ -19,66 +19,114 @@ RAnimation::~RAnimation()
 	m_keyFrames.clear();
 }
 
+void RAnimation::LoadPositions(const std::string& bonename, aiNodeAnim* channel)
+{
+	KeyFrames keyframes;
+	positionKey_t pos;
+
+	//Keyframe exist - copy values
+	auto key = m_keyFrames.find(bonename);
+	if (key != m_keyFrames.end())
+	{
+		keyframes = key->second;
+	}
+
+	//Load in all the positions
+	keyframes.position.reserve(size_t(channel->mNumPositionKeys));
+	for (UINT i = 0; i < channel->mNumPositionKeys; i++)
+	{
+		pos.time = channel->mPositionKeys[i].mTime;
+		const aiVector3D aiPos = channel->mPositionKeys[i].mValue;
+		pos.val = { aiPos.x, aiPos.y, aiPos.z };
+		keyframes.position.push_back(pos);
+	}
+
+	m_keyFrames[bonename] = keyframes;
+}
+
+void RAnimation::LoadScales(const std::string& bonename, aiNodeAnim* channel)
+{
+	KeyFrames keyframes;
+	scaleKey_t scl;
+
+	//Keyframe exist - copy values
+	auto key = m_keyFrames.find(bonename);
+	if (key != m_keyFrames.end())
+	{
+		keyframes = key->second;
+	}
+
+	//Load in all the scales
+	keyframes.scale.reserve(size_t(channel->mNumScalingKeys));
+	for (UINT i = 0; i < channel->mNumScalingKeys; i++)
+	{
+		scl.time = channel->mScalingKeys[i].mTime;
+		const aiVector3D aiScl = channel->mScalingKeys[i].mValue;
+		scl.val = { aiScl.x, aiScl.y, aiScl.z };
+		keyframes.scale.push_back(scl);
+	}
+
+	m_keyFrames[bonename] = keyframes;
+}
+
+void RAnimation::LoadRotations(const std::string& bonename, aiNodeAnim* channel)
+{
+	KeyFrames keyframes;
+	rotationKey_t rot;
+
+	//Keyframe exist - copy values
+	auto key = m_keyFrames.find(bonename);
+	if (key != m_keyFrames.end())
+	{
+		keyframes = key->second;
+	}
+
+	//Load in all the rotation
+	keyframes.rotation.reserve(size_t(channel->mNumRotationKeys));
+	for (UINT i = 0; i < channel->mNumRotationKeys; i++)
+	{
+		rot.time = channel->mRotationKeys[i].mTime;
+		const aiQuaternion aiRot = channel->mRotationKeys[i].mValue;
+		rot.val = { aiRot.x, aiRot.y, aiRot.z, aiRot.w };
+		rot.val.Normalize();
+		keyframes.rotation.push_back(rot);
+	}
+
+	m_keyFrames[bonename] = keyframes;
+}
+
 void RAnimation::LoadKeyframes(const aiAnimation* animation)
 {
-	//Group together channels with the same name.
-	//unordered map?
+	std::string assimpKeyword = "_$AssimpFbx$_";
 
 	//Go through all the bones
 	for (UINT i = 0; i < animation->mNumChannels; i++)
 	{
-		const std::string boneName = animation->mChannels[i]->mNodeName.C_Str();
-		
-		//check if the keyframe exist - if so add to it - otherwise 
+		std::string assimpName = animation->mChannels[i]->mNodeName.C_Str();
+		std::string boneName = assimpName.substr(0, assimpName.find(assimpKeyword));
 
-		//if (boneName.find("$AssimpFbx$") == boneName.npos)
-			//Nothing special - load in all, translations, scales and rotations
-
-		//else if ($AssimpFbx$_translations)
-			//load in all the translations for bonename minus "$AssimpFbx$_translations"
-
-		//Ignore AssimpFbx
-		//if (boneName.find("$AssimpFbx$") == boneName.npos)
-		//{
-			KeyFrames		keyframes;
-			positionKey_t	pos;
-			scaleKey_t		scl;
-			rotationKey_t	rot;
-
-			//Load in all the positions
-			keyframes.position.reserve(size_t(animation->mChannels[i]->mNumPositionKeys));
-			for (UINT p = 0; p < animation->mChannels[i]->mNumPositionKeys; p++)
-			{
-				pos.time = animation->mChannels[i]->mPositionKeys[p].mTime;
-				const aiVector3D aiPos = animation->mChannels[i]->mPositionKeys[p].mValue;
-				pos.val = { aiPos.x, aiPos.y, aiPos.z };
-				keyframes.position.push_back(pos);
-			}
-
-			//Load in all the scales
-			keyframes.scale.reserve(size_t(animation->mChannels[i]->mNumScalingKeys));
-			for (UINT s = 0; s < animation->mChannels[i]->mNumScalingKeys; s++)
-			{
-				scl.time = animation->mChannels[i]->mScalingKeys[s].mTime;
-				const aiVector3D aiScl = animation->mChannels[i]->mScalingKeys[s].mValue;
-				scl.val = { aiScl.x, aiScl.y, aiScl.z };
-				keyframes.scale.push_back(scl);
-			}
-
-			//Load in all the rotations
-			keyframes.rotation.reserve(size_t(animation->mChannels[i]->mNumRotationKeys));
-			for (UINT r = 0; r < animation->mChannels[i]->mNumRotationKeys; r++)
-			{
-				rot.time = animation->mChannels[i]->mRotationKeys[r].mTime;
-				const aiQuaternion aiRot = animation->mChannels[i]->mRotationKeys[r].mValue;
-				rot.val = { aiRot.x, aiRot.y, aiRot.z, aiRot.w };
-				rot.val.Normalize();
-				keyframes.rotation.push_back(rot);
-			}
-
-			m_keyFrames[boneName] = keyframes;
-		//}
+		//Load in only one part if we get any of the following keywords
+		if (assimpName.find("Translation") != std::string::npos)
+		{
+			LoadPositions(boneName, animation->mChannels[i]);
+		}
+		else if (assimpName.find("Scaling") != std::string::npos)
+		{
+			LoadScales(boneName, animation->mChannels[i]);
+		}
+		else if (assimpName.find("Rotation") != std::string::npos)
+		{
+			LoadRotations(boneName, animation->mChannels[i]);
+		}
+		else
+		{
+			LoadPositions(boneName, animation->mChannels[i]);
+			LoadScales(boneName, animation->mChannels[i]);
+			LoadRotations(boneName, animation->mChannels[i]);
+		}
 	}
+
+	//std::cout << "Done" << std::endl;
 }
 
 const sm::Vector3 RAnimation::GetPosition(const std::string& bonename, const double& currentFrame, const double& nextFrame, UINT& lastKey, bool interpolate) const
@@ -230,9 +278,6 @@ void RAnimation::Create(const aiAnimation* animation)
 	//Load in all the keyframes
 	LoadKeyframes(animation);
 
-#ifdef _DEBUG
-		LOG_INFO("Loaded animation: %s\n", animation->mName.C_Str());
-#endif // _DEBUG
 }
 
 bool RAnimation::Create(const std::string& filename)
