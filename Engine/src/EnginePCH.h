@@ -3,7 +3,7 @@
 #define RENDER_IMGUI 0
 #define PROFILER 0
 
-#define DEBUG_SNAPSHOT 0
+#define DEBUG_SNAPSHOT 1
 
 // Turn this to 1 if you want to see the very beautiful demo menu
 #define DRAW_TEMP_2D 0

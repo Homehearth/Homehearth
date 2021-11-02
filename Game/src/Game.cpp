@@ -152,7 +152,14 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		for (uint32_t i = 0; i < count; i++)
 		{
 			msg >> entityID >> b;
-			m_gameEntities[entityID].AddComponent<comp::BoundingOrientedBox>(b);
+			if (m_gameEntities.find(entityID) != m_gameEntities.end())
+			{
+				m_gameEntities[entityID].AddComponent<comp::BoundingOrientedBox>(b);
+			}
+			else 
+			{
+				LOG_WARNING("Entity %u not in m_gameEntities, should not happen...", entityID);
+			}
 		}
 
 		msg >> count;
@@ -161,7 +168,14 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		for (uint32_t i = 0; i < count; i++)
 		{
 			msg >> entityID >> t;
-			m_gameEntities[entityID].AddComponent<comp::Transform>(t);
+			if (m_gameEntities.find(entityID) != m_gameEntities.end())
+			{
+				m_gameEntities[entityID].AddComponent<comp::Transform>(t);
+			}
+			else
+			{
+				LOG_WARNING("Entity %u not in m_gameEntities, should not happen...", entityID);
+			}
 		}
 
 		break;
@@ -238,13 +252,14 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			msg >> id;
 			if (m_gameEntities.find(id) != m_gameEntities.end())
 			{
-				// Was the entity a player?
-				if (m_players.find(id) != m_players.end())
-				{
-					m_players.erase(id);
-				}
 				m_gameEntities.at(id).Destroy();
 				m_gameEntities.erase(id);
+			}
+			// Was the entity a player?
+			if (m_players.find(id) != m_players.end())
+			{
+				m_players.at(id).Destroy();
+				m_players.erase(id);
 			}
 
 		}

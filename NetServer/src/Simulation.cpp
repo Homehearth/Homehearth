@@ -375,7 +375,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 		collider.AddComponent<comp::Network>();
 		collider.AddComponent<comp::Tag<TagType::STATIC>>();
 	}
-
+	
 	//Gridsystem
 	GridProperties_t gridOption;
 	m_grid.Initialize(gridOption.mapSize, gridOption.position, gridOption.fileName, m_pGameScene);
@@ -459,7 +459,7 @@ bool Simulation::AddPlayer(uint32_t playerID, const std::string& namePlate)
 
 	// Create Player entity in Game scene
 	Entity player = m_pGameScene->CreateEntity();
-	player.AddComponent<comp::Transform>()->position = sm::Vector3(320.f,0,-310.f);
+	player.AddComponent<comp::Transform>();// ->position = sm::Vector3(320.f, 0, -310.f);
 	player.AddComponent<comp::Velocity>();
 	player.AddComponent<comp::NamePlate>()->namePlate = namePlate;
 	player.AddComponent<comp::MeshName>()->name = "Arrow.fbx";
@@ -469,7 +469,7 @@ bool Simulation::AddPlayer(uint32_t playerID, const std::string& namePlate)
 	player.AddComponent<comp::Player>()->runSpeed = 10.f;
 #endif // _DEBUG
 
-	* player.AddComponent<comp::CombatStats>() = { 1.0f, 20.f, 1.0f, false, false };
+	*player.AddComponent<comp::CombatStats>() = { 0.3f, 20.f, 2.0f, true, 30.f};
 	player.AddComponent<comp::Health>();
 	player.AddComponent<comp::BoundingOrientedBox>();
 

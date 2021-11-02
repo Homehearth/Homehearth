@@ -134,6 +134,8 @@ namespace ecs
 			float attackDamage = 5.f;
 			float attackLifeTime = 5.f;
 			bool isRanged = false;
+			float projectileSpeed = 10.f;
+
 			bool isAttacking = false;
 			float cooldownTimer = 0.f;
 			Ray_t targetRay;
