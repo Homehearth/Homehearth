@@ -211,13 +211,8 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 		msg >> playerID;
 		if (m_simulations.find(gameID) != m_simulations.end())
 		{
-			if (m_simulations[gameID]->LeaveLobby(playerID, gameID)) {
-
-				// Send to client the message with the new game ID
-				message<GameMsg> accMsg;
-				accMsg.header.id = GameMsg::Lobby_AcceptedLeave;
-
-				m_server.SendToClient(playerID, accMsg);
+			if (m_simulations[gameID]->LeaveLobby(playerID, gameID)) 
+			{
 				break;
 			}
 		}

@@ -149,13 +149,6 @@ bool Simulation::JoinLobby(uint32_t playerID, uint32_t gameID, const std::string
 
 		// Add the players to the simulation on that specific client
 		this->AddPlayer(playerID, namePlate);
-
-		message<GameMsg> msg2;
-		msg2.header.id = GameMsg::Lobby_PlayerJoin;
-		msg2 << playerID;
-		this->Broadcast(msg2, playerID);
-
-		UpdateLobby();
 	}
 	else
 	{
@@ -179,34 +172,31 @@ bool Simulation::LeaveLobby(uint32_t playerID, uint32_t gameID)
 		return false;
 	}
 
-	this->SendRemoveAllEntitiesToPlayer(playerID);
+	// Send to client the message with the new game ID
+	message<GameMsg> accMsg;
+	accMsg.header.id = GameMsg::Lobby_AcceptedLeave;
 
-	// Update the lobby for players.
-	network::message<GameMsg> msg;
-	msg.header.id = GameMsg::Lobby_PlayerLeft;
-	msg << playerID;
-	this->Broadcast(msg);
-
-	UpdateLobby();
+	m_pServer->SendToClient(playerID, accMsg);
 
 	return true;
 }
 
 void Simulation::UpdateLobby()
 {
+	network::message<GameMsg> msg;
+	msg.header.id = GameMsg::Lobby_Update;
+
 	for (auto& player : m_players)
 	{
-		network::message<GameMsg> msg;
-		msg.header.id = GameMsg::Lobby_Update;
-		std::string name = player.second.GetComponent<comp::NamePlate>()->namePlate;
 		// Send ID first.
 		msg << (uint32_t)player.first;
 		// After that name.
-		msg << name;
-
-		// Send message to each other player and skip the current one.
-		this->Broadcast(msg, player.first);
+		msg << player.second.GetComponent<comp::NamePlate>()->namePlate;
 	}
+	msg << (uint32_t)m_players.size();
+
+	// Send message to each other player and skip the current one.
+	this->Broadcast(msg);
 }
 
 
@@ -238,7 +228,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 					comp::CombatStats* stats = e.GetComponent<comp::CombatStats>();
 					if (stats)
 					{
-						if(stats->cooldownTimer <= 0.0f)
+						if (stats->cooldownTimer <= 0.0f)
 							stats->isAttacking = true;
 
 						stats->targetRay = input.mouseRay;
@@ -248,7 +238,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 					if (player)
 					{
 						player->state = comp::Player::State::ATTACK;
-						
+
 					}
 				}
 			}
@@ -297,17 +287,17 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 	e2.AddComponent<comp::Network>();
 
 	// --- END OF THE WORLD ---
-	//Entity collider;
-	//for (size_t i = 0; i < mapColliders->size(); i++)
-	//{
-	//	collider = m_pGameScene->CreateEntity();
-	//	collider.AddComponent<comp::BoundingOrientedBox>()->Center = mapColliders->at(i).Center;
-	//	collider.GetComponent<comp::BoundingOrientedBox>()->Extents = mapColliders->at(i).Extents;
-	//	collider.GetComponent<comp::BoundingOrientedBox>()->Orientation = mapColliders->at(i).Orientation;
-	//	//collider.AddComponent<comp::Transform>()->position = mapColliders->at(i).Center;
-	//	collider.AddComponent<comp::Network>();
-	//	collider.AddComponent<comp::Tag<TagType::STATIC>>();
-	//}
+	Entity collider;
+	for (size_t i = 0; i < mapColliders->size(); i++)
+	{
+		collider = m_pGameScene->CreateEntity();
+		collider.AddComponent<comp::BoundingOrientedBox>()->Center = mapColliders->at(i).Center;
+		collider.GetComponent<comp::BoundingOrientedBox>()->Extents = mapColliders->at(i).Extents;
+		collider.GetComponent<comp::BoundingOrientedBox>()->Orientation = mapColliders->at(i).Orientation;
+		//collider.AddComponent<comp::Transform>()->position = mapColliders->at(i).Center;
+		collider.AddComponent<comp::Network>();
+		collider.AddComponent<comp::Tag<TagType::STATIC>>();
+	}
 
 	m_addedEntities.clear();
 	m_removedEntities.clear();
@@ -343,9 +333,9 @@ void Simulation::ReadyCheck(const uint32_t& playerID)
 			msg.header.id = GameMsg::Game_Start;
 			this->Broadcast(msg);
 			return;
-//#endif
+			//#endif
 			auto it = m_players.begin();
-			
+
 			uint32_t readyCount = 0;
 			while (it != m_players.end())
 			{
@@ -355,7 +345,7 @@ void Simulation::ReadyCheck(const uint32_t& playerID)
 				}
 				it++;
 			}
-			
+
 			// Start game when all players are marked ready
 			if (readyCount == MAX_PLAYERS_PER_LOBBY)
 			{
@@ -381,6 +371,9 @@ bool Simulation::AddPlayer(uint32_t playerID, const std::string& namePlate)
 		return false;
 	}
 
+	// Send all entities in Game Scene to new player
+	this->SendAllEntitiesToPlayer(playerID);
+
 	// Create Player entity in Game scene
 	Entity player = m_pGameScene->CreateEntity();
 	player.AddComponent<comp::Transform>();
@@ -393,7 +386,7 @@ bool Simulation::AddPlayer(uint32_t playerID, const std::string& namePlate)
 	player.AddComponent<comp::Player>()->runSpeed = 10.f;
 #endif // _DEBUG
 
-	*player.AddComponent<comp::CombatStats>() = { 1.0f, 20.f, 1.0f, false, false };
+	* player.AddComponent<comp::CombatStats>() = { 1.0f, 20.f, 1.0f, false, false };
 	player.AddComponent<comp::Health>();
 	player.AddComponent<comp::BoundingOrientedBox>();
 
@@ -401,12 +394,8 @@ bool Simulation::AddPlayer(uint32_t playerID, const std::string& namePlate)
 	player.AddComponent<comp::Tag<TagType::DYNAMIC>>();
 	// Network component will make sure the new entity is sent
 	player.AddComponent<comp::Network>(playerID);
-	
-	m_players[playerID] = player;
 
-	// Send all entities in Game Scene to new player
-	this->SendAllEntitiesToPlayer(playerID);
-	this->SendEntity(player, playerID);
+	m_players[playerID] = player;
 
 	return true;
 }
@@ -426,6 +415,8 @@ bool Simulation::AddEnemy()
 
 bool Simulation::RemovePlayer(uint32_t playerID)
 {
+	this->SendRemoveAllEntitiesToPlayer(playerID);
+
 	Entity player = m_players.at(playerID);
 	if (m_playerInputs.find(player) != m_playerInputs.end())
 	{
@@ -467,20 +458,19 @@ std::unordered_map<uint32_t, Entity>::iterator Simulation::RemovePlayer(std::uno
 
 void Simulation::SendSnapshot()
 {
+	// remove any client disconnected
+	this->ScanForDisconnects();
+
+	// all new Entities
+	this->SendEntities(m_addedEntities);
+	m_addedEntities.clear();
+
+	// all destroyed Entities
+	this->SendRemoveEntities(m_removedEntities);
+	m_removedEntities.clear();
 
 	if (m_pCurrentScene == m_pGameScene)
 	{
-		// remove any client disconnected
-		this->ScanForDisconnects();
-		
-		// all new Entities
-		this->SendEntities(m_addedEntities);
-		m_addedEntities.clear();
-
-		// all destroyed Entities
-		this->SendRemoveEntities(m_removedEntities);
-		m_removedEntities.clear();
-
 		// Positions
 		network::message<GameMsg> msg;
 		msg.header.id = GameMsg::Game_Snapshot;
@@ -497,8 +487,10 @@ void Simulation::SendSnapshot()
 
 		this->Broadcast(msg);
 	}
-	
-
+	else if (m_pCurrentScene == m_pLobbyScene)
+	{
+		this->UpdateLobby();
+	}
 }
 
 void Simulation::Update(float dt)
@@ -588,7 +580,7 @@ HeadlessScene* Simulation::GetGameScene() const
 	return m_pGameScene;
 }
 
-void Simulation::SendEntity(Entity e, size_t exclude = -1)const
+void Simulation::SendEntity(Entity e, size_t exclude)const
 {
 	message<GameMsg> msg;
 	msg.header.id = GameMsg::Game_AddEntity;
@@ -597,7 +589,7 @@ void Simulation::SendEntity(Entity e, size_t exclude = -1)const
 
 	msg << 1U;
 
-	this->Broadcast(msg);
+	this->Broadcast(msg, exclude);
 }
 
 void Simulation::SendEntities(const std::vector<Entity>& entities) const
@@ -655,7 +647,7 @@ void Simulation::SendRemoveSingleEntity(Entity e) const
 	{
 		this->SendRemoveSingleEntity(net->id);
 	}
-	else 
+	else
 	{
 		LOG_WARNING("Tried to remove entity without network component");
 	}
