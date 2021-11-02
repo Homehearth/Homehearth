@@ -203,11 +203,9 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		{
 			Entity e = CreateEntityFromMessage(msg);
 
-			LOG_INFO("Added entity %u", e.GetComponent<comp::Network>()->id);
-
 			if (e.GetComponent<comp::Network>()->id == m_localPID)
 			{
-				LOG_INFO("This player added");
+				LOG_INFO("You added yourself, congratulations!");
 				m_players[m_localPID] = e;
 
 				GetScene("Game").ForEachComponent<comp::Tag<TagType::CAMERA>>([&](Entity entt, comp::Tag<TagType::CAMERA>& t)
@@ -221,8 +219,16 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			}
 			else if (e.GetComponent<comp::Player>())
 			{
+				LOG_INFO("A remote player added!");
 				m_players[e.GetComponent<comp::Network>()->id] = e;
 			}
+		}
+
+		LOG_INFO("Successfully loaded all entities!");
+
+		if (GetCurrentScene() == &GetScene("Loading"))
+		{
+			SetScene("Lobby");
 		}
 
 		break;
@@ -257,7 +263,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	case GameMsg::Lobby_Accepted:
 	{
 		msg >> m_gameID;
-		SetScene("Lobby");
+		SetScene("Loading");
 		LOG_INFO("You are now in lobby: %lu", m_gameID);
 
 		break;

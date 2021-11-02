@@ -442,7 +442,6 @@ void sceneHelp::SetupLobbyJoinScreen(Game* game)
 				{
 					game->m_playerName = *nameInputField->RawGetBuffer();
 					game->CreateLobby();
-					game->SetScene("Loading");
 
 					// Update own name.
 					dynamic_cast<rtd::Text*>(game->GetScene("Lobby").GetCollection("playerIcon1")->elements[1].get())->SetText(game->m_playerName);
@@ -451,7 +450,6 @@ void sceneHelp::SetupLobbyJoinScreen(Game* game)
 				{
 					game->m_playerName = *nameInputField->RawGetBuffer();
 					game->JoinLobby(std::stoi(*lobbyString));
-					game->SetScene("Loading");
 
 					// Update own name.
 					dynamic_cast<rtd::Text*>(game->GetScene("Lobby").GetCollection("playerIcon1")->elements[1].get())->SetText(game->m_playerName);
