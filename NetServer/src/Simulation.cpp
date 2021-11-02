@@ -366,17 +366,17 @@ bool Simulation::IsEmpty() const
 
 bool Simulation::AICreateNodes()
 {
-	//m_pGameScene->ForEachComponent<comp::Tile>([=](Entity entity, comp::Tile& tile) 
-	//{
-	//	//LOG_INFO("Tile ID: %lf  %lf",tile.gridID.x, tile.gridID.y);
-	//});
-	std::vector<Entity>* tiles = m_grid.GetTiles();
-	for (Entity& tile : *tiles)
+	m_pGameScene->ForEachComponent<comp::Tile>([&](comp::Tile& tile) 
 	{
-		comp::Tile* tileComponent = tile.GetComponent<comp::Tile>();
-		LOG_INFO("Tile ID: %lf  %lf", tileComponent->gridID.x, tileComponent->gridID.y);
+		//LOG_INFO("Tile ID: %lf  %lf",tile.gridID.x, tile.gridID.y);
+	});
+	//std::vector<Entity>* tiles = m_grid.GetTiles();
+	//for (Entity& tile : *tiles)
+	//{
+	//	comp::Tile* tileComponent = tile.GetComponent<comp::Tile>();
+	//	LOG_INFO("Tile ID: %lf  %lf", tileComponent->gridID.x, tileComponent->gridID.y);
 
-	}
+	//}
 	//std::vector<std::string> file = OpenFile("Other/NodeInfo.txt");//replace with actual name
 	//int currentIndex = 0;
 	//if (file.size() == 0)

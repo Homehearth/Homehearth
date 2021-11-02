@@ -120,7 +120,6 @@ namespace ecs
 			enum class State
 			{
 				IDLE,
-				PATROL,
 				CHASE,
 				ATTACK
 			} state;
