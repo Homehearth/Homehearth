@@ -77,47 +77,6 @@ void Game::OnUserUpdate(float deltaTime)
 {
 	static float pingCheck = 0.f;
 
-	IMGUI(
-		ImGui::Begin("Network");
-
-	if (m_client.IsConnected())
-	{
-		ImGui::Text(std::string("Local Client ID: " + std::to_string(m_localPID)).c_str());
-
-		if (m_client.m_latency > 0)
-		{
-			ImGui::Text(std::string("Latency: " + std::to_string(m_client.m_latency) + "ms").c_str());
-		}
-		else
-		{
-			ImGui::Text(std::string("Latency: <1 ms").c_str());
-		}
-
-		
-		if (GetCurrentScene() == &GetScene("Game"))
-		{
-			ImGui::Text(std::string("Game ID: " + std::to_string(m_gameID)).c_str());
-		}
-
-		if (ImGui::Button("Disconnect"))
-		{
-			this->m_client.Disconnect();
-		}
-	}
-	else
-	{
-		static char buffer[IPV6_ADDRSTRLEN] = "127.0.0.1";
-		ImGui::InputText("IP", buffer, IPV6_ADDRSTRLEN);
-		static uint16_t port = 4950;
-		ImGui::InputInt("Port", (int*)&port);
-		if (ImGui::Button("Connect"))
-		{
-			m_client.Connect(buffer, port);
-		}
-	}
-	ImGui::End();
-	);
-
 
 	/*
 if (GetCurrentScene() == &GetScene("Game") && GetCurrentScene()->GetCurrentCamera()->GetCameraType() == CAMERATYPE::PLAY)

@@ -20,7 +20,7 @@ namespace sceneHelp
 	void SetupMainMenuScreen(Game* game);
 	void SetupLobbyJoinScreen(Game* game);
 	void SetupInLobbyScreen(Game* game);
-	void SetupInGameScreen(Scene& scene);
+	void SetupInGameScreen(Game* game);
 	void SetupOptionsScreen(Scene& scene);
 	void SetupLoadingScene(Game* game);
 }
