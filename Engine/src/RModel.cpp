@@ -176,7 +176,7 @@ bool RModel::CombineMeshes(std::vector<aiMesh*>& submeshes, submesh_t& submesh)
         if (aimesh->HasBones())
         {
             skeletonVertices.shrink_to_fit();
-            LoadBones(aimesh, skeletonVertices);
+            LoadVertexSkinning(aimesh, skeletonVertices);
             submesh.hasBones = true;
         }
     }
@@ -350,7 +350,23 @@ void RModel::LoadMaterial(const aiScene* scene, const UINT& matIndex, bool& useM
     }
 }
 
-bool RModel::LoadBones(const aiMesh* aimesh, std::vector<anim_vertex_t>& skeletonVertices)
+void RModel::BoneHierchy(aiNode* node, std::unordered_map<std::string, bone_t>& nameToBone)
+{
+    //Check if the bone exist in the map
+    auto boneIterator = nameToBone.find(node->mName.C_Str());
+    if (boneIterator != nameToBone.end())
+    {
+        m_allBones.push_back(boneIterator->second);
+    }
+
+    //Check the children
+    for (UINT i = 0; i < node->mNumChildren; i++)
+    {
+        BoneHierchy(node->mChildren[i], nameToBone);
+    }
+}
+
+bool RModel::LoadVertexSkinning(const aiMesh* aimesh, std::vector<anim_vertex_t>& skeletonVertices)
 {
     //Data that will be used temporarily for this.
     std::vector<UINT> boneCounter;
@@ -359,21 +375,8 @@ bool RModel::LoadBones(const aiMesh* aimesh, std::vector<anim_vertex_t>& skeleto
     //Go through all the bones
     for (UINT b = 0; b < aimesh->mNumBones; b++)
     {
-        const aiBone* aibone = aimesh->mBones[b];
-        std::string boneName = aibone->mName.C_Str();
-
-        //Bone does not exist - create it
-        if (m_boneMap.find(boneName) == m_boneMap.end())
-        {
-            bone_t bone;
-            bone.name = aibone->mName.C_Str();
-            bone.inverseBind = sm::Matrix(&aibone->mOffsetMatrix.a1).Transpose();
-            
-            m_boneMap[boneName] = static_cast<UINT>(m_allBones.size());
-            m_allBones.push_back(bone);
-        }
-
-        UINT boneNr = m_boneMap[boneName];
+        aiBone* aibone = aimesh->mBones[b];
+        UINT boneNr = m_boneMap[aibone->mName.C_Str()];
 
         //Go through all the vertices that the bone affect
         for (UINT v = 0; v < aibone->mNumWeights; v++)
@@ -525,14 +528,52 @@ bool RModel::Create(const std::string& filename)
 
     LoadLights(scene);
 
+   
     /*
         Links together a material to multiple submeshes - a set
     */
+    std::unordered_map<std::string, bone_t> nameToBone;
     std::unordered_map<UINT, std::vector<aiMesh*>> matSet;
     for (UINT i = 0; i < scene->mNumMeshes; i++)
     {
-        UINT matIndex = scene->mMeshes[i]->mMaterialIndex;
-        matSet[matIndex].push_back(scene->mMeshes[i]);
+        aiMesh* aimesh = scene->mMeshes[i];
+        UINT matIndex = aimesh->mMaterialIndex;
+        matSet[matIndex].push_back(aimesh);
+
+        //Add bones if they exist
+        for (UINT b = 0; b < aimesh->mNumBones; b++)
+        {
+            const aiBone* aibone = aimesh->mBones[b];
+            std::string boneName = aibone->mName.C_Str();
+
+            //Bone does not exist - create it
+            if (nameToBone.find(boneName) == nameToBone.end())
+            {
+                bone_t bone;
+                bone.name = boneName;
+                bone.inverseBind = sm::Matrix(&aibone->mOffsetMatrix.a1).Transpose();
+                nameToBone[boneName] = bone;
+            }
+        }
+    }
+
+
+    BoneHierchy(scene->mRootNode, nameToBone);
+    std::cout << "Final parent fix" << std::endl;
+    for (UINT i = 0; i < m_allBones.size(); i++)
+    {
+        if (m_boneMap.find(m_allBones[i].name) == m_boneMap.end())
+        {
+            m_boneMap[m_allBones[i].name] = i;
+        }
+
+        std::string parentName = scene->mRootNode->FindNode(m_allBones[i].name.c_str())->mParent->mName.C_Str();
+        if (m_boneMap.find(parentName) != m_boneMap.end())
+            m_allBones[i].parentIndex = m_boneMap[parentName];
+       
+#ifdef _DEBUG
+        std::cout << i << "\t" << m_allBones[i].parentIndex << "\t" << m_allBones[i].name << std::endl;
+#endif // _DEBUG
     }
 
     //.fbx uses default material, and .obj uses mtl
@@ -564,21 +605,6 @@ bool RModel::Create(const std::string& filename)
         m_meshes.push_back(submesh);
     }
     m_meshes.shrink_to_fit();
-
-    //Set bones parents
-    if (!m_allBones.empty())
-    {
-        std::cout << "Final parent fix" << std::endl;
-        for (size_t i = 0; i < m_allBones.size(); i++)
-        {
-            std::string parentName = scene->mRootNode->FindNode(m_allBones[i].name.c_str())->mParent->mName.C_Str();
-
-            if (m_boneMap.find(parentName) != m_boneMap.end())
-                m_allBones[i].parentIndex = m_boneMap[parentName];
-
-            std::cout << i << "\t" << m_allBones[i].parentIndex << "\t" << m_allBones[i].name << std::endl;
-        }
-    }
 
     //Freeing memory
     matSet.clear();

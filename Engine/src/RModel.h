@@ -6,6 +6,7 @@
 //Define structs to avoid 
 struct aiMesh;
 struct aiScene;
+struct aiNode;
 
 /*
 	Load in a model/scene of multiple meshes with Assimp 5.0.1
@@ -47,8 +48,9 @@ private:
 	/*
 		Skeleton information
 	*/
-	std::vector<bone_t>				m_allBones;
-	std::unordered_map<std::string, UINT> m_boneMap;	//Move to create later?
+	//std::unordered_map<std::string, bone_t> m_nameToBone;	//Temp
+	std::vector<bone_t>						m_allBones;
+	std::unordered_map<std::string, UINT>	m_boneMap;		//Move to create later?
 
 private:
 	//Get the end of file. Searches for "."
@@ -68,7 +70,10 @@ private:
 	//Loading data from assimp
 	void LoadLights(const aiScene* scene);
 	void LoadMaterial(const aiScene* scene, const UINT& matIndex, bool& useMTL, submesh_t& inoutMesh) const;
-	bool LoadBones(const aiMesh* aimesh, std::vector<anim_vertex_t>& vertices);
+
+	void LoadBones();
+	void BoneHierchy(aiNode* node, std::unordered_map<std::string, bone_t>& nameToBone);
+	bool LoadVertexSkinning(const aiMesh* aimesh, std::vector<anim_vertex_t>& vertices);
 
 public:
 	RModel();
