@@ -75,8 +75,10 @@ bool Game::OnStartup()
 	sceneHelp::CreateJoinLobbyScene(this);
 	sceneHelp::CreateLoadingScene(this);
 
-
+#ifdef _DEBUG
 	CreateGridSystem();
+#endif // DEBUG
+
 	// Set Current Scene
 	SetScene("MainMenu");
 

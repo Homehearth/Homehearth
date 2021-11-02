@@ -46,10 +46,10 @@ void GridSystem::Initialize(sm::Vector2 mapSize, sm::Vector3 position, std::stri
 
 			sm::Vector4 rgba;
 
-			rgba.x = (float)pixelValues.at(0 + ((row + (col * (int)m_gridSize.y)) * 4));
-			rgba.y = (float)pixelValues.at(1 + ((row + (col * (int)m_gridSize.y)) * 4));
-			rgba.z = (float)pixelValues.at(2 + ((row + (col * (int)m_gridSize.y)) * 4));
-			rgba.w = (float)pixelValues.at(3 + ((row + (col * (int)m_gridSize.y)) * 4));
+			rgba.x = (float)pixelValues.at(0 + ((row + (col * (size_t)m_gridSize.y)) * 4));
+			rgba.y = (float)pixelValues.at(1 + ((row + (col * (size_t)m_gridSize.y)) * 4));
+			rgba.z = (float)pixelValues.at(2 + ((row + (col * (size_t)m_gridSize.y)) * 4));
+			rgba.w = (float)pixelValues.at(3 + ((row + (col * (size_t)m_gridSize.y)) * 4));
 
 			//std::cout << "RGBA: " << rgba.x << " " << rgba.y << " " << rgba.z << " " << rgba.w << std::endl;
 
@@ -118,10 +118,10 @@ void GridSystem::Initialize2(sm::Vector2 mapSize, sm::Vector3 position, std::str
 
 			sm::Vector4 rgba;
 
-			rgba.x = (float)pixelValues.at(0 + ((row + (col * (int)m_gridSize.y)) * 4));
-			rgba.y = (float)pixelValues.at(1 + ((row + (col * (int)m_gridSize.y)) * 4));
-			rgba.z = (float)pixelValues.at(2 + ((row + (col * (int)m_gridSize.y)) * 4));
-			rgba.w = (float)pixelValues.at(3 + ((row + (col * (int)m_gridSize.y)) * 4));
+			rgba.x = (float)pixelValues.at(0 + ((row + (col * (size_t)m_gridSize.y)) * 4));
+			rgba.y = (float)pixelValues.at(1 + ((row + (col * (size_t)m_gridSize.y)) * 4));
+			rgba.z = (float)pixelValues.at(2 + ((row + (col * (size_t)m_gridSize.y)) * 4));
+			rgba.w = (float)pixelValues.at(3 + ((row + (col * (size_t)m_gridSize.y)) * 4));
 
 			//std::cout << "RGBA: " << rgba.x << " " << rgba.y << " " << rgba.z << " " << rgba.w << std::endl;
 
@@ -153,7 +153,7 @@ void GridSystem::Initialize2(sm::Vector2 mapSize, sm::Vector3 position, std::str
 			tile->type = tileTypeTemp;
 			comp::Transform* transform = tileEntity.AddComponent<comp::Transform>();
 			transform->position = tilePosition;
-			transform->scale = { 4.2, 0.5f, 4.2 };
+			transform->scale = { 4.2f, 0.5f, 4.2f };
 
 			m_tiles.push_back(tileEntity);
 		}
