@@ -1,4 +1,5 @@
 #include "NetServerPCH.h"
+#include "Wave.h"
 #include "ServerSystems.h"
 #include "Simulation.h"
 
@@ -37,10 +38,26 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 			velocity->vel *= 5.0f;
 			*combatStats = {1.0f, 20.f, 1.0f, false, false};
 		}
+		break;
+	case EnemyType::Default2:
+		{
+			// ---DEFAULT ENEMY 2---
+			transform->position = spawnP;
+			meshName->name = "StreetLamp.obj";
+			obb->Extents = sm::Vector3(2.f, 2.f, 2.f);
+			velocity->vel = sm::Vector3(transform->position * -1.0f);
+			velocity->vel.Normalize();
+			velocity->vel *= 5.0f;
+			*combatStats = { 1.0f, 20.f, 1.0f, false, false };
+		}
+		break;
+	default:
+			LOG_WARNING("Attempted to create unknown EnemyType.")
+		break;
 	}
 
 	simulation->SendEntity(entity);
-	
+
 	return entity;
 }
 
@@ -52,7 +69,7 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
  *@param point		   This is the point the calculation assumes to spawn the enemy from.
  *@param waveInfo      Contains configurations for the wave system.
  */
-void SpawnZoneWave(Simulation* simulation, WaveInfo& waveInfo)
+void SpawnZoneWave(Simulation* simulation, Wave& currentWave)
 {
 	LOG_INFO("[WaveSystem] spawns a zone wave...");
 	
@@ -62,21 +79,27 @@ void SpawnZoneWave(Simulation* simulation, WaveInfo& waveInfo)
 	int nrOfEnemies = 0;
 	float degree = 0.0f;
 
-	for (auto& group : waveInfo.enemyGroups)
+	float distance;
+	float posX;
+	float posZ;
+
+	using namespace EnemyManagement;
+	for (auto& group : currentWave.GetGroups())
 	{
-		//Go through each enemyType of  group
-		for (auto& enemyType : group.enemiesPerType)
+		//Go through each enemyType of that group
+		constexpr int SIZE = static_cast<int>(EnemyType::ENUM_SIZE);
+		for (auto it = 0; it < SIZE; it++)
 		{
-			nrOfEnemies = enemyType.second;
-			degree = (360.f / static_cast<float>(nrOfEnemies)) * deg2rad;
+			nrOfEnemies = group.GetEnemyTypeCount(static_cast<EnemyType>(it));
+			const float degree = (360.f / static_cast<float>(nrOfEnemies)) * deg2rad;
 
 			//Spawn enemies of this type
 			for (int i = 0; i < nrOfEnemies; i++)
 			{
-				const float distance = (rand() % (max - min)) + min;
-				const float posX = distance * cos(i * degree) + group.origo.x;
-				const float posZ = distance * sin(i * degree) + group.origo.y;
-				EnemyManagement::CreateEnemy(simulation, { posX, 0.0f, posZ }, enemyType.first);
+				distance = static_cast<float>(rand() % (max - min) + min);
+				posX = distance * cos(i * degree) + group.GetSpawnPoint().x;
+				posZ = distance * sin(i * degree) + group.GetSpawnPoint().y;
+				EnemyManagement::CreateEnemy(simulation, { posX, 0.0f, posZ }, static_cast<EnemyType>(it));
 			}
 		}
 	}
@@ -91,32 +114,35 @@ void SpawnZoneWave(Simulation* simulation, WaveInfo& waveInfo)
  *@param point		   This is the point the calculation assumes to spawn the enemy from.
  *@param waveInfo      Contains configurations for the wave system.
  */
-void SpawnSwarmWave(Simulation* simulation, WaveInfo& waveInfo)
+void SpawnSwarmWave(Simulation* simulation, Wave& currentWave)
 {
 	LOG_INFO("[WaveSystem] spawns a swarm wave...");
 	
-	const float distance = waveInfo.spawnDistance;
+	const float distance = currentWave.GetDistance();
 	const float deg2rad = 3.14f / 180.f;
 	int nrOfEnemies = 0;
 
-	for (auto& group : waveInfo.enemyGroups)
+	float posX;
+	float posZ;
+
+	using namespace EnemyManagement;
+	for (auto& group : currentWave.GetGroups())
 	{
 		//Go through each enemyType of that group
-		for (auto& enemyType : group.enemiesPerType)
+		constexpr int SIZE = static_cast<int>(EnemyType::ENUM_SIZE);
+		for (auto it = 0; it < SIZE; it++)
 		{
-			nrOfEnemies = enemyType.second;
+			nrOfEnemies = group.GetEnemyTypeCount(static_cast<EnemyType>(it));
 			const float degree = (360.f / static_cast<float>(nrOfEnemies)) * deg2rad;
 
-			//Spawn enemies of this type
-			for(int i = 0; i < nrOfEnemies; i++)
+			for (int i = 0; i < nrOfEnemies; i++)
 			{
-				const float posX = distance * cos(i * degree) + group.origo.x;
-				const float posZ = distance * sin(i * degree) + group.origo.y;
-				EnemyManagement::CreateEnemy(simulation, { posX, 0.0f, posZ }, enemyType.first);
+				posX = distance * cos(i * degree) + group.GetSpawnPoint().x;
+				posZ = distance * sin(i * degree) + group.GetSpawnPoint().y;
+				EnemyManagement::CreateEnemy(simulation, { posX, 0.0f, posZ }, static_cast<EnemyType>(it));
 			}
 		}
 	}
-
 }
 
 /**Wave system handles enemies spawns in the scene as a "wave", handles several different types of waves that is specified by the input queue.
@@ -126,24 +152,24 @@ void SpawnSwarmWave(Simulation* simulation, WaveInfo& waveInfo)
  *@param waveInfo      Contains configurations for the wave system.
  */
 void ServerSystems::WaveSystem(Simulation* simulation,
-                               std::queue<std::pair<EnemyManagement::WaveType, WaveInfo>>& waves)
+                               std::queue<Wave>& waves)
 {
 	//initialize a new wave
 	if (!waves.empty())
 	{
-		const EnemyManagement::WaveType wave = waves.front().first;
+		const EnemyManagement::WaveType waveType = waves.front().GetWaveType();
 
-		switch (wave)
+		switch (waveType)
 		{
 		case EnemyManagement::WaveType::Zone:
 			{
-				SpawnZoneWave(simulation, waves.front().second);
+				SpawnZoneWave(simulation, waves.front());
 			}
 			break;
 
 		case EnemyManagement::WaveType::Swarm:
 			{
-				SpawnSwarmWave(simulation, waves.front().second);
+				SpawnSwarmWave(simulation, waves.front());
 			}
 			break;
 
@@ -163,7 +189,7 @@ void ServerSystems::WaveSystem(Simulation* simulation,
 /**Removes all enemies that has been destroyed and broadcasts the removal to the clients.
  *@param simulation	   Manages sending and removal of entities on the server.
  */
-void ServerSystems::ActivateNextWave(Simulation* simulation, Timer& timer, float timeToFinish)
+void ServerSystems::NextWaveConditions(Simulation* simulation, Timer& timer, int timeToFinish)
 {
 	message<GameMsg> msg;
 	msg.header.id = GameMsg::Game_RemoveEntity;
@@ -175,7 +201,7 @@ void ServerSystems::ActivateNextWave(Simulation* simulation, Timer& timer, float
 	simulation->GetGameScene()->ForEachComponent<comp::Enemy, comp::Network, comp::Transform>(
 		[&](Entity entity, comp::Enemy enemy, comp::Network network, comp::Transform transform)
 		{
-			if (abs(transform.position.x) < 8.f && abs(transform.position.z) < 8.f)
+			if (abs(transform.position.x) <= 10.f && abs(transform.position.z) <= 10.f)
 			{
 				msg << network.id;
 				count++;
@@ -194,8 +220,8 @@ void ServerSystems::ActivateNextWave(Simulation* simulation, Timer& timer, float
 		simulation->SendRemoveEntities(msg);
 	}
 
-	//Publish all enemies have been destroyed
-	if (numOfEnemies == 0 && timer.GetElapsedTime() > timeToFinish || timer.GetElapsedTime() > timeToFinish)
+	//Publish event when timeToFinish been exceeded.
+	if (timer.GetElapsedTime() > timeToFinish)
 	{
 		simulation->GetGameScene()->publish<ESceneCallWaveSystem>(0.0f);
 	}

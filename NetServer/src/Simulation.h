@@ -2,6 +2,7 @@
 #include "Server.h"
 #include "HeadlessEngine.h"
 #include "ServerSystems.h"
+#include "Wave.h"
 
 constexpr int MAX_PLAYER_PER_LOBBY = 2;
 
@@ -43,7 +44,8 @@ private:
 
 	//Game play related
 	Timer waveTimer;
-	std::queue<std::pair<EnemyManagement::WaveType, WaveInfo>> waveQueue;
+	std::queue<Wave> waveQueue;
+	void CreateWaves();
 	
 public:
 	Server* m_pServer;

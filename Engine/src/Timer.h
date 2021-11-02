@@ -11,11 +11,7 @@ private:
 	
 public:
     Timer();                                                  
-    Timer(const Timer& other) = delete;                       
-    Timer(Timer&& other) = delete;                           
-    Timer& operator=(const Timer& other) = delete;            
-    Timer& operator=(Timer&& other) = delete;                 
-    virtual ~Timer() {};
+    virtual ~Timer() = default;
 
     void Start();
     void Stop();

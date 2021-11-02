@@ -1,6 +1,8 @@
 #include "NetServerPCH.h"
 #include "Simulation.h"
 
+#include "Wave.h"
+
 void Simulation::InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg)const
 {
 	std::bitset<ecs::Component::COMPONENT_MAX> compSet;
@@ -108,6 +110,45 @@ message<GameMsg> Simulation::AllEntitiesMessage()const
 	return msg;
 }
 
+void Simulation::CreateWaves()
+{
+	using namespace EnemyManagement;
+
+	Wave wave1, wave2; // Default: WaveType::Zone
+	{ // Wave_1 Group_1
+		Wave::Group group1;
+		group1.AddEnemy(EnemyType::Default, 5);
+		group1.AddEnemy(EnemyType::Default2, 5);
+		group1.SetSpawnPoint({ 200.f, 0.0f });
+		wave1.SetTimeLimit(5);
+		wave1.AddGroup(group1);
+	}
+
+	{ // Wave_1 Group_2
+		Wave::Group group2;
+		group2.AddEnemy(EnemyType::Default, 5);
+		group2.SetSpawnPoint({ -200.f, 0.0f });
+		wave1.AddGroup(group2);
+	}
+	waveQueue.emplace(wave1); // Add Wave_1
+
+	{ // Wave_2 Group_3
+		Wave::Group group3;
+		group3.AddEnemy(EnemyType::Default, 5);
+		group3.AddEnemy(EnemyType::Default2, 5);
+		group3.SetSpawnPoint({ 0.f, -200.0f });
+		wave2.AddGroup(group3);
+	}
+
+	{ // Wave_2 Group_4
+		Wave::Group group4;
+		group4.AddEnemy(EnemyType::Default, 2);
+		group4.SetSpawnPoint({ 0.f, 200.0f });
+		wave2.AddGroup(group4);
+	}
+	waveQueue.emplace(wave2); // Add Wave_2
+}
+
 Simulation::Simulation(Server* pServer, HeadlessEngine* pEngine)
 	: m_pServer(pServer)
 	, m_pEngine(pEngine), m_pLobbyScene(nullptr), m_pGameScene(nullptr), m_pCurrentScene(nullptr)
@@ -207,49 +248,11 @@ bool Simulation::LeaveLobby(uint32_t playerID, uint32_t gameID)
 
 bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 {
-
 	this->m_gameID = gameID;
 
-	
-	EnemyManagement::EnemyGroup group1;
-	group1.enemiesPerType.emplace_back(std::make_pair(EnemyManagement::EnemyType::Default, 8));
-	group1.origo = sm::Vector2{ 200.f, 0.0f };
+	// Create and add all waves to the queue.
+	CreateWaves();
 
-	EnemyManagement::EnemyGroup group2;
-	group2.enemiesPerType.emplace_back(std::make_pair(EnemyManagement::EnemyType::Default, 5));
-	group2.origo = sm::Vector2{ -200.f, 0.0f };
-
-	EnemyManagement::EnemyGroup group3;
-	group1.enemiesPerType.emplace_back(std::make_pair(EnemyManagement::EnemyType::Default, 10));
-	group1.origo = sm::Vector2{ 0.f, -200.f };
-
-	EnemyManagement::EnemyGroup group4;
-	group2.enemiesPerType.emplace_back(std::make_pair(EnemyManagement::EnemyType::Default, 2));
-	group2.origo = sm::Vector2{ 0.f, 200.0f };
-	
-	//Setting the configurations for the wave system
-	WaveInfo wave1;
-	wave1.enemyGroups.emplace_back(group1);
-	wave1.enemyGroups.emplace_back(group2);
-	wave1.timerToFinish = 0;
-	wave1.spawnDistance = 100.f;
-	wave1.flankWidth = 100.f;
-	wave1.timerToFinish = 10.f;
-
-	WaveInfo wave2;
-	wave2.enemyGroups.emplace_back(group3);
-	wave2.enemyGroups.emplace_back(group4);
-	wave2.timerToFinish = 0;
-	wave2.spawnDistance = 100.f;
-	wave2.flankWidth = 100.f;
-	wave2.timerToFinish = 10.f;
-	
-	//init waveQueue
-	waveQueue.emplace(std::make_pair(EnemyManagement::WaveType::Zone, wave1));
-	waveQueue.emplace(std::make_pair(EnemyManagement::WaveType::Zone, wave2));
-	waveQueue.emplace(std::make_pair(EnemyManagement::WaveType::Zone, wave2));
-	waveQueue.emplace(std::make_pair(EnemyManagement::WaveType::Zone, wave2));
-	
 	// Create Scenes associated with this Simulation
 	m_pLobbyScene = &m_pEngine->GetScene("Lobby_" + std::to_string(gameID));
 	m_pLobbyScene->on<ESceneUpdate>([&](const ESceneUpdate& e, HeadlessScene& scene)
@@ -288,8 +291,10 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 			Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(scene, e.dt);
 			Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingSphere>(scene, e.dt);
 			Systems::CombatSystem(scene, e.dt);
+
 			if(!waveQueue.empty())
-				ServerSystems::ActivateNextWave(this, waveTimer, waveQueue.front().second.timerToFinish);
+				ServerSystems::NextWaveConditions(this, waveTimer, waveQueue.front().GetTimeLimit());
+
 			//LOG_INFO("GAME Scene %d", m_gameID);
 		});
 
@@ -311,7 +316,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 	// --- WORLD ---
 	Entity e2 = m_pGameScene->CreateEntity();
 	e2.AddComponent<comp::Network>()->id = m_pServer->PopNextUniqueID();
-	e2.AddComponent<comp::Transform>()->position = { -250, -2, 300 };
+	e2.AddComponent<comp::Transform>()->position = sm::Vector3( -250, -2, 300 );
 	e2.AddComponent<comp::MeshName>()->name = "GameScene.obj";
 	e2.AddComponent<comp::Tag<TagType::STATIC>>();
 	// --- END OF THE WORLD ---
