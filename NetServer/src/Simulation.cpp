@@ -436,7 +436,7 @@ bool Simulation::AIAStarSearch()
 
 		//Neighbors
 		
-		std::vector<comp::Node*> neighbors = nodeToAdd->connectedNodes;
+		std::vector<comp::Node*> neighbors = nodeToAdd->connections;
 
 		for (comp::Node* neighbor : neighbors)
 		{

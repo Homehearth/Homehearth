@@ -121,7 +121,7 @@ namespace ecs
 			sm::Vector3 position;
 			uint32_t id;
 			std::vector<Node*> connections;
-			comp::Node parent;
+			Node* parent;
 			void ResetFGH() 
 			{
 				f = FLT_MAX, g = FLT_MAX, h = FLT_MAX;
