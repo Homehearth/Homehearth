@@ -374,17 +374,17 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 	e2.AddComponent<comp::Network>();
 
 	// --- END OF THE WORLD ---
-	//Entity collider;
-	//for (size_t i = 0; i < mapColliders->size(); i++)
-	//{
-	//	collider = m_pGameScene->CreateEntity();
-	//	collider.AddComponent<comp::BoundingOrientedBox>()->Center = mapColliders->at(i).Center;
-	//	collider.GetComponent<comp::BoundingOrientedBox>()->Extents = mapColliders->at(i).Extents;
-	//	collider.GetComponent<comp::BoundingOrientedBox>()->Orientation = mapColliders->at(i).Orientation;
-	//	//collider.AddComponent<comp::Transform>()->position = mapColliders->at(i).Center;
-	//	collider.AddComponent<comp::Network>();
-	//	collider.AddComponent<comp::Tag<TagType::STATIC>>();
-	//}
+	Entity collider;
+	for (size_t i = 0; i < mapColliders->size(); i++)
+	{
+		collider = m_pGameScene->CreateEntity();
+		collider.AddComponent<comp::BoundingOrientedBox>()->Center = mapColliders->at(i).Center;
+		collider.GetComponent<comp::BoundingOrientedBox>()->Extents = mapColliders->at(i).Extents;
+		collider.GetComponent<comp::BoundingOrientedBox>()->Orientation = mapColliders->at(i).Orientation;
+		//collider.AddComponent<comp::Transform>()->position = mapColliders->at(i).Center;
+		collider.AddComponent<comp::Network>();
+		collider.AddComponent<comp::Tag<TagType::STATIC>>();
+	}
 	
 	//Gridsystem
 	GridProperties_t gridOption;

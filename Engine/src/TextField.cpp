@@ -12,7 +12,21 @@ void rtd::TextField::Update()
 		{
 			if (InputSystem::Get().CheckKeyboardKey(static_cast<dx::Keyboard::Keys>(i), KeyState::PRESSED))
 			{
-				const char c = static_cast<char>(i);
+				char c;
+				if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Keys::LeftShift, KeyState::HELD))
+				{
+					// BIG CHARACTER
+					c = static_cast<char>(i);
+				}
+				else
+				{
+					if (i > 64)
+					{
+						// MAKE IT SMALL CHARACTER ADDING 32 WILL SET THE ASCII VALUE CORRECT
+						c = static_cast<char>(i + 32);
+					}
+
+				}
 				m_stringText.push_back(c);
 			}
 		}
@@ -40,7 +54,7 @@ void rtd::TextField::Update()
 		}
 
 	}
-	// Remove with the backspace
+	//Remove with the backspace
 	if ((InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Keys::Back, KeyState::PRESSED) && (m_stringText.length() > 0)) == 1)
 	{
 		m_stringText.pop_back();

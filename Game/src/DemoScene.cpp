@@ -136,7 +136,6 @@ namespace sceneHelp
 		//}
 
 		CreateLightEntity(gameScene, { 0.f, 0.f, 0.f, 0.f }, { 1.f, -1.f, 0.f, 0.f }, { 10.f, 10.f, 10.f, 10.f }, 0, TypeLight::DIRECTIONAL, 1);
-		CreateLightEntity(gameScene, { 0.f, 8.f, -10.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 300.f, 300.f, 300.f, 300.f }, 75.f, TypeLight::POINT, 1);
 
 		InputSystem::Get().SetCamera(gameScene.GetCurrentCamera());
 		GameSystems::UpdateHealthbar(gameScene);
