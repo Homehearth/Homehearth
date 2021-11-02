@@ -169,7 +169,9 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 	{
 		uint32_t playerID;
 		msg >> playerID;
-		if (this->CreateSimulation(playerID))
+		std::string namePlate;
+		msg >> namePlate;
+		if (this->CreateSimulation(playerID, namePlate))
 		{
 			LOG_INFO("Created Game lobby!");
 		}
@@ -185,9 +187,11 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 		msg >> gameID;
 		uint32_t playerID;
 		msg >> playerID;
+		std::string namePlate;
+		msg >> namePlate;
 		if (m_simulations.find(gameID) != m_simulations.end())
 		{
-			m_simulations[gameID]->JoinLobby(playerID, gameID);
+			m_simulations[gameID]->JoinLobby(playerID, gameID, namePlate);
 		}
 		else
 		{
@@ -261,10 +265,10 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 	}
 }
 
-bool ServerGame::CreateSimulation(uint32_t playerID)
+bool ServerGame::CreateSimulation(uint32_t playerID, const std::string& mainPlayerPlate)
 {
 	m_simulations[m_nGameID] = std::make_unique<Simulation>(&m_server, this);
-	if (!m_simulations[m_nGameID]->Create(playerID, m_nGameID, &m_mapColliders))
+	if (!m_simulations[m_nGameID]->Create(playerID, m_nGameID, &m_mapColliders, mainPlayerPlate))
 	{
 		m_simulations.erase(m_nGameID);
 		return false;

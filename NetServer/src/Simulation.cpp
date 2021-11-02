@@ -296,20 +296,6 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 	// send entity
 	e2.AddComponent<comp::Network>();
 
-<<<<<<< HEAD
-	//// --- END OF THE WORLD ---
-	Entity collider;
-	for (size_t i = 0; i < mapColliders->size(); i++)
-	{
-		collider = m_pGameScene->CreateEntity();
-		collider.AddComponent<comp::BoundingOrientedBox>()->Center = mapColliders->at(i).Center;
-		collider.GetComponent<comp::BoundingOrientedBox>()->Orientation = mapColliders->at(i).Orientation;
-		collider.GetComponent<comp::BoundingOrientedBox>()->Extents = mapColliders->at(i).Extents;
-		//collider.AddComponent<comp::Transform>()->position = mapColliders->at(i).Center;
-		collider.AddComponent<comp::Network>();
-		collider.AddComponent<comp::Tag<TagType::STATIC>>();
-	}
-=======
 	// --- END OF THE WORLD ---
 	//Entity collider;
 	//for (size_t i = 0; i < mapColliders->size(); i++)
@@ -322,7 +308,6 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 	//	collider.AddComponent<comp::Network>();
 	//	collider.AddComponent<comp::Tag<TagType::STATIC>>();
 	//}
->>>>>>> b779411ecb30c10822acceffa9e99df04545ead6
 
 	m_addedEntities.clear();
 	m_removedEntities.clear();
