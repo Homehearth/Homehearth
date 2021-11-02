@@ -448,10 +448,23 @@ void sceneHelp::SetupLobbyJoinScreen(Game* game)
 				else
 				{
 					game->m_playerName = *nameInputField->RawGetBuffer();
-					game->JoinLobby(std::stoi(*lobbyString));
+					int lobbyID = -1;
+					try
+					{
+						lobbyID = std::stoi(*lobbyString);
+					}
+					catch (std::exception e)
+					{
+						LOG_WARNING("Invalid lobby ID: Was not numerical");
+					}
 
-					// Update own name.
-					dynamic_cast<rtd::Text*>(game->GetScene("Lobby").GetCollection("playerIcon1")->elements[1].get())->SetText(game->m_playerName);
+					if (lobbyID > -1)
+					{
+						game->JoinLobby(lobbyID);
+						// Update own name.
+						dynamic_cast<rtd::Text*>(game->GetScene("Lobby").GetCollection("playerIcon1")->elements[1].get())->SetText(game->m_playerName);
+					}
+
 				}
 			}
 		});
