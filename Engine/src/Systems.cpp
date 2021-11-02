@@ -20,7 +20,7 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 				//Creates an entity that's used to check collision if an attack lands.
 				Entity attackCollider = scene.CreateEntity();
 				attackCollider.AddComponent<comp::Transform>()->position = transform.position + stats.targetDir;
-				attackCollider.AddComponent<comp::Tag<TagType::DYNAMIC>>();
+				//attackCollider.AddComponent<comp::Tag<TagType::DYNAMIC>>();
 				attackCollider.AddComponent<comp::BoundingOrientedBox>()->Center = transform.position + stats.targetDir;
 				comp::Attack* atk = attackCollider.AddComponent<comp::Attack>();
 				atk->lifeTime = stats.attackLifeTime;
@@ -106,8 +106,8 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 void Systems::MovementSystem(HeadlessScene& scene, float dt)
 {
 	//Transform
-	scene.ForEachComponent<comp::Transform, comp::Velocity, comp::Tag<TagType::DYNAMIC>>([&, dt]
-	(comp::Transform& transform, comp::Velocity& velocity, comp::Tag<TagType::DYNAMIC>&)
+	scene.ForEachComponent<comp::Transform, comp::Velocity>([&, dt]
+	(comp::Transform& transform, comp::Velocity& velocity)
 		{
 			transform.previousPosition = transform.position;
 			transform.position += velocity.vel * dt;

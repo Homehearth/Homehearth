@@ -256,7 +256,7 @@ namespace Systems {
 			{
 				if (p.state == comp::Player::State::TURN || p.state == comp::Player::State::ATTACK)
 				{
-					float time = dt * p.runSpeed;
+					float time = dt * p.runSpeed * 0.5f;
 					if (ecs::StepRotateTo(t.rotation, p.targetForward, time))
 					{
 						p.state = comp::Player::State::IDLE;

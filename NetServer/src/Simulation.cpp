@@ -364,17 +364,17 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 	e2.AddComponent<comp::Network>();
 
 	// --- END OF THE WORLD ---
-	Entity collider;
-	for (size_t i = 0; i < mapColliders->size(); i++)
-	{
-		collider = m_pGameScene->CreateEntity();
-		collider.AddComponent<comp::BoundingOrientedBox>()->Center = mapColliders->at(i).Center;
-		collider.GetComponent<comp::BoundingOrientedBox>()->Extents = mapColliders->at(i).Extents;
-		collider.GetComponent<comp::BoundingOrientedBox>()->Orientation = mapColliders->at(i).Orientation;
-		//collider.AddComponent<comp::Transform>()->position = mapColliders->at(i).Center;
-		collider.AddComponent<comp::Network>();
-		collider.AddComponent<comp::Tag<TagType::STATIC>>();
-	}
+	//Entity collider;
+	//for (size_t i = 0; i < mapColliders->size(); i++)
+	//{
+	//	collider = m_pGameScene->CreateEntity();
+	//	collider.AddComponent<comp::BoundingOrientedBox>()->Center = mapColliders->at(i).Center;
+	//	collider.GetComponent<comp::BoundingOrientedBox>()->Extents = mapColliders->at(i).Extents;
+	//	collider.GetComponent<comp::BoundingOrientedBox>()->Orientation = mapColliders->at(i).Orientation;
+	//	//collider.AddComponent<comp::Transform>()->position = mapColliders->at(i).Center;
+	//	collider.AddComponent<comp::Network>();
+	//	collider.AddComponent<comp::Tag<TagType::STATIC>>();
+	//}
 	
 	//Gridsystem
 	GridProperties_t gridOption;
@@ -562,8 +562,8 @@ void Simulation::SendSnapshot()
 		
 
 		uint32_t i = 0;
-		m_pCurrentScene->ForEachComponent<comp::Network, comp::Transform, comp::Tag<TagType::DYNAMIC>>([&]
-		(comp::Network& n, comp::Transform& t, comp::Tag<TagType::DYNAMIC>&)
+		m_pCurrentScene->ForEachComponent<comp::Network, comp::Transform>([&]
+		(comp::Network& n, comp::Transform& t)
 			{
 				msg << t << n.id;
 				i++;
@@ -572,8 +572,8 @@ void Simulation::SendSnapshot()
 
 #if DEBUG_SNAPSHOT
 		i = 0;
-		m_pCurrentScene->ForEachComponent<comp::Network, comp::BoundingOrientedBox, comp::Tag<TagType::DYNAMIC>>([&]
-		(comp::Network& n, comp::BoundingOrientedBox& b, comp::Tag<TagType::DYNAMIC>&)
+		m_pCurrentScene->ForEachComponent<comp::Network, comp::BoundingOrientedBox>([&]
+		(comp::Network& n, comp::BoundingOrientedBox& b)
 			{
 				msg << b << n.id;
 				i++;
