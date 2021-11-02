@@ -43,11 +43,11 @@ void Game::UpdateNetwork(float deltaTime)
 		{
 			if (GetCurrentScene()->GetCurrentCamera()->GetCameraType() == CAMERATYPE::PLAY)
 			{
-				
+
 				message<GameMsg> msg;
 				msg.header.id = GameMsg::Game_PlayerInput;
 
-				
+
 				msg << this->m_localPID << m_gameID << m_inputState;
 
 				m_client.Send(msg);
@@ -154,34 +154,34 @@ void Game::OnUserUpdate(float deltaTime)
 	);
 
 
-			/*
-	if (GetCurrentScene() == &GetScene("Game") && GetCurrentScene()->GetCurrentCamera()->GetCameraType() == CAMERATYPE::PLAY)
+	/*
+if (GetCurrentScene() == &GetScene("Game") && GetCurrentScene()->GetCurrentCamera()->GetCameraType() == CAMERATYPE::PLAY)
+{
+	if (m_players.find(m_localPID) != m_players.end())
 	{
-		if (m_players.find(m_localPID) != m_players.end())
+		comp::Transform* t = m_players.at(m_localPID).GetComponent<comp::Transform>();
+
+		int x = InputSystem::Get().GetAxis(Axis::HORIZONTAL);
+		int z = InputSystem::Get().GetAxis(Axis::VERTICAL);
+		if (x || z)
 		{
-			comp::Transform* t = m_players.at(m_localPID).GetComponent<comp::Transform>();
+			t->position.x += 10.f * deltaTime * x;
+			t->position.z += 10.f * deltaTime * z;
 
-			int x = InputSystem::Get().GetAxis(Axis::HORIZONTAL);
-			int z = InputSystem::Get().GetAxis(Axis::VERTICAL);
-			if (x || z)
-			{
-				t->position.x += 10.f * deltaTime * x;
-				t->position.z += 10.f * deltaTime * z;
+			predictedPositions.push_back(*t);
+		}
 
-				predictedPositions.push_back(*t);
-			}
-
-			//LOG_INFO("Predicted size: %llu", predictedPositions.size());
-			if (sm::Vector3::Distance(t->position, test.position) > m_predictionThreshhold)
-			{
-				t->position.x = test.position.x;
-				t->position.z = test.position.z;
-			}
+		//LOG_INFO("Predicted size: %llu", predictedPositions.size());
+		if (sm::Vector3::Distance(t->position, test.position) > m_predictionThreshhold)
+		{
+			t->position.x = test.position.x;
+			t->position.z = test.position.z;
 		}
 	}
-			*/
-	
-	//Update InputState
+}
+		*/
+
+		//Update InputState
 	this->UpdateInput();
 
 }
@@ -274,7 +274,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 						}
 					});
 			}
-			else if(e.GetComponent<comp::Player>())
+			else if (e.GetComponent<comp::Player>())
 			{
 				m_players[e.GetComponent<comp::Network>()->id] = e;
 			}
@@ -315,17 +315,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		SetScene("Lobby");
 		LOG_INFO("You are now in lobby: %lu", m_gameID);
 
-		// Update the lobby ID visual
-		Element2D* elem = GetScene("Lobby").GetCollection("LobbyDesc")->elements[1].get();
-		if (elem)
-		{
-			rtd::Text* text = dynamic_cast<rtd::Text*>(elem);
-			if (text)
-			{
-				text->SetText("LobbyID: " + std::to_string(m_gameID));
-			}
-		}
-
 		break;
 	}
 	case GameMsg::Lobby_Invalid:
@@ -339,13 +328,8 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	case GameMsg::Lobby_AcceptedLeave:
 	{
 		LOG_WARNING("Left Lobby %u", m_gameID);
-		//m_isLeavingLobby = false;
 		m_gameID = -1;
 		SetScene("JoinLobby");
-		for (int i = 0; i < MAX_PLAYERS_PER_LOBBY; i++)
-		{
-			GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i + 1))->Hide();
-		}
 		break;
 	}
 	case GameMsg::Lobby_PlayerJoin:
@@ -357,52 +341,34 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		SetScene("Game");
 		break;
 	}
-	case GameMsg::Lobby_PlayerLeft:
-	{
-		uint32_t playerID;
-		msg >> playerID;
-
-		if (m_players.find(playerID) != m_players.end())
-		{
-			m_players.at(playerID).Destroy();
-			m_players.erase(playerID);
-		}
-
-		// Update visuals.
-		for (int i = 0; i < MAX_PLAYERS_PER_LOBBY; i++)
-		{
-			GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i + 1))->Hide();
-		}
-		const int nrOfPlayers = (int)m_players.size();
-		for (int i = 0; i < nrOfPlayers; i++)
-		{
-			GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i + 1))->Show();
-
-		}
-		break;
-	}
 	case GameMsg::Lobby_Update:
 	{
-		uint32_t playerID;
-		std::string playerPlate;
-		msg >> playerPlate;
-		msg >> playerID;
-		if (int i = m_players.find(playerID) != m_players.end())
+		uint32_t count;
+		msg >> count;
+
+		for (uint32_t i = 0; i < count; i++)
 		{
-			m_players.at(playerID).GetComponent<comp::NamePlate>()->namePlate = playerPlate;
-			dynamic_cast<rtd::Text*>(GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i + 1))->elements[1].get())->SetText(playerPlate);
+			std::string playerPlate;
+			uint32_t playerID;
+			msg >> playerPlate;
+			msg >> playerID;
+
+			if (m_players.find(playerID) != m_players.end())
+			{
+				m_players.at(playerID).GetComponent<comp::NamePlate>()->namePlate = playerPlate;
+				dynamic_cast<rtd::Text*>(GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i + 1))->elements[1].get())->SetText(playerPlate);
+			}
 		}
 
-		// Update visiblity of present players.
-		const int nrOfPlayers = (int)m_players.size();
+		dynamic_cast<rtd::Text*>(GetScene("Lobby").GetCollection("LobbyDesc")->elements[1].get())->SetText("Lobby ID: " + std::to_string(m_gameID));
+
 		for (int i = 0; i < MAX_PLAYERS_PER_LOBBY; i++)
 		{
 			GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i + 1))->Hide();
 		}
-		for (int i = 0; i < nrOfPlayers; i++)
+		for (int i = 0; i < count; i++)
 		{
 			GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i + 1))->Show();
-
 		}
 		break;
 	}
@@ -557,7 +523,7 @@ Entity Game::CreateEntityFromMessage(message<GameMsg>& msg)
 			}
 			default:
 				LOG_WARNING("Retrieved unimplemented component %u", i)
-				break;
+					break;
 			}
 		}
 	}
