@@ -7,6 +7,7 @@
 #include "TextField.h"
 #include "Slider.h"
 #include "Collection2D.h"
+#include "Healthbar.h"
 
 namespace sceneHelp
 {
@@ -138,7 +139,7 @@ namespace sceneHelp
 		CreateLightEntity(gameScene, { 0.f, 8.f, -10.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 300.f, 300.f, 300.f, 300.f }, 75.f, TypeLight::POINT, 1);
 
 		InputSystem::Get().SetCamera(gameScene.GetCurrentCamera());
-
+		GameSystems::UpdateHealthbar(gameScene);
 
 		gameScene.on<ESceneUpdate>([cameraEntity, debugCameraEntity](const ESceneUpdate& e, Scene& scene)
 			{
@@ -244,10 +245,6 @@ void sceneHelp::SetupMainMenuScreen(Game* game)
 <div>Icons made by <a href="https://www.freepik.com" title="Freepik">Freepik</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a></div>
 */
 
-/*
-	HP bars are located at elements[0, 1 and 2]
-*/
-
 void sceneHelp::SetupInGameScreen(Game* game)
 {
 	//// Temp textures
@@ -262,10 +259,7 @@ void sceneHelp::SetupInGameScreen(Game* game)
 		Collection2D* playerHp = new Collection2D;
 
 		// Initiate 3 healthbars. for each player.
-		for (int j = 0; j < 3; j++)
-		{
-			playerHp->AddElement<rtd::Picture>(texture1, draw_t((j * (width / 12)) + (width / 12), (i * ((height / 12)) + (height / 32)), (width / 16), (height / 9)));
-		}
+		playerHp->AddElement<rtd::Healthbar>(nullptr, draw_t(width / 12, (i * ((height / 12)) + (height / 32)), (width / 4), (height / 16)), 100.0f);
 
 		// You and Friend text
 		if (i == 0)
@@ -306,6 +300,7 @@ void sceneHelp::SetupInGameScreen(Game* game)
 		Collection2D* nameCollection = new Collection2D;
 		nameCollection->AddElement<rtd::Text>("Player" + std::to_string(i + 1), draw_text_t(0, 0, width / 16, height / 9));
 		scene.Add2DCollection(nameCollection, "player" + std::to_string(i + 1) + "namePlate");
+		nameCollection->Hide();
 	}
 }
 

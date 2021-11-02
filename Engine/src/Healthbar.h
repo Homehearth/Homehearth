@@ -10,9 +10,15 @@ namespace rtd
 
 		std::unique_ptr<Canvas> m_backGround;
 		std::unique_ptr<Canvas> m_foreGround;
+
 		float* m_points;
 		float m_maxHealth;
+
+		// Current size on current health.
 		draw_t m_drawOpts;
+
+		// size when it is on full health.
+		float m_sizeFull;
 
 		void Update();
 
