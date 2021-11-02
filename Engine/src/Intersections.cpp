@@ -118,3 +118,35 @@ const bool Intersect::RayIntersectSphere(const Ray_t& ray, const comp::BoundingS
 		}
 	}
 }
+
+const bool Intersect::RayIntersectPlane(const Ray_t& ray, const comp::PlaneCollider& planeCollider, float& t)
+{
+	sm::Vector3 origin = ray.rayPos;
+	sm::Vector3 direction = ray.rayDir;
+	float halfLenght = planeCollider.size.x / 2;
+
+	//Kollar ifall normalen och ray är parallela 
+	double dirNormal = direction.Dot(planeCollider.normal);
+	if (abs(dirNormal) < 0.0000001f)
+		return false;
+
+	//Plane intersecation test
+	sm::Vector3 originToCenter = planeCollider.center - origin;
+	double originToCenterDotNormal = originToCenter.Dot(planeCollider.normal);
+	t = originToCenterDotNormal / dirNormal;
+
+	//Return false if plane is behind us
+	if (t < 0.0)
+		return false;
+
+	//Restriction that makes the plane to a disc, if its outside the disc radius it does not intersect
+	sm::Vector3 intersecPoint = origin + direction * (float)t;
+	sm::Vector3 disToCenter = (intersecPoint - planeCollider.center);
+	double disToCenterL = (intersecPoint - planeCollider.center).Length();
+
+	if (disToCenter.x >= halfLenght && disToCenter.y >= halfLenght)
+		return false;
+
+
+	return false;
+}

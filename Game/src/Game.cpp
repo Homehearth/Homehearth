@@ -53,6 +53,7 @@ void Game::UpdateNetwork(float deltaTime)
 
 				//reset input
 				m_inputState.leftMouse = false;
+				m_inputState.rightMouse = false;
 			}
 		}
 	}
@@ -502,6 +503,11 @@ void Game::UpdateInput()
 	if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::HELD))
 	{
 		m_inputState.leftMouse = true;
+		m_inputState.mouseRay = InputSystem::Get().GetMouseRay();
+	}
+	if (InputSystem::Get().CheckMouseKey(MouseKey::RIGHT, KeyState::HELD))
+	{
+		m_inputState.rightMouse = true;
 		m_inputState.mouseRay = InputSystem::Get().GetMouseRay();
 	}
 }

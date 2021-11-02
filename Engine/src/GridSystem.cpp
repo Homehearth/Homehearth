@@ -13,6 +13,7 @@ GridSystem::~GridSystem()
 
 void GridSystem::Initialize(sm::Vector2 mapSize, sm::Vector3 position, std::string fileName, HeadlessScene* scene)
 {
+	m_scene = scene;
 	m_position = position;
 	m_mapSize = mapSize;
 
@@ -21,16 +22,11 @@ void GridSystem::Initialize(sm::Vector2 mapSize, sm::Vector3 position, std::stri
 	int height = 0;
 	int comp = 0;
 
-	//std::shared_ptr<RTexture> texture = ResourceManager::Get().GetResource<RTexture>(fileName);
-	//bool added = ResourceManager::Get().AddResource(fileName, texture);
-	//std::shared_ptr<RTexture> texture = std::make_shared<RTexture>();
-	//texture->GetImageData(fileName);
-	//texture->GetSize();
-
 	unsigned char* pixelsData = stbi_load(m_filepath.c_str(), &width, &height, &comp, STBI_rgb_alpha); //TODO: find out what to do with this
 
 	std::vector<int> pixelValues;
 	m_gridSize = { (float)width, (float)height };
+	sm::Vector2 tileSize = { (float)(m_mapSize.x / m_gridSize.x),(float)(m_mapSize.y / m_gridSize.y) };
 
 	for (int i = 0; i < m_gridSize.x * m_gridSize.y * 4; i++)
 	{
@@ -70,14 +66,14 @@ void GridSystem::Initialize(sm::Vector2 mapSize, sm::Vector3 position, std::stri
 				tileTypeTemp = TileType::DEFAULT;
 			}
 
-			float tileHalfWidth = (float)(((m_mapSize.x / m_gridSize.x)) / 2);
-			sm::Vector3 tilePosition = {m_position.x + (tileHalfWidth * row) + tileHalfWidth/2, m_position.y + 0.f , -(tileHalfWidth * col) - (tileHalfWidth/2) + m_position.z};
+			m_tileHalfWidth = (float)(tileSize.x/2);
+			sm::Vector3 tilePosition = {m_position.x + (m_tileHalfWidth * row) + m_tileHalfWidth/2, m_position.y + 0.f , -(m_tileHalfWidth * col) - (m_tileHalfWidth/2) + m_position.z};
 			m_tilePosiitons.push_back(tilePosition);
 
-			Entity tileEntity = scene->CreateEntity();
+			Entity tileEntity = m_scene->CreateEntity();
 			comp::Tile* tile = tileEntity.AddComponent<comp::Tile>();
 			tile->gridID = { (float)row, (float)col };
-			tile->halfWidth = tileHalfWidth;
+			tile->halfWidth = m_tileHalfWidth;
 			tile->type = tileTypeTemp;
 			comp::Transform* transform = tileEntity.AddComponent<comp::Transform>();
 			transform->position = tilePosition;
@@ -88,83 +84,31 @@ void GridSystem::Initialize(sm::Vector2 mapSize, sm::Vector3 position, std::stri
 			// Uncomment this if you want to send Tiles to client
 			//tileEntity.AddComponent<comp::Network>();
 
+			comp::PlaneCollider* collider = tileEntity.AddComponent<comp::PlaneCollider>();
+			collider->center = tilePosition;
+			collider->size = tileSize;
+			collider->normal = { 0,1,0 };
+
 			m_tiles.push_back(tileEntity);
 		}
 	}
 	stbi_image_free(pixelsData);
 }
 
-void GridSystem::Initialize2(sm::Vector2 mapSize, sm::Vector3 position, std::string fileName, Scene* scene)
+
+bool GridSystem::PlaceDefence(Ray_t mouseRay)
 {
-	m_position = position;
-	m_mapSize = mapSize;
+	float t = 0;
 
-	std::string m_filepath = TEXTUREPATH + fileName;
-	int width = 0;
-	int height = 0;
-	int comp = 0;
-
-	unsigned char* pixelsData = stbi_load(m_filepath.c_str(), &width, &height, &comp, STBI_rgb_alpha); //TODO: find out what to do with this
-
-	std::vector<int> pixelValues;
-	m_gridSize = { (float)width, (float)height };
-
-	for (int i = 0; i < m_gridSize.x * m_gridSize.y * 4; i++)
-	{
-		pixelValues.push_back((int)pixelsData[i]);
-	}
-
-	//Initialize all tiles
-	for (int col = 0; col < m_gridSize.y; col++)
-	{
-		for (int row = 0; row < m_gridSize.x; row++)
+	m_scene->ForEachComponent<comp::Tile, comp::PlaneCollider>([&](Entity entity, comp::Tile& tile, comp::PlaneCollider& planeCollider)
 		{
-			TileType tileTypeTemp = TileType::DEFAULT;
-
-			sm::Vector4 rgba;
-
-			rgba.x = (float)pixelValues.at(0 + ((row + (col * (size_t)m_gridSize.y)) * 4));
-			rgba.y = (float)pixelValues.at(1 + ((row + (col * (size_t)m_gridSize.y)) * 4));
-			rgba.z = (float)pixelValues.at(2 + ((row + (col * (size_t)m_gridSize.y)) * 4));
-			rgba.w = (float)pixelValues.at(3 + ((row + (col * (size_t)m_gridSize.y)) * 4));
-
-			//std::cout << "RGBA: " << rgba.x << " " << rgba.y << " " << rgba.z << " " << rgba.w << std::endl;
-
-			if (rgba == sm::Vector4{ 100, 100, 100, 255 })
+			if (Intersect::RayIntersectPlane(InputSystem::Get().GetMouseRay(), planeCollider, t))
 			{
-				tileTypeTemp = TileType::EMPTY;
+				LOG_INFO("Mouseray HIT plane detected!");
 			}
-			if (rgba == sm::Vector4{ 255, 51, 0, 255 })
-			{
-				tileTypeTemp = TileType::BUILDING;
-			}
-			if (rgba == sm::Vector4{ 255, 234, 0, 255 } || rgba == sm::Vector4{ 0, 21, 255, 255 })
-			{
-				tileTypeTemp = TileType::UNPLACABLE;
-			}
-			if (rgba == sm::Vector4{ 0, 0, 0, 255 })
-			{
-				tileTypeTemp = TileType::DEFAULT;
-			}
+		});
 
-			float tileHalfWidth = (m_mapSize.x / m_gridSize.x) / 2.0f;
-			sm::Vector3 tilePosition = { m_position.x + (tileHalfWidth * row) + tileHalfWidth / 2, m_position.y + 0.f , -(tileHalfWidth * col) - (tileHalfWidth / 2) + m_position.z };
-			m_tilePosiitons.push_back(tilePosition);
-
-			Entity tileEntity = scene->CreateEntity();
-			comp::Tile* tile = tileEntity.AddComponent<comp::Tile>();
-			tile->gridID = { (float)row, (float)col };
-			tile->halfWidth = tileHalfWidth;
-			tile->type = tileTypeTemp;
-			comp::Transform* transform = tileEntity.AddComponent<comp::Transform>();
-			transform->position = tilePosition;
-			transform->scale = { 4.2f, 0.5f, 4.2f };
-
-			m_tiles.push_back(tileEntity);
-		}
-	}
-
-	stbi_image_free(pixelsData);
+	return false;
 }
 
 std::vector<sm::Vector3>* GridSystem::GetTilePositions()

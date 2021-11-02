@@ -593,6 +593,8 @@ void Simulation::Update(float dt)
 	PROFILE_FUNCTION();
 	if (m_pCurrentScene)
 		m_pCurrentScene->Update(dt);
+	
+	
 }
 
 void Simulation::UpdateInput(InputState state, uint32_t playerID)
@@ -603,6 +605,11 @@ void Simulation::UpdateInput(InputState state, uint32_t playerID)
 	if (m_players.find(playerID) != m_players.end())
 	{
 		m_playerInputs[m_players.at(playerID)] = state;
+
+		if (state.rightMouse == true)
+		{
+			m_grid.PlaceDefence(state.mouseRay);
+		}
 	}
 }
 
