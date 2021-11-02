@@ -2,6 +2,7 @@
 #include "Button.h"
 #include "TextField.h"
 #include <DemoScene.h>
+#include "Healthbar.h"
 
 using namespace std::placeholders;
 
@@ -316,6 +317,8 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	{
 		uint32_t count;
 		msg >> count;
+		const uint32_t* spots = &count;
+		std::string ids[MAX_PLAYERS_PER_LOBBY];
 
 		for (uint32_t i = 0; i < count; i++)
 		{
@@ -323,6 +326,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			uint32_t playerID;
 			msg >> playerPlate;
 			msg >> playerID;
+			ids[i] = playerPlate;
 
 			if (m_players.find(playerID) != m_players.end())
 			{
@@ -342,8 +346,17 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i + 1))->Show();
 		}
 
+		Scene& gameScene = GetScene("Game");
 		// Map healthbars to players.
-		GameSystems::UpdateHealthbar(GetScene("Game"));
+		GameSystems::UpdateHealthbar(gameScene);
+
+		for (size_t i = 0; i < count; i++)
+		{
+			Collection2D* collect = gameScene.GetCollection("player" + std::to_string(i + 1) + "Info");
+			collect->Show();
+			dynamic_cast<rtd::Text*>(collect->elements[1].get())->SetText(ids[i]);
+		}
+
 		break;
 	}
 	}

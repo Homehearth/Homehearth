@@ -12,6 +12,7 @@ namespace rtd
 		std::unique_ptr<Canvas> m_foreGround;
 
 		float* m_points;
+		Entity m_entity;
 		float m_maxHealth;
 
 		// Current size on current health.
@@ -24,14 +25,14 @@ namespace rtd
 
 	public:
 
-		Healthbar(void* health, const draw_t& drawOpts, const float& max_health = 100);
+		Healthbar(const draw_t& drawOpts);
 		~Healthbar();
 
 		/*
 			Set the health variable use when rendering healthbar.
 			It will be read as a float.
 		*/
-		void SetHealthVariable(void* var, const float& max_health = 100);
+		void SetHealthVariable(Entity e);
 
 		// Inherited via Element2D
 		virtual void Draw() override;

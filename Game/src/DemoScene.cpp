@@ -259,16 +259,16 @@ void sceneHelp::SetupInGameScreen(Game* game)
 		Collection2D* playerHp = new Collection2D;
 
 		// Initiate 3 healthbars. for each player.
-		playerHp->AddElement<rtd::Healthbar>(nullptr, draw_t(width / 12, (i * ((height / 12)) + (height / 32)), (width / 4), (height / 16)), 100.0f);
+		playerHp->AddElement<rtd::Healthbar>(draw_t(width / 8, (i * ((height / 12)) + (height / 32)), (width / 4), (height / 16)));
 
 		// You and Friend text
 		if (i == 0)
 		{
-			playerHp->AddElement<rtd::Text>("You:", draw_text_t(0, (i * ((height / 12)) + (height / 32)), (strlen("You:") * D2D1Core::GetDefaultFontSize()) * 0.5f, D2D1Core::GetDefaultFontSize()));
+			playerHp->AddElement<rtd::Text>("You:", draw_text_t(0, (i * ((height / 12)) + (height / 32)), (12 * D2D1Core::GetDefaultFontSize()) * 0.5f, D2D1Core::GetDefaultFontSize()));
 		}
 		else
 		{
-			playerHp->AddElement<rtd::Text>("Friend:", draw_text_t(0, (i * ((height / 12)) + (height / 32)), (strlen("Friend:") * D2D1Core::GetDefaultFontSize()) * 0.5f, D2D1Core::GetDefaultFontSize()));
+			playerHp->AddElement<rtd::Text>("Friend:", draw_text_t(0, (i * ((height / 12)) + (height / 32)), (12 * D2D1Core::GetDefaultFontSize()) * 0.5f, D2D1Core::GetDefaultFontSize()));
 			playerHp->Hide();
 		}
 		scene.Add2DCollection(playerHp, "player" + std::to_string(i + 1) + "Info");
@@ -416,7 +416,7 @@ void sceneHelp::SetupLobbyJoinScreen(Game* game)
 
 
 	Collection2D* nameCollection = new Collection2D;
-	rtd::TextField* nameInputField = nameCollection->AddElement<rtd::TextField>(draw_text_t((width / 2) - (width / 8), height / 8, width / 4, D2D1Core::GetDefaultFontSize()), 15);
+	rtd::TextField* nameInputField = nameCollection->AddElement<rtd::TextField>(draw_text_t((width / 2) - (width / 8), height / 8, width / 4, D2D1Core::GetDefaultFontSize()), 6);
 	nameInputField->SetDescriptionText("Input Name");
 	nameInputField->SetPresetText("Noobie");
 	scene.Add2DCollection(nameCollection, "nameInput");
