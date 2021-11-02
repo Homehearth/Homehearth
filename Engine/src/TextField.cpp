@@ -12,7 +12,19 @@ void rtd::TextField::Update()
 		{
 			if (InputSystem::Get().CheckKeyboardKey(static_cast<dx::Keyboard::Keys>(i), KeyState::PRESSED))
 			{
-				const char c = static_cast<char>(i);
+				char c;
+				if (i > 64)
+				{
+					static_cast<char>(i);
+					if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Keys::LeftShift, KeyState::HELD))
+					{
+						c = static_cast<char>(i);
+					}
+					else
+					{
+						c = static_cast<char>(i + 32);
+					}
+				}
 				m_stringText.push_back(c);
 			}
 		}

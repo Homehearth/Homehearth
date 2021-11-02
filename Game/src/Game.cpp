@@ -288,7 +288,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	case GameMsg::Lobby_Accepted:
 	{
 		msg >> m_gameID;
-		SetScene("Loading");
+		this->SetScene("Loading");
 		LOG_INFO("You are now in lobby: %lu", m_gameID);
 
 		break;
