@@ -12,21 +12,7 @@ void rtd::TextField::Update()
 		{
 			if (InputSystem::Get().CheckKeyboardKey(static_cast<dx::Keyboard::Keys>(i), KeyState::PRESSED))
 			{
-				char c;
-				if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Keys::LeftShift, KeyState::HELD))
-				{
-					// BIG CHARACTER
-					c = static_cast<char>(i);
-				}
-				else
-				{
-					if (i > 64)
-					{
-						// MAKE IT SMALL CHARACTER ADDING 32 WILL SET THE ASCII VALUE CORRECT
-						c = static_cast<char>(i + 32);
-					}
-
-				}
+				const char c = static_cast<char>(i);
 				m_stringText.push_back(c);
 			}
 		}
@@ -54,28 +40,21 @@ void rtd::TextField::Update()
 		}
 
 	}
-	//Remove with the backspace
+	// Remove with the backspace
 	if ((InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Keys::Back, KeyState::PRESSED) && (m_stringText.length() > 0)) == 1)
 	{
 		m_stringText.pop_back();
 	}
 
-	if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Keys::LeftControl, KeyState::HELD))
+	if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Keys::LeftControl, KeyState::HELD) &&
+		InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Keys::V, KeyState::PRESSED))
 	{
-		if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Keys::V, KeyState::PRESSED))
+		m_stringText = InputSystem::Get().GetClipboard();
+		if (m_stringText.length() > m_textLimit)
 		{
-			m_stringText = InputSystem::Get().GetClipboard();
-			if (m_stringText.length() > m_textLimit)
-			{
-				m_stringText = m_stringText.substr(0, m_textLimit);
-			}
-		}
-		else if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Keys::C, KeyState::PRESSED))
-		{
-			InputSystem::Get().SetClipboard(m_stringText);
+			m_stringText = m_stringText.substr(0, m_textLimit);
 		}
 	}
-
 
 	// Update the text
 	m_text->SetText(m_stringText);

@@ -1,9 +1,7 @@
 #pragma once
 
-#define RENDER_IMGUI 0
-#define PROFILER 0
-
-#define DEBUG_SNAPSHOT 1
+#define RENDER_IMGUI 1
+#define PROFILER 1
 
 // Turn this to 1 if you want to see the very beautiful demo menu
 #define DRAW_TEMP_2D 0
@@ -15,6 +13,8 @@
 #define IMGUI(a) do {} while(0)
 #endif
 
+//Options
+#define USE_MIPMAPS 1
 
 // Windows
 #ifdef WIN32
