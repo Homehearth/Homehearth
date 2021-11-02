@@ -58,6 +58,9 @@ public:
 	virtual ~Simulation() = default;
 	bool AICreateNodes();
 	bool AIAStarSearch();
+	bool AddNPC(uint32_t npcId);
+	bool RemoveNPC(uint32_t npcId);
+
 	bool AddPlayer(uint32_t playerID, const std::string& namePlate = "Noobie");
 	bool RemovePlayer(uint32_t playerID);
 	std::unordered_map<uint32_t, Entity>::iterator RemovePlayer(std::unordered_map<uint32_t, Entity>::iterator playerIterator);

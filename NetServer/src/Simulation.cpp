@@ -175,7 +175,6 @@ Simulation::Simulation(Server* pServer, HeadlessEngine* pEngine)
 {
 	this->m_gameID = 0;
 	this->m_tick = 0;
-	this->AICreateNodes();
 }
 
 bool Simulation::JoinLobby(uint32_t playerID, uint32_t gameID, const std::string& namePlate)
@@ -381,6 +380,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 	GridProperties_t gridOption;
 	m_grid.Initialize(gridOption.mapSize, gridOption.position, gridOption.fileName, m_pGameScene);
 	
+	this->AICreateNodes();
 	m_addedEntities.clear();
 	m_removedEntities.clear();
 
@@ -720,7 +720,6 @@ bool Simulation::AddNPC(uint32_t npcId)
 			LOG_INFO("NPC COLLISION!");
 		}
 	});
-	Broadcast(SingleEntityMessage(npc));
 	return true;
 }
 bool Simulation::RemoveNPC(uint32_t npcId)
@@ -864,7 +863,7 @@ void Simulation::OnNetworkEntityDestroy(entt::registry& reg, entt::entity entity
 	Entity e(reg, entity);
 	// Network has not been destroyed yet
 	m_removedEntities.push_back(e.GetComponent<comp::Network>()->id);
-	}
+	
 }
 
 std::vector<std::string> Simulation::OpenFile(std::string filePath)

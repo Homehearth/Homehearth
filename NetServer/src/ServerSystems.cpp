@@ -15,7 +15,7 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 {
 	Entity entity = simulation->GetGameScene()->CreateEntity();
 	entity.AddComponent<comp::Network>();
-	entity.AddComponent<comp::Enemy>();
+	entity.AddComponent<comp::NPC>();
 	entity.AddComponent<comp::Tag<DYNAMIC>>();
 
 	comp::Transform* transform = entity.AddComponent<comp::Transform>();
@@ -190,8 +190,8 @@ void ServerSystems::WaveSystem(Simulation* simulation,
 void ServerSystems::NextWaveConditions(Simulation* simulation, Timer& timer, int timeToFinish)
 {
 	//Summarize all the existing enemy components in the scene
-	simulation->GetGameScene()->ForEachComponent<comp::Enemy, comp::Transform>(
-		[&](Entity entity, comp::Enemy enemy, comp::Transform transform)
+	simulation->GetGameScene()->ForEachComponent<comp::NPC, comp::Transform>(
+		[&](Entity entity, comp::NPC enemy, comp::Transform transform)
 		{
 			if (abs(transform.position.x) <= 10.f && abs(transform.position.z) <= 10.f)
 			{
