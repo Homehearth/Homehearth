@@ -67,10 +67,6 @@ bool Game::OnStartup()
 	sceneHelp::CreateJoinLobbyScene(this);
 	sceneHelp::CreateLoadingScene(this);
 
-#ifdef _DEBUG
-	//CreateGridSystem();
-#endif // DEBUG
-
 	// Set Current Scene
 	SetScene("MainMenu");
 
@@ -174,8 +170,9 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 
 		// TODO MAKE BETTER
 		// Update entities with new transforms
-		GetScene("Game").ForEachComponent<comp::Network, comp::Transform>([&](comp::Network& n, comp::Transform& t)
+		GetScene("Game").ForEachComponent<comp::Network, comp::Transform>([&](Entity e, comp::Network& n, comp::Transform& t)
 			{
+				
 				if (transforms.find(n.id) != transforms.end())
 				{
 					t = transforms.at(n.id);
@@ -222,6 +219,28 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 				LOG_INFO("A remote player added!");
 				m_players[e.GetComponent<comp::Network>()->id] = e;
 			}
+			// TODO DEBUG
+#ifdef  _DEBUG
+			comp::Tile* tile = e.GetComponent<comp::Tile>();
+			if (tile)
+			{
+				if (tile->type == TileType::EMPTY)
+				{
+					comp::Renderable* renderable = e.AddComponent<comp::Renderable>();
+					renderable->model = ResourceManager::Get().GetResource<RModel>("Plane1.obj");
+					renderable->model->ChangeMaterial("TileEmpty.mtl");
+				}
+				else if (tile->type == TileType::BUILDING || tile->type == TileType::UNPLACABLE)
+				{
+					comp::Renderable* renderable = e.AddComponent<comp::Renderable>();
+					renderable->model = ResourceManager::Get().GetResource<RModel>("Plane2.obj");
+					renderable->model->ChangeMaterial("TileBuilding.mtl");
+				}
+				
+			}
+#endif //  _DEBUG
+
+
 		}
 
 		LOG_INFO("Successfully loaded all entities!");
@@ -253,11 +272,10 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 					{
 						m_players.erase(net.id);
 					}
-					LOG_INFO("Removed Entity %u", net.id);
 					e.Destroy();
 				}
 			});
-
+		LOG_INFO("Removed %u entities", count);
 		break;
 	}
 	case GameMsg::Lobby_Accepted:
@@ -373,7 +391,6 @@ void Game::OnClientDisconnect()
 	// remove all network entities
 	GetScene("Game").ForEachComponent<comp::Network>([](Entity& e, comp::Network& net)
 		{
-			LOG_INFO("Removed entity %u on disconnect", net.id);
 			e.Destroy();
 		}
 	);
@@ -381,38 +398,6 @@ void Game::OnClientDisconnect()
 	SetScene("MainMenu");
 
 	LOG_INFO("Disconnected from server!");
-}
-
-void Game::CreateGridSystem()
-{
-	GridProperties_t options;
-	m_grid.Initialize2(options.mapSize, options.position, options.fileName, &GetScene("Game"));
-	for (int i = 0; i < m_grid.GetTilePositions()->size(); i++)
-	{
-		Entity tile = m_grid.GetTiles()->at(i);
-		comp::Renderable* renderable = tile.AddComponent<comp::Renderable>();
-		tile.GetComponent<comp::Transform>()->position.y = 0.5;
-
-		if (m_grid.GetTiles()->at(i).GetComponent<comp::Tile>()->type == TileType::EMPTY)
-		{
-			renderable->model = ResourceManager::Get().GetResource<RModel>("Plane1.obj");
-			renderable->model->ChangeMaterial("TileEmpty.mtl");
-		}
-		else if (m_grid.GetTiles()->at(i).GetComponent<comp::Tile>()->type == TileType::BUILDING || m_grid.GetTiles()->at(i).GetComponent<comp::Tile>()->type == TileType::UNPLACABLE)
-		{
-			renderable->model = ResourceManager::Get().GetResource<RModel>("Plane2.obj");
-			renderable->model->ChangeMaterial("TileBuilding.mtl");
-		}
-		else if (m_grid.GetTiles()->at(i).GetComponent<comp::Tile>()->type == TileType::DEFAULT)
-		{
-			renderable->model = ResourceManager::Get().GetResource<RModel>("Plane3.obj");
-			renderable->model->ChangeMaterial("TileDefence.mtl");
-		}
-		else
-		{
-			std::cout << "Couldnt create this tile" << std::endl;
-		}
-	}
 }
 
 void Game::SendStartGame()
@@ -498,6 +483,13 @@ Entity Game::CreateEntityFromMessage(message<GameMsg>& msg)
 				comp::Player p;
 				msg >> p;
 				*e.AddComponent<comp::Player>() = p;
+				break;
+			}
+			case ecs::Component::TILE:
+			{
+				comp::Tile t;
+				msg >> t;
+				*e.AddComponent<comp::Tile>() = t;
 				break;
 			}
 			default:
