@@ -46,15 +46,22 @@ void rtd::TextField::Update()
 		m_stringText.pop_back();
 	}
 
-	if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Keys::LeftControl, KeyState::HELD) &&
-		InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Keys::V, KeyState::PRESSED))
+	if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Keys::LeftControl, KeyState::HELD))
 	{
-		m_stringText = InputSystem::Get().GetClipboard();
-		if (m_stringText.length() > m_textLimit)
+		if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Keys::V, KeyState::PRESSED))
 		{
-			m_stringText = m_stringText.substr(0, m_textLimit);
+			m_stringText = InputSystem::Get().GetClipboard();
+			if (m_stringText.length() > m_textLimit)
+			{
+				m_stringText = m_stringText.substr(0, m_textLimit);
+			}
+		}
+		else if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Keys::C, KeyState::PRESSED))
+		{
+			InputSystem::Get().SetClipboard(m_stringText);
 		}
 	}
+
 
 	// Update the text
 	m_text->SetText(m_stringText);

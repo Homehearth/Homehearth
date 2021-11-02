@@ -169,6 +169,30 @@ std::string InputSystem::GetClipboard()
 	return str;
 }
 
+void InputSystem::SetClipboard(const std::string& str)
+{
+	if (!OpenClipboard(NULL))
+	{
+		LOG_WARNING("Failed to open clipboard %d", GetLastError());
+	}
+	EmptyClipboard();
+
+	HGLOBAL hg = GlobalAlloc(GMEM_MOVEABLE, str.size());
+	if (!hg)
+	{
+		CloseClipboard();
+		LOG_WARNING("Failed to allocate clipboard handle %d", GetLastError());
+		return;
+	}
+
+	memcpy(GlobalLock(hg), str.c_str(), str.size());
+	GlobalUnlock(hg);
+	SetClipboardData(CF_TEXT, hg);
+
+	CloseClipboard();
+	GlobalFree(hg);
+}
+
 void InputSystem::ToggleMouseVisibility() const
 {
 	if (m_mouseState.positionMode == dx::Mouse::MODE_ABSOLUTE)
