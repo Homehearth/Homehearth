@@ -302,6 +302,7 @@ void Systems::AISystem(HeadlessScene& scene)
 		{
 		case comp::NPC::State::ATTACK:
 			//Do attacking things
+			entity.GetComponent<comp::CombatStats>()->isAttacking = true;
 			break;
 		case comp::NPC::State::CHASE:
 			if (!npc.currentNode)
