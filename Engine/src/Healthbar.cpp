@@ -1,25 +1,30 @@
 #include "EnginePCH.h"
 #include "Healthbar.h"
+#include "Components.h"
 
 using namespace rtd;
 
 void rtd::Healthbar::Update()
 {
     // Update if health is not nullptr
-    if (m_points)
+    if (!m_entity.IsNull())
     {
-        // Scale the foreground to reflect on available health.
-        const float scale = *m_points / m_maxHealth;
-        m_drawOpts.width = m_sizeFull * scale;
+        comp::Health* h = m_entity.GetComponent<comp::Health>();
 
-        m_foreGround.get()->SetPosition(m_drawOpts.x_pos, m_drawOpts.y_pos);
-        m_foreGround.get()->SetScale(m_drawOpts.width, m_drawOpts.height);
+        if (h)
+        {
+            // Scale the foreground to reflect on available health.
+            const float scale = h->currentHealth / h->maxHealth;
+            m_drawOpts.width = (m_sizeFull * scale) > 0 ? (m_sizeFull * scale) : 0;
+
+            m_foreGround.get()->SetPosition(m_drawOpts.x_pos, m_drawOpts.y_pos);
+            m_foreGround.get()->SetScale(m_drawOpts.width, m_drawOpts.height);
+        }
     }
 }
 
-rtd::Healthbar::Healthbar(void* health, const draw_t& drawOpts, const float& max_health)
+rtd::Healthbar::Healthbar(const draw_t& drawOpts)
 {
-    this->SetHealthVariable(health, max_health);
     m_drawOpts = drawOpts;
     m_backGround = std::make_unique<Canvas>(m_drawOpts);
     m_foreGround = std::make_unique<Canvas>(m_drawOpts);
@@ -34,10 +39,9 @@ rtd::Healthbar::~Healthbar()
 
 }
 
-void rtd::Healthbar::SetHealthVariable(void* var, const float& max_health)
+void rtd::Healthbar::SetHealthVariable(Entity e)
 {
-    m_points = (float*)var;
-    m_maxHealth = max_health;
+    m_entity = e;
 }
 
 void rtd::Healthbar::Draw()

@@ -48,7 +48,7 @@ void GameSystems::UpdateHealthbar(Scene& scene)
 			rtd::Healthbar* healthbar = dynamic_cast<rtd::Healthbar*>(scene.GetCollection("player" + std::to_string(i) + "Info")->elements[0].get());
 			if (healthbar)
 			{
-				healthbar->SetHealthVariable(&health.currentHealth, health.maxHealth);
+				healthbar->SetHealthVariable(e);
 			}
 		}
 		i++;
