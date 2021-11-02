@@ -276,10 +276,9 @@ bool ServerGame::CreateSimulation(uint32_t playerID, const std::string& mainPlay
 	if (!m_simulations[m_nGameID]->Create(playerID, m_nGameID, &m_mapColliders, mainPlayerPlate))
 	{
 		m_simulations.erase(m_nGameID);
+
 		return false;
 	}
-
-	m_nGameID++;
 
 	return true;
 }
