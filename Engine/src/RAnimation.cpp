@@ -125,13 +125,23 @@ void RAnimation::LoadKeyframes(const aiAnimation* animation)
 			LoadRotations(boneName, animation->mChannels[i]);
 		}
 	}
-
-	//std::cout << "Done" << std::endl;
 }
 
 const sm::Vector3 RAnimation::GetPosition(const std::string& bonename, const double& currentFrame, const double& nextFrame, UINT& lastKey, bool interpolate) const
 {
 	sm::Vector3 finalVec;
+	//UINT nextKey = lastKey;
+
+	////Get the closest next keyframe to currentframe
+	//while (m_keyFrames.at(bonename).position[nextKey].time < currentFrame)
+	//{
+	//	nextKey++;
+
+	//	//Next key should not go out of range
+	//	if (nextKey >= m_keyFrames.at(bonename).position.size())
+	//		nextKey = 0;
+	//}
+
 	UINT nextKey = lastKey + 1;
 	//Next key should not go out of range
 	if (nextKey >= m_keyFrames.at(bonename).position.size())
@@ -166,6 +176,18 @@ const sm::Vector3 RAnimation::GetPosition(const std::string& bonename, const dou
 const sm::Vector3 RAnimation::GetScale(const std::string& bonename, const double& currentFrame, const double& nextFrame, UINT& lastKey, bool interpolate) const
 {
 	sm::Vector3 finalVec;
+	//UINT nextKey = lastKey;
+
+	////Get the closest next keyframe to currentframe
+	//while (m_keyFrames.at(bonename).scale[nextKey].time < currentFrame)
+	//{
+	//	nextKey++;
+
+	//	//Next key should not go out of range
+	//	if (nextKey >= m_keyFrames.at(bonename).scale.size())
+	//		nextKey = 0;
+	//}
+
 	UINT nextKey = lastKey + 1;
 	//Next key should not go out of range
 	if (nextKey >= m_keyFrames.at(bonename).scale.size())
@@ -200,6 +222,18 @@ const sm::Vector3 RAnimation::GetScale(const std::string& bonename, const double
 const sm::Quaternion RAnimation::GetRotation(const std::string& bonename, const double& currentFrame, const double& nextFrame, UINT& lastKey, bool interpolate) const
 {
 	sm::Quaternion finalQuat;
+	//UINT nextKey = lastKey;
+
+	////Get the closest next keyframe to currentframe
+	//while (m_keyFrames.at(bonename).rotation[nextKey].time < currentFrame)
+	//{
+	//	nextKey++;
+
+	//	//Next key should not go out of range
+	//	if (nextKey >= m_keyFrames.at(bonename).rotation.size())
+	//		nextKey = 0;
+	//}
+
 	UINT nextKey = lastKey + 1;
 	//Next key should not go out of range
 	if (nextKey >= m_keyFrames.at(bonename).rotation.size())

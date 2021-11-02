@@ -95,14 +95,14 @@ bool RAnimator::Create(const std::string& filename)
 
 	//Load in all the animations needed
 
-	m_currentAnim = ResourceManager::Get().GetResource<RAnimation>("Test/Knight_Animation.fbx");
+	m_currentAnim = ResourceManager::Get().GetResource<RAnimation>(filename);
 
 	return true;
 }
 
 void RAnimator::Update()
 {
-	if (!m_bones.empty())
+	if (!m_bones.empty() && m_currentAnim)
 	{
 		double tickDT = m_currentAnim->GetTicksPerFrame() * Stats::GetDeltaTime();
 		m_frameTime = fmod(m_frameTime + tickDT, m_currentAnim->GetDuraction());

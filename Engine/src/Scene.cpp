@@ -22,12 +22,6 @@ void Scene::Update(float dt)
 	// Emit event
 	BasicScene::Update(dt);
 
-	if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::P, KeyState::RELEASED))
-		m_updateAnimation = false;
-	else if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::O, KeyState::RELEASED))
-		m_updateAnimation = true;
-
-
 	if (!m_renderableCopies.IsSwapped() &&
 		!m_renderableAnimCopies.IsSwapped())
 	{

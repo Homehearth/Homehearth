@@ -126,17 +126,17 @@ namespace sceneHelp
 			//Copy a model
 			//animEnt.GetComponent<comp::Renderable>()->model = ResourceManager::Get().CopyResource<RModel>("Skeleton.fbx");
 			//if (!animEnt.GetComponent<comp::Renderable>()->model)
-				animEnt.GetComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>("Test/Knight_Skeleton.fbx");
+				animEnt.GetComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>("Test/GameCharacterBindPose.fbx");
 			
 			//Change materials
 			//animEnt.GetComponent<comp::Renderable>()->model->ChangeMaterial(materials[i]);
 
 			//Add animator - remove component if it did not work - will still render model
 			animEnt.AddComponent<comp::Animator>();
-			animEnt.GetComponent<comp::Animator>()->animator = ResourceManager::Get().CopyResource<RAnimator>("Test.anim");
+			animEnt.GetComponent<comp::Animator>()->animator = ResourceManager::Get().CopyResource<RAnimator>("Test/RunningAnimation.fbx");
 			if (!animEnt.GetComponent<comp::Animator>()->animator)
 			{
-				animEnt.GetComponent<comp::Animator>()->animator = ResourceManager::Get().GetResource<RAnimator>("Test.anim");
+				animEnt.GetComponent<comp::Animator>()->animator = ResourceManager::Get().GetResource<RAnimator>("Test/RunningAnimation.fbx");
 				if (!animEnt.GetComponent<comp::Animator>()->animator->LoadSkeleton(animEnt.GetComponent<comp::Renderable>()->model->GetSkeleton()))
 					animEnt.RemoveComponent<comp::Animator>();
 			}
