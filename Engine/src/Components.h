@@ -17,6 +17,7 @@ namespace ecs
 		LIGHT,
 		PLAYER,
 		COMPONENT_COUNT,
+		TILE,
 		COMPONENT_MAX = 32
 	};
 
@@ -165,6 +166,13 @@ namespace ecs
 		{
 			float chargeAmount;
 			bool positive;
+		};
+
+		struct Tile 
+		{
+			TileType type;
+			sm::Vector2 gridID;
+			float halfWidth;
 		};
 
 	};

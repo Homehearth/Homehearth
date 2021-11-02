@@ -286,7 +286,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 	// ---DEBUG ENTITY---
 	Entity e = m_pGameScene->CreateEntity();
 	e.AddComponent<comp::Network>()->id = m_pServer->PopNextUniqueID();
-	e.AddComponent<comp::Transform>()->position = sm::Vector3(-5, 0, 0);
+	e.AddComponent<comp::Transform>()->position = sm::Vector3(0, 0, 0);
 	e.AddComponent<comp::MeshName>()->name = "Chest.obj";
 	e.AddComponent<comp::BoundingOrientedBox>()->Extents = sm::Vector3(2.f, 2.f, 2.f);
 	e.AddComponent<comp::NPC>();
@@ -298,15 +298,21 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 	// --- WORLD ---
 	Entity e2 = m_pGameScene->CreateEntity();
 	e2.AddComponent<comp::Network>()->id = m_pServer->PopNextUniqueID();
-	e2.AddComponent<comp::Transform>()->position = { -250, -2, 300 };
+	e2.AddComponent<comp::Transform>();
 	e2.AddComponent<comp::MeshName>()->name = "GameScene.obj";
 	e2.AddComponent<comp::Tag<TagType::STATIC>>();
 	// --- END OF THE WORLD ---
 
 	m_pCurrentScene = m_pLobbyScene;
 
+
+	//Gridsystem
+	GridProperties_t gridOption;
+	m_grid.Initialize(gridOption.mapSize, gridOption.position, gridOption.fileName, m_pGameScene);
+	
 	// Automatically join created lobby
 	JoinLobby(playerID, gameID);
+
 
 	return true;
 }
