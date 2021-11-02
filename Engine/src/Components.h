@@ -100,6 +100,7 @@ namespace ecs
 			float runSpeed;
 			sm::Vector3 targetForward;
 		};
+
 		struct NPC
 		{
 			enum class State
@@ -113,7 +114,10 @@ namespace ecs
 			float attackRange;
 			bool hostile;
 			uint32_t currentNodeTarget = static_cast<uint32_t>(-1);
+			std::vector<comp::Node*> path;
+			comp::Node* currentNode;
 		};
+
 		struct Node
 		{
 			float f = FLT_MAX, g = FLT_MAX, h = FLT_MAX;
@@ -126,6 +130,7 @@ namespace ecs
 				f = FLT_MAX, g = FLT_MAX, h = FLT_MAX;
 			}
 		};
+
 		struct Light
 		{
 			light_t lightData;
