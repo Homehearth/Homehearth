@@ -3,7 +3,6 @@
 #include "Scene.h"
 
 #include <omp.h>
-#define TICK_RATE 1.f / 60.f
 
 template<typename SceneType>
 class BasicEngine
@@ -122,6 +121,7 @@ void BasicEngine<SceneType>::Run()
 	float update_time = 0.f;
 	float network_time = 0.f;
 	const float TARGET_UPDATE = 1.f / 120.f;
+	const float TICK_RATE = 1.f / 60.f;
 
 	while (IsRunning())
 	{
