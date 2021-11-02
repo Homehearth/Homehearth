@@ -148,3 +148,21 @@ struct light_t
 	UINT		enabled		= 0;	// 0 = Off, 1 = On
 	float		padding		= 0;
 };
+
+static struct GridProperties_t
+{
+	sm::Vector3 position = sm::Vector3(0, 0, 0);
+	sm::Vector2 mapSize = sm::Vector2(1200, 1200);
+	std::string fileName = "GridMap.png";
+	bool isVisible = true;
+
+} Options;
+
+enum class TileType
+{
+	DEFAULT,
+	EMPTY,
+	BUILDING,
+	UNPLACABLE,
+	DEFENCE
+};

@@ -1,6 +1,8 @@
 #include "NetServerPCH.h"
 #include "Simulation.h"
 
+#include "Wave.h"
+
 void Simulation::InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg)const
 {
 	std::bitset<ecs::Component::COMPONENT_MAX> compSet;
@@ -118,6 +120,45 @@ message<GameMsg> Simulation::AllEntitiesMessage()const
 	return msg;
 }
 
+void Simulation::CreateWaves()
+{
+	using namespace EnemyManagement;
+
+	Wave wave1, wave2; // Default: WaveType::Zone
+	{ // Wave_1 Group_1
+		Wave::Group group1;
+		group1.AddEnemy(EnemyType::Default, 5);
+		group1.AddEnemy(EnemyType::Default2, 5);
+		group1.SetSpawnPoint({ 200.f, 0.0f });
+		wave1.SetTimeLimit(5);
+		wave1.AddGroup(group1);
+	}
+
+	{ // Wave_1 Group_2
+		Wave::Group group2;
+		group2.AddEnemy(EnemyType::Default, 5);
+		group2.SetSpawnPoint({ -200.f, 0.0f });
+		wave1.AddGroup(group2);
+	}
+	waveQueue.emplace(wave1); // Add Wave_1
+
+	{ // Wave_2 Group_3
+		Wave::Group group3;
+		group3.AddEnemy(EnemyType::Default, 5);
+		group3.AddEnemy(EnemyType::Default2, 5);
+		group3.SetSpawnPoint({ 0.f, -200.0f });
+		wave2.AddGroup(group3);
+	}
+
+	{ // Wave_2 Group_4
+		Wave::Group group4;
+		group4.AddEnemy(EnemyType::Default, 2);
+		group4.SetSpawnPoint({ 0.f, 200.0f });
+		wave2.AddGroup(group4);
+	}
+	waveQueue.emplace(wave2); // Add Wave_2
+}
+
 Simulation::Simulation(Server* pServer, HeadlessEngine* pEngine)
 	: m_pServer(pServer)
 	, m_pEngine(pEngine), m_pLobbyScene(nullptr), m_pGameScene(nullptr), m_pCurrentScene(nullptr)
@@ -203,6 +244,10 @@ void Simulation::UpdateLobby()
 bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::BoundingOrientedBox>* mapColliders, const std::string& namePlate)
 {
 	this->m_gameID = gameID;
+
+	// Create and add all waves to the queue.
+	CreateWaves();
+
 	// Create Scenes associated with this Simulation
 	m_pLobbyScene = &m_pEngine->GetScene("Lobby_" + std::to_string(gameID));
 	m_pLobbyScene->on<ESceneUpdate>([&](const ESceneUpdate& e, HeadlessScene& scene)
@@ -260,8 +305,21 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 				Systems::CombatSystem(scene, e.dt);
 
 			}
+
+			if(!waveQueue.empty())
+				ServerSystems::NextWaveConditions(this, waveTimer, waveQueue.front().GetTimeLimit());
+
+			//LOG_INFO("GAME Scene %d", m_gameID);
 		});
 
+	//On all enemies wiped, activate the next wave.
+	m_pGameScene->on<ESceneCallWaveSystem>([&](const ESceneCallWaveSystem& dt, HeadlessScene& scene)
+		{
+			waveTimer.Start();
+			ServerSystems::WaveSystem(this, waveQueue);
+		
+		});
+	
 	//On collision event add entities as pair in the collision system
 	m_pGameScene->on<ESceneCollision>([&](const ESceneCollision& e, HeadlessScene& scene)
 		{
@@ -313,8 +371,14 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 
 	m_pCurrentScene = m_pLobbyScene;
 
+
+	//Gridsystem
+	GridProperties_t gridOption;
+	m_grid.Initialize(gridOption.mapSize, gridOption.position, gridOption.fileName, m_pGameScene);
+	
 	// Automatically join created lobby
 	JoinLobby(playerID, gameID, namePlate);
+
 
 	return true;
 }

@@ -17,6 +17,7 @@ namespace ecs
 		BOUNDING_SPHERE,
 		LIGHT,
 		PLAYER,
+		TILE,
 		COMPONENT_COUNT,
 		COMPONENT_MAX = 32
 	};
@@ -151,7 +152,12 @@ namespace ecs
 			uint8_t id = ID;
 		};
 
-
+		struct Tile 
+		{
+			TileType type;
+			sm::Vector2 gridID;
+			float halfWidth;
+		};
 
 	};
 

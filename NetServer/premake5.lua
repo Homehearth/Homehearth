@@ -26,6 +26,7 @@ project "NetServer"
     -- Note: specify the path relative to the Premake file.
     includedirs {
 		"src",
+		"../Game/src/",
         "../Engine/src",
         "../ThirdParty/DirectXTK/include/",
         "../ThirdParty/imGUI/",

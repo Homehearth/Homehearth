@@ -1,7 +1,9 @@
 #pragma once
 #include "Server.h"
 #include "HeadlessEngine.h"
+#include "GridSystem.h"
 #include "ServerSystems.h"
+#include "Wave.h"
 
 /* 
 		Simulation defines each ongoing simulation from the perspective of the server
@@ -16,7 +18,8 @@ private:
 	HeadlessEngine* m_pEngine;
 	uint32_t m_gameID;
 	uint32_t m_tick;
-	
+	GridSystem m_grid;
+
 	HeadlessScene* m_pLobbyScene;
 	HeadlessScene* m_pGameScene;
 	HeadlessScene* m_pCurrentScene;
@@ -37,6 +40,11 @@ private:
 	void Broadcast(message<GameMsg>& msg, uint32_t exclude = -1)const;
 	void ScanForDisconnects();
 
+	//Game play related
+	Timer waveTimer;
+	std::queue<Wave> waveQueue;
+	void CreateWaves();
+	
 	void OnNetworkEntityCreate(entt::registry& reg, entt::entity entity);
 	void OnNetworkEntityDestroy(entt::registry& reg, entt::entity entity);
 

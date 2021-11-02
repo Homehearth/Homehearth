@@ -1,6 +1,7 @@
 #pragma once
 #include <EnginePCH.h>
 #include <Engine.h>
+#include <GridSystem.h>
 
 class Game : public Engine
 {
@@ -9,7 +10,9 @@ private:
 	std::vector<comp::Transform> predictedPositions;
 	std::unordered_map<uint32_t, Entity> m_players;
 
-	//bool m_isLeavingLobby;
+	GridSystem m_grid;
+
+
 	comp::Transform test;
 	float m_predictionThreshhold;
 
@@ -25,6 +28,8 @@ private:
 	void CheckIncoming(message<GameMsg>& msg);
 	void PingServer();
 	void OnClientDisconnect();
+	void CreateGridSystem();
+	
 	Entity CreateEntityFromMessage(message<GameMsg>& msg);
 
 	void UpdateInput();

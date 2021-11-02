@@ -38,15 +38,15 @@ void Game::UpdateNetwork(float deltaTime)
 		//	pingCheck -= TARGET_PING_TIME;
 		//}
 
-		if (GetCurrentScene() == &GetScene("Game") /*&& !m_isLeavingLobby*/)
+		if (GetCurrentScene() == &GetScene("Game"))
 		{
 			if (GetCurrentScene()->GetCurrentCamera()->GetCameraType() == CAMERATYPE::PLAY)
 			{
-
+				
 				message<GameMsg> msg;
 				msg.header.id = GameMsg::Game_PlayerInput;
 
-
+				
 				msg << this->m_localPID << m_gameID << m_inputState;
 
 				m_client.Send(msg);
@@ -66,6 +66,10 @@ bool Game::OnStartup()
 	sceneHelp::CreateMainMenuScene(this);
 	sceneHelp::CreateJoinLobbyScene(this);
 	sceneHelp::CreateLoadingScene(this);
+
+#ifdef _DEBUG
+	CreateGridSystem();
+#endif // DEBUG
 
 	// Set Current Scene
 	SetScene("MainMenu");
@@ -273,10 +277,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		SetScene("JoinLobby");
 		break;
 	}
-	case GameMsg::Lobby_PlayerJoin:
-	{
-		break;
-	}
 	case GameMsg::Game_Start:
 	{
 		SetScene("Game");
@@ -375,6 +375,38 @@ void Game::OnClientDisconnect()
 	SetScene("MainMenu");
 
 	LOG_INFO("Disconnected from server!");
+}
+
+void Game::CreateGridSystem()
+{
+	GridProperties_t options;
+	m_grid.Initialize2(options.mapSize, options.position, options.fileName, &GetScene("Game"));
+	for (int i = 0; i < m_grid.GetTilePositions()->size(); i++)
+	{
+		Entity tile = m_grid.GetTiles()->at(i);
+		comp::Renderable* renderable = tile.AddComponent<comp::Renderable>();
+		tile.GetComponent<comp::Transform>()->position.y = 0.5;
+
+		if (m_grid.GetTiles()->at(i).GetComponent<comp::Tile>()->type == TileType::EMPTY)
+		{
+			renderable->model = ResourceManager::Get().GetResource<RModel>("Plane1.obj");
+			renderable->model->ChangeMaterial("TileEmpty.mtl");
+		}
+		else if (m_grid.GetTiles()->at(i).GetComponent<comp::Tile>()->type == TileType::BUILDING || m_grid.GetTiles()->at(i).GetComponent<comp::Tile>()->type == TileType::UNPLACABLE)
+		{
+			renderable->model = ResourceManager::Get().GetResource<RModel>("Plane2.obj");
+			renderable->model->ChangeMaterial("TileBuilding.mtl");
+		}
+		else if (m_grid.GetTiles()->at(i).GetComponent<comp::Tile>()->type == TileType::DEFAULT)
+		{
+			renderable->model = ResourceManager::Get().GetResource<RModel>("Plane3.obj");
+			renderable->model->ChangeMaterial("TileDefence.mtl");
+		}
+		else
+		{
+			std::cout << "Couldnt create this tile" << std::endl;
+		}
+	}
 }
 
 void Game::SendStartGame()
