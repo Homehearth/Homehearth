@@ -673,7 +673,7 @@ void Simulation::OnNetworkEntityCreate(entt::registry& reg, entt::entity entity)
 	Entity e(reg, entity);
 	// Network has surely been added
 	comp::Network* net = e.GetComponent<comp::Network>();
-	if (net->id == -1)
+	if (net->id == UINT32_MAX)
 	{
 		net->id = GetUniqueID();
 	}

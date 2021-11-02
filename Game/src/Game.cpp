@@ -155,12 +155,16 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			{
 				m_gameEntities[entityID].AddComponent<comp::Health>(h);
 			}
+			else
+			{
+				LOG_WARNING("Adding Health: Entity %u not in m_gameEntities, should not happen...", entityID);
+			}
 		}
+		msg >> count;
 
 
 #if DEBUG_SNAPSHOT
 		comp::BoundingOrientedBox b;
-		msg >> count;
 
 		for (uint32_t i = 0; i < count; i++)
 		{
@@ -171,7 +175,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			}
 			else 
 			{
-				LOG_WARNING("Entity %u not in m_gameEntities, should not happen...", entityID);
+				LOG_WARNING("Adding BoundingOrientedBox: Entity %u not in m_gameEntities, should not happen...", entityID);
 			}
 		}
 
@@ -187,7 +191,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			}
 			else
 			{
-				LOG_WARNING("Entity %u not in m_gameEntities, should not happen...", entityID);
+				LOG_WARNING("Adding Transform: Entity %u not in m_gameEntities, should not happen...", entityID);
 			}
 		}
 
