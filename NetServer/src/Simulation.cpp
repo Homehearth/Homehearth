@@ -97,6 +97,16 @@ void Simulation::InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg)co
 			}
 			break;
 		}
+		case ecs::Component::TILE:
+		{
+			comp::Tile* t = entity.GetComponent<comp::Tile>();
+			if (t)
+			{
+				compSet.set(ecs::Component::TILE);
+				msg << *t;
+			}
+			break;
+		}
 		default:
 			LOG_WARNING("Trying to send unimplemented component %u", i);
 			break;
@@ -366,16 +376,16 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 		collider.AddComponent<comp::Tag<TagType::STATIC>>();
 	}
 
+	//Gridsystem
+	GridProperties_t gridOption;
+	m_grid.Initialize(gridOption.mapSize, gridOption.position, gridOption.fileName, m_pGameScene);
+	
 	m_addedEntities.clear();
 	m_removedEntities.clear();
 
 	m_pCurrentScene = m_pLobbyScene;
 
 
-	//Gridsystem
-	GridProperties_t gridOption;
-	m_grid.Initialize(gridOption.mapSize, gridOption.position, gridOption.fileName, m_pGameScene);
-	
 	// Automatically join created lobby
 	JoinLobby(playerID, gameID, namePlate);
 
@@ -449,7 +459,7 @@ bool Simulation::AddPlayer(uint32_t playerID, const std::string& namePlate)
 
 	// Create Player entity in Game scene
 	Entity player = m_pGameScene->CreateEntity();
-	player.AddComponent<comp::Transform>();
+	player.AddComponent<comp::Transform>()->position = sm::Vector3(320.f,0,-310.f);
 	player.AddComponent<comp::Velocity>();
 	player.AddComponent<comp::NamePlate>()->namePlate = namePlate;
 	player.AddComponent<comp::MeshName>()->name = "Arrow.fbx";
@@ -550,7 +560,7 @@ void Simulation::SendSnapshot()
 		msg.header.id = GameMsg::Game_Snapshot;
 
 		uint32_t i = 0;
-		m_pCurrentScene->ForEachComponent<comp::Network, comp::Transform>([&](comp::Network& n, comp::Transform& t)
+		m_pCurrentScene->ForEachComponent<comp::Network, comp::Transform>([&](Entity e, comp::Network& n, comp::Transform& t)
 			{
 				msg << t << n.id;
 				i++;
