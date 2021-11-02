@@ -11,7 +11,6 @@ Game::Game()
 {
 	this->m_localPID = -1;
 	this->m_gameID = -1;
-	//this->m_isLeavingLobby = false;
 	this->m_predictionThreshhold = 0.001f;
 }
 
@@ -78,10 +77,6 @@ void Game::OnUserUpdate(float deltaTime)
 {
 	static float pingCheck = 0.f;
 
-#if RENDER_IMGUI == 0
-
-#endif
-
 	IMGUI(
 		ImGui::Begin("Network");
 
@@ -98,42 +93,12 @@ void Game::OnUserUpdate(float deltaTime)
 			ImGui::Text(std::string("Latency: <1 ms").c_str());
 		}
 
-		if (GetCurrentScene() != &GetScene("Game"))
-		{
-			if (ImGui::Button("Create Lobby"))
-			{
-				this->CreateLobby();
-			}
-			static uint32_t lobbyID = 0;
-			ImGui::InputInt("LobbyID", (int*)&lobbyID);
-			ImGui::SameLine();
-
-			if (ImGui::Button("Join"))
-			{
-				this->JoinLobby(lobbyID);
-			}
-		}
-		else
+		
+		if (GetCurrentScene() == &GetScene("Game"))
 		{
 			ImGui::Text(std::string("Game ID: " + std::to_string(m_gameID)).c_str());
-
-			if (m_isLeavingLobby)
-			{
-				ImGui::BeginDisabled();
-				ImGui::Button("Leave Game");
-				ImGui::EndDisabled();
-
-			}
-			else if (ImGui::Button("Leave Game"))
-			{
-				m_isLeavingLobby = true;
-				message<GameMsg> msg;
-				msg.header.id = GameMsg::Lobby_Leave;
-				msg << m_localPID << m_gameID;
-				m_client.Send(msg);
-			}
-
 		}
+
 		if (ImGui::Button("Disconnect"))
 		{
 			this->m_client.Disconnect();
