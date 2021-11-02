@@ -57,6 +57,16 @@ void Simulation::InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg)co
 			}
 			break;
 		}
+		case ecs::Component::HEALTH:
+		{
+			comp::Health* h = entity.GetComponent<comp::Health>();
+			if (h)
+			{
+				compSet.set(ecs::Component::HEALTH);
+				msg << h->currentHealth << h->isAlive << h->maxHealth;
+			}
+			break;
+		}
 		case ecs::Component::BOUNDING_ORIENTED_BOX:
 		{
 			comp::BoundingOrientedBox* b = entity.GetComponent<comp::BoundingOrientedBox>();
@@ -576,6 +586,14 @@ void Simulation::SendSnapshot()
 		(comp::Network& n, comp::BoundingOrientedBox& b)
 			{
 				msg << b << n.id;
+				i++;
+			});
+		msg << i;
+
+		i = 0;
+		m_pCurrentScene->ForEachComponent<comp::Network, comp::Health>([&](comp::Network& n, comp::Health h)
+			{
+				msg << h << n.id;
 				i++;
 			});
 		msg << i;

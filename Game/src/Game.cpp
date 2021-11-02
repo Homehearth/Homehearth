@@ -145,10 +145,23 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		msg >> currentTick;
 		uint32_t count;
 		msg >> count;
-
 		uint32_t entityID;
+
+		comp::Health h;
+		for (uint32_t i = 0; i < count; i++)
+		{
+			msg >> entityID >> h;
+			if (m_gameEntities.find(entityID) != m_gameEntities.end())
+			{
+				m_gameEntities[entityID].AddComponent<comp::Health>(h);
+			}
+		}
+
+
 #if DEBUG_SNAPSHOT
 		comp::BoundingOrientedBox b;
+		msg >> count;
+
 		for (uint32_t i = 0; i < count; i++)
 		{
 			msg >> entityID >> b;
@@ -323,6 +336,9 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		{
 			GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i + 1))->Show();
 		}
+
+		// Map healthbars to players.
+		GameSystems::UpdateHealthbar(GetScene("Game"));
 		break;
 	}
 	}
@@ -443,6 +459,15 @@ Entity Game::CreateEntityFromMessage(message<GameMsg>& msg)
 				std::string name;
 				msg >> name;
 				e.AddComponent<comp::NamePlate>()->namePlate = name;
+				break;
+			}
+			case ecs::Component::HEALTH:
+			{
+				comp::Health heal;
+				msg >> heal.maxHealth;
+				msg >> heal.isAlive;
+				msg >> heal.currentHealth;
+				*e.AddComponent<comp::Health>() = heal;
 				break;
 			}
 			case ecs::Component::BOUNDING_ORIENTED_BOX:
