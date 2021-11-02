@@ -256,7 +256,6 @@ void CollisionSystem::CollisionResponse(Entity entity1, Entity entity2) const
 	}
 
 	//Move the entity away from the other entity
-
 	const sm::Vector3 moveVec = smallestVec * 1.1f;
 	if ((p2Obb->Center - (p1Obb->Center + moveVec)).Length() > (sm::Vector3(p2Obb->Center) -
 		p1Obb->Center).Length())
@@ -267,7 +266,7 @@ void CollisionSystem::CollisionResponse(Entity entity1, Entity entity2) const
 			p1Obb->Center = p1transform->position;
 		}
 		
-		if(entity2.GetComponent<comp::Tag<DYNAMIC>>() && entity2.GetComponent<comp::Tag<DYNAMIC>>())
+		if(entity2.GetComponent<comp::Tag<DYNAMIC>>() && p2transform)
 		{
 			p2transform->position += ((moveVec * -1.0f) / 2.0f);
 			p2Obb->Center = p2transform->position;
@@ -281,7 +280,7 @@ void CollisionSystem::CollisionResponse(Entity entity1, Entity entity2) const
 			p1Obb->Center = p1transform->position;
 		}
 		
-		if (entity2.GetComponent<comp::Tag<DYNAMIC>>() && entity1.GetComponent<comp::Tag<DYNAMIC>>())
+		if (entity2.GetComponent<comp::Tag<DYNAMIC>>() && p2transform)
 		{
 			p2transform->position += ((moveVec) / 2.0f);
 			p2Obb->Center = p2transform->position;
