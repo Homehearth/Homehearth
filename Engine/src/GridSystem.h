@@ -20,5 +20,7 @@ public:
 	void Initialize(sm::Vector2 mapSize, sm::Vector3 position, std::string fileName, HeadlessScene* scene);
 	void Initialize2(sm::Vector2 mapSize, sm::Vector3 position, std::string fileName, Scene* scene); //TODO: remove when networking branch is in master
 	std::vector<sm::Vector3>* GetTilePositions();
+	sm::Vector2 GetGridSize() const;
+	Entity& GetTileByID(sm::Vector2 id);
 	std::vector<Entity>* GetTiles();
 };

@@ -268,68 +268,68 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 
 	m_pGameScene = &m_pEngine->GetScene("Game_" + std::to_string(gameID));
 	m_pGameScene->on<ESceneUpdate>([&](const ESceneUpdate& e, HeadlessScene& scene)
+	{
+		// update components with input
+		for (const auto& pair : m_playerInputs)
 		{
-			// update components with input
-			for (const auto& pair : m_playerInputs)
+			Entity e = pair.first;
+			InputState input = pair.second;
+			// update velocity
+			e.GetComponent<comp::Velocity>()->vel = sm::Vector3(static_cast<float>(input.axisHorizontal), 0, static_cast<float>(input.axisVertical)) * e.GetComponent<comp::Player>()->runSpeed;
+
+			// check if attacking
+			if (input.leftMouse)
 			{
-				Entity e = pair.first;
-				InputState input = pair.second;
-				// update velocity
-				e.GetComponent<comp::Velocity>()->vel = sm::Vector3(static_cast<float>(input.axisHorizontal), 0, static_cast<float>(input.axisVertical)) * e.GetComponent<comp::Player>()->runSpeed;
-
-				// check if attacking
-				if (input.leftMouse)
+				comp::CombatStats* stats = e.GetComponent<comp::CombatStats>();
+				if (stats)
 				{
-					comp::CombatStats* stats = e.GetComponent<comp::CombatStats>();
-					if (stats)
-					{
-						if (stats->cooldownTimer <= 0.0f)
-							stats->isAttacking = true;
+					if (stats->cooldownTimer <= 0.0f)
+						stats->isAttacking = true;
 
-						stats->targetRay = input.mouseRay;
+					stats->targetRay = input.mouseRay;
 
-					}
-					comp::Player* player = e.GetComponent<comp::Player>();
-					if (player)
-					{
-						player->state = comp::Player::State::ATTACK;
+				}
+				comp::Player* player = e.GetComponent<comp::Player>();
+				if (player)
+				{
+					player->state = comp::Player::State::ATTACK;
 
-					}
 				}
 			}
+		}
 
-			//  run all game logic systems
+		//  run all game logic systems
+		{
+			PROFILE_SCOPE("Systems");
+			Systems::CharacterMovement(scene, e.dt);
+			Systems::MovementSystem(scene, e.dt);
+			Systems::MovementColliderSystem(scene, e.dt);
 			{
-				PROFILE_SCOPE("Systems");
-				Systems::CharacterMovement(scene, e.dt);
-				Systems::MovementSystem(scene, e.dt);
-				Systems::MovementColliderSystem(scene, e.dt);
-				{
-					PROFILE_SCOPE("Collision Box/Box");
-					Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(scene, e.dt);
-				}
-				{
-					PROFILE_SCOPE("Collision Box/Sphere");
-					Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingSphere>(scene, e.dt);
-				}
-				Systems::CombatSystem(scene, e.dt);
-
+				PROFILE_SCOPE("Collision Box/Box");
+				Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(scene, e.dt);
 			}
+			{
+				PROFILE_SCOPE("Collision Box/Sphere");
+				Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingSphere>(scene, e.dt);
+			}
+			Systems::CombatSystem(scene, e.dt);
 
-			if(!waveQueue.empty())
-				ServerSystems::NextWaveConditions(this, waveTimer, waveQueue.front().GetTimeLimit());
+		}
 
-			//LOG_INFO("GAME Scene %d", m_gameID);
-		});
+		if (!waveQueue.empty())
+			ServerSystems::NextWaveConditions(this, waveTimer, waveQueue.front().GetTimeLimit());
+
+		//LOG_INFO("GAME Scene %d", m_gameID);
+	});
 
 	//On all enemies wiped, activate the next wave.
 	m_pGameScene->on<ESceneCallWaveSystem>([&](const ESceneCallWaveSystem& dt, HeadlessScene& scene)
-		{
-			waveTimer.Start();
-			ServerSystems::WaveSystem(this, waveQueue);
-		
-		});
-	
+	{
+		waveTimer.Start();
+		ServerSystems::WaveSystem(this, waveQueue);
+
+	});
+
 	//On collision event add entities as pair in the collision system
 	m_pGameScene->on<ESceneCollision>([&](const ESceneCollision& e, HeadlessScene& scene)
 	{
@@ -379,7 +379,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 	//Gridsystem
 	GridProperties_t gridOption;
 	m_grid.Initialize(gridOption.mapSize, gridOption.position, gridOption.fileName, m_pGameScene);
-	
+	LOG_INFO("Creating Nodes");
 	this->AICreateNodes();
 	m_addedEntities.clear();
 	m_removedEntities.clear();
@@ -450,44 +450,63 @@ bool Simulation::IsEmpty() const
 
 bool Simulation::AICreateNodes()
 {
-	m_pGameScene->ForEachComponent<comp::Tile>([&](comp::Tile& tile) 
+	int itrID = 0;
+	std::vector<Entity>* tiles = m_grid.GetTiles();
+	std::vector<comp::Node*> nodes;
+	//Create Nodes
+	for (int i = 0; i < tiles->size(); i++)
 	{
-		//LOG_INFO("Tile ID: %lf  %lf",tile.gridID.x, tile.gridID.y);
-	});
-	//std::vector<Entity>* tiles = m_grid.GetTiles();
-	//for (Entity& tile : *tiles)
-	//{
-	//	comp::Tile* tileComponent = tile.GetComponent<comp::Tile>();
-	//	LOG_INFO("Tile ID: %lf  %lf", tileComponent->gridID.x, tileComponent->gridID.y);
+		Entity node = m_pGameScene->CreateEntity();
+		comp::Transform* tileTransform = tiles->at(i).GetComponent<comp::Transform>();
+		node.AddComponent<comp::Node>()->position = tileTransform->position;
+		node.GetComponent<comp::Node>()->id = tiles->at(i).GetComponent<comp::Tile>()->gridID;
+		nodes.push_back(node.GetComponent<comp::Node>());
 
-	//}
-	//std::vector<std::string> file = OpenFile("Other/NodeInfo.txt");//replace with actual name
-	//int currentIndex = 0;
-	//if (file.size() == 0)
-	//{
-	//	LOG_ERROR("Error Opening NodeFile!");
-	//}
-	////Creating nodes
-	//LOG_INFO("Creating nodes");
-	//while (file[currentIndex] != "")
-	//{
-	//	std::stringstream ss(file.at(currentIndex));
-	//	int ID = 0;
-	//	float posX = 0, posZ = 0;
-	//	ss >> ID >> posX >> posZ;
-	//	Entity node = m_pGameScene->CreateEntity();
-	//	node.AddComponent<comp::Node>();
+		//LOG_INFO("Tile ID: %lf  %lf", entityTile->gridID.x, entityTile->gridID.y);
+	}
+	
+	//Build Connections
+	for (int i = 0; i < tiles->size(); i++)
+	{
+		comp::Tile* entityTile = tiles->at(i).GetComponent<comp::Tile>();
+		sm::Vector2 currentID = entityTile->gridID;
+		//Get Neighbors
+		
+		//Left
+		if (m_grid.GetTileByID(currentID - sm::Vector2(-1,0)).GetComponent<comp::Tile>()->type == TileType::EMPTY)
+		{
+			if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID)))
+			{
+				nodes.at(i)->connections.push_back(GetAINodeById(currentID));
+			}
+		}
+		//Right
+		if (m_grid.GetTileByID(currentID - sm::Vector2(1, 0)).GetComponent<comp::Tile>()->type == TileType::EMPTY)
+		{
+			if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID)))
+			{
+				nodes.at(i)->connections.push_back(GetAINodeById(currentID));
+			}
+		}
+		//Up
+		if (m_grid.GetTileByID(currentID - sm::Vector2(0, 1)).GetComponent<comp::Tile>()->type == TileType::EMPTY)
+		{
+			if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID)))
+			{
+				nodes.at(i)->connections.push_back(GetAINodeById(currentID));
+			}
+		}
+		//Down
+		if (m_grid.GetTileByID(currentID - sm::Vector2(0, -1)).GetComponent<comp::Tile>()->type == TileType::EMPTY)
+		{
+			if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID)))
+			{
+				nodes.at(i)->connections.push_back(GetAINodeById(currentID));
+			}
+		}
 
-	//	currentIndex++;
-	//}
-	//LOG_INFO("Connecting Nodes");
-	//for (int i = currentIndex + 1; i < file.size(); i++)
-	//{
-	//	std::stringstream ss(file.at(i));
-	//	int ID1 = 0, ID2 = 0;
-	//	ss >> ID1 >> ID2;
-	//	this->ConnectNodes(this->GetAINodeById(ID1), this->GetAINodeById(ID2));
-	//}
+		//LOG_INFO("Tile ID: %lf  %lf", entityTile->gridID.x, entityTile->gridID.y);
+	}
 
 	return true;
 }
@@ -609,7 +628,7 @@ bool Simulation::AIAStarSearch()
 	return true;
 }
 
-bool Simulation::AddPlayer(uint32_t playerID, const std::string& namePlate) 
+bool Simulation::AddPlayer(uint32_t playerID, const std::string& namePlate)
 {
 	if (!m_pServer->isClientConnected(playerID))
 	{
@@ -621,7 +640,7 @@ bool Simulation::AddPlayer(uint32_t playerID, const std::string& namePlate)
 
 	// Create Player entity in Game scene
 	Entity player = m_pGameScene->CreateEntity();
-	player.AddComponent<comp::Transform>()->position = sm::Vector3(320.f,0,-310.f);
+	player.AddComponent<comp::Transform>()->position = sm::Vector3(320.f, 0, -310.f);
 	player.AddComponent<comp::Velocity>();
 	player.AddComponent<comp::NamePlate>()->namePlate = namePlate;
 	player.AddComponent<comp::MeshName>()->name = "Arrow.fbx";
@@ -760,19 +779,19 @@ void Simulation::SendSnapshot()
 
 		uint32_t i = 0;
 		m_pCurrentScene->ForEachComponent<comp::Network, comp::Transform>([&](Entity e, comp::Network& n, comp::Transform& t)
-			{
-				msg << t << n.id;
-				i++;
-			});
+		{
+			msg << t << n.id;
+			i++;
+		});
 		msg << i;
 
 		//DEBUG
 		i = 0;
 		m_pCurrentScene->ForEachComponent<comp::Network, comp::BoundingOrientedBox>([&](comp::Network& n, comp::BoundingOrientedBox& b)
-			{
-				msg << b << n.id;
-				i++;
-			});
+		{
+			msg << b << n.id;
+			i++;
+		});
 		msg << i;
 		//END DEBUG
 
@@ -863,7 +882,7 @@ void Simulation::OnNetworkEntityDestroy(entt::registry& reg, entt::entity entity
 	Entity e(reg, entity);
 	// Network has not been destroyed yet
 	m_removedEntities.push_back(e.GetComponent<comp::Network>()->id);
-	
+
 }
 
 std::vector<std::string> Simulation::OpenFile(std::string filePath)
@@ -894,7 +913,7 @@ void Simulation::ConnectNodes(comp::Node* node1, comp::Node* node2)
 	}
 }
 
-comp::Node* Simulation::GetAINodeById(uint32_t id)
+comp::Node* Simulation::GetAINodeById(sm::Vector2 id)
 {
 	m_pGameScene->ForEachComponent<comp::Node>([&](comp::Node& n)
 	{
@@ -951,10 +970,10 @@ void Simulation::SendAllEntitiesToPlayer(uint32_t playerID) const
 	msg.header.id = GameMsg::Game_AddEntity;
 	uint32_t count = 0;
 	m_pGameScene->ForEachComponent<comp::Network>([&](Entity e, comp::Network& n)
-		{
-			InsertEntityIntoMessage(e, msg);
-			count++;
-		});
+	{
+		InsertEntityIntoMessage(e, msg);
+		count++;
+	});
 	msg << count;
 
 	this->m_pServer->SendToClient(playerID, msg);
@@ -967,10 +986,10 @@ void Simulation::SendRemoveAllEntitiesToPlayer(uint32_t playerID) const
 
 	uint32_t count = 0;
 	m_pGameScene->ForEachComponent<comp::Network>([&](comp::Network& n)
-		{
-			msg << n.id;
-			count++;
-		});
+	{
+		msg << n.id;
+		count++;
+	});
 	msg << count;
 
 	m_pServer->SendToClient(playerID, msg);

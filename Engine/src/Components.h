@@ -114,12 +114,23 @@ namespace ecs
 		{
 			float f = FLT_MAX, g = FLT_MAX, h = FLT_MAX;
 			sm::Vector3 position;
-			uint32_t id;
+			sm::Vector2 id;
 			std::vector<Node*> connections;
 			ecs::component::Node* parent;
 			void ResetFGH()
 			{
 				f = FLT_MAX, g = FLT_MAX, h = FLT_MAX;
+			}
+			bool ConnectionAlreadyExists(Node* other)
+			{
+				for (Node* node : connections)
+				{
+					if (node == other)
+					{
+						return true;
+					}
+				}
+				return false;
 			}
 		};
 
@@ -187,6 +198,7 @@ namespace ecs
 			TileType type;
 			sm::Vector2 gridID;
 			float halfWidth;
+
 		};
 
 	};

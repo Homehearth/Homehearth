@@ -166,10 +166,24 @@ void GridSystem::Initialize2(sm::Vector2 mapSize, sm::Vector3 position, std::str
 
 	stbi_image_free(pixelsData);
 }
-
+sm::Vector2 GridSystem::GetGridSize() const
+{
+	return m_gridSize;
+}
 std::vector<sm::Vector3>* GridSystem::GetTilePositions()
 {
 	return &m_tilePosiitons;
+}
+Entity& GridSystem::GetTileByID(sm::Vector2 id)
+{
+	for (int i = 0; i < m_tiles.size(); i++)
+	{
+		comp::Tile* tile = m_tiles.at(i).GetComponent<comp::Tile>();
+		if (tile->gridID == id);
+		{
+			return m_tiles.at(i);
+		}
+	}
 }
 
 std::vector<Entity>* GridSystem::GetTiles()
