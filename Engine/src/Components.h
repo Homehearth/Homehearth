@@ -17,8 +17,8 @@ namespace ecs
 		BOUNDING_SPHERE,
 		LIGHT,
 		PLAYER,
-		COMPONENT_COUNT,
 		TILE,
+		COMPONENT_COUNT,
 		COMPONENT_MAX = 32
 	};
 
@@ -159,7 +159,6 @@ namespace ecs
 			sm::Vector2 gridID;
 			float halfWidth;
 		};
-
 
 	};
 

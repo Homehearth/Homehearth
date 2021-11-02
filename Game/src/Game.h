@@ -13,8 +13,6 @@ private:
 	GridSystem m_grid;
 
 
-	bool m_isLeavingLobby;
-	//bool m_isLeavingLobby;
 	comp::Transform test;
 	float m_predictionThreshhold;
 

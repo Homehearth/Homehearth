@@ -14,7 +14,7 @@
 Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, EnemyType type)
 {
 	Entity entity = simulation->GetGameScene()->CreateEntity();
-	entity.AddComponent<comp::Network>()->id = simulation->m_pServer->PopNextUniqueID();
+	entity.AddComponent<comp::Network>();
 	entity.AddComponent<comp::Enemy>();
 	entity.AddComponent<comp::Tag<DYNAMIC>>();
 

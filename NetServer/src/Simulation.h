@@ -5,8 +5,6 @@
 #include "ServerSystems.h"
 #include "Wave.h"
 
-constexpr int MAX_PLAYER_PER_LOBBY = 2;
-
 /* 
 		Simulation defines each ongoing simulation from the perspective of the server
 		gameID identifies the simulation which each player has to give the server to keep track
@@ -16,10 +14,10 @@ constexpr int MAX_PLAYER_PER_LOBBY = 2;
 class Simulation
 {
 private:
+	Server* m_pServer;
 	HeadlessEngine* m_pEngine;
 	uint32_t m_gameID;
 	uint32_t m_tick;
-	
 	GridSystem m_grid;
 
 	HeadlessScene* m_pLobbyScene;
@@ -52,7 +50,6 @@ private:
 
 
 public:
-	Server* m_pServer;
 	Simulation(Server* pServer, HeadlessEngine* pEngine);
 	virtual ~Simulation() = default;
 
@@ -84,7 +81,7 @@ public:
 	HeadlessScene* GetLobbyScene() const;
 	HeadlessScene* GetGameScene() const;
 
-	void SendEntity(Entity e, size_t exclude)const;
+	void SendEntity(Entity e, uint32_t exclude = -1)const;
 	void SendEntities(const std::vector<Entity>& entities)const;
 
 	void SendAllEntitiesToPlayer(uint32_t playerID)const;

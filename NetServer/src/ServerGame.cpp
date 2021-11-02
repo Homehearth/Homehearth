@@ -28,27 +28,36 @@ void ServerGame::InputThread()
 		else if (input == "/info")
 		{
 			LOG_INFO("INFO:")
-				for (const auto& sim : m_simulations)
-				{
-					LOG_INFO("-------Simulation %u-------", sim.first);
-					LOG_INFO("LOBBY SCENE:");
-					LOG_INFO("\tEntity Count: %u", (unsigned int)sim.second->GetLobbyScene()->GetRegistry()->size());
-					sim.second->GetLobbyScene()->ForEachComponent<comp::Network>([](Entity e, comp::Network& n)
-						{
-							LOG_INFO("\tEntity: %d", (entt::entity)e);
-							LOG_INFO("\tNetwork id: %u", n.id);
-						});
+			for (const auto& sim : m_simulations)
+			{
+				LOG_INFO("-------Simulation %u-------", sim.first);
+				LOG_INFO("LOBBY SCENE:");
+				LOG_INFO("\tEntity Count: %u", (unsigned int)sim.second->GetLobbyScene()->GetRegistry()->size());
+				sim.second->GetLobbyScene()->ForEachComponent<comp::Network>([](Entity e, comp::Network& n)
+					{
+						LOG_INFO("\tEntity: %d", (entt::entity)e);
+						LOG_INFO("\tNetwork id: %u", n.id);
+					});
 
-					LOG_INFO("GAME SCENE:");
-					LOG_INFO("\tEntity Count: %u\n", (unsigned int)sim.second->GetGameScene()->GetRegistry()->size());
-					sim.second->GetGameScene()->ForEachComponent<comp::Network>([](Entity e, comp::Network& n)
-						{
-							LOG_INFO("\tEntity: %d", (entt::entity)e);
-							LOG_INFO("\tNetwork id: %u", n.id);
-						});
+				LOG_INFO("GAME SCENE:");
+				LOG_INFO("\tEntity Count: %u\n", (unsigned int)sim.second->GetGameScene()->GetRegistry()->size());
+				sim.second->GetGameScene()->ForEachComponent<comp::Network>([](Entity e, comp::Network& n)
+					{
+						LOG_INFO("\tEntity: %d", (entt::entity)e);
+						LOG_INFO("\tNetwork id: %u", n.id);
+					});
 
-				}
+			}
 		}
+		else if (input == "/pstart")
+		{
+			PROFILER_BEGIN_SESSION();
+		}
+		else if (input == "/pend")
+		{
+			PROFILER_END_SESSION();
+		}
+
 	}
 }
 
@@ -76,13 +85,14 @@ void ServerGame::OnShutdown()
 
 void ServerGame::UpdateNetwork(float deltaTime)
 {
-	//static float timer = 0.0f;
-	//timer += deltaTime;
-	//if (timer >= 1.0f)
-	//{
-	//	LOG_INFO("Update: %f", 1.f / deltaTime);
-	//	timer = 0.0f;
-	//}
+	PROFILE_FUNCTION();
+	static float timer = 0.0f;
+	timer += deltaTime;
+	if (timer >= 1.0f)
+	{
+		LOG_INFO("Update: %f", 1.f / deltaTime);
+		timer = 0.0f;
+	}
 
 	// Check incoming messages
 	this->m_server.Update();
@@ -211,13 +221,8 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 		msg >> playerID;
 		if (m_simulations.find(gameID) != m_simulations.end())
 		{
-			if (m_simulations[gameID]->LeaveLobby(playerID, gameID)) {
-
-				// Send to client the message with the new game ID
-				message<GameMsg> accMsg;
-				accMsg.header.id = GameMsg::Lobby_AcceptedLeave;
-
-				m_server.SendToClient(playerID, accMsg);
+			if (m_simulations[gameID]->LeaveLobby(playerID, gameID)) 
+			{
 				break;
 			}
 		}

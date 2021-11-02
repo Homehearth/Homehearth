@@ -198,7 +198,7 @@ void Engine::drawImGUI() const
 	}
 
 	ImGui::End();
-	
+
 	ImGui::Begin("Components");
 	if (ImGui::CollapsingHeader("Transform"))
 	{
@@ -456,6 +456,13 @@ void Engine::Render(float& dt)
 	}
 
 	{
+		PROFILE_SCOPE("Render D2D1");
+		D2D1Core::Begin();
+		GetCurrentScene()->Render2D();
+		D2D1Core::Present();
+	}
+
+	{
 		PROFILE_SCOPE("Render ImGui");
 		IMGUI(
 			m_imguiMutex.lock();
@@ -463,13 +470,6 @@ void Engine::Render(float& dt)
 		ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 		m_imguiMutex.unlock();
 		);
-	}
-
-	{
-		PROFILE_SCOPE("Render D2D1");
-		D2D1Core::Begin();
-		GetCurrentScene()->Render2D();
-		D2D1Core::Present();
 	}
 
 	

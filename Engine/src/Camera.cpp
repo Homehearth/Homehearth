@@ -5,19 +5,19 @@
 
 Camera::Camera()
 {
-	m_FOV = dx::XMConvertToRadians(90.f); //0.4f * 3.14f;
-	m_zoomValue = 1;
-	m_nearPlane = 0.01f; // 1.0f;
-	m_farPlane = 1000.0; // 1000.0f
-	m_rollPitchYaw = { 0.0f, 0.0f, 0.0f };
-	m_move = { 0.0f, 0.0f, 0.0f };
-	m_aspectRatio = 0;
-	m_windowHeight = 0;
-	m_windowWidth = 0;
-	m_rotationSpeed = 2.5f;
-	m_movingSpeed = 15.0f;
-	m_type = CAMERATYPE::DEFAULT;
-	m_viewConstantBuffer = nullptr;
+	m_FOV					= dx::XMConvertToRadians(90.f); //0.4f * 3.14f;
+	m_zoomValue				= 1;
+	m_nearPlane				= 0.01f; // 1.0f;
+	m_farPlane				= 1000.0; // 1000.0f
+	m_rollPitchYaw			= { 0.0f, 0.0f, 0.0f };
+	m_move					= { 0.0f, 0.0f, 0.0f };
+	m_aspectRatio			= 0;
+	m_windowHeight			= 0;
+	m_windowWidth			= 0;
+	m_rotationSpeed			= 2.5f;
+	m_movingSpeed			= 15.0f;
+	m_type					= CAMERATYPE::DEFAULT;
+	m_viewConstantBuffer	= nullptr;
 }
 
 Camera::~Camera()
