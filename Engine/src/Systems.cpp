@@ -213,7 +213,7 @@ void Systems::AISystem(HeadlessScene& scene)
 	});
 }
 
-bool AIAStarSearch(Entity& npc)
+bool AIAStarSearch(Entity& npc, HeadlessScene& scene)
 {
 	comp::NPC* npcComp = npc.GetComponent<comp::NPC>();
 	comp::Node* currentNode = npcComp->currentNode;
@@ -321,12 +321,11 @@ bool AIAStarSearch(Entity& npc)
 		currentNode = currentNode->parent;
 	}
 
-	/*
-	for (unsigned int i = 0; i < AIHANDLER->allNodes.size(); i++)
-	{
-		AIHANDLER->allNodes.at(i)->ResetFGH();
-		AIHANDLER->allNodes.at(i)->ResetParent();
-	}
-	AIHANDLER->nrOfAstar++;*/
+	scene.ForEachComponent<comp::Node>([&](Entity entity, comp::Node& node)
+		{
+			node.ResetFGH();
+			node.parent = nullptr;
+		});
+
 	return true;
 }
