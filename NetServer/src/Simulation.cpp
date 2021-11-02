@@ -126,7 +126,7 @@ Simulation::Simulation(Server* pServer, HeadlessEngine* pEngine)
 {
 	this->m_gameID = 0;
 	this->m_tick = 0;
-	//this->AICreateNodes();
+	this->AICreateNodes();
 }
 
 bool Simulation::JoinLobby(uint32_t playerID, uint32_t gameID)
@@ -309,7 +309,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID)
 	//Gridsystem
 	GridProperties_t gridOption;
 	m_grid.Initialize(gridOption.mapSize, gridOption.position, gridOption.fileName, m_pGameScene);
-	
+
 	// Automatically join created lobby
 	JoinLobby(playerID, gameID);
 
@@ -366,34 +366,44 @@ bool Simulation::IsEmpty() const
 
 bool Simulation::AICreateNodes()
 {
+	//m_pGameScene->ForEachComponent<comp::Tile>([=](Entity entity, comp::Tile& tile) 
+	//{
+	//	//LOG_INFO("Tile ID: %lf  %lf",tile.gridID.x, tile.gridID.y);
+	//});
+	std::vector<Entity>* tiles = m_grid.GetTiles();
+	for (Entity& tile : *tiles)
+	{
+		comp::Tile* tileComponent = tile.GetComponent<comp::Tile>();
+		LOG_INFO("Tile ID: %lf  %lf", tileComponent->gridID.x, tileComponent->gridID.y);
 
-	std::vector<std::string> file = OpenFile("Other/NodeInfo.txt");//replace with actual name
-	int currentIndex = 0;
-	if (file.size() == 0)
-	{
-		LOG_ERROR("Error Opening NodeFile!");
 	}
-	//Creating nodes
-	LOG_INFO("Creating nodes");
-	while (file[currentIndex] != "")
-	{
-		std::stringstream ss(file.at(currentIndex));
-		int ID = 0;
-		float posX = 0, posZ = 0;
-		ss >> ID >> posX >> posZ;
-		Entity node = m_pGameScene->CreateEntity();
-		node.AddComponent<comp::Node>();
+	//std::vector<std::string> file = OpenFile("Other/NodeInfo.txt");//replace with actual name
+	//int currentIndex = 0;
+	//if (file.size() == 0)
+	//{
+	//	LOG_ERROR("Error Opening NodeFile!");
+	//}
+	////Creating nodes
+	//LOG_INFO("Creating nodes");
+	//while (file[currentIndex] != "")
+	//{
+	//	std::stringstream ss(file.at(currentIndex));
+	//	int ID = 0;
+	//	float posX = 0, posZ = 0;
+	//	ss >> ID >> posX >> posZ;
+	//	Entity node = m_pGameScene->CreateEntity();
+	//	node.AddComponent<comp::Node>();
 
-		currentIndex++;
-	}
-	LOG_INFO("Connecting Nodes");
-	for (int i = currentIndex + 1; i < file.size(); i++)
-	{
-		std::stringstream ss(file.at(i));
-		int ID1 = 0, ID2 = 0;
-		ss >> ID1 >> ID2;
-		this->ConnectNodes(this->GetAINodeById(ID1), this->GetAINodeById(ID2));
-	}
+	//	currentIndex++;
+	//}
+	//LOG_INFO("Connecting Nodes");
+	//for (int i = currentIndex + 1; i < file.size(); i++)
+	//{
+	//	std::stringstream ss(file.at(i));
+	//	int ID1 = 0, ID2 = 0;
+	//	ss >> ID1 >> ID2;
+	//	this->ConnectNodes(this->GetAINodeById(ID1), this->GetAINodeById(ID2));
+	//}
 
 	return true;
 }
@@ -405,7 +415,7 @@ bool Simulation::AIAStarSearch()
 
 	std::vector<comp::Node*> closedList, openList;
 	//AIHANDLER->path.clear();
-	comp::Node* startingNode = currentNode,* goalNode = currentNode;
+	comp::Node* startingNode = currentNode, * goalNode = currentNode;
 	openList.push_back(startingNode);
 	startingNode->f = 0.f;
 	startingNode->g = 0.f;
@@ -435,7 +445,7 @@ bool Simulation::AIAStarSearch()
 		openList.erase(openList.begin() + indexToPop);
 
 		//Neighbors
-		
+
 		std::vector<comp::Node*> neighbors = nodeToAdd->connections;
 
 		for (comp::Node* neighbor : neighbors)
@@ -490,7 +500,7 @@ bool Simulation::AIAStarSearch()
 				}
 			}
 		}
-		
+
 		closedList.push_back(nodeToAdd);
 
 		index++;
