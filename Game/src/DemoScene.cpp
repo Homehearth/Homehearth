@@ -284,6 +284,12 @@ void sceneHelp::SetupInGameScreen(Game* game)
 		buildCollection->AddElement<rtd::Picture>(texture2, draw_t((width - (width / 12)) - (i * (width / 12)), height - (height / 8), width / 12, height / 8));
 	}
 	scene.Add2DCollection(buildCollection, "builds");
+
+	//Collection2D* nameCollection = new Collection2D;
+	//for (int i = 0; i < MAX_PLAYERS_PER_LOBBY; i++)
+	//{
+	//	nameCollection->AddElement<rtd::Text>("Player" + std::to_string(i + 1), )
+	//}
 }
 
 void sceneHelp::SetupInLobbyScreen(Game* game)
