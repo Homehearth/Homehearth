@@ -69,7 +69,7 @@ bool Game::OnStartup()
 	sceneHelp::CreateLoadingScene(this);
 
 #ifdef _DEBUG
-	CreateGridSystem();
+	//CreateGridSystem();
 #endif // DEBUG
 
 	// Set Current Scene

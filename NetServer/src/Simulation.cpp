@@ -354,17 +354,17 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 	e2.AddComponent<comp::Network>();
 
 	// --- END OF THE WORLD ---
-	//Entity collider;
-	//for (size_t i = 0; i < mapColliders->size(); i++)
-	//{
-	//	collider = m_pGameScene->CreateEntity();
-	//	collider.AddComponent<comp::BoundingOrientedBox>()->Center = mapColliders->at(i).Center;
-	//	collider.GetComponent<comp::BoundingOrientedBox>()->Extents = mapColliders->at(i).Extents;
-	//	collider.GetComponent<comp::BoundingOrientedBox>()->Orientation = mapColliders->at(i).Orientation;
-	//	//collider.AddComponent<comp::Transform>()->position = mapColliders->at(i).Center;
-	//	collider.AddComponent<comp::Network>();
-	//	collider.AddComponent<comp::Tag<TagType::STATIC>>();
-	//}
+	Entity collider;
+	for (size_t i = 0; i < mapColliders->size(); i++)
+	{
+		collider = m_pGameScene->CreateEntity();
+		collider.AddComponent<comp::BoundingOrientedBox>()->Center = mapColliders->at(i).Center;
+		collider.GetComponent<comp::BoundingOrientedBox>()->Extents = mapColliders->at(i).Extents;
+		collider.GetComponent<comp::BoundingOrientedBox>()->Orientation = mapColliders->at(i).Orientation;
+		//collider.AddComponent<comp::Transform>()->position = mapColliders->at(i).Center;
+		collider.AddComponent<comp::Network>();
+		collider.AddComponent<comp::Tag<TagType::STATIC>>();
+	}
 
 	m_addedEntities.clear();
 	m_removedEntities.clear();
@@ -446,7 +446,7 @@ bool Simulation::AddPlayer(uint32_t playerID, const std::string& namePlate)
 
 	// Create Player entity in Game scene
 	Entity player = m_pGameScene->CreateEntity();
-	player.AddComponent<comp::Transform>();
+	player.AddComponent<comp::Transform>()->position = sm::Vector3(320.f,0,-310.f);
 	player.AddComponent<comp::Velocity>();
 	player.AddComponent<comp::NamePlate>()->namePlate = namePlate;
 	player.AddComponent<comp::MeshName>()->name = "Arrow.fbx";

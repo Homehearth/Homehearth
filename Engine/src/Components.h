@@ -30,6 +30,7 @@ namespace ecs
 		
 		struct Transform
 		{
+			sm::Vector3 previousPosition;
 			sm::Vector3 position;
 			sm::Quaternion rotation;
 			sm::Vector3 scale = sm::Vector3(1);

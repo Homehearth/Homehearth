@@ -103,11 +103,20 @@ void CollisionSystem::AddOnCollision(Entity entity1, std::function<void(Entity)>
 
 void CollisionSystem::OnCollision(Entity entity1, Entity entity2)
 {
-	if(entity1.GetComponent<comp::Tag<DYNAMIC>>() && entity2.GetComponent<comp::Tag<DYNAMIC>>() 
-		|| entity1.GetComponent<comp::Tag<DYNAMIC>>() && entity2.GetComponent<comp::Tag<STATIC>>()
-		|| entity1.GetComponent<comp::Tag<STATIC>>() && entity2.GetComponent<comp::Tag<DYNAMIC>>())
+	if(entity1.GetComponent<comp::Tag<DYNAMIC>>() && entity2.GetComponent<comp::Tag<DYNAMIC>>())
 	{
 		CollisionSystem::Get().CollisionResponse(entity1, entity2);
+	}
+	else
+	{
+		if(entity1.GetComponent<comp::Tag<DYNAMIC>>() && entity2.GetComponent<comp::Tag<STATIC>>())
+		{
+			entity1.GetComponent<comp::Transform>()->position = entity1.GetComponent<comp::Transform>()->previousPosition;
+		}
+		else if (entity1.GetComponent<comp::Tag<STATIC>>() && entity2.GetComponent<comp::Tag<DYNAMIC>>())
+		{
+			entity2.GetComponent<comp::Transform>()->position = entity2.GetComponent<comp::Transform>()->previousPosition;
+		}
 	}
 
 	if (m_OnCollision.find(entity1) != m_OnCollision.end())
@@ -258,7 +267,7 @@ void CollisionSystem::CollisionResponse(Entity entity1, Entity entity2) const
 			p1Obb->Center = p1transform->position;
 		}
 		
-		if(entity2.GetComponent<comp::Tag<DYNAMIC>>() && p2transform)
+		if(entity2.GetComponent<comp::Tag<DYNAMIC>>() && entity2.GetComponent<comp::Tag<DYNAMIC>>())
 		{
 			p2transform->position += ((moveVec * -1.0f) / 2.0f);
 			p2Obb->Center = p2transform->position;
@@ -272,7 +281,7 @@ void CollisionSystem::CollisionResponse(Entity entity1, Entity entity2) const
 			p1Obb->Center = p1transform->position;
 		}
 		
-		if (entity2.GetComponent<comp::Tag<DYNAMIC>>() && p2transform)
+		if (entity2.GetComponent<comp::Tag<DYNAMIC>>() && entity1.GetComponent<comp::Tag<DYNAMIC>>())
 		{
 			p2transform->position += ((moveVec) / 2.0f);
 			p2Obb->Center = p2transform->position;
