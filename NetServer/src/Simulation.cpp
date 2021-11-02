@@ -152,8 +152,7 @@ bool Simulation::JoinLobby(uint32_t playerID, uint32_t gameID, const std::string
 
 		message<GameMsg> msg2;
 		msg2.header.id = GameMsg::Lobby_PlayerJoin;
-		msg << playerID;
-
+		msg2 << playerID;
 		this->Broadcast(msg2, playerID);
 
 		UpdateLobby();
@@ -298,17 +297,17 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 	e2.AddComponent<comp::Network>();
 
 	// --- END OF THE WORLD ---
-	Entity collider;
-	for (size_t i = 0; i < mapColliders->size(); i++)
-	{
-		collider = m_pGameScene->CreateEntity();
-		collider.AddComponent<comp::BoundingOrientedBox>()->Center = mapColliders->at(i).Center;
-		collider.GetComponent<comp::BoundingOrientedBox>()->Extents = mapColliders->at(i).Extents;
-		collider.GetComponent<comp::BoundingOrientedBox>()->Orientation = mapColliders->at(i).Orientation;
-		//collider.AddComponent<comp::Transform>()->position = mapColliders->at(i).Center;
-		collider.AddComponent<comp::Network>();
-		collider.AddComponent<comp::Tag<TagType::STATIC>>();
-	}
+	//Entity collider;
+	//for (size_t i = 0; i < mapColliders->size(); i++)
+	//{
+	//	collider = m_pGameScene->CreateEntity();
+	//	collider.AddComponent<comp::BoundingOrientedBox>()->Center = mapColliders->at(i).Center;
+	//	collider.GetComponent<comp::BoundingOrientedBox>()->Extents = mapColliders->at(i).Extents;
+	//	collider.GetComponent<comp::BoundingOrientedBox>()->Orientation = mapColliders->at(i).Orientation;
+	//	//collider.AddComponent<comp::Transform>()->position = mapColliders->at(i).Center;
+	//	collider.AddComponent<comp::Network>();
+	//	collider.AddComponent<comp::Tag<TagType::STATIC>>();
+	//}
 
 	m_addedEntities.clear();
 	m_removedEntities.clear();
@@ -382,9 +381,6 @@ bool Simulation::AddPlayer(uint32_t playerID, const std::string& namePlate)
 		return false;
 	}
 
-	// Send all entities in Game Scene to new player
-	this->SendAllEntitiesToPlayer(playerID);
-
 	// Create Player entity in Game scene
 	Entity player = m_pGameScene->CreateEntity();
 	player.AddComponent<comp::Transform>();
@@ -397,17 +393,20 @@ bool Simulation::AddPlayer(uint32_t playerID, const std::string& namePlate)
 	player.AddComponent<comp::Player>()->runSpeed = 10.f;
 #endif // _DEBUG
 
-
 	*player.AddComponent<comp::CombatStats>() = { 1.0f, 20.f, 1.0f, false, false };
 	player.AddComponent<comp::Health>();
 	player.AddComponent<comp::BoundingOrientedBox>();
 
 	//Collision will handle this entity as a dynamic one
 	player.AddComponent<comp::Tag<TagType::DYNAMIC>>();
-	
-	m_players[playerID] = player;
 	// Network component will make sure the new entity is sent
 	player.AddComponent<comp::Network>(playerID);
+	
+	m_players[playerID] = player;
+
+	// Send all entities in Game Scene to new player
+	this->SendAllEntitiesToPlayer(playerID);
+	this->SendEntity(player, playerID);
 
 	return true;
 }
@@ -439,7 +438,7 @@ bool Simulation::RemovePlayer(uint32_t playerID)
 		LOG_INFO("Player %u entity could not be removed", playerID);
 		return false;
 	}
-	LOG_INFO("Removed player %u from scene", player.GetComponent<comp::Network>()->id);
+	LOG_INFO("Removed player %u from scene", playerID);
 
 	return true;
 }
@@ -592,7 +591,7 @@ HeadlessScene* Simulation::GetGameScene() const
 	return m_pGameScene;
 }
 
-void Simulation::SendEntity(Entity e)const
+void Simulation::SendEntity(Entity e, size_t exclude = -1)const
 {
 	message<GameMsg> msg;
 	msg.header.id = GameMsg::Game_AddEntity;
