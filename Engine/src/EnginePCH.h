@@ -13,6 +13,8 @@
 #define IMGUI(a) do {} while(0)
 #endif
 
+//Options
+#define USE_MIPMAPS 1
 
 // Windows
 #ifdef WIN32
