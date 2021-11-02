@@ -130,18 +130,18 @@ void BasicEngine<SceneType>::Run()
 		currentFrame = omp_get_wtime();
 		deltaTime = static_cast<float>(currentFrame - lastFrame);
 
+		network_time += deltaTime;
+		update_time += deltaTime;
 		if (update_time >= TARGET_UPDATE)
 		{
 			Update(update_time);
-			update_time -= TARGET_UPDATE;
+			update_time = 0.0f;
 		}
 		if (network_time >= TICK_RATE)
 		{
 			UpdateNetwork(network_time);
-			network_time -= TICK_RATE;
+			network_time = 0.0f;
 		}
-		network_time += deltaTime;
-		update_time += deltaTime;
 		lastFrame = currentFrame;
 	}
 }

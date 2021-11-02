@@ -24,6 +24,9 @@ private:
 	std::unordered_map<uint32_t, Entity> m_players;
 	std::unordered_map<Entity, InputState> m_playerInputs;
 
+	std::vector<Entity> m_addedEntities;
+	std::vector<uint32_t> m_removedEntities;
+
 
 	void InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg)const;
 	message<GameMsg> AllEntitiesMessage()const;
@@ -34,12 +37,18 @@ private:
 	void Broadcast(message<GameMsg>& msg, uint32_t exclude = -1)const;
 	void ScanForDisconnects();
 
+	void OnNetworkEntityCreate(entt::registry& reg, entt::entity entity);
+	void OnNetworkEntityDestroy(entt::registry& reg, entt::entity entity);
+
+
 public:
 	Simulation(Server* pServer, HeadlessEngine* pEngine);
 	virtual ~Simulation() = default;
 
 	bool AddPlayer(uint32_t playerID, const std::string& namePlate = "Noobie");
 	bool RemovePlayer(uint32_t playerID);
+	std::unordered_map<uint32_t, Entity>::iterator RemovePlayer(std::unordered_map<uint32_t, Entity>::iterator playerIterator);
+
 	bool AddEnemy();
 	
 	void SendSnapshot();
@@ -48,7 +57,7 @@ public:
 	// Update the visuals to the player.
 	void UpdateLobby();
 
-	bool Create(uint32_t playerID, uint32_t gameID, const std::string& namePlate = "Noobie");
+	bool Create(uint32_t playerID, uint32_t gameID, std::vector<dx::BoundingOrientedBox>* mapColliders, const std::string& namePlate = "Noobie");
 	void Destroy();
 
 	// Updates the lobby.
@@ -65,12 +74,15 @@ public:
 	HeadlessScene* GetGameScene() const;
 
 	void SendEntity(Entity e)const;
+	void SendEntities(const std::vector<Entity>& entities)const;
+
 	void SendAllEntitiesToPlayer(uint32_t playerID)const;
 	void SendRemoveAllEntitiesToPlayer(uint32_t playerID)const;
 	void SendRemoveSingleEntity(Entity e)const;
 	void SendRemoveSingleEntity(uint32_t networkID)const;
 
 	void SendRemoveEntities(message<GameMsg>& msg)const;
+	void SendRemoveEntities(const std::vector<uint32_t> entitiesNetIDs)const;
 
 	uint32_t GetUniqueID();
 };

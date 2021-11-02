@@ -82,7 +82,7 @@ project "NetServer"
     filter {"configurations:Release"}
         staticruntime "on"
         runtime "Release"
-        defines{"NDEBUG", "_UNICODE", "UNICODE"}
+        defines{"SERVER_LOG", "NDEBUG", "_UNICODE", "UNICODE"}
         symbols "on"
         optimize "on"
         libdirs{

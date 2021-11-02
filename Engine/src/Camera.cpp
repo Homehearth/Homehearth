@@ -90,17 +90,23 @@ void Camera::Update(float deltaTime)
 		quaterion = sm::Quaternion::CreateFromYawPitchRoll(m_rollPitchYaw.z, m_rollPitchYaw.y, m_rollPitchYaw.x);
 		m_rotationMatrix = dx::XMMatrixRotationRollPitchYaw(m_rollPitchYaw.y, m_rollPitchYaw.z, m_rollPitchYaw.x);
 
+		float speed = m_movingSpeed;
+		if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Keys::LeftShift, KeyState::HELD))
+		{
+			speed *= 6;
+		}
+
 		//Keyboard
 		if (KEYPRESS(dx::Keyboard::E, KeyState::HELD)) //Down
 		{
-			m_move.y -= m_movingSpeed * deltaTime;
+			m_move.y -= speed * deltaTime;
 		}
 		if (KEYPRESS(dx::Keyboard::Q, KeyState::HELD)) //UP
 		{
-			m_move.y += m_movingSpeed * deltaTime;
+			m_move.y += speed * deltaTime;
 		}
-		m_move.x = static_cast<float>(InputSystem::Get().GetAxis(Axis::HORIZONTAL));
-		m_move.z = static_cast<float>(InputSystem::Get().GetAxis(Axis::VERTICAL));
+		m_move.x = static_cast<float>(InputSystem::Get().GetAxis(Axis::HORIZONTAL)) * speed * deltaTime;
+		m_move.z = static_cast<float>(InputSystem::Get().GetAxis(Axis::VERTICAL)) * speed * deltaTime;
 
 		//Update camera values
 		m_right = dx::XMVector3TransformNormal(m_defaultRight, m_rotationMatrix);
@@ -114,7 +120,7 @@ void Camera::Update(float deltaTime)
 
 		m_move = sm::Vector3::Transform(m_move, quaterion);
 
-		m_position += m_move * m_movingSpeed * deltaTime;
+		m_position += m_move;
 		m_move = { 0.0f, 0.0f, 0.0f };
 		m_forward = m_target;
 

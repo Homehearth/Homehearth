@@ -222,7 +222,7 @@ namespace network
 	{ 
 		if (tempMsgIn.header.size > sizeof(msg_header<T>))
 		{
-			if (tempMsgIn.header.size > 30000)
+			if (tempMsgIn.header.size > 9999999)
 			{
 				LOG_ERROR("Message corrupted, ignoring read!");
 				this->PrimeReadHeader();

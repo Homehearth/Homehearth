@@ -1,6 +1,6 @@
 #pragma once
 
-constexpr int MAX_PLAYERS_PER_LOBBY = 2;
+constexpr int MAX_PLAYERS_PER_LOBBY = 4;
 constexpr int MAX_HEALTH = 100;
 
 struct MinMaxProj_t
