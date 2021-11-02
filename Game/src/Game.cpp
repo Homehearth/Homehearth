@@ -147,7 +147,17 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		msg >> count;
 
 		std::unordered_map<uint32_t, comp::Transform> transforms;
+		std::unordered_map<uint32_t, comp::BoundingOrientedBox> boxes;
 
+		for (uint32_t i = 0; i < count; i++)
+		{
+			uint32_t entityID;
+			comp::BoundingOrientedBox b;
+			msg >> entityID >> b;
+			boxes[entityID] = b;
+		}
+
+		msg >> count;
 		for (uint32_t i = 0; i < count; i++)
 		{
 			uint32_t entityID;
@@ -155,6 +165,9 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			msg >> entityID >> t;
 			transforms[entityID] = t;
 		}
+		
+
+
 		// TODO MAKE BETTER
 		// Update entities with new transforms
 		GetScene("Game").ForEachComponent<comp::Network, comp::Transform>([&](comp::Network& n, comp::Transform& t)
@@ -162,13 +175,17 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 				if (transforms.find(n.id) != transforms.end())
 				{
 					t = transforms.at(n.id);
-					if (n.id == m_localPID)
-					{
-						test = transforms.at(n.id);
-						predictedPositions.clear();
-					}
 				}
 			});
+
+		GetScene("Game").ForEachComponent<comp::Network, comp::BoundingOrientedBox>([&](comp::Network& n, comp::BoundingOrientedBox& b)
+			{
+				if (boxes.find(n.id) != boxes.end())
+				{
+					b = boxes.at(n.id);
+				}
+			});
+
 
 		break;
 	}

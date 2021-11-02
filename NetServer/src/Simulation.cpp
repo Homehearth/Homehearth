@@ -244,13 +244,22 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 			}
 
 			//  run all game logic systems
-			Systems::CharacterMovement(scene, e.dt);
-			Systems::MovementSystem(scene, e.dt);
-			Systems::MovementColliderSystem(scene, e.dt);
-			Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(scene, e.dt);
-			Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingSphere>(scene, e.dt);
-			Systems::CombatSystem(scene, e.dt);
+			{
+				PROFILE_SCOPE("Systems");
+				Systems::CharacterMovement(scene, e.dt);
+				Systems::MovementSystem(scene, e.dt);
+				Systems::MovementColliderSystem(scene, e.dt);
+				{
+					PROFILE_SCOPE("Collision Box/Box");
+					Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(scene, e.dt);
+				}
+				{
+					PROFILE_SCOPE("Collision Box/Sphere");
+					Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingSphere>(scene, e.dt);
+				}
+				Systems::CombatSystem(scene, e.dt);
 
+			}
 		});
 
 	//On collision event add entities as pair in the collision system
@@ -458,6 +467,7 @@ std::unordered_map<uint32_t, Entity>::iterator Simulation::RemovePlayer(std::uno
 
 void Simulation::SendSnapshot()
 {
+	PROFILE_FUNCTION();
 	// remove any client disconnected
 	this->ScanForDisconnects();
 
@@ -483,6 +493,17 @@ void Simulation::SendSnapshot()
 			});
 		msg << i;
 
+		//DEBUG
+		i = 0;
+		m_pCurrentScene->ForEachComponent<comp::Network, comp::BoundingOrientedBox>([&](comp::Network& n, comp::BoundingOrientedBox& b)
+			{
+				msg << b << n.id;
+				i++;
+			});
+		msg << i;
+		//END DEBUG
+
+
 		msg << this->GetTick();
 
 		this->Broadcast(msg);
@@ -495,6 +516,7 @@ void Simulation::SendSnapshot()
 
 void Simulation::Update(float dt)
 {
+	PROFILE_FUNCTION();
 	if (m_pCurrentScene)
 		m_pCurrentScene->Update(dt);
 }

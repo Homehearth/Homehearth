@@ -28,27 +28,36 @@ void ServerGame::InputThread()
 		else if (input == "/info")
 		{
 			LOG_INFO("INFO:")
-				for (const auto& sim : m_simulations)
-				{
-					LOG_INFO("-------Simulation %u-------", sim.first);
-					LOG_INFO("LOBBY SCENE:");
-					LOG_INFO("\tEntity Count: %u", (unsigned int)sim.second->GetLobbyScene()->GetRegistry()->size());
-					sim.second->GetLobbyScene()->ForEachComponent<comp::Network>([](Entity e, comp::Network& n)
-						{
-							LOG_INFO("\tEntity: %d", (entt::entity)e);
-							LOG_INFO("\tNetwork id: %u", n.id);
-						});
+			for (const auto& sim : m_simulations)
+			{
+				LOG_INFO("-------Simulation %u-------", sim.first);
+				LOG_INFO("LOBBY SCENE:");
+				LOG_INFO("\tEntity Count: %u", (unsigned int)sim.second->GetLobbyScene()->GetRegistry()->size());
+				sim.second->GetLobbyScene()->ForEachComponent<comp::Network>([](Entity e, comp::Network& n)
+					{
+						LOG_INFO("\tEntity: %d", (entt::entity)e);
+						LOG_INFO("\tNetwork id: %u", n.id);
+					});
 
-					LOG_INFO("GAME SCENE:");
-					LOG_INFO("\tEntity Count: %u\n", (unsigned int)sim.second->GetGameScene()->GetRegistry()->size());
-					sim.second->GetGameScene()->ForEachComponent<comp::Network>([](Entity e, comp::Network& n)
-						{
-							LOG_INFO("\tEntity: %d", (entt::entity)e);
-							LOG_INFO("\tNetwork id: %u", n.id);
-						});
+				LOG_INFO("GAME SCENE:");
+				LOG_INFO("\tEntity Count: %u\n", (unsigned int)sim.second->GetGameScene()->GetRegistry()->size());
+				sim.second->GetGameScene()->ForEachComponent<comp::Network>([](Entity e, comp::Network& n)
+					{
+						LOG_INFO("\tEntity: %d", (entt::entity)e);
+						LOG_INFO("\tNetwork id: %u", n.id);
+					});
 
-				}
+			}
 		}
+		else if (input == "/pstart")
+		{
+			PROFILER_BEGIN_SESSION();
+		}
+		else if (input == "/pend")
+		{
+			PROFILER_END_SESSION();
+		}
+
 	}
 }
 
@@ -76,6 +85,7 @@ void ServerGame::OnShutdown()
 
 void ServerGame::UpdateNetwork(float deltaTime)
 {
+	PROFILE_FUNCTION();
 	static float timer = 0.0f;
 	timer += deltaTime;
 	if (timer >= 1.0f)
