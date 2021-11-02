@@ -235,6 +235,7 @@ void sceneHelp::SetupMainMenuScreen(Game* game)
 void sceneHelp::SetupInGameScreen(Game* game)
 {
 	//// Temp textures
+	Scene& scene = game->GetScene("Game");
 	const std::string& texture1 = "like.png";
 	const std::string& texture2 = "sword.png";
 	float width = (float)game->GetWindow()->GetWidth();
@@ -283,7 +284,6 @@ void sceneHelp::SetupInGameScreen(Game* game)
 		buildCollection->AddElement<rtd::Picture>(texture2, draw_t((width - (width / 12)) - (i * (width / 12)), height - (height / 8), width / 12, height / 8));
 	}
 	scene.Add2DCollection(buildCollection, "builds");
-#endif
 }
 
 void sceneHelp::SetupInLobbyScreen(Game* game)
