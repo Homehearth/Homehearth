@@ -16,8 +16,8 @@ public:
 	template<typename T>
 	T* GetComponent() const;
 	
-	template<typename T>
-	T* AddComponent();
+	template<typename T, typename ...Args>
+	T* AddComponent(Args&& ...);
 
 	template<typename T>
 	void RemoveComponent();
@@ -36,10 +36,21 @@ public:
 		return (uint32_t)m_entity;
 	}
 
-	bool operator >(const Entity& other) const
+	bool operator > (const Entity& other) const
 	{
 		return m_entity > other.m_entity;
 	}
+
+	bool operator == (const Entity& other) const
+	{
+		return m_entity == other.m_entity && m_pRegistry == other.m_pRegistry;
+	}
+	
+	bool operator != (const Entity& other) const
+	{
+		return !(m_entity == other.m_entity && m_pRegistry == other.m_pRegistry);
+	}
+
 };
 
 template<typename T>
@@ -52,14 +63,14 @@ inline T* Entity::GetComponent() const
 	return m_pRegistry->try_get<T>(m_entity);
 }
 
-template<typename T>
-inline T* Entity::AddComponent()
+template<typename T, typename ...Args>
+inline T* Entity::AddComponent(Args&& ... args)
 {
 	if (this->IsNull())
 	{
 		throw std::runtime_error("Entity was a null entity");
 	}	
-	return &m_pRegistry->emplace_or_replace<T>(m_entity);
+	return &m_pRegistry->emplace_or_replace<T>(m_entity, args...);
 }
 
 template<typename T>

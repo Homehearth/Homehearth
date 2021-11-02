@@ -22,7 +22,9 @@ namespace network
 		READ_VALIDATION,
 		READ_HEADER,
 		READ_PAYLOAD,
-		WRITE_MESSAGE
+		WRITE_MESSAGE,
+		WRITE_HEADER,
+		WRITE_PAYLOAD
 	};
 
 	// Information regarding every input or output

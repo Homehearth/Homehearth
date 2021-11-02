@@ -5,18 +5,19 @@
 
 Camera::Camera()
 {
-	m_FOV				= dx::XMConvertToRadians(90.f); //0.4f * 3.14f;
-	m_zoomValue			= 1;
-	m_nearPlane			= 0.01f; // 1.0f;
-	m_farPlane			= 1000.0; // 1000.0f
-	m_rollPitchYaw		= { 0.0f, 0.0f, 0.0f };
-	m_move				= { 0.0f, 0.0f, 0.0f };
-	m_aspectRatio		= 0;
-	m_windowHeight		= 0;
-	m_windowWidth		= 0;
-	m_rotationSpeed		= 2.5f;
-	m_movingSpeed		= 15.0f;
-	m_type				= CAMERATYPE::DEFAULT;
+	m_FOV = dx::XMConvertToRadians(90.f); //0.4f * 3.14f;
+	m_zoomValue = 1;
+	m_nearPlane = 0.01f; // 1.0f;
+	m_farPlane = 1000.0; // 1000.0f
+	m_rollPitchYaw = { 0.0f, 0.0f, 0.0f };
+	m_move = { 0.0f, 0.0f, 0.0f };
+	m_aspectRatio = 0;
+	m_windowHeight = 0;
+	m_windowWidth = 0;
+	m_rotationSpeed = 2.5f;
+	m_movingSpeed = 15.0f;
+	m_type = CAMERATYPE::DEFAULT;
+	m_viewConstantBuffer = nullptr;
 }
 
 Camera::~Camera()
@@ -48,7 +49,14 @@ void Camera::Initialize(sm::Vector3 pos, sm::Vector3 target, sm::Vector3 up, sm:
 	m_cameraMat.projection = m_projection;
 	m_cameraMat.view = m_view;
 
-	//Constant buffer
+	//Constant buffer already created
+	if (m_viewConstantBuffer != nullptr)
+	{
+		D3D11Core::Get().DeviceContext()->UpdateSubresource(m_viewConstantBuffer.Get(), 0, nullptr, &m_cameraMat, 0, 0);
+		return;
+	}
+	
+	// Create new Constant buffer
 	D3D11_BUFFER_DESC desc;
 	desc.ByteWidth = sizeof(camera_Matrix_t);
 	desc.Usage = D3D11_USAGE_DEFAULT;
@@ -60,7 +68,6 @@ void Camera::Initialize(sm::Vector3 pos, sm::Vector3 target, sm::Vector3 up, sm:
 	data.pSysMem = &m_cameraMat;
 	data.SysMemPitch = 0;
 	data.SysMemSlicePitch = 0;
-
 	HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&desc, &data, m_viewConstantBuffer.GetAddressOf());
 	if (FAILED(hr))
 	{
@@ -80,17 +87,23 @@ void Camera::Update(float deltaTime)
 		quaterion = sm::Quaternion::CreateFromYawPitchRoll(m_rollPitchYaw.z, m_rollPitchYaw.y, m_rollPitchYaw.x);
 		m_rotationMatrix = dx::XMMatrixRotationRollPitchYaw(m_rollPitchYaw.y, m_rollPitchYaw.z, m_rollPitchYaw.x);
 
+		float speed = m_movingSpeed;
+		if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Keys::LeftShift, KeyState::HELD))
+		{
+			speed *= 6;
+		}
+
 		//Keyboard
 		if (KEYPRESS(dx::Keyboard::E, KeyState::HELD)) //Down
 		{
-			m_move.y -= m_movingSpeed * deltaTime;
+			m_move.y -= speed * deltaTime;
 		}
 		if (KEYPRESS(dx::Keyboard::Q, KeyState::HELD)) //UP
 		{
-			m_move.y += m_movingSpeed * deltaTime;
+			m_move.y += speed * deltaTime;
 		}
-		m_move.x = static_cast<float>(InputSystem::Get().GetAxis(Axis::HORIZONTAL));
-		m_move.z = static_cast<float>(InputSystem::Get().GetAxis(Axis::VERTICAL));
+		m_move.x = static_cast<float>(InputSystem::Get().GetAxis(Axis::HORIZONTAL)) * speed * deltaTime;
+		m_move.z = static_cast<float>(InputSystem::Get().GetAxis(Axis::VERTICAL)) * speed * deltaTime;
 
 		//Update camera values
 		m_right = dx::XMVector3TransformNormal(m_defaultRight, m_rotationMatrix);
@@ -104,7 +117,7 @@ void Camera::Update(float deltaTime)
 
 		m_move = sm::Vector3::Transform(m_move, quaterion);
 
-		m_position += m_move * m_movingSpeed * deltaTime;
+		m_position += m_move;
 		m_move = { 0.0f, 0.0f, 0.0f };
 		m_forward = m_target;
 

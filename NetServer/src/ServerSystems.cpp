@@ -235,14 +235,13 @@ namespace Systems {
 	{
 		scene.ForEachComponent<comp::Player, comp::CombatStats, comp::Velocity, comp::Transform>([&](comp::Player& p, comp::CombatStats& a, comp::Velocity& v, comp::Transform& t)
 			{
-				if (a.isAttacking) // should only happen one frame
+				if (p.state == comp::Player::State::ATTACK)
 				{
-					
 					Plane_t plane;
 					plane.normal = sm::Vector3(0, 1, 0);
 					plane.point = t.position;
 
-					sm::Vector3 point(0, 0, 0);
+					sm::Vector3 point;
 					sm::Vector3 targetDir(1, 0, 0);
 
 					if (a.targetRay.Intersects(plane, point))
@@ -253,13 +252,11 @@ namespace Systems {
 					else {
 						LOG_WARNING("Mouse click ray missed walking plane. Should not happen...");
 					}
-
-					p.state = comp::Player::State::ATTACK;
+					a.targetDir = targetDir;
 					p.targetForward = targetDir;
-				}
 
-				if (p.state == comp::Player::State::ATTACK) // happens every frame the player is attacking
 					v.vel = sm::Vector3::Zero;
+				}
 
 			});
 		// turns player with velocity

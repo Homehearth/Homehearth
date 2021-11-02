@@ -62,6 +62,9 @@ bool ServerGame::OnStartup()
 
 	m_inputThread = std::thread(&ServerGame::InputThread, this);
 
+	LoadMapColliders("SceneBoundingBoxes.obj");
+	//LoadMapColliders("MapBounds.obj");
+
 	return true;
 }
 
@@ -73,6 +76,14 @@ void ServerGame::OnShutdown()
 
 void ServerGame::UpdateNetwork(float deltaTime)
 {
+	//static float timer = 0.0f;
+	//timer += deltaTime;
+	//if (timer >= 1.0f)
+	//{
+	//	LOG_INFO("Update: %f", 1.f / deltaTime);
+	//	timer = 0.0f;
+	//}
+
 	// Check incoming messages
 	this->m_server.Update();
 
@@ -97,6 +108,51 @@ void ServerGame::UpdateNetwork(float deltaTime)
 	}
 }
 
+bool ServerGame::LoadMapColliders(const std::string& filename)
+{
+	std::string filepath = BOUNDSPATH + filename;
+	Assimp::Importer importer;
+
+	const aiScene* scene = importer.ReadFile
+	(
+		filepath, 
+		aiProcess_JoinIdenticalVertices |
+		aiProcess_FlipWindingOrder		|
+		aiProcess_DropNormals			|
+		aiProcess_MakeLeftHanded
+	);
+
+	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
+	{
+#ifdef _DEBUG
+		LOG_WARNING("[Bounds] Assimp error: %s", importer.GetErrorString());
+#endif 
+		importer.FreeScene();
+		return false;
+	}
+
+	if (!scene->HasMeshes())
+	{
+#ifdef _DEBUG
+		LOG_WARNING("[Bounds] has no meshes...");
+#endif 
+		importer.FreeScene();
+		return false;
+	}
+
+	// Go through all the meshes and create boundingboxes for them
+	for (UINT i = 0; i < scene->mNumMeshes; i++)
+	{
+		const aiMesh* mesh = scene->mMeshes[i];
+		//Create a bob from all the points and the orientation will be calculated and add to vector
+		dx::BoundingOrientedBox bob;
+		dx::BoundingOrientedBox::CreateFromPoints(bob, mesh->mNumVertices, (dx::XMFLOAT3*)mesh->mVertices, sizeof(dx::XMFLOAT3));
+		m_mapColliders.push_back(bob);
+	}
+
+	return true;
+}
+
 void ServerGame::CheckIncoming(message<GameMsg>& msg)
 {
 	switch (msg.header.id)
@@ -113,7 +169,9 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 	{
 		uint32_t playerID;
 		msg >> playerID;
-		if (this->CreateSimulation(playerID))
+		std::string namePlate;
+		msg >> namePlate;
+		if (this->CreateSimulation(playerID, namePlate))
 		{
 			LOG_INFO("Created Game lobby!");
 		}
@@ -129,17 +187,18 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 		msg >> gameID;
 		uint32_t playerID;
 		msg >> playerID;
-		LOG_INFO("Player %d trying to join lobby %d", playerID, gameID);
+		std::string namePlate;
+		msg >> namePlate;
 		if (m_simulations.find(gameID) != m_simulations.end())
 		{
-			m_simulations[gameID]->JoinLobby(playerID, gameID);
+			m_simulations[gameID]->JoinLobby(playerID, gameID, namePlate);
 		}
 		else
 		{
 			message<GameMsg> invalidLobbyMsg;
 			invalidLobbyMsg.header.id = GameMsg::Lobby_Invalid;
-			invalidLobbyMsg << std::string("Player trying to join invalid Lobby");
-			LOG_WARNING("Request denied: Player trying to join invalid Lobby");
+			invalidLobbyMsg << std::string("Request denied: Invalid Lobby");
+			LOG_WARNING("Request denied: Invalid Lobby");
 			m_server.SendToClient(playerID, invalidLobbyMsg);
 		}
 		break;
@@ -198,7 +257,7 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 
 		if (m_simulations.find(gameID) != m_simulations.end())
 		{
-			m_simulations.at(gameID)->UpdateLobby(playerID);
+			m_simulations.at(gameID)->ReadyCheck(playerID);
 		}
 
 		break;
@@ -206,10 +265,10 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 	}
 }
 
-bool ServerGame::CreateSimulation(uint32_t playerID)
+bool ServerGame::CreateSimulation(uint32_t playerID, const std::string& mainPlayerPlate)
 {
 	m_simulations[m_nGameID] = std::make_unique<Simulation>(&m_server, this);
-	if (!m_simulations[m_nGameID]->Create(playerID, m_nGameID))
+	if (!m_simulations[m_nGameID]->Create(playerID, m_nGameID, &m_mapColliders, mainPlayerPlate))
 	{
 		m_simulations.erase(m_nGameID);
 		return false;

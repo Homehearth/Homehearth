@@ -12,6 +12,7 @@ namespace ecs
 		TRANSFORM,
 		VELOCITY,
 		MESH_NAME,
+		NAME_PLATE,
 		BOUNDING_ORIENTED_BOX,
 		BOUNDING_SPHERE,
 		LIGHT,
@@ -30,7 +31,7 @@ namespace ecs
 		struct Transform
 		{
 			sm::Vector3 position;
-			sm::Vector3 rotation;
+			sm::Quaternion rotation;
 			sm::Vector3 scale = sm::Vector3(1);
 
 			friend network::message<GameMsg>& operator<<(network::message<GameMsg>& msg, const ecs::component::Transform& data)
@@ -48,13 +49,14 @@ namespace ecs
 
 		struct Network
 		{
-			uint32_t id;
+			uint32_t id = UINT32_MAX;
 		};
 
 		struct Renderable
 		{
 			std::shared_ptr<RModel>		model;
 			basic_model_matrix_t		data;
+			bool						visible = true;
 		};
 
 		// Used on server side
@@ -63,6 +65,10 @@ namespace ecs
 			std::string name;
 		};
 
+		struct NamePlate
+		{
+			std::string namePlate;
+		};
 		
 		struct RenderableDebug
 		{
@@ -96,10 +102,11 @@ namespace ecs
 				IDLE,
 				ATTACK,
 				TURN
-			} state;
+			} state = State::IDLE;
 
 			float runSpeed;
 			sm::Vector3 targetForward;
+			bool isReady = false;
 		};
 
 		struct Enemy
@@ -129,6 +136,7 @@ namespace ecs
 			bool isAttacking = false;
 			float cooldownTimer = 0.f;
 			Ray_t targetRay;
+			sm::Vector3 targetDir;
 		};
 
 		struct Attack
@@ -136,6 +144,7 @@ namespace ecs
 			float lifeTime;
 			float damage;
 		};
+
 
 		template<uint8_t ID>
 		struct Tag
@@ -150,12 +159,13 @@ namespace ecs
 			float halfWidth;
 		};
 
+
 	};
 
 	sm::Matrix GetMatrix(const component::Transform& transform);
 	sm::Vector3 GetForward(const component::Transform& transform);
-	sm::Vector3 GetUp(const component::Transform& transform);
-	bool StepRotateTo(sm::Vector3& rotation, const sm::Vector3& target, float t);
+	sm::Vector3 GetRight(const component::Transform& transform);
+	bool StepRotateTo(sm::Quaternion& rotation, const sm::Vector3& targetVector, float t);
 	bool StepTranslateTo(sm::Vector3& translation, const sm::Vector3& target, float t);
 
 };

@@ -7,73 +7,89 @@ Handler2D::Handler2D()
 
 Handler2D::~Handler2D()
 {
-	for (auto it : m_elements)
+	for (auto it : m_collections)
 	{
 		if (it.second)
 		{
 			delete it.second;
-			it.second = nullptr;
 		}
 	}
 
-	m_elements.clear();
+	m_collections.clear();
 }
 
-void Handler2D::InsertElement(Element2D* element, std::string& name)
+void Handler2D::AddElementCollection(Collection2D* collection, const char* name)
 {
-	if (name.size() <= 0)
+	std::string theName(name);
+	if (strlen(name) == 0)
 	{
-		name.push_back((const char)m_elements.size());
+		theName.push_back((const char)m_collections.size());
 	}
-	m_elements.emplace(name, element);
+	m_collections.emplace(theName, collection);
+}
+
+void Handler2D::AddElementCollection(Collection2D* collection, std::string& name)
+{
+	if (name.size() == 0)
+	{
+		name.push_back((const char)m_collections.size());
+	}
+	m_collections.emplace(name, collection);
+}
+
+Collection2D* Handler2D::GetCollection(const std::string& collectionName) const
+{
+	if (m_collections.find(collectionName) != m_collections.end())
+	{
+		return m_collections.at(collectionName);
+	}
+
+	return nullptr;
 }
 
 void Handler2D::Render()
 {
-	for (int i = 0; i < (int)m_drawBuffers[1].size(); i++)
+	for (size_t i = 0; i < m_renderBuffers[1].size(); i++)
 	{
-		Element2D* elem = *m_drawBuffers[1][i];
-		if (elem)
+		Collection2D* collection = *m_renderBuffers[1][i];
+		if (collection)
 		{
-			if(elem->IsVisible())
-				elem->Draw();
-
-			elem->Release();
+			for (size_t j = 0; j < collection->elements.size(); j++)
+			{
+				if (collection->elements[j]->IsVisible())
+					collection->elements[j]->Draw();
+			}
 		}
 	}
-
-	m_drawBuffers.ReadyForSwap();
+	m_renderBuffers.ReadyForSwap();
 }
 
 void Handler2D::Update()
 {
-	for (auto& it : m_elements)
+	for (auto& it : m_collections)
 	{
 		if (it.second)
 		{
-			if (it.second->IsVisible())
-			{
-				if (it.second->CheckClick())
-					it.second->OnClick();
-				if (it.second->CheckHover())
-					it.second->OnHover();
-			}
+			it.second->UpdateCollection();
 		}
 	}
 
-	if (!m_drawBuffers.IsSwapped())
+	m_renderBuffers[0].clear();
+	for (auto& it : m_collections)
 	{
-		m_drawBuffers[0].clear();
-		for (auto& it : m_elements)
+		for (size_t i = 0; i < it.second->elements.size(); i++)
 		{
-			m_drawBuffers[0].push_back(&it.second);
-			it.second->AddRef();
+			m_renderBuffers[0].push_back(&it.second);
 		}
+	}
 
-		m_drawBuffers.Swap();
+	if (!m_renderBuffers.IsSwapped())
+	{
+		m_renderBuffers.Swap();
 	}
 }
+
 bool Handler2D::IsRenderReady() const
 {
-	return m_drawBuffers.IsSwapped();
+	return m_renderBuffers.IsSwapped();
 }

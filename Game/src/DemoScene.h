@@ -13,8 +13,7 @@ namespace sceneHelp
 
 	void CreateMainMenuScene(Game* game);
 	void CreateLobbyScene(Game* game);
-	void CreateGameScene(Engine& engine);
-	void CreateConnectScene(Game* game);
+	void CreateGameScene(Game* engine);
 	void CreateJoinLobbyScene(Game* game);
 	void CreateLoadingScene(Game* game);
 
@@ -23,6 +22,5 @@ namespace sceneHelp
 	void SetupInLobbyScreen(Game* game);
 	void SetupInGameScreen(Scene& scene);
 	void SetupOptionsScreen(Scene& scene);
-	void SetupConnectScreen(Game* game);
 	void SetupLoadingScene(Game* game);
 }

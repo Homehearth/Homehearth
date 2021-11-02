@@ -68,4 +68,6 @@ public:
 	// No copying allowed.
 	InputSystem(const InputSystem& other) = delete;
 	InputSystem& operator=(const InputSystem& other) = delete;
+
+	std::string GetClipboard();
 };
