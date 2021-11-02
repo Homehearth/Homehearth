@@ -63,7 +63,7 @@ bool ServerGame::OnStartup()
 	m_inputThread = std::thread(&ServerGame::InputThread, this);
 
 	LoadMapColliders("SceneBoundingBoxes.obj");
-	//LoadMapColliders("MapBounds.obj")
+	//LoadMapColliders("MapBounds.obj");
 
 	return true;
 }
@@ -76,13 +76,13 @@ void ServerGame::OnShutdown()
 
 void ServerGame::UpdateNetwork(float deltaTime)
 {
-	static float timer = 0.0f;
-	timer += deltaTime;
-	if (timer >= 1.0f)
-	{
-		LOG_INFO("Update: %f", 1.f / deltaTime);
-		timer = 0.0f;
-	}
+	//static float timer = 0.0f;
+	//timer += deltaTime;
+	//if (timer >= 1.0f)
+	//{
+	//	LOG_INFO("Update: %f", 1.f / deltaTime);
+	//	timer = 0.0f;
+	//}
 
 	// Check incoming messages
 	this->m_server.Update();
@@ -116,9 +116,9 @@ bool ServerGame::LoadMapColliders(const std::string& filename)
 	const aiScene* scene = importer.ReadFile
 	(
 		filepath, 
-		aiProcess_Triangulate			| 
 		aiProcess_JoinIdenticalVertices |
 		aiProcess_FlipWindingOrder		|
+		aiProcess_DropNormals			|
 		aiProcess_MakeLeftHanded
 	);
 
@@ -144,20 +144,9 @@ bool ServerGame::LoadMapColliders(const std::string& filename)
 	for (UINT i = 0; i < scene->mNumMeshes; i++)
 	{
 		const aiMesh* mesh = scene->mMeshes[i];
-		size_t count = mesh->mNumVertices;
-		std::vector<dx::XMFLOAT3> vertices;
-		vertices.reserve(count);
-
-		//Go through all the vertices
-		for (UINT v = 0; v < count; v++)
-		{
-			aiVector3D aivec = mesh->mVertices[v];
-			vertices.push_back({ aivec.x, aivec.y, aivec.z });
-		}
-
 		//Create a bob from all the points and the orientation will be calculated and add to vector
 		dx::BoundingOrientedBox bob;
-		dx::BoundingOrientedBox::CreateFromPoints(bob, count, &vertices[0], sizeof(dx::XMFLOAT3));
+		dx::BoundingOrientedBox::CreateFromPoints(bob, mesh->mNumVertices, (dx::XMFLOAT3*)mesh->mVertices, sizeof(dx::XMFLOAT3));
 		m_mapColliders.push_back(bob);
 	}
 
@@ -222,13 +211,8 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 		msg >> playerID;
 		if (m_simulations.find(gameID) != m_simulations.end())
 		{
-			if (m_simulations[gameID]->LeaveLobby(playerID, gameID)) {
-
-				// Send to client the message with the new game ID
-				message<GameMsg> accMsg;
-				accMsg.header.id = GameMsg::Lobby_AcceptedLeave;
-
-				m_server.SendToClient(playerID, accMsg);
+			if (m_simulations[gameID]->LeaveLobby(playerID, gameID)) 
+			{
 				break;
 			}
 		}

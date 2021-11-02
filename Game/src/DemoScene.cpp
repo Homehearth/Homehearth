@@ -175,7 +175,6 @@ Entity CreatePlayerEntity(HeadlessScene& scene, uint32_t playerID)
 
 void sceneHelp::SetupMainMenuScreen(Game* game)
 {
-#if RENDER_IMGUI == 0
 	// Setup main menu scene.
 	Scene& scene = game->GetScene("MainMenu");
 	float width = (float)game->GetWindow()->GetWidth();
@@ -222,7 +221,6 @@ void sceneHelp::SetupMainMenuScreen(Game* game)
 	//exitGameButton->GetBorder()->SetColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
 	//scene.Insert2DElement(exitGameButton);
 	//exitGameButton->SetOnPressedEvent([=] { game->Shutdown(); });
-#endif
 }
 
 /*
@@ -236,9 +234,6 @@ void sceneHelp::SetupMainMenuScreen(Game* game)
 
 void sceneHelp::SetupInGameScreen(Game* game)
 {
-#if RENDER_IMGUI == 0
-
-	Scene& scene = game->GetScene("Game");
 	//// Temp textures
 	const std::string& texture1 = "like.png";
 	const std::string& texture2 = "sword.png";
@@ -293,7 +288,6 @@ void sceneHelp::SetupInGameScreen(Game* game)
 
 void sceneHelp::SetupInLobbyScreen(Game* game)
 {
-#if RENDER_IMGUI == 0
 	const float width = (float)game->GetWindow()->GetWidth();
 	const float height = (float)game->GetWindow()->GetHeight();
 
@@ -374,7 +368,6 @@ void sceneHelp::SetupInLobbyScreen(Game* game)
 		});
 
 	scene.Add2DCollection(classButtons, "ClassButtons");
-#endif
 }
 
 void sceneHelp::SetupOptionsScreen(Scene& scene)
@@ -399,7 +392,6 @@ void sceneHelp::SetupLoadingScene(Game* game)
 
 void sceneHelp::SetupLobbyJoinScreen(Game* game)
 {
-#if RENDER_IMGUI == 0
 	const float width = (float)game->GetWindow()->GetWidth();
 	const float height = (float)game->GetWindow()->GetHeight();
 	Scene& scene = game->GetScene("JoinLobby");
@@ -446,5 +438,4 @@ void sceneHelp::SetupLobbyJoinScreen(Game* game)
 
 	scene.Add2DCollection(lobbyCollection, "LobbyFields");
 
-#endif
 }

@@ -73,7 +73,7 @@ public:
 	HeadlessScene* GetLobbyScene() const;
 	HeadlessScene* GetGameScene() const;
 
-	void SendEntity(Entity e, size_t exclude)const;
+	void SendEntity(Entity e, size_t exclude = -1)const;
 	void SendEntities(const std::vector<Entity>& entities)const;
 
 	void SendAllEntitiesToPlayer(uint32_t playerID)const;
