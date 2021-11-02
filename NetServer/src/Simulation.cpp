@@ -559,6 +559,8 @@ void Simulation::SendSnapshot()
 		network::message<GameMsg> msg;
 		msg.header.id = GameMsg::Game_Snapshot;
 
+		
+
 		uint32_t i = 0;
 		m_pCurrentScene->ForEachComponent<comp::Network, comp::Transform>([&](Entity e, comp::Network& n, comp::Transform& t)
 			{
@@ -567,7 +569,7 @@ void Simulation::SendSnapshot()
 			});
 		msg << i;
 
-		//DEBUG
+#if DEBUG_SNAPSHOT
 		i = 0;
 		m_pCurrentScene->ForEachComponent<comp::Network, comp::BoundingOrientedBox>([&](comp::Network& n, comp::BoundingOrientedBox& b)
 			{
@@ -575,8 +577,7 @@ void Simulation::SendSnapshot()
 				i++;
 			});
 		msg << i;
-		//END DEBUG
-
+#endif
 
 		msg << this->GetTick();
 
@@ -663,7 +664,8 @@ void Simulation::OnNetworkEntityDestroy(entt::registry& reg, entt::entity entity
 {
 	Entity e(reg, entity);
 	// Network has not been destroyed yet
-	m_removedEntities.push_back(e.GetComponent<comp::Network>()->id);
+	comp::Network* net = e.GetComponent<comp::Network>();
+	m_removedEntities.push_back(net->id);
 }
 
 HeadlessScene* Simulation::GetLobbyScene() const

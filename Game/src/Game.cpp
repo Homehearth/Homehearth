@@ -146,47 +146,23 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		uint32_t count;
 		msg >> count;
 
-		std::unordered_map<uint32_t, comp::Transform> transforms;
-		std::unordered_map<uint32_t, comp::BoundingOrientedBox> boxes;
-
+		uint32_t entityID;
+#if DEBUG_SNAPSHOT
+		comp::BoundingOrientedBox b;
 		for (uint32_t i = 0; i < count; i++)
 		{
-			uint32_t entityID;
-			comp::BoundingOrientedBox b;
 			msg >> entityID >> b;
-			boxes[entityID] = b;
+			m_gameEntities[entityID].AddComponent<comp::BoundingOrientedBox>(b);
 		}
 
 		msg >> count;
+#endif
+		comp::Transform t;
 		for (uint32_t i = 0; i < count; i++)
 		{
-			uint32_t entityID;
-			comp::Transform t;
 			msg >> entityID >> t;
-			transforms[entityID] = t;
+			m_gameEntities[entityID].AddComponent<comp::Transform>(t);
 		}
-		
-
-
-		// TODO MAKE BETTER
-		// Update entities with new transforms
-		GetScene("Game").ForEachComponent<comp::Network, comp::Transform>([&](Entity e, comp::Network& n, comp::Transform& t)
-			{
-				
-				if (transforms.find(n.id) != transforms.end())
-				{
-					t = transforms.at(n.id);
-				}
-			});
-
-		GetScene("Game").ForEachComponent<comp::Network, comp::BoundingOrientedBox>([&](comp::Network& n, comp::BoundingOrientedBox& b)
-			{
-				if (boxes.find(n.id) != boxes.end())
-				{
-					b = boxes.at(n.id);
-				}
-			});
-
 
 		break;
 	}
@@ -199,7 +175,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		for (uint32_t i = 0; i < count; i++)
 		{
 			Entity e = CreateEntityFromMessage(msg);
-
+			m_gameEntities.insert(std::make_pair(e.GetComponent<comp::Network>()->id, e));
 			if (e.GetComponent<comp::Network>()->id == m_localPID)
 			{
 				LOG_INFO("You added yourself, congratulations!");
@@ -256,25 +232,22 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	{
 		uint32_t count;
 		msg >> count;
-		std::vector<uint32_t> ids(count);
 		for (uint32_t i = 0; i < count; i++)
 		{
-			msg >> ids[i];
-		}
-
-		GetScene("Game").ForEachComponent<comp::Network>([&](Entity& e, comp::Network& net)
+			uint32_t id;
+			msg >> id;
+			if (m_gameEntities.find(id) != m_gameEntities.end())
 			{
-				// Do we have this entity?
-				if (std::find(ids.begin(), ids.end(), net.id) != ids.end())
+				// Was the entity a player?
+				if (m_players.find(id) != m_players.end())
 				{
-					// Was the entity a player?
-					if (m_players.find(net.id) != m_players.end())
-					{
-						m_players.erase(net.id);
-					}
-					e.Destroy();
+					m_players.erase(id);
 				}
-			});
+				m_gameEntities.at(id).Destroy();
+				m_gameEntities.erase(id);
+			}
+
+		}
 		LOG_INFO("Removed %u entities", count);
 		break;
 	}

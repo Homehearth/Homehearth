@@ -9,6 +9,8 @@ private:
 	std::chrono::system_clock::time_point m_timeThen;
 	std::vector<comp::Transform> predictedPositions;
 	std::unordered_map<uint32_t, Entity> m_players;
+	std::unordered_map<uint32_t, Entity> m_gameEntities;
+
 
 	GridSystem m_grid;
 
