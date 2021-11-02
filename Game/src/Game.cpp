@@ -331,7 +331,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		{
 			GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i + 1))->Hide();
 		}
-		for (int i = 0; i < count; i++)
+		for (uint32_t i = 0; i < count; i++)
 		{
 			GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i + 1))->Show();
 		}

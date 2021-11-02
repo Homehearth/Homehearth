@@ -580,7 +580,7 @@ HeadlessScene* Simulation::GetGameScene() const
 	return m_pGameScene;
 }
 
-void Simulation::SendEntity(Entity e, size_t exclude)const
+void Simulation::SendEntity(Entity e, uint32_t exclude)const
 {
 	message<GameMsg> msg;
 	msg.header.id = GameMsg::Game_AddEntity;
