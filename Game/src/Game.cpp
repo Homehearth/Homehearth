@@ -490,20 +490,21 @@ void Game::CreateGridSystem()
 	{
 		Entity tile = m_grid.GetTiles()->at(i);
 		comp::Renderable* renderable = tile.AddComponent<comp::Renderable>();
+		tile.GetComponent<comp::Transform>()->position.y = 0.5;
 
 		if (m_grid.GetTiles()->at(i).GetComponent<comp::Tile>()->type == TileType::EMPTY)
 		{
-			renderable->model = ResourceManager::Get().GetResource<RModel>("Cube.obj");
+			renderable->model = ResourceManager::Get().GetResource<RModel>("Plane1.obj");
 			renderable->model->ChangeMaterial("TileEmpty.mtl");
 		}
 		else if (m_grid.GetTiles()->at(i).GetComponent<comp::Tile>()->type == TileType::BUILDING || m_grid.GetTiles()->at(i).GetComponent<comp::Tile>()->type == TileType::UNPLACABLE)
 		{
-			renderable->model = ResourceManager::Get().GetResource<RModel>("Cube1.obj");
+			renderable->model = ResourceManager::Get().GetResource<RModel>("Plane2.obj");
 			renderable->model->ChangeMaterial("TileBuilding.mtl");
 		}
 		else if (m_grid.GetTiles()->at(i).GetComponent<comp::Tile>()->type == TileType::DEFAULT)
 		{
-			renderable->model = ResourceManager::Get().GetResource<RModel>("CubeD.obj");
+			renderable->model = ResourceManager::Get().GetResource<RModel>("Plane3.obj");
 			renderable->model->ChangeMaterial("TileDefence.mtl");
 		}
 		else
