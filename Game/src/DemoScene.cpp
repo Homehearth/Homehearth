@@ -97,7 +97,7 @@ namespace sceneHelp
 	void CreateGameScene(Game* engine)
 	{
 		Scene& gameScene = engine->GetScene("Game");
-		SetupInGameScreen(gameScene);
+		SetupInGameScreen(engine);
 
 		//Construct collider meshes if colliders are added.
 		gameScene.GetRegistry()->on_construct<comp::RenderableDebug>().connect<entt::invoke<&comp::RenderableDebug::InitRenderable>>();
@@ -225,77 +225,69 @@ void sceneHelp::SetupMainMenuScreen(Game* game)
 #endif
 }
 
-void sceneHelp::SetupInGameScreen(Scene& scene)
+/*
+* LICENSE
+<div>Icons made by <a href="https://www.freepik.com" title="Freepik">Freepik</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a></div>
+*/
+
+/*
+	HP bars are located at elements[0, 1 and 2]
+*/
+
+void sceneHelp::SetupInGameScreen(Game* game)
 {
 #if RENDER_IMGUI == 0
+
+	Scene& scene = game->GetScene("Game");
 	//// Temp textures
-	//const std::string& texture1 = "Leafs3.png";
-	//const std::string& texture2 = "LampFlowerLeafs.png";
-	//const std::string& texture3 = "LeafsDark.png";
-	//const std::string& texture4 = "Light.png";
+	const std::string& texture1 = "like.png";
+	const std::string& texture2 = "sword.png";
+	float width = (float)game->GetWindow()->GetWidth();
+	float height = (float)game->GetWindow()->GetHeight();
 
-	//// Player 1
-	//// Temp 'heart' displayed as leaf
-	//rtd::Picture* heart1 = new rtd::Picture(texture1, draw_t(90.0f, 10.0f, 64.0f, 64.0f));
-	//scene.Insert2DElement(heart1);
+	for (int i = 0; i < MAX_PLAYERS_PER_LOBBY; i++)
+	{
+		Collection2D* playerHp = new Collection2D;
 
-	//rtd::Picture* heart2 = new rtd::Picture(texture1, draw_t(174.0f, 10.0f, 64.0f, 64.0f));
-	//scene.Insert2DElement(heart2);
+		// Initiate 3 healthbars. for each player.
+		for (int j = 0; j < 3; j++)
+		{
+			playerHp->AddElement<rtd::Picture>(texture1, draw_t((j * (width / 12)) + (width / 12), (i * ((height / 12)) + (height / 32)), (width / 16), (height / 12)));
+		}
 
-	//rtd::Picture* heart3 = new rtd::Picture(texture1, draw_t(258.0f, 10.0f, 64.0f, 64.0f));
-	//scene.Insert2DElement(heart3);
+		// You and Friend text
+		if (i == 0)
+		{
+			playerHp->AddElement<rtd::Text>("You:", draw_text_t(0, (i * ((height / 12)) + (height / 32)), (strlen("You:") * D2D1Core::GetDefaultFontSize()) * 0.5f, D2D1Core::GetDefaultFontSize()));
+		}
+		else
+		{
+			playerHp->AddElement<rtd::Text>("Friend:", draw_text_t(0, (i * ((height / 12)) + (height / 32)), (strlen("Friend:") * D2D1Core::GetDefaultFontSize()) * 0.5f, D2D1Core::GetDefaultFontSize()));
+			playerHp->Hide();
+		}
+		scene.Add2DCollection(playerHp, "player" + std::to_string(i + 1) + "Info");
+	}
 
-	//rtd::Text* youText = new rtd::Text("You:", draw_text_t(5.0f, 30.0f, 60.0f, 20.0f));
-	//scene.Insert2DElement(youText);
+	Collection2D* timerCollection = new Collection2D;
+	timerCollection->AddElement<rtd::Text>("0", draw_text_t(0, 0, width, height / 16.f));
+	scene.Add2DCollection(timerCollection, "timer");
 
-	//// Player 2
-	//rtd::Picture* heart4 = new rtd::Picture(texture1, draw_t(90.0f, 72.0f, 64.0f, 64.0f));
-	//scene.Insert2DElement(heart4);
+	Collection2D* attackCollection = new Collection2D;
+	attackCollection->AddElement<rtd::Text>("Attacks!", draw_text_t(0, height - (height / 6), (strlen("Attacks!") * D2D1Core::GetDefaultFontSize()) * 0.5f, D2D1Core::GetDefaultFontSize()));
 
-	//rtd::Picture* heart5 = new rtd::Picture(texture1, draw_t(174.0f, 72.0f, 64.0f, 64.0f));
-	//scene.Insert2DElement(heart5);
+	for (int i = 0; i < 1; i++)
+	{
+		attackCollection->AddElement<rtd::Picture>(texture2, draw_t(0, height - (height / 8), width / 12, height / 8));
+	}
+	scene.Add2DCollection(attackCollection, "attacks");
 
-	//rtd::Picture* heart6 = new rtd::Picture(texture1, draw_t(258.0f, 72.0f, 64.0f, 64.0f));
-	//scene.Insert2DElement(heart6);
-
-	//rtd::Text* friendText = new rtd::Text("Friend:", draw_text_t(5.0f, 95.0f, 84.0f, 20.0f));
-	//scene.Insert2DElement(friendText);
-
-	////Timer text
-	//const std::string& timerText = "1:20";
-	//rtd::Text* timer = new rtd::Text(timerText, draw_text_t(436.0f, 24.0f, 96.0f, 24.0f));
-	//scene.Insert2DElement(timer, "TimerText");
-
-	//// Attacks
-	//rtd::Text* attacksText = new rtd::Text("Attacks!", draw_text_t(24.0f, 412.0f, 96.0f, 24.0f));
-	//scene.Insert2DElement(attacksText);
-
-	//rtd::Picture* attack1 = new rtd::Picture(texture2, draw_t(24.f, 448.0f, 64.0f, 64.0f));
-	//scene.Insert2DElement(attack1);
-
-	//rtd::Picture* attack2 = new rtd::Picture(texture3, draw_t(98.f, 448.0f, 64.0f, 64.0f));
-	//scene.Insert2DElement(attack2);
-
-	//rtd::Picture* attack3 = new rtd::Picture(texture4, draw_t(172.f, 448.0f, 64.0f, 64.0f));
-	//attack3->GetBorder()->SetColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
-	//attack2->GetBorder()->SetColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
-	//attack1->GetBorder()->SetColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
-	//scene.Insert2DElement(attack3);
-
-	//// Builds
-	//rtd::Text* buildText = new rtd::Text("Builds!", draw_text_t(700.0f, 412.0f, 96.0f, 24.0f));
-	//scene.Insert2DElement(buildText);
-
-	//rtd::Picture* build1 = new rtd::Picture(texture2, draw_t(700.f, 448.0f, 64.0f, 64.0f));
-	//scene.Insert2DElement(build1);
-
-	//rtd::Picture* build2 = new rtd::Picture(texture3, draw_t(774.f, 448.0f, 64.0f, 64.0f));
-	//scene.Insert2DElement(build2);
-	//rtd::Picture* build3 = new rtd::Picture(texture4, draw_t(848.f, 448.0f, 64.0f, 64.0f));
-	//build3->GetBorder()->SetColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
-	//build2->GetBorder()->SetColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
-	//build1->GetBorder()->SetColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
-	//scene.Insert2DElement(build3);
+	Collection2D* buildCollection = new Collection2D;
+	buildCollection->AddElement<rtd::Text>("Builds!", draw_text_t(width - (strlen("Builds!") * D2D1Core::GetDefaultFontSize()), height - (height / 6), strlen("Builds!") * D2D1Core::GetDefaultFontSize(), D2D1Core::GetDefaultFontSize()));
+	for (int i = 0; i < 1; i++)
+	{
+		buildCollection->AddElement<rtd::Picture>(texture2, draw_t((width - (width / 12)) - (i * (width / 12)), height - (height / 8), width / 12, height / 8));
+	}
+	scene.Add2DCollection(buildCollection, "builds");
 #endif
 }
 
