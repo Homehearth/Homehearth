@@ -190,8 +190,8 @@ void ServerSystems::WaveSystem(Simulation* simulation,
 void ServerSystems::NextWaveConditions(Simulation* simulation, Timer& timer, int timeToFinish)
 {
 	//Summarize all the existing enemy components in the scene
-	simulation->GetGameScene()->ForEachComponent<comp::Enemy, comp::Network, comp::Transform>(
-		[&](Entity entity, comp::Enemy enemy, comp::Network network, comp::Transform transform)
+	simulation->GetGameScene()->ForEachComponent<comp::Enemy, comp::Transform>(
+		[&](Entity entity, comp::Enemy enemy, comp::Transform transform)
 		{
 			if (abs(transform.position.x) <= 10.f && abs(transform.position.z) <= 10.f)
 			{
