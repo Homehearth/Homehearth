@@ -84,6 +84,17 @@ void Simulation::InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg, c
 			}
 			break;
 		}
+
+		case ecs::Component::PLANECOLLIDER:
+		{
+			comp::PlaneCollider* b = entity.GetComponent<comp::PlaneCollider>();
+			if (b)
+			{
+				compSet.set(ecs::Component::PLANECOLLIDER);
+				msg << *b;
+			}
+			break;
+		}
 		case ecs::Component::LIGHT:
 		{
 			comp::Light* l = entity.GetComponent<comp::Light>();
@@ -303,6 +314,48 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 
 					}
 				}
+
+				//Place defence on grid
+				if (input.rightMouse)
+				{
+#ifdef _DEBUG
+					if (RENDER_GRID)
+					{
+						std::cout << "Clicked tile " << std::endl;
+						uint32_t netID = m_grid.PlaceDefenceRenderGrid(input.mouseRay);
+
+						if (netID != -1)
+						{
+							network::message<GameMsg> msg;
+							msg.header.id = GameMsg::Grid_PlaceDefence;
+							msg << netID;
+							Broadcast(msg);
+						}
+					}
+					else
+					{
+						sm::Vector3 position = m_grid.PlaceDefence(input.mouseRay);
+						if (position != sm::Vector3(-1, -1, -1))
+						{
+							network::message<GameMsg> msg;
+							msg.header.id = GameMsg::Grid_PlaceDefence;
+							msg << position;
+							Broadcast(msg);
+						}
+					}
+#endif // _DEBUG
+#ifdef NDEBUG
+					sm::Vector3 position = m_grid.PlaceDefence(input.mouseRay);
+					if (position != sm::Vector3(-1, -1, -1))
+					{
+						network::message<GameMsg> msg;
+						msg.header.id = GameMsg::Grid_PlaceDefence;
+						msg << position;
+						Broadcast(msg);
+					}
+#endif // NDEBUG
+
+				}
 			}
 
 			//  run all game logic systems
@@ -323,7 +376,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 
 			}
 
-			if(!waveQueue.empty())
+			if (!waveQueue.empty())
 				ServerSystems::NextWaveConditions(this, waveTimer, waveQueue.front().GetTimeLimit());
 
 			//LOG_INFO("GAME Scene %d", m_gameID);
@@ -334,9 +387,9 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 		{
 			waveTimer.Start();
 			ServerSystems::WaveSystem(this, waveQueue);
-		
+
 		});
-	
+
 	//On collision event add entities as pair in the collision system
 	m_pGameScene->on<ESceneCollision>([&](const ESceneCollision& e, HeadlessScene& scene)
 		{
@@ -371,11 +424,11 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 		collider.AddComponent<comp::Tag<TagType::STATIC>>();
 		collider.AddComponent<comp::Tag<TagType::MAP_BOUNDS>>();
 	}
-	
+
 	//Gridsystem
 	GridProperties_t gridOption;
 	m_grid.Initialize(gridOption.mapSize, gridOption.position, gridOption.fileName, m_pGameScene);
-	
+
 	m_addedEntities.clear();
 	m_removedEntities.clear();
 
@@ -459,19 +512,21 @@ bool Simulation::AddPlayer(uint32_t playerID, const std::string& namePlate)
 
 	// Create Player entity in Game scene
 	Entity player = m_pGameScene->CreateEntity();
-	player.AddComponent<comp::Transform>()->position = sm::Vector3(320.f, 0, -310.f);
+	comp::Transform* transform = player.AddComponent<comp::Transform>();
+	transform->position = sm::Vector3(320.f, 0, -310.f);
+	transform->scale = { 1.8f, 1.8f, 1.8f };
 	player.AddComponent<comp::Velocity>();
 	player.AddComponent<comp::NamePlate>()->namePlate = namePlate;
-	player.AddComponent<comp::MeshName>()->name = "Arrow.fbx";
+	player.AddComponent<comp::MeshName>()->name = "GameCharacter.fbx";
 #ifdef _DEBUG
 	player.AddComponent<comp::Player>()->runSpeed = 25.f;
 #else
 	player.AddComponent<comp::Player>()->runSpeed = 10.f;
 #endif // _DEBUG
 
-	*player.AddComponent<comp::CombatStats>() = { 0.3f, 20.f, 2.0f, true, 30.f};
+	* player.AddComponent<comp::CombatStats>() = { 0.3f, 20.f, 2.0f, true, 30.f };
 	player.AddComponent<comp::Health>();
-	player.AddComponent<comp::BoundingOrientedBox>()->Extents = {2.0f,2.0f,2.0f};
+	player.AddComponent<comp::BoundingOrientedBox>()->Extents = { 2.0f,2.0f,2.0f };
 
 	//Collision will handle this entity as a dynamic one
 	player.AddComponent<comp::Tag<TagType::DYNAMIC>>();
@@ -584,6 +639,8 @@ void Simulation::Update(float dt)
 	PROFILE_FUNCTION();
 	if (m_pCurrentScene)
 		m_pCurrentScene->Update(dt);
+
+
 }
 
 void Simulation::UpdateInput(InputState state, uint32_t playerID)
@@ -594,6 +651,8 @@ void Simulation::UpdateInput(InputState state, uint32_t playerID)
 	if (m_players.find(playerID) != m_players.end())
 	{
 		m_playerInputs[m_players.at(playerID)] = state;
+
+
 	}
 }
 

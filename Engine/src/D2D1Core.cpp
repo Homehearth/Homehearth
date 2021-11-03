@@ -27,7 +27,7 @@ D2D1Core::~D2D1Core()
 {
 	CoUninitialize();
 	RemoveFontResourceA("Bookworm");
-	SendMessageW(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
+	//SendMessageW(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
 }
 
 const bool D2D1Core::Setup(Window* window)
@@ -90,7 +90,7 @@ const bool D2D1Core::Setup(Window* window)
 	*/
 	// Add font resource and access it through FindResource.
 	int i = AddFontResourceA("Bookworm.ttf");
-	SendMessageW(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
+	//SendMessageW(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
 
 	hr = m_writeFactory->CreateTextFormat(
 		L"Bookworm",
