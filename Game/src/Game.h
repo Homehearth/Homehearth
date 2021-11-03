@@ -13,6 +13,7 @@ private:
 
 
 	GridSystem m_grid;
+	uint32_t m_waveTimer;
 
 
 	comp::Transform test;

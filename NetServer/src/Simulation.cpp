@@ -145,17 +145,17 @@ void Simulation::CreateWaves()
 	Wave wave1, wave2; // Default: WaveType::Zone
 	{ // Wave_1 Group_1
 		Wave::Group group1;
-		group1.AddEnemy(EnemyType::Default, 50);
-		group1.AddEnemy(EnemyType::Default2, 50);
-		group1.SetSpawnPoint({ 200.f, 0.0f });
+		group1.AddEnemy(EnemyType::Default, 3);
+		group1.AddEnemy(EnemyType::Default2, 2);
+		group1.SetSpawnPoint({ 400.f, -300.0f });
 		wave1.SetTimeLimit(5);
 		wave1.AddGroup(group1);
 	}
 
 	{ // Wave_1 Group_2
 		Wave::Group group2;
-		group2.AddEnemy(EnemyType::Default, 200);
-		group2.SetSpawnPoint({ -200.f, 0.0f });
+		group2.AddEnemy(EnemyType::Default, 4);
+		group2.SetSpawnPoint({ -400.f, 320.0f });
 		wave1.AddGroup(group2);
 	}
 	waveQueue.emplace(wave1); // Add Wave_1
@@ -163,15 +163,14 @@ void Simulation::CreateWaves()
 	{ // Wave_2 Group_3
 		Wave::Group group3;
 		group3.AddEnemy(EnemyType::Default, 5);
-		group3.AddEnemy(EnemyType::Default2, 5);
-		group3.SetSpawnPoint({ 0.f, -200.0f });
+		group3.SetSpawnPoint({ 400.f, -200.0f });
 		wave2.AddGroup(group3);
 	}
 
 	{ // Wave_2 Group_4
 		Wave::Group group4;
-		group4.AddEnemy(EnemyType::Default, 2);
-		group4.SetSpawnPoint({ 0.f, 200.0f });
+		group4.AddEnemy(EnemyType::Default, 4);
+		group4.SetSpawnPoint({ 400.f, 200.0f });
 		wave2.AddGroup(group4);
 	}
 	waveQueue.emplace(wave2); // Add Wave_2
@@ -370,6 +369,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 		//collider.AddComponent<comp::Transform>()->position = mapColliders->at(i).Center;
 		collider.AddComponent<comp::Network>();
 		collider.AddComponent<comp::Tag<TagType::STATIC>>();
+		collider.AddComponent<comp::Tag<TagType::MAP_BOUNDS>>();
 	}
 	
 	//Gridsystem
@@ -471,7 +471,7 @@ bool Simulation::AddPlayer(uint32_t playerID, const std::string& namePlate)
 
 	*player.AddComponent<comp::CombatStats>() = { 0.3f, 20.f, 2.0f, true, 30.f};
 	player.AddComponent<comp::Health>();
-	player.AddComponent<comp::BoundingOrientedBox>();
+	player.AddComponent<comp::BoundingOrientedBox>()->Extents = {2.0f,2.0f,2.0f};
 
 	//Collision will handle this entity as a dynamic one
 	player.AddComponent<comp::Tag<TagType::DYNAMIC>>();
@@ -565,6 +565,17 @@ void Simulation::SendSnapshot()
 			LOG_INFO("Updated %u entities", (uint32_t)m_updatedEntities.size());
 		}
 		m_updatedEntities.clear();
+	
+		// Update until next wave timer if next wave is present.
+		if (!waveQueue.empty())
+		{
+			// Update wave timer to clients.
+			network::message<GameMsg> msg2;
+			msg2.header.id = GameMsg::Game_WaveTimer;
+			uint32_t timer = (uint32_t)waveQueue.front().GetTimeLimit() - (uint32_t)waveTimer.GetElapsedTime<std::chrono::seconds>();
+			msg2 << timer;
+			this->Broadcast(msg2);
+		}
 	}
 	else if (m_pCurrentScene == m_pLobbyScene)
 	{

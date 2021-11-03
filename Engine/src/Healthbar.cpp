@@ -2,6 +2,8 @@
 #include "Healthbar.h"
 #include "Components.h"
 
+constexpr float SHOW_TIME = 3.0f;
+
 using namespace rtd;
 
 void rtd::Healthbar::Update()
@@ -19,6 +21,7 @@ void rtd::Healthbar::Update()
 
             m_foreGround.get()->SetPosition(m_drawOpts.x_pos, m_drawOpts.y_pos);
             m_foreGround.get()->SetScale(m_drawOpts.width, m_drawOpts.height);
+            m_healthInfo.get()->SetText("Health: " + std::to_string((int)h->currentHealth));
         }
     }
 }
@@ -28,6 +31,8 @@ rtd::Healthbar::Healthbar(const draw_t& drawOpts)
     m_drawOpts = drawOpts;
     m_backGround = std::make_unique<Canvas>(m_drawOpts);
     m_foreGround = std::make_unique<Canvas>(m_drawOpts);
+    m_healthInfo = std::make_unique<Text>("Health", draw_text_t(m_drawOpts.x_pos, m_drawOpts.y_pos, m_drawOpts.width, m_drawOpts.height));
+    m_healthInfo.get()->SetVisiblity(false);
     m_sizeFull = drawOpts.width;
 
     m_backGround.get()->SetColor(D2D1::ColorF(134 / 255.0f, 2 / 255.0f, 17 / 255.0f));
@@ -50,6 +55,9 @@ void rtd::Healthbar::Draw()
         m_backGround.get()->Draw();
     if (m_foreGround)
         m_foreGround.get()->Draw();
+
+    if (m_healthInfo.get()->IsVisible())
+        m_healthInfo.get()->Draw();
 }
 
 
@@ -58,19 +66,30 @@ void rtd::Healthbar::Draw()
 */
 void rtd::Healthbar::OnClick()
 {
+    this->Update();
 }
 
 void rtd::Healthbar::OnHover()
 {
-    this->Update();
+    m_healthInfo.get()->SetVisiblity(true);
 }
 
 bool rtd::Healthbar::CheckHover()
 {
-    return true;
+    // Is within bounds?
+    if (InputSystem::Get().GetMousePos().x > m_drawOpts.x_pos &&
+        InputSystem::Get().GetMousePos().x < m_drawOpts.x_pos + m_drawOpts.width &&
+        InputSystem::Get().GetMousePos().y > m_drawOpts.y_pos &&
+        InputSystem::Get().GetMousePos().y < m_drawOpts.y_pos + m_drawOpts.height)
+    {
+        return true;
+    }
+    
+    m_healthInfo.get()->SetVisiblity(false);
+    return false;
 }
 
 bool rtd::Healthbar::CheckClick()
 {
-    return false;
+    return true;
 }

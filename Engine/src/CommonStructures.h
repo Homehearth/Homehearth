@@ -76,6 +76,7 @@ enum class GameMsg : uint8_t
 	Game_Snapshot,
 	Game_AddEntity,
 	Game_RemoveEntity,
+	Game_WaveTimer,
 
 	Game_PlayerInput
 };

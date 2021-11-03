@@ -13,6 +13,7 @@ Game::Game()
 	this->m_localPID = -1;
 	this->m_gameID = -1;
 	this->m_predictionThreshhold = 0.001f;
+	m_waveTimer = 0;
 }
 
 Game::~Game()
@@ -43,11 +44,11 @@ void Game::UpdateNetwork(float deltaTime)
 		{
 			if (GetCurrentScene()->GetCurrentCamera()->GetCameraType() == CAMERATYPE::PLAY)
 			{
-				
+
 				message<GameMsg> msg;
 				msg.header.id = GameMsg::Game_PlayerInput;
 
-				
+
 				msg << this->m_localPID << m_gameID << m_inputState;
 
 				m_client.Send(msg);
@@ -77,8 +78,18 @@ bool Game::OnStartup()
 void Game::OnUserUpdate(float deltaTime)
 {
 	static float pingCheck = 0.f;
+	const float PING_TARGET = 5.0f;
 
 
+	if (m_client.IsConnected())
+	{
+		pingCheck += deltaTime;
+		if (pingCheck >= PING_TARGET)
+		{
+			PingServer();
+			pingCheck = 0.f;
+		}
+	}
 	/*
 if (GetCurrentScene() == &GetScene("Game") && GetCurrentScene()->GetCurrentCamera()->GetCameraType() == CAMERATYPE::PLAY)
 {
@@ -106,9 +117,11 @@ if (GetCurrentScene() == &GetScene("Game") && GetCurrentScene()->GetCurrentCamer
 }
 		*/
 
-		//Update InputState
-	this->UpdateInput();
-
+	//Update InputState
+	if (GetCurrentScene() == &GetScene("Game"))
+	{
+		this->UpdateInput();
+	}
 }
 
 
@@ -221,7 +234,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 					renderable->model = ResourceManager::Get().GetResource<RModel>("Plane2.obj");
 					renderable->model->ChangeMaterial("TileBuilding.mtl");
 				}
-				
+
 			}
 #endif //  _DEBUG
 
@@ -287,6 +300,19 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	case GameMsg::Game_Start:
 	{
 		SetScene("Game");
+		break;
+	}
+	case GameMsg::Game_WaveTimer:
+	{
+		msg >> m_waveTimer;
+		Element2D* elem = GetScene("Game").GetCollection("timer")->elements[0].get();
+		if (elem)
+		{
+			if (m_waveTimer > 0)
+				dynamic_cast<rtd::Text*>(elem)->SetText("\nUntil next Wave:\n" + std::to_string(m_waveTimer));
+			else
+				dynamic_cast<rtd::Text*>(elem)->SetText("\nUnder Attack!");
+		}
 		break;
 	}
 	case GameMsg::Lobby_Update:
@@ -507,6 +533,7 @@ void Game::UpdateInput()
 	{
 		m_inputState.leftMouse = true;
 		m_inputState.mouseRay = InputSystem::Get().GetMouseRay();
+
 	}
 }
 
