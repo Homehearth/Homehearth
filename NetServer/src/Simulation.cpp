@@ -606,6 +606,17 @@ void Simulation::SendSnapshot()
 		msg << this->GetTick();
 
 		this->Broadcast(msg);
+
+		// Update until next wave timer if next wave is present.
+		if (!waveQueue.empty())
+		{
+			// Update wave timer to clients.
+			network::message<GameMsg> msg2;
+			msg2.header.id = GameMsg::Game_WaveTimer;
+			uint32_t timer = (uint32_t)waveQueue.front().GetTimeLimit() - (uint32_t)waveTimer.GetElapsedTime<std::chrono::seconds>();
+			msg2 << timer;
+			this->Broadcast(msg2);
+		}
 	}
 	else if (m_pCurrentScene == m_pLobbyScene)
 	{
