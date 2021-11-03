@@ -602,6 +602,7 @@ void Simulation::SendSnapshot()
 							compSet.set(ecs::Component::HEALTH);
 							msg << *h;
 						}
+						break;
 					}
 					case ecs::Component::BOUNDING_ORIENTED_BOX:
 					{
@@ -611,6 +612,7 @@ void Simulation::SendSnapshot()
 							compSet.set(ecs::Component::BOUNDING_ORIENTED_BOX);
 							msg << *b;
 						}
+						break;
 					}
 					default:
 						break;
