@@ -7,5 +7,6 @@ namespace GameSystems
 {
 	void MRayIntersectBoxSystem(Scene& scene);
 	void RenderIsCollidingSystem(Scene& scene);
+	void UpdateHealthbar(Scene& scene);
 }
 

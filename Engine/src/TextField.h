@@ -18,6 +18,7 @@ namespace rtd
 		std::unique_ptr<Canvas> m_canvas;
 
 		std::string m_stringText;
+		uint16_t m_textPos;
 		size_t m_textLimit;
 		draw_text_t m_opts;
 

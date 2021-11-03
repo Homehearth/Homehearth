@@ -9,9 +9,13 @@ private:
 	std::chrono::system_clock::time_point m_timeThen;
 	std::vector<comp::Transform> predictedPositions;
 	std::unordered_map<uint32_t, Entity> m_players;
+	std::unordered_map<uint32_t, Entity> m_gameEntities;
+
 
 	GridSystem m_grid;
+	uint32_t m_waveTimer;
 
+	Entity m_mapEntity;
 
 	bool m_isLeavingLobby;
 	comp::Transform test;
@@ -30,9 +34,12 @@ private:
 	void PingServer();
 	void OnClientDisconnect();
 	
-	Entity CreateEntityFromMessage(message<GameMsg>& msg);
+	void UpdateEntityFromMessage(Entity entity, message<GameMsg>& msg);
 
 	void UpdateInput();
+	void PlaceDefenceDebug(message<GameMsg>& msg);
+	void PlaceDefenceRelease(message<GameMsg>& msg);
+	void CreateVisualGrid(Entity e);
 
 public:
 	Client m_client;

@@ -70,4 +70,5 @@ public:
 	InputSystem& operator=(const InputSystem& other) = delete;
 
 	std::string GetClipboard();
+	void SetClipboard(const std::string& str);
 };

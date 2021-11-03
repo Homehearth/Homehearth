@@ -28,26 +28,26 @@ void ServerGame::InputThread()
 		else if (input == "/info")
 		{
 			LOG_INFO("INFO:")
-			for (const auto& sim : m_simulations)
-			{
-				LOG_INFO("-------Simulation %u-------", sim.first);
-				LOG_INFO("LOBBY SCENE:");
-				LOG_INFO("\tEntity Count: %u", (unsigned int)sim.second->GetLobbyScene()->GetRegistry()->size());
-				sim.second->GetLobbyScene()->ForEachComponent<comp::Network>([](Entity e, comp::Network& n)
-					{
-						LOG_INFO("\tEntity: %d", (entt::entity)e);
-						LOG_INFO("\tNetwork id: %u", n.id);
-					});
+				for (const auto& sim : m_simulations)
+				{
+					LOG_INFO("-------Simulation %u-------", sim.first);
+					LOG_INFO("LOBBY SCENE:");
+					LOG_INFO("\tEntity Count: %u", (unsigned int)sim.second->GetLobbyScene()->GetRegistry()->size());
+					sim.second->GetLobbyScene()->ForEachComponent<comp::Network>([](Entity e, comp::Network& n)
+						{
+							LOG_INFO("\tEntity: %d", (entt::entity)e);
+							LOG_INFO("\tNetwork id: %u", n.id);
+						});
 
-				LOG_INFO("GAME SCENE:");
-				LOG_INFO("\tEntity Count: %u\n", (unsigned int)sim.second->GetGameScene()->GetRegistry()->size());
-				sim.second->GetGameScene()->ForEachComponent<comp::Network>([](Entity e, comp::Network& n)
-					{
-						LOG_INFO("\tEntity: %d", (entt::entity)e);
-						LOG_INFO("\tNetwork id: %u", n.id);
-					});
+					LOG_INFO("GAME SCENE:");
+					LOG_INFO("\tEntity Count: %u\n", (unsigned int)sim.second->GetGameScene()->GetRegistry()->size());
+					sim.second->GetGameScene()->ForEachComponent<comp::Network>([](Entity e, comp::Network& n)
+						{
+							LOG_INFO("\tEntity: %d", (entt::entity)e);
+							LOG_INFO("\tNetwork id: %u", n.id);
+						});
 
-			}
+				}
 		}
 		else if (input == "/pstart")
 		{
@@ -71,7 +71,7 @@ bool ServerGame::OnStartup()
 
 	m_inputThread = std::thread(&ServerGame::InputThread, this);
 
-	LoadMapColliders("SceneBoundingBoxes.obj");
+	LoadMapColliders("SceneBoundingBoxes.fbx");
 	//LoadMapColliders("MapBounds.obj");
 
 	return true;
@@ -86,13 +86,13 @@ void ServerGame::OnShutdown()
 void ServerGame::UpdateNetwork(float deltaTime)
 {
 	PROFILE_FUNCTION();
-	static float timer = 0.0f;
-	timer += deltaTime;
-	if (timer >= 1.0f)
-	{
-		LOG_INFO("Update: %f", 1.f / deltaTime);
-		timer = 0.0f;
-	}
+	//static float timer = 0.0f;
+	//timer += deltaTime;
+	//if (timer >= 1.0f)
+	//{
+	//	LOG_INFO("Update: %f", 1.f / deltaTime);
+	//	timer = 0.0f;
+	//}
 
 	// Check incoming messages
 	this->m_server.Update();
@@ -125,11 +125,9 @@ bool ServerGame::LoadMapColliders(const std::string& filename)
 
 	const aiScene* scene = importer.ReadFile
 	(
-		filepath, 
-		aiProcess_JoinIdenticalVertices |
-		aiProcess_FlipWindingOrder		|
-		aiProcess_DropNormals			|
-		aiProcess_MakeLeftHanded
+		filepath,
+		aiProcess_JoinIdenticalVertices		|
+		aiProcess_ConvertToLeftHanded
 	);
 
 	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
@@ -149,15 +147,28 @@ bool ServerGame::LoadMapColliders(const std::string& filename)
 		importer.FreeScene();
 		return false;
 	}
-
 	// Go through all the meshes and create boundingboxes for them
 	for (UINT i = 0; i < scene->mNumMeshes; i++)
 	{
 		const aiMesh* mesh = scene->mMeshes[i];
-		//Create a bob from all the points and the orientation will be calculated and add to vector
-		dx::BoundingOrientedBox bob;
-		dx::BoundingOrientedBox::CreateFromPoints(bob, mesh->mNumVertices, (dx::XMFLOAT3*)mesh->mVertices, sizeof(dx::XMFLOAT3));
-		m_mapColliders.push_back(bob);
+
+		aiNode* node = scene->mRootNode->FindNode(mesh->mName);
+
+		if (node)
+		{
+			aiVector3D pos;
+			aiVector3D scl;
+			aiQuaternion rot;
+			node->mTransformation.Decompose(scl, rot, pos);
+
+			dx::XMFLOAT3 center = { pos.x, pos.y, pos.z };
+			dx::XMFLOAT3 extents = { scl.x / 2.f, scl.y / 2.f, scl.z / 2.f };
+			dx::XMFLOAT4 orientation = { rot.x, rot.y, rot.z, rot.w };
+
+			dx::BoundingOrientedBox bob(center, extents, orientation);
+
+			m_mapColliders.push_back(bob);
+		}
 	}
 
 	return true;
@@ -221,7 +232,7 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 		msg >> playerID;
 		if (m_simulations.find(gameID) != m_simulations.end())
 		{
-			if (m_simulations[gameID]->LeaveLobby(playerID, gameID)) 
+			if (m_simulations[gameID]->LeaveLobby(playerID, gameID))
 			{
 				break;
 			}
@@ -306,6 +317,7 @@ bool ServerGame::CreateSimulation(uint32_t playerID, const std::string& mainPlay
 	if (!m_simulations[m_nGameID]->Create(playerID, m_nGameID, &m_mapColliders, mainPlayerPlate))
 	{
 		m_simulations.erase(m_nGameID);
+
 		return false;
 	}
 	//TEMP

@@ -53,7 +53,7 @@ float4 main(PixelIn input) : SV_TARGET
     
 	
     //Ambient lighting
-    float3 ambient = float3(0.4f, 0.4f, 0.4f) * albedo * ao;
+    float3 ambient = float3(0.7f, 0.15f, 0.5f) * albedo * ao;
     float3 color = ambient + Lo;
     
     //HDR tonemapping

@@ -71,18 +71,19 @@ enum class GameMsg : uint8_t
 
 	Server_AssignID,
 	Server_GetPing,
-	
+
 	Game_PlayerReady,
 	Game_Start,
 	Game_Snapshot,
 	Game_AddEntity,
 	Game_RemoveEntity,
+	Game_BackToLobby,
+	Game_WaveTimer,
 
 	Game_PlayerAttack,
 	Game_AddNPC,
 	Game_RemoveNPC,
 	Game_PlayerInput,
-
 	Grid_PlaceDefence
 };
 
@@ -100,25 +101,20 @@ struct simple_vertex_t
 };
 
 /*
-	Debugging with collision boxes
-*/
-struct debug_vertex_t
-{
-	sm::Vector3 position = {};
-	//sm::Vector3 color = {}; could be implemented if needed
-};
-
-/*
-	Skeletal animated meshes
-	Uses 3 bones per vertex which is cheaper than 4 
-	without much of a noticeable difference
+	Skeletal animated model.
+	Uses 4 bones per vertex for now.
+	If optimization is needed, consider lowering to 3.
 */
 ALIGN16
 struct anim_vertex_t
 {
-	simple_vertex_t vertex	   = {};
-	dx::XMUINT3		boneID	   = {};
-	sm::Vector3		boneWeight = {};
+	sm::Vector3 position	= {};
+	sm::Vector2	uv			= {};
+	sm::Vector3	normal		= {};
+	sm::Vector3	tangent		= {};
+	sm::Vector3	bitanget	= {};
+	dx::XMUINT4	boneIDs	    = {};
+	sm::Vector4	boneWeights = {};
 };
 
 ALIGN16

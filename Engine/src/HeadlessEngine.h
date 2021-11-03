@@ -70,6 +70,7 @@ template<typename SceneType>
 void BasicEngine<SceneType>::SetScene(SceneType& scene)
 {	
 	m_currentScene = &scene;
+	m_currentScene->publish<ESceneStart>();
 }
 
 template<typename SceneType>
@@ -120,7 +121,7 @@ void BasicEngine<SceneType>::Run()
 	float deltaTime = 0.f;
 	float update_time = 0.f;
 	float network_time = 0.f;
-	const float TARGET_UPDATE = 1.f / 120.f;
+	const float TARGET_UPDATE = 1.f / Stats::GetMaxFPS();
 	const float TICK_RATE = 1.f / 60.f;
 
 	while (IsRunning())

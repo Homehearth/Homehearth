@@ -31,7 +31,8 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		{
 			// ---DEFAULT ENEMY---
 			transform->position = spawnP;
-			meshName->name = "Chest.obj";
+			transform->scale = { 1.8f, 1.8f, 1.8f };
+			meshName->name = "MonsterCharacter.fbx";
 			obb->Extents = sm::Vector3(2.f, 2.f, 2.f);
 			/*velocity->vel = sm::Vector3(transform->position * -1.0f);
 			velocity->vel.Normalize();
@@ -43,7 +44,8 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		{
 			// ---DEFAULT ENEMY 2---
 			transform->position = spawnP;
-			meshName->name = "StreetLamp.obj";
+			meshName->name = "Barrel.obj";
+			transform->scale = { 1.8f, 1.8f, 1.8f };
 			obb->Extents = sm::Vector3(2.f, 2.f, 2.f);
 			/*velocity->vel = sm::Vector3(transform->position * -1.0f);
 			velocity->vel.Normalize();
@@ -206,7 +208,57 @@ void ServerSystems::NextWaveConditions(Simulation* simulation, Timer& timer, int
 	}
 }
 
+void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& scene, sm::Vector3 spawnPoint, float dt)
+{
+	scene.ForEachComponent<comp::Player, comp::Network, comp::CombatStats, comp::Health, comp::Transform>([&](Entity e, comp::Player& p, comp::Network& net, comp::CombatStats& a, comp::Health health, comp::Transform& t)
+		{
+			if (health.currentHealth <= 0 && p.state != comp::Player::State::DEAD)
+			{
+				p.state = comp::Player::State::DEAD;
+				p.respawnTimer = 60.f;
+				health.isAlive = false;
+				e.AddComponent<comp::MeshName>("Skull.obj");
+				e.UpdateNetwork();
+				LOG_INFO("Player id %u died...", net.id);
+			}
 
+			if(p.state == comp::Player::State::DEAD)
+			{
+				p.respawnTimer -= dt;
+
+				if(p.respawnTimer < 0.01f)
+				{
+					p.state = comp::Player::State::IDLE;
+					t.position = spawnPoint;
+					health.currentHealth = 100;
+					health.isAlive = true;
+					e.AddComponent<comp::MeshName>("GameCharacter.fbx");
+					e.UpdateNetwork();
+					LOG_INFO("Player id %u Respawnd...", net.id);
+				}
+			}
+		});
+}
+
+void ServerSystems::CheckGameOver(Simulation* simulation, HeadlessScene& scene)
+{
+	bool gameOver = true;
+	
+	//Check if all players is dead
+	scene.ForEachComponent<comp::Player, comp::CombatStats>([&](comp::Player& p, comp::CombatStats& a)
+		{
+			if (p.state != comp::Player::State::DEAD)
+			{
+				gameOver = false;
+			}
+		});
+
+	if (gameOver)
+	{
+		simulation->SetLobbyScene();
+		
+	}
+}
 
 
 namespace Systems {
@@ -256,7 +308,7 @@ namespace Systems {
 			{
 				if (p.state == comp::Player::State::TURN || p.state == comp::Player::State::ATTACK)
 				{
-					float time = dt * p.runSpeed;
+					float time = dt * p.runSpeed * 0.5f;
 					if (ecs::StepRotateTo(t.rotation, p.targetForward, time))
 					{
 						p.state = comp::Player::State::IDLE;

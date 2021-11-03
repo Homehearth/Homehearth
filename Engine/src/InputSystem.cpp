@@ -114,21 +114,21 @@ int InputSystem::GetAxis(Axis axis) const
 	case Axis::VERTICAL:
 		if (CheckKeyboardKey(dx::Keyboard::W, KeyState::HELD) || CheckKeyboardKey(dx::Keyboard::Up, KeyState::HELD))
 		{
-			toReturn = 1;
+			toReturn = -1;
 		}
 		else if (CheckKeyboardKey(dx::Keyboard::S, KeyState::HELD) || CheckKeyboardKey(dx::Keyboard::Down, KeyState::HELD))
 		{
-			toReturn = -1;
+			toReturn = 1;
 		}
 		break;
 	case Axis::HORIZONTAL:
 		if (CheckKeyboardKey(dx::Keyboard::D, KeyState::HELD) || CheckKeyboardKey(dx::Keyboard::Right, KeyState::HELD))
 		{
-			toReturn = 1;
+			toReturn = -1;
 		}
 		else if (CheckKeyboardKey(dx::Keyboard::A, KeyState::HELD) || CheckKeyboardKey(dx::Keyboard::Left, KeyState::HELD))
 		{
-			toReturn = -1;
+			toReturn = 1;
 		}
 		break;
 	default:
@@ -167,6 +167,30 @@ std::string InputSystem::GetClipboard()
 	CloseClipboard();
 
 	return str;
+}
+
+void InputSystem::SetClipboard(const std::string& str)
+{
+	if (!OpenClipboard(NULL))
+	{
+		LOG_WARNING("Failed to open clipboard %d", GetLastError());
+	}
+	EmptyClipboard();
+
+	HGLOBAL hg = GlobalAlloc(GMEM_MOVEABLE, str.size());
+	if (!hg)
+	{
+		CloseClipboard();
+		LOG_WARNING("Failed to allocate clipboard handle %d", GetLastError());
+		return;
+	}
+
+	memcpy(GlobalLock(hg), str.c_str(), str.size());
+	GlobalUnlock(hg);
+	SetClipboardData(CF_TEXT, hg);
+
+	CloseClipboard();
+	GlobalFree(hg);
 }
 
 void InputSystem::ToggleMouseVisibility() const

@@ -22,6 +22,8 @@ public:
 	template<typename T>
 	void RemoveComponent();
 
+	void UpdateNetwork();
+
 	bool Destroy();
 
 	bool IsNull() const;
@@ -82,6 +84,7 @@ inline void Entity::RemoveComponent()
 	}	
 	m_pRegistry->erase<T>(m_entity);
 }
+
 
 namespace std
 {

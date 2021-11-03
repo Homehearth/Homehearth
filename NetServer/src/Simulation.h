@@ -30,24 +30,28 @@ private:
 	std::vector<Entity> m_addedEntities;
 	std::vector<uint32_t> m_removedEntities;
 
+	std::vector<Entity> m_updatedEntities;
 
-	void InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg)const;
+	void InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg, const std::bitset<ecs::Component::COMPONENT_MAX>& componentMask = UINT32_MAX) const;
 	message<GameMsg> AllEntitiesMessage()const;
 
 	uint32_t GetTick()const;
-
-	// -1 will be defaulted to max value of unsigned 32 bit integer
-	void Broadcast(message<GameMsg>& msg, uint32_t exclude = -1)const;
+	
 	void ScanForDisconnects();
 
 	//Game play related
 	Timer waveTimer;
 	std::queue<Wave> waveQueue;
+	sm::Vector3 playerSpawnPoint;
+
+	
 	void CreateWaves();
+	void ResetPlayer(Entity e);
 	
 	void OnNetworkEntityCreate(entt::registry& reg, entt::entity entity);
 	void OnNetworkEntityDestroy(entt::registry& reg, entt::entity entity);
 
+	void OnNetworkEntityUpdated(entt::registry& reg, entt::entity entity);
 
 	std::vector<std::string> OpenFile(std::string filePath);
 	void ConnectNodes(comp::Node* node1, comp::Node* node2);
@@ -60,6 +64,9 @@ public:
 	bool AIAStarSearch();
 	bool AddNPC(uint32_t npcId);
 	bool RemoveNPC(uint32_t npcId);
+
+	// -1 will be defaulted to max value of unsigned 32 bit integer
+	void Broadcast(message<GameMsg>& msg, uint32_t exclude = -1)const;
 
 	bool AddPlayer(uint32_t playerID, const std::string& namePlate = "Noobie");
 	bool RemovePlayer(uint32_t playerID);
@@ -88,9 +95,13 @@ public:
 
 	HeadlessScene* GetLobbyScene() const;
 	HeadlessScene* GetGameScene() const;
-
+	
+	void SetLobbyScene();
+	void SetGameScene();
+	void ResetGameScene();
+	
 	void SendEntity(Entity e, uint32_t exclude = -1)const;
-	void SendEntities(const std::vector<Entity>& entities)const;
+	void SendEntities(const std::vector<Entity>& entities, GameMsg msgID, const std::bitset<ecs::Component::COMPONENT_MAX>& componentMask = UINT32_MAX)const;
 
 	void SendAllEntitiesToPlayer(uint32_t playerID)const;
 	void SendRemoveAllEntitiesToPlayer(uint32_t playerID)const;

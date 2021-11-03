@@ -26,13 +26,23 @@ namespace ecs {
     bool StepRotateTo(sm::Quaternion& rotation, const sm::Vector3& targetVector, float t)
     {
         
-        float targetRotation = atan2(-targetVector.z, targetVector.x);
+        float targetRotation = atan2(-targetVector.x, -targetVector.z);
         sm::Quaternion targetQuat = sm::Quaternion::CreateFromAxisAngle(sm::Vector3::Up, targetRotation);
-
+        targetQuat.Normalize();
+        if (t >= 1.0f)
+        {
+            rotation = targetQuat;
+            return true;
+        }
         rotation = sm::Quaternion::Slerp(rotation, targetQuat, t);
         rotation.Normalize();
 
-        return std::abs(rotation.Dot(targetQuat)) > 1 - 0.001f;
+        if (std::abs(rotation.Dot(targetQuat)) > 1 - 0.01f)
+        {
+            rotation = targetQuat;
+            return true;
+        }
+        return false;
     }
 
     bool StepTranslateTo(sm::Vector3& translation, const sm::Vector3& target, float t)

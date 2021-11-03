@@ -12,7 +12,15 @@ void rtd::TextField::Update()
 		{
 			if (InputSystem::Get().CheckKeyboardKey(static_cast<dx::Keyboard::Keys>(i), KeyState::PRESSED))
 			{
-				const char c = static_cast<char>(i);
+				char c;
+				c = static_cast<char>(i);
+				if (i > 64)
+				{
+					if (!InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Keys::LeftShift, KeyState::HELD))
+					{
+						c = static_cast<char>(i + 32);
+					}
+				}
 				m_stringText.push_back(c);
 			}
 		}
@@ -83,7 +91,7 @@ void rtd::TextField::SetDescriptionText(const std::string& displayText)
 {
 	if (!m_infoText)
 	{
-		m_infoText = std::make_unique<Text>(displayText, draw_text_t(m_opts.x_pos, m_opts.y_pos - D2D1Core::GetDefaultFontSize(), m_opts.x_stretch, m_opts.y_stretch));
+		m_infoText = std::make_unique<Text>(displayText, draw_text_t(m_opts.x_pos, m_opts.y_pos - D2D1Core::GetDefaultFontSize() * 1.25f, m_opts.x_stretch, m_opts.y_stretch));
 
 		return;
 	}

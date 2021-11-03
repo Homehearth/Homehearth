@@ -1,18 +1,19 @@
 #pragma once
 #include "net_message.h"
 #include "RModel.h"
-#include "RDebugMesh.h"
+#include "RAnimator.h"
 #include "ResourceManager.h"
 
 namespace ecs
 {
 	enum Component : uint32_t
 	{
-		NETWORK,
 		TRANSFORM,
 		VELOCITY,
+		ANIMATOR_NAME,
 		MESH_NAME,
 		NAME_PLATE,
+		HEALTH,
 		BOUNDING_ORIENTED_BOX,
 		BOUNDING_SPHERE,
 		PLANECOLLIDER,
@@ -68,10 +69,20 @@ namespace ecs
 			bool						visible = true;
 		};
 
-		// Used on server side
-		struct MeshName
+		struct Animator
 		{
-			std::string name;
+			std::shared_ptr<RAnimator> animator;
+		};
+
+		// Used on server side
+		struct AnimatorName 
+		{
+			std::string name = "";
+		};
+	
+		struct MeshName 
+		{
+			std::string name = "";
 		};
 
 		struct NamePlate
@@ -90,13 +101,20 @@ namespace ecs
 				BoundingSphere* sphere = reg.try_get<BoundingSphere>(curr);
 				if (obb != nullptr)
 				{
-					model = ResourceManager::Get().GetResource<RModel>("cube.obj");
+					model = ResourceManager::Get().GetResource<RModel>("Cube.obj");
 				}
 				else if (sphere != nullptr)
 				{
 					model = ResourceManager::Get().GetResource<RModel>("Sphere.obj");
 				}
 			}
+		};
+		
+		struct Force
+		{
+			sm::Vector3 force = sm::Vector3(5, 0, 0);
+			bool wasApplied = false;
+			float actingTime = 5.0f;
 		};
 
 		struct Velocity
@@ -110,11 +128,13 @@ namespace ecs
 			{
 				IDLE,
 				ATTACK,
-				TURN
+				TURN,
+				DEAD
 			} state = State::IDLE;
 
 			float runSpeed;
 			sm::Vector3 targetForward;
+			float respawnTimer;
 			bool isReady = false;
 		};
 
@@ -178,6 +198,8 @@ namespace ecs
 			float attackDamage = 5.f;
 			float attackLifeTime = 5.f;
 			bool isRanged = false;
+			float projectileSpeed = 10.f;
+
 			bool isAttacking = false;
 			float cooldownTimer = 0.f;
 			Ray_t targetRay;
