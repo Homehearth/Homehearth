@@ -115,32 +115,20 @@ namespace sceneHelp
 		/*
 			Testing to add models with animators
 		*/
-		std::array<std::string, 5> materials = { "Tree1.mtl", "Tree2.mtl", "StreetLamp.mtl", "Cube.mtl", "Bush1.mtl" };
-		for (int i = 0; i < 1; i++)
-		{
-			Entity animEnt = gameScene.CreateEntity();
-			
-			animEnt.AddComponent<comp::Transform>()->position = { i*5.0f,0,0 };
-			//Add model
-			animEnt.AddComponent<comp::Renderable>();
-			//Copy a model
-			//animEnt.GetComponent<comp::Renderable>()->model = ResourceManager::Get().CopyResource<RModel>("Skeleton.fbx");
-			//if (!animEnt.GetComponent<comp::Renderable>()->model)
-				animEnt.GetComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>("Knight.fbx");
-			
-			//Change materials
-			//animEnt.GetComponent<comp::Renderable>()->model->ChangeMaterial(materials[i]);
+		
+		Entity animEnt = gameScene.CreateEntity();
+		animEnt.AddComponent<comp::Transform>();
 
-			//Add animator - remove component if it did not work - will still render model
-			animEnt.AddComponent<comp::Animator>();
-			/*animEnt.GetComponent<comp::Animator>()->animator = ResourceManager::Get().CopyResource<RAnimator>("Slash.fbx");
-			if (!animEnt.GetComponent<comp::Animator>()->animator)
-			{*/
-				animEnt.GetComponent<comp::Animator>()->animator = ResourceManager::Get().GetResource<RAnimator>("Player.anim");
-				if (!animEnt.GetComponent<comp::Animator>()->animator->LoadSkeleton(animEnt.GetComponent<comp::Renderable>()->model->GetSkeleton()))
-					animEnt.RemoveComponent<comp::Animator>();
-			//}
-		}
+		//Add model
+		animEnt.AddComponent<comp::Renderable>();
+		animEnt.GetComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>("Knight.fbx");
+
+		//Add animator - remove component if it did not work - will still render static model
+		animEnt.AddComponent<comp::Animator>();
+		animEnt.GetComponent<comp::Animator>()->animator = ResourceManager::Get().GetResource<RAnimator>("Player.anim");
+		if (!animEnt.GetComponent<comp::Animator>()->animator->LoadSkeleton(animEnt.GetComponent<comp::Renderable>()->model->GetSkeleton()))
+			animEnt.RemoveComponent<comp::Animator>();
+			
 
 		CreateLightEntity(gameScene, { 0.f, 0.f, 0.f, 0.f }, { 1.f, -1.f, 0.f, 0.f }, { 10.f, 10.f, 10.f, 10.f }, 0, TypeLight::DIRECTIONAL, 1);
 		CreateLightEntity(gameScene, { 0.f, 8.f, -10.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 300.f, 300.f, 300.f, 300.f }, 75.f, TypeLight::POINT, 1);
