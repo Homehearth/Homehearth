@@ -328,27 +328,37 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 
 						}
 					}
-				}
 
 				//Place defence on grid
-				if (input.rightMouse) 
-				{
+					if (input.rightMouse)
+					{
 #ifdef _DEBUG
-					if (RENDER_GRID)
-					{
-						std::cout << "Clicked tile " << std::endl;
-						uint32_t netID = m_grid.PlaceDefenceRenderGrid(input.mouseRay);
-
-						if (netID != -1)
+						if (RENDER_GRID)
 						{
-							network::message<GameMsg> msg;
-							msg.header.id = GameMsg::Grid_PlaceDefence;
-							msg << netID;
-							Broadcast(msg);
+							std::cout << "Clicked tile " << std::endl;
+							uint32_t netID = m_grid.PlaceDefenceRenderGrid(input.mouseRay);
+
+							if (netID != -1)
+							{
+								network::message<GameMsg> msg;
+								msg.header.id = GameMsg::Grid_PlaceDefence;
+								msg << netID;
+								Broadcast(msg);
+							}
 						}
-					}
-					else 
-					{
+						else
+						{
+							sm::Vector3 position = m_grid.PlaceDefence(input.mouseRay);
+							if (position != sm::Vector3(-1, -1, -1))
+							{
+								network::message<GameMsg> msg;
+								msg.header.id = GameMsg::Grid_PlaceDefence;
+								msg << position;
+								Broadcast(msg);
+							}
+						}
+#endif // _DEBUG
+#ifdef NDEBUG
 						sm::Vector3 position = m_grid.PlaceDefence(input.mouseRay);
 						if (position != sm::Vector3(-1, -1, -1))
 						{
@@ -356,20 +366,10 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 							msg.header.id = GameMsg::Grid_PlaceDefence;
 							msg << position;
 							Broadcast(msg);
-						}
-					}
-#endif // _DEBUG
-#ifdef NDEBUG
-					sm::Vector3 position = m_grid.PlaceDefence(input.mouseRay);
-					if (position != sm::Vector3(-1, -1, -1))
-					{
-						network::message<GameMsg> msg;
-						msg.header.id = GameMsg::Grid_PlaceDefence;
-						msg << position;
-						Broadcast(msg);
-					}
+							}
 #endif // NDEBUG
 
+						}
 				}
 			}
 
