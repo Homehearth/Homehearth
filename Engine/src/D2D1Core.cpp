@@ -78,7 +78,7 @@ const bool D2D1Core::Setup(Window* window)
 	const float font = ((window->GetWidth() * res) - (window->GetHeight() * res)) * 0.03f;
 
 	hr = m_writeFactory->CreateTextFormat(
-		L"Times New Roman",
+		L"Ink Free",
 		NULL,
 		DWRITE_FONT_WEIGHT_REGULAR,
 		DWRITE_FONT_STYLE_NORMAL,
