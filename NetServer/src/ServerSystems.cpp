@@ -31,7 +31,8 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		{
 			// ---DEFAULT ENEMY---
 			transform->position = spawnP;
-			meshName->name = "Chest.obj";
+			transform->scale = { 1.8f, 1.8f, 1.8f };
+			meshName->name = "MonsterCharacter.fbx";
 			obb->Extents = sm::Vector3(2.f, 2.f, 2.f);
 			velocity->vel = sm::Vector3(transform->position * -1.0f);
 			velocity->vel.Normalize();
@@ -43,7 +44,8 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		{
 			// ---DEFAULT ENEMY 2---
 			transform->position = spawnP;
-			meshName->name = "StreetLamp.obj";
+			meshName->name = "Barrel.obj";
+			transform->scale = { 1.8f, 1.8f, 1.8f };
 			obb->Extents = sm::Vector3(2.f, 2.f, 2.f);
 			velocity->vel = sm::Vector3(transform->position * -1.0f);
 			velocity->vel.Normalize();
