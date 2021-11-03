@@ -31,7 +31,7 @@ private:
 	void PingServer();
 	void OnClientDisconnect();
 	
-	Entity CreateEntityFromMessage(message<GameMsg>& msg);
+	void UpdateEntityFromMessage(Entity entity, message<GameMsg>& msg);
 
 	void UpdateInput();
 

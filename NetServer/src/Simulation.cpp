@@ -3,20 +3,17 @@
 
 #include "Wave.h"
 
-void Simulation::InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg)const
+void Simulation::InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg, const std::bitset<ecs::Component::COMPONENT_MAX>& componentMask)const
 {
 	std::bitset<ecs::Component::COMPONENT_MAX> compSet;
 
 	for (uint32_t i = 0; i < ecs::Component::COMPONENT_COUNT; i++)
 	{
+		if (!componentMask.test(i))
+			continue;
+
 		switch (i)
 		{
-		case ecs::Component::NETWORK:
-		{
-			compSet.set(ecs::Component::NETWORK);
-			msg << *entity.GetComponent<comp::Network>();
-			break;
-		}
 		case ecs::Component::TRANSFORM:
 		{
 			comp::Transform* t = entity.GetComponent<comp::Transform>();
@@ -63,7 +60,7 @@ void Simulation::InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg)co
 			if (h)
 			{
 				compSet.set(ecs::Component::HEALTH);
-				msg << h->currentHealth << h->isAlive << h->maxHealth;
+				msg << *h;
 			}
 			break;
 		}
@@ -124,6 +121,7 @@ void Simulation::InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg)co
 	}
 
 	msg << static_cast<uint32_t>(compSet.to_ulong());
+	msg << entity.GetComponent<comp::Network>()->id;
 }
 
 message<GameMsg> Simulation::AllEntitiesMessage()const
@@ -352,19 +350,6 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 	m_pGameScene->GetRegistry()->on_update<comp::Network>().connect<&Simulation::OnNetworkEntityUpdated>(this);
 
 
-	// ---DEBUG ENTITY---
-	Entity e = m_pGameScene->CreateEntity();
-	e.AddComponent<comp::Transform>()->position = sm::Vector3(-5, 0, 0);
-	e.AddComponent<comp::MeshName>()->name = "Chest.obj";
-	e.AddComponent<comp::BoundingOrientedBox>()->Extents = sm::Vector3(2.f, 2.f, 2.f);
-	e.AddComponent<comp::Enemy>();
-	e.AddComponent<comp::Health>();
-	*e.AddComponent<comp::CombatStats>() = { 1.0f, 20.f, 1.0f, false, false };
-	e.AddComponent<comp::Tag<TagType::STATIC>>();
-	// send entity
-	e.AddComponent<comp::Network>();
-
-	// ---END OF DEBUG---
 
 	// --- WORLD ---
 	Entity e2 = m_pGameScene->CreateEntity();
@@ -393,6 +378,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 	
 	m_addedEntities.clear();
 	m_removedEntities.clear();
+
 
 	m_pCurrentScene = m_pLobbyScene;
 
@@ -560,7 +546,7 @@ void Simulation::SendSnapshot()
 	this->ScanForDisconnects();
 
 	// all new Entities
-	this->SendEntities(m_addedEntities);
+	this->SendEntities(m_addedEntities, GameMsg::Game_AddEntity);
 	m_addedEntities.clear();
 
 	// all destroyed Entities
@@ -569,95 +555,16 @@ void Simulation::SendSnapshot()
 
 	if (m_pCurrentScene == m_pGameScene)
 	{
-		// Positions
-		network::message<GameMsg> msg;
-		msg.header.id = GameMsg::Game_Snapshot;
-
-		
-		uint32_t count = 0;
-		for (const auto& e : m_updatedEntities)
+		std::bitset<ecs::Component::COMPONENT_MAX> compMask;
+		compMask.set(ecs::Component::TRANSFORM);
+		compMask.set(ecs::Component::HEALTH);
+		compMask.set(ecs::Component::BOUNDING_ORIENTED_BOX);
+		this->SendEntities(m_updatedEntities, GameMsg::Game_Snapshot, compMask);
+		if (m_updatedEntities.size() > 0)
 		{
-			if (!e.IsNull())
-			{
-				std::bitset<ecs::Component::COMPONENT_MAX> compSet;
-				for (int i = 0; i < ecs::Component::COMPONENT_COUNT; i++)
-				{
-					switch (i)
-					{
-					case ecs::Component::TRANSFORM:
-					{
-						comp::Transform* t = e.GetComponent<comp::Transform>();
-						if (t)
-						{
-							compSet.set(ecs::Component::TRANSFORM);
-							msg << *t;
-						}
-						break;
-					}
-					case ecs::Component::HEALTH:
-					{
-						comp::Health* h = e.GetComponent<comp::Health>();
-						if (h)
-						{
-							compSet.set(ecs::Component::HEALTH);
-							msg << *h;
-						}
-						break;
-					}
-					case ecs::Component::BOUNDING_ORIENTED_BOX:
-					{
-						comp::BoundingOrientedBox* b = e.GetComponent<comp::BoundingOrientedBox>();
-						if (b)
-						{
-							compSet.set(ecs::Component::BOUNDING_ORIENTED_BOX);
-							msg << *b;
-						}
-						break;
-					}
-					default:
-						break;
-					}
-				}
-				msg << static_cast<uint32_t>(compSet.to_ulong());
-				msg << e.GetComponent<comp::Network>()->id;
-				count++;
-			}
+			LOG_INFO("Updated %u entities", (uint32_t)m_updatedEntities.size());
 		}
-		msg << count;
 		m_updatedEntities.clear();
-		/*
-		m_pCurrentScene->ForEachComponent<comp::Network, comp::Transform>([&]
-		(comp::Network& n, comp::Transform& t)
-			{
-				msg << t << n.id;
-				i++;
-			});
-		msg << i;
-		*/
-		/*
-		i = 0;
-		m_pCurrentScene->ForEachComponent<comp::Network, comp::Health>([&](comp::Network& n, comp::Health h)
-			{
-				msg << h << n.id;
-				i++;
-			});
-		msg << i;
-		*/
-
-#if DEBUG_SNAPSHOT
-		i = 0;
-		m_pCurrentScene->ForEachComponent<comp::Network, comp::BoundingOrientedBox>([&]
-		(comp::Network& n, comp::BoundingOrientedBox& b)
-			{
-				msg << b << n.id;
-				i++;
-			});
-		msg << i;
-#endif
-
-		msg << this->GetTick();
-
-		this->Broadcast(msg);
 	}
 	else if (m_pCurrentScene == m_pLobbyScene)
 	{
@@ -742,12 +649,21 @@ void Simulation::OnNetworkEntityDestroy(entt::registry& reg, entt::entity entity
 	// Network has not been destroyed yet
 	comp::Network* net = e.GetComponent<comp::Network>();
 	m_removedEntities.push_back(net->id);
+	auto it = std::find(m_updatedEntities.begin(), m_updatedEntities.end(), e);
+	if (it != m_updatedEntities.end())
+	{
+		m_updatedEntities.erase(it);
+	}
 }
 
 void Simulation::OnNetworkEntityUpdated(entt::registry& reg, entt::entity entity)
 {
 	Entity e(reg, entity);
-	m_updatedEntities.push_back(e);
+	if (std::find(m_updatedEntities.begin(), m_updatedEntities.end(), e) == m_updatedEntities.end() &&
+		!e.IsNull())
+	{
+		m_updatedEntities.push_back(e);
+	}
 }
 
 HeadlessScene* Simulation::GetLobbyScene() const
@@ -768,11 +684,12 @@ void Simulation::SendEntity(Entity e, uint32_t exclude)const
 	InsertEntityIntoMessage(e, msg);
 
 	msg << 1U;
+	msg << GetTick();
 
 	this->Broadcast(msg, exclude);
 }
 
-void Simulation::SendEntities(const std::vector<Entity>& entities) const
+void Simulation::SendEntities(const std::vector<Entity>& entities, GameMsg msgID, const std::bitset<ecs::Component::COMPONENT_MAX>& componentMask) const
 {
 	if (entities.size() == 0)
 		return;
@@ -782,7 +699,7 @@ void Simulation::SendEntities(const std::vector<Entity>& entities) const
 	do
 	{
 		message<GameMsg> msg;
-		msg.header.id = GameMsg::Game_AddEntity;
+		msg.header.id = msgID;
 		for (size_t i = sent; i < sent + count; i++)
 		{
 			if (entities[i].IsNull())
@@ -790,10 +707,11 @@ void Simulation::SendEntities(const std::vector<Entity>& entities) const
 				count--;
 				continue;
 			}
-			this->InsertEntityIntoMessage(entities[i], msg);
+			this->InsertEntityIntoMessage(entities[i], msg, componentMask);
 		}
 
 		msg << static_cast<uint32_t>(count);
+		msg << GetTick();
 
 		this->Broadcast(msg);
 		sent += count;
@@ -812,6 +730,7 @@ void Simulation::SendAllEntitiesToPlayer(uint32_t playerID) const
 			count++;
 		});
 	msg << count;
+	msg << GetTick();
 
 	this->m_pServer->SendToClient(playerID, msg);
 }

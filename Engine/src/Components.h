@@ -8,7 +8,6 @@ namespace ecs
 {
 	enum Component : uint32_t
 	{
-		NETWORK,
 		TRANSFORM,
 		VELOCITY,
 		MESH_NAME,

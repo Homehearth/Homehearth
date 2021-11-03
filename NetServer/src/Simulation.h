@@ -32,7 +32,7 @@ private:
 
 	std::vector<Entity> m_updatedEntities;
 
-	void InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg)const;
+	void InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg, const std::bitset<ecs::Component::COMPONENT_MAX>& componentMask = UINT32_MAX) const;
 	message<GameMsg> AllEntitiesMessage()const;
 
 	uint32_t GetTick()const;
@@ -84,7 +84,7 @@ public:
 	HeadlessScene* GetGameScene() const;
 
 	void SendEntity(Entity e, uint32_t exclude = -1)const;
-	void SendEntities(const std::vector<Entity>& entities)const;
+	void SendEntities(const std::vector<Entity>& entities, GameMsg msgID, const std::bitset<ecs::Component::COMPONENT_MAX>& componentMask = UINT32_MAX)const;
 
 	void SendAllEntitiesToPlayer(uint32_t playerID)const;
 	void SendRemoveAllEntitiesToPlayer(uint32_t playerID)const;

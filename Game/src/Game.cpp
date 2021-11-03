@@ -159,60 +159,32 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			}
 			else {
 				LOG_WARNING("Updating: Entity %u not in m_gameEntities, should not happen...", entityID);
-				continue;
+				//continue;
 			}
-
-			uint32_t bits;
-			msg >> bits;
-			std::bitset<ecs::Component::COMPONENT_MAX> compSet(bits);
-
-			for (int j = ecs::Component::COMPONENT_COUNT; j >= 0; j--)
-			{
-				if (compSet.test(j))
-				{
-					switch (j)
-					{
-					case ecs::Component::TRANSFORM:
-					{
-						comp::Transform t;
-						msg >> t;
-						entity.AddComponent<comp::Transform>(t);
-
-						break;
-					}
-					case ecs::Component::HEALTH:
-					{
-						comp::Health h;
-						msg >> h;
-						entity.AddComponent<comp::Health>(h);
-						break;
-					}
-					case ecs::Component::BOUNDING_ORIENTED_BOX:
-					{
-						comp::BoundingOrientedBox b;
-						msg >> b;
-						entity.AddComponent<comp::BoundingOrientedBox>(b);
-						break;
-					}
-					default:
-						break;
-					}
-				}
-			}
+			
+			UpdateEntityFromMessage(entity, msg);
 		}
+		LOG_INFO("Updated %u entities", count);
 
 		break;
 	}
 	case GameMsg::Game_AddEntity:
 	{
+		uint32_t currentTick;
+		msg >> currentTick;
 		uint32_t count; // Could be more than one Entity
 		msg >> count;
 		LOG_INFO("Received %u entities", count);
 
 		for (uint32_t i = 0; i < count; i++)
 		{
-			Entity e = CreateEntityFromMessage(msg);
-			m_gameEntities.insert(std::make_pair(e.GetComponent<comp::Network>()->id, e));
+			Entity e = GetScene("Game").CreateEntity();
+			uint32_t entityID;
+			msg >> entityID;
+			e.AddComponent<comp::Network>(entityID);
+			UpdateEntityFromMessage(e, msg);
+			
+			m_gameEntities.insert(std::make_pair(entityID, e));
 			if (e.GetComponent<comp::Network>()->id == m_localPID)
 			{
 				LOG_INFO("You added yourself, congratulations!");
@@ -434,9 +406,9 @@ void Game::SendStartGame()
 	m_client.Send(msg);
 }
 
-Entity Game::CreateEntityFromMessage(message<GameMsg>& msg)
+void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 {
-	Entity e = GetScene("Game").CreateEntity();
+	
 	uint32_t bits;
 	msg >> bits;
 	std::bitset<ecs::Component::COMPONENT_MAX> compSet(bits);
@@ -447,26 +419,19 @@ Entity Game::CreateEntityFromMessage(message<GameMsg>& msg)
 		{
 			switch (i)
 			{
-			case ecs::Component::NETWORK:
-			{
-				comp::Network n;
-				msg >> n;
-				*e.AddComponent<comp::Network>() = n;
-				break;
-			}
 			case ecs::Component::TRANSFORM:
 			{
 				comp::Transform t;
 				msg >> t;
 				t.rotation.Normalize();
-				*e.AddComponent<comp::Transform>() = t;
+				e.AddComponent<comp::Transform>(t);
 				break;
 			}
 			case ecs::Component::VELOCITY:
 			{
 				comp::Velocity v;
 				msg >> v;
-				*e.AddComponent<comp::Velocity>() = v;
+				e.AddComponent<comp::Velocity>(v);
 				break;
 			}
 			case ecs::Component::MESH_NAME:
@@ -486,56 +451,52 @@ Entity Game::CreateEntityFromMessage(message<GameMsg>& msg)
 			case ecs::Component::HEALTH:
 			{
 				comp::Health heal;
-				msg >> heal.maxHealth;
-				msg >> heal.isAlive;
-				msg >> heal.currentHealth;
-				*e.AddComponent<comp::Health>() = heal;
+				msg >> heal;
+				e.AddComponent<comp::Health>(heal);
 				break;
 			}
 			case ecs::Component::BOUNDING_ORIENTED_BOX:
 			{
 				comp::BoundingOrientedBox box;
 				msg >> box;
-				*e.AddComponent<comp::BoundingOrientedBox>() = box;
+				e.AddComponent<comp::BoundingOrientedBox>(box);
 				break;
 			}
 			case ecs::Component::BOUNDING_SPHERE:
 			{
 				comp::BoundingSphere s;
 				msg >> s;
-				*e.AddComponent<comp::BoundingSphere>() = s;
+				e.AddComponent<comp::BoundingSphere>(s);
 				break;
 			}
 			case ecs::Component::LIGHT:
 			{
 				comp::Light l;
 				msg >> l;
-				*e.AddComponent<comp::Light>() = l;
+				e.AddComponent<comp::Light>(l);
 				break;
 			}
 			case ecs::Component::PLAYER:
 			{
 				comp::Player p;
 				msg >> p;
-				*e.AddComponent<comp::Player>() = p;
+				e.AddComponent<comp::Player>(p);
 				break;
 			}
 			case ecs::Component::TILE:
 			{
 				comp::Tile t;
 				msg >> t;
-				*e.AddComponent<comp::Tile>() = t;
+				e.AddComponent<comp::Tile>(t);
 				break;
 			}
 			default:
-				LOG_WARNING("Retrieved unimplemented component %u", i)
-					break;
+				LOG_WARNING("Retrieved unimplemented component %u", i);
+				break;
 			}
 		}
 	}
 
-
-	return e;
 }
 
 void Game::UpdateInput()
