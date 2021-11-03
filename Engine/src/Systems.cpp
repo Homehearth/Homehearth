@@ -154,7 +154,7 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 		//
 		// attack LOGIC
 		//
-		if (stats.isAttacking)
+		if (stats.isAttacking && stats.cooldownTimer <= 0)
 		{
 			/*
 			for (int i = 0; i < 100; i++)
@@ -289,13 +289,15 @@ void Systems::AISystem(HeadlessScene& scene)
 		Entity* currentClosestPlayer = nullptr;
 		if (npc.currentNode)
 		{
-			if (sm::Vector3::Distance(npc.currentNode->position, transformNPC->position) <= npc.attackRange)
+			if (sm::Vector3::Distance(npc.currentNode->position, transformNPC->position) <= npc.attackRange && npc.hostile)
 			{
 				npc.state = comp::NPC::State::ATTACK;
+				LOG_INFO("Switching to Attack State!");
 			}
 			else if ((sm::Vector3::Distance(npc.currentNode->position, transformNPC->position) >= npc.attackRange + 10 && npc.state == comp::NPC::State::ATTACK))
 			{
 				npc.state = comp::NPC::State::CHASE;
+				LOG_INFO("Switching to Chase State!");
 			}
 		}
 		switch (npc.state)
@@ -337,6 +339,15 @@ void Systems::AISystem(HeadlessScene& scene)
 
 		}
 
-
+		if (sm::Vector3::Distance(transformNPC->position, transformCurrentClosestPlayer->position) <= npc.attackRange && npc.state != comp::NPC::State::ATTACK)
+		{
+			npc.state = comp::NPC::State::ATTACK;
+			LOG_INFO("ATTACKING");
+		}
+		else
+		{
+			//LOG_INFO("IDLE!");
+			npc.state = comp::NPC::State::IDLE;
+		}
 	});
 }
