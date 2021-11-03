@@ -21,8 +21,8 @@ void Engine::Startup()
 
 	// Window Startup:
 	Window::Desc config;
-	config.height = 1080;
-	config.width = 1920;
+	//config.height = 1080;
+	//config.width = 1920;
 	config.title = L"Engine";
 	if (!m_window.Initialize(config))
 	{
@@ -30,6 +30,7 @@ void Engine::Startup()
 	}
 
 	// DirectX Startup:
+	FontCollectionLoader::Initialize();
 	D3D11Core::Get().Initialize(&m_window);
 	D2D1Core::Initialize(&m_window);
 
@@ -109,6 +110,7 @@ void Engine::Run()
     T_DESTROY();
     D2D1Core::Destroy();
 	ResourceManager::Get().Destroy();
+	FontCollectionLoader::Destroy();
 }
 
 
