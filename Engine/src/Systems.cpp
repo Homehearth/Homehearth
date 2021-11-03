@@ -165,7 +165,7 @@ bool Systems::AIAStarSearch(Entity& npc, HeadlessScene& scene)
 	{
 		//Insert currentNode to the path
 		npcComp->path.insert(npcComp->path.begin(), goalNode);
-		if(goalNode->parent)
+		if(goalNode && goalNode->parent)
 			goalNode = goalNode->parent;
 	}
 
@@ -333,7 +333,7 @@ void Systems::AISystem(HeadlessScene& scene)
 		comp::Transform* transformCurrentClosestPlayer = closestPlayer->GetComponent<comp::Transform>();
 		if (npc.currentNode)
 		{
-			if (sm::Vector3::Distance(transformNPC->position, transformCurrentClosestPlayer->position) <= npc.attackRange)
+			/*if (sm::Vector3::Distance(transformNPC->position, transformCurrentClosestPlayer->position) <= npc.attackRange)
 			{
 				npc.state = comp::NPC::State::CHASE;
 				LOG_INFO("Switching to CHASE State!");
@@ -342,7 +342,9 @@ void Systems::AISystem(HeadlessScene& scene)
 			{
 				npc.state = comp::NPC::State::ASTAR;
 				LOG_INFO("Switching to ASTAR State!");
-			}
+			}*/
+
+			npc.state = comp::NPC::State::CHASE;
 		}
 
 		switch (npc.state)
@@ -372,7 +374,7 @@ void Systems::AISystem(HeadlessScene& scene)
 			}
 			else
 			{
-				if (velocityTowardsPlayer)
+				if (velocityTowardsPlayer && npc.currentNode)
 				{
 					sm::Vector3 nodePos = npc.currentNode->position;
 					velocityTowardsPlayer->vel = nodePos - transformNPC->position;
