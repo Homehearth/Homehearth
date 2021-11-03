@@ -33,9 +33,9 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 			transform->position = spawnP;
 			meshName->name = "Chest.obj";
 			obb->Extents = sm::Vector3(2.f, 2.f, 2.f);
-			velocity->vel = sm::Vector3(transform->position * -1.0f);
+			/*velocity->vel = sm::Vector3(transform->position * -1.0f);
 			velocity->vel.Normalize();
-			velocity->vel *= 5.0f;
+			velocity->vel *= 5.0f;*/
 			*combatStats = {1.0f, 20.f, 1.0f, false, false};
 		}
 		break;
@@ -45,9 +45,9 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 			transform->position = spawnP;
 			meshName->name = "StreetLamp.obj";
 			obb->Extents = sm::Vector3(2.f, 2.f, 2.f);
-			velocity->vel = sm::Vector3(transform->position * -1.0f);
+			/*velocity->vel = sm::Vector3(transform->position * -1.0f);
 			velocity->vel.Normalize();
-			velocity->vel *= 5.0f;
+			velocity->vel *= 5.0f;*/
 			*combatStats = { 1.0f, 20.f, 1.0f, false, false };
 		}
 		break;

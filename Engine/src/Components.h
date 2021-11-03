@@ -125,6 +125,7 @@ namespace ecs
 			sm::Vector2 id;
 			std::vector<Node*> connections;
 			ecs::component::Node* parent;
+			bool reachable = true;
 			void ResetFGH()
 			{
 				f = FLT_MAX, g = FLT_MAX, h = FLT_MAX;

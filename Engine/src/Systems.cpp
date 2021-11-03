@@ -46,14 +46,15 @@ comp::Node* FindClosestNode(HeadlessScene& scene, sm::Vector3 position)
 		{
 			if (currentClosest)
 			{
-				if (sm::Vector3::Distance(node.position, position) < sm::Vector3::Distance(currentClosest->position, position))
+				if (sm::Vector3::Distance(node.position, position) < sm::Vector3::Distance(currentClosest->position, position) && node.reachable)
 				{
 					currentClosest = &node;
 				}
 			}
 			else
 			{
-				currentClosest = &node;
+				if(node.reachable)
+					currentClosest = &node;
 			}
 		});
 
@@ -80,7 +81,6 @@ bool Systems::AIAStarSearch(Entity& npc, HeadlessScene& scene)
 	startingNode->parent = startingNode;
 
 	comp::Node* nodeToAdd = nullptr;
-	int index = 0;
 	while (!openList.empty() && nodeToAdd != goalNode)
 	{
 		nodeToAdd = openList.at(0);
@@ -154,19 +154,16 @@ bool Systems::AIAStarSearch(Entity& npc, HeadlessScene& scene)
 		}
 
 		closedList.push_back(nodeToAdd);
-
-		index++;
-
 	}
 
 	//TracePath
-
 	while (goalNode != startingNode)
 	{
 		//Insert currentNode to the path
 		npcComp->path.insert(npcComp->path.begin(), goalNode);
-		if(goalNode && goalNode->parent)
-			goalNode = goalNode->parent;
+		if (goalNode->parent == nullptr) //37, 36 / 32, 33
+			float stop = 2.f;
+		goalNode = goalNode->parent;
 	}
 
 	scene.ForEachComponent<comp::Node>([&](Entity entity, comp::Node& node)
@@ -174,8 +171,6 @@ bool Systems::AIAStarSearch(Entity& npc, HeadlessScene& scene)
 		node.ResetFGH();
 		node.parent = nullptr;
 	});
-
-	//LOG_INFO("Goal Node Position: %lf %lf %lf", goalNode->position.x, goalNode->position.y, goalNode->position.z);
 
 	return true;
 }
@@ -333,19 +328,31 @@ void Systems::AISystem(HeadlessScene& scene)
 		comp::Transform* transformCurrentClosestPlayer = closestPlayer->GetComponent<comp::Transform>();
 		if (npc.currentNode)
 		{
-			/*if (sm::Vector3::Distance(transformNPC->position, transformCurrentClosestPlayer->position) <= npc.attackRange)
+			/*if (sm::Vector3::Distance(transformNPC->position, transformCurrentClosestPlayer->position) <= 100.f)
 			{
 				npc.state = comp::NPC::State::CHASE;
 				LOG_INFO("Switching to CHASE State!");
 			}
-			else if ((sm::Vector3::Distance(transformNPC->position, transformCurrentClosestPlayer->position) >= npc.attackRange + 100 && npc.state != comp::NPC::State::ASTAR))
+			else if ((sm::Vector3::Distance(transformNPC->position, transformCurrentClosestPlayer->position) >= npc.attackRange + 100.f && npc.state != comp::NPC::State::ASTAR))
 			{
 				npc.state = comp::NPC::State::ASTAR;
 				LOG_INFO("Switching to ASTAR State!");
-			}*/
+			}
 
-			npc.state = comp::NPC::State::CHASE;
+			else if (sm::Vector3::Distance(transformNPC->position, transformCurrentClosestPlayer->position) <= npc.attackRange)
+			{
+				comp::CombatStats* stats = entity.GetComponent<comp::CombatStats>();
+
+				stats->targetDir = transformCurrentClosestPlayer->position - transformNPC->position;
+				stats->targetDir.Normalize();
+				stats->isAttacking = true;
+			}*/
+			npc.state = comp::NPC::State::ASTAR;
 		}
+
+		//npc.state = comp::NPC::State::CHASE;
+
+		
 
 		switch (npc.state)
 		{
@@ -369,6 +376,7 @@ void Systems::AISystem(HeadlessScene& scene)
 				}
 				else
 				{
+					npc.currentNode = FindClosestNode(scene, transformNPC->position);
 					AIAStarSearch(entity, scene);
 				}
 			}

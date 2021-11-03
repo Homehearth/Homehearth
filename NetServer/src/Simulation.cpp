@@ -433,7 +433,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 	GridProperties_t gridOption;
 	m_grid.Initialize(gridOption.mapSize, gridOption.position, gridOption.fileName, m_pGameScene);
 	LOG_INFO("Creating Nodes");
-	//this->AICreateNodes();
+	this->AICreateNodes();
 	m_addedEntities.clear();
 	m_removedEntities.clear();
 
@@ -513,6 +513,12 @@ bool Simulation::AICreateNodes()
 		comp::Transform* tileTransform = tiles->at(i).GetComponent<comp::Transform>();
 		node.AddComponent<comp::Node>()->position = tileTransform->position;
 		node.GetComponent<comp::Node>()->id = tiles->at(i).GetComponent<comp::Tile>()->gridID;
+		if (tiles->at(i).GetComponent<comp::Tile>()->type == TileType::BUILDING ||
+			tiles->at(i).GetComponent<comp::Tile>()->type == TileType::DEFENCE ||
+			tiles->at(i).GetComponent<comp::Tile>()->type == TileType::UNPLACABLE)
+		{
+			node.GetComponent<comp::Node>()->reachable = false;
+		}
 		nodes.push_back(node.GetComponent<comp::Node>());
 	}
 
