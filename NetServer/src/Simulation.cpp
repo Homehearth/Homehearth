@@ -538,8 +538,8 @@ bool Simulation::AddPlayer(uint32_t playerID, const std::string& namePlate)
 	Entity player = m_pGameScene->CreateEntity();
 	comp::Transform* transform = player.AddComponent<comp::Transform>();
 	transform->position = playerSpawnPoint;
-	
 	transform->scale = {1.8f, 1.8f, 1.8f};
+	
 	player.AddComponent<comp::Velocity>();
 	player.AddComponent<comp::NamePlate>()->namePlate = namePlate;
 
