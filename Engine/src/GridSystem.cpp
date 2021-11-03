@@ -181,7 +181,7 @@ Entity* GridSystem::GetTileByID(sm::Vector2 id)
 		for (int i = 0; i < m_tiles.size(); i++)
 		{
 			comp::Tile* tile = m_tiles.at(i).GetComponent<comp::Tile>();
-			if (tile->gridID == id);
+			if (tile->gridID == id)
 			{
 				return &m_tiles.at(i);
 			}
