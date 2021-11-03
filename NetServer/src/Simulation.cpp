@@ -458,7 +458,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 	GridProperties_t gridOption;
 	m_grid.Initialize(gridOption.mapSize, gridOption.position, gridOption.fileName, m_pGameScene);
 	LOG_INFO("Creating Nodes");
-	this->AICreateNodes();
+	//this->AICreateNodes();
 	m_addedEntities.clear();
 	m_removedEntities.clear();
 

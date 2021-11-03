@@ -363,12 +363,12 @@ void Systems::AISystem(HeadlessScene& scene)
 	{
 		comp::Transform* transformNPC = entity.GetComponent<comp::Transform>();
 		Entity* currentClosestPlayer = nullptr;
-		npc.currentNode = FindClosestNode(scene, transformNPC->position);
+		//npc.currentNode = FindClosestNode(scene, transformNPC->position);
 
 		Entity* closestPlayer = FindClosestPlayer(scene, transformNPC->position);
 		comp::Velocity* velocityTowardsPlayer = entity.GetComponent<comp::Velocity>();
 		comp::Transform* transformCurrentClosestPlayer = closestPlayer->GetComponent<comp::Transform>();
-		if (npc.currentNode)
+	/*	if (npc.currentNode)
 		{
 			if (sm::Vector3::Distance(transformNPC->position, transformCurrentClosestPlayer->position) <= 100.f && npc.state != comp::NPC::State::CHASE)
 			{
@@ -391,8 +391,18 @@ void Systems::AISystem(HeadlessScene& scene)
 			}
 		}
 		else
-			npc.state = comp::NPC::State::IDLE;
+			npc.state = comp::NPC::State::IDLE;*/
 
+		npc.state = comp::NPC::State::CHASE;
+
+		if (sm::Vector3::Distance(transformNPC->position, transformCurrentClosestPlayer->position) <= npc.attackRange)
+		{
+			comp::CombatStats* stats = entity.GetComponent<comp::CombatStats>();
+
+			stats->targetDir = transformCurrentClosestPlayer->position - transformNPC->position;
+			stats->targetDir.Normalize();
+			stats->isAttacking = true;
+		}
 		
 
 		switch (npc.state)
