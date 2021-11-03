@@ -309,15 +309,43 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 				}
 				if (input.rightMouse)
 				{
-					uint32_t netID = m_grid.PlaceDefence(input.mouseRay);
-					if (netID != -1)
+#ifdef _DEBUG
+					if (RENDER_GRID)
+					{
+						std::cout << "Clicked tile " << std::endl;
+						uint32_t netID = m_grid.PlaceDefenceRenderGrid(input.mouseRay);
+
+						if (netID != -1)
+						{
+							network::message<GameMsg> msg;
+							msg.header.id = GameMsg::Grid_PlaceDefence;
+							msg << netID;
+							Broadcast(msg);
+						}
+					}
+					else 
+					{
+						sm::Vector3 position = m_grid.PlaceDefence(input.mouseRay);
+						if (position != sm::Vector3(-1, -1, -1))
+						{
+							network::message<GameMsg> msg;
+							msg.header.id = GameMsg::Grid_PlaceDefence;
+							msg << position;
+							Broadcast(msg);
+						}
+					}
+#endif // _DEBUG
+#ifdef NDEBUG
+					sm::Vector3 position = m_grid.PlaceDefence(input.mouseRay);
+					if (position != sm::Vector3(-1, -1, -1))
 					{
 						network::message<GameMsg> msg;
 						msg.header.id = GameMsg::Grid_PlaceDefence;
-
-						msg << netID;
+						msg << position;
 						Broadcast(msg);
 					}
+#endif // NDEBUG
+
 				}
 			}
 
@@ -482,10 +510,12 @@ bool Simulation::AddPlayer(uint32_t playerID, const std::string& namePlate)
 
 	// Create Player entity in Game scene
 	Entity player = m_pGameScene->CreateEntity();
-	player.AddComponent<comp::Transform>()->position = sm::Vector3(320.f,0,-310.f);
+	comp::Transform* transform = player.AddComponent<comp::Transform>();
+	transform->position = sm::Vector3(320.f, 0, -310.f);
+	transform->scale = {1.8f, 1.8f, 1.8f};
 	player.AddComponent<comp::Velocity>();
 	player.AddComponent<comp::NamePlate>()->namePlate = namePlate;
-	player.AddComponent<comp::MeshName>()->name = "Arrow.fbx";
+	player.AddComponent<comp::MeshName>()->name = "GameCharacter.fbx";
 #ifdef _DEBUG
 	player.AddComponent<comp::Player>()->runSpeed = 25.f;
 #else

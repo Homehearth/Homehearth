@@ -144,7 +144,7 @@ const bool Intersect::RayIntersectPlane(const Ray_t& ray, const comp::PlaneColli
 	sm::Vector3 disToCenter = (intersecPoint - planeCollider.center);
 	double disToCenterL = (intersecPoint - planeCollider.center).Length();
 
-	/*if (disToCenter.x >= halfLenght && disToCenter.y >= halfLenght)
+	/*f (disToCenter.x >= halfLenght && disToCenter.y >= halfLenght)
 		return false;*/
 
 
