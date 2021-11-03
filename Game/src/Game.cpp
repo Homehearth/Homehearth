@@ -282,7 +282,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			Entity defence = GetScene("Game").CreateEntity();
 			comp::Renderable* render = defence.AddComponent<comp::Renderable>();
 			defence.AddComponent<comp::Transform>()->position = position;
-			defence.AddComponent<comp::Transform>()->scale = { 4.2f, 0.5f, 4.2f };
+			defence.GetComponent<comp::Transform>()->scale = { 4.2f, 0.5f, 4.2f };
 			render->model = ResourceManager::Get().GetResource<RModel>("Defence.obj");
 			render->model->ChangeMaterial("TileDefence.mtl");
 			LOG_INFO("Placed defence");
@@ -295,7 +295,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		Entity defence = GetScene("Game").CreateEntity();
 		comp::Renderable* render = defence.AddComponent<comp::Renderable>();
 		defence.AddComponent<comp::Transform>()->position = position;
-		defence.AddComponent<comp::Transform>()->scale = { 4.2f, 0.5f, 4.2f };
+		defence.GetComponent<comp::Transform>()->scale = { 4.2f, 0.5f, 4.2f };
 		render->model = ResourceManager::Get().GetResource<RModel>("Defence.obj");
 		render->model->ChangeMaterial("TileDefence.mtl");
 		LOG_INFO("Placed defence");

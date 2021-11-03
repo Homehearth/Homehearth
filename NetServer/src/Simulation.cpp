@@ -307,7 +307,9 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 
 					}
 				}
-				if (input.rightMouse)
+
+				//Place defence on grid
+				if (input.rightMouse) 
 				{
 #ifdef _DEBUG
 					if (RENDER_GRID)

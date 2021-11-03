@@ -109,6 +109,10 @@ uint32_t GridSystem::PlaceDefenceRenderGrid(Ray_t mouseRay)
 					if (entity.GetComponent<comp::Network>())
 					{
 						returnID = entity.GetComponent<comp::Network>()->id;
+						comp::BoundingOrientedBox* collider = entity.AddComponent<comp::BoundingOrientedBox>();
+						collider->Center = entity.GetComponent<comp::Transform>()->position;
+						collider->Extents = { entity.GetComponent<comp::Transform>()->scale.x, 10.f , entity.GetComponent<comp::Transform>()->scale.z };
+						entity.AddComponent<comp::Tag<TagType::STATIC>>();
 					}
 					
 				}
@@ -142,6 +146,10 @@ sm::Vector3 GridSystem::PlaceDefence(Ray_t mouseRay)
 					tile.type = TileType::DEFENCE;
 
 					returnPosition = entity.GetComponent<comp::Transform>()->position;
+					comp::BoundingOrientedBox* collider = entity.AddComponent<comp::BoundingOrientedBox>();
+					collider->Center = returnPosition;
+					collider->Extents = { entity.GetComponent<comp::Transform>()->scale.x, 10.f , entity.GetComponent<comp::Transform>()->scale.z };
+					entity.AddComponent<comp::Tag<TagType::STATIC>>();
 
 
 				}
