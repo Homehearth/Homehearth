@@ -44,11 +44,11 @@ void Game::UpdateNetwork(float deltaTime)
 		{
 			if (GetCurrentScene()->GetCurrentCamera()->GetCameraType() == CAMERATYPE::PLAY)
 			{
-				
+
 				message<GameMsg> msg;
 				msg.header.id = GameMsg::Game_PlayerInput;
 
-				
+
 				msg << this->m_localPID << m_gameID << m_inputState;
 
 				m_client.Send(msg);
@@ -78,8 +78,15 @@ bool Game::OnStartup()
 void Game::OnUserUpdate(float deltaTime)
 {
 	static float pingCheck = 0.f;
+	const float PING_TARGET = 5.0f;
 
 
+	pingCheck += deltaTime;
+	if (pingCheck >= PING_TARGET)
+	{
+		PingServer();
+		pingCheck = 0.f;
+	}
 	/*
 if (GetCurrentScene() == &GetScene("Game") && GetCurrentScene()->GetCurrentCamera()->GetCameraType() == CAMERATYPE::PLAY)
 {
@@ -107,9 +114,11 @@ if (GetCurrentScene() == &GetScene("Game") && GetCurrentScene()->GetCurrentCamer
 }
 		*/
 
-		//Update InputState
-	this->UpdateInput();
-
+	//Update InputState
+	if (GetCurrentScene() == &GetScene("Game"))
+	{
+		this->UpdateInput();
+	}
 }
 
 
@@ -160,7 +169,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			{
 				m_gameEntities[entityID].AddComponent<comp::BoundingOrientedBox>(b);
 			}
-			else 
+			else
 			{
 				LOG_WARNING("Adding BoundingOrientedBox: Entity %u not in m_gameEntities, should not happen...", entityID);
 			}
@@ -246,7 +255,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 					renderable->model = ResourceManager::Get().GetResource<RModel>("Plane2.obj");
 					renderable->model->ChangeMaterial("TileBuilding.mtl");
 				}
-				
+
 			}
 #endif //  _DEBUG
 
@@ -320,7 +329,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		Element2D* elem = GetScene("Game").GetCollection("timer")->elements[0].get();
 		if (elem)
 		{
-			if(m_waveTimer > 0)
+			if (m_waveTimer > 0)
 				dynamic_cast<rtd::Text*>(elem)->SetText("\nUntil next Wave:\n" + std::to_string(m_waveTimer));
 			else
 				dynamic_cast<rtd::Text*>(elem)->SetText("\nUnder Attack!");
@@ -556,6 +565,7 @@ void Game::UpdateInput()
 	{
 		m_inputState.leftMouse = true;
 		m_inputState.mouseRay = InputSystem::Get().GetMouseRay();
+
 	}
 }
 
