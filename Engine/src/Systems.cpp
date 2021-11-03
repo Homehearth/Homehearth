@@ -167,8 +167,9 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 			*/
 			//Creates an entity that's used to check collision if an attack lands.
 			Entity attackCollider = scene.CreateEntity();
-			attackCollider.AddComponent<comp::Transform>()->position = transform.position + stats.targetDir;
-			attackCollider.AddComponent<comp::BoundingOrientedBox>()->Center = transform.position + stats.targetDir;
+			attackCollider.AddComponent<comp::Transform>()->position = transform.position + stats.targetDir * 10.f;
+			//attackCollider.AddComponent<comp::BoundingOrientedBox>()->Center = transform.position + stats.targetDir;
+			attackCollider.AddComponent<comp::BoundingOrientedBox>()->Extents = sm::Vector3(2.f, 2.f, 2.f);
 			comp::Attack* atk = attackCollider.AddComponent<comp::Attack>();
 			atk->lifeTime = stats.attackLifeTime;
 			atk->damage = stats.attackDamage;
@@ -176,7 +177,7 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 			//If the attack is ranged add a velocity to the entity.
 			if (stats.isRanged)
 			{
-				sm::Vector3 vel = stats.targetDir * 10.f; //CHANGE HERE WHEN FORWARD GETS FIXED!!!!!!
+				sm::Vector3 vel = stats.targetDir * 100.f; //CHANGE HERE WHEN FORWARD GETS FIXED!!!!!!
 				attackCollider.AddComponent<comp::Velocity>()->vel = vel;
 			}
 
@@ -287,6 +288,10 @@ void Systems::AISystem(HeadlessScene& scene)
 	{
 		comp::Transform* transformNPC = entity.GetComponent<comp::Transform>();
 		Entity* currentClosestPlayer = nullptr;
+
+		Entity* closestPlayer = FindClosestPlayer(scene, transformNPC->position);
+		comp::Velocity* velocityTowardsPlayer = entity.GetComponent<comp::Velocity>();
+		comp::Transform* transformCurrentClosestPlayer = closestPlayer->GetComponent<comp::Transform>();
 		if (npc.currentNode)
 		{
 			if (sm::Vector3::Distance(npc.currentNode->position, transformNPC->position) <= npc.attackRange && npc.hostile)
@@ -304,6 +309,8 @@ void Systems::AISystem(HeadlessScene& scene)
 		{
 		case comp::NPC::State::ATTACK:
 			//Do attacking things
+			entity.GetComponent<comp::CombatStats>()->targetDir = transformCurrentClosestPlayer->position - transformNPC->position;
+			entity.GetComponent<comp::CombatStats>()->targetDir.Normalize();
 			entity.GetComponent<comp::CombatStats>()->isAttacking = true;
 			break;
 		case comp::NPC::State::CHASE:
@@ -328,9 +335,7 @@ void Systems::AISystem(HeadlessScene& scene)
 			break;
 		}
 
-		Entity* closestPlayer = FindClosestPlayer(scene, transformNPC->position);
-		comp::Velocity* velocityTowardsPlayer = entity.GetComponent<comp::Velocity>();
-		comp::Transform* transformCurrentClosestPlayer = closestPlayer->GetComponent<comp::Transform>();
+		
 		if (velocityTowardsPlayer)
 		{
 			velocityTowardsPlayer->vel = transformCurrentClosestPlayer->position - transformNPC->position;
@@ -342,11 +347,9 @@ void Systems::AISystem(HeadlessScene& scene)
 		if (sm::Vector3::Distance(transformNPC->position, transformCurrentClosestPlayer->position) <= npc.attackRange && npc.state != comp::NPC::State::ATTACK)
 		{
 			npc.state = comp::NPC::State::ATTACK;
-			LOG_INFO("ATTACKING");
 		}
 		else
 		{
-			//LOG_INFO("IDLE!");
 			npc.state = comp::NPC::State::IDLE;
 		}
 	});
