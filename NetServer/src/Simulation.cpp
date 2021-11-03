@@ -77,6 +77,17 @@ void Simulation::InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg)co
 			}
 			break;
 		}
+
+		case ecs::Component::PLANECOLLIDER:
+		{
+			comp::PlaneCollider* b = entity.GetComponent<comp::PlaneCollider>();
+			if (b)
+			{
+				compSet.set(ecs::Component::PLANECOLLIDER);
+				msg << *b;
+			}
+			break;
+		}
 		case ecs::Component::LIGHT:
 		{
 			comp::Light* l = entity.GetComponent<comp::Light>();
