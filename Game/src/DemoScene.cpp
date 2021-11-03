@@ -431,27 +431,28 @@ void sceneHelp::SetupLobbyJoinScreen(Game* game)
 
 	rtd::TextField* lobbyField = lobbyCollection->AddElement<rtd::TextField>(draw_text_t(width / 8, height - (height / 3.33f), width / 4, D2D1Core::GetDefaultFontSize()));
 	lobbyField->SetDescriptionText("Input Lobby ID");
-	rtd::Button* lobbyButton = lobbyCollection->AddElement<rtd::Button>("StartButton.png", draw_t(width / 2, height - (height / 3.33f), width / 4, height / 8));
+	rtd::Button* startLobbyButton = lobbyCollection->AddElement<rtd::Button>("Button.png", draw_t(width / 2, height - (height / 6.f), width / 4, height / 8));
+	lobbyCollection->AddElement<rtd::Text>("Create Lobby", draw_text_t(width / 2, height - (height / 6.f), width / 4, height / 8));
+	rtd::Button* lobbyButton = lobbyCollection->AddElement<rtd::Button>("StartButton.png", draw_t(width / 8, height - (height / 6.f), width / 4, height / 8));
 	rtd::Button* exitButton = lobbyCollection->AddElement<rtd::Button>("demoExitButton.png", draw_t(0.0f, 0.0f, width / 24, height / 16));
 	exitButton->SetOnPressedEvent([=] {
 		game->m_client.Disconnect();
 		});
 
+	startLobbyButton->SetOnPressedEvent([=]
+		{
+			game->m_playerName = *nameInputField->RawGetBuffer();
+			game->CreateLobby();
+
+			// Update own name.
+			dynamic_cast<rtd::Text*>(game->GetScene("Lobby").GetCollection("playerIcon1")->elements[1].get())->SetText(game->m_playerName);
+		});
 	lobbyButton->SetOnPressedEvent([=]()
 		{
 			std::string* lobbyString = lobbyField->RawGetBuffer();
 
 			if (lobbyString)
 			{
-				if (lobbyString->size() == 0)
-				{
-					game->m_playerName = *nameInputField->RawGetBuffer();
-					game->CreateLobby();
-
-					// Update own name.
-					dynamic_cast<rtd::Text*>(game->GetScene("Lobby").GetCollection("playerIcon1")->elements[1].get())->SetText(game->m_playerName);
-				}
-				else
 				{
 					game->m_playerName = *nameInputField->RawGetBuffer();
 					int lobbyID = -1;
