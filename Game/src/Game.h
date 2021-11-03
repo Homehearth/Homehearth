@@ -16,6 +16,7 @@ private:
 	uint32_t m_waveTimer;
 
 
+	bool m_isLeavingLobby;
 	comp::Transform test;
 	float m_predictionThreshhold;
 
@@ -35,6 +36,9 @@ private:
 	Entity CreateEntityFromMessage(message<GameMsg>& msg);
 
 	void UpdateInput();
+	void PlaceDefenceDebug(message<GameMsg>& msg);
+	void PlaceDefenceRelease(message<GameMsg>& msg);
+	void CreateVisualGrid(Entity e);
 
 public:
 	Client m_client;
