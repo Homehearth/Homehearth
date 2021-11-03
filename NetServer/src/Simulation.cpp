@@ -472,11 +472,11 @@ bool Simulation::AICreateNodes()
 		comp::Tile* entityTile = tiles->at(i).GetComponent<comp::Tile>();
 		sm::Vector2 currentID = entityTile->gridID;
 		//Get Neighbors
-		Entity* currentTile = m_grid.GetTileByID(currentID + sm::Vector2(-1, 0));
+		Entity* currentTile = m_grid.GetTileByID(currentID);
 		if ((currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
 			|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
 		{
-
+			currentTile = m_grid.GetTileByID(currentID + sm::Vector2(-1, 0));
 			//TODO: Improve this bad code. EXTREMELY TEMPORARY
 			//Left
 			if (currentTile && (currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT

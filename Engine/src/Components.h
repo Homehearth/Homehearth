@@ -139,8 +139,8 @@ namespace ecs
 			enum class State
 			{
 				IDLE,
-				CHASE,
-				ATTACK
+				ASTAR,
+				CHASE
 			} state;
 			float movementSpeed = 2.f;
 			float attackRange = 10.f;
