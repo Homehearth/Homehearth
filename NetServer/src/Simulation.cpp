@@ -147,8 +147,8 @@ void Simulation::CreateWaves()
 	Wave wave1, wave2; // Default: WaveType::Zone
 	{ // Wave_1 Group_1
 		Wave::Group group1;
-		group1.AddEnemy(EnemyType::Default, 5);
-		group1.AddEnemy(EnemyType::Default2, 5);
+		group1.AddEnemy(EnemyType::Default, 50);
+		group1.AddEnemy(EnemyType::Default2, 50);
 		group1.SetSpawnPoint({ 200.f, 0.0f });
 		wave1.SetTimeLimit(5);
 		wave1.AddGroup(group1);
@@ -156,7 +156,7 @@ void Simulation::CreateWaves()
 
 	{ // Wave_1 Group_2
 		Wave::Group group2;
-		group2.AddEnemy(EnemyType::Default, 5);
+		group2.AddEnemy(EnemyType::Default, 200);
 		group2.SetSpawnPoint({ -200.f, 0.0f });
 		wave1.AddGroup(group2);
 	}
@@ -349,6 +349,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 
 	m_pGameScene->GetRegistry()->on_construct<comp::Network>().connect<&Simulation::OnNetworkEntityCreate>(this);
 	m_pGameScene->GetRegistry()->on_destroy<comp::Network>().connect<&Simulation::OnNetworkEntityDestroy>(this);
+	m_pGameScene->GetRegistry()->on_update<comp::Network>().connect<&Simulation::OnNetworkEntityUpdated>(this);
 
 
 	// ---DEBUG ENTITY---
@@ -573,8 +574,47 @@ void Simulation::SendSnapshot()
 		msg.header.id = GameMsg::Game_Snapshot;
 
 		
-
-		uint32_t i = 0;
+		uint32_t count = 0;
+		for (const auto& e : m_updatedEntities)
+		{
+			if (!e.IsNull())
+			{
+				std::bitset<ecs::Component::COMPONENT_MAX> compSet;
+				for (int i = 0; i < ecs::Component::COMPONENT_COUNT; i++)
+				{
+					switch (i)
+					{
+					case ecs::Component::TRANSFORM:
+					{
+						comp::Transform* t = e.GetComponent<comp::Transform>();
+						if (t)
+						{
+							compSet.set(ecs::Component::TRANSFORM);
+							msg << *t;
+						}
+						break;
+					}
+					case ecs::Component::HEALTH:
+					{
+						comp::Health* h = e.GetComponent<comp::Health>();
+						if (h)
+						{
+							compSet.set(ecs::Component::HEALTH);
+							msg << *h;
+						}
+					}
+					default:
+						break;
+					}
+				}
+				msg << static_cast<uint32_t>(compSet.to_ulong());
+				msg << e.GetComponent<comp::Network>()->id;
+				count++;
+			}
+		}
+		msg << count;
+		m_updatedEntities.clear();
+		/*
 		m_pCurrentScene->ForEachComponent<comp::Network, comp::Transform>([&]
 		(comp::Network& n, comp::Transform& t)
 			{
@@ -582,7 +622,8 @@ void Simulation::SendSnapshot()
 				i++;
 			});
 		msg << i;
-
+		*/
+		/*
 		i = 0;
 		m_pCurrentScene->ForEachComponent<comp::Network, comp::Health>([&](comp::Network& n, comp::Health h)
 			{
@@ -590,6 +631,7 @@ void Simulation::SendSnapshot()
 				i++;
 			});
 		msg << i;
+		*/
 
 #if DEBUG_SNAPSHOT
 		i = 0;
@@ -691,6 +733,12 @@ void Simulation::OnNetworkEntityDestroy(entt::registry& reg, entt::entity entity
 	m_removedEntities.push_back(net->id);
 }
 
+void Simulation::OnNetworkEntityUpdated(entt::registry& reg, entt::entity entity)
+{
+	Entity e(reg, entity);
+	m_updatedEntities.push_back(e);
+}
+
 HeadlessScene* Simulation::GetLobbyScene() const
 {
 	return m_pLobbyScene;
@@ -718,7 +766,7 @@ void Simulation::SendEntities(const std::vector<Entity>& entities) const
 	if (entities.size() == 0)
 		return;
 
-	int32_t count = min(entities.size(), 50);
+	int32_t count = min(entities.size(), 10);
 	size_t sent = 0;
 	do
 	{
@@ -726,6 +774,11 @@ void Simulation::SendEntities(const std::vector<Entity>& entities) const
 		msg.header.id = GameMsg::Game_AddEntity;
 		for (size_t i = sent; i < sent + count; i++)
 		{
+			if (entities[i].IsNull())
+			{
+				count--;
+				continue;
+			}
 			this->InsertEntityIntoMessage(entities[i], msg);
 		}
 
@@ -733,7 +786,7 @@ void Simulation::SendEntities(const std::vector<Entity>& entities) const
 
 		this->Broadcast(msg);
 		sent += count;
-		count = min(entities.size() - sent, 50);
+		count = min(entities.size() - sent, 10);
 	} while (sent < entities.size());
 }
 

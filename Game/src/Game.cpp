@@ -146,54 +146,51 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		msg >> currentTick;
 		uint32_t count;
 		msg >> count;
-		uint32_t entityID;
 
-
-#if DEBUG_SNAPSHOT
-		comp::BoundingOrientedBox b;
-
-		for (uint32_t i = 0; i < count; i++)
+		for (int i = 0; i < count; i++)
 		{
-			msg >> entityID >> b;
+			uint32_t entityID;
+			msg >> entityID;
+
+			Entity entity;
 			if (m_gameEntities.find(entityID) != m_gameEntities.end())
 			{
-				m_gameEntities[entityID].AddComponent<comp::BoundingOrientedBox>(b);
+				entity = m_gameEntities.at(entityID);
 			}
-			else 
-			{
-				LOG_WARNING("Adding BoundingOrientedBox: Entity %u not in m_gameEntities, should not happen...", entityID);
+			else {
+				LOG_WARNING("Updating: Entity %u not in m_gameEntities, should not happen...", entityID);
+				continue;
 			}
-		}
 
-		msg >> count;
-#endif
+			uint32_t bits;
+			msg >> bits;
+			std::bitset<ecs::Component::COMPONENT_MAX> compSet(bits);
 
-		comp::Health h;
-		for (uint32_t i = 0; i < count; i++)
-		{
-			msg >> entityID >> h;
-			if (m_gameEntities.find(entityID) != m_gameEntities.end())
+			for (int j = ecs::Component::COMPONENT_COUNT; j >= 0; j--)
 			{
-				m_gameEntities[entityID].AddComponent<comp::Health>(h);
-			}
-			else
-			{
-				LOG_WARNING("Adding Health: Entity %u not in m_gameEntities, should not happen...", entityID);
-			}
-		}
-		msg >> count;
+				if (compSet.test(j))
+				{
+					switch (j)
+					{
+					case ecs::Component::TRANSFORM:
+					{
+						comp::Transform t;
+						msg >> t;
+						entity.AddComponent<comp::Transform>(t);
 
-		comp::Transform t;
-		for (uint32_t i = 0; i < count; i++)
-		{
-			msg >> entityID >> t;
-			if (m_gameEntities.find(entityID) != m_gameEntities.end())
-			{
-				m_gameEntities[entityID].AddComponent<comp::Transform>(t);
-			}
-			else
-			{
-				LOG_WARNING("Adding Transform: Entity %u not in m_gameEntities, should not happen...", entityID);
+						break;
+					}
+					case ecs::Component::HEALTH:
+					{
+						comp::Health h;
+						msg >> h;
+						entity.AddComponent<comp::Health>(h);
+						break;
+					}
+					default:
+						break;
+					}
+				}
 			}
 		}
 

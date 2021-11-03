@@ -18,6 +18,14 @@ Entity::Entity()
 	m_entity = entt::null;
 }
 
+void Entity::UpdateNetwork()
+{
+	if (GetComponent<comp::Network>())
+	{
+		m_pRegistry->patch<comp::Network>(m_entity);
+	}
+}
+
 bool Entity::Destroy() 
 {
 	if (IsNull())

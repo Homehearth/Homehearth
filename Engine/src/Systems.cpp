@@ -111,6 +111,15 @@ void Systems::MovementSystem(HeadlessScene& scene, float dt)
 		{
 			transform.previousPosition = transform.position;
 			transform.position += velocity.vel * dt;
+			
+		});
+
+	scene.ForEachComponent<comp::Transform, comp::Network>([](Entity e, comp::Transform& t, comp::Network&) 
+		{
+			if (t.previousPosition != t.position)
+			{
+				e.UpdateNetwork();
+			}
 		});
 }
 

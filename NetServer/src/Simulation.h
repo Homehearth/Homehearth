@@ -30,6 +30,7 @@ private:
 	std::vector<Entity> m_addedEntities;
 	std::vector<uint32_t> m_removedEntities;
 
+	std::vector<Entity> m_updatedEntities;
 
 	void InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg)const;
 	message<GameMsg> AllEntitiesMessage()const;
@@ -48,6 +49,7 @@ private:
 	void OnNetworkEntityCreate(entt::registry& reg, entt::entity entity);
 	void OnNetworkEntityDestroy(entt::registry& reg, entt::entity entity);
 
+	void OnNetworkEntityUpdated(entt::registry& reg, entt::entity entity);
 
 public:
 	Simulation(Server* pServer, HeadlessEngine* pEngine);
