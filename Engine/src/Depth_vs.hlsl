@@ -1,15 +1,14 @@
 cbuffer Matrices : register(b0)
 {
-	float4x4 world;
+	float4x4 c_world; //row major
 }
 
 cbuffer Camera : register(b1)
 {
-    float4 cameraPosition;
-    float4 cameraTarget;
-
-    float4x4 projection;
-    float4x4 view;
+    float4   c_cameraPosition;
+    float4   c_cameraTarget;
+    float4x4 c_projection;  //row major
+    float4x4 c_view;        //row major
 }
 
 struct VertexIn
@@ -25,7 +24,7 @@ struct VertexIn
 float4 main(VertexIn input) : SV_POSITION
 {
     float4 position = float4(input.pos, 1.0f);
-    position = mul(world, position);
-    position = mul(view, position);
-    return mul(projection, position);
+    position = mul(c_world, position);
+    position = mul(c_view, position);
+    return mul(c_projection, position);
 }

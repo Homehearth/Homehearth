@@ -26,7 +26,7 @@ namespace ecs {
     bool StepRotateTo(sm::Quaternion& rotation, const sm::Vector3& targetVector, float t)
     {
         
-        float targetRotation = atan2(-targetVector.z, targetVector.x);
+        float targetRotation = atan2(-targetVector.x, -targetVector.z);
         sm::Quaternion targetQuat = sm::Quaternion::CreateFromAxisAngle(sm::Vector3::Up, targetRotation);
         targetQuat.Normalize();
         if (t >= 1.0f)

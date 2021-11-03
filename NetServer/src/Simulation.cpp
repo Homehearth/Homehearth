@@ -42,6 +42,18 @@ void Simulation::InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg, c
 				compSet.set(ecs::Component::MESH_NAME);
 				msg << m->name;
 			}
+
+			break;
+		}
+		case ecs::Component::ANIMATOR_NAME:
+		{
+			comp::AnimatorName* m = entity.GetComponent<comp::AnimatorName>();
+			if (m)
+			{
+				compSet.set(ecs::Component::ANIMATOR_NAME);
+				msg << m->name;
+			}
+
 			break;
 		}
 		case ecs::Component::NAME_PLATE:
@@ -152,13 +164,19 @@ message<GameMsg> Simulation::AllEntitiesMessage()const
 void Simulation::CreateWaves()
 {
 	using namespace EnemyManagement;
+	//Reeset wavequeu
+	while(!waveQueue.empty())
+	{
+		waveQueue.pop();
+	}
 
+	
 	Wave wave1, wave2; // Default: WaveType::Zone
 	{ // Wave_1 Group_1
 		Wave::Group group1;
 		group1.AddEnemy(EnemyType::Default, 3);
 		group1.AddEnemy(EnemyType::Default2, 2);
-		group1.SetSpawnPoint({ 400.f, -300.0f });
+		group1.SetSpawnPoint({ 400.f, -350.0f });
 		wave1.SetTimeLimit(5);
 		wave1.AddGroup(group1);
 	}
@@ -174,17 +192,28 @@ void Simulation::CreateWaves()
 	{ // Wave_2 Group_3
 		Wave::Group group3;
 		group3.AddEnemy(EnemyType::Default, 5);
-		group3.SetSpawnPoint({ 400.f, -200.0f });
+		group3.SetSpawnPoint({ 400.f, -35000.0f });
 		wave2.AddGroup(group3);
 	}
 
 	{ // Wave_2 Group_4
 		Wave::Group group4;
 		group4.AddEnemy(EnemyType::Default, 4);
-		group4.SetSpawnPoint({ 400.f, 200.0f });
+		group4.SetSpawnPoint({ 400.f, 320.0f });
 		wave2.AddGroup(group4);
 	}
 	waveQueue.emplace(wave2); // Add Wave_2
+}
+
+void Simulation::ResetPlayer(Entity e)
+{
+	e.GetComponent<comp::Transform>()->position = e.GetComponent<comp::Player>()->spawnPoint;
+	e.GetComponent<comp::Velocity>()->vel = sm::Vector3(0.0f, 0.0f, 0.0f);
+	e.GetComponent<comp::Health>()->currentHealth = 100;
+	e.GetComponent<comp::Health>()->isAlive = true;
+	e.GetComponent<comp::Player>()->state = comp::Player::State::IDLE;
+	e.GetComponent<comp::Player>()->isReady = false;
+	e.AddComponent<comp::MeshName>("GameCharacter.fbx");
 }
 
 Simulation::Simulation(Server* pServer, HeadlessEngine* pEngine)
@@ -273,6 +302,12 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 {
 	this->m_gameID = gameID;
 
+	//Set players spawn point
+	playerSpawnPoint[0] = sm::Vector3(320.f, 0, -310.f);
+	playerSpawnPoint[1] = sm::Vector3(320.f, 0, -312.f);
+	playerSpawnPoint[2] = sm::Vector3(320.f, 0, -314.f);
+	playerSpawnPoint[3] = sm::Vector3(320.f, 0, -316.f);
+	
 	// Create and add all waves to the queue.
 	CreateWaves();
 
@@ -291,69 +326,64 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 			for (const auto& pair : m_playerInputs)
 			{
 				Entity e = pair.first;
-				InputState input = pair.second;
-				// update velocity
-				e.GetComponent<comp::Velocity>()->vel = sm::Vector3(static_cast<float>(input.axisHorizontal), 0, static_cast<float>(input.axisVertical)) * e.GetComponent<comp::Player>()->runSpeed;
-
-				// check if attacking
-				if (input.leftMouse)
+				comp::Player* p = e.GetComponent<comp::Player>();
+				if(p->state != comp::Player::State::DEAD)
 				{
-					comp::CombatStats* stats = e.GetComponent<comp::CombatStats>();
-					if (stats)
+					InputState input = pair.second;
+					// update velocity
+					sm::Vector3 vel = sm::Vector3(static_cast<float>(input.axisHorizontal), 0, static_cast<float>(input.axisVertical));
+					vel.Normalize();
+					vel *= p->runSpeed;
+					e.GetComponent<comp::Velocity>()->vel = vel;
+
+					// check if attacking
+					if (input.leftMouse)
 					{
-						if (stats->cooldownTimer <= 0.0f)
-							stats->isAttacking = true;
-
-						stats->targetRay = input.mouseRay;
-
-					}
-					comp::Player* player = e.GetComponent<comp::Player>();
-					if (player)
-					{
-						player->state = comp::Player::State::ATTACK;
-
-					}
-				}
-
-				//Place defence on grid
-				if (input.rightMouse)
-				{
-#ifdef _DEBUG
-					if (RENDER_GRID)
-					{
-						std::cout << "Clicked tile " << std::endl;
-						uint32_t netID = m_grid.PlaceDefenceRenderGrid(input.mouseRay);
-
-						if (netID != -1)
+						comp::CombatStats* stats = e.GetComponent<comp::CombatStats>();
+						if (stats)
 						{
-							network::message<GameMsg> msg;
-							msg.header.id = GameMsg::Grid_PlaceDefence;
-							msg << netID;
-							Broadcast(msg);
+							if (stats->cooldownTimer <= 0.0f)
+								stats->isAttacking = true;
+
+							stats->targetRay = input.mouseRay;
+
+						}
+						comp::Player* player = e.GetComponent<comp::Player>();
+						if (player)
+						{
+							player->state = comp::Player::State::ATTACK;
+
 						}
 					}
-					else
+
+					//Place defence on grid
+					if (input.rightMouse)
 					{
-						sm::Vector3 position = m_grid.PlaceDefence(input.mouseRay);
-						if (position != sm::Vector3(-1, -1, -1))
+						if (RENDER_GRID)
 						{
-							network::message<GameMsg> msg;
-							msg.header.id = GameMsg::Grid_PlaceDefence;
-							msg << position;
-							Broadcast(msg);
+							std::cout << "Clicked tile " << std::endl;
+							uint32_t netID = m_grid.PlaceDefenceRenderGrid(input.mouseRay);
+
+							if (netID != -1)
+							{
+								network::message<GameMsg> msg;
+								msg.header.id = GameMsg::Grid_PlaceDefence;
+								msg << netID;
+								Broadcast(msg);
+							}
+						}
+						else
+						{
+							sm::Vector3 position = m_grid.PlaceDefence(input.mouseRay);
+							if (position != sm::Vector3(-1, -1, -1))
+							{
+								network::message<GameMsg> msg;
+								msg.header.id = GameMsg::Grid_PlaceDefence;
+								msg << position;
+								Broadcast(msg);
+							}
 						}
 					}
-#endif // _DEBUG
-#ifdef NDEBUG
-					sm::Vector3 position = m_grid.PlaceDefence(input.mouseRay);
-					if (position != sm::Vector3(-1, -1, -1))
-					{
-						network::message<GameMsg> msg;
-						msg.header.id = GameMsg::Grid_PlaceDefence;
-						msg << position;
-						Broadcast(msg);
-					}
-#endif // NDEBUG
 
 				}
 			}
@@ -361,6 +391,8 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 			//  run all game logic systems
 			{
 				PROFILE_SCOPE("Systems");
+				ServerSystems::PlayerStateSystem(this, scene, e.dt);
+				ServerSystems::CheckGameOver(this, scene);
 				Systems::CharacterMovement(scene, e.dt);
 				Systems::MovementSystem(scene, e.dt);
 				Systems::MovementColliderSystem(scene, e.dt);
@@ -402,6 +434,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 	m_pGameScene->GetRegistry()->on_update<comp::Network>().connect<&Simulation::OnNetworkEntityUpdated>(this);
 
 
+	
 
 	// --- WORLD ---
 	Entity e2 = m_pGameScene->CreateEntity();
@@ -459,7 +492,6 @@ void Simulation::ReadyCheck(const uint32_t& playerID)
 			m_players.at(playerID).GetComponent<comp::Player>()->isReady = true;
 
 			// DEBUG
-//#ifdef _DEBUG
 			// Debugging allow only one player to start.
 			m_pCurrentScene = m_pGameScene;
 			// Start the game.
@@ -467,7 +499,7 @@ void Simulation::ReadyCheck(const uint32_t& playerID)
 			msg.header.id = GameMsg::Game_Start;
 			this->Broadcast(msg);
 			return;
-			//#endif
+			
 			auto it = m_players.begin();
 
 			uint32_t readyCount = 0;
@@ -500,6 +532,7 @@ bool Simulation::IsEmpty() const
 
 bool Simulation::AddPlayer(uint32_t playerID, const std::string& namePlate)
 {
+	static int playerCount = 0;
 	if (!m_pServer->isClientConnected(playerID))
 	{
 		return false;
@@ -510,22 +543,43 @@ bool Simulation::AddPlayer(uint32_t playerID, const std::string& namePlate)
 
 	// Create Player entity in Game scene
 	Entity player = m_pGameScene->CreateEntity();
+	comp::Player* playerComp = player.AddComponent<comp::Player>();
 	comp::Transform* transform = player.AddComponent<comp::Transform>();
-	transform->position = sm::Vector3(320.f, 0, -310.f);
-	transform->scale = { 1.8f, 1.8f, 1.8f };
+	playerComp->spawnPoint = playerSpawnPoint[playerCount++];
+	playerComp->runSpeed = 25.f;
+	transform->position = playerComp->spawnPoint;
+	transform->scale = sm::Vector3(1.8f, 1.8f, 1.8f);
+
 	player.AddComponent<comp::Velocity>();
 	player.AddComponent<comp::NamePlate>()->namePlate = namePlate;
-	player.AddComponent<comp::MeshName>()->name = "GameCharacter.fbx";
-#ifdef _DEBUG
-	player.AddComponent<comp::Player>()->runSpeed = 25.f;
-#else
-	player.AddComponent<comp::Player>()->runSpeed = 10.f;
-#endif // _DEBUG
 
-	* player.AddComponent<comp::CombatStats>() = { 0.3f, 20.f, 2.0f, true, 30.f };
+	player.AddComponent<comp::MeshName>()->name = "Knight.fbx";
+	player.AddComponent<comp::AnimatorName>()->name = "Player.anim";
+
+	*player.AddComponent<comp::CombatStats>() = { 0.3f, 20.f, 2.0f, true, 30.f };
 	player.AddComponent<comp::Health>();
 	player.AddComponent<comp::BoundingOrientedBox>()->Extents = { 2.0f,2.0f,2.0f };
+	
+	CollisionSystem::Get().AddOnCollision(player, [=](Entity other)
+	{
+		if (other == player)
+			return;
 
+		comp::Enemy* enemy = other.GetComponent<comp::Enemy>();
+		if(enemy)
+		{
+			comp::Health* health = player.GetComponent<comp::Health>();
+
+			if(health)
+			{
+				health->currentHealth -= 20;
+			}
+		}
+		
+	});
+
+
+	
 	//Collision will handle this entity as a dynamic one
 	player.AddComponent<comp::Tag<TagType::DYNAMIC>>();
 	// Network component will make sure the new entity is sent
@@ -740,6 +794,52 @@ HeadlessScene* Simulation::GetLobbyScene() const
 HeadlessScene* Simulation::GetGameScene() const
 {
 	return m_pGameScene;
+}
+
+void Simulation::SetLobbyScene()
+{
+	m_pCurrentScene = m_pLobbyScene;
+	ResetGameScene();
+	message<GameMsg> msg;
+	msg.header.id = GameMsg::Game_BackToLobby;
+
+	Broadcast(msg);
+}
+
+void Simulation::SetGameScene()
+{
+	m_pCurrentScene = m_pGameScene;
+}
+
+void Simulation::ResetGameScene()
+{
+	message<GameMsg> msg;
+	msg.header.id = GameMsg::Game_RemoveEntity;
+	uint32_t count = 0;
+	this->m_pGameScene->ForEachComponent<comp::Network>([&](Entity e, comp::Network& n)
+	{
+		if(m_players.find(n.id) == m_players.end())
+		{
+			msg << n.id;
+			count++;
+			e.Destroy();
+		}
+		else
+		{
+			ResetPlayer(e);
+		}
+		
+	});
+
+	if(count > 0)
+	{
+		msg << count;
+		Broadcast(msg);
+	}
+
+	
+	LOG_INFO("%lld", m_pGameScene->GetRegistry()->size());
+	CreateWaves();
 }
 
 void Simulation::SendEntity(Entity e, uint32_t exclude)const

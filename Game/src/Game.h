@@ -15,6 +15,7 @@ private:
 	GridSystem m_grid;
 	uint32_t m_waveTimer;
 
+	Entity m_mapEntity;
 
 	bool m_isLeavingLobby;
 	comp::Transform test;
@@ -39,6 +40,7 @@ private:
 	void PlaceDefenceDebug(message<GameMsg>& msg);
 	void PlaceDefenceRelease(message<GameMsg>& msg);
 	void CreateVisualGrid(Entity e);
+	void LoadAllAssets();
 
 public:
 	Client m_client;

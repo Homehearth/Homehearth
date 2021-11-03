@@ -1,6 +1,6 @@
 #pragma once
 #include "RTexture.h"
-#include <assimp/material.h>
+struct aiMaterial;
 
 //Slots to bind to on shader-side
 const UINT CB_MAT_SLOT			= 0;
@@ -22,8 +22,10 @@ const UINT T2D_STARTSLOT		= 1;
 	* Metalness				"map_ns   Object_Metalness.png"
 	* Roughness				"map_Ks   Object_Roughness.png"
 	* Ambient occlusion		"map_Ka	  Object_AO.png"
-	//Extra
-	* Displacement			"map_disp Object_Displace.png
+	
+	//Other useful textures
+	* Displacement			"map_disp Object_Displace.png"
+	* Opacitymask			"map_d	  Object_Opacity.png"
 
 */
 
@@ -38,6 +40,7 @@ enum class ETextureType
 	roughness,
 	ambientOcclusion,
 	displacement,
+	opacitymask,
 	length
 };
 
@@ -75,7 +78,8 @@ private:
 		int		hasRoughness = 0;	//4 byte
 		int		hasAoMap	 = 0;	//4 byte
 		int		hasDisplace  = 0;	//4 byte
-		int		padding[2];			//8 bytes
+		int		hasOpacity	 = 0;	//4 byte
+		int		padding;			//4 byte
 	};
 	properties_t m_properties;
 	ComPtr<ID3D11Buffer> m_hasTextureCB;

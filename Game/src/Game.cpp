@@ -132,6 +132,7 @@ if (GetCurrentScene() == &GetScene("Game") && GetCurrentScene()->GetCurrentCamer
 void Game::OnShutdown()
 {
 	m_players.clear();
+	m_mapEntity.Destroy();
 }
 
 
@@ -263,12 +264,18 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		LOG_INFO("Removed %u entities", count);
 		break;
 	}
+	case GameMsg::Game_BackToLobby:
+	{
+		SetScene("Lobby");
+		break;
+	}	
 	case GameMsg::Lobby_Accepted:
 	{
 		msg >> m_gameID;
 		this->SetScene("Loading");
-		LOG_INFO("You are now in lobby: %lu", m_gameID);
+		this->LoadAllAssets();
 
+		LOG_INFO("You are now in lobby: %lu", m_gameID);
 		break;
 	}
 	case GameMsg::Lobby_Invalid:
@@ -455,6 +462,29 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 				e.AddComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>(name);
 				break;
 			}
+			case ecs::Component::ANIMATOR_NAME:
+			{
+				comp::AnimatorName animName;
+				msg >> animName.name;
+
+				//Get model
+				comp::Renderable* renderable = e.GetComponent<comp::Renderable>();
+				if(renderable && renderable->model)
+				{
+
+					//Add an animator if we can get it
+					if (!animName.name.empty())
+					{
+						std::shared_ptr<RAnimator> anim = ResourceManager::Get().CopyResource<RAnimator>(animName.name, true);
+						if (anim)
+						{
+							if (anim->LoadSkeleton(renderable->model->GetSkeleton()))
+								e.AddComponent<comp::Animator>()->animator = anim;
+						}
+					}
+				}
+				break;
+			}
 			case ecs::Component::NAME_PLATE:
 			{
 				std::string name;
@@ -618,4 +648,16 @@ void Game::CreateVisualGrid(Entity e)
 
 		}
 	}
+}
+
+void Game::LoadAllAssets()
+{
+	ResourceManager::Get().GetResource<RModel>("MonsterCharacter.fbx");
+	ResourceManager::Get().GetResource<RModel>("Barrel.obj");
+	ResourceManager::Get().GetResource<RModel>("Defence.obj");
+	ResourceManager::Get().GetResource<RModel>("Plane1.obj");
+	ResourceManager::Get().GetResource<RModel>("Knight.fbx");
+	Entity e = GetScene("Game").CreateEntity();
+	e.AddComponent<comp::Transform>();
+	e.AddComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>("GameScene.obj");
 }
