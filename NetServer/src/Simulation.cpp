@@ -310,12 +310,15 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 			for (const auto& pair : m_playerInputs)
 			{
 				Entity e = pair.first;
-				
-				if(e.GetComponent<comp::Player>()->state != comp::Player::State::DEAD)
+				comp::Player* p = e.GetComponent<comp::Player>();
+				if(p->state != comp::Player::State::DEAD)
 				{
 					InputState input = pair.second;
 					// update velocity
-					e.GetComponent<comp::Velocity>()->vel = sm::Vector3(static_cast<float>(input.axisHorizontal), 0, static_cast<float>(input.axisVertical)) * e.GetComponent<comp::Player>()->runSpeed;
+					sm::Vector3 vel = sm::Vector3(static_cast<float>(input.axisHorizontal), 0, static_cast<float>(input.axisVertical));
+					vel.Normalize();
+					vel *= p->runSpeed;
+					e.GetComponent<comp::Velocity>()->vel = vel;
 
 					// check if attacking
 					if (input.leftMouse)
