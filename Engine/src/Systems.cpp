@@ -56,6 +56,7 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 							otherHealth->currentHealth -= atk->damage;
 							LOG_INFO("ATTACK COLLIDER HIT BAD GUY!");
 							atk->lifeTime = 0.f;
+							other.UpdateNetwork();
 						}
 					});
 

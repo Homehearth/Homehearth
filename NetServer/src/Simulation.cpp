@@ -603,6 +603,15 @@ void Simulation::SendSnapshot()
 							msg << *h;
 						}
 					}
+					case ecs::Component::BOUNDING_ORIENTED_BOX:
+					{
+						comp::BoundingOrientedBox* b = e.GetComponent<comp::BoundingOrientedBox>();
+						if (b)
+						{
+							compSet.set(ecs::Component::BOUNDING_ORIENTED_BOX);
+							msg << *b;
+						}
+					}
 					default:
 						break;
 					}

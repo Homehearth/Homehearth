@@ -187,6 +187,13 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 						entity.AddComponent<comp::Health>(h);
 						break;
 					}
+					case ecs::Component::BOUNDING_ORIENTED_BOX:
+					{
+						comp::BoundingOrientedBox b;
+						msg >> b;
+						entity.AddComponent<comp::BoundingOrientedBox>(b);
+						break;
+					}
 					default:
 						break;
 					}
