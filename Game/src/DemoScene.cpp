@@ -118,25 +118,6 @@ namespace sceneHelp
 
 		gameScene.SetCurrentCameraEntity(cameraEntity);
 
-		/*
-			Testing to add models with animators
-		*/
-		
-		Entity animEnt = gameScene.CreateEntity();
-		animEnt.AddComponent<comp::Transform>();
-
-		//Add model
-		animEnt.AddComponent<comp::Renderable>();
-		animEnt.GetComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>("Knight.fbx");
-
-		//Add animator - remove component if it did not work - will still render static model
-		animEnt.AddComponent<comp::Animator>();
-		animEnt.GetComponent<comp::Animator>()->animator = ResourceManager::Get().GetResource<RAnimator>("Player.anim");
-		if (!animEnt.GetComponent<comp::Animator>()->animator->LoadSkeleton(animEnt.GetComponent<comp::Renderable>()->model->GetSkeleton()))
-			animEnt.RemoveComponent<comp::Animator>();
-			
-
-
 		//for (int i = 0; i < 5; i++)
 		//{
 		//	// Debug Chest

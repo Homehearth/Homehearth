@@ -37,14 +37,15 @@ void Simulation::InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg)co
 			}
 			break;
 		}
-		case ecs::Component::MESH_NAME:
+		case ecs::Component::MODEL_NAME:
 		{
-			comp::MeshName* m = entity.GetComponent<comp::MeshName>();
+			comp::ModelNames* m = entity.GetComponent<comp::ModelNames>();
 			if (m)
 			{
-				compSet.set(ecs::Component::MESH_NAME);
-				msg << m->name;
+				compSet.set(ecs::Component::MODEL_NAME);
+				msg << m->meshName;
 			}
+
 			break;
 		}
 		case ecs::Component::NAME_PLATE:
@@ -343,7 +344,9 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 	// ---DEBUG ENTITY---
 	Entity e = m_pGameScene->CreateEntity();
 	e.AddComponent<comp::Transform>()->position = sm::Vector3(-5, 0, 0);
-	e.AddComponent<comp::MeshName>()->name = "Chest.obj";
+	e.AddComponent<comp::ModelNames>();
+	//strcpy(e.GetComponent<comp::ModelNames>()->meshName, "Chest.obj");
+	e.AddComponent<comp::ModelNames>()->meshName = "Chest.obj";
 	e.AddComponent<comp::BoundingOrientedBox>()->Extents = sm::Vector3(2.f, 2.f, 2.f);
 	e.AddComponent<comp::Enemy>();
 	e.AddComponent<comp::Health>();
@@ -357,7 +360,9 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 	// --- WORLD ---
 	Entity e2 = m_pGameScene->CreateEntity();
 	e2.AddComponent<comp::Transform>();// ->position = { -250, -2, 300 };
-	e2.AddComponent<comp::MeshName>()->name = "GameScene.obj";
+	e2.AddComponent<comp::ModelNames>();
+	//strcpy(e2.GetComponent<comp::ModelNames>()->meshName, "GameScene.obj");
+	e2.AddComponent<comp::ModelNames>()->meshName = "GameScene.obj";
 	e2.AddComponent<comp::Tag<TagType::STATIC>>();
 	// send entity
 	e2.AddComponent<comp::Network>();
@@ -461,7 +466,13 @@ bool Simulation::AddPlayer(uint32_t playerID, const std::string& namePlate)
 	player.AddComponent<comp::Transform>()->position = sm::Vector3(320.f,0,-310.f);
 	player.AddComponent<comp::Velocity>();
 	player.AddComponent<comp::NamePlate>()->namePlate = namePlate;
-	player.AddComponent<comp::MeshName>()->name = "Arrow.fbx";
+
+	/*player.AddComponent<comp::ModelNames>();
+	strcpy(player.GetComponent<comp::ModelNames>()->meshName, "Knight.fbx");
+	strcpy(player.GetComponent<comp::ModelNames>()->animatorName, "Player.anim");*/
+
+	player.AddComponent<comp::ModelNames>()->meshName = "Knight.fbx";
+	player.AddComponent<comp::ModelNames>()->animatorName = "Player.anim";
 #ifdef _DEBUG
 	player.AddComponent<comp::Player>()->runSpeed = 25.f;
 #else

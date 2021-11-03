@@ -11,7 +11,7 @@ namespace ecs
 		NETWORK,
 		TRANSFORM,
 		VELOCITY,
-		MESH_NAME,
+		MODEL_NAME,
 		NAME_PLATE,
 		BOUNDING_ORIENTED_BOX,
 		BOUNDING_SPHERE,
@@ -66,9 +66,12 @@ namespace ecs
 		};
 
 		// Used on server side
-		struct MeshName 
+		struct ModelNames 
 		{
-			std::string name;
+			std::string meshName;
+			std::string animatorName;
+			//char meshName[64];
+			//char animatorName[64];
 		};
 
 		struct NamePlate
