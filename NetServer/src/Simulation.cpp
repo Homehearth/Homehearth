@@ -34,13 +34,24 @@ void Simulation::InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg, c
 			}
 			break;
 		}
-		case ecs::Component::MODEL_NAME:
+		case ecs::Component::MESH_NAME:
 		{
-			comp::ModelNames* m = entity.GetComponent<comp::ModelNames>();
+			comp::MeshName* m = entity.GetComponent<comp::MeshName>();
 			if (m)
 			{
-				compSet.set(ecs::Component::MODEL_NAME);
-				msg << m->meshName << m->animatorName;
+				compSet.set(ecs::Component::MESH_NAME);
+				msg << m->name;
+			}
+
+			break;
+		}
+		case ecs::Component::ANIMATOR_NAME:
+		{
+			comp::AnimatorName* m = entity.GetComponent<comp::AnimatorName>();
+			if (m)
+			{
+				compSet.set(ecs::Component::ANIMATOR_NAME);
+				msg << m->name;
 			}
 
 			break;
@@ -202,7 +213,7 @@ void Simulation::ResetPlayer(Entity e)
 	e.GetComponent<comp::Health>()->isAlive = true;
 	e.GetComponent<comp::Player>()->state = comp::Player::State::IDLE;
 	e.GetComponent<comp::Player>()->isReady = false;
-	e.GetComponent<comp::MeshName>()->name = "GameCharacter.fbx";
+	e.AddComponent<comp::MeshName>("GameCharacter.fbx");
 }
 
 Simulation::Simulation(Server* pServer, HeadlessEngine* pEngine)
@@ -422,8 +433,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 	// --- WORLD ---
 	Entity e2 = m_pGameScene->CreateEntity();
 	e2.AddComponent<comp::Transform>();// ->position = { -250, -2, 300 };
-	e2.AddComponent<comp::ModelNames>();
-	e2.AddComponent<comp::ModelNames>()->meshName = "GameScene.obj";
+	e2.AddComponent<comp::MeshName>()->name = "GameScene.obj";
 	e2.AddComponent<comp::Tag<TagType::STATIC>>();
 	// send entity
 	e2.AddComponent<comp::Network>();
@@ -533,8 +543,8 @@ bool Simulation::AddPlayer(uint32_t playerID, const std::string& namePlate)
 	player.AddComponent<comp::Velocity>();
 	player.AddComponent<comp::NamePlate>()->namePlate = namePlate;
 
-	player.AddComponent<comp::ModelNames>()->meshName = "Knight.fbx";
-	player.GetComponent<comp::ModelNames>()->animatorName = "Player.anim";
+	player.AddComponent<comp::MeshName>()->name = "Knight.fbx";
+	player.AddComponent<comp::AnimatorName>()->name = "Player.anim";
 	player.AddComponent<comp::Player>()->runSpeed = 25.f;
 
 	*player.AddComponent<comp::CombatStats>() = { 0.3f, 20.f, 2.0f, true, 30.f };

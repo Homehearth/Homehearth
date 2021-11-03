@@ -10,7 +10,8 @@ namespace ecs
 	{
 		TRANSFORM,
 		VELOCITY,
-		MODEL_NAME,
+		ANIMATOR_NAME,
+		MESH_NAME,
 		NAME_PLATE,
 		HEALTH,
 		BOUNDING_ORIENTED_BOX,
@@ -74,10 +75,14 @@ namespace ecs
 		};
 
 		// Used on server side
-		struct ModelNames 
+		struct AnimatorName 
 		{
-			std::string meshName = "";
-			std::string animatorName = "";
+			std::string name = "";
+		};
+	
+		struct MeshName 
+		{
+			std::string name = "";
 		};
 
 		struct NamePlate

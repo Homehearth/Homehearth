@@ -456,24 +456,30 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 				e.AddComponent<comp::Velocity>(v);
 				break;
 			}
-			case ecs::Component::MODEL_NAME:
+			case ecs::Component::MESH_NAME:
 			{
-				comp::ModelNames names;
-				msg >> names.animatorName >> names.meshName;
+				std::string name;
+				msg >> name;
+				e.AddComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>(name);
+				break;
+			}
+			case ecs::Component::ANIMATOR_NAME:
+			{
+				comp::AnimatorName animName;
+				msg >> animName.name;
 
 				//Get model
-				std::shared_ptr<RModel> model = ResourceManager::Get().GetResource<RModel>(names.meshName);
-				if (model)
+				comp::Renderable* renderable = e.GetComponent<comp::Renderable>();
+				if(renderable && renderable->model)
 				{
-					e.AddComponent<comp::Renderable>()->model = model;
 
 					//Add an animator if we can get it
-					if (!names.animatorName.empty())
+					if (!animName.name.empty())
 					{
-						std::shared_ptr<RAnimator> anim = ResourceManager::Get().GetResource<RAnimator>(names.animatorName);
+						std::shared_ptr<RAnimator> anim = ResourceManager::Get().GetResource<RAnimator>(animName.name);
 						if (anim)
 						{
-							if (anim->LoadSkeleton(model->GetSkeleton()))
+							if (anim->LoadSkeleton(renderable->model->GetSkeleton()))
 								e.AddComponent<comp::Animator>()->animator = anim;
 						}
 					}

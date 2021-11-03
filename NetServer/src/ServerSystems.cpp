@@ -20,7 +20,7 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 
 	comp::Transform* transform = entity.AddComponent<comp::Transform>();
 	comp::Health* health = entity.AddComponent<comp::Health>();
-	comp::ModelNames* modelNames = entity.AddComponent<comp::ModelNames>();
+	comp::MeshName* meshName = entity.AddComponent<comp::MeshName>();
 	comp::BoundingOrientedBox* obb = entity.AddComponent<comp::BoundingOrientedBox>();
 	comp::Velocity* velocity = entity.AddComponent<comp::Velocity>();
 	comp::CombatStats* combatStats = entity.AddComponent<comp::CombatStats>();
@@ -31,7 +31,7 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		{
 			// ---DEFAULT ENEMY---
 			transform->position = spawnP;
-			modelNames->meshName = "Chest.obj";
+			meshName->name = "Chest.obj";
 			obb->Extents = sm::Vector3(2.f, 2.f, 2.f);
 			velocity->vel = sm::Vector3(transform->position * -1.0f);
 			velocity->vel.Normalize();
@@ -43,7 +43,7 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		{
 			// ---DEFAULT ENEMY 2---
 			transform->position = spawnP;
-			modelNames->meshName = "StreetLamp.obj";
+			meshName->name = "StreetLamp.obj";
 			obb->Extents = sm::Vector3(2.f, 2.f, 2.f);
 			velocity->vel = sm::Vector3(transform->position * -1.0f);
 			velocity->vel.Normalize();
@@ -230,7 +230,7 @@ void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& sce
 					t.position = spawnPoint;
 					health.currentHealth = 100;
 					health.isAlive = true;
-					e.AddComponent<comp::MeshName>("GameCharacter.obj");
+					e.AddComponent<comp::MeshName>("GameCharacter.fbx");
 					e.UpdateNetwork();
 					LOG_INFO("Player id %u Respawnd...", net.id);
 				}
