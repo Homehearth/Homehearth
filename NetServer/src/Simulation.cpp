@@ -201,6 +201,7 @@ void Simulation::ResetPlayer(Entity e)
 	e.GetComponent<comp::Health>()->isAlive = true;
 	e.GetComponent<comp::Player>()->state = comp::Player::State::IDLE;
 	e.GetComponent<comp::Player>()->isReady = false;
+	e.GetComponent<comp::MeshName>()->name = "GameCharacter.fbx";
 }
 
 Simulation::Simulation(Server* pServer, HeadlessEngine* pEngine)
@@ -630,6 +631,7 @@ void Simulation::SendSnapshot()
 		std::bitset<ecs::Component::COMPONENT_MAX> compMask;
 		compMask.set(ecs::Component::TRANSFORM);
 		compMask.set(ecs::Component::HEALTH);
+		compMask.set(ecs::Component::MESH_NAME);
 #if DEBUG_SNAPSHOT
 		compMask.set(ecs::Component::BOUNDING_ORIENTED_BOX);
 #endif
