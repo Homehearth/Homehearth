@@ -32,7 +32,7 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 					sm::Vector3 vel = stats.targetDir * stats.projectileSpeed;
 					attackCollider.AddComponent<comp::Velocity>()->vel = vel;
 
-					attackCollider.AddComponent<comp::MeshName>()->name = "Sphere.obj";
+					attackCollider.AddComponent<comp::ModelNames>()->meshName = "Sphere.obj";
 				}
 
 				LOG_INFO("Attack Collider Created!");
