@@ -718,16 +718,23 @@ void Simulation::SendEntities(const std::vector<Entity>& entities) const
 	if (entities.size() == 0)
 		return;
 
-	message<GameMsg> msg;
-	msg.header.id = GameMsg::Game_AddEntity;
-	for (const auto& e : entities)
+	int32_t count = min(entities.size(), 100);
+	size_t sent = 0;
+	do
 	{
-		this->InsertEntityIntoMessage(e, msg);
-	}
+		message<GameMsg> msg;
+		msg.header.id = GameMsg::Game_AddEntity;
+		for (size_t i = sent; i < count; i++)
+		{
+			this->InsertEntityIntoMessage(entities[i], msg);
+		}
 
-	msg << static_cast<uint32_t>(entities.size());
+		msg << static_cast<uint32_t>(count);
 
-	this->Broadcast(msg);
+		this->Broadcast(msg);
+		sent += count;
+		count = min(entities.size() - sent, 100);
+	} while (sent >= entities.size());
 }
 
 void Simulation::SendAllEntitiesToPlayer(uint32_t playerID) const
