@@ -31,7 +31,6 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		{
 			// ---DEFAULT ENEMY---
 			transform->position = spawnP;
-			//strcpy(modelNames->meshName, "Chest.obj");
 			modelNames->meshName = "Chest.obj";
 			obb->Extents = sm::Vector3(2.f, 2.f, 2.f);
 			velocity->vel = sm::Vector3(transform->position * -1.0f);
@@ -44,7 +43,6 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		{
 			// ---DEFAULT ENEMY 2---
 			transform->position = spawnP;
-			//strcpy(modelNames->meshName, "StreetLamp.obj");
 			modelNames->meshName = "StreetLamp.obj";
 			obb->Extents = sm::Vector3(2.f, 2.f, 2.f);
 			velocity->vel = sm::Vector3(transform->position * -1.0f);
