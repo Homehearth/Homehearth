@@ -39,7 +39,8 @@ namespace ServerSystems
 {
 	void WaveSystem(Simulation* simulation, std::queue<Wave>& waves);
 	void NextWaveConditions(Simulation* simulation, Timer& timer, int timeToFinish);
-	void PlayerGameOverSystem(Simulation* simulation, HeadlessScene& scene, sm::Vector3 spawnPoint, float dt);
+	void PlayerStateSystem(Simulation* simulation, HeadlessScene& scene, sm::Vector3 spawnPoint, float dt);
+	void CheckGameOver(Simulation* simulation, HeadlessScene& scene);
 }
 
 namespace Systems {

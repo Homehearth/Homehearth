@@ -47,6 +47,7 @@ private:
 
 	
 	void CreateWaves();
+	void ResetPlayer(Entity e);
 	
 	void OnNetworkEntityCreate(entt::registry& reg, entt::entity entity);
 	void OnNetworkEntityDestroy(entt::registry& reg, entt::entity entity);
@@ -83,7 +84,11 @@ public:
 	
 	HeadlessScene* GetLobbyScene() const;
 	HeadlessScene* GetGameScene() const;
-
+	
+	void SetLobbyScene();
+	void SetGameScene();
+	void ResetGameScene();
+	
 	void SendEntity(Entity e, uint32_t exclude = -1)const;
 	void SendEntities(const std::vector<Entity>& entities)const;
 

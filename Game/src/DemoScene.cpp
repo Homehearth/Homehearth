@@ -370,7 +370,7 @@ void sceneHelp::SetupInLobbyScreen(Game* game)
 	rtd::Button* startGameButton = startGame->AddElement<rtd::Button>("StartButton.png", draw_t((width / 2) + (width / 10.f), height - (height / 5.0f), (width / 3.33f), (height / 6.f)), false);
 	startGameButton->SetOnPressedEvent([=]()
 		{
-			game->SendStartGame();
+		 	game->SendStartGame();
 		});
 	scene.Add2DCollection(startGame, "StartGame");
 

@@ -270,6 +270,11 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		LOG_INFO("Removed %u entities", count);
 		break;
 	}
+	case GameMsg::Game_BackToLobby:
+	{
+		SetScene("Lobby");
+		break;
+	}	
 	case GameMsg::Lobby_Accepted:
 	{
 		msg >> m_gameID;
@@ -296,6 +301,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	case GameMsg::Game_Start:
 	{
 		SetScene("Game");
+		
 		break;
 	}
 	case GameMsg::Lobby_Update:
