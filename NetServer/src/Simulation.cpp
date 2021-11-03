@@ -77,6 +77,17 @@ void Simulation::InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg)co
 			}
 			break;
 		}
+
+		case ecs::Component::PLANECOLLIDER:
+		{
+			comp::PlaneCollider* b = entity.GetComponent<comp::PlaneCollider>();
+			if (b)
+			{
+				compSet.set(ecs::Component::PLANECOLLIDER);
+				msg << *b;
+			}
+			break;
+		}
 		case ecs::Component::LIGHT:
 		{
 			comp::Light* l = entity.GetComponent<comp::Light>();
@@ -137,17 +148,17 @@ void Simulation::CreateWaves()
 	Wave wave1, wave2; // Default: WaveType::Zone
 	{ // Wave_1 Group_1
 		Wave::Group group1;
-		group1.AddEnemy(EnemyType::Default, 5);
-		group1.AddEnemy(EnemyType::Default2, 5);
-		group1.SetSpawnPoint({ 200.f, 0.0f });
+		group1.AddEnemy(EnemyType::Default, 3);
+		group1.AddEnemy(EnemyType::Default2, 2);
+		group1.SetSpawnPoint({ 400.f, -300.0f });
 		wave1.SetTimeLimit(5);
 		wave1.AddGroup(group1);
 	}
 
 	{ // Wave_1 Group_2
 		Wave::Group group2;
-		group2.AddEnemy(EnemyType::Default, 5);
-		group2.SetSpawnPoint({ -200.f, 0.0f });
+		group2.AddEnemy(EnemyType::Default, 4);
+		group2.SetSpawnPoint({ -400.f, 320.0f });
 		wave1.AddGroup(group2);
 	}
 	waveQueue.emplace(wave1); // Add Wave_1
@@ -155,15 +166,14 @@ void Simulation::CreateWaves()
 	{ // Wave_2 Group_3
 		Wave::Group group3;
 		group3.AddEnemy(EnemyType::Default, 5);
-		group3.AddEnemy(EnemyType::Default2, 5);
-		group3.SetSpawnPoint({ 0.f, -200.0f });
+		group3.SetSpawnPoint({ 400.f, -200.0f });
 		wave2.AddGroup(group3);
 	}
 
 	{ // Wave_2 Group_4
 		Wave::Group group4;
-		group4.AddEnemy(EnemyType::Default, 2);
-		group4.SetSpawnPoint({ 0.f, 200.0f });
+		group4.AddEnemy(EnemyType::Default, 4);
+		group4.SetSpawnPoint({ 400.f, 200.0f });
 		wave2.AddGroup(group4);
 	}
 	waveQueue.emplace(wave2); // Add Wave_2
@@ -294,26 +304,68 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 				{
 					player->state = comp::Player::State::ATTACK;
 
+					}
+				}
+
+				//Place defence on grid
+				if (input.rightMouse) 
+				{
+#ifdef _DEBUG
+					if (RENDER_GRID)
+					{
+						std::cout << "Clicked tile " << std::endl;
+						uint32_t netID = m_grid.PlaceDefenceRenderGrid(input.mouseRay);
+
+						if (netID != -1)
+						{
+							network::message<GameMsg> msg;
+							msg.header.id = GameMsg::Grid_PlaceDefence;
+							msg << netID;
+							Broadcast(msg);
+						}
+					}
+					else 
+					{
+						sm::Vector3 position = m_grid.PlaceDefence(input.mouseRay);
+						if (position != sm::Vector3(-1, -1, -1))
+						{
+							network::message<GameMsg> msg;
+							msg.header.id = GameMsg::Grid_PlaceDefence;
+							msg << position;
+							Broadcast(msg);
+						}
+					}
+#endif // _DEBUG
+#ifdef NDEBUG
+					sm::Vector3 position = m_grid.PlaceDefence(input.mouseRay);
+					if (position != sm::Vector3(-1, -1, -1))
+					{
+						network::message<GameMsg> msg;
+						msg.header.id = GameMsg::Grid_PlaceDefence;
+						msg << position;
+						Broadcast(msg);
+					}
+#endif // NDEBUG
+
 				}
 			}
-		}
 
-		//  run all game logic systems
-		{
-			PROFILE_SCOPE("Systems");
-			Systems::CharacterMovement(scene, e.dt);
-			Systems::MovementSystem(scene, e.dt);
-			Systems::MovementColliderSystem(scene, e.dt);
+			//  run all game logic systems
 			{
-				PROFILE_SCOPE("Collision Box/Box");
-				Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(scene, e.dt);
-			}
-			{
-				PROFILE_SCOPE("Collision Box/Sphere");
-				Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingSphere>(scene, e.dt);
-			}
-			Systems::AISystem(scene);
-			Systems::CombatSystem(scene, e.dt);
+				PROFILE_SCOPE("Systems");
+				Systems::CharacterMovement(scene, e.dt);
+				Systems::MovementSystem(scene, e.dt);
+				Systems::MovementColliderSystem(scene, e.dt);
+				{
+					PROFILE_SCOPE("Collision Box/Box");
+					Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(scene, e.dt);
+				}
+				{
+					PROFILE_SCOPE("Collision Box/Sphere");
+					Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingSphere>(scene, e.dt);
+				}
+				Systems::AISystem(scene);
+				Systems::CombatSystem(scene, e.dt);
 
 		}
 
@@ -574,10 +626,12 @@ bool Simulation::AddPlayer(uint32_t playerID, const std::string& namePlate)
 
 	// Create Player entity in Game scene
 	Entity player = m_pGameScene->CreateEntity();
-	player.AddComponent<comp::Transform>()->position = sm::Vector3(320.f, 0, -310.f);
+	comp::Transform* transform = player.AddComponent<comp::Transform>();
+	transform->position = sm::Vector3(320.f, 0, -310.f);
+	transform->scale = {1.8f, 1.8f, 1.8f};
 	player.AddComponent<comp::Velocity>();
 	player.AddComponent<comp::NamePlate>()->namePlate = namePlate;
-	player.AddComponent<comp::MeshName>()->name = "Arrow.fbx";
+	player.AddComponent<comp::MeshName>()->name = "GameCharacter.fbx";
 #ifdef _DEBUG
 	player.AddComponent<comp::Player>()->runSpeed = 25.f;
 #else
@@ -586,7 +640,7 @@ bool Simulation::AddPlayer(uint32_t playerID, const std::string& namePlate)
 
 	* player.AddComponent<comp::CombatStats>() = { 1.0f, 20.f, 1.0f, false, false };
 	player.AddComponent<comp::Health>();
-	player.AddComponent<comp::BoundingOrientedBox>();
+	player.AddComponent<comp::BoundingOrientedBox>()->Extents = {2.0f,2.0f,2.0f};
 
 	//Collision will handle this entity as a dynamic one
 	player.AddComponent<comp::Tag<TagType::DYNAMIC>>();
@@ -745,6 +799,8 @@ void Simulation::Update(float dt)
 	PROFILE_FUNCTION();
 	if (m_pCurrentScene)
 		m_pCurrentScene->Update(dt);
+	
+	
 }
 
 void Simulation::UpdateInput(InputState state, uint32_t playerID)
@@ -755,6 +811,8 @@ void Simulation::UpdateInput(InputState state, uint32_t playerID)
 	if (m_players.find(playerID) != m_players.end())
 	{
 		m_playerInputs[m_players.at(playerID)] = state;
+
+
 	}
 }
 

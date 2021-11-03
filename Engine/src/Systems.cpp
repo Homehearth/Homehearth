@@ -282,10 +282,10 @@ void Systems::MovementSystem(HeadlessScene& scene, float dt)
 {
 	//Transform
 	scene.ForEachComponent<comp::Transform, comp::Velocity>([&, dt](comp::Transform& transform, comp::Velocity& velocity)
-	{
-		transform.previousPosition = transform.position;
-		transform.position += velocity.vel * dt;
-	});
+		{
+			transform.position += velocity.vel * dt;
+			transform.position.y = 1.0f;
+		});
 }
 
 void Systems::MovementColliderSystem(HeadlessScene& scene, float dt)
