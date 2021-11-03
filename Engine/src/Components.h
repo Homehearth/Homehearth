@@ -123,6 +123,7 @@ namespace ecs
 
 			float runSpeed;
 			sm::Vector3 targetForward;
+			sm::Vector3 spawnPoint;
 			float respawnTimer;
 			bool isReady = false;
 		};

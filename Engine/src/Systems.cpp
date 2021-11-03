@@ -78,14 +78,6 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 			if (health.currentHealth <= 0)
 			{
 				comp::Network* net = entity.GetComponent<comp::Network>();
-
-				if (net)
-				{
-					LOG_INFO("Entity %u died", net->id);
-				}
-				else {
-					LOG_INFO("Entity died");
-				}
 				health.isAlive = false;
 				if (!entity.GetComponent<comp::Player>())
 				{
