@@ -115,7 +115,7 @@ if (GetCurrentScene() == &GetScene("Game") && GetCurrentScene()->GetCurrentCamer
 }
 		*/
 
-	//Update InputState
+		//Update InputState
 	if (GetCurrentScene() == &GetScene("Game"))
 	{
 		this->UpdateInput();
@@ -239,92 +239,24 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 				LOG_INFO("A remote player added!");
 				m_players[e.GetComponent<comp::Network>()->id] = e;
 			}
-			// TODO DEBUG
+			
 #ifdef  _DEBUG
-			if (RENDER_GRID)
-			{
-				comp::Tile* tile = e.GetComponent<comp::Tile>();
-				if (tile)
-				{
-					if (tile->type == TileType::EMPTY)
-					{
-						comp::Renderable* renderable = e.AddComponent<comp::Renderable>();
-						renderable->model = ResourceManager::Get().GetResource<RModel>("Plane1.obj");
-						renderable->model->ChangeMaterial("TileEmpty.mtl");
-					}
-					else if (tile->type == TileType::BUILDING || tile->type == TileType::UNPLACABLE)
-					{
-						comp::Renderable* renderable = e.AddComponent<comp::Renderable>();
-						renderable->model = ResourceManager::Get().CopyResource<RModel>("Plane1.obj");
-						renderable->model->ChangeMaterial("TileBuilding.mtl");
-					}
-					else if (tile->type == TileType::DEFENCE)
-					{
-						comp::Renderable* renderable = e.AddComponent<comp::Renderable>();
-						renderable->model = ResourceManager::Get().CopyResource<RModel>("Plane1.obj");
-						renderable->model->ChangeMaterial("TileDefence.mtl");
-					}
-
-				}
-			}
+			CreateVisualGrid(e);
 #endif //  _DEBUG
-
-
 		}
 
-		break;
-	}
-	case GameMsg::Grid_PlaceDefence:
-	{
-#ifdef _DEBUG
-		if (RENDER_GRID)
-		{
-			uint32_t id;
-			msg >> id;
-
-		GetScene("Game").ForEachComponent<comp::Network, comp::Tile>([&](Entity& e, comp::Network& net, comp::Tile& tile)
-			{
-				if (id == net.id)
-				{
-					comp::Renderable* render = e.GetComponent<comp::Renderable>();
-					render->model = ResourceManager::Get().GetResource<RModel>("Defence.obj");
-					render->model->ChangeMaterial("TileDefence.mtl");
-					tile.type = TileType::DEFENCE;
-					LOG_INFO("Placed defence %d", id);
-				}
-			});
-		}
-		else if (!RENDER_GRID)
-		{
-			sm::Vector3 position;
-			msg >> position;
-
-			Entity defence = GetScene("Game").CreateEntity();
-			comp::Renderable* render = defence.AddComponent<comp::Renderable>();
-			defence.AddComponent<comp::Transform>()->position = position;
-			defence.GetComponent<comp::Transform>()->scale = { 4.2f, 0.5f, 4.2f };
-			render->model = ResourceManager::Get().GetResource<RModel>("Defence.obj");
-			render->model->ChangeMaterial("TileDefence.mtl");
-			LOG_INFO("Placed defence");
-#endif // DEBUG
-#ifdef NDEBUG
-		sm::Vector3 position;
-		msg >> position;
-
-		Entity defence = GetScene("Game").CreateEntity();
-		comp::Renderable* render = defence.AddComponent<comp::Renderable>();
-		defence.AddComponent<comp::Transform>()->position = position;
-		defence.GetComponent<comp::Transform>()->scale = { 4.2f, 0.5f, 4.2f };
-		render->model = ResourceManager::Get().GetResource<RModel>("Defence.obj");
-		render->model->ChangeMaterial("TileDefence.mtl");
-		LOG_INFO("Placed defence");
-
-#endif // NDEBUG				
 		if (GetCurrentScene() == &GetScene("Loading"))
 		{
 			SetScene("Lobby");
 		}
 		LOG_INFO("Successfully loaded all entities!");
+
+		break;
+	}
+	case GameMsg::Grid_PlaceDefence:
+	{
+		PlaceDefenceDebug(msg);
+		PlaceDefenceRelease(msg);
 		break;
 	}
 	case GameMsg::Game_RemoveEntity:
@@ -435,7 +367,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			collect->Show();
 			dynamic_cast<rtd::Text*>(collect->elements[1].get())->SetText(ids[i]);
 		}
-
 		break;
 	}
 	}
