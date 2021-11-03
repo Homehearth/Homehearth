@@ -63,7 +63,7 @@ void ServerGame::InputThread()
 
 bool ServerGame::OnStartup()
 {
-	if (!m_server.Start(25565))
+	if (!m_server.Start(4950))
 	{
 		LOG_ERROR("Failed to start server");
 		exit(0);
