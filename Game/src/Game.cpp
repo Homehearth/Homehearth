@@ -73,6 +73,9 @@ bool Game::OnStartup()
 	sceneHelp::CreateJoinLobbyScene(this);
 	sceneHelp::CreateLoadingScene(this);
 
+	Entity e = GetScene("Game").CreateEntity();
+	e.AddComponent<comp::Transform>();
+	e.AddComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>("GameScene.obj");
 	// Set Current Scene
 	SetScene("MainMenu");
 
@@ -132,6 +135,7 @@ if (GetCurrentScene() == &GetScene("Game") && GetCurrentScene()->GetCurrentCamer
 void Game::OnShutdown()
 {
 	m_players.clear();
+	m_mapEntity.Destroy();
 }
 
 
@@ -263,12 +267,16 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		LOG_INFO("Removed %u entities", count);
 		break;
 	}
+	case GameMsg::Game_BackToLobby:
+	{
+		SetScene("Lobby");
+		break;
+	}	
 	case GameMsg::Lobby_Accepted:
 	{
 		msg >> m_gameID;
 		this->SetScene("Loading");
 		LOG_INFO("You are now in lobby: %lu", m_gameID);
-
 		break;
 	}
 	case GameMsg::Lobby_Invalid:

@@ -117,11 +117,13 @@ namespace ecs
 			{
 				IDLE,
 				ATTACK,
-				TURN
+				TURN,
+				DEAD
 			} state = State::IDLE;
 
 			float runSpeed;
 			sm::Vector3 targetForward;
+			float respawnTimer;
 			bool isReady = false;
 		};
 
