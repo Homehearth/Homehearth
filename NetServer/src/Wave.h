@@ -17,7 +17,7 @@ public:
 		std::unordered_map<EnemyManagement::EnemyType, int> m_enemies;
 		std::unordered_map<EnemyManagement::EnemyType, int>::iterator m_iterator;
 		sm::Vector2 m_spawnPoint;
-		int m_totalEnemyCount;
+		int m_totalEnemyCount = 0;
 
 	public:
 		Group() = default;

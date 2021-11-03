@@ -419,8 +419,6 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 		collider.AddComponent<comp::BoundingOrientedBox>()->Center = mapColliders->at(i).Center;
 		collider.GetComponent<comp::BoundingOrientedBox>()->Extents = mapColliders->at(i).Extents;
 		collider.GetComponent<comp::BoundingOrientedBox>()->Orientation = mapColliders->at(i).Orientation;
-		//collider.AddComponent<comp::Transform>()->position = mapColliders->at(i).Center;
-		collider.AddComponent<comp::Network>();
 		collider.AddComponent<comp::Tag<TagType::STATIC>>();
 		collider.AddComponent<comp::Tag<TagType::MAP_BOUNDS>>();
 	}
@@ -613,7 +611,9 @@ void Simulation::SendSnapshot()
 		std::bitset<ecs::Component::COMPONENT_MAX> compMask;
 		compMask.set(ecs::Component::TRANSFORM);
 		compMask.set(ecs::Component::HEALTH);
+#if DEBUG_SNAPSHOT
 		compMask.set(ecs::Component::BOUNDING_ORIENTED_BOX);
+#endif
 		this->SendEntities(m_updatedEntities, GameMsg::Game_Snapshot, compMask);
 		m_updatedEntities.clear();
 	
@@ -760,7 +760,7 @@ void Simulation::SendEntities(const std::vector<Entity>& entities, GameMsg msgID
 	if (entities.size() == 0)
 		return;
 
-	int32_t count = min(entities.size(), 10);
+	size_t count = min(entities.size(), 10);
 	size_t sent = 0;
 	do
 	{
