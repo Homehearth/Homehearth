@@ -56,6 +56,10 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 							otherHealth->currentHealth -= atk->damage;
 							LOG_INFO("ATTACK COLLIDER HIT BAD GUY!");
 							atk->lifeTime = 0.f;
+							comp::Velocity* attackVel = attackCollider.GetComponent<comp::Velocity>();
+							
+							other.AddComponent<comp::Force>()->force = attackVel->vel;
+
 							other.UpdateNetwork();
 						}
 					});
@@ -107,6 +111,25 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 void Systems::MovementSystem(HeadlessScene& scene, float dt)
 {
 	//Transform
+
+	scene.ForEachComponent<comp::Velocity, comp::Force>([&](Entity e, comp::Velocity& v, comp::Force& f)
+		{
+			if (f.wasApplied)
+			{
+				v.vel *= 1.0f - (dt * 10.f);
+				f.actingTime -= dt;
+				if (f.actingTime <= 0.0f)
+				{
+					e.RemoveComponent<comp::Force>();
+				}
+			}
+			else
+			{
+				v.vel = f.force;
+				f.wasApplied = true;
+			}
+		});
+
 	scene.ForEachComponent<comp::Transform, comp::Velocity>([&, dt]
 	(comp::Transform& transform, comp::Velocity& velocity)
 		{
