@@ -103,22 +103,6 @@ void CollisionSystem::AddOnCollision(Entity entity1, std::function<void(Entity)>
 
 void CollisionSystem::OnCollision(Entity entity1, Entity entity2)
 {
-	if(entity1.GetComponent<comp::Tag<DYNAMIC>>() && entity2.GetComponent<comp::Tag<DYNAMIC>>())
-	{
-		CollisionSystem::Get().CollisionResponse(entity1, entity2);
-	}
-	else
-	{
-		if(entity1.GetComponent<comp::Tag<DYNAMIC>>() && entity2.GetComponent<comp::Tag<STATIC>>())
-		{
-			entity1.GetComponent<comp::Transform>()->position = entity1.GetComponent<comp::Transform>()->previousPosition;
-		}
-		else if (entity1.GetComponent<comp::Tag<STATIC>>() && entity2.GetComponent<comp::Tag<DYNAMIC>>())
-		{
-			entity2.GetComponent<comp::Transform>()->position = entity2.GetComponent<comp::Transform>()->previousPosition;
-		}
-	}
-
 	if (m_OnCollision.find(entity1) != m_OnCollision.end())
 	{
 		if (!entity1.IsNull())
@@ -144,185 +128,153 @@ void CollisionSystem::OnCollision(Entity entity1, Entity entity2)
 }
 
 
+CollisionSystem::Projection_t CollisionSystem::GetProjection(sm::Vector3 axis, sm::Vector3* corners)
+{
+	double min = axis.Dot(corners[0]);
+	double max = min;
+
+	for(int i = 1; i < 8; i++)
+	{
+		double p = axis.Dot(corners[i]);
+
+		if(p < min)
+		{
+			min = p;
+		}
+		else if(p > max)
+		{
+			max = p;
+		}
+		
+	}
+
+	//Projection_t projection = {min, max};
+	return { min, max };
+}
+
 //Generates a response when two objects collide with each other,
 //Will move both objects if they are both dynamic in different directions depending on how much of
 //each corners crosses each other and take the axis that differs the least.
-void CollisionSystem::CollisionResponse(Entity entity1, Entity entity2) const
+CollisionInfo_t CollisionSystem::Intersection(Entity entity1, Entity entity2)
 {
 	comp::BoundingOrientedBox* p1Obb = entity1.GetComponent<comp::BoundingOrientedBox>();
 	comp::BoundingOrientedBox* p2Obb = entity2.GetComponent<comp::BoundingOrientedBox>();
-	
-	comp::Transform* p1transform = entity1.GetComponent<comp::Transform>();
-	comp::Transform* p2transform = entity2.GetComponent<comp::Transform>();
 
 	if (p1Obb == nullptr || p2Obb == nullptr)
 	{
 		LOG_ERROR("Attempt to perform collision response with or against an entity that does not have a collider component");
-		return;
+		return {false, 0.0, sm::Vector3::Zero};
 	}
-
+	
 	sm::Vector3 p2Corners[8];
 	sm::Vector3 p1Corners[8];
+	
 	p2Obb->GetCorners(p2Corners);
 	p1Obb->GetCorners(p1Corners);
+	
+	sm::Vector3 normals[6] = { sm::Vector3(1.0,0.0,0.0f),sm::Vector3(0.0,1.0,0.0f), sm::Vector3(0.0,0.0,1.0f), sm::Vector3(-1.0,0.0,0.0f),sm::Vector3(0.0,-1.0,0.0f), sm::Vector3(0.0,0.0,-1.0f) };
+	std::vector<sm::Vector3> allAxis;
 
-	//normal axis for both colliders
-	std::vector<sm::Vector3> normalAxis;
+	allAxis.emplace_back(DirectX::XMVector3Rotate(normals[0], DirectX::XMLoadFloat4(& p1Obb->Orientation)));
+	allAxis.emplace_back(DirectX::XMVector3Rotate(normals[1], DirectX::XMLoadFloat4(& p1Obb->Orientation)));
+	allAxis.emplace_back(DirectX::XMVector3Rotate(normals[2], DirectX::XMLoadFloat4(& p1Obb->Orientation)));
+	allAxis.emplace_back(DirectX::XMVector3Rotate(normals[3], DirectX::XMLoadFloat4(& p1Obb->Orientation)));
+	allAxis.emplace_back(DirectX::XMVector3Rotate(normals[4], DirectX::XMLoadFloat4(& p1Obb->Orientation)));
+	allAxis.emplace_back(DirectX::XMVector3Rotate(normals[5], DirectX::XMLoadFloat4(& p1Obb->Orientation)));
+	
+	allAxis.emplace_back(DirectX::XMVector3Rotate(normals[0], DirectX::XMLoadFloat4(&p2Obb->Orientation)));
+	allAxis.emplace_back(DirectX::XMVector3Rotate(normals[1], DirectX::XMLoadFloat4(&p2Obb->Orientation)));
+	allAxis.emplace_back(DirectX::XMVector3Rotate(normals[2], DirectX::XMLoadFloat4(&p2Obb->Orientation)));
+	allAxis.emplace_back(DirectX::XMVector3Rotate(normals[3], DirectX::XMLoadFloat4(&p2Obb->Orientation)));
+	allAxis.emplace_back(DirectX::XMVector3Rotate(normals[4], DirectX::XMLoadFloat4(&p2Obb->Orientation)));
+	allAxis.emplace_back(DirectX::XMVector3Rotate(normals[5], DirectX::XMLoadFloat4(&p2Obb->Orientation)));
+	
+	double overlap = DBL_MAX;
+	sm::Vector3 smallest = sm::Vector3::Zero;
 
-	//Get the 3 AXIS from box1 needed to do the projection on
-	normalAxis.push_back((p1Corners[1] - p1Corners[0]));
-	normalAxis[0].Normalize();
-	normalAxis.push_back((p1Corners[2] - p1Corners[1]));
-	normalAxis[1].Normalize();
-	normalAxis.push_back((p1Corners[0] - p1Corners[4]));
-	normalAxis[2].Normalize();
-
-	//Get the 3 AXIS from box2 needed to do the projection on
-	normalAxis.push_back((p2Corners[1] - p2Corners[0]));
-	normalAxis[3].Normalize();
-	normalAxis.push_back((p2Corners[2] - p2Corners[1]));
-	normalAxis[4].Normalize();
-	normalAxis.push_back((p2Corners[0] - p2Corners[4]));
-	normalAxis[5].Normalize();
-
-	std::vector<sm::Vector3> p1Vectors;
-	std::vector<sm::Vector3> p2Vectors;
-
-	//Save all the corners
-	for (int i = 0; i < 8; i++)
+	for(int i = 0; i < allAxis.size(); i++)
 	{
-		p1Vectors.emplace_back(p1Corners[i]);
-		p2Vectors.emplace_back(p2Corners[i]);
-	}
+		sm::Vector3 axis = allAxis.at(i);
+		
+		//Project both shapes on the axis
+		Projection_t p1 = GetProjection(axis, p1Corners);
+		Projection_t p2 = GetProjection(axis, p2Corners);
 
-	//Get min-max for the axis for the box
-	std::vector<MinMaxProj_t> minMaxProj;
-	for(int i = 0; i < normalAxis.size(); i++)
-	{
-		minMaxProj.push_back(CollisionSystem::Get().GetMinMax(p1Vectors, normalAxis.at(i)));
-		minMaxProj.push_back(CollisionSystem::Get().GetMinMax(p2Vectors, normalAxis.at(i)));
-	}
-
-	float depth = FLT_MAX;
-	sm::Vector3 smallestVec(FLT_MAX, FLT_MAX, FLT_MAX);
-	bool isValueSet = false;
-
-	//Find the smallest gap between the min and max corners.
-	for (int i = 0; i < static_cast<int>(minMaxProj.size()) - 1; i += 2)
-	{
-		sm::Vector3 gap;
-		const unsigned int nextIndex = i+1;
-		//Take projections in the right order depending on entitys position in the world space
-		if (minMaxProj[i].maxProj < minMaxProj[nextIndex].maxProj)
+		// 1D
+		if((p1.max < p2.min))
 		{
-			gap = p2Vectors[minMaxProj[nextIndex].minInxed] - p1Vectors[minMaxProj[i].maxIndex];
-		}
-		else if (minMaxProj[i].maxProj > minMaxProj[nextIndex].maxProj)
-		{
-			gap = p1Vectors[minMaxProj[i].minInxed] - p2Vectors[minMaxProj[nextIndex].maxIndex];
+			//NO OVERLAP
+			return { false,0.0, sm::Vector3::Zero };
 		}
 		else
 		{
-			continue; // Skips if 0.0f
-		}
+			//Get the overlap
+			double o = p1.max - p2.min;
 
-		//Find the axis with lowest difference
-		if (abs(gap.x) < abs(depth) && abs(gap.x) > 0.0001f)
-		{
-			depth = gap.x;
-			smallestVec = sm::Vector3(gap.x, 0.0f, 0.0f);
-			isValueSet = true;
-		}
-		//LOCK Y
-		//if (abs(gap.y) < abs(depth) && abs(gap.y) > 0.0001f)
-		//{
-		//	depth = gap.y;
-		//	smallestVec = sm::Vector3(0.0f, gap.y, 0.0f);
-		//	isValueSet = true;
-		//}
-		if (abs(gap.z) < abs(depth) && abs(gap.z) > 0.0001f)
-		{
-			depth = gap.z;
-			smallestVec = sm::Vector3(0.0f, 0.0f, gap.z);
-			isValueSet = true;
-		}
+			if(o < overlap)
+			{
+				overlap = o;
+				smallest = axis;
+			}
 
-	}
-
-	//Reset to 0.001 (happens if boxes share exactly the same corners pos)
-	if (!isValueSet)
-	{
-		smallestVec = sm::Vector3(0.01f, 0.00f, 0.01f);
-	}
-
-	//Move the entity away from the other entity
-	const sm::Vector3 moveVec = smallestVec * 1.1f;
-	if ((p2Obb->Center - (p1Obb->Center + moveVec)).Length() > (sm::Vector3(p2Obb->Center) -
-		p1Obb->Center).Length())
-	{
-		if (p1transform)
-		{
-			p1transform->position += (moveVec);
-			p1Obb->Center = p1transform->position;
-		}
-		
-		if(entity2.GetComponent<comp::Tag<DYNAMIC>>() && p2transform)
-		{
-			p2transform->position += ((moveVec * -1.0f) / 2.0f);
-			p2Obb->Center = p2transform->position;
-		}
-	}
-	else
-	{
-		if (p1transform)
-		{
-			p1transform->position += (moveVec * -1.0f);
-			p1Obb->Center = p1transform->position;
-		}
-		
-		if (entity2.GetComponent<comp::Tag<DYNAMIC>>() && p2transform)
-		{
-			p2transform->position += ((moveVec) / 2.0f);
-			p2Obb->Center = p2transform->position;
 		}
 	}
 
-	//If still colliding should make another iteration through the function to find the other axis
-	if(p1Obb->Intersects(*p2Obb))
-	{
-		this->CollisionResponse(entity1, entity2);
-	}
+	return { true,overlap,smallest };
+	
 }
 
-
-
-
-MinMaxProj_t CollisionSystem::GetMinMax(std::vector<sm::Vector3> boxVectors, sm::Vector3 boxAxis)
+void CollisionSystem::CollisionResponse(CollisionInfo_t collisionInfo, Entity entity1, Entity entity2)
 {
-	MinMaxProj_t minMaxProj;
-
-	minMaxProj.minProj = boxVectors.at(0).Dot(boxAxis);
-	minMaxProj.maxProj = boxVectors.at(0).Dot(boxAxis);
-	minMaxProj.minInxed = 0;
-	minMaxProj.maxIndex = 0;
-
-	
-	for(int i = 1; i < boxVectors.size(); i++)
+	if(entity1.GetComponent<comp::Tag<DYNAMIC>>() && entity2.GetComponent<comp::Tag<STATIC>>())
 	{
-		float currentProj = boxVectors[i].Dot(boxAxis);
-		//select the maximum projection on axis to corresponding box corners
-		if(minMaxProj.minProj > currentProj)
+		comp::Transform* transform = entity1.GetComponent<comp::Transform>();
+		comp::BoundingOrientedBox* obb = entity1.GetComponent<comp::BoundingOrientedBox>();
+		if (transform)
 		{
-			minMaxProj.minProj = currentProj;
-			minMaxProj.minInxed = i;
+			transform->position = transform->position + sm::Vector3(collisionInfo.smallestVec * (float)collisionInfo.overlap * -1.1f);
+			
+			if (obb)
+				obb->Center = transform->position;
 		}
-		//select the minimum projection on axis to corresponding box corners
-		if(currentProj > minMaxProj.maxProj)
-		{
-			minMaxProj.maxProj = currentProj;
-			minMaxProj.maxIndex = i;
-		}
+			
 	}
+	else if(entity2.GetComponent<comp::Tag<DYNAMIC>>() && entity1.GetComponent<comp::Tag<STATIC>>())
+	{
+		comp::Transform* transform = entity2.GetComponent<comp::Transform>();
+		comp::BoundingOrientedBox* obb = entity2.GetComponent<comp::BoundingOrientedBox>();
+		
+		if (transform)
+		{
+			transform->position = transform->position + sm::Vector3(collisionInfo.smallestVec * (float)collisionInfo.overlap * 1.1f);
+			
+			if (obb)
+				obb->Center = transform->position;
+		}
+			
+	}
+	else if(entity2.GetComponent<comp::Tag<DYNAMIC>>() && entity1.GetComponent<comp::Tag<DYNAMIC>>())
+	{
+		comp::Transform* transform1 = entity1.GetComponent<comp::Transform>();
+		comp::Transform* transform2 = entity2.GetComponent<comp::Transform>();
+		comp::BoundingOrientedBox* obb1 = entity1.GetComponent<comp::BoundingOrientedBox>();
+		comp::BoundingOrientedBox* obb2 = entity2.GetComponent<comp::BoundingOrientedBox>();
+		//Dynamic
+		if (transform1)
+		{
+			transform1->position = transform1->position + (sm::Vector3(collisionInfo.smallestVec * (float)collisionInfo.overlap * -1.1f) / 2.0f);
 
-	return minMaxProj;		
+			if (obb1)
+				obb1->Center = transform1->position;
+		}
+
+		if (transform2)
+		{
+			transform2->position = transform2->position + (sm::Vector3(collisionInfo.smallestVec * (float)collisionInfo.overlap) / 2.0f * 1.1f);
+
+			if (obb2)
+				obb2->Center = transform2->position;
+		}
+			
+	}
 }
