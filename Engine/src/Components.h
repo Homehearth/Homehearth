@@ -27,6 +27,12 @@ namespace ecs
 		//Collider components
 		using DirectX::BoundingOrientedBox;
 		using DirectX::BoundingSphere;
+		struct PlaneCollider
+		{
+			sm::Vector3 center;
+			sm::Vector3 normal;
+			sm::Vector2 size;
+		};
 
 		struct Transform
 		{
