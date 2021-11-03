@@ -71,7 +71,7 @@ void GridSystem::Initialize(sm::Vector2 mapSize, sm::Vector3 position, std::stri
 			}
 
 			float tileHalfWidth = (float)(((m_mapSize.x / m_gridSize.x)) / 2);
-			sm::Vector3 tilePosition = {m_position.x + (tileHalfWidth * row) + tileHalfWidth/2, m_position.y + 0.f , -(tileHalfWidth * col) - (tileHalfWidth/2) + m_position.z};
+			sm::Vector3 tilePosition = { m_position.x + (tileHalfWidth * row) + tileHalfWidth / 2, m_position.y + 0.f , -(tileHalfWidth * col) - (tileHalfWidth / 2) + m_position.z };
 			m_tilePosiitons.push_back(tilePosition);
 
 			Entity tileEntity = scene->CreateEntity();
@@ -174,16 +174,20 @@ std::vector<sm::Vector3>* GridSystem::GetTilePositions()
 {
 	return &m_tilePosiitons;
 }
-Entity& GridSystem::GetTileByID(sm::Vector2 id)
+Entity* GridSystem::GetTileByID(sm::Vector2 id)
 {
-	for (int i = 0; i < m_tiles.size(); i++)
+	if (id.x >= 0 && id.y >= 0 && id.x < m_gridSize.x && id.y < m_gridSize.y)
 	{
-		comp::Tile* tile = m_tiles.at(i).GetComponent<comp::Tile>();
-		if (tile->gridID == id);
+		for (int i = 0; i < m_tiles.size(); i++)
 		{
-			return m_tiles.at(i);
+			comp::Tile* tile = m_tiles.at(i).GetComponent<comp::Tile>();
+			if (tile->gridID == id);
+			{
+				return &m_tiles.at(i);
+			}
 		}
 	}
+	return nullptr;
 }
 
 std::vector<Entity>* GridSystem::GetTiles()
