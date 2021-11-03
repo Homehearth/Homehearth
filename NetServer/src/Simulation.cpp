@@ -384,6 +384,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 		//collider.AddComponent<comp::Transform>()->position = mapColliders->at(i).Center;
 		collider.AddComponent<comp::Network>();
 		collider.AddComponent<comp::Tag<TagType::STATIC>>();
+		collider.AddComponent<comp::Tag<TagType::MAP_BOUNDS>>();
 	}
 	
 	//Gridsystem
