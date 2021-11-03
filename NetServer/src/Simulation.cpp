@@ -462,8 +462,6 @@ bool Simulation::AICreateNodes()
 		node.AddComponent<comp::Node>()->position = tileTransform->position;
 		node.GetComponent<comp::Node>()->id = tiles->at(i).GetComponent<comp::Tile>()->gridID;
 		nodes.push_back(node.GetComponent<comp::Node>());
-
-		//LOG_INFO("Tile ID: %lf  %lf", entityTile->gridID.x, entityTile->gridID.y);
 	}
 
 	//Build Connections

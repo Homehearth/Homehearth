@@ -164,8 +164,9 @@ bool Systems::AIAStarSearch(Entity& npc, HeadlessScene& scene)
 	while (goalNode != startingNode)
 	{
 		//Insert currentNode to the path
-		npcComp->path.insert(npcComp->path.begin(), currentNode);
-		currentNode = currentNode->parent;
+		npcComp->path.insert(npcComp->path.begin(), goalNode);
+		if(goalNode->parent)
+			goalNode = goalNode->parent;
 	}
 
 	scene.ForEachComponent<comp::Node>([&](Entity entity, comp::Node& node)
@@ -173,6 +174,8 @@ bool Systems::AIAStarSearch(Entity& npc, HeadlessScene& scene)
 		node.ResetFGH();
 		node.parent = nullptr;
 	});
+
+	//LOG_INFO("Goal Node Position: %lf %lf %lf", goalNode->position.x, goalNode->position.y, goalNode->position.z);
 
 	return true;
 }
@@ -335,7 +338,7 @@ void Systems::AISystem(HeadlessScene& scene)
 				npc.state = comp::NPC::State::CHASE;
 				LOG_INFO("Switching to CHASE State!");
 			}
-			else if ((sm::Vector3::Distance(transformNPC->position, transformCurrentClosestPlayer->position) >= npc.attackRange + 100 && npc.state == comp::NPC::State::CHASE))
+			else if ((sm::Vector3::Distance(transformNPC->position, transformCurrentClosestPlayer->position) >= npc.attackRange + 100 && npc.state != comp::NPC::State::ASTAR))
 			{
 				npc.state = comp::NPC::State::ASTAR;
 				LOG_INFO("Switching to ASTAR State!");
@@ -355,9 +358,9 @@ void Systems::AISystem(HeadlessScene& scene)
 			}
 			break;
 		case comp::NPC::State::ASTAR:
-			if (!npc.currentNode)
+			if (ReachedNode(&entity, npc.currentNode))
 			{
-				if (ReachedNode(&entity, npc.currentNode))
+				if (!npc.path.empty())
 				{
 					npc.currentNode = npc.path.at(0);
 					npc.path.erase(npc.path.begin());
@@ -369,9 +372,18 @@ void Systems::AISystem(HeadlessScene& scene)
 			}
 			else
 			{
-				velocityTowardsPlayer->vel = transformNPC->position - npc.currentNode->position;
-				velocityTowardsPlayer->vel.Normalize();
-				velocityTowardsPlayer->vel *= npc.movementSpeed;
+				if (velocityTowardsPlayer)
+				{
+					sm::Vector3 nodePos = npc.currentNode->position;
+					velocityTowardsPlayer->vel = nodePos - transformNPC->position;
+					velocityTowardsPlayer->vel.Normalize();
+					velocityTowardsPlayer->vel *= npc.movementSpeed;
+
+					if (velocityTowardsPlayer->vel.y <= 0.00001f)
+					{
+						LOG_INFO("We got a bad boy over here!");
+					}
+				}				
 			}
 			break;
 		case comp::NPC::State::IDLE:
