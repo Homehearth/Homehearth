@@ -73,9 +73,6 @@ bool Game::OnStartup()
 	sceneHelp::CreateJoinLobbyScene(this);
 	sceneHelp::CreateLoadingScene(this);
 
-	Entity e = GetScene("Game").CreateEntity();
-	e.AddComponent<comp::Transform>();
-	e.AddComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>("GameScene.obj");
 	// Set Current Scene
 	SetScene("MainMenu");
 
@@ -276,6 +273,8 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	{
 		msg >> m_gameID;
 		this->SetScene("Loading");
+		this->LoadAllAssets();
+
 		LOG_INFO("You are now in lobby: %lu", m_gameID);
 		break;
 	}
@@ -476,7 +475,7 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 					//Add an animator if we can get it
 					if (!animName.name.empty())
 					{
-						std::shared_ptr<RAnimator> anim = ResourceManager::Get().GetResource<RAnimator>(animName.name);
+						std::shared_ptr<RAnimator> anim = ResourceManager::Get().CopyResource<RAnimator>(animName.name, true);
 						if (anim)
 						{
 							if (anim->LoadSkeleton(renderable->model->GetSkeleton()))
@@ -649,4 +648,16 @@ void Game::CreateVisualGrid(Entity e)
 
 		}
 	}
+}
+
+void Game::LoadAllAssets()
+{
+	ResourceManager::Get().GetResource<RModel>("MonsterCharacter.fbx");
+	ResourceManager::Get().GetResource<RModel>("Barrel.obj");
+	ResourceManager::Get().GetResource<RModel>("Defence.obj");
+	ResourceManager::Get().GetResource<RModel>("Plane1.obj");
+	ResourceManager::Get().GetResource<RModel>("Knight.fbx");
+	Entity e = GetScene("Game").CreateEntity();
+	e.AddComponent<comp::Transform>();
+	e.AddComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>("GameScene.obj");
 }
