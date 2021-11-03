@@ -1,43 +1,55 @@
 #pragma once
 #include "CommonStructures.h"
+#include "AnimStructures.h"
 #include "RMaterial.h"
+
+//Define structs to avoid 
 struct aiMesh;
 struct aiScene;
+struct aiNode;
 
 /*
 	Load in a model/scene of multiple meshes with Assimp 5.0.1
-	Formats supported:
-	* FBX
-	* OBJ
+	
+	*  Formats supported: FBX and OBJ
 
-	Supports files with multiple submeshes and multiple materials
-	Combines all the submeshes with same material to one.
-	This is to optimized and lower the amount of drawcalls.
+	*  Supports files with multiple submeshes and multiple materials.
+	   Combines all the submeshes with same material to one.
+	   This is to optimized and lower the amount of drawcalls.
 
-	The model can change material to any other mtl-file.
-	Order in the mtl-file is important.
+	*  The model can change material to any other mtl-file.
+	   Order in the mtl-file is important for best result.
 
-	Can load in lights from the FBX-format.
+	*  Supports loading in lights from the FBX-format.
 
-	TODO:
-	* Fix loading in bones
+	*  Loads a skeleton, which is a hierchi of bones/joints
+	   that can affect the model.
+
+	*  Need an animator to do animations
 */
 
 class RModel : public resource::GResource
 {
 private:
-	//Each submesh has some data
+	/*
+		Default data for model 
+	*/
 	struct submesh_t
 	{
-		ComPtr<ID3D11Buffer>			vertexBuffer;
-		ComPtr<ID3D11Buffer>			indexBuffer;
-		UINT							indexCount = 0;
-		std::shared_ptr<RMaterial>		material;
+		ComPtr<ID3D11Buffer>		vertexBuffer;
+		ComPtr<ID3D11Buffer>		indexBuffer;
+		UINT						indexCount = 0;
+		std::shared_ptr<RMaterial>	material;
+		bool						hasBones = false;
 	};
-	std::vector<submesh_t>				m_meshes;
-	std::vector<light_t>				m_lights;
+	std::vector<submesh_t>			m_meshes;
+	std::vector<light_t>			m_lights;
 	
-	//Save the skeleton in a structure: rootbone --> other parts
+	/*
+		Skeleton information
+	*/
+	std::vector<bone_t>						m_allBones;
+	std::unordered_map<std::string, UINT>	m_boneMap;		//Move to create later?
 
 private:
 	//Get the end of file. Searches for "."
@@ -50,6 +62,7 @@ private:
 	bool CombineMeshes(std::vector<aiMesh*>& submeshes, submesh_t& submesh);
 
 	//Creating buffers
+	bool CreateVertexBuffer(const std::vector<anim_vertex_t>&	vertices, submesh_t& mesh);
 	bool CreateVertexBuffer(const std::vector<simple_vertex_t>& vertices, submesh_t& mesh);
 	bool CreateIndexBuffer(const std::vector<UINT>& indices, submesh_t& mesh);
 
@@ -57,9 +70,18 @@ private:
 	void LoadLights(const aiScene* scene);
 	void LoadMaterial(const aiScene* scene, const UINT& matIndex, bool& useMTL, submesh_t& inoutMesh) const;
 
+	void BoneHierchy(aiNode* node, std::unordered_map<std::string, bone_t>& nameToBone);
+	bool LoadVertexSkinning(const aiMesh* aimesh, std::vector<anim_vertex_t>& vertices);
+
 public:
 	RModel();
 	~RModel();
+
+	//Get function to check if the model has loaded in any bones
+	bool HasSkeleton() const;
+
+	//Get all the bones for the model - Most useful for the animator
+	const std::vector<bone_t>& GetSkeleton() const;
 
 	//Get the vector of lights
 	const std::vector<light_t>& GetLights() const;
@@ -81,5 +103,4 @@ public:
 
 	// Inherited via GResource
 	virtual bool Create(const std::string& filename) override;
-
 };

@@ -215,6 +215,8 @@ void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& sce
 				p.state = comp::Player::State::DEAD;
 				p.respawnTimer = 10.f;
 				health.isAlive = false;
+				e.AddComponent<comp::MeshName>("Skull.obj");
+				e.UpdateNetwork();
 				LOG_INFO("Player id %u died...", net.id);
 			}
 
@@ -228,6 +230,8 @@ void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& sce
 					t.position = p.spawnPoint;
 					health.currentHealth = 100;
 					health.isAlive = true;
+					e.AddComponent<comp::MeshName>("GameCharacter.fbx");
+					e.UpdateNetwork();
 					LOG_INFO("Player id %u Respawnd...", net.id);
 				}
 			}

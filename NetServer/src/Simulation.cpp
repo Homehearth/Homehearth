@@ -42,6 +42,18 @@ void Simulation::InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg, c
 				compSet.set(ecs::Component::MESH_NAME);
 				msg << m->name;
 			}
+
+			break;
+		}
+		case ecs::Component::ANIMATOR_NAME:
+		{
+			comp::AnimatorName* m = entity.GetComponent<comp::AnimatorName>();
+			if (m)
+			{
+				compSet.set(ecs::Component::ANIMATOR_NAME);
+				msg << m->name;
+			}
+
 			break;
 		}
 		case ecs::Component::NAME_PLATE:
@@ -201,6 +213,7 @@ void Simulation::ResetPlayer(Entity e)
 	e.GetComponent<comp::Health>()->isAlive = true;
 	e.GetComponent<comp::Player>()->state = comp::Player::State::IDLE;
 	e.GetComponent<comp::Player>()->isReady = false;
+	e.AddComponent<comp::MeshName>("GameCharacter.fbx");
 }
 
 Simulation::Simulation(Server* pServer, HeadlessEngine* pEngine)
@@ -313,12 +326,15 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 			for (const auto& pair : m_playerInputs)
 			{
 				Entity e = pair.first;
-				
-				if(e.GetComponent<comp::Player>()->state != comp::Player::State::DEAD)
+				comp::Player* p = e.GetComponent<comp::Player>();
+				if(p->state != comp::Player::State::DEAD)
 				{
 					InputState input = pair.second;
 					// update velocity
-					e.GetComponent<comp::Velocity>()->vel = sm::Vector3(static_cast<float>(input.axisHorizontal), 0, static_cast<float>(input.axisVertical)) * e.GetComponent<comp::Player>()->runSpeed;
+					sm::Vector3 vel = sm::Vector3(static_cast<float>(input.axisHorizontal), 0, static_cast<float>(input.axisVertical));
+					vel.Normalize();
+					vel *= p->runSpeed;
+					e.GetComponent<comp::Velocity>()->vel = vel;
 
 					// check if attacking
 					if (input.leftMouse)
@@ -416,6 +432,17 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 	m_pGameScene->GetRegistry()->on_construct<comp::Network>().connect<&Simulation::OnNetworkEntityCreate>(this);
 	m_pGameScene->GetRegistry()->on_destroy<comp::Network>().connect<&Simulation::OnNetworkEntityDestroy>(this);
 	m_pGameScene->GetRegistry()->on_update<comp::Network>().connect<&Simulation::OnNetworkEntityUpdated>(this);
+
+
+	
+
+	// --- WORLD ---
+	Entity e2 = m_pGameScene->CreateEntity();
+	e2.AddComponent<comp::Transform>();// ->position = { -250, -2, 300 };
+	e2.AddComponent<comp::MeshName>()->name = "GameScene.obj";
+	e2.AddComponent<comp::Tag<TagType::STATIC>>();
+	// send entity
+	e2.AddComponent<comp::Network>();
 
 	// --- END OF THE WORLD ---
 	Entity collider;
@@ -524,13 +551,10 @@ bool Simulation::AddPlayer(uint32_t playerID, const std::string& namePlate)
 
 	player.AddComponent<comp::Velocity>();
 	player.AddComponent<comp::NamePlate>()->namePlate = namePlate;
-	player.AddComponent<comp::MeshName>()->name = "GameCharacter.fbx";
-	
-#ifdef _DEBUG
-	playerComp->runSpeed = 25.f;
-#else
-	playerComp->runSpeed = 10.f;
-#endif // _DEBUG
+
+	player.AddComponent<comp::MeshName>()->name = "Knight.fbx";
+	player.AddComponent<comp::AnimatorName>()->name = "Player.anim";
+	player.AddComponent<comp::Player>()->runSpeed = 25.f;
 
 	*player.AddComponent<comp::CombatStats>() = { 0.3f, 20.f, 2.0f, true, 30.f };
 	player.AddComponent<comp::Health>();
@@ -641,6 +665,7 @@ void Simulation::SendSnapshot()
 		std::bitset<ecs::Component::COMPONENT_MAX> compMask;
 		compMask.set(ecs::Component::TRANSFORM);
 		compMask.set(ecs::Component::HEALTH);
+		compMask.set(ecs::Component::MESH_NAME);
 #if DEBUG_SNAPSHOT
 		compMask.set(ecs::Component::BOUNDING_ORIENTED_BOX);
 #endif
