@@ -272,6 +272,8 @@ void sceneHelp::SetupInGameScreen(Game* game)
 
 	Collection2D* timerCollection = new Collection2D;
 	timerCollection->AddElement<rtd::Text>("0", draw_text_t(0, 0, width, height / 16.f));
+	rtd::Text* enemies = timerCollection->AddElement<rtd::Text>("Enemies", draw_text_t(width - (width / 8), 0, width / 8, height / 16.f));
+	enemies->SetVisiblity(false);
 	scene.Add2DCollection(timerCollection, "timer");
 
 	Collection2D* attackCollection = new Collection2D;
@@ -300,7 +302,7 @@ void sceneHelp::SetupInGameScreen(Game* game)
 	}
 
 	Collection2D* buttons = new Collection2D;
-	rtd::Button* exitButton = buttons->AddElement<rtd::Button>("demoExitButton.png", draw_t(0.0f, 0.0f, width / 32, height / 18));
+	rtd::Button* exitButton = buttons->AddElement<rtd::Button>("demoExitButton.png", draw_t(0.0f, 0.0f, width / 24, height / 16));
 	exitButton->SetOnPressedEvent([=] {
 		game->m_client.Disconnect();
 		game->Shutdown();
@@ -430,7 +432,7 @@ void sceneHelp::SetupLobbyJoinScreen(Game* game)
 	rtd::TextField* lobbyField = lobbyCollection->AddElement<rtd::TextField>(draw_text_t(width / 8, height - (height / 3.33f), width / 4, D2D1Core::GetDefaultFontSize()));
 	lobbyField->SetDescriptionText("Input Lobby ID");
 	rtd::Button* lobbyButton = lobbyCollection->AddElement<rtd::Button>("StartButton.png", draw_t(width / 2, height - (height / 3.33f), width / 4, height / 8));
-	rtd::Button* exitButton = lobbyCollection->AddElement<rtd::Button>("demoExitButton.png", draw_t(0.0f, 0.0f, width / 16, height / 9));
+	rtd::Button* exitButton = lobbyCollection->AddElement<rtd::Button>("demoExitButton.png", draw_t(0.0f, 0.0f, width / 24, height / 16));
 	exitButton->SetOnPressedEvent([=] {
 		game->m_client.Disconnect();
 		});

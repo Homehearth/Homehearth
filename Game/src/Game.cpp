@@ -13,6 +13,7 @@ Game::Game()
 	this->m_localPID = -1;
 	this->m_gameID = -1;
 	this->m_predictionThreshhold = 0.001f;
+	m_waveTimer = 0;
 }
 
 Game::~Game()
@@ -319,7 +320,10 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		Element2D* elem = GetScene("Game").GetCollection("timer")->elements[0].get();
 		if (elem)
 		{
-			dynamic_cast<rtd::Text*>(elem)->SetText(std::to_string(m_waveTimer));
+			if(m_waveTimer > 0)
+				dynamic_cast<rtd::Text*>(elem)->SetText("\nUntil next Wave:\n" + std::to_string(m_waveTimer));
+			else
+				dynamic_cast<rtd::Text*>(elem)->SetText("\nUnder Attack!");
 		}
 		break;
 	}

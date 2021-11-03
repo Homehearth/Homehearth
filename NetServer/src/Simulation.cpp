@@ -607,7 +607,7 @@ void Simulation::SendSnapshot()
 		this->Broadcast(msg);
 
 		// Update until next wave timer if next wave is present.
-		if (waveQueue.size() > 0)
+		if (!waveQueue.empty())
 		{
 			// Update wave timer to clients.
 			network::message<GameMsg> msg2;
