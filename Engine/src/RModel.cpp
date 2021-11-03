@@ -566,9 +566,9 @@ bool RModel::Create(const std::string& filename)
         if (m_boneMap.find(parentName) != m_boneMap.end())
             m_allBones[i].parentIndex = m_boneMap[parentName];
        
-#ifdef _DEBUG
-        std::cout << i << "\t" << m_allBones[i].parentIndex << "\t" << m_allBones[i].name << std::endl;
-#endif // _DEBUG
+//#ifdef _DEBUG
+//        std::cout << i << "\t" << m_allBones[i].parentIndex << "\t" << m_allBones[i].name << std::endl;
+//#endif // _DEBUG
     }
 
     //.fbx uses default material, and .obj uses mtl

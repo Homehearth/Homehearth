@@ -30,7 +30,7 @@ void Game::UpdateNetwork(float deltaTime)
 	{
 		m_client.Update();
 
-		pingCheck += deltaTime;
+		//pingCheck += deltaTime;
 
 		//if (pingCheck > TARGET_PING_TIME)
 		//{

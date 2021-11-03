@@ -70,7 +70,6 @@ private:
 	void LoadLights(const aiScene* scene);
 	void LoadMaterial(const aiScene* scene, const UINT& matIndex, bool& useMTL, submesh_t& inoutMesh) const;
 
-	//void LoadBones();
 	void BoneHierchy(aiNode* node, std::unordered_map<std::string, bone_t>& nameToBone);
 	bool LoadVertexSkinning(const aiMesh* aimesh, std::vector<anim_vertex_t>& vertices);
 

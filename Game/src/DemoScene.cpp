@@ -270,7 +270,7 @@ void sceneHelp::SetupInGameScreen(Game* game)
 	//// Temp textures
 	Scene& scene = game->GetScene("Game");
 	const std::string& texture1 = "like.png";
-	const std::string& texture2 = "sword.png";
+	const std::string& texture2 = "UI_sword.png";
 	float width = (float)game->GetWindow()->GetWidth();
 	float height = (float)game->GetWindow()->GetHeight();
 

@@ -354,9 +354,9 @@ bool RAnimation::Create(const std::string& filename)
 	//Load in all the keyframes - works with only one animation at time
 	LoadKeyframes(animation);
 	
-#ifdef _DEBUG
-	LOG_INFO("Loaded animation: %s\n", filename.c_str());
-#endif // _DEBUG
+//#ifdef _DEBUG
+//	LOG_INFO("Loaded animation: %s\n", filename.c_str());
+//#endif // _DEBUG
 
 	importer.FreeScene();
 	return true;
