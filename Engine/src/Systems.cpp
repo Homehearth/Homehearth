@@ -106,14 +106,6 @@ void Systems::MovementSystem(HeadlessScene& scene, float dt)
 		{
 			transform.position += velocity.vel * dt;
 		});
-
-	scene.ForEachComponent<comp::Transform, comp::Network>([](Entity e, comp::Transform& t, comp::Network&) 
-		{
-			if (t.previousPosition != t.position)
-			{
-				e.UpdateNetwork();
-			}
-		});
 }
 
 void Systems::MovementColliderSystem(HeadlessScene& scene, float dt)
