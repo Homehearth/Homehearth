@@ -307,6 +307,18 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 
 					}
 				}
+				if (input.rightMouse)
+				{
+					uint32_t netID = m_grid.PlaceDefence(input.mouseRay);
+					if (netID != -1)
+					{
+						network::message<GameMsg> msg;
+						msg.header.id = GameMsg::Grid_PlaceDefence;
+
+						msg << netID;
+						Broadcast(msg);
+					}
+				}
 			}
 
 			//  run all game logic systems
@@ -617,10 +629,7 @@ void Simulation::UpdateInput(InputState state, uint32_t playerID)
 	{
 		m_playerInputs[m_players.at(playerID)] = state;
 
-		if (state.rightMouse == true)
-		{
-			m_grid.PlaceDefence(state.mouseRay);
-		}
+
 	}
 }
 

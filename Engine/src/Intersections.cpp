@@ -135,18 +135,18 @@ const bool Intersect::RayIntersectPlane(const Ray_t& ray, const comp::PlaneColli
 	double originToCenterDotNormal = originToCenter.Dot(planeCollider.normal);
 	t = originToCenterDotNormal / dirNormal;
 
-	//Return false if plane is behind us
-	if (t < 0.0)
-		return false;
+	////Return false if plane is behind us
+	//if (t < 0.0)
+	//	return false;
 
 	//Restriction that makes the plane to a disc, if its outside the disc radius it does not intersect
 	sm::Vector3 intersecPoint = origin + direction * (float)t;
 	sm::Vector3 disToCenter = (intersecPoint - planeCollider.center);
 	double disToCenterL = (intersecPoint - planeCollider.center).Length();
 
-	if (disToCenter.x >= halfLenght && disToCenter.y >= halfLenght)
-		return false;
+	/*if (disToCenter.x >= halfLenght && disToCenter.y >= halfLenght)
+		return false;*/
 
 
-	return false;
+	return disToCenterL <= halfLenght/2;
 }

@@ -236,6 +236,12 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 					renderable->model = ResourceManager::Get().GetResource<RModel>("Plane2.obj");
 					renderable->model->ChangeMaterial("TileBuilding.mtl");
 				}
+				else if (tile->type == TileType::DEFENCE)
+				{
+					comp::Renderable* renderable = e.AddComponent<comp::Renderable>();
+					renderable->model = ResourceManager::Get().GetResource<RModel>("Plane3.obj");
+					renderable->model->ChangeMaterial("TileDefence.mtl");
+				}
 				
 			}
 #endif //  _DEBUG
@@ -243,6 +249,23 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 
 		}
 
+		break;
+	}
+	case GameMsg::Grid_PlaceDefence:
+	{
+		uint32_t id;
+		msg >> id;
+
+		GetScene("Game").ForEachComponent<comp::Network, comp::Tile>([&](Entity& e, comp::Network& net, comp::Tile& tile)
+			{	
+				if (id == net.id)
+				{
+					e.GetComponent<comp::Transform>()->position.y = 3;
+					tile.type = TileType::DEFENCE;
+					std::cout << "clicked on tile!" << std::endl;
+				}
+			});
+		LOG_INFO("Placed defence ", id);
 		break;
 	}
 	case GameMsg::Game_RemoveEntity:
@@ -464,6 +487,13 @@ Entity Game::CreateEntityFromMessage(message<GameMsg>& msg)
 				*e.AddComponent<comp::BoundingSphere>() = s;
 				break;
 			}
+			case ecs::Component::PLANECOLLIDER:
+			{
+				comp::PlaneCollider p;
+				msg >> p;
+				*e.AddComponent<comp::PlaneCollider>() = p;
+				break;
+			}
 			case ecs::Component::LIGHT:
 			{
 				comp::Light l;
@@ -505,7 +535,7 @@ void Game::UpdateInput()
 		m_inputState.leftMouse = true;
 		m_inputState.mouseRay = InputSystem::Get().GetMouseRay();
 	}
-	if (InputSystem::Get().CheckMouseKey(MouseKey::RIGHT, KeyState::HELD))
+	if (InputSystem::Get().CheckMouseKey(MouseKey::RIGHT, KeyState::PRESSED))
 	{
 		m_inputState.rightMouse = true;
 		m_inputState.mouseRay = InputSystem::Get().GetMouseRay();

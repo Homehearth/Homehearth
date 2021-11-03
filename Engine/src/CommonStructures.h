@@ -78,7 +78,9 @@ enum class GameMsg : uint8_t
 	Game_AddEntity,
 	Game_RemoveEntity,
 
-	Game_PlayerInput
+	Game_PlayerInput,
+
+	Grid_PlaceDefence
 };
 
 /*

@@ -50,21 +50,16 @@ void GridSystem::Initialize(sm::Vector2 mapSize, sm::Vector3 position, std::stri
 			//std::cout << "RGBA: " << rgba.x << " " << rgba.y << " " << rgba.z << " " << rgba.w << std::endl;
 
 			if (rgba == sm::Vector4{ 100, 100, 100, 255 })
-			{
 				tileTypeTemp = TileType::EMPTY;
-			}
+
 			if (rgba == sm::Vector4{ 255, 51, 0, 255 })
-			{
 				tileTypeTemp = TileType::BUILDING;
-			}
+
 			if (rgba == sm::Vector4{ 255, 234, 0, 255 } || rgba == sm::Vector4{ 0, 21, 255, 255 })
-			{
 				tileTypeTemp = TileType::UNPLACABLE;
-			}
+
 			if (rgba == sm::Vector4{ 0, 0, 0, 255 })
-			{
 				tileTypeTemp = TileType::DEFAULT;
-			}
 
 			m_tileHalfWidth = (float)(tileSize.x/2);
 			sm::Vector3 tilePosition = {m_position.x + (m_tileHalfWidth * row) + m_tileHalfWidth/2, m_position.y + 0.f , -(m_tileHalfWidth * col) - (m_tileHalfWidth/2) + m_position.z};
@@ -82,7 +77,8 @@ void GridSystem::Initialize(sm::Vector2 mapSize, sm::Vector3 position, std::stri
 			transform->scale = { 4.2f, 0.5f, 4.2f };
 
 			// Uncomment this if you want to send Tiles to client
-			//tileEntity.AddComponent<comp::Network>();
+			if (tileTypeTemp != TileType::DEFAULT)
+				tileEntity.AddComponent<comp::Network>();
 
 			comp::PlaneCollider* collider = tileEntity.AddComponent<comp::PlaneCollider>();
 			collider->center = tilePosition;
@@ -96,19 +92,39 @@ void GridSystem::Initialize(sm::Vector2 mapSize, sm::Vector3 position, std::stri
 }
 
 
-bool GridSystem::PlaceDefence(Ray_t mouseRay)
+uint32_t GridSystem::PlaceDefence(Ray_t mouseRay)
 {
 	float t = 0;
 
+	int returnID = -1;
+
 	m_scene->ForEachComponent<comp::Tile, comp::PlaneCollider>([&](Entity entity, comp::Tile& tile, comp::PlaneCollider& planeCollider)
 		{
-			if (Intersect::RayIntersectPlane(InputSystem::Get().GetMouseRay(), planeCollider, t))
+			if (Intersect::RayIntersectPlane(mouseRay,  planeCollider, t))
 			{
-				LOG_INFO("Mouseray HIT plane detected!");
+				if (tile.type == TileType::EMPTY)
+				{
+					LOG_INFO("Mouseray HIT plane detected a EMPTY Tile!");
+					tile.type = TileType::DEFENCE;
+
+					if (entity.GetComponent<comp::Network>())
+					{
+						returnID = entity.GetComponent<comp::Network>()->id;
+					}
+					
+				}
+				else if (tile.type == TileType::BUILDING || tile.type == TileType::UNPLACABLE || tile.type == TileType::DEFAULT)
+				{
+					LOG_INFO("You cant place here!");
+				}
+				else if (tile.type == TileType::DEFENCE)
+				{
+					LOG_INFO("Theres already a defence here!");
+				}
 			}
 		});
 
-	return false;
+	return returnID;
 }
 
 std::vector<sm::Vector3>* GridSystem::GetTilePositions()
