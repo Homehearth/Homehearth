@@ -34,14 +34,15 @@ void Simulation::InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg, c
 			}
 			break;
 		}
-		case ecs::Component::MESH_NAME:
+		case ecs::Component::MODEL_NAME:
 		{
-			comp::MeshName* m = entity.GetComponent<comp::MeshName>();
+			comp::ModelNames* m = entity.GetComponent<comp::ModelNames>();
 			if (m)
 			{
-				compSet.set(ecs::Component::MESH_NAME);
-				msg << m->name;
+				compSet.set(ecs::Component::MODEL_NAME);
+				msg << m->meshName << m->animatorName;
 			}
+
 			break;
 		}
 		case ecs::Component::NAME_PLATE:
@@ -414,6 +415,18 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 	m_pGameScene->GetRegistry()->on_destroy<comp::Network>().connect<&Simulation::OnNetworkEntityDestroy>(this);
 	m_pGameScene->GetRegistry()->on_update<comp::Network>().connect<&Simulation::OnNetworkEntityUpdated>(this);
 
+
+	
+
+	// --- WORLD ---
+	Entity e2 = m_pGameScene->CreateEntity();
+	e2.AddComponent<comp::Transform>();// ->position = { -250, -2, 300 };
+	e2.AddComponent<comp::ModelNames>();
+	e2.AddComponent<comp::ModelNames>()->meshName = "GameScene.obj";
+	e2.AddComponent<comp::Tag<TagType::STATIC>>();
+	// send entity
+	e2.AddComponent<comp::Network>();
+
 	// --- END OF THE WORLD ---
 	Entity collider;
 	for (size_t i = 0; i < mapColliders->size(); i++)
@@ -518,7 +531,9 @@ bool Simulation::AddPlayer(uint32_t playerID, const std::string& namePlate)
 	transform->scale = {1.8f, 1.8f, 1.8f};
 	player.AddComponent<comp::Velocity>();
 	player.AddComponent<comp::NamePlate>()->namePlate = namePlate;
-	player.AddComponent<comp::MeshName>()->name = "GameCharacter.fbx";
+
+	player.AddComponent<comp::ModelNames>()->meshName = "Knight.fbx";
+	player.GetComponent<comp::ModelNames>()->animatorName = "Player.anim";
 	player.AddComponent<comp::Player>()->runSpeed = 25.f;
 
 	*player.AddComponent<comp::CombatStats>() = { 0.3f, 20.f, 2.0f, true, 30.f };

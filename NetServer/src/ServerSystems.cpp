@@ -20,7 +20,7 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 
 	comp::Transform* transform = entity.AddComponent<comp::Transform>();
 	comp::Health* health = entity.AddComponent<comp::Health>();
-	comp::MeshName* meshName = entity.AddComponent<comp::MeshName>();
+	comp::ModelNames* modelNames = entity.AddComponent<comp::ModelNames>();
 	comp::BoundingOrientedBox* obb = entity.AddComponent<comp::BoundingOrientedBox>();
 	comp::Velocity* velocity = entity.AddComponent<comp::Velocity>();
 	comp::CombatStats* combatStats = entity.AddComponent<comp::CombatStats>();
@@ -31,7 +31,8 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		{
 			// ---DEFAULT ENEMY---
 			transform->position = spawnP;
-			meshName->name = "Chest.obj";
+			//strcpy(modelNames->meshName, "Chest.obj");
+			modelNames->meshName = "Chest.obj";
 			obb->Extents = sm::Vector3(2.f, 2.f, 2.f);
 			velocity->vel = sm::Vector3(transform->position * -1.0f);
 			velocity->vel.Normalize();
@@ -43,7 +44,8 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		{
 			// ---DEFAULT ENEMY 2---
 			transform->position = spawnP;
-			meshName->name = "StreetLamp.obj";
+			//strcpy(modelNames->meshName, "StreetLamp.obj");
+			modelNames->meshName = "StreetLamp.obj";
 			obb->Extents = sm::Vector3(2.f, 2.f, 2.f);
 			velocity->vel = sm::Vector3(transform->position * -1.0f);
 			velocity->vel.Normalize();
