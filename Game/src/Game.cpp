@@ -440,48 +440,25 @@ Entity Game::CreateEntityFromMessage(message<GameMsg>& msg)
 				comp::ModelNames names;
 				msg >> names.animatorName >> names.meshName;
 
+				//Get model
 				std::shared_ptr<RModel> model = ResourceManager::Get().GetResource<RModel>(names.meshName);
 				if (model)
 				{
 					e.AddComponent<comp::Renderable>()->model = model;
 
-					std::shared_ptr<RAnimator> anim = ResourceManager::Get().GetResource<RAnimator>(names.animatorName);
-					if (anim)
+					//Add an animator if we can get it
+					if (!names.animatorName.empty())
 					{
-						if (anim->LoadSkeleton(model->GetSkeleton()))
-							e.AddComponent<comp::Animator>()->animator = anim;
+						std::shared_ptr<RAnimator> anim = ResourceManager::Get().GetResource<RAnimator>(names.animatorName);
+						if (anim)
+						{
+							if (anim->LoadSkeleton(model->GetSkeleton()))
+								e.AddComponent<comp::Animator>()->animator = anim;
+						}
 					}
 				}
-				
 				break;
 			}
-
-			//case ecs::Component::MESH_NAME:
-			//{
-			//	std::string name;
-			//	msg >> name;
-			//	e.AddComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>(name);
-			//	break;
-			//}
-			//case ecs::Component::ANIMATOR_NAME:
-			//{
-			//	std::string name;
-			//	msg >> name;
-			//	
-			//	std::shared_ptr<RAnimator> anim = ResourceManager::Get().GetResource<RAnimator>(name);
-			//	if (anim)
-			//	{
-			//		comp::Renderable* renderable = e.GetComponent<comp::Renderable>();
-			//		if (renderable)
-			//		{
-			//			//Add component on success
-			//			if (anim->LoadSkeleton(renderable->model->GetSkeleton()))
-			//				e.AddComponent<comp::Animator>()->animator = anim;
-			//		}
-			//	}
-
-			//	break;
-			//}
 			case ecs::Component::NAME_PLATE:
 			{
 				std::string name;

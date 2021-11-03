@@ -43,7 +43,7 @@ void Simulation::InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg)co
 			if (m)
 			{
 				compSet.set(ecs::Component::MODEL_NAME);
-				msg << m->meshName;
+				msg << m->meshName << m->animatorName;
 			}
 
 			break;
@@ -345,7 +345,6 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 	Entity e = m_pGameScene->CreateEntity();
 	e.AddComponent<comp::Transform>()->position = sm::Vector3(-5, 0, 0);
 	e.AddComponent<comp::ModelNames>();
-	//strcpy(e.GetComponent<comp::ModelNames>()->meshName, "Chest.obj");
 	e.AddComponent<comp::ModelNames>()->meshName = "Chest.obj";
 	e.AddComponent<comp::BoundingOrientedBox>()->Extents = sm::Vector3(2.f, 2.f, 2.f);
 	e.AddComponent<comp::Enemy>();
@@ -361,7 +360,6 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 	Entity e2 = m_pGameScene->CreateEntity();
 	e2.AddComponent<comp::Transform>();// ->position = { -250, -2, 300 };
 	e2.AddComponent<comp::ModelNames>();
-	//strcpy(e2.GetComponent<comp::ModelNames>()->meshName, "GameScene.obj");
 	e2.AddComponent<comp::ModelNames>()->meshName = "GameScene.obj";
 	e2.AddComponent<comp::Tag<TagType::STATIC>>();
 	// send entity
@@ -467,12 +465,8 @@ bool Simulation::AddPlayer(uint32_t playerID, const std::string& namePlate)
 	player.AddComponent<comp::Velocity>();
 	player.AddComponent<comp::NamePlate>()->namePlate = namePlate;
 
-	/*player.AddComponent<comp::ModelNames>();
-	strcpy(player.GetComponent<comp::ModelNames>()->meshName, "Knight.fbx");
-	strcpy(player.GetComponent<comp::ModelNames>()->animatorName, "Player.anim");*/
-
 	player.AddComponent<comp::ModelNames>()->meshName = "Knight.fbx";
-	player.AddComponent<comp::ModelNames>()->animatorName = "Player.anim";
+	player.GetComponent<comp::ModelNames>()->animatorName = "Player.anim";
 #ifdef _DEBUG
 	player.AddComponent<comp::Player>()->runSpeed = 25.f;
 #else

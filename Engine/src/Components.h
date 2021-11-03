@@ -68,10 +68,8 @@ namespace ecs
 		// Used on server side
 		struct ModelNames 
 		{
-			std::string meshName;
-			std::string animatorName;
-			//char meshName[64];
-			//char animatorName[64];
+			std::string meshName = "";
+			std::string animatorName = "";
 		};
 
 		struct NamePlate

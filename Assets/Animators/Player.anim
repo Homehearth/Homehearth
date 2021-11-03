@@ -3,7 +3,7 @@ loadAnim 	idle 		Idle.fbx
 loadAnim 	running 	Running.fbx
 loadAnim 	slash 		Slash.fbx
 loadAnim 	takesDamage 	TakesDamage.fbx
-setCurrentAnim 	idle
+setCurrentAnim 	running
 
 
 /*
