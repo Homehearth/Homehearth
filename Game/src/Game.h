@@ -12,6 +12,7 @@ private:
 
 	GridSystem m_grid;
 
+	Entity m_mapEntity;
 
 	comp::Transform test;
 	float m_predictionThreshhold;

@@ -365,29 +365,6 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 	m_pGameScene->GetRegistry()->on_construct<comp::Network>().connect<&Simulation::OnNetworkEntityCreate>(this);
 	m_pGameScene->GetRegistry()->on_destroy<comp::Network>().connect<&Simulation::OnNetworkEntityDestroy>(this);
 
-
-	// ---DEBUG ENTITY---
-	Entity e = m_pGameScene->CreateEntity();
-	e.AddComponent<comp::Transform>()->position = sm::Vector3(-5, 0, 0);
-	e.AddComponent<comp::MeshName>()->name = "Chest.obj";
-	e.AddComponent<comp::BoundingOrientedBox>()->Extents = sm::Vector3(2.f, 2.f, 2.f);
-	e.AddComponent<comp::Enemy>();
-	e.AddComponent<comp::Health>();
-	*e.AddComponent<comp::CombatStats>() = { 1.0f, 20.f, 1.0f, false, false };
-	e.AddComponent<comp::Tag<TagType::STATIC>>();
-	// send entity
-	e.AddComponent<comp::Network>();
-
-	// ---END OF DEBUG---
-
-	// --- WORLD ---
-	Entity e2 = m_pGameScene->CreateEntity();
-	e2.AddComponent<comp::Transform>();// ->position = { -250, -2, 300 };
-	e2.AddComponent<comp::MeshName>()->name = "GameScene.obj";
-	e2.AddComponent<comp::Tag<TagType::STATIC>>();
-	// send entity
-	e2.AddComponent<comp::Network>();
-
 	// --- END OF THE WORLD ---
 	Entity collider;
 	for (size_t i = 0; i < mapColliders->size(); i++)
@@ -740,13 +717,13 @@ void Simulation::ResetGameScene()
 	uint32_t count = 0;
 	this->m_pGameScene->ForEachComponent<comp::Network>([&](Entity e, comp::Network& n)
 	{
-		if(m_players.find(n.id) == m_players.end() && e.GetComponent<comp::Tag<STATIC>>() == nullptr)
+		if(m_players.find(n.id) == m_players.end())
 		{
 			msg << n.id;
 			count++;
 			e.Destroy();
 		}
-		else if(m_players.find(n.id) != m_players.end())
+		else
 		{
 			ResetPlayer(e);
 		}
