@@ -143,7 +143,7 @@ namespace ecs
 				ATTACK
 			} state;
 			float movementSpeed = 2.f;
-			float attackRange;
+			float attackRange = 10.f;
 			bool hostile;
 			uint32_t currentNodeTarget = static_cast<uint32_t>(-1);
 			std::vector<ecs::component::Node*> path;
