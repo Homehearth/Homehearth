@@ -26,6 +26,18 @@ Entity* FindClosestPlayer(HeadlessScene& scene, sm::Vector3 position)
 	return currentClosest;
 }
 
+bool ReachedNode(Entity* entity,comp::Node* node)
+{
+	comp::Transform* entityTransform = entity->GetComponent<comp::Transform>();
+	if (sm::Vector3::Distance(entityTransform->position, node->position) < 10.f)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
 comp::Node* FindClosestNode(HeadlessScene& scene, sm::Vector3 position)
 {
 	comp::Node* currentClosest = nullptr;
@@ -345,7 +357,7 @@ void Systems::AISystem(HeadlessScene& scene)
 		case comp::NPC::State::ASTAR:
 			if (!npc.currentNode)
 			{
-				if (!npc.path.empty())
+				if (ReachedNode(&entity, npc.currentNode))
 				{
 					npc.currentNode = npc.path.at(0);
 					npc.path.erase(npc.path.begin());
