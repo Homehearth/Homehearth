@@ -136,7 +136,7 @@ namespace sceneHelp
 			/*animEnt.GetComponent<comp::Animator>()->animator = ResourceManager::Get().CopyResource<RAnimator>("Slash.fbx");
 			if (!animEnt.GetComponent<comp::Animator>()->animator)
 			{*/
-				animEnt.GetComponent<comp::Animator>()->animator = ResourceManager::Get().GetResource<RAnimator>("Running.fbx");
+				animEnt.GetComponent<comp::Animator>()->animator = ResourceManager::Get().GetResource<RAnimator>("Player.anim");
 				if (!animEnt.GetComponent<comp::Animator>()->animator->LoadSkeleton(animEnt.GetComponent<comp::Renderable>()->model->GetSkeleton()))
 					animEnt.RemoveComponent<comp::Animator>();
 			//}

@@ -4,7 +4,7 @@
 RAnimator::RAnimator()
 {
 	m_frameTime = 0;
-	m_useInterpolation = true;
+	m_useInterpolation = false;
 }
 
 RAnimator::~RAnimator()
@@ -95,13 +95,45 @@ void RAnimator::UpdateStructureBuffer()
 
 bool RAnimator::Create(const std::string& filename)
 {
+	std::ifstream readfile(ANIMATORPATH + filename);
+	std::string line;
+
 	/*
 		Load from a customfile later.
 		Loads in all the animations
 	*/
+	while (std::getline(readfile, line))
+	{
+		std::stringstream ss(line);
 
-	//This is temp... Just have to play an animation for now
-	m_currentAnim = ResourceManager::Get().GetResource<RAnimation>(filename);
+		std::string keyword;
+		ss >> keyword;
+
+		if (keyword == "loadAnim")
+		{
+			std::string key;
+			std::string animName;
+			ss >> key >> animName;
+
+			std::shared_ptr<RAnimation> animation = ResourceManager::Get().GetResource<RAnimation>(animName);
+			if (animation)
+			{
+				m_animations[key] = animation;
+			}
+		}
+		else if (keyword == "setCurrentAnim")
+		{
+			std::string key;
+			ss >> key;
+
+			if (m_animations.find(key) != m_animations.end())
+			{
+				m_currentAnim = m_animations[key];
+			}
+		}
+	}
+
+	readfile.close();
 
 	return true;
 }

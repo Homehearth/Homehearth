@@ -1,18 +1,17 @@
-//Skeleton - RModel
-TestPlayer.fbx
-
 //List of animations
-"idle" 			Player_Idle.fbx
-"walkForward" 	Player_WalkForward.fbx
-"walkBack" 		Player_WalkBackward.fbx
-...
+loadAnim 	idle 		Idle.fbx
+loadAnim 	running 	Running.fbx
+loadAnim 	slash 		Slash.fbx
+loadAnim 	takesDamage 	TakesDamage.fbx
+setCurrentAnim 	idle
 
 
+/*
+	Save for later
+*/
 //States between animations
 ... Idle --> WalkForward
 Blendtime: 1.0s
 
 ... Walk --> Idle
 Blendtime: 2.0s;
-
-...
