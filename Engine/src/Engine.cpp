@@ -30,6 +30,7 @@ void Engine::Startup()
 	}
 
 	// DirectX Startup:
+	FontCollectionLoader::Initialize();
 	D3D11Core::Get().Initialize(&m_window);
 	D2D1Core::Initialize(&m_window);
 
@@ -68,21 +69,6 @@ void Engine::Startup()
 	thread::RenderThreadHandler::Get().Setup(2);
 
 	InputSystem::Get().SetMouseWindow(m_window.GetHWnd(), m_window.GetWidth(), m_window.GetHeight());
-
-#if DRAW_TEMP_2D
-	rtd::Button* test = new rtd::Button("demo_start_game_button.png", draw_t(100.0f, 100.0f, 275.0f, 100.0f), true);
-	rtd::Button* test2 = new rtd::Button("demo_options_button.png", draw_t(100.0f, 225.0f, 275.0f, 100.0f), true);
-	rtd::Button* test3 = new rtd::Button("demo_exit_button.png", draw_t(100.0f, 350.0f, 275.0f, 100.0f), false);
-	rtd::Text* test4 = new rtd::Text("Welcome to Homehearth!", draw_text_t(350.0f, 25.0f, 300.0f, 100.0f));
-	test->GetBorder()->SetColor(D2D1::ColorF(1.0f, 0.0f, 0.5f));
-	test2->GetBorder()->SetColor(D2D1::ColorF(0.1f, .75f, 0.25f));
-	test3->GetBorder()->SetColor(D2D1::ColorF(0.5f, .23f, 0.65f));
-	test->SetName("Button1");
-	rtd::Handler2D::InsertElement(test);
-	rtd::Handler2D::InsertElement(test2);
-	rtd::Handler2D::InsertElement(test3);
-	rtd::Handler2D::InsertElement(test4);
-#endif
 	
 	BasicEngine::Startup();
 }
@@ -109,6 +95,7 @@ void Engine::Run()
     T_DESTROY();
     D2D1Core::Destroy();
 	ResourceManager::Get().Destroy();
+	FontCollectionLoader::Destroy();
 }
 
 

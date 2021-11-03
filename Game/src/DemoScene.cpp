@@ -7,6 +7,7 @@
 #include "TextField.h"
 #include "Slider.h"
 #include "Collection2D.h"
+#include "Healthbar.h"
 
 namespace sceneHelp
 {
@@ -138,10 +139,9 @@ namespace sceneHelp
 		//}
 
 		CreateLightEntity(gameScene, { 0.f, 0.f, 0.f, 0.f }, { 1.f, -1.f, 0.f, 0.f }, { 10.f, 10.f, 10.f, 10.f }, 0, TypeLight::DIRECTIONAL, 1);
-		CreateLightEntity(gameScene, { 0.f, 8.f, -10.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 300.f, 300.f, 300.f, 300.f }, 75.f, TypeLight::POINT, 1);
 
 		InputSystem::Get().SetCamera(gameScene.GetCurrentCamera());
-
+		GameSystems::UpdateHealthbar(gameScene);
 
 		gameScene.on<ESceneUpdate>([cameraEntity, debugCameraEntity](const ESceneUpdate& e, Scene& scene)
 			{
@@ -209,11 +209,15 @@ void sceneHelp::SetupMainMenuScreen(Game* game)
 	rtd::TextField* portField = connectFields->AddElement<rtd::TextField>(draw_text_t(width / 4 + (width / 3.33f), height * 0.55f, width * 0.15f, D2D1Core::GetDefaultFontSize()), 6);
 	portField->SetDescriptionText("Port:");
 	rtd::Button* connectButton = connectFields->AddElement<rtd::Button>("StartButton.png", draw_t((width / 2) - (width / 8.f), height - (height * 0.25f), width / 4.f, height * 0.15f));
+	rtd::Button* exitButton = connectFields->AddElement<rtd::Button>("demoExitButton.png", draw_t(0.0f, 0.0f, width / 24, height / 16));
+	exitButton->SetOnPressedEvent([=] {
+		game->Shutdown();
+		});
 
 #ifdef _DEBUG
 	ipField->SetPresetText("localhost");
-	portField->SetPresetText("4950");
 #endif
+	portField->SetPresetText("4950");
 
 	scene.Add2DCollection(connectFields, "ConnectFields");
 
@@ -233,22 +237,11 @@ void sceneHelp::SetupMainMenuScreen(Game* game)
 				LOG_WARNING("Please enter a valid ip/port");
 			}
 		});
-
-	//// Adds a button and names it exit game button.
-	//rtd::Button* exitGameButton = new rtd::Button("demo_exit_button.png", draw_t((Width / 8), (height / 4) + 200, 350.0f, 150.0f));
-	//// Adds a border around the button and sets the color to black.
-	//exitGameButton->GetBorder()->SetColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
-	//scene.Insert2DElement(exitGameButton);
-	//exitGameButton->SetOnPressedEvent([=] { game->Shutdown(); });
 }
 
 /*
 * LICENSE
 <div>Icons made by <a href="https://www.freepik.com" title="Freepik">Freepik</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a></div>
-*/
-
-/*
-	HP bars are located at elements[0, 1 and 2]
 */
 
 void sceneHelp::SetupInGameScreen(Game* game)
@@ -265,19 +258,16 @@ void sceneHelp::SetupInGameScreen(Game* game)
 		Collection2D* playerHp = new Collection2D;
 
 		// Initiate 3 healthbars. for each player.
-		for (int j = 0; j < 3; j++)
-		{
-			playerHp->AddElement<rtd::Picture>(texture1, draw_t((j * (width / 12)) + (width / 12), (i * ((height / 12)) + (height / 32)), (width / 16), (height / 12)));
-		}
+		playerHp->AddElement<rtd::Healthbar>(draw_t(width / 8, (i * ((height / 12)) + (height / 32)), (width / 4), (height / 16)));
 
 		// You and Friend text
 		if (i == 0)
 		{
-			playerHp->AddElement<rtd::Text>("You:", draw_text_t(0, (i * ((height / 12)) + (height / 32)), (strlen("You:") * D2D1Core::GetDefaultFontSize()) * 0.5f, D2D1Core::GetDefaultFontSize()));
+			playerHp->AddElement<rtd::Text>("You:", draw_text_t(0, (i * ((height / 12)) + (height / 32)), (width / 8), height / 16));
 		}
 		else
 		{
-			playerHp->AddElement<rtd::Text>("Friend:", draw_text_t(0, (i * ((height / 12)) + (height / 32)), (strlen("Friend:") * D2D1Core::GetDefaultFontSize()) * 0.5f, D2D1Core::GetDefaultFontSize()));
+			playerHp->AddElement<rtd::Text>("Friend:", draw_text_t(0, (i * ((height / 12)) + (height / 32)), width / 8, height / 16));
 			playerHp->Hide();
 		}
 		scene.Add2DCollection(playerHp, "player" + std::to_string(i + 1) + "Info");
@@ -285,6 +275,8 @@ void sceneHelp::SetupInGameScreen(Game* game)
 
 	Collection2D* timerCollection = new Collection2D;
 	timerCollection->AddElement<rtd::Text>("0", draw_text_t(0, 0, width, height / 16.f));
+	rtd::Text* enemies = timerCollection->AddElement<rtd::Text>("Enemies", draw_text_t(width - (width / 8), 0, width / 8, height / 16.f));
+	enemies->SetVisiblity(false);
 	scene.Add2DCollection(timerCollection, "timer");
 
 	Collection2D* attackCollection = new Collection2D;
@@ -300,15 +292,26 @@ void sceneHelp::SetupInGameScreen(Game* game)
 	buildCollection->AddElement<rtd::Text>("Builds!", draw_text_t(width - (strlen("Builds!") * D2D1Core::GetDefaultFontSize()), height - (height / 6), strlen("Builds!") * D2D1Core::GetDefaultFontSize(), D2D1Core::GetDefaultFontSize()));
 	for (int i = 0; i < 1; i++)
 	{
-		buildCollection->AddElement<rtd::Picture>(texture2, draw_t((width - (width / 12)) - (i * (width / 12)), height - (height / 8), width / 12, height / 8));
+		buildCollection->AddElement<rtd::Picture>(texture2, draw_t((width - (width / 12)) - (i * (width / 12)), height - (height / 8), width / 16, height / 9));
 	}
 	scene.Add2DCollection(buildCollection, "builds");
 
-	//Collection2D* nameCollection = new Collection2D;
-	//for (int i = 0; i < MAX_PLAYERS_PER_LOBBY; i++)
-	//{
-	//	nameCollection->AddElement<rtd::Text>("Player" + std::to_string(i + 1), )
-	//}
+	for (int i = 0; i < MAX_PLAYERS_PER_LOBBY; i++)
+	{
+		Collection2D* nameCollection = new Collection2D;
+		nameCollection->AddElement<rtd::Text>("Player" + std::to_string(i + 1), draw_text_t(0, 0, width / 16, height / 9));
+		scene.Add2DCollection(nameCollection, "player" + std::to_string(i + 1) + "namePlate");
+		nameCollection->Hide();
+	}
+
+	Collection2D* buttons = new Collection2D;
+	rtd::Button* exitButton = buttons->AddElement<rtd::Button>("demoExitButton.png", draw_t(0.0f, 0.0f, width / 24, height / 16));
+	exitButton->SetOnPressedEvent([=] {
+		game->m_client.Disconnect();
+		game->Shutdown();
+		});
+	buttons->Hide();
+	scene.Add2DCollection(buttons, "Buttons");
 }
 
 void sceneHelp::SetupInLobbyScreen(Game* game)
@@ -408,8 +411,7 @@ void sceneHelp::SetupLoadingScene(Game* game)
 
 	Collection2D* loadingScreen = new Collection2D;
 
-	loadingScreen->AddElement<rtd::Picture>("oohstonefigures.jpg", (draw_t(0.0f, 0.0f,
-		width, height)));
+	loadingScreen->AddElement<rtd::Picture>("oohstonefigures.jpg", (draw_t(0.0f, 0.0f, width, height)));
 	loadingScreen->AddElement<rtd::Text>("Loading!", draw_text_t((width / 2.f) - (strlen("Loading!") * 24.f * 0.5f), (height / 2.f) - D2D1Core::GetDefaultFontSize(), strlen("Loading!") * D2D1Core::GetDefaultFontSize(), D2D1Core::GetDefaultFontSize()));
 
 	scene.Add2DCollection(loadingScreen, "LoadingScreen");
@@ -423,7 +425,7 @@ void sceneHelp::SetupLobbyJoinScreen(Game* game)
 
 
 	Collection2D* nameCollection = new Collection2D;
-	rtd::TextField* nameInputField = nameCollection->AddElement<rtd::TextField>(draw_text_t((width / 2) - (width / 8), height / 8, width / 4, D2D1Core::GetDefaultFontSize()), 15);
+	rtd::TextField* nameInputField = nameCollection->AddElement<rtd::TextField>(draw_text_t((width / 2) - (width / 8), height / 8, width / 4, D2D1Core::GetDefaultFontSize()), 6);
 	nameInputField->SetDescriptionText("Input Name");
 	nameInputField->SetPresetText("Noobie");
 	scene.Add2DCollection(nameCollection, "nameInput");
@@ -432,31 +434,48 @@ void sceneHelp::SetupLobbyJoinScreen(Game* game)
 
 	rtd::TextField* lobbyField = lobbyCollection->AddElement<rtd::TextField>(draw_text_t(width / 8, height - (height / 3.33f), width / 4, D2D1Core::GetDefaultFontSize()));
 	lobbyField->SetDescriptionText("Input Lobby ID");
-	rtd::Button* lobbyButton = lobbyCollection->AddElement<rtd::Button>("StartButton.png", draw_t(width / 2, height - (height / 3.33f), width / 4, height / 8));
+	rtd::Button* startLobbyButton = lobbyCollection->AddElement<rtd::Button>("Button.png", draw_t(width / 2, height - (height / 6.f), width / 4, height / 8));
+	lobbyCollection->AddElement<rtd::Text>("Create Lobby", draw_text_t(width / 2, height - (height / 6.f), width / 4, height / 8));
+	rtd::Button* lobbyButton = lobbyCollection->AddElement<rtd::Button>("StartButton.png", draw_t(width / 8, height - (height / 6.f), width / 4, height / 8));
+	rtd::Button* exitButton = lobbyCollection->AddElement<rtd::Button>("demoExitButton.png", draw_t(0.0f, 0.0f, width / 24, height / 16));
+	exitButton->SetOnPressedEvent([=] {
+		game->m_client.Disconnect();
+		});
 
+	startLobbyButton->SetOnPressedEvent([=]
+		{
+			game->m_playerName = *nameInputField->RawGetBuffer();
+			game->CreateLobby();
+
+			// Update own name.
+			dynamic_cast<rtd::Text*>(game->GetScene("Lobby").GetCollection("playerIcon1")->elements[1].get())->SetText(game->m_playerName);
+		});
 	lobbyButton->SetOnPressedEvent([=]()
 		{
 			std::string* lobbyString = lobbyField->RawGetBuffer();
 
 			if (lobbyString)
 			{
-				if (lobbyString->size() == 0)
 				{
 					game->m_playerName = *nameInputField->RawGetBuffer();
-					game->CreateLobby();
-					game->SetScene("Loading");
+					int lobbyID = -1;
+					try
+					{
+						lobbyID = std::stoi(*lobbyString);
+					}
+					catch (std::exception e)
+					{
+						LOG_WARNING("Invalid lobby ID: Was not numerical");
+					}
 
-					// Update own name.
-					dynamic_cast<rtd::Text*>(game->GetScene("Lobby").GetCollection("playerIcon1")->elements[1].get())->SetText(game->m_playerName);
-				}
-				else
-				{
-					game->m_playerName = *nameInputField->RawGetBuffer();
-					game->JoinLobby(std::stoi(*lobbyString));
-					game->SetScene("Loading");
+					if (lobbyID > -1)
+					{
+						game->JoinLobby(lobbyID);
+						game->SetScene("Loading");
+						// Update own name.
+						dynamic_cast<rtd::Text*>(game->GetScene("Lobby").GetCollection("playerIcon1")->elements[1].get())->SetText(game->m_playerName);
+					}
 
-					// Update own name.
-					dynamic_cast<rtd::Text*>(game->GetScene("Lobby").GetCollection("playerIcon1")->elements[1].get())->SetText(game->m_playerName);
 				}
 			}
 		});

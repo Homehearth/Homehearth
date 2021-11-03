@@ -7,6 +7,8 @@ struct ESceneChange
 	std::string newScene;
 };
 
+struct ESceneStart {};
+
 struct ESceneUpdate 
 {
 	float dt;

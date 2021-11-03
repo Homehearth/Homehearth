@@ -29,6 +29,7 @@ namespace rtd
 		~Canvas();
 
 		void SetPosition(const float& x, const float& y);
+		void SetScale(const float& x_stretch, const float& y_stretch);
 
 		// Set new color for canvas.
 		void SetColor(const D2D1_COLOR_F& new_color);

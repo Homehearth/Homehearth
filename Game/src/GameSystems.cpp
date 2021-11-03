@@ -1,5 +1,6 @@
 #include "GameSystems.h"
 #include "EnginePCH.h"
+#include "Healthbar.h"
 
 using namespace network;
 
@@ -33,6 +34,24 @@ void GameSystems::RenderIsCollidingSystem(Scene& scene)
 			{
 				renderableDebug.isColliding.hit = 0;
 			}
+		});
+}
+
+// Set all the healthbars to players.
+void GameSystems::UpdateHealthbar(Scene& scene)
+{
+	int i = 1;
+	scene.ForEachComponent<comp::Health, comp::Player>([&](Entity e,comp::Health& health, const comp::Player& player) {
+		// Safety check for now.
+		if (i < 5)
+		{
+			rtd::Healthbar* healthbar = dynamic_cast<rtd::Healthbar*>(scene.GetCollection("player" + std::to_string(i) + "Info")->elements[0].get());
+			if (healthbar)
+			{
+				healthbar->SetHealthVariable(e);
+			}
+		}
+		i++;
 		});
 }
 

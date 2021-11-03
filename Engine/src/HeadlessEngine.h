@@ -70,6 +70,7 @@ template<typename SceneType>
 void BasicEngine<SceneType>::SetScene(SceneType& scene)
 {	
 	m_currentScene = &scene;
+	m_currentScene->publish<ESceneStart>();
 }
 
 template<typename SceneType>

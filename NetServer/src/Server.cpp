@@ -39,17 +39,13 @@ SOCKET Server::GetConnection(uint32_t playerID) const
 uint32_t Server::PopNextUniqueID()
 {
 	uint32_t id = m_uniqueID;
-	EnterCriticalSection(&lock);
 	m_uniqueID++;
-	LeaveCriticalSection(&lock);
 	return id;
 }
 
 void Server::OnClientConnect(std::string&& ip, const uint16_t& port)
 {
-	EnterCriticalSection(&lock);
 	LOG_INFO("Client connected from %s:%d", ip.c_str(), port);
-	LeaveCriticalSection(&lock);
 }
 
 void Server::OnClientDisconnect(const SOCKET& socket)

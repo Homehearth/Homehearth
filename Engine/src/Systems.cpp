@@ -16,18 +16,11 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 			//
 			if (stats.isAttacking)
 			{
-				/*
-				for (int i = 0; i < 100; i++)
-				{
-					Entity e = scene.CreateEntity();
-					e.AddComponent<comp::Network>();
-					e.AddComponent<comp::MeshName>("cube.obj");
-					e.AddComponent<comp::Transform>()->position = transform.position + sm::Vector3(i) * 2;
-				}
-				*/
+
 				//Creates an entity that's used to check collision if an attack lands.
 				Entity attackCollider = scene.CreateEntity();
 				attackCollider.AddComponent<comp::Transform>()->position = transform.position + stats.targetDir;
+				//attackCollider.AddComponent<comp::Tag<TagType::DYNAMIC>>();
 				attackCollider.AddComponent<comp::BoundingOrientedBox>()->Center = transform.position + stats.targetDir;
 				comp::Attack* atk = attackCollider.AddComponent<comp::Attack>();
 				atk->lifeTime = stats.attackLifeTime;
@@ -36,14 +29,17 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 				//If the attack is ranged add a velocity to the entity.
 				if (stats.isRanged)
 				{
-					sm::Vector3 vel = stats.targetDir * 10.f; //CHANGE HERE WHEN FORWARD GETS FIXED!!!!!!
+					sm::Vector3 vel = stats.targetDir * stats.projectileSpeed;
 					attackCollider.AddComponent<comp::Velocity>()->vel = vel;
+
+					attackCollider.AddComponent<comp::MeshName>()->name = "Sphere.obj";
 				}
 
-				//DEBUG
 				LOG_INFO("Attack Collider Created!");
+				
 				attackCollider.AddComponent<comp::Network>();
-				//
+				//DEBUG
+
 
 				
 				CollisionSystem::Get().AddOnCollision(attackCollider, [=](Entity other)
@@ -60,6 +56,11 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 							otherHealth->currentHealth -= atk->damage;
 							LOG_INFO("ATTACK COLLIDER HIT BAD GUY!");
 							atk->lifeTime = 0.f;
+							comp::Velocity* attackVel = attackCollider.GetComponent<comp::Velocity>();
+							
+							other.AddComponent<comp::Force>()->force = attackVel->vel;
+
+							other.UpdateNetwork();
 						}
 					});
 
@@ -76,7 +77,15 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 			//Check if something should be dead, and if so set isAlive to false
 			if (health.currentHealth <= 0)
 			{
-				LOG_INFO("Entity died");
+				comp::Network* net = entity.GetComponent<comp::Network>();
+
+				if (net)
+				{
+					LOG_INFO("Entity %u died", net->id);
+				}
+				else {
+					LOG_INFO("Entity died");
+				}
 				health.isAlive = false;
 				if (!entity.GetComponent<comp::Player>())
 				{
@@ -102,23 +111,55 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 void Systems::MovementSystem(HeadlessScene& scene, float dt)
 {
 	//Transform
-	scene.ForEachComponent<comp::Transform, comp::Velocity>([&, dt](comp::Transform& transform, comp::Velocity& velocity)
+
+	scene.ForEachComponent<comp::Velocity, comp::Force>([&](Entity e, comp::Velocity& v, comp::Force& f)
+		{
+			if (f.wasApplied)
+			{
+				v.vel *= 1.0f - (dt * 10.f);
+				f.actingTime -= dt;
+				if (f.actingTime <= 0.0f)
+				{
+					e.RemoveComponent<comp::Force>();
+				}
+			}
+			else
+			{
+				v.vel = f.force;
+				f.wasApplied = true;
+			}
+		});
+
+	scene.ForEachComponent<comp::Transform, comp::Velocity>([&, dt]
+	(comp::Transform& transform, comp::Velocity& velocity)
 		{
 			transform.position += velocity.vel * dt;
+			transform.position.y = 1.0f;
+			
+		});
+
+	scene.ForEachComponent<comp::Transform, comp::Network>([](Entity e, comp::Transform& t, comp::Network&) 
+		{
+			if (t.previousPosition != t.position)
+			{
+				e.UpdateNetwork();
+			}
 		});
 }
 
 void Systems::MovementColliderSystem(HeadlessScene& scene, float dt)
 {
 	//BoundingOrientedBox
-	scene.ForEachComponent<comp::Transform, comp::BoundingOrientedBox>([&, dt](comp::Transform& transform, comp::BoundingOrientedBox& obb)
+	scene.ForEachComponent<comp::Transform, comp::BoundingOrientedBox>([&, dt]
+	(comp::Transform& transform, comp::BoundingOrientedBox& obb)
 		{
 			obb.Center = transform.position;
 			obb.Orientation = transform.rotation;
 		});
 
 	//BoundingSphere
-	scene.ForEachComponent<comp::Transform, comp::BoundingSphere>([&, dt](comp::Transform& transform, comp::BoundingSphere& sphere)
+	scene.ForEachComponent<comp::Transform, comp::BoundingSphere>([&, dt]
+	(comp::Transform& transform, comp::BoundingSphere& sphere)
 		{
 			sphere.Center = transform.position;
 		});

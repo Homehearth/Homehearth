@@ -8,11 +8,11 @@ namespace ecs
 {
 	enum Component : uint32_t
 	{
-		NETWORK,
 		TRANSFORM,
 		VELOCITY,
 		MESH_NAME,
 		NAME_PLATE,
+		HEALTH,
 		BOUNDING_ORIENTED_BOX,
 		BOUNDING_SPHERE,
 		PLANECOLLIDER,
@@ -99,6 +99,13 @@ namespace ecs
 			}
 		};
 		
+		struct Force
+		{
+			sm::Vector3 force = sm::Vector3(5, 0, 0);
+			bool wasApplied = false;
+			float actingTime = 5.0f;
+		};
+
 		struct Velocity
 		{
 			sm::Vector3 vel;
@@ -144,6 +151,8 @@ namespace ecs
 			float attackDamage = 5.f;
 			float attackLifeTime = 5.f;
 			bool isRanged = false;
+			float projectileSpeed = 10.f;
+
 			bool isAttacking = false;
 			float cooldownTimer = 0.f;
 			Ray_t targetRay;

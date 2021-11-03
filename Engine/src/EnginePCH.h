@@ -1,10 +1,15 @@
 #pragma once
 
-#define RENDER_IMGUI 1
+//Options
+#define RENDER_IMGUI 0
 #define PROFILER 1
 
 // Turn this to 1 if you want to see the very beautiful demo menu
 #define DRAW_TEMP_2D 0
+#define DEBUG_SNAPSHOT 0
+
+#define USE_MIPMAPS 1
+#define RENDER_GRID 0
 
 //Macros
 #if RENDER_IMGUI
@@ -13,9 +18,6 @@
 #define IMGUI(a) do {} while(0)
 #endif
 
-//Options
-#define USE_MIPMAPS 1
-#define RENDER_GRID 1
 
 // Windows
 #ifdef WIN32
@@ -129,3 +131,4 @@ const std::string MODELPATH		= "../Assets/Models/";		//"../../../../../Assets/Mo
 const std::string MATERIALPATH	= "../Assets/Materials/";
 const std::string TEXTUREPATH	= "../Assets/Textures/";
 const std::string ANIMATIONPATH = "../Assets/Animations/";
+const std::string FONTPATH = "../Assets/Fonts/";
