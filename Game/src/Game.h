@@ -33,6 +33,9 @@ private:
 	Entity CreateEntityFromMessage(message<GameMsg>& msg);
 
 	void UpdateInput();
+	void PlaceDefenceDebug(message<GameMsg>& msg);
+	void PlaceDefenceRelease(message<GameMsg>& msg);
+	void CreateVisualGrid(Entity e);
 
 public:
 	Client m_client;

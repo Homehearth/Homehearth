@@ -107,7 +107,7 @@ namespace sceneHelp
 
 		// Setup Cameras
 		Entity debugCameraEntity = gameScene.CreateEntity();
-		debugCameraEntity.AddComponent<comp::Camera3D>()->camera.Initialize(sm::Vector3(200, 60, -320), sm::Vector3(200, 50, -300), sm::Vector3(0, 1, 0),
+		debugCameraEntity.AddComponent<comp::Camera3D>()->camera.Initialize(sm::Vector3(200, 60, -320), sm::Vector3(200, 50, -350), sm::Vector3(0, 1, 0),
 			sm::Vector2((float)engine->GetWindow()->GetWidth(), (float)engine->GetWindow()->GetHeight()), CAMERATYPE::DEBUG);
 		debugCameraEntity.AddComponent<comp::Tag<TagType::DEBUG_CAMERA>>();
 
