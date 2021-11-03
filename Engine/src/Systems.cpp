@@ -357,7 +357,9 @@ void Systems::AISystem(HeadlessScene& scene)
 			}
 			else
 			{
-				
+				velocityTowardsPlayer->vel = transformNPC->position - npc.currentNode->position;
+				velocityTowardsPlayer->vel.Normalize();
+				velocityTowardsPlayer->vel *= npc.movementSpeed;
 			}
 			break;
 		case comp::NPC::State::IDLE:
