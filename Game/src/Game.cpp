@@ -172,12 +172,10 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			}
 			else {
 				LOG_WARNING("Updating: Entity %u not in m_gameEntities, should not happen...", entityID);
-				//continue;
 			}
 			
 			UpdateEntityFromMessage(entity, msg);
 		}
-		LOG_INFO("Updated %u entities", count);
 
 		break;
 	}

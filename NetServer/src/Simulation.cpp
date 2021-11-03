@@ -560,10 +560,6 @@ void Simulation::SendSnapshot()
 		compMask.set(ecs::Component::HEALTH);
 		compMask.set(ecs::Component::BOUNDING_ORIENTED_BOX);
 		this->SendEntities(m_updatedEntities, GameMsg::Game_Snapshot, compMask);
-		if (m_updatedEntities.size() > 0)
-		{
-			LOG_INFO("Updated %u entities", (uint32_t)m_updatedEntities.size());
-		}
 		m_updatedEntities.clear();
 	
 		// Update until next wave timer if next wave is present.
