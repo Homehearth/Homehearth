@@ -414,7 +414,7 @@ void sceneHelp::SetupLobbyJoinScreen(Game* game)
 	Collection2D* nameCollection = new Collection2D;
 	rtd::TextField* nameInputField = nameCollection->AddElement<rtd::TextField>(draw_text_t((width / 2) - (width / 8), height / 8, width / 4, D2D1Core::GetDefaultFontSize()), 6);
 	nameInputField->SetDescriptionText("Input Name");
-	nameInputField->SetPresetText("Noobie");
+	//nameInputField->SetPresetText("Noobie");
 	scene.Add2DCollection(nameCollection, "nameInput");
 
 	Collection2D* lobbyCollection = new Collection2D;
@@ -432,11 +432,18 @@ void sceneHelp::SetupLobbyJoinScreen(Game* game)
 
 	startLobbyButton->SetOnPressedEvent([=]
 		{
-			game->m_playerName = *nameInputField->RawGetBuffer();
-			game->CreateLobby();
+			if (nameInputField->RawGetBuffer()->length() > 0)
+			{
+				game->m_playerName = *nameInputField->RawGetBuffer();
+				game->CreateLobby();
 
-			// Update own name.
-			dynamic_cast<rtd::Text*>(game->GetScene("Lobby").GetCollection("playerIcon1")->elements[1].get())->SetText(game->m_playerName);
+				// Update own name.
+				dynamic_cast<rtd::Text*>(game->GetScene("Lobby").GetCollection("playerIcon1")->elements[1].get())->SetText(game->m_playerName);
+			}
+			else
+			{
+				LOG_WARNING("Enter a valid nickname");
+			}
 		});
 	lobbyButton->SetOnPressedEvent([=]()
 		{
@@ -444,7 +451,6 @@ void sceneHelp::SetupLobbyJoinScreen(Game* game)
 
 			if (lobbyString)
 			{
-				{
 					game->m_playerName = *nameInputField->RawGetBuffer();
 					int lobbyID = -1;
 					try
@@ -453,18 +459,22 @@ void sceneHelp::SetupLobbyJoinScreen(Game* game)
 					}
 					catch (std::exception e)
 					{
-						LOG_WARNING("Invalid lobby ID: Was not numerical");
+						LOG_WARNING("Request denied: Invalid lobby ID: Was not numerical");
 					}
 
 					if (lobbyID > -1)
 					{
-						game->JoinLobby(lobbyID);
-						game->SetScene("Loading");
-						// Update own name.
-						dynamic_cast<rtd::Text*>(game->GetScene("Lobby").GetCollection("playerIcon1")->elements[1].get())->SetText(game->m_playerName);
+						if (nameInputField->RawGetBuffer()->length() > 0)
+						{
+							game->JoinLobby(lobbyID);
+							// Update own name.
+							dynamic_cast<rtd::Text*>(game->GetScene("Lobby").GetCollection("playerIcon1")->elements[1].get())->SetText(game->m_playerName);
+						}
+						else
+						{
+							LOG_WARNING("Request denied: Enter a valid nickname");
+						}
 					}
-
-				}
 			}
 		});
 
