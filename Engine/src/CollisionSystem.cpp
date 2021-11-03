@@ -229,23 +229,52 @@ void CollisionSystem::CollisionResponse(CollisionInfo_t collisionInfo, Entity en
 	if(entity1.GetComponent<comp::Tag<DYNAMIC>>() && entity2.GetComponent<comp::Tag<STATIC>>())
 	{
 		comp::Transform* transform = entity1.GetComponent<comp::Transform>();
+		comp::BoundingOrientedBox* obb = entity1.GetComponent<comp::BoundingOrientedBox>();
 		if (transform)
+		{
 			transform->position = transform->position + sm::Vector3(collisionInfo.smallestVec * (float)collisionInfo.overlap * -1.1f);
+			
+			if (obb)
+				obb->Center = transform->position;
+		}
+			
 	}
 	else if(entity2.GetComponent<comp::Tag<DYNAMIC>>() && entity1.GetComponent<comp::Tag<STATIC>>())
 	{
 		comp::Transform* transform = entity2.GetComponent<comp::Transform>();
+		comp::BoundingOrientedBox* obb = entity2.GetComponent<comp::BoundingOrientedBox>();
+		
 		if (transform)
+		{
 			transform->position = transform->position + sm::Vector3(collisionInfo.smallestVec * (float)collisionInfo.overlap * 1.1f);
+			
+			if (obb)
+				obb->Center = transform->position;
+		}
+			
 	}
 	else if(entity2.GetComponent<comp::Tag<DYNAMIC>>() && entity1.GetComponent<comp::Tag<DYNAMIC>>())
 	{
 		comp::Transform* transform1 = entity1.GetComponent<comp::Transform>();
 		comp::Transform* transform2 = entity2.GetComponent<comp::Transform>();
+		comp::BoundingOrientedBox* obb1 = entity1.GetComponent<comp::BoundingOrientedBox>();
+		comp::BoundingOrientedBox* obb2 = entity2.GetComponent<comp::BoundingOrientedBox>();
 		//Dynamic
 		if (transform1)
+		{
 			transform1->position = transform1->position + (sm::Vector3(collisionInfo.smallestVec * (float)collisionInfo.overlap * -1.1f) / 2.0f);
+
+			if (obb1)
+				obb1->Center = transform1->position;
+		}
+
 		if (transform2)
+		{
 			transform2->position = transform2->position + (sm::Vector3(collisionInfo.smallestVec * (float)collisionInfo.overlap) / 2.0f * 1.1f);
+
+			if (obb2)
+				obb2->Center = transform2->position;
+		}
+			
 	}
 }
