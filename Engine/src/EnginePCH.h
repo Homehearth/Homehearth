@@ -14,7 +14,7 @@
 #endif
 
 //Options
-#define USE_MIPMAPS 0
+#define USE_MIPMAPS 1
 #define RENDER_GRID 0
 
 // Windows
