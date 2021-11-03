@@ -126,20 +126,20 @@ namespace sceneHelp
 			//Copy a model
 			//animEnt.GetComponent<comp::Renderable>()->model = ResourceManager::Get().CopyResource<RModel>("Skeleton.fbx");
 			//if (!animEnt.GetComponent<comp::Renderable>()->model)
-				animEnt.GetComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>("Test/GameCharacterBindPose_Blender.fbx");
+				animEnt.GetComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>("Knight.fbx");
 			
 			//Change materials
 			//animEnt.GetComponent<comp::Renderable>()->model->ChangeMaterial(materials[i]);
 
 			//Add animator - remove component if it did not work - will still render model
 			animEnt.AddComponent<comp::Animator>();
-			animEnt.GetComponent<comp::Animator>()->animator = ResourceManager::Get().CopyResource<RAnimator>("Test/RunningAnimation_Blender.fbx");
+			/*animEnt.GetComponent<comp::Animator>()->animator = ResourceManager::Get().CopyResource<RAnimator>("Slash.fbx");
 			if (!animEnt.GetComponent<comp::Animator>()->animator)
-			{
-				animEnt.GetComponent<comp::Animator>()->animator = ResourceManager::Get().GetResource<RAnimator>("Test/RunningAnimation_Blender.fbx");
+			{*/
+				animEnt.GetComponent<comp::Animator>()->animator = ResourceManager::Get().GetResource<RAnimator>("Running.fbx");
 				if (!animEnt.GetComponent<comp::Animator>()->animator->LoadSkeleton(animEnt.GetComponent<comp::Renderable>()->model->GetSkeleton()))
 					animEnt.RemoveComponent<comp::Animator>();
-			}
+			//}
 		}
 
 		CreateLightEntity(gameScene, { 0.f, 0.f, 0.f, 0.f }, { 1.f, -1.f, 0.f, 0.f }, { 10.f, 10.f, 10.f, 10.f }, 0, TypeLight::DIRECTIONAL, 1);

@@ -1,6 +1,5 @@
 #pragma once
 #include "AnimStructures.h"
-#include "RModel.h"
 #include "RAnimation.h"
 
 const UINT T2D_BONESLOT = 11;
@@ -10,7 +9,7 @@ const UINT T2D_BONESLOT = 11;
 
 	Can be used as an Resource an reused for multiple entities. 
 	But will use the same animation in that case.
-
+	
 	Prefixes:
 	* 
 
@@ -20,6 +19,7 @@ class RAnimator : public resource::GResource
 {
 private:
 	double							m_frameTime;
+	bool							m_useInterpolation;
 	std::vector<bone_keyFrames_t>	m_bones;
 	std::unordered_map<std::string, std::shared_ptr<RAnimation>> m_animations;
 
@@ -32,8 +32,7 @@ private:
 	ComPtr<ID3D11ShaderResourceView> m_bonesSB_RSV;
 
 private:
-	void LoadAnimations(const std::vector<std::string>& animNames);
-
+	//void LoadAnimations(const std::vector<std::string>& animNames);
 	bool CreateBonesSB();
 	void UpdateStructureBuffer();
 
@@ -43,6 +42,9 @@ public:
 
 	//Load in the skeleton from a model
 	bool LoadSkeleton(const std::vector<bone_t>& skeleton);
+
+	//Enable or disable interpolation
+	void SetInterpolation(bool& toggle);
 
 	// Inherited via GResource
 	// Create from a custom file - something.anim

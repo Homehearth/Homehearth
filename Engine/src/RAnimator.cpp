@@ -4,6 +4,7 @@
 RAnimator::RAnimator()
 {
 	m_frameTime = 0;
+	m_useInterpolation = true;
 }
 
 RAnimator::~RAnimator()
@@ -34,6 +35,11 @@ bool RAnimator::LoadSkeleton(const std::vector<bone_t>& skeleton)
 			loaded = true;
 	}
 	return loaded;
+}
+
+void RAnimator::SetInterpolation(bool& toggle)
+{
+	m_useInterpolation = toggle;
 }
 
 bool RAnimator::CreateBonesSB()
@@ -90,11 +96,11 @@ void RAnimator::UpdateStructureBuffer()
 bool RAnimator::Create(const std::string& filename)
 {
 	/*
-		Testing with hardcoded values for now...
+		Load from a customfile later.
+		Loads in all the animations
 	*/
 
-	//Load in all the animations needed
-
+	//This is temp... Just have to play an animation for now
 	m_currentAnim = ResourceManager::Get().GetResource<RAnimation>(filename);
 
 	return true;
@@ -113,7 +119,7 @@ void RAnimator::Update()
 
 		for (size_t i = 0; i < m_bones.size(); i++)
 		{
-			sm::Matrix localMatrix = m_currentAnim->GetMatrix(m_bones[i].name, m_frameTime, nextFrameTime, m_bones[i].lastKeys, false);
+			sm::Matrix localMatrix = m_currentAnim->GetMatrix(m_bones[i].name, m_frameTime, nextFrameTime, m_bones[i].lastKeys, m_useInterpolation);
 
 			if (m_bones[i].parentIndex == -1)
 				modelMatrices[i] = localMatrix;

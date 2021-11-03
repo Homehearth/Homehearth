@@ -48,7 +48,6 @@ private:
 	/*
 		Skeleton information
 	*/
-	//std::unordered_map<std::string, bone_t> m_nameToBone;	//Temp
 	std::vector<bone_t>						m_allBones;
 	std::unordered_map<std::string, UINT>	m_boneMap;		//Move to create later?
 
@@ -71,7 +70,7 @@ private:
 	void LoadLights(const aiScene* scene);
 	void LoadMaterial(const aiScene* scene, const UINT& matIndex, bool& useMTL, submesh_t& inoutMesh) const;
 
-	void LoadBones();
+	//void LoadBones();
 	void BoneHierchy(aiNode* node, std::unordered_map<std::string, bone_t>& nameToBone);
 	bool LoadVertexSkinning(const aiMesh* aimesh, std::vector<anim_vertex_t>& vertices);
 

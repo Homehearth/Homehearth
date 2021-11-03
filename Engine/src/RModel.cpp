@@ -434,9 +434,7 @@ bool RModel::LoadVertexSkinning(const aiMesh* aimesh, std::vector<anim_vertex_t>
 void RModel::Render() const
 {
     UINT offset = 0;
-    UINT stride = 0; /*= sizeof(simple_vertex_t);
-    if (!m_allBones.empty())
-        stride = sizeof(anim_vertex_t);*/
+    UINT stride = 0;
 
     for (size_t m = 0; m < m_meshes.size(); m++)
     {
@@ -461,9 +459,7 @@ void RModel::Render() const
 void RModel::RenderDeferred(ID3D11DeviceContext* context)
 {
     UINT offset = 0;
-    UINT stride = 0; /*sizeof(simple_vertex_t);
-    if (!m_allBones.empty())
-        stride = sizeof(anim_vertex_t);*/
+    UINT stride = 0;
 
     for (size_t m = 0; m < m_meshes.size(); m++)
     {
@@ -559,7 +555,6 @@ bool RModel::Create(const std::string& filename)
 
 
     BoneHierchy(scene->mRootNode, nameToBone);
-    std::cout << "Final parent fix" << std::endl;
     for (UINT i = 0; i < m_allBones.size(); i++)
     {
         if (m_boneMap.find(m_allBones[i].name) == m_boneMap.end())
