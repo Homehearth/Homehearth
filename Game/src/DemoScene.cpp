@@ -107,13 +107,15 @@ namespace sceneHelp
 
 		// Setup Cameras
 		Entity debugCameraEntity = gameScene.CreateEntity();
-		debugCameraEntity.AddComponent<comp::Camera3D>()->camera.Initialize(sm::Vector3(0, 0, -20), sm::Vector3(0, 0, 1), sm::Vector3(0, 1, 0),
+		debugCameraEntity.AddComponent<comp::Camera3D>()->camera.Initialize(sm::Vector3(200, 60, -320), sm::Vector3(200, 50, -350), sm::Vector3(0, 1, 0),
 			sm::Vector2((float)engine->GetWindow()->GetWidth(), (float)engine->GetWindow()->GetHeight()), CAMERATYPE::DEBUG);
 		debugCameraEntity.AddComponent<comp::Tag<TagType::DEBUG_CAMERA>>();
 
 		Entity cameraEntity = gameScene.CreateEntity();
-		cameraEntity.AddComponent<comp::Camera3D>()->camera.Initialize(sm::Vector3(0, 20.f, -10), sm::Vector3(0, 0, 1), sm::Vector3(0, 1, 0),
+		comp::Camera3D* gameCamera = cameraEntity.AddComponent<comp::Camera3D>();
+		gameCamera->camera.Initialize(sm::Vector3(60, 100.f, 80), sm::Vector3(0, 0, 1), sm::Vector3(0, 1, 0),
 			sm::Vector2((float)engine->GetWindow()->GetWidth(), (float)engine->GetWindow()->GetHeight()), CAMERATYPE::PLAY);
+		gameCamera->camera.SetFOV(dx::XMConvertToRadians(30.f));
 		cameraEntity.AddComponent<comp::Tag<TagType::CAMERA>>();
 
 		gameScene.SetCurrentCameraEntity(cameraEntity);

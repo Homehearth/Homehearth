@@ -82,7 +82,7 @@ void Camera::Update(float deltaTime)
 	{
 		//Mouse
 		m_rollPitchYaw.z += (float)InputSystem::Get().GetMousePos().x * m_rotationSpeed * deltaTime;
-		m_rollPitchYaw.y += (float)InputSystem::Get().GetMousePos().y * m_rotationSpeed * deltaTime;
+		m_rollPitchYaw.y -= (float)InputSystem::Get().GetMousePos().y * m_rotationSpeed * deltaTime;
 
 		quaterion = sm::Quaternion::CreateFromYawPitchRoll(m_rollPitchYaw.z, m_rollPitchYaw.y, m_rollPitchYaw.x);
 		m_rotationMatrix = dx::XMMatrixRotationRollPitchYaw(m_rollPitchYaw.y, m_rollPitchYaw.z, m_rollPitchYaw.x);
@@ -173,6 +173,7 @@ void Camera::Update(float deltaTime)
 void Camera::SetFollowEntity(const Entity& entity)
 {
 	m_targetEntity = entity;
+	m_target = entity.GetComponent<comp::Transform>()->position;
 }
 
 
