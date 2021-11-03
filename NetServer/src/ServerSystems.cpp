@@ -210,6 +210,7 @@ void ServerSystems::NextWaveConditions(Simulation* simulation, Timer& timer, int
 
 void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& scene, sm::Vector3 spawnPoint, float dt)
 {
+	PROFILE_FUNCTION();
 	scene.ForEachComponent<comp::Player, comp::Network, comp::CombatStats, comp::Health, comp::Transform>([&](Entity e, comp::Player& p, comp::Network& net, comp::CombatStats& a, comp::Health health, comp::Transform& t)
 		{
 			if (health.currentHealth <= 0 && p.state != comp::Player::State::DEAD)
@@ -242,6 +243,8 @@ void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& sce
 
 void ServerSystems::CheckGameOver(Simulation* simulation, HeadlessScene& scene)
 {
+	PROFILE_FUNCTION();
+
 	bool gameOver = true;
 	
 	//Check if all players is dead
@@ -264,6 +267,8 @@ void ServerSystems::CheckGameOver(Simulation* simulation, HeadlessScene& scene)
 namespace Systems {
 	void CharacterMovement(HeadlessScene& scene, float dt)
 	{
+		PROFILE_FUNCTION();
+
 		scene.ForEachComponent<comp::Player, comp::CombatStats, comp::Velocity, comp::Transform>([&](comp::Player& p, comp::CombatStats& a, comp::Velocity& v, comp::Transform& t)
 			{
 				if (p.state == comp::Player::State::ATTACK)
