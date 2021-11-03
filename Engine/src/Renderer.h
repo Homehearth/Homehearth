@@ -2,7 +2,7 @@
 #include "BasePass.h"
 #include "DepthPass.h"
 #include "DebugPass.h"
-#include "IRenderPass.h"
+#include "AnimationPass.h"
 #include "PipelineManager.h"
 
 
@@ -13,9 +13,10 @@ private:
 	PipelineManager m_pipelineManager;
 	std::vector<IRenderPass*> m_passes;
 
-	BasePass m_basePass;	
-	DepthPass m_depthPass;
-	DebugPass m_debugPass;
+	BasePass		m_basePass;	
+	DepthPass		m_depthPass;
+	DebugPass		m_debugPass;
+	AnimationPass	m_animPass;
 	unsigned int m_currentPass = 0;
 
 	// Update per frame related resources.

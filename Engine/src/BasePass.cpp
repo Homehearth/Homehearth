@@ -1,9 +1,6 @@
 #include "EnginePCH.h"
 #include "BasePass.h"
 
-#include "PipelineManager.h"
-#include "RModel.h"
-
 void BasePass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 {	
     DC->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);

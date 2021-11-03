@@ -1,7 +1,7 @@
 #pragma once
 #include "net_message.h"
 #include "RModel.h"
-#include "RDebugMesh.h"
+#include "RAnimator.h"
 #include "ResourceManager.h"
 
 namespace ecs
@@ -10,7 +10,7 @@ namespace ecs
 	{
 		TRANSFORM,
 		VELOCITY,
-		MESH_NAME,
+		MODEL_NAME,
 		NAME_PLATE,
 		HEALTH,
 		BOUNDING_ORIENTED_BOX,
@@ -68,10 +68,16 @@ namespace ecs
 			bool						visible = true;
 		};
 
-		// Used on server side
-		struct MeshName 
+		struct Animator
 		{
-			std::string name;
+			std::shared_ptr<RAnimator> animator;
+		};
+
+		// Used on server side
+		struct ModelNames 
+		{
+			std::string meshName = "";
+			std::string animatorName = "";
 		};
 
 		struct NamePlate
@@ -90,7 +96,7 @@ namespace ecs
 				BoundingSphere* sphere = reg.try_get<BoundingSphere>(curr);
 				if(obb != nullptr)
 				{
-					model = ResourceManager::Get().GetResource<RModel>("cube.obj");
+					model = ResourceManager::Get().GetResource<RModel>("Cube.obj");
 				}
 				else if(sphere != nullptr)
 				{

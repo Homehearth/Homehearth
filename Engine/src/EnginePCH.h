@@ -114,6 +114,7 @@ namespace sm = dx::SimpleMath;
 #include "Components.h"
 #include "SceneBuilder.h"
 #include "RenderThreadHandler.h"
+#include "Stats.h"
 
 // Network
 #include "Client.h"
@@ -131,4 +132,5 @@ const std::string MODELPATH		= "../Assets/Models/";		//"../../../../../Assets/Mo
 const std::string MATERIALPATH	= "../Assets/Materials/";
 const std::string TEXTUREPATH	= "../Assets/Textures/";
 const std::string ANIMATIONPATH = "../Assets/Animations/";
-const std::string FONTPATH = "../Assets/Fonts/";
+const std::string ANIMATORPATH	= "../Assets/Animators/";
+const std::string FONTPATH		= "../Assets/Fonts/";

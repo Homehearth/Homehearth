@@ -1,6 +1,6 @@
 cbuffer Matrices : register(b0)
 {
-    float4x4 c_world;
+    float4x4 c_world;       //row major
 }
 
 cbuffer Camera : register(b1)
@@ -8,8 +8,8 @@ cbuffer Camera : register(b1)
     float4 c_cameraPosition;
     float4 c_cameraTarget;
     
-    float4x4 c_projection;
-    float4x4 c_view;
+    float4x4 c_projection;  //row major
+    float4x4 c_view;        //row major
 }
 
 struct VertexIn
