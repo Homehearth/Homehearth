@@ -15,6 +15,7 @@ namespace ecs
 		NAME_PLATE,
 		BOUNDING_ORIENTED_BOX,
 		BOUNDING_SPHERE,
+		PLANECOLLIDER,
 		LIGHT,
 		PLAYER,
 		TILE,
@@ -28,6 +29,13 @@ namespace ecs
 		using DirectX::BoundingOrientedBox;
 		using DirectX::BoundingSphere;
 		
+		struct PlaneCollider 
+		{
+			sm::Vector3 center;
+			sm::Vector3 normal;
+			sm::Vector2 size;
+		};
+
 		struct Transform
 		{
 			sm::Vector3 previousPosition;
