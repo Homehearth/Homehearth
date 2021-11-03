@@ -476,7 +476,7 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 					//Add an animator if we can get it
 					if (!animName.name.empty())
 					{
-						std::shared_ptr<RAnimator> anim = ResourceManager::Get().GetResource<RAnimator>(animName.name);
+						std::shared_ptr<RAnimator> anim = ResourceManager::Get().CopyResource<RAnimator>(animName.name, true);
 						if (anim)
 						{
 							if (anim->LoadSkeleton(renderable->model->GetSkeleton()))
