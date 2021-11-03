@@ -1,6 +1,9 @@
 #pragma once
 #include "EnginePCH.h"
 
+//Which slot to bind to in the GPU
+const UINT T2D_SLOT = 10;
+
 struct light_info_t
 {
 	dx::XMFLOAT4 nrOfLights;

@@ -208,13 +208,15 @@ void ServerSystems::NextWaveConditions(Simulation* simulation, Timer& timer, int
 
 void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& scene, sm::Vector3 spawnPoint, float dt)
 {
-	scene.ForEachComponent<comp::Player, comp::Network, comp::CombatStats, comp::Health, comp::Transform>([&](comp::Player& p, comp::Network& net, comp::CombatStats& a, comp::Health health, comp::Transform& t)
+	scene.ForEachComponent<comp::Player, comp::Network, comp::CombatStats, comp::Health, comp::Transform>([&](Entity e, comp::Player& p, comp::Network& net, comp::CombatStats& a, comp::Health health, comp::Transform& t)
 		{
 			if (health.currentHealth <= 0 && p.state != comp::Player::State::DEAD)
 			{
 				p.state = comp::Player::State::DEAD;
 				p.respawnTimer = 60.f;
 				health.isAlive = false;
+				e.AddComponent<comp::MeshName>("Skull.obj");
+				e.UpdateNetwork();
 				LOG_INFO("Player id %u died...", net.id);
 			}
 
@@ -228,6 +230,8 @@ void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& sce
 					t.position = spawnPoint;
 					health.currentHealth = 100;
 					health.isAlive = true;
+					e.AddComponent<comp::MeshName>("GameCharacter.fbx");
+					e.UpdateNetwork();
 					LOG_INFO("Player id %u Respawnd...", net.id);
 				}
 			}

@@ -4,16 +4,15 @@
 //--------------------------------------
 // Forward Rendering, or GeometryPass.
 //--------------------------------------
-class BasePass : public IRenderPass
+class AnimationPass : public IRenderPass
 {
 public:
-	BasePass() = default;
-	virtual ~BasePass() = default;
+	AnimationPass() = default;
+	virtual ~AnimationPass() = default;
 
 	void PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext = D3D11Core::Get().DeviceContext()) override;
-	
+
 	void Render(Scene* pScene) override;
-	
+
 	void PostRender(ID3D11DeviceContext* pDeviceContext = D3D11Core::Get().DeviceContext()) override;
 };
-
