@@ -71,16 +71,16 @@ enum class GameMsg : uint8_t
 
 	Server_AssignID,
 	Server_GetPing,
-	
+
 	Game_PlayerReady,
 	Game_Start,
 	Game_Snapshot,
 	Game_AddEntity,
 	Game_RemoveEntity,
+	Game_BackToLobby,
 	Game_WaveTimer,
 
 	Game_PlayerInput,
-
 	Grid_PlaceDefence
 };
 

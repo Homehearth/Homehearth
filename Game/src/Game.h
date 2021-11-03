@@ -15,6 +15,7 @@ private:
 	GridSystem m_grid;
 	uint32_t m_waveTimer;
 
+	Entity m_mapEntity;
 
 	bool m_isLeavingLobby;
 	comp::Transform test;
