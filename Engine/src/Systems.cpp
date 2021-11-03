@@ -1,5 +1,6 @@
 #include "EnginePCH.h"
 #include "Systems.h"
+
 Entity* FindClosestPlayer(HeadlessScene& scene, sm::Vector3 position)
 {
 	Entity* currentClosest = nullptr;
@@ -38,6 +39,7 @@ bool ReachedNode(Entity* entity,comp::Node* node)
 		return false;
 	}
 }
+
 comp::Node* FindClosestNode(HeadlessScene& scene, sm::Vector3 position)
 {
 	comp::Node* currentClosest = nullptr;
@@ -61,14 +63,13 @@ comp::Node* FindClosestNode(HeadlessScene& scene, sm::Vector3 position)
 	return currentClosest;
 }
 
-bool Systems::AIAStarSearch(Entity& npc, HeadlessScene& scene)
+bool AIAStarSearch(Entity& npc, HeadlessScene& scene)
 {
 	comp::NPC* npcComp = npc.GetComponent<comp::NPC>();
 	comp::Transform* npcTransform = npc.GetComponent<comp::Transform>();
 	comp::Node* currentNode = npcComp->currentNode;
 
 	Entity* closestPlayer = FindClosestPlayer(scene, npcTransform->position);
-
 	comp::Transform* playerTransform = closestPlayer->GetComponent<comp::Transform>();
 
 	std::vector<comp::Node*> closedList, openList;
@@ -157,13 +158,14 @@ bool Systems::AIAStarSearch(Entity& npc, HeadlessScene& scene)
 	}
 
 	//TracePath
-	while (goalNode != startingNode)
+	if(goalNode)
+		currentNode = goalNode;
+
+	while (currentNode != startingNode)
 	{
 		//Insert currentNode to the path
-		npcComp->path.insert(npcComp->path.begin(), goalNode);
-		if (goalNode->parent == nullptr) //37, 36 / 32, 33
-			float stop = 2.f;
-		goalNode = goalNode->parent;
+		npcComp->path.insert(npcComp->path.begin(), currentNode);
+		currentNode = currentNode->parent;
 	}
 
 	scene.ForEachComponent<comp::Node>([&](Entity entity, comp::Node& node)
@@ -187,7 +189,7 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 			//
 			// attack LOGIC
 			//
-			if (stats.isAttacking)
+			if (stats.isAttacking && stats.cooldownTimer <= 0.f)
 			{
 
 				//Creates an entity that's used to check collision if an attack lands.
@@ -354,6 +356,7 @@ void Systems::LightSystem(Scene& scene, float dt)
 
 
 }
+
 void Systems::AISystem(HeadlessScene& scene)
 {
 	scene.ForEachComponent<comp::NPC>([&](Entity entity, comp::NPC& npc)
@@ -367,7 +370,7 @@ void Systems::AISystem(HeadlessScene& scene)
 		comp::Transform* transformCurrentClosestPlayer = closestPlayer->GetComponent<comp::Transform>();
 		if (npc.currentNode)
 		{
-			/*if (sm::Vector3::Distance(transformNPC->position, transformCurrentClosestPlayer->position) <= 100.f)
+			if (sm::Vector3::Distance(transformNPC->position, transformCurrentClosestPlayer->position) <= 100.f && npc.state != comp::NPC::State::CHASE)
 			{
 				npc.state = comp::NPC::State::CHASE;
 				LOG_INFO("Switching to CHASE State!");
@@ -385,11 +388,10 @@ void Systems::AISystem(HeadlessScene& scene)
 				stats->targetDir = transformCurrentClosestPlayer->position - transformNPC->position;
 				stats->targetDir.Normalize();
 				stats->isAttacking = true;
-			}*/
-			npc.state = comp::NPC::State::ASTAR;
+			}
 		}
-
-		//npc.state = comp::NPC::State::CHASE;
+		else
+			npc.state = comp::NPC::State::IDLE;
 
 		
 
@@ -402,7 +404,6 @@ void Systems::AISystem(HeadlessScene& scene)
 				velocityTowardsPlayer->vel = transformCurrentClosestPlayer->position - transformNPC->position;
 				velocityTowardsPlayer->vel.Normalize();
 				velocityTowardsPlayer->vel *= npc.movementSpeed;
-
 			}
 			break;
 		case comp::NPC::State::ASTAR:
@@ -415,7 +416,7 @@ void Systems::AISystem(HeadlessScene& scene)
 				}
 				else
 				{
-					npc.currentNode = FindClosestNode(scene, transformNPC->position);
+					//npc.currentNode = FindClosestNode(scene, transformNPC->position);
 					AIAStarSearch(entity, scene);
 				}
 			}
@@ -423,19 +424,14 @@ void Systems::AISystem(HeadlessScene& scene)
 			{
 				if (velocityTowardsPlayer && npc.currentNode)
 				{
-					sm::Vector3 nodePos = npc.currentNode->position;
-					velocityTowardsPlayer->vel = nodePos - transformNPC->position;
+					velocityTowardsPlayer->vel = npc.currentNode->position - transformNPC->position;
 					velocityTowardsPlayer->vel.Normalize();
 					velocityTowardsPlayer->vel *= npc.movementSpeed;
-
-					if (velocityTowardsPlayer->vel.y <= 0.00001f)
-					{
-						LOG_INFO("We got a bad boy over here!");
-					}
 				}				
 			}
 			break;
 		case comp::NPC::State::IDLE:
+			velocityTowardsPlayer->vel = { 0.f, 0.f, 0.f };
 			break;
 		}
 	});

@@ -171,7 +171,7 @@ namespace ecs
 				ASTAR,
 				CHASE
 			} state;
-			float movementSpeed = 2.f;
+			float movementSpeed = 20.f;
 			float attackRange = 10.f;
 			bool hostile;
 			uint32_t currentNodeTarget = static_cast<uint32_t>(-1);
