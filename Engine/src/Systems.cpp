@@ -4,6 +4,7 @@
 
 void Systems::CombatSystem(HeadlessScene& scene, float dt)
 {
+	PROFILE_FUNCTION();
 	// For Each entity that can attack.
 	scene.ForEachComponent<comp::CombatStats, comp::Transform>([&](Entity entity, comp::CombatStats& stats, comp::Transform& transform)
 		{
@@ -78,14 +79,6 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 			if (health.currentHealth <= 0)
 			{
 				comp::Network* net = entity.GetComponent<comp::Network>();
-
-				if (net)
-				{
-					LOG_INFO("Entity %u died", net->id);
-				}
-				else {
-					LOG_INFO("Entity died");
-				}
 				health.isAlive = false;
 				if (!entity.GetComponent<comp::Player>())
 				{
@@ -110,6 +103,8 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 
 void Systems::MovementSystem(HeadlessScene& scene, float dt)
 {
+	PROFILE_FUNCTION();
+
 	//Transform
 
 	scene.ForEachComponent<comp::Velocity, comp::Force>([&](Entity e, comp::Velocity& v, comp::Force& f)
@@ -130,25 +125,32 @@ void Systems::MovementSystem(HeadlessScene& scene, float dt)
 			}
 		});
 
-	scene.ForEachComponent<comp::Transform, comp::Velocity>([&, dt]
-	(comp::Transform& transform, comp::Velocity& velocity)
-		{
-			transform.position += velocity.vel * dt;
-			transform.position.y = 1.0f;
-			
-		});
-
-	scene.ForEachComponent<comp::Transform, comp::Network>([](Entity e, comp::Transform& t, comp::Network&) 
-		{
-			if (t.previousPosition != t.position)
+	{
+		PROFILE_SCOPE("Add Velocity to Transform");
+		scene.ForEachComponent<comp::Transform, comp::Velocity>([&, dt]
+		(comp::Transform& transform, comp::Velocity& velocity)
 			{
-				e.UpdateNetwork();
-			}
-		});
+				transform.position += velocity.vel * dt;
+				transform.position.y = 1.0f;
+			
+			});
+	}
+	{
+		PROFILE_SCOPE("Update Transforms");
+		scene.ForEachComponent<comp::Transform, comp::Network>([](Entity e, comp::Transform& t, comp::Network&) 
+			{
+				if (t.previousPosition != t.position)
+				{
+					e.UpdateNetwork();
+				}
+			});
+	}
 }
 
 void Systems::MovementColliderSystem(HeadlessScene& scene, float dt)
 {
+	PROFILE_FUNCTION();
+
 	//BoundingOrientedBox
 	scene.ForEachComponent<comp::Transform, comp::BoundingOrientedBox>([&, dt]
 	(comp::Transform& transform, comp::BoundingOrientedBox& obb)
