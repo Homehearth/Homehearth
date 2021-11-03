@@ -20,6 +20,8 @@ void Scene::Update(float dt)
 	PROFILE_FUNCTION();
 
 	// Emit event
+
+	GetCurrentCamera()->Update(dt);
 	BasicScene::Update(dt);
 
 	if (!m_renderableCopies.IsSwapped() &&
@@ -48,30 +50,33 @@ void Scene::Update(float dt)
 		m_renderableCopies.Swap();
 		m_renderableAnimCopies.Swap();
 	}
-
-	if(!m_debugRenderableCopies.IsSwapped())
+	if (!m_debugRenderableCopies.IsSwapped())
 	{
 		m_debugRenderableCopies[0].clear();
-		m_registry.view<comp::RenderableDebug, comp::Transform>().each([&](entt::entity entity, comp::RenderableDebug& r, comp::Transform& t)
+		m_registry.view<comp::RenderableDebug>().each([&](entt::entity entity, comp::RenderableDebug& r)
 			{
-				sm::Matrix mat;
 				comp::BoundingOrientedBox* obb = m_registry.try_get<comp::BoundingOrientedBox>(entity);
 				comp::BoundingSphere* sphere = m_registry.try_get<comp::BoundingSphere>(entity);
-				if(obb != nullptr)
-				{
-					mat = sm::Matrix::CreateScale(obb->Extents);
-				}
-				else if(sphere != nullptr)
-				{
-					mat = sm::Matrix::CreateScale(sm::Vector3(sphere->Radius, sphere->Radius, sphere->Radius));
-				}
-				mat *= sm::Matrix::CreateWorld(t.position, ecs::GetForward(t), ecs::GetUp(t));
 				
+				comp::Transform transform;
+				transform.rotation = sm::Quaternion::Identity;
+
+				if (obb != nullptr)
+				{
+					transform.scale = sm::Vector3(obb->Extents);
+					transform.position = obb->Center;
+					transform.rotation = obb->Orientation;
+				}
+				else if (sphere != nullptr)
+				{
+					transform.scale = sm::Vector3(sphere->Radius);
+					transform.position = sphere->Center;
+				}
 				
-				r.data.worldMatrix = mat;
+				r.data.worldMatrix = ecs::GetMatrix(transform);
 				m_debugRenderableCopies[0].push_back(r);
 			});
-		
+
 		m_debugRenderableCopies.Swap();
 	}
 
@@ -120,7 +125,7 @@ void Scene::Render()
 
 void Scene::RenderDebug()
 {
-	if(m_IsRenderingColliders)
+	if (m_IsRenderingColliders)
 	{
 		PROFILE_FUNCTION();
 
@@ -134,14 +139,14 @@ void Scene::RenderDebug()
 		{
 			m_ColliderHitBuffer.GetBuffer(),
 		};
-		
+
 		D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, buffers);
 		D3D11Core::Get().DeviceContext()->PSSetConstantBuffers(3, 1, buffer2);
 		for (const auto& it : m_debugRenderableCopies[1])
 		{
 			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
 			m_ColliderHitBuffer.SetData(D3D11Core::Get().DeviceContext(), it.isColliding);
-			
+
 			if (it.model)
 				it.model->Render();
 		}
@@ -163,14 +168,19 @@ bool Scene::IsRenderReady() const
 	return (IsRender2DReady() && IsRender3DReady() && IsRenderDebugReady());
 }
 
-void Scene::Insert2DElement(Element2D* element, std::string& name)
+void Scene::Add2DCollection(Collection2D* collection, std::string& name)
 {
-	m_2dHandler.InsertElement(element, name);
+	m_2dHandler.AddElementCollection(collection, name);
 }
 
-void Scene::Insert2DElement(Element2D* element, std::string&& name)
+void Scene::Add2DCollection(Collection2D* collection, const char* name)
 {
-	m_2dHandler.InsertElement(element, name);
+	m_2dHandler.AddElementCollection(collection, name);
+}
+
+Collection2D* Scene::GetCollection(const std::string& name)
+{
+	return m_2dHandler.GetCollection(name);
 }
 
 void Scene::RenderAnimation()

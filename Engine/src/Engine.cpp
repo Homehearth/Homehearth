@@ -2,6 +2,7 @@
 #include "Engine.h"
 #include <omp.h>
 #include "Camera.h"
+#include "GridSystem.h"
 
 bool Engine::s_safeExit = false;
 
@@ -20,6 +21,8 @@ void Engine::Startup()
 
 	// Window Startup:
 	Window::Desc config;
+	//config.height = 1080;
+	//config.width = 1920;
 	config.title = L"Engine";
 	if (!m_window.Initialize(config))
 	{
@@ -31,7 +34,6 @@ void Engine::Startup()
 	D2D1Core::Initialize(&m_window);
 
 	m_renderer.Initialize(&m_window);
-
 
 	// Thread should be launched after s_engineRunning is set to true and D3D11 is initialized.
 	//
@@ -196,7 +198,7 @@ void Engine::drawImGUI() const
 	}
 
 	ImGui::End();
-	
+
 	ImGui::Begin("Components");
 	if (ImGui::CollapsingHeader("Transform"))
 	{
@@ -458,6 +460,13 @@ void Engine::Render(float& dt)
 	}
 
 	{
+		PROFILE_SCOPE("Render D2D1");
+		D2D1Core::Begin();
+		GetCurrentScene()->Render2D();
+		D2D1Core::Present();
+	}
+
+	{
 		PROFILE_SCOPE("Render ImGui");
 		IMGUI(
 			m_imguiMutex.lock();
@@ -465,13 +474,6 @@ void Engine::Render(float& dt)
 		ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 		m_imguiMutex.unlock();
 		);
-	}
-
-	{
-		PROFILE_SCOPE("Render D2D1");
-		D2D1Core::Begin();
-		GetCurrentScene()->Render2D();
-		D2D1Core::Present();
 	}
 
 	

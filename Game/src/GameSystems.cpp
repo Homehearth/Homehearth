@@ -1,14 +1,8 @@
 #include "GameSystems.h"
+#include "EnginePCH.h"
 
 using namespace network;
-void GameSystems::UserInputSystem(Scene& scene, Client& client)
-{
-	scene.ForEachComponent<comp::Transform, comp::Velocity, comp::Player>([&](comp::Transform&, comp::Velocity& velocity, comp::Player& player)
-		{
-			velocity.vel.z = InputSystem::Get().GetAxis(Axis::VERTICAL) * player.runSpeed;
-			velocity.vel.x = InputSystem::Get().GetAxis(Axis::HORIZONTAL) * player.runSpeed;
-		});
-}
+
 
 //System check if mouse ray intersects any of the box collider components in scene
 void GameSystems::MRayIntersectBoxSystem(Scene& scene)
@@ -41,3 +35,4 @@ void GameSystems::RenderIsCollidingSystem(Scene& scene)
 			}
 		});
 }
+

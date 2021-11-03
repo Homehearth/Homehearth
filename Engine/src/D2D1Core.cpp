@@ -73,13 +73,17 @@ const bool D2D1Core::Setup(Window* window)
 	if (FAILED(hr))
 		[] {LOG_WARNING("Creating default solid color brush failed."); };
 
+	// Somehow scales the text to window size
+	float res = ((window->GetWidth()) / ((float)window->GetHeight()));
+	const float font = ((window->GetWidth() * res) - (window->GetHeight() * res)) * 0.03f;
+
 	hr = m_writeFactory->CreateTextFormat(
 		L"Times New Roman",
 		NULL,
 		DWRITE_FONT_WEIGHT_REGULAR,
 		DWRITE_FONT_STYLE_NORMAL,
 		DWRITE_FONT_STRETCH_NORMAL,
-		24.0f,
+		font,
 		L"en-us",
 		&m_writeFormat
 	);
@@ -114,6 +118,11 @@ void D2D1Core::Destroy()
 {
 	if (INSTANCE)
 		delete INSTANCE;
+}
+
+float D2D1Core::GetDefaultFontSize()
+{
+	return INSTANCE->m_writeFormat.Get()->GetFontSize();
 }
 
 void D2D1Core::DrawT(const std::string& text, const draw_text_t& opt)

@@ -2,7 +2,7 @@
 #include "DoubleBuffer.h"
 
 // Elements
-#include "Element2D.h"
+#include "Collection2D.h"
 
 /*
 	Defines for ease of use.
@@ -45,26 +45,20 @@
 		/*
 			Unordered map containing the group and name as key.
 		*/
-		std::map<std::string, Element2D*> m_elements;
+		std::map<std::string, Collection2D*> m_collections;
 
 		// Doublebuffer holding references to elements.
 		DoubleBuffer<std::vector<Element2D**>> m_drawBuffers;
+		DoubleBuffer<std::vector<Collection2D**>> m_renderBuffers;
 
 	public:
 
 		Handler2D();
 		~Handler2D();
-
-		// Insert an element into the rendering system.
-		void InsertElement(Element2D* element, std::string& name);
-
-		/*
-			Get an Element by its assigned name.
-			nullptr will be returned if
-			element couldn't be casted to Template.
-		*/
-		template<class T>
-		T* GetElement(const std::string& element_name) const;
+		
+		void AddElementCollection(Collection2D* collection, const char* name);
+		void AddElementCollection(Collection2D* collection, std::string& name);
+		Collection2D* GetCollection(const std::string& collectionName) const;
 
 		// Render all elements.
 		void Render();
@@ -73,17 +67,4 @@
 		void Update();
 
 		bool IsRenderReady() const;
-
 	};
-
-
-	template<class T>
-	inline T* Handler2D::GetElement(const std::string& element_name) const
-	{
-		if (m_elements.find(element_name) != m_elements.end())
-		{
-			return dynamic_cast<T*>(m_elements.at(element_name));
-		}
-
-		return nullptr;
-	}

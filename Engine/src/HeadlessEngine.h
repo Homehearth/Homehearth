@@ -3,7 +3,6 @@
 #include "Scene.h"
 
 #include <omp.h>
-#define TICK_RATE 1.f / 60.f
 
 template<typename SceneType>
 class BasicEngine
@@ -122,6 +121,7 @@ void BasicEngine<SceneType>::Run()
 	float update_time = 0.f;
 	float network_time = 0.f;
 	const float TARGET_UPDATE = 1.f / Stats::GetMaxFPS();
+	const float TICK_RATE = 1.f / 60.f;
 
 	while (IsRunning())
 	{
@@ -130,18 +130,18 @@ void BasicEngine<SceneType>::Run()
 		currentFrame = omp_get_wtime();
 		deltaTime = static_cast<float>(currentFrame - lastFrame);
 
+		network_time += deltaTime;
+		update_time += deltaTime;
 		if (update_time >= TARGET_UPDATE)
 		{
 			Update(update_time);
-			update_time -= TARGET_UPDATE;
+			update_time = 0.0f;
 		}
 		if (network_time >= TICK_RATE)
 		{
 			UpdateNetwork(network_time);
-			network_time -= TICK_RATE;
+			network_time = 0.0f;
 		}
-		network_time += deltaTime;
-		update_time += deltaTime;
 		lastFrame = currentFrame;
 	}
 }

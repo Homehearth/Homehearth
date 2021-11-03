@@ -37,12 +37,10 @@ public:
 	void Render2D();
 
 	bool IsRenderReady() const;
-	
-	template<class E>
-	E* GetElement(const std::string& element_name) const;
 
-	void Insert2DElement(Element2D* element, std::string& name);
-	void Insert2DElement(Element2D* element, std::string&& name = "");
+	void Add2DCollection(Collection2D* collection, std::string& name);
+	void Add2DCollection(Collection2D* collection, const char* name);
+	Collection2D* GetCollection(const std::string& name);
 
 	Camera* GetCurrentCamera()const;
 	void SetCurrentCameraEntity(Entity cameraEntity);
@@ -55,9 +53,3 @@ public:
 	DoubleBuffer<std::vector<comp::RenderableDebug>>*	GetDebugBuffers();
 	void ReadyForSwap();
 };
-
-template<class E>
-inline E* Scene::GetElement(const std::string& element_name) const
-{
-	return m_2dHandler.GetElement<E>(element_name);
-}

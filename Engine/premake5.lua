@@ -43,6 +43,7 @@ project "Engine"
         ["src/Engine"] = { "**EnginePCH.*" },
             ["src/Engine/Core"] = { "**Engine.*", "**Scene.*", "**EventTypes.*", "**Window.*" },
             ["src/Engine/Input"] = { "**InputSystem.*" },
+            ["src/Engine/GameSystems"] = { "**GridSystem.*", "**CollisionSystem.*" },
             ["src/Engine/Thread"] = { "**multi_thread_manager.*", "**ThreadSyncer.*", "**RenderThreadHandler.*"},
 
         ["src/Engine/Utility"] = { "**Timer.*", "**Profiler.*", "**Logger.*", "**Stats.*" },
@@ -51,7 +52,7 @@ project "Engine"
         ["src/Engine"] = {  },
             ["src/Engine/Graphics/Renderer"] = {"**Renderer.*", "**PipelineManager.*", "**BackBuffer.*"},
                 ["src/Engine/Graphics/Renderer/RenderPass"] = {"**Pass.*"},
-				["src/Engine/Graphics/Renderer2D"] = {"**Handler2D.*", "**Element2D.*"},
+				["src/Engine/Graphics/Renderer2D"] = {"**Handler2D.*", "**Element2D.*", "**Collection2D.*"},
             ["src/Engine/Graphics/D3D11"] = { "**D3D11Core.*" },
 			["src/Engine/Graphics/D2D1"] = { "**D2D1Core.*" },
 			

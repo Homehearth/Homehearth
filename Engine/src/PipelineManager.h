@@ -42,7 +42,8 @@ public:
 	ComPtr<ID3D11BlendState>		m_blendStatepDepthOnlyAlphaTest;
 	ComPtr<ID3D11BlendState>		m_blendStateDepthOnlyAlphaToCoverage;;
 	
-	ComPtr<ID3D11SamplerState>		m_linearSamplerState;
+	ComPtr<ID3D11SamplerState>		m_linearSamplerState;		//Low settings
+	ComPtr<ID3D11SamplerState>		m_anisotropicSamplerState;	//High settings
 	ComPtr<ID3D11SamplerState>		m_pointSamplerState;
 
 	ComPtr<ID3D11InputLayout>		m_defaultInputLayout;
