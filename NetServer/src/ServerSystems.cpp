@@ -232,7 +232,7 @@ void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& sce
 					t.position = p.spawnPoint;
 					health.currentHealth = 100;
 					health.isAlive = true;
-					e.AddComponent<comp::MeshName>("GameCharacter.fbx");
+					e.AddComponent<comp::MeshName>("Knight.fbx");
 					e.UpdateNetwork();
 					LOG_INFO("Player id %u Respawnd...", net.id);
 				}
