@@ -410,12 +410,12 @@ void Engine::Update(float dt)
 		}
 	}
 	// todo temp
-	if (InputSystem::Get().CheckMouseKey(MouseKey::RIGHT, KeyState::PRESSED))
+	/*if (InputSystem::Get().CheckMouseKey(MouseKey::RIGHT, KeyState::PRESSED))
 	{
 		InputSystem::Get().SwitchMouseMode();
 
 		LOG_INFO("Switched mouse Mode");
-	}
+	}*/
 
 	{
 		PROFILE_SCOPE("Starting ImGui");
