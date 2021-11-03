@@ -105,7 +105,14 @@ void Systems::MovementSystem(HeadlessScene& scene, float dt)
 	scene.ForEachComponent<comp::Transform, comp::Velocity>([&, dt](comp::Transform& transform, comp::Velocity& velocity)
 		{
 			transform.position += velocity.vel * dt;
-			transform.position.y = 1.0f;
+		});
+
+	scene.ForEachComponent<comp::Transform, comp::Network>([](Entity e, comp::Transform& t, comp::Network&) 
+		{
+			if (t.previousPosition != t.position)
+			{
+				e.UpdateNetwork();
+			}
 		});
 }
 

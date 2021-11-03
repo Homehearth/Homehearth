@@ -43,6 +43,9 @@ private:
 	//Game play related
 	Timer waveTimer;
 	std::queue<Wave> waveQueue;
+	sm::Vector3 playerSpawnPoint;
+
+	
 	void CreateWaves();
 	
 	void OnNetworkEntityCreate(entt::registry& reg, entt::entity entity);

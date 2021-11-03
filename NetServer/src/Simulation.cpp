@@ -254,6 +254,9 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 {
 	this->m_gameID = gameID;
 
+	//Set players spawn point
+	playerSpawnPoint = sm::Vector3(320.f, 0, -310.f);
+	
 	// Create and add all waves to the queue.
 	CreateWaves();
 
@@ -272,34 +275,40 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 			for (const auto& pair : m_playerInputs)
 			{
 				Entity e = pair.first;
-				InputState input = pair.second;
-				// update velocity
-				e.GetComponent<comp::Velocity>()->vel = sm::Vector3(static_cast<float>(input.axisHorizontal), 0, static_cast<float>(input.axisVertical)) * e.GetComponent<comp::Player>()->runSpeed;
-
-				// check if attacking
-				if (input.leftMouse)
+				
+				if(e.GetComponent<comp::Player>()->state != comp::Player::State::DEAD)
 				{
-					comp::CombatStats* stats = e.GetComponent<comp::CombatStats>();
-					if (stats)
+					InputState input = pair.second;
+					// update velocity
+					e.GetComponent<comp::Velocity>()->vel = sm::Vector3(static_cast<float>(input.axisHorizontal), 0, static_cast<float>(input.axisVertical)) * e.GetComponent<comp::Player>()->runSpeed;
+
+					// check if attacking
+					if (input.leftMouse)
 					{
-						if (stats->cooldownTimer <= 0.0f)
-							stats->isAttacking = true;
+						comp::CombatStats* stats = e.GetComponent<comp::CombatStats>();
+						if (stats)
+						{
+							if (stats->cooldownTimer <= 0.0f)
+								stats->isAttacking = true;
 
-						stats->targetRay = input.mouseRay;
+							stats->targetRay = input.mouseRay;
 
-					}
-					comp::Player* player = e.GetComponent<comp::Player>();
-					if (player)
-					{
-						player->state = comp::Player::State::ATTACK;
+						}
+						comp::Player* player = e.GetComponent<comp::Player>();
+						if (player)
+						{
+							player->state = comp::Player::State::ATTACK;
 
+						}
 					}
 				}
+
 			}
 
 			//  run all game logic systems
 			{
 				PROFILE_SCOPE("Systems");
+				ServerSystems::PlayerGameOverSystem(this, scene, playerSpawnPoint, e.dt);
 				Systems::CharacterMovement(scene, e.dt);
 				Systems::MovementSystem(scene, e.dt);
 				Systems::MovementColliderSystem(scene, e.dt);
@@ -458,7 +467,7 @@ bool Simulation::AddPlayer(uint32_t playerID, const std::string& namePlate)
 
 	// Create Player entity in Game scene
 	Entity player = m_pGameScene->CreateEntity();
-	player.AddComponent<comp::Transform>()->position = sm::Vector3(320.f,0,-310.f);
+	player.AddComponent<comp::Transform>()->position = playerSpawnPoint;
 	player.AddComponent<comp::Velocity>();
 	player.AddComponent<comp::NamePlate>()->namePlate = namePlate;
 	player.AddComponent<comp::MeshName>()->name = "Arrow.fbx";

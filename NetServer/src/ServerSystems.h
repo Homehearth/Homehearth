@@ -29,11 +29,17 @@ namespace EnemyManagement
 
 }
 
+namespace PlayerManagement
+{
+	
+}
+
 /*! Namespace to manage the server's various ECS systems. */
 namespace ServerSystems
 {
 	void WaveSystem(Simulation* simulation, std::queue<Wave>& waves);
 	void NextWaveConditions(Simulation* simulation, Timer& timer, int timeToFinish);
+	void PlayerGameOverSystem(Simulation* simulation, HeadlessScene& scene, sm::Vector3 spawnPoint, float dt);
 }
 
 namespace Systems {
