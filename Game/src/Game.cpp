@@ -313,6 +313,16 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		SetScene("Game");
 		break;
 	}
+	case GameMsg::Game_WaveTimer:
+	{
+		msg >> m_waveTimer;
+		Element2D* elem = GetScene("Game").GetCollection("timer")->elements[0].get();
+		if (elem)
+		{
+			dynamic_cast<rtd::Text*>(elem)->SetText(std::to_string(m_waveTimer));
+		}
+		break;
+	}
 	case GameMsg::Lobby_Update:
 	{
 		uint32_t count;

@@ -206,11 +206,15 @@ void sceneHelp::SetupMainMenuScreen(Game* game)
 	rtd::TextField* portField = connectFields->AddElement<rtd::TextField>(draw_text_t(width / 4 + (width / 3.33f), height * 0.55f, width * 0.15f, D2D1Core::GetDefaultFontSize()), 6);
 	portField->SetDescriptionText("Port:");
 	rtd::Button* connectButton = connectFields->AddElement<rtd::Button>("StartButton.png", draw_t((width / 2) - (width / 8.f), height - (height * 0.25f), width / 4.f, height * 0.15f));
+	rtd::Button* exitButton = connectFields->AddElement<rtd::Button>("demoExitButton.png", draw_t(0.0f, 0.0f, width / 16, height / 9));
+	exitButton->SetOnPressedEvent([=] {
+		game->Shutdown();
+		});
 
 #ifdef _DEBUG
 	ipField->SetPresetText("localhost");
-	portField->SetPresetText("4950");
 #endif
+	portField->SetPresetText("4950");
 
 	scene.Add2DCollection(connectFields, "ConnectFields");
 
@@ -230,13 +234,6 @@ void sceneHelp::SetupMainMenuScreen(Game* game)
 				LOG_WARNING("Please enter a valid ip/port");
 			}
 		});
-
-	//// Adds a button and names it exit game button.
-	//rtd::Button* exitGameButton = new rtd::Button("demo_exit_button.png", draw_t((Width / 8), (height / 4) + 200, 350.0f, 150.0f));
-	//// Adds a border around the button and sets the color to black.
-	//exitGameButton->GetBorder()->SetColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
-	//scene.Insert2DElement(exitGameButton);
-	//exitGameButton->SetOnPressedEvent([=] { game->Shutdown(); });
 }
 
 /*
@@ -263,11 +260,11 @@ void sceneHelp::SetupInGameScreen(Game* game)
 		// You and Friend text
 		if (i == 0)
 		{
-			playerHp->AddElement<rtd::Text>("You:", draw_text_t(0, (i * ((height / 12)) + (height / 32)), (12 * D2D1Core::GetDefaultFontSize()) * 0.5f, D2D1Core::GetDefaultFontSize()));
+			playerHp->AddElement<rtd::Text>("You:", draw_text_t(0, (i * ((height / 12)) + (height / 32)), (width / 8), height / 16));
 		}
 		else
 		{
-			playerHp->AddElement<rtd::Text>("Friend:", draw_text_t(0, (i * ((height / 12)) + (height / 32)), (12 * D2D1Core::GetDefaultFontSize()) * 0.5f, D2D1Core::GetDefaultFontSize()));
+			playerHp->AddElement<rtd::Text>("Friend:", draw_text_t(0, (i * ((height / 12)) + (height / 32)), width / 8, height / 16));
 			playerHp->Hide();
 		}
 		scene.Add2DCollection(playerHp, "player" + std::to_string(i + 1) + "Info");
@@ -301,6 +298,15 @@ void sceneHelp::SetupInGameScreen(Game* game)
 		scene.Add2DCollection(nameCollection, "player" + std::to_string(i + 1) + "namePlate");
 		nameCollection->Hide();
 	}
+
+	Collection2D* buttons = new Collection2D;
+	rtd::Button* exitButton = buttons->AddElement<rtd::Button>("demoExitButton.png", draw_t(0.0f, 0.0f, width / 32, height / 18));
+	exitButton->SetOnPressedEvent([=] {
+		game->m_client.Disconnect();
+		game->Shutdown();
+		});
+	buttons->Hide();
+	scene.Add2DCollection(buttons, "Buttons");
 }
 
 void sceneHelp::SetupInLobbyScreen(Game* game)
@@ -424,6 +430,10 @@ void sceneHelp::SetupLobbyJoinScreen(Game* game)
 	rtd::TextField* lobbyField = lobbyCollection->AddElement<rtd::TextField>(draw_text_t(width / 8, height - (height / 3.33f), width / 4, D2D1Core::GetDefaultFontSize()));
 	lobbyField->SetDescriptionText("Input Lobby ID");
 	rtd::Button* lobbyButton = lobbyCollection->AddElement<rtd::Button>("StartButton.png", draw_t(width / 2, height - (height / 3.33f), width / 4, height / 8));
+	rtd::Button* exitButton = lobbyCollection->AddElement<rtd::Button>("demoExitButton.png", draw_t(0.0f, 0.0f, width / 16, height / 9));
+	exitButton->SetOnPressedEvent([=] {
+		game->m_client.Disconnect();
+		});
 
 	lobbyButton->SetOnPressedEvent([=]()
 		{

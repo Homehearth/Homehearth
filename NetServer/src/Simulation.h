@@ -36,8 +36,6 @@ private:
 
 	uint32_t GetTick()const;
 	
-	// -1 will be defaulted to max value of unsigned 32 bit integer
-	void Broadcast(message<GameMsg>& msg, uint32_t exclude = -1)const;
 	void ScanForDisconnects();
 
 	//Game play related
@@ -52,6 +50,9 @@ private:
 public:
 	Simulation(Server* pServer, HeadlessEngine* pEngine);
 	virtual ~Simulation() = default;
+
+	// -1 will be defaulted to max value of unsigned 32 bit integer
+	void Broadcast(message<GameMsg>& msg, uint32_t exclude = -1)const;
 
 	bool AddPlayer(uint32_t playerID, const std::string& namePlate = "Noobie");
 	bool RemovePlayer(uint32_t playerID);
