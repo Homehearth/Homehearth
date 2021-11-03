@@ -114,21 +114,21 @@ int InputSystem::GetAxis(Axis axis) const
 	case Axis::VERTICAL:
 		if (CheckKeyboardKey(dx::Keyboard::W, KeyState::HELD) || CheckKeyboardKey(dx::Keyboard::Up, KeyState::HELD))
 		{
-			toReturn = 1;
+			toReturn = -1;
 		}
 		else if (CheckKeyboardKey(dx::Keyboard::S, KeyState::HELD) || CheckKeyboardKey(dx::Keyboard::Down, KeyState::HELD))
 		{
-			toReturn = -1;
+			toReturn = 1;
 		}
 		break;
 	case Axis::HORIZONTAL:
 		if (CheckKeyboardKey(dx::Keyboard::D, KeyState::HELD) || CheckKeyboardKey(dx::Keyboard::Right, KeyState::HELD))
 		{
-			toReturn = 1;
+			toReturn = -1;
 		}
 		else if (CheckKeyboardKey(dx::Keyboard::A, KeyState::HELD) || CheckKeyboardKey(dx::Keyboard::Left, KeyState::HELD))
 		{
-			toReturn = -1;
+			toReturn = 1;
 		}
 		break;
 	default:

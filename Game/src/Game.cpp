@@ -55,6 +55,7 @@ void Game::UpdateNetwork(float deltaTime)
 
 				//reset input
 				m_inputState.leftMouse = false;
+				m_inputState.rightMouse = false;
 			}
 		}
 	}
@@ -240,35 +241,90 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			}
 			// TODO DEBUG
 #ifdef  _DEBUG
-			comp::Tile* tile = e.GetComponent<comp::Tile>();
-			if (tile)
+			if (RENDER_GRID)
 			{
-				if (tile->type == TileType::EMPTY)
+				comp::Tile* tile = e.GetComponent<comp::Tile>();
+				if (tile)
 				{
-					comp::Renderable* renderable = e.AddComponent<comp::Renderable>();
-					renderable->model = ResourceManager::Get().GetResource<RModel>("Plane1.obj");
-					renderable->model->ChangeMaterial("TileEmpty.mtl");
-				}
-				else if (tile->type == TileType::BUILDING || tile->type == TileType::UNPLACABLE)
-				{
-					comp::Renderable* renderable = e.AddComponent<comp::Renderable>();
-					renderable->model = ResourceManager::Get().GetResource<RModel>("Plane2.obj");
-					renderable->model->ChangeMaterial("TileBuilding.mtl");
-				}
+					if (tile->type == TileType::EMPTY)
+					{
+						comp::Renderable* renderable = e.AddComponent<comp::Renderable>();
+						renderable->model = ResourceManager::Get().GetResource<RModel>("Plane1.obj");
+						renderable->model->ChangeMaterial("TileEmpty.mtl");
+					}
+					else if (tile->type == TileType::BUILDING || tile->type == TileType::UNPLACABLE)
+					{
+						comp::Renderable* renderable = e.AddComponent<comp::Renderable>();
+						renderable->model = ResourceManager::Get().CopyResource<RModel>("Plane1.obj");
+						renderable->model->ChangeMaterial("TileBuilding.mtl");
+					}
+					else if (tile->type == TileType::DEFENCE)
+					{
+						comp::Renderable* renderable = e.AddComponent<comp::Renderable>();
+						renderable->model = ResourceManager::Get().CopyResource<RModel>("Plane1.obj");
+						renderable->model->ChangeMaterial("TileDefence.mtl");
+					}
 
+				}
 			}
 #endif //  _DEBUG
 
 
 		}
 
-		LOG_INFO("Successfully loaded all entities!");
+		break;
+	}
+	case GameMsg::Grid_PlaceDefence:
+	{
+#ifdef _DEBUG
+		if (RENDER_GRID)
+		{
+			uint32_t id;
+			msg >> id;
 
+		GetScene("Game").ForEachComponent<comp::Network, comp::Tile>([&](Entity& e, comp::Network& net, comp::Tile& tile)
+			{
+				if (id == net.id)
+				{
+					comp::Renderable* render = e.GetComponent<comp::Renderable>();
+					render->model = ResourceManager::Get().GetResource<RModel>("Defence.obj");
+					render->model->ChangeMaterial("TileDefence.mtl");
+					tile.type = TileType::DEFENCE;
+					LOG_INFO("Placed defence %d", id);
+				}
+			});
+		}
+		else if (!RENDER_GRID)
+		{
+			sm::Vector3 position;
+			msg >> position;
+
+			Entity defence = GetScene("Game").CreateEntity();
+			comp::Renderable* render = defence.AddComponent<comp::Renderable>();
+			defence.AddComponent<comp::Transform>()->position = position;
+			defence.GetComponent<comp::Transform>()->scale = { 4.2f, 0.5f, 4.2f };
+			render->model = ResourceManager::Get().GetResource<RModel>("Defence.obj");
+			render->model->ChangeMaterial("TileDefence.mtl");
+			LOG_INFO("Placed defence");
+#endif // DEBUG
+#ifdef NDEBUG
+		sm::Vector3 position;
+		msg >> position;
+
+		Entity defence = GetScene("Game").CreateEntity();
+		comp::Renderable* render = defence.AddComponent<comp::Renderable>();
+		defence.AddComponent<comp::Transform>()->position = position;
+		defence.GetComponent<comp::Transform>()->scale = { 4.2f, 0.5f, 4.2f };
+		render->model = ResourceManager::Get().GetResource<RModel>("Defence.obj");
+		render->model->ChangeMaterial("TileDefence.mtl");
+		LOG_INFO("Placed defence");
+
+#endif // NDEBUG				
 		if (GetCurrentScene() == &GetScene("Loading"))
 		{
 			SetScene("Lobby");
 		}
-
+		LOG_INFO("Successfully loaded all entities!");
 		break;
 	}
 	case GameMsg::Game_RemoveEntity:
@@ -525,6 +581,13 @@ Entity Game::CreateEntityFromMessage(message<GameMsg>& msg)
 				*e.AddComponent<comp::BoundingSphere>() = s;
 				break;
 			}
+			case ecs::Component::PLANECOLLIDER:
+			{
+				comp::PlaneCollider p;
+				msg >> p;
+				*e.AddComponent<comp::PlaneCollider>() = p;
+				break;
+			}
 			case ecs::Component::LIGHT:
 			{
 				comp::Light l;
@@ -566,6 +629,11 @@ void Game::UpdateInput()
 		m_inputState.leftMouse = true;
 		m_inputState.mouseRay = InputSystem::Get().GetMouseRay();
 
+	}
+	if (InputSystem::Get().CheckMouseKey(MouseKey::RIGHT, KeyState::PRESSED))
+	{
+		m_inputState.rightMouse = true;
+		m_inputState.mouseRay = InputSystem::Get().GetMouseRay();
 	}
 }
 

@@ -16,6 +16,7 @@ private:
 	uint32_t m_waveTimer;
 
 
+	bool m_isLeavingLobby;
 	comp::Transform test;
 	float m_predictionThreshhold;
 

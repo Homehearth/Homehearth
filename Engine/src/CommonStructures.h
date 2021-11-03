@@ -48,6 +48,7 @@ struct InputState
 	int axisHorizontal : 2;
 	int axisVertical : 2;
 	bool leftMouse : 1;
+	bool rightMouse : 1;
 
 	Ray_t mouseRay;
 
@@ -78,7 +79,9 @@ enum class GameMsg : uint8_t
 	Game_RemoveEntity,
 	Game_WaveTimer,
 
-	Game_PlayerInput
+	Game_PlayerInput,
+
+	Grid_PlaceDefence
 };
 
 /*
