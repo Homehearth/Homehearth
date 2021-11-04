@@ -28,7 +28,7 @@ void Engine::Startup()
 	float aspectRatio = 16.0f / 9.0f;
 	config.width = static_cast<UINT>(aspectRatio * config.height);
 
-	config.title = L"Engine";
+	config.title = L"Homehearth";
 	if (!m_window.Initialize(config))
 	{
 		LOG_ERROR("Could not Initialize m_window.");
