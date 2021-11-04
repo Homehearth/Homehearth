@@ -85,7 +85,7 @@ void GameSystems::UpdateNamePlate(Scene& scene)
 						float new_y = (((newP.y + 1) * (540)) / (2));
 						//LOG_INFO("Pos x: %f, Pos y: %f", new_x, new_y);
 
-						namePlate->SetPosition(new_x, new_y);
+						namePlate->SetPosition(new_x - 35.f, new_y - 125.f);
 						namePlate->SetText(name.namePlate);
 					}
 				}
