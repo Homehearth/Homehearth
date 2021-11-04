@@ -368,17 +368,22 @@ void sceneHelp::SetupInLobbyScreen(Game* game)
 	static bool isReady = false;
 	startGameButton->SetOnPressedEvent([=]()
 		{
-			if (isReady)
+			//if (isReady)
+			//{
+			//	readyText->SetText("Ready");
+			//}
+			//else
+			//{
+			//	readyText->SetText("Not ready");
+			//}
+			//isReady = !isReady;
+			if (!isReady)
 			{
 				readyText->SetText("Ready");
-			}
-			else
-			{
-				readyText->SetText("Not ready");
-			}
-			isReady = !isReady;
 
-			game->SendStartGame();
+				game->SendStartGame();
+				isReady = true;
+			}
 		});
 	scene.Add2DCollection(startGame, "StartGame");
 
