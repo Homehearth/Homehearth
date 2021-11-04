@@ -236,9 +236,10 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 #endif
 							atk->lifeTime = 0.f;
 							comp::Velocity* attackVel = attackCollider.GetComponent<comp::Velocity>();
-							
-							other.AddComponent<comp::Force>()->force = attackVel->vel;
-
+							if (attackVel)
+							{
+								other.AddComponent<comp::Force>()->force = attackVel->vel;
+							}
 							other.UpdateNetwork();
 						}
 					});
@@ -409,6 +410,7 @@ void Systems::AISystem(HeadlessScene& scene)
 
 			stats->targetDir = transformCurrentClosestPlayer->position - transformNPC->position;
 			stats->targetDir.Normalize();
+			stats->targetDir *= 10.f;
 			stats->isAttacking = true;
 		}
 		
