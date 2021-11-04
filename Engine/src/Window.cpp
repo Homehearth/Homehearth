@@ -9,14 +9,18 @@ LRESULT CALLBACK Window::WinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 	// Engine events:
 	switch (uMsg)
 	{
-		
+	case WM_ACTIVATE:
+		ConfineCursor(hwnd);
+		break;
 	case WM_NCCREATE:
 		LOG_INFO("Window has been created.");
 		break;
 	case WM_DESTROY:
+		ClipCursor(nullptr);
 		PostQuitMessage(0);
 		break;
 	case WM_CLOSE:
+		ClipCursor(nullptr);
 		PostQuitMessage(0);
 		break;
 	case WM_INPUT:
@@ -24,8 +28,8 @@ LRESULT CALLBACK Window::WinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 		break;
 	case WM_KEYDOWN:
 		InputSystem::Get().GetKeyboard()->ProcessMessage(uMsg, wParam, lParam);
-		if (wParam == VK_ESCAPE)
-			PostQuitMessage(0);
+		//if (wParam == VK_ESCAPE)
+		//	PostQuitMessage(0);
 		break;
 	case WM_KEYUP:
 		InputSystem::Get().GetKeyboard()->ProcessMessage(uMsg, wParam, lParam);
@@ -73,11 +77,11 @@ LRESULT CALLBACK Window::WinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 	return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
-void Window::ConfineCursor()
+void Window::ConfineCursor(HWND hwnd)
 {
 	RECT rect;
-	GetClientRect(m_hWnd, &rect);
-	MapWindowPoints(m_hWnd, nullptr, reinterpret_cast<POINT*>(&rect), 2);
+	GetClientRect(hwnd, &rect);
+	MapWindowPoints(hwnd, nullptr, reinterpret_cast<POINT*>(&rect), 2);
 	ClipCursor(&rect);
 }
 
@@ -147,8 +151,12 @@ bool Window::Initialize(const Desc& desc)
 	assert(this->m_hWnd && "Window wasn't successfully created.");
 	
 	UpdateWindow(this->m_hWnd);
+#ifdef _DEBUG
 	ShowWindow(this->m_hWnd, desc.nShowCmd);
-	//ConfineCursor();
+#else
+	ShowWindow(this->m_hWnd, SW_NORMAL);
+#endif
+	ConfineCursor(this->m_hWnd);
 
 	this->m_windowDesc = desc;
 

@@ -42,8 +42,7 @@ private:
 	//Game play related
 	Timer waveTimer;
 	std::queue<Wave> waveQueue;
-	sm::Vector3 playerSpawnPoint[4];
-
+	std::queue<sm::Vector3> m_spawnPoints;
 	
 	void CreateWaves();
 	void ResetPlayer(Entity e);
