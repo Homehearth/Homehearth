@@ -11,7 +11,9 @@ namespace Systems
 
 	template<typename Collider1, typename Collider2>
 	void CheckCollisions(HeadlessScene& scene, float dt);
-	
+	void AISystem(HeadlessScene& scene);
+
+
 }
 
 template<typename Collider1, typename Collider2>
@@ -60,4 +62,5 @@ inline void Systems::CheckCollisions(HeadlessScene& scene, float dt)
 			}
 		}
 	}
+
 }

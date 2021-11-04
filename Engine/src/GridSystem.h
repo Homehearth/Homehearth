@@ -28,5 +28,7 @@ public:
 
 	//Get functions
 	std::vector<sm::Vector3>* GetTilePositions();
+	sm::Vector2 GetGridSize() const;
+	Entity* GetTileByID(sm::Vector2 id);
 	std::vector<Entity>* GetTiles();
 };
