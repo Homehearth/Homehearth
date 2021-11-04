@@ -1,5 +1,6 @@
 #pragma once
 #include "Element2D.h"
+#include <SimpleMath.h>
 
 namespace rtd
 {
@@ -29,10 +30,12 @@ namespace rtd
 		*/
 		void SetText(const std::string& displayText);
 
+
 		/*
 			Set the position of the text.
 		*/
 		void SetPosition(const float& x, const float& y);
+		const sm::Vector2 GetPosition() const;
 
 		/*
 			Set the scale of the text.

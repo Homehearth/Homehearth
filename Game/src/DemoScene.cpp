@@ -140,7 +140,7 @@ namespace sceneHelp
 				);
 
 				GameSystems::RenderIsCollidingSystem(scene);
-
+				GameSystems::UpdateNamePlate(scene);
 #ifdef _DEBUG
 				if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Space, KeyState::RELEASED))
 				{
@@ -288,6 +288,14 @@ void sceneHelp::SetupInGameScreen(Game* game)
 		Collection2D* nameCollection = new Collection2D;
 		nameCollection->AddElement<rtd::Text>("Player" + std::to_string(i + 1), draw_text_t(0, 0, width / 16, height / 9));
 		scene.Add2DCollection(nameCollection, "player" + std::to_string(i + 1) + "namePlate");
+		nameCollection->Hide();
+	}
+
+	for (int i = 0; i < MAX_PLAYERS_PER_LOBBY; i++)
+	{
+		Collection2D* nameCollection = new Collection2D;
+		nameCollection->AddElement<rtd::Text>("Player", draw_text_t(0, 0, width / 16, height / 9));
+		scene.Add2DCollection(nameCollection, "dynamicPlayer" + std::to_string(i + 1) + "namePlate");
 		nameCollection->Hide();
 	}
 

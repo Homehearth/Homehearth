@@ -25,6 +25,12 @@ void rtd::Text::SetPosition(const float& x, const float& y)
     m_opts.y_pos = y;
 }
 
+const sm::Vector2 rtd::Text::GetPosition() const
+{
+    const sm::Vector2 pos = { m_opts.x_pos, m_opts.y_pos };
+    return pos;
+}
+
 void rtd::Text::SetScale(float scale)
 {
     m_opts.scale = scale;
