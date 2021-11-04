@@ -103,10 +103,7 @@ void SpawnZoneWave(Simulation* simulation, Wave& currentWave)
 			}
 		}
 	}
-	
 }
-
-
 
 /**Spawn the enemies within a circular zone based on the specified point
  *
