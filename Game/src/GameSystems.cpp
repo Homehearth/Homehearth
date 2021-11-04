@@ -68,29 +68,26 @@ void GameSystems::UpdateNamePlate(Scene& scene)
 					rtd::Text* namePlate = dynamic_cast<rtd::Text*>(collection->elements[0].get());
 					if (namePlate)
 					{
-						collection->Show();
 						Camera* cam = scene.GetCurrentCamera();
 
-						//LOG_INFO("%d", i);
-						sm::Vector4 oldP = { t.position.x, t.position.y, t.position.z, 1.0f };
+						sm::Vector4 oldP = { t.position.x, t.position.y + 20.0f, t.position.z, 1.0f };
 						sm::Vector4 newP = dx::XMVector4Transform(oldP, cam->GetCameraMatrixes()->view);
 						newP = dx::XMVector4Transform(newP, cam->GetCameraMatrixes()->projection);
-						//LOG_INFO("OldP x: %f, y: %f z: %f", oldP.x, oldP.y, oldP.z);
-						//LOG_INFO("NewP x: %f, y: %f z: %f", newP.x, newP.y, newP.z);
 						newP.x /= newP.w;
 						newP.y /= newP.w;
+						newP.z /= newP.w;
 
 						// Conversion from NDC space [-1, 1] to Window space [960, 540]
-						float new_x = (((newP.x + 1) * (960)) / (2));
-						float new_y = (((newP.y + 1) * (540)) / (2));
-						//LOG_INFO("Pos x: %f, Pos y: %f", new_x, new_y);
+						float new_x = (((newP.x + 1) * (D2D1Core::GetWindow()->GetWidth())) / (2));
+						float new_y = D2D1Core::GetWindow()->GetHeight() - (((newP.y + 1) * (D2D1Core::GetWindow()->GetHeight())) / (2));
 
-						namePlate->SetPosition(new_x - 35.f, new_y - 125.f);
+						namePlate->SetPosition(new_x - ((name.namePlate.length() * D2D1Core::GetDefaultFontSize()) * 0.25f), new_y);
 						namePlate->SetText(name.namePlate);
+
+						namePlate->SetVisiblity(true);
 					}
 				}
 			}
 			i++;
 		});
 }
-
