@@ -9,6 +9,9 @@
 #include "Collection2D.h"
 #include "Healthbar.h"
 
+#include <windows.h>
+#include <shellapi.h>
+
 namespace sceneHelp
 {
 	Entity CreatePlayerEntity(HeadlessScene& scene, uint32_t playerID)
@@ -205,6 +208,14 @@ void sceneHelp::SetupMainMenuScreen(Game* game)
 		game->Shutdown();
 		});
 
+	
+	rtd::Button* externalLinkBtn = connectFields->AddElement<rtd::Button>("Button.png", draw_t(width - width / 4.f, height - (height / 5), width / 8.f, height / 16));
+	externalLinkBtn->GetText()->SetScale(0.5f);
+	externalLinkBtn->GetText()->SetText("Give Feedback!");
+	externalLinkBtn->SetOnPressedEvent([] {
+		ShellExecuteA(NULL, "open", "https://docs.google.com/forms/d/e/1FAIpQLSfvyYTRNYaVHbg9Fa8H7xNXQGr2SWoaC9_GKZ7rSkuoNDjOMA/viewform?usp=sf_link", NULL, NULL, SW_SHOWNORMAL);
+		});
+
 #ifdef _DEBUG
 	ipField->SetPresetText("localhost");
 #endif
@@ -368,17 +379,22 @@ void sceneHelp::SetupInLobbyScreen(Game* game)
 	static bool isReady = false;
 	startGameButton->SetOnPressedEvent([=]()
 		{
-			if (isReady)
+			//if (isReady)
+			//{
+			//	readyText->SetText("Ready");
+			//}
+			//else
+			//{
+			//	readyText->SetText("Not ready");
+			//}
+			//isReady = !isReady;
+			if (!isReady)
 			{
 				readyText->SetText("Ready");
-			}
-			else
-			{
-				readyText->SetText("Not ready");
-			}
-			isReady = !isReady;
 
-			game->SendStartGame();
+				game->SendStartGame();
+				isReady = true;
+			}
 		});
 	scene.Add2DCollection(startGame, "StartGame");
 
