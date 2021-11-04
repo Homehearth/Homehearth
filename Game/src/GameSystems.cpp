@@ -70,6 +70,7 @@ void GameSystems::UpdateNamePlate(Scene& scene)
 					{
 						Camera* cam = scene.GetCurrentCamera();
 
+						// Conversion from World space to NDC space.
 						sm::Vector4 oldP = { t.position.x, t.position.y + 20.0f, t.position.z, 1.0f };
 						sm::Vector4 newP = dx::XMVector4Transform(oldP, cam->GetCameraMatrixes()->view);
 						newP = dx::XMVector4Transform(newP, cam->GetCameraMatrixes()->projection);
@@ -77,14 +78,17 @@ void GameSystems::UpdateNamePlate(Scene& scene)
 						newP.y /= newP.w;
 						newP.z /= newP.w;
 
-						// Conversion from NDC space [-1, 1] to Window space [960, 540]
+						// Conversion from NDC space [-1, 1] to Window space
 						float new_x = (((newP.x + 1) * (D2D1Core::GetWindow()->GetWidth())) / (2));
 						float new_y = D2D1Core::GetWindow()->GetHeight() - (((newP.y + 1) * (D2D1Core::GetWindow()->GetHeight())) / (2));
 
 						namePlate->SetPosition(new_x - ((name.namePlate.length() * D2D1Core::GetDefaultFontSize()) * 0.25f), new_y);
-						namePlate->SetText(name.namePlate);
 
-						namePlate->SetVisiblity(true);
+						// Show nameplates only if camera is turned to it.
+						if (newP.z < 1.f)
+							namePlate->SetVisiblity(true);
+						else
+							namePlate->SetVisiblity(false);
 					}
 				}
 			}

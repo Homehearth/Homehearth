@@ -330,6 +330,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			{
 				m_players.at(playerID).GetComponent<comp::NamePlate>()->namePlate = playerPlate;
 				dynamic_cast<rtd::Text*>(GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i + 1))->elements[1].get())->SetText(playerPlate);
+				dynamic_cast<rtd::Text*>(GetScene("Game").GetCollection("dynamicPlayer" + std::to_string(i + 1) + "namePlate")->elements[0].get())->SetText(playerPlate);
 			}
 		}
 
