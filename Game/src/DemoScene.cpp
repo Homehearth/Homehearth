@@ -9,6 +9,9 @@
 #include "Collection2D.h"
 #include "Healthbar.h"
 
+#include <windows.h>
+#include <shellapi.h>
+
 namespace sceneHelp
 {
 	Entity CreatePlayerEntity(HeadlessScene& scene, uint32_t playerID)
@@ -203,6 +206,14 @@ void sceneHelp::SetupMainMenuScreen(Game* game)
 	rtd::Button* exitButton = connectFields->AddElement<rtd::Button>("demoExitButton.png", draw_t(0.0f, 0.0f, width / 24, height / 16));
 	exitButton->SetOnPressedEvent([=] {
 		game->Shutdown();
+		});
+
+	
+	rtd::Button* externalLinkBtn = connectFields->AddElement<rtd::Button>("Button.png", draw_t(width - width / 4.f, height - (height / 5), width / 8.f, height / 16));
+	externalLinkBtn->GetText()->SetScale(0.5f);
+	externalLinkBtn->GetText()->SetText("Give Feedback!");
+	externalLinkBtn->SetOnPressedEvent([] {
+		ShellExecuteA(NULL, "open", "https://docs.google.com/forms/d/e/1FAIpQLSfvyYTRNYaVHbg9Fa8H7xNXQGr2SWoaC9_GKZ7rSkuoNDjOMA/viewform?usp=sf_link", NULL, NULL, SW_SHOWNORMAL);
 		});
 
 #ifdef _DEBUG
