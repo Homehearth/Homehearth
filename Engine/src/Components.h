@@ -196,7 +196,7 @@ namespace ecs
 
 		struct CombatStats
 		{
-			float attackSpeed = 1.f;
+			float attackSpeed = 1.5f;
 			float attackDamage = 5.f;
 			float attackLifeTime = 5.f;
 			bool isRanged = false;
