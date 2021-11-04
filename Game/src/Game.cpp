@@ -365,10 +365,10 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			dynamic_cast<rtd::Text*>(collect->elements[1].get())->SetText(ids[i]);
 		}
 		break;
+
 	}
 	}
 }
-
 void Game::PingServer()
 {
 	message<GameMsg> msg = {};

@@ -153,10 +153,10 @@ message<GameMsg> Simulation::AllEntitiesMessage()const
 	msg.header.id = GameMsg::Game_AddEntity;
 	uint32_t count = 0;
 	m_pGameScene->ForEachComponent<comp::Network>([&](Entity e, comp::Network& n)
-		{
-			InsertEntityIntoMessage(e, msg);
-			count++;
-		});
+	{
+		InsertEntityIntoMessage(e, msg);
+		count++;
+	});
 	msg << count;
 	return msg;
 }
@@ -313,10 +313,10 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 	// Create Scenes associated with this Simulation
 	m_pLobbyScene = &m_pEngine->GetScene("Lobby_" + std::to_string(gameID));
 	m_pLobbyScene->on<ESceneUpdate>([&](const ESceneUpdate& e, HeadlessScene& scene)
-		{
-			//LOG_INFO("LOBBY Scene %d", gameID);
+	{
+		//LOG_INFO("LOBBY Scene %d", gameID);
 
-		});
+	});
 
 	m_pGameScene = &m_pEngine->GetScene("Game_" + std::to_string(gameID));
 	m_pGameScene->on<ESceneUpdate>([&](const ESceneUpdate& e, HeadlessScene& scene)
@@ -403,15 +403,16 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 					PROFILE_SCOPE("Collision Box/Sphere");
 					Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingSphere>(scene, e.dt);
 				}
+				Systems::AISystem(scene);
 				Systems::CombatSystem(scene, e.dt);
 
-			}
+		}
 
 			if (!waveQueue.empty())
 				ServerSystems::NextWaveConditions(this, waveTimer, waveQueue.front().GetTimeLimit());
 
-			//LOG_INFO("GAME Scene %d", m_gameID);
-		});
+		//LOG_INFO("GAME Scene %d", m_gameID);
+	});
 
 	//On all enemies wiped, activate the next wave.
 	m_pGameScene->on<ESceneCallWaveSystem>([&](const ESceneCallWaveSystem& dt, HeadlessScene& scene)
@@ -423,10 +424,10 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 
 	//On collision event add entities as pair in the collision system
 	m_pGameScene->on<ESceneCollision>([&](const ESceneCollision& e, HeadlessScene& scene)
-		{
-			CollisionSystem::Get().AddPair(e.obj1, e.obj2);
-			CollisionSystem::Get().OnCollision(e.obj1, e.obj2);
-		});
+	{
+		CollisionSystem::Get().AddPair(e.obj1, e.obj2);
+		CollisionSystem::Get().OnCollision(e.obj1, e.obj2);
+	});
 
 	m_pGameScene->GetRegistry()->on_construct<comp::Network>().connect<&Simulation::OnNetworkEntityCreate>(this);
 	m_pGameScene->GetRegistry()->on_destroy<comp::Network>().connect<&Simulation::OnNetworkEntityDestroy>(this);
@@ -447,7 +448,8 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 	//Gridsystem
 	GridProperties_t gridOption;
 	m_grid.Initialize(gridOption.mapSize, gridOption.position, gridOption.fileName, m_pGameScene);
-
+	LOG_INFO("Creating Nodes");
+	//this->AICreateNodes();
 	m_addedEntities.clear();
 	m_removedEntities.clear();
 
@@ -518,6 +520,125 @@ bool Simulation::IsEmpty() const
 	return m_players.empty();
 }
 
+bool Simulation::AICreateNodes()
+{
+	int itrID = 0;
+	std::vector<Entity>* tiles = m_grid.GetTiles();
+	std::vector<comp::Node*> nodes;
+	//Create Nodes
+	for (int i = 0; i < tiles->size(); i++)
+	{
+		Entity node = m_pGameScene->CreateEntity();
+		comp::Transform* tileTransform = tiles->at(i).GetComponent<comp::Transform>();
+		node.AddComponent<comp::Node>()->position = tileTransform->position;
+		node.GetComponent<comp::Node>()->id = tiles->at(i).GetComponent<comp::Tile>()->gridID;
+		if (tiles->at(i).GetComponent<comp::Tile>()->type == TileType::BUILDING ||
+			tiles->at(i).GetComponent<comp::Tile>()->type == TileType::DEFENCE ||
+			tiles->at(i).GetComponent<comp::Tile>()->type == TileType::UNPLACABLE)
+		{
+			node.GetComponent<comp::Node>()->reachable = false;
+		}
+		nodes.push_back(node.GetComponent<comp::Node>());
+	}
+
+	//Build Connections
+	for (int i = 0; i < tiles->size(); i++)
+	{
+		comp::Tile* entityTile = tiles->at(i).GetComponent<comp::Tile>();
+		sm::Vector2 currentID = entityTile->gridID;
+		//Get Neighbors
+		Entity* currentTile = m_grid.GetTileByID(currentID);
+		if ((currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
+			|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
+		{
+			currentTile = m_grid.GetTileByID(currentID + sm::Vector2(-1, 0));
+			//TODO: Improve this bad code. EXTREMELY TEMPORARY
+			//Left
+			if (currentTile && (currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
+				|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
+			{
+				if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID + sm::Vector2(-1, 0))))
+				{
+					nodes.at(i)->connections.push_back(GetAINodeById(currentID + sm::Vector2(-1, 0)));
+				}
+			}
+			currentTile = m_grid.GetTileByID(currentID + sm::Vector2(-1, 1));
+			//Up-left
+			if (currentTile && (currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
+				|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
+			{
+				if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID + sm::Vector2(-1, 1))))
+				{
+					nodes.at(i)->connections.push_back(GetAINodeById(currentID + sm::Vector2(-1, 1)));
+				}
+			}
+			currentTile = m_grid.GetTileByID(currentID + sm::Vector2(1, 0));
+			//Right
+			if (currentTile && (currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
+				|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
+			{
+				if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID + sm::Vector2(1, 0))))
+				{
+					nodes.at(i)->connections.push_back(GetAINodeById(currentID + sm::Vector2(1, 0)));
+				}
+			}
+			currentTile = m_grid.GetTileByID(currentID + sm::Vector2(1, 1));
+			//Up-right
+			if (currentTile && (currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
+				|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
+			{
+				if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID + sm::Vector2(1, 1))))
+				{
+					nodes.at(i)->connections.push_back(GetAINodeById(currentID + sm::Vector2(1, 1)));
+				}
+			}
+			currentTile = m_grid.GetTileByID(currentID + sm::Vector2(0, 1));
+			//Up
+			if (currentTile && (currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
+				|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
+			{
+				if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID + sm::Vector2(0, 1))))
+				{
+					nodes.at(i)->connections.push_back(GetAINodeById(currentID + sm::Vector2(0, 1)));
+				}
+			}
+			currentTile = m_grid.GetTileByID(currentID + sm::Vector2(-1, -1));
+			//Down-left
+			if (currentTile && (currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
+				|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
+			{
+				if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID + sm::Vector2(-1, -1))))
+				{
+					nodes.at(i)->connections.push_back(GetAINodeById(currentID + sm::Vector2(-1, -1)));
+				}
+			}
+			currentTile = m_grid.GetTileByID(currentID + sm::Vector2(0, -1));
+			//Down
+			if (currentTile && (currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
+				|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
+			{
+				if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID + sm::Vector2(0, -1))))
+				{
+					nodes.at(i)->connections.push_back(GetAINodeById(currentID + sm::Vector2(0, -1)));
+				}
+			}
+			currentTile = m_grid.GetTileByID(currentID + sm::Vector2(1, -1));
+			//Down-right
+			if (currentTile && (currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
+				|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
+			{
+				if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID + sm::Vector2(1, -1))))
+				{
+					nodes.at(i)->connections.push_back(GetAINodeById(currentID + sm::Vector2(1, -1)));
+				}
+			}
+			//LOG_INFO("Connections: %d", nodes.at(i)->connections.size());
+		}
+	}
+
+	return true;
+}
+
 bool Simulation::AddPlayer(uint32_t playerID, const std::string& namePlate)
 {
 	if (!m_pServer->isClientConnected(playerID))
@@ -553,7 +674,7 @@ bool Simulation::AddPlayer(uint32_t playerID, const std::string& namePlate)
 			if (other == player)
 				return;
 
-			comp::Enemy* enemy = other.GetComponent<comp::Enemy>();
+			comp::NPC* enemy = other.GetComponent<comp::NPC>();
 			if (enemy)
 			{
 				comp::Health* health = player.GetComponent<comp::Health>();
@@ -620,7 +741,44 @@ std::unordered_map<uint32_t, Entity>::iterator Simulation::RemovePlayer(std::uno
 
 	return it;
 }
+bool Simulation::AddNPC(uint32_t npcId)
+{
+	//LOG_INFO("NPC with ID: %ld added to game!", npcId);
 
+	Entity npc = m_pGameScene->CreateEntity();
+	npc.AddComponent<comp::Transform>()->position = sm::Vector3(0.f, 0.f, 0.f);
+	npc.AddComponent<comp::Velocity>();
+	npc.AddComponent<comp::MeshName>()->name = "StreetLamp.obj";
+	npc.AddComponent<comp::NPC>();
+	npc.AddComponent<comp::Network>()->id = npcId;
+	npc.AddComponent<comp::BoundingOrientedBox>();
+
+	CollisionSystem::Get().AddOnCollision(npc, [&](Entity other)
+	{
+		comp::NPC* otherNPC = m_pCurrentScene->GetRegistry()->try_get<comp::NPC>(other);
+		if (otherNPC)
+		{
+			LOG_INFO("NPC COLLISION!");
+		}
+	});
+	return true;
+}
+bool Simulation::RemoveNPC(uint32_t npcId)
+{
+	message<GameMsg> msg;
+	msg.header.id = GameMsg::Game_RemoveEntity;
+	msg << npcId << 1U;
+	this->Broadcast(msg);
+	m_pGameScene->ForEachComponent<comp::Network>([npcId](Entity e, comp::Network& n)
+	{
+		if (n.id == npcId)
+		{
+			LOG_INFO("Removed NPC %u from game scene", n.id);
+			e.Destroy();
+		}
+	});
+	return true;
+}
 void Simulation::SendSnapshot()
 {
 	PROFILE_FUNCTION();
@@ -760,6 +918,27 @@ void Simulation::OnNetworkEntityUpdated(entt::registry& reg, entt::entity entity
 		m_updatedEntities.push_back(e);
 	}
 }
+void Simulation::ConnectNodes(comp::Node* node1, comp::Node* node2)
+{
+	if (node1 && node2)
+	{
+		node1->connections.push_back(node2);
+		node2->connections.push_back(node1);
+	}
+}
+
+comp::Node* Simulation::GetAINodeById(sm::Vector2 id)
+{
+	comp::Node* toReturn = nullptr;
+	m_pGameScene->ForEachComponent<comp::Node>([&](comp::Node& n)
+		{
+			if (n.id == id)
+			{
+				toReturn = &n;
+			}
+		});
+	return toReturn;
+}
 
 HeadlessScene* Simulation::GetLobbyScene() const
 {
@@ -885,10 +1064,10 @@ void Simulation::SendAllEntitiesToPlayer(uint32_t playerID) const
 	msg.header.id = GameMsg::Game_AddEntity;
 	uint32_t count = 0;
 	m_pGameScene->ForEachComponent<comp::Network>([&](Entity e, comp::Network& n)
-		{
-			InsertEntityIntoMessage(e, msg);
-			count++;
-		});
+	{
+		InsertEntityIntoMessage(e, msg);
+		count++;
+	});
 	msg << count;
 	msg << GetTick();
 
@@ -903,10 +1082,10 @@ void Simulation::SendRemoveAllEntitiesToPlayer(uint32_t playerID) const
 
 	uint32_t count = 0;
 	m_pGameScene->ForEachComponent<comp::Network>([&](comp::Network& n)
-		{
-			msg << n.id;
-			count++;
-		});
+	{
+		msg << n.id;
+		count++;
+	});
 	msg << count;
 
 	m_pServer->SendToClient(playerID, msg);
