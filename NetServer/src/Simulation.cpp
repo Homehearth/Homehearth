@@ -433,17 +433,6 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 	m_pGameScene->GetRegistry()->on_destroy<comp::Network>().connect<&Simulation::OnNetworkEntityDestroy>(this);
 	m_pGameScene->GetRegistry()->on_update<comp::Network>().connect<&Simulation::OnNetworkEntityUpdated>(this);
 
-
-	
-
-	// --- WORLD ---
-	Entity e2 = m_pGameScene->CreateEntity();
-	e2.AddComponent<comp::Transform>();// ->position = { -250, -2, 300 };
-	e2.AddComponent<comp::MeshName>()->name = "GameScene.obj";
-	e2.AddComponent<comp::Tag<TagType::STATIC>>();
-	// send entity
-	e2.AddComponent<comp::Network>();
-
 	// --- END OF THE WORLD ---
 	Entity collider;
 	for (size_t i = 0; i < mapColliders->size(); i++)
@@ -465,7 +454,6 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 
 
 	m_pCurrentScene = m_pLobbyScene;
-
 
 	// Automatically join created lobby
 	JoinLobby(playerID, gameID, namePlate);
@@ -578,27 +566,12 @@ bool Simulation::AddPlayer(uint32_t playerID, const std::string& namePlate)
 		
 	});
 
-
-	
 	//Collision will handle this entity as a dynamic one
 	player.AddComponent<comp::Tag<TagType::DYNAMIC>>();
 	// Network component will make sure the new entity is sent
 	player.AddComponent<comp::Network>(playerID);
 
 	m_players[playerID] = player;
-
-	return true;
-}
-
-bool Simulation::AddEnemy()
-{
-	// Create Enemy entity in Game scene.
-	Entity enemy = m_pGameScene->CreateEntity();
-	enemy.AddComponent<comp::Transform>();
-	const unsigned char BAD = 8;
-	enemy.AddComponent<comp::Tag<BAD>>();
-	enemy.AddComponent<comp::Health>();
-	enemy.AddComponent<comp::Network>();
 
 	return true;
 }
@@ -899,6 +872,7 @@ void Simulation::SendAllEntitiesToPlayer(uint32_t playerID) const
 	msg << GetTick();
 
 	this->m_pServer->SendToClient(playerID, msg);
+	LOG_INFO("Count: %d", count);
 }
 
 void Simulation::SendRemoveAllEntitiesToPlayer(uint32_t playerID) const
