@@ -114,7 +114,7 @@ namespace ecs
 		{
 			sm::Vector3 force = sm::Vector3(5, 0, 0);
 			bool wasApplied = false;
-			float actingTime = 5.0f;
+			float actingTime = 2.0f;
 		};
 
 		struct Velocity
