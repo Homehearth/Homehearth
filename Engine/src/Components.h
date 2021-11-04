@@ -172,12 +172,13 @@ namespace ecs
 				ASTAR,
 				CHASE
 			} state;
-			float movementSpeed = 20.f;
+			float movementSpeed = 15.f;
 			float attackRange = 10.f;
 			bool hostile;
 			uint32_t currentNodeTarget = static_cast<uint32_t>(-1);
 			std::vector<ecs::component::Node*> path;
 			ecs::component::Node* currentNode;
+			Entity currentClosest;
 		};
 
 		struct Light

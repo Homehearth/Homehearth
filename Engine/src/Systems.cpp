@@ -1,30 +1,32 @@
 #include "EnginePCH.h"
 #include "Systems.h"
 
-Entity* FindClosestPlayer(HeadlessScene& scene, sm::Vector3 position)
+Entity FindClosestPlayer(HeadlessScene& scene, sm::Vector3 position, comp::NPC* npc)
 {
-	Entity* currentClosest = nullptr;
+	
 	comp::Transform* transformCurrentClosest = nullptr;
 
-	scene.ForEachComponent < comp::Player>([&](Entity playerEntity, comp::Player& player)
+	scene.ForEachComponent < comp::Player>([&](Entity& playerEntity, comp::Player& player)
 	{
-		if (currentClosest)
+		if (!npc->currentClosest.IsNull())
 		{
+			transformCurrentClosest = npc->currentClosest.GetComponent<comp::Transform>();
 			comp::Transform* transformPlayer = playerEntity.GetComponent<comp::Transform>();
 			if (sm::Vector3::Distance(transformPlayer->position, position) < sm::Vector3::Distance(transformCurrentClosest->position, position))
 			{
 				LOG_INFO("Switching player");
-				currentClosest = &playerEntity;
-				transformCurrentClosest = currentClosest->GetComponent<comp::Transform>();
+				npc->currentClosest = playerEntity;
+				transformCurrentClosest = npc->currentClosest.GetComponent<comp::Transform>();
 			}
 		}
 		else
 		{
-			currentClosest = &playerEntity;
-			transformCurrentClosest = currentClosest->GetComponent<comp::Transform>();
+			npc->currentClosest = playerEntity;
+			transformCurrentClosest = npc->currentClosest.GetComponent<comp::Transform>();
 		}
 	});
-	return currentClosest;
+
+	return npc->currentClosest;
 }
 
 bool ReachedNode(Entity* entity,comp::Node* node)
@@ -69,8 +71,8 @@ bool AIAStarSearch(Entity& npc, HeadlessScene& scene)
 	comp::Transform* npcTransform = npc.GetComponent<comp::Transform>();
 	comp::Node* currentNode = npcComp->currentNode;
 
-	Entity* closestPlayer = FindClosestPlayer(scene, npcTransform->position);
-	comp::Transform* playerTransform = closestPlayer->GetComponent<comp::Transform>();
+	Entity closestPlayer = FindClosestPlayer(scene, npcTransform->position, npcComp);
+	comp::Transform* playerTransform = closestPlayer.GetComponent<comp::Transform>();
 
 	std::vector<comp::Node*> closedList, openList;
 	npcComp->path.clear();
@@ -371,12 +373,12 @@ void Systems::AISystem(HeadlessScene& scene)
 	scene.ForEachComponent<comp::NPC>([&](Entity entity, comp::NPC& npc)
 	{
 		comp::Transform* transformNPC = entity.GetComponent<comp::Transform>();
-		Entity* currentClosestPlayer = nullptr;
+		Entity currentClosestPlayer;
 		//npc.currentNode = FindClosestNode(scene, transformNPC->position);
 
-		Entity* closestPlayer = FindClosestPlayer(scene, transformNPC->position);
+		Entity closestPlayer = FindClosestPlayer(scene, transformNPC->position, &npc);
 		comp::Velocity* velocityTowardsPlayer = entity.GetComponent<comp::Velocity>();
-		comp::Transform* transformCurrentClosestPlayer = closestPlayer->GetComponent<comp::Transform>();
+		comp::Transform* transformCurrentClosestPlayer = closestPlayer.GetComponent<comp::Transform>();
 	/*	if (npc.currentNode)
 		{
 			if (sm::Vector3::Distance(transformNPC->position, transformCurrentClosestPlayer->position) <= 100.f && npc.state != comp::NPC::State::CHASE)
