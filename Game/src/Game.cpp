@@ -590,7 +590,7 @@ void Game::PlaceDefenceDebug(message<GameMsg>& msg)
 				{
 					comp::Renderable* render = e.GetComponent<comp::Renderable>();
 					render->model = ResourceManager::Get().GetResource<RModel>("Defence.obj");
-					render->model->ChangeMaterial("TileDefence.mtl");
+					render->model->ChangeMaterial("Defence.mtl");
 					tile.type = TileType::DEFENCE;
 					LOG_INFO("Placed defence %d", id);
 				}
@@ -606,7 +606,7 @@ void Game::PlaceDefenceDebug(message<GameMsg>& msg)
 		defence.AddComponent<comp::Transform>()->position = position;
 		defence.GetComponent<comp::Transform>()->scale = { 4.2f, 0.5f, 4.2f };
 		render->model = ResourceManager::Get().GetResource<RModel>("Defence.obj");
-		render->model->ChangeMaterial("TileDefence.mtl");
+		render->model->ChangeMaterial("Defence.mtl");
 		LOG_INFO("Placed defence");
 	}
 #endif // DEBUG
@@ -623,7 +623,7 @@ void Game::PlaceDefenceRelease(message<GameMsg>& msg)
 	defence.AddComponent<comp::Transform>()->position = position;
 	defence.GetComponent<comp::Transform>()->scale = { 4.2f, 0.5f, 4.2f };
 	render->model = ResourceManager::Get().GetResource<RModel>("Defence.obj");
-	render->model->ChangeMaterial("TileDefence.mtl");
+	render->model->ChangeMaterial("Defence.mtl");
 	LOG_INFO("Placed defence");
 
 #endif // NDEBUG		
@@ -648,13 +648,6 @@ void Game::CreateVisualGrid(Entity e)
 				renderable->model = ResourceManager::Get().CopyResource<RModel>("Plane1.obj");
 				renderable->model->ChangeMaterial("TileBuilding.mtl");
 			}
-			else if (tile->type == TileType::DEFENCE)
-			{
-				comp::Renderable* renderable = e.AddComponent<comp::Renderable>();
-				renderable->model = ResourceManager::Get().CopyResource<RModel>("Plane1.obj");
-				renderable->model->ChangeMaterial("TileDefence.mtl");
-			}
-
 		}
 	}
 }
