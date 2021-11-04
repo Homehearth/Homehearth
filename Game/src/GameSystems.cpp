@@ -73,16 +73,19 @@ void GameSystems::UpdateNamePlate(Scene& scene)
 
 						//LOG_INFO("%d", i);
 						sm::Vector4 oldP = { t.position.x, t.position.y, t.position.z, 1.0f };
-						sm::Matrix conversion = cam->GetView() * cam->GetProjection();
-						sm::Vector4 newP = dx::XMVector4Transform(oldP, conversion);
+						sm::Vector4 newP = dx::XMVector4Transform(oldP, cam->GetCameraMatrixes()->view);
+						newP = dx::XMVector4Transform(newP, cam->GetCameraMatrixes()->projection);
+						//LOG_INFO("OldP x: %f, y: %f z: %f", oldP.x, oldP.y, oldP.z);
 						//LOG_INFO("NewP x: %f, y: %f z: %f", newP.x, newP.y, newP.z);
+						newP.x /= newP.w;
+						newP.y /= newP.w;
 
-						// Conversion from Clip space [-1, 1] to Window space [960, 540]
+						// Conversion from NDC space [-1, 1] to Window space [960, 540]
 						float new_x = (((newP.x + 1) * (960)) / (2));
 						float new_y = (((newP.y + 1) * (540)) / (2));
 						//LOG_INFO("Pos x: %f, Pos y: %f", new_x, new_y);
 
-						namePlate->SetPosition(new_x - 25.0f, new_y - 150.0f);
+						namePlate->SetPosition(new_x, new_y);
 						namePlate->SetText(name.namePlate);
 					}
 				}
