@@ -174,12 +174,12 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			if (m_gameEntities.find(entityID) != m_gameEntities.end())
 			{
 				entity = m_gameEntities.at(entityID);
+				UpdateEntityFromMessage(entity, msg);
 			}
 			else {
 				LOG_WARNING("Updating: Entity %u not in m_gameEntities, should not happen...", entityID);
+				
 			}
-			
-			UpdateEntityFromMessage(entity, msg);
 		}
 
 		break;
