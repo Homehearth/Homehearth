@@ -50,16 +50,20 @@ namespace sceneHelp
 		SetupMainMenuScreen(game);
 
 		Entity backgroundScene = mainMenuScene.CreateEntity();
-		backgroundScene.AddComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>("Tree1.obj");
+		backgroundScene.AddComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>("GameScene.obj");
 		backgroundScene.AddComponent<comp::Transform>();
 
-		mainMenuScene.GetCurrentCamera()->Initialize(sm::Vector3(0, 60, -60), sm::Vector3(0, 0, 1), sm::Vector3(0, 1, 0),
-			sm::Vector2((float)game->GetWindow()->GetWidth(), (float)game->GetWindow()->GetHeight()), CAMERATYPE::PLAY);
-		mainMenuScene.GetCurrentCamera()->SetFollowEntity(backgroundScene);
-
-		mainMenuScene.on<ESceneUpdate>([backgroundScene](const ESceneUpdate& e, Scene& scene)
+		mainMenuScene.GetCurrentCamera()->Initialize(sm::Vector3(0, 0, 0), sm::Vector3(0, 0, 1), sm::Vector3(0, 1, 0),
+			sm::Vector2((float)game->GetWindow()->GetWidth(), (float)game->GetWindow()->GetHeight()), CAMERATYPE::DEFAULT);
+		mainMenuScene.GetCurrentCamera()->m_position = sm::Vector3(350.f, 30.f, -250.f);
+		
+		mainMenuScene.on<ESceneUpdate>([](const ESceneUpdate& e, Scene& scene)
 			{
-				//backgroundScene.GetComponent<comp::Transform>()->rotation.y += e.dt;
+				static float d = 0.0f;
+				d += e.dt;
+				float angle = ((std::sin(d) + 1) * 0.5f) * dx::g_XMPi[0] * 0.05f;
+
+				scene.GetCurrentCamera()->m_rotation = sm::Quaternion::CreateFromAxisAngle(sm::Vector3(0, 1, 0), angle + dx::XMConvertToRadians(170.0f - 30.f));
 
 				IMGUI(
 					ImGui::Begin("Scene");
