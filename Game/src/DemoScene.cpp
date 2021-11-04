@@ -208,7 +208,7 @@ void sceneHelp::SetupMainMenuScreen(Game* game)
 		game->Shutdown();
 		});
 
-	
+
 	rtd::Button* externalLinkBtn = connectFields->AddElement<rtd::Button>("Button.png", draw_t(width - width / 4.f, height - (height / 5), width / 8.f, height / 16));
 	externalLinkBtn->GetText()->SetScale(0.5f);
 	externalLinkBtn->GetText()->SetText("Give Feedback!");
@@ -375,8 +375,7 @@ void sceneHelp::SetupInLobbyScreen(Game* game)
 
 	Collection2D* startGame = new Collection2D;
 	rtd::Button* startGameButton = startGame->AddElement<rtd::Button>("Button.png", draw_t((width / 2) + (width / 10.f), height - (height / 5.0f), (width / 3.33f), (height / 6.f)), false);
-	rtd::Text* readyText = startGame->AddElement<rtd::Text>("Not ready", draw_text_t((width / 2) + (width / 10.f), height - (height / 5.0f), (width / 3.33f), (height / 6.f)));
-	static bool isReady = false;
+	rtd::Text* readyText = startGame->AddElement<rtd::Text>("Ready", draw_text_t((width / 2) + (width / 10.f), height - (height / 5.0f), (width / 3.33f), (height / 6.f)));
 	startGameButton->SetOnPressedEvent([=]()
 		{
 			//if (isReady)
@@ -388,13 +387,8 @@ void sceneHelp::SetupInLobbyScreen(Game* game)
 			//	readyText->SetText("Not ready");
 			//}
 			//isReady = !isReady;
-			if (!isReady)
-			{
-				readyText->SetText("Ready");
 
-				game->SendStartGame();
-				isReady = true;
-			}
+			game->SendStartGame();
 		});
 	scene.Add2DCollection(startGame, "StartGame");
 

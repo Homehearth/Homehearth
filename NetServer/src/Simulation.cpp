@@ -478,7 +478,7 @@ void Simulation::ReadyCheck(const uint32_t& playerID)
 	{
 		if (m_players.find(playerID) != m_players.end())
 		{
-			m_players.at(playerID).GetComponent<comp::Player>()->isReady = !m_players.at(playerID).GetComponent<comp::Player>()->isReady;
+			m_players.at(playerID).GetComponent<comp::Player>()->isReady = true;
 
 			// DEBUG
 #ifdef _DEBUG
