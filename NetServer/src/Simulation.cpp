@@ -478,16 +478,17 @@ void Simulation::ReadyCheck(const uint32_t& playerID)
 	{
 		if (m_players.find(playerID) != m_players.end())
 		{
-			m_players.at(playerID).GetComponent<comp::Player>()->isReady = true;
+			m_players.at(playerID).GetComponent<comp::Player>()->isReady = !m_players.at(playerID).GetComponent<comp::Player>()->isReady;
 
 			// DEBUG
+#ifdef _DEBUG
 			// Debugging allow only one player to start.
-			m_pCurrentScene = m_pGameScene;
-			// Start the game.
-			network::message<GameMsg> msg;
-			msg.header.id = GameMsg::Game_Start;
-			this->Broadcast(msg);
-			return;
+			//m_pCurrentScene = m_pGameScene;
+			//// Start the game.
+			//network::message<GameMsg> msg;
+			//msg.header.id = GameMsg::Game_Start;
+			//this->Broadcast(msg);
+#endif
 
 			auto it = m_players.begin();
 
@@ -502,7 +503,7 @@ void Simulation::ReadyCheck(const uint32_t& playerID)
 			}
 
 			// Start game when all players are marked ready
-			if (readyCount == MAX_PLAYERS_PER_LOBBY)
+			if (readyCount == m_players.size())
 			{
 				m_pCurrentScene = m_pGameScene;
 				// Start the game.
