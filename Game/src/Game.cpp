@@ -275,6 +275,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	case GameMsg::Game_BackToLobby:
 	{
 		SetScene("Lobby");
+		ClearGrid();
 		break;
 	}	
 	case GameMsg::Lobby_Accepted:
@@ -364,10 +365,10 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			dynamic_cast<rtd::Text*>(collect->elements[1].get())->SetText(ids[i]);
 		}
 		break;
+
 	}
 	}
 }
-
 void Game::PingServer()
 {
 	message<GameMsg> msg = {};
@@ -434,6 +435,15 @@ void Game::SendStartGame()
 	msg.header.id = GameMsg::Game_PlayerReady;
 	msg << m_localPID << m_gameID;
 	m_client.Send(msg);
+}
+
+void Game::ClearGrid()
+{
+	GetScene("Game").ForEachComponent<comp::Tag<TagType::DEFENCE>>([](Entity& e, comp::Tag<TagType::DEFENCE>& tag)
+		{
+			e.Destroy();
+		}
+	);
 }
 
 void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
@@ -622,6 +632,7 @@ void Game::PlaceDefenceRelease(message<GameMsg>& msg)
 	comp::Renderable* render = defence.AddComponent<comp::Renderable>();
 	defence.AddComponent<comp::Transform>()->position = position;
 	defence.GetComponent<comp::Transform>()->scale = { 4.2f, 0.5f, 4.2f };
+	defence.AddComponent<comp::Tag<TagType::DEFENCE>>();
 	render->model = ResourceManager::Get().GetResource<RModel>("Defence.obj");
 	render->model->ChangeMaterial("Defence.mtl");
 	LOG_INFO("Placed defence");

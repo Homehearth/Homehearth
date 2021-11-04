@@ -80,6 +80,9 @@ enum class GameMsg : uint8_t
 	Game_BackToLobby,
 	Game_WaveTimer,
 
+	Game_PlayerAttack,
+	Game_AddNPC,
+	Game_RemoveNPC,
 	Game_PlayerInput,
 	Grid_PlaceDefence
 };

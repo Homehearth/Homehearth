@@ -71,7 +71,7 @@ bool ServerGame::OnStartup()
 
 	m_inputThread = std::thread(&ServerGame::InputThread, this);
 
-	LoadMapColliders("SceneBoundingBoxes.fbx");
+	LoadMapColliders("AllBounds.fbx");
 	//LoadMapColliders("MapBounds.obj");
 
 	return true;
@@ -278,6 +278,36 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 
 		break;
 	}
+	case GameMsg::Game_AddNPC:
+	{
+		uint32_t gameID;
+		uint32_t npcID;
+		msg >> gameID >> npcID;
+		if (m_simulations.find(gameID) != m_simulations.end())
+		{
+			m_simulations.at(gameID)->AddNPC(npcID);
+		}
+		else
+		{
+			LOG_WARNING("Invalid GameID input for AddNPC");
+		}
+		break;
+	}
+	case GameMsg::Game_RemoveNPC:
+	{
+		uint32_t gameID;
+		uint32_t npcID;
+		msg >> gameID >> npcID;
+		if (m_simulations.find(gameID) != m_simulations.end())
+		{
+			m_simulations.at(gameID)->RemoveNPC(npcID);
+		}
+		else
+		{
+			LOG_WARNING("Invalid GameID input for AddNPC");
+		}
+		break;
+	}
 	}
 }
 
@@ -290,6 +320,8 @@ bool ServerGame::CreateSimulation(uint32_t playerID, const std::string& mainPlay
 
 		return false;
 	}
+	//TEMP
+	m_simulations[m_nGameID]->AddNPC(m_server.PopNextUniqueID());
 
 	m_nGameID++;
 
