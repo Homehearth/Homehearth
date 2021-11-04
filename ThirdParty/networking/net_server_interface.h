@@ -238,7 +238,7 @@ namespace network
 					closesocket(m_qMessagesOut.front().remote);
 				}
 				delete context;
-				if (error != WSAENOTSOCK)
+				if (error != WSAENOTSOCK && error != WSAECONNRESET)
 				{
 					LOG_ERROR("WSASend on socket: %lld message with error: %ld", m_qMessagesOut.front().remote, error);
 				}

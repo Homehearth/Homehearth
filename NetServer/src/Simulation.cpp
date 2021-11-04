@@ -176,7 +176,7 @@ void Simulation::CreateWaves()
 		Wave::Group group1;
 		group1.AddEnemy(EnemyType::Default, 3);
 		group1.AddEnemy(EnemyType::Default2, 2);
-		group1.SetSpawnPoint({ 400.f, -300.0f });
+		group1.SetSpawnPoint({ 400.f, -350.0f });
 		wave1.SetTimeLimit(5);
 		wave1.AddGroup(group1);
 	}
@@ -192,14 +192,14 @@ void Simulation::CreateWaves()
 	{ // Wave_2 Group_3
 		Wave::Group group3;
 		group3.AddEnemy(EnemyType::Default, 5);
-		group3.SetSpawnPoint({ 400.f, -200.0f });
+		group3.SetSpawnPoint({ 400.f, -35000.0f });
 		wave2.AddGroup(group3);
 	}
 
 	{ // Wave_2 Group_4
 		Wave::Group group4;
 		group4.AddEnemy(EnemyType::Default, 4);
-		group4.SetSpawnPoint({ 400.f, 200.0f });
+		group4.SetSpawnPoint({ 400.f, 320.0f });
 		wave2.AddGroup(group4);
 	}
 	waveQueue.emplace(wave2); // Add Wave_2
@@ -207,7 +207,7 @@ void Simulation::CreateWaves()
 
 void Simulation::ResetPlayer(Entity e)
 {
-	e.GetComponent<comp::Transform>()->position = playerSpawnPoint;
+	e.GetComponent<comp::Transform>()->position = e.GetComponent<comp::Player>()->spawnPoint;
 	e.GetComponent<comp::Velocity>()->vel = sm::Vector3(0.0f, 0.0f, 0.0f);
 	e.GetComponent<comp::Health>()->currentHealth = 100;
 	e.GetComponent<comp::Health>()->isAlive = true;
@@ -303,7 +303,10 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 	this->m_gameID = gameID;
 
 	//Set players spawn point
-	playerSpawnPoint = sm::Vector3(320.f, 0, -310.f);
+	playerSpawnPoint[0] = sm::Vector3(320.f, 0, -310.f);
+	playerSpawnPoint[1] = sm::Vector3(320.f, 0, -312.f);
+	playerSpawnPoint[2] = sm::Vector3(320.f, 0, -314.f);
+	playerSpawnPoint[3] = sm::Vector3(320.f, 0, -316.f);
 	
 	// Create and add all waves to the queue.
 	CreateWaves();
@@ -388,7 +391,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 			//  run all game logic systems
 			{
 				PROFILE_SCOPE("Systems");
-				ServerSystems::PlayerStateSystem(this, scene, playerSpawnPoint, e.dt);
+				ServerSystems::PlayerStateSystem(this, scene, e.dt);
 				ServerSystems::CheckGameOver(this, scene);
 				Systems::CharacterMovement(scene, e.dt);
 				Systems::MovementSystem(scene, e.dt);
@@ -431,17 +434,6 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 	m_pGameScene->GetRegistry()->on_destroy<comp::Network>().connect<&Simulation::OnNetworkEntityDestroy>(this);
 	m_pGameScene->GetRegistry()->on_update<comp::Network>().connect<&Simulation::OnNetworkEntityUpdated>(this);
 
-
-	
-
-	// --- WORLD ---
-	Entity e2 = m_pGameScene->CreateEntity();
-	e2.AddComponent<comp::Transform>();// ->position = { -250, -2, 300 };
-	e2.AddComponent<comp::MeshName>()->name = "GameScene.obj";
-	e2.AddComponent<comp::Tag<TagType::STATIC>>();
-	// send entity
-	e2.AddComponent<comp::Network>();
-
 	// --- END OF THE WORLD ---
 	Entity collider;
 	for (size_t i = 0; i < mapColliders->size(); i++)
@@ -464,7 +456,6 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 
 
 	m_pCurrentScene = m_pLobbyScene;
-
 
 	// Automatically join created lobby
 	JoinLobby(playerID, gameID, namePlate);
@@ -650,6 +641,7 @@ bool Simulation::AICreateNodes()
 
 bool Simulation::AddPlayer(uint32_t playerID, const std::string& namePlate)
 {
+	static int playerCount = 0;
 	if (!m_pServer->isClientConnected(playerID))
 	{
 		return false;
@@ -660,16 +652,18 @@ bool Simulation::AddPlayer(uint32_t playerID, const std::string& namePlate)
 
 	// Create Player entity in Game scene
 	Entity player = m_pGameScene->CreateEntity();
+	comp::Player* playerComp = player.AddComponent<comp::Player>();
 	comp::Transform* transform = player.AddComponent<comp::Transform>();
-	transform->position = playerSpawnPoint;
-	transform->scale = {1.8f, 1.8f, 1.8f};
-	
+	playerComp->spawnPoint = playerSpawnPoint[playerCount++];
+	playerComp->runSpeed = 25.f;
+	transform->position = playerComp->spawnPoint;
+	transform->scale = sm::Vector3(1.8f, 1.8f, 1.8f);
+
 	player.AddComponent<comp::Velocity>();
 	player.AddComponent<comp::NamePlate>()->namePlate = namePlate;
 
 	player.AddComponent<comp::MeshName>()->name = "Knight.fbx";
 	player.AddComponent<comp::AnimatorName>()->name = "Player.anim";
-	player.AddComponent<comp::Player>()->runSpeed = 25.f;
 
 	*player.AddComponent<comp::CombatStats>() = { 0.3f, 20.f, 2.0f, true, 30.f };
 	player.AddComponent<comp::Health>();
@@ -693,27 +687,12 @@ bool Simulation::AddPlayer(uint32_t playerID, const std::string& namePlate)
 		
 	});
 
-
-	
 	//Collision will handle this entity as a dynamic one
 	player.AddComponent<comp::Tag<TagType::DYNAMIC>>();
 	// Network component will make sure the new entity is sent
 	player.AddComponent<comp::Network>(playerID);
 
 	m_players[playerID] = player;
-
-	return true;
-}
-
-bool Simulation::AddEnemy()
-{
-	// Create Enemy entity in Game scene.
-	Entity enemy = m_pGameScene->CreateEntity();
-	enemy.AddComponent<comp::Transform>();
-	const unsigned char BAD = 8;
-	enemy.AddComponent<comp::Tag<BAD>>();
-	enemy.AddComponent<comp::Health>();
-	enemy.AddComponent<comp::Network>();
 
 	return true;
 }
@@ -817,7 +796,6 @@ void Simulation::SendSnapshot()
 		std::bitset<ecs::Component::COMPONENT_MAX> compMask;
 		compMask.set(ecs::Component::TRANSFORM);
 		compMask.set(ecs::Component::HEALTH);
-		compMask.set(ecs::Component::MESH_NAME);
 #if DEBUG_SNAPSHOT
 		compMask.set(ecs::Component::BOUNDING_ORIENTED_BOX);
 #endif
@@ -1073,6 +1051,7 @@ void Simulation::SendAllEntitiesToPlayer(uint32_t playerID) const
 	msg << GetTick();
 
 	this->m_pServer->SendToClient(playerID, msg);
+	LOG_INFO("Count: %d", count);
 }
 
 void Simulation::SendRemoveAllEntitiesToPlayer(uint32_t playerID) const

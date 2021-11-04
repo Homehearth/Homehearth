@@ -76,9 +76,12 @@ void GridSystem::Initialize(sm::Vector2 mapSize, sm::Vector3 position, std::stri
 
 			transform->scale = { 4.2f, 0.5f, 4.2f };
 
-			if (tileTypeTemp != TileType::DEFAULT || RENDER_GRID)
+#if RENDER_GRID
+			if (tileTypeTemp != TileType::DEFAULT)
+			{
 				tileEntity.AddComponent<comp::Network>();
-
+			}
+#endif
 			comp::PlaneCollider* collider = tileEntity.AddComponent<comp::PlaneCollider>();
 			collider->center = tilePosition;
 			collider->size = tileSize;

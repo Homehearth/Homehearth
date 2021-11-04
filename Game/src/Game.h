@@ -40,6 +40,7 @@ private:
 	void PlaceDefenceDebug(message<GameMsg>& msg);
 	void PlaceDefenceRelease(message<GameMsg>& msg);
 	void CreateVisualGrid(Entity e);
+	void LoadAllAssets();
 
 public:
 	Client m_client;

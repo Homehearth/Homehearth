@@ -145,6 +145,9 @@ bool RTexture::Create(const std::string& filename)
 	else
 		image = stbi_load(filepath.c_str(), &width, &height, &comp, STBI_rgb_alpha);
 
+
+
+	
 	if (image == nullptr)
 	{
 #ifdef _DEBUG
@@ -165,11 +168,24 @@ bool RTexture::Create(const std::string& filename)
 
 	if (USE_MIPMAPS)
 	{
-		if (!GenerateMipMaps(image, static_cast<UINT>(width), static_cast<UINT>(height)))
+		if(width % 2 == 0 && height % 2 == 0)
 		{
-			stbi_image_free(image);
-			return false;
+			if (!GenerateMipMaps(image, static_cast<UINT>(width), static_cast<UINT>(height)))
+			{
+				stbi_image_free(image);
+				return false;
+			}
 		}
+		else
+		{
+			if (!StandardSetup(image, static_cast<UINT>(width), static_cast<UINT>(height)))
+			{
+				stbi_image_free(image);
+				return false;
+			}
+		}
+		
+
 	}
 	else
 	{

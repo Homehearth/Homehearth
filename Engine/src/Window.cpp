@@ -73,6 +73,14 @@ LRESULT CALLBACK Window::WinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 	return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
+void Window::ConfineCursor()
+{
+	RECT rect;
+	GetClientRect(m_hWnd, &rect);
+	MapWindowPoints(m_hWnd, nullptr, reinterpret_cast<POINT*>(&rect), 2);
+	ClipCursor(&rect);
+}
+
 Window::Window()
 	: m_hWnd(nullptr)
 	, m_clientRect({})
@@ -140,7 +148,7 @@ bool Window::Initialize(const Desc& desc)
 	
 	UpdateWindow(this->m_hWnd);
 	ShowWindow(this->m_hWnd, desc.nShowCmd);
-
+	//ConfineCursor();
 
 	this->m_windowDesc = desc;
 

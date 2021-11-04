@@ -42,7 +42,7 @@ private:
 	//Game play related
 	Timer waveTimer;
 	std::queue<Wave> waveQueue;
-	sm::Vector3 playerSpawnPoint;
+	sm::Vector3 playerSpawnPoint[4];
 
 	
 	void CreateWaves();
@@ -70,9 +70,7 @@ public:
 	bool AddPlayer(uint32_t playerID, const std::string& namePlate = "Noobie");
 	bool RemovePlayer(uint32_t playerID);
 	std::unordered_map<uint32_t, Entity>::iterator RemovePlayer(std::unordered_map<uint32_t, Entity>::iterator playerIterator);
-
-	bool AddEnemy();
-
+	
 	void SendSnapshot();
 	bool JoinLobby(uint32_t playerID, uint32_t gameID, const std::string& namePlate = "Noobie");
 	bool LeaveLobby(uint32_t playerID, uint32_t gameID);

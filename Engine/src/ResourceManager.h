@@ -75,7 +75,7 @@ public:
 		Return nullptr if the resource does not exist.
 	*/
 	template <class T>
-	std::shared_ptr<T> CopyResource(const std::string& key);
+	std::shared_ptr<T> CopyResource(const std::string& key, bool createIfFailed = false);
 
 	/*
 		Removes every resource from the the manager.
@@ -135,7 +135,7 @@ inline std::shared_ptr<T> ResourceManager::GetResource(const std::string& key, b
 }
 
 template<class T>
-inline std::shared_ptr<T> ResourceManager::CopyResource(const std::string& key)
+inline std::shared_ptr<T> ResourceManager::CopyResource(const std::string& key, bool createIfFailed)
 {
 	//Check if the resource exists
 	auto f = m_resources.find(key);
@@ -150,6 +150,18 @@ inline std::shared_ptr<T> ResourceManager::CopyResource(const std::string& key)
 	}
 	else
 	{
+		if (createIfFailed)
+		{
+			std::shared_ptr<T> resource = std::make_shared<T>();
+			if (resource->Create(key))
+			{
+#ifdef _DEBUG
+				LOG_INFO("RM added '%s' and created", key.c_str());
+#endif
+				m_resources.emplace(key, resource);
+				return std::dynamic_pointer_cast<T>(resource);
+			}
+		}
 		return std::shared_ptr<T>(nullptr);
 	}
 }
