@@ -165,12 +165,12 @@ void Simulation::CreateWaves()
 {
 	using namespace EnemyManagement;
 	//Reeset wavequeu
-	while(!waveQueue.empty())
+	while (!waveQueue.empty())
 	{
 		waveQueue.pop();
 	}
 
-	
+
 	Wave wave1, wave2; // Default: WaveType::Zone
 	{ // Wave_1 Group_1
 		Wave::Group group1;
@@ -327,7 +327,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 			{
 				Entity e = pair.first;
 				comp::Player* p = e.GetComponent<comp::Player>();
-				if(p->state != comp::Player::State::DEAD)
+				if (p->state != comp::Player::State::DEAD)
 				{
 					InputState input = pair.second;
 					// update velocity
@@ -487,7 +487,7 @@ void Simulation::ReadyCheck(const uint32_t& playerID)
 			msg.header.id = GameMsg::Game_Start;
 			this->Broadcast(msg);
 			return;
-			
+
 			auto it = m_players.begin();
 
 			uint32_t readyCount = 0;
@@ -547,24 +547,24 @@ bool Simulation::AddPlayer(uint32_t playerID, const std::string& namePlate)
 	*player.AddComponent<comp::CombatStats>() = { 0.3f, 20.f, 2.0f, true, 30.f };
 	player.AddComponent<comp::Health>();
 	player.AddComponent<comp::BoundingOrientedBox>()->Extents = { 2.0f,2.0f,2.0f };
-	
+
 	CollisionSystem::Get().AddOnCollision(player, [=](Entity other)
-	{
-		if (other == player)
-			return;
-
-		comp::Enemy* enemy = other.GetComponent<comp::Enemy>();
-		if(enemy)
 		{
-			comp::Health* health = player.GetComponent<comp::Health>();
+			if (other == player)
+				return;
 
-			if(health)
+			comp::Enemy* enemy = other.GetComponent<comp::Enemy>();
+			if (enemy)
 			{
-				health->currentHealth -= 20;
+				comp::Health* health = player.GetComponent<comp::Health>();
+
+				if (health)
+				{
+					health->currentHealth -= 20;
+				}
 			}
-		}
-		
-	});
+
+		});
 
 	//Collision will handle this entity as a dynamic one
 	player.AddComponent<comp::Tag<TagType::DYNAMIC>>();
@@ -645,7 +645,7 @@ void Simulation::SendSnapshot()
 #endif
 		this->SendEntities(m_updatedEntities, GameMsg::Game_Snapshot, compMask);
 		m_updatedEntities.clear();
-	
+
 		// Update until next wave timer if next wave is present.
 		if (!waveQueue.empty())
 		{
@@ -792,26 +792,26 @@ void Simulation::ResetGameScene()
 	msg.header.id = GameMsg::Game_RemoveEntity;
 	uint32_t count = 0;
 	this->m_pGameScene->ForEachComponent<comp::Network>([&](Entity e, comp::Network& n)
-	{
-		if(m_players.find(n.id) == m_players.end())
 		{
-			msg << n.id;
-			count++;
-			e.Destroy();
-		}
-		else
-		{
-			ResetPlayer(e);
-		}
-		
-	});
+			if (m_players.find(n.id) == m_players.end())
+			{
+				msg << n.id;
+				count++;
+				e.Destroy();
+			}
+			else
+			{
+				ResetPlayer(e);
+			}
 
-	if(count > 0)
+		});
+
+	if (count > 0)
 	{
 		msg << count;
 		Broadcast(msg);
 	}
-	
+
 	while (!m_spawnPoints.empty())
 	{
 		m_spawnPoints.pop();
@@ -821,6 +821,16 @@ void Simulation::ResetGameScene()
 	m_spawnPoints.push(sm::Vector3(320.f, 0, -272.f));
 	m_spawnPoints.push(sm::Vector3(336.f, 0, -250.f));
 	m_spawnPoints.push(sm::Vector3(365.f, 0, -267.f));
+
+	this->m_pGameScene->ForEachComponent<comp::Tile>([](Entity& e, comp::Tile& tile)
+		{
+			if (tile.type == TileType::DEFENCE)
+			{
+				e.RemoveComponent<comp::BoundingOrientedBox>();
+				tile.type = TileType::EMPTY;
+			}
+		}
+	);
 
 	LOG_INFO("%lld", m_pGameScene->GetRegistry()->size());
 	CreateWaves();
