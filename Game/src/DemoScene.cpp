@@ -297,7 +297,6 @@ void sceneHelp::SetupInGameScreen(Game* game)
 		game->m_client.Disconnect();
 		game->Shutdown();
 		});
-	buttons->Hide();
 	scene.Add2DCollection(buttons, "Buttons");
 }
 

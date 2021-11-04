@@ -23,7 +23,7 @@ private:
     RECT m_clientRect;
     Desc m_windowDesc;
     
-    void ConfineCursor();
+    static void ConfineCursor(HWND hwnd);
 
 public:
     Window();

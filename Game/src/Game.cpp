@@ -190,7 +190,9 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		msg >> currentTick;
 		uint32_t count; // Could be more than one Entity
 		msg >> count;
+#ifdef _DEBUG
 		LOG_INFO("Received %u entities", count);
+#endif
 
 		for (uint32_t i = 0; i < count; i++)
 		{
@@ -203,7 +205,9 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			m_gameEntities.insert(std::make_pair(entityID, e));
 			if (e.GetComponent<comp::Network>()->id == m_localPID)
 			{
+#ifdef _DEBUG
 				LOG_INFO("You added yourself, congratulations!");
+#endif
 				m_players[m_localPID] = e;
 
 				GetScene("Game").ForEachComponent<comp::Tag<TagType::CAMERA>>([&](Entity entt, comp::Tag<TagType::CAMERA>& t)
@@ -230,7 +234,9 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		{
 			SetScene("Lobby");
 		}
+#ifdef _DEBUG
 		LOG_INFO("Successfully loaded all entities!");
+#endif
 
 		break;
 	}
@@ -261,7 +267,9 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			}
 
 		}
+#ifdef _DEBUG
 		LOG_INFO("Removed %u entities", count);
+#endif
 		break;
 	}
 	case GameMsg::Game_BackToLobby:

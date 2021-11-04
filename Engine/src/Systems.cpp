@@ -35,8 +35,9 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 
 					attackCollider.AddComponent<comp::MeshName>()->name = "Sphere.obj";
 				}
-
+#ifdef _DEBUG
 				LOG_INFO("Attack Collider Created!");
+#endif
 				
 				attackCollider.AddComponent<comp::Network>();
 				//DEBUG
@@ -55,7 +56,9 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 						if (otherHealth)
 						{
 							otherHealth->currentHealth -= atk->damage;
+#ifdef _DEBUG
 							LOG_INFO("ATTACK COLLIDER HIT BAD GUY!");
+#endif
 							atk->lifeTime = 0.f;
 							comp::Velocity* attackVel = attackCollider.GetComponent<comp::Velocity>();
 							
@@ -95,7 +98,9 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 
 			if (Projectile.lifeTime <= 0)
 			{
+#ifdef _DEBUG
 				LOG_INFO("Attack Collider Destroyed");
+#endif
 				ent.Destroy();
 			}
 		});
