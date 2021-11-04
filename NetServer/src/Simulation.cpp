@@ -673,7 +673,7 @@ bool Simulation::AddPlayer(uint32_t playerID, const std::string& namePlate)
 			if (other == player)
 				return;
 
-			comp::Enemy* enemy = other.GetComponent<comp::Enemy>();
+			comp::NPC* enemy = other.GetComponent<comp::NPC>();
 			if (enemy)
 			{
 				comp::Health* health = player.GetComponent<comp::Health>();
