@@ -128,8 +128,8 @@ bool Window::Initialize(const Desc& desc)
 	const HWND hwndDesktop = GetDesktopWindow();
 	GetWindowRect(hwndDesktop, &desktop);
 
-	const int posX = (desktop.right - desc.width) / 2;
-	const int posY = (desktop.bottom - desc.height) / 2;
+	const int posX = (desktop.right / 2) - (desc.width / 2);
+	const int posY = (desktop.bottom / 2) - (desc.height / 2);
 
 	RECT rect;
 	rect.left = posX;
@@ -138,12 +138,14 @@ bool Window::Initialize(const Desc& desc)
 	rect.bottom = posY + desc.height;
 
 	AdjustWindowRect(&rect, WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE, FALSE);
+	const int width = rect.right - rect.left;
+	const int height = rect.bottom - rect.top;
 
 	// Create the window.
 	this->m_hWnd = CreateWindowEx(0, WINDOW_CLASS, desc.title,
 		WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE,
 		posX, posY,
-		static_cast<int>(desc.width), static_cast<int>(desc.height),
+		width, height,
 		nullptr, nullptr, desc.hInstance, nullptr);
 
 	assert(this->m_hWnd && "Window wasn't successfully created.");
