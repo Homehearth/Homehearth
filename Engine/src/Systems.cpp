@@ -142,6 +142,7 @@ void Systems::MovementSystem(HeadlessScene& scene, float dt)
 				if (t.previousPosition != t.position)
 				{
 					e.UpdateNetwork();
+					t.previousPosition = t.position;
 				}
 			});
 	}
