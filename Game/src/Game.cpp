@@ -335,13 +335,14 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 
 		dynamic_cast<rtd::Text*>(GetScene("Lobby").GetCollection("LobbyDesc")->elements[1].get())->SetText("Lobby ID: " + std::to_string(m_gameID));
 
-		for (int i = 0; i < MAX_PLAYERS_PER_LOBBY; i++)
-		{
-			GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i + 1))->Hide();
-		}
+
 		for (uint32_t i = 0; i < count; i++)
 		{
 			GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i + 1))->Show();
+		}
+		for (uint32_t i = count; i < MAX_PLAYERS_PER_LOBBY; i++)
+		{
+			GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i + 1))->Hide();
 		}
 
 		Scene& gameScene = GetScene("Game");
