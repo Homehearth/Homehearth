@@ -71,7 +71,7 @@ bool ServerGame::OnStartup()
 
 	m_inputThread = std::thread(&ServerGame::InputThread, this);
 
-	LoadMapColliders("SceneBoundingBoxes.fbx");
+	LoadMapColliders("AllBounds.fbx");
 	//LoadMapColliders("MapBounds.obj");
 
 	return true;

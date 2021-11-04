@@ -41,6 +41,7 @@ private:
 	void PlaceDefenceRelease(message<GameMsg>& msg);
 	void CreateVisualGrid(Entity e);
 	void LoadAllAssets();
+	void ClearGrid();
 
 public:
 	Client m_client;
