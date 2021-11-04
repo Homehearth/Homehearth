@@ -175,8 +175,7 @@ void Simulation::CreateWaves()
 	{ // Wave_1 Group_1
 		Wave::Group group1;
 		group1.AddEnemy(EnemyType::Default, 3);
-		group1.AddEnemy(EnemyType::Default2, 2);
-		group1.SetSpawnPoint({ 500.f, -180.0f });
+		group1.SetSpawnPoint({ 380.f, -220.0f });
 		wave1.SetTimeLimit(5);
 		wave1.AddGroup(group1);
 	}
@@ -184,7 +183,7 @@ void Simulation::CreateWaves()
 	{ // Wave_1 Group_2
 		Wave::Group group2;
 		group2.AddEnemy(EnemyType::Default, 4);
-		group2.SetSpawnPoint({ 500.f, -180.0f });
+		group2.SetSpawnPoint({ 380.f, -220.0f });
 		wave1.AddGroup(group2);
 	}
 	waveQueue.emplace(wave1); // Add Wave_1
@@ -192,14 +191,14 @@ void Simulation::CreateWaves()
 	{ // Wave_2 Group_3
 		Wave::Group group3;
 		group3.AddEnemy(EnemyType::Default, 5);
-		group3.SetSpawnPoint({ 500.f, -180.0f });
+		group3.SetSpawnPoint({ 380.f, -220.0f });
 		wave2.AddGroup(group3);
 	}
 
 	{ // Wave_2 Group_4
 		Wave::Group group4;
 		group4.AddEnemy(EnemyType::Default, 4);
-		group4.SetSpawnPoint({ 500.f, -180.0f });
+		group4.SetSpawnPoint({ 380.f, -220.0f });
 		wave2.AddGroup(group4);
 	}
 	waveQueue.emplace(wave2); // Add Wave_2
@@ -303,10 +302,10 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 	this->m_gameID = gameID;
 
 	//Set players spawn point
-	m_spawnPoints.push(sm::Vector3(352.f, 0, -290.f));
-	m_spawnPoints.push(sm::Vector3(320.f, 0, -272.f));
-	m_spawnPoints.push(sm::Vector3(336.f, 0, -250.f));
-	m_spawnPoints.push(sm::Vector3(365.f, 0, -267.f));
+	m_spawnPoints.push(sm::Vector3(220.f, 0, -353.f));
+	m_spawnPoints.push(sm::Vector3(197.f, 0, -325.f));
+	m_spawnPoints.push(sm::Vector3(222.f, 0, -300.f));
+	m_spawnPoints.push(sm::Vector3(247.f, 0, -325.f));
 
 	// Create and add all waves to the queue.
 	CreateWaves();
@@ -817,10 +816,10 @@ void Simulation::ResetGameScene()
 		m_spawnPoints.pop();
 	}
 
-	m_spawnPoints.push(sm::Vector3(352.f, 0, -290.f));
-	m_spawnPoints.push(sm::Vector3(320.f, 0, -272.f));
-	m_spawnPoints.push(sm::Vector3(336.f, 0, -250.f));
-	m_spawnPoints.push(sm::Vector3(365.f, 0, -267.f));
+	m_spawnPoints.push(sm::Vector3(220.f, 0, -353.f));
+	m_spawnPoints.push(sm::Vector3(197.f, 0, -325.f));
+	m_spawnPoints.push(sm::Vector3(222.f, 0, -300.f));
+	m_spawnPoints.push(sm::Vector3(247.f, 0, -325.f));
 
 	this->m_pGameScene->ForEachComponent<comp::Tile>([](Entity& e, comp::Tile& tile)
 		{
