@@ -9,6 +9,9 @@
 #include "Collection2D.h"
 #include "Healthbar.h"
 
+#include <windows.h>
+#include <shellapi.h>
+
 namespace sceneHelp
 {
 	Entity CreatePlayerEntity(HeadlessScene& scene, uint32_t playerID)
@@ -50,16 +53,20 @@ namespace sceneHelp
 		SetupMainMenuScreen(game);
 
 		Entity backgroundScene = mainMenuScene.CreateEntity();
-		backgroundScene.AddComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>("Tree1.obj");
+		backgroundScene.AddComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>("GameScene.obj");
 		backgroundScene.AddComponent<comp::Transform>();
 
-		mainMenuScene.GetCurrentCamera()->Initialize(sm::Vector3(0, 60, -60), sm::Vector3(0, 0, 1), sm::Vector3(0, 1, 0),
-			sm::Vector2((float)game->GetWindow()->GetWidth(), (float)game->GetWindow()->GetHeight()), CAMERATYPE::PLAY);
-		mainMenuScene.GetCurrentCamera()->SetFollowEntity(backgroundScene);
+		mainMenuScene.GetCurrentCamera()->Initialize(sm::Vector3(0, 0, 0), sm::Vector3(0, 0, 1), sm::Vector3(0, 1, 0),
+			sm::Vector2((float)game->GetWindow()->GetWidth(), (float)game->GetWindow()->GetHeight()), CAMERATYPE::DEFAULT);
+		mainMenuScene.GetCurrentCamera()->m_position = sm::Vector3(350.f, 30.f, -250.f);
 
-		mainMenuScene.on<ESceneUpdate>([backgroundScene](const ESceneUpdate& e, Scene& scene)
+		mainMenuScene.on<ESceneUpdate>([](const ESceneUpdate& e, Scene& scene)
 			{
-				//backgroundScene.GetComponent<comp::Transform>()->rotation.y += e.dt;
+				static float d = 0.0f;
+				d += e.dt;
+				float angle = ((std::sin(d) + 1) * 0.5f) * dx::g_XMPi[0] * 0.05f;
+
+				scene.GetCurrentCamera()->m_rotation = sm::Quaternion::CreateFromAxisAngle(sm::Vector3(0, 1, 0), angle + dx::XMConvertToRadians(170.0f - 30.f));
 
 				IMGUI(
 					ImGui::Begin("Scene");
@@ -106,7 +113,7 @@ namespace sceneHelp
 		gameScene.GetRegistry()->on_construct<comp::BoundingSphere>().connect<&entt::registry::emplace_or_replace<comp::RenderableDebug>>();
 		gameScene.GetRegistry()->on_construct<comp::Light>().connect<&Lights::Add>(gameScene.GetLights());
 
-		
+
 		// Setup Cameras
 		Entity debugCameraEntity = gameScene.CreateEntity();
 		debugCameraEntity.AddComponent<comp::Camera3D>()->camera.Initialize(sm::Vector3(200, 60, -320), sm::Vector3(200, 50, -350), sm::Vector3(0, 1, 0),
@@ -199,6 +206,14 @@ void sceneHelp::SetupMainMenuScreen(Game* game)
 	rtd::Button* exitButton = connectFields->AddElement<rtd::Button>("demoExitButton.png", draw_t(0.0f, 0.0f, width / 24, height / 16));
 	exitButton->SetOnPressedEvent([=] {
 		game->Shutdown();
+		});
+
+
+	rtd::Button* externalLinkBtn = connectFields->AddElement<rtd::Button>("Button.png", draw_t(width - width / 4.f, height - (height / 5), width / 8.f, height / 16));
+	externalLinkBtn->GetText()->SetScale(0.5f);
+	externalLinkBtn->GetText()->SetText("Give Feedback!");
+	externalLinkBtn->SetOnPressedEvent([] {
+		ShellExecuteA(NULL, "open", "https://docs.google.com/forms/d/e/1FAIpQLSfvyYTRNYaVHbg9Fa8H7xNXQGr2SWoaC9_GKZ7rSkuoNDjOMA/viewform?usp=sf_link", NULL, NULL, SW_SHOWNORMAL);
 		});
 
 #ifdef _DEBUG
@@ -305,7 +320,6 @@ void sceneHelp::SetupInGameScreen(Game* game)
 		game->m_client.Disconnect();
 		game->Shutdown();
 		});
-	buttons->Hide();
 	scene.Add2DCollection(buttons, "Buttons");
 }
 
@@ -368,10 +382,21 @@ void sceneHelp::SetupInLobbyScreen(Game* game)
 	scene.Add2DCollection(lobbyDesc, "LobbyDesc");
 
 	Collection2D* startGame = new Collection2D;
-	rtd::Button* startGameButton = startGame->AddElement<rtd::Button>("StartButton.png", draw_t((width / 2) + (width / 10.f), height - (height / 5.0f), (width / 3.33f), (height / 6.f)), false);
+	rtd::Button* startGameButton = startGame->AddElement<rtd::Button>("Button.png", draw_t((width / 2) + (width / 10.f), height - (height / 5.0f), (width / 3.33f), (height / 6.f)), false);
+	rtd::Text* readyText = startGame->AddElement<rtd::Text>("Ready", draw_text_t((width / 2) + (width / 10.f), height - (height / 5.0f), (width / 3.33f), (height / 6.f)));
 	startGameButton->SetOnPressedEvent([=]()
 		{
-		 	game->SendStartGame();
+			//if (isReady)
+			//{
+			//	readyText->SetText("Ready");
+			//}
+			//else
+			//{
+			//	readyText->SetText("Not ready");
+			//}
+			//isReady = !isReady;
+
+			game->SendStartGame();
 		});
 	scene.Add2DCollection(startGame, "StartGame");
 
@@ -422,7 +447,7 @@ void sceneHelp::SetupLobbyJoinScreen(Game* game)
 	Collection2D* nameCollection = new Collection2D;
 	rtd::TextField* nameInputField = nameCollection->AddElement<rtd::TextField>(draw_text_t((width / 2) - (width / 8), height / 8, width / 4, D2D1Core::GetDefaultFontSize()), 6);
 	nameInputField->SetDescriptionText("Input Name");
-	nameInputField->SetPresetText("Noobie");
+	//nameInputField->SetPresetText("Noobie");
 	scene.Add2DCollection(nameCollection, "nameInput");
 
 	Collection2D* lobbyCollection = new Collection2D;
@@ -440,11 +465,18 @@ void sceneHelp::SetupLobbyJoinScreen(Game* game)
 
 	startLobbyButton->SetOnPressedEvent([=]
 		{
-			game->m_playerName = *nameInputField->RawGetBuffer();
-			game->CreateLobby();
+			if (nameInputField->RawGetBuffer()->length() > 0)
+			{
+				game->m_playerName = *nameInputField->RawGetBuffer();
+				game->CreateLobby();
 
-			// Update own name.
-			dynamic_cast<rtd::Text*>(game->GetScene("Lobby").GetCollection("playerIcon1")->elements[1].get())->SetText(game->m_playerName);
+				// Update own name.
+				dynamic_cast<rtd::Text*>(game->GetScene("Lobby").GetCollection("playerIcon1")->elements[1].get())->SetText(game->m_playerName);
+			}
+			else
+			{
+				LOG_WARNING("Enter a valid nickname");
+			}
 		});
 	lobbyButton->SetOnPressedEvent([=]()
 		{
@@ -452,26 +484,29 @@ void sceneHelp::SetupLobbyJoinScreen(Game* game)
 
 			if (lobbyString)
 			{
+				game->m_playerName = *nameInputField->RawGetBuffer();
+				int lobbyID = -1;
+				try
 				{
-					game->m_playerName = *nameInputField->RawGetBuffer();
-					int lobbyID = -1;
-					try
-					{
-						lobbyID = std::stoi(*lobbyString);
-					}
-					catch (std::exception e)
-					{
-						LOG_WARNING("Invalid lobby ID: Was not numerical");
-					}
+					lobbyID = std::stoi(*lobbyString);
+				}
+				catch (std::exception e)
+				{
+					LOG_WARNING("Request denied: Invalid lobby ID: Was not numerical");
+				}
 
-					if (lobbyID > -1)
+				if (lobbyID > -1)
+				{
+					if (nameInputField->RawGetBuffer()->length() > 0)
 					{
 						game->JoinLobby(lobbyID);
-						game->SetScene("Loading");
 						// Update own name.
 						dynamic_cast<rtd::Text*>(game->GetScene("Lobby").GetCollection("playerIcon1")->elements[1].get())->SetText(game->m_playerName);
 					}
-
+					else
+					{
+						LOG_WARNING("Request denied: Enter a valid nickname");
+					}
 				}
 			}
 		});

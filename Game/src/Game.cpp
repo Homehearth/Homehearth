@@ -174,12 +174,12 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			if (m_gameEntities.find(entityID) != m_gameEntities.end())
 			{
 				entity = m_gameEntities.at(entityID);
+				UpdateEntityFromMessage(entity, msg);
 			}
 			else {
 				LOG_WARNING("Updating: Entity %u not in m_gameEntities, should not happen...", entityID);
+				
 			}
-			
-			UpdateEntityFromMessage(entity, msg);
 		}
 
 		break;
@@ -190,7 +190,9 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		msg >> currentTick;
 		uint32_t count; // Could be more than one Entity
 		msg >> count;
+#ifdef _DEBUG
 		LOG_INFO("Received %u entities", count);
+#endif
 
 		for (uint32_t i = 0; i < count; i++)
 		{
@@ -203,7 +205,9 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			m_gameEntities.insert(std::make_pair(entityID, e));
 			if (e.GetComponent<comp::Network>()->id == m_localPID)
 			{
+#ifdef _DEBUG
 				LOG_INFO("You added yourself, congratulations!");
+#endif
 				m_players[m_localPID] = e;
 
 				GetScene("Game").ForEachComponent<comp::Tag<TagType::CAMERA>>([&](Entity entt, comp::Tag<TagType::CAMERA>& t)
@@ -230,7 +234,9 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		{
 			SetScene("Lobby");
 		}
+#ifdef _DEBUG
 		LOG_INFO("Successfully loaded all entities!");
+#endif
 
 		break;
 	}
@@ -261,12 +267,15 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			}
 
 		}
+#ifdef _DEBUG
 		LOG_INFO("Removed %u entities", count);
+#endif
 		break;
 	}
 	case GameMsg::Game_BackToLobby:
 	{
 		SetScene("Lobby");
+		ClearGrid();
 		break;
 	}	
 	case GameMsg::Lobby_Accepted:
@@ -336,13 +345,14 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 
 		dynamic_cast<rtd::Text*>(GetScene("Lobby").GetCollection("LobbyDesc")->elements[1].get())->SetText("Lobby ID: " + std::to_string(m_gameID));
 
-		for (int i = 0; i < MAX_PLAYERS_PER_LOBBY; i++)
-		{
-			GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i + 1))->Hide();
-		}
+
 		for (uint32_t i = 0; i < count; i++)
 		{
 			GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i + 1))->Show();
+		}
+		for (uint32_t i = count; i < MAX_PLAYERS_PER_LOBBY; i++)
+		{
+			GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i + 1))->Hide();
 		}
 
 		Scene& gameScene = GetScene("Game");
@@ -356,10 +366,10 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			dynamic_cast<rtd::Text*>(collect->elements[1].get())->SetText(ids[i]);
 		}
 		break;
+
 	}
 	}
 }
-
 void Game::PingServer()
 {
 	message<GameMsg> msg = {};
@@ -426,6 +436,15 @@ void Game::SendStartGame()
 	msg.header.id = GameMsg::Game_PlayerReady;
 	msg << m_localPID << m_gameID;
 	m_client.Send(msg);
+}
+
+void Game::ClearGrid()
+{
+	GetScene("Game").ForEachComponent<comp::Tag<TagType::DEFENCE>>([](Entity& e, comp::Tag<TagType::DEFENCE>& tag)
+		{
+			e.Destroy();
+		}
+	);
 }
 
 void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
@@ -582,7 +601,7 @@ void Game::PlaceDefenceDebug(message<GameMsg>& msg)
 				{
 					comp::Renderable* render = e.GetComponent<comp::Renderable>();
 					render->model = ResourceManager::Get().GetResource<RModel>("Defence.obj");
-					render->model->ChangeMaterial("TileDefence.mtl");
+					render->model->ChangeMaterial("Defence.mtl");
 					tile.type = TileType::DEFENCE;
 					LOG_INFO("Placed defence %d", id);
 				}
@@ -598,7 +617,7 @@ void Game::PlaceDefenceDebug(message<GameMsg>& msg)
 		defence.AddComponent<comp::Transform>()->position = position;
 		defence.GetComponent<comp::Transform>()->scale = { 4.2f, 0.5f, 4.2f };
 		render->model = ResourceManager::Get().GetResource<RModel>("Defence.obj");
-		render->model->ChangeMaterial("TileDefence.mtl");
+		render->model->ChangeMaterial("Defence.mtl");
 		LOG_INFO("Placed defence");
 	}
 #endif // DEBUG
@@ -614,8 +633,9 @@ void Game::PlaceDefenceRelease(message<GameMsg>& msg)
 	comp::Renderable* render = defence.AddComponent<comp::Renderable>();
 	defence.AddComponent<comp::Transform>()->position = position;
 	defence.GetComponent<comp::Transform>()->scale = { 4.2f, 0.5f, 4.2f };
+	defence.AddComponent<comp::Tag<TagType::DEFENCE>>();
 	render->model = ResourceManager::Get().GetResource<RModel>("Defence.obj");
-	render->model->ChangeMaterial("TileDefence.mtl");
+	render->model->ChangeMaterial("Defence.mtl");
 	LOG_INFO("Placed defence");
 
 #endif // NDEBUG		
@@ -640,13 +660,6 @@ void Game::CreateVisualGrid(Entity e)
 				renderable->model = ResourceManager::Get().CopyResource<RModel>("Plane1.obj");
 				renderable->model->ChangeMaterial("TileBuilding.mtl");
 			}
-			else if (tile->type == TileType::DEFENCE)
-			{
-				comp::Renderable* renderable = e.AddComponent<comp::Renderable>();
-				renderable->model = ResourceManager::Get().CopyResource<RModel>("Plane1.obj");
-				renderable->model->ChangeMaterial("TileDefence.mtl");
-			}
-
 		}
 	}
 }

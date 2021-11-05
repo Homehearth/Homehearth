@@ -99,11 +99,11 @@ namespace ecs
 			{
 				BoundingOrientedBox* obb = reg.try_get<BoundingOrientedBox>(curr);
 				BoundingSphere* sphere = reg.try_get<BoundingSphere>(curr);
-				if(obb != nullptr)
+				if (obb != nullptr)
 				{
 					model = ResourceManager::Get().GetResource<RModel>("Cube.obj");
 				}
-				else if(sphere != nullptr)
+				else if (sphere != nullptr)
 				{
 					model = ResourceManager::Get().GetResource<RModel>("Sphere.obj");
 				}
@@ -114,7 +114,7 @@ namespace ecs
 		{
 			sm::Vector3 force = sm::Vector3(5, 0, 0);
 			bool wasApplied = false;
-			float actingTime = 5.0f;
+			float actingTime = 2.0f;
 		};
 
 		struct Velocity
@@ -139,9 +139,46 @@ namespace ecs
 			bool isReady = false;
 		};
 
-		struct Enemy
+		struct Node
 		{
-			float temp = 0;
+			float f = FLT_MAX, g = FLT_MAX, h = FLT_MAX;
+			sm::Vector3 position;
+			sm::Vector2 id;
+			std::vector<Node*> connections;
+			ecs::component::Node* parent;
+			bool reachable = true;
+			void ResetFGH()
+			{
+				f = FLT_MAX, g = FLT_MAX, h = FLT_MAX;
+			}
+			bool ConnectionAlreadyExists(Node* other)
+			{
+				for (Node* node : connections)
+				{
+					if (node == other)
+					{
+						return true;
+					}
+				}
+				return false;
+			}
+		};
+
+		struct NPC
+		{
+			enum class State
+			{
+				IDLE,
+				ASTAR,
+				CHASE
+			} state;
+			float movementSpeed = 15.f;
+			float attackRange = 10.f;
+			bool hostile;
+			uint32_t currentNodeTarget = static_cast<uint32_t>(-1);
+			std::vector<ecs::component::Node*> path;
+			ecs::component::Node* currentNode;
+			Entity currentClosest;
 		};
 
 		struct Light
@@ -159,7 +196,7 @@ namespace ecs
 
 		struct CombatStats
 		{
-			float attackSpeed = 1.f;
+			float attackSpeed = 1.5f;
 			float attackDamage = 5.f;
 			float attackLifeTime = 5.f;
 			bool isRanged = false;
@@ -183,12 +220,18 @@ namespace ecs
 		{
 			uint8_t id = ID;
 		};
+		struct PotentialField
+		{
+			float chargeAmount;
+			bool positive;
+		};
 
 		struct Tile 
 		{
 			TileType type;
 			sm::Vector2 gridID;
 			float halfWidth;
+
 		};
 
 	};

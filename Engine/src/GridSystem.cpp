@@ -76,9 +76,12 @@ void GridSystem::Initialize(sm::Vector2 mapSize, sm::Vector3 position, std::stri
 
 			transform->scale = { 4.2f, 0.5f, 4.2f };
 
-			if (tileTypeTemp != TileType::DEFAULT || RENDER_GRID)
+#if RENDER_GRID
+			if (tileTypeTemp != TileType::DEFAULT)
+			{
 				tileEntity.AddComponent<comp::Network>();
-
+			}
+#endif
 			comp::PlaneCollider* collider = tileEntity.AddComponent<comp::PlaneCollider>();
 			collider->center = tilePosition;
 			collider->size = tileSize;
@@ -166,10 +169,28 @@ sm::Vector3 GridSystem::PlaceDefence(Ray_t mouseRay)
 
 	return returnPosition;
 }
-
+sm::Vector2 GridSystem::GetGridSize() const
+{
+	return m_gridSize;
+}
 std::vector<sm::Vector3>* GridSystem::GetTilePositions()
 {
 	return &m_tilePosiitons;
+}
+Entity* GridSystem::GetTileByID(sm::Vector2 id)
+{
+	if (id.x >= 0 && id.y >= 0 && id.x < m_gridSize.x && id.y < m_gridSize.y)
+	{
+		for (int i = 0; i < m_tiles.size(); i++)
+		{
+			comp::Tile* tile = m_tiles.at(i).GetComponent<comp::Tile>();
+			if (tile->gridID == id)
+			{
+				return &m_tiles.at(i);
+			}
+		}
+	}
+	return nullptr;
 }
 
 std::vector<Entity>* GridSystem::GetTiles()

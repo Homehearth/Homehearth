@@ -43,6 +43,7 @@ void Camera::Initialize(sm::Vector3 pos, sm::Vector3 target, sm::Vector3 up, sm:
 	m_view = dx::XMMatrixLookAtLH(m_position, m_target, m_up);
 	m_projection = dx::XMMatrixPerspectiveFovLH(m_FOV * m_zoomValue, m_aspectRatio, m_nearPlane, m_farPlane);
 
+	
 	//Constant buffer struct
 	m_cameraMat.position = sm::Vector4(m_position.x, m_position.y, m_position.z, 0.0f);
 	m_cameraMat.target = sm::Vector4(m_target.x, m_target.y, m_target.z, 0);
@@ -162,6 +163,24 @@ void Camera::Update(float deltaTime)
 	else if (m_type == CAMERATYPE::DEFAULT)
 	{
 		//TODO: check if see if something is needed to add
+		/*
+		m_rotationMatrix = sm::Matrix::CreateFromQuaternion(m_rotation);
+		m_right = dx::XMVector3TransformNormal(m_defaultRight, m_rotationMatrix);
+		m_forward = dx::XMVector3TransformNormal(m_defaultForward, m_rotationMatrix);
+
+		m_up = dx::XMVector3Cross(m_forward, m_right);
+		m_up = dx::XMVector3Normalize(m_up);
+
+		m_target = m_position + m_forward;
+		
+		m_view = dx::XMMatrixLookToLH(m_position, m_target, m_up);
+		*/
+
+		m_view = sm::Matrix::Identity;
+		m_view.Translation(-m_position);
+		m_view = sm::Matrix::Transform(m_view, m_rotation);
+
+		UpdateProjection();
 	}
 
 	m_cameraMat.position = { m_position.x, m_position.y, m_position.z, 0.0f };
@@ -211,6 +230,11 @@ camera_Matrix_t* Camera::GetCameraMatrixes()
 CAMERATYPE Camera::GetCameraType()const
 {
 	return m_type;
+}
+
+sm::Vector3 Camera::GetRollPitchYaw() const
+{
+	return m_rollPitchYaw;
 }
 
 void Camera::SetPosition(sm::Vector3 newPosition)

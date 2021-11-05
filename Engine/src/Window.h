@@ -22,6 +22,8 @@ private:
     HWND m_hWnd;
     RECT m_clientRect;
     Desc m_windowDesc;
+    
+    static void ConfineCursor(HWND hwnd);
 
 public:
     Window();

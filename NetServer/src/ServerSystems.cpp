@@ -15,7 +15,7 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 {
 	Entity entity = simulation->GetGameScene()->CreateEntity();
 	entity.AddComponent<comp::Network>();
-	entity.AddComponent<comp::Enemy>();
+	entity.AddComponent<comp::NPC>();
 	entity.AddComponent<comp::Tag<DYNAMIC>>();
 
 	comp::Transform* transform = entity.AddComponent<comp::Transform>();
@@ -34,9 +34,9 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 			transform->scale = { 1.8f, 1.8f, 1.8f };
 			meshName->name = "MonsterCharacter.fbx";
 			obb->Extents = sm::Vector3(2.f, 2.f, 2.f);
-			velocity->vel = sm::Vector3(transform->position * -1.0f);
+			/*velocity->vel = sm::Vector3(transform->position * -1.0f);
 			velocity->vel.Normalize();
-			velocity->vel *= 5.0f;
+			velocity->vel *= 5.0f;*/
 			*combatStats = {1.0f, 20.f, 1.0f, false, false};
 		}
 		break;
@@ -47,9 +47,9 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 			meshName->name = "Barrel.obj";
 			transform->scale = { 1.8f, 1.8f, 1.8f };
 			obb->Extents = sm::Vector3(2.f, 2.f, 2.f);
-			velocity->vel = sm::Vector3(transform->position * -1.0f);
+			/*velocity->vel = sm::Vector3(transform->position * -1.0f);
 			velocity->vel.Normalize();
-			velocity->vel *= 5.0f;
+			velocity->vel *= 5.0f;*/
 			*combatStats = { 1.0f, 20.f, 1.0f, false, false };
 		}
 		break;
@@ -103,10 +103,7 @@ void SpawnZoneWave(Simulation* simulation, Wave& currentWave)
 			}
 		}
 	}
-	
 }
-
-
 
 /**Spawn the enemies within a circular zone based on the specified point
  *
@@ -192,8 +189,8 @@ void ServerSystems::WaveSystem(Simulation* simulation,
 void ServerSystems::NextWaveConditions(Simulation* simulation, Timer& timer, int timeToFinish)
 {
 	//Summarize all the existing enemy components in the scene
-	simulation->GetGameScene()->ForEachComponent<comp::Enemy, comp::Transform>(
-		[&](Entity entity, comp::Enemy enemy, comp::Transform transform)
+	simulation->GetGameScene()->ForEachComponent<comp::NPC, comp::Transform>(
+		[&](Entity entity, comp::NPC enemy, comp::Transform transform)
 		{
 			if (abs(transform.position.x) <= 10.f && abs(transform.position.z) <= 10.f)
 			{
