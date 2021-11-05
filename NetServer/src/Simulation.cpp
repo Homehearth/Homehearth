@@ -346,13 +346,9 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 
 							stats->targetRay = input.mouseRay;
 
+							p->state = comp::Player::State::ATTACK;
 						}
-						comp::Player* player = e.GetComponent<comp::Player>();
-						if (player)
-						{
-							player->state = comp::Player::State::ATTACK;
-
-						}
+						
 					}
 
 					//Place defence on grid
@@ -406,7 +402,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 				Systems::AISystem(scene);
 				Systems::CombatSystem(scene, e.dt);
 
-		}
+			}
 
 			if (!waveQueue.empty())
 				ServerSystems::NextWaveConditions(this, waveTimer, waveQueue.front().GetTimeLimit());

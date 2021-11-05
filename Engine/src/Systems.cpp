@@ -209,16 +209,9 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 				{
 					sm::Vector3 vel = stats.targetDir * stats.projectileSpeed;
 					attackCollider.AddComponent<comp::Velocity>()->vel = vel;
-
 					attackCollider.AddComponent<comp::MeshName>()->name = "Sphere.obj";
+					attackCollider.AddComponent<comp::Network>();
 				}
-#ifdef _DEBUG
-				LOG_INFO("Attack Collider Created!");
-#endif
-				
-				attackCollider.AddComponent<comp::Network>();
-				//DEBUG
-
 
 				
 				CollisionSystem::Get().AddOnCollision(attackCollider, [=](Entity other)
@@ -233,9 +226,7 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 						if (otherHealth)
 						{
 							otherHealth->currentHealth -= atk->damage;
-#ifdef _DEBUG
-							LOG_INFO("ATTACK COLLIDER HIT BAD GUY!");
-#endif
+
 							atk->lifeTime = 0.f;
 							comp::Velocity* attackVel = attackCollider.GetComponent<comp::Velocity>();
 							if (attackVel)
@@ -362,6 +353,8 @@ void Systems::LightSystem(Scene& scene, float dt)
 
 void Systems::AISystem(HeadlessScene& scene)
 {
+	PROFILE_FUNCTION();
+
 	scene.ForEachComponent<comp::NPC>([&](Entity entity, comp::NPC& npc)
 	{
 		comp::Transform* transformNPC = entity.GetComponent<comp::Transform>();
