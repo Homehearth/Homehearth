@@ -311,21 +311,13 @@ void Systems::MovementSystem(HeadlessScene& scene, float dt)
 	{
 		PROFILE_SCOPE("Add Velocity to Transform");
 		scene.ForEachComponent<comp::Transform, comp::Velocity>([&, dt]
-		(comp::Transform& transform, comp::Velocity& velocity)
+		(Entity e, comp::Transform& transform, comp::Velocity& velocity)
 			{
 				transform.position += velocity.vel * dt;
 				transform.position.y = 1.0f;
-			
-			});
-	}
-	{
-		PROFILE_SCOPE("Update Transforms");
-		scene.ForEachComponent<comp::Transform, comp::Network>([](Entity e, comp::Transform& t, comp::Network&) 
-			{
-				if (t.previousPosition != t.position)
+				if (velocity.vel.Length() > 0.01f)
 				{
 					e.UpdateNetwork();
-					t.previousPosition = t.position;
 				}
 			});
 	}

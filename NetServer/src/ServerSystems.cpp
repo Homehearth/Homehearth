@@ -306,7 +306,7 @@ namespace Systems {
 			});
 
 		// if player is turning, turns until forward is reached
-		scene.ForEachComponent<comp::Player, comp::Transform>([&](comp::Player& p, comp::Transform& t)
+		scene.ForEachComponent<comp::Player, comp::Transform>([&](Entity e, comp::Player& p, comp::Transform& t)
 			{
 				if (p.state == comp::Player::State::TURN || p.state == comp::Player::State::ATTACK)
 				{
@@ -315,6 +315,7 @@ namespace Systems {
 					{
 						p.state = comp::Player::State::IDLE;
 					}
+					e.UpdateNetwork();
 				}
 			});
 	}
