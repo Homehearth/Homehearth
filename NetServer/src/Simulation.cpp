@@ -388,7 +388,6 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 				PROFILE_SCOPE("Systems");
 				ServerSystems::PlayerStateSystem(this, scene, e.dt);
 				ServerSystems::CheckGameOver(this, scene);
-				Systems::CharacterMovement(scene, e.dt);
 				Systems::MovementSystem(scene, e.dt);
 				Systems::MovementColliderSystem(scene, e.dt);
 				{
@@ -1011,17 +1010,17 @@ void Simulation::ResetGameScene()
 	CreateWaves();
 }
 
-void Simulation::SendEntity(Entity e, uint32_t exclude)const
+void Simulation::SendEntity(Entity e, const std::bitset<ecs::Component::COMPONENT_MAX>& componentMask)const
 {
 	message<GameMsg> msg;
 	msg.header.id = GameMsg::Game_AddEntity;
 
-	InsertEntityIntoMessage(e, msg);
+	InsertEntityIntoMessage(e, msg, componentMask);
 
 	msg << 1U;
 	msg << GetTick();
 
-	this->Broadcast(msg, exclude);
+	this->Broadcast(msg);
 }
 
 void Simulation::SendEntities(const std::vector<Entity>& entities, GameMsg msgID, const std::bitset<ecs::Component::COMPONENT_MAX>& componentMask) const

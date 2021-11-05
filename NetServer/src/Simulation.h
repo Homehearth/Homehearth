@@ -96,16 +96,16 @@ public:
 	void SetGameScene();
 	void ResetGameScene();
 	
-	void SendEntity(Entity e, uint32_t exclude = -1)const;
-	void SendEntities(const std::vector<Entity>& entities, GameMsg msgID, const std::bitset<ecs::Component::COMPONENT_MAX>& componentMask = UINT32_MAX)const;
+	void SendEntity(Entity e, const std::bitset<ecs::Component::COMPONENT_MAX>& componentMask = UINT32_MAX) const;
+	void SendEntities(const std::vector<Entity>& entities, GameMsg msgID, const std::bitset<ecs::Component::COMPONENT_MAX>& componentMask = UINT32_MAX) const;
 
-	void SendAllEntitiesToPlayer(uint32_t playerID)const;
-	void SendRemoveAllEntitiesToPlayer(uint32_t playerID)const;
-	void SendRemoveSingleEntity(Entity e)const;
-	void SendRemoveSingleEntity(uint32_t networkID)const;
+	void SendAllEntitiesToPlayer(uint32_t playerID) const;
+	void SendRemoveAllEntitiesToPlayer(uint32_t playerID) const;
+	void SendRemoveSingleEntity(Entity e) const;
+	void SendRemoveSingleEntity(uint32_t networkID) const;
 
-	void SendRemoveEntities(message<GameMsg>& msg)const;
-	void SendRemoveEntities(const std::vector<uint32_t> entitiesNetIDs)const;
+	void SendRemoveEntities(message<GameMsg>& msg) const;
+	void SendRemoveEntities(const std::vector<uint32_t> entitiesNetIDs) const;
 
 	uint32_t GetUniqueID();
 };
