@@ -12,6 +12,7 @@ Game::Game()
 {
 	this->m_localPID = -1;
 	this->m_gameID = -1;
+	m_isLeavingLobby = false;
 	this->m_predictionThreshhold = 0.001f;
 	m_waveTimer = 0;
 }
@@ -339,7 +340,12 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			{
 				m_players.at(playerID).GetComponent<comp::NamePlate>()->namePlate = playerPlate;
 				dynamic_cast<rtd::Text*>(GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i + 1))->elements[1].get())->SetText(playerPlate);
-				dynamic_cast<rtd::Text*>(GetScene("Game").GetCollection("dynamicPlayer" + std::to_string(i + 1) + "namePlate")->elements[0].get())->SetText(playerPlate);
+				rtd::Text* plT = dynamic_cast<rtd::Text*>(GetScene("Game").GetCollection("dynamicPlayer" + std::to_string(i + 1) + "namePlate")->elements[0].get());
+				if (plT)
+				{
+					plT->SetText(playerPlate);
+					plT->SetStretch(D2D1Core::GetDefaultFontSize() * plT->GetText().length(), D2D1Core::GetDefaultFontSize());
+				}
 			}
 		}
 
@@ -358,13 +364,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		Scene& gameScene = GetScene("Game");
 		// Map healthbars to players.
 		GameSystems::UpdateHealthbar(gameScene);
-
-		for (size_t i = 0; i < count; i++)
-		{
-			Collection2D* collect = gameScene.GetCollection("player" + std::to_string(i + 1) + "Info");
-			collect->Show();
-			dynamic_cast<rtd::Text*>(collect->elements[1].get())->SetText(ids[i]);
-		}
 		break;
 
 	}

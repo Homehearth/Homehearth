@@ -19,6 +19,11 @@ void Text::SetText(const std::string& displayText)
     m_text = displayText;
 }
 
+const std::string& rtd::Text::GetText() const
+{
+    return m_text;
+}
+
 void rtd::Text::SetPosition(const float& x, const float& y)
 {
     m_opts.x_pos = x;
@@ -34,6 +39,12 @@ const sm::Vector2 rtd::Text::GetPosition() const
 void rtd::Text::SetScale(float scale)
 {
     m_opts.scale = scale;
+}
+
+void rtd::Text::SetStretch(const float& x, const float& y)
+{
+    m_opts.x_stretch = x;
+    m_opts.y_stretch = y;
 }
 
 bool Text::SetFormat(const WCHAR* fontName, 

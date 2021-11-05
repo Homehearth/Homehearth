@@ -10,7 +10,7 @@ LRESULT CALLBACK Window::WinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 	switch (uMsg)
 	{
 	case WM_ACTIVATE:
-		ConfineCursor(hwnd);
+		//ConfineCursor(hwnd);
 		break;
 	case WM_NCCREATE:
 		LOG_INFO("Window has been created.");
@@ -156,7 +156,7 @@ bool Window::Initialize(const Desc& desc)
 #else
 	ShowWindow(this->m_hWnd, SW_NORMAL);
 #endif
-	ConfineCursor(this->m_hWnd);
+	//ConfineCursor(this->m_hWnd);
 
 	this->m_windowDesc = desc;
 

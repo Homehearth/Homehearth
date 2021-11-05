@@ -8,6 +8,6 @@ namespace GameSystems
 	void MRayIntersectBoxSystem(Scene& scene);
 	void RenderIsCollidingSystem(Scene& scene);
 	void UpdateHealthbar(Scene& scene);
-	void UpdateNamePlate(Scene& scene);
+	void UpdatePlayerVisuals(Scene& scene);
 }
 

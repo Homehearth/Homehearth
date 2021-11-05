@@ -135,7 +135,6 @@ namespace sceneHelp
 		//CreateLightEntity(gameScene, { 348.5f, 29.f, 325.5f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 142.f, 10.f, 0.f }, 2.f, TypeLight::POINT, 1);
 
 		InputSystem::Get().SetCamera(gameScene.GetCurrentCamera());
-		GameSystems::UpdateHealthbar(gameScene);
 
 		gameScene.on<ESceneUpdate>([cameraEntity, debugCameraEntity](const ESceneUpdate& e, Scene& scene)
 			{
@@ -147,7 +146,7 @@ namespace sceneHelp
 				);
 
 				GameSystems::RenderIsCollidingSystem(scene);
-				GameSystems::UpdateNamePlate(scene);
+				GameSystems::UpdatePlayerVisuals(scene);
 #ifdef _DEBUG
 				if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Space, KeyState::RELEASED))
 				{
@@ -260,16 +259,16 @@ void sceneHelp::SetupInGameScreen(Game* game)
 		Collection2D* playerHp = new Collection2D;
 
 		// Initiate 3 healthbars. for each player.
-		playerHp->AddElement<rtd::Healthbar>(draw_t(width / 8, (i * ((height / 12)) + (height / 32)), (width / 4), (height / 16)));
+		playerHp->AddElement<rtd::Healthbar>(draw_t(width / 8, (i * ((height / 12)) + (height / 32)), (width / 8), (height / 24)));
 
 		// You and Friend text
 		if (i == 0)
 		{
-			playerHp->AddElement<rtd::Text>("You:", draw_text_t(0, (i * ((height / 12)) + (height / 32)), (width / 8), height / 16));
+			//playerHp->AddElement<rtd::Text>("You:", draw_text_t(0, (i * ((height / 12)) + (height / 32)), (width / 8), height / 16));
 		}
 		else
 		{
-			playerHp->AddElement<rtd::Text>("Friend:", draw_text_t(0, (i * ((height / 12)) + (height / 32)), width / 8, height / 16));
+			//playerHp->AddElement<rtd::Text>("Friend:", draw_text_t(0, (i * ((height / 12)) + (height / 32)), width / 8, height / 16));
 			playerHp->Hide();
 		}
 		scene.Add2DCollection(playerHp, "player" + std::to_string(i + 1) + "Info");
@@ -297,14 +296,6 @@ void sceneHelp::SetupInGameScreen(Game* game)
 		buildCollection->AddElement<rtd::Picture>(texture2, draw_t((width - (width / 12)) - (i * (width / 12)), height - (height / 8), width / 16, height / 9));
 	}
 	scene.Add2DCollection(buildCollection, "builds");
-
-	for (int i = 0; i < MAX_PLAYERS_PER_LOBBY; i++)
-	{
-		Collection2D* nameCollection = new Collection2D;
-		nameCollection->AddElement<rtd::Text>("Player" + std::to_string(i + 1), draw_text_t(0, 0, width / 16, height / 9));
-		scene.Add2DCollection(nameCollection, "player" + std::to_string(i + 1) + "namePlate");
-		nameCollection->Hide();
-	}
 
 	for (int i = 0; i < MAX_PLAYERS_PER_LOBBY; i++)
 	{
@@ -445,7 +436,7 @@ void sceneHelp::SetupLobbyJoinScreen(Game* game)
 
 
 	Collection2D* nameCollection = new Collection2D;
-	rtd::TextField* nameInputField = nameCollection->AddElement<rtd::TextField>(draw_text_t((width / 2) - (width / 8), height / 8, width / 4, D2D1Core::GetDefaultFontSize()), 6);
+	rtd::TextField* nameInputField = nameCollection->AddElement<rtd::TextField>(draw_text_t((width / 2) - (width / 8), height / 8, width / 4, D2D1Core::GetDefaultFontSize()), 12);
 	nameInputField->SetDescriptionText("Input Name");
 	//nameInputField->SetPresetText("Noobie");
 	scene.Add2DCollection(nameCollection, "nameInput");

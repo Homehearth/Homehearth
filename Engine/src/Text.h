@@ -29,7 +29,7 @@ namespace rtd
 			Set the text to display.
 		*/
 		void SetText(const std::string& displayText);
-
+		const std::string& GetText() const;
 
 		/*
 			Set the position of the text.
@@ -41,7 +41,7 @@ namespace rtd
 			Set the scale of the text.
 		*/
 		void SetScale(float scale);
-
+		void SetStretch(const float& x, const float& y);
 
 		/*
 			Create a custom format to use for this text element.
