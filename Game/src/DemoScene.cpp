@@ -8,6 +8,7 @@
 #include "Slider.h"
 #include "Collection2D.h"
 #include "Healthbar.h"
+#include "Scroller.h"
 
 #include <windows.h>
 #include <shellapi.h>
@@ -202,11 +203,14 @@ void sceneHelp::SetupMainMenuScreen(Game* game)
 	rtd::TextField* portField = connectFields->AddElement<rtd::TextField>(draw_text_t(width / 4 + (width / 3.33f), height * 0.55f, width * 0.15f, D2D1Core::GetDefaultFontSize()), 6);
 	portField->SetDescriptionText("Port:");
 	rtd::Button* connectButton = connectFields->AddElement<rtd::Button>("StartButton.png", draw_t((width / 2) - (width / 8.f), height - (height * 0.25f), width / 4.f, height * 0.15f));
-	rtd::Button* exitButton = connectFields->AddElement<rtd::Button>("demoExitButton.png", draw_t(0.0f, 0.0f, width / 24, height / 16));
-	exitButton->SetOnPressedEvent([=] {
-		game->Shutdown();
-		});
+	//rtd::Button* exitButton = connectFields->AddElement<rtd::Button>("demoExitButton.png", draw_t(0.0f, 0.0f, width / 24, height / 16));
+	//exitButton->SetOnPressedEvent([=] {
+	//game->Shutdown();
+	//	});
 
+	Collection2D* test = new Collection2D;
+	test->AddElement<rtd::Scroller>(draw_t(0.0f, -480.0f, 160.0f, 480.0f), sm::Vector2(0, 0));
+	scene.Add2DCollection(test, "test");
 
 	rtd::Button* externalLinkBtn = connectFields->AddElement<rtd::Button>("Button.png", draw_t(width - width / 4.f, height - (height / 5), width / 8.f, height / 16));
 	externalLinkBtn->GetText()->SetScale(0.5f);
