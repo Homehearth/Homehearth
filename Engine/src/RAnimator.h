@@ -18,7 +18,7 @@ const UINT T2D_BONESLOT = 11;
 class RAnimator : public resource::GResource
 {
 private:
-	double							m_frameTime;
+	double							m_currentFrameTime;
 	bool							m_useInterpolation;
 	std::vector<bone_keyFrames_t>	m_bones;
 	std::unordered_map<std::string, std::shared_ptr<RAnimation>> m_animations;

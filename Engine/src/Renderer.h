@@ -17,10 +17,7 @@ private:
 	DepthPass		m_depthPass;
 	DebugPass		m_debugPass;
 	AnimationPass	m_animPass;
-	unsigned int m_currentPass = 0;
-
-	// Update per frame related resources.
-	void UpdatePerFrame(Camera* pCam);
+	unsigned int	m_currentPass = 0;
 	
 	// Add a pass to the list.
 	void AddPass(IRenderPass* pass);

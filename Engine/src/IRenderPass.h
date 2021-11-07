@@ -33,7 +33,7 @@ public:
 	PipelineManager* GetPipelineManager() const { return m_pipelineManager; }
 	
 	// Methods to override.
-	virtual void PreRender(Camera* pCam = nullptr, ID3D11DeviceContext * pDeviceContext = D3D11Core::Get().DeviceContext()) = 0;
+	virtual void PreRender(ID3D11DeviceContext * pDeviceContext = D3D11Core::Get().DeviceContext()) = 0;
 	virtual void Render(Scene* pScene) = 0;
 	virtual void PostRender(ID3D11DeviceContext* pDeviceContext = D3D11Core::Get().DeviceContext()) = 0;
 	virtual void SetLights(Lights* light);

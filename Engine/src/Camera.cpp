@@ -17,12 +17,19 @@ Camera::Camera()
 	m_rotationSpeed			= 2.5f;
 	m_movingSpeed			= 15.0f;
 	m_type					= CAMERATYPE::DEFAULT;
-	m_viewConstantBuffer	= nullptr;
 }
 
 Camera::~Camera()
 {
 
+}
+
+void Camera::UpdateConstantBuffer()
+{
+	D3D11_MAPPED_SUBRESOURCE submap;
+	D3D11Core::Get().DeviceContext()->Map(m_CameraConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &submap);
+	memcpy(submap.pData, &m_cameraMat, sizeof(camera_Matrix_t));
+	D3D11Core::Get().DeviceContext()->Unmap(m_CameraConstantBuffer.Get(), 0);
 }
 
 void Camera::Initialize(sm::Vector3 pos, sm::Vector3 target, sm::Vector3 up, sm::Vector2 windowSize, CAMERATYPE type)
@@ -51,39 +58,39 @@ void Camera::Initialize(sm::Vector3 pos, sm::Vector3 target, sm::Vector3 up, sm:
 	m_cameraMat.view = m_view;
 
 	//Constant buffer already created
-	if (m_viewConstantBuffer != nullptr)
+	if (m_CameraConstantBuffer)
 	{
-		D3D11Core::Get().DeviceContext()->UpdateSubresource(m_viewConstantBuffer.Get(), 0, nullptr, &m_cameraMat, 0, 0);
-		return;
+		UpdateConstantBuffer();
 	}
-	
-	// Create new Constant buffer
-	D3D11_BUFFER_DESC desc;
-	desc.ByteWidth = sizeof(camera_Matrix_t);
-	desc.Usage = D3D11_USAGE_DEFAULT;
-	desc.CPUAccessFlags = 0;
-	desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	desc.MiscFlags = 0;
-
-	D3D11_SUBRESOURCE_DATA data;
-	data.pSysMem = &m_cameraMat;
-	data.SysMemPitch = 0;
-	data.SysMemSlicePitch = 0;
-	HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&desc, &data, m_viewConstantBuffer.GetAddressOf());
-	if (FAILED(hr))
+	else
 	{
-		LOG_ERROR("Camera couldnt create constant buffer");
+		// Create new Constant buffer
+		D3D11_BUFFER_DESC desc;
+		desc.ByteWidth			= sizeof(camera_Matrix_t);
+		desc.Usage				= D3D11_USAGE_DYNAMIC;
+		desc.CPUAccessFlags		= D3D11_CPU_ACCESS_WRITE;
+		desc.BindFlags			= D3D11_BIND_CONSTANT_BUFFER;
+		desc.MiscFlags			= 0;
+
+		D3D11_SUBRESOURCE_DATA data;
+		data.pSysMem = &m_cameraMat;
+		data.SysMemPitch = 0;
+		data.SysMemSlicePitch = 0;
+		HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&desc, &data, m_CameraConstantBuffer.GetAddressOf());
+		if (FAILED(hr))
+		{
+			LOG_ERROR("Camera couldnt create constant buffer");
+		}
 	}
 }
 
-void Camera::Update(float deltaTime)
+void Camera::Update()
 {
-
 	if (m_type == CAMERATYPE::DEBUG && InputSystem::Get().IsMouseRelative()) //Can't move the camera when in absolut mode
 	{
 		//Mouse
-		m_rollPitchYaw.z += (float)InputSystem::Get().GetMousePos().x * m_rotationSpeed * deltaTime;
-		m_rollPitchYaw.y -= (float)InputSystem::Get().GetMousePos().y * m_rotationSpeed * deltaTime;
+		m_rollPitchYaw.z += (float)InputSystem::Get().GetMousePos().x * m_rotationSpeed * Stats::Get().GetFrameTime();
+		m_rollPitchYaw.y -= (float)InputSystem::Get().GetMousePos().y * m_rotationSpeed * Stats::Get().GetFrameTime();
 
 		quaterion = sm::Quaternion::CreateFromYawPitchRoll(m_rollPitchYaw.z, m_rollPitchYaw.y, m_rollPitchYaw.x);
 		m_rotationMatrix = dx::XMMatrixRotationRollPitchYaw(m_rollPitchYaw.y, m_rollPitchYaw.z, m_rollPitchYaw.x);
@@ -97,14 +104,14 @@ void Camera::Update(float deltaTime)
 		//Keyboard
 		if (KEYPRESS(dx::Keyboard::E, KeyState::HELD)) //Down
 		{
-			m_move.y -= speed * deltaTime;
+			m_move.y -= speed * Stats::Get().GetFrameTime();
 		}
 		if (KEYPRESS(dx::Keyboard::Q, KeyState::HELD)) //UP
 		{
-			m_move.y += speed * deltaTime;
+			m_move.y += speed * Stats::Get().GetFrameTime();
 		}
-		m_move.x = static_cast<float>(InputSystem::Get().GetAxis(Axis::HORIZONTAL)) * speed * deltaTime;
-		m_move.z = static_cast<float>(InputSystem::Get().GetAxis(Axis::VERTICAL)) * speed * deltaTime;
+		m_move.x = static_cast<float>(InputSystem::Get().GetAxis(Axis::HORIZONTAL)) * speed * Stats::Get().GetFrameTime();
+		m_move.z = static_cast<float>(InputSystem::Get().GetAxis(Axis::VERTICAL)) * speed * Stats::Get().GetFrameTime();
 
 		//Update camera values
 		m_right = dx::XMVector3TransformNormal(m_defaultRight, m_rotationMatrix);
@@ -187,12 +194,25 @@ void Camera::Update(float deltaTime)
 	m_cameraMat.target = { m_target.x, m_target.y, m_target.z, 0 };
 	m_cameraMat.projection = m_projection;
 	m_cameraMat.view = m_view;
+
+	UpdateConstantBuffer();
 }
 
 void Camera::SetFollowEntity(const Entity& entity)
 {
 	m_targetEntity = entity;
 	m_target = entity.GetComponent<comp::Transform>()->position;
+}
+
+void Camera::BindCB()
+{
+	D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(CB_CAM_SLOT, 1, m_CameraConstantBuffer.GetAddressOf());
+}
+
+void Camera::UnbindCB()
+{
+	ComPtr<ID3D11Buffer> nullbuffer;
+	D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(CB_CAM_SLOT, 1, nullbuffer.GetAddressOf());
 }
 
 
@@ -282,5 +302,4 @@ void Camera::SetRollPitchYaw(sm::Vector3 rotation)
 void Camera::UpdateProjection()
 {
 	m_projection = dx::XMMatrixPerspectiveFovLH(m_FOV * m_zoomValue, m_aspectRatio, m_nearPlane, m_farPlane);
-
 }

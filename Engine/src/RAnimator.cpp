@@ -3,7 +3,7 @@
 
 RAnimator::RAnimator()
 {
-	m_frameTime = 0;
+	m_currentFrameTime = 0;
 	m_useInterpolation = false;
 }
 
@@ -142,16 +142,16 @@ void RAnimator::Update()
 {
 	if (!m_bones.empty() && m_currentAnim)
 	{
-		double tickDT = m_currentAnim->GetTicksPerFrame() * Stats::GetDeltaTime();
-		m_frameTime = fmod(m_frameTime + tickDT, m_currentAnim->GetDuraction());
-		double nextFrameTime = m_frameTime + tickDT;
+		double tickFT = m_currentAnim->GetTicksPerFrame() * Stats::Get().GetFrameTime();
+		m_currentFrameTime = fmod(m_currentFrameTime + tickFT, m_currentAnim->GetDuraction());
+		double nextFrameTime = m_currentFrameTime + tickFT;
 
 		std::vector<sm::Matrix> modelMatrices;
 		modelMatrices.resize(m_bones.size(), sm::Matrix::Identity);
 
 		for (size_t i = 0; i < m_bones.size(); i++)
 		{
-			sm::Matrix localMatrix = m_currentAnim->GetMatrix(m_bones[i].name, m_frameTime, nextFrameTime, m_bones[i].lastKeys, m_useInterpolation);
+			sm::Matrix localMatrix = m_currentAnim->GetMatrix(m_bones[i].name, m_currentFrameTime, nextFrameTime, m_bones[i].lastKeys, m_useInterpolation);
 
 			if (m_bones[i].parentIndex == -1)
 				modelMatrices[i] = localMatrix;

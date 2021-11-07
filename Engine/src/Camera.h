@@ -2,6 +2,8 @@
 #include "EnginePCH.h"
 #include "Components.h"
 
+#define CB_CAM_SLOT 1
+
 enum class CAMERATYPE
 {
 	DEFAULT,
@@ -34,21 +36,28 @@ private:
 	float m_rotationSpeed;
 	float m_movingSpeed;
 
-	camera_Matrix_t m_cameraMat;
 	sm::Quaternion quaterion;
 	CAMERATYPE m_type;
 
 	/*Run in all the set functions*/
 	void UpdateProjection();
 
+
+	camera_Matrix_t m_cameraMat;
+	ComPtr<ID3D11Buffer> m_CameraConstantBuffer;
+	void UpdateConstantBuffer();
+
 public:
 	Camera();
 	~Camera();
 	/* Position, Target, up, windowSize = (window width, window height) */
 	void Initialize(sm::Vector3 pos, sm::Vector3 target, sm::Vector3 up, sm::Vector2 windowSize, CAMERATYPE type) ;
-	void Update(float deltaTime);
+	void Update();
 	void SetFollowEntity(const Entity& entity);
 
+	//Bind the camera to shader
+	void BindCB();
+	void UnbindCB();
 
 	//Get Functions
 	sm::Matrix GetView() const;
@@ -69,9 +78,6 @@ public:
 	/*Val can only be between 0 and 1, 1 is normal*/
 	void SetZoom(float val);
 	void SetRollPitchYaw(sm::Vector3 rotation);
-
-	//Public variables and stuff for IMGU
-	ComPtr<ID3D11Buffer> m_viewConstantBuffer;
 
 	float m_FOV;
 	float m_zoomValue;

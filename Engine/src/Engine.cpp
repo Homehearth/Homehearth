@@ -8,7 +8,6 @@ bool Engine::s_safeExit = false;
 
 Engine::Engine()
 	: BasicEngine()
-	//, m_frameTime()
 {
 	LOG_INFO("Engine(): " __TIMESTAMP__);
 }
@@ -113,7 +112,7 @@ void Engine::drawImGUI() const
 {
 	//Containers for plotting
 	static std::vector<float> fpsContainer;
-	//static std::vector<float> fpsUpdateContainer;
+	static std::vector<float> fpsUpdateContainer;
 	static std::vector<float> ramUsageContainer;
 	static std::vector<float> vRamUsageContainer;
 
@@ -121,8 +120,8 @@ void Engine::drawImGUI() const
 	static int dots = 0;
 	if (timer.GetElapsedTime<std::chrono::duration<float>>() > 0.5f)
 	{
-		fpsContainer.emplace_back(static_cast<float>(Stats::GetCurrentFPS()));
-		//fpsUpdateContainer.emplace_back(static_cast<float>(Stats::GetUpdateFPS()));
+		fpsContainer.emplace_back(1.f / Stats::Get().GetFrameTime());
+		fpsUpdateContainer.emplace_back(1.f / Stats::Get().GetUpdateTime());
 		ramUsageContainer.emplace_back((Profiler::GetRAMUsage() / (1024.f * 1024.f)));
 		vRamUsageContainer.emplace_back((Profiler::GetVRAMUsage() / (1042.f * 1024.f)));
 		timer.Start();
@@ -132,8 +131,8 @@ void Engine::drawImGUI() const
 	if (fpsContainer.size() > 10)
 		fpsContainer.erase(fpsContainer.begin());
 
-	/*if (fpsUpdateContainer.size() > 10)
-		fpsUpdateContainer.erase(fpsUpdateContainer.begin());*/
+	if (fpsUpdateContainer.size() > 10)
+		fpsUpdateContainer.erase(fpsUpdateContainer.begin());
 
 	if (ramUsageContainer.size() > 10)
 		ramUsageContainer.erase(ramUsageContainer.begin());
@@ -176,10 +175,10 @@ void Engine::drawImGUI() const
 #endif
 	if (ImGui::CollapsingHeader("FPS"))
 	{
-		ImGui::PlotLines(("FPS: " + std::to_string(Stats::GetCurrentFPS())).c_str(), fpsContainer.data(), static_cast<int>(fpsContainer.size()), 0, nullptr, 0.0f, Stats::GetMaxFPS(), ImVec2(150, 50));
+		ImGui::PlotLines(("FPS: " + std::to_string(1.f / Stats::Get().GetFrameTime())).c_str(), fpsContainer.data(), static_cast<int>(fpsContainer.size()), 0, nullptr, 0.0f, Stats::Get().GetFramerate(), ImVec2(150, 50));
 		ImGui::Spacing();
-		/*ImGui::PlotLines(("Update FPS: " + std::to_string(Stats::GetUpdateFPS())).c_str(), fpsUpdateContainer.data(), static_cast<int>(fpsUpdateContainer.size()), 0, nullptr, 0.0f, 144.0f, ImVec2(150, 50));
-		ImGui::Spacing();*/
+		ImGui::PlotLines(("Update FPS: " + std::to_string(1.f / Stats::Get().GetUpdateTime())).c_str(), fpsUpdateContainer.data(), static_cast<int>(fpsUpdateContainer.size()), 0, nullptr, 0.0f, Stats::Get().GetUpdaterate(), ImVec2(150, 50));
+		ImGui::Spacing();
 	}
 
 	if (ImGui::CollapsingHeader("Memory"))
@@ -365,24 +364,26 @@ void Engine::RenderThread()
 	float deltaTime = 0.f;
 	float frameTime = 0.f;
 
-	const float targetDelta = 1.0f / Stats::GetMaxFPS();
+	//Need to place inside of the loop if we have to update it from settings
+	const float targetDelta = 1.0f / Stats::Get().GetFramerate();
+
 	while (IsRunning())
 	{
 		currentFrame = omp_get_wtime();
 		deltaTime = static_cast<float>(currentFrame - lastFrame);
-		
+		frameTime += deltaTime;
+
 		//Render every now and then
 		if (frameTime >= targetDelta)
 		{
 			if (GetCurrentScene()->IsRenderReady()) 
 			{
-				Stats::SetDeltaTime(frameTime);
+				Stats::Get().SetFrameTime(frameTime);
 				Render(frameTime);
-				//m_frameTime.render = deltaSum;
 				frameTime = 0.f;
 			}
 		}
-		frameTime += deltaTime;
+		
 		lastFrame = currentFrame;
 	}
 
@@ -424,8 +425,8 @@ void Engine::Update(float dt)
 		);
 	}
 
-	OnUserUpdate(dt);
-	BasicEngine::Update(dt);
+	OnUserUpdate(Stats::Get().GetUpdateTime());
+	BasicEngine::Update(Stats::Get().GetUpdateTime());
 
 	{
 		PROFILE_SCOPE("Ending ImGui");

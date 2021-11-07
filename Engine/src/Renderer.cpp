@@ -51,10 +51,12 @@ void Renderer::Render(Scene* pScene)
 	{
 		if (!m_passes.empty())
 		{
-			this->UpdatePerFrame(pScene->GetCurrentCamera());
+			//Update and bind the camera once
+			pScene->GetCurrentCamera()->Update();
+			pScene->GetCurrentCamera()->BindCB();
 			thread::RenderThreadHandler::SetCamera(pScene->GetCurrentCamera());
 			/*
-				Optimize idead: Render/Update lights once instead of per pass?
+				Optimize idea: Render/Update lights once instead of per pass?
 				Set lights once.
 			*/
 			for (int i = 0; i < m_passes.size(); i++)
@@ -64,13 +66,14 @@ void Renderer::Render(Scene* pScene)
 				if (pass->IsEnabled())
 				{
 					pass->SetLights(pScene->GetLights());
-					pass->PreRender(pScene->GetCurrentCamera());
+					pass->PreRender();
 					pass->Render(pScene);
 					pass->PostRender();
 				}
 			}
 
 			pScene->ReadyForSwap();
+			pScene->GetCurrentCamera()->UnbindCB();
 		}
 	}
 }
@@ -83,10 +86,4 @@ IRenderPass* Renderer::GetCurrentPass() const
 void Renderer::AddPass(IRenderPass* pass)
 {
 	m_passes.emplace_back(pass);
-}
-
-void Renderer::UpdatePerFrame(Camera* pCam)
-{
-	// Update Camera constant buffer.
-	m_d3d11->DeviceContext()->UpdateSubresource(pCam->m_viewConstantBuffer.Get(), 0, nullptr, pCam->GetCameraMatrixes(), 0, 0);
 }

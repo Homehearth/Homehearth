@@ -121,8 +121,8 @@ void BasicEngine<SceneType>::Run()
 	float deltaTime = 0.f;
 	float update_time = 0.f;
 	float network_time = 0.f;
-	const float TARGET_UPDATE = 1.f / Stats::GetMaxFPS();
-	const float TICK_RATE = 1.f / 60.f;
+	const float TARGET_UPDATE	= 1.f / Stats::Get().GetUpdaterate();
+	const float TICK_RATE		= 1.f / Stats::Get().GetTickrate();
 
 	while (IsRunning())
 	{
@@ -130,16 +130,19 @@ void BasicEngine<SceneType>::Run()
 		// Update time.
 		currentFrame = omp_get_wtime();
 		deltaTime = static_cast<float>(currentFrame - lastFrame);
+		Stats::Get().SetDeltaTime(deltaTime);
 
 		network_time += deltaTime;
 		update_time += deltaTime;
 		if (update_time >= TARGET_UPDATE)
 		{
+			Stats::Get().SetUpdateTime(update_time);
 			Update(update_time);
 			update_time = 0.0f;
 		}
 		if (network_time >= TICK_RATE)
 		{
+			Stats::Get().SetNetworkTime(network_time);
 			UpdateNetwork(network_time);
 			network_time = 0.0f;
 		}
