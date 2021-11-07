@@ -109,7 +109,24 @@ bool RAnimator::Create(const std::string& filename)
 		std::string keyword;
 		ss >> keyword;
 
-		if (keyword == "loadAnim")
+		if (keyword == "skel")
+		{
+			std::string modelName;
+			ss >> modelName;
+
+			std::shared_ptr<RModel> model = ResourceManager::Get().GetResource<RModel>(modelName);
+			if (model)
+			{
+				if (!LoadSkeleton(model->GetSkeleton()))
+				{
+#ifdef _DEBUG
+					LOG_WARNING("Animator %s could not load in skeleton...", filename.c_str());
+#endif // _DEBUG
+					return false;
+				}
+			}
+		}
+		else if (keyword == "anim")
 		{
 			std::string key;
 			std::string animName;
@@ -121,7 +138,7 @@ bool RAnimator::Create(const std::string& filename)
 				m_animations[key] = animation;
 			}
 		}
-		else if (keyword == "setCurrentAnim")
+		else if (keyword == "currentAnim")
 		{
 			std::string key;
 			ss >> key;

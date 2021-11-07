@@ -1,0 +1,9 @@
+//Skeleton based on model
+skel							Enemy1.fbx
+
+//List of animations
+anim 			idle 			Idle.fbx
+anim 			running 		Running.fbx
+anim 			slash 			Slash.fbx
+anim 			takesDamage 	TakesDamage.fbx
+currentAnim 	running

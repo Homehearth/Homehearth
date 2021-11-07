@@ -485,23 +485,7 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 			{
 				comp::AnimatorName animName;
 				msg >> animName.name;
-
-				//Get model
-				comp::Renderable* renderable = e.GetComponent<comp::Renderable>();
-				if(renderable && renderable->model)
-				{
-
-					//Add an animator if we can get it
-					if (!animName.name.empty())
-					{
-						std::shared_ptr<RAnimator> anim = ResourceManager::Get().CopyResource<RAnimator>(animName.name, true);
-						if (anim)
-						{
-							if (anim->LoadSkeleton(renderable->model->GetSkeleton()))
-								e.AddComponent<comp::Animator>()->animator = anim;
-						}
-					}
-				}
+				e.AddComponent<comp::Animator>()->animator = ResourceManager::Get().CopyResource<RAnimator>(animName.name, true);
 				break;
 			}
 			case ecs::Component::NAME_PLATE:

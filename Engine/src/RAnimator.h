@@ -6,13 +6,15 @@ const UINT T2D_BONESLOT = 11;
 
 /*
 	Loads in an animator from our custom format ".anim"
-
-	Can be used as an Resource an reused for multiple entities. 
-	But will use the same animation in that case.
 	
 	Prefixes:
-	* 
+	* Load in skeleton-hierchy:		"skel			Knight.fbx"
+	* Load in an animation:			"anim			idle		idle.fbx"
+	* Set current start animation:  "currentAnim	idle"
 
+	Can be used as an Resource and reused for multiple entities. 
+	But will use the same animation in that case.
+	
 */
 
 class RAnimator : public resource::GResource
@@ -32,16 +34,13 @@ private:
 	ComPtr<ID3D11ShaderResourceView> m_bonesSB_RSV;
 
 private:
-	//void LoadAnimations(const std::vector<std::string>& animNames);
+	bool LoadSkeleton(const std::vector<bone_t>& skeleton);
 	bool CreateBonesSB();
 	void UpdateStructureBuffer();
 
 public:
 	RAnimator();
 	~RAnimator();
-
-	//Load in the skeleton from a model
-	bool LoadSkeleton(const std::vector<bone_t>& skeleton);
 
 	//Enable or disable interpolation
 	void SetInterpolation(bool& toggle);

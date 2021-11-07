@@ -1,9 +1,14 @@
+//Skeleton based on model
+skel							Knight.fbx
+
 //List of animations
-loadAnim 	idle 		Idle.fbx
-loadAnim 	running 	Running.fbx
-loadAnim 	slash 		Slash.fbx
-loadAnim 	takesDamage 	TakesDamage.fbx
-setCurrentAnim 	running
+anim 			idle 			Knight_Idle.fbx
+anim 			running 		Knight_Running.fbx
+anim 			slash 			Knight_Slash.fbx
+anim 			takesDamage 	Knight_TakesDamage.fbx
+currentAnim 	idle
+
+
 
 
 /*
