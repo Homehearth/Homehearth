@@ -56,6 +56,8 @@ private:
 	void ConnectNodes(comp::Node* node1, comp::Node* node2);
 	comp::Node* GetAINodeById(sm::Vector2 id);
 
+	void BuildMapColliders(std::vector<dx::BoundingOrientedBox>* mapColliders);
+
 public:
 	Simulation(Server* pServer, HeadlessEngine* pEngine);
 	virtual ~Simulation() = default;
@@ -65,6 +67,7 @@ public:
 
 	// -1 will be defaulted to max value of unsigned 32 bit integer
 	void Broadcast(message<GameMsg>& msg, uint32_t exclude = -1)const;
+	void BroadcastUDP(message<GameMsg>& msg, uint32_t exclude = -1)const;
 
 	bool AddPlayer(uint32_t playerID, const std::string& namePlate = "Noobie");
 	bool RemovePlayer(uint32_t playerID);

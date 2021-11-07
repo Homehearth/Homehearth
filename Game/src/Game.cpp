@@ -426,6 +426,8 @@ void Game::OnClientDisconnect()
 
 	SetScene("MainMenu");
 
+	m_client.m_qPrioMessagesIn.clear();
+	m_client.m_qMessagesIn.clear();
 	LOG_INFO("Disconnected from server!");
 }
 
