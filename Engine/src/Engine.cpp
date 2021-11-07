@@ -379,7 +379,7 @@ void Engine::RenderThread()
 			if (GetCurrentScene()->IsRenderReady()) 
 			{
 				Stats::Get().SetFrameTime(frameTime);
-				Render(frameTime);
+				Render();
 				frameTime = 0.f;
 			}
 		}
@@ -439,7 +439,7 @@ void Engine::Update(float dt)
 	}
 }
 
-void Engine::Render(float& dt)
+void Engine::Render()
 {
 	PROFILE_FUNCTION();
 

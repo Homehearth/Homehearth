@@ -6,6 +6,7 @@ private:
 	Stats();
 	~Stats() = default;
 
+	//How long since last update
 	float m_deltaTime;
 	float m_frameTime;
 	float m_updateTime;
