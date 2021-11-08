@@ -216,12 +216,20 @@ void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& sce
 				p.respawnTimer = 10.f;
 				health.isAlive = false;
 				e.AddComponent<comp::MeshName>("Skull.obj");
+				e.RemoveComponent<comp::Tag<TagType::DYNAMIC>>();
 				e.UpdateNetwork();
 				LOG_INFO("Player id %u died...", net.id);
 			}
 
 			if(p.state == comp::Player::State::DEAD)
 			{
+				comp::Velocity* vel = e.GetComponent<comp::Velocity>();
+				if (vel)
+				{
+					// dont move if in dead state
+					vel->vel = sm::Vector3::Zero;
+				}
+
 				p.respawnTimer -= dt;
 
 				if(p.respawnTimer < 0.01f)
