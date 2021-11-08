@@ -530,91 +530,91 @@ bool Simulation::AICreateNodes()
 	for (int i = 0; i < tiles->size(); i++)
 	{
 		comp::Tile* entityTile = tiles->at(i).GetComponent<comp::Tile>();
-		sm::Vector2 currentID = entityTile->gridID;
+		Vector2I currentID = entityTile->gridID;
 		//Get Neighbors
 		Entity* currentTile = m_grid.GetTileByID(currentID);
 		if ((currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
 			|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
 		{
-			currentTile = m_grid.GetTileByID(currentID + sm::Vector2(-1, 0));
+			currentTile = m_grid.GetTileByID(currentID + Vector2I(-1, 0));
 			//TODO: Improve this bad code. EXTREMELY TEMPORARY
 			//Left
 			if (currentTile && (currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
 				|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
 			{
-				if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID + sm::Vector2(-1, 0))))
+				if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID + Vector2I(-1, 0))))
 				{
-					nodes.at(i)->connections.push_back(GetAINodeById(currentID + sm::Vector2(-1, 0)));
+					nodes.at(i)->connections.push_back(GetAINodeById(currentID + Vector2I(-1, 0)));
 				}
 			}
-			currentTile = m_grid.GetTileByID(currentID + sm::Vector2(-1, 1));
+			currentTile = m_grid.GetTileByID(currentID + Vector2I(-1, 1));
 			//Up-left
 			if (currentTile && (currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
 				|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
 			{
-				if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID + sm::Vector2(-1, 1))))
+				if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID + Vector2I(-1, 1))))
 				{
-					nodes.at(i)->connections.push_back(GetAINodeById(currentID + sm::Vector2(-1, 1)));
+					nodes.at(i)->connections.push_back(GetAINodeById(currentID + Vector2I(-1, 1)));
 				}
 			}
-			currentTile = m_grid.GetTileByID(currentID + sm::Vector2(1, 0));
+			currentTile = m_grid.GetTileByID(currentID + Vector2I(1, 0));
 			//Right
 			if (currentTile && (currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
 				|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
 			{
-				if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID + sm::Vector2(1, 0))))
+				if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID + Vector2I(1, 0))))
 				{
-					nodes.at(i)->connections.push_back(GetAINodeById(currentID + sm::Vector2(1, 0)));
+					nodes.at(i)->connections.push_back(GetAINodeById(currentID + Vector2I(1, 0)));
 				}
 			}
-			currentTile = m_grid.GetTileByID(currentID + sm::Vector2(1, 1));
+			currentTile = m_grid.GetTileByID(currentID + Vector2I(1, 1));
 			//Up-right
 			if (currentTile && (currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
 				|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
 			{
-				if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID + sm::Vector2(1, 1))))
+				if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID + Vector2I(1, 1))))
 				{
-					nodes.at(i)->connections.push_back(GetAINodeById(currentID + sm::Vector2(1, 1)));
+					nodes.at(i)->connections.push_back(GetAINodeById(currentID + Vector2I(1, 1)));
 				}
 			}
-			currentTile = m_grid.GetTileByID(currentID + sm::Vector2(0, 1));
+			currentTile = m_grid.GetTileByID(currentID + Vector2I(0, 1));
 			//Up
 			if (currentTile && (currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
 				|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
 			{
-				if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID + sm::Vector2(0, 1))))
+				if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID + Vector2I(0, 1))))
 				{
-					nodes.at(i)->connections.push_back(GetAINodeById(currentID + sm::Vector2(0, 1)));
+					nodes.at(i)->connections.push_back(GetAINodeById(currentID + Vector2I(0, 1)));
 				}
 			}
-			currentTile = m_grid.GetTileByID(currentID + sm::Vector2(-1, -1));
+			currentTile = m_grid.GetTileByID(currentID + Vector2I(-1, -1));
 			//Down-left
 			if (currentTile && (currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
 				|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
 			{
-				if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID + sm::Vector2(-1, -1))))
+				if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID + Vector2I(-1, -1))))
 				{
-					nodes.at(i)->connections.push_back(GetAINodeById(currentID + sm::Vector2(-1, -1)));
+					nodes.at(i)->connections.push_back(GetAINodeById(currentID + Vector2I(-1, -1)));
 				}
 			}
-			currentTile = m_grid.GetTileByID(currentID + sm::Vector2(0, -1));
+			currentTile = m_grid.GetTileByID(currentID + Vector2I(0, -1));
 			//Down
 			if (currentTile && (currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
 				|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
 			{
-				if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID + sm::Vector2(0, -1))))
+				if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID + Vector2I(0, -1))))
 				{
-					nodes.at(i)->connections.push_back(GetAINodeById(currentID + sm::Vector2(0, -1)));
+					nodes.at(i)->connections.push_back(GetAINodeById(currentID + Vector2I(0, -1)));
 				}
 			}
-			currentTile = m_grid.GetTileByID(currentID + sm::Vector2(1, -1));
+			currentTile = m_grid.GetTileByID(currentID + Vector2I(1, -1));
 			//Down-right
 			if (currentTile && (currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
 				|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
 			{
-				if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID + sm::Vector2(1, -1))))
+				if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID + Vector2I(1, -1))))
 				{
-					nodes.at(i)->connections.push_back(GetAINodeById(currentID + sm::Vector2(1, -1)));
+					nodes.at(i)->connections.push_back(GetAINodeById(currentID + Vector2I(1, -1)));
 				}
 			}
 			//LOG_INFO("Connections: %d", nodes.at(i)->connections.size());
@@ -922,7 +922,7 @@ void Simulation::ConnectNodes(comp::Node* node1, comp::Node* node2)
 	}
 }
 
-comp::Node* Simulation::GetAINodeById(sm::Vector2 id)
+comp::Node* Simulation::GetAINodeById(Vector2I& id)
 {
 	comp::Node* toReturn = nullptr;
 	m_pGameScene->ForEachComponent<comp::Node>([&](comp::Node& n)

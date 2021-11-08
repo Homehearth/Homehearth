@@ -644,7 +644,7 @@ void Game::PlaceDefenceRelease(message<GameMsg>& msg)
 
 void Game::CreateVisualGrid(Entity e)
 {
-	if (RENDER_GRID) //TODO dosent work atm
+	if (RENDER_GRID)
 	{
 		comp::Tile* tile = e.GetComponent<comp::Tile>();
 		if (tile)
@@ -660,6 +660,12 @@ void Game::CreateVisualGrid(Entity e)
 				comp::Renderable* renderable = e.AddComponent<comp::Renderable>();
 				renderable->model = ResourceManager::Get().CopyResource<RModel>("Plane1.obj");
 				renderable->model->ChangeMaterial("TileBuilding.mtl");
+			}
+			else if (tile->type == TileType::DEFAULT)
+			{
+				comp::Renderable* renderable = e.AddComponent<comp::Renderable>();
+				renderable->model = ResourceManager::Get().CopyResource<RModel>("Plane1.obj");
+				renderable->model->ChangeMaterial("TileDefence.mtl");
 			}
 		}
 	}

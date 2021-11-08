@@ -142,7 +142,7 @@ namespace ecs
 		{
 			float f = FLT_MAX, g = FLT_MAX, h = FLT_MAX;
 			sm::Vector3 position;
-			sm::Vector2 id;
+			Vector2I id;
 			std::vector<Node*> connections;
 			ecs::component::Node* parent;
 			bool reachable = true;
@@ -228,7 +228,7 @@ namespace ecs
 		struct Tile 
 		{
 			TileType type;
-			sm::Vector2 gridID;
+			Vector2I gridID;
 			float halfWidth;
 
 		};

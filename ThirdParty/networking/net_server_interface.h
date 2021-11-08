@@ -605,12 +605,12 @@ namespace network
 		struct addrinfo hints, * servinfo, * p;
 		ZeroMemory(&hints, sizeof(hints));
 		hints.ai_family = AF_INET;
+		hints.ai_flags = AI_PASSIVE;
 
 		if (type == SockType::TCP)
 		{
 			hints.ai_socktype = SOCK_STREAM;
 			hints.ai_protocol = IPPROTO_TCP;
-			hints.ai_flags = AI_PASSIVE;
 		}
 		else
 		{
@@ -618,7 +618,7 @@ namespace network
 			hints.ai_protocol = IPPROTO_UDP;
 		}
 
-		int8_t rv = getaddrinfo(nullptr, std::to_string(port).c_str(), &hints, &servinfo);
+		int8_t rv = getaddrinfo(NULL, std::to_string(port).c_str(), &hints, &servinfo);
 
 		if (rv != 0)
 		{

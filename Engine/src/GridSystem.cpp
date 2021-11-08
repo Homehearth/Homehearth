@@ -4,14 +4,15 @@
 
 GridSystem::GridSystem()
 {
-
+	m_scene = nullptr;
+	m_tileHalfWidth = 0.f;
 }
 
 GridSystem::~GridSystem()
 {
 }
 
-void GridSystem::Initialize(sm::Vector2 mapSize, sm::Vector3 position, std::string fileName, HeadlessScene* scene)
+void GridSystem::Initialize(Vector2I mapSize, sm::Vector3 position, std::string fileName, HeadlessScene* scene)
 {
 	m_scene = scene;
 	m_position = position;
@@ -25,8 +26,8 @@ void GridSystem::Initialize(sm::Vector2 mapSize, sm::Vector3 position, std::stri
 	unsigned char* pixelsData = stbi_load(m_filepath.c_str(), &width, &height, &comp, STBI_rgb_alpha); //TODO: find out what to do with this
 
 	std::vector<int> pixelValues;
-	m_gridSize = { (float)width, (float)height };
-	sm::Vector2 tileSize = { (float)(m_mapSize.x / m_gridSize.x),(float)(m_mapSize.y / m_gridSize.y) };
+	m_gridSize = { width, height };
+	sm::Vector2 tileSize = { (float)m_mapSize.x / m_gridSize.x, (float)m_mapSize.y / m_gridSize.y };
 
 	for (int i = 0; i < m_gridSize.x * m_gridSize.y * 4; i++)
 	{
@@ -47,8 +48,6 @@ void GridSystem::Initialize(sm::Vector2 mapSize, sm::Vector3 position, std::stri
 			rgba.z = (float)pixelValues.at(2 + ((row + (col * (size_t)m_gridSize.y)) * 4));
 			rgba.w = (float)pixelValues.at(3 + ((row + (col * (size_t)m_gridSize.y)) * 4));
 
-			//std::cout << "RGBA: " << rgba.x << " " << rgba.y << " " << rgba.z << " " << rgba.w << std::endl;
-
 			if (rgba == sm::Vector4{ 100, 100, 100, 255 })
 				tileTypeTemp = TileType::EMPTY;
 
@@ -61,13 +60,13 @@ void GridSystem::Initialize(sm::Vector2 mapSize, sm::Vector3 position, std::stri
 			if (rgba == sm::Vector4{ 0, 0, 0, 255 })
 				tileTypeTemp = TileType::DEFAULT;
 
-			m_tileHalfWidth = (float)(tileSize.x/2);
-			sm::Vector3 tilePosition = {m_position.x + (m_tileHalfWidth * row) + m_tileHalfWidth/2, m_position.y + 0.f , -(m_tileHalfWidth * col) - (m_tileHalfWidth/2) + m_position.z};
-			m_tilePosiitons.push_back(tilePosition);
+			m_tileHalfWidth = (tileSize.x / 2.f);
+			sm::Vector3 tilePosition = { tileSize.x * row + m_tileHalfWidth, 0.f , (tileSize.y * -col) - m_tileHalfWidth };
+			m_tilePositions.push_back(tilePosition);
 
 			Entity tileEntity = m_scene->CreateEntity();
 			comp::Tile* tile = tileEntity.AddComponent<comp::Tile>();
-			tile->gridID = { (float)row, (float)col };
+			tile->gridID = { row, col };
 			tile->halfWidth = m_tileHalfWidth;
 			tile->type = tileTypeTemp;
 			comp::Transform* transform = tileEntity.AddComponent<comp::Transform>();
@@ -82,11 +81,6 @@ void GridSystem::Initialize(sm::Vector2 mapSize, sm::Vector3 position, std::stri
 				tileEntity.AddComponent<comp::Network>();
 			}
 #endif
-			comp::PlaneCollider* collider = tileEntity.AddComponent<comp::PlaneCollider>();
-			collider->center = tilePosition;
-			collider->size = tileSize;
-			collider->normal = { 0,1,0 };
-
 			m_tiles.push_back(tileEntity);
 		}
 	}
@@ -94,15 +88,18 @@ void GridSystem::Initialize(sm::Vector2 mapSize, sm::Vector3 position, std::stri
 }
 
 
-uint32_t GridSystem::PlaceDefenceRenderGrid(Ray_t mouseRay)
+uint32_t GridSystem::PlaceDefenceRenderGrid(Ray_t& mouseRay)
 {
 	float t = 0;
 
 	int returnID = -1;
 
-	m_scene->ForEachComponent<comp::Tile, comp::PlaneCollider>([&](Entity entity, comp::Tile& tile, comp::PlaneCollider& planeCollider)
+	Plane_t plane;
+	plane.normal = { 0.0f, 1.0f, 0.0f };
+
+	m_scene->ForEachComponent<comp::Tile>([&](Entity entity, comp::Tile& tile)
 		{
-			if (Intersect::RayIntersectPlane(mouseRay,  planeCollider, t))
+			if (mouseRay.Intersects(plane, &plane.point))
 			{
 				if (tile.type == TileType::EMPTY)
 				{
@@ -117,7 +114,6 @@ uint32_t GridSystem::PlaceDefenceRenderGrid(Ray_t mouseRay)
 						collider->Extents = { entity.GetComponent<comp::Transform>()->scale.x, 10.f , entity.GetComponent<comp::Transform>()->scale.z };
 						entity.AddComponent<comp::Tag<TagType::STATIC>>();
 					}
-					
 				}
 				else if (tile.type == TileType::BUILDING || tile.type == TileType::UNPLACABLE || tile.type == TileType::DEFAULT)
 				{
@@ -133,51 +129,62 @@ uint32_t GridSystem::PlaceDefenceRenderGrid(Ray_t mouseRay)
 	return returnID;
 }
 
-sm::Vector3 GridSystem::PlaceDefence(Ray_t mouseRay)
+sm::Vector3 GridSystem::PlaceDefence(Ray_t& mouseRay)
 {
 	float t = 0;
 
-	sm::Vector3 returnPosition = {-1, -1 ,-1};
+	sm::Vector3 returnPosition = { -1, -1 ,-1 };
+	Plane_t plane;
+	plane.normal = { 0.0f, 1.0f, 0.0f };
+	sm::Vector3 pos;
 
-	m_scene->ForEachComponent<comp::Tile, comp::PlaneCollider>([&](Entity entity, comp::Tile& tile, comp::PlaneCollider& planeCollider)
+	m_scene->ForEachComponent<comp::Tile>([&](Entity entity, comp::Tile& tile)
 		{
-			if (Intersect::RayIntersectPlane(mouseRay, planeCollider, t))
+			if (mouseRay.Intersects(plane, &pos))
 			{
-				if (tile.type == TileType::EMPTY)
-				{
-					LOG_INFO("Mouseray HIT plane detected a EMPTY Tile!");
-					tile.type = TileType::DEFENCE;
+				comp::Transform* t = entity.GetComponent<comp::Transform>();
 
-					returnPosition = entity.GetComponent<comp::Transform>()->position;
-					comp::BoundingOrientedBox* collider = entity.AddComponent<comp::BoundingOrientedBox>();
-					collider->Center = returnPosition;
-					collider->Extents = { entity.GetComponent<comp::Transform>()->scale.x, 10.f , entity.GetComponent<comp::Transform>()->scale.z };
-					entity.AddComponent<comp::Tag<TagType::STATIC>>();
+				float right = t->position.x + tile.halfWidth;
+				float left = t->position.x - tile.halfWidth;
+				float top = t->position.z + tile.halfWidth;
+				float bottom = t->position.z - tile.halfWidth;
 
+				if (pos.x > left && pos.x < right && pos.z < top && pos.z > bottom)
+				{
+					if (tile.type == TileType::EMPTY)
+					{
+						LOG_INFO("Mouseray HIT plane detected a EMPTY Tile!");
+						tile.type = TileType::DEFENCE;
 
-				}
-				else if (tile.type == TileType::BUILDING || tile.type == TileType::UNPLACABLE || tile.type == TileType::DEFAULT)
-				{
-					LOG_INFO("You cant place here!");
-				}
-				else if (tile.type == TileType::DEFENCE)
-				{
-					LOG_INFO("Theres already a defence here!");
+						returnPosition = entity.GetComponent<comp::Transform>()->position;
+						comp::BoundingOrientedBox* collider = entity.AddComponent<comp::BoundingOrientedBox>();
+						collider->Center = returnPosition;
+						collider->Extents = { entity.GetComponent<comp::Transform>()->scale.x, 10.f , entity.GetComponent<comp::Transform>()->scale.z };
+						entity.AddComponent<comp::Tag<TagType::STATIC>>();
+					}
+					else if (tile.type == TileType::BUILDING || tile.type == TileType::UNPLACABLE || tile.type == TileType::DEFAULT)
+					{
+						LOG_INFO("You cant place here!");
+					}
+					else if (tile.type == TileType::DEFENCE)
+					{
+						LOG_INFO("Theres already a defence here!");
+					}
 				}
 			}
 		});
 
 	return returnPosition;
 }
-sm::Vector2 GridSystem::GetGridSize() const
+Vector2I GridSystem::GetGridSize() const
 {
 	return m_gridSize;
 }
 std::vector<sm::Vector3>* GridSystem::GetTilePositions()
 {
-	return &m_tilePosiitons;
+	return &m_tilePositions;
 }
-Entity* GridSystem::GetTileByID(sm::Vector2 id)
+Entity* GridSystem::GetTileByID(Vector2I& id)
 {
 	if (id.x >= 0 && id.y >= 0 && id.x < m_gridSize.x && id.y < m_gridSize.y)
 	{

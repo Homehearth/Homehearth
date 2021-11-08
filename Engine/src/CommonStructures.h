@@ -17,6 +17,27 @@ enum class TypeLight : UINT
 	POINT
 };
 
+struct Vector2I
+{
+	int x = 0, y = 0;
+
+	Vector2I(int&& x, int&& y) :x(x), y(y) {};
+	Vector2I(int& x, int& y) :y(y), x(x) {};
+	Vector2I() = default;
+
+	bool operator==(const Vector2I& other)
+	{
+		return (x == other.x && y == other.y);
+	}
+
+	Vector2I& operator+(const Vector2I& other)
+	{
+		this->x += other.x;
+		this->y += other.y;
+
+		return *this;	
+	}
+};
 
 struct Plane_t
 {
@@ -157,7 +178,7 @@ struct light_t
 static struct GridProperties_t
 {
 	sm::Vector3 position = sm::Vector3(0, 0, 0);
-	sm::Vector2 mapSize = sm::Vector2(1200, 1200);
+	Vector2I mapSize = Vector2I(600, 600);
 	std::string fileName = "GridMap.png";
 	bool isVisible = true;
 
