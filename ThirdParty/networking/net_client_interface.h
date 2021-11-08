@@ -700,6 +700,11 @@ namespace network
 							this->ReadPacket(context);
 							break;
 						}
+						case NetState::WRITE_PACKET:
+						{
+							LOG_INFO("Sent initiate packet to server!");
+							break;
+						}
 						}
 						if (context)
 						{
