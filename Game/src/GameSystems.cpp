@@ -1,14 +1,9 @@
 #include "GameSystems.h"
+#include "EnginePCH.h"
+#include "Healthbar.h"
 
 using namespace network;
-void GameSystems::UserInputSystem(Scene& scene, Client& client)
-{
-	scene.ForEachComponent<comp::Transform, comp::Velocity, comp::Player>([&](comp::Transform&, comp::Velocity& velocity, comp::Player& player)
-		{
-			velocity.vel.z = InputSystem::Get().GetAxis(Axis::VERTICAL) * player.runSpeed;
-			velocity.vel.x = InputSystem::Get().GetAxis(Axis::HORIZONTAL) * player.runSpeed;
-		});
-}
+
 
 //System check if mouse ray intersects any of the box collider components in scene
 void GameSystems::MRayIntersectBoxSystem(Scene& scene)
@@ -41,3 +36,22 @@ void GameSystems::RenderIsCollidingSystem(Scene& scene)
 			}
 		});
 }
+
+// Set all the healthbars to players.
+void GameSystems::UpdateHealthbar(Scene& scene)
+{
+	int i = 1;
+	scene.ForEachComponent<comp::Health, comp::Player>([&](Entity e,comp::Health& health, const comp::Player& player) {
+		// Safety check for now.
+		if (i < 5)
+		{
+			rtd::Healthbar* healthbar = dynamic_cast<rtd::Healthbar*>(scene.GetCollection("player" + std::to_string(i) + "Info")->elements[0].get());
+			if (healthbar)
+			{
+				healthbar->SetHealthVariable(e);
+			}
+		}
+		i++;
+		});
+}
+

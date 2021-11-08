@@ -1,6 +1,5 @@
 #pragma once
 
-
 class Profiler 
 {
 private:
@@ -57,7 +56,8 @@ public:
 
 
 #if PROFILER
-#define PROFILER_BEGIN_SESSION(filepath) ::Profiler::Get().BeginSession(filepath)
+#define PROFILER_BEGIN_SESSION_PATH(filepath) ::Profiler::Get().BeginSession(filepath)
+#define PROFILER_BEGIN_SESSION() ::Profiler::Get().BeginSession()
 #define PROFILER_END_SESSION() ::Profiler::Get().EndSession()
 #define PROFILE_SCOPE(name) ::Profiler::ProfileTimer timer##__LINE__(name)
 #define PROFILE_FUNCTION() PROFILE_SCOPE(__FUNCSIG__)

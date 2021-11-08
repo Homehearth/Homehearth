@@ -13,7 +13,7 @@
 namespace network
 {
 #define IPV6_ADDRSTRLEN 46
-#define BUFFER_SIZE 4096
+#define BUFFER_SIZE 32768
 
 	// What current state are the current connection in
 	enum class NetState
@@ -22,7 +22,9 @@ namespace network
 		READ_VALIDATION,
 		READ_HEADER,
 		READ_PAYLOAD,
-		WRITE_MESSAGE
+		WRITE_MESSAGE,
+		WRITE_HEADER,
+		WRITE_PAYLOAD
 	};
 
 	// Information regarding every input or output

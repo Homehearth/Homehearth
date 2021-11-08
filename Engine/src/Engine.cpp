@@ -2,12 +2,13 @@
 #include "Engine.h"
 #include <omp.h>
 #include "Camera.h"
+#include "GridSystem.h"
 
 bool Engine::s_safeExit = false;
 
 Engine::Engine()
 	: BasicEngine()
-	, m_frameTime()
+	//, m_frameTime()
 {
 	LOG_INFO("Engine(): " __TIMESTAMP__);
 }
@@ -20,18 +21,25 @@ void Engine::Startup()
 
 	// Window Startup:
 	Window::Desc config;
-	config.title = L"Engine";
+
+	//Get heighest possible 16:9 resolution
+	//90% of the height
+	config.height = static_cast<UINT>(GetSystemMetrics(SM_CYSCREEN) * 0.90f);
+	float aspectRatio = 16.0f / 9.0f;
+	config.width = static_cast<UINT>(aspectRatio * config.height);
+
+	config.title = L"Homehearth";
 	if (!m_window.Initialize(config))
 	{
 		LOG_ERROR("Could not Initialize m_window.");
 	}
 
 	// DirectX Startup:
+	FontCollectionLoader::Initialize();
 	D3D11Core::Get().Initialize(&m_window);
 	D2D1Core::Initialize(&m_window);
 
 	m_renderer.Initialize(&m_window);
-
 
 	// Thread should be launched after s_engineRunning is set to true and D3D11 is initialized.
 	//
@@ -66,21 +74,6 @@ void Engine::Startup()
 	thread::RenderThreadHandler::Get().Setup(2);
 
 	InputSystem::Get().SetMouseWindow(m_window.GetHWnd(), m_window.GetWidth(), m_window.GetHeight());
-
-#if DRAW_TEMP_2D
-	rtd::Button* test = new rtd::Button("demo_start_game_button.png", draw_t(100.0f, 100.0f, 275.0f, 100.0f), true);
-	rtd::Button* test2 = new rtd::Button("demo_options_button.png", draw_t(100.0f, 225.0f, 275.0f, 100.0f), true);
-	rtd::Button* test3 = new rtd::Button("demo_exit_button.png", draw_t(100.0f, 350.0f, 275.0f, 100.0f), false);
-	rtd::Text* test4 = new rtd::Text("Welcome to Homehearth!", draw_text_t(350.0f, 25.0f, 300.0f, 100.0f));
-	test->GetBorder()->SetColor(D2D1::ColorF(1.0f, 0.0f, 0.5f));
-	test2->GetBorder()->SetColor(D2D1::ColorF(0.1f, .75f, 0.25f));
-	test3->GetBorder()->SetColor(D2D1::ColorF(0.5f, .23f, 0.65f));
-	test->SetName("Button1");
-	rtd::Handler2D::InsertElement(test);
-	rtd::Handler2D::InsertElement(test2);
-	rtd::Handler2D::InsertElement(test3);
-	rtd::Handler2D::InsertElement(test4);
-#endif
 	
 	BasicEngine::Startup();
 }
@@ -107,6 +100,7 @@ void Engine::Run()
     T_DESTROY();
     D2D1Core::Destroy();
 	ResourceManager::Get().Destroy();
+	FontCollectionLoader::Destroy();
 }
 
 
@@ -119,7 +113,7 @@ void Engine::drawImGUI() const
 {
 	//Containers for plotting
 	static std::vector<float> fpsContainer;
-	static std::vector<float> fpsUpdateContainer;
+	//static std::vector<float> fpsUpdateContainer;
 	static std::vector<float> ramUsageContainer;
 	static std::vector<float> vRamUsageContainer;
 
@@ -127,8 +121,8 @@ void Engine::drawImGUI() const
 	static int dots = 0;
 	if (timer.GetElapsedTime<std::chrono::duration<float>>() > 0.5f)
 	{
-		fpsContainer.emplace_back((1 / m_frameTime.render));
-		fpsUpdateContainer.emplace_back((1.0f / m_frameTime.update));
+		fpsContainer.emplace_back(static_cast<float>(Stats::GetCurrentFPS()));
+		//fpsUpdateContainer.emplace_back(static_cast<float>(Stats::GetUpdateFPS()));
 		ramUsageContainer.emplace_back((Profiler::GetRAMUsage() / (1024.f * 1024.f)));
 		vRamUsageContainer.emplace_back((Profiler::GetVRAMUsage() / (1042.f * 1024.f)));
 		timer.Start();
@@ -138,8 +132,8 @@ void Engine::drawImGUI() const
 	if (fpsContainer.size() > 10)
 		fpsContainer.erase(fpsContainer.begin());
 
-	if (fpsUpdateContainer.size() > 10)
-		fpsUpdateContainer.erase(fpsUpdateContainer.begin());
+	/*if (fpsUpdateContainer.size() > 10)
+		fpsUpdateContainer.erase(fpsUpdateContainer.begin());*/
 
 	if (ramUsageContainer.size() > 10)
 		ramUsageContainer.erase(ramUsageContainer.begin());
@@ -182,10 +176,10 @@ void Engine::drawImGUI() const
 #endif
 	if (ImGui::CollapsingHeader("FPS"))
 	{
-		ImGui::PlotLines(("FPS: " + std::to_string(static_cast<size_t>(1 / m_frameTime.render))).c_str(), fpsContainer.data(), static_cast<int>(fpsContainer.size()), 0, nullptr, 0.0f, 144.0f, ImVec2(150, 50));
+		ImGui::PlotLines(("FPS: " + std::to_string(Stats::GetCurrentFPS())).c_str(), fpsContainer.data(), static_cast<int>(fpsContainer.size()), 0, nullptr, 0.0f, Stats::GetMaxFPS(), ImVec2(150, 50));
 		ImGui::Spacing();
-		ImGui::PlotLines(("Update FPS: " + std::to_string(static_cast<size_t>(1.0f / m_frameTime.update))).c_str(), fpsUpdateContainer.data(), static_cast<int>(fpsUpdateContainer.size()), 0, nullptr, 0.0f, 144.0f, ImVec2(150, 50));
-		ImGui::Spacing();
+		/*ImGui::PlotLines(("Update FPS: " + std::to_string(Stats::GetUpdateFPS())).c_str(), fpsUpdateContainer.data(), static_cast<int>(fpsUpdateContainer.size()), 0, nullptr, 0.0f, 144.0f, ImVec2(150, 50));
+		ImGui::Spacing();*/
 	}
 
 	if (ImGui::CollapsingHeader("Memory"))
@@ -196,7 +190,7 @@ void Engine::drawImGUI() const
 	}
 
 	ImGui::End();
-	
+
 	ImGui::Begin("Components");
 	if (ImGui::CollapsingHeader("Transform"))
 	{
@@ -366,25 +360,30 @@ void Engine::drawImGUI() const
 
 void Engine::RenderThread()
 {
-	double currentFrame = 0.f, lastFrame = omp_get_wtime();
-	float deltaTime = 0.f, deltaSum = 0.f;
-	const float targetDelta = 1 / 10000.0f; 	// Desired FPS
+	double currentFrame = 0.f;
+	double lastFrame = omp_get_wtime();
+	float deltaTime = 0.f;
+	float frameTime = 0.f;
+
+	const float targetDelta = 1.0f / Stats::GetMaxFPS();
 	while (IsRunning())
 	{
 		currentFrame = omp_get_wtime();
 		deltaTime = static_cast<float>(currentFrame - lastFrame);
-		if (deltaSum >= targetDelta)
+		
+		//Render every now and then
+		if (frameTime >= targetDelta)
 		{
-			if (GetCurrentScene()->IsRenderReady())
+			if (GetCurrentScene()->IsRenderReady()) 
 			{
-				Render(deltaSum);
-				m_frameTime.render = deltaSum;
-				deltaSum = 0.f;
+				Stats::SetDeltaTime(frameTime);
+				Render(frameTime);
+				//m_frameTime.render = deltaSum;
+				frameTime = 0.f;
 			}
 		}
-		deltaSum += deltaTime;
+		frameTime += deltaTime;
 		lastFrame = currentFrame;
-		
 	}
 
 	s_safeExit = true;
@@ -393,7 +392,6 @@ void Engine::RenderThread()
 void Engine::Update(float dt)
 {
 	PROFILE_FUNCTION();
-	m_frameTime.update = dt;
 
 	InputSystem::Get().UpdateEvents();
 
@@ -408,12 +406,12 @@ void Engine::Update(float dt)
 		}
 	}
 	// todo temp
-	if (InputSystem::Get().CheckMouseKey(MouseKey::RIGHT, KeyState::PRESSED))
+	/*if (InputSystem::Get().CheckMouseKey(MouseKey::RIGHT, KeyState::PRESSED))
 	{
 		InputSystem::Get().SwitchMouseMode();
 
 		LOG_INFO("Switched mouse Mode");
-	}
+	}*/
 
 	{
 		PROFILE_SCOPE("Starting ImGui");
@@ -454,6 +452,13 @@ void Engine::Render(float& dt)
 	}
 
 	{
+		PROFILE_SCOPE("Render D2D1");
+		D2D1Core::Begin();
+		GetCurrentScene()->Render2D();
+		D2D1Core::Present();
+	}
+
+	{
 		PROFILE_SCOPE("Render ImGui");
 		IMGUI(
 			m_imguiMutex.lock();
@@ -461,13 +466,6 @@ void Engine::Render(float& dt)
 		ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 		m_imguiMutex.unlock();
 		);
-	}
-
-	{
-		PROFILE_SCOPE("Render D2D1");
-		D2D1Core::Begin();
-		GetCurrentScene()->Render2D();
-		D2D1Core::Present();
 	}
 
 	

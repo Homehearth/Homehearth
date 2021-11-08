@@ -2,7 +2,9 @@
 #include "D2D1Core.h"
 
 #define INSTANCE D2D1Core::instance
+#define LOADER FontCollectionLoader::instance
 D2D1Core* INSTANCE = nullptr;
+FontCollectionLoader* LOADER = nullptr;
 
 D2D1Core::D2D1Core()
 {
@@ -15,11 +17,17 @@ D2D1Core::D2D1Core()
 	m_solidBrush = nullptr;
 	m_windowPointer = nullptr;
 	m_imageFactory = nullptr;
+	m_loader = nullptr;
+	m_fontSet = nullptr;
+	m_fontSetBuilder = nullptr;
+	m_fontCollection = nullptr;
 }
 
 D2D1Core::~D2D1Core()
 {
 	CoUninitialize();
+	//RemoveFontResourceA("Bookworm");
+	//SendMessageW(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
 }
 
 const bool D2D1Core::Setup(Window* window)
@@ -73,13 +81,24 @@ const bool D2D1Core::Setup(Window* window)
 	if (FAILED(hr))
 		[] {LOG_WARNING("Creating default solid color brush failed."); };
 
+	// Somehow scales the text to window size
+	float res = ((window->GetWidth()) / ((float)window->GetHeight()));
+	const float font = ((window->GetWidth() * res) - (window->GetHeight() * res)) * 0.03f;
+
+	/*
+		Load in custom FONT
+	*/
+	// Add font resource and access it through FindResource.
+	//int i = AddFontResourceA("Bookworm.ttf");
+	//SendMessageW(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
+
 	hr = m_writeFactory->CreateTextFormat(
-		L"Times New Roman",
+		L"Ink Free",
 		NULL,
 		DWRITE_FONT_WEIGHT_REGULAR,
 		DWRITE_FONT_STYLE_NORMAL,
 		DWRITE_FONT_STRETCH_NORMAL,
-		24.0f,
+		font,
 		L"en-us",
 		&m_writeFormat
 	);
@@ -98,6 +117,8 @@ const bool D2D1Core::Setup(Window* window)
 		CLSCTX_INPROC_SERVER,
 		IID_PPV_ARGS(&m_imageFactory));
 
+
+
 	return true;
 }
 
@@ -114,6 +135,11 @@ void D2D1Core::Destroy()
 {
 	if (INSTANCE)
 		delete INSTANCE;
+}
+
+float D2D1Core::GetDefaultFontSize()
+{
+	return INSTANCE->m_writeFormat.Get()->GetFontSize();
 }
 
 void D2D1Core::DrawT(const std::string& text, const draw_text_t& opt)
@@ -268,6 +294,16 @@ const bool D2D1Core::CreateTextFormat(const WCHAR* fontName,
 	return SUCCEEDED(hr);
 }
 
+void D2D1Core::LoadCustomFont(const std::string& filePath, const std::string& fontName)
+{
+
+}
+
+HRESULT D2D1Core::LoadFont(const std::string& fontName)
+{
+	return E_NOTIMPL;
+}
+
 HRESULT D2D1Core::LoadBitMap(const LPCWSTR& filePath, ID2D1Bitmap** bitMap)
 {
 	HRESULT hr;
@@ -337,6 +373,105 @@ HRESULT D2D1Core::LoadBitMap(const LPCWSTR& filePath, ID2D1Bitmap** bitMap)
 		fDecoder->Release();
 	if(decoder)
 		decoder->Release();
+
+	return E_FAIL;
+}
+
+void FontCollectionLoader::Initialize()
+{
+	if (!LOADER)
+		LOADER = new FontCollectionLoader;
+}
+
+void FontCollectionLoader::Destroy()
+{
+	if (LOADER)
+		delete LOADER;
+}
+
+
+HRESULT __stdcall FontCollectionLoader::QueryInterface(REFIID riid, void** ppvObject)
+{
+	return E_NOTIMPL;
+}
+
+HRESULT __stdcall FontCollectionLoader::CreateEnumeratorFromKey(IDWriteFactory* factory, void const* collectionKey, UINT32 collectionKeySize, IDWriteFontFileEnumerator** fontFileEnumerator)
+{
+	if (!*fontFileEnumerator)
+	{
+		FontFileEnumerator* point = dynamic_cast<FontFileEnumerator*>(*fontFileEnumerator = new FontFileEnumerator(factory));
+		if (point)
+		{
+			point->SetKey(collectionKey);
+			return S_OK;
+		}
+		else
+			return E_FAIL;
+	}
+	else
+		return E_FAIL;
+
+}
+
+ULONG __stdcall FontCollectionLoader::AddRef(void)
+{
+	return m_refs++;
+}
+
+ULONG __stdcall FontCollectionLoader::Release(void)
+{
+	return m_refs--;
+}
+
+FontFileEnumerator::FontFileEnumerator(IDWriteFactory* ref)
+{
+	//AddFontResourceEx(L"../Assets/Fonts/Bookworm.ttf", FR_PRIVATE, 0);
+}
+
+void FontFileEnumerator::SetKey(const void* pointer)
+{
+	m_key = (UINT64)pointer;
+}
+
+HRESULT __stdcall FontFileEnumerator::QueryInterface(REFIID riid, void** ppvObject)
+{
+	return E_NOTIMPL;
+}
+
+ULONG __stdcall FontFileEnumerator::AddRef(void)
+{
+	return m_refs++;
+}
+
+ULONG __stdcall FontFileEnumerator::Release(void)
+{
+	return m_refs--;
+}
+
+HRESULT __stdcall FontFileEnumerator::MoveNext(BOOL* hasCurrentFile)
+{
+	for (int i = 0; i < m_fonts.size(); i++)
+	{
+		m_pos = i;
+		IDWriteFontFile* font = m_fonts[m_pos];
+		if (font)
+		{
+			*hasCurrentFile = 1;
+			return S_OK;
+		}
+	}
+
+	*hasCurrentFile = 0;
+	return E_FAIL;
+}
+
+HRESULT __stdcall FontFileEnumerator::GetCurrentFontFile(IDWriteFontFile** fontFile)
+{
+	if (m_fonts[m_pos])
+	{
+		fontFile = &m_fonts[m_pos];
+		return S_OK;
+	}
 
 	return E_FAIL;
 }

@@ -25,15 +25,18 @@ bool RMaterial::LoadTexture(const ETextureType& type, const std::string& filenam
     if (!texture)
     {
         //Has only one channel
-        if (type == ETextureType::metalness ||
-            type == ETextureType::roughness ||
-            type == ETextureType::ambientOcclusion ||
-            type == ETextureType::displacement)
+        if (type == ETextureType::metalness         ||
+            type == ETextureType::roughness         ||
+            type == ETextureType::ambientOcclusion  ||
+            type == ETextureType::displacement      ||
+            type == ETextureType::opacitymask)
         {
             texture = std::make_shared<RTexture>(ETextureChannelType::oneChannel);
         }
         else
+        {
             texture = std::make_shared<RTexture>();
+        }
 
         if (!texture->Create(filename))
         {
@@ -211,7 +214,8 @@ bool RMaterial::Create(aiMaterial* aiMat, bool& useMTL)
     {
         {ETextureType::albedo,              aiTextureType::aiTextureType_DIFFUSE},
         {ETextureType::normal,              aiTextureType::aiTextureType_NORMALS},
-        {ETextureType::displacement,        aiTextureType::aiTextureType_DISPLACEMENT}
+        {ETextureType::displacement,        aiTextureType::aiTextureType_DISPLACEMENT},
+        {ETextureType::opacitymask,         aiTextureType::aiTextureType_OPACITY}
     };
     
     //MTL has a special format to work with pbr
@@ -255,6 +259,8 @@ bool RMaterial::Create(aiMaterial* aiMat, bool& useMTL)
         m_properties.hasAoMap = true;
     if (m_textures[(uint8_t)ETextureType::displacement])
         m_properties.hasDisplace = true;
+    if (m_textures[(uint8_t)ETextureType::opacitymask])
+        m_properties.hasOpacity = true;
 
     if (!CreateConstBuf(m_properties))
     {
@@ -380,6 +386,17 @@ bool RMaterial::CreateFromMTL(std::string& text)
                 std::string filename = GetFilename(filepath);
                 if (LoadTexture(ETextureType::displacement, filename))
                     m_properties.hasDisplace = true;
+            }
+        }
+        //Opacity map
+        else if (prefix == "map_d")
+        {
+            std::string filepath;
+            if (ss >> filepath)
+            {
+                std::string filename = GetFilename(filepath);
+                if (LoadTexture(ETextureType::opacitymask, filename))
+                    m_properties.hasOpacity = true;
             }
         }
 

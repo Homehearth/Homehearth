@@ -122,7 +122,7 @@ void Lights::Render(ID3D11DeviceContext* dc)
     }
 
     dc->PSSetConstantBuffers(3, 1, m_lightInfoBuffer.GetAddressOf());
-    dc->PSSetShaderResources(7, 1, m_lightShaderView.GetAddressOf());
+    dc->PSSetShaderResources(T2D_SLOT, 1, m_lightShaderView.GetAddressOf());
 }
 
 void Lights::EditLight(light_t L, const int& index)

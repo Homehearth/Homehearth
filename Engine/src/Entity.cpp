@@ -18,6 +18,14 @@ Entity::Entity()
 	m_entity = entt::null;
 }
 
+void Entity::UpdateNetwork()
+{
+	if (GetComponent<comp::Network>())
+	{
+		m_pRegistry->patch<comp::Network>(m_entity);
+	}
+}
+
 bool Entity::Destroy() 
 {
 	if (IsNull())
@@ -25,7 +33,6 @@ bool Entity::Destroy()
 		return false;
 	}
 
-	LOG_INFO("Entity with ID: %u was destroyed", m_entity);
 	m_pRegistry->destroy(m_entity);
 	return true;
 }
