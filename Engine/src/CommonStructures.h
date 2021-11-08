@@ -168,3 +168,16 @@ enum class TileType
 	UNPLACABLE,
 	DEFENCE
 };
+
+ALIGN16
+struct dispatch_params_t
+{
+	DirectX::XMUINT4 numThreadGroups;
+	DirectX::XMUINT4 numThreads;
+};
+
+ALIGN16
+struct screen_view_params_t
+{
+	
+};

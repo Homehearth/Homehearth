@@ -50,6 +50,12 @@ cbuffer IsCollidingCB : register(b5)
     int c_colliding;
 }
 
+cbuffer ScreenToViewParamsCB : register(b6)
+{
+    float4x4 c_inverseProjection;
+    float2 c_screenDimensions;
+}
+
 
 //---------------------------------------------------------------------------
 //	Samplers.
@@ -83,7 +89,7 @@ StructuredBuffer<Light> sb_lights : register(t10);
 //StructuredBuffer<PointLight> sb_pointLights : register();
 //StructuredBuffer<DirectionalLight> sb_directionalLights : register();
 //StructuredBuffer<uint> sb_pointLightIndexList : register();
-//StructuredBuffer<Frustum> sb_frustums : register();
+StructuredBuffer<Frustum> sb_frustums : register(t11); // Precomputed frustums for the grid.
 
 
 //---------------------------------------------------------------------------
@@ -91,9 +97,12 @@ StructuredBuffer<Light> sb_lights : register(t10);
 //---------------------------------------------------------------------------
 
 // RWStructuredBuffers.
+RWStructuredBuffer<uint> opaq_lightIndexCounter     : register(u0);
+RWStructuredBuffer<uint> trans_lightIndexCounter    : register(u1);
+RWStructuredBuffer<uint> opaq_lightIndexList        : register(u2);
+RWStructuredBuffer<uint> trans_lightIndexList       : register(u3);
 
+// RWTexture2D.
+RWTexture2D<uint2> opaq_lightGrid                   : register(u4);
+RWTexture2D<uint2> trans_lightGrid                  : register(u5);
 
-// Forward+
-//RWStructuredBuffer<PointLight> rw_pointLights : register();
-//RWStructuredBuffer<DirectionalLight> rw_directionalLights : register();
-//RWStructuredBuffer<Frustum> rw_frustums : register();
