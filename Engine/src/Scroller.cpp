@@ -31,17 +31,13 @@ rtd::Scroller::Scroller(const draw_t& startPos, const sm::Vector2& endPos)
 
 rtd::Scroller::~Scroller()
 {
+    // Remove all elements from memory.
     while (!m_elements.empty())
     {
        delete m_elements[m_elements.size() - 1];
        m_elements[m_elements.size() - 1] = nullptr;
        m_elements.pop_back();
     }
-}
-
-void rtd::Scroller::AddElement(Element2D* elem)
-{
-    m_elements.push_back(elem);
 }
 
 void Scroller::Draw()

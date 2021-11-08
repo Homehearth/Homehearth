@@ -36,7 +36,8 @@ namespace rtd
 			Add an element to the scroller. Any element added will be
 			taken care of at the end of life.
 		*/
-		void AddElement(Element2D* elem);
+		template<typename T, typename ...Args>
+		T* AddElement(Args... args);
 
 		// Inherited via Element2D
 		virtual void Draw() override;
@@ -50,4 +51,16 @@ namespace rtd
 		virtual bool CheckClick() override;
 
 	};
+	template<typename T, typename ...Args>
+	inline T* Scroller::AddElement(Args ...args)
+	{
+		T* elem = new T(args...);
+		if (elem)
+		{
+			m_elements.push_back(elem);
+			return elem;
+		}
+		else
+			return nullptr;
+	}
 }
