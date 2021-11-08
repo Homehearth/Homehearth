@@ -107,5 +107,4 @@ public:
 	void SendRemoveEntities(message<GameMsg>& msg) const;
 	void SendRemoveEntities(const std::vector<uint32_t> entitiesNetIDs) const;
 
-	uint32_t GetUniqueID();
 };
