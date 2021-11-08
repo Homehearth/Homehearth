@@ -34,7 +34,7 @@ void GridSystem::Initialize(Vector2I mapSize, sm::Vector3 position, std::string 
 		pixelValues.push_back((int)pixelsData[i]);
 	}
 
-	//Initialize all tiles
+	std::vector<Tile> rowTilesTemp;
 	for (int col = 0; col < m_gridSize.y; col++)
 	{
 		for (int row = 0; row < m_gridSize.x; row++)
@@ -43,6 +43,7 @@ void GridSystem::Initialize(Vector2I mapSize, sm::Vector3 position, std::string 
 
 			sm::Vector4 rgba;
 
+			//Colors from texture
 			rgba.x = (float)pixelValues.at(0 + ((row + (col * (size_t)m_gridSize.y)) * 4));
 			rgba.y = (float)pixelValues.at(1 + ((row + (col * (size_t)m_gridSize.y)) * 4));
 			rgba.z = (float)pixelValues.at(2 + ((row + (col * (size_t)m_gridSize.y)) * 4));
@@ -64,25 +65,37 @@ void GridSystem::Initialize(Vector2I mapSize, sm::Vector3 position, std::string 
 			sm::Vector3 tilePosition = { tileSize.x * row + m_tileHalfWidth, 0.f , (tileSize.y * -col) - m_tileHalfWidth };
 			m_tilePositions.push_back(tilePosition);
 
-			Entity tileEntity = m_scene->CreateEntity();
-			comp::Tile* tile = tileEntity.AddComponent<comp::Tile>();
-			tile->gridID = { row, col };
-			tile->halfWidth = m_tileHalfWidth;
-			tile->type = tileTypeTemp;
-			comp::Transform* transform = tileEntity.AddComponent<comp::Transform>();
-			transform->position = tilePosition;
-			transform->position.y = 0.5;
-
-			transform->scale = { 4.2f, 0.5f, 4.2f };
+			Tile tileTemp;
+			tileTemp.gridID		= { (float)row, (float)col };
+			tileTemp.halfWidth	= m_tileHalfWidth;
+			tileTemp.type		= tileTypeTemp;
+			tileTemp.position	= tilePosition;
 
 #if RENDER_GRID
 			if (tileTypeTemp != TileType::DEFAULT)
 			{
+				Entity tileEntity = m_scene->CreateEntity();
+				comp::Tile* tile = tileEntity.AddComponent<comp::Tile>();
+				tile->gridID = { (float)row, (float)col };
+				tile->halfWidth = m_tileHalfWidth;
+				tile->type = tileTypeTemp;
+				comp::Transform* transform = tileEntity.AddComponent<comp::Transform>();
+				transform->position = tilePosition;
+				transform->position.y = 0.5;
+
+				transform->scale = { 4.2f, 0.5f, 4.2f };
 				tileEntity.AddComponent<comp::Network>();
 			}
 #endif
-			m_tiles.push_back(tileEntity);
+
+			if (rowTilesTemp.size() < m_gridSize.x)
+				rowTilesTemp.push_back(tileTemp);
+			
+			if (rowTilesTemp.size() >= m_gridSize.x)
+				m_tiles.push_back(rowTilesTemp);
+
 		}
+		rowTilesTemp.clear();
 	}
 	stbi_image_free(pixelsData);
 }
@@ -188,19 +201,24 @@ Entity* GridSystem::GetTileByID(Vector2I& id)
 {
 	if (id.x >= 0 && id.y >= 0 && id.x < m_gridSize.x && id.y < m_gridSize.y)
 	{
-		for (int i = 0; i < m_tiles.size(); i++)
+		for (int i = 0; i < m_tileEntites.size(); i++)
 		{
-			comp::Tile* tile = m_tiles.at(i).GetComponent<comp::Tile>();
+			comp::Tile* tile = m_tileEntites.at(i).GetComponent<comp::Tile>();
 			if (tile->gridID == id)
 			{
-				return &m_tiles.at(i);
+				return &m_tileEntites.at(i);
 			}
 		}
 	}
 	return nullptr;
 }
 
-std::vector<Entity>* GridSystem::GetTiles()
+Tile GridSystem::GetTile(sm::Vector2 id)
 {
-	return &m_tiles;
+	return m_tiles.at(id.x).at(id.y);
+}
+
+std::vector<Entity>* GridSystem::GetTileEntities()
+{
+	return &m_tileEntites;
 }
