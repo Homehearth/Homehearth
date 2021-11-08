@@ -163,6 +163,10 @@ void Scene::Render2D()
 	m_2dHandler.Render();
 }
 
+void Scene::RenderSkybox()
+{
+}
+
 bool Scene::IsRenderReady() const
 {
 	return (IsRender2DReady() && IsRender3DReady() && IsRenderDebugReady());

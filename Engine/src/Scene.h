@@ -35,6 +35,7 @@ public:
 	void RenderDebug();
 	void RenderAnimation();
 	void Render2D();
+	void RenderSkybox();
 
 	bool IsRenderReady() const;
 

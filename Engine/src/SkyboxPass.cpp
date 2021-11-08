@@ -1,7 +1,7 @@
+#include "EnginePCH.h"
 #include "SkyboxPass.h"
-#include "PipelineManager.h"
 
-void SkyboxPass::PreRender(Camera* pCam = nullptr, ID3D11DeviceContext* pDeviceContext = D3D11Core::Get().DeviceContext())
+void SkyboxPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 {
     //DC->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     //DC->IASetInputLayout(PM->m_defaultInputLayout.Get());
@@ -15,7 +15,6 @@ void SkyboxPass::PreRender(Camera* pCam = nullptr, ID3D11DeviceContext* pDeviceC
 
     //DC->PSSetSamplers(0, 1, PM->m_linearSamplerState.GetAddressOf());
     //DC->PSSetSamplers(1, 1, PM->m_pointSamplerState.GetAddressOf());
-    //m_lights->Render(DC);
 
     //DC->RSSetViewports(1, &PM->m_viewport);
     //DC->RSSetState(PM->m_rasterState.Get());
@@ -26,8 +25,9 @@ void SkyboxPass::PreRender(Camera* pCam = nullptr, ID3D11DeviceContext* pDeviceC
 
 void SkyboxPass::Render(Scene* pScene)
 {
+    pScene->RenderSkybox();
 }
 
-void SkyboxPass::PostRender(ID3D11DeviceContext* pDeviceContext = D3D11Core::Get().DeviceContext())
+void SkyboxPass::PostRender(ID3D11DeviceContext* pDeviceContext)
 {
 }
