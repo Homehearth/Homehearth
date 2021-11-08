@@ -1,4 +1,4 @@
-#include "PBR.hlsli"
+#include "Common.hlsli"
 
 float4 main(PixelIn input) : SV_TARGET
 {
@@ -31,21 +31,21 @@ float4 main(PixelIn input) : SV_TARGET
     
     for (int i = 0; i < c_info.x; i++)
     {
-        if(s_Lights[i].enabled == 1)
+        if(sb_lights[i].enabled == 1)
         {
-            switch (s_Lights[i].type)
+            switch (sb_lights[i].type)
             {
                 case 0:
-                    lightCol += DoDirectionlight(s_Lights[i], N);
+                    lightCol += DoDirectionlight(sb_lights[i], N);
                     break;
                 case 1:
-                    lightCol += DoPointlight(s_Lights[i], input, N);
+                    lightCol += DoPointlight(sb_lights[i], input, N);
                     break;
                 default:
                     break;
             }
         
-            CalcRadiance(input, V, N, roughness, metallic, albedo, s_Lights[i].position.xyz, lightCol, F0, rad);
+            CalcRadiance(input, V, N, roughness, metallic, albedo, sb_lights[i].position.xyz, lightCol, F0, rad);
             Lo += rad;
         }
         
