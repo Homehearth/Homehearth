@@ -23,14 +23,14 @@ struct Tile
 class GridSystem
 {
 private:
-	sm::Vector2						m_mapSize;	//Width x length in, ingame units
-	sm::Vector2						m_gridSize;	//Tiles x tiles
+	Vector2I						m_mapSize;	//Width x length in, ingame units
+	Vector2I						m_gridSize;	//Tiles x tiles
 	sm::Vector3						m_position;
 
 	float							m_tileHalfWidth;
 	HeadlessScene*					m_scene;
 
-	std::vector<sm::Vector3>		m_tilePosiitons;
+	std::vector<sm::Vector3>		m_tilePositions;
 	std::vector<Entity>				m_tileEntites;
 	std::vector<std::vector<Tile>>	m_tiles;
 
@@ -39,16 +39,15 @@ public:
 									~GridSystem();
 
 	/*GridSize is decided by the texture size, how many tiles in x and why, MapSize is how big the world is*/
-	void							Initialize(sm::Vector2 mapSize, sm::Vector3 position, std::string fileName, HeadlessScene* scene);
+	void							Initialize(Vector2I mapSize, sm::Vector3 position, std::string fileName, HeadlessScene* scene);
 
-	uint32_t						PlaceDefenceRenderGrid(Ray_t mouseRay);
-	sm::Vector3						PlaceDefence(Ray_t mouseRay);
+	uint32_t						PlaceDefenceRenderGrid(Ray_t& mouseRay);
+	sm::Vector3						PlaceDefence(Ray_t& mouseRay);
 
 	//Get functions
 	std::vector<sm::Vector3>*		GetTilePositions();
-	sm::Vector2						GetGridSize() const;
-	Entity*							GetTileByID(sm::Vector2 id);
-	Entity*							GetTileEntity(sm::Vector2 id);
-	Tile							GetTile(sm::Vector2 id);
+	Vector2I						GetGridSize() const;
+	Entity*							GetTileByID(Vector2I& id);
+	Tile							GetTile(Vector2I& id);
 	std::vector<Entity>*			GetTileEntities();
 };

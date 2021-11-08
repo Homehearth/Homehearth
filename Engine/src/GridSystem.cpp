@@ -110,34 +110,53 @@ uint32_t GridSystem::PlaceDefenceRenderGrid(Ray_t& mouseRay)
 	Plane_t plane;
 	plane.normal = { 0.0f, 1.0f, 0.0f };
 
-	m_scene->ForEachComponent<comp::Tile>([&](Entity entity, comp::Tile& tile)
-		{
-			if (mouseRay.Intersects(plane, &plane.point))
-			{
-				if (tile.type == TileType::EMPTY)
-				{
-					LOG_INFO("Mouseray HIT plane detected a EMPTY Tile!");
-					tile.type = TileType::DEFENCE;
+	sm::Vector3 pos;
+	bool isHit = false;
 
-					if (entity.GetComponent<comp::Network>())
+	if (mouseRay.Intersects(plane, &pos))
+	{
+		for (int col = 0; col < m_gridSize.y && !isHit; col++)
+		{
+			for (int row = 0; row < m_gridSize.x && !isHit; row++)
+			{
+				Tile tile = m_tiles[row][col];
+
+				float right = tile.position.x + tile.halfWidth;
+				float left = tile.position.x - tile.halfWidth;
+				float top = tile.position.z + tile.halfWidth;
+				float bottom = tile.position.z - tile.halfWidth;
+
+				if (pos.x > left && pos.x < right && pos.z < top && pos.z > bottom)
+				{
+					isHit = true;
+					if (m_tiles[row][col].type == TileType::EMPTY)
 					{
-						returnID = entity.GetComponent<comp::Network>()->id;
-						comp::BoundingOrientedBox* collider = entity.AddComponent<comp::BoundingOrientedBox>();
-						collider->Center = entity.GetComponent<comp::Transform>()->position;
-						collider->Extents = { entity.GetComponent<comp::Transform>()->scale.x, 10.f , entity.GetComponent<comp::Transform>()->scale.z };
-						entity.AddComponent<comp::Tag<TagType::STATIC>>();
+						LOG_INFO("Mouseray HIT plane detected a EMPTY Tile!");
+						m_tiles[row][col].type = TileType::DEFENCE;
+#if RENDER_GRID
+						if (entity.GetComponent<comp::Network>())
+						{
+							returnID = entity.GetComponent<comp::Network>()->id;
+							comp::BoundingOrientedBox* collider = entity.AddComponent<comp::BoundingOrientedBox>();
+							collider->Center = entity.GetComponent<comp::Transform>()->position;
+							collider->Extents = { entity.GetComponent<comp::Transform>()->scale.x, 10.f , entity.GetComponent<comp::Transform>()->scale.z };
+							entity.AddComponent<comp::Tag<TagType::STATIC>>();
+						}
+#endif // RENDER_GRID
+
+					}
+					else if (m_tiles[row][col].type == TileType::BUILDING || m_tiles[row][col].type == TileType::UNPLACABLE || m_tiles[row][col].type == TileType::DEFAULT)
+					{
+						LOG_INFO("You cant place here!");
+					}
+					else if (m_tiles[row][col].type == TileType::DEFENCE)
+					{
+						LOG_INFO("Theres already a defence here!");
 					}
 				}
-				else if (tile.type == TileType::BUILDING || tile.type == TileType::UNPLACABLE || tile.type == TileType::DEFAULT)
-				{
-					LOG_INFO("You cant place here!");
-				}
-				else if (tile.type == TileType::DEFENCE)
-				{
-					LOG_INFO("Theres already a defence here!");
-				}
 			}
-		});
+		}
+	}
 
 	return returnID;
 }
@@ -150,30 +169,37 @@ sm::Vector3 GridSystem::PlaceDefence(Ray_t& mouseRay)
 	Plane_t plane;
 	plane.normal = { 0.0f, 1.0f, 0.0f };
 	sm::Vector3 pos;
+	bool isHit = false;
 
-	m_scene->ForEachComponent<comp::Tile>([&](Entity entity, comp::Tile& tile)
+	if (mouseRay.Intersects(plane, &pos))
+	{
+		for (int col = 0; col < m_gridSize.y && !isHit; col++)
 		{
-			if (mouseRay.Intersects(plane, &pos))
+			for (int row = 0; row < m_gridSize.x && !isHit; row++)
 			{
-				comp::Transform* t = entity.GetComponent<comp::Transform>();
 
-				float right = t->position.x + tile.halfWidth;
-				float left = t->position.x - tile.halfWidth;
-				float top = t->position.z + tile.halfWidth;
-				float bottom = t->position.z - tile.halfWidth;
+				Tile tile = m_tiles[row][col];
+
+				float right = tile.position.x + tile.halfWidth;
+				float left = tile.position.x - tile.halfWidth;
+				float top = tile.position.z + tile.halfWidth;
+				float bottom = tile.position.z - tile.halfWidth;
 
 				if (pos.x > left && pos.x < right && pos.z < top && pos.z > bottom)
 				{
+					isHit = true;
 					if (tile.type == TileType::EMPTY)
 					{
 						LOG_INFO("Mouseray HIT plane detected a EMPTY Tile!");
 						tile.type = TileType::DEFENCE;
 
-						returnPosition = entity.GetComponent<comp::Transform>()->position;
-						comp::BoundingOrientedBox* collider = entity.AddComponent<comp::BoundingOrientedBox>();
+						returnPosition = tile.position;
+						Entity defenceEntity = m_scene->CreateEntity();
+						comp::BoundingOrientedBox* collider = defenceEntity.AddComponent<comp::BoundingOrientedBox>();
 						collider->Center = returnPosition;
-						collider->Extents = { entity.GetComponent<comp::Transform>()->scale.x, 10.f , entity.GetComponent<comp::Transform>()->scale.z };
-						entity.AddComponent<comp::Tag<TagType::STATIC>>();
+
+						collider->Extents = { 4.2f, 10.f , 4.2f };
+						defenceEntity.AddComponent<comp::Tag<TagType::STATIC>>();
 					}
 					else if (tile.type == TileType::BUILDING || tile.type == TileType::UNPLACABLE || tile.type == TileType::DEFAULT)
 					{
@@ -185,18 +211,22 @@ sm::Vector3 GridSystem::PlaceDefence(Ray_t& mouseRay)
 					}
 				}
 			}
-		});
+		}
+	}
 
 	return returnPosition;
 }
+
 Vector2I GridSystem::GetGridSize() const
 {
 	return m_gridSize;
 }
+
 std::vector<sm::Vector3>* GridSystem::GetTilePositions()
 {
 	return &m_tilePositions;
 }
+
 Entity* GridSystem::GetTileByID(Vector2I& id)
 {
 	if (id.x >= 0 && id.y >= 0 && id.x < m_gridSize.x && id.y < m_gridSize.y)
@@ -213,12 +243,12 @@ Entity* GridSystem::GetTileByID(Vector2I& id)
 	return nullptr;
 }
 
-Tile GridSystem::GetTile(sm::Vector2 id)
+Tile GridSystem::GetTile(Vector2I& id)
 {
 	return m_tiles.at(id.x).at(id.y);
 }
 
 std::vector<Entity>* GridSystem::GetTileEntities()
 {
-	return &m_tileEntites;
+	return nullptr;
 }
