@@ -886,7 +886,7 @@ void Simulation::OnNetworkEntityCreate(entt::registry& reg, entt::entity entity)
 	comp::Network* net = e.GetComponent<comp::Network>();
 	if (net->id == UINT32_MAX)
 	{
-		net->id = GetUniqueID();
+		net->id = m_pServer->PopNextUniqueID();
 	}
 	m_addedEntities.push_back(e);
 }
@@ -1129,9 +1129,4 @@ void Simulation::SendRemoveEntities(const std::vector<uint32_t> entitiesNetIDs) 
 	msg << static_cast<uint32_t>(entitiesNetIDs.size());
 
 	this->Broadcast(msg);
-}
-
-uint32_t Simulation::GetUniqueID()
-{
-	return m_pServer->PopNextUniqueID();
 }
