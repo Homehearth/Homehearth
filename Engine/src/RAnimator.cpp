@@ -138,7 +138,7 @@ bool RAnimator::Create(const std::string& filename)
 	return true;
 }
 
-void RAnimator::Update(const float& dt)
+void RAnimator::Update()
 {
 	if (!m_bones.empty() && m_currentAnim)
 	{
@@ -163,12 +163,13 @@ void RAnimator::Update(const float& dt)
 
 		modelMatrices.clear();
 
-		UpdateStructureBuffer();
+		//UpdateStructureBuffer(); - did not work well...  
 	}
 }
 
-void RAnimator::Bind() const
+void RAnimator::Bind()
 {
+	UpdateStructureBuffer();
 	D3D11Core::Get().DeviceContext()->VSSetShaderResources(T2D_BONESLOT, 1, m_bonesSB_RSV.GetAddressOf());
 }
 

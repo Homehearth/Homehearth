@@ -50,10 +50,10 @@ public:
 	virtual bool Create(const std::string& filename) override;
 
 	//Update the animation
-	void Update(const float& dt);
+	void Update();
 
 	//Bind the bones matrices structured buffer
-	void Bind() const;
+	void Bind();
 
 	//Unbind the bones matrices structured buffer
 	void Unbind() const;

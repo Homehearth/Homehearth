@@ -7,7 +7,7 @@ Stats::Stats()
 	m_updateTime	= 0.0f;
 	m_networkTime	= 0.0f;
 
-	m_framerate		= 30.0f;
+	m_framerate		= 140.0f;
 	m_updaterate	= 1000.0f;
 	m_tickrate		= 60.0f;
 }

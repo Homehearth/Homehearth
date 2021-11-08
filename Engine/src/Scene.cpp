@@ -19,7 +19,8 @@ void Scene::Update(float dt)
 	//Update the animations
 	m_registry.view<comp::Animator>().each([&](comp::Animator& anim)
 	{
-			anim.animator->Update(dt);
+			if (anim.animator)
+				anim.animator->Update();
 	});
 
 	m_2dHandler.Update();
@@ -202,15 +203,6 @@ void Scene::RenderAnimation()
 	// Render everything on same thread
 	if ((inst.start | inst.stop) == 0)
 	{
-		//Update all the animators
-		/*if (m_updateAnimation)
-		{
-			m_registry.view<comp::Animator>().each([&](comp::Animator& anim)
-				{
-					anim.animator->Update(Stats::Get().GetFrameTime());
-				});
-		}*/
-
 		for (auto& it : m_renderableAnimCopies[1])
 		{
 			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.first.data);
@@ -224,15 +216,6 @@ void Scene::RenderAnimation()
 	{
 		for (int i = inst.start; i < inst.stop; i++)
 		{
-			//Update all the animators
-			/*if (m_updateAnimation)
-			{
-				m_registry.view<comp::Animator>().each([&](comp::Animator& anim)
-					{
-						anim.animator->Update(Stats::Get().GetFrameTime());
-					});
-			}*/
-
 			auto& it = m_renderableAnimCopies[1][i];
 			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.first.data);
 
