@@ -183,6 +183,8 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			}
 		}
 
+		//m_predictor.LinearExtrapolate(GetScene("Game"));
+
 		break;
 	}
 	case GameMsg::Game_AddEntity:
@@ -465,6 +467,7 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 				msg >> t;
 				t.rotation.Normalize();
 				e.AddComponent<comp::Transform>(t);
+				m_predictor.Add(e.GetComponent<comp::Network>()->id, t);
 				break;
 			}
 			case ecs::Component::VELOCITY:
@@ -586,7 +589,12 @@ void Game::UpdatePredictorFromMessage(Entity e, message<GameMsg>& msg, const uin
 				comp::Transform t;
 				msg >> t;
 				t.rotation.Normalize();
-				m_predictor.Add(id, t);
+
+				if (m_players.find(id) == m_players.end())
+					m_predictor.Add(id, t);
+				else
+					e.AddComponent<comp::Transform>(t);
+
 				break;
 			}
 			case ecs::Component::VELOCITY:
