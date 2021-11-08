@@ -138,11 +138,11 @@ bool RAnimator::Create(const std::string& filename)
 	return true;
 }
 
-void RAnimator::Update()
+void RAnimator::Update(const float& dt)
 {
 	if (!m_bones.empty() && m_currentAnim)
 	{
-		double tickFT = m_currentAnim->GetTicksPerFrame() * Stats::Get().GetFrameTime();
+		double tickFT = m_currentAnim->GetTicksPerFrame() * Stats::Get().GetUpdateTime();
 		m_currentFrameTime = fmod(m_currentFrameTime + tickFT, m_currentAnim->GetDuraction());
 		double nextFrameTime = m_currentFrameTime + tickFT;
 

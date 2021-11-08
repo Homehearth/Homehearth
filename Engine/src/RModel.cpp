@@ -431,7 +431,7 @@ bool RModel::LoadVertexSkinning(const aiMesh* aimesh, std::vector<anim_vertex_t>
     return true;
 }
 
-void RModel::Render() const
+void RModel::Render(ID3D11DeviceContext* context)
 {
     UINT offset = 0;
     UINT stride = 0;
@@ -439,44 +439,20 @@ void RModel::Render() const
     for (size_t m = 0; m < m_meshes.size(); m++)
     {
         if (m_meshes[m].material)
-            m_meshes[m].material->BindMaterial();
+            m_meshes[m].material->BindMaterial(context);
         
         if (m_meshes[m].hasBones)
             stride = sizeof(anim_vertex_t);
         else
             stride = sizeof(simple_vertex_t);
 
-        D3D11Core::Get().DeviceContext()->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-        D3D11Core::Get().DeviceContext()->IASetVertexBuffers(0, 1, m_meshes[m].vertexBuffer.GetAddressOf(), &stride, &offset);
-        D3D11Core::Get().DeviceContext()->IASetIndexBuffer(m_meshes[m].indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
-        D3D11Core::Get().DeviceContext()->DrawIndexed(m_meshes[m].indexCount, 0, 0);
-
-		if (m_meshes[m].material)
-            m_meshes[m].material->UnBindMaterial();
-    }
-}
-
-void RModel::RenderDeferred(ID3D11DeviceContext* context)
-{
-    UINT offset = 0;
-    UINT stride = 0;
-
-    for (size_t m = 0; m < m_meshes.size(); m++)
-    {
-        if (m_meshes[m].material)
-            m_meshes[m].material->BindDeferredMaterial(context);
-
-        if (m_meshes[m].hasBones)
-            stride = sizeof(anim_vertex_t);
-        else
-            stride = sizeof(simple_vertex_t);
-
+        context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
         context->IASetVertexBuffers(0, 1, m_meshes[m].vertexBuffer.GetAddressOf(), &stride, &offset);
         context->IASetIndexBuffer(m_meshes[m].indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
         context->DrawIndexed(m_meshes[m].indexCount, 0, 0);
 
-        if (m_meshes[m].material)
-            m_meshes[m].material->UnBindDeferredMaterial(context);
+		if (m_meshes[m].material)
+            m_meshes[m].material->UnBindMaterial(context);
     }
 }
 

@@ -344,7 +344,7 @@ void RenderJob(const unsigned int start,
 
 			m_buffer->SetData(m_context, it->data);
 			m_context->VSSetConstantBuffers(0, 1, buffers);
-			it->model->RenderDeferred(m_context);
+			it->model->Render(m_context);
 		}
 
 		pass->PostRender(m_context);

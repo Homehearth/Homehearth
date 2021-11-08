@@ -3,25 +3,14 @@
 
 Stats::Stats()
 {
-	m_deltaTime		= 0.0f;
 	m_frameTime		= 0.0f;
 	m_updateTime	= 0.0f;
 	m_networkTime	= 0.0f;
 
-	m_framerate		= 120.0f;
+	m_framerate		= 30.0f;
 	m_updaterate	= 1000.0f;
 	m_tickrate		= 60.0f;
 }
-
-void Stats::SetDeltaTime(const float& dt)
-{
-	m_deltaTime = dt;
-}
-const float& Stats::GetDeltaTime() const
-{
-	return m_deltaTime;
-}
-
 
 void Stats::SetFrameTime(const float& ft)
 {

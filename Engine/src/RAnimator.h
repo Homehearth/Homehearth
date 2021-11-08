@@ -1,7 +1,6 @@
 #pragma once
 #include "AnimStructures.h"
 #include "RAnimation.h"
-
 const UINT T2D_BONESLOT = 11;
 
 /*
@@ -51,7 +50,7 @@ public:
 	virtual bool Create(const std::string& filename) override;
 
 	//Update the animation
-	void Update();
+	void Update(const float& dt);
 
 	//Bind the bones matrices structured buffer
 	void Bind() const;

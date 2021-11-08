@@ -7,7 +7,6 @@ private:
 	~Stats() = default;
 
 	//How long since last update
-	float m_deltaTime;
 	float m_frameTime;
 	float m_updateTime;
 	float m_networkTime;
@@ -33,10 +32,6 @@ public:
 		static Stats instance;
 		return instance;
 	}
-
-	//Deltatime
-	void			SetDeltaTime(const float& dt);
-	const float&	GetDeltaTime() const;
 
 	//Frametime
 	void			SetFrameTime(const float& ft);

@@ -113,6 +113,7 @@ void Engine::drawImGUI() const
 	//Containers for plotting
 	static std::vector<float> fpsContainer;
 	static std::vector<float> fpsUpdateContainer;
+	static std::vector<float> fpsNetworkContainer;
 	static std::vector<float> ramUsageContainer;
 	static std::vector<float> vRamUsageContainer;
 
@@ -122,6 +123,7 @@ void Engine::drawImGUI() const
 	{
 		fpsContainer.emplace_back(1.f / Stats::Get().GetFrameTime());
 		fpsUpdateContainer.emplace_back(1.f / Stats::Get().GetUpdateTime());
+		fpsNetworkContainer.emplace_back(1.f / Stats::Get().GetNetworkTime());
 		ramUsageContainer.emplace_back((Profiler::GetRAMUsage() / (1024.f * 1024.f)));
 		vRamUsageContainer.emplace_back((Profiler::GetVRAMUsage() / (1042.f * 1024.f)));
 		timer.Start();
@@ -133,6 +135,9 @@ void Engine::drawImGUI() const
 
 	if (fpsUpdateContainer.size() > 10)
 		fpsUpdateContainer.erase(fpsUpdateContainer.begin());
+
+	if (fpsNetworkContainer.size() > 10)
+		fpsNetworkContainer.erase(fpsNetworkContainer.begin());
 
 	if (ramUsageContainer.size() > 10)
 		ramUsageContainer.erase(ramUsageContainer.begin());
@@ -178,6 +183,8 @@ void Engine::drawImGUI() const
 		ImGui::PlotLines(("FPS: " + std::to_string(1.f / Stats::Get().GetFrameTime())).c_str(), fpsContainer.data(), static_cast<int>(fpsContainer.size()), 0, nullptr, 0.0f, Stats::Get().GetFramerate(), ImVec2(150, 50));
 		ImGui::Spacing();
 		ImGui::PlotLines(("Update FPS: " + std::to_string(1.f / Stats::Get().GetUpdateTime())).c_str(), fpsUpdateContainer.data(), static_cast<int>(fpsUpdateContainer.size()), 0, nullptr, 0.0f, Stats::Get().GetUpdaterate(), ImVec2(150, 50));
+		ImGui::Spacing();
+		ImGui::PlotLines(("Network FPS: " + std::to_string(1.f / Stats::Get().GetNetworkTime())).c_str(), fpsNetworkContainer.data(), static_cast<int>(fpsNetworkContainer.size()), 0, nullptr, 0.0f, Stats::Get().GetTickrate(), ImVec2(150, 50));
 		ImGui::Spacing();
 	}
 
@@ -365,7 +372,7 @@ void Engine::RenderThread()
 	float frameTime = 0.f;
 
 	//Need to place inside of the loop if we have to update it from settings
-	const float targetDelta = 1.0f / Stats::Get().GetFramerate();
+	const float TARGET_DELTA = 1.f / Stats::Get().GetFramerate();
 
 	while (IsRunning())
 	{
@@ -374,13 +381,13 @@ void Engine::RenderThread()
 		frameTime += deltaTime;
 
 		//Render every now and then
-		if (frameTime >= targetDelta)
+		if (frameTime >= TARGET_DELTA)
 		{
 			if (GetCurrentScene()->IsRenderReady()) 
 			{
 				Stats::Get().SetFrameTime(frameTime);
 				Render();
-				frameTime = 0.f;
+				frameTime = 0.0f; //-= TARGET_DELTA;
 			}
 		}
 		

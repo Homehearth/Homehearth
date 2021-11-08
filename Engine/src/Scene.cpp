@@ -16,6 +16,12 @@ Scene::Scene()
 
 void Scene::Update(float dt)
 {
+	//Update the animations
+	m_registry.view<comp::Animator>().each([&](comp::Animator& anim)
+	{
+			anim.animator->Update(dt);
+	});
+
 	m_2dHandler.Update();
 	PROFILE_FUNCTION();
 
@@ -44,7 +50,7 @@ void Scene::Update(float dt)
 				m_renderableCopies[0].push_back(r);
 			}
 		});
-		
+			
 		m_renderableCopies.Swap();
 		m_renderableAnimCopies.Swap();
 	}
@@ -98,7 +104,7 @@ void Scene::Render()
 		{
 			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
 			if (it.model)
-				it.model->Render();
+				it.model->Render(D3D11Core::Get().DeviceContext());
 		}
 	}
 	// Render third part of the scene with immediate context
@@ -110,7 +116,7 @@ void Scene::Render()
 			const auto& it = m_renderableCopies[1][i];
 			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
 			if (it.model)
-				it.model->Render();
+				it.model->Render(D3D11Core::Get().DeviceContext());
 		}
 	}
 
@@ -119,6 +125,8 @@ void Scene::Render()
 
 	// Emit event
 	publish<ESceneRender>();
+
+	//m_renderableCopies.ReadyForSwap();
 }
 
 void Scene::RenderDebug()
@@ -146,12 +154,12 @@ void Scene::RenderDebug()
 			m_ColliderHitBuffer.SetData(D3D11Core::Get().DeviceContext(), it.isColliding);
 
 			if (it.model)
-				it.model->Render();
+				it.model->Render(D3D11Core::Get().DeviceContext());
 		}
 
 		// Emit event
 		publish<ESceneRender>();
-		m_debugRenderableCopies.ReadyForSwap();
+		//m_debugRenderableCopies.ReadyForSwap();
 	}
 
 }
@@ -195,19 +203,19 @@ void Scene::RenderAnimation()
 	if ((inst.start | inst.stop) == 0)
 	{
 		//Update all the animators
-		if (m_updateAnimation)
+		/*if (m_updateAnimation)
 		{
 			m_registry.view<comp::Animator>().each([&](comp::Animator& anim)
 				{
-					anim.animator->Update();
+					anim.animator->Update(Stats::Get().GetFrameTime());
 				});
-		}
+		}*/
 
 		for (auto& it : m_renderableAnimCopies[1])
 		{
 			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.first.data);
 			it.second.animator->Bind();
-			it.first.model->Render();
+			it.first.model->Render(D3D11Core::Get().DeviceContext());
 			it.second.animator->Unbind();
 		}
 	}
@@ -217,19 +225,19 @@ void Scene::RenderAnimation()
 		for (int i = inst.start; i < inst.stop; i++)
 		{
 			//Update all the animators
-			if (m_updateAnimation)
+			/*if (m_updateAnimation)
 			{
 				m_registry.view<comp::Animator>().each([&](comp::Animator& anim)
 					{
-						anim.animator->Update();
+						anim.animator->Update(Stats::Get().GetFrameTime());
 					});
-			}
+			}*/
 
 			auto& it = m_renderableAnimCopies[1][i];
 			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.first.data);
 
 			it.second.animator->Bind();
-			it.first.model->Render();
+			it.first.model->Render(D3D11Core::Get().DeviceContext());
 			it.second.animator->Unbind();
 		}
 	}
@@ -240,6 +248,7 @@ void Scene::RenderAnimation()
 	// Emit event
 	publish<ESceneRender>();
 
+	//m_renderableAnimCopies.ReadyForSwap();
 }
 
 bool Scene::IsRender3DReady() const
