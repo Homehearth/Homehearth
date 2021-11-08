@@ -182,36 +182,53 @@ bool AIAStarSearch(Entity& npc, HeadlessScene& scene)
 void Systems::CombatSystem(HeadlessScene& scene, float dt)
 {
 	PROFILE_FUNCTION();
+
+	scene.ForEachComponent<comp::CombatStats>([&](comp::CombatStats& stats)
+		{
+			// Decreases cooldown between attacks.
+			if (stats.delayTimer > 0.f)
+				stats.delayTimer -= dt;
+
+			if (stats.cooldownTimer > 0.f)
+				stats.cooldownTimer -= dt;
+			else
+				stats.isReady = true;
+		});
+
 	// For Each entity that can attack.
 	scene.ForEachComponent<comp::CombatStats, comp::Transform>([&](Entity entity, comp::CombatStats& stats, comp::Transform& transform)
-	{
-		// Decreases cooldown between attacks.
-		if (stats.cooldownTimer > 0.f)
-			stats.cooldownTimer -= dt;
-
+		{
 			//
 			// attack LOGIC
 			//
-			if (stats.isAttacking && stats.cooldownTimer <= 0.f)
+			if (stats.isUsing && stats.delayTimer <= 0.f)
 			{
 
 				//Creates an entity that's used to check collision if an attack lands.
 				Entity attackCollider = scene.CreateEntity();
-				attackCollider.AddComponent<comp::Transform>()->position = transform.position + stats.targetDir;
-				//attackCollider.AddComponent<comp::Tag<TagType::DYNAMIC>>();
-				attackCollider.AddComponent<comp::BoundingOrientedBox>()->Center = transform.position + stats.targetDir;
-				comp::Attack* atk = attackCollider.AddComponent<comp::Attack>();
-				atk->lifeTime = stats.attackLifeTime;
-				atk->damage = stats.attackDamage;
+				comp::Transform* t = attackCollider.AddComponent<comp::Transform>();
+				comp::BoundingOrientedBox* box = attackCollider.AddComponent<comp::BoundingOrientedBox>();
+				
+				box->Extents = sm::Vector3(stats.attackRange * 0.5f);
+				
+				t->position = transform.position + stats.targetDir * stats.attackRange * 0.5f;
+				t->rotation = transform.rotation;
 
+				box->Center = t->position;
+				box->Orientation = t->rotation;
+
+
+				comp::SelfDestruct* selfDestruct = attackCollider.AddComponent<comp::SelfDestruct>();
+				selfDestruct->lifeTime = stats.lifetime;
+				
 				//If the attack is ranged add a velocity to the entity.
 				if (stats.isRanged)
 				{
 					sm::Vector3 vel = stats.targetDir * stats.projectileSpeed;
 					attackCollider.AddComponent<comp::Velocity>()->vel = vel;
 					attackCollider.AddComponent<comp::MeshName>()->name = "Sphere.obj";
-					attackCollider.AddComponent<comp::Network>();
 				}
+				attackCollider.AddComponent<comp::Network>();
 
 				
 				CollisionSystem::Get().AddOnCollision(attackCollider, [=](Entity other)
@@ -221,24 +238,30 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 					
 						
 						comp::Health* otherHealth = other.GetComponent<comp::Health>();
-						comp::Attack* atk = attackCollider.GetComponent<comp::Attack>();
+						comp::CombatStats* stats = entity.GetComponent<comp::CombatStats>();
 
 						if (otherHealth)
 						{
-							otherHealth->currentHealth -= atk->damage;
+							otherHealth->currentHealth -= stats->attackDamage;
+							attackCollider.GetComponent<comp::SelfDestruct>()->lifeTime = 0.f;
 
-							atk->lifeTime = 0.f;
 							comp::Velocity* attackVel = attackCollider.GetComponent<comp::Velocity>();
 							if (attackVel)
 							{
 								other.AddComponent<comp::Force>()->force = attackVel->vel;
 							}
+							else
+							{
+								sm::Vector3 toOther = other.GetComponent<comp::Transform>()->position - entity.GetComponent<comp::Transform>()->position;
+								toOther.Normalize();
+								other.AddComponent<comp::Force>()->force = toOther * stats->attackDamage;
+							}
 							other.UpdateNetwork();
 						}
 					});
 
-			stats.cooldownTimer = stats.attackSpeed;
-			stats.isAttacking = false;
+			stats.cooldownTimer = stats.cooldown;
+			stats.isUsing = false;
 		}
 
 	});
@@ -261,15 +284,11 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 	});
 
 	//Projectile Life System
-	scene.ForEachComponent<comp::Attack>([&](Entity& ent, comp::Attack& Projectile)
-	{
-		Projectile.lifeTime -= 1.f * dt;
-
-			if (Projectile.lifeTime <= 0)
+	scene.ForEachComponent<comp::SelfDestruct>([&](Entity& ent, comp::SelfDestruct& s)
+		{
+			s.lifeTime -= dt;
+			if (s.lifeTime <= 0)
 			{
-#ifdef _DEBUG
-				LOG_INFO("Attack Collider Destroyed");
-#endif
 				ent.Destroy();
 			}
 		});
@@ -398,7 +417,10 @@ void Systems::AISystem(HeadlessScene& scene)
 			stats->targetDir = transformCurrentClosestPlayer->position - transformNPC->position;
 			stats->targetDir.Normalize();
 			stats->targetDir *= 10.f;
-			stats->isAttacking = true;
+			if (ecs::Use(stats))
+			{
+				LOG_INFO("Enemy Attacked");
+			};
 		}
 		
 

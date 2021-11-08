@@ -350,12 +350,12 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 						comp::CombatStats* stats = e.GetComponent<comp::CombatStats>();
 						if (stats)
 						{
-							if (stats->cooldownTimer <= 0.0f)
-								stats->isAttacking = true;
-
 							stats->targetRay = input.mouseRay;
-
 							p->state = comp::Player::State::ATTACK;
+							if (ecs::Use(stats))
+							{
+
+							}
 						}
 						
 					}
@@ -669,7 +669,12 @@ bool Simulation::AddPlayer(uint32_t playerID, const std::string& namePlate)
 	player.AddComponent<comp::MeshName>()->name = "Knight.fbx";
 	player.AddComponent<comp::AnimatorName>()->name = "Player.anim";
 
-	*player.AddComponent<comp::CombatStats>() = { 0.3f, 20.f, 2.0f, true, 30.f };
+	comp::CombatStats* combatStats = player.AddComponent<comp::CombatStats>();
+	combatStats->cooldown = 0.4f;
+	combatStats->attackDamage = 40.f;
+	combatStats->isRanged = false;
+	combatStats->lifetime = 0.1f;
+	
 	player.AddComponent<comp::Health>();
 	player.AddComponent<comp::BoundingOrientedBox>()->Extents = { 2.0f,2.0f,2.0f };
 	
@@ -824,8 +829,6 @@ void Simulation::UpdateInput(InputState state, uint32_t playerID)
 	if (m_players.find(playerID) != m_players.end())
 	{
 		m_playerInputs[m_players.at(playerID)] = state;
-
-
 	}
 }
 
