@@ -14,7 +14,6 @@ private:
 
 
 	GridSystem m_grid;
-	Predictor m_predictor;
 	uint32_t m_waveTimer;
 
 	Entity m_mapEntity;
@@ -37,6 +36,7 @@ private:
 	void OnClientDisconnect();
 	
 	void UpdateEntityFromMessage(Entity entity, message<GameMsg>& msg);
+	void UpdatePredictorFromMessage(Entity entity, message<GameMsg>& msg, const uint32_t& id);
 
 	void UpdateInput();
 	void PlaceDefenceDebug(message<GameMsg>& msg);
@@ -47,6 +47,7 @@ private:
 
 public:
 	Client m_client;
+	Predictor m_predictor;
 	uint32_t m_localPID;
 	uint32_t m_gameID;
 	std::string m_playerName;

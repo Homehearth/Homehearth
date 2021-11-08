@@ -175,7 +175,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			if (m_gameEntities.find(entityID) != m_gameEntities.end())
 			{
 				entity = m_gameEntities.at(entityID);
-				UpdateEntityFromMessage(entity, msg);
+				UpdatePredictorFromMessage(entity, msg, entityID);
 			}
 			else {
 				LOG_WARNING("Updating: Entity %u not in m_gameEntities, should not happen...", entityID);
@@ -567,6 +567,127 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 		}
 	}
 
+}
+
+void Game::UpdatePredictorFromMessage(Entity e, message<GameMsg>& msg, const uint32_t& id)
+{
+	uint32_t bits;
+	msg >> bits;
+	std::bitset<ecs::Component::COMPONENT_MAX> compSet(bits);
+
+	for (int i = ecs::Component::COMPONENT_COUNT - 1; i >= 0; i--)
+	{
+		if (compSet.test(i))
+		{
+			switch (i)
+			{
+			case ecs::Component::TRANSFORM:
+			{
+				comp::Transform t;
+				msg >> t;
+				t.rotation.Normalize();
+				m_predictor.Add(id, t);
+				break;
+			}
+			case ecs::Component::VELOCITY:
+			{
+				comp::Velocity v;
+				msg >> v;
+				e.AddComponent<comp::Velocity>(v);
+				break;
+			}
+			case ecs::Component::MESH_NAME:
+			{
+				std::string name;
+				msg >> name;
+				e.AddComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>(name);
+				break;
+			}
+			case ecs::Component::ANIMATOR_NAME:
+			{
+				comp::AnimatorName animName;
+				msg >> animName.name;
+
+				//Get model
+				comp::Renderable* renderable = e.GetComponent<comp::Renderable>();
+				if (renderable && renderable->model)
+				{
+
+					//Add an animator if we can get it
+					if (!animName.name.empty())
+					{
+						std::shared_ptr<RAnimator> anim = ResourceManager::Get().CopyResource<RAnimator>(animName.name, true);
+						if (anim)
+						{
+							if (anim->LoadSkeleton(renderable->model->GetSkeleton()))
+								e.AddComponent<comp::Animator>()->animator = anim;
+						}
+					}
+				}
+				break;
+			}
+			case ecs::Component::NAME_PLATE:
+			{
+				std::string name;
+				msg >> name;
+				e.AddComponent<comp::NamePlate>()->namePlate = name;
+				break;
+			}
+			case ecs::Component::HEALTH:
+			{
+				comp::Health heal;
+				msg >> heal;
+				e.AddComponent<comp::Health>(heal);
+				break;
+			}
+			case ecs::Component::BOUNDING_ORIENTED_BOX:
+			{
+				comp::BoundingOrientedBox box;
+				msg >> box;
+				e.AddComponent<comp::BoundingOrientedBox>(box);
+				break;
+			}
+			case ecs::Component::BOUNDING_SPHERE:
+			{
+				comp::BoundingSphere s;
+				msg >> s;
+				e.AddComponent<comp::BoundingSphere>(s);
+				break;
+			}
+			case ecs::Component::PLANECOLLIDER:
+			{
+				comp::PlaneCollider p;
+				msg >> p;
+				*e.AddComponent<comp::PlaneCollider>() = p;
+				break;
+			}
+			case ecs::Component::LIGHT:
+			{
+				comp::Light l;
+				msg >> l;
+				e.AddComponent<comp::Light>(l);
+				break;
+			}
+			case ecs::Component::PLAYER:
+			{
+				comp::Player p;
+				msg >> p;
+				e.AddComponent<comp::Player>(p);
+				break;
+			}
+			case ecs::Component::TILE:
+			{
+				comp::Tile t;
+				msg >> t;
+				e.AddComponent<comp::Tile>(t);
+				break;
+			}
+			default:
+				LOG_WARNING("Retrieved unimplemented component %u", i);
+				break;
+			}
+		}
+	}
 }
 
 void Game::UpdateInput()

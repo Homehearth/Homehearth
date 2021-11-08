@@ -137,7 +137,7 @@ namespace sceneHelp
 
 		InputSystem::Get().SetCamera(gameScene.GetCurrentCamera());
 
-		gameScene.on<ESceneUpdate>([cameraEntity, debugCameraEntity](const ESceneUpdate& e, Scene& scene)
+		gameScene.on<ESceneUpdate>([cameraEntity, debugCameraEntity, engine](const ESceneUpdate& e, Scene& scene)
 			{
 
 				IMGUI(
@@ -146,6 +146,8 @@ namespace sceneHelp
 				ImGui::End();
 				);
 
+				// Prediction
+				engine->m_predictor.LinearExtrapolate(engine->GetScene("Game"));
 				GameSystems::RenderIsCollidingSystem(scene);
 				GameSystems::UpdatePlayerVisuals(scene);
 #ifdef _DEBUG
