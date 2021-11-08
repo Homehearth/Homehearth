@@ -26,7 +26,7 @@ struct Plane_t
 struct Ray_t
 {
 	sm::Vector3 rayPos, rayDir;
-	bool Intersects(Plane_t plane, sm::Vector3& outIntersectPoint)
+	bool Intersects(Plane_t plane, sm::Vector3* outIntersectPoint = nullptr)
 	{
 		rayDir.Normalize(rayDir);
 		float dotAngle = plane.normal.Dot(rayDir);
@@ -38,7 +38,10 @@ struct Ray_t
 		if (t < 0)
 			return false;
 
-		outIntersectPoint = rayPos + rayDir * t;
+		if (outIntersectPoint)
+		{
+			*outIntersectPoint = rayPos + rayDir * t;
+		}
 		return true;
 	}
 };
@@ -94,9 +97,9 @@ ALIGN16
 struct simple_vertex_t
 {
 	sm::Vector3 position = {};
-	sm::Vector2 uv		 = {};
-	sm::Vector3 normal	 = {};
-	sm::Vector3 tangent  = {};
+	sm::Vector2 uv = {};
+	sm::Vector3 normal = {};
+	sm::Vector3 tangent = {};
 	sm::Vector3 bitanget = {};
 };
 
@@ -108,12 +111,12 @@ struct simple_vertex_t
 ALIGN16
 struct anim_vertex_t
 {
-	sm::Vector3 position	= {};
-	sm::Vector2	uv			= {};
-	sm::Vector3	normal		= {};
-	sm::Vector3	tangent		= {};
-	sm::Vector3	bitanget	= {};
-	dx::XMUINT4	boneIDs	    = {};
+	sm::Vector3 position = {};
+	sm::Vector2	uv = {};
+	sm::Vector3	normal = {};
+	sm::Vector3	tangent = {};
+	sm::Vector3	bitanget = {};
+	dx::XMUINT4	boneIDs = {};
 	sm::Vector4	boneWeights = {};
 };
 
@@ -142,13 +145,13 @@ struct camera_Matrix_t
 ALIGN16
 struct light_t
 {
-	sm::Vector4 position	= {};	//Only in use on Point Lights
-	sm::Vector4 direction	= {};	//Only in use on Directional Lights
-	sm::Vector4 color		= {};	//Color and Intensity of the Lamp
-	float		range		= 0;	//Only in use on Point Lights
-	TypeLight	type		= TypeLight::DIRECTIONAL;	// 0 = Directional, 1 = Point
-	UINT		enabled		= 0;	// 0 = Off, 1 = On
-	float		padding		= 0;
+	sm::Vector4 position = {};	//Only in use on Point Lights
+	sm::Vector4 direction = {};	//Only in use on Directional Lights
+	sm::Vector4 color = {};	//Color and Intensity of the Lamp
+	float		range = 0;	//Only in use on Point Lights
+	TypeLight	type = TypeLight::DIRECTIONAL;	// 0 = Directional, 1 = Point
+	UINT		enabled = 0;	// 0 = Off, 1 = On
+	float		padding = 0;
 };
 
 static struct GridProperties_t

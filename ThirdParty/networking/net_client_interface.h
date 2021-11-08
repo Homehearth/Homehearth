@@ -63,6 +63,7 @@ namespace network
 		void WriteHeader();
 		void WritePayload();
 		void WriteValidation();
+		void Handshake();
 
 		static VOID CALLBACK AlertThread()
 		{
@@ -124,6 +125,28 @@ namespace network
 		// Sends a message to the server
 		void Send(message<T>& msg);
 	};
+
+	template <typename T>
+	void client_interface<T>::Handshake()
+	{
+		PER_IO_DATA* context = new PER_IO_DATA;
+		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
+		char buffer[10] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+		context->DataBuf.buf = buffer;
+		context->DataBuf.len = static_cast<ULONG>(sizeof(buffer));
+		context->state = NetState::WRITE_PACKET;
+		DWORD bytes = 0;
+		socklen_t len = sizeof(m_endpointUDP);
+		if (WSASendTo(m_udpSocket, &context->DataBuf, 1, &bytes, 0, (sockaddr*)&m_endpointUDP, len, &context->Overlapped, NULL) == SOCKET_ERROR)
+		{
+			DWORD error = WSAGetLastError();
+			if (error != WSA_IO_PENDING)
+			{
+				LOG_ERROR("SendTo: %d", error);
+				delete context;
+			}
+		}
+	}
 
 	template <typename T>
 	void client_interface<T>::PrimeReadPacket()
@@ -424,7 +447,7 @@ namespace network
 		if (type == SockType::TCP)
 		{
 			setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, &enable, sizeof(enable));
-			m_endpoint = *(struct sockaddr_in*)p->ai_addr;
+			m_endpoint = *((struct sockaddr_in*)p->ai_addr);
 		}
 		else
 		{
@@ -567,23 +590,8 @@ namespace network
 			return false;
 		}
 
-		PER_IO_DATA* context = new PER_IO_DATA;
-		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
-		char buffer[10] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
-		context->DataBuf.buf = buffer;
-		context->DataBuf.len = static_cast<ULONG>(sizeof(buffer));
-		context->state = NetState::WRITE_PACKET;
-		DWORD bytes = 0;
-		len = sizeof(m_endpointUDP);
-		if (WSASendTo(m_udpSocket, &context->DataBuf, 1, &bytes, 0, (sockaddr*)&m_endpointUDP, len, &context->Overlapped, NULL) == SOCKET_ERROR)
-		{
-			DWORD error = WSAGetLastError();
-			if (error != WSA_IO_PENDING)
-			{
-				LOG_ERROR("SendTo: %d", error);
-				delete context;
-			}
-		}
+		// Sends UDP packet to server so that it registers the client
+		this->Handshake();
 
 		if (m_workerThread)
 		{

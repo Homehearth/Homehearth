@@ -605,12 +605,12 @@ namespace network
 		struct addrinfo hints, * servinfo, * p;
 		ZeroMemory(&hints, sizeof(hints));
 		hints.ai_family = AF_INET;
-		hints.ai_flags = AI_PASSIVE;
 
 		if (type == SockType::TCP)
 		{
 			hints.ai_socktype = SOCK_STREAM;
 			hints.ai_protocol = IPPROTO_TCP;
+			hints.ai_flags = AI_PASSIVE;
 		}
 		else
 		{
@@ -646,8 +646,6 @@ namespace network
 			int enable = 1;
 
 			// Options to disable Nagle's algorithm (can queue up multiple packets instead of sending 1 by 1)
-			// SO_REUSEADDR will let the server to reuse the port its bound on even if it have not closed 
-			// by the the operating system yet.
 			if (type == SockType::TCP)
 			{
 				if (setsockopt(socket, IPPROTO_TCP, TCP_NODELAY, (char*)&enable, sizeof(int)) != 0)
@@ -657,6 +655,8 @@ namespace network
 				}
 			}
 
+			// SO_REUSEADDR will let the server to reuse the port its bound on even if it have not closed 
+			// by the the operating system yet. Also it allows UDP/TCP being bound to the same port working
 			if (setsockopt(socket, SOL_SOCKET, SO_REUSEADDR, (char*)&enable, sizeof(int)) != 0)
 			{
 				LOG_ERROR("setsockopt: %d", WSAGetLastError());
@@ -856,6 +856,7 @@ namespace network
 						}
 						case NetState::READ_PACKET:
 						{
+							LOG_INFO(":)");
 							break;
 						}
 						}
