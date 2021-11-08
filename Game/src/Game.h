@@ -2,6 +2,7 @@
 #include <EnginePCH.h>
 #include <Engine.h>
 #include <GridSystem.h>
+#include "Predictor.h"
 
 class Game : public Engine
 {
@@ -13,6 +14,7 @@ private:
 
 
 	GridSystem m_grid;
+	Predictor m_predictor;
 	uint32_t m_waveTimer;
 
 	Entity m_mapEntity;
