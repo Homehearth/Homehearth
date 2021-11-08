@@ -130,16 +130,20 @@ void BasicEngine<SceneType>::Run()
 		// Update time.
 		currentFrame = omp_get_wtime();
 		deltaTime = static_cast<float>(currentFrame - lastFrame);
-		Stats::Get().SetDeltaTime(deltaTime);
+		//Stats::Get().SetDeltaTime(deltaTime);
 
-		network_time += deltaTime;
-		update_time += deltaTime;
+		/*update_time += deltaTime;
 		if (update_time >= TARGET_UPDATE)
 		{
 			Stats::Get().SetUpdateTime(update_time);
 			Update(update_time);
 			update_time = 0.0f;
-		}
+		}*/
+
+		Stats::Get().SetUpdateTime(deltaTime);
+		Update(deltaTime);
+
+		network_time += deltaTime;
 		if (network_time >= TICK_RATE)
 		{
 			Stats::Get().SetNetworkTime(network_time);
