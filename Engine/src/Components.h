@@ -139,30 +139,7 @@ namespace ecs
 			bool isReady = false;
 		};
 
-		struct Node
-		{
-			float f = FLT_MAX, g = FLT_MAX, h = FLT_MAX;
-			sm::Vector3 position;
-			sm::Vector2 id;
-			std::vector<Node*> connections;
-			ecs::component::Node* parent;
-			bool reachable = true;
-			void ResetFGH()
-			{
-				f = FLT_MAX, g = FLT_MAX, h = FLT_MAX;
-			}
-			bool ConnectionAlreadyExists(Node* other)
-			{
-				for (Node* node : connections)
-				{
-					if (node == other)
-					{
-						return true;
-					}
-				}
-				return false;
-			}
-		};
+	
 
 		struct NPC
 		{
@@ -176,8 +153,8 @@ namespace ecs
 			float attackRange = 10.f;
 			bool hostile;
 			uint32_t currentNodeTarget = static_cast<uint32_t>(-1);
-			std::vector<ecs::component::Node*> path;
-			ecs::component::Node* currentNode;
+			//std::vector<AIHandler::Node*> path;
+			//AIHandler::Node* currentNode;
 			Entity currentClosest;
 		};
 

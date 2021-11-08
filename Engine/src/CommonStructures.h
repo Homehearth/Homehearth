@@ -94,9 +94,9 @@ ALIGN16
 struct simple_vertex_t
 {
 	sm::Vector3 position = {};
-	sm::Vector2 uv		 = {};
-	sm::Vector3 normal	 = {};
-	sm::Vector3 tangent  = {};
+	sm::Vector2 uv = {};
+	sm::Vector3 normal = {};
+	sm::Vector3 tangent = {};
 	sm::Vector3 bitanget = {};
 };
 
@@ -108,12 +108,12 @@ struct simple_vertex_t
 ALIGN16
 struct anim_vertex_t
 {
-	sm::Vector3 position	= {};
-	sm::Vector2	uv			= {};
-	sm::Vector3	normal		= {};
-	sm::Vector3	tangent		= {};
-	sm::Vector3	bitanget	= {};
-	dx::XMUINT4	boneIDs	    = {};
+	sm::Vector3 position = {};
+	sm::Vector2	uv = {};
+	sm::Vector3	normal = {};
+	sm::Vector3	tangent = {};
+	sm::Vector3	bitanget = {};
+	dx::XMUINT4	boneIDs = {};
 	sm::Vector4	boneWeights = {};
 };
 
@@ -142,13 +142,13 @@ struct camera_Matrix_t
 ALIGN16
 struct light_t
 {
-	sm::Vector4 position	= {};	//Only in use on Point Lights
-	sm::Vector4 direction	= {};	//Only in use on Directional Lights
-	sm::Vector4 color		= {};	//Color and Intensity of the Lamp
-	float		range		= 0;	//Only in use on Point Lights
-	TypeLight	type		= TypeLight::DIRECTIONAL;	// 0 = Directional, 1 = Point
-	UINT		enabled		= 0;	// 0 = Off, 1 = On
-	float		padding		= 0;
+	sm::Vector4 position = {};	//Only in use on Point Lights
+	sm::Vector4 direction = {};	//Only in use on Directional Lights
+	sm::Vector4 color = {};	//Color and Intensity of the Lamp
+	float		range = 0;	//Only in use on Point Lights
+	TypeLight	type = TypeLight::DIRECTIONAL;	// 0 = Directional, 1 = Point
+	UINT		enabled = 0;	// 0 = Off, 1 = On
+	float		padding = 0;
 };
 
 static struct GridProperties_t
@@ -167,4 +167,29 @@ enum class TileType
 	BUILDING,
 	UNPLACABLE,
 	DEFENCE
+};
+struct Vector2I
+{
+	int x = 0, y = 0;
+
+	Vector2I(int&& x, int&& y) :x(x), y(y) {};
+	Vector2I(int& x, int& y) :y(y), x(x) {};
+
+	Vector2I() = default;
+
+	bool operator==(const Vector2I& other)
+	{
+		return (x == other.x && y == other.y);
+	}
+	//Vector2I& operator=(const sm::Vector2& other)
+	//{
+	//	return { (int)other.x,(int)other.y };
+	//}
+	Vector2I& operator+(const Vector2I& other)
+	{
+		this->x += other.x;
+		this->y += other.y;
+
+		return *this;
+	}
 };
