@@ -2,7 +2,7 @@
 #include "AnimStructures.h"
 #include "RAnimation.h"
 
-const UINT T2D_BONESLOT = 11;
+const UINT T2D_BONESLOT = 9;
 
 /*
 	Loads in an animator from our custom format ".anim"
