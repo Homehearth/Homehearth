@@ -10,8 +10,8 @@ void LightCullingPass::ComputeGridFrustums()
     dx::XMUINT3 numThreads = { screenWidth / TILE_SIZE, screenHeight / TILE_SIZE, 1, };
     dx::XMUINT3 numThreadGroups = { numThreads.x / TILE_SIZE, numThreads.y / TILE_SIZE, 1 };
 
-    m_dispatchParams.NumThreadGroups = numThreadGroups;
-    m_dispatchParams.NumThreads = numThreads;
+    m_dispatchParams.numThreadGroups = numThreadGroups;
+    m_dispatchParams.numThreads = numThreads;
 
     // We will need 1 frustum for each grid cell.
     // [x, y] screen resolution and [z,z] tile size yield [x/z, y/z] grid size.
@@ -87,7 +87,7 @@ void LightCullingPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceConte
         DC->CSSetShaderResources(0, 1, PM->m_gridFrustumSRV.GetAddressOf());
         DC->CSSetShaderResources(2, 1, PM->m_depthBufferSRV.GetAddressOf());
 
-        DC->Dispatch(m_dispatchParams.NumThreads.x, m_dispatchParams.NumThreads.y, 1);
+        DC->Dispatch(m_dispatchParams.numThreads.x, m_dispatchParams.numThreads.y, 1);
     }
 }
 

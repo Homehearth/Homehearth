@@ -172,12 +172,26 @@ enum class TileType
 ALIGN16
 struct dispatch_params_t
 {
-	DirectX::XMUINT4 numThreadGroups;
-	DirectX::XMUINT4 numThreads;
+	DirectX::XMUINT3 numThreadGroups;
+	DirectX::XMUINT3 numThreads;
 };
 
 ALIGN16
 struct screen_view_params_t
 {
-	
+	sm::Vector4 inverseProjection;
+	sm::Vector2 screenDimensions;
+};
+
+ALIGN16
+struct plane_t
+{
+	sm::Vector3 normal;
+	float  distanceToOrigin;
+};
+
+ALIGN16
+struct frustum_t
+{
+	plane_t planes[4];
 };
