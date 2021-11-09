@@ -1,7 +1,5 @@
 #pragma once
-#include "EnginePCH.h"
 #include <stb_image.h>
-#include "Intersections.h"
 
 enum class TileType
 {
@@ -15,7 +13,7 @@ enum class TileType
 struct Tile 
 {
 	TileType type					= TileType::DEFAULT;
-	sm::Vector2 gridID				= { -1, -1 };
+	Vector2I gridID				= { -1, -1 };
 	float halfWidth					= 0;
 	sm::Vector3 position			= { 0, 0, 0 };
 };
@@ -26,7 +24,6 @@ private:
 	Vector2I						m_mapSize;	//Width x length in, ingame units
 	Vector2I						m_gridSize;	//Tiles x tiles
 	sm::Vector3						m_position;
-
 	float							m_tileHalfWidth;
 	HeadlessScene*					m_scene;
 
@@ -40,9 +37,9 @@ public:
 	void							Initialize(Vector2I mapSize, sm::Vector3 position, std::string fileName, HeadlessScene* scene);
 
 	void							PlaceDefence(Ray_t& mouseRay);
-
+	uint32_t						GetTileCount() const;
 	//Get functions
 	Vector2I						GetGridSize() const;
-	Tile							GetTile(Vector2I& id);
+	Tile*							GetTile(Vector2I& id);
 	std::vector<Entity>*			GetTileEntities();
 };

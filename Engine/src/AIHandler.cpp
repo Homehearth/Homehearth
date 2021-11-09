@@ -1,11 +1,6 @@
 #include "EnginePCH.h"
 #include "AIHandler.h"
 
-std::vector<std::unique_ptr<AIHandler::Node>>& AIHandler::GetNeighbors(std::unique_ptr<AIHandler::Node>& node, comp::Tile& tile, const Vector2I& gridSize)
-{
-	std::vector<std::unique_ptr<Node>> neighbors;
-
-}
 
 Entity AIHandler::FindClosestPlayer(HeadlessScene& scene, sm::Vector3 position, comp::NPC* npc)
 {
@@ -34,7 +29,7 @@ Entity AIHandler::FindClosestPlayer(HeadlessScene& scene, sm::Vector3 position, 
 	return npc->currentClosest;
 }
 
-AIHandler::Node* AIHandler::FindClosestNode(sm::Vector3 position)
+Node* AIHandler::FindClosestNode(sm::Vector3 position)
 {
 	Node* currentClosest = nullptr;
 
@@ -42,93 +37,110 @@ AIHandler::Node* AIHandler::FindClosestNode(sm::Vector3 position)
 	return currentClosest;
 }
 
-AIHandler::Node* AIHandler::GetNodeByID(Vector2I id) const
+std::vector<Node*> AIHandler::GetNeighbors(GridSystem* grid, Tile* baseNode)
 {
-	try
+	std::vector<Node*> neighbors;
+	if ((baseNode->type == TileType::DEFAULT
+		|| baseNode->type == TileType::EMPTY))
 	{
-		return m_nodes.at(id).get();
+
+		Tile* currentTile = nullptr;
+		for (int i = max(0, baseNode->gridID.x - 1); i <= min(baseNode->gridID.x + 1, grid->GetGridSize().x - 1); i++)
+		{
+			for (int j = max(0, baseNode->gridID.y - 1); j <= min(baseNode->gridID.y + 1, grid->GetGridSize().y - 1); j++)
+			{
+				if (i != baseNode->gridID.x || j != baseNode->gridID.y)
+				{
+					currentTile = grid->GetTile(Vector2I(i, j));
+					if (currentTile->type == TileType::DEFAULT
+						|| currentTile->type == TileType::EMPTY)
+					{
+						neighbors.push_back(GetNodeByID({ i,j }));
+					}
+				}
+			}
+		}
+
+
+		//LOG_INFO("Connections: %d", nodes.at(i)->connections.size());
 	}
-	catch (std::out_of_range)
-	{
-		return nullptr;
-	}
+	return neighbors;
+}
+
+Node* AIHandler::GetNodeByID(Vector2I id) const
+{
+
+	return m_nodes[id.x][id.y].get();
+
 }
 
 bool AIHandler::AddNode(Vector2I id)
 {
-	if (!GetNodeByID(id))
+	if (GetNodeByID(id))
 	{
 		return false;
 	}
 	else
 	{
-		m_nodes.insert({ id, std::make_unique<Node>(id) });
+		m_nodes[id.x][id.y] = std::make_unique<Node>(id);
 		return true;
 	}
 }
 
 bool AIHandler::AddNode(std::unique_ptr<Node>& node)
 {
-	if (!GetNodeByID(node->id))
+	if (GetNodeByID(node->id))
 	{
 		return false;
 	}
 	else
 	{
-		m_nodes.insert({ node->id, std::move(node) });
+		m_nodes[node->id.x][node->id.y] = std::move(node);
 		return true;
 	}
 }
 
-void AIHandler::CreateNodes(GridSystem* grid, HeadlessScene* scene)
+void AIHandler::CreateNodes(GridSystem* grid)
 {
 	int itrID = 0;
-	std::vector<Entity>* tiles = grid->GetTiles();
 	//Create Nodes
-	for (int i = 0; i < tiles->size(); i++)
+	LOG_INFO("AIHandler: Creating Nodes");
+	m_nodes.resize(grid->GetGridSize().x);
+	for (int i = 0; i < m_nodes.size(); i++)
 	{
-		std::unique_ptr<Node> currentNode = std::make_unique<Node>(tiles->at(i).GetComponent<comp::Tile>()->gridID);
-		if (tiles->at(i).GetComponent<comp::Tile>()->type == TileType::BUILDING ||
-			tiles->at(i).GetComponent<comp::Tile>()->type == TileType::DEFENCE ||
-			tiles->at(i).GetComponent<comp::Tile>()->type == TileType::UNPLACABLE)
+		m_nodes[i].resize(grid->GetGridSize().y);
+	}
+
+	for (int i = 0; i < grid->GetGridSize().x; i++)
+	{
+		for (int j = 0; j < grid->GetGridSize().y; j++)
 		{
-			currentNode->reachable = false;
+			Vector2I tileID = { i,j };
+			Vector2I nodeID = grid->GetTile(tileID)->gridID;
+			std::unique_ptr<Node> currentNode = std::make_unique<Node>(nodeID);
+			if (grid->GetTile(Vector2I(i, j))->type == TileType::BUILDING ||
+				grid->GetTile(Vector2I(i, j))->type == TileType::DEFENCE ||
+				grid->GetTile(Vector2I(i, j))->type == TileType::UNPLACABLE)
+			{
+				currentNode->reachable = false;
+			}
+			AddNode(currentNode);
 		}
-		AddNode(currentNode);
 	}
 
 	//Build Connections
-	for (int i = 0; i < tiles->size(); i++)
+	LOG_INFO("AIHandler: Connecting Nodes");
+	for (int i = 0; i < grid->GetGridSize().x; i++)
 	{
-		comp::Tile* entityTile = tiles->at(i).GetComponent<comp::Tile>();
-		Vector2I currentID = entityTile->gridID;
-		//Get Neighbors
-		Entity* currentTile = grid->GetTileByID(currentID);
-		if ((currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
-			|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
+		for (int j = 0; j < grid->GetGridSize().y; j++)
 		{
-			Vector2I gridSize = grid->GetGridSize();
-			currentTile = grid->GetTileByID(currentID + sm::Vector2(-1, 0));
-			if (gridSize.x > 0)
-			{
-				for (int i = max(0, currentID.x - 1); i <= min(currentID.x + 1, gridSize.x); i++)
-				{
-					for (int j = max(0, currentID.y - 1); j <= min(currentID.y + 1, gridSize.y); j++)
-					{
-						if (i != currentID.x || j != currentID.y)
-						{
-							currentTile = grid->GetTileByID({ i,j });
-							if (currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
-								|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY)
-							{
-								m_nodes.at({ i,j })->connections.push_back(GetNodeByID({ i,j }));
-							}
-						}
-					}
-				}
-			}
+			Tile* entityTile = grid->GetTile(Vector2I(i, j));
 
-			//LOG_INFO("Connections: %d", nodes.at(i)->connections.size());
+			std::vector<Node*> neighbors = GetNeighbors(grid, entityTile);
+			for (auto neighbor : neighbors)
+			{
+				m_nodes[i][j]->connections.push_back(neighbor);
+			}
 		}
 	}
 
@@ -247,6 +259,7 @@ void AIHandler::AStarSearch(HeadlessScene& scene, Entity npc)
 		npcComp->path.insert(npcComp->path.begin(), currentNode);
 		currentNode = currentNode->parent;
 	}
+
 
 	//scene.ForEachComponent<Node>([&](Entity entity, Node& node)
 	//	{

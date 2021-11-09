@@ -65,7 +65,7 @@ void GridSystem::Initialize(Vector2I mapSize, sm::Vector3 position, std::string 
 			sm::Vector3 tilePosition = { tileSize.x * row + m_tileHalfWidth, 0.f , (tileSize.y * -col) - m_tileHalfWidth };
 
 			Tile tileTemp;
-			tileTemp.gridID		= { (float)row, (float)col };
+			tileTemp.gridID		= { row, col };
 			tileTemp.halfWidth	= m_tileHalfWidth;
 			tileTemp.type		= tileTypeTemp;
 			tileTemp.position	= tilePosition;
@@ -169,15 +169,20 @@ void GridSystem::PlaceDefence(Ray_t& mouseRay)
 
 }
 
+uint32_t GridSystem::GetTileCount() const
+{
+	return m_gridSize.x * m_gridSize.y;
+}
+
 Vector2I GridSystem::GetGridSize() const
 {
 	return m_gridSize;
 }
 
 
-Tile GridSystem::GetTile(Vector2I& id)
+Tile* GridSystem::GetTile(Vector2I& id)
 {
-	return m_tiles.at(id.x).at(id.y);
+	return &m_tiles.at(id.x).at(id.y);
 }
 
 std::vector<Entity>* GridSystem::GetTileEntities()

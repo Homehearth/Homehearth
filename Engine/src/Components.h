@@ -3,7 +3,6 @@
 #include "RModel.h"
 #include "RAnimator.h"
 #include "ResourceManager.h"
-#include "AIHandler.h"
 
 namespace ecs
 {
@@ -19,7 +18,6 @@ namespace ecs
 		BOUNDING_SPHERE,
 		LIGHT,
 		PLAYER,
-		TILE,
 		COMPONENT_COUNT,
 		COMPONENT_MAX = 32
 	};
@@ -146,8 +144,8 @@ namespace ecs
 			float attackRange = 10.f;
 			bool hostile;
 			uint32_t currentNodeTarget = static_cast<uint32_t>(-1);
-			std::vector<AIHandler::Node*> path;
-			AIHandler::Node* currentNode;
+			std::vector<Node*> path;
+			Node* currentNode;
 			Entity currentClosest;
 		};
 

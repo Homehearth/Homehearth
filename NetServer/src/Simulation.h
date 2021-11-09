@@ -2,6 +2,7 @@
 #include "Server.h"
 #include "HeadlessEngine.h"
 #include "GridSystem.h"
+#include "AIHandler.h"
 #include "ServerSystems.h"
 #include "Wave.h"
 
@@ -19,6 +20,7 @@ private:
 	uint32_t m_gameID;
 	uint32_t m_tick;
 	GridSystem m_grid;
+	AIHandler m_aiHandler;
 
 	HeadlessScene* m_pLobbyScene;
 	HeadlessScene* m_pGameScene;
