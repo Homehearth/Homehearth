@@ -1,90 +1,8 @@
-/*
----------------------------------Textures and SamplerState---------------------------------
-*/
-
-Texture2D t_depth               : register(t0);
-Texture2D t_albedo              : register(t1);
-Texture2D t_normal              : register(t2);
-Texture2D t_metalness           : register(t3);
-Texture2D t_roughness           : register(t4);
-Texture2D t_aomap               : register(t5);
-Texture2D t_displace            : register(t6);
-Texture2D t_opacitymask         : register(t7);
-
-SamplerState s_linearSampler    : register(s0);
-SamplerState s_pointSampler     : register(s1);
-
-
-/*
----------------------------------Shader Struct & Const Variables---------------------------------
-*/
-
-struct Light
-{
-    float4 position;    //Only in use on Point Lights
-    float4 direction;   //Only in use on Directional Lights
-    float4 color;       //Color and Intensity of the Lamp
-    float  range;       //Only in use on Point Lights
-    int    type;        // 0 = Directional, 1 = Point
-    uint   enabled;     // 0 = Off, 1 = On
-    float  padding;
-};
-
-struct PixelIn
-{
-    float4 pos : SV_POSITION;
-    float2 uv : TEXCOORD;
-    float3 normal : NORMAL;
-    float3 tangent : TANGENT;
-    float3 biTangent : BINORMAL;
-    float4 worldPos : WORLDPOSITION;
-};
+#ifndef _COMMON_HLSLI_
+	#error You may not include this header directly.
+#endif
 
 static const float PI = 3.14159265359;
-
-/*
----------------------------------Buffers---------------------------------
-*/
-
-StructuredBuffer<Light> s_Lights : register(t10);
-/*
-    Material constant buffers
-*/
-
-cbuffer matConstants_t : register(b0)
-{
-    float3 c_ambient;
-    float c_shiniess;
-    float3 c_diffuse;
-    float c_opacity;
-    float3 c_specular;
-};
-
-cbuffer properties_t : register(b2)
-{
-    //If a texture is set this will be 1
-    int c_hasAlbedo;
-    int c_hasNormal;
-    int c_hasMetalness;
-    int c_hasRoughness;
-    int c_hasAoMap;
-    int c_hasDisplace;
-    int c_hasOpacity;
-};
-
-cbuffer Camera : register(b1)
-{
-    float4 c_cameraPosition;
-    float4 c_cameraTarget;
-    
-    float4x4 c_projection;
-    float4x4 c_view;
-}
-
-cbuffer LightsInfo : register(b3)
-{
-    float4 c_info = float4(0.f, 0.f, 0.f, 0.f);
-}
 
 /*
 ---------------------------------Normal distribution function---------------------------------
@@ -240,7 +158,7 @@ void SampleTextures(PixelIn input, inout float3 albedo, inout float3 N, inout fl
     //If albedo texture exists, sample from it
     if(c_hasAlbedo == 1)
     {
-        float4 albedoSamp = t_albedo.Sample(s_linearSampler, input.uv);
+        float4 albedoSamp = t_albedo.Sample(s_linear, input.uv);
         //Alpha-test
         clip(albedoSamp.a < 0.5f ? -1 : 1);
         albedo = pow(max(albedoSamp.rgb, 0.0f), 2.2f); //Power the albedo by 2.2f to get it to linear space.
@@ -249,7 +167,7 @@ void SampleTextures(PixelIn input, inout float3 albedo, inout float3 N, inout fl
     //If normal texture exists, sample from it
     if(c_hasNormal == 1)
     {
-        float3 normalMap = t_normal.Sample(s_linearSampler, input.uv).rgb;
+        float3 normalMap = t_normal.Sample(s_linear, input.uv).rgb;
         normalMap = normalMap * 2.0f - 1.0f;
         
         float3 tangent = normalize(input.tangent.xyz);
@@ -262,18 +180,18 @@ void SampleTextures(PixelIn input, inout float3 albedo, inout float3 N, inout fl
     //If metallic texture exists, sample from it
     if(c_hasMetalness == 1)
     {
-        metallic = t_metalness.Sample(s_linearSampler, input.uv).r;
+        metallic = t_metalness.Sample(s_linear, input.uv).r;
     }
     
     //If roughness texture exists, sample from it
     if(c_hasRoughness == 1)
     {
-        roughness = t_roughness.Sample(s_linearSampler, input.uv).r;
+        roughness = t_roughness.Sample(s_linear, input.uv).r;
     }
     
     //If ao texture exists, sample from it
     if(c_hasAoMap == 1)
     {
-        ao = t_aomap.Sample(s_linearSampler, input.uv).r;
+        ao = t_aomap.Sample(s_linear, input.uv).r;
     }
 }

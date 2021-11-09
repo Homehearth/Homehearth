@@ -146,7 +146,7 @@ void Scene::RenderDebug()
 		};
 
 		D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, buffers);
-		D3D11Core::Get().DeviceContext()->PSSetConstantBuffers(3, 1, buffer2);
+		D3D11Core::Get().DeviceContext()->PSSetConstantBuffers(5, 1, buffer2);
 		for (const auto& it : m_debugRenderableCopies[1])
 		{
 			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
