@@ -14,6 +14,7 @@ private:
 
 	dx::ConstantBuffer<basic_model_matrix_t> m_publicBuffer;
 	dx::ConstantBuffer<collider_hit_t> m_ColliderHitBuffer;
+	dx::ConstantBuffer<camera_Matrix_t> m_publicDecalBuffer;
 	Entity m_currentCamera;
 	Entity m_defaultCamera;
 	Handler2D m_2dHandler;
@@ -44,6 +45,11 @@ public:
 	void RenderDebug();
 	void RenderAnimation();
 	void Render2D();
+
+	/*
+		Decalpass Functions.
+	*/
+	void RenderDecals();
 
 	bool IsRenderReady() const;
 

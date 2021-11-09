@@ -6,6 +6,7 @@ Scene::Scene()
 	: m_IsRenderingColliders(true), m_updateAnimation(true)
 {
 	m_publicBuffer.Create(D3D11Core::Get().Device());
+	m_publicDecalBuffer.Create(D3D11Core::Get().Device());
 	m_ColliderHitBuffer.Create(D3D11Core::Get().Device());
 	thread::RenderThreadHandler::Get().SetObjectsBuffer(&m_renderableCopies);
 
@@ -166,6 +167,42 @@ void Scene::RenderDebug()
 void Scene::Render2D()
 {
 	m_2dHandler.Render();
+}
+
+void Scene::RenderDecals()
+{
+	ForEachComponent<comp::Decal>([&](comp::Decal& d) {
+
+		d.lifespan -= Stats::GetDeltaTime();
+		if (d.lifespan > 0)
+		{
+
+			ID3D11Buffer* buffer[1] =
+			{
+				m_publicBuffer.GetBuffer()
+			};
+
+			basic_model_matrix_t temp;
+			temp.worldMatrix = ecs::GetMatrix(d.position);
+			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), temp);
+
+			D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, buffer);
+			D3D11Core::Get().DeviceContext()->PSSetShaderResources(0, 1, &d.decal->GetShaderView());
+
+			camera_Matrix_t matrix;
+			matrix.view = d.viewPoint;
+
+			m_publicDecalBuffer.SetData(D3D11Core::Get().DeviceContext(), matrix);
+			ID3D11Buffer* buffer2[1] =
+			{
+				m_publicDecalBuffer.GetBuffer()
+			};
+			D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(10, 1, buffer2);
+
+			D3D11Core::Get().DeviceContext()->Draw(4, 0);
+		}
+
+		});
 }
 
 bool Scene::IsRenderReady() const

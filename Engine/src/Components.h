@@ -56,6 +56,27 @@ namespace ecs
 			}
 		};
 
+		struct Decal
+		{
+			RTexture* decal = nullptr;
+			// Where the decal should render.
+			Transform position;
+			sm::Matrix viewPoint;
+
+			// Life span in seconds.
+			float lifespan = 5.0f;
+
+			Decal(const Transform& t, RTexture* decal = nullptr)
+			{
+				position = t;
+				this->decal = decal;
+
+				// Be positioned slightly above.
+				position.position.y += 3.0f;
+				viewPoint = dx::XMMatrixLookAtLH(position.position, t.position, { 0.0f, 1.0f, 0.0f });
+			}
+		};
+
 		struct Network
 		{
 			uint32_t id = UINT32_MAX;
