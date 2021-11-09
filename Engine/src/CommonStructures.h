@@ -107,8 +107,7 @@ enum class GameMsg : uint8_t
 	Game_PlayerAttack,
 	Game_AddNPC,
 	Game_RemoveNPC,
-	Game_PlayerInput,
-	Grid_PlaceDefence
+	Game_PlayerInput
 };
 
 /*
@@ -182,38 +181,4 @@ static struct GridProperties_t
 	std::string fileName = "GridMap.png";
 	bool isVisible = true;
 
-} Options;
-
-enum class TileType
-{
-	DEFAULT,
-	EMPTY,
-	BUILDING,
-	UNPLACABLE,
-	DEFENCE
-};
-struct Vector2I
-{
-	int x = 0, y = 0;
-
-	Vector2I(int&& x, int&& y) :x(x), y(y) {};
-	Vector2I(int& x, int& y) :y(y), x(x) {};
-	Vector2I(sm::Vector2& v) : x((int)v.x), y((int)v.y) {};
-	Vector2I() = default;
-
-	bool operator==(const Vector2I& other)
-	{
-		return (x == other.x && y == other.y);
-	}
-	Vector2I& operator=(const sm::Vector2& other)
-	{
-		return { (int)other.x,(int)other.y };
-	}
-	Vector2I& operator+(const Vector2I& other)
-	{
-		this->x += other.x;
-		this->y += other.y;
-
-		return *this;
-	}
-};
+} gridOptions;

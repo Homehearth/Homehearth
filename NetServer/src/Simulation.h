@@ -59,7 +59,7 @@ private:
 public:
 	Simulation(Server* pServer, HeadlessEngine* pEngine);
 	virtual ~Simulation() = default;
-	bool AICreateNodes();
+	//bool AICreateNodes();
 	bool AddNPC(uint32_t npcId);
 	bool RemoveNPC(uint32_t npcId);
 
