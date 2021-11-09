@@ -18,10 +18,12 @@ void Renderer::Initialize(Window* pWindow)
 	//AddPass(&m_depthPass);  // 1
 	AddPass(&m_basePass);   // 2
 	AddPass(&m_animPass);	// 3
+	AddPass(&m_skyPass);
 
 	//m_depthPass.SetEnable(true);
 	m_basePass.SetEnable(true);
 	m_animPass.SetEnable(true);
+	m_skyPass.SetEnable(true);
 
 #ifdef _DEBUG
 	AddPass(&m_debugPass);  // 4

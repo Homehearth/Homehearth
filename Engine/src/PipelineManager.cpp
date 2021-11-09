@@ -290,6 +290,21 @@ bool PipelineManager::CreateSamplerStates()
     samplerDesc.BorderColor[3] = 0;
 
     hr = D3D11Core::Get().Device()->CreateSamplerState(&samplerDesc, m_pointSamplerState.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+
+    // Setup for Cubemap SamplerState
+    samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+    samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+    samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+    samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+    samplerDesc.MipLODBias = 0.0f;
+    samplerDesc.MaxAnisotropy = 4;
+    samplerDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+    samplerDesc.MinLOD = 0;
+    samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
+
+    hr = D3D11Core::Get().Device()->CreateSamplerState(&samplerDesc, m_cubemapSamplerState.GetAddressOf());
 
     return !FAILED(hr);
 }
@@ -398,6 +413,18 @@ bool PipelineManager::CreateInputLayouts()
     if (FAILED(hr = D3D11Core::Get().Device()->CreateInputLayout(animationVertexShaderDesc, ARRAYSIZE(animationVertexShaderDesc), shaderByteCodeAnim.c_str(), shaderByteCodeAnim.length(), &m_animationInputLayout)))
     {
         LOG_WARNING("failed creating m_animationInputLayout.");
+        return false;
+    }
+
+    std::string shaderByteCodeSky = m_skyboxVertexShader.GetShaderByteCode();
+    D3D11_INPUT_ELEMENT_DESC skyboxVertexShaderDesc[1] =
+    {
+        {"SKYPOS", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
+    };
+
+    if (FAILED(hr = D3D11Core::Get().Device()->CreateInputLayout(skyboxVertexShaderDesc, 1, shaderByteCodeSky.c_str(), shaderByteCodeSky.length(), &m_skyboxInputLayout)))
+    {
+        LOG_WARNING("failed creating m_skyboxInputLayout.");
         return false;
     }
 

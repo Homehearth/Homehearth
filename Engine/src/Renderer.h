@@ -4,6 +4,7 @@
 #include "DebugPass.h"
 #include "AnimationPass.h"
 #include "PipelineManager.h"
+#include "SkyboxPass.h"
 
 
 class Renderer
@@ -17,6 +18,7 @@ private:
 	DepthPass		m_depthPass;
 	DebugPass		m_debugPass;
 	AnimationPass	m_animPass;
+	SkyboxPass		m_skyPass;
 	unsigned int m_currentPass = 0;
 
 	// Update per frame related resources.
