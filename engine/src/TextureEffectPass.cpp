@@ -2,7 +2,7 @@
 #include "TextureEffectPass.h"
 
 #include "PipelineManager.h"
-#include "RMesh.h"
+//#include "RMesh.h"
 
 void TextureEffectPass::Initialize()
 {
@@ -58,13 +58,13 @@ void TextureEffectPass::Render(Scene* pScene)
 {
     // Render objects.
     pScene->Render();
-    m_camera = pScene->GetCamera();
+    m_camera = pScene->GetCurrentCamera();
 }
 
 void TextureEffectPass::PostRender()
 {
     // Update constantbuffer here!
-    m_CBuffer.deltaTime  = *m_camera->GetDeltaTime();
+    //m_CBuffer.deltaTime  = *m_camera->GetDeltaTime();
     m_CBuffer.direction  = 45;
     m_CBuffer.radious    = 10;
     D3D11Core::Get().DeviceContext()->UpdateSubresource(m_pm->m_textureEffectConstantBuffer.Get(), 0, nullptr, &m_CBuffer, 0, 0);
@@ -78,7 +78,7 @@ void TextureEffectPass::CreateViews()
     shaderResourceViewDesc.Texture2D.MostDetailedMip = 0;
     shaderResourceViewDesc.Texture2D.MipLevels = 1;
 
-    HRESULT result = device->CreateShaderResourceView(normalData.Get(), &shaderResourceViewDesc, normalResourceView.GetAddressOf());
+    HRESULT result = DC->CreateShaderResourceView(normalData.Get(), &shaderResourceViewDesc, normalResourceView.GetAddressOf());
     if (FAILED(result)) { return false; };
 
 }
