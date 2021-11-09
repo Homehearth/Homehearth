@@ -53,7 +53,15 @@ float4 main(PixelIn input) : SV_TARGET
     
 	
     //Ambient lighting
-    float3 ambient = float3(0.7f, 0.15f, 0.5f) * albedo * ao;
+    //float3 ambient = float3(0.7f, 0.15f, 0.5f) * albedo * ao;
+    
+    //IBL Ambient
+    float3 kS = FresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness);
+    float3 kD = 1.0 - kS;
+    float3 irradiance = t_cubeMap.Sample(s_cubeSamp, N).rgb;
+    float3 diffuse = irradiance * albedo;
+    float3 ambient = (kD * diffuse) * ao;
+    
     float3 color = ambient + Lo;
     
     //HDR tonemapping
