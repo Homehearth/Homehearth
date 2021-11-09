@@ -737,7 +737,7 @@ namespace network
 
 		// Determine how many processors are on the system
 		GetSystemInfo(&SystemInfo);
-		m_nrOfThreads = (int)SystemInfo.dwNumberOfProcessors;
+		m_nrOfThreads = (int)SystemInfo.dwNumberOfProcessors - 1;
 		m_workerThreads = new std::thread[m_nrOfThreads];
 
 		m_isRunning = true;
@@ -745,13 +745,13 @@ namespace network
 		// system. Create two worker threads for each processor
 		for (size_t i = 0; i < m_nrOfThreads; i++)
 		{
-			if (i < 4)
+			if (i < (m_nrOfThreads / 2))
 			{
-				m_workerThreads[i] = std::thread(&server_interface<T>::ProcessTCPIO, this);
+				m_workerThreads[i] = std::thread(&server_interface<T>::ProcessUDPIO, this);
 			}
 			else
 			{
-				m_workerThreads[i] = std::thread(&server_interface<T>::ProcessUDPIO, this);
+				m_workerThreads[i] = std::thread(&server_interface<T>::ProcessTCPIO, this);
 			}
 		}
 
@@ -763,7 +763,7 @@ namespace network
 	{
 		EnterCriticalSection(&lock);
 		EnterCriticalSection(&udpLock);
-		m_isRunning = false;
+		m_isRunning = false;	
 		LOG_INFO("Shutting down server!");
 		if (m_listening != INVALID_SOCKET)
 		{
