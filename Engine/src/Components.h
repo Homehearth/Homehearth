@@ -3,6 +3,7 @@
 #include "RModel.h"
 #include "RAnimator.h"
 #include "ResourceManager.h"
+#include "AIHandler.h"
 
 namespace ecs
 {

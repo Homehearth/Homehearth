@@ -179,9 +179,9 @@ void AIHandler::AStarSearch(HeadlessScene& scene, Entity npc)
 
 		//Neighbors
 
-		std::vector<comp::Node*> neighbors = nodeToAdd->connections;
+		std::vector<Node*> neighbors = nodeToAdd->connections;
 
-		for (comp::Node* neighbor : neighbors)
+		for (Node* neighbor : neighbors)
 		{
 			if (neighbor->parent != nodeToAdd && neighbor != nodeToAdd)
 			{
@@ -248,11 +248,10 @@ void AIHandler::AStarSearch(HeadlessScene& scene, Entity npc)
 		currentNode = currentNode->parent;
 	}
 
-	scene.ForEachComponent<comp::Node>([&](Entity entity, comp::Node& node)
-		{
-			node.ResetFGH();
-			node.parent = nullptr;
-		});
+	//scene.ForEachComponent<Node>([&](Entity entity, Node& node)
+	//	{
+	//		node.ResetFGH();
+	//		node.parent = nullptr;
+	//	});
 
-	return true;
 }
