@@ -193,7 +193,11 @@ void Simulation::ResetPlayer(Entity e)
 	e.GetComponent<comp::Player>()->isReady = false;
 	e.AddComponent<comp::MeshName>("GameCharacter.fbx");
 	e.AddComponent<comp::Tag<TagType::DYNAMIC>>();
-
+	e.AddComponent<comp::AnimatorName>("Player.anim");
+	e.RemoveComponent<comp::TemporaryPhysics>();
+	
+	m_pGameScene->publish<EComponentUpdated>(e, ecs::Component::HEALTH);
+	
 }
 
 Simulation::Simulation(Server* pServer, HeadlessEngine* pEngine)
@@ -390,6 +394,10 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 	m_pGameScene->GetRegistry()->on_construct<comp::Network>().connect<&Simulation::OnNetworkEntityCreate>(this);
 	m_pGameScene->GetRegistry()->on_destroy<comp::Network>().connect<&Simulation::OnNetworkEntityDestroy>(this);
 	m_pGameScene->GetRegistry()->on_update<comp::Network>().connect<&Simulation::OnNetworkEntityUpdated>(this);
+	m_pGameScene->on<EComponentUpdated>([&](const EComponentUpdated& e, HeadlessScene& scene) 
+		{
+			OnComponentUpdated(e.entity, e.component);
+		});
 
 	//Gridsystem
 	m_grid.Initialize(gridOptions.mapSize, gridOptions.position, gridOptions.fileName, m_pGameScene);
@@ -729,9 +737,20 @@ void Simulation::SendSnapshot()
 
 	if (m_pCurrentScene == m_pGameScene)
 	{
+		if (!m_updatedComponents.empty())
+		{
+			for (auto& pair : m_updatedComponents)
+			{
+				std::bitset<ecs::Component::COMPONENT_MAX> compMask;
+				compMask.set(pair.first);
+				this->SendEntities(pair.second, GameMsg::Game_UpdateComponent, compMask);
+			}
+			m_updatedComponents.clear();
+		}
+
 		std::bitset<ecs::Component::COMPONENT_MAX> compMask;
 		compMask.set(ecs::Component::TRANSFORM);
-		compMask.set(ecs::Component::HEALTH);
+		//compMask.set(ecs::Component::HEALTH);
 #if DEBUG_SNAPSHOT
 		compMask.set(ecs::Component::BOUNDING_ORIENTED_BOX);
 #endif
@@ -862,6 +881,12 @@ void Simulation::OnNetworkEntityUpdated(entt::registry& reg, entt::entity entity
 		m_updatedEntities.push_back(e);
 	}
 }
+
+void Simulation::OnComponentUpdated(Entity entity, ecs::Component component)
+{
+	m_updatedComponents[component].push_back(entity);
+}
+
 void Simulation::ConnectNodes(comp::Node* node1, comp::Node* node2)
 {
 	if (node1 && node2)
@@ -982,7 +1007,9 @@ void Simulation::SendEntities(const std::vector<Entity>& entities, GameMsg msgID
 	if (entities.size() == 0)
 		return;
 
-	size_t count = min(entities.size(), 10);
+	const size_t PACKET_CHUNK_SIZE = 10;
+
+	size_t count = min(entities.size(), PACKET_CHUNK_SIZE);
 	size_t sent = 0;
 	do
 	{
@@ -997,6 +1024,9 @@ void Simulation::SendEntities(const std::vector<Entity>& entities, GameMsg msgID
 			}
 			this->InsertEntityIntoMessage(entities[i], msg, componentMask);
 		}
+		
+		if (count == 0)
+			break;
 
 		msg << static_cast<uint32_t>(count);
 		msg << GetTick();
@@ -1013,7 +1043,7 @@ void Simulation::SendEntities(const std::vector<Entity>& entities, GameMsg msgID
 			this->Broadcast(msg);
 		}
 		sent += count;
-		count = min(entities.size() - sent, 10);
+		count = min(entities.size() - sent, PACKET_CHUNK_SIZE);
 	} while (sent < entities.size());
 }
 

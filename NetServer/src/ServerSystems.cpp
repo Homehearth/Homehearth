@@ -222,9 +222,9 @@ void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& sce
 				p.state = comp::Player::State::DEAD;
 				p.respawnTimer = 10.f;
 				health.isAlive = false;
-				e.AddComponent<comp::MeshName>("Skull.obj");
 				e.RemoveComponent<comp::Tag<TagType::DYNAMIC>>();
-				e.UpdateNetwork();
+				
+
 				LOG_INFO("Player id %u died...", e.GetComponent<comp::Network>()->id);
 			}
 
@@ -241,12 +241,9 @@ void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& sce
 
 				if(p.respawnTimer < 0.01f)
 				{
-					p.state = comp::Player::State::IDLE;
-					t.position = p.spawnPoint;
-					health.currentHealth = 100;
-					health.isAlive = true;
-					e.AddComponent<comp::MeshName>("Knight.fbx");
-					e.UpdateNetwork();
+					
+					simulation->ResetPlayer(e);
+
 					LOG_INFO("Player id %u Respawnd...", e.GetComponent<comp::Network>()->id);
 				}
 			}
@@ -274,7 +271,7 @@ void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& sce
 				a.targetDir = targetDir;
 				p.targetForward = targetDir;
 
-				v.vel = sm::Vector3::Zero;
+				v.vel *= 0.2f;
 			}
 
 		});

@@ -62,5 +62,13 @@ namespace ecs {
         }
         return abilityComponent->isUsing;
     }
+    
+    component::TemporaryPhysics::Force GetGravityForce()
+    {
+        component::TemporaryPhysics::Force f = {};
+        f.force = sm::Vector3(0, -50.f, 0);
+        f.isImpulse = false;
+        return f;
+    }
 }
 

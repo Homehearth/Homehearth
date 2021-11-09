@@ -172,6 +172,32 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 
 		break;
 	}
+	case GameMsg::Game_UpdateComponent:
+	{
+		uint32_t currentTick;
+		msg >> currentTick;
+		uint32_t count; // Could be more than one Entity
+		msg >> count;
+
+		for (uint32_t i = 0; i < count; i++)
+		{
+			uint32_t entityID;
+			msg >> entityID;
+
+			Entity entity;
+			if (m_gameEntities.find(entityID) != m_gameEntities.end())
+			{
+				entity = m_gameEntities.at(entityID);
+				UpdateEntityFromMessage(entity, msg);
+			}
+			else {
+				LOG_WARNING("Updating: Entity %u not in m_gameEntities, should not happen...", entityID);
+
+			}
+		}
+
+		break;
+	}
 	case GameMsg::Game_AddEntity:
 	{
 		uint32_t currentTick;
@@ -472,6 +498,10 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 							if (anim->LoadSkeleton(renderable->model->GetSkeleton()))
 								e.AddComponent<comp::Animator>()->animator = anim;
 						}
+					}
+					else
+					{
+						e.RemoveComponent<comp::Animator>();
 					}
 				}
 				break;

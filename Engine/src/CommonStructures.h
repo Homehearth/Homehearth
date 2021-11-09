@@ -100,6 +100,7 @@ enum class GameMsg : uint8_t
 	Game_Start,
 	Game_Snapshot,
 	Game_AddEntity,
+	Game_UpdateComponent,
 	Game_RemoveEntity,
 	Game_BackToLobby,
 	Game_WaveTimer,
