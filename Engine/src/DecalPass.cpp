@@ -24,19 +24,34 @@ void DecalPass::CreateBuffer()
 	if (m_matrices.size() > 0)
 	{
 		data.pSysMem = &(m_matrices[0]);
-		D3D11Core::Get().Device()->CreateBuffer(&bDesc, &data, &m_buffer);
+		HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&bDesc, &data, &m_buffer);
+
+		if (SUCCEEDED(hr))
+			D3D11Core::Get().Device()->CreateShaderResourceView(m_buffer, NULL, &m_shaderView);
 	}
+
+	sm::Vector4 info = { (float)m_matrices.size(), 0.0f, 0.0f, 0.0f };
+
+	m_infoBuffer.SetData(D3D11Core::Get().DeviceContext(), info);
+}
+
+void DecalPass::Create()
+{
+	m_infoBuffer.Create(D3D11Core::Get().Device());
 }
 
 DecalPass::DecalPass()
 {
 	m_buffer = nullptr;
+	m_shaderView = nullptr;
 }
 
 DecalPass::~DecalPass()
 {
 	if (m_buffer)
 		m_buffer->Release();
+	if (m_shaderView)
+		m_shaderView->Release();
 }
 
 void DecalPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
@@ -72,7 +87,11 @@ void DecalPass::Render(Scene* pScene)
 
 void DecalPass::PostRender(ID3D11DeviceContext* pDeviceContext)
 {
-	ID3D11Buffer* nullBuffer = nullptr;
-	DC->VSSetConstantBuffers(10, 1, &nullBuffer);
-	DC->VSSetConstantBuffers(10, 1, &m_buffer);
+	ID3D11Buffer* buff =
+	{
+		m_infoBuffer.GetBuffer()
+	};
+
+	DC->PSSetShaderResources(15, 1, &m_shaderView);
+	DC->PSSetConstantBuffers(10, 1, &buff);
 }

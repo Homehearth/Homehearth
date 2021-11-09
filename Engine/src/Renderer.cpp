@@ -17,6 +17,7 @@ void Renderer::Initialize(Window* pWindow)
 	*/
 	//AddPass(&m_depthPass);  // 1
 	AddPass(&m_decalPass);
+	m_decalPass.Create();
 	AddPass(&m_basePass);   // 2
 	AddPass(&m_animPass);	// 3
 

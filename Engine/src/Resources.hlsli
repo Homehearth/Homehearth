@@ -50,6 +50,11 @@ cbuffer IsCollidingCB : register(b5)
     int c_colliding;
 }
 
+cbuffer DecalInfoCB : register(b10)
+{
+    float4x4 viewPoint;
+}
+
 
 //---------------------------------------------------------------------------
 //	Samplers.
@@ -78,6 +83,7 @@ Texture2D<uint2> t_pointLightGrid	: register(t8);
 // StructuredBuffers.
 StructuredBuffer<float4x4> sb_boneTransforms : register(t9); // read as column major, actually is row major.
 StructuredBuffer<Light> sb_lights : register(t10);
+StructuredBuffer<float4x4> sb_decaldata : register(t15);
 
 // Forward+
 //StructuredBuffer<PointLight> sb_pointLights : register();
