@@ -48,7 +48,7 @@ float4 main(PixelIn input) : SV_TARGET
             CalcRadiance(input, V, N, roughness, metallic, albedo, sb_lights[i].position.xyz, lightCol, F0, rad);
             Lo += rad;
         }
-        
+        lightCol = 0.f;
     }
     
 	

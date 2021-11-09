@@ -58,6 +58,7 @@ cbuffer IsCollidingCB : register(b5)
 SamplerState s_point		: register(s0);
 SamplerState s_linear		: register(s1);
 SamplerState s_anisotropic	: register(s2);
+SamplerState s_cubeSamp     : register(s3);
 
 
 //---------------------------------------------------------------------------
@@ -84,6 +85,8 @@ StructuredBuffer<Light> sb_lights : register(t10);
 //StructuredBuffer<DirectionalLight> sb_directionalLights : register();
 //StructuredBuffer<uint> sb_pointLightIndexList : register();
 //StructuredBuffer<Frustum> sb_frustums : register();
+
+TextureCube t_cubeMap : register(t15);
 
 
 //---------------------------------------------------------------------------

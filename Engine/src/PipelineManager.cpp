@@ -424,6 +424,12 @@ bool PipelineManager::CreateShaders()
         return false;
     }
 
+    if (!m_skyboxVertexShader.Create("Skybox_vs"))
+    {
+        LOG_WARNING("failed creating Skox_vs.");
+        return false;
+    }
+
     if (!m_defaultPixelShader.Create("Model_ps"))
     {
         LOG_WARNING("failed creating Model_ps.");
@@ -433,6 +439,12 @@ bool PipelineManager::CreateShaders()
     if (!m_debugPixelShader.Create("Debug_ps"))
     {
         LOG_WARNING("failed creating Debug_ps.");
+        return false;
+    }
+
+    if (!m_skyboxPixelShader.Create("Skybox_ps"))
+    {
+        LOG_WARNING("failed creating Skybox_ps.");
         return false;
     }
 

@@ -53,9 +53,11 @@ public:
 	Shaders::VertexShader			m_defaultVertexShader;
 	Shaders::VertexShader			m_depthPassVertexShader;
 	Shaders::VertexShader			m_animationVertexShader;
+	Shaders::VertexShader			m_skyboxVertexShader;
 
 	Shaders::PixelShader			m_defaultPixelShader;
 	Shaders::PixelShader			m_debugPixelShader;
+	Shaders::PixelShader			m_skyboxPixelShader;
 	
 	D3D11_VIEWPORT					m_viewport;
 
