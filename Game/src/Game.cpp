@@ -545,14 +545,12 @@ void Game::UpdateInput()
 	if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::HELD))
 	{
 		m_inputState.leftMouse = true;
-		m_inputState.mouseRay = InputSystem::Get().GetMouseRay();
-
 	}
 	if (InputSystem::Get().CheckMouseKey(MouseKey::RIGHT, KeyState::PRESSED))
 	{
 		m_inputState.rightMouse = true;
-		m_inputState.mouseRay = InputSystem::Get().GetMouseRay();
 	}
+	m_inputState.mouseRay = InputSystem::Get().GetMouseRay();
 }
 
 void Game::LoadAllAssets()

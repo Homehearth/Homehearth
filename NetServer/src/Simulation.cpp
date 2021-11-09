@@ -192,6 +192,8 @@ void Simulation::ResetPlayer(Entity e)
 	e.GetComponent<comp::Player>()->state = comp::Player::State::IDLE;
 	e.GetComponent<comp::Player>()->isReady = false;
 	e.AddComponent<comp::MeshName>("GameCharacter.fbx");
+	e.AddComponent<comp::Tag<TagType::DYNAMIC>>();
+
 }
 
 Simulation::Simulation(Server* pServer, HeadlessEngine* pEngine)
@@ -311,6 +313,13 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 					// update velocity
 					sm::Vector3 vel = sm::Vector3(static_cast<float>(input.axisHorizontal), 0, static_cast<float>(input.axisVertical));
 					vel.Normalize();
+					
+					sm::Vector3 cameraToPlayer = e.GetComponent<comp::Transform>()->position - input.mouseRay.rayPos;
+					cameraToPlayer.y = 0;
+					cameraToPlayer.Normalize();
+					float targetRotation = atan2(-cameraToPlayer.x, -cameraToPlayer.z);
+					vel = sm::Vector3::TransformNormal(vel, sm::Matrix::CreateRotationY(targetRotation));
+					
 					vel *= p->runSpeed;
 					e.GetComponent<comp::Velocity>()->vel = vel;
 
@@ -320,19 +329,19 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 						comp::CombatStats* stats = e.GetComponent<comp::CombatStats>();
 						if (stats)
 						{
-							if (stats->cooldownTimer <= 0.0f)
-								stats->isAttacking = true;
-
 							stats->targetRay = input.mouseRay;
-
 							p->state = comp::Player::State::ATTACK;
+							if (ecs::Use(stats))
+							{
+
+							}
 						}
 
 					}
 
 					//Place defence on grid
 					if (input.rightMouse)
-						m_grid.PlaceDefence(input.mouseRay);
+						m_grid.PlaceDefence(input.mouseRay, e.GetComponent<comp::Network>()->id);
 
 				}
 			}
@@ -603,28 +612,15 @@ bool Simulation::AddPlayer(uint32_t playerID, const std::string& namePlate)
 	player.AddComponent<comp::MeshName>()->name = "Knight.fbx";
 	player.AddComponent<comp::AnimatorName>()->name = "Player.anim";
 
-	*player.AddComponent<comp::CombatStats>() = { 0.3f, 20.f, 2.0f, true, 30.f };
+	comp::CombatStats* combatStats = player.AddComponent<comp::CombatStats>();
+	combatStats->cooldown = 0.4f;
+	combatStats->attackDamage = 40.f;
+	combatStats->isRanged = false;
+	combatStats->lifetime = 0.1f;
+	
 	player.AddComponent<comp::Health>();
 	player.AddComponent<comp::BoundingOrientedBox>()->Extents = { 2.0f,2.0f,2.0f };
-
-	CollisionSystem::Get().AddOnCollision(player, [=](Entity other)
-		{
-			if (other == player)
-				return;
-
-			comp::NPC* enemy = other.GetComponent<comp::NPC>();
-			if (enemy)
-			{
-				comp::Health* health = player.GetComponent<comp::Health>();
-
-				if (health)
-				{
-					health->currentHealth -= 20;
-				}
-			}
-
-		});
-
+	
 	//Collision will handle this entity as a dynamic one
 	player.AddComponent<comp::Tag<TagType::DYNAMIC>>();
 	// Network component will make sure the new entity is sent
@@ -839,7 +835,7 @@ void Simulation::OnNetworkEntityCreate(entt::registry& reg, entt::entity entity)
 	comp::Network* net = e.GetComponent<comp::Network>();
 	if (net->id == UINT32_MAX)
 	{
-		net->id = GetUniqueID();
+		net->id = m_pServer->PopNextUniqueID();
 	}
 	m_addedEntities.push_back(e);
 }
@@ -964,8 +960,6 @@ void Simulation::ResetGameScene()
 	m_spawnPoints.push(sm::Vector3(222.f, 0, -300.f));
 	m_spawnPoints.push(sm::Vector3(247.f, 0, -325.f));
 
-	//TODO rensa defences if needed
-
 	LOG_INFO("%lld", m_pGameScene->GetRegistry()->size());
 	CreateWaves();
 }
@@ -1007,14 +1001,17 @@ void Simulation::SendEntities(const std::vector<Entity>& entities, GameMsg msgID
 		msg << static_cast<uint32_t>(count);
 		msg << GetTick();
 
-		if (msgID == GameMsg::Game_Snapshot)
+
+		this->Broadcast(msg);
+
+		/*if (msgID == GameMsg::Game_Snapshot)
 		{
 			this->BroadcastUDP(msg);
 		}
 		else
 		{
 			this->Broadcast(msg);
-		}
+		}*/
 		sent += count;
 		count = min(entities.size() - sent, 10);
 	} while (sent < entities.size());
@@ -1096,9 +1093,4 @@ void Simulation::SendRemoveEntities(const std::vector<uint32_t> entitiesNetIDs) 
 	msg << static_cast<uint32_t>(entitiesNetIDs.size());
 
 	this->Broadcast(msg);
-}
-
-uint32_t Simulation::GetUniqueID()
-{
-	return m_pServer->PopNextUniqueID();
 }
