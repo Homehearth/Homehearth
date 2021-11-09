@@ -517,7 +517,7 @@ bool Simulation::IsEmpty() const
 bool Simulation::AICreateNodes()
 {
 	int itrID = 0;
-	std::vector<Entity>* tiles = m_grid.GetTiles();
+	std::vector<Entity>* tiles = m_grid.GetTileEntities();
 	std::vector<comp::Node*> nodes;
 	//Create Nodes
 	for (int i = 0; i < tiles->size(); i++)

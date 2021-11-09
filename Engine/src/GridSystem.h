@@ -3,32 +3,51 @@
 #include <stb_image.h>
 #include "Intersections.h"
 
+//enum class TileType
+//{
+//	DEFAULT,
+//	EMPTY,
+//	BUILDING,
+//	UNPLACABLE,
+//	DEFENCE
+//};
+
+struct Tile 
+{
+	TileType type					= TileType::DEFAULT;
+	sm::Vector2 gridID				= { -1, -1 };
+	float halfWidth					= 0;
+	sm::Vector3 position			= { 0, 0, 0 };
+};
+
 class GridSystem
 {
 private:
-	Vector2I m_mapSize;	//Width x length in, ingame units
-	Vector2I m_gridSize;	//Tiles x tiles
-	sm::Vector3 m_position;
+	Vector2I						m_mapSize;	//Width x length in, ingame units
+	Vector2I						m_gridSize;	//Tiles x tiles
+	sm::Vector3						m_position;
 
-	float m_tileHalfWidth;
-	HeadlessScene* m_scene;
+	float							m_tileHalfWidth;
+	HeadlessScene*					m_scene;
 
-	std::vector<sm::Vector3> m_tilePositions;
-	std::vector<Entity> m_tiles;
+	std::vector<sm::Vector3>		m_tilePositions;
+	std::vector<Entity>				m_tileEntites;
+	std::vector<std::vector<Tile>>	m_tiles;
 
 public:
-	GridSystem();
-	~GridSystem();
+									GridSystem();
+									~GridSystem();
 
 	/*GridSize is decided by the texture size, how many tiles in x and why, MapSize is how big the world is*/
-	void Initialize(Vector2I mapSize, sm::Vector3 position, std::string fileName, HeadlessScene* scene);
+	void							Initialize(Vector2I mapSize, sm::Vector3 position, std::string fileName, HeadlessScene* scene);
 
-	uint32_t PlaceDefenceRenderGrid(Ray_t& mouseRay);
-	sm::Vector3 PlaceDefence(Ray_t& mouseRay);
+	uint32_t						PlaceDefenceRenderGrid(Ray_t& mouseRay);
+	sm::Vector3						PlaceDefence(Ray_t& mouseRay);
 
 	//Get functions
-	std::vector<sm::Vector3>* GetTilePositions();
-	Vector2I GetGridSize() const;
-	Entity* GetTileByID(Vector2I& id);
-	std::vector<Entity>* GetTiles();
+	std::vector<sm::Vector3>*		GetTilePositions();
+	Vector2I						GetGridSize() const;
+	Entity*							GetTileByID(Vector2I& id);
+	Tile							GetTile(Vector2I& id);
+	std::vector<Entity>*			GetTileEntities();
 };
