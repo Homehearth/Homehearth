@@ -16,8 +16,9 @@ void AnimationPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 
     //DC->PSSetShaderResources(0, 1, PM->m_depthBufferSRV.GetAddressOf());   // DepthBuffer.
 
-    DC->PSSetSamplers(0, 1, PM->m_anisotropicSamplerState.GetAddressOf());
-    DC->PSSetSamplers(1, 1, PM->m_pointSamplerState.GetAddressOf());
+    DC->PSSetSamplers(0, 1, PM->m_pointSamplerState.GetAddressOf());
+    DC->PSSetSamplers(1, 1, PM->m_linearSamplerState.GetAddressOf());
+    DC->PSSetSamplers(2, 1, PM->m_anisotropicSamplerState.GetAddressOf());
     m_lights->Render(DC);
 
     DC->RSSetViewports(1, &PM->m_viewport);

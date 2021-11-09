@@ -618,7 +618,7 @@ namespace network
 			hints.ai_protocol = IPPROTO_UDP;
 		}
 
-		int8_t rv = getaddrinfo(nullptr, std::to_string(port).c_str(), &hints, &servinfo);
+		int8_t rv = getaddrinfo(NULL, std::to_string(port).c_str(), &hints, &servinfo);
 
 		if (rv != 0)
 		{
@@ -646,8 +646,6 @@ namespace network
 			int enable = 1;
 
 			// Options to disable Nagle's algorithm (can queue up multiple packets instead of sending 1 by 1)
-			// SO_REUSEADDR will let the server to reuse the port its bound on even if it have not closed 
-			// by the the operating system yet.
 			if (type == SockType::TCP)
 			{
 				if (setsockopt(socket, IPPROTO_TCP, TCP_NODELAY, (char*)&enable, sizeof(int)) != 0)
@@ -657,7 +655,9 @@ namespace network
 				}
 			}
 
-			if (setsockopt(socket, SOL_SOCKET, SO_REUSEADDR, (char*)&enable, sizeof(int)) != 0)
+			// SO_REUSEADDR will let the server to reuse the port its bound on even if it have not closed 
+			// by the the operating system yet. Also it allows UDP/TCP being bound to the same port working
+			if (setsockopt(socket, SOL_SOCKET, SO_REUSEADDR, (char*)&enable, sizeof(enable)) != 0)
 			{
 				LOG_ERROR("setsockopt: %d", WSAGetLastError());
 				return false;
@@ -737,7 +737,7 @@ namespace network
 
 		// Determine how many processors are on the system
 		GetSystemInfo(&SystemInfo);
-		m_nrOfThreads = (int)SystemInfo.dwNumberOfProcessors;
+		m_nrOfThreads = (int)SystemInfo.dwNumberOfProcessors - 1;
 		m_workerThreads = new std::thread[m_nrOfThreads];
 
 		m_isRunning = true;
@@ -745,13 +745,13 @@ namespace network
 		// system. Create two worker threads for each processor
 		for (size_t i = 0; i < m_nrOfThreads; i++)
 		{
-			if (i < 4)
+			if (i < (m_nrOfThreads / 2))
 			{
-				m_workerThreads[i] = std::thread(&server_interface<T>::ProcessTCPIO, this);
+				m_workerThreads[i] = std::thread(&server_interface<T>::ProcessUDPIO, this);
 			}
 			else
 			{
-				m_workerThreads[i] = std::thread(&server_interface<T>::ProcessUDPIO, this);
+				m_workerThreads[i] = std::thread(&server_interface<T>::ProcessTCPIO, this);
 			}
 		}
 
@@ -763,7 +763,7 @@ namespace network
 	{
 		EnterCriticalSection(&lock);
 		EnterCriticalSection(&udpLock);
-		m_isRunning = false;
+		m_isRunning = false;	
 		LOG_INFO("Shutting down server!");
 		if (m_listening != INVALID_SOCKET)
 		{
@@ -856,6 +856,7 @@ namespace network
 						}
 						case NetState::READ_PACKET:
 						{
+							LOG_INFO(":)");
 							break;
 						}
 						}

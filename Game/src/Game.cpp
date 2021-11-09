@@ -226,9 +226,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 				m_players[e.GetComponent<comp::Network>()->id] = e;
 			}
 			
-#ifdef  _DEBUG
-			CreateVisualGrid(e);
-#endif //  _DEBUG
 		}
 
 		if (GetCurrentScene() == &GetScene("Loading"))
@@ -239,12 +236,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		LOG_INFO("Successfully loaded all entities!");
 #endif
 
-		break;
-	}
-	case GameMsg::Grid_PlaceDefence:
-	{
-		PlaceDefenceDebug(msg);
-		PlaceDefenceRelease(msg);
 		break;
 	}
 	case GameMsg::Game_RemoveEntity:
@@ -276,7 +267,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	case GameMsg::Game_BackToLobby:
 	{
 		SetScene("Lobby");
-		ClearGrid();
 		break;
 	}	
 	case GameMsg::Lobby_Accepted:
@@ -439,15 +429,6 @@ void Game::SendStartGame()
 	m_client.Send(msg);
 }
 
-void Game::ClearGrid()
-{
-	GetScene("Game").ForEachComponent<comp::Tag<TagType::DEFENCE>>([](Entity& e, comp::Tag<TagType::DEFENCE>& tag)
-		{
-			e.Destroy();
-		}
-	);
-}
-
 void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 {
 	
@@ -534,13 +515,6 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 				e.AddComponent<comp::BoundingSphere>(s);
 				break;
 			}
-			case ecs::Component::PLANECOLLIDER:
-			{
-				comp::PlaneCollider p;
-				msg >> p;
-				*e.AddComponent<comp::PlaneCollider>() = p;
-				break;
-			}
 			case ecs::Component::LIGHT:
 			{
 				comp::Light l;
@@ -553,13 +527,6 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 				comp::Player p;
 				msg >> p;
 				e.AddComponent<comp::Player>(p);
-				break;
-			}
-			case ecs::Component::TILE:
-			{
-				comp::Tile t;
-				msg >> t;
-				e.AddComponent<comp::Tile>(t);
 				break;
 			}
 			default:
@@ -578,91 +545,12 @@ void Game::UpdateInput()
 	if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::HELD))
 	{
 		m_inputState.leftMouse = true;
-		m_inputState.mouseRay = InputSystem::Get().GetMouseRay();
-
 	}
 	if (InputSystem::Get().CheckMouseKey(MouseKey::RIGHT, KeyState::PRESSED))
 	{
 		m_inputState.rightMouse = true;
-		m_inputState.mouseRay = InputSystem::Get().GetMouseRay();
 	}
-}
-
-void Game::PlaceDefenceDebug(message<GameMsg>& msg)
-{
-#ifdef _DEBUG
-	if (RENDER_GRID)
-	{
-		uint32_t id;
-		msg >> id;
-
-		GetScene("Game").ForEachComponent<comp::Network, comp::Tile>([&](Entity& e, comp::Network& net, comp::Tile& tile)
-			{
-				if (id == net.id)
-				{
-					comp::Renderable* render = e.GetComponent<comp::Renderable>();
-					render->model = ResourceManager::Get().GetResource<RModel>("Defence.obj");
-					render->model->ChangeMaterial("Defence.mtl");
-					tile.type = TileType::DEFENCE;
-					LOG_INFO("Placed defence %d", id);
-				}
-			});
-	}
-	else if (!RENDER_GRID)
-	{
-		sm::Vector3 position;
-		msg >> position;
-
-		Entity defence = GetScene("Game").CreateEntity();
-		comp::Renderable* render = defence.AddComponent<comp::Renderable>();
-		defence.AddComponent<comp::Transform>()->position = position;
-		defence.GetComponent<comp::Transform>()->scale = { 4.2f, 0.5f, 4.2f };
-		render->model = ResourceManager::Get().GetResource<RModel>("Defence.obj");
-		render->model->ChangeMaterial("Defence.mtl");
-		LOG_INFO("Placed defence");
-	}
-#endif // DEBUG
-}
-
-void Game::PlaceDefenceRelease(message<GameMsg>& msg)
-{
-#ifdef NDEBUG
-	sm::Vector3 position;
-	msg >> position;
-
-	Entity defence = GetScene("Game").CreateEntity();
-	comp::Renderable* render = defence.AddComponent<comp::Renderable>();
-	defence.AddComponent<comp::Transform>()->position = position;
-	defence.GetComponent<comp::Transform>()->scale = { 4.2f, 0.5f, 4.2f };
-	defence.AddComponent<comp::Tag<TagType::DEFENCE>>();
-	render->model = ResourceManager::Get().GetResource<RModel>("Defence.obj");
-	render->model->ChangeMaterial("Defence.mtl");
-	LOG_INFO("Placed defence");
-
-#endif // NDEBUG		
-}
-
-void Game::CreateVisualGrid(Entity e)
-{
-	if (RENDER_GRID) //TODO dosent work atm
-	{
-		comp::Tile* tile = e.GetComponent<comp::Tile>();
-		if (tile)
-		{
-			if (tile->type == TileType::EMPTY)
-			{
-				comp::Renderable* renderable = e.AddComponent<comp::Renderable>();
-				renderable->model = ResourceManager::Get().GetResource<RModel>("Plane1.obj");
-				renderable->model->ChangeMaterial("TileEmpty.mtl");
-			}
-			else if (tile->type == TileType::BUILDING || tile->type == TileType::UNPLACABLE)
-			{
-				comp::Renderable* renderable = e.AddComponent<comp::Renderable>();
-				renderable->model = ResourceManager::Get().CopyResource<RModel>("Plane1.obj");
-				renderable->model->ChangeMaterial("TileBuilding.mtl");
-			}
-		}
-	}
+	m_inputState.mouseRay = InputSystem::Get().GetMouseRay();
 }
 
 void Game::LoadAllAssets()
