@@ -28,7 +28,16 @@ public:
 	Scene();
 
 	// Emit update event and update constant buffers
+
+	/*
+		Updates both 3d and 2d.
+	*/
 	virtual void Update(float dt) override;
+
+	/*
+		Updates only the 2d scene.
+	*/
+	void Update2D();
 
 	// Emit render event and render Renderable components
 	void Render();

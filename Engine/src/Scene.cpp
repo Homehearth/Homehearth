@@ -82,6 +82,11 @@ void Scene::Update(float dt)
 
 }
 
+void Scene::Update2D()
+{
+	m_2dHandler.Update();
+}
+
 void Scene::Render()
 {
 	PROFILE_FUNCTION();

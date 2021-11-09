@@ -429,7 +429,7 @@ void sceneHelp::SetupLoadingScene(Game* game)
 	Collection2D* loadingScreen = new Collection2D;
 
 	loadingScreen->AddElement<rtd::Picture>("oohstonefigures.jpg", (draw_t(0.0f, 0.0f, width, height)));
-	loadingScreen->AddElement<rtd::Text>("Loading!", draw_text_t((width / 2.f) - (strlen("Loading!") * 24.f * 0.5f), (height / 2.f) - D2D1Core::GetDefaultFontSize(), strlen("Loading!") * D2D1Core::GetDefaultFontSize(), D2D1Core::GetDefaultFontSize()));
+	loadingScreen->AddElement<rtd::Text>("Loading!", draw_text_t((width / 2.f) - (strlen("Loading!") * D2D1Core::GetDefaultFontSize() * 0.5f), (height / 2.f) - D2D1Core::GetDefaultFontSize(), strlen("Loading!") * D2D1Core::GetDefaultFontSize(), D2D1Core::GetDefaultFontSize()));
 
 	scene.Add2DCollection(loadingScreen, "LoadingScreen");
 }

@@ -76,7 +76,6 @@ bool Game::OnStartup()
 
 	// Set Current Scene
 	SetScene("MainMenu");
-
 	return true;
 }
 
@@ -84,7 +83,6 @@ void Game::OnUserUpdate(float deltaTime)
 {
 	static float pingCheck = 0.f;
 	const float PING_TARGET = 5.0f;
-
 
 	if (m_client.IsConnected())
 	{

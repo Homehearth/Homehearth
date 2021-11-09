@@ -4,6 +4,11 @@
 #include "Camera.h"
 #include "GridSystem.h"
 
+/*
+	We only need the loading screen rendered once. 
+*/
+static bool s_loaded = false;
+
 bool Engine::s_safeExit = false;
 
 Engine::Engine()
@@ -372,12 +377,23 @@ void Engine::RenderThread()
 		//Render every now and then
 		if (frameTime >= targetDelta)
 		{
-			if (GetCurrentScene()->IsRenderReady()) 
+			if (!s_loaded && GetCurrentScene() == &GetScene("Loading"))
+			{
+				GetCurrentScene()->Update2D();
+				D2D1Core::Begin();
+				GetCurrentScene()->Render2D();
+				D2D1Core::Present();
+				D3D11Core::Get().SwapChain()->Present(0, 0);
+				s_loaded = true;
+				frameTime = 0.f;
+			}
+			if (GetCurrentScene()->IsRenderReady()) // Render Scene.
 			{
 				Stats::SetDeltaTime(frameTime);
 				Render(frameTime);
 				//m_frameTime.render = deltaSum;
 				frameTime = 0.f;
+				s_loaded = false;
 			}
 		}
 		frameTime += deltaTime;
@@ -423,6 +439,7 @@ void Engine::Update(float dt)
 	}
 
 	OnUserUpdate(dt);
+
 	BasicEngine::Update(dt);
 
 	{
