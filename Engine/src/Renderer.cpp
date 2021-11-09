@@ -51,8 +51,6 @@ void Renderer::Render(Scene* pScene)
 	{
 		if (!m_passes.empty())
 		{
-			//Update and bind the camera once
-			pScene->GetCurrentCamera()->Update();
 			pScene->GetCurrentCamera()->BindCB();
 			thread::RenderThreadHandler::SetCamera(pScene->GetCurrentCamera());
 			/*

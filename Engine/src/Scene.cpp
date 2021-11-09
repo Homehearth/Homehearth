@@ -16,6 +16,9 @@ Scene::Scene()
 
 void Scene::Update(float dt)
 {
+	//Update the camera
+	m_currentCamera.GetComponent<comp::Camera3D>()->camera.Update();
+
 	//Update the animations
 	m_registry.view<comp::Animator>().each([&](comp::Animator& anim)
 	{

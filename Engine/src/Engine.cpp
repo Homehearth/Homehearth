@@ -387,7 +387,7 @@ void Engine::RenderThread()
 			{
 				Stats::Get().SetFrameTime(frameTime);
 				Render();
-				frameTime = 0.0f; //-= TARGET_DELTA;
+				frameTime = 0.f;
 			}
 		}
 		

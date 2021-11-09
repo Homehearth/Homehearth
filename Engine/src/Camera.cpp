@@ -89,8 +89,8 @@ void Camera::Update()
 	if (m_type == CAMERATYPE::DEBUG && InputSystem::Get().IsMouseRelative()) //Can't move the camera when in absolut mode
 	{
 		//Mouse
-		m_rollPitchYaw.z += (float)InputSystem::Get().GetMousePos().x * m_rotationSpeed * Stats::Get().GetFrameTime();
-		m_rollPitchYaw.y -= (float)InputSystem::Get().GetMousePos().y * m_rotationSpeed * Stats::Get().GetFrameTime();
+		m_rollPitchYaw.z += (float)InputSystem::Get().GetMousePos().x * m_rotationSpeed * Stats::Get().GetUpdateTime();
+		m_rollPitchYaw.y -= (float)InputSystem::Get().GetMousePos().y * m_rotationSpeed * Stats::Get().GetUpdateTime();
 
 		quaterion = sm::Quaternion::CreateFromYawPitchRoll(m_rollPitchYaw.z, m_rollPitchYaw.y, m_rollPitchYaw.x);
 		m_rotationMatrix = dx::XMMatrixRotationRollPitchYaw(m_rollPitchYaw.y, m_rollPitchYaw.z, m_rollPitchYaw.x);
@@ -98,20 +98,20 @@ void Camera::Update()
 		float speed = m_movingSpeed;
 		if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Keys::LeftShift, KeyState::HELD))
 		{
-			speed *= 6;
+			speed *= 2;
 		}
 
 		//Keyboard
 		if (KEYPRESS(dx::Keyboard::E, KeyState::HELD)) //Down
 		{
-			m_move.y -= speed * Stats::Get().GetFrameTime();
+			m_move.y -= speed * Stats::Get().GetUpdateTime();
 		}
 		if (KEYPRESS(dx::Keyboard::Q, KeyState::HELD)) //UP
 		{
-			m_move.y += speed * Stats::Get().GetFrameTime();
+			m_move.y += speed * Stats::Get().GetUpdateTime();
 		}
-		m_move.x = static_cast<float>(InputSystem::Get().GetAxis(Axis::HORIZONTAL)) * speed * Stats::Get().GetFrameTime();
-		m_move.z = static_cast<float>(InputSystem::Get().GetAxis(Axis::VERTICAL)) * speed * Stats::Get().GetFrameTime();
+		m_move.x = static_cast<float>(InputSystem::Get().GetAxis(Axis::HORIZONTAL)) * speed * Stats::Get().GetUpdateTime();
+		m_move.z = static_cast<float>(InputSystem::Get().GetAxis(Axis::VERTICAL)) * speed * Stats::Get().GetUpdateTime();
 
 		//Update camera values
 		m_right = dx::XMVector3TransformNormal(m_defaultRight, m_rotationMatrix);
@@ -195,7 +195,7 @@ void Camera::Update()
 	m_cameraMat.projection = m_projection;
 	m_cameraMat.view = m_view;
 
-	UpdateConstantBuffer();
+	//UpdateConstantBuffer();
 }
 
 void Camera::SetFollowEntity(const Entity& entity)
@@ -206,6 +206,7 @@ void Camera::SetFollowEntity(const Entity& entity)
 
 void Camera::BindCB()
 {
+	UpdateConstantBuffer();
 	D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(CB_CAM_SLOT, 1, m_CameraConstantBuffer.GetAddressOf());
 }
 

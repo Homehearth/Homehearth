@@ -136,7 +136,7 @@ void BasicEngine<SceneType>::Run()
 		{
 			Stats::Get().SetUpdateTime(update_time);
 			Update(update_time);
-			update_time -= TARGET_UPDATE;
+			update_time = 0.f;
 		}
 
 		network_time += deltaTime;
