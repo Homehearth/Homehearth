@@ -342,7 +342,7 @@ void Systems::MovementColliderSystem(HeadlessScene& scene, float dt)
 	(comp::Transform& transform, comp::BoundingOrientedBox& obb)
 		{
 			obb.Center = transform.position;
-			obb.Orientation = transform.rotation;
+			/*obb.Orientation = transform.rotation;*/
 		});
 
 	//BoundingSphere
