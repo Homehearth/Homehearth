@@ -141,7 +141,7 @@ namespace thread
 		*/
 		static void SetStatus(unsigned int status, int index);
 
-		// Check for any available jobs inside the system.
+		// CheckCollisions for any available jobs inside the system.
 		static std::function<void()> CheckJob();
 
 		// Remove the most recent job.
@@ -159,6 +159,8 @@ namespace thread
 		static const bool IsActive();
 
 		static const int GetAmountOfJobs();
+
+		static const int GetAmountOfThreads();
 	};
 
 

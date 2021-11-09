@@ -7,13 +7,11 @@ namespace rtd
 	{
 	private:
 
-		// Text to be rendered.
-		std::string m_text;
-
+	public:
 		// Pointer to format as well as position, stretch area.
 		draw_text_t m_opts;
-
-	public:
+		// Text to be rendered.
+		std::string m_text;
 
 		/*
 			Using this construct will use the default text format defined in
@@ -32,9 +30,20 @@ namespace rtd
 		void SetText(const std::string& displayText);
 
 		/*
+			Set the position of the text.
+		*/
+		void SetPosition(const float& x, const float& y);
+
+		/*
+			Set the scale of the text.
+		*/
+		void SetScale(float scale);
+
+
+		/*
 			Create a custom format to use for this text element.
 		*/
-		const bool SetFormat(const WCHAR* fontName,
+		bool SetFormat(const WCHAR* fontName,
 			IDWriteFontCollection* fontCollection,
 			const DWRITE_FONT_WEIGHT& weight, const DWRITE_FONT_STYLE& style,
 			const DWRITE_FONT_STRETCH& stretch, const FLOAT& fontSize, const WCHAR* localeName);
@@ -46,9 +55,9 @@ namespace rtd
 
 		virtual void OnHover() override;
 
-		virtual const bool CheckHover() override;
+		virtual bool CheckHover() override;
 
-		virtual const bool CheckClick() override;
+		virtual bool CheckClick() override;
 
 	};
 }

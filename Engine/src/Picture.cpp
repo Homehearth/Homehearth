@@ -8,7 +8,6 @@ Picture::Picture(const std::string& fileName, const draw_t& opts)
 	m_texture = ResourceManager::Get().GetResource<RBitMap>(fileName);
 	m_drawOpts = opts;
 	m_border = nullptr;
-	this->SetLayer(m_drawOpts.layer);
 }
 
 rtd::Picture::Picture()
@@ -66,12 +65,12 @@ void rtd::Picture::OnHover()
 {
 }
 
-const bool rtd::Picture::CheckClick()
+bool rtd::Picture::CheckClick()
 {
 	return false;
 }
 
-const bool rtd::Picture::CheckHover()
+bool rtd::Picture::CheckHover()
 {
 	return false;
 }

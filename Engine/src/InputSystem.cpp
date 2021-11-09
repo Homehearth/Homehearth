@@ -16,7 +16,8 @@ InputSystem::InputSystem(): m_kBState(), m_mouseState()
 void InputSystem::SetMouseWindow(const HWND& windowHandle, const int width, const int height)
 {
 	m_mouse->SetWindow(windowHandle);
-	m_mouse->SetMode(DirectX::Mouse::MODE_RELATIVE);
+	//m_mouse->SetMode(DirectX::Mouse::MODE_RELATIVE);
+	m_mouse->SetMode(DirectX::Mouse::MODE_ABSOLUTE);
 	m_windowWidth = width;
 	m_windowHeight = height;
 }
@@ -27,7 +28,7 @@ void InputSystem::SetCamera(Camera* camera)
 		this->m_currentCamera = camera;
 	else
 	{
-		LOG_WARNING("Tried to set camera as nullptr...");
+		LOG_WARNING("Tried to set camera with nullptr...");
 	}
 }
 
@@ -113,21 +114,21 @@ int InputSystem::GetAxis(Axis axis) const
 	case Axis::VERTICAL:
 		if (CheckKeyboardKey(dx::Keyboard::W, KeyState::HELD) || CheckKeyboardKey(dx::Keyboard::Up, KeyState::HELD))
 		{
-			toReturn = 1;
+			toReturn = -1;
 		}
 		else if (CheckKeyboardKey(dx::Keyboard::S, KeyState::HELD) || CheckKeyboardKey(dx::Keyboard::Down, KeyState::HELD))
 		{
-			toReturn = -1;
+			toReturn = 1;
 		}
 		break;
 	case Axis::HORIZONTAL:
 		if (CheckKeyboardKey(dx::Keyboard::D, KeyState::HELD) || CheckKeyboardKey(dx::Keyboard::Right, KeyState::HELD))
 		{
-			toReturn = 1;
+			toReturn = -1;
 		}
 		else if (CheckKeyboardKey(dx::Keyboard::A, KeyState::HELD) || CheckKeyboardKey(dx::Keyboard::Left, KeyState::HELD))
 		{
-			toReturn = -1;
+			toReturn = 1;
 		}
 		break;
 	default:
@@ -139,6 +140,57 @@ int InputSystem::GetAxis(Axis axis) const
 const MousePos& InputSystem::GetMousePos() const
 {
 	return m_mousePos;
+}
+
+std::string InputSystem::GetClipboard()
+{
+	if (!OpenClipboard(NULL))
+	{
+		LOG_WARNING("Failed to open clipboard %d", GetLastError());
+		return "";
+	}
+	HANDLE handle = GetClipboardData(CF_TEXT);
+	if (!handle)
+	{
+		LOG_WARNING("Failed to get clipboard handle %d", GetLastError());
+		return "";
+	}
+
+	char* str = static_cast<char*>(GlobalLock(handle));
+	if (!str)
+	{
+		LOG_WARNING("Failed to get clipboard string");
+		return "";
+	}
+	
+	GlobalUnlock(handle);
+	CloseClipboard();
+
+	return str;
+}
+
+void InputSystem::SetClipboard(const std::string& str)
+{
+	if (!OpenClipboard(NULL))
+	{
+		LOG_WARNING("Failed to open clipboard %d", GetLastError());
+	}
+	EmptyClipboard();
+
+	HGLOBAL hg = GlobalAlloc(GMEM_MOVEABLE, str.size());
+	if (!hg)
+	{
+		CloseClipboard();
+		LOG_WARNING("Failed to allocate clipboard handle %d", GetLastError());
+		return;
+	}
+
+	memcpy(GlobalLock(hg), str.c_str(), str.size());
+	GlobalUnlock(hg);
+	SetClipboardData(CF_TEXT, hg);
+
+	CloseClipboard();
+	GlobalFree(hg);
 }
 
 void InputSystem::ToggleMouseVisibility() const

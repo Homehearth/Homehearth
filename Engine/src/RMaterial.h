@@ -1,6 +1,11 @@
 #pragma once
 #include "RTexture.h"
-#include <assimp/material.h>
+struct aiMaterial;
+
+//Slots to bind to on shader-side
+const UINT CB_MAT_SLOT			= 0;
+const UINT CB_PROPERTIES_SLOT	= 2;
+const UINT T2D_STARTSLOT		= 1;
 
 /*
 	---MTL-Standard---
@@ -17,8 +22,10 @@
 	* Metalness				"map_ns   Object_Metalness.png"
 	* Roughness				"map_Ks   Object_Roughness.png"
 	* Ambient occlusion		"map_Ka	  Object_AO.png"
-	//Extra
-	* Displacement			"map_disp Object_Displace.png
+	
+	//Other useful textures
+	* Displacement			"map_disp Object_Displace.png"
+	* Opacitymask			"map_d	  Object_Opacity.png"
 
 */
 
@@ -33,6 +40,7 @@ enum class ETextureType
 	roughness,
 	ambientOcclusion,
 	displacement,
+	opacitymask,
 	length
 };
 
@@ -43,6 +51,7 @@ private:
 		Constantbuffer with constants for the material
 		Size: 48 bytes
 	*/
+	ALIGN16
 	struct matConstants_t
 	{
 		sm::Vector3	 ambient	= {};		//12 bytes
@@ -60,6 +69,7 @@ private:
 		Size: 32 bytes
 		Optimization: save memory with bitwise? send only one number
 	*/
+	ALIGN16
 	struct properties_t
 	{
 		int 	hasAlbedo	 = 0;	//4 byte
@@ -68,7 +78,8 @@ private:
 		int		hasRoughness = 0;	//4 byte
 		int		hasAoMap	 = 0;	//4 byte
 		int		hasDisplace  = 0;	//4 byte
-		int		padding[2];			//8 bytes
+		int		hasOpacity	 = 0;	//4 byte
+		int		padding;			//4 byte
 	};
 	properties_t m_properties;
 	ComPtr<ID3D11Buffer> m_hasTextureCB;
@@ -81,6 +92,7 @@ private:
 private:
 	//Split the path to only get the filename
 	const std::string GetFilename(const std::string& path) const;
+	bool LoadTexture(const ETextureType& type, const std::string& filename);
 	bool CreateConstBuf(const matConstants_t& mat);
 	bool CreateConstBuf(const properties_t& mat);
 
@@ -90,12 +102,17 @@ public:
 
 	void BindMaterial() const;
 	void UnBindMaterial() const;
+	void BindDeferredMaterial(ID3D11DeviceContext* context);
+	void UnBindDeferredMaterial(ID3D11DeviceContext* context);
 	
-	//Check if a material has a specific texture
+	//CheckCollisions if a material has a specific texture
 	bool HasTexture(const ETextureType& type) const;
 
 	//Loaded from assimp
-	bool Create(aiMaterial* aiMat, const std::string& fileformat);
+	bool Create(aiMaterial* aiMat, bool& useMTL);
+
+	//Load a part of a mtl-file. Text = "newmtl ..."
+	bool CreateFromMTL(std::string& text);
 
 	// Inherited via GResource
 	// Load material with file - mtl files

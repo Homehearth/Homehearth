@@ -1,17 +1,12 @@
 #pragma once
-#include "Element2D.h"
 #include "DoubleBuffer.h"
 
 // Elements
-#include "Canvas.h"
-#include "Picture.h"
-#include "Border.h"
-#include "Button.h"
-#include "Text.h"
+#include "Collection2D.h"
 
-// std
-#include <set>
-#include <type_traits>
+/*
+	Defines for ease of use.
+*/
 
 /*
 	WIKI:
@@ -38,79 +33,38 @@
 	Functions to ignore:
 	Render();
 	Update();
-	Initialize();
-	Destroy();
 	IsRenderReady();
 */
 
 
-/*
-	rtd -> Render *Two* Dee [Render2D]
-*/
-namespace rtd
-{
-	// Singleton class used to render and update each element.
+	// class used to render and update each element.
 	class Handler2D
 	{
 	private:
 
-		// Double buffer
-		static std::vector<Element2D*> m_elements;
+		/*
+			Unordered map containing the group and name as key.
+		*/
+		std::map<std::string, Collection2D*> m_collections;
 
-		static DoubleBuffer<std::vector<Element2D**>> m_drawBuffers;
-		static Handler2D* instance;
-		Handler2D();
-		~Handler2D();
+		// Doublebuffer holding references to elements.
+		DoubleBuffer<std::vector<Element2D**>> m_drawBuffers;
+		DoubleBuffer<std::vector<Collection2D**>> m_renderBuffers;
 
 	public:
 
-		static auto& Get()
-		{
-			return Handler2D::instance;
-		}
-
-		static void Initialize();
-		static void Destroy();
-
-		// Insert an element into the rendering system.
-		static void InsertElement(Element2D* element);
-
-		/*
-			Get an Element by its assigned name.
-			nullptr will be returned if
-			element couldn't be casted to Template.
-		*/
-		template<class T>
-		static T* GetElement(const std::string& element_name);
+		Handler2D();
+		~Handler2D();
+		
+		void AddElementCollection(Collection2D* collection, const char* name);
+		void AddElementCollection(Collection2D* collection, std::string& name);
+		Collection2D* GetCollection(const std::string& collectionName) const;
 
 		// Render all elements.
-		static void Render();
+		void Render();
 
 		// Update the states of all buttons.
-		static void Update();
+		void Update();
 
-		// Deallocate all pointers.
-		static void EraseAll();
-
-		// Remove all pointers without deallocation.
-		static void RemoveAll();
-
-		static const bool IsRenderReady();
+		bool IsRenderReady() const;
 	};
-
-
-	template<class T>
-	inline T* rtd::Handler2D::GetElement(const std::string& element_name)
-	{
-		for (auto elem : Handler2D::instance->m_elements)
-		{
-			if (elem)
-			{
-				if (elem->GetName() == element_name)
-					return dynamic_cast<T*>(elem);
-			}
-		}
-
-		return nullptr;
-	}
-}

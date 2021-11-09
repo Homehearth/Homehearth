@@ -12,18 +12,16 @@ enum class CAMERATYPE
 class Camera
 {
 private:
-	sm::Vector2 m_currentMousePosition;
-	sm::Vector2 m_lastMousePosition;
-
 	sm::Vector3 m_up;
 	sm::Vector3 m_target;
 	sm::Vector3 m_forward;
 	sm::Vector3 m_right;
 	sm::Vector3 m_defaultForward;
 	sm::Vector3 m_defaultRight;
+	sm::Vector3 m_defaultPos;
 	sm::Vector3 m_move;
 
-	comp::Velocity* m_targetVelocity;
+	Entity m_targetEntity;
 
 	sm::Matrix  m_view;
 	sm::Matrix  m_projection;
@@ -34,7 +32,7 @@ private:
 	float m_aspectRatio;
 
 	float m_rotationSpeed;
-	float m_movingSepeed;
+	float m_movingSpeed;
 
 	camera_Matrix_t m_cameraMat;
 	sm::Quaternion quaterion;
@@ -52,7 +50,8 @@ public:
 	/* Position, Target, up, windowSize = (window width, window height) */
 	void Initialize(sm::Vector3 pos, sm::Vector3 target, sm::Vector3 up, sm::Vector2 windowSize, CAMERATYPE type) ;
 	void Update(float deltaTime);
-	void SetFollowVelocity(comp::Velocity* target);
+	void SetFollowEntity(const Entity& entity);
+
 
 	//Get Functions
 	sm::Matrix GetView() const;
@@ -61,8 +60,8 @@ public:
 	sm::Vector3 GetTarget() const;
 	sm::Vector3 GetUp() const;
 	camera_Matrix_t* GetCameraMatrixes();
-	CAMERATYPE GetCameraType();
-	float* GetDeltaTime();
+	CAMERATYPE GetCameraType()const;
+	sm::Vector3 GetRollPitchYaw() const;
 
 	//Set Functions
 	void SetPosition(sm::Vector3 newPosition);
@@ -82,5 +81,14 @@ public:
 	float m_nearPlane;
 	float m_farPlane;
 	sm::Vector3 m_rollPitchYaw;
+	sm::Quaternion m_rotation = sm::Quaternion::Identity;
 	sm::Vector3 m_position;
 };
+
+
+// component version
+namespace ecs::component {
+	struct Camera3D {
+		Camera camera;
+	};
+}

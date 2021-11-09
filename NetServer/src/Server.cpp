@@ -13,7 +13,6 @@ Server::~Server()
 
 void Server::Update(size_t nMaxMessage)
 {
-
 	size_t nMessageCount = 0;
 	while (nMessageCount < nMaxMessage && !m_qMessagesIn.empty())
 	{
@@ -27,21 +26,30 @@ void Server::Update(size_t nMaxMessage)
 
 SOCKET Server::GetConnection(uint32_t playerID) const
 {
-	return connections.at(playerID);
+	if (connections.find(playerID) != connections.end())
+	{
+		return connections.at(playerID);
+	}
+	else
+	{
+		return INVALID_SOCKET;
+	}
+}
+
+uint32_t Server::PopNextUniqueID()
+{
+	uint32_t id = m_uniqueID;
+	m_uniqueID++;
+	return id;
 }
 
 void Server::OnClientConnect(std::string&& ip, const uint16_t& port)
 {
-	EnterCriticalSection(&lock);
 	LOG_INFO("Client connected from %s:%d", ip.c_str(), port);
-	LeaveCriticalSection(&lock);
 }
 
-void Server::OnClientDisconnect()
+void Server::OnClientDisconnect(const SOCKET& socket)
 {
-	EnterCriticalSection(&lock);
-	connections.erase(m_uniqueID);
-	LeaveCriticalSection(&lock);
 	LOG_INFO("Client disconnected!");
 }
 
@@ -52,14 +60,12 @@ void Server::OnMessageReceived(message<GameMsg>& msg)
 
 void Server::OnClientValidated(const SOCKET& socket)
 {
-	EnterCriticalSection(&lock);
-	m_uniqueID++;
-	LeaveCriticalSection(&lock);
+	uint32_t id = this->PopNextUniqueID();
 	message<GameMsg> msg = {};
-	msg << m_uniqueID;
+	msg << id;
 	msg.header.id = GameMsg::Server_AssignID;
-	connections[m_uniqueID] = socket;
-	this->SendToClient(socket, msg);
+	connections[id] = socket;
+	this->SendToClient(id, msg);
 
 	LOG_INFO("Client has been validated on socket %lld", socket);
 }

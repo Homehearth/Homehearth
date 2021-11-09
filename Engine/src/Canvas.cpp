@@ -8,7 +8,6 @@ Canvas::Canvas(const D2D1_COLOR_F& color, const draw_t& opts)
 	m_color = color;
 	m_drawOpts = opts;
 	m_border = nullptr;
-	this->SetLayer(m_drawOpts.layer);
 }
 
 rtd::Canvas::Canvas(const draw_t& opts)
@@ -29,6 +28,18 @@ rtd::Canvas::~Canvas()
 
 }
 
+void rtd::Canvas::SetPosition(const float& x, const float& y)
+{
+	m_drawOpts.x_pos = x;
+	m_drawOpts.y_pos = y;
+}
+
+void rtd::Canvas::SetScale(const float& x_stretch, const float& y_stretch)
+{
+	m_drawOpts.width = x_stretch;
+	m_drawOpts.height = y_stretch;
+}
+
 void rtd::Canvas::SetColor(const D2D1_COLOR_F& new_color)
 {
 	m_color = new_color;
@@ -39,13 +50,23 @@ D2D1_COLOR_F& rtd::Canvas::GetColor()
 	return m_color;
 }
 
-Border* rtd::Canvas::GetBorder()
+void rtd::Canvas::SetBorderColor(const D2D1_COLOR_F& new_color)
 {
 	if (!m_border)
 	{
 		m_border = std::make_unique<Border>(m_drawOpts);
 	}
-	return m_border.get();
+	m_border->SetColor(new_color);
+}
+
+void rtd::Canvas::HideBorder()
+{
+	m_border->SetColor({ m_border->GetColor().r, m_border->GetColor().g, m_border->GetColor().b, 0.f });
+}
+
+void rtd::Canvas::ShowBorder()
+{
+	m_border->SetColor({ m_border->GetColor().r, m_border->GetColor().g, m_border->GetColor().b, 1.f });
 }
 
 void Canvas::Draw()
@@ -58,7 +79,7 @@ void Canvas::Draw()
 
 void rtd::Canvas::OnClick()
 {
-	m_color = D2D1::ColorF(FLOAT(rand() % 255), FLOAT(rand() % 255), FLOAT(rand() % 255));
+
 }
 
 void rtd::Canvas::OnHover()
@@ -66,24 +87,33 @@ void rtd::Canvas::OnHover()
 
 }
 
-const bool rtd::Canvas::CheckClick()
+bool rtd::Canvas::CheckClick()
 {
-	// Check if mouse key is pressed.
-	if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED))
+	// CheckCollisions if mouse key is pressed.
+	// Is within bounds?
+	m_isClicked = false;
+	if (CheckHover())
 	{
-		// Is within bounds?
-		if (InputSystem::Get().GetMousePos().x > m_drawOpts.x_pos &&
-			InputSystem::Get().GetMousePos().x < m_drawOpts.x_pos + m_drawOpts.width &&
-			InputSystem::Get().GetMousePos().y > m_drawOpts.y_pos &&
-			InputSystem::Get().GetMousePos().y < m_drawOpts.y_pos + m_drawOpts.height)
+		OnHover();
+		if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED))
 		{
-			return true;
+			OnClick();
+			m_isClicked = true;
 		}
 	}
 	return false;
 }
 
-const bool rtd::Canvas::CheckHover()
+bool rtd::Canvas::CheckHover()
 {
+	if (InputSystem::Get().GetMousePos().x > m_drawOpts.x_pos &&
+		InputSystem::Get().GetMousePos().x < m_drawOpts.x_pos + m_drawOpts.width &&
+		InputSystem::Get().GetMousePos().y > m_drawOpts.y_pos &&
+		InputSystem::Get().GetMousePos().y < m_drawOpts.y_pos + m_drawOpts.height)
+	{
+		m_isHovering = true;
+		return true;
+	}
+	m_isHovering = false;
 	return false;
 }

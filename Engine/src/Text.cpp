@@ -19,7 +19,18 @@ void Text::SetText(const std::string& displayText)
     m_text = displayText;
 }
 
-const bool Text::SetFormat(const WCHAR* fontName, 
+void rtd::Text::SetPosition(const float& x, const float& y)
+{
+    m_opts.x_pos = x;
+    m_opts.y_pos = y;
+}
+
+void rtd::Text::SetScale(float scale)
+{
+    m_opts.scale = scale;
+}
+
+bool Text::SetFormat(const WCHAR* fontName, 
     IDWriteFontCollection* fontCollection, 
     const DWRITE_FONT_WEIGHT& weight, const DWRITE_FONT_STYLE& style, 
     const DWRITE_FONT_STRETCH& stretch, const FLOAT& fontSize,
@@ -43,12 +54,12 @@ void Text::OnHover()
 
 }
 
-const bool Text::CheckHover()
+bool Text::CheckHover()
 {
     return false;
 }
 
-const bool Text::CheckClick()
+bool Text::CheckClick()
 {
     return false;
 }

@@ -1,7 +1,6 @@
 #pragma once
-#include <EnginePCH.h>
 #include "RTexture.h"
-
+#include "Window.h"
 /*
 	Is this your first time in this .h Header file?
 	WIKI:
@@ -98,6 +97,8 @@ struct draw_text_t
 	float x_stretch = 100.0f;
 	float y_stretch = 100.0f;
 
+	float scale = 1.0f;
+
 	draw_text_t() = default;
 
 	draw_text_t(IDWriteTextFormat* format, float x, float y, float x_stretch, float y_stretch)
@@ -128,6 +129,16 @@ enum class Shapes
 	NR_OF_SHAPES
 };
 
+enum class LineWidth
+{
+	NONE,
+	SMALL,
+	MEDIUM,
+	LARGE,
+	THICK,
+	NR_OF
+};
+
 /*
 	Struct used to draw a shape with a specific color.
 */
@@ -154,13 +165,17 @@ struct draw_shape_t
 class D2D1Core
 {
 private:
-	ComPtr<IDWriteFactory> m_writeFactory;
+	ComPtr<IDWriteFactory5> m_writeFactory;
 	ComPtr<ID2D1Factory> m_factory;
 	ComPtr<ID2D1RenderTarget> m_renderTarget;
 	ComPtr<ID2D1HwndRenderTarget> m_hwndTarget;
 	ComPtr<IDXGISurface1> m_surface;
 	ComPtr<IWICImagingFactory> m_imageFactory;
 	Window* m_windowPointer;
+	ComPtr<IDWriteInMemoryFontFileLoader> m_loader;
+	ComPtr<IDWriteFontSetBuilder1> m_fontSetBuilder;
+	ComPtr<IDWriteFontSet> m_fontSet;
+	ComPtr<IDWriteFontCollection1> m_fontCollection;
 
 private:
 	D2D1Core();
@@ -174,6 +189,8 @@ private:
 	HRESULT LoadBitMap(
 		const LPCWSTR& filePath,
 		ID2D1Bitmap** bitMap);
+
+	HRESULT LoadFont(const std::string& fontName);
 public:
 
 	// Boot up the D2D1Core application.
@@ -181,6 +198,8 @@ public:
 
 	// Free up any used memory.
 	static void Destroy();
+
+	static float GetDefaultFontSize();
 
 	/*
 		Draw Text onto the window assigned in the parameter.
@@ -227,6 +246,12 @@ public:
 		const DWRITE_FONT_STRETCH& stretch, const FLOAT& fontSize,
 		const WCHAR* localeName, IDWriteTextFormat** pointer);
 
+	/*
+		Loads in a custom font through the filePath.
+		It is saved in an unordered_map with the fontName key.
+	*/
+	static void LoadCustomFont(const std::string& filePath, const std::string& fontName);
+
 private:
 	/*
 		Default objects to be used when no other parameters are specified.
@@ -234,4 +259,52 @@ private:
 
 	ComPtr<IDWriteTextFormat> m_writeFormat;
 	ComPtr<ID2D1SolidColorBrush> m_solidBrush;
+};
+
+class FontCollectionLoader : public IDWriteFontCollectionLoader
+{
+private:
+
+	UINT32 m_refs = 0;
+	UINT32 m_key = 1;
+
+public:
+	static FontCollectionLoader* instance;
+	static void Initialize();
+	static void Destroy();
+
+	// Inherited via IDWriteFontCollectionLoader
+	virtual HRESULT __stdcall QueryInterface(REFIID riid, void** ppvObject) override;
+	virtual ULONG __stdcall AddRef(void) override;
+	virtual ULONG __stdcall Release(void) override;
+	virtual HRESULT __stdcall CreateEnumeratorFromKey(IDWriteFactory* factory, void const* collectionKey, UINT32 collectionKeySize, IDWriteFontFileEnumerator** fontFileEnumerator) override;
+};
+
+class FontFileEnumerator : public IDWriteFontFileEnumerator
+{
+private:
+
+	UINT32 m_refs = 0;
+	UINT64 m_key = 1;
+	std::vector<IDWriteFontFile*> m_fonts;
+	IDWriteFactory* m_factoryRef = nullptr;
+	int m_pos = 0;
+
+public:
+
+	FontFileEnumerator(IDWriteFactory* ref);
+	~FontFileEnumerator() = default;
+	void SetKey(const void* pointer);
+
+	// Inherited via IDWriteFontFileEnumerator
+	virtual HRESULT __stdcall QueryInterface(REFIID riid, void** ppvObject) override;
+
+	virtual ULONG __stdcall AddRef(void) override;
+
+	virtual ULONG __stdcall Release(void) override;
+
+	virtual HRESULT __stdcall MoveNext(BOOL* hasCurrentFile) override;
+
+	virtual HRESULT __stdcall GetCurrentFontFile(IDWriteFontFile** fontFile) override;
+
 };

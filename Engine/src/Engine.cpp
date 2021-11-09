@@ -2,14 +2,13 @@
 #include "Engine.h"
 #include <omp.h>
 #include "Camera.h"
-
-#include "RMesh.h"
+#include "GridSystem.h"
 
 bool Engine::s_safeExit = false;
 
 Engine::Engine()
-	: HeadlessEngine()
-	, m_frameTime()
+	: BasicEngine()
+	//, m_frameTime()
 {
 	LOG_INFO("Engine(): " __TIMESTAMP__);
 }
@@ -22,17 +21,23 @@ void Engine::Startup()
 
 	// Window Startup:
 	Window::Desc config;
-	config.title = L"Engine";
+
+	//Get heighest possible 16:9 resolution
+	//90% of the height
+	config.height = static_cast<UINT>(GetSystemMetrics(SM_CYSCREEN) * 0.90f);
+	float aspectRatio = 16.0f / 9.0f;
+	config.width = static_cast<UINT>(aspectRatio * config.height);
+
+	config.title = L"Homehearth";
 	if (!m_window.Initialize(config))
 	{
 		LOG_ERROR("Could not Initialize m_window.");
 	}
 
 	// DirectX Startup:
+	FontCollectionLoader::Initialize();
 	D3D11Core::Get().Initialize(&m_window);
 	D2D1Core::Initialize(&m_window);
-	rtd::Handler2D::Get()->Initialize();
-	BackBuffer::Initialize();
 
 	m_renderer.Initialize(&m_window);
 
@@ -63,24 +68,14 @@ void Engine::Startup()
 		LOG_INFO("ImGui was successfully initialized");
 	);
 
-	InputSystem::Get().SetMouseWindow(m_window.GetHWnd(), m_window.GetWidth(), m_window.GetHeight());
+	// Thread Startup.
+	thread::RenderThreadHandler::Get().SetRenderer(&m_renderer);
+	thread::RenderThreadHandler::Get().SetWindow(&m_window);
+	thread::RenderThreadHandler::Get().Setup(2);
 
-#if DRAW_TEMP_2D
-	rtd::Button* test = new rtd::Button("demo_start_game_button.png", draw_t(100.0f, 100.0f, 275.0f, 100.0f), true);
-	rtd::Button* test2 = new rtd::Button("demo_options_button.png", draw_t(100.0f, 225.0f, 275.0f, 100.0f), true);
-	rtd::Button* test3 = new rtd::Button("demo_exit_button.png", draw_t(100.0f, 350.0f, 275.0f, 100.0f), false);
-	rtd::Text* test4 = new rtd::Text("Welcome to Homehearth!", draw_text_t(350.0f, 25.0f, 300.0f, 100.0f));
-	test->GetBorder()->SetColor(D2D1::ColorF(1.0f, 0.0f, 0.5f));
-	test2->GetBorder()->SetColor(D2D1::ColorF(0.1f, .75f, 0.25f));
-	test3->GetBorder()->SetColor(D2D1::ColorF(0.5f, .23f, 0.65f));
-	test->SetName("Button1");
-	rtd::Handler2D::InsertElement(test);
-	rtd::Handler2D::InsertElement(test2);
-	rtd::Handler2D::InsertElement(test3);
-	rtd::Handler2D::InsertElement(test4);
-#endif
+	InputSystem::Get().SetMouseWindow(m_window.GetHWnd(), m_window.GetWidth(), m_window.GetHeight());
 	
-	HeadlessEngine::Startup();
+	BasicEngine::Startup();
 }
 
 void Engine::Run()
@@ -88,7 +83,7 @@ void Engine::Run()
 	if (thread::IsThreadActive())
 		T_CJOB(Engine, RenderThread);
 
-	HeadlessEngine::Run();
+	BasicEngine::Run();
 	// Wait for the rendering thread to exit its last render cycle and shutdown
 #if _DEBUG
 	// This is debug since it catches release in endless loop.
@@ -105,8 +100,7 @@ void Engine::Run()
     T_DESTROY();
     D2D1Core::Destroy();
 	ResourceManager::Get().Destroy();
-	rtd::Handler2D::Get()->Destroy();
-	BackBuffer::Destroy();
+	FontCollectionLoader::Destroy();
 }
 
 
@@ -119,7 +113,7 @@ void Engine::drawImGUI() const
 {
 	//Containers for plotting
 	static std::vector<float> fpsContainer;
-	static std::vector<float> fpsUpdateContainer;
+	//static std::vector<float> fpsUpdateContainer;
 	static std::vector<float> ramUsageContainer;
 	static std::vector<float> vRamUsageContainer;
 
@@ -127,8 +121,8 @@ void Engine::drawImGUI() const
 	static int dots = 0;
 	if (timer.GetElapsedTime<std::chrono::duration<float>>() > 0.5f)
 	{
-		fpsContainer.emplace_back((1 / m_frameTime.render));
-		fpsUpdateContainer.emplace_back((1.0f / m_frameTime.update));
+		fpsContainer.emplace_back(static_cast<float>(Stats::GetCurrentFPS()));
+		//fpsUpdateContainer.emplace_back(static_cast<float>(Stats::GetUpdateFPS()));
 		ramUsageContainer.emplace_back((Profiler::GetRAMUsage() / (1024.f * 1024.f)));
 		vRamUsageContainer.emplace_back((Profiler::GetVRAMUsage() / (1042.f * 1024.f)));
 		timer.Start();
@@ -138,8 +132,8 @@ void Engine::drawImGUI() const
 	if (fpsContainer.size() > 10)
 		fpsContainer.erase(fpsContainer.begin());
 
-	if (fpsUpdateContainer.size() > 10)
-		fpsUpdateContainer.erase(fpsUpdateContainer.begin());
+	/*if (fpsUpdateContainer.size() > 10)
+		fpsUpdateContainer.erase(fpsUpdateContainer.begin());*/
 
 	if (ramUsageContainer.size() > 10)
 		ramUsageContainer.erase(ramUsageContainer.begin());
@@ -182,10 +176,10 @@ void Engine::drawImGUI() const
 #endif
 	if (ImGui::CollapsingHeader("FPS"))
 	{
-		ImGui::PlotLines(("FPS: " + std::to_string(static_cast<size_t>(1 / m_frameTime.render))).c_str(), fpsContainer.data(), static_cast<int>(fpsContainer.size()), 0, nullptr, 0.0f, 144.0f, ImVec2(150, 50));
+		ImGui::PlotLines(("FPS: " + std::to_string(Stats::GetCurrentFPS())).c_str(), fpsContainer.data(), static_cast<int>(fpsContainer.size()), 0, nullptr, 0.0f, Stats::GetMaxFPS(), ImVec2(150, 50));
 		ImGui::Spacing();
-		ImGui::PlotLines(("Update FPS: " + std::to_string(static_cast<size_t>(1.0f / m_frameTime.update))).c_str(), fpsUpdateContainer.data(), static_cast<int>(fpsUpdateContainer.size()), 0, nullptr, 0.0f, 144.0f, ImVec2(150, 50));
-		ImGui::Spacing();
+		/*ImGui::PlotLines(("Update FPS: " + std::to_string(Stats::GetUpdateFPS())).c_str(), fpsUpdateContainer.data(), static_cast<int>(fpsUpdateContainer.size()), 0, nullptr, 0.0f, 144.0f, ImVec2(150, 50));
+		ImGui::Spacing();*/
 	}
 
 	if (ImGui::CollapsingHeader("Memory"))
@@ -196,62 +190,200 @@ void Engine::drawImGUI() const
 	}
 
 	ImGui::End();
-	
+
 	ImGui::Begin("Components");
 	if (ImGui::CollapsingHeader("Transform"))
 	{
+		
 		GetCurrentScene()->ForEachComponent<comp::Transform>([&](Entity& e, comp::Transform& transform)
 			{
+				std::string entityname = "Entity: " + std::to_string(static_cast<int>((entt::entity)e));
+				
 				ImGui::Separator();
-				ImGui::Text("Entity: %d", static_cast<int>((entt::entity)e));
+				ImGui::Text(entityname.c_str());
 				ImGui::DragFloat3(("Position##" + std::to_string(static_cast<int>((entt::entity)e))).c_str(), (float*)&transform.position);
 				ImGui::DragFloat3(("Rotation##" + std::to_string(static_cast<int>((entt::entity)e))).c_str(), (float*)&transform.rotation, dx::XMConvertToRadians(1.f));
-				if(ImGui::Button(("Remove##" + std::to_string(static_cast<int>((entt::entity)e))).c_str()))
+
+				if (ImGui::Button(("Remove##" + std::to_string(static_cast<int>((entt::entity)e))).c_str()))
 				{
 					e.Destroy();
 				}
 				ImGui::Spacing();
 			});
+
+		
 	}
+	
+	if (ImGui::CollapsingHeader("Renderable"))
+	{
+		GetCurrentScene()->ForEachComponent<comp::Renderable>([&](Entity& e, comp::Renderable& renderable)
+			{
+				std::string entityname = "Entity: " + std::to_string(static_cast<int>((entt::entity)e));
+
+				ImGui::Separator();
+				ImGui::Text(entityname.c_str());
+				ImGui::Text("Change 'mtl-file'");
+				char str[30] = "";
+				ImGui::InputText("New material", str, IM_ARRAYSIZE(str));
+				if (ImGui::IsKeyPressedMap(ImGuiKey_Enter))
+				{
+					renderable.model->ChangeMaterial(str);
+				}
+				ImGui::Spacing();
+			});
+	}
+	if (ImGui::CollapsingHeader("Light"))
+	{
+
+		GetCurrentScene()->ForEachComponent<comp::Light>([&](Entity& e, comp::Light& light)
+			{
+				std::string entityname = "Entity: " + std::to_string(static_cast<int>((entt::entity)e));
+				
+				ImGui::Separator();
+				ImGui::Text(entityname.c_str());
+				ImGui::SameLine();
+				std::string index = std::to_string(light.index);
+				ImGui::Text("Light index: %d", light.index);
+				bool edited = false;
+				if (ImGui::ColorEdit4(("Color##" + index).c_str(), (float*)&light.lightData.color)) 
+					edited = true;
+				
+				if (ImGui::DragFloat3(("Direction##" + index).c_str(), (float*)&light.lightData.direction))
+					edited = true;
+
+				if (ImGui::Checkbox(("Enabled##" + index).c_str(), (bool*)&light.lightData.enabled))
+					edited = true;
+
+				if (ImGui::DragFloat3(("Position##" + index).c_str(), (float*)&light.lightData.position))
+					edited = true;
+				
+				if (ImGui::InputFloat(("Range##" + index).c_str(), &light.lightData.range))
+					edited = true;
+				
+				const char* const items[2] = { "Directional", "Point" };
+				if (ImGui::ListBox(("Type##" + index).c_str(), (int*)&light.lightData.type, items, 2))
+					edited = true;
+				
+				if (edited)
+				{
+					GetCurrentScene()->GetLights()->EditLight(light.lightData, light.index);
+				}
+
+				ImGui::Spacing();
+			});
+
+	}
+	if (ImGui::CollapsingHeader("Network"))
+	{
+
+		GetCurrentScene()->ForEachComponent<comp::Network>([&](Entity& e, comp::Network& net)
+			{
+				std::string entityname = "Entity: " + std::to_string(static_cast<int>((entt::entity)e));
+				std::string netID = "Network ID: " + std::to_string(net.id);
+
+				ImGui::Separator();
+				ImGui::Text(entityname.c_str());
+				ImGui::Text(netID.c_str());
+
+				ImGui::Spacing();
+			});
+
+	}
+	if (ImGui::CollapsingHeader("Colliders"))
+	{
+		ImGui::Text("Bounding Oriented Box");
+		ImGui::Spacing();
+
+		GetCurrentScene()->ForEachComponent<comp::BoundingOrientedBox>([&](Entity& e, comp::BoundingOrientedBox& box)
+			{
+				std::string id = std::to_string(static_cast<int>((entt::entity)e));
+				
+				ImGui::Text("Entity: %d", (entt::entity)e);
+				
+				ImGui::DragFloat3(("Center##" + id).c_str(), (float*)&box.Center);
+				ImGui::DragFloat3(("Extents##" + id).c_str(), (float*)&box.Extents);
+				ImGui::DragFloat3(("Orientation##" + id).c_str(), (float*)&box.Orientation);
+
+				ImGui::Spacing();
+				ImGui::Separator();
+			});
+
+		ImGui::Text("Bounding Sphere");
+		ImGui::Spacing();
+		GetCurrentScene()->ForEachComponent<comp::BoundingSphere>([&](Entity& e, comp::BoundingSphere& s)
+			{
+				std::string id = std::to_string(static_cast<int>((entt::entity)e));
+
+				ImGui::Text("Entity: %d", (entt::entity)e);
+
+				ImGui::DragFloat3(("Center##" + id).c_str(), (float*)&s.Center);
+				ImGui::DragFloat(("Radius##" + id).c_str(), (float*)&s.Radius, 0.1f);
+
+				ImGui::Spacing();
+				ImGui::Separator();
+			});
+
+	}
+
 	ImGui::End();
 
 	ImGui::Begin("Camera");
 	{
-		const std::string position = "Position: " + std::to_string(GetCurrentScene()->m_currentCamera->GetPosition().x)+ " " + std::to_string(GetCurrentScene()->m_currentCamera->GetPosition().y) + " " + std::to_string(GetCurrentScene()->m_currentCamera->GetPosition().z);
-		ImGui::Separator();
-		ImGui::Text(position.c_str());
-		ImGui::DragFloat("Zoom: ", &GetCurrentScene()->m_currentCamera->m_zoomValue, 0.01f, 0.0001f, 1.0f);
-		ImGui::DragFloat("Near Plane : ", &GetCurrentScene()->m_currentCamera->m_nearPlane, 0.1f , 0.0001f, GetCurrentScene()->m_currentCamera->m_farPlane-1);
-		ImGui::DragFloat("Far Plane: ", &GetCurrentScene()->m_currentCamera->m_farPlane, 0.1f, GetCurrentScene()->m_currentCamera->m_nearPlane+1);
-		ImGui::DragFloat3("Position: ", (float*)&GetCurrentScene()->m_currentCamera->m_position, 0.1f);
-		ImGui::DragFloat3("Rotation: ", (float*)&GetCurrentScene()->m_currentCamera->m_rollPitchYaw, 0.1f, 0.0f);
-		ImGui::Spacing();
-
+		Camera* currentCam = GetCurrentScene()->GetCurrentCamera();
+		if (currentCam)
+		{
+			const std::string position = "Position: " + std::to_string(currentCam->GetPosition().x)+ " " + std::to_string(currentCam->GetPosition().y) + " " + std::to_string(currentCam->GetPosition().z);
+			ImGui::Separator();
+			ImGui::Text(position.c_str());
+			ImGui::DragFloat("Zoom: ", &currentCam->m_zoomValue, 0.01f, 0.0001f, 1.0f);
+			ImGui::DragFloat("Near Plane : ", &currentCam->m_nearPlane, 0.1f , 0.0001f, currentCam->m_farPlane-1);
+			ImGui::DragFloat("Far Plane: ", &currentCam->m_farPlane, 0.1f, currentCam->m_nearPlane+1);
+			ImGui::DragFloat3("Position: ", (float*)&currentCam->m_position, 0.1f);
+			ImGui::DragFloat3("Rotation: ", (float*)&currentCam->m_rollPitchYaw, 0.1f, 0.0f);
+			ImGui::Spacing();
+		}
+		else
+		{
+			ImGui::Text("No Camera");
+		}
 	};
 	ImGui::End();
+
+
+	ImGui::Begin("Render Pass");
+	{
+		ImGui::Checkbox("Render Colliders", GetCurrentScene()->GetIsRenderingColliders());
+	};
+	ImGui::End();
+	
 }
 
 void Engine::RenderThread()
 {
-	double currentFrame = 0.f, lastFrame = omp_get_wtime();
-	float m_deltaTime = 0.f, deltaSum = 0.f;
-	const float targetDelta = 1 / 10000.0f; 	// Desired FPS
+	double currentFrame = 0.f;
+	double lastFrame = omp_get_wtime();
+	float deltaTime = 0.f;
+	float frameTime = 0.f;
+
+	const float targetDelta = 1.0f / Stats::GetMaxFPS();
 	while (IsRunning())
 	{
 		currentFrame = omp_get_wtime();
-		m_deltaTime = static_cast<float>(currentFrame - lastFrame);
-		if (deltaSum >= targetDelta)
+		deltaTime = static_cast<float>(currentFrame - lastFrame);
+		
+		//Render every now and then
+		if (frameTime >= targetDelta)
 		{
-			if (GetCurrentScene()->IsRenderReady() && rtd::Handler2D::Get()->IsRenderReady())
+			if (GetCurrentScene()->IsRenderReady()) 
 			{
-				Render(deltaSum);
-				m_frameTime.render = deltaSum;
-				deltaSum = 0.f;
+				Stats::SetDeltaTime(frameTime);
+				Render(frameTime);
+				//m_frameTime.render = deltaSum;
+				frameTime = 0.f;
 			}
 		}
-		deltaSum += m_deltaTime;
+		frameTime += deltaTime;
 		lastFrame = currentFrame;
-
 	}
 
 	s_safeExit = true;
@@ -260,11 +392,8 @@ void Engine::RenderThread()
 void Engine::Update(float dt)
 {
 	PROFILE_FUNCTION();
-	m_frameTime.update = dt;
 
-	
 	InputSystem::Get().UpdateEvents();
-	rtd::Handler2D::Update();
 
 	MSG msg = { nullptr };
 	while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
@@ -277,11 +406,12 @@ void Engine::Update(float dt)
 		}
 	}
 	// todo temp
-	if (InputSystem::Get().CheckMouseKey(MouseKey::RIGHT, KeyState::PRESSED))
+	/*if (InputSystem::Get().CheckMouseKey(MouseKey::RIGHT, KeyState::PRESSED))
 	{
 		InputSystem::Get().SwitchMouseMode();
+
 		LOG_INFO("Switched mouse Mode");
-	}
+	}*/
 
 	{
 		PROFILE_SCOPE("Starting ImGui");
@@ -294,7 +424,8 @@ void Engine::Update(float dt)
 		);
 	}
 
-	HeadlessEngine::Update(dt);
+	OnUserUpdate(dt);
+	BasicEngine::Update(dt);
 
 	{
 		PROFILE_SCOPE("Ending ImGui");
@@ -311,31 +442,38 @@ void Engine::Render(float& dt)
 {
 	PROFILE_FUNCTION();
 
-	/*
-		Render 3D
-	*/
-	m_renderer.ClearFrame();
-	m_renderer.Render(GetCurrentScene());
-
 	{
-		PROFILE_SCOPE("Render ImGui");
-		IMGUI(
-			m_imguiMutex.lock();
-			ImGui::Render();
-			ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
-			m_imguiMutex.unlock();
-		);
+		PROFILE_SCOPE("Render D3D11");
+		/*
+			Render 3D
+		*/
+		m_renderer.ClearFrame();
+		m_renderer.Render(GetCurrentScene());
 	}
 
 	{
 		PROFILE_SCOPE("Render D2D1");
 		D2D1Core::Begin();
-		rtd::Handler2D::Get()->Render();
+		GetCurrentScene()->Render2D();
 		D2D1Core::Present();
 	}
+
+	{
+		PROFILE_SCOPE("Render ImGui");
+		IMGUI(
+			m_imguiMutex.lock();
+		ImGui::Render();
+		ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+		m_imguiMutex.unlock();
+		);
+	}
+
+	
 
 	{
 		PROFILE_SCOPE("Present");
 		D3D11Core::Get().SwapChain()->Present(0, 0);
 	}
+
+
 }

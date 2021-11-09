@@ -4,7 +4,7 @@
 #include "Window.h"
 #include "Renderer.h"
 
-class Engine : public HeadlessEngine
+class Engine : public BasicEngine<Scene>
 {
 private:
 	static bool s_safeExit;
@@ -16,11 +16,6 @@ private:
 	Renderer m_renderer;
 	std::unique_ptr<DirectX::AudioEngine> m_audio_engine;
 	
-	struct {
-		float update;
-		float render;
-	} m_frameTime;
-
 	// Startup the Engine and its instances in a specific order.
 	void Startup() override;
 
@@ -39,6 +34,8 @@ private:
 
 	// IMGUI
 	void drawImGUI() const;
+
+	virtual void OnUserUpdate(float deltaTime) = 0;
 
 public:
 	Engine();

@@ -1,125 +1,95 @@
 #include "EnginePCH.h"
 
-#define INSTANCE rtd::Handler2D::instance
-rtd::Handler2D* INSTANCE = nullptr;
-std::vector<Element2D*> rtd::Handler2D::m_elements = {};
-DoubleBuffer<std::vector<Element2D**>> rtd::Handler2D::m_drawBuffers;
-
-rtd::Handler2D::Handler2D()
+Handler2D::Handler2D()
 {
 
 }
 
-rtd::Handler2D::~Handler2D()
+Handler2D::~Handler2D()
 {
-	for (auto& elem : m_elements)
+	for (auto it : m_collections)
 	{
-		delete elem;
-	}
-	m_elements.clear();
-}
-
-void rtd::Handler2D::Initialize()
-{
-	if (!INSTANCE)
-	{
-		INSTANCE = new Handler2D();
-	}
-}
-
-void rtd::Handler2D::Destroy()
-{
-	if (INSTANCE)
-		delete INSTANCE;
-}
-
-void rtd::Handler2D::InsertElement(Element2D* element)
-{
-	INSTANCE->m_elements.push_back(element);
-}
-
-void rtd::Handler2D::Render()
-{
-	for (int i = 0; i < (int)INSTANCE->m_drawBuffers[1].size(); i++)
-	{
-		Element2D* elem = *INSTANCE->m_drawBuffers[1][i];
-		if (elem)
+		if (it.second)
 		{
-			if (elem->IsVisible())
-				elem->Draw();
-
-			elem->Release();
+			delete it.second;
 		}
 	}
 
-	INSTANCE->m_drawBuffers.ReadyForSwap();
+	m_collections.clear();
 }
 
-void rtd::Handler2D::Update()
+void Handler2D::AddElementCollection(Collection2D* collection, const char* name)
 {
-	bool shouldErase = false;
-	for (int i = 0; i < INSTANCE->m_elements.size(); i++)
+	std::string theName(name);
+	if (strlen(name) == 0)
 	{
-		Element2D* elem = INSTANCE->m_elements[i];
-		if (elem != nullptr)
+		theName.push_back((const char)m_collections.size());
+	}
+	m_collections.emplace(theName, collection);
+}
+
+void Handler2D::AddElementCollection(Collection2D* collection, std::string& name)
+{
+	if (name.size() == 0)
+	{
+		name.push_back((const char)m_collections.size());
+	}
+	m_collections.emplace(name, collection);
+}
+
+Collection2D* Handler2D::GetCollection(const std::string& collectionName) const
+{
+	if (m_collections.find(collectionName) != m_collections.end())
+	{
+		return m_collections.at(collectionName);
+	}
+
+	return nullptr;
+}
+
+void Handler2D::Render()
+{
+	for (size_t i = 0; i < m_renderBuffers[1].size(); i++)
+	{
+		Collection2D* collection = *m_renderBuffers[1][i];
+		if (collection)
 		{
-			if (elem->GetRef() > 0)
+			for (size_t j = 0; j < collection->elements.size(); j++)
 			{
-				if (elem->CheckClick())
-					elem->OnClick();
-				if (elem->CheckHover())
-					elem->OnHover();
+				if (collection->elements[j]->IsVisible())
+					collection->elements[j]->Draw();
 			}
-			else
-				shouldErase = true;
 		}
 	}
+	m_renderBuffers.ReadyForSwap();
+}
 
-	/*
-		Cleanup before push up to render
-	*/
-	if (shouldErase)
+void Handler2D::Update()
+{
+	for (auto& it : m_collections)
 	{
-		INSTANCE->EraseAll();
-	}
-
-	if (!INSTANCE->m_drawBuffers.IsSwapped())
-	{
-		INSTANCE->m_drawBuffers[0].clear();
-		for (int i = 0; i < INSTANCE->m_elements.size(); i++)
+		if (it.second)
 		{
-			INSTANCE->m_drawBuffers[0].push_back(&INSTANCE->m_elements[i]);
-			INSTANCE->m_elements[i]->AddRef();
+			it.second->UpdateCollection();
 		}
+	}
 
-		INSTANCE->m_drawBuffers.Swap();
+	m_renderBuffers[0].clear();
+	for (auto& it : m_collections)
+	{
+		for (size_t i = 0; i < it.second->elements.size(); i++)
+		{
+			m_renderBuffers[0].push_back(&it.second);
+		}
+	}
+
+	if (!m_renderBuffers.IsSwapped())
+	{
+		m_renderBuffers.Swap();
 	}
 }
 
-void rtd::Handler2D::EraseAll()
+bool Handler2D::IsRenderReady() const
 {
-	for (int i = 0; i < (int)INSTANCE->m_elements.size(); i++)
-	{
-		if (INSTANCE->m_elements[i]->GetRef() <= 0)
-		{
-			delete INSTANCE->m_elements[i];
-			INSTANCE->m_elements.erase(INSTANCE->m_elements.begin() + i);
-		}
-	}
-}
-
-void rtd::Handler2D::RemoveAll()
-{
-	for (int i = 0; i < (int)INSTANCE->m_elements.size(); i++)
-	{
-		if (INSTANCE->m_elements[i]->GetRef() <= 0)
-		{
-			INSTANCE->m_elements.erase(INSTANCE->m_elements.begin() + i);
-		}
-	}
-}
-
-const bool rtd::Handler2D::IsRenderReady()
-{
-	return INSTANCE->m_drawBuffers.IsSwapped();
+	return m_renderBuffers.IsSwapped();
 }

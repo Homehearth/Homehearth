@@ -49,7 +49,27 @@ Canvas* rtd::Button::GetCanvas()
 	return m_canvas.get();
 }
 
-const bool Button::CheckClicked() const
+Text* rtd::Button::GetText()
+{
+	if (!m_text)
+	{
+		m_text = std::make_unique<Text>("", 
+			draw_text_t(
+				m_drawOpts.x_pos,
+				m_drawOpts.y_pos,
+				m_drawOpts.width, 
+				m_drawOpts.height));
+
+	}
+	return m_text.get();
+}
+
+void rtd::Button::SetOnPressedEvent(const std::function<void()>& func)
+{
+	m_function = func;
+}
+
+bool Button::CheckClicked() const
 {
     return m_isClicked;
 }
@@ -63,6 +83,9 @@ void Button::Draw()
 		m_picture->Draw();
 	if (m_canvas)
 		m_canvas->Draw();
+	if (m_text)
+		m_text->Draw();
+
 }
 
 void rtd::Button::OnHover()
@@ -70,17 +93,13 @@ void rtd::Button::OnHover()
 
 }
 
-const bool rtd::Button::CheckClick()
+bool rtd::Button::CheckClick()
 {
 	m_isClicked = false;
-	// Check if mouse key is pressed.
-	if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED))
+	if (CheckHover())
 	{
-		// Is within bounds?
-		if (InputSystem::Get().GetMousePos().x > m_drawOpts.x_pos &&
-			InputSystem::Get().GetMousePos().x < m_drawOpts.x_pos + m_drawOpts.width &&
-			InputSystem::Get().GetMousePos().y > m_drawOpts.y_pos &&
-			InputSystem::Get().GetMousePos().y < m_drawOpts.y_pos + m_drawOpts.height)
+		// CheckCollisions if mouse key is pressed.
+		if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED))
 		{
 			m_isClicked = true;
 		}
@@ -89,9 +108,8 @@ const bool rtd::Button::CheckClick()
 	return m_isClicked;
 }
 
-const bool rtd::Button::CheckHover()
+bool rtd::Button::CheckHover()
 {
-	/*
 	m_isHovering = false;
 	// Is within bounds?
 	if (InputSystem::Get().GetMousePos().x > m_drawOpts.x_pos &&
@@ -102,12 +120,10 @@ const bool rtd::Button::CheckHover()
 		m_isHovering = true;
 	}
 	return m_isHovering;
-	*/
-
-	return false;
 }
 
 void Button::OnClick()
 {
-	std::cout << "CLICKED!\n";
+	if(m_function)
+		m_function();
 }

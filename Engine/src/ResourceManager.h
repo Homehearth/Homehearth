@@ -1,5 +1,6 @@
 #pragma once
 #include "GResource.h"
+#include "Logger.h"
 
 /*
 	Resourcemanager is a singleton and can be used everywhere
@@ -18,8 +19,11 @@
 	 
 	get - resource will be returned if found. If not it will try to create it
 		  if create is succesfull, return resource, otherwise return no resource
-	* std::shared_ptr<RMesh> mesh = ResourceManager::Get().GetResource<RMesh>("Cube.fbx");
+	* std::shared_ptr<RModel> mesh = ResourceManager::Get().GetResource<RModel>("Cube.fbx");
 	
+	copy - will return a copy of a resource from the manager.
+	* std::shared_ptr<RModel> meshCopy = ResourceManager::Get().CopyResource<RModel>("Cube.fbx");
+
 	free - remove any resources that is not in use
 	* ResourceManager::Get().FreeResources();
 
@@ -58,13 +62,20 @@ public:
 
 	/*
 		Retrieve any resource with the name (key).
-		Creates a resource if it does not exist.
-		Uses the GResource::Create()-function 
+		Second parameter is an option to if you want to create
+		the resource if it does not exist. Uses: GResource::Create().
 		Uses the appropiate T class when retrieving a resource.
-		Returns a shared_ptr that is nullptr if it failed to create
+		Returns a shared_ptr that is nullptr if failed
 	*/
 	template <class T>
-	std::shared_ptr<T> GetResource(const std::string& key);
+	std::shared_ptr<T> GetResource(const std::string& key, bool createIfFailed = true);
+
+	/*
+		Copy a resource with the name (key).
+		Return nullptr if the resource does not exist.
+	*/
+	template <class T>
+	std::shared_ptr<T> CopyResource(const std::string& key, bool createIfFailed = false);
 
 	/*
 		Removes every resource from the the manager.
@@ -87,7 +98,7 @@ public:
 * 
 */
 template<class T>
-inline std::shared_ptr<T> ResourceManager::GetResource(const std::string& key)
+inline std::shared_ptr<T> ResourceManager::GetResource(const std::string& key, bool createIfFailed)
 {
 	//Check if the resource exists
 	auto f = m_resources.find(key);
@@ -100,7 +111,7 @@ inline std::shared_ptr<T> ResourceManager::GetResource(const std::string& key)
 		return std::dynamic_pointer_cast<T>(f->second);
 	}
 	//Create a new resource of this type
-	else
+	else if (createIfFailed)
 	{
 		std::shared_ptr<T> resource = std::make_shared<T>();
 
@@ -114,10 +125,43 @@ inline std::shared_ptr<T> ResourceManager::GetResource(const std::string& key)
 		}
 		else
 		{
-#ifdef _DEBUG
-			LOG_WARNING("RM failed to create '%s'", key.c_str());
-#endif
 			return std::shared_ptr<T>(nullptr);
 		}
+	}
+	else
+	{
+		return std::shared_ptr<T>(nullptr);
+	}
+}
+
+template<class T>
+inline std::shared_ptr<T> ResourceManager::CopyResource(const std::string& key, bool createIfFailed)
+{
+	//Check if the resource exists
+	auto f = m_resources.find(key);
+
+	if (f != m_resources.end())
+	{
+		//Get the resource
+		std::shared_ptr<T> resource = std::dynamic_pointer_cast<T>(f->second);
+		//Copy the resource - uses copy constructor
+		std::shared_ptr<T> copy = std::make_shared<T>(*resource);
+		return copy;
+	}
+	else
+	{
+		if (createIfFailed)
+		{
+			std::shared_ptr<T> resource = std::make_shared<T>();
+			if (resource->Create(key))
+			{
+#ifdef _DEBUG
+				LOG_INFO("RM added '%s' and created", key.c_str());
+#endif
+				m_resources.emplace(key, resource);
+				return std::dynamic_pointer_cast<T>(resource);
+			}
+		}
+		return std::shared_ptr<T>(nullptr);
 	}
 }

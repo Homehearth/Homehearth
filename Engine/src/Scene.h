@@ -1,63 +1,55 @@
 #pragma once
-#include "EventTypes.h"
-#include "Components.h"
-#include "DoubleBuffer.h"
-#include "Entity.h"
-#include "Camera.h"
+#include "HeadlessScene.h"
+#include "Lights.h"
+#include "Handler2D.h"
 
-class Scene : public entt::emitter<Scene>
+class Scene : public BasicScene<Scene>
 {
 private:
-
-	// Registry handles all ecs data
-	entt::registry m_registry;
-
+	bool m_IsRenderingColliders;
+	bool m_updateAnimation;
 	DoubleBuffer<std::vector<comp::Renderable>> m_renderableCopies;
+	DoubleBuffer<std::vector<comp::RenderableDebug>> m_debugRenderableCopies;
+	DoubleBuffer<std::vector<std::pair<comp::Renderable,comp::Animator>>> m_renderableAnimCopies;
+
 	dx::ConstantBuffer<basic_model_matrix_t> m_publicBuffer;
+	dx::ConstantBuffer<collider_hit_t> m_ColliderHitBuffer;
+	Entity m_currentCamera;
+	Entity m_defaultCamera;
+	Handler2D m_2dHandler;
+
+	Lights m_lights;
+
+	bool IsRender3DReady() const;
+	bool IsRenderDebugReady() const;
+	bool IsRender2DReady() const;
 
 public:
-
 	Scene();
-	virtual ~Scene() = default;
-	Scene(const Scene&) = delete;
-	void operator=(const Scene&) = delete;
-
-	Entity CreateEntity();
-
-	template<typename ...T>
-	void ForEachComponent(std::function<void(T&...)> func);
-	
-	template<typename ...T>
-	void ForEachComponent(std::function<void(Entity, T&...)> func); 
-	
-	void ReadyForSwap();
 
 	// Emit update event and update constant buffers
-	void Update(float dt);
+	virtual void Update(float dt) override;
 
 	// Emit render event and render Renderable components
 	void Render();
+	void RenderDebug();
+	void RenderAnimation();
+	void Render2D();
 
-	const bool IsRenderReady() const;
+	bool IsRenderReady() const;
 
-	Camera* GetCamera();
-	std::shared_ptr<Camera> m_currentCamera;
+	void Add2DCollection(Collection2D* collection, std::string& name);
+	void Add2DCollection(Collection2D* collection, const char* name);
+	Collection2D* GetCollection(const std::string& name);
 
-	DoubleBuffer<std::vector<comp::Renderable>>* GetBuffers();
+	Camera* GetCurrentCamera()const;
+	void SetCurrentCameraEntity(Entity cameraEntity);
+
+	//ImGui data for disable/enable 
+	bool* GetIsRenderingColliders();
+	Lights* GetLights();
+	
+	DoubleBuffer<std::vector<comp::Renderable>>*		GetBuffers();
+	DoubleBuffer<std::vector<comp::RenderableDebug>>*	GetDebugBuffers();
+	void ReadyForSwap();
 };
-
-
-
-template<typename ...T>
-inline void Scene::ForEachComponent(std::function<void(T&...)> func) {
-	m_registry.view<T...>().each(func);
-}
-
-template<typename ...T>
-inline void Scene::ForEachComponent(std::function<void(Entity, T&...)> func) {
-	m_registry.view<T...>().each([&](entt::entity e, T&... comp)
-		{
-			Entity entity(m_registry, e);
-			func(entity, comp...);
-		});
-}

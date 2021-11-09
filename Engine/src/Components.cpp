@@ -4,43 +4,52 @@ namespace ecs {
 
     sm::Matrix GetMatrix(const component::Transform& transform)
     {
-        sm::Matrix mat = sm::Matrix::CreateWorld(transform.position, GetForward(transform), GetUp(transform));
-        mat *= sm::Matrix::CreateScale(transform.scale);
+        sm::Matrix mat = sm::Matrix::CreateScale(transform.scale);
+        mat *= sm::Matrix::CreateFromQuaternion(transform.rotation);
+        mat.Translation(transform.position);
         return mat;
     }
 
     sm::Vector3 GetForward(const component::Transform& transform)
     {
         sm::Vector3 f = sm::Vector3::Forward;
-        f = sm::Vector3::TransformNormal(f, sm::Matrix::CreateRotationX(transform.rotation.x));
-        f = sm::Vector3::TransformNormal(f, sm::Matrix::CreateRotationY(transform.rotation.y));
-        f = sm::Vector3::TransformNormal(f, sm::Matrix::CreateRotationZ(transform.rotation.z));
+        f = sm::Vector3::TransformNormal(f, sm::Matrix::CreateFromQuaternion(transform.rotation));
         return f;
     }
 
-    sm::Vector3 GetUp(const component::Transform& transform) 
+    sm::Vector3 GetRight(const component::Transform& transform) 
     {
-        sm::Vector3 u = sm::Vector3::Up;
-        u = sm::Vector3::TransformNormal(u, sm::Matrix::CreateRotationX(transform.rotation.x));
-        u = sm::Vector3::TransformNormal(u, sm::Matrix::CreateRotationY(transform.rotation.y));
-        u = sm::Vector3::TransformNormal(u, sm::Matrix::CreateRotationZ(transform.rotation.z));
-        return u;
+        sm::Vector3 r = GetForward(transform).Cross(sm::Vector3::Up);
+        return r;
+    }
+
+    bool StepRotateTo(sm::Quaternion& rotation, const sm::Vector3& targetVector, float t)
+    {
+        
+        float targetRotation = atan2(-targetVector.x, -targetVector.z);
+        sm::Quaternion targetQuat = sm::Quaternion::CreateFromAxisAngle(sm::Vector3::Up, targetRotation);
+        targetQuat.Normalize();
+        if (t >= 1.0f)
+        {
+            rotation = targetQuat;
+            return true;
+        }
+        rotation = sm::Quaternion::Slerp(rotation, targetQuat, t);
+        rotation.Normalize();
+
+        if (std::abs(rotation.Dot(targetQuat)) > 1 - 0.01f)
+        {
+            rotation = targetQuat;
+            return true;
+        }
+        return false;
+    }
+
+    bool StepTranslateTo(sm::Vector3& translation, const sm::Vector3& target, float t)
+    {
+        translation = translation * (1 - t) + target * t;
+        return sm::Vector3::Distance(translation, target) < 0.01f;
     }
 
 }
 
-network::message<GameMsg>& operator << (message<GameMsg>& msg, const ecs::component::Transform& data)
-{
-    msg << data.position.x << data.position.y << data.position.z;
-    msg << data.rotation.x << data.rotation.y << data.rotation.z;
-    msg << data.scale.x << data.scale.y << data.scale.z;
-    return msg;
-}
-
-network::message<GameMsg>& operator >> (message<GameMsg>& msg, ecs::component::Transform& data)
-{
-    msg >> data.scale.z >> data.scale.y >> data.scale.x;
-    msg >> data.rotation.z >> data.rotation.y >> data.rotation.x;
-    msg >> data.position.z >> data.position.y >> data.position.x;
-    return msg;
-}

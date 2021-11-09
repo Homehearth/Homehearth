@@ -26,6 +26,7 @@ project "NetServer"
     -- Note: specify the path relative to the Premake file.
     includedirs {
 		"src",
+		"../Game/src/",
         "../Engine/src",
         "../ThirdParty/DirectXTK/include/",
         "../ThirdParty/imGUI/",
@@ -82,7 +83,7 @@ project "NetServer"
     filter {"configurations:Release"}
         staticruntime "on"
         runtime "Release"
-        defines{"NDEBUG", "_UNICODE", "UNICODE"}
+        defines{"SERVER_LOG", "NDEBUG", "_UNICODE", "UNICODE"}
         symbols "on"
         optimize "on"
         libdirs{

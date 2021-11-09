@@ -51,12 +51,12 @@ void rtd::Border::OnHover()
 {
 }
 
-const bool rtd::Border::CheckClick()
+bool rtd::Border::CheckClick()
 {
 	return false;
 }
 
-const bool rtd::Border::CheckHover()
+bool rtd::Border::CheckHover()
 {
 	return false;
 }

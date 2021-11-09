@@ -22,11 +22,20 @@ namespace Logger
 #define LOG_WARNING(...) Logger::SetConsoleTextColor(Logger::YELLOW); printf("[WARNING] ");	printf(__VA_ARGS__); printf("\n"); Logger::SetConsoleTextColor(Logger::WHITE);
 #define LOG_INFO(...) Logger::SetConsoleTextColor(Logger::GREEN); printf("[INFO] "); printf(__VA_ARGS__); printf("\n"); Logger::SetConsoleTextColor(Logger::WHITE);
 #define LOG_NETWORK(...) Logger::SetConsoleTextColor(FOREGROUND_BLUE); printf("[NETWORK] "); printf(__VA_ARGS__); printf("\n"); Logger::SetConsoleTextColor(Logger::WHITE);
+#elif SERVER_LOG
+#define LOG_ERROR(...) Logger::SetConsoleTextColor(Logger::RED); printf("[ERROR] "); printf(__VA_ARGS__); printf("\n"); Logger::SetConsoleTextColor(Logger::WHITE);
+#define LOG_WARNING(...) Logger::SetConsoleTextColor(Logger::YELLOW); printf("[WARNING] ");	printf(__VA_ARGS__); printf("\n"); Logger::SetConsoleTextColor(Logger::WHITE);
+#define LOG_INFO(...) Logger::SetConsoleTextColor(Logger::GREEN); printf("[INFO] "); printf(__VA_ARGS__); printf("\n"); Logger::SetConsoleTextColor(Logger::WHITE);
+#define LOG_NETWORK(...) Logger::SetConsoleTextColor(FOREGROUND_BLUE); printf("[NETWORK] "); printf(__VA_ARGS__); printf("\n"); Logger::SetConsoleTextColor(Logger::WHITE);
 #else
-#define LOG_ERROR(...)
-#define LOG_WARNING(...)
-#define LOG_INFO(...)
-#define LOG_NETWORK
+#define LOG_ERROR(...) Logger::SetConsoleTextColor(Logger::RED); printf("[ERROR] "); printf(__VA_ARGS__); printf("\n"); Logger::SetConsoleTextColor(Logger::WHITE);
+#define LOG_WARNING(...) Logger::SetConsoleTextColor(Logger::YELLOW); printf("[WARNING] ");	printf(__VA_ARGS__); printf("\n"); Logger::SetConsoleTextColor(Logger::WHITE);
+#define LOG_INFO(...) Logger::SetConsoleTextColor(Logger::GREEN); printf("[INFO] "); printf(__VA_ARGS__); printf("\n"); Logger::SetConsoleTextColor(Logger::WHITE);
+#define LOG_NETWORK(...) Logger::SetConsoleTextColor(FOREGROUND_BLUE); printf("[NETWORK] "); printf(__VA_ARGS__); printf("\n"); Logger::SetConsoleTextColor(Logger::WHITE);
+//#define LOG_ERROR(...)
+//#define LOG_WARNING(...)
+//#define LOG_INFO(...)
+//#define LOG_NETWORK
 #endif																																
 
 

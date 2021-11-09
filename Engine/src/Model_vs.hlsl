@@ -1,15 +1,15 @@
 cbuffer Matrices : register(b0)
 {
-    float4x4 world;
+    float4x4 c_world;       //row major
 }
 
 cbuffer Camera : register(b1)
 {
-    float4 cameraPosition;
-    float4 cameraTarget;
+    float4 c_cameraPosition;
+    float4 c_cameraTarget;
     
-    float4x4 projection;
-    float4x4 view;
+    float4x4 c_projection;  //row major
+    float4x4 c_view;        //row major
 }
 
 struct VertexIn
@@ -36,12 +36,12 @@ VertexOut main(VertexIn input)
     VertexOut output;
     
     output.pos = float4(input.pos, 1.0f);
-    output.pos = mul(world, output.pos);
+    output.pos = mul(c_world, output.pos);
     output.worldPos = output.pos;
-    output.pos = mul(view, output.pos);
-    output.pos = mul(projection, output.pos);
+    output.pos = mul(c_view, output.pos);
+    output.pos = mul(c_projection, output.pos);
 
-    output.normal = mul(input.normal, (float3x3) world);
+    output.normal = mul((float3x3) c_world, input.normal);
     output.uv = input.uv;
     output.tangent = input.tangent;
     output.biTangent = input.biTangent;

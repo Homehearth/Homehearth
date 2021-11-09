@@ -28,19 +28,24 @@ namespace rtd
 		Canvas();
 		~Canvas();
 
+		void SetPosition(const float& x, const float& y);
+		void SetScale(const float& x_stretch, const float& y_stretch);
+
 		// Set new color for canvas.
 		void SetColor(const D2D1_COLOR_F& new_color);
 		D2D1_COLOR_F& GetColor();
 
-		Border* GetBorder();
+		void SetBorderColor(const D2D1_COLOR_F& new_color);
+		void HideBorder();
+		void ShowBorder();
 
 		// Inherited via Element2D
 		virtual void Draw() override;
 		virtual void OnClick() override;
 		virtual void OnHover() override;
-		virtual const bool CheckClick() override;
+		virtual bool CheckClick() override;
 
 		// Inherited via Element2D
-		virtual const bool CheckHover() override;
+		virtual bool CheckHover() override;
 	};
 }

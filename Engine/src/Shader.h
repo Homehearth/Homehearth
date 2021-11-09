@@ -21,7 +21,7 @@ namespace Shaders
 
 
 	
-    class VertexShader : public IShaders, resource::GResource
+    class VertexShader : public IShaders, public resource::GResource
     {
     private:
         ComPtr<ID3D11VertexShader> m_shader;
@@ -39,7 +39,7 @@ namespace Shaders
         ID3D11VertexShader* Get() const;
     };
 
-    class PixelShader : public IShaders, resource::GResource
+    class PixelShader : public IShaders, public resource::GResource
     {
     private:
         ComPtr<ID3D11PixelShader> m_shader;
@@ -57,7 +57,7 @@ namespace Shaders
         ID3D11PixelShader* Get() const;
     };
 
-    class ComputeShader : public IShaders, resource::GResource
+    class ComputeShader : public IShaders, public resource::GResource
     {
     private:
         ComPtr<ID3D11ComputeShader> m_shader;
@@ -75,7 +75,7 @@ namespace Shaders
         ID3D11ComputeShader* Get() const;
     };
 
-    class GeometryShader : public IShaders, resource::GResource
+    class GeometryShader : public IShaders, public resource::GResource
     {
     private:
         ComPtr<ID3D11GeometryShader> m_shader;
@@ -93,7 +93,7 @@ namespace Shaders
         ID3D11GeometryShader* Get() const;
     };
 
-    class HullShader : public IShaders, resource::GResource
+    class HullShader : public IShaders, public resource::GResource
     {
     private:
         ComPtr<ID3D11HullShader> m_shader;
@@ -111,7 +111,7 @@ namespace Shaders
         ID3D11HullShader* Get() const;
     };
 
-    class DomainShader : public IShaders, resource::GResource
+    class DomainShader : public IShaders, public resource::GResource
     {
     private:
         ComPtr<ID3D11DomainShader> m_shader;
