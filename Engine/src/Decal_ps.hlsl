@@ -11,5 +11,5 @@ float4 main(PSIn input) : SV_TARGET
 	float4 samp = t_depth.Sample(s_linear, input.uv);
 
 
-	return float4(1.0f, 1.0f, 1.0f, 1.0f);
+	return samp;
 }

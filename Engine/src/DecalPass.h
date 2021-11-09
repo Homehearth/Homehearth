@@ -5,9 +5,12 @@ class DecalPass : public IRenderPass
 {
 private:
 
+	ID3D11Buffer* m_buffers;
 
 public:
 
+	DecalPass();
+	~DecalPass();
 
 	// Inherited via IRenderPass
 	virtual void PreRender(Camera* pCam = nullptr, ID3D11DeviceContext* pDeviceContext = D3D11Core::Get().DeviceContext()) override;
