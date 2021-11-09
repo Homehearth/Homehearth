@@ -153,8 +153,8 @@ namespace ecs
 			float attackRange = 10.f;
 			bool hostile;
 			uint32_t currentNodeTarget = static_cast<uint32_t>(-1);
-			//std::vector<AIHandler::Node*> path;
-			//AIHandler::Node* currentNode;
+			std::vector<AIHandler::Node*> path;
+			AIHandler::Node* currentNode;
 			Entity currentClosest;
 		};
 

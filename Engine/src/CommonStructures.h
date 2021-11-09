@@ -174,17 +174,17 @@ struct Vector2I
 
 	Vector2I(int&& x, int&& y) :x(x), y(y) {};
 	Vector2I(int& x, int& y) :y(y), x(x) {};
-
+	Vector2I(sm::Vector2& v) : x((int)v.x), y((int)v.y) {};
 	Vector2I() = default;
 
 	bool operator==(const Vector2I& other)
 	{
 		return (x == other.x && y == other.y);
 	}
-	//Vector2I& operator=(const sm::Vector2& other)
-	//{
-	//	return { (int)other.x,(int)other.y };
-	//}
+	Vector2I& operator=(const sm::Vector2& other)
+	{
+		return { (int)other.x,(int)other.y };
+	}
 	Vector2I& operator+(const Vector2I& other)
 	{
 		this->x += other.x;
