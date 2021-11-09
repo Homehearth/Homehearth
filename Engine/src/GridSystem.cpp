@@ -71,23 +71,6 @@ void GridSystem::Initialize(Vector2I mapSize, sm::Vector3 position, std::string 
 			tileTemp.type		= tileTypeTemp;
 			tileTemp.position	= tilePosition;
 
-#if RENDER_GRID
-			if (tileTypeTemp != TileType::DEFAULT)
-			{
-				Entity tileEntity = m_scene->CreateEntity();
-				comp::Tile* tile = tileEntity.AddComponent<comp::Tile>();
-				tile->gridID = { (float)row, (float)col };
-				tile->halfWidth = m_tileHalfWidth;
-				tile->type = tileTypeTemp;
-				comp::Transform* transform = tileEntity.AddComponent<comp::Transform>();
-				transform->position = tilePosition;
-				transform->position.y = 0.5;
-
-				transform->scale = { 4.2f, 0.5f, 4.2f };
-				tileEntity.AddComponent<comp::Network>();
-			}
-#endif
-
 			if (rowTilesTemp.size() < m_gridSize.x)
 				rowTilesTemp.push_back(tileTemp);
 			
@@ -101,7 +84,7 @@ void GridSystem::Initialize(Vector2I mapSize, sm::Vector3 position, std::string 
 }
 
 
-uint32_t GridSystem::PlaceDefenceRenderGrid(Ray_t& mouseRay)
+void GridSystem::PlaceDefence(Ray_t& mouseRay)
 {
 	float t = 0;
 
@@ -133,16 +116,20 @@ uint32_t GridSystem::PlaceDefenceRenderGrid(Ray_t& mouseRay)
 					{
 						LOG_INFO("Mouseray HIT plane detected a EMPTY Tile!");
 						m_tiles[row][col].type = TileType::DEFENCE;
-#if RENDER_GRID
-						if (entity.GetComponent<comp::Network>())
-						{
-							returnID = entity.GetComponent<comp::Network>()->id;
-							comp::BoundingOrientedBox* collider = entity.AddComponent<comp::BoundingOrientedBox>();
-							collider->Center = entity.GetComponent<comp::Transform>()->position;
-							collider->Extents = { entity.GetComponent<comp::Transform>()->scale.x, 10.f , entity.GetComponent<comp::Transform>()->scale.z };
-							entity.AddComponent<comp::Tag<TagType::STATIC>>();
-						}
-#endif // RENDER_GRID
+
+						Entity tileEntity = m_scene->CreateEntity();
+						comp::Transform* transform = tileEntity.AddComponent<comp::Transform>();
+						transform->position = tile.position;
+						transform->position.y = 0.5;
+
+						transform->scale = { 4.2f, 0.5f, 4.2f };
+						tileEntity.AddComponent<comp::Network>();
+						returnID = tileEntity.GetComponent<comp::Network>()->id;
+						comp::BoundingOrientedBox* collider = tileEntity.AddComponent<comp::BoundingOrientedBox>();
+						collider->Center = tileEntity.GetComponent<comp::Transform>()->position;
+						collider->Extents = { tileEntity.GetComponent<comp::Transform>()->scale.x, 10.f , tileEntity.GetComponent<comp::Transform>()->scale.z };
+						tileEntity.AddComponent<comp::Tag<TagType::STATIC>>();
+						tileEntity.AddComponent<comp::MeshName>()->name = "Defence.obj";
 
 					}
 					else if (m_tiles[row][col].type == TileType::BUILDING || m_tiles[row][col].type == TileType::UNPLACABLE || m_tiles[row][col].type == TileType::DEFAULT)
@@ -158,63 +145,6 @@ uint32_t GridSystem::PlaceDefenceRenderGrid(Ray_t& mouseRay)
 		}
 	}
 
-	return returnID;
-}
-
-sm::Vector3 GridSystem::PlaceDefence(Ray_t& mouseRay)
-{
-	float t = 0;
-
-	sm::Vector3 returnPosition = { -1, -1 ,-1 };
-	Plane_t plane;
-	plane.normal = { 0.0f, 1.0f, 0.0f };
-	sm::Vector3 pos;
-	bool isHit = false;
-
-	if (mouseRay.Intersects(plane, &pos))
-	{
-		for (int col = 0; col < m_gridSize.y && !isHit; col++)
-		{
-			for (int row = 0; row < m_gridSize.x && !isHit; row++)
-			{
-
-				Tile tile = m_tiles[row][col];
-
-				float right = tile.position.x + tile.halfWidth;
-				float left = tile.position.x - tile.halfWidth;
-				float top = tile.position.z + tile.halfWidth;
-				float bottom = tile.position.z - tile.halfWidth;
-
-				if (pos.x > left && pos.x < right && pos.z < top && pos.z > bottom)
-				{
-					isHit = true;
-					if (tile.type == TileType::EMPTY)
-					{
-						LOG_INFO("Mouseray HIT plane detected a EMPTY Tile!");
-						tile.type = TileType::DEFENCE;
-
-						returnPosition = tile.position;
-						Entity defenceEntity = m_scene->CreateEntity();
-						comp::BoundingOrientedBox* collider = defenceEntity.AddComponent<comp::BoundingOrientedBox>();
-						collider->Center = returnPosition;
-
-						collider->Extents = { 4.2f, 10.f , 4.2f };
-						defenceEntity.AddComponent<comp::Tag<TagType::STATIC>>();
-					}
-					else if (tile.type == TileType::BUILDING || tile.type == TileType::UNPLACABLE || tile.type == TileType::DEFAULT)
-					{
-						LOG_INFO("You cant place here!");
-					}
-					else if (tile.type == TileType::DEFENCE)
-					{
-						LOG_INFO("Theres already a defence here!");
-					}
-				}
-			}
-		}
-	}
-
-	return returnPosition;
 }
 
 Vector2I GridSystem::GetGridSize() const

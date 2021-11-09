@@ -41,8 +41,7 @@ public:
 	/*GridSize is decided by the texture size, how many tiles in x and why, MapSize is how big the world is*/
 	void							Initialize(Vector2I mapSize, sm::Vector3 position, std::string fileName, HeadlessScene* scene);
 
-	uint32_t						PlaceDefenceRenderGrid(Ray_t& mouseRay);
-	sm::Vector3						PlaceDefence(Ray_t& mouseRay);
+	void							PlaceDefence(Ray_t& mouseRay);
 
 	//Get functions
 	std::vector<sm::Vector3>*		GetTilePositions();

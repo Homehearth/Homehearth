@@ -37,11 +37,8 @@ private:
 	void UpdateEntityFromMessage(Entity entity, message<GameMsg>& msg);
 
 	void UpdateInput();
-	void PlaceDefenceDebug(message<GameMsg>& msg);
-	void PlaceDefenceRelease(message<GameMsg>& msg);
 	void CreateVisualGrid(Entity e);
 	void LoadAllAssets();
-	void ClearGrid();
 
 public:
 	Client m_client;

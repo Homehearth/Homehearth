@@ -96,17 +96,6 @@ void Simulation::InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg, c
 			}
 			break;
 		}
-
-		case ecs::Component::PLANECOLLIDER:
-		{
-			comp::PlaneCollider* b = entity.GetComponent<comp::PlaneCollider>();
-			if (b)
-			{
-				compSet.set(ecs::Component::PLANECOLLIDER);
-				msg << *b;
-			}
-			break;
-		}
 		case ecs::Component::LIGHT:
 		{
 			comp::Light* l = entity.GetComponent<comp::Light>();
@@ -353,32 +342,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 
 					//Place defence on grid
 					if (input.rightMouse)
-					{
-						if (RENDER_GRID)
-						{
-							std::cout << "Clicked tile " << std::endl;
-							uint32_t netID = m_grid.PlaceDefenceRenderGrid(input.mouseRay);
-
-							if (netID != -1)
-							{
-								network::message<GameMsg> msg;
-								msg.header.id = GameMsg::Grid_PlaceDefence;
-								msg << netID;
-								Broadcast(msg);
-							}
-						}
-						else
-						{
-							sm::Vector3 position = m_grid.PlaceDefence(input.mouseRay);
-							if (position != sm::Vector3(-1, -1, -1))
-							{
-								network::message<GameMsg> msg;
-								msg.header.id = GameMsg::Grid_PlaceDefence;
-								msg << position;
-								Broadcast(msg);
-							}
-						}
-					}
+						m_grid.PlaceDefence(input.mouseRay);
 
 				}
 			}
@@ -429,8 +393,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 	m_pGameScene->GetRegistry()->on_update<comp::Network>().connect<&Simulation::OnNetworkEntityUpdated>(this);
 
 	//Gridsystem
-	GridProperties_t gridOption;
-	m_grid.Initialize(gridOption.mapSize, gridOption.position, gridOption.fileName, m_pGameScene);
+	m_grid.Initialize(gridOptions.mapSize, gridOptions.position, gridOptions.fileName, m_pGameScene);
 	LOG_INFO("Creating Nodes");
 	//this->AICreateNodes();
 	m_addedEntities.clear();
@@ -1062,14 +1025,16 @@ void Simulation::SendEntities(const std::vector<Entity>& entities, GameMsg msgID
 		msg << static_cast<uint32_t>(count);
 		msg << GetTick();
 
-		if (msgID == GameMsg::Game_Snapshot)
+		this->Broadcast(msg);
+
+		/*if (msgID == GameMsg::Game_Snapshot)
 		{
 			this->BroadcastUDP(msg);
 		}
 		else
 		{
 			this->Broadcast(msg);
-		}
+		}*/
 		sent += count;
 		count = min(entities.size() - sent, 10);
 	} while (sent < entities.size());

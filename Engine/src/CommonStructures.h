@@ -107,8 +107,7 @@ enum class GameMsg : uint8_t
 	Game_PlayerAttack,
 	Game_AddNPC,
 	Game_RemoveNPC,
-	Game_PlayerInput,
-	Grid_PlaceDefence
+	Game_PlayerInput
 };
 
 /*
@@ -182,7 +181,7 @@ static struct GridProperties_t
 	std::string fileName = "GridMap.png";
 	bool isVisible = true;
 
-} Options;
+} gridOptions;
 
 enum class TileType
 {
