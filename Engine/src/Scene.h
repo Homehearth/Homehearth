@@ -46,11 +46,6 @@ public:
 	void RenderAnimation();
 	void Render2D();
 
-	/*
-		Decalpass Functions.
-	*/
-	void RenderDecals();
-
 	bool IsRenderReady() const;
 
 	void Add2DCollection(Collection2D* collection, std::string& name);
