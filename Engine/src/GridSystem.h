@@ -3,14 +3,14 @@
 #include <stb_image.h>
 #include "Intersections.h"
 
-//enum class TileType
-//{
-//	DEFAULT,
-//	EMPTY,
-//	BUILDING,
-//	UNPLACABLE,
-//	DEFENCE
-//};
+enum class TileType
+{
+	DEFAULT,
+	EMPTY,
+	BUILDING,
+	UNPLACABLE,
+	DEFENCE
+};
 
 struct Tile 
 {

@@ -37,7 +37,6 @@ private:
 	void UpdateEntityFromMessage(Entity entity, message<GameMsg>& msg);
 
 	void UpdateInput();
-	void CreateVisualGrid(Entity e);
 	void LoadAllAssets();
 
 public:

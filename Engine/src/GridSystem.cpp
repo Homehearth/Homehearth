@@ -76,6 +76,32 @@ void GridSystem::Initialize(Vector2I mapSize, sm::Vector3 position, std::string 
 			if (rowTilesTemp.size() >= m_gridSize.x)
 				m_tiles.push_back(rowTilesTemp);
 
+#if RENDER_GRID
+			Entity tileEntity = m_scene->CreateEntity();
+			comp::Transform* transform = tileEntity.AddComponent<comp::Transform>();
+			tileEntity.AddComponent<comp::Network>();
+			transform->position = tileTemp.position;
+			transform->position.y = 0.5;
+			transform->scale = { 4.2f, 0.5f, 4.2f };
+
+			if (tileTemp.type == TileType::EMPTY)
+			{
+				tileEntity.AddComponent<comp::MeshName>()->name = "Plane1.obj";
+			}
+			else if (tileTemp.type == TileType::BUILDING || tileTemp.type == TileType::UNPLACABLE)
+			{
+
+				tileEntity.AddComponent<comp::MeshName>()->name = "Plane2.obj";
+			}
+			else if (tileTemp.type == TileType::DEFAULT)
+			{
+				tileEntity.AddComponent<comp::MeshName>()->name = "Plane3.obj";
+
+			}
+
+#endif // RENDER_GRID
+
+
 		}
 		rowTilesTemp.clear();
 	}
@@ -86,8 +112,6 @@ void GridSystem::Initialize(Vector2I mapSize, sm::Vector3 position, std::string 
 void GridSystem::PlaceDefence(Ray_t& mouseRay)
 {
 	float t = 0;
-
-	int returnID = -1;
 
 	Plane_t plane;
 	plane.normal = { 0.0f, 1.0f, 0.0f };
@@ -123,7 +147,6 @@ void GridSystem::PlaceDefence(Ray_t& mouseRay)
 
 						transform->scale = { 4.2f, 0.5f, 4.2f };
 						tileEntity.AddComponent<comp::Network>();
-						returnID = tileEntity.GetComponent<comp::Network>()->id;
 						comp::BoundingOrientedBox* collider = tileEntity.AddComponent<comp::BoundingOrientedBox>();
 						collider->Center = tileEntity.GetComponent<comp::Transform>()->position;
 						collider->Extents = { tileEntity.GetComponent<comp::Transform>()->scale.x, 10.f , tileEntity.GetComponent<comp::Transform>()->scale.z };

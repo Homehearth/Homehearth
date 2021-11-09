@@ -226,9 +226,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 				m_players[e.GetComponent<comp::Network>()->id] = e;
 			}
 			
-#ifdef  _DEBUG
-			CreateVisualGrid(e);
-#endif //  _DEBUG
 		}
 
 		if (GetCurrentScene() == &GetScene("Loading"))
@@ -532,13 +529,6 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 				e.AddComponent<comp::Player>(p);
 				break;
 			}
-			case ecs::Component::TILE:
-			{
-				comp::Tile t;
-				msg >> t;
-				e.AddComponent<comp::Tile>(t);
-				break;
-			}
 			default:
 				LOG_WARNING("Retrieved unimplemented component %u", i);
 				break;
@@ -562,36 +552,6 @@ void Game::UpdateInput()
 	{
 		m_inputState.rightMouse = true;
 		m_inputState.mouseRay = InputSystem::Get().GetMouseRay();
-	}
-}
-
-
-void Game::CreateVisualGrid(Entity e)
-{
-	if (RENDER_GRID)
-	{
-		comp::Tile* tile = e.GetComponent<comp::Tile>();
-		if (tile)
-		{
-			if (tile->type == TileType::EMPTY)
-			{
-				comp::Renderable* renderable = e.AddComponent<comp::Renderable>();
-				renderable->model = ResourceManager::Get().GetResource<RModel>("Plane1.obj");
-				renderable->model->ChangeMaterial("TileEmpty.mtl");
-			}
-			else if (tile->type == TileType::BUILDING || tile->type == TileType::UNPLACABLE)
-			{
-				comp::Renderable* renderable = e.AddComponent<comp::Renderable>();
-				renderable->model = ResourceManager::Get().CopyResource<RModel>("Plane1.obj");
-				renderable->model->ChangeMaterial("TileBuilding.mtl");
-			}
-			else if (tile->type == TileType::DEFAULT)
-			{
-				comp::Renderable* renderable = e.AddComponent<comp::Renderable>();
-				renderable->model = ResourceManager::Get().CopyResource<RModel>("Plane1.obj");
-				renderable->model->ChangeMaterial("TileDefence.mtl");
-			}
-		}
 	}
 }
 

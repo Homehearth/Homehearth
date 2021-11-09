@@ -218,14 +218,6 @@ namespace ecs
 			bool positive;
 		};
 
-		struct Tile 
-		{
-			TileType type;
-			Vector2I gridID;
-			float halfWidth;
-
-		};
-
 	};
 
 	sm::Matrix GetMatrix(const component::Transform& transform);

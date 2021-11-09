@@ -116,16 +116,6 @@ void Simulation::InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg, c
 			}
 			break;
 		}
-		case ecs::Component::TILE:
-		{
-			comp::Tile* t = entity.GetComponent<comp::Tile>();
-			if (t)
-			{
-				compSet.set(ecs::Component::TILE);
-				msg << *t;
-			}
-			break;
-		}
 		default:
 			LOG_WARNING("Trying to send unimplemented component %u", i);
 			break;
@@ -468,124 +458,124 @@ bool Simulation::IsEmpty() const
 	return m_players.empty();
 }
 
-bool Simulation::AICreateNodes()
-{
-	int itrID = 0;
-	std::vector<Entity>* tiles = m_grid.GetTileEntities();
-	std::vector<comp::Node*> nodes;
-	//Create Nodes
-	for (int i = 0; i < tiles->size(); i++)
-	{
-		Entity node = m_pGameScene->CreateEntity();
-		comp::Transform* tileTransform = tiles->at(i).GetComponent<comp::Transform>();
-		node.AddComponent<comp::Node>()->position = tileTransform->position;
-		node.GetComponent<comp::Node>()->id = tiles->at(i).GetComponent<comp::Tile>()->gridID;
-		if (tiles->at(i).GetComponent<comp::Tile>()->type == TileType::BUILDING ||
-			tiles->at(i).GetComponent<comp::Tile>()->type == TileType::DEFENCE ||
-			tiles->at(i).GetComponent<comp::Tile>()->type == TileType::UNPLACABLE)
-		{
-			node.GetComponent<comp::Node>()->reachable = false;
-		}
-		nodes.push_back(node.GetComponent<comp::Node>());
-	}
-
-	//Build Connections
-	for (int i = 0; i < tiles->size(); i++)
-	{
-		comp::Tile* entityTile = tiles->at(i).GetComponent<comp::Tile>();
-		Vector2I currentID = entityTile->gridID;
-		//Get Neighbors
-		Entity* currentTile = m_grid.GetTileByID(currentID);
-		if ((currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
-			|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
-		{
-			currentTile = m_grid.GetTileByID(currentID + Vector2I(-1, 0));
-			//TODO: Improve this bad code. EXTREMELY TEMPORARY
-			//Left
-			if (currentTile && (currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
-				|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
-			{
-				if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID + Vector2I(-1, 0))))
-				{
-					nodes.at(i)->connections.push_back(GetAINodeById(currentID + Vector2I(-1, 0)));
-				}
-			}
-			currentTile = m_grid.GetTileByID(currentID + Vector2I(-1, 1));
-			//Up-left
-			if (currentTile && (currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
-				|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
-			{
-				if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID + Vector2I(-1, 1))))
-				{
-					nodes.at(i)->connections.push_back(GetAINodeById(currentID + Vector2I(-1, 1)));
-				}
-			}
-			currentTile = m_grid.GetTileByID(currentID + Vector2I(1, 0));
-			//Right
-			if (currentTile && (currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
-				|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
-			{
-				if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID + Vector2I(1, 0))))
-				{
-					nodes.at(i)->connections.push_back(GetAINodeById(currentID + Vector2I(1, 0)));
-				}
-			}
-			currentTile = m_grid.GetTileByID(currentID + Vector2I(1, 1));
-			//Up-right
-			if (currentTile && (currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
-				|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
-			{
-				if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID + Vector2I(1, 1))))
-				{
-					nodes.at(i)->connections.push_back(GetAINodeById(currentID + Vector2I(1, 1)));
-				}
-			}
-			currentTile = m_grid.GetTileByID(currentID + Vector2I(0, 1));
-			//Up
-			if (currentTile && (currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
-				|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
-			{
-				if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID + Vector2I(0, 1))))
-				{
-					nodes.at(i)->connections.push_back(GetAINodeById(currentID + Vector2I(0, 1)));
-				}
-			}
-			currentTile = m_grid.GetTileByID(currentID + Vector2I(-1, -1));
-			//Down-left
-			if (currentTile && (currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
-				|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
-			{
-				if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID + Vector2I(-1, -1))))
-				{
-					nodes.at(i)->connections.push_back(GetAINodeById(currentID + Vector2I(-1, -1)));
-				}
-			}
-			currentTile = m_grid.GetTileByID(currentID + Vector2I(0, -1));
-			//Down
-			if (currentTile && (currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
-				|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
-			{
-				if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID + Vector2I(0, -1))))
-				{
-					nodes.at(i)->connections.push_back(GetAINodeById(currentID + Vector2I(0, -1)));
-				}
-			}
-			currentTile = m_grid.GetTileByID(currentID + Vector2I(1, -1));
-			//Down-right
-			if (currentTile && (currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
-				|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
-			{
-				if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID + Vector2I(1, -1))))
-				{
-					nodes.at(i)->connections.push_back(GetAINodeById(currentID + Vector2I(1, -1)));
-				}
-			}
-			//LOG_INFO("Connections: %d", nodes.at(i)->connections.size());
-		}
-	}
-
-	return true;
-}
+//bool Simulation::AICreateNodes()
+//{
+//	int itrID = 0;
+//	std::vector<Entity>* tiles = m_grid.GetTileEntities();
+//	std::vector<comp::Node*> nodes;
+//	//Create Nodes
+//	for (int i = 0; i < tiles->size(); i++)
+//	{
+//		Entity node = m_pGameScene->CreateEntity();
+//		comp::Transform* tileTransform = tiles->at(i).GetComponent<comp::Transform>();
+//		node.AddComponent<comp::Node>()->position = tileTransform->position;
+//		node.GetComponent<comp::Node>()->id = tiles->at(i).GetComponent<comp::Tile>()->gridID;
+//		if (tiles->at(i).GetComponent<comp::Tile>()->type == TileType::BUILDING ||
+//			tiles->at(i).GetComponent<comp::Tile>()->type == TileType::DEFENCE ||
+//			tiles->at(i).GetComponent<comp::Tile>()->type == TileType::UNPLACABLE)
+//		{
+//			node.GetComponent<comp::Node>()->reachable = false;
+//		}
+//		nodes.push_back(node.GetComponent<comp::Node>());
+//	}
+//
+//	//Build Connections
+//	for (int i = 0; i < tiles->size(); i++)
+//	{
+//		comp::Tile* entityTile = tiles->at(i).GetComponent<comp::Tile>();
+//		Vector2I currentID = entityTile->gridID;
+//		//Get Neighbors
+//		Entity* currentTile = m_grid.GetTileByID(currentID);
+//		if ((currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
+//			|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
+//		{
+//			currentTile = m_grid.GetTileByID(currentID + Vector2I(-1, 0));
+//			//TODO: Improve this bad code. EXTREMELY TEMPORARY
+//			//Left
+//			if (currentTile && (currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
+//				|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
+//			{
+//				if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID + Vector2I(-1, 0))))
+//				{
+//					nodes.at(i)->connections.push_back(GetAINodeById(currentID + Vector2I(-1, 0)));
+//				}
+//			}
+//			currentTile = m_grid.GetTileByID(currentID + Vector2I(-1, 1));
+//			//Up-left
+//			if (currentTile && (currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
+//				|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
+//			{
+//				if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID + Vector2I(-1, 1))))
+//				{
+//					nodes.at(i)->connections.push_back(GetAINodeById(currentID + Vector2I(-1, 1)));
+//				}
+//			}
+//			currentTile = m_grid.GetTileByID(currentID + Vector2I(1, 0));
+//			//Right
+//			if (currentTile && (currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
+//				|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
+//			{
+//				if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID + Vector2I(1, 0))))
+//				{
+//					nodes.at(i)->connections.push_back(GetAINodeById(currentID + Vector2I(1, 0)));
+//				}
+//			}
+//			currentTile = m_grid.GetTileByID(currentID + Vector2I(1, 1));
+//			//Up-right
+//			if (currentTile && (currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
+//				|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
+//			{
+//				if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID + Vector2I(1, 1))))
+//				{
+//					nodes.at(i)->connections.push_back(GetAINodeById(currentID + Vector2I(1, 1)));
+//				}
+//			}
+//			currentTile = m_grid.GetTileByID(currentID + Vector2I(0, 1));
+//			//Up
+//			if (currentTile && (currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
+//				|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
+//			{
+//				if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID + Vector2I(0, 1))))
+//				{
+//					nodes.at(i)->connections.push_back(GetAINodeById(currentID + Vector2I(0, 1)));
+//				}
+//			}
+//			currentTile = m_grid.GetTileByID(currentID + Vector2I(-1, -1));
+//			//Down-left
+//			if (currentTile && (currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
+//				|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
+//			{
+//				if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID + Vector2I(-1, -1))))
+//				{
+//					nodes.at(i)->connections.push_back(GetAINodeById(currentID + Vector2I(-1, -1)));
+//				}
+//			}
+//			currentTile = m_grid.GetTileByID(currentID + Vector2I(0, -1));
+//			//Down
+//			if (currentTile && (currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
+//				|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
+//			{
+//				if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID + Vector2I(0, -1))))
+//				{
+//					nodes.at(i)->connections.push_back(GetAINodeById(currentID + Vector2I(0, -1)));
+//				}
+//			}
+//			currentTile = m_grid.GetTileByID(currentID + Vector2I(1, -1));
+//			//Down-right
+//			if (currentTile && (currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
+//				|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
+//			{
+//				if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID + Vector2I(1, -1))))
+//				{
+//					nodes.at(i)->connections.push_back(GetAINodeById(currentID + Vector2I(1, -1)));
+//				}
+//			}
+//			//LOG_INFO("Connections: %d", nodes.at(i)->connections.size());
+//		}
+//	}
+//
+//	return true;
+//}
 
 bool Simulation::AddPlayer(uint32_t playerID, const std::string& namePlate)
 {
@@ -974,15 +964,7 @@ void Simulation::ResetGameScene()
 	m_spawnPoints.push(sm::Vector3(222.f, 0, -300.f));
 	m_spawnPoints.push(sm::Vector3(247.f, 0, -325.f));
 
-	this->m_pGameScene->ForEachComponent<comp::Tile>([](Entity& e, comp::Tile& tile)
-		{
-			if (tile.type == TileType::DEFENCE)
-			{
-				e.RemoveComponent<comp::BoundingOrientedBox>();
-				tile.type = TileType::EMPTY;
-			}
-		}
-	);
+	//TODO rensa defences if needed
 
 	LOG_INFO("%lld", m_pGameScene->GetRegistry()->size());
 	CreateWaves();
