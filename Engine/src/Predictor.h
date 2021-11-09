@@ -7,14 +7,14 @@ class Predictor
 {
 private:
 
-	std::unordered_map<uint32_t, comp::Transform> m_networkPositions;
-	std::unordered_map<uint32_t, comp::Transform> m_oldPositions;
+	std::unordered_map<uint32_t, std::pair<sm::Vector3, uint32_t>> m_networkPositions;
+	std::unordered_map < uint32_t, std::pair<sm::Vector3, uint32_t>> m_predictedVectors;
 
 	/*
 		t1 = current position in ecs system.
 		t2 = newest position from network.
 	*/
-	void DoExtrapolation(const uint32_t& id, comp::Transform& t1, const comp::Transform& t2);
+	void DoPolation(const uint32_t& id, comp::Transform& t1);
 
 public:
 
@@ -32,7 +32,7 @@ public:
 	void Remove(const uint32_t& id);
 
 	/*
-		Perform linear extrapolation on the chosen scene with the available positions.
+		Predict the new positions based on network data and local data.
 	*/
-	void LinearExtrapolate(Scene& scene);
+	void Predict(Scene& scene);
 };

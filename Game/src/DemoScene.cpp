@@ -103,6 +103,12 @@ namespace sceneHelp
 		SetupLoadingScene(game);
 	}
 
+	void CreateOptionsScene(Game* game)
+	{
+		Scene& optionsMenu = game->GetScene("Options");
+		SetupOptionsScreen(game);
+	}
+
 	void CreateGameScene(Game* engine)
 	{
 		Scene& gameScene = engine->GetScene("Game");
@@ -147,7 +153,7 @@ namespace sceneHelp
 				);
 
 				// Prediction
-				//engine->m_predictor.LinearExtrapolate(engine->GetScene("Game"));
+				engine->m_predictor.Predict(engine->GetScene("Game"));
 				GameSystems::RenderIsCollidingSystem(scene);
 				GameSystems::UpdatePlayerVisuals(scene);
 #ifdef _DEBUG
@@ -211,7 +217,13 @@ void sceneHelp::SetupMainMenuScreen(Game* game)
 	//	});
 
 	Collection2D* test = new Collection2D;
-	test->AddElement<rtd::Scroller>(draw_t(0.0f, -480.0f, 160.0f, 480.0f), sm::Vector2(0, 0));
+	rtd::Scroller* sc = test->AddElement<rtd::Scroller>(draw_t(0.0f, -480.0f, 160.0f, 480.0f), sm::Vector2(0, 0));
+	sc->AddButton("demoExitButton.png", draw_t(32.0f, -32.0f, 64.0f, 32.0f))->SetOnPressedEvent([=] {
+		game->Shutdown();
+		});
+	sc->AddButton("demo_options_button.png", draw_t(32.0f, -72.0f, 64.0f, 32.0f))->SetOnPressedEvent([=] {
+		game->SetScene("Options");
+		});
 	scene.Add2DCollection(test, "test");
 
 	rtd::Button* externalLinkBtn = connectFields->AddElement<rtd::Button>("Button.png", draw_t(width - width / 4.f, height - (height / 5), width / 8.f, height / 16));
@@ -415,9 +427,9 @@ void sceneHelp::SetupInLobbyScreen(Game* game)
 	scene.Add2DCollection(classButtons, "ClassButtons");
 }
 
-void sceneHelp::SetupOptionsScreen(Scene& scene)
+void sceneHelp::SetupOptionsScreen(Game* game)
 {
-
+	Scene& scene = game->GetScene("Options");
 }
 
 void sceneHelp::SetupLoadingScene(Game* game)

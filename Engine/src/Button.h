@@ -30,6 +30,10 @@ namespace rtd
 		Picture* GetPicture();
 		Canvas* GetCanvas();
 		Text* GetText();
+		const draw_t& GetOpts() const;
+
+		void SetPosition(const float& x, const float& y);
+		void AddPosition(const float& x, const float& y);
 
 		void SetOnPressedEvent(const std::function<void()>& func);
 

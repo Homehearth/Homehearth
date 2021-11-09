@@ -17,11 +17,12 @@ namespace sceneHelp
 	void CreateGameScene(Game* engine);
 	void CreateJoinLobbyScene(Game* game);
 	void CreateLoadingScene(Game* game);
+	void CreateOptionsScene(Game* game);
 
 	void SetupMainMenuScreen(Game* game);
 	void SetupLobbyJoinScreen(Game* game);
 	void SetupInLobbyScreen(Game* game);
 	void SetupInGameScreen(Game* game);
-	void SetupOptionsScreen(Scene& scene);
+	void SetupOptionsScreen(Game* game);
 	void SetupLoadingScene(Game* game);
 }
