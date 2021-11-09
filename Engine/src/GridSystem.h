@@ -30,8 +30,6 @@ private:
 	float							m_tileHalfWidth;
 	HeadlessScene*					m_scene;
 
-	std::vector<sm::Vector3>		m_tilePositions;
-	std::vector<Entity>				m_tileEntites;
 	std::vector<std::vector<Tile>>	m_tiles;
 
 public:
@@ -44,9 +42,7 @@ public:
 	void							PlaceDefence(Ray_t& mouseRay);
 
 	//Get functions
-	std::vector<sm::Vector3>*		GetTilePositions();
 	Vector2I						GetGridSize() const;
-	Entity*							GetTileByID(Vector2I& id);
 	Tile							GetTile(Vector2I& id);
 	std::vector<Entity>*			GetTileEntities();
 };
