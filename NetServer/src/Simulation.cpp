@@ -194,7 +194,10 @@ void Simulation::ResetPlayer(Entity e)
 	e.AddComponent<comp::MeshName>("GameCharacter.fbx");
 	e.AddComponent<comp::Tag<TagType::DYNAMIC>>();
 	e.AddComponent<comp::AnimatorName>("Player.anim");
-
+	e.RemoveComponent<comp::TemporaryPhysics>();
+	
+	m_pGameScene->publish<EComponentUpdated>(e, ecs::Component::HEALTH);
+	
 }
 
 Simulation::Simulation(Server* pServer, HeadlessEngine* pEngine)
