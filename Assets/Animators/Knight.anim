@@ -1,0 +1,18 @@
+//List of animations
+loadAnim 		idle 			Knight_Idle.fbx
+loadAnim 		running 		Knight_Running.fbx
+loadAnim 		slash 			Knight_Slash.fbx
+loadAnim 		takeDamage 		Knight_TakeDamage.fbx
+loadAnim		placeDefence	Knight_PlaceDefence.fbx
+setCurrentAnim 	placeDefence
+
+
+/*
+	Save for later
+*/
+//States between animations
+... Idle --> WalkForward
+Blendtime: 1.0s
+
+... Walk --> Idle
+Blendtime: 2.0s;
