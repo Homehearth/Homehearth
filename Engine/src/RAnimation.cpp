@@ -165,13 +165,7 @@ const sm::Vector3 RAnimation::GetPosition(const std::string& bonename, const dou
 	}
 	else
 	{
-		double distance1 = std::abs(currentFrame - m_keyFrames.at(bonename).position[closestLeft].time);
-		double distance2 = std::abs(m_keyFrames.at(bonename).position[closestRight].time - currentFrame);
-
-		if (distance1 < distance2)
-			finalVec = m_keyFrames.at(bonename).position[closestLeft].val;
-		else
-			finalVec = m_keyFrames.at(bonename).position[closestRight].val;
+		finalVec = m_keyFrames.at(bonename).position[closestLeft].val;
 	}
 
 	lastKey = closestLeft;
@@ -216,13 +210,7 @@ const sm::Vector3 RAnimation::GetScale(const std::string& bonename, const double
 	}
 	else
 	{
-		double distance1 = std::abs(currentFrame - m_keyFrames.at(bonename).scale[closestLeft].time);
-		double distance2 = std::abs(m_keyFrames.at(bonename).scale[closestRight].time - currentFrame);
-
-		if (distance1 < distance2)
-			finalVec = m_keyFrames.at(bonename).scale[closestLeft].val;
-		else
-			finalVec = m_keyFrames.at(bonename).scale[closestRight].val;
+		finalVec = m_keyFrames.at(bonename).scale[closestLeft].val;
 	}
 
 	lastKey = closestLeft;
@@ -268,13 +256,7 @@ const sm::Quaternion RAnimation::GetRotation(const std::string& bonename, const 
 	}
 	else
 	{
-		double distance1 = std::abs(currentFrame - m_keyFrames.at(bonename).rotation[closestLeft].time);
-		double distance2 = std::abs(m_keyFrames.at(bonename).rotation[closestRight].time - currentFrame);
-
-		if (distance1 < distance2)
-			finalQuat = m_keyFrames.at(bonename).rotation[closestLeft].val;
-		else
-			finalQuat = m_keyFrames.at(bonename).rotation[closestRight].val;
+		finalQuat = m_keyFrames.at(bonename).rotation[closestLeft].val;
 	}
 
 	lastKey = closestLeft;
