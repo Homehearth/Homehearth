@@ -1,6 +1,47 @@
 #include "EnginePCH.h"
 #include "AIHandler.h"
 
+std::vector<std::unique_ptr<AIHandler::Node>>& AIHandler::GetNeighbors(std::unique_ptr<AIHandler::Node>& node, comp::Tile& tile, const Vector2I& gridSize)
+{
+	std::vector<std::unique_ptr<Node>> neighbors;
+
+}
+
+Entity AIHandler::FindClosestPlayer(HeadlessScene& scene, sm::Vector3 position, comp::NPC* npc)
+{
+	comp::Transform* transformCurrentClosest = nullptr;
+
+	scene.ForEachComponent < comp::Player>([&](Entity& playerEntity, comp::Player& player)
+		{
+			if (!npc->currentClosest.IsNull())
+			{
+				transformCurrentClosest = npc->currentClosest.GetComponent<comp::Transform>();
+				comp::Transform* transformPlayer = playerEntity.GetComponent<comp::Transform>();
+				if (sm::Vector3::Distance(transformPlayer->position, position) < sm::Vector3::Distance(transformCurrentClosest->position, position))
+				{
+					LOG_INFO("Switching player");
+					npc->currentClosest = playerEntity;
+					transformCurrentClosest = npc->currentClosest.GetComponent<comp::Transform>();
+				}
+			}
+			else
+			{
+				npc->currentClosest = playerEntity;
+				transformCurrentClosest = npc->currentClosest.GetComponent<comp::Transform>();
+			}
+		});
+
+	return npc->currentClosest;
+}
+
+AIHandler::Node* AIHandler::FindClosestNode(sm::Vector3 position)
+{
+	Node* currentClosest = nullptr;
+
+
+	return currentClosest;
+}
+
 AIHandler::Node* AIHandler::GetNodeByID(Vector2I id) const
 {
 	try
@@ -66,87 +107,27 @@ void AIHandler::CreateNodes(GridSystem* grid, HeadlessScene* scene)
 		if ((currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
 			|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
 		{
+			Vector2I gridSize = grid->GetGridSize();
 			currentTile = grid->GetTileByID(currentID + sm::Vector2(-1, 0));
-			//TODO: Improve this bad code. EXTREMELY TEMPORARY
-			//Left
-			if (currentTile && (currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
-				|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
+			if (gridSize.x > 0)
 			{
-				if (!nodes.at(i)->ConnectionAlreadyExists(GetNodeByID(currentID + sm::Vector2(-1, 0))))
+				for (int i = max(0, currentID.x - 1); i <= min(currentID.x + 1, gridSize.x); i++)
 				{
-					nodes.at(i)->connections.push_back(GetAINodeById(currentID + sm::Vector2(-1, 0)));
+					for (int j = max(0, currentID.y - 1); j <= min(currentID.y + 1, gridSize.y); j++)
+					{
+						if (i != currentID.x || j != currentID.y)
+						{
+							currentTile = grid->GetTileByID({ i,j });
+							if (currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
+								|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY)
+							{
+								m_nodes.at({ i,j })->connections.push_back(GetNodeByID({ i,j }));
+							}
+						}
+					}
 				}
 			}
-			currentTile = m_grid.GetTileByID(currentID + sm::Vector2(-1, 1));
-			//Up-left
-			if (currentTile && (currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
-				|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
-			{
-				if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID + sm::Vector2(-1, 1))))
-				{
-					nodes.at(i)->connections.push_back(GetAINodeById(currentID + sm::Vector2(-1, 1)));
-				}
-			}
-			currentTile = m_grid.GetTileByID(currentID + sm::Vector2(1, 0));
-			//Right
-			if (currentTile && (currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
-				|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
-			{
-				if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID + sm::Vector2(1, 0))))
-				{
-					nodes.at(i)->connections.push_back(GetAINodeById(currentID + sm::Vector2(1, 0)));
-				}
-			}
-			currentTile = m_grid.GetTileByID(currentID + sm::Vector2(1, 1));
-			//Up-right
-			if (currentTile && (currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
-				|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
-			{
-				if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID + sm::Vector2(1, 1))))
-				{
-					nodes.at(i)->connections.push_back(GetAINodeById(currentID + sm::Vector2(1, 1)));
-				}
-			}
-			currentTile = m_grid.GetTileByID(currentID + sm::Vector2(0, 1));
-			//Up
-			if (currentTile && (currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
-				|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
-			{
-				if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID + sm::Vector2(0, 1))))
-				{
-					nodes.at(i)->connections.push_back(GetAINodeById(currentID + sm::Vector2(0, 1)));
-				}
-			}
-			currentTile = m_grid.GetTileByID(currentID + sm::Vector2(-1, -1));
-			//Down-left
-			if (currentTile && (currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
-				|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
-			{
-				if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID + sm::Vector2(-1, -1))))
-				{
-					nodes.at(i)->connections.push_back(GetAINodeById(currentID + sm::Vector2(-1, -1)));
-				}
-			}
-			currentTile = m_grid.GetTileByID(currentID + sm::Vector2(0, -1));
-			//Down
-			if (currentTile && (currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
-				|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
-			{
-				if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID + sm::Vector2(0, -1))))
-				{
-					nodes.at(i)->connections.push_back(GetAINodeById(currentID + sm::Vector2(0, -1)));
-				}
-			}
-			currentTile = m_grid.GetTileByID(currentID + sm::Vector2(1, -1));
-			//Down-right
-			if (currentTile && (currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
-				|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
-			{
-				if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID + sm::Vector2(1, -1))))
-				{
-					nodes.at(i)->connections.push_back(GetAINodeById(currentID + sm::Vector2(1, -1)));
-				}
-			}
+
 			//LOG_INFO("Connections: %d", nodes.at(i)->connections.size());
 		}
 	}
@@ -166,21 +147,21 @@ void AIHandler::AStarSearch(HeadlessScene& scene, Entity npc)
 {
 	comp::NPC* npcComp = npc.GetComponent<comp::NPC>();
 	comp::Transform* npcTransform = npc.GetComponent<comp::Transform>();
-	comp::Node* currentNode = npcComp->currentNode;
+	Node* currentNode = npcComp->currentNode;
 
 	Entity closestPlayer = FindClosestPlayer(scene, npcTransform->position, npcComp);
 	comp::Transform* playerTransform = closestPlayer.GetComponent<comp::Transform>();
 
-	std::vector<comp::Node*> closedList, openList;
+	std::vector<Node*> closedList, openList;
 	npcComp->path.clear();
-	comp::Node* startingNode = currentNode, * goalNode = FindClosestNode(scene, playerTransform->position);;
+	Node* startingNode = currentNode, * goalNode = FindClosestNode(playerTransform->position);;
 	openList.push_back(startingNode);
 	startingNode->f = 0.f;
 	startingNode->g = 0.f;
 	startingNode->h = 0.f;
 	startingNode->parent = startingNode;
 
-	comp::Node* nodeToAdd = nullptr;
+	Node* nodeToAdd = nullptr;
 	while (!openList.empty() && nodeToAdd != goalNode)
 	{
 		nodeToAdd = openList.at(0);

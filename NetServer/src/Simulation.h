@@ -52,9 +52,7 @@ private:
 
 	void OnNetworkEntityUpdated(entt::registry& reg, entt::entity entity);
 
-	std::vector<std::string> OpenFile(std::string filePath);
-	void ConnectNodes(comp::Node* node1, comp::Node* node2);
-	comp::Node* GetAINodeById(Vector2I& id);
+
 
 	void BuildMapColliders(std::vector<dx::BoundingOrientedBox>* mapColliders);
 

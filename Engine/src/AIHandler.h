@@ -34,6 +34,9 @@ public:
 private:
 
 	std::unordered_map<Vector2I, std::unique_ptr<Node>> m_nodes;
+	std::vector<std::unique_ptr<Node>>& GetNeighbors(std::unique_ptr<Node>& node, comp::Tile& tile, const Vector2I& gridSize);
+	Entity FindClosestPlayer(HeadlessScene& scene, sm::Vector3 position, comp::NPC* npc);
+	Node* FindClosestNode(sm::Vector3 position);
 public:
 	Node* GetNodeByID(Vector2I id) const;
 	bool AddNode(Vector2I id);
