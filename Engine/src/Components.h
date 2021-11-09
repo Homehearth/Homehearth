@@ -193,24 +193,35 @@ namespace ecs
 			bool isAlive = true;
 		};
 
-		struct CombatStats
+		struct IAbility
 		{
-			float attackSpeed = 1.5f;
+			float cooldown = 1.5f;
+			float cooldownTimer = 0.f;
+			
+			float delay = 0.1f;
+			float delayTimer = 0.f;
+
+			float lifetime = 5.f;
+
+			bool isReady = false;
+			bool isUsing = false;
+
+			Ray_t targetRay;
+		};
+
+		struct CombatStats : public IAbility
+		{
 			float attackDamage = 5.f;
-			float attackLifeTime = 5.f;
+			float attackRange = 10.0f;
 			bool isRanged = false;
 			float projectileSpeed = 10.f;
 
-			bool isAttacking = false;
-			float cooldownTimer = 0.f;
-			Ray_t targetRay;
 			sm::Vector3 targetDir;
 		};
 
-		struct Attack
+		struct SelfDestruct
 		{
 			float lifeTime;
-			float damage;
 		};
 
 
@@ -240,6 +251,8 @@ namespace ecs
 	sm::Vector3 GetRight(const component::Transform& transform);
 	bool StepRotateTo(sm::Quaternion& rotation, const sm::Vector3& targetVector, float t);
 	bool StepTranslateTo(sm::Vector3& translation, const sm::Vector3& target, float t);
+	bool Use(component::IAbility* abilityComponent);
+
 
 };
 
