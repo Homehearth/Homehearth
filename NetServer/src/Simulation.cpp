@@ -378,7 +378,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 						}
 						else
 						{
-							sm::Vector3 position = m_grid.PlaceDefence(input.mouseRay);
+							sm::Vector3 position = m_grid.PlaceDefence(input.mouseRay, e.GetComponent<comp::Network>()->id);
 							if (position != sm::Vector3(-1, -1, -1))
 							{
 								network::message<GameMsg> msg;

@@ -66,10 +66,10 @@ void GridSystem::Initialize(Vector2I mapSize, sm::Vector3 position, std::string 
 			m_tilePositions.push_back(tilePosition);
 
 			Tile tileTemp;
-			tileTemp.gridID		= { (float)row, (float)col };
-			tileTemp.halfWidth	= m_tileHalfWidth;
-			tileTemp.type		= tileTypeTemp;
-			tileTemp.position	= tilePosition;
+			tileTemp.gridID = { (float)row, (float)col };
+			tileTemp.halfWidth = m_tileHalfWidth;
+			tileTemp.type = tileTypeTemp;
+			tileTemp.position = tilePosition;
 
 #if RENDER_GRID
 			if (tileTypeTemp != TileType::DEFAULT)
@@ -90,7 +90,7 @@ void GridSystem::Initialize(Vector2I mapSize, sm::Vector3 position, std::string 
 
 			if (rowTilesTemp.size() < m_gridSize.x)
 				rowTilesTemp.push_back(tileTemp);
-			
+
 			if (rowTilesTemp.size() >= m_gridSize.x)
 				m_tiles.push_back(rowTilesTemp);
 
@@ -161,23 +161,42 @@ uint32_t GridSystem::PlaceDefenceRenderGrid(Ray_t& mouseRay)
 	return returnID;
 }
 
-sm::Vector3 GridSystem::PlaceDefence(Ray_t& mouseRay)
+sm::Vector3 GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse)
 {
 	float t = 0;
+
+	const float MAX_RADIUS = 40.f;
+	const float MIN_RADIUS = 10.f;
 
 	sm::Vector3 returnPosition = { -1, -1 ,-1 };
 	Plane_t plane;
 	plane.normal = { 0.0f, 1.0f, 0.0f };
 	sm::Vector3 pos;
-	bool isHit = false;
+	bool tileFound = false;
+	bool canBuild = false;
+
+	sm::Vector3 localPlayer;
+	std::vector<sm::Vector3> pPos;
+
+	// Save positions to calculate distances to the tile
+	m_scene->ForEachComponent<comp::Player, comp::Transform, comp::Network>([&](comp::Player& p, comp::Transform& t, comp::Network& net)
+		{
+			if (net.id != playerWhoPressedMouse)
+			{
+				pPos.push_back(t.position);
+			}
+			else
+			{
+				localPlayer = t.position;
+			}
+		});
 
 	if (mouseRay.Intersects(plane, &pos))
 	{
-		for (int col = 0; col < m_gridSize.y && !isHit; col++)
+		for (int col = 0; col < m_gridSize.y && !tileFound; col++)
 		{
-			for (int row = 0; row < m_gridSize.x && !isHit; row++)
+			for (int row = 0; row < m_gridSize.x && !tileFound; row++)
 			{
-
 				Tile tile = m_tiles[row][col];
 
 				float right = tile.position.x + tile.halfWidth;
@@ -185,21 +204,35 @@ sm::Vector3 GridSystem::PlaceDefence(Ray_t& mouseRay)
 				float top = tile.position.z + tile.halfWidth;
 				float bottom = tile.position.z - tile.halfWidth;
 
+				// Is mouse position we clicked at within the tiles bounds
 				if (pos.x > left && pos.x < right && pos.z < top && pos.z > bottom)
 				{
-					isHit = true;
+					tileFound = true;
 					if (tile.type == TileType::EMPTY)
 					{
-						LOG_INFO("Mouseray HIT plane detected a EMPTY Tile!");
-						tile.type = TileType::DEFENCE;
+						bool tileOccupied = false;
+						// Other players, should be other entities
+						for (int i = 0; i < pPos.size() && !tileOccupied; i++)
+						{
+							if (sm::Vector3::Distance(pPos[i], tile.position) < MIN_RADIUS)
+							{
+								tileOccupied = true;
+							}
+						}
+						if (!tileOccupied && 
+							sm::Vector3::Distance(tile.position, localPlayer) < MAX_RADIUS && 
+							sm::Vector3::Distance(tile.position, localPlayer) > MIN_RADIUS)
+						{
+							tile.type = TileType::DEFENCE;
 
-						returnPosition = tile.position;
-						Entity defenceEntity = m_scene->CreateEntity();
-						comp::BoundingOrientedBox* collider = defenceEntity.AddComponent<comp::BoundingOrientedBox>();
-						collider->Center = returnPosition;
+							returnPosition = tile.position;
+							Entity defenceEntity = m_scene->CreateEntity();
+							comp::BoundingOrientedBox* collider = defenceEntity.AddComponent<comp::BoundingOrientedBox>();
+							collider->Center = returnPosition;
 
-						collider->Extents = { 4.2f, 10.f , 4.2f };
-						defenceEntity.AddComponent<comp::Tag<TagType::STATIC>>();
+							collider->Extents = { 4.2f, 10.f , 4.2f };
+							defenceEntity.AddComponent<comp::Tag<TagType::STATIC>>();
+						}
 					}
 					else if (tile.type == TileType::BUILDING || tile.type == TileType::UNPLACABLE || tile.type == TileType::DEFAULT)
 					{

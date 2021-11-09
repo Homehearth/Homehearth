@@ -657,7 +657,7 @@ namespace network
 
 			// SO_REUSEADDR will let the server to reuse the port its bound on even if it have not closed 
 			// by the the operating system yet. Also it allows UDP/TCP being bound to the same port working
-			if (setsockopt(socket, SOL_SOCKET, SO_REUSEADDR, (char*)&enable, sizeof(int)) != 0)
+			if (setsockopt(socket, SOL_SOCKET, SO_REUSEADDR, (char*)&enable, sizeof(enable)) != 0)
 			{
 				LOG_ERROR("setsockopt: %d", WSAGetLastError());
 				return false;

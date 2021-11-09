@@ -42,7 +42,7 @@ public:
 	void							Initialize(Vector2I mapSize, sm::Vector3 position, std::string fileName, HeadlessScene* scene);
 
 	uint32_t						PlaceDefenceRenderGrid(Ray_t& mouseRay);
-	sm::Vector3						PlaceDefence(Ray_t& mouseRay);
+	sm::Vector3						PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse);
 
 	//Get functions
 	std::vector<sm::Vector3>*		GetTilePositions();
