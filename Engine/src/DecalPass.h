@@ -5,7 +5,10 @@ class DecalPass : public IRenderPass
 {
 private:
 
-	ID3D11Buffer* m_buffers;
+	ID3D11Buffer* m_buffer;
+	std::vector<sm::Matrix> m_matrices;
+
+	void CreateBuffer();
 
 public:
 
