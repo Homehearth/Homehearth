@@ -23,6 +23,7 @@ void Renderer::Initialize(Window* pWindow)
 	//m_depthPass.SetEnable(true);
 	m_basePass.SetEnable(true);
 	m_animPass.SetEnable(true);
+	m_decalPass.SetEnable(true);
 
 #ifdef _DEBUG
 	AddPass(&m_debugPass);  // 4

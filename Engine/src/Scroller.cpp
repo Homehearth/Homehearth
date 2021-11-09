@@ -15,7 +15,6 @@ void rtd::Scroller::Update()
         for (size_t i = 0; i < m_buttons.size(); i++)
         {
             m_buttons[i]->AddPosition(m_currentPos.x - temp.x, m_currentPos.y - temp.y);
-            LOG_INFO("Pos x: %f, y: %f", m_buttons[i]->GetOpts().x_pos, m_buttons[i]->GetOpts().y_pos);
 
             // Mini update
             if (m_buttons[i]->CheckClick())
@@ -32,7 +31,6 @@ void rtd::Scroller::Update()
         for (size_t i = 0; i < m_buttons.size(); i++)
         {
             m_buttons[i]->AddPosition(m_currentPos.x - temp.x, m_currentPos.y - temp.y);
-            LOG_INFO("Pos x: %f, y: %f", m_buttons[i]->GetOpts().x_pos, m_buttons[i]->GetOpts().y_pos);
 
             // Mini update
             if (m_buttons[i]->CheckClick())

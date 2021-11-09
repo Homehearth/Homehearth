@@ -4,7 +4,10 @@
 void DecalPass::CreateBuffer()
 {
 	if (m_buffer)
+	{
 		m_buffer->Release();
+		m_buffer = nullptr;
+	}
 
 	const size_t size = m_matrices.size() > 0 ? m_matrices.size() : 1;
 
@@ -17,9 +20,12 @@ void DecalPass::CreateBuffer()
 	bDesc.StructureByteStride = sizeof(sm::Matrix);
 
 	D3D11_SUBRESOURCE_DATA data;
-	data.pSysMem = &(m_matrices[0]);
-
-	D3D11Core::Get().Device()->CreateBuffer(&bDesc, &data, &m_buffer);
+	// Dont make data if matrices is below 0.
+	if (m_matrices.size() > 0)
+	{
+		data.pSysMem = &(m_matrices[0]);
+		D3D11Core::Get().Device()->CreateBuffer(&bDesc, &data, &m_buffer);
+	}
 }
 
 DecalPass::DecalPass()
@@ -66,5 +72,7 @@ void DecalPass::Render(Scene* pScene)
 
 void DecalPass::PostRender(ID3D11DeviceContext* pDeviceContext)
 {
+	ID3D11Buffer* nullBuffer = nullptr;
+	DC->VSSetConstantBuffers(10, 1, &nullBuffer);
 	DC->VSSetConstantBuffers(10, 1, &m_buffer);
 }
