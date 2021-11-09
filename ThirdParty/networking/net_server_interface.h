@@ -23,7 +23,7 @@ namespace network
 		CRITICAL_SECTION udpLock;
 
 	protected:
-		std::unordered_map<uint32_t, SOCKET> connections;
+		std::unordered_map<uint32_t, SOCKET> m_connections;
 		std::unordered_map<SOCKET, SOCKET_INFORMATION<T>*> m_socketInfo;
 		std::function<void(message<T>&)> messageReceivedHandler;
 		CRITICAL_SECTION lock;
@@ -50,7 +50,7 @@ namespace network
 		bool Listen(const uint32_t& nListen);
 		void InitWinsock();
 		bool CreateSocketInformation(const SOCKET& s);
-		void DisconnectClient(SOCKET_INFORMATION<T>*& SI);
+		void DisconnectClient(SOCKET_INFORMATION<T>* SI);
 		SOCKET WaitForConnection();
 
 		// FUNCTIONS TO EASIER HANDLE DATA IN AND OUT FROM SERVER
@@ -61,9 +61,10 @@ namespace network
 		void WriteHeader();
 		void WritePacket();
 		void WritePayload();
-		void PrimeReadHeader(SOCKET_INFORMATION<T>*& SI);
-		void PrimeReadPayload(SOCKET_INFORMATION<T>*& SI);
-		void PrimeReadValidation(SOCKET_INFORMATION<T>*& SI);
+		void PrimeReadHeader(SOCKET_INFORMATION<T>* SI);
+		void PrimeReadPayload(SOCKET_INFORMATION<T>* SI);
+		void PrimeReadValidation(SOCKET_INFORMATION<T>* SI);
+		void PrimeReadPacket(SOCKET_INFORMATION<T>* SI);
 
 		static void AlertThread();
 
@@ -104,9 +105,9 @@ namespace network
 	{
 		bool isConnected = false;
 
-		if (connections.find(ID) != connections.end())
+		if (m_connections.find(ID) != m_connections.end())
 		{
-			if (connections.at(ID) != INVALID_SOCKET)
+			if (m_connections.at(ID) != INVALID_SOCKET)
 			{
 				isConnected = true;
 			}
@@ -122,7 +123,7 @@ namespace network
 	}
 
 	template <typename T>
-	void server_interface<T>::PrimeReadValidation(SOCKET_INFORMATION<T>*& SI)
+	void server_interface<T>::PrimeReadValidation(SOCKET_INFORMATION<T>* SI)
 	{
 		PER_IO_DATA* context = new PER_IO_DATA;
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
@@ -143,7 +144,7 @@ namespace network
 	}
 
 	template <typename T>
-	void server_interface<T>::PrimeReadHeader(SOCKET_INFORMATION<T>*& SI)
+	void server_interface<T>::PrimeReadHeader(SOCKET_INFORMATION<T>* SI)
 	{
 		PER_IO_DATA* context = new PER_IO_DATA;
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
@@ -164,7 +165,30 @@ namespace network
 	}
 
 	template <typename T>
-	void server_interface<T>::PrimeReadPayload(SOCKET_INFORMATION<T>*& SI)
+	void server_interface<T>::PrimeReadPacket(SOCKET_INFORMATION<T>* SI)
+	{
+		PER_IO_DATA* context = new PER_IO_DATA;
+		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
+		char buffer[10] = {};
+		context->DataBuf.buf = buffer;
+		context->DataBuf.len = static_cast<ULONG>(sizeof(buffer));
+		context->state = NetState::READ_PACKET;
+		DWORD bytes = 0;
+		DWORD flags = 0;
+		SI->socket.len = sizeof(SI->socket.remote);
+		if (WSARecvFrom(m_udpSocket, &context->DataBuf, 1, &bytes, &flags, (sockaddr*)&SI->socket.remote, &SI->socket.len, &context->Overlapped, NULL) == SOCKET_ERROR)
+		{
+			DWORD error = WSAGetLastError();
+			if (error != WSA_IO_PENDING)
+			{
+				LOG_ERROR("RecvFrom: %d", error);
+				delete context;
+			}
+		}
+	}
+
+	template <typename T>
+	void server_interface<T>::PrimeReadPayload(SOCKET_INFORMATION<T>* SI)
 	{
 		PER_IO_DATA* context = new PER_IO_DATA;
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
@@ -288,9 +312,9 @@ namespace network
 		DWORD BytesSent = 0;
 		DWORD flags = 0;
 
-		SOCKET_INFORMATION<T>* SI = m_socketInfo.at(m_qPrioMessagesOut.front().remote);
+		SOCKET_INFORMATION<T>* SI = m_socketInfo.at(msg.remote);
 
-		if (WSASendTo(m_udpSocket, &context->DataBuf, 1, &BytesSent, flags, (sockaddr*)&SI->socket.remote, SI->socket.len, &context->Overlapped, NULL) == SOCKET_ERROR)
+		if (WSASendTo(m_udpSocket, &context->DataBuf, 1, &BytesSent, flags, reinterpret_cast<sockaddr*>(&SI->socket.remote), SI->socket.len, &context->Overlapped, NULL) == SOCKET_ERROR)
 		{
 			DWORD error = GetLastError();
 			if (error != WSA_IO_PENDING)
@@ -299,6 +323,7 @@ namespace network
 				delete context;
 			}
 		}
+
 	}
 
 	template <typename T>
@@ -379,18 +404,18 @@ namespace network
 	}
 
 	template<typename T>
-	void server_interface<T>::DisconnectClient(SOCKET_INFORMATION<T>*& SI)
+	void server_interface<T>::DisconnectClient(SOCKET_INFORMATION<T>* SI)
 	{
 		EnterCriticalSection(&lock);
 		if (SI != NULL)
 		{
 			SOCKET socket = SI->socket.tcp;
-			auto it = connections.begin();
-			while (it != connections.end())
+			auto it = m_connections.begin();
+			while (it != m_connections.end())
 			{
 				if (it->second == socket)
 				{
-					connections.erase(it);
+					m_connections.erase(it);
 					break;
 				}
 				it++;
@@ -437,6 +462,7 @@ namespace network
 		if (sockHandle == NULL)
 		{
 			LOG_ERROR("CreateIoCompletionPort() failed with error %d", GetLastError());
+			delete SI;
 
 			return false;
 		}
@@ -445,24 +471,7 @@ namespace network
 
 		// Send a puzzle to the client and refuse connection if client fails
 		this->WriteValidation(SI->socket.tcp, SI->handshakeOut);
-		char buffer[10] = {};
-		PER_IO_DATA* context = new PER_IO_DATA;
-		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
-		context->DataBuf.buf = buffer;
-		context->DataBuf.len = static_cast<ULONG>(sizeof(buffer));
-		context->state = NetState::READ_PACKET;
-		DWORD bytes = 0;
-		DWORD flags = 0;
-		SI->socket.len = sizeof(SI->socket.remote);
-		if (WSARecvFrom(m_udpSocket, &context->DataBuf, 1, &bytes, &flags, (sockaddr*)&SI->socket.remote, &SI->socket.len, &context->Overlapped, NULL) == SOCKET_ERROR)
-		{
-			DWORD error = WSAGetLastError();
-			if (error != WSA_IO_PENDING)
-			{
-				LOG_ERROR("RecvFrom: %d", error);
-				delete context;
-			}
-		}
+		this->PrimeReadPacket(SI);
 
 		return true;
 	}
@@ -474,7 +483,7 @@ namespace network
 		{
 			owned_message<T>* remoteMsg = new owned_message<T>;
 			remoteMsg->msg = msg;
-			remoteMsg->remote = connections.at(id);
+			remoteMsg->remote = m_connections.at(id);
 			if (!PostQueuedCompletionStatus((HANDLE)m_udpHandle, 2, (ULONG_PTR)remoteMsg, NULL))
 			{
 				LOG_ERROR("PostQueuedCompletionStatus: %d", GetLastError());
@@ -493,7 +502,7 @@ namespace network
 		{
 			owned_message<T>* remoteMsg = new owned_message<T>;
 			remoteMsg->msg = msg;
-			remoteMsg->remote = connections.at(id);
+			remoteMsg->remote = m_connections.at(id);
 			if (!PostQueuedCompletionStatus(m_CompletionPort, 1, (ULONG_PTR)remoteMsg, NULL))
 			{
 				LOG_ERROR("PostQueuedCompletionStatus: %d", GetLastError());
@@ -763,11 +772,11 @@ namespace network
 	{
 		EnterCriticalSection(&lock);
 		EnterCriticalSection(&udpLock);
-		m_isRunning = false;	
+		m_isRunning = false;
 		LOG_INFO("Shutting down server!");
 		if (m_listening != INVALID_SOCKET)
 		{
-			for (auto con : connections)
+			for (auto con : m_connections)
 			{
 				if (CancelIoEx((HANDLE)con.second, NULL))
 				{
@@ -823,13 +832,17 @@ namespace network
 				{
 					EnterCriticalSection(&udpLock);
 					owned_message<T>* s = (owned_message<T>*)Entries[i].lpCompletionKey;
-					bool write_in_progress = !m_qPrioMessagesOut.empty();
-					m_qPrioMessagesOut.push_back(std::move(*s));
-
-					if (!write_in_progress)
+					if (m_socketInfo.find(s->remote) != m_socketInfo.end())
 					{
-						this->WritePacket();
+						bool write_in_progress = !m_qPrioMessagesOut.empty();
+						m_qPrioMessagesOut.push_back(std::move(*s));
+
+						if (!write_in_progress)
+						{
+							this->WritePacket();
+						}
 					}
+
 					delete s;
 					LeaveCriticalSection(&udpLock);
 					continue;
@@ -856,7 +869,7 @@ namespace network
 						}
 						case NetState::READ_PACKET:
 						{
-							LOG_INFO(":)");
+							LOG_INFO("Registered user to receive UDP packets");
 							break;
 						}
 						}

@@ -30,19 +30,19 @@ Game::~Game()
 
 void Game::UpdateNetwork(float deltaTime)
 {
-	//static float pingCheck = 0.f;
-	//const float TARGET_PING_TIME = 5.0f;
+	static float pingCheck = 0.f;
+	const float TARGET_PING_TIME = 5.0f;
 	if (m_client.IsConnected())
 	{
 		m_client.Update();
 
-		//pingCheck += deltaTime;
+		pingCheck += deltaTime;
 
-		//if (pingCheck > TARGET_PING_TIME)
-		//{
-		//	this->PingServer();
-		//	pingCheck -= TARGET_PING_TIME;
-		//}
+		if (pingCheck > TARGET_PING_TIME)
+		{
+			this->PingServer();
+			pingCheck -= TARGET_PING_TIME;
+		}
 
 		if (GetCurrentScene() == &GetScene("Game"))
 		{
@@ -82,19 +82,6 @@ bool Game::OnStartup()
 
 void Game::OnUserUpdate(float deltaTime)
 {
-	static float pingCheck = 0.f;
-	const float PING_TARGET = 5.0f;
-
-
-	if (m_client.IsConnected())
-	{
-		pingCheck += deltaTime;
-		if (pingCheck >= PING_TARGET)
-		{
-			PingServer();
-			pingCheck = 0.f;
-		}
-	}
 	/*
 if (GetCurrentScene() == &GetScene("Game") && GetCurrentScene()->GetCurrentCamera()->GetCameraType() == CAMERATYPE::PLAY)
 {
@@ -364,6 +351,8 @@ void Game::PingServer()
 	message<GameMsg> msg = {};
 	msg.header.id = GameMsg::Server_GetPing;
 	msg << this->m_localPID;
+
+	LOG_INFO("Pinging server!");
 
 	this->m_timeThen = std::chrono::system_clock::now();
 	m_client.Send(msg);

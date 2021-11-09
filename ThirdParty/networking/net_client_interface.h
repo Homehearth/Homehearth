@@ -20,7 +20,6 @@ namespace network
 		HANDLE m_CompletionPort;
 		HANDLE m_udpCompletionPort;
 		struct sockaddr_in m_endpoint;
-		struct sockaddr_in m_endpointUDP;
 		uint64_t m_handshakeIn;
 		uint64_t m_handshakeOut;
 		message<T> tempMsgIn;
@@ -81,7 +80,6 @@ namespace network
 		client_interface(std::function<void(message<GameMsg>&)> handler)
 			:messageReceivedHandler(handler)
 		{
-			m_endpointUDP = {};
 			m_endpoint = {};
 			m_socket = INVALID_SOCKET;
 			m_handshakeIn = 0;
@@ -124,6 +122,7 @@ namespace network
 		bool IsConnected();
 		// Sends a message to the server
 		void Send(message<T>& msg);
+		void SendPacket(message<T>& msg);
 	};
 
 	template <typename T>
@@ -131,13 +130,13 @@ namespace network
 	{
 		PER_IO_DATA* context = new PER_IO_DATA;
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
-		char buffer[10] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+		char buffer[1] = { 95 };
 		context->DataBuf.buf = buffer;
 		context->DataBuf.len = static_cast<ULONG>(sizeof(buffer));
 		context->state = NetState::WRITE_PACKET;
 		DWORD bytes = 0;
-		socklen_t len = sizeof(m_endpointUDP);
-		if (WSASendTo(m_udpSocket, &context->DataBuf, 1, &bytes, 0, (sockaddr*)&m_endpointUDP, len, &context->Overlapped, NULL) == SOCKET_ERROR)
+		socklen_t len = sizeof(m_endpoint);
+		if (WSASendTo(m_udpSocket, &context->DataBuf, 1, &bytes, 0, (sockaddr*)&m_endpoint, len, &context->Overlapped, NULL) == SOCKET_ERROR)
 		{
 			DWORD error = WSAGetLastError();
 			if (error != WSA_IO_PENDING)
@@ -162,7 +161,7 @@ namespace network
 
 		socklen_t len = sizeof(m_endpoint);
 
-		if (WSARecvFrom(m_udpSocket, &context->DataBuf, 1, &bytesReceived, &flags, reinterpret_cast<sockaddr*>(&m_endpointUDP), &len, &context->Overlapped, NULL) == SOCKET_ERROR)
+		if (WSARecvFrom(m_udpSocket, &context->DataBuf, 1, &bytesReceived, &flags, reinterpret_cast<sockaddr*>(&m_endpoint), &len, &context->Overlapped, NULL) == SOCKET_ERROR)
 		{
 			if (WSAGetLastError() != WSA_IO_PENDING)
 			{
@@ -447,12 +446,9 @@ namespace network
 		if (type == SockType::TCP)
 		{
 			setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, &enable, sizeof(enable));
-			m_endpoint = *((struct sockaddr_in*)p->ai_addr);
 		}
-		else
-		{
-			m_endpointUDP = *((struct sockaddr_in*)p->ai_addr);
-		}
+
+		m_endpoint = *((struct sockaddr_in*)p->ai_addr);
 
 		freeaddrinfo(servinfo);
 
@@ -519,6 +515,25 @@ namespace network
 		}
 
 		return data;
+	}
+
+
+	template<typename T>
+	inline void client_interface<T>::SendPacket(message<T>& msg)
+	{
+		if (IsConnected())
+		{
+			message<T>* mess = new message<T>;
+			*mess = msg;
+			if (!PostQueuedCompletionStatus(m_udpCompletionPort, 1, (ULONG_PTR)mess, NULL))
+			{
+				LOG_ERROR("PostQueuedCompletionStatus: %d", GetLastError());
+			}
+		}
+		else
+		{
+			LOG_WARNING("Send: No connection!");
+		}
 	}
 
 	template<typename T>
@@ -694,7 +709,7 @@ namespace network
 						{
 						case NetState::READ_PACKET:
 						{
-							LOG_INFO("Reading UDP Bytes: %d", Entries[i].dwNumberOfBytesTransferred);
+							//LOG_INFO("Reading UDP Bytes: %d", Entries[i].dwNumberOfBytesTransferred);
 							tempMsgInUDP.payload.resize(Entries[i].dwNumberOfBytesTransferred);
 							memcpy(tempMsgInUDP.payload.data(), context->DataBuf.buf, Entries[i].dwNumberOfBytesTransferred);
 							this->ReadPacket(context);
@@ -702,7 +717,7 @@ namespace network
 						}
 						case NetState::WRITE_PACKET:
 						{
-							LOG_INFO("Sent initiate packet to server!");
+							//LOG_INFO("Sent initiate packet to server!");
 							break;
 						}
 						}
