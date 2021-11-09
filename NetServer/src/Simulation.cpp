@@ -522,119 +522,119 @@ bool Simulation::IsEmpty() const
 
 bool Simulation::AICreateNodes()
 {
-	//int itrID = 0;
-	//std::vector<Entity>* tiles = m_grid.GetTiles();
-	//std::vector<comp::Node*> nodes;
-	////Create Nodes
-	//for (int i = 0; i < tiles->size(); i++)
-	//{
-	//	Entity node = m_pGameScene->CreateEntity();
-	//	comp::Transform* tileTransform = tiles->at(i).GetComponent<comp::Transform>();
-	//	node.AddComponent<comp::Node>()->position = tileTransform->position;
-	//	node.GetComponent<comp::Node>()->id = tiles->at(i).GetComponent<comp::Tile>()->gridID;
-	//	if (tiles->at(i).GetComponent<comp::Tile>()->type == TileType::BUILDING ||
-	//		tiles->at(i).GetComponent<comp::Tile>()->type == TileType::DEFENCE ||
-	//		tiles->at(i).GetComponent<comp::Tile>()->type == TileType::UNPLACABLE)
-	//	{
-	//		node.GetComponent<comp::Node>()->reachable = false;
-	//	}
-	//	nodes.push_back(node.GetComponent<comp::Node>());
-	//}
+	int itrID = 0;
+	std::vector<Entity>* tiles = m_grid.GetTiles();
+	std::vector<comp::Node*> nodes;
+	//Create Nodes
+	for (int i = 0; i < tiles->size(); i++)
+	{
+		Entity node = m_pGameScene->CreateEntity();
+		comp::Transform* tileTransform = tiles->at(i).GetComponent<comp::Transform>();
+		node.AddComponent<comp::Node>()->position = tileTransform->position;
+		node.GetComponent<comp::Node>()->id = tiles->at(i).GetComponent<comp::Tile>()->gridID;
+		if (tiles->at(i).GetComponent<comp::Tile>()->type == TileType::BUILDING ||
+			tiles->at(i).GetComponent<comp::Tile>()->type == TileType::DEFENCE ||
+			tiles->at(i).GetComponent<comp::Tile>()->type == TileType::UNPLACABLE)
+		{
+			node.GetComponent<comp::Node>()->reachable = false;
+		}
+		nodes.push_back(node.GetComponent<comp::Node>());
+	}
 
-	////Build Connections
-	//for (int i = 0; i < tiles->size(); i++)
-	//{
-	//	comp::Tile* entityTile = tiles->at(i).GetComponent<comp::Tile>();
-	//	sm::Vector2 currentID = entityTile->gridID;
-	//	//Get Neighbors
-	//	Entity* currentTile = m_grid.GetTileByID(currentID);
-	//	if ((currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
-	//		|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
-	//	{
-	//		currentTile = m_grid.GetTileByID(currentID + sm::Vector2(-1, 0));
-	//		//TODO: Improve this bad code. EXTREMELY TEMPORARY
-	//		//Left
-	//		if (currentTile && (currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
-	//			|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
-	//		{
-	//			if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID + sm::Vector2(-1, 0))))
-	//			{
-	//				nodes.at(i)->connections.push_back(GetAINodeById(currentID + sm::Vector2(-1, 0)));
-	//			}
-	//		}
-	//		currentTile = m_grid.GetTileByID(currentID + sm::Vector2(-1, 1));
-	//		//Up-left
-	//		if (currentTile && (currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
-	//			|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
-	//		{
-	//			if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID + sm::Vector2(-1, 1))))
-	//			{
-	//				nodes.at(i)->connections.push_back(GetAINodeById(currentID + sm::Vector2(-1, 1)));
-	//			}
-	//		}
-	//		currentTile = m_grid.GetTileByID(currentID + sm::Vector2(1, 0));
-	//		//Right
-	//		if (currentTile && (currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
-	//			|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
-	//		{
-	//			if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID + sm::Vector2(1, 0))))
-	//			{
-	//				nodes.at(i)->connections.push_back(GetAINodeById(currentID + sm::Vector2(1, 0)));
-	//			}
-	//		}
-	//		currentTile = m_grid.GetTileByID(currentID + sm::Vector2(1, 1));
-	//		//Up-right
-	//		if (currentTile && (currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
-	//			|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
-	//		{
-	//			if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID + sm::Vector2(1, 1))))
-	//			{
-	//				nodes.at(i)->connections.push_back(GetAINodeById(currentID + sm::Vector2(1, 1)));
-	//			}
-	//		}
-	//		currentTile = m_grid.GetTileByID(currentID + sm::Vector2(0, 1));
-	//		//Up
-	//		if (currentTile && (currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
-	//			|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
-	//		{
-	//			if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID + sm::Vector2(0, 1))))
-	//			{
-	//				nodes.at(i)->connections.push_back(GetAINodeById(currentID + sm::Vector2(0, 1)));
-	//			}
-	//		}
-	//		currentTile = m_grid.GetTileByID(currentID + sm::Vector2(-1, -1));
-	//		//Down-left
-	//		if (currentTile && (currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
-	//			|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
-	//		{
-	//			if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID + sm::Vector2(-1, -1))))
-	//			{
-	//				nodes.at(i)->connections.push_back(GetAINodeById(currentID + sm::Vector2(-1, -1)));
-	//			}
-	//		}
-	//		currentTile = m_grid.GetTileByID(currentID + sm::Vector2(0, -1));
-	//		//Down
-	//		if (currentTile && (currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
-	//			|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
-	//		{
-	//			if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID + sm::Vector2(0, -1))))
-	//			{
-	//				nodes.at(i)->connections.push_back(GetAINodeById(currentID + sm::Vector2(0, -1)));
-	//			}
-	//		}
-	//		currentTile = m_grid.GetTileByID(currentID + sm::Vector2(1, -1));
-	//		//Down-right
-	//		if (currentTile && (currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
-	//			|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
-	//		{
-	//			if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID + sm::Vector2(1, -1))))
-	//			{
-	//				nodes.at(i)->connections.push_back(GetAINodeById(currentID + sm::Vector2(1, -1)));
-	//			}
-	//		}
-	//		//LOG_INFO("Connections: %d", nodes.at(i)->connections.size());
-	//	}
-	//}
+	//Build Connections
+	for (int i = 0; i < tiles->size(); i++)
+	{
+		comp::Tile* entityTile = tiles->at(i).GetComponent<comp::Tile>();
+		sm::Vector2 currentID = entityTile->gridID;
+		//Get Neighbors
+		Entity* currentTile = m_grid.GetTileByID(currentID);
+		if ((currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
+			|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
+		{
+			currentTile = m_grid.GetTileByID(currentID + sm::Vector2(-1, 0));
+			//TODO: Improve this bad code. EXTREMELY TEMPORARY
+			//Left
+			if (currentTile && (currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
+				|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
+			{
+				if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID + sm::Vector2(-1, 0))))
+				{
+					nodes.at(i)->connections.push_back(GetAINodeById(currentID + sm::Vector2(-1, 0)));
+				}
+			}
+			currentTile = m_grid.GetTileByID(currentID + sm::Vector2(-1, 1));
+			//Up-left
+			if (currentTile && (currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
+				|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
+			{
+				if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID + sm::Vector2(-1, 1))))
+				{
+					nodes.at(i)->connections.push_back(GetAINodeById(currentID + sm::Vector2(-1, 1)));
+				}
+			}
+			currentTile = m_grid.GetTileByID(currentID + sm::Vector2(1, 0));
+			//Right
+			if (currentTile && (currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
+				|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
+			{
+				if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID + sm::Vector2(1, 0))))
+				{
+					nodes.at(i)->connections.push_back(GetAINodeById(currentID + sm::Vector2(1, 0)));
+				}
+			}
+			currentTile = m_grid.GetTileByID(currentID + sm::Vector2(1, 1));
+			//Up-right
+			if (currentTile && (currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
+				|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
+			{
+				if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID + sm::Vector2(1, 1))))
+				{
+					nodes.at(i)->connections.push_back(GetAINodeById(currentID + sm::Vector2(1, 1)));
+				}
+			}
+			currentTile = m_grid.GetTileByID(currentID + sm::Vector2(0, 1));
+			//Up
+			if (currentTile && (currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
+				|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
+			{
+				if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID + sm::Vector2(0, 1))))
+				{
+					nodes.at(i)->connections.push_back(GetAINodeById(currentID + sm::Vector2(0, 1)));
+				}
+			}
+			currentTile = m_grid.GetTileByID(currentID + sm::Vector2(-1, -1));
+			//Down-left
+			if (currentTile && (currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
+				|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
+			{
+				if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID + sm::Vector2(-1, -1))))
+				{
+					nodes.at(i)->connections.push_back(GetAINodeById(currentID + sm::Vector2(-1, -1)));
+				}
+			}
+			currentTile = m_grid.GetTileByID(currentID + sm::Vector2(0, -1));
+			//Down
+			if (currentTile && (currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
+				|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
+			{
+				if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID + sm::Vector2(0, -1))))
+				{
+					nodes.at(i)->connections.push_back(GetAINodeById(currentID + sm::Vector2(0, -1)));
+				}
+			}
+			currentTile = m_grid.GetTileByID(currentID + sm::Vector2(1, -1));
+			//Down-right
+			if (currentTile && (currentTile->GetComponent<comp::Tile>()->type == TileType::DEFAULT
+				|| currentTile->GetComponent<comp::Tile>()->type == TileType::EMPTY))
+			{
+				if (!nodes.at(i)->ConnectionAlreadyExists(GetAINodeById(currentID + sm::Vector2(1, -1))))
+				{
+					nodes.at(i)->connections.push_back(GetAINodeById(currentID + sm::Vector2(1, -1)));
+				}
+			}
+			//LOG_INFO("Connections: %d", nodes.at(i)->connections.size());
+		}
+	}
 
 	return true;
 }
