@@ -665,11 +665,11 @@ void Game::CreateVisualGrid(Entity e)
 
 void Game::LoadAllAssets()
 {
-	ResourceManager::Get().GetResource<RModel>("MonsterCharacter.fbx");
+	ResourceManager::Get().GetResource<RModel>("Knight.fbx");
+	ResourceManager::Get().GetResource<RModel>("Monster.fbx");
 	ResourceManager::Get().GetResource<RModel>("Barrel.obj");
 	ResourceManager::Get().GetResource<RModel>("Defence.obj");
 	ResourceManager::Get().GetResource<RModel>("Plane1.obj");
-	ResourceManager::Get().GetResource<RModel>("Knight.fbx");
 	Entity e = GetScene("Game").CreateEntity();
 	e.AddComponent<comp::Transform>();
 	e.AddComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>("GameScene.obj");

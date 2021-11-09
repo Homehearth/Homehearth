@@ -2,4 +2,4 @@ loadAnim 		idle 			Monster_Idle.fbx
 loadAnim 		walk 			Monster_Walk.fbx
 loadAnim 		attack 			Monster_Attack.fbx
 loadAnim 		takeDamage 		Monster_TakeDamage.fbx
-setCurrentAnim 	idle
+setCurrentAnim 	walk

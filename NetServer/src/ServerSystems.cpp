@@ -32,7 +32,8 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 			// ---DEFAULT ENEMY---
 			transform->position = spawnP;
 			transform->scale = { 1.8f, 1.8f, 1.8f };
-			meshName->name = "MonsterCharacter.fbx";
+			meshName->name = "Monster.fbx";
+			entity.AddComponent<comp::AnimatorName>()->name = "Monster.anim";
 			obb->Extents = sm::Vector3(2.f, 2.f, 2.f);
 			/*velocity->vel = sm::Vector3(transform->position * -1.0f);
 			velocity->vel.Normalize();
