@@ -274,7 +274,7 @@ void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& sce
 				a.targetDir = targetDir;
 				p.targetForward = targetDir;
 
-				v.vel = sm::Vector3::Zero;
+				v.vel *= 0.2f;
 			}
 
 		});

@@ -357,7 +357,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 
 							}
 						}
-						
+
 					}
 
 					//Place defence on grid
