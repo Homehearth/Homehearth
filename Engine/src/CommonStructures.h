@@ -17,6 +17,27 @@ enum class TypeLight : UINT
 	POINT
 };
 
+struct Vector2I
+{
+	int x = 0, y = 0;
+
+	Vector2I(int&& x, int&& y) :x(x), y(y) {};
+	Vector2I(int& x, int& y) :y(y), x(x) {};
+	Vector2I() = default;
+
+	bool operator==(const Vector2I& other)
+	{
+		return (x == other.x && y == other.y);
+	}
+
+	Vector2I& operator+(const Vector2I& other)
+	{
+		this->x += other.x;
+		this->y += other.y;
+
+		return *this;	
+	}
+};
 
 struct Plane_t
 {
@@ -26,7 +47,7 @@ struct Plane_t
 struct Ray_t
 {
 	sm::Vector3 rayPos, rayDir;
-	bool Intersects(Plane_t plane, sm::Vector3& outIntersectPoint)
+	bool Intersects(Plane_t plane, sm::Vector3* outIntersectPoint = nullptr)
 	{
 		rayDir.Normalize(rayDir);
 		float dotAngle = plane.normal.Dot(rayDir);
@@ -38,7 +59,10 @@ struct Ray_t
 		if (t < 0)
 			return false;
 
-		outIntersectPoint = rayPos + rayDir * t;
+		if (outIntersectPoint)
+		{
+			*outIntersectPoint = rayPos + rayDir * t;
+		}
 		return true;
 	}
 };
@@ -83,8 +107,7 @@ enum class GameMsg : uint8_t
 	Game_PlayerAttack,
 	Game_AddNPC,
 	Game_RemoveNPC,
-	Game_PlayerInput,
-	Grid_PlaceDefence
+	Game_PlayerInput
 };
 
 /*
@@ -94,9 +117,9 @@ ALIGN16
 struct simple_vertex_t
 {
 	sm::Vector3 position = {};
-	sm::Vector2 uv		 = {};
-	sm::Vector3 normal	 = {};
-	sm::Vector3 tangent  = {};
+	sm::Vector2 uv = {};
+	sm::Vector3 normal = {};
+	sm::Vector3 tangent = {};
 	sm::Vector3 bitanget = {};
 };
 
@@ -108,12 +131,12 @@ struct simple_vertex_t
 ALIGN16
 struct anim_vertex_t
 {
-	sm::Vector3 position	= {};
-	sm::Vector2	uv			= {};
-	sm::Vector3	normal		= {};
-	sm::Vector3	tangent		= {};
-	sm::Vector3	bitanget	= {};
-	dx::XMUINT4	boneIDs	    = {};
+	sm::Vector3 position = {};
+	sm::Vector2	uv = {};
+	sm::Vector3	normal = {};
+	sm::Vector3	tangent = {};
+	sm::Vector3	bitanget = {};
+	dx::XMUINT4	boneIDs = {};
 	sm::Vector4	boneWeights = {};
 };
 
@@ -142,29 +165,20 @@ struct camera_Matrix_t
 ALIGN16
 struct light_t
 {
-	sm::Vector4 position	= {};	//Only in use on Point Lights
-	sm::Vector4 direction	= {};	//Only in use on Directional Lights
-	sm::Vector4 color		= {};	//Color and Intensity of the Lamp
-	float		range		= 0;	//Only in use on Point Lights
-	TypeLight	type		= TypeLight::DIRECTIONAL;	// 0 = Directional, 1 = Point
-	UINT		enabled		= 0;	// 0 = Off, 1 = On
-	float		padding		= 0;
+	sm::Vector4 position = {};	//Only in use on Point Lights
+	sm::Vector4 direction = {};	//Only in use on Directional Lights
+	sm::Vector4 color = {};	//Color and Intensity of the Lamp
+	float		range = 0;	//Only in use on Point Lights
+	TypeLight	type = TypeLight::DIRECTIONAL;	// 0 = Directional, 1 = Point
+	UINT		enabled = 0;	// 0 = Off, 1 = On
+	float		padding = 0;
 };
 
 static struct GridProperties_t
 {
 	sm::Vector3 position = sm::Vector3(0, 0, 0);
-	sm::Vector2 mapSize = sm::Vector2(1200, 1200);
+	Vector2I mapSize = Vector2I(600, 600);
 	std::string fileName = "GridMap.png";
 	bool isVisible = true;
 
-} Options;
-
-enum class TileType
-{
-	DEFAULT,
-	EMPTY,
-	BUILDING,
-	UNPLACABLE,
-	DEFENCE
-};
+} gridOptions;

@@ -54,17 +54,20 @@ private:
 
 	std::vector<std::string> OpenFile(std::string filePath);
 	void ConnectNodes(comp::Node* node1, comp::Node* node2);
-	comp::Node* GetAINodeById(sm::Vector2 id);
+	comp::Node* GetAINodeById(Vector2I& id);
+
+	void BuildMapColliders(std::vector<dx::BoundingOrientedBox>* mapColliders);
 
 public:
 	Simulation(Server* pServer, HeadlessEngine* pEngine);
 	virtual ~Simulation() = default;
-	bool AICreateNodes();
+	//bool AICreateNodes();
 	bool AddNPC(uint32_t npcId);
 	bool RemoveNPC(uint32_t npcId);
 
 	// -1 will be defaulted to max value of unsigned 32 bit integer
 	void Broadcast(message<GameMsg>& msg, uint32_t exclude = -1)const;
+	void BroadcastUDP(message<GameMsg>& msg, uint32_t exclude = -1)const;
 
 	bool AddPlayer(uint32_t playerID, const std::string& namePlate = "Noobie");
 	bool RemovePlayer(uint32_t playerID);

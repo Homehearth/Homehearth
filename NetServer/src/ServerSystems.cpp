@@ -263,7 +263,7 @@ void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& sce
 				sm::Vector3 point;
 				sm::Vector3 targetDir(1, 0, 0);
 
-				if (a.targetRay.Intersects(plane, point))
+				if (a.targetRay.Intersects(plane, &point))
 				{
 					targetDir = point - t.position;
 					targetDir.Normalize(targetDir);

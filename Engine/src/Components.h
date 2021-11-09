@@ -16,10 +16,8 @@ namespace ecs
 		HEALTH,
 		BOUNDING_ORIENTED_BOX,
 		BOUNDING_SPHERE,
-		PLANECOLLIDER,
 		LIGHT,
 		PLAYER,
-		TILE,
 		COMPONENT_COUNT,
 		COMPONENT_MAX = 32
 	};
@@ -30,12 +28,6 @@ namespace ecs
 		using DirectX::BoundingOrientedBox;
 		using DirectX::BoundingSphere;
 		
-		struct PlaneCollider 
-		{
-			sm::Vector3 center;
-			sm::Vector3 normal;
-			sm::Vector2 size;
-		};
 
 		struct Transform
 		{
@@ -139,7 +131,7 @@ namespace ecs
 		{
 			float f = FLT_MAX, g = FLT_MAX, h = FLT_MAX;
 			sm::Vector3 position;
-			sm::Vector2 id;
+			Vector2I id;
 			std::vector<Node*> connections;
 			ecs::component::Node* parent;
 			bool reachable = true;
@@ -231,14 +223,6 @@ namespace ecs
 		{
 			float chargeAmount;
 			bool positive;
-		};
-
-		struct Tile 
-		{
-			TileType type;
-			sm::Vector2 gridID;
-			float halfWidth;
-
 		};
 
 	};
