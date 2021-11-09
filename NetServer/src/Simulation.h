@@ -31,6 +31,8 @@ private:
 	std::vector<uint32_t> m_removedEntities;
 
 	std::vector<Entity> m_updatedEntities;
+	std::unordered_map<ecs::Component, std::vector<Entity>> m_updatedComponents;
+
 
 	void InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg, const std::bitset<ecs::Component::COMPONENT_MAX>& componentMask = UINT32_MAX) const;
 	message<GameMsg> AllEntitiesMessage()const;
@@ -45,12 +47,13 @@ private:
 	std::queue<sm::Vector3> m_spawnPoints;
 	
 	void CreateWaves();
-	void ResetPlayer(Entity e);
 	
 	void OnNetworkEntityCreate(entt::registry& reg, entt::entity entity);
 	void OnNetworkEntityDestroy(entt::registry& reg, entt::entity entity);
 
 	void OnNetworkEntityUpdated(entt::registry& reg, entt::entity entity);
+	void OnComponentUpdated(Entity entity, ecs::Component component);
+
 
 	std::vector<std::string> OpenFile(std::string filePath);
 	void ConnectNodes(comp::Node* node1, comp::Node* node2);
@@ -64,6 +67,7 @@ public:
 	//bool AICreateNodes();
 	bool AddNPC(uint32_t npcId);
 	bool RemoveNPC(uint32_t npcId);
+
 
 	// -1 will be defaulted to max value of unsigned 32 bit integer
 	void Broadcast(message<GameMsg>& msg, uint32_t exclude = -1)const;
@@ -99,6 +103,8 @@ public:
 	void SetGameScene();
 	void ResetGameScene();
 	
+	void ResetPlayer(Entity e);
+
 	void SendEntity(Entity e, const std::bitset<ecs::Component::COMPONENT_MAX>& componentMask = UINT32_MAX) const;
 	void SendEntities(const std::vector<Entity>& entities, GameMsg msgID, const std::bitset<ecs::Component::COMPONENT_MAX>& componentMask = UINT32_MAX) const;
 

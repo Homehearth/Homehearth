@@ -211,6 +211,7 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 				
 				box->Extents = sm::Vector3(stats.attackRange * 0.5f);
 				
+				stats.targetDir.Normalize();
 				t->position = transform.position + stats.targetDir * stats.attackRange * 0.5f;
 				t->rotation = transform.rotation;
 
@@ -231,7 +232,7 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 				attackCollider.AddComponent<comp::Network>();
 
 				
-				CollisionSystem::Get().AddOnCollision(attackCollider, [=](Entity other)
+				CollisionSystem::Get().AddOnCollision(attackCollider, [=, &scene](Entity other)
 					{
 						if (other == entity)
 							return;
@@ -243,6 +244,9 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 						if (otherHealth)
 						{
 							otherHealth->currentHealth -= stats->attackDamage;
+							// update Health on network
+							scene.publish<EComponentUpdated>(other, ecs::Component::HEALTH);
+
 							attackCollider.GetComponent<comp::SelfDestruct>()->lifeTime = 0.f;
 
 							comp::Velocity* attackVel = attackCollider.GetComponent<comp::Velocity>();
@@ -274,7 +278,7 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 								auto gravity = ecs::GetGravityForce();
 								p->forces.push_back(gravity);
 							}
-							other.UpdateNetwork();
+							
 						}
 					});
 
