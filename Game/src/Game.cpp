@@ -67,12 +67,16 @@ void Game::UpdateNetwork(float deltaTime)
 
 bool Game::OnStartup()
 {
+	sceneHelp::CreateLoadingScene(this);
+	SetScene("Loading");
+
 	// Scene logic
 	sceneHelp::CreateLobbyScene(this);
 	sceneHelp::CreateGameScene(this);
 	sceneHelp::CreateMainMenuScene(this);
 	sceneHelp::CreateJoinLobbyScene(this);
-	sceneHelp::CreateLoadingScene(this);
+
+	sceneHelp::CreateOptionsScene(this);
 
 	// Set Current Scene
 	SetScene("MainMenu");

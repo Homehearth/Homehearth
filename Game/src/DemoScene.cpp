@@ -429,7 +429,17 @@ void sceneHelp::SetupInLobbyScreen(Game* game)
 
 void sceneHelp::SetupOptionsScreen(Game* game)
 {
+	const float width = (float)game->GetWindow()->GetWidth();
+	const float height = (float)game->GetWindow()->GetHeight();
 	Scene& scene = game->GetScene("Options");
+
+
+	Collection2D* soundCollection = new Collection2D;
+	rtd::Slider* sl = soundCollection->AddElement<rtd::Slider>(D2D1::ColorF(0.0f, 0.0f, 0.0f), draw_t((width / 2) - (width / 9), height / 5, width / 9, height / 16), &game->m_masterVolume);
+	sl->SetMinPos(sm::Vector2((width / 8) - (width / 9)));
+	sl->SetMaxPos(sm::Vector2(width - (width / 8)));
+	sl->SetExplanationText("Master Volume: ");
+	scene.Add2DCollection(soundCollection, "Sounds");
 }
 
 void sceneHelp::SetupLoadingScene(Game* game)

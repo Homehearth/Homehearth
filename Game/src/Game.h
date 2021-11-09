@@ -52,6 +52,8 @@ public:
 	uint32_t m_gameID;
 	std::string m_playerName;
 
+	float m_masterVolume = 5.0f;
+
 	Game();
 	virtual ~Game();
 	void JoinLobby(uint32_t lobbyID);
