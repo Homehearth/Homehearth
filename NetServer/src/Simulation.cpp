@@ -1007,16 +1007,14 @@ void Simulation::SendEntities(const std::vector<Entity>& entities, GameMsg msgID
 		msg << static_cast<uint32_t>(count);
 		msg << GetTick();
 
-		this->Broadcast(msg);
-
-		/*if (msgID == GameMsg::Game_Snapshot)
+		if (msgID == GameMsg::Game_Snapshot)
 		{
 			this->BroadcastUDP(msg);
 		}
 		else
 		{
 			this->Broadcast(msg);
-		}*/
+		}
 		sent += count;
 		count = min(entities.size() - sent, 10);
 	} while (sent < entities.size());

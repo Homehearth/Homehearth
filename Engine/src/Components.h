@@ -18,7 +18,6 @@ namespace ecs
 		BOUNDING_SPHERE,
 		LIGHT,
 		PLAYER,
-		TILE,
 		COMPONENT_COUNT,
 		COMPONENT_MAX = 32
 	};
