@@ -12,6 +12,7 @@ Game::Game()
 {
 	this->m_localPID = -1;
 	this->m_gameID = -1;
+	m_isLeavingLobby = false;
 	this->m_predictionThreshhold = 0.001f;
 	m_waveTimer = 0;
 }
@@ -275,6 +276,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	case GameMsg::Game_BackToLobby:
 	{
 		SetScene("Lobby");
+		ClearGrid();
 		break;
 	}	
 	case GameMsg::Lobby_Accepted:
@@ -338,6 +340,12 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			{
 				m_players.at(playerID).GetComponent<comp::NamePlate>()->namePlate = playerPlate;
 				dynamic_cast<rtd::Text*>(GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i + 1))->elements[1].get())->SetText(playerPlate);
+				rtd::Text* plT = dynamic_cast<rtd::Text*>(GetScene("Game").GetCollection("dynamicPlayer" + std::to_string(i + 1) + "namePlate")->elements[0].get());
+				if (plT)
+				{
+					plT->SetText(playerPlate);
+					plT->SetStretch(D2D1Core::GetDefaultFontSize() * plT->GetText().length(), D2D1Core::GetDefaultFontSize());
+				}
 			}
 		}
 
@@ -356,13 +364,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		Scene& gameScene = GetScene("Game");
 		// Map healthbars to players.
 		GameSystems::UpdateHealthbar(gameScene);
-
-		for (size_t i = 0; i < count; i++)
-		{
-			Collection2D* collect = gameScene.GetCollection("player" + std::to_string(i + 1) + "Info");
-			collect->Show();
-			dynamic_cast<rtd::Text*>(collect->elements[1].get())->SetText(ids[i]);
-		}
 		break;
 
 	}
@@ -425,6 +426,8 @@ void Game::OnClientDisconnect()
 
 	SetScene("MainMenu");
 
+	m_client.m_qPrioMessagesIn.clear();
+	m_client.m_qMessagesIn.clear();
 	LOG_INFO("Disconnected from server!");
 }
 
@@ -434,6 +437,15 @@ void Game::SendStartGame()
 	msg.header.id = GameMsg::Game_PlayerReady;
 	msg << m_localPID << m_gameID;
 	m_client.Send(msg);
+}
+
+void Game::ClearGrid()
+{
+	GetScene("Game").ForEachComponent<comp::Tag<TagType::DEFENCE>>([](Entity& e, comp::Tag<TagType::DEFENCE>& tag)
+		{
+			e.Destroy();
+		}
+	);
 }
 
 void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
@@ -590,7 +602,7 @@ void Game::PlaceDefenceDebug(message<GameMsg>& msg)
 				{
 					comp::Renderable* render = e.GetComponent<comp::Renderable>();
 					render->model = ResourceManager::Get().GetResource<RModel>("Defence.obj");
-					render->model->ChangeMaterial("TileDefence.mtl");
+					render->model->ChangeMaterial("Defence.mtl");
 					tile.type = TileType::DEFENCE;
 					LOG_INFO("Placed defence %d", id);
 				}
@@ -606,7 +618,7 @@ void Game::PlaceDefenceDebug(message<GameMsg>& msg)
 		defence.AddComponent<comp::Transform>()->position = position;
 		defence.GetComponent<comp::Transform>()->scale = { 4.2f, 0.5f, 4.2f };
 		render->model = ResourceManager::Get().GetResource<RModel>("Defence.obj");
-		render->model->ChangeMaterial("TileDefence.mtl");
+		render->model->ChangeMaterial("Defence.mtl");
 		LOG_INFO("Placed defence");
 	}
 #endif // DEBUG
@@ -622,8 +634,9 @@ void Game::PlaceDefenceRelease(message<GameMsg>& msg)
 	comp::Renderable* render = defence.AddComponent<comp::Renderable>();
 	defence.AddComponent<comp::Transform>()->position = position;
 	defence.GetComponent<comp::Transform>()->scale = { 4.2f, 0.5f, 4.2f };
+	defence.AddComponent<comp::Tag<TagType::DEFENCE>>();
 	render->model = ResourceManager::Get().GetResource<RModel>("Defence.obj");
-	render->model->ChangeMaterial("TileDefence.mtl");
+	render->model->ChangeMaterial("Defence.mtl");
 	LOG_INFO("Placed defence");
 
 #endif // NDEBUG		
@@ -631,7 +644,7 @@ void Game::PlaceDefenceRelease(message<GameMsg>& msg)
 
 void Game::CreateVisualGrid(Entity e)
 {
-	if (RENDER_GRID) //TODO dosent work atm
+	if (RENDER_GRID)
 	{
 		comp::Tile* tile = e.GetComponent<comp::Tile>();
 		if (tile)
@@ -648,13 +661,12 @@ void Game::CreateVisualGrid(Entity e)
 				renderable->model = ResourceManager::Get().CopyResource<RModel>("Plane1.obj");
 				renderable->model->ChangeMaterial("TileBuilding.mtl");
 			}
-			else if (tile->type == TileType::DEFENCE)
+			else if (tile->type == TileType::DEFAULT)
 			{
 				comp::Renderable* renderable = e.AddComponent<comp::Renderable>();
 				renderable->model = ResourceManager::Get().CopyResource<RModel>("Plane1.obj");
 				renderable->model->ChangeMaterial("TileDefence.mtl");
 			}
-
 		}
 	}
 }

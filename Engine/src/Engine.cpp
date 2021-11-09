@@ -23,20 +23,18 @@ void Engine::Startup()
 	Window::Desc config;
 
 	//Get heighest possible 16:9 resolution
-	//95% of the height
-	config.height = static_cast<UINT>(GetSystemMetrics(SM_CYSCREEN) * 0.95f);
+	//90% of the height
+	config.height = static_cast<UINT>(GetSystemMetrics(SM_CYSCREEN) * 0.50f);
 	float aspectRatio = 16.0f / 9.0f;
 	config.width = static_cast<UINT>(aspectRatio * config.height);
 
-	//config.width = static_cast<UINT>(GetSystemMetrics(SM_CXSCREEN) * 0.9f);
-	config.title = L"Engine";
+	config.title = L"Homehearth";
 	if (!m_window.Initialize(config))
 	{
 		LOG_ERROR("Could not Initialize m_window.");
 	}
 
 	// DirectX Startup:
-	FontCollectionLoader::Initialize();
 	D3D11Core::Get().Initialize(&m_window);
 	D2D1Core::Initialize(&m_window);
 
@@ -101,7 +99,6 @@ void Engine::Run()
     T_DESTROY();
     D2D1Core::Destroy();
 	ResourceManager::Get().Destroy();
-	FontCollectionLoader::Destroy();
 }
 
 

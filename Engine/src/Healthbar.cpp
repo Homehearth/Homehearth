@@ -49,6 +49,20 @@ void rtd::Healthbar::SetHealthVariable(Entity e)
     m_entity = e;
 }
 
+void rtd::Healthbar::SetPosition(const float& x, const float& y)
+{
+    m_drawOpts.x_pos = x;
+    m_drawOpts.y_pos = y;
+    m_backGround.get()->SetPosition(x, y);
+    m_foreGround.get()->SetPosition(x, y);
+    m_healthInfo.get()->SetPosition(x, y);
+}
+
+const draw_t rtd::Healthbar::GetOpts() const
+{
+    return m_backGround.get()->GetOpts();
+}
+
 void rtd::Healthbar::Draw()
 {
     if (m_backGround)

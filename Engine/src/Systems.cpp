@@ -209,16 +209,9 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 				{
 					sm::Vector3 vel = stats.targetDir * stats.projectileSpeed;
 					attackCollider.AddComponent<comp::Velocity>()->vel = vel;
-
 					attackCollider.AddComponent<comp::MeshName>()->name = "Sphere.obj";
+					attackCollider.AddComponent<comp::Network>();
 				}
-#ifdef _DEBUG
-				LOG_INFO("Attack Collider Created!");
-#endif
-				
-				attackCollider.AddComponent<comp::Network>();
-				//DEBUG
-
 
 				
 				CollisionSystem::Get().AddOnCollision(attackCollider, [=](Entity other)
@@ -233,9 +226,7 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 						if (otherHealth)
 						{
 							otherHealth->currentHealth -= atk->damage;
-#ifdef _DEBUG
-							LOG_INFO("ATTACK COLLIDER HIT BAD GUY!");
-#endif
+
 							atk->lifeTime = 0.f;
 							comp::Velocity* attackVel = attackCollider.GetComponent<comp::Velocity>();
 							if (attackVel)
@@ -311,21 +302,13 @@ void Systems::MovementSystem(HeadlessScene& scene, float dt)
 	{
 		PROFILE_SCOPE("Add Velocity to Transform");
 		scene.ForEachComponent<comp::Transform, comp::Velocity>([&, dt]
-		(comp::Transform& transform, comp::Velocity& velocity)
+		(Entity e, comp::Transform& transform, comp::Velocity& velocity)
 			{
 				transform.position += velocity.vel * dt;
 				transform.position.y = 1.0f;
-			
-			});
-	}
-	{
-		PROFILE_SCOPE("Update Transforms");
-		scene.ForEachComponent<comp::Transform, comp::Network>([](Entity e, comp::Transform& t, comp::Network&) 
-			{
-				if (t.previousPosition != t.position)
+				if (velocity.vel.Length() > 0.01f)
 				{
 					e.UpdateNetwork();
-					t.previousPosition = t.position;
 				}
 			});
 	}
@@ -370,6 +353,8 @@ void Systems::LightSystem(Scene& scene, float dt)
 
 void Systems::AISystem(HeadlessScene& scene)
 {
+	PROFILE_FUNCTION();
+
 	scene.ForEachComponent<comp::NPC>([&](Entity entity, comp::NPC& npc)
 	{
 		comp::Transform* transformNPC = entity.GetComponent<comp::Transform>();

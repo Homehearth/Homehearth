@@ -200,6 +200,7 @@ public:
 	static void Destroy();
 
 	static float GetDefaultFontSize();
+	static Window* GetWindow();
 
 	/*
 		Draw Text onto the window assigned in the parameter.
@@ -259,52 +260,4 @@ private:
 
 	ComPtr<IDWriteTextFormat> m_writeFormat;
 	ComPtr<ID2D1SolidColorBrush> m_solidBrush;
-};
-
-class FontCollectionLoader : public IDWriteFontCollectionLoader
-{
-private:
-
-	UINT32 m_refs = 0;
-	UINT32 m_key = 1;
-
-public:
-	static FontCollectionLoader* instance;
-	static void Initialize();
-	static void Destroy();
-
-	// Inherited via IDWriteFontCollectionLoader
-	virtual HRESULT __stdcall QueryInterface(REFIID riid, void** ppvObject) override;
-	virtual ULONG __stdcall AddRef(void) override;
-	virtual ULONG __stdcall Release(void) override;
-	virtual HRESULT __stdcall CreateEnumeratorFromKey(IDWriteFactory* factory, void const* collectionKey, UINT32 collectionKeySize, IDWriteFontFileEnumerator** fontFileEnumerator) override;
-};
-
-class FontFileEnumerator : public IDWriteFontFileEnumerator
-{
-private:
-
-	UINT32 m_refs = 0;
-	UINT64 m_key = 1;
-	std::vector<IDWriteFontFile*> m_fonts;
-	IDWriteFactory* m_factoryRef = nullptr;
-	int m_pos = 0;
-
-public:
-
-	FontFileEnumerator(IDWriteFactory* ref);
-	~FontFileEnumerator() = default;
-	void SetKey(const void* pointer);
-
-	// Inherited via IDWriteFontFileEnumerator
-	virtual HRESULT __stdcall QueryInterface(REFIID riid, void** ppvObject) override;
-
-	virtual ULONG __stdcall AddRef(void) override;
-
-	virtual ULONG __stdcall Release(void) override;
-
-	virtual HRESULT __stdcall MoveNext(BOOL* hasCurrentFile) override;
-
-	virtual HRESULT __stdcall GetCurrentFontFile(IDWriteFontFile** fontFile) override;
-
 };

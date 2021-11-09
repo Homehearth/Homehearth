@@ -10,7 +10,7 @@ LRESULT CALLBACK Window::WinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 	switch (uMsg)
 	{
 	case WM_ACTIVATE:
-		ConfineCursor(hwnd);
+		//ConfineCursor(hwnd);
 		break;
 	case WM_NCCREATE:
 		LOG_INFO("Window has been created.");
@@ -128,8 +128,8 @@ bool Window::Initialize(const Desc& desc)
 	const HWND hwndDesktop = GetDesktopWindow();
 	GetWindowRect(hwndDesktop, &desktop);
 
-	const int posX = ((desktop.right / 2) - (desc.width / 2));
-	const int posY = ((desktop.bottom / 2) - (desc.height / 2));
+	const int posX = (desktop.right / 2) - (desc.width / 2);
+	const int posY = (desktop.bottom / 2) - (desc.height / 2);
 
 	RECT rect;
 	rect.left = posX;
@@ -156,7 +156,7 @@ bool Window::Initialize(const Desc& desc)
 #else
 	ShowWindow(this->m_hWnd, SW_NORMAL);
 #endif
-	ConfineCursor(this->m_hWnd);
+	//ConfineCursor(this->m_hWnd);
 
 	this->m_windowDesc = desc;
 

@@ -58,6 +58,7 @@ public:
 	sm::Vector3 GetUp() const;
 	camera_Matrix_t* GetCameraMatrixes();
 	CAMERATYPE GetCameraType()const;
+	sm::Vector3 GetRollPitchYaw() const;
 
 	//Set Functions
 	void SetPosition(sm::Vector3 newPosition);
@@ -77,6 +78,7 @@ public:
 	float m_nearPlane;
 	float m_farPlane;
 	sm::Vector3 m_rollPitchYaw;
+	sm::Quaternion m_rotation = sm::Quaternion::Identity;
 	sm::Vector3 m_position;
 };
 

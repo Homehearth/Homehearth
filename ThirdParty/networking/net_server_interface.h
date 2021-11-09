@@ -11,27 +11,24 @@ namespace network
 	private:
 		// Information regarding every connection
 		SOCKET m_listening;
+		SOCKET m_udpSocket;
 		bool m_isRunning;
 		HANDLE m_CompletionPort;
+		HANDLE m_udpHandle;
 		std::thread* m_workerThreads;
 		std::thread m_acceptThread;
 		int m_nrOfThreads;
 		tsQueue<owned_message<T>> m_qMessagesOut;
+		tsQueue<owned_message<T>> m_qPrioMessagesOut;
+		CRITICAL_SECTION udpLock;
 
 	protected:
-		struct SOCKET_INFORMATION
-		{
-			uint64_t handshakeIn = 0;
-			uint64_t handshakeOut = 0;
-			uint64_t handshakeResult = 0;
-			SOCKET Socket = {};
-			message<T> msgTempIn = {};
-		};
 		std::unordered_map<uint32_t, SOCKET> connections;
-		std::unordered_map<SOCKET, HANDLE> m_sockHandles;
+		std::unordered_map<SOCKET, SOCKET_INFORMATION<T>*> m_socketInfo;
 		std::function<void(message<T>&)> messageReceivedHandler;
 		CRITICAL_SECTION lock;
 		tsQueue<message<T>> m_qMessagesIn;
+		tsQueue<message<T>> m_qPrioMessagesIn;
 
 	protected:
 		// Called once when a client connects
@@ -44,27 +41,29 @@ namespace network
 		virtual void OnClientValidated(const SOCKET& socket) = 0;
 
 	private:
-		DWORD WINAPI ServerWorkerThread();
+		DWORD WINAPI ProcessTCPIO();
+		DWORD WINAPI ProcessUDPIO();
 		DWORD WINAPI ProcessIncomingConnections(LPVOID param);
 
-		SOCKET CreateSocket(const uint16_t& port);
+		SOCKET CreateSocket(const uint16_t& port, SockType&& type);
 		std::string PrintSocketData(struct addrinfo* p);
 		bool Listen(const uint32_t& nListen);
 		void InitWinsock();
-		bool CreateSocketInformation(SOCKET& s);
-		void DisconnectClient(SOCKET_INFORMATION*& SI);
+		bool CreateSocketInformation(const SOCKET& s);
+		void DisconnectClient(SOCKET_INFORMATION<T>*& SI);
 		SOCKET WaitForConnection();
 
 		// FUNCTIONS TO EASIER HANDLE DATA IN AND OUT FROM SERVER
 		void WriteValidation(const SOCKET& socketId, uint64_t handshakeOut);
-		void ReadValidation(SOCKET_INFORMATION*& SI, PER_IO_DATA* context);
-		void ReadHeader(SOCKET_INFORMATION*& SI, PER_IO_DATA* context);
-		void ReadPayload(SOCKET_INFORMATION*& SI, PER_IO_DATA* context);
+		void ReadValidation(SOCKET_INFORMATION<T>*& SI, PER_IO_DATA* context);
+		void ReadHeader(SOCKET_INFORMATION<T>*& SI, PER_IO_DATA* context);
+		void ReadPayload(SOCKET_INFORMATION<T>*& SI, PER_IO_DATA* context);
 		void WriteHeader();
+		void WritePacket();
 		void WritePayload();
-		void PrimeReadHeader(SOCKET_INFORMATION*& SI);
-		void PrimeReadPayload(SOCKET_INFORMATION*& SI);
-		void PrimeReadValidation(SOCKET_INFORMATION*& SI);
+		void PrimeReadHeader(SOCKET_INFORMATION<T>*& SI);
+		void PrimeReadPayload(SOCKET_INFORMATION<T>*& SI);
+		void PrimeReadValidation(SOCKET_INFORMATION<T>*& SI);
 
 		static void AlertThread();
 
@@ -87,6 +86,7 @@ namespace network
 		{
 			WSACleanup();
 			DeleteCriticalSection(&lock);
+			DeleteCriticalSection(&udpLock);
 			delete[] m_workerThreads;
 		}
 
@@ -94,6 +94,7 @@ namespace network
 		bool Start(const uint16_t& port);
 		void Stop();
 		void SendToClient(const uint32_t& id, message<T>& msg);
+		void SendToClientUDP(const uint32_t& id, message<T>& msg);
 		bool IsRunning();
 		bool isClientConnected(const uint32_t& ID)const;
 	};
@@ -121,7 +122,7 @@ namespace network
 	}
 
 	template <typename T>
-	void server_interface<T>::PrimeReadValidation(SOCKET_INFORMATION*& SI)
+	void server_interface<T>::PrimeReadValidation(SOCKET_INFORMATION<T>*& SI)
 	{
 		PER_IO_DATA* context = new PER_IO_DATA;
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
@@ -131,7 +132,7 @@ namespace network
 		DWORD BytesReceived = 0;
 		DWORD flags = 0;
 
-		if (WSARecv(SI->Socket, &context->DataBuf, 1, &BytesReceived, &flags, &context->Overlapped, NULL) == SOCKET_ERROR)
+		if (WSARecv(SI->socket.tcp, &context->DataBuf, 1, &BytesReceived, &flags, &context->Overlapped, NULL) == SOCKET_ERROR)
 		{
 			if (GetLastError() != WSA_IO_PENDING)
 			{
@@ -142,7 +143,7 @@ namespace network
 	}
 
 	template <typename T>
-	void server_interface<T>::PrimeReadHeader(SOCKET_INFORMATION*& SI)
+	void server_interface<T>::PrimeReadHeader(SOCKET_INFORMATION<T>*& SI)
 	{
 		PER_IO_DATA* context = new PER_IO_DATA;
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
@@ -152,7 +153,7 @@ namespace network
 		DWORD BytesReceived = 0;
 		DWORD flags = 0;
 
-		if (WSARecv(SI->Socket, &context->DataBuf, 1, &BytesReceived, &flags, &context->Overlapped, NULL) == SOCKET_ERROR)
+		if (WSARecv(SI->socket.tcp, &context->DataBuf, 1, &BytesReceived, &flags, &context->Overlapped, NULL) == SOCKET_ERROR)
 		{
 			if (GetLastError() != WSA_IO_PENDING)
 			{
@@ -163,7 +164,7 @@ namespace network
 	}
 
 	template <typename T>
-	void server_interface<T>::PrimeReadPayload(SOCKET_INFORMATION*& SI)
+	void server_interface<T>::PrimeReadPayload(SOCKET_INFORMATION<T>*& SI)
 	{
 		PER_IO_DATA* context = new PER_IO_DATA;
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
@@ -175,7 +176,7 @@ namespace network
 		DWORD BytesReceived = 0;
 		DWORD flags = 0;
 
-		if (WSARecv(SI->Socket, &context->DataBuf, 1, &BytesReceived, &flags, &context->Overlapped, NULL) == SOCKET_ERROR)
+		if (WSARecv(SI->socket.tcp, &context->DataBuf, 1, &BytesReceived, &flags, &context->Overlapped, NULL) == SOCKET_ERROR)
 		{
 			if (GetLastError() != WSA_IO_PENDING)
 			{
@@ -186,7 +187,7 @@ namespace network
 	}
 
 	template <typename T>
-	void server_interface<T>::ReadPayload(SOCKET_INFORMATION*& SI, PER_IO_DATA* context)
+	void server_interface<T>::ReadPayload(SOCKET_INFORMATION<T>*& SI, PER_IO_DATA* context)
 	{
 		this->m_qMessagesIn.push_back(SI->msgTempIn);
 		SI->msgTempIn.payload.clear();
@@ -194,7 +195,7 @@ namespace network
 	}
 
 	template <typename T>
-	void server_interface<T>::ReadHeader(SOCKET_INFORMATION*& SI, PER_IO_DATA* context)
+	void server_interface<T>::ReadHeader(SOCKET_INFORMATION<T>*& SI, PER_IO_DATA* context)
 	{
 		if (SI->msgTempIn.header.size > 0)
 		{
@@ -276,14 +277,39 @@ namespace network
 	}
 
 	template <typename T>
-	void server_interface<T>::ReadValidation(SOCKET_INFORMATION*& SI, PER_IO_DATA* context)
+	void server_interface<T>::WritePacket()
+	{
+		PER_IO_DATA* context = new PER_IO_DATA;
+		owned_message<T> msg = m_qPrioMessagesOut.front();
+		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
+		context->DataBuf.buf = (CHAR*)msg.msg.payload.data();
+		context->DataBuf.len = ULONG(msg.msg.payload.size());
+		context->state = NetState::WRITE_PACKET;
+		DWORD BytesSent = 0;
+		DWORD flags = 0;
+
+		SOCKET_INFORMATION<T>* SI = m_socketInfo.at(m_qPrioMessagesOut.front().remote);
+
+		if (WSASendTo(m_udpSocket, &context->DataBuf, 1, &BytesSent, flags, (sockaddr*)&SI->socket.remote, SI->socket.len, &context->Overlapped, NULL) == SOCKET_ERROR)
+		{
+			DWORD error = GetLastError();
+			if (error != WSA_IO_PENDING)
+			{
+				LOG_ERROR("WSASendTo: %d", error);
+				delete context;
+			}
+		}
+	}
+
+	template <typename T>
+	void server_interface<T>::ReadValidation(SOCKET_INFORMATION<T>*& SI, PER_IO_DATA* context)
 	{
 		memcpy(&SI->handshakeIn, context->DataBuf.buf, sizeof(uint64_t));
 
 		if (SI->handshakeIn == SI->handshakeResult)
 		{
 			EnterCriticalSection(&lock);
-			this->OnClientValidated(SI->Socket);
+			this->OnClientValidated(SI->socket.tcp);
 			LeaveCriticalSection(&lock);
 			this->PrimeReadHeader(SI);
 		}
@@ -322,14 +348,14 @@ namespace network
 	template <typename T>
 	DWORD server_interface<T>::ProcessIncomingConnections(LPVOID param)
 	{
-		HANDLE eventHandle = param;
+		HANDLE accEvent = param;
 		while (m_isRunning)
 		{
 			WSANETWORKEVENTS netEvents;
 			DWORD success = 0;
 
 			// Will put thread to sleep unless there is I/O to process or a new connection has been made
-			if ((success = WSAWaitForMultipleEvents(1, &eventHandle, FALSE, WSA_INFINITE, TRUE)) == WSA_WAIT_FAILED)
+			if ((success = WSAWaitForMultipleEvents(1, &accEvent, FALSE, WSA_INFINITE, TRUE)) == WSA_WAIT_FAILED)
 			{
 				LOG_ERROR("WSAWaitForEvents failed with code: %d", WSAGetLastError());
 				continue;
@@ -340,20 +366,11 @@ namespace network
 				continue;
 			}
 
-			WSAEnumNetworkEvents(m_listening, eventHandle, &netEvents);
+			WSAEnumNetworkEvents(m_listening, accEvent, &netEvents);
 
 			if (netEvents.lNetworkEvents & FD_ACCEPT && (netEvents.iErrorCode[FD_ACCEPT_BIT] == 0))
 			{
 				SOCKET clientSocket = WaitForConnection();
-
-				struct sockaddr_in c = {};
-				socklen_t cLen = sizeof(c);
-				getpeername(clientSocket, (struct sockaddr*)&c, &cLen);
-				char ipAsString[IPV6_ADDRSTRLEN] = {};
-				inet_ntop(c.sin_family, &c.sin_addr, ipAsString, sizeof(ipAsString));
-				uint16_t port = GetPort((struct sockaddr*)&c);
-
-				OnClientConnect(ipAsString, port);
 
 				CreateSocketInformation(clientSocket);
 			}
@@ -362,12 +379,12 @@ namespace network
 	}
 
 	template<typename T>
-	void server_interface<T>::DisconnectClient(SOCKET_INFORMATION*& SI)
+	void server_interface<T>::DisconnectClient(SOCKET_INFORMATION<T>*& SI)
 	{
 		EnterCriticalSection(&lock);
 		if (SI != NULL)
 		{
-			SOCKET socket = SI->Socket;
+			SOCKET socket = SI->socket.tcp;
 			auto it = connections.begin();
 			while (it != connections.end())
 			{
@@ -378,8 +395,11 @@ namespace network
 				}
 				it++;
 			}
-			closesocket(SI->Socket);
-			SI->Socket = INVALID_SOCKET;
+			if (m_socketInfo.find(socket) != m_socketInfo.end())
+			{
+				m_socketInfo.erase(socket);
+			}
+			SI->socket.close();
 			delete SI;
 			SI = nullptr;
 
@@ -395,26 +415,75 @@ namespace network
 	}
 
 	template <typename T>
-	bool server_interface<T>::CreateSocketInformation(SOCKET& s)
+	bool server_interface<T>::CreateSocketInformation(const SOCKET& s)
 	{
-		SOCKET_INFORMATION* SI = new SOCKET_INFORMATION;
-		SI->Socket = s;
+		struct sockaddr_in c = {};
+		socklen_t cLen = sizeof(c);
+		getpeername(s, (struct sockaddr*)&c, &cLen);
+		char ipAsString[IPV6_ADDRSTRLEN] = {};
+		inet_ntop(c.sin_family, &c.sin_addr, ipAsString, sizeof(ipAsString));
+		uint16_t port = GetPort((struct sockaddr*)&c);
+
+		SOCKET_INFORMATION<T>* SI = new SOCKET_INFORMATION<T>;
+		SI->socket.tcp = s;
 		SI->handshakeIn = 0;
 		SI->handshakeOut = uint64_t(std::chrono::system_clock::now().time_since_epoch().count());
 		SI->handshakeResult = scrambleData(SI->handshakeOut);
-		HANDLE h = CreateIoCompletionPort((HANDLE)SI->Socket, m_CompletionPort, (ULONG_PTR)SI, 0);
 
-		if (h == NULL)
+		OnClientConnect(ipAsString, port);
+
+		HANDLE sockHandle = CreateIoCompletionPort((HANDLE)s, m_CompletionPort, (ULONG_PTR)SI, 0);
+
+		if (sockHandle == NULL)
 		{
 			LOG_ERROR("CreateIoCompletionPort() failed with error %d", GetLastError());
 
 			return false;
 		}
 
-		m_sockHandles[SI->Socket] = h;
-		this->WriteValidation(SI->Socket, SI->handshakeOut);
+		m_socketInfo[SI->socket.tcp] = SI;
+
+		// Send a puzzle to the client and refuse connection if client fails
+		this->WriteValidation(SI->socket.tcp, SI->handshakeOut);
+		char buffer[10] = {};
+		PER_IO_DATA* context = new PER_IO_DATA;
+		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
+		context->DataBuf.buf = buffer;
+		context->DataBuf.len = static_cast<ULONG>(sizeof(buffer));
+		context->state = NetState::READ_PACKET;
+		DWORD bytes = 0;
+		DWORD flags = 0;
+		SI->socket.len = sizeof(SI->socket.remote);
+		if (WSARecvFrom(m_udpSocket, &context->DataBuf, 1, &bytes, &flags, (sockaddr*)&SI->socket.remote, &SI->socket.len, &context->Overlapped, NULL) == SOCKET_ERROR)
+		{
+			DWORD error = WSAGetLastError();
+			if (error != WSA_IO_PENDING)
+			{
+				LOG_ERROR("RecvFrom: %d", error);
+				delete context;
+			}
+		}
 
 		return true;
+	}
+
+	template <typename T>
+	void server_interface<T>::SendToClientUDP(const uint32_t& id, message<T>& msg)
+	{
+		if (isClientConnected(id))
+		{
+			owned_message<T>* remoteMsg = new owned_message<T>;
+			remoteMsg->msg = msg;
+			remoteMsg->remote = connections.at(id);
+			if (!PostQueuedCompletionStatus((HANDLE)m_udpHandle, 2, (ULONG_PTR)remoteMsg, NULL))
+			{
+				LOG_ERROR("PostQueuedCompletionStatus: %d", GetLastError());
+			}
+		}
+		else
+		{
+			LOG_WARNING("SendToClientUDP: Client not connected!");
+		}
 	}
 
 	template <typename T>
@@ -425,7 +494,7 @@ namespace network
 			owned_message<T>* remoteMsg = new owned_message<T>;
 			remoteMsg->msg = msg;
 			remoteMsg->remote = connections.at(id);
-			if (!PostQueuedCompletionStatus(m_sockHandles.at(remoteMsg->remote), 1, (ULONG_PTR)remoteMsg, NULL))
+			if (!PostQueuedCompletionStatus(m_CompletionPort, 1, (ULONG_PTR)remoteMsg, NULL))
 			{
 				LOG_ERROR("PostQueuedCompletionStatus: %d", GetLastError());
 			}
@@ -486,7 +555,7 @@ namespace network
 	template <typename T>
 	std::string server_interface<T>::PrintSocketData(addrinfo* p)
 	{
-		std::string data = "Full socket information:\n";
+		std::string data = "\nFull socket information:\n";
 
 		if (p->ai_family == AF_INET)
 		{
@@ -530,18 +599,26 @@ namespace network
 	}
 
 	template <typename T>
-	SOCKET server_interface<T>::CreateSocket(const uint16_t& port)
+	SOCKET server_interface<T>::CreateSocket(const uint16_t& port, SockType&& type)
 	{
 		// Get a linked network structure based on provided hints
 		struct addrinfo hints, * servinfo, * p;
-
 		ZeroMemory(&hints, sizeof(hints));
 		hints.ai_family = AF_INET;
-		hints.ai_socktype = SOCK_STREAM;
 		hints.ai_flags = AI_PASSIVE;
-		hints.ai_protocol = IPPROTO_TCP;
 
-		int8_t rv = getaddrinfo(nullptr, std::to_string(port).c_str(), &hints, &servinfo);
+		if (type == SockType::TCP)
+		{
+			hints.ai_socktype = SOCK_STREAM;
+			hints.ai_protocol = IPPROTO_TCP;
+		}
+		else
+		{
+			hints.ai_socktype = SOCK_DGRAM;
+			hints.ai_protocol = IPPROTO_UDP;
+		}
+
+		int8_t rv = getaddrinfo(NULL, std::to_string(port).c_str(), &hints, &servinfo);
 
 		if (rv != 0)
 		{
@@ -549,7 +626,7 @@ namespace network
 			return INVALID_SOCKET;
 		}
 
-		SOCKET listener;
+		SOCKET socket;
 
 		// Loop through linked list of possible network structures
 		for (p = servinfo; p != nullptr; p = p->ai_next)
@@ -559,34 +636,38 @@ namespace network
 			LOG_NETWORK(socketData.c_str());
 			LeaveCriticalSection(&lock);
 
-			listener = WSASocket(p->ai_family, p->ai_socktype, p->ai_protocol, NULL, 0, WSA_FLAG_OVERLAPPED);
+			socket = WSASocket(p->ai_family, p->ai_socktype, p->ai_protocol, NULL, 0, WSA_FLAG_OVERLAPPED);
 
-			if (listener == INVALID_SOCKET)
+			if (socket == INVALID_SOCKET)
 			{
 				continue;
 			}
 
-			// Options to disable Nagle's algorithm (can queue up multiple packets instead of sending 1 by 1)
-			// SO_REUSEADDR will let the server to reuse the port its bound on even if it have not closed 
-			// by the the operating system yet.
 			int enable = 1;
-			if (setsockopt(listener, IPPROTO_TCP, TCP_NODELAY, (char*)&enable, sizeof(int)) != 0)
+
+			// Options to disable Nagle's algorithm (can queue up multiple packets instead of sending 1 by 1)
+			if (type == SockType::TCP)
+			{
+				if (setsockopt(socket, IPPROTO_TCP, TCP_NODELAY, (char*)&enable, sizeof(int)) != 0)
+				{
+					LOG_ERROR("setsockopt: %d", WSAGetLastError());
+					return false;
+				}
+			}
+
+			// SO_REUSEADDR will let the server to reuse the port its bound on even if it have not closed 
+			// by the the operating system yet. Also it allows UDP/TCP being bound to the same port working
+			if (setsockopt(socket, SOL_SOCKET, SO_REUSEADDR, (char*)&enable, sizeof(int)) != 0)
 			{
 				LOG_ERROR("setsockopt: %d", WSAGetLastError());
 				return false;
 			}
 
-			if (setsockopt(listener, SOL_SOCKET, SO_REUSEADDR, (char*)&enable, sizeof(int)) != 0)
-			{
-				LOG_ERROR("setsockopt: %d", WSAGetLastError());
-				return false;
-			}
-
-			if (bind(listener, p->ai_addr, static_cast<int>(p->ai_addrlen)) != 0)
+			if (bind(socket, p->ai_addr, static_cast<int>(p->ai_addrlen)) != 0)
 			{
 				LOG_ERROR("Bind failed with error: %d", WSAGetLastError());
-				closesocket(listener);
-				listener = INVALID_SOCKET;
+				closesocket(socket);
+				socket = INVALID_SOCKET;
 				continue;
 			}
 
@@ -601,22 +682,37 @@ namespace network
 
 		freeaddrinfo(servinfo);
 
-		return listener;
+		return socket;
 	}
 
 	template <typename T>
 	bool server_interface<T>::Start(const uint16_t& port)
 	{
 		InitializeCriticalSection(&lock);
+		InitializeCriticalSection(&udpLock);
 		InitWinsock();
 		SYSTEM_INFO SystemInfo;
-		if ((m_listening = CreateSocket(port)) == INVALID_SOCKET)
+		LOG_NETWORK("Creating the TCP Socket...");
+		if ((m_listening = CreateSocket(port, SockType::TCP)) == INVALID_SOCKET)
 		{
 			return false;
 		}
 
-		// Setup an I/O completion port
+		LOG_NETWORK("Creating the UDP Socket...");
+		if ((m_udpSocket = CreateSocket(port, SockType::UDP)) == INVALID_SOCKET)
+		{
+			return false;
+		}
+
+		// Setup an I/O completion port for TCP
 		if ((m_CompletionPort = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0)) == NULL)
+		{
+			LOG_ERROR("CreateIoCompletionPort() failed with error %d", GetLastError());
+			return false;
+		}
+
+		// Setup an I/O completion port for UDP
+		if ((m_udpHandle = CreateIoCompletionPort((HANDLE)m_udpSocket, NULL, m_udpSocket, 0)) == NULL)
 		{
 			LOG_ERROR("CreateIoCompletionPort() failed with error %d", GetLastError());
 			return false;
@@ -628,16 +724,16 @@ namespace network
 		}
 
 		// Create an event for the accepting socket
-		HANDLE acceptEvent = WSACreateEvent();
+		HANDLE accEvent = WSACreateEvent();
 
-		if (acceptEvent == WSA_INVALID_EVENT)
+		if (accEvent == WSA_INVALID_EVENT)
 		{
 			LOG_ERROR("Failed to create event %d", WSAGetLastError());
 			return false;
 		}
-		WSAEventSelect(m_listening, acceptEvent, FD_ACCEPT);
+		WSAEventSelect(m_listening, accEvent, FD_ACCEPT);
 
-		m_acceptThread = std::thread(&server_interface<T>::ProcessIncomingConnections, this, acceptEvent);
+		m_acceptThread = std::thread(&server_interface<T>::ProcessIncomingConnections, this, accEvent);
 
 		// Determine how many processors are on the system
 		GetSystemInfo(&SystemInfo);
@@ -649,7 +745,14 @@ namespace network
 		// system. Create two worker threads for each processor
 		for (size_t i = 0; i < m_nrOfThreads; i++)
 		{
-			m_workerThreads[i] = std::thread(&server_interface<T>::ServerWorkerThread, this);
+			if (i < 4)
+			{
+				m_workerThreads[i] = std::thread(&server_interface<T>::ProcessTCPIO, this);
+			}
+			else
+			{
+				m_workerThreads[i] = std::thread(&server_interface<T>::ProcessUDPIO, this);
+			}
 		}
 
 		return true;
@@ -659,6 +762,7 @@ namespace network
 	void server_interface<T>::Stop()
 	{
 		EnterCriticalSection(&lock);
+		EnterCriticalSection(&udpLock);
 		m_isRunning = false;
 		LOG_INFO("Shutting down server!");
 		if (m_listening != INVALID_SOCKET)
@@ -674,8 +778,9 @@ namespace network
 					LOG_INFO("Cancel I/O failed: %d", GetLastError());
 				}
 			}
-			m_sockHandles.clear();
+			m_socketInfo.clear();
 			LeaveCriticalSection(&lock);
+			LeaveCriticalSection(&udpLock);
 			for (int i = 0; i < m_nrOfThreads; i++)
 			{
 				QueueUserAPC((PAPCFUNC)server_interface<T>::AlertThread, (HANDLE)m_workerThreads[i].native_handle(), NULL);
@@ -687,20 +792,101 @@ namespace network
 	}
 
 	template <typename T>
-	DWORD server_interface<T>::ServerWorkerThread()
+	DWORD server_interface<T>::ProcessUDPIO()
 	{
-		DWORD BytesTransferred = 0;
-		SOCKET_INFORMATION* SI = nullptr;
+		SOCKET_INFORMATION<T>* SI = nullptr;
 		PER_IO_DATA* context;
-		DWORD bytesReceived = 0;
-		const DWORD CAP = 1;
+		const DWORD CAP = 50;
 		OVERLAPPED_ENTRY Entries[CAP];
 		ULONG EntriesRemoved = 0;
-		BOOL ShouldShutdown = false;
 
 		while (m_isRunning)
 		{
-			SOCKET_INFORMATION* SI = nullptr;
+			memset(Entries, 0, sizeof(Entries));
+			if (!GetQueuedCompletionStatusEx(m_udpHandle, Entries, CAP, &EntriesRemoved, WSA_INFINITE, TRUE))
+			{
+				DWORD LastError = GetLastError();
+				if (LastError != ERROR_EXE_MARKED_INVALID)
+				{
+					LOG_ERROR("%d", LastError);
+				}
+			}
+
+			for (int i = 0; i < (int)EntriesRemoved; i++)
+			{
+				if (Entries[i].lpCompletionKey == NULL)
+				{
+					continue;
+				}
+				// UDP job to send to a client
+				if (Entries[i].dwNumberOfBytesTransferred == 2)
+				{
+					EnterCriticalSection(&udpLock);
+					owned_message<T>* s = (owned_message<T>*)Entries[i].lpCompletionKey;
+					bool write_in_progress = !m_qPrioMessagesOut.empty();
+					m_qPrioMessagesOut.push_back(std::move(*s));
+
+					if (!write_in_progress)
+					{
+						this->WritePacket();
+					}
+					delete s;
+					LeaveCriticalSection(&udpLock);
+					continue;
+				}
+
+				context = (PER_IO_DATA*)Entries[i].lpOverlapped;
+				if (context != NULL)
+				{
+					if (HasOverlappedIoCompleted(Entries[i].lpOverlapped))
+					{
+						switch (context->state)
+						{
+						case NetState::WRITE_PACKET:
+						{
+							EnterCriticalSection(&udpLock);
+							m_qPrioMessagesOut.pop_front();
+
+							if (!m_qPrioMessagesOut.empty())
+							{
+								this->WritePacket();
+							}
+							LeaveCriticalSection(&udpLock);
+							break;
+						}
+						case NetState::READ_PACKET:
+						{
+							LOG_INFO(":)");
+							break;
+						}
+						}
+						// Since PER_IO_DATA is created with new for EVERY I/O we need to 
+						// de-allocate that data after I/O has completed
+						if (context)
+						{
+							delete context;
+							context = nullptr;
+						}
+					}
+				}
+			}
+		}
+		return 0;
+	}
+
+	template <typename T>
+	DWORD server_interface<T>::ProcessTCPIO()
+	{
+		DWORD BytesTransferred = 0;
+		SOCKET_INFORMATION<T>* SI = nullptr;
+		PER_IO_DATA* context;
+		const DWORD CAP = 50;
+		OVERLAPPED_ENTRY Entries[CAP];
+		ULONG EntriesRemoved = 0;
+
+		while (m_isRunning)
+		{
+			SOCKET_INFORMATION<T>* SI = nullptr;
 			memset(Entries, 0, sizeof(Entries));
 			if (!GetQueuedCompletionStatusEx(m_CompletionPort, Entries, CAP, &EntriesRemoved, WSA_INFINITE, TRUE))
 			{
@@ -717,7 +903,7 @@ namespace network
 				{
 					continue;
 				}
-				// Special case when we we queue a send to remote client
+				// TCP job to send to a client
 				if (Entries[i].dwNumberOfBytesTransferred == 1)
 				{
 					EnterCriticalSection(&lock);
@@ -734,7 +920,7 @@ namespace network
 					continue;
 				}
 
-				SI = (SOCKET_INFORMATION*)Entries[i].lpCompletionKey;
+				SI = (SOCKET_INFORMATION<T>*)Entries[i].lpCompletionKey;
 				context = (PER_IO_DATA*)Entries[i].lpOverlapped;
 				if (SI == NULL)
 				{
