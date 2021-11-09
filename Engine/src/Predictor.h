@@ -8,7 +8,7 @@ class Predictor
 private:
 
 	std::unordered_map<uint32_t, comp::Transform> m_networkPositions;
-	std::unordered_map<uint32_t, comp::Transform> m_predictedPositions;
+	std::unordered_map<uint32_t, comp::Transform> m_oldPositions;
 
 	/*
 		t1 = current position in ecs system.
@@ -25,6 +25,11 @@ public:
 		Add or Update a position in the map.
 	*/
 	void Add(const uint32_t& id, const comp::Transform& position);
+
+	/*
+		Remove id from map
+	*/
+	void Remove(const uint32_t& id);
 
 	/*
 		Perform linear extrapolation on the chosen scene with the available positions.

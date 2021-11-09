@@ -148,7 +148,6 @@ namespace sceneHelp
 
 				// Prediction
 				//engine->m_predictor.LinearExtrapolate(engine->GetScene("Game"));
-				engine->m_predictor.LinearExtrapolate(engine->GetScene("Game"));
 				GameSystems::RenderIsCollidingSystem(scene);
 				GameSystems::UpdatePlayerVisuals(scene);
 #ifdef _DEBUG

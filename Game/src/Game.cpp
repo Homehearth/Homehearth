@@ -175,7 +175,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			if (m_gameEntities.find(entityID) != m_gameEntities.end())
 			{
 				entity = m_gameEntities.at(entityID);
-				UpdatePredictorFromMessage(entity, msg, entityID);
+				UpdateEntityFromMessage(entity, msg);
 			}
 			else {
 				LOG_WARNING("Updating: Entity %u not in m_gameEntities, should not happen...", entityID);
@@ -261,12 +261,14 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			{
 				m_gameEntities.at(id).Destroy();
 				m_gameEntities.erase(id);
+				m_predictor.Remove(id);
 			}
 			// Was the entity a player?
 			if (m_players.find(id) != m_players.end())
 			{
 				m_players.at(id).Destroy();
 				m_players.erase(id);
+				m_predictor.Remove(id);
 			}
 
 		}
@@ -467,7 +469,7 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 				msg >> t;
 				t.rotation.Normalize();
 				e.AddComponent<comp::Transform>(t);
-				m_predictor.Add(e.GetComponent<comp::Network>()->id, t);
+				//m_predictor.Add(e.GetComponent<comp::Network>()->id, t);
 				break;
 			}
 			case ecs::Component::VELOCITY:
