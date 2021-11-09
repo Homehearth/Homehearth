@@ -4,7 +4,7 @@
 RAnimator::RAnimator()
 {
 	m_currentFrameTime = 0;
-	m_useInterpolation = false;
+	m_useInterpolation = true;
 }
 
 RAnimator::~RAnimator()
@@ -142,16 +142,15 @@ void RAnimator::Update()
 {
 	if (!m_bones.empty() && m_currentAnim)
 	{
-		double tickFT = m_currentAnim->GetTicksPerFrame() * Stats::Get().GetUpdateTime();
-		m_currentFrameTime = fmod(m_currentFrameTime + tickFT, m_currentAnim->GetDuraction());
-		double nextFrameTime = m_currentFrameTime + tickFT;
-
+		double tick = m_currentAnim->GetTicksPerFrame() * Stats::Get().GetUpdateTime();
+		m_currentFrameTime = fmod(m_currentFrameTime + tick, m_currentAnim->GetDuraction());
+		
 		std::vector<sm::Matrix> modelMatrices;
 		modelMatrices.resize(m_bones.size(), sm::Matrix::Identity);
 
 		for (size_t i = 0; i < m_bones.size(); i++)
 		{
-			sm::Matrix localMatrix = m_currentAnim->GetMatrix(m_bones[i].name, m_currentFrameTime, nextFrameTime, m_bones[i].lastKeys, m_useInterpolation);
+			sm::Matrix localMatrix = m_currentAnim->GetMatrix(m_bones[i].name, m_currentFrameTime, m_bones[i].lastKeys, m_useInterpolation);
 
 			if (m_bones[i].parentIndex == -1)
 				modelMatrices[i] = localMatrix;
@@ -162,8 +161,6 @@ void RAnimator::Update()
 		}
 
 		modelMatrices.clear();
-
-		//UpdateStructureBuffer(); - did not work well...  
 	}
 }
 

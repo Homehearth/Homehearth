@@ -127,142 +127,157 @@ void RAnimation::LoadKeyframes(const aiAnimation* animation)
 	}
 }
 
-const sm::Vector3 RAnimation::GetPosition(const std::string& bonename, const double& currentFrame, const double& nextFrame, UINT& lastKey, bool interpolate) const
+const sm::Vector3 RAnimation::GetPosition(const std::string& bonename, const double& currentFrame, UINT& lastKey, bool interpolate) const
 {
 	sm::Vector3 finalVec;
-	//UINT nextKey = lastKey;
+	UINT nrOfKeys = static_cast<UINT>(m_keyFrames.at(bonename).position.size());
+	UINT closestLeft = lastKey;
+	UINT closestRight = (closestLeft + 1) % nrOfKeys;
 
-	////Get the closest next keyframe to currentframe
-	//while (m_keyFrames.at(bonename).position[nextKey].time < currentFrame)
-	//{
-	//	nextKey++;
-
-	//	//Next key should not go out of range
-	//	if (nextKey >= m_keyFrames.at(bonename).position.size())
-	//		nextKey = 0;
-	//}
-
-	UINT nextKey = lastKey + 1;
-	//Next key should not go out of range
-	if (nextKey >= m_keyFrames.at(bonename).position.size())
-		nextKey = 0;
-
-	const double secondTime = m_keyFrames.at(bonename).position[nextKey].time;
+	/*
+		Searches through all the keyframes to see which two is closest to current frame.
+		Starts at the last key for optimization.
+		Usually does the search for 1-3 times instead of search everything from start.
+	*/
+	bool foundKey = false;
+	while (!foundKey)
+	{
+		if (m_keyFrames.at(bonename).position[closestLeft].time < currentFrame &&
+			m_keyFrames.at(bonename).position[closestRight].time > currentFrame)
+		{
+			foundKey = true;
+		}
+		else
+		{
+			closestLeft = closestRight;
+			closestRight = (closestRight + 1) % nrOfKeys;
+		}
+	}
 
 	if (interpolate)
 	{
-		const double firstTime = m_keyFrames.at(bonename).position[lastKey].time;
-
-		//Gets a value between 0.0f to 1.0f of how much to interpolate
+		double firstTime = m_keyFrames.at(bonename).position[closestLeft].time;
+		double secondTime = m_keyFrames.at(bonename).position[closestRight].time;
+		sm::Vector3 firstVal = m_keyFrames.at(bonename).position[closestLeft].val;
+		sm::Vector3 secondVal = m_keyFrames.at(bonename).position[closestRight].val;
 		float lerpTime = float((currentFrame - firstTime) / (secondTime - firstTime));
-
-		const sm::Vector3 firstPos = m_keyFrames.at(bonename).position[lastKey].val;
-		const sm::Vector3 secondPos = m_keyFrames.at(bonename).position[nextKey].val;
-
-		finalVec = sm::Vector3::Lerp(firstPos, secondPos, lerpTime);
+		finalVec = sm::Vector3::Lerp(firstVal, secondVal, lerpTime);
 	}
 	else
 	{
-		finalVec = m_keyFrames.at(bonename).position[lastKey].val;
+		double distance1 = std::abs(currentFrame - m_keyFrames.at(bonename).position[closestLeft].time);
+		double distance2 = std::abs(m_keyFrames.at(bonename).position[closestRight].time - currentFrame);
+
+		if (distance1 < distance2)
+			finalVec = m_keyFrames.at(bonename).position[closestLeft].val;
+		else
+			finalVec = m_keyFrames.at(bonename).position[closestRight].val;
 	}
 
-	//Update the lastkey to new value
-	if (nextFrame >= secondTime)
-		lastKey = nextKey;
-
+	lastKey = closestLeft;
 	return finalVec;
 }
 
-const sm::Vector3 RAnimation::GetScale(const std::string& bonename, const double& currentFrame, const double& nextFrame, UINT& lastKey, bool interpolate) const
+const sm::Vector3 RAnimation::GetScale(const std::string& bonename, const double& currentFrame, UINT& lastKey, bool interpolate) const
 {
 	sm::Vector3 finalVec;
-	//UINT nextKey = lastKey;
+	UINT nrOfKeys = static_cast<UINT>(m_keyFrames.at(bonename).scale.size());
+	UINT closestLeft = lastKey;
+	UINT closestRight = (closestLeft + 1) % nrOfKeys;
 
-	////Get the closest next keyframe to currentframe
-	//while (m_keyFrames.at(bonename).scale[nextKey].time < currentFrame)
-	//{
-	//	nextKey++;
-
-	//	//Next key should not go out of range
-	//	if (nextKey >= m_keyFrames.at(bonename).scale.size())
-	//		nextKey = 0;
-	//}
-
-	UINT nextKey = lastKey + 1;
-	//Next key should not go out of range
-	if (nextKey >= m_keyFrames.at(bonename).scale.size())
-		nextKey = 0;
-
-	const double secondTime = m_keyFrames.at(bonename).scale[nextKey].time;
+	/*
+		Searches through all the keyframes to see which two is closest to current frame.
+		Starts at the last key for optimization.
+		Usually does the search for 1-3 times instead of search everything from start.
+	*/
+	bool foundKey = false;
+	while (!foundKey)
+	{
+		if (m_keyFrames.at(bonename).scale[closestLeft].time < currentFrame &&
+			m_keyFrames.at(bonename).scale[closestRight].time > currentFrame)
+		{
+			foundKey = true;
+		}
+		else
+		{
+			closestLeft = closestRight;
+			closestRight = (closestRight + 1) % nrOfKeys;
+		}
+	}
 
 	if (interpolate)
 	{
-		const double firstTime = m_keyFrames.at(bonename).scale[lastKey].time;
-
-		//Gets a value between 0.0f to 1.0f of how much to interpolate
+		double firstTime = m_keyFrames.at(bonename).scale[closestLeft].time;
+		double secondTime = m_keyFrames.at(bonename).scale[closestRight].time;
+		sm::Vector3 firstVal = m_keyFrames.at(bonename).scale[closestLeft].val;
+		sm::Vector3 secondVal = m_keyFrames.at(bonename).scale[closestRight].val;
 		float lerpTime = float((currentFrame - firstTime) / (secondTime - firstTime));
-
-		const sm::Vector3 firstScl = m_keyFrames.at(bonename).scale[lastKey].val;
-		const sm::Vector3 secondScl = m_keyFrames.at(bonename).scale[nextKey].val;
-
-		finalVec = sm::Vector3::Lerp(firstScl, secondScl, lerpTime);
+		finalVec = sm::Vector3::Lerp(firstVal, secondVal, lerpTime);
 	}
 	else
 	{
-		finalVec = m_keyFrames.at(bonename).scale[lastKey].val;
+		double distance1 = std::abs(currentFrame - m_keyFrames.at(bonename).scale[closestLeft].time);
+		double distance2 = std::abs(m_keyFrames.at(bonename).scale[closestRight].time - currentFrame);
+
+		if (distance1 < distance2)
+			finalVec = m_keyFrames.at(bonename).scale[closestLeft].val;
+		else
+			finalVec = m_keyFrames.at(bonename).scale[closestRight].val;
 	}
 
-	//Update the lastkey to new value
-	if (nextFrame >= secondTime)
-		lastKey = nextKey;
-
+	lastKey = closestLeft;
 	return finalVec;
 }
 
-const sm::Quaternion RAnimation::GetRotation(const std::string& bonename, const double& currentFrame, const double& nextFrame, UINT& lastKey, bool interpolate) const
+const sm::Quaternion RAnimation::GetRotation(const std::string& bonename, const double& currentFrame, UINT& lastKey, bool interpolate) const
 {
 	sm::Quaternion finalQuat;
-	//UINT nextKey = lastKey;
+	UINT nrOfKeys = static_cast<UINT>(m_keyFrames.at(bonename).rotation.size());
+	UINT closestLeft = lastKey;
+	UINT closestRight = (closestLeft + 1) % nrOfKeys;
 
-	////Get the closest next keyframe to currentframe
-	//while (m_keyFrames.at(bonename).rotation[nextKey].time < currentFrame)
-	//{
-	//	nextKey++;
-
-	//	//Next key should not go out of range
-	//	if (nextKey >= m_keyFrames.at(bonename).rotation.size())
-	//		nextKey = 0;
-	//}
-
-	UINT nextKey = lastKey + 1;
-	//Next key should not go out of range
-	if (nextKey >= m_keyFrames.at(bonename).rotation.size())
-		nextKey = 0;
-
-	const double secondTime = m_keyFrames.at(bonename).rotation[nextKey].time;
+	/*
+		Searches through all the keyframes to see which two is closest to current frame.
+		Starts at the last key for optimization.
+		Usually does the search for 1-3 times instead of search everything from start.
+	*/
+	bool foundKey = false;
+	while (!foundKey)
+	{
+		if (m_keyFrames.at(bonename).rotation[closestLeft].time < currentFrame &&
+			m_keyFrames.at(bonename).rotation[closestRight].time > currentFrame)
+		{
+			foundKey = true;
+		}
+		else
+		{
+			closestLeft = closestRight;
+			closestRight = (closestRight + 1) % nrOfKeys;
+		}
+	}
 
 	if (interpolate)
 	{
-		const double firstTime = m_keyFrames.at(bonename).rotation[lastKey].time;
-
-		//Gets a value between 0.0f to 1.0f of how much to interpolate
+		double firstTime = m_keyFrames.at(bonename).rotation[closestLeft].time;
+		double secondTime = m_keyFrames.at(bonename).rotation[closestRight].time;
+		sm::Quaternion firstVal = m_keyFrames.at(bonename).rotation[closestLeft].val;
+		sm::Quaternion secondVal = m_keyFrames.at(bonename).rotation[closestRight].val;
 		float lerpTime = float((currentFrame - firstTime) / (secondTime - firstTime));
-
-		const sm::Quaternion firstQuat = m_keyFrames.at(bonename).rotation[lastKey].val;
-		const sm::Quaternion secondQuat = m_keyFrames.at(bonename).rotation[nextKey].val;
-
-		finalQuat = sm::Quaternion::Slerp(firstQuat, secondQuat, lerpTime);
+		finalQuat = sm::Quaternion::Slerp(firstVal, secondVal, lerpTime);
 		finalQuat.Normalize();
 	}
 	else
 	{
-		finalQuat = m_keyFrames.at(bonename).rotation[lastKey].val;
+		double distance1 = std::abs(currentFrame - m_keyFrames.at(bonename).rotation[closestLeft].time);
+		double distance2 = std::abs(m_keyFrames.at(bonename).rotation[closestRight].time - currentFrame);
+
+		if (distance1 < distance2)
+			finalQuat = m_keyFrames.at(bonename).rotation[closestLeft].val;
+		else
+			finalQuat = m_keyFrames.at(bonename).rotation[closestRight].val;
 	}
 
-	//Update the lastkey to new value
-	if (nextFrame >= secondTime)
-		lastKey = nextKey;
-
+	lastKey = closestLeft;
 	return finalQuat;
 }
 
@@ -286,16 +301,16 @@ const double& RAnimation::GetDuraction() const
 	return m_duration;
 }
 
-const sm::Matrix RAnimation::GetMatrix(const std::string& bonename, const double& currentFrame, const double& nextFrame, std::array<UINT, 3>& lastKeys, bool interpolate)
+const sm::Matrix RAnimation::GetMatrix(const std::string& bonename, const double& currentFrame, std::array<UINT, 3>& lastKeys, bool interpolate)
 {
 	sm::Matrix finalMatrix = sm::Matrix::Identity;
 
 	//Bone has to exist otherwise return identity matrix
 	if (m_keyFrames.find(bonename) != m_keyFrames.end())
 	{
-		sm::Vector3 pos		= GetPosition(bonename, currentFrame, nextFrame, lastKeys[0], interpolate);
-		sm::Vector3 scl		= GetScale(	  bonename, currentFrame, nextFrame, lastKeys[1], interpolate);
-		sm::Quaternion rot	= GetRotation(bonename, currentFrame, nextFrame, lastKeys[2], interpolate);
+		sm::Vector3 pos		= GetPosition(bonename, currentFrame, lastKeys[0], interpolate);
+		sm::Vector3 scl		= GetScale(	  bonename, currentFrame, lastKeys[1], interpolate);
+		sm::Quaternion rot	= GetRotation(bonename, currentFrame, lastKeys[2], interpolate);
 
 		//Row major: Scale * Rotation * Translation
 		finalMatrix = sm::Matrix::CreateScale(scl) * sm::Matrix::CreateFromQuaternion(rot) * sm::Matrix::CreateTranslation(pos);

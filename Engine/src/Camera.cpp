@@ -98,7 +98,7 @@ void Camera::Update()
 		float speed = m_movingSpeed;
 		if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Keys::LeftShift, KeyState::HELD))
 		{
-			speed *= 2;
+			speed *= 6;
 		}
 
 		//Keyboard

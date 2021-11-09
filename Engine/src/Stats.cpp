@@ -8,7 +8,8 @@ Stats::Stats()
 	m_networkTime	= 0.0f;
 
 	m_framerate		= 140.0f;
-	m_updaterate	= 1000.0f;
+	//High updaterate can cause a lot of stuttering
+	m_updaterate	= m_framerate * 2;
 	m_tickrate		= 60.0f;
 }
 
