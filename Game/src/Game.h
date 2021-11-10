@@ -21,6 +21,8 @@ private:
 
 	InputState m_inputState;
 
+	Entity outlineEntity;
+
 	// Inherited via Engine
 	virtual bool OnStartup() override;
 	virtual void OnUserUpdate(float deltaTime) override;

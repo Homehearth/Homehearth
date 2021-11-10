@@ -47,7 +47,6 @@ namespace ecs
 			basic_model_matrix_t		data;
 			bool						visible = true;
 			bool						outline = false;
-			bool						drawnStencil = false;
 		};
 
 		struct Animator

@@ -103,27 +103,23 @@ void Scene::Render()
 		for (const auto& it : m_renderableCopies[1])
 		{
 			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
-			if (it.model)
-				it.model->Render();
 
 			if (it.outline)
 			{
-				if (!it.drawnStencil)
-					m_outlineStencilRead.Bind();
-				else 
-				{
-					m_outlineStencilMask.Bind();
-					Entity outLine = CreateEntity();
-					comp::Renderable* renderable = outLine.AddComponent<comp::Renderable>();
-					renderable->model = it.model;
-					renderable->model->ChangeMaterial("TileBuilding.mtl");
-					//outLine.AddComponent<comp::Transform>()->scale = 
+				it.model->ChangeMaterial("TileDefence.mtl");
 
-					m_outlineStencilMask.Bind();
+				it.model->Render();
+				std::cout << "RENDER OUTLINE" << std::endl;
 
-				}
-
+				//	m_outlineStencilRead.Bind();
+				//	m_outlineStencilMask.Bind();
 			}
+
+
+			if (it.model)
+				it.model->Render();
+
+			
 		}
 	}
 	// Render third part of the scene with immediate context

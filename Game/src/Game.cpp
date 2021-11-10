@@ -77,7 +77,19 @@ bool Game::OnStartup()
 	// Set Current Scene
 	SetScene("MainMenu");
 
-
+	/*GetScene("Game").ForEachComponent<comp::Player>([&](Entity& e, comp::Player& player)
+		{
+			outlineEntity = GetScene("Game").CreateEntity();
+			comp::Transform* outTransform = outlineEntity.AddComponent<comp::Transform>();
+			outTransform->position = e.GetComponent<comp::Transform>()->position;
+			outTransform->rotation = e.GetComponent<comp::Transform>()->rotation;
+			outTransform->scale = sm::Vector3(2.f, 2.f, 2.f);;
+			comp::Renderable* outRend = outlineEntity.AddComponent<comp::Renderable>();
+			outRend->model = ResourceManager::Get().GetResource<RModel>("GameCharacter.fbx");
+			outRend->model->ChangeMaterial("TileBuilding.mtl");
+		}
+	);*/
+	
 	return true;
 }
 
@@ -241,6 +253,9 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 				LOG_INFO("A remote player added!");
 				m_players[e.GetComponent<comp::Network>()->id] = e;
 				m_players[e.GetComponent<comp::Network>()->id].GetComponent<comp::Renderable>()->outline = true;
+				
+
+				
 			}
 
 		}

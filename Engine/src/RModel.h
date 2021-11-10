@@ -99,6 +99,7 @@ public:
 		Render all of the submeshes in the RModel with correct material
 	*/
 	void Render() const;
+	void RenderOutline();
 	void RenderDeferred(ID3D11DeviceContext* context);
 
 	// Inherited via GResource
