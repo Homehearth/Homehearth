@@ -357,6 +357,8 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 				ServerSystems::CheckGameOver(this, scene);
 				Systems::MovementSystem(scene, e.dt);
 				Systems::MovementColliderSystem(scene, e.dt);
+				Systems::AISystem(scene);
+				Systems::CombatSystem(scene, e.dt);
 				{
 					PROFILE_SCOPE("Collision Box/Box");
 					Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(scene, e.dt);
@@ -365,8 +367,6 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 					PROFILE_SCOPE("Collision Box/Sphere");
 					Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingSphere>(scene, e.dt);
 				}
-				Systems::AISystem(scene);
-				Systems::CombatSystem(scene, e.dt);
 
 			}
 
@@ -384,13 +384,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 
 		});
 
-	//On collision event add entities as pair in the collision system
-	m_pGameScene->on<ESceneCollision>([&](const ESceneCollision& e, HeadlessScene& scene)
-		{
-			CollisionSystem::Get().AddPair(e.obj1, e.obj2);
-			CollisionSystem::Get().OnCollision(e.obj1, e.obj2);
-		});
-
+	
 	m_pGameScene->GetRegistry()->on_construct<comp::Network>().connect<&Simulation::OnNetworkEntityCreate>(this);
 	m_pGameScene->GetRegistry()->on_destroy<comp::Network>().connect<&Simulation::OnNetworkEntityDestroy>(this);
 	m_pGameScene->GetRegistry()->on_update<comp::Network>().connect<&Simulation::OnNetworkEntityUpdated>(this);
@@ -752,6 +746,7 @@ void Simulation::SendSnapshot()
 #if DEBUG_SNAPSHOT
 		compMask.set(ecs::Component::BOUNDING_ORIENTED_BOX);
 #endif
+
 		this->SendEntities(m_updatedEntities, GameMsg::Game_Snapshot, compMask);
 		m_updatedEntities.clear();
 
@@ -871,6 +866,7 @@ void Simulation::OnNetworkEntityDestroy(entt::registry& reg, entt::entity entity
 	if (it != m_updatedEntities.end())
 	{
 		m_updatedEntities.erase(it);
+		//LOG_WARNING("Removed entity from updated cuz destroyed");
 	}
 }
 
