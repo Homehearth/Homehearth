@@ -27,7 +27,6 @@ void main(ComputeShaderIn input)
     screenSpace[BOTTOM_RIGHT]   = float4(float2(input.dispatchThreadID.x + 1, input.dispatchThreadID.y + 1) * TILE_SIZE, 1.0f, 1.0f);
 
     float3 viewSpace[NUM_CORNERS];
-
     for (int i = 0; i < NUM_CORNERS; i++)
     {
         viewSpace[i] = ScreenToView(screenSpace[i]).xyz;
@@ -44,6 +43,6 @@ void main(ComputeShaderIn input)
     if (input.dispatchThreadID.x < numThreads.x && input.dispatchThreadID.y < numThreads.y)
     {
         const uint index = input.dispatchThreadID.x + (input.dispatchThreadID.y * numThreads.x);
-        sb_frustums[index] = frustum;
+        rw_frustums_out[index] = frustum;
     }
 }

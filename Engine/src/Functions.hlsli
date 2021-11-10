@@ -28,10 +28,11 @@ Plane ComputePlane(float3 p0, float3 p1, float3 p2)
 
 {
     Plane plane;
-
+    plane.distanceToOrigin = 1;
     // Compute a plane from 3 non-collinear points that form a triangle.
-    const float3 v0 = p1 - p0;
-    const float3 v2 = p2 - p0;
+    // Assuming Counter-Clockwise Winding Order.
+    const float3 v0 = p1 - p0; // C-A.
+    const float3 v2 = p2 - p0; // B-A.
     plane.normal = normalize(cross(v0, v2));
     plane.distanceToOrigin = dot(plane.distanceToOrigin, p0);
 

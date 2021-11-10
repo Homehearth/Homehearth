@@ -94,7 +94,7 @@ StructuredBuffer<Light> sb_lights : register(t10);
 //StructuredBuffer<PointLight> sb_pointLights : register();
 //StructuredBuffer<DirectionalLight> sb_directionalLights : register();
 //StructuredBuffer<uint> sb_pointLightIndexList : register();
-StructuredBuffer<Frustum> sb_frustums : register(t11); // Precomputed frustums for the grid.
+StructuredBuffer<Frustum> sb_frustums_in : register(t11); // Precomputed frustums for the grid.
 
 
 //---------------------------------------------------------------------------
@@ -102,12 +102,13 @@ StructuredBuffer<Frustum> sb_frustums : register(t11); // Precomputed frustums f
 //---------------------------------------------------------------------------
 
 // RWStructuredBuffers.
-RWStructuredBuffer<uint> opaq_lightIndexCounter     : register(u0);
-RWStructuredBuffer<uint> trans_lightIndexCounter    : register(u1);
-RWStructuredBuffer<uint> opaq_lightIndexList        : register(u2);
-RWStructuredBuffer<uint> trans_lightIndexList       : register(u3);
+RWStructuredBuffer<Frustum> rw_frustums_out            : register(u0);
+RWStructuredBuffer<uint> rw_opaq_lightIndexCounter     : register(u1);
+RWStructuredBuffer<uint> rw_trans_lightIndexCounter    : register(u2);
+RWStructuredBuffer<uint> rw_opaq_lightIndexList        : register(u3);
+RWStructuredBuffer<uint> rw_trans_lightIndexList       : register(u4);
 
 // RWTexture2D.
-RWTexture2D<uint2> opaq_lightGrid                   : register(u4);
-RWTexture2D<uint2> trans_lightGrid                  : register(u5);
+RWTexture2D<uint2> rw_opaq_lightGrid                   : register(u4);
+RWTexture2D<uint2> rw_trans_lightGrid                  : register(u5);
 
