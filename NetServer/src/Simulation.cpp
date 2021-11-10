@@ -568,7 +568,7 @@ bool Simulation::AddNPC(uint32_t npcId)
 	npc.AddComponent<comp::Transform>()->position = sm::Vector3(0.f, 0.f, 0.f);
 	npc.AddComponent<comp::Velocity>();
 	npc.AddComponent<comp::MeshName>()->name = "StreetLamp.obj";
-	npc.AddComponent<comp::NPC>();
+	npc.AddComponent<comp::NPC>()->state = comp::NPC::State::ASTAR;
 	npc.AddComponent<comp::Network>()->id = npcId;
 	npc.AddComponent<comp::BoundingOrientedBox>();
 

@@ -296,7 +296,7 @@ bool AIHandler::ReachedNode(const Entity npc)
 {
 	comp::NPC* npcComp = npc.GetComponent<comp::NPC>();
 	comp::Transform* transformComp = npc.GetComponent<comp::Transform>();
-	if (sm::Vector3::Distance(transformComp->position, npcComp->currentNode->position) < 10.f)
+	if (npcComp->currentNode && sm::Vector3::Distance(transformComp->position, npcComp->currentNode->position) < 10.f)
 	{
 		return true;
 	}

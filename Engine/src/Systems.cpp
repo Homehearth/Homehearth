@@ -3,28 +3,28 @@
 
 Entity FindClosestPlayer(HeadlessScene& scene, sm::Vector3 position, comp::NPC* npc)
 {
-	
+
 	comp::Transform* transformCurrentClosest = nullptr;
 
 	scene.ForEachComponent < comp::Player>([&](Entity& playerEntity, comp::Player& player)
-	{
-		if (!npc->currentClosest.IsNull())
 		{
-			transformCurrentClosest = npc->currentClosest.GetComponent<comp::Transform>();
-			comp::Transform* transformPlayer = playerEntity.GetComponent<comp::Transform>();
-			if (sm::Vector3::Distance(transformPlayer->position, position) < sm::Vector3::Distance(transformCurrentClosest->position, position))
+			if (!npc->currentClosest.IsNull())
 			{
-				LOG_INFO("Switching player");
+				transformCurrentClosest = npc->currentClosest.GetComponent<comp::Transform>();
+				comp::Transform* transformPlayer = playerEntity.GetComponent<comp::Transform>();
+				if (sm::Vector3::Distance(transformPlayer->position, position) < sm::Vector3::Distance(transformCurrentClosest->position, position))
+				{
+					LOG_INFO("Switching player");
+					npc->currentClosest = playerEntity;
+					transformCurrentClosest = npc->currentClosest.GetComponent<comp::Transform>();
+				}
+			}
+			else
+			{
 				npc->currentClosest = playerEntity;
 				transformCurrentClosest = npc->currentClosest.GetComponent<comp::Transform>();
 			}
-		}
-		else
-		{
-			npc->currentClosest = playerEntity;
-			transformCurrentClosest = npc->currentClosest.GetComponent<comp::Transform>();
-		}
-	});
+		});
 
 	return npc->currentClosest;
 }
@@ -38,10 +38,10 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 	PROFILE_FUNCTION();
 	// For Each entity that can attack.
 	scene.ForEachComponent<comp::CombatStats, comp::Transform>([&](Entity entity, comp::CombatStats& stats, comp::Transform& transform)
-	{
-		// Decreases cooldown between attacks.
-		if (stats.cooldownTimer > 0.f)
-			stats.cooldownTimer -= dt;
+		{
+			// Decreases cooldown between attacks.
+			if (stats.cooldownTimer > 0.f)
+				stats.cooldownTimer -= dt;
 
 			//
 			// attack LOGIC
@@ -67,13 +67,13 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 					attackCollider.AddComponent<comp::Network>();
 				}
 
-				
+
 				CollisionSystem::Get().AddOnCollision(attackCollider, [=](Entity other)
 					{
 						if (other == entity)
 							return;
-					
-						
+
+
 						comp::Health* otherHealth = other.GetComponent<comp::Health>();
 						comp::Attack* atk = attackCollider.GetComponent<comp::Attack>();
 
@@ -91,11 +91,11 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 						}
 					});
 
-			stats.cooldownTimer = stats.attackSpeed;
-			stats.isAttacking = false;
-		}
+				stats.cooldownTimer = stats.attackSpeed;
+				stats.isAttacking = false;
+			}
 
-	});
+		});
 
 
 	//Health System
@@ -111,13 +111,13 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 					entity.Destroy();
 				}
 
-		}
-	});
+			}
+		});
 
 	//Projectile Life System
 	scene.ForEachComponent<comp::Attack>([&](Entity& ent, comp::Attack& Projectile)
-	{
-		Projectile.lifeTime -= 1.f * dt;
+		{
+			Projectile.lifeTime -= 1.f * dt;
 
 			if (Projectile.lifeTime <= 0)
 			{
@@ -192,15 +192,15 @@ void Systems::LightSystem(Scene& scene, float dt)
 {
 	//If you update the lightData update the info to the GPU
 	scene.ForEachComponent<comp::Light>([&](Entity e, comp::Light light)
-	{
-		//If an Entity has both a Light and Transform component use Transform for position
-		comp::Transform* t = e.GetComponent<comp::Transform>();
-		if (t)
 		{
-			light.lightData.position = sm::Vector4(t->position.x, t->position.y, t->position.z, 1.f);
-		}
-		scene.GetLights()->EditLight(light.lightData, light.index);
-	});
+			//If an Entity has both a Light and Transform component use Transform for position
+			comp::Transform* t = e.GetComponent<comp::Transform>();
+			if (t)
+			{
+				light.lightData.position = sm::Vector4(t->position.x, t->position.y, t->position.z, 1.f);
+			}
+			scene.GetLights()->EditLight(light.lightData, light.index);
+		});
 
 
 }
@@ -210,90 +210,100 @@ void Systems::AISystem(HeadlessScene& scene, AIHandler* aiHandler)
 	PROFILE_FUNCTION();
 
 	scene.ForEachComponent<comp::NPC>([&](Entity entity, comp::NPC& npc)
-	{
-		comp::Transform* transformNPC = entity.GetComponent<comp::Transform>();
-		Entity currentClosestPlayer;
-		//npc.currentNode = FindClosestNode(scene, transformNPC->position);
-
-		Entity closestPlayer = FindClosestPlayer(scene, transformNPC->position, &npc);
-		comp::Velocity* velocityTowardsPlayer = entity.GetComponent<comp::Velocity>();
-		comp::Transform* transformCurrentClosestPlayer = closestPlayer.GetComponent<comp::Transform>();
-		if (npc.currentNode)
 		{
-			if (sm::Vector3::Distance(transformNPC->position, transformCurrentClosestPlayer->position) <= 100.f && npc.state != comp::NPC::State::CHASE)
-			{
-				npc.state = comp::NPC::State::CHASE;
-				LOG_INFO("Switching to CHASE State!");
-			}
-			else if ((sm::Vector3::Distance(transformNPC->position, transformCurrentClosestPlayer->position) >= npc.attackRange + 100.f && npc.state != comp::NPC::State::ASTAR))
-			{
-				npc.state = comp::NPC::State::ASTAR;
-				LOG_INFO("Switching to ASTAR State!");
-			}
+			comp::Transform* transformNPC = entity.GetComponent<comp::Transform>();
+			Entity currentClosestPlayer;
+			//npc.currentNode = FindClosestNode(scene, transformNPC->position);
 
-			else if (sm::Vector3::Distance(transformNPC->position, transformCurrentClosestPlayer->position) <= npc.attackRange)
+			Entity closestPlayer = FindClosestPlayer(scene, transformNPC->position, &npc);
+			comp::Velocity* velocityTowardsPlayer = entity.GetComponent<comp::Velocity>();
+			comp::Transform* transformCurrentClosestPlayer = closestPlayer.GetComponent<comp::Transform>();
+			if (npc.currentNode)
+			{
+				if (sm::Vector3::Distance(transformNPC->position, transformCurrentClosestPlayer->position) <= 100.f && npc.state != comp::NPC::State::CHASE)
+				{
+					npc.state = comp::NPC::State::CHASE;
+					LOG_INFO("Switching to CHASE State!");
+				}
+				else if ((sm::Vector3::Distance(transformNPC->position, transformCurrentClosestPlayer->position) >= npc.attackRange + 20.f && npc.state != comp::NPC::State::ASTAR))
+				{
+					npc.state = comp::NPC::State::ASTAR;
+					LOG_INFO("Switching to ASTAR State!");
+				}
+
+				else if (sm::Vector3::Distance(transformNPC->position, transformCurrentClosestPlayer->position) <= npc.attackRange)
+				{
+					comp::CombatStats* stats = entity.GetComponent<comp::CombatStats>();
+
+					stats->targetDir = transformCurrentClosestPlayer->position - transformNPC->position;
+					stats->targetDir.Normalize();
+					stats->isAttacking = true;
+				}
+			}
+			//else
+			//{
+			//	npc.state = comp::NPC::State::IDLE;
+			//}
+
+
+			if (sm::Vector3::Distance(transformNPC->position, transformCurrentClosestPlayer->position) <= npc.attackRange)
 			{
 				comp::CombatStats* stats = entity.GetComponent<comp::CombatStats>();
 
 				stats->targetDir = transformCurrentClosestPlayer->position - transformNPC->position;
 				stats->targetDir.Normalize();
+				stats->targetDir *= 10.f;
 				stats->isAttacking = true;
 			}
-		}
-		else
-			npc.state = comp::NPC::State::IDLE;
 
-		npc.state = comp::NPC::State::CHASE;
 
-		if (sm::Vector3::Distance(transformNPC->position, transformCurrentClosestPlayer->position) <= npc.attackRange)
-		{
-			comp::CombatStats* stats = entity.GetComponent<comp::CombatStats>();
-
-			stats->targetDir = transformCurrentClosestPlayer->position - transformNPC->position;
-			stats->targetDir.Normalize();
-			stats->targetDir *= 10.f;
-			stats->isAttacking = true;
-		}
-		
-
-		switch (npc.state)
-		{
-		case comp::NPC::State::CHASE:
-
-			if (velocityTowardsPlayer)
+			switch (npc.state)
 			{
-				velocityTowardsPlayer->vel = transformCurrentClosestPlayer->position - transformNPC->position;
-				velocityTowardsPlayer->vel.Normalize();
-				velocityTowardsPlayer->vel *= npc.movementSpeed;
-			}
-			break;
-		case comp::NPC::State::ASTAR:
-			if (aiHandler->ReachedNode(entity))
-			{
-				if (!npc.path.empty())
+			case comp::NPC::State::CHASE:
+
+				if (velocityTowardsPlayer)
 				{
-					npc.currentNode = npc.path.at(0);
-					npc.path.erase(npc.path.begin());
+					velocityTowardsPlayer->vel = transformCurrentClosestPlayer->position - transformNPC->position;
+					velocityTowardsPlayer->vel.Normalize();
+					velocityTowardsPlayer->vel *= npc.movementSpeed;
+				}
+				break;
+			case comp::NPC::State::ASTAR:
+				if (npc.currentNode)
+				{
+					if (aiHandler->ReachedNode(entity))
+					{
+						if (!npc.path.empty())
+						{
+							npc.currentNode = npc.path[0];
+							npc.path.erase(npc.path.begin());
+						}
+						else
+						{
+							aiHandler->SetClosestNode(npc, transformNPC->position);
+							aiHandler->AStarSearch(scene, entity);
+						}
+					}
+					else
+					{
+						if (velocityTowardsPlayer && npc.currentNode)
+						{
+							velocityTowardsPlayer->vel = npc.currentNode->position - transformNPC->position;
+							velocityTowardsPlayer->vel.Normalize();
+							velocityTowardsPlayer->vel *= npc.movementSpeed;
+						}
+					}
 				}
 				else
 				{
 					aiHandler->SetClosestNode(npc, transformNPC->position);
-					aiHandler->AStarSearch(scene, entity);
 				}
+				break;
+			case comp::NPC::State::IDLE:
+				velocityTowardsPlayer->vel = { 0.f, 0.f, 0.f };
+				aiHandler->SetClosestNode(npc, transformNPC->position);
+				aiHandler->AStarSearch(scene, entity);
+				break;
 			}
-			else
-			{
-				if (velocityTowardsPlayer && npc.currentNode)
-				{
-					velocityTowardsPlayer->vel = npc.currentNode->position - transformNPC->position;
-					velocityTowardsPlayer->vel.Normalize();
-					velocityTowardsPlayer->vel *= npc.movementSpeed;
-				}				
-			}
-			break;
-		case comp::NPC::State::IDLE:
-			velocityTowardsPlayer->vel = { 0.f, 0.f, 0.f };
-			break;
-		}
-	});
+		});
 }
