@@ -9,7 +9,7 @@ Stats::Stats()
 
 	m_framerate		= 140.0f;
 	//High updaterate can cause a lot of stuttering
-	m_updaterate	= m_framerate * 2;
+	m_updaterate	= m_framerate;
 	m_tickrate		= 60.0f;
 }
 
