@@ -16,6 +16,10 @@ float4 main(PixelIn input) : SV_TARGET
     //If an object has a texture, sample from it else use default values.
     SampleTextures(input, albedo, N, roughness, metallic, ao);
     
+    // For testing Depth Buffer.
+    //const int3 posCoords = int3(input.pos.xy, 0);
+    //const float depth = t_depth.Load(posCoords).x;
+    //return float4(depth, depth, depth, 1.0f);
 
     //---------------------------------PBR-Shading Calculations---------------------------------
     
@@ -31,21 +35,21 @@ float4 main(PixelIn input) : SV_TARGET
     
     for (int i = 0; i < c_info.x; i++)
     {
-        if(sb_lights[i].enabled == 1)
+        if(sb_Lights[i].enabled == 1)
         {
-            switch (sb_lights[i].type)
+            switch (sb_Lights[i].type)
             {
                 case 0:
-                    lightCol += DoDirectionlight(sb_lights[i], N);
+                    lightCol += DoDirectionlight(sb_Lights[i], N);
                     break;
                 case 1:
-                    lightCol += DoPointlight(sb_lights[i], input, N);
+                    lightCol += DoPointlight(sb_Lights[i], input, N);
                     break;
                 default:
                     break;
             }
         
-            CalcRadiance(input, V, N, roughness, metallic, albedo, sb_lights[i].position.xyz, lightCol, F0, rad);
+            CalcRadiance(input, V, N, roughness, metallic, albedo, sb_Lights[i].position.xyz, lightCol, F0, rad);
             Lo += rad;
         }
         

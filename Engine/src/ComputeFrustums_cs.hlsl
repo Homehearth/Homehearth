@@ -1,7 +1,5 @@
 #include "Common.hlsli"
 
-#define TILE_SIZE       16
-
 #define LEFT            0
 #define RIGHT           1
 #define TOP             2
@@ -21,10 +19,10 @@ void main(ComputeShaderIn input)
 
     // Compute the 4 corner points on the far clipping plane to use as the frustum vertices.
     float4 screenSpace[NUM_CORNERS];
-    screenSpace[TOP_LEFT]       = float4(input.dispatchThreadID.xy * TILE_SIZE, 1.0f, 1.0f); // Changed z from negative to positive in z component, all of these 4.
-    screenSpace[TOP_RIGHT]      = float4(float2(input.dispatchThreadID.x + 1, input.dispatchThreadID.y) * TILE_SIZE, 1.0f, 1.0f);
-    screenSpace[BOTTOM_LEFT]    = float4(float2(input.dispatchThreadID.x, input.dispatchThreadID.y + 1) * TILE_SIZE, 1.0f, 1.0f);
-    screenSpace[BOTTOM_RIGHT]   = float4(float2(input.dispatchThreadID.x + 1, input.dispatchThreadID.y + 1) * TILE_SIZE, 1.0f, 1.0f);
+    screenSpace[TOP_LEFT]       = float4(input.dispatchThreadID.xy * TILE_SIZE, -1.0f, 1.0f);
+    screenSpace[TOP_RIGHT]      = float4(float2(input.dispatchThreadID.x + 1, input.dispatchThreadID.y) * TILE_SIZE, -1.0f, 1.0f);
+    screenSpace[BOTTOM_LEFT]    = float4(float2(input.dispatchThreadID.x, input.dispatchThreadID.y + 1) * TILE_SIZE, -1.0f, 1.0f);
+    screenSpace[BOTTOM_RIGHT]   = float4(float2(input.dispatchThreadID.x + 1, input.dispatchThreadID.y + 1) * TILE_SIZE, -1.0f, 1.0f);
 
     float3 viewSpace[NUM_CORNERS];
     for (int i = 0; i < NUM_CORNERS; i++)
@@ -43,6 +41,6 @@ void main(ComputeShaderIn input)
     if (input.dispatchThreadID.x < numThreads.x && input.dispatchThreadID.y < numThreads.y)
     {
         const uint index = input.dispatchThreadID.x + (input.dispatchThreadID.y * numThreads.x);
-        rw_frustums_out[index] = frustum;
+        rw_Frustums_out[index] = frustum;
     }
 }

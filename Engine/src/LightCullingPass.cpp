@@ -4,11 +4,11 @@
 void LightCullingPass::ComputeGridFrustums()
 {
     // Safety check: screen resolution must be > 0 so at least 1 thread is created.
-    uint32_t screenWidth = static_cast<uint32_t>(max(PM->m_viewport.Width, 1u));
-    uint32_t screenHeight = static_cast<uint32_t>(max(PM->m_viewport.Width, 1u));
+    const auto screenWidth = static_cast<uint32_t>(max(PM->m_viewport.Width, 1u));
+    const auto screenHeight = static_cast<uint32_t>(max(PM->m_viewport.Width, 1u));
 
-    dx::XMUINT3 numThreads = { screenWidth / TILE_SIZE, screenHeight / TILE_SIZE, 1, };
-    dx::XMUINT3 numThreadGroups = { numThreads.x / TILE_SIZE, numThreads.y / TILE_SIZE, 1 };
+    const dx::XMUINT3 numThreads = { screenWidth / TILE_SIZE, screenHeight / TILE_SIZE, 1, };
+    const dx::XMUINT3 numThreadGroups = { numThreads.x / TILE_SIZE, numThreads.y / TILE_SIZE, 1 };
 
     m_dispatchParams.numThreadGroups = numThreadGroups;
     m_dispatchParams.numThreads = numThreads;
@@ -28,7 +28,7 @@ void LightCullingPass::ComputeGridFrustums()
         m_hasChanged = false;
 }
 
-bool LightCullingPass::CreateGridFrustumSWB(size_t numElements, size_t elementSize, const void* bufferData)
+bool LightCullingPass::CreateGridFrustumSWB(size_t numElements, size_t elementSize, const void* bufferData) const
 {
     D3D11_BUFFER_DESC desc;
     ZeroMemory(&desc, sizeof(D3D11_BUFFER_DESC));

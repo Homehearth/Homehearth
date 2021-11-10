@@ -2,6 +2,19 @@
 	#error You may not include this header directly.
 #endif
 
+#ifndef TILE_SIZE
+	#pragma message( "TILE_SIZE undefined. Set to 16.")
+	#define TILE_SIZE 16
+#endif
+
+#ifndef MAX_LIGHTS
+	#pragma message( "MAX_LIGHTS undefined. Set to 1024.")
+	#define MAX_LIGHTS 1024
+#endif
+
+#define DIRECTIONAL_LIGHT 0
+#define POINT_LIGHT 1
+
 static const float PI = 3.14159265359;
 
 /*

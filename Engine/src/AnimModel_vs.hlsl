@@ -7,7 +7,7 @@ VertexOut main(VertexBoneIn input)
     float4x4 world;
     for (int i = 0; i < 4; i++)
     {
-        world += sb_boneTransforms[input.boneIDs[i]] * input.boneWeights[i];
+        world += sb_BoneTransforms[input.boneIDs[i]] * input.boneWeights[i];
     }
 
     //Global world-matrix has to affect the model

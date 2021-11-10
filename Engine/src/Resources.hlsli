@@ -87,14 +87,14 @@ Texture2D t_opacitymask				: register(t7);
 Texture2D<uint2> t_pointLightGrid	: register(t8);
 
 // StructuredBuffers.
-StructuredBuffer<float4x4> sb_boneTransforms : register(t9); // read as column major, actually is row major.
-StructuredBuffer<Light> sb_lights : register(t10);
+StructuredBuffer<float4x4> sb_BoneTransforms : register(t9); // read as column major, actually is row major.
+StructuredBuffer<Light> sb_Lights : register(t10);
 
 // Forward+
 //StructuredBuffer<PointLight> sb_pointLights : register();
 //StructuredBuffer<DirectionalLight> sb_directionalLights : register();
 //StructuredBuffer<uint> sb_pointLightIndexList : register();
-StructuredBuffer<Frustum> sb_frustums_in : register(t11); // Precomputed frustums for the grid.
+StructuredBuffer<Frustum> sb_Frustums_in : register(t11); // Precomputed frustums for the grid.
 
 
 //---------------------------------------------------------------------------
@@ -102,13 +102,13 @@ StructuredBuffer<Frustum> sb_frustums_in : register(t11); // Precomputed frustum
 //---------------------------------------------------------------------------
 
 // RWStructuredBuffers.
-RWStructuredBuffer<Frustum> rw_frustums_out            : register(u0);
-RWStructuredBuffer<uint> rw_opaq_lightIndexCounter     : register(u1);
-RWStructuredBuffer<uint> rw_trans_lightIndexCounter    : register(u2);
-RWStructuredBuffer<uint> rw_opaq_lightIndexList        : register(u3);
-RWStructuredBuffer<uint> rw_trans_lightIndexList       : register(u4);
+RWStructuredBuffer<Frustum> rw_Frustums_out            : register(u0);
+RWStructuredBuffer<uint> rw_opaq_LightIndexCounter     : register(u1);
+RWStructuredBuffer<uint> rw_trans_LightIndexCounter    : register(u2);
+RWStructuredBuffer<uint> rw_opaq_LightIndexList        : register(u3);
+RWStructuredBuffer<uint> rw_trans_LightIndexList       : register(u4);
 
 // RWTexture2D.
-RWTexture2D<uint2> rw_opaq_lightGrid                   : register(u4);
-RWTexture2D<uint2> rw_trans_lightGrid                  : register(u5);
+RWTexture2D<uint2> rw_opaq_LightGrid                   : register(u5);
+RWTexture2D<uint2> rw_trans_LightGrid                  : register(u6);
 
