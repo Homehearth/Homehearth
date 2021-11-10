@@ -4,13 +4,15 @@
 /*
     Uses other inputlayout and vertexshader than basepass
 */
-void AnimationPass::PreRender(ID3D11DeviceContext* pDeviceContext)
+void AnimationPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 {
     DC->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     DC->IASetInputLayout(PM->m_animationInputLayout.Get());
 
     DC->VSSetShader(PM->m_animationVertexShader.Get(), nullptr, 0);
     DC->PSSetShader(PM->m_defaultPixelShader.Get(), nullptr, 0);
+
+    DC->VSSetConstantBuffers(1, 1, pCam->m_viewConstantBuffer.GetAddressOf());
 
     //DC->PSSetShaderResources(0, 1, PM->m_depthBufferSRV.GetAddressOf());   // DepthBuffer.
 
@@ -33,7 +35,7 @@ void AnimationPass::Render(Scene* pScene)
 
 void AnimationPass::PostRender(ID3D11DeviceContext* pDeviceContext)
 {
-	// Cleanup.
-	//ID3D11ShaderResourceView* nullSRV[] = { nullptr };
-	//DC->PSSetShaderResources(0, 1, nullSRV);
+    // Cleanup.
+    //ID3D11ShaderResourceView* nullSRV[] = { nullptr };
+    //DC->PSSetShaderResources(0, 1, nullSRV);
 }

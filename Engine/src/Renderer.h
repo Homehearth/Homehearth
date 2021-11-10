@@ -19,6 +19,9 @@ private:
 	AnimationPass	m_animPass;
 	unsigned int	m_currentPass = 0;
 	
+	// Update per frame related resources.
+	void UpdatePerFrame(Camera* pCam);
+
 	// Add a pass to the list.
 	void AddPass(IRenderPass* pass);
 

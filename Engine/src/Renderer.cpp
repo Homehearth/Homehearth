@@ -25,7 +25,7 @@ void Renderer::Initialize(Window* pWindow)
 
 #ifdef _DEBUG
 	AddPass(&m_debugPass);  // 4
-    m_debugPass.SetEnable(true);
+	m_debugPass.SetEnable(true);
 #endif
 
 	LOG_INFO("Number of rendering passes: %d", static_cast<int>(m_passes.size()));
@@ -38,11 +38,11 @@ void Renderer::Initialize(Window* pWindow)
 
 void Renderer::ClearFrame()
 {
-    // Clear the back buffer.
-    const float m_clearColor[4] = { 0.5f, 0.5f, 0.5f, 1.0f };
-    m_d3d11->DeviceContext()->ClearRenderTargetView(m_pipelineManager.m_backBuffer.Get(), m_clearColor);
-    m_d3d11->DeviceContext()->ClearDepthStencilView(m_pipelineManager.m_depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-    m_d3d11->DeviceContext()->ClearDepthStencilView(m_pipelineManager.m_debugDepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+	// Clear the back buffer.
+	const float m_clearColor[4] = { 0.5f, 0.5f, 0.5f, 1.0f };
+	m_d3d11->DeviceContext()->ClearRenderTargetView(m_pipelineManager.m_backBuffer.Get(), m_clearColor);
+	m_d3d11->DeviceContext()->ClearDepthStencilView(m_pipelineManager.m_depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+	m_d3d11->DeviceContext()->ClearDepthStencilView(m_pipelineManager.m_debugDepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 }
 
 void Renderer::Render(Scene* pScene)
@@ -51,10 +51,10 @@ void Renderer::Render(Scene* pScene)
 	{
 		if (!m_passes.empty())
 		{
-			pScene->GetCurrentCamera()->BindCB();
+			this->UpdatePerFrame(pScene->GetCurrentCamera());
 			thread::RenderThreadHandler::SetCamera(pScene->GetCurrentCamera());
 			/*
-				Optimize idea: Render/Update lights once instead of per pass?
+				Optimize idead: Render/Update lights once instead of per pass?
 				Set lights once.
 			*/
 			for (int i = 0; i < m_passes.size(); i++)
@@ -64,14 +64,13 @@ void Renderer::Render(Scene* pScene)
 				if (pass->IsEnabled())
 				{
 					pass->SetLights(pScene->GetLights());
-					pass->PreRender();
+					pass->PreRender(pScene->GetCurrentCamera());
 					pass->Render(pScene);
 					pass->PostRender();
 				}
 			}
 
 			pScene->ReadyForSwap();
-			pScene->GetCurrentCamera()->UnbindCB();
 		}
 	}
 }
@@ -84,4 +83,10 @@ IRenderPass* Renderer::GetCurrentPass() const
 void Renderer::AddPass(IRenderPass* pass)
 {
 	m_passes.emplace_back(pass);
+}
+
+void Renderer::UpdatePerFrame(Camera* pCam)
+{
+	// Update Camera constant buffer.
+	m_d3d11->DeviceContext()->UpdateSubresource(pCam->m_viewConstantBuffer.Get(), 0, nullptr, pCam->GetCameraMatrixes(), 0, 0);
 }

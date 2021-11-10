@@ -326,7 +326,7 @@ void RenderJob(const unsigned int start,
 		IRenderPass* pass = thread::RenderThreadHandler::Get().GetRenderer()->GetCurrentPass();
 		Camera* cam = (Camera*)INSTANCE.Get().GetCamera();
 
-		pass->PreRender(m_context);
+		pass->PreRender(cam, m_context);
 
 		// Make sure not to go out of range
 		if (stop > (unsigned int)(*m_objects)[1].size())
@@ -344,7 +344,10 @@ void RenderJob(const unsigned int start,
 
 			m_buffer->SetData(m_context, it->data);
 			m_context->VSSetConstantBuffers(0, 1, buffers);
-			it->model->Render(m_context);
+			
+			if (it->model)
+				it->model->Render(m_context);
+
 		}
 
 		pass->PostRender(m_context);

@@ -1,21 +1,23 @@
 #include "EnginePCH.h"
 #include "BasePass.h"
 
-void BasePass::PreRender(ID3D11DeviceContext* pDeviceContext)
-{	
+void BasePass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
+{
     DC->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	DC->IASetInputLayout(PM->m_defaultInputLayout.Get());
-	
+    DC->IASetInputLayout(PM->m_defaultInputLayout.Get());
+
     DC->VSSetShader(PM->m_defaultVertexShader.Get(), nullptr, 0);
     DC->PSSetShader(PM->m_defaultPixelShader.Get(), nullptr, 0);
-       
+
+    DC->VSSetConstantBuffers(1, 1, pCam->m_viewConstantBuffer.GetAddressOf());
+
     //DC->PSSetShaderResources(0, 1, PM->m_depthBufferSRV.GetAddressOf());   // DepthBuffer.
 
     DC->PSSetSamplers(0, 1, PM->m_pointSamplerState.GetAddressOf());
     DC->PSSetSamplers(1, 1, PM->m_linearSamplerState.GetAddressOf());
     DC->PSSetSamplers(2, 1, PM->m_anisotropicSamplerState.GetAddressOf());
     m_lights->Render(DC);
-    
+
     DC->RSSetViewports(1, &PM->m_viewport);
     DC->RSSetState(PM->m_rasterState.Get());
 
@@ -30,8 +32,7 @@ void BasePass::Render(Scene* pScene)
 
 void BasePass::PostRender(ID3D11DeviceContext* pDeviceContext)
 {
-	// Cleanup.
-	//ID3D11ShaderResourceView* nullSRV[] = { nullptr };
-	//DC->PSSetShaderResources(0, 1, nullSRV);
+    // Cleanup.
+    //ID3D11ShaderResourceView* nullSRV[] = { nullptr };
+    //DC->PSSetShaderResources(0, 1, nullSRV);
 }
-

@@ -16,9 +16,6 @@ Scene::Scene()
 
 void Scene::Update(float dt)
 {
-	//Update the camera
-	m_currentCamera.GetComponent<comp::Camera3D>()->camera.Update();
-
 	//Update all the animations
 	m_registry.view<comp::Animator>().each([&](comp::Animator& anim)
 	{
@@ -30,6 +27,7 @@ void Scene::Update(float dt)
 	PROFILE_FUNCTION();
 
 	// Emit event
+	GetCurrentCamera()->Update(dt);
 	BasicScene::Update(dt);
 
 	if (!m_renderableCopies.IsSwapped() &&
