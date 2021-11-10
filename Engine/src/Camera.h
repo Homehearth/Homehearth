@@ -46,7 +46,7 @@ public:
 	~Camera();
 	/* Position, Target, up, windowSize = (window width, window height) */
 	void Initialize(sm::Vector3 pos, sm::Vector3 target, sm::Vector3 up, sm::Vector2 windowSize, CAMERATYPE type) ;
-	void Update(float deltaTime);
+	void Update(const float& deltaTime);
 	void SetFollowEntity(const Entity& entity);
 
 

@@ -3,27 +3,56 @@
 
 Stats::Stats()
 {
-	m_deltaTime	= 0.0f;
-	m_maxFPS	= 140.0f;
+	m_frameTime		= 0.0f;
+	m_updateTime	= 0.0f;
+	m_networkTime	= 0.0f;
+
+	m_framerate		= 140.0f;
+	//High updaterate can cause a lot of stuttering
+	m_updaterate	= m_framerate;
+	m_tickrate		= 60.0f;
 }
 
-const float& Stats::IGetDeltaTime() const
+void Stats::SetFrameTime(const float& ft)
 {
-	return m_deltaTime;
+	m_frameTime = ft;
+}
+const float& Stats::GetFrameTime() const
+{
+	return m_frameTime;
 }
 
-void Stats::ISetDeltaTime(const float& dt)
+
+void Stats::SetUpdateTime(const float& ut)
 {
-	m_deltaTime = dt;
+	m_updateTime = ut;
+}
+const float& Stats::GetUpdateTime() const
+{
+	return m_updateTime;
 }
 
-const float Stats::IGetCurrentFPS() const
+
+void Stats::SetNetworkTime(const float& nt)
 {
-	return 1.0f / m_deltaTime;
+	m_networkTime = nt;
+}
+const float& Stats::GetNetworkTime() const
+{
+	return m_networkTime;
 }
 
-const float& Stats::IGetMaxFPS() const
+
+const float& Stats::GetFramerate() const
 {
-	return m_maxFPS;
+	return m_framerate;
+}
+const float& Stats::GetUpdaterate() const
+{
+	return m_updaterate;
+}
+const float& Stats::GetTickrate() const
+{
+	return m_tickrate;
 }
 

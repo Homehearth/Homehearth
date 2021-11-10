@@ -3,8 +3,8 @@
 
 RAnimator::RAnimator()
 {
-	m_frameTime = 0;
-	m_useInterpolation = false;
+	m_currentFrameTime = 0;
+	m_useInterpolation = true;
 }
 
 RAnimator::~RAnimator()
@@ -16,6 +16,10 @@ RAnimator::~RAnimator()
 
 bool RAnimator::LoadSkeleton(const std::vector<bone_t>& skeleton)
 {
+	//Clear previous bones and matrices if needed
+	m_finalMatrices.clear();
+	m_bones.clear();
+
 	bool loaded = false;
 	if (!skeleton.empty())
 	{
@@ -109,7 +113,24 @@ bool RAnimator::Create(const std::string& filename)
 		std::string keyword;
 		ss >> keyword;
 
-		if (keyword == "loadAnim")
+		if (keyword == "skel")
+		{
+			std::string modelName;
+			ss >> modelName;
+
+			std::shared_ptr<RModel> model = ResourceManager::Get().GetResource<RModel>(modelName);
+			if (model)
+			{
+				if (!LoadSkeleton(model->GetSkeleton()))
+				{
+#ifdef _DEBUG
+					LOG_WARNING("Animator %s could not load in skeleton...", filename.c_str());
+#endif // _DEBUG
+					return false;
+				}
+			}
+		}
+		else if (keyword == "anim")
 		{
 			std::string key;
 			std::string animName;
@@ -119,9 +140,10 @@ bool RAnimator::Create(const std::string& filename)
 			if (animation)
 			{
 				m_animations[key] = animation;
+				m_currentAnim = animation;
 			}
 		}
-		else if (keyword == "setCurrentAnim")
+		else if (keyword == "currentAnim")
 		{
 			std::string key;
 			ss >> key;
@@ -142,16 +164,15 @@ void RAnimator::Update()
 {
 	if (!m_bones.empty() && m_currentAnim)
 	{
-		double tickDT = m_currentAnim->GetTicksPerFrame() * Stats::GetDeltaTime();
-		m_frameTime = fmod(m_frameTime + tickDT, m_currentAnim->GetDuraction());
-		double nextFrameTime = m_frameTime + tickDT;
-
+		double tick = m_currentAnim->GetTicksPerFrame() * Stats::Get().GetUpdateTime();
+		m_currentFrameTime = fmod(m_currentFrameTime + tick, m_currentAnim->GetDuraction());
+		
 		std::vector<sm::Matrix> modelMatrices;
 		modelMatrices.resize(m_bones.size(), sm::Matrix::Identity);
 
 		for (size_t i = 0; i < m_bones.size(); i++)
 		{
-			sm::Matrix localMatrix = m_currentAnim->GetMatrix(m_bones[i].name, m_frameTime, nextFrameTime, m_bones[i].lastKeys, m_useInterpolation);
+			sm::Matrix localMatrix = m_currentAnim->GetMatrix(m_bones[i].name, m_currentFrameTime, m_bones[i].lastKeys, m_useInterpolation);
 
 			if (m_bones[i].parentIndex == -1)
 				modelMatrices[i] = localMatrix;
@@ -162,13 +183,12 @@ void RAnimator::Update()
 		}
 
 		modelMatrices.clear();
-
-		UpdateStructureBuffer();
 	}
 }
 
-void RAnimator::Bind() const
+void RAnimator::Bind()
 {
+	UpdateStructureBuffer();
 	D3D11Core::Get().DeviceContext()->VSSetShaderResources(T2D_BONESLOT, 1, m_bonesSB_RSV.GetAddressOf());
 }
 

@@ -418,7 +418,6 @@ void Simulation::Destroy()
 {
 	m_pGameScene->GetRegistry()->on_construct<comp::Network>().disconnect<&Simulation::OnNetworkEntityCreate>(this);
 	m_pGameScene->GetRegistry()->on_destroy<comp::Network>().disconnect<&Simulation::OnNetworkEntityDestroy>(this);
-
 	m_pGameScene->Clear();
 	m_pLobbyScene->Clear();
 }
@@ -615,7 +614,7 @@ bool Simulation::AddPlayer(uint32_t playerID, const std::string& namePlate)
 	player.AddComponent<comp::NamePlate>()->namePlate = namePlate;
 
 	player.AddComponent<comp::MeshName>()->name = "Knight.fbx";
-	player.AddComponent<comp::AnimatorName>()->name = "Player.anim";
+	player.AddComponent<comp::AnimatorName>()->name = "Knight.anim";
 
 	comp::CombatStats* combatStats = player.AddComponent<comp::CombatStats>();
 	combatStats->cooldown = 0.4f;
