@@ -12,6 +12,8 @@ Scene::Scene()
 	m_defaultCamera = CreateEntity();
 	m_defaultCamera.AddComponent<comp::Camera3D>()->camera.Initialize(sm::Vector3(0, 0, 0), sm::Vector3(0, 0, 1), sm::Vector3(0, 1, 0), sm::Vector2(1000, 1000), CAMERATYPE::DEFAULT);
 	SetCurrentCameraEntity(m_defaultCamera);
+
+	m_sky.Initialize("skybox1.dds");
 }
 
 void Scene::Update(float dt)
@@ -165,6 +167,7 @@ void Scene::Render2D()
 
 void Scene::RenderSkybox()
 {
+	m_sky.Render();
 }
 
 bool Scene::IsRenderReady() const
