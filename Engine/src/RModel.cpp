@@ -10,6 +10,7 @@ RModel::~RModel()
 {
     m_meshes.clear();
     m_allBones.clear();
+    m_boneMap.clear();
     m_lights.clear();
 }
 

@@ -478,7 +478,7 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 			{
 				std::string name;
 				msg >> name;
-				e.AddComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>(name);
+				e.AddComponent<comp::Renderable>()->model = ResourceManager::Get().CopyResource<RModel>(name, true);
 				break;
 			}
 			case ecs::Component::ANIMATOR_NAME:

@@ -16,6 +16,10 @@ RAnimator::~RAnimator()
 
 bool RAnimator::LoadSkeleton(const std::vector<bone_t>& skeleton)
 {
+	//Clear previous bones and matrices if needed
+	m_finalMatrices.clear();
+	m_bones.clear();
+
 	bool loaded = false;
 	if (!skeleton.empty())
 	{
