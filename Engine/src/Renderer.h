@@ -4,6 +4,7 @@
 #include "DebugPass.h"
 #include "AnimationPass.h"
 #include "PipelineManager.h"
+#include "DecalPass.h"
 #include "SkyboxPass.h"
 
 
@@ -18,6 +19,7 @@ private:
 	DepthPass		m_depthPass;
 	DebugPass		m_debugPass;
 	AnimationPass	m_animPass;
+	DecalPass		m_decalPass;
 	SkyboxPass		m_skyPass;
 	unsigned int m_currentPass = 0;
 

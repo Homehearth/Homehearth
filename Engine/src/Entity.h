@@ -23,7 +23,7 @@ public:
 	void RemoveComponent();
 
 	void UpdateNetwork();
-
+	
 	bool Destroy();
 
 	bool IsNull() const;
@@ -82,7 +82,7 @@ inline void Entity::RemoveComponent()
 	{
 		throw std::runtime_error("Entity was a null entity");
 	}	
-	m_pRegistry->erase<T>(m_entity);
+	m_pRegistry->remove<T>(m_entity);
 }
 
 

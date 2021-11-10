@@ -24,7 +24,6 @@ void rtd::TextField::Update()
 				m_stringText.push_back(c);
 			}
 		}
-
 		for (int i = dx::Keyboard::Keys::NumPad0; i <= dx::Keyboard::Keys::NumPad9; i++)
 		{
 			if (InputSystem::Get().CheckKeyboardKey(static_cast<dx::Keyboard::Keys>(i), KeyState::PRESSED))
@@ -33,20 +32,12 @@ void rtd::TextField::Update()
 				m_stringText.push_back(c);
 			}
 		}
-
 		// Checks '.' press
 		if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Keys::OemPeriod, KeyState::PRESSED))
 		{
 			const char c = static_cast<char>(0x2E);
 			m_stringText.push_back(c);
 		}
-
-		if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Keys::Space, KeyState::PRESSED))
-		{
-			const char space = ' ';
-			m_stringText.push_back(space);
-		}
-
 	}
 	// Remove with the backspace
 	if ((InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Keys::Back, KeyState::PRESSED) && (m_stringText.length() > 0)) == 1)

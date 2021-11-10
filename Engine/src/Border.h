@@ -9,6 +9,7 @@ namespace rtd
 
 		draw_shape_t m_borderOpts;
 		draw_t m_opts;
+		LineWidth m_lineWidth = LineWidth::MEDIUM;
 
 	public:
 
@@ -19,6 +20,8 @@ namespace rtd
 		// set the new color
 		void SetColor(const D2D1_COLOR_F& new_color);
 		D2D1_COLOR_F& GetColor();
+
+		void SetLineWidth(const LineWidth& width);
 
 		// Update position of border.
 		void UpdatePos(const draw_t& new_opts);

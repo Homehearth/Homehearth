@@ -1,12 +1,12 @@
 #pragma once
 
 //Options
-#define RENDER_IMGUI 0
+#define RENDER_IMGUI 1
 #define PROFILER 1
 
 // Turn this to 1 if you want to see the very beautiful demo menu
 #define DRAW_TEMP_2D 0
-#define DEBUG_SNAPSHOT 0
+#define DEBUG_SNAPSHOT 1
 
 #define USE_MIPMAPS 1
 #define RENDER_GRID 0
@@ -66,6 +66,7 @@
 #include <dwrite.h>
 #include <dwrite_3.h>
 #include <d2d1.h>
+#include <d2d1_1.h>
 #include <ctime>
 #include <Keyboard.h>
 #include <Mouse.h>
@@ -134,3 +135,4 @@ const std::string TEXTUREPATH	= "../Assets/Textures/";
 const std::string ANIMATIONPATH = "../Assets/Animations/";
 const std::string ANIMATORPATH	= "../Assets/Animators/";
 const std::string FONTPATH		= "../Assets/Fonts/";
+const std::string BOUNDSPATH = "../Assets/Bounds/";

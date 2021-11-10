@@ -4,6 +4,11 @@
 #include "Camera.h"
 #include "GridSystem.h"
 
+/*
+	We only need the loading screen rendered once. 
+*/
+static bool s_loaded = false;
+
 bool Engine::s_safeExit = false;
 
 Engine::Engine()
@@ -24,7 +29,7 @@ void Engine::Startup()
 
 	//Get heighest possible 16:9 resolution
 	//90% of the height
-	config.height = static_cast<UINT>(GetSystemMetrics(SM_CYSCREEN) * 0.90f);
+	config.height = static_cast<UINT>(GetSystemMetrics(SM_CYSCREEN) * 0.50f);
 	float aspectRatio = 16.0f / 9.0f;
 	config.width = static_cast<UINT>(aspectRatio * config.height);
 
@@ -35,7 +40,6 @@ void Engine::Startup()
 	}
 
 	// DirectX Startup:
-	FontCollectionLoader::Initialize();
 	D3D11Core::Get().Initialize(&m_window);
 	D2D1Core::Initialize(&m_window);
 
@@ -100,7 +104,6 @@ void Engine::Run()
     T_DESTROY();
     D2D1Core::Destroy();
 	ResourceManager::Get().Destroy();
-	FontCollectionLoader::Destroy();
 }
 
 
@@ -374,12 +377,23 @@ void Engine::RenderThread()
 		//Render every now and then
 		if (frameTime >= targetDelta)
 		{
-			if (GetCurrentScene()->IsRenderReady()) 
+			if (!s_loaded && GetCurrentScene() == &GetScene("Loading"))
+			{
+				GetCurrentScene()->Update2D();
+				D2D1Core::Begin();
+				GetCurrentScene()->Render2D();
+				D2D1Core::Present();
+				D3D11Core::Get().SwapChain()->Present(0, 0);
+				s_loaded = true;
+				frameTime = 0.f;
+			}
+			if (GetCurrentScene()->IsRenderReady()) // Render Scene.
 			{
 				Stats::SetDeltaTime(frameTime);
 				Render(frameTime);
 				//m_frameTime.render = deltaSum;
 				frameTime = 0.f;
+				s_loaded = false;
 			}
 		}
 		frameTime += deltaTime;
@@ -425,6 +439,7 @@ void Engine::Update(float dt)
 	}
 
 	OnUserUpdate(dt);
+
 	BasicEngine::Update(dt);
 
 	{

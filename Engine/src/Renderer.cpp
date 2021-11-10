@@ -16,6 +16,8 @@ void Renderer::Initialize(Window* pWindow)
 		Had to disable the depth pass to get alpha testing to work correctly... -Filip
 	*/
 	//AddPass(&m_depthPass);  // 1
+	AddPass(&m_decalPass);
+	m_decalPass.Create();
 	AddPass(&m_basePass);   // 2
 	AddPass(&m_animPass);	// 3
 	AddPass(&m_skyPass);
@@ -23,6 +25,7 @@ void Renderer::Initialize(Window* pWindow)
 	//m_depthPass.SetEnable(true);
 	m_basePass.SetEnable(true);
 	m_animPass.SetEnable(true);
+	m_decalPass.SetEnable(true);
 	m_skyPass.SetEnable(true);
 
 #ifdef _DEBUG
@@ -89,6 +92,9 @@ void Renderer::AddPass(IRenderPass* pass)
 
 void Renderer::UpdatePerFrame(Camera* pCam)
 {
-	// Update Camera constant buffer.
-	m_d3d11->DeviceContext()->UpdateSubresource(pCam->m_viewConstantBuffer.Get(), 0, nullptr, pCam->GetCameraMatrixes(), 0, 0);
+	if (pCam)
+	{
+		// Update Camera constant buffer.
+		m_d3d11->DeviceContext()->UpdateSubresource(pCam->m_viewConstantBuffer.Get(), 0, nullptr, pCam->GetCameraMatrixes(), 0, 0);
+	}
 }

@@ -50,6 +50,12 @@ cbuffer IsCollidingCB : register(b5)
     int c_colliding;
 }
 
+cbuffer DecalInfoCB : register(b10)
+{
+    float4 infoData = float4(0.0f, 0.0f, 0.0f, 0.0f);
+	float4x4 decal_projection;
+}
+
 
 //---------------------------------------------------------------------------
 //	Samplers.
@@ -75,10 +81,13 @@ Texture2D t_aomap					: register(t5);
 Texture2D t_displace				: register(t6);
 Texture2D t_opacitymask				: register(t7);
 Texture2D<uint2> t_pointLightGrid	: register(t8);
+Texture2D t_decal                   : register(t12);
+Texture2D t_decalAlpha              : register(t13);
 
 // StructuredBuffers.
 StructuredBuffer<float4x4> sb_boneTransforms : register(t9); // read as column major, actually is row major.
 StructuredBuffer<Light> sb_lights : register(t10);
+StructuredBuffer<float4x4> sb_decaldata : register(t16);
 
 // Forward+
 //StructuredBuffer<PointLight> sb_pointLights : register();

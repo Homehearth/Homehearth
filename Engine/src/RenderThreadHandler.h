@@ -18,7 +18,7 @@ namespace thread
 	for it to be considered benefitable to divide up the rendering
 	between threads.
 	*/
-	const int THRESHOLD = 1000;
+	const int THRESHOLD = 100;
 
 	class RenderThreadHandler
 	{

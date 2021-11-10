@@ -4,7 +4,7 @@
 
 
 //Returns number of how many colliders the entity is colliding with
-const int CollisionSystem::getCollisionCounts(Entity entity) const
+int CollisionSystem::GetCollisionCounts(Entity entity) const
 {
 	int count = 0;
 	if (m_CollisionCount.find(entity) != m_CollisionCount.end())
@@ -14,83 +14,6 @@ const int CollisionSystem::getCollisionCounts(Entity entity) const
 
 	return count;
 }
-
-
-
-
-const std::set<std::pair<Entity, Entity>>& CollisionSystem::GetCollisions() const
-{
-	return m_CollisionPairs;
-}
-
-
-
-
-void CollisionSystem::AddPair(const Entity e1, const Entity e2)
-{
-#ifdef _DEBUG
-	//Increase collision count for each Entity
-	if (m_CollisionPairs.find(std::make_pair(e1, e2)) == m_CollisionPairs.end())
-	{
-		if (m_CollisionCount.find(e1) == m_CollisionCount.end())
-		{
-			m_CollisionCount.insert(std::make_pair(e1, 1));
-		}
-		else
-		{
-			m_CollisionCount.at(e1)++;
-		}
-
-		if (m_CollisionCount.find(e2) == m_CollisionCount.end())
-		{
-			m_CollisionCount.insert(std::make_pair(e2, 1));
-		}
-		else
-		{
-			m_CollisionCount.at(e2)++;
-		}
-	}
-#endif
-
-	if (e1 > e2)
-		m_CollisionPairs.insert({ e1,e2 });
-	else
-		m_CollisionPairs.insert({ e2,e1 });
-
-}
-
-
-
-
-void CollisionSystem::RemovePair(const Entity e1, const Entity e2)
-{
-
-#ifdef _DEBUG
-	//Decrease collision count for each Entity
-	if (m_CollisionPairs.find(std::make_pair(e1, e2)) != m_CollisionPairs.end() || m_CollisionPairs.find(std::make_pair(e2, e1)) != m_CollisionPairs.end())
-	{
-		if (m_CollisionCount.find(e1) != m_CollisionCount.end() && m_CollisionCount.find(e1)->second > 0)
-		{
-			m_CollisionCount.at(e1)--;
-		}
-
-		if (m_CollisionCount.find(e2) != m_CollisionCount.end() && m_CollisionCount.find(e2)->second > 0)
-		{
-			m_CollisionCount.at(e2)--;
-		}
-	}
-#endif
-
-
-	if (e1 > e2)
-		m_CollisionPairs.erase(std::make_pair(e1, e2));
-	else
-		m_CollisionPairs.erase(std::make_pair(e2, e1));
-
-
-}
-
-
 
 
 void CollisionSystem::AddOnCollision(Entity entity1, std::function<void(Entity)> func)
@@ -107,7 +30,10 @@ void CollisionSystem::OnCollision(Entity entity1, Entity entity2)
 	{
 		if (!entity1.IsNull())
 		{
-			m_OnCollision.at(entity1)(entity2);
+			if (!entity2.IsNull())
+			{
+				m_OnCollision.at(entity1)(entity2);
+			}
 		}
 		else
 		{
@@ -118,7 +44,10 @@ void CollisionSystem::OnCollision(Entity entity1, Entity entity2)
 	{
 		if (!entity2.IsNull())
 		{
-			m_OnCollision.at(entity2)(entity1);
+			if (!entity1.IsNull())
+			{
+				m_OnCollision.at(entity2)(entity1);
+			}
 		}
 		else
 		{
@@ -226,34 +155,30 @@ CollisionInfo_t CollisionSystem::Intersection(Entity entity1, Entity entity2)
 
 void CollisionSystem::CollisionResponse(CollisionInfo_t collisionInfo, Entity entity1, Entity entity2)
 {
-	if(entity1.GetComponent<comp::Tag<DYNAMIC>>() && entity2.GetComponent<comp::Tag<STATIC>>())
-	{
-		comp::Transform* transform = entity1.GetComponent<comp::Transform>();
-		comp::BoundingOrientedBox* obb = entity1.GetComponent<comp::BoundingOrientedBox>();
-		if (transform)
+
+	for(int i = -1; i < 2; i += 2) // runs twice, i becomes -1 and then 1
+	{ 
+		if(entity1.GetComponent<comp::Tag<DYNAMIC>>() && entity2.GetComponent<comp::Tag<STATIC>>())
 		{
-			transform->position = transform->position + sm::Vector3(collisionInfo.smallestVec * (float)collisionInfo.overlap * -1.1f);
+			comp::Transform* transform = entity1.GetComponent<comp::Transform>();
+			comp::BoundingOrientedBox* obb = entity1.GetComponent<comp::BoundingOrientedBox>();
+			if (transform)
+			{
+				transform->position = transform->position + sm::Vector3(collisionInfo.smallestVec * (float)collisionInfo.overlap * i);
 			
-			if (obb)
-				obb->Center = transform->position;
+				if (obb)
+					obb->Center = transform->position;
+
+				// make sure client gets updated position
+				entity1.UpdateNetwork();
+			}
+			
 		}
-			
+		// swap entities so we check the opposite the next iteration
+		std::swap(entity1, entity2);
 	}
-	else if(entity2.GetComponent<comp::Tag<DYNAMIC>>() && entity1.GetComponent<comp::Tag<STATIC>>())
-	{
-		comp::Transform* transform = entity2.GetComponent<comp::Transform>();
-		comp::BoundingOrientedBox* obb = entity2.GetComponent<comp::BoundingOrientedBox>();
-		
-		if (transform)
-		{
-			transform->position = transform->position + sm::Vector3(collisionInfo.smallestVec * (float)collisionInfo.overlap * 1.1f);
-			
-			if (obb)
-				obb->Center = transform->position;
-		}
-			
-	}
-	else if(entity2.GetComponent<comp::Tag<DYNAMIC>>() && entity1.GetComponent<comp::Tag<DYNAMIC>>())
+	
+	if(entity2.GetComponent<comp::Tag<DYNAMIC>>() && entity1.GetComponent<comp::Tag<DYNAMIC>>())
 	{
 		comp::Transform* transform1 = entity1.GetComponent<comp::Transform>();
 		comp::Transform* transform2 = entity2.GetComponent<comp::Transform>();
@@ -262,18 +187,22 @@ void CollisionSystem::CollisionResponse(CollisionInfo_t collisionInfo, Entity en
 		//Dynamic
 		if (transform1)
 		{
-			transform1->position = transform1->position + (sm::Vector3(collisionInfo.smallestVec * (float)collisionInfo.overlap * -1.1f) / 2.0f);
+			transform1->position = transform1->position + (sm::Vector3(collisionInfo.smallestVec * (float)collisionInfo.overlap * -1.1f) * 0.5f);
 
 			if (obb1)
 				obb1->Center = transform1->position;
+
+			entity1.UpdateNetwork();
 		}
 
 		if (transform2)
 		{
-			transform2->position = transform2->position + (sm::Vector3(collisionInfo.smallestVec * (float)collisionInfo.overlap) / 2.0f * 1.1f);
+			transform2->position = transform2->position + (sm::Vector3(collisionInfo.smallestVec * (float)collisionInfo.overlap) * 0.5f);
 
 			if (obb2)
 				obb2->Center = transform2->position;
+
+			entity2.UpdateNetwork();
 		}
 			
 	}
