@@ -24,7 +24,7 @@ void Engine::Startup()
 
 	//Get heighest possible 16:9 resolution
 	//90% of the height
-	config.height = static_cast<UINT>(GetSystemMetrics(SM_CYSCREEN) * 0.90f);
+	config.height = static_cast<UINT>(GetSystemMetrics(SM_CYSCREEN) * 0.50f);
 	float aspectRatio = 16.0f / 9.0f;
 	config.width = static_cast<UINT>(aspectRatio * config.height);
 
@@ -35,7 +35,6 @@ void Engine::Startup()
 	}
 
 	// DirectX Startup:
-	FontCollectionLoader::Initialize();
 	D3D11Core::Get().Initialize(&m_window);
 	D2D1Core::Initialize(&m_window);
 
@@ -100,7 +99,6 @@ void Engine::Run()
     T_DESTROY();
     D2D1Core::Destroy();
 	ResourceManager::Get().Destroy();
-	FontCollectionLoader::Destroy();
 }
 
 

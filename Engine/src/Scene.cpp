@@ -36,21 +36,21 @@ void Scene::Update(float dt)
 		m_renderableAnimCopies[0].clear();
 
 		m_registry.view<comp::Renderable, comp::Transform>().each([&](entt::entity entity, comp::Renderable& r, comp::Transform& t)
-		{
-			r.data.worldMatrix = ecs::GetMatrix(t);
-			
-			//Check if the model has an animator too
-			comp::Animator* anim = m_registry.try_get<comp::Animator>(entity);
-			if (anim != nullptr)
 			{
-				m_renderableAnimCopies[0].push_back({r, *anim});
-			}
-			else
-			{
-				m_renderableCopies[0].push_back(r);
-			}
-		});
-		
+				r.data.worldMatrix = ecs::GetMatrix(t);
+
+				//Check if the model has an animator too
+				comp::Animator* anim = m_registry.try_get<comp::Animator>(entity);
+				if (anim != nullptr)
+				{
+					m_renderableAnimCopies[0].push_back({ r, *anim });
+				}
+				else
+				{
+					m_renderableCopies[0].push_back(r);
+				}
+			});
+
 		m_renderableCopies.Swap();
 		m_renderableAnimCopies.Swap();
 	}
@@ -61,7 +61,7 @@ void Scene::Update(float dt)
 			{
 				comp::BoundingOrientedBox* obb = m_registry.try_get<comp::BoundingOrientedBox>(entity);
 				comp::BoundingSphere* sphere = m_registry.try_get<comp::BoundingSphere>(entity);
-				
+
 				comp::Transform transform;
 				transform.rotation = sm::Quaternion::Identity;
 
@@ -76,7 +76,7 @@ void Scene::Update(float dt)
 					transform.scale = sm::Vector3(sphere->Radius);
 					transform.position = sphere->Center;
 				}
-				
+
 				r.data.worldMatrix = ecs::GetMatrix(transform);
 				m_debugRenderableCopies[0].push_back(r);
 			});
@@ -97,7 +97,7 @@ void Scene::Render()
 	D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, buffers);
 
 	// Render everything on same thread.
-	if((inst.start | inst.stop) == 0)
+	if ((inst.start | inst.stop) == 0)
 	{
 		// System that renders Renderable component
 		for (const auto& it : m_renderableCopies[1])
@@ -133,6 +133,47 @@ void Scene::Render()
 		for (int i = inst.start; i < inst.stop; i++)
 		{
 			const auto& it = m_renderableCopies[1][i];
+			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
+			if (it.model)
+				it.model->Render();
+		}
+	}
+
+	// Run any available Command lists from worker threads.
+	thread::RenderThreadHandler::ExecuteCommandLists();
+
+	// Emit event
+	publish<ESceneRender>();
+}
+
+void Scene::RenderTransparency()
+{
+	PROFILE_FUNCTION();
+	thread::RenderThreadHandler::Get().SetObjectsBuffer(&m_renderableTransparent);
+	// Divides up work between threads.
+	const render_instructions_t inst = thread::RenderThreadHandler::Get().Launch(static_cast<int>(m_renderableTransparent[1].size()));
+
+	ID3D11Buffer* const buffers[1] = { m_publicBuffer.GetBuffer() };
+	D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, buffers);
+
+	// Render everything on same thread.
+	if ((inst.start | inst.stop) == 0)
+	{
+		// System that renders Renderable component
+		for (const auto& it : m_renderableTransparent[1])
+		{
+			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
+			if (it.model)
+				it.model->Render();
+		}
+	}
+	// Render third part of the scene with immediate context
+	else
+	{
+		// System that renders Renderable component
+		for (int i = inst.start; i < inst.stop; i++)
+		{
+			const auto& it = m_renderableTransparent[1][i];
 			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
 			if (it.model)
 				it.model->Render();
@@ -216,7 +257,7 @@ void Scene::RenderAnimation()
 
 	// Divides up work between threads.
 	const render_instructions_t inst = thread::RenderThreadHandler::Get().Launch(static_cast<int>(m_renderableAnimCopies[1].size()));
-	
+
 	ID3D11Buffer* const buffers[1] = { m_publicBuffer.GetBuffer() };
 	D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, buffers);
 
@@ -323,6 +364,11 @@ Lights* Scene::GetLights()
 DoubleBuffer<std::vector<comp::Renderable>>* Scene::GetBuffers()
 {
 	return &m_renderableCopies;
+}
+
+DoubleBuffer<std::vector<comp::Renderable>>* Scene::GetTransparentBuffers()
+{
+	return &m_renderableTransparent;
 }
 
 DoubleBuffer<std::vector<comp::RenderableDebug>>* Scene::GetDebugBuffers()

@@ -16,10 +16,8 @@ namespace ecs
 		HEALTH,
 		BOUNDING_ORIENTED_BOX,
 		BOUNDING_SPHERE,
-		PLANECOLLIDER,
 		LIGHT,
 		PLAYER,
-		TILE,
 		COMPONENT_COUNT,
 		COMPONENT_MAX = 32
 	};
@@ -30,31 +28,12 @@ namespace ecs
 		using DirectX::BoundingOrientedBox;
 		using DirectX::BoundingSphere;
 		
-		struct PlaneCollider 
-		{
-			sm::Vector3 center;
-			sm::Vector3 normal;
-			sm::Vector2 size;
-		};
 
 		struct Transform
 		{
-			sm::Vector3 previousPosition;
 			sm::Vector3 position;
 			sm::Quaternion rotation;
 			sm::Vector3 scale = sm::Vector3(1);
-
-			friend network::message<GameMsg>& operator<<(network::message<GameMsg>& msg, const ecs::component::Transform& data)
-			{
-				msg << data.position << data.rotation << data.scale;
-				return msg;
-			}
-
-			friend network::message<GameMsg>& operator >> (network::message<GameMsg>& msg, ecs::component::Transform& data)
-			{
-				msg >> data.scale >> data.rotation >> data.position;
-				return msg;
-			}
 		};
 
 		struct Network
@@ -112,16 +91,25 @@ namespace ecs
 			}
 		};
 		
-		struct Force
+
+		struct TemporaryPhysics
 		{
-			sm::Vector3 force = sm::Vector3(5, 0, 0);
-			bool wasApplied = false;
-			float actingTime = 2.0f;
+			struct Force
+			{
+				sm::Vector3 force = sm::Vector3(5, 0, 0);
+				float drag = 5.f;
+				bool isImpulse = true;
+				bool wasApplied = false;
+				float actingTime = 1.0f;
+			};
+
+			std::vector<Force> forces;
 		};
 
 		struct Velocity
 		{
 			sm::Vector3 vel;
+			sm::Vector3 oldVel;
 		};
 
 		struct Player
@@ -145,7 +133,7 @@ namespace ecs
 		{
 			float f = FLT_MAX, g = FLT_MAX, h = FLT_MAX;
 			sm::Vector3 position;
-			sm::Vector2 id;
+			Vector2I id;
 			std::vector<Node*> connections;
 			ecs::component::Node* parent;
 			bool reachable = true;
@@ -196,24 +184,35 @@ namespace ecs
 			bool isAlive = true;
 		};
 
-		struct CombatStats
+		struct IAbility
 		{
-			float attackSpeed = 1.5f;
+			float cooldown = 1.5f;
+			float cooldownTimer = 0.f;
+			
+			float delay = 0.1f;
+			float delayTimer = 0.f;
+
+			float lifetime = 5.f;
+
+			bool isReady = false;
+			bool isUsing = false;
+
+			Ray_t targetRay;
+		};
+
+		struct CombatStats : public IAbility
+		{
 			float attackDamage = 5.f;
-			float attackLifeTime = 5.f;
+			float attackRange = 10.0f;
 			bool isRanged = false;
 			float projectileSpeed = 10.f;
 
-			bool isAttacking = false;
-			float cooldownTimer = 0.f;
-			Ray_t targetRay;
 			sm::Vector3 targetDir;
 		};
 
-		struct Attack
+		struct SelfDestruct
 		{
 			float lifeTime;
-			float damage;
 		};
 
 
@@ -228,14 +227,6 @@ namespace ecs
 			bool positive;
 		};
 
-		struct Tile 
-		{
-			TileType type;
-			sm::Vector2 gridID;
-			float halfWidth;
-
-		};
-
 	};
 
 	sm::Matrix GetMatrix(const component::Transform& transform);
@@ -243,6 +234,10 @@ namespace ecs
 	sm::Vector3 GetRight(const component::Transform& transform);
 	bool StepRotateTo(sm::Quaternion& rotation, const sm::Vector3& targetVector, float t);
 	bool StepTranslateTo(sm::Vector3& translation, const sm::Vector3& target, float t);
+	
+	bool Use(component::IAbility* abilityComponent);
+
+	component::TemporaryPhysics::Force GetGravityForce();
 
 };
 

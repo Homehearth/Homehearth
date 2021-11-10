@@ -1,7 +1,7 @@
 #include "EnginePCH.h"
 #include "Components.h"
 namespace ecs {
-
+    
     sm::Matrix GetMatrix(const component::Transform& transform)
     {
         sm::Matrix mat = sm::Matrix::CreateScale(transform.scale);
@@ -51,5 +51,24 @@ namespace ecs {
         return sm::Vector3::Distance(translation, target) < 0.01f;
     }
 
+    bool Use(component::IAbility* abilityComponent)
+    {
+        if (abilityComponent->isReady)
+        {
+            abilityComponent->isUsing = true;
+            abilityComponent->isReady = false;
+            abilityComponent->cooldownTimer = abilityComponent->cooldown;
+            abilityComponent->delayTimer = abilityComponent->delay;
+        }
+        return abilityComponent->isUsing;
+    }
+    
+    component::TemporaryPhysics::Force GetGravityForce()
+    {
+        component::TemporaryPhysics::Force f = {};
+        f.force = sm::Vector3(0, -50.f, 0);
+        f.isImpulse = false;
+        return f;
+    }
 }
 

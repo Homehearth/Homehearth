@@ -34,6 +34,7 @@ namespace rtd
 		// Set new color for canvas.
 		void SetColor(const D2D1_COLOR_F& new_color);
 		D2D1_COLOR_F& GetColor();
+		const draw_t GetOpts() const;
 
 		void SetBorderColor(const D2D1_COLOR_F& new_color);
 		void HideBorder();
