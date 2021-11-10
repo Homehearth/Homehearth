@@ -650,7 +650,9 @@ void Game::CreateVisualGrid(Entity e)
 void Game::LoadAllAssets()
 {
 	ResourceManager::Get().GetResource<RModel>("Knight.fbx");
+	ResourceManager::Get().GetResource<RAnimator>("Knight.anim");
 	ResourceManager::Get().GetResource<RModel>("Monster.fbx");
+	ResourceManager::Get().GetResource<RAnimator>("Monster.anim");
 	ResourceManager::Get().GetResource<RModel>("Barrel.obj");
 	ResourceManager::Get().GetResource<RModel>("Defence.obj");
 	ResourceManager::Get().GetResource<RModel>("Plane1.obj");

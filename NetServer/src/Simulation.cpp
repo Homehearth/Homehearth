@@ -467,9 +467,6 @@ void Simulation::Destroy()
 {
 	m_pGameScene->GetRegistry()->on_construct<comp::Network>().disconnect<&Simulation::OnNetworkEntityCreate>(this);
 	m_pGameScene->GetRegistry()->on_destroy<comp::Network>().disconnect<&Simulation::OnNetworkEntityDestroy>(this);
-
-	//MEMORY LEAKS...
-
 	m_pGameScene->Clear();
 	m_pLobbyScene->Clear();
 }
