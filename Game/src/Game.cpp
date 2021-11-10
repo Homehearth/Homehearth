@@ -694,13 +694,6 @@ void Game::UpdatePredictorFromMessage(Entity e, message<GameMsg>& msg, const uin
 				e.AddComponent<comp::BoundingSphere>(s);
 				break;
 			}
-			case ecs::Component::PLANECOLLIDER:
-			{
-				comp::PlaneCollider p;
-				msg >> p;
-				*e.AddComponent<comp::PlaneCollider>() = p;
-				break;
-			}
 			case ecs::Component::LIGHT:
 			{
 				comp::Light l;
@@ -713,13 +706,6 @@ void Game::UpdatePredictorFromMessage(Entity e, message<GameMsg>& msg, const uin
 				comp::Player p;
 				msg >> p;
 				e.AddComponent<comp::Player>(p);
-				break;
-			}
-			case ecs::Component::TILE:
-			{
-				comp::Tile t;
-				msg >> t;
-				e.AddComponent<comp::Tile>(t);
 				break;
 			}
 			default:
