@@ -318,7 +318,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 					sm::Vector3 vel = sm::Vector3(static_cast<float>(input.axisHorizontal), 0, static_cast<float>(input.axisVertical));
 					vel.Normalize();
 					
-					sm::Vector3 cameraToPlayer = e.GetComponent<comp::Transform>()->position - input.mouseRay.rayPos;
+					sm::Vector3 cameraToPlayer = e.GetComponent<comp::Transform>()->position - input.mouseRay.origin;
 					cameraToPlayer.y = 0;
 					cameraToPlayer.Normalize();
 					float targetRotation = atan2(-cameraToPlayer.x, -cameraToPlayer.z);
@@ -433,7 +433,8 @@ void Simulation::ReadyCheck(const uint32_t& playerID)
 	{
 		if (m_players.find(playerID) != m_players.end())
 		{
-			m_players.at(playerID).GetComponent<comp::Player>()->isReady = true;
+			comp::Player* player = m_players.at(playerID).GetComponent<comp::Player>();
+			player->isReady = !player->isReady;
 
 			// DEBUG
 #ifdef _DEBUG
@@ -966,7 +967,6 @@ void Simulation::ResetGameScene()
 			{
 				ResetPlayer(e);
 			}
-
 		});
 
 	if (count > 0)

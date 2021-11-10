@@ -746,7 +746,7 @@ namespace network
 
 		// Determine how many processors are on the system
 		GetSystemInfo(&SystemInfo);
-		m_nrOfThreads = (int)SystemInfo.dwNumberOfProcessors - 1;
+		m_nrOfThreads = (int)SystemInfo.dwNumberOfProcessors;
 		m_workerThreads = new std::thread[m_nrOfThreads];
 
 		m_isRunning = true;

@@ -10,15 +10,13 @@ private:
 	std::vector<comp::Transform> predictedPositions;
 	std::unordered_map<uint32_t, Entity> m_players;
 	std::unordered_map<uint32_t, Entity> m_gameEntities;
-
+	std::vector<dx::BoundingOrientedBox> m_LOSColliders;
 
 	GridSystem m_grid;
 	uint32_t m_waveTimer;
 
 	Entity m_mapEntity;
 
-	bool m_isLeavingLobby;
-	comp::Transform test;
 	float m_predictionThreshhold;
 
 	InputState m_inputState;
@@ -38,6 +36,7 @@ private:
 
 	void UpdateInput();
 	void LoadAllAssets();
+	bool LoadMapColliders(const std::string& filename);
 
 public:
 	Client m_client;
@@ -50,4 +49,5 @@ public:
 	void JoinLobby(uint32_t lobbyID);
 	void CreateLobby();
 	void SendStartGame();
+	Entity& GetLocalPlayer();
 };

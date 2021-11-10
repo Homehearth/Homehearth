@@ -10,8 +10,8 @@ const bool Intersect::RayIntersectBox(const Ray_t& ray, const comp::BoundingOrie
 	 * It returns the closest positive t-value
 	 *
 	 */
-	const sm::Vector3 rayOrigin = ray.rayPos;
-	const sm::Vector3 rayDir = ray.rayDir;
+	const sm::Vector3 rayOrigin = ray.origin;
+	const sm::Vector3 rayDir = ray.dir;
 
 	float tmin = (std::numeric_limits<float>::min)();
 	float tmax = (std::numeric_limits<float>::max)();
@@ -87,11 +87,11 @@ const bool Intersect::RayIntersectBox(const Ray_t& ray, const comp::BoundingOrie
 
 const bool Intersect::RayIntersectSphere(const Ray_t& ray, const comp::BoundingSphere& sphereCollider, float& t)
 {
-	const sm::Vector3 rayToCenter = ray.rayPos - sphereCollider.Center;
+	const sm::Vector3 rayToCenter = ray.origin - sphereCollider.Center;
 	
 	//Parameterization to use for the quadtratic formula.
-	const float scalarRayDir =  ray.rayDir.Dot(ray.rayDir);
-	const float b = 2.0f * rayToCenter.Dot(ray.rayDir);
+	const float scalarRayDir =  ray.dir.Dot(ray.dir);
+	const float b = 2.0f * rayToCenter.Dot(ray.dir);
 	const float c = rayToCenter.Dot(rayToCenter) - sphereCollider.Radius * sphereCollider.Radius;
 
 	const float discriminant = b * b - 4.0f * scalarRayDir * c;

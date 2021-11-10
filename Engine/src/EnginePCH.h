@@ -134,3 +134,4 @@ const std::string TEXTUREPATH	= "../Assets/Textures/";
 const std::string ANIMATIONPATH = "../Assets/Animations/";
 const std::string ANIMATORPATH	= "../Assets/Animators/";
 const std::string FONTPATH		= "../Assets/Fonts/";
+const std::string BOUNDSPATH = "../Assets/Bounds/";

@@ -1,4 +1,4 @@
-#include "DemoScene.h"
+#include "SceneHelper.h"
 #include "Canvas.h"
 #include "Picture.h"
 #include "Border.h"
@@ -113,7 +113,6 @@ namespace sceneHelp
 		gameScene.GetRegistry()->on_construct<comp::BoundingOrientedBox>().connect<&entt::registry::emplace_or_replace<comp::RenderableDebug>>();
 		gameScene.GetRegistry()->on_construct<comp::BoundingSphere>().connect<&entt::registry::emplace_or_replace<comp::RenderableDebug>>();
 		gameScene.GetRegistry()->on_construct<comp::Light>().connect<&Lights::Add>(gameScene.GetLights());
-
 
 		// Setup Cameras
 		Entity debugCameraEntity = gameScene.CreateEntity();
@@ -339,18 +338,6 @@ void sceneHelp::SetupInLobbyScreen(Game* game)
 			playerIcon->Hide();
 	}
 
-	Collection2D* general = new Collection2D;
-	general->AddElement<rtd::Canvas>(D2D1::ColorF(.2f, .2f, .2f), draw_t(0.0f, 0.0f, width, height));
-	rtd::Button* exitButton = general->AddElement<rtd::Button>("demoExitButton.png", draw_t(0.0f, 0.0f, width / 24, height / 16), false);
-	exitButton->SetOnPressedEvent([=]()
-		{
-			network::message<GameMsg> msg;
-			msg.header.id = GameMsg::Lobby_Leave;
-			msg << game->m_localPID << game->m_gameID;
-			game->m_client.Send(msg);
-		});
-	scene.Add2DCollection(general, "AGeneral");
-
 	const std::string& desc = "##--Description--##";
 	Collection2D* classTextCanvas = new Collection2D;
 	classTextCanvas->AddElement<rtd::Canvas>(D2D1::ColorF(1.0f, 1.0f, 1.0f), draw_t(width / 2, 0, (width / 2.12f), height - (height / 4)));
@@ -378,22 +365,28 @@ void sceneHelp::SetupInLobbyScreen(Game* game)
 
 	Collection2D* startGame = new Collection2D;
 	rtd::Button* startGameButton = startGame->AddElement<rtd::Button>("Button.png", draw_t((width / 2) + (width / 10.f), height - (height / 5.0f), (width / 3.33f), (height / 6.f)), false);
-	rtd::Text* readyText = startGame->AddElement<rtd::Text>("Ready", draw_text_t((width / 2) + (width / 10.f), height - (height / 5.0f), (width / 3.33f), (height / 6.f)));
+	rtd::Text* readyText = startGame->AddElement<rtd::Text>("Not ready", draw_text_t((width / 2) + (width / 10.f), height - (height / 5.0f), (width / 3.33f), (height / 6.f)));
 	startGameButton->SetOnPressedEvent([=]()
 		{
-			//if (isReady)
-			//{
-			//	readyText->SetText("Ready");
-			//}
-			//else
-			//{
-			//	readyText->SetText("Not ready");
-			//}
-			//isReady = !isReady;
-
+			comp::Player* player = game->GetLocalPlayer().GetComponent<comp::Player>();
+			player->isReady = !player->isReady;
 			game->SendStartGame();
 		});
 	scene.Add2DCollection(startGame, "StartGame");
+
+	Collection2D* general = new Collection2D;
+	general->AddElement<rtd::Canvas>(D2D1::ColorF(.2f, .2f, .2f), draw_t(0.0f, 0.0f, width, height));
+	rtd::Button* exitButton = general->AddElement<rtd::Button>("demoExitButton.png", draw_t(0.0f, 0.0f, width / 24, height / 16), false);
+	exitButton->SetOnPressedEvent([=]()
+		{
+			comp::Player* player = game->GetLocalPlayer().GetComponent<comp::Player>();
+			player->isReady = false;
+			network::message<GameMsg> msg;
+			msg.header.id = GameMsg::Lobby_Leave;
+			msg << game->m_localPID << game->m_gameID;
+			game->m_client.Send(msg);
+		});
+	scene.Add2DCollection(general, "AGeneral");
 
 	Collection2D* classButtons = new Collection2D;
 	rtd::Button* mageButton = classButtons->AddElement<rtd::Button>("mageIconDemo.png", draw_t((width / 3.33f) + (float)(width / 20), height - (height / 6), width / 24, height / 16));
