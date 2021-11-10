@@ -495,7 +495,6 @@ void Systems::AISystem(HeadlessScene& scene)
 			{
 				stats->targetDir = transformCurrentClosestPlayer->position - transformNPC->position;
 				stats->targetDir.Normalize();
-				stats->targetDir *= 10.f;
 				if (ecs::Use(stats))
 				{
 					// Enemy Attacked
