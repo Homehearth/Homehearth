@@ -1,5 +1,6 @@
-loadAnim 		idle 			Monster_Idle.fbx
-loadAnim 		walk 			Monster_Walk.fbx
-loadAnim 		attack 			Monster_Attack.fbx
-loadAnim 		takeDamage 		Monster_TakeDamage.fbx
-setCurrentAnim 	walk
+skel			Monster.fbx
+anim 			idle 			Monster_Idle.fbx
+anim 			walk 			Monster_Walk.fbx
+anim 			attack 			Monster_Attack.fbx
+anim 			takeDamage 		Monster_TakeDamage.fbx
+currentAnim 	walk

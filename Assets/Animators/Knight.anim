@@ -1,10 +1,10 @@
-//List of animations
-loadAnim 		idle 			Knight_Idle.fbx
-loadAnim 		running 		Knight_Running.fbx
-loadAnim 		slash 			Knight_Slash.fbx
-loadAnim 		takeDamage 		Knight_TakeDamage.fbx
-loadAnim		placeDefence	Knight_PlaceDefence.fbx
-setCurrentAnim 	idle
+skel 			Knight.fbx
+anim 			idle 			Knight_Idle.fbx
+anim 			running 		Knight_Running.fbx
+anim 			slash 			Knight_Slash.fbx
+anim 			takeDamage 		Knight_TakeDamage.fbx
+anim			placeDefence	Knight_PlaceDefence.fbx
+currentAnim 	idle
 
 
 /*

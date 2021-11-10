@@ -483,9 +483,9 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 			}
 			case ecs::Component::ANIMATOR_NAME:
 			{
-				comp::AnimatorName animName;
-				msg >> animName.name;
-				e.AddComponent<comp::Animator>()->animator = ResourceManager::Get().CopyResource<RAnimator>(animName.name, true);
+				std::string name;
+				msg >> name;
+				e.AddComponent<comp::Animator>()->animator = ResourceManager::Get().CopyResource<RAnimator>(name, true);
 				break;
 			}
 			case ecs::Component::NAME_PLATE:
