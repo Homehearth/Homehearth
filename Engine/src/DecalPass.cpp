@@ -17,7 +17,7 @@ void DecalPass::CreateBuffer()
 	const size_t size = m_matrices.size() > 0 ? m_matrices.size() : 1;
 
 	D3D11_BUFFER_DESC bDesc;
-	bDesc.ByteWidth = sizeof(sm::Matrix) * size;
+	bDesc.ByteWidth = sizeof(sm::Matrix) * (UINT)size;
 	bDesc.Usage = D3D11_USAGE_DEFAULT;
 	bDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
 	bDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;

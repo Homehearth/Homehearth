@@ -12,7 +12,7 @@ float4 main(PixelIn input) : SV_TARGET
 	if (input.worldPos.y < 1.0f)
     {
         [loop]
-		for (int j = 0; j < rolls; j++)
+		for (unsigned int j = 0; j < rolls; j++)
 		{
 			float4 decal_pos = mul(sb_decaldata[j], input.worldPos);
 			decal_pos = mul(decal_projection, decal_pos);
