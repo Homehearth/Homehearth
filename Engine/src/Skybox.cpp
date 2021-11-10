@@ -71,6 +71,22 @@ bool Skybox::CreateTextureAndSRV(const std::string& fileName)
 	std::string fileNameLong = "../Assets/Skybox/" + fileName;
 	std::wstring fileNameLongWS = std::wstring(fileNameLong.begin(), fileNameLong.end());
 	HRESULT hr = dx::CreateDDSTextureFromFile(D3D11Core::Get().Device(), DC, fileNameLongWS.c_str(), nullptr, m_skySrv.GetAddressOf());
+	
+
+	std::string lut = "ibl_brdf_lut.png";
+
+	std::shared_ptr<RTexture> texture = ResourceManager::Get().GetResource<RTexture>(lut, false);
+	m_brdfLUT = ResourceManager::Get().GetResource<RTexture>(lut, false);
+	if (!m_brdfLUT)
+	{
+		m_brdfLUT = std::make_shared<RTexture>();
+
+		if (!m_brdfLUT->Create(lut))
+			return false;
+
+		ResourceManager::Get().AddResource(lut, texture);
+	}
+
 	return !FAILED(hr);
 }
 
@@ -100,6 +116,7 @@ void Skybox::Render()
 	DC->IASetVertexBuffers(0, 1, m_vertexBuffer.GetAddressOf(), &stride, &offset);
 	DC->IASetIndexBuffer(m_indexBuffer.Get(), DXGI_FORMAT_R16_UINT, offset);
 	DC->PSSetShaderResources(15, 1, m_skySrv.GetAddressOf());
+	DC->PSSetShaderResources(99, 1, &m_brdfLUT.get()->GetShaderView());
 
 	DC->DrawIndexed(nrOfIndices, 0, 0);
 }

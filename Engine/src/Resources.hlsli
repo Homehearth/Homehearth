@@ -86,7 +86,8 @@ StructuredBuffer<Light> sb_lights : register(t10);
 //StructuredBuffer<uint> sb_pointLightIndexList : register();
 //StructuredBuffer<Frustum> sb_frustums : register();
 
-TextureCube t_cubeMap : register(t15);
+TextureCube t_cubeMap               : register(t15);
+Texture2D t_BRDFLUT                 : register(t99);
 
 
 //---------------------------------------------------------------------------

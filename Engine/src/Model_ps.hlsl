@@ -5,13 +5,15 @@ float4 main(PixelIn input) : SV_TARGET
     float3 camPos = c_cameraPosition.xyz;
     float ao = 1.0f;
     float3 albedo = 1.f;
-    float metallic = 0.0f;
-    float roughness = 0.5f;
+    float metallic = 1.0f;
+    float roughness = 0.0f;
     
     //Normal Vector
     float3 N = normalize(input.normal);
     //View Direction Vector
-    float3 V = normalize(camPos - input.worldPos.xyz);    
+    float3 V = normalize(camPos - input.worldPos.xyz);
+    //Reflection Vector
+    float3 R = reflect(-V, N);
     
     //If an object has a texture, sample from it else use default values.
     SampleTextures(input, albedo, N, roughness, metallic, ao);
@@ -57,11 +59,18 @@ float4 main(PixelIn input) : SV_TARGET
     
     //IBL Ambient
     float3 kS = FresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness);
-    float3 kD = 1.0 - kS;
-    float3 irradiance = t_cubeMap.Sample(s_cubeSamp, N).rgb;
-    float3 diffuse = irradiance * albedo;
-    float3 ambient = (kD * diffuse) * ao;
+    float3 kD = float3(1.0f, 1.0f, 1.0f) - kS;
+    kD *= 1.0f - metallic;
     
+    float3 irradiance = t_cubeMap.Sample(s_linear, N).rgb;
+    float3 diffuse = irradiance * albedo;
+    
+    const float MAX_REF_LOD = 4.0f;
+    float3 prefilteredColor = t_cubeMap.SampleLevel(s_linear, R, roughness * MAX_REF_LOD).rgb;
+    float2 brdf = t_BRDFLUT.Sample(s_linear, float2(max(dot(N, V), 0.0f), roughness)).rg;
+    float3 specular = prefilteredColor * (kS * brdf.x + brdf.y);
+    
+    float3 ambient = (kD * diffuse + specular) * ao;
     float3 color = ambient + Lo;
     
     //HDR tonemapping
@@ -69,5 +78,5 @@ float4 main(PixelIn input) : SV_TARGET
     //Gamma correct
     color = pow(max(color, 0.0f), float3(1.0 / 2.2, 1.0 / 2.2, 1.0 / 2.2));
     
-	return float4(color, 0.0);    
+	return float4(color, 0.0);
 }
