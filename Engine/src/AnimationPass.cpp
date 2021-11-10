@@ -35,7 +35,7 @@ void AnimationPass::Render(Scene* pScene)
 
 void AnimationPass::PostRender(ID3D11DeviceContext* pDeviceContext)
 {
-	// Cleanup.
-	//ID3D11ShaderResourceView* nullSRV[] = { nullptr };
-	//DC->PSSetShaderResources(0, 1, nullSRV);
+    // Cleanup.
+    //ID3D11ShaderResourceView* nullSRV[] = { nullptr };
+    //DC->PSSetShaderResources(0, 1, nullSRV);
 }
