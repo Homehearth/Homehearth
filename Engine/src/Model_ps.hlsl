@@ -24,9 +24,11 @@ float4 main(PixelIn input) : SV_TARGET
         
 			if ((saturate(texCoords.x) == texCoords.x) & (saturate(texCoords.y) == texCoords.y))
 			{
-				float4 color = t_decal.Sample(s_linear, texCoords);
-
-				return color;
+				float3 color = t_decal.Sample(s_linear, texCoords).xyz;
+				float alpha = t_decalAlpha.Sample(s_linear, texCoords).r;
+                
+				if (alpha > 0.1f)
+					return float4(color, alpha);
 			}
 		}
 	}
@@ -90,5 +92,5 @@ float4 main(PixelIn input) : SV_TARGET
     //Gamma correct
     color = pow(max(color, 0.0f), float3(1.0 / 2.2, 1.0 / 2.2, 1.0 / 2.2));
     
-	return float4(color, 0.0);    
+	return float4(color, 5.0f);    
 }

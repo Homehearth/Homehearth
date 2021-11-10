@@ -18,6 +18,7 @@ private:
 	DecalInfoBuffer m_decalInfoBuffer;
 
 	std::shared_ptr<RTexture> tempTexture = nullptr;
+	std::shared_ptr<RTexture> tempAlphaTexture = nullptr;
 
 	void CreateBuffer();
 

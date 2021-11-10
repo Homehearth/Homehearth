@@ -57,6 +57,11 @@ namespace sceneHelp
 		backgroundScene.AddComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>("GameScene.obj");
 		backgroundScene.AddComponent<comp::Transform>();
 
+		comp::Transform test;
+		test.position = { 330.0f, 1.0f, -333.3f };
+		Entity blood = mainMenuScene.CreateEntity();
+		blood.AddComponent<comp::Decal>(test);
+
 		mainMenuScene.GetCurrentCamera()->Initialize(sm::Vector3(0, 0, 0), sm::Vector3(0, 0, 1), sm::Vector3(0, 1, 0),
 			sm::Vector2((float)game->GetWindow()->GetWidth(), (float)game->GetWindow()->GetHeight()), CAMERATYPE::DEFAULT);
 		mainMenuScene.GetCurrentCamera()->m_position = sm::Vector3(350.f, 30.f, -250.f);

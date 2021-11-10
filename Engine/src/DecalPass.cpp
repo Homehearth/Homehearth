@@ -44,6 +44,7 @@ void DecalPass::Create()
 {
 	m_infoBuffer.Create(D3D11Core::Get().Device());
 	tempTexture = ResourceManager::Get().GetResource<RTexture>("demoBloodsplat.png");
+	tempAlphaTexture = ResourceManager::Get().GetResource<RTexture>("demoBloodsplatAlpha.png");
 }
 
 DecalPass::DecalPass()
@@ -66,7 +67,12 @@ void DecalPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 {
 	if (tempTexture)
 	{
-		DC->PSSetShaderResources(9, 1, &tempTexture.get()->GetShaderView());
+		DC->PSSetShaderResources(12, 1, &tempTexture.get()->GetShaderView());
+	}
+
+	if (tempAlphaTexture)
+	{
+		DC->PSSetShaderResources(13, 1, &tempAlphaTexture.get()->GetShaderView());
 	}
 }
 
@@ -101,6 +107,6 @@ void DecalPass::PostRender(ID3D11DeviceContext* pDeviceContext)
 		m_infoBuffer.GetBuffer()
 	};
 
-	DC->PSSetShaderResources(15, 1, &m_shaderView);
+	DC->PSSetShaderResources(16, 1, &m_shaderView);
 	DC->PSSetConstantBuffers(10, 1, &buff);
 }
