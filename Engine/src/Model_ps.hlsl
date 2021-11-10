@@ -5,7 +5,7 @@ float4 main(PixelIn input) : SV_TARGET
     float3 camPos = c_cameraPosition.xyz;
     float ao = 1.0f;
     float3 albedo = 1.f;
-    float metallic = 0.5f;
+    float metallic = 0.0f;
     float roughness = 0.5f;
     
     //Normal Vector
