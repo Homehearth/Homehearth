@@ -24,7 +24,7 @@ rtd::Slider::Slider(D2D1_COLOR_F color, const draw_t& draw_opts, float* value, f
 	std::string tmp = std::to_string(*m_value);
 	auto length = std::snprintf(&m_valueString[0], m_valueString.size(), "%.2f", *m_value);
 	tmp.resize(length);
-	m_valueText = std::make_unique<Text>(tmp, draw_text_t(draw_opts.x_pos + (draw_opts.width * 0.5f), draw_opts.y_pos - draw_opts.height, tmp.length() * 24.0f, draw_opts.height));
+	m_valueText = std::make_unique<Text>(tmp, draw_text_t(draw_opts.x_pos + (draw_opts.width * 0.5f), draw_opts.y_pos - draw_opts.height, draw_opts.width, draw_opts.height));
 
 	if (m_isHorizontal)
 	{
@@ -60,6 +60,22 @@ void rtd::Slider::SetMinPos(sm::Vector2 minPos)
 void rtd::Slider::SetMaxPos(sm::Vector2 maxPos)
 {
 	m_maxPos = maxPos;
+
+	if (m_isHorizontal)
+	{
+		m_valueText->SetPosition(m_minPos.x, m_drawOpts.height);
+		m_valueText->SetStretch(maxPos.x, m_drawOpts.height);
+	}
+	else
+	{
+		m_valueText->SetPosition(m_drawOpts.width, m_minPos.y);
+		m_valueText->SetStretch(m_drawOpts.width, maxPos.y);
+	}
+}
+
+void rtd::Slider::SetExplanationText(const std::string& text)
+{
+	m_explanationString = text;
 }
 
 void Slider::Draw()
@@ -81,13 +97,14 @@ void Slider::OnClick()
 		UpdateSliderPos(m_drawOpts.x_pos, InputSystem::Get().GetMousePos().y - (m_drawOpts.height * 0.5f));
 
 	m_slider.get()->SetPosition(m_drawOpts.x_pos, m_drawOpts.y_pos);
+
 	// Update the value
 	if (m_value)
 	{
 		m_valueString = std::to_string(*m_value);
 		auto length = std::snprintf(&m_valueString[0], m_valueString.size(), "%.2f", *m_value);
 		m_valueString.resize(length);
-		m_valueText.get()->SetText(m_valueString);
+		m_valueText.get()->SetText(m_explanationString + m_valueString);
 		if (m_isHorizontal)
 		{
 			float old_range = (m_drawOpts.x_pos - m_minPos.x) / (m_maxPos.x - m_minPos.x);
@@ -103,20 +120,12 @@ void Slider::OnClick()
 
 void Slider::OnHover()
 {
+	m_valueText.get()->SetText(m_explanationString + m_valueString);
 }
 
 bool Slider::CheckHover()
 {
-	m_isHovering = false;
-	// Is within bounds?
-	if (InputSystem::Get().GetMousePos().x > m_drawOpts.x_pos &&
-		InputSystem::Get().GetMousePos().x < m_drawOpts.x_pos + m_drawOpts.width &&
-		InputSystem::Get().GetMousePos().y > m_drawOpts.y_pos &&
-		InputSystem::Get().GetMousePos().y < m_drawOpts.y_pos + m_drawOpts.height)
-	{
-		m_isHovering = true;
-	}
-	return m_isHovering;
+	return true;
 }
 
 bool Slider::CheckClick()

@@ -64,6 +64,25 @@ Text* rtd::Button::GetText()
 	return m_text.get();
 }
 
+const draw_t& rtd::Button::GetOpts() const
+{
+	return m_drawOpts;
+}
+
+void rtd::Button::SetPosition(const float& x, const float& y)
+{
+	m_drawOpts.x_pos = x;
+	m_drawOpts.y_pos = y;
+}
+
+void rtd::Button::AddPosition(const float& x, const float& y)
+{
+	m_drawOpts.x_pos += x;
+	m_drawOpts.y_pos += y;
+
+	m_picture->UpdatePos(m_drawOpts);
+}
+
 void rtd::Button::SetOnPressedEvent(const std::function<void()>& func)
 {
 	m_function = func;

@@ -2,22 +2,20 @@
 #include "EnginePCH.h"
 #include "Healthbar.h"
 
-using namespace network;
-
 
 //System check if mouse ray intersects any of the box collider components in scene
 void GameSystems::MRayIntersectBoxSystem(Scene& scene)
 {
 	float t = 0;
-	
+
 	scene.ForEachComponent<comp::BoundingOrientedBox, comp::Transform>([&](Entity entity, comp::BoundingOrientedBox& boxCollider, comp::Transform& transform)
-    {
-		//Collided with mouse TODO make it do someting?
-		if(Intersect::RayIntersectBox(InputSystem::Get().GetMouseRay(), boxCollider, t))
 		{
-			LOG_INFO("Mouseray HIT box detected!");
-		}
-	});
+			//Collided with mouse TODO make it do someting?
+			if (Intersect::RayIntersectBox(InputSystem::Get().GetMouseRay(), boxCollider, t))
+			{
+				LOG_INFO("Mouseray HIT box detected!");
+			}
+		});
 }
 
 //System to render collider mesh red if collider is colliding with another collider
@@ -26,7 +24,7 @@ void GameSystems::RenderIsCollidingSystem(Scene& scene)
 	scene.ForEachComponent<comp::RenderableDebug>([&](Entity entity, comp::RenderableDebug& renderableDebug)
 		{
 			//Collided with mouse TODO make it do someting?
-			if(CollisionSystem::Get().getCollisionCounts(entity) > 0)
+			if (CollisionSystem::Get().getCollisionCounts(entity) > 0)
 			{
 				renderableDebug.isColliding.hit = 1;
 			}
@@ -41,7 +39,7 @@ void GameSystems::RenderIsCollidingSystem(Scene& scene)
 void GameSystems::UpdateHealthbar(Scene& scene)
 {
 	int i = 1;
-	scene.ForEachComponent<comp::Health, comp::Player>([&](Entity e,comp::Health& health, const comp::Player& player) {
+	scene.ForEachComponent<comp::Health, comp::Player>([&](Entity e, comp::Health& health, const comp::Player& player) {
 		// Safety check for now.
 		if (i < 5)
 		{
@@ -59,7 +57,7 @@ void GameSystems::UpdatePlayerVisuals(Scene& scene)
 {
 	int i = 1;
 	int j = 4;
-	scene.ForEachComponent<comp::NamePlate, comp::Transform>([&](Entity& e, comp::NamePlate& name, comp::Transform &t)
+	scene.ForEachComponent<comp::NamePlate, comp::Transform>([&](Entity& e, comp::NamePlate& name, comp::Transform& t)
 		{
 			if (i < 5)
 			{
@@ -123,4 +121,31 @@ void GameSystems::UpdatePlayerVisuals(Scene& scene)
 			i++;
 			j--;
 		});
+
+}
+
+
+// Will check if a ray hits an object before it hits the player and if it does it will add the object to be rendered transparent
+void GameSystems::CheckLOS(Scene& scene, const sm::Vector3& playerPos, const std::vector<dx::BoundingOrientedBox>& mapColliders)
+{
+	Camera* cam = scene.GetCurrentCamera();
+
+	// Only need to check LOS if we are using the game camera
+	if (cam->GetCameraType() == CAMERATYPE::PLAY)
+	{
+		// Shoot a ray from cameras position to players position
+		Ray_t ray;
+		ray.origin = cam->GetPosition();
+		ray.dir = (playerPos - ray.origin);
+		ray.dir.Normalize(ray.dir);
+
+		for (int i = 0; i < mapColliders.size(); i++)
+		{
+			if (ray.Intersects(mapColliders[i]))
+			{
+				LOG_INFO("You are now behind an object and we cannot see you ROFL!");
+				break;
+			}
+		}
+	}
 }

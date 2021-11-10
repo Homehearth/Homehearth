@@ -213,7 +213,7 @@ public:
 		Draws the specified shape with _DRAW input specifications.
 		This method uses the default brush.
 	*/
-	static void DrawF(const draw_t& fig, const draw_shape_t& shape);
+	static void DrawF(const draw_t& fig, const draw_shape_t& shape, const LineWidth& thickness = LineWidth::MEDIUM);
 
 	/*
 		Draws a Bitmap onto the screen at the coordinates of

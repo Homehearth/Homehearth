@@ -1,4 +1,4 @@
-#include "DemoScene.h"
+#include "SceneHelper.h"
 #include "Canvas.h"
 #include "Picture.h"
 #include "Border.h"
@@ -57,6 +57,11 @@ namespace sceneHelp
 		backgroundScene.AddComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>("GameScene.obj");
 		backgroundScene.AddComponent<comp::Transform>();
 
+		comp::Transform test;
+		test.position = { 330.0f, 1.0f, -333.3f };
+		Entity blood = mainMenuScene.CreateEntity();
+		blood.AddComponent<comp::Decal>(test);
+
 		mainMenuScene.GetCurrentCamera()->Initialize(sm::Vector3(0, 0, 0), sm::Vector3(0, 0, 1), sm::Vector3(0, 1, 0),
 			sm::Vector2((float)game->GetWindow()->GetWidth(), (float)game->GetWindow()->GetHeight()), CAMERATYPE::DEFAULT);
 		mainMenuScene.GetCurrentCamera()->m_position = sm::Vector3(350.f, 30.f, -250.f);
@@ -103,6 +108,12 @@ namespace sceneHelp
 		SetupLoadingScene(game);
 	}
 
+	void CreateOptionsScene(Game* game)
+	{
+		Scene& optionsMenu = game->GetScene("Options");
+		SetupOptionsScreen(game);
+	}
+
 	void CreateGameScene(Game* engine)
 	{
 		Scene& gameScene = engine->GetScene("Game");
@@ -113,7 +124,6 @@ namespace sceneHelp
 		gameScene.GetRegistry()->on_construct<comp::BoundingOrientedBox>().connect<&entt::registry::emplace_or_replace<comp::RenderableDebug>>();
 		gameScene.GetRegistry()->on_construct<comp::BoundingSphere>().connect<&entt::registry::emplace_or_replace<comp::RenderableDebug>>();
 		gameScene.GetRegistry()->on_construct<comp::Light>().connect<&Lights::Add>(gameScene.GetLights());
-
 
 		// Setup Cameras
 		Entity debugCameraEntity = gameScene.CreateEntity();
@@ -137,7 +147,7 @@ namespace sceneHelp
 
 		InputSystem::Get().SetCamera(gameScene.GetCurrentCamera());
 
-		gameScene.on<ESceneUpdate>([cameraEntity, debugCameraEntity](const ESceneUpdate& e, Scene& scene)
+		gameScene.on<ESceneUpdate>([cameraEntity, debugCameraEntity, engine](const ESceneUpdate& e, Scene& scene)
 			{
 
 				IMGUI(
@@ -146,6 +156,8 @@ namespace sceneHelp
 				ImGui::End();
 				);
 
+				// Prediction
+				//engine->m_predictor.Predict(engine->GetScene("Game"));
 				GameSystems::RenderIsCollidingSystem(scene);
 				GameSystems::UpdatePlayerVisuals(scene);
 #ifdef _DEBUG
@@ -209,7 +221,13 @@ void sceneHelp::SetupMainMenuScreen(Game* game)
 	//	});
 
 	Collection2D* test = new Collection2D;
-	test->AddElement<rtd::Scroller>(draw_t(0.0f, -480.0f, 160.0f, 480.0f), sm::Vector2(0, 0));
+	rtd::Scroller* sc = test->AddElement<rtd::Scroller>(draw_t(0.0f, -480.0f, 160.0f, 480.0f), sm::Vector2(0, 0));
+	sc->AddButton("demoExitButton.png", draw_t(32.0f, -32.0f, 64.0f, 32.0f))->SetOnPressedEvent([=] {
+		game->Shutdown();
+		});
+	sc->AddButton("demo_options_button.png", draw_t(32.0f, -72.0f, 64.0f, 32.0f))->SetOnPressedEvent([=] {
+		game->SetScene("Options");
+		});
 	scene.Add2DCollection(test, "test");
 
 	rtd::Button* externalLinkBtn = connectFields->AddElement<rtd::Button>("Button.png", draw_t(width - width / 4.f, height - (height / 5), width / 8.f, height / 16));
@@ -339,18 +357,6 @@ void sceneHelp::SetupInLobbyScreen(Game* game)
 			playerIcon->Hide();
 	}
 
-	Collection2D* general = new Collection2D;
-	general->AddElement<rtd::Canvas>(D2D1::ColorF(.2f, .2f, .2f), draw_t(0.0f, 0.0f, width, height));
-	rtd::Button* exitButton = general->AddElement<rtd::Button>("demoExitButton.png", draw_t(0.0f, 0.0f, width / 24, height / 16), false);
-	exitButton->SetOnPressedEvent([=]()
-		{
-			network::message<GameMsg> msg;
-			msg.header.id = GameMsg::Lobby_Leave;
-			msg << game->m_localPID << game->m_gameID;
-			game->m_client.Send(msg);
-		});
-	scene.Add2DCollection(general, "AGeneral");
-
 	const std::string& desc = "##--Description--##";
 	Collection2D* classTextCanvas = new Collection2D;
 	classTextCanvas->AddElement<rtd::Canvas>(D2D1::ColorF(1.0f, 1.0f, 1.0f), draw_t(width / 2, 0, (width / 2.12f), height - (height / 4)));
@@ -378,22 +384,28 @@ void sceneHelp::SetupInLobbyScreen(Game* game)
 
 	Collection2D* startGame = new Collection2D;
 	rtd::Button* startGameButton = startGame->AddElement<rtd::Button>("Button.png", draw_t((width / 2) + (width / 10.f), height - (height / 5.0f), (width / 3.33f), (height / 6.f)), false);
-	rtd::Text* readyText = startGame->AddElement<rtd::Text>("Ready", draw_text_t((width / 2) + (width / 10.f), height - (height / 5.0f), (width / 3.33f), (height / 6.f)));
+	rtd::Text* readyText = startGame->AddElement<rtd::Text>("Not ready", draw_text_t((width / 2) + (width / 10.f), height - (height / 5.0f), (width / 3.33f), (height / 6.f)));
 	startGameButton->SetOnPressedEvent([=]()
 		{
-			//if (isReady)
-			//{
-			//	readyText->SetText("Ready");
-			//}
-			//else
-			//{
-			//	readyText->SetText("Not ready");
-			//}
-			//isReady = !isReady;
-
+			comp::Player* player = game->GetLocalPlayer().GetComponent<comp::Player>();
+			player->isReady = !player->isReady;
 			game->SendStartGame();
 		});
 	scene.Add2DCollection(startGame, "StartGame");
+
+	Collection2D* general = new Collection2D;
+	general->AddElement<rtd::Canvas>(D2D1::ColorF(.2f, .2f, .2f), draw_t(0.0f, 0.0f, width, height));
+	rtd::Button* exitButton = general->AddElement<rtd::Button>("demoExitButton.png", draw_t(0.0f, 0.0f, width / 24, height / 16), false);
+	exitButton->SetOnPressedEvent([=]()
+		{
+			comp::Player* player = game->GetLocalPlayer().GetComponent<comp::Player>();
+			player->isReady = false;
+			network::message<GameMsg> msg;
+			msg.header.id = GameMsg::Lobby_Leave;
+			msg << game->m_localPID << game->m_gameID;
+			game->m_client.Send(msg);
+		});
+	scene.Add2DCollection(general, "AGeneral");
 
 	Collection2D* classButtons = new Collection2D;
 	rtd::Button* mageButton = classButtons->AddElement<rtd::Button>("mageIconDemo.png", draw_t((width / 3.33f) + (float)(width / 20), height - (height / 6), width / 24, height / 16));
@@ -413,9 +425,19 @@ void sceneHelp::SetupInLobbyScreen(Game* game)
 	scene.Add2DCollection(classButtons, "ClassButtons");
 }
 
-void sceneHelp::SetupOptionsScreen(Scene& scene)
+void sceneHelp::SetupOptionsScreen(Game* game)
 {
+	const float width = (float)game->GetWindow()->GetWidth();
+	const float height = (float)game->GetWindow()->GetHeight();
+	Scene& scene = game->GetScene("Options");
 
+
+	Collection2D* soundCollection = new Collection2D;
+	rtd::Slider* sl = soundCollection->AddElement<rtd::Slider>(D2D1::ColorF(0.0f, 0.0f, 0.0f), draw_t((width / 2) - (width / 9), height / 5, width / 9, height / 16), &game->m_masterVolume);
+	sl->SetMinPos(sm::Vector2((width / 8) - (width / 9)));
+	sl->SetMaxPos(sm::Vector2(width - (width / 8)));
+	sl->SetExplanationText("Master Volume: ");
+	scene.Add2DCollection(soundCollection, "Sounds");
 }
 
 void sceneHelp::SetupLoadingScene(Game* game)
@@ -427,7 +449,7 @@ void sceneHelp::SetupLoadingScene(Game* game)
 	Collection2D* loadingScreen = new Collection2D;
 
 	loadingScreen->AddElement<rtd::Picture>("oohstonefigures.jpg", (draw_t(0.0f, 0.0f, width, height)));
-	loadingScreen->AddElement<rtd::Text>("Loading!", draw_text_t((width / 2.f) - (strlen("Loading!") * 24.f * 0.5f), (height / 2.f) - D2D1Core::GetDefaultFontSize(), strlen("Loading!") * D2D1Core::GetDefaultFontSize(), D2D1Core::GetDefaultFontSize()));
+	loadingScreen->AddElement<rtd::Text>("Loading!", draw_text_t((width / 2.f) - (strlen("Loading!") * D2D1Core::GetDefaultFontSize() * 0.5f), (height / 2.f) - D2D1Core::GetDefaultFontSize(), strlen("Loading!") * D2D1Core::GetDefaultFontSize(), D2D1Core::GetDefaultFontSize()));
 
 	scene.Add2DCollection(loadingScreen, "LoadingScreen");
 }
