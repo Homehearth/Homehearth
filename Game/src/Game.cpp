@@ -204,7 +204,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 				UpdateEntityFromMessage(entity, msg);
 			}
 			else {
-				LOG_WARNING("Updating: Entity %u not in m_gameEntities, should not happen...", entityID);
+				LOG_WARNING("Updating component: Entity %u not in m_gameEntities, should not happen...", entityID);
 
 			}
 		}
