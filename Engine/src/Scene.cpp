@@ -248,7 +248,8 @@ void Scene::RenderAnimation()
 		{
 			m_registry.view<comp::Animator>().each([&](comp::Animator& anim)
 				{
-					anim.animator->Update();
+					if(anim.animator)
+						anim.animator->Update();
 				});
 		}
 
