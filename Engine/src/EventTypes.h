@@ -1,5 +1,7 @@
 #pragma once
 #include "Entity.h"
+#include "Components.h"
+
 struct EShutdown {};
 
 struct ESceneChange
@@ -27,3 +29,9 @@ struct ESceneCallWaveSystem
 };
 
 struct ESceneRender {};
+
+struct EComponentUpdated 
+{
+	Entity entity;
+	ecs::Component component;
+};

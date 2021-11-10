@@ -109,21 +109,40 @@ void GridSystem::Initialize(Vector2I mapSize, sm::Vector3 position, std::string 
 }
 
 
-void GridSystem::PlaceDefence(Ray_t& mouseRay)
+void GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse)
 {
 	float t = 0;
 
+	const float MAX_RADIUS = 40.f;
+	const float MIN_RADIUS = 10.f;
+
 	Plane_t plane;
 	plane.normal = { 0.0f, 1.0f, 0.0f };
-
 	sm::Vector3 pos;
-	bool isHit = false;
+	bool tileFound = false;
+	bool canBuild = false;
+
+	sm::Vector3 localPlayer;
+	std::vector<sm::Vector3> pPos;
+
+	// Save positions to calculate distances to the tile
+	m_scene->ForEachComponent<comp::Player, comp::Transform, comp::Network>([&](comp::Player& p, comp::Transform& t, comp::Network& net)
+		{
+			if (net.id != playerWhoPressedMouse)
+			{
+				pPos.push_back(t.position);
+			}
+			else
+			{
+				localPlayer = t.position;
+			}
+		});
 
 	if (mouseRay.Intersects(plane, &pos))
 	{
-		for (int col = 0; col < m_gridSize.y && !isHit; col++)
+		for (int col = 0; col < m_gridSize.y && !tileFound; col++)
 		{
-			for (int row = 0; row < m_gridSize.x && !isHit; row++)
+			for (int row = 0; row < m_gridSize.x && !tileFound; row++)
 			{
 				Tile tile = m_tiles[row][col];
 
@@ -132,36 +151,49 @@ void GridSystem::PlaceDefence(Ray_t& mouseRay)
 				float top = tile.position.z + tile.halfWidth;
 				float bottom = tile.position.z - tile.halfWidth;
 
+				// Is mouse position we clicked at within the tiles bounds
 				if (pos.x > left && pos.x < right && pos.z < top && pos.z > bottom)
 				{
-					isHit = true;
-					if (m_tiles[row][col].type == TileType::EMPTY)
+					tileFound = true;
+					if (tile.type == TileType::EMPTY)
 					{
-						LOG_INFO("Mouseray HIT plane detected a EMPTY Tile!");
-						m_tiles[row][col].type = TileType::DEFENCE;
+						bool tileOccupied = false;
+						// Other players, should be other entities
+						for (int i = 0; i < pPos.size() && !tileOccupied; i++)
+						{
+							if (sm::Vector3::Distance(pPos[i], tile.position) < MIN_RADIUS)
+							{
+								tileOccupied = true;
+							}
+						}
+						if (!tileOccupied && 
+							sm::Vector3::Distance(tile.position, localPlayer) < MAX_RADIUS && 
+							sm::Vector3::Distance(tile.position, localPlayer) > MIN_RADIUS)
+						{
+							m_tiles[row][col].type = TileType::DEFENCE;
 
-						Entity tileEntity = m_scene->CreateEntity();
-						comp::Transform* transform = tileEntity.AddComponent<comp::Transform>();
-						transform->position = tile.position;
-						transform->position.y = 0.5;
+							Entity tileEntity = m_scene->CreateEntity();
+							comp::Transform* transform = tileEntity.AddComponent<comp::Transform>();
+							transform->position = tile.position;
+							transform->position.y = 0.5;
 
-						transform->scale = { 4.2f, 0.5f, 4.2f };
-						tileEntity.AddComponent<comp::Network>();
-						comp::BoundingOrientedBox* collider = tileEntity.AddComponent<comp::BoundingOrientedBox>();
-						collider->Center = tileEntity.GetComponent<comp::Transform>()->position;
-						collider->Extents = { tileEntity.GetComponent<comp::Transform>()->scale.x, 10.f , tileEntity.GetComponent<comp::Transform>()->scale.z };
-						tileEntity.AddComponent<comp::Tag<TagType::STATIC>>();
-						tileEntity.AddComponent<comp::MeshName>()->name = "Defence.obj";
-
+							transform->scale = { 4.2f, 0.5f, 4.2f };
+							tileEntity.AddComponent<comp::Network>();
+							comp::BoundingOrientedBox* collider = tileEntity.AddComponent<comp::BoundingOrientedBox>();
+							collider->Center = tileEntity.GetComponent<comp::Transform>()->position;
+							collider->Extents = { tileEntity.GetComponent<comp::Transform>()->scale.x, 10.f , tileEntity.GetComponent<comp::Transform>()->scale.z };
+							tileEntity.AddComponent<comp::Tag<TagType::STATIC>>();
+							tileEntity.AddComponent<comp::MeshName>()->name = "Defence.obj";
+						}
 					}
-					else if (m_tiles[row][col].type == TileType::BUILDING || m_tiles[row][col].type == TileType::UNPLACABLE || m_tiles[row][col].type == TileType::DEFAULT)
-					{
-						LOG_INFO("You cant place here!");
-					}
-					else if (m_tiles[row][col].type == TileType::DEFENCE)
-					{
-						LOG_INFO("Theres already a defence here!");
-					}
+					//else if (tile.type == TileType::BUILDING || tile.type == TileType::UNPLACABLE || tile.type == TileType::DEFAULT)
+					//{
+					//	LOG_INFO("You cant place here!");
+					//}
+					//else if (tile.type == TileType::DEFENCE)
+					//{
+					//	LOG_INFO("Theres already a defence here!");
+					//}
 				}
 			}
 		}

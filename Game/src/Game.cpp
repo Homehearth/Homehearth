@@ -1,7 +1,7 @@
 #include "Game.h"
 #include "Button.h"
 #include "TextField.h"
-#include <DemoScene.h>
+#include <SceneHelper.h>
 #include "Healthbar.h"
 
 using namespace std::placeholders;
@@ -12,9 +12,8 @@ Game::Game()
 {
 	this->m_localPID = -1;
 	this->m_gameID = -1;
-	m_isLeavingLobby = false;
 	this->m_predictionThreshhold = 0.001f;
-	m_waveTimer = 0;
+	this->m_waveTimer = 0;
 }
 
 
@@ -30,19 +29,19 @@ Game::~Game()
 
 void Game::UpdateNetwork(float deltaTime)
 {
-	//static float pingCheck = 0.f;
-	//const float TARGET_PING_TIME = 5.0f;
+	static float pingCheck = 0.f;
+	const float TARGET_PING_TIME = 5.0f;
 	if (m_client.IsConnected())
 	{
 		m_client.Update();
 
-		//pingCheck += deltaTime;
+		pingCheck += deltaTime;
 
-		//if (pingCheck > TARGET_PING_TIME)
-		//{
-		//	this->PingServer();
-		//	pingCheck -= TARGET_PING_TIME;
-		//}
+		if (pingCheck > TARGET_PING_TIME)
+		{
+			this->PingServer();
+			pingCheck -= TARGET_PING_TIME;
+		}
 
 		if (GetCurrentScene() == &GetScene("Game"))
 		{
@@ -74,27 +73,16 @@ bool Game::OnStartup()
 	sceneHelp::CreateJoinLobbyScene(this);
 	sceneHelp::CreateLoadingScene(this);
 
+	this->LoadMapColliders("AllBounds.fbx");
 	// Set Current Scene
 	SetScene("MainMenu");
+
 
 	return true;
 }
 
 void Game::OnUserUpdate(float deltaTime)
 {
-	static float pingCheck = 0.f;
-	const float PING_TARGET = 5.0f;
-
-
-	if (m_client.IsConnected())
-	{
-		pingCheck += deltaTime;
-		if (pingCheck >= PING_TARGET)
-		{
-			PingServer();
-			pingCheck = 0.f;
-		}
-	}
 	/*
 if (GetCurrentScene() == &GetScene("Game") && GetCurrentScene()->GetCurrentCamera()->GetCameraType() == CAMERATYPE::PLAY)
 {
@@ -125,6 +113,8 @@ if (GetCurrentScene() == &GetScene("Game") && GetCurrentScene()->GetCurrentCamer
 		//Update InputState
 	if (GetCurrentScene() == &GetScene("Game"))
 	{
+		// Re-enable when we have the transparency pass done
+		//GameSystems::CheckLOS(GetScene("Game"), m_players.at(m_localPID).GetComponent<comp::Transform>()->position, m_LOSColliders);
 		this->UpdateInput();
 	}
 }
@@ -179,7 +169,33 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			}
 			else {
 				LOG_WARNING("Updating: Entity %u not in m_gameEntities, should not happen...", entityID);
-				
+
+			}
+		}
+
+		break;
+	}
+	case GameMsg::Game_UpdateComponent:
+	{
+		uint32_t currentTick;
+		msg >> currentTick;
+		uint32_t count; // Could be more than one Entity
+		msg >> count;
+
+		for (uint32_t i = 0; i < count; i++)
+		{
+			uint32_t entityID;
+			msg >> entityID;
+
+			Entity entity;
+			if (m_gameEntities.find(entityID) != m_gameEntities.end())
+			{
+				entity = m_gameEntities.at(entityID);
+				UpdateEntityFromMessage(entity, msg);
+			}
+			else {
+				LOG_WARNING("Updating: Entity %u not in m_gameEntities, should not happen...", entityID);
+
 			}
 		}
 
@@ -202,7 +218,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			msg >> entityID;
 			e.AddComponent<comp::Network>(entityID);
 			UpdateEntityFromMessage(e, msg);
-			
+
 			m_gameEntities.insert(std::make_pair(entityID, e));
 			if (e.GetComponent<comp::Network>()->id == m_localPID)
 			{
@@ -225,7 +241,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 				LOG_INFO("A remote player added!");
 				m_players[e.GetComponent<comp::Network>()->id] = e;
 			}
-			
+
 		}
 
 		if (GetCurrentScene() == &GetScene("Loading"))
@@ -266,9 +282,15 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	}
 	case GameMsg::Game_BackToLobby:
 	{
+		auto it = m_players.begin();
+		while (it != m_players.end())
+		{
+			it->second.GetComponent<comp::Player>()->isReady = false;
+			it++;
+		}
 		SetScene("Lobby");
 		break;
-	}	
+	}
 	case GameMsg::Lobby_Accepted:
 	{
 		msg >> m_gameID;
@@ -315,7 +337,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	{
 		uint32_t count;
 		msg >> count;
-		const uint32_t* spots = &count;
 		std::string ids[MAX_PLAYERS_PER_LOBBY];
 
 		for (uint32_t i = 0; i < count; i++)
@@ -335,6 +356,22 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 				{
 					plT->SetText(playerPlate);
 					plT->SetStretch(D2D1Core::GetDefaultFontSize() * plT->GetText().length(), D2D1Core::GetDefaultFontSize());
+				}
+			}
+		}
+		if (m_players.find(m_localPID) != m_players.end())
+		{
+			comp::Player* player = m_players.at(m_localPID).GetComponent<comp::Player>();
+			rtd::Text* readyText = dynamic_cast<rtd::Text*>(GetScene("Lobby").GetCollection("StartGame")->elements[1].get());
+			if (readyText)
+			{
+				if (player->isReady)
+				{
+					readyText->SetText("Ready");
+				}
+				else
+				{
+					readyText->SetText("Not ready");
 				}
 			}
 		}
@@ -364,6 +401,8 @@ void Game::PingServer()
 	message<GameMsg> msg = {};
 	msg.header.id = GameMsg::Server_GetPing;
 	msg << this->m_localPID;
+
+	LOG_INFO("Pinging server!");
 
 	this->m_timeThen = std::chrono::system_clock::now();
 	m_client.Send(msg);
@@ -426,12 +465,18 @@ void Game::SendStartGame()
 	network::message<GameMsg> msg;
 	msg.header.id = GameMsg::Game_PlayerReady;
 	msg << m_localPID << m_gameID;
+
 	m_client.Send(msg);
+}
+
+Entity& Game::GetLocalPlayer()
+{
+	return this->m_players.at(m_localPID);
 }
 
 void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 {
-	
+
 	uint32_t bits;
 	msg >> bits;
 	std::bitset<ecs::Component::COMPONENT_MAX> compSet(bits);
@@ -471,7 +516,7 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 
 				//Get model
 				comp::Renderable* renderable = e.GetComponent<comp::Renderable>();
-				if(renderable && renderable->model)
+				if (renderable && renderable->model)
 				{
 
 					//Add an animator if we can get it
@@ -483,6 +528,10 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 							if (anim->LoadSkeleton(renderable->model->GetSkeleton()))
 								e.AddComponent<comp::Animator>()->animator = anim;
 						}
+					}
+					else
+					{
+						e.RemoveComponent<comp::Animator>();
 					}
 				}
 				break;
@@ -545,14 +594,12 @@ void Game::UpdateInput()
 	if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::HELD))
 	{
 		m_inputState.leftMouse = true;
-		m_inputState.mouseRay = InputSystem::Get().GetMouseRay();
-
 	}
 	if (InputSystem::Get().CheckMouseKey(MouseKey::RIGHT, KeyState::PRESSED))
 	{
 		m_inputState.rightMouse = true;
-		m_inputState.mouseRay = InputSystem::Get().GetMouseRay();
 	}
+	m_inputState.mouseRay = InputSystem::Get().GetMouseRay();
 }
 
 void Game::LoadAllAssets()
@@ -565,4 +612,67 @@ void Game::LoadAllAssets()
 	Entity e = GetScene("Game").CreateEntity();
 	e.AddComponent<comp::Transform>();
 	e.AddComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>("GameScene.obj");
+}
+
+bool Game::LoadMapColliders(const std::string& filename)
+{
+	std::string filepath = BOUNDSPATH + filename;
+	Assimp::Importer importer;
+
+	const aiScene* scene = importer.ReadFile
+	(
+		filepath,
+		aiProcess_JoinIdenticalVertices |
+		aiProcess_ConvertToLeftHanded
+	);
+
+	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
+	{
+#ifdef _DEBUG
+		LOG_WARNING("[Bounds] Assimp error: %s", importer.GetErrorString());
+#endif 
+		importer.FreeScene();
+		return false;
+	}
+
+	if (!scene->HasMeshes())
+	{
+#ifdef _DEBUG
+		LOG_WARNING("[Bounds] has no meshes...");
+#endif 
+		importer.FreeScene();
+		return false;
+	}
+	// Go through all the meshes and create boundingboxes for them
+	for (UINT i = 0; i < scene->mNumMeshes; i++)
+	{
+		const aiMesh* mesh = scene->mMeshes[i];
+
+		aiNode* node = scene->mRootNode->FindNode(mesh->mName);
+
+		if (node)
+		{
+			aiVector3D pos;
+			aiVector3D scl;
+			aiQuaternion rot;
+			node->mTransformation.Decompose(scl, rot, pos);
+
+			dx::XMFLOAT3 center = { pos.x, pos.y, pos.z };
+			dx::XMFLOAT3 extents = { scl.x / 2.f, scl.y / 2.f, scl.z / 2.f };
+			dx::XMFLOAT4 orientation = { rot.x, rot.y, rot.z, rot.w };
+
+			dx::BoundingOrientedBox bob(center, extents, orientation);
+
+			// This is for renderside
+			Entity collider = GetScene("Game").CreateEntity();
+			collider.AddComponent<comp::BoundingOrientedBox>()->Center = center;
+			collider.GetComponent<comp::BoundingOrientedBox>()->Extents = extents;
+			collider.GetComponent<comp::BoundingOrientedBox>()->Orientation = orientation;
+			collider.AddComponent<comp::Tag<TagType::STATIC>>();
+			collider.AddComponent<comp::Tag<TagType::MAP_BOUNDS>>();
+			m_LOSColliders.push_back(bob);
+		}
+	}
+
+	return true;
 }
