@@ -13,6 +13,7 @@ private:
 	DirectX::ConstantBuffer<dispatch_params_t> dispatchParamsBuffer; //F+
 	DirectX::ConstantBuffer<screen_view_params_t> screenToViewParams;//F+
 
+	// Created once, and updated upon OnWindowResize. 
 	void ComputeGridFrustums();
 	bool CreateGridFrustumSWB(size_t numElements, size_t elementSize, const void* bufferData = nullptr);
 public:

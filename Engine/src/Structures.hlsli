@@ -44,10 +44,10 @@ struct PixelIn
 
 struct ComputeShaderIn
 {
-    uint3 GroupID           : SV_GroupID;          
-    uint3 GroupThreadID     : SV_GroupThreadID;    
-    uint3 DispatchThreadID  : SV_DispatchThreadID; 
-    uint  GroupIndex        : SV_GroupIndex;       
+    uint3 groupID           : SV_GroupID;          
+    uint3 groupThreadID     : SV_GroupThreadID;    
+    uint3 dispatchThreadID  : SV_DispatchThreadID;
+    uint  groupIndex        : SV_GroupIndex;       
 };
 
 struct Light

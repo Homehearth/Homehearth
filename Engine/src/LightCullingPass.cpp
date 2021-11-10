@@ -93,6 +93,11 @@ void LightCullingPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceConte
 
 void LightCullingPass::Render(Scene* pScene)
 {
+    //SetCullBack(true);
+    // render opaq.
+    //SetCullBack(false);
+	//// render trans.
+    //SetCullBack(true);
 }
 
 void LightCullingPass::PostRender(ID3D11DeviceContext* pDeviceContext)

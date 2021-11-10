@@ -56,6 +56,11 @@ cbuffer ScreenToViewParamsCB : register(b6)
     float2 c_screenDimensions;
 }
 
+cbuffer DispatchParamsCB : register (b7)
+{
+    uint3 numThreadGroups;
+    uint3 numThreads;
+}
 
 //---------------------------------------------------------------------------
 //	Samplers.

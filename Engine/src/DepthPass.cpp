@@ -23,7 +23,12 @@ void DepthPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 
 void DepthPass::Render(Scene* pScene)
 {
-   pScene->Render();
+    //SetCullBack(true);
+	// render opaq.
+	//SetCullBack(false);
+	// render trans.
+	//SetCullBack(true);
+	pScene->Render();
 }
 
 void DepthPass::PostRender(ID3D11DeviceContext* pDeviceContext)
