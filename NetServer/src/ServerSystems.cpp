@@ -37,7 +37,11 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 			/*velocity->vel = sm::Vector3(transform->position * -1.0f);
 			velocity->vel.Normalize();
 			velocity->vel *= 5.0f;*/
-			*combatStats = {1.0f, 20.f, 1.0f, false, false};
+			combatStats->cooldown = 1.0f;
+			combatStats->attackDamage = 20.f;
+			combatStats->lifetime = 0.2f;
+			combatStats->isRanged = false;
+			
 		}
 		break;
 	case EnemyType::Default2:
@@ -50,7 +54,10 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 			/*velocity->vel = sm::Vector3(transform->position * -1.0f);
 			velocity->vel.Normalize();
 			velocity->vel *= 5.0f;*/
-			*combatStats = { 1.0f, 20.f, 1.0f, false, false };
+			combatStats->cooldown = 1.0f;
+			combatStats->attackDamage = 20.f;
+			combatStats->lifetime = 0.2f;
+			combatStats->isRanged = false;
 		}
 		break;
 	default:
@@ -208,31 +215,36 @@ void ServerSystems::NextWaveConditions(Simulation* simulation, Timer& timer, int
 void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& scene, float dt)
 {
 	PROFILE_FUNCTION();
-	scene.ForEachComponent<comp::Player, comp::Network, comp::CombatStats, comp::Health, comp::Transform>([&](Entity e, comp::Player& p, comp::Network& net, comp::CombatStats& a, comp::Health& health, comp::Transform& t)
+	scene.ForEachComponent<comp::Player, comp::Health, comp::Transform>([&](Entity e, comp::Player& p, comp::Health& health, comp::Transform& t)
 		{
 			if (health.currentHealth <= 0 && p.state != comp::Player::State::DEAD)
 			{
 				p.state = comp::Player::State::DEAD;
 				p.respawnTimer = 10.f;
 				health.isAlive = false;
-				e.AddComponent<comp::MeshName>("Skull.obj");
-				e.UpdateNetwork();
-				LOG_INFO("Player id %u died...", net.id);
+				e.RemoveComponent<comp::Tag<TagType::DYNAMIC>>();
+				
+
+				LOG_INFO("Player id %u died...", e.GetComponent<comp::Network>()->id);
 			}
 
 			if(p.state == comp::Player::State::DEAD)
 			{
+				comp::Velocity* vel = e.GetComponent<comp::Velocity>();
+				if (vel)
+				{
+					// dont move if in dead state
+					vel->vel = sm::Vector3::Zero;
+				}
+
 				p.respawnTimer -= dt;
 
 				if(p.respawnTimer < 0.01f)
 				{
-					p.state = comp::Player::State::IDLE;
-					t.position = p.spawnPoint;
-					health.currentHealth = 100;
-					health.isAlive = true;
-					e.AddComponent<comp::MeshName>("Knight.fbx");
-					e.UpdateNetwork();
-					LOG_INFO("Player id %u Respawnd...", net.id);
+					
+					simulation->ResetPlayer(e);
+
+					LOG_INFO("Player id %u Respawnd...", e.GetComponent<comp::Network>()->id);
 				}
 			}
 		});
@@ -248,7 +260,7 @@ void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& sce
 				sm::Vector3 point;
 				sm::Vector3 targetDir(1, 0, 0);
 
-				if (a.targetRay.Intersects(plane, point))
+				if (a.targetRay.Intersects(plane, &point))
 				{
 					targetDir = point - t.position;
 					targetDir.Normalize(targetDir);
@@ -259,7 +271,7 @@ void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& sce
 				a.targetDir = targetDir;
 				p.targetForward = targetDir;
 
-				v.vel = sm::Vector3::Zero;
+				v.vel *= 0.2f;
 			}
 
 		});
@@ -285,6 +297,20 @@ void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& sce
 				if (ecs::StepRotateTo(t.rotation, p.targetForward, time))
 				{
 					p.state = comp::Player::State::IDLE;
+				}
+				e.UpdateNetwork();
+			}
+		});
+
+	// turns npc with velocity
+	scene.ForEachComponent<comp::NPC, comp::Transform, comp::Velocity>([&](Entity e, comp::NPC& p, comp::Transform& t, comp::Velocity& v)
+		{
+			if (v.vel.Length() > 0.001f)
+			{
+				float time = dt * p.movementSpeed * 0.5f;
+				if (ecs::StepRotateTo(t.rotation, v.vel, time))
+				{
+
 				}
 				e.UpdateNetwork();
 			}
