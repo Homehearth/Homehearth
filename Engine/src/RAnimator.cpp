@@ -119,6 +119,7 @@ bool RAnimator::Create(const std::string& filename)
 			if (animation)
 			{
 				m_animations[key] = animation;
+				m_currentAnim = animation;
 			}
 		}
 		else if (keyword == "setCurrentAnim")
