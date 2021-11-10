@@ -6,6 +6,7 @@ Scene::Scene()
 	: m_IsRenderingColliders(true), m_updateAnimation(true)
 {
 	m_publicBuffer.Create(D3D11Core::Get().Device());
+	m_publicDecalBuffer.Create(D3D11Core::Get().Device());
 	m_ColliderHitBuffer.Create(D3D11Core::Get().Device());
 	thread::RenderThreadHandler::Get().SetObjectsBuffer(&m_renderableCopies);
 
@@ -80,6 +81,11 @@ void Scene::Update(float dt)
 		m_debugRenderableCopies.Swap();
 	}
 
+}
+
+void Scene::Update2D()
+{
+	m_2dHandler.Update();
 }
 
 void Scene::Render()

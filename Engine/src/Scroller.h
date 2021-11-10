@@ -15,7 +15,7 @@ namespace rtd
 
 		std::unique_ptr<Button> m_button;
 		std::unique_ptr<Canvas> m_canvas;
-		std::vector<Element2D*> m_elements;
+		std::vector<Button*> m_buttons;
 		draw_t m_startPos;
 		sm::Vector2 m_currentPos;
 		sm::Vector2 m_endPos;
@@ -36,7 +36,8 @@ namespace rtd
 			Add an element to the scroller. Any element added will be
 			taken care of at the end of life.
 		*/
-		void AddElement(Element2D* elem);
+		template <typename ...Args>
+		rtd::Button* AddButton(Args... args);
 
 		// Inherited via Element2D
 		virtual void Draw() override;
@@ -50,4 +51,17 @@ namespace rtd
 		virtual bool CheckClick() override;
 
 	};
+
+	template<typename ...Args>
+	inline rtd::Button* Scroller::AddButton(Args ...args)
+	{
+		rtd::Button* elem = new rtd::Button(args...);
+		if (elem)
+		{
+			m_buttons.push_back(elem);
+			return elem;
+		}
+		else
+			return nullptr;
+	}
 }

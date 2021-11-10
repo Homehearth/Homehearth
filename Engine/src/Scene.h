@@ -15,6 +15,7 @@ private:
 
 	dx::ConstantBuffer<basic_model_matrix_t> m_publicBuffer;
 	dx::ConstantBuffer<collider_hit_t> m_ColliderHitBuffer;
+	dx::ConstantBuffer<camera_Matrix_t> m_publicDecalBuffer;
 	Entity m_currentCamera;
 	Entity m_defaultCamera;
 	Handler2D m_2dHandler;
@@ -29,7 +30,16 @@ public:
 	Scene();
 
 	// Emit update event and update constant buffers
+
+	/*
+		Updates both 3d and 2d.
+	*/
 	virtual void Update(float dt) override;
+
+	/*
+		Updates only the 2d scene.
+	*/
+	void Update2D();
 
 	// Emit render event and render Renderable components
 	void Render();

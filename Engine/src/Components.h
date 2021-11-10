@@ -36,6 +36,29 @@ namespace ecs
 			sm::Vector3 scale = sm::Vector3(1);
 		};
 
+		struct Decal
+		{
+			RTexture* decal = nullptr;
+			sm::Matrix viewPoint;
+			// Life span in seconds.
+			float lifespan = 5.0f;
+
+			Decal(const Transform& t, RTexture* decal = nullptr)
+			{
+				this->decal = decal;
+
+				// Be positioned slightly above.
+				sm::Vector3 position = t.position;
+				position.y += 10.0f;
+				position.x += 0.0001f;
+				position.z -= 0.0001f;
+
+				sm::Vector3 lookAt = t.position;
+				lookAt.y = 0;
+				viewPoint = dx::XMMatrixLookAtLH(position, lookAt, { 0.0f, 1.0f, 0.0f });
+			}
+		};
+
 		struct Network
 		{
 			uint32_t id = UINT32_MAX;

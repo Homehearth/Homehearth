@@ -37,6 +37,9 @@ rtd::Healthbar::Healthbar(const draw_t& drawOpts)
 
     m_backGround.get()->SetColor(D2D1::ColorF(134 / 255.0f, 2 / 255.0f, 17 / 255.0f));
     m_foreGround.get()->SetColor(D2D1::ColorF(61 / 255.0f, 121 / 255.0f, 15 / 255.0f));
+    m_backGround.get()->SetBorderColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
+    m_backGround.get()->ShowBorder();
+    m_backGround.get()->SetBorderWidth(LineWidth::MEDIUM);
 }
 
 rtd::Healthbar::~Healthbar()

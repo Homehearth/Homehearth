@@ -6,15 +6,38 @@ using namespace rtd;
 void rtd::Scroller::Update()
 {
     // Transition to the endPos position.
+    sm::Vector2 temp = m_currentPos;
     if (m_isPressed)
     {
         m_currentPos = sm::Vector2::Lerp(m_currentPos, m_endPos, Stats::GetDeltaTime());
         m_canvas.get()->SetPosition(m_currentPos.x, m_currentPos.y);
+
+        for (size_t i = 0; i < m_buttons.size(); i++)
+        {
+            m_buttons[i]->AddPosition(m_currentPos.x - temp.x, m_currentPos.y - temp.y);
+
+            // Mini update
+            if (m_buttons[i]->CheckClick())
+                m_buttons[i]->OnClick();
+            if (m_buttons[i]->CheckHover())
+                m_buttons[i]->OnHover();
+        }
     }
     else
     {
         m_currentPos = sm::Vector2::Lerp(m_currentPos, sm::Vector2(m_startPos.x_pos, m_startPos.y_pos), Stats::GetDeltaTime());
         m_canvas.get()->SetPosition(m_currentPos.x, m_currentPos.y);
+
+        for (size_t i = 0; i < m_buttons.size(); i++)
+        {
+            m_buttons[i]->AddPosition(m_currentPos.x - temp.x, m_currentPos.y - temp.y);
+
+            // Mini update
+            if (m_buttons[i]->CheckClick())
+                m_buttons[i]->OnClick();
+            if (m_buttons[i]->CheckHover())
+                m_buttons[i]->OnHover();
+        }
     }
 }
 
@@ -31,17 +54,12 @@ rtd::Scroller::Scroller(const draw_t& startPos, const sm::Vector2& endPos)
 
 rtd::Scroller::~Scroller()
 {
-    while (!m_elements.empty())
+    while (!m_buttons.empty())
     {
-       delete m_elements[m_elements.size() - 1];
-       m_elements[m_elements.size() - 1] = nullptr;
-       m_elements.pop_back();
+       delete m_buttons[m_buttons.size() - 1];
+       m_buttons[m_buttons.size() - 1] = nullptr;
+       m_buttons.pop_back();
     }
-}
-
-void rtd::Scroller::AddElement(Element2D* elem)
-{
-    m_elements.push_back(elem);
 }
 
 void Scroller::Draw()
@@ -50,10 +68,10 @@ void Scroller::Draw()
         m_canvas->Draw();
     if (m_button)
         m_button->Draw();
-    for (size_t i = 0; i < m_elements.size(); i++)
+    for (size_t i = 0; i < m_buttons.size(); i++)
     {
-        if (m_elements[i])
-            m_elements[i]->Draw();
+        if (m_buttons[i])
+            m_buttons[i]->Draw();
     }
 }
 

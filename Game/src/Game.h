@@ -2,6 +2,7 @@
 #include <EnginePCH.h>
 #include <Engine.h>
 #include <GridSystem.h>
+#include "Predictor.h"
 
 class Game : public Engine
 {
@@ -33,6 +34,7 @@ private:
 	void OnClientDisconnect();
 	
 	void UpdateEntityFromMessage(Entity entity, message<GameMsg>& msg);
+	void UpdatePredictorFromMessage(Entity entity, message<GameMsg>& msg, const uint32_t& id);
 
 	void UpdateInput();
 	void LoadAllAssets();
@@ -40,9 +42,12 @@ private:
 
 public:
 	Client m_client;
+	Predictor m_predictor;
 	uint32_t m_localPID;
 	uint32_t m_gameID;
 	std::string m_playerName;
+
+	float m_masterVolume = 5.0f;
 
 	Game();
 	virtual ~Game();
