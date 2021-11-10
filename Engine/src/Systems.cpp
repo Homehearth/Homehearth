@@ -232,8 +232,15 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 				attackCollider.AddComponent<comp::Network>();
 
 				
-				CollisionSystem::Get().AddOnCollision(attackCollider, [=, &scene](Entity other)
+				CollisionSystem::Get().AddOnCollision(attackCollider, [entity, &scene](Entity thisEntity, Entity other)
 					{
+						// is caster already dead
+						if (entity.IsNull())
+						{
+							thisEntity.GetComponent<comp::SelfDestruct>()->lifeTime = 0.f;
+							return;
+						}
+
 						if (other == entity)
 							return;
 					
@@ -247,9 +254,9 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 							// update Health on network
 							scene.publish<EComponentUpdated>(other, ecs::Component::HEALTH);
 
-							attackCollider.GetComponent<comp::SelfDestruct>()->lifeTime = 0.f;
+							thisEntity.GetComponent<comp::SelfDestruct>()->lifeTime = 0.f;
 
-							comp::Velocity* attackVel = attackCollider.GetComponent<comp::Velocity>();
+							comp::Velocity* attackVel = thisEntity.GetComponent<comp::Velocity>();
 							if (attackVel)
 							{
 								comp::TemporaryPhysics* p = other.AddComponent<comp::TemporaryPhysics>();

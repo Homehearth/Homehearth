@@ -691,7 +691,7 @@ bool Simulation::AddNPC(uint32_t npcId)
 	npc.AddComponent<comp::Network>()->id = npcId;
 	npc.AddComponent<comp::BoundingOrientedBox>();
 
-	CollisionSystem::Get().AddOnCollision(npc, [&](Entity other)
+	CollisionSystem::Get().AddOnCollision(npc, [&](Entity thisEntity, Entity other)
 		{
 			comp::NPC* otherNPC = m_pCurrentScene->GetRegistry()->try_get<comp::NPC>(other);
 			if (otherNPC)
@@ -867,22 +867,15 @@ void Simulation::OnNetworkEntityDestroy(entt::registry& reg, entt::entity entity
 	if (it != m_updatedEntities.end())
 	{
 		m_updatedEntities.erase(it);
-		//LOG_WARNING("Removed entity from updated cuz destroyed");
 	}
 }
 
 void Simulation::OnNetworkEntityUpdated(entt::registry& reg, entt::entity entity)
 {
 	Entity e(reg, entity);
-	if (!e.IsNull())
+	if (std::find(m_updatedEntities.begin(), m_updatedEntities.end(), e) == m_updatedEntities.end())
 	{
-		comp::Network* net = e.GetComponent<comp::Network>();
-
-		if (std::find(m_updatedEntities.begin(), m_updatedEntities.end(), e) == m_updatedEntities.end() &&
-			std::find(m_removedEntities.begin(), m_removedEntities.end(), net->id) == m_removedEntities.end())
-		{
-			m_updatedEntities.push_back(e);
-		}
+		m_updatedEntities.push_back(e);
 	}
 }
 
