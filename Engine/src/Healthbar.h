@@ -36,6 +36,9 @@ namespace rtd
 		*/
 		void SetHealthVariable(Entity e);
 
+		void SetPosition(const float& x, const float& y);
+		const draw_t GetOpts() const;
+
 		// Inherited via Element2D
 		virtual void Draw() override;
 

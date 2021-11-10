@@ -226,34 +226,30 @@ CollisionInfo_t CollisionSystem::Intersection(Entity entity1, Entity entity2)
 
 void CollisionSystem::CollisionResponse(CollisionInfo_t collisionInfo, Entity entity1, Entity entity2)
 {
-	if(entity1.GetComponent<comp::Tag<DYNAMIC>>() && entity2.GetComponent<comp::Tag<STATIC>>())
-	{
-		comp::Transform* transform = entity1.GetComponent<comp::Transform>();
-		comp::BoundingOrientedBox* obb = entity1.GetComponent<comp::BoundingOrientedBox>();
-		if (transform)
+
+	for(int i = -1; i < 2; i += 2) // runs twice, i becomes -1 and then 1
+	{ 
+		if(entity1.GetComponent<comp::Tag<DYNAMIC>>() && entity2.GetComponent<comp::Tag<STATIC>>())
 		{
-			transform->position = transform->position + sm::Vector3(collisionInfo.smallestVec * (float)collisionInfo.overlap * -1.1f);
+			comp::Transform* transform = entity1.GetComponent<comp::Transform>();
+			comp::BoundingOrientedBox* obb = entity1.GetComponent<comp::BoundingOrientedBox>();
+			if (transform)
+			{
+				transform->position = transform->position + sm::Vector3(collisionInfo.smallestVec * (float)collisionInfo.overlap * i);
 			
-			if (obb)
-				obb->Center = transform->position;
+				if (obb)
+					obb->Center = transform->position;
+
+				// make sure client gets updated position
+				entity1.UpdateNetwork();
+			}
+			
 		}
-			
+		// swap entities so we check the opposite the next iteration
+		std::swap(entity1, entity2);
 	}
-	else if(entity2.GetComponent<comp::Tag<DYNAMIC>>() && entity1.GetComponent<comp::Tag<STATIC>>())
-	{
-		comp::Transform* transform = entity2.GetComponent<comp::Transform>();
-		comp::BoundingOrientedBox* obb = entity2.GetComponent<comp::BoundingOrientedBox>();
-		
-		if (transform)
-		{
-			transform->position = transform->position + sm::Vector3(collisionInfo.smallestVec * (float)collisionInfo.overlap * 1.1f);
-			
-			if (obb)
-				obb->Center = transform->position;
-		}
-			
-	}
-	else if(entity2.GetComponent<comp::Tag<DYNAMIC>>() && entity1.GetComponent<comp::Tag<DYNAMIC>>())
+	
+	if(entity2.GetComponent<comp::Tag<DYNAMIC>>() && entity1.GetComponent<comp::Tag<DYNAMIC>>())
 	{
 		comp::Transform* transform1 = entity1.GetComponent<comp::Transform>();
 		comp::Transform* transform2 = entity2.GetComponent<comp::Transform>();
@@ -262,18 +258,22 @@ void CollisionSystem::CollisionResponse(CollisionInfo_t collisionInfo, Entity en
 		//Dynamic
 		if (transform1)
 		{
-			transform1->position = transform1->position + (sm::Vector3(collisionInfo.smallestVec * (float)collisionInfo.overlap * -1.1f) / 2.0f);
+			transform1->position = transform1->position + (sm::Vector3(collisionInfo.smallestVec * (float)collisionInfo.overlap * -1.1f) * 0.5f);
 
 			if (obb1)
 				obb1->Center = transform1->position;
+
+			entity1.UpdateNetwork();
 		}
 
 		if (transform2)
 		{
-			transform2->position = transform2->position + (sm::Vector3(collisionInfo.smallestVec * (float)collisionInfo.overlap) / 2.0f * 1.1f);
+			transform2->position = transform2->position + (sm::Vector3(collisionInfo.smallestVec * (float)collisionInfo.overlap) * 0.5f);
 
 			if (obb2)
 				obb2->Center = transform2->position;
+
+			entity2.UpdateNetwork();
 		}
 			
 	}

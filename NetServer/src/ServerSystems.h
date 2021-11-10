@@ -42,7 +42,3 @@ namespace ServerSystems
 	void PlayerStateSystem(Simulation* simulation, HeadlessScene& scene, float dt);
 	void CheckGameOver(Simulation* simulation, HeadlessScene& scene);
 }
-
-namespace Systems {
-	void CharacterMovement(HeadlessScene& scene, float dt);
-};

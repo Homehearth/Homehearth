@@ -10,8 +10,8 @@ const bool Intersect::RayIntersectBox(const Ray_t& ray, const comp::BoundingOrie
 	 * It returns the closest positive t-value
 	 *
 	 */
-	const sm::Vector3 rayOrigin = ray.rayPos;
-	const sm::Vector3 rayDir = ray.rayDir;
+	const sm::Vector3 rayOrigin = ray.origin;
+	const sm::Vector3 rayDir = ray.dir;
 
 	float tmin = (std::numeric_limits<float>::min)();
 	float tmax = (std::numeric_limits<float>::max)();
@@ -87,11 +87,11 @@ const bool Intersect::RayIntersectBox(const Ray_t& ray, const comp::BoundingOrie
 
 const bool Intersect::RayIntersectSphere(const Ray_t& ray, const comp::BoundingSphere& sphereCollider, float& t)
 {
-	const sm::Vector3 rayToCenter = ray.rayPos - sphereCollider.Center;
+	const sm::Vector3 rayToCenter = ray.origin - sphereCollider.Center;
 	
 	//Parameterization to use for the quadtratic formula.
-	const float scalarRayDir =  ray.rayDir.Dot(ray.rayDir);
-	const float b = 2.0f * rayToCenter.Dot(ray.rayDir);
+	const float scalarRayDir =  ray.dir.Dot(ray.dir);
+	const float b = 2.0f * rayToCenter.Dot(ray.dir);
 	const float c = rayToCenter.Dot(rayToCenter) - sphereCollider.Radius * sphereCollider.Radius;
 
 	const float discriminant = b * b - 4.0f * scalarRayDir * c;
@@ -117,36 +117,4 @@ const bool Intersect::RayIntersectSphere(const Ray_t& ray, const comp::BoundingS
 			return false;
 		}
 	}
-}
-
-const bool Intersect::RayIntersectPlane(const Ray_t& ray, const comp::PlaneCollider& planeCollider, float& t)
-{
-	sm::Vector3 origin = ray.rayPos;
-	sm::Vector3 direction = ray.rayDir;
-	float halfLenght = planeCollider.size.x / 2;
-
-	//Kollar ifall normalen och ray är parallela 
-	float dirNormal = direction.Dot(planeCollider.normal);
-	if (abs(dirNormal) < 0.0000001f)
-		return false;
-
-	//Plane intersecation test
-	sm::Vector3 originToCenter = planeCollider.center - origin;
-	float originToCenterDotNormal = originToCenter.Dot(planeCollider.normal);
-	t = originToCenterDotNormal / dirNormal;
-
-	////Return false if plane is behind us
-	//if (t < 0.0)
-	//	return false;
-
-	//Restriction that makes the plane to a disc, if its outside the disc radius it does not intersect
-	sm::Vector3 intersecPoint = origin + direction * (float)t;
-	sm::Vector3 disToCenter = (intersecPoint - planeCollider.center);
-	float disToCenterL = (intersecPoint - planeCollider.center).Length();
-
-	/*f (disToCenter.x >= halfLenght && disToCenter.y >= halfLenght)
-		return false;*/
-
-
-	return disToCenterL <= halfLenght/2;
 }

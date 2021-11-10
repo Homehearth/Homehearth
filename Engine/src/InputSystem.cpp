@@ -219,8 +219,8 @@ void InputSystem::UpdateMouseRay()
 
 		const sm::Matrix viewInverse = m_currentCamera->GetView().Invert();
 
-		m_mouseRay.rayDir = sm::Vector3::TransformNormal({ viewX, viewY, 1.f }, viewInverse);
-		m_mouseRay.rayPos = sm::Vector3::Transform({ 0.f,0.f,0.f }, viewInverse);
+		m_mouseRay.dir = sm::Vector3::TransformNormal({ viewX, viewY, 1.f }, viewInverse);
+		m_mouseRay.origin = sm::Vector3::Transform({ 0.f,0.f,0.f }, viewInverse);
 	}
 	else
 	{

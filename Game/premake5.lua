@@ -31,7 +31,7 @@ project "Game"
 
     vpaths {
         ["src/Game"] = { "**Game.*" },
-            ["src/Game/Scenes"] = { "**DemoScene.*" }
+            ["src/Game/Scenes"] = { "**SceneHelper.*" }
     }
 
     links {

@@ -7,13 +7,44 @@
 #include <string>
 #include <chrono>
 #include <WS2tcpip.h>
+#include <winsock2.h>
 #include <functional>
 #include <unordered_map>
+#include "net_message.h"
 
 namespace network
 {
 #define IPV6_ADDRSTRLEN 46
 #define BUFFER_SIZE 32768
+	
+	struct Socket_t
+	{
+		SOCKET tcp;
+		sockaddr_in remote = {};
+		socklen_t len = sizeof(remote);
+
+	public:
+		void close()
+		{
+			closesocket(tcp);
+		}
+	};
+
+	enum class SockType
+	{
+		UDP,
+		TCP
+	};
+
+	template <typename T>
+	struct SOCKET_INFORMATION
+	{
+		uint64_t handshakeIn = 0;
+		uint64_t handshakeOut = 0;
+		uint64_t handshakeResult = 0;
+		Socket_t socket = {};
+		message<T> msgTempIn = {};
+	};
 
 	// What current state are the current connection in
 	enum class NetState
@@ -22,7 +53,8 @@ namespace network
 		READ_VALIDATION,
 		READ_HEADER,
 		READ_PAYLOAD,
-		WRITE_MESSAGE,
+		WRITE_PACKET,
+		READ_PACKET,
 		WRITE_HEADER,
 		WRITE_PAYLOAD
 	};

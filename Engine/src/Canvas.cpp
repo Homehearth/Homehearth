@@ -50,6 +50,11 @@ D2D1_COLOR_F& rtd::Canvas::GetColor()
 	return m_color;
 }
 
+const draw_t rtd::Canvas::GetOpts() const
+{
+	return m_drawOpts;
+}
+
 void rtd::Canvas::SetBorderColor(const D2D1_COLOR_F& new_color)
 {
 	if (!m_border)
