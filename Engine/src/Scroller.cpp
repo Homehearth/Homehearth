@@ -8,12 +8,12 @@ void rtd::Scroller::Update()
     // Transition to the endPos position.
     if (m_isPressed)
     {
-        m_currentPos = sm::Vector2::Lerp(m_currentPos, m_endPos, Stats::GetDeltaTime());
+        m_currentPos = sm::Vector2::Lerp(m_currentPos, m_endPos, Stats::Get().GetUpdateTime());
         m_canvas.get()->SetPosition(m_currentPos.x, m_currentPos.y);
     }
     else
     {
-        m_currentPos = sm::Vector2::Lerp(m_currentPos, sm::Vector2(m_startPos.x_pos, m_startPos.y_pos), Stats::GetDeltaTime());
+        m_currentPos = sm::Vector2::Lerp(m_currentPos, sm::Vector2(m_startPos.x_pos, m_startPos.y_pos), Stats::Get().GetUpdateTime());
         m_canvas.get()->SetPosition(m_currentPos.x, m_currentPos.y);
     }
 }

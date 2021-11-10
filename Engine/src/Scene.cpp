@@ -151,7 +151,7 @@ void Scene::RenderTransparency()
 		{
 			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
 			if (it.model)
-				it.model->Render();
+				it.model->Render(D3D11Core::Get().DeviceContext());
 		}
 	}
 	// Render third part of the scene with immediate context
@@ -163,7 +163,7 @@ void Scene::RenderTransparency()
 			const auto& it = m_renderableTransparent[1][i];
 			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
 			if (it.model)
-				it.model->Render();
+				it.model->Render(D3D11Core::Get().DeviceContext());
 		}
 	}
 
