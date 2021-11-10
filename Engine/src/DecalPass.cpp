@@ -8,6 +8,11 @@ void DecalPass::CreateBuffer()
 		m_buffer->Release();
 		m_buffer = nullptr;
 	}
+	if (m_shaderView)
+	{
+		m_shaderView->Release();
+		m_shaderView = nullptr;
+	}
 
 	const size_t size = m_matrices.size() > 0 ? m_matrices.size() : 1;
 
@@ -29,15 +34,18 @@ void DecalPass::CreateBuffer()
 		if (SUCCEEDED(hr))
 			D3D11Core::Get().Device()->CreateShaderResourceView(m_buffer, NULL, &m_shaderView);
 	}
+	
+	DecalInfoBuffer buff;
+	buff.info = { (float)m_matrices.size(), 0.0f, 0.0f, 0.0f };
+	buff.projection = dx::XMMatrixPerspectiveFovLH(3.1415F * 0.15F, 1.777777777777778F, 7.5f, 10.0f);
 
-	sm::Vector4 info = { (float)m_matrices.size(), 0.0f, 0.0f, 0.0f };
-
-	m_infoBuffer.SetData(D3D11Core::Get().DeviceContext(), info);
+	m_infoBuffer.SetData(D3D11Core::Get().DeviceContext(), buff);
 }
 
 void DecalPass::Create()
 {
 	m_infoBuffer.Create(D3D11Core::Get().Device());
+	tempTexture = ResourceManager::Get().GetResource<RTexture>("demoBloodsplat.png");
 }
 
 DecalPass::DecalPass()
@@ -56,22 +64,25 @@ DecalPass::~DecalPass()
 
 void DecalPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 {
-	//if (pCam)
-	//{
-	//	DC->VSSetConstantBuffers(1, 1, pCam->m_viewConstantBuffer.GetAddressOf());
-	//}
+	/*
+		Clear.
+	*/
 
-	//DC->OMSetRenderTargets(1, PM->m_backBuffer.GetAddressOf(), PM->m_depthStencilView.Get());
-	//DC->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	//DC->RSSetViewports(1, &PM->m_viewport);
-	//DC->RSSetState(PM->m_rasterState.Get());
-	//DC->OMSetDepthStencilState(PM->m_depthStencilStateLessEqual.Get(), 0);
+	if (tempTexture)
+	{
+		DC->PSSetShaderResources(9, 1, &tempTexture.get()->GetShaderView());
+	}
+
+	if (pCam)
+	{
+		DC->PSSetConstantBuffers(1, 1, pCam->m_viewConstantBuffer.GetAddressOf());
+	}
 }
 
 void DecalPass::Render(Scene* pScene)
 {
 	m_matrices.clear();
-	pScene->ForEachComponent<comp::Decal>([&](comp::Decal& d) {
+	pScene->ForEachComponent<comp::Decal>([&](Entity e, comp::Decal& d) {
 
 		// Decrease lifespan.
 		d.lifespan -= Stats::GetDeltaTime();
@@ -80,6 +91,13 @@ void DecalPass::Render(Scene* pScene)
 			m_matrices.push_back(d.viewPoint);
 		}
 
+		/*
+			Remove the component when not needed anymore.
+		*/
+		if (d.lifespan <= 0)
+		{
+			e.RemoveComponent<comp::Decal>();
+		}
 		});
 	
 	this->CreateBuffer();

@@ -90,6 +90,9 @@ void Renderer::AddPass(IRenderPass* pass)
 
 void Renderer::UpdatePerFrame(Camera* pCam)
 {
-	// Update Camera constant buffer.
-	m_d3d11->DeviceContext()->UpdateSubresource(pCam->m_viewConstantBuffer.Get(), 0, nullptr, pCam->GetCameraMatrixes(), 0, 0);
+	if (pCam)
+	{
+		// Update Camera constant buffer.
+		m_d3d11->DeviceContext()->UpdateSubresource(pCam->m_viewConstantBuffer.Get(), 0, nullptr, pCam->GetCameraMatrixes(), 0, 0);
+	}
 }

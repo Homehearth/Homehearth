@@ -57,6 +57,12 @@ namespace sceneHelp
 		backgroundScene.AddComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>("GameScene.obj");
 		backgroundScene.AddComponent<comp::Transform>();
 
+
+		comp::Transform t;
+		t.position = { 330.0f, 1.0f, -333.0f };
+		Entity testBlood = mainMenuScene.CreateEntity();
+		testBlood.AddComponent<comp::Decal>(t);
+
 		mainMenuScene.GetCurrentCamera()->Initialize(sm::Vector3(0, 0, 0), sm::Vector3(0, 0, 1), sm::Vector3(0, 1, 0),
 			sm::Vector2((float)game->GetWindow()->GetWidth(), (float)game->GetWindow()->GetHeight()), CAMERATYPE::DEFAULT);
 		mainMenuScene.GetCurrentCamera()->m_position = sm::Vector3(350.f, 30.f, -250.f);
@@ -113,6 +119,11 @@ namespace sceneHelp
 	{
 		Scene& gameScene = engine->GetScene("Game");
 		SetupInGameScreen(engine);
+
+		comp::Transform t;
+		t.position = { 330.0f, 1.0f, -333.0f };
+		Entity testBlood = gameScene.CreateEntity();
+		testBlood.AddComponent<comp::Decal>(t);
 
 		//Construct collider meshes if colliders are added.
 		gameScene.GetRegistry()->on_construct<comp::RenderableDebug>().connect<entt::invoke<&comp::RenderableDebug::InitRenderable>>();

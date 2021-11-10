@@ -2,7 +2,27 @@
 
 float4 main(PixelIn input) : SV_TARGET
 {
-    float3 camPos = c_cameraPosition.xyz;
+    static unsigned int rolls = infoData.x;
+    
+    [loop]
+	for (int j = 0; j < rolls; j++)
+	{
+		float4 decal_pos = mul(sb_decaldata[j] ,input.worldPos);
+		decal_pos = mul(decal_projection, decal_pos);
+
+		float2 texCoords;
+		texCoords.x = decal_pos.x / decal_pos.w / 2.0f + 0.5f;
+		texCoords.y = -decal_pos.y / decal_pos.w / 2.0f + 0.5f;
+        
+		if ((saturate(texCoords.x) == texCoords.x) & (saturate(texCoords.y) == texCoords.y))
+		{
+			float4 color = t_decal.Sample(s_linear, texCoords);
+
+			return color;
+		}
+	}
+
+	float3 camPos = c_cameraPosition.xyz;
     float ao = 1.0f;
     float3 albedo = 1.f;
     float metallic = 0.5f;

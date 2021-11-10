@@ -1,14 +1,22 @@
 #pragma once
 #include "IRenderPass.h"
 
+struct DecalInfoBuffer
+{
+	dx::XMFLOAT4 info;
+	dx::XMMATRIX projection;
+};
+
 class DecalPass : public IRenderPass
 {
 private:
 
 	ID3D11Buffer* m_buffer;
-	dx::ConstantBuffer<dx::XMFLOAT4> m_infoBuffer;
+	dx::ConstantBuffer<DecalInfoBuffer> m_infoBuffer;
 	ID3D11ShaderResourceView* m_shaderView;
 	std::vector<sm::Matrix> m_matrices;
+
+	std::shared_ptr<RTexture> tempTexture = nullptr;
 
 	void CreateBuffer();
 

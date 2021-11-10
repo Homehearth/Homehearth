@@ -61,16 +61,21 @@ namespace ecs
 			RTexture* decal = nullptr;
 			sm::Matrix viewPoint;
 			// Life span in seconds.
-			float lifespan = 5.0f;
+			float lifespan = 100.0f;
 
 			Decal(const Transform& t, RTexture* decal = nullptr)
 			{
 				this->decal = decal;
 
 				// Be positioned slightly above.
-				Transform position = t;
-				position.position.y += 3.0f;
-				viewPoint = dx::XMMatrixLookAtLH(position.position, t.position, { 0.0f, 1.0f, 0.0f });
+				sm::Vector3 position = t.position;
+				position.y += 10.0f;
+				position.x += 0.0001f;
+				position.z -= 0.0001f;
+
+				sm::Vector3 lookAt = t.position;
+				lookAt.y = 0;
+				viewPoint = dx::XMMatrixLookAtLH(position, lookAt, { 0.0f, 1.0f, 0.0f });
 			}
 		};
 
