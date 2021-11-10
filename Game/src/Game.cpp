@@ -620,30 +620,14 @@ void Game::UpdatePredictorFromMessage(Entity e, message<GameMsg>& msg, const uin
 			{
 				std::string name;
 				msg >> name;
-				e.AddComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>(name);
+				e.AddComponent<comp::Renderable>()->model = ResourceManager::Get().CopyResource<RModel>(name);
 				break;
 			}
 			case ecs::Component::ANIMATOR_NAME:
 			{
-				comp::AnimatorName animName;
-				msg >> animName.name;
-
-				//Get model
-				comp::Renderable* renderable = e.GetComponent<comp::Renderable>();
-				if (renderable && renderable->model)
-				{
-
-					//Add an animator if we can get it
-					if (!animName.name.empty())
-					{
-						std::shared_ptr<RAnimator> anim = ResourceManager::Get().CopyResource<RAnimator>(animName.name, true);
-						if (anim)
-						{
-							if (anim->LoadSkeleton(renderable->model->GetSkeleton()))
-								e.AddComponent<comp::Animator>()->animator = anim;
-						}
-					}
-				}
+				std::string name;
+				msg >> name;
+				e.AddComponent<comp::Animator>()->animator = ResourceManager::Get().CopyResource<RAnimator>(name);
 				break;
 			}
 			case ecs::Component::NAME_PLATE:
