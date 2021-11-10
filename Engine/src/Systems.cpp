@@ -62,9 +62,9 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 				Entity attackCollider = scene.CreateEntity();
 				comp::Transform* t = attackCollider.AddComponent<comp::Transform>();
 				comp::BoundingOrientedBox* box = attackCollider.AddComponent<comp::BoundingOrientedBox>();
-				
+
 				box->Extents = sm::Vector3(stats.attackRange * 0.5f);
-				
+
 				stats.targetDir.Normalize();
 				t->position = transform.position + stats.targetDir * stats.attackRange * 0.5f;
 				t->rotation = transform.rotation;
@@ -75,7 +75,7 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 
 				comp::SelfDestruct* selfDestruct = attackCollider.AddComponent<comp::SelfDestruct>();
 				selfDestruct->lifeTime = stats.lifetime;
-				
+
 				//If the attack is ranged add a velocity to the entity.
 				if (stats.isRanged)
 				{
@@ -85,7 +85,7 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 				}
 				attackCollider.AddComponent<comp::Network>();
 
-				
+
 				CollisionSystem::Get().AddOnCollision(attackCollider, [=, &scene](Entity other)
 					{
 						if (other == entity)
@@ -119,10 +119,10 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 
 								comp::TemporaryPhysics* p = other.AddComponent<comp::TemporaryPhysics>();
 								comp::TemporaryPhysics::Force force = {};
-								
+
 								force.force = toOther + sm::Vector3(0, 1, 0);
 								force.force *= stats->attackDamage;
-								
+
 								force.isImpulse = true;
 								force.drag = 0.0f;
 								force.actingTime = 0.7f;
@@ -132,13 +132,13 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 								auto gravity = ecs::GetGravityForce();
 								p->forces.push_back(gravity);
 							}
-							
+
 						}
 					});
 
-			stats.cooldownTimer = stats.cooldown;
-			stats.isUsing = false;
-		}
+				stats.cooldownTimer = stats.cooldown;
+				stats.isUsing = false;
+			}
 
 		});
 
@@ -176,14 +176,14 @@ void Systems::MovementSystem(HeadlessScene& scene, float dt)
 
 	//Transform
 
-	scene.ForEachComponent<comp::Transform, comp::Velocity, comp::TemporaryPhysics > ([&](Entity e, comp::Transform& t, comp::Velocity& v, comp::TemporaryPhysics& p)
+	scene.ForEachComponent<comp::Transform, comp::Velocity, comp::TemporaryPhysics >([&](Entity e, comp::Transform& t, comp::Velocity& v, comp::TemporaryPhysics& p)
 		{
 			v.vel = v.oldVel; // ignore any changes made to velocity made this frame
 			auto& it = p.forces.begin();
-			while(it != p.forces.end())
+			while (it != p.forces.end())
 			{
 				comp::TemporaryPhysics::Force& f = *it;
-				
+
 				if (f.isImpulse)
 				{
 					if (f.wasApplied)
@@ -243,9 +243,9 @@ void Systems::MovementSystem(HeadlessScene& scene, float dt)
 				{
 					e.UpdateNetwork();
 				}
-				
+
 				transform.position += velocity.vel * dt;
-				
+
 				if (transform.position.y < 0.f)
 				{
 					transform.position.y = 0.f;
@@ -310,7 +310,7 @@ void Systems::AISystem(HeadlessScene& scene, AIHandler* aiHandler)
 			comp::Transform* transformCurrentClosestPlayer = closestPlayer.GetComponent<comp::Transform>();
 			if (npc.currentNode)
 			{
-				if (sm::Vector3::Distance(transformNPC->position, transformCurrentClosestPlayer->position) <= 100.f && npc.state != comp::NPC::State::CHASE)
+				if (sm::Vector3::Distance(transformNPC->position, transformCurrentClosestPlayer->position) <= npc.attackRange + 10.f && npc.state != comp::NPC::State::CHASE)
 				{
 					npc.state = comp::NPC::State::CHASE;
 					LOG_INFO("Switching to CHASE State!");
@@ -319,15 +319,6 @@ void Systems::AISystem(HeadlessScene& scene, AIHandler* aiHandler)
 				{
 					npc.state = comp::NPC::State::ASTAR;
 					LOG_INFO("Switching to ASTAR State!");
-				}
-
-				else if (sm::Vector3::Distance(transformNPC->position, transformCurrentClosestPlayer->position) <= npc.attackRange)
-				{
-					comp::CombatStats* stats = entity.GetComponent<comp::CombatStats>();
-
-					stats->targetDir = transformCurrentClosestPlayer->position - transformNPC->position;
-					stats->targetDir.Normalize();
-					stats->isAttacking = true;
 				}
 			}
 			//else
@@ -340,15 +331,15 @@ void Systems::AISystem(HeadlessScene& scene, AIHandler* aiHandler)
 			{
 				comp::CombatStats* stats = entity.GetComponent<comp::CombatStats>();
 
-			stats->targetDir = transformCurrentClosestPlayer->position - transformNPC->position;
-			stats->targetDir.Normalize();
-			stats->targetDir *= 10.f;
-			if (ecs::Use(stats))
-			{
-				// Enemy Attacked
-			};
-		}
-		
+				stats->targetDir = transformCurrentClosestPlayer->position - transformNPC->position;
+				stats->targetDir.Normalize();
+				stats->targetDir *= 10.f;
+				if (ecs::Use(stats))
+				{
+					// Enemy Attacked
+				};
+			}
+
 
 			switch (npc.state)
 			{

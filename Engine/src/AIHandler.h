@@ -9,6 +9,7 @@ private:
 	Entity FindClosestPlayer(HeadlessScene& scene, sm::Vector3 position, comp::NPC* npc);
 	std::vector<Node*> GetNeighbors(GridSystem* grid, Tile* baseNode);
 	Node* FindClosestNode(sm::Vector3 position);
+	float CalculateFGH(Node* currentNode, Node* neighbor, Node* goalNode);
 public:
 	AIHandler();
 	virtual ~AIHandler();
