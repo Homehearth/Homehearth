@@ -197,6 +197,7 @@ void Simulation::ResetPlayer(Entity e)
 	e.RemoveComponent<comp::TemporaryPhysics>();
 	
 	m_pGameScene->publish<EComponentUpdated>(e, ecs::Component::HEALTH);
+	e.UpdateNetwork();
 	
 }
 
