@@ -195,10 +195,10 @@ void Simulation::ResetPlayer(Entity e)
 	e.AddComponent<comp::Tag<TagType::DYNAMIC>>();
 	e.AddComponent<comp::AnimatorName>("Player.anim");
 	e.RemoveComponent<comp::TemporaryPhysics>();
-	
+
 	m_pGameScene->publish<EComponentUpdated>(e, ecs::Component::HEALTH);
 	e.UpdateNetwork();
-	
+
 }
 
 Simulation::Simulation(Server* pServer, HeadlessEngine* pEngine)
@@ -252,6 +252,7 @@ bool Simulation::LeaveLobby(uint32_t playerID, uint32_t gameID)
 {
 	if (!this->RemovePlayer(playerID))
 	{
+		LOG_INFO("Could not remove player!");
 		return false;
 	}
 
@@ -318,13 +319,13 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 					// update velocity
 					sm::Vector3 vel = sm::Vector3(static_cast<float>(input.axisHorizontal), 0, static_cast<float>(input.axisVertical));
 					vel.Normalize();
-					
+
 					sm::Vector3 cameraToPlayer = e.GetComponent<comp::Transform>()->position - input.mouseRay.origin;
 					cameraToPlayer.y = 0;
 					cameraToPlayer.Normalize();
 					float targetRotation = atan2(-cameraToPlayer.x, -cameraToPlayer.z);
 					vel = sm::Vector3::TransformNormal(vel, sm::Matrix::CreateRotationY(targetRotation));
-					
+
 					vel *= p->runSpeed;
 					e.GetComponent<comp::Velocity>()->vel = vel;
 
@@ -385,11 +386,11 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 
 		});
 
-	
+
 	m_pGameScene->GetRegistry()->on_construct<comp::Network>().connect<&Simulation::OnNetworkEntityCreate>(this);
 	m_pGameScene->GetRegistry()->on_destroy<comp::Network>().connect<&Simulation::OnNetworkEntityDestroy>(this);
 	m_pGameScene->GetRegistry()->on_update<comp::Network>().connect<&Simulation::OnNetworkEntityUpdated>(this);
-	m_pGameScene->on<EComponentUpdated>([&](const EComponentUpdated& e, HeadlessScene& scene) 
+	m_pGameScene->on<EComponentUpdated>([&](const EComponentUpdated& e, HeadlessScene& scene)
 		{
 			OnComponentUpdated(e.entity, e.component);
 		});
@@ -621,10 +622,10 @@ bool Simulation::AddPlayer(uint32_t playerID, const std::string& namePlate)
 	combatStats->attackDamage = 40.f;
 	combatStats->isRanged = false;
 	combatStats->lifetime = 0.1f;
-	
+
 	player.AddComponent<comp::Health>();
 	player.AddComponent<comp::BoundingOrientedBox>()->Extents = { 2.0f,2.0f,2.0f };
-	
+
 	//Collision will handle this entity as a dynamic one
 	player.AddComponent<comp::Tag<TagType::DYNAMIC>>();
 	// Network component will make sure the new entity is sent
@@ -643,9 +644,11 @@ bool Simulation::RemovePlayer(uint32_t playerID)
 	if (m_playerInputs.find(player) != m_playerInputs.end())
 	{
 		m_playerInputs.erase(player);
-		m_spawnPoints.push(player.GetComponent<comp::Player>()->spawnPoint);
 	}
+	m_spawnPoints.push(player.GetComponent<comp::Player>()->spawnPoint);
 	m_players.erase(playerID);
+
+	LOG_INFO("Spawnpoints: %d", m_spawnPoints.size());
 
 	if (!player.Destroy())
 	{
@@ -1022,7 +1025,7 @@ void Simulation::SendEntities(const std::vector<Entity>& entities, GameMsg msgID
 	uint32_t sent = 0;
 	message<GameMsg> msg;
 	msg.header.id = msgID;
-	
+
 	for (size_t i = 0; i < entities.size(); i++)
 	{
 		if (!entities[i].IsNull())
