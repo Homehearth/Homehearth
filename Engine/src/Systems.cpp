@@ -491,14 +491,16 @@ void Systems::AISystem(HeadlessScene& scene)
 		if (sm::Vector3::Distance(transformNPC->position, transformCurrentClosestPlayer->position) <= npc.attackRange)
 		{
 			comp::CombatStats* stats = entity.GetComponent<comp::CombatStats>();
-
-			stats->targetDir = transformCurrentClosestPlayer->position - transformNPC->position;
-			stats->targetDir.Normalize();
-			stats->targetDir *= 10.f;
-			if (ecs::Use(stats))
+			if (stats)
 			{
-				// Enemy Attacked
-			};
+				stats->targetDir = transformCurrentClosestPlayer->position - transformNPC->position;
+				stats->targetDir.Normalize();
+				stats->targetDir *= 10.f;
+				if (ecs::Use(stats))
+				{
+					// Enemy Attacked
+				};
+			}
 		}
 		
 
