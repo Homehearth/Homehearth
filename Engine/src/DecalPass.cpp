@@ -35,11 +35,9 @@ void DecalPass::CreateBuffer()
 			D3D11Core::Get().Device()->CreateShaderResourceView(m_buffer, NULL, &m_shaderView);
 	}
 	
-	DecalInfoBuffer buff;
-	buff.info = { (float)m_matrices.size(), 0.0f, 0.0f, 0.0f };
-	buff.projection = dx::XMMatrixPerspectiveFovLH(3.1415F * 0.15F, 1.777777777777778F, 7.5f, 10.0f);
+	m_decalInfoBuffer.info = { (float)m_matrices.size(), 0.0f, 0.0f, 0.0f };
 
-	m_infoBuffer.SetData(D3D11Core::Get().DeviceContext(), buff);
+	m_infoBuffer.SetData(D3D11Core::Get().DeviceContext(), m_decalInfoBuffer);
 }
 
 void DecalPass::Create()
@@ -52,6 +50,8 @@ DecalPass::DecalPass()
 {
 	m_buffer = nullptr;
 	m_shaderView = nullptr;
+
+	m_decalInfoBuffer.projection = dx::XMMatrixPerspectiveFovLH(3.1415F * 0.15F, 1.777777777777778F, 7.5f, 10.0f);
 }
 
 DecalPass::~DecalPass()
@@ -64,18 +64,9 @@ DecalPass::~DecalPass()
 
 void DecalPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 {
-	/*
-		Clear.
-	*/
-
 	if (tempTexture)
 	{
 		DC->PSSetShaderResources(9, 1, &tempTexture.get()->GetShaderView());
-	}
-
-	if (pCam)
-	{
-		DC->PSSetConstantBuffers(1, 1, pCam->m_viewConstantBuffer.GetAddressOf());
 	}
 }
 

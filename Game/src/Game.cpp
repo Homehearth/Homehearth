@@ -261,16 +261,24 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			msg >> id;
 			if (m_gameEntities.find(id) != m_gameEntities.end())
 			{
+				// Spawn blood splat when enemy dies.
+				if (m_gameEntities.at(id).GetComponent<comp::Transform>() && m_gameEntities.at(id).GetComponent<comp::Health>())
+				{
+					Entity bloodDecal = GetCurrentScene()->CreateEntity();
+					bloodDecal.AddComponent<comp::Decal>(*m_gameEntities.at(id).GetComponent<comp::Transform>());
+				}
+
 				m_gameEntities.at(id).Destroy();
 				m_gameEntities.erase(id);
-				m_predictor.Remove(id);
+				//m_predictor.Remove(id);
 			}
 			// Was the entity a player?
 			if (m_players.find(id) != m_players.end())
 			{
 				m_players.at(id).Destroy();
 				m_players.erase(id);
-				m_predictor.Remove(id);
+				//m_predictor.Remove(id);
+				
 			}
 
 		}

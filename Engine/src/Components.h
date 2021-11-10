@@ -61,7 +61,7 @@ namespace ecs
 			RTexture* decal = nullptr;
 			sm::Matrix viewPoint;
 			// Life span in seconds.
-			float lifespan = 100.0f;
+			float lifespan = 5.0f;
 
 			Decal(const Transform& t, RTexture* decal = nullptr)
 			{

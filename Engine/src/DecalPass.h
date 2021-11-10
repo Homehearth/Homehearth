@@ -15,6 +15,7 @@ private:
 	dx::ConstantBuffer<DecalInfoBuffer> m_infoBuffer;
 	ID3D11ShaderResourceView* m_shaderView;
 	std::vector<sm::Matrix> m_matrices;
+	DecalInfoBuffer m_decalInfoBuffer;
 
 	std::shared_ptr<RTexture> tempTexture = nullptr;
 

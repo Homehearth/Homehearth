@@ -4,24 +4,33 @@ float4 main(PixelIn input) : SV_TARGET
 {
     static unsigned int rolls = infoData.x;
     
-    [loop]
-	for (int j = 0; j < rolls; j++)
-	{
-		float4 decal_pos = mul(sb_decaldata[j] ,input.worldPos);
-		decal_pos = mul(decal_projection, decal_pos);
-
-		float2 texCoords;
-		texCoords.x = decal_pos.x / decal_pos.w / 2.0f + 0.5f;
-		texCoords.y = -decal_pos.y / decal_pos.w / 2.0f + 0.5f;
-        
-		if ((saturate(texCoords.x) == texCoords.x) & (saturate(texCoords.y) == texCoords.y))
+    
+    /*
+        This part of the code calculates if a decal should be present at this location.
+        if-statement is to make sure the decal only gets placed on the world scene since its below 1.0f and everything else if either 1.0f or above.
+    */
+	if (input.worldPos.y < 1.0f)
+    {
+        [loop]
+		for (int j = 0; j < rolls; j++)
 		{
-			float4 color = t_decal.Sample(s_linear, texCoords);
+			float4 decal_pos = mul(sb_decaldata[j], input.worldPos);
+			decal_pos = mul(decal_projection, decal_pos);
 
-			return color;
+            // This is the same as shadow-mapping but instead of having different maps we have different view points.
+			float2 texCoords;
+			texCoords.x = decal_pos.x / decal_pos.w / 2.0f + 0.5f;
+			texCoords.y = -decal_pos.y / decal_pos.w / 2.0f + 0.5f;
+        
+			if ((saturate(texCoords.x) == texCoords.x) & (saturate(texCoords.y) == texCoords.y))
+			{
+				float4 color = t_decal.Sample(s_linear, texCoords);
+
+				return color;
+			}
 		}
 	}
-
+    
 	float3 camPos = c_cameraPosition.xyz;
     float ao = 1.0f;
     float3 albedo = 1.f;
