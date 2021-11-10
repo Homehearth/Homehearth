@@ -2,6 +2,7 @@
 #include "HeadlessScene.h"
 #include "Lights.h"
 #include "Handler2D.h"
+#include "Stencil.h"
 
 class Scene : public BasicScene<Scene>
 {
@@ -20,6 +21,9 @@ private:
 
 	Lights m_lights;
 
+	Stencil m_outlineStencilRead;
+	Stencil m_outlineStencilMask;
+
 	bool IsRender3DReady() const;
 	bool IsRenderDebugReady() const;
 	bool IsRender2DReady() const;
@@ -35,6 +39,7 @@ public:
 	void RenderDebug();
 	void RenderAnimation();
 	void Render2D();
+	void RenderOutline();
 
 	bool IsRenderReady() const;
 

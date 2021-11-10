@@ -1,6 +1,6 @@
 #pragma once
 #include "Shader.h"
-
+#include "Stencil.h"
 /*
  * This class holds the D3D11-specific resources used in different passes.
  */

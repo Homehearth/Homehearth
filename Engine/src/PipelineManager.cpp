@@ -196,7 +196,7 @@ bool PipelineManager::CreateDepthStencilStates()
     hr = m_d3d11->Device()->CreateDepthStencilState(&depthStencilDesc, m_depthStencilStateEqualAndDisableDepthWrite.GetAddressOf());
     if (FAILED(hr))
         return false;
-	
+
     return !FAILED(hr);
 }
 

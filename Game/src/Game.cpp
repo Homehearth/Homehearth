@@ -223,6 +223,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			{
 				LOG_INFO("A remote player added!");
 				m_players[e.GetComponent<comp::Network>()->id] = e;
+				m_players[e.GetComponent<comp::Network>()->id].GetComponent<comp::Renderable>()->outline = true;
 			}
 			
 #ifdef  _DEBUG

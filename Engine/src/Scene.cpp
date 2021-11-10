@@ -12,6 +12,10 @@ Scene::Scene()
 	m_defaultCamera = CreateEntity();
 	m_defaultCamera.AddComponent<comp::Camera3D>()->camera.Initialize(sm::Vector3(0, 0, 0), sm::Vector3(0, 0, 1), sm::Vector3(0, 1, 0), sm::Vector2(1000, 1000), CAMERATYPE::DEFAULT);
 	SetCurrentCameraEntity(m_defaultCamera);
+
+	m_outlineStencilRead.Initialize(MODE::WRITE);
+	m_outlineStencilMask.Initialize(MODE::MASK);
+
 }
 
 void Scene::Update(float dt)
@@ -101,6 +105,25 @@ void Scene::Render()
 			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
 			if (it.model)
 				it.model->Render();
+
+			if (it.outline)
+			{
+				if (!it.drawnStencil)
+					m_outlineStencilRead.Bind();
+				else 
+				{
+					m_outlineStencilMask.Bind();
+					Entity outLine = CreateEntity();
+					comp::Renderable* renderable = outLine.AddComponent<comp::Renderable>();
+					renderable->model = it.model;
+					renderable->model->ChangeMaterial("TileBuilding.mtl");
+					//outLine.AddComponent<comp::Transform>()->scale = 
+
+					m_outlineStencilMask.Bind();
+
+				}
+
+			}
 		}
 	}
 	// Render third part of the scene with immediate context
@@ -161,6 +184,10 @@ void Scene::RenderDebug()
 void Scene::Render2D()
 {
 	m_2dHandler.Render();
+}
+
+void Scene::RenderOutline()
+{
 }
 
 bool Scene::IsRenderReady() const
