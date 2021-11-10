@@ -33,6 +33,23 @@ Node* AIHandler::FindClosestNode(sm::Vector3 position)
 {
 	Node* currentClosest = nullptr;
 
+	for (int i = 0; i < m_nodes.size(); i++)
+	{
+		for (int j = 0; j < m_nodes[i].size(); j++)
+		{
+			if (currentClosest)
+			{
+				if (sm::Vector3::Distance(currentClosest->position, position) < sm::Vector3::Distance(position, m_nodes[i][j]->position))
+				{
+					currentClosest = m_nodes[i][j].get();
+				}
+			}
+			else
+			{
+				currentClosest = m_nodes[i][j].get();
+			}
+		}
+	}
 
 	return currentClosest;
 }
@@ -155,6 +172,11 @@ AIHandler::~AIHandler()
 	m_nodes.clear();
 }
 
+void AIHandler::SetClosestNode(comp::NPC& npc, sm::Vector3 position)
+{
+	npc.currentNode = FindClosestNode(position);
+}
+
 void AIHandler::AStarSearch(HeadlessScene& scene, Entity npc)
 {
 	comp::NPC* npcComp = npc.GetComponent<comp::NPC>();
@@ -260,11 +282,26 @@ void AIHandler::AStarSearch(HeadlessScene& scene, Entity npc)
 		currentNode = currentNode->parent;
 	}
 
+	for (int i = 0; i < m_nodes.size(); i++)
+	{
+		for (int j = 0; j < m_nodes[i].size(); j++)
+		{
+			m_nodes[i][j]->ResetFGH();
+			m_nodes[i][j]->parent = nullptr;
+		}
+	}
+}
 
-	//scene.ForEachComponent<Node>([&](Entity entity, Node& node)
-	//	{
-	//		node.ResetFGH();
-	//		node.parent = nullptr;
-	//	});
-
+bool AIHandler::ReachedNode(const Entity npc)
+{
+	comp::NPC* npcComp = npc.GetComponent<comp::NPC>();
+	comp::Transform* transformComp = npc.GetComponent<comp::Transform>();
+	if (sm::Vector3::Distance(transformComp->position, npcComp->currentNode->position) < 10.f)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 }

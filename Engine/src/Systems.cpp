@@ -205,7 +205,7 @@ void Systems::LightSystem(Scene& scene, float dt)
 
 }
 
-void Systems::AISystem(HeadlessScene& scene)
+void Systems::AISystem(HeadlessScene& scene, AIHandler* aiHandler)
 {
 	PROFILE_FUNCTION();
 
@@ -218,7 +218,7 @@ void Systems::AISystem(HeadlessScene& scene)
 		Entity closestPlayer = FindClosestPlayer(scene, transformNPC->position, &npc);
 		comp::Velocity* velocityTowardsPlayer = entity.GetComponent<comp::Velocity>();
 		comp::Transform* transformCurrentClosestPlayer = closestPlayer.GetComponent<comp::Transform>();
-	/*	if (npc.currentNode)
+		if (npc.currentNode)
 		{
 			if (sm::Vector3::Distance(transformNPC->position, transformCurrentClosestPlayer->position) <= 100.f && npc.state != comp::NPC::State::CHASE)
 			{
@@ -241,7 +241,7 @@ void Systems::AISystem(HeadlessScene& scene)
 			}
 		}
 		else
-			npc.state = comp::NPC::State::IDLE;*/
+			npc.state = comp::NPC::State::IDLE;
 
 		npc.state = comp::NPC::State::CHASE;
 
@@ -268,28 +268,28 @@ void Systems::AISystem(HeadlessScene& scene)
 			}
 			break;
 		case comp::NPC::State::ASTAR:
-			//if (ReachedNode(&entity, npc.currentNode))
-			//{
-			//	if (!npc.path.empty())
-			//	{
-			//		npc.currentNode = npc.path.at(0);
-			//		npc.path.erase(npc.path.begin());
-			//	}
-			//	else
-			//	{
-			//		//npc.currentNode = FindClosestNode(scene, transformNPC->position);
-			//		//AIAStarSearch(entity, scene);
-			//	}
-			//}
-			//else
-			//{
-			//	if (velocityTowardsPlayer && npc.currentNode)
-			//	{
-			//		velocityTowardsPlayer->vel = npc.currentNode->position - transformNPC->position;
-			//		velocityTowardsPlayer->vel.Normalize();
-			//		velocityTowardsPlayer->vel *= npc.movementSpeed;
-			//	}				
-			//}
+			if (aiHandler->ReachedNode(entity))
+			{
+				if (!npc.path.empty())
+				{
+					npc.currentNode = npc.path.at(0);
+					npc.path.erase(npc.path.begin());
+				}
+				else
+				{
+					aiHandler->SetClosestNode(npc, transformNPC->position);
+					aiHandler->AStarSearch(scene, entity);
+				}
+			}
+			else
+			{
+				if (velocityTowardsPlayer && npc.currentNode)
+				{
+					velocityTowardsPlayer->vel = npc.currentNode->position - transformNPC->position;
+					velocityTowardsPlayer->vel.Normalize();
+					velocityTowardsPlayer->vel *= npc.movementSpeed;
+				}				
+			}
 			break;
 		case comp::NPC::State::IDLE:
 			velocityTowardsPlayer->vel = { 0.f, 0.f, 0.f };

@@ -352,7 +352,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 					PROFILE_SCOPE("Collision Box/Sphere");
 					Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingSphere>(scene, e.dt);
 				}
-				Systems::AISystem(scene);
+				Systems::AISystem(scene, &m_aiHandler);
 				Systems::CombatSystem(scene, e.dt);
 
 			}
