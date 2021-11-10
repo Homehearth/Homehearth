@@ -13,7 +13,7 @@ float4 main(PixelIn input) : SV_TARGET
     //View Direction Vector
     float3 V = normalize(camPos - input.worldPos.xyz);
     //Reflection Vector
-    float3 R = reflect(-V, N);
+    float3 R = reflect(V, N);
     
     //If an object has a texture, sample from it else use default values.
     SampleTextures(input, albedo, N, roughness, metallic, ao);
@@ -62,11 +62,11 @@ float4 main(PixelIn input) : SV_TARGET
     float3 kD = float3(1.0f, 1.0f, 1.0f) - kS;
     kD *= 1.0f - metallic;
     
-    float3 irradiance = t_cubeMap.Sample(s_linear, N).rgb;
+    float3 irradiance = t_cubeMap.Sample(s_cubeSamp, N).rgb;
     float3 diffuse = irradiance * albedo;
     
     const float MAX_REF_LOD = 4.0f;
-    float3 prefilteredColor = t_cubeMap.SampleLevel(s_linear, R, roughness * MAX_REF_LOD).rgb;
+    float3 prefilteredColor = t_cubeMap.SampleLevel(s_cubeSamp, R, roughness * MAX_REF_LOD).rgb;
     float2 brdf = t_BRDFLUT.Sample(s_linear, float2(max(dot(N, V), 0.0f), roughness)).rg;
     float3 specular = prefilteredColor * (kS * brdf.x + brdf.y);
     
