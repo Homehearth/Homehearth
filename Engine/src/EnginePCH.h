@@ -66,6 +66,7 @@
 #include <dwrite.h>
 #include <dwrite_3.h>
 #include <d2d1.h>
+#include <d2d1_1.h>
 #include <ctime>
 #include <Keyboard.h>
 #include <Mouse.h>

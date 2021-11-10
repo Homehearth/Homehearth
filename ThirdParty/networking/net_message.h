@@ -27,6 +27,12 @@ namespace network
 			return sizeof(msg_header<T>) + payload.size();
 		}
 
+		void clear()
+		{
+			payload.clear();
+			header = {};
+		}
+
 		friend std::ostream& operator <<(std::ostream& os, const message<T>& msg)
 		{
 			os << "ID:" << (int)msg.header.id << " Size: " << msg.size();

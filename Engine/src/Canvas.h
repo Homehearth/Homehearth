@@ -39,6 +39,7 @@ namespace rtd
 		void SetBorderColor(const D2D1_COLOR_F& new_color);
 		void HideBorder();
 		void ShowBorder();
+		void SetBorderWidth(const LineWidth& width);
 
 		// Inherited via Element2D
 		virtual void Draw() override;

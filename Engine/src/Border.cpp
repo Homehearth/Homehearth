@@ -28,6 +28,11 @@ D2D1_COLOR_F& rtd::Border::GetColor()
 	return m_borderOpts.color;
 }
 
+void rtd::Border::SetLineWidth(const LineWidth& width)
+{
+	m_lineWidth = width;
+}
+
 void rtd::Border::UpdatePos(const draw_t& new_opts)
 {
 	m_opts = new_opts;
@@ -40,7 +45,7 @@ void rtd::Border::SetShape(const draw_shape_t& new_shape)
 
 void rtd::Border::Draw()
 {
-	D2D1Core::DrawF(m_opts, m_borderOpts);
+	D2D1Core::DrawF(m_opts, m_borderOpts, m_lineWidth);
 }
 
 void rtd::Border::OnClick()

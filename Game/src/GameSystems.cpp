@@ -24,7 +24,7 @@ void GameSystems::RenderIsCollidingSystem(Scene& scene)
 	scene.ForEachComponent<comp::RenderableDebug>([&](Entity entity, comp::RenderableDebug& renderableDebug)
 		{
 			//Collided with mouse TODO make it do someting?
-			if (CollisionSystem::Get().getCollisionCounts(entity) > 0)
+			if (CollisionSystem::Get().GetCollisionCounts(entity) > 0)
 			{
 				renderableDebug.isColliding.hit = 1;
 			}

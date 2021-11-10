@@ -4,6 +4,7 @@
 #include "DebugPass.h"
 #include "AnimationPass.h"
 #include "PipelineManager.h"
+#include "DecalPass.h"
 
 
 class Renderer
@@ -17,11 +18,12 @@ private:
 	DepthPass		m_depthPass;
 	DebugPass		m_debugPass;
 	AnimationPass	m_animPass;
-	unsigned int	m_currentPass = 0;
-	
+	DecalPass		m_decalPass;
+	unsigned int m_currentPass = 0;
+
 	// Update per frame related resources.
 	void UpdatePerFrame(Camera* pCam);
-
+	
 	// Add a pass to the list.
 	void AddPass(IRenderPass* pass);
 

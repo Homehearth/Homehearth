@@ -186,7 +186,7 @@ void D2D1Core::DrawT(const std::string& text, const draw_text_t& opt)
 	}
 }
 
-void D2D1Core::DrawF(const draw_t& fig, const draw_shape_t& shape)
+void D2D1Core::DrawF(const draw_t& fig, const draw_shape_t& shape, const LineWidth& thickness)
 {
 	D2D1_COLOR_F oldColor = INSTANCE->m_solidBrush->GetColor();
 	INSTANCE->m_renderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
@@ -201,14 +201,19 @@ void D2D1Core::DrawF(const draw_t& fig, const draw_shape_t& shape)
 	switch (shape.shape)
 	{
 	case Shapes::RECTANGLE_FILLED:
-		D2D1_RECT_F rectangle_filled = D2D1::RectF(fig.x_pos, fig.y_pos, fig.x_pos + fig.width , fig.y_pos + fig.height);
+	{
+		D2D1_RECT_F rectangle_filled = D2D1::RectF(fig.x_pos, fig.y_pos, fig.x_pos + fig.width, fig.y_pos + fig.height);
 		INSTANCE->m_renderTarget->FillRectangle(&rectangle_filled, INSTANCE->m_solidBrush.Get());
 		break;
+	}
 	case Shapes::RECTANGLE_OUTLINED:
+	{
 		D2D1_RECT_F rectangle_outlined = D2D1::RectF(fig.x_pos, fig.y_pos, fig.x_pos + fig.width, fig.y_pos + fig.height);
-		INSTANCE->m_renderTarget->DrawRectangle(&rectangle_outlined, INSTANCE->m_solidBrush.Get(), 5.0f);
+		INSTANCE->m_renderTarget->DrawRectangle(&rectangle_outlined, INSTANCE->m_solidBrush.Get(), static_cast<int>(thickness) * 2.0f);
 		break;
+	}
 	case Shapes::TRIANGLE_FILLED:
+	{
 		INSTANCE->m_factory->CreatePathGeometry(&geometry);
 		if (!geometry)
 			break;
@@ -228,6 +233,7 @@ void D2D1Core::DrawF(const draw_t& fig, const draw_shape_t& shape)
 		INSTANCE->m_renderTarget->FillGeometry(geometry, INSTANCE->m_solidBrush.Get());
 		geometry->Release();
 		break;
+	}
 	}
 
 	// Reset it to its old color.
