@@ -10,6 +10,7 @@ private:
 	bool m_IsRenderingColliders;
 	bool m_updateAnimation;
 	DoubleBuffer<std::vector<comp::Renderable>> m_renderableCopies;
+	DoubleBuffer<std::vector<comp::Transform>> m_transforms;
 	DoubleBuffer<std::vector<comp::Renderable>> m_renderableTransparent;
 	DoubleBuffer<std::vector<comp::RenderableDebug>> m_debugRenderableCopies;
 	DoubleBuffer<std::vector<std::pair<comp::Renderable,comp::Animator>>> m_renderableAnimCopies;
@@ -41,7 +42,6 @@ public:
 	void RenderDebug();
 	void RenderAnimation();
 	void Render2D();
-	void RenderOutline();
 
 	bool IsRenderReady() const;
 

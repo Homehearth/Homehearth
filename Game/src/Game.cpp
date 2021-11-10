@@ -523,6 +523,10 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 				std::string name;
 				msg >> name;
 				e.AddComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>(name);
+
+				if (e.GetComponent<comp::Player>()) 
+					e.GetComponent<comp::Renderable>()->outline = true;
+
 				break;
 			}
 			case ecs::Component::ANIMATOR_NAME:
@@ -592,6 +596,9 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 				comp::Player p;
 				msg >> p;
 				e.AddComponent<comp::Player>(p);
+
+				if (e.GetComponent<comp::Renderable>())
+					e.GetComponent<comp::Renderable>()->outline = true;
 				break;
 			}
 			default:
@@ -616,6 +623,8 @@ void Game::UpdateInput()
 		m_inputState.rightMouse = true;
 	}
 	m_inputState.mouseRay = InputSystem::Get().GetMouseRay();
+
+	m_players.at(m_localPID).GetComponent<comp::Renderable>()->outline = true;
 }
 
 void Game::LoadAllAssets()

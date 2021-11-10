@@ -48,6 +48,7 @@ void Scene::Update(float dt)
 				else
 				{
 					m_renderableCopies[0].push_back(r);
+					//m_transforms[0].push_back(*m_registry.try_get<comp::Transform>(entity));
 				}
 			});
 
@@ -95,7 +96,8 @@ void Scene::Render()
 
 	ID3D11Buffer* const buffers[1] = { m_publicBuffer.GetBuffer() };
 	D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, buffers);
-
+	sm::Vector3 oldScale;
+	const sm::Vector3 newScale;
 	// Render everything on same thread.
 	if ((inst.start | inst.stop) == 0)
 	{
@@ -103,6 +105,34 @@ void Scene::Render()
 		for (const auto& it : m_renderableCopies[1])
 		{
 			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
+
+			if (it.outline == true)
+			{
+				it.model->ChangeMaterial("TileDefence.mtl");
+
+				it.model->Render();
+				std::cout << "RENDER OUTLINE" << std::endl;
+
+				//	m_outlineStencilRead.Bind();
+				//	m_outlineStencilMask.Bind();
+			}
+
+			if (it.model)
+				it.model->Render();
+
+			
+		}
+
+	}
+	// Render third part of the scene with immediate context
+	else
+	{
+		// System that renders Renderable component
+		for (int i = inst.start; i < inst.stop; i++)
+		{
+			const auto& it = m_renderableCopies[1][i];
+			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
+							it.model->ChangeMaterial("TileDefence.mtl");
 
 			if (it.outline)
 			{
@@ -115,21 +145,6 @@ void Scene::Render()
 				//	m_outlineStencilMask.Bind();
 			}
 
-
-			if (it.model)
-				it.model->Render();
-
-			
-		}
-	}
-	// Render third part of the scene with immediate context
-	else
-	{
-		// System that renders Renderable component
-		for (int i = inst.start; i < inst.stop; i++)
-		{
-			const auto& it = m_renderableCopies[1][i];
-			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
 			if (it.model)
 				it.model->Render();
 		}
@@ -221,10 +236,6 @@ void Scene::RenderDebug()
 void Scene::Render2D()
 {
 	m_2dHandler.Render();
-}
-
-void Scene::RenderOutline()
-{
 }
 
 bool Scene::IsRenderReady() const
