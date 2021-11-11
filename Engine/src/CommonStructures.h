@@ -186,6 +186,7 @@ enum class GameMsg : uint8_t
 	Game_BackToLobby,
 	Game_WaveTimer,
 
+	Game_ClassSelected,
 	Game_PlayerAttack,
 	Game_AddNPC,
 	Game_RemoveNPC,

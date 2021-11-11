@@ -183,21 +183,81 @@ void Simulation::CreateWaves()
 	waveQueue.emplace(wave2); // Add Wave_2
 }
 
-void Simulation::ResetPlayer(Entity e)
+void Simulation::ResetPlayer(Entity player)
 {
-	e.GetComponent<comp::Transform>()->position = e.GetComponent<comp::Player>()->spawnPoint;
-	e.GetComponent<comp::Velocity>()->vel = sm::Vector3(0.0f, 0.0f, 0.0f);
-	e.GetComponent<comp::Health>()->currentHealth = 100;
-	e.GetComponent<comp::Health>()->isAlive = true;
-	e.GetComponent<comp::Player>()->state = comp::Player::State::IDLE;
-	e.GetComponent<comp::Player>()->isReady = false;
-	e.AddComponent<comp::MeshName>("GameCharacter.fbx");
-	e.AddComponent<comp::Tag<TagType::DYNAMIC>>();
-	e.AddComponent<comp::AnimatorName>("Player.anim");
-	e.RemoveComponent<comp::TemporaryPhysics>();
 	
-	m_pGameScene->publish<EComponentUpdated>(e, ecs::Component::HEALTH);
-	e.UpdateNetwork();
+	comp::Player* playerComp = player.GetComponent<comp::Player>();
+	if (!playerComp)
+	{
+		LOG_WARNING("ResetPlayer: Entity is not a Player");
+		return;
+	}
+
+	playerComp->runSpeed = 25.f;
+	playerComp->state = comp::Player::State::IDLE;
+	playerComp->isReady = false;
+
+	comp::Transform* transform = player.AddComponent<comp::Transform>();
+
+	transform->position = playerComp->spawnPoint;
+	transform->scale = sm::Vector3(1.8f, 1.8f, 1.8f);
+
+	player.AddComponent<comp::Velocity>();
+
+	bool firstTimeAdded = false;
+	if (!player.GetComponent<comp::AnimatorName>())
+	{
+		firstTimeAdded = true;
+	}
+
+	player.AddComponent<comp::MeshName>()->name = "Knight.fbx";
+	player.AddComponent<comp::AnimatorName>()->name = "Knight.anim";
+
+	comp::CombatStats* combatStats = player.AddComponent<comp::CombatStats>();
+	// only if Melee
+	if (playerComp->classType == comp::Player::Class::WARRIOR)
+	{
+		combatStats->cooldown = 0.4f;
+		combatStats->attackDamage = 40.f;
+		combatStats->isRanged = false;
+		combatStats->lifetime = 0.1f;
+
+	}
+	else if(playerComp->classType == comp::Player::Class::MAGE) 
+	{
+		combatStats->cooldown = 0.5f;
+		combatStats->attackDamage = 20.f;
+		combatStats->isRanged = true;
+		combatStats->lifetime = 2.0f;
+		combatStats->projectileSpeed = 40.f;
+		combatStats->attackRange = 2.0f;
+
+		player.AddComponent<comp::MeshName>()->name = "Monster.fbx";
+		player.AddComponent<comp::AnimatorName>()->name = "Monster.anim";
+
+	}
+
+	comp::Health* health = player.AddComponent<comp::Health>();
+	health->currentHealth = 100.f;
+	health->isAlive = true;
+
+
+	player.AddComponent<comp::BoundingOrientedBox>()->Extents = { 2.0f,2.0f,2.0f };
+
+	//Collision will handle this entity as a dynamic one
+	player.AddComponent<comp::Tag<TagType::DYNAMIC>>();
+	// Network component will make sure the new entity is sent
+
+	
+	player.RemoveComponent<comp::TemporaryPhysics>();
+	if (!firstTimeAdded)
+	{
+		m_pGameScene->publish<EComponentUpdated>(player, ecs::Component::MESH_NAME);
+		m_pGameScene->publish<EComponentUpdated>(player, ecs::Component::ANIMATOR_NAME);
+	}
+
+	m_pGameScene->publish<EComponentUpdated>(player, ecs::Component::HEALTH);
+	player.UpdateNetwork();
 	
 }
 
@@ -455,7 +515,7 @@ void Simulation::ReadyCheck(const uint32_t& playerID)
 			// Start game when all players are marked ready
 			if (readyCount == m_players.size())
 			{
-				m_pCurrentScene = m_pGameScene;
+				SetGameScene();
 				// Start the game.
 				network::message<GameMsg> msg;
 				msg.header.id = GameMsg::Game_Start;
@@ -601,7 +661,15 @@ bool Simulation::AddPlayer(uint32_t playerID, const std::string& namePlate)
 
 	// Create Player entity in Game scene
 	Entity player = m_pGameScene->CreateEntity();
+	
 	comp::Player* playerComp = player.AddComponent<comp::Player>();
+	playerComp->spawnPoint = m_spawnPoints.front();
+	m_spawnPoints.pop();
+	player.AddComponent<comp::Network>(playerID);
+	player.AddComponent<comp::NamePlate>()->namePlate = namePlate;
+	
+	ResetPlayer(player);
+	/*
 	comp::Transform* transform = player.AddComponent<comp::Transform>();
 	playerComp->spawnPoint = m_spawnPoints.front();
 	m_spawnPoints.pop();
@@ -627,7 +695,7 @@ bool Simulation::AddPlayer(uint32_t playerID, const std::string& namePlate)
 	//Collision will handle this entity as a dynamic one
 	player.AddComponent<comp::Tag<TagType::DYNAMIC>>();
 	// Network component will make sure the new entity is sent
-	player.AddComponent<comp::Network>(playerID);
+	*/
 
 	m_players[playerID] = player;
 
@@ -936,10 +1004,19 @@ HeadlessScene* Simulation::GetGameScene() const
 	return m_pGameScene;
 }
 
+Entity* Simulation::GetPlayer(uint32_t entityID)
+{
+	if (m_players.find(entityID) == m_players.end())
+	{
+		return nullptr;
+	}
+
+	return &m_players[entityID];
+}
+
 void Simulation::SetLobbyScene()
 {
 	m_pCurrentScene = m_pLobbyScene;
-	ResetGameScene();
 	message<GameMsg> msg;
 	msg.header.id = GameMsg::Game_BackToLobby;
 
@@ -948,6 +1025,7 @@ void Simulation::SetLobbyScene()
 
 void Simulation::SetGameScene()
 {
+	ResetGameScene();
 	m_pCurrentScene = m_pGameScene;
 }
 

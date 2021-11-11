@@ -278,6 +278,20 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 
 		break;
 	}
+	case GameMsg::Game_ClassSelected:
+	{
+		uint32_t playerID;
+		uint32_t gameID;
+		comp::Player::Class type;
+		msg >> gameID >> playerID >> type;
+
+		if (m_simulations.find(gameID) != m_simulations.end())
+		{
+			m_simulations.at(gameID)->GetPlayer(playerID)->GetComponent<comp::Player>()->classType = type;
+		}
+
+		break;
+	}
 	case GameMsg::Game_AddNPC:
 	{
 		uint32_t gameID;

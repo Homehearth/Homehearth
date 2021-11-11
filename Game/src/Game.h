@@ -53,6 +53,9 @@ public:
 	virtual ~Game();
 	void JoinLobby(uint32_t lobbyID);
 	void CreateLobby();
+	
 	void SendStartGame();
+	void SendSelectedClass(comp::Player::Class classType);
+
 	Entity& GetLocalPlayer();
 };

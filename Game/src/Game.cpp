@@ -485,6 +485,15 @@ void Game::SendStartGame()
 	m_client.Send(msg);
 }
 
+void Game::SendSelectedClass(comp::Player::Class classType)
+{
+	network::message<GameMsg> msg;
+	msg.header.id = GameMsg::Game_ClassSelected;
+	msg << classType << m_localPID << m_gameID;
+
+	m_client.Send(msg);
+}
+
 Entity& Game::GetLocalPlayer()
 {
 	return this->m_players.at(m_localPID);

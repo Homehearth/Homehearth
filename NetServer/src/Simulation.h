@@ -98,12 +98,13 @@ public:
 
 	HeadlessScene* GetLobbyScene() const;
 	HeadlessScene* GetGameScene() const;
-	
+	Entity* GetPlayer(uint32_t entityID);
+
 	void SetLobbyScene();
 	void SetGameScene();
 	void ResetGameScene();
 	
-	void ResetPlayer(Entity e);
+	void ResetPlayer(Entity player);
 
 	void SendEntity(Entity e, const std::bitset<ecs::Component::COMPONENT_MAX>& componentMask = UINT32_MAX) const;
 	void SendEntities(const std::vector<Entity>& entities, GameMsg msgID, const std::bitset<ecs::Component::COMPONENT_MAX>& componentMask = UINT32_MAX) const;

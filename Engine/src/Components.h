@@ -143,6 +143,12 @@ namespace ecs
 				DEAD
 			} state = State::IDLE;
 
+			enum class Class
+			{
+				WARRIOR,
+				MAGE
+			} classType = Class::WARRIOR;
+
 			float runSpeed;
 			sm::Vector3 targetForward;
 			sm::Vector3 spawnPoint;

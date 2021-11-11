@@ -414,12 +414,18 @@ void sceneHelp::SetupInLobbyScreen(Game* game)
 		{
 			warriorDesc->Hide();
 			mageDesc->Show();
+			comp::Player* player = game->GetLocalPlayer().GetComponent<comp::Player>();
+			player->classType = comp::Player::Class::MAGE;
+			game->SendSelectedClass(player->classType);
 		});
 	rtd::Button* warriorButton = classButtons->AddElement<rtd::Button>("warriorIconDemo.png", draw_t((width / 3.33f) + (width / 20.0f) + (float)(width / 20), height - (height / 6), width / 24, height / 16));
 	warriorButton->SetOnPressedEvent([=]()
 		{
 			mageDesc->Hide();
 			warriorDesc->Show();
+			comp::Player* player = game->GetLocalPlayer().GetComponent<comp::Player>();
+			player->classType = comp::Player::Class::WARRIOR;
+			game->SendSelectedClass(player->classType);
 		});
 
 	scene.Add2DCollection(classButtons, "ClassButtons");
