@@ -36,7 +36,7 @@ float4 main(PixelIn input) : SV_TARGET
 	float3 camPos = c_cameraPosition.xyz;
     float ao = 1.0f;
     float3 albedo = 1.f;
-    float metallic = 0.0f;
+    float metallic = 1.0f;
     float roughness = 0.0f;
     float exposure = 0.1f;
     
@@ -49,7 +49,7 @@ float4 main(PixelIn input) : SV_TARGET
     SampleTextures(input, albedo, N, roughness, metallic, ao);
     
     //Reflection Vector
-    float3 R = reflect(V, N);
+    float3 R = reflect(-V, N);
 
     //---------------------------------PBR-Shading Calculations---------------------------------
     
@@ -99,13 +99,14 @@ float4 main(PixelIn input) : SV_TARGET
     float3 kD = 1.0f - kS;
     kD *= 1.0f - metallic;
     
-    float3 irradiance = t_irradiance.Sample(s_cubeSamp, N).rgb;
+    float3 irradiance = t_irradiance.Sample(s_linear, N).rgb;
     float3 diffuse = albedo * irradiance;
     
     const float MAX_REF_LOD = 3.0f;
-    float3 prefilteredColor = t_radiance.SampleLevel(s_cubeSamp, R, roughness * MAX_REF_LOD).rgb;
+    float3 prefilteredColor = t_radiance.SampleLevel(s_linear, R, roughness * MAX_REF_LOD).rgb;
     float2 brdf = t_BRDFLUT.Sample(s_linear, float2(max(dot(N, V), 0.0f), roughness)).rg;
     float3 specular = prefilteredColor * (F * brdf.x + brdf.y);
+    specular *= exposure;
     
     float3 ambient = (kD * diffuse + specular) * ao;
     //float3 ambient = (kD * diffuse) * ao;
@@ -117,5 +118,5 @@ float4 main(PixelIn input) : SV_TARGET
     //Gamma correct
     color = pow(max(color, 0.0f), float3(1.0 / 2.2, 1.0 / 2.2, 1.0 / 2.2));
     
-	return float4(color, 5.0f);    
+    return float4(color, 5.0f);
 }

@@ -65,7 +65,7 @@ namespace sceneHelp
 
 		//TEST
 		Entity chest = mainMenuScene.CreateEntity();
-		chest.AddComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>("Chest.obj");
+		chest.AddComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>("Barrel.obj");
 		chest.AddComponent<comp::Transform>()->position = {331, 34, -277};
 
 		mainMenuScene.GetCurrentCamera()->Initialize(sm::Vector3(0, 0, 0), sm::Vector3(0, 0, 1), sm::Vector3(0, 1, 0),
