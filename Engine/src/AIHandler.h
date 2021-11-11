@@ -10,6 +10,7 @@ private:
 	std::vector<Node*> GetNeighbors(GridSystem* grid, Tile* baseNode);
 	Node* FindClosestNode(sm::Vector3 position);
 	float CalculateFGH(Node* currentNode, Node* neighbor, Node* goalNode);
+	bool IsInVector(std::vector<Node*> vector, Node* node);
 public:
 	AIHandler();
 	virtual ~AIHandler();

@@ -308,19 +308,19 @@ void Systems::AISystem(HeadlessScene& scene, AIHandler* aiHandler)
 			Entity closestPlayer = FindClosestPlayer(scene, transformNPC->position, &npc);
 			comp::Velocity* velocityTowardsPlayer = entity.GetComponent<comp::Velocity>();
 			comp::Transform* transformCurrentClosestPlayer = closestPlayer.GetComponent<comp::Transform>();
-			if (npc.currentNode)
-			{
-				if (sm::Vector3::Distance(transformNPC->position, transformCurrentClosestPlayer->position) <= npc.attackRange + 10.f && npc.state != comp::NPC::State::CHASE)
-				{
-					npc.state = comp::NPC::State::CHASE;
-					LOG_INFO("Switching to CHASE State!");
-				}
-				else if ((sm::Vector3::Distance(transformNPC->position, transformCurrentClosestPlayer->position) >= npc.attackRange + 20.f && npc.state != comp::NPC::State::ASTAR))
-				{
-					npc.state = comp::NPC::State::ASTAR;
-					LOG_INFO("Switching to ASTAR State!");
-				}
-			}
+			//if (npc.currentNode)
+			//{
+			//	if (sm::Vector3::Distance(transformNPC->position, transformCurrentClosestPlayer->position) <= npc.attackRange + 10.f && npc.state != comp::NPC::State::CHASE)
+			//	{
+			//		npc.state = comp::NPC::State::CHASE;
+			//		LOG_INFO("Switching to CHASE State!");
+			//	}
+			//	else if ((sm::Vector3::Distance(transformNPC->position, transformCurrentClosestPlayer->position) >= npc.attackRange + 20.f && npc.state != comp::NPC::State::ASTAR))
+			//	{
+			//		npc.state = comp::NPC::State::ASTAR;
+			//		LOG_INFO("Switching to ASTAR State!");
+			//	}
+			//}
 			//else
 			//{
 			//	npc.state = comp::NPC::State::IDLE;

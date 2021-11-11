@@ -61,6 +61,18 @@ float AIHandler::CalculateFGH(Node* currentNode, Node* startNode, Node* goalNode
 	return tempG + tempH;
 }
 
+bool AIHandler::IsInVector(std::vector<Node*> vector, Node* node)
+{
+	for (Node* current : vector)
+	{
+		if (current == node)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
 std::vector<Node*> AIHandler::GetNeighbors(GridSystem* grid, Tile* baseNode)
 {
 	std::vector<Node*> neighbors;
@@ -142,6 +154,7 @@ void AIHandler::CreateNodes(GridSystem* grid)
 			Vector2I tileID = { i,j };
 			Vector2I nodeID = grid->GetTile(tileID)->gridID;
 			std::unique_ptr<Node> currentNode = std::make_unique<Node>(nodeID);
+			currentNode->position = grid->GetTile(Vector2I(i, j))->position;
 			if (grid->GetTile(Vector2I(i, j))->type == TileType::BUILDING ||
 				grid->GetTile(Vector2I(i, j))->type == TileType::DEFENCE ||
 				grid->GetTile(Vector2I(i, j))->type == TileType::UNPLACABLE)
@@ -151,7 +164,13 @@ void AIHandler::CreateNodes(GridSystem* grid)
 			AddNode(currentNode);
 		}
 	}
-
+	//for (int i = 0; i < m_nodes.size(); i++)
+	//{
+	//	for (int j = 0; j < m_nodes[i].size(); j++)
+	//	{
+	//		LOG_INFO("NODE POS: %d %d", m_nodes[i][j]->position.x, m_nodes[i][j]->position.y)
+	//	}
+	//}
 	//Build Connections
 	LOG_INFO("AIHandler: Connecting Nodes");
 	for (int i = 0; i < grid->GetGridSize().x; i++)
@@ -196,15 +215,20 @@ void AIHandler::AStarSearch(HeadlessScene& scene, Entity npc)
 	Entity closestPlayer = FindClosestPlayer(scene, npcTransform->position, npcComp);
 	comp::Transform* playerTransform = closestPlayer.GetComponent<comp::Transform>();
 	Node* currentNode = npcComp->currentNode, * goalNode = FindClosestNode(playerTransform->position), * startingNode = npcComp->currentNode;
+	startingNode->parent = startingNode;
 	while (!openList.empty())
 	{
+		int itrToRemove = 0;
 		for (int i = 0; i < openList.size(); i++)
 		{
 			if (openList.at(i)->f < currentNode->f)
 			{
 				currentNode = openList[i];
+				itrToRemove = i;
 			}
 		}
+		openList.erase(openList.begin() + itrToRemove);
+		closedList.push_back(currentNode);
 		if (currentNode == goalNode)
 		{
 			break;
@@ -212,11 +236,48 @@ void AIHandler::AStarSearch(HeadlessScene& scene, Entity npc)
 
 		for (Node* neighbor : currentNode->connections)
 		{
-			float tempF = CalculateFGH(currentNode, startingNode, goalNode);
+			if (!IsInVector(closedList, neighbor))
+			{
+				float tempG = currentNode->g + (neighbor->position - startingNode->position).Length();;
+				float tempH = (neighbor->position - goalNode->position).Length(); //Using euclidean distance
+				float tempF = neighbor->g + neighbor->h;
+
+				bool inOpen = false;
+				for (int i = 0; i < openList.size() && !inOpen; i++)
+				{
+					if (neighbor == openList[i] && tempG > openList[i]->g)
+					{
+						inOpen = true;
+					}
+				}
+				if (!inOpen)
+				{
+					neighbor->parent = currentNode;
+					neighbor->f = tempF;
+					neighbor->g = tempG;
+					neighbor->h = tempH;
+				}
+
+			}
 		}
 	}
-
-
+	//Trace the path back
+	if (goalNode->parent)
+	{
+		while (currentNode != startingNode)
+		{
+			npcComp->path.push_back(currentNode);
+			currentNode = currentNode->parent;
+		}
+	}
+	for (int i = 0; i < m_nodes.size();i++)
+	{
+		for (int j = 0; j < m_nodes[i].size(); j++)
+		{
+			m_nodes[i][j]->parent = nullptr;
+			m_nodes[i][j]->ResetFGH();
+		}
+	}
 	//OLD A* CODE
 	//comp::NPC* npcComp = npc.GetComponent<comp::NPC>();
 	//comp::Transform* npcTransform = npc.GetComponent<comp::Transform>();

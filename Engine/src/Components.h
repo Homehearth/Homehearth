@@ -133,8 +133,8 @@ namespace ecs
 		{
 			enum class State
 			{
-				IDLE,
 				ASTAR,
+				IDLE,
 				CHASE
 			} state;
 			float movementSpeed = 15.f;
