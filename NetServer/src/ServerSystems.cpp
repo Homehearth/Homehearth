@@ -42,6 +42,8 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 			combatStats->attackDamage = 20.f;
 			combatStats->lifetime = 0.2f;
 			combatStats->isRanged = false;
+			combatStats->attackRange = 7.0f;
+
 			
 		}
 		break;
@@ -59,6 +61,8 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 			combatStats->attackDamage = 20.f;
 			combatStats->lifetime = 0.2f;
 			combatStats->isRanged = false;
+			combatStats->attackRange = 7.0f;
+
 		}
 		break;
 	default:
@@ -196,16 +200,6 @@ void ServerSystems::WaveSystem(Simulation* simulation,
  */
 void ServerSystems::NextWaveConditions(Simulation* simulation, Timer& timer, int timeToFinish)
 {
-	//Summarize all the existing enemy components in the scene
-	simulation->GetGameScene()->ForEachComponent<comp::NPC, comp::Transform>(
-		[&](Entity entity, comp::NPC enemy, comp::Transform transform)
-		{
-			if (abs(transform.position.x) <= 10.f && abs(transform.position.z) <= 10.f)
-			{
-				entity.Destroy();
-			}
-		});
-
 	//Publish event when timeToFinish been exceeded.
 	if (timer.GetElapsedTime() > timeToFinish)
 	{

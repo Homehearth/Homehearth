@@ -16,7 +16,7 @@ int CollisionSystem::GetCollisionCounts(Entity entity) const
 }
 
 
-void CollisionSystem::AddOnCollision(Entity entity1, std::function<void(Entity)> func)
+void CollisionSystem::AddOnCollision(Entity entity1, std::function<void(Entity, Entity)> func)
 {
 	if (m_OnCollision.find(entity1) == m_OnCollision.end())
 	{
@@ -32,7 +32,7 @@ void CollisionSystem::OnCollision(Entity entity1, Entity entity2)
 		{
 			if (!entity2.IsNull())
 			{
-				m_OnCollision.at(entity1)(entity2);
+				m_OnCollision.at(entity1)(entity1, entity2);
 			}
 		}
 		else
@@ -46,7 +46,7 @@ void CollisionSystem::OnCollision(Entity entity1, Entity entity2)
 		{
 			if (!entity1.IsNull())
 			{
-				m_OnCollision.at(entity2)(entity1);
+				m_OnCollision.at(entity2)(entity2, entity1);
 			}
 		}
 		else
