@@ -46,8 +46,9 @@ public:
 	~RAnimation();
 
 	//Set and get
-	bool IsLoopable() const;
 	void SetLoopable(bool& enable);
+	bool IsLoopable() const;
+	void SetTicksPerFrame(const double& speed);
 	const double& GetTicksPerFrame() const;
 	const double& GetDuraction() const;
 

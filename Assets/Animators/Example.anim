@@ -1,0 +1,20 @@
+// Set the skeleton that will be used for this animator
+skel 		Model.fbx
+
+
+// Add an animation
+anim 			idle 			Model_Idle.fbx
+
+
+// Have to set a default animation to use
+defaultAnim 	idle
+
+
+// Possible to set options for animation. 
+// Set by default if nothing was set.
+loopable		1
+tickSpeed		30
+
+
+// Blend states - time in seconds or ticks???
+blendstate		idle 	--> 	running		1.0

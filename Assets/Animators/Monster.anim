@@ -2,5 +2,8 @@ skel			Monster.fbx
 anim 			idle 			Monster_Idle.fbx
 anim 			walk 			Monster_Walk.fbx
 anim 			attack 			Monster_Attack.fbx
+loopable		0
 anim 			takeDamage 		Monster_TakeDamage.fbx
-currentAnim 	walk
+loopable		0
+defaultAnim 	walk
+

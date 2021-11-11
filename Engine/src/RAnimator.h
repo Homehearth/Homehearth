@@ -6,15 +6,10 @@ const UINT T2D_BONESLOT = 9;
 
 /*
 	Loads in an animator from our custom format ".anim"
-	
-	Prefixes:
-	* Load in skeleton-hierchy:		"skel			Knight.fbx"
-	* Load in an animation:			"anim			idle		idle.fbx"
-	* Set current start animation:  "currentAnim	idle"
+	Read Example.anim for more details about how to use it.
 
 	Can be used as an Resource and reused for multiple entities. 
 	But will use the same animation in that case.
-	
 */
 
 class RAnimator : public resource::GResource
@@ -22,17 +17,23 @@ class RAnimator : public resource::GResource
 private:
 	double							m_currentFrameTime;
 	bool							m_useInterpolation;
-	std::vector<bone_keyFrames_t>	m_bones;
-	std::unordered_map<std::string, std::shared_ptr<RAnimation>> m_animations;
+	std::vector<bone_keyFrames_t>	m_bones;										//Change to only bone_t later
+	std::unordered_map<std::string, std::shared_ptr<RAnimation>> m_animations;		//Change to std::unique_ptr<animation_t>
 
+	//Will later be: animation_t* m_defaultAnim;
+	std::shared_ptr<RAnimation> m_defaultAnim;
 	std::shared_ptr<RAnimation> m_currentAnim;
-	//std::shared_ptr<RAnimation> m_nextAnim;
+	std::shared_ptr<RAnimation> m_nextAnim;
 
-	/*struct animation
-		std::shared_ptr<RAnimation> 
+	/*
+	struct animation_t
+	{
+		std::shared_ptr<RAnimation> animation;
 		double currentFrameTime;
+		std::unordermap<std::string, std::array<UINT, 3>> lastKeys;
+	}
 	*/
-
+	//some kind of double m_currentBlendTime;
 
 	//Matrices that is going up to the GPU - structure buffer
 	std::vector<sm::Matrix>			 m_finalMatrices;
@@ -43,6 +44,15 @@ private:
 	bool LoadSkeleton(const std::vector<bone_t>& skeleton);
 	bool CreateBonesSB();
 	void UpdateStructureBuffer();
+
+	//Reset the time of currentFrametime
+	void ResetTime();
+
+	//Randomize at what time an animation starts at
+	void RandomizeStartTime(const std::shared_ptr<RAnimation>& anim);
+
+	//void BlendAnimation();
+	//void OneAnimation();
 
 public:
 	RAnimator();

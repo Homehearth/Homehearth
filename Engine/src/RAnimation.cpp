@@ -22,7 +22,6 @@ RAnimation::~RAnimation()
 void RAnimation::LoadPositions(const std::string& bonename, aiNodeAnim* channel)
 {
 	KeyFrames keyframes;
-	positionKey_t pos;
 
 	//Keyframe exist - copy values
 	auto key = m_keyFrames.find(bonename);
@@ -35,10 +34,7 @@ void RAnimation::LoadPositions(const std::string& bonename, aiNodeAnim* channel)
 	keyframes.position.reserve(size_t(channel->mNumPositionKeys));
 	for (UINT i = 0; i < channel->mNumPositionKeys; i++)
 	{
-		pos.time = channel->mPositionKeys[i].mTime;
-		const aiVector3D aiPos = channel->mPositionKeys[i].mValue;
-		pos.val = { aiPos.x, aiPos.y, aiPos.z };
-		keyframes.position.push_back(pos);
+		keyframes.position.push_back({ channel->mPositionKeys[i].mTime, sm::Vector3(&channel->mPositionKeys[i].mValue.x) });
 	}
 
 	m_keyFrames[bonename] = keyframes;
@@ -47,7 +43,6 @@ void RAnimation::LoadPositions(const std::string& bonename, aiNodeAnim* channel)
 void RAnimation::LoadScales(const std::string& bonename, aiNodeAnim* channel)
 {
 	KeyFrames keyframes;
-	scaleKey_t scl;
 
 	//Keyframe exist - copy values
 	auto key = m_keyFrames.find(bonename);
@@ -60,10 +55,7 @@ void RAnimation::LoadScales(const std::string& bonename, aiNodeAnim* channel)
 	keyframes.scale.reserve(size_t(channel->mNumScalingKeys));
 	for (UINT i = 0; i < channel->mNumScalingKeys; i++)
 	{
-		scl.time = channel->mScalingKeys[i].mTime;
-		const aiVector3D aiScl = channel->mScalingKeys[i].mValue;
-		scl.val = { aiScl.x, aiScl.y, aiScl.z };
-		keyframes.scale.push_back(scl);
+		keyframes.scale.push_back({ channel->mScalingKeys[i].mTime, sm::Vector3(&channel->mScalingKeys[i].mValue.x) });
 	}
 
 	m_keyFrames[bonename] = keyframes;
@@ -88,7 +80,6 @@ void RAnimation::LoadRotations(const std::string& bonename, aiNodeAnim* channel)
 		rot.time = channel->mRotationKeys[i].mTime;
 		const aiQuaternion aiRot = channel->mRotationKeys[i].mValue;
 		rot.val = { aiRot.x, aiRot.y, aiRot.z, aiRot.w };
-		rot.val.Normalize();
 		keyframes.rotation.push_back(rot);
 	}
 
@@ -263,14 +254,19 @@ const sm::Quaternion RAnimation::GetRotation(const std::string& bonename, const 
 	return finalQuat;
 }
 
+void RAnimation::SetLoopable(bool& enable)
+{
+	m_isLoopable = enable;
+}
+
 bool RAnimation::IsLoopable() const
 {
 	return m_isLoopable;
 }
 
-void RAnimation::SetLoopable(bool& enable)
+void RAnimation::SetTicksPerFrame(const double& speed)
 {
-	m_isLoopable = enable;
+	m_ticksPerFrame = speed;
 }
 
 const double& RAnimation::GetTicksPerFrame() const
@@ -319,10 +315,8 @@ bool RAnimation::Create(const std::string& filename)
 	//Will remove extra text on bones like: "_$AssimpFbx$_"...
 	importer.SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, false);
 
-    const aiScene* scene = importer.ReadFile(filepath, 
-											aiProcess_FlipWindingOrder |
-											aiProcess_MakeLeftHanded);
-
+	const aiScene* scene = importer.ReadFile(filepath, aiProcess_MakeLeftHanded);
+	
     //Check if readfile was successful
     if (!scene || !scene->mRootNode)
 	{
