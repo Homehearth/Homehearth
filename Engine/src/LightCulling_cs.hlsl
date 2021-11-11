@@ -1,5 +1,9 @@
 #include "Common.hlsli"
 
+//
+// ForwardPlus: https://www.3dgep.com/forward-plus/
+//
+
 // Group shared variables.
 groupshared uint group_uMinDepth;
 groupshared uint group_uMaxDepth;
@@ -42,7 +46,7 @@ void main(ComputeShaderIn input)
 
 	uint uDepth = asuint(fDepth);
 
-	const float near = 0.01f; 
+	const float near = 0.01f;  
 	const float far = 500.0f;
 
 	uDepth = ((2.0f * near) / (far + near - uDepth * (far - near))); // Do I really need to ??
@@ -56,11 +60,18 @@ void main(ComputeShaderIn input)
 		group_GroupFrustum = sb_Frustums_in[input.groupID.x + (input.groupID.y * numThreadGroups.x)];
     }
 
+	// Blocks execution of all threads in a group until
+	// all group shared accesses have been completed and
+	// all threads in the group have reached this call.
     GroupMemoryBarrierWithGroupSync();
 
-    InterlockedMin(group_uMinDepth, uDepth);
-    InterlockedMax(group_uMaxDepth, uDepth);
 
+	// The InterlockedMin and InterlockedMax methods
+	// are used to atomically update the uMinDepth and
+	// uMaxDepth group - shared variables based on the current threads depth value.
+    InterlockedMin(group_uMinDepth, uDepth);	// Performs a guaranteed atomic min.
+	InterlockedMax(group_uMaxDepth, uDepth);	// Performs a guaranteed atomic max.
+	
     GroupMemoryBarrierWithGroupSync();
 
     float fMinDepth = asfloat(group_uMinDepth);
@@ -73,7 +84,7 @@ void main(ComputeShaderIn input)
 
     // Clipping plane for minimum depth value 
     // (used for testing lights within the bounds of opaque geometry).
-    Plane minPlane = { float3(0, 0, -1), -minDepthVS };
+    const Plane minPlane = { float3(0, 0, -1), -minDepthVS };
 
     // Cull lights.
     // Each thread in a group will cull 1 light until all lights have been culled.
@@ -85,18 +96,30 @@ void main(ComputeShaderIn input)
 
 			switch (light.type)
 			{
-			case DIRECTIONAL_LIGHT:
-			{
-				AddLightToOpaqueList(i);
-				AddLightToTransparentList(i);
-			}
-			break;
-			case POINT_LIGHT:
-			{
-				// Don't know what the fuck to do...
-			}
-			break;
-			default:
+				case DIRECTIONAL_LIGHT:
+				{
+					AddLightToOpaqueList(i);
+					AddLightToTransparentList(i);
+				}
+				break;
+				case POINT_LIGHT:
+				{
+					const float3 lightPositionVS = mul(light.position, c_view).xyz;
+					const Sphere sphere = { lightPositionVS, light.range };
+					if (SphereInsideFrustum(sphere, group_GroupFrustum, nearClipVS, maxDepthVS))
+					{
+						// Add light to light list for transparent geometry.
+						AddLightToOpaqueList(i);
+
+						if (!SphereInsidePlane(sphere, minPlane))
+						{
+							// Add light to light list for opaque geometry.
+							AddLightToTransparentList(i);
+						}
+					}
+				}
+				break;
+				default:
 #pragma message( "You want spot lights? Implement it yourself then!")
 				break;
 			}
@@ -111,7 +134,7 @@ void main(ComputeShaderIn input)
 	if (input.groupIndex == 0)
 	{
 		// Update light grid for opaque geometry.
-		InterlockedAdd(rw_opaq_LightIndexCounter[0], group_opaq_LightCount, group_opaq_LightIndexStartOffset);
+		InterlockedAdd(rw_opaq_LightIndexCounter[0], group_opaq_LightCount, group_opaq_LightIndexStartOffset); // Performs a guaranteed atomic add of value to the dest resource variable.
 		rw_opaq_LightGrid[input.groupID.xy] = uint2(group_opaq_LightIndexStartOffset, group_opaq_LightCount);
 
 		// Update light grid for transparent geometry.
@@ -121,7 +144,7 @@ void main(ComputeShaderIn input)
 
 	GroupMemoryBarrierWithGroupSync();
 
-	// Now update the light index list (all threads).
+	// Update the light index list (all threads).
 	// For opaque geometry.
 	for (uint i = input.groupIndex; i < group_opaq_LightCount; i += TILE_SIZE * TILE_SIZE)
 	{

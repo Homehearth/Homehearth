@@ -1,5 +1,9 @@
 #include "Common.hlsli"
 
+//
+// ForwardPlus: https://www.3dgep.com/forward-plus/
+//
+
 #define LEFT            0
 #define RIGHT           1
 #define TOP             2

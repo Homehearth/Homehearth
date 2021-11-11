@@ -5,7 +5,7 @@ class LightCullingPass : IRenderPass
 private:
 	const int TILE_SIZE = 16; // Must have the same value in shaders.
 
-	static bool m_hasChanged;
+	bool m_hasChanged;
 
 	unsigned int m_numFrustums;
 	dispatch_params_t m_dispatchParams;

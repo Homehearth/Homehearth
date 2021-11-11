@@ -56,7 +56,10 @@ public:
 
 	Shaders::PixelShader			m_defaultPixelShader;
 	Shaders::PixelShader			m_debugPixelShader;
-	
+
+	Shaders::ComputeShader			m_computeFrustums;
+	Shaders::ComputeShader			m_lightCulling;
+
 	D3D11_VIEWPORT					m_viewport;
 
 	

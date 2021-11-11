@@ -26,6 +26,20 @@ void LightCullingPass::ComputeGridFrustums()
     }
     else
         m_hasChanged = false;
+    // todo: SetEnable()
+
+
+    // todo: ComputeFrustums.
+    // DispatchParams.
+    // ScreenToViewParams.
+    // sb_Frustums_out
+
+
+    // todo: LightCullingPass
+    // device->CreateUnorderedAccessView(tex2D, &uavDesc, &o_LightGrid_tex);
+    // device->CreateUnorderedAccessView(tex2D2, &uavDesc, &t_LightGrid_tex);
+    // device->CreateShaderResourceView(tex2D, &srvDesc, &o_LightGrid_texSRV);
+    // device->CreateShaderResourceView(tex2D, &srvDesc, &t_LightGrid_texSRV);
 }
 
 bool LightCullingPass::CreateGridFrustumSWB(size_t numElements, size_t elementSize, const void* bufferData) const

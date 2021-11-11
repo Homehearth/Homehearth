@@ -35,7 +35,6 @@ void D3D11Core::Initialize(Window* pWindow)
     {
         LOG_ERROR("Failed to create IDXGIAdapter4");
     }
-
 }
 
 ID3D11Device* D3D11Core::Device() const

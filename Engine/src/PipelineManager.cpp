@@ -436,5 +436,17 @@ bool PipelineManager::CreateShaders()
         return false;
     }
 
+    if (!m_computeFrustums.Create("ComputeFrustums_cs"))
+    {
+        LOG_WARNING("failed creating ComputeFrustums_cs.");
+        return false;
+    }
+
+    if (!m_lightCulling.Create("LightCulling_cs"))
+    {
+        LOG_WARNING("failed creating LightCulling_cs.");
+        return false;
+    }
+
     return true;
 }                         
