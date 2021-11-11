@@ -200,7 +200,10 @@ void AIHandler::AStarSearch(HeadlessScene& scene, Entity npc)
 	{
 		for (int i = 0; i < openList.size(); i++)
 		{
-
+			if (openList.at(i)->f < currentNode->f)
+			{
+				currentNode = openList[i];
+			}
 		}
 		if (currentNode == goalNode)
 		{
