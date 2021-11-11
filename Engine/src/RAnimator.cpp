@@ -160,6 +160,29 @@ bool RAnimator::Create(const std::string& filename)
 	return true;
 }
 
+bool RAnimator::ChangeAnimation(const std::string& name)
+{
+	auto iterator = m_animations.find(name);
+	if (iterator != m_animations.end())
+	{
+		m_currentAnim = m_animations[name];
+
+		//Reset frametime
+		m_currentFrameTime = 0;
+
+		//Reset safespot in bones
+		for (size_t i = 0; i < m_bones.size(); i++)
+		{
+			m_bones[i].lastKeys = { 0, 0, 0 };
+		}
+	}
+	//Animation does not exist and can't be changed to
+	else
+	{
+		return false;
+	}
+}
+
 void RAnimator::Update()
 {
 	if (!m_bones.empty() && m_currentAnim)

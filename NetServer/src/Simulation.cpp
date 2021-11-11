@@ -191,9 +191,9 @@ void Simulation::ResetPlayer(Entity e)
 	e.GetComponent<comp::Health>()->isAlive = true;
 	e.GetComponent<comp::Player>()->state = comp::Player::State::IDLE;
 	e.GetComponent<comp::Player>()->isReady = false;
-	e.AddComponent<comp::MeshName>("GameCharacter.fbx");
+	e.AddComponent<comp::MeshName>("Knight.fbx");
 	e.AddComponent<comp::Tag<TagType::DYNAMIC>>();
-	e.AddComponent<comp::AnimatorName>("Player.anim");
+	e.AddComponent<comp::AnimatorName>("Knight.anim");
 	e.RemoveComponent<comp::TemporaryPhysics>();
 	
 	m_pGameScene->publish<EComponentUpdated>(e, ecs::Component::HEALTH);

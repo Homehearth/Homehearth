@@ -28,6 +28,12 @@ private:
 	std::shared_ptr<RAnimation> m_currentAnim;
 	//std::shared_ptr<RAnimation> m_nextAnim;
 
+	/*struct animation
+		std::shared_ptr<RAnimation> 
+		double currentFrameTime;
+	*/
+
+
 	//Matrices that is going up to the GPU - structure buffer
 	std::vector<sm::Matrix>			 m_finalMatrices;
 	ComPtr<ID3D11Buffer>			 m_bonesSB_Buffer;
@@ -48,6 +54,9 @@ public:
 	// Inherited via GResource
 	// Create from a custom file - something.anim
 	virtual bool Create(const std::string& filename) override;
+
+	//Switch animation - not filename
+	bool ChangeAnimation(const std::string& name);
 
 	//Update the animation
 	void Update();

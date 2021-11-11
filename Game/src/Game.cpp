@@ -533,6 +533,18 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 				e.AddComponent<comp::Animator>()->animator = ResourceManager::Get().CopyResource<RAnimator>(name, true);
 				break;
 			}
+			case ecs::Component::CHANGE_ANIMATION:
+			{
+				std::string animationName;
+				msg >> animationName;
+
+				std::shared_ptr<RAnimator> animator = e.GetComponent<comp::Animator>()->animator;
+				if (animator)
+				{
+					animator->ChangeAnimation(animationName);
+				}
+				break;
+			}
 			case ecs::Component::NAME_PLATE:
 			{
 				std::string name;
