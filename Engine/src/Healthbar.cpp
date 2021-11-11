@@ -21,7 +21,7 @@ void rtd::Healthbar::Update()
 
             //m_foreGround.get()->SetPosition(m_drawOpts[0].x_pos, m_drawOpts[0].y_pos);
             m_foreGround.get()->SetScale(m_drawOpts[0].width, m_drawOpts[0].height);
-            m_healthInfo.get()->SetText("Health: " + std::to_string((int)h->currentHealth));
+            //m_healthInfo.get()->SetText("Health: " + std::to_string((int)h->currentHealth));
         }
     }
 }
@@ -31,8 +31,8 @@ rtd::Healthbar::Healthbar(const draw_t& drawOpts)
     m_drawOpts[0] = drawOpts;
     m_backGround = std::make_unique<Canvas>(m_drawOpts[0]);
     m_foreGround = std::make_unique<Canvas>(m_drawOpts[0]);
-    m_healthInfo = std::make_unique<Text>("Health", draw_text_t(m_drawOpts[0].x_pos, m_drawOpts[0].y_pos, m_drawOpts[0].width, m_drawOpts[0].height));
-    m_healthInfo.get()->SetVisiblity(false);
+    //m_healthInfo = std::make_unique<Text>("Health", draw_text_t(m_drawOpts[0].x_pos, m_drawOpts[0].y_pos, m_drawOpts[0].width, m_drawOpts[0].height));
+    //m_healthInfo.get()->SetVisiblity(false);
     m_sizeFull = drawOpts.width;
 
     m_drawOpts[1] = m_drawOpts[0];
@@ -75,7 +75,7 @@ void rtd::Healthbar::Draw()
         float y = m_drawOpts[1].y_pos;
         m_backGround.get()->SetPosition(x, y);
         m_foreGround.get()->SetPosition(x, y);
-        m_healthInfo.get()->SetPosition(x, y);
+        //m_healthInfo.get()->SetPosition(x, y);
     }
 
     if (m_backGround)
@@ -83,8 +83,8 @@ void rtd::Healthbar::Draw()
     if (m_foreGround)
         m_foreGround.get()->Draw();
 
-    if (m_healthInfo.get()->IsVisible())
-        m_healthInfo.get()->Draw();
+    //if (m_healthInfo.get()->IsVisible())
+    //    m_healthInfo.get()->Draw();
 
     m_drawOpts.ReadyForSwap();
 }
@@ -100,21 +100,21 @@ void rtd::Healthbar::OnClick()
 
 void rtd::Healthbar::OnHover()
 {
-    m_healthInfo.get()->SetVisiblity(true);
+  /*  m_healthInfo.get()->SetVisiblity(true);*/
 }
 
 bool rtd::Healthbar::CheckHover()
 {
-    // Is within bounds?
-    if (InputSystem::Get().GetMousePos().x > m_drawOpts[1].x_pos &&
-        InputSystem::Get().GetMousePos().x < m_drawOpts[1].x_pos + m_drawOpts[1].width &&
-        InputSystem::Get().GetMousePos().y > m_drawOpts[1].y_pos &&
-        InputSystem::Get().GetMousePos().y < m_drawOpts[1].y_pos + m_drawOpts[1].height)
-    {
-        return true;
-    }
+    //// Is within bounds?
+    //if (InputSystem::Get().GetMousePos().x > m_drawOpts[1].x_pos &&
+    //    InputSystem::Get().GetMousePos().x < m_drawOpts[1].x_pos + m_drawOpts[1].width &&
+    //    InputSystem::Get().GetMousePos().y > m_drawOpts[1].y_pos &&
+    //    InputSystem::Get().GetMousePos().y < m_drawOpts[1].y_pos + m_drawOpts[1].height)
+    //{
+    //    return true;
+    //}
     
-    m_healthInfo.get()->SetVisiblity(false);
+    //m_healthInfo.get()->SetVisiblity(false);
     return false;
 }
 

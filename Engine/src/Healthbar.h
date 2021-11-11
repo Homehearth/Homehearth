@@ -8,10 +8,9 @@ namespace rtd
 	class Healthbar : public Element2D
 	{
 	private:
-
 		std::unique_ptr<Canvas> m_backGround;
 		std::unique_ptr<Canvas> m_foreGround;
-		std::unique_ptr<Text> m_healthInfo;
+		//std::unique_ptr<Text> m_healthInfo;
 
 		float* m_points;
 		Entity m_entity;
