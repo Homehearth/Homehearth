@@ -154,6 +154,7 @@ struct InputState
 	int axisVertical : 2;
 	bool leftMouse : 1;
 	bool rightMouse : 1;
+	bool key_b : 1;
 
 	Ray_t mouseRay;
 

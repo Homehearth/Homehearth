@@ -248,6 +248,7 @@ void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& sce
 		{
 			if (p.state == comp::Player::State::ATTACK)
 			{
+				/*
 				Plane_t plane;
 				plane.normal = sm::Vector3(0, 1, 0);
 				plane.point = t.position;
@@ -264,8 +265,10 @@ void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& sce
 					LOG_WARNING("Mouse click ray missed walking plane. Should not happen...");
 				}
 				a.targetDir = targetDir;
-				p.targetForward = targetDir;
-
+				p.mousePoint = targetDir;
+				*/
+				p.fowardDir = p.mousePoint - t.position;
+				p.fowardDir.Normalize();
 				v.vel *= 0.2f;
 			}
 
@@ -279,7 +282,7 @@ void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& sce
 				v.vel.Normalize(vel);
 
 				p.state = comp::Player::State::TURN;
-				p.targetForward = vel;
+				p.fowardDir = vel;
 			}
 		});
 
@@ -289,7 +292,8 @@ void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& sce
 			if (p.state == comp::Player::State::TURN || p.state == comp::Player::State::ATTACK)
 			{
 				float time = dt * p.runSpeed * 0.5f;
-				if (ecs::StepRotateTo(t.rotation, p.targetForward, time))
+				
+				if (ecs::StepRotateTo(t.rotation, p.fowardDir, time))
 				{
 					p.state = comp::Player::State::IDLE;
 				}

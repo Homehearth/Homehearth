@@ -211,8 +211,9 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 				
 				box->Extents = sm::Vector3(stats.attackRange * 0.5f);
 				
-				stats.targetDir.Normalize();
-				t->position = transform.position + stats.targetDir * stats.attackRange * 0.5f;
+				sm::Vector3 targetDir = stats.targetPoint - transform.position;
+				targetDir.Normalize();
+				t->position = transform.position + targetDir * stats.attackRange * 0.5f;
 				t->rotation = transform.rotation;
 
 				box->Center = t->position;
@@ -225,7 +226,7 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 				//If the attack is ranged add a velocity to the entity.
 				if (stats.isRanged)
 				{
-					sm::Vector3 vel = stats.targetDir * stats.projectileSpeed;
+					sm::Vector3 vel = targetDir * stats.projectileSpeed;
 					attackCollider.AddComponent<comp::Velocity>()->vel = vel;
 					attackCollider.AddComponent<comp::MeshName>()->name = "Sphere.obj";
 				}
@@ -493,9 +494,7 @@ void Systems::AISystem(HeadlessScene& scene)
 			comp::CombatStats* stats = entity.GetComponent<comp::CombatStats>();
 			if (stats)
 			{
-				stats->targetDir = transformCurrentClosestPlayer->position - transformNPC->position;
-				stats->targetDir.Normalize();
-				if (ecs::Use(stats))
+				if (ecs::Use(stats, transformCurrentClosestPlayer->position))
 				{
 					// Enemy Attacked
 				};

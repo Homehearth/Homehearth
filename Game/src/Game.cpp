@@ -51,14 +51,12 @@ void Game::UpdateNetwork(float deltaTime)
 				message<GameMsg> msg;
 				msg.header.id = GameMsg::Game_PlayerInput;
 
-
 				msg << this->m_localPID << m_gameID << m_inputState;
 
 				m_client.Send(msg);
 
 				//reset input
-				m_inputState.leftMouse = false;
-				m_inputState.rightMouse = false;
+				memset(&m_inputState, 0, sizeof(m_inputState));
 			}
 		}
 	}
@@ -702,6 +700,12 @@ void Game::UpdateInput()
 		m_inputState.rightMouse = true;
 	}
 	m_inputState.mouseRay = InputSystem::Get().GetMouseRay();
+	// temp
+	if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::B, KeyState::PRESSED))
+	{
+		m_inputState.key_b = true;
+	}
+
 }
 
 void Game::LoadAllAssets()

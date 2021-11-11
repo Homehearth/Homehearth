@@ -214,13 +214,18 @@ void Simulation::ResetPlayer(Entity player)
 	player.AddComponent<comp::AnimatorName>()->name = "Knight.anim";
 
 	comp::CombatStats* combatStats = player.AddComponent<comp::CombatStats>();
+	
+
 	// only if Melee
 	if (playerComp->classType == comp::Player::Class::WARRIOR)
 	{
-		combatStats->cooldown = 0.4f;
+		combatStats->cooldown = 0.3f;
 		combatStats->attackDamage = 40.f;
 		combatStats->isRanged = false;
 		combatStats->lifetime = 0.1f;
+
+		playerComp->primaryAbilty = entt::resolve<comp::CombatStats>();
+		playerComp->secondaryAbilty = entt::resolve<comp::CombatStats>();
 
 	}
 	else if(playerComp->classType == comp::Player::Class::MAGE) 
@@ -231,6 +236,10 @@ void Simulation::ResetPlayer(Entity player)
 		combatStats->lifetime = 2.0f;
 		combatStats->projectileSpeed = 40.f;
 		combatStats->attackRange = 2.0f;
+
+		playerComp->primaryAbilty = entt::resolve<comp::CombatStats>();
+		playerComp->secondaryAbilty = entt::resolve<comp::CombatStats>();
+
 
 		player.AddComponent<comp::MeshName>()->name = "Monster.fbx";
 		player.AddComponent<comp::AnimatorName>()->name = "Monster.anim";
@@ -342,7 +351,6 @@ void Simulation::UpdateLobby()
 	this->Broadcast(msg);
 }
 
-
 bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::BoundingOrientedBox>* mapColliders, const std::string& namePlate)
 {
 	this->m_gameID = gameID;
@@ -375,37 +383,51 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 				if (p->state != comp::Player::State::DEAD)
 				{
 					InputState input = pair.second;
+					
 					// update velocity
 					sm::Vector3 vel = sm::Vector3(static_cast<float>(input.axisHorizontal), 0, static_cast<float>(input.axisVertical));
 					vel.Normalize();
-					
 					sm::Vector3 cameraToPlayer = e.GetComponent<comp::Transform>()->position - input.mouseRay.origin;
 					cameraToPlayer.y = 0;
 					cameraToPlayer.Normalize();
 					float targetRotation = atan2(-cameraToPlayer.x, -cameraToPlayer.z);
 					vel = sm::Vector3::TransformNormal(vel, sm::Matrix::CreateRotationY(targetRotation));
-					
 					vel *= p->runSpeed;
 					e.GetComponent<comp::Velocity>()->vel = vel;
-
-					// check if attacking
-					if (input.leftMouse)
+					
+					// Get point on ground where mouse hovers over
+					Plane_t plane;
+					plane.normal = sm::Vector3(0, 1, 0);
+					plane.point = sm::Vector3(0, 0, 0);
+					
+					if (!input.mouseRay.Intersects(plane, &p->mousePoint))
 					{
-						comp::CombatStats* stats = e.GetComponent<comp::CombatStats>();
-						if (stats)
+						LOG_WARNING("Mouse click ray missed walking plane. Should not happen...");
+					}
+				
+					// check if attacking
+					if (input.leftMouse) // is held
+					{
+						p->state = comp::Player::State::ATTACK;
+						
+						if (ecs::Use(e, p->primaryAbilty, p->mousePoint))
 						{
-							stats->targetRay = input.mouseRay;
-							p->state = comp::Player::State::ATTACK;
-							if (ecs::Use(stats))
-							{
-
-							}
+							LOG_INFO("Primary attack");
 						}
+					
+					}
+					else if (input.rightMouse) // was pressed
+					{
+						//p->state = comp::Player::State::ATTACK;
 
+						if (ecs::Use(e, p->secondaryAbilty, p->mousePoint))
+						{
+							LOG_INFO("Secondary attack");
+						}
 					}
 
 					//Place defence on grid
-					if (input.rightMouse)
+					if (input.key_b)
 						m_grid.PlaceDefence(input.mouseRay, e.GetComponent<comp::Network>()->id);
 
 				}

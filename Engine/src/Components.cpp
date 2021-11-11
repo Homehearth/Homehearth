@@ -51,8 +51,9 @@ namespace ecs {
         return sm::Vector3::Distance(translation, target) < 0.01f;
     }
 
-    bool Use(component::IAbility* abilityComponent)
+    bool Use(component::IAbility* abilityComponent, sm::Vector3 targetPoint)
     {
+        abilityComponent->targetPoint = targetPoint;
         if (abilityComponent->isReady)
         {
             abilityComponent->isUsing = true;
@@ -63,6 +64,20 @@ namespace ecs {
         return abilityComponent->isUsing;
     }
     
+    bool Use(Entity entity, entt::meta_type abilityType, sm::Vector3 targetPoint)
+    {
+        using namespace entt::literals;
+
+        auto instance = abilityType.func("get"_hs).invoke({}, entity);
+        component::IAbility* ability = instance.try_cast<component::IAbility>();
+        if (!ability)
+        {
+            LOG_WARNING("This entity does not have this ability");
+            return false;
+        }
+        return Use(ability, targetPoint);
+    }
+
     component::TemporaryPhysics::Force GetGravityForce()
     {
         component::TemporaryPhysics::Force f = {};

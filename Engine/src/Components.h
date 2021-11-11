@@ -149,8 +149,14 @@ namespace ecs
 				MAGE
 			} classType = Class::WARRIOR;
 
+			entt::meta_type primaryAbilty;
+			entt::meta_type secondaryAbilty;
+
 			float runSpeed;
-			sm::Vector3 targetForward;
+
+			sm::Vector3 mousePoint;
+			sm::Vector3 fowardDir;
+
 			sm::Vector3 spawnPoint;
 			float respawnTimer;
 			bool isReady = false;
@@ -224,7 +230,7 @@ namespace ecs
 			bool isReady = false;
 			bool isUsing = false;
 
-			Ray_t targetRay;
+			sm::Vector3 targetPoint;
 		};
 
 		struct CombatStats : public IAbility
@@ -233,8 +239,6 @@ namespace ecs
 			float attackRange = 10.0f;
 			bool isRanged = false;
 			float projectileSpeed = 10.f;
-
-			sm::Vector3 targetDir;
 		};
 
 		struct SelfDestruct
@@ -256,13 +260,27 @@ namespace ecs
 
 	};
 
+
 	sm::Matrix GetMatrix(const component::Transform& transform);
 	sm::Vector3 GetForward(const component::Transform& transform);
 	sm::Vector3 GetRight(const component::Transform& transform);
 	bool StepRotateTo(sm::Quaternion& rotation, const sm::Vector3& targetVector, float t);
 	bool StepTranslateTo(sm::Vector3& translation, const sm::Vector3& target, float t);
 	
-	bool Use(component::IAbility* abilityComponent);
+	template<typename T>
+	void RegisterAsAbility()
+	{
+		static_assert(std::is_base_of_v<component::IAbility, T> && "Component has to derive from comp::IAbility");
+
+		using namespace entt::literals;
+		entt::meta<T>()
+			.base<component::IAbility>()
+			.func<&Entity::GetComponentRef<T>, entt::as_ref_t>("get"_hs);
+	}
+
+	bool Use(component::IAbility* abilityComponent, sm::Vector3 targetPoint);
+	bool Use(Entity entity, entt::meta_type abilityType, sm::Vector3 targetPoint);
+
 
 	component::TemporaryPhysics::Force GetGravityForce();
 
