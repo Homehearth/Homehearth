@@ -9,7 +9,8 @@ private:
 	ComPtr<ID3D11Buffer> m_indexBuffer;
 	int nrOfIndices;
 	ComPtr<ID3D11ShaderResourceView> m_skySrv;
-	//ComPtr<ID3D11Texture2D> m_brdfLUT;
+	ComPtr<ID3D11ShaderResourceView> m_radianceSrv;
+	ComPtr<ID3D11ShaderResourceView> m_irradianceSrv;
 	std::shared_ptr<RTexture> m_brdfLUT;
 
 	bool CreateVertIndBuffers();

@@ -14,7 +14,7 @@ Scene::Scene()
 	m_defaultCamera.AddComponent<comp::Camera3D>()->camera.Initialize(sm::Vector3(0, 0, 0), sm::Vector3(0, 0, 1), sm::Vector3(0, 1, 0), sm::Vector2(1000, 1000), CAMERATYPE::DEFAULT);
 	SetCurrentCameraEntity(m_defaultCamera);
 
-	m_sky.Initialize("output_radiance.dds");
+	m_sky.Initialize("kiara1dawn.dds");
 }
 
 void Scene::Update(float dt)

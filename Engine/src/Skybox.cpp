@@ -3,6 +3,7 @@
 #include <DDSTextureLoader.h>
 
 #define DC D3D11Core::Get().DeviceContext()
+#define DV D3D11Core::Get().Device()
 
 bool Skybox::CreateVertIndBuffers()
 {
@@ -68,10 +69,26 @@ bool Skybox::CreateVertIndBuffers()
 
 bool Skybox::CreateTextureAndSRV(const std::string& fileName)
 {
-	std::string fileNameLong = "../Assets/Skybox/" + fileName;
-	std::wstring fileNameLongWS = std::wstring(fileNameLong.begin(), fileNameLong.end());
-	HRESULT hr = dx::CreateDDSTextureFromFile(D3D11Core::Get().Device(), DC, fileNameLongWS.c_str(), nullptr, m_skySrv.GetAddressOf());
+	std::string path = "../Assets/Skybox/";
+
+	std::string sky = path + "sky_" + fileName;
+
+	std::wstring pathWS = std::wstring(sky.begin(), sky.end());
+	HRESULT hr = dx::CreateDDSTextureFromFile(DV, pathWS.c_str(), nullptr, m_skySrv.GetAddressOf());
+	if (FAILED(hr))
+		return false;
 	
+	std::string radiance = path + "radiance_" + fileName;
+	pathWS = std::wstring(radiance.begin(), radiance.end());
+	hr = dx::CreateDDSTextureFromFile(DV, pathWS.c_str(), nullptr, m_radianceSrv.GetAddressOf());
+	if (FAILED(hr))
+		return false;
+
+	std::string irradiance = path + "irradiance_" + fileName;
+	pathWS = std::wstring(irradiance.begin(), irradiance.end());
+	hr = dx::CreateDDSTextureFromFile(DV, pathWS.c_str(), nullptr, m_irradianceSrv.GetAddressOf());
+	if (FAILED(hr))
+		return false;
 
 	std::string lut = "ibl_brdf_lut.png";
 
@@ -87,7 +104,7 @@ bool Skybox::CreateTextureAndSRV(const std::string& fileName)
 		ResourceManager::Get().AddResource(lut, texture);
 	}
 
-	return !FAILED(hr);
+	return true;
 }
 
 Skybox::Skybox()
@@ -115,7 +132,9 @@ void Skybox::Render()
 	UINT offset = 0;
 	DC->IASetVertexBuffers(0, 1, m_vertexBuffer.GetAddressOf(), &stride, &offset);
 	DC->IASetIndexBuffer(m_indexBuffer.Get(), DXGI_FORMAT_R16_UINT, offset);
-	DC->PSSetShaderResources(15, 1, m_skySrv.GetAddressOf());
+	DC->PSSetShaderResources(96, 1, m_radianceSrv.GetAddressOf());
+	DC->PSSetShaderResources(97, 1, m_irradianceSrv.GetAddressOf());
+	DC->PSSetShaderResources(98, 1, m_skySrv.GetAddressOf());
 	DC->PSSetShaderResources(99, 1, &m_brdfLUT.get()->GetShaderView());
 
 	DC->DrawIndexed(nrOfIndices, 0, 0);

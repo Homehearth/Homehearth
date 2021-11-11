@@ -36,31 +36,33 @@ float4 main(PixelIn input) : SV_TARGET
 	float3 camPos = c_cameraPosition.xyz;
     float ao = 1.0f;
     float3 albedo = 1.f;
-    float metallic = 1.0f;
+    float metallic = 0.0f;
     float roughness = 0.0f;
+    float exposure = 0.1f;
     
     //Normal Vector
     float3 N = normalize(input.normal);
     //View Direction Vector
     float3 V = normalize(camPos - input.worldPos.xyz);
-    //Reflection Vector
-    float3 R = reflect(V, N);
     
     //If an object has a texture, sample from it else use default values.
     SampleTextures(input, albedo, N, roughness, metallic, ao);
     
+    //Reflection Vector
+    float3 R = reflect(V, N);
 
     //---------------------------------PBR-Shading Calculations---------------------------------
     
     // calculate reflectance at normal incidence; if dia-electric (like plastic) use F0 
     // of 0.04 and if it's a metal, use the albedo color as F0 (metallic workflow)
-    float3 F0 = 0.04f;
+    float3 F0 = float3(0.04f, 0.04f, 0.04f);
     F0 = lerp(F0, albedo, metallic);
+   
 
     //Reflectance Equation
-    float3 Lo = 0.f;
-    float3 rad = 0.f;
-    float3 lightCol = 0.f;
+    float3 Lo = float3(0.f, 0.f, 0.f);
+    float3 rad = float3(0.f, 0.f, 0.f);
+    float3 lightCol = float3(0.f, 0.f, 0.f);
     
     for (int i = 0; i < c_info.x; i++)
     {
@@ -80,29 +82,35 @@ float4 main(PixelIn input) : SV_TARGET
         
             CalcRadiance(input, V, N, roughness, metallic, albedo, sb_lights[i].position.xyz, lightCol, F0, rad);
             Lo += rad;
+            lightCol *= 0.f;
         }
-        lightCol = 0.f;
     }
     
 	
     //Ambient lighting
     //float3 ambient = float3(0.7f, 0.15f, 0.5f) * albedo * ao;
     
+    
+    
+    
     //IBL Ambient
-    float3 kS = FresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness);
-    float3 kD = float3(1.0f, 1.0f, 1.0f) - kS;
+    float3 F = FresnelSchlickRoughness(max(dot(N, V), 0.0f), F0, roughness);
+    float3 kS = F;
+    float3 kD = 1.0f - kS;
     kD *= 1.0f - metallic;
     
-    float3 irradiance = t_cubeMap.Sample(s_cubeSamp, N).rgb;
-    float3 diffuse = irradiance * albedo;
+    float3 irradiance = t_irradiance.Sample(s_cubeSamp, N).rgb;
+    float3 diffuse = albedo * irradiance;
     
-    const float MAX_REF_LOD = 4.0f;
-    float3 prefilteredColor = t_cubeMap.SampleLevel(s_cubeSamp, R, roughness * MAX_REF_LOD).rgb;
+    const float MAX_REF_LOD = 3.0f;
+    float3 prefilteredColor = t_radiance.SampleLevel(s_cubeSamp, R, roughness * MAX_REF_LOD).rgb;
     float2 brdf = t_BRDFLUT.Sample(s_linear, float2(max(dot(N, V), 0.0f), roughness)).rg;
-    float3 specular = prefilteredColor * (kS * brdf.x + brdf.y);
+    float3 specular = prefilteredColor * (F * brdf.x + brdf.y);
     
     float3 ambient = (kD * diffuse + specular) * ao;
-    float3 color = ambient + Lo;
+    //float3 ambient = (kD * diffuse) * ao;
+    //float3 color = ambient + Lo;
+    float3 color = ambient;
     
     //HDR tonemapping
 	color = color / (color + float3(1.0, 1.0, 1.0));

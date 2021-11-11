@@ -95,7 +95,9 @@ StructuredBuffer<float4x4> sb_decaldata : register(t16);
 //StructuredBuffer<uint> sb_pointLightIndexList : register();
 //StructuredBuffer<Frustum> sb_frustums : register();
 
-TextureCube t_cubeMap               : register(t15);
+TextureCube t_radiance              : register(t96);
+TextureCube t_irradiance            : register(t97);
+TextureCube t_sky                   : register(t98);
 Texture2D t_BRDFLUT                 : register(t99);
 
 
