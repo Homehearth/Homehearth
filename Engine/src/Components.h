@@ -115,7 +115,7 @@ namespace ecs
 
 		struct BehaviorTree
 		{
-			BT::SequenceNode* root;
+			BT::ParentNode* root;
 		};
 		
 

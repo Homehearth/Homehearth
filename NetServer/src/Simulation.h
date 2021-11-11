@@ -4,7 +4,7 @@
 #include "GridSystem.h"
 #include "ServerSystems.h"
 #include "Wave.h"
-
+#include "AIBehaviors.h"
 /*
 		Simulation defines each ongoing simulation from the perspective of the server
 		gameID identifies the simulation which each player has to give the server to keep track

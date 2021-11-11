@@ -5,6 +5,7 @@ namespace BT
 {
 	class FallbackNode : public ParentNode
 	{
+	public:
 		FallbackNode(std::string name);
 		~FallbackNode() override = default;
 

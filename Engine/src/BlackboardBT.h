@@ -2,6 +2,7 @@
 #include <iostream>
 #include <ostream>
 #include <unordered_map>
+
 struct Base
 {
 	virtual void virtualFunction() = 0;
@@ -13,6 +14,13 @@ struct Derived : Base
 	void virtualFunction() override {};
 	T value;
 };
+
+//Structs of different blackboard data.
+struct PlayersPosition_t
+{
+	std::vector<sm::Vector3> positions;
+};
+
 
 class Blackboard
 {

@@ -11,7 +11,7 @@ void Simulation::InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg, c
 	{
 		if (!componentMask.test(i))
 			continue;
-
+		
 		switch (i)
 		{
 		case ecs::Component::TRANSFORM:
@@ -354,11 +354,13 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 			//  run all game logic systems
 			{
 				PROFILE_SCOPE("Systems");
+				AIBehaviors::UpdateBlackBoard(scene);
+				ServerSystems::TickBTSystem(this, scene);
 				ServerSystems::PlayerStateSystem(this, scene, e.dt);
 				ServerSystems::CheckGameOver(this, scene);
 				Systems::MovementSystem(scene, e.dt);
 				Systems::MovementColliderSystem(scene, e.dt);
-				Systems::AISystem(scene);
+				//Systems::AISystem(scene);
 				Systems::CombatSystem(scene, e.dt);
 				{
 					PROFILE_SCOPE("Collision Box/Box");
