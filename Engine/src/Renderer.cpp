@@ -47,10 +47,17 @@ void Renderer::Initialize(Window* pWindow)
 
 void Renderer::ClearFrame()
 {
-    // Clear the back buffer.
-    const float m_clearColor[4] = { 0.5f, 0.5f, 0.5f, 1.0f };
-    m_d3d11->DeviceContext()->ClearRenderTargetView(m_pipelineManager.m_backBuffer.Get(), m_clearColor);
-    m_d3d11->DeviceContext()->ClearDepthStencilView(m_pipelineManager.m_depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+	// Clear the back buffer.
+	const float m_clearColor[4] = { 0.5f, 0.5f, 0.5f, 1.0f };
+	m_d3d11->DeviceContext()->ClearRenderTargetView(m_pipelineManager.m_backBuffer.Get(), m_clearColor);
+	m_d3d11->DeviceContext()->ClearDepthStencilView(m_pipelineManager.m_depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+	m_d3d11->DeviceContext()->ClearDepthStencilView(m_pipelineManager.m_debugDepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+
+}
+
+void Renderer::Render(Scene* pScene)
+{
+
 	if (pScene)
 	{
 		if (!m_passes.empty())
@@ -82,11 +89,6 @@ void Renderer::ClearFrame()
 IRenderPass* Renderer::GetCurrentPass() const
 {
 	return m_passes[m_currentPass];
-                    pass->PostRender(); // args? currently does nothing.
-                }
-            }
-        }
-    }
 }
 
 void Renderer::AddPass(IRenderPass* pass)

@@ -50,6 +50,16 @@ cbuffer IsCollidingCB : register(b5)
     int c_colliding;
 }
 
+cbuffer DeltaCB : register(b6)
+{
+    float c_deltaTime;
+}
+
+cbuffer TextureEffectCB : register(b7)
+{
+    float c_frequency;
+    float c_amplitude;
+};
 
 //---------------------------------------------------------------------------
 //	Samplers.
@@ -78,6 +88,13 @@ Texture2D<uint2> t_pointLightGrid	: register(t8);
 // StructuredBuffers.
 StructuredBuffer<float4x4> sb_boneTransforms : register(t9); // read as column major, actually is row major.
 StructuredBuffer<Light> sb_lights : register(t10);
+
+//Nikkis stuff:
+Texture2D t_underWaterGround : register(t17);
+Texture2D t_underWaterEdge   : register(t18);
+Texture2D t_waterTexture     : register(t19);
+Texture2D t_waterBlend       : register(t20);
+Texture2D t_waterTextureN    : register(t21);
 
 // Forward+
 //StructuredBuffer<PointLight> sb_pointLights : register();

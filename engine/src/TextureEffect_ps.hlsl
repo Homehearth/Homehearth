@@ -1,3 +1,4 @@
+#include "Common.hlsli"
 struct Input
 {
     float4 position : SV_POSITION;

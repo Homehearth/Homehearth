@@ -19,8 +19,6 @@ private:
 	DepthPass m_depthPass;	// Forward Plus (1st pass).
 	TextureEffectPass m_textureEffectPass; // Water effect pass.
 
-	BasePass		m_basePass;	
-	DepthPass		m_depthPass;
 	DebugPass		m_debugPass;
 	AnimationPass	m_animPass;
 	unsigned int m_currentPass = 0;

@@ -126,9 +126,14 @@ struct basic_model_matrix_t
 ALIGN16
 struct texture_effect_t
 {
-	float deltaTime;
-	float direction;
-	float radious; 
+	float frequency;
+	float amplitude;
+};
+
+ALIGN16
+struct delta_time_t
+{
+	float delta;
 };
 
 ALIGN16

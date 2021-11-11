@@ -74,12 +74,6 @@ void PipelineManager::Initialize(Window* pWindow, ID3D11DeviceContext* context)
     }
 
     // Initialize ConstantBuffers (temp?).
-    if (!this->CreateDefaultConstantBuffer())
-    {
-        LOG_ERROR("failed creating default constant buffer.");
-    }
-
-    // Initialize ConstantBuffers (temp?).
     if (!this->CreateTextureEffectConstantBuffer())
     {
         LOG_ERROR("failed creating texture effect constant buffer.");
@@ -382,8 +376,8 @@ bool PipelineManager::CreateInputLayouts()
 {
     HRESULT hr = S_FALSE;
 
-	// Create m_defaultInputLayout.
-	std::string shaderByteCode = m_defaultVertexShader.GetShaderByteCode();
+    // Create m_defaultInputLayout.
+    std::string shaderByteCode = m_defaultVertexShader.GetShaderByteCode();
     D3D11_INPUT_ELEMENT_DESC defaultVertexShaderDesc[] =
     {
         {"POSITION",    0, DXGI_FORMAT_R32G32B32_FLOAT,    0,                0,                   D3D11_INPUT_PER_VERTEX_DATA, 0},
@@ -392,8 +386,8 @@ bool PipelineManager::CreateInputLayouts()
         {"TANGENT",     0, DXGI_FORMAT_R32G32B32_FLOAT,    0,    D3D11_APPEND_ALIGNED_ELEMENT,    D3D11_INPUT_PER_VERTEX_DATA, 0},
         {"BINORMAL",    0, DXGI_FORMAT_R32G32B32_FLOAT,    0,    D3D11_APPEND_ALIGNED_ELEMENT,    D3D11_INPUT_PER_VERTEX_DATA, 0}
     };
-	
-	if(FAILED(hr = D3D11Core::Get().Device()->CreateInputLayout(defaultVertexShaderDesc, ARRAYSIZE(defaultVertexShaderDesc), shaderByteCode.c_str(), shaderByteCode.length(), &m_defaultInputLayout)))
+
+    if (FAILED(hr = D3D11Core::Get().Device()->CreateInputLayout(defaultVertexShaderDesc, ARRAYSIZE(defaultVertexShaderDesc), shaderByteCode.c_str(), shaderByteCode.length(), &m_defaultInputLayout)))
     {
         LOG_WARNING("failed creating m_defaultInputLayout.");
         return false;
@@ -417,38 +411,7 @@ bool PipelineManager::CreateInputLayouts()
         return false;
     }
 
-bool PipelineManager::CreateRTextures()
-{
-    //TODO: Här läggs alla texturer som skall få vatteneffekten på sig skapas.(Ska dem uppdatera texturen eller ska jag ha en sånhär för varje textur?)
-    //Dessa behöver filvägen till texturen dem ska ha. 
-    //m_TextureEffectDiffuseMap.Create()
-    //m_TextureEffectDisplacementMap.Create();
-
-    return false;
-}
-
-bool PipelineManager::CreateDefaultConstantBuffer()
-{
-    D3D11_BUFFER_DESC bDesc;
-    bDesc.ByteWidth = sizeof(basic_model_matrix_t);
-    bDesc.Usage = D3D11_USAGE_DEFAULT;
-    bDesc.CPUAccessFlags = 0;
-    bDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-    bDesc.MiscFlags = 0;
-
-    basic_model_matrix_t b;
-    b.worldMatrix = sm::Matrix::CreateWorld({ 0.f, 0.0f, 1.0f }, { 0.0f, 0.0f, -1.0f }, { 0.0f, 1.0f, 0.0f }).Transpose();
-
-    D3D11_SUBRESOURCE_DATA data;
-    data.pSysMem = &b;
-    data.SysMemPitch = 0;
-    data.SysMemSlicePitch = 0;
-
-    // Model ConstantBuffer
-    HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&bDesc, &data, m_defaultModelConstantBuffer.GetAddressOf());
-    if (FAILED(hr)) return false;
-
-    return !FAILED(hr);
+    return true;
 }
 
 bool PipelineManager::CreateTextureEffectConstantBuffer()
@@ -461,7 +424,7 @@ bool PipelineManager::CreateTextureEffectConstantBuffer()
     bDesc.MiscFlags = 0;
 
     texture_effect_t b;
-    b.deltaTime = 0;
+    //b.deltaTime = 0;
 
     D3D11_SUBRESOURCE_DATA data = {};
     data.pSysMem = &b;
@@ -475,6 +438,7 @@ bool PipelineManager::CreateTextureEffectConstantBuffer()
         LOG_WARNING("failed to create textureEffectConstantBuffer");
         return false;
     }
+
     return !FAILED(hr);
 }
 
