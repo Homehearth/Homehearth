@@ -50,6 +50,7 @@ public:
 	void RenderAnimation();
 	void Render2D();
 	void RenderSkybox();
+	Skybox* GetSkybox();
 
 	bool IsRenderReady() const;
 

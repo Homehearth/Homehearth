@@ -56,10 +56,11 @@ void Renderer::Render(Scene* pScene)
 	{
 		if (!m_passes.empty())
 		{
+			m_basePass.m_skyboxRef = pScene->GetSkybox();
 			if (pScene->GetCurrentCamera()->IsSwapped())
 			{
-			this->UpdatePerFrame(pScene->GetCurrentCamera());
-			thread::RenderThreadHandler::SetCamera(pScene->GetCurrentCamera());
+				this->UpdatePerFrame(pScene->GetCurrentCamera());
+				thread::RenderThreadHandler::SetCamera(pScene->GetCurrentCamera());
 			/*
 				Optimize idead: Render/Update lights once instead of per pass?
 				Set lights once.

@@ -232,6 +232,11 @@ void Scene::RenderSkybox()
 	m_sky.Render();
 }
 
+Skybox* Scene::GetSkybox()
+{
+	return &m_sky;
+}
+
 bool Scene::IsRenderReady() const
 {
 	return (IsRender2DReady() && IsRender3DReady() && IsRenderDebugReady());

@@ -132,10 +132,21 @@ void Skybox::Render()
 	UINT offset = 0;
 	DC->IASetVertexBuffers(0, 1, m_vertexBuffer.GetAddressOf(), &stride, &offset);
 	DC->IASetIndexBuffer(m_indexBuffer.Get(), DXGI_FORMAT_R16_UINT, offset);
+
+	/*
 	DC->PSSetShaderResources(96, 1, m_radianceSrv.GetAddressOf());
 	DC->PSSetShaderResources(97, 1, m_irradianceSrv.GetAddressOf());
 	DC->PSSetShaderResources(98, 1, m_skySrv.GetAddressOf());
 	DC->PSSetShaderResources(99, 1, &m_brdfLUT.get()->GetShaderView());
+	*/
 
 	DC->DrawIndexed(nrOfIndices, 0, 0);
+}
+
+void Skybox::Bind(ID3D11DeviceContext* dc = D3D11Core::Get().DeviceContext())
+{
+	dc->PSSetShaderResources(96, 1, m_radianceSrv.GetAddressOf());
+	dc->PSSetShaderResources(97, 1, m_irradianceSrv.GetAddressOf());
+	dc->PSSetShaderResources(98, 1, m_skySrv.GetAddressOf());
+	dc->PSSetShaderResources(99, 1, &m_brdfLUT.get()->GetShaderView());
 }

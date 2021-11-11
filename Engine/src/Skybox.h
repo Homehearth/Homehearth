@@ -23,4 +23,5 @@ public:
 	bool Initialize(const std::string& fileName);
 
 	void Render();
+	void Bind(ID3D11DeviceContext* dc);
 };
