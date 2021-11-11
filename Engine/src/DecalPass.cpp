@@ -82,7 +82,7 @@ void DecalPass::Render(Scene* pScene)
 	pScene->ForEachComponent<comp::Decal>([&](Entity e, comp::Decal& d) {
 
 		// Decrease lifespan.
-		d.lifespan -= Stats::GetDeltaTime();
+		d.lifespan -= Stats::Get().GetFrameTime();
 		if (d.lifespan > 0)
 		{
 			m_matrices.push_back(d.viewPoint);

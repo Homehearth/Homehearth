@@ -39,4 +39,3 @@ void BasePass::PostRender(ID3D11DeviceContext* pDeviceContext)
     ID3D11Buffer* nullBuffer = nullptr;
     DC->PSSetConstantBuffers(1, 1, &nullBuffer);
 }
-

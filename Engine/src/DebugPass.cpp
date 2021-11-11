@@ -29,4 +29,3 @@ void DebugPass::PostRender(ID3D11DeviceContext* pDeviceContext)
     //ID3D11ShaderResourceView* nullSRV[] = { nullptr };
     //DC->PSSetShaderResources(0, 1, nullSRV);
 }
-

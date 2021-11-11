@@ -523,34 +523,14 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 			{
 				std::string name;
 				msg >> name;
-				e.AddComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>(name);
+				e.AddComponent<comp::Renderable>()->model = ResourceManager::Get().CopyResource<RModel>(name, true);
 				break;
 			}
 			case ecs::Component::ANIMATOR_NAME:
 			{
-				comp::AnimatorName animName;
-				msg >> animName.name;
-
-				//Get model
-				comp::Renderable* renderable = e.GetComponent<comp::Renderable>();
-				if (renderable && renderable->model)
-				{
-
-					//Add an animator if we can get it
-					if (!animName.name.empty())
-					{
-						std::shared_ptr<RAnimator> anim = ResourceManager::Get().CopyResource<RAnimator>(animName.name, true);
-						if (anim)
-						{
-							if (anim->LoadSkeleton(renderable->model->GetSkeleton()))
-								e.AddComponent<comp::Animator>()->animator = anim;
-						}
-					}
-					else
-					{
-						e.RemoveComponent<comp::Animator>();
-					}
-				}
+				std::string name;
+				msg >> name;
+				e.AddComponent<comp::Animator>()->animator = ResourceManager::Get().CopyResource<RAnimator>(name, true);
 				break;
 			}
 			case ecs::Component::NAME_PLATE:
@@ -640,30 +620,14 @@ void Game::UpdatePredictorFromMessage(Entity e, message<GameMsg>& msg, const uin
 			{
 				std::string name;
 				msg >> name;
-				e.AddComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>(name);
+				e.AddComponent<comp::Renderable>()->model = ResourceManager::Get().CopyResource<RModel>(name);
 				break;
 			}
 			case ecs::Component::ANIMATOR_NAME:
 			{
-				comp::AnimatorName animName;
-				msg >> animName.name;
-
-				//Get model
-				comp::Renderable* renderable = e.GetComponent<comp::Renderable>();
-				if (renderable && renderable->model)
-				{
-
-					//Add an animator if we can get it
-					if (!animName.name.empty())
-					{
-						std::shared_ptr<RAnimator> anim = ResourceManager::Get().CopyResource<RAnimator>(animName.name, true);
-						if (anim)
-						{
-							if (anim->LoadSkeleton(renderable->model->GetSkeleton()))
-								e.AddComponent<comp::Animator>()->animator = anim;
-						}
-					}
-				}
+				std::string name;
+				msg >> name;
+				e.AddComponent<comp::Animator>()->animator = ResourceManager::Get().CopyResource<RAnimator>(name);
 				break;
 			}
 			case ecs::Component::NAME_PLATE:
@@ -733,14 +697,17 @@ void Game::UpdateInput()
 
 void Game::LoadAllAssets()
 {
-	ResourceManager::Get().GetResource<RModel>("MonsterCharacter.fbx");
+	ResourceManager::Get().GetResource<RModel>("Knight.fbx");
+	ResourceManager::Get().GetResource<RAnimator>("Knight.anim");
+	ResourceManager::Get().GetResource<RModel>("Monster.fbx");
+	ResourceManager::Get().GetResource<RAnimator>("Monster.anim");
 	ResourceManager::Get().GetResource<RModel>("Barrel.obj");
 	ResourceManager::Get().GetResource<RModel>("Defence.obj");
 	ResourceManager::Get().GetResource<RModel>("Plane1.obj");
-	ResourceManager::Get().GetResource<RModel>("Knight.fbx");
 	Entity e = GetScene("Game").CreateEntity();
 	e.AddComponent<comp::Transform>();
 	e.AddComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>("GameScene.obj");
+
 }
 
 bool Game::LoadMapColliders(const std::string& filename)

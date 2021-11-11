@@ -419,7 +419,6 @@ void Simulation::Destroy()
 {
 	m_pGameScene->GetRegistry()->on_construct<comp::Network>().disconnect<&Simulation::OnNetworkEntityCreate>(this);
 	m_pGameScene->GetRegistry()->on_destroy<comp::Network>().disconnect<&Simulation::OnNetworkEntityDestroy>(this);
-
 	m_pGameScene->Clear();
 	m_pLobbyScene->Clear();
 }
@@ -616,7 +615,7 @@ bool Simulation::AddPlayer(uint32_t playerID, const std::string& namePlate)
 	player.AddComponent<comp::NamePlate>()->namePlate = namePlate;
 
 	player.AddComponent<comp::MeshName>()->name = "Knight.fbx";
-	player.AddComponent<comp::AnimatorName>()->name = "Player.anim";
+	player.AddComponent<comp::AnimatorName>()->name = "Knight.anim";
 
 	comp::CombatStats* combatStats = player.AddComponent<comp::CombatStats>();
 	combatStats->cooldown = 0.4f;
@@ -693,7 +692,7 @@ bool Simulation::AddNPC(uint32_t npcId)
 	npc.AddComponent<comp::Network>()->id = npcId;
 	npc.AddComponent<comp::BoundingOrientedBox>();
 
-	CollisionSystem::Get().AddOnCollision(npc, [&](Entity other)
+	CollisionSystem::Get().AddOnCollision(npc, [&](Entity thisEntity, Entity other)
 		{
 			comp::NPC* otherNPC = m_pCurrentScene->GetRegistry()->try_get<comp::NPC>(other);
 			if (otherNPC)
@@ -869,22 +868,15 @@ void Simulation::OnNetworkEntityDestroy(entt::registry& reg, entt::entity entity
 	if (it != m_updatedEntities.end())
 	{
 		m_updatedEntities.erase(it);
-		//LOG_WARNING("Removed entity from updated cuz destroyed");
 	}
 }
 
 void Simulation::OnNetworkEntityUpdated(entt::registry& reg, entt::entity entity)
 {
 	Entity e(reg, entity);
-	if (!e.IsNull())
+	if (std::find(m_updatedEntities.begin(), m_updatedEntities.end(), e) == m_updatedEntities.end())
 	{
-		comp::Network* net = e.GetComponent<comp::Network>();
-
-		if (std::find(m_updatedEntities.begin(), m_updatedEntities.end(), e) == m_updatedEntities.end() &&
-			std::find(m_removedEntities.begin(), m_removedEntities.end(), net->id) == m_removedEntities.end())
-		{
-			m_updatedEntities.push_back(e);
-		}
+		m_updatedEntities.push_back(e);
 	}
 }
 
