@@ -1,6 +1,8 @@
 #include "EnginePCH.h"
 #include "Scene.h"
 #include <omp.h>
+#include "Systems.h"
+
 
 Scene::Scene()
 	: m_IsRenderingColliders(true), m_updateAnimation(true)
@@ -57,9 +59,10 @@ void Scene::Update(float dt)
 				m_renderableCopies[0].push_back(r);
 			}
 		});
-			
+
 		m_renderableCopies.Swap();
 		m_renderableAnimCopies.Swap();
+		GetCurrentCamera()->Swap();
 	}
 	if (!m_debugRenderableCopies.IsSwapped())
 	{
@@ -91,6 +94,7 @@ void Scene::Update(float dt)
 		m_debugRenderableCopies.Swap();
 	}
 
+	Systems::UpdatePlayerVisuals(this);
 }
 
 void Scene::Update2D()
@@ -101,6 +105,7 @@ void Scene::Update2D()
 void Scene::Render()
 {
 	PROFILE_FUNCTION();
+
 	thread::RenderThreadHandler::Get().SetObjectsBuffer(&m_renderableCopies);
 	// Divides up work between threads.
 	const render_instructions_t inst = thread::RenderThreadHandler::Get().Launch(static_cast<int>(m_renderableCopies[1].size()));
