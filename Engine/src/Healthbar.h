@@ -17,8 +17,8 @@ namespace rtd
 		Entity m_entity;
 		float m_maxHealth;
 
-		// Current size on current health.
-		draw_t m_drawOpts;
+		// Double buffered draw opts XDD
+		DoubleBuffer<draw_t> m_drawOpts;
 
 		// size when it is on full health.
 		float m_sizeFull;
