@@ -219,7 +219,6 @@ void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& sce
 				health.isAlive = false;
 				e.RemoveComponent<comp::Tag<TagType::DYNAMIC>>();
 				
-
 				LOG_INFO("Player id %u died...", e.GetComponent<comp::Network>()->id);
 			}
 

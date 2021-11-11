@@ -28,7 +28,7 @@ void Engine::Startup()
 
 	//Get heighest possible 16:9 resolution
 	//90% of the height
-	config.height = static_cast<UINT>(GetSystemMetrics(SM_CYSCREEN) * 0.50f);
+	config.height = static_cast<UINT>(GetSystemMetrics(SM_CYSCREEN) * 0.80f);
 	float aspectRatio = 16.0f / 9.0f;
 	config.width = static_cast<UINT>(aspectRatio * config.height);
 
@@ -233,7 +233,7 @@ void Engine::drawImGUI() const
 				ImGui::Text(entityname.c_str());
 				ImGui::Text("Change 'mtl-file'");
 				char str[30] = "";
-				ImGui::InputText("New material", str, IM_ARRAYSIZE(str));
+				ImGui::InputText(entityname.c_str(), str, IM_ARRAYSIZE(str));
 				if (ImGui::IsKeyPressedMap(ImGuiKey_Enter))
 				{
 					renderable.model->ChangeMaterial(str);
@@ -241,6 +241,29 @@ void Engine::drawImGUI() const
 				ImGui::Spacing();
 			});
 	}
+
+	if (ImGui::CollapsingHeader("Animators"))
+	{
+		GetCurrentScene()->ForEachComponent<comp::Animator>([&](Entity& e, comp::Animator& animComp)
+			{
+				std::string entityname = "Entity: " + std::to_string(static_cast<int>((entt::entity)e));
+
+				ImGui::Separator();
+				ImGui::Text(entityname.c_str());
+				ImGui::Text("Change 'Animation'");
+				char str[30] = "";
+				ImGui::InputText(entityname.c_str(), str, IM_ARRAYSIZE(str));
+				if (ImGui::IsKeyPressedMap(ImGuiKey_Enter))
+				{
+					if (animComp.animator)
+					{
+						animComp.animator->ChangeAnimation(str);
+					}
+				}
+				ImGui::Spacing();
+			});
+	}
+
 	if (ImGui::CollapsingHeader("Light"))
 	{
 
