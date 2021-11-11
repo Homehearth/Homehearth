@@ -9,6 +9,8 @@ enum class CAMERATYPE
 	PLAY
 };
 
+static DoubleBuffer<camera_Matrix_t> s_cameraBuffers;
+
 class Camera
 {
 private:
@@ -57,6 +59,9 @@ public:
 	sm::Vector3 GetTarget() const;
 	sm::Vector3 GetUp() const;
 	camera_Matrix_t* GetCameraMatrixes();
+	void Swap();
+	void ReadySwap();
+	bool IsSwapped() const;
 	CAMERATYPE GetCameraType()const;
 	sm::Vector3 GetRollPitchYaw() const;
 

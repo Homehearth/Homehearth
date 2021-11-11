@@ -60,6 +60,7 @@ void Scene::Update(float dt)
 			
 		m_renderableCopies.Swap();
 		m_renderableAnimCopies.Swap();
+		GetCurrentCamera()->Swap();
 	}
 	if (!m_debugRenderableCopies.IsSwapped())
 	{
