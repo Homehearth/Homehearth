@@ -8,7 +8,6 @@
 void UpdatePlayerVisuals(Scene* scene)
 {
 	int i = 1;
-	int j = 4;
 	scene->ForEachComponent<comp::NamePlate, comp::Transform>([&](Entity& e, comp::NamePlate& name, comp::Transform& t)
 		{
 			if (i < 5)
@@ -74,7 +73,6 @@ void UpdatePlayerVisuals(Scene* scene)
 				}
 			}
 			i++;
-			j--;
 		});
 
 }
