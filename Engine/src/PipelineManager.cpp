@@ -417,6 +417,21 @@ bool PipelineManager::CreateInputLayouts()
         return false;
     }
 
+    std::string shaderByteCodeParticle = m_ParticleVertexShader.GetShaderByteCode();
+    D3D11_INPUT_ELEMENT_DESC particlwVertexShaderDesc[] =
+    {
+        {"POSITION",    0, DXGI_FORMAT_R32G32B32_FLOAT,    0,                0,                   D3D11_INPUT_PER_VERTEX_DATA, 0},
+        {"COLOR",       0, DXGI_FORMAT_R32G32B32_FLOAT,    0,    D3D11_APPEND_ALIGNED_ELEMENT,                   D3D11_INPUT_PER_VERTEX_DATA, 0},
+        {"NORMAL",      0, DXGI_FORMAT_R32G32B32_FLOAT,    0,    D3D11_APPEND_ALIGNED_ELEMENT,    D3D11_INPUT_PER_VERTEX_DATA, 0},
+        {"EMITTERID",   0, DXGI_FORMAT_R32G32B32A32_SINT,  0,    D3D11_APPEND_ALIGNED_ELEMENT,    D3D11_INPUT_PER_VERTEX_DATA, 0}
+    };
+
+    if (FAILED(hr = D3D11Core::Get().Device()->CreateInputLayout(particlwVertexShaderDesc, ARRAYSIZE(particlwVertexShaderDesc), shaderByteCodeParticle.c_str(), shaderByteCodeParticle.length(), &m_ParticleInputLayout)))
+    {
+        LOG_WARNING("failed creating m_animationInputLayout.");
+        return false;
+    }
+
     return !FAILED(hr);
 }
 
@@ -451,6 +466,30 @@ bool PipelineManager::CreateShaders()
         LOG_WARNING("failed creating Debug_ps.");
         return false;
     }
+
+    if (!m_ParticleVertexShader.Create("Particle_vs"))
+    {
+        LOG_WARNING("failed creating Particle_vs.");
+        return false;
+    }
+
+    if (!m_ParticlePixelShader.Create("Particle_ps"))
+    {
+        LOG_WARNING("failed creating Particle_ps.");
+        return false;
+    }
+
+    if (!m_ParticleComputeShader.Create("Particle_cs"))
+    {
+        LOG_WARNING("failed creating Particle_cs.");
+        return false;
+    }    
+
+    if (!m_ParticleComputeShader.Create("Particle_gs"))
+    {
+        LOG_WARNING("failed creating Particle_gs.");
+        return false;
+    } 
 
     return true;
 }                         

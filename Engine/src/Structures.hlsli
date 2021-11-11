@@ -22,6 +22,23 @@ struct VertexBoneIn
     float4 boneWeights  : BONEWEIGHTS;
 };
 
+struct VertexParticleIn
+{
+    float3 pos          : POSITION;
+    float3 color        : COLOR;
+    float2 size         : SIZE;
+    int emitterID       : EMITTERID;
+};
+
+struct VertexParticleOut
+{
+    float4 pos          : POSITION;
+    float3 color        : COLOR;
+    float3 normal       : NORMAL;
+    float2 uv           : TEXCOORD;
+    float4 worldPos     : WORLDPOSITION;
+};
+
 struct VertexOut
 {
     float4 pos          : SV_POSITION;

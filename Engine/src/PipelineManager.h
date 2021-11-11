@@ -50,13 +50,19 @@ public:
 
 	ComPtr<ID3D11InputLayout>		m_defaultInputLayout;
 	ComPtr<ID3D11InputLayout>		m_animationInputLayout;
+	ComPtr<ID3D11InputLayout>		m_ParticleInputLayout;
 
 	Shaders::VertexShader			m_defaultVertexShader;
 	Shaders::VertexShader			m_depthPassVertexShader;
 	Shaders::VertexShader			m_animationVertexShader;
+	Shaders::VertexShader			m_ParticleVertexShader;
 
 	Shaders::PixelShader			m_defaultPixelShader;
 	Shaders::PixelShader			m_debugPixelShader;
+	Shaders::PixelShader			m_ParticlePixelShader;
+
+	Shaders::ComputeShader			m_ParticleComputeShader;
+	Shaders::GeometryShader			m_ParticleGeometryShader;
 	
 	D3D11_VIEWPORT					m_viewport;
 
