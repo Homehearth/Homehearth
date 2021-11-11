@@ -244,40 +244,13 @@ void Scene::RenderAnimation()
 {
 	PROFILE_FUNCTION();
 
-	// Divides up work between threads.
-	const render_instructions_t inst = thread::RenderThreadHandler::Get().Launch(static_cast<int>(m_renderableAnimCopies[1].size()));
-
-	ID3D11Buffer* const buffers[1] = { m_publicBuffer.GetBuffer() };
-	D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, buffers);
-
-	// Render everything on same thread
-	if ((inst.start | inst.stop) == 0)
+	for (auto& it : m_renderableAnimCopies[1])
 	{
-		for (auto& it : m_renderableAnimCopies[1])
-		{
-			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.first.data);
-			it.second.animator->Bind();
-			it.first.model->Render(D3D11Core::Get().DeviceContext());
-			it.second.animator->Unbind();
-		}
+		m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.first.data);
+		it.second.animator->Bind();
+		it.first.model->Render(D3D11Core::Get().DeviceContext());
+		it.second.animator->Unbind();
 	}
-	// Render third part of the scene with immediate context
-	else
-	{
-		for (int i = inst.start; i < inst.stop; i++)
-		{
-			auto& it = m_renderableAnimCopies[1][i];
-			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.first.data);
-
-			it.second.animator->Bind();
-			it.first.model->Render(D3D11Core::Get().DeviceContext());
-			it.second.animator->Unbind();
-		}
-	}
-
-	// Run any available Command lists from worker threads.
-	thread::RenderThreadHandler::ExecuteCommandLists();
-
 	// Emit event
 	publish<ESceneRender>();
 
