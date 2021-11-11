@@ -287,7 +287,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 				m_players.at(id).Destroy();
 				m_players.erase(id);
 				//m_predictor.Remove(id);
-				
+
 			}
 
 		}
@@ -329,6 +329,11 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		LOG_WARNING("Left Lobby %u", m_gameID);
 		m_gameID = -1;
 		SetScene("JoinLobby");
+		rtd::TextField* textField = dynamic_cast<rtd::TextField*>(GetScene("JoinLobby").GetCollection("LobbyFields")->elements[0].get());
+		if (textField)
+		{
+			textField->SetPresetText("");
+		}
 		break;
 	}
 	case GameMsg::Game_Start:
@@ -468,6 +473,17 @@ void Game::OnClientDisconnect()
 			e.Destroy();
 		}
 	);
+
+	rtd::TextField* textField = dynamic_cast<rtd::TextField*>(GetScene("JoinLobby").GetCollection("nameInput")->elements[0].get());
+	if (textField)
+	{
+		textField->SetPresetText("");
+	}
+	textField = dynamic_cast<rtd::TextField*>(GetScene("JoinLobby").GetCollection("LobbyFields")->elements[0].get());
+	if (textField)
+	{
+		textField->SetPresetText("");
+	}
 
 	SetScene("MainMenu");
 
