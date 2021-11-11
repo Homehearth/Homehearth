@@ -303,8 +303,13 @@ namespace network
 	template <typename T>
 	void server_interface<T>::WritePacket()
 	{
-		PER_IO_DATA* context = new PER_IO_DATA;
 		owned_message<T> msg = m_qPrioMessagesOut.front();
+		if (m_socketInfo.find(msg.remote) == m_socketInfo.end())
+		{
+			return;
+		}
+
+		PER_IO_DATA* context = new PER_IO_DATA;
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
 		context->DataBuf.buf = (CHAR*)msg.msg.payload.data();
 		context->DataBuf.len = ULONG(msg.msg.payload.size());
@@ -407,6 +412,7 @@ namespace network
 	void server_interface<T>::DisconnectClient(SOCKET_INFORMATION<T>* SI)
 	{
 		EnterCriticalSection(&lock);
+		EnterCriticalSection(&udpLock);
 		if (SI != NULL)
 		{
 			SOCKET socket = SI->socket.tcp;
@@ -431,6 +437,7 @@ namespace network
 			this->OnClientDisconnect(socket);
 		}
 		LeaveCriticalSection(&lock);
+		LeaveCriticalSection(&udpLock);
 	}
 
 	template <typename T>

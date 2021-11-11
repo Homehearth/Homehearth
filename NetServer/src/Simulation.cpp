@@ -647,8 +647,6 @@ bool Simulation::RemovePlayer(uint32_t playerID)
 	m_spawnPoints.push(player.GetComponent<comp::Player>()->spawnPoint);
 	m_players.erase(playerID);
 
-	LOG_INFO("Spawnpoints: %d", m_spawnPoints.size());
-
 	if (!player.Destroy())
 	{
 		LOG_INFO("Player %u entity could not be removed", playerID);
@@ -666,8 +664,8 @@ std::unordered_map<uint32_t, Entity>::iterator Simulation::RemovePlayer(std::uno
 	if (m_playerInputs.find(player) != m_playerInputs.end())
 	{
 		m_playerInputs.erase(player);
-		m_spawnPoints.push(player.GetComponent<comp::Player>()->spawnPoint);
 	}
+	m_spawnPoints.push(player.GetComponent<comp::Player>()->spawnPoint);
 	auto it = m_players.erase(playerIterator);
 
 	if (!player.Destroy())
