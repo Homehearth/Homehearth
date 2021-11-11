@@ -191,9 +191,9 @@ void Simulation::ResetPlayer(Entity e)
 	e.GetComponent<comp::Health>()->isAlive = true;
 	e.GetComponent<comp::Player>()->state = comp::Player::State::IDLE;
 	e.GetComponent<comp::Player>()->isReady = false;
-	e.AddComponent<comp::MeshName>("GameCharacter.fbx");
+	e.AddComponent<comp::MeshName>("Knight.fbx");
 	e.AddComponent<comp::Tag<TagType::DYNAMIC>>();
-	e.AddComponent<comp::AnimatorName>("Player.anim");
+	e.AddComponent<comp::AnimatorName>("Knight.anim");
 	e.RemoveComponent<comp::TemporaryPhysics>();
 
 	m_pGameScene->publish<EComponentUpdated>(e, ecs::Component::HEALTH);
@@ -976,16 +976,6 @@ void Simulation::ResetGameScene()
 		msg << count;
 		Broadcast(msg);
 	}
-
-	while (!m_spawnPoints.empty())
-	{
-		m_spawnPoints.pop();
-	}
-
-	m_spawnPoints.push(sm::Vector3(220.f, 0, -353.f));
-	m_spawnPoints.push(sm::Vector3(197.f, 0, -325.f));
-	m_spawnPoints.push(sm::Vector3(222.f, 0, -300.f));
-	m_spawnPoints.push(sm::Vector3(247.f, 0, -325.f));
 
 	LOG_INFO("%lld", m_pGameScene->GetRegistry()->size());
 	CreateWaves();

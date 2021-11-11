@@ -126,7 +126,7 @@ void GameSystems::UpdatePlayerVisuals(Scene& scene)
 
 
 // Will check if a ray hits an object before it hits the player and if it does it will add the object to be rendered transparent
-void GameSystems::CheckLOS(Scene& scene, const sm::Vector3& playerPos, const std::vector<dx::BoundingOrientedBox>& mapColliders)
+void GameSystems::CheckLOS(Scene& scene, const sm::Vector3& playerPos, const std::vector<dx::BoundingSphere>& mapColliders)
 {
 	Camera* cam = scene.GetCurrentCamera();
 
@@ -143,7 +143,7 @@ void GameSystems::CheckLOS(Scene& scene, const sm::Vector3& playerPos, const std
 		{
 			if (ray.Intersects(mapColliders[i]))
 			{
-				LOG_INFO("You are now behind an object and we cannot see you ROFL!");
+				//LOG_INFO("You are now behind an object and we cannot see you ROFL!");
 				break;
 			}
 		}

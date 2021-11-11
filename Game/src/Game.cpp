@@ -1,7 +1,8 @@
 #include "Game.h"
+#include "GameSystems.h"
 #include "Button.h"
 #include "TextField.h"
-#include <SceneHelper.h>
+#include "SceneHelper.h"
 #include "Healthbar.h"
 
 using namespace std::placeholders;
@@ -47,7 +48,6 @@ void Game::UpdateNetwork(float deltaTime)
 		{
 			if (GetCurrentScene()->GetCurrentCamera()->GetCameraType() == CAMERATYPE::PLAY)
 			{
-
 				message<GameMsg> msg;
 				msg.header.id = GameMsg::Game_PlayerInput;
 
@@ -76,11 +76,8 @@ bool Game::OnStartup()
 	sceneHelp::CreateJoinLobbyScene(this);
 
 	sceneHelp::CreateOptionsScene(this);
-
-	this->LoadMapColliders("AllBounds.fbx");
 	// Set Current Scene
 	SetScene("MainMenu");
-
 
 	return true;
 }
@@ -118,7 +115,8 @@ if (GetCurrentScene() == &GetScene("Game") && GetCurrentScene()->GetCurrentCamer
 	if (GetCurrentScene() == &GetScene("Game"))
 	{
 		// Re-enable when we have the transparency pass done
-		//GameSystems::CheckLOS(GetScene("Game"), m_players.at(m_localPID).GetComponent<comp::Transform>()->position, m_LOSColliders);
+		sm::Vector3 playerPos = m_players.at(m_localPID).GetComponent<comp::Transform>()->position;
+		GameSystems::CheckLOS(GetScene("Game"), playerPos, m_LOSColliders);
 		this->UpdateInput();
 	}
 }
@@ -176,8 +174,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 
 			}
 		}
-
-		//m_predictor.LinearExtrapolate(GetScene("Game"));
 
 		break;
 	}
@@ -311,7 +307,8 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	{
 		msg >> m_gameID;
 		this->SetScene("Loading");
-		this->LoadAllAssets();
+		sceneHelp::LoadAllAssets(GetScene("Game"));
+		sceneHelp::LoadMapColliders(GetScene("Game"), "TransparencyBounds.txt", &m_LOSColliders);
 
 		LOG_INFO("You are now in lobby: %lu", m_gameID);
 		break;
@@ -709,82 +706,4 @@ void Game::UpdateInput()
 		m_inputState.rightMouse = true;
 	}
 	m_inputState.mouseRay = InputSystem::Get().GetMouseRay();
-}
-
-void Game::LoadAllAssets()
-{
-	ResourceManager::Get().GetResource<RModel>("Knight.fbx");
-	ResourceManager::Get().GetResource<RAnimator>("Knight.anim");
-	ResourceManager::Get().GetResource<RModel>("Monster.fbx");
-	ResourceManager::Get().GetResource<RAnimator>("Monster.anim");
-	ResourceManager::Get().GetResource<RModel>("Barrel.obj");
-	ResourceManager::Get().GetResource<RModel>("Defence.obj");
-	ResourceManager::Get().GetResource<RModel>("Plane1.obj");
-	Entity e = GetScene("Game").CreateEntity();
-	e.AddComponent<comp::Transform>();
-	e.AddComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>("GameScene.obj");
-
-}
-
-bool Game::LoadMapColliders(const std::string& filename)
-{
-	std::string filepath = BOUNDSPATH + filename;
-	Assimp::Importer importer;
-
-	const aiScene* scene = importer.ReadFile
-	(
-		filepath,
-		aiProcess_JoinIdenticalVertices |
-		aiProcess_ConvertToLeftHanded
-	);
-
-	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
-	{
-#ifdef _DEBUG
-		LOG_WARNING("[Bounds] Assimp error: %s", importer.GetErrorString());
-#endif 
-		importer.FreeScene();
-		return false;
-	}
-
-	if (!scene->HasMeshes())
-	{
-#ifdef _DEBUG
-		LOG_WARNING("[Bounds] has no meshes...");
-#endif 
-		importer.FreeScene();
-		return false;
-	}
-	// Go through all the meshes and create boundingboxes for them
-	for (UINT i = 0; i < scene->mNumMeshes; i++)
-	{
-		const aiMesh* mesh = scene->mMeshes[i];
-
-		aiNode* node = scene->mRootNode->FindNode(mesh->mName);
-
-		if (node)
-		{
-			aiVector3D pos;
-			aiVector3D scl;
-			aiQuaternion rot;
-			node->mTransformation.Decompose(scl, rot, pos);
-
-			dx::XMFLOAT3 center = { pos.x, pos.y, pos.z };
-			dx::XMFLOAT3 extents = { scl.x / 2.f, scl.y / 2.f, scl.z / 2.f };
-			dx::XMFLOAT4 orientation = { rot.x, rot.y, rot.z, rot.w };
-
-			dx::BoundingOrientedBox bob(center, extents, orientation);
-
-			//// This is for renderside
-			//Entity collider = GetScene("Game").CreateEntity();
-			//collider.AddComponent<comp::BoundingOrientedBox>()->Center = center;
-			//collider.GetComponent<comp::BoundingOrientedBox>()->Extents = extents;
-			//collider.GetComponent<comp::BoundingOrientedBox>()->Orientation = orientation;
-			//collider.AddComponent<comp::Tag<TagType::STATIC>>();
-			//collider.AddComponent<comp::Tag<TagType::MAP_BOUNDS>>();
-			//m_LOSColliders.push_back(bob);
-		}
-	}
-
-	return true;
 }

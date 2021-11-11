@@ -7,6 +7,7 @@ ServerGame::ServerGame()
 	:m_server(std::bind(&ServerGame::CheckIncoming, this, _1))
 {
 	m_nGameID = 0;
+	SetUpdateRate(60.f);
 }
 
 ServerGame::~ServerGame()

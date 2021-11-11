@@ -11,7 +11,7 @@ private:
 	std::vector<comp::Transform> predictedPositions;
 	std::unordered_map<uint32_t, Entity> m_players;
 	std::unordered_map<uint32_t, Entity> m_gameEntities;
-	std::vector<dx::BoundingOrientedBox> m_LOSColliders;
+	std::vector<dx::BoundingSphere> m_LOSColliders;
 
 	GridSystem m_grid;
 	uint32_t m_waveTimer;
@@ -37,8 +37,6 @@ private:
 	void UpdatePredictorFromMessage(Entity entity, message<GameMsg>& msg, const uint32_t& id);
 
 	void UpdateInput();
-	void LoadAllAssets();
-	bool LoadMapColliders(const std::string& filename);
 
 public:
 	Client m_client;

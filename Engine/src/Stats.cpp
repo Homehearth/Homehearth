@@ -27,6 +27,10 @@ void Stats::SetUpdateTime(const float& ut)
 {
 	m_updateTime = ut;
 }
+void Stats::SetUpdateRate(const float& rate)
+{
+	m_updaterate = rate;
+}
 const float& Stats::GetUpdateTime() const
 {
 	return m_updateTime;
