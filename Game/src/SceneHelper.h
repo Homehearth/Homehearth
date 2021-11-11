@@ -1,8 +1,7 @@
 #pragma once
 #include "Lights.h"
 
-#include "Tags.h"
-
+// Forward declaration to not get circular include
 class Game;
 
 namespace sceneHelp
@@ -23,6 +22,6 @@ namespace sceneHelp
 	void SetupOptionsScreen(Game* game);
 	void SetupLoadingScene(Game* game);
 
-	bool LoadMapColliders(Scene& scene, const std::string& filename, std::vector<dx::BoundingSphere>* outVector);
-	void LoadAllAssets(Scene& scene);
+	bool LoadMapColliders(Game* game, std::vector<dx::BoundingSphere>* outVector);
+	void LoadAllAssets(Game* game);
 }

@@ -501,11 +501,11 @@ namespace sceneHelp
 
 	}
 
-	bool LoadMapColliders(Scene& scene, const std::string& filename, std::vector<dx::BoundingSphere>* outVector)
+	bool LoadMapColliders(Game* game, std::vector<dx::BoundingSphere>* outVector)
 	{
 		std::fstream file;
 
-		file.open(BOUNDSPATH + filename);
+		file.open(BOUNDSLOADER);
 
 		if (!file.is_open())
 		{
@@ -563,7 +563,7 @@ namespace sceneHelp
 
 					dx::BoundingSphere boS(center, scl.x);
 
-					//Entity collider = scene.CreateEntity();
+					//Entity collider = game->GetScene("Game").CreateEntity();
 					//collider.AddComponent<comp::BoundingSphere>()->Center = center;
 					//collider.GetComponent<comp::BoundingSphere>()->Radius = radius;
 					//collider.AddComponent<comp::Tag<TagType::STATIC>>();
@@ -577,10 +577,10 @@ namespace sceneHelp
 		return true;
 	}
 
-	void LoadAllAssets(Scene& scene)
+	void LoadAllAssets(Game* game)
 	{
 		std::fstream file;
-		file.open(MODELPATH + "InfoLoaderGameScene.txt");
+		file.open(ASSETLOADER);
 		if (!file.is_open())
 		{
 			LOG_ERROR("Failed to load GameScene!");
@@ -593,7 +593,7 @@ namespace sceneHelp
 
 			file >> filename;
 
-			Entity e = scene.CreateEntity();
+			Entity e = game->GetScene("Game").CreateEntity();
 			e.AddComponent<comp::Transform>();
 			e.AddComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>(filename);
 		}

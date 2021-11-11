@@ -111,12 +111,18 @@ if (GetCurrentScene() == &GetScene("Game") && GetCurrentScene()->GetCurrentCamer
 }
 		*/
 
-		//Update InputState
 	if (GetCurrentScene() == &GetScene("Game"))
 	{
-		// Re-enable when we have the transparency pass done
-		sm::Vector3 playerPos = m_players.at(m_localPID).GetComponent<comp::Transform>()->position;
-		GameSystems::CheckLOS(GetScene("Game"), playerPos, m_LOSColliders);
+		if (m_players.find(m_localPID) != m_players.end())
+		{
+			sm::Vector3 playerPos = m_players.at(m_localPID).GetComponent<comp::Transform>()->position;
+
+			Camera* cam = GetScene("Game").GetCurrentCamera();
+			if (cam->GetCameraType()  == CAMERATYPE::PLAY)
+			{
+				GameSystems::CheckLOS(cam->GetPosition(), playerPos, m_LOSColliders);
+			}
+		}
 		this->UpdateInput();
 	}
 }
@@ -307,8 +313,8 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	{
 		msg >> m_gameID;
 		this->SetScene("Loading");
-		sceneHelp::LoadAllAssets(GetScene("Game"));
-		sceneHelp::LoadMapColliders(GetScene("Game"), "TransparencyBounds.txt", &m_LOSColliders);
+		sceneHelp::LoadAllAssets(this);
+		sceneHelp::LoadMapColliders(this, &m_LOSColliders);
 
 		LOG_INFO("You are now in lobby: %lu", m_gameID);
 		break;
@@ -486,6 +492,8 @@ void Game::OnClientDisconnect()
 
 	m_client.m_qPrioMessagesIn.clear();
 	m_client.m_qMessagesIn.clear();
+	m_players.clear();
+	m_gameEntities.clear();
 	LOG_INFO("Disconnected from server!");
 }
 
@@ -614,11 +622,7 @@ void Game::UpdatePredictorFromMessage(Entity e, message<GameMsg>& msg, const uin
 				comp::Transform t;
 				msg >> t;
 				t.rotation.Normalize();
-
-				if (m_players.find(id) == m_players.end())
-					m_predictor.Add(id, t);
-				else
-					e.AddComponent<comp::Transform>(t);
+				e.AddComponent<comp::Transform>(t);
 
 				break;
 			}

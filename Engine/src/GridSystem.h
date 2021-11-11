@@ -1,7 +1,6 @@
 #pragma once
 #include "EnginePCH.h"
 #include <stb_image.h>
-#include "Intersections.h"
 
 enum class TileType
 {
