@@ -77,6 +77,7 @@ void rtd::Healthbar::Draw()
         m_foreGround.get()->SetPosition(x, y);
         m_healthInfo.get()->SetPosition(x, y);
     }
+
     if (m_backGround)
         m_backGround.get()->Draw();
     if (m_foreGround)
@@ -105,10 +106,10 @@ void rtd::Healthbar::OnHover()
 bool rtd::Healthbar::CheckHover()
 {
     // Is within bounds?
-    if (InputSystem::Get().GetMousePos().x > m_drawOpts[0].x_pos &&
-        InputSystem::Get().GetMousePos().x < m_drawOpts[0].x_pos + m_drawOpts[0].width &&
-        InputSystem::Get().GetMousePos().y > m_drawOpts[0].y_pos &&
-        InputSystem::Get().GetMousePos().y < m_drawOpts[0].y_pos + m_drawOpts[0].height)
+    if (InputSystem::Get().GetMousePos().x > m_drawOpts[1].x_pos &&
+        InputSystem::Get().GetMousePos().x < m_drawOpts[1].x_pos + m_drawOpts[1].width &&
+        InputSystem::Get().GetMousePos().y > m_drawOpts[1].y_pos &&
+        InputSystem::Get().GetMousePos().y < m_drawOpts[1].y_pos + m_drawOpts[1].height)
     {
         return true;
     }
