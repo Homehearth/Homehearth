@@ -13,7 +13,7 @@ namespace Systems
 	void CheckCollisions(HeadlessScene& scene, float dt);
 	void AISystem(HeadlessScene& scene);
 
-
+	void UpdatePlayerVisuals(Scene* scene);
 }
 
 template<typename Collider1, typename Collider2>
