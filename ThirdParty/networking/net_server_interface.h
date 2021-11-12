@@ -52,6 +52,7 @@ namespace network
 		bool CreateSocketInformation(const SOCKET& s);
 		void DisconnectClient(SOCKET_INFORMATION<T>* SI);
 		SOCKET WaitForConnection();
+		bool IsConnected(const Socket_t& socket)const;
 
 		// FUNCTIONS TO EASIER HANDLE DATA IN AND OUT FROM SERVER
 		void WriteValidation(const SOCKET& socketId, uint64_t handshakeOut);
@@ -99,6 +100,22 @@ namespace network
 		bool IsRunning();
 		bool isClientConnected(const uint32_t& ID)const;
 	};
+
+	template <typename T>
+	bool server_interface<T>::IsConnected(const Socket_t& socket)const
+	{
+		bool isConnected = false;
+
+		if (m_socketInfo.find(socket.tcp) != m_socketInfo.end())
+		{
+			if (socket.tcp != INVALID_SOCKET)
+			{
+				isConnected = true;
+			}
+		}
+
+		return isConnected;
+	}
 
 	template <typename T>
 	bool server_interface<T>::isClientConnected(const uint32_t& ID)const
@@ -156,10 +173,18 @@ namespace network
 
 		if (WSARecv(SI->socket.tcp, &context->DataBuf, 1, &BytesReceived, &flags, &context->Overlapped, NULL) == SOCKET_ERROR)
 		{
-			if (GetLastError() != WSA_IO_PENDING)
+			DWORD error = GetLastError();
+			if (error != WSA_IO_PENDING)
 			{
+				if (error == WSAECONNRESET)
+				{
+					if (IsConnected(SI->socket))
+					{
+						DisconnectClient(SI);
+					}
+				}
 				delete context;
-				LOG_ERROR("WSARecv header with error: %ld", GetLastError());
+				LOG_ERROR("WSARecv header with error: %ld", error);
 			}
 		}
 	}
@@ -202,10 +227,18 @@ namespace network
 
 		if (WSARecv(SI->socket.tcp, &context->DataBuf, 1, &BytesReceived, &flags, &context->Overlapped, NULL) == SOCKET_ERROR)
 		{
-			if (GetLastError() != WSA_IO_PENDING)
+			DWORD error = GetLastError();
+			if (error != WSA_IO_PENDING)
 			{
+				if (error == WSAECONNRESET)
+				{
+					if (IsConnected(SI->socket))
+					{
+						DisconnectClient(SI);
+					}
+				}
 				delete context;
-				LOG_ERROR("WSARecv payload with error: %ld", GetLastError());
+				LOG_ERROR("WSARecv payload with error: %ld", error);
 			}
 		}
 	}

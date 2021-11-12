@@ -250,7 +250,7 @@ namespace sceneHelp
 			Collection2D* playerHp = new Collection2D;
 
 			// Initiate 3 healthbars. for each player.
-			playerHp->AddElement<rtd::Healthbar>(draw_t(width / 8, (i * ((height / 18)) + (height / 32)), (width / 12), (height / 48)));
+			playerHp->AddElement<rtd::Healthbar>(draw_t(width / 8, (i * ((height / 12)) + (height / 32)), (width / 12), (height / 48)));
 
 			// You and Friend text
 			if (i == 0)
@@ -596,6 +596,10 @@ namespace sceneHelp
 			Entity e = game->GetScene("Game").CreateEntity();
 			e.AddComponent<comp::Transform>();
 			e.AddComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>(filename);
+			if (filename == "House7.obj")
+			{
+				game->m_models[ModelID::HOUSE7].push_back(*e.GetComponent<comp::Renderable>());
+			}
 		}
 	}
 }
