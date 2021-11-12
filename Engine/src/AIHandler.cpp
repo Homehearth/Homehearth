@@ -272,6 +272,7 @@ void AIHandler::AStarSearch(HeadlessScene& scene, Entity npc)
 			currentNode = currentNode->parent;
 		}
 	}
+
 	for (int i = 0; i < m_nodes.size(); i++)
 	{
 		for (int j = 0; j < m_nodes[i].size(); j++)
@@ -398,7 +399,7 @@ bool AIHandler::ReachedNode(const Entity npc)
 {
 	comp::NPC* npcComp = npc.GetComponent<comp::NPC>();
 	comp::Transform* transformComp = npc.GetComponent<comp::Transform>();
-	if (npcComp->currentNode && sm::Vector3::Distance(transformComp->position, npcComp->currentNode->position) < 2.f)
+	if (npcComp->currentNode && sm::Vector3::Distance(transformComp->position, npcComp->currentNode->position) < .2f)
 	{
 		return true;
 	}
