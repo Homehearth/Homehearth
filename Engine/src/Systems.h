@@ -4,6 +4,7 @@
 
 namespace Systems
 {
+	void UpdateAbilities(HeadlessScene& scene, float dt);
 	void CombatSystem(HeadlessScene& scene, float dt);
 	void MovementSystem(HeadlessScene& scene, float dt);
 	void MovementColliderSystem(HeadlessScene& scene, float dt);

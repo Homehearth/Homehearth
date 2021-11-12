@@ -182,22 +182,40 @@ bool AIAStarSearch(Entity& npc, HeadlessScene& scene)
 	return true;
 }
 
+void Systems::UpdateAbilities(HeadlessScene& scene, float dt)
+{
+	PROFILE_FUNCTION();
+	for (auto type : entt::resolve())
+	{
+		using namespace entt::literals;
+
+		entt::id_type abilityType[] = { type.info().hash() };
+		for (auto e : scene.GetRegistry()->runtime_view(std::cbegin(abilityType), std::cend(abilityType)))
+		{
+			Entity entity(*scene.GetRegistry(), e);
+			auto instance = type.func("get"_hs).invoke({}, entity);
+			comp::IAbility* ability = instance.try_cast<comp::IAbility>();
+			if (ability)
+			{
+				// Decreases cooldown between attacks.
+				if (ability->delayTimer > 0.f)
+					ability->delayTimer -= dt;
+					
+
+				if (ability->cooldownTimer > 0.f)
+					ability->cooldownTimer -= dt;
+				else
+					ability->isReady = true;
+			}
+		}
+	}
+
+}
+
 void Systems::CombatSystem(HeadlessScene& scene, float dt)
 {
 	PROFILE_FUNCTION();
-
-	scene.ForEachComponent<comp::CombatStats>([&](comp::CombatStats& stats)
-		{
-			// Decreases cooldown between attacks.
-			if (stats.delayTimer > 0.f)
-				stats.delayTimer -= dt;
-
-			if (stats.cooldownTimer > 0.f)
-				stats.cooldownTimer -= dt;
-			else
-				stats.isReady = true;
-		});
-
+	
 	// For Each entity that can attack.
 	scene.ForEachComponent<comp::CombatStats, comp::Transform>([&](Entity entity, comp::CombatStats& stats, comp::Transform& transform)
 		{
@@ -212,11 +230,11 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 				comp::Transform* t = attackCollider.AddComponent<comp::Transform>();
 				comp::BoundingOrientedBox* box = attackCollider.AddComponent<comp::BoundingOrientedBox>();
 				
-				box->Extents = sm::Vector3(stats.attackRange * 0.5f);
+				box->Extents = sm::Vector3(stats.attackRange * 0.5f, 10, stats.attackRange * 0.5f);
 				
 				sm::Vector3 targetDir = stats.targetPoint - transform.position;
 				targetDir.Normalize();
-				t->position = transform.position + targetDir * stats.attackRange * 0.5f;
+				t->position = transform.position + targetDir * stats.attackRange * 0.5f + sm::Vector3(0, 4, 0);
 				t->rotation = transform.rotation;
 
 				box->Center = t->position;

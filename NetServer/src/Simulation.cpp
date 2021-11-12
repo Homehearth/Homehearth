@@ -444,6 +444,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 				Systems::MovementSystem(scene, e.dt);
 				Systems::MovementColliderSystem(scene, e.dt);
 				Systems::AISystem(scene);
+				Systems::UpdateAbilities(scene, e.dt);
 				Systems::CombatSystem(scene, e.dt);
 				{
 					PROFILE_SCOPE("Collision Box/Box");

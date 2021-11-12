@@ -273,7 +273,7 @@ namespace ecs
 		static_assert(std::is_base_of_v<component::IAbility, T> && "Component has to derive from comp::IAbility");
 
 		using namespace entt::literals;
-		entt::meta<T>()
+		entt::meta<T>().type()
 			.base<component::IAbility>()
 			.func<&Entity::GetComponentRef<T>, entt::as_ref_t>("get"_hs);
 	}
