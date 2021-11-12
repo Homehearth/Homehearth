@@ -3,9 +3,9 @@ House6.fbx
 House7.fbx
 House8.fbx
 House9.fbx
-HouseRoofBoundingBalls.fbx
-Tree2BoundingBalls.fbx
-Tree3BoundingBalls.fbx
-Tree5BoundingBalls.fbx
-Tree6BoundingBalls.fbx
-Tree8BoundingBalls.fbx
+HouseRoof.fbx
+Tree2.fbx
+Tree3.fbx
+Tree5.fbx
+Tree6.fbx
+Tree8.fbx
