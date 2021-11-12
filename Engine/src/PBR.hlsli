@@ -179,7 +179,6 @@ float3 ambientIBL(float3 albedo, float3 N, float3 V, float3 F0, float metallic, 
     float3 specular = prefilteredColor * (F * brdf.x + brdf.y);
 
     return (kD * diffuse + specular) * ao;
-    //return kD;
 }
 
 void SampleTextures(PixelIn input, inout float3 albedo, inout float3 N, inout float roughness, inout float metallic, inout float ao)
