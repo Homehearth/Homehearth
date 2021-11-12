@@ -140,7 +140,6 @@ namespace ecs
 			float movementSpeed = 15.f;
 			float attackRange = 10.f;
 			bool hostile;
-			uint32_t currentNodeTarget = static_cast<uint32_t>(-1);
 			std::vector<Node*> path;
 			Node* currentNode;
 			Entity currentClosest;

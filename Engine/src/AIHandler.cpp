@@ -241,15 +241,15 @@ void AIHandler::AStarSearch(HeadlessScene& scene, Entity npc)
 				{
 					if (neighbor == openList[i] && tempG > openList[i]->g)
 					{
+						neighbor->parent = currentNode;
+						neighbor->f = tempF;
+						neighbor->g = tempG;
+						neighbor->h = tempH;
 						inOpen = true;
 					}
 				}
 				if (!inOpen)
 				{
-					neighbor->parent = currentNode;
-					neighbor->f = tempF;
-					neighbor->g = tempG;
-					neighbor->h = tempH;
 					openList.push_back(neighbor);
 				}
 
@@ -265,7 +265,7 @@ void AIHandler::AStarSearch(HeadlessScene& scene, Entity npc)
 			currentNode = currentNode->parent;
 		}
 	}
-	for (int i = 0; i < m_nodes.size();i++)
+	for (int i = 0; i < m_nodes.size(); i++)
 	{
 		for (int j = 0; j < m_nodes[i].size(); j++)
 		{
