@@ -90,11 +90,11 @@ StructuredBuffer<float4x4> sb_boneTransforms : register(t9); // read as column m
 StructuredBuffer<Light> sb_lights : register(t10);
 
 //Nikkis stuff:
-//Texture2D t_underWaterGround : register(t17);
-//Texture2D t_underWaterEdge   : register(t18);
-//Texture2D t_waterTexture     : register(t19);
+Texture2D t_underWaterGround : register(t17);
+Texture2D t_underWaterEdge   : register(t18);
+Texture2D t_waterTexture     : register(t19);
 Texture2D t_waterBlend       : register(t20);
-//Texture2D t_waterTextureN    : register(t21);
+Texture2D t_waterTextureN    : register(t21);
 
 // Forward+
 //StructuredBuffer<PointLight> sb_pointLights : register();

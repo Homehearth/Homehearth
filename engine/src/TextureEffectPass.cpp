@@ -26,15 +26,20 @@ void TextureEffectPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceCont
     {
         DC->PSSetConstantBuffers(0, 0, nullptr);
         DC->VSSetConstantBuffers(0, 0, nullptr);
-        //DC->VSSetConstantBuffers(6, 1, PM-);
+        DC->CSSetConstantBuffers(6, 1, PM->m_deltaTimeBuffer.GetAddressOf());
         DC->CSSetConstantBuffers(3, 1, PM->m_textureEffectConstantBuffer.GetAddressOf());
     }
 
     // SHADER RESOURCES.
     {
-        DC->VSSetShaderResources(1, 20, PM->m_SRV_TextureEffectBlendMap.GetAddressOf());
-        //DC->PSSetShaderResources(0, 0, nullptr);
-        DC->PSSetSamplers(0, 1, PM->m_pointSamplerState.GetAddressOf());
+        //Kolla i din deffered rendering hur man la sånnahär i en array. 
+        
+        DC->CSSetShaderResources(1, 17, PM->m_SRV_TextureEffectWaterFloorMap.GetAddressOf());
+        DC->CSSetShaderResources(1, 18, PM->m_SRV_TextureEffectWaterEdgeMap.GetAddressOf());
+        DC->CSSetShaderResources(1, 19, PM->m_SRV_TextureEffectWaterMap.GetAddressOf());
+        DC->CSSetShaderResources(1, 20, PM->m_SRV_TextureEffectBlendMap.GetAddressOf());
+        DC->CSSetShaderResources(1, 21, PM->m_SRV_TextureEffectWaterNormalMap.GetAddressOf());
+        DC->CSSetSamplers(0, 1, PM->m_pointSamplerState.GetAddressOf());
     }
 
     // OUTPUT MERGER.
@@ -62,16 +67,4 @@ void TextureEffectPass::PostRender(ID3D11DeviceContext* pDeviceContext)
     D3D11Core::Get().DeviceContext()->UpdateSubresource(PM->m_textureEffectConstantBuffer.Get(), 0, nullptr, &m_CBuffer, 0, 0);
 }
 
-void TextureEffectPass::CreateViews()
-{
-    //D3D11_SHADER_RESOURCE_VIEW_DESC shaderResourceViewDesc;
-    //shaderResourceViewDesc.Format = textureDesc.Format;
-    //shaderResourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-    //shaderResourceViewDesc.Texture2D.MostDetailedMip = 0;
-    //shaderResourceViewDesc.Texture2D.MipLevels = 1;
-
-    //HRESULT result = DC->CreateShaderResourceView(normalData.Get(), &shaderResourceViewDesc, normalResourceView.GetAddressOf());
-    //if (FAILED(result)) { return false; };
-
-}
 

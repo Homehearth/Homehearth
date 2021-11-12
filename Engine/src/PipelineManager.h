@@ -83,6 +83,14 @@ public:
 	ComPtr<ID3D11Buffer>              m_deltaTimeBuffer;
 	ComPtr<ID3D11RenderTargetView>    m_RTV_TextureEffectBlendMap;
 	ComPtr<ID3D11ShaderResourceView>  m_SRV_TextureEffectBlendMap;
+	ComPtr<ID3D11RenderTargetView>    m_RTV_TextureEffectWaterMap;
+	ComPtr<ID3D11ShaderResourceView>  m_SRV_TextureEffectWaterMap;
+	ComPtr<ID3D11RenderTargetView>    m_RTV_TextureEffectWaterFloorMap;
+	ComPtr<ID3D11ShaderResourceView>  m_SRV_TextureEffectWaterFloorMap;
+	ComPtr<ID3D11RenderTargetView>    m_RTV_TextureEffectWaterEdgeMap;
+	ComPtr<ID3D11ShaderResourceView>  m_SRV_TextureEffectWaterEdgeMap;
+	ComPtr<ID3D11RenderTargetView>    m_RTV_TextureEffectWaterNormalMap;
+	ComPtr<ID3D11ShaderResourceView>  m_SRV_TextureEffectWaterNormalMap;
 
 private:
 	// INITIALIZE METHODS.
@@ -99,6 +107,7 @@ private:
 	void SetViewport();
 
 	bool CreateTextureEffectConstantBuffer();
+	bool CreateTextureEffectResources();
 };
 
 

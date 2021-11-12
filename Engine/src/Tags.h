@@ -7,5 +7,6 @@ enum TagType : uint8_t
 	DYNAMIC = 4,
 	STATIC = 8,
 	MAP_BOUNDS = 16,
-	DEFENCE = 32
+	DEFENCE = 32,
+	TEXTUREEFFECT = 64
 };
