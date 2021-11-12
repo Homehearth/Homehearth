@@ -37,9 +37,9 @@ private:
 	void LoadKeyframes(const aiAnimation* animation);
 
 	//Make public? Needed for blending two animations?
-	const sm::Vector3 GetPosition(const std::string& bonename, const double& currentFrame, const double& nextFrame, UINT& lastKey, bool interpolate) const;
-	const sm::Vector3 GetScale(const std::string& bonename, const double& currentFrame, const double& nextFrame, UINT& lastKey, bool interpolate) const;
-	const sm::Quaternion GetRotation(const std::string& bonename, const double& currentFrame, const double& nextFrame, UINT& lastKey, bool interpolate) const;
+	const sm::Vector3 GetPosition(		const std::string& bonename, const double& currentFrame, UINT& lastKey, bool interpolate) const;
+	const sm::Vector3 GetScale(			const std::string& bonename, const double& currentFrame, UINT& lastKey, bool interpolate) const;
+	const sm::Quaternion GetRotation(	const std::string& bonename, const double& currentFrame, UINT& lastKey, bool interpolate) const;
 
 public:
 	RAnimation();
@@ -54,13 +54,11 @@ public:
 	/*
 		Get translations depending on the bone.
 		Current frame is the frame we shall get information about.
-		Next frame is the next predicted frame.
 		Last keys is a way to optimize the search for next pos,scl,rot.
 		Can use interpolation for smoother animations. By default it's is on
 	*/
 	const sm::Matrix GetMatrix(const std::string& bonename, 
 								const double& currentFrame, 
-								const double& nextFrame, 
 								std::array<UINT,3>& lastKeys,
 								bool interpolate = true);
 

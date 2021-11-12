@@ -111,9 +111,7 @@ void GridSystem::Initialize(Vector2I mapSize, sm::Vector3 position, std::string 
 
 void GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse)
 {
-	float t = 0;
-
-	const float MAX_RADIUS = 40.f;
+	const float MAX_RADIUS = 20.f;
 	const float MIN_RADIUS = 10.f;
 
 	Plane_t plane;
@@ -123,19 +121,24 @@ void GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse)
 	bool canBuild = false;
 
 	sm::Vector3 localPlayer;
-	std::vector<sm::Vector3> pPos;
+	std::vector<sm::Vector3> entityPos;
 
-	// Save positions to calculate distances to the tile
+	// Save positions to calculate distances to the tile for players
 	m_scene->ForEachComponent<comp::Player, comp::Transform, comp::Network>([&](comp::Player& p, comp::Transform& t, comp::Network& net)
 		{
 			if (net.id != playerWhoPressedMouse)
 			{
-				pPos.push_back(t.position);
+				entityPos.push_back(t.position);
 			}
 			else
 			{
 				localPlayer = t.position;
 			}
+		});
+	// Do the same for all NPC entities
+	m_scene->ForEachComponent<comp::NPC, comp::Transform>([&](comp::NPC& p, comp::Transform& t)
+		{
+			entityPos.push_back(t.position);
 		});
 
 	if (mouseRay.Intersects(plane, &pos))
@@ -146,6 +149,7 @@ void GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse)
 			{
 				Tile tile = m_tiles[row][col];
 
+				// Basically an AABB check
 				float right = tile.position.x + tile.halfWidth;
 				float left = tile.position.x - tile.halfWidth;
 				float top = tile.position.z + tile.halfWidth;
@@ -158,10 +162,11 @@ void GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse)
 					if (tile.type == TileType::EMPTY)
 					{
 						bool tileOccupied = false;
-						// Other players, should be other entities
-						for (int i = 0; i < pPos.size() && !tileOccupied; i++)
+						// Checking so the other entities doesnt occupy the tile
+						for (int i = 0; i < entityPos.size() && !tileOccupied; i++)
 						{
-							if (sm::Vector3::Distance(pPos[i], tile.position) < MIN_RADIUS)
+							// Is the entity occupying a tile?
+							if (entityPos[i].x > left && entityPos[i].x < right && entityPos[i].z < top && entityPos[i].z > bottom)
 							{
 								tileOccupied = true;
 							}

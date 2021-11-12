@@ -66,6 +66,7 @@
 #include <dwrite.h>
 #include <dwrite_3.h>
 #include <d2d1.h>
+#include <d2d1_1.h>
 #include <ctime>
 #include <Keyboard.h>
 #include <Mouse.h>
@@ -134,3 +135,6 @@ const std::string TEXTUREPATH	= "../Assets/Textures/";
 const std::string ANIMATIONPATH = "../Assets/Animations/";
 const std::string ANIMATORPATH	= "../Assets/Animators/";
 const std::string FONTPATH		= "../Assets/Fonts/";
+const std::string BOUNDSPATH	= "../Assets/Bounds/";
+const std::string ASSETLOADER	= "../Assets/Models/Loader.txt";
+const std::string BOUNDSLOADER	= "../Assets/Bounds/Loader.txt";

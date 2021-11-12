@@ -3,6 +3,22 @@
 constexpr int MAX_PLAYERS_PER_LOBBY = 4;
 constexpr int MAX_HEALTH = 100;
 
+struct Currency
+{
+private:
+	uint32_t m_amount = 0;
+
+public:
+	uint32_t GetAmount()const
+	{
+		return m_amount;
+	}
+	void AddAmount(int32_t amount)
+	{
+		m_amount += amount;
+	}
+};
+
 struct MinMaxProj_t
 {
 	float minProj;
@@ -35,7 +51,7 @@ struct Vector2I
 		this->x += other.x;
 		this->y += other.y;
 
-		return *this;	
+		return *this;
 	}
 };
 
@@ -46,23 +62,122 @@ struct Plane_t
 
 struct Ray_t
 {
-	sm::Vector3 rayPos, rayDir;
+	sm::Vector3 origin, dir;
 	bool Intersects(Plane_t plane, sm::Vector3* outIntersectPoint = nullptr)
 	{
-		rayDir.Normalize(rayDir);
-		float dotAngle = plane.normal.Dot(rayDir);
+		dir.Normalize(dir);
+		float dotAngle = plane.normal.Dot(dir);
 		if (std::abs(dotAngle) < 0.001f)
 			return false;
 
-		sm::Vector3 p = plane.point - rayPos;
+		sm::Vector3 p = plane.point - origin;
 		float t = p.Dot(plane.normal) / dotAngle;
 		if (t < 0)
 			return false;
 
 		if (outIntersectPoint)
 		{
-			*outIntersectPoint = rayPos + rayDir * t;
+			*outIntersectPoint = origin + dir * t;
 		}
+		return true;
+	}
+
+	bool Intersects(const dx::BoundingSphere& sphere)
+	{
+		const sm::Vector3 centerToRay = this->origin - sphere.Center;
+
+		//Parameterization to use for the quadtratic formula.
+		const float a = this->dir.Dot(this->dir);
+		const float b = 2.0f * centerToRay.Dot(this->dir);
+		const float c = centerToRay.Dot(centerToRay) - sphere.Radius * sphere.Radius;
+
+		const float discriminant = b * b - 4.0f * a * c;
+
+		//discriminant < 0 the ray does not intersect sphere.
+		//discriminant = 0 the ray touches the sphere in one point
+		//discriminant > 0 the ray touches the sphere in two points
+
+		return discriminant > 0.0f;
+	}
+
+	bool Intersects(const dx::BoundingOrientedBox& boxCollider)
+	{
+
+		/*
+		 * computing all t-values for the ray
+		 * and all planes belonging to the faces of the OBB.
+		 * It returns the closest positive t-value
+		 */
+
+		float tmin = (std::numeric_limits<float>::min)();
+		float tmax = (std::numeric_limits<float>::max)();
+
+		sm::Vector3 p = boxCollider.Center - this->origin;
+
+		std::array<sm::Vector3, 3> norms;
+		norms[0] = sm::Vector3(1.0f, 0.0f, 0.0f);
+		norms[1] = sm::Vector3(0.0f, 1.0f, 0.0f);
+		norms[2] = sm::Vector3(0.0f, 0.0f, 1.0f);
+
+		norms[0] = sm::Vector3::Transform(norms[0], boxCollider.Orientation);
+		norms[1] = sm::Vector3::Transform(norms[1], boxCollider.Orientation);
+		norms[2] = sm::Vector3::Transform(norms[2], boxCollider.Orientation);
+
+		float halfSize[3];
+		halfSize[0] = boxCollider.Extents.x;
+		halfSize[1] = boxCollider.Extents.y;
+		halfSize[2] = boxCollider.Extents.z;
+
+		for (size_t i = 0; i < 3; i++)
+		{
+			const float e = norms[i].x * p.x + norms[i].y * p.y + norms[i].z * p.z;
+			const float f = norms[i].x * this->dir.x + norms[i].y * this->dir.y + norms[i].z * this->dir.z;
+
+			//CheckCollisions normal face is not ortogonal to ray direction
+			if (abs(f) > 0.001f)
+			{
+				float t1 = (e + halfSize[i]) / f;
+				float t2 = (e - halfSize[i]) / f;
+
+				if (t1 > t2)
+				{
+					std::swap(t1, t2);
+				}
+				if (t1 > tmin)
+				{
+					tmin = t1;
+				}
+				if (t2 < tmax)
+				{
+					tmax = t2;
+				}
+				if (tmin > tmax)
+				{
+					return false;
+				}
+				//if true, then the box is behind the rayorigin.
+				if (tmax < 0)
+				{
+					return false;
+				}
+
+			}
+			/**executed if the ray is parallel to the slab
+			 * (and so cannot intersect it); it tests if the ray is outside the slab.
+			 * If so, then the ray misses the box and the test terminates.
+			 */
+			else if (-e - halfSize[i] > 0 || -e + halfSize[i] < 0)
+			{
+				return false;
+			}
+
+		}
+
+		//if (tmin > 0)
+		//	t = tmin;
+		//else
+		//	t = tmax;
+
 		return true;
 	}
 };
@@ -100,6 +215,7 @@ enum class GameMsg : uint8_t
 	Game_Start,
 	Game_Snapshot,
 	Game_AddEntity,
+	Game_UpdateComponent,
 	Game_RemoveEntity,
 	Game_BackToLobby,
 	Game_WaveTimer,

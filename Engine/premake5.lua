@@ -46,7 +46,7 @@ project "Engine"
             ["src/Engine/GamePlay"] = { "**GridSystem.*", "**CollisionSystem.*" },
             ["src/Engine/Thread"] = { "**multi_thread_manager.*", "**ThreadSyncer.*", "**RenderThreadHandler.*"},
 
-        ["src/Engine/Utility"] = { "**Timer.*", "**Profiler.*", "**Logger.*", "**Stats.*" },
+        ["src/Engine/Utility"] = { "**Timer.*", "**Profiler.*", "**Logger.*", "**Stats.*", "**ModelIdentifier.*" },
 		["src/Engine/Elements"] = {"**Canvas.*", "**Picture.*", "**Border.*", "**Button.*", "**Text.*", "**TextField.*", "**Slider.*", "**Healthbar.*", "**Scroller.*"},
         
         ["src/Engine"] = {  },
@@ -57,6 +57,7 @@ project "Engine"
 			["src/Engine/Graphics/D2D1"] = { "**D2D1Core.*" },
 			
 			["src/Network"] = { "**Client.*" },
+			["src/Network/Prediction"] = {"**Predictor.*"},
 
         ["src/Engine/Resources"] = { "**ResourceManager.*", "**GResource.*", "**RModel.*", "**RTexture.*", "**RMaterial.*"},
             ["src/Engine/Resources/Shaders"] = { "**.hlsl", "**.hlsli", "**Shader.*" },

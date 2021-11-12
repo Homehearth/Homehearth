@@ -42,6 +42,7 @@ public:
 	SceneType* GetCurrentScene() const;
 	void SetScene(const std::string& name);
 	void SetScene(SceneType& scene);
+	void SetUpdateRate(float rate);
 	
 	void Start();
 
@@ -71,6 +72,12 @@ void BasicEngine<SceneType>::SetScene(SceneType& scene)
 {	
 	m_currentScene = &scene;
 	m_currentScene->publish<ESceneStart>();
+}
+
+template<typename SceneType>
+inline void BasicEngine<SceneType>::SetUpdateRate(float rate)
+{
+	Stats::Get().SetUpdateRate(rate);
 }
 
 template<typename SceneType>
@@ -121,8 +128,8 @@ void BasicEngine<SceneType>::Run()
 	float deltaTime = 0.f;
 	float update_time = 0.f;
 	float network_time = 0.f;
-	const float TARGET_UPDATE = 1.f / Stats::GetMaxFPS();
-	const float TICK_RATE = 1.f / 60.f;
+	const float TARGET_UPDATE	= 1.f / Stats::Get().GetUpdaterate();
+	const float TICK_RATE		= 1.f / Stats::Get().GetTickrate();
 
 	while (IsRunning())
 	{
@@ -131,17 +138,20 @@ void BasicEngine<SceneType>::Run()
 		currentFrame = omp_get_wtime();
 		deltaTime = static_cast<float>(currentFrame - lastFrame);
 
-		network_time += deltaTime;
 		update_time += deltaTime;
 		if (update_time >= TARGET_UPDATE)
 		{
+			Stats::Get().SetUpdateTime(update_time);
 			Update(update_time);
-			update_time = 0.0f;
+			update_time = 0.f;
 		}
+
+		network_time += deltaTime;
 		if (network_time >= TICK_RATE)
 		{
+			Stats::Get().SetNetworkTime(network_time);
 			UpdateNetwork(network_time);
-			network_time = 0.0f;
+			network_time = 0.f;
 		}
 		lastFrame = currentFrame;
 	}

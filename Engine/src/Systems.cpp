@@ -1,5 +1,8 @@
 #include "EnginePCH.h"
 #include "Systems.h"
+#include "Text.h"
+#include "Components.h"
+#include "Healthbar.h"
 
 Entity FindClosestPlayer(HeadlessScene& scene, sm::Vector3 position, comp::NPC* npc)
 {
@@ -211,6 +214,7 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 				
 				box->Extents = sm::Vector3(stats.attackRange * 0.5f);
 				
+				stats.targetDir.Normalize();
 				t->position = transform.position + stats.targetDir * stats.attackRange * 0.5f;
 				t->rotation = transform.rotation;
 
@@ -231,8 +235,15 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 				attackCollider.AddComponent<comp::Network>();
 
 				
-				CollisionSystem::Get().AddOnCollision(attackCollider, [=](Entity other)
+				CollisionSystem::Get().AddOnCollision(attackCollider, [entity, &scene](Entity thisEntity, Entity other)
 					{
+						// is caster already dead
+						if (entity.IsNull())
+						{
+							thisEntity.GetComponent<comp::SelfDestruct>()->lifeTime = 0.f;
+							return;
+						}
+
 						if (other == entity)
 							return;
 					
@@ -243,20 +254,41 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 						if (otherHealth)
 						{
 							otherHealth->currentHealth -= stats->attackDamage;
-							attackCollider.GetComponent<comp::SelfDestruct>()->lifeTime = 0.f;
+							// update Health on network
+							scene.publish<EComponentUpdated>(other, ecs::Component::HEALTH);
 
-							comp::Velocity* attackVel = attackCollider.GetComponent<comp::Velocity>();
+							thisEntity.GetComponent<comp::SelfDestruct>()->lifeTime = 0.f;
+
+							comp::Velocity* attackVel = thisEntity.GetComponent<comp::Velocity>();
 							if (attackVel)
 							{
-								other.AddComponent<comp::Force>()->force = attackVel->vel;
+								comp::TemporaryPhysics* p = other.AddComponent<comp::TemporaryPhysics>();
+								comp::TemporaryPhysics::Force force = {};
+								force.force = attackVel->vel;
+								p->forces.push_back(force);
 							}
 							else
 							{
+
 								sm::Vector3 toOther = other.GetComponent<comp::Transform>()->position - entity.GetComponent<comp::Transform>()->position;
 								toOther.Normalize();
-								other.AddComponent<comp::Force>()->force = toOther * stats->attackDamage;
+
+								comp::TemporaryPhysics* p = other.AddComponent<comp::TemporaryPhysics>();
+								comp::TemporaryPhysics::Force force = {};
+								
+								force.force = toOther + sm::Vector3(0, 1, 0);
+								force.force *= stats->attackDamage;
+								
+								force.isImpulse = true;
+								force.drag = 0.0f;
+								force.actingTime = 0.7f;
+
+								p->forces.push_back(force);
+
+								auto gravity = ecs::GetGravityForce();
+								p->forces.push_back(gravity);
 							}
-							other.UpdateNetwork();
+							
 						}
 					});
 
@@ -300,21 +332,60 @@ void Systems::MovementSystem(HeadlessScene& scene, float dt)
 
 	//Transform
 
-	scene.ForEachComponent<comp::Velocity, comp::Force>([&](Entity e, comp::Velocity& v, comp::Force& f)
+	scene.ForEachComponent<comp::Transform, comp::Velocity, comp::TemporaryPhysics > ([&](Entity e, comp::Transform& t, comp::Velocity& v, comp::TemporaryPhysics& p)
 		{
-			if (f.wasApplied)
+			v.vel = v.oldVel; // ignore any changes made to velocity made this frame
+			auto& it = p.forces.begin();
+			while(it != p.forces.end())
 			{
-				v.vel *= 1.0f - (dt * 10.f);
+				comp::TemporaryPhysics::Force& f = *it;
+				
+				if (f.isImpulse)
+				{
+					if (f.wasApplied)
+					{
+						// Apply drag
+						v.vel *= 1.0f - (dt * f.drag);
+					}
+					else
+					{
+						// Apply force once
+						v.vel = f.force;
+						f.wasApplied = true;
+					}
+				}
+				else
+				{
+					// Apply constant force
+					v.vel += f.force * dt * 2.f;
+				}
+
+				sm::Vector3 newPos = t.position + v.vel * dt;
+				if (newPos.y < 0.0f)
+				{
+					v.vel.y = 0;
+					f.force.y = 0;
+				}
+
+				if (f.force.Length() < 0.01f)
+				{
+					f.actingTime = 0.0f;
+				}
+
 				f.actingTime -= dt;
 				if (f.actingTime <= 0.0f)
 				{
-					e.RemoveComponent<comp::Force>();
+					it = p.forces.erase(it);
+					if (p.forces.size() == 0)
+					{
+						e.RemoveComponent<comp::TemporaryPhysics>();
+						return;
+					}
 				}
-			}
-			else
-			{
-				v.vel = f.force;
-				f.wasApplied = true;
+				else
+				{
+					it++;
+				}
 			}
 		});
 
@@ -323,12 +394,22 @@ void Systems::MovementSystem(HeadlessScene& scene, float dt)
 		scene.ForEachComponent<comp::Transform, comp::Velocity>([&, dt]
 		(Entity e, comp::Transform& transform, comp::Velocity& velocity)
 			{
-				transform.position += velocity.vel * dt;
-				transform.position.y = 1.0f;
+
 				if (velocity.vel.Length() > 0.01f)
 				{
 					e.UpdateNetwork();
 				}
+				
+				transform.position += velocity.vel * dt;
+				
+				if (transform.position.y < 0.f)
+				{
+					transform.position.y = 0.f;
+					velocity.vel.y = 0;
+				}
+
+
+				velocity.oldVel = velocity.vel; // updated old vel position
 			});
 	}
 }
@@ -413,14 +494,15 @@ void Systems::AISystem(HeadlessScene& scene)
 		if (sm::Vector3::Distance(transformNPC->position, transformCurrentClosestPlayer->position) <= npc.attackRange)
 		{
 			comp::CombatStats* stats = entity.GetComponent<comp::CombatStats>();
-
-			stats->targetDir = transformCurrentClosestPlayer->position - transformNPC->position;
-			stats->targetDir.Normalize();
-			stats->targetDir *= 10.f;
-			if (ecs::Use(stats))
+			if (stats)
 			{
-				LOG_INFO("Enemy Attacked");
-			};
+				stats->targetDir = transformCurrentClosestPlayer->position - transformNPC->position;
+				stats->targetDir.Normalize();
+				if (ecs::Use(stats))
+				{
+					// Enemy Attacked
+				};
+			}
 		}
 		
 
@@ -464,4 +546,76 @@ void Systems::AISystem(HeadlessScene& scene)
 			break;
 		}
 	});
+}
+
+void Systems::UpdatePlayerVisuals(Scene* scene)
+{
+	int i = 1;
+	scene->ForEachComponent<comp::NamePlate, comp::Transform>([&](Entity& e, comp::NamePlate& name, comp::Transform& t)
+		{
+			if (i < 5)
+			{
+				Collection2D* collection = scene->GetCollection("dynamicPlayer" + std::to_string(i) + "namePlate");
+				if (collection)
+				{
+					rtd::Text* namePlate = dynamic_cast<rtd::Text*>(collection->elements[0].get());
+					if (namePlate)
+					{
+						Camera* cam = scene->GetCurrentCamera();
+
+						if (cam->GetCameraMatrixes())
+						{
+							// Conversion from World space to NDC space.
+							sm::Vector4 oldP = { t.position.x, t.position.y + 25.0f, t.position.z, 1.0f };
+							sm::Vector4 newP = dx::XMVector4Transform(oldP, cam->GetCameraMatrixes()->view);
+							newP = dx::XMVector4Transform(newP, cam->GetCameraMatrixes()->projection);
+							newP.x /= newP.w;
+							newP.y /= newP.w;
+							newP.z /= newP.w;
+
+							// Conversion from NDC space [-1, 1] to Window space
+							float new_x = (((newP.x + 1) * (D2D1Core::GetWindow()->GetWidth())) / (2));
+							float new_y = D2D1Core::GetWindow()->GetHeight() - (((newP.y + 1) * (D2D1Core::GetWindow()->GetHeight())) / (2));
+
+							namePlate->SetPosition(new_x - ((name.namePlate.length() * D2D1Core::GetDefaultFontSize()) * 0.5f), new_y);
+							// Show nameplates only if camera is turned to it.
+							if (newP.z < 1.f)
+								namePlate->SetVisiblity(true);
+							else
+								namePlate->SetVisiblity(false);
+
+							// Update healthbars position.
+							Collection2D* collHealth = scene->GetCollection("player" + std::to_string(i) + "Info");
+							if (collHealth)
+							{
+								rtd::Healthbar* health = dynamic_cast<rtd::Healthbar*>(collHealth->elements[0].get());
+								if (health)
+								{
+									sm::Vector4 oldPp = { t.position.x, t.position.y + 20.0f, t.position.z, 1.0f };
+									sm::Vector4 newPp = dx::XMVector4Transform(oldPp, cam->GetCameraMatrixes()->view);
+									newPp = dx::XMVector4Transform(newPp, cam->GetCameraMatrixes()->projection);
+									newPp.x /= newPp.w;
+									newPp.y /= newPp.w;
+									newPp.z /= newPp.w;
+
+									// Conversion from NDC space [-1, 1] to Window space
+									new_x = (((newPp.x + 1) * (D2D1Core::GetWindow()->GetWidth())) / (2));
+									new_y = D2D1Core::GetWindow()->GetHeight() - (((newPp.y + 1) * (D2D1Core::GetWindow()->GetHeight())) / (2));
+
+									health->SetPosition(new_x - (health->GetOpts().width * 0.5f), new_y);
+
+									// Only visible if camera is turned to it.
+									if (newPp.z < 1.f)
+										health->SetVisiblity(true);
+									else
+										health->SetVisiblity(false);
+								}
+							}
+						}
+					}
+				}
+			}
+			i++;
+		});
+
 }

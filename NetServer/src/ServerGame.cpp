@@ -7,6 +7,7 @@ ServerGame::ServerGame()
 	:m_server(std::bind(&ServerGame::CheckIncoming, this, _1))
 {
 	m_nGameID = 0;
+	SetUpdateRate(60.f);
 }
 
 ServerGame::~ServerGame()
@@ -183,7 +184,7 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 		uint32_t playerID;
 		msg >> playerID;
 		this->m_server.SendToClient(playerID, msg);
-		//LOG_INFO("Client on with ID: %ld is pinging server", playerID);
+		LOG_INFO("Client on with ID: %ld is pinging server", playerID);
 		break;
 	}
 	case GameMsg::Lobby_Create:

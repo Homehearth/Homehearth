@@ -100,10 +100,8 @@ public:
 	RMaterial();
 	~RMaterial();
 
-	void BindMaterial() const;
-	void UnBindMaterial() const;
-	void BindDeferredMaterial(ID3D11DeviceContext* context);
-	void UnBindDeferredMaterial(ID3D11DeviceContext* context);
+	void BindMaterial(ID3D11DeviceContext* context);
+	void UnBindMaterial(ID3D11DeviceContext* context);
 	
 	//CheckCollisions if a material has a specific texture
 	bool HasTexture(const ETextureType& type) const;

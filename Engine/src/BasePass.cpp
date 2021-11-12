@@ -35,5 +35,7 @@ void BasePass::PostRender(ID3D11DeviceContext* pDeviceContext)
 	// Cleanup.
 	//ID3D11ShaderResourceView* nullSRV[] = { nullptr };
 	//DC->PSSetShaderResources(0, 1, nullSRV);
-}
 
+    ID3D11Buffer* nullBuffer = nullptr;
+    DC->PSSetConstantBuffers(1, 1, &nullBuffer);
+}

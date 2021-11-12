@@ -34,17 +34,28 @@ namespace ecs
 			sm::Vector3 position;
 			sm::Quaternion rotation;
 			sm::Vector3 scale = sm::Vector3(1);
+		};
 
-			friend network::message<GameMsg>& operator<<(network::message<GameMsg>& msg, const ecs::component::Transform& data)
-			{
-				msg << data.position << data.rotation << data.scale;
-				return msg;
-			}
+		struct Decal
+		{
+			RTexture* decal = nullptr;
+			sm::Matrix viewPoint;
+			// Life span in seconds.
+			float lifespan = 5.0f;
 
-			friend network::message<GameMsg>& operator >> (network::message<GameMsg>& msg, ecs::component::Transform& data)
+			Decal(const Transform& t, RTexture* decal = nullptr)
 			{
-				msg >> data.scale >> data.rotation >> data.position;
-				return msg;
+				this->decal = decal;
+
+				// Be positioned slightly above.
+				sm::Vector3 position = t.position;
+				position.y += 10.0f;
+				position.x += 0.0001f;
+				position.z -= 0.0001f;
+
+				sm::Vector3 lookAt = t.position;
+				lookAt.y = 0;
+				viewPoint = dx::XMMatrixLookAtLH(position, lookAt, { 0.0f, 1.0f, 0.0f });
 			}
 		};
 
@@ -101,16 +112,25 @@ namespace ecs
 			}
 		};
 		
-		struct Force
+
+		struct TemporaryPhysics
 		{
-			sm::Vector3 force = sm::Vector3(5, 0, 0);
-			bool wasApplied = false;
-			float actingTime = 2.0f;
+			struct Force
+			{
+				sm::Vector3 force = sm::Vector3(5, 0, 0);
+				float drag = 5.f;
+				bool isImpulse = true;
+				bool wasApplied = false;
+				float actingTime = 1.0f;
+			};
+
+			std::vector<Force> forces;
 		};
 
 		struct Velocity
 		{
 			sm::Vector3 vel;
+			sm::Vector3 oldVel;
 		};
 
 		struct Player
@@ -235,8 +255,10 @@ namespace ecs
 	sm::Vector3 GetRight(const component::Transform& transform);
 	bool StepRotateTo(sm::Quaternion& rotation, const sm::Vector3& targetVector, float t);
 	bool StepTranslateTo(sm::Vector3& translation, const sm::Vector3& target, float t);
+	
 	bool Use(component::IAbility* abilityComponent);
 
+	component::TemporaryPhysics::Force GetGravityForce();
 
 };
 

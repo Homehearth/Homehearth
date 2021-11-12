@@ -1,7 +1,8 @@
 #include "Game.h"
+#include "GameSystems.h"
 #include "Button.h"
 #include "TextField.h"
-#include <DemoScene.h>
+#include "SceneHelper.h"
 #include "Healthbar.h"
 
 using namespace std::placeholders;
@@ -12,9 +13,8 @@ Game::Game()
 {
 	this->m_localPID = -1;
 	this->m_gameID = -1;
-	m_isLeavingLobby = false;
 	this->m_predictionThreshhold = 0.001f;
-	m_waveTimer = 0;
+	this->m_waveTimer = 0;
 }
 
 
@@ -30,25 +30,24 @@ Game::~Game()
 
 void Game::UpdateNetwork(float deltaTime)
 {
-	//static float pingCheck = 0.f;
-	//const float TARGET_PING_TIME = 5.0f;
+	static float pingCheck = 0.f;
+	const float TARGET_PING_TIME = 5.0f;
 	if (m_client.IsConnected())
 	{
 		m_client.Update();
 
-		//pingCheck += deltaTime;
+		pingCheck += deltaTime;
 
-		//if (pingCheck > TARGET_PING_TIME)
-		//{
-		//	this->PingServer();
-		//	pingCheck -= TARGET_PING_TIME;
-		//}
+		if (pingCheck > TARGET_PING_TIME)
+		{
+			this->PingServer();
+			pingCheck -= TARGET_PING_TIME;
+		}
 
 		if (GetCurrentScene() == &GetScene("Game"))
 		{
 			if (GetCurrentScene()->GetCurrentCamera()->GetCameraType() == CAMERATYPE::PLAY)
 			{
-
 				message<GameMsg> msg;
 				msg.header.id = GameMsg::Game_PlayerInput;
 
@@ -67,13 +66,16 @@ void Game::UpdateNetwork(float deltaTime)
 
 bool Game::OnStartup()
 {
+	sceneHelp::CreateLoadingScene(this);
+	SetScene("Loading");
+
 	// Scene logic
 	sceneHelp::CreateLobbyScene(this);
 	sceneHelp::CreateGameScene(this);
 	sceneHelp::CreateMainMenuScene(this);
 	sceneHelp::CreateJoinLobbyScene(this);
-	sceneHelp::CreateLoadingScene(this);
 
+	sceneHelp::CreateOptionsScene(this);
 	// Set Current Scene
 	SetScene("MainMenu");
 
@@ -82,19 +84,6 @@ bool Game::OnStartup()
 
 void Game::OnUserUpdate(float deltaTime)
 {
-	static float pingCheck = 0.f;
-	const float PING_TARGET = 5.0f;
-
-
-	if (m_client.IsConnected())
-	{
-		pingCheck += deltaTime;
-		if (pingCheck >= PING_TARGET)
-		{
-			PingServer();
-			pingCheck = 0.f;
-		}
-	}
 	/*
 if (GetCurrentScene() == &GetScene("Game") && GetCurrentScene()->GetCurrentCamera()->GetCameraType() == CAMERATYPE::PLAY)
 {
@@ -122,9 +111,18 @@ if (GetCurrentScene() == &GetScene("Game") && GetCurrentScene()->GetCurrentCamer
 }
 		*/
 
-		//Update InputState
 	if (GetCurrentScene() == &GetScene("Game"))
 	{
+		if (m_players.find(m_localPID) != m_players.end())
+		{
+			sm::Vector3 playerPos = m_players.at(m_localPID).GetComponent<comp::Transform>()->position;
+
+			Camera* cam = GetScene("Game").GetCurrentCamera();
+			if (cam->GetCameraType()  == CAMERATYPE::PLAY)
+			{
+				GameSystems::CheckLOS(cam->GetPosition(), playerPos, m_LOSColliders);
+			}
+		}
 		this->UpdateInput();
 	}
 }
@@ -179,7 +177,33 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			}
 			else {
 				LOG_WARNING("Updating: Entity %u not in m_gameEntities, should not happen...", entityID);
-				
+
+			}
+		}
+
+		break;
+	}
+	case GameMsg::Game_UpdateComponent:
+	{
+		uint32_t currentTick;
+		msg >> currentTick;
+		uint32_t count; // Could be more than one Entity
+		msg >> count;
+
+		for (uint32_t i = 0; i < count; i++)
+		{
+			uint32_t entityID;
+			msg >> entityID;
+
+			Entity entity;
+			if (m_gameEntities.find(entityID) != m_gameEntities.end())
+			{
+				entity = m_gameEntities.at(entityID);
+				UpdateEntityFromMessage(entity, msg);
+			}
+			else {
+				LOG_WARNING("Updating component: Entity %u not in m_gameEntities, should not happen...", entityID);
+
 			}
 		}
 
@@ -202,7 +226,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			msg >> entityID;
 			e.AddComponent<comp::Network>(entityID);
 			UpdateEntityFromMessage(e, msg);
-			
+
 			m_gameEntities.insert(std::make_pair(entityID, e));
 			if (e.GetComponent<comp::Network>()->id == m_localPID)
 			{
@@ -225,7 +249,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 				LOG_INFO("A remote player added!");
 				m_players[e.GetComponent<comp::Network>()->id] = e;
 			}
-			
+
 		}
 
 		if (GetCurrentScene() == &GetScene("Loading"))
@@ -248,14 +272,24 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			msg >> id;
 			if (m_gameEntities.find(id) != m_gameEntities.end())
 			{
+				// Spawn blood splat when enemy dies.
+				if (m_gameEntities.at(id).GetComponent<comp::Transform>() && m_gameEntities.at(id).GetComponent<comp::Health>())
+				{
+					Entity bloodDecal = GetCurrentScene()->CreateEntity();
+					bloodDecal.AddComponent<comp::Decal>(*m_gameEntities.at(id).GetComponent<comp::Transform>());
+				}
+
 				m_gameEntities.at(id).Destroy();
 				m_gameEntities.erase(id);
+				//m_predictor.Remove(id);
 			}
 			// Was the entity a player?
 			if (m_players.find(id) != m_players.end())
 			{
 				m_players.at(id).Destroy();
 				m_players.erase(id);
+				//m_predictor.Remove(id);
+
 			}
 
 		}
@@ -266,14 +300,21 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	}
 	case GameMsg::Game_BackToLobby:
 	{
+		auto it = m_players.begin();
+		while (it != m_players.end())
+		{
+			it->second.GetComponent<comp::Player>()->isReady = false;
+			it++;
+		}
 		SetScene("Lobby");
 		break;
-	}	
+	}
 	case GameMsg::Lobby_Accepted:
 	{
 		msg >> m_gameID;
 		this->SetScene("Loading");
-		this->LoadAllAssets();
+		sceneHelp::LoadAllAssets(this);
+		sceneHelp::LoadMapColliders(this, &m_LOSColliders);
 
 		LOG_INFO("You are now in lobby: %lu", m_gameID);
 		break;
@@ -291,6 +332,11 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		LOG_WARNING("Left Lobby %u", m_gameID);
 		m_gameID = -1;
 		SetScene("JoinLobby");
+		rtd::TextField* textField = dynamic_cast<rtd::TextField*>(GetScene("JoinLobby").GetCollection("LobbyFields")->elements[0].get());
+		if (textField)
+		{
+			textField->SetPresetText("");
+		}
 		break;
 	}
 	case GameMsg::Game_Start:
@@ -315,7 +361,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	{
 		uint32_t count;
 		msg >> count;
-		const uint32_t* spots = &count;
 		std::string ids[MAX_PLAYERS_PER_LOBBY];
 
 		for (uint32_t i = 0; i < count; i++)
@@ -335,6 +380,22 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 				{
 					plT->SetText(playerPlate);
 					plT->SetStretch(D2D1Core::GetDefaultFontSize() * plT->GetText().length(), D2D1Core::GetDefaultFontSize());
+				}
+			}
+		}
+		if (m_players.find(m_localPID) != m_players.end())
+		{
+			comp::Player* player = m_players.at(m_localPID).GetComponent<comp::Player>();
+			rtd::Text* readyText = dynamic_cast<rtd::Text*>(GetScene("Lobby").GetCollection("StartGame")->elements[1].get());
+			if (readyText)
+			{
+				if (player->isReady)
+				{
+					readyText->SetText("Ready");
+				}
+				else
+				{
+					readyText->SetText("Not ready");
 				}
 			}
 		}
@@ -364,6 +425,8 @@ void Game::PingServer()
 	message<GameMsg> msg = {};
 	msg.header.id = GameMsg::Server_GetPing;
 	msg << this->m_localPID;
+
+	LOG_INFO("Pinging server!");
 
 	this->m_timeThen = std::chrono::system_clock::now();
 	m_client.Send(msg);
@@ -414,10 +477,23 @@ void Game::OnClientDisconnect()
 		}
 	);
 
+	rtd::TextField* textField = dynamic_cast<rtd::TextField*>(GetScene("JoinLobby").GetCollection("nameInput")->elements[0].get());
+	if (textField)
+	{
+		textField->SetPresetText("");
+	}
+	textField = dynamic_cast<rtd::TextField*>(GetScene("JoinLobby").GetCollection("LobbyFields")->elements[0].get());
+	if (textField)
+	{
+		textField->SetPresetText("");
+	}
+
 	SetScene("MainMenu");
 
 	m_client.m_qPrioMessagesIn.clear();
 	m_client.m_qMessagesIn.clear();
+	m_players.clear();
+	m_gameEntities.clear();
 	LOG_INFO("Disconnected from server!");
 }
 
@@ -426,12 +502,18 @@ void Game::SendStartGame()
 	network::message<GameMsg> msg;
 	msg.header.id = GameMsg::Game_PlayerReady;
 	msg << m_localPID << m_gameID;
+
 	m_client.Send(msg);
+}
+
+Entity& Game::GetLocalPlayer()
+{
+	return this->m_players.at(m_localPID);
 }
 
 void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 {
-	
+
 	uint32_t bits;
 	msg >> bits;
 	std::bitset<ecs::Component::COMPONENT_MAX> compSet(bits);
@@ -448,6 +530,7 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 				msg >> t;
 				t.rotation.Normalize();
 				e.AddComponent<comp::Transform>(t);
+				//m_predictor.Add(e.GetComponent<comp::Network>()->id, t);
 				break;
 			}
 			case ecs::Component::VELOCITY:
@@ -461,30 +544,14 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 			{
 				std::string name;
 				msg >> name;
-				e.AddComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>(name);
+				e.AddComponent<comp::Renderable>()->model = ResourceManager::Get().CopyResource<RModel>(name, true);
 				break;
 			}
 			case ecs::Component::ANIMATOR_NAME:
 			{
-				comp::AnimatorName animName;
-				msg >> animName.name;
-
-				//Get model
-				comp::Renderable* renderable = e.GetComponent<comp::Renderable>();
-				if(renderable && renderable->model)
-				{
-
-					//Add an animator if we can get it
-					if (!animName.name.empty())
-					{
-						std::shared_ptr<RAnimator> anim = ResourceManager::Get().CopyResource<RAnimator>(animName.name, true);
-						if (anim)
-						{
-							if (anim->LoadSkeleton(renderable->model->GetSkeleton()))
-								e.AddComponent<comp::Animator>()->animator = anim;
-						}
-					}
-				}
+				std::string name;
+				msg >> name;
+				e.AddComponent<comp::Animator>()->animator = ResourceManager::Get().CopyResource<RAnimator>(name, true);
 				break;
 			}
 			case ecs::Component::NAME_PLATE:
@@ -538,6 +605,98 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 
 }
 
+void Game::UpdatePredictorFromMessage(Entity e, message<GameMsg>& msg, const uint32_t& id)
+{
+	uint32_t bits;
+	msg >> bits;
+	std::bitset<ecs::Component::COMPONENT_MAX> compSet(bits);
+
+	for (int i = ecs::Component::COMPONENT_COUNT - 1; i >= 0; i--)
+	{
+		if (compSet.test(i))
+		{
+			switch (i)
+			{
+			case ecs::Component::TRANSFORM:
+			{
+				comp::Transform t;
+				msg >> t;
+				t.rotation.Normalize();
+				e.AddComponent<comp::Transform>(t);
+
+				break;
+			}
+			case ecs::Component::VELOCITY:
+			{
+				comp::Velocity v;
+				msg >> v;
+				e.AddComponent<comp::Velocity>(v);
+				break;
+			}
+			case ecs::Component::MESH_NAME:
+			{
+				std::string name;
+				msg >> name;
+				e.AddComponent<comp::Renderable>()->model = ResourceManager::Get().CopyResource<RModel>(name);
+				break;
+			}
+			case ecs::Component::ANIMATOR_NAME:
+			{
+				std::string name;
+				msg >> name;
+				e.AddComponent<comp::Animator>()->animator = ResourceManager::Get().CopyResource<RAnimator>(name);
+				break;
+			}
+			case ecs::Component::NAME_PLATE:
+			{
+				std::string name;
+				msg >> name;
+				e.AddComponent<comp::NamePlate>()->namePlate = name;
+				break;
+			}
+			case ecs::Component::HEALTH:
+			{
+				comp::Health heal;
+				msg >> heal;
+				e.AddComponent<comp::Health>(heal);
+				break;
+			}
+			case ecs::Component::BOUNDING_ORIENTED_BOX:
+			{
+				comp::BoundingOrientedBox box;
+				msg >> box;
+				e.AddComponent<comp::BoundingOrientedBox>(box);
+				break;
+			}
+			case ecs::Component::BOUNDING_SPHERE:
+			{
+				comp::BoundingSphere s;
+				msg >> s;
+				e.AddComponent<comp::BoundingSphere>(s);
+				break;
+			}
+			case ecs::Component::LIGHT:
+			{
+				comp::Light l;
+				msg >> l;
+				e.AddComponent<comp::Light>(l);
+				break;
+			}
+			case ecs::Component::PLAYER:
+			{
+				comp::Player p;
+				msg >> p;
+				e.AddComponent<comp::Player>(p);
+				break;
+			}
+			default:
+				LOG_WARNING("Retrieved unimplemented component %u", i);
+				break;
+			}
+		}
+	}
+}
+
 void Game::UpdateInput()
 {
 	m_inputState.axisHorizontal = InputSystem::Get().GetAxis(Axis::HORIZONTAL);
@@ -551,16 +710,4 @@ void Game::UpdateInput()
 		m_inputState.rightMouse = true;
 	}
 	m_inputState.mouseRay = InputSystem::Get().GetMouseRay();
-}
-
-void Game::LoadAllAssets()
-{
-	ResourceManager::Get().GetResource<RModel>("MonsterCharacter.fbx");
-	ResourceManager::Get().GetResource<RModel>("Barrel.obj");
-	ResourceManager::Get().GetResource<RModel>("Defence.obj");
-	ResourceManager::Get().GetResource<RModel>("Plane1.obj");
-	ResourceManager::Get().GetResource<RModel>("Knight.fbx");
-	Entity e = GetScene("Game").CreateEntity();
-	e.AddComponent<comp::Transform>();
-	e.AddComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>("GameScene.obj");
 }
