@@ -9,7 +9,7 @@ namespace Systems
 	void CombatSystem(HeadlessScene& scene, float dt);
 	void HealingSystem(HeadlessScene& scene, float dt);
 
-	void HealthSystem(HeadlessScene& scene, float dt);
+	void HealthSystem(HeadlessScene& scene, float dt, uint32_t& money_ref);
 	void SelfDestructSystem(HeadlessScene& scene, float dt);
 
 	void MovementSystem(HeadlessScene& scene, float dt);

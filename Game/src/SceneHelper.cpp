@@ -14,6 +14,7 @@
 #include "Scroller.h"
 #include <windows.h>
 #include <shellapi.h>
+#include "MoneyUI.h"
 
 namespace sceneHelp
 {
@@ -303,6 +304,10 @@ namespace sceneHelp
 			game->Shutdown();
 			});
 		scene.Add2DCollection(buttons, "Buttons");
+
+		Collection2D* money = new Collection2D;
+		money->AddElement<rtd::MoneyUI>(draw_text_t(width - (width / 8.0f), D2D1Core::GetDefaultFontSize(), width / 8.0f, D2D1Core::GetDefaultFontSize()));
+		scene.Add2DCollection(money, "MoneyUI");
 	}
 
 	void SetupInLobbyScreen(Game* game)
@@ -437,7 +442,7 @@ namespace sceneHelp
 
 
 		Collection2D* nameCollection = new Collection2D;
-		rtd::TextField* nameInputField = nameCollection->AddElement<rtd::TextField>(draw_text_t((width / 2) - (width / 8), height / 8, width / 4, D2D1Core::GetDefaultFontSize()), 12);
+		rtd::TextField* nameInputField = nameCollection->AddElement<rtd::TextField>(draw_text_t((width / 2) - (width / 8), height / 8, width / 4, D2D1Core::GetDefaultFontSize()), 12, true);
 		nameInputField->SetDescriptionText("Input Name");
 		//nameInputField->SetPresetText("Noobie");
 		scene.Add2DCollection(nameCollection, "nameInput");
@@ -507,7 +512,7 @@ namespace sceneHelp
 
 	}
 
-	bool LoadMapColliders(Game* game, std::vector<dx::BoundingSphere>* outVector)
+	bool LoadMapColliders(Game* game)
 	{
 		std::fstream file;
 
@@ -517,13 +522,64 @@ namespace sceneHelp
 		{
 			return false;
 		}
-
+		
+		int nrOf = 0;
 		while (!file.eof())
 		{
-			std::string colliderName;
-			file >> colliderName;
-			LOG_INFO("%s", colliderName.c_str());
-			std::string colliderPath = BOUNDSPATH + colliderName;
+			std::string filename;
+			file >> filename;
+			std::string colliderPath = BOUNDSPATH + filename;
+			ModelID modelID;
+
+			// Remove .obj / .fbx
+			size_t count = filename.find_last_of('.');
+			filename = filename.substr(0, count);
+
+			if (House5 == filename)
+			{
+				modelID = ModelID::HOUSE5;
+			}
+			else if (House6 == filename)
+			{
+				modelID = ModelID::HOUSE6;
+			}
+			else if (House7 == filename)
+			{
+				modelID = ModelID::HOUSE7;
+			}
+			else if (House8 == filename)
+			{
+				modelID = ModelID::HOUSE8;
+			}
+			else if (House9 == filename)
+			{
+				modelID = ModelID::HOUSE9;
+			}
+			else if (HouseRoof == filename)
+			{
+				modelID = ModelID::HOUSEROOF;
+			}
+			else if (Tree2 == filename)
+			{
+				modelID = ModelID::TREE2;
+			}
+			else if (Tree3 == filename)
+			{
+				modelID = ModelID::TREE3;
+			}
+			else if (Tree5 == filename)
+			{
+				modelID = ModelID::TREE5;
+			}
+			else if (Tree6 == filename)
+			{
+				modelID = ModelID::TREE6;
+			}
+			else if (Tree8 == filename)
+			{
+				modelID = ModelID::TREE8;
+			}
+
 			Assimp::Importer importer;
 
 			const aiScene* aiScene = importer.ReadFile
@@ -575,7 +631,7 @@ namespace sceneHelp
 					//collider.AddComponent<comp::Tag<TagType::STATIC>>();
 					//collider.AddComponent<comp::Tag<TagType::MAP_BOUNDS>>();
 
-					outVector->push_back(boS);
+					game->m_LOSColliders.push_back(std::make_pair(modelID, boS));
 				}
 			}
 		}
@@ -602,9 +658,54 @@ namespace sceneHelp
 			Entity e = game->GetScene("Game").CreateEntity();
 			e.AddComponent<comp::Transform>();
 			e.AddComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>(filename);
-			if (filename == "House7.obj")
+
+			// Remove .obj / .fbx
+			size_t count = filename.find_last_of('.');
+			filename = filename.substr(0, count);
+
+			if (House5 == filename)
 			{
-				game->m_models[ModelID::HOUSE7].push_back(*e.GetComponent<comp::Renderable>());
+				game->m_models[ModelID::HOUSE5].push_back(e);
+			}
+			else if (House6 == filename)
+			{
+				game->m_models[ModelID::HOUSE6].push_back(e);
+			}
+			else if (House7 == filename)
+			{
+				game->m_models[ModelID::HOUSE7].push_back(e);
+			}
+			else if (House8 == filename)
+			{
+				game->m_models[ModelID::HOUSE8].push_back(e);
+			}
+			else if (House9 == filename)
+			{
+				game->m_models[ModelID::HOUSE9].push_back(e);
+			}
+			else if (HouseRoof == filename)
+			{
+				game->m_models[ModelID::HOUSEROOF].push_back(e);
+			}
+			else if (Tree2 == filename)
+			{
+				game->m_models[ModelID::TREE2].push_back(e);
+			}
+			else if (Tree2 == filename)
+			{
+				game->m_models[ModelID::TREE3].push_back(e);
+			}
+			else if (Tree2 == filename)
+			{
+				game->m_models[ModelID::TREE5].push_back(e);
+			}
+			else if (Tree2 == filename)
+			{
+				game->m_models[ModelID::TREE6].push_back(e);
+			}
+			else if (Tree2 == filename)
+			{
+				game->m_models[ModelID::TREE8].push_back(e);
 			}
 		}
 	}

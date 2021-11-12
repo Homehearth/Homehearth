@@ -456,7 +456,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 				Systems::CombatSystem(scene, e.dt);
 				Systems::HealingSystem(scene, e.dt);
 
-				Systems::HealthSystem(scene, e.dt);
+				Systems::HealthSystem(scene, e.dt, m_money.m_amount);
 				Systems::SelfDestructSystem(scene, e.dt);
 				{
 					PROFILE_SCOPE("Collision Box/Box");
@@ -466,7 +466,6 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 					PROFILE_SCOPE("Collision Box/Sphere");
 					Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingSphere>(scene, e.dt);
 				}
-
 			}
 
 			if (!waveQueue.empty())
@@ -847,6 +846,11 @@ void Simulation::SendSnapshot()
 	// all destroyed Entities
 	this->SendRemoveEntities(m_removedEntities);
 	m_removedEntities.clear();
+
+	network::message<GameMsg> msg3;
+	msg3.header.id = GameMsg::Game_Money;
+	msg3 << m_money.m_amount;
+	this->Broadcast(msg3);
 }
 
 void Simulation::Update(float dt)

@@ -1,6 +1,7 @@
 #include "GameSystems.h"
 #include "EnginePCH.h"
 #include "Healthbar.h"
+#include "Game.h"
 
 //System check if mouse ray intersects any of the box collider components in scene
 void GameSystems::MRayIntersectBoxSystem(Scene& scene)
@@ -53,19 +54,22 @@ void GameSystems::UpdateHealthbar(Scene& scene)
 }
 
 // Will check if a ray hits an object before it hits the player and if it does it will add the object to be rendered transparent
-void GameSystems::CheckLOS(const sm::Vector3& camPos, const sm::Vector3& playerPos, const std::vector<dx::BoundingSphere>& mapColliders)
+void GameSystems::CheckLOS(Game* game)
 {
 	// Shoot a ray from cameras position to players position
 	Ray_t ray;
-	ray.origin = camPos;
-	ray.dir = (playerPos - ray.origin);
+	ray.origin = game->GetCurrentScene()->GetCurrentCamera()->GetPosition();
+	ray.dir = (game->m_players.at(game->m_localPID).GetComponent<comp::Transform>()->position - ray.origin);
 	ray.dir.Normalize(ray.dir);
 
-	for (int i = 0; i < mapColliders.size(); i++)
+	for (int i = 0; i < game->m_LOSColliders.size(); i++)
 	{
-		if (ray.Intersects(mapColliders[i]))
+		if (ray.Intersects(game->m_LOSColliders[i].second))
 		{
-			//LOG_INFO("You are now behind an object and we cannot see you ROFL!");
+			for (int j = 0; j < game->m_models.at(game->m_LOSColliders[i].first).size(); j++)
+			{
+				game->m_models.at(game->m_LOSColliders[i].first)[j].GetComponent<comp::Renderable>()->isSolid = false;
+			}
 			break;
 		}
 	}

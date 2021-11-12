@@ -6,9 +6,9 @@ constexpr int MAX_HEALTH = 100;
 struct Currency
 {
 private:
-	uint32_t m_amount = 0;
 
 public:
+	uint32_t m_amount = 0;
 	uint32_t GetAmount()const
 	{
 		return m_amount;
@@ -225,7 +225,8 @@ enum class GameMsg : uint8_t
 	Game_PlayerAttack,
 	Game_AddNPC,
 	Game_RemoveNPC,
-	Game_PlayerInput
+	Game_PlayerInput,
+	Game_Money
 };
 
 /*

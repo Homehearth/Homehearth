@@ -330,7 +330,7 @@ void Systems::HealingSystem(HeadlessScene& scene, float dt)
 
 }
 
-void Systems::HealthSystem(HeadlessScene& scene, float dt)
+void Systems::HealthSystem(HeadlessScene& scene, float dt, uint32_t& money_ref)
 {
 	//Entity destoys self if health <= 0
 	scene.ForEachComponent<comp::Health>([&](Entity& entity, comp::Health& health)
@@ -343,6 +343,7 @@ void Systems::HealthSystem(HeadlessScene& scene, float dt)
 				if (!entity.GetComponent<comp::Player>())
 				{
 					entity.Destroy();
+					money_ref += 5;
 				}
 
 			}

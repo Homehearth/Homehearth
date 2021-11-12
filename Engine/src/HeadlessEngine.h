@@ -150,7 +150,7 @@ void BasicEngine<SceneType>::Run()
 		if (network_time >= TICK_RATE)
 		{
 			Stats::Get().SetNetworkTime(network_time);
-			UpdateNetwork(TICK_RATE);
+			UpdateNetwork(network_time);
 			network_time = 0.f;
 		}
 		lastFrame = currentFrame;
