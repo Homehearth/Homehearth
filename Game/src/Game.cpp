@@ -4,6 +4,7 @@
 #include "TextField.h"
 #include "SceneHelper.h"
 #include "Healthbar.h"
+#include "MoneyUI.h"
 
 using namespace std::placeholders;
 
@@ -418,6 +419,16 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		//GameSystems::UpdateMainPlayer(this);
 		break;
 
+	}
+	case GameMsg::Game_Money:
+	{
+		msg >> m_money;
+		rtd::MoneyUI* elem = dynamic_cast<rtd::MoneyUI*>(GetScene("Game").GetCollection("MoneyUI")->elements[0].get());
+		if (elem)
+		{
+			elem->SetNewMoney(m_money);
+		}
+		break;
 	}
 	}
 }

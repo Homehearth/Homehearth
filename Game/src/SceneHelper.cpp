@@ -14,6 +14,7 @@
 #include "Scroller.h"
 #include <windows.h>
 #include <shellapi.h>
+#include "MoneyUI.h"
 
 namespace sceneHelp
 {
@@ -303,6 +304,10 @@ namespace sceneHelp
 			game->Shutdown();
 			});
 		scene.Add2DCollection(buttons, "Buttons");
+
+		Collection2D* money = new Collection2D;
+		money->AddElement<rtd::MoneyUI>(draw_text_t(width - (width / 8.0f), D2D1Core::GetDefaultFontSize(), width / 8.0f, D2D1Core::GetDefaultFontSize()));
+		scene.Add2DCollection(money, "MoneyUI");
 	}
 
 	void SetupInLobbyScreen(Game* game)

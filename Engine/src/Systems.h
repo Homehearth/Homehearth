@@ -4,7 +4,7 @@
 
 namespace Systems
 {
-	void CombatSystem(HeadlessScene& scene, float dt);
+	void CombatSystem(HeadlessScene& scene, float dt, uint32_t& money_ref);
 	void MovementSystem(HeadlessScene& scene, float dt);
 	void MovementColliderSystem(HeadlessScene& scene, float dt);
 	void LightSystem(Scene& scene, float dt);

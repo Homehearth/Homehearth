@@ -182,7 +182,7 @@ bool AIAStarSearch(Entity& npc, HeadlessScene& scene)
 	return true;
 }
 
-void Systems::CombatSystem(HeadlessScene& scene, float dt)
+void Systems::CombatSystem(HeadlessScene& scene, float dt, uint32_t& money_ref)
 {
 	PROFILE_FUNCTION();
 
@@ -310,6 +310,7 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 				if (!entity.GetComponent<comp::Player>())
 				{
 					entity.Destroy();
+					money_ref += 5;
 				}
 
 		}
