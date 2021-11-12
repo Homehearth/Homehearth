@@ -4,7 +4,7 @@
 
 namespace Systems
 {
-	void CombatSystem(HeadlessScene& scene, float dt);
+	void CombatSystem(HeadlessScene& scene, float dt, uint32_t& money_ref);
 	void MovementSystem(HeadlessScene& scene, float dt);
 	void MovementColliderSystem(HeadlessScene& scene, float dt);
 	void LightSystem(Scene& scene, float dt);
@@ -12,8 +12,6 @@ namespace Systems
 	template<typename Collider1, typename Collider2>
 	void CheckCollisions(HeadlessScene& scene, float dt);
 	void AISystem(HeadlessScene& scene);
-
-	void UpdatePlayerVisuals(Scene* scene);
 }
 
 template<typename Collider1, typename Collider2>

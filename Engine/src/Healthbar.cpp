@@ -58,9 +58,18 @@ void rtd::Healthbar::SetPosition(const float& x, const float& y)
 {
     m_drawOpts[0].x_pos = x;
     m_drawOpts[0].y_pos = y;
+    m_drawOpts.Swap();
 
-    if (!m_drawOpts.IsSwapped())
-        m_drawOpts.Swap();
+    m_drawOpts[0].height = m_drawOpts[1].height;
+}
+
+void rtd::Healthbar::SetStretch(const float& x, const float& y)
+{
+    m_drawOpts[0].height = y;
+    m_drawOpts[0].width = x;
+    m_foreGround.get()->SetScale(x, y);
+    m_backGround.get()->SetScale(x, y);
+    m_sizeFull = x;
 }
 
 const draw_t rtd::Healthbar::GetOpts() const
