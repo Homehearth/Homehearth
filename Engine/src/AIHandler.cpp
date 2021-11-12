@@ -164,13 +164,6 @@ void AIHandler::CreateNodes(GridSystem* grid)
 			AddNode(currentNode);
 		}
 	}
-	//for (int i = 0; i < m_nodes.size(); i++)
-	//{
-	//	for (int j = 0; j < m_nodes[i].size(); j++)
-	//	{
-	//		LOG_INFO("NODE POS: %d %d", m_nodes[i][j]->position.x, m_nodes[i][j]->position.y)
-	//	}
-	//}
 	//Build Connections
 	LOG_INFO("AIHandler: Connecting Nodes");
 	for (int i = 0; i < grid->GetGridSize().x; i++)
@@ -182,6 +175,7 @@ void AIHandler::CreateNodes(GridSystem* grid)
 			std::vector<Node*> neighbors = GetNeighbors(grid, entityTile);
 			for (auto neighbor : neighbors)
 			{
+
 				m_nodes[i][j]->connections.push_back(neighbor);
 			}
 		}
