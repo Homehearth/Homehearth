@@ -113,16 +113,16 @@ if (GetCurrentScene() == &GetScene("Game") && GetCurrentScene()->GetCurrentCamer
 
 	if (GetCurrentScene() == &GetScene("Game"))
 	{
-		if (m_players.find(m_localPID) != m_players.end())
-		{
-			sm::Vector3 playerPos = m_players.at(m_localPID).GetComponent<comp::Transform>()->position;
+		//if (m_players.find(m_localPID) != m_players.end())
+		//{
+		//	sm::Vector3 playerPos = m_players.at(m_localPID).GetComponent<comp::Transform>()->position;
 
-			Camera* cam = GetScene("Game").GetCurrentCamera();
-			if (cam->GetCameraType()  == CAMERATYPE::PLAY)
-			{
-				GameSystems::CheckLOS(cam->GetPosition(), playerPos, m_LOSColliders);
-			}
-		}
+		//	Camera* cam = GetScene("Game").GetCurrentCamera();
+		//	if (cam->GetCameraType()  == CAMERATYPE::PLAY)
+		//	{
+		//		GameSystems::CheckLOS(this);
+		//	}
+		//}
 		this->UpdateInput();
 	}
 }
@@ -132,6 +132,8 @@ void Game::OnShutdown()
 {
 	m_players.clear();
 	m_mapEntity.Destroy();
+	m_models.clear();
+	m_LOSColliders.clear();
 }
 
 
@@ -314,7 +316,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		msg >> m_gameID;
 		this->SetScene("Loading");
 		sceneHelp::LoadAllAssets(this);
-		sceneHelp::LoadMapColliders(this, &m_LOSColliders);
+		sceneHelp::LoadMapColliders(this);
 
 		LOG_INFO("You are now in lobby: %lu", m_gameID);
 		break;

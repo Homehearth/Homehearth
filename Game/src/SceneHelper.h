@@ -22,6 +22,6 @@ namespace sceneHelp
 	void SetupOptionsScreen(Game* game);
 	void SetupLoadingScene(Game* game);
 
-	bool LoadMapColliders(Game* game, std::vector<dx::BoundingSphere>* outVector);
+	bool LoadMapColliders(Game* game);
 	void LoadAllAssets(Game* game);
 }

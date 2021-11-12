@@ -144,47 +144,6 @@ void Scene::Render()
 	publish<ESceneRender>();
 }
 
-void Scene::RenderTransparency()
-{
-	PROFILE_FUNCTION();
-	thread::RenderThreadHandler::Get().SetObjectsBuffer(&m_renderableTransparent);
-	// Divides up work between threads.
-	const render_instructions_t inst = thread::RenderThreadHandler::Get().Launch(static_cast<int>(m_renderableTransparent[1].size()));
-
-	ID3D11Buffer* const buffers[1] = { m_publicBuffer.GetBuffer() };
-	D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, buffers);
-
-	// Render everything on same thread.
-	if ((inst.start | inst.stop) == 0)
-	{
-		// System that renders Renderable component
-		for (const auto& it : m_renderableTransparent[1])
-		{
-			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
-			if (it.model)
-				it.model->Render(D3D11Core::Get().DeviceContext());
-		}
-	}
-	// Render third part of the scene with immediate context
-	else
-	{
-		// System that renders Renderable component
-		for (int i = inst.start; i < inst.stop; i++)
-		{
-			const auto& it = m_renderableTransparent[1][i];
-			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
-			if (it.model)
-				it.model->Render(D3D11Core::Get().DeviceContext());
-		}
-	}
-
-	// Run any available Command lists from worker threads.
-	thread::RenderThreadHandler::ExecuteCommandLists();
-
-	// Emit event
-	publish<ESceneRender>();
-}
-
 void Scene::RenderDebug()
 {
 	if (m_IsRenderingColliders)
@@ -313,11 +272,6 @@ Lights* Scene::GetLights()
 DoubleBuffer<std::vector<comp::Renderable>>* Scene::GetBuffers()
 {
 	return &m_renderableCopies;
-}
-
-DoubleBuffer<std::vector<comp::Renderable>>* Scene::GetTransparentBuffers()
-{
-	return &m_renderableTransparent;
 }
 
 DoubleBuffer<std::vector<comp::RenderableDebug>>* Scene::GetDebugBuffers()
