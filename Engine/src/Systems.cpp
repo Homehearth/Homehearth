@@ -381,6 +381,7 @@ void Systems::AISystem(HeadlessScene& scene, AIHandler* aiHandler)
 				else
 				{
 					aiHandler->SetClosestNode(npc, transformNPC->position);
+					aiHandler->AStarSearch(scene, entity);
 				}
 				break;
 			case comp::NPC::State::IDLE:

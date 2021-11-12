@@ -25,7 +25,7 @@ Entity AIHandler::FindClosestPlayer(HeadlessScene& scene, sm::Vector3 position, 
 				transformCurrentClosest = npc->currentClosest.GetComponent<comp::Transform>();
 			}
 		});
-
+	LOG_INFO("AIHANDLER: Closest player pos: %lf %lf", transformCurrentClosest->position.x, transformCurrentClosest->position.y);
 	return npc->currentClosest;
 }
 
@@ -39,7 +39,7 @@ Node* AIHandler::FindClosestNode(sm::Vector3 position)
 		{
 			if (currentClosest)
 			{
-				if (sm::Vector3::Distance(currentClosest->position, position) < sm::Vector3::Distance(position, m_nodes[i][j]->position))
+				if (sm::Vector3::Distance(currentClosest->position, position) > sm::Vector3::Distance(position, m_nodes[i][j]->position))
 				{
 					currentClosest = m_nodes[i][j].get();
 				}
@@ -390,7 +390,7 @@ bool AIHandler::ReachedNode(const Entity npc)
 {
 	comp::NPC* npcComp = npc.GetComponent<comp::NPC>();
 	comp::Transform* transformComp = npc.GetComponent<comp::Transform>();
-	if (npcComp->currentNode && sm::Vector3::Distance(transformComp->position, npcComp->currentNode->position) < 10.f)
+	if (npcComp->currentNode && sm::Vector3::Distance(transformComp->position, npcComp->currentNode->position) < 2.f)
 	{
 		return true;
 	}
