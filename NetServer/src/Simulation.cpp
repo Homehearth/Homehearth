@@ -691,33 +691,6 @@ bool Simulation::AddPlayer(uint32_t playerID, const std::string& namePlate)
 	player.AddComponent<comp::NamePlate>()->namePlate = namePlate;
 	
 	ResetPlayer(player);
-	/*
-	comp::Transform* transform = player.AddComponent<comp::Transform>();
-	playerComp->spawnPoint = m_spawnPoints.front();
-	m_spawnPoints.pop();
-	playerComp->runSpeed = 25.f;
-	transform->position = playerComp->spawnPoint;
-	transform->scale = sm::Vector3(1.8f, 1.8f, 1.8f);
-
-	player.AddComponent<comp::Velocity>();
-	player.AddComponent<comp::NamePlate>()->namePlate = namePlate;
-
-	player.AddComponent<comp::MeshName>()->name = "Knight.fbx";
-	player.AddComponent<comp::AnimatorName>()->name = "Knight.anim";
-
-	comp::CombatStats* combatStats = player.AddComponent<comp::CombatStats>();
-	combatStats->cooldown = 0.4f;
-	combatStats->attackDamage = 40.f;
-	combatStats->isRanged = false;
-	combatStats->lifetime = 0.1f;
-	
-	player.AddComponent<comp::Health>();
-	player.AddComponent<comp::BoundingOrientedBox>()->Extents = { 2.0f,2.0f,2.0f };
-	
-	//Collision will handle this entity as a dynamic one
-	player.AddComponent<comp::Tag<TagType::DYNAMIC>>();
-	// Network component will make sure the new entity is sent
-	*/
 
 	m_players[playerID] = player;
 
@@ -832,7 +805,6 @@ void Simulation::SendSnapshot()
 
 		std::bitset<ecs::Component::COMPONENT_MAX> compMask;
 		compMask.set(ecs::Component::TRANSFORM);
-		//compMask.set(ecs::Component::HEALTH);
 #if DEBUG_SNAPSHOT
 		compMask.set(ecs::Component::BOUNDING_ORIENTED_BOX);
 #endif

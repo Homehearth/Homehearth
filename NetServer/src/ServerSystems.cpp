@@ -248,25 +248,6 @@ void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& sce
 		{
 			if (p.state == comp::Player::State::ATTACK)
 			{
-				/*
-				Plane_t plane;
-				plane.normal = sm::Vector3(0, 1, 0);
-				plane.point = t.position;
-
-				sm::Vector3 point;
-				sm::Vector3 targetDir(1, 0, 0);
-
-				if (a.targetRay.Intersects(plane, &point))
-				{
-					targetDir = point - t.position;
-					targetDir.Normalize(targetDir);
-				}
-				else {
-					LOG_WARNING("Mouse click ray missed walking plane. Should not happen...");
-				}
-				a.targetDir = targetDir;
-				p.mousePoint = targetDir;
-				*/
 				p.fowardDir = p.mousePoint - t.position;
 				p.fowardDir.Normalize();
 				v.vel *= 0.2f;
