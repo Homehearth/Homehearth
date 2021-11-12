@@ -213,7 +213,7 @@ void Simulation::ResetPlayer(Entity player)
 	player.AddComponent<comp::MeshName>()->name = "Knight.fbx";
 	player.AddComponent<comp::AnimatorName>()->name = "Knight.anim";
 
-	comp::CombatStats* combatStats = player.AddComponent<comp::CombatStats>();
+	comp::AttackAbility* combatStats = player.AddComponent<comp::AttackAbility>();
 	
 
 	// only if Melee
@@ -224,8 +224,8 @@ void Simulation::ResetPlayer(Entity player)
 		combatStats->isRanged = false;
 		combatStats->lifetime = 0.1f;
 
-		playerComp->primaryAbilty = entt::resolve<comp::CombatStats>();
-		playerComp->secondaryAbilty = entt::resolve<comp::CombatStats>();
+		playerComp->primaryAbilty = entt::resolve<comp::AttackAbility>();
+		playerComp->secondaryAbilty = entt::resolve<comp::AttackAbility>();
 
 	}
 	else if(playerComp->classType == comp::Player::Class::MAGE) 
@@ -237,8 +237,15 @@ void Simulation::ResetPlayer(Entity player)
 		combatStats->projectileSpeed = 40.f;
 		combatStats->attackRange = 2.0f;
 
-		playerComp->primaryAbilty = entt::resolve<comp::CombatStats>();
-		playerComp->secondaryAbilty = entt::resolve<comp::CombatStats>();
+		comp::HealAbility* healAbility = player.AddComponent<comp::HealAbility>();
+		healAbility->cooldown = 5.0f;
+		healAbility->delay = 0.0f;
+		healAbility->healAmount = 50.f;
+		healAbility->lifetime = 1.f;
+		healAbility->range = 50.f;
+
+		playerComp->primaryAbilty = entt::resolve<comp::AttackAbility>();
+		playerComp->secondaryAbilty = entt::resolve<comp::HealAbility>();
 
 
 		player.AddComponent<comp::MeshName>()->name = "Monster.fbx";
@@ -415,7 +422,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 						
 						if (ecs::UseAbility(e, p->primaryAbilty, p->mousePoint))
 						{
-							LOG_INFO("Primary attack");
+						
 						}
 					
 					}
@@ -425,7 +432,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 
 						if (ecs::UseAbility(e, p->secondaryAbilty, p->mousePoint))
 						{
-							LOG_INFO("Secondary attack");
+							
 						}
 					}
 
@@ -444,8 +451,13 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 				Systems::MovementSystem(scene, e.dt);
 				Systems::MovementColliderSystem(scene, e.dt);
 				Systems::AISystem(scene);
+
 				Systems::UpdateAbilities(scene, e.dt);
 				Systems::CombatSystem(scene, e.dt);
+				Systems::HealingSystem(scene, e.dt);
+
+				Systems::HealthSystem(scene, e.dt);
+				Systems::SelfDestructSystem(scene, e.dt);
 				{
 					PROFILE_SCOPE("Collision Box/Box");
 					Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(scene, e.dt);

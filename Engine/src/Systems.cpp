@@ -217,14 +217,13 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 	PROFILE_FUNCTION();
 	
 	// For Each entity that can attack.
-	scene.ForEachComponent<comp::CombatStats, comp::Transform>([&](Entity entity, comp::CombatStats& stats, comp::Transform& transform)
+	scene.ForEachComponent<comp::AttackAbility, comp::Transform>([&](Entity entity, comp::AttackAbility& stats, comp::Transform& transform)
 		{
 			//
 			// attack LOGIC
 			//
-			if (stats.isUsing && stats.delayTimer <= 0.f)
+			if (ecs::IsUsing(&stats))
 			{
-
 				//Creates an entity that's used to check collision if an attack lands.
 				Entity attackCollider = scene.CreateEntity();
 				comp::Transform* t = attackCollider.AddComponent<comp::Transform>();
@@ -268,7 +267,7 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 					
 						
 						comp::Health* otherHealth = other.GetComponent<comp::Health>();
-						comp::CombatStats* stats = entity.GetComponent<comp::CombatStats>();
+						comp::AttackAbility* stats = entity.GetComponent<comp::AttackAbility>();
 
 						if (otherHealth)
 						{
@@ -311,14 +310,29 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 						}
 					});
 
-			stats.cooldownTimer = stats.cooldown;
-			stats.isUsing = false;
 		}
 
 	});
 
 
-	//Health System
+}
+
+void Systems::HealingSystem(HeadlessScene& scene, float dt)
+{
+	// HealAbility system
+	scene.ForEachComponent<comp::HealAbility>([](comp::HealAbility& ability)
+		{
+			if (ecs::IsUsing(&ability))
+			{
+				LOG_INFO("Used healing ability");
+			}
+		});
+
+}
+
+void Systems::HealthSystem(HeadlessScene& scene, float dt)
+{
+	//Entity destoys self if health <= 0
 	scene.ForEachComponent<comp::Health>([&](Entity& entity, comp::Health& health)
 		{
 			//Check if something should be dead, and if so set isAlive to false
@@ -331,10 +345,13 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 					entity.Destroy();
 				}
 
-		}
-	});
+			}
+		});
+}
 
-	//Projectile Life System
+void Systems::SelfDestructSystem(HeadlessScene& scene, float dt)
+{
+	//Entity destroys self after set time
 	scene.ForEachComponent<comp::SelfDestruct>([&](Entity& ent, comp::SelfDestruct& s)
 		{
 			s.lifeTime -= dt;
@@ -498,7 +515,7 @@ void Systems::AISystem(HeadlessScene& scene)
 
 			else if (sm::Vector3::Distance(transformNPC->position, transformCurrentClosestPlayer->position) <= npc.attackRange)
 			{
-				comp::CombatStats* stats = entity.GetComponent<comp::CombatStats>();
+				comp::AttackAbility* stats = entity.GetComponent<comp::AttackAbility>();
 
 				stats->targetDir = transformCurrentClosestPlayer->position - transformNPC->position;
 				stats->targetDir.Normalize();
@@ -512,7 +529,7 @@ void Systems::AISystem(HeadlessScene& scene)
 
 		if (sm::Vector3::Distance(transformNPC->position, transformCurrentClosestPlayer->position) <= npc.attackRange)
 		{
-			comp::CombatStats* stats = entity.GetComponent<comp::CombatStats>();
+			comp::AttackAbility* stats = entity.GetComponent<comp::AttackAbility>();
 			if (stats)
 			{
 				if (ecs::UseAbility(stats, transformCurrentClosestPlayer->position))

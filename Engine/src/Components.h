@@ -219,26 +219,40 @@ namespace ecs
 
 		struct IAbility
 		{
+			// set this for cooldown
 			float cooldown = 1.5f;
+			// do not touch
 			float cooldownTimer = 0.f;
 			
+			// set this for delay before ability is actually used after the cooldown is done and the ecs::UseAbility has bee called
 			float delay = 0.1f;
+			// do not touch
 			float delayTimer = 0.f;
-
+			
+			// lifetime of the ability, for instance lifetime of any created collider
 			float lifetime = 5.f;
 
+			// do not touch
 			bool isReady = false;
+			// do not touch
 			bool isUsing = false;
 
+			// set to be target for ability
 			sm::Vector3 targetPoint;
 		};
 
-		struct CombatStats : public IAbility
+		struct AttackAbility : public IAbility
 		{
 			float attackDamage = 5.f;
 			float attackRange = 10.0f;
 			bool isRanged = false;
 			float projectileSpeed = 10.f;
+		};
+
+		struct HealAbility : public IAbility
+		{
+			float healAmount = 40.f;
+			float range = 50.f;
 		};
 
 		struct SelfDestruct
@@ -278,9 +292,26 @@ namespace ecs
 			.func<&Entity::GetComponentRef<T>, entt::as_ref_t>("get"_hs);
 	}
 
+	/**
+	*	Warning: This function will modify the component
+	*	If this ability is ready to be used, meaning isReady == true.
+	*	If returns true the ability is set to being used, so it only returns true once with a interval of cooldown.
+	*/
 	bool UseAbility(component::IAbility* abilityComponent, sm::Vector3 targetPoint);
+	/**
+	*	Warning: This function will modify the component
+	*	If this ability is ready to be used, meaning isReady == true.
+	*	If returns true the ability is set to being used, so it only returns true once with a interval of cooldown.
+	*/
 	bool UseAbility(Entity entity, entt::meta_type abilityType, sm::Vector3 targetPoint);
 
+	/**
+	*	Warning: This function will modify the component
+	*	Check if this ability is used, meaning isUsing == true and delayTimer <= 0.
+	*	If returns true the ability is reset, so it only returns true once after ecs::UseAbility is called on this component.
+	*/
+	bool IsUsing(component::IAbility* abilityComponent);
+	
 
 	component::TemporaryPhysics::Force GetGravityForce();
 

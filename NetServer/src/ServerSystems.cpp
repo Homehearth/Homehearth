@@ -23,7 +23,7 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 	comp::MeshName* meshName = entity.AddComponent<comp::MeshName>();
 	comp::BoundingOrientedBox* obb = entity.AddComponent<comp::BoundingOrientedBox>();
 	comp::Velocity* velocity = entity.AddComponent<comp::Velocity>();
-	comp::CombatStats* combatStats = entity.AddComponent<comp::CombatStats>();
+	comp::AttackAbility* combatStats = entity.AddComponent<comp::AttackAbility>();
 
 	switch (type)
 	{
@@ -244,7 +244,7 @@ void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& sce
 			}
 		});
 
-	scene.ForEachComponent<comp::Player, comp::CombatStats, comp::Velocity, comp::Transform>([&](comp::Player& p, comp::CombatStats& a, comp::Velocity& v, comp::Transform& t)
+	scene.ForEachComponent<comp::Player, comp::AttackAbility, comp::Velocity, comp::Transform>([&](comp::Player& p, comp::AttackAbility& a, comp::Velocity& v, comp::Transform& t)
 		{
 			if (p.state == comp::Player::State::ATTACK)
 			{
@@ -304,7 +304,7 @@ void ServerSystems::CheckGameOver(Simulation* simulation, HeadlessScene& scene)
 	bool gameOver = true;
 	
 	//Check if all players is dead
-	scene.ForEachComponent<comp::Player, comp::CombatStats>([&](comp::Player& p, comp::CombatStats& a)
+	scene.ForEachComponent<comp::Player, comp::AttackAbility>([&](comp::Player& p, comp::AttackAbility& a)
 		{
 			if (p.state != comp::Player::State::DEAD)
 			{

@@ -73,7 +73,8 @@ bool ServerGame::OnStartup()
 	m_inputThread = std::thread(&ServerGame::InputThread, this);
 
 	
-	ecs::RegisterAsAbility<comp::CombatStats>();
+	ecs::RegisterAsAbility<comp::AttackAbility>();
+	ecs::RegisterAsAbility<comp::HealAbility>();
 	// more abilities ...
 
 	LoadMapColliders("AllBounds.fbx");

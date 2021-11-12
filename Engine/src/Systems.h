@@ -4,8 +4,14 @@
 
 namespace Systems
 {
+	// abilities
 	void UpdateAbilities(HeadlessScene& scene, float dt);
 	void CombatSystem(HeadlessScene& scene, float dt);
+	void HealingSystem(HeadlessScene& scene, float dt);
+
+	void HealthSystem(HeadlessScene& scene, float dt);
+	void SelfDestructSystem(HeadlessScene& scene, float dt);
+
 	void MovementSystem(HeadlessScene& scene, float dt);
 	void MovementColliderSystem(HeadlessScene& scene, float dt);
 	void LightSystem(Scene& scene, float dt);

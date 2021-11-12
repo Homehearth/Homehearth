@@ -67,8 +67,14 @@ namespace ecs {
     bool UseAbility(Entity entity, entt::meta_type abilityType, sm::Vector3 targetPoint)
     {
         using namespace entt::literals;
-
-        auto instance = abilityType.func("get"_hs).invoke({}, entity);
+        
+        auto func = abilityType.func("get"_hs);
+        if (!func)
+        {
+            LOG_WARNING("Could not use ability, did you register component as ability with ecs::RegisterAsAbility?");
+            return false;
+        }
+        auto instance = func.invoke({}, entity);
         component::IAbility* ability = instance.try_cast<component::IAbility>();
         if (!ability)
         {
@@ -77,6 +83,18 @@ namespace ecs {
         }
         return UseAbility(ability, targetPoint);
     }
+
+    bool IsUsing(component::IAbility* abilityComponent)
+    {
+        if (abilityComponent->isUsing && abilityComponent->delayTimer <= 0.f)
+        {
+            abilityComponent->cooldownTimer = abilityComponent->cooldown;
+            abilityComponent->isUsing = false;
+            return true;
+        }
+        return false;
+    }
+
 
     component::TemporaryPhysics::Force GetGravityForce()
     {
