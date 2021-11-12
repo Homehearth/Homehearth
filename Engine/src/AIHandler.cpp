@@ -250,6 +250,7 @@ void AIHandler::AStarSearch(HeadlessScene& scene, Entity npc)
 					neighbor->f = tempF;
 					neighbor->g = tempG;
 					neighbor->h = tempH;
+					openList.push_back(neighbor);
 				}
 
 			}
