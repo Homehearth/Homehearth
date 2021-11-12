@@ -7,6 +7,7 @@ ServerGame::ServerGame()
 	:m_server(std::bind(&ServerGame::CheckIncoming, this, _1))
 {
 	m_nGameID = 0;
+	SetUpdateRate(60.f);
 }
 
 ServerGame::~ServerGame()
@@ -90,13 +91,13 @@ void ServerGame::OnShutdown()
 void ServerGame::UpdateNetwork(float deltaTime)
 {
 	PROFILE_FUNCTION();
-	static float timer = 0.0f;
-	timer += deltaTime;
-	if (timer >= 1.0f)
-	{
-		LOG_INFO("Update: %f", 1.f / deltaTime);
-		timer = 0.0f;
-	}
+	//static float timer = 0.0f;
+	//timer += deltaTime;
+	//if (timer >= 1.0f)
+	//{
+	//	LOG_INFO("Update: %f", 1.f / deltaTime);
+	//	timer = 0.0f;
+	//}
 
 	// Check incoming messages
 	this->m_server.Update();

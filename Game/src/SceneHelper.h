@@ -1,15 +1,11 @@
 #pragma once
-#pragma once
-#include "EnginePCH.h"
-#include "GameSystems.h"
 #include "Lights.h"
-#include "Game.h"
 
-#include "Tags.h"
+// Forward declaration to not get circular include
+class Game;
 
 namespace sceneHelp
 {
-	Entity CreatePlayerEntity(HeadlessScene& scene, uint32_t playerID);
 	Entity CreateLightEntity(Scene& scene, sm::Vector4 pos, sm::Vector4 dir, sm::Vector4 col, float range, TypeLight type, UINT enabled);
 
 	void CreateMainMenuScene(Game* game);
@@ -25,4 +21,7 @@ namespace sceneHelp
 	void SetupInGameScreen(Game* game);
 	void SetupOptionsScreen(Game* game);
 	void SetupLoadingScene(Game* game);
+
+	bool LoadMapColliders(Game* game, std::vector<dx::BoundingSphere>* outVector);
+	void LoadAllAssets(Game* game);
 }

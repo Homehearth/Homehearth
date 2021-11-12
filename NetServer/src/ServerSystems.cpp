@@ -315,6 +315,5 @@ void ServerSystems::CheckGameOver(Simulation* simulation, HeadlessScene& scene)
 	if (gameOver)
 	{
 		simulation->SetLobbyScene();
-		
 	}
 }

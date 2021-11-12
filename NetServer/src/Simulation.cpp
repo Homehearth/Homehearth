@@ -321,6 +321,7 @@ bool Simulation::LeaveLobby(uint32_t playerID, uint32_t gameID)
 {
 	if (!this->RemovePlayer(playerID))
 	{
+		LOG_INFO("Could not remove player!");
 		return false;
 	}
 
@@ -387,11 +388,13 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 					// update velocity
 					sm::Vector3 vel = sm::Vector3(static_cast<float>(input.axisHorizontal), 0, static_cast<float>(input.axisVertical));
 					vel.Normalize();
+
 					sm::Vector3 cameraToPlayer = e.GetComponent<comp::Transform>()->position - input.mouseRay.origin;
 					cameraToPlayer.y = 0;
 					cameraToPlayer.Normalize();
 					float targetRotation = atan2(-cameraToPlayer.x, -cameraToPlayer.z);
 					vel = sm::Vector3::TransformNormal(vel, sm::Matrix::CreateRotationY(targetRotation));
+
 					vel *= p->runSpeed;
 					e.GetComponent<comp::Velocity>()->vel = vel;
 					
@@ -467,11 +470,11 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 
 		});
 
-	
+
 	m_pGameScene->GetRegistry()->on_construct<comp::Network>().connect<&Simulation::OnNetworkEntityCreate>(this);
 	m_pGameScene->GetRegistry()->on_destroy<comp::Network>().connect<&Simulation::OnNetworkEntityDestroy>(this);
 	m_pGameScene->GetRegistry()->on_update<comp::Network>().connect<&Simulation::OnNetworkEntityUpdated>(this);
-	m_pGameScene->on<EComponentUpdated>([&](const EComponentUpdated& e, HeadlessScene& scene) 
+	m_pGameScene->on<EComponentUpdated>([&](const EComponentUpdated& e, HeadlessScene& scene)
 		{
 			OnComponentUpdated(e.entity, e.component);
 		});
@@ -705,8 +708,8 @@ bool Simulation::RemovePlayer(uint32_t playerID)
 	if (m_playerInputs.find(player) != m_playerInputs.end())
 	{
 		m_playerInputs.erase(player);
-		m_spawnPoints.push(player.GetComponent<comp::Player>()->spawnPoint);
 	}
+	m_spawnPoints.push(player.GetComponent<comp::Player>()->spawnPoint);
 	m_players.erase(playerID);
 
 	if (!player.Destroy())
@@ -726,8 +729,8 @@ std::unordered_map<uint32_t, Entity>::iterator Simulation::RemovePlayer(std::uno
 	if (m_playerInputs.find(player) != m_playerInputs.end())
 	{
 		m_playerInputs.erase(player);
-		m_spawnPoints.push(player.GetComponent<comp::Player>()->spawnPoint);
 	}
+	m_spawnPoints.push(player.GetComponent<comp::Player>()->spawnPoint);
 	auto it = m_players.erase(playerIterator);
 
 	if (!player.Destroy())
@@ -1048,16 +1051,6 @@ void Simulation::ResetGameScene()
 		Broadcast(msg);
 	}
 
-	while (!m_spawnPoints.empty())
-	{
-		m_spawnPoints.pop();
-	}
-
-	m_spawnPoints.push(sm::Vector3(220.f, 0, -353.f));
-	m_spawnPoints.push(sm::Vector3(197.f, 0, -325.f));
-	m_spawnPoints.push(sm::Vector3(222.f, 0, -300.f));
-	m_spawnPoints.push(sm::Vector3(247.f, 0, -325.f));
-
 	LOG_INFO("%lld", m_pGameScene->GetRegistry()->size());
 	CreateWaves();
 }
@@ -1086,7 +1079,7 @@ void Simulation::SendEntities(const std::vector<Entity>& entities, GameMsg msgID
 	uint32_t sent = 0;
 	message<GameMsg> msg;
 	msg.header.id = msgID;
-	
+
 	for (size_t i = 0; i < entities.size(); i++)
 	{
 		if (!entities[i].IsNull())

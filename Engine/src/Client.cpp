@@ -3,6 +3,8 @@
 
 void Client::OnDisconnect()
 {
+	m_qMessagesIn.clear();
+	m_qPrioMessagesIn.clear();
 	this->onDisconnectHandler();
 }
 

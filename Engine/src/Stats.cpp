@@ -7,9 +7,8 @@ Stats::Stats()
 	m_updateTime	= 0.0f;
 	m_networkTime	= 0.0f;
 
-	m_framerate		= 140.0f;
-	//High updaterate can cause a lot of stuttering
-	m_updaterate	= m_framerate;
+	m_framerate		= 144.0f;
+	m_updaterate	= 144.0f;
 	m_tickrate		= 60.0f;
 }
 
@@ -26,6 +25,10 @@ const float& Stats::GetFrameTime() const
 void Stats::SetUpdateTime(const float& ut)
 {
 	m_updateTime = ut;
+}
+void Stats::SetUpdateRate(const float& rate)
+{
+	m_updaterate = rate;
 }
 const float& Stats::GetUpdateTime() const
 {

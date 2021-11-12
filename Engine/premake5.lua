@@ -46,7 +46,7 @@ project "Engine"
             ["src/Engine/GamePlay"] = { "**GridSystem.*", "**CollisionSystem.*" },
             ["src/Engine/Thread"] = { "**multi_thread_manager.*", "**ThreadSyncer.*", "**RenderThreadHandler.*"},
 
-        ["src/Engine/Utility"] = { "**Timer.*", "**Profiler.*", "**Logger.*", "**Stats.*" },
+        ["src/Engine/Utility"] = { "**Timer.*", "**Profiler.*", "**Logger.*", "**Stats.*", "**ModelIdentifier.*" },
 		["src/Engine/Elements"] = {"**Canvas.*", "**Picture.*", "**Border.*", "**Button.*", "**Text.*", "**TextField.*", "**Slider.*", "**Healthbar.*", "**Scroller.*"},
         
         ["src/Engine"] = {  },
