@@ -6,8 +6,7 @@
 
 
 void TextureEffectPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
-{
-    
+{ 
     // INPUT ASSEMBLY.
     {
         DC->IASetInputLayout(PM->m_positionOnlyInputLayout.Get());
@@ -27,14 +26,14 @@ void TextureEffectPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceCont
     {
         DC->PSSetConstantBuffers(0, 0, nullptr);
         DC->VSSetConstantBuffers(0, 0, nullptr);
-        DC->VSSetConstantBuffers(0, 0, nullptr);
+        //DC->VSSetConstantBuffers(6, 1, PM-);
         DC->CSSetConstantBuffers(3, 1, PM->m_textureEffectConstantBuffer.GetAddressOf());
     }
 
     // SHADER RESOURCES.
     {
-        DC->PSSetShaderResources(0, 0, nullptr);
-        DC->VSSetShaderResources(0, 0, nullptr);
+        DC->VSSetShaderResources(1, 20, PM->m_SRV_TextureEffectBlendMap.GetAddressOf());
+        //DC->PSSetShaderResources(0, 0, nullptr);
         DC->PSSetSamplers(0, 1, PM->m_pointSamplerState.GetAddressOf());
     }
 
@@ -44,6 +43,9 @@ void TextureEffectPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceCont
         DC->OMSetBlendState(PM->m_blendStatepOpaque.Get(), nullptr, 0xFFFFFFFF);
         DC->OMSetDepthStencilState(PM->m_depthStencilStateLess.Get(), 1);
     }
+
+    //dispatch here
+
 }
 
 void TextureEffectPass::Render(Scene* pScene)
@@ -55,8 +57,8 @@ void TextureEffectPass::Render(Scene* pScene)
 void TextureEffectPass::PostRender(ID3D11DeviceContext* pDeviceContext)
 {
     // Update constantbuffer here!
-    m_CBuffer.direction = 45;
-    m_CBuffer.radius = 10;
+    m_CBuffer.amplitude = 0.05f;
+    m_CBuffer.frequency = 25.f;
     D3D11Core::Get().DeviceContext()->UpdateSubresource(PM->m_textureEffectConstantBuffer.Get(), 0, nullptr, &m_CBuffer, 0, 0);
 }
 

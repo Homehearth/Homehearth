@@ -1,5 +1,14 @@
 #include "Common.hlsli"
-float4 main(float4 pos : POSITION) : SV_POSITION
+
+VertexOut main(VertexIn input)
 {
-    return pos;
+    VertexOut output;
+    
+    output.pos       = input.pos;
+    output.normal    = input.normal;
+    output.uv        = input.uv;
+    output.tangent   = input.tangent;
+    output.biTangent = input.biTangent;
+    
+    return output;
 }

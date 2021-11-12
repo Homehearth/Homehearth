@@ -25,10 +25,30 @@
     
     UV displacement:
     https://gamedevelopment.tutsplus.com/tutorials/using-displacement-shaders-to-create-an-underwater-effect--cms-27191
+
+How do do shit: 
+    UV:s 
+    - Structured buffer for reading. 
+        - Sno vertexbuffern från någonstanns och skicka in den som en shader resours view och regestrera den som en structured buffer.
+
+    Textures
+    - Water normal map
+    - Water map
+    - Ground map
+    - ground edge map.
+        - Skicka in dessa som Unordered Acces Views.
+
+    Delta time
+    - cbuffer
+        - Updateras med update subresource.
+        - Skickas in som en constantbuffer.
+
+    Mina andra variabler.
+    - hårdkodas först. 
 */
 
 [numthreads(1, 1, 1)]
-void main( uint3 DTid : SV_DispatchThreadID )
+void main( ComputeShaderIn input)
 {
     
     
