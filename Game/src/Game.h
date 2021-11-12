@@ -11,6 +11,7 @@ private:
 	std::vector<comp::Transform> predictedPositions;
 	std::unordered_map<uint32_t, Entity> m_gameEntities;
 	std::vector<dx::BoundingSphere> m_LOSColliders;
+	std::unordered_map<uint32_t, Entity> m_players;
 
 	GridSystem m_grid;
 	uint32_t m_waveTimer;
@@ -43,7 +44,6 @@ public:
 	uint32_t m_gameID;
 	std::string m_playerName;
 	std::unordered_map<ModelID, std::vector<comp::Renderable>> m_models;
-	std::unordered_map<uint32_t, Entity> m_players;
 
 	float m_masterVolume = 5.0f;
 
