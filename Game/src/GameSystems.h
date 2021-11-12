@@ -1,5 +1,6 @@
 #pragma once
 #include "EnginePCH.h"
+#include "Game.h"
 
 namespace GameSystems
 {
@@ -7,4 +8,7 @@ namespace GameSystems
 	void RenderIsCollidingSystem(Scene& scene);
 	void UpdateHealthbar(Scene& scene);
 	void CheckLOS(const sm::Vector3& camPos, const sm::Vector3& playerPos, const std::vector<dx::BoundingSphere>& mapColliders);
+
+	void UpdatePlayerVisuals(Game* game);
+	void UpdateMainPlayer(Game* game);
 }

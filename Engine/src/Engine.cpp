@@ -28,7 +28,7 @@ void Engine::Startup()
 
 	//Get heighest possible 16:9 resolution
 	//90% of the height
-	config.height = static_cast<UINT>(GetSystemMetrics(SM_CYSCREEN) * 0.90f);
+	config.height = static_cast<UINT>(GetSystemMetrics(SM_CYSCREEN) * 0.50f);
 	float aspectRatio = 16.0f / 9.0f;
 	config.width = static_cast<UINT>(aspectRatio * config.height);
 
@@ -470,6 +470,7 @@ void Engine::Render()
 			Render 3D
 		*/
 		m_renderer.ClearFrame();
+
 		m_renderer.Render(GetCurrentScene());
 	}
 
