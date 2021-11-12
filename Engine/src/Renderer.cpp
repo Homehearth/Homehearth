@@ -12,34 +12,47 @@ void Renderer::Initialize(Window* pWindow)
 	m_pipelineManager.Initialize(pWindow);
 	m_d3d11 = &D3D11Core::Get();
 
-	/*
-		Had to disable the depth pass to get alpha testing to work correctly... -Filip
-	*/
+	AddPass(&m_basePass);		// solo pass.
+
 	AddPass(&m_depthPass);		// 1
-	AddPass(&m_basePass);		// 2
-	AddPass(&m_animPass);		// 3
+	AddPass(&m_frustumPass);	// 2
+	AddPass(&m_cullingPass);	// 3
+	AddPass(&m_opaqPass);		// 4
+	AddPass(&m_transPass);		// 5
+	AddPass(&m_animPass);		// 6
+
+	m_basePass.SetEnable(true);	// solo pass
 
 	m_depthPass.SetEnable(false);
-	m_basePass.SetEnable(true);
+	m_frustumPass.SetEnable(true);
+	m_cullingPass.SetEnable(false);
+	m_opaqPass.SetEnable(false);
+	m_transPass.SetEnable(false);
 	m_animPass.SetEnable(true);
 
 #ifdef _DEBUG
-	AddPass(&m_debugPass);  // 4
+	AddPass(&m_debugPass);
     m_debugPass.SetEnable(true);
 #endif
 
 	LOG_INFO("Number of rendering passes: %d", static_cast<int>(m_passes.size()));
 
-	for (auto& pass : m_passes)
+	for (const auto& pass : m_passes)
 	{
 		pass->Initialize(m_d3d11->DeviceContext(), &m_pipelineManager);
 	}
+
+	if(!m_frustumPass.UpdateFrustums())
+	{
+		LOG_WARNING("Failed to initialize FrustumPass.")
+	}
+
 }
 
 void Renderer::ClearFrame()
 {
     // Clear the back buffer.
-    const float m_clearColor[4] = { 0.5f, 0.5f, 0.5f, 1.0f };
+    constexpr float m_clearColor[4] = { 0.5f, 0.5f, 0.5f, 1.0f };
     m_d3d11->DeviceContext()->ClearRenderTargetView(m_pipelineManager.m_backBuffer.Get(), m_clearColor);
     m_d3d11->DeviceContext()->ClearDepthStencilView(m_pipelineManager.m_depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
     m_d3d11->DeviceContext()->ClearDepthStencilView(m_pipelineManager.m_debugDepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
@@ -75,6 +88,17 @@ void Renderer::Render(Scene* pScene)
 	}
 }
 
+void Renderer::OnWindowResize()
+{
+	// Update frustums.
+	const bool enable = m_frustumPass.UpdateFrustums();
+	if(!enable)
+	{
+		LOG_WARNING("Failed to update grid frustums on window resize.")
+	}
+	m_frustumPass.SetEnable(enable);
+}
+
 IRenderPass* Renderer::GetCurrentPass() const
 {
 	return m_passes[m_currentPass];
@@ -88,5 +112,18 @@ void Renderer::AddPass(IRenderPass* pass)
 void Renderer::UpdatePerFrame(Camera* pCam)
 {
 	// Update Camera constant buffer.
-	m_d3d11->DeviceContext()->UpdateSubresource(pCam->m_viewConstantBuffer.Get(), 0, nullptr, pCam->GetCameraMatrixes(), 0, 0);
+	m_d3d11->DeviceContext()->UpdateSubresource(pCam->m_viewConstantBuffer.Get(), 0,
+		nullptr,pCam->GetCameraMatrixes(), 0, 0);
+
+	// todo: if(!m_frustumPass.IsEnabled())
+	{
+		// Update ScreenToViewParams.
+		screen_view_params_t screenToView;
+		screenToView.screenDimensions.x = max(m_pipelineManager.m_viewport.Width, 1u);
+		screenToView.screenDimensions.y = max(m_pipelineManager.m_viewport.Height, 1u);
+		dx::XMStoreFloat4x4(&screenToView.inverseProjection,
+			dx::XMMatrixTranspose(dx::XMMatrixInverse(nullptr, pCam->GetProjection())));
+
+		m_pipelineManager.m_screenToViewParamsCB.SetData(m_d3d11->DeviceContext(), screenToView);
+	}
 }

@@ -179,7 +179,7 @@ struct dispatch_params_t
 ALIGN16
 struct screen_view_params_t
 {
-	sm::Vector4 inverseProjection;
+	sm::Matrix inverseProjection;
 	sm::Vector2 screenDimensions;
 };
 

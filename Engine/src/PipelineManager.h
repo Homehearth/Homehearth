@@ -63,9 +63,15 @@ public:
 	D3D11_VIEWPORT					m_viewport;
 
 	
-	// View space frustums for the grid cells used in ForwardPlus rendering.
-	ComPtr<ID3D11Buffer>				m_gridFrustum;
-	ComPtr<ID3D11ShaderResourceView>	m_gridFrustumSRV;
+	// Forward+ Resources.
+	std::vector<frustum_t> m_frustums_data;
+	ComPtr<ID3D11Buffer> m_frustums_buffer;
+	ComPtr<ID3D11ShaderResourceView> m_inFrustumsSRV;	// Precomputed frustums used in LightCulling_cs.
+	ComPtr<ID3D11UnorderedAccessView> m_outFrustumsUAV;	// Used in ComputerFrustums_cs to store computed frustums.
+
+	DirectX::ConstantBuffer<dispatch_params_t> m_dispatchParamsCB;
+	DirectX::ConstantBuffer<screen_view_params_t> m_screenToViewParamsCB;
+
 private:
 	// INITIALIZE METHODS.
 	

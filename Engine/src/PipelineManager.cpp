@@ -73,6 +73,13 @@ void PipelineManager::Initialize(Window* pWindow, ID3D11DeviceContext* context)
         LOG_ERROR("failed creating InputLayouts.");
     }
 
+    // Initialize Forward+ related resources
+	{
+        m_dispatchParamsCB.Create(m_d3d11->Device());
+        m_screenToViewParamsCB.Create(m_d3d11->Device());
+    }
+
+
     // Set Viewport.
     this->SetViewport();
 }

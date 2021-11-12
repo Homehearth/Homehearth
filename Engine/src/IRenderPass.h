@@ -18,10 +18,11 @@ private:
 
 protected:
 	Lights* m_lights;
+
 public:
 	virtual ~IRenderPass() = default;
 	
-	virtual void Initialize(ID3D11DeviceContext* pContextDevice, PipelineManager* pPipelineManager)
+	void Initialize(ID3D11DeviceContext* pContextDevice, PipelineManager* pPipelineManager)
 	{
 		m_contextDevice = pContextDevice;
 		m_pipelineManager = pPipelineManager;
