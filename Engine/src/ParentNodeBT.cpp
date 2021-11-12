@@ -7,7 +7,13 @@ BT::ParentNode::ParentNode(std::string& name)
 
 }
 
-BT::ParentNode::~ParentNode() = default;
+BT::ParentNode::~ParentNode()
+{
+	for (auto child : m_childrenNodes)
+	{
+		delete child;
+	}
+}
 
 void BT::ParentNode::AddChild(TreeNode* child)
 {

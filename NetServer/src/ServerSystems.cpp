@@ -337,8 +337,16 @@ void ServerSystems::CheckGameOver(Simulation* simulation, HeadlessScene& scene)
 
 void ServerSystems::TickBTSystem(Simulation* simulation, HeadlessScene& scene)
 {
-	scene.ForEachComponent<comp::BehaviorTree>([&](comp::BehaviorTree& bt)
+	scene.ForEachComponent<comp::BehaviorTree>([&](Entity entity,comp::BehaviorTree& bt)
 		{
-			bt.root->Tick();
+			if(bt.currentNode != nullptr)
+			{
+				bt.currentNode->Tick();
+			}
+			else
+			{
+				bt.root->Tick();
+			}
+		
 		});
 }

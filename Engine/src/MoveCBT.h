@@ -11,5 +11,6 @@ namespace BT
 		BT::NodeStatus Tick() override;
 	private:
 		Entity entity;
+		int runNrTimes;
 	};
 }
