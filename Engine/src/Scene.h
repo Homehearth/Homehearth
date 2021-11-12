@@ -47,6 +47,7 @@ public:
 	void RenderDebug();
 	void RenderAnimation();
 	void Render2D();
+	void RenderParticles();
 
 	bool IsRenderReady() const;
 

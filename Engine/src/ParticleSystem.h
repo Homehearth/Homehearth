@@ -16,7 +16,7 @@ public:
 	ParticleSystem();
 	~ParticleSystem();
 
-	void Initialize(, std::string texturepath);
+	void Initialize(UINT nrOfParticles, comp::EmitterParticle);
 
 };
 

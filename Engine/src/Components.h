@@ -59,6 +59,18 @@ namespace ecs
 			}
 		};
 
+		struct EmitterParticle
+		{
+			RTexture* texture = nullptr;
+			UINT EmitterID
+
+		/*	EmitterParticle(RTexture* texture = nullptr)
+			{
+				this->texture = texture;
+			}*/
+
+		};
+
 		struct Network
 		{
 			uint32_t id = UINT32_MAX;
