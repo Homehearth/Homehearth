@@ -34,19 +34,19 @@ can overshadow other microfacets reducing the light the surface reflects.
 
 float GeometrySchlickGGX(float NdotV, float roughness)
 {
-    float r = (roughness + 1.0);
-    float k = (r * r) / 8.0;
+    float r = (roughness + 1.0f);
+    float k = (r * r) / 8.0f;
 
     float nom = NdotV;
-    float denom = NdotV * (1.0 - k) + k;
+    float denom = NdotV * (1.0f - k) + k;
 
     return nom / denom;
 }
 
 float GeometrySmith(float3 N, float3 V, float3 L, float roughness)
 {
-    float NdotV = max(dot(N, V), 0.0);
-    float NdotL = max(dot(N, L), 0.0);
+    float NdotV = max(dot(N, V), 0.0f);
+    float NdotL = max(dot(N, L), 0.0f);
     float ggx2 = GeometrySchlickGGX(NdotV, roughness);
     float ggx1 = GeometrySchlickGGX(NdotL, roughness);
 
@@ -60,12 +60,13 @@ The Fresnel equation describes the ratio of surface reflection at different surf
 
 float3 FresnelSchlick(float cosTheta, float3 F0)
 {
-    return F0 + (1.0 - F0) * pow(2, -5.55473 * cosTheta - 6.98316 * cosTheta);
+    //return F0 + (1.0 - F0) * pow(2, -5.55473 * cosTheta - 6.98316 * cosTheta);
+    return (F0 + (1.0f - F0) * pow(1.0f - cosTheta, 5.0f));
 }
 
 float3 FresnelSchlickRoughness(float cosTheta, float3 F0, float roughness)
 {
-    return F0 + (max(float3(1.0 - roughness, 1.0 - roughness, 1.0 - roughness), F0) - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+    return F0 + (max(float3(1.0f - roughness, 1.0f - roughness, 1.0f - roughness), F0) - F0) * pow(clamp(1.0f - cosTheta, 0.0f, 1.0f), 5.0f);
 }
 
 
@@ -142,7 +143,7 @@ void CalcRadiance(PixelIn input, float3 V, float3 N, float roughness, float meta
     
     float3 kS = F;
     float3 kD = float3(1.0f, 1.0f, 1.0f) - kS;
-    kD *= (1.0 - metallic);
+    kD *= (1.0f - metallic);
     
     float3 nom = D * G * F;
     float denom = 4 * max(dot(N, V), 0.0f) * max(dot(N, lightDir), 0.0f) + 0.001f;
@@ -150,6 +151,33 @@ void CalcRadiance(PixelIn input, float3 V, float3 N, float roughness, float meta
     
     float NdotL = max(dot(N, lightDir), 0.0f);
     rad = (((kD * albedo / PI) + specular) * radiance * NdotL);
+}
+
+float3 ambientIBL(float3 albedo, float3 N, float3 V, float3 F0, float metallic, float roughness, float ao)
+{
+     //Reflection Vector
+    float3 R = reflect(-V, N);
+    
+    if (dot(-V, N) > 0)
+    {
+        R *= -1;
+    }
+    
+    float3 F = FresnelSchlickRoughness(max(dot(N, V), 0.0f), F0, roughness);
+    float3 kS = F;
+    float3 kD = 1.0f - kS;
+    //kD *= (1.0f - metallic);
+    
+    float3 irradiance = t_irradiance.Sample(s_linear, N).rgb;
+    float3 diffuse = albedo * irradiance;
+    
+    const float MAX_REF_LOD = 3.0f;
+    float3 prefilteredColor = t_radiance.SampleLevel(s_linear, R, roughness * MAX_REF_LOD).rgb;
+    float2 brdf = t_BRDFLUT.Sample(s_linear, float2(max(dot(N, V), 0.0f), roughness)).rg;
+    float3 specular = prefilteredColor * (F * brdf.x + brdf.y);
+
+    //return (kD * diffuse + specular) * ao;
+    return (kD * diffuse) * ao;
 }
 
 void SampleTextures(PixelIn input, inout float3 albedo, inout float3 N, inout float roughness, inout float metallic, inout float ao)
@@ -193,44 +221,4 @@ void SampleTextures(PixelIn input, inout float3 albedo, inout float3 N, inout fl
     {
         ao = t_aomap.Sample(s_linear, input.uv).r;
     }
-}
-
-float4x4 inverse(float4x4 m)
-{
-    float n11 = m[0][0], n12 = m[1][0], n13 = m[2][0], n14 = m[3][0];
-    float n21 = m[0][1], n22 = m[1][1], n23 = m[2][1], n24 = m[3][1];
-    float n31 = m[0][2], n32 = m[1][2], n33 = m[2][2], n34 = m[3][2];
-    float n41 = m[0][3], n42 = m[1][3], n43 = m[2][3], n44 = m[3][3];
-
-    float t11 = n23 * n34 * n42 - n24 * n33 * n42 + n24 * n32 * n43 - n22 * n34 * n43 - n23 * n32 * n44 + n22 * n33 * n44;
-    float t12 = n14 * n33 * n42 - n13 * n34 * n42 - n14 * n32 * n43 + n12 * n34 * n43 + n13 * n32 * n44 - n12 * n33 * n44;
-    float t13 = n13 * n24 * n42 - n14 * n23 * n42 + n14 * n22 * n43 - n12 * n24 * n43 - n13 * n22 * n44 + n12 * n23 * n44;
-    float t14 = n14 * n23 * n32 - n13 * n24 * n32 - n14 * n22 * n33 + n12 * n24 * n33 + n13 * n22 * n34 - n12 * n23 * n34;
-
-    float det = n11 * t11 + n21 * t12 + n31 * t13 + n41 * t14;
-    float idet = 1.0f / det;
-
-    float4x4 ret;
-
-    ret[0][0] = t11 * idet;
-    ret[0][1] = (n24 * n33 * n41 - n23 * n34 * n41 - n24 * n31 * n43 + n21 * n34 * n43 + n23 * n31 * n44 - n21 * n33 * n44) * idet;
-    ret[0][2] = (n22 * n34 * n41 - n24 * n32 * n41 + n24 * n31 * n42 - n21 * n34 * n42 - n22 * n31 * n44 + n21 * n32 * n44) * idet;
-    ret[0][3] = (n23 * n32 * n41 - n22 * n33 * n41 - n23 * n31 * n42 + n21 * n33 * n42 + n22 * n31 * n43 - n21 * n32 * n43) * idet;
-
-    ret[1][0] = t12 * idet;
-    ret[1][1] = (n13 * n34 * n41 - n14 * n33 * n41 + n14 * n31 * n43 - n11 * n34 * n43 - n13 * n31 * n44 + n11 * n33 * n44) * idet;
-    ret[1][2] = (n14 * n32 * n41 - n12 * n34 * n41 - n14 * n31 * n42 + n11 * n34 * n42 + n12 * n31 * n44 - n11 * n32 * n44) * idet;
-    ret[1][3] = (n12 * n33 * n41 - n13 * n32 * n41 + n13 * n31 * n42 - n11 * n33 * n42 - n12 * n31 * n43 + n11 * n32 * n43) * idet;
-
-    ret[2][0] = t13 * idet;
-    ret[2][1] = (n14 * n23 * n41 - n13 * n24 * n41 - n14 * n21 * n43 + n11 * n24 * n43 + n13 * n21 * n44 - n11 * n23 * n44) * idet;
-    ret[2][2] = (n12 * n24 * n41 - n14 * n22 * n41 + n14 * n21 * n42 - n11 * n24 * n42 - n12 * n21 * n44 + n11 * n22 * n44) * idet;
-    ret[2][3] = (n13 * n22 * n41 - n12 * n23 * n41 - n13 * n21 * n42 + n11 * n23 * n42 + n12 * n21 * n43 - n11 * n22 * n43) * idet;
-
-    ret[3][0] = t14 * idet;
-    ret[3][1] = (n13 * n24 * n31 - n14 * n23 * n31 + n14 * n21 * n33 - n11 * n24 * n33 - n13 * n21 * n34 + n11 * n23 * n34) * idet;
-    ret[3][2] = (n14 * n22 * n31 - n12 * n24 * n31 - n14 * n21 * n32 + n11 * n24 * n32 + n12 * n21 * n34 - n11 * n22 * n34) * idet;
-    ret[3][3] = (n12 * n23 * n31 - n13 * n22 * n31 + n13 * n21 * n32 - n11 * n23 * n32 - n12 * n21 * n33 + n11 * n22 * n33) * idet;
-
-    return ret;
 }
