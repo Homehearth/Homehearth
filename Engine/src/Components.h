@@ -3,6 +3,7 @@
 #include "RModel.h"
 #include "RAnimator.h"
 #include "ResourceManager.h"
+#include <stack>
 
 namespace ecs
 {
@@ -140,7 +141,7 @@ namespace ecs
 			float movementSpeed = 15.f;
 			float attackRange = 10.f;
 			bool hostile;
-			std::vector<Node*> path;
+			std::stack<Node*> path;
 			Node* currentNode;
 			Entity currentClosest;
 		};

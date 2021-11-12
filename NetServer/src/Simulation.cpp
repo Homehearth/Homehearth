@@ -153,34 +153,34 @@ void Simulation::CreateWaves()
 	Wave wave1, wave2; // Default: WaveType::Zone
 	{ // Wave_1 Group_1
 		Wave::Group group1;
-		group1.AddEnemy(EnemyType::Default, 3);
+		group1.AddEnemy(EnemyType::Default, 1);
 		group1.SetSpawnPoint({ 380.f, -220.0f });
 		wave1.SetTimeLimit(5);
 		wave1.AddGroup(group1);
 	}
 
 	{ // Wave_1 Group_2
-		Wave::Group group2;
-		group2.AddEnemy(EnemyType::Default, 4);
-		group2.SetSpawnPoint({ 380.f, -220.0f });
-		wave1.AddGroup(group2);
+		//Wave::Group group2;
+		//group2.AddEnemy(EnemyType::Default, 4);
+		//group2.SetSpawnPoint({ 380.f, -220.0f });
+		//wave1.AddGroup(group2);
 	}
 	waveQueue.emplace(wave1); // Add Wave_1
 
 	{ // Wave_2 Group_3
-		Wave::Group group3;
-		group3.AddEnemy(EnemyType::Default, 5);
-		group3.SetSpawnPoint({ 380.f, -220.0f });
-		wave2.AddGroup(group3);
+		//Wave::Group group3;
+		//group3.AddEnemy(EnemyType::Default, 5);
+		//group3.SetSpawnPoint({ 380.f, -220.0f });
+		//wave2.AddGroup(group3);
 	}
 
 	{ // Wave_2 Group_4
-		Wave::Group group4;
-		group4.AddEnemy(EnemyType::Default, 4);
-		group4.SetSpawnPoint({ 380.f, -220.0f });
-		wave2.AddGroup(group4);
+		//Wave::Group group4;
+		//group4.AddEnemy(EnemyType::Default, 4);
+		//group4.SetSpawnPoint({ 380.f, -220.0f });
+		//wave2.AddGroup(group4);
 	}
-	waveQueue.emplace(wave2); // Add Wave_2
+	//waveQueue.emplace(wave2); // Add Wave_2
 }
 
 void Simulation::ResetPlayer(Entity e)
@@ -406,7 +406,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 	m_removedEntities.clear();
 
 
-	this->BuildMapColliders(mapColliders);
+	//this->BuildMapColliders(mapColliders);
 
 	m_pCurrentScene = m_pLobbyScene;
 
@@ -569,22 +569,22 @@ bool Simulation::AddNPC(uint32_t npcId)
 {
 	//LOG_INFO("NPC with ID: %ld added to game!", npcId);
 
-	Entity npc = m_pGameScene->CreateEntity();
-	npc.AddComponent<comp::Transform>()->position = sm::Vector3(0.f, 0.f, 0.f);
-	npc.AddComponent<comp::Velocity>();
-	npc.AddComponent<comp::MeshName>()->name = "StreetLamp.obj";
-	npc.AddComponent<comp::NPC>()->state = comp::NPC::State::ASTAR;
-	npc.AddComponent<comp::Network>()->id = npcId;
-	npc.AddComponent<comp::BoundingOrientedBox>();
+	//Entity npc = m_pGameScene->CreateEntity();
+	//npc.AddComponent<comp::Transform>()->position = sm::Vector3(0.f, 0.f, 0.f);
+	//npc.AddComponent<comp::Velocity>();
+	//npc.AddComponent<comp::MeshName>()->name = "StreetLamp.obj";
+	//npc.AddComponent<comp::NPC>()->state = comp::NPC::State::ASTAR;
+	//npc.AddComponent<comp::Network>()->id = npcId;
+	//npc.AddComponent<comp::BoundingOrientedBox>();
 
-	CollisionSystem::Get().AddOnCollision(npc, [&](Entity other)
-		{
-			comp::NPC* otherNPC = m_pCurrentScene->GetRegistry()->try_get<comp::NPC>(other);
-			if (otherNPC)
-			{
-				LOG_INFO("NPC COLLISION!");
-			}
-		});
+	//CollisionSystem::Get().AddOnCollision(npc, [&](Entity other)
+	//	{
+	//		comp::NPC* otherNPC = m_pCurrentScene->GetRegistry()->try_get<comp::NPC>(other);
+	//		if (otherNPC)
+	//		{
+	//			LOG_INFO("NPC COLLISION!");
+	//		}
+	//	});
 	return true;
 }
 bool Simulation::RemoveNPC(uint32_t npcId)

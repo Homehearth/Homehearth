@@ -8,7 +8,7 @@ private:
 	//std::unordered_map<Vector2I, std::unique_ptr<Node>> m_nodes;
 	Entity FindClosestPlayer(HeadlessScene& scene, sm::Vector3 position, comp::NPC* npc);
 	std::vector<Node*> GetNeighbors(GridSystem* grid, Tile* baseNode);
-	Node* FindClosestNode(sm::Vector3 position);
+	
 	float CalculateFGH(Node* currentNode, Node* neighbor, Node* goalNode);
 	bool IsInVector(std::vector<Node*> vector, Node* node);
 public:
@@ -21,6 +21,7 @@ public:
 	void CreateNodes(GridSystem* grid);
 	void AStarSearch(HeadlessScene& scene, Entity npc);
 	bool ReachedNode(const Entity npc);
+	Node* FindClosestNode(sm::Vector3 position);
 
 };
 

@@ -308,24 +308,13 @@ void Systems::AISystem(HeadlessScene& scene, AIHandler* aiHandler)
 			Entity closestPlayer = FindClosestPlayer(scene, transformNPC->position, &npc);
 			comp::Velocity* velocityTowardsPlayer = entity.GetComponent<comp::Velocity>();
 			comp::Transform* transformCurrentClosestPlayer = closestPlayer.GetComponent<comp::Transform>();
-			//if (npc.currentNode)
-			//{
-			//	if (sm::Vector3::Distance(transformNPC->position, transformCurrentClosestPlayer->position) <= npc.attackRange + 10.f && npc.state != comp::NPC::State::CHASE)
-			//	{
-			//		npc.state = comp::NPC::State::CHASE;
-			//		LOG_INFO("Switching to CHASE State!");
-			//	}
-			//	else if ((sm::Vector3::Distance(transformNPC->position, transformCurrentClosestPlayer->position) >= npc.attackRange + 20.f && npc.state != comp::NPC::State::ASTAR))
-			//	{
-			//		npc.state = comp::NPC::State::ASTAR;
-			//		LOG_INFO("Switching to ASTAR State!");
-			//	}
-			//}
-			//else
-			//{
-			//	npc.state = comp::NPC::State::IDLE;
-			//}
 
+			Node* closestNod = aiHandler->FindClosestNode(transformCurrentClosestPlayer->position);
+			if(!closestNod->reachable)
+			{
+				LOG_INFO("Nodetype not reachable...");
+			}
+				
 
 			if (sm::Vector3::Distance(transformNPC->position, transformCurrentClosestPlayer->position) <= npc.attackRange)
 			{
@@ -343,52 +332,31 @@ void Systems::AISystem(HeadlessScene& scene, AIHandler* aiHandler)
 
 			switch (npc.state)
 			{
-			case comp::NPC::State::CHASE:
-
-				if (velocityTowardsPlayer)
-				{
-					velocityTowardsPlayer->vel = transformCurrentClosestPlayer->position - transformNPC->position;
-					velocityTowardsPlayer->vel.Normalize();
-					velocityTowardsPlayer->vel *= npc.movementSpeed;
-				}
-				break;
 			case comp::NPC::State::ASTAR:
-				if (npc.currentNode)
+
+				if(npc.path.size() > 0)
 				{
-					if (aiHandler->ReachedNode(entity))
+					npc.currentNode = npc.path.top();
+					if (velocityTowardsPlayer && npc.currentNode)
 					{
-						if (!npc.path.empty())
-						{
-							npc.currentNode = npc.path[0];
-							npc.path.erase(npc.path.begin());
-						}
-						else
-						{
-							aiHandler->SetClosestNode(npc, transformNPC->position);
-							aiHandler->AStarSearch(scene, entity);
-						}
+						velocityTowardsPlayer->vel = npc.currentNode->position - transformNPC->position;
+						velocityTowardsPlayer->vel.Normalize();
+						velocityTowardsPlayer->vel *= npc.movementSpeed;
 					}
-					else
+
+					if(sm::Vector3::Distance(npc.currentNode->position, transformNPC->position) < 8.f)
 					{
-						if (velocityTowardsPlayer && npc.currentNode)
-						{
-							velocityTowardsPlayer->vel = npc.currentNode->position - transformNPC->position;
-							velocityTowardsPlayer->vel.Normalize();
-							velocityTowardsPlayer->vel *= npc.movementSpeed;
-						}
+						npc.path.pop();
 					}
+					
 				}
 				else
 				{
-					aiHandler->SetClosestNode(npc, transformNPC->position);
 					aiHandler->AStarSearch(scene, entity);
+					velocityTowardsPlayer->vel = sm::Vector3(0.f,0.f,0.f);
 				}
-				break;
-			case comp::NPC::State::IDLE:
-				velocityTowardsPlayer->vel = { 0.f, 0.f, 0.f };
-				aiHandler->SetClosestNode(npc, transformNPC->position);
-				aiHandler->AStarSearch(scene, entity);
-				break;
+
+
 			}
 		});
 }

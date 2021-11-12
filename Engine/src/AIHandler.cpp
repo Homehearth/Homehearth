@@ -75,26 +75,49 @@ bool AIHandler::IsInVector(std::vector<Node*> vector, Node* node)
 std::vector<Node*> AIHandler::GetNeighbors(GridSystem* grid, Tile* baseNode)
 {
 	std::vector<Node*> neighbors;
-	if ((baseNode->type == TileType::DEFAULT
-		|| baseNode->type == TileType::EMPTY))
+	if ((baseNode->type == TileType::DEFAULT || baseNode->type == TileType::EMPTY))
 	{
-
 		Tile* currentTile = nullptr;
-		for (int i = max(0, baseNode->gridID.x - 1); i <= min(baseNode->gridID.x + 1, grid->GetGridSize().x - 1); i++)
+
+		for (int newY = -1; newY <= 1; newY++)
 		{
-			for (int j = max(0, baseNode->gridID.y - 1); j <= min(baseNode->gridID.y + 1, grid->GetGridSize().y - 1); j++)
+			for (int newX = -1; newX <= 1; newX++)
 			{
-				if (i != baseNode->gridID.x || j != baseNode->gridID.y)
+				if (baseNode->gridID.x + newX >= grid->GetGridSize().x || baseNode->gridID.y + newY >= grid->GetGridSize().y
+					|| baseNode->gridID.x + newX < 0 || baseNode->gridID.y + newY < 0)
+					continue;
+
+				if(baseNode->gridID.x + newX == 38 && baseNode->gridID.y + newY == 20)
 				{
-					currentTile = grid->GetTile(Vector2I(i, j));
-					if (currentTile->type == TileType::DEFAULT
-						|| currentTile->type == TileType::EMPTY)
-					{
-						neighbors.push_back(GetNodeByID({ i,j }));
-					}
+
 				}
+				currentTile = grid->GetTile(Vector2I(baseNode->gridID.x + newX, baseNode->gridID.y + newY));
+
+				if (currentTile->type == TileType::DEFAULT || currentTile->type == TileType::EMPTY)
+				{
+					neighbors.push_back(GetNodeByID({ baseNode->gridID.x + newX,baseNode->gridID.y + newY }));
+				}
+				
 			}
 		}
+
+
+
+		//for (int i = max(0,  - 1); i <= min(baseNode->gridID.x + 1, grid->GetGridSize().x - 1); i++)
+		//{
+		//	for (int j = max(0, baseNode->gridID.y - 1); j <= min(baseNode->gridID.y + 1, grid->GetGridSize().y - 1); j++)
+		//	{
+		//		if (i != baseNode->gridID.x || j != baseNode->gridID.y)
+		//		{
+		//			currentTile = grid->GetTile(Vector2I(j, i));
+		//			if (currentTile->type == TileType::DEFAULT
+		//				|| currentTile->type == TileType::EMPTY)
+		//			{
+		//				neighbors.push_back(GetNodeByID({ j,i }));
+		//			}
+		//		}
+		//	}
+		//}
 
 
 		//LOG_INFO("Connections: %d", nodes.at(i)->connections.size());
@@ -154,9 +177,10 @@ void AIHandler::CreateNodes(GridSystem* grid)
 			Vector2I nodeID = grid->GetTile(tileID)->gridID;
 			std::unique_ptr<Node> currentNode = std::make_unique<Node>(nodeID);
 			currentNode->position = grid->GetTile(Vector2I(i, j))->position;
-			if (grid->GetTile(Vector2I(i, j))->type == TileType::BUILDING ||
-				grid->GetTile(Vector2I(i, j))->type == TileType::DEFENCE ||
-				grid->GetTile(Vector2I(i, j))->type == TileType::UNPLACABLE)
+
+			if (grid->GetTile(Vector2I(i, j))->type == TileType::DEFENCE ||
+				grid->GetTile(Vector2I(i, j))->type == TileType::UNPLACABLE ||
+				grid->GetTile(Vector2I(i, j))->type == TileType::BUILDING)
 			{
 				currentNode->reachable = false;
 			}
@@ -165,17 +189,17 @@ void AIHandler::CreateNodes(GridSystem* grid)
 	}
 	//Build Connections
 	LOG_INFO("AIHandler: Connecting Nodes");
-	for (int i = 0; i < grid->GetGridSize().x; i++)
+	for (int y = 0; y < grid->GetGridSize().y; y++)
 	{
-		for (int j = 0; j < grid->GetGridSize().y; j++)
+		for (int x = 0; x < grid->GetGridSize().x; x++)
 		{
-			Tile* entityTile = grid->GetTile(Vector2I(i, j));
+			Tile* entityTile = grid->GetTile(Vector2I(x, y));
 
 			std::vector<Node*> neighbors = GetNeighbors(grid, entityTile);
 			for (auto neighbor : neighbors)
 			{
-
-				m_nodes[i][j]->connections.push_back(neighbor);
+				if(neighbor->reachable)
+					m_nodes[y][x]->connections.push_back(neighbor);
 			}
 		}
 	}
@@ -198,22 +222,32 @@ void AIHandler::SetClosestNode(comp::NPC& npc, sm::Vector3 position)
 
 void AIHandler::AStarSearch(HeadlessScene& scene, Entity npc)
 {
+	
 	std::vector<Node*> openList, closedList;
 	comp::NPC* npcComp = npc.GetComponent<comp::NPC>();
+
+	while (!npcComp->path.empty())
+		npcComp->path.pop();
+
 	comp::Transform* npcTransform = npc.GetComponent<comp::Transform>();
+
+	if(npcComp->currentNode == nullptr)
+	{
+		this->SetClosestNode(*npcComp, npcTransform->position);
+	}
+
 	openList.push_back(npcComp->currentNode);
-	npcComp->currentNode->f = 0;
-	npcComp->currentNode->g = 0;
-	npcComp->currentNode->h = 0;
+
 	Entity closestPlayer = FindClosestPlayer(scene, npcTransform->position, npcComp);
 	comp::Transform* playerTransform = closestPlayer.GetComponent<comp::Transform>();
-	Node* currentNode = npcComp->currentNode, * goalNode = FindClosestNode(playerTransform->position), * startingNode = npcComp->currentNode;
-	startingNode->parent = startingNode;
+	//Node* currentNode = npcComp->currentNode,
+	Node* goalNode = FindClosestNode(playerTransform->position);
+	Node* startingNode = npcComp->currentNode;
 	while (!openList.empty())
 	{
 		int itrToRemove = 0;
-		currentNode = openList[0];
-		for (int i = 1; i < openList.size(); i++)
+		Node* currentNode = openList[0];
+		for (int i = 0; i < openList.size(); i++)
 		{
 			if (openList.at(i)->f < currentNode->f)
 			{
@@ -221,10 +255,23 @@ void AIHandler::AStarSearch(HeadlessScene& scene, Entity npc)
 				itrToRemove = i;
 			}
 		}
+
 		openList.erase(openList.begin() + itrToRemove);
 		closedList.push_back(currentNode);
+
+
+
 		if (currentNode == goalNode)
 		{
+			//Trace the path back
+			if (goalNode->parent)
+			{
+				while (currentNode != startingNode)
+				{
+					npcComp->path.emplace(currentNode);
+					currentNode = currentNode->parent;
+				}
+			}
 			break;
 		}
 
@@ -232,46 +279,30 @@ void AIHandler::AStarSearch(HeadlessScene& scene, Entity npc)
 		{
 			if (!IsInVector(closedList, neighbor))
 			{
-				float tempG = currentNode->g + (neighbor->position - startingNode->position).Length();;
-				float tempH = (neighbor->position - goalNode->position).Length(); //Using euclidean distance
-				float tempF = neighbor->g + neighbor->h;
+				neighbor->g = currentNode->g + 1.0f;
+				neighbor->h = (neighbor->position - goalNode->position).Length(); //Using euclidean distance
+				neighbor->f = neighbor->g + neighbor->h;
 
 				bool inOpen = false;
+
 				for (int i = 0; i < openList.size() && !inOpen; i++)
 				{
 					if (neighbor == openList[i])
 					{
-						if (tempG < openList[i]->g)
-						{
-							neighbor->parent = currentNode;
-							neighbor->f = tempF;
-							neighbor->g = tempG;
-							neighbor->h = tempH;
-						}
 						inOpen = true;
 					}
 				}
+
 				if (!inOpen)
 				{
 					neighbor->parent = currentNode;
-					neighbor->f = tempF;
-					neighbor->g = tempG;
-					neighbor->h = tempH;
-					openList.push_back(neighbor);
+					openList.emplace_back(neighbor);
 				}
 
 			}
 		}
 	}
-	//Trace the path back
-	if (goalNode->parent)
-	{
-		while (currentNode != startingNode)
-		{
-			npcComp->path.push_back(currentNode);
-			currentNode = currentNode->parent;
-		}
-	}
+
 
 	for (int i = 0; i < m_nodes.size(); i++)
 	{
@@ -281,118 +312,6 @@ void AIHandler::AStarSearch(HeadlessScene& scene, Entity npc)
 			m_nodes[i][j]->ResetFGH();
 		}
 	}
-	//OLD A* CODE
-	//comp::NPC* npcComp = npc.GetComponent<comp::NPC>();
-	//comp::Transform* npcTransform = npc.GetComponent<comp::Transform>();
-	//Node* currentNode = npcComp->currentNode;
-
-	//Entity closestPlayer = FindClosestPlayer(scene, npcTransform->position, npcComp);
-	//comp::Transform* playerTransform = closestPlayer.GetComponent<comp::Transform>();
-
-	//std::vector<Node*> closedList, openList;
-	//npcComp->path.clear();
-	//Node* startingNode = currentNode, * goalNode = FindClosestNode(playerTransform->position);;
-	//openList.push_back(startingNode);
-	//startingNode->f = 0.f;
-	//startingNode->g = 0.f;
-	//startingNode->h = 0.f;
-	//startingNode->parent = startingNode;
-
-	//Node* nodeToAdd = nullptr;
-	//while (!openList.empty() && nodeToAdd != goalNode)
-	//{
-	//	nodeToAdd = openList.at(0);
-	//	int indexToPop = 0;
-	//	bool stop = false;
-	//	for (unsigned int i = 0; i < openList.size(); i++)
-	//	{
-	//		if (openList.at(i)->f < nodeToAdd->f)
-	//		{
-	//			nodeToAdd = openList.at(i);
-	//			indexToPop = i;
-	//		}
-	//	}
-	//	openList.erase(openList.begin() + indexToPop);
-
-	//	//Neighbors
-
-	//	std::vector<Node*> neighbors = nodeToAdd->connections;
-
-	//	for (Node* neighbor : neighbors)
-	//	{
-	//		if (neighbor->parent != nodeToAdd && neighbor != nodeToAdd)
-	//		{
-	//			if (!neighbor->parent)
-	//			{
-	//				neighbor->parent = nodeToAdd;
-	//			}
-	//			if (neighbor == goalNode)
-	//			{
-	//				nodeToAdd = goalNode;
-	//				break;
-	//			}
-	//			if (neighbor->f == FLT_MAX)
-	//			{
-	//				float tempF = 0, tempG = 0, tempH = 0;
-
-	//				tempG = nodeToAdd->g + (nodeToAdd->position - neighbor->position).Length();
-	//				tempH = (goalNode->position - nodeToAdd->position).Length(); //Using euclidean distance
-	//				tempF = tempG + tempH;
-	//				neighbor->f = tempF;
-	//				neighbor->g = tempG;
-	//				neighbor->h = tempH;
-	//			}
-	//			stop = false;
-	//			for (unsigned int i = 0; i < openList.size() && !stop; i++)
-	//			{
-	//				if (openList.at(i)->id == neighbor->id)
-	//				{
-	//					stop = true;
-	//				}
-	//			}
-	//			if (closedList.size() > 0)
-	//			{
-	//				for (unsigned int i = 0; i < closedList.size() && !stop; i++)
-	//				{
-	//					if (closedList.at(i)->id == neighbor->id)
-	//					{
-	//						stop = true;
-	//					}
-	//				}
-	//				if (!stop)
-	//				{
-	//					openList.push_back(neighbor);
-	//				}
-	//			}
-	//			else
-	//			{
-	//				openList.push_back(neighbor);
-	//			}
-	//		}
-	//	}
-
-	//	closedList.push_back(nodeToAdd);
-	//}
-
-	////TracePath
-	//if (goalNode)
-	//	currentNode = goalNode;
-
-	//while (currentNode != startingNode)
-	//{
-	//	//Insert currentNode to the path
-	//	npcComp->path.insert(npcComp->path.begin(), currentNode);
-	//	currentNode = currentNode->parent;
-	//}
-
-	//for (int i = 0; i < m_nodes.size(); i++)
-	//{
-	//	for (int j = 0; j < m_nodes[i].size(); j++)
-	//	{
-	//		m_nodes[i][j]->ResetFGH();
-	//		m_nodes[i][j]->parent = nullptr;
-	//	}
-	//}
 }
 
 bool AIHandler::ReachedNode(const Entity npc)
