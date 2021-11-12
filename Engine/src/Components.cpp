@@ -51,20 +51,23 @@ namespace ecs {
         return sm::Vector3::Distance(translation, target) < 0.01f;
     }
 
-    bool UseAbility(component::IAbility* abilityComponent, sm::Vector3 targetPoint)
+    bool UseAbility(component::IAbility* abilityComponent, sm::Vector3* targetPoint)
     {
-        abilityComponent->targetPoint = targetPoint;
+        if (targetPoint)
+            abilityComponent->targetPoint = *targetPoint;
+        
         if (abilityComponent->isReady)
         {
             abilityComponent->isUsing = true;
             abilityComponent->isReady = false;
             abilityComponent->cooldownTimer = abilityComponent->cooldown;
             abilityComponent->delayTimer = abilityComponent->delay;
+            abilityComponent->useTimer = abilityComponent->useTime;
         }
         return abilityComponent->isUsing;
     }
     
-    bool UseAbility(Entity entity, entt::meta_type abilityType, sm::Vector3 targetPoint)
+    bool UseAbility(Entity entity, entt::meta_type abilityType, sm::Vector3* targetPoint)
     {
         using namespace entt::literals;
         
@@ -84,8 +87,11 @@ namespace ecs {
         return UseAbility(ability, targetPoint);
     }
 
-    bool IsUsing(component::IAbility* abilityComponent)
+    bool ReadyToUse(component::IAbility* abilityComponent, sm::Vector3* targetPoint)
     {
+        if (targetPoint)
+            abilityComponent->targetPoint = *targetPoint;
+
         if (abilityComponent->isUsing && abilityComponent->delayTimer <= 0.f)
         {
             abilityComponent->cooldownTimer = abilityComponent->cooldown;
@@ -95,6 +101,62 @@ namespace ecs {
         return false;
     }
 
+    bool ReadyToUse(Entity entity, entt::meta_type abilityType, sm::Vector3* targetPoint)
+    {
+        using namespace entt::literals;
+
+        auto func = abilityType.func("get"_hs);
+        if (!func)
+        {
+            LOG_WARNING("Could not use ability, did you register component as ability with ecs::RegisterAsAbility?");
+            return false;
+        }
+        auto instance = func.invoke({}, entity);
+        component::IAbility* ability = instance.try_cast<component::IAbility>();
+        if (!ability)
+        {
+            LOG_WARNING("This entity does not have this ability");
+            return false;
+        }
+        return ReadyToUse(ability, targetPoint);
+
+    }
+
+    bool IsUsing(const component::IAbility* abilityComponent)
+    {
+        return abilityComponent->isUsing || abilityComponent->useTimer > 0.f;
+    }
+
+
+    bool IsUsing(Entity entity, entt::meta_type abilityType)
+    {
+        using namespace entt::literals;
+
+        auto func = abilityType.func("get"_hs);
+        if (!func)
+        {
+            LOG_WARNING("Could not use ability, did you register component as ability with ecs::RegisterAsAbility?");
+            return false;
+        }
+        auto instance = func.invoke({}, entity);
+        component::IAbility* ability = instance.try_cast<component::IAbility>();
+        if (!ability)
+        {
+            LOG_WARNING("This entity does not have this ability");
+            return false;
+        }
+        return IsUsing(ability);
+    }
+
+    bool IsPlayerUsingAnyAbility(Entity player)
+    {
+        component::Player* p = player.GetComponent<component::Player>();
+        if (p)
+        {
+            return IsUsing(player, p->primaryAbilty) || IsUsing(player, p->secondaryAbilty);
+        }
+        return false;
+    }
 
     component::TemporaryPhysics::Force GetGravityForce()
     {

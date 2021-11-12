@@ -201,10 +201,13 @@ void Systems::UpdateAbilities(HeadlessScene& scene, float dt)
 				if (ability->delayTimer > 0.f)
 					ability->delayTimer -= dt;
 					
+				if (ability->useTimer > 0.f)
+					ability->useTimer -= dt;
 
 				if (ability->cooldownTimer > 0.f)
 					ability->cooldownTimer -= dt;
-				else
+
+				if (ability->cooldownTimer <= 0.f && ability->delayTimer <= 0.f && ability->useTimer <= 0.f)
 					ability->isReady = true;
 			}
 		}
@@ -222,7 +225,13 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 			//
 			// attack LOGIC
 			//
-			if (ecs::IsUsing(&stats))
+			sm::Vector3* updateTargetPoint = nullptr;
+			comp::Player* player = entity.GetComponent<comp::Player>();
+			if (player)
+			{
+				updateTargetPoint = &player->mousePoint; // only update targetPoint if this is a player
+			}
+			if (ecs::ReadyToUse(&stats, updateTargetPoint))
 			{
 				//Creates an entity that's used to check collision if an attack lands.
 				Entity attackCollider = scene.CreateEntity();
@@ -320,9 +329,10 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 void Systems::HealingSystem(HeadlessScene& scene, float dt)
 {
 	// HealAbility system
-	scene.ForEachComponent<comp::HealAbility>([](comp::HealAbility& ability)
+	scene.ForEachComponent<comp::HealAbility, comp::Player>([](comp::HealAbility& ability, comp::Player& player)
 		{
-			if (ecs::IsUsing(&ability))
+			
+			if (ecs::ReadyToUse(&ability))
 			{
 				LOG_INFO("Used healing ability");
 			}
@@ -533,7 +543,7 @@ void Systems::AISystem(HeadlessScene& scene)
 			comp::AttackAbility* stats = entity.GetComponent<comp::AttackAbility>();
 			if (stats)
 			{
-				if (ecs::UseAbility(stats, transformCurrentClosestPlayer->position))
+				if (ecs::UseAbility(stats, &transformCurrentClosestPlayer->position))
 				{
 					// Enemy Attacked
 				};

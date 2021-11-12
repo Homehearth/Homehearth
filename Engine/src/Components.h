@@ -222,20 +222,25 @@ namespace ecs
 		{
 			// set this for cooldown
 			float cooldown = 1.5f;
-			// do not touch
+			// !DO NOT TOUCH!
 			float cooldownTimer = 0.f;
 			
 			// set this for delay before ability is actually used after the cooldown is done and the ecs::UseAbility has bee called
 			float delay = 0.1f;
-			// do not touch
+			// !DO NOT TOUCH!
 			float delayTimer = 0.f;
-			
+
+			// the time it takes to use
+			float useTime = 1.0f;
+			// !DO NOT TOUCH!
+			float useTimer = 0.f;
+
 			// lifetime of the ability, for instance lifetime of any created collider
 			float lifetime = 5.f;
 
-			// do not touch
+			// !DO NOT TOUCH!
 			bool isReady = false;
-			// do not touch
+			// !DO NOT TOUCH!
 			bool isUsing = false;
 
 			// set to be target for ability
@@ -298,21 +303,34 @@ namespace ecs
 	*	If this ability is ready to be used, meaning isReady == true.
 	*	If returns true the ability is set to being used, so it only returns true once with a interval of cooldown.
 	*/
-	bool UseAbility(component::IAbility* abilityComponent, sm::Vector3 targetPoint);
+	bool UseAbility(component::IAbility* abilityComponent, sm::Vector3* targetPoint = nullptr);
 	/**
 	*	Warning: This function will modify the component
 	*	If this ability is ready to be used, meaning isReady == true.
 	*	If returns true the ability is set to being used, so it only returns true once with a interval of cooldown.
 	*/
-	bool UseAbility(Entity entity, entt::meta_type abilityType, sm::Vector3 targetPoint);
+	bool UseAbility(Entity entity, entt::meta_type abilityType, sm::Vector3* targetPoint = nullptr);
 
 	/**
 	*	Warning: This function will modify the component
-	*	Check if this ability is used, meaning isUsing == true and delayTimer <= 0.
+	*	Check if this ability is ready to used, meaning isUsing == true and delayTimer <= 0.
 	*	If returns true the ability is reset, so it only returns true once after ecs::UseAbility is called on this component.
 	*/
-	bool IsUsing(component::IAbility* abilityComponent);
-	
+	bool ReadyToUse(component::IAbility* abilityComponent, sm::Vector3* targetPoint = nullptr);
+	/**
+	*	Warning: This function will modify the component
+	*	Check if this ability is ready to used, meaning isUsing == true and delayTimer <= 0.
+	*	If returns true the ability is reset, so it only returns true once after ecs::UseAbility is called on this component.
+	*/
+	bool ReadyToUse(Entity entity, entt::meta_type abilityType, sm::Vector3* targetPoint = nullptr);
+
+	// returns if the ability is currently used
+	bool IsUsing(const component::IAbility* abilityComponent);
+
+	// returns if the ability is currently used
+	bool IsUsing(Entity entity, entt::meta_type abilityType);
+
+	bool IsPlayerUsingAnyAbility(Entity player);
 
 	component::TemporaryPhysics::Force GetGravityForce();
 

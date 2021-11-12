@@ -223,6 +223,8 @@ void Simulation::ResetPlayer(Entity player)
 		combatStats->attackDamage = 40.f;
 		combatStats->isRanged = false;
 		combatStats->lifetime = 0.1f;
+		combatStats->useTime = 0.2f;
+		combatStats->delay = 0.1f;
 
 		playerComp->primaryAbilty = entt::resolve<comp::AttackAbility>();
 		playerComp->secondaryAbilty = entt::resolve<comp::AttackAbility>();
@@ -236,6 +238,8 @@ void Simulation::ResetPlayer(Entity player)
 		combatStats->lifetime = 2.0f;
 		combatStats->projectileSpeed = 40.f;
 		combatStats->attackRange = 2.0f;
+		combatStats->useTime = 0.3f;
+		combatStats->delay = 0.1f;
 
 		comp::HealAbility* healAbility = player.AddComponent<comp::HealAbility>();
 		healAbility->cooldown = 5.0f;
@@ -243,6 +247,7 @@ void Simulation::ResetPlayer(Entity player)
 		healAbility->healAmount = 50.f;
 		healAbility->lifetime = 1.f;
 		healAbility->range = 50.f;
+		healAbility->useTime = 1.0f;
 
 		playerComp->primaryAbilty = entt::resolve<comp::AttackAbility>();
 		playerComp->secondaryAbilty = entt::resolve<comp::HealAbility>();
@@ -415,22 +420,21 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 						LOG_WARNING("Mouse click ray missed walking plane. Should not happen...");
 					}
 				
+
 					// check if attacking
 					if (input.leftMouse) // is held
 					{
-						p->state = comp::Player::State::ATTACK;
 						
-						if (ecs::UseAbility(e, p->primaryAbilty, p->mousePoint))
+						if (ecs::UseAbility(e, p->primaryAbilty, &p->mousePoint))
 						{
-						
+							
 						}
 					
 					}
 					else if (input.rightMouse) // was pressed
 					{
-						//p->state = comp::Player::State::ATTACK;
-
-						if (ecs::UseAbility(e, p->secondaryAbilty, p->mousePoint))
+						LOG_INFO("Pressed right");
+						if (ecs::UseAbility(e, p->secondaryAbilty, &p->mousePoint))
 						{
 							
 						}
@@ -446,8 +450,8 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 			//  run all game logic systems
 			{
 				PROFILE_SCOPE("Systems");
-				ServerSystems::PlayerStateSystem(this, scene, e.dt);
 				ServerSystems::CheckGameOver(this, scene);
+				ServerSystems::PlayerStateSystem(this, scene, e.dt);
 				Systems::MovementSystem(scene, e.dt);
 				Systems::MovementColliderSystem(scene, e.dt);
 				Systems::AISystem(scene);

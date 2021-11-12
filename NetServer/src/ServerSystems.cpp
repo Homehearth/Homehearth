@@ -210,6 +210,18 @@ void ServerSystems::NextWaveConditions(Simulation* simulation, Timer& timer, int
 void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& scene, float dt)
 {
 	PROFILE_FUNCTION();
+	scene.ForEachComponent<comp::Player>([](Entity e, comp::Player& p)
+		{
+			if (ecs::IsPlayerUsingAnyAbility(e))
+			{
+				p.state = comp::Player::State::ATTACK;
+			}
+			else
+			{
+				p.state = comp::Player::State::IDLE;
+			}
+		});
+
 	scene.ForEachComponent<comp::Player, comp::Health, comp::Transform>([&](Entity e, comp::Player& p, comp::Health& health, comp::Transform& t)
 		{
 			if (health.currentHealth <= 0 && p.state != comp::Player::State::DEAD)
