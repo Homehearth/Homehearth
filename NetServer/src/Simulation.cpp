@@ -413,7 +413,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 					{
 						p->state = comp::Player::State::ATTACK;
 						
-						if (ecs::Use(e, p->primaryAbilty, p->mousePoint))
+						if (ecs::UseAbility(e, p->primaryAbilty, p->mousePoint))
 						{
 							LOG_INFO("Primary attack");
 						}
@@ -423,7 +423,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 					{
 						//p->state = comp::Player::State::ATTACK;
 
-						if (ecs::Use(e, p->secondaryAbilty, p->mousePoint))
+						if (ecs::UseAbility(e, p->secondaryAbilty, p->mousePoint))
 						{
 							LOG_INFO("Secondary attack");
 						}

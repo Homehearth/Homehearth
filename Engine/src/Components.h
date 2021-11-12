@@ -278,8 +278,8 @@ namespace ecs
 			.func<&Entity::GetComponentRef<T>, entt::as_ref_t>("get"_hs);
 	}
 
-	bool Use(component::IAbility* abilityComponent, sm::Vector3 targetPoint);
-	bool Use(Entity entity, entt::meta_type abilityType, sm::Vector3 targetPoint);
+	bool UseAbility(component::IAbility* abilityComponent, sm::Vector3 targetPoint);
+	bool UseAbility(Entity entity, entt::meta_type abilityType, sm::Vector3 targetPoint);
 
 
 	component::TemporaryPhysics::Force GetGravityForce();

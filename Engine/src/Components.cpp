@@ -51,7 +51,7 @@ namespace ecs {
         return sm::Vector3::Distance(translation, target) < 0.01f;
     }
 
-    bool Use(component::IAbility* abilityComponent, sm::Vector3 targetPoint)
+    bool UseAbility(component::IAbility* abilityComponent, sm::Vector3 targetPoint)
     {
         abilityComponent->targetPoint = targetPoint;
         if (abilityComponent->isReady)
@@ -64,7 +64,7 @@ namespace ecs {
         return abilityComponent->isUsing;
     }
     
-    bool Use(Entity entity, entt::meta_type abilityType, sm::Vector3 targetPoint)
+    bool UseAbility(Entity entity, entt::meta_type abilityType, sm::Vector3 targetPoint)
     {
         using namespace entt::literals;
 
@@ -75,7 +75,7 @@ namespace ecs {
             LOG_WARNING("This entity does not have this ability");
             return false;
         }
-        return Use(ability, targetPoint);
+        return UseAbility(ability, targetPoint);
     }
 
     component::TemporaryPhysics::Force GetGravityForce()

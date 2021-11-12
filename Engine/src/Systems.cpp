@@ -515,7 +515,7 @@ void Systems::AISystem(HeadlessScene& scene)
 			comp::CombatStats* stats = entity.GetComponent<comp::CombatStats>();
 			if (stats)
 			{
-				if (ecs::Use(stats, transformCurrentClosestPlayer->position))
+				if (ecs::UseAbility(stats, transformCurrentClosestPlayer->position))
 				{
 					// Enemy Attacked
 				};
