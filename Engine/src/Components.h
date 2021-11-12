@@ -62,13 +62,16 @@ namespace ecs
 		struct EmitterParticle
 		{
 			RTexture* texture = nullptr;
-			UINT EmitterID
+			UINT type = 0U;
+			UINT nrOfParticles = 0;
+			std::vector<Particle_t> particles;
 
-		/*	EmitterParticle(RTexture* texture = nullptr)
+			EmitterParticle(std::string textureName = " ")
 			{
+				RTexture* texture;
+				texture->Create(textureName);
 				this->texture = texture;
-			}*/
-
+			}
 		};
 
 		struct Network

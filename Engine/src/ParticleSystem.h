@@ -1,22 +1,25 @@
 #pragma once
 #include "EnginePCH.h"
 
-struct Particle_t
+enum class PARTICLEMODE : UINT
 {
-	sm::Vector3 position;
-	sm::Vector2 size;
-	sm::Vector3 color;
-	INT EmitterID;
+	BLOOD,
+	LEAF,
+	WASTER,
+	SMOKE,
+	SPARKELS, 
+	RAIN
 };
 
 class ParticleSystem
 {
 private:
+
 public:
 	ParticleSystem();
 	~ParticleSystem();
 
-	void Initialize(UINT nrOfParticles, comp::EmitterParticle);
+	void Initialize(Entity* emitterEntity);
 
 };
 

@@ -25,9 +25,10 @@ struct VertexBoneIn
 struct VertexParticleIn
 {
     float3 pos          : POSITION;
+    float4 startPos     : STARTPOSITION;
     float3 color        : COLOR;
     float2 size         : SIZE;
-    int emitterID       : EMITTERID;
+    int typ             : TYPE;
 };
 
 struct VertexParticleOut

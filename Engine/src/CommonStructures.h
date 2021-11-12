@@ -264,3 +264,13 @@ static struct GridProperties_t
 	bool isVisible = true;
 
 } gridOptions;
+
+
+struct Particle_t
+{
+	sm::Vector3 position;
+	sm::Vector3 startPosition;
+	sm::Vector2 size;
+	sm::Vector3 color;
+	UINT type;
+};
