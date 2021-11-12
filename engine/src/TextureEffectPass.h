@@ -20,6 +20,5 @@ public:
 
 	void PostRender(ID3D11DeviceContext* pDeviceContext = D3D11Core::Get().DeviceContext()) override;
 
-	void CreateViews();
 };
 

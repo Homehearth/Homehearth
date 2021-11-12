@@ -442,6 +442,12 @@ bool PipelineManager::CreateTextureEffectConstantBuffer()
     return !FAILED(hr);
 }
 
+bool PipelineManager::CreateTextureEffectResources()
+{
+    // Create render target views and shader resource views here
+    return false;
+}
+
 bool PipelineManager::CreateShaders()
 {	
     if (!m_defaultVertexShader.Create("Model_vs"))
