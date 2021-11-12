@@ -25,7 +25,6 @@ Entity AIHandler::FindClosestPlayer(HeadlessScene& scene, sm::Vector3 position, 
 				transformCurrentClosest = npc->currentClosest.GetComponent<comp::Transform>();
 			}
 		});
-	LOG_INFO("AIHANDLER: Closest player pos: %lf %lf", transformCurrentClosest->position.x, transformCurrentClosest->position.y);
 	return npc->currentClosest;
 }
 
@@ -213,7 +212,8 @@ void AIHandler::AStarSearch(HeadlessScene& scene, Entity npc)
 	while (!openList.empty())
 	{
 		int itrToRemove = 0;
-		for (int i = 0; i < openList.size(); i++)
+		currentNode = openList[0];
+		for (int i = 1; i < openList.size(); i++)
 		{
 			if (openList.at(i)->f < currentNode->f)
 			{
@@ -239,17 +239,24 @@ void AIHandler::AStarSearch(HeadlessScene& scene, Entity npc)
 				bool inOpen = false;
 				for (int i = 0; i < openList.size() && !inOpen; i++)
 				{
-					if (neighbor == openList[i] && tempG > openList[i]->g)
+					if (neighbor == openList[i])
 					{
-						neighbor->parent = currentNode;
-						neighbor->f = tempF;
-						neighbor->g = tempG;
-						neighbor->h = tempH;
+						if (tempG < openList[i]->g)
+						{
+							neighbor->parent = currentNode;
+							neighbor->f = tempF;
+							neighbor->g = tempG;
+							neighbor->h = tempH;
+						}
 						inOpen = true;
 					}
 				}
 				if (!inOpen)
 				{
+					neighbor->parent = currentNode;
+					neighbor->f = tempF;
+					neighbor->g = tempG;
+					neighbor->h = tempH;
 					openList.push_back(neighbor);
 				}
 
