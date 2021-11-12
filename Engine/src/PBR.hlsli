@@ -170,11 +170,11 @@ float3 ambientIBL(float3 albedo, float3 N, float3 V, float3 F0, float metallic, 
     float3 kD = 1.0f - kS;
     kD *= (1.0f - metallic);
     
-    float3 irradiance = t_irradiance.Sample(s_linear, N).rgb;
+    float3 irradiance = pow(max(t_irradiance.Sample(s_linear, N).rgb, 0.0f), 2.2f);
     float3 diffuse = albedo * irradiance;
     
-    const float MAX_REF_LOD = 3.0f;
-    float3 prefilteredColor = t_radiance.SampleLevel(s_linear, R, roughness * MAX_REF_LOD).rgb;
+    const float MAX_REF_LOD = 4.0f;
+    float3 prefilteredColor = pow(max(t_radiance.SampleLevel(s_linear, R, roughness * MAX_REF_LOD).rgb, 0.0f), 2.2f);
     float2 brdf = t_BRDFLUT.Sample(s_linear, float2(max(dot(N, V), 0.0f), roughness)).rg;
     float3 specular = prefilteredColor * (F * brdf.x + brdf.y);
 
