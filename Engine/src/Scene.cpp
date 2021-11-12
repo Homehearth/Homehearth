@@ -37,33 +37,35 @@ void Scene::Update(float dt)
 	GetCurrentCamera()->Update(dt);
 	BasicScene::Update(dt);
 
-	if (!m_renderableCopies.IsSwapped() &&
-		!m_renderableAnimCopies.IsSwapped())
 	{
 		PROFILE_SCOPE("Copy Transforms");
 		m_renderableCopies[0].clear();
 		m_renderableAnimCopies[0].clear();
 
 		m_registry.view<comp::Renderable, comp::Transform>().each([&](entt::entity entity, comp::Renderable& r, comp::Transform& t)
-		{
-			r.data.worldMatrix = ecs::GetMatrix(t);
-			
-			//Check if the model has an animator too
-			comp::Animator* anim = m_registry.try_get<comp::Animator>(entity);
-			if (anim != nullptr)
 			{
-				m_renderableAnimCopies[0].push_back({r, *anim});
-			}
-			else
-			{
-				m_renderableCopies[0].push_back(r);
-			}
-		});
+				r.data.worldMatrix = ecs::GetMatrix(t);
 
+				//Check if the model has an animator too
+				comp::Animator* anim = m_registry.try_get<comp::Animator>(entity);
+				if (anim != nullptr)
+				{
+					m_renderableAnimCopies[0].push_back({ r, *anim });
+				}
+				else
+				{
+					m_renderableCopies[0].push_back(r);
+				}
+			});
+	}
+	if (!m_renderableCopies.IsSwapped() &&
+		!m_renderableAnimCopies.IsSwapped())
+	{
 		m_renderableCopies.Swap();
 		m_renderableAnimCopies.Swap();
 		GetCurrentCamera()->Swap();
 	}
+
 	if (!m_debugRenderableCopies.IsSwapped())
 	{
 		m_debugRenderableCopies[0].clear();
@@ -93,8 +95,6 @@ void Scene::Update(float dt)
 
 		m_debugRenderableCopies.Swap();
 	}
-
-	Systems::UpdatePlayerVisuals(this);
 }
 
 void Scene::Update2D()

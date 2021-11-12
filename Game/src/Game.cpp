@@ -415,6 +415,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		Scene& gameScene = GetScene("Game");
 		// Map healthbars to players.
 		GameSystems::UpdateHealthbar(gameScene);
+		//GameSystems::UpdateMainPlayer(this);
 		break;
 
 	}

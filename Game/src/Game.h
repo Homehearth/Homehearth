@@ -9,7 +9,6 @@ class Game : public Engine
 private:
 	std::chrono::system_clock::time_point m_timeThen;
 	std::vector<comp::Transform> predictedPositions;
-	std::unordered_map<uint32_t, Entity> m_players;
 	std::unordered_map<uint32_t, Entity> m_gameEntities;
 	std::vector<dx::BoundingSphere> m_LOSColliders;
 	std::unordered_map<ModelID, std::vector<comp::Renderable>> m_models;
@@ -44,6 +43,7 @@ public:
 	uint32_t m_localPID;
 	uint32_t m_gameID;
 	std::string m_playerName;
+	std::unordered_map<uint32_t, Entity> m_players;
 
 	float m_masterVolume = 5.0f;
 

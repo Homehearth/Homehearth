@@ -146,7 +146,7 @@ namespace sceneHelp
 				// Prediction
 				//engine->m_predictor.Predict(engine->GetScene("Game"));
 				GameSystems::RenderIsCollidingSystem(scene);
-				//GameSystems::UpdatePlayerVisuals(scene);
+				GameSystems::UpdatePlayerVisuals(engine);
 #ifdef _DEBUG
 				if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Space, KeyState::RELEASED))
 				{
@@ -271,22 +271,22 @@ namespace sceneHelp
 		enemies->SetVisiblity(false);
 		scene.Add2DCollection(timerCollection, "timer");
 
-		Collection2D* attackCollection = new Collection2D;
-		attackCollection->AddElement<rtd::Text>("Attacks!", draw_text_t(0, height - (height / 6), (strlen("Attacks!") * D2D1Core::GetDefaultFontSize()) * 0.5f, D2D1Core::GetDefaultFontSize()));
+		//Collection2D* attackCollection = new Collection2D;
+		//attackCollection->AddElement<rtd::Text>("Attacks!", draw_text_t(0, height - (height / 6), (strlen("Attacks!") * D2D1Core::GetDefaultFontSize()) * 0.5f, D2D1Core::GetDefaultFontSize()));
 
-		for (int i = 0; i < 1; i++)
-		{
-			attackCollection->AddElement<rtd::Picture>(texture2, draw_t(0, height - (height / 8), width / 12, height / 8));
-		}
-		scene.Add2DCollection(attackCollection, "attacks");
+		//for (int i = 0; i < 1; i++)
+		//{
+		//	attackCollection->AddElement<rtd::Picture>(texture2, draw_t(0, height - (height / 8), width / 12, height / 8));
+		//}
+		//scene.Add2DCollection(attackCollection, "attacks");
 
-		Collection2D* buildCollection = new Collection2D;
-		buildCollection->AddElement<rtd::Text>("Builds!", draw_text_t(width - (strlen("Builds!") * D2D1Core::GetDefaultFontSize()), height - (height / 6), strlen("Builds!") * D2D1Core::GetDefaultFontSize(), D2D1Core::GetDefaultFontSize()));
-		for (int i = 0; i < 1; i++)
-		{
-			buildCollection->AddElement<rtd::Picture>(texture2, draw_t((width - (width / 12)) - (i * (width / 12)), height - (height / 8), width / 16, height / 9));
-		}
-		scene.Add2DCollection(buildCollection, "builds");
+		//Collection2D* buildCollection = new Collection2D;
+		//buildCollection->AddElement<rtd::Text>("Builds!", draw_text_t(width - (strlen("Builds!") * D2D1Core::GetDefaultFontSize()), height - (height / 6), strlen("Builds!") * D2D1Core::GetDefaultFontSize(), D2D1Core::GetDefaultFontSize()));
+		//for (int i = 0; i < 1; i++)
+		//{
+		//	buildCollection->AddElement<rtd::Picture>(texture2, draw_t((width - (width / 12)) - (i * (width / 12)), height - (height / 8), width / 16, height / 9));
+		//}
+		//scene.Add2DCollection(buildCollection, "builds");
 
 		for (int i = 0; i < MAX_PLAYERS_PER_LOBBY; i++)
 		{
