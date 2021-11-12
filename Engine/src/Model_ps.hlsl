@@ -36,14 +36,14 @@ float4 main(PixelIn input) : SV_TARGET
 	float3 camPos = c_cameraPosition.xyz;
     float ao = 1.0f;
     float3 albedo = 1.f;
-    float metallic = 0.0f;
+    float metallic = 1.0f;
     float roughness = 0.0f;
     float exposure = 0.1f;
     
     //Normal Vector
     float3 N = normalize(input.normal);
     //View Direction Vector
-    float3 V = normalize(camPos - input.worldPos.xyz);
+    float3 V = normalize(camPos - input.worldPos.xyz); //Uppdateras denna korrekt?
     
     //If an object has a texture, sample from it else use default values.
     SampleTextures(input, albedo, N, roughness, metallic, ao);
@@ -82,6 +82,7 @@ float4 main(PixelIn input) : SV_TARGET
             lightCol *= 0.f;
         }
     }
+    
     //Ambient lighting
     float3 ambient = float3(0.7f, 0.15f, 0.5f) * albedo * ao;
     

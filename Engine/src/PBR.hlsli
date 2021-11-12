@@ -66,7 +66,9 @@ float3 FresnelSchlick(float cosTheta, float3 F0)
 
 float3 FresnelSchlickRoughness(float cosTheta, float3 F0, float roughness)
 {
-    return F0 + (max(float3(1.0f - roughness, 1.0f - roughness, 1.0f - roughness), F0) - F0) * pow(clamp(1.0f - cosTheta, 0.0f, 1.0f), 5.0f);
+    float3 r = 1.0f - roughness;
+    //return F0 + (max(r, F0) - F0) * pow(clamp(1.0f - cosTheta, 0.0f, 1.0f), 5.0f);
+    return F0 + (max(r, F0) - F0) * pow(1.0f - cosTheta, 5.0f);
 }
 
 
@@ -166,7 +168,7 @@ float3 ambientIBL(float3 albedo, float3 N, float3 V, float3 F0, float metallic, 
     float3 F = FresnelSchlickRoughness(max(dot(N, V), 0.0f), F0, roughness);
     float3 kS = F;
     float3 kD = 1.0f - kS;
-    //kD *= (1.0f - metallic);
+    kD *= (1.0f - metallic);
     
     float3 irradiance = t_irradiance.Sample(s_linear, N).rgb;
     float3 diffuse = albedo * irradiance;
@@ -176,8 +178,8 @@ float3 ambientIBL(float3 albedo, float3 N, float3 V, float3 F0, float metallic, 
     float2 brdf = t_BRDFLUT.Sample(s_linear, float2(max(dot(N, V), 0.0f), roughness)).rg;
     float3 specular = prefilteredColor * (F * brdf.x + brdf.y);
 
-    //return (kD * diffuse + specular) * ao;
-    return (kD * diffuse) * ao;
+    return (kD * diffuse + specular) * ao;
+    //return kD;
 }
 
 void SampleTextures(PixelIn input, inout float3 albedo, inout float3 N, inout float roughness, inout float metallic, inout float ao)
