@@ -11,7 +11,7 @@ BT::MoveCBT::MoveCBT(const std::string& name, Entity entity)
 
 BT::NodeStatus BT::MoveCBT::Tick()
 {
-	if(runNrTimes <= 0)
+	//if(runNrTimes <= 0)
 	{
 		//Temp function to get the direction to target and add that to velocity
 		sm::Vector3* targetPosition = Blackboard::Get().GetValue<sm::Vector3>("target" + std::to_string(entity));
@@ -34,17 +34,17 @@ BT::NodeStatus BT::MoveCBT::Tick()
 
 		entity.GetComponent<comp::Velocity>()->vel = direction * entity.GetComponent<comp::NPC>()->movementSpeed;
 
-		entity.GetComponent<comp::BehaviorTree>()->currentNode = this;
+		//entity.GetComponent<comp::BehaviorTree>()->currentNode = this;
 
-		runNrTimes--;
+		//runNrTimes--;
 		return BT::NodeStatus::SUCCESS;
 	}
-	else
-	{
-		LOG_INFO("Reseted currentNode");
-		runNrTimes = 600;
-		entity.GetComponent<comp::BehaviorTree>()->currentNode = nullptr;
-		return BT::NodeStatus::SUCCESS;
-	}
+	//else
+	//{
+	//	LOG_INFO("Reseted currentNode");
+	//	runNrTimes = 600;
+	//	entity.GetComponent<comp::BehaviorTree>()->currentNode = nullptr;
+	//	return BT::NodeStatus::SUCCESS;
+	//}
 
 }
