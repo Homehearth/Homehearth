@@ -40,3 +40,17 @@ struct rotationKey_t
 	double			time;
 	sm::Quaternion	val;
 };
+
+
+enum class AnimationType
+{
+	NONE,
+	IDLE1,
+	IDLE2,
+	WALK,
+	RUN,
+	ATTACK,
+	ATTACK2,
+	TAKE_DAMAGE,
+	PLACE_DEFENCE
+};

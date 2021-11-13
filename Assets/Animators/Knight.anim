@@ -11,7 +11,9 @@ defaultAnim 	idle
 
 
 //Blendstates:
-idle --> running	1.0s
+idle --> run		1.0s
+idle --> attack		0.3s
+
 
 ... Walk --> Idle
 Blendtime: 2.0s;

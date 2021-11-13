@@ -46,6 +46,14 @@ void RAnimator::SetInterpolation(bool& toggle)
 	m_useInterpolation = toggle;
 }
 
+void RAnimator::RandomizeTime()
+{
+	if (m_currentAnim)
+	{
+		m_currentFrameTime = std::rand() / m_currentAnim->GetDuraction();
+	}
+}
+
 bool RAnimator::CreateBonesSB()
 {
 	UINT nrOfMatrices = static_cast<UINT>(m_finalMatrices.size());
@@ -97,6 +105,13 @@ void RAnimator::UpdateStructureBuffer()
 	D3D11Core::Get().DeviceContext()->Unmap(m_bonesSB_Buffer.Get(), 0);
 }
 
+AnimationType RAnimator::GetAnimationType(const std::string& name) const
+{
+
+
+	return AnimationType();
+}
+
 void RAnimator::ResetTime()
 {
 	//Reset frametime
@@ -107,11 +122,6 @@ void RAnimator::ResetTime()
 	{
 		m_bones[i].lastKeys = { 0, 0, 0 };
 	}
-}
-
-void RAnimator::RandomizeStartTime(const std::shared_ptr<RAnimation>& anim)
-{
-	m_currentFrameTime = std::rand() / anim->GetDuraction();
 }
 
 bool RAnimator::Create(const std::string& filename)

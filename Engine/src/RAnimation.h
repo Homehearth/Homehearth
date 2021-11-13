@@ -9,7 +9,6 @@ struct aiNodeAnim;
 
 	Create(aiAnimation): Load an animation from assimpformat
 	Create(filename):	 Load an animation from file
-	GetMatrix():		 Get the matrix for specific time
 */
 
 class RAnimation : public resource::GResource
@@ -33,17 +32,17 @@ private:
 	void LoadPositions(const std::string& bonename, aiNodeAnim* channel);
 	void LoadScales(const std::string& bonename, aiNodeAnim* channel);
 	void LoadRotations(const std::string& bonename, aiNodeAnim* channel);
-
 	void LoadKeyframes(const aiAnimation* animation);
-
-	//Make public? Needed for blending two animations?
-	const sm::Vector3 GetPosition(		const std::string& bonename, const double& currentFrame, UINT& lastKey, bool interpolate) const;
-	const sm::Vector3 GetScale(			const std::string& bonename, const double& currentFrame, UINT& lastKey, bool interpolate) const;
-	const sm::Quaternion GetRotation(	const std::string& bonename, const double& currentFrame, UINT& lastKey, bool interpolate) const;
 
 public:
 	RAnimation();
 	~RAnimation();
+
+	//Create from a assimp-animation if needed
+	void Create(const aiAnimation* animation);
+
+	// Inherited via GResource
+	virtual bool Create(const std::string& filename) override;
 
 	//Set and get
 	void SetLoopable(bool& enable);
@@ -53,6 +52,13 @@ public:
 	const double& GetDuraction() const;
 
 	/*
+		Data for doing animation
+	*/
+	const sm::Vector3 GetPosition(const std::string& bonename, const double& currentFrame, UINT& lastKey, bool interpolate) const;
+	const sm::Vector3 GetScale(const std::string& bonename, const double& currentFrame, UINT& lastKey, bool interpolate) const;
+	const sm::Quaternion GetRotation(const std::string& bonename, const double& currentFrame, UINT& lastKey, bool interpolate) const;
+
+	/*
 		Get translations depending on the bone.
 		Current frame is the frame we shall get information about.
 		Last keys is a way to optimize the search for next pos,scl,rot.
@@ -60,13 +66,7 @@ public:
 	*/
 	const sm::Matrix GetMatrix(const std::string& bonename, 
 								const double& currentFrame, 
-								std::array<UINT,3>& lastKeys,
-								bool interpolate = true);
-
-	//Create from a assimp-animation if needed
-	void Create(const aiAnimation* animation);
-
-	// Inherited via GResource
-	virtual bool Create(const std::string& filename) override;
+								std::array<UINT,3>& lastKeys, 
+								bool interpolate = true) const;
 
 };

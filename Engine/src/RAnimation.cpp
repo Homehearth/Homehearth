@@ -19,6 +19,9 @@ RAnimation::~RAnimation()
 	m_keyFrames.clear();
 }
 
+/* 
+	Private functions
+*/
 void RAnimation::LoadPositions(const std::string& bonename, aiNodeAnim* channel)
 {
 	KeyFrames keyframes;
@@ -116,6 +119,89 @@ void RAnimation::LoadKeyframes(const aiAnimation* animation)
 			LoadRotations(boneName, animation->mChannels[i]);
 		}
 	}
+}
+
+/* 
+	Public functions
+*/
+void RAnimation::Create(const aiAnimation* animation)
+{
+	m_duration = animation->mDuration;
+	m_ticksPerFrame = animation->mTicksPerSecond;
+
+	//Load in all the keyframes
+	LoadKeyframes(animation);
+}
+
+bool RAnimation::Create(const std::string& filename)
+{
+	std::string filepath = ANIMATIONPATH + filename;
+	Assimp::Importer importer;
+
+	//Will remove extra text on bones like: "_$AssimpFbx$_"...
+	importer.SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, false);
+
+	const aiScene* scene = importer.ReadFile(filepath, aiProcess_MakeLeftHanded);
+
+	//Check if readfile was successful
+	if (!scene || !scene->mRootNode)
+	{
+#ifdef _DEBUG
+		LOG_WARNING("Assimp error: %s", importer.GetErrorString());
+#endif 
+		importer.FreeScene();
+		return false;
+	}
+
+	if (!scene->HasAnimations())
+	{
+#ifdef _DEBUG
+		std::cout << "The file " << filename << " does not have any animations..." << std::endl;
+#endif
+		importer.FreeScene();
+		return false;
+	}
+
+	//Only supports to load in the first animation
+	const aiAnimation* animation = scene->mAnimations[0];
+
+	m_duration = animation->mDuration;
+	m_ticksPerFrame = animation->mTicksPerSecond;
+
+	//Load in all the keyframes - works with only one animation at time
+	LoadKeyframes(animation);
+
+	//#ifdef _DEBUG
+	//	LOG_INFO("Loaded animation: %s\n", filename.c_str());
+	//#endif // _DEBUG
+
+	importer.FreeScene();
+	return true;
+}
+
+void RAnimation::SetLoopable(bool& enable)
+{
+	m_isLoopable = enable;
+}
+
+bool RAnimation::IsLoopable() const
+{
+	return m_isLoopable;
+}
+
+void RAnimation::SetTicksPerFrame(const double& speed)
+{
+	m_ticksPerFrame = speed;
+}
+
+const double& RAnimation::GetTicksPerFrame() const
+{
+	return m_ticksPerFrame;
+}
+
+const double& RAnimation::GetDuraction() const
+{
+	return m_duration;
 }
 
 const sm::Vector3 RAnimation::GetPosition(const std::string& bonename, const double& currentFrame, UINT& lastKey, bool interpolate) const
@@ -254,32 +340,7 @@ const sm::Quaternion RAnimation::GetRotation(const std::string& bonename, const 
 	return finalQuat;
 }
 
-void RAnimation::SetLoopable(bool& enable)
-{
-	m_isLoopable = enable;
-}
-
-bool RAnimation::IsLoopable() const
-{
-	return m_isLoopable;
-}
-
-void RAnimation::SetTicksPerFrame(const double& speed)
-{
-	m_ticksPerFrame = speed;
-}
-
-const double& RAnimation::GetTicksPerFrame() const
-{
-	return m_ticksPerFrame;
-}
-
-const double& RAnimation::GetDuraction() const
-{
-	return m_duration;
-}
-
-const sm::Matrix RAnimation::GetMatrix(const std::string& bonename, const double& currentFrame, std::array<UINT, 3>& lastKeys, bool interpolate)
+const sm::Matrix RAnimation::GetMatrix(const std::string& bonename, const double& currentFrame, std::array<UINT, 3>& lastKeys, bool interpolate) const
 {
 	sm::Matrix finalMatrix = sm::Matrix::Identity;
 
@@ -295,60 +356,4 @@ const sm::Matrix RAnimation::GetMatrix(const std::string& bonename, const double
 	}
 
 	return finalMatrix;
-}
-
-void RAnimation::Create(const aiAnimation* animation)
-{
-	m_duration = animation->mDuration;
-	m_ticksPerFrame = animation->mTicksPerSecond;
-	
-	//Load in all the keyframes
-	LoadKeyframes(animation);
-
-}
-
-bool RAnimation::Create(const std::string& filename)
-{
-	std::string filepath = ANIMATIONPATH + filename;
-	Assimp::Importer importer;
-
-	//Will remove extra text on bones like: "_$AssimpFbx$_"...
-	importer.SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, false);
-
-	const aiScene* scene = importer.ReadFile(filepath, aiProcess_MakeLeftHanded);
-	
-    //Check if readfile was successful
-    if (!scene || !scene->mRootNode)
-	{
-#ifdef _DEBUG
-        LOG_WARNING("Assimp error: %s", importer.GetErrorString());
-#endif 
-        importer.FreeScene();
-        return false;
-    }
-
-	if (!scene->HasAnimations())
-	{
-#ifdef _DEBUG
-		std::cout << "The file " << filename << " does not have any animations..." << std::endl;
-#endif
-		importer.FreeScene();
-		return false;
-	}
-
-	//Only supports to load in the first animation
-	const aiAnimation* animation = scene->mAnimations[0];
-
-	m_duration = animation->mDuration;
-	m_ticksPerFrame = animation->mTicksPerSecond;
-	
-	//Load in all the keyframes - works with only one animation at time
-	LoadKeyframes(animation);
-	
-//#ifdef _DEBUG
-//	LOG_INFO("Loaded animation: %s\n", filename.c_str());
-//#endif // _DEBUG
-
-	importer.FreeScene();
-	return true;
 }

@@ -523,14 +523,23 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 			{
 				std::string name;
 				msg >> name;
-				e.AddComponent<comp::Renderable>()->model = ResourceManager::Get().CopyResource<RModel>(name, true);
+				std::shared_ptr<RModel> model = ResourceManager::Get().CopyResource<RModel>(name, true);
+				if (model)
+				{
+					e.AddComponent<comp::Renderable>()->model = model;
+				}
 				break;
 			}
 			case ecs::Component::ANIMATOR_NAME:
 			{
 				std::string name;
 				msg >> name;
-				e.AddComponent<comp::Animator>()->animator = ResourceManager::Get().CopyResource<RAnimator>(name, true);
+				std::shared_ptr<RAnimator> animator = ResourceManager::Get().CopyResource<RAnimator>(name, true);
+				if (animator)
+				{
+					animator->RandomizeTime();
+					e.AddComponent<comp::Animator>()->animator = animator;
+				}
 				break;
 			}
 			case ecs::Component::CHANGE_ANIMATION:
@@ -632,14 +641,22 @@ void Game::UpdatePredictorFromMessage(Entity e, message<GameMsg>& msg, const uin
 			{
 				std::string name;
 				msg >> name;
-				e.AddComponent<comp::Renderable>()->model = ResourceManager::Get().CopyResource<RModel>(name);
-				break;
+				std::shared_ptr<RModel> model = ResourceManager::Get().CopyResource<RModel>(name, true);
+				if (model)
+				{
+					e.AddComponent<comp::Renderable>()->model = model;
+				}
 			}
 			case ecs::Component::ANIMATOR_NAME:
 			{
 				std::string name;
 				msg >> name;
-				e.AddComponent<comp::Animator>()->animator = ResourceManager::Get().CopyResource<RAnimator>(name);
+				std::shared_ptr<RAnimator> animator = ResourceManager::Get().CopyResource<RAnimator>(name, true);
+				if (animator)
+				{
+					animator->RandomizeTime();
+					e.AddComponent<comp::Animator>()->animator = animator;
+				}
 				break;
 			}
 			case ecs::Component::NAME_PLATE:

@@ -18,6 +18,10 @@ private:
 	double							m_currentFrameTime;
 	bool							m_useInterpolation;
 	std::vector<bone_keyFrames_t>	m_bones;										//Change to only bone_t later
+
+	//AnimationType m_currentAnim;
+	//std::unordered_map<AnimationType, std::shared_ptr<RAnimation>> m_animations;
+
 	std::unordered_map<std::string, std::shared_ptr<RAnimation>> m_animations;		//Change to std::unique_ptr<animation_t>
 
 	//Will later be: animation_t* m_defaultAnim;
@@ -45,11 +49,10 @@ private:
 	bool CreateBonesSB();
 	void UpdateStructureBuffer();
 
+	AnimationType GetAnimationType(const std::string& name) const;
+
 	//Reset the time of currentFrametime
 	void ResetTime();
-
-	//Randomize at what time an animation starts at
-	void RandomizeStartTime(const std::shared_ptr<RAnimation>& anim);
 
 	//void BlendAnimation();
 	//void OneAnimation();
@@ -58,12 +61,15 @@ public:
 	RAnimator();
 	~RAnimator();
 
-	//Enable or disable interpolation
-	void SetInterpolation(bool& toggle);
-
 	// Inherited via GResource
 	// Create from a custom file - something.anim
 	virtual bool Create(const std::string& filename) override;
+
+	//Enable or disable interpolation
+	void SetInterpolation(bool& toggle);
+
+	//Randomize the starttime of an animation
+	void RandomizeTime();
 
 	//Switch animation - not filename
 	bool ChangeAnimation(const std::string& name);
