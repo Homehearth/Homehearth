@@ -2,6 +2,7 @@
 #include "Server.h"
 #include "HeadlessEngine.h"
 #include "GridSystem.h"
+#include "AIHandler.h"
 #include "ServerSystems.h"
 #include "Wave.h"
 #include "AIBehaviors.h"
@@ -19,6 +20,7 @@ private:
 	uint32_t m_gameID;
 	uint32_t m_tick;
 	GridSystem m_grid;
+	AIHandler m_aiHandler;
 
 	HeadlessScene* m_pLobbyScene;
 	HeadlessScene* m_pGameScene;
@@ -55,9 +57,7 @@ private:
 	void OnComponentUpdated(Entity entity, ecs::Component component);
 
 
-	std::vector<std::string> OpenFile(std::string filePath);
-	void ConnectNodes(comp::Node* node1, comp::Node* node2);
-	comp::Node* GetAINodeById(Vector2I& id);
+
 
 	void BuildMapColliders(std::vector<dx::BoundingOrientedBox>* mapColliders);
 
