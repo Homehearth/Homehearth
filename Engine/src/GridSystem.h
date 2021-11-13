@@ -1,5 +1,6 @@
 #pragma once
 #include <stb_image.h>
+class AIHandler;
 
 enum class TileType
 {
@@ -36,7 +37,7 @@ public:
 	/*GridSize is decided by the texture size, how many tiles in x and why, MapSize is how big the world is*/
 	void							Initialize(Vector2I mapSize, sm::Vector3 position, std::string fileName, HeadlessScene* scene);
 
-	void							PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse);
+	void							PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, AIHandler* aiHandler);
 	uint32_t						GetTileCount() const;
 	//Get functions
 	Vector2I						GetGridSize() const;

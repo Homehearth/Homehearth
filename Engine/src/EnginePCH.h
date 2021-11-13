@@ -11,7 +11,7 @@
 #define USE_MIPMAPS 1
 #define RENDER_GRID 0
 
-#define RENDER_AINODES 1
+#define RENDER_AINODES 0
 
 //Macros
 #if RENDER_IMGUI

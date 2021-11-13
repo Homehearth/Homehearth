@@ -153,7 +153,7 @@ void Simulation::CreateWaves()
 	Wave wave1, wave2; // Default: WaveType::Zone
 	{ // Wave_1 Group_1
 		Wave::Group group1;
-		group1.AddEnemy(EnemyType::Default, 1);
+		group1.AddEnemy(EnemyType::Default, 3);
 		group1.SetSpawnPoint({ 380.f, -220.0f });
 		wave1.SetTimeLimit(5);
 		wave1.AddGroup(group1);
@@ -345,7 +345,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 
 					//Place defence on grid
 					if (input.rightMouse)
-						m_grid.PlaceDefence(input.mouseRay, e.GetComponent<comp::Network>()->id);
+						m_grid.PlaceDefence(input.mouseRay, e.GetComponent<comp::Network>()->id, &m_aiHandler);
 
 				}
 			}
@@ -423,7 +423,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 	m_removedEntities.clear();
 
 
-	this->BuildMapColliders(mapColliders);
+	//this->BuildMapColliders(mapColliders);
 
 	m_pCurrentScene = m_pLobbyScene;
 

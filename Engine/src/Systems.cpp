@@ -310,11 +310,6 @@ void Systems::AISystem(HeadlessScene& scene, AIHandler* aiHandler)
 			comp::Transform* transformCurrentClosestPlayer = closestPlayer.GetComponent<comp::Transform>();
 
 			Node* closestNod = aiHandler->FindClosestNode(transformCurrentClosestPlayer->position);
-			if(!closestNod->reachable)
-			{
-				LOG_INFO("Nodetype not reachable...");
-			}
-				
 
 			if (sm::Vector3::Distance(transformNPC->position, transformCurrentClosestPlayer->position) <= npc.attackRange)
 			{
