@@ -12,3 +12,4 @@
 #include "MoveCBT.h"
 #include "AttackCBT.h"
 #include "InRangeCBT.h"
+#include "GenPathCBT.h"

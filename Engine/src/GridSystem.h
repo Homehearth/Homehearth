@@ -1,6 +1,8 @@
 #pragma once
 #include <stb_image.h>
+
 class AIHandler;
+class HeadlessScene;
 
 enum class TileType
 {

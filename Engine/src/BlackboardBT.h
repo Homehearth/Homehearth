@@ -2,6 +2,7 @@
 #include <iostream>
 #include <ostream>
 #include <unordered_map>
+#include "AIHandler.h"
 
 struct Base
 {
@@ -38,10 +39,17 @@ public:
 	template<typename T>
 	bool AddValue(std::string key, T value);
 
+	AIHandler* GetAIHandler();
 private:
 	Blackboard() = default;
 	std::unordered_map<std::string, std::unique_ptr<Base>> storage;
+	AIHandler aiHandler;
 };
+
+inline AIHandler* Blackboard::GetAIHandler()
+{
+	return &this->aiHandler;
+}
 
 template <typename T>
 T* Blackboard::GetValue(std::string key)

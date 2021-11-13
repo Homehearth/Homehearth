@@ -346,7 +346,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 
 					//Place defence on grid
 					if (input.rightMouse)
-						m_grid.PlaceDefence(input.mouseRay, e.GetComponent<comp::Network>()->id, &m_aiHandler);
+						m_grid.PlaceDefence(input.mouseRay, e.GetComponent<comp::Network>()->id, Blackboard::Get().GetAIHandler());
 
 				}
 			}
@@ -398,7 +398,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 
 	//Gridsystem
 	m_grid.Initialize(gridOptions.mapSize, gridOptions.position, gridOptions.fileName, m_pGameScene);
-	m_aiHandler.CreateNodes(&m_grid);
+	Blackboard::Get().GetAIHandler()->CreateNodes(&m_grid);
 #if RENDER_AINODES
 	std::vector<std::vector<std::shared_ptr<Node>>> nodes = m_aiHandler.GetNodes();
 	for(int y = 0; y < nodes[0].size(); y++)
@@ -420,7 +420,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 	m_removedEntities.clear();
 
 
-	//this->BuildMapColliders(mapColliders);
+	this->BuildMapColliders(mapColliders);
 
 	m_pCurrentScene = m_pLobbyScene;
 

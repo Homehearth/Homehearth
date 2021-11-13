@@ -20,7 +20,6 @@ private:
 	uint32_t m_gameID;
 	uint32_t m_tick;
 	GridSystem m_grid;
-	AIHandler m_aiHandler;
 
 	HeadlessScene* m_pLobbyScene;
 	HeadlessScene* m_pGameScene;

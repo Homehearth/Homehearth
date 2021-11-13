@@ -1,33 +1,6 @@
 #include "EnginePCH.h"
 #include "AIHandler.h"
 
-
-Entity AIHandler::FindClosestPlayer(HeadlessScene& scene, sm::Vector3 position, comp::NPC* npc)
-{
-	comp::Transform* transformCurrentClosest = nullptr;
-
-	scene.ForEachComponent < comp::Player>([&](Entity& playerEntity, comp::Player& player)
-		{
-			if (!npc->currentClosest.IsNull())
-			{
-				transformCurrentClosest = npc->currentClosest.GetComponent<comp::Transform>();
-				comp::Transform* transformPlayer = playerEntity.GetComponent<comp::Transform>();
-				if (sm::Vector3::Distance(transformPlayer->position, position) < sm::Vector3::Distance(transformCurrentClosest->position, position))
-				{
-					LOG_INFO("Switching player");
-					npc->currentClosest = playerEntity;
-					transformCurrentClosest = npc->currentClosest.GetComponent<comp::Transform>();
-				}
-			}
-			else
-			{
-				npc->currentClosest = playerEntity;
-				transformCurrentClosest = npc->currentClosest.GetComponent<comp::Transform>();
-			}
-		});
-	return npc->currentClosest;
-}
-
 Node* AIHandler::FindClosestNode(sm::Vector3 position)
 {
 	Node* currentClosest = nullptr;
@@ -97,11 +70,6 @@ std::vector<Node*> AIHandler::GetNeighbors(GridSystem* grid, Tile* baseNode)
 					continue;
 				}
 
-				//if(baseNode->gridID.x + newX == 38 && baseNode->gridID.y + newY == 20)
-				//{
-				//	__debugbreak();
-				//}
-
 				currentTile = grid->GetTile(Vector2I(baseNode->gridID.x + newX, baseNode->gridID.y + newY));
 
 				if (currentTile->type == TileType::DEFAULT || currentTile->type == TileType::EMPTY)
@@ -111,27 +79,6 @@ std::vector<Node*> AIHandler::GetNeighbors(GridSystem* grid, Tile* baseNode)
 
 			}
 		}
-
-
-
-		//for (int i = max(0,  - 1); i <= min(baseNode->gridID.x + 1, grid->GetGridSize().x - 1); i++)
-		//{
-		//	for (int j = max(0, baseNode->gridID.y - 1); j <= min(baseNode->gridID.y + 1, grid->GetGridSize().y - 1); j++)
-		//	{
-		//		if (i != baseNode->gridID.x || j != baseNode->gridID.y)
-		//		{
-		//			currentTile = grid->GetTile(Vector2I(j, i));
-		//			if (currentTile->type == TileType::DEFAULT
-		//				|| currentTile->type == TileType::EMPTY)
-		//			{
-		//				neighbors.push_back(GetNodeByID({ j,i }));
-		//			}
-		//		}
-		//	}
-		//}
-
-
-		//LOG_INFO("Connections: %d", nodes.at(i)->connections.size());
 	}
 	return neighbors;
 }
@@ -209,32 +156,6 @@ void AIHandler::CreateNodes(GridSystem* grid)
 
 		}
 	}
-	//Build Connections
-	//LOG_INFO("AIHandler: Connecting Nodes");
-	//for (int y = 0; y < grid->GetGridSize().y; y++)
-	//{
-	//	for (int x = 0; x < grid->GetGridSize().x; x++)
-	//	{
-	//		Tile* entityTile = grid->GetTile(Vector2I(y, x));
-
-	//		if (entityTile->type == TileType::EMPTY || entityTile->type == TileType::DEFAULT)
-	//		{
-	//			std::vector<Node*> neighbors = GetNeighbors(grid, entityTile);
-	//			for (auto neighbor : neighbors)
-	//			{
-	//				if (neighbor->reachable)
-	//					m_nodes[x][y]->connections.push_back(neighbor);
-	//			}
-	//		}
-	//		else
-	//		{
-	//			m_nodes[x][y]->reachable = false;
-	//		}
-
-
-	//	}
-	//}
-
 
 }
 
@@ -247,12 +168,7 @@ AIHandler::~AIHandler()
 	m_nodes.clear();
 }
 
-void AIHandler::SetClosestNode(comp::NPC& npc, sm::Vector3 position)
-{
-	npc.currentNode = FindClosestNode(position);
-}
-
-void AIHandler::AStarSearch(HeadlessScene& scene, Entity npc)
+void AIHandler::AStarSearch(Entity npc)
 {
 	comp::Transform* npcTransform = npc.GetComponent<comp::Transform>();
 	comp::NPC* npcComp = npc.GetComponent<comp::NPC>();
@@ -265,9 +181,15 @@ void AIHandler::AStarSearch(HeadlessScene& scene, Entity npc)
 	startingNode->f = 0.0f;
 	openList.push_back(startingNode);
 
-	Entity closestPlayer = FindClosestPlayer(scene, npcTransform->position, npcComp);
-	comp::Transform* playerTransform = closestPlayer.GetComponent<comp::Transform>();
-	Node* goalNode = FindClosestNode(playerTransform->position);
+	//Gets the target that findTargetNode has picked for this entity
+	sm::Vector3* targetPos = Blackboard::Get().GetValue<sm::Vector3>("target" + std::to_string(npc));
+	if(targetPos == nullptr)
+	{
+		LOG_INFO("Target was nullptr...");
+		return;
+	}
+
+	Node* goalNode = FindClosestNode(*targetPos);
 
 	while(!openList.empty())
 	{
