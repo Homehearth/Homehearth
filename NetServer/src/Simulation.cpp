@@ -360,7 +360,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 				Systems::MovementSystem(scene, e.dt);
 				Systems::MovementColliderSystem(scene, e.dt);
 				Systems::AISystem(scene);
-				Systems::CombatSystem(scene, e.dt, m_money.m_amount);
+				Systems::CombatSystem(scene, e.dt, m_currency.GetAmountRef());
 				{
 					PROFILE_SCOPE("Collision Box/Box");
 					Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(scene, e.dt);
@@ -772,7 +772,7 @@ void Simulation::SendSnapshot()
 
 	network::message<GameMsg> msg3;
 	msg3.header.id = GameMsg::Game_Money;
-	msg3 << m_money.m_amount;
+	msg3 << m_currency.GetAmount();
 	this->Broadcast(msg3);
 }
 
@@ -980,6 +980,8 @@ void Simulation::ResetGameScene()
 		msg << count;
 		Broadcast(msg);
 	}
+
+	m_currency.Zero();
 
 	LOG_INFO("%lld", m_pGameScene->GetRegistry()->size());
 	CreateWaves();

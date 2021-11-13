@@ -6,16 +6,20 @@ constexpr int MAX_HEALTH = 100;
 struct Currency
 {
 private:
+	uint32_t m_amount = 0;
 
 public:
-	uint32_t m_amount = 0;
 	uint32_t GetAmount()const
 	{
 		return m_amount;
 	}
-	void AddAmount(int32_t amount)
+	uint32_t& GetAmountRef()
 	{
-		m_amount += amount;
+		return m_amount;
+	}
+	void Zero()
+	{
+		m_amount = 0;
 	}
 };
 
