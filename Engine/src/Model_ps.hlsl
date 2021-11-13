@@ -56,11 +56,13 @@ float4 main(PixelIn input) : SV_TARGET
     
     //Ambient lighting
     float3 ambient = float3(0.7f, 0.15f, 0.5f) * albedo * ao;
+    ambient = ambientIBL(albedo, N, V, F0, metallic, roughness, ao);
     
     /*
         This part of the code calculates if a decal should be present at this location.
         if-statement is to make sure the decal only gets placed on the world scene since its below 1.0f and everything else if either 1.0f or above.
     */
+
     if (input.worldPos.y < 1.0f)
     {
         [loop]
@@ -93,7 +95,6 @@ float4 main(PixelIn input) : SV_TARGET
         }
     }
     
-    ambient = ambientIBL(albedo, N, V, F0, metallic, roughness, ao);
     float3 color = ambient + Lo;
     
     //HDR tonemapping

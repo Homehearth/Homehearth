@@ -3,7 +3,6 @@
 #include <omp.h>
 #include "Systems.h"
 
-
 Scene::Scene()
 	: m_IsRenderingColliders(true), m_updateAnimation(true)
 {

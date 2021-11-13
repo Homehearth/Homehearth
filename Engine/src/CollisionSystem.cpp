@@ -59,12 +59,12 @@ void CollisionSystem::OnCollision(Entity entity1, Entity entity2)
 
 CollisionSystem::Projection_t CollisionSystem::GetProjection(sm::Vector3 axis, sm::Vector3* corners)
 {
-	double min = axis.Dot(corners[0]);
-	double max = min;
+	float min = axis.Dot(corners[0]);
+	float max = min;
 
 	for(int i = 1; i < 8; i++)
 	{
-		double p = axis.Dot(corners[i]);
+		float p = axis.Dot(corners[i]);
 
 		if(p < min)
 		{
@@ -92,7 +92,7 @@ CollisionInfo_t CollisionSystem::Intersection(Entity entity1, Entity entity2)
 	if (p1Obb == nullptr || p2Obb == nullptr)
 	{
 		LOG_ERROR("Attempt to perform collision response with or against an entity that does not have a collider component");
-		return {false, 0.0, sm::Vector3::Zero};
+		return {false, 0.0f, sm::Vector3::Zero};
 	}
 	
 	sm::Vector3 p2Corners[8];
@@ -118,7 +118,7 @@ CollisionInfo_t CollisionSystem::Intersection(Entity entity1, Entity entity2)
 	allAxis.emplace_back(DirectX::XMVector3Rotate(normals[4], DirectX::XMLoadFloat4(&p2Obb->Orientation)));
 	allAxis.emplace_back(DirectX::XMVector3Rotate(normals[5], DirectX::XMLoadFloat4(&p2Obb->Orientation)));
 	
-	double overlap = DBL_MAX;
+	float overlap = FLT_MAX;
 	sm::Vector3 smallest = sm::Vector3::Zero;
 
 	for(int i = 0; i < allAxis.size(); i++)
@@ -133,12 +133,12 @@ CollisionInfo_t CollisionSystem::Intersection(Entity entity1, Entity entity2)
 		if((p1.max < p2.min))
 		{
 			//NO OVERLAP
-			return { false,0.0, sm::Vector3::Zero };
+			return { false, 0.0f, sm::Vector3::Zero };
 		}
 		else
 		{
 			//Get the overlap
-			double o = p1.max - p2.min;
+			float o = p1.max - p2.min;
 
 			if(o < overlap)
 			{
@@ -164,7 +164,7 @@ void CollisionSystem::CollisionResponse(CollisionInfo_t collisionInfo, Entity en
 			comp::BoundingOrientedBox* obb = entity1.GetComponent<comp::BoundingOrientedBox>();
 			if (transform)
 			{
-				transform->position = transform->position + sm::Vector3(collisionInfo.smallestVec * (float)collisionInfo.overlap * i);
+				transform->position = transform->position + sm::Vector3(collisionInfo.smallestVec * collisionInfo.overlap * static_cast<float>(i));
 			
 				if (obb)
 					obb->Center = transform->position;
@@ -187,7 +187,7 @@ void CollisionSystem::CollisionResponse(CollisionInfo_t collisionInfo, Entity en
 		//Dynamic
 		if (transform1)
 		{
-			transform1->position = transform1->position + (sm::Vector3(collisionInfo.smallestVec * (float)collisionInfo.overlap * -1.1f) * 0.5f);
+			transform1->position = transform1->position + (sm::Vector3(collisionInfo.smallestVec * collisionInfo.overlap * -1.1f) * 0.5f);
 
 			if (obb1)
 				obb1->Center = transform1->position;
@@ -197,7 +197,7 @@ void CollisionSystem::CollisionResponse(CollisionInfo_t collisionInfo, Entity en
 
 		if (transform2)
 		{
-			transform2->position = transform2->position + (sm::Vector3(collisionInfo.smallestVec * (float)collisionInfo.overlap) * 0.5f);
+			transform2->position = transform2->position + (sm::Vector3(collisionInfo.smallestVec * collisionInfo.overlap) * 0.5f);
 
 			if (obb2)
 				obb2->Center = transform2->position;
