@@ -47,16 +47,20 @@ public:
 	ComPtr<ID3D11SamplerState>		m_linearSamplerState;		//Low settings
 	ComPtr<ID3D11SamplerState>		m_anisotropicSamplerState;	//High settings
 	ComPtr<ID3D11SamplerState>		m_pointSamplerState;
+	ComPtr<ID3D11SamplerState>		m_cubemapSamplerState;
 
 	ComPtr<ID3D11InputLayout>		m_defaultInputLayout;
 	ComPtr<ID3D11InputLayout>		m_animationInputLayout;
+	ComPtr<ID3D11InputLayout>		m_skyboxInputLayout;
 
 	Shaders::VertexShader			m_defaultVertexShader;
 	Shaders::VertexShader			m_depthPassVertexShader;
 	Shaders::VertexShader			m_animationVertexShader;
+	Shaders::VertexShader			m_skyboxVertexShader;
 
 	Shaders::PixelShader			m_defaultPixelShader;
 	Shaders::PixelShader			m_debugPixelShader;
+	Shaders::PixelShader			m_skyboxPixelShader;
 	
 	D3D11_VIEWPORT					m_viewport;
 
