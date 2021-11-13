@@ -107,7 +107,7 @@ void RAnimator::UpdateStructureBuffer()
 
 AnimationType RAnimator::GetAnimationType(const std::string& name) const
 {
-
+	//dx::XMFLOAT3X4
 
 	return AnimationType();
 }
@@ -223,6 +223,8 @@ void RAnimator::Update()
 	/*
 		TODO: Need to be cleaned up
 	*/
+
+	PROFILE_FUNCTION();
 
 	//Needs a skeleton
 	if (!m_bones.empty())

@@ -1,6 +1,5 @@
 #pragma once
 #include "GResource.h"
-const UINT MAXSIZE = 4096;
 
 /*
 	Can genarate mipmaps for textures to avoid flickering on textures far away.

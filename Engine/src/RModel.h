@@ -37,6 +37,7 @@ private:
 	struct submesh_t
 	{
 		ComPtr<ID3D11Buffer>		vertexBuffer;
+		UINT						vertexCount = 0;
 		ComPtr<ID3D11Buffer>		indexBuffer;
 		UINT						indexCount = 0;
 		std::shared_ptr<RMaterial>	material;
@@ -49,7 +50,7 @@ private:
 		Skeleton information
 	*/
 	std::vector<bone_t>						m_allBones;
-	std::unordered_map<std::string, UINT>	m_boneMap;		//Move to create later?
+	std::unordered_map<std::string, UINT>	m_boneMap;
 
 private:
 	//Get the end of file. Searches for "."
@@ -85,6 +86,9 @@ public:
 
 	//Get the vector of lights
 	const std::vector<light_t>& GetLights() const;
+
+	//Get all of the texture coordinates for a model
+	const std::vector<sm::Vector2> GetTextureCoords() const;
 
 	/*
 		Change the material to other. Uses a mtlfile.

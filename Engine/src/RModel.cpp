@@ -29,6 +29,79 @@ const std::vector<light_t>& RModel::GetLights() const
     return m_lights;
 }
 
+const std::vector<sm::Vector2> RModel::GetTextureCoords() const
+{
+    std::vector<sm::Vector2> texturecoords;
+
+    ComPtr<ID3D11Buffer> tempResource;
+    D3D11_BUFFER_DESC desc = {};
+    desc.Usage = D3D11_USAGE_STAGING;
+    desc.BindFlags = 0;
+    desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+    desc.MiscFlags = 0;
+    desc.StructureByteStride = 0;
+
+    //Go through all the meshes
+    for (size_t i = 0; i < m_meshes.size(); i++)
+    {
+        UINT byteWidth = 0;
+
+        if (m_meshes[i].hasBones)
+            byteWidth = static_cast<UINT>(sizeof(anim_vertex_t) * m_meshes[i].vertexCount);
+        else
+            byteWidth = static_cast<UINT>(sizeof(simple_vertex_t) * m_meshes[i].vertexCount);
+
+        desc.ByteWidth = byteWidth;
+
+        HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&desc, nullptr, tempResource.GetAddressOf());
+        if (FAILED(hr))
+        {
+#ifdef _DEBUG
+            LOG_ERROR("Failed to create staging buffer for get texturecoords...");
+#endif // _DEBUG
+            return texturecoords;
+        }
+
+        //Copy the resource to staging buffer so that we can read it
+        D3D11Core::Get().DeviceContext()->CopyResource(tempResource.Get(), m_meshes[i].vertexBuffer.Get());
+
+        std::vector<simple_vertex_t> simpleVertices;
+        std::vector<anim_vertex_t>   animVertices;
+
+        //Copy the data
+        D3D11_MAPPED_SUBRESOURCE data;
+        D3D11Core::Get().DeviceContext()->Map(tempResource.Get(), 0, D3D11_MAP_READ, 0, &data);
+
+        if (m_meshes[i].hasBones)
+        {
+            animVertices.resize(m_meshes[i].vertexCount);
+            memcpy(&animVertices[0], data.pData, byteWidth);
+
+            //Go through the vector of vertices and get the texturecoords
+            for (size_t v = 0; v < animVertices.size(); v++)
+            {
+                texturecoords.push_back(animVertices[v].uv);
+            }
+            animVertices.clear();
+        }
+        else
+        {
+            simpleVertices.resize(m_meshes[i].vertexCount);
+            memcpy(&simpleVertices[0], data.pData, byteWidth);
+
+            //Go through the vector of vertices and get the texturecoords
+            for (size_t v = 0; v < simpleVertices.size(); v++)
+            {
+                texturecoords.push_back(simpleVertices[v].uv);
+            }
+            simpleVertices.clear();
+        }
+        D3D11Core::Get().DeviceContext()->Unmap(tempResource.Get(), 0);
+    }
+
+    return texturecoords;
+}
+
 bool RModel::ChangeMaterial(const std::string& mtlfile)
 {
     const std::string filepath = MATERIALPATH + mtlfile;
@@ -230,22 +303,21 @@ bool RModel::CreateVertexBuffer(const std::vector<anim_vertex_t>& vertices, subm
     if (vertices.empty())
         return false;
 
-    D3D11_BUFFER_DESC bufferDesc = {};
+    D3D11_BUFFER_DESC desc        = {};
+    desc.ByteWidth                = static_cast<UINT>(sizeof(anim_vertex_t) * vertices.size());
+    desc.Usage                    = D3D11_USAGE::D3D11_USAGE_DEFAULT;
+    desc.BindFlags                = D3D11_BIND_FLAG::D3D11_BIND_VERTEX_BUFFER;
+    desc.CPUAccessFlags           = 0;
+    desc.MiscFlags                = 0;
+    desc.StructureByteStride      = 0;
 
-    bufferDesc.ByteWidth = static_cast<UINT>(sizeof(anim_vertex_t) * vertices.size());
-    bufferDesc.Usage = D3D11_USAGE::D3D11_USAGE_DEFAULT;
-    bufferDesc.BindFlags = D3D11_BIND_FLAG::D3D11_BIND_VERTEX_BUFFER;
-    bufferDesc.CPUAccessFlags = 0;
-    bufferDesc.MiscFlags = 0;
-    bufferDesc.StructureByteStride = 0;
+    D3D11_SUBRESOURCE_DATA data   = {};
+    data.pSysMem                  = &vertices[0];
+    data.SysMemPitch              = 0;
+    data.SysMemSlicePitch         = 0;
 
-    D3D11_SUBRESOURCE_DATA subresData = {};
-
-    subresData.pSysMem = &vertices[0];
-    subresData.SysMemPitch = 0;
-    subresData.SysMemSlicePitch = 0;
-
-    HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&bufferDesc, &subresData, mesh.vertexBuffer.GetAddressOf());
+    mesh.vertexCount = static_cast<UINT>(vertices.size());
+    HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&desc, &data, mesh.vertexBuffer.GetAddressOf());
     return !FAILED(hr);
 }
 
@@ -254,22 +326,21 @@ bool RModel::CreateVertexBuffer(const std::vector<simple_vertex_t>& vertices, su
     if (vertices.empty())
         return false;
 
-    D3D11_BUFFER_DESC bufferDesc = {};
+    D3D11_BUFFER_DESC desc        = {};
+    desc.ByteWidth                = static_cast<UINT>(sizeof(simple_vertex_t) * vertices.size());
+    desc.Usage                    = D3D11_USAGE::D3D11_USAGE_DEFAULT;
+    desc.BindFlags                = D3D11_BIND_FLAG::D3D11_BIND_VERTEX_BUFFER;
+    desc.CPUAccessFlags           = 0;
+    desc.MiscFlags                = 0;
+    desc.StructureByteStride      = 0;
 
-    bufferDesc.ByteWidth = static_cast<UINT>(sizeof(simple_vertex_t) * vertices.size());
-    bufferDesc.Usage = D3D11_USAGE::D3D11_USAGE_DEFAULT;
-    bufferDesc.BindFlags = D3D11_BIND_FLAG::D3D11_BIND_VERTEX_BUFFER;
-    bufferDesc.CPUAccessFlags = 0;
-    bufferDesc.MiscFlags = 0;
-    bufferDesc.StructureByteStride = 0;
+    D3D11_SUBRESOURCE_DATA data   = {};
+    data.pSysMem                  = &vertices[0];
+    data.SysMemPitch              = 0;
+    data.SysMemSlicePitch         = 0;
 
-    D3D11_SUBRESOURCE_DATA subresData = {};
-
-    subresData.pSysMem = &vertices[0];
-    subresData.SysMemPitch = 0;
-    subresData.SysMemSlicePitch = 0;
-
-    HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&bufferDesc, &subresData, mesh.vertexBuffer.GetAddressOf());
+    mesh.vertexCount = static_cast<UINT>(vertices.size());
+    HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&desc, &data, mesh.vertexBuffer.GetAddressOf());
     return !FAILED(hr);
 }
 
@@ -278,24 +349,20 @@ bool RModel::CreateIndexBuffer(const std::vector<UINT>& indices, submesh_t& mesh
     if (indices.empty())
         return false;
 
-    D3D11_BUFFER_DESC indexBufferDesc;
-    ZeroMemory(&indexBufferDesc, sizeof(D3D11_BUFFER_DESC));
+    D3D11_BUFFER_DESC desc = {};
+    desc.ByteWidth              = static_cast<UINT>(sizeof(UINT) * indices.size());
+    desc.Usage                  = D3D11_USAGE::D3D11_USAGE_DEFAULT;
+    desc.BindFlags              = D3D11_BIND_FLAG::D3D11_BIND_INDEX_BUFFER;
+    desc.CPUAccessFlags         = 0;
+    desc.MiscFlags              = 0;
 
-    indexBufferDesc.ByteWidth = sizeof(UINT) * (UINT)indices.size();
-    indexBufferDesc.Usage = D3D11_USAGE::D3D11_USAGE_DEFAULT;
-    indexBufferDesc.BindFlags = D3D11_BIND_FLAG::D3D11_BIND_INDEX_BUFFER;
-    indexBufferDesc.CPUAccessFlags = 0;
-    indexBufferDesc.MiscFlags = 0;
+    D3D11_SUBRESOURCE_DATA data = {};
+    data.pSysMem                = &indices[0];
+    data.SysMemPitch            = 0;
+    data.SysMemSlicePitch       = 0;
 
-    D3D11_SUBRESOURCE_DATA subresData;
-    ZeroMemory(&subresData, sizeof(D3D11_SUBRESOURCE_DATA));
-
-    subresData.pSysMem = &indices[0];
-    subresData.SysMemPitch = 0;
-    subresData.SysMemSlicePitch = 0;
-
-    mesh.indexCount = (UINT)indices.size();
-    HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&indexBufferDesc, &subresData, mesh.indexBuffer.GetAddressOf());
+    mesh.indexCount = static_cast<UINT>(indices.size());
+    HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&desc, &data, mesh.indexBuffer.GetAddressOf());
     return !FAILED(hr);
 }
 

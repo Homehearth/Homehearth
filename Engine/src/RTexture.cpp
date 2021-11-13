@@ -145,24 +145,11 @@ bool RTexture::Create(const std::string& filename)
 	else
 		image = stbi_load(filepath.c_str(), &width, &height, &comp, STBI_rgb_alpha);
 
-
-
-	
 	if (image == nullptr)
 	{
 #ifdef _DEBUG
 		LOG_WARNING("[Texture] Failed to load image: %s", filepath.c_str());
 #endif 
-		return false;
-	}
-
-	//The texture is to large for the engine
-	if (width > MAXSIZE || height > MAXSIZE)
-	{
-#ifdef _DEBUG
-		LOG_WARNING("[Texture] %s is too large (%d x %d)", filename.c_str(), width, height);
-#endif
-		stbi_image_free(image);
 		return false;
 	}
 
@@ -184,8 +171,6 @@ bool RTexture::Create(const std::string& filename)
 				return false;
 			}
 		}
-		
-
 	}
 	else
 	{

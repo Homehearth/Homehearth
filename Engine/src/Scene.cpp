@@ -132,6 +132,7 @@ void Scene::Render()
 		{
 			const auto& it = m_renderableCopies[1][i];
 			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
+
 			if (it.model)
 				it.model->Render(D3D11Core::Get().DeviceContext());
 		}
@@ -252,6 +253,7 @@ void Scene::RenderAnimation()
 	for (auto& it : m_renderableAnimCopies[1])
 	{
 		m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.first.data);
+
 		it.second.animator->Bind();
 		it.first.model->Render(D3D11Core::Get().DeviceContext());
 		it.second.animator->Unbind();
