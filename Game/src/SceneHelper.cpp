@@ -159,7 +159,7 @@ namespace sceneHelp
 				// Prediction
 				//engine->m_predictor.Predict(engine->GetScene("Game"));
 				GameSystems::RenderIsCollidingSystem(scene);
-				GameSystems::UpdatePlayerVisuals(scene);
+				//GameSystems::UpdatePlayerVisuals(scene);
 #ifdef _DEBUG
 				if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Space, KeyState::RELEASED))
 				{

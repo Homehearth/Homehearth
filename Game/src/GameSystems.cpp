@@ -68,50 +68,53 @@ void GameSystems::UpdatePlayerVisuals(Scene& scene)
 					{
 						Camera* cam = scene.GetCurrentCamera();
 
-						// Conversion from World space to NDC space.
-						sm::Vector4 oldP = { t.position.x, t.position.y + 25.0f, t.position.z, 1.0f };
-						sm::Vector4 newP = dx::XMVector4Transform(oldP, cam->GetCameraMatrixes()->view);
-						newP = dx::XMVector4Transform(newP, cam->GetCameraMatrixes()->projection);
-						newP.x /= newP.w;
-						newP.y /= newP.w;
-						newP.z /= newP.w;
-
-						// Conversion from NDC space [-1, 1] to Window space
-						float new_x = (((newP.x + 1) * (D2D1Core::GetWindow()->GetWidth())) / (2));
-						float new_y = D2D1Core::GetWindow()->GetHeight() - (((newP.y + 1) * (D2D1Core::GetWindow()->GetHeight())) / (2));
-
-						namePlate->SetPosition(new_x - ((name.namePlate.length() * D2D1Core::GetDefaultFontSize()) * 0.5f), new_y);
-						// Show nameplates only if camera is turned to it.
-						if (newP.z < 1.f)
-							namePlate->SetVisiblity(true);
-						else
-							namePlate->SetVisiblity(false);
-
-						// Update healthbars position.
-						Collection2D* collHealth = scene.GetCollection("player" + std::to_string(i) + "Info");
-						if (collHealth)
+						if (cam->GetCameraMatrixes())
 						{
-							rtd::Healthbar* health = dynamic_cast<rtd::Healthbar*>(collHealth->elements[0].get());
-							if (health)
+							// Conversion from World space to NDC space.
+							sm::Vector4 oldP = { t.position.x, t.position.y + 25.0f, t.position.z, 1.0f };
+							sm::Vector4 newP = dx::XMVector4Transform(oldP, cam->GetCameraMatrixes()->view);
+							newP = dx::XMVector4Transform(newP, cam->GetCameraMatrixes()->projection);
+							newP.x /= newP.w;
+							newP.y /= newP.w;
+							newP.z /= newP.w;
+
+							// Conversion from NDC space [-1, 1] to Window space
+							float new_x = (((newP.x + 1) * (D2D1Core::GetWindow()->GetWidth())) / (2));
+							float new_y = D2D1Core::GetWindow()->GetHeight() - (((newP.y + 1) * (D2D1Core::GetWindow()->GetHeight())) / (2));
+
+							namePlate->SetPosition(new_x - ((name.namePlate.length() * D2D1Core::GetDefaultFontSize()) * 0.5f), new_y);
+							// Show nameplates only if camera is turned to it.
+							if (newP.z < 1.f)
+								namePlate->SetVisiblity(true);
+							else
+								namePlate->SetVisiblity(false);
+
+							// Update healthbars position.
+							Collection2D* collHealth = scene.GetCollection("player" + std::to_string(i) + "Info");
+							if (collHealth)
 							{
-								sm::Vector4 oldPp = { t.position.x, t.position.y + 20.0f, t.position.z, 1.0f };
-								sm::Vector4 newPp = dx::XMVector4Transform(oldPp, cam->GetCameraMatrixes()->view);
-								newPp = dx::XMVector4Transform(newPp, cam->GetCameraMatrixes()->projection);
-								newPp.x /= newPp.w;
-								newPp.y /= newPp.w;
-								newPp.z /= newPp.w;
+								rtd::Healthbar* health = dynamic_cast<rtd::Healthbar*>(collHealth->elements[0].get());
+								if (health)
+								{
+									sm::Vector4 oldPp = { t.position.x, t.position.y + 20.0f, t.position.z, 1.0f };
+									sm::Vector4 newPp = dx::XMVector4Transform(oldPp, cam->GetCameraMatrixes()->view);
+									newPp = dx::XMVector4Transform(newPp, cam->GetCameraMatrixes()->projection);
+									newPp.x /= newPp.w;
+									newPp.y /= newPp.w;
+									newPp.z /= newPp.w;
 
-								// Conversion from NDC space [-1, 1] to Window space
-								new_x = (((newPp.x + 1) * (D2D1Core::GetWindow()->GetWidth())) / (2));
-								new_y = D2D1Core::GetWindow()->GetHeight() - (((newPp.y + 1) * (D2D1Core::GetWindow()->GetHeight())) / (2));
+									// Conversion from NDC space [-1, 1] to Window space
+									new_x = (((newPp.x + 1) * (D2D1Core::GetWindow()->GetWidth())) / (2));
+									new_y = D2D1Core::GetWindow()->GetHeight() - (((newPp.y + 1) * (D2D1Core::GetWindow()->GetHeight())) / (2));
 
-								health->SetPosition(new_x - (health->GetOpts().width * 0.5f), new_y);
+									health->SetPosition(new_x - (health->GetOpts().width * 0.5f), new_y);
 
-								// Only visible if camera is turned to it.
-								if (newPp.z < 1.f)
-									health->SetVisiblity(true);
-								else
-									health->SetVisiblity(false);
+									// Only visible if camera is turned to it.
+									if (newPp.z < 1.f)
+										health->SetVisiblity(true);
+									else
+										health->SetVisiblity(false);
+								}
 							}
 						}
 					}

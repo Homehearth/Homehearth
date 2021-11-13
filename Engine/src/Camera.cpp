@@ -177,7 +177,6 @@ void Camera::Update(const float& deltaTime)
 		m_view = sm::Matrix::Identity;
 		m_view.Translation(-m_position);
 		m_view = sm::Matrix::Transform(m_view, m_rotation);
-
 		UpdateProjection();
 	}
 
@@ -185,6 +184,7 @@ void Camera::Update(const float& deltaTime)
 	m_cameraMat.target = { m_target.x, m_target.y, m_target.z, 0 };
 	m_cameraMat.projection = m_projection;
 	m_cameraMat.view = m_view;
+	s_cameraBuffers[0] = m_cameraMat;
 }
 
 void Camera::SetFollowEntity(const Entity& entity)
@@ -222,7 +222,22 @@ sm::Vector3 Camera::GetUp() const
 
 camera_Matrix_t* Camera::GetCameraMatrixes()
 {
-	return &m_cameraMat;
+	return &s_cameraBuffers[1];
+}
+
+void Camera::Swap()
+{
+	s_cameraBuffers.Swap();
+}
+
+void Camera::ReadySwap()
+{
+	s_cameraBuffers.ReadyForSwap();
+}
+
+bool Camera::IsSwapped() const
+{
+	return s_cameraBuffers.IsSwapped();
 }
 
 CAMERATYPE Camera::GetCameraType()const
