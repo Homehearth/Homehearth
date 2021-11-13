@@ -65,7 +65,7 @@ void GridSystem::Initialize(Vector2I mapSize, sm::Vector3 position, std::string 
 			sm::Vector3 tilePosition = { tileSize.x * row + m_tileHalfWidth, 0.f , (tileSize.y * -col) - m_tileHalfWidth };
 
 			Tile tileTemp;
-			tileTemp.gridID		= { row, col };
+			tileTemp.gridID		= { col, row };
 			tileTemp.halfWidth	= m_tileHalfWidth;
 			tileTemp.type		= tileTypeTemp;
 			tileTemp.position	= tilePosition;
@@ -77,27 +77,33 @@ void GridSystem::Initialize(Vector2I mapSize, sm::Vector3 position, std::string 
 				m_tiles.push_back(rowTilesTemp);
 
 #if RENDER_GRID
-			Entity tileEntity = m_scene->CreateEntity();
-			comp::Transform* transform = tileEntity.AddComponent<comp::Transform>();
-			tileEntity.AddComponent<comp::Network>();
-			transform->position = tileTemp.position;
-			transform->position.y = 0.5;
-			transform->scale = { 4.2f, 0.5f, 4.2f };
-
-			if (tileTemp.type == TileType::EMPTY)
+			if(tileTemp.type == TileType::DEFAULT || tileTemp.type == TileType::EMPTY)
 			{
-				tileEntity.AddComponent<comp::MeshName>()->name = "Plane1.obj";
-			}
-			else if (tileTemp.type == TileType::BUILDING || tileTemp.type == TileType::UNPLACABLE)
-			{
+				Entity tileEntity = m_scene->CreateEntity();
+				comp::Transform* transform = tileEntity.AddComponent<comp::Transform>();
+				tileEntity.AddComponent<comp::Network>();
 
-				tileEntity.AddComponent<comp::MeshName>()->name = "Plane2.obj";
+				transform->position = tileTemp.position;
+				
+				tileEntity.AddComponent<comp::MeshName>()->name = "Cube.obj";
 			}
-			else if (tileTemp.type == TileType::DEFAULT)
-			{
-				tileEntity.AddComponent<comp::MeshName>()->name = "Plane3.obj";
 
-			}
+			//transform->scale = { 4.2f, 0.5f, 4.2f };
+
+			//if (tileTemp.type == TileType::EMPTY)
+			//{
+			//	tileEntity.AddComponent<comp::MeshName>()->name = "Plane1.obj";
+			//}
+			//else if (tileTemp.type == TileType::BUILDING || tileTemp.type == TileType::UNPLACABLE)
+			//{
+
+			//	tileEntity.AddComponent<comp::MeshName>()->name = "Plane2.obj";
+			//}
+			//else if (tileTemp.type == TileType::DEFAULT)
+			//{
+			//	tileEntity.AddComponent<comp::MeshName>()->name = "Plane3.obj";
+
+			//}
 
 #endif // RENDER_GRID
 

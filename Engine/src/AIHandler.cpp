@@ -32,9 +32,9 @@ Node* AIHandler::FindClosestNode(sm::Vector3 position)
 {
 	Node* currentClosest = nullptr;
 
-	for (int i = 0; i < m_nodes.size(); i++)
+	for (int j = 0; j < m_nodes.size(); j++)
 	{
-		for (int j = 0; j < m_nodes[i].size(); j++)
+		for (int i = 0; i < m_nodes[j].size(); i++)
 		{
 			if (currentClosest)
 			{
@@ -51,6 +51,11 @@ Node* AIHandler::FindClosestNode(sm::Vector3 position)
 	}
 
 	return currentClosest;
+}
+
+std::vector<std::vector<std::shared_ptr<Node>>>& AIHandler::GetNodes()
+{
+	return m_nodes;
 }
 
 float AIHandler::CalculateFGH(Node* currentNode, Node* startNode, Node* goalNode)
@@ -79,25 +84,31 @@ std::vector<Node*> AIHandler::GetNeighbors(GridSystem* grid, Tile* baseNode)
 	{
 		Tile* currentTile = nullptr;
 
-		for (int newY = -1; newY <= 1; newY++)
+		for (int newX = -1; newX <= 1; newX++)
 		{
-			for (int newX = -1; newX <= 1; newX++)
+			for (int newY = -1; newY <= 1; newY++)
 			{
 				if (baseNode->gridID.x + newX >= grid->GetGridSize().x || baseNode->gridID.y + newY >= grid->GetGridSize().y
 					|| baseNode->gridID.x + newX < 0 || baseNode->gridID.y + newY < 0)
 					continue;
 
-				if(baseNode->gridID.x + newX == 38 && baseNode->gridID.y + newY == 20)
+				if (newX == 0 && newY == 0)
 				{
-
+					continue;
 				}
+
+				//if(baseNode->gridID.x + newX == 38 && baseNode->gridID.y + newY == 20)
+				//{
+				//	__debugbreak();
+				//}
+
 				currentTile = grid->GetTile(Vector2I(baseNode->gridID.x + newX, baseNode->gridID.y + newY));
 
 				if (currentTile->type == TileType::DEFAULT || currentTile->type == TileType::EMPTY)
 				{
-					neighbors.push_back(GetNodeByID({ baseNode->gridID.x + newX,baseNode->gridID.y + newY }));
+					neighbors.push_back(AddNode(currentTile->gridID));
 				}
-				
+
 			}
 		}
 
@@ -132,16 +143,16 @@ Node* AIHandler::GetNodeByID(Vector2I id) const
 
 }
 
-bool AIHandler::AddNode(Vector2I id)
+Node* AIHandler::AddNode(Vector2I id)
 {
 	if (GetNodeByID(id))
 	{
-		return false;
+		return GetNodeByID(id);
 	}
 	else
 	{
 		m_nodes[id.x][id.y] = std::make_unique<Node>(id);
-		return true;
+		return m_nodes[id.x][id.y].get();
 	}
 }
 
@@ -169,40 +180,61 @@ void AIHandler::CreateNodes(GridSystem* grid)
 		m_nodes[i].resize(grid->GetGridSize().y);
 	}
 
-	for (int i = 0; i < grid->GetGridSize().x; i++)
+	for (int j = 0; j < grid->GetGridSize().x; j++)
 	{
-		for (int j = 0; j < grid->GetGridSize().y; j++)
+		for (int i = 0; i < grid->GetGridSize().y; i++)
 		{
-			Vector2I tileID = { i,j };
-			Vector2I nodeID = grid->GetTile(tileID)->gridID;
-			std::unique_ptr<Node> currentNode = std::make_unique<Node>(nodeID);
-			currentNode->position = grid->GetTile(Vector2I(i, j))->position;
+			Tile* tile = grid->GetTile(Vector2I(j,i));
 
-			if (grid->GetTile(Vector2I(i, j))->type == TileType::DEFENCE ||
-				grid->GetTile(Vector2I(i, j))->type == TileType::UNPLACABLE ||
-				grid->GetTile(Vector2I(i, j))->type == TileType::BUILDING)
+			Vector2I nodeID = tile->gridID;
+
+			Node* currentNode = AddNode(tile->gridID);
+			currentNode->position = tile->position;
+			if (tile->type == TileType::DEFENCE || tile->type == TileType::UNPLACABLE ||
+				tile->type == TileType::BUILDING)
 			{
 				currentNode->reachable = false;
 			}
-			AddNode(currentNode);
+			else
+			{
+				std::vector<Node*> neighbors = GetNeighbors(grid, tile);
+				for (auto neighbor : neighbors)
+				{
+					
+					if (neighbor->reachable)
+						m_nodes[j][i]->connections.push_back(neighbor);
+				}
+			}
+
+
 		}
 	}
 	//Build Connections
-	LOG_INFO("AIHandler: Connecting Nodes");
-	for (int y = 0; y < grid->GetGridSize().y; y++)
-	{
-		for (int x = 0; x < grid->GetGridSize().x; x++)
-		{
-			Tile* entityTile = grid->GetTile(Vector2I(x, y));
+	//LOG_INFO("AIHandler: Connecting Nodes");
+	//for (int y = 0; y < grid->GetGridSize().y; y++)
+	//{
+	//	for (int x = 0; x < grid->GetGridSize().x; x++)
+	//	{
+	//		Tile* entityTile = grid->GetTile(Vector2I(y, x));
 
-			std::vector<Node*> neighbors = GetNeighbors(grid, entityTile);
-			for (auto neighbor : neighbors)
-			{
-				if(neighbor->reachable)
-					m_nodes[y][x]->connections.push_back(neighbor);
-			}
-		}
-	}
+	//		if (entityTile->type == TileType::EMPTY || entityTile->type == TileType::DEFAULT)
+	//		{
+	//			std::vector<Node*> neighbors = GetNeighbors(grid, entityTile);
+	//			for (auto neighbor : neighbors)
+	//			{
+	//				if (neighbor->reachable)
+	//					m_nodes[x][y]->connections.push_back(neighbor);
+	//			}
+	//		}
+	//		else
+	//		{
+	//			m_nodes[x][y]->reachable = false;
+	//		}
+
+
+	//	}
+	//}
+
 
 }
 
@@ -222,87 +254,83 @@ void AIHandler::SetClosestNode(comp::NPC& npc, sm::Vector3 position)
 
 void AIHandler::AStarSearch(HeadlessScene& scene, Entity npc)
 {
-	
-	std::vector<Node*> openList, closedList;
-	comp::NPC* npcComp = npc.GetComponent<comp::NPC>();
-
-	while (!npcComp->path.empty())
-		npcComp->path.pop();
-
 	comp::Transform* npcTransform = npc.GetComponent<comp::Transform>();
+	comp::NPC* npcComp = npc.GetComponent<comp::NPC>();
+	npcComp->path.clear();
 
-	if(npcComp->currentNode == nullptr)
-	{
-		this->SetClosestNode(*npcComp, npcTransform->position);
-	}
-
-	openList.push_back(npcComp->currentNode);
+	npcComp->currentNode->g = 0.0f;
+	npcComp->currentNode->h = 0.0f;
+	std::vector<Node*> openList, closedList;
+	Node* startingNode = npcComp->currentNode;
+	startingNode->f = 0.0f;
+	openList.push_back(startingNode);
 
 	Entity closestPlayer = FindClosestPlayer(scene, npcTransform->position, npcComp);
 	comp::Transform* playerTransform = closestPlayer.GetComponent<comp::Transform>();
-	//Node* currentNode = npcComp->currentNode,
 	Node* goalNode = FindClosestNode(playerTransform->position);
-	Node* startingNode = npcComp->currentNode;
-	while (!openList.empty())
+
+	while(!openList.empty())
 	{
-		int itrToRemove = 0;
-		Node* currentNode = openList[0];
-		for (int i = 0; i < openList.size(); i++)
+		Node* currentNode = openList.at(0);
+		int ind = 0;
+		for (int i = 1; i < openList.size(); i++)
 		{
-			if (openList.at(i)->f < currentNode->f)
+			if(openList[i]->f < currentNode->f)
 			{
 				currentNode = openList[i];
-				itrToRemove = i;
+				ind = i;
 			}
 		}
+		openList.erase(openList.begin() + ind);
+		closedList.emplace_back(currentNode);
 
-		openList.erase(openList.begin() + itrToRemove);
-		closedList.push_back(currentNode);
-
-
-
-		if (currentNode == goalNode)
+		if(currentNode == goalNode)
 		{
 			//Trace the path back
 			if (goalNode->parent)
 			{
 				while (currentNode != startingNode)
 				{
-					npcComp->path.emplace(currentNode);
+					npcComp->path.push_back(currentNode);
 					currentNode = currentNode->parent;
 				}
 			}
-			break;
+
+			for (int i = 0; i < m_nodes.size(); i++)
+			{
+				for (int j = 0; j < m_nodes[i].size(); j++)
+				{
+					m_nodes[i][j]->parent = nullptr;
+					m_nodes[i][j]->ResetFGH();
+				}
+			}
+			return;
 		}
 
-		for (Node* neighbor : currentNode->connections)
+		for (auto neighbour : currentNode->connections)
 		{
-			if (!IsInVector(closedList, neighbor))
+			float gNew, hNew, fNew;
+			if(IsInVector(closedList, neighbour))
 			{
-				neighbor->g = currentNode->g + 1.0f;
-				neighbor->h = (neighbor->position - goalNode->position).Length(); //Using euclidean distance
-				neighbor->f = neighbor->g + neighbor->h;
+				continue;
+			}
 
-				bool inOpen = false;
+			gNew = currentNode->g + sm::Vector3::Distance(neighbour->position, currentNode->position);
+			hNew = sm::Vector3::Distance(goalNode->position, neighbour->position);
+			fNew = gNew + hNew;
 
-				for (int i = 0; i < openList.size() && !inOpen; i++)
-				{
-					if (neighbor == openList[i])
-					{
-						inOpen = true;
-					}
-				}
+			if(gNew < currentNode->g || !IsInVector(openList, neighbour))
+			{
+				neighbour->g = gNew;
+				neighbour->h = hNew;
+				neighbour->f = fNew;
 
-				if (!inOpen)
-				{
-					neighbor->parent = currentNode;
-					openList.emplace_back(neighbor);
-				}
+				neighbour->parent = currentNode;
 
+				openList.emplace_back(neighbour);
 			}
 		}
 	}
-
 
 	for (int i = 0; i < m_nodes.size(); i++)
 	{

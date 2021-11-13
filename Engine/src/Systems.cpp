@@ -336,7 +336,7 @@ void Systems::AISystem(HeadlessScene& scene, AIHandler* aiHandler)
 
 				if(npc.path.size() > 0)
 				{
-					npc.currentNode = npc.path.top();
+					npc.currentNode = npc.path.back();
 					if (velocityTowardsPlayer && npc.currentNode)
 					{
 						velocityTowardsPlayer->vel = npc.currentNode->position - transformNPC->position;
@@ -346,12 +346,13 @@ void Systems::AISystem(HeadlessScene& scene, AIHandler* aiHandler)
 
 					if(sm::Vector3::Distance(npc.currentNode->position, transformNPC->position) < 8.f)
 					{
-						npc.path.pop();
+						npc.path.pop_back();
 					}
 					
 				}
 				else
 				{
+					npc.currentNode = aiHandler->FindClosestNode(transformNPC->position);
 					aiHandler->AStarSearch(scene, entity);
 					velocityTowardsPlayer->vel = sm::Vector3(0.f,0.f,0.f);
 				}

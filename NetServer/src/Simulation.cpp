@@ -402,11 +402,28 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 	//Gridsystem
 	m_grid.Initialize(gridOptions.mapSize, gridOptions.position, gridOptions.fileName, m_pGameScene);
 	m_aiHandler.CreateNodes(&m_grid);
+#if RENDER_AINODES
+	std::vector<std::vector<std::shared_ptr<Node>>> nodes = m_aiHandler.GetNodes();
+	for(int y = 0; y < nodes[0].size(); y++)
+	{
+		for (int x = 0; x < nodes[0].size(); x++)
+		{
+			if(nodes[y][x].get()->reachable)
+			{
+				Entity cube = m_pGameScene->CreateEntity();
+				cube.AddComponent<comp::Transform>()->position = nodes[y][x].get()->position;
+				cube.AddComponent<comp::MeshName>()->name = "Cube.obj";
+				cube.AddComponent<comp::Network>();
+			}
+
+		}
+	}
+#endif RENDER_AINODES
 	m_addedEntities.clear();
 	m_removedEntities.clear();
 
 
-	//this->BuildMapColliders(mapColliders);
+	this->BuildMapColliders(mapColliders);
 
 	m_pCurrentScene = m_pLobbyScene;
 

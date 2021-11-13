@@ -141,7 +141,7 @@ namespace ecs
 			float movementSpeed = 15.f;
 			float attackRange = 10.f;
 			bool hostile;
-			std::stack<Node*> path;
+			std::vector<Node*> path;
 			Node* currentNode;
 			Entity currentClosest;
 		};
