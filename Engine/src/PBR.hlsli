@@ -79,8 +79,9 @@ float3 FresnelSchlickRoughness(float cosTheta, float3 F0, float roughness)
 //Calculates the radiance of a Pointlight
 float3 DoPointlight(Light L, PixelIn input, float3 normal)
 {
-    float3 VL = normalize(L.position.xyz - input.worldPos.xyz);
+    float3 VL = L.position.xyz - input.worldPos.xyz;
     float distance = length(VL);
+    VL = normalize(VL);
     
     float3 N = normalize(normal);
     

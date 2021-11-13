@@ -37,13 +37,13 @@ float4 main(PixelIn input) : SV_TARGET
     float ao = 1.0f;
     float3 albedo = 1.f;
     float metallic = 0.0f;
-    float roughness = 0.0f;
+    float roughness = 1.0f;
     float exposure = 0.1f;
     
     //Normal Vector
     float3 N = normalize(input.normal);
     //View Direction Vector
-    float3 V = normalize(camPos - input.worldPos.xyz); //Uppdateras denna korrekt?
+    float3 V = normalize(camPos - input.worldPos.xyz);
     
     //If an object has a texture, sample from it else use default values.
     SampleTextures(input, albedo, N, roughness, metallic, ao);
@@ -79,7 +79,6 @@ float4 main(PixelIn input) : SV_TARGET
         
             CalcRadiance(input, V, N, roughness, metallic, albedo, sb_lights[i].position.xyz, lightCol, F0, rad);
             Lo += rad;
-            lightCol *= 0.f;
         }
     }
     
