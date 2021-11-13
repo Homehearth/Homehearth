@@ -37,8 +37,9 @@ float4 main(PixelIn input) : SV_TARGET
     float ao = 1.0f;
     float3 albedo = 1.f;
     float metallic = 0.0f;
-    float roughness = 1.0f;
+    float roughness = 0.0f;
     float exposure = 0.1f;
+    const float gamma = 1.f / 2.2f;
     
     //Normal Vector
     float3 N = normalize(input.normal);
@@ -91,7 +92,7 @@ float4 main(PixelIn input) : SV_TARGET
     //HDR tonemapping
 	color = color / (color + float3(1.0, 1.0, 1.0));
     //Gamma correct
-    color = pow(max(color, 0.0f), float3(1.0 / 2.2, 1.0 / 2.2, 1.0 / 2.2));
+    color = pow(max(color, 0.0f), float3(gamma, gamma, gamma));
     
     return float4(color, 5.0f);
 }

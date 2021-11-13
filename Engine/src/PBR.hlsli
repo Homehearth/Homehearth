@@ -2,8 +2,6 @@
 	#error You may not include this header directly.
 #endif
 
-static const float PI = 3.14159265359;
-
 /*
 ---------------------------------Normal distribution function---------------------------------
 Approximates the amount the surface's microfacets are aligned to the halfway vector, 
@@ -161,11 +159,6 @@ float3 ambientIBL(float3 albedo, float3 N, float3 V, float3 F0, float metallic, 
      //Reflection Vector
     float3 R = reflect(-V, N);
     
-    if (dot(-V, N) > 0)
-    {
-        R *= -1;
-    }
-    
     float3 F = FresnelSchlickRoughness(max(dot(N, V), 0.0f), F0, roughness);
     float3 kS = F;
     float3 kD = 1.0f - kS;
@@ -180,47 +173,4 @@ float3 ambientIBL(float3 albedo, float3 N, float3 V, float3 F0, float metallic, 
     float3 specular = prefilteredColor * (F * brdf.x + brdf.y);
 
     return (kD * diffuse + specular) * ao;
-}
-
-void SampleTextures(PixelIn input, inout float3 albedo, inout float3 N, inout float roughness, inout float metallic, inout float ao)
-{
-    //If albedo texture exists, sample from it
-    if(c_hasAlbedo == 1)
-    {
-        float4 albedoSamp = t_albedo.Sample(s_linear, input.uv);
-        //Alpha-test
-        clip(albedoSamp.a < 0.5f ? -1 : 1);
-        albedo = pow(max(albedoSamp.rgb, 0.0f), 2.2f); //Power the albedo by 2.2f to get it to linear space.
-    }
-    
-    //If normal texture exists, sample from it
-    if(c_hasNormal == 1)
-    {
-        float3 normalMap = t_normal.Sample(s_linear, input.uv).rgb;
-        normalMap = normalMap * 2.0f - 1.0f;
-        
-        float3 tangent = normalize(input.tangent.xyz);
-        float3 biTangent = normalize(input.biTangent);
-        float3x3 TBN = float3x3(tangent, biTangent, input.normal);
-        
-        N = normalize(mul(normalMap, TBN));
-    }
-    
-    //If metallic texture exists, sample from it
-    if(c_hasMetalness == 1)
-    {
-        metallic = t_metalness.Sample(s_linear, input.uv).r;
-    }
-    
-    //If roughness texture exists, sample from it
-    if(c_hasRoughness == 1)
-    {
-        roughness = t_roughness.Sample(s_linear, input.uv).r;
-    }
-    
-    //If ao texture exists, sample from it
-    if(c_hasAoMap == 1)
-    {
-        ao = t_aomap.Sample(s_linear, input.uv).r;
-    }
 }
