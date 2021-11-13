@@ -17,10 +17,10 @@ void rtd::Healthbar::Update()
         {
             // Scale the foreground to reflect on available health.
             const float scale = h->currentHealth / h->maxHealth;
-            m_drawOpts.width = (m_sizeFull * scale) > 0 ? (m_sizeFull * scale) : 0;
+            m_drawOpts[0].width = (m_sizeFull * scale) > 0 ? (m_sizeFull * scale) : 0;
 
-            m_foreGround.get()->SetPosition(m_drawOpts.x_pos, m_drawOpts.y_pos);
-            m_foreGround.get()->SetScale(m_drawOpts.width, m_drawOpts.height);
+            //m_foreGround.get()->SetPosition(m_drawOpts[0].x_pos, m_drawOpts[0].y_pos);
+            m_foreGround.get()->SetScale(m_drawOpts[0].width, m_drawOpts[0].height);
             m_healthInfo.get()->SetText("Health: " + std::to_string((int)h->currentHealth));
         }
     }
@@ -28,15 +28,20 @@ void rtd::Healthbar::Update()
 
 rtd::Healthbar::Healthbar(const draw_t& drawOpts)
 {
-    m_drawOpts = drawOpts;
-    m_backGround = std::make_unique<Canvas>(m_drawOpts);
-    m_foreGround = std::make_unique<Canvas>(m_drawOpts);
-    m_healthInfo = std::make_unique<Text>("Health", draw_text_t(m_drawOpts.x_pos, m_drawOpts.y_pos, m_drawOpts.width, m_drawOpts.height));
+    m_drawOpts[0] = drawOpts;
+    m_backGround = std::make_unique<Canvas>(m_drawOpts[0]);
+    m_foreGround = std::make_unique<Canvas>(m_drawOpts[0]);
+    m_healthInfo = std::make_unique<Text>("Health", draw_text_t(m_drawOpts[0].x_pos, m_drawOpts[0].y_pos, m_drawOpts[0].width, m_drawOpts[0].height));
     m_healthInfo.get()->SetVisiblity(false);
     m_sizeFull = drawOpts.width;
 
+    m_drawOpts[1] = m_drawOpts[0];
+
     m_backGround.get()->SetColor(D2D1::ColorF(134 / 255.0f, 2 / 255.0f, 17 / 255.0f));
     m_foreGround.get()->SetColor(D2D1::ColorF(61 / 255.0f, 121 / 255.0f, 15 / 255.0f));
+    m_backGround.get()->SetBorderColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
+    m_backGround.get()->ShowBorder();
+    m_backGround.get()->SetBorderWidth(LineWidth::MEDIUM);
 }
 
 rtd::Healthbar::~Healthbar()
@@ -51,11 +56,11 @@ void rtd::Healthbar::SetHealthVariable(Entity e)
 
 void rtd::Healthbar::SetPosition(const float& x, const float& y)
 {
-    m_drawOpts.x_pos = x;
-    m_drawOpts.y_pos = y;
-    m_backGround.get()->SetPosition(x, y);
-    m_foreGround.get()->SetPosition(x, y);
-    m_healthInfo.get()->SetPosition(x, y);
+    m_drawOpts[0].x_pos = x;
+    m_drawOpts[0].y_pos = y;
+
+    if (!m_drawOpts.IsSwapped())
+        m_drawOpts.Swap();
 }
 
 const draw_t rtd::Healthbar::GetOpts() const
@@ -65,6 +70,14 @@ const draw_t rtd::Healthbar::GetOpts() const
 
 void rtd::Healthbar::Draw()
 {
+    {
+        float x = m_drawOpts[1].x_pos;
+        float y = m_drawOpts[1].y_pos;
+        m_backGround.get()->SetPosition(x, y);
+        m_foreGround.get()->SetPosition(x, y);
+        m_healthInfo.get()->SetPosition(x, y);
+    }
+
     if (m_backGround)
         m_backGround.get()->Draw();
     if (m_foreGround)
@@ -72,6 +85,8 @@ void rtd::Healthbar::Draw()
 
     if (m_healthInfo.get()->IsVisible())
         m_healthInfo.get()->Draw();
+
+    m_drawOpts.ReadyForSwap();
 }
 
 
@@ -91,10 +106,10 @@ void rtd::Healthbar::OnHover()
 bool rtd::Healthbar::CheckHover()
 {
     // Is within bounds?
-    if (InputSystem::Get().GetMousePos().x > m_drawOpts.x_pos &&
-        InputSystem::Get().GetMousePos().x < m_drawOpts.x_pos + m_drawOpts.width &&
-        InputSystem::Get().GetMousePos().y > m_drawOpts.y_pos &&
-        InputSystem::Get().GetMousePos().y < m_drawOpts.y_pos + m_drawOpts.height)
+    if (InputSystem::Get().GetMousePos().x > m_drawOpts[1].x_pos &&
+        InputSystem::Get().GetMousePos().x < m_drawOpts[1].x_pos + m_drawOpts[1].width &&
+        InputSystem::Get().GetMousePos().y > m_drawOpts[1].y_pos &&
+        InputSystem::Get().GetMousePos().y < m_drawOpts[1].y_pos + m_drawOpts[1].height)
     {
         return true;
     }

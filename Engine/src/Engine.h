@@ -26,7 +26,7 @@ private:
 	void Update(float dt) override;
 	
 	// Renders one frame.
-	void Render(float& dt);
+	void Render();
 
 	// Run the Engine's core loop.
 	void Run() override;
@@ -47,3 +47,4 @@ public:
 	Window* GetWindow();
 
 };
+

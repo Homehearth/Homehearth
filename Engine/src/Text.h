@@ -10,7 +10,8 @@ namespace rtd
 
 	public:
 		// Pointer to format as well as position, stretch area.
-		draw_text_t m_opts;
+		DoubleBuffer<draw_text_t> m_opts;
+		//draw_text_t m_opts;
 		// Text to be rendered.
 		std::string m_text;
 
@@ -35,7 +36,7 @@ namespace rtd
 			Set the position of the text.
 		*/
 		void SetPosition(const float& x, const float& y);
-		const sm::Vector2 GetPosition() const;
+		const sm::Vector2 GetPosition();
 
 		/*
 			Set the scale of the text.

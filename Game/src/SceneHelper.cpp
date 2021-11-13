@@ -57,6 +57,11 @@ namespace sceneHelp
 		backgroundScene.AddComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>("GameScene.obj");
 		backgroundScene.AddComponent<comp::Transform>();
 
+		comp::Transform test;
+		test.position = { 330.0f, 1.0f, -333.3f };
+		Entity blood = mainMenuScene.CreateEntity();
+		blood.AddComponent<comp::Decal>(test);
+
 		mainMenuScene.GetCurrentCamera()->Initialize(sm::Vector3(0, 0, 0), sm::Vector3(0, 0, 1), sm::Vector3(0, 1, 0),
 			sm::Vector2((float)game->GetWindow()->GetWidth(), (float)game->GetWindow()->GetHeight()), CAMERATYPE::DEFAULT);
 		mainMenuScene.GetCurrentCamera()->m_position = sm::Vector3(350.f, 30.f, -250.f);
@@ -103,6 +108,12 @@ namespace sceneHelp
 		SetupLoadingScene(game);
 	}
 
+	void CreateOptionsScene(Game* game)
+	{
+		Scene& optionsMenu = game->GetScene("Options");
+		SetupOptionsScreen(game);
+	}
+
 	void CreateGameScene(Game* engine)
 	{
 		Scene& gameScene = engine->GetScene("Game");
@@ -136,7 +147,7 @@ namespace sceneHelp
 
 		InputSystem::Get().SetCamera(gameScene.GetCurrentCamera());
 
-		gameScene.on<ESceneUpdate>([cameraEntity, debugCameraEntity](const ESceneUpdate& e, Scene& scene)
+		gameScene.on<ESceneUpdate>([cameraEntity, debugCameraEntity, engine](const ESceneUpdate& e, Scene& scene)
 			{
 
 				IMGUI(
@@ -145,8 +156,10 @@ namespace sceneHelp
 				ImGui::End();
 				);
 
+				// Prediction
+				//engine->m_predictor.Predict(engine->GetScene("Game"));
 				GameSystems::RenderIsCollidingSystem(scene);
-				GameSystems::UpdatePlayerVisuals(scene);
+				//GameSystems::UpdatePlayerVisuals(scene);
 #ifdef _DEBUG
 				if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Space, KeyState::RELEASED))
 				{
@@ -208,7 +221,13 @@ void sceneHelp::SetupMainMenuScreen(Game* game)
 	//	});
 
 	Collection2D* test = new Collection2D;
-	test->AddElement<rtd::Scroller>(draw_t(0.0f, -480.0f, 160.0f, 480.0f), sm::Vector2(0, 0));
+	rtd::Scroller* sc = test->AddElement<rtd::Scroller>(draw_t(0.0f, -480.0f, 160.0f, 480.0f), sm::Vector2(0, 0));
+	sc->AddButton("demoExitButton.png", draw_t(32.0f, -32.0f, 64.0f, 32.0f))->SetOnPressedEvent([=] {
+		game->Shutdown();
+		});
+	sc->AddButton("demo_options_button.png", draw_t(32.0f, -72.0f, 64.0f, 32.0f))->SetOnPressedEvent([=] {
+		game->SetScene("Options");
+		});
 	scene.Add2DCollection(test, "test");
 
 	rtd::Button* externalLinkBtn = connectFields->AddElement<rtd::Button>("Button.png", draw_t(width - width / 4.f, height - (height / 5), width / 8.f, height / 16));
@@ -406,9 +425,19 @@ void sceneHelp::SetupInLobbyScreen(Game* game)
 	scene.Add2DCollection(classButtons, "ClassButtons");
 }
 
-void sceneHelp::SetupOptionsScreen(Scene& scene)
+void sceneHelp::SetupOptionsScreen(Game* game)
 {
+	const float width = (float)game->GetWindow()->GetWidth();
+	const float height = (float)game->GetWindow()->GetHeight();
+	Scene& scene = game->GetScene("Options");
 
+
+	Collection2D* soundCollection = new Collection2D;
+	rtd::Slider* sl = soundCollection->AddElement<rtd::Slider>(D2D1::ColorF(0.0f, 0.0f, 0.0f), draw_t((width / 2) - (width / 9), height / 5, width / 9, height / 16), &game->m_masterVolume);
+	sl->SetMinPos(sm::Vector2((width / 8) - (width / 9)));
+	sl->SetMaxPos(sm::Vector2(width - (width / 8)));
+	sl->SetExplanationText("Master Volume: ");
+	scene.Add2DCollection(soundCollection, "Sounds");
 }
 
 void sceneHelp::SetupLoadingScene(Game* game)
@@ -420,7 +449,7 @@ void sceneHelp::SetupLoadingScene(Game* game)
 	Collection2D* loadingScreen = new Collection2D;
 
 	loadingScreen->AddElement<rtd::Picture>("oohstonefigures.jpg", (draw_t(0.0f, 0.0f, width, height)));
-	loadingScreen->AddElement<rtd::Text>("Loading!", draw_text_t((width / 2.f) - (strlen("Loading!") * 24.f * 0.5f), (height / 2.f) - D2D1Core::GetDefaultFontSize(), strlen("Loading!") * D2D1Core::GetDefaultFontSize(), D2D1Core::GetDefaultFontSize()));
+	loadingScreen->AddElement<rtd::Text>("Loading!", draw_text_t((width / 2.f) - (strlen("Loading!") * D2D1Core::GetDefaultFontSize() * 0.5f), (height / 2.f) - D2D1Core::GetDefaultFontSize(), strlen("Loading!") * D2D1Core::GetDefaultFontSize(), D2D1Core::GetDefaultFontSize()));
 
 	scene.Add2DCollection(loadingScreen, "LoadingScreen");
 }

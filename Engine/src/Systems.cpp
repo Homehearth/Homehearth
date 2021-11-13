@@ -1,5 +1,8 @@
 #include "EnginePCH.h"
 #include "Systems.h"
+#include "Text.h"
+#include "Components.h"
+#include "Healthbar.h"
 
 Entity FindClosestPlayer(HeadlessScene& scene, sm::Vector3 position, comp::NPC* npc)
 {
@@ -85,9 +88,16 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 				}
 				attackCollider.AddComponent<comp::Network>();
 
-
-				CollisionSystem::Get().AddOnCollision(attackCollider, [=, &scene](Entity other)
+				
+				CollisionSystem::Get().AddOnCollision(attackCollider, [entity, &scene](Entity thisEntity, Entity other)
 					{
+						// is caster already dead
+						if (entity.IsNull())
+						{
+							thisEntity.GetComponent<comp::SelfDestruct>()->lifeTime = 0.f;
+							return;
+						}
+
 						if (other == entity)
 							return;
 
@@ -101,9 +111,9 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 							// update Health on network
 							scene.publish<EComponentUpdated>(other, ecs::Component::HEALTH);
 
-							attackCollider.GetComponent<comp::SelfDestruct>()->lifeTime = 0.f;
+							thisEntity.GetComponent<comp::SelfDestruct>()->lifeTime = 0.f;
 
-							comp::Velocity* attackVel = attackCollider.GetComponent<comp::Velocity>();
+							comp::Velocity* attackVel = thisEntity.GetComponent<comp::Velocity>();
 							if (attackVel)
 							{
 								comp::TemporaryPhysics* p = other.AddComponent<comp::TemporaryPhysics>();
@@ -355,4 +365,76 @@ void Systems::AISystem(HeadlessScene& scene, AIHandler* aiHandler)
 
 			}
 		});
+}
+
+void Systems::UpdatePlayerVisuals(Scene* scene)
+{
+	int i = 1;
+	scene->ForEachComponent<comp::NamePlate, comp::Transform>([&](Entity& e, comp::NamePlate& name, comp::Transform& t)
+		{
+			if (i < 5)
+			{
+				Collection2D* collection = scene->GetCollection("dynamicPlayer" + std::to_string(i) + "namePlate");
+				if (collection)
+				{
+					rtd::Text* namePlate = dynamic_cast<rtd::Text*>(collection->elements[0].get());
+					if (namePlate)
+					{
+						Camera* cam = scene->GetCurrentCamera();
+
+						if (cam->GetCameraMatrixes())
+						{
+							// Conversion from World space to NDC space.
+							sm::Vector4 oldP = { t.position.x, t.position.y + 25.0f, t.position.z, 1.0f };
+							sm::Vector4 newP = dx::XMVector4Transform(oldP, cam->GetCameraMatrixes()->view);
+							newP = dx::XMVector4Transform(newP, cam->GetCameraMatrixes()->projection);
+							newP.x /= newP.w;
+							newP.y /= newP.w;
+							newP.z /= newP.w;
+
+							// Conversion from NDC space [-1, 1] to Window space
+							float new_x = (((newP.x + 1) * (D2D1Core::GetWindow()->GetWidth())) / (2));
+							float new_y = D2D1Core::GetWindow()->GetHeight() - (((newP.y + 1) * (D2D1Core::GetWindow()->GetHeight())) / (2));
+
+							namePlate->SetPosition(new_x - ((name.namePlate.length() * D2D1Core::GetDefaultFontSize()) * 0.5f), new_y);
+							// Show nameplates only if camera is turned to it.
+							if (newP.z < 1.f)
+								namePlate->SetVisiblity(true);
+							else
+								namePlate->SetVisiblity(false);
+
+							// Update healthbars position.
+							Collection2D* collHealth = scene->GetCollection("player" + std::to_string(i) + "Info");
+							if (collHealth)
+							{
+								rtd::Healthbar* health = dynamic_cast<rtd::Healthbar*>(collHealth->elements[0].get());
+								if (health)
+								{
+									sm::Vector4 oldPp = { t.position.x, t.position.y + 20.0f, t.position.z, 1.0f };
+									sm::Vector4 newPp = dx::XMVector4Transform(oldPp, cam->GetCameraMatrixes()->view);
+									newPp = dx::XMVector4Transform(newPp, cam->GetCameraMatrixes()->projection);
+									newPp.x /= newPp.w;
+									newPp.y /= newPp.w;
+									newPp.z /= newPp.w;
+
+									// Conversion from NDC space [-1, 1] to Window space
+									new_x = (((newPp.x + 1) * (D2D1Core::GetWindow()->GetWidth())) / (2));
+									new_y = D2D1Core::GetWindow()->GetHeight() - (((newPp.y + 1) * (D2D1Core::GetWindow()->GetHeight())) / (2));
+
+									health->SetPosition(new_x - (health->GetOpts().width * 0.5f), new_y);
+
+									// Only visible if camera is turned to it.
+									if (newPp.z < 1.f)
+										health->SetVisiblity(true);
+									else
+										health->SetVisiblity(false);
+								}
+							}
+						}
+					}
+				}
+			}
+			i++;
+		});
+
 }

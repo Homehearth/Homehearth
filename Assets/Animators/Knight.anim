@@ -1,0 +1,18 @@
+skel 			Knight.fbx
+anim 			idle 			Knight_Idle.fbx
+anim 			running 		Knight_Running.fbx
+anim 			slash 			Knight_Slash.fbx
+anim 			takeDamage 		Knight_TakeDamage.fbx
+anim			placeDefence	Knight_PlaceDefence.fbx
+currentAnim 	idle
+
+
+/*
+	Save for later
+*/
+//States between animations
+... Idle --> WalkForward
+Blendtime: 1.0s
+
+... Walk --> Idle
+Blendtime: 2.0s;
