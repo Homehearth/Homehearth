@@ -26,7 +26,7 @@ void Renderer::Initialize(Window* pWindow)
 	m_basePass.SetEnable(true);	// solo pass
 
 	m_depthPass.SetEnable(false);
-	m_frustumPass.SetEnable(true);
+	m_frustumPass.SetEnable(false);
 	m_cullingPass.SetEnable(false);
 	m_opaqPass.SetEnable(false);
 	m_transPass.SetEnable(false);

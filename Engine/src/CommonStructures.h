@@ -266,15 +266,6 @@ static struct GridProperties_t
 
 } gridOptions;
 
-struct Node
-{
-	DEFAULT,
-	EMPTY,
-	BUILDING,
-	UNPLACABLE,
-	DEFENCE
-};
-
 ALIGN16
 struct dispatch_params_t
 {
@@ -301,6 +292,9 @@ struct frustum_t
 {
 	plane_t planes[4];
 };
+
+struct Node
+{
 	float f = FLT_MAX, g = FLT_MAX, h = FLT_MAX;
 	sm::Vector3 position;
 	Vector2I id;

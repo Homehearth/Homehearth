@@ -15,7 +15,7 @@
 #define DIRECTIONAL_LIGHT 0
 #define POINT_LIGHT 1
 
-static const float PI = 3.14159265359;
+//static const float PI = 3.14159265359;
 
 /*
 ---------------------------------Normal distribution function---------------------------------
