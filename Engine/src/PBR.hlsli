@@ -2,8 +2,6 @@
 	#error You may not include this header directly.
 #endif
 
-static const float PI = 3.14159265359;
-
 /*
 ---------------------------------Normal distribution function---------------------------------
 Approximates the amount the surface's microfacets are aligned to the halfway vector, 
@@ -34,19 +32,19 @@ can overshadow other microfacets reducing the light the surface reflects.
 
 float GeometrySchlickGGX(float NdotV, float roughness)
 {
-    float r = (roughness + 1.0);
-    float k = (r * r) / 8.0;
+    float r = (roughness + 1.0f);
+    float k = (r * r) / 8.0f;
 
     float nom = NdotV;
-    float denom = NdotV * (1.0 - k) + k;
+    float denom = NdotV * (1.0f - k) + k;
 
     return nom / denom;
 }
 
 float GeometrySmith(float3 N, float3 V, float3 L, float roughness)
 {
-    float NdotV = max(dot(N, V), 0.0);
-    float NdotL = max(dot(N, L), 0.0);
+    float NdotV = max(dot(N, V), 0.0f);
+    float NdotL = max(dot(N, L), 0.0f);
     float ggx2 = GeometrySchlickGGX(NdotV, roughness);
     float ggx1 = GeometrySchlickGGX(NdotL, roughness);
 
@@ -60,13 +58,15 @@ The Fresnel equation describes the ratio of surface reflection at different surf
 
 float3 FresnelSchlick(float cosTheta, float3 F0)
 {
-    return F0 + (1.0 - F0) * pow(2, -5.55473 * cosTheta - 6.98316 * cosTheta);
+    //return F0 + (1.0 - F0) * pow(2, -5.55473 * cosTheta - 6.98316 * cosTheta);
+    return (F0 + (1.0f - F0) * pow(1.0f - cosTheta, 5.0f));
 }
 
-float3 FresnelSchlickRoughness(float cosTheta, float F0, float roughness)
+float3 FresnelSchlickRoughness(float cosTheta, float3 F0, float roughness)
 {
-    return F0 + (max(float3(1.0f - roughness, 1.0f - roughness, 1.0f - roughness), F0) - F0) 
-    * pow(clamp(1.0f - cosTheta, 0.0f, 1.0f), 5.0f);
+    float3 r = 1.0f - roughness;
+    //return F0 + (max(r, F0) - F0) * pow(clamp(1.0f - cosTheta, 0.0f, 1.0f), 5.0f);
+    return F0 + (max(r, F0) - F0) * pow(1.0f - cosTheta, 5.0f);
 }
 
 
@@ -77,8 +77,9 @@ float3 FresnelSchlickRoughness(float cosTheta, float F0, float roughness)
 //Calculates the radiance of a Pointlight
 float3 DoPointlight(Light L, PixelIn input, float3 normal)
 {
-    float3 VL = normalize(L.position.xyz - input.worldPos.xyz);
+    float3 VL = L.position.xyz - input.worldPos.xyz;
     float distance = length(VL);
+    VL = normalize(VL);
     
     float3 N = normalize(normal);
     
@@ -143,7 +144,7 @@ void CalcRadiance(PixelIn input, float3 V, float3 N, float roughness, float meta
     
     float3 kS = F;
     float3 kD = float3(1.0f, 1.0f, 1.0f) - kS;
-    kD *= (1.0 - metallic);
+    kD *= (1.0f - metallic);
     
     float3 nom = D * G * F;
     float denom = 4 * max(dot(N, V), 0.0f) * max(dot(N, lightDir), 0.0f) + 0.001f;
@@ -153,45 +154,23 @@ void CalcRadiance(PixelIn input, float3 V, float3 N, float roughness, float meta
     rad = (((kD * albedo / PI) + specular) * radiance * NdotL);
 }
 
-void SampleTextures(PixelIn input, inout float3 albedo, inout float3 N, inout float roughness, inout float metallic, inout float ao)
+float3 ambientIBL(float3 albedo, float3 N, float3 V, float3 F0, float metallic, float roughness, float ao)
 {
-    //If albedo texture exists, sample from it
-    if(c_hasAlbedo == 1)
-    {
-        float4 albedoSamp = t_albedo.Sample(s_linear, input.uv);
-        //Alpha-test
-        clip(albedoSamp.a < 0.5f ? -1 : 1);
-        albedo = pow(max(albedoSamp.rgb, 0.0f), 2.2f); //Power the albedo by 2.2f to get it to linear space.
-    }
+     //Reflection Vector
+    float3 R = reflect(-V, N);
     
-    //If normal texture exists, sample from it
-    if(c_hasNormal == 1)
-    {
-        float3 normalMap = t_normal.Sample(s_linear, input.uv).rgb;
-        normalMap = normalMap * 2.0f - 1.0f;
-        
-        float3 tangent = normalize(input.tangent.xyz);
-        float3 biTangent = normalize(input.biTangent);
-        float3x3 TBN = float3x3(tangent, biTangent, input.normal);
-        
-        N = normalize(mul(normalMap, TBN));
-    }
+    float3 F = FresnelSchlickRoughness(max(dot(N, V), 0.0f), F0, roughness);
+    float3 kS = F;
+    float3 kD = 1.0f - kS;
+    kD *= (1.0f - metallic);
     
-    //If metallic texture exists, sample from it
-    if(c_hasMetalness == 1)
-    {
-        metallic = t_metalness.Sample(s_linear, input.uv).r;
-    }
+    float3 irradiance = pow(max(t_irradiance.Sample(s_linear, N).rgb, 0.0f), 2.2f);
+    float3 diffuse = albedo * irradiance;
     
-    //If roughness texture exists, sample from it
-    if(c_hasRoughness == 1)
-    {
-        roughness = t_roughness.Sample(s_linear, input.uv).r;
-    }
-    
-    //If ao texture exists, sample from it
-    if(c_hasAoMap == 1)
-    {
-        ao = t_aomap.Sample(s_linear, input.uv).r;
-    }
+    const float MAX_REF_LOD = 4.0f;
+    float3 prefilteredColor = pow(max(t_radiance.SampleLevel(s_linear, R, roughness * MAX_REF_LOD).rgb, 0.0f), 2.2f);
+    float2 brdf = t_BRDFLUT.Sample(s_linear, float2(max(dot(N, V), 0.0f), roughness)).rg;
+    float3 specular = prefilteredColor * (F * brdf.x + brdf.y);
+
+    return (kD * diffuse + specular) * ao;
 }

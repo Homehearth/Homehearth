@@ -8,7 +8,10 @@ void rtd::MoneyUI::Update()
 {
     if ((omp_get_wtime() - lastUpdate) > 0.0016f)
     {
-        m_localMoney += 1;
+        if(m_localMoney < m_networkMoney)
+           m_localMoney += 1;
+        else
+           m_localMoney -= 1;
 
         m_text->SetText("Money: " + std::to_string(m_localMoney));
     }
@@ -47,7 +50,7 @@ bool MoneyUI::CheckHover()
 
 bool MoneyUI::CheckClick()
 {
-    if (m_localMoney < m_networkMoney)
+    if (m_localMoney != m_networkMoney)
     {
         return true;
     }

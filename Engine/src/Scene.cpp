@@ -3,7 +3,6 @@
 #include <omp.h>
 #include "Systems.h"
 
-
 Scene::Scene()
 	: m_IsRenderingColliders(true), m_updateAnimation(true)
 {
@@ -15,6 +14,8 @@ Scene::Scene()
 	m_defaultCamera = CreateEntity();
 	m_defaultCamera.AddComponent<comp::Camera3D>()->camera.Initialize(sm::Vector3(0, 0, 0), sm::Vector3(0, 0, 1), sm::Vector3(0, 1, 0), sm::Vector2(1000, 1000), CAMERATYPE::DEFAULT);
 	SetCurrentCameraEntity(m_defaultCamera);
+
+	m_sky.Initialize("kiara1dawn.dds");
 }
 
 void Scene::Update(float dt)
@@ -37,6 +38,8 @@ void Scene::Update(float dt)
 	GetCurrentCamera()->Update(dt);
 	BasicScene::Update(dt);
 
+	if (!m_renderableCopies.IsSwapped() &&
+		!m_renderableAnimCopies.IsSwapped())
 	{
 		PROFILE_SCOPE("Copy Transforms");
 		m_renderableCopies[0].clear();
@@ -57,10 +60,6 @@ void Scene::Update(float dt)
 					m_renderableCopies[0].push_back(r);
 				}
 			});
-	}
-	if (!m_renderableCopies.IsSwapped() &&
-		!m_renderableAnimCopies.IsSwapped())
-	{
 		m_renderableCopies.Swap();
 		m_renderableAnimCopies.Swap();
 		GetCurrentCamera()->Swap();
@@ -79,7 +78,7 @@ void Scene::Update(float dt)
 
 				if (obb != nullptr)
 				{
-					transform.scale = sm::Vector3(obb->Extents);
+					transform.scale = obb->Extents;
 					transform.position = obb->Center;
 					transform.rotation = obb->Orientation;
 				}
@@ -184,6 +183,16 @@ void Scene::Render2D()
 	m_2dHandler.Render();
 }
 
+void Scene::RenderSkybox()
+{
+	m_sky.Render();
+}
+
+Skybox* Scene::GetSkybox()
+{
+	return &m_sky;
+}
+
 bool Scene::IsRenderReady() const
 {
 	return (IsRender2DReady() && IsRender3DReady() && IsRenderDebugReady());
@@ -211,6 +220,10 @@ void Scene::RenderAnimation()
 	for (auto& it : m_renderableAnimCopies[1])
 	{
 		m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.first.data);
+		ID3D11Buffer* const buffer = {
+			m_publicBuffer.GetBuffer()
+		};
+		D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, &buffer);
 		it.second.animator->Bind();
 		it.first.model->Render(D3D11Core::Get().DeviceContext());
 		it.second.animator->Unbind();

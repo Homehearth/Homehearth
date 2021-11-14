@@ -1,5 +1,6 @@
 #include "EnginePCH.h"
 #include "GridSystem.h"
+#include "PathFinderManager.h"
 #define STB_IMAGE_IMPLEMENTATION
 
 GridSystem::GridSystem()
@@ -65,10 +66,10 @@ void GridSystem::Initialize(Vector2I mapSize, sm::Vector3 position, std::string 
 			sm::Vector3 tilePosition = { tileSize.x * row + m_tileHalfWidth, 0.f , (tileSize.y * -col) - m_tileHalfWidth };
 
 			Tile tileTemp;
-			tileTemp.gridID = { (float)row, (float)col };
-			tileTemp.halfWidth = m_tileHalfWidth;
-			tileTemp.type = tileTypeTemp;
-			tileTemp.position = tilePosition;
+			tileTemp.gridID		= { col, row };
+			tileTemp.halfWidth	= m_tileHalfWidth;
+			tileTemp.type		= tileTypeTemp;
+			tileTemp.position	= tilePosition;
 
 			if (rowTilesTemp.size() < m_gridSize.x)
 				rowTilesTemp.push_back(tileTemp);
@@ -77,27 +78,33 @@ void GridSystem::Initialize(Vector2I mapSize, sm::Vector3 position, std::string 
 				m_tiles.push_back(rowTilesTemp);
 
 #if RENDER_GRID
-			Entity tileEntity = m_scene->CreateEntity();
-			comp::Transform* transform = tileEntity.AddComponent<comp::Transform>();
-			tileEntity.AddComponent<comp::Network>();
-			transform->position = tileTemp.position;
-			transform->position.y = 0.5;
-			transform->scale = { 4.2f, 0.5f, 4.2f };
-
-			if (tileTemp.type == TileType::EMPTY)
+			if(tileTemp.type == TileType::DEFAULT || tileTemp.type == TileType::EMPTY)
 			{
-				tileEntity.AddComponent<comp::MeshName>()->name = "Plane1.obj";
-			}
-			else if (tileTemp.type == TileType::BUILDING || tileTemp.type == TileType::UNPLACABLE)
-			{
+				Entity tileEntity = m_scene->CreateEntity();
+				comp::Transform* transform = tileEntity.AddComponent<comp::Transform>();
+				tileEntity.AddComponent<comp::Network>();
 
-				tileEntity.AddComponent<comp::MeshName>()->name = "Plane2.obj";
+				transform->position = tileTemp.position;
+				
+				tileEntity.AddComponent<comp::MeshName>()->name = "Cube.obj";
 			}
-			else if (tileTemp.type == TileType::DEFAULT)
-			{
-				tileEntity.AddComponent<comp::MeshName>()->name = "Plane3.obj";
 
-			}
+			//transform->scale = { 4.2f, 0.5f, 4.2f };
+
+			//if (tileTemp.type == TileType::EMPTY)
+			//{
+			//	tileEntity.AddComponent<comp::MeshName>()->name = "Plane1.obj";
+			//}
+			//else if (tileTemp.type == TileType::BUILDING || tileTemp.type == TileType::UNPLACABLE)
+			//{
+
+			//	tileEntity.AddComponent<comp::MeshName>()->name = "Plane2.obj";
+			//}
+			//else if (tileTemp.type == TileType::DEFAULT)
+			//{
+			//	tileEntity.AddComponent<comp::MeshName>()->name = "Plane3.obj";
+
+			//}
 
 #endif // RENDER_GRID
 
@@ -109,7 +116,7 @@ void GridSystem::Initialize(Vector2I mapSize, sm::Vector3 position, std::string 
 }
 
 
-void GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse)
+void GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, PathFinderManager* aiHandler)
 {
 	const float MAX_RADIUS = 20.f;
 	const float MIN_RADIUS = 10.f;
@@ -179,16 +186,18 @@ void GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse)
 
 							Entity tileEntity = m_scene->CreateEntity();
 							comp::Transform* transform = tileEntity.AddComponent<comp::Transform>();
-							transform->position = tile.position;
-							transform->position.y = 0.5;
+							transform->position = { tile.position.x, 0.5f, tile.position.z };
+							transform->scale = { m_tileHalfWidth, 0.5f, m_tileHalfWidth };
 
-							transform->scale = { 4.2f, 0.5f, 4.2f };
-							tileEntity.AddComponent<comp::Network>();
 							comp::BoundingOrientedBox* collider = tileEntity.AddComponent<comp::BoundingOrientedBox>();
-							collider->Center = tileEntity.GetComponent<comp::Transform>()->position;
-							collider->Extents = { tileEntity.GetComponent<comp::Transform>()->scale.x, 10.f , tileEntity.GetComponent<comp::Transform>()->scale.z };
+							collider->Extents = { transform->scale.x, 5.f , transform->scale.z };
+							collider->Center = { transform->position.x, 100.5f, transform->position.z };
 							tileEntity.AddComponent<comp::Tag<TagType::STATIC>>();
 							tileEntity.AddComponent<comp::MeshName>()->name = "Defence.obj";
+							tileEntity.AddComponent<comp::Network>();
+
+							aiHandler->GetNodeByID(Vector2I(row, col))->reachable = false;
+							aiHandler->GetNodeByID(Vector2I(row, col))->connections.clear();
 						}
 					}
 					//else if (tile.type == TileType::BUILDING || tile.type == TileType::UNPLACABLE || tile.type == TileType::DEFAULT)
@@ -206,15 +215,20 @@ void GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse)
 
 }
 
+uint32_t GridSystem::GetTileCount() const
+{
+	return m_gridSize.x * m_gridSize.y;
+}
+
 Vector2I GridSystem::GetGridSize() const
 {
 	return m_gridSize;
 }
 
 
-Tile GridSystem::GetTile(Vector2I& id)
+Tile* GridSystem::GetTile(Vector2I& id)
 {
-	return m_tiles.at(id.x).at(id.y);
+	return &m_tiles.at(id.x).at(id.y);
 }
 
 std::vector<Entity>* GridSystem::GetTileEntities()

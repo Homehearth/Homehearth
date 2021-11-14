@@ -1,6 +1,7 @@
 #pragma once
 #include "Scene.h"
 #include "CollisionSystem.h"
+#include "PathFinderManager.h"
 
 namespace Systems
 {
@@ -18,7 +19,8 @@ namespace Systems
 
 	template<typename Collider1, typename Collider2>
 	void CheckCollisions(HeadlessScene& scene, float dt);
-	void AISystem(HeadlessScene& scene);
+	void AISystem(HeadlessScene& scene, PathFinderManager* aiHandler);
+
 }
 
 template<typename Collider1, typename Collider2>

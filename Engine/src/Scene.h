@@ -2,6 +2,7 @@
 #include "HeadlessScene.h"
 #include "Lights.h"
 #include "Handler2D.h"
+#include "Skybox.h"
 
 class Scene : public BasicScene<Scene>
 {
@@ -20,6 +21,7 @@ private:
 	Handler2D m_2dHandler;
 
 	Lights m_lights;
+	Skybox m_sky;
 
 	bool IsRender3DReady() const;
 	bool IsRenderDebugReady() const;
@@ -45,6 +47,8 @@ public:
 	void RenderDebug();
 	void RenderAnimation();
 	void Render2D();
+	void RenderSkybox();
+	Skybox* GetSkybox();
 
 	bool IsRenderReady() const;
 

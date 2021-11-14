@@ -3,21 +3,6 @@
 #include "Healthbar.h"
 #include "Game.h"
 
-//System check if mouse ray intersects any of the box collider components in scene
-void GameSystems::MRayIntersectBoxSystem(Scene& scene)
-{
-	scene.ForEachComponent<comp::BoundingOrientedBox, comp::Transform>([&](Entity entity, comp::BoundingOrientedBox& boxCollider, comp::Transform& transform)
-		{
-			//Collided with mouse TODO make it do someting?
-			Ray_t ray = InputSystem::Get().GetMouseRay();
-
-			if (ray.Intersects(boxCollider))
-			{
-				LOG_INFO("Mouseray HIT box detected!");
-			}
-		});
-}
-
 //System to render collider mesh red if collider is colliding with another collider
 void GameSystems::RenderIsCollidingSystem(Scene& scene)
 {

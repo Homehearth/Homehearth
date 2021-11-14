@@ -6,16 +6,20 @@ constexpr int MAX_HEALTH = 100;
 struct Currency
 {
 private:
+	uint32_t m_amount = 0;
 
 public:
-	uint32_t m_amount = 0;
 	uint32_t GetAmount()const
 	{
 		return m_amount;
 	}
-	void AddAmount(int32_t amount)
+	uint32_t& GetAmountRef()
 	{
-		m_amount += amount;
+		return m_amount;
+	}
+	void Zero()
+	{
+		m_amount = 0;
 	}
 };
 
@@ -39,6 +43,7 @@ struct Vector2I
 
 	Vector2I(int&& x, int&& y) :x(x), y(y) {};
 	Vector2I(int& x, int& y) :y(y), x(x) {};
+
 	Vector2I() = default;
 
 	bool operator==(const Vector2I& other)
@@ -301,3 +306,30 @@ static struct GridProperties_t
 	bool isVisible = true;
 
 } gridOptions;
+
+struct Node
+{
+	float f = FLT_MAX, g = FLT_MAX, h = FLT_MAX;
+	sm::Vector3 position;
+	Vector2I id;
+	std::vector<Node*> connections;
+	Node* parent = nullptr;
+	bool reachable = true;
+	Node(Vector2I id) : id(id) {};
+
+	void ResetFGH()
+	{
+		f = FLT_MAX, g = FLT_MAX, h = FLT_MAX;
+	}
+	bool ConnectionAlreadyExists(Node* other)
+	{
+		for (Node* node : connections)
+		{
+			if (node == other)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+};

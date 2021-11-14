@@ -4,7 +4,7 @@
 struct CollisionInfo_t
 {
 	bool hasCollided;
-	double overlap;
+	float overlap;
 	sm::Vector3 smallestVec;
 };
 
@@ -27,8 +27,8 @@ public:
 
 	struct Projection_t
 	{
-		double min;
-		double max;
+		float min;
+		float max;
 	};
 
 	CollisionInfo_t Intersection(Entity entity1, Entity entity2);
