@@ -7,6 +7,7 @@
 class BasePass : public IRenderPass
 {
 public:
+	Skybox* m_skyboxRef = nullptr;
 	BasePass() = default;
 	virtual ~BasePass() = default;
 
