@@ -24,8 +24,6 @@ struct aiNode;
 
 	*  Loads a skeleton, which is a hierchi of bones/joints
 	   that can affect the model.
-
-	*  Need an animator to do animations
 */
 
 class RModel : public resource::GResource
@@ -45,12 +43,7 @@ private:
 	};
 	std::vector<submesh_t>			m_meshes;
 	std::vector<light_t>			m_lights;
-	
-	/*
-		Skeleton information
-	*/
-	std::vector<bone_t>						m_allBones;
-	std::unordered_map<std::string, UINT>	m_boneMap;
+	std::vector<bone_t>				m_allBones;
 
 private:
 	//Get the end of file. Searches for "."
@@ -60,7 +53,8 @@ private:
 		Combines multiple submeshes that uses the same material to one.
 		This is to avoid to many drawcalls per RModel.
 	*/
-	bool CombineMeshes(std::vector<aiMesh*>& submeshes, submesh_t& submesh);
+	bool CombineMeshes(std::vector<aiMesh*>& submeshes, submesh_t& submesh,
+						const std::unordered_map<std::string, UINT>& boneMap);
 
 	//Creating buffers
 	bool CreateVertexBuffer(const std::vector<anim_vertex_t>&	vertices, submesh_t& mesh);
@@ -71,8 +65,11 @@ private:
 	void LoadLights(const aiScene* scene);
 	void LoadMaterial(const aiScene* scene, const UINT& matIndex, bool& useMTL, submesh_t& inoutMesh) const;
 
+	//Bone structure
 	void BoneHierchy(aiNode* node, std::unordered_map<std::string, bone_t>& nameToBone);
-	bool LoadVertexSkinning(const aiMesh* aimesh, std::vector<anim_vertex_t>& vertices);
+	bool LoadVertexSkinning(const aiMesh* aimesh, 
+							std::vector<anim_vertex_t>& vertices, 
+							const std::unordered_map<std::string, UINT>& boneMap);
 
 public:
 	RModel();

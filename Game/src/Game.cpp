@@ -542,7 +542,7 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 				}
 				break;
 			}
-			case ecs::Component::CHANGE_ANIMATION:
+			/*case ecs::Component::CHANGE_ANIMATION:
 			{
 				std::string animationName;
 				msg >> animationName;
@@ -553,7 +553,7 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 					animator->ChangeAnimation(animationName);
 				}
 				break;
-			}
+			}*/
 			case ecs::Component::NAME_PLATE:
 			{
 				std::string name;

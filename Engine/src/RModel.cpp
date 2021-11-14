@@ -9,9 +9,8 @@ RModel::RModel()
 RModel::~RModel()
 {
     m_meshes.clear();
-    m_allBones.clear();
-    m_boneMap.clear();
     m_lights.clear();
+    m_allBones.clear();
 }
 
 bool RModel::HasSkeleton() const
@@ -189,7 +188,7 @@ const std::string RModel::GetFileFormat(const std::string& filename) const
     return filename.substr(startIndex);
 }
 
-bool RModel::CombineMeshes(std::vector<aiMesh*>& submeshes, submesh_t& submesh)
+bool RModel::CombineMeshes(std::vector<aiMesh*>& submeshes, submesh_t& submesh, const std::unordered_map<std::string, UINT>& boneMap)
 {
     std::vector<simple_vertex_t> simpleVertices;
     std::vector<anim_vertex_t> skeletonVertices;
@@ -250,7 +249,7 @@ bool RModel::CombineMeshes(std::vector<aiMesh*>& submeshes, submesh_t& submesh)
         if (aimesh->HasBones())
         {
             skeletonVertices.shrink_to_fit();
-            LoadVertexSkinning(aimesh, skeletonVertices);
+            LoadVertexSkinning(aimesh, skeletonVertices, boneMap);
             submesh.hasBones = true;
         }
     }
@@ -434,7 +433,7 @@ void RModel::BoneHierchy(aiNode* node, std::unordered_map<std::string, bone_t>& 
     }
 }
 
-bool RModel::LoadVertexSkinning(const aiMesh* aimesh, std::vector<anim_vertex_t>& skeletonVertices)
+bool RModel::LoadVertexSkinning(const aiMesh* aimesh, std::vector<anim_vertex_t>& skeletonVertices, const std::unordered_map<std::string, UINT>& boneMap)
 {
     //Data that will be used temporarily for this.
     std::vector<UINT> boneCounter;
@@ -444,7 +443,7 @@ bool RModel::LoadVertexSkinning(const aiMesh* aimesh, std::vector<anim_vertex_t>
     for (UINT b = 0; b < aimesh->mNumBones; b++)
     {
         aiBone* aibone = aimesh->mBones[b];
-        UINT boneNr = m_boneMap[aibone->mName.C_Str()];
+        UINT boneNr = boneMap.at(aibone->mName.C_Str());
 
         //Go through all the vertices that the bone affect
         for (UINT v = 0; v < aibone->mNumWeights; v++)
@@ -597,18 +596,21 @@ bool RModel::Create(const std::string& filename)
         }
     }
 
-
+    /*
+        Add all the bones that we found. Link together who the parent is.
+    */
+    std::unordered_map<std::string, UINT> boneMap;
     BoneHierchy(scene->mRootNode, nameToBone);
     for (UINT i = 0; i < m_allBones.size(); i++)
     {
-        if (m_boneMap.find(m_allBones[i].name) == m_boneMap.end())
+        if (boneMap.find(m_allBones[i].name) == boneMap.end())
         {
-            m_boneMap[m_allBones[i].name] = i;
+            boneMap[m_allBones[i].name] = i;
         }
 
         std::string parentName = scene->mRootNode->FindNode(m_allBones[i].name.c_str())->mParent->mName.C_Str();
-        if (m_boneMap.find(parentName) != m_boneMap.end())
-            m_allBones[i].parentIndex = m_boneMap[parentName];
+        if (boneMap.find(parentName) != boneMap.end())
+            m_allBones[i].parentIndex = boneMap[parentName];
        
 //#ifdef _DEBUG
 //        std::cout << i << "\t" << m_allBones[i].parentIndex << "\t" << m_allBones[i].name << std::endl;
@@ -634,7 +636,7 @@ bool RModel::Create(const std::string& filename)
         /*
             Load in vertex- and index-data and combines all the meshes in a set to one
         */
-        if (!CombineMeshes(mat.second, submesh))
+        if (!CombineMeshes(mat.second, submesh, boneMap))
         {
             importer.FreeScene();
             return false;
@@ -647,6 +649,7 @@ bool RModel::Create(const std::string& filename)
 
     //Freeing memory
     matSet.clear();
+    boneMap.clear();
     importer.FreeScene();
     return true;
 }

@@ -3,8 +3,9 @@
 
 RAnimator::RAnimator()
 {
-	m_currentFrameTime = 0;
+	m_lastTick = 0;
 	m_useInterpolation = true;
+	m_currentFrameTime = 0;
 }
 
 RAnimator::~RAnimator()
@@ -75,10 +76,7 @@ bool RAnimator::CreateBonesSB()
 	desc.StructureByteStride	= sizeof(sm::Matrix);
 	desc.MiscFlags				= D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
 
-	D3D11_SUBRESOURCE_DATA data = {};
-	data.pSysMem				= &m_finalMatrices[0];
-
-	HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&desc, &data, m_bonesSB_Buffer.GetAddressOf());
+	HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&desc, nullptr, m_bonesSB_Buffer.GetAddressOf());
 	if (FAILED(hr))
 		return false;
 	
@@ -246,40 +244,45 @@ void RAnimator::Update()
 				bool reachedEnd = false;
 
 				double tick = m_currentAnim->GetTicksPerFrame() * Stats::Get().GetUpdateTime();
-				m_currentFrameTime += tick;
 
-				if (m_currentFrameTime >= m_currentAnim->GetDuraction())
+				if (m_lastTick != tick)
 				{
-					if (m_currentAnim->IsLoopable())
-					{
-						m_currentFrameTime = fmod(m_currentFrameTime, m_currentAnim->GetDuraction());
-					}
-					else
-					{
-						m_currentAnim = m_defaultAnim;
-						ResetTime();
-						reachedEnd = true;
-					}
-				}
+					m_lastTick = tick;
+					m_currentFrameTime += tick;
 
-				if (!reachedEnd)
-				{
-					std::vector<sm::Matrix> modelMatrices;
-					modelMatrices.resize(m_bones.size(), sm::Matrix::Identity);
-
-					for (size_t i = 0; i < m_bones.size(); i++)
+					if (m_currentFrameTime >= m_currentAnim->GetDuraction())
 					{
-						sm::Matrix localMatrix = m_currentAnim->GetMatrix(m_bones[i].name, m_currentFrameTime, m_bones[i].lastKeys, m_useInterpolation);
-
-						if (m_bones[i].parentIndex == -1)
-							modelMatrices[i] = localMatrix;
+						if (m_currentAnim->IsLoopable())
+						{
+							m_currentFrameTime = fmod(m_currentFrameTime, m_currentAnim->GetDuraction());
+						}
 						else
-							modelMatrices[i] = localMatrix * modelMatrices[m_bones[i].parentIndex];
-
-						m_finalMatrices[i] = m_bones[i].inverseBind * modelMatrices[i];
+						{
+							m_currentAnim = m_defaultAnim;
+							ResetTime();
+							reachedEnd = true;
+						}
 					}
 
-					modelMatrices.clear();
+					if (!reachedEnd)
+					{
+						std::vector<sm::Matrix> modelMatrices;
+						modelMatrices.resize(m_bones.size(), sm::Matrix::Identity);
+
+						for (size_t i = 0; i < m_bones.size(); i++)
+						{
+							sm::Matrix localMatrix = m_currentAnim->GetMatrix(m_bones[i].name, m_currentFrameTime, m_bones[i].lastKeys, m_useInterpolation);
+
+							if (m_bones[i].parentIndex == -1)
+								modelMatrices[i] = localMatrix;
+							else
+								modelMatrices[i] = localMatrix * modelMatrices[m_bones[i].parentIndex];
+
+							m_finalMatrices[i] = m_bones[i].inverseBind * modelMatrices[i];
+						}
+
+						modelMatrices.clear();
+					}
 				}
 			}
 		}
