@@ -950,7 +950,6 @@ void Simulation::SendAllEntitiesToPlayer(uint32_t playerID) const
 	msg << GetTick();
 
 	this->m_pServer->SendToClient(playerID, msg);
-	LOG_INFO("Count: %d", count);
 }
 
 void Simulation::SendRemoveAllEntitiesToPlayer(uint32_t playerID) const
