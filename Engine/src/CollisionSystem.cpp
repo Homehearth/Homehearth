@@ -1,8 +1,6 @@
 #include "EnginePCH.h"
 #include "CollisionSystem.h"
 
-
-
 //Returns number of how many colliders the entity is colliding with
 int CollisionSystem::GetCollisionCounts(Entity entity) const
 {
@@ -62,19 +60,19 @@ CollisionSystem::Projection_t CollisionSystem::GetProjection(sm::Vector3 axis, s
 	float min = axis.Dot(corners[0]);
 	float max = min;
 
-	for(int i = 1; i < 8; i++)
+	for (int i = 1; i < 8; i++)
 	{
 		float p = axis.Dot(corners[i]);
 
-		if(p < min)
+		if (p < min)
 		{
 			min = p;
 		}
-		else if(p > max)
+		else if (p > max)
 		{
 			max = p;
 		}
-		
+
 	}
 
 	//Projection_t projection = {min, max};
@@ -94,43 +92,43 @@ CollisionInfo_t CollisionSystem::Intersection(Entity entity1, Entity entity2)
 		LOG_ERROR("Attempt to perform collision response with or against an entity that does not have a collider component");
 		return {false, 0.0f, sm::Vector3::Zero};
 	}
-	
+
 	sm::Vector3 p2Corners[8];
 	sm::Vector3 p1Corners[8];
-	
+
 	p2Obb->GetCorners(p2Corners);
 	p1Obb->GetCorners(p1Corners);
-	
+
 	sm::Vector3 normals[6] = { sm::Vector3(1.0,0.0,0.0f),sm::Vector3(0.0,1.0,0.0f), sm::Vector3(0.0,0.0,1.0f), sm::Vector3(-1.0,0.0,0.0f),sm::Vector3(0.0,-1.0,0.0f), sm::Vector3(0.0,0.0,-1.0f) };
 	std::vector<sm::Vector3> allAxis;
 
-	allAxis.emplace_back(DirectX::XMVector3Rotate(normals[0], DirectX::XMLoadFloat4(& p1Obb->Orientation)));
-	allAxis.emplace_back(DirectX::XMVector3Rotate(normals[1], DirectX::XMLoadFloat4(& p1Obb->Orientation)));
-	allAxis.emplace_back(DirectX::XMVector3Rotate(normals[2], DirectX::XMLoadFloat4(& p1Obb->Orientation)));
-	allAxis.emplace_back(DirectX::XMVector3Rotate(normals[3], DirectX::XMLoadFloat4(& p1Obb->Orientation)));
-	allAxis.emplace_back(DirectX::XMVector3Rotate(normals[4], DirectX::XMLoadFloat4(& p1Obb->Orientation)));
-	allAxis.emplace_back(DirectX::XMVector3Rotate(normals[5], DirectX::XMLoadFloat4(& p1Obb->Orientation)));
-	
+	allAxis.emplace_back(DirectX::XMVector3Rotate(normals[0], DirectX::XMLoadFloat4(&p1Obb->Orientation)));
+	allAxis.emplace_back(DirectX::XMVector3Rotate(normals[1], DirectX::XMLoadFloat4(&p1Obb->Orientation)));
+	allAxis.emplace_back(DirectX::XMVector3Rotate(normals[2], DirectX::XMLoadFloat4(&p1Obb->Orientation)));
+	allAxis.emplace_back(DirectX::XMVector3Rotate(normals[3], DirectX::XMLoadFloat4(&p1Obb->Orientation)));
+	allAxis.emplace_back(DirectX::XMVector3Rotate(normals[4], DirectX::XMLoadFloat4(&p1Obb->Orientation)));
+	allAxis.emplace_back(DirectX::XMVector3Rotate(normals[5], DirectX::XMLoadFloat4(&p1Obb->Orientation)));
+
 	allAxis.emplace_back(DirectX::XMVector3Rotate(normals[0], DirectX::XMLoadFloat4(&p2Obb->Orientation)));
 	allAxis.emplace_back(DirectX::XMVector3Rotate(normals[1], DirectX::XMLoadFloat4(&p2Obb->Orientation)));
 	allAxis.emplace_back(DirectX::XMVector3Rotate(normals[2], DirectX::XMLoadFloat4(&p2Obb->Orientation)));
 	allAxis.emplace_back(DirectX::XMVector3Rotate(normals[3], DirectX::XMLoadFloat4(&p2Obb->Orientation)));
 	allAxis.emplace_back(DirectX::XMVector3Rotate(normals[4], DirectX::XMLoadFloat4(&p2Obb->Orientation)));
 	allAxis.emplace_back(DirectX::XMVector3Rotate(normals[5], DirectX::XMLoadFloat4(&p2Obb->Orientation)));
-	
+
 	float overlap = FLT_MAX;
 	sm::Vector3 smallest = sm::Vector3::Zero;
 
-	for(int i = 0; i < allAxis.size(); i++)
+	for (int i = 0; i < allAxis.size(); i++)
 	{
 		sm::Vector3 axis = allAxis.at(i);
-		
+
 		//Project both shapes on the axis
 		Projection_t p1 = GetProjection(axis, p1Corners);
 		Projection_t p2 = GetProjection(axis, p2Corners);
 
 		// 1D
-		if((p1.max < p2.min))
+		if ((p1.max < p2.min))
 		{
 			//NO OVERLAP
 			return { false, 0.0f, sm::Vector3::Zero };
@@ -140,7 +138,7 @@ CollisionInfo_t CollisionSystem::Intersection(Entity entity1, Entity entity2)
 			//Get the overlap
 			float o = p1.max - p2.min;
 
-			if(o < overlap)
+			if (o < overlap)
 			{
 				overlap = o;
 				smallest = axis;
@@ -150,35 +148,35 @@ CollisionInfo_t CollisionSystem::Intersection(Entity entity1, Entity entity2)
 	}
 
 	return { true,overlap,smallest };
-	
+
 }
 
 void CollisionSystem::CollisionResponse(CollisionInfo_t collisionInfo, Entity entity1, Entity entity2)
 {
 
-	for(int i = -1; i < 2; i += 2) // runs twice, i becomes -1 and then 1
-	{ 
-		if(entity1.GetComponent<comp::Tag<DYNAMIC>>() && entity2.GetComponent<comp::Tag<STATIC>>())
+	for (int i = -1; i < 2; i += 2) // runs twice, i becomes -1 and then 1
+	{
+		if (entity1.GetComponent<comp::Tag<DYNAMIC>>() && entity2.GetComponent<comp::Tag<STATIC>>())
 		{
 			comp::Transform* transform = entity1.GetComponent<comp::Transform>();
 			comp::BoundingOrientedBox* obb = entity1.GetComponent<comp::BoundingOrientedBox>();
 			if (transform)
 			{
 				transform->position = transform->position + sm::Vector3(collisionInfo.smallestVec * collisionInfo.overlap * static_cast<float>(i));
-			
+
 				if (obb)
 					obb->Center = transform->position;
 
 				// make sure client gets updated position
 				entity1.UpdateNetwork();
 			}
-			
+
 		}
 		// swap entities so we check the opposite the next iteration
 		std::swap(entity1, entity2);
 	}
-	
-	if(entity2.GetComponent<comp::Tag<DYNAMIC>>() && entity1.GetComponent<comp::Tag<DYNAMIC>>())
+
+	if (entity2.GetComponent<comp::Tag<DYNAMIC>>() && entity1.GetComponent<comp::Tag<DYNAMIC>>())
 	{
 		comp::Transform* transform1 = entity1.GetComponent<comp::Transform>();
 		comp::Transform* transform2 = entity2.GetComponent<comp::Transform>();
@@ -204,6 +202,6 @@ void CollisionSystem::CollisionResponse(CollisionInfo_t collisionInfo, Entity en
 
 			entity2.UpdateNetwork();
 		}
-			
+
 	}
 }

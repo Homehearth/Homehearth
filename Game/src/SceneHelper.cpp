@@ -252,7 +252,7 @@ namespace sceneHelp
 			Collection2D* playerHp = new Collection2D;
 
 			// Initiate 3 healthbars. for each player.
-			playerHp->AddElement<rtd::Healthbar>(draw_t(width / 8, (i * ((height / 12)) + (height / 32)), (width / 12), (height / 48)));
+			playerHp->AddElement<rtd::Healthbar>(draw_t(width / 8, (i * ((height / 12)) + (height / 32)), (width / 24), (height / 100)));
 
 			// You and Friend text
 			if (i == 0)

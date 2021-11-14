@@ -78,7 +78,7 @@ void Scene::Update(float dt)
 
 				if (obb != nullptr)
 				{
-					transform.scale = sm::Vector3(obb->Extents);
+					transform.scale = obb->Extents;
 					transform.position = obb->Center;
 					transform.rotation = obb->Orientation;
 				}

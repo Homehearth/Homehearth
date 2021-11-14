@@ -8,7 +8,6 @@ class Game : public Engine
 {
 private:
 	std::chrono::system_clock::time_point m_timeThen;
-	std::vector<comp::Transform> predictedPositions;
 	std::unordered_map<uint32_t, Entity> m_gameEntities;
 
 	GridSystem m_grid;
@@ -16,8 +15,6 @@ private:
 	uint32_t m_money;
 
 	Entity m_mapEntity;
-
-	float m_predictionThreshhold;
 
 	InputState m_inputState;
 
@@ -33,7 +30,6 @@ private:
 	void OnClientDisconnect();
 	
 	void UpdateEntityFromMessage(Entity entity, message<GameMsg>& msg);
-	void UpdatePredictorFromMessage(Entity entity, message<GameMsg>& msg, const uint32_t& id);
 
 	void UpdateInput();
 

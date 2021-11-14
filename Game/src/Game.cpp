@@ -13,8 +13,8 @@ Game::Game()
 	, Engine()
 {
 	this->m_localPID = -1;
+	this->m_money = 0;
 	this->m_gameID = -1;
-	this->m_predictionThreshhold = 0.001f;
 	this->m_waveTimer = 0;
 }
 
@@ -284,15 +284,12 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 
 				m_gameEntities.at(id).Destroy();
 				m_gameEntities.erase(id);
-				//m_predictor.Remove(id);
 			}
 			// Was the entity a player?
 			if (m_players.find(id) != m_players.end())
 			{
 				m_players.at(id).Destroy();
 				m_players.erase(id);
-				//m_predictor.Remove(id);
-
 			}
 
 		}
@@ -617,98 +614,6 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 		}
 	}
 
-}
-
-void Game::UpdatePredictorFromMessage(Entity e, message<GameMsg>& msg, const uint32_t& id)
-{
-	uint32_t bits;
-	msg >> bits;
-	std::bitset<ecs::Component::COMPONENT_MAX> compSet(bits);
-
-	for (int i = ecs::Component::COMPONENT_COUNT - 1; i >= 0; i--)
-	{
-		if (compSet.test(i))
-		{
-			switch (i)
-			{
-			case ecs::Component::TRANSFORM:
-			{
-				comp::Transform t;
-				msg >> t;
-				t.rotation.Normalize();
-				e.AddComponent<comp::Transform>(t);
-
-				break;
-			}
-			case ecs::Component::VELOCITY:
-			{
-				comp::Velocity v;
-				msg >> v;
-				e.AddComponent<comp::Velocity>(v);
-				break;
-			}
-			case ecs::Component::MESH_NAME:
-			{
-				std::string name;
-				msg >> name;
-				e.AddComponent<comp::Renderable>()->model = ResourceManager::Get().CopyResource<RModel>(name);
-				break;
-			}
-			case ecs::Component::ANIMATOR_NAME:
-			{
-				std::string name;
-				msg >> name;
-				e.AddComponent<comp::Animator>()->animator = ResourceManager::Get().CopyResource<RAnimator>(name);
-				break;
-			}
-			case ecs::Component::NAME_PLATE:
-			{
-				std::string name;
-				msg >> name;
-				e.AddComponent<comp::NamePlate>()->namePlate = name;
-				break;
-			}
-			case ecs::Component::HEALTH:
-			{
-				comp::Health heal;
-				msg >> heal;
-				e.AddComponent<comp::Health>(heal);
-				break;
-			}
-			case ecs::Component::BOUNDING_ORIENTED_BOX:
-			{
-				comp::BoundingOrientedBox box;
-				msg >> box;
-				e.AddComponent<comp::BoundingOrientedBox>(box);
-				break;
-			}
-			case ecs::Component::BOUNDING_SPHERE:
-			{
-				comp::BoundingSphere s;
-				msg >> s;
-				e.AddComponent<comp::BoundingSphere>(s);
-				break;
-			}
-			case ecs::Component::LIGHT:
-			{
-				comp::Light l;
-				msg >> l;
-				e.AddComponent<comp::Light>(l);
-				break;
-			}
-			case ecs::Component::PLAYER:
-			{
-				comp::Player p;
-				msg >> p;
-				e.AddComponent<comp::Player>(p);
-				break;
-			}
-			default:
-				LOG_WARNING("Retrieved unimplemented component %u", i);
-				break;
-			}
-		}
-	}
 }
 
 void Game::UpdateInput()

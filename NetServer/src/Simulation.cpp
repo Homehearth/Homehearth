@@ -623,6 +623,7 @@ bool Simulation::AddPlayer(uint32_t playerID, const std::string& namePlate)
 
 	player.AddComponent<comp::Health>();
 	player.AddComponent<comp::BoundingOrientedBox>()->Extents = { 2.0f,2.0f,2.0f };
+	//player.AddComponent<comp::BoundingSphere>()->Radius = 2.f;
 
 	//Collision will handle this entity as a dynamic one
 	player.AddComponent<comp::Tag<TagType::DYNAMIC>>();
