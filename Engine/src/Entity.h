@@ -1,4 +1,5 @@
 #pragma once
+#include "Tags.h"
 
 class Entity
 {
@@ -20,7 +21,9 @@ public:
 	template<typename T>
 	T& GetComponentRef() const;
 
-	
+	template<typename T>
+	bool HasComponent() const;
+
 	template<typename T, typename ...Args>
 	T* AddComponent(Args&& ...);
 
@@ -32,6 +35,8 @@ public:
 	bool Destroy();
 
 	bool IsNull() const;
+
+	tag_bits GetTags() const;
 
 	operator entt::entity()const
 	{
@@ -80,6 +85,11 @@ inline T& Entity::GetComponentRef() const
 	return m_pRegistry->get<T>(m_entity);
 }
 
+template<typename T>
+inline bool Entity::HasComponent() const
+{
+	return GetComponent<T>() != nullptr;
+}
 
 template<typename T, typename ...Args>
 inline T* Entity::AddComponent(Args&& ... args)

@@ -139,3 +139,12 @@ const std::string FONTPATH		= "../Assets/Fonts/";
 const std::string BOUNDSPATH	= "../Assets/Bounds/";
 const std::string ASSETLOADER	= "../Assets/Models/Loader.txt";
 const std::string BOUNDSLOADER	= "../Assets/Bounds/Loader.txt";
+
+
+template<typename Type>
+struct entt::type_seq<Type> {
+	static entt::id_type value() ENTT_NOEXCEPT {
+		static const entt::id_type value = (ecs::RegisterAsAbility<Type>(), internal::type_seq::next());
+		return value;
+	}
+};

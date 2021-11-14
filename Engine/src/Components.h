@@ -267,11 +267,19 @@ namespace ecs
 		};
 
 
-		template<uint8_t ID>
-		struct Tag
+		struct ITag
 		{
-			uint8_t id = ID;
+			tag_bits id;
 		};
+
+		template<tag_bits ID>
+		struct Tag : ITag
+		{
+			Tag() {
+				id = ID;
+			}
+		};
+
 		struct PotentialField
 		{
 			float chargeAmount;
@@ -290,12 +298,25 @@ namespace ecs
 	template<typename T>
 	void RegisterAsAbility()
 	{
-		static_assert(std::is_base_of_v<component::IAbility, T> && "Component has to derive from comp::IAbility");
 
 		using namespace entt::literals;
-		entt::meta<T>().type()
-			.base<component::IAbility>()
-			.func<&Entity::GetComponentRef<T>, entt::as_ref_t>("get"_hs);
+		if constexpr (std::is_base_of_v<component::IAbility, T>)
+		{
+			entt::meta<T>().type()
+				.base<component::IAbility>()
+				.func<&Entity::GetComponentRef<T>, entt::as_ref_t>("get"_hs)
+				.func<&Entity::HasComponent<T>>("has"_hs);
+
+			LOG_INFO("Registered ability %s", entt::resolve<T>().info().name().data());
+		}
+		else if constexpr (std::is_base_of_v<component::ITag, T>) {
+			entt::meta<T>().type()
+				.base<component::ITag>()
+				.func<&Entity::GetComponentRef<T>, entt::as_ref_t>("get"_hs)
+				.func<&Entity::HasComponent<T>>("has"_hs);
+			
+			LOG_INFO("Registered tag %s", entt::resolve<T>().info().name().data());
+		}
 	}
 
 	/**

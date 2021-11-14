@@ -69,14 +69,8 @@ bool ServerGame::OnStartup()
 		LOG_ERROR("Failed to start server");
 		exit(0);
 	}
-
 	m_inputThread = std::thread(&ServerGame::InputThread, this);
-
 	
-	ecs::RegisterAsAbility<comp::AttackAbility>();
-	ecs::RegisterAsAbility<comp::HealAbility>();
-	// more abilities ...
-
 	LoadMapColliders("AllBounds.fbx");
 	//LoadMapColliders("MapBounds.obj");
 

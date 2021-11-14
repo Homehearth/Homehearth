@@ -194,22 +194,25 @@ void Systems::UpdateAbilities(HeadlessScene& scene, float dt)
 		{
 			Entity entity(*scene.GetRegistry(), e);
 			auto instance = type.func("get"_hs).invoke({}, entity);
+			
 			comp::IAbility* ability = instance.try_cast<comp::IAbility>();
-			if (ability)
+			if (!ability)
 			{
-				// Decreases cooldown between attacks.
-				if (ability->delayTimer > 0.f)
-					ability->delayTimer -= dt;
-					
-				if (ability->useTimer > 0.f)
-					ability->useTimer -= dt;
-
-				if (ability->cooldownTimer > 0.f)
-					ability->cooldownTimer -= dt;
-
-				if (ability->cooldownTimer <= 0.f && ability->delayTimer <= 0.f && ability->useTimer <= 0.f)
-					ability->isReady = true;
+				break; // if not of ability type move on to next type
 			}
+
+			// Decreases cooldown between attacks.
+			if (ability->delayTimer > 0.f)
+				ability->delayTimer -= dt;
+					
+			if (ability->useTimer > 0.f)
+				ability->useTimer -= dt;
+
+			if (ability->cooldownTimer > 0.f)
+				ability->cooldownTimer -= dt;
+
+			if (ability->cooldownTimer <= 0.f && ability->delayTimer <= 0.f && ability->useTimer <= 0.f)
+				ability->isReady = true;
 		}
 	}
 
