@@ -194,6 +194,7 @@ void GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 							collider->Center = { transform->position.x, 100.5f, transform->position.z };
 							tileEntity.AddComponent<comp::Tag<TagType::STATIC>>();
 							tileEntity.AddComponent<comp::MeshName>()->name = "Defence.obj";
+							tileEntity.AddComponent<comp::Network>();
 
 							aiHandler->GetNodeByID(Vector2I(row, col))->reachable = false;
 							aiHandler->GetNodeByID(Vector2I(row, col))->connections.clear();
