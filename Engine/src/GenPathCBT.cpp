@@ -1,6 +1,6 @@
 #include "EnginePCH.h"
 #include "GenPathCBT.h"
-#include "AIHandler.h"
+#include "PathFinderManager.h"
 
 BT::GenPathCBT::GenPathCBT(const std::string& name, Entity entity)
 	:ActionNode(name),
@@ -12,7 +12,7 @@ BT::GenPathCBT::GenPathCBT(const std::string& name, Entity entity)
 
 BT::NodeStatus BT::GenPathCBT::Tick()
 {
-	AIHandler* aiHandler = Blackboard::Get().GetAIHandler();
+	PathFinderManager* aiHandler = Blackboard::Get().GetAIHandler();
 
 	if(aiHandler != nullptr)
 	{

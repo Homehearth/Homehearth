@@ -6,9 +6,9 @@ void AIBehaviors::UpdateBlackBoard(HeadlessScene& scene)
 	PlayersPosition_t players;
 	scene.ForEachComponent<comp::Player, comp::Transform>([&](Entity entity, comp::Player& player, comp::Transform& transform)
 	{
-			players.positions.emplace_back(transform.position);
+			players.players.emplace_back(entity);
 	});
-	Blackboard::Get().AddValue("playersPosition", players);
+	Blackboard::Get().AddValue("players", players);
 }
 
 BT::FallbackNode* AIBehaviors::GetSimpleAIBehavior(Entity entity)

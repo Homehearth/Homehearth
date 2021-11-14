@@ -1,7 +1,7 @@
 #include "EnginePCH.h"
-#include "AIHandler.h"
+#include "PathFinderManager.h"
 
-Node* AIHandler::FindClosestNode(sm::Vector3 position)
+Node* PathFinderManager::FindClosestNode(sm::Vector3 position)
 {
 	Node* currentClosest = nullptr;
 
@@ -26,19 +26,12 @@ Node* AIHandler::FindClosestNode(sm::Vector3 position)
 	return currentClosest;
 }
 
-std::vector<std::vector<std::shared_ptr<Node>>>& AIHandler::GetNodes()
+std::vector<std::vector<std::shared_ptr<Node>>>& PathFinderManager::GetNodes()
 {
 	return m_nodes;
 }
 
-float AIHandler::CalculateFGH(Node* currentNode, Node* startNode, Node* goalNode)
-{
-	float tempG = currentNode->g + (currentNode->position - startNode->position).Length();
-	float tempH = (currentNode->position - goalNode->position).Length(); //Using euclidean distance
-	return tempG + tempH;
-}
-
-bool AIHandler::IsInVector(std::vector<Node*> vector, Node* node)
+bool PathFinderManager::IsInVector(std::vector<Node*> vector, Node* node)
 {
 	for (Node* current : vector)
 	{
@@ -50,7 +43,7 @@ bool AIHandler::IsInVector(std::vector<Node*> vector, Node* node)
 	return false;
 }
 
-std::vector<Node*> AIHandler::GetNeighbors(GridSystem* grid, Tile* baseNode)
+std::vector<Node*> PathFinderManager::GetNeighbors(GridSystem* grid, Tile* baseNode)
 {
 	std::vector<Node*> neighbors;
 	if ((baseNode->type == TileType::DEFAULT || baseNode->type == TileType::EMPTY))
@@ -83,14 +76,14 @@ std::vector<Node*> AIHandler::GetNeighbors(GridSystem* grid, Tile* baseNode)
 	return neighbors;
 }
 
-Node* AIHandler::GetNodeByID(Vector2I id) const
+Node* PathFinderManager::GetNodeByID(Vector2I id) const
 {
 
 	return m_nodes[id.x][id.y].get();
 
 }
 
-Node* AIHandler::AddNode(Vector2I id)
+Node* PathFinderManager::AddNode(Vector2I id)
 {
 	if (GetNodeByID(id))
 	{
@@ -103,24 +96,11 @@ Node* AIHandler::AddNode(Vector2I id)
 	}
 }
 
-bool AIHandler::AddNode(std::unique_ptr<Node>& node)
-{
-	if (GetNodeByID(node->id))
-	{
-		return false;
-	}
-	else
-	{
-		m_nodes[node->id.x][node->id.y] = std::move(node);
-		return true;
-	}
-}
-
-void AIHandler::CreateNodes(GridSystem* grid)
+void PathFinderManager::CreateNodes(GridSystem* grid)
 {
 	int itrID = 0;
 	//Create Nodes
-	LOG_INFO("AIHandler: Creating Nodes");
+	LOG_INFO("PathFinderManager: Creating Nodes");
 	m_nodes.resize(grid->GetGridSize().x);
 	for (int i = 0; i < m_nodes.size(); i++)
 	{
@@ -159,20 +139,20 @@ void AIHandler::CreateNodes(GridSystem* grid)
 
 }
 
-AIHandler::AIHandler()
+PathFinderManager::PathFinderManager()
 {
 }
 
-AIHandler::~AIHandler()
+PathFinderManager::~PathFinderManager()
 {
 	m_nodes.clear();
 }
 
-void AIHandler::AStarSearch(Entity npc)
+void PathFinderManager::AStarSearch(Entity npc)
 {
 	comp::Transform* npcTransform = npc.GetComponent<comp::Transform>();
 	comp::NPC* npcComp = npc.GetComponent<comp::NPC>();
-	npcComp->path.clear();
+
 
 	npcComp->currentNode->g = 0.0f;
 	npcComp->currentNode->h = 0.0f;
@@ -182,14 +162,23 @@ void AIHandler::AStarSearch(Entity npc)
 	openList.push_back(startingNode);
 
 	//Gets the target that findTargetNode has picked for this entity
-	sm::Vector3* targetPos = Blackboard::Get().GetValue<sm::Vector3>("target" + std::to_string(npc));
-	if(targetPos == nullptr)
+	Entity* target= Blackboard::Get().GetValue<Entity>("target" + std::to_string(npc));
+	if(target == nullptr)
 	{
 		LOG_INFO("Target was nullptr...");
 		return;
 	}
 
-	Node* goalNode = FindClosestNode(*targetPos);
+
+	Node* goalNode = FindClosestNode(target->GetComponent<comp::Transform>()->position);
+
+	//Cancel if its a dead node (no connections)
+	if(!goalNode->reachable)
+	{
+		return;
+	}
+
+	npcComp->path.clear();
 
 	while(!openList.empty())
 	{
@@ -264,7 +253,7 @@ void AIHandler::AStarSearch(Entity npc)
 	}
 }
 
-bool AIHandler::ReachedNode(const Entity npc)
+bool PathFinderManager::ReachedNode(const Entity npc)
 {
 	comp::NPC* npcComp = npc.GetComponent<comp::NPC>();
 	comp::Transform* transformComp = npc.GetComponent<comp::Transform>();

@@ -305,7 +305,7 @@ void Systems::LightSystem(Scene& scene, float dt)
 
 }
 
-void Systems::AISystem(HeadlessScene& scene, AIHandler* aiHandler)
+void Systems::AISystem(HeadlessScene& scene, PathFinderManager* aiHandler)
 {
 	PROFILE_FUNCTION();
 

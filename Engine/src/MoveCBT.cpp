@@ -3,7 +3,8 @@
 
 BT::MoveCBT::MoveCBT(const std::string& name, Entity entity)
 	:ActionNode(name),
-	entity(entity)
+	entity(entity),
+	refreshRateOnEscape(1.0f)
 {
 	timerEscape.Start();
 }
@@ -67,15 +68,15 @@ BT::NodeStatus BT::MoveCBT::Tick()
 		return BT::NodeStatus::FAILURE;
 	}
 
-	//velocity->vel = sm::Vector3(0.f, 0.f, 0.f);
+	
 
 	if (npc->path.empty())
 	{
+		
 		//Check if AI stands on a dead node (no connections to grid)
-		if (!npc->currentNode->reachable && timerEscape.GetElapsedTime<std::chrono::seconds>() > 1.0f)
+		if (!npc->currentNode->reachable && timerEscape.GetElapsedTime<std::chrono::seconds>() > refreshRateOnEscape)
 		{
 			timerEscape.Start();
-			LOG_WARNING("Updated escape function");
 			if (EscapeCurrentNode(entity))
 			{
 				return BT::NodeStatus::SUCCESS;
@@ -83,6 +84,10 @@ BT::NodeStatus BT::MoveCBT::Tick()
 
 			LOG_WARNING("Standing on non rechable node and failed to generate escape path");
 			return BT::NodeStatus::FAILURE;
+		}
+		else if (npc->currentNode->reachable)
+		{
+			velocity->vel = sm::Vector3(0.0f, 0.0f, 0.0f);
 		}
 
 		return BT::NodeStatus::SUCCESS;
@@ -105,9 +110,5 @@ BT::NodeStatus BT::MoveCBT::Tick()
 
 		return BT::NodeStatus::SUCCESS;
 	}
-
-
-
-
 
 }

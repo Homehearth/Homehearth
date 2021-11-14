@@ -2,7 +2,7 @@
 #include <iostream>
 #include <ostream>
 #include <unordered_map>
-#include "AIHandler.h"
+#include "PathFinderManager.h"
 
 struct Base
 {
@@ -19,7 +19,7 @@ struct Derived : Base
 //Structs of different blackboard data.
 struct PlayersPosition_t
 {
-	std::vector<sm::Vector3> positions;
+	std::vector<Entity> players;
 };
 
 
@@ -39,14 +39,14 @@ public:
 	template<typename T>
 	bool AddValue(std::string key, T value);
 
-	AIHandler* GetAIHandler();
+	PathFinderManager* GetAIHandler();
 private:
 	Blackboard() = default;
 	std::unordered_map<std::string, std::unique_ptr<Base>> storage;
-	AIHandler aiHandler;
+	PathFinderManager aiHandler;
 };
 
-inline AIHandler* Blackboard::GetAIHandler()
+inline PathFinderManager* Blackboard::GetAIHandler()
 {
 	return &this->aiHandler;
 }

@@ -2,7 +2,7 @@
 #include "Server.h"
 #include "HeadlessEngine.h"
 #include "GridSystem.h"
-#include "AIHandler.h"
+#include "PathFinderManager.h"
 #include "ServerSystems.h"
 #include "Wave.h"
 #include "AIBehaviors.h"

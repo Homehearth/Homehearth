@@ -26,5 +26,6 @@ namespace BT
 
 		//Timer for when to try escape again
 		Timer timerEscape;
+		float refreshRateOnEscape;
 	};
 }
