@@ -25,7 +25,7 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 	//comp::BoundingSphere* bos = entity.AddComponent<comp::BoundingSphere>();
 	comp::Velocity* velocity = entity.AddComponent<comp::Velocity>();
 	comp::CombatStats* combatStats = entity.AddComponent<comp::CombatStats>();
-
+	comp::BehaviorTree* behaviorTree = entity.AddComponent<comp::BehaviorTree>();
 	switch (type)
 	{
 	case EnemyType::Default:
@@ -44,6 +44,7 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 			combatStats->attackDamage = 20.f;
 			combatStats->lifetime = 0.2f;
 			combatStats->isRanged = false;
+			behaviorTree->root = AIBehaviors::GetSimpleAIBehavior(entity);
 			combatStats->attackRange = 7.0f;
 
 			
@@ -334,4 +335,20 @@ void ServerSystems::CheckGameOver(Simulation* simulation, HeadlessScene& scene)
 	{
 		simulation->SetLobbyScene();
 	}
+}
+
+void ServerSystems::TickBTSystem(Simulation* simulation, HeadlessScene& scene)
+{
+	scene.ForEachComponent<comp::BehaviorTree>([&](Entity entity,comp::BehaviorTree& bt)
+		{
+			if(bt.currentNode != nullptr)
+			{
+				bt.currentNode->Tick();
+			}
+			else
+			{
+				bt.root->Tick();
+			}
+		
+		});
 }

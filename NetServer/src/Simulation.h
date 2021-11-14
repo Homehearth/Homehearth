@@ -2,9 +2,10 @@
 #include "Server.h"
 #include "HeadlessEngine.h"
 #include "GridSystem.h"
+#include "PathFinderManager.h"
 #include "ServerSystems.h"
 #include "Wave.h"
-
+#include "AIBehaviors.h"
 /*
 		Simulation defines each ongoing simulation from the perspective of the server
 		gameID identifies the simulation which each player has to give the server to keep track
@@ -55,9 +56,7 @@ private:
 	void OnComponentUpdated(Entity entity, ecs::Component component);
 
 
-	std::vector<std::string> OpenFile(std::string filePath);
-	void ConnectNodes(comp::Node* node1, comp::Node* node2);
-	comp::Node* GetAINodeById(Vector2I& id);
+
 
 	void BuildMapColliders(std::vector<dx::BoundingOrientedBox>* mapColliders);
 
