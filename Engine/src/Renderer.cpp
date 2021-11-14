@@ -57,6 +57,7 @@ void Renderer::Render(Scene* pScene)
 		if (!m_passes.empty())
 		{
 			m_basePass.m_skyboxRef = pScene->GetSkybox();
+			m_animPass.m_skyboxRef = pScene->GetSkybox();
 			if (pScene->GetCurrentCamera()->IsSwapped())
 			{
 				this->UpdatePerFrame(pScene->GetCurrentCamera());
