@@ -2,6 +2,8 @@
 	#error You may not include this header directly.
 #endif
 
+static const float PI = 3.14159265359;
+
 //---------------------------------------------------------------------------
 //	Constant buffers.
 //---------------------------------------------------------------------------
@@ -64,6 +66,7 @@ cbuffer DecalInfoCB : register(b10)
 SamplerState s_point		: register(s0);
 SamplerState s_linear		: register(s1);
 SamplerState s_anisotropic	: register(s2);
+SamplerState s_cubeSamp     : register(s3);
 
 
 //---------------------------------------------------------------------------
@@ -93,6 +96,11 @@ StructuredBuffer<float4x4> sb_decaldata : register(t16);
 //StructuredBuffer<DirectionalLight> sb_directionalLights : register();
 //StructuredBuffer<uint> sb_pointLightIndexList : register();
 //StructuredBuffer<Frustum> sb_frustums : register();
+
+TextureCube t_radiance              : register(t96);
+TextureCube t_irradiance            : register(t97);
+TextureCube t_sky                   : register(t98);
+Texture2D t_BRDFLUT                 : register(t99);
 
 
 //---------------------------------------------------------------------------

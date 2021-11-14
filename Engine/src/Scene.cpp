@@ -15,6 +15,8 @@ Scene::Scene()
 	m_defaultCamera = CreateEntity();
 	m_defaultCamera.AddComponent<comp::Camera3D>()->camera.Initialize(sm::Vector3(0, 0, 0), sm::Vector3(0, 0, 1), sm::Vector3(0, 1, 0), sm::Vector2(1000, 1000), CAMERATYPE::DEFAULT);
 	SetCurrentCameraEntity(m_defaultCamera);
+
+	m_sky.Initialize("kiara1dawn.dds");
 }
 
 void Scene::Update(float dt)
@@ -223,6 +225,16 @@ void Scene::RenderDebug()
 void Scene::Render2D()
 {
 	m_2dHandler.Render();
+}
+
+void Scene::RenderSkybox()
+{
+	m_sky.Render();
+}
+
+Skybox* Scene::GetSkybox()
+{
+	return &m_sky;
 }
 
 bool Scene::IsRenderReady() const
