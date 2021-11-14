@@ -7,7 +7,7 @@
 
 #include "BlackboardBT.h"
 
-//Costums
+//Costum nodes
 #include "FindTargetCBT.h"
 #include "MoveCBT.h"
 #include "AttackCBT.h"

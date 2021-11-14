@@ -4,8 +4,10 @@
 
 BT::GenPathCBT::GenPathCBT(const std::string& name, Entity entity)
 	:ActionNode(name),
-	entity(entity)
+	entity(entity),
+	refreshRate(0.2f)
 {
+	generatePathTimer.Start();
 }
 
 BT::NodeStatus BT::GenPathCBT::Tick()
@@ -14,8 +16,15 @@ BT::NodeStatus BT::GenPathCBT::Tick()
 
 	if(aiHandler != nullptr)
 	{
-		entity.GetComponent<comp::NPC>()->currentNode = aiHandler->FindClosestNode(entity.GetComponent<comp::Transform>()->position);
-		aiHandler->AStarSearch(entity);
+		comp::NPC* npc = entity.GetComponent<comp::NPC>();
+		npc->currentNode = aiHandler->FindClosestNode(entity.GetComponent<comp::Transform>()->position);
+
+		if(npc->path.empty() || generatePathTimer.GetElapsedTime<std::chrono::seconds>() > refreshRate)
+		{
+			generatePathTimer.Start();
+			aiHandler->AStarSearch(entity);
+		}
+
 		return BT::NodeStatus::SUCCESS;
 	}
 	else

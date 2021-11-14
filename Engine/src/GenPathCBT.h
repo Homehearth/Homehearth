@@ -1,5 +1,5 @@
 #pragma once
-
+#include "Timer.h"
 namespace BT
 {
 	
@@ -11,6 +11,8 @@ namespace BT
 		BT::NodeStatus Tick() override;
 	private:
 		Entity entity;
+		Timer generatePathTimer;
+		float refreshRate;
 	};
 }
 

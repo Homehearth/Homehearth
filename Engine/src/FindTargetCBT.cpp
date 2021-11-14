@@ -12,6 +12,7 @@ BT::FindTargetCBT::~FindTargetCBT() = default;
 BT::NodeStatus BT::FindTargetCBT::Tick()
 {
 	const PlayersPosition_t* playersPos = Blackboard::Get().GetValue<PlayersPosition_t>("playersPosition");
+	const comp::Transform* transform = entity.GetComponent<comp::Transform>();
 
 	if(playersPos == nullptr)
 	{
@@ -19,16 +20,14 @@ BT::NodeStatus BT::FindTargetCBT::Tick()
 		return BT::NodeStatus::FAILURE;
 	}
 
-	sm::Vector3 nearestPlayerPos = playersPos->positions.at(0);
-	const comp::Transform* transform = entity.GetComponent<comp::Transform>();
-
 	if(transform == nullptr)
 	{
 		LOG_ERROR("The enemy have no transform");
 		return BT::NodeStatus::FAILURE;
 	}
-		
+	Blackboard::Get().GetAIHandler();
 	//Find the nearest player and set that position as target
+	sm::Vector3 nearestPlayerPos = playersPos->positions.at(0);
 	for (auto playerPos : playersPos->positions)
 	{
 		if(sm::Vector3::Distance(transform->position, playerPos) < sm::Vector3::Distance(transform->position, nearestPlayerPos))

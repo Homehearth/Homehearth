@@ -3,101 +3,111 @@
 
 BT::MoveCBT::MoveCBT(const std::string& name, Entity entity)
 	:ActionNode(name),
-	entity(entity),
-	runNrTimes(600)
+	entity(entity)
 {
+	timerEscape.Start();
 }
 
 
-BT::NodeStatus BT::MoveCBT::Tick()
+bool BT::MoveCBT::EscapeCurrentNode(const Entity entity)
 {
-	//if(runNrTimes <= 0)
+	comp::NPC* npc = entity.GetComponent<comp::NPC>();
+	comp::Velocity* velocity = entity.GetComponent<comp::Velocity>();
+	comp::Transform* transform = entity.GetComponent<comp::Transform>();
+
+	const std::vector<std::vector<std::shared_ptr<Node>>> nodes = Blackboard::Get().GetAIHandler()->GetNodes();
+	const int currentX = npc->currentNode->id.x;
+	const int currentY = npc->currentNode->id.y;
+	Node* currentClosest = nullptr;
+
+	//For each neighbor starting from nort-west to south east
+	//Find the closest node that is alive (Has connections with the grid)
+	for (int newX = -1; newX <= 1; newX++)
 	{
-		//Temp function to get the direction to target and add that to velocity
-		comp::Transform* transform = entity.GetComponent<comp::Transform>();
-		comp::Velocity* veloicty = entity.GetComponent<comp::Velocity>();
-		comp::NPC* npc = entity.GetComponent<comp::NPC>();
-
-		if(npc->path.empty())
+		for (int newY = -1; newY <= 1; newY++)
 		{
-			LOG_ERROR("Path was empty");
-			veloicty->vel = sm::Vector3(0.f, 0.f, 0.f);
+			Node* neighborNode = nodes[currentX + newX][currentY + newY].get();
 
-			//PUT AI back on a reachable node
-			if(!npc->currentNode->reachable)
+			if (currentX + newX >= 0 && currentY + newY >= 0 && neighborNode->reachable)
 			{
-				std::vector<std::vector<std::shared_ptr<Node>>> nodes = Blackboard::Get().GetAIHandler()->GetNodes();
-				int currentX = npc->currentNode->id.x;
-				int currentY = npc->currentNode->id.y;
-				Node* currentClosest = nullptr;
-				//For each neighbour starting from nort-west to south east
-				for (int newX = -1; newX <= 1; newX++)
+				if (currentClosest)
 				{
-					for (int newY = -1; newY <= 1; newY++)
+					if (sm::Vector3::Distance(neighborNode->position, npc->currentNode->position) < sm::Vector3::Distance(currentClosest->position, npc->currentNode->position))
 					{
-						Node* neighborNode = nodes[currentX + newX][currentY + newY].get();
-
-						if(currentX + newX >= 0 && currentY + newY >= 0 && neighborNode->reachable)
-						{
-							if(currentClosest)
-							{
-								if(sm::Vector3::Distance(neighborNode->position, npc->currentNode->position) < sm::Vector3::Distance(currentClosest->position, npc->currentNode->position))
-								{
-									currentClosest = neighborNode;
-								}
-							}
-							else
-							{
-								currentClosest = nodes[currentX + newX][currentY + newY].get();
-							}
-						}
+						currentClosest = neighborNode;
 					}
 				}
-
-				if(currentClosest)
+				else
 				{
-					veloicty->vel = currentClosest->position - transform->position;
-					veloicty->vel.Normalize();
-					veloicty->vel *= npc->movementSpeed;
-					return BT::NodeStatus::SUCCESS;
+					currentClosest = nodes[currentX + newX][currentY + newY].get();
 				}
+			}
+		}
+	}
+	//Adjust velocity to target the closest node that is alive.
+	if (currentClosest)
+	{
+		velocity->vel = currentClosest->position - transform->position;
+		velocity->vel.Normalize();
+		velocity->vel *= npc->movementSpeed;
+		return true;
+	}
+	return false;
+}
 
-				LOG_ERROR("Standing on non rechable node and failed to generate escape path");
+BT::NodeStatus BT::MoveCBT::Tick()
+{
+	comp::Transform* transform = entity.GetComponent<comp::Transform>();
+	comp::Velocity* velocity = entity.GetComponent<comp::Velocity>();
+	comp::NPC* npc = entity.GetComponent<comp::NPC>();
+
+	if (transform == nullptr || velocity == nullptr || npc == nullptr)
+	{
+		LOG_ERROR("Components returned as nullptr...");
+		return BT::NodeStatus::FAILURE;
+	}
+
+	//velocity->vel = sm::Vector3(0.f, 0.f, 0.f);
+
+	if (npc->path.empty())
+	{
+		//Check if AI stands on a dead node (no connections to grid)
+		if (!npc->currentNode->reachable && timerEscape.GetElapsedTime<std::chrono::seconds>() > 1.0f)
+		{
+			timerEscape.Start();
+			LOG_WARNING("Updated escape function");
+			if (EscapeCurrentNode(entity))
+			{
+				return BT::NodeStatus::SUCCESS;
 			}
 
-			return BT::NodeStatus::FAILURE;
-		}
-		if (transform == nullptr)
-		{
-			LOG_ERROR("Transform component returned as nullptr...");
+			LOG_WARNING("Standing on non rechable node and failed to generate escape path");
 			return BT::NodeStatus::FAILURE;
 		}
 
+		return BT::NodeStatus::SUCCESS;
+	}
+	else
+	{
 		npc->currentNode = npc->path.back();
-		if (veloicty && npc->currentNode)
+		if (velocity && npc->currentNode)
 		{
-			veloicty->vel = npc->currentNode->position - transform->position;
-			veloicty->vel.Normalize();
-			veloicty->vel *= npc->movementSpeed;
+			velocity->vel = npc->currentNode->position - transform->position;
+			velocity->vel.Normalize();
+			velocity->vel *= npc->movementSpeed;
 		}
 
-		if (sm::Vector3::Distance(npc->currentNode->position, transform->position) < 4.f)
+		//If AI close enough to next node, pop it from the path
+		if (sm::Vector3::Distance(npc->currentNode->position, transform->position) < 4.0f)
 		{
 			npc->path.pop_back();
 		}
 
-
-		//entity.GetComponent<comp::BehaviorTree>()->currentNode = this;
-
-		//runNrTimes--;
 		return BT::NodeStatus::SUCCESS;
 	}
-	//else
-	//{
-	//	LOG_INFO("Reseted currentNode");
-	//	runNrTimes = 600;
-	//	entity.GetComponent<comp::BehaviorTree>()->currentNode = nullptr;
-	//	return BT::NodeStatus::SUCCESS;
-	//}
+
+
+
+
 
 }
