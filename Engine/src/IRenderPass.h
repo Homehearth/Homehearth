@@ -29,12 +29,12 @@ public:
 	}
 
 	bool IsEnabled() const { return m_isEnable; }
-	void SetEnable(bool enable) { m_isEnable = enable; } 
+	void SetEnable(bool enable) { m_isEnable = enable; }
 	ID3D11DeviceContext* GetDeviceContext() const { return m_contextDevice; }
 	PipelineManager* GetPipelineManager() const { return m_pipelineManager; }
-	
+
 	// Methods to override.
-	virtual void PreRender(Camera* pCam = nullptr, ID3D11DeviceContext * pDeviceContext = D3D11Core::Get().DeviceContext()) = 0;
+	virtual void PreRender(Camera* pCam = nullptr, ID3D11DeviceContext* pDeviceContext = D3D11Core::Get().DeviceContext()) = 0;
 	virtual void Render(Scene* pScene) = 0;
 	virtual void PostRender(ID3D11DeviceContext* pDeviceContext = D3D11Core::Get().DeviceContext()) = 0;
 	virtual void SetLights(Lights* light);

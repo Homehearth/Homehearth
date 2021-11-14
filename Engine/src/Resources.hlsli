@@ -2,6 +2,8 @@
 	#error You may not include this header directly.
 #endif
 
+static const float PI = 3.14159265359;
+
 //---------------------------------------------------------------------------
 //	Constant buffers.
 //---------------------------------------------------------------------------
@@ -62,6 +64,13 @@ cbuffer DispatchParamsCB : register (b7)
     uint3 numThreads;
 }
 
+cbuffer DecalInfoCB : register(b10)
+{
+    float4 infoData = float4(0.0f, 0.0f, 0.0f, 0.0f);
+	float4x4 decal_projection;
+}
+
+
 //---------------------------------------------------------------------------
 //	Samplers.
 //---------------------------------------------------------------------------
@@ -69,6 +78,7 @@ cbuffer DispatchParamsCB : register (b7)
 SamplerState s_point		: register(s0);
 SamplerState s_linear		: register(s1);
 SamplerState s_anisotropic	: register(s2);
+SamplerState s_cubeSamp     : register(s3);
 
 
 //---------------------------------------------------------------------------
@@ -76,19 +86,39 @@ SamplerState s_anisotropic	: register(s2);
 //---------------------------------------------------------------------------
 
 // Textures
-Texture2D t_depth		    : register(t0);
-Texture2D t_albedo		    : register(t1);
-Texture2D t_normal		    : register(t2);
-Texture2D t_metalness	    : register(t3);
-Texture2D t_roughness	    : register(t4);
-Texture2D t_aomap		    : register(t5);
-Texture2D t_displace	    : register(t6);
-Texture2D t_opacitymask	    : register(t7);
+Texture2D t_depth		            : register(t0);
+Texture2D t_albedo		            : register(t1);
+Texture2D t_normal		            : register(t2);
+Texture2D t_metalness	            : register(t3);
+Texture2D t_roughness	            : register(t4);
+Texture2D t_aomap		            : register(t5);
+Texture2D t_displace	            : register(t6);
+Texture2D t_opacitymask	            : register(t7);
+Texture2D<uint2> t_pointLightGrid	: register(t8);
+Texture2D t_decal                   : register(t12);
+Texture2D t_decalAlpha              : register(t13);
 
 // StructuredBuffers.
 StructuredBuffer<float4x4> sb_BoneTransforms    : register(t9);     // read as column major, actually is row major.
 StructuredBuffer<Light> sb_Lights               : register(t10);
 StructuredBuffer<Frustum> sb_Frustums_in        : register(t11);    // Precomputed frustums for the grid.
+
+
+// StructuredBuffers.
+StructuredBuffer<float4x4> sb_boneTransforms : register(t9); // read as column major, actually is row major.
+StructuredBuffer<Light> sb_lights : register(t10);
+StructuredBuffer<float4x4> sb_decaldata : register(t16);
+
+// Forward+
+//StructuredBuffer<PointLight> sb_pointLights : register();
+//StructuredBuffer<DirectionalLight> sb_directionalLights : register();
+//StructuredBuffer<uint> sb_pointLightIndexList : register();
+//StructuredBuffer<Frustum> sb_frustums : register();
+
+TextureCube t_radiance              : register(t96);
+TextureCube t_irradiance            : register(t97);
+TextureCube t_sky                   : register(t98);
+Texture2D t_BRDFLUT                 : register(t99);
 
 
 //---------------------------------------------------------------------------

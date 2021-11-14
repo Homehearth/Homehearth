@@ -6,20 +6,19 @@ private:
 	Stats();
 	~Stats() = default;
 
-	static auto& Get()
-	{
-		static Stats instance;
-		return instance;
-	}
+	//How long since last update
+	float m_frameTime;
+	float m_updateTime;
+	float m_networkTime;
 
-	//Time it takes between each frame
-	float m_deltaTime;
-	float m_maxFPS;
+	//How often to render a frame
+	float m_framerate;
+
+	//How often to update the information
+	float m_updaterate;
 	
-	const float&	IGetDeltaTime() const;
-	void			ISetDeltaTime(const float& dt);
-	const float		IGetCurrentFPS() const;
-	const float&	IGetMaxFPS() const;
+	//How often to get and send to server
+	float m_tickrate;
 
 public:
 	//Delete copy constructors
@@ -28,9 +27,27 @@ public:
 	Stats& operator=(const Stats& rm) = delete;
 	Stats& operator=(const Stats&& rm) = delete;
 
-	static const float& GetDeltaTime()					{ return Get().IGetDeltaTime(); }
-	static void			SetDeltaTime(const float& dt)	{ Get().ISetDeltaTime(dt); }
-	static const float  GetCurrentFPS()					{ return Get().IGetCurrentFPS(); }
-	static const float&	GetMaxFPS()						{ return Get().IGetMaxFPS(); }
+	static auto& Get()
+	{
+		static Stats instance;
+		return instance;
+	}
+
+	//Frametime
+	void			SetFrameTime(const float& ft);
+	const float&	GetFrameTime() const;
+
+	//Updatetime
+	void			SetUpdateTime(const float& ut);
+	const float&	GetUpdateTime() const;
+
+	//Networktime
+	void			SetNetworkTime(const float& nt);
+	const float&	GetNetworkTime() const;
+
+	//Which rate to update in
+	const float&	GetFramerate() const;
+	const float&	GetUpdaterate() const;
+	const float&	GetTickrate() const;
 
 };

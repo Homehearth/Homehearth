@@ -17,8 +17,8 @@ namespace rtd
 		Entity m_entity;
 		float m_maxHealth;
 
-		// Current size on current health.
-		draw_t m_drawOpts;
+		// Double buffered draw opts XDD
+		DoubleBuffer<draw_t> m_drawOpts;
 
 		// size when it is on full health.
 		float m_sizeFull;
@@ -35,6 +35,9 @@ namespace rtd
 			It will be read as a float.
 		*/
 		void SetHealthVariable(Entity e);
+
+		void SetPosition(const float& x, const float& y);
+		const draw_t GetOpts() const;
 
 		// Inherited via Element2D
 		virtual void Draw() override;

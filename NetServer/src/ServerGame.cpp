@@ -86,13 +86,13 @@ void ServerGame::OnShutdown()
 void ServerGame::UpdateNetwork(float deltaTime)
 {
 	PROFILE_FUNCTION();
-	//static float timer = 0.0f;
-	//timer += deltaTime;
-	//if (timer >= 1.0f)
-	//{
-	//	LOG_INFO("Update: %f", 1.f / deltaTime);
-	//	timer = 0.0f;
-	//}
+	static float timer = 0.0f;
+	timer += deltaTime;
+	if (timer >= 1.0f)
+	{
+		LOG_INFO("Update: %f", 1.f / deltaTime);
+		timer = 0.0f;
+	}
 
 	// Check incoming messages
 	this->m_server.Update();
@@ -183,7 +183,7 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 		uint32_t playerID;
 		msg >> playerID;
 		this->m_server.SendToClient(playerID, msg);
-		//LOG_INFO("Client on with ID: %ld is pinging server", playerID);
+		LOG_INFO("Client on with ID: %ld is pinging server", playerID);
 		break;
 	}
 	case GameMsg::Lobby_Create:

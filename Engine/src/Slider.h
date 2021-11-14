@@ -13,6 +13,8 @@ namespace rtd
 		std::unique_ptr<Border> m_border;
 		std::unique_ptr<Canvas> m_slider;
 		std::unique_ptr<Text> m_valueText;
+
+		std::string m_explanationString;
 		std::string m_valueString;
 		float* m_value;
 		draw_t m_drawOpts;
@@ -43,6 +45,8 @@ namespace rtd
 
 		void SetMinPos(sm::Vector2 minPos);
 		void SetMaxPos(sm::Vector2 maxPos);
+
+		void SetExplanationText(const std::string& text);
 
 		// Inherited via Element2D
 		virtual void Draw() override;

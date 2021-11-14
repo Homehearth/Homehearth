@@ -41,8 +41,5 @@ namespace ServerSystems
 	void NextWaveConditions(Simulation* simulation, Timer& timer, int timeToFinish);
 	void PlayerStateSystem(Simulation* simulation, HeadlessScene& scene, float dt);
 	void CheckGameOver(Simulation* simulation, HeadlessScene& scene);
+	void TickBTSystem(Simulation* simulation, HeadlessScene& scene);
 }
-
-namespace Systems {
-	void CharacterMovement(HeadlessScene& scene, float dt);
-};

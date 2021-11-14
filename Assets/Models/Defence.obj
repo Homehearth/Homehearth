@@ -1,5 +1,7 @@
 # This file uses centimeters as units for non-parametric coordinates.
 
+mtllib ../Materials/Defence.mtl
+
 v -1.021361 -0.164649 1.021361
 v 1.021361 -0.164649 1.021361
 v -1.021361 18.868860 1.021361

@@ -2,9 +2,10 @@
 #include "Server.h"
 #include "HeadlessEngine.h"
 #include "GridSystem.h"
+#include "PathFinderManager.h"
 #include "ServerSystems.h"
 #include "Wave.h"
-
+#include "AIBehaviors.h"
 /*
 		Simulation defines each ongoing simulation from the perspective of the server
 		gameID identifies the simulation which each player has to give the server to keep track
@@ -31,6 +32,8 @@ private:
 	std::vector<uint32_t> m_removedEntities;
 
 	std::vector<Entity> m_updatedEntities;
+	std::unordered_map<ecs::Component, std::vector<Entity>> m_updatedComponents;
+
 
 	void InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg, const std::bitset<ecs::Component::COMPONENT_MAX>& componentMask = UINT32_MAX) const;
 	message<GameMsg> AllEntitiesMessage()const;
@@ -45,26 +48,29 @@ private:
 	std::queue<sm::Vector3> m_spawnPoints;
 	
 	void CreateWaves();
-	void ResetPlayer(Entity e);
 	
 	void OnNetworkEntityCreate(entt::registry& reg, entt::entity entity);
 	void OnNetworkEntityDestroy(entt::registry& reg, entt::entity entity);
 
 	void OnNetworkEntityUpdated(entt::registry& reg, entt::entity entity);
+	void OnComponentUpdated(Entity entity, ecs::Component component);
 
-	std::vector<std::string> OpenFile(std::string filePath);
-	void ConnectNodes(comp::Node* node1, comp::Node* node2);
-	comp::Node* GetAINodeById(sm::Vector2 id);
+
+
+
+	void BuildMapColliders(std::vector<dx::BoundingOrientedBox>* mapColliders);
 
 public:
 	Simulation(Server* pServer, HeadlessEngine* pEngine);
 	virtual ~Simulation() = default;
-	bool AICreateNodes();
+	//bool AICreateNodes();
 	bool AddNPC(uint32_t npcId);
 	bool RemoveNPC(uint32_t npcId);
 
+
 	// -1 will be defaulted to max value of unsigned 32 bit integer
 	void Broadcast(message<GameMsg>& msg, uint32_t exclude = -1)const;
+	void BroadcastUDP(message<GameMsg>& msg, uint32_t exclude = -1)const;
 
 	bool AddPlayer(uint32_t playerID, const std::string& namePlate = "Noobie");
 	bool RemovePlayer(uint32_t playerID);
@@ -96,16 +102,17 @@ public:
 	void SetGameScene();
 	void ResetGameScene();
 	
-	void SendEntity(Entity e, uint32_t exclude = -1)const;
-	void SendEntities(const std::vector<Entity>& entities, GameMsg msgID, const std::bitset<ecs::Component::COMPONENT_MAX>& componentMask = UINT32_MAX)const;
+	void ResetPlayer(Entity e);
 
-	void SendAllEntitiesToPlayer(uint32_t playerID)const;
-	void SendRemoveAllEntitiesToPlayer(uint32_t playerID)const;
-	void SendRemoveSingleEntity(Entity e)const;
-	void SendRemoveSingleEntity(uint32_t networkID)const;
+	void SendEntity(Entity e, const std::bitset<ecs::Component::COMPONENT_MAX>& componentMask = UINT32_MAX) const;
+	void SendEntities(const std::vector<Entity>& entities, GameMsg msgID, const std::bitset<ecs::Component::COMPONENT_MAX>& componentMask = UINT32_MAX) const;
 
-	void SendRemoveEntities(message<GameMsg>& msg)const;
-	void SendRemoveEntities(const std::vector<uint32_t> entitiesNetIDs)const;
+	void SendAllEntitiesToPlayer(uint32_t playerID) const;
+	void SendRemoveAllEntitiesToPlayer(uint32_t playerID) const;
+	void SendRemoveSingleEntity(Entity e) const;
+	void SendRemoveSingleEntity(uint32_t networkID) const;
 
-	uint32_t GetUniqueID();
+	void SendRemoveEntities(message<GameMsg>& msg) const;
+	void SendRemoveEntities(const std::vector<uint32_t> entitiesNetIDs) const;
+
 };

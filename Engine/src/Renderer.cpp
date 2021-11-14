@@ -20,6 +20,8 @@ void Renderer::Initialize(Window* pWindow)
 	AddPass(&m_opaqPass);		// 4
 	AddPass(&m_transPass);		// 5
 	AddPass(&m_animPass);		// 6
+	AddPass(&m_decalPass);		// 7
+	AddPass(&m_skyPass);		// 8
 
 	m_basePass.SetEnable(true);	// solo pass
 
@@ -28,7 +30,8 @@ void Renderer::Initialize(Window* pWindow)
 	m_cullingPass.SetEnable(false);
 	m_opaqPass.SetEnable(false);
 	m_transPass.SetEnable(false);
-	m_animPass.SetEnable(true);
+	m_decalPass.SetEnable(true);
+	m_skyPass.SetEnable(true);
 
 #ifdef _DEBUG
 	AddPass(&m_debugPass);
@@ -37,6 +40,7 @@ void Renderer::Initialize(Window* pWindow)
 
 	LOG_INFO("Number of rendering passes: %d", static_cast<int>(m_passes.size()));
 
+	m_decalPass.Create();
 	for (const auto& pass : m_passes)
 	{
 		pass->Initialize(m_d3d11->DeviceContext(), &m_pipelineManager);
@@ -64,26 +68,31 @@ void Renderer::Render(Scene* pScene)
 	{
 		if (!m_passes.empty())
 		{
-			this->UpdatePerFrame(pScene->GetCurrentCamera());
-			thread::RenderThreadHandler::SetCamera(pScene->GetCurrentCamera());
+			m_basePass.m_skyboxRef = pScene->GetSkybox();
+			if (pScene->GetCurrentCamera()->IsSwapped())
+			{
+				this->UpdatePerFrame(pScene->GetCurrentCamera());
+				thread::RenderThreadHandler::SetCamera(pScene->GetCurrentCamera());
 			/*
 				Optimize idead: Render/Update lights once instead of per pass?
 				Set lights once.
 			*/
-			for (int i = 0; i < m_passes.size(); i++)
-			{
-				m_currentPass = i;
-				IRenderPass* pass = m_passes[i];
-				if (pass->IsEnabled())
+				for (int i = 0; i < m_passes.size(); i++)
 				{
-					pass->SetLights(pScene->GetLights());
-					pass->PreRender(pScene->GetCurrentCamera());
-					pass->Render(pScene);
-					pass->PostRender();
+					m_currentPass = i;
+					IRenderPass* pass = m_passes[i];
+					if (pass->IsEnabled())
+					{
+						pass->SetLights(pScene->GetLights());
+						pass->PreRender(pScene->GetCurrentCamera());
+						pass->Render(pScene);
+						pass->PostRender();
+					}
 				}
-			}
 
-			pScene->ReadyForSwap();
+				pScene->GetCurrentCamera()->ReadySwap();
+				pScene->ReadyForSwap();
+			}
 		}
 	}
 }

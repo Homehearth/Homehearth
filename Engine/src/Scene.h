@@ -2,6 +2,7 @@
 #include "HeadlessScene.h"
 #include "Lights.h"
 #include "Handler2D.h"
+#include "Skybox.h"
 
 class Scene : public BasicScene<Scene>
 {
@@ -9,16 +10,19 @@ private:
 	bool m_IsRenderingColliders;
 	bool m_updateAnimation;
 	DoubleBuffer<std::vector<comp::Renderable>> m_renderableCopies;
+	DoubleBuffer<std::vector<comp::Renderable>> m_renderableTransparent;
 	DoubleBuffer<std::vector<comp::RenderableDebug>> m_debugRenderableCopies;
 	DoubleBuffer<std::vector<std::pair<comp::Renderable,comp::Animator>>> m_renderableAnimCopies;
 
 	dx::ConstantBuffer<basic_model_matrix_t> m_publicBuffer;
 	dx::ConstantBuffer<collider_hit_t> m_ColliderHitBuffer;
+	dx::ConstantBuffer<camera_Matrix_t> m_publicDecalBuffer;
 	Entity m_currentCamera;
 	Entity m_defaultCamera;
 	Handler2D m_2dHandler;
 
 	Lights m_lights;
+	Skybox m_sky;
 
 	bool IsRender3DReady() const;
 	bool IsRenderDebugReady() const;
@@ -28,13 +32,25 @@ public:
 	Scene();
 
 	// Emit update event and update constant buffers
+
+	/*
+		Updates both 3d and 2d.
+	*/
 	virtual void Update(float dt) override;
+
+	/*
+		Updates only the 2d scene.
+	*/
+	void Update2D();
 
 	// Emit render event and render Renderable components
 	void Render();
+	void RenderTransparency();
 	void RenderDebug();
 	void RenderAnimation();
 	void Render2D();
+	void RenderSkybox();
+	Skybox* GetSkybox();
 
 	bool IsRenderReady() const;
 
@@ -50,6 +66,7 @@ public:
 	Lights* GetLights();
 	
 	DoubleBuffer<std::vector<comp::Renderable>>*		GetBuffers();
+	DoubleBuffer<std::vector<comp::Renderable>>*		GetTransparentBuffers();
 	DoubleBuffer<std::vector<comp::RenderableDebug>>*	GetDebugBuffers();
 	void ReadyForSwap();
 };
