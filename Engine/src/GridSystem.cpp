@@ -193,7 +193,7 @@ void GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 							tileEntity.AddComponent<comp::MeshName>()->name = "Defence.obj";
 
 							aiHandler->GetNodeByID(Vector2I(row, col))->reachable = false;
-
+							aiHandler->GetNodeByID(Vector2I(row, col))->connections.clear();
 						}
 					}
 					//else if (tile.type == TileType::BUILDING || tile.type == TileType::UNPLACABLE || tile.type == TileType::DEFAULT)

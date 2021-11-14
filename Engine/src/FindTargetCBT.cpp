@@ -28,13 +28,24 @@ BT::NodeStatus BT::FindTargetCBT::Tick()
 	PathFinderManager* aihandler = Blackboard::Get().GetAIHandler();
 
 	//Find the nearest player and set that position as target
-	Entity nearestPlayer = playersEntity->players.at(0);
+	Entity nearestPlayer;
+	for(auto player : playersEntity->players)
+	{
+		if(player.GetComponent<comp::Health>()->isAlive)
+		{
+			nearestPlayer = player;
+			break;
+		}
+	}
+
 	for (auto player : playersEntity->players)
 	{
 		comp::Transform* currentNearest = nearestPlayer.GetComponent<comp::Transform>();
 		comp::Transform* playerTransform = player.GetComponent<comp::Transform>();
+		comp::Health* playerHealth = player.GetComponent<comp::Health>();
+
 		if(sm::Vector3::Distance(transform->position, playerTransform->position) < sm::Vector3::Distance(transform->position, currentNearest->position)
-			&& aihandler->FindClosestNode(playerTransform->position)->reachable)
+			&& aihandler->FindClosestNode(playerTransform->position)->reachable && playerHealth->isAlive)
 		{
 			nearestPlayer = player;
 		}

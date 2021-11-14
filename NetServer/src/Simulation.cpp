@@ -153,19 +153,19 @@ void Simulation::CreateWaves()
 	Wave wave1, wave2; // Default: WaveType::Zone
 	{ // Wave_1 Group_1
 		Wave::Group group1;
-		group1.AddEnemy(EnemyType::Default,10);
+		group1.AddEnemy(EnemyType::Default,2);
 		group1.SetSpawnPoint({ 380.f, -220.0f });
 		Wave::Group group2;
-		group2.AddEnemy(EnemyType::Default, 10);
+		group2.AddEnemy(EnemyType::Default, 2);
 		group2.SetSpawnPoint({ 154, -215.0f });
 		Wave::Group group3;
-		group3.AddEnemy(EnemyType::Default, 10);
+		group3.AddEnemy(EnemyType::Default, 1);
 		group3.SetSpawnPoint({ 83.0f, -318.0f });
 		Wave::Group group4;
-		group4.AddEnemy(EnemyType::Default, 10);
+		group4.AddEnemy(EnemyType::Default, 1);
 		group4.SetSpawnPoint({ 213.f, -516.0f });
 		Wave::Group group5;
-		group5.AddEnemy(EnemyType::Default, 10);
+		group5.AddEnemy(EnemyType::Default, 1);
 		group5.SetSpawnPoint({ 387.f, -448.0f });
 		wave1.SetTimeLimit(5);
 		wave1.AddGroup(group1);
