@@ -133,10 +133,10 @@ void Skybox::Render()
 	DCSB->IASetVertexBuffers(0, 1, m_vertexBuffer.GetAddressOf(), &stride, &offset);
 	DCSB->IASetIndexBuffer(m_indexBuffer.Get(), DXGI_FORMAT_R16_UINT, offset);
 
-	//DCSB->PSSetShaderResources(96, 1, m_radianceSrv.GetAddressOf());
-	//DCSB->PSSetShaderResources(97, 1, m_irradianceSrv.GetAddressOf());
-	//DCSB->PSSetShaderResources(98, 1, m_skySrv.GetAddressOf());
-	//DCSB->PSSetShaderResources(99, 1, &m_brdfLUT.get()->GetShaderView());
+	DCSB->PSSetShaderResources(96, 1, m_radianceSrv.GetAddressOf());
+	DCSB->PSSetShaderResources(97, 1, m_irradianceSrv.GetAddressOf());
+	DCSB->PSSetShaderResources(98, 1, m_skySrv.GetAddressOf());
+	DCSB->PSSetShaderResources(99, 1, &m_brdfLUT.get()->GetShaderView());
 
 	DCSB->DrawIndexed(nrOfIndices, 0, 0);
 }
