@@ -103,8 +103,11 @@ public:
 	void BindMaterial(ID3D11DeviceContext* context);
 	void UnBindMaterial(ID3D11DeviceContext* context);
 	
-	//CheckCollisions if a material has a specific texture
+	//Check if a material has a specific texture
 	bool HasTexture(const ETextureType& type) const;
+
+	//Get a texture
+	const std::shared_ptr<RTexture> GetTexture(const ETextureType& type) const;
 
 	//Loaded from assimp
 	bool Create(aiMaterial* aiMat, bool& useMTL);

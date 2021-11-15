@@ -101,6 +101,18 @@ const std::vector<sm::Vector2> RModel::GetTextureCoords() const
     return texturecoords;
 }
 
+const std::vector<std::shared_ptr<RTexture>> RModel::GetTextures(const ETextureType& type) const
+{
+    std::vector<std::shared_ptr<RTexture>> textures;
+
+    for (size_t i = 0; i < m_meshes.size(); i++)
+    {
+        textures.push_back(m_meshes[i].material->GetTexture(type));
+    }
+
+    return textures;
+}
+
 bool RModel::ChangeMaterial(const std::string& mtlfile)
 {
     const std::string filepath = MATERIALPATH + mtlfile;

@@ -17,14 +17,13 @@ class RTexture : public resource::GResource
 private:
 	ETextureChannelType					m_format;
 	ComPtr<ID3D11ShaderResourceView>	m_shaderView;
+	bool StandardSetup(unsigned char* image, const UINT& width, const UINT& height);
+	bool GenerateMipMaps(unsigned char* image, const UINT& width, const UINT& height);
 
 public:
 	RTexture();
 	RTexture(ETextureChannelType format);
 	~RTexture();
-
-	bool StandardSetup(unsigned char* image, const UINT& width, const UINT& height);
-	bool GenerateMipMaps(unsigned char* image, const UINT& width, const UINT& height);
 
 	// Inherited via GResource
 	virtual bool Create(const std::string& filename) override;
