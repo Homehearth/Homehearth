@@ -30,14 +30,31 @@ struct Vector2I
 	{
 		return (x == other.x && y == other.y);
 	}
-
 	Vector2I& operator+(const Vector2I& other)
+	{
+		Vector2I toReturn(this->x + other.x, this->y + other.y);
+		return toReturn;
+	}
+	Vector2I& operator+=(const Vector2I& other)
 	{
 		this->x += other.x;
 		this->y += other.y;
 
-		return *this;	
+		return *this;
 	}
+	Vector2I& operator-(const Vector2I& other)
+	{
+		Vector2I toReturn(this->x - other.x, this->y - other.y);
+		return toReturn;
+	}
+	Vector2I& operator-=(const Vector2I& other)
+	{
+		this->x -= other.x;
+		this->y -= other.y;
+
+		return *this;
+	}
+
 };
 
 struct Plane_t
@@ -66,7 +83,7 @@ struct Ray_t
 		}
 		return true;
 	}
-	
+
 	bool Intersects(const dx::BoundingOrientedBox& boxCollider)
 	{
 
@@ -279,6 +296,18 @@ struct Node
 	void ResetFGH()
 	{
 		f = FLT_MAX, g = FLT_MAX, h = FLT_MAX;
+	}
+	std::vector<Node*> GetDiagonalConnections()
+	{
+		std::vector<Node*> DiagConnections;
+		for (Node* connection : connections)
+		{
+			if (abs(connection->id.x - this->id.x) == 1 && abs(connection->id.y - this->id.y) == 1)
+			{
+				DiagConnections.push_back(connection);
+			}
+		}
+		return DiagConnections;
 	}
 	bool ConnectionAlreadyExists(Node* other)
 	{

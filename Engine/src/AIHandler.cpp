@@ -97,11 +97,6 @@ std::vector<Node*> AIHandler::GetNeighbors(GridSystem* grid, Tile* baseNode)
 					continue;
 				}
 
-				//if(baseNode->gridID.x + newX == 38 && baseNode->gridID.y + newY == 20)
-				//{
-				//	__debugbreak();
-				//}
-
 				currentTile = grid->GetTile(Vector2I(baseNode->gridID.x + newX, baseNode->gridID.y + newY));
 
 				if (currentTile->type == TileType::DEFAULT || currentTile->type == TileType::EMPTY)
@@ -332,14 +327,6 @@ void AIHandler::AStarSearch(HeadlessScene& scene, Entity npc)
 		}
 	}
 
-	for (int i = 0; i < m_nodes.size(); i++)
-	{
-		for (int j = 0; j < m_nodes[i].size(); j++)
-		{
-			m_nodes[i][j]->parent = nullptr;
-			m_nodes[i][j]->ResetFGH();
-		}
-	}
 }
 
 bool AIHandler::ReachedNode(const Entity npc)
