@@ -280,9 +280,9 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 			}
 
 			//Place defence on grid
-			if (p.lastInputState.key_b && simulation->GetCurrency().GetAmount() >= 20)
+			if (p.lastInputState.key_b && simulation->GetCurrency().GetAmount() >= 5)
 				if (simulation->GetGrid().PlaceDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, Blackboard::Get().GetAIHandler()))
-					simulation->GetCurrency().GetAmountRef() -= 20;
+					simulation->GetCurrency().GetAmountRef() -= 5;
 
 		});
 

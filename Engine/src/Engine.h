@@ -31,7 +31,6 @@ private:
 	// Run the Engine's core loop.
 	void Run() override;
 
-
 	// IMGUI
 	void drawImGUI() const;
 

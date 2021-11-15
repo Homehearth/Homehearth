@@ -43,6 +43,7 @@ void Engine::Startup()
 	D2D1Core::Initialize(&m_window);
 
 	m_renderer.Initialize(&m_window);
+	m_renderer.Setup(*this);
 
 	// Thread should be launched after s_engineRunning is set to true and D3D11 is initialized.
 	//
