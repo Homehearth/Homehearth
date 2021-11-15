@@ -3,6 +3,8 @@
 
 void Client::OnDisconnect()
 {
+	m_qMessagesIn.clear();
+	m_qPrioMessagesIn.clear();
 	this->onDisconnectHandler();
 }
 
@@ -18,10 +20,23 @@ Client::~Client()
 
 void Client::Update(size_t nMaxMessage)
 {
+	//TCP
 	size_t nMessageCount = 0;
 	while (nMessageCount < nMaxMessage && !m_qMessagesIn.empty())
 	{
 		auto msg = m_qMessagesIn.pop_front();
+
+		this->OnMessageReceived(msg);
+
+		nMessageCount++;
+	}
+
+	//UDP
+	nMessageCount = 0;
+	while (nMessageCount < nMaxMessage && !m_qPrioMessagesIn.empty())
+	{
+		auto msg = m_qPrioMessagesIn.pop_front();
+		msg.header.id = GameMsg::Game_Snapshot;
 
 		this->OnMessageReceived(msg);
 
