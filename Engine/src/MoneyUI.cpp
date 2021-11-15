@@ -2,8 +2,7 @@
 #include "MoneyUI.h"
 #include <omp.h>
 #include "Stats.h"
-
-constexpr float DELTA = 1.0f / 15.0f;
+#include <cmath>
 
 using namespace rtd;
 

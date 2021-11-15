@@ -10,6 +10,5 @@ namespace GameSystems
 	void RenderIsCollidingSystem(Scene& scene);
 	void UpdateHealthbar(Scene& scene);
 	void CheckLOS(Game* game);
-	void UpdateMainPlayer(Game* game);
 	void UpdatePlayerVisuals(Game* game);
 }
