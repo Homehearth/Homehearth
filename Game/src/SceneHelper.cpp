@@ -413,6 +413,8 @@ namespace sceneHelp
 		const float height = (float)game->GetWindow()->GetHeight();
 		Scene& scene = game->GetScene("Options");
 
+		Collection2D* helpText = new Collection2D;
+
 		Collection2D* soundCollection = new Collection2D;
 		rtd::Slider* sl = soundCollection->AddElement<rtd::Slider>(D2D1::ColorF(0.0f, 0.0f, 0.0f), draw_t((width / 2) - (width / 9), height / 5, width / 9, height / 16), &game->m_masterVolume);
 		sl->SetMinPos(sm::Vector2((width / 8) - (width / 9)));
@@ -427,6 +429,15 @@ namespace sceneHelp
 		Collection2D* menu = new Collection2D;
 		rtd::Button* soundsButton = menu->AddElement<rtd::Button>("Button.png", draw_t(width / 8.0f, height / 8.0f, width / 4.0f, height / 8.0f));
 		rtd::Button* resolutionButton = menu->AddElement<rtd::Button>("Button.png", draw_t((width / 8.0f) * 5.0f, (height / 8.0f), width / 4.0f, height / 8.0f));
+		rtd::Button* helpButton = menu->AddElement<rtd::Button>("Button.png", draw_t((width / 8.0f) * 5.0f, (height / 8.0f) * 4.0f, width / 4.0f, height / 8.0f));
+		helpButton->SetOnPressedEvent([=] {
+
+			helpText->Show();
+			backButton->Hide();
+			menu->Hide();
+
+			});
+		menu->AddElement<rtd::Text>("Help", draw_text_t((width / 8.0f) * 5.0f, (height / 8.0f) * 4.0f, width / 4.0f, height / 8.0f));
 		
 		rtd::Button* returnTo = menu->AddElement<rtd::Button>("Button.png", draw_t((width / 2.0f) - (width / 8.0f), height - (height / 4.0f), width / 4.0f, height / 8.0f));
 		menu->AddElement<rtd::Text>("Go Back", draw_text_t((width / 2.0f) - (width / 8.0f), height - (height / 4.0f), width / 4.0f, height / 8.0f));
@@ -458,6 +469,20 @@ namespace sceneHelp
 			});
 		backButton->Hide();
 		scene.Add2DCollection(backButton, "returnButton");
+
+		helpText->AddElement<rtd::Text>("Insert super helpful text here for all the noobs.", draw_text_t(0.0f, 0.0f, width, height - (height / 8.0f)));
+		rtd::Button* goback = helpText->AddElement<rtd::Button>("Button.png", draw_t((width / 2.0f) - (width / 8.0f), height - (height / 4.0f), width / 4.0f, height / 8.0f));
+		helpText->AddElement<rtd::Text>("Go Back", draw_text_t((width / 2.0f) - (width / 8.0f), height - (height / 4.0f), width / 4.0f, height / 8.0f));
+		goback->SetOnPressedEvent([=] {
+
+			helpText->Hide();
+			menu->Show();
+			backButton->Show();
+
+			});
+		helpText->Hide();
+		scene.Add2DCollection(helpText, "HelpText");
+
 	}
 
 	void SetupLoadingScene(Game* game)
