@@ -94,7 +94,23 @@ bool PipelineManager::CreateRenderTargetView()
     // Create the renderTargetView with the back buffer pointer.
     HRESULT hr = m_d3d11->Device()->CreateRenderTargetView(pBackBuffer, nullptr, m_backBuffer.GetAddressOf());
 
-    hr = m_d3d11->Device()->CreateRenderTargetView(pBackBuffer, nullptr, m_RTV_TextureEffectDiffuseMap.GetAddressOf());
+    hr = m_d3d11->Device()->CreateRenderTargetView(pBackBuffer, nullptr, m_RTV_TextureEffectWaterMap.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+
+    hr = m_d3d11->Device()->CreateRenderTargetView(pBackBuffer, nullptr, m_RTV_TextureEffectBlendMap.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+
+    hr = m_d3d11->Device()->CreateRenderTargetView(pBackBuffer, nullptr, m_RTV_TextureEffectWaterFloorMap.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+
+    hr = m_d3d11->Device()->CreateRenderTargetView(pBackBuffer, nullptr, m_RTV_TextureEffectWaterEdgeMap.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+
+    hr = m_d3d11->Device()->CreateRenderTargetView(pBackBuffer, nullptr, m_RTV_TextureEffectWaterNormalMap.GetAddressOf());
     if (FAILED(hr))
         return false;
 
@@ -444,8 +460,106 @@ bool PipelineManager::CreateTextureEffectConstantBuffer()
 
 bool PipelineManager::CreateTextureEffectResources()
 {
-    // Create render target views and shader resource views here
-    return false;
+    // Create render textures, target views and shader resource views here
+
+    HRESULT hr = {};
+    int textureHeight = 512;
+    int textureWidth  = 512;
+
+    // TEXTURE 2D //
+
+    D3D11_TEXTURE2D_DESC textureDesc;
+    ZeroMemory(&textureDesc, sizeof(D3D11_TEXTURE2D_DESC));
+    textureDesc.Width = textureWidth;
+    textureDesc.Height = textureHeight;
+    textureDesc.MipLevels = 1;
+    textureDesc.ArraySize = 1;
+    textureDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+    textureDesc.SampleDesc.Count = 1;
+    textureDesc.SampleDesc.Quality = 0;
+    textureDesc.Usage = D3D11_USAGE_DEFAULT;
+    textureDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+    textureDesc.CPUAccessFlags = 0;
+    textureDesc.MiscFlags = 0;
+
+   hr = m_d3d11->Device()->CreateTexture2D(&textureDesc, nullptr, m_T_TextureEffectBlendMap.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+
+    hr = m_d3d11->Device()->CreateTexture2D(&textureDesc, nullptr, m_T_TextureEffectWaterEdgeMap.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+
+    hr = m_d3d11->Device()->CreateTexture2D(&textureDesc, nullptr, m_T_TextureEffectWaterFloorMap.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+
+    hr = m_d3d11->Device()->CreateTexture2D(&textureDesc, nullptr, m_T_TextureEffectWaterMap.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+
+    hr = m_d3d11->Device()->CreateTexture2D(&textureDesc, nullptr, m_T_TextureEffectWaterNormalMap.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+
+
+    // RENDER TARGET VIEWS //
+
+    D3D11_RENDER_TARGET_VIEW_DESC renderTargetViewDesc;
+    renderTargetViewDesc.Format = textureDesc.Format;
+    renderTargetViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+    renderTargetViewDesc.Texture2D.MipSlice = 0;
+
+    hr = m_d3d11->Device()->CreateRenderTargetView(m_T_TextureEffectBlendMap.Get(), nullptr, m_RTV_TextureEffectWaterMap.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+
+    hr = m_d3d11->Device()->CreateRenderTargetView(m_T_TextureEffectWaterEdgeMap.Get(), nullptr, m_RTV_TextureEffectBlendMap.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+
+    hr = m_d3d11->Device()->CreateRenderTargetView(m_T_TextureEffectWaterFloorMap.Get(), nullptr, m_RTV_TextureEffectWaterFloorMap.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+
+    hr = m_d3d11->Device()->CreateRenderTargetView(m_T_TextureEffectWaterEdgeMap.Get(), nullptr, m_RTV_TextureEffectWaterEdgeMap.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+
+    hr = m_d3d11->Device()->CreateRenderTargetView(m_T_TextureEffectWaterNormalMap.Get(), nullptr, m_RTV_TextureEffectWaterNormalMap.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+
+
+    // SHADER RESOURCE VIEWS //
+
+    D3D11_SHADER_RESOURCE_VIEW_DESC shaderResourceViewDesc;
+    shaderResourceViewDesc.Format = DXGI_FORMAT_R32_FLOAT;
+    shaderResourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+    shaderResourceViewDesc.Texture2D.MostDetailedMip = 0;
+    shaderResourceViewDesc.Texture2D.MipLevels = 1;
+
+    hr = m_d3d11->Device()->CreateShaderResourceView(m_T_TextureEffectBlendMap.Get(), &shaderResourceViewDesc, m_SRV_TextureEffectBlendMap.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+
+    hr = m_d3d11->Device()->CreateShaderResourceView(m_T_TextureEffectWaterEdgeMap.Get(), &shaderResourceViewDesc, m_SRV_TextureEffectWaterEdgeMap.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+
+    hr = m_d3d11->Device()->CreateShaderResourceView(m_T_TextureEffectWaterFloorMap.Get(), &shaderResourceViewDesc, m_SRV_TextureEffectWaterFloorMap.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+
+    hr = m_d3d11->Device()->CreateShaderResourceView(m_T_TextureEffectWaterMap.Get(), &shaderResourceViewDesc, m_SRV_TextureEffectWaterMap.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+
+    hr = m_d3d11->Device()->CreateShaderResourceView(m_T_TextureEffectWaterNormalMap.Get(), &shaderResourceViewDesc, m_SRV_TextureEffectWaterNormalMap.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+
+    return true;
 }
 
 bool PipelineManager::CreateShaders()
