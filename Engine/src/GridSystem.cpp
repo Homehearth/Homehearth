@@ -186,12 +186,11 @@ void GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 
 							Entity tileEntity = m_scene->CreateEntity();
 							comp::Transform* transform = tileEntity.AddComponent<comp::Transform>();
-							transform->position = { tile.position.x, 0.5f, tile.position.z };
-							transform->scale = { m_tileHalfWidth, 0.5f, m_tileHalfWidth };
+							transform->position = { tile.position.x , 5.f, tile.position.z };
+							transform->scale = { 1.35f, 1.f, 1.35f };
 
 							comp::BoundingOrientedBox* collider = tileEntity.AddComponent<comp::BoundingOrientedBox>();
-							collider->Extents = { transform->scale.x, 5.f , transform->scale.z };
-							collider->Center = { transform->position.x, 100.5f, transform->position.z };
+							collider->Extents = { m_tileHalfWidth, m_tileHalfWidth, m_tileHalfWidth };
 							tileEntity.AddComponent<comp::Tag<TagType::STATIC>>();
 							tileEntity.AddComponent<comp::MeshName>()->name = "Defence.obj";
 							tileEntity.AddComponent<comp::Network>();

@@ -118,7 +118,7 @@ void GameSystems::UpdatePlayerVisuals(Game* game)
 						if (cam->GetCameraMatrixes())
 						{
 							// Conversion from World space to NDC space.
-							sm::Vector4 oldP = { t.position.x, t.position.y + 25.0f, t.position.z, 1.0f };
+							sm::Vector4 oldP = { t.position.x, t.position.y + 21.f, t.position.z, 1.0f };
 							sm::Vector4 newP = dx::XMVector4Transform(oldP, cam->GetCameraMatrixes()->view);
 							newP = dx::XMVector4Transform(newP, cam->GetCameraMatrixes()->projection);
 							newP.x /= newP.w;
@@ -143,7 +143,7 @@ void GameSystems::UpdatePlayerVisuals(Game* game)
 								rtd::Healthbar* health = dynamic_cast<rtd::Healthbar*>(collHealth->elements[0].get());
 								if (health)
 								{
-									sm::Vector4 oldPp = { t.position.x, t.position.y + 20.0f, t.position.z, 1.0f };
+									sm::Vector4 oldPp = { t.position.x, t.position.y + 17.0f, t.position.z, 1.0f };
 									sm::Vector4 newPp = dx::XMVector4Transform(oldPp, cam->GetCameraMatrixes()->view);
 									newPp = dx::XMVector4Transform(newPp, cam->GetCameraMatrixes()->projection);
 									newPp.x /= newPp.w;

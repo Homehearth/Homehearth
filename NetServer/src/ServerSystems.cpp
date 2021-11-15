@@ -21,8 +21,8 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 	comp::Transform* transform = entity.AddComponent<comp::Transform>();
 	comp::Health* health = entity.AddComponent<comp::Health>();
 	comp::MeshName* meshName = entity.AddComponent<comp::MeshName>();
-	comp::BoundingOrientedBox* obb = entity.AddComponent<comp::BoundingOrientedBox>();
-	//comp::BoundingSphere* bos = entity.AddComponent<comp::BoundingSphere>();
+	//comp::BoundingOrientedBox* obb = entity.AddComponent<comp::BoundingOrientedBox>();
+	comp::BoundingSphere* bos = entity.AddComponent<comp::BoundingSphere>();
 	comp::Velocity* velocity = entity.AddComponent<comp::Velocity>();
 	comp::AttackAbility* combatStats = entity.AddComponent<comp::AttackAbility>();
 	comp::BehaviorTree* behaviorTree = entity.AddComponent<comp::BehaviorTree>();
@@ -35,8 +35,8 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 			transform->scale = { 1.8f, 1.8f, 1.8f };
 			meshName->name = "Monster.fbx";
 			entity.AddComponent<comp::AnimatorName>()->name = "Monster.anim";
-			obb->Extents = sm::Vector3(2.f, 2.f, 2.f);
-			//bos->Radius = 2.f;
+			//obb->Extents = sm::Vector3(2.f, 2.f, 2.f);
+			bos->Radius = 3.f;
 			/*velocity->vel = sm::Vector3(transform->position * -1.0f);
 			velocity->vel.Normalize();
 			velocity->vel *= 5.0f;*/
@@ -56,8 +56,8 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 			transform->position = spawnP;
 			meshName->name = "Barrel.obj";
 			transform->scale = { 1.8f, 1.8f, 1.8f };
-			obb->Extents = sm::Vector3(2.f, 2.f, 2.f);
-			//bos->Radius = 2.f;
+			//obb->Extents = sm::Vector3(2.f, 2.f, 2.f);
+			bos->Radius = 3.f;
 			/*velocity->vel = sm::Vector3(transform->position * -1.0f);
 			velocity->vel.Normalize();
 			velocity->vel *= 5.0f;*/

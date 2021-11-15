@@ -29,6 +29,7 @@ namespace ecs
 		//Collider components
 		using DirectX::BoundingOrientedBox;
 		using DirectX::BoundingSphere;
+		using dx::BoundingBox;
 		
 
 		struct Transform
@@ -104,6 +105,7 @@ namespace ecs
 			{
 				BoundingOrientedBox* obb = reg.try_get<BoundingOrientedBox>(curr);
 				BoundingSphere* sphere = reg.try_get<BoundingSphere>(curr);
+				BoundingBox* box = reg.try_get<BoundingBox>(curr);
 				if (obb != nullptr)
 				{
 					model = ResourceManager::Get().GetResource<RModel>("Cube.obj");
@@ -111,6 +113,10 @@ namespace ecs
 				else if (sphere != nullptr)
 				{
 					model = ResourceManager::Get().GetResource<RModel>("Sphere.obj");
+				}
+				else if (box != nullptr)
+				{
+					model = ResourceManager::Get().GetResource<RModel>("Cube.obj");
 				}
 			}
 		};

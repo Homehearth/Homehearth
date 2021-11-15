@@ -497,6 +497,9 @@ void Game::OnClientDisconnect()
 		textField->SetPresetText("");
 	}
 
+	rtd::TextField* ipInput = dynamic_cast<rtd::TextField*>(GetScene("MainMenu").GetCollection("ConnectFields")->elements[0].get());
+	ipInput->SetActive();
+
 	SetScene("MainMenu");
 
 	m_client.m_qPrioMessagesIn.clear();

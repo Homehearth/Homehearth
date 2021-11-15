@@ -55,18 +55,11 @@ private:
 	void OnNetworkEntityUpdated(entt::registry& reg, entt::entity entity);
 	void OnComponentUpdated(Entity entity, ecs::Component component);
 
-
-
-
 	void BuildMapColliders(std::vector<dx::BoundingOrientedBox>* mapColliders);
 
 public:
 	Simulation(Server* pServer, HeadlessEngine* pEngine);
 	virtual ~Simulation() = default;
-	//bool AICreateNodes();
-	bool AddNPC(uint32_t npcId);
-	bool RemoveNPC(uint32_t npcId);
-
 
 	// -1 will be defaulted to max value of unsigned 32 bit integer
 	void Broadcast(message<GameMsg>& msg, uint32_t exclude = -1)const;

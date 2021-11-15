@@ -146,7 +146,7 @@ namespace sceneHelp
 
 				// Prediction
 				//engine->m_predictor.Predict(engine->GetScene("Game"));
-				GameSystems::RenderIsCollidingSystem(scene);
+				//GameSystems::RenderIsCollidingSystem(scene);
 				GameSystems::UpdatePlayerVisuals(engine);
 				Systems::LightSystem(scene, e.dt);
 #ifdef _DEBUG
@@ -186,6 +186,7 @@ namespace sceneHelp
 		rtd::TextField* portField = connectFields->AddElement<rtd::TextField>(draw_text_t(width / 4 + (width / 3.33f), height * 0.55f, width * 0.15f, D2D1Core::GetDefaultFontSize()), 6);
 		portField->SetDescriptionText("Port:");
 		rtd::Button* connectButton = connectFields->AddElement<rtd::Button>("StartButton.png", draw_t((width / 2) - (width / 8.f), height - (height * 0.25f), width / 4.f, height * 0.15f));
+		scene.Add2DCollection(connectFields, "ConnectFields");
 		//rtd::Button* exitButton = connectFields->AddElement<rtd::Button>("demoExitButton.png", draw_t(0.0f, 0.0f, width / 24, height / 16));
 		//exitButton->SetOnPressedEvent([=] {
 		//game->Shutdown();
@@ -213,7 +214,6 @@ namespace sceneHelp
 #endif
 		portField->SetPresetText("4950");
 
-		scene.Add2DCollection(connectFields, "ConnectFields");
 
 		connectButton->SetOnPressedEvent([=]()
 			{
@@ -223,6 +223,8 @@ namespace sceneHelp
 				{
 					if (game->m_client.Connect(ip->c_str(), std::stoi(port->c_str())))
 					{
+						rtd::TextField* nameInput = dynamic_cast<rtd::TextField*>(game->GetScene("JoinLobby").GetCollection("nameInput")->elements[0].get());
+						nameInput->SetActive();
 						game->SetScene("JoinLobby");
 					}
 				}
@@ -379,29 +381,31 @@ namespace sceneHelp
 				msg.header.id = GameMsg::Lobby_Leave;
 				msg << game->m_localPID << game->m_gameID;
 				game->m_client.Send(msg);
+				rtd::TextField* nameInput = dynamic_cast<rtd::TextField*>(game->GetScene("JoinLobby").GetCollection("nameInput")->elements[0].get());
+				nameInput->SetActive();
 			});
 		scene.Add2DCollection(general, "AGeneral");
 
-	Collection2D* classButtons = new Collection2D;
-	rtd::Button* mageButton = classButtons->AddElement<rtd::Button>("mageIconDemo.png", draw_t((width / 3.33f) + (float)(width / 20), height - (height / 6), width / 24, height / 16));
-	// FIX WHAT CLASS SYMBOL PLAYER HAS LATER
-	mageButton->SetOnPressedEvent([=]()
-		{
-			warriorDesc->Hide();
-			mageDesc->Show();
-			comp::Player* player = game->GetLocalPlayer().GetComponent<comp::Player>();
-			player->classType = comp::Player::Class::MAGE;
-			game->SendSelectedClass(player->classType);
-		});
-	rtd::Button* warriorButton = classButtons->AddElement<rtd::Button>("warriorIconDemo.png", draw_t((width / 3.33f) + (width / 20.0f) + (float)(width / 20), height - (height / 6), width / 24, height / 16));
-	warriorButton->SetOnPressedEvent([=]()
-		{
-			mageDesc->Hide();
-			warriorDesc->Show();
-			comp::Player* player = game->GetLocalPlayer().GetComponent<comp::Player>();
-			player->classType = comp::Player::Class::WARRIOR;
-			game->SendSelectedClass(player->classType);
-		});
+		Collection2D* classButtons = new Collection2D;
+		rtd::Button* mageButton = classButtons->AddElement<rtd::Button>("mageIconDemo.png", draw_t((width / 3.33f) + (float)(width / 20), height - (height / 6), width / 24, height / 16));
+		// FIX WHAT CLASS SYMBOL PLAYER HAS LATER
+		mageButton->SetOnPressedEvent([=]()
+			{
+				warriorDesc->Hide();
+				mageDesc->Show();
+				comp::Player* player = game->GetLocalPlayer().GetComponent<comp::Player>();
+				player->classType = comp::Player::Class::MAGE;
+				game->SendSelectedClass(player->classType);
+			});
+		rtd::Button* warriorButton = classButtons->AddElement<rtd::Button>("warriorIconDemo.png", draw_t((width / 3.33f) + (width / 20.0f) + (float)(width / 20), height - (height / 6), width / 24, height / 16));
+		warriorButton->SetOnPressedEvent([=]()
+			{
+				mageDesc->Hide();
+				warriorDesc->Show();
+				comp::Player* player = game->GetLocalPlayer().GetComponent<comp::Player>();
+				player->classType = comp::Player::Class::WARRIOR;
+				game->SendSelectedClass(player->classType);
+			});
 
 		scene.Add2DCollection(classButtons, "ClassButtons");
 	}
@@ -457,8 +461,10 @@ namespace sceneHelp
 		rtd::Button* lobbyButton = lobbyCollection->AddElement<rtd::Button>("Button.png", draw_t(width / 8, height - (height / 6.f), width / 4, height / 8));
 		lobbyCollection->AddElement<rtd::Text>("Join Lobby", draw_text_t(width / 8, height - (height / 6.f), width / 4, height / 8));
 		rtd::Button* exitButton = lobbyCollection->AddElement<rtd::Button>("demoExitButton.png", draw_t(0.0f, 0.0f, width / 24, height / 16));
-		exitButton->SetOnPressedEvent([=] {
-			game->m_client.Disconnect();
+
+		exitButton->SetOnPressedEvent([=]
+			{
+				game->m_client.Disconnect();
 			});
 
 		startLobbyButton->SetOnPressedEvent([=]
@@ -523,7 +529,7 @@ namespace sceneHelp
 		{
 			return false;
 		}
-		
+
 		int nrOf = 0;
 		while (!file.eof())
 		{
