@@ -5,19 +5,19 @@
 
 Camera::Camera()
 {
-	m_FOV					= dx::XMConvertToRadians(90.f); //0.4f * 3.14f;
-	m_zoomValue				= 1;
-	m_nearPlane				= 0.1f; // 1.0f;
-	m_farPlane				= 400.0; // 1000.0f
-	m_rollPitchYaw			= { 0.0f, 0.0f, 0.0f };
-	m_move					= { 0.0f, 0.0f, 0.0f };
-	m_aspectRatio			= 0;
-	m_windowHeight			= 0;
-	m_windowWidth			= 0;
-	m_rotationSpeed			= 2.5f;
-	m_movingSpeed			= 15.0f;
-	m_type					= CAMERATYPE::DEFAULT;
-	m_viewConstantBuffer	= nullptr;
+	m_FOV = dx::XMConvertToRadians(90.f); //0.4f * 3.14f;
+	m_zoomValue = 1;
+	m_nearPlane = 0.1f; // 1.0f;
+	m_farPlane = 400.0; // 1000.0f
+	m_rollPitchYaw = { 0.0f, 0.0f, 0.0f };
+	m_move = { 0.0f, 0.0f, 0.0f };
+	m_aspectRatio = 0;
+	m_windowHeight = 0;
+	m_windowWidth = 0;
+	m_rotationSpeed = 2.5f;
+	m_movingSpeed = 15.0f;
+	m_type = CAMERATYPE::DEFAULT;
+	m_viewConstantBuffer = nullptr;
 }
 
 Camera::~Camera()
@@ -43,7 +43,7 @@ void Camera::Initialize(sm::Vector3 pos, sm::Vector3 target, sm::Vector3 up, sm:
 	m_view = dx::XMMatrixLookAtLH(m_position, m_target, m_up);
 	m_projection = dx::XMMatrixPerspectiveFovLH(m_FOV * m_zoomValue, m_aspectRatio, m_nearPlane, m_farPlane);
 
-	
+
 	//Constant buffer struct
 	m_cameraMat.position = sm::Vector4(m_position.x, m_position.y, m_position.z, 0.0f);
 	m_cameraMat.target = sm::Vector4(m_target.x, m_target.y, m_target.z, 0);
@@ -56,7 +56,7 @@ void Camera::Initialize(sm::Vector3 pos, sm::Vector3 target, sm::Vector3 up, sm:
 		D3D11Core::Get().DeviceContext()->UpdateSubresource(m_viewConstantBuffer.Get(), 0, nullptr, &m_cameraMat, 0, 0);
 		return;
 	}
-	
+
 	// Create new Constant buffer
 	D3D11_BUFFER_DESC desc;
 	desc.ByteWidth = sizeof(camera_Matrix_t);
@@ -76,7 +76,7 @@ void Camera::Initialize(sm::Vector3 pos, sm::Vector3 target, sm::Vector3 up, sm:
 	}
 }
 
-void Camera::Update(float deltaTime)
+void Camera::Update(const float& deltaTime)
 {
 
 	if (m_type == CAMERATYPE::DEBUG && InputSystem::Get().IsMouseRelative()) //Can't move the camera when in absolut mode
@@ -97,11 +97,11 @@ void Camera::Update(float deltaTime)
 		//Keyboard
 		if (KEYPRESS(dx::Keyboard::E, KeyState::HELD)) //Down
 		{
-			m_move.y -= speed * deltaTime;
+			m_move.y -= speed * Stats::Get().GetUpdateTime();
 		}
 		if (KEYPRESS(dx::Keyboard::Q, KeyState::HELD)) //UP
 		{
-			m_move.y += speed * deltaTime;
+			m_move.y += speed * Stats::Get().GetUpdateTime();
 		}
 		m_move.x = static_cast<float>(InputSystem::Get().GetAxis(Axis::HORIZONTAL)) * speed * deltaTime;
 		m_move.z = static_cast<float>(InputSystem::Get().GetAxis(Axis::VERTICAL)) * speed * deltaTime;
@@ -131,7 +131,7 @@ void Camera::Update(float deltaTime)
 		m_rotationMatrix = dx::XMMatrixRotationRollPitchYaw(m_rollPitchYaw.y, m_rollPitchYaw.z, m_rollPitchYaw.x);
 
 		comp::Transform* targetTransform = nullptr;
-		
+
 		if (!m_targetEntity.IsNull())
 		{
 			targetTransform = m_targetEntity.GetComponent<comp::Transform>();
@@ -141,7 +141,7 @@ void Camera::Update(float deltaTime)
 		{
 			m_position = m_defaultPos + targetTransform->position;
 		}
-			
+
 		m_right = dx::XMVector3TransformNormal(m_defaultRight, m_rotationMatrix);
 		m_forward = dx::XMVector3TransformNormal(m_defaultForward, m_rotationMatrix);
 
@@ -167,19 +167,16 @@ void Camera::Update(float deltaTime)
 		m_rotationMatrix = sm::Matrix::CreateFromQuaternion(m_rotation);
 		m_right = dx::XMVector3TransformNormal(m_defaultRight, m_rotationMatrix);
 		m_forward = dx::XMVector3TransformNormal(m_defaultForward, m_rotationMatrix);
-
 		m_up = dx::XMVector3Cross(m_forward, m_right);
 		m_up = dx::XMVector3Normalize(m_up);
-
 		m_target = m_position + m_forward;
-		
+
 		m_view = dx::XMMatrixLookToLH(m_position, m_target, m_up);
 		*/
 
 		m_view = sm::Matrix::Identity;
 		m_view.Translation(-m_position);
 		m_view = sm::Matrix::Transform(m_view, m_rotation);
-
 		UpdateProjection();
 	}
 
@@ -187,6 +184,7 @@ void Camera::Update(float deltaTime)
 	m_cameraMat.target = { m_target.x, m_target.y, m_target.z, 0 };
 	m_cameraMat.projection = m_projection;
 	m_cameraMat.view = m_view;
+	s_cameraBuffers[0] = m_cameraMat;
 }
 
 void Camera::SetFollowEntity(const Entity& entity)
@@ -224,7 +222,22 @@ sm::Vector3 Camera::GetUp() const
 
 camera_Matrix_t* Camera::GetCameraMatrixes()
 {
-	return &m_cameraMat;
+	return &s_cameraBuffers[1];
+}
+
+void Camera::Swap()
+{
+	s_cameraBuffers.Swap();
+}
+
+void Camera::ReadySwap()
+{
+	s_cameraBuffers.ReadyForSwap();
+}
+
+bool Camera::IsSwapped() const
+{
+	return s_cameraBuffers.IsSwapped();
 }
 
 CAMERATYPE Camera::GetCameraType()const

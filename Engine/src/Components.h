@@ -3,6 +3,8 @@
 #include "RModel.h"
 #include "RAnimator.h"
 #include "ResourceManager.h"
+#include "BehaviorTreeBT.h"
+#include <stack>
 
 namespace ecs
 {
@@ -16,10 +18,8 @@ namespace ecs
 		HEALTH,
 		BOUNDING_ORIENTED_BOX,
 		BOUNDING_SPHERE,
-		PLANECOLLIDER,
 		LIGHT,
 		PLAYER,
-		TILE,
 		COMPONENT_COUNT,
 		COMPONENT_MAX = 32
 	};
@@ -30,30 +30,34 @@ namespace ecs
 		using DirectX::BoundingOrientedBox;
 		using DirectX::BoundingSphere;
 		
-		struct PlaneCollider 
-		{
-			sm::Vector3 center;
-			sm::Vector3 normal;
-			sm::Vector2 size;
-		};
 
 		struct Transform
 		{
-			sm::Vector3 previousPosition;
 			sm::Vector3 position;
 			sm::Quaternion rotation;
 			sm::Vector3 scale = sm::Vector3(1);
+		};
 
-			friend network::message<GameMsg>& operator<<(network::message<GameMsg>& msg, const ecs::component::Transform& data)
-			{
-				msg << data.position << data.rotation << data.scale;
-				return msg;
-			}
+		struct Decal
+		{
+			RTexture* decal = nullptr;
+			sm::Matrix viewPoint;
+			// Life span in seconds.
+			float lifespan = 5.0f;
 
-			friend network::message<GameMsg>& operator >> (network::message<GameMsg>& msg, ecs::component::Transform& data)
+			Decal(const Transform& t, RTexture* decal = nullptr)
 			{
-				msg >> data.scale >> data.rotation >> data.position;
-				return msg;
+				this->decal = decal;
+
+				// Be positioned slightly above.
+				sm::Vector3 position = t.position;
+				position.y += 10.0f;
+				position.x += 0.0001f;
+				position.z -= 0.0001f;
+
+				sm::Vector3 lookAt = t.position;
+				lookAt.y = 0;
+				viewPoint = dx::XMMatrixLookAtLH(position, lookAt, { 0.0f, 1.0f, 0.0f });
 			}
 		};
 
@@ -67,6 +71,7 @@ namespace ecs
 			std::shared_ptr<RModel>		model;
 			basic_model_matrix_t		data;
 			bool						visible = true;
+			bool						isSolid = true;
 		};
 
 		struct Animator
@@ -109,17 +114,32 @@ namespace ecs
 				}
 			}
 		};
-		
-		struct Force
+
+		struct BehaviorTree
 		{
-			sm::Vector3 force = sm::Vector3(5, 0, 0);
-			bool wasApplied = false;
-			float actingTime = 2.0f;
+			BT::ParentNode* root;
+			BT::LeafNode* currentNode;
+		};
+		
+
+		struct TemporaryPhysics
+		{
+			struct Force
+			{
+				sm::Vector3 force = sm::Vector3(5, 0, 0);
+				float drag = 5.f;
+				bool isImpulse = true;
+				bool wasApplied = false;
+				float actingTime = 1.0f;
+			};
+
+			std::vector<Force> forces;
 		};
 
 		struct Velocity
 		{
 			sm::Vector3 vel;
+			sm::Vector3 oldVel;
 		};
 
 		struct Player
@@ -127,57 +147,45 @@ namespace ecs
 			enum class State
 			{
 				IDLE,
-				ATTACK,
-				TURN,
-				DEAD
+				LOOK_TO_MOUSE,
+				WALK
 			} state = State::IDLE;
 
+			enum class Class
+			{
+				WARRIOR,
+				MAGE
+			} classType = Class::WARRIOR;
+
+			entt::meta_type primaryAbilty;
+			entt::meta_type secondaryAbilty;
+
 			float runSpeed;
-			sm::Vector3 targetForward;
+
+			InputState lastInputState;
+			sm::Vector3 mousePoint;
+			sm::Vector3 fowardDir;
+
 			sm::Vector3 spawnPoint;
 			float respawnTimer;
 			bool isReady = false;
 		};
 
-		struct Node
-		{
-			float f = FLT_MAX, g = FLT_MAX, h = FLT_MAX;
-			sm::Vector3 position;
-			sm::Vector2 id;
-			std::vector<Node*> connections;
-			ecs::component::Node* parent;
-			bool reachable = true;
-			void ResetFGH()
-			{
-				f = FLT_MAX, g = FLT_MAX, h = FLT_MAX;
-			}
-			bool ConnectionAlreadyExists(Node* other)
-			{
-				for (Node* node : connections)
-				{
-					if (node == other)
-					{
-						return true;
-					}
-				}
-				return false;
-			}
-		};
+	
 
 		struct NPC
 		{
 			enum class State
 			{
-				IDLE,
 				ASTAR,
+				IDLE,
 				CHASE
 			} state;
 			float movementSpeed = 15.f;
 			float attackRange = 10.f;
 			bool hostile;
-			uint32_t currentNodeTarget = static_cast<uint32_t>(-1);
-			std::vector<ecs::component::Node*> path;
-			ecs::component::Node* currentNode;
+			std::vector<Node*> path;
+			Node* currentNode;
 			Entity currentClosest;
 		};
 
@@ -194,53 +202,142 @@ namespace ecs
 			bool isAlive = true;
 		};
 
-		struct CombatStats
+		struct IAbility
 		{
-			float attackSpeed = 1.5f;
+			// set this for cooldown
+			float cooldown = 1.5f;
+			// !DO NOT TOUCH!
+			float cooldownTimer = 0.f;
+			
+			// set this for delay before ability is actually used after the cooldown is done and the ecs::UseAbility has bee called
+			float delay = 0.1f;
+			// !DO NOT TOUCH!
+			float delayTimer = 0.f;
+
+			// the time it takes to use
+			float useTime = 1.0f;
+			// !DO NOT TOUCH!
+			float useTimer = 0.f;
+
+			// lifetime of the ability, for instance lifetime of any created collider
+			float lifetime = 5.f;
+
+			// !DO NOT TOUCH!
+			bool isReady = false;
+			// !DO NOT TOUCH!
+			bool isUsing = false;
+
+			// set to be target for ability
+			sm::Vector3 targetPoint;
+		};
+
+		struct AttackAbility : public IAbility
+		{
 			float attackDamage = 5.f;
-			float attackLifeTime = 5.f;
+			float attackRange = 10.0f;
 			bool isRanged = false;
 			float projectileSpeed = 10.f;
-
-			bool isAttacking = false;
-			float cooldownTimer = 0.f;
-			Ray_t targetRay;
-			sm::Vector3 targetDir;
 		};
 
-		struct Attack
+		struct HealAbility : public IAbility
+		{
+			float healAmount = 40.f;
+			float range = 50.f;
+		};
+
+		struct SelfDestruct
 		{
 			float lifeTime;
-			float damage;
 		};
 
 
-		template<uint8_t ID>
-		struct Tag
+		struct ITag
 		{
-			uint8_t id = ID;
+			tag_bits id;
 		};
+
+		template<tag_bits ID>
+		struct Tag : ITag
+		{
+			Tag() {
+				id = ID;
+			}
+		};
+
 		struct PotentialField
 		{
 			float chargeAmount;
 			bool positive;
 		};
 
-		struct Tile 
-		{
-			TileType type;
-			sm::Vector2 gridID;
-			float halfWidth;
-
-		};
-
 	};
+
 
 	sm::Matrix GetMatrix(const component::Transform& transform);
 	sm::Vector3 GetForward(const component::Transform& transform);
 	sm::Vector3 GetRight(const component::Transform& transform);
 	bool StepRotateTo(sm::Quaternion& rotation, const sm::Vector3& targetVector, float t);
 	bool StepTranslateTo(sm::Vector3& translation, const sm::Vector3& target, float t);
+	
+	template<typename T>
+	void RegisterAsAbility()
+	{
+
+		using namespace entt::literals;
+		if constexpr (std::is_base_of_v<component::IAbility, T>)
+		{
+			entt::meta<T>().type()
+				.base<component::IAbility>()
+				.func<&Entity::GetComponentRef<T>, entt::as_ref_t>("get"_hs)
+				.func<&Entity::HasComponent<T>>("has"_hs);
+
+			LOG_INFO("Registered ability %s", entt::resolve<T>().info().name().data());
+		}
+		else if constexpr (std::is_base_of_v<component::ITag, T>) {
+			entt::meta<T>().type()
+				.base<component::ITag>()
+				.func<&Entity::GetComponentRef<T>, entt::as_ref_t>("get"_hs)
+				.func<&Entity::HasComponent<T>>("has"_hs);
+			
+			LOG_INFO("Registered tag %s", entt::resolve<T>().info().name().data());
+		}
+	}
+
+	/**
+	*	Warning: This function will modify the component
+	*	If this ability is ready to be used, meaning isReady == true.
+	*	If returns true the ability is set to being used, so it only returns true once with a interval of cooldown.
+	*/
+	bool UseAbility(component::IAbility* abilityComponent, sm::Vector3* targetPoint = nullptr);
+	/**
+	*	Warning: This function will modify the component
+	*	If this ability is ready to be used, meaning isReady == true.
+	*	If returns true the ability is set to being used, so it only returns true once with a interval of cooldown.
+	*/
+	bool UseAbility(Entity entity, entt::meta_type abilityType, sm::Vector3* targetPoint = nullptr);
+
+	/**
+	*	Warning: This function will modify the component
+	*	Check if this ability is ready to used, meaning isUsing == true and delayTimer <= 0.
+	*	If returns true the ability is reset, so it only returns true once after ecs::UseAbility is called on this component.
+	*/
+	bool ReadyToUse(component::IAbility* abilityComponent, sm::Vector3* targetPoint = nullptr);
+	/**
+	*	Warning: This function will modify the component
+	*	Check if this ability is ready to used, meaning isUsing == true and delayTimer <= 0.
+	*	If returns true the ability is reset, so it only returns true once after ecs::UseAbility is called on this component.
+	*/
+	bool ReadyToUse(Entity entity, entt::meta_type abilityType, sm::Vector3* targetPoint = nullptr);
+
+	// returns if the ability is currently used
+	bool IsUsing(const component::IAbility* abilityComponent);
+
+	// returns if the ability is currently used
+	bool IsUsing(Entity entity, entt::meta_type abilityType);
+
+	bool IsPlayerUsingAnyAbility(Entity player);
+
+	component::TemporaryPhysics::Force GetGravityForce();
 
 };
 

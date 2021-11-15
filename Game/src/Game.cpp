@@ -1,8 +1,10 @@
 #include "Game.h"
+#include "GameSystems.h"
 #include "Button.h"
 #include "TextField.h"
-#include <DemoScene.h>
+#include "SceneHelper.h"
 #include "Healthbar.h"
+#include "MoneyUI.h"
 
 using namespace std::placeholders;
 
@@ -11,9 +13,9 @@ Game::Game()
 	, Engine()
 {
 	this->m_localPID = -1;
+	this->m_money = 0;
 	this->m_gameID = -1;
-	this->m_predictionThreshhold = 0.001f;
-	m_waveTimer = 0;
+	this->m_waveTimer = 0;
 }
 
 
@@ -29,36 +31,33 @@ Game::~Game()
 
 void Game::UpdateNetwork(float deltaTime)
 {
-	//static float pingCheck = 0.f;
-	//const float TARGET_PING_TIME = 5.0f;
+	static float pingCheck = 0.f;
+	const float TARGET_PING_TIME = 5.0f;
 	if (m_client.IsConnected())
 	{
 		m_client.Update();
 
-		//pingCheck += deltaTime;
+		pingCheck += deltaTime;
 
-		//if (pingCheck > TARGET_PING_TIME)
-		//{
-		//	this->PingServer();
-		//	pingCheck -= TARGET_PING_TIME;
-		//}
+		if (pingCheck > TARGET_PING_TIME)
+		{
+			this->PingServer();
+			pingCheck -= TARGET_PING_TIME;
+		}
 
 		if (GetCurrentScene() == &GetScene("Game"))
 		{
 			if (GetCurrentScene()->GetCurrentCamera()->GetCameraType() == CAMERATYPE::PLAY)
 			{
-
 				message<GameMsg> msg;
 				msg.header.id = GameMsg::Game_PlayerInput;
-
 
 				msg << this->m_localPID << m_gameID << m_inputState;
 
 				m_client.Send(msg);
 
 				//reset input
-				m_inputState.leftMouse = false;
-				m_inputState.rightMouse = false;
+				memset(&m_inputState, 0, sizeof(m_inputState));
 			}
 		}
 	}
@@ -66,13 +65,16 @@ void Game::UpdateNetwork(float deltaTime)
 
 bool Game::OnStartup()
 {
+	sceneHelp::CreateLoadingScene(this);
+	SetScene("Loading");
+
 	// Scene logic
 	sceneHelp::CreateLobbyScene(this);
 	sceneHelp::CreateGameScene(this);
 	sceneHelp::CreateMainMenuScene(this);
 	sceneHelp::CreateJoinLobbyScene(this);
-	sceneHelp::CreateLoadingScene(this);
 
+	sceneHelp::CreateOptionsScene(this);
 	// Set Current Scene
 	SetScene("MainMenu");
 
@@ -81,19 +83,6 @@ bool Game::OnStartup()
 
 void Game::OnUserUpdate(float deltaTime)
 {
-	static float pingCheck = 0.f;
-	const float PING_TARGET = 5.0f;
-
-
-	if (m_client.IsConnected())
-	{
-		pingCheck += deltaTime;
-		if (pingCheck >= PING_TARGET)
-		{
-			PingServer();
-			pingCheck = 0.f;
-		}
-	}
 	/*
 if (GetCurrentScene() == &GetScene("Game") && GetCurrentScene()->GetCurrentCamera()->GetCameraType() == CAMERATYPE::PLAY)
 {
@@ -121,9 +110,18 @@ if (GetCurrentScene() == &GetScene("Game") && GetCurrentScene()->GetCurrentCamer
 }
 		*/
 
-		//Update InputState
 	if (GetCurrentScene() == &GetScene("Game"))
 	{
+		//if (m_players.find(m_localPID) != m_players.end())
+		//{
+		//	sm::Vector3 playerPos = m_players.at(m_localPID).GetComponent<comp::Transform>()->position;
+
+		//	Camera* cam = GetScene("Game").GetCurrentCamera();
+		//	if (cam->GetCameraType()  == CAMERATYPE::PLAY)
+		//	{
+		//		GameSystems::CheckLOS(this);
+		//	}
+		//}
 		this->UpdateInput();
 	}
 }
@@ -133,6 +131,8 @@ void Game::OnShutdown()
 {
 	m_players.clear();
 	m_mapEntity.Destroy();
+	m_models.clear();
+	m_LOSColliders.clear();
 }
 
 
@@ -178,7 +178,33 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			}
 			else {
 				LOG_WARNING("Updating: Entity %u not in m_gameEntities, should not happen...", entityID);
-				
+
+			}
+		}
+
+		break;
+	}
+	case GameMsg::Game_UpdateComponent:
+	{
+		uint32_t currentTick;
+		msg >> currentTick;
+		uint32_t count; // Could be more than one Entity
+		msg >> count;
+
+		for (uint32_t i = 0; i < count; i++)
+		{
+			uint32_t entityID;
+			msg >> entityID;
+
+			Entity entity;
+			if (m_gameEntities.find(entityID) != m_gameEntities.end())
+			{
+				entity = m_gameEntities.at(entityID);
+				UpdateEntityFromMessage(entity, msg);
+			}
+			else {
+				LOG_WARNING("Updating component: Entity %u not in m_gameEntities, should not happen...", entityID);
+
 			}
 		}
 
@@ -201,7 +227,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			msg >> entityID;
 			e.AddComponent<comp::Network>(entityID);
 			UpdateEntityFromMessage(e, msg);
-			
+
 			m_gameEntities.insert(std::make_pair(entityID, e));
 			if (e.GetComponent<comp::Network>()->id == m_localPID)
 			{
@@ -224,10 +250,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 				LOG_INFO("A remote player added!");
 				m_players[e.GetComponent<comp::Network>()->id] = e;
 			}
-			
-#ifdef  _DEBUG
-			CreateVisualGrid(e);
-#endif //  _DEBUG
+
 		}
 
 		if (GetCurrentScene() == &GetScene("Loading"))
@@ -240,12 +263,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 
 		break;
 	}
-	case GameMsg::Grid_PlaceDefence:
-	{
-		PlaceDefenceDebug(msg);
-		PlaceDefenceRelease(msg);
-		break;
-	}
 	case GameMsg::Game_RemoveEntity:
 	{
 		uint32_t count;
@@ -256,6 +273,13 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			msg >> id;
 			if (m_gameEntities.find(id) != m_gameEntities.end())
 			{
+				// Spawn blood splat when enemy dies.
+				if (m_gameEntities.at(id).GetComponent<comp::Transform>() && m_gameEntities.at(id).GetComponent<comp::Health>())
+				{
+					Entity bloodDecal = GetCurrentScene()->CreateEntity();
+					bloodDecal.AddComponent<comp::Decal>(*m_gameEntities.at(id).GetComponent<comp::Transform>());
+				}
+
 				m_gameEntities.at(id).Destroy();
 				m_gameEntities.erase(id);
 			}
@@ -274,15 +298,21 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	}
 	case GameMsg::Game_BackToLobby:
 	{
+		auto it = m_players.begin();
+		while (it != m_players.end())
+		{
+			it->second.GetComponent<comp::Player>()->isReady = false;
+			it++;
+		}
 		SetScene("Lobby");
-		ClearGrid();
 		break;
-	}	
+	}
 	case GameMsg::Lobby_Accepted:
 	{
 		msg >> m_gameID;
 		this->SetScene("Loading");
-		this->LoadAllAssets();
+		sceneHelp::LoadAllAssets(this);
+		sceneHelp::LoadMapColliders(this);
 
 		LOG_INFO("You are now in lobby: %lu", m_gameID);
 		break;
@@ -300,6 +330,11 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		LOG_WARNING("Left Lobby %u", m_gameID);
 		m_gameID = -1;
 		SetScene("JoinLobby");
+		rtd::TextField* textField = dynamic_cast<rtd::TextField*>(GetScene("JoinLobby").GetCollection("LobbyFields")->elements[0].get());
+		if (textField)
+		{
+			textField->SetPresetText("");
+		}
 		break;
 	}
 	case GameMsg::Game_Start:
@@ -324,7 +359,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	{
 		uint32_t count;
 		msg >> count;
-		const uint32_t* spots = &count;
 		std::string ids[MAX_PLAYERS_PER_LOBBY];
 
 		for (uint32_t i = 0; i < count; i++)
@@ -339,6 +373,28 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			{
 				m_players.at(playerID).GetComponent<comp::NamePlate>()->namePlate = playerPlate;
 				dynamic_cast<rtd::Text*>(GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i + 1))->elements[1].get())->SetText(playerPlate);
+				rtd::Text* plT = dynamic_cast<rtd::Text*>(GetScene("Game").GetCollection("dynamicPlayer" + std::to_string(i + 1) + "namePlate")->elements[0].get());
+				if (plT)
+				{
+					plT->SetText(playerPlate);
+					plT->SetStretch(D2D1Core::GetDefaultFontSize() * plT->GetText().length(), D2D1Core::GetDefaultFontSize());
+				}
+			}
+		}
+		if (m_players.find(m_localPID) != m_players.end())
+		{
+			comp::Player* player = m_players.at(m_localPID).GetComponent<comp::Player>();
+			rtd::Text* readyText = dynamic_cast<rtd::Text*>(GetScene("Lobby").GetCollection("StartGame")->elements[1].get());
+			if (readyText)
+			{
+				if (player->isReady)
+				{
+					readyText->SetText("Ready");
+				}
+				else
+				{
+					readyText->SetText("Not ready");
+				}
 			}
 		}
 
@@ -357,15 +413,19 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		Scene& gameScene = GetScene("Game");
 		// Map healthbars to players.
 		GameSystems::UpdateHealthbar(gameScene);
-
-		for (size_t i = 0; i < count; i++)
-		{
-			Collection2D* collect = gameScene.GetCollection("player" + std::to_string(i + 1) + "Info");
-			collect->Show();
-			dynamic_cast<rtd::Text*>(collect->elements[1].get())->SetText(ids[i]);
-		}
+		//GameSystems::UpdateMainPlayer(this);
 		break;
 
+	}
+	case GameMsg::Game_Money:
+	{
+		msg >> m_money;
+		rtd::MoneyUI* elem = dynamic_cast<rtd::MoneyUI*>(GetScene("Game").GetCollection("MoneyUI")->elements[0].get());
+		if (elem)
+		{
+			elem->SetNewMoney(m_money);
+		}
+		break;
 	}
 	}
 }
@@ -374,6 +434,8 @@ void Game::PingServer()
 	message<GameMsg> msg = {};
 	msg.header.id = GameMsg::Server_GetPing;
 	msg << this->m_localPID;
+
+	LOG_INFO("Pinging server!");
 
 	this->m_timeThen = std::chrono::system_clock::now();
 	m_client.Send(msg);
@@ -424,8 +486,23 @@ void Game::OnClientDisconnect()
 		}
 	);
 
+	rtd::TextField* textField = dynamic_cast<rtd::TextField*>(GetScene("JoinLobby").GetCollection("nameInput")->elements[0].get());
+	if (textField)
+	{
+		textField->SetPresetText("");
+	}
+	textField = dynamic_cast<rtd::TextField*>(GetScene("JoinLobby").GetCollection("LobbyFields")->elements[0].get());
+	if (textField)
+	{
+		textField->SetPresetText("");
+	}
+
 	SetScene("MainMenu");
 
+	m_client.m_qPrioMessagesIn.clear();
+	m_client.m_qMessagesIn.clear();
+	m_players.clear();
+	m_gameEntities.clear();
 	LOG_INFO("Disconnected from server!");
 }
 
@@ -434,21 +511,27 @@ void Game::SendStartGame()
 	network::message<GameMsg> msg;
 	msg.header.id = GameMsg::Game_PlayerReady;
 	msg << m_localPID << m_gameID;
+
 	m_client.Send(msg);
 }
 
-void Game::ClearGrid()
+void Game::SendSelectedClass(comp::Player::Class classType)
 {
-	GetScene("Game").ForEachComponent<comp::Tag<TagType::DEFENCE>>([](Entity& e, comp::Tag<TagType::DEFENCE>& tag)
-		{
-			e.Destroy();
-		}
-	);
+	network::message<GameMsg> msg;
+	msg.header.id = GameMsg::Game_ClassSelected;
+	msg << classType << m_localPID << m_gameID;
+
+	m_client.Send(msg);
+}
+
+Entity& Game::GetLocalPlayer()
+{
+	return this->m_players.at(m_localPID);
 }
 
 void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 {
-	
+
 	uint32_t bits;
 	msg >> bits;
 	std::bitset<ecs::Component::COMPONENT_MAX> compSet(bits);
@@ -465,6 +548,7 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 				msg >> t;
 				t.rotation.Normalize();
 				e.AddComponent<comp::Transform>(t);
+				//m_predictor.Add(e.GetComponent<comp::Network>()->id, t);
 				break;
 			}
 			case ecs::Component::VELOCITY:
@@ -478,30 +562,14 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 			{
 				std::string name;
 				msg >> name;
-				e.AddComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>(name);
+				e.AddComponent<comp::Renderable>()->model = ResourceManager::Get().CopyResource<RModel>(name, true);
 				break;
 			}
 			case ecs::Component::ANIMATOR_NAME:
 			{
-				comp::AnimatorName animName;
-				msg >> animName.name;
-
-				//Get model
-				comp::Renderable* renderable = e.GetComponent<comp::Renderable>();
-				if(renderable && renderable->model)
-				{
-
-					//Add an animator if we can get it
-					if (!animName.name.empty())
-					{
-						std::shared_ptr<RAnimator> anim = ResourceManager::Get().CopyResource<RAnimator>(animName.name, true);
-						if (anim)
-						{
-							if (anim->LoadSkeleton(renderable->model->GetSkeleton()))
-								e.AddComponent<comp::Animator>()->animator = anim;
-						}
-					}
-				}
+				std::string name;
+				msg >> name;
+				e.AddComponent<comp::Animator>()->animator = ResourceManager::Get().CopyResource<RAnimator>(name, true);
 				break;
 			}
 			case ecs::Component::NAME_PLATE:
@@ -532,13 +600,6 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 				e.AddComponent<comp::BoundingSphere>(s);
 				break;
 			}
-			case ecs::Component::PLANECOLLIDER:
-			{
-				comp::PlaneCollider p;
-				msg >> p;
-				*e.AddComponent<comp::PlaneCollider>() = p;
-				break;
-			}
 			case ecs::Component::LIGHT:
 			{
 				comp::Light l;
@@ -551,13 +612,6 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 				comp::Player p;
 				msg >> p;
 				e.AddComponent<comp::Player>(p);
-				break;
-			}
-			case ecs::Component::TILE:
-			{
-				comp::Tile t;
-				msg >> t;
-				e.AddComponent<comp::Tile>(t);
 				break;
 			}
 			default:
@@ -576,101 +630,15 @@ void Game::UpdateInput()
 	if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::HELD))
 	{
 		m_inputState.leftMouse = true;
-		m_inputState.mouseRay = InputSystem::Get().GetMouseRay();
-
 	}
 	if (InputSystem::Get().CheckMouseKey(MouseKey::RIGHT, KeyState::PRESSED))
 	{
 		m_inputState.rightMouse = true;
-		m_inputState.mouseRay = InputSystem::Get().GetMouseRay();
 	}
-}
-
-void Game::PlaceDefenceDebug(message<GameMsg>& msg)
-{
-#ifdef _DEBUG
-	if (RENDER_GRID)
+	m_inputState.mouseRay = InputSystem::Get().GetMouseRay();
+	// temp
+	if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::B, KeyState::PRESSED))
 	{
-		uint32_t id;
-		msg >> id;
-
-		GetScene("Game").ForEachComponent<comp::Network, comp::Tile>([&](Entity& e, comp::Network& net, comp::Tile& tile)
-			{
-				if (id == net.id)
-				{
-					comp::Renderable* render = e.GetComponent<comp::Renderable>();
-					render->model = ResourceManager::Get().GetResource<RModel>("Defence.obj");
-					render->model->ChangeMaterial("Defence.mtl");
-					tile.type = TileType::DEFENCE;
-					LOG_INFO("Placed defence %d", id);
-				}
-			});
+		m_inputState.key_b = true;
 	}
-	else if (!RENDER_GRID)
-	{
-		sm::Vector3 position;
-		msg >> position;
-
-		Entity defence = GetScene("Game").CreateEntity();
-		comp::Renderable* render = defence.AddComponent<comp::Renderable>();
-		defence.AddComponent<comp::Transform>()->position = position;
-		defence.GetComponent<comp::Transform>()->scale = { 4.2f, 0.5f, 4.2f };
-		render->model = ResourceManager::Get().GetResource<RModel>("Defence.obj");
-		render->model->ChangeMaterial("Defence.mtl");
-		LOG_INFO("Placed defence");
-	}
-#endif // DEBUG
-}
-
-void Game::PlaceDefenceRelease(message<GameMsg>& msg)
-{
-#ifdef NDEBUG
-	sm::Vector3 position;
-	msg >> position;
-
-	Entity defence = GetScene("Game").CreateEntity();
-	comp::Renderable* render = defence.AddComponent<comp::Renderable>();
-	defence.AddComponent<comp::Transform>()->position = position;
-	defence.GetComponent<comp::Transform>()->scale = { 4.2f, 0.5f, 4.2f };
-	defence.AddComponent<comp::Tag<TagType::DEFENCE>>();
-	render->model = ResourceManager::Get().GetResource<RModel>("Defence.obj");
-	render->model->ChangeMaterial("Defence.mtl");
-	LOG_INFO("Placed defence");
-
-#endif // NDEBUG		
-}
-
-void Game::CreateVisualGrid(Entity e)
-{
-	if (RENDER_GRID) //TODO dosent work atm
-	{
-		comp::Tile* tile = e.GetComponent<comp::Tile>();
-		if (tile)
-		{
-			if (tile->type == TileType::EMPTY)
-			{
-				comp::Renderable* renderable = e.AddComponent<comp::Renderable>();
-				renderable->model = ResourceManager::Get().GetResource<RModel>("Plane1.obj");
-				renderable->model->ChangeMaterial("TileEmpty.mtl");
-			}
-			else if (tile->type == TileType::BUILDING || tile->type == TileType::UNPLACABLE)
-			{
-				comp::Renderable* renderable = e.AddComponent<comp::Renderable>();
-				renderable->model = ResourceManager::Get().CopyResource<RModel>("Plane1.obj");
-				renderable->model->ChangeMaterial("TileBuilding.mtl");
-			}
-		}
-	}
-}
-
-void Game::LoadAllAssets()
-{
-	ResourceManager::Get().GetResource<RModel>("MonsterCharacter.fbx");
-	ResourceManager::Get().GetResource<RModel>("Barrel.obj");
-	ResourceManager::Get().GetResource<RModel>("Defence.obj");
-	ResourceManager::Get().GetResource<RModel>("Plane1.obj");
-	ResourceManager::Get().GetResource<RModel>("Knight.fbx");
-	Entity e = GetScene("Game").CreateEntity();
-	e.AddComponent<comp::Transform>();
-	e.AddComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>("GameScene.obj");
 }

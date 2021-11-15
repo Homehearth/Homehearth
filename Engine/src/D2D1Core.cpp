@@ -2,9 +2,7 @@
 #include "D2D1Core.h"
 
 #define INSTANCE D2D1Core::instance
-#define LOADER FontCollectionLoader::instance
 D2D1Core* INSTANCE = nullptr;
-FontCollectionLoader* LOADER = nullptr;
 
 D2D1Core::D2D1Core()
 {
@@ -142,6 +140,11 @@ float D2D1Core::GetDefaultFontSize()
 	return INSTANCE->m_writeFormat.Get()->GetFontSize();
 }
 
+Window* D2D1Core::GetWindow()
+{
+	return INSTANCE->m_windowPointer;
+}
+
 void D2D1Core::DrawT(const std::string& text, const draw_text_t& opt)
 {
 	if (INSTANCE->m_renderTarget)
@@ -183,7 +186,7 @@ void D2D1Core::DrawT(const std::string& text, const draw_text_t& opt)
 	}
 }
 
-void D2D1Core::DrawF(const draw_t& fig, const draw_shape_t& shape)
+void D2D1Core::DrawF(const draw_t& fig, const draw_shape_t& shape, const LineWidth& thickness)
 {
 	D2D1_COLOR_F oldColor = INSTANCE->m_solidBrush->GetColor();
 	INSTANCE->m_renderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
@@ -198,14 +201,19 @@ void D2D1Core::DrawF(const draw_t& fig, const draw_shape_t& shape)
 	switch (shape.shape)
 	{
 	case Shapes::RECTANGLE_FILLED:
-		D2D1_RECT_F rectangle_filled = D2D1::RectF(fig.x_pos, fig.y_pos, fig.x_pos + fig.width , fig.y_pos + fig.height);
+	{
+		D2D1_RECT_F rectangle_filled = D2D1::RectF(fig.x_pos, fig.y_pos, fig.x_pos + fig.width, fig.y_pos + fig.height);
 		INSTANCE->m_renderTarget->FillRectangle(&rectangle_filled, INSTANCE->m_solidBrush.Get());
 		break;
+	}
 	case Shapes::RECTANGLE_OUTLINED:
+	{
 		D2D1_RECT_F rectangle_outlined = D2D1::RectF(fig.x_pos, fig.y_pos, fig.x_pos + fig.width, fig.y_pos + fig.height);
-		INSTANCE->m_renderTarget->DrawRectangle(&rectangle_outlined, INSTANCE->m_solidBrush.Get(), 5.0f);
+		INSTANCE->m_renderTarget->DrawRectangle(&rectangle_outlined, INSTANCE->m_solidBrush.Get(), static_cast<int>(thickness) * 2.0f);
 		break;
+	}
 	case Shapes::TRIANGLE_FILLED:
+	{
 		INSTANCE->m_factory->CreatePathGeometry(&geometry);
 		if (!geometry)
 			break;
@@ -225,6 +233,7 @@ void D2D1Core::DrawF(const draw_t& fig, const draw_shape_t& shape)
 		INSTANCE->m_renderTarget->FillGeometry(geometry, INSTANCE->m_solidBrush.Get());
 		geometry->Release();
 		break;
+	}
 	}
 
 	// Reset it to its old color.
@@ -373,105 +382,6 @@ HRESULT D2D1Core::LoadBitMap(const LPCWSTR& filePath, ID2D1Bitmap** bitMap)
 		fDecoder->Release();
 	if(decoder)
 		decoder->Release();
-
-	return E_FAIL;
-}
-
-void FontCollectionLoader::Initialize()
-{
-	if (!LOADER)
-		LOADER = new FontCollectionLoader;
-}
-
-void FontCollectionLoader::Destroy()
-{
-	if (LOADER)
-		delete LOADER;
-}
-
-
-HRESULT __stdcall FontCollectionLoader::QueryInterface(REFIID riid, void** ppvObject)
-{
-	return E_NOTIMPL;
-}
-
-HRESULT __stdcall FontCollectionLoader::CreateEnumeratorFromKey(IDWriteFactory* factory, void const* collectionKey, UINT32 collectionKeySize, IDWriteFontFileEnumerator** fontFileEnumerator)
-{
-	if (!*fontFileEnumerator)
-	{
-		FontFileEnumerator* point = dynamic_cast<FontFileEnumerator*>(*fontFileEnumerator = new FontFileEnumerator(factory));
-		if (point)
-		{
-			point->SetKey(collectionKey);
-			return S_OK;
-		}
-		else
-			return E_FAIL;
-	}
-	else
-		return E_FAIL;
-
-}
-
-ULONG __stdcall FontCollectionLoader::AddRef(void)
-{
-	return m_refs++;
-}
-
-ULONG __stdcall FontCollectionLoader::Release(void)
-{
-	return m_refs--;
-}
-
-FontFileEnumerator::FontFileEnumerator(IDWriteFactory* ref)
-{
-	//AddFontResourceEx(L"../Assets/Fonts/Bookworm.ttf", FR_PRIVATE, 0);
-}
-
-void FontFileEnumerator::SetKey(const void* pointer)
-{
-	m_key = (UINT64)pointer;
-}
-
-HRESULT __stdcall FontFileEnumerator::QueryInterface(REFIID riid, void** ppvObject)
-{
-	return E_NOTIMPL;
-}
-
-ULONG __stdcall FontFileEnumerator::AddRef(void)
-{
-	return m_refs++;
-}
-
-ULONG __stdcall FontFileEnumerator::Release(void)
-{
-	return m_refs--;
-}
-
-HRESULT __stdcall FontFileEnumerator::MoveNext(BOOL* hasCurrentFile)
-{
-	for (int i = 0; i < m_fonts.size(); i++)
-	{
-		m_pos = i;
-		IDWriteFontFile* font = m_fonts[m_pos];
-		if (font)
-		{
-			*hasCurrentFile = 1;
-			return S_OK;
-		}
-	}
-
-	*hasCurrentFile = 0;
-	return E_FAIL;
-}
-
-HRESULT __stdcall FontFileEnumerator::GetCurrentFontFile(IDWriteFontFile** fontFile)
-{
-	if (m_fonts[m_pos])
-	{
-		fontFile = &m_fonts[m_pos];
-		return S_OK;
-	}
 
 	return E_FAIL;
 }

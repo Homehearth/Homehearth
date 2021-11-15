@@ -32,6 +32,12 @@ struct VertexOut
     float4 worldPos     : WORLDPOSITION;
 };
 
+struct VertexOutSB
+{
+    float3 texCoord : SKYTEXCOORD;
+    float4 posCS    : SV_Position;
+};
+
 struct PixelIn
 {
     float4 pos          : SV_POSITION;
@@ -40,6 +46,12 @@ struct PixelIn
     float3 tangent      : TANGENT;
     float3 biTangent    : BINORMAL;
     float4 worldPos     : WORLDPOSITION;
+};
+
+struct PixelInSB
+{
+    float3 texCoord : SKYTEXCOORD;
+    float4 posCS    : SV_Position;
 };
 
 struct ComputeShaderIn

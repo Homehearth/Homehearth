@@ -32,6 +32,9 @@ void rtd::Canvas::SetPosition(const float& x, const float& y)
 {
 	m_drawOpts.x_pos = x;
 	m_drawOpts.y_pos = y;
+
+	if(m_border)
+		m_border->UpdatePos(m_drawOpts);
 }
 
 void rtd::Canvas::SetScale(const float& x_stretch, const float& y_stretch)
@@ -48,6 +51,11 @@ void rtd::Canvas::SetColor(const D2D1_COLOR_F& new_color)
 D2D1_COLOR_F& rtd::Canvas::GetColor()
 {
 	return m_color;
+}
+
+const draw_t rtd::Canvas::GetOpts() const
+{
+	return m_drawOpts;
 }
 
 void rtd::Canvas::SetBorderColor(const D2D1_COLOR_F& new_color)
@@ -69,10 +77,17 @@ void rtd::Canvas::ShowBorder()
 	m_border->SetColor({ m_border->GetColor().r, m_border->GetColor().g, m_border->GetColor().b, 1.f });
 }
 
+void rtd::Canvas::SetBorderWidth(const LineWidth& width)
+{
+	m_border.get()->SetLineWidth(width);
+}
+
 void Canvas::Draw()
 {
 	if (m_border)
+	{
 		m_border->Draw();
+	}
 
 	D2D1Core::DrawF(m_drawOpts, draw_shape_t(Shapes::RECTANGLE_FILLED, m_color));
 }

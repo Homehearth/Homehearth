@@ -8,17 +8,16 @@ namespace rtd
 	class Healthbar : public Element2D
 	{
 	private:
-
 		std::unique_ptr<Canvas> m_backGround;
 		std::unique_ptr<Canvas> m_foreGround;
-		std::unique_ptr<Text> m_healthInfo;
+		//std::unique_ptr<Text> m_healthInfo;
 
 		float* m_points;
 		Entity m_entity;
 		float m_maxHealth;
 
-		// Current size on current health.
-		draw_t m_drawOpts;
+		// Double buffered draw opts XDD
+		DoubleBuffer<draw_t> m_drawOpts;
 
 		// size when it is on full health.
 		float m_sizeFull;
@@ -35,6 +34,10 @@ namespace rtd
 			It will be read as a float.
 		*/
 		void SetHealthVariable(Entity e);
+
+		void SetPosition(const float& x, const float& y);
+		void SetStretch(const float& x, const float& y);
+		const draw_t GetOpts() const;
 
 		// Inherited via Element2D
 		virtual void Draw() override;

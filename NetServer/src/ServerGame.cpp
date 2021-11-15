@@ -7,6 +7,7 @@ ServerGame::ServerGame()
 	:m_server(std::bind(&ServerGame::CheckIncoming, this, _1))
 {
 	m_nGameID = 0;
+	SetUpdateRate(60.f);
 }
 
 ServerGame::~ServerGame()
@@ -68,11 +69,11 @@ bool ServerGame::OnStartup()
 		LOG_ERROR("Failed to start server");
 		exit(0);
 	}
-
 	m_inputThread = std::thread(&ServerGame::InputThread, this);
-
+	
 	LoadMapColliders("AllBounds.fbx");
 	//LoadMapColliders("MapBounds.obj");
+
 
 	return true;
 }
@@ -183,7 +184,7 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 		uint32_t playerID;
 		msg >> playerID;
 		this->m_server.SendToClient(playerID, msg);
-		//LOG_INFO("Client on with ID: %ld is pinging server", playerID);
+		LOG_INFO("Client on with ID: %ld is pinging server", playerID);
 		break;
 	}
 	case GameMsg::Lobby_Create:
@@ -274,6 +275,20 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 		if (m_simulations.find(gameID) != m_simulations.end())
 		{
 			m_simulations.at(gameID)->ReadyCheck(playerID);
+		}
+
+		break;
+	}
+	case GameMsg::Game_ClassSelected:
+	{
+		uint32_t playerID;
+		uint32_t gameID;
+		comp::Player::Class type;
+		msg >> gameID >> playerID >> type;
+
+		if (m_simulations.find(gameID) != m_simulations.end())
+		{
+			m_simulations.at(gameID)->GetPlayer(playerID)->GetComponent<comp::Player>()->classType = type;
 		}
 
 		break;

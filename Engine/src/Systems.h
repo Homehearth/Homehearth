@@ -1,18 +1,25 @@
 #pragma once
 #include "Scene.h"
 #include "CollisionSystem.h"
+#include "PathFinderManager.h"
 
 namespace Systems
 {
+	// abilities
+	void UpdateAbilities(HeadlessScene& scene, float dt);
 	void CombatSystem(HeadlessScene& scene, float dt);
+	void HealingSystem(HeadlessScene& scene, float dt);
+
+	void HealthSystem(HeadlessScene& scene, float dt, uint32_t& money_ref);
+	void SelfDestructSystem(HeadlessScene& scene, float dt);
+
 	void MovementSystem(HeadlessScene& scene, float dt);
 	void MovementColliderSystem(HeadlessScene& scene, float dt);
 	void LightSystem(Scene& scene, float dt);
 
 	template<typename Collider1, typename Collider2>
 	void CheckCollisions(HeadlessScene& scene, float dt);
-	void AISystem(HeadlessScene& scene);
-
+	void AISystem(HeadlessScene& scene, PathFinderManager* aiHandler);
 
 }
 
@@ -51,13 +58,10 @@ inline void Systems::CheckCollisions(HeadlessScene& scene, float dt)
 					CollisionInfo_t collisionInfo = CollisionSystem::Get().Intersection(e1, e2);
 					if (collisionInfo.hasCollided)
 					{
-						scene.publish<ESceneCollision>(e1, e2, dt);
+						CollisionSystem::Get().OnCollision(e1, e2);
 						CollisionSystem::Get().CollisionResponse(collisionInfo, e1, e2);
 					}
-					else
-					{
-						CollisionSystem::Get().RemovePair(e1, e2);
-					}
+					
 				}
 			}
 		}

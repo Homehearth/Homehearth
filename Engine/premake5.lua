@@ -45,9 +45,10 @@ project "Engine"
             ["src/Engine/Input"] = { "**InputSystem.*" },
             ["src/Engine/GamePlay"] = { "**GridSystem.*", "**CollisionSystem.*" },
             ["src/Engine/Thread"] = { "**multi_thread_manager.*", "**ThreadSyncer.*", "**RenderThreadHandler.*"},
-
+            ["src/Engine/AI/BehaviorTree"] = {"**BT.*"},
+            ["src/Engine/AI/BehaviorTree/CustomNodes"] = {"**CBT.*"},
         ["src/Engine/Utility"] = { "**Timer.*", "**Profiler.*", "**Logger.*", "**Stats.*" },
-		["src/Engine/Elements"] = {"**Canvas.*", "**Picture.*", "**Border.*", "**Button.*", "**Text.*", "**TextField.*", "**Slider.*", "**Healthbar.*"},
+		["src/Engine/Elements"] = {"**Canvas.*", "**Picture.*", "**Border.*", "**Button.*", "**Text.*", "**TextField.*", "**Slider.*", "**Healthbar.*", "**Scroller.*"},
         
         ["src/Engine"] = {  },
             ["src/Engine/Graphics/Renderer"] = {"**Renderer.*", "**PipelineManager.*", "**BackBuffer.*"},
@@ -57,6 +58,7 @@ project "Engine"
 			["src/Engine/Graphics/D2D1"] = { "**D2D1Core.*" },
 			
 			["src/Network"] = { "**Client.*" },
+			["src/Network/Prediction"] = {"**Predictor.*"},
 
         ["src/Engine/Resources"] = { "**ResourceManager.*", "**GResource.*", "**RModel.*", "**RTexture.*", "**RMaterial.*"},
             ["src/Engine/Resources/Shaders"] = { "**.hlsl", "**.hlsli", "**Shader.*" },
@@ -67,7 +69,7 @@ project "Engine"
         ["src/Engine/Network"] = { "**Client.*" },
         ["src/Engine/Animation"] = {  },
         ["src/Engine/ECS"] = { "**Components.*",  "**Entity.*" }, 
-        ["src/Engine/AI"] = {  },  
+        ["src/Engine/AI"] = { "**AISystem*", "**PathFinderManager.*", "**AIBehaviors.*" },  
 		["src/Engine/Structures"] = { "**VertexStructure.*" }  
     }
 

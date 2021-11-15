@@ -1,4 +1,5 @@
 #pragma once
+#include "Tags.h"
 
 class Entity
 {
@@ -16,6 +17,13 @@ public:
 	template<typename T>
 	T* GetComponent() const;
 	
+	// Only use this if 100% sure this entity has component T
+	template<typename T>
+	T& GetComponentRef() const;
+
+	template<typename T>
+	bool HasComponent() const;
+
 	template<typename T, typename ...Args>
 	T* AddComponent(Args&& ...);
 
@@ -23,10 +31,12 @@ public:
 	void RemoveComponent();
 
 	void UpdateNetwork();
-
+	
 	bool Destroy();
 
 	bool IsNull() const;
+
+	tag_bits GetTags() const;
 
 	operator entt::entity()const
 	{
@@ -65,6 +75,22 @@ inline T* Entity::GetComponent() const
 	return m_pRegistry->try_get<T>(m_entity);
 }
 
+template<typename T>
+inline T& Entity::GetComponentRef() const
+{
+	if (this->IsNull())
+	{
+		throw std::runtime_error("Entity was a null entity");
+	}
+	return m_pRegistry->get<T>(m_entity);
+}
+
+template<typename T>
+inline bool Entity::HasComponent() const
+{
+	return GetComponent<T>() != nullptr;
+}
+
 template<typename T, typename ...Args>
 inline T* Entity::AddComponent(Args&& ... args)
 {
@@ -82,7 +108,7 @@ inline void Entity::RemoveComponent()
 	{
 		throw std::runtime_error("Entity was a null entity");
 	}	
-	m_pRegistry->erase<T>(m_entity);
+	m_pRegistry->remove<T>(m_entity);
 }
 
 

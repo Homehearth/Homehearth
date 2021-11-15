@@ -2,6 +2,8 @@
 	#error You may not include this header directly.
 #endif
 
+static const float PI = 3.14159265359;
+
 //---------------------------------------------------------------------------
 //	Constant buffers.
 //---------------------------------------------------------------------------
@@ -50,6 +52,11 @@ cbuffer IsCollidingCB : register(b5)
     int c_colliding;
 }
 
+cbuffer DecalInfoCB : register(b10)
+{
+    float4 infoData = float4(0.0f, 0.0f, 0.0f, 0.0f);
+	float4x4 decal_projection;
+}
 cbuffer DeltaCB : register(b6)
 {
     float c_deltaTime;
@@ -68,6 +75,7 @@ cbuffer TextureEffectCB : register(b7)
 SamplerState s_point		: register(s0);
 SamplerState s_linear		: register(s1);
 SamplerState s_anisotropic	: register(s2);
+SamplerState s_cubeSamp     : register(s3);
 
 
 //---------------------------------------------------------------------------
@@ -84,10 +92,13 @@ Texture2D t_aomap					: register(t5);
 Texture2D t_displace				: register(t6);
 Texture2D t_opacitymask				: register(t7);
 Texture2D<uint2> t_pointLightGrid	: register(t8);
+Texture2D t_decal                   : register(t12);
+Texture2D t_decalAlpha              : register(t13);
 
 // StructuredBuffers.
 StructuredBuffer<float4x4> sb_boneTransforms : register(t9); // read as column major, actually is row major.
 StructuredBuffer<Light> sb_lights : register(t10);
+StructuredBuffer<float4x4> sb_decaldata : register(t16);
 
 //Nikkis stuff:
 Texture2D t_waterBlend       : register(t17);
@@ -101,6 +112,11 @@ Texture2D t_waterTextureN    : register(t21);
 //StructuredBuffer<DirectionalLight> sb_directionalLights : register();
 //StructuredBuffer<uint> sb_pointLightIndexList : register();
 //StructuredBuffer<Frustum> sb_frustums : register();
+
+TextureCube t_radiance              : register(t96);
+TextureCube t_irradiance            : register(t97);
+TextureCube t_sky                   : register(t98);
+Texture2D t_BRDFLUT                 : register(t99);
 
 
 //---------------------------------------------------------------------------

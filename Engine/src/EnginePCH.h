@@ -6,10 +6,12 @@
 
 // Turn this to 1 if you want to see the very beautiful demo menu
 #define DRAW_TEMP_2D 0
-#define DEBUG_SNAPSHOT 0
+#define DEBUG_SNAPSHOT 1
 
 #define USE_MIPMAPS 1
 #define RENDER_GRID 0
+
+#define RENDER_AINODES 0
 
 //Macros
 #if RENDER_IMGUI
@@ -17,6 +19,7 @@
 #else
 #define IMGUI(a) do {} while(0)
 #endif
+
 
 
 // Windows
@@ -66,6 +69,7 @@
 #include <dwrite.h>
 #include <dwrite_3.h>
 #include <d2d1.h>
+#include <d2d1_1.h>
 #include <ctime>
 #include <Keyboard.h>
 #include <Mouse.h>
@@ -134,3 +138,15 @@ const std::string TEXTUREPATH	= "../Assets/Textures/";
 const std::string ANIMATIONPATH = "../Assets/Animations/";
 const std::string ANIMATORPATH	= "../Assets/Animators/";
 const std::string FONTPATH		= "../Assets/Fonts/";
+const std::string BOUNDSPATH	= "../Assets/Bounds/";
+const std::string ASSETLOADER	= "../Assets/Models/Loader.txt";
+const std::string BOUNDSLOADER	= "../Assets/Bounds/Loader.txt";
+
+
+template<typename Type>
+struct entt::type_seq<Type> {
+	static entt::id_type value() ENTT_NOEXCEPT {
+		static const entt::id_type value = (ecs::RegisterAsAbility<Type>(), internal::type_seq::next());
+		return value;
+	}
+};

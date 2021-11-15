@@ -1,26 +1,40 @@
 #include "EnginePCH.h"
 #include "Scene.h"
 #include <omp.h>
+#include "Systems.h"
 
 Scene::Scene()
 	: m_IsRenderingColliders(true), m_updateAnimation(true)
 {
 	m_publicBuffer.Create(D3D11Core::Get().Device());
+	m_publicDecalBuffer.Create(D3D11Core::Get().Device());
 	m_ColliderHitBuffer.Create(D3D11Core::Get().Device());
 	thread::RenderThreadHandler::Get().SetObjectsBuffer(&m_renderableCopies);
 
 	m_defaultCamera = CreateEntity();
 	m_defaultCamera.AddComponent<comp::Camera3D>()->camera.Initialize(sm::Vector3(0, 0, 0), sm::Vector3(0, 0, 1), sm::Vector3(0, 1, 0), sm::Vector2(1000, 1000), CAMERATYPE::DEFAULT);
 	SetCurrentCameraEntity(m_defaultCamera);
+
+	m_sky.Initialize("kiara1dawn.dds");
 }
 
 void Scene::Update(float dt)
 {
+	//Update all the animations
+	if (m_updateAnimation)
+	{
+		m_registry.view<comp::Animator>().each([&](comp::Animator& anim)
+			{
+				if (anim.animator)
+					anim.animator->Update();
+			});
+	}
+	
+
 	m_2dHandler.Update();
 	PROFILE_FUNCTION();
 
 	// Emit event
-
 	GetCurrentCamera()->Update(dt);
 	BasicScene::Update(dt);
 
@@ -32,24 +46,25 @@ void Scene::Update(float dt)
 		m_renderableAnimCopies[0].clear();
 
 		m_registry.view<comp::Renderable, comp::Transform>().each([&](entt::entity entity, comp::Renderable& r, comp::Transform& t)
-		{
-			r.data.worldMatrix = ecs::GetMatrix(t);
-			
-			//Check if the model has an animator too
-			comp::Animator* anim = m_registry.try_get<comp::Animator>(entity);
-			if (anim != nullptr)
 			{
-				m_renderableAnimCopies[0].push_back({r, *anim});
-			}
-			else
-			{
-				m_renderableCopies[0].push_back(r);
-			}
-		});
-		
+				r.data.worldMatrix = ecs::GetMatrix(t);
+
+				//Check if the model has an animator too
+				comp::Animator* anim = m_registry.try_get<comp::Animator>(entity);
+				if (anim != nullptr)
+				{
+					m_renderableAnimCopies[0].push_back({ r, *anim });
+				}
+				else
+				{
+					m_renderableCopies[0].push_back(r);
+				}
+			});
 		m_renderableCopies.Swap();
 		m_renderableAnimCopies.Swap();
+		GetCurrentCamera()->Swap();
 	}
+
 	if (!m_debugRenderableCopies.IsSwapped())
 	{
 		m_debugRenderableCopies[0].clear();
@@ -57,13 +72,13 @@ void Scene::Update(float dt)
 			{
 				comp::BoundingOrientedBox* obb = m_registry.try_get<comp::BoundingOrientedBox>(entity);
 				comp::BoundingSphere* sphere = m_registry.try_get<comp::BoundingSphere>(entity);
-				
+
 				comp::Transform transform;
 				transform.rotation = sm::Quaternion::Identity;
 
 				if (obb != nullptr)
 				{
-					transform.scale = sm::Vector3(obb->Extents);
+					transform.scale = obb->Extents;
 					transform.position = obb->Center;
 					transform.rotation = obb->Orientation;
 				}
@@ -72,19 +87,24 @@ void Scene::Update(float dt)
 					transform.scale = sm::Vector3(sphere->Radius);
 					transform.position = sphere->Center;
 				}
-				
+
 				r.data.worldMatrix = ecs::GetMatrix(transform);
 				m_debugRenderableCopies[0].push_back(r);
 			});
 
 		m_debugRenderableCopies.Swap();
 	}
+}
 
+void Scene::Update2D()
+{
+	m_2dHandler.Update();
 }
 
 void Scene::Render()
 {
 	PROFILE_FUNCTION();
+
 	thread::RenderThreadHandler::Get().SetObjectsBuffer(&m_renderableCopies);
 	// Divides up work between threads.
 	const render_instructions_t inst = thread::RenderThreadHandler::Get().Launch(static_cast<int>(m_renderableCopies[1].size()));
@@ -93,14 +113,14 @@ void Scene::Render()
 	D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, buffers);
 
 	// Render everything on same thread.
-	if((inst.start | inst.stop) == 0)
+	if ((inst.start | inst.stop) == 0)
 	{
 		// System that renders Renderable component
 		for (const auto& it : m_renderableCopies[1])
 		{
 			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
 			if (it.model)
-				it.model->Render();
+				it.model->Render(D3D11Core::Get().DeviceContext());
 		}
 	}
 	// Render third part of the scene with immediate context
@@ -112,7 +132,7 @@ void Scene::Render()
 			const auto& it = m_renderableCopies[1][i];
 			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
 			if (it.model)
-				it.model->Render();
+				it.model->Render(D3D11Core::Get().DeviceContext());
 		}
 	}
 
@@ -148,7 +168,7 @@ void Scene::RenderDebug()
 			m_ColliderHitBuffer.SetData(D3D11Core::Get().DeviceContext(), it.isColliding);
 
 			if (it.model)
-				it.model->Render();
+				it.model->Render(D3D11Core::Get().DeviceContext());
 		}
 
 		// Emit event
@@ -161,6 +181,16 @@ void Scene::RenderDebug()
 void Scene::Render2D()
 {
 	m_2dHandler.Render();
+}
+
+void Scene::RenderSkybox()
+{
+	m_sky.Render();
+}
+
+Skybox* Scene::GetSkybox()
+{
+	return &m_sky;
 }
 
 bool Scene::IsRenderReady() const
@@ -187,58 +217,17 @@ void Scene::RenderAnimation()
 {
 	PROFILE_FUNCTION();
 
-	// Divides up work between threads.
-	const render_instructions_t inst = thread::RenderThreadHandler::Get().Launch(static_cast<int>(m_renderableAnimCopies[1].size()));
-	
-	ID3D11Buffer* const buffers[1] = { m_publicBuffer.GetBuffer() };
-	D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, buffers);
-
-	// Render everything on same thread
-	if ((inst.start | inst.stop) == 0)
+	for (auto& it : m_renderableAnimCopies[1])
 	{
-		//Update all the animators
-		if (m_updateAnimation)
-		{
-			m_registry.view<comp::Animator>().each([&](comp::Animator& anim)
-				{
-					anim.animator->Update();
-				});
-		}
-
-		for (auto& it : m_renderableAnimCopies[1])
-		{
-			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.first.data);
-			it.second.animator->Bind();
-			it.first.model->Render();
-			it.second.animator->Unbind();
-		}
+		m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.first.data);
+		ID3D11Buffer* const buffer = {
+			m_publicBuffer.GetBuffer()
+		};
+		D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, &buffer);
+		it.second.animator->Bind();
+		it.first.model->Render(D3D11Core::Get().DeviceContext());
+		it.second.animator->Unbind();
 	}
-	// Render third part of the scene with immediate context
-	else
-	{
-		for (int i = inst.start; i < inst.stop; i++)
-		{
-			//Update all the animators
-			if (m_updateAnimation)
-			{
-				m_registry.view<comp::Animator>().each([&](comp::Animator& anim)
-					{
-						anim.animator->Update();
-					});
-			}
-
-			auto& it = m_renderableAnimCopies[1][i];
-			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.first.data);
-
-			it.second.animator->Bind();
-			it.first.model->Render();
-			it.second.animator->Unbind();
-		}
-	}
-
-	// Run any available Command lists from worker threads.
-	thread::RenderThreadHandler::ExecuteCommandLists();
-
 	// Emit event
 	publish<ESceneRender>();
 

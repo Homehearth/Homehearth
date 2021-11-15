@@ -316,6 +316,21 @@ bool PipelineManager::CreateSamplerStates()
     samplerDesc.BorderColor[3] = 0;
 
     hr = D3D11Core::Get().Device()->CreateSamplerState(&samplerDesc, m_pointSamplerState.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+
+    // Setup for Cubemap SamplerState
+    samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+    samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+    samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+    samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+    samplerDesc.MipLODBias = 0.0f;
+    samplerDesc.MaxAnisotropy = 4;
+    samplerDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+    samplerDesc.MinLOD = 0;
+    samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
+
+    hr = D3D11Core::Get().Device()->CreateSamplerState(&samplerDesc, m_cubemapSamplerState.GetAddressOf());
 
     return !FAILED(hr);
 }
@@ -328,8 +343,8 @@ bool PipelineManager::CreateBlendStates()
 
     D3D11_RENDER_TARGET_BLEND_DESC rtbd;
     ZeroMemory(&rtbd, sizeof(D3D11_RENDER_TARGET_BLEND_DESC));
-	
-    // Setup for Opaque BlendState.
+
+    // Setup Opaque blend state
     rtbd.BlendEnable = 0;
     rtbd.BlendOp = D3D11_BLEND_OP_ADD;
     rtbd.SrcBlend = D3D11_BLEND_ONE;
@@ -342,8 +357,24 @@ bool PipelineManager::CreateBlendStates()
     blendStateDesc.AlphaToCoverageEnable = 0;
     blendStateDesc.IndependentBlendEnable = 0;
 
+    D3D11_BLEND_DESC blendDesc = {};
+    blendDesc.AlphaToCoverageEnable = false;
+    blendDesc.IndependentBlendEnable = FALSE;
+    blendDesc.RenderTarget[0].BlendEnable = true;
+    blendDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+    blendDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+    blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+    blendDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+    blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+    blendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+    blendDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ZERO;
+
+    HRESULT hr = m_d3d11->Device()->CreateBlendState(&blendDesc, m_blendStateAlphaBlending.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+
     // Create m_blendStatepOpaque.
-    HRESULT hr = m_d3d11->Device()->CreateBlendState(&blendStateDesc, m_blendStatepOpaque.GetAddressOf());
+    hr = m_d3d11->Device()->CreateBlendState(&blendStateDesc, m_blendStatepOpaque.GetAddressOf());
     if (FAILED(hr))
         return false;
 
@@ -452,6 +483,18 @@ bool PipelineManager::CreateTextureEffectConstantBuffer()
     if (FAILED(hr))
     {
         LOG_WARNING("failed to create textureEffectConstantBuffer");
+        return false;
+    }
+
+    std::string shaderByteCodeSky = m_skyboxVertexShader.GetShaderByteCode();
+    D3D11_INPUT_ELEMENT_DESC skyboxVertexShaderDesc[1] =
+    {
+        {"SKYPOS", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
+    };
+
+    if (FAILED(hr = D3D11Core::Get().Device()->CreateInputLayout(skyboxVertexShaderDesc, 1, shaderByteCodeSky.c_str(), shaderByteCodeSky.length(), &m_skyboxInputLayout)))
+    {
+        LOG_WARNING("failed creating m_skyboxInputLayout.");
         return false;
     }
 
@@ -582,6 +625,12 @@ bool PipelineManager::CreateShaders()
         return false;
     }
 
+    if (!m_skyboxVertexShader.Create("Skybox_vs"))
+    {
+        LOG_WARNING("failed creating Skox_vs.");
+        return false;
+    }
+
     if (!m_defaultPixelShader.Create("Model_ps"))
     {
         LOG_WARNING("failed creating Model_ps.");
@@ -609,6 +658,12 @@ bool PipelineManager::CreateShaders()
     if (!m_debugPixelShader.Create("Debug_ps"))
     {
         LOG_WARNING("failed creating Debug_ps.");
+        return false;
+    }
+
+    if (!m_skyboxPixelShader.Create("Skybox_ps"))
+    {
+        LOG_WARNING("failed creating Skybox_ps.");
         return false;
     }
 

@@ -25,12 +25,17 @@ void Renderer::Initialize(Window* pWindow)
 		Had to disable the depth pass to get alpha testing to work correctly... -Filip
 	*/
 	//AddPass(&m_depthPass);  // 1
+	AddPass(&m_decalPass);
+	m_decalPass.Create();
 	AddPass(&m_basePass);   // 2
 	AddPass(&m_animPass);	// 3
+	AddPass(&m_skyPass);
 
 	//m_depthPass.SetEnable(true);
 	m_basePass.SetEnable(true);
 	m_animPass.SetEnable(true);
+	m_decalPass.SetEnable(true);
+	m_skyPass.SetEnable(true);
 
 #ifdef _DEBUG
 	AddPass(&m_debugPass);  // 4
@@ -62,26 +67,32 @@ void Renderer::Render(Scene* pScene)
 	{
 		if (!m_passes.empty())
 		{
-			this->UpdatePerFrame(pScene->GetCurrentCamera());
-			thread::RenderThreadHandler::SetCamera(pScene->GetCurrentCamera());
+			m_basePass.m_skyboxRef = pScene->GetSkybox();
+			m_animPass.m_skyboxRef = pScene->GetSkybox();
+			if (pScene->GetCurrentCamera()->IsSwapped())
+			{
+				this->UpdatePerFrame(pScene->GetCurrentCamera());
+				thread::RenderThreadHandler::SetCamera(pScene->GetCurrentCamera());
 			/*
 				Optimize idead: Render/Update lights once instead of per pass?
 				Set lights once.
 			*/
-			for (int i = 0; i < m_passes.size(); i++)
-			{
-				m_currentPass = i;
-				IRenderPass* pass = m_passes[i];
-				if (pass->IsEnabled())
+				for (int i = 0; i < m_passes.size(); i++)
 				{
-					pass->SetLights(pScene->GetLights());
-					pass->PreRender(pScene->GetCurrentCamera());
-					pass->Render(pScene);
-					pass->PostRender();
+					m_currentPass = i;
+					IRenderPass* pass = m_passes[i];
+					if (pass->IsEnabled())
+					{
+						pass->SetLights(pScene->GetLights());
+						pass->PreRender(pScene->GetCurrentCamera());
+						pass->Render(pScene);
+						pass->PostRender();
+					}
 				}
-			}
 
-			pScene->ReadyForSwap();
+				pScene->GetCurrentCamera()->ReadySwap();
+				pScene->ReadyForSwap();
+			}
 		}
 	}
 }
@@ -98,6 +109,9 @@ void Renderer::AddPass(IRenderPass* pass)
 
 void Renderer::UpdatePerFrame(Camera* pCam)
 {
-	// Update Camera constant buffer.
-	m_d3d11->DeviceContext()->UpdateSubresource(pCam->m_viewConstantBuffer.Get(), 0, nullptr, pCam->GetCameraMatrixes(), 0, 0);
+	if (pCam)
+	{
+		// Update Camera constant buffer.
+		m_d3d11->DeviceContext()->UpdateSubresource(pCam->m_viewConstantBuffer.Get(), 0, nullptr, pCam->GetCameraMatrixes(), 0, 0);
+	}
 }
