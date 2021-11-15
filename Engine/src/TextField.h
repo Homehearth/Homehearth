@@ -37,6 +37,7 @@ namespace rtd
 
 		// Get the buffer from textfield directly.
 		std::string* RawGetBuffer();
+		void SetActive();
 
 		// Inherited via Element2D
 		virtual void Draw() override;

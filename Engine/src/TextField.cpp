@@ -101,6 +101,12 @@ std::string* rtd::TextField::RawGetBuffer()
 	return &m_stringText;
 }
 
+void rtd::TextField::SetActive()
+{
+	m_isUsed = true;
+	m_canvas->ShowBorder();
+}
+
 void rtd::TextField::Draw()
 {
 	if (m_canvas)

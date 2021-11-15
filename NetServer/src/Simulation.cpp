@@ -279,7 +279,8 @@ void Simulation::ResetPlayer(Entity player)
 	health->isAlive = true;
 
 
-	player.AddComponent<comp::BoundingOrientedBox>()->Extents = { 2.0f,2.0f,2.0f };
+	//player.AddComponent<comp::BoundingOrientedBox>()->Extents = { 2.0f,2.0f,2.0f };
+	player.AddComponent<comp::BoundingSphere>()->Radius = 3.f;
 
 	//Collision will handle this entity as a dynamic one
 	player.AddComponent<comp::Tag<TagType::DYNAMIC>>();
@@ -440,8 +441,12 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 					Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(scene, e.dt);
 				}
 				{
-					PROFILE_SCOPE("Collision Box/Sphere");
-					Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingSphere>(scene, e.dt);
+					PROFILE_SCOPE("Collision Sphere/Box");
+					Systems::CheckCollisions<comp::BoundingSphere, comp::BoundingOrientedBox>(scene, e.dt);
+				}
+				{
+					PROFILE_SCOPE("Collision Sphere/Sphere");
+					Systems::CheckCollisions<comp::BoundingSphere, comp::BoundingSphere>(scene, e.dt);
 				}
 				
 				Systems::MovementSystem(scene, e.dt);
@@ -497,7 +502,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 	m_removedEntities.clear();
 
 
-	//this->BuildMapColliders(mapColliders);
+	this->BuildMapColliders(mapColliders);
 
 	m_pCurrentScene = m_pLobbyScene;
 
@@ -636,44 +641,7 @@ std::unordered_map<uint32_t, Entity>::iterator Simulation::RemovePlayer(std::uno
 
 	return it;
 }
-bool Simulation::AddNPC(uint32_t npcId)
-{
-	//LOG_INFO("NPC with ID: %ld added to game!", npcId);
 
-	//Entity npc = m_pGameScene->CreateEntity();
-	//npc.AddComponent<comp::Transform>()->position = sm::Vector3(0.f, 0.f, 0.f);
-	//npc.AddComponent<comp::Velocity>();
-	//npc.AddComponent<comp::MeshName>()->name = "StreetLamp.obj";
-	//npc.AddComponent<comp::NPC>()->state = comp::NPC::State::ASTAR;
-	//npc.AddComponent<comp::Network>()->id = npcId;
-	//npc.AddComponent<comp::BoundingOrientedBox>();
-
-	//CollisionSystem::Get().AddOnCollision(npc, [&](Entity other)
-	//	{
-	//		comp::NPC* otherNPC = m_pCurrentScene->GetRegistry()->try_get<comp::NPC>(other);
-	//		if (otherNPC)
-	//		{
-	//			LOG_INFO("NPC COLLISION!");
-	//		}
-	//	});
-	return true;
-}
-bool Simulation::RemoveNPC(uint32_t npcId)
-{
-	message<GameMsg> msg;
-	msg.header.id = GameMsg::Game_RemoveEntity;
-	msg << npcId << 1U;
-	this->Broadcast(msg);
-	m_pGameScene->ForEachComponent<comp::Network>([npcId](Entity e, comp::Network& n)
-		{
-			if (n.id == npcId)
-			{
-				LOG_INFO("Removed NPC %u from game scene", n.id);
-				e.Destroy();
-			}
-		});
-	return true;
-}
 void Simulation::SendSnapshot()
 {
 	PROFILE_FUNCTION();
@@ -860,11 +828,12 @@ void Simulation::BuildMapColliders(std::vector<dx::BoundingOrientedBox>* mapColl
 	for (size_t i = 0; i < mapColliders->size(); i++)
 	{
 		collider = m_pGameScene->CreateEntity();
-		collider.AddComponent<comp::BoundingOrientedBox>()->Center = mapColliders->at(i).Center;
-		collider.GetComponent<comp::BoundingOrientedBox>()->Extents = mapColliders->at(i).Extents;
-		collider.GetComponent<comp::BoundingOrientedBox>()->Orientation = mapColliders->at(i).Orientation;
+		dx::BoundingOrientedBox* obb = collider.AddComponent<comp::BoundingOrientedBox>();
+		obb->Center = mapColliders->at(i).Center;
+		obb->Extents = mapColliders->at(i).Extents;
+		obb->Orientation = mapColliders->at(i).Orientation;
 		collider.AddComponent<comp::Tag<TagType::STATIC>>();
-		collider.AddComponent<comp::Tag<TagType::MAP_BOUNDS>>();
+		//collider.AddComponent<comp::Network>();
 	}
 }
 
