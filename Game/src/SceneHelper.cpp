@@ -200,7 +200,7 @@ namespace sceneHelp
 			game->SetScene("Options");
 			});
 		sc->SetPrimeButtonMeasurements(draw_t(0.0f, 0.0f, width / 24, height / 16));
-		scene.Add2DCollection(test, "test");
+		scene.Add2DCollection(test, "ScrolldownMenu");
 
 		rtd::Button* externalLinkBtn = connectFields->AddElement<rtd::Button>("Button.png", draw_t(width - width / 4.f, height - (height / 5), width / 8.f, height / 16));
 		externalLinkBtn->GetText()->SetScale(0.5f);
