@@ -13,13 +13,16 @@ void Collection2D::UpdateCollection()
 {
 	for (size_t i = 0; i < elements.size(); i++)
 	{
-		if (elements[i]->CheckClick())
+		if (elements[i]->IsVisible())
 		{
-			elements[i]->OnClick();
-		}
-		if (elements[i]->CheckHover())
-		{
-			elements[i]->OnHover();
+			if (elements[i]->CheckClick())
+			{
+				elements[i]->OnClick();
+			}
+			if (elements[i]->CheckHover())
+			{
+				elements[i]->OnHover();
+			}
 		}
 	}
 }

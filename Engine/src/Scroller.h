@@ -31,6 +31,7 @@ namespace rtd
 		*/
 		Scroller(const draw_t& startPos, const sm::Vector2& endPos);
 		~Scroller();
+		void SetPrimeButtonMeasurements(const draw_t& opts);
 
 		/*
 			Add an element to the scroller. Any element added will be

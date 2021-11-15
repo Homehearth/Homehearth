@@ -1,21 +1,23 @@
 #include "EnginePCH.h"
 #include "MoneyUI.h"
 #include <omp.h>
+#include "Stats.h"
+#include <cmath>
 
 using namespace rtd;
 
 void rtd::MoneyUI::Update()
 {
-    if ((omp_get_wtime() - lastUpdate) > 0.0016f)
+    if ((omp_get_wtime() - lastUpdate) > ((double)Stats::Get().GetFrameTime() * 3.0))
     {
-        if(m_localMoney < m_networkMoney)
-           m_localMoney += 1;
+        if (m_localMoney < m_networkMoney)
+            m_localMoney += 1;
         else
-           m_localMoney -= 1;
+            m_localMoney -= 1;
 
         m_text->SetText("Money: " + std::to_string(m_localMoney));
+        lastUpdate = omp_get_wtime();
     }
-    lastUpdate = omp_get_wtime();
 }
 
 rtd::MoneyUI::MoneyUI(const draw_text_t& opts)

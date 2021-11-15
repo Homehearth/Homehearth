@@ -116,7 +116,7 @@ void GridSystem::Initialize(Vector2I mapSize, sm::Vector3 position, std::string 
 }
 
 
-void GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, PathFinderManager* aiHandler)
+bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, PathFinderManager* aiHandler)
 {
 	const float MAX_RADIUS = 20.f;
 	const float MIN_RADIUS = 10.f;
@@ -197,6 +197,8 @@ void GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 
 							aiHandler->GetNodeByID(Vector2I(row, col))->reachable = false;
 							aiHandler->GetNodeByID(Vector2I(row, col))->connections.clear();
+
+							return true;
 						}
 					}
 					//else if (tile.type == TileType::BUILDING || tile.type == TileType::UNPLACABLE || tile.type == TileType::DEFAULT)
@@ -212,6 +214,7 @@ void GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 		}
 	}
 
+	return false;
 }
 
 uint32_t GridSystem::GetTileCount() const

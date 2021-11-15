@@ -39,7 +39,10 @@ namespace ServerSystems
 {
 	void WaveSystem(Simulation* simulation, std::queue<Wave>& waves);
 	void NextWaveConditions(Simulation* simulation, Timer& timer, int timeToFinish);
+
+	void UpdatePlayerWithInput(Simulation* simulation, HeadlessScene& scene, float dt);
 	void PlayerStateSystem(Simulation* simulation, HeadlessScene& scene, float dt);
+	
 	void CheckGameOver(Simulation* simulation, HeadlessScene& scene);
 	void TickBTSystem(Simulation* simulation, HeadlessScene& scene);
 }

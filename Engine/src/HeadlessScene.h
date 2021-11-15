@@ -80,6 +80,11 @@ void BasicScene<Inheriter>::ForEachOrComponent(F&& f)
 template<typename Inheriter>
 template<typename ...T, typename F>
 void BasicScene<Inheriter>::ForEachComponent(F func) {
+	static_assert(
+		std::is_assignable_v<std::function<void(Entity, T&...)>, F> ||
+		std::is_assignable_v<std::function<void(T&...)>, F> && 
+		"Not a valid function signature");
+
 	if constexpr (std::is_assignable_v<std::function<void(Entity, T&...)>, F>) 
 	{
 		m_registry.view<T...>().each([&](entt::entity e, T&... comp)
@@ -92,11 +97,7 @@ void BasicScene<Inheriter>::ForEachComponent(F func) {
 	{
 		m_registry.view<T...>().each(func);
 	}
-	else
-	{
-		throw std::runtime_error("No valid function argument");
-	}
-
+	
 }
 
 class HeadlessScene : public BasicScene<HeadlessScene>

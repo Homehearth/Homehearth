@@ -108,7 +108,7 @@ namespace ecs {
         auto func = abilityType.func("get"_hs);
         if (!func)
         {
-            LOG_WARNING("Could not use ability, did you register component as ability with ecs::RegisterAsAbility?");
+            LOG_WARNING("Could not get ability, did you register component as ability with ecs::RegisterAsAbility?");
             return false;
         }
         auto instance = func.invoke({}, entity);
@@ -135,7 +135,7 @@ namespace ecs {
         auto func = abilityType.func("get"_hs);
         if (!func)
         {
-            LOG_WARNING("Could not use ability, did you register component as ability with ecs::RegisterAsAbility?");
+            LOG_WARNING("Could not get ability, did you register component as ability with ecs::RegisterAsAbility?");
             return false;
         }
         auto instance = func.invoke({}, entity);

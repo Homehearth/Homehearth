@@ -189,7 +189,6 @@ void Systems::HealingSystem(HeadlessScene& scene, float dt)
 	// HealAbility system
 	scene.ForEachComponent<comp::HealAbility, comp::Player>([](comp::HealAbility& ability, comp::Player& player)
 		{
-			
 			if (ecs::ReadyToUse(&ability))
 			{
 				LOG_INFO("Used healing ability");
@@ -208,11 +207,23 @@ void Systems::HealthSystem(HeadlessScene& scene, float dt, uint32_t& money_ref)
 			{
 				comp::Network* net = entity.GetComponent<comp::Network>();
 				health.isAlive = false;
-				if (!entity.GetComponent<comp::Player>())
+				// increase money
+				if (entity.GetComponent<comp::NPC>())
 				{
-					entity.Destroy();
-					money_ref += 5;
+					money_ref += 2;
 				}
+
+				// if player
+				comp::Player* p = entity.GetComponent<comp::Player>();
+				if (p)
+				{
+					p->respawnTimer = 10.f;
+					entity.RemoveComponent<comp::Tag<TagType::DYNAMIC>>();
+				}
+				else {
+					entity.Destroy();
+				}
+				
 
 			}
 		});
