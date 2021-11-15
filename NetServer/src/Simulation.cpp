@@ -152,7 +152,7 @@ void Simulation::CreateWaves()
 	//left bottom corner { 490.f, -150.0f });   right bottom corner { 170, -80.0f }
 	//left top corner { 520.f, -540.0f }        right top corner { 80.0f, -500.0f }
 	Wave wave1, wave2, wave3, wave4, wave5; // Default: WaveType::Zone
-	{ // Wave_1 Group_1
+	{
 		Wave::Group group1;
 		group1.AddEnemy(EnemyType::Default,4);
 		group1.SetSpawnPoint({ 490.f, -150.0f });
@@ -162,7 +162,7 @@ void Simulation::CreateWaves()
 
 	{ // Wave_2
 		Wave::Group group1, group2;
-		//Wave::Group group2;
+
 		group1.AddEnemy(EnemyType::Default, 3);
 		group2.AddEnemy(EnemyType::Default, 2);
 		group2.AddEnemy(EnemyType::Runner, 1);
@@ -176,7 +176,7 @@ void Simulation::CreateWaves()
 
 	{ // Wave_3
 		Wave::Group group1, group2, group3, group4;
-		//Wave::Group group2;
+
 		group1.AddEnemy(EnemyType::Default, 3);
 		group1.AddEnemy(EnemyType::Runner, 1);
 		group1.SetSpawnPoint({ 490.f, -150.0f });
@@ -200,7 +200,7 @@ void Simulation::CreateWaves()
 
 	{ // Wave_4
 		Wave::Group group1, group2, group3, group4;
-		//Wave::Group group2;
+
 		group1.AddEnemy(EnemyType::Default, 4);
 		group1.AddEnemy(EnemyType::Runner, 1);
 		group1.SetSpawnPoint({ 490.f, -150.0f });
@@ -224,9 +224,9 @@ void Simulation::CreateWaves()
 		wave4.SetTimeLimit(45);
 	}
 
-	{ // Wave_5 BOOOSS
+	{ // Wave_5 BOSS
 		Wave::Group group1, group2, group3, group4;
-		//Wave::Group group2;
+
 		group1.AddEnemy(EnemyType::Default, 2);
 		group1.AddEnemy(EnemyType::BIGMOMMA, 1);
 		group1.SetSpawnPoint({ 490.f, -150.0f });
