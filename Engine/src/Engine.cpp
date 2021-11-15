@@ -248,16 +248,16 @@ void Engine::drawImGUI() const
 			{
 				std::string entityname = "Entity: " + std::to_string(static_cast<int>((entt::entity)e));
 
-				ImGui::Separator();
-				ImGui::Text(entityname.c_str());
-				ImGui::Text("Change 'Animation'");
-				char str[30] = "";
-				ImGui::InputText(entityname.c_str(), str, IM_ARRAYSIZE(str));
-				if (ImGui::IsKeyPressedMap(ImGuiKey_Enter))
+				const char* items[] = { "NONE", "IDLE", "WALK", "RUN", "PRIMARY_ATTACK", 
+										"SECONDARY_ATTACK", "ABILITY1", "ABILITY2", 
+										"ABILITY3", "ABILITY4", "TAKE_DAMAGE", "PLACE_DEFENCE" };
+				int index = (int)animComp.animator->GetCurrentState();
+
+				if (ImGui::ListBox(entityname.c_str(), &index, items, IM_ARRAYSIZE(items), 3))
 				{
 					if (animComp.animator)
 					{
-						animComp.animator->ChangeAnimation(str);
+						animComp.animator->ChangeAnimation(AnimationType(index));
 					}
 				}
 				ImGui::Spacing();

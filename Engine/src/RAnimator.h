@@ -17,28 +17,30 @@ class RAnimator : public resource::GResource
 private:
 	double							m_lastTick;
 	bool							m_useInterpolation;
-	std::vector<bone_keyFrames_t>	m_bones;										//Change to only bone_t later
+	std::vector<bone_keyFrames_t>	m_bones;				//Change to only bone_t later
 
-	//AnimationType m_currentAnim;
-	//std::unordered_map<AnimationType, std::shared_ptr<RAnimation>> m_animations;
+	//States
+	AnimationType m_currentType;
+	AnimationType m_nextType;
+	AnimationType m_defaultType;
 
-	std::unordered_map<std::string, std::shared_ptr<RAnimation>> m_animations;		//Change to std::unique_ptr<animation_t>
-
-	//Will later be: animation_t* m_defaultAnim;
-	double						m_currentFrameTime;
-	std::shared_ptr<RAnimation> m_defaultAnim;
-	std::shared_ptr<RAnimation> m_currentAnim;
-	std::shared_ptr<RAnimation> m_nextAnim;
-
-	/*
 	struct animation_t
 	{
 		std::shared_ptr<RAnimation> animation;
-		double currentFrameTime;
-		std::unordermap<std::string, std::array<UINT, 3>> lastKeys;
-	}
-	*/
-	//some kind of double m_currentBlendTime;
+		double						frameTimer = 0;
+		double						blendTimer = 0;
+	};
+
+	//All the animations
+	std::unordered_map<AnimationType, animation_t> m_animations;
+
+	//Blendstates
+	/*struct twoStates
+	{
+		AnimationType from;
+		AnimationType to;
+	};
+	std::unordered_map<twoStates, double> blendStates;*/
 
 	//Matrices that is going up to the GPU - structure buffer
 	std::vector<sm::Matrix>			 m_finalMatrices;
@@ -46,14 +48,20 @@ private:
 	ComPtr<ID3D11ShaderResourceView> m_bonesSB_RSV;
 
 private:
+	//All the bones
 	bool LoadSkeleton(const std::vector<bone_t>& skeleton);
 	bool CreateBonesSB();
 	void UpdateStructureBuffer();
 
-	AnimationType GetAnimationType(const std::string& name) const;
+	//Enum
+	AnimationType StringToAnimationType(const std::string& name) const;
 
 	//Reset the time of currentFrametime
-	void ResetTime();
+	void ResetLastKeys();
+	void ResetAnimation(const AnimationType& type);
+
+	//Return if we shall update
+	bool UpdateTime();
 
 	//void BlendAnimation();
 	//void OneAnimation();
@@ -73,7 +81,10 @@ public:
 	void RandomizeTime();
 
 	//Switch animation - not filename
-	bool ChangeAnimation(const std::string& name);
+	bool ChangeAnimation(const AnimationType& type);
+
+	//Get the enum of what state the animator is in
+	const AnimationType& GetCurrentState() const;
 
 	//Update the animation
 	void Update();

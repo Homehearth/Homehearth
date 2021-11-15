@@ -22,35 +22,18 @@ struct bone_keyFrames_t
 	std::array<UINT, 3> lastKeys	= {};
 };
 
-/*
-	Keyframes structures
-*/
-struct positionKey_t
-{
-	double		time;
-	sm::Vector3 val;
-};
-struct scaleKey_t
-{
-	double		time;
-	sm::Vector3	val;
-};
-struct rotationKey_t
-{
-	double			time;
-	sm::Quaternion	val;
-};
-
-
 enum class AnimationType
 {
 	NONE,
-	IDLE1,
-	IDLE2,
+	IDLE,
 	WALK,
 	RUN,
-	ATTACK,
-	ATTACK2,
+	PRIMARY_ATTACK,
+	SECONDARY_ATTACK,
+	ABILITY1,
+	ABILITY2,
+	ABILITY3,
+	ABILITY4,
 	TAKE_DAMAGE,
 	PLACE_DEFENCE
 };

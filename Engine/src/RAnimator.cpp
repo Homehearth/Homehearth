@@ -3,9 +3,11 @@
 
 RAnimator::RAnimator()
 {
-	m_lastTick = 0;
-	m_useInterpolation = true;
-	m_currentFrameTime = 0;
+	m_lastTick			= 0;
+	m_useInterpolation	= true;
+	m_currentType		= AnimationType::NONE;
+	m_nextType			= AnimationType::NONE;
+	m_defaultType		= AnimationType::NONE;
 }
 
 RAnimator::~RAnimator()
@@ -49,9 +51,12 @@ void RAnimator::SetInterpolation(bool& toggle)
 
 void RAnimator::RandomizeTime()
 {
-	if (m_currentAnim)
+	auto iterator = m_animations.find(m_currentType);
+
+	//Check that it is okay to edit this animation
+	if (iterator != m_animations.end())
 	{
-		m_currentFrameTime = std::rand() / m_currentAnim->GetDuraction();
+		iterator->second.frameTimer = std::rand() / m_animations[m_currentType].animation->GetDuraction();
 	}
 }
 
@@ -103,23 +108,91 @@ void RAnimator::UpdateStructureBuffer()
 	D3D11Core::Get().DeviceContext()->Unmap(m_bonesSB_Buffer.Get(), 0);
 }
 
-AnimationType RAnimator::GetAnimationType(const std::string& name) const
+AnimationType RAnimator::StringToAnimationType(const std::string& name) const
 {
-	//dx::XMFLOAT3X4
+	AnimationType type = AnimationType::NONE;
+	
+	std::unordered_map<std::string, AnimationType> animationMap
+	{
+		{"NONE",				AnimationType::NONE},
+		{"IDLE",				AnimationType::IDLE},
+		{"WALK",				AnimationType::WALK},
+		{"RUN",					AnimationType::RUN},
+		{"PRIMARY_ATTACK",		AnimationType::PRIMARY_ATTACK},
+		{"SECONDARY_ATTACK",	AnimationType::SECONDARY_ATTACK},
+		{"ABILITY1",			AnimationType::ABILITY1},
+		{"ABILITY2",			AnimationType::ABILITY2},
+		{"ABILITY3",			AnimationType::ABILITY3},
+		{"ABILITY4",			AnimationType::ABILITY4},
+		{"TAKE_DAMAGE",			AnimationType::TAKE_DAMAGE},
+		{"PLACE_DEFENCE",		AnimationType::PLACE_DEFENCE}
+	};
 
-	return AnimationType();
+	//Search for the keyword
+	if (animationMap.find(name) != animationMap.end())
+	{
+		type = animationMap[name];
+	}
+	return  type;
 }
 
-void RAnimator::ResetTime()
+void RAnimator::ResetLastKeys()
 {
-	//Reset frametime
-	m_currentFrameTime = 0;
-
 	//Reset safespot in bones
 	for (size_t i = 0; i < m_bones.size(); i++)
 	{
 		m_bones[i].lastKeys = { 0, 0, 0 };
 	}
+}
+
+void RAnimator::ResetAnimation(const AnimationType& type)
+{
+	if (m_animations.find(type) != m_animations.end())
+	{
+		animation_t* anim = &m_animations[type];
+		anim->frameTimer = 0;
+		anim->blendTimer = 0;
+	}
+}
+
+bool RAnimator::UpdateTime()
+{
+	bool shouldUpdate = true;
+	animation_t* current = &m_animations[m_currentType];
+
+	if (current)
+	{
+		double tick = current->animation->GetTicksPerFrame() * Stats::Get().GetUpdateTime();
+
+		if (m_lastTick != tick)
+		{
+			m_lastTick = tick;
+			current->frameTimer += tick;
+
+			if (current->frameTimer >= current->animation->GetDuraction())
+			{
+				if (current->animation->IsLoopable())
+				{
+					current->frameTimer = fmod(current->frameTimer, current->animation->GetDuraction());
+				}
+				else
+				{
+					//Go to next state
+					shouldUpdate = false;
+					ChangeAnimation(m_defaultType);
+				}
+			}
+		}
+		else
+		{
+			shouldUpdate = false;
+		}
+	}
+	else
+	{
+		shouldUpdate = false;
+	}
+	return shouldUpdate;
 }
 
 bool RAnimator::Create(const std::string& filename)
@@ -160,21 +233,29 @@ bool RAnimator::Create(const std::string& filename)
 			std::string animName;
 			ss >> key >> animName;
 
-			std::shared_ptr<RAnimation> animation = ResourceManager::Get().GetResource<RAnimation>(animName);
-			if (animation)
+			AnimationType animType = StringToAnimationType(key);
+			if (animType != AnimationType::NONE)
 			{
-				m_animations[key] = animation;
-				lastAnimation = animation;
+				std::shared_ptr<RAnimation> animation = ResourceManager::Get().GetResource<RAnimation>(animName);
+				if (animation)
+				{
+					animation_t animStruct;
+					animStruct.animation = animation;
+					m_animations[animType] = animStruct;
+					lastAnimation = animation;
+				}				
 			}
 		}
 		else if (keyword == "defaultAnim")
 		{
 			std::string key;
 			ss >> key;
-			if (m_animations.find(key) != m_animations.end())
+
+			AnimationType animType = StringToAnimationType(key);
+			if (m_animations.find(animType) != m_animations.end())
 			{
-				m_defaultAnim = m_animations[key];
-				m_currentAnim = m_defaultAnim;
+				m_currentType = animType;
+				m_defaultType = animType;
 			}
 		}
 		else if (keyword == "loopable")
@@ -199,21 +280,35 @@ bool RAnimator::Create(const std::string& filename)
 	return true;
 }
 
-bool RAnimator::ChangeAnimation(const std::string& name)
+bool RAnimator::ChangeAnimation(const AnimationType& type)
 {
-	auto iterator = m_animations.find(name);
+	bool foundAnim = false;
 
-	//Animation does not exist in this animator...
-	if (iterator == m_animations.end())
+	//Don't change if we already are in this state.
+	if (m_currentType != type)
 	{
-		return false;
+		//Change animation if it exist
+		if (m_animations.find(type) != m_animations.end())
+		{
+			ResetAnimation(m_currentType);
+			ResetAnimation(type);
+			m_currentType = type;
+			ResetLastKeys();
+			foundAnim = true;
+		}
+		if (type == AnimationType::NONE)
+		{
+			ResetAnimation(m_currentType);
+			m_currentType = type;
+			ResetLastKeys();
+		}
 	}
-	
-	m_currentAnim = m_animations[name];
+	return foundAnim;
+}
 
-	ResetTime();
-
-	return true;
+const AnimationType& RAnimator::GetCurrentState() const
+{
+	return m_currentType;
 }
 
 void RAnimator::Update()
@@ -227,10 +322,10 @@ void RAnimator::Update()
 	//Needs a skeleton
 	if (!m_bones.empty())
 	{
-		if (m_currentAnim)
+		if (m_currentType != AnimationType::NONE)
 		{
 			//Do blending
-			if (m_nextAnim)
+			if (m_nextType != AnimationType::NONE)
 			{
 				//TODO: Make separate function
 				//tickCurrent =  ...
@@ -240,49 +335,24 @@ void RAnimator::Update()
 			//Do regular
 			else
 			{
-				//TODO: Make separate function
-				bool reachedEnd = false;
-
-				double tick = m_currentAnim->GetTicksPerFrame() * Stats::Get().GetUpdateTime();
-
-				if (m_lastTick != tick)
+				if (UpdateTime())
 				{
-					m_lastTick = tick;
-					m_currentFrameTime += tick;
+					std::vector<sm::Matrix> modelMatrices;
+					modelMatrices.resize(m_bones.size(), sm::Matrix::Identity);
 
-					if (m_currentFrameTime >= m_currentAnim->GetDuraction())
+					for (size_t i = 0; i < m_bones.size(); i++)
 					{
-						if (m_currentAnim->IsLoopable())
-						{
-							m_currentFrameTime = fmod(m_currentFrameTime, m_currentAnim->GetDuraction());
-						}
+						sm::Matrix localMatrix = m_animations[m_currentType].animation->GetMatrix(m_bones[i].name, m_animations[m_currentType].frameTimer, m_bones[i].lastKeys, m_useInterpolation);
+
+						if (m_bones[i].parentIndex == -1)
+							modelMatrices[i] = localMatrix;
 						else
-						{
-							m_currentAnim = m_defaultAnim;
-							ResetTime();
-							reachedEnd = true;
-						}
+							modelMatrices[i] = localMatrix * modelMatrices[m_bones[i].parentIndex];
+
+						m_finalMatrices[i] = m_bones[i].inverseBind * modelMatrices[i];
 					}
 
-					if (!reachedEnd)
-					{
-						std::vector<sm::Matrix> modelMatrices;
-						modelMatrices.resize(m_bones.size(), sm::Matrix::Identity);
-
-						for (size_t i = 0; i < m_bones.size(); i++)
-						{
-							sm::Matrix localMatrix = m_currentAnim->GetMatrix(m_bones[i].name, m_currentFrameTime, m_bones[i].lastKeys, m_useInterpolation);
-
-							if (m_bones[i].parentIndex == -1)
-								modelMatrices[i] = localMatrix;
-							else
-								modelMatrices[i] = localMatrix * modelMatrices[m_bones[i].parentIndex];
-
-							m_finalMatrices[i] = m_bones[i].inverseBind * modelMatrices[i];
-						}
-
-						modelMatrices.clear();
-					}
+					modelMatrices.clear();
 				}
 			}
 		}

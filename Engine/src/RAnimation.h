@@ -1,5 +1,4 @@
 #pragma once
-#include "AnimStructures.h"
 struct aiAnimation;
 struct aiNodeAnim;
 
@@ -18,7 +17,25 @@ private:
 	double	m_duration;
 	bool	m_isLoopable;
 
-	struct KeyFrames
+	/*
+		Keyframes structures
+	*/
+	struct positionKey_t
+	{
+		double		time;
+		sm::Vector3 val;
+	};
+	struct scaleKey_t
+	{
+		double		time;
+		sm::Vector3	val;
+	};
+	struct rotationKey_t
+	{
+		double			time;
+		sm::Quaternion	val;
+	};
+	struct keyFrames_t
 	{
 		std::vector<positionKey_t>	position;
 		std::vector<scaleKey_t>		scale;
@@ -26,7 +43,7 @@ private:
 	};
 
 	//Each bone has a list of translations
-	std::unordered_map<std::string, KeyFrames> m_keyFrames;
+	std::unordered_map<std::string, keyFrames_t> m_keyFrames;
 
 private:
 	void LoadPositions(const std::string& bonename, aiNodeAnim* channel);

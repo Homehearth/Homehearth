@@ -24,7 +24,7 @@ RAnimation::~RAnimation()
 */
 void RAnimation::LoadPositions(const std::string& bonename, aiNodeAnim* channel)
 {
-	KeyFrames keyframes;
+	keyFrames_t keyframes;
 
 	//Keyframe exist - copy values
 	auto key = m_keyFrames.find(bonename);
@@ -45,7 +45,7 @@ void RAnimation::LoadPositions(const std::string& bonename, aiNodeAnim* channel)
 
 void RAnimation::LoadScales(const std::string& bonename, aiNodeAnim* channel)
 {
-	KeyFrames keyframes;
+	keyFrames_t keyframes;
 
 	//Keyframe exist - copy values
 	auto key = m_keyFrames.find(bonename);
@@ -66,7 +66,7 @@ void RAnimation::LoadScales(const std::string& bonename, aiNodeAnim* channel)
 
 void RAnimation::LoadRotations(const std::string& bonename, aiNodeAnim* channel)
 {
-	KeyFrames keyframes;
+	keyFrames_t keyframes;
 	rotationKey_t rot;
 
 	//Keyframe exist - copy values
