@@ -891,6 +891,11 @@ GridSystem& Simulation::GetGrid()
 	return m_grid;
 }
 
+Currency& Simulation::GetCurrency()
+{
+	return m_currency;
+}
+
 void Simulation::SetLobbyScene()
 {
 	m_pCurrentScene = m_pLobbyScene;

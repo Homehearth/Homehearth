@@ -100,6 +100,7 @@ public:
 	Entity* GetPlayer(uint32_t entityID);
 
 	GridSystem& GetGrid();
+	Currency& GetCurrency();
 
 	void SetLobbyScene();
 	void SetGameScene();
