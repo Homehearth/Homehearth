@@ -5,9 +5,9 @@ RAnimator::RAnimator()
 {
 	m_lastTick			= 0;
 	m_useInterpolation	= true;
-	m_currentType		= AnimationType::NONE;
-	m_nextType			= AnimationType::NONE;
-	m_defaultType		= AnimationType::NONE;
+	m_currentType		= EAnimationType::NONE;
+	m_nextType			= EAnimationType::NONE;
+	m_defaultType		= EAnimationType::NONE;
 }
 
 RAnimator::~RAnimator()
@@ -108,24 +108,24 @@ void RAnimator::UpdateStructureBuffer()
 	D3D11Core::Get().DeviceContext()->Unmap(m_bonesSB_Buffer.Get(), 0);
 }
 
-AnimationType RAnimator::StringToAnimationType(const std::string& name) const
+EAnimationType RAnimator::StringToAnimationType(const std::string& name) const
 {
-	AnimationType type = AnimationType::NONE;
+	EAnimationType type = EAnimationType::NONE;
 	
-	std::unordered_map<std::string, AnimationType> animationMap
+	std::unordered_map<std::string, EAnimationType> animationMap
 	{
-		{"NONE",				AnimationType::NONE},
-		{"IDLE",				AnimationType::IDLE},
-		{"WALK",				AnimationType::WALK},
-		{"RUN",					AnimationType::RUN},
-		{"PRIMARY_ATTACK",		AnimationType::PRIMARY_ATTACK},
-		{"SECONDARY_ATTACK",	AnimationType::SECONDARY_ATTACK},
-		{"ABILITY1",			AnimationType::ABILITY1},
-		{"ABILITY2",			AnimationType::ABILITY2},
-		{"ABILITY3",			AnimationType::ABILITY3},
-		{"ABILITY4",			AnimationType::ABILITY4},
-		{"TAKE_DAMAGE",			AnimationType::TAKE_DAMAGE},
-		{"PLACE_DEFENCE",		AnimationType::PLACE_DEFENCE}
+		{"NONE",				EAnimationType::NONE},
+		{"IDLE",				EAnimationType::IDLE},
+		{"WALK",				EAnimationType::WALK},
+		{"RUN",					EAnimationType::RUN},
+		{"PRIMARY_ATTACK",		EAnimationType::PRIMARY_ATTACK},
+		{"SECONDARY_ATTACK",	EAnimationType::SECONDARY_ATTACK},
+		{"ABILITY1",			EAnimationType::ABILITY1},
+		{"ABILITY2",			EAnimationType::ABILITY2},
+		{"ABILITY3",			EAnimationType::ABILITY3},
+		{"ABILITY4",			EAnimationType::ABILITY4},
+		{"TAKE_DAMAGE",			EAnimationType::TAKE_DAMAGE},
+		{"PLACE_DEFENCE",		EAnimationType::PLACE_DEFENCE}
 	};
 
 	//Search for the keyword
@@ -145,7 +145,7 @@ void RAnimator::ResetLastKeys()
 	}
 }
 
-void RAnimator::ResetAnimation(const AnimationType& type)
+void RAnimator::ResetAnimation(const EAnimationType& type)
 {
 	if (m_animations.find(type) != m_animations.end())
 	{
@@ -233,8 +233,8 @@ bool RAnimator::Create(const std::string& filename)
 			std::string animName;
 			ss >> key >> animName;
 
-			AnimationType animType = StringToAnimationType(key);
-			if (animType != AnimationType::NONE)
+			EAnimationType animType = StringToAnimationType(key);
+			if (animType != EAnimationType::NONE)
 			{
 				std::shared_ptr<RAnimation> animation = ResourceManager::Get().GetResource<RAnimation>(animName);
 				if (animation)
@@ -251,7 +251,7 @@ bool RAnimator::Create(const std::string& filename)
 			std::string key;
 			ss >> key;
 
-			AnimationType animType = StringToAnimationType(key);
+			EAnimationType animType = StringToAnimationType(key);
 			if (m_animations.find(animType) != m_animations.end())
 			{
 				m_currentType = animType;
@@ -280,7 +280,7 @@ bool RAnimator::Create(const std::string& filename)
 	return true;
 }
 
-bool RAnimator::ChangeAnimation(const AnimationType& type)
+bool RAnimator::ChangeAnimation(const EAnimationType& type)
 {
 	bool foundAnim = false;
 
@@ -296,7 +296,7 @@ bool RAnimator::ChangeAnimation(const AnimationType& type)
 			ResetLastKeys();
 			foundAnim = true;
 		}
-		if (type == AnimationType::NONE)
+		if (type == EAnimationType::NONE)
 		{
 			ResetAnimation(m_currentType);
 			m_currentType = type;
@@ -306,7 +306,7 @@ bool RAnimator::ChangeAnimation(const AnimationType& type)
 	return foundAnim;
 }
 
-const AnimationType& RAnimator::GetCurrentState() const
+const EAnimationType& RAnimator::GetCurrentState() const
 {
 	return m_currentType;
 }
@@ -322,10 +322,10 @@ void RAnimator::Update()
 	//Needs a skeleton
 	if (!m_bones.empty())
 	{
-		if (m_currentType != AnimationType::NONE)
+		if (m_currentType != EAnimationType::NONE)
 		{
 			//Do blending
-			if (m_nextType != AnimationType::NONE)
+			if (m_nextType != EAnimationType::NONE)
 			{
 				//TODO: Make separate function
 				//tickCurrent =  ...

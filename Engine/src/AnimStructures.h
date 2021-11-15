@@ -22,7 +22,7 @@ struct bone_keyFrames_t
 	std::array<UINT, 3> lastKeys	= {};
 };
 
-enum class AnimationType
+enum class EAnimationType
 {
 	NONE,
 	IDLE,

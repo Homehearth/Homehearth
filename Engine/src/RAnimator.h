@@ -20,9 +20,9 @@ private:
 	std::vector<bone_keyFrames_t>	m_bones;				//Change to only bone_t later
 
 	//States
-	AnimationType m_currentType;
-	AnimationType m_nextType;
-	AnimationType m_defaultType;
+	EAnimationType m_currentType;
+	EAnimationType m_nextType;
+	EAnimationType m_defaultType;
 
 	struct animation_t
 	{
@@ -32,15 +32,25 @@ private:
 	};
 
 	//All the animations
-	std::unordered_map<AnimationType, animation_t> m_animations;
+	std::unordered_map<EAnimationType, animation_t> m_animations;
 
 	//Blendstates
-	/*struct twoStates
+	/*struct twoStates_t
 	{
 		AnimationType from;
 		AnimationType to;
+
+		twoStates_t(AnimationType x, AnimationType y)
+		{
+			this->from = x;
+			this->to = y;
+		}
+		bool operator==(const twoStates_t& state) const
+		{
+			return from == state.from && to == state.to;
+		}
 	};
-	std::unordered_map<twoStates, double> blendStates;*/
+	std::unordered_map<twoStates_t, double> blendStates;*/
 
 	//Matrices that is going up to the GPU - structure buffer
 	std::vector<sm::Matrix>			 m_finalMatrices;
@@ -54,11 +64,11 @@ private:
 	void UpdateStructureBuffer();
 
 	//Enum
-	AnimationType StringToAnimationType(const std::string& name) const;
+	EAnimationType StringToAnimationType(const std::string& name) const;
 
 	//Reset the time of currentFrametime
 	void ResetLastKeys();
-	void ResetAnimation(const AnimationType& type);
+	void ResetAnimation(const EAnimationType& type);
 
 	//Return if we shall update
 	bool UpdateTime();
@@ -81,10 +91,10 @@ public:
 	void RandomizeTime();
 
 	//Switch animation - not filename
-	bool ChangeAnimation(const AnimationType& type);
+	bool ChangeAnimation(const EAnimationType& type);
 
 	//Get the enum of what state the animator is in
-	const AnimationType& GetCurrentState() const;
+	const EAnimationType& GetCurrentState() const;
 
 	//Update the animation
 	void Update();

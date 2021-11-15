@@ -257,7 +257,7 @@ void Engine::drawImGUI() const
 				{
 					if (animComp.animator)
 					{
-						animComp.animator->ChangeAnimation(AnimationType(index));
+						animComp.animator->ChangeAnimation(EAnimationType(index));
 					}
 				}
 				ImGui::Spacing();
