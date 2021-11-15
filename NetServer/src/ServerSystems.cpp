@@ -211,6 +211,68 @@ void ServerSystems::NextWaveConditions(Simulation* simulation, Timer& timer, int
 	}
 }
 
+void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene& scene, float dt)
+{
+	scene.ForEachComponent<comp::Player, comp::Transform, comp::Velocity>([](comp::Player& p, comp::Transform& t, comp::Velocity& v)
+		{
+			// update velocity
+			sm::Vector3 vel = sm::Vector3(static_cast<float>(p.lastInputState.axisHorizontal), 0, static_cast<float>(p.lastInputState.axisVertical));
+			vel.Normalize();
+
+			sm::Vector3 cameraToPlayer = t.position - p.lastInputState.mouseRay.origin;
+			cameraToPlayer.y = 0;
+			cameraToPlayer.Normalize();
+			float targetRotation = atan2(-cameraToPlayer.x, -cameraToPlayer.z);
+			vel = sm::Vector3::TransformNormal(vel, sm::Matrix::CreateRotationY(targetRotation));
+
+			if (vel.Length() > 0.01f)
+				p.state = comp::Player::State::WALK;
+
+			vel *= p.runSpeed;
+			v.vel = vel;
+		});
+
+	scene.ForEachComponent<comp::Player>([&](Entity e, comp::Player& p)
+		{
+			// Do stuff based on input
+
+			// Get point on ground where mouse hovers over
+			Plane_t plane;
+			plane.normal = sm::Vector3(0, 1, 0);
+			plane.point = sm::Vector3(0, 0, 0);
+
+			if (!p.lastInputState.mouseRay.Intersects(plane, &p.mousePoint))
+			{
+				LOG_WARNING("Mouse click ray missed walking plane. Should not happen...");
+			}
+
+			// check if using abilities
+			if (p.lastInputState.leftMouse) // is held
+			{
+				p.state = comp::Player::State::LOOK_TO_MOUSE; // set state even if ability is not ready for use yet
+				if (ecs::UseAbility(e, p.primaryAbilty, &p.mousePoint))
+				{
+
+				}
+			}
+			else if (p.lastInputState.rightMouse) // was pressed
+			{
+				LOG_INFO("Pressed right");
+				if (ecs::UseAbility(e, p.secondaryAbilty, &p.mousePoint))
+				{
+
+				}
+			}
+
+			//Place defence on grid
+			if (p.lastInputState.key_b)
+				simulation->GetGrid().PlaceDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, Blackboard::Get().GetAIHandler());
+
+		});
+
+
+}
+
 void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& scene, float dt)
 {
 	PROFILE_FUNCTION();
@@ -218,33 +280,19 @@ void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& sce
 		{
 			if (ecs::IsPlayerUsingAnyAbility(e))
 			{
-				p.state = comp::Player::State::ATTACK;
+				p.state = comp::Player::State::LOOK_TO_MOUSE; // always use this state if any ability is being used
 			}
-			else
-			{
-				p.state = comp::Player::State::IDLE;
-			}
+
 		});
 
-	scene.ForEachComponent<comp::Player, comp::Health, comp::Transform>([&](Entity e, comp::Player& p, comp::Health& health, comp::Transform& t)
+	scene.ForEachComponent<comp::Player, comp::Health>([&](Entity e, comp::Player& p, comp::Health& health)
 		{
-			if (health.currentHealth <= 0 && p.state != comp::Player::State::DEAD)
-			{
-				p.state = comp::Player::State::DEAD;
-				p.respawnTimer = 10.f;
-				health.isAlive = false;
-				e.RemoveComponent<comp::Tag<TagType::DYNAMIC>>();
-				
-
-				LOG_INFO("Player id %u died...", e.GetComponent<comp::Network>()->id);
-			}
-
-			if(p.state == comp::Player::State::DEAD)
+			if(!health.isAlive)
 			{
 				comp::Velocity* vel = e.GetComponent<comp::Velocity>();
 				if (vel)
 				{
-					// dont move if in dead state
+					// dont move if dead
 					vel->vel = sm::Vector3::Zero;
 				}
 
@@ -252,7 +300,6 @@ void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& sce
 
 				if(p.respawnTimer < 0.01f)
 				{
-					
 					simulation->ResetPlayer(e);
 
 					LOG_INFO("Player id %u Respawnd...", e.GetComponent<comp::Network>()->id);
@@ -260,33 +307,28 @@ void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& sce
 			}
 		});
 
-	scene.ForEachComponent<comp::Player, comp::AttackAbility, comp::Velocity, comp::Transform>([&](comp::Player& p, comp::AttackAbility& a, comp::Velocity& v, comp::Transform& t)
+	scene.ForEachComponent<comp::Player, comp::Velocity, comp::Transform>([&](comp::Player& p, comp::Velocity& v, comp::Transform& t)
 		{
-			if (p.state == comp::Player::State::ATTACK)
+			if (p.state == comp::Player::State::LOOK_TO_MOUSE)
 			{
+				// turns player to look at mouse world pos
 				p.fowardDir = p.mousePoint - t.position;
 				p.fowardDir.Normalize();
 				v.vel *= 0.2f;
 			}
-
-		});
-	// turns player with velocity
-	scene.ForEachComponent<comp::Player, comp::Velocity>([&](comp::Player& p, comp::Velocity& v)
-		{
-			if (v.vel.Length() > 0.001f && p.state != comp::Player::State::ATTACK)
+			else if (p.state == comp::Player::State::WALK)
 			{
-				sm::Vector3 vel;
-				v.vel.Normalize(vel);
-
-				p.state = comp::Player::State::TURN;
-				p.fowardDir = vel;
+				// turns player with velocity
+				sm::Vector3 dir;
+				v.vel.Normalize(dir);
+				p.fowardDir = dir;
 			}
 		});
-
+	
 	// if player is turning, turns until forward is reached
 	scene.ForEachComponent<comp::Player, comp::Transform>([&](Entity e, comp::Player& p, comp::Transform& t)
 		{
-			if (p.state == comp::Player::State::TURN || p.state == comp::Player::State::ATTACK)
+			if (p.state == comp::Player::State::WALK || p.state == comp::Player::State::LOOK_TO_MOUSE)
 			{
 				float time = dt * p.runSpeed * 0.5f;
 				
@@ -320,9 +362,9 @@ void ServerSystems::CheckGameOver(Simulation* simulation, HeadlessScene& scene)
 	bool gameOver = true;
 	
 	//Check if all players is dead
-	scene.ForEachComponent<comp::Player, comp::AttackAbility>([&](comp::Player& p, comp::AttackAbility& a)
+	scene.ForEachComponent<comp::Player, comp::Health>([&](comp::Player& p, comp::Health& h)
 		{
-			if (p.state != comp::Player::State::DEAD)
+			if (h.isAlive)
 			{
 				gameOver = false;
 			}

@@ -99,6 +99,8 @@ public:
 	HeadlessScene* GetGameScene() const;
 	Entity* GetPlayer(uint32_t entityID);
 
+	GridSystem& GetGrid();
+
 	void SetLobbyScene();
 	void SetGameScene();
 	void ResetGameScene();

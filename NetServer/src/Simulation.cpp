@@ -229,18 +229,18 @@ void Simulation::ResetPlayer(Entity player)
 	player.AddComponent<comp::MeshName>()->name = "Knight.fbx";
 	player.AddComponent<comp::AnimatorName>()->name = "Knight.anim";
 
-	comp::AttackAbility* combatStats = player.AddComponent<comp::AttackAbility>();
 	
+	comp::AttackAbility* attackAbility = player.AddComponent<comp::AttackAbility>();
 
 	// only if Melee
 	if (playerComp->classType == comp::Player::Class::WARRIOR)
 	{
-		combatStats->cooldown = 0.3f;
-		combatStats->attackDamage = 40.f;
-		combatStats->isRanged = false;
-		combatStats->lifetime = 0.1f;
-		combatStats->useTime = 0.2f;
-		combatStats->delay = 0.1f;
+		attackAbility->cooldown = 0.3f;
+		attackAbility->attackDamage = 40.f;
+		attackAbility->isRanged = false;
+		attackAbility->lifetime = 0.1f;
+		attackAbility->useTime = 0.2f;
+		attackAbility->delay = 0.1f;
 
 		playerComp->primaryAbilty = entt::resolve<comp::AttackAbility>();
 		playerComp->secondaryAbilty = entt::resolve<comp::AttackAbility>();
@@ -248,14 +248,15 @@ void Simulation::ResetPlayer(Entity player)
 	}
 	else if(playerComp->classType == comp::Player::Class::MAGE) 
 	{
-		combatStats->cooldown = 0.5f;
-		combatStats->attackDamage = 20.f;
-		combatStats->isRanged = true;
-		combatStats->lifetime = 2.0f;
-		combatStats->projectileSpeed = 40.f;
-		combatStats->attackRange = 2.0f;
-		combatStats->useTime = 0.3f;
-		combatStats->delay = 0.1f;
+		attackAbility->cooldown = 0.5f;
+		attackAbility->attackDamage = 20.f;
+		attackAbility->isRanged = true;
+		attackAbility->lifetime = 2.0f;
+		attackAbility->projectileSpeed = 40.f;
+		attackAbility->attackRange = 2.0f;
+		attackAbility->useTime = 0.3f;
+		attackAbility->delay = 0.1f;
+		playerComp->primaryAbilty = entt::resolve<comp::AttackAbility>();
 
 		comp::HealAbility* healAbility = player.AddComponent<comp::HealAbility>();
 		healAbility->cooldown = 5.0f;
@@ -265,7 +266,6 @@ void Simulation::ResetPlayer(Entity player)
 		healAbility->range = 50.f;
 		healAbility->useTime = 1.0f;
 
-		playerComp->primaryAbilty = entt::resolve<comp::AttackAbility>();
 		playerComp->secondaryAbilty = entt::resolve<comp::HealAbility>();
 
 
@@ -409,57 +409,11 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 			{
 				Entity e = pair.first;
 				comp::Player* p = e.GetComponent<comp::Player>();
-				if (p->state != comp::Player::State::DEAD)
+				comp::Health* h = e.GetComponent<comp::Health>();
+				if (h->isAlive)
 				{
 					InputState input = pair.second;
-					
-					// update velocity
-					sm::Vector3 vel = sm::Vector3(static_cast<float>(input.axisHorizontal), 0, static_cast<float>(input.axisVertical));
-					vel.Normalize();
-
-					sm::Vector3 cameraToPlayer = e.GetComponent<comp::Transform>()->position - input.mouseRay.origin;
-					cameraToPlayer.y = 0;
-					cameraToPlayer.Normalize();
-					float targetRotation = atan2(-cameraToPlayer.x, -cameraToPlayer.z);
-					vel = sm::Vector3::TransformNormal(vel, sm::Matrix::CreateRotationY(targetRotation));
-
-					vel *= p->runSpeed;
-					e.GetComponent<comp::Velocity>()->vel = vel;
-					
-					// Get point on ground where mouse hovers over
-					Plane_t plane;
-					plane.normal = sm::Vector3(0, 1, 0);
-					plane.point = sm::Vector3(0, 0, 0);
-					
-					if (!input.mouseRay.Intersects(plane, &p->mousePoint))
-					{
-						LOG_WARNING("Mouse click ray missed walking plane. Should not happen...");
-					}
-				
-
-					// check if attacking
-					if (input.leftMouse) // is held
-					{
-						
-						if (ecs::UseAbility(e, p->primaryAbilty, &p->mousePoint))
-						{
-							
-						}
-					
-					}
-					else if (input.rightMouse) // was pressed
-					{
-						LOG_INFO("Pressed right");
-						if (ecs::UseAbility(e, p->secondaryAbilty, &p->mousePoint))
-						{
-							
-						}
-					}
-
-					//Place defence on grid
-					if (input.key_b)
-						m_grid.PlaceDefence(input.mouseRay, e.GetComponent<comp::Network>()->id, Blackboard::Get().GetAIHandler());
-
+					p->lastInputState = input;
 				}
 			}
 
@@ -469,12 +423,14 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 				ServerSystems::CheckGameOver(this, scene);
 
 				AIBehaviors::UpdateBlackBoard(scene);
+				
 				ServerSystems::TickBTSystem(this, scene);
+				ServerSystems::UpdatePlayerWithInput(this, scene, e.dt);
 				ServerSystems::PlayerStateSystem(this, scene, e.dt);
+
 				Systems::MovementSystem(scene, e.dt);
 				Systems::MovementColliderSystem(scene, e.dt);
-				//Systems::AISystem(scene);
-
+				
 				Systems::UpdateAbilities(scene, e.dt);
 				Systems::CombatSystem(scene, e.dt);
 				Systems::HealingSystem(scene, e.dt);
@@ -928,6 +884,11 @@ Entity* Simulation::GetPlayer(uint32_t entityID)
 	}
 
 	return &m_players[entityID];
+}
+
+GridSystem& Simulation::GetGrid()
+{
+	return m_grid;
 }
 
 void Simulation::SetLobbyScene()

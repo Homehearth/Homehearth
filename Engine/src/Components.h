@@ -147,9 +147,8 @@ namespace ecs
 			enum class State
 			{
 				IDLE,
-				ATTACK,
-				TURN,
-				DEAD
+				LOOK_TO_MOUSE,
+				WALK
 			} state = State::IDLE;
 
 			enum class Class
@@ -163,6 +162,7 @@ namespace ecs
 
 			float runSpeed;
 
+			InputState lastInputState;
 			sm::Vector3 mousePoint;
 			sm::Vector3 fowardDir;
 
