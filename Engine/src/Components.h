@@ -3,6 +3,7 @@
 #include "RModel.h"
 #include "RAnimator.h"
 #include "ResourceManager.h"
+#include "BehaviorTreeBT.h"
 #include <stack>
 
 namespace ecs
@@ -111,6 +112,12 @@ namespace ecs
 					model = ResourceManager::Get().GetResource<RModel>("Sphere.obj");
 				}
 			}
+		};
+
+		struct BehaviorTree
+		{
+			BT::ParentNode* root;
+			BT::LeafNode* currentNode;
 		};
 		
 

@@ -2,10 +2,10 @@
 #include "Server.h"
 #include "HeadlessEngine.h"
 #include "GridSystem.h"
-#include "AIHandler.h"
+#include "PathFinderManager.h"
 #include "ServerSystems.h"
 #include "Wave.h"
-
+#include "AIBehaviors.h"
 /*
 		Simulation defines each ongoing simulation from the perspective of the server
 		gameID identifies the simulation which each player has to give the server to keep track
@@ -20,7 +20,6 @@ private:
 	uint32_t m_gameID;
 	uint32_t m_tick;
 	GridSystem m_grid;
-	AIHandler m_aiHandler;
 
 	HeadlessScene* m_pLobbyScene;
 	HeadlessScene* m_pGameScene;

@@ -1,6 +1,6 @@
 #include "EnginePCH.h"
 #include "GridSystem.h"
-#include "AIHandler.h"
+#include "PathFinderManager.h"
 #define STB_IMAGE_IMPLEMENTATION
 
 GridSystem::GridSystem()
@@ -116,7 +116,7 @@ void GridSystem::Initialize(Vector2I mapSize, sm::Vector3 position, std::string 
 }
 
 
-void GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, AIHandler* aiHandler)
+void GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, PathFinderManager* aiHandler)
 {
 	float t = 0;
 
@@ -193,7 +193,7 @@ void GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, A
 							tileEntity.AddComponent<comp::MeshName>()->name = "Defence.obj";
 
 							aiHandler->GetNodeByID(Vector2I(row, col))->reachable = false;
-
+							aiHandler->GetNodeByID(Vector2I(row, col))->connections.clear();
 						}
 					}
 					//else if (tile.type == TileType::BUILDING || tile.type == TileType::UNPLACABLE || tile.type == TileType::DEFAULT)

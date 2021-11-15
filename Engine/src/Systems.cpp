@@ -305,7 +305,7 @@ void Systems::LightSystem(Scene& scene, float dt)
 
 }
 
-void Systems::AISystem(HeadlessScene& scene, AIHandler* aiHandler)
+void Systems::AISystem(HeadlessScene& scene, PathFinderManager* aiHandler)
 {
 	PROFILE_FUNCTION();
 
@@ -358,7 +358,7 @@ void Systems::AISystem(HeadlessScene& scene, AIHandler* aiHandler)
 				else
 				{
 					npc.currentNode = aiHandler->FindClosestNode(transformNPC->position);
-					aiHandler->AStarSearch(scene, entity);
+					aiHandler->AStarSearch(entity);
 					velocityTowardsPlayer->vel = sm::Vector3(0.f,0.f,0.f);
 				}
 

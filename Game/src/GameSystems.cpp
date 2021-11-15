@@ -7,7 +7,6 @@
 void GameSystems::MRayIntersectBoxSystem(Scene& scene)
 {
 	float t = 0;
-
 	scene.ForEachComponent<comp::BoundingOrientedBox, comp::Transform>([&](Entity entity, comp::BoundingOrientedBox& boxCollider, comp::Transform& transform)
 		{
 			//Collided with mouse TODO make it do someting?

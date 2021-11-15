@@ -11,7 +11,7 @@ void Simulation::InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg, c
 	{
 		if (!componentMask.test(i))
 			continue;
-
+		
 		switch (i)
 		{
 		case ecs::Component::TRANSFORM:
@@ -153,10 +153,26 @@ void Simulation::CreateWaves()
 	Wave wave1, wave2; // Default: WaveType::Zone
 	{ // Wave_1 Group_1
 		Wave::Group group1;
-		group1.AddEnemy(EnemyType::Default, 3);
+		group1.AddEnemy(EnemyType::Default,2);
 		group1.SetSpawnPoint({ 380.f, -220.0f });
+		Wave::Group group2;
+		group2.AddEnemy(EnemyType::Default, 2);
+		group2.SetSpawnPoint({ 154, -215.0f });
+		Wave::Group group3;
+		group3.AddEnemy(EnemyType::Default, 1);
+		group3.SetSpawnPoint({ 83.0f, -318.0f });
+		Wave::Group group4;
+		group4.AddEnemy(EnemyType::Default, 1);
+		group4.SetSpawnPoint({ 213.f, -516.0f });
+		Wave::Group group5;
+		group5.AddEnemy(EnemyType::Default, 1);
+		group5.SetSpawnPoint({ 387.f, -448.0f });
 		wave1.SetTimeLimit(5);
 		wave1.AddGroup(group1);
+		wave1.AddGroup(group2);
+		wave1.AddGroup(group3);
+		wave1.AddGroup(group4);
+		wave1.AddGroup(group5);
 	}
 
 	{ // Wave_1 Group_2
@@ -346,7 +362,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 
 					//Place defence on grid
 					if (input.rightMouse)
-						m_grid.PlaceDefence(input.mouseRay, e.GetComponent<comp::Network>()->id, &m_aiHandler);
+						m_grid.PlaceDefence(input.mouseRay, e.GetComponent<comp::Network>()->id, Blackboard::Get().GetAIHandler());
 
 				}
 			}
@@ -354,11 +370,13 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 			//  run all game logic systems
 			{
 				PROFILE_SCOPE("Systems");
+				AIBehaviors::UpdateBlackBoard(scene);
+				ServerSystems::TickBTSystem(this, scene);
 				ServerSystems::PlayerStateSystem(this, scene, e.dt);
 				ServerSystems::CheckGameOver(this, scene);
 				Systems::MovementSystem(scene, e.dt);
 				Systems::MovementColliderSystem(scene, e.dt);
-				Systems::AISystem(scene, &m_aiHandler);
+				//Systems::AISystem(scene);
 				Systems::CombatSystem(scene, e.dt);
 				{
 					PROFILE_SCOPE("Collision Box/Box");
@@ -396,7 +414,9 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 
 	//Gridsystem
 	m_grid.Initialize(gridOptions.mapSize, gridOptions.position, gridOptions.fileName, m_pGameScene);
-	m_aiHandler.CreateNodes(&m_grid);
+	//Create the nodes for AI handler on blackboard
+	Blackboard::Get().GetAIHandler()->CreateNodes(&m_grid);
+
 #if RENDER_AINODES
 	std::vector<std::vector<std::shared_ptr<Node>>> nodes = m_aiHandler.GetNodes();
 	for(int y = 0; y < nodes[0].size(); y++)
@@ -519,7 +539,7 @@ bool Simulation::AddPlayer(uint32_t playerID, const std::string& namePlate)
 	combatStats->isRanged = false;
 	combatStats->lifetime = 0.1f;
 	
-	player.AddComponent<comp::Health>();
+	player.AddComponent<comp::Health>()->currentHealth; //testing
 	player.AddComponent<comp::BoundingOrientedBox>()->Extents = { 2.0f,2.0f,2.0f };
 	
 	//Collision will handle this entity as a dynamic one
