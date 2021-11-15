@@ -192,13 +192,14 @@ namespace sceneHelp
 		//	});
 
 		Collection2D* test = new Collection2D;
-		rtd::Scroller* sc = test->AddElement<rtd::Scroller>(draw_t(0.0f, -480.0f, 160.0f, 480.0f), sm::Vector2(0, 0));
-		sc->AddButton("demoExitButton.png", draw_t(32.0f, -32.0f, 64.0f, 32.0f))->SetOnPressedEvent([=] {
+		rtd::Scroller* sc = test->AddElement<rtd::Scroller>(draw_t(0.0f, -(height / 16) * 3.0f, width / 24.0f, (height / 16) * 3.0f), sm::Vector2(0, 0));
+		sc->AddButton("demoExitButton.png", draw_t(0.0f, -(height / 16), width / 24, height / 16))->SetOnPressedEvent([=] {
 			game->Shutdown();
 			});
-		sc->AddButton("demo_options_button.png", draw_t(32.0f, -72.0f, 64.0f, 32.0f))->SetOnPressedEvent([=] {
+		sc->AddButton("demo_options_button.png", draw_t(0.0f, -(height / 16) * 2.0f, width / 24, height / 16))->SetOnPressedEvent([=] {
 			game->SetScene("Options");
 			});
+		sc->SetPrimeButtonMeasurements(draw_t(0.0f, 0.0f, width / 24, height / 16));
 		scene.Add2DCollection(test, "test");
 
 		rtd::Button* externalLinkBtn = connectFields->AddElement<rtd::Button>("Button.png", draw_t(width - width / 4.f, height - (height / 5), width / 8.f, height / 16));
@@ -412,13 +413,51 @@ namespace sceneHelp
 		const float height = (float)game->GetWindow()->GetHeight();
 		Scene& scene = game->GetScene("Options");
 
-
 		Collection2D* soundCollection = new Collection2D;
 		rtd::Slider* sl = soundCollection->AddElement<rtd::Slider>(D2D1::ColorF(0.0f, 0.0f, 0.0f), draw_t((width / 2) - (width / 9), height / 5, width / 9, height / 16), &game->m_masterVolume);
 		sl->SetMinPos(sm::Vector2((width / 8) - (width / 9)));
 		sl->SetMaxPos(sm::Vector2(width - (width / 8)));
 		sl->SetExplanationText("Master Volume: ");
+		soundCollection->Hide();
 		scene.Add2DCollection(soundCollection, "Sounds");
+
+		// Declaration
+		Collection2D* backButton = new Collection2D;
+
+		Collection2D* menu = new Collection2D;
+		rtd::Button* soundsButton = menu->AddElement<rtd::Button>("Button.png", draw_t(width / 8.0f, height / 8.0f, width / 4.0f, height / 8.0f));
+		rtd::Button* resolutionButton = menu->AddElement<rtd::Button>("Button.png", draw_t((width / 8.0f) * 5.0f, (height / 8.0f), width / 4.0f, height / 8.0f));
+		
+		rtd::Button* returnTo = menu->AddElement<rtd::Button>("Button.png", draw_t((width / 2.0f) - (width / 8.0f), height - (height / 4.0f), width / 4.0f, height / 8.0f));
+		menu->AddElement<rtd::Text>("Go Back", draw_text_t((width / 2.0f) - (width / 8.0f), height - (height / 4.0f), width / 4.0f, height / 8.0f));
+		returnTo->SetOnPressedEvent([=] {
+
+			game->SetScene("MainMenu");
+
+			});
+
+		menu->AddElement<rtd::Text>("Sounds", draw_text_t(width / 8.0f, height / 8.0f, width / 4.0f, height / 8.0f));
+		menu->AddElement<rtd::Text>("Resolution", draw_text_t((width / 8.0f) * 5.0f, (height / 8.0f), width / 4.0f, height / 8.0f));
+		soundsButton->SetOnPressedEvent([=]() {
+
+			soundCollection->Show();
+			menu->Hide();
+			backButton->Show();
+
+			});
+		scene.Add2DCollection(menu, "MenuButtons");
+
+		rtd::Button* gb = backButton->AddElement<rtd::Button>("Button.png", draw_t((width / 2.0f) - (width / 8.0f), height - (height / 4.0f), width / 4.0f, height / 8.0f));
+		backButton->AddElement<rtd::Text>("Go Back", draw_text_t((width / 2.0f) - (width / 8.0f), height - (height / 4.0f), width / 4.0f, height / 8.0f));
+		gb->SetOnPressedEvent([=] {
+
+			soundCollection->Hide();
+			menu->Show();
+			backButton->Hide();
+
+			});
+		backButton->Hide();
+		scene.Add2DCollection(backButton, "returnButton");
 	}
 
 	void SetupLoadingScene(Game* game)

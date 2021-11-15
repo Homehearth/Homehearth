@@ -457,8 +457,11 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 					}
 
 					//Place defence on grid
-					if (input.key_b)
-						m_grid.PlaceDefence(input.mouseRay, e.GetComponent<comp::Network>()->id, Blackboard::Get().GetAIHandler());
+					if (input.key_b && m_currency.GetAmount() >= (uint32_t)20)
+					{
+						if(m_grid.PlaceDefence(input.mouseRay, e.GetComponent<comp::Network>()->id, Blackboard::Get().GetAIHandler()))
+							m_currency.GetAmountRef() -= 20;
+					}
 
 				}
 			}
@@ -943,6 +946,11 @@ void Simulation::SetGameScene()
 {
 	ResetGameScene();
 	m_pCurrentScene = m_pGameScene;
+#ifdef _DEBUG
+	// During debug give players 1000 gold/monies.
+	m_currency.GetAmountRef() = 1000;
+
+#endif
 }
 
 void Simulation::ResetGameScene()

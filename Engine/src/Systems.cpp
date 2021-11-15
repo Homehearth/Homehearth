@@ -211,7 +211,7 @@ void Systems::HealthSystem(HeadlessScene& scene, float dt, uint32_t& money_ref)
 				if (!entity.GetComponent<comp::Player>())
 				{
 					entity.Destroy();
-					money_ref += 5;
+					money_ref += 10;
 				}
 
 			}
