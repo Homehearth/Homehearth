@@ -154,18 +154,18 @@ void Simulation::CreateWaves()
 	Wave wave1, wave2, wave3, wave4, wave5; // Default: WaveType::Zone
 	{
 		Wave::Group group1;
-		group1.AddEnemy(EnemyType::Default,4);
+		group1.AddEnemy(EnemyType::Default,4 + 1 * currentRound);
 		group1.SetSpawnPoint({ 490.f, -150.0f });
-		wave1.SetTimeLimit(5);
+		wave1.SetTimeLimit(5 * currentRound);
 		wave1.AddGroup(group1);
 	}
 
 	{ // Wave_2
 		Wave::Group group1, group2;
 
-		group1.AddEnemy(EnemyType::Default, 3);
-		group2.AddEnemy(EnemyType::Default, 2);
-		group2.AddEnemy(EnemyType::Runner, 1);
+		group1.AddEnemy(EnemyType::Default, 3 + currentRound);
+		group2.AddEnemy(EnemyType::Default, 2 + currentRound);
+		group2.AddEnemy(EnemyType::Runner, 1 + 1 * currentRound);
 		group1.SetSpawnPoint({ 490.f, -150.0f });
 		group2.SetSpawnPoint({ 170, -80.0f });
 		wave2.AddGroup(group1);
@@ -177,18 +177,18 @@ void Simulation::CreateWaves()
 	{ // Wave_3
 		Wave::Group group1, group2, group3, group4;
 
-		group1.AddEnemy(EnemyType::Default, 3);
-		group1.AddEnemy(EnemyType::Runner, 1);
+		group1.AddEnemy(EnemyType::Default, 3 + currentRound);
+		group1.AddEnemy(EnemyType::Runner, 1 + 1 * currentRound);
 		group1.SetSpawnPoint({ 490.f, -150.0f });
 
-		group2.AddEnemy(EnemyType::Default, 3);
-		group2.AddEnemy(EnemyType::Runner, 1);
+		group2.AddEnemy(EnemyType::Default, 3 + currentRound);
+		group2.AddEnemy(EnemyType::Runner, 1 + currentRound);
 		group2.SetSpawnPoint({ 170, -80.0f });
 
-		group3.AddEnemy(EnemyType::Default, 3);
+		group3.AddEnemy(EnemyType::Default, 3 + currentRound);
 		group3.SetSpawnPoint({ 80.0f, -500.0f });
 
-		group4.AddEnemy(EnemyType::Default, 2);
+		group4.AddEnemy(EnemyType::Default, 2 + currentRound);
 		group4.SetSpawnPoint({ 520.f, -540.0f });
 
 		wave3.AddGroup(group1);
@@ -201,20 +201,20 @@ void Simulation::CreateWaves()
 	{ // Wave_4
 		Wave::Group group1, group2, group3, group4;
 
-		group1.AddEnemy(EnemyType::Default, 4);
-		group1.AddEnemy(EnemyType::Runner, 1);
+		group1.AddEnemy(EnemyType::Default, 4 + currentRound);
+		group1.AddEnemy(EnemyType::Runner, 1 + currentRound);
 		group1.SetSpawnPoint({ 490.f, -150.0f });
 
-		group2.AddEnemy(EnemyType::Default, 4);
-		group2.AddEnemy(EnemyType::Runner, 1);
+		group2.AddEnemy(EnemyType::Default, 4 + currentRound);
+		group2.AddEnemy(EnemyType::Runner, 1 + currentRound);
 		group2.SetSpawnPoint({ 170, -80.0f });
 
-		group3.AddEnemy(EnemyType::Default, 2);
-		group3.AddEnemy(EnemyType::Runner, 2);
+		group3.AddEnemy(EnemyType::Default, 2 + currentRound);
+		group3.AddEnemy(EnemyType::Runner, 2 + currentRound);
 		group3.SetSpawnPoint({ 80.0f, -500.0f });
 
-		group4.AddEnemy(EnemyType::Default, 4);
-		group4.AddEnemy(EnemyType::Runner, 1);
+		group4.AddEnemy(EnemyType::Default, 4 + currentRound);
+		group4.AddEnemy(EnemyType::Runner, 1 + currentRound);
 		group4.SetSpawnPoint({ 520.f, -540.0f });
 
 		wave4.AddGroup(group1);
@@ -227,17 +227,17 @@ void Simulation::CreateWaves()
 	{ // Wave_5 BOSS
 		Wave::Group group1, group2, group3, group4;
 
-		group1.AddEnemy(EnemyType::Default, 2);
+		group1.AddEnemy(EnemyType::Default, 2 + currentRound);
 		group1.AddEnemy(EnemyType::BIGMOMMA, 1);
 		group1.SetSpawnPoint({ 490.f, -150.0f });
 
-		group2.AddEnemy(EnemyType::Default, 1);
+		group2.AddEnemy(EnemyType::Default, 1 + currentRound);
 		group2.SetSpawnPoint({ 170, -80.0f });
 
-		group3.AddEnemy(EnemyType::Default, 2);
+		group3.AddEnemy(EnemyType::Default, 2 + currentRound);
 		group3.SetSpawnPoint({ 80.0f, -500.0f });
 
-		group4.AddEnemy(EnemyType::Default, 1);
+		group4.AddEnemy(EnemyType::Default, 1 + currentRound);
 		group4.SetSpawnPoint({ 520.f, -540.0f });
 
 		wave5.AddGroup(group1);
@@ -274,7 +274,7 @@ void Simulation::ResetPlayer(Entity e)
 
 Simulation::Simulation(Server* pServer, HeadlessEngine* pEngine)
 	: m_pServer(pServer)
-	, m_pEngine(pEngine), m_pLobbyScene(nullptr), m_pGameScene(nullptr), m_pCurrentScene(nullptr)
+	, m_pEngine(pEngine), m_pLobbyScene(nullptr), m_pGameScene(nullptr), m_pCurrentScene(nullptr), currentRound(0)
 {
 	this->m_gameID = 0;
 	this->m_tick = 0;
@@ -446,7 +446,8 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 
 			if (!waveQueue.empty())
 				ServerSystems::NextWaveConditions(this, waveTimer, waveQueue.front().GetTimeLimit());
-
+			else
+				this->CreateWaves();
 			//LOG_INFO("GAME Scene %d", m_gameID);
 		});
 
@@ -908,6 +909,7 @@ void Simulation::ResetGameScene()
 	message<GameMsg> msg;
 	msg.header.id = GameMsg::Game_RemoveEntity;
 	uint32_t count = 0;
+	currentRound = 0;
 	this->m_pGameScene->ForEachComponent<comp::Network>([&](Entity e, comp::Network& n)
 		{
 			if (m_players.find(n.id) == m_players.end())
