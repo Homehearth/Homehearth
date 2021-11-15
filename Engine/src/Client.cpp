@@ -39,7 +39,7 @@ void Client::Update(size_t nMaxMessage)
 		msg.header.id = GameMsg::Game_Snapshot;
 
 		this->OnMessageReceived(msg);
-		
+
 		nMessageCount++;
 	}
 }

@@ -4,9 +4,9 @@
 #include "CommonStructures.h"
 
 PipelineManager::PipelineManager()
-	: m_window(nullptr)
-	, m_d3d11(&D3D11Core::Get())
-	, m_viewport()
+    : m_window(nullptr)
+    , m_d3d11(&D3D11Core::Get())
+    , m_viewport()
 {
 }
 
@@ -138,11 +138,11 @@ bool PipelineManager::CreateDepthBuffer()
     HRESULT hr = m_d3d11->Device()->CreateTexture2D(&depthBufferDesc, nullptr, m_depthStencilTexture.GetAddressOf());
     if (FAILED(hr))
         return false;
-	
+
     hr = m_d3d11->Device()->CreateTexture2D(&depthBufferDesc, nullptr, m_debugDepthStencilTexture.GetAddressOf());
     if (FAILED(hr))
         return false;
-	
+
     D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc;
     ZeroMemory(&depthStencilViewDesc, sizeof(D3D11_DEPTH_STENCIL_VIEW_DESC));
     depthStencilViewDesc.Format = DXGI_FORMAT_D32_FLOAT;
@@ -152,23 +152,23 @@ bool PipelineManager::CreateDepthBuffer()
     if (FAILED(hr))
         return false;
 
-	//Depth for debug render
+    //Depth for debug render
     hr = m_d3d11->Device()->CreateDepthStencilView(m_debugDepthStencilTexture.Get(), &depthStencilViewDesc, m_debugDepthStencilView.GetAddressOf());
     if (FAILED(hr))
         return false;
-	
+
     D3D11_SHADER_RESOURCE_VIEW_DESC shaderResourceViewDesc;
     shaderResourceViewDesc.Format = DXGI_FORMAT_R32_FLOAT;
     shaderResourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
     shaderResourceViewDesc.Texture2D.MostDetailedMip = 0;
     shaderResourceViewDesc.Texture2D.MipLevels = 1;
-	
+
     hr = m_d3d11->Device()->CreateShaderResourceView(m_depthStencilTexture.Get(), &shaderResourceViewDesc, m_depthBufferSRV.GetAddressOf());
     if (FAILED(hr))
         return false;
-	
+
     hr = m_d3d11->Device()->CreateShaderResourceView(m_debugDepthStencilTexture.Get(), &shaderResourceViewDesc, m_debugDepthBufferSRV.GetAddressOf());
-	
+
     return !FAILED(hr);
 }
 
@@ -185,7 +185,7 @@ bool PipelineManager::CreateDepthStencilStates()
     depthStencilDesc.StencilEnable = true;
     depthStencilDesc.StencilReadMask = D3D11_DEFAULT_STENCIL_READ_MASK;
     depthStencilDesc.StencilWriteMask = D3D11_DEFAULT_STENCIL_WRITE_MASK;
-	
+
     // Stencil operations if pixel is front-facing.
     depthStencilDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
     depthStencilDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
@@ -209,20 +209,20 @@ bool PipelineManager::CreateDepthStencilStates()
     if (FAILED(hr))
         return false;
 
-	// Create m_depthStencilStateGreater
+    // Create m_depthStencilStateGreater
     depthStencilDesc.DepthFunc = D3D11_COMPARISON_GREATER;
     hr = m_d3d11->Device()->CreateDepthStencilState(&depthStencilDesc, m_depthStencilStateGreater.GetAddressOf());
     if (FAILED(hr))
         return false;
-	
-	// Create m_depthStencilStateEqualAndDisableDepthWrite.
+
+    // Create m_depthStencilStateEqualAndDisableDepthWrite.
     depthStencilDesc.StencilEnable = FALSE;
     depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
     depthStencilDesc.DepthFunc = D3D11_COMPARISON_EQUAL;
     hr = m_d3d11->Device()->CreateDepthStencilState(&depthStencilDesc, m_depthStencilStateEqualAndDisableDepthWrite.GetAddressOf());
     if (FAILED(hr))
         return false;
-	
+
     return !FAILED(hr);
 }
 
@@ -385,11 +385,11 @@ bool PipelineManager::CreateBlendStates()
         return false;
 
     // Create m_blendStateDepthOnlyAlphaToCoverage.
-	// "...the quality is significantly improved when used in conjunction with MSAA".
+    // "...the quality is significantly improved when used in conjunction with MSAA".
     blendStateDesc.AlphaToCoverageEnable = 1;
     hr = m_d3d11->Device()->CreateBlendState(&blendStateDesc, m_blendStateDepthOnlyAlphaToCoverage.GetAddressOf());
 
-	return !FAILED(hr);
+    return !FAILED(hr);
 }
 
 void PipelineManager::SetViewport()
@@ -507,7 +507,7 @@ bool PipelineManager::CreateTextureEffectResources()
 
     HRESULT hr = {};
     int textureHeight = 512;
-    int textureWidth  = 512;
+    int textureWidth = 512;
 
     // TEXTURE 2D //
 
@@ -525,7 +525,7 @@ bool PipelineManager::CreateTextureEffectResources()
     textureDesc.CPUAccessFlags = 0;
     textureDesc.MiscFlags = 0;
 
-   hr = m_d3d11->Device()->CreateTexture2D(&textureDesc, nullptr, m_T_TextureEffectBlendMap.GetAddressOf());
+    hr = m_d3d11->Device()->CreateTexture2D(&textureDesc, nullptr, m_T_TextureEffectBlendMap.GetAddressOf());
     if (FAILED(hr))
         return false;
 
@@ -606,7 +606,7 @@ bool PipelineManager::CreateTextureEffectResources()
 }
 
 bool PipelineManager::CreateShaders()
-{	
+{
     if (!m_defaultVertexShader.Create("Model_vs"))
     {
         LOG_WARNING("failed creating Model_vs.");
@@ -668,4 +668,4 @@ bool PipelineManager::CreateShaders()
     }
 
     return true;
-}                         
+}
