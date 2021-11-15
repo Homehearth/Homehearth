@@ -15,7 +15,7 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 {
 	Entity entity = simulation->GetGameScene()->CreateEntity();
 	entity.AddComponent<comp::Network>();
-	entity.AddComponent<comp::NPC>();
+	comp::NPC* npc = entity.AddComponent<comp::NPC>();
 	entity.AddComponent<comp::Tag<DYNAMIC>>();
 
 	comp::Transform* transform = entity.AddComponent<comp::Transform>();
@@ -31,7 +31,10 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		{
 			// ---DEFAULT ENEMY---
 			transform->position = spawnP;
-			transform->scale = { 1.8f, 1.8f, 1.8f };
+			//Generate float between 0.0 and 0.5 (give monster a slightly different height?)
+			float randomNum = static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (0.5)));
+
+			transform->scale = { 1.8f, 1.8f+randomNum, 1.8f };
 			meshName->name = "Monster.fbx";
 			entity.AddComponent<comp::AnimatorName>()->name = "Monster.anim";
 			obb->Extents = sm::Vector3(2.f, 2.f, 2.f);
@@ -39,27 +42,48 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 			combatStats->attackDamage = 20.f;
 			combatStats->lifetime = 0.2f;
 			combatStats->isRanged = false;
+			npc->movementSpeed = 15.f;
 			behaviorTree->root = AIBehaviors::GetSimpleAIBehavior(entity);
 			combatStats->attackRange = 7.0f;
 
 			
 		}
 		break;
-	case EnemyType::Default2:
+	case EnemyType::Runner:
 		{
-			// ---DEFAULT ENEMY 2---
-			transform->position = spawnP;
-			meshName->name = "Barrel.obj";
-			transform->scale = { 1.8f, 1.8f, 1.8f };
-			obb->Extents = sm::Vector3(2.f, 2.f, 2.f);
-			combatStats->cooldown = 1.0f;
-			combatStats->attackDamage = 20.f;
-			combatStats->lifetime = 0.2f;
-			combatStats->isRanged = false;
-			combatStats->attackRange = 7.0f;
-
+		// ---Fast Zombie ENEMY---
+		transform->position = spawnP;
+		transform->scale = { 1.8f, 3.f, 1.8f };
+		meshName->name = "Monster.fbx";
+		entity.AddComponent<comp::AnimatorName>()->name = "Monster.anim";
+		obb->Extents = sm::Vector3(2.f, 2.f, 2.f);
+		combatStats->cooldown = 1.0f;
+		combatStats->attackDamage = 20.f;
+		combatStats->lifetime = 0.2f;
+		combatStats->isRanged = false;
+		npc->movementSpeed = 30.f;
+		behaviorTree->root = AIBehaviors::GetSimpleAIBehavior(entity);
+		combatStats->attackRange = 7.0f;
 		}
 		break;
+	case EnemyType::BIGMOMMA:
+	{
+		// ---BOSS ENEMY---
+		transform->position = spawnP;
+		transform->scale = { 3.8f, 6.f, 3.8f };
+		meshName->name = "Monster.fbx";
+		entity.AddComponent<comp::AnimatorName>()->name = "Monster.anim";
+		obb->Extents = sm::Vector3(2.f, 2.f, 2.f);
+		combatStats->cooldown = 3.0f;
+		combatStats->attackDamage = 20.f;
+		combatStats->lifetime = 0.2f;
+		combatStats->isRanged = false;
+		npc->movementSpeed = 10.f;
+		health->currentHealth = 1500.f;
+		behaviorTree->root = AIBehaviors::GetSimpleAIBehavior(entity);
+		combatStats->attackRange = 20.0f;
+	}
+	break;
 	default:
 			LOG_WARNING("Attempted to create unknown EnemyType.")
 		break;
