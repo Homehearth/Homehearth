@@ -102,10 +102,6 @@ CollisionInfo_t CollisionSystem::Intersection(Entity entity1, Entity entity2)
 
 			return { true, overlap, vec };
 		}
-		else
-		{
-			return { false, 0.0f, sm::Vector3::Zero };
-		}
 	}
 	//Sphere - OBB
 	else if (p1Tags & TagType::DYNAMIC && p2Tags & TagType::STATIC)
@@ -146,10 +142,6 @@ CollisionInfo_t CollisionSystem::Intersection(Entity entity1, Entity entity2)
 			pointToSphere * -1.f;
 
 			return { true, overlap, pointToSphere };
-		}
-		else
-		{
-			return { false, 0.0f, sm::Vector3::Zero };
 		}
 	}
 
