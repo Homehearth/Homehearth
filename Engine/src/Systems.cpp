@@ -68,6 +68,12 @@ void Systems::UpdateAbilities(HeadlessScene& scene, float dt)
 
 			if (ability->cooldownTimer <= 0.f && ability->delayTimer <= 0.f && ability->useTimer <= 0.f)
 				ability->isReady = true;
+
+			comp::Velocity* vel = entity.GetComponent<comp::Velocity>();
+			if (vel && ecs::IsUsing(ability))
+			{
+				vel->vel *= ability->movementSpeedAlt;
+			}
 		}
 	}
 
@@ -132,6 +138,12 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 						if (other == entity)
 							return;
 
+						tag_bits goodOrBad = TagType::GOOD | TagType::BAD;
+						if ((entity.GetTags() & goodOrBad) ==
+							(other.GetTags() & goodOrBad))
+						{
+							return;
+						}
 
 						comp::Health* otherHealth = other.GetComponent<comp::Health>();
 						comp::AttackAbility* stats = entity.GetComponent<comp::AttackAbility>();

@@ -283,9 +283,8 @@ void Simulation::ResetPlayer(Entity player)
 
 	//Collision will handle this entity as a dynamic one
 	player.AddComponent<comp::Tag<TagType::DYNAMIC>>();
-	// Network component will make sure the new entity is sent
+	player.AddComponent<comp::Tag<TagType::GOOD>>(); // this is a good guy
 
-	
 	player.RemoveComponent<comp::TemporaryPhysics>();
 	if (!firstTimeAdded)
 	{
@@ -427,9 +426,6 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 				ServerSystems::TickBTSystem(this, scene);
 				ServerSystems::UpdatePlayerWithInput(this, scene, e.dt);
 				ServerSystems::PlayerStateSystem(this, scene, e.dt);
-
-				Systems::MovementSystem(scene, e.dt);
-				Systems::MovementColliderSystem(scene, e.dt);
 				
 				Systems::UpdateAbilities(scene, e.dt);
 				Systems::CombatSystem(scene, e.dt);
@@ -437,6 +433,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 
 				Systems::HealthSystem(scene, e.dt, m_currency.GetAmountRef());
 				Systems::SelfDestructSystem(scene, e.dt);
+				
 				{
 					PROFILE_SCOPE("Collision Box/Box");
 					Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(scene, e.dt);
@@ -445,6 +442,9 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 					PROFILE_SCOPE("Collision Box/Sphere");
 					Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingSphere>(scene, e.dt);
 				}
+				
+				Systems::MovementSystem(scene, e.dt);
+				Systems::MovementColliderSystem(scene, e.dt);
 			}
 
 			if (!waveQueue.empty())
