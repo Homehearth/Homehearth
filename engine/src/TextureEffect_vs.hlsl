@@ -4,7 +4,7 @@ VertexOut main(VertexIn input)
 {
     VertexOut output;
     
-    output.pos       = input.pos;
+    output.pos = float4(input.pos,1.0f);
     output.normal    = input.normal;
     output.uv        = input.uv;
     output.tangent   = input.tangent;

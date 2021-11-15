@@ -33,23 +33,25 @@ void TextureEffectPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceCont
     // SHADER RESOURCES.
     {
         //Kolla i din deffered rendering hur man la sånnahär i en array. 
-        
-        DC->CSSetShaderResources(1, 17, PM->m_SRV_TextureEffectWaterFloorMap.GetAddressOf());
-        DC->CSSetShaderResources(1, 18, PM->m_SRV_TextureEffectWaterEdgeMap.GetAddressOf());
-        DC->CSSetShaderResources(1, 19, PM->m_SRV_TextureEffectWaterMap.GetAddressOf());
-        DC->CSSetShaderResources(1, 20, PM->m_SRV_TextureEffectBlendMap.GetAddressOf());
-        DC->CSSetShaderResources(1, 21, PM->m_SRV_TextureEffectWaterNormalMap.GetAddressOf());
+        DC->CSSetShaderResources(17, 5, resources); // 17 - 21 (order checked)
         DC->CSSetSamplers(0, 1, PM->m_pointSamplerState.GetAddressOf());
     }
 
     // OUTPUT MERGER.
     {
         DC->OMSetRenderTargets(1, PM->m_renderTargetView.GetAddressOf(), PM->m_depthStencilView.Get());
+        DC->OMSetRenderTargets(5, targets, PM->m_debugDepthStencilView.Get()); //(order checked)
         DC->OMSetBlendState(PM->m_blendStatepOpaque.Get(), nullptr, 0xFFFFFFFF);
         DC->OMSetDepthStencilState(PM->m_depthStencilStateLess.Get(), 1);
+        //Might need to set view port
     }
 
-    //dispatch here
+    // DISPATCH
+
+    {
+        const int groupCount = static_cast<int>(ceil(MAX_PIXELS / 1024));
+        DC->Dispatch(groupCount, 1, 1);
+    }
 
 }
 
@@ -65,6 +67,13 @@ void TextureEffectPass::PostRender(ID3D11DeviceContext* pDeviceContext)
     m_CBuffer.amplitude = 0.05f;
     m_CBuffer.frequency = 25.f;
     D3D11Core::Get().DeviceContext()->UpdateSubresource(PM->m_textureEffectConstantBuffer.Get(), 0, nullptr, &m_CBuffer, 0, 0);
+    
+    pDeviceContext->ClearRenderTargetView(PM->m_RTV_TextureEffectBlendMap.Get(), clearColor);
+    pDeviceContext->ClearRenderTargetView(PM->m_RTV_TextureEffectWaterEdgeMap.Get(), clearColor);
+    pDeviceContext->ClearRenderTargetView(PM->m_RTV_TextureEffectWaterFloorMap.Get(), clearColor);
+    pDeviceContext->ClearRenderTargetView(PM->m_RTV_TextureEffectWaterMap.Get(), clearColor);
+    pDeviceContext->ClearRenderTargetView(PM->m_RTV_TextureEffectWaterNormalMap.Get(), clearColor);
 }
+
 
 

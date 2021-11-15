@@ -81,15 +81,20 @@ public:
 	Shaders::PixelShader              m_textureEffectPixelShader;   // Nikki's water effect pixel shader.
 	ComPtr<ID3D11Buffer>			  m_textureEffectConstantBuffer;
 	ComPtr<ID3D11Buffer>              m_deltaTimeBuffer;
+	ComPtr<ID3D11Texture2D>			  m_T_TextureEffectBlendMap;
+	ComPtr<ID3D11Texture2D>			  m_T_TextureEffectWaterMap;
+	ComPtr<ID3D11Texture2D>			  m_T_TextureEffectWaterFloorMap;
+	ComPtr<ID3D11Texture2D>		   	  m_T_TextureEffectWaterEdgeMap;
+	ComPtr<ID3D11Texture2D>			  m_T_TextureEffectWaterNormalMap;
 	ComPtr<ID3D11RenderTargetView>    m_RTV_TextureEffectBlendMap;
-	ComPtr<ID3D11ShaderResourceView>  m_SRV_TextureEffectBlendMap;
 	ComPtr<ID3D11RenderTargetView>    m_RTV_TextureEffectWaterMap;
-	ComPtr<ID3D11ShaderResourceView>  m_SRV_TextureEffectWaterMap;
 	ComPtr<ID3D11RenderTargetView>    m_RTV_TextureEffectWaterFloorMap;
-	ComPtr<ID3D11ShaderResourceView>  m_SRV_TextureEffectWaterFloorMap;
 	ComPtr<ID3D11RenderTargetView>    m_RTV_TextureEffectWaterEdgeMap;
-	ComPtr<ID3D11ShaderResourceView>  m_SRV_TextureEffectWaterEdgeMap;
 	ComPtr<ID3D11RenderTargetView>    m_RTV_TextureEffectWaterNormalMap;
+	ComPtr<ID3D11ShaderResourceView>  m_SRV_TextureEffectBlendMap;
+	ComPtr<ID3D11ShaderResourceView>  m_SRV_TextureEffectWaterMap;
+	ComPtr<ID3D11ShaderResourceView>  m_SRV_TextureEffectWaterFloorMap;
+	ComPtr<ID3D11ShaderResourceView>  m_SRV_TextureEffectWaterEdgeMap;
 	ComPtr<ID3D11ShaderResourceView>  m_SRV_TextureEffectWaterNormalMap;
 
 private:

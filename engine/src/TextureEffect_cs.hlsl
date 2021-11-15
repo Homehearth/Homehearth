@@ -47,7 +47,7 @@ How do do shit:
     - hårdkodas först. 
 */
 
-[numthreads(1, 1, 1)]
+[numthreads(1024, 1, 1)]
 void main( ComputeShaderIn input)
 {
     
