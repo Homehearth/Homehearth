@@ -20,6 +20,7 @@ private:
 	uint32_t m_gameID;
 	uint32_t m_tick;
 	GridSystem m_grid;
+	Currency m_currency;
 
 	HeadlessScene* m_pLobbyScene;
 	HeadlessScene* m_pGameScene;
@@ -57,18 +58,11 @@ private:
 	void OnNetworkEntityUpdated(entt::registry& reg, entt::entity entity);
 	void OnComponentUpdated(Entity entity, ecs::Component component);
 
-
-
-
 	void BuildMapColliders(std::vector<dx::BoundingOrientedBox>* mapColliders);
 
 public:
 	Simulation(Server* pServer, HeadlessEngine* pEngine);
 	virtual ~Simulation() = default;
-	//bool AICreateNodes();
-	bool AddNPC(uint32_t npcId);
-	bool RemoveNPC(uint32_t npcId);
-
 
 	// -1 will be defaulted to max value of unsigned 32 bit integer
 	void Broadcast(message<GameMsg>& msg, uint32_t exclude = -1)const;
@@ -101,12 +95,16 @@ public:
 
 	HeadlessScene* GetLobbyScene() const;
 	HeadlessScene* GetGameScene() const;
-	
+	Entity* GetPlayer(uint32_t entityID);
+
+	GridSystem& GetGrid();
+	Currency& GetCurrency();
+
 	void SetLobbyScene();
 	void SetGameScene();
 	void ResetGameScene();
 	
-	void ResetPlayer(Entity e);
+	void ResetPlayer(Entity player);
 
 	void SendEntity(Entity e, const std::bitset<ecs::Component::COMPONENT_MAX>& componentMask = UINT32_MAX) const;
 	void SendEntities(const std::vector<Entity>& entities, GameMsg msgID, const std::bitset<ecs::Component::COMPONENT_MAX>& componentMask = UINT32_MAX) const;

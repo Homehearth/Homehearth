@@ -21,6 +21,7 @@ void Renderer::Initialize(Window* pWindow)
 	AddPass(&m_basePass);   // 2
 	AddPass(&m_animPass);	// 3
 	AddPass(&m_skyPass);
+	AddPass(&m_shadowPass);
 
 	//m_depthPass.SetEnable(true);
 	m_basePass.SetEnable(true);
@@ -41,6 +42,18 @@ void Renderer::Initialize(Window* pWindow)
 	}
 }
 
+void Renderer::Setup(BasicEngine<Scene>& engine)
+{
+	engine.GetScene("Game").ForEachComponent<comp::Light>([&](comp::Light& l) {
+
+		m_shadowPass.CreateShadow(l);
+
+		});
+
+	m_shadowPass.SetupMap();
+
+}
+
 void Renderer::ClearFrame()
 {
     // Clear the back buffer.
@@ -57,6 +70,7 @@ void Renderer::Render(Scene* pScene)
 		if (!m_passes.empty())
 		{
 			m_basePass.m_skyboxRef = pScene->GetSkybox();
+			m_animPass.m_skyboxRef = pScene->GetSkybox();
 			if (pScene->GetCurrentCamera()->IsSwapped())
 			{
 				this->UpdatePerFrame(pScene->GetCurrentCamera());

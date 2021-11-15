@@ -3,6 +3,26 @@
 constexpr int MAX_PLAYERS_PER_LOBBY = 4;
 constexpr int MAX_HEALTH = 100;
 
+struct Currency
+{
+private:
+	uint32_t m_amount = 0;
+
+public:
+	uint32_t GetAmount()const
+	{
+		return m_amount;
+	}
+	uint32_t& GetAmountRef()
+	{
+		return m_amount;
+	}
+	void Zero()
+	{
+		m_amount = 0;
+	}
+};
+
 struct MinMaxProj_t
 {
 	float minProj;
@@ -36,7 +56,7 @@ struct Vector2I
 		this->x += other.x;
 		this->y += other.y;
 
-		return *this;	
+		return *this;
 	}
 };
 
@@ -66,7 +86,25 @@ struct Ray_t
 		}
 		return true;
 	}
-	
+
+	bool Intersects(const dx::BoundingSphere& sphere)
+	{
+		const sm::Vector3 centerToRay = this->origin - sphere.Center;
+
+		//Parameterization to use for the quadtratic formula.
+		const float a = this->dir.Dot(this->dir);
+		const float b = 2.0f * centerToRay.Dot(this->dir);
+		const float c = centerToRay.Dot(centerToRay) - sphere.Radius * sphere.Radius;
+
+		const float discriminant = b * b - 4.0f * a * c;
+
+		//discriminant < 0 the ray does not intersect sphere.
+		//discriminant = 0 the ray touches the sphere in one point
+		//discriminant > 0 the ray touches the sphere in two points
+
+		return discriminant > 0.0f;
+	}
+
 	bool Intersects(const dx::BoundingOrientedBox& boxCollider)
 	{
 
@@ -155,6 +193,7 @@ struct InputState
 	int axisVertical : 2;
 	bool leftMouse : 1;
 	bool rightMouse : 1;
+	bool key_b : 1;
 
 	Ray_t mouseRay;
 
@@ -187,10 +226,12 @@ enum class GameMsg : uint8_t
 	Game_BackToLobby,
 	Game_WaveTimer,
 
+	Game_ClassSelected,
 	Game_PlayerAttack,
 	Game_AddNPC,
 	Game_RemoveNPC,
-	Game_PlayerInput
+	Game_PlayerInput,
+	Game_Money
 };
 
 /*

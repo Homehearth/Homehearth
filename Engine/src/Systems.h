@@ -5,7 +5,14 @@
 
 namespace Systems
 {
+	// abilities
+	void UpdateAbilities(HeadlessScene& scene, float dt);
 	void CombatSystem(HeadlessScene& scene, float dt);
+	void HealingSystem(HeadlessScene& scene, float dt);
+
+	void HealthSystem(HeadlessScene& scene, float dt, uint32_t& money_ref);
+	void SelfDestructSystem(HeadlessScene& scene, float dt);
+
 	void MovementSystem(HeadlessScene& scene, float dt);
 	void MovementColliderSystem(HeadlessScene& scene, float dt);
 	void LightSystem(Scene& scene, float dt);
@@ -14,7 +21,6 @@ namespace Systems
 	void CheckCollisions(HeadlessScene& scene, float dt);
 	void AISystem(HeadlessScene& scene, PathFinderManager* aiHandler);
 
-	void UpdatePlayerVisuals(Scene* scene);
 }
 
 template<typename Collider1, typename Collider2>

@@ -6,6 +6,11 @@
 */
 void AnimationPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 {
+    if (m_skyboxRef)
+    {
+        m_skyboxRef->Bind(pDeviceContext);
+    }
+
     DC->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     DC->IASetInputLayout(PM->m_animationInputLayout.Get());
 

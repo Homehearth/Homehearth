@@ -1,6 +1,4 @@
 #pragma once
-#include "EnginePCH.h"
-
 
 class Skybox
 {

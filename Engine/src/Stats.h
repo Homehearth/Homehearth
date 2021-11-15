@@ -39,6 +39,7 @@ public:
 
 	//Updatetime
 	void			SetUpdateTime(const float& ut);
+	void			SetUpdateRate(const float& rate);
 	const float&	GetUpdateTime() const;
 
 	//Networktime
