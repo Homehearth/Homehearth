@@ -142,7 +142,7 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 						if ((entity.GetTags() & goodOrBad) ==
 							(other.GetTags() & goodOrBad))
 						{
-							return;
+							return; //these guys are on the same team
 						}
 
 						comp::Health* otherHealth = other.GetComponent<comp::Health>();
@@ -189,9 +189,9 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 						}
 					});
 
-		}
+			}
 
-	});
+		});
 
 
 }
@@ -199,11 +199,34 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 void Systems::HealingSystem(HeadlessScene& scene, float dt)
 {
 	// HealAbility system
-	scene.ForEachComponent<comp::HealAbility, comp::Player>([](comp::HealAbility& ability, comp::Player& player)
+	scene.ForEachComponent<comp::HealAbility, comp::Player>([&](Entity entity, comp::HealAbility& ability, comp::Player& player)
 		{
 			if (ecs::ReadyToUse(&ability))
 			{
 				LOG_INFO("Used healing ability");
+				Entity collider = scene.CreateEntity();
+				comp::Transform* transform = collider.AddComponent<comp::Transform>();
+				transform->position = entity.GetComponent<comp::Transform>()->position;
+				transform->scale = sm::Vector3(2);
+				
+				/*
+				comp::BoundingSphere* sphere = collider.AddComponent<comp::BoundingSphere>();
+				sphere->Center = transform->position;
+				sphere->Radius = 1.f;
+				*/
+				//collider.AddComponent<comp::MeshName>()->name = "Sphere.obj";
+
+				comp::BoundingOrientedBox* box = collider.AddComponent<comp::BoundingOrientedBox>();
+				box->Center = transform->position;
+				
+				comp::Velocity* vel = collider.AddComponent<comp::Velocity>();
+				vel->scaleVel = sm::Vector3(20);
+				vel->applyToCollider = true;
+
+				collider.AddComponent<comp::SelfDestruct>()->lifeTime = ability.lifetime;
+
+				collider.AddComponent<comp::Network>();
+
 			}
 		});
 
@@ -335,9 +358,32 @@ void Systems::MovementSystem(HeadlessScene& scene, float dt)
 					transform.position.y = 0.f;
 					velocity.vel.y = 0;
 				}
-
-
 				velocity.oldVel = velocity.vel; // updated old vel position
+
+				
+				if (velocity.scaleVel.Length() > 0.01f)
+				{
+					e.UpdateNetwork();
+				}
+				transform.scale += velocity.scaleVel * dt;
+				velocity.oldScaleVel = velocity.scaleVel; // updated old vel scale
+
+				if (velocity.applyToCollider)
+				{					
+					comp::BoundingOrientedBox* box = e.GetComponent<comp::BoundingOrientedBox>();
+					if (box)
+					{
+						box->Extents = box->Extents + velocity.scaleVel * dt;
+					}
+
+					comp::BoundingSphere* bos = e.GetComponent<comp::BoundingSphere>();
+					if (bos)
+					{
+						bos->Radius += velocity.scaleVel.x * dt;
+					}
+
+				}
+
 			});
 	}
 }

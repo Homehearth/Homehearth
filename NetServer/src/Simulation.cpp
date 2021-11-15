@@ -283,7 +283,7 @@ void Simulation::ResetPlayer(Entity player)
 
 	//Collision will handle this entity as a dynamic one
 	player.AddComponent<comp::Tag<TagType::DYNAMIC>>();
-	player.AddComponent<comp::Tag<TagType::GOOD>>(); // this is a good guy
+	player.AddComponent<comp::Tag<TagType::GOOD>>(); // this is a good guy, he will call you back
 
 	player.RemoveComponent<comp::TemporaryPhysics>();
 	if (!firstTimeAdded)
@@ -419,6 +419,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 			//  run all game logic systems
 			{
 				PROFILE_SCOPE("Systems");
+				
 				ServerSystems::CheckGameOver(this, scene);
 
 				AIBehaviors::UpdateBlackBoard(scene);
@@ -701,6 +702,7 @@ void Simulation::SendSnapshot()
 		compMask.set(ecs::Component::TRANSFORM);
 #if DEBUG_SNAPSHOT
 		compMask.set(ecs::Component::BOUNDING_ORIENTED_BOX);
+		compMask.set(ecs::Component::BOUNDING_SPHERE);
 #endif
 
 		this->SendEntities(m_updatedEntities, GameMsg::Game_Snapshot, compMask);
