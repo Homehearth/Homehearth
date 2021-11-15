@@ -297,6 +297,32 @@ struct Node
 	{
 		f = FLT_MAX, g = FLT_MAX, h = FLT_MAX;
 	}
+	bool RemoveConnection(Node* connection)
+	{
+		for (int i = 0; i < connections.size(); i++)
+		{
+			if (connections[i] == connection)
+			{
+				connections.erase(connections.begin() + i);
+				return true;
+			}
+		}
+		return false;
+
+	}
+	bool RemoveConnection(size_t index)
+	{
+		if (index < connections.size())
+		{
+			connections.erase(connections.begin() + index);
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+
 	std::vector<Node*> GetDiagonalConnections()
 	{
 		std::vector<Node*> DiagConnections;

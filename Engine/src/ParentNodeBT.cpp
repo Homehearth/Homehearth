@@ -2,9 +2,8 @@
 #include "ParentNodeBT.h"
 
 BT::ParentNode::ParentNode(std::string& name)
-	:TreeNode(name)
+	:TreeNode(name), childStatus(NodeStatus::IDLE)
 {
-
 }
 
 BT::ParentNode::~ParentNode()
@@ -23,7 +22,7 @@ void BT::ParentNode::AddChild(TreeNode* child)
 
 int BT::ParentNode::GetNumChildren() const
 {
-	return this->m_childrenNodes.size();
+	return (int)this->m_childrenNodes.size();
 }
 
 std::vector<BT::TreeNode*> BT::ParentNode::GetChildren()

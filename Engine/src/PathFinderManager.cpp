@@ -111,13 +111,14 @@ void PathFinderManager::CreateNodes(GridSystem* grid)
 	{
 		for (int i = 0; i < grid->GetGridSize().y; i++)
 		{
-			Tile* tile = grid->GetTile(Vector2I(j,i));
+			Tile* tile = grid->GetTile(Vector2I(j, i));
 
 			Vector2I nodeID = tile->gridID;
 
 			Node* currentNode = AddNode(tile->gridID);
 			currentNode->position = tile->position;
-			if (tile->type == TileType::DEFENCE || tile->type == TileType::UNPLACABLE ||
+			if (tile->type == TileType::DEFENCE || 
+				tile->type == TileType::UNPLACABLE ||
 				tile->type == TileType::BUILDING)
 			{
 				currentNode->reachable = false;
@@ -127,7 +128,6 @@ void PathFinderManager::CreateNodes(GridSystem* grid)
 				std::vector<Node*> neighbors = GetNeighbors(grid, tile);
 				for (auto neighbor : neighbors)
 				{
-					
 					if (neighbor->reachable)
 						m_nodes[j][i]->connections.push_back(neighbor);
 				}
@@ -162,8 +162,8 @@ void PathFinderManager::AStarSearch(Entity npc)
 	openList.push_back(startingNode);
 
 	//Gets the target that findTargetNode has picked for this entity
-	Entity* target= Blackboard::Get().GetValue<Entity>("target" + std::to_string(npc));
-	if(target == nullptr)
+	Entity* target = Blackboard::Get().GetValue<Entity>("target" + std::to_string(npc));
+	if (target == nullptr)
 	{
 		LOG_INFO("Target was nullptr...");
 		return;
@@ -173,20 +173,20 @@ void PathFinderManager::AStarSearch(Entity npc)
 	Node* goalNode = FindClosestNode(target->GetComponent<comp::Transform>()->position);
 
 	//Cancel if its a dead node (no connections)
-	if(!goalNode->reachable)
+	if (!goalNode->reachable)
 	{
 		return;
 	}
 
 	npcComp->path.clear();
 
-	while(!openList.empty())
+	while (!openList.empty())
 	{
 		Node* currentNode = openList.at(0);
 		int ind = 0;
 		for (int i = 1; i < openList.size(); i++)
 		{
-			if(openList[i]->f < currentNode->f)
+			if (openList[i]->f < currentNode->f)
 			{
 				currentNode = openList[i];
 				ind = i;
@@ -195,7 +195,7 @@ void PathFinderManager::AStarSearch(Entity npc)
 		openList.erase(openList.begin() + ind);
 		closedList.emplace_back(currentNode);
 
-		if(currentNode == goalNode)
+		if (currentNode == goalNode)
 		{
 			//Trace the path back
 			if (goalNode->parent)
@@ -221,7 +221,7 @@ void PathFinderManager::AStarSearch(Entity npc)
 		for (auto neighbour : currentNode->connections)
 		{
 			float gNew, hNew, fNew;
-			if(IsInVector(closedList, neighbour))
+			if (IsInVector(closedList, neighbour))
 			{
 				continue;
 			}
@@ -230,7 +230,7 @@ void PathFinderManager::AStarSearch(Entity npc)
 			hNew = sm::Vector3::Distance(goalNode->position, neighbour->position);
 			fNew = gNew + hNew;
 
-			if(gNew < currentNode->g || !IsInVector(openList, neighbour))
+			if (gNew < currentNode->g || !IsInVector(openList, neighbour))
 			{
 				neighbour->g = gNew;
 				neighbour->h = hNew;

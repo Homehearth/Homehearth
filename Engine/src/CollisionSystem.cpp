@@ -164,7 +164,7 @@ void CollisionSystem::CollisionResponse(CollisionInfo_t collisionInfo, Entity en
 			comp::BoundingOrientedBox* obb = entity1.GetComponent<comp::BoundingOrientedBox>();
 			if (transform)
 			{
-				transform->position = transform->position + sm::Vector3(collisionInfo.smallestVec * (float)collisionInfo.overlap * i);
+				transform->position = transform->position + sm::Vector3(collisionInfo.smallestVec * (float)collisionInfo.overlap * (float)i);
 			
 				if (obb)
 					obb->Center = transform->position;
