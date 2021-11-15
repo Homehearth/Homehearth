@@ -210,7 +210,7 @@ void Systems::HealthSystem(HeadlessScene& scene, float dt, uint32_t& money_ref)
 				// increase money
 				if (entity.GetComponent<comp::NPC>())
 				{
-					money_ref += 5;
+					money_ref += 10;
 				}
 
 				// if player

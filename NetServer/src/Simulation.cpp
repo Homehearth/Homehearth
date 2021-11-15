@@ -904,6 +904,11 @@ void Simulation::SetGameScene()
 {
 	ResetGameScene();
 	m_pCurrentScene = m_pGameScene;
+#ifdef _DEBUG
+	// During debug give players 1000 gold/monies.
+	m_currency.GetAmountRef() = 1000;
+
+#endif
 }
 
 void Simulation::ResetGameScene()

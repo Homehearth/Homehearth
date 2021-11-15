@@ -93,7 +93,7 @@ void DecalPass::Render(Scene* pScene)
 		*/
 		if (d.lifespan <= 0)
 		{
-			e.RemoveComponent<comp::Decal>();
+			e.Destroy();
 		}
 		});
 	
