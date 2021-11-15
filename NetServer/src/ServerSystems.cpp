@@ -74,7 +74,7 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		transform->scale = { 3.8f, 6.f, 3.8f };
 		meshName->name = "Monster.fbx";
 		entity.AddComponent<comp::AnimatorName>()->name = "Monster.anim";
-		obb->Extents = sm::Vector3(2.f, 2.f, 2.f);
+		bos->Radius = 3.f;
 		combatStats->cooldown = 3.0f;
 		combatStats->attackDamage = 20.f;
 		combatStats->lifetime = 0.2f;
