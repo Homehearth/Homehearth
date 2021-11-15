@@ -35,9 +35,6 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 			meshName->name = "Monster.fbx";
 			entity.AddComponent<comp::AnimatorName>()->name = "Monster.anim";
 			obb->Extents = sm::Vector3(2.f, 2.f, 2.f);
-			/*velocity->vel = sm::Vector3(transform->position * -1.0f);
-			velocity->vel.Normalize();
-			velocity->vel *= 5.0f;*/
 			combatStats->cooldown = 1.0f;
 			combatStats->attackDamage = 20.f;
 			combatStats->lifetime = 0.2f;
@@ -55,9 +52,6 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 			meshName->name = "Barrel.obj";
 			transform->scale = { 1.8f, 1.8f, 1.8f };
 			obb->Extents = sm::Vector3(2.f, 2.f, 2.f);
-			/*velocity->vel = sm::Vector3(transform->position * -1.0f);
-			velocity->vel.Normalize();
-			velocity->vel *= 5.0f;*/
 			combatStats->cooldown = 1.0f;
 			combatStats->attackDamage = 20.f;
 			combatStats->lifetime = 0.2f;
@@ -339,14 +333,6 @@ void ServerSystems::TickBTSystem(Simulation* simulation, HeadlessScene& scene)
 {
 	scene.ForEachComponent<comp::BehaviorTree>([&](Entity entity,comp::BehaviorTree& bt)
 		{
-			if(bt.currentNode != nullptr)
-			{
-				bt.currentNode->Tick();
-			}
-			else
-			{
-				bt.root->Tick();
-			}
-		
+			bt.root->Tick();
 		});
 }

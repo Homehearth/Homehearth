@@ -3,18 +3,20 @@
 #include "TreeNodeBT.h"
 namespace BT
 {
+	class FallbackNode;
+
 	class ParentNode : public TreeNode
 	{
 	public:
 		ParentNode(std::string& name);
 		~ParentNode() override;
 
-		void AddChild(TreeNode* child);
+		void AddChild(std::shared_ptr<BT::TreeNode> child);
 		int GetNumChildren() const;
-		std::vector<TreeNode*> GetChildren();
+		std::vector<std::shared_ptr<BT::TreeNode>> GetChildren();
 
 	protected:
-		std::vector<TreeNode*> m_childrenNodes;
+		std::vector<std::shared_ptr<TreeNode>> m_childrenNodes;
 		std::vector<NodeStatus> m_childrenStates;
 		NodeStatus childStatus;
 	private:
