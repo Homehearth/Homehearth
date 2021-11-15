@@ -21,6 +21,7 @@ void Renderer::Initialize(Window* pWindow)
 	AddPass(&m_basePass);   // 2
 	AddPass(&m_animPass);	// 3
 	AddPass(&m_skyPass);
+	AddPass(&m_shadowPass);
 
 	//m_depthPass.SetEnable(true);
 	m_basePass.SetEnable(true);
@@ -39,6 +40,18 @@ void Renderer::Initialize(Window* pWindow)
 	{
 		pass->Initialize(m_d3d11->DeviceContext(), &m_pipelineManager);
 	}
+}
+
+void Renderer::Setup(BasicEngine<Scene>& engine)
+{
+	engine.GetScene("Game").ForEachComponent<comp::Light>([&](comp::Light& l) {
+
+		m_shadowPass.CreateShadow(l);
+
+		});
+
+	m_shadowPass.SetupMap();
+
 }
 
 void Renderer::ClearFrame()
