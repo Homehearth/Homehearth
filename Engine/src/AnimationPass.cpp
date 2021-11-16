@@ -13,6 +13,7 @@ void AnimationPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
     DC->PSSetShader(PM->m_defaultPixelShader.Get(), nullptr, 0);
 
     DC->VSSetConstantBuffers(1, 1, pCam->m_viewConstantBuffer.GetAddressOf());
+    DC->PSSetConstantBuffers(1, 1, pCam->m_viewConstantBuffer.GetAddressOf());
 
     //DC->PSSetShaderResources(0, 1, PM->m_depthBufferSRV.GetAddressOf());   // DepthBuffer.
 

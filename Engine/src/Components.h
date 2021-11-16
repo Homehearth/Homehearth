@@ -3,6 +3,8 @@
 #include "RModel.h"
 #include "RAnimator.h"
 #include "ResourceManager.h"
+#include "BehaviorTreeBT.h"
+#include <stack>
 
 namespace ecs
 {
@@ -127,6 +129,12 @@ namespace ecs
 				}
 			}
 		};
+
+		struct BehaviorTree
+		{
+			BT::ParentNode* root;
+			BT::LeafNode* currentNode;
+		};
 		
 
 		struct TemporaryPhysics
@@ -166,45 +174,21 @@ namespace ecs
 			bool isReady = false;
 		};
 
-		struct Node
-		{
-			float f = FLT_MAX, g = FLT_MAX, h = FLT_MAX;
-			sm::Vector3 position;
-			Vector2I id;
-			std::vector<Node*> connections;
-			ecs::component::Node* parent;
-			bool reachable = true;
-			void ResetFGH()
-			{
-				f = FLT_MAX, g = FLT_MAX, h = FLT_MAX;
-			}
-			bool ConnectionAlreadyExists(Node* other)
-			{
-				for (Node* node : connections)
-				{
-					if (node == other)
-					{
-						return true;
-					}
-				}
-				return false;
-			}
-		};
+	
 
 		struct NPC
 		{
 			enum class State
 			{
-				IDLE,
 				ASTAR,
+				IDLE,
 				CHASE
 			} state;
 			float movementSpeed = 15.f;
 			float attackRange = 10.f;
 			bool hostile;
-			uint32_t currentNodeTarget = static_cast<uint32_t>(-1);
-			std::vector<ecs::component::Node*> path;
-			ecs::component::Node* currentNode;
+			std::vector<Node*> path;
+			Node* currentNode;
 			Entity currentClosest;
 		};
 

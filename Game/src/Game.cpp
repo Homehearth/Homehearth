@@ -770,12 +770,12 @@ bool Game::LoadMapColliders(const std::string& filename)
 			dx::BoundingOrientedBox bob(center, extents, orientation);
 
 			// This is for renderside
-			Entity collider = GetScene("Game").CreateEntity();
+			/*Entity collider = GetScene("Game").CreateEntity();
 			collider.AddComponent<comp::BoundingOrientedBox>()->Center = center;
 			collider.GetComponent<comp::BoundingOrientedBox>()->Extents = extents;
 			collider.GetComponent<comp::BoundingOrientedBox>()->Orientation = orientation;
 			collider.AddComponent<comp::Tag<TagType::STATIC>>();
-			collider.AddComponent<comp::Tag<TagType::MAP_BOUNDS>>();
+			collider.AddComponent<comp::Tag<TagType::MAP_BOUNDS>>();*/
 			m_LOSColliders.push_back(bob);
 		}
 	}

@@ -1,6 +1,8 @@
 #include "EnginePCH.h"
 #include "Scene.h"
 #include <omp.h>
+#include "Systems.h"
+
 
 Scene::Scene()
 	: m_IsRenderingColliders(true), m_updateAnimation(true)
@@ -13,6 +15,8 @@ Scene::Scene()
 	m_defaultCamera = CreateEntity();
 	m_defaultCamera.AddComponent<comp::Camera3D>()->camera.Initialize(sm::Vector3(0, 0, 0), sm::Vector3(0, 0, 1), sm::Vector3(0, 1, 0), sm::Vector2(1000, 1000), CAMERATYPE::DEFAULT);
 	SetCurrentCameraEntity(m_defaultCamera);
+
+	m_sky.Initialize("kiara1dawn.dds");
 }
 
 void Scene::Update(float dt)
@@ -57,9 +61,10 @@ void Scene::Update(float dt)
 				m_renderableCopies[0].push_back(r);
 			}
 		});
-		
+
 		m_renderableCopies.Swap();
 		m_renderableAnimCopies.Swap();
+		GetCurrentCamera()->Swap();
 	}
 	if (!m_debugRenderableCopies.IsSwapped())
 	{
@@ -91,6 +96,7 @@ void Scene::Update(float dt)
 		m_debugRenderableCopies.Swap();
 	}
 
+	Systems::UpdatePlayerVisuals(this);
 }
 
 void Scene::Update2D()
@@ -101,6 +107,7 @@ void Scene::Update2D()
 void Scene::Render()
 {
 	PROFILE_FUNCTION();
+
 	thread::RenderThreadHandler::Get().SetObjectsBuffer(&m_renderableCopies);
 	// Divides up work between threads.
 	const render_instructions_t inst = thread::RenderThreadHandler::Get().Launch(static_cast<int>(m_renderableCopies[1].size()));
@@ -219,6 +226,16 @@ void Scene::Render2D()
 {
 	m_2dHandler.Render();
 
+}
+
+void Scene::RenderSkybox()
+{
+	m_sky.Render();
+}
+
+Skybox* Scene::GetSkybox()
+{
+	return &m_sky;
 }
 
 bool Scene::IsRenderReady() const

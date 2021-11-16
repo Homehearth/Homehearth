@@ -33,6 +33,7 @@ struct Vector2I
 
 	Vector2I(int&& x, int&& y) :x(x), y(y) {};
 	Vector2I(int& x, int& y) :y(y), x(x) {};
+
 	Vector2I() = default;
 
 	bool operator==(const Vector2I& other)
@@ -274,6 +275,33 @@ static struct GridProperties_t
 	bool isVisible = true;
 
 } gridOptions;
+
+struct Node
+{
+	float f = FLT_MAX, g = FLT_MAX, h = FLT_MAX;
+	sm::Vector3 position;
+	Vector2I id;
+	std::vector<Node*> connections;
+	Node* parent = nullptr;
+	bool reachable = true;
+	Node(Vector2I id) : id(id) {};
+
+	void ResetFGH()
+	{
+		f = FLT_MAX, g = FLT_MAX, h = FLT_MAX;
+	}
+	bool ConnectionAlreadyExists(Node* other)
+	{
+		for (Node* node : connections)
+		{
+			if (node == other)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+};
 
 ALIGN16
 struct Particle_t
