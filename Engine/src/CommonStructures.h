@@ -52,8 +52,7 @@ struct Vector2I
 	}
 	Vector2I& operator+(const Vector2I& other)
 	{
-		Vector2I toReturn(this->x + other.x, this->y + other.y);
-		return toReturn;
+		return Vector2I(this->x + other.x, this->y + other.y);
 	}
 	Vector2I& operator+=(const Vector2I& other)
 	{
@@ -64,8 +63,7 @@ struct Vector2I
 	}
 	Vector2I& operator-(const Vector2I& other)
 	{
-		Vector2I toReturn(this->x - other.x, this->y - other.y);
-		return toReturn;
+		return Vector2I(this->x - other.x, this->y - other.y);
 	}
 	Vector2I& operator-=(const Vector2I& other)
 	{

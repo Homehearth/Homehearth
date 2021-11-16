@@ -193,6 +193,7 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 							collider->Extents = { m_tileHalfWidth, m_tileHalfWidth, m_tileHalfWidth };
 							tileEntity.AddComponent<comp::Tag<TagType::STATIC>>();
 							tileEntity.AddComponent<comp::MeshName>()->name = "Defence.obj";
+							tileEntity.AddComponent<comp::Network>();
 							Node* node = aiHandler->GetNodeByID(Vector2I(row, col));
 							node->defencePlaced = true;
 							//Check if connections need to be severed
@@ -202,13 +203,23 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 								if (diagNeighbor->defencePlaced)
 								{
 									Vector2I difference = node->id - diagNeighbor->id;
-									Node* connectionRemovalNode = aiHandler->GetNodeByID(node->id + difference);
-									node->RemoveConnection(connectionRemovalNode);
-									connectionRemovalNode->RemoveConnection(node);
-									
+									Vector2I adjacentNode;
+									adjacentNode.x = diagNeighbor->id.x + difference.x;
+									adjacentNode.y = diagNeighbor->id.y;
+									Node* connectionRemovalNode1 = aiHandler->GetNodeByID(adjacentNode);
+									adjacentNode.x = diagNeighbor->id.x;
+									adjacentNode.y = diagNeighbor->id.y + difference.y;
+									Node* connectionRemovalNode2 = aiHandler->GetNodeByID(adjacentNode);
+									if (!connectionRemovalNode1->RemoveConnection(connectionRemovalNode2))
+									{
+										LOG_INFO("Failed to remove connection1");
+									}
+									if (!connectionRemovalNode2->RemoveConnection(connectionRemovalNode1))
+									{
+										LOG_INFO("Failed to remove connection2");
+									}
 								}
 							}
-
 							node->connections.clear();
 						}
 					}
@@ -218,7 +229,7 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 		}
 	}
 
-	return false;
+	return true;
 }
 
 uint32_t GridSystem::GetTileCount() const
