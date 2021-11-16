@@ -39,6 +39,7 @@ std::shared_ptr<BT::FallbackNode> AIBehaviors::GetSimpleAIBehavior(Entity entity
 					seq2->AddChild(attackTarget);
 					seq3->AddChild(genPath);
 					seq3->AddChild(moveToTarget);
+			
 
 	return root;
 }
