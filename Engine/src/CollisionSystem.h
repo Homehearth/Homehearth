@@ -1,6 +1,9 @@
 #pragma once
 #include "Tags.h"
 
+#define RESPONSE true
+#define NO_RESPONSE false
+
 struct CollisionInfo_t
 {
 	bool hasCollided;
@@ -13,7 +16,7 @@ class CollisionSystem
 {
 private:
 	std::unordered_map<Entity, int> m_CollisionCount;
-	std::unordered_map<Entity, std::function<void(Entity, Entity)>> m_OnCollision;
+	std::unordered_map<Entity, std::function<bool(Entity, Entity)>> m_OnCollision;
 	CollisionSystem() = default;
 
 	
@@ -36,8 +39,8 @@ public:
 	
 	int GetCollisionCounts(Entity entity) const;
 	
-	void AddOnCollision(Entity entity1, std::function<void(Entity, Entity)> func);
-	void OnCollision(Entity entity1, Entity entity2);
+	void AddOnCollision(Entity entity1, std::function<bool(Entity, Entity)> func);
+	bool OnCollision(Entity entity1, Entity entity2);
 	Projection_t GetProjection(sm::Vector3 axis, sm::Vector3* corners);
 
 
