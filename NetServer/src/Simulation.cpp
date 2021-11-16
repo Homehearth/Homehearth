@@ -238,7 +238,7 @@ void Simulation::ResetPlayer(Entity player)
 		attackAbility->cooldown = 0.3f;
 		attackAbility->attackDamage = 40.f;
 		attackAbility->isRanged = false;
-		attackAbility->lifetime = 0.1f;
+		attackAbility->lifetime = 0.2f;
 		attackAbility->useTime = 0.2f;
 		attackAbility->delay = 0.1f;
 
@@ -438,7 +438,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 				
 				{
 					PROFILE_SCOPE("Collision Box/Box");
-					Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(scene, e.dt);
+					//Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(scene, e.dt);
 				}
 				{
 					PROFILE_SCOPE("Collision Sphere/Box");

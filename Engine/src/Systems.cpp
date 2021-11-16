@@ -99,6 +99,7 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 			{
 				//Creates an entity that's used to check collision if an attack lands.
 				Entity attackCollider = scene.CreateEntity();
+				
 				comp::Transform* t = attackCollider.AddComponent<comp::Transform>();
 				attackCollider.AddComponent<comp::Tag<TagType::DYNAMIC>>();
 
@@ -142,7 +143,7 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 						if ((entity.GetTags() & goodOrBad) ==
 							(other.GetTags() & goodOrBad))
 						{
-							return; //these guys are on the same team
+							return NO_RESPONSE; //these guys are on the same team
 						}
 
 						comp::Health* otherHealth = other.GetComponent<comp::Health>();
@@ -155,6 +156,7 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 							scene.publish<EComponentUpdated>(other, ecs::Component::HEALTH);
 
 							thisEntity.GetComponent<comp::SelfDestruct>()->lifeTime = 0.f;
+
 
 							comp::Velocity* attackVel = thisEntity.GetComponent<comp::Velocity>();
 							if (attackVel)

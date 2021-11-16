@@ -261,6 +261,7 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 				p.state = comp::Player::State::LOOK_TO_MOUSE; // set state even if ability is not ready for use yet
 				if (ecs::UseAbility(e, p.primaryAbilty, &p.mousePoint))
 				{
+					LOG_INFO("Used primary");
 
 				}
 

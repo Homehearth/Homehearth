@@ -24,13 +24,16 @@ void CollisionSystem::AddOnCollision(Entity entity1, std::function<bool(Entity, 
 
 bool CollisionSystem::OnCollision(Entity entity1, Entity entity2)
 {
+
+	bool doResponse = RESPONSE;
 	if (m_OnCollision.find(entity1) != m_OnCollision.end())
 	{
 		if (!entity1.IsNull())
 		{
 			if (!entity2.IsNull())
 			{
-				return m_OnCollision.at(entity1)(entity1, entity2);
+				if (!m_OnCollision.at(entity1)(entity1, entity2))
+					doResponse = NO_RESPONSE;
 			}
 		}
 		else
@@ -44,7 +47,8 @@ bool CollisionSystem::OnCollision(Entity entity1, Entity entity2)
 		{
 			if (!entity1.IsNull())
 			{
-				return m_OnCollision.at(entity2)(entity2, entity1);
+				if (!m_OnCollision.at(entity1)(entity1, entity2))
+					doResponse = NO_RESPONSE;
 			}
 		}
 		else
@@ -53,7 +57,7 @@ bool CollisionSystem::OnCollision(Entity entity1, Entity entity2)
 		}
 	}
 
-	return RESPONSE;
+	return doResponse;
 }
 
 
