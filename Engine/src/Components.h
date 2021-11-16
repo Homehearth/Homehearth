@@ -64,16 +64,18 @@ namespace ecs
 		struct EmitterParticle
 		{
 			std::shared_ptr<RTexture> texture = nullptr;
-			PARTICLEMODE type = PARTICLEMODE::SPARKLES;
+			PARTICLEMODE type = PARTICLEMODE::BLOOD;
 			UINT nrOfParticles = 0;
 
 			ComPtr<ID3D11Buffer> particleBuffer;
 			ComPtr<ID3D11ShaderResourceView> particleSRV;
 			ComPtr<ID3D11UnorderedAccessView> particleUAV;
 
-			EmitterParticle(std::string textureName = " ")
+			EmitterParticle(std::string textureName = " ", UINT amoutOfParticles = 10, PARTICLEMODE mode = PARTICLEMODE::BLOOD)
 			{
 				texture = ResourceManager::Get().GetResource<RTexture>(textureName);
+				nrOfParticles = amoutOfParticles;
+				type = mode;
 			}
 		};
 

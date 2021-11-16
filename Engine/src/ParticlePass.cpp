@@ -32,7 +32,7 @@ void ParticlePass::Render(Scene* pScene)
 		//Dispatch
 		//D3D11Core::Get().DeviceContext()->CSSetUnorderedAccessViews(0, 1, &m_nullUAV, nullptr);
 
-		D3D11Core::Get().DeviceContext()->PSSetShaderResources(2, 1, &emitter.texture->GetShaderView());
+		D3D11Core::Get().DeviceContext()->PSSetShaderResources(1, 1, &emitter.texture->GetShaderView());
 
 		D3D11Core::Get().DeviceContext()->VSSetShaderResources(17, 1, emitter.particleSRV.GetAddressOf());
 

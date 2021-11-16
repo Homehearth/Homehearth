@@ -23,11 +23,11 @@ void ParticleSystem::InitializeParticles(Entity* emitterEntity)
 	{
 		Particle_t tempParticle;
 		sm::Vector3 position = emitterEntity->GetComponent<comp::Transform>()->position;
-		sm::Vector4 newPosition = { position.x, position.y + i/2, position.z, 1.0f };
+		sm::Vector4 newPosition = { position.x, position.y + i*2, position.z, 1.0f };
 		tempParticle.position = newPosition;
 		tempParticle.startPosition = tempParticle.position;
 		tempParticle.type = emitter->type;
-		tempParticle.size = { 10, 10 };
+		tempParticle.size = { 1, 1 };
 		tempParticle.color = { 1,0,0,1 };
 
 
@@ -93,3 +93,4 @@ bool ParticleSystem::CreateBufferSRVUAV(std::vector<Particle_t> particles, comp:
 
 	return true;
 }
+
