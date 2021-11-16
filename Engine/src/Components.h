@@ -187,7 +187,6 @@ namespace ecs
 				CHASE
 			} state;
 			float movementSpeed = 15.f;
-			float attackRange = 10.f;
 			bool hostile;
 			std::vector<Node*> path;
 			Node* currentNode;
