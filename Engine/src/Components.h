@@ -62,7 +62,7 @@ namespace ecs
 		struct EmitterParticle
 		{
 			std::shared_ptr<RTexture> texture = nullptr;
-			UINT type = 0U;
+			PARTICLEMODE type = PARTICLEMODE::SPARKLES;
 			UINT nrOfParticles = 0;
 
 			ComPtr<ID3D11Buffer> particleBuffer;

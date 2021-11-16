@@ -1,7 +1,7 @@
 #ifndef _COMMON_HLSLI_
 	#error You may not include this header directly.
 #endif
-
+#include "Structures.hlsli"
 //---------------------------------------------------------------------------
 //	Constant buffers.
 //---------------------------------------------------------------------------
@@ -87,6 +87,7 @@ Texture2D t_decalAlpha              : register(t13);
 StructuredBuffer<float4x4> sb_boneTransforms : register(t9); // read as column major, actually is row major.
 StructuredBuffer<Light> sb_lights : register(t10);
 StructuredBuffer<float4x4> sb_decaldata : register(t16);
+StructuredBuffer<VertexParticleIn> particlesInput : register(t17);
 
 // Forward+
 //StructuredBuffer<PointLight> sb_pointLights : register();

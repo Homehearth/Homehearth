@@ -84,10 +84,10 @@ bool Game::OnStartup()
 	ParticleSystem particles;
 
 	Entity emitter = GetScene("Game").CreateEntity();
-	emitter.AddComponent<comp::Transform>();
-	comp::EmitterParticle* e = emitter.AddComponent <comp::EmitterParticle>("demoHost.png");
+	emitter.AddComponent<comp::Transform>()->position = {250,5,-340};
+	comp::EmitterParticle* e = emitter.AddComponent <comp::EmitterParticle>("thisisfine.png");
 	e->nrOfParticles = 10;
-	e->type = (UINT)PARTICLEMODE::SMOKE;
+	e->type = PARTICLEMODE::SMOKE;
 
 	particles.Initialize(D3D11Core::Get().Device());
 	particles.InitializeParticles(&emitter);

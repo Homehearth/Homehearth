@@ -1,15 +1,12 @@
 #include "Common.hlsli"
 
-VertexParticleOut main(VertexIn input)
+VertexParticleOut main(uint id : SV_InstanceID)
 {
     VertexParticleOut output;
     
-    output.pos = float4(input.pos, 1.0f);
-    output.pos = mul(c_world, output.pos);
-    output.worldPos = output.pos;
-    output.pos = mul(c_view, output.pos);
-    output.pos = mul(c_projection, output.pos);
-
+    output.pos = particlesInput[id].pos;
+    output.size = particlesInput[id].size;
+    output.color = particlesInput[id].color;
     
     return output;
 }

@@ -1,16 +1,6 @@
 #pragma once
 #include "EnginePCH.h"
 
-enum class PARTICLEMODE : UINT
-{
-	BLOOD,
-	LEAF,
-	WATERSPLASH,
-	SMOKE,
-	SPARKLES, 
-	RAIN
-};
-
 class ParticleSystem
 {
 private:

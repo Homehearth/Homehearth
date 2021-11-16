@@ -4,60 +4,42 @@
 
 struct VertexIn
 {
-    float3 pos          : POSITION;
-    float2 uv           : TEXCOORD;
-    float3 normal       : NORMAL;
-    float3 tangent      : TANGENT;
-    float3 biTangent    : BINORMAL;
-};
-
-struct VertexBoneIn
-{
-    float3 pos          : POSITION;
-    float2 uv           : TEXCOORD;
-    float3 normal       : NORMAL;
-    float3 tangent      : TANGENT;
-    float3 biTangent    : BINORMAL;
-    uint4  boneIDs      : BONEIDS;
-    float4 boneWeights  : BONEWEIGHTS;
-};
-
-struct VertexParticleIn
-{
-    float3 pos          : POSITION;
-    float4 startPos     : STARTPOSITION;
-    float3 color        : COLOR;
-    float2 size         : SIZE;
-    int typ             : TYPE;
-};
-
-struct VertexParticleOut
-{
-    float4 pos          : POSITION;
-    float3 color        : COLOR;
-    float3 normal       : NORMAL;
-    float2 uv           : TEXCOORD;
-    float4 worldPos     : WORLDPOSITION;
+    float3 pos              : POSITION;
+    float2 uv               : TEXCOORD;
+    float3 normal           : NORMAL;
+    float3 tangent          : TANGENT;
+    float3 biTangent        : BINORMAL;
 };
 
 struct VertexOut
 {
-    float4 pos          : SV_POSITION;
-    float2 uv           : TEXCOORD;
-    float3 normal       : NORMAL;
-    float3 tangent      : TANGENT;
-    float3 biTangent    : BINORMAL;
-    float4 worldPos     : WORLDPOSITION;
+    float4 pos              : SV_POSITION;
+    float2 uv               : TEXCOORD;
+    float3 normal           : NORMAL;
+    float3 tangent          : TANGENT;
+    float3 biTangent        : BINORMAL;
+    float4 worldPos         : WORLDPOSITION;
+};
+
+struct VertexBoneIn
+{
+    float3 pos              : POSITION;
+    float2 uv               : TEXCOORD;
+    float3 normal           : NORMAL;
+    float3 tangent          : TANGENT;
+    float3 biTangent        : BINORMAL;
+    uint4  boneIDs          : BONEIDS;
+    float4 boneWeights      : BONEWEIGHTS;
 };
 
 struct PixelIn
 {
-    float4 pos          : SV_POSITION;
-    float2 uv           : TEXCOORD;
-    float3 normal       : NORMAL;
-    float3 tangent      : TANGENT;
-    float3 biTangent    : BINORMAL;
-    float4 worldPos     : WORLDPOSITION;
+    float4 pos              : SV_POSITION;
+    float2 uv               : TEXCOORD;
+    float3 normal           : NORMAL;
+    float3 tangent          : TANGENT;
+    float3 biTangent        : BINORMAL;
+    float4 worldPos         : WORLDPOSITION;
 };
 
 struct ComputeShaderIn
@@ -66,6 +48,31 @@ struct ComputeShaderIn
     uint3 GroupThreadID     : SV_GroupThreadID;    
     uint3 DispatchThreadID  : SV_DispatchThreadID; 
     uint  GroupIndex        : SV_GroupIndex;       
+};
+
+struct VertexParticleIn
+{
+    float4 pos              : POSITION;
+    float4 startPos         : STARTPOS;
+    float4 color            : COLOR;
+    float2 size             : SIZE;
+    uint   type             : TYPE;
+    float padding;
+};
+
+struct VertexParticleOut
+{
+    float4 pos              : SV_POSITION;
+    float4 color            : COLOR;
+    float2 size             : SIZE;
+};
+
+struct PixelParticleIn
+{
+    float4 pos              : SV_POSITION;
+    float4 color            : COLOR;
+    float3 normal           : NORMAL;
+    float2 uv               : TEXCOORD;
 };
 
 struct Light

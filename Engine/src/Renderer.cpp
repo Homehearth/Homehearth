@@ -29,7 +29,7 @@ void Renderer::Initialize(Window* pWindow)
 	m_particlePass.SetEnable(true);
 
 #ifdef _DEBUG
-	AddPass(&m_debugPass);  // 4
+	AddPass(&m_debugPass);  // 5
     m_debugPass.SetEnable(true);
 #endif
 

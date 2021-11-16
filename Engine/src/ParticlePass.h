@@ -5,9 +5,14 @@
 class ParticlePass :public IRenderPass
 {
 private:
-	ID3D11Buffer* m_nullVertexBuffer = nullptr;
+
+	UINT m_offset = sizeof(Particle_t);
+	UINT m_stride = 0;
+
+	ID3D11Buffer* m_nullBuffer = nullptr;
 	ID3D11ShaderResourceView* m_nullSRV = nullptr;
 	ID3D11UnorderedAccessView* m_nullUAV = nullptr;
+	ID3D11GeometryShader* m_nullGS = nullptr;
 
 public:
 	ParticlePass() = default;

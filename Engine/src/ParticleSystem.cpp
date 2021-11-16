@@ -1,3 +1,4 @@
+#include "EnginePCH.h"
 #include "ParticleSystem.h"
 
 ParticleSystem::ParticleSystem()
@@ -21,11 +22,13 @@ void ParticleSystem::InitializeParticles(Entity* emitterEntity)
 	for (int i = 0; i < emitter->nrOfParticles; i++)
 	{
 		Particle_t tempParticle;
-		
-		tempParticle.position = emitterEntity->GetComponent<comp::Transform>()->position;
+		sm::Vector3 position = emitterEntity->GetComponent<comp::Transform>()->position;
+		sm::Vector4 newPosition = { position.x, position.y + i/2, position.z, 1.0f };
+		tempParticle.position = newPosition;
 		tempParticle.startPosition = tempParticle.position;
 		tempParticle.type = emitter->type;
-		tempParticle.size = { 1,1,1, };
+		tempParticle.size = { 10, 10 };
+		tempParticle.color = { 1,0,0,1 };
 
 
 		particles[i] =  tempParticle;
@@ -85,6 +88,8 @@ bool ParticleSystem::CreateBufferSRVUAV(std::vector<Particle_t> particles, comp:
 		LOG_ERROR("Couldnt create particle UAV");
 		return false;
 	}
+
+	
 
 	return true;
 }

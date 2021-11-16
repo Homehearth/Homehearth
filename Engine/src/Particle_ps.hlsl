@@ -1,6 +1,14 @@
 #include "Common.hlsli"
 
-float4 main() : SV_TARGET
+//Texture2D t_albedo : register(t1);
+
+float4 main(PixelParticleIn input) : SV_TARGET
 {
-	return float4(1.0f, 1.0f, 1.0f, 1.0f);
+	
+    float4 finalColor;
+    
+    finalColor = t_albedo.Sample(s_linear, input.uv);
+    finalColor = finalColor * input.color;
+        
+    return finalColor;
 }

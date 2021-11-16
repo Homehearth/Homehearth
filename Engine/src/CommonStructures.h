@@ -17,6 +17,16 @@ enum class TypeLight : UINT
 	POINT
 };
 
+enum class PARTICLEMODE : UINT
+{
+	BLOOD,
+	LEAF,
+	WATERSPLASH,
+	SMOKE,
+	SPARKLES,
+	RAIN
+};
+
 struct Vector2I
 {
 	int x = 0, y = 0;
@@ -265,12 +275,14 @@ static struct GridProperties_t
 
 } gridOptions;
 
-
+ALIGN16
 struct Particle_t
 {
-	sm::Vector3 position;
-	sm::Vector3 startPosition;
-	sm::Vector2 size;
-	sm::Vector3 color;
-	UINT type;
+	sm::Vector4		position;
+	sm::Vector4		startPosition;
+	sm::Vector4		color;
+
+	sm::Vector2		size;
+	PARTICLEMODE	type;
+	float			padding = 0;
 };
