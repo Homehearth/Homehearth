@@ -1,6 +1,8 @@
 #pragma once
 
-enum TagType : uint8_t
+typedef uint8_t tag_bits;
+
+enum TagType : tag_bits
 {
 	CAMERA = 1,
 	DEBUG_CAMERA = 2,

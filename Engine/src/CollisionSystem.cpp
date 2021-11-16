@@ -1,8 +1,6 @@
 #include "EnginePCH.h"
 #include "CollisionSystem.h"
 
-
-
 //Returns number of how many colliders the entity is colliding with
 int CollisionSystem::GetCollisionCounts(Entity entity) const
 {
@@ -59,22 +57,22 @@ void CollisionSystem::OnCollision(Entity entity1, Entity entity2)
 
 CollisionSystem::Projection_t CollisionSystem::GetProjection(sm::Vector3 axis, sm::Vector3* corners)
 {
-	double min = axis.Dot(corners[0]);
-	double max = min;
+	float min = axis.Dot(corners[0]);
+	float max = min;
 
-	for(int i = 1; i < 8; i++)
+	for (int i = 1; i < 8; i++)
 	{
-		double p = axis.Dot(corners[i]);
+		float p = axis.Dot(corners[i]);
 
-		if(p < min)
+		if (p < min)
 		{
 			min = p;
 		}
-		else if(p > max)
+		else if (p > max)
 		{
 			max = p;
 		}
-		
+
 	}
 
 	//Projection_t projection = {min, max};
@@ -86,124 +84,194 @@ CollisionSystem::Projection_t CollisionSystem::GetProjection(sm::Vector3 axis, s
 //each corners crosses each other and take the axis that differs the least.
 CollisionInfo_t CollisionSystem::Intersection(Entity entity1, Entity entity2)
 {
+	tag_bits p1Tags = entity1.GetTags();
+	tag_bits p2Tags = entity2.GetTags();
+
+	// Sphere - Sphere
+	if (p1Tags & TagType::DYNAMIC && p2Tags & TagType::DYNAMIC)
+	{
+		comp::BoundingSphere* p1BoS = entity1.GetComponent<comp::BoundingSphere>();
+		comp::BoundingSphere* p2BoS = entity2.GetComponent<comp::BoundingSphere>();
+		sm::Vector3 vec = sm::Vector3(p2BoS->Center) - sm::Vector3(p1BoS->Center);
+		float distance = vec.Length();
+		vec.Normalize();
+		float radius = (p1BoS->Radius + p2BoS->Radius);
+		if (distance < radius)
+		{
+			float overlap = (radius - distance) * 0.5f;
+
+			return { true, overlap, vec };
+		}
+	}
+	//Sphere - OBB
+	else if (p1Tags & TagType::DYNAMIC && p2Tags & TagType::STATIC)
+	{
+		comp::BoundingSphere* p1BoS = entity1.GetComponent<comp::BoundingSphere>();
+		comp::BoundingOrientedBox* p2OBB = entity2.GetComponent<comp::BoundingOrientedBox>();
+
+		sm::Matrix Translation = sm::Matrix::CreateTranslation(p2OBB->Center);
+		sm::Matrix Rotation = sm::Matrix::CreateFromQuaternion(p2OBB->Orientation);
+		sm::Matrix obbInverse = (Translation * Rotation).Invert();
+		sm::Vector3 obbLocalPos = p2OBB->Center;
+		// Put the obb in local space
+		obbLocalPos = sm::Vector3::Transform(obbLocalPos, obbInverse);
+		sm::Vector3 sCenter = p1BoS->Center;
+		// Put the sphere in the obb's local space
+		sCenter = sm::Vector3::Transform(sCenter, obbInverse);
+
+		// Get the closest point on the OBB that is inside the sphere
+		float closestX = max(obbLocalPos.x - p2OBB->Extents.x, min(sCenter.x, obbLocalPos.x + p2OBB->Extents.x));
+		float closestY = max(obbLocalPos.y - p2OBB->Extents.y, min(sCenter.y, obbLocalPos.y + p2OBB->Extents.y));
+		float closestZ = max(obbLocalPos.z - p2OBB->Extents.z, min(sCenter.z, obbLocalPos.z + p2OBB->Extents.z));
+		sm::Vector3 ClosestPoint = { closestX, closestY, closestZ };
+		sm::Vector3 pointToSphere = sCenter - ClosestPoint;
+
+		float distance = pointToSphere.Length();
+
+		// If the distance between the point that is inside the Sphere (on the OBB) 
+		// is less that the radius we are intersecting
+		// MIGHT NEED TO ADD MORE LOGIC IF THE SPHERE CENTER EVER COLLIDES WITH THE BOX
+		if (distance < p1BoS->Radius)
+		{
+			float overlap = (p1BoS->Radius - distance);
+
+			pointToSphere.Normalize();
+			// To use the normal in world space, transform it back.
+			pointToSphere = sm::Vector3::TransformNormal(pointToSphere, obbInverse.Invert());
+			// For some stupid reason we get the axis inverted, invert it back.
+			pointToSphere * -1.f;
+
+			return { true, overlap, pointToSphere };
+		}
+	}
+
+	return { false, 0.0f, sm::Vector3::Zero };
+
+
+
+
+	/*
+		DONT DELETE IF WE NEED TO REUSE THIS LATER
+	*/
+
+/*
 	comp::BoundingOrientedBox* p1Obb = entity1.GetComponent<comp::BoundingOrientedBox>();
 	comp::BoundingOrientedBox* p2Obb = entity2.GetComponent<comp::BoundingOrientedBox>();
-
 	if (p1Obb == nullptr || p2Obb == nullptr)
 	{
-		LOG_ERROR("Attempt to perform collision response with or against an entity that does not have a collider component");
-		return {false, 0.0, sm::Vector3::Zero};
+		//LOG_ERROR("Attempt to perform collision response with or against an entity that does not have a collider component");
+		return { false, 0.0f, sm::Vector3::Zero };
 	}
-	
+
 	sm::Vector3 p2Corners[8];
 	sm::Vector3 p1Corners[8];
-	
+
 	p2Obb->GetCorners(p2Corners);
 	p1Obb->GetCorners(p1Corners);
-	
+
 	sm::Vector3 normals[6] = { sm::Vector3(1.0,0.0,0.0f),sm::Vector3(0.0,1.0,0.0f), sm::Vector3(0.0,0.0,1.0f), sm::Vector3(-1.0,0.0,0.0f),sm::Vector3(0.0,-1.0,0.0f), sm::Vector3(0.0,0.0,-1.0f) };
 	std::vector<sm::Vector3> allAxis;
 
-	allAxis.emplace_back(DirectX::XMVector3Rotate(normals[0], DirectX::XMLoadFloat4(& p1Obb->Orientation)));
-	allAxis.emplace_back(DirectX::XMVector3Rotate(normals[1], DirectX::XMLoadFloat4(& p1Obb->Orientation)));
-	allAxis.emplace_back(DirectX::XMVector3Rotate(normals[2], DirectX::XMLoadFloat4(& p1Obb->Orientation)));
-	allAxis.emplace_back(DirectX::XMVector3Rotate(normals[3], DirectX::XMLoadFloat4(& p1Obb->Orientation)));
-	allAxis.emplace_back(DirectX::XMVector3Rotate(normals[4], DirectX::XMLoadFloat4(& p1Obb->Orientation)));
-	allAxis.emplace_back(DirectX::XMVector3Rotate(normals[5], DirectX::XMLoadFloat4(& p1Obb->Orientation)));
-	
+	allAxis.emplace_back(DirectX::XMVector3Rotate(normals[0], DirectX::XMLoadFloat4(&p1Obb->Orientation)));
+	allAxis.emplace_back(DirectX::XMVector3Rotate(normals[1], DirectX::XMLoadFloat4(&p1Obb->Orientation)));
+	allAxis.emplace_back(DirectX::XMVector3Rotate(normals[2], DirectX::XMLoadFloat4(&p1Obb->Orientation)));
+	allAxis.emplace_back(DirectX::XMVector3Rotate(normals[3], DirectX::XMLoadFloat4(&p1Obb->Orientation)));
+	allAxis.emplace_back(DirectX::XMVector3Rotate(normals[4], DirectX::XMLoadFloat4(&p1Obb->Orientation)));
+	allAxis.emplace_back(DirectX::XMVector3Rotate(normals[5], DirectX::XMLoadFloat4(&p1Obb->Orientation)));
+
 	allAxis.emplace_back(DirectX::XMVector3Rotate(normals[0], DirectX::XMLoadFloat4(&p2Obb->Orientation)));
 	allAxis.emplace_back(DirectX::XMVector3Rotate(normals[1], DirectX::XMLoadFloat4(&p2Obb->Orientation)));
 	allAxis.emplace_back(DirectX::XMVector3Rotate(normals[2], DirectX::XMLoadFloat4(&p2Obb->Orientation)));
 	allAxis.emplace_back(DirectX::XMVector3Rotate(normals[3], DirectX::XMLoadFloat4(&p2Obb->Orientation)));
 	allAxis.emplace_back(DirectX::XMVector3Rotate(normals[4], DirectX::XMLoadFloat4(&p2Obb->Orientation)));
 	allAxis.emplace_back(DirectX::XMVector3Rotate(normals[5], DirectX::XMLoadFloat4(&p2Obb->Orientation)));
-	
-	double overlap = DBL_MAX;
+
+	float overlap = FLT_MAX;
 	sm::Vector3 smallest = sm::Vector3::Zero;
 
-	for(int i = 0; i < allAxis.size(); i++)
+	for (int i = 0; i < allAxis.size(); i++)
 	{
 		sm::Vector3 axis = allAxis.at(i);
-		
+
 		//Project both shapes on the axis
 		Projection_t p1 = GetProjection(axis, p1Corners);
 		Projection_t p2 = GetProjection(axis, p2Corners);
 
 		// 1D
-		if((p1.max < p2.min))
+		if ((p1.max < p2.min))
 		{
 			//NO OVERLAP
-			return { false,0.0, sm::Vector3::Zero };
+			return { false, 0.0f, sm::Vector3::Zero };
 		}
 		else
 		{
 			//Get the overlap
-			double o = p1.max - p2.min;
+			float o = p1.max - p2.min;
 
-			if(o < overlap)
+			if (o < overlap)
 			{
 				overlap = o;
 				smallest = axis;
 			}
-
 		}
 	}
 
 	return { true,overlap,smallest };
-	
+*/
 }
 
 void CollisionSystem::CollisionResponse(CollisionInfo_t collisionInfo, Entity entity1, Entity entity2)
 {
+	tag_bits p1Tags = entity1.GetTags();
+	tag_bits p2Tags = entity2.GetTags();
 
-	for(int i = -1; i < 2; i += 2) // runs twice, i becomes -1 and then 1
-	{ 
-		if(entity1.GetComponent<comp::Tag<DYNAMIC>>() && entity2.GetComponent<comp::Tag<STATIC>>())
+	if (p1Tags & TagType::DYNAMIC && p2Tags & TagType::STATIC)
+	{
+		comp::Transform* transform = entity1.GetComponent<comp::Transform>();
+		comp::BoundingSphere* BoS = entity1.GetComponent<comp::BoundingSphere>();
+		if (transform)
 		{
-			comp::Transform* transform = entity1.GetComponent<comp::Transform>();
-			comp::BoundingOrientedBox* obb = entity1.GetComponent<comp::BoundingOrientedBox>();
-			if (transform)
-			{
-				transform->position = transform->position + sm::Vector3(collisionInfo.smallestVec * (float)collisionInfo.overlap * (float)i);
-			
-				if (obb)
-					obb->Center = transform->position;
+			transform->position = transform->position + sm::Vector3(collisionInfo.smallestVec * collisionInfo.overlap);
 
-				// make sure client gets updated position
-				entity1.UpdateNetwork();
+			if (BoS)
+			{
+				BoS->Center = transform->position;
 			}
-			
+
+			// make sure client gets updated position
+			entity1.UpdateNetwork();
 		}
-		// swap entities so we check the opposite the next iteration
-		std::swap(entity1, entity2);
 	}
-	
-	if(entity2.GetComponent<comp::Tag<DYNAMIC>>() && entity1.GetComponent<comp::Tag<DYNAMIC>>())
+	if (p1Tags & TagType::DYNAMIC && p2Tags & TagType::DYNAMIC)
 	{
 		comp::Transform* transform1 = entity1.GetComponent<comp::Transform>();
 		comp::Transform* transform2 = entity2.GetComponent<comp::Transform>();
-		comp::BoundingOrientedBox* obb1 = entity1.GetComponent<comp::BoundingOrientedBox>();
-		comp::BoundingOrientedBox* obb2 = entity2.GetComponent<comp::BoundingOrientedBox>();
+		comp::BoundingSphere* BoS1 = entity1.GetComponent<comp::BoundingSphere>();
+		comp::BoundingSphere* BoS2 = entity2.GetComponent<comp::BoundingSphere>();
 		//Dynamic
 		if (transform1)
 		{
-			transform1->position = transform1->position + (sm::Vector3(collisionInfo.smallestVec * (float)collisionInfo.overlap * -1.1f) * 0.5f);
+			transform1->position = transform1->position + (sm::Vector3(collisionInfo.smallestVec * collisionInfo.overlap * -1.0f));
+			transform1->position.y = 0.f;
 
-			if (obb1)
-				obb1->Center = transform1->position;
+			if (BoS1)
+			{
+				BoS1->Center = transform1->position;
+			}
 
 			entity1.UpdateNetwork();
 		}
-
 		if (transform2)
 		{
-			transform2->position = transform2->position + (sm::Vector3(collisionInfo.smallestVec * (float)collisionInfo.overlap) * 0.5f);
+			transform2->position = transform2->position + (sm::Vector3(collisionInfo.smallestVec * collisionInfo.overlap));
+			transform2->position.y = 0.f;
 
-			if (obb2)
-				obb2->Center = transform2->position;
+			if (BoS2)
+			{
+				BoS2->Center = transform2->position;
+			}
 
 			entity2.UpdateNetwork();
 		}
-			
 	}
 }

@@ -73,6 +73,16 @@ void rtd::Button::SetPosition(const float& x, const float& y)
 {
 	m_drawOpts.x_pos = x;
 	m_drawOpts.y_pos = y;
+
+	m_picture->UpdatePos(m_drawOpts);
+}
+
+void rtd::Button::SetScale(const float& x, const float& y)
+{
+	m_drawOpts.width = x;
+	m_drawOpts.height = y;
+
+	m_picture->UpdatePos(m_drawOpts);
 }
 
 void rtd::Button::AddPosition(const float& x, const float& y)
