@@ -203,13 +203,8 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 								if (diagNeighbor->defencePlaced)
 								{
 									Vector2I difference = node->id - diagNeighbor->id;
-									Vector2I adjacentNode;
-									adjacentNode.x = diagNeighbor->id.x + difference.x;
-									adjacentNode.y = diagNeighbor->id.y;
-									Node* connectionRemovalNode1 = aiHandler->GetNodeByID(adjacentNode);
-									adjacentNode.x = diagNeighbor->id.x;
-									adjacentNode.y = diagNeighbor->id.y + difference.y;
-									Node* connectionRemovalNode2 = aiHandler->GetNodeByID(adjacentNode);
+									Node* connectionRemovalNode1 = aiHandler->GetNodeByID(Vector2I(diagNeighbor->id.x + difference.x, diagNeighbor->id.y));
+									Node* connectionRemovalNode2 = aiHandler->GetNodeByID(Vector2I(diagNeighbor->id.x, diagNeighbor->id.y + difference.y));
 									if (!connectionRemovalNode1->RemoveConnection(connectionRemovalNode2))
 									{
 										LOG_INFO("Failed to remove connection1");
@@ -220,10 +215,8 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 									}
 								}
 							}
-							node->connections.clear();
 						}
 					}
-
 				}
 			}
 		}

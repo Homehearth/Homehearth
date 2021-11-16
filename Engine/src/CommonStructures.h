@@ -41,8 +41,7 @@ struct Vector2I
 {
 	int x = 0, y = 0;
 
-	Vector2I(int&& x, int&& y) :x(x), y(y) {};
-	Vector2I(int& x, int& y) :y(y), x(x) {};
+	Vector2I(int x, int y) :y(y), x(x) {};
 
 	Vector2I() = default;
 
@@ -374,6 +373,18 @@ struct Node
 			}
 		}
 		return DiagConnections;
+	}
+	std::vector<Node*> GetAdjacentConnections()
+	{
+		std::vector<Node*> AdjConnections;
+		for (Node* connection : connections)
+		{
+			if (connection->id.x == this->id.x || connection->id.y == this->id.y)
+			{
+				AdjConnections.push_back(connection);
+			}
+		}
+		return AdjConnections;
 	}
 	bool ConnectionAlreadyExists(Node* other)
 	{

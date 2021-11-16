@@ -117,7 +117,7 @@ void PathFinderManager::CreateNodes(GridSystem* grid)
 
 			Node* currentNode = AddNode(tile->gridID);
 			currentNode->position = tile->position;
-			if (tile->type == TileType::DEFENCE || 
+			if (tile->type == TileType::DEFENCE ||
 				tile->type == TileType::UNPLACABLE ||
 				tile->type == TileType::BUILDING)
 			{
@@ -128,7 +128,7 @@ void PathFinderManager::CreateNodes(GridSystem* grid)
 				std::vector<Node*> neighbors = GetNeighbors(grid, tile);
 				for (auto neighbor : neighbors)
 				{
-						m_nodes[j][i]->connections.push_back(neighbor);
+					m_nodes[j][i]->connections.push_back(neighbor);
 				}
 			}
 
@@ -176,68 +176,78 @@ void PathFinderManager::AStarSearch(Entity npc)
 	{
 		return;
 	}
-
-	npcComp->path.clear();
-
-	while (!openList.empty())
+	std::vector<Node*> adjNodes = goalNode->GetAdjacentConnections();
+	int itr = 0;
+	for (Node* node : adjNodes)
 	{
-		Node* currentNode = openList.at(0);
-		int ind = 0;
-		for (int i = 1; i < openList.size(); i++)
+		if (node->defencePlaced)
 		{
-			if (openList[i]->f < currentNode->f)
-			{
-				currentNode = openList[i];
-				ind = i;
-			}
+			itr++;
 		}
-		openList.erase(openList.begin() + ind);
-		closedList.emplace_back(currentNode);
-
-		if (currentNode == goalNode)
+	}
+	if (itr < adjNodes.size())
+	{
+		npcComp->path.clear();
+		while (!openList.empty())
 		{
-			//Trace the path back
-			if (goalNode->parent)
+			Node* currentNode = openList.at(0);
+			int ind = 0;
+			for (int i = 1; i < openList.size(); i++)
 			{
-				while (currentNode != startingNode)
+				if (openList[i]->f < currentNode->f)
 				{
-					npcComp->path.push_back(currentNode);
-					currentNode = currentNode->parent;
+					currentNode = openList[i];
+					ind = i;
 				}
 			}
+			openList.erase(openList.begin() + ind);
+			closedList.emplace_back(currentNode);
 
-			for (int i = 0; i < m_nodes.size(); i++)
+			if (currentNode == goalNode)
 			{
-				for (int j = 0; j < m_nodes[i].size(); j++)
+				//Trace the path back
+				if (goalNode->parent)
 				{
-					m_nodes[i][j]->parent = nullptr;
-					m_nodes[i][j]->ResetFGH();
+					while (currentNode != startingNode)
+					{
+						npcComp->path.push_back(currentNode);
+						currentNode = currentNode->parent;
+					}
 				}
+
+				for (int i = 0; i < m_nodes.size(); i++)
+				{
+					for (int j = 0; j < m_nodes[i].size(); j++)
+					{
+						m_nodes[i][j]->parent = nullptr;
+						m_nodes[i][j]->ResetFGH();
+					}
+				}
+				return;
 			}
-			return;
-		}
 
-		for (auto neighbour : currentNode->connections)
-		{
-			float gNew, hNew, fNew;
-			if (IsInVector(closedList, neighbour) || neighbour->defencePlaced || !neighbour->reachable)
+			for (auto neighbour : currentNode->connections)
 			{
-				continue;
-			}
+				float gNew, hNew, fNew;
+				if (IsInVector(closedList, neighbour) || neighbour->defencePlaced || !neighbour->reachable)
+				{
+					continue;
+				}
 
-			gNew = currentNode->g + sm::Vector3::Distance(neighbour->position, currentNode->position);
-			hNew = sm::Vector3::Distance(goalNode->position, neighbour->position);
-			fNew = gNew + hNew;
+				gNew = currentNode->g + sm::Vector3::Distance(neighbour->position, currentNode->position);
+				hNew = sm::Vector3::Distance(goalNode->position, neighbour->position);
+				fNew = gNew + hNew;
 
-			if (gNew < currentNode->g || !IsInVector(openList, neighbour))
-			{
-				neighbour->g = gNew;
-				neighbour->h = hNew;
-				neighbour->f = fNew;
+				if (gNew < currentNode->g || !IsInVector(openList, neighbour))
+				{
+					neighbour->g = gNew;
+					neighbour->h = hNew;
+					neighbour->f = fNew;
 
-				neighbour->parent = currentNode;
+					neighbour->parent = currentNode;
 
-				openList.emplace_back(neighbour);
+					openList.emplace_back(neighbour);
+				}
 			}
 		}
 	}
