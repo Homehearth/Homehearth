@@ -127,7 +127,7 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 				attackCollider.AddComponent<comp::Network>();
 
 				
-				CollisionSystem::Get().AddOnCollision(attackCollider, [entity, &scene](Entity thisEntity, Entity other)
+				CollisionSystem::Get().AddOnCollisionEnter(attackCollider, [entity, &scene](Entity thisEntity, Entity other)
 					{
 						// is caster already dead
 						if (entity.IsNull())
@@ -212,15 +212,11 @@ void Systems::HealingSystem(HeadlessScene& scene, float dt)
 				transform->position = entity.GetComponent<comp::Transform>()->position;
 				transform->scale = sm::Vector3(2);
 				
-				/*
 				comp::BoundingSphere* sphere = collider.AddComponent<comp::BoundingSphere>();
 				sphere->Center = transform->position;
 				sphere->Radius = 1.f;
-				*/
-				//collider.AddComponent<comp::MeshName>()->name = "Sphere.obj";
 
-				comp::BoundingOrientedBox* box = collider.AddComponent<comp::BoundingOrientedBox>();
-				box->Center = transform->position;
+				collider.AddComponent<comp::Tag<TagType::DYNAMIC>>();
 				
 				comp::Velocity* vel = collider.AddComponent<comp::Velocity>();
 				vel->scaleVel = sm::Vector3(20);
@@ -229,6 +225,21 @@ void Systems::HealingSystem(HeadlessScene& scene, float dt)
 				collider.AddComponent<comp::SelfDestruct>()->lifeTime = ability.lifetime;
 
 				collider.AddComponent<comp::Network>();
+
+				CollisionSystem::Get().AddOnCollisionEnter(collider, [&, entity](Entity thisEntity, Entity other)
+					{
+						if (entity.IsNull())
+							return NO_RESPONSE;
+
+						comp::Health* h = other.GetComponent<comp::Health>();
+						if (h)
+						{
+							h->currentHealth += ability.healAmount;
+							scene.publish<EComponentUpdated>(other, ecs::Component::HEALTH);
+						}
+
+						return NO_RESPONSE;
+					});
 
 			}
 		});
