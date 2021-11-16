@@ -57,12 +57,6 @@ void Scene::Update(float dt)
 				m_renderableCopies[0].push_back(r);
 			}
 		});
-			
-
-		m_registry.view<comp::EmitterParticle, comp::Transform>().each([&](entt::entity entity, comp::EmitterParticle& emitter, comp::Transform& t)
-			{
-				m_emitterParticles[0].push_back(emitter);
-			});		
 		
 		m_renderableCopies.Swap();
 		m_renderableAnimCopies.Swap();
@@ -224,11 +218,7 @@ void Scene::RenderDebug()
 void Scene::Render2D()
 {
 	m_2dHandler.Render();
-}
 
-void Scene::RenderParticles()
-{
-	//m_emitterParticles;
 }
 
 bool Scene::IsRenderReady() const

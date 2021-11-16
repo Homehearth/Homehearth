@@ -12,7 +12,6 @@ private:
 	DoubleBuffer<std::vector<comp::Renderable>> m_renderableTransparent;
 	DoubleBuffer<std::vector<comp::RenderableDebug>> m_debugRenderableCopies;
 	DoubleBuffer<std::vector<std::pair<comp::Renderable,comp::Animator>>> m_renderableAnimCopies;
-	DoubleBuffer<std::vector<comp::EmitterParticle>> m_emitterParticles;
 
 	dx::ConstantBuffer<basic_model_matrix_t> m_publicBuffer;
 	dx::ConstantBuffer<collider_hit_t> m_ColliderHitBuffer;
@@ -48,7 +47,6 @@ public:
 	void RenderDebug();
 	void RenderAnimation();
 	void Render2D();
-	void RenderParticles();
 
 	bool IsRenderReady() const;
 

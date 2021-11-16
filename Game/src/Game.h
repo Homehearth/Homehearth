@@ -3,6 +3,7 @@
 #include <Engine.h>
 #include <GridSystem.h>
 #include "Predictor.h"
+#include "ParticleSystem.h"
 
 class Game : public Engine
 {

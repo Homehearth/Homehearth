@@ -81,6 +81,16 @@ bool Game::OnStartup()
 	// Set Current Scene
 	SetScene("MainMenu");
 
+	ParticleSystem particles;
+
+	Entity emitter = GetScene("Game").CreateEntity();
+	emitter.AddComponent<comp::Transform>();
+	comp::EmitterParticle* e = emitter.AddComponent <comp::EmitterParticle>("demoHost.png");
+	e->nrOfParticles = 10;
+	e->type = (UINT)PARTICLEMODE::SMOKE;
+
+	particles.Initialize(D3D11Core::Get().Device());
+	particles.InitializeParticles(&emitter);
 
 	return true;
 }

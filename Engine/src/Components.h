@@ -61,16 +61,17 @@ namespace ecs
 
 		struct EmitterParticle
 		{
-			RTexture* texture = nullptr;
+			std::shared_ptr<RTexture> texture = nullptr;
 			UINT type = 0U;
 			UINT nrOfParticles = 0;
-			std::vector<Particle_t> particles;
+
+			ComPtr<ID3D11Buffer> particleBuffer;
+			ComPtr<ID3D11ShaderResourceView> particleSRV;
+			ComPtr<ID3D11UnorderedAccessView> particleUAV;
 
 			EmitterParticle(std::string textureName = " ")
 			{
-				RTexture* texture;
-				texture->Create(textureName);
-				this->texture = texture;
+				texture = ResourceManager::Get().GetResource<RTexture>(textureName);
 			}
 		};
 

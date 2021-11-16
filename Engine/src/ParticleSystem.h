@@ -5,9 +5,9 @@ enum class PARTICLEMODE : UINT
 {
 	BLOOD,
 	LEAF,
-	WASTER,
+	WATERSPLASH,
 	SMOKE,
-	SPARKELS, 
+	SPARKLES, 
 	RAIN
 };
 
@@ -15,11 +15,20 @@ class ParticleSystem
 {
 private:
 
+	RTexture* texture = nullptr;
+	UINT type = 0U;
+	UINT nrOfParticles = 0;
+	std::vector<Particle_t> particles;
+
+	ID3D11Device* m_pDevice;
+
 public:
 	ParticleSystem();
 	~ParticleSystem();
 
-	void Initialize(Entity* emitterEntity);
+	void Initialize(ID3D11Device* pDevice);
+	void InitializeParticles(Entity* emitterEntity);
+
+	bool CreateBufferSRVUAV(std::vector<Particle_t> particles, comp::EmitterParticle* emitter);
 
 };
-

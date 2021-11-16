@@ -5,6 +5,9 @@
 class ParticlePass :public IRenderPass
 {
 private:
+	ID3D11Buffer* m_nullVertexBuffer = nullptr;
+	ID3D11ShaderResourceView* m_nullSRV = nullptr;
+	ID3D11UnorderedAccessView* m_nullUAV = nullptr;
 
 public:
 	ParticlePass() = default;

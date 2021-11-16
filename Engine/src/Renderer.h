@@ -5,6 +5,7 @@
 #include "AnimationPass.h"
 #include "PipelineManager.h"
 #include "DecalPass.h"
+#include "ParticlePass.h"
 
 
 class Renderer
@@ -19,6 +20,7 @@ private:
 	DebugPass		m_debugPass;
 	AnimationPass	m_animPass;
 	DecalPass		m_decalPass;
+	ParticlePass	m_particlePass;
 	unsigned int m_currentPass = 0;
 
 	// Update per frame related resources.
