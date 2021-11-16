@@ -58,8 +58,8 @@ inline void Systems::CheckCollisions(HeadlessScene& scene, float dt)
 					CollisionInfo_t collisionInfo = CollisionSystem::Get().Intersection(e1, e2);
 					if (collisionInfo.hasCollided)
 					{
-						CollisionSystem::Get().OnCollision(e1, e2);
-						CollisionSystem::Get().CollisionResponse(collisionInfo, e1, e2);
+						if(CollisionSystem::Get().OnCollision(e1, e2))
+							CollisionSystem::Get().CollisionResponse(collisionInfo, e1, e2);
 					}
 					
 				}

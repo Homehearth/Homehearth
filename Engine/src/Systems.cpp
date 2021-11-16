@@ -94,18 +94,18 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 				//Creates an entity that's used to check collision if an attack lands.
 				Entity attackCollider = scene.CreateEntity();
 				comp::Transform* t = attackCollider.AddComponent<comp::Transform>();
-				comp::BoundingOrientedBox* box = attackCollider.AddComponent<comp::BoundingOrientedBox>();
-				
-				box->Extents = sm::Vector3(stats.attackRange * 0.5f, 10, stats.attackRange * 0.5f);
+				attackCollider.AddComponent<comp::Tag<TagType::DYNAMIC>>();
+
+				comp::BoundingSphere* bos = attackCollider.AddComponent<comp::BoundingSphere>();
+
+				bos->Radius = stats.attackRange;
 				
 				sm::Vector3 targetDir = stats.targetPoint - transform.position;
 				targetDir.Normalize();
 				t->position = transform.position + targetDir * stats.attackRange * 0.5f + sm::Vector3(0, 4, 0);
 				t->rotation = transform.rotation;
 
-				box->Center = t->position;
-				box->Orientation = t->rotation;
-
+				bos->Center = t->position;
 
 				comp::SelfDestruct* selfDestruct = attackCollider.AddComponent<comp::SelfDestruct>();
 				selfDestruct->lifeTime = stats.lifetime;
@@ -126,11 +126,11 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 						if (entity.IsNull())
 						{
 							thisEntity.GetComponent<comp::SelfDestruct>()->lifeTime = 0.f;
-							return;
+							return NO_RESPONSE;
 						}
 
 						if (other == entity)
-							return;
+							return NO_RESPONSE;
 
 
 						comp::Health* otherHealth = other.GetComponent<comp::Health>();
@@ -175,6 +175,7 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 							}
 							
 						}
+						return NO_RESPONSE;
 					});
 
 		}
