@@ -272,8 +272,10 @@ void Systems::HealthSystem(HeadlessScene& scene, float dt, uint32_t& money_ref)
 				else {
 					entity.Destroy();
 				}
-				
-
+			}
+			else if (health.currentHealth > health.maxHealth)
+			{
+				health.currentHealth = health.maxHealth;
 			}
 		});
 }
