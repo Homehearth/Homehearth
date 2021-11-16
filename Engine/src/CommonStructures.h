@@ -291,6 +291,7 @@ struct Node
 	std::vector<Node*> connections;
 	Node* parent = nullptr;
 	bool reachable = true;
+	bool defencePlaced = false;
 	Node(Vector2I id) : id(id) {};
 
 	void ResetFGH()

@@ -192,21 +192,25 @@ void GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 							tileEntity.AddComponent<comp::Tag<TagType::STATIC>>();
 							tileEntity.AddComponent<comp::MeshName>()->name = "Defence.obj";
 							Node* node = aiHandler->GetNodeByID(Vector2I(row, col));
-							node->reachable = false;
+							node->defencePlaced = true;
 							//Check if connections need to be severed
 							std::vector<Node*> diagNeighbors = node->GetDiagonalConnections();
+							for (Node* diagNeighbor : diagNeighbors)
+							{
+								if (diagNeighbor->defencePlaced)
+								{
+									Vector2I difference = node->id - diagNeighbor->id;
+									Node* connectionRemovalNode = aiHandler->GetNodeByID(node->id + difference);
+									node->RemoveConnection(connectionRemovalNode);
+									connectionRemovalNode->RemoveConnection(node);
+									
+								}
+							}
 
 							node->connections.clear();
 						}
 					}
-					//else if (tile.type == TileType::BUILDING || tile.type == TileType::UNPLACABLE || tile.type == TileType::DEFAULT)
-					//{
-					//	LOG_INFO("You cant place here!");
-					//}
-					//else if (tile.type == TileType::DEFENCE)
-					//{
-					//	LOG_INFO("Theres already a defence here!");
-					//}
+
 				}
 			}
 		}

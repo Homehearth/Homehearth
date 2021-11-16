@@ -128,7 +128,6 @@ void PathFinderManager::CreateNodes(GridSystem* grid)
 				std::vector<Node*> neighbors = GetNeighbors(grid, tile);
 				for (auto neighbor : neighbors)
 				{
-					if (neighbor->reachable)
 						m_nodes[j][i]->connections.push_back(neighbor);
 				}
 			}
@@ -221,7 +220,7 @@ void PathFinderManager::AStarSearch(Entity npc)
 		for (auto neighbour : currentNode->connections)
 		{
 			float gNew, hNew, fNew;
-			if (IsInVector(closedList, neighbour))
+			if (IsInVector(closedList, neighbour) || neighbour->defencePlaced || !neighbour->reachable)
 			{
 				continue;
 			}
