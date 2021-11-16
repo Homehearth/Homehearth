@@ -15,42 +15,29 @@ const UINT T2D_BONESLOT = 9;
 class RAnimator : public resource::GResource
 {
 private:
-	double							m_lastTick;
-	bool							m_useInterpolation;
-	std::vector<bone_keyFrames_t>	m_bones;				//Change to only bone_t later
+	bool				m_useInterpolation;
+	std::vector<bone_t>	m_bones;
 
 	//States
 	EAnimationType m_currentType;
 	EAnimationType m_nextType;
-	EAnimationType m_defaultType;
-
+	EAnimationType m_previousType;
+	
 	struct animation_t
 	{
-		std::shared_ptr<RAnimation> animation;
-		double						frameTimer = 0;
-		double						blendTimer = 0;
+		std::shared_ptr<RAnimation>					animation;
+		double										frameTimer	= 0;
+		double										blendTimer	= 0;
+		double										lastTick	= 0;
+		std::unordered_map<std::string, lastKeys_t> lastKeys;
+		bool										reachedEnd	= false;
 	};
 
 	//All the animations
 	std::unordered_map<EAnimationType, animation_t> m_animations;
 
 	//Blendstates
-	/*struct twoStates_t
-	{
-		AnimationType from;
-		AnimationType to;
-
-		twoStates_t(AnimationType x, AnimationType y)
-		{
-			this->from = x;
-			this->to = y;
-		}
-		bool operator==(const twoStates_t& state) const
-		{
-			return from == state.from && to == state.to;
-		}
-	};
-	std::unordered_map<twoStates_t, double> blendStates;*/
+	std::unordered_map<blendstate_t, double, blend_hash_fn> m_blendStates;
 
 	//Matrices that is going up to the GPU - structure buffer
 	std::vector<sm::Matrix>			 m_finalMatrices;
@@ -67,14 +54,19 @@ private:
 	EAnimationType StringToAnimationType(const std::string& name) const;
 
 	//Reset the time of currentFrametime
-	void ResetLastKeys();
 	void ResetAnimation(const EAnimationType& type);
 
-	//Return if we shall update
-	bool UpdateTime();
+	//Update the time for an animation
+	void UpdateTime(const EAnimationType& type);
 
 	//void BlendAnimation();
 	//void OneAnimation();
+
+
+	//Change back to something?
+	//If next is not NONE --> Swap to that one
+	//Else
+	//Go back to previous animation
 
 public:
 	RAnimator();

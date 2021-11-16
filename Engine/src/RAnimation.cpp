@@ -340,7 +340,7 @@ const sm::Quaternion RAnimation::GetRotation(const std::string& bonename, const 
 	return finalQuat;
 }
 
-const sm::Matrix RAnimation::GetMatrix(const std::string& bonename, const double& currentFrame, std::array<UINT, 3>& lastKeys, bool interpolate) const
+const sm::Matrix RAnimation::GetMatrix(const std::string& bonename, const double& currentFrame, UINT (&lastKeys)[3], bool interpolate) const
 {
 	sm::Matrix finalMatrix = sm::Matrix::Identity;
 

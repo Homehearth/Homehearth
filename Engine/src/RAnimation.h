@@ -83,7 +83,7 @@ public:
 	*/
 	const sm::Matrix GetMatrix(const std::string& bonename, 
 								const double& currentFrame, 
-								std::array<UINT,3>& lastKeys, 
+								UINT (&lastKeys)[3], 
 								bool interpolate = true) const;
 
 };

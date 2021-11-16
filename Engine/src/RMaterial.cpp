@@ -200,8 +200,8 @@ bool RMaterial::Create(aiMaterial* aiMat, bool& useMTL)
     }
     else
     {
-        textureTypeMap[ETextureType::metalness]         = aiTextureType::aiTextureType_METALNESS;
-        textureTypeMap[ETextureType::roughness]         = aiTextureType::aiTextureType_DIFFUSE_ROUGHNESS;
+        textureTypeMap[ETextureType::metalness]         = aiTextureType::aiTextureType_SPECULAR;
+        textureTypeMap[ETextureType::roughness]         = aiTextureType::aiTextureType_SHININESS;
         textureTypeMap[ETextureType::ambientOcclusion]  = aiTextureType::aiTextureType_AMBIENT_OCCLUSION;
     }
     

@@ -3,15 +3,21 @@
 
 RAnimator::RAnimator()
 {
-	m_lastTick			= 0;
 	m_useInterpolation	= true;
 	m_currentType		= EAnimationType::NONE;
 	m_nextType			= EAnimationType::NONE;
-	m_defaultType		= EAnimationType::NONE;
+	m_previousType		= EAnimationType::NONE;
 }
 
 RAnimator::~RAnimator()
 {
+	for (auto& anim : m_animations)
+	{
+		anim.second.lastKeys.clear();
+	}
+	m_animations.clear();
+	m_blendStates.clear();
+
 	m_bones.clear();
 	m_finalMatrices.clear();
 	m_animations.clear();
@@ -26,15 +32,7 @@ bool RAnimator::LoadSkeleton(const std::vector<bone_t>& skeleton)
 	bool loaded = false;
 	if (!skeleton.empty())
 	{
-		for (size_t i = 0; i < skeleton.size(); i++)
-		{
-			bone_keyFrames_t bone;
-			bone.name = skeleton[i].name;
-			bone.inverseBind = skeleton[i].inverseBind;
-			bone.parentIndex = skeleton[i].parentIndex;
-			m_bones.push_back(bone);
-		}
-
+		m_bones = skeleton;
 		m_finalMatrices.resize(m_bones.size(), sm::Matrix::Identity);
 
 		//Creating the buffers needed for the GPU
@@ -136,63 +134,49 @@ EAnimationType RAnimator::StringToAnimationType(const std::string& name) const
 	return  type;
 }
 
-void RAnimator::ResetLastKeys()
-{
-	//Reset safespot in bones
-	for (size_t i = 0; i < m_bones.size(); i++)
-	{
-		m_bones[i].lastKeys = { 0, 0, 0 };
-	}
-}
-
 void RAnimator::ResetAnimation(const EAnimationType& type)
 {
 	if (m_animations.find(type) != m_animations.end())
 	{
-		animation_t* anim = &m_animations[type];
-		anim->frameTimer = 0;
-		anim->blendTimer = 0;
+		animation_t* anim	= &m_animations[type];
+		anim->frameTimer	= 0;
+		anim->blendTimer	= 0;
+		anim->reachedEnd	= false;
+		anim->lastTick		= 0;
+
+		for (auto& key : anim->lastKeys)
+		{
+			key.second = { 0,0,0 };
+		}
 	}
 }
 
-bool RAnimator::UpdateTime()
+void RAnimator::UpdateTime(const EAnimationType& type)
 {
-	bool shouldUpdate = true;
-	animation_t* current = &m_animations[m_currentType];
-
-	if (current)
+	animation_t* anim = &m_animations[type];
+	if (anim)
 	{
-		double tick = current->animation->GetTicksPerFrame() * Stats::Get().GetUpdateTime();
+		double tick = anim->animation->GetTicksPerFrame() * Stats::Get().GetUpdateTime();
 
-		if (m_lastTick != tick)
+		if (anim->lastTick != tick)
 		{
-			m_lastTick = tick;
-			current->frameTimer += tick;
+			anim->lastTick = tick;
+			anim->frameTimer += tick;
 
-			if (current->frameTimer >= current->animation->GetDuraction())
+			//Reached end
+			if (anim->frameTimer >= anim->animation->GetDuraction())
 			{
-				if (current->animation->IsLoopable())
+				if (anim->animation->IsLoopable())
 				{
-					current->frameTimer = fmod(current->frameTimer, current->animation->GetDuraction());
+					anim->frameTimer = fmod(anim->frameTimer, anim->animation->GetDuraction());
 				}
 				else
 				{
-					//Go to next state
-					shouldUpdate = false;
-					ChangeAnimation(m_defaultType);
+					anim->reachedEnd = true;
 				}
 			}
 		}
-		else
-		{
-			shouldUpdate = false;
-		}
-	}
-	else
-	{
-		shouldUpdate = false;
-	}
-	return shouldUpdate;
+	}	
 }
 
 bool RAnimator::Create(const std::string& filename)
@@ -246,7 +230,7 @@ bool RAnimator::Create(const std::string& filename)
 				}				
 			}
 		}
-		else if (keyword == "defaultAnim")
+		else if (keyword == "startAnim")
 		{
 			std::string key;
 			ss >> key;
@@ -255,7 +239,6 @@ bool RAnimator::Create(const std::string& filename)
 			if (m_animations.find(animType) != m_animations.end())
 			{
 				m_currentType = animType;
-				m_defaultType = animType;
 			}
 		}
 		else if (keyword == "loopable")
@@ -273,6 +256,21 @@ bool RAnimator::Create(const std::string& filename)
 			if (lastAnimation)
 				lastAnimation->SetTicksPerFrame(speed);
 		}
+		else if (keyword == "blendstate")
+		{
+			std::string key1;
+			std::string key2;
+			double blendtime = 0;
+			ss >> key1 >> key2 >> blendtime;
+
+			EAnimationType fromType = StringToAnimationType(key1);
+			EAnimationType toType	= StringToAnimationType(key2);
+
+			if (fromType != EAnimationType::NONE && toType != EAnimationType::NONE)
+			{
+				m_blendStates[{fromType, toType}] = blendtime;
+			}
+		}
 	}
 
 	readfile.close();
@@ -282,27 +280,20 @@ bool RAnimator::Create(const std::string& filename)
 
 bool RAnimator::ChangeAnimation(const EAnimationType& type)
 {
+	//Add the animationtype to the queue
 	bool foundAnim = false;
 
-	//Don't change if we already are in this state.
-	if (m_currentType != type)
+	//Ignore to add type if we are already in this state
+	if (m_currentType != type && m_nextType != type)
 	{
-		//Change animation if it exist
+		//Check if the state exist
 		if (m_animations.find(type) != m_animations.end())
 		{
-			ResetAnimation(m_currentType);
-			ResetAnimation(type);
-			m_currentType = type;
-			ResetLastKeys();
+			m_nextType = type;
 			foundAnim = true;
 		}
-		if (type == EAnimationType::NONE)
-		{
-			ResetAnimation(m_currentType);
-			m_currentType = type;
-			ResetLastKeys();
-		}
 	}
+
 	return foundAnim;
 }
 
@@ -313,50 +304,128 @@ const EAnimationType& RAnimator::GetCurrentState() const
 
 void RAnimator::Update()
 {
-	/*
-		TODO: Need to be cleaned up
-	*/
-
 	PROFILE_FUNCTION();
 
-	//Needs a skeleton
-	if (!m_bones.empty())
+	//Needs a skeleton and need a current animation
+	if (!m_bones.empty() && m_currentType != EAnimationType::NONE)
 	{
-		if (m_currentType != EAnimationType::NONE)
+		//Do blending
+		if (m_nextType != EAnimationType::NONE)
 		{
-			//Do blending
-			if (m_nextType != EAnimationType::NONE)
+			//Follow blendstate
+			if (m_blendStates.find({ m_currentType, m_nextType }) != m_blendStates.end())
 			{
-				//TODO: Make separate function
-				//tickCurrent =  ...
-				//tickNext = ...
-				//check the blendtimer - where are we
-			}
-			//Do regular
-			else
-			{
-				if (UpdateTime())
+				/*
+					TODO: Separate function
+				*/
+
+				UpdateTime(m_currentType);
+				UpdateTime(m_nextType);
+
+				animation_t* anim1 = &m_animations[m_currentType];
+				animation_t* anim2 = &m_animations[m_nextType];
+
+				if (anim1->reachedEnd || anim2->reachedEnd)
 				{
-					std::vector<sm::Matrix> modelMatrices;
-					modelMatrices.resize(m_bones.size(), sm::Matrix::Identity);
-
-					for (size_t i = 0; i < m_bones.size(); i++)
+					//Handle both cases
+					if (anim1->reachedEnd)
 					{
-						sm::Matrix localMatrix = m_animations[m_currentType].animation->GetMatrix(m_bones[i].name, m_animations[m_currentType].frameTimer, m_bones[i].lastKeys, m_useInterpolation);
-
-						if (m_bones[i].parentIndex == -1)
-							modelMatrices[i] = localMatrix;
-						else
-							modelMatrices[i] = localMatrix * modelMatrices[m_bones[i].parentIndex];
-
-						m_finalMatrices[i] = m_bones[i].inverseBind * modelMatrices[i];
+						//Do stuff
+						ResetAnimation(m_currentType);
 					}
+					if (anim2->reachedEnd)
+					{
+						//Do stuff
+						ResetAnimation(m_nextType);
+					}
+				}
+				else
+				{
+					//Update blendtimer
+					anim1->blendTimer += Stats::Get().GetUpdateTime();
 
-					modelMatrices.clear();
+					//We only do blending when it is needed
+					if (anim1->blendTimer < m_blendStates[{m_currentType, m_nextType}])
+					{
+						std::vector<sm::Matrix> modelMatrices;
+						modelMatrices.resize(m_bones.size(), sm::Matrix::Identity);
+
+						for (size_t i = 0; i < m_bones.size(); i++)
+						{
+							//From 
+							sm::Vector3 pos1 = anim1->animation->GetPosition(m_bones[i].name, anim1->frameTimer, anim1->lastKeys[m_bones[i].name].keys[0], m_useInterpolation);
+							sm::Vector3 scl1 = anim1->animation->GetScale(m_bones[i].name, anim1->frameTimer, anim1->lastKeys[m_bones[i].name].keys[1], m_useInterpolation);
+							sm::Quaternion rot1 = anim1->animation->GetRotation(m_bones[i].name, anim1->frameTimer, anim1->lastKeys[m_bones[i].name].keys[2], m_useInterpolation);
+							//To
+							sm::Vector3 pos2 = anim2->animation->GetPosition(m_bones[i].name, anim2->frameTimer, anim2->lastKeys[m_bones[i].name].keys[0], m_useInterpolation);
+							sm::Vector3 scl2 = anim2->animation->GetScale(m_bones[i].name, anim2->frameTimer, anim2->lastKeys[m_bones[i].name].keys[1], m_useInterpolation);
+							sm::Quaternion rot2 = anim2->animation->GetRotation(m_bones[i].name, anim2->frameTimer, anim2->lastKeys[m_bones[i].name].keys[2], m_useInterpolation);
+
+							float lerpTime = float(m_animations[m_currentType].blendTimer / m_blendStates[{m_currentType, m_nextType}]);
+							sm::Vector3 lerpPos = sm::Vector3::Lerp(pos1, pos2, lerpTime);
+							sm::Vector3 lerpScl = sm::Vector3::Lerp(scl1, scl2, lerpTime);
+							sm::Quaternion lerpRot = sm::Quaternion::Slerp(rot1, rot2, lerpTime);
+							lerpRot.Normalize();
+
+							sm::Matrix localMatrix = sm::Matrix::CreateScale(lerpScl) * sm::Matrix::CreateFromQuaternion(lerpRot) * sm::Matrix::CreateTranslation(lerpPos);
+
+							if (m_bones[i].parentIndex == -1)
+								modelMatrices[i] = localMatrix;
+							else
+								modelMatrices[i] = localMatrix * modelMatrices[m_bones[i].parentIndex];
+
+							m_finalMatrices[i] = m_bones[i].inverseBind * modelMatrices[i];
+						}
+						modelMatrices.clear();
+					}
+					else
+					{
+						//Blending ended
+						ResetAnimation(m_currentType);
+						m_previousType = m_currentType;
+						m_currentType = m_nextType;
+						m_nextType = EAnimationType::NONE;
+					}
 				}
 			}
+			//No blendstates exist
+			//Check if the first one has reached end - if so we shall go to next
 		}
-	}
+		//Do regular animation with one animation
+		else
+		{
+			/*
+				TODO: Separate function
+			*/
+			UpdateTime(m_currentType);
+			animation_t* anim = &m_animations[m_currentType];
+
+			if (!anim->reachedEnd)
+			{
+				std::vector<sm::Matrix> modelMatrices;
+				modelMatrices.resize(m_bones.size(), sm::Matrix::Identity);
+
+				for (size_t i = 0; i < m_bones.size(); i++)
+				{
+					sm::Matrix localMatrix = anim->animation->GetMatrix(m_bones[i].name, anim->frameTimer, anim->lastKeys[m_bones[i].name].keys, m_useInterpolation);
+
+					if (m_bones[i].parentIndex == -1)
+						modelMatrices[i] = localMatrix;
+					else
+						modelMatrices[i] = localMatrix * modelMatrices[m_bones[i].parentIndex];
+
+					m_finalMatrices[i] = m_bones[i].inverseBind * modelMatrices[i];
+				}
+
+				modelMatrices.clear();
+			}
+			else
+			{
+				//Reached end --> go back to previous animation
+				m_currentType = m_previousType;
+			}
+		}
+	}	
 }
 
 void RAnimator::Bind()
