@@ -91,7 +91,10 @@ Texture2D t_decalAlpha              : register(t13);
 StructuredBuffer<float4x4> sb_boneTransforms : register(t9); // read as column major, actually is row major.
 StructuredBuffer<Light> sb_lights : register(t10);
 StructuredBuffer<float4x4> sb_decaldata : register(t16);
-StructuredBuffer<VertexParticleIn> particlesInput : register(t17);
+StructuredBuffer<VertexParticleIn> particlesSRV : register(t17);
+
+RWStructuredBuffer<VertexParticleIn> particlesUAV : register(u0);
+
 
 // Forward+
 //StructuredBuffer<PointLight> sb_pointLights : register();

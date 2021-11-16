@@ -64,6 +64,7 @@ namespace ecs
 		struct EmitterParticle
 		{
 			std::shared_ptr<RTexture> texture = nullptr;
+			std::shared_ptr<RTexture> opacityTexture = nullptr;
 			PARTICLEMODE type = PARTICLEMODE::BLOOD;
 			UINT nrOfParticles = 0;
 
@@ -74,6 +75,8 @@ namespace ecs
 			EmitterParticle(std::string textureName = " ", UINT amoutOfParticles = 10, PARTICLEMODE mode = PARTICLEMODE::BLOOD)
 			{
 				texture = ResourceManager::Get().GetResource<RTexture>(textureName);
+				opacityTexture = ResourceManager::Get().GetResource<RTexture>("thisisfine_Opacity.png");
+
 				nrOfParticles = amoutOfParticles;
 				type = mode;
 			}

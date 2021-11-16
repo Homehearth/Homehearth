@@ -89,8 +89,6 @@ bool ParticleSystem::CreateBufferSRVUAV(std::vector<Particle_t> particles, comp:
 		return false;
 	}
 
-	
-
 	return true;
 }
 

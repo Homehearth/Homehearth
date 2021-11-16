@@ -363,6 +363,27 @@ bool PipelineManager::CreateBlendStates()
     blendStateDesc.AlphaToCoverageEnable = 1;
     hr = m_d3d11->Device()->CreateBlendState(&blendStateDesc, m_blendStateDepthOnlyAlphaToCoverage.GetAddressOf());
 
+    D3D11_BLEND_DESC blendStateParticleDesc = {};
+    blendStateParticleDesc.AlphaToCoverageEnable = true;
+    blendStateParticleDesc.IndependentBlendEnable = true;
+    blendStateParticleDesc.RenderTarget[0].BlendEnable = true;
+    blendStateParticleDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD; //Blend opacity: add 1 and 2
+    blendStateParticleDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD; //Blend alpha: add 1 and 2
+    blendStateParticleDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+    blendStateParticleDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO; //No blend
+    blendStateParticleDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+    blendStateParticleDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+    blendStateParticleDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ZERO;
+
+    hr = m_d3d11->Device()->CreateBlendState(&blendStateParticleDesc, m_blendStateParticle.GetAddressOf());
+
+
+    if (FAILED(hr))
+    {
+        LOG_ERROR("Couldnt create particle UAV");
+        return false;
+    }
+
 	return !FAILED(hr);
 }
 
