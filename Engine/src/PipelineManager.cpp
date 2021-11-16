@@ -79,10 +79,127 @@ void PipelineManager::Initialize(Window* pWindow, ID3D11DeviceContext* context)
         m_screenToViewParamsCB.Create(m_d3d11->Device());
     }
 
-
     // Set Viewport.
     this->SetViewport();
 }
+
+bool PipelineManager::CreateStructuredBuffer(ID3D11Buffer** buffer, void* data, unsigned int byteStride,
+    unsigned int arraySize, ID3D11UnorderedAccessView** uav)
+{
+    D3D11_BUFFER_DESC sBufferDesc = {};
+    D3D11_SUBRESOURCE_DATA sBufferSub = {};
+
+    sBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+    sBufferDesc.ByteWidth = byteStride * arraySize; 
+    sBufferDesc.BindFlags = D3D11_BIND_UNORDERED_ACCESS; 
+    sBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ | D3D11_CPU_ACCESS_WRITE;
+    sBufferDesc.StructureByteStride = byteStride;
+    sBufferDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
+    sBufferSub.pSysMem = data;
+
+    HRESULT hr = m_d3d11->Device()->CreateBuffer(&sBufferDesc, &sBufferSub, buffer);
+    if (FAILED(hr))
+        return false;
+
+    D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
+    uavDesc.Format = DXGI_FORMAT_UNKNOWN;
+    uavDesc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;
+    uavDesc.Buffer.FirstElement = 0;
+    uavDesc.Buffer.Flags = 0;
+    uavDesc.Buffer.NumElements = arraySize;
+    hr = m_d3d11->Device()->CreateUnorderedAccessView(*buffer, &uavDesc, uav);
+ 
+    return !FAILED(hr);
+}
+
+bool PipelineManager::CreateStructuredBuffer(ID3D11Buffer** buffer, void* data, unsigned byteStride, unsigned arraySize,
+	ID3D11UnorderedAccessView** uav, ID3D11ShaderResourceView** srv)
+{
+    D3D11_BUFFER_DESC sBufferDesc = {};
+    D3D11_SUBRESOURCE_DATA sBufferSub = {};
+
+    sBufferDesc.ByteWidth = byteStride * arraySize; 
+    sBufferDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
+    sBufferDesc.BindFlags = D3D11_BIND_UNORDERED_ACCESS | D3D11_BIND_SHADER_RESOURCE; 
+    sBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ | D3D11_CPU_ACCESS_WRITE;
+    sBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+    sBufferDesc.StructureByteStride = byteStride;
+    sBufferSub.pSysMem = data;
+
+    HRESULT hr = m_d3d11->Device()->CreateBuffer(&sBufferDesc, &sBufferSub, buffer);
+    if (FAILED(hr))
+        return false;
+
+    D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
+    uavDesc.Format = DXGI_FORMAT_UNKNOWN;
+    uavDesc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;
+    uavDesc.Buffer.FirstElement = 0;
+    uavDesc.Buffer.Flags = 0;
+    uavDesc.Buffer.NumElements = arraySize;
+
+    hr = m_d3d11->Device()->CreateUnorderedAccessView(*buffer, &uavDesc, uav);
+    if (FAILED(hr))
+        return false;
+
+    D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+    srvDesc.Format = DXGI_FORMAT_UNKNOWN;
+    srvDesc.ViewDimension = D3D11_SRV_DIMENSION_BUFFEREX;
+    srvDesc.BufferEx.FirstElement = 0;
+    srvDesc.BufferEx.Flags = 0;
+    srvDesc.BufferEx.NumElements = arraySize;
+    hr = m_d3d11->Device()->CreateShaderResourceView(*buffer, &srvDesc, srv);
+
+    return !FAILED(hr);
+}
+
+bool PipelineManager::CreateRenderTargetResource(RenderTargetResource * resource)
+{
+    D3D11_TEXTURE2D_DESC textureDesc{};
+    textureDesc.Width = m_window->GetWidth();
+    textureDesc.Height = m_window->GetHeight();
+    textureDesc.MipLevels = 1;
+    textureDesc.ArraySize = 1;
+    textureDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+    textureDesc.SampleDesc.Count = 1;
+    textureDesc.Usage = D3D11_USAGE_DEFAULT;
+    textureDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+
+	HRESULT hr = m_d3d11->Device()->CreateTexture2D(&textureDesc, nullptr, resource->texture2D.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+
+    D3D11_RENDER_TARGET_VIEW_DESC renderTargetViewDesc{};
+    renderTargetViewDesc.Format = textureDesc.Format;
+    renderTargetViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+
+	hr = m_d3d11->Device()->CreateRenderTargetView(resource->texture2D.Get(), &renderTargetViewDesc, resource->rtv.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+
+    D3D11_SHADER_RESOURCE_VIEW_DESC shaderResourceViewDesc{};
+    shaderResourceViewDesc.Format = textureDesc.Format;
+    shaderResourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+    shaderResourceViewDesc.Texture2D.MipLevels = 1;
+
+	m_d3d11->Device()->CreateShaderResourceView(resource->texture2D.Get(), &shaderResourceViewDesc, resource->srv.GetAddressOf());
+
+}
+
+bool PipelineManager::CreateCopyBuffer(ID3D11Buffer** buffer, unsigned int byteStride, unsigned int arraySize)
+{
+    D3D11_BUFFER_DESC outputDesc = {};
+    outputDesc.ByteWidth = byteStride * arraySize;
+    outputDesc.StructureByteStride = byteStride;
+    outputDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
+
+    outputDesc.Usage = D3D11_USAGE_STAGING;
+    outputDesc.BindFlags = 0;
+    outputDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ | D3D11_CPU_ACCESS_WRITE;
+
+    HRESULT hr = m_d3d11->Device()->CreateBuffer(&outputDesc, nullptr, buffer);
+    return !FAILED(hr);
+}
+
 
 bool PipelineManager::CreateRenderTargetView()
 {
@@ -105,6 +222,7 @@ bool PipelineManager::CreateDepthBuffer()
 {
     D3D11_TEXTURE2D_DESC depthBufferDesc;
     ZeroMemory(&depthBufferDesc, sizeof(D3D11_TEXTURE2D_DESC));
+
     depthBufferDesc.Width = m_window->GetWidth();
     depthBufferDesc.Height = m_window->GetHeight();
     depthBufferDesc.MipLevels = 1;
@@ -126,6 +244,7 @@ bool PipelineManager::CreateDepthBuffer()
 	
     D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc;
     ZeroMemory(&depthStencilViewDesc, sizeof(D3D11_DEPTH_STENCIL_VIEW_DESC));
+
     depthStencilViewDesc.Format = DXGI_FORMAT_D32_FLOAT;
     depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
     depthStencilViewDesc.Texture2D.MipSlice = 0;

@@ -6,11 +6,25 @@
  */
 class PipelineManager
 {
+	struct ResourceAccessView
+	{
+		ComPtr<ID3D11Buffer> buffer;
+		ComPtr<ID3D11ShaderResourceView> srv;
+		ComPtr<ID3D11UnorderedAccessView> uav;
+	};
+
+	struct RenderTargetResource
+	{
+		ComPtr<ID3D11Texture2D> texture2D;
+		ComPtr<ID3D11ShaderResourceView> srv;
+		ComPtr<ID3D11RenderTargetView> rtv;
+	};
+
 private:
 	Window*							m_window;
 	D3D11Core*						m_d3d11;
 	ID3D11DeviceContext*			m_context;
-	
+
 public:
 	PipelineManager();
 	virtual ~PipelineManager() = default;
@@ -18,7 +32,6 @@ public:
 	// Initialize PipelineManager.
 	void Initialize(Window* pWindow, ID3D11DeviceContext* context = D3D11Core::Get().DeviceContext());
 
-	
 	// PUBLIC AVAILABLE DATA.
 	ComPtr<ID3D11RenderTargetView>	m_backBuffer;
 
@@ -68,15 +81,48 @@ public:
 	
 	D3D11_VIEWPORT					m_viewport;
 
-	
-	// Forward+ Resources.
-	std::vector<frustum_t> m_frustums_data;
-	ComPtr<ID3D11Buffer> m_frustums_buffer;
-	ComPtr<ID3D11ShaderResourceView> m_inFrustumsSRV;	// Precomputed frustums used in LightCulling_cs.
-	ComPtr<ID3D11UnorderedAccessView> m_outFrustumsUAV;	// Used in ComputerFrustums_cs to store computed frustums.
 
+	bool CreateStructuredBuffer(ID3D11Buffer** buffer, void* data, unsigned int byteStride,
+		unsigned int arraySize, ID3D11UnorderedAccessView** uav);
+
+	bool CreateStructuredBuffer(ID3D11Buffer** buffer, void* data, unsigned int byteStride,
+		unsigned int arraySize, ID3D11UnorderedAccessView** uav, ID3D11ShaderResourceView** srv);
+
+	bool CreateRenderTargetResource(RenderTargetResource * resource);
+
+	bool CreateCopyBuffer(ID3D11Buffer** buffer, unsigned int byteStride, unsigned int arraySize);
+
+	//
+	// Forward+ Resources.
+	//
+	const uint32_t AVERAGE_OVERLAPPING_LIGHTS_PER_TILE = 100u;
+	uint32_t m_numFrustums;
+
+	dispatch_params_t m_dispatchParams;
 	DirectX::ConstantBuffer<dispatch_params_t> m_dispatchParamsCB;
 	DirectX::ConstantBuffer<screen_view_params_t> m_screenToViewParamsCB;
+
+	std::vector<frustum_t> m_frustums_data;
+	std::vector<UINT> opaq_LightIndexCounter_data;
+	std::vector<UINT> trans_LightIndexCounter_data;
+	std::vector<UINT> opaq_LightIndexList_data;
+	std::vector<UINT> trans_LightIndexList_data;
+
+	// SRV: Precomputed frustums used in LightCulling_cs.
+	// UAV: Used in ComputerFrustums_cs to store computed frustums.
+	ResourceAccessView m_frustums;
+
+	ResourceAccessView opaq_LightIndexCounter;
+	ResourceAccessView trans_LightIndexCounter;
+
+	// Count of values stored in a light index list.
+	// Size is based the expected average number of overlapping lights per tile.
+	ResourceAccessView opaq_LightIndexList;
+	ResourceAccessView trans_LightIndexList;
+
+	// Stores an offset.
+	ResourceAccessView opaq_LightGrid;
+	ResourceAccessView trans_LightGrid;
 
 private:
 	// INITIALIZE METHODS.
@@ -91,5 +137,6 @@ private:
 	bool CreateInputLayouts();	
 	void SetViewport();
 };
+
 
 

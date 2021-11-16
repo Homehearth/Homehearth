@@ -1,21 +1,16 @@
 #pragma once
 #include "IRenderPass.h"
 
-//--------------------------------------
-// Write the depth values of the scene
-// from the camera's perspective into
-// a depth buffer.
-//--------------------------------------
+// todo: OnWindowResize()
 class DepthPass : public IRenderPass
 {
 public:
 	DepthPass() = default;
 	virtual ~DepthPass() = default;
 
-	void PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext = D3D11Core::Get().DeviceContext()) override;
-
+	// Inherited via IRenderPass
+	void PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext) override;
 	void Render(Scene* pScene) override;
-
-	void PostRender(ID3D11DeviceContext* pDeviceContext = D3D11Core::Get().DeviceContext()) override;
+	void PostRender(ID3D11DeviceContext* pDeviceContext) override;
 
 };

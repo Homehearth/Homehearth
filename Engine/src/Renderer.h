@@ -11,7 +11,6 @@
 #include "DecalPass.h"
 #include "SkyboxPass.h"
 
-
 class Renderer
 {
 private:
@@ -29,10 +28,12 @@ private:
 	AnimationPass	m_animPass;
 	DebugPass		m_debugPass;
 
-
 	DecalPass		m_decalPass;
 	SkyboxPass		m_skyPass;
+
 	unsigned int m_currentPass = 0;
+	bool m_isForwardPlusInitialized;
+
 
 	// Update per frame related resources.
 	void UpdatePerFrame(Camera* pCam);
@@ -40,6 +41,11 @@ private:
 	// Add a pass to the list.
 	void AddPass(IRenderPass* pass);
 
+	// Initialize ForwardPlus. Called on create and on window resize.
+	void InitilializeForwardPlus(Camera* camera);
+	bool CreateLightGridRWB();
+	bool CreateLightIndexListRWB(const uint32_t& COUNT);
+	bool CreateLightIndexCounterRWB();
 public:
 	Renderer();
 	virtual ~Renderer() = default;

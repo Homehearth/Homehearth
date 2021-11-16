@@ -86,39 +86,28 @@ SamplerState s_cubeSamp     : register(s3);
 //---------------------------------------------------------------------------
 
 // Textures
-Texture2D t_depth		            : register(t0);
-Texture2D t_albedo		            : register(t1);
-Texture2D t_normal		            : register(t2);
-Texture2D t_metalness	            : register(t3);
-Texture2D t_roughness	            : register(t4);
-Texture2D t_aomap		            : register(t5);
-Texture2D t_displace	            : register(t6);
-Texture2D t_opacitymask	            : register(t7);
-Texture2D<uint2> t_pointLightGrid	: register(t8);
-Texture2D t_decal                   : register(t12);
-Texture2D t_decalAlpha              : register(t13);
+Texture2D t_depth		                        : register(t0);
+Texture2D t_albedo		                        : register(t1);
+Texture2D t_normal		                        : register(t2);
+Texture2D t_metalness	                        : register(t3);
+Texture2D t_roughness	                        : register(t4);
+Texture2D t_aomap		                        : register(t5);
+Texture2D t_displace	                        : register(t6);
+Texture2D t_opacitymask	                        : register(t7);
+Texture2D<uint2> t_pointLightGrid	            : register(t8);
+Texture2D t_decal                               : register(t12);
+Texture2D t_decalAlpha                          : register(t13);
 
 // StructuredBuffers.
 StructuredBuffer<float4x4> sb_BoneTransforms    : register(t9);     // read as column major, actually is row major.
 StructuredBuffer<Light> sb_Lights               : register(t10);
 StructuredBuffer<Frustum> sb_Frustums_in        : register(t11);    // Precomputed frustums for the grid.
+StructuredBuffer<float4x4> sb_decaldata         : register(t16);
 
-
-// StructuredBuffers.
-StructuredBuffer<float4x4> sb_boneTransforms : register(t9); // read as column major, actually is row major.
-StructuredBuffer<Light> sb_lights : register(t10);
-StructuredBuffer<float4x4> sb_decaldata : register(t16);
-
-// Forward+
-//StructuredBuffer<PointLight> sb_pointLights : register();
-//StructuredBuffer<DirectionalLight> sb_directionalLights : register();
-//StructuredBuffer<uint> sb_pointLightIndexList : register();
-//StructuredBuffer<Frustum> sb_frustums : register();
-
-TextureCube t_radiance              : register(t96);
-TextureCube t_irradiance            : register(t97);
-TextureCube t_sky                   : register(t98);
-Texture2D t_BRDFLUT                 : register(t99);
+TextureCube t_radiance                          : register(t96);
+TextureCube t_irradiance                        : register(t97);
+TextureCube t_sky                               : register(t98);
+Texture2D t_BRDFLUT                             : register(t99);
 
 
 //---------------------------------------------------------------------------
@@ -127,12 +116,17 @@ Texture2D t_BRDFLUT                 : register(t99);
 
 // RWStructuredBuffers.
 RWStructuredBuffer<Frustum> rw_Frustums_out            : register(u0);
+
+// Global counter for current index into the light index list.
 RWStructuredBuffer<uint> rw_opaq_LightIndexCounter     : register(u1);
 RWStructuredBuffer<uint> rw_trans_LightIndexCounter    : register(u2);
+
+// Light index lists and light grids.
 RWStructuredBuffer<uint> rw_opaq_LightIndexList        : register(u3);
 RWStructuredBuffer<uint> rw_trans_LightIndexList       : register(u4);
 
-// RWTexture2D.
+// Each “texel” is a 2-component unsigned integer vector.
+// The light grid texture is created using the R32G32_UINT format.
 RWTexture2D<uint2> rw_opaq_LightGrid                   : register(u5);
 RWTexture2D<uint2> rw_trans_LightGrid                  : register(u6);
 

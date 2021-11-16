@@ -3,19 +3,35 @@
 //
 // ForwardPlus: https://www.3dgep.com/forward-plus/
 //
+// The purpose of the light culling compute shader is to
+// update the global light index list and the light grid
+// that is required by the fragment shader.
+// Two lists need to be updated per frame:
+//		- Light index list for opaque geometry.
+//		- Light index list for transparent geometry
+
 
 // Group shared variables.
 groupshared uint group_uMinDepth;
 groupshared uint group_uMaxDepth;
 groupshared Frustum group_GroupFrustum;
 
+// To keep track of the number of lights that
+// are intersecting the current tile frustum.
 groupshared uint group_opaq_LightCount;
+
+// Offset into the global light index list.
+// This index will be written to the light grid and
+// is used as the starting offset when copying the
+// local light index list to global light index list.
 groupshared uint group_opaq_LightIndexStartOffset;
 groupshared uint group_opaq_LightList[MAX_LIGHTS];
 
 groupshared uint group_trans_LightCount;
 groupshared uint group_trans_LightIndexStartOffset;
 groupshared uint group_trans_LightList[MAX_LIGHTS];
+
+
 
 void AddLightToOpaqueList(uint lightIndex)
 {
@@ -43,13 +59,7 @@ void main(ComputeShaderIn input)
 	// Calculate min & max depth in threadgroup / tile.
 	const int2 texCoord = input.dispatchThreadID.xy;
 	const float fDepth = t_depth.Load(int3(texCoord, 0)).r;
-
-	uint uDepth = asuint(fDepth);
-
-	const float near = 0.01f;  
-	const float far = 500.0f;
-
-	uDepth = ((2.0f * near) / (far + near - uDepth * (far - near))); // Do I really need to ??
+	const uint uDepth = asuint(fDepth);
 
     if (input.groupIndex == 0) // Avoid contention by other threads in the group.
     {
@@ -138,7 +148,7 @@ void main(ComputeShaderIn input)
 		rw_opaq_LightGrid[input.groupID.xy] = uint2(group_opaq_LightIndexStartOffset, group_opaq_LightCount);
 
 		// Update light grid for transparent geometry.
-		InterlockedAdd(rw_opaq_LightIndexCounter[0], group_trans_LightCount, group_trans_LightIndexStartOffset);
+		InterlockedAdd(rw_trans_LightIndexCounter[0], group_trans_LightCount, group_trans_LightIndexStartOffset);
 		rw_trans_LightGrid[input.groupID.xy] = uint2(group_trans_LightIndexStartOffset, group_trans_LightCount);
 	}
 
