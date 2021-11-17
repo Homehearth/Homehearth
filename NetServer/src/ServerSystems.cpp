@@ -85,14 +85,13 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		attackAbility->attackDamage = 20.f;
 		attackAbility->lifetime = 0.3f;
 		attackAbility->isRanged = false;
-		attackAbility->attackRange = 7.0f;
+		attackAbility->attackRange = 20.0f;
 		attackAbility->useTime = 0.3f;
 		attackAbility->delay = 0.2f;
 		attackAbility->movementSpeedAlt = 0.0f;
 		npc->movementSpeed = 10.f;
 		health->currentHealth = 1500.f;
 		behaviorTree->root = AIBehaviors::GetSimpleAIBehavior(entity);
-		combatStats->attackRange = 20.0f;
 	}
 	break;
 	default:
