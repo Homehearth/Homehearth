@@ -149,54 +149,109 @@ void Simulation::CreateWaves()
 		waveQueue.pop();
 	}
 
-
-	Wave wave1, wave2; // Default: WaveType::Zone
-	{ // Wave_1 Group_1
+	//left bottom corner { 490.f, -150.0f });   right bottom corner { 170, -80.0f }
+	//left top corner { 520.f, -540.0f }        right top corner { 80.0f, -500.0f }
+	Wave wave1, wave2, wave3, wave4, wave5; // Default: WaveType::Zone
+	{
 		Wave::Group group1;
-		group1.AddEnemy(EnemyType::Default,2);
-		group1.SetSpawnPoint({ 380.f, -220.0f });
-		Wave::Group group2;
-		group2.AddEnemy(EnemyType::Default, 2);
-		group2.SetSpawnPoint({ 154, -215.0f });
-		Wave::Group group3;
-		group3.AddEnemy(EnemyType::Default, 1);
-		group3.SetSpawnPoint({ 83.0f, -318.0f });
-		Wave::Group group4;
-		group4.AddEnemy(EnemyType::Default, 1);
-		group4.SetSpawnPoint({ 213.f, -516.0f });
-		Wave::Group group5;
-		group5.AddEnemy(EnemyType::Default, 1);
-		group5.SetSpawnPoint({ 387.f, -448.0f });
-		wave1.SetTimeLimit(5);
+		group1.AddEnemy(EnemyType::Default,4 + 2 * currentRound);
+		group1.SetSpawnPoint({ 490.f, -150.0f });
+		wave1.SetTimeLimit(5 * currentRound);
 		wave1.AddGroup(group1);
-		wave1.AddGroup(group2);
-		wave1.AddGroup(group3);
-		wave1.AddGroup(group4);
-		wave1.AddGroup(group5);
 	}
 
-	{ // Wave_1 Group_2
-		//Wave::Group group2;
-		//group2.AddEnemy(EnemyType::Default, 4);
-		//group2.SetSpawnPoint({ 380.f, -220.0f });
-		//wave1.AddGroup(group2);
-	}
-	waveQueue.emplace(wave1); // Add Wave_1
+	{ // Wave_2
+		Wave::Group group1, group2;
 
-	{ // Wave_2 Group_3
-		//Wave::Group group3;
-		//group3.AddEnemy(EnemyType::Default, 5);
-		//group3.SetSpawnPoint({ 380.f, -220.0f });
-		//wave2.AddGroup(group3);
+		group1.AddEnemy(EnemyType::Default, 3 + currentRound);
+		group2.AddEnemy(EnemyType::Default, 2 + currentRound);
+		group2.AddEnemy(EnemyType::Runner, 1 + 2 * currentRound);
+		group1.SetSpawnPoint({ 490.f, -150.0f });
+		group2.SetSpawnPoint({ 170, -80.0f });
+		wave2.AddGroup(group1);
+		wave2.AddGroup(group2);
+		wave2.SetTimeLimit(30);
 	}
 
-	{ // Wave_2 Group_4
-		//Wave::Group group4;
-		//group4.AddEnemy(EnemyType::Default, 4);
-		//group4.SetSpawnPoint({ 380.f, -220.0f });
-		//wave2.AddGroup(group4);
+
+	{ // Wave_3
+		Wave::Group group1, group2, group3, group4;
+
+		group1.AddEnemy(EnemyType::Default, 3 + currentRound);
+		group1.AddEnemy(EnemyType::Runner, 1 + 1 * currentRound);
+		group1.SetSpawnPoint({ 490.f, -150.0f });
+
+		group2.AddEnemy(EnemyType::Default, 3 + currentRound);
+		group2.AddEnemy(EnemyType::Runner, 1 + currentRound);
+		group2.SetSpawnPoint({ 170, -80.0f });
+
+		group3.AddEnemy(EnemyType::Default, 3 + currentRound);
+		group3.SetSpawnPoint({ 80.0f, -500.0f });
+
+		group4.AddEnemy(EnemyType::Default, 2 + currentRound);
+		group4.SetSpawnPoint({ 520.f, -540.0f });
+
+		wave3.AddGroup(group1);
+		wave3.AddGroup(group2);
+		wave3.AddGroup(group3);
+		wave3.AddGroup(group4);
+		wave3.SetTimeLimit(45);
 	}
-	//waveQueue.emplace(wave2); // Add Wave_2
+
+	{ // Wave_4
+		Wave::Group group1, group2, group3, group4;
+
+		group1.AddEnemy(EnemyType::Default, 4 + currentRound);
+		group1.AddEnemy(EnemyType::Runner, 1 + currentRound);
+		group1.SetSpawnPoint({ 490.f, -150.0f });
+
+		group2.AddEnemy(EnemyType::Default, 4 + currentRound);
+		group2.AddEnemy(EnemyType::Runner, 1 + currentRound);
+		group2.SetSpawnPoint({ 170, -80.0f });
+
+		group3.AddEnemy(EnemyType::Default, 2 + currentRound);
+		group3.AddEnemy(EnemyType::Runner, 2 + currentRound);
+		group3.SetSpawnPoint({ 80.0f, -500.0f });
+
+		group4.AddEnemy(EnemyType::Default, 4 + currentRound);
+		group4.AddEnemy(EnemyType::Runner, 1 + currentRound);
+		group4.SetSpawnPoint({ 520.f, -540.0f });
+
+		wave4.AddGroup(group1);
+		wave4.AddGroup(group2);
+		wave4.AddGroup(group3);
+		wave4.AddGroup(group4);
+		wave4.SetTimeLimit(45);
+	}
+
+	{ // Wave_5 BOSS
+		Wave::Group group1, group2, group3, group4;
+
+		group1.AddEnemy(EnemyType::Default, 2 + currentRound);
+		group1.AddEnemy(EnemyType::BIGMOMMA, 1);
+		group1.SetSpawnPoint({ 490.f, -150.0f });
+
+		group2.AddEnemy(EnemyType::Default, 1 + currentRound);
+		group2.SetSpawnPoint({ 170, -80.0f });
+
+		group3.AddEnemy(EnemyType::Default, 2 + currentRound);
+		group3.SetSpawnPoint({ 80.0f, -500.0f });
+
+		group4.AddEnemy(EnemyType::Default, 1 + currentRound);
+		group4.SetSpawnPoint({ 520.f, -540.0f });
+
+		wave5.AddGroup(group1);
+		wave5.AddGroup(group2);
+		wave5.AddGroup(group3);
+		wave5.AddGroup(group4);
+		wave5.SetTimeLimit(45);
+	}
+
+	waveQueue.emplace(wave1); 
+	waveQueue.emplace(wave2); 
+	waveQueue.emplace(wave3); 
+	waveQueue.emplace(wave4); 
+	waveQueue.emplace(wave5); 
 }
 
 void Simulation::ResetPlayer(Entity player)
@@ -238,7 +293,7 @@ void Simulation::ResetPlayer(Entity player)
 		attackAbility->cooldown = 0.3f;
 		attackAbility->attackDamage = 40.f;
 		attackAbility->isRanged = false;
-		attackAbility->lifetime = 0.1f;
+		attackAbility->lifetime = 0.2f;
 		attackAbility->useTime = 0.2f;
 		attackAbility->delay = 0.1f;
 
@@ -284,9 +339,8 @@ void Simulation::ResetPlayer(Entity player)
 
 	//Collision will handle this entity as a dynamic one
 	player.AddComponent<comp::Tag<TagType::DYNAMIC>>();
-	// Network component will make sure the new entity is sent
+	player.AddComponent<comp::Tag<TagType::GOOD>>(); // this is a good guy, he will call you back
 
-	
 	player.RemoveComponent<comp::TemporaryPhysics>();
 	if (!firstTimeAdded)
 	{
@@ -301,7 +355,7 @@ void Simulation::ResetPlayer(Entity player)
 
 Simulation::Simulation(Server* pServer, HeadlessEngine* pEngine)
 	: m_pServer(pServer)
-	, m_pEngine(pEngine), m_pLobbyScene(nullptr), m_pGameScene(nullptr), m_pCurrentScene(nullptr)
+	, m_pEngine(pEngine), m_pLobbyScene(nullptr), m_pGameScene(nullptr), m_pCurrentScene(nullptr), currentRound(0)
 {
 	this->m_gameID = 0;
 	this->m_tick = 0;
@@ -421,6 +475,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 			//  run all game logic systems
 			{
 				PROFILE_SCOPE("Systems");
+				
 				ServerSystems::CheckGameOver(this, scene);
 
 				AIBehaviors::UpdateBlackBoard(scene);
@@ -428,9 +483,6 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 				ServerSystems::TickBTSystem(this, scene);
 				ServerSystems::UpdatePlayerWithInput(this, scene, e.dt);
 				ServerSystems::PlayerStateSystem(this, scene, e.dt);
-
-				Systems::MovementSystem(scene, e.dt);
-				Systems::MovementColliderSystem(scene, e.dt);
 				
 				Systems::UpdateAbilities(scene, e.dt);
 				Systems::CombatSystem(scene, e.dt);
@@ -438,9 +490,10 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 
 				Systems::HealthSystem(scene, e.dt, m_currency.GetAmountRef());
 				Systems::SelfDestructSystem(scene, e.dt);
+				
 				{
 					PROFILE_SCOPE("Collision Box/Box");
-					Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(scene, e.dt);
+					//Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(scene, e.dt);
 				}
 				{
 					PROFILE_SCOPE("Collision Sphere/Box");
@@ -450,11 +503,15 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 					PROFILE_SCOPE("Collision Sphere/Sphere");
 					Systems::CheckCollisions<comp::BoundingSphere, comp::BoundingSphere>(scene, e.dt);
 				}
+				
+				Systems::MovementSystem(scene, e.dt);
+				Systems::MovementColliderSystem(scene, e.dt);
 			}
 
 			if (!waveQueue.empty())
 				ServerSystems::NextWaveConditions(this, waveTimer, waveQueue.front().GetTimeLimit());
-
+			else
+				this->CreateWaves();
 			//LOG_INFO("GAME Scene %d", m_gameID);
 		});
 
@@ -891,6 +948,7 @@ void Simulation::ResetGameScene()
 	message<GameMsg> msg;
 	msg.header.id = GameMsg::Game_RemoveEntity;
 	uint32_t count = 0;
+	currentRound = 0;
 	this->m_pGameScene->ForEachComponent<comp::Network>([&](Entity e, comp::Network& n)
 		{
 			if (m_players.find(n.id) == m_players.end())

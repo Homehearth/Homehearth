@@ -15,8 +15,9 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 {
 	Entity entity = simulation->GetGameScene()->CreateEntity();
 	entity.AddComponent<comp::Network>();
-	entity.AddComponent<comp::NPC>();
+	comp::NPC* npc = entity.AddComponent<comp::NPC>();
 	entity.AddComponent<comp::Tag<DYNAMIC>>();
+	entity.AddComponent<comp::Tag<BAD>>(); // this entity is BAD
 
 	comp::Transform* transform = entity.AddComponent<comp::Transform>();
 	comp::Health* health = entity.AddComponent<comp::Health>();
@@ -24,7 +25,7 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 	//comp::BoundingOrientedBox* obb = entity.AddComponent<comp::BoundingOrientedBox>();
 	comp::BoundingSphere* bos = entity.AddComponent<comp::BoundingSphere>();
 	comp::Velocity* velocity = entity.AddComponent<comp::Velocity>();
-	comp::AttackAbility* combatStats = entity.AddComponent<comp::AttackAbility>();
+	comp::AttackAbility* attackAbility = entity.AddComponent<comp::AttackAbility>();
 	comp::BehaviorTree* behaviorTree = entity.AddComponent<comp::BehaviorTree>();
 	switch (type)
 	{
@@ -32,43 +33,67 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		{
 			// ---DEFAULT ENEMY---
 			transform->position = spawnP;
-			transform->scale = { 1.8f, 1.8f, 1.8f };
+			//Generate float between 0.0 and 0.5 (give monster a slightly different height?)
+			float randomNum = static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (0.5)));
+
+			transform->scale = { 1.8f, 1.8f+randomNum, 1.8f };
 			meshName->name = "Monster.fbx";
 			entity.AddComponent<comp::AnimatorName>()->name = "Monster.anim";
-			//obb->Extents = sm::Vector3(2.f, 2.f, 2.f);
 			bos->Radius = 3.f;
-			/*velocity->vel = sm::Vector3(transform->position * -1.0f);
-			velocity->vel.Normalize();
-			velocity->vel *= 5.0f;*/
-			combatStats->cooldown = 1.0f;
-			combatStats->attackDamage = 20.f;
-			combatStats->lifetime = 0.2f;
-			combatStats->isRanged = false;
+
+			npc->movementSpeed = 15.f;
+			attackAbility->cooldown = 1.0f;
+			attackAbility->attackDamage = 20.f;
+			attackAbility->lifetime = 0.3f;
+			attackAbility->isRanged = false;
+			attackAbility->attackRange = 7.0f;
+			attackAbility->useTime = 0.3f;
+			attackAbility->delay = 0.2f;
+			attackAbility->movementSpeedAlt = 0.0f;
 			behaviorTree->root = AIBehaviors::GetSimpleAIBehavior(entity);
-			combatStats->attackRange = 7.0f;
-
-			
 		}
 		break;
-	case EnemyType::Default2:
+	case EnemyType::Runner:
 		{
-			// ---DEFAULT ENEMY 2---
-			transform->position = spawnP;
-			meshName->name = "Barrel.obj";
-			transform->scale = { 1.8f, 1.8f, 1.8f };
-			//obb->Extents = sm::Vector3(2.f, 2.f, 2.f);
-			bos->Radius = 3.f;
-			/*velocity->vel = sm::Vector3(transform->position * -1.0f);
-			velocity->vel.Normalize();
-			velocity->vel *= 5.0f;*/
-			combatStats->cooldown = 1.0f;
-			combatStats->attackDamage = 20.f;
-			combatStats->lifetime = 0.2f;
-			combatStats->isRanged = false;
-			combatStats->attackRange = 7.0f;
-
+		// ---Fast Zombie ENEMY---
+		transform->position = spawnP;
+		transform->scale = { 1.8f, 3.f, 1.8f };
+		meshName->name = "Monster.fbx";
+		entity.AddComponent<comp::AnimatorName>()->name = "Monster.anim";
+		bos->Radius = 3.f;
+		attackAbility->cooldown = 1.0f;
+		attackAbility->attackDamage = 20.f;
+		attackAbility->lifetime = 0.3f;
+		attackAbility->isRanged = false;
+		attackAbility->attackRange = 7.0f;
+		attackAbility->useTime = 0.3f;
+		attackAbility->delay = 0.2f;
+		attackAbility->movementSpeedAlt = 0.0f;
+		npc->movementSpeed = 30.f;
+		behaviorTree->root = AIBehaviors::GetSimpleAIBehavior(entity);
 		}
 		break;
+	case EnemyType::BIGMOMMA:
+	{
+		// ---BOSS ENEMY---
+		transform->position = spawnP;
+		transform->scale = { 3.8f, 6.f, 3.8f };
+		meshName->name = "Monster.fbx";
+		entity.AddComponent<comp::AnimatorName>()->name = "Monster.anim";
+		bos->Radius = 3.f;
+		attackAbility->cooldown = 1.0f;
+		attackAbility->attackDamage = 20.f;
+		attackAbility->lifetime = 0.3f;
+		attackAbility->isRanged = false;
+		attackAbility->attackRange = 20.0f;
+		attackAbility->useTime = 0.3f;
+		attackAbility->delay = 0.2f;
+		attackAbility->movementSpeedAlt = 0.0f;
+		npc->movementSpeed = 10.f;
+		health->currentHealth = 1500.f;
+		behaviorTree->root = AIBehaviors::GetSimpleAIBehavior(entity);
+	}
+	break;
 	default:
 			LOG_WARNING("Attempted to create unknown EnemyType.")
 		break;
@@ -252,7 +277,14 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 				p.state = comp::Player::State::LOOK_TO_MOUSE; // set state even if ability is not ready for use yet
 				if (ecs::UseAbility(e, p.primaryAbilty, &p.mousePoint))
 				{
+					LOG_INFO("Used primary");
 
+				}
+
+				// make sure movement alteration is not applied when using, because then its applied atomatically
+				if (!ecs::IsUsing(e, p.primaryAbilty)) 
+				{
+					e.GetComponent<comp::Velocity>()->vel *= ecs::GetAbility(e, p.primaryAbilty)->movementSpeedAlt;
 				}
 			}
 			else if (p.lastInputState.rightMouse) // was pressed
@@ -308,14 +340,13 @@ void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& sce
 			}
 		});
 
-	scene.ForEachComponent<comp::Player, comp::Velocity, comp::Transform>([&](comp::Player& p, comp::Velocity& v, comp::Transform& t)
+	scene.ForEachComponent<comp::Player, comp::Velocity, comp::Transform>([&](Entity e, comp::Player& p, comp::Velocity& v, comp::Transform& t)
 		{
 			if (p.state == comp::Player::State::LOOK_TO_MOUSE)
 			{
 				// turns player to look at mouse world pos
 				p.fowardDir = p.mousePoint - t.position;
 				p.fowardDir.Normalize();
-				v.vel *= 0.2f;
 			}
 			else if (p.state == comp::Player::State::WALK)
 			{
@@ -381,14 +412,6 @@ void ServerSystems::TickBTSystem(Simulation* simulation, HeadlessScene& scene)
 {
 	scene.ForEachComponent<comp::BehaviorTree>([&](Entity entity,comp::BehaviorTree& bt)
 		{
-			if(bt.currentNode != nullptr)
-			{
-				bt.currentNode->Tick();
-			}
-			else
-			{
-				bt.root->Tick();
-			}
-		
+			bt.root->Tick();
 		});
 }

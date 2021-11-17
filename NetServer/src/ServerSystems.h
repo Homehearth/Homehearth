@@ -7,8 +7,9 @@ namespace EnemyManagement
 {
 	enum class EnemyType
 	{
-		Default,
-		Default2,
+		Default,  //Basic walkere zombie
+		Runner,   //Zombie but faster...
+		BIGMOMMA, //Boss BIG MOMMA
 		ENUM_SIZE
 	};
 

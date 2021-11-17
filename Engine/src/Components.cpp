@@ -69,16 +69,7 @@ namespace ecs {
     
     bool UseAbility(Entity entity, entt::meta_type abilityType, sm::Vector3* targetPoint)
     {
-        using namespace entt::literals;
-        
-        auto func = abilityType.func("get"_hs);
-        if (!func)
-        {
-            LOG_WARNING("Could not use ability, did you register component as ability with ecs::RegisterAsAbility?");
-            return false;
-        }
-        auto instance = func.invoke({}, entity);
-        component::IAbility* ability = instance.try_cast<component::IAbility>();
+        comp::IAbility* ability = GetAbility(entity, abilityType);
         if (!ability)
         {
             LOG_WARNING("This entity does not have this ability");
@@ -103,16 +94,7 @@ namespace ecs {
 
     bool ReadyToUse(Entity entity, entt::meta_type abilityType, sm::Vector3* targetPoint)
     {
-        using namespace entt::literals;
-
-        auto func = abilityType.func("get"_hs);
-        if (!func)
-        {
-            LOG_WARNING("Could not get ability, did you register component as ability with ecs::RegisterAsAbility?");
-            return false;
-        }
-        auto instance = func.invoke({}, entity);
-        component::IAbility* ability = instance.try_cast<component::IAbility>();
+        comp::IAbility* ability = GetAbility(entity, abilityType);
         if (!ability)
         {
             LOG_WARNING("This entity does not have this ability");
@@ -130,16 +112,7 @@ namespace ecs {
 
     bool IsUsing(Entity entity, entt::meta_type abilityType)
     {
-        using namespace entt::literals;
-
-        auto func = abilityType.func("get"_hs);
-        if (!func)
-        {
-            LOG_WARNING("Could not get ability, did you register component as ability with ecs::RegisterAsAbility?");
-            return false;
-        }
-        auto instance = func.invoke({}, entity);
-        component::IAbility* ability = instance.try_cast<component::IAbility>();
+        comp::IAbility* ability = GetAbility(entity, abilityType);
         if (!ability)
         {
             LOG_WARNING("This entity does not have this ability");
@@ -156,6 +129,21 @@ namespace ecs {
             return IsUsing(player, p->primaryAbilty) || IsUsing(player, p->secondaryAbilty);
         }
         return false;
+    }
+
+    component::IAbility* GetAbility(Entity entity, entt::meta_type abilityType)
+    {
+        using namespace entt::literals;
+
+        auto func = abilityType.func("get"_hs);
+        if (!func)
+        {
+            return nullptr;
+        }
+        auto instance = func.invoke({}, entity);
+        component::IAbility* ability = instance.try_cast<component::IAbility>();
+
+        return ability;
     }
 
     component::TemporaryPhysics::Force GetGravityForce()
