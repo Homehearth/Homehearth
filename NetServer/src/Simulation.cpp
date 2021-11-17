@@ -293,7 +293,7 @@ void Simulation::ResetPlayer(Entity player)
 		attackAbility->cooldown = 0.3f;
 		attackAbility->attackDamage = 40.f;
 		attackAbility->isRanged = false;
-		attackAbility->lifetime = 0.1f;
+		attackAbility->lifetime = 0.2f;
 		attackAbility->useTime = 0.2f;
 		attackAbility->delay = 0.1f;
 
@@ -339,9 +339,8 @@ void Simulation::ResetPlayer(Entity player)
 
 	//Collision will handle this entity as a dynamic one
 	player.AddComponent<comp::Tag<TagType::DYNAMIC>>();
-	// Network component will make sure the new entity is sent
+	player.AddComponent<comp::Tag<TagType::GOOD>>(); // this is a good guy, he will call you back
 
-	
 	player.RemoveComponent<comp::TemporaryPhysics>();
 	if (!firstTimeAdded)
 	{
@@ -476,6 +475,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 			//  run all game logic systems
 			{
 				PROFILE_SCOPE("Systems");
+				
 				ServerSystems::CheckGameOver(this, scene);
 
 				AIBehaviors::UpdateBlackBoard(scene);
@@ -483,9 +483,6 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 				ServerSystems::TickBTSystem(this, scene);
 				ServerSystems::UpdatePlayerWithInput(this, scene, e.dt);
 				ServerSystems::PlayerStateSystem(this, scene, e.dt);
-
-				Systems::MovementSystem(scene, e.dt);
-				Systems::MovementColliderSystem(scene, e.dt);
 				
 				Systems::UpdateAbilities(scene, e.dt);
 				Systems::CombatSystem(scene, e.dt);
@@ -493,9 +490,10 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 
 				Systems::HealthSystem(scene, e.dt, m_currency.GetAmountRef());
 				Systems::SelfDestructSystem(scene, e.dt);
+				
 				{
 					PROFILE_SCOPE("Collision Box/Box");
-					Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(scene, e.dt);
+					//Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(scene, e.dt);
 				}
 				{
 					PROFILE_SCOPE("Collision Sphere/Box");
@@ -505,6 +503,9 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 					PROFILE_SCOPE("Collision Sphere/Sphere");
 					Systems::CheckCollisions<comp::BoundingSphere, comp::BoundingSphere>(scene, e.dt);
 				}
+				
+				Systems::MovementSystem(scene, e.dt);
+				Systems::MovementColliderSystem(scene, e.dt);
 			}
 
 			if (!waveQueue.empty())

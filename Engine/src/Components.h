@@ -145,6 +145,11 @@ namespace ecs
 		{
 			sm::Vector3 vel;
 			sm::Vector3 oldVel;
+
+			sm::Vector3 scaleVel = { 0, 0, 0 };
+			sm::Vector3 oldScaleVel;
+
+			bool applyToCollider = false;
 		};
 
 		struct Player
@@ -223,8 +228,12 @@ namespace ecs
 			// !DO NOT TOUCH!
 			float useTimer = 0.f;
 
+			// alter movement speed during use
+			// == 1 -> normal, < 1 -> slow, > 1 -> fast
+			float movementSpeedAlt = 0.2f;
 			// lifetime of the ability, for instance lifetime of any created collider
 			float lifetime = 5.f;
+
 
 			// !DO NOT TOUCH!
 			bool isReady = false;
@@ -257,10 +266,10 @@ namespace ecs
 
 		struct ITag
 		{
-			tag_bits id;
+			TagType id;
 		};
 
-		template<tag_bits ID>
+		template<TagType ID>
 		struct Tag : ITag
 		{
 			Tag() {
@@ -340,6 +349,8 @@ namespace ecs
 	bool IsUsing(Entity entity, entt::meta_type abilityType);
 
 	bool IsPlayerUsingAnyAbility(Entity player);
+
+	component::IAbility* GetAbility(Entity entity, entt::meta_type abilityType);
 
 	component::TemporaryPhysics::Force GetGravityForce();
 

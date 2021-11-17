@@ -1,6 +1,6 @@
 #pragma once
 
-typedef uint8_t tag_bits;
+typedef uint16_t tag_bits;
 
 enum TagType : tag_bits
 {
@@ -9,5 +9,8 @@ enum TagType : tag_bits
 	DYNAMIC = 4,
 	STATIC = 8,
 	MAP_BOUNDS = 16,
-	DEFENCE = 32
+	DEFENCE = 32,
+
+	GOOD = 128,
+	BAD = 256,
 };

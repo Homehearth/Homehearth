@@ -68,6 +68,12 @@ void Systems::UpdateAbilities(HeadlessScene& scene, float dt)
 
 			if (ability->cooldownTimer <= 0.f && ability->delayTimer <= 0.f && ability->useTimer <= 0.f)
 				ability->isReady = true;
+
+			comp::Velocity* vel = entity.GetComponent<comp::Velocity>();
+			if (vel && ecs::IsUsing(ability))
+			{
+				vel->vel *= ability->movementSpeedAlt;
+			}
 		}
 	}
 
@@ -93,19 +99,20 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 			{
 				//Creates an entity that's used to check collision if an attack lands.
 				Entity attackCollider = scene.CreateEntity();
-				comp::Transform* t = attackCollider.AddComponent<comp::Transform>();
-				comp::BoundingOrientedBox* box = attackCollider.AddComponent<comp::BoundingOrientedBox>();
 				
-				box->Extents = sm::Vector3(stats.attackRange * 0.5f, 10, stats.attackRange * 0.5f);
+				comp::Transform* t = attackCollider.AddComponent<comp::Transform>();
+				attackCollider.AddComponent<comp::Tag<TagType::DYNAMIC>>();
+
+				comp::BoundingSphere* bos = attackCollider.AddComponent<comp::BoundingSphere>();
+
+				bos->Radius = stats.attackRange;
 				
 				sm::Vector3 targetDir = stats.targetPoint - transform.position;
 				targetDir.Normalize();
 				t->position = transform.position + targetDir * stats.attackRange * 0.5f + sm::Vector3(0, 4, 0);
 				t->rotation = transform.rotation;
 
-				box->Center = t->position;
-				box->Orientation = t->rotation;
-
+				bos->Center = t->position;
 
 				comp::SelfDestruct* selfDestruct = attackCollider.AddComponent<comp::SelfDestruct>();
 				selfDestruct->lifeTime = stats.lifetime;
@@ -120,18 +127,24 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 				attackCollider.AddComponent<comp::Network>();
 
 				
-				CollisionSystem::Get().AddOnCollision(attackCollider, [entity, &scene](Entity thisEntity, Entity other)
+				CollisionSystem::Get().AddOnCollisionEnter(attackCollider, [entity, &scene](Entity thisEntity, Entity other)
 					{
 						// is caster already dead
 						if (entity.IsNull())
 						{
 							thisEntity.GetComponent<comp::SelfDestruct>()->lifeTime = 0.f;
-							return;
+							return NO_RESPONSE;
 						}
 
 						if (other == entity)
-							return;
+							return NO_RESPONSE;
 
+						tag_bits goodOrBad = TagType::GOOD | TagType::BAD;
+						if ((entity.GetTags() & goodOrBad) ==
+							(other.GetTags() & goodOrBad))
+						{
+							return NO_RESPONSE; //these guys are on the same team
+						}
 
 						comp::Health* otherHealth = other.GetComponent<comp::Health>();
 						comp::AttackAbility* stats = entity.GetComponent<comp::AttackAbility>();
@@ -143,6 +156,7 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 							scene.publish<EComponentUpdated>(other, ecs::Component::HEALTH);
 
 							thisEntity.GetComponent<comp::SelfDestruct>()->lifeTime = 0.f;
+
 
 							comp::Velocity* attackVel = thisEntity.GetComponent<comp::Velocity>();
 							if (attackVel)
@@ -175,11 +189,12 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 							}
 							
 						}
+						return NO_RESPONSE;
 					});
 
-		}
+			}
 
-	});
+		});
 
 
 }
@@ -187,11 +202,45 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 void Systems::HealingSystem(HeadlessScene& scene, float dt)
 {
 	// HealAbility system
-	scene.ForEachComponent<comp::HealAbility, comp::Player>([](comp::HealAbility& ability, comp::Player& player)
+	scene.ForEachComponent<comp::HealAbility, comp::Player>([&](Entity entity, comp::HealAbility& ability, comp::Player& player)
 		{
 			if (ecs::ReadyToUse(&ability))
 			{
 				LOG_INFO("Used healing ability");
+				Entity collider = scene.CreateEntity();
+				comp::Transform* transform = collider.AddComponent<comp::Transform>();
+				transform->position = entity.GetComponent<comp::Transform>()->position;
+				transform->scale = sm::Vector3(2);
+				
+				comp::BoundingSphere* sphere = collider.AddComponent<comp::BoundingSphere>();
+				sphere->Center = transform->position;
+				sphere->Radius = 1.f;
+
+				collider.AddComponent<comp::Tag<TagType::DYNAMIC>>();
+				
+				comp::Velocity* vel = collider.AddComponent<comp::Velocity>();
+				vel->scaleVel = sm::Vector3(20);
+				vel->applyToCollider = true;
+
+				collider.AddComponent<comp::SelfDestruct>()->lifeTime = ability.lifetime;
+
+				collider.AddComponent<comp::Network>();
+
+				CollisionSystem::Get().AddOnCollisionEnter(collider, [&, entity](Entity thisEntity, Entity other)
+					{
+						if (entity.IsNull())
+							return NO_RESPONSE;
+
+						comp::Health* h = other.GetComponent<comp::Health>();
+						if (h)
+						{
+							h->currentHealth += ability.healAmount;
+							scene.publish<EComponentUpdated>(other, ecs::Component::HEALTH);
+						}
+
+						return NO_RESPONSE;
+					});
+
 			}
 		});
 
@@ -223,8 +272,10 @@ void Systems::HealthSystem(HeadlessScene& scene, float dt, uint32_t& money_ref)
 				else {
 					entity.Destroy();
 				}
-				
-
+			}
+			else if (health.currentHealth > health.maxHealth)
+			{
+				health.currentHealth = health.maxHealth;
 			}
 		});
 }
@@ -323,9 +374,32 @@ void Systems::MovementSystem(HeadlessScene& scene, float dt)
 					transform.position.y = 0.f;
 					velocity.vel.y = 0;
 				}
-
-
 				velocity.oldVel = velocity.vel; // updated old vel position
+
+				
+				if (velocity.scaleVel.Length() > 0.01f)
+				{
+					e.UpdateNetwork();
+				}
+				transform.scale += velocity.scaleVel * dt;
+				velocity.oldScaleVel = velocity.scaleVel; // updated old vel scale
+
+				if (velocity.applyToCollider)
+				{					
+					comp::BoundingOrientedBox* box = e.GetComponent<comp::BoundingOrientedBox>();
+					if (box)
+					{
+						box->Extents = box->Extents + velocity.scaleVel * dt;
+					}
+
+					comp::BoundingSphere* bos = e.GetComponent<comp::BoundingSphere>();
+					if (bos)
+					{
+						bos->Radius += velocity.scaleVel.x * dt;
+					}
+
+				}
+
 			});
 	}
 }

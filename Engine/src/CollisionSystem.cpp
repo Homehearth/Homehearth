@@ -1,59 +1,137 @@
 #include "EnginePCH.h"
 #include "CollisionSystem.h"
 
-//Returns number of how many colliders the entity is colliding with
-int CollisionSystem::GetCollisionCounts(Entity entity) const
-{
-	int count = 0;
-	if (m_CollisionCount.find(entity) != m_CollisionCount.end())
-	{
-		count = this->m_CollisionCount.at(entity);
-	}
 
-	return count;
+void CollisionSystem::AddOnCollisionEnter(Entity entity1, std::function<bool(Entity, Entity)> func)
+{
+	if (m_onCollisionEnter.find(entity1) == m_onCollisionEnter.end())
+	{
+		m_onCollisionEnter.insert(std::make_pair(entity1, func));
+	}
+}
+
+bool CollisionSystem::OnCollisionEnter(Entity entity1, Entity entity2)
+{
+	bool doResponse = RESPONSE;
+	for (int i = 0; i < 2; i++)
+	{
+		if (m_onCollisionEnter.find(entity1) != m_onCollisionEnter.end())
+		{
+			if (!entity1.IsNull())
+			{
+				if (!entity2.IsNull())
+				{
+					if (!m_onCollisionEnter.at(entity1)(entity1, entity2))
+						doResponse = NO_RESPONSE;
+				}
+			}
+			else
+			{
+				m_onCollisionEnter.erase(entity1);
+			}
+		}
+		std::swap(entity1, entity2);
+	}
+	return doResponse;
 }
 
 
 void CollisionSystem::AddOnCollision(Entity entity1, std::function<void(Entity, Entity)> func)
 {
-	if (m_OnCollision.find(entity1) == m_OnCollision.end())
+	if (m_onCollision.find(entity1) == m_onCollision.end())
 	{
-		m_OnCollision.insert(std::make_pair(entity1, func));
+		m_onCollision.insert(std::make_pair(entity1, func));
 	}
 }
 
 void CollisionSystem::OnCollision(Entity entity1, Entity entity2)
 {
-	if (m_OnCollision.find(entity1) != m_OnCollision.end())
+	for (int i = 0; i < 2; i++)
 	{
-		if (!entity1.IsNull())
-		{
-			if (!entity2.IsNull())
-			{
-				m_OnCollision.at(entity1)(entity1, entity2);
-			}
-		}
-		else
-		{
-			m_OnCollision.erase(entity1);
-		}
-	}
-	if (m_OnCollision.find(entity2) != m_OnCollision.end())
-	{
-		if (!entity2.IsNull())
+		if (m_onCollision.find(entity1) != m_onCollision.end())
 		{
 			if (!entity1.IsNull())
 			{
-				m_OnCollision.at(entity2)(entity2, entity1);
+				if (!entity2.IsNull())
+				{
+					m_onCollision.at(entity1)(entity1, entity2);
+				}
+			}
+			else
+			{
+				m_onCollision.erase(entity1);
 			}
 		}
-		else
-		{
-			m_OnCollision.erase(entity2);
-		}
+		std::swap(entity1, entity2);
 	}
 }
 
+void CollisionSystem::AddOnCollisionExit(Entity entity1, std::function<void(Entity, Entity)> func)
+{
+	if (m_onCollisionExit.find(entity1) == m_onCollisionExit.end())
+	{
+		m_onCollisionExit.insert(std::make_pair(entity1, func));
+	}
+}
+
+void CollisionSystem::OnCollisionExit(Entity entity1, Entity entity2)
+{
+	for (int i = 0; i < 2; i++)
+	{
+		if (m_onCollisionExit.find(entity1) != m_onCollisionExit.end())
+		{
+			if (!entity1.IsNull())
+			{
+				if (!entity2.IsNull())
+				{
+					m_onCollisionExit.at(entity1)(entity1, entity2);
+				}
+			}
+			else
+			{
+				m_onCollisionExit.erase(entity1);
+			}
+		}
+		std::swap(entity1, entity2);
+	}
+}
+
+bool CollisionSystem::AddPair(Entity entity1, Entity entity2)
+{
+	size_t collisionSize = m_collisionPairs.size();
+	std::pair<Entity, Entity> entityPair = MakeEntityPair(entity1, entity2);
+	m_collisionPairs.insert(entityPair);
+	if (collisionSize < m_collisionPairs.size())
+	{
+		return true;
+	}
+	return false;
+}
+
+bool CollisionSystem::RemovePair(Entity entity1, Entity entity2)
+{
+	std::pair<Entity, Entity> entityPair = MakeEntityPair(entity1, entity2);
+	size_t collisionSize = m_collisionPairs.size();
+	m_collisionPairs.erase(entityPair);
+	if (collisionSize > m_collisionPairs.size())
+	{
+		return true;
+	}
+	return false;
+}
+
+uint32_t CollisionSystem::GetCollisionCount(Entity entity) const
+{
+	uint32_t count = 0;
+	for (const auto& pair : m_collisionPairs)
+	{
+		if (entity == pair.first || entity == pair.second)
+		{
+			count++;
+		}
+	}
+	return count;
+}
 
 CollisionSystem::Projection_t CollisionSystem::GetProjection(sm::Vector3 axis, sm::Vector3* corners)
 {
@@ -77,6 +155,13 @@ CollisionSystem::Projection_t CollisionSystem::GetProjection(sm::Vector3 axis, s
 
 	//Projection_t projection = {min, max};
 	return { min, max };
+}
+
+std::pair<Entity, Entity> CollisionSystem::MakeEntityPair(Entity entity1, Entity entity2)
+{
+	if (entity1 > entity2)
+		return { entity2, entity1 };
+	return { entity1, entity2 };
 }
 
 //Generates a response when two objects collide with each other,
