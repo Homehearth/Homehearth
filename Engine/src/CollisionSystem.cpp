@@ -2,7 +2,7 @@
 #include "CollisionSystem.h"
 
 
-void CollisionSystem::AddOnCollisionEnter(Entity entity1, std::function<bool(Entity, Entity)> func)
+void CollisionSystem::AddOnCollisionEnter(Entity entity1, std::function<void(Entity, Entity)> func)
 {
 	if (m_onCollisionEnter.find(entity1) == m_onCollisionEnter.end())
 	{
@@ -10,9 +10,8 @@ void CollisionSystem::AddOnCollisionEnter(Entity entity1, std::function<bool(Ent
 	}
 }
 
-bool CollisionSystem::OnCollisionEnter(Entity entity1, Entity entity2)
+void CollisionSystem::OnCollisionEnter(Entity entity1, Entity entity2)
 {
-	bool doResponse = RESPONSE;
 	for (int i = 0; i < 2; i++)
 	{
 		if (m_onCollisionEnter.find(entity1) != m_onCollisionEnter.end())
@@ -21,8 +20,7 @@ bool CollisionSystem::OnCollisionEnter(Entity entity1, Entity entity2)
 			{
 				if (!entity2.IsNull())
 				{
-					if (!m_onCollisionEnter.at(entity1)(entity1, entity2))
-						doResponse = NO_RESPONSE;
+					m_onCollisionEnter.at(entity1)(entity1, entity2);
 				}
 			}
 			else
@@ -32,7 +30,7 @@ bool CollisionSystem::OnCollisionEnter(Entity entity1, Entity entity2)
 		}
 		std::swap(entity1, entity2);
 	}
-	return doResponse;
+
 }
 
 
