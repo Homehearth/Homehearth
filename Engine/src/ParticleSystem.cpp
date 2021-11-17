@@ -14,15 +14,16 @@ void ParticleSystem::Initialize(ID3D11Device* pDevice)
 	m_pDevice = pDevice;
 }
 
-void ParticleSystem::InitializeParticles(Entity* emitterEntity)
+void ParticleSystem::InitializeParticles(entt::registry& reg, entt::entity ent)
 {
-	comp::EmitterParticle* emitter = emitterEntity->GetComponent<comp::EmitterParticle>();	
+	comp::EmitterParticle* emitter = &reg.get<comp::EmitterParticle>(ent);
+	sm::Vector3 entityPosition = reg.get<comp::Transform>(ent).position;
 	std::vector<Particle_t> particles(emitter->nrOfParticles);
 
 	for (int i = 0; i < emitter->nrOfParticles; i++)
 	{
 		Particle_t tempParticle;
-		sm::Vector3 position = emitterEntity->GetComponent<comp::Transform>()->position;
+		sm::Vector3 position = entityPosition;
 		sm::Vector4 newPosition = { position.x, position.y + i*2, position.z, 1.0f };
 		tempParticle.position = newPosition;
 		tempParticle.startPosition = tempParticle.position;
@@ -91,4 +92,3 @@ bool ParticleSystem::CreateBufferSRVUAV(std::vector<Particle_t> particles, comp:
 
 	return true;
 }
-

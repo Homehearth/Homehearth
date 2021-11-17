@@ -114,10 +114,10 @@ namespace sceneHelp
 		SetupOptionsScreen(game);
 	}
 
-	void CreateGameScene(Game* engine)
+	void CreateGameScene(Game* game)
 	{
-		Scene& gameScene = engine->GetScene("Game");
-		SetupInGameScreen(engine);
+		Scene& gameScene = game->GetScene("Game");
+		SetupInGameScreen(game);
 
 		//Construct collider meshes if colliders are added.
 		gameScene.GetRegistry()->on_construct<comp::RenderableDebug>().connect<entt::invoke<&comp::RenderableDebug::InitRenderable>>();
@@ -125,16 +125,19 @@ namespace sceneHelp
 		gameScene.GetRegistry()->on_construct<comp::BoundingSphere>().connect<&entt::registry::emplace_or_replace<comp::RenderableDebug>>();
 		gameScene.GetRegistry()->on_construct<comp::Light>().connect<&Lights::Add>(gameScene.GetLights());
 
+		game->GetParticleSystem()->Initialize(D3D11Core::Get().Device());
+		gameScene.GetRegistry()->on_construct<comp::EmitterParticle>().connect<&ParticleSystem::InitializeParticles>(game->GetParticleSystem());
+
 		// Setup Cameras
 		Entity debugCameraEntity = gameScene.CreateEntity();
 		debugCameraEntity.AddComponent<comp::Camera3D>()->camera.Initialize(sm::Vector3(200, 60, -320), sm::Vector3(200, 50, -350), sm::Vector3(0, 1, 0),
-			sm::Vector2((float)engine->GetWindow()->GetWidth(), (float)engine->GetWindow()->GetHeight()), CAMERATYPE::DEBUG);
+			sm::Vector2((float)game->GetWindow()->GetWidth(), (float)game->GetWindow()->GetHeight()), CAMERATYPE::DEBUG);
 		debugCameraEntity.AddComponent<comp::Tag<TagType::DEBUG_CAMERA>>();
 
 		Entity cameraEntity = gameScene.CreateEntity();
 		comp::Camera3D* gameCamera = cameraEntity.AddComponent<comp::Camera3D>();
 		gameCamera->camera.Initialize(sm::Vector3(60, 100.f, 80), sm::Vector3(0, 0, 1), sm::Vector3(0, 1, 0),
-			sm::Vector2((float)engine->GetWindow()->GetWidth(), (float)engine->GetWindow()->GetHeight()), CAMERATYPE::PLAY);
+			sm::Vector2((float)game->GetWindow()->GetWidth(), (float)game->GetWindow()->GetHeight()), CAMERATYPE::PLAY);
 		gameCamera->camera.SetFOV(dx::XMConvertToRadians(30.f));
 		cameraEntity.AddComponent<comp::Tag<TagType::CAMERA>>();
 
@@ -147,7 +150,7 @@ namespace sceneHelp
 
 		InputSystem::Get().SetCamera(gameScene.GetCurrentCamera());
 
-		gameScene.on<ESceneUpdate>([cameraEntity, debugCameraEntity, engine](const ESceneUpdate& e, Scene& scene)
+		gameScene.on<ESceneUpdate>([cameraEntity, debugCameraEntity, game](const ESceneUpdate& e, Scene& scene)
 			{
 
 				IMGUI(
@@ -157,7 +160,7 @@ namespace sceneHelp
 				);
 
 				// Prediction
-				//engine->m_predictor.Predict(engine->GetScene("Game"));
+				//game->m_predictor.Predict(game->GetScene("Game"));
 				GameSystems::RenderIsCollidingSystem(scene);
 				//GameSystems::UpdatePlayerVisuals(scene);
 				Systems::LightSystem(scene, e.dt);

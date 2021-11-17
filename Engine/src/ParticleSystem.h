@@ -17,7 +17,7 @@ public:
 	~ParticleSystem();
 
 	void Initialize(ID3D11Device* pDevice);
-	void InitializeParticles(Entity* emitterEntity);
+	void InitializeParticles(entt::registry& reg, entt::entity ent);
 
 	bool CreateBufferSRVUAV(std::vector<Particle_t> particles, comp::EmitterParticle* emitter);
 

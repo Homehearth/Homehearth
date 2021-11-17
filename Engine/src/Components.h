@@ -72,12 +72,12 @@ namespace ecs
 			ComPtr<ID3D11ShaderResourceView> particleSRV;
 			ComPtr<ID3D11UnorderedAccessView> particleUAV;
 
-			EmitterParticle(std::string textureName = " ", UINT amoutOfParticles = 10, PARTICLEMODE mode = PARTICLEMODE::BLOOD)
+			EmitterParticle(std::string textureName = " ", int amoutOfParticles = 10, PARTICLEMODE mode = PARTICLEMODE::BLOOD)
 			{
 				texture = ResourceManager::Get().GetResource<RTexture>(textureName);
 				opacityTexture = ResourceManager::Get().GetResource<RTexture>("thisisfine_Opacity.png");
 
-				nrOfParticles = amoutOfParticles;
+				nrOfParticles = (UINT)amoutOfParticles;
 				type = mode;
 			}
 		};

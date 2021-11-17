@@ -50,11 +50,15 @@ void SmokeSimmulation(inout VertexParticleIn particle)
 {
     float raise = 0.05;
     
-    particle.pos.x += raise;
-    particle.color = (0, 0, 1, 1);
+    particle.pos.y += raise;
+    particle.size += 0.01;
     
-   // if (particle.pos.y >= 200) 
-     //   particle.pos = particle.startPos;
+    if (particle.pos.y >= 50) //Reset
+    {
+        particle.pos = particle.startPos;
+        particle.size = (1, 1);
+
+    }
 
 }
 
@@ -63,10 +67,19 @@ void SparklesSimmulation(inout VertexParticleIn particle)
     
     particle.size = (2, 2);
     particle.color = (0, 1, 0, 1);
-    
 
 }
 
 void RainSimmulation(inout VertexParticleIn particle)
 {
+    float raise = 0.05;
+    
+    particle.pos.y -= raise;
+    
+    if (particle.pos.y == -10) //Reset
+    {
+        particle.pos = particle.startPos;
+
+    }
+    
 }

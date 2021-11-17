@@ -16,6 +16,8 @@ private:
 
 	GridSystem m_grid;
 	uint32_t m_waveTimer;
+	ParticleSystem m_particles;
+
 
 	Entity m_mapEntity;
 
@@ -56,4 +58,6 @@ public:
 	void CreateLobby();
 	void SendStartGame();
 	Entity& GetLocalPlayer();
+
+	ParticleSystem* GetParticleSystem();
 };

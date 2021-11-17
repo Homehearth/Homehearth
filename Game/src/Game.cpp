@@ -81,24 +81,19 @@ bool Game::OnStartup()
 	// Set Current Scene
 	SetScene("MainMenu");
 
-	ParticleSystem particles;
-
 	Entity emitter = GetScene("Game").CreateEntity();
 	emitter.AddComponent<comp::Transform>()->position = {250,5,-340};
-	comp::EmitterParticle* e = emitter.AddComponent <comp::EmitterParticle>("thisisfine.png");
-	e->nrOfParticles = 10;
-	e->type = PARTICLEMODE::SMOKE;
+	comp::EmitterParticle* e = emitter.AddComponent <comp::EmitterParticle>("thisisfine.png", 10, PARTICLEMODE::SMOKE);
+
 
 	Entity emitter2 = GetScene("Game").CreateEntity();
 	emitter2.AddComponent<comp::Transform>()->position = { 250,5,-320 };
-	comp::EmitterParticle* e2 = emitter2.AddComponent <comp::EmitterParticle>("thisisfine.png");
-	e2->nrOfParticles = 10;
-	e2->type = PARTICLEMODE::SPARKLES;
+	comp::EmitterParticle* e2 = emitter2.AddComponent <comp::EmitterParticle>("thisisfine.png", 10, PARTICLEMODE::SPARKLES);
 
 
-	particles.Initialize(D3D11Core::Get().Device());
-	particles.InitializeParticles(&emitter);
-	particles.InitializeParticles(&emitter2);
+	Entity emitter3 = GetScene("Game").CreateEntity();
+	emitter3.AddComponent<comp::Transform>()->position = { 250,5,-300 };
+	comp::EmitterParticle* e3 = emitter3.AddComponent <comp::EmitterParticle>("thisisfine.png", 20, PARTICLEMODE::SPARKLES);
 
 	return true;
 }
@@ -501,6 +496,11 @@ void Game::SendStartGame()
 	msg << m_localPID << m_gameID;
 
 	m_client.Send(msg);
+}
+
+ParticleSystem* Game::GetParticleSystem()
+{
+	return &m_particles;
 }
 
 Entity& Game::GetLocalPlayer()
