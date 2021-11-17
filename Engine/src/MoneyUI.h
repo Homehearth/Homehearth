@@ -12,8 +12,6 @@ namespace rtd
 		uint32_t m_localMoney = 0;
 		draw_text_t m_drawOpts;
 
-		double lastUpdate;
-
 		void Update();
 
 	public:

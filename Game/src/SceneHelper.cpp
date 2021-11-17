@@ -762,19 +762,19 @@ namespace sceneHelp
 			{
 				game->m_models[ModelID::TREE2].push_back(e);
 			}
-			else if (Tree2 == filename)
+			else if (Tree3 == filename)
 			{
 				game->m_models[ModelID::TREE3].push_back(e);
 			}
-			else if (Tree2 == filename)
+			else if (Tree5 == filename)
 			{
 				game->m_models[ModelID::TREE5].push_back(e);
 			}
-			else if (Tree2 == filename)
+			else if (Tree6 == filename)
 			{
 				game->m_models[ModelID::TREE6].push_back(e);
 			}
-			else if (Tree2 == filename)
+			else if (Tree8 == filename)
 			{
 				game->m_models[ModelID::TREE8].push_back(e);
 			}
