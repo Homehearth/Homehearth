@@ -192,89 +192,96 @@ bool RAnimator::Create(const std::string& filename)
 	{
 		std::stringstream ss(line);
 		std::string keyword;
-		ss >> keyword;
-
-		if (keyword == "skel")
+		if (ss >> keyword)
 		{
-			std::string modelName;
-			ss >> modelName;
-
-			std::shared_ptr<RModel> model = ResourceManager::Get().GetResource<RModel>(modelName);
-			if (model)
+			if (keyword == "skel")
 			{
-				if (!LoadSkeleton(model->GetSkeleton()))
+				std::string modelName;
+				if (ss >> modelName)
 				{
+					std::shared_ptr<RModel> model = ResourceManager::Get().GetResource<RModel>(modelName);
+					if (model)
+					{
+						if (!LoadSkeleton(model->GetSkeleton()))
+						{
 #ifdef _DEBUG
-					LOG_WARNING("Animator %s could not load in skeleton...", filename.c_str());
+							LOG_WARNING("Animator %s could not load in skeleton...", filename.c_str());
 #endif // _DEBUG
-					return false;
+							return false;
+						}
+					}
 				}
 			}
-		}
-		else if (keyword == "anim")
-		{
-			std::string key;
-			std::string animName;
-			ss >> key >> animName;
-
-			EAnimationType animType = StringToAnimationType(key);
-			if (animType != EAnimationType::NONE)
+			else if (keyword == "anim")
 			{
-				std::shared_ptr<RAnimation> animation = ResourceManager::Get().GetResource<RAnimation>(animName);
-				if (animation)
+				std::string key;
+				std::string animName;
+				if (ss >> key >> animName)
 				{
-					animation_t animStruct;
-					animStruct.animation = animation;
-					m_animations[animType] = animStruct;
-					lastAnimation = animation;
-				}				
+					EAnimationType animType = StringToAnimationType(key);
+					if (animType != EAnimationType::NONE)
+					{
+						std::shared_ptr<RAnimation> animation = ResourceManager::Get().GetResource<RAnimation>(animName);
+						if (animation)
+						{
+							animation_t animStruct;
+							animStruct.animation = animation;
+							m_animations[animType] = animStruct;
+							lastAnimation = animation;
+						}
+					}
+				}
 			}
-		}
-		else if (keyword == "startAnim")
-		{
-			std::string key;
-			ss >> key;
-
-			EAnimationType animType = StringToAnimationType(key);
-			if (m_animations.find(animType) != m_animations.end())
+			else if (keyword == "startAnim")
 			{
-				m_currentType = animType;
+				std::string key;
+				if (ss >> key)
+				{
+					EAnimationType animType = StringToAnimationType(key);
+					if (m_animations.find(animType) != m_animations.end())
+					{
+						m_currentType = animType;
+					}
+				}
 			}
-		}
-		else if (keyword == "loopable")
-		{
-			bool option = false;
-			ss >> option;
-			if (lastAnimation)
-				lastAnimation->SetLoopable(option);
-		
-		}
-		else if (keyword == "tickSpeed")
-		{
-			double speed = 0;
-			ss >> speed;
-			if (lastAnimation)
-				lastAnimation->SetTicksPerFrame(speed);
-		}
-		else if (keyword == "blendstate")
-		{
-			std::string key1;
-			std::string key2;
-			double blendtime = 0;
-			ss >> key1 >> key2 >> blendtime;
-
-			EAnimationType fromType = StringToAnimationType(key1);
-			EAnimationType toType	= StringToAnimationType(key2);
-
-			if (fromType != EAnimationType::NONE && toType != EAnimationType::NONE)
+			else if (keyword == "loopable")
 			{
-				m_blendStates[{fromType, toType}] = blendtime;
+				bool option = false;
+				if (ss >> option)
+				{
+					if (lastAnimation)
+						lastAnimation->SetLoopable(option);
+				}
+			}
+			else if (keyword == "tickSpeed")
+			{
+				double speed = 0;
+				if (ss >> speed)
+				{
+					if (lastAnimation)
+						lastAnimation->SetTicksPerFrame(speed);
+				}
+			}
+			else if (keyword == "blendstate")
+			{
+				std::string key1;
+				std::string key2;
+				double blendtime = 0;
+				if (ss >> key1 >> key2 >> blendtime)
+				{
+					EAnimationType fromType = StringToAnimationType(key1);
+					EAnimationType toType = StringToAnimationType(key2);
+
+					if (fromType != EAnimationType::NONE && toType != EAnimationType::NONE)
+					{
+						m_blendStates[{fromType, toType}] = blendtime;
+					}
+				}
 			}
 		}
 	}
 
 	readfile.close();
-
 	return true;
 }
 
@@ -289,11 +296,15 @@ bool RAnimator::ChangeAnimation(const EAnimationType& type)
 		//Check if the state exist
 		if (m_animations.find(type) != m_animations.end())
 		{
-			m_nextType = type;
 			foundAnim = true;
+
+			if (m_currentType == EAnimationType::NONE)
+				m_currentType = type;
+			else
+				m_nextType = type;
 		}
 	}
-
+	
 	return foundAnim;
 }
 

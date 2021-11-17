@@ -7,7 +7,7 @@ anim 			TAKE_DAMAGE 		Knight_TakeDamage.fbx
 loopable 		0
 anim			PLACE_DEFENCE		Knight_PlaceDefence.fbx
 loopable		0
-startAnim 		IDLE		
+	
 
 //				FROM			TO					BLENDINGTIME
 blendstate 		IDLE			RUN					2.0s

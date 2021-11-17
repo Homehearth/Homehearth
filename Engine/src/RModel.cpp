@@ -411,23 +411,30 @@ void RModel::LoadMaterial(const aiScene* scene, const UINT& matIndex, bool& useM
     scene->mMaterials[matIndex]->Get(AI_MATKEY_NAME, matName);
 
     //DEBUGGING
-    std::string name = matName.C_Str();
-    if (name == "Chest_PBR")
-    {
-        std::cout << "Material: " << matName.C_Str() << std::endl;
-        for (int i = 0; i <= (int)aiTextureType::aiTextureType_UNKNOWN; i++)
-        {
-            aiString testPath;
-            scene->mMaterials[matIndex]->GetTexture(aiTextureType(i), 0, &testPath);
-            std::cout << "Path for: " << i << testPath.C_Str() << std::endl;
-        }
-        aiString path1;
-        aiString path2;
-        
-        std::cout << "Path for: " << path1.C_Str() << std::endl;
-        std::cout << "Path for: " << path2.C_Str() << std::endl;
-        std::cout << "Done" << std::endl;
-    }
+    //std::string name = matName.C_Str();
+    ///*if (name == "Chest_PBR")
+    //{*/
+    //    std::cout << "Material: " << matName.C_Str() << std::endl;
+    //    for (int i = 0; i <= (int)aiTextureType::aiTextureType_UNKNOWN; i++)
+    //    {
+    //        aiString testPath;
+    //        scene->mMaterials[matIndex]->GetTexture(aiTextureType(i), 0, &testPath);
+    //        std::cout << "Path for: " << i << testPath.C_Str() << std::endl;
+    //    }
+    //    aiString path1;
+    //    aiString path2;
+    //    
+    //    std::cout << "Path for: " << path1.C_Str() << std::endl;
+    //    std::cout << "Path for: " << path2.C_Str() << std::endl;
+    //    std::cout << "Done" << std::endl;
+
+    //    const aiTexture* text1 = scene->GetEmbeddedTexture("*1");
+    //    if (text1)
+    //        std::cout << text1->mFilename.C_Str() << std::endl;
+    //    const aiTexture* text2 = scene->GetEmbeddedTexture("*2");
+    //    if (text2)
+    //        std::cout << text2->mFilename.C_Str() << std::endl;
+    ////}
     //DEBUGGING
 
     //Check if the material exists
