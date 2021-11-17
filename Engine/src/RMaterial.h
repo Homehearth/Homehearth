@@ -107,7 +107,7 @@ public:
 	bool HasTexture(const ETextureType& type) const;
 
 	//Loaded from assimp
-	bool Create(aiMaterial* aiMat, bool& useMTL);
+	bool Create(aiMaterial* aiMat);
 
 	//Load a part of a mtl-file. Text = "newmtl ..."
 	bool CreateFromMTL(std::string& text);

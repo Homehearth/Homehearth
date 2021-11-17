@@ -281,8 +281,8 @@ void Simulation::ResetPlayer(Entity player)
 		firstTimeAdded = true;
 	}
 
-	player.AddComponent<comp::MeshName>()->name = "Knight.fbx";
-	player.AddComponent<comp::AnimatorName>()->name = "Knight.anim";
+	player.AddComponent<comp::MeshName>()->name = "Test/GameScene.fbx";//"Knight.fbx";
+	//player.AddComponent<comp::AnimatorName>()->name = "Knight.anim";
 
 	
 	comp::AttackAbility* attackAbility = player.AddComponent<comp::AttackAbility>();

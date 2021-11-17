@@ -51,10 +51,7 @@ private:
 	std::vector<bone_t>						m_allBones;
 	std::unordered_map<std::string, UINT>	m_boneMap;		//Move to create later?
 
-private:
-	//Get the end of file. Searches for "."
-	const std::string GetFileFormat(const std::string& filename) const;
-	
+private:	
 	/*
 		Combines multiple submeshes that uses the same material to one.
 		This is to avoid to many drawcalls per RModel.
@@ -68,7 +65,7 @@ private:
 
 	//Loading data from assimp
 	void LoadLights(const aiScene* scene);
-	void LoadMaterial(const aiScene* scene, const UINT& matIndex, bool& useMTL, submesh_t& inoutMesh) const;
+	void LoadMaterial(const aiScene* scene, const UINT& matIndex, submesh_t& inoutMesh) const;
 
 	void BoneHierchy(aiNode* node, std::unordered_map<std::string, bone_t>& nameToBone);
 	bool LoadVertexSkinning(const aiMesh* aimesh, std::vector<anim_vertex_t>& vertices);

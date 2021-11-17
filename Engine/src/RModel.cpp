@@ -110,12 +110,6 @@ bool RModel::ChangeMaterial(const std::string& mtlfile)
     return true;
 }
 
-const std::string RModel::GetFileFormat(const std::string& filename) const
-{
-    size_t startIndex = filename.find_last_of(".");
-    return filename.substr(startIndex);
-}
-
 bool RModel::CombineMeshes(std::vector<aiMesh*>& submeshes, submesh_t& submesh)
 {
     std::vector<simple_vertex_t> simpleVertices;
@@ -326,7 +320,7 @@ void RModel::LoadLights(const aiScene* scene)
     m_lights.shrink_to_fit();
 }
 
-void RModel::LoadMaterial(const aiScene* scene, const UINT& matIndex, bool& useMTL, submesh_t& inoutMesh) const
+void RModel::LoadMaterial(const aiScene* scene, const UINT& matIndex, submesh_t& inoutMesh) const
 {
     //Get name of the material
     aiString matName;
@@ -338,7 +332,7 @@ void RModel::LoadMaterial(const aiScene* scene, const UINT& matIndex, bool& useM
     {
         material = std::make_shared<RMaterial>();
         //Add the material to the resourcemanager if it was successfully created
-        if (material->Create(scene->mMaterials[matIndex], useMTL))
+        if (material->Create(scene->mMaterials[matIndex]))
         {
             ResourceManager::Get().AddResource(matName.C_Str(), material);
             inoutMesh.material = material;
@@ -548,11 +542,6 @@ bool RModel::Create(const std::string& filename)
 //#endif // _DEBUG
     }
 
-    //.fbx uses default material, and .obj uses mtl
-    bool useMTL = false;
-    if (GetFileFormat(filename) == ".obj")
-        useMTL = true;
-
     /*
         Loads in each material and then combine
         the multiple meshes to one, if needed.
@@ -561,8 +550,8 @@ bool RModel::Create(const std::string& filename)
     {
         submesh_t submesh;
         
-        //Load in the material at index and with mtl-format or default
-        LoadMaterial(scene, mat.first, useMTL, submesh);
+        //Load in the material at index
+        LoadMaterial(scene, mat.first, submesh);
 
         /*
             Load in vertex- and index-data and combines all the meshes in a set to one
