@@ -1,13 +1,13 @@
 // Set the skeleton that will be used for this animator
-skel 		Model.fbx
+skel 			Model.fbx
 
 
 // Add an animation
-anim 			idle 			Model_Idle.fbx
+anim 			IDLE 			Model_Idle.fbx
 
 
-// Have to set a default animation to use
-defaultAnim 	idle
+// Have to set a start animation to use
+startAnim 		IDLE
 
 
 // Possible to set options for animation. 
@@ -16,5 +16,6 @@ loopable		1
 tickSpeed		30
 
 
-// Blend states - time in seconds or ticks???
-blendstate		idle 	--> 	running		1.0
+// Blending two animations. The blending time is in seconds.
+// 				from			to		blendtime
+blendstate		IDLE 	 		RUN		1.0

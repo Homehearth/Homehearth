@@ -6,7 +6,6 @@ RAnimator::RAnimator()
 	m_useInterpolation	= true;
 	m_currentType		= EAnimationType::NONE;
 	m_nextType			= EAnimationType::NONE;
-	m_previousType		= EAnimationType::NONE;
 }
 
 RAnimator::~RAnimator()
@@ -17,7 +16,6 @@ RAnimator::~RAnimator()
 	}
 	m_animations.clear();
 	m_blendStates.clear();
-
 	m_bones.clear();
 	m_finalMatrices.clear();
 	m_animations.clear();
@@ -179,6 +177,89 @@ void RAnimator::UpdateTime(const EAnimationType& type)
 	}	
 }
 
+void RAnimator::RegularAnimation()
+{
+	animation_t* anim = &m_animations[m_currentType];
+
+	if (anim)
+	{
+		std::vector<sm::Matrix> modelMatrices;
+		modelMatrices.resize(m_bones.size(), sm::Matrix::Identity);
+
+		//Go through all the bones
+		for (size_t i = 0; i < m_bones.size(); i++)
+		{
+			sm::Matrix localMatrix = anim->animation->GetMatrix(m_bones[i].name, anim->frameTimer, anim->lastKeys[m_bones[i].name].keys, m_useInterpolation);
+
+			if (m_bones[i].parentIndex == -1)
+				modelMatrices[i] = localMatrix;
+			else
+				modelMatrices[i] = localMatrix * modelMatrices[m_bones[i].parentIndex];
+
+			m_finalMatrices[i] = m_bones[i].inverseBind * modelMatrices[i];
+		}
+		modelMatrices.clear();
+	}
+}
+
+void RAnimator::BlendAnimations()
+{
+	animation_t* anim1 = &m_animations[m_currentType];
+	animation_t* anim2 = &m_animations[m_nextType];
+
+	if (anim1 && anim2)
+	{
+		std::vector<sm::Matrix> modelMatrices;
+		modelMatrices.resize(m_bones.size(), sm::Matrix::Identity);
+
+		for (size_t i = 0; i < m_bones.size(); i++)
+		{
+			//From 
+			sm::Vector3 pos1 = anim1->animation->GetPosition(	m_bones[i].name, anim1->frameTimer, anim1->lastKeys[m_bones[i].name].keys[0], m_useInterpolation);
+			sm::Vector3 scl1 = anim1->animation->GetScale(		m_bones[i].name, anim1->frameTimer, anim1->lastKeys[m_bones[i].name].keys[1], m_useInterpolation);
+			sm::Quaternion rot1 = anim1->animation->GetRotation(m_bones[i].name, anim1->frameTimer, anim1->lastKeys[m_bones[i].name].keys[2], m_useInterpolation);
+			//To
+			sm::Vector3 pos2 = anim2->animation->GetPosition(	m_bones[i].name, anim2->frameTimer, anim2->lastKeys[m_bones[i].name].keys[0], m_useInterpolation);
+			sm::Vector3 scl2 = anim2->animation->GetScale(		m_bones[i].name, anim2->frameTimer, anim2->lastKeys[m_bones[i].name].keys[1], m_useInterpolation);
+			sm::Quaternion rot2 = anim2->animation->GetRotation(m_bones[i].name, anim2->frameTimer, anim2->lastKeys[m_bones[i].name].keys[2], m_useInterpolation);
+
+			float lerpTime = float(m_animations[m_currentType].blendTimer / m_blendStates[{m_currentType, m_nextType}]);
+			sm::Vector3 lerpPos = sm::Vector3::Lerp(pos1, pos2, lerpTime);
+			sm::Vector3 lerpScl = sm::Vector3::Lerp(scl1, scl2, lerpTime);
+			sm::Quaternion lerpRot = sm::Quaternion::Slerp(rot1, rot2, lerpTime);
+			lerpRot.Normalize();
+
+			sm::Matrix localMatrix = sm::Matrix::CreateScale(lerpScl) * sm::Matrix::CreateFromQuaternion(lerpRot) * sm::Matrix::CreateTranslation(lerpPos);
+
+			if (m_bones[i].parentIndex == -1)
+				modelMatrices[i] = localMatrix;
+			else
+				modelMatrices[i] = localMatrix * modelMatrices[m_bones[i].parentIndex];
+
+			m_finalMatrices[i] = m_bones[i].inverseBind * modelMatrices[i];
+		}
+		modelMatrices.clear();
+	}
+}
+
+void RAnimator::SwapAnimationState()
+{
+	ResetAnimation(m_currentType);
+
+	//Not loopable - add the previous to the queue again
+	if (!m_animations[m_nextType].animation->IsLoopable())
+	{
+		EAnimationType previous = m_currentType;
+		m_currentType = m_nextType;
+		m_nextType = previous;
+	}
+	else
+	{
+		m_currentType = m_nextType;
+		m_nextType = EAnimationType::NONE;
+	}
+}
+
 bool RAnimator::Create(const std::string& filename)
 {
 	std::ifstream readfile(ANIMATORPATH + filename);
@@ -287,25 +368,17 @@ bool RAnimator::Create(const std::string& filename)
 
 bool RAnimator::ChangeAnimation(const EAnimationType& type)
 {
-	//Add the animationtype to the queue
-	bool foundAnim = false;
+	bool swapSuccess = false;
 
-	//Ignore to add type if we are already in this state
-	if (m_currentType != type && m_nextType != type)
-	{
-		//Check if the state exist
-		if (m_animations.find(type) != m_animations.end())
+	if (m_animations.find(type) != m_animations.end())
+	{ 
+		if (m_nextType != type && m_currentType != type)
 		{
-			foundAnim = true;
-
-			if (m_currentType == EAnimationType::NONE)
-				m_currentType = type;
-			else
-				m_nextType = type;
+			m_nextType = type;
+			swapSuccess = true;
 		}
 	}
-	
-	return foundAnim;
+	return swapSuccess;
 }
 
 const EAnimationType& RAnimator::GetCurrentState() const
@@ -317,125 +390,79 @@ void RAnimator::Update()
 {
 	PROFILE_FUNCTION();
 
-	//Needs a skeleton and need a current animation
+	//Needs a skeleton and a current animation
 	if (!m_bones.empty() && m_currentType != EAnimationType::NONE)
 	{
-		//Do blending
-		if (m_nextType != EAnimationType::NONE)
+		UpdateTime(m_currentType);
+
+		/*
+			Do regular animation with one animation.
+			If we reached end we go back to previous animation.
+		*/
+		if (m_nextType == EAnimationType::NONE)
+		{
+			if (!m_animations[m_currentType].reachedEnd)
+			{
+				RegularAnimation();
+			}
+			else
+			{
+				ResetAnimation(m_currentType);	
+			}
+		}
+
+		/*
+			We got two animations that we need to blend together.
+			If there is no transition between them we shall just swap it.
+		*/
+		else
 		{
 			//Follow blendstate
 			if (m_blendStates.find({ m_currentType, m_nextType }) != m_blendStates.end())
 			{
-				/*
-					TODO: Separate function
-				*/
-
-				UpdateTime(m_currentType);
 				UpdateTime(m_nextType);
 
 				animation_t* anim1 = &m_animations[m_currentType];
 				animation_t* anim2 = &m_animations[m_nextType];
 
-				if (anim1->reachedEnd || anim2->reachedEnd)
+				if (anim1 && anim2)
 				{
-					//Handle both cases
-					if (anim1->reachedEnd)
+					if (anim1->reachedEnd || anim2->reachedEnd)
 					{
-						//Do stuff
-						ResetAnimation(m_currentType);
-					}
-					if (anim2->reachedEnd)
-					{
-						//Do stuff
-						ResetAnimation(m_nextType);
-					}
-				}
-				else
-				{
-					//Update blendtimer
-					anim1->blendTimer += Stats::Get().GetUpdateTime();
-
-					//We only do blending when it is needed
-					if (anim1->blendTimer < m_blendStates[{m_currentType, m_nextType}])
-					{
-						std::vector<sm::Matrix> modelMatrices;
-						modelMatrices.resize(m_bones.size(), sm::Matrix::Identity);
-
-						for (size_t i = 0; i < m_bones.size(); i++)
+						//Handle both cases
+						if (anim1->reachedEnd)
 						{
-							//From 
-							sm::Vector3 pos1 = anim1->animation->GetPosition(m_bones[i].name, anim1->frameTimer, anim1->lastKeys[m_bones[i].name].keys[0], m_useInterpolation);
-							sm::Vector3 scl1 = anim1->animation->GetScale(m_bones[i].name, anim1->frameTimer, anim1->lastKeys[m_bones[i].name].keys[1], m_useInterpolation);
-							sm::Quaternion rot1 = anim1->animation->GetRotation(m_bones[i].name, anim1->frameTimer, anim1->lastKeys[m_bones[i].name].keys[2], m_useInterpolation);
-							//To
-							sm::Vector3 pos2 = anim2->animation->GetPosition(m_bones[i].name, anim2->frameTimer, anim2->lastKeys[m_bones[i].name].keys[0], m_useInterpolation);
-							sm::Vector3 scl2 = anim2->animation->GetScale(m_bones[i].name, anim2->frameTimer, anim2->lastKeys[m_bones[i].name].keys[1], m_useInterpolation);
-							sm::Quaternion rot2 = anim2->animation->GetRotation(m_bones[i].name, anim2->frameTimer, anim2->lastKeys[m_bones[i].name].keys[2], m_useInterpolation);
-
-							float lerpTime = float(m_animations[m_currentType].blendTimer / m_blendStates[{m_currentType, m_nextType}]);
-							sm::Vector3 lerpPos = sm::Vector3::Lerp(pos1, pos2, lerpTime);
-							sm::Vector3 lerpScl = sm::Vector3::Lerp(scl1, scl2, lerpTime);
-							sm::Quaternion lerpRot = sm::Quaternion::Slerp(rot1, rot2, lerpTime);
-							lerpRot.Normalize();
-
-							sm::Matrix localMatrix = sm::Matrix::CreateScale(lerpScl) * sm::Matrix::CreateFromQuaternion(lerpRot) * sm::Matrix::CreateTranslation(lerpPos);
-
-							if (m_bones[i].parentIndex == -1)
-								modelMatrices[i] = localMatrix;
-							else
-								modelMatrices[i] = localMatrix * modelMatrices[m_bones[i].parentIndex];
-
-							m_finalMatrices[i] = m_bones[i].inverseBind * modelMatrices[i];
+							SwapAnimationState();
 						}
-						modelMatrices.clear();
+						if (anim2->reachedEnd)
+						{
+							ResetAnimation(m_nextType);
+							m_nextType = EAnimationType::NONE;
+						}
 					}
 					else
 					{
-						//Blending ended
-						ResetAnimation(m_currentType);
-						m_previousType = m_currentType;
-						m_currentType = m_nextType;
-						m_nextType = EAnimationType::NONE;
+						//Update blendtimer
+						anim1->blendTimer += Stats::Get().GetUpdateTime();
+
+						//We only do blending when it is needed
+						if (anim1->blendTimer < m_blendStates[{m_currentType, m_nextType}])
+						{
+							BlendAnimations();
+						}
+						//Blending reached end - Swap
+						else
+						{
+							SwapAnimationState();
+						}
 					}
 				}
-			}
-			//No blendstates exist
-			//Check if the first one has reached end - if so we shall go to next
-		}
-		//Do regular animation with one animation
-		else
-		{
-			/*
-				TODO: Separate function
-			*/
-			UpdateTime(m_currentType);
-			animation_t* anim = &m_animations[m_currentType];
-
-			if (!anim->reachedEnd)
-			{
-				std::vector<sm::Matrix> modelMatrices;
-				modelMatrices.resize(m_bones.size(), sm::Matrix::Identity);
-
-				for (size_t i = 0; i < m_bones.size(); i++)
-				{
-					sm::Matrix localMatrix = anim->animation->GetMatrix(m_bones[i].name, anim->frameTimer, anim->lastKeys[m_bones[i].name].keys, m_useInterpolation);
-
-					if (m_bones[i].parentIndex == -1)
-						modelMatrices[i] = localMatrix;
-					else
-						modelMatrices[i] = localMatrix * modelMatrices[m_bones[i].parentIndex];
-
-					m_finalMatrices[i] = m_bones[i].inverseBind * modelMatrices[i];
-				}
-
-				modelMatrices.clear();
 			}
 			else
 			{
-				//Reached end --> go back to previous animation
-				m_currentType = m_previousType;
+				m_nextType = EAnimationType::NONE;
 			}
-		}
+		}		
 	}	
 }
 

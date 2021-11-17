@@ -4,26 +4,37 @@ anim 			RUN 				Knight_Run.fbx
 anim 			PRIMARY_ATTACK 		Knight_Slash.fbx
 loopable 		0
 anim 			TAKE_DAMAGE 		Knight_TakeDamage.fbx
-loopable 		0
-anim			PLACE_DEFENCE		Knight_PlaceDefence.fbx
 loopable		0
-	
+anim			PLACE_DEFENCE		Knight_PlaceDefence.fbx
+tickSpeed		15
+loopable		0
+startAnim		IDLE
 
-//				FROM			TO					BLENDINGTIME
-blendstate 		IDLE			RUN					2.0s
-blendstate		IDLE			PRIMARY_ATTACK		0.1s
-blendstate 		IDLE			TAKE_DAMAGE			0.1s
-blendstate		IDLE			PLACE_DEFENCE		0.05s
 
-blendstate 		RUN				IDLE				2.0s
-blendstate 		RUN				PRIMARY_ATTACK		0.1s
-blendstate		RUN 			PLACE_DEFENCE		0.05s
-blendstate		RUN				TAKE_DAMAGE			0.05s
+blendstate 		IDLE			RUN					2.0
+blendstate 		RUN				IDLE				2.0
 
-blendstate		TAKE_DAMAGE		IDLE				0.1s
-blendstate		TAKE_DAMAGE		RUN					0.1s
-blendstate		TAKE_DAMAGE		PRIMARY_ATTACK		0.1s
-blendstate		TAKE_DAMAGE		PLACE_DEFENCE		0.1s
 
-//PRIMARY_ATTACK
-//PLACE_DEFENCE
+blendstate		IDLE			PRIMARY_ATTACK		0.3
+blendstate		PRIMARY_ATTACK	IDLE				0.3
+
+
+blendstate 		IDLE			TAKE_DAMAGE			0.5
+blendstate		TAKE_DAMAGE		IDLE				0.5
+
+
+blendstate		IDLE 			PLACE_DEFENCE		0.5
+blendstate		PLACE_DEFENCE	IDLE				0.5
+
+
+blendstate		RUN				TAKE_DAMAGE			0.3
+blendstate		TAKE_DAMAGE		RUN					0.3
+
+
+blendstate		RUN				PRIMARY_ATTACK		0.3
+blendstate		PRIMARY_ATTACK	RUN					0.3
+
+
+blendstate		RUN				PLACE_DEFENCE		0.3
+blendstate		PLACE_DEFENCE	RUN					0.3
+

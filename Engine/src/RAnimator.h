@@ -21,7 +21,6 @@ private:
 	//States
 	EAnimationType m_currentType;
 	EAnimationType m_nextType;
-	EAnimationType m_previousType;
 	
 	struct animation_t
 	{
@@ -59,14 +58,9 @@ private:
 	//Update the time for an animation
 	void UpdateTime(const EAnimationType& type);
 
-	//void BlendAnimation();
-	//void OneAnimation();
-
-
-	//Change back to something?
-	//If next is not NONE --> Swap to that one
-	//Else
-	//Go back to previous animation
+	void RegularAnimation();
+	void BlendAnimations();
+	void SwapAnimationState();
 
 public:
 	RAnimator();
@@ -82,7 +76,7 @@ public:
 	//Randomize the starttime of an animation
 	void RandomizeTime();
 
-	//Switch animation - not filename
+	//Queue up what animation to play next
 	bool ChangeAnimation(const EAnimationType& type);
 
 	//Get the enum of what state the animator is in
