@@ -311,6 +311,6 @@ struct Particle_t
 	sm::Vector4		color;
 
 	sm::Vector2		size;
-	PARTICLEMODE	type;
+	PARTICLEMODE	type = PARTICLEMODE::SPARKLES;
 	float			padding = 0;
 };

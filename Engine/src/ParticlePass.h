@@ -13,6 +13,7 @@ private:
 	ID3D11ShaderResourceView* m_nullSRV = nullptr;
 	ID3D11UnorderedAccessView* m_nullUAV = nullptr;
 	ID3D11GeometryShader* m_nullGS = nullptr;
+	ID3D11ComputeShader* m_nullCS = nullptr;
 
 public:
 	ParticlePass() = default;

@@ -93,7 +93,7 @@ bool Game::OnStartup()
 	emitter2.AddComponent<comp::Transform>()->position = { 250,5,-320 };
 	comp::EmitterParticle* e2 = emitter2.AddComponent <comp::EmitterParticle>("thisisfine.png");
 	e2->nrOfParticles = 10;
-	e2->type = PARTICLEMODE::RAIN;
+	e2->type = PARTICLEMODE::SPARKLES;
 
 
 	particles.Initialize(D3D11Core::Get().Device());

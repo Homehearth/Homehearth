@@ -4,5 +4,6 @@
 #include "Resources.hlsli"
 #include "Functions.hlsli"
 #include "PBR.hlsli"	// PBR related methods.
+#include "ParticleSimulations.hlsli"
 
 #endif 
