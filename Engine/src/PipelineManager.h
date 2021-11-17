@@ -62,7 +62,8 @@ public:
 	Shaders::PixelShader			m_debugPixelShader;
 	Shaders::PixelShader			m_skyboxPixelShader;
 
-	Shaders::ComputeShader			m_blurComputeShader;
+	Shaders::ComputeShader			m_GuassianBlurComputeShader;
+	Shaders::ComputeShader			m_BoxBlurComputeShader;
 	
 	D3D11_VIEWPORT					m_viewport;
 

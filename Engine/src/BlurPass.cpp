@@ -33,7 +33,8 @@ void BlurPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 	{
 		ID3D11RenderTargetView* nullRTV = nullptr;
 		DC->OMSetRenderTargets(1, &nullRTV, nullptr);
-		DC->CSSetShader(PM->m_blurComputeShader.Get(), nullptr, 0);
+		//DC->CSSetShader(PM->m_GuassianBlurComputeShader.Get(), nullptr, 0);
+		DC->CSSetShader(PM->m_BoxBlurComputeShader.Get(), nullptr, 0);
 		DC->CSSetConstantBuffers(11, 1, m_settingsBuffer.GetAddressOf());
 
 		ID3D11Texture2D* backBuff = nullptr;
@@ -47,13 +48,14 @@ void BlurPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 
 void BlurPass::Render(Scene* pScene)
 {
-	if (m_currentBlur != BlurLevel::NOBLUR)
+	/*if (m_currentBlur != BlurLevel::NOBLUR)
 	{
 		D3D11Core::Get().DeviceContext()->Dispatch(PM->m_windowWidth / 8, PM->m_windowHeight / 8, 1);
 		SwapBlurDirection();
 		D3D11Core::Get().DeviceContext()->Dispatch(PM->m_windowWidth / 8, PM->m_windowHeight / 8, 1);
 		SwapBlurDirection();
-	}
+	}*/
+	D3D11Core::Get().DeviceContext()->Dispatch(PM->m_windowWidth / 8, PM->m_windowHeight / 8, 1);
 }
 
 void BlurPass::PostRender(ID3D11DeviceContext* pDeviceContext)
