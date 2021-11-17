@@ -62,7 +62,7 @@ struct Vector2I
 	}
 	Vector2I& operator-(const Vector2I& other)
 	{
-		return Vector2I(this->x - other.x, this->y - other.y);
+ 		return Vector2I(this->x - other.x, this->y - other.y);
 	}
 	Vector2I& operator-=(const Vector2I& other)
 	{

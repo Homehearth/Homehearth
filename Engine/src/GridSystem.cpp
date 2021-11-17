@@ -215,6 +215,16 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 									}
 								}
 							}
+							if (!aiHandler->PlayerAStar(localPlayer))
+							{
+								m_scene->ForEachComponent<comp::Player, comp::Network>([&](comp::Player& p, comp::Network& net)
+									{
+										if (net.id == playerWhoPressedMouse)
+										{
+											p.reachable = false;
+										}
+									});
+							}
 						}
 					}
 				}

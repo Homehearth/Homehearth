@@ -175,6 +175,7 @@ namespace ecs
 			sm::Vector3 spawnPoint;
 			float respawnTimer;
 			bool isReady = false;
+			bool reachable = true;
 		};
 
 	
