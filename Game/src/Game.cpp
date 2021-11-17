@@ -28,7 +28,6 @@ Game::~Game()
 	}
 }
 
-
 void Game::UpdateNetwork(float deltaTime)
 {
 	static float pingCheck = 0.f;
@@ -45,6 +44,24 @@ void Game::UpdateNetwork(float deltaTime)
 			pingCheck -= TARGET_PING_TIME;
 		}
 
+		//if (GetCurrentScene() == &GetScene("Game") && GetCurrentScene()->GetCurrentCamera()->GetCameraType() == CAMERATYPE::PLAY)
+		//{
+		//	if (m_players.find(m_localPID) != m_players.end())
+		//	{
+		//		comp::Transform* t = m_players.at(m_localPID).GetComponent<comp::Transform>();
+
+		//		float x = static_cast<float>(InputSystem::Get().GetAxis(Axis::HORIZONTAL));
+		//		float z = static_cast<float>(InputSystem::Get().GetAxis(Axis::VERTICAL));
+		//		if (x || z)
+		//		{
+		//			float speed = 25.f * deltaTime;
+		//			sm::Vector3 moveVec = sm::Vector3(x, 0.f, z);
+		//			moveVec.Normalize();
+		//			moveVec *= speed;
+		//			t->position += moveVec;
+		//		}
+		//	}
+		//}
 		if (GetCurrentScene() == &GetScene("Game"))
 		{
 			if (GetCurrentScene()->GetCurrentCamera()->GetCameraType() == CAMERATYPE::PLAY)
@@ -83,32 +100,7 @@ bool Game::OnStartup()
 
 void Game::OnUserUpdate(float deltaTime)
 {
-	/*
-if (GetCurrentScene() == &GetScene("Game") && GetCurrentScene()->GetCurrentCamera()->GetCameraType() == CAMERATYPE::PLAY)
-{
-	if (m_players.find(m_localPID) != m_players.end())
-	{
-		comp::Transform* t = m_players.at(m_localPID).GetComponent<comp::Transform>();
-
-		int x = InputSystem::Get().GetAxis(Axis::HORIZONTAL);
-		int z = InputSystem::Get().GetAxis(Axis::VERTICAL);
-		if (x || z)
-		{
-			t->position.x += 10.f * deltaTime * x;
-			t->position.z += 10.f * deltaTime * z;
-
-			predictedPositions.push_back(*t);
-		}
-
-		//LOG_INFO("Predicted size: %llu", predictedPositions.size());
-		if (sm::Vector3::Distance(t->position, test.position) > m_predictionThreshhold)
-		{
-			t->position.x = test.position.x;
-			t->position.z = test.position.z;
-		}
-	}
-}
-		*/
+	this->UpdateInput();
 
 	if (GetCurrentScene() == &GetScene("Game"))
 	{
@@ -122,7 +114,6 @@ if (GetCurrentScene() == &GetScene("Game") && GetCurrentScene()->GetCurrentCamer
 		//		GameSystems::CheckLOS(this);
 		//	}
 		//}
-		this->UpdateInput();
 	}
 }
 
@@ -160,6 +151,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	}
 	case GameMsg::Game_Snapshot:
 	{
+		m_savedInputs.clear();
 		uint32_t currentTick;
 		msg >> currentTick;
 		uint32_t count;
@@ -644,4 +636,6 @@ void Game::UpdateInput()
 	{
 		m_inputState.key_b = true;
 	}
+
+	m_savedInputs.push_back(m_inputState);
 }
