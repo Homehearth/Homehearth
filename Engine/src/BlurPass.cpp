@@ -1,7 +1,7 @@
 #include "EnginePCH.h"
 #include "BlurPass.h"
 
-bool BlurPass::Create(BlurLevel level)
+bool BlurPass::Create(BlurLevel pLevel, BlurType pType)
 {
 	SetUpBlurLevels();
 
@@ -17,10 +17,14 @@ bool BlurPass::Create(BlurLevel level)
 		return false;
 	}
 
-	if (level != BlurLevel::NOBLUR)
+	if (pLevel != BlurLevel::NOBLUR)
 	{
-		m_currentBlur = level;
-		GenerateGuassFilter(level);
+		m_currentBlur = pLevel;
+		m_blurType = pType;
+		m_blurSettings.blurType = UINT(pType);
+		if(pType == BlurType::GUASSIAN)
+			GenerateGuassFilter(pLevel);
+
 		UpdateBlurSettings();
 	}
 
@@ -33,8 +37,7 @@ void BlurPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 	{
 		ID3D11RenderTargetView* nullRTV = nullptr;
 		DC->OMSetRenderTargets(1, &nullRTV, nullptr);
-		//DC->CSSetShader(PM->m_GuassianBlurComputeShader.Get(), nullptr, 0);
-		DC->CSSetShader(PM->m_BoxBlurComputeShader.Get(), nullptr, 0);
+		DC->CSSetShader(PM->m_blurComputeShader.Get(), nullptr, 0);
 		DC->CSSetConstantBuffers(11, 1, m_settingsBuffer.GetAddressOf());
 
 		ID3D11Texture2D* backBuff = nullptr;
@@ -43,19 +46,24 @@ void BlurPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 		DC->CopyResource(m_backBufferRead.Get(), backBuff);
 		DC->CSSetUnorderedAccessViews(0, 1, m_backBufferReadView.GetAddressOf(), nullptr);
 		DC->CSSetUnorderedAccessViews(1, 1, m_backBufferView.GetAddressOf(), nullptr);
+
+		if (m_blurType == BlurType::BOX)
+		{
+			D3D11Core::Get().DeviceContext()->Dispatch(PM->m_windowWidth / 8, PM->m_windowHeight / 8, 1);
+		}
+
+		else if (m_blurType == BlurType::GUASSIAN)
+		{
+			D3D11Core::Get().DeviceContext()->Dispatch(PM->m_windowWidth / 8, PM->m_windowHeight / 8, 1);
+			SwapBlurDirection();
+			D3D11Core::Get().DeviceContext()->Dispatch(PM->m_windowWidth / 8, PM->m_windowHeight / 8, 1);
+			SwapBlurDirection();
+		}
 	}
 }
 
 void BlurPass::Render(Scene* pScene)
 {
-	/*if (m_currentBlur != BlurLevel::NOBLUR)
-	{
-		D3D11Core::Get().DeviceContext()->Dispatch(PM->m_windowWidth / 8, PM->m_windowHeight / 8, 1);
-		SwapBlurDirection();
-		D3D11Core::Get().DeviceContext()->Dispatch(PM->m_windowWidth / 8, PM->m_windowHeight / 8, 1);
-		SwapBlurDirection();
-	}*/
-	D3D11Core::Get().DeviceContext()->Dispatch(PM->m_windowWidth / 8, PM->m_windowHeight / 8, 1);
 }
 
 void BlurPass::PostRender(ID3D11DeviceContext* pDeviceContext)
@@ -123,9 +131,9 @@ void BlurPass::SetUpBlurLevels()
 	m_blurLevels[(UINT)BlurLevel::SUPERHIGH] = std::pair<UINT, float>(4, 10.0f);
 }
 
-void BlurPass::GenerateGuassFilter(BlurLevel level)
+void BlurPass::GenerateGuassFilter(BlurLevel pLevel)
 {
-	UINT index = UINT(level);
+	UINT index = UINT(pLevel);
 
 	if (index < BLURLEVELSIZE)
 	{

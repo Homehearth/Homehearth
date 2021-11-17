@@ -63,7 +63,8 @@ cbuffer BlurSettings : register(b11)
 {
     uint c_blurRadius;
     bool c_useVertical;
-    float2 padding;
+    uint c_blurType;
+    float padding;
     float4 c_weights[MAXWEIGHTS / 4];
 }
 

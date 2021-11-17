@@ -494,15 +494,9 @@ bool PipelineManager::CreateShaders()
         return false;
     }
 
-    if (!m_GuassianBlurComputeShader.Create("GuassianBlur_CS"))
+    if (!m_blurComputeShader.Create("Blur_CS"))
     {
-        LOG_WARNING("failed creating GuassianBlur_CS");
-        return false;
-    }
-
-    if (!m_BoxBlurComputeShader.Create("BoxBlur_CS"))
-    {
-        LOG_WARNING("failed creating BoxBlur_CS");
+        LOG_WARNING("failed creating Blur_CS");
         return false;
     }
 
