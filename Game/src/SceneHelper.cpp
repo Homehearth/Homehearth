@@ -15,6 +15,7 @@
 #include <windows.h>
 #include <shellapi.h>
 #include "MoneyUI.h"
+#include "AbilityUI.h"
 
 namespace sceneHelp
 {
@@ -312,6 +313,21 @@ namespace sceneHelp
 		Collection2D* money = new Collection2D;
 		money->AddElement<rtd::MoneyUI>(draw_text_t(width - (width / 8.0f), D2D1Core::GetDefaultFontSize(), width / 8.0f, D2D1Core::GetDefaultFontSize()));
 		scene.Add2DCollection(money, "MoneyUI");
+
+		Collection2D* abilities = new Collection2D;
+		rtd::AbilityUI* primary = abilities->AddElement<rtd::AbilityUI>(draw_t(width - width / 16.0f, height - height / 4.0f, width / 16.0f, height / 9.0f), D2D1::ColorF(0.0f, 1.0f), "UI_sword.png");
+		primary->SetActivateButton("LMB");
+		rtd::AbilityUI* secondary = abilities->AddElement<rtd::AbilityUI>(draw_t(width - width / 8.0f, height - height / 9.0f, width / 16.0f, height / 9.0f), D2D1::ColorF(0.0f, 1.0f), "UI_sword.png");
+		secondary->SetActivateButton("RMB");
+		rtd::AbilityUI* third = abilities->AddElement<rtd::AbilityUI>(draw_t((width / 2.f) - ((width / 16.0f) * 2.0f), height - height / 12.0f, width / 16.0f, height / 12.0f), D2D1::ColorF(0.0f, 1.0f), "slashAbilityDemo.png");
+		third->SetActivateButton("Q");
+		rtd::AbilityUI* fourth = abilities->AddElement<rtd::AbilityUI>(draw_t((width / 2.f) - ((width / 16.0f)), height - height / 12.0f, width / 16.0f, height / 12.0f), D2D1::ColorF(0.0f, 1.0f), "someRandomAbilityIdkDemo.png");
+		fourth->SetActivateButton("E");
+		rtd::AbilityUI* fifth = abilities->AddElement<rtd::AbilityUI>(draw_t((width / 2.f), height - height / 12.0f, width / 16.0f, height / 12.0f), D2D1::ColorF(0.0f, 1.0f), "healAbilityDemo.png");
+		fifth->SetActivateButton("R");
+		rtd::AbilityUI* sixth = abilities->AddElement<rtd::AbilityUI>(draw_t((width / 2.f) + ((width / 16.0f)), height - height / 12.0f, width / 16.0f, height / 12.0f), D2D1::ColorF(0.0f, 1.0f), "slashAbilityDemo.png");
+		sixth->SetActivateButton("C");
+		scene.Add2DCollection(abilities, "AbilityUI");
 	}
 
 	void SetupInLobbyScreen(Game* game)
@@ -437,7 +453,7 @@ namespace sceneHelp
 		helpButton->SetOnPressedEvent([=] {
 
 			helpText->Show();
-			backButton->Hide();
+			backButton->Show();
 			menu->Hide();
 
 			});
@@ -466,6 +482,7 @@ namespace sceneHelp
 		backButton->AddElement<rtd::Text>("Go Back", draw_text_t((width / 2.0f) - (width / 8.0f), height - (height / 4.0f), width / 4.0f, height / 8.0f));
 		gb->SetOnPressedEvent([=] {
 
+			helpText->Hide();
 			soundCollection->Hide();
 			menu->Show();
 			backButton->Hide();
@@ -475,15 +492,15 @@ namespace sceneHelp
 		scene.Add2DCollection(backButton, "returnButton");
 
 		helpText->AddElement<rtd::Text>("Insert super helpful text here for all the noobs.", draw_text_t(0.0f, 0.0f, width, height - (height / 8.0f)));
-		rtd::Button* goback = helpText->AddElement<rtd::Button>("Button.png", draw_t((width / 2.0f) - (width / 8.0f), height - (height / 4.0f), width / 4.0f, height / 8.0f));
-		helpText->AddElement<rtd::Text>("Go Back", draw_text_t((width / 2.0f) - (width / 8.0f), height - (height / 4.0f), width / 4.0f, height / 8.0f));
-		goback->SetOnPressedEvent([=] {
+		//rtd::Button* goback = backButton->AddElement<rtd::Button>("Button.png", draw_t((width / 2.0f) - (width / 8.0f), height - (height / 4.0f), width / 4.0f, height / 8.0f));
+		//backButton->AddElement<rtd::Text>("Go Back", draw_text_t((width / 2.0f) - (width / 8.0f), height - (height / 4.0f), width / 4.0f, height / 8.0f));
+		//goback->SetOnPressedEvent([=] {
 
-			helpText->Hide();
-			menu->Show();
-			backButton->Show();
+		//	helpText->Hide();
+		//	menu->Show();
+		//	backButton->Show();
 
-			});
+		//	});
 		helpText->Hide();
 		scene.Add2DCollection(helpText, "HelpText");
 
