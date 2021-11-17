@@ -1,17 +1,12 @@
 #pragma once
 #include "Tags.h"
 
-#define RESPONSE true
-#define NO_RESPONSE false
-
 struct CollisionInfo_t
 {
 	bool hasCollided;
 	float overlap;
 	sm::Vector3 smallestVec;
 };
-
-
 
 namespace std
 {
@@ -27,7 +22,7 @@ namespace std
 class CollisionSystem
 {
 private:
-	std::unordered_map<Entity, std::function<bool(Entity, Entity)>> m_onCollisionEnter;
+	std::unordered_map<Entity, std::function<void(Entity, Entity)>> m_onCollisionEnter;
 	std::unordered_map<Entity, std::function<void(Entity, Entity)>> m_onCollision;
 	std::unordered_map<Entity, std::function<void(Entity, Entity)>> m_onCollisionExit;
 
@@ -54,8 +49,8 @@ public:
 	CollisionInfo_t Intersection(Entity entity1, Entity entity2);
 	void CollisionResponse(CollisionInfo_t collisionInfo, Entity entity1, Entity entity2);
 		
-	void AddOnCollisionEnter(Entity entity1, std::function<bool(Entity, Entity)> func);
-	bool OnCollisionEnter(Entity entity1, Entity entity2);
+	void AddOnCollisionEnter(Entity entity1, std::function<void(Entity, Entity)> func);
+	void OnCollisionEnter(Entity entity1, Entity entity2);
 
 	void AddOnCollision(Entity entity1, std::function<void(Entity, Entity)> func);
 	void OnCollision(Entity entity1, Entity entity2);

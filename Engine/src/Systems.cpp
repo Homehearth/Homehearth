@@ -125,6 +125,7 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 					attackCollider.AddComponent<comp::MeshName>()->name = "Sphere.obj";
 				}
 				attackCollider.AddComponent<comp::Network>();
+				attackCollider.AddComponent<comp::Tag<TagType::NO_RESPONSE>>();
 
 				
 				CollisionSystem::Get().AddOnCollisionEnter(attackCollider, [entity, &scene](Entity thisEntity, Entity other)
@@ -133,17 +134,17 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 						if (entity.IsNull())
 						{
 							thisEntity.GetComponent<comp::SelfDestruct>()->lifeTime = 0.f;
-							return NO_RESPONSE;
+							return;
 						}
 
 						if (other == entity)
-							return NO_RESPONSE;
+							return;
 
 						tag_bits goodOrBad = TagType::GOOD | TagType::BAD;
 						if ((entity.GetTags() & goodOrBad) ==
 							(other.GetTags() & goodOrBad))
 						{
-							return NO_RESPONSE; //these guys are on the same team
+							return; //these guys are on the same team
 						}
 
 						comp::Health* otherHealth = other.GetComponent<comp::Health>();
@@ -189,7 +190,6 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 							}
 							
 						}
-						return NO_RESPONSE;
 					});
 
 			}
@@ -223,13 +223,15 @@ void Systems::HealingSystem(HeadlessScene& scene, float dt)
 				vel->applyToCollider = true;
 
 				collider.AddComponent<comp::SelfDestruct>()->lifeTime = ability.lifetime;
+				
+				collider.AddComponent<comp::Tag<TagType::NO_RESPONSE>>();
 
 				collider.AddComponent<comp::Network>();
 
 				CollisionSystem::Get().AddOnCollisionEnter(collider, [&, entity](Entity thisEntity, Entity other)
 					{
 						if (entity.IsNull())
-							return NO_RESPONSE;
+							return;
 
 						comp::Health* h = other.GetComponent<comp::Health>();
 						if (h)
@@ -238,7 +240,6 @@ void Systems::HealingSystem(HeadlessScene& scene, float dt)
 							scene.publish<EComponentUpdated>(other, ecs::Component::HEALTH);
 						}
 
-						return NO_RESPONSE;
 					});
 
 			}

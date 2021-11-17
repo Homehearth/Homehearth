@@ -53,16 +53,19 @@ inline void Systems::CheckCollisions(HeadlessScene& scene, float dt)
 				Entity e1(*scene.GetRegistry(), *entity1);
 				Entity e2(*scene.GetRegistry(), *entity2);
 
-				if(e1.GetComponent<comp::Tag<DYNAMIC>>() || e2.GetComponent<comp::Tag<DYNAMIC>>())
+				if (e1.GetComponent<comp::Tag<DYNAMIC>>() || e2.GetComponent<comp::Tag<DYNAMIC>>())
 				{
 					CollisionInfo_t collisionInfo = CollisionSystem::Get().Intersection(e1, e2);
 					if (collisionInfo.hasCollided)
 					{
+
 						if (CollisionSystem::Get().AddPair(e1, e2))
-							if(CollisionSystem::Get().OnCollisionEnter(e1, e2))
-								CollisionSystem::Get().CollisionResponse(collisionInfo, e1, e2);
+							CollisionSystem::Get().OnCollisionEnter(e1, e2);
 
 						CollisionSystem::Get().OnCollision(e1, e2);
+
+						if (!e1.HasComponent<comp::Tag<TagType::NO_RESPONSE>>() && !e2.HasComponent<comp::Tag<TagType::NO_RESPONSE>>())
+							CollisionSystem::Get().CollisionResponse(collisionInfo, e1, e2);
 					}
 					else
 					{
