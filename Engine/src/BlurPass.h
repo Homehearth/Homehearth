@@ -62,6 +62,7 @@ private:
 	bool CreateSettingsBuffer();
 	void SetUpBlurLevels();
 	void GenerateGuassFilter(BlurLevel pLevel);
+	void GenerateBoxFilter(BlurLevel pLevel);
 	void UpdateBlurSettings();
 	void SwapBlurDirection();
 };

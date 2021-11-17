@@ -22,7 +22,9 @@ bool BlurPass::Create(BlurLevel pLevel, BlurType pType)
 		m_currentBlur = pLevel;
 		m_blurType = pType;
 		m_blurSettings.blurType = UINT(pType);
-		if(pType == BlurType::GUASSIAN)
+		if (pType == BlurType::BOX)
+			GenerateBoxFilter(pLevel);
+		else if(pType == BlurType::GUASSIAN)
 			GenerateGuassFilter(pLevel);
 
 		UpdateBlurSettings();
@@ -174,6 +176,22 @@ void BlurPass::GenerateGuassFilter(BlurLevel pLevel)
 				m_blurSettings.weights[i] /= total;
 			}
 		}
+	}
+}
+
+void BlurPass::GenerateBoxFilter(BlurLevel pLevel)
+{
+	UINT index = UINT(pLevel);
+	if (index < BLURLEVELSIZE)
+	{
+		UINT radius = m_blurLevels[index].first;
+		//Only acceptable to have radiuses in the range of min and max
+		if (radius > MAXRADIUS)
+			radius = MAXRADIUS;
+		if (radius < MINRADIUS)
+			radius = MINRADIUS;
+
+		m_blurSettings.blurRadius = radius * 2;
 	}
 }
 

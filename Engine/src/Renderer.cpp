@@ -23,7 +23,7 @@ void Renderer::Initialize(Window* pWindow)
 	AddPass(&m_skyPass);
 	AddPass(&m_shadowPass);
 	AddPass(&m_blurPass);
-	m_blurPass.Create(BlurLevel::LOW, BlurType::BOX);
+	m_blurPass.Create(BlurLevel::SUPERHIGH, BlurType::BOX);
 
 	//m_depthPass.SetEnable(true);
 	m_basePass.SetEnable(true);
