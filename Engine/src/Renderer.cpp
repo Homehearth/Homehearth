@@ -22,12 +22,15 @@ void Renderer::Initialize(Window* pWindow)
 	AddPass(&m_animPass);	// 3
 	AddPass(&m_skyPass);
 	AddPass(&m_shadowPass);
+	AddPass(&m_blurPass);
+	m_blurPass.Create(BlurLevel::SUPERHIGH);
 
 	//m_depthPass.SetEnable(true);
 	m_basePass.SetEnable(true);
 	m_animPass.SetEnable(true);
 	m_decalPass.SetEnable(true);
 	m_skyPass.SetEnable(true);
+	m_blurPass.SetEnable(true);
 
 #ifdef _DEBUG
 	AddPass(&m_debugPass);  // 4

@@ -3,6 +3,7 @@
 #endif
 
 static const float PI = 3.14159265359;
+#define MAXWEIGHTS 8
 
 //---------------------------------------------------------------------------
 //	Constant buffers.
@@ -58,6 +59,14 @@ cbuffer DecalInfoCB : register(b10)
 	float4x4 decal_projection;
 }
 
+cbuffer BlurSettings : register(b11)
+{
+    uint c_blurRadius;
+    bool c_useVertical;
+    float2 padding;
+    float4 c_weights[MAXWEIGHTS / 4];
+}
+
 
 //---------------------------------------------------------------------------
 //	Samplers.
@@ -109,6 +118,9 @@ Texture2D t_BRDFLUT                 : register(t99);
 
 // RWStructuredBuffers.
 
+//Blur Pass
+RWTexture2D<unorm float4> t_bufferRead : register(u0);
+RWTexture2D<unorm float4> t_bufferOut : register(u1);
 
 // Forward+
 //RWStructuredBuffer<PointLight> rw_pointLights : register();

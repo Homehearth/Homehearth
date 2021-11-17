@@ -75,6 +75,9 @@ void PipelineManager::Initialize(Window* pWindow, ID3D11DeviceContext* context)
 
     // Set Viewport.
     this->SetViewport();
+
+    m_windowWidth = m_window->GetWidth();
+    m_windowHeight = m_window->GetHeight();
 }
 
 bool PipelineManager::CreateRenderTargetView()
@@ -488,6 +491,12 @@ bool PipelineManager::CreateShaders()
     if (!m_skyboxPixelShader.Create("Skybox_ps"))
     {
         LOG_WARNING("failed creating Skybox_ps.");
+        return false;
+    }
+
+    if (!m_blurComputeShader.Create("Blur_cs"))
+    {
+        LOG_WARNING("failed creating Blur_cs");
         return false;
     }
 

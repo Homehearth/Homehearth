@@ -61,9 +61,14 @@ public:
 	Shaders::PixelShader			m_defaultPixelShader;
 	Shaders::PixelShader			m_debugPixelShader;
 	Shaders::PixelShader			m_skyboxPixelShader;
+
+	Shaders::ComputeShader			m_blurComputeShader;
 	
 	D3D11_VIEWPORT					m_viewport;
 
+
+	float							m_windowWidth;
+	float							m_windowHeight;
 	
 	// View space frustums for the grid cells used in ForwardPlus rendering.
 	ComPtr<ID3D11Buffer>				m_gridFrustum;

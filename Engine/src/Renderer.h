@@ -7,6 +7,7 @@
 #include "DecalPass.h"
 #include "ShadowPass.h"
 #include "SkyboxPass.h"
+#include "BlurPass.h"
 
 
 class Renderer
@@ -23,6 +24,7 @@ private:
 	DecalPass		m_decalPass;
 	SkyboxPass		m_skyPass;
 	ShadowPass		m_shadowPass;
+	BlurPass		m_blurPass;
 	unsigned int m_currentPass = 0;
 
 	// Update per frame related resources.

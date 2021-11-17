@@ -333,3 +333,21 @@ struct Node
 		return false;
 	}
 };
+
+struct BlurSettings
+{
+	UINT blurRadius;
+	bool useVerticalBlur;
+	float padding[2];
+	float weights[8] = {};
+};
+
+enum class BlurLevel
+{
+	SUPERLOW,			//Rad: 1 sigma: 0.5f
+	LOW,				//Rad: 2 sigma: 2.0f
+	MEDIUM,				//Rad: 3 sigma: 5.0f
+	HIGH,				//Rad: 3 sigma: 10.0f
+	SUPERHIGH,			//Rad: 4 sigma: 10.0f
+	NOBLUR
+};
