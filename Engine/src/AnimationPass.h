@@ -7,6 +7,7 @@
 class AnimationPass : public IRenderPass
 {
 public:
+	Skybox* m_skyboxRef = nullptr;
 	AnimationPass() = default;
 	virtual ~AnimationPass() = default;
 

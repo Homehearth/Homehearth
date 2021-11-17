@@ -37,6 +37,8 @@ BT::NodeStatus BT::FindTargetCBT::Tick()
 			break;
 		}
 	}
+	if (nearestPlayer.IsNull())
+		return BT::NodeStatus::FAILURE;
 
 	for (auto player : playersEntity->players)
 	{

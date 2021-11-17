@@ -42,6 +42,7 @@ public:
 	SceneType* GetCurrentScene() const;
 	void SetScene(const std::string& name);
 	void SetScene(SceneType& scene);
+	void SetUpdateRate(float rate);
 	
 	void Start();
 
@@ -71,6 +72,12 @@ void BasicEngine<SceneType>::SetScene(SceneType& scene)
 {	
 	m_currentScene = &scene;
 	m_currentScene->publish<ESceneStart>();
+}
+
+template<typename SceneType>
+inline void BasicEngine<SceneType>::SetUpdateRate(float rate)
+{
+	Stats::Get().SetUpdateRate(rate);
 }
 
 template<typename SceneType>

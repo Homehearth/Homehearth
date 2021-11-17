@@ -1,19 +1,68 @@
+newmtl Arm2SG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+map_Kd Arm.png
+Ni 1.00
+newmtl BodySG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+map_Kd Body2.png
+Ni 1.00
+newmtl ChestplateSG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+map_Kd chestplate.png
+Ni 1.00
 newmtl DefaultMaterial
 illum 4
 Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
 Tf 1.00 1.00 1.00
 map_Kd Rocks_Flat_Group_Albedo.png
+bump  -bm 1 Rocks_Flat_Group_Normal.png
 Ni 1.00
 Ks 0.00 0.00 0.00
 Ns 0.06
+newmtl GameMonster_lambert10SG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+map_Kd MonsterClothes.png
+Ni 1.00
+newmtl GameMonster_lambert11SG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+map_Kd MonsterBody.png
+Ni 1.00
+newmtl HelmetSG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+map_Kd Helmet.png
+Ni 1.00
+newmtl Leg1SG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+map_Kd leg.png
+Ni 1.00
 newmtl Ormbunke
 illum 4
 Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
 Tf 1.00 1.00 1.00
 map_Kd OrmbunkeTextur.png
-map_Kn  -bm 1 OrmbunkeN.png
 Ni 1.00
 newmtl Rocks_Normal_Group_DefaultMaterial
 illum 4
@@ -21,6 +70,7 @@ Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
 Tf 1.00 1.00 1.00
 map_Kd Rocks_Normal_Group_Albedo.png
+bump  -bm 1 Rocks_Normal_Group_Normal.png
 Ni 1.00
 Ks 0.00 0.00 0.00
 Ns 0.06
@@ -30,30 +80,43 @@ Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
 Tf 1.00 1.00 1.00
 map_Kd Rocks_Stack_2_Albedo.png
+bump  -bm 1 Rocks_Stack_2_Normal.png
 Ni 1.00
 Ks 0.00 0.00 0.00
 Ns 0.06
+newmtl SheildSG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+map_Kd Sheald.png
+Ni 1.00
+newmtl Shoe2SG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+map_Kd Shoe.png
+Ni 1.00
+newmtl SwardSG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+map_Kd Sword.png
+Ni 1.00
 newmtl initialShadingGroup
 illum 4
 Kd 0.15 0.01 0.01
 Ka 0.00 0.00 0.00
 Tf 1.00 1.00 1.00
 Ni 1.00
-newmtl lambert2SG
-illum 4
-Kd 0.14 0.10 0.07
-Ka 0.00 0.00 0.00
-Tf 1.00 1.00 1.00
-Ni 1.00
-Ks 0.50 0.50 0.50
-Ns 18.00
 newmtl lambert3SG
 illum 4
 Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
 Tf 1.00 1.00 1.00
 map_Kd TWigDark.png
-map_Kn  -bm 1 TwigN.png
 Ni 1.00
 newmtl lambert5SG
 illum 4
@@ -61,7 +124,6 @@ Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
 Tf 1.00 1.00 1.00
 map_Kd TWig2Dark.png
-map_Kn  -bm 1 Twig2N.png
 Ni 1.00
 newmtl lambert6SG
 illum 4
@@ -69,7 +131,6 @@ Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
 Tf 1.00 1.00 1.00
 map_Kd TWig3Dark.png
-map_Kn  -bm 1 Twig3N.png
 Ni 1.00
 newmtl lambert7SG
 illum 4
@@ -77,7 +138,6 @@ Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
 Tf 1.00 1.00 1.00
 map_Kd LeafsDarkG.png
-map_Kn  -bm 1 ThinnLeafN.png
 Ni 1.00
 newmtl lambert10SG
 illum 4
@@ -85,7 +145,6 @@ Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
 Tf 1.00 1.00 1.00
 map_Kd LightG.png
-map_Kn  -bm 1 LeafN.png
 Ni 1.00
 newmtl lambert11SG
 illum 4
@@ -93,7 +152,7 @@ Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
 Tf 1.00 1.00 1.00
 map_Kd LeafsDarkG.png
-map_Kn  -bm 1 ThinnLeafN.png
+bump  -bm 1 ThinnLeafN.png
 Ni 1.00
 newmtl lambert12SG
 illum 4
@@ -101,7 +160,6 @@ Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
 Tf 1.00 1.00 1.00
 map_Kd TreeTexture1.png
-map_Kn  -bm 1 Tree2N.png
 Ni 1.00
 newmtl lambert13SG
 illum 4
@@ -109,7 +167,6 @@ Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
 Tf 1.00 1.00 1.00
 map_Kd TreeTexture2.png
-map_Kn  -bm 1 Tree1N.png
 Ni 1.00
 newmtl lambert14SG
 illum 4
@@ -117,7 +174,6 @@ Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
 Tf 1.00 1.00 1.00
 map_Kd LampFlowerLeafs.png
-map_Kn  -bm 1 LeafN.png
 Ni 1.00
 newmtl lambert16SG
 illum 4
@@ -125,7 +181,7 @@ Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
 Tf 1.00 1.00 1.00
 map_Kd StreetLamp.png
-map_Kn  -bm 1 StreetLampN.png
+bump  -bm 1 StreetLampN.png
 Ni 1.00
 newmtl lambert17SG
 illum 4
@@ -173,7 +229,6 @@ Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
 Tf 1.00 1.00 1.00
 map_Kd Window1.png
-map_Kn  -bm 1 Window1N.png
 Ni 1.00
 newmtl lambert25SG
 illum 4
@@ -181,7 +236,6 @@ Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
 Tf 1.00 1.00 1.00
 map_Kd Window2.png
-map_Kn  -bm 1 Window2N.png
 Ni 1.00
 newmtl lambert26SG
 illum 4
@@ -189,7 +243,6 @@ Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
 Tf 1.00 1.00 1.00
 map_Kd Door.png
-map_Kn  -bm 1 DoorN.png
 Ni 1.00
 newmtl lambert27SG
 illum 4
@@ -197,7 +250,6 @@ Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
 Tf 1.00 1.00 1.00
 map_Kd HouseAndRoof.png
-map_Kn  -bm 1 HouseAndRoofN.png
 Ni 1.00
 newmtl lambert28SG
 illum 4
@@ -205,7 +257,6 @@ Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
 Tf 1.00 1.00 1.00
 map_Kd HouseBridge.png
-map_Kn  -bm 1 HouseBridgeN.png
 Ni 1.00
 newmtl lambert29SG
 illum 4
@@ -213,7 +264,6 @@ Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
 Tf 1.00 1.00 1.00
 map_Kd LongRoof.png
-map_Kn  -bm 1 LongRoofN.png
 Ni 1.00
 newmtl lambert30SG
 illum 4
@@ -221,7 +271,6 @@ Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
 Tf 1.00 1.00 1.00
 map_Kd FloatingHouse.png
-map_Kn  -bm 1 FloatingHouseN.png
 Ni 1.00
 newmtl lambert31SG
 illum 4
@@ -229,7 +278,6 @@ Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
 Tf 1.00 1.00 1.00
 map_Kd WaterMillHouse.png
-map_Kn  -bm 1 WaterMillHouseN.png
 Ni 1.00
 newmtl lambert32SG
 illum 4
@@ -237,7 +285,6 @@ Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
 Tf 1.00 1.00 1.00
 map_Kd Beam.png
-map_Kn  -bm 1 BeamN.png
 Ni 1.00
 newmtl lambert33SG
 illum 4
@@ -245,7 +292,6 @@ Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
 Tf 1.00 1.00 1.00
 map_Kd WaterWheel.png
-map_Kn  -bm 1 WaterWheelN.png
 Ni 1.00
 newmtl lambert34SG
 illum 4
@@ -253,7 +299,6 @@ Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
 Tf 1.00 1.00 1.00
 map_Kd WaterWheelHolder.png
-map_Kn  -bm 1 WaterWheelHolderN.png
 Ni 1.00
 newmtl lambert35SG
 illum 4
@@ -261,7 +306,6 @@ Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
 Tf 1.00 1.00 1.00
 map_Kd Bridge.png
-map_Kn  -bm 1 BeidgeN.png
 Ni 1.00
 newmtl lambert36SG
 illum 4
@@ -269,7 +313,6 @@ Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
 Tf 1.00 1.00 1.00
 map_Kd Brunn.png
-map_Kn  -bm 1 BrunnN.png
 Ni 1.00
 newmtl lambert37SG
 illum 4
@@ -277,7 +320,7 @@ Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
 Tf 1.00 1.00 1.00
 map_Kd TileableGrass.png
-map_Kn  -bm 1 TileableGrassN.png
+bump  -bm 1 TileableGrassN.png
 Ni 1.00
 newmtl lambert38SG
 illum 4
@@ -285,7 +328,7 @@ Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
 Tf 1.00 1.00 1.00
 map_Kd WaterEdge.png
-map_Kn  -bm 1 WaterEdgeN.png
+bump  -bm 1 WaterEdgeN.png
 Ni 1.00
 newmtl lambert39SG
 illum 4
@@ -294,12 +337,37 @@ Ka 0.00 0.00 0.00
 Tf 1.00 1.00 1.00
 map_Kd WaterGrass.png
 Ni 1.00
+newmtl lambert41SG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 0.36 0.36 0.36
+map_Kd Grid.png
+Ni 1.00
+newmtl lambert42SG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+map_Kd WaterGrounfTexture.png
+Ni 1.00
+newmtl phong1SG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 0.68 0.68 0.68
+map_Kd WaterTexture.png
+bump  -bm 1 WaterTextureN.jpg
+Ni 1.00
+Ks 1.00 1.00 1.00
+Ns 18.00
 newmtl rocks_stacks1_DefaultMaterial
 illum 4
 Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
 Tf 1.00 1.00 1.00
 map_Kd rocks_stacks1_Albedo.png
+bump  -bm 1 rocks_stacks1_Normal.png
 Ni 1.00
 Ks 0.00 0.00 0.00
 Ns 0.06

@@ -8,10 +8,9 @@ namespace rtd
 	class Healthbar : public Element2D
 	{
 	private:
-
 		std::unique_ptr<Canvas> m_backGround;
 		std::unique_ptr<Canvas> m_foreGround;
-		std::unique_ptr<Text> m_healthInfo;
+		//std::unique_ptr<Text> m_healthInfo;
 
 		float* m_points;
 		Entity m_entity;
@@ -37,6 +36,7 @@ namespace rtd
 		void SetHealthVariable(Entity e);
 
 		void SetPosition(const float& x, const float& y);
+		void SetStretch(const float& x, const float& y);
 		const draw_t GetOpts() const;
 
 		// Inherited via Element2D

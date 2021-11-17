@@ -10,10 +10,10 @@ BT::InRangeCBT::InRangeCBT(const std::string& name, Entity entity)
 BT::NodeStatus BT::InRangeCBT::Tick()
 {
 	comp::Transform* transform = entity.GetComponent<comp::Transform>();
-	comp::NPC* npc = entity.GetComponent<comp::NPC>();
+	comp::AttackAbility* attackAbility = entity.GetComponent<comp::AttackAbility>();
 	Entity* target = Blackboard::Get().GetValue<Entity>("target" + std::to_string(entity));
 
-	if(transform == nullptr || npc == nullptr)
+	if(transform == nullptr || attackAbility == nullptr)
 	{
 		LOG_ERROR("Failed to get components from entity");
 		return BT::NodeStatus::FAILURE;
@@ -24,7 +24,7 @@ BT::NodeStatus BT::InRangeCBT::Tick()
 		return BT::NodeStatus::FAILURE;
 	}
 
-	if (sm::Vector3::Distance(transform->position, target->GetComponent<comp::Transform>()->position) <= npc->attackRange)
+	if (sm::Vector3::Distance(transform->position, target->GetComponent<comp::Transform>()->position) <= attackAbility->attackRange)
 	{
 		return BT::NodeStatus::SUCCESS;
 	}
