@@ -272,7 +272,7 @@ void Simulation::ResetPlayer(Entity player)
 
 	transform->position = playerComp->spawnPoint;
 	transform->scale = sm::Vector3(1.8f, 1.8f, 1.8f);
-
+	
 	player.AddComponent<comp::Velocity>();
 
 	bool firstTimeAdded = false;
@@ -316,8 +316,8 @@ void Simulation::ResetPlayer(Entity player)
 		comp::HealAbility* healAbility = player.AddComponent<comp::HealAbility>();
 		healAbility->cooldown = 5.0f;
 		healAbility->delay = 0.0f;
-		healAbility->healAmount = 50.f;
-		healAbility->lifetime = 1.f;
+		healAbility->healAmount = 30.f;
+		healAbility->lifetime = 1.5f;
 		healAbility->range = 50.f;
 		healAbility->useTime = 1.0f;
 
@@ -334,7 +334,6 @@ void Simulation::ResetPlayer(Entity player)
 	health->isAlive = true;
 
 
-	//player.AddComponent<comp::BoundingOrientedBox>()->Extents = { 2.0f,2.0f,2.0f };
 	player.AddComponent<comp::BoundingSphere>()->Radius = 3.f;
 
 	//Collision will handle this entity as a dynamic one
@@ -974,27 +973,6 @@ void Simulation::ResetGameScene()
 
 	LOG_INFO("%lld", m_pGameScene->GetRegistry()->size());
 	CreateWaves();
-
-
-
-	Entity entt = m_pGameScene->CreateEntity();
-	comp::Transform* t = entt.AddComponent<comp::Transform>();
-	t->scale = sm::Vector3(5);
-	t->position = m_players.begin()->second.GetComponent<comp::Transform>()->position;
-
-	comp::BezierAnimation* a = entt.AddComponent<comp::BezierAnimation>();
-	
-	a->scalePoints.push_back(t->scale);
-	a->scalePoints.push_back(t->scale * 2);
-	a->scalePoints.push_back(t->scale);
-
-	a->rotationPoints.push_back(t->rotation);
-	a->rotationPoints.push_back(t->rotation + sm::Quaternion::CreateFromAxisAngle(sm::Vector3(0, 1, 0), 180.f));
-
-	a->rotationPoints.push_back(t->rotation);
-
-	entt.AddComponent<comp::MeshName>()->name = "Cube.obj";
-	entt.AddComponent<comp::Network>();
 
 }
 

@@ -104,8 +104,8 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 				attackCollider.AddComponent<comp::Tag<TagType::DYNAMIC>>();
 
 				comp::BoundingSphere* bos = attackCollider.AddComponent<comp::BoundingSphere>();
-
 				bos->Radius = stats.attackRange;
+
 				
 				sm::Vector3 targetDir = stats.targetPoint - transform.position;
 				targetDir.Normalize();
@@ -211,17 +211,17 @@ void Systems::HealingSystem(HeadlessScene& scene, float dt)
 				comp::Transform* transform = collider.AddComponent<comp::Transform>();
 				transform->position = entity.GetComponent<comp::Transform>()->position;
 				transform->scale = sm::Vector3(2);
+				transform->syncColliderScale = true;
 				
 				comp::BoundingSphere* sphere = collider.AddComponent<comp::BoundingSphere>();
 				sphere->Center = transform->position;
-				sphere->Radius = 1.f;
-
+				
 				collider.AddComponent<comp::Tag<TagType::DYNAMIC>>();
 				
-				comp::Velocity* vel = collider.AddComponent<comp::Velocity>();
-				vel->scaleVel = sm::Vector3(20);
-				vel->applyToCollider = true;
-
+				comp::BezierAnimation* a = collider.AddComponent<comp::BezierAnimation>();
+				a->scalePoints.push_back(transform->scale);
+				a->scalePoints.push_back(transform->scale + sm::Vector3(ability.range));
+				
 				collider.AddComponent<comp::SelfDestruct>()->lifeTime = ability.lifetime;
 				
 				collider.AddComponent<comp::Tag<TagType::NO_RESPONSE>>();
@@ -377,30 +377,6 @@ void Systems::MovementSystem(HeadlessScene& scene, float dt)
 				}
 				velocity.oldVel = velocity.vel; // updated old vel position
 
-				
-				if (velocity.scaleVel.Length() > 0.01f)
-				{
-					e.UpdateNetwork();
-				}
-				transform.scale += velocity.scaleVel * dt;
-				velocity.oldScaleVel = velocity.scaleVel; // updated old vel scale
-
-				if (velocity.applyToCollider)
-				{					
-					comp::BoundingOrientedBox* box = e.GetComponent<comp::BoundingOrientedBox>();
-					if (box)
-					{
-						box->Extents = box->Extents + velocity.scaleVel * dt;
-					}
-
-					comp::BoundingSphere* bos = e.GetComponent<comp::BoundingSphere>();
-					if (bos)
-					{
-						bos->Radius += velocity.scaleVel.x * dt;
-					}
-
-				}
-
 			});
 	}
 }
@@ -415,6 +391,8 @@ void Systems::MovementColliderSystem(HeadlessScene& scene, float dt)
 		{
 			obb.Center = transform.position;
 			/*obb.Orientation = transform.rotation;*/
+			if (transform.syncColliderScale)
+				obb.Extents = transform.scale;
 		});
 
 	//BoundingSphere
@@ -422,6 +400,9 @@ void Systems::MovementColliderSystem(HeadlessScene& scene, float dt)
 	(comp::Transform& transform, comp::BoundingSphere& sphere)
 		{
 			sphere.Center = transform.position;
+			if (transform.syncColliderScale)
+				sphere.Radius = transform.scale.x;
+			
 		});
 }
 
@@ -444,18 +425,6 @@ void Systems::LightSystem(Scene& scene, float dt)
 
 void Systems::TransformAnimationSystem(HeadlessScene& scene, float dt)
 {
-	scene.ForEachComponent<comp::Transform, comp::LinearAnimation>([&](Entity e, comp::Transform& t, comp::LinearAnimation& a)
-		{
-			a.time += dt * a.speed;
-			if (a.time > 1.0f)
-			{
-				e.RemoveComponent<comp::BezierAnimation>();
-			}
-			t.position = util::Lerp(a.translationPoints, a.time);
-
-			e.UpdateNetwork();
-		});
-
 	scene.ForEachComponent<comp::Transform, comp::BezierAnimation>([&](Entity e, comp::Transform& t, comp::BezierAnimation& a)
 		{
 			a.time += dt * a.speed;

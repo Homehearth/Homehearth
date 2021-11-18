@@ -37,6 +37,8 @@ namespace ecs
 			sm::Vector3 position;
 			sm::Quaternion rotation;
 			sm::Vector3 scale = sm::Vector3(1);
+			
+			bool syncColliderScale = false;
 		};
 
 		struct Decal
@@ -155,11 +157,6 @@ namespace ecs
 		{
 			sm::Vector3 vel;
 			sm::Vector3 oldVel;
-
-			sm::Vector3 scaleVel = { 0, 0, 0 };
-			sm::Vector3 oldScaleVel;
-
-			bool applyToCollider = false;
 		};
 
 		struct Player
