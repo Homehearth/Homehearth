@@ -19,6 +19,7 @@ void Renderer::Initialize(Window* pWindow)
     //AddPass(&m_depthPass);
     AddPass(&m_basePass);
     AddPass(&m_textureEffectPass);
+	//m_textureEffectPass.CreateResourceArrays();
 	m_d3d11 = &D3D11Core::Get();
 
 	/*

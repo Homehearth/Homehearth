@@ -13,7 +13,8 @@ enum class ModelID : uint16_t
 	TREE3,
 	TREE5,
 	TREE6,
-	TREE8
+	TREE8,
+	WATER
 };
 
 const std::string House5		= "House5";
@@ -27,3 +28,8 @@ const std::string Tree3			= "Tree3";
 const std::string Tree5			= "Tree5";
 const std::string Tree6			= "Tree6";
 const std::string Tree8			= "Tree8";
+const std::string Water			= "WaterMesh";
+
+//non transparent
+const std::string WaterEdge     = "WaterEdgeMesh";
+const std::string WaterFloor    = "WaterFloorMesh";

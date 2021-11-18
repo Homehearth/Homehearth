@@ -79,6 +79,11 @@ void PipelineManager::Initialize(Window* pWindow, ID3D11DeviceContext* context)
         LOG_ERROR("failed creating texture effect constant buffer.");
     }
 
+    if (!this->CreateTextureEffectResources())
+    {
+        LOG_ERROR("failed creating texture effect resources.");
+    }
+
     // Set Viewport.
     this->SetViewport();
 }
@@ -505,9 +510,36 @@ bool PipelineManager::CreateTextureEffectResources()
 {
     // Create render textures, target views and shader resource views here
 
+    //Get all models needed
+    m_WaterModel      = ResourceManager::Get().GetResource<RModel>("WaterMesh.obj");
+    m_WaterEdgeModel  = ResourceManager::Get().GetResource<RModel>("WaterEdgeMesh.obj");
+    m_WaterFloorModel = ResourceManager::Get().GetResource<RModel>("WaterFloorMesh.obj");
+
+    //Get the UV_s from the models
+    m_WaterUV       = m_WaterModel.get()->GetTextureCoords();
+    m_WaterEdgeUV   = m_WaterEdgeModel.get()->GetTextureCoords();
+    m_WaterFloorUV  = m_WaterFloorModel.get()->GetTextureCoords();
+
+    //Get the textures from the models
+    m_WaterAlbedoMap       = m_WaterModel.get()->GetTextures(ETextureType::albedo)[0];
+    m_WaterNormalMap       = m_WaterModel.get()->GetTextures(ETextureType::normal)[0];
+    m_WaterEdgeAlbedoMap   = m_WaterEdgeModel.get()->GetTextures(ETextureType::albedo)[0];
+    m_WaterFloorAlbedoMap  = m_WaterFloorModel.get()->GetTextures(ETextureType::albedo)[0];
+
+    //Get the SRV:s from the textures
+    m_SRV_TextureEffectWaterEdgeMap    = m_WaterEdgeAlbedoMap.get()->GetShaderView();
+    m_SRV_TextureEffectWaterFloorMap   = m_WaterFloorAlbedoMap.get()->GetShaderView();
+    m_SRV_TextureEffectWaterMap        = m_WaterAlbedoMap.get()->GetShaderView();
+    m_SRV_TextureEffectWaterNormalMap  = m_WaterNormalMap.get()->GetShaderView();
+
+
     HRESULT hr = {};
     int textureHeight = 512;
     int textureWidth = 512;
+    int channels = 0;
+    std::string fileNamePath = "../../Assets/Textures/WaterBlendMap.jpg"; //funkar inte
+
+    unsigned char* image = stbi_load(fileNamePath.c_str(), &textureWidth, &textureHeight, &channels, STBI_rgb_alpha);
 
     // TEXTURE 2D //
 
@@ -525,23 +557,13 @@ bool PipelineManager::CreateTextureEffectResources()
     textureDesc.CPUAccessFlags = 0;
     textureDesc.MiscFlags = 0;
 
-    hr = m_d3d11->Device()->CreateTexture2D(&textureDesc, nullptr, m_T_TextureEffectBlendMap.GetAddressOf());
-    if (FAILED(hr))
-        return false;
+    //Information about D3D11_SUBRESOURCE_DATA https://docs.microsoft.com/en-us/windows/win32/api/d3d11/ns-d3d11-d3d11_subresource_data
+    D3D11_SUBRESOURCE_DATA data = {};
+    data.pSysMem = image;
+    data.SysMemPitch = textureWidth * 4;
+    data.SysMemSlicePitch = 0;
 
-    hr = m_d3d11->Device()->CreateTexture2D(&textureDesc, nullptr, m_T_TextureEffectWaterEdgeMap.GetAddressOf());
-    if (FAILED(hr))
-        return false;
-
-    hr = m_d3d11->Device()->CreateTexture2D(&textureDesc, nullptr, m_T_TextureEffectWaterFloorMap.GetAddressOf());
-    if (FAILED(hr))
-        return false;
-
-    hr = m_d3d11->Device()->CreateTexture2D(&textureDesc, nullptr, m_T_TextureEffectWaterMap.GetAddressOf());
-    if (FAILED(hr))
-        return false;
-
-    hr = m_d3d11->Device()->CreateTexture2D(&textureDesc, nullptr, m_T_TextureEffectWaterNormalMap.GetAddressOf());
+    hr = m_d3d11->Device()->CreateTexture2D(&textureDesc, &data, m_T_TextureEffectBlendMap.GetAddressOf());
     if (FAILED(hr))
         return false;
 
@@ -553,31 +575,31 @@ bool PipelineManager::CreateTextureEffectResources()
     renderTargetViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
     renderTargetViewDesc.Texture2D.MipSlice = 0;
 
-    hr = m_d3d11->Device()->CreateRenderTargetView(m_T_TextureEffectBlendMap.Get(), nullptr, m_RTV_TextureEffectWaterMap.GetAddressOf());
+    hr = m_d3d11->Device()->CreateRenderTargetView(m_WaterAlbedoMap.get()->GetTexture2D(), nullptr, m_RTV_TextureEffectWaterMap.GetAddressOf());
     if (FAILED(hr))
         return false;
 
-    hr = m_d3d11->Device()->CreateRenderTargetView(m_T_TextureEffectWaterEdgeMap.Get(), nullptr, m_RTV_TextureEffectBlendMap.GetAddressOf());
+    hr = m_d3d11->Device()->CreateRenderTargetView(m_WaterFloorAlbedoMap.get()->GetTexture2D(), nullptr, m_RTV_TextureEffectWaterFloorMap.GetAddressOf());
     if (FAILED(hr))
         return false;
 
-    hr = m_d3d11->Device()->CreateRenderTargetView(m_T_TextureEffectWaterFloorMap.Get(), nullptr, m_RTV_TextureEffectWaterFloorMap.GetAddressOf());
+    hr = m_d3d11->Device()->CreateRenderTargetView(m_WaterEdgeAlbedoMap.get()->GetTexture2D(), nullptr, m_RTV_TextureEffectWaterEdgeMap.GetAddressOf());
     if (FAILED(hr))
         return false;
 
-    hr = m_d3d11->Device()->CreateRenderTargetView(m_T_TextureEffectWaterEdgeMap.Get(), nullptr, m_RTV_TextureEffectWaterEdgeMap.GetAddressOf());
+    hr = m_d3d11->Device()->CreateRenderTargetView(m_WaterNormalMap.get()->GetTexture2D(), nullptr, m_RTV_TextureEffectWaterNormalMap.GetAddressOf());
     if (FAILED(hr))
         return false;
 
-    hr = m_d3d11->Device()->CreateRenderTargetView(m_T_TextureEffectWaterNormalMap.Get(), nullptr, m_RTV_TextureEffectWaterNormalMap.GetAddressOf());
+    hr = m_d3d11->Device()->CreateRenderTargetView(m_T_TextureEffectBlendMap.Get(), nullptr, m_RTV_TextureEffectBlendMap.GetAddressOf());
     if (FAILED(hr))
         return false;
 
 
-    // SHADER RESOURCE VIEWS //
+    // SHADER RESOURCE VIEWS FOR BLENDMAP //
 
     D3D11_SHADER_RESOURCE_VIEW_DESC shaderResourceViewDesc;
-    shaderResourceViewDesc.Format = DXGI_FORMAT_R32_FLOAT;
+    shaderResourceViewDesc.Format = textureDesc.Format;
     shaderResourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
     shaderResourceViewDesc.Texture2D.MostDetailedMip = 0;
     shaderResourceViewDesc.Texture2D.MipLevels = 1;
@@ -586,21 +608,6 @@ bool PipelineManager::CreateTextureEffectResources()
     if (FAILED(hr))
         return false;
 
-    hr = m_d3d11->Device()->CreateShaderResourceView(m_T_TextureEffectWaterEdgeMap.Get(), &shaderResourceViewDesc, m_SRV_TextureEffectWaterEdgeMap.GetAddressOf());
-    if (FAILED(hr))
-        return false;
-
-    hr = m_d3d11->Device()->CreateShaderResourceView(m_T_TextureEffectWaterFloorMap.Get(), &shaderResourceViewDesc, m_SRV_TextureEffectWaterFloorMap.GetAddressOf());
-    if (FAILED(hr))
-        return false;
-
-    hr = m_d3d11->Device()->CreateShaderResourceView(m_T_TextureEffectWaterMap.Get(), &shaderResourceViewDesc, m_SRV_TextureEffectWaterMap.GetAddressOf());
-    if (FAILED(hr))
-        return false;
-
-    hr = m_d3d11->Device()->CreateShaderResourceView(m_T_TextureEffectWaterNormalMap.Get(), &shaderResourceViewDesc, m_SRV_TextureEffectWaterNormalMap.GetAddressOf());
-    if (FAILED(hr))
-        return false;
 
     return true;
 }

@@ -22,7 +22,6 @@ public:
 	// PUBLIC AVAILABLE DATA.
 	ComPtr<ID3D11RenderTargetView>	  m_backBuffer;
 	ComPtr<ID3D11RenderTargetView>	  m_renderTargetView;
-	
 
 	ComPtr<ID3D11Texture2D>			  m_depthStencilTexture;
 	ComPtr<ID3D11DepthStencilView>	  m_depthStencilView;
@@ -32,28 +31,20 @@ public:
 	ComPtr<ID3D11DepthStencilView>	  m_debugDepthStencilView;
 	ComPtr<ID3D11ShaderResourceView>  m_debugDepthBufferSRV;
 	
-	ComPtr<ID3D11RasterizerState>	m_rasterState;
-	ComPtr<ID3D11RasterizerState>	m_rasterStateNoCulling;
-	ComPtr<ID3D11RasterizerState>	m_rasterStateWireframe;
-
-	ComPtr<ID3D11BlendState>		m_blendStatepOpaque;
-	ComPtr<ID3D11BlendState>		m_blendStatepDepthOnlyAlphaTest;
-	ComPtr<ID3D11BlendState>		m_blendStateDepthOnlyAlphaToCoverage;
-	ComPtr<ID3D11BlendState>		m_blendStateAlphaBlending;
-	ComPtr<ID3D11DepthStencilState>	  m_depthStencilStateLess;
-	ComPtr<ID3D11DepthStencilState>	  m_depthStencilStateLessEqual;
-	ComPtr<ID3D11DepthStencilState>   m_depthStencilStateGreater;
-	ComPtr<ID3D11DepthStencilState>   m_depthStencilStateEqualAndDisableDepthWrite;
-	
 	ComPtr<ID3D11RasterizerState>	  m_rasterState;
 	ComPtr<ID3D11RasterizerState>	  m_rasterStateNoCulling;
 	ComPtr<ID3D11RasterizerState>	  m_rasterStateWireframe;
 
-	ComPtr<ID3D11ShaderResourceView>  m_depthStencilSRV;
-
 	ComPtr<ID3D11BlendState>		  m_blendStatepOpaque;
 	ComPtr<ID3D11BlendState>		  m_blendStatepDepthOnlyAlphaTest;
-	ComPtr<ID3D11BlendState>		  m_blendStateDepthOnlyAlphaToCoverage;;
+	ComPtr<ID3D11BlendState>		  m_blendStateDepthOnlyAlphaToCoverage;
+	ComPtr<ID3D11BlendState>		  m_blendStateAlphaBlending;
+	ComPtr<ID3D11DepthStencilState>	  m_depthStencilStateLess;
+	ComPtr<ID3D11DepthStencilState>	  m_depthStencilStateLessEqual;
+	ComPtr<ID3D11DepthStencilState>   m_depthStencilStateGreater;
+	ComPtr<ID3D11DepthStencilState>   m_depthStencilStateEqualAndDisableDepthWrite;
+
+	ComPtr<ID3D11ShaderResourceView>  m_depthStencilSRV;
 
 	ComPtr<ID3D11InputLayout>		  m_defaultInputLayout;
 	ComPtr<ID3D11InputLayout>		  m_positionOnlyInputLayout;
@@ -61,25 +52,24 @@ public:
 	ComPtr<ID3D11SamplerState>		  m_linearSamplerState;		//Low settings
 	ComPtr<ID3D11SamplerState>		  m_anisotropicSamplerState;	//High settings
 	ComPtr<ID3D11SamplerState>		  m_pointSamplerState;
-	ComPtr<ID3D11SamplerState>		m_cubemapSamplerState;
-
+	ComPtr<ID3D11SamplerState>		  m_cubemapSamplerState;
 
 	ComPtr<ID3D11InputLayout>		  m_animationInputLayout;
-	ComPtr<ID3D11InputLayout>		m_skyboxInputLayout;
+	ComPtr<ID3D11InputLayout>		  m_skyboxInputLayout;
 
 	Shaders::VertexShader			  m_defaultVertexShader;
 	Shaders::VertexShader			  m_depthPassVertexShader;
 	Shaders::VertexShader			  m_animationVertexShader;
 	Shaders::VertexShader		      m_positionOnlyVertexShader;
-	Shaders::VertexShader			m_skyboxVertexShader;
+	Shaders::VertexShader			  m_skyboxVertexShader;
 
 	Shaders::PixelShader			  m_defaultPixelShader;
 	Shaders::PixelShader			  m_debugPixelShader;
-	Shaders::PixelShader			m_skyboxPixelShader;
+	Shaders::PixelShader			  m_skyboxPixelShader;
 	
-	D3D11_VIEWPORT					m_viewport;
-	RTexture m_TextureEffectDiffuseMap;
-	RTexture m_TextureEffectDisplacementMap;
+	D3D11_VIEWPORT					  m_viewport;
+	RTexture						  m_TextureEffectDiffuseMap;
+	RTexture						  m_TextureEffectDisplacementMap;
 
 	
 	// View space frustums for the grid cells used in ForwardPlus rendering.
@@ -94,10 +84,6 @@ public:
 	ComPtr<ID3D11Buffer>			  m_textureEffectConstantBuffer;
 	ComPtr<ID3D11Buffer>              m_deltaTimeBuffer;
 	ComPtr<ID3D11Texture2D>			  m_T_TextureEffectBlendMap;
-	ComPtr<ID3D11Texture2D>			  m_T_TextureEffectWaterMap;
-	ComPtr<ID3D11Texture2D>			  m_T_TextureEffectWaterFloorMap;
-	ComPtr<ID3D11Texture2D>		   	  m_T_TextureEffectWaterEdgeMap;
-	ComPtr<ID3D11Texture2D>			  m_T_TextureEffectWaterNormalMap;
 	ComPtr<ID3D11RenderTargetView>    m_RTV_TextureEffectBlendMap;
 	ComPtr<ID3D11RenderTargetView>    m_RTV_TextureEffectWaterMap;
 	ComPtr<ID3D11RenderTargetView>    m_RTV_TextureEffectWaterFloorMap;
@@ -108,6 +94,19 @@ public:
 	ComPtr<ID3D11ShaderResourceView>  m_SRV_TextureEffectWaterFloorMap;
 	ComPtr<ID3D11ShaderResourceView>  m_SRV_TextureEffectWaterEdgeMap;
 	ComPtr<ID3D11ShaderResourceView>  m_SRV_TextureEffectWaterNormalMap;
+
+	std::shared_ptr<RModel> m_WaterModel;
+	std::shared_ptr<RModel> m_WaterEdgeModel;
+	std::shared_ptr<RModel> m_WaterFloorModel;
+
+	std::vector<sm::Vector2> m_WaterUV;
+	std::vector<sm::Vector2> m_WaterEdgeUV;
+	std::vector<sm::Vector2> m_WaterFloorUV;
+
+	std::shared_ptr<RTexture> m_WaterAlbedoMap;
+	std::shared_ptr<RTexture> m_WaterNormalMap;
+	std::shared_ptr<RTexture> m_WaterEdgeAlbedoMap;
+	std::shared_ptr<RTexture> m_WaterFloorAlbedoMap;
 
 private:
 	// INITIALIZE METHODS.
