@@ -506,6 +506,8 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 				
 				Systems::MovementSystem(scene, e.dt);
 				Systems::MovementColliderSystem(scene, e.dt);
+			
+				Systems::TransformAnimationSystem(scene, e.dt);
 			}
 
 			if (!waveQueue.empty())
@@ -564,7 +566,6 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 
 	// Automatically join created lobby
 	JoinLobby(playerID, gameID, namePlate);
-
 
 	return true;
 }
@@ -973,6 +974,22 @@ void Simulation::ResetGameScene()
 
 	LOG_INFO("%lld", m_pGameScene->GetRegistry()->size());
 	CreateWaves();
+
+
+
+	Entity entt = m_pGameScene->CreateEntity();
+	comp::Transform* t = entt.AddComponent<comp::Transform>();
+	t->scale = sm::Vector3(5);
+	t->position = m_players.begin()->second.GetComponent<comp::Transform>()->position;
+
+	comp::BezierAnimation* a = entt.AddComponent<comp::BezierAnimation>();
+	a->translationPoints.push_back(t->position);
+	a->translationPoints.push_back(t->position + sm::Vector3(100, 100, 0));
+	a->translationPoints.push_back(t->position + sm::Vector3(200, 0, 0));
+
+	entt.AddComponent<comp::MeshName>()->name = "Cube.obj";
+	entt.AddComponent<comp::Network>();
+
 }
 
 void Simulation::SendEntity(Entity e, const std::bitset<ecs::Component::COMPONENT_MAX>& componentMask)const

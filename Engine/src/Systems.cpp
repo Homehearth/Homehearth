@@ -441,3 +441,31 @@ void Systems::LightSystem(Scene& scene, float dt)
 
 
 }
+
+void Systems::TransformAnimationSystem(HeadlessScene& scene, float dt)
+{
+	scene.ForEachComponent<comp::Transform, comp::LinearAnimation>([&](Entity e, comp::Transform& t, comp::LinearAnimation& a)
+		{
+			a.time += dt * a.speed;
+			if (a.time > 1.0f)
+			{
+				e.RemoveComponent<comp::BezierAnimation>();
+			}
+			t.position = util::Lerp(a.translationPoints, a.time);
+
+			e.UpdateNetwork();
+		});
+
+	scene.ForEachComponent<comp::Transform, comp::BezierAnimation>([&](Entity e, comp::Transform& t, comp::BezierAnimation& a)
+		{
+			a.time += dt * a.speed;
+			if (a.time > 1.0f)
+			{
+				e.RemoveComponent<comp::BezierAnimation>();
+			}
+			t.position = util::BezierCurve(a.translationPoints, a.time);
+
+			e.UpdateNetwork();
+		});
+
+}

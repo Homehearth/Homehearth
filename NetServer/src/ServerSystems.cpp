@@ -278,7 +278,6 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 				if (ecs::UseAbility(e, p.primaryAbilty, &p.mousePoint))
 				{
 					LOG_INFO("Used primary");
-
 				}
 
 				// make sure movement alteration is not applied when using, because then its applied atomatically

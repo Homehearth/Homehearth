@@ -17,6 +17,8 @@ namespace Systems
 	void MovementColliderSystem(HeadlessScene& scene, float dt);
 	void LightSystem(Scene& scene, float dt);
 
+	void TransformAnimationSystem(HeadlessScene& scene, float dt);
+
 	template<typename Collider1, typename Collider2>
 	void CheckCollisions(HeadlessScene& scene, float dt);
 	void AISystem(HeadlessScene& scene, PathFinderManager* aiHandler);

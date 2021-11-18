@@ -141,6 +141,20 @@ namespace ecs
 			std::vector<Force> forces;
 		};
 
+		struct LinearAnimation
+		{
+			float speed = 1.0f;
+			std::vector<sm::Vector3> translationPoints;
+			float time = 0.0f;
+		};
+
+		struct BezierAnimation
+		{
+			float speed = 1.0f;
+			std::vector<sm::Vector3> translationPoints;
+			float time = 0.0f;
+		};
+
 		struct Velocity
 		{
 			sm::Vector3 vel;
@@ -257,6 +271,12 @@ namespace ecs
 			float healAmount = 40.f;
 			float range = 50.f;
 		};
+
+		struct ShieldBashAbility : public IAbility
+		{
+
+		};
+
 
 		struct SelfDestruct
 		{
