@@ -285,33 +285,33 @@ void Simulation::ResetPlayer(Entity player)
 	player.AddComponent<comp::AnimatorName>()->name = "Knight.anim";
 
 	
-	comp::AttackAbility* attackAbility = player.AddComponent<comp::AttackAbility>();
+
 
 	// only if Melee
 	if (playerComp->classType == comp::Player::Class::WARRIOR)
 	{
+		comp::MeleeAttackAbility* attackAbility = player.AddComponent<comp::MeleeAttackAbility>();
 		attackAbility->cooldown = 0.3f;
 		attackAbility->attackDamage = 40.f;
-		attackAbility->isRanged = false;
 		attackAbility->lifetime = 0.2f;
 		attackAbility->useTime = 0.2f;
 		attackAbility->delay = 0.1f;
 
-		playerComp->primaryAbilty = entt::resolve<comp::AttackAbility>();
-		playerComp->secondaryAbilty = entt::resolve<comp::AttackAbility>();
+		playerComp->primaryAbilty = entt::resolve<comp::MeleeAttackAbility>();
+		playerComp->secondaryAbilty = entt::resolve<comp::MeleeAttackAbility>();
 
 	}
 	else if(playerComp->classType == comp::Player::Class::MAGE) 
 	{
+		comp::RangeAttackAbility* attackAbility = player.AddComponent<comp::RangeAttackAbility>();
 		attackAbility->cooldown = 0.5f;
 		attackAbility->attackDamage = 20.f;
-		attackAbility->isRanged = true;
 		attackAbility->lifetime = 2.0f;
 		attackAbility->projectileSpeed = 40.f;
 		attackAbility->attackRange = 2.0f;
 		attackAbility->useTime = 0.3f;
 		attackAbility->delay = 0.1f;
-		playerComp->primaryAbilty = entt::resolve<comp::AttackAbility>();
+		playerComp->primaryAbilty = entt::resolve<comp::MeleeAttackAbility>();
 
 		comp::HealAbility* healAbility = player.AddComponent<comp::HealAbility>();
 		healAbility->cooldown = 5.0f;
