@@ -149,12 +149,11 @@ void Renderer::InitilializeForwardPlus(Camera* camera)
     // Update ScreenToViewParams.
     //
 
-    screen_view_params_t screenToView;
-    screenToView.screenDimensions.x = static_cast<float>(screenWidth);
-    screenToView.screenDimensions.y = static_cast<float>(screenHeight);
-    dx::XMStoreFloat4x4(&screenToView.inverseProjection,
+    m_pipelineManager.m_screenToViewParams.screenDimensions.x = static_cast<float>(screenWidth);
+    m_pipelineManager.m_screenToViewParams.screenDimensions.y = static_cast<float>(screenHeight);
+    dx::XMStoreFloat4x4(&m_pipelineManager.m_screenToViewParams.inverseProjection,
         dx::XMMatrixTranspose(dx::XMMatrixInverse(nullptr, camera->GetProjection())));
-	m_pipelineManager.m_screenToViewParamsCB.SetData(m_d3d11->DeviceContext(), screenToView);
+	m_pipelineManager.m_screenToViewParamsCB.SetData(m_d3d11->DeviceContext(), m_pipelineManager.m_screenToViewParams);
 
     //
     // Update GridFrustums.

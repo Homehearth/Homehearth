@@ -97,12 +97,16 @@ Texture2D t_opacitymask	                        : register(t7);
 Texture2D<uint2> t_pointLightGrid	            : register(t8);
 Texture2D t_decal                               : register(t12);
 Texture2D t_decalAlpha                          : register(t13);
+Texture2D<uint2> t_lightGrid                    : register(t14);
+Texture2D<uint2> LightGrid                      : register(t18);
 
 // StructuredBuffers.
 StructuredBuffer<float4x4> sb_BoneTransforms    : register(t9);     // read as column major, actually is row major.
 StructuredBuffer<Light> sb_Lights               : register(t10);
 StructuredBuffer<Frustum> sb_Frustums_in        : register(t11);    // Precomputed frustums for the grid.
+StructuredBuffer<uint> sb_lightIndexList        : register(t15);
 StructuredBuffer<float4x4> sb_decaldata         : register(t16);
+StructuredBuffer<uint> LightIndexList           : register(t17);
 
 TextureCube t_radiance                          : register(t96);
 TextureCube t_irradiance                        : register(t97);
@@ -129,4 +133,3 @@ RWStructuredBuffer<uint> rw_trans_LightIndexList       : register(u4);
 // The light grid texture is created using the R32G32_UINT format.
 RWTexture2D<uint2> rw_opaq_LightGrid                   : register(u5);
 RWTexture2D<uint2> rw_trans_LightGrid                  : register(u6);
-

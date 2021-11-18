@@ -19,18 +19,22 @@ void OpaqPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 	DC->RSSetViewports(1, &PM->m_viewport);
 	DC->RSSetState(PM->m_rasterState.Get());
 
-	// todo: pass lights to shaders.
-	// todo: locate memory leaks.
-
+	DC->PSSetShaderResources(17, 1, PM->opaq_LightIndexList.srv.GetAddressOf());
+	DC->PSSetShaderResources(18, 1, PM->opaq_LightGrid.srv.GetAddressOf());
+	
 	DC->OMSetRenderTargets(1, PM->m_backBuffer.GetAddressOf(), PM->m_depthStencilView.Get());
 	DC->OMSetDepthStencilState(PM->m_depthStencilStateLessEqual.Get(), 0);
 }
 
 void OpaqPass::Render(Scene* pScene)
 {
+	// Opaque stuff.
 	pScene->Render();
 }
 
 void OpaqPass::PostRender(ID3D11DeviceContext* pDeviceContext)
 {
+	ID3D11ShaderResourceView* nullSRV[] = { nullptr };
+	DC->CSSetShaderResources(17, 1, nullSRV);
+	DC->CSSetShaderResources(18, 1, nullSRV);
 }

@@ -20,12 +20,11 @@ void FrustumPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 	};
 	DC->CSSetConstantBuffers(6, ARRAYSIZE(buffers), buffers); // ScreenToViewParamsCB + DispatchParamsCB
 	DC->VSSetConstantBuffers(1, 1, pCam->m_viewConstantBuffer.GetAddressOf());  // Camera.
-	DC->CSSetUnorderedAccessViews(0, 1, PM->m_frustums.uav.GetAddressOf(), nullptr);
+	DC->CSSetUnorderedAccessViews(0, 1, PM->m_frustums.uav.GetAddressOf(), nullptr); // Frustums
 }
 
 void FrustumPass::Render(Scene* pScene)
 {
-	// Dispatch.
 	GetDeviceContext()->Dispatch(PM->m_dispatchParams.numThreads.x, PM->m_dispatchParams.numThreads.y, 1);
 }
 

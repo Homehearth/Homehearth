@@ -99,6 +99,7 @@ public:
 	uint32_t m_numFrustums;
 
 	dispatch_params_t m_dispatchParams;
+	screen_view_params_t m_screenToViewParams;
 	DirectX::ConstantBuffer<dispatch_params_t> m_dispatchParamsCB;
 	DirectX::ConstantBuffer<screen_view_params_t> m_screenToViewParamsCB;
 

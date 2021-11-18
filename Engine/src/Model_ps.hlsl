@@ -66,24 +66,39 @@ float4 main(PixelIn input) : SV_TARGET
     float3 Lo = float3(0.f, 0.f, 0.f);
     float3 rad = float3(0.f, 0.f, 0.f);
     float3 lightCol = float3(0.f, 0.f, 0.f);
-    
-    for (int i = 0; i < c_info.x; i++)
+
+    // Get the index of the current pixel in the light grid.
+	uint2 tileIndex = uint2(floor(input.pos.xy / (TILE_SIZE)));
+
+    // Get the start position and offset of the light in the light index list.
+	uint startOffset = LightGrid[tileIndex].x;
+	uint lightCount = LightGrid[tileIndex].y;
+	
+	//for each < lightCount
+	//     uint lightIndex = LightIndexList[startOffset + i];
+	//     Light light = sb_Lights[lightIndex];
+	
+
+    //for (int i = 0; i < c_info.x; i++)
+    for (int i = 0; i < lightCount; i++)
     {
-        if(sb_Lights[i].enabled == 1)
+        const uint lightIndex = LightIndexList[startOffset + i];
+
+        if(sb_Lights[lightIndex].enabled == 1)
         {
-            switch (sb_Lights[i].type)
+            switch (sb_Lights[lightIndex].type)
             {
                 case 0:
-                    lightCol += DoDirectionlight(sb_Lights[i], N);
+                    lightCol += DoDirectionlight(sb_Lights[lightIndex], N);
                     break;
                 case 1:
-                    lightCol += DoPointlight(sb_Lights[i], input, N);
+                    lightCol += DoPointlight(sb_Lights[lightIndex], input, N);
                     break;
                 default:
                     break;
             }
         
-            CalcRadiance(input, V, N, roughness, metallic, albedo, sb_Lights[i].position.xyz, lightCol, F0, rad);
+            CalcRadiance(input, V, N, roughness, metallic, albedo, sb_Lights[lightIndex].position.xyz, lightCol, F0, rad);
             Lo += rad;
         }
     }
