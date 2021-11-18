@@ -60,8 +60,8 @@ cbuffer ScreenToViewParamsCB : register(b6)
 
 cbuffer DispatchParamsCB : register (b7)
 {
-    uint3 numThreadGroups;
-    uint3 numThreads;
+    uint4 numThreadGroups;
+    uint4 numThreads;
 }
 
 cbuffer DecalInfoCB : register(b10)

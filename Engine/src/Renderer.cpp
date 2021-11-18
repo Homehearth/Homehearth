@@ -142,20 +142,18 @@ void Renderer::InitilializeForwardPlus(Camera* camera)
     // [x, y] screen resolution and [z, z] tile size yield [x/z, y/z] grid size.
     // Resulting in a total of x/z * y/z frustums.
 	constexpr uint32_t TILE_SIZE = 16u;
-    const uint32_t numFrustums = { screenWidth / TILE_SIZE * screenHeight / TILE_SIZE };
+    const uint32_t numFrustums = { (screenWidth / TILE_SIZE) * (screenHeight / TILE_SIZE) };
 
     //
     // Update DispatchParams.
     //
-    const dx::XMUINT3 numThreads = { static_cast<uint32_t>(std::ceil(screenWidth / TILE_SIZE)), static_cast<uint32_t>(std::ceil(screenHeight / TILE_SIZE)), 1u };
-    const dx::XMUINT3 numThreadGroups = { static_cast<uint32_t>(std::ceil(numThreads.x / TILE_SIZE)), static_cast<uint32_t>(std::ceil(numThreads.y / TILE_SIZE)), 1u };
+
+    const dx::XMUINT4 numThreads = { static_cast<uint32_t>(std::ceil(screenWidth / TILE_SIZE)), static_cast<uint32_t>(std::ceil(screenHeight / TILE_SIZE)), 1u, 1u };
+    const dx::XMUINT4 numThreadGroups = { static_cast<uint32_t>(std::ceil(numThreads.x / TILE_SIZE)), static_cast<uint32_t>(std::ceil(numThreads.y / TILE_SIZE)), 1u, 1u };
 
 	m_pipelineManager.m_dispatchParams.numThreadGroups = numThreadGroups;
 	m_pipelineManager.m_dispatchParams.numThreads = numThreads;
 	m_pipelineManager.m_dispatchParamsCB.SetData(m_d3d11->DeviceContext(), m_pipelineManager.m_dispatchParams);
-
-    const uint32_t COUNT = m_pipelineManager.m_dispatchParams.numThreads.x +
-    	m_pipelineManager.m_dispatchParams.numThreads.y + m_pipelineManager.m_dispatchParams.numThreads.z;
 
     //
     // Update ScreenToViewParams.
@@ -170,6 +168,9 @@ void Renderer::InitilializeForwardPlus(Camera* camera)
     //
     // Update GridFrustums.
     //
+
+    const uint32_t numGridCells = m_pipelineManager.m_dispatchParams.numThreads.x *
+        m_pipelineManager.m_dispatchParams.numThreads.y * m_pipelineManager.m_dispatchParams.numThreads.z;
 
     m_pipelineManager.m_frustums_data.resize(numFrustums);
     m_pipelineManager.CreateCopyBuffer(m_pipelineManager.m_frustums.buffer.GetAddressOf(), sizeof(frustum_t), m_pipelineManager.m_frustums_data.size());
@@ -195,12 +196,12 @@ void Renderer::InitilializeForwardPlus(Camera* camera)
     //
     // Create LightIndexList.
     //
-    if (!CreateLightIndexListRWB(COUNT))
+    if (!CreateLightIndexListRWB(numGridCells))
     {
         LOG_ERROR("failed to create LightIndexListRWB")
     }
 
-    LOG_WARNING("ForwardPlus Initialized")
+    LOG_INFO("ForwardPlus Initialized")
 	m_isForwardPlusInitialized = true;
     m_frustumPass.SetEnable(true);
 }
@@ -208,8 +209,8 @@ void Renderer::InitilializeForwardPlus(Camera* camera)
 
 bool Renderer::CreateLightGridRWB()
 {
-    ID3D11Texture2D* texture2D1 = nullptr;
-    ID3D11Texture2D* texture2D2 = nullptr;
+    ComPtr<ID3D11Texture2D> texture2D1 = nullptr;
+    ComPtr<ID3D11Texture2D> texture2D2 = nullptr;
 
     D3D11_TEXTURE2D_DESC textureDesc;
     ZeroMemory(&textureDesc, sizeof(D3D11_TEXTURE2D_DESC));
@@ -225,11 +226,11 @@ bool Renderer::CreateLightGridRWB()
     textureDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ | D3D11_CPU_ACCESS_WRITE;
     textureDesc.MiscFlags = 0;
 
-    HRESULT hr = D3D11Core::Get().Device()->CreateTexture2D(&textureDesc, nullptr, &texture2D1);
+    HRESULT hr = D3D11Core::Get().Device()->CreateTexture2D(&textureDesc, nullptr, texture2D1.GetAddressOf());
     if (FAILED(hr))
         return false;
 
-    hr = D3D11Core::Get().Device()->CreateTexture2D(&textureDesc, nullptr, &texture2D2);
+    hr = D3D11Core::Get().Device()->CreateTexture2D(&textureDesc, nullptr, texture2D2.GetAddressOf());
     if (FAILED(hr))
         return false;
 
@@ -247,30 +248,37 @@ bool Renderer::CreateLightGridRWB()
     srvDesc.Texture2D.MostDetailedMip = 0;
     srvDesc.Texture2D.MipLevels = textureDesc.MipLevels;
 
-    hr = D3D11Core::Get().Device()->CreateUnorderedAccessView(texture2D1, &uavDesc, m_pipelineManager.opaq_LightGrid.uav.GetAddressOf());
+    hr = D3D11Core::Get().Device()->CreateUnorderedAccessView(texture2D1.Get(), &uavDesc, m_pipelineManager.opaq_LightGrid.uav.GetAddressOf());
     if (FAILED(hr))
         return false;
 
-    hr = D3D11Core::Get().Device()->CreateUnorderedAccessView(texture2D2, &uavDesc, m_pipelineManager.trans_LightGrid.uav.GetAddressOf());
+    hr = D3D11Core::Get().Device()->CreateUnorderedAccessView(texture2D2.Get(), &uavDesc, m_pipelineManager.trans_LightGrid.uav.GetAddressOf());
     if (FAILED(hr))
         return false;
 
-    hr = D3D11Core::Get().Device()->CreateShaderResourceView(texture2D1, &srvDesc, m_pipelineManager.opaq_LightGrid.srv.GetAddressOf());
+    hr = D3D11Core::Get().Device()->CreateShaderResourceView(texture2D1.Get(), &srvDesc, m_pipelineManager.opaq_LightGrid.srv.GetAddressOf());
     if (FAILED(hr))
         return false;
 
-    hr = D3D11Core::Get().Device()->CreateShaderResourceView(texture2D1, &srvDesc, m_pipelineManager.trans_LightGrid.srv.GetAddressOf());
+    hr = D3D11Core::Get().Device()->CreateShaderResourceView(texture2D1.Get(), &srvDesc, m_pipelineManager.trans_LightGrid.srv.GetAddressOf());
     if (FAILED(hr))
         return false;
-
-    texture2D1->Release();
-    texture2D2->Release();
 
     return !FAILED(hr);
 }
 
 bool Renderer::CreateLightIndexListRWB(const uint32_t& COUNT)
 {
+    // Size of the light index list: for a screen resolution of 1280×720 and
+    // a tile size of 16×16 results in a 80×45 (3, 600) light grid.
+    // Assuming an average of 100 lights per tile,
+    // this would require a light index list of 360,000 indices.
+    // Each light index cost 4 bytes (for a 32 - bit unsigned integer)
+    // so the light list would consume 1.44 MB of GPU memory. Since we
+    // need two lists, one for opaque and one for transparent, the memory
+    // usage will double.
+    
+    // Size of the light index list:
     const uint32_t SIZE = COUNT * m_pipelineManager.AVERAGE_OVERLAPPING_LIGHTS_PER_TILE;
 
     m_pipelineManager.opaq_LightIndexList_data.clear();

@@ -310,8 +310,8 @@ static struct GridProperties_t
 ALIGN16
 struct dispatch_params_t
 {
-	DirectX::XMUINT3 numThreadGroups;
-	DirectX::XMUINT3 numThreads;
+	DirectX::XMUINT4 numThreadGroups;
+	DirectX::XMUINT4 numThreads;
 };
 
 ALIGN16
