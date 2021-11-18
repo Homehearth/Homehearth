@@ -10,8 +10,18 @@ BT::InRangeCBT::InRangeCBT(const std::string& name, Entity entity)
 BT::NodeStatus BT::InRangeCBT::Tick()
 {
 	comp::Transform* transform = entity.GetComponent<comp::Transform>();
-	comp::AttackAbility* attackAbility = entity.GetComponent<comp::AttackAbility>();
+	comp::MeleeAttackAbility* attackMAbility = entity.GetComponent<comp::MeleeAttackAbility>();
+	comp::RangeAttackAbility* attackRAbility = entity.GetComponent<comp::RangeAttackAbility>();
 	Entity* target = Blackboard::Get().GetValue<Entity>("target" + std::to_string(entity));
+	comp::IAbility* attackAbility = nullptr;
+	if(attackMAbility)
+	{
+		attackAbility = attackMAbility;
+	}
+	else if(attackRAbility)
+	{
+		attackAbility = attackRAbility;
+	}
 
 	if(transform == nullptr || attackAbility == nullptr)
 	{

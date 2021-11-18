@@ -41,8 +41,7 @@ struct Vector2I
 {
 	int x = 0, y = 0;
 
-	Vector2I(int&& x, int&& y) :x(x), y(y) {};
-	Vector2I(int& x, int& y) :y(y), x(x) {};
+	Vector2I(int x, int y) :y(y), x(x) {};
 
 	Vector2I() = default;
 
@@ -50,14 +49,29 @@ struct Vector2I
 	{
 		return (x == other.x && y == other.y);
 	}
-
-	Vector2I& operator+(const Vector2I& other)
+	Vector2I operator+(const Vector2I& other)
+	{
+		return Vector2I(this->x + other.x, this->y + other.y);
+	}
+	Vector2I& operator+=(const Vector2I& other)
 	{
 		this->x += other.x;
 		this->y += other.y;
 
 		return *this;
 	}
+	Vector2I operator-(const Vector2I& other)
+	{
+ 		return Vector2I(this->x - other.x, this->y - other.y);
+	}
+	Vector2I& operator-=(const Vector2I& other)
+	{
+		this->x -= other.x;
+		this->y -= other.y;
+
+		return *this;
+	}
+
 };
 
 struct Plane_t
@@ -315,11 +329,62 @@ struct Node
 	std::vector<Node*> connections;
 	Node* parent = nullptr;
 	bool reachable = true;
+	bool defencePlaced = false;
 	Node(Vector2I id) : id(id) {};
 
 	void ResetFGH()
 	{
 		f = FLT_MAX, g = FLT_MAX, h = FLT_MAX;
+	}
+	bool RemoveConnection(Node* connection)
+	{
+		for (int i = 0; i < connections.size(); i++)
+		{
+			if (connections[i] == connection)
+			{
+				connections.erase(connections.begin() + i);
+				return true;
+			}
+		}
+		return false;
+
+	}
+	bool RemoveConnection(size_t index)
+	{
+		if (index < connections.size())
+		{
+			connections.erase(connections.begin() + index);
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+
+	std::vector<Node*> GetDiagonalConnections()
+	{
+		std::vector<Node*> DiagConnections;
+		for (Node* connection : connections)
+		{
+			if (abs(connection->id.x - this->id.x) == 1 && abs(connection->id.y - this->id.y) == 1)
+			{
+				DiagConnections.push_back(connection);
+			}
+		}
+		return DiagConnections;
+	}
+	std::vector<Node*> GetAdjacentConnections()
+	{
+		std::vector<Node*> AdjConnections;
+		for (Node* connection : connections)
+		{
+			if (connection->id.x == this->id.x || connection->id.y == this->id.y)
+			{
+				AdjConnections.push_back(connection);
+			}
+		}
+		return AdjConnections;
 	}
 	bool ConnectionAlreadyExists(Node* other)
 	{

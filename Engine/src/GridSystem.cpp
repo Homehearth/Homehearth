@@ -66,26 +66,26 @@ void GridSystem::Initialize(Vector2I mapSize, sm::Vector3 position, std::string 
 			sm::Vector3 tilePosition = { tileSize.x * row + m_tileHalfWidth, 0.f , (tileSize.y * -col) - m_tileHalfWidth };
 
 			Tile tileTemp;
-			tileTemp.gridID		= { col, row };
-			tileTemp.halfWidth	= m_tileHalfWidth;
-			tileTemp.type		= tileTypeTemp;
-			tileTemp.position	= tilePosition;
+			tileTemp.gridID = { col, row };
+			tileTemp.halfWidth = m_tileHalfWidth;
+			tileTemp.type = tileTypeTemp;
+			tileTemp.position = tilePosition;
 
 			if (rowTilesTemp.size() < m_gridSize.x)
 				rowTilesTemp.push_back(tileTemp);
-			
+
 			if (rowTilesTemp.size() >= m_gridSize.x)
 				m_tiles.push_back(rowTilesTemp);
 
 #if RENDER_GRID
-			if(tileTemp.type == TileType::DEFAULT || tileTemp.type == TileType::EMPTY)
+			if (tileTemp.type == TileType::DEFAULT || tileTemp.type == TileType::EMPTY)
 			{
 				Entity tileEntity = m_scene->CreateEntity();
 				comp::Transform* transform = tileEntity.AddComponent<comp::Transform>();
 				tileEntity.AddComponent<comp::Network>();
 
 				transform->position = tileTemp.position;
-				
+
 				tileEntity.AddComponent<comp::MeshName>()->name = "Cube.obj";
 			}
 
@@ -178,8 +178,8 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 								tileOccupied = true;
 							}
 						}
-						if (!tileOccupied && 
-							sm::Vector3::Distance(tile.position, localPlayer) < MAX_RADIUS && 
+						if (!tileOccupied &&
+							sm::Vector3::Distance(tile.position, localPlayer) < MAX_RADIUS &&
 							sm::Vector3::Distance(tile.position, localPlayer) > MIN_RADIUS)
 						{
 							m_tiles[row][col].type = TileType::DEFENCE;
@@ -194,27 +194,45 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 							tileEntity.AddComponent<comp::Tag<TagType::STATIC>>();
 							tileEntity.AddComponent<comp::MeshName>()->name = "Defence.obj";
 							tileEntity.AddComponent<comp::Network>();
-
-							aiHandler->GetNodeByID(Vector2I(row, col))->reachable = false;
-							aiHandler->GetNodeByID(Vector2I(row, col))->connections.clear();
-
-							return true;
+							Node* node = aiHandler->GetNodeByID(Vector2I(row, col));
+							node->defencePlaced = true;
+							//Check if connections need to be severed
+							std::vector<Node*> diagNeighbors = node->GetDiagonalConnections();
+							for (Node* diagNeighbor : diagNeighbors)
+							{
+								if (diagNeighbor->defencePlaced || !diagNeighbor->reachable)
+								{
+									Vector2I difference = node->id - diagNeighbor->id;
+									Node* connectionRemovalNode1 = aiHandler->GetNodeByID(Vector2I(diagNeighbor->id.x + difference.x, diagNeighbor->id.y));
+									Node* connectionRemovalNode2 = aiHandler->GetNodeByID(Vector2I(diagNeighbor->id.x, diagNeighbor->id.y + difference.y));
+									if (!connectionRemovalNode1->RemoveConnection(connectionRemovalNode2))
+									{
+										LOG_INFO("Failed to remove connection1");
+									}
+									if (!connectionRemovalNode2->RemoveConnection(connectionRemovalNode1))
+									{
+										LOG_INFO("Failed to remove connection2");
+									}
+								}
+							}
+							if (!aiHandler->PlayerAStar(localPlayer))
+							{
+								m_scene->ForEachComponent<comp::Player, comp::Network>([&](comp::Player& p, comp::Network& net)
+									{
+										if (net.id == playerWhoPressedMouse)
+										{
+											p.reachable = false;
+										}
+									});
+							}
 						}
 					}
-					//else if (tile.type == TileType::BUILDING || tile.type == TileType::UNPLACABLE || tile.type == TileType::DEFAULT)
-					//{
-					//	LOG_INFO("You cant place here!");
-					//}
-					//else if (tile.type == TileType::DEFENCE)
-					//{
-					//	LOG_INFO("Theres already a defence here!");
-					//}
 				}
 			}
 		}
 	}
 
-	return false;
+	return true;
 }
 
 uint32_t GridSystem::GetTileCount() const
