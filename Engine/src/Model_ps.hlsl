@@ -39,17 +39,12 @@ float4 main(PixelIn input) : SV_TARGET
     float3 lightCol = float3(0.f, 0.f, 0.f);
 
     // Get the index of the current pixel in the light grid.
-	uint2 tileIndex = uint2(floor(input.pos.xy / (TILE_SIZE)));
+	const uint2 tileIndex = uint2(floor(input.pos.xy / (TILE_SIZE)));
 
     // Get the start position and offset of the light in the light index list.
-	uint startOffset = LightGrid[tileIndex].x;
-	uint lightCount = LightGrid[tileIndex].y;
-	
-	//for each < lightCount
-	//     uint lightIndex = LightIndexList[startOffset + i];
-	//     Light light = sb_Lights[lightIndex];
-	
-
+	const uint startOffset = LightGrid[tileIndex].x;
+	const uint lightCount = LightGrid[tileIndex].y;
+    
     //for (int i = 0; i < c_info.x; i++)
     for (int i = 0; i < lightCount; i++)
     {
