@@ -46,33 +46,30 @@ bool PathFinderManager::IsInVector(std::vector<Node*> vector, Node* node)
 std::vector<Node*> PathFinderManager::GetNeighbors(GridSystem* grid, Tile* baseNode)
 {
 	std::vector<Node*> neighbors;
-	if ((baseNode->type == TileType::DEFAULT || baseNode->type == TileType::EMPTY))
+
+	Tile* currentTile = nullptr;
+
+	for (int newX = -1; newX <= 1; newX++)
 	{
-		Tile* currentTile = nullptr;
-
-		for (int newX = -1; newX <= 1; newX++)
+		for (int newY = -1; newY <= 1; newY++)
 		{
-			for (int newY = -1; newY <= 1; newY++)
+			if (baseNode->gridID.x + newX >= grid->GetGridSize().x || baseNode->gridID.y + newY >= grid->GetGridSize().y
+				|| baseNode->gridID.x + newX < 0 || baseNode->gridID.y + newY < 0)
+				continue;
+
+			if (newX == 0 && newY == 0)
 			{
-				if (baseNode->gridID.x + newX >= grid->GetGridSize().x || baseNode->gridID.y + newY >= grid->GetGridSize().y
-					|| baseNode->gridID.x + newX < 0 || baseNode->gridID.y + newY < 0)
-					continue;
-
-				if (newX == 0 && newY == 0)
-				{
-					continue;
-				}
-
-				currentTile = grid->GetTile(Vector2I(baseNode->gridID.x + newX, baseNode->gridID.y + newY));
-
-				if (currentTile->type == TileType::DEFAULT || currentTile->type == TileType::EMPTY)
-				{
-					neighbors.push_back(AddNode(currentTile->gridID));
-				}
-
+				continue;
 			}
+
+			currentTile = grid->GetTile(Vector2I(baseNode->gridID.x + newX, baseNode->gridID.y + newY));
+
+			neighbors.push_back(AddNode(currentTile->gridID));
+
+
 		}
 	}
+
 	return neighbors;
 }
 
@@ -138,14 +135,13 @@ void PathFinderManager::CreateNodes(GridSystem* grid)
 			{
 				currentNode->reachable = false;
 			}
-			else
+
+			std::vector<Node*> neighbors = GetNeighbors(grid, tile);
+			for (auto neighbor : neighbors)
 			{
-				std::vector<Node*> neighbors = GetNeighbors(grid, tile);
-				for (auto neighbor : neighbors)
-				{
-					m_nodes[j][i]->connections.push_back(neighbor);
-				}
+				m_nodes[j][i]->connections.push_back(neighbor);
 			}
+
 
 
 		}
@@ -298,7 +294,6 @@ bool PathFinderManager::PlayerAStar(sm::Vector3 playerPos)
 				node->ResetFGH();
 				node->parent = nullptr;
 			}
-			LOG_INFO("A* end");
 			return true;
 		}
 

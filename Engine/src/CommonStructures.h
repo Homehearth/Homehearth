@@ -49,7 +49,7 @@ struct Vector2I
 	{
 		return (x == other.x && y == other.y);
 	}
-	Vector2I& operator+(const Vector2I& other)
+	Vector2I operator+(const Vector2I& other)
 	{
 		return Vector2I(this->x + other.x, this->y + other.y);
 	}
@@ -60,7 +60,7 @@ struct Vector2I
 
 		return *this;
 	}
-	Vector2I& operator-(const Vector2I& other)
+	Vector2I operator-(const Vector2I& other)
 	{
  		return Vector2I(this->x - other.x, this->y - other.y);
 	}

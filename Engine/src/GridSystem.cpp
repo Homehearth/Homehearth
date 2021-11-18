@@ -200,7 +200,7 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 							std::vector<Node*> diagNeighbors = node->GetDiagonalConnections();
 							for (Node* diagNeighbor : diagNeighbors)
 							{
-								if (diagNeighbor->defencePlaced)
+								if (diagNeighbor->defencePlaced || !diagNeighbor->reachable)
 								{
 									Vector2I difference = node->id - diagNeighbor->id;
 									Node* connectionRemovalNode1 = aiHandler->GetNodeByID(Vector2I(diagNeighbor->id.x + difference.x, diagNeighbor->id.y));
