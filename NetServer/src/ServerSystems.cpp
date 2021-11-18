@@ -23,15 +23,14 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 	comp::Health* health = entity.AddComponent<comp::Health>();
 	comp::MeshName* meshName = entity.AddComponent<comp::MeshName>();
 	comp::AnimatorName* animatorName = entity.AddComponent<comp::AnimatorName>();
-	//comp::BoundingOrientedBox* obb = entity.AddComponent<comp::BoundingOrientedBox>();
 	comp::BoundingSphere* bos = entity.AddComponent<comp::BoundingSphere>();
 	comp::Velocity* velocity = entity.AddComponent<comp::Velocity>();
-	comp::AttackAbility* attackAbility = entity.AddComponent<comp::AttackAbility>();
 	comp::BehaviorTree* behaviorTree = entity.AddComponent<comp::BehaviorTree>();
 	switch (type)
 	{
 	case EnemyType::Default:
 		{
+			comp::MeleeAttackAbility* attackAbility = entity.AddComponent<comp::MeleeAttackAbility>();
 			// ---DEFAULT ENEMY---
 			transform->position = spawnP;
 			//Generate float between 0.0 and 0.5 (give monster a slightly different height?)
@@ -46,17 +45,42 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 			npc->movementSpeed = 15.f;
 			attackAbility->cooldown = 1.0f;
 			attackAbility->attackDamage = 20.f;
-			attackAbility->lifetime = 0.3f;
-			attackAbility->isRanged = false;
-			attackAbility->attackRange = 7.0f;
+			attackAbility->lifetime = 5.0f;
+			attackAbility->attackRange = 7.f;
 			attackAbility->useTime = 0.3f;
 			attackAbility->delay = 0.2f;
 			attackAbility->movementSpeedAlt = 0.0f;
 			behaviorTree->root = AIBehaviors::GetSimpleAIBehavior(entity);
 		}
 		break;
+	case EnemyType::Mage:
+	{
+		comp::RangeAttackAbility* attackAbility = entity.AddComponent<comp::RangeAttackAbility>();
+		// ---DEFAULT ENEMY---
+		transform->position = spawnP;
+		//Generate float between 0.0 and 0.5 (give monster a slightly different height?)
+		float randomNum = static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (0.5)));
+
+		transform->scale = { 1.8f, 0.5f + randomNum, 1.8f };
+		meshName->name = "Monster.fbx";
+		entity.AddComponent<comp::AnimatorName>()->name = "Monster.anim";
+		bos->Radius = 3.f;
+
+		npc->movementSpeed = 15.f;
+		attackAbility->cooldown = 3.0f;
+		attackAbility->attackDamage = 20.f;
+		attackAbility->lifetime = 5.0f;
+		attackAbility->attackRange = 60.f;
+		attackAbility->useTime = 0.3f;
+		attackAbility->delay = 0.2f;
+		attackAbility->projectileSpeed = 50.f;
+		attackAbility->movementSpeedAlt = 0.0f;
+		behaviorTree->root = AIBehaviors::GetSimpleAIBehavior(entity);
+	}
+		break;
 	case EnemyType::Runner:
 		{
+		comp::MeleeAttackAbility* attackAbility = entity.AddComponent<comp::MeleeAttackAbility>();
 		// ---Fast Zombie ENEMY---
 		transform->position = spawnP;
 		transform->scale = { 1.8f, 3.f, 1.8f };
@@ -66,7 +90,6 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		attackAbility->cooldown = 1.0f;
 		attackAbility->attackDamage = 20.f;
 		attackAbility->lifetime = 0.3f;
-		attackAbility->isRanged = false;
 		attackAbility->attackRange = 7.0f;
 		attackAbility->useTime = 0.3f;
 		attackAbility->delay = 0.2f;
@@ -77,6 +100,7 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		break;
 	case EnemyType::BIGMOMMA:
 	{
+		comp::MeleeAttackAbility* attackAbility = entity.AddComponent<comp::MeleeAttackAbility>();
 		// ---BOSS ENEMY---
 		transform->position = spawnP;
 		transform->scale = { 3.8f, 6.f, 3.8f };
@@ -86,7 +110,6 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		attackAbility->cooldown = 1.0f;
 		attackAbility->attackDamage = 20.f;
 		attackAbility->lifetime = 0.3f;
-		attackAbility->isRanged = false;
 		attackAbility->attackRange = 20.0f;
 		attackAbility->useTime = 0.3f;
 		attackAbility->delay = 0.2f;
