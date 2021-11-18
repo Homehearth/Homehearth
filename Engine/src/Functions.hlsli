@@ -57,17 +57,3 @@ float4 ViewPosFromDepth(float depth, float2 texCoord)
     
     return viewSpacePosition;
 }
-
-float4 WorldPosFromDepth(float depth, float2 texCoord)
-{
-    float z = depth * 2.0 - 1.0;
-    
-    float4 clipSpacePos = float4(texCoord * 2.0 - 1.0, z, 1.0);
-    float4 viewSpacePosition = mul(c_inverseProjection, clipSpacePos);
-    
-    viewSpacePosition /= viewSpacePosition.w;
-    
-    float4 worldPos = mul(c_inverseView, viewSpacePosition);
-    
-    return worldPos;
-}
