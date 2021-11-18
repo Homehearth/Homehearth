@@ -12,12 +12,14 @@
 class IRenderPass
 {
 private:
-	ID3D11DeviceContext* m_contextDevice = nullptr;
-	PipelineManager* m_pipelineManager = nullptr;
 	bool m_isEnable = false;
 
 protected:
 	Lights* m_lights;
+
+	ID3D11DeviceContext* m_contextDevice = nullptr;
+	PipelineManager* m_pipelineManager = nullptr;
+
 public:
 	virtual ~IRenderPass() = default;
 

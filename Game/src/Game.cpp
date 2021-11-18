@@ -93,7 +93,8 @@ bool Game::OnStartup()
 
 	Entity emitter3 = GetScene("Game").CreateEntity();
 	emitter3.AddComponent<comp::Transform>()->position = { 250,5,-300 };
-	comp::EmitterParticle* e3 = emitter3.AddComponent <comp::EmitterParticle>("thisisfine.png", 20, PARTICLEMODE::SPARKLES);
+	comp::EmitterParticle* e3 = emitter3.AddComponent <comp::EmitterParticle>("thisisfine.png", 20, PARTICLEMODE::RAIN);
+
 
 	return true;
 }
@@ -259,6 +260,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			{
 				LOG_INFO("A remote player added!");
 				m_players[e.GetComponent<comp::Network>()->id] = e;
+
 			}
 
 		}
@@ -591,6 +593,7 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 				comp::Player p;
 				msg >> p;
 				e.AddComponent<comp::Player>(p);
+
 				break;
 			}
 			default:

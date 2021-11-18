@@ -13,5 +13,5 @@ float4 main(PixelParticleIn input) : SV_TARGET
     finalColor = finalColor * input.color.rgb;
     
         
-    return float4(finalColor, (opacity * 2.5));
+    return float4(finalColor, (opacity));
 }

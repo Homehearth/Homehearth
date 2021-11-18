@@ -53,11 +53,18 @@ cbuffer IsCollidingCB : register(b5)
     int c_colliding;
 }
 
+cbuffer ParticleUpdate : register(b8)
+{
+    float4 emitterPosition;
+    float deltaTime;
+}
+
 cbuffer DecalInfoCB : register(b10)
 {
     float4 infoData = float4(0.0f, 0.0f, 0.0f, 0.0f);
 	float4x4 decal_projection;
 }
+
 
 
 //---------------------------------------------------------------------------
@@ -93,7 +100,7 @@ StructuredBuffer<Light> sb_lights : register(t10);
 StructuredBuffer<float4x4> sb_decaldata : register(t16);
 StructuredBuffer<VertexParticleIn> particlesSRV : register(t17);
 
-RWStructuredBuffer<VertexParticleIn> particlesUAV : register(u0);
+RWStructuredBuffer<VertexParticleIn> particlesUAV : register(u7);
 
 
 // Forward+

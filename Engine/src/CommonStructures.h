@@ -24,7 +24,8 @@ enum class PARTICLEMODE : UINT
 	WATERSPLASH,
 	SMOKE,
 	SPARKLES,
-	RAIN
+	RAIN,
+	DUST
 };
 
 struct Vector2I
@@ -307,10 +308,9 @@ ALIGN16
 struct Particle_t
 {
 	sm::Vector4		position;
-	sm::Vector4		startPosition;
 	sm::Vector4		color;
 
 	sm::Vector2		size;
 	PARTICLEMODE	type = PARTICLEMODE::SPARKLES;
-	float			padding = 0;
+	float			paddning;
 };

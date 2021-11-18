@@ -48,14 +48,14 @@ void WaterSplashSimmulation(inout VertexParticleIn particle)
 
 void SmokeSimmulation(inout VertexParticleIn particle)
 {
-    float raise = 0.05;
+    float raise = 5 * deltaTime;
     
     particle.pos.y += raise;
     particle.size += 0.01;
     
-    if (particle.pos.y >= 50) //Reset
+    if (particle.pos.y >= emitterPosition.y + 50) //Reset
     {
-        particle.pos = particle.startPos;
+        particle.pos = emitterPosition;
         particle.size = (1, 1);
 
     }
@@ -72,13 +72,13 @@ void SparklesSimmulation(inout VertexParticleIn particle)
 
 void RainSimmulation(inout VertexParticleIn particle)
 {
-    float raise = 0.05;
+    float raise = 5  * deltaTime;
     
     particle.pos.y -= raise;
     
     if (particle.pos.y == -10) //Reset
     {
-        particle.pos = particle.startPos;
+        particle.pos = emitterPosition;
 
     }
     
