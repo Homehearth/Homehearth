@@ -13,6 +13,11 @@ void rtd::MoneyUI::Update()
 		m_localMoney += 1;
 		m_text->SetText("Money: " + std::to_string(m_localMoney));
 	}
+	else if (m_localMoney > m_networkMoney)
+	{
+		m_localMoney -= 1;
+		m_text->SetText("Money: " + std::to_string(m_localMoney));
+	}
 
 }
 

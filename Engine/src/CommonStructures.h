@@ -231,7 +231,17 @@ enum class GameMsg : uint8_t
 	Game_AddNPC,
 	Game_RemoveNPC,
 	Game_PlayerInput,
-	Game_Money
+	Game_Money,
+	Game_UseShop
+};
+
+enum class ShopItem : uint8_t
+{
+	Primary_Upgrade,
+	Secondary_Upgrade,
+	Tower_Upgrade,
+
+	NR_OF
 };
 
 /*
