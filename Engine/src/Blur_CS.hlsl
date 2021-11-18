@@ -9,13 +9,17 @@ void main( uint3 DTid : SV_DispatchThreadID )
     //Box Blur
     if (c_blurType == 1)
     {
-        int upper = ((c_blurRadius - 1) / 2);
+        int upper = c_blurRadius;
         int lower = -upper;
+        int count = 0;
         for (int x = lower; x <= upper; x++)
             for (int y = lower; y <= upper; y++)
+            {
                 finalColor += t_bufferRead[DTid.xy + float2(x, y)];
+                count++;
+            }
     
-        finalColor /= (c_blurRadius * c_blurRadius);
+        finalColor /= count;
     }
     
     //Guassian Blur
