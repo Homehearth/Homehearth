@@ -154,7 +154,8 @@ void Simulation::CreateWaves()
 	Wave wave1, wave2, wave3, wave4, wave5; // Default: WaveType::Zone
 	{
 		Wave::Group group1;
-		group1.AddEnemy(EnemyType::Default,4 + 2 * currentRound);
+		group1.AddEnemy(EnemyType::Default,2 + 2 * currentRound);
+		group1.AddEnemy(EnemyType::Mage, 2 + 2 * currentRound);
 		group1.SetSpawnPoint({ 490.f, -150.0f });
 		wave1.SetTimeLimit(5 * currentRound);
 		wave1.AddGroup(group1);

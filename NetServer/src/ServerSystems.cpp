@@ -59,7 +59,7 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		//Generate float between 0.0 and 0.5 (give monster a slightly different height?)
 		float randomNum = static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (0.5)));
 
-		transform->scale = { 1.8f, 1.8f + randomNum, 1.8f };
+		transform->scale = { 1.8f, 0.5f + randomNum, 1.8f };
 		meshName->name = "Monster.fbx";
 		entity.AddComponent<comp::AnimatorName>()->name = "Monster.anim";
 		bos->Radius = 3.f;
