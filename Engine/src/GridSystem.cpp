@@ -66,26 +66,26 @@ void GridSystem::Initialize(Vector2I mapSize, sm::Vector3 position, std::string 
 			sm::Vector3 tilePosition = { tileSize.x * row + m_tileHalfWidth, 0.f , (tileSize.y * -col) - m_tileHalfWidth };
 
 			Tile tileTemp;
-			tileTemp.gridID		= { col, row };
-			tileTemp.halfWidth	= m_tileHalfWidth;
-			tileTemp.type		= tileTypeTemp;
-			tileTemp.position	= tilePosition;
+			tileTemp.gridID = { col, row };
+			tileTemp.halfWidth = m_tileHalfWidth;
+			tileTemp.type = tileTypeTemp;
+			tileTemp.position = tilePosition;
 
 			if (rowTilesTemp.size() < m_gridSize.x)
 				rowTilesTemp.push_back(tileTemp);
-			
+
 			if (rowTilesTemp.size() >= m_gridSize.x)
 				m_tiles.push_back(rowTilesTemp);
 
 #if RENDER_GRID
-			if(tileTemp.type == TileType::DEFAULT || tileTemp.type == TileType::EMPTY)
+			if (tileTemp.type == TileType::DEFAULT || tileTemp.type == TileType::EMPTY)
 			{
 				Entity tileEntity = m_scene->CreateEntity();
 				comp::Transform* transform = tileEntity.AddComponent<comp::Transform>();
 				tileEntity.AddComponent<comp::Network>();
 
 				transform->position = tileTemp.position;
-				
+
 				tileEntity.AddComponent<comp::MeshName>()->name = "Cube.obj";
 			}
 
@@ -127,25 +127,22 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 	bool tileFound = false;
 	bool canBuild = false;
 
-	sm::Vector3 localPlayer;
-	std::vector<sm::Vector3> entityPos;
+	dx::BoundingSphere localPlayer;
+	std::vector<dx::BoundingSphere> ePos;
 
 	// Save positions to calculate distances to the tile for players
-	m_scene->ForEachComponent<comp::Player, comp::Transform, comp::Network>([&](comp::Player& p, comp::Transform& t, comp::Network& net)
+	m_scene->ForEachComponent<comp::Player, comp::BoundingSphere, comp::Network>([&](comp::Player& p, comp::BoundingSphere& bs, comp::Network& net)
 		{
-			if (net.id != playerWhoPressedMouse)
+			if (net.id == playerWhoPressedMouse)
 			{
-				entityPos.push_back(t.position);
+				localPlayer = bs;
 			}
-			else
-			{
-				localPlayer = t.position;
-			}
+			ePos.push_back(bs);
 		});
 	// Do the same for all NPC entities
-	m_scene->ForEachComponent<comp::NPC, comp::Transform>([&](comp::NPC& p, comp::Transform& t)
+	m_scene->ForEachComponent<comp::NPC, comp::BoundingSphere>([&](comp::NPC& p, comp::BoundingSphere& bs)
 		{
-			entityPos.push_back(t.position);
+			ePos.push_back(bs);
 		});
 
 	if (mouseRay.Intersects(plane, &pos))
@@ -170,17 +167,20 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 					{
 						bool tileOccupied = false;
 						// Checking so the other entities doesnt occupy the tile
-						for (int i = 0; i < entityPos.size() && !tileOccupied; i++)
+						for (int i = 0; i < ePos.size() && !tileOccupied; i++)
 						{
-							// Is the entity occupying a tile?
-							if (entityPos[i].x > left && entityPos[i].x < right && entityPos[i].z < top && entityPos[i].z > bottom)
+							float closestX = max(left, min(ePos[i].Center.x, right));
+							float closestZ = max(bottom, min(ePos[i].Center.z, top));
+
+							sm::Vector3 pointToSphere = ePos[i].Center - sm::Vector3(closestX, 0.f, closestZ);
+							float distance = pointToSphere.Length();
+
+							if (distance < ePos[i].Radius)
 							{
 								tileOccupied = true;
 							}
 						}
-						if (!tileOccupied && 
-							sm::Vector3::Distance(tile.position, localPlayer) < MAX_RADIUS && 
-							sm::Vector3::Distance(tile.position, localPlayer) > MIN_RADIUS)
+						if (!tileOccupied && sm::Vector3::Distance(localPlayer.Center, tile.position) < 32.f)
 						{
 							m_tiles[row][col].type = TileType::DEFENCE;
 

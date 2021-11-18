@@ -5,6 +5,7 @@ House7.obj
 House8.obj
 House9.obj
 House10.obj
+Tree2.obj
 Tree3.obj
 Tree4.obj
 Tree5.obj
