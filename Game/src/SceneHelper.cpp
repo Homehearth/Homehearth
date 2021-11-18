@@ -315,17 +315,17 @@ namespace sceneHelp
 		scene.Add2DCollection(money, "MoneyUI");
 
 		Collection2D* abilities = new Collection2D;
-		rtd::AbilityUI* primary = abilities->AddElement<rtd::AbilityUI>(draw_t(width - width / 16.0f, height - height / 4.0f, width / 16.0f, height / 9.0f), D2D1::ColorF(0.0f, 1.0f), "UI_sword.png");
+		rtd::AbilityUI* primary = abilities->AddElement<rtd::AbilityUI>(draw_t(width - width / 16.0f, height - height / 4.0f, width / 16.0f, height / 9.0f), D2D1::ColorF(0, 1.0f), "UI_sword.png");
 		primary->SetActivateButton("LMB");
-		rtd::AbilityUI* secondary = abilities->AddElement<rtd::AbilityUI>(draw_t(width - width / 8.0f, height - height / 9.0f, width / 16.0f, height / 9.0f), D2D1::ColorF(0.0f, 1.0f), "UI_sword.png");
+		rtd::AbilityUI* secondary = abilities->AddElement<rtd::AbilityUI>(draw_t(width - width / 8.0f, height - height / 9.0f, width / 16.0f, height / 9.0f), D2D1::ColorF(0, 1.0f), "UI_sword.png");
 		secondary->SetActivateButton("RMB");
-		rtd::AbilityUI* third = abilities->AddElement<rtd::AbilityUI>(draw_t((width / 2.f) - ((width / 16.0f) * 2.0f), height - height / 12.0f, width / 16.0f, height / 12.0f), D2D1::ColorF(0.0f, 1.0f), "slashAbilityDemo.png");
+		rtd::AbilityUI* third = abilities->AddElement<rtd::AbilityUI>(draw_t((width / 2.f) - ((width / 16.0f) * 2.0f), height - height / 12.0f, width / 16.0f, height / 12.0f), D2D1::ColorF(0, 1.0f), "slashAbilityDemo.png");
 		third->SetActivateButton("Q");
-		rtd::AbilityUI* fourth = abilities->AddElement<rtd::AbilityUI>(draw_t((width / 2.f) - ((width / 16.0f)), height - height / 12.0f, width / 16.0f, height / 12.0f), D2D1::ColorF(0.0f, 1.0f), "someRandomAbilityIdkDemo.png");
+		rtd::AbilityUI* fourth = abilities->AddElement<rtd::AbilityUI>(draw_t((width / 2.f) - ((width / 16.0f)), height - height / 12.0f, width / 16.0f, height / 12.0f), D2D1::ColorF(0, 1.0f), "someRandomAbilityIdkDemo.png");
 		fourth->SetActivateButton("E");
 		rtd::AbilityUI* fifth = abilities->AddElement<rtd::AbilityUI>(draw_t((width / 2.f), height - height / 12.0f, width / 16.0f, height / 12.0f), D2D1::ColorF(0.0f, 1.0f), "healAbilityDemo.png");
 		fifth->SetActivateButton("R");
-		rtd::AbilityUI* sixth = abilities->AddElement<rtd::AbilityUI>(draw_t((width / 2.f) + ((width / 16.0f)), height - height / 12.0f, width / 16.0f, height / 12.0f), D2D1::ColorF(0.0f, 1.0f), "slashAbilityDemo.png");
+		rtd::AbilityUI* sixth = abilities->AddElement<rtd::AbilityUI>(draw_t((width / 2.f) + ((width / 16.0f)), height - height / 12.0f, width / 16.0f, height / 12.0f), D2D1::ColorF(0, 1.0f), "slashAbilityDemo.png");
 		sixth->SetActivateButton("C");
 		scene.Add2DCollection(abilities, "AbilityUI");
 	}
