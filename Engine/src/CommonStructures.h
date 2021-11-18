@@ -3,6 +3,26 @@
 constexpr int MAX_PLAYERS_PER_LOBBY = 4;
 constexpr int MAX_HEALTH = 100;
 
+struct Currency
+{
+private:
+	uint32_t m_amount = 0;
+
+public:
+	uint32_t GetAmount()const
+	{
+		return m_amount;
+	}
+	uint32_t& GetAmountRef()
+	{
+		return m_amount;
+	}
+	void Zero()
+	{
+		m_amount = 0;
+	}
+};
+
 struct MinMaxProj_t
 {
 	float minProj;
@@ -32,8 +52,7 @@ struct Vector2I
 {
 	int x = 0, y = 0;
 
-	Vector2I(int&& x, int&& y) :x(x), y(y) {};
-	Vector2I(int& x, int& y) :y(y), x(x) {};
+	Vector2I(int x, int y) :y(y), x(x) {};
 
 	Vector2I() = default;
 
@@ -41,14 +60,29 @@ struct Vector2I
 	{
 		return (x == other.x && y == other.y);
 	}
-
-	Vector2I& operator+(const Vector2I& other)
+	Vector2I operator+(const Vector2I& other)
+	{
+		return Vector2I(this->x + other.x, this->y + other.y);
+	}
+	Vector2I& operator+=(const Vector2I& other)
 	{
 		this->x += other.x;
 		this->y += other.y;
 
-		return *this;	
+		return *this;
 	}
+	Vector2I operator-(const Vector2I& other)
+	{
+ 		return Vector2I(this->x - other.x, this->y - other.y);
+	}
+	Vector2I& operator-=(const Vector2I& other)
+	{
+		this->x -= other.x;
+		this->y -= other.y;
+
+		return *this;
+	}
+
 };
 
 struct Plane_t
@@ -77,7 +111,25 @@ struct Ray_t
 		}
 		return true;
 	}
-	
+
+	bool Intersects(const dx::BoundingSphere& sphere)
+	{
+		const sm::Vector3 centerToRay = this->origin - sphere.Center;
+
+		//Parameterization to use for the quadtratic formula.
+		const float a = this->dir.Dot(this->dir);
+		const float b = 2.0f * centerToRay.Dot(this->dir);
+		const float c = centerToRay.Dot(centerToRay) - sphere.Radius * sphere.Radius;
+
+		const float discriminant = b * b - 4.0f * a * c;
+
+		//discriminant < 0 the ray does not intersect sphere.
+		//discriminant = 0 the ray touches the sphere in one point
+		//discriminant > 0 the ray touches the sphere in two points
+
+		return discriminant > 0.0f;
+	}
+
 	bool Intersects(const dx::BoundingOrientedBox& boxCollider)
 	{
 
@@ -166,6 +218,7 @@ struct InputState
 	int axisVertical : 2;
 	bool leftMouse : 1;
 	bool rightMouse : 1;
+	bool key_b : 1;
 
 	Ray_t mouseRay;
 
@@ -198,10 +251,12 @@ enum class GameMsg : uint8_t
 	Game_BackToLobby,
 	Game_WaveTimer,
 
+	Game_ClassSelected,
 	Game_PlayerAttack,
 	Game_AddNPC,
 	Game_RemoveNPC,
-	Game_PlayerInput
+	Game_PlayerInput,
+	Game_Money
 };
 
 /*
@@ -285,11 +340,62 @@ struct Node
 	std::vector<Node*> connections;
 	Node* parent = nullptr;
 	bool reachable = true;
+	bool defencePlaced = false;
 	Node(Vector2I id) : id(id) {};
 
 	void ResetFGH()
 	{
 		f = FLT_MAX, g = FLT_MAX, h = FLT_MAX;
+	}
+	bool RemoveConnection(Node* connection)
+	{
+		for (int i = 0; i < connections.size(); i++)
+		{
+			if (connections[i] == connection)
+			{
+				connections.erase(connections.begin() + i);
+				return true;
+			}
+		}
+		return false;
+
+	}
+	bool RemoveConnection(size_t index)
+	{
+		if (index < connections.size())
+		{
+			connections.erase(connections.begin() + index);
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+
+	std::vector<Node*> GetDiagonalConnections()
+	{
+		std::vector<Node*> DiagConnections;
+		for (Node* connection : connections)
+		{
+			if (abs(connection->id.x - this->id.x) == 1 && abs(connection->id.y - this->id.y) == 1)
+			{
+				DiagConnections.push_back(connection);
+			}
+		}
+		return DiagConnections;
+	}
+	std::vector<Node*> GetAdjacentConnections()
+	{
+		std::vector<Node*> AdjConnections;
+		for (Node* connection : connections)
+		{
+			if (connection->id.x == this->id.x || connection->id.y == this->id.y)
+			{
+				AdjConnections.push_back(connection);
+			}
+		}
+		return AdjConnections;
 	}
 	bool ConnectionAlreadyExists(Node* other)
 	{

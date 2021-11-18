@@ -9,7 +9,7 @@ BT::AttackCBT::AttackCBT(const std::string& name, Entity entity)
 
 BT::NodeStatus BT::AttackCBT::Tick()
 {
-	comp::CombatStats* stats = entity.GetComponent<comp::CombatStats>();
+	comp::AttackAbility* stats = entity.GetComponent<comp::AttackAbility>();
 	comp::Transform* transform = entity.GetComponent<comp::Transform>();
 	Entity* target = Blackboard::Get().GetValue<Entity>("target" + std::to_string(entity));
 
@@ -27,10 +27,9 @@ BT::NodeStatus BT::AttackCBT::Tick()
 	//Perform the attack?
 	PathFinderManager* aihandler = Blackboard::Get().GetAIHandler();
 
-	stats->targetDir = target->GetComponent<comp::Transform>()->position - transform->position;
-	stats->targetDir.Normalize();
+	stats->targetPoint = target->GetComponent<comp::Transform>()->position;
 
-	if (ecs::Use(stats))
+	if (ecs::UseAbility(stats))
 	{
 		// Enemy Attacked
 	};

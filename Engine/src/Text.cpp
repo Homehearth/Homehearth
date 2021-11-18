@@ -30,8 +30,7 @@ void rtd::Text::SetPosition(const float& x, const float& y)
     m_opts[0].x_pos = x;
     m_opts[0].y_pos = y;
 
-    if (!m_opts.IsSwapped())
-        m_opts.Swap();
+    m_opts.Swap();
 }
 
 const sm::Vector2 rtd::Text::GetPosition()
@@ -44,8 +43,7 @@ void rtd::Text::SetScale(float scale)
 {
     m_opts[0].scale = scale;
 
-    if (!m_opts.IsSwapped())
-        m_opts.Swap();
+    m_opts.Swap();
 }
 
 void rtd::Text::SetStretch(const float& x, const float& y)
@@ -53,8 +51,7 @@ void rtd::Text::SetStretch(const float& x, const float& y)
     m_opts[0].x_stretch = x;
     m_opts[0].y_stretch = y;
 
-    if (!m_opts.IsSwapped())
-        m_opts.Swap();
+    m_opts.Swap();
 }
 
 bool Text::SetFormat(const WCHAR* fontName, 

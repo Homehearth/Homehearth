@@ -5,6 +5,7 @@
 #include "AnimationPass.h"
 #include "PipelineManager.h"
 #include "DecalPass.h"
+#include "ShadowPass.h"
 #include "ParticlePass.h"
 #include "SkyboxPass.h"
 
@@ -23,6 +24,7 @@ private:
 	DecalPass		m_decalPass;
 	ParticlePass	m_particlePass;
 	SkyboxPass		m_skyPass;
+	ShadowPass		m_shadowPass;
 	unsigned int m_currentPass = 0;
 
 	// Update per frame related resources.
@@ -36,6 +38,7 @@ public:
 	virtual ~Renderer() = default;
 
 	void Initialize(Window* pWindow);
+	void Setup(BasicEngine<Scene>& engine);
 
 	void ClearFrame();
 

@@ -7,6 +7,7 @@ ServerGame::ServerGame()
 	:m_server(std::bind(&ServerGame::CheckIncoming, this, _1))
 {
 	m_nGameID = 0;
+	SetUpdateRate(60.f);
 }
 
 ServerGame::~ServerGame()
@@ -68,11 +69,9 @@ bool ServerGame::OnStartup()
 		LOG_ERROR("Failed to start server");
 		exit(0);
 	}
-
 	m_inputThread = std::thread(&ServerGame::InputThread, this);
-
-	LoadMapColliders("AllBounds.fbx");
-	//LoadMapColliders("MapBounds.obj");
+	
+	LoadMapColliders("VillageColliders.fbx");
 
 	return true;
 }
@@ -278,34 +277,18 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 
 		break;
 	}
-	case GameMsg::Game_AddNPC:
+	case GameMsg::Game_ClassSelected:
 	{
+		uint32_t playerID;
 		uint32_t gameID;
-		uint32_t npcID;
-		msg >> gameID >> npcID;
+		comp::Player::Class type;
+		msg >> gameID >> playerID >> type;
+
 		if (m_simulations.find(gameID) != m_simulations.end())
 		{
-			m_simulations.at(gameID)->AddNPC(npcID);
+			m_simulations.at(gameID)->GetPlayer(playerID)->GetComponent<comp::Player>()->classType = type;
 		}
-		else
-		{
-			LOG_WARNING("Invalid GameID input for AddNPC");
-		}
-		break;
-	}
-	case GameMsg::Game_RemoveNPC:
-	{
-		uint32_t gameID;
-		uint32_t npcID;
-		msg >> gameID >> npcID;
-		if (m_simulations.find(gameID) != m_simulations.end())
-		{
-			m_simulations.at(gameID)->RemoveNPC(npcID);
-		}
-		else
-		{
-			LOG_WARNING("Invalid GameID input for AddNPC");
-		}
+
 		break;
 	}
 	}
@@ -320,8 +303,6 @@ bool ServerGame::CreateSimulation(uint32_t playerID, const std::string& mainPlay
 
 		return false;
 	}
-	//TEMP
-	m_simulations[m_nGameID]->AddNPC(m_server.PopNextUniqueID());
 
 	m_nGameID++;
 

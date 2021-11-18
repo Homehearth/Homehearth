@@ -2,8 +2,8 @@
 #include "Skybox.h"
 #include <DDSTextureLoader.h>
 
-#define DC D3D11Core::Get().DeviceContext()
 #define DV D3D11Core::Get().Device()
+#define DCSB D3D11Core::Get().DeviceContext()
 
 bool Skybox::CreateVertIndBuffers()
 {
@@ -130,20 +130,18 @@ void Skybox::Render()
 {
 	UINT stride = sizeof(sm::Vector3);
 	UINT offset = 0;
-	DC->IASetVertexBuffers(0, 1, m_vertexBuffer.GetAddressOf(), &stride, &offset);
-	DC->IASetIndexBuffer(m_indexBuffer.Get(), DXGI_FORMAT_R16_UINT, offset);
+	DCSB->IASetVertexBuffers(0, 1, m_vertexBuffer.GetAddressOf(), &stride, &offset);
+	DCSB->IASetIndexBuffer(m_indexBuffer.Get(), DXGI_FORMAT_R16_UINT, offset);
 
-	/*
-	DC->PSSetShaderResources(96, 1, m_radianceSrv.GetAddressOf());
-	DC->PSSetShaderResources(97, 1, m_irradianceSrv.GetAddressOf());
-	DC->PSSetShaderResources(98, 1, m_skySrv.GetAddressOf());
-	DC->PSSetShaderResources(99, 1, &m_brdfLUT.get()->GetShaderView());
-	*/
+	DCSB->PSSetShaderResources(96, 1, m_radianceSrv.GetAddressOf());
+	DCSB->PSSetShaderResources(97, 1, m_irradianceSrv.GetAddressOf());
+	DCSB->PSSetShaderResources(98, 1, m_skySrv.GetAddressOf());
+	DCSB->PSSetShaderResources(99, 1, &m_brdfLUT.get()->GetShaderView());
 
-	DC->DrawIndexed(nrOfIndices, 0, 0);
+	DCSB->DrawIndexed(nrOfIndices, 0, 0);
 }
 
-void Skybox::Bind(ID3D11DeviceContext* dc = D3D11Core::Get().DeviceContext())
+void Skybox::Bind(ID3D11DeviceContext* dc = DCSB)
 {
 	dc->PSSetShaderResources(96, 1, m_radianceSrv.GetAddressOf());
 	dc->PSSetShaderResources(97, 1, m_irradianceSrv.GetAddressOf());
