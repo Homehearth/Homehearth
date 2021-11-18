@@ -6,13 +6,12 @@ loopable 		0
 anim 			TAKE_DAMAGE 		Knight_TakeDamage.fbx
 loopable		0
 anim			PLACE_DEFENCE		Knight_PlaceDefence.fbx
-tickSpeed		15
 loopable		0
 startAnim		IDLE
 
 
-blendstate 		IDLE			RUN					2.0
-blendstate 		RUN				IDLE				2.0
+blendstate 		IDLE			RUN					1.0
+blendstate 		RUN				IDLE				0.4
 
 
 blendstate		IDLE			PRIMARY_ATTACK		0.3

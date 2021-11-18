@@ -17,6 +17,7 @@ class RTexture : public resource::GResource
 private:
 	ETextureChannelType					m_format;
 	ComPtr<ID3D11ShaderResourceView>	m_shaderView;
+	ComPtr<ID3D11Texture2D>				m_texture2D;
 	bool StandardSetup(unsigned char* image, const UINT& width, const UINT& height);
 	bool GenerateMipMaps(unsigned char* image, const UINT& width, const UINT& height);
 
@@ -28,6 +29,7 @@ public:
 	// Inherited via GResource
 	virtual bool Create(const std::string& filename) override;
 	ID3D11ShaderResourceView*& GetShaderView();
+	ID3D11Texture2D*& GetTexture2D();
 };
 
 class RBitMap : public resource::GResource

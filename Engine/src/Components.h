@@ -14,7 +14,6 @@ namespace ecs
 		VELOCITY,
 		MESH_NAME,
 		ANIMATOR_NAME,
-		CHANGE_ANIMATION,
 		NAME_PLATE,
 		HEALTH,
 		BOUNDING_ORIENTED_BOX,
@@ -94,9 +93,9 @@ namespace ecs
 
 		struct NamePlate
 		{
-			std::string namePlate;
+			std::string namePlate = "";
 		};
-		
+
 		struct RenderableDebug
 		{
 			std::shared_ptr<RModel> 	model;

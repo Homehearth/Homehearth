@@ -15,7 +15,7 @@ struct lastKeys_t
 	UINT keys[3] = { 0,0,0 };
 };
 
-enum class EAnimationType
+enum class EAnimationType : uint32_t
 {
 	NONE,
 	IDLE,

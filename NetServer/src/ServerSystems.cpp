@@ -22,6 +22,7 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 	comp::Transform* transform = entity.AddComponent<comp::Transform>();
 	comp::Health* health = entity.AddComponent<comp::Health>();
 	comp::MeshName* meshName = entity.AddComponent<comp::MeshName>();
+	comp::AnimatorName* animatorName = entity.AddComponent<comp::AnimatorName>();
 	//comp::BoundingOrientedBox* obb = entity.AddComponent<comp::BoundingOrientedBox>();
 	comp::BoundingSphere* bos = entity.AddComponent<comp::BoundingSphere>();
 	comp::Velocity* velocity = entity.AddComponent<comp::Velocity>();
@@ -38,7 +39,8 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 
 			transform->scale = { 1.8f, 1.8f+randomNum, 1.8f };
 			meshName->name = "Monster.fbx";
-			entity.AddComponent<comp::AnimatorName>()->name = "Monster.anim";
+			animatorName->name = "Monster.anim";
+
 			bos->Radius = 3.f;
 
 			npc->movementSpeed = 15.f;
@@ -59,7 +61,7 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		transform->position = spawnP;
 		transform->scale = { 1.8f, 3.f, 1.8f };
 		meshName->name = "Monster.fbx";
-		entity.AddComponent<comp::AnimatorName>()->name = "Monster.anim";
+		animatorName->name = "Monster.anim";
 		bos->Radius = 3.f;
 		attackAbility->cooldown = 1.0f;
 		attackAbility->attackDamage = 20.f;
@@ -79,7 +81,7 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		transform->position = spawnP;
 		transform->scale = { 3.8f, 6.f, 3.8f };
 		meshName->name = "Monster.fbx";
-		entity.AddComponent<comp::AnimatorName>()->name = "Monster.anim";
+		animatorName->name = "Monster.anim";
 		bos->Radius = 3.f;
 		attackAbility->cooldown = 1.0f;
 		attackAbility->attackDamage = 20.f;
@@ -238,7 +240,7 @@ void ServerSystems::NextWaveConditions(Simulation* simulation, Timer& timer, int
 
 void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene& scene, float dt)
 {
-	scene.ForEachComponent<comp::Player, comp::Transform, comp::Velocity>([](comp::Player& p, comp::Transform& t, comp::Velocity& v)
+	scene.ForEachComponent<comp::Player, comp::Transform, comp::Velocity>([&](comp::Player& p, comp::Transform& t, comp::Velocity& v)
 		{
 			// update velocity
 			sm::Vector3 vel = sm::Vector3(static_cast<float>(p.lastInputState.axisHorizontal), 0, static_cast<float>(p.lastInputState.axisVertical));
@@ -251,13 +253,38 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 			vel = sm::Vector3::TransformNormal(vel, sm::Matrix::CreateRotationY(targetRotation));
 
 			if (vel.Length() > 0.01f)
+			{
 				p.state = comp::Player::State::WALK;
+			}
 
 			vel *= p.runSpeed;
 			v.vel = vel;
 		});
 
-	scene.ForEachComponent<comp::Player>([&](Entity e, comp::Player& p)
+	scene.ForEachComponent<comp::Player, comp::Network>([&](comp::Player& p, comp::Network& net)
+		{
+			switch (p.state)
+			{
+				case comp::Player::State::WALK:
+				{
+					message<GameMsg>msg;
+					msg.header.id = GameMsg::Game_ChangeAnimation;
+					msg << EAnimationType::RUN << net.id;
+					simulation->Broadcast(msg);
+					break;
+				}
+				case comp::Player::State::IDLE:
+				{
+					message<GameMsg>msg;
+					msg.header.id = GameMsg::Game_ChangeAnimation;
+					msg << EAnimationType::IDLE << net.id;
+					simulation->Broadcast(msg);
+					break;
+				}
+			}
+		});
+
+	scene.ForEachComponent<comp::Player, comp::Network>([&](Entity e, comp::Player& p, comp::Network& net)
 		{
 			// Do stuff based on input
 
@@ -279,6 +306,10 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 				{
 					LOG_INFO("Used primary");
 
+					message<GameMsg>msg;
+					msg.header.id = GameMsg::Game_ChangeAnimation;
+					msg << EAnimationType::PRIMARY_ATTACK << net.id;
+					simulation->Broadcast(msg);
 				}
 
 				// make sure movement alteration is not applied when using, because then its applied atomatically
@@ -289,17 +320,29 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 			}
 			else if (p.lastInputState.rightMouse) // was pressed
 			{
-				LOG_INFO("Pressed right");
 				if (ecs::UseAbility(e, p.secondaryAbilty, &p.mousePoint))
 				{
-
+					LOG_INFO("Used secondary");
+					message<GameMsg>msg;
+					msg.header.id = GameMsg::Game_ChangeAnimation;
+					msg << EAnimationType::SECONDARY_ATTACK << net.id;
+					simulation->Broadcast(msg);
 				}
 			}
 
 			//Place defence on grid
 			if (p.lastInputState.key_b && simulation->GetCurrency().GetAmount() >= 5)
+			{
 				if (simulation->GetGrid().PlaceDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, Blackboard::Get().GetAIHandler()))
+				{
 					simulation->GetCurrency().GetAmountRef() -= 5;
+
+					message<GameMsg>msg;
+					msg.header.id = GameMsg::Game_ChangeAnimation;
+					msg << EAnimationType::PLACE_DEFENCE << net.id;
+					simulation->Broadcast(msg);
+				}
+			}
 
 		});
 
@@ -322,6 +365,8 @@ void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& sce
 		{
 			if(!health.isAlive)
 			{
+				//CHANGE TO DEAD ANIMATION?
+
 				comp::Velocity* vel = e.GetComponent<comp::Velocity>();
 				if (vel)
 				{

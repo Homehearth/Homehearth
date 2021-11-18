@@ -427,6 +427,25 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		}
 		break;
 	}
+	case GameMsg::Game_ChangeAnimation:
+	{
+		uint32_t id;
+		EAnimationType animtype = EAnimationType::NONE;
+		msg >> id >> animtype;
+
+		if (m_gameEntities.find(id) != m_gameEntities.end())
+		{
+			comp::Animator* animComp = m_players.at(id).GetComponent<comp::Animator>();
+			if (animComp)
+			{
+				std::shared_ptr<RAnimator> anim = animComp->animator;
+				if (anim)
+				{
+					anim->ChangeAnimation(animtype);
+				}
+			}
+		}
+	}
 	}
 }
 void Game::PingServer()
@@ -584,18 +603,6 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 				}
 				break;
 			}
-			/*case ecs::Component::CHANGE_ANIMATION:
-			{
-				std::string animationName;
-				msg >> animationName;
-
-				std::shared_ptr<RAnimator> animator = e.GetComponent<comp::Animator>()->animator;
-				if (animator)
-				{
-					animator->ChangeAnimation(animationName);
-				}
-				break;
-			}*/
 			case ecs::Component::NAME_PLATE:
 			{
 				std::string name;

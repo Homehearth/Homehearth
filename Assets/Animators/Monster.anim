@@ -7,3 +7,13 @@ anim 			TAKE_DAMAGE 		Monster_TakeDamage.fbx
 loopable		0
 startAnim 		WALK
 
+blendstate 		IDLE			WALK				1.5
+blendstate 		WALK			IDLE				1.5
+
+
+blendstate		IDLE			PRIMARY_ATTACK		0
+blendstate		PRIMARY_ATTACK	IDLE				0
+
+
+blendstate		WALK			PRIMARY_ATTACK		0
+blendstate		PRIMARY_ATTACK	WALK				0

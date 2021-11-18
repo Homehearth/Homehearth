@@ -370,8 +370,10 @@ bool RAnimator::ChangeAnimation(const EAnimationType& type)
 {
 	bool swapSuccess = false;
 
+	//Check if animation exist
 	if (m_animations.find(type) != m_animations.end())
 	{ 
+		//Not in one of this states
 		if (m_nextType != type && m_currentType != type)
 		{
 			m_nextType = type;
