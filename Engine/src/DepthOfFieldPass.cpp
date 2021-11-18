@@ -15,7 +15,7 @@ bool DOFPass::Create()
 		return false;
 	}
 	
-	if (!m_blurPass.Create(BlurLevel::HIGH, BlurType::GUASSIAN))
+	if (!m_blurPass.Create(BlurLevel::MEDIUM, BlurType::GUASSIAN))
 		return false;
 
 	m_blurPass.Initialize(D3D11Core::Get().DeviceContext(), PM);

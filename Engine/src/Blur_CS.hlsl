@@ -41,7 +41,7 @@ void main( uint3 DTid : SV_DispatchThreadID )
         for (uint neg = c_blurRadius; neg > 0; neg--)
         {
             weight = (c_weights[neg / 4])[neg % 4];
-            finalColor += t_bufferRead[DTid.xy + (offset * pos)] * weight;
+            finalColor += t_bufferRead[DTid.xy - (offset * pos)] * weight;
         }
 
     }
