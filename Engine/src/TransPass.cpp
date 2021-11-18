@@ -22,8 +22,6 @@ void TransPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 	DC->PSSetShaderResources(17, 1, PM->trans_LightIndexList.srv.GetAddressOf());
 	DC->PSSetShaderResources(18, 1, PM->trans_LightGrid.srv.GetAddressOf());
 
-	// todo: locate memory leaks.
-
 	DC->OMSetRenderTargets(1, PM->m_backBuffer.GetAddressOf(), PM->m_depthStencilView.Get());
 	DC->OMSetDepthStencilState(PM->m_depthStencilStateLessEqual.Get(), 0);
 }

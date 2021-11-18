@@ -35,6 +35,6 @@ void OpaqPass::Render(Scene* pScene)
 void OpaqPass::PostRender(ID3D11DeviceContext* pDeviceContext)
 {
 	ID3D11ShaderResourceView* nullSRV[] = { nullptr };
-	DC->CSSetShaderResources(17, 1, nullSRV);
-	DC->CSSetShaderResources(18, 1, nullSRV);
+	DC->PSSetShaderResources(17, 1, nullSRV);
+	DC->PSSetShaderResources(18, 1, nullSRV);
 }

@@ -28,7 +28,7 @@ void Renderer::Initialize(Window* pWindow)
     m_frustumPass.SetEnable(true);
     m_cullingPass.SetEnable(true);
 	m_opaqPass.SetEnable(true);
-	m_transPass.SetEnable(true);
+	m_transPass.SetEnable(false);
 	m_decalPass.SetEnable(true);
 	m_skyPass.SetEnable(true);
 
