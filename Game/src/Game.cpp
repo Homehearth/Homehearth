@@ -79,17 +79,17 @@ bool Game::OnStartup()
 	SetScene("MainMenu");
 
 	Entity emitter = GetScene("Game").CreateEntity();
-	emitter.AddComponent<comp::Transform>()->position = {250,5,-340};
+	emitter.AddComponent<comp::Transform>()->position = {250, 5, -340};
 	comp::EmitterParticle* e = emitter.AddComponent <comp::EmitterParticle>("thisisfine.png", 10, PARTICLEMODE::SMOKE);
 
 
 	Entity emitter2 = GetScene("Game").CreateEntity();
-	emitter2.AddComponent<comp::Transform>()->position = { 250,5,-320 };
+	emitter2.AddComponent<comp::Transform>()->position = { 250, 5,- 320 };
 	comp::EmitterParticle* e2 = emitter2.AddComponent <comp::EmitterParticle>("thisisfine.png", 10, PARTICLEMODE::SPARKLES);
 
 
 	Entity emitter3 = GetScene("Game").CreateEntity();
-	emitter3.AddComponent<comp::Transform>()->position = { 250,5,-300 };
+	emitter3.AddComponent<comp::Transform>()->position = { 250, 20, -300 };
 	comp::EmitterParticle* e3 = emitter3.AddComponent <comp::EmitterParticle>("thisisfine.png", 20, PARTICLEMODE::RAIN);
 
 
@@ -250,6 +250,12 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 				LOG_INFO("You added yourself, congratulations!");
 #endif
 				m_players[m_localPID] = e;
+
+				if (e.GetComponent<comp::Transform>())
+				{
+					e.AddComponent <comp::EmitterParticle>("thisisfine.png", 100, PARTICLEMODE::SMOKE);
+					std::cout << "PLAYER GOT PARTICLES!!------------------------------------------------------------" << std::endl;
+				}
 
 				GetScene("Game").ForEachComponent<comp::Tag<TagType::CAMERA>>([&](Entity entt, comp::Tag<TagType::CAMERA>& t)
 					{

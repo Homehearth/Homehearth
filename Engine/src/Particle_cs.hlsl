@@ -66,7 +66,7 @@ void SparklesSimmulation(inout VertexParticleIn particle)
 {
     
     particle.size = (2, 2);
-    particle.color = (0, 1, 0, 1);
+    particle.color = (0.5f, 1, 0, 1);
 
 }
 
@@ -76,7 +76,7 @@ void RainSimmulation(inout VertexParticleIn particle)
     
     particle.pos.y -= raise;
     
-    if (particle.pos.y == -10) //Reset
+    if (particle.pos.y <= emitterPosition.y -20) //Reset
     {
         particle.pos = emitterPosition;
 
