@@ -141,17 +141,13 @@ namespace ecs
 			std::vector<Force> forces;
 		};
 
-		struct LinearAnimation
-		{
-			float speed = 1.0f;
-			std::vector<sm::Vector3> translationPoints;
-			float time = 0.0f;
-		};
-
 		struct BezierAnimation
 		{
 			float speed = 1.0f;
+			bool loop = false;
 			std::vector<sm::Vector3> translationPoints;
+			std::vector<sm::Vector3> scalePoints;
+			std::vector<sm::Quaternion> rotationPoints;
 			float time = 0.0f;
 		};
 

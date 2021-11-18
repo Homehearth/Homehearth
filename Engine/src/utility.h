@@ -8,10 +8,29 @@ namespace util {
 	{
 		return a + t * (b - a);
 	}
+
 	sm::Vector3 Lerp(std::vector<sm::Vector3> points, float t);
 	
-	sm::Vector3 BezierCurve(std::vector<sm::Vector3> points, float t);
-	sm::Vector3 BezierCurve(std::vector<sm::Vector3>::iterator begin, std::vector<sm::Vector3>::iterator end, float t);
-	
+	template<typename T>
+	T BezierCurve(std::vector<T> points, float t)
+	{
+		return util::BezierCurve<T>(points.begin(), points.end(), t);
+	}
+
+	template<typename T>
+	T BezierCurve(typename std::vector<T>::iterator begin, typename std::vector<T>::iterator end, float t)
+	{
+		if (begin == end)
+			return *begin;
+
+		for (auto it = begin; (it + 1) != end; it++)
+		{
+			*it = util::Lerp(*it, *(it + 1), t);
+		}
+
+		return util::BezierCurve<T>(begin, end - 1, t);
+	}
+;
+
 	
 }

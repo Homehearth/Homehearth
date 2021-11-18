@@ -461,9 +461,23 @@ void Systems::TransformAnimationSystem(HeadlessScene& scene, float dt)
 			a.time += dt * a.speed;
 			if (a.time > 1.0f)
 			{
-				e.RemoveComponent<comp::BezierAnimation>();
+				a.time = 0.0f;
+				if (!a.loop)
+				{
+					e.RemoveComponent<comp::BezierAnimation>();
+					return;
+				}
+
 			}
-			t.position = util::BezierCurve(a.translationPoints, a.time);
+			
+			if(a.translationPoints.size() > 0)
+				t.position = util::BezierCurve(a.translationPoints, a.time);
+			
+			if (a.scalePoints.size() > 0)
+				t.scale = util::BezierCurve(a.scalePoints, a.time);
+
+			if (a.rotationPoints.size() > 0)
+				t.rotation = util::BezierCurve(a.rotationPoints, a.time);
 
 			e.UpdateNetwork();
 		});

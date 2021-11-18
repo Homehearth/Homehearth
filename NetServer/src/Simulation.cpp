@@ -983,9 +983,15 @@ void Simulation::ResetGameScene()
 	t->position = m_players.begin()->second.GetComponent<comp::Transform>()->position;
 
 	comp::BezierAnimation* a = entt.AddComponent<comp::BezierAnimation>();
-	a->translationPoints.push_back(t->position);
-	a->translationPoints.push_back(t->position + sm::Vector3(100, 100, 0));
-	a->translationPoints.push_back(t->position + sm::Vector3(200, 0, 0));
+	
+	a->scalePoints.push_back(t->scale);
+	a->scalePoints.push_back(t->scale * 2);
+	a->scalePoints.push_back(t->scale);
+
+	a->rotationPoints.push_back(t->rotation);
+	a->rotationPoints.push_back(t->rotation + sm::Quaternion::CreateFromAxisAngle(sm::Vector3(0, 1, 0), 180.f));
+
+	a->rotationPoints.push_back(t->rotation);
 
 	entt.AddComponent<comp::MeshName>()->name = "Cube.obj";
 	entt.AddComponent<comp::Network>();
