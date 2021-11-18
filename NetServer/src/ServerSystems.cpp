@@ -284,29 +284,6 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 			v.vel = vel;
 		});
 
-	scene.ForEachComponent<comp::Player, comp::Network>([&](comp::Player& p, comp::Network& net)
-		{
-			switch (p.state)
-			{
-				case comp::Player::State::WALK:
-				{
-					message<GameMsg>msg;
-					msg.header.id = GameMsg::Game_ChangeAnimation;
-					msg << EAnimationType::RUN << net.id;
-					simulation->Broadcast(msg);
-					break;
-				}
-				case comp::Player::State::IDLE:
-				{
-					message<GameMsg>msg;
-					msg.header.id = GameMsg::Game_ChangeAnimation;
-					msg << EAnimationType::IDLE << net.id;
-					simulation->Broadcast(msg);
-					break;
-				}
-			}
-		});
-
 	scene.ForEachComponent<comp::Player, comp::Network>([&](Entity e, comp::Player& p, comp::Network& net)
 		{
 			// Do stuff based on input
@@ -365,6 +342,26 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 					msg << EAnimationType::PLACE_DEFENCE << net.id;
 					simulation->Broadcast(msg);
 				}
+			}
+
+			switch (p.state)
+			{
+			case comp::Player::State::WALK:
+			{
+				message<GameMsg>msg;
+				msg.header.id = GameMsg::Game_ChangeAnimation;
+				msg << EAnimationType::RUN << net.id;
+				simulation->Broadcast(msg);
+				break;
+			}
+			case comp::Player::State::IDLE:
+			{
+				message<GameMsg>msg;
+				msg.header.id = GameMsg::Game_ChangeAnimation;
+				msg << EAnimationType::IDLE << net.id;
+				simulation->Broadcast(msg);
+				break;
+			}
 			}
 
 		});
