@@ -71,7 +71,7 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		attackAbility->attackRange = 60.f;
 		attackAbility->useTime = 0.3f;
 		attackAbility->delay = 0.2f;
-		attackAbility->projectileSpeed = 25.f;
+		attackAbility->projectileSpeed = 50.f;
 		attackAbility->movementSpeedAlt = 0.0f;
 		behaviorTree->root = AIBehaviors::GetSimpleAIBehavior(entity);
 	}

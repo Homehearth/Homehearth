@@ -164,7 +164,8 @@ void Simulation::CreateWaves()
 	{ // Wave_2
 		Wave::Group group1, group2;
 
-		group1.AddEnemy(EnemyType::Default, 3 + currentRound);
+		group1.AddEnemy(EnemyType::Default, 1 + currentRound);
+		group1.AddEnemy(EnemyType::Mage, 2 + 2 * currentRound);
 		group2.AddEnemy(EnemyType::Default, 2 + currentRound);
 		group2.AddEnemy(EnemyType::Runner, 1 + 2 * currentRound);
 		group1.SetSpawnPoint({ 490.f, -150.0f });
