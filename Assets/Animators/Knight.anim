@@ -1,6 +1,6 @@
 skel 			Knight.fbx
 anim 			IDLE 				Knight_Idle.fbx
-anim 			RUN 				Knight_Run.fbx
+anim 			MOVE 				Knight_Run.fbx
 anim 			PRIMARY_ATTACK 		Knight_Slash.fbx
 loopable 		0
 anim 			TAKE_DAMAGE 		Knight_TakeDamage.fbx
@@ -10,30 +10,30 @@ loopable		0
 startAnim		IDLE
 
 
-blendstate 		IDLE			RUN					1.0
-blendstate 		RUN				IDLE				0.4
+blendstate 		IDLE				MOVE				1.0
+blendstate 		MOVE				IDLE				0.4
 
 
-blendstate		IDLE			PRIMARY_ATTACK		0.3
-blendstate		PRIMARY_ATTACK	IDLE				0.3
+blendstate		IDLE				PRIMARY_ATTACK		0.3
+blendstate		PRIMARY_ATTACK		IDLE				0.3
 
 
-blendstate 		IDLE			TAKE_DAMAGE			0.5
-blendstate		TAKE_DAMAGE		IDLE				0.5
+blendstate 		IDLE				TAKE_DAMAGE			0.5
+blendstate		TAKE_DAMAGE			IDLE				0.5
 
 
-blendstate		IDLE 			PLACE_DEFENCE		0.5
-blendstate		PLACE_DEFENCE	IDLE				0.5
-
-
-blendstate		RUN				TAKE_DAMAGE			0.3
-blendstate		TAKE_DAMAGE		RUN					0.3
-
-
-blendstate		RUN				PRIMARY_ATTACK		0.3
-blendstate		PRIMARY_ATTACK	RUN					0.3
-
-
-blendstate		RUN				PLACE_DEFENCE		0.3
-blendstate		PLACE_DEFENCE	RUN					0.3
+blendstate		IDLE 				PLACE_DEFENCE		0.5
+blendstate		PLACE_DEFENCE		IDLE				0.5
+	
+	
+blendstate		MOVE				TAKE_DAMAGE			0.3
+blendstate		TAKE_DAMAGE			MOVE				0.3
+	
+	
+blendstate		MOVE				PRIMARY_ATTACK		0.3
+blendstate		PRIMARY_ATTACK		MOVE				0.3
+	
+	
+blendstate		MOVE				PLACE_DEFENCE		0.3
+blendstate		PLACE_DEFENCE		MOVE				0.3
 

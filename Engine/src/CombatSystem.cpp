@@ -167,6 +167,13 @@ void CombatSystem::AddCollisionBehavior(Entity entity, Entity attackEntity, Head
 
 				thisEntity.GetComponent<comp::SelfDestruct>()->lifeTime = 0.f;
 
+				//Change animation when taken damage
+				comp::AnimationState* anim = other.GetComponent<comp::AnimationState>();
+				if (anim)
+				{
+					anim->type = EAnimationType::TAKE_DAMAGE;
+				}
+
 
 				comp::Velocity* attackVel = thisEntity.GetComponent<comp::Velocity>();
 				if (attackVel)

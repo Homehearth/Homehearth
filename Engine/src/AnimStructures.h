@@ -19,8 +19,7 @@ enum class EAnimationType : uint32_t
 {
 	NONE,
 	IDLE,
-	WALK,
-	RUN,
+	MOVE,
 	PRIMARY_ATTACK,
 	SECONDARY_ATTACK,
 	ABILITY1,

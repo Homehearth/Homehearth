@@ -112,8 +112,7 @@ EAnimationType RAnimator::StringToAnimationType(const std::string& name) const
 	{
 		{"NONE",				EAnimationType::NONE},
 		{"IDLE",				EAnimationType::IDLE},
-		{"WALK",				EAnimationType::WALK},
-		{"RUN",					EAnimationType::RUN},
+		{"MOVE",				EAnimationType::MOVE},
 		{"PRIMARY_ATTACK",		EAnimationType::PRIMARY_ATTACK},
 		{"SECONDARY_ATTACK",	EAnimationType::SECONDARY_ATTACK},
 		{"ABILITY1",			EAnimationType::ABILITY1},

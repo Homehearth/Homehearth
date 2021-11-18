@@ -435,7 +435,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 
 		if (m_gameEntities.find(id) != m_gameEntities.end())
 		{
-			comp::Animator* animComp = m_players.at(id).GetComponent<comp::Animator>();
+			comp::Animator* animComp = m_gameEntities.at(id).GetComponent<comp::Animator>();
 			if (animComp)
 			{
 				std::shared_ptr<RAnimator> anim = animComp->animator;

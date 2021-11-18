@@ -80,6 +80,11 @@ namespace ecs
 			std::shared_ptr<RAnimator> animator;
 		};
 
+		struct AnimationState
+		{
+			EAnimationType type;
+		};
+
 		// Used on server side
 		struct AnimatorName 
 		{

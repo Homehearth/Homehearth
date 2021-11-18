@@ -23,6 +23,7 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 	comp::Health* health = entity.AddComponent<comp::Health>();
 	comp::MeshName* meshName = entity.AddComponent<comp::MeshName>();
 	comp::AnimatorName* animatorName = entity.AddComponent<comp::AnimatorName>();
+	comp::AnimationState* animationState = entity.AddComponent<comp::AnimationState>();
 	comp::BoundingSphere* bos = entity.AddComponent<comp::BoundingSphere>();
 	comp::Velocity* velocity = entity.AddComponent<comp::Velocity>();
 	comp::BehaviorTree* behaviorTree = entity.AddComponent<comp::BehaviorTree>();
@@ -39,6 +40,7 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 			transform->scale = { 1.8f, 1.8f+randomNum, 1.8f };
 			meshName->name = "Monster.fbx";
 			animatorName->name = "Monster.anim";
+			animationState->type = EAnimationType::IDLE;
 
 			bos->Radius = 3.f;
 
@@ -63,7 +65,8 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 
 		transform->scale = { 1.8f, 0.5f + randomNum, 1.8f };
 		meshName->name = "Monster.fbx";
-		entity.AddComponent<comp::AnimatorName>()->name = "Monster.anim";
+		animatorName->name = "Monster.anim";
+		animationState->type = EAnimationType::IDLE;
 		bos->Radius = 3.f;
 
 		npc->movementSpeed = 15.f;
@@ -86,6 +89,7 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		transform->scale = { 1.8f, 3.f, 1.8f };
 		meshName->name = "Monster.fbx";
 		animatorName->name = "Monster.anim";
+		animationState->type = EAnimationType::IDLE;
 		bos->Radius = 3.f;
 		attackAbility->cooldown = 1.0f;
 		attackAbility->attackDamage = 20.f;
@@ -106,6 +110,7 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		transform->scale = { 3.8f, 6.f, 3.8f };
 		meshName->name = "Monster.fbx";
 		animatorName->name = "Monster.anim";
+		animationState->type = EAnimationType::IDLE;
 		bos->Radius = 3.f;
 		attackAbility->cooldown = 1.0f;
 		attackAbility->attackDamage = 20.f;
@@ -284,7 +289,7 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 			v.vel = vel;
 		});
 
-	scene.ForEachComponent<comp::Player, comp::Network>([&](Entity e, comp::Player& p, comp::Network& net)
+	scene.ForEachComponent<comp::Player, comp::Network, comp::AnimationState>([&](Entity e, comp::Player& p, comp::Network& net, comp::AnimationState& anim)
 		{
 			// Do stuff based on input
 
@@ -298,6 +303,11 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 				LOG_WARNING("Mouse click ray missed walking plane. Should not happen...");
 			}
 
+			if (p.state == comp::Player::State::WALK)
+				anim.type = EAnimationType::MOVE;
+			else if (p.state == comp::Player::State::IDLE)
+				anim.type = EAnimationType::IDLE;
+
 			// check if using abilities
 			if (p.lastInputState.leftMouse) // is held
 			{
@@ -305,11 +315,7 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 				if (ecs::UseAbility(e, p.primaryAbilty, &p.mousePoint))
 				{
 					LOG_INFO("Used primary");
-
-					message<GameMsg>msg;
-					msg.header.id = GameMsg::Game_ChangeAnimation;
-					msg << EAnimationType::PRIMARY_ATTACK << net.id;
-					simulation->Broadcast(msg);
+					anim.type = EAnimationType::PRIMARY_ATTACK;
 				}
 
 				// make sure movement alteration is not applied when using, because then its applied atomatically
@@ -323,10 +329,7 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 				if (ecs::UseAbility(e, p.secondaryAbilty, &p.mousePoint))
 				{
 					LOG_INFO("Used secondary");
-					message<GameMsg>msg;
-					msg.header.id = GameMsg::Game_ChangeAnimation;
-					msg << EAnimationType::SECONDARY_ATTACK << net.id;
-					simulation->Broadcast(msg);
+					anim.type = EAnimationType::SECONDARY_ATTACK;
 				}
 			}
 
@@ -336,34 +339,9 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 				if (simulation->GetGrid().PlaceDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, Blackboard::Get().GetAIHandler()))
 				{
 					simulation->GetCurrency().GetAmountRef() -= 5;
-
-					message<GameMsg>msg;
-					msg.header.id = GameMsg::Game_ChangeAnimation;
-					msg << EAnimationType::PLACE_DEFENCE << net.id;
-					simulation->Broadcast(msg);
+					anim.type = EAnimationType::PLACE_DEFENCE;
 				}
 			}
-
-			switch (p.state)
-			{
-			case comp::Player::State::WALK:
-			{
-				message<GameMsg>msg;
-				msg.header.id = GameMsg::Game_ChangeAnimation;
-				msg << EAnimationType::RUN << net.id;
-				simulation->Broadcast(msg);
-				break;
-			}
-			case comp::Player::State::IDLE:
-			{
-				message<GameMsg>msg;
-				msg.header.id = GameMsg::Game_ChangeAnimation;
-				msg << EAnimationType::IDLE << net.id;
-				simulation->Broadcast(msg);
-				break;
-			}
-			}
-
 		});
 
 
@@ -478,5 +456,22 @@ void ServerSystems::TickBTSystem(Simulation* simulation, HeadlessScene& scene)
 	scene.ForEachComponent<comp::BehaviorTree>([&](Entity entity,comp::BehaviorTree& bt)
 		{
 			bt.root->Tick();
+		});
+}
+
+void ServerSystems::AnimatonSystem(Simulation* simulation, HeadlessScene& scene)
+{
+	scene.ForEachComponent<comp::Network, comp::AnimationState>([&](comp::Network& net, comp::AnimationState& anim)
+		{
+			//Only update when we have something
+			if (anim.type != EAnimationType::NONE)
+			{
+				message<GameMsg>msg;
+				msg.header.id = GameMsg::Game_ChangeAnimation;
+				msg << anim.type << net.id;
+				simulation->Broadcast(msg);
+				//Reset animation on serverside.
+				anim.type = EAnimationType::NONE;
+			}
 		});
 }
