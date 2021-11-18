@@ -9,26 +9,22 @@ class TextureEffectPass : public IRenderPass
 {
 private:
 
-	const int MAX_PIXELS = 256 * 256;
-	float clearColor[4] = { 0.f,0.f,0.f,0.f };
-	texture_effect_t m_CBuffer;
-	ID3D11ShaderResourceView* resources[5] =
-	{
-		PM->m_SRV_TextureEffectBlendMap.Get(),
-		PM->m_SRV_TextureEffectWaterEdgeMap.Get(),
-		PM->m_SRV_TextureEffectWaterFloorMap.Get(),
-		PM->m_SRV_TextureEffectWaterMap.Get(),
-		PM->m_SRV_TextureEffectWaterNormalMap.Get()
-	};
+	std::shared_ptr<RModel> m_WaterModel;
+	std::shared_ptr<RModel> m_WaterEdgeModel;
+	std::shared_ptr<RModel> m_WaterFloorModel;
 
-	ID3D11RenderTargetView* targets[5] =
-	{
-		PM->m_RTV_TextureEffectBlendMap.Get(),
-		PM->m_RTV_TextureEffectWaterEdgeMap.Get(),
-		PM->m_RTV_TextureEffectWaterFloorMap.Get(),
-		PM->m_RTV_TextureEffectWaterMap.Get(),
-		PM->m_RTV_TextureEffectWaterNormalMap.Get()
-	};
+	std::vector<sm::Vector2> m_WaterUV;
+	std::vector<sm::Vector2> m_WaterEdgeUV;
+	std::vector<sm::Vector2> m_WaterFloorUV;
+
+	std::shared_ptr<RTexture> m_WaterAlbedoMap;
+	std::shared_ptr<RTexture> m_WaterNormalMap;
+	std::shared_ptr<RTexture> m_WaterEdgeAlbedoMap;
+	std::shared_ptr<RTexture> m_WaterFloorAlbedoMap;
+
+	const int m_MAX_PIXELS = 256 * 256;
+	float m_clearColor[4] = { 0.f,0.f,0.f,0.f };
+	texture_effect_t m_CBuffer;
 
 public:
 	TextureEffectPass() = default;
@@ -39,5 +35,7 @@ public:
 	void Render(Scene* pScene) override;
 
 	void PostRender(ID3D11DeviceContext* pDeviceContext = D3D11Core::Get().DeviceContext()) override;
+
+	void SetResources();
 };
 
