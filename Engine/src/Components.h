@@ -151,6 +151,8 @@ namespace ecs
 			std::vector<sm::Vector3> scalePoints;
 			std::vector<sm::Quaternion> rotationPoints;
 			float time = 0.0f;
+
+			std::function<void()> onFinish;
 		};
 
 		struct Velocity
@@ -265,9 +267,11 @@ namespace ecs
 			float range = 50.f;
 		};
 
-		struct ShieldBashAbility : public IAbility
+		struct HeroLeapAbility : public IAbility
 		{
-
+			float damage = 10.f;
+			float damageRadius = 20.f;
+			float maxRange = 30.f;
 		};
 
 

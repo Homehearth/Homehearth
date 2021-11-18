@@ -298,7 +298,16 @@ void Simulation::ResetPlayer(Entity player)
 		attackAbility->delay = 0.1f;
 
 		playerComp->primaryAbilty = entt::resolve<comp::AttackAbility>();
-		playerComp->secondaryAbilty = entt::resolve<comp::AttackAbility>();
+
+		comp::HeroLeapAbility* leap = player.AddComponent<comp::HeroLeapAbility>();
+		leap->cooldown = 5.0f;
+		leap->delay = 0.0f;
+		leap->lifetime = 0.5f;
+		leap->movementSpeedAlt = 0.0f;
+		leap->useTime = 0.5f;
+		leap->damageRadius = 20.f;
+
+		playerComp->secondaryAbilty = entt::resolve<comp::HeroLeapAbility>();
 
 	}
 	else if(playerComp->classType == comp::Player::Class::MAGE) 
@@ -486,10 +495,16 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 				Systems::UpdateAbilities(scene, e.dt);
 				Systems::CombatSystem(scene, e.dt);
 				Systems::HealingSystem(scene, e.dt);
+				Systems::HeroLeapSystem(scene, e.dt);
 
 				Systems::HealthSystem(scene, e.dt, m_currency.GetAmountRef());
 				Systems::SelfDestructSystem(scene, e.dt);
 				
+				Systems::TransformAnimationSystem(scene, e.dt);
+				
+				Systems::MovementSystem(scene, e.dt);
+				Systems::MovementColliderSystem(scene, e.dt);
+
 				{
 					PROFILE_SCOPE("Collision Box/Box");
 					//Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(scene, e.dt);
@@ -503,10 +518,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 					Systems::CheckCollisions<comp::BoundingSphere, comp::BoundingSphere>(scene, e.dt);
 				}
 				
-				Systems::MovementSystem(scene, e.dt);
-				Systems::MovementColliderSystem(scene, e.dt);
 			
-				Systems::TransformAnimationSystem(scene, e.dt);
 			}
 
 			if (!waveQueue.empty())

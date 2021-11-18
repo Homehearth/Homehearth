@@ -247,6 +247,103 @@ void Systems::HealingSystem(HeadlessScene& scene, float dt)
 
 }
 
+void Systems::HeroLeapSystem(HeadlessScene& scene, float dt)
+{
+	scene.ForEachComponent<comp::Transform, comp::HeroLeapAbility>([&](Entity e, comp::Transform& t, comp::HeroLeapAbility& ability)
+		{
+			sm::Vector3* point = nullptr;
+			comp::Player* player = e.GetComponent<comp::Player>();
+			if (player)
+			{
+				point = &player->mousePoint;
+			}
+
+			if (ecs::ReadyToUse(&ability, point))
+			{
+				
+				comp::BezierAnimation* a = e.AddComponent<comp::BezierAnimation>();
+				a->translationPoints.push_back(t.position);
+				sm::Vector3 toTarget = ability.targetPoint - t.position;
+				float distance = toTarget.Length();
+				toTarget.Normalize();
+				distance = min(distance, ability.maxRange);
+				toTarget *= distance;
+
+				a->translationPoints.push_back(t.position);
+				a->translationPoints.push_back(t.position + sm::Vector3(0, 40, 0));
+				a->translationPoints.push_back(t.position + toTarget);
+				a->speed = ability.useTime;
+
+				a->onFinish = [&]()
+				{
+					Entity collider = scene.CreateEntity();
+					collider.AddComponent<comp::Transform>()->position = t.position;
+					comp::BoundingSphere* sphere = collider.AddComponent<comp::BoundingSphere>();
+					sphere->Center = t.position;
+					sphere->Radius = ability.damageRadius;
+
+					collider.AddComponent<comp::SelfDestruct>()->lifeTime = ability.lifetime;
+					collider.AddComponent<comp::Network>();
+					collider.AddComponent<comp::Tag<TagType::DYNAMIC>>();
+					collider.AddComponent<comp::Tag<TagType::NO_RESPONSE>>();
+
+					CollisionSystem::Get().AddOnCollisionEnter(collider, [=, &scene](Entity thisEntity, Entity other)
+						{
+
+							// is caster already dead
+							if (e.IsNull())
+							{
+								thisEntity.GetComponent<comp::SelfDestruct>()->lifeTime = 0.f;
+								return;
+							}
+
+							if (other == e)
+								return;
+
+							tag_bits goodOrBad = TagType::GOOD | TagType::BAD;
+							if ((e.GetTags() & goodOrBad) ==
+								(other.GetTags() & goodOrBad))
+							{
+								return; //these guys are on the same team
+							}
+
+							comp::Health* otherHealth = other.GetComponent<comp::Health>();
+							comp::HeroLeapAbility* ability = e.GetComponent<comp::HeroLeapAbility>();
+
+							if (otherHealth)
+							{
+								otherHealth->currentHealth -= ability->damage;
+								// update Health on network
+								scene.publish<EComponentUpdated>(other, ecs::Component::HEALTH);
+
+								sm::Vector3 toOther = other.GetComponent<comp::Transform>()->position - thisEntity.GetComponent<comp::Transform>()->position;
+								toOther.Normalize();
+
+								comp::TemporaryPhysics* p = other.AddComponent<comp::TemporaryPhysics>();
+								comp::TemporaryPhysics::Force force = {};
+
+								force.force = toOther + sm::Vector3(0, 5, 0);
+								force.force *= ability->damage;
+
+								force.isImpulse = true;
+								force.drag = 0.0f;
+								force.actingTime = 0.7f;
+
+								p->forces.push_back(force);
+
+								auto gravity = ecs::GetGravityForce();
+								p->forces.push_back(gravity);
+								
+							}
+
+						});
+
+				};
+
+			}
+		});
+}
+
 void Systems::HealthSystem(HeadlessScene& scene, float dt, uint32_t& money_ref)
 {
 	//Entity destoys self if health <= 0
@@ -427,17 +524,7 @@ void Systems::TransformAnimationSystem(HeadlessScene& scene, float dt)
 {
 	scene.ForEachComponent<comp::Transform, comp::BezierAnimation>([&](Entity e, comp::Transform& t, comp::BezierAnimation& a)
 		{
-			a.time += dt * a.speed;
-			if (a.time > 1.0f)
-			{
-				a.time = 0.0f;
-				if (!a.loop)
-				{
-					e.RemoveComponent<comp::BezierAnimation>();
-					return;
-				}
-
-			}
+			a.time += dt * (1.f / a.speed);
 			
 			if(a.translationPoints.size() > 0)
 				t.position = util::BezierCurve(a.translationPoints, a.time);
@@ -449,6 +536,20 @@ void Systems::TransformAnimationSystem(HeadlessScene& scene, float dt)
 				t.rotation = util::BezierCurve(a.rotationPoints, a.time);
 
 			e.UpdateNetwork();
+			
+			if (a.time > 1.0f)
+			{
+				
+				if(a.onFinish)
+					a.onFinish();
+
+				a.time = 0.0f;
+				if (!a.loop)
+				{
+					e.RemoveComponent<comp::BezierAnimation>();
+				}
+
+			}
 		});
 
 }

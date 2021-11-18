@@ -14,6 +14,7 @@ namespace util {
 	template<typename T>
 	T BezierCurve(std::vector<T> points, float t)
 	{
+		t = min(t, 1.0f);
 		return util::BezierCurve<T>(points.begin(), points.end(), t);
 	}
 
