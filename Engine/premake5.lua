@@ -70,7 +70,7 @@ project "Engine"
         ["src/Engine/Network"] = { "**Client.*" },
         ["src/Engine/Animation"] = {  },
         ["src/Engine/ECS"] = { "**Components.*",  "**Entity.*" }, 
-        ["src/Engine/AI"] = {  },  
+        ["src/Engine/AI"] = { "**AISystem*", "**PathFinderManager.*", "**AIBehaviors.*" },  
 		["src/Engine/Structures"] = { "**VertexStructure.*" }  
     }
 

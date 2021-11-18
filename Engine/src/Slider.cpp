@@ -125,7 +125,16 @@ void Slider::OnHover()
 
 bool Slider::CheckHover()
 {
-	return true;
+	m_isHovering = false;
+	// Is within bounds?
+	if (InputSystem::Get().GetMousePos().x > m_drawOpts.x_pos &&
+		InputSystem::Get().GetMousePos().x < m_drawOpts.x_pos + m_drawOpts.width &&
+		InputSystem::Get().GetMousePos().y > m_drawOpts.y_pos &&
+		InputSystem::Get().GetMousePos().y < m_drawOpts.y_pos + m_drawOpts.height)
+	{
+		m_isHovering = true;
+	}
+	return m_isHovering;
 }
 
 bool Slider::CheckClick()

@@ -185,9 +185,14 @@ namespace network
 
 		if (WSARecv(m_socket, &context->DataBuf, 1, &bytesReceived, &flags, &context->Overlapped, NULL) == SOCKET_ERROR)
 		{
-			if (WSAGetLastError() != WSA_IO_PENDING)
+			DWORD error = WSAGetLastError();
+			if (error != WSA_IO_PENDING)
 			{
-				LOG_ERROR("WSARecv failed with error: %d", WSAGetLastError());
+				if (error == WSAECONNRESET)
+				{
+					this->Disconnect();
+				}
+				LOG_ERROR("WSARecv failed with error: %d", error);
 				delete context;
 				context = nullptr;
 			}
@@ -208,9 +213,14 @@ namespace network
 
 		if (WSARecv(m_socket, &context->DataBuf, 1, &ReceivedBytes, &flags, &context->Overlapped, NULL) == SOCKET_ERROR)
 		{
-			if (WSAGetLastError() != WSA_IO_PENDING)
+			DWORD error = WSAGetLastError();
+			if (error != WSA_IO_PENDING)
 			{
-				LOG_ERROR("WSARecv failed with error: %d", WSAGetLastError());
+				if (error == WSAECONNRESET)
+				{
+					this->Disconnect();
+				}
+				LOG_ERROR("WSARecv failed with error: %d", error);
 				delete context;
 				context = nullptr;
 			}

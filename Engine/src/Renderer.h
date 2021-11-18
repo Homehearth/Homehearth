@@ -9,6 +9,7 @@
 #include "PipelineManager.h"
 #include "TransPass.h"
 #include "DecalPass.h"
+#include "ShadowPass.h"
 #include "SkyboxPass.h"
 
 class Renderer
@@ -30,7 +31,7 @@ private:
 
 	DecalPass		m_decalPass;
 	SkyboxPass		m_skyPass;
-
+	ShadowPass		m_shadowPass;
 	unsigned int m_currentPass = 0;
 	bool m_isForwardPlusInitialized;
 
@@ -51,6 +52,7 @@ public:
 	virtual ~Renderer() = default;
 
 	void Initialize(Window* pWindow);
+	void Setup(BasicEngine<Scene>& engine);
 
 	void ClearFrame();
 
