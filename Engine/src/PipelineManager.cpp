@@ -494,9 +494,15 @@ bool PipelineManager::CreateShaders()
         return false;
     }
 
-    if (!m_blurComputeShader.Create("Blur_CS"))
+    if (!m_blurComputeShader.Create("Blur_cs"))
     {
-        LOG_WARNING("failed creating Blur_CS");
+        LOG_WARNING("failed creating Blur_cs");
+        return false;
+    }
+
+    if (!m_dofComputeShader.Create("DOF_cs"))
+    {
+        LOG_WARNING("failed creating DOF_cs");
         return false;
     }
 

@@ -73,6 +73,9 @@ void BlurPass::PostRender(ID3D11DeviceContext* pDeviceContext)
 	ID3D11UnorderedAccessView* nullUAV = nullptr;
 	DC->CSSetUnorderedAccessViews(0, 1, &nullUAV, nullptr);
 	DC->CSSetUnorderedAccessViews(1, 1, &nullUAV, nullptr);
+
+	ID3D11ComputeShader* nullCS = nullptr;
+	DC->CSSetShader(nullCS, nullptr, 0);
 }
 
 bool BlurPass::CreateUnorderedAccessView()
