@@ -4,6 +4,7 @@
 
 #include "SequenceNodeBT.h"
 #include "FallbackNodeBT.h"
+#include "NonDeterministicNodeBT.h"
 
 #include "BlackboardBT.h"
 

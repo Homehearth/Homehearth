@@ -35,6 +35,9 @@ private:
 	std::vector<Entity> m_updatedEntities;
 	std::unordered_map<ecs::Component, std::vector<Entity>> m_updatedComponents;
 
+	int currentRound;
+
+
 	void InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg, const std::bitset<ecs::Component::COMPONENT_MAX>& componentMask = UINT32_MAX) const;
 	message<GameMsg> AllEntitiesMessage()const;
 
@@ -47,7 +50,7 @@ private:
 	std::queue<Wave> waveQueue;
 	std::queue<sm::Vector3> m_spawnPoints;
 	
-	void CreateWaves();
+
 	
 	void OnNetworkEntityCreate(entt::registry& reg, entt::entity entity);
 	void OnNetworkEntityDestroy(entt::registry& reg, entt::entity entity);
@@ -76,6 +79,8 @@ public:
 	void UpdateLobby();
 
 	bool Create(uint32_t playerID, uint32_t gameID, std::vector<dx::BoundingOrientedBox>* mapColliders, const std::string& namePlate = "Noobie");
+	//Creates the waves needed to spawn enemies
+	void CreateWaves();
 	void Destroy();
 
 	// Updates the lobby.
