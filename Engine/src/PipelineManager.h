@@ -18,7 +18,6 @@ public:
 	// Initialize PipelineManager.
 	void Initialize(Window* pWindow, ID3D11DeviceContext* context = D3D11Core::Get().DeviceContext());
 
-	
 	// PUBLIC AVAILABLE DATA.
 	ComPtr<ID3D11RenderTargetView>	m_backBuffer;
 
@@ -29,7 +28,7 @@ public:
 	ComPtr<ID3D11Texture2D>			m_debugDepthStencilTexture;
 	ComPtr<ID3D11DepthStencilView>	m_debugDepthStencilView;
 	ComPtr<ID3D11ShaderResourceView>m_debugDepthBufferSRV;
-	
+
 	ComPtr<ID3D11DepthStencilState>	m_depthStencilStateLess;
 	ComPtr<ID3D11DepthStencilState>	m_depthStencilStateLessEqual;
 	ComPtr<ID3D11DepthStencilState> m_depthStencilStateGreater;
@@ -85,7 +84,7 @@ private:
 	bool CreateSamplerStates();
 	bool CreateBlendStates();
 	bool CreateShaders();
-	bool CreateInputLayouts();	
+	bool CreateInputLayouts();
 	void SetViewport();
 };
 

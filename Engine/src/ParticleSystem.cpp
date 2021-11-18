@@ -24,7 +24,7 @@ void ParticleSystem::InitializeParticles(entt::registry& reg, entt::entity ent)
 	{
 		Particle_t tempParticle;
 		sm::Vector3 position = entityPosition;
-		sm::Vector4 newPosition = { position.x, position.y + i*2, position.z, 1.0f };
+		sm::Vector4 newPosition = { position.x, position.y * (float)(rand()) / float(RAND_MAX) * 1 + i, position.z, 1.0f };
 		tempParticle.position = newPosition;
 		tempParticle.type = emitter->type;
 		tempParticle.size = { 1, 1 };

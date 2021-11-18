@@ -7,6 +7,7 @@ struct ParticleUpdate
 {
 	sm::Vector4 emitterPosition;
 	float deltaTime;
+	int counter;
 };
 
 class ParticlePass :public IRenderPass
@@ -16,14 +17,22 @@ private:
 	UINT m_offset = sizeof(Particle_t);
 	UINT m_stride = 0;
 
-	dx::ConstantBuffer<ParticleUpdate> m_constantBuffer;
-	ParticleUpdate m_particleUpdate;
+	int									m_counter = 0;
+	std::vector<float>					m_randomNumbers;
 
-	ID3D11Buffer* m_nullBuffer = nullptr;
-	ID3D11ShaderResourceView* m_nullSRV = nullptr;
-	ID3D11UnorderedAccessView* m_nullUAV = nullptr;
-	ID3D11GeometryShader* m_nullGS = nullptr;
-	ID3D11ComputeShader* m_nullCS = nullptr;
+	dx::ConstantBuffer<ParticleUpdate>	m_constantBufferParticleUpdate;
+	ParticleUpdate						m_particleUpdate;
+
+	ComPtr<ID3D11ShaderResourceView>	m_randomNumbersSRV;
+	ComPtr<ID3D11Buffer>				m_randomNumbersBuffer;
+
+	ID3D11Buffer*						m_nullBuffer = nullptr;
+	ID3D11ShaderResourceView*			m_nullSRV = nullptr;
+	ID3D11UnorderedAccessView*			m_nullUAV = nullptr;
+	ID3D11GeometryShader*				m_nullGS = nullptr;
+	ID3D11ComputeShader*				m_nullCS = nullptr;
+
+	void CreateRandomNumbers();
 
 public:
 	ParticlePass() = default;

@@ -80,17 +80,21 @@ bool Game::OnStartup()
 
 	Entity emitter = GetScene("Game").CreateEntity();
 	emitter.AddComponent<comp::Transform>()->position = {250, 5, -340};
-	comp::EmitterParticle* e = emitter.AddComponent <comp::EmitterParticle>("thisisfine.png", 10, PARTICLEMODE::SMOKE);
+	emitter.AddComponent <comp::EmitterParticle>("thisisfine.png", "", 50, PARTICLEMODE::SMOKE);
 
 
 	Entity emitter2 = GetScene("Game").CreateEntity();
 	emitter2.AddComponent<comp::Transform>()->position = { 250, 5,- 320 };
-	comp::EmitterParticle* e2 = emitter2.AddComponent <comp::EmitterParticle>("thisisfine.png", 10, PARTICLEMODE::SPARKLES);
+	emitter2.AddComponent <comp::EmitterParticle>("thisisfine.png", "", 10, PARTICLEMODE::SPARKLES);
 
 
 	Entity emitter3 = GetScene("Game").CreateEntity();
 	emitter3.AddComponent<comp::Transform>()->position = { 250, 20, -300 };
-	comp::EmitterParticle* e3 = emitter3.AddComponent <comp::EmitterParticle>("thisisfine.png", 20, PARTICLEMODE::RAIN);
+	emitter3.AddComponent <comp::EmitterParticle>("thisisfine.png", "", 20, PARTICLEMODE::RAIN);
+	
+	Entity emitter4 = GetScene("Game").CreateEntity();
+	emitter4.AddComponent<comp::Transform>()->position = { 240, 20, -300 };
+	emitter4.AddComponent <comp::EmitterParticle>("", "", 20, PARTICLEMODE::RAIN);
 
 
 	return true;
@@ -253,8 +257,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 
 				if (e.GetComponent<comp::Transform>())
 				{
-					e.AddComponent <comp::EmitterParticle>("thisisfine.png", 100, PARTICLEMODE::SMOKE);
-					std::cout << "PLAYER GOT PARTICLES!!------------------------------------------------------------" << std::endl;
+					e.AddComponent <comp::EmitterParticle>("thisisfine.png", "thisisfine_Opacity.png", 100, PARTICLEMODE::SMOKE);
 				}
 
 				GetScene("Game").ForEachComponent<comp::Tag<TagType::CAMERA>>([&](Entity entt, comp::Tag<TagType::CAMERA>& t)
