@@ -53,10 +53,9 @@ void GameSystems::CheckLOS(Game* game)
 		{
 			for (int j = 0; j < game->m_models.at(game->m_LOSColliders[i].first).size(); j++)
 			{
-				LOG_INFO("Behind an object!");
+				//LOG_INFO("Behind an object!");
 				game->m_models.at(game->m_LOSColliders[i].first)[j].GetComponent<comp::Renderable>()->isSolid = false;
 			}
-			break;
 		}
 	}
 }

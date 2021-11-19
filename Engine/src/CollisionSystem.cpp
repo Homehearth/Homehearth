@@ -195,18 +195,20 @@ CollisionInfo_t CollisionSystem::Intersection(Entity entity1, Entity entity2)
 		sm::Matrix Translation = sm::Matrix::CreateTranslation(p2OBB->Center).Invert();
 		sm::Matrix Rotation = sm::Matrix::CreateFromQuaternion(p2OBB->Orientation).Transpose();
 		sm::Matrix obbInverse = Translation * Rotation;
-		sm::Vector3 obbLocalPos = p2OBB->Center;
-		// Put the obb in local space
-		obbLocalPos = sm::Vector3::Transform(obbLocalPos, obbInverse);
 		sm::Vector3 sCenter = p1BoS->Center;
 		// Put the sphere in the obb's local space
 		sCenter = sm::Vector3::Transform(sCenter, obbInverse);
+		sCenter.y = 0.f;
+
+		float minX = (-p2OBB->Extents.x);
+		float maxX = p2OBB->Extents.x;
+		float minZ = (-p2OBB->Extents.z);
+		float maxZ = p2OBB->Extents.z;
 
 		// Get the closest point on the OBB that is inside the sphere
-		float closestX = max(obbLocalPos.x - p2OBB->Extents.x, min(sCenter.x, obbLocalPos.x + p2OBB->Extents.x));
-		float closestY = max(obbLocalPos.y - p2OBB->Extents.y, min(sCenter.y, obbLocalPos.y + p2OBB->Extents.y));
-		float closestZ = max(obbLocalPos.z - p2OBB->Extents.z, min(sCenter.z, obbLocalPos.z + p2OBB->Extents.z));
-		sm::Vector3 ClosestPoint = { closestX, closestY, closestZ };
+		float closestX = max(minX, min(sCenter.x, maxX));
+		float closestZ = max(minZ, min(sCenter.z, maxZ));
+		sm::Vector3 ClosestPoint = { closestX, 0.f, closestZ };
 		sm::Vector3 pointToSphere = sCenter - ClosestPoint;
 
 		float distance = pointToSphere.Length();
@@ -216,66 +218,44 @@ CollisionInfo_t CollisionSystem::Intersection(Entity entity1, Entity entity2)
 		if (distance < p1BoS->Radius)
 		{
 			// Center point of the sphere is inside the OBB == EDGE CASE
-			if (abs(distance) < 0.001f)
+			if (distance < 0.001f)
 			{
-				float clampX;
-				float clampY;
-				float clampZ;
-				
-				// Gives a point on the nearest face of the OBB
-				if (sCenter.x < obbLocalPos.x)
+				// Clamp to the nearest face of the OBB
+				float dl = abs(sCenter.x - minX);
+				float dr = abs(sCenter.x - maxX);
+				float dt = abs(sCenter.z - minZ);
+				float db = abs(sCenter.z - maxZ);
+
+				float clampX = sCenter.x;
+				float clampZ = sCenter.z;
+
+				if (dt < db && dt < dl && dt < dr)
 				{
-					clampX = obbLocalPos.x - p2OBB->Extents.x;
+					clampZ = (-p2OBB->Extents.z);
+				}
+				else if (db < dl && db < dr)
+				{
+					clampZ = p2OBB->Extents.z;
+				}
+				else if (dl < dr)
+				{
+					clampX = (-p2OBB->Extents.x);
 				}
 				else
 				{
-					clampX = obbLocalPos.x + p2OBB->Extents.x;
+					clampX = p2OBB->Extents.x;
 				}
-				if (sCenter.y < obbLocalPos.y)
-				{
-					clampY = obbLocalPos.y - p2OBB->Extents.y;
-				}
-				else
-				{
-					clampY = obbLocalPos.y + p2OBB->Extents.y;
-				}
-				if (sCenter.z < obbLocalPos.z)
-				{
-					clampZ = obbLocalPos.z - p2OBB->Extents.z;
-				}
-				else
-				{
-					clampZ = obbLocalPos.z + p2OBB->Extents.z;
-				}
-				
-				sm::Vector3 closestPoint(clampX, clampY, clampZ);
-				sm::Vector3 faceToSphere = (sCenter - closestPoint);
+			
+				sm::Vector3 closestPoint = { clampX, 0.f, clampZ };
 
-				sm::Vector3 normals[4] = { sm::Vector3(1.0f, 0.0f, 0.0f), sm::Vector3(0.0f, 0.0f, 1.0f),
-											sm::Vector3(-1.0f, 0.0f, 0.0f), sm::Vector3(0.0f, 0.0f, -1.0f) };
+				// This goes inwards to the obb make sure to flip its direction
+				sm::Vector3 pointToSphere = (sCenter - closestPoint) * -1.f;
+				float overlap = pointToSphere.Length() + p1BoS->Radius;
 
-				// Project the vector from the face point to the sphere on the normals.
-				// This will give us the direction normal of where to push the sphere towards
-				// The length of the projection vector and the sphere radius is the EXACT
-				// length that is needed to be outside the OBB.
-				float overlap = FLT_MAX;
-				int index = 0;
-				for (int i = 0; i < 4; i++)
-				{
-					float dot = faceToSphere.Dot(normals[i]);
-					float projectionLength = (dot * normals[i]).Length();
+				pointToSphere = sm::Vector3::TransformNormal(pointToSphere, obbInverse.Invert());
+				pointToSphere.Normalize();
 
-					if (projectionLength < overlap && dot < 0.0f)
-					{
-						overlap = projectionLength;
-						index = i;
-					}
-				}
-
-				normals[index] = sm::Vector3::TransformNormal(normals[index], obbInverse.Invert());
-				normals[index].Normalize();
-
-				return { true, p1BoS->Radius + overlap, normals[index] };
+				return { true, overlap, pointToSphere };
 			}
 			else
 			{

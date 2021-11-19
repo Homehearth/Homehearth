@@ -751,23 +751,23 @@ namespace sceneHelp
 			size_t count = filename.find_last_of('.');
 			filename = filename.substr(0, count);
 
-			if (House5 == filename)
+			if (House5 == filename || Door5 == filename)
 			{
 				game->m_models[ModelID::HOUSE5].push_back(e);
 			}
-			else if (House6 == filename)
+			else if (House6 == filename || Door6 == filename)
 			{
 				game->m_models[ModelID::HOUSE6].push_back(e);
 			}
-			else if (House7 == filename)
+			else if (House7 == filename || Door7 == filename)
 			{
 				game->m_models[ModelID::HOUSE7].push_back(e);
 			}
-			else if (House8 == filename)
+			else if (House8 == filename || Door8 == filename)
 			{
 				game->m_models[ModelID::HOUSE8].push_back(e);
 			}
-			else if (House9 == filename)
+			else if (House9 == filename || Door9 == filename)
 			{
 				game->m_models[ModelID::HOUSE9].push_back(e);
 			}
