@@ -321,7 +321,7 @@ void Simulation::ResetPlayer(Entity player)
 		attackAbility->attackRange = 2.0f;
 		attackAbility->useTime = 0.3f;
 		attackAbility->delay = 0.1f;
-		playerComp->primaryAbilty = entt::resolve<comp::MeleeAttackAbility>();
+		playerComp->primaryAbilty = entt::resolve<comp::RangeAttackAbility>();
 
 		comp::HealAbility* healAbility = player.AddComponent<comp::HealAbility>();
 		healAbility->cooldown = 5.0f;

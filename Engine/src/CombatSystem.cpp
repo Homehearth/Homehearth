@@ -102,6 +102,7 @@ Entity CombatSystem::CreateAttackEntity(Entity entity, HeadlessScene& scene, com
 
 	comp::Transform* t = attackEntity.AddComponent<comp::Transform>();
 	attackEntity.AddComponent<comp::Tag<TagType::DYNAMIC>>();
+	attackEntity.AddComponent<comp::Tag<TagType::NO_RESPONSE>>();
 
 	comp::BoundingSphere* bos = attackEntity.AddComponent<comp::BoundingSphere>();
 
@@ -175,6 +176,7 @@ void CombatSystem::AddCollisionBehavior(Entity entity, Entity attackEntity, Head
 					comp::TemporaryPhysics* p = other.AddComponent<comp::TemporaryPhysics>();
 					comp::TemporaryPhysics::Force force = {};
 					force.force = attackVel->vel;
+					force.actingTime = 0.7f;
 					p->forces.push_back(force);
 				}
 				else
