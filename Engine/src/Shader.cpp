@@ -98,7 +98,7 @@ namespace Shaders
         return m_shader.GetAddressOf();
     }
 
-    ID3D11ComputeShader* ComputeShader::Get() const
+    ID3D11ComputeShader* ComputeShader::Get()
     {
         return m_shader.Get();
     }

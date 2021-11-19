@@ -182,6 +182,7 @@ void Scene::RenderDebug()
 void Scene::Render2D()
 {
 	m_2dHandler.Render();
+
 }
 
 void Scene::RenderSkybox()

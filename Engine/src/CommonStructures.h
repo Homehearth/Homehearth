@@ -37,6 +37,17 @@ enum class TypeLight : UINT
 	POINT
 };
 
+enum class PARTICLEMODE : UINT
+{
+	BLOOD,
+	LEAF,
+	WATERSPLASH,
+	SMOKE,
+	SPARKLES,
+	RAIN,
+	DUST
+};
+
 struct Vector2I
 {
 	int x = 0, y = 0;
@@ -407,4 +418,15 @@ struct Node
 		}
 		return false;
 	}
+};
+
+ALIGN16
+struct Particle_t
+{
+	sm::Vector4		position;
+	sm::Vector4		color;
+
+	sm::Vector2		size;
+	PARTICLEMODE	type = PARTICLEMODE::SPARKLES;
+	float			paddning = -1;
 };

@@ -3,6 +3,7 @@
 #include <Engine.h>
 #include <GridSystem.h>
 #include "ModelIdentifier.h"
+#include "ParticleSystem.h"
 
 class Game : public Engine
 {
@@ -13,6 +14,8 @@ private:
 	GridSystem m_grid;
 	uint32_t m_waveTimer;
 	uint32_t m_money;
+	ParticleSystem m_particles;
+
 
 	Entity m_mapEntity;
 
@@ -56,10 +59,6 @@ public:
 
 	Entity& GetLocalPlayer();
 
-	/*
-		One-stop-shop for the usage of shop items like
-		upgrades for player or towers, new towers with better abilities.
-		Heals for players who can't heal.
-	*/
+	ParticleSystem* GetParticleSystem();
 	void UseShop(const ShopItem& whatToBuy);
 };
