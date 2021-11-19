@@ -171,7 +171,7 @@ void CombatSystem::AddCollisionBehavior(Entity entity, Entity attackEntity, Head
 				comp::AnimationState* anim = other.GetComponent<comp::AnimationState>();
 				if (anim)
 				{
-					anim->type = EAnimationType::TAKE_DAMAGE;
+					anim->toSend = EAnimationType::TAKE_DAMAGE;
 				}
 
 

@@ -100,6 +100,17 @@ BT::NodeStatus BT::MoveCBT::Tick()
 			velocity->vel = npc->currentNode->position - transform->position;
 			velocity->vel.Normalize();
 			velocity->vel *= npc->movementSpeed;
+
+
+			//Update animation depending on velocity
+			comp::AnimationState* animState = entity.GetComponent<comp::AnimationState>();
+			if (animState)
+			{
+				if (velocity->vel.Length() > 0.01f)
+					animState->toSend = EAnimationType::MOVE;
+				else
+					animState->toSend = EAnimationType::IDLE;
+			}
 		}
 
 		//If AI close enough to next node, pop it from the path

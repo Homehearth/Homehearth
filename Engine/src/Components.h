@@ -82,7 +82,8 @@ namespace ecs
 
 		struct AnimationState
 		{
-			EAnimationType type;
+			EAnimationType lastSend;	//Send to user last time
+			EAnimationType toSend;		//Going to be send this update
 		};
 
 		// Used on server side

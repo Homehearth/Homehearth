@@ -6,8 +6,9 @@ skel 			Model.fbx
 anim 			IDLE 			Model_Idle.fbx
 
 
-// Have to set a start animation to use
-startAnim 		IDLE
+// Have to set default animation that it will return 
+// to after an animation that can't be looped
+defaultAnim 	IDLE
 
 
 // Possible to set options for animation. 
@@ -19,3 +20,7 @@ tickSpeed		30
 // Blending two animations. The blending time is in seconds.
 // 				from			to		blendtime
 blendstate		IDLE 	 		RUN		1.0
+
+
+blendstate		IDLE				PRIMARY_ATTACK		0.3
+blendstate		PRIMARY_ATTACK		IDLE				0.2

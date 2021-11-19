@@ -40,7 +40,7 @@ BT::NodeStatus BT::AttackCBT::Tick()
 		// Enemy Attacked
 		comp::AnimationState* animState = entity.GetComponent<comp::AnimationState>();
 		if (animState)
-			animState->type = EAnimationType::PRIMARY_ATTACK;
+			animState->toSend = EAnimationType::PRIMARY_ATTACK;
 	};
 
 	return BT::NodeStatus::SUCCESS;

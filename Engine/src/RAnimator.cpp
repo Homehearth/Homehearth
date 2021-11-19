@@ -6,6 +6,7 @@ RAnimator::RAnimator()
 	m_useInterpolation	= true;
 	m_currentType		= EAnimationType::NONE;
 	m_nextType			= EAnimationType::NONE;
+	m_defaultType		= EAnimationType::NONE;
 }
 
 RAnimator::~RAnimator()
@@ -248,9 +249,8 @@ void RAnimator::SwapAnimationState()
 	//Not loopable - add the previous to the queue again
 	if (!m_animations[m_nextType].animation->IsLoopable())
 	{
-		EAnimationType previous = m_currentType;
 		m_currentType = m_nextType;
-		m_nextType = previous;
+		m_nextType = m_defaultType;
 	}
 	else
 	{
@@ -312,7 +312,7 @@ bool RAnimator::Create(const std::string& filename)
 					}
 				}
 			}
-			else if (keyword == "startAnim")
+			else if (keyword == "defaultAnim")
 			{
 				std::string key;
 				if (ss >> key)
@@ -320,6 +320,7 @@ bool RAnimator::Create(const std::string& filename)
 					EAnimationType animType = StringToAnimationType(key);
 					if (m_animations.find(animType) != m_animations.end())
 					{
+						m_defaultType = animType;
 						m_currentType = animType;
 					}
 				}
@@ -403,13 +404,9 @@ void RAnimator::Update()
 		if (m_nextType == EAnimationType::NONE)
 		{
 			if (!m_animations[m_currentType].reachedEnd)
-			{
 				RegularAnimation();
-			}
 			else
-			{
-				ResetAnimation(m_currentType);	
-			}
+				ResetAnimation(m_currentType);
 		}
 
 		/*
@@ -458,12 +455,29 @@ void RAnimator::Update()
 						}
 					}
 				}
+				else
+				{
+					m_nextType = EAnimationType::NONE;
+				}
 			}
 			else
 			{
-				m_nextType = EAnimationType::NONE;
+				//Animations that will be played once
+				if (!m_animations[m_currentType].animation->IsLoopable())
+				{
+					if (m_animations[m_currentType].reachedEnd)
+					{
+						SwapAnimationState();
+					}
+				}
+				//Swap directly from a loopable animation to other
+				else
+				{
+					SwapAnimationState();
+				}
+				RegularAnimation();
 			}
-		}		
+		}
 	}	
 }
 

@@ -285,7 +285,7 @@ void Simulation::ResetPlayer(Entity player)
 
 	player.AddComponent<comp::MeshName>()->name = "Knight.fbx";
 	player.AddComponent<comp::AnimatorName>()->name = "Knight.anim";
-	player.AddComponent<comp::AnimationState>()->type = EAnimationType::IDLE;
+	player.AddComponent<comp::AnimationState>();
 
 	
 
@@ -329,7 +329,7 @@ void Simulation::ResetPlayer(Entity player)
 
 		player.AddComponent<comp::MeshName>()->name = "Monster.fbx";
 		player.AddComponent<comp::AnimatorName>()->name = "Monster.anim";
-		player.AddComponent<comp::AnimationState>()->type = EAnimationType::IDLE;
+		player.AddComponent<comp::AnimationState>();
 
 	}
 

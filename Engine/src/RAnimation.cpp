@@ -217,7 +217,8 @@ const sm::Vector3 RAnimation::GetPosition(const std::string& bonename, const dou
 		Usually does the search for 1-3 times instead of search everything from start.
 	*/
 	bool foundKey = false;
-	while (!foundKey)
+	UINT counter = 0;
+	while (!foundKey && counter < nrOfKeys)
 	{
 		if (m_keyFrames.at(bonename).position[closestLeft].time < currentFrame &&
 			m_keyFrames.at(bonename).position[closestRight].time > currentFrame)
@@ -229,6 +230,7 @@ const sm::Vector3 RAnimation::GetPosition(const std::string& bonename, const dou
 			closestLeft = closestRight;
 			closestRight = (closestRight + 1) % nrOfKeys;
 		}
+		counter++;
 	}
 
 	if (interpolate)
@@ -262,7 +264,8 @@ const sm::Vector3 RAnimation::GetScale(const std::string& bonename, const double
 		Usually does the search for 1-3 times instead of search everything from start.
 	*/
 	bool foundKey = false;
-	while (!foundKey)
+	UINT counter = 0;
+	while (!foundKey && counter < nrOfKeys)
 	{
 		if (m_keyFrames.at(bonename).scale[closestLeft].time < currentFrame &&
 			m_keyFrames.at(bonename).scale[closestRight].time > currentFrame)
@@ -274,6 +277,7 @@ const sm::Vector3 RAnimation::GetScale(const std::string& bonename, const double
 			closestLeft = closestRight;
 			closestRight = (closestRight + 1) % nrOfKeys;
 		}
+		counter++;
 	}
 
 	if (interpolate)
@@ -307,7 +311,8 @@ const sm::Quaternion RAnimation::GetRotation(const std::string& bonename, const 
 		Usually does the search for 1-3 times instead of search everything from start.
 	*/
 	bool foundKey = false;
-	while (!foundKey)
+	UINT counter = 0;
+	while (!foundKey && counter < nrOfKeys)
 	{
 		if (m_keyFrames.at(bonename).rotation[closestLeft].time < currentFrame &&
 			m_keyFrames.at(bonename).rotation[closestRight].time > currentFrame)
@@ -319,6 +324,7 @@ const sm::Quaternion RAnimation::GetRotation(const std::string& bonename, const 
 			closestLeft = closestRight;
 			closestRight = (closestRight + 1) % nrOfKeys;
 		}
+		counter++;
 	}
 
 	if (interpolate)
