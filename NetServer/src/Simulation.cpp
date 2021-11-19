@@ -1,6 +1,5 @@
 #include "NetServerPCH.h"
 #include "Simulation.h"
-
 #include "Wave.h"
 
 void Simulation::InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg, const std::bitset<ecs::Component::COMPONENT_MAX>& componentMask)const
@@ -154,7 +153,8 @@ void Simulation::CreateWaves()
 	Wave wave1, wave2, wave3, wave4, wave5; // Default: WaveType::Zone
 	{
 		Wave::Group group1;
-		group1.AddEnemy(EnemyType::Default,4 + 2 * currentRound);
+		group1.AddEnemy(EnemyType::Default,2 + 2 * currentRound);
+		group1.AddEnemy(EnemyType::Mage, 2 + 2 * currentRound);
 		group1.SetSpawnPoint({ 490.f, -150.0f });
 		wave1.SetTimeLimit(5 * currentRound);
 		wave1.AddGroup(group1);
@@ -163,7 +163,8 @@ void Simulation::CreateWaves()
 	{ // Wave_2
 		Wave::Group group1, group2;
 
-		group1.AddEnemy(EnemyType::Default, 3 + currentRound);
+		group1.AddEnemy(EnemyType::Default, 1 + currentRound);
+		group1.AddEnemy(EnemyType::Mage, 2 + 2 * currentRound);
 		group2.AddEnemy(EnemyType::Default, 2 + currentRound);
 		group2.AddEnemy(EnemyType::Runner, 1 + 2 * currentRound);
 		group1.SetSpawnPoint({ 490.f, -150.0f });
@@ -272,7 +273,7 @@ void Simulation::ResetPlayer(Entity player)
 
 	transform->position = playerComp->spawnPoint;
 	transform->scale = sm::Vector3(1.8f, 1.8f, 1.8f);
-
+	
 	player.AddComponent<comp::Velocity>();
 
 	bool firstTimeAdded = false;
@@ -285,39 +286,48 @@ void Simulation::ResetPlayer(Entity player)
 	player.AddComponent<comp::AnimatorName>()->name = "Knight.anim";
 
 	
-	comp::AttackAbility* attackAbility = player.AddComponent<comp::AttackAbility>();
+
 
 	// only if Melee
 	if (playerComp->classType == comp::Player::Class::WARRIOR)
 	{
+		comp::MeleeAttackAbility* attackAbility = player.AddComponent<comp::MeleeAttackAbility>();
 		attackAbility->cooldown = 0.3f;
 		attackAbility->attackDamage = 40.f;
-		attackAbility->isRanged = false;
 		attackAbility->lifetime = 0.2f;
 		attackAbility->useTime = 0.2f;
 		attackAbility->delay = 0.1f;
 
-		playerComp->primaryAbilty = entt::resolve<comp::AttackAbility>();
-		playerComp->secondaryAbilty = entt::resolve<comp::AttackAbility>();
+		playerComp->primaryAbilty = entt::resolve<comp::MeleeAttackAbility>();
+
+		comp::HeroLeapAbility* leap = player.AddComponent<comp::HeroLeapAbility>();
+		leap->cooldown = 5.0f;
+		leap->delay = 0.0f;
+		leap->lifetime = 0.5f;
+		leap->movementSpeedAlt = 0.0f;
+		leap->useTime = 0.5f;
+		leap->damageRadius = 20.f;
+
+		playerComp->secondaryAbilty = entt::resolve<comp::HeroLeapAbility>();
 
 	}
 	else if(playerComp->classType == comp::Player::Class::MAGE) 
 	{
+		comp::RangeAttackAbility* attackAbility = player.AddComponent<comp::RangeAttackAbility>();
 		attackAbility->cooldown = 0.5f;
 		attackAbility->attackDamage = 20.f;
-		attackAbility->isRanged = true;
 		attackAbility->lifetime = 2.0f;
 		attackAbility->projectileSpeed = 40.f;
 		attackAbility->attackRange = 2.0f;
 		attackAbility->useTime = 0.3f;
 		attackAbility->delay = 0.1f;
-		playerComp->primaryAbilty = entt::resolve<comp::AttackAbility>();
+		playerComp->primaryAbilty = entt::resolve<comp::MeleeAttackAbility>();
 
 		comp::HealAbility* healAbility = player.AddComponent<comp::HealAbility>();
 		healAbility->cooldown = 5.0f;
 		healAbility->delay = 0.0f;
-		healAbility->healAmount = 50.f;
-		healAbility->lifetime = 1.f;
+		healAbility->healAmount = 30.f;
+		healAbility->lifetime = 1.5f;
 		healAbility->range = 50.f;
 		healAbility->useTime = 1.0f;
 
@@ -334,7 +344,6 @@ void Simulation::ResetPlayer(Entity player)
 	health->isAlive = true;
 
 
-	//player.AddComponent<comp::BoundingOrientedBox>()->Extents = { 2.0f,2.0f,2.0f };
 	player.AddComponent<comp::BoundingSphere>()->Radius = 3.f;
 
 	//Collision will handle this entity as a dynamic one
@@ -487,12 +496,16 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 				Systems::UpdateAbilities(scene, e.dt);
 				Systems::CombatSystem(scene, e.dt);
 				Systems::HealingSystem(scene, e.dt);
+				Systems::HeroLeapSystem(scene, e.dt);
 
 				Systems::HealthSystem(scene, e.dt, m_currency.GetAmountRef());
 				Systems::SelfDestructSystem(scene, e.dt);
+				
+				Systems::TransformAnimationSystem(scene, e.dt);
+				
 				Systems::MovementSystem(scene, e.dt);
 				Systems::MovementColliderSystem(scene, e.dt);
-				
+
 				{
 					PROFILE_SCOPE("Collision Box/Box");
 					//Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(scene, e.dt);
@@ -564,7 +577,6 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 
 	// Automatically join created lobby
 	JoinLobby(playerID, gameID, namePlate);
-
 
 	return true;
 }
@@ -929,10 +941,10 @@ void Simulation::UseShop(const ShopItem& item, const uint32_t& player)
 	{
 	case ShopItem::Primary_Upgrade:
 	{
-		comp::AttackAbility* p = m_players.at(player).GetComponent<comp::AttackAbility>();
+		comp::IAbility* p = m_players.at(player).GetComponent<comp::IAbility>();
 		if (p && m_currency.GetAmountRef() >= 10)
 		{
-			p->attackDamage += 2.0f;
+			//p->attackDamage += 2.0f;
 			m_currency.GetAmountRef() -= 10;
 		}
 		break;
@@ -943,12 +955,12 @@ void Simulation::UseShop(const ShopItem& item, const uint32_t& player)
 			break;
 
 		/*Upgrade a tower or ALL towers?*/
-		m_pCurrentScene->ForEachComponent<comp::Health, comp::Tag<TagType::STATIC>>([&](comp::Health& h, comp::Tag<TagType::STATIC>& t) {
+		//m_pCurrentScene->ForEachComponent<comp::Health, comp::Tag<TagType::STATIC>>([&](comp::Health& h, comp::Tag<TagType::STATIC>& t) {
 
-			h.maxHealth += 20;
-			h.currentHealth += 20;
+		//	h.maxHealth += 20;
+		//	h.currentHealth += 20;
 
-			});
+		//	});
 
 		m_currency.GetAmountRef() -= 20;
 
@@ -1011,6 +1023,7 @@ void Simulation::ResetGameScene()
 
 	LOG_INFO("%lld", m_pGameScene->GetRegistry()->size());
 	CreateWaves();
+
 }
 
 void Simulation::SendEntity(Entity e, const std::bitset<ecs::Component::COMPONENT_MAX>& componentMask)const

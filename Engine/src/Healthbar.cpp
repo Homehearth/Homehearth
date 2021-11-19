@@ -1,7 +1,7 @@
 #include "EnginePCH.h"
 #include "Healthbar.h"
-#include "Components.h"
 #include <cmath>
+#include "utility.h"
 
 constexpr float SHOW_TIME = 3.0f;
 
@@ -21,9 +21,7 @@ void rtd::Healthbar::Update()
             const float targetWidth = (m_sizeFull * scale) > 0 ? (m_sizeFull * scale) : 0;
             const float time = min(Stats::Get().GetUpdateTime() * 10.f, 1.0f);
 
-            //m_drawOpts[0].width = m_drawOpts[0].width + time * (targetWidth - m_drawOpts[0].width);
-            m_drawOpts[0].width = m_drawOpts[0].width * (1 - time) + targetWidth * time;
-
+            m_drawOpts[0].width = util::Lerp(m_drawOpts[0].width, targetWidth, time);
 
             //m_foreGround.get()->SetPosition(m_drawOpts[0].x_pos, m_drawOpts[0].y_pos);
             m_foreGround.get()->SetScale(m_drawOpts[0].width, m_drawOpts[0].height);

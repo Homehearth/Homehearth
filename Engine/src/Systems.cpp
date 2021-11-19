@@ -1,12 +1,10 @@
 #include "EnginePCH.h"
 #include "Systems.h"
 #include "Text.h"
-#include "Components.h"
 #include "Healthbar.h"
 
 Entity FindClosestPlayer(HeadlessScene& scene, sm::Vector3 position, comp::NPC* npc)
 {
-
 	comp::Transform* transformCurrentClosest = nullptr;
 
 	scene.ForEachComponent < comp::Player>([&](Entity& playerEntity, comp::Player& player)
@@ -81,122 +79,7 @@ void Systems::UpdateAbilities(HeadlessScene& scene, float dt)
 
 void Systems::CombatSystem(HeadlessScene& scene, float dt)
 {
-	PROFILE_FUNCTION();
-	
-	// For Each entity that can attack.
-	scene.ForEachComponent<comp::AttackAbility, comp::Transform>([&](Entity entity, comp::AttackAbility& stats, comp::Transform& transform)
-		{
-			//
-			// attack LOGIC
-			//
-			sm::Vector3* updateTargetPoint = nullptr;
-			comp::Player* player = entity.GetComponent<comp::Player>();
-			if (player)
-			{
-				updateTargetPoint = &player->mousePoint; // only update targetPoint if this is a player
-			}
-			if (ecs::ReadyToUse(&stats, updateTargetPoint))
-			{
-				//Creates an entity that's used to check collision if an attack lands.
-				Entity attackCollider = scene.CreateEntity();
-				
-				comp::Transform* t = attackCollider.AddComponent<comp::Transform>();
-				attackCollider.AddComponent<comp::Tag<TagType::DYNAMIC>>();
-
-				comp::BoundingSphere* bos = attackCollider.AddComponent<comp::BoundingSphere>();
-
-				bos->Radius = stats.attackRange;
-				
-				sm::Vector3 targetDir = stats.targetPoint - transform.position;
-				targetDir.Normalize();
-				t->position = transform.position + targetDir * stats.attackRange * 0.5f + sm::Vector3(0, 4, 0);
-				t->rotation = transform.rotation;
-
-				bos->Center = t->position;
-
-				comp::SelfDestruct* selfDestruct = attackCollider.AddComponent<comp::SelfDestruct>();
-				selfDestruct->lifeTime = stats.lifetime;
-
-				//If the attack is ranged add a velocity to the entity.
-				if (stats.isRanged)
-				{
-					sm::Vector3 vel = targetDir * stats.projectileSpeed;
-					attackCollider.AddComponent<comp::Velocity>()->vel = vel;
-					attackCollider.AddComponent<comp::MeshName>()->name = "Sphere.obj";
-				}
-				attackCollider.AddComponent<comp::Network>();
-				attackCollider.AddComponent<comp::Tag<TagType::NO_RESPONSE>>();
-
-				
-				CollisionSystem::Get().AddOnCollisionEnter(attackCollider, [entity, &scene](Entity thisEntity, Entity other)
-					{
-						// is caster already dead
-						if (entity.IsNull())
-						{
-							thisEntity.GetComponent<comp::SelfDestruct>()->lifeTime = 0.f;
-							return;
-						}
-
-						if (other == entity)
-							return;
-
-						tag_bits goodOrBad = TagType::GOOD | TagType::BAD;
-						if ((entity.GetTags() & goodOrBad) ==
-							(other.GetTags() & goodOrBad))
-						{
-							return; //these guys are on the same team
-						}
-
-						comp::Health* otherHealth = other.GetComponent<comp::Health>();
-						comp::AttackAbility* stats = entity.GetComponent<comp::AttackAbility>();
-
-						if (otherHealth)
-						{
-							otherHealth->currentHealth -= stats->attackDamage;
-							// update Health on network
-							scene.publish<EComponentUpdated>(other, ecs::Component::HEALTH);
-
-							thisEntity.GetComponent<comp::SelfDestruct>()->lifeTime = 0.f;
-
-
-							comp::Velocity* attackVel = thisEntity.GetComponent<comp::Velocity>();
-							if (attackVel)
-							{
-								comp::TemporaryPhysics* p = other.AddComponent<comp::TemporaryPhysics>();
-								comp::TemporaryPhysics::Force force = {};
-								force.force = attackVel->vel;
-								p->forces.push_back(force);
-							}
-							else
-							{
-
-								sm::Vector3 toOther = other.GetComponent<comp::Transform>()->position - entity.GetComponent<comp::Transform>()->position;
-								toOther.Normalize();
-
-								comp::TemporaryPhysics* p = other.AddComponent<comp::TemporaryPhysics>();
-								comp::TemporaryPhysics::Force force = {};
-
-								force.force = toOther + sm::Vector3(0, 1, 0);
-								force.force *= stats->attackDamage;
-
-								force.isImpulse = true;
-								force.drag = 0.0f;
-								force.actingTime = 0.7f;
-
-								p->forces.push_back(force);
-
-								auto gravity = ecs::GetGravityForce();
-								p->forces.push_back(gravity);
-							}
-							
-						}
-					});
-
-			}
-
-		});
-
-
+	CombatSystem::UpdateCombatSystem(scene, dt);
 }
 
 void Systems::HealingSystem(HeadlessScene& scene, float dt)
@@ -211,17 +94,17 @@ void Systems::HealingSystem(HeadlessScene& scene, float dt)
 				comp::Transform* transform = collider.AddComponent<comp::Transform>();
 				transform->position = entity.GetComponent<comp::Transform>()->position;
 				transform->scale = sm::Vector3(2);
+				transform->syncColliderScale = true;
 				
 				comp::BoundingSphere* sphere = collider.AddComponent<comp::BoundingSphere>();
 				sphere->Center = transform->position;
-				sphere->Radius = 1.f;
-
+				
 				collider.AddComponent<comp::Tag<TagType::DYNAMIC>>();
 				
-				comp::Velocity* vel = collider.AddComponent<comp::Velocity>();
-				vel->scaleVel = sm::Vector3(20);
-				vel->applyToCollider = true;
-
+				comp::BezierAnimation* a = collider.AddComponent<comp::BezierAnimation>();
+				a->scalePoints.push_back(transform->scale);
+				a->scalePoints.push_back(transform->scale + sm::Vector3(ability.range));
+				
 				collider.AddComponent<comp::SelfDestruct>()->lifeTime = ability.lifetime;
 				
 				collider.AddComponent<comp::Tag<TagType::NO_RESPONSE>>();
@@ -245,6 +128,103 @@ void Systems::HealingSystem(HeadlessScene& scene, float dt)
 			}
 		});
 
+}
+
+void Systems::HeroLeapSystem(HeadlessScene& scene, float dt)
+{
+	scene.ForEachComponent<comp::Transform, comp::HeroLeapAbility>([&](Entity e, comp::Transform& t, comp::HeroLeapAbility& ability)
+		{
+			sm::Vector3* point = nullptr;
+			comp::Player* player = e.GetComponent<comp::Player>();
+			if (player)
+			{
+				point = &player->mousePoint;
+			}
+
+			if (ecs::ReadyToUse(&ability, point))
+			{
+				
+				comp::BezierAnimation* a = e.AddComponent<comp::BezierAnimation>();
+				a->translationPoints.push_back(t.position);
+				sm::Vector3 toTarget = ability.targetPoint - t.position;
+				float distance = toTarget.Length();
+				toTarget.Normalize();
+				distance = min(distance, ability.maxRange);
+				toTarget *= distance;
+
+				a->translationPoints.push_back(t.position);
+				a->translationPoints.push_back(t.position + sm::Vector3(0, 40, 0));
+				a->translationPoints.push_back(t.position + toTarget);
+				a->speed = ability.useTime;
+
+				a->onFinish = [&]()
+				{
+					Entity collider = scene.CreateEntity();
+					collider.AddComponent<comp::Transform>()->position = t.position;
+					comp::BoundingSphere* sphere = collider.AddComponent<comp::BoundingSphere>();
+					sphere->Center = t.position;
+					sphere->Radius = ability.damageRadius;
+
+					collider.AddComponent<comp::SelfDestruct>()->lifeTime = ability.lifetime;
+					collider.AddComponent<comp::Network>();
+					collider.AddComponent<comp::Tag<TagType::DYNAMIC>>();
+					collider.AddComponent<comp::Tag<TagType::NO_RESPONSE>>();
+
+					CollisionSystem::Get().AddOnCollisionEnter(collider, [=, &scene](Entity thisEntity, Entity other)
+						{
+
+							// is caster already dead
+							if (e.IsNull())
+							{
+								thisEntity.GetComponent<comp::SelfDestruct>()->lifeTime = 0.f;
+								return;
+							}
+
+							if (other == e)
+								return;
+
+							tag_bits goodOrBad = TagType::GOOD | TagType::BAD;
+							if ((e.GetTags() & goodOrBad) ==
+								(other.GetTags() & goodOrBad))
+							{
+								return; //these guys are on the same team
+							}
+
+							comp::Health* otherHealth = other.GetComponent<comp::Health>();
+							comp::HeroLeapAbility* ability = e.GetComponent<comp::HeroLeapAbility>();
+
+							if (otherHealth)
+							{
+								otherHealth->currentHealth -= ability->damage;
+								// update Health on network
+								scene.publish<EComponentUpdated>(other, ecs::Component::HEALTH);
+
+								sm::Vector3 toOther = other.GetComponent<comp::Transform>()->position - thisEntity.GetComponent<comp::Transform>()->position;
+								toOther.Normalize();
+
+								comp::TemporaryPhysics* p = other.AddComponent<comp::TemporaryPhysics>();
+								comp::TemporaryPhysics::Force force = {};
+
+								force.force = toOther + sm::Vector3(0, 5, 0);
+								force.force *= ability->damage;
+
+								force.isImpulse = true;
+								force.drag = 0.0f;
+								force.actingTime = 0.7f;
+
+								p->forces.push_back(force);
+
+								auto gravity = ecs::GetGravityForce();
+								p->forces.push_back(gravity);
+								
+							}
+
+						});
+
+				};
+
+			}
+		});
 }
 
 void Systems::HealthSystem(HeadlessScene& scene, float dt, uint32_t& money_ref)
@@ -377,30 +357,6 @@ void Systems::MovementSystem(HeadlessScene& scene, float dt)
 				}
 				velocity.oldVel = velocity.vel; // updated old vel position
 
-				
-				if (velocity.scaleVel.Length() > 0.01f)
-				{
-					e.UpdateNetwork();
-				}
-				transform.scale += velocity.scaleVel * dt;
-				velocity.oldScaleVel = velocity.scaleVel; // updated old vel scale
-
-				if (velocity.applyToCollider)
-				{					
-					comp::BoundingOrientedBox* box = e.GetComponent<comp::BoundingOrientedBox>();
-					if (box)
-					{
-						box->Extents = box->Extents + velocity.scaleVel * dt;
-					}
-
-					comp::BoundingSphere* bos = e.GetComponent<comp::BoundingSphere>();
-					if (bos)
-					{
-						bos->Radius += velocity.scaleVel.x * dt;
-					}
-
-				}
-
 			});
 	}
 }
@@ -415,6 +371,8 @@ void Systems::MovementColliderSystem(HeadlessScene& scene, float dt)
 		{
 			obb.Center = transform.position;
 			/*obb.Orientation = transform.rotation;*/
+			if (transform.syncColliderScale)
+				obb.Extents = transform.scale;
 		});
 
 	//BoundingSphere
@@ -422,6 +380,9 @@ void Systems::MovementColliderSystem(HeadlessScene& scene, float dt)
 	(comp::Transform& transform, comp::BoundingSphere& sphere)
 		{
 			sphere.Center = transform.position;
+			if (transform.syncColliderScale)
+				sphere.Radius = transform.scale.x;
+			
 		});
 }
 
@@ -439,5 +400,39 @@ void Systems::LightSystem(Scene& scene, float dt)
 			scene.GetLights()->EditLight(light.lightData, light.index);
 		});
 
+
+}
+
+void Systems::TransformAnimationSystem(HeadlessScene& scene, float dt)
+{
+	scene.ForEachComponent<comp::Transform, comp::BezierAnimation>([&](Entity e, comp::Transform& t, comp::BezierAnimation& a)
+		{
+			a.time += dt * (1.f / a.speed);
+			
+			if(a.translationPoints.size() > 0)
+				t.position = util::BezierCurve(a.translationPoints, a.time);
+			
+			if (a.scalePoints.size() > 0)
+				t.scale = util::BezierCurve(a.scalePoints, a.time);
+
+			if (a.rotationPoints.size() > 0)
+				t.rotation = util::BezierCurve(a.rotationPoints, a.time);
+
+			e.UpdateNetwork();
+			
+			if (a.time > 1.0f)
+			{
+				
+				if(a.onFinish)
+					a.onFinish();
+
+				a.time = 0.0f;
+				if (!a.loop)
+				{
+					e.RemoveComponent<comp::BezierAnimation>();
+				}
+
+			}
+		});
 
 }

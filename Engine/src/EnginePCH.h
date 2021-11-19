@@ -105,6 +105,7 @@ namespace sm = dx::SimpleMath;
 
 //Utility
 #include "Timer.h"
+#include "utility.h"
 
 // Custom Global includes (Singletons)
 #include "Logger.h"

@@ -2,6 +2,7 @@
 #include "Scene.h"
 #include "CollisionSystem.h"
 #include "PathFinderManager.h"
+#include "CombatSystem.h"
 
 namespace Systems
 {
@@ -9,6 +10,7 @@ namespace Systems
 	void UpdateAbilities(HeadlessScene& scene, float dt);
 	void CombatSystem(HeadlessScene& scene, float dt);
 	void HealingSystem(HeadlessScene& scene, float dt);
+	void HeroLeapSystem(HeadlessScene& scene, float dt);
 
 	void HealthSystem(HeadlessScene& scene, float dt, uint32_t& money_ref);
 	void SelfDestructSystem(HeadlessScene& scene, float dt);
@@ -16,6 +18,8 @@ namespace Systems
 	void MovementSystem(HeadlessScene& scene, float dt);
 	void MovementColliderSystem(HeadlessScene& scene, float dt);
 	void LightSystem(Scene& scene, float dt);
+
+	void TransformAnimationSystem(HeadlessScene& scene, float dt);
 
 	template<typename Collider1, typename Collider2>
 	void CheckCollisions(HeadlessScene& scene, float dt);
