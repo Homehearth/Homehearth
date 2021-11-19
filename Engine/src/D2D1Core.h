@@ -239,7 +239,7 @@ public:
 		Draws a Bitmap onto the screen at the coordinates of
 		_DRAW specification.
 	*/
-	static void DrawP(const draw_t& fig, ID2D1Bitmap* texture = nullptr);
+	static void DrawP(const draw_t& fig, ID2D1Bitmap* texture = nullptr, const float& opacity = (1.0f));
 
 	/*
 		Run buffering D2D1 Draw commands.

@@ -220,7 +220,7 @@ CollisionInfo_t CollisionSystem::Intersection(Entity entity1, Entity entity2)
 			// Center point of the sphere is inside the OBB == EDGE CASE
 			if (distance < 0.001f)
 			{
-				// Clamp to the nearest face of the OBB
+				// DeltaLeft, DeltaRight, DeltaTop, DeltaBottom
 				float dl = abs(sCenter.x - minX);
 				float dr = abs(sCenter.x - maxX);
 				float dt = abs(sCenter.z - minZ);
@@ -229,21 +229,22 @@ CollisionInfo_t CollisionSystem::Intersection(Entity entity1, Entity entity2)
 				float clampX = sCenter.x;
 				float clampZ = sCenter.z;
 
+				// Clamp to the nearest face of the OBB
 				if (dt < db && dt < dl && dt < dr)
 				{
-					clampZ = (-p2OBB->Extents.z);
+					clampZ = minZ;
 				}
 				else if (db < dl && db < dr)
 				{
-					clampZ = p2OBB->Extents.z;
+					clampZ = maxZ;
 				}
 				else if (dl < dr)
 				{
-					clampX = (-p2OBB->Extents.x);
+					clampX = minX;
 				}
 				else
 				{
-					clampX = p2OBB->Extents.x;
+					clampX = maxX;
 				}
 			
 				sm::Vector3 closestPoint = { clampX, 0.f, clampZ };
