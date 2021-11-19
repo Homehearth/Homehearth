@@ -509,7 +509,13 @@ bool PipelineManager::CreateShaders()
 
     if (!m_skyboxVertexShader.Create("Skybox_vs"))
     {
-        LOG_WARNING("failed creating Skox_vs.");
+        LOG_WARNING("failed creating Skybox_vs.");
+        return false;
+    }
+
+    if (!m_skyboxPixelShader.Create("Skybox_ps"))
+    {
+        LOG_WARNING("failed creating Skybox_ps.");
         return false;
     }
 
