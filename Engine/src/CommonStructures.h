@@ -73,7 +73,7 @@ struct Vector2I
 	}
 	Vector2I operator-(const Vector2I& other)
 	{
- 		return Vector2I(this->x - other.x, this->y - other.y);
+		return Vector2I(this->x - other.x, this->y - other.y);
 	}
 	Vector2I& operator-=(const Vector2I& other)
 	{
@@ -130,7 +130,7 @@ struct Ray_t
 		return discriminant > 0.0f;
 	}
 
-	bool Intersects(const dx::BoundingOrientedBox& boxCollider)
+	bool Intersects(const dx::BoundingOrientedBox& boxCollider, float* t = nullptr)
 	{
 
 		/*
@@ -202,11 +202,14 @@ struct Ray_t
 			}
 
 		}
+		if (t)
+		{
 
-		//if (tmin > 0)
-		//	t = tmin;
-		//else
-		//	t = tmax;
+			if (tmin > 0)
+				*t = tmin;
+			else
+				*t = tmax;
+		}
 
 		return true;
 	}
