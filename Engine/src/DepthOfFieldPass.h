@@ -5,7 +5,7 @@
 enum class DoFType
 {
 	DEFAULT = 0,
-	ADDAPTIVE = 1,
+	ADAPTIVE = 1,
 	VIGNETTE = 2
 };
 
