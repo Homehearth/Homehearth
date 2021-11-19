@@ -257,7 +257,7 @@ void D2D1Core::DrawF(ID2D1PathGeometry* geometry = nullptr)
 	}
 }
 
-void D2D1Core::DrawP(const draw_t& fig, ID2D1Bitmap* texture)
+void D2D1Core::DrawP(const draw_t& fig, ID2D1Bitmap* texture, const float& opacity)
 {
 	if (texture == nullptr)
 		return;
@@ -270,7 +270,7 @@ void D2D1Core::DrawP(const draw_t& fig, ID2D1Bitmap* texture)
 	D2D1_RECT_F dest = D2D1::RectF(upperLeftCorner.x, upperLeftCorner.y,
 		(upperLeftCorner.x + fig.width), (upperLeftCorner.y + fig.height));
 
-	INSTANCE->m_renderTarget->DrawBitmap(texture, dest);
+	INSTANCE->m_renderTarget->DrawBitmap(texture, dest, opacity);
 }
 
 void D2D1Core::Begin()
