@@ -294,12 +294,12 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 							});
 					}
 				}
+				return true;
 			}
 		}
 
 	}
-
-	return true;
+	return false;
 }
 
 uint32_t GridSystem::GetTileCount() const
