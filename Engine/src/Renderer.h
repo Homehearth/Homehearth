@@ -49,6 +49,6 @@ public:
 
 	IRenderPass* GetCurrentPass() const;
 	//TEMP PLZ REMOVE AFTER WE COME TO AN AGREEMENT ON WHICH DOF EFFECT TO USE
-	DOFPass* GetPass();
+	DOFPass* GetDoFPass();
 };
 

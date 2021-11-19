@@ -111,7 +111,7 @@ IRenderPass* Renderer::GetCurrentPass() const
 	return m_passes[m_currentPass];
 }
 
-DOFPass* Renderer::GetPass()
+DOFPass* Renderer::GetDoFPass()
 {
 	return &m_dofPass;
 }

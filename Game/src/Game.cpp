@@ -679,11 +679,11 @@ void Game::UpdateInput()
 	//TEMP PLZ REMOVE AFTER WE COME TO AN AGREEMENT ON WHICH DOF EFFECT TO USE
 	if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::D1, KeyState::PRESSED))
 	{
-		thread::RenderThreadHandler::Get().GetRenderer()->GetPass()->SetDoFType(DoFType::ADDAPTIVE);
+		thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::ADDAPTIVE);
 	}
 
 	if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::D2, KeyState::PRESSED))
 	{
-		thread::RenderThreadHandler::Get().GetRenderer()->GetPass()->SetDoFType(DoFType::VIGNETTE);
+		thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::VIGNETTE);
 	}
 }
