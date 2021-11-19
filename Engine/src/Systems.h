@@ -2,6 +2,7 @@
 #include "Scene.h"
 #include "CollisionSystem.h"
 #include "PathFinderManager.h"
+#include "CombatSystem.h"
 
 namespace Systems
 {

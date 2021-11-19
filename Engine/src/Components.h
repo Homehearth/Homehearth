@@ -185,6 +185,7 @@ namespace ecs
 			sm::Vector3 spawnPoint;
 			float respawnTimer;
 			bool isReady = false;
+			bool reachable = true;
 		};
 
 	
@@ -240,6 +241,9 @@ namespace ecs
 			// lifetime of the ability, for instance lifetime of any created collider
 			float lifetime = 5.f;
 
+			float attackDamage = 5.f;
+
+			float attackRange = 10.0f;
 
 			// !DO NOT TOUCH!
 			bool isReady = false;
@@ -250,12 +254,17 @@ namespace ecs
 			sm::Vector3 targetPoint;
 		};
 
-		struct AttackAbility : public IAbility
+		struct MeleeAttackAbility : public IAbility
+		{
+			//Just to keep it not empty for now
+			float temp = 0.0f;
+		};
+
+		struct RangeAttackAbility : public IAbility
 		{
 			float attackDamage = 5.f;
-			float attackRange = 10.0f;
-			bool isRanged = false;
 			float projectileSpeed = 10.f;
+			float projectileSize = 1.0f;
 		};
 
 		struct HealAbility : public IAbility

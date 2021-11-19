@@ -194,27 +194,45 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 							tileEntity.AddComponent<comp::Tag<TagType::STATIC>>();
 							tileEntity.AddComponent<comp::MeshName>()->name = "Defence.obj";
 							tileEntity.AddComponent<comp::Network>();
-
-							aiHandler->GetNodeByID(Vector2I(row, col))->reachable = false;
-							aiHandler->GetNodeByID(Vector2I(row, col))->connections.clear();
-
-							return true;
+							Node* node = aiHandler->GetNodeByID(Vector2I(row, col));
+							node->defencePlaced = true;
+							//Check if connections need to be severed
+							std::vector<Node*> diagNeighbors = node->GetDiagonalConnections();
+							for (Node* diagNeighbor : diagNeighbors)
+							{
+								if (diagNeighbor->defencePlaced || !diagNeighbor->reachable)
+								{
+									Vector2I difference = node->id - diagNeighbor->id;
+									Node* connectionRemovalNode1 = aiHandler->GetNodeByID(Vector2I(diagNeighbor->id.x + difference.x, diagNeighbor->id.y));
+									Node* connectionRemovalNode2 = aiHandler->GetNodeByID(Vector2I(diagNeighbor->id.x, diagNeighbor->id.y + difference.y));
+									if (!connectionRemovalNode1->RemoveConnection(connectionRemovalNode2))
+									{
+										LOG_INFO("Failed to remove connection1");
+									}
+									if (!connectionRemovalNode2->RemoveConnection(connectionRemovalNode1))
+									{
+										LOG_INFO("Failed to remove connection2");
+									}
+								}
+							}
+							if (!aiHandler->PlayerAStar(localPlayer.Center))
+							{
+								m_scene->ForEachComponent<comp::Player, comp::Network>([&](comp::Player& p, comp::Network& net)
+									{
+										if (net.id == playerWhoPressedMouse)
+										{
+											p.reachable = false;
+										}
+									});
+							}
 						}
 					}
-					//else if (tile.type == TileType::BUILDING || tile.type == TileType::UNPLACABLE || tile.type == TileType::DEFAULT)
-					//{
-					//	LOG_INFO("You cant place here!");
-					//}
-					//else if (tile.type == TileType::DEFENCE)
-					//{
-					//	LOG_INFO("Theres already a defence here!");
-					//}
 				}
 			}
 		}
 	}
 
-	return false;
+	return true;
 }
 
 uint32_t GridSystem::GetTileCount() const
