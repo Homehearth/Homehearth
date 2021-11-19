@@ -3,6 +3,7 @@
 #include <Engine.h>
 #include <GridSystem.h>
 #include "ModelIdentifier.h"
+#include "ParticleSystem.h"
 
 class Game : public Engine
 {
@@ -13,6 +14,8 @@ private:
 	GridSystem m_grid;
 	uint32_t m_waveTimer;
 	uint32_t m_money;
+	ParticleSystem m_particles;
+
 
 	Entity m_mapEntity;
 
@@ -53,4 +56,6 @@ public:
 	void SendSelectedClass(comp::Player::Class classType);
 
 	Entity& GetLocalPlayer();
+
+	ParticleSystem* GetParticleSystem();
 };

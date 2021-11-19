@@ -20,6 +20,7 @@ void Renderer::Initialize(Window* pWindow)
 	m_decalPass.Create();
 	AddPass(&m_basePass);   // 2
 	AddPass(&m_animPass);	// 3
+	AddPass(&m_particlePass);	// 4
 	AddPass(&m_skyPass);
 	AddPass(&m_shadowPass);
 	AddPass(&m_dofPass);
@@ -29,11 +30,12 @@ void Renderer::Initialize(Window* pWindow)
 	m_basePass.SetEnable(true);
 	m_animPass.SetEnable(true);
 	m_decalPass.SetEnable(true);
+	m_particlePass.SetEnable(true);
 	m_skyPass.SetEnable(true);
 	m_dofPass.SetEnable(true);
 
 #ifdef _DEBUG
-	AddPass(&m_debugPass);  // 4
+	AddPass(&m_debugPass);  // 5
     m_debugPass.SetEnable(true);
 #endif
 

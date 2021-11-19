@@ -62,6 +62,37 @@ namespace ecs
 			}
 		};
 
+		struct EmitterParticle
+		{
+			std::shared_ptr<RTexture> texture = nullptr;
+			std::shared_ptr<RTexture> opacityTexture = nullptr;
+			PARTICLEMODE type = PARTICLEMODE::BLOOD;
+			UINT nrOfParticles = 0;
+
+			ComPtr<ID3D11Buffer> particleBuffer;
+			ComPtr<ID3D11ShaderResourceView> particleSRV;
+			ComPtr<ID3D11UnorderedAccessView> particleUAV;
+
+			EmitterParticle(std::string textureName = "thisisfine.png ", std::string opacityTextureName = "thisisfine_Opacity.png", int amoutOfParticles = 10, PARTICLEMODE mode = PARTICLEMODE::BLOOD)
+			{
+				//If no texture name take default texture else use the given name
+				if (textureName == "")
+					texture = ResourceManager::Get().GetResource<RTexture>("thisisfine.png ");
+				else 
+					texture = ResourceManager::Get().GetResource<RTexture>(textureName);
+
+				//If no opacity texture name take default opacity texture else use given name
+				if (opacityTextureName == "")
+					opacityTexture = ResourceManager::Get().GetResource<RTexture>("thisisfine_Opacity.png");
+				else
+					opacityTexture = ResourceManager::Get().GetResource<RTexture>(opacityTextureName);
+
+
+				nrOfParticles = (UINT)amoutOfParticles;
+				type = mode;
+			}
+		};
+
 		struct Network
 		{
 			uint32_t id = UINT32_MAX;

@@ -6,6 +6,7 @@
 #include "PipelineManager.h"
 #include "DecalPass.h"
 #include "ShadowPass.h"
+#include "ParticlePass.h"
 #include "SkyboxPass.h"
 #include "BlurPass.h"
 #include "DepthOfFieldPass.h"
@@ -23,6 +24,7 @@ private:
 	DebugPass		m_debugPass;
 	AnimationPass	m_animPass;
 	DecalPass		m_decalPass;
+	ParticlePass	m_particlePass;
 	SkyboxPass		m_skyPass;
 	ShadowPass		m_shadowPass;
 	DOFPass			m_dofPass;
