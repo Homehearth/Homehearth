@@ -14,7 +14,7 @@ void CombatSystem::UpdateMelee(HeadlessScene& scene)
 		if (ecs::ReadyToUse(&stats, updateTargetPoint))
 		{
 			Entity attackEntity = CreateAttackEntity(entity, scene, &transform, &stats);
-			AddCollisionBehavior(entity, attackEntity, scene);
+			AddCollisionMeleeBehavior(entity, attackEntity, scene);
 		}
 	});
 }
@@ -32,7 +32,7 @@ void CombatSystem::UpdateRange(HeadlessScene& scene)
 		if (ecs::ReadyToUse(&stats, updateTargetPoint))
 		{
 			Entity attackEntity = CreateAttackEntity(entity, scene, &transform, &stats);
-			AddCollisionBehavior(entity, attackEntity, scene);
+			AddCollisionRangeBehavior(entity, attackEntity, scene);
 		}
 	});
 }
@@ -128,7 +128,7 @@ Entity CombatSystem::CreateAttackEntity(Entity entity, HeadlessScene& scene, com
 
 
 
-void CombatSystem::AddCollisionBehavior(Entity entity, Entity attackEntity, HeadlessScene& scene)
+void CombatSystem::AddCollisionMeleeBehavior(Entity entity, Entity attackEntity, HeadlessScene& scene)
 {
 	CollisionSystem::Get().AddOnCollisionEnter(attackEntity, [entity, &scene](Entity thisEntity, Entity other)
 		{
@@ -150,16 +150,77 @@ void CombatSystem::AddCollisionBehavior(Entity entity, Entity attackEntity, Head
 			}
 
 			comp::Health* otherHealth = other.GetComponent<comp::Health>();
-			comp::MeleeAttackAbility* attackMAbility = entity.GetComponent<comp::MeleeAttackAbility>();
-			comp::RangeAttackAbility* attackRAbility = entity.GetComponent<comp::RangeAttackAbility>();
-			comp::IAbility* attackAbility = nullptr;
+			comp::MeleeAttackAbility* attackAbility = entity.GetComponent<comp::MeleeAttackAbility>();
 
-			if (attackMAbility)
-				attackAbility = attackMAbility;
-			else if(attackRAbility)
-				attackAbility = attackRAbility;
+			if (otherHealth && attackAbility)
+			{
+				otherHealth->currentHealth -= attackAbility->attackDamage;
+				// update Health on network
+				scene.publish<EComponentUpdated>(other, ecs::Component::HEALTH);
 
-			if (otherHealth)
+				thisEntity.GetComponent<comp::SelfDestruct>()->lifeTime = 0.f;
+
+
+				comp::Velocity* attackVel = thisEntity.GetComponent<comp::Velocity>();
+				if (attackVel)
+				{
+					comp::TemporaryPhysics* p = other.AddComponent<comp::TemporaryPhysics>();
+					comp::TemporaryPhysics::Force force = {};
+					force.force = attackVel->vel;
+					p->forces.push_back(force);
+				}
+				else
+				{
+
+					sm::Vector3 toOther = other.GetComponent<comp::Transform>()->position - entity.GetComponent<comp::Transform>()->position;
+					toOther.Normalize();
+
+					comp::TemporaryPhysics* p = other.AddComponent<comp::TemporaryPhysics>();
+					comp::TemporaryPhysics::Force force = {};
+
+					force.force = toOther + sm::Vector3(0, 1, 0);
+					force.force *= attackAbility->attackDamage;
+
+					force.isImpulse = true;
+					force.drag = 0.0f;
+					force.actingTime = 0.7f;
+
+					p->forces.push_back(force);
+
+					auto gravity = ecs::GetGravityForce();
+					p->forces.push_back(gravity);
+				}
+
+			}
+			return NO_RESPONSE;
+		});
+}
+
+void CombatSystem::AddCollisionRangeBehavior(Entity entity, Entity attackEntity, HeadlessScene& scene)
+{
+	CollisionSystem::Get().AddOnCollisionEnter(attackEntity, [entity, &scene](Entity thisEntity, Entity other)
+		{
+			// is caster already dead
+			if (entity.IsNull())
+			{
+				thisEntity.GetComponent<comp::SelfDestruct>()->lifeTime = 0.f;
+				return NO_RESPONSE;
+			}
+
+			if (other == entity)
+				return NO_RESPONSE;
+
+			tag_bits goodOrBad = TagType::GOOD | TagType::BAD;
+			if ((entity.GetTags() & goodOrBad) ==
+				(other.GetTags() & goodOrBad))
+			{
+				return NO_RESPONSE; //these guys are on the same team
+			}
+
+			comp::Health* otherHealth = other.GetComponent<comp::Health>();
+			comp::RangeAttackAbility* attackAbility = entity.GetComponent<comp::RangeAttackAbility>();
+
+			if (otherHealth && attackAbility)
 			{
 				otherHealth->currentHealth -= attackAbility->attackDamage;
 				// update Health on network

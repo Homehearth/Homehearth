@@ -13,17 +13,8 @@ BT::NodeStatus BT::InRangeCBT::Tick()
 	comp::MeleeAttackAbility* attackMAbility = entity.GetComponent<comp::MeleeAttackAbility>();
 	comp::RangeAttackAbility* attackRAbility = entity.GetComponent<comp::RangeAttackAbility>();
 	Entity* target = Blackboard::Get().GetValue<Entity>("target" + std::to_string(entity));
-	comp::IAbility* attackAbility = nullptr;
-	if(attackMAbility)
-	{
-		attackAbility = attackMAbility;
-	}
-	else if(attackRAbility)
-	{
-		attackAbility = attackRAbility;
-	}
 
-	if(transform == nullptr || attackAbility == nullptr)
+	if(transform == nullptr || attackMAbility && attackRAbility)
 	{
 		LOG_ERROR("Failed to get components from entity");
 		return BT::NodeStatus::FAILURE;
@@ -33,13 +24,20 @@ BT::NodeStatus BT::InRangeCBT::Tick()
 		LOG_ERROR("Failed to get target position");
 		return BT::NodeStatus::FAILURE;
 	}
+	if (attackMAbility)
+	{
+		if (sm::Vector3::Distance(transform->position, target->GetComponent<comp::Transform>()->position) <= attackMAbility->attackRange)
+		{
+			return BT::NodeStatus::SUCCESS;
+		}
+	}
+	else if(attackRAbility)
+	{
+		if (sm::Vector3::Distance(transform->position, target->GetComponent<comp::Transform>()->position) <= attackRAbility->attackRange)
+		{
+			return BT::NodeStatus::SUCCESS;
+		}
+	}
 
-	if (sm::Vector3::Distance(transform->position, target->GetComponent<comp::Transform>()->position) <= attackAbility->attackRange)
-	{
-		return BT::NodeStatus::SUCCESS;
-	}
-	else
-	{
-		return BT::NodeStatus::FAILURE;
-	}
+	return BT::NodeStatus::FAILURE;
 }

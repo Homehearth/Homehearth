@@ -20,6 +20,7 @@ private:
 	//Creates an ranged attack entity that holds multiple components
 	static Entity CreateAttackEntity(Entity entity, HeadlessScene& scene, comp::Transform* transform, comp::RangeAttackAbility* stats);
 	//Creates behavior for collision with an attack entity
-	static void AddCollisionBehavior(Entity entity, Entity attackEntity, HeadlessScene& scene);
+	static void AddCollisionMeleeBehavior(Entity entity, Entity attackEntity, HeadlessScene& scene);
+	static void AddCollisionRangeBehavior(Entity entity, Entity attackEntity, HeadlessScene& scene);
 };
 
