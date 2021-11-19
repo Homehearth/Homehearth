@@ -923,6 +923,32 @@ Currency& Simulation::GetCurrency()
 	return m_currency;
 }
 
+void Simulation::UseShop(const ShopItem& item, const uint32_t& player)
+{
+	switch (item)
+	{
+	case ShopItem::Primary_Upgrade:
+	{
+		comp::AttackAbility* p = m_players.at(player).GetComponent<comp::AttackAbility>();
+		if (p && m_currency.GetAmountRef() >= 10)
+		{
+			p->attackDamage += 2.0f;
+			m_currency.GetAmountRef() -= 10;
+		}
+		break;
+	}
+	case ShopItem::Tower_Upgrade:
+	{
+		/*Upgrade a tower or ALL towers?*/
+		break;
+	}
+	default:
+	{
+		break;
+	}
+	}
+}
+
 void Simulation::SetLobbyScene()
 {
 	m_pCurrentScene = m_pLobbyScene;

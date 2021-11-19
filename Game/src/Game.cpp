@@ -524,6 +524,15 @@ Entity& Game::GetLocalPlayer()
 	return this->m_players.at(m_localPID);
 }
 
+void Game::UseShop(const ShopItem& whatToBuy)
+{
+	network::message<GameMsg> msg;
+	msg.header.id = GameMsg::Game_UseShop;
+	msg << whatToBuy << m_localPID << m_gameID;
+
+	m_client.Send(msg);
+}
+
 void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 {
 

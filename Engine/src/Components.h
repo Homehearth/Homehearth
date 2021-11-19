@@ -41,18 +41,15 @@ namespace ecs
 
 		struct Decal
 		{
-			RTexture* decal = nullptr;
 			sm::Matrix viewPoint;
 			// Life span in seconds.
-			float lifespan = 5.0f;
+			float lifespan = 10.0f;
 
-			Decal(const Transform& t, RTexture* decal = nullptr)
+			Decal(const Transform& t)
 			{
-				this->decal = decal;
-
 				// Be positioned slightly above.
 				sm::Vector3 position = t.position;
-				position.y += 10.0f;
+				position.y = 10.0f;
 				position.x += 0.0001f;
 				position.z -= 0.0001f;
 

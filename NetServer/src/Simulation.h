@@ -100,6 +100,8 @@ public:
 	GridSystem& GetGrid();
 	Currency& GetCurrency();
 
+	void UseShop(const ShopItem& item, const uint32_t& player);
+
 	void SetLobbyScene();
 	void SetGameScene();
 	void ResetGameScene();
