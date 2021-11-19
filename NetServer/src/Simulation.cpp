@@ -939,7 +939,19 @@ void Simulation::UseShop(const ShopItem& item, const uint32_t& player)
 	}
 	case ShopItem::Tower_Upgrade:
 	{
+		if (m_currency.GetAmount() < 20)
+			break;
+
 		/*Upgrade a tower or ALL towers?*/
+		m_pCurrentScene->ForEachComponent<comp::Health, comp::Tag<TagType::STATIC>>([&](comp::Health& h, comp::Tag<TagType::STATIC>& t) {
+
+			h.maxHealth += 20;
+			h.currentHealth += 20;
+
+			});
+
+		m_currency.GetAmountRef() -= 20;
+
 		break;
 	}
 	default:

@@ -337,6 +337,12 @@ namespace sceneHelp
 
 			});
 		shopMenu->AddElement<rtd::Text>("Upgrade Primary", draw_text_t((width / 24.f) + ((width * 0.37f) * 0.5f) - width / 8.0f, height / 24.f, width / 4.0f, height / 8.0f));
+		shopMenu->AddElement<rtd::Button>("Button.png", draw_t((width / 24.f) + ((width * 0.37f) * 0.5f) - width / 8.0f, ((height / 24.f) * 2.0f) + height / 8.0f, width / 4.0f, height / 8.0f))->SetOnPressedEvent([=] {
+
+			game->UseShop(ShopItem::Tower_Upgrade);
+
+			});
+		shopMenu->AddElement<rtd::Text>("Upgrade Defences", draw_text_t((width / 24.f) + ((width * 0.37f) * 0.5f) - width / 8.0f, ((height / 24.f) * 2.0f) + height / 8.0f, width / 4.0f, height / 8.0f));
 		shopMenu->Hide();
 		scene.Add2DCollection(shopMenu, "shopMenu");
 	}
