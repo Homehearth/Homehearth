@@ -313,6 +313,7 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 			else if (p.lastInputState.rightMouse) // was pressed
 			{
 				LOG_INFO("Pressed right");
+				simulation->GetGrid().RemoveDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, Blackboard::Get().GetAIHandler());
 				if (ecs::UseAbility(e, p.secondaryAbilty, &p.mousePoint))
 				{
 
