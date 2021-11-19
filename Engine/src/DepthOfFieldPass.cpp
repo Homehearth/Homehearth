@@ -15,7 +15,7 @@ bool DOFPass::Create()
 		return false;
 	}
 	
-	if (!m_blurPass.Create(BlurLevel::SUPERLOW, BlurType::BOX))
+	if (!m_blurPass.Create(BlurLevel::LOW, BlurType::BOX))
 		return false;
 
 	m_blurPass.Initialize(D3D11Core::Get().DeviceContext(), PM);
