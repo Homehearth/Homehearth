@@ -115,7 +115,80 @@ void GridSystem::Initialize(Vector2I mapSize, sm::Vector3 position, std::string 
 	stbi_image_free(pixelsData);
 }
 
+bool GridSystem::RemoveDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, PathFinderManager* aiHandler)
+{
+	const float MAX_RADIUS = 20.f;
+	const float MIN_RADIUS = 10.f;
 
+	Plane_t plane;
+	plane.normal = { 0.0f, 1.0f, 0.0f };
+	sm::Vector3 pos;
+	bool tileFound = false;
+	bool canBuild = false;
+
+	sm::Vector3 localPlayer;
+	std::vector<sm::Vector3> entityPos;
+	m_scene->ForEachComponent<comp::Player, comp::Transform, comp::Network>([&](comp::Player& p, comp::Transform& t, comp::Network& net)
+		{
+			if (net.id != playerWhoPressedMouse)
+			{
+				entityPos.push_back(t.position);
+			}
+			else
+			{
+				localPlayer = t.position;
+			}
+		});
+	m_scene->ForEachComponent<comp::Transform, comp::Tag<TagType::DEFENCE>, comp::BoundingOrientedBox>([&](Entity e, comp::Transform& t, comp::Tag<TagType::DEFENCE>& d, comp::BoundingOrientedBox& b)
+		{
+			if (mouseRay.Intersects(b))
+			{
+				for (int col = 0; col < m_gridSize.y && !tileFound; col++)
+				{
+					for (int row = 0; row < m_gridSize.x && !tileFound; row++)
+					{
+						Tile tile = m_tiles[row][col];
+						if (t.position == tile.position)
+						{
+							LOG_INFO("Tile Found");
+
+						}
+					}
+				}
+				//Check if the connection between diagonal neighbors needs to be restored
+				//Node* node = nullptr;
+				//node->defencePlaced = false;
+				//node->reachable = true;
+				//std::vector<Node*> diagNeighbors = node->GetDiagonalConnections();
+				//for (Node* diagNeighbor : diagNeighbors)
+				//{
+				//	if (diagNeighbor->defencePlaced || !diagNeighbor->reachable)
+				//	{
+				//		Vector2I difference = node->id - diagNeighbor->id;
+				//		Node* node1 = aiHandler->GetNodeByID(Vector2I(diagNeighbor->id.x + difference.x, diagNeighbor->id.y));
+				//		Node* node2 = aiHandler->GetNodeByID(Vector2I(diagNeighbor->id.x, diagNeighbor->id.y + difference.y));
+
+				//		node1->connections.push_back(node2);
+				//		node2->connections.push_back(node1);
+				//	}
+				//}
+				//if (aiHandler->PlayerAStar(localPlayer))
+				//{
+				//	m_scene->ForEachComponent<comp::Player, comp::Network>([&](comp::Player& p, comp::Network& net)
+				//		{
+				//			if (net.id == playerWhoPressedMouse)
+				//			{
+				//				p.reachable = true;
+				//			}
+				//		});
+				//}
+				e.Destroy();
+			}
+
+		});
+
+	return true;
+}
 bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, PathFinderManager* aiHandler)
 {
 	const float MAX_RADIUS = 20.f;
@@ -192,10 +265,12 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 							comp::BoundingOrientedBox* collider = tileEntity.AddComponent<comp::BoundingOrientedBox>();
 							collider->Extents = { m_tileHalfWidth, m_tileHalfWidth, m_tileHalfWidth };
 							tileEntity.AddComponent<comp::Tag<TagType::STATIC>>();
+							tileEntity.AddComponent<comp::Tag<TagType::DEFENCE>>();
 							tileEntity.AddComponent<comp::MeshName>()->name = "Defence.obj";
 							tileEntity.AddComponent<comp::Network>();
 							Node* node = aiHandler->GetNodeByID(Vector2I(row, col));
 							node->defencePlaced = true;
+							node->reachable = false;
 							//Check if connections need to be severed
 							std::vector<Node*> diagNeighbors = node->GetDiagonalConnections();
 							for (Node* diagNeighbor : diagNeighbors)
