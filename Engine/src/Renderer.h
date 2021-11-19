@@ -10,6 +10,7 @@
 #include "SkyboxPass.h"
 #include "BlurPass.h"
 #include "DepthOfFieldPass.h"
+#include "HeadlessEngine.h"
 
 
 class Renderer
