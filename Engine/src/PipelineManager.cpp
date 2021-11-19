@@ -75,6 +75,8 @@ void PipelineManager::Initialize(Window* pWindow, ID3D11DeviceContext* context)
 
     // Set Viewport.
     this->SetViewport();
+    m_windowWidth = m_window->GetWidth();
+    m_windowHeight = m_window->GetHeight();
 }
 
 bool PipelineManager::CreateRenderTargetView()
@@ -543,7 +545,19 @@ bool PipelineManager::CreateShaders()
     {
         LOG_WARNING("failed creating Particle_cs.");
         return false;
-    } 
+    }
+
+    if (!m_blurComputeShader.Create("Blur_CS"))
+    {
+        LOG_WARNING("failed creating Blur_CS");
+        return false;
+    }
+
+    if (!m_dofComputeShader.Create("DOF_cs"))
+    {
+        LOG_WARNING("failed creating DOF_cs");
+        return false;
+    }
 
     return true;
 }                         

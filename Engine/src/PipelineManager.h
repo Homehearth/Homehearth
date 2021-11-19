@@ -68,12 +68,10 @@ public:
 	Shaders::ComputeShader			m_ParticleComputeShader;
 	Shaders::GeometryShader			m_ParticleGeometryShader;
 	
-
 	Shaders::ComputeShader			m_blurComputeShader;
 	Shaders::ComputeShader			m_dofComputeShader;
 	
 	D3D11_VIEWPORT					m_viewport;
-
 
 	UINT							m_windowWidth;
 	UINT							m_windowHeight;
