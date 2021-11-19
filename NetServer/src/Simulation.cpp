@@ -1,6 +1,5 @@
 #include "NetServerPCH.h"
 #include "Simulation.h"
-
 #include "Wave.h"
 
 void Simulation::InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg, const std::bitset<ecs::Component::COMPONENT_MAX>& componentMask)const
@@ -931,10 +930,10 @@ void Simulation::UseShop(const ShopItem& item, const uint32_t& player)
 	{
 	case ShopItem::Primary_Upgrade:
 	{
-		comp::AttackAbility* p = m_players.at(player).GetComponent<comp::AttackAbility>();
+		comp::IAbility* p = m_players.at(player).GetComponent<comp::IAbility>();
 		if (p && m_currency.GetAmountRef() >= 10)
 		{
-			p->attackDamage += 2.0f;
+			//p->attackDamage += 2.0f;
 			m_currency.GetAmountRef() -= 10;
 		}
 		break;
@@ -945,12 +944,12 @@ void Simulation::UseShop(const ShopItem& item, const uint32_t& player)
 			break;
 
 		/*Upgrade a tower or ALL towers?*/
-		m_pCurrentScene->ForEachComponent<comp::Health, comp::Tag<TagType::STATIC>>([&](comp::Health& h, comp::Tag<TagType::STATIC>& t) {
+		//m_pCurrentScene->ForEachComponent<comp::Health, comp::Tag<TagType::STATIC>>([&](comp::Health& h, comp::Tag<TagType::STATIC>& t) {
 
-			h.maxHealth += 20;
-			h.currentHealth += 20;
+		//	h.maxHealth += 20;
+		//	h.currentHealth += 20;
 
-			});
+		//	});
 
 		m_currency.GetAmountRef() -= 20;
 

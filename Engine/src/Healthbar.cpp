@@ -1,6 +1,5 @@
 #include "EnginePCH.h"
 #include "Healthbar.h"
-#include "Components.h"
 #include <cmath>
 
 constexpr float SHOW_TIME = 3.0f;

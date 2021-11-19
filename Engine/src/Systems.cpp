@@ -1,7 +1,6 @@
 #include "EnginePCH.h"
 #include "Systems.h"
 #include "Text.h"
-#include "Components.h"
 #include "Healthbar.h"
 
 Entity FindClosestPlayer(HeadlessScene& scene, sm::Vector3 position, comp::NPC* npc)
