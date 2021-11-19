@@ -61,7 +61,7 @@ bool rtd::AbilityUI::CheckHover()
     return true;
 }
 
-bool rtd::AbilityUI::CheckClick()
+ElementState rtd::AbilityUI::CheckClick()
 {
-    return false;
+    return ElementState::NONE;
 }

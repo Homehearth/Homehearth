@@ -217,6 +217,7 @@ namespace ecs
 			float respawnTimer;
 			bool isReady = false;
 			bool reachable = true;
+			TowerTypes towerSelected = TowerTypes::SHORT;
 		};
 
 	

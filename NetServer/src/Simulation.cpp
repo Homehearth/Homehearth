@@ -368,6 +368,7 @@ Simulation::Simulation(Server* pServer, HeadlessEngine* pEngine)
 {
 	this->m_gameID = 0;
 	this->m_tick = 0;
+	m_shop.SetSimulation(this);
 }
 
 bool Simulation::JoinLobby(uint32_t playerID, uint32_t gameID, const std::string& namePlate)
@@ -480,6 +481,18 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 					p->lastInputState = input;
 				}
 			}
+
+#if GOD_MODE
+			/*
+				Infinite health.
+			*/
+			scene.ForEachComponent<comp::Player, comp::Health>([](comp::Player& p, comp::Health& h) {
+
+				h.currentHealth = h.maxHealth;
+
+				});
+
+#endif
 
 			//  run all game logic systems
 			{
@@ -937,40 +950,7 @@ Currency& Simulation::GetCurrency()
 
 void Simulation::UseShop(const ShopItem& item, const uint32_t& player)
 {
-	switch (item)
-	{
-	case ShopItem::Primary_Upgrade:
-	{
-		comp::IAbility* p = m_players.at(player).GetComponent<comp::IAbility>();
-		if (p && m_currency.GetAmountRef() >= 10)
-		{
-			//p->attackDamage += 2.0f;
-			m_currency.GetAmountRef() -= 10;
-		}
-		break;
-	}
-	case ShopItem::Tower_Upgrade:
-	{
-		if (m_currency.GetAmount() < 20)
-			break;
-
-		/*Upgrade a tower or ALL towers?*/
-		//m_pCurrentScene->ForEachComponent<comp::Health, comp::Tag<TagType::STATIC>>([&](comp::Health& h, comp::Tag<TagType::STATIC>& t) {
-
-		//	h.maxHealth += 20;
-		//	h.currentHealth += 20;
-
-		//	});
-
-		m_currency.GetAmountRef() -= 20;
-
-		break;
-	}
-	default:
-	{
-		break;
-	}
-	}
+	m_shop.UseShop(item, player);
 }
 
 void Simulation::SetLobbyScene()
@@ -986,7 +966,7 @@ void Simulation::SetGameScene()
 {
 	ResetGameScene();
 	m_pCurrentScene = m_pGameScene;
-#ifdef _DEBUG
+#ifdef GOD_MODE
 	// During debug give players 1000 gold/monies.
 	m_currency.GetAmountRef() = 1000;
 

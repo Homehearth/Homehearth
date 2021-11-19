@@ -189,10 +189,31 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 							transform->position = { tile.position.x , 5.f, tile.position.z };
 							transform->scale = { 1.35f, 1.f, 1.35f };
 
+							/*
+								Find out which tower type the player wanted to build.
+							*/
+							TowerTypes towerBuild = TowerTypes::SHORT;
+							m_scene->ForEachComponent<comp::Player, comp::Network>([&](comp::Player& p, comp::Network& n) {
+
+								if (n.id == playerWhoPressedMouse)
+								{
+									towerBuild = p.towerSelected;
+								}
+
+								});
+
 							comp::BoundingOrientedBox* collider = tileEntity.AddComponent<comp::BoundingOrientedBox>();
 							collider->Extents = { m_tileHalfWidth, m_tileHalfWidth, m_tileHalfWidth };
 							tileEntity.AddComponent<comp::Tag<TagType::STATIC>>();
-							tileEntity.AddComponent<comp::MeshName>()->name = "Defence.obj";
+
+							// Temp
+							if (towerBuild == TowerTypes::SHORT)
+							{
+								tileEntity.AddComponent<comp::MeshName>()->name = "Defence.obj";
+							}
+							else
+								tileEntity.AddComponent<comp::MeshName>()->name = "Barrel.obj";
+
 							tileEntity.AddComponent<comp::Network>();
 							Node* node = aiHandler->GetNodeByID(Vector2I(row, col));
 							node->defencePlaced = true;

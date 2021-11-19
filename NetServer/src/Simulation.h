@@ -6,6 +6,7 @@
 #include "ServerSystems.h"
 #include "Wave.h"
 #include "AIBehaviors.h"
+#include "IShop.h"
 /*
 		Simulation defines each ongoing simulation from the perspective of the server
 		gameID identifies the simulation which each player has to give the server to keep track
@@ -21,6 +22,7 @@ private:
 	uint32_t m_tick;
 	GridSystem m_grid;
 	Currency m_currency;
+	IShop m_shop;
 
 	HeadlessScene* m_pLobbyScene;
 	HeadlessScene* m_pGameScene;

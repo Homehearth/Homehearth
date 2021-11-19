@@ -122,7 +122,7 @@ void rtd::Button::OnHover()
 
 }
 
-bool rtd::Button::CheckClick()
+ElementState rtd::Button::CheckClick()
 {
 	m_isClicked = false;
 	if (CheckHover())
@@ -131,10 +131,19 @@ bool rtd::Button::CheckClick()
 		if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED))
 		{
 			m_isClicked = true;
+			return ElementState::INSIDE;
+		}
+	}
+	else
+	{
+		// CheckCollisions if mouse key is pressed.
+		if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED))
+		{
+			return ElementState::OUTSIDE;
 		}
 	}
 
-	return m_isClicked;
+	return ElementState::NONE;
 }
 
 bool rtd::Button::CheckHover()

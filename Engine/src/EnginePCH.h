@@ -4,6 +4,9 @@
 #define RENDER_IMGUI 0
 #define PROFILER 1
 
+// Feel free to add more things to this, currently only gives more money :)
+#define GOD_MODE 1
+
 // Turn this to 1 if you want to see the very beautiful demo menu
 #define DRAW_TEMP_2D 0
 #define DEBUG_SNAPSHOT 1

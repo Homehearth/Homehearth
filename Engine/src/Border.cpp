@@ -100,9 +100,24 @@ void rtd::Border::OnHover()
 {
 }
 
-bool rtd::Border::CheckClick()
+ElementState rtd::Border::CheckClick()
 {
-	return false;
+	//// CheckCollisions if mouse key is pressed.
+	//if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED))
+	//{
+	//	// Is within bounds?
+	//	if (InputSystem::Get().GetMousePos().x > m_opts.x_pos &&
+	//		InputSystem::Get().GetMousePos().x < m_opts.x_pos + m_opts.width &&
+	//		InputSystem::Get().GetMousePos().y > m_opts.y_pos &&
+	//		InputSystem::Get().GetMousePos().y < m_opts.y_pos + m_opts.height)
+	//	{
+	//		return ElementState::INSIDE;
+	//	}
+	//	else
+	//		return ElementState::OUTSIDE;
+	//}
+
+	return ElementState::NONE;
 }
 
 bool rtd::Border::CheckHover()

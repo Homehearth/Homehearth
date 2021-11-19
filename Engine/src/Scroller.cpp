@@ -17,7 +17,7 @@ void rtd::Scroller::Update()
             m_buttons[i]->AddPosition(m_currentPos.x - temp.x, m_currentPos.y - temp.y);
 
             // Mini update
-            if (m_buttons[i]->CheckClick())
+            if (m_buttons[i]->CheckClick() == ElementState::INSIDE)
                 m_buttons[i]->OnClick();
             if (m_buttons[i]->CheckHover())
                 m_buttons[i]->OnHover();
@@ -33,7 +33,7 @@ void rtd::Scroller::Update()
             m_buttons[i]->AddPosition(m_currentPos.x - temp.x, m_currentPos.y - temp.y);
 
             // Mini update
-            if (m_buttons[i]->CheckClick())
+            if (m_buttons[i]->CheckClick() == ElementState::INSIDE)
                 m_buttons[i]->OnClick();
             if (m_buttons[i]->CheckHover())
                 m_buttons[i]->OnHover();
@@ -99,7 +99,15 @@ bool Scroller::CheckHover()
     return true;
 }
 
-bool Scroller::CheckClick()
+ElementState Scroller::CheckClick()
 {
-    return m_button->CheckClick();
+    ElementState state = m_button->CheckClick();
+
+    for (size_t i = 0; i < m_buttons.size(); i++)
+    {
+        if(state != ElementState::INSIDE)
+           state = m_buttons[i]->CheckClick();
+    }
+
+    return state;
 }

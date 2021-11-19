@@ -136,7 +136,7 @@ bool rtd::Healthbar::CheckHover()
     return false;
 }
 
-bool rtd::Healthbar::CheckClick()
+ElementState rtd::Healthbar::CheckClick()
 {
-    return true;
+    return ElementState::NONE;
 }
