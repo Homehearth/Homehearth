@@ -36,7 +36,7 @@ public:
 									~GridSystem();
 
 	/*GridSize is decided by the texture size, how many tiles in x and why, MapSize is how big the world is*/
-	void							Initialize( Vector2I mapSize, sm::Vector3 position, std::string fileName, HeadlessScene* scene);
+	void							Initialize(Vector2I mapSize, sm::Vector3 position, std::string fileName, HeadlessScene* scene);
 	bool							RemoveDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, PathFinderManager* aihandler);
 	bool							PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, PathFinderManager* aiHandler);
 	uint32_t						GetTileCount() const;
