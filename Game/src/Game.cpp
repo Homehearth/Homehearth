@@ -365,6 +365,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	case GameMsg::Game_Start:
 	{
 		SetScene("Game");
+		thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::ADAPTIVE);
 		break;
 	}
 	case GameMsg::Game_WaveTimer:
@@ -674,5 +675,16 @@ void Game::UpdateInput()
 	if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::B, KeyState::PRESSED))
 	{
 		m_inputState.key_b = true;
+	}
+
+	//TEMP PLZ REMOVE AFTER WE COME TO AN AGREEMENT ON WHICH DOF EFFECT TO USE
+	if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::D1, KeyState::PRESSED))
+	{
+		thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::ADAPTIVE);
+	}
+
+	if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::D2, KeyState::PRESSED))
+	{
+		thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::VIGNETTE);
 	}
 }
