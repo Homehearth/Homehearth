@@ -55,4 +55,11 @@ public:
 	void SendSelectedClass(comp::Player::Class classType);
 
 	Entity& GetLocalPlayer();
+
+	/*
+		One-stop-shop for the usage of shop items like
+		upgrades for player or towers, new towers with better abilities.
+		Heals for players who can't heal.
+	*/
+	void UseShop(const ShopItem& whatToBuy);
 };

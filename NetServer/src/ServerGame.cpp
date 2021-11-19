@@ -291,6 +291,18 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 
 		break;
 	}
+	case GameMsg::Game_UseShop:
+	{
+		uint32_t playerID;
+		uint32_t gameID;
+		ShopItem shopItem;
+		msg >> gameID >> playerID >> shopItem;
+
+		if (m_simulations.find(gameID) != m_simulations.end())
+		{
+			m_simulations.at(gameID)->UseShop(shopItem, playerID);
+		}
+	}
 	}
 }
 
