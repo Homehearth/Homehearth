@@ -148,40 +148,41 @@ bool GridSystem::RemoveDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, 
 					for (int row = 0; row < m_gridSize.x && !tileFound; row++)
 					{
 						Tile tile = m_tiles[row][col];
-						if (t.position == tile.position)
+						if (t.position.x == tile.position.x && t.position.z == tile.position.z)
 						{
 							LOG_INFO("Tile Found");
+							m_tiles[row][col].type = TileType::EMPTY;
+							Node* node = aiHandler->GetNodeByID(tile.gridID);
+							node->defencePlaced = false;
+							node->reachable = true;
+							std::vector<Node*> diagNeighbors = node->GetDiagonalConnections();
+							for (Node* diagNeighbor : diagNeighbors)
+							{
+								if (diagNeighbor->defencePlaced || !diagNeighbor->reachable)
+								{
+									Vector2I difference = node->id - diagNeighbor->id;
+									Node* node1 = aiHandler->GetNodeByID(Vector2I(diagNeighbor->id.x + difference.x, diagNeighbor->id.y));
+									Node* node2 = aiHandler->GetNodeByID(Vector2I(diagNeighbor->id.x, diagNeighbor->id.y + difference.y));
 
+									node1->connections.push_back(node2);
+									node2->connections.push_back(node1);
+								}
+							}
+							if (aiHandler->PlayerAStar(localPlayer))
+							{
+								m_scene->ForEachComponent<comp::Player, comp::Network>([&](comp::Player& p, comp::Network& net)
+									{
+										if (net.id == playerWhoPressedMouse)
+										{
+											p.reachable = true;
+										}
+									});
+							}
 						}
 					}
 				}
-				//Check if the connection between diagonal neighbors needs to be restored
-				//Node* node = nullptr;
-				//node->defencePlaced = false;
-				//node->reachable = true;
-				//std::vector<Node*> diagNeighbors = node->GetDiagonalConnections();
-				//for (Node* diagNeighbor : diagNeighbors)
-				//{
-				//	if (diagNeighbor->defencePlaced || !diagNeighbor->reachable)
-				//	{
-				//		Vector2I difference = node->id - diagNeighbor->id;
-				//		Node* node1 = aiHandler->GetNodeByID(Vector2I(diagNeighbor->id.x + difference.x, diagNeighbor->id.y));
-				//		Node* node2 = aiHandler->GetNodeByID(Vector2I(diagNeighbor->id.x, diagNeighbor->id.y + difference.y));
 
-				//		node1->connections.push_back(node2);
-				//		node2->connections.push_back(node1);
-				//	}
-				//}
-				//if (aiHandler->PlayerAStar(localPlayer))
-				//{
-				//	m_scene->ForEachComponent<comp::Player, comp::Network>([&](comp::Player& p, comp::Network& net)
-				//		{
-				//			if (net.id == playerWhoPressedMouse)
-				//			{
-				//				p.reachable = true;
-				//			}
-				//		});
-				//}
+				//Check if the connection between diagonal neighbors needs to be restored
 				e.Destroy();
 			}
 
