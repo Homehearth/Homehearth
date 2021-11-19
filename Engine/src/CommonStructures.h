@@ -277,7 +277,10 @@ struct texture_effect_t
 	float amplitude;
 };
 
+struct texture_effect_UVs_t
+{
 
+};
 
 ALIGN16
 struct delta_time_t

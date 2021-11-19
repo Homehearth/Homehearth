@@ -83,7 +83,6 @@ public:
 	Shaders::PixelShader              m_textureEffectPixelShader;   // Nikki's water effect pixel shader.
 	ComPtr<ID3D11Buffer>			  m_textureEffectConstantBuffer;
 	ComPtr<ID3D11Buffer>              m_deltaTimeBuffer;
-	ComPtr<ID3D11Texture2D>			  m_T_TextureEffectBlendMap;
 	ComPtr<ID3D11RenderTargetView>    m_RTV_TextureEffectBlendMap;
 	ComPtr<ID3D11RenderTargetView>    m_RTV_TextureEffectWaterMap;
 	ComPtr<ID3D11RenderTargetView>    m_RTV_TextureEffectWaterFloorMap;
@@ -107,6 +106,7 @@ public:
 	std::shared_ptr<RTexture> m_WaterNormalMap;
 	std::shared_ptr<RTexture> m_WaterEdgeAlbedoMap;
 	std::shared_ptr<RTexture> m_WaterFloorAlbedoMap;
+	std::shared_ptr<RTexture> m_WaterBlendAlbedoMap;
 
 private:
 	// INITIALIZE METHODS.

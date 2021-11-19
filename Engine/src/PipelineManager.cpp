@@ -510,6 +510,8 @@ bool PipelineManager::CreateTextureEffectResources()
 {
     // Create render textures, target views and shader resource views here
 
+    m_WaterBlendAlbedoMap = ResourceManager::Get().GetResource<RTexture>("WaterBlendMap.jpg");
+
     //Get all models needed
     m_WaterModel      = ResourceManager::Get().GetResource<RModel>("WaterMesh.obj");
     m_WaterEdgeModel  = ResourceManager::Get().GetResource<RModel>("WaterEdgeMesh.obj");
@@ -531,47 +533,14 @@ bool PipelineManager::CreateTextureEffectResources()
     m_SRV_TextureEffectWaterFloorMap   = m_WaterFloorAlbedoMap.get()->GetShaderView();
     m_SRV_TextureEffectWaterMap        = m_WaterAlbedoMap.get()->GetShaderView();
     m_SRV_TextureEffectWaterNormalMap  = m_WaterNormalMap.get()->GetShaderView();
-
+    m_SRV_TextureEffectBlendMap        = m_WaterBlendAlbedoMap.get()->GetShaderView();
 
     HRESULT hr = {};
-    int textureHeight = 512;
-    int textureWidth = 512;
-    int channels = 0;
-    std::string fileNamePath = "../../Assets/Textures/WaterBlendMap.jpg"; //funkar inte
-
-    unsigned char* image = stbi_load(fileNamePath.c_str(), &textureWidth, &textureHeight, &channels, STBI_rgb_alpha);
-
-    // TEXTURE 2D //
-
-    D3D11_TEXTURE2D_DESC textureDesc;
-    ZeroMemory(&textureDesc, sizeof(D3D11_TEXTURE2D_DESC));
-    textureDesc.Width = textureWidth;
-    textureDesc.Height = textureHeight;
-    textureDesc.MipLevels = 1;
-    textureDesc.ArraySize = 1;
-    textureDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-    textureDesc.SampleDesc.Count = 1;
-    textureDesc.SampleDesc.Quality = 0;
-    textureDesc.Usage = D3D11_USAGE_DEFAULT;
-    textureDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
-    textureDesc.CPUAccessFlags = 0;
-    textureDesc.MiscFlags = 0;
-
-    //Information about D3D11_SUBRESOURCE_DATA https://docs.microsoft.com/en-us/windows/win32/api/d3d11/ns-d3d11-d3d11_subresource_data
-    D3D11_SUBRESOURCE_DATA data = {};
-    data.pSysMem = image;
-    data.SysMemPitch = textureWidth * 4;
-    data.SysMemSlicePitch = 0;
-
-    hr = m_d3d11->Device()->CreateTexture2D(&textureDesc, &data, m_T_TextureEffectBlendMap.GetAddressOf());
-    if (FAILED(hr))
-        return false;
-
 
     // RENDER TARGET VIEWS //
 
     D3D11_RENDER_TARGET_VIEW_DESC renderTargetViewDesc;
-    renderTargetViewDesc.Format = textureDesc.Format;
+    renderTargetViewDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
     renderTargetViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
     renderTargetViewDesc.Texture2D.MipSlice = 0;
 
@@ -591,24 +560,9 @@ bool PipelineManager::CreateTextureEffectResources()
     if (FAILED(hr))
         return false;
 
-    hr = m_d3d11->Device()->CreateRenderTargetView(m_T_TextureEffectBlendMap.Get(), nullptr, m_RTV_TextureEffectBlendMap.GetAddressOf());
+    hr = m_d3d11->Device()->CreateRenderTargetView(m_WaterBlendAlbedoMap.get()->GetTexture2D(), nullptr, m_RTV_TextureEffectBlendMap.GetAddressOf());
     if (FAILED(hr))
         return false;
-
-
-    // SHADER RESOURCE VIEWS FOR BLENDMAP //
-
-    D3D11_SHADER_RESOURCE_VIEW_DESC shaderResourceViewDesc;
-    shaderResourceViewDesc.Format = textureDesc.Format;
-    shaderResourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-    shaderResourceViewDesc.Texture2D.MostDetailedMip = 0;
-    shaderResourceViewDesc.Texture2D.MipLevels = 1;
-
-    hr = m_d3d11->Device()->CreateShaderResourceView(m_T_TextureEffectBlendMap.Get(), &shaderResourceViewDesc, m_SRV_TextureEffectBlendMap.GetAddressOf());
-    if (FAILED(hr))
-        return false;
-
-
     return true;
 }
 

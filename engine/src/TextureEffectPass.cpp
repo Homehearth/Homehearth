@@ -10,7 +10,7 @@ void TextureEffectPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceCont
 { 
     // INPUT ASSEMBLY.
     {
-        DC->IASetInputLayout(PM->m_positionOnlyInputLayout.Get());
+        DC->IASetInputLayout(PM->m_defaultInputLayout.Get());
     }
 
     // SHADER STAGES.
@@ -32,6 +32,7 @@ void TextureEffectPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceCont
         DC->CSSetConstantBuffers(3, 1, PM->m_textureEffectConstantBuffer.GetAddressOf());
     }
 
+    
     // SHADER RESOURCES.
     {
         DC->CSSetShaderResources(17, 1, PM->m_SRV_TextureEffectBlendMap.GetAddressOf());
@@ -42,22 +43,37 @@ void TextureEffectPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceCont
         DC->CSSetSamplers(0, 1, PM->m_pointSamplerState.GetAddressOf());
     }
 
-    // OUTPUT MERGER.
-    {
-        DC->OMSetRenderTargets(1, PM->m_RTV_TextureEffectBlendMap.GetAddressOf(),        nullptr);
-        DC->OMSetRenderTargets(1, PM->m_RTV_TextureEffectWaterEdgeMap.GetAddressOf(),    nullptr);
-        DC->OMSetRenderTargets(1, PM->m_RTV_TextureEffectWaterFloorMap.GetAddressOf(),   nullptr);
-        DC->OMSetRenderTargets(1, PM->m_RTV_TextureEffectWaterMap.GetAddressOf(),        nullptr);
-        DC->OMSetRenderTargets(1, PM->m_RTV_TextureEffectWaterNormalMap.GetAddressOf(),  nullptr);
-        //Might need to set view port
-    }
-
     // DISPATCH
     {
         const int groupCount = static_cast<int>(ceil(m_MAX_PIXELS / 1024));
         DC->Dispatch(groupCount, 1, 1);
     }
 
+    // UNBIND SRV:S
+    {
+        ID3D11ShaderResourceView* const kill[5] = { nullptr };
+        pDeviceContext->CSSetShaderResources(17, 5, kill);
+
+        for (int i = 0; i < 5; i++)
+        {
+            delete kill[i];
+        }
+    }
+
+    // OUTPUT MERGER. BIND RTV:S
+    {
+        ID3D11RenderTargetView* targets[5] =
+        {
+            PM->m_RTV_TextureEffectBlendMap.Get(),      //slot 0 - 17 Blendmap: 225 x 225
+            PM->m_RTV_TextureEffectWaterEdgeMap.Get(),  //slot 1 - 18 WaterEdge: 1024 x 1024
+            PM->m_RTV_TextureEffectWaterFloorMap.Get(), //slot 2 - 19 WaterFloor: 256 x 256
+            PM->m_RTV_TextureEffectWaterMap.Get(),      //slot 3 - 20 Water: 256 x 256
+            PM->m_RTV_TextureEffectWaterNormalMap.Get() //slot 4 - 21 WaterNormal: 600 x 600
+        };
+
+        DC->OMSetRenderTargets(5, targets, nullptr);
+        //Might need to set view port
+    }
 }
 
 void TextureEffectPass::Render(Scene* pScene)
@@ -73,34 +89,29 @@ void TextureEffectPass::PostRender(ID3D11DeviceContext* pDeviceContext)
     m_CBuffer.frequency = 25.f;
     D3D11Core::Get().DeviceContext()->UpdateSubresource(PM->m_textureEffectConstantBuffer.Get(), 0, nullptr, &m_CBuffer, 0, 0);
     
-    pDeviceContext->ClearRenderTargetView(PM->m_RTV_TextureEffectBlendMap.Get(),        m_clearColor);
-    pDeviceContext->ClearRenderTargetView(PM->m_RTV_TextureEffectWaterEdgeMap.Get(),    m_clearColor);
-    pDeviceContext->ClearRenderTargetView(PM->m_RTV_TextureEffectWaterFloorMap.Get(),   m_clearColor);
-    pDeviceContext->ClearRenderTargetView(PM->m_RTV_TextureEffectWaterMap.Get(),        m_clearColor);
-    pDeviceContext->ClearRenderTargetView(PM->m_RTV_TextureEffectWaterNormalMap.Get(),  m_clearColor);
+    DC->ClearRenderTargetView(PM->m_RTV_TextureEffectBlendMap.Get(),        m_clearColor);
+    DC->ClearRenderTargetView(PM->m_RTV_TextureEffectWaterEdgeMap.Get(),    m_clearColor);
+    DC->ClearRenderTargetView(PM->m_RTV_TextureEffectWaterFloorMap.Get(),   m_clearColor);
+    DC->ClearRenderTargetView(PM->m_RTV_TextureEffectWaterMap.Get(),        m_clearColor);
+    DC->ClearRenderTargetView(PM->m_RTV_TextureEffectWaterNormalMap.Get(),  m_clearColor);
+
+    ID3D11RenderTargetView* const kill[5] = { nullptr };
+    pDeviceContext->OMSetRenderTargets(5, kill, nullptr);
+
+    for (int i = 0; i < 5; i++)
+    {
+        delete kill[i];
+    }
+
+    ID3D11ShaderResourceView* const kill2[5] = { nullptr };
+    pDeviceContext->CSSetShaderResources(17, 5, kill2);
+
+    for (int i = 0; i < 5; i++)
+    {
+        delete kill2[i];
+    }
 }
 
-void TextureEffectPass::SetResources()
-{
-    m_WaterModel       = ResourceManager::Get().GetResource<RModel>("WaterMesh.obj");
-    m_WaterEdgeModel   = ResourceManager::Get().GetResource<RModel>("WaterEdgeMesh.obj");
-    m_WaterFloorModel  = ResourceManager::Get().GetResource<RModel>("WaterFloorModel.obj");
-
-    m_WaterUV       = m_WaterModel.get()->GetTextureCoords();
-    m_WaterEdgeUV   = m_WaterEdgeModel.get()->GetTextureCoords();
-    m_WaterFloorUV  = m_WaterFloorModel.get()->GetTextureCoords();
-
-    m_WaterAlbedoMap       = m_WaterModel.get()->GetTextures(ETextureType::albedo)[0];
-    m_WaterNormalMap       = m_WaterModel.get()->GetTextures(ETextureType::normal)[0];
-    m_WaterEdgeAlbedoMap   = m_WaterEdgeModel.get()->GetTextures(ETextureType::albedo)[0];
-    m_WaterFloorAlbedoMap  = m_WaterFloorModel.get()->GetTextures(ETextureType::albedo)[0];
-
-    PM->m_SRV_TextureEffectWaterEdgeMap    = m_WaterEdgeAlbedoMap.get()->GetShaderView();
-    PM->m_SRV_TextureEffectWaterFloorMap   = m_WaterFloorAlbedoMap.get()->GetShaderView();
-    PM->m_SRV_TextureEffectWaterMap        = m_WaterAlbedoMap.get()->GetShaderView();
-    PM->m_SRV_TextureEffectWaterNormalMap  = m_WaterNormalMap.get()->GetShaderView();
-
-}
 
 
 
