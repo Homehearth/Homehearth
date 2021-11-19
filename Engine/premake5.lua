@@ -70,7 +70,8 @@ project "Engine"
         ["src/Engine/Animation"] = {  },
         ["src/Engine/ECS"] = { "**Components.*",  "**Entity.*" }, 
         ["src/Engine/AI"] = { "**AISystem*", "**PathFinderManager.*", "**AIBehaviors.*" },  
-		["src/Engine/Structures"] = { "**VertexStructure.*" }  
+		["src/Engine/Structures"] = { "**VertexStructure.*" },
+		["src/Engine/QuadTree"] = { "**QuadTree.*" }
     }
 
 

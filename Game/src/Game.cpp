@@ -102,19 +102,19 @@ void Game::OnUserUpdate(float deltaTime)
 {
 	this->UpdateInput();
 
-	//if (GetCurrentScene() == &GetScene("Game"))
-	//{
-	//	if (m_players.find(m_localPID) != m_players.end())
-	//	{
-	//		sm::Vector3 playerPos = m_players.at(m_localPID).GetComponent<comp::Transform>()->position;
+	if (GetCurrentScene() == &GetScene("Game"))
+	{
+		if (m_players.find(m_localPID) != m_players.end())
+		{
+			sm::Vector3 playerPos = m_players.at(m_localPID).GetComponent<comp::Transform>()->position;
 
-	//		Camera* cam = GetScene("Game").GetCurrentCamera();
-	//		if (cam->GetCameraType()  == CAMERATYPE::PLAY)
-	//		{
-	//			GameSystems::CheckLOS(this);
-	//		}
-	//	}
-	//}
+			Camera* cam = GetScene("Game").GetCurrentCamera();
+			if (cam->GetCameraType()  == CAMERATYPE::PLAY)
+			{
+				GameSystems::CheckLOS(this);
+			}
+		}
+	}
 }
 
 
