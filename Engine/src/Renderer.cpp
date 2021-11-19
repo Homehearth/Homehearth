@@ -173,9 +173,7 @@ void Renderer::InitilializeForwardPlus(Camera* camera)
         m_pipelineManager.m_dispatchParams.numThreads.y * m_pipelineManager.m_dispatchParams.numThreads.z;
 
     m_pipelineManager.m_frustums_data.resize(numFrustums);
-    m_pipelineManager.CreateCopyBuffer(m_pipelineManager.m_frustums.buffer.GetAddressOf(), sizeof(frustum_t), m_pipelineManager.m_frustums_data.size());
-    m_pipelineManager.CreateStructuredBuffer(m_pipelineManager.m_frustums.buffer.GetAddressOf(), m_pipelineManager.m_frustums_data.data(), sizeof(frustum_t),
-		m_pipelineManager.m_frustums_data.size(), m_pipelineManager.m_frustums.uav.GetAddressOf(), m_pipelineManager.m_frustums.srv.GetAddressOf());
+    m_pipelineManager.CreateStructuredBuffer(m_pipelineManager.m_frustums_data.data(), sizeof(frustum_t), m_pipelineManager.m_frustums_data.size(), m_pipelineManager.m_frustums);
 
     //
     // Create LightGrid.
@@ -285,15 +283,13 @@ bool Renderer::CreateLightIndexListRWB(const uint32_t& COUNT)
     m_pipelineManager.trans_LightIndexList_data.clear();
 
     m_pipelineManager.opaq_LightIndexList_data.resize(SIZE);
-    if (!m_pipelineManager.CreateStructuredBuffer(m_pipelineManager.opaq_LightIndexList.buffer.GetAddressOf(), m_pipelineManager.opaq_LightIndexList_data.data(),
-        sizeof(UINT), m_pipelineManager.opaq_LightIndexList_data.size(), m_pipelineManager.trans_LightIndexList.uav.GetAddressOf(), m_pipelineManager.opaq_LightIndexList.srv.GetAddressOf()))
+    if (!m_pipelineManager.CreateStructuredBuffer(m_pipelineManager.opaq_LightIndexList_data.data(),sizeof(UINT), m_pipelineManager.opaq_LightIndexList_data.size(), m_pipelineManager.trans_LightIndexList))
     {
         return false;
     }
 
     m_pipelineManager.trans_LightIndexList_data.resize(SIZE);
-    if (!m_pipelineManager.CreateStructuredBuffer(m_pipelineManager.trans_LightIndexList.buffer.GetAddressOf(), m_pipelineManager.trans_LightIndexList_data.data(),
-        sizeof(UINT), m_pipelineManager.trans_LightIndexList_data.size(), m_pipelineManager.trans_LightIndexList.uav.GetAddressOf(), m_pipelineManager.trans_LightIndexList.srv.GetAddressOf()))
+    if (!m_pipelineManager.CreateStructuredBuffer(m_pipelineManager.trans_LightIndexList_data.data(),sizeof(UINT), m_pipelineManager.trans_LightIndexList_data.size(), m_pipelineManager.trans_LightIndexList))
     {
         return false;
     }
@@ -307,15 +303,15 @@ bool Renderer::CreateLightIndexCounterRWB()
     m_pipelineManager.opaq_LightIndexCounter_data.clear();
 
     m_pipelineManager.opaq_LightIndexCounter_data.push_back(0);
-    if (!m_pipelineManager.CreateStructuredBuffer(m_pipelineManager.opaq_LightIndexCounter.buffer.GetAddressOf(), m_pipelineManager.opaq_LightIndexCounter_data.data(),
-        sizeof(UINT), m_pipelineManager.opaq_LightIndexCounter_data.size(), m_pipelineManager.opaq_LightIndexCounter.uav.GetAddressOf()))
+    if (!m_pipelineManager.CreateStructuredBuffer(m_pipelineManager.opaq_LightIndexCounter.buffer, m_pipelineManager.opaq_LightIndexCounter_data.data(),
+        sizeof(UINT), m_pipelineManager.opaq_LightIndexCounter_data.size(), m_pipelineManager.opaq_LightIndexCounter.uav))
     {
         return false;
     }
 
     m_pipelineManager.trans_LightIndexCounter_data.push_back(0);
-    if (!m_pipelineManager.CreateStructuredBuffer(m_pipelineManager.trans_LightIndexCounter.buffer.GetAddressOf(), m_pipelineManager.trans_LightIndexCounter_data.data(),
-        sizeof(UINT), m_pipelineManager.trans_LightIndexCounter_data.size(), m_pipelineManager.opaq_LightIndexCounter.uav.GetAddressOf()))
+    if (!m_pipelineManager.CreateStructuredBuffer(m_pipelineManager.trans_LightIndexCounter.buffer, m_pipelineManager.trans_LightIndexCounter_data.data(),
+        sizeof(UINT), m_pipelineManager.trans_LightIndexCounter_data.size(), m_pipelineManager.opaq_LightIndexCounter.uav))
     {
         return false;
     }

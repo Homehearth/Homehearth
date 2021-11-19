@@ -98,7 +98,7 @@ void main(ComputeShaderIn input)
 
     // Cull lights.
     // Each thread in a group will cull 1 light until all lights have been culled.
-	for (uint i = input.groupIndex; i < MAX_LIGHTS; i += TILE_SIZE * TILE_SIZE)
+	for (uint i = input.groupIndex; i < c_info.x; i += TILE_SIZE * TILE_SIZE)
 	{
 		if (sb_Lights[i].enabled)
 		{

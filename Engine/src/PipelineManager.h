@@ -13,13 +13,6 @@ class PipelineManager
 		ComPtr<ID3D11UnorderedAccessView> uav;
 	};
 
-	struct RenderTargetResource
-	{
-		ComPtr<ID3D11Texture2D> texture2D;
-		ComPtr<ID3D11ShaderResourceView> srv;
-		ComPtr<ID3D11RenderTargetView> rtv;
-	};
-
 private:
 	Window*							m_window;
 	D3D11Core*						m_d3d11;
@@ -82,15 +75,11 @@ public:
 	D3D11_VIEWPORT					m_viewport;
 
 
-	bool CreateStructuredBuffer(ID3D11Buffer** buffer, void* data, unsigned int byteStride,
-		unsigned int arraySize, ID3D11UnorderedAccessView** uav);
+	bool CreateStructuredBuffer(ComPtr<ID3D11Buffer>& buffer, void* data, unsigned int byteStride,
+		unsigned int arraySize, ComPtr<ID3D11UnorderedAccessView>& uav);
 
-	bool CreateStructuredBuffer(ID3D11Buffer** buffer, void* data, unsigned int byteStride,
-		unsigned int arraySize, ID3D11UnorderedAccessView** uav, ID3D11ShaderResourceView** srv);
+	bool CreateStructuredBuffer(void* data, unsigned int byteStride, unsigned int arraySize, ResourceAccessView &rav);
 
-	bool CreateRenderTargetResource(RenderTargetResource * resource);
-
-	bool CreateCopyBuffer(ID3D11Buffer** buffer, unsigned int byteStride, unsigned int arraySize);
 
 	//
 	// Forward+ Resources.
@@ -103,7 +92,7 @@ public:
 	DirectX::ConstantBuffer<dispatch_params_t> m_dispatchParamsCB;
 	DirectX::ConstantBuffer<screen_view_params_t> m_screenToViewParamsCB;
 
-	std::vector<frustum_t> m_frustums_data;
+	std::vector<frustum_t> m_frustums_data;				
 	std::vector<UINT> opaq_LightIndexCounter_data;
 	std::vector<UINT> trans_LightIndexCounter_data;
 	std::vector<UINT> opaq_LightIndexList_data;
@@ -138,6 +127,3 @@ private:
 	bool CreateInputLayouts();	
 	void SetViewport();
 };
-
-
-
