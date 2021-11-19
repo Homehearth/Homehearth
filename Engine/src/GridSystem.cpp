@@ -143,9 +143,9 @@ bool GridSystem::RemoveDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, 
 		});
 	if (tMin != FLT_MAX)
 	{
-		comp::Transform* entiTransform = closestEntity.GetComponent<comp::Transform>();
-		int clampedX = (int)((abs(entiTransform->position.x) / (m_tileHalfWidth * 2)));
-		int clampedZ = (int)((abs(entiTransform->position.z) / (m_tileHalfWidth * 2)));
+		comp::Transform* closestTransform = closestEntity.GetComponent<comp::Transform>();
+		int clampedX = (int)((abs(closestTransform->position.x) / (m_tileHalfWidth * 2)));
+		int clampedZ = (int)((abs(closestTransform->position.z) / (m_tileHalfWidth * 2)));
 
 		m_tiles[clampedZ][clampedX].type = TileType::EMPTY;
 		Node* node = aiHandler->GetNodeByID(m_tiles[clampedZ][clampedX].gridID);
