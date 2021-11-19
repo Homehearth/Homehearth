@@ -68,8 +68,8 @@ public:
 	D3D11_VIEWPORT					m_viewport;
 
 
-	float							m_windowWidth;
-	float							m_windowHeight;
+	UINT							m_windowWidth;
+	UINT							m_windowHeight;
 	
 	// View space frustums for the grid cells used in ForwardPlus rendering.
 	ComPtr<ID3D11Buffer>				m_gridFrustum;
