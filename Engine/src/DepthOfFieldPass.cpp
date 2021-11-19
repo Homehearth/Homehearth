@@ -1,8 +1,11 @@
 #include "EnginePCH.h"
 #include "DepthOfFieldPass.h"
 
-bool DOFPass::Create()
+bool DOFPass::Create(const DoFType& pType)
 {
+	m_currentType = pType;
+	m_dofHelp.dofType = UINT(m_currentType);
+
 	if (!CreateUnorderedAccessView())
 	{
 		LOG_ERROR("Failed to create UnorderedAccessViews");
@@ -21,6 +24,11 @@ bool DOFPass::Create()
 	m_blurPass.Initialize(D3D11Core::Get().DeviceContext(), PM);
 
 	return true;
+}
+
+void DOFPass::SetDoFType(const DoFType& pType)
+{
+	m_currentType = pType;
 }
 
 void DOFPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
@@ -44,9 +52,10 @@ void DOFPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 	DC->OMSetRenderTargets(1, &nullRTV, nullptr);
 	DC->CSSetShader(PM->m_dofComputeShader.Get(), nullptr, 0);
 
-	m_matrices.inverseView = pCam->GetView().Invert();
-	m_matrices.inverseProjection = pCam->GetProjection().Invert();
-	DC->UpdateSubresource(m_constBuff.Get(), 0, nullptr, &m_matrices, 0, 0);
+	m_dofHelp.inverseView = pCam->GetView().Invert();
+	m_dofHelp.inverseProjection = pCam->GetProjection().Invert();
+	m_dofHelp.dofType = UINT(m_currentType);
+	DC->UpdateSubresource(m_constBuff.Get(), 0, nullptr, &m_dofHelp, 0, 0);
 
 	DC->CSSetUnorderedAccessViews(2, 1, m_inFocusView.GetAddressOf(), nullptr);
 	DC->CSSetUnorderedAccessViews(3, 1, m_outOfFocusView.GetAddressOf(), nullptr);
@@ -119,7 +128,7 @@ bool DOFPass::CreateUnorderedAccessView()
 bool DOFPass::CreateBuffer()
 {
 	D3D11_BUFFER_DESC desc;
-	desc.ByteWidth = sizeof(sm::Matrix) * 2;
+	desc.ByteWidth = sizeof(DoFHelpStruct);
 	desc.Usage = D3D11_USAGE_DEFAULT;
 	desc.CPUAccessFlags = 0;
 	desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
