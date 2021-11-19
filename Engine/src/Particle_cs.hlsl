@@ -66,7 +66,7 @@ void SmokeSimmulation(inout VertexParticleIn particle, in int id, in uint3 partc
             particle.pos.z -= (1 + abs(randomNumbers[id + counter / 2])) * deltaTime;
         }
      
-        particle.size += 0.5f * deltaTime;
+        particle.size += 1 * deltaTime;
                     
         if (particle.color.x > 20.f)
             particle.color = 10.f;
