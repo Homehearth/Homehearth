@@ -54,6 +54,7 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 	case EnemyType::Mage:
 	{
 		comp::RangeAttackAbility* attackAbility = entity.AddComponent<comp::RangeAttackAbility>();
+		comp::TeleportAbility* teleportAbility = entity.AddComponent<comp::TeleportAbility>();
 		// ---DEFAULT ENEMY---
 		transform->position = spawnP;
 		//Generate float between 0.0 and 0.5 (give monster a slightly different height?)

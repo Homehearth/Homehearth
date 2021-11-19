@@ -6,11 +6,12 @@
 
 struct Base
 {
+	virtual ~Base() = default;
 	virtual void virtualFunction() = 0;
 };
 
 template <typename T>
-struct Derived : Base
+struct Derived final : Base
 {
 	void virtualFunction() override {};
 	T value;
@@ -19,11 +20,11 @@ struct Derived : Base
 //Structs of different blackboard data.
 struct PlayersPosition_t
 {
-	std::vector<Entity> players;
+	std::vector<Entity> players{};
 };
 
 
-class Blackboard
+class Blackboard final
 {
 public:
 	virtual ~Blackboard() = default;
@@ -38,11 +39,10 @@ public:
 
 	template<typename T>
 	bool AddValue(std::string key, T value);
-
 	PathFinderManager* GetAIHandler();
 private:
 	Blackboard() = default;
-	std::unordered_map<std::string, std::unique_ptr<Base>> storage;
+	std::unordered_map<std::string, std::unique_ptr<Base>> storage{};
 	PathFinderManager aiHandler;
 };
 

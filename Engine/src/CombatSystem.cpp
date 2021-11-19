@@ -37,6 +37,50 @@ void CombatSystem::UpdateRange(HeadlessScene& scene)
 	});
 }
 
+void CombatSystem::UpdateTeleport(HeadlessScene& scene)
+{
+
+	scene.ForEachComponent<comp::TeleportAbility, comp::Transform>([&](Entity entity, comp::TeleportAbility& teleportAbility, comp::Transform& transform)
+		{
+			PathFinderManager* pathFinderManager = Blackboard::Get().GetAIHandler();
+			sm::Vector3* targetPoint = nullptr;
+			UpdateTargetPoint(entity, targetPoint);
+
+
+
+			if (ecs::ReadyToUse(&teleportAbility, nullptr))
+			{
+				//Lower length of vector by 25% every try
+				float decreaseValue = 0.75f;
+				if (targetPoint)
+				{
+					targetPoint->Normalize();
+					*targetPoint *= teleportAbility.distance;
+
+					bool hasSetTarget = false;
+
+					while (!hasSetTarget && targetPoint->Length() > 4.0f)
+					{
+						sm::Vector3 newPos = transform.position + *targetPoint;
+
+						if (pathFinderManager->FindClosestNode(newPos)->reachable)
+						{
+							teleportAbility.targetPoint = newPos;
+							LOG_INFO("Succesfully teleported");
+							hasSetTarget = true;
+						}
+						else
+						{
+							*targetPoint *= decreaseValue;
+						}
+
+					}
+				}
+
+				entity.GetComponent<comp::Transform>()->position = transform.position + teleportAbility.targetPoint;
+			}
+		});
+}
 
 
 void CombatSystem::UpdateCombatSystem(HeadlessScene& scene, float dt)
@@ -48,6 +92,9 @@ void CombatSystem::UpdateCombatSystem(HeadlessScene& scene, float dt)
 
 	//For each entity that can use range attack
 	UpdateRange(scene);
+
+	//For each entity that can use teleport
+	UpdateTeleport(scene);
 }
 
 
