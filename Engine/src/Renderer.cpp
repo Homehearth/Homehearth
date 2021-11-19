@@ -171,7 +171,6 @@ void Renderer::InitilializeForwardPlus(Camera* camera)
 
     const uint32_t numGridCells = m_pipelineManager.m_dispatchParams.numThreads.x *
         m_pipelineManager.m_dispatchParams.numThreads.y * m_pipelineManager.m_dispatchParams.numThreads.z;
-
     m_pipelineManager.m_frustums_data.resize(numFrustums);
     m_pipelineManager.CreateStructuredBuffer(m_pipelineManager.m_frustums_data.data(), sizeof(frustum_t), m_pipelineManager.m_frustums_data.size(), m_pipelineManager.m_frustums);
 

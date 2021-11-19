@@ -11,7 +11,6 @@ void DepthPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
     DC->OMSetDepthStencilState(PM->m_depthStencilStateLessEqual.Get(), 0);
 
     DC->RSSetViewports(1, &PM->m_viewport);
-    DC->RSSetState(PM->m_rasterState.Get());
 	DC->IASetInputLayout(PM->m_defaultInputLayout.Get());
     DC->VSSetConstantBuffers(1, 1, pCam->m_viewConstantBuffer.GetAddressOf());  // Camera.
 
@@ -21,22 +20,19 @@ void DepthPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 
 void DepthPass::Render(Scene* pScene)
 {
-    //SetCullBack(true);
-	//
-	// render opaq.
-	//
-	//SetCullBack(false);
-	//
-	// render trans.
-	//
-	//SetCullBack(true);
+    PM->SetCullBack(true);
 
-	pScene->Render();
+    // Render opaque.
+	pScene->Render(); // Opaque Mesh
+
+    PM->SetCullBack(false);
+
+	// Render trans.
+    pScene->Render(); // Alpha Mesh
 }
 
 void DepthPass::PostRender(ID3D11DeviceContext* pDeviceContext)
 {
     // Cleanup.
-    //ID3D11DepthStencilView* nullDSV = { nullptr };
-    //DC->OMSetRenderTargets(0, nullptr, nullDSV);
+    PM->SetCullBack(true);
 }

@@ -158,6 +158,21 @@ bool PipelineManager::CreateStructuredBuffer(void* data, unsigned byteStride, un
     return !FAILED(hr);
 }
 
+void PipelineManager::SetCullBack(bool cullNone)
+{
+    constexpr float blendFactor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
+    if (cullNone)
+    {
+        m_d3d11->DeviceContext()->RSSetState(m_rasterState.Get());
+        m_d3d11->DeviceContext()->OMSetBlendState(m_blendOff.Get(), blendFactor, 0xffffffff);
+    }
+    else
+    {
+        m_d3d11->DeviceContext()->RSSetState(m_rasterStateNoCulling.Get());
+        m_d3d11->DeviceContext()->OMSetBlendState(m_blendOn.Get(), blendFactor, 0xffffffff);
+    }
+}
+
 bool PipelineManager::CreateRenderTargetView()
 {
     ID3D11Texture2D* pBackBuffer = nullptr;
@@ -445,6 +460,28 @@ bool PipelineManager::CreateBlendStates()
 	// "...the quality is significantly improved when used in conjunction with MSAA".
     blendStateDesc.AlphaToCoverageEnable = 1;
     hr = m_d3d11->Device()->CreateBlendState(&blendStateDesc, m_blendStateDepthOnlyAlphaToCoverage.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+
+    ZeroMemory(&blendDesc, sizeof(D3D11_BLEND_DESC));
+    blendDesc.AlphaToCoverageEnable = true;
+    blendDesc.IndependentBlendEnable = true;
+    blendDesc.RenderTarget[0].BlendEnable = true;
+    blendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+    blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_ONE;
+    blendDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+    blendDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ZERO;
+    blendDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+    blendDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+    blendDesc.RenderTarget[0].RenderTargetWriteMask = 0x0f;
+
+    hr = m_d3d11->Device()->CreateBlendState(&blendDesc, m_blendOn.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+
+    blendStateDesc.RenderTarget[0].BlendEnable = false;
+    blendStateDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+    hr = m_d3d11->Device()->CreateBlendState(&blendDesc, m_blendOff.GetAddressOf());
 
 	return !FAILED(hr);
 }
