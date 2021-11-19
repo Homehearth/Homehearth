@@ -7,7 +7,7 @@ struct ParticleUpdate
 {
 	sm::Vector4 emitterPosition;
 	float deltaTime;
-	int counter;
+	UINT counter;
 };
 
 class ParticlePass :public IRenderPass

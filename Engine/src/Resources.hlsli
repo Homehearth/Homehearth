@@ -57,7 +57,7 @@ cbuffer ParticleUpdate : register(b8)
 {
     float4 emitterPosition;
     float deltaTime;
-    int counter;
+    uint counter;
 }
 
 cbuffer DecalInfoCB : register(b10)

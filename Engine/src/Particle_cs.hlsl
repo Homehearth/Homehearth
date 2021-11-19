@@ -5,14 +5,14 @@
 void BloodSimmulation(inout VertexParticleIn particle);
 void LeafSimmulation(inout VertexParticleIn particle);
 void WaterSplashSimmulation(inout VertexParticleIn particle);
-void SmokeSimmulation(inout VertexParticleIn particle, in int id, in uint3 partcileID);
+void SmokeSimmulation(inout VertexParticleIn particle, in uint id, in uint3 partcileID);
 void SparklesSimmulation(inout VertexParticleIn particle);
 void RainSimmulation(inout VertexParticleIn particle);
 
 [numthreads(1, 1, 1)]
 void main(uint3 particleID : SV_DispatchThreadID)
 {
-    int id = particleID;
+    uint id = particleID.x;
     if (id >= 100)
         id -= 100;
             
@@ -44,7 +44,7 @@ void WaterSplashSimmulation(inout VertexParticleIn particle)
 {
 }
 
-void SmokeSimmulation(inout VertexParticleIn particle, in int id, in uint3 partcileID)
+void SmokeSimmulation(inout VertexParticleIn particle, in uint id, in uint3 partcileID)
 {  
     if (particle.pos.y < emitterPosition.y + 50 + randomNumbers[id])
     {
@@ -73,7 +73,7 @@ void SmokeSimmulation(inout VertexParticleIn particle, in int id, in uint3 partc
     }
     else
     {
-        particle.size = (1,1);
+        particle.size = float2(1,1);
         particle.pos = emitterPosition;
     }
 }
@@ -81,8 +81,8 @@ void SmokeSimmulation(inout VertexParticleIn particle, in int id, in uint3 partc
 void SparklesSimmulation(inout VertexParticleIn particle)
 {
     
-    particle.size = (2, 2);
-    particle.color = (0.5f, 1, 0, 1);
+    particle.size = float2(2, 2);
+    particle.color = float4(0.5f, 1, 0, 1);
 
 }
 

@@ -4,12 +4,6 @@
 class ParticleSystem
 {
 private:
-
-	RTexture* texture = nullptr;
-	UINT type = 0U;
-	UINT nrOfParticles = 0;
-	std::vector<Particle_t> particles;
-
 	ID3D11Device* m_pDevice;
 
 public:

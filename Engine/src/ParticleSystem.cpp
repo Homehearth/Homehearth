@@ -2,6 +2,7 @@
 #include "ParticleSystem.h"
 
 ParticleSystem::ParticleSystem()
+:m_pDevice(nullptr)
 {
 }
 
