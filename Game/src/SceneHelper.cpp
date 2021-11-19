@@ -464,6 +464,7 @@ namespace sceneHelp
 		Collection2D* backButton = new Collection2D;
 		Collection2D* visualMenu = new Collection2D;
 		Collection2D* resolutionMenu = new Collection2D;
+		Collection2D* miscMenu = new Collection2D;
 
 		Collection2D* menu = new Collection2D;
 		rtd::Button* soundsButton = menu->AddElement<rtd::Button>("Button.png", draw_t(width / 8.0f, height / 8.0f, width / 4.0f, height / 8.0f));
@@ -511,9 +512,19 @@ namespace sceneHelp
 			
 			});
 		visualMenu->AddElement<rtd::Text>("Resolution", draw_t(width / 8.0f, height / 8.0f, width / 4.0f, height / 8.0f));
+		visualMenu->AddElement<rtd::Button>("Button.png", draw_t((width / 8.0f) * 5.0f, (height / 8.0f), width / 4.0f, height / 8.0f))->SetOnPressedEvent([=] {
+			
+			//visualMenu->Hide();
+			//miscMenu->Show();
+			
+			});
+		visualMenu->AddElement<rtd::Text>("Misc.", draw_t((width / 8.0f) * 5.0f, (height / 8.0f), width / 4.0f, height / 8.0f));
 
+
+		miscMenu->Hide();
 		resolutionMenu->Hide();
 		visualMenu->Hide();
+		scene.Add2DCollection(miscMenu, "miscMenu");
 		scene.Add2DCollection(resolutionMenu, "resolutionMenu");
 		scene.Add2DCollection(visualMenu, "visualMenu");
 		scene.Add2DCollection(menu, "MenuButtons");
