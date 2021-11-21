@@ -278,7 +278,6 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 
 			if (vel.Length() > 0.01f)
 				p.state = comp::Player::State::WALK;
-			
 
 			vel *= p.runSpeed;
 			v.vel = vel;
@@ -321,6 +320,8 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 			}
 			else if (p.lastInputState.rightMouse) // was pressed
 			{
+				LOG_INFO("Pressed right");
+				simulation->GetGrid().RemoveDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, Blackboard::Get().GetAIHandler());
 				if (ecs::UseAbility(e, p.secondaryAbilty, &p.mousePoint))
 				{
 					LOG_INFO("Used secondary");
