@@ -15,8 +15,9 @@ const UINT T2D_BONESLOT = 9;
 class RAnimator : public resource::GResource
 {
 private:
-	bool				m_useInterpolation;
-	std::vector<bone_t>	m_bones;
+	bool									m_useInterpolation;
+	std::vector<bone_t>						m_bones;
+	std::unordered_map<std::string, UINT>	m_nameToBone;
 
 	//States
 	EAnimationType m_currentType;
@@ -28,7 +29,7 @@ private:
 		std::shared_ptr<RAnimation>					animation;
 		double										frameTimer	= 0;
 		double										blendTimer	= 0;
-		double										lastTick	= 0;
+		double										currentTick	= 0;
 		std::unordered_map<std::string, lastKeys_t> lastKeys;
 		bool										reachedEnd	= false;
 	};
@@ -40,7 +41,7 @@ private:
 	std::unordered_map<blendstate_t, double, blend_hash_fn> m_blendStates;
 
 	//Matrices that is going up to the GPU - structure buffer
-	std::vector<sm::Matrix>			 m_finalMatrices;
+	std::vector<sm::Matrix>			 m_localMatrices;	//In modelspace
 	ComPtr<ID3D11Buffer>			 m_bonesSB_Buffer;
 	ComPtr<ID3D11ShaderResourceView> m_bonesSB_RSV;
 
@@ -50,7 +51,7 @@ private:
 	bool CreateBonesSB();
 	void UpdateStructureBuffer();
 
-	//Enum
+	//Convert a string to enum
 	EAnimationType StringToAnimationType(const std::string& name) const;
 
 	//Reset the time of currentFrametime
@@ -82,6 +83,9 @@ public:
 
 	//Get the enum of what state the animator is in
 	const EAnimationType& GetCurrentState() const;
+
+	//Get a the local matrix of a bone
+	const sm::Matrix GetLocalMatrix(const std::string& bonename) const;
 
 	//Update the animation
 	void Update();

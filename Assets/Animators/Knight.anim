@@ -10,28 +10,28 @@ loopable		0
 defaultAnim		IDLE
 
 
-blendstate 		IDLE				MOVE				1.4
+blendstate 		IDLE				MOVE				1.5
 blendstate 		MOVE				IDLE				0.2
 
 
-----NO----		IDLE				PRIMARY_ATTACK		0
-blendstate		PRIMARY_ATTACK		IDLE				1.0
+blendstate		IDLE				PRIMARY_ATTACK		0
+blendstate		PRIMARY_ATTACK		IDLE				0.2
 
 
 blendstate 		IDLE				TAKE_DAMAGE			0.5
 blendstate		TAKE_DAMAGE			IDLE				0.5
 
 
-blendstate		IDLE 				PLACE_DEFENCE		0.5
-blendstate		PLACE_DEFENCE		IDLE				0.5
+blendstate		IDLE 				PLACE_DEFENCE		0
+blendstate		PLACE_DEFENCE		IDLE				0.7
 	
 	
 blendstate		MOVE				TAKE_DAMAGE			0.5
 blendstate		TAKE_DAMAGE			MOVE				0.5
 	
 	
-----NO----		MOVE				PRIMARY_ATTACK		0
-blendstate		PRIMARY_ATTACK		MOVE				1.0
+blendstate		MOVE				PRIMARY_ATTACK		0
+blendstate		PRIMARY_ATTACK		MOVE				0.5
 	
 	
 blendstate		MOVE				PLACE_DEFENCE		0.5
