@@ -153,6 +153,10 @@ void Systems::HealthSystem(HeadlessScene& scene, float dt, uint32_t& money_ref)
 					p->respawnTimer = 10.f;
 					entity.RemoveComponent<comp::Tag<TagType::DYNAMIC>>();
 				}
+				else if(entity.GetComponent<comp::Tag<TagType::DEFENCE>>())
+				{
+					comp::Transform* buildTransform = entity.GetComponent<comp::Transform>();
+				}
 				else {
 					entity.Destroy();
 				}

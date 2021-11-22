@@ -260,7 +260,21 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 					tileEntity.AddComponent<comp::Tag<TagType::STATIC>>();
 					tileEntity.AddComponent<comp::Tag<TagType::DEFENCE>>();
 					tileEntity.AddComponent<comp::MeshName>()->name = "Defence.obj";
+					tileEntity.AddComponent<comp::Health>();
 					tileEntity.AddComponent<comp::Network>();
+
+					//Add collision behavior for defense
+					CollisionSystem::Get().AddOnCollision(tileEntity, [=](Entity thisEntity, Entity other){
+						if(tileEntity.IsNull())
+							return NO_RESPONSE;
+
+						if(other.GetComponent<comp::Tag<TagType::GOOD>>())
+						{
+							LOG_INFO("YEEEEEEEES");
+						}
+
+						});
+					
 					Node* node = aiHandler->GetNodeByID(Vector2I(clampedZ, clampedX));
 					node->defencePlaced = true;
 					node->reachable = false;
