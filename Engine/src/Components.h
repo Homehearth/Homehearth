@@ -12,8 +12,8 @@ namespace ecs
 	{
 		TRANSFORM,
 		VELOCITY,
-		ANIMATOR_NAME,
 		MESH_NAME,
+		ANIMATOR_NAME,
 		HEALTH,
 		BOUNDING_ORIENTED_BOX,
 		BOUNDING_SPHERE,
@@ -106,7 +106,14 @@ namespace ecs
 
 		struct Animator
 		{
-			std::shared_ptr<RAnimator> animator;
+			std::shared_ptr<RAnimator>  animator;
+			bool						updating = true;
+		};
+
+		struct AnimationState
+		{
+			EAnimationType lastSend;	//Send to user last time
+			EAnimationType toSend;		//Going to be send this update
 		};
 
 		// Used on server side

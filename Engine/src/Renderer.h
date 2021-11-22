@@ -10,6 +10,7 @@
 #include "SkyboxPass.h"
 #include "BlurPass.h"
 #include "DepthOfFieldPass.h"
+#include "HeadlessEngine.h"
 
 
 class Renderer
@@ -48,5 +49,7 @@ public:
 	void Render(Scene* pScene);
 
 	IRenderPass* GetCurrentPass() const;
+	//TEMP PLZ REMOVE AFTER WE COME TO AN AGREEMENT ON WHICH DOF EFFECT TO USE
+	DOFPass* GetDoFPass();
 };
 

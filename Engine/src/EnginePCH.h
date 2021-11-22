@@ -120,7 +120,6 @@ namespace sm = dx::SimpleMath;
 #include "Profiler.h"
 #include "ThreadSyncer.h"
 #include "Components.h"
-#include "SceneBuilder.h"
 #include "RenderThreadHandler.h"
 #include "Stats.h"
 

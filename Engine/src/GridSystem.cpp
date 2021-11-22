@@ -115,6 +115,73 @@ void GridSystem::Initialize(Vector2I mapSize, sm::Vector3 position, std::string 
 	stbi_image_free(pixelsData);
 }
 
+bool GridSystem::RemoveDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, PathFinderManager* aiHandler)
+{
+	sm::Vector3 localPlayer;
+	m_scene->ForEachComponent<comp::Player, comp::Transform, comp::Network>([&](comp::Player& p, comp::Transform& t, comp::Network& net)
+		{
+			if (net.id == playerWhoPressedMouse)
+			{
+				localPlayer = t.position;
+			}
+		});
+
+	float t = 0;
+	float tMin = FLT_MAX;
+	Entity closestEntity;
+	m_scene->ForEachComponent<comp::Transform, comp::Tag<TagType::DEFENCE>, comp::BoundingOrientedBox>([&](Entity e, comp::Transform& transform, comp::Tag<TagType::DEFENCE>& d, comp::BoundingOrientedBox& b)
+		{
+			if (mouseRay.Intersects(b, &t))
+			{
+				if (t < tMin)
+				{
+					tMin = t;
+					closestEntity = e;
+				}
+			}
+		});
+	if (tMin != FLT_MAX)
+	{
+		comp::Transform* closestTransform = closestEntity.GetComponent<comp::Transform>();
+		int clampedX = (int)((abs(closestTransform->position.x) / (m_tileHalfWidth * 2)));
+		int clampedZ = (int)((abs(closestTransform->position.z) / (m_tileHalfWidth * 2)));
+
+		m_tiles[clampedZ][clampedX].type = TileType::EMPTY;
+		Node* node = aiHandler->GetNodeByID(m_tiles[clampedZ][clampedX].gridID);
+		node->defencePlaced = false;
+		node->reachable = true;
+		std::vector<Node*> diagNeighbors = node->GetDiagonalConnections();
+		for (Node* diagNeighbor : diagNeighbors)
+		{
+			if (diagNeighbor->defencePlaced || !diagNeighbor->reachable)
+			{
+				Vector2I difference = node->id - diagNeighbor->id;
+				Node* node1 = aiHandler->GetNodeByID(Vector2I(diagNeighbor->id.x + difference.x, diagNeighbor->id.y));
+				Node* node2 = aiHandler->GetNodeByID(Vector2I(diagNeighbor->id.x, diagNeighbor->id.y + difference.y));
+
+				node1->connections.push_back(node2);
+				node2->connections.push_back(node1);
+			}
+		}
+		if (aiHandler->PlayerAStar(localPlayer))
+		{
+			m_scene->ForEachComponent<comp::Player, comp::Network>([&](comp::Player& p, comp::Network& net)
+				{
+					if (net.id == playerWhoPressedMouse)
+					{
+						p.reachable = true;
+					}
+				});
+		}
+		closestEntity.Destroy();
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
 
 bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, PathFinderManager* aiHandler)
 {
@@ -147,23 +214,29 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 
 	if (mouseRay.Intersects(plane, &pos))
 	{
-		for (int col = 0; col < m_gridSize.y && !tileFound; col++)
+
+		int clampedX = (int)((abs(pos.x) / (m_tileHalfWidth * 2)));
+		int clampedZ = (int)((abs(pos.z) / (m_tileHalfWidth * 2)));
+		Tile tile = m_tiles[clampedZ][clampedX];
+
+		// Basically an AABB check
+		float right = tile.position.x + tile.halfWidth;
+		float left = tile.position.x - tile.halfWidth;
+		float top = tile.position.z + tile.halfWidth;
+		float bottom = tile.position.z - tile.halfWidth;
+
+		// Is mouse position we clicked at within the tiles bounds
+		if (pos.x > left && pos.x < right && pos.z < top && pos.z > bottom)
 		{
-			for (int row = 0; row < m_gridSize.x && !tileFound; row++)
+			tileFound = true;
+			if (tile.type == TileType::EMPTY)
 			{
-				Tile tile = m_tiles[row][col];
-
-				// Basically an AABB check
-				float right = tile.position.x + tile.halfWidth;
-				float left = tile.position.x - tile.halfWidth;
-				float top = tile.position.z + tile.halfWidth;
-				float bottom = tile.position.z - tile.halfWidth;
-
-				// Is mouse position we clicked at within the tiles bounds
-				if (pos.x > left && pos.x < right && pos.z < top && pos.z > bottom)
+				bool tileOccupied = false;
+				// Checking so the other entities doesnt occupy the tile
+				for (int i = 0; i < entityPos.size() && !tileOccupied; i++)
 				{
-					tileFound = true;
-					if (tile.type == TileType::EMPTY)
+					// Is the entity occupying a tile?
+					if (entityPos[i].x > left && entityPos[i].x < right && entityPos[i].z < top && entityPos[i].z > bottom)
 					{
 						bool tileOccupied = false;
 						// Checking so the other entities doesnt occupy the tile
@@ -179,81 +252,62 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 							{
 								tileOccupied = true;
 							}
-						}
-						if (!tileOccupied && sm::Vector3::Distance(localPlayer.Center, tile.position) < 32.f)
+					}
+				}
+				if (!tileOccupied)
+				{
+					m_tiles[clampedZ][clampedX].type = TileType::DEFENCE;
+
+					Entity tileEntity = m_scene->CreateEntity();
+					comp::Transform* transform = tileEntity.AddComponent<comp::Transform>();
+					transform->position = { tile.position.x , 5.f, tile.position.z };
+					transform->scale = { 1.35f, 1.f, 1.35f };
+
+					comp::BoundingOrientedBox* collider = tileEntity.AddComponent<comp::BoundingOrientedBox>();
+					collider->Extents = { m_tileHalfWidth, m_tileHalfWidth, m_tileHalfWidth };
+					tileEntity.AddComponent<comp::Tag<TagType::STATIC>>();
+					tileEntity.AddComponent<comp::Tag<TagType::DEFENCE>>();
+					tileEntity.AddComponent<comp::MeshName>()->name = "Defence.obj";
+					tileEntity.AddComponent<comp::Network>();
+					Node* node = aiHandler->GetNodeByID(Vector2I(clampedZ, clampedX));
+					node->defencePlaced = true;
+					node->reachable = false;
+					//Check if connections need to be severed
+					std::vector<Node*> diagNeighbors = node->GetDiagonalConnections();
+					for (Node* diagNeighbor : diagNeighbors)
+					{
+						if (diagNeighbor->defencePlaced || !diagNeighbor->reachable)
 						{
-							m_tiles[row][col].type = TileType::DEFENCE;
-
-							Entity tileEntity = m_scene->CreateEntity();
-							comp::Transform* transform = tileEntity.AddComponent<comp::Transform>();
-							transform->position = { tile.position.x , 5.f, tile.position.z };	
-							transform->scale = { 1.35f, 1.f, 1.35f };
-
-							/*
-								Find out which tower type the player wanted to build.
-							*/
-							TowerTypes towerBuild = TowerTypes::SHORT;
-							m_scene->ForEachComponent<comp::Player, comp::Network>([&](comp::Player& p, comp::Network& n) {
-
-								if (n.id == playerWhoPressedMouse)
-								{
-									towerBuild = p.towerSelected;
-								}
-
-								});
-
-							comp::BoundingOrientedBox* collider = tileEntity.AddComponent<comp::BoundingOrientedBox>();
-							collider->Extents = { m_tileHalfWidth, m_tileHalfWidth, m_tileHalfWidth };
-							tileEntity.AddComponent<comp::Tag<TagType::STATIC>>();
-
-							// Temp
-							if (towerBuild == TowerTypes::SHORT)
+							Vector2I difference = node->id - diagNeighbor->id;
+							Node* connectionRemovalNode1 = aiHandler->GetNodeByID(Vector2I(diagNeighbor->id.x + difference.x, diagNeighbor->id.y));
+							Node* connectionRemovalNode2 = aiHandler->GetNodeByID(Vector2I(diagNeighbor->id.x, diagNeighbor->id.y + difference.y));
+							if (!connectionRemovalNode1->RemoveConnection(connectionRemovalNode2))
 							{
-								tileEntity.AddComponent<comp::MeshName>()->name = "Defence.obj";
+								LOG_INFO("Failed to remove connection1");
 							}
-							else
-								tileEntity.AddComponent<comp::MeshName>()->name = "Barrel.obj";
-
-							tileEntity.AddComponent<comp::Network>();
-							Node* node = aiHandler->GetNodeByID(Vector2I(row, col));
-							node->defencePlaced = true;
-							//Check if connections need to be severed
-							std::vector<Node*> diagNeighbors = node->GetDiagonalConnections();
-							for (Node* diagNeighbor : diagNeighbors)
+							if (!connectionRemovalNode2->RemoveConnection(connectionRemovalNode1))
 							{
-								if (diagNeighbor->defencePlaced || !diagNeighbor->reachable)
-								{
-									Vector2I difference = node->id - diagNeighbor->id;
-									Node* connectionRemovalNode1 = aiHandler->GetNodeByID(Vector2I(diagNeighbor->id.x + difference.x, diagNeighbor->id.y));
-									Node* connectionRemovalNode2 = aiHandler->GetNodeByID(Vector2I(diagNeighbor->id.x, diagNeighbor->id.y + difference.y));
-									if (!connectionRemovalNode1->RemoveConnection(connectionRemovalNode2))
-									{
-										LOG_INFO("Failed to remove connection1");
-									}
-									if (!connectionRemovalNode2->RemoveConnection(connectionRemovalNode1))
-									{
-										LOG_INFO("Failed to remove connection2");
-									}
-								}
-							}
-							if (!aiHandler->PlayerAStar(localPlayer.Center))
-							{
-								m_scene->ForEachComponent<comp::Player, comp::Network>([&](comp::Player& p, comp::Network& net)
-									{
-										if (net.id == playerWhoPressedMouse)
-										{
-											p.reachable = false;
-										}
-									});
+								LOG_INFO("Failed to remove connection2");
 							}
 						}
 					}
+					if (!aiHandler->PlayerAStar(localPlayer))
+					{
+						m_scene->ForEachComponent<comp::Player, comp::Network>([&](comp::Player& p, comp::Network& net)
+							{
+								if (net.id == playerWhoPressedMouse)
+								{
+									p.reachable = false;
+								}
+							});
+					}
 				}
+				return true;
 			}
 		}
-	}
 
-	return true;
+	}
+	return false;
 }
 
 uint32_t GridSystem::GetTileCount() const

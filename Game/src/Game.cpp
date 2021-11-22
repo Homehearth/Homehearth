@@ -323,6 +323,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			});
 
 		SetScene("Game");
+		thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::ADAPTIVE);
 		break;
 	}
 	case GameMsg::Game_WaveTimer:
@@ -404,6 +405,25 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			elem->SetNewMoney(m_money);
 		}
 		break;
+	}
+	case GameMsg::Game_ChangeAnimation:
+	{
+		uint32_t id;
+		EAnimationType animtype = EAnimationType::NONE;
+		msg >> id >> animtype;
+
+		if (m_gameEntities.find(id) != m_gameEntities.end())
+		{
+			comp::Animator* animComp = m_gameEntities.at(id).GetComponent<comp::Animator>();
+			if (animComp)
+			{
+				std::shared_ptr<RAnimator> anim = animComp->animator;
+				if (anim)
+				{
+					anim->ChangeAnimation(animtype);
+				}
+			}
+		}
 	}
 	}
 }
@@ -555,14 +575,23 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 			{
 				std::string name;
 				msg >> name;
-				e.AddComponent<comp::Renderable>()->model = ResourceManager::Get().CopyResource<RModel>(name, true);
+				std::shared_ptr<RModel> model = ResourceManager::Get().CopyResource<RModel>(name, true);
+				if (model)
+				{
+					e.AddComponent<comp::Renderable>()->model = model;
+				}
 				break;
 			}
 			case ecs::Component::ANIMATOR_NAME:
 			{
 				std::string name;
 				msg >> name;
-				e.AddComponent<comp::Animator>()->animator = ResourceManager::Get().CopyResource<RAnimator>(name, true);
+				std::shared_ptr<RAnimator> animator = ResourceManager::Get().CopyResource<RAnimator>(name, true);
+				if (animator)
+				{
+					animator->RandomizeTime();
+					e.AddComponent<comp::Animator>()->animator = animator;
+				}
 				break;
 			}
 			case ecs::Component::HEALTH:
@@ -629,4 +658,14 @@ void Game::UpdateInput()
 	}
 
 	m_savedInputs.push_back(m_inputState);
+	//TEMP PLZ REMOVE AFTER WE COME TO AN AGREEMENT ON WHICH DOF EFFECT TO USE
+	if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::D1, KeyState::PRESSED))
+	{
+		thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::ADAPTIVE);
+	}
+
+	if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::D2, KeyState::PRESSED))
+	{
+		thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::VIGNETTE);
+	}
 }

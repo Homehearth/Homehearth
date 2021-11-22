@@ -275,6 +275,7 @@ void Simulation::ResetPlayer(Entity player)
 
 	player.AddComponent<comp::MeshName>()->name = "Knight.fbx";
 	player.AddComponent<comp::AnimatorName>()->name = "Knight.anim";
+	player.AddComponent<comp::AnimationState>();
 
 	// only if Melee
 	if (playerComp->classType == comp::Player::Class::WARRIOR)
@@ -324,6 +325,7 @@ void Simulation::ResetPlayer(Entity player)
 
 		player.AddComponent<comp::MeshName>()->name = "Monster.fbx";
 		player.AddComponent<comp::AnimatorName>()->name = "Monster.anim";
+		player.AddComponent<comp::AnimationState>();
 
 	}
 
@@ -444,7 +446,7 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 					PROFILE_SCOPE("Collision Sphere/Sphere");
 					Systems::CheckCollisions<comp::BoundingSphere, comp::BoundingSphere>(scene, e.dt);
 				}
-
+				ServerSystems::AnimatonSystem(this, scene);
 			}
 
 			if (!waveQueue.empty())

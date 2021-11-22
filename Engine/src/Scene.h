@@ -8,7 +8,6 @@ class Scene : public BasicScene<Scene>
 {
 private:
 	bool m_IsRenderingColliders;
-	bool m_updateAnimation;
 	DoubleBuffer<std::vector<comp::Renderable>> m_renderableCopies;
 	DoubleBuffer<std::vector<comp::RenderableDebug>> m_debugRenderableCopies;
 	DoubleBuffer<std::vector<std::pair<comp::Renderable,comp::Animator>>> m_renderableAnimCopies;
