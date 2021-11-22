@@ -21,41 +21,48 @@ void GameSystems::RenderIsCollidingSystem(Scene& scene)
 }
 
 // Set all the healthbars to players.
-void GameSystems::UpdateHealthbar(Scene& scene)
+void GameSystems::UpdateHealthbar(Game* game)
 {
-	int i = 1;
-	scene.ForEachComponent<comp::Health, comp::Player>([&](Entity e, comp::Health& health, const comp::Player& player) {
-		// Safety check for now.
-		if (i < 5)
+	size_t i = game->m_players.size();
+
+	Scene* scene = &game->GetScene("Game");
+
+	scene->ForEachComponent<comp::Health, comp::Player>([&](Entity e, comp::Health& health, const comp::Player& player)
 		{
-			rtd::Healthbar* healthbar = dynamic_cast<rtd::Healthbar*>(scene.GetCollection("player" + std::to_string(i) + "Info")->elements[0].get());
+			rtd::Healthbar* healthbar = dynamic_cast<rtd::Healthbar*>(scene->GetCollection("player" + std::to_string(i) + "Info")->elements[0].get());
 			if (healthbar)
 			{
 				healthbar->SetHealthVariable(e);
 			}
-		}
-		i++;
+			i--;
 		});
 }
 
 // Will check if a ray hits an object before it hits the player and if it does it will add the object to be rendered transparent
 void GameSystems::CheckLOS(Game* game)
 {
-	// Shoot a ray from cameras position to players position
-	Ray_t ray;
-	ray.origin = game->GetCurrentScene()->GetCurrentCamera()->GetPosition();
-	ray.dir = (game->m_players.at(game->m_localPID).GetComponent<comp::Transform>()->position - ray.origin);
-	ray.dir.Normalize(ray.dir);
+	comp::Transform* t = game->m_players.at(game->m_localPID).GetComponent<comp::Transform>();
+	Camera* cam = game->GetCurrentScene()->GetCurrentCamera();
 
-	for (int i = 0; i < game->m_LOSColliders.size(); i++)
+	if (t && cam->GetCameraType() == CAMERATYPE::PLAY)
 	{
-		if (ray.Intersects(game->m_LOSColliders[i].second))
+		sm::Vector3 playerPos = t->position;
+		// Shoot a ray from cameras position to players position
+		Ray_t ray;
+		ray.origin = cam->m_position;
+		ray.dir = (t->position - ray.origin);
+		ray.dir.Normalize(ray.dir);
+
+		for (int i = 0; i < game->m_LOSColliders.size(); i++)
 		{
-			for (int j = 0; j < game->m_models.at(game->m_LOSColliders[i].first).size(); j++)
+			if (ray.Intersects(game->m_LOSColliders[i].second))
 			{
-				game->m_models.at(game->m_LOSColliders[i].first)[j].GetComponent<comp::Renderable>()->isSolid = false;
+				for (int j = 0; j < game->m_models.at(game->m_LOSColliders[i].first).size(); j++)
+				{
+					//LOG_INFO("Behind an object!");
+					game->m_models.at(game->m_LOSColliders[i].first)[j].GetComponent<comp::Renderable>()->isSolid = false;
+				}
 			}
-			break;
 		}
 	}
 }
@@ -64,10 +71,10 @@ static bool STRECH_ONCE = true;
 
 void GameSystems::UpdatePlayerVisuals(Game* game)
 {
-	int i = 1;
+	size_t i = game->m_players.size();
 	Scene* scene = game->GetCurrentScene();
 
-	scene->ForEachComponent<comp::NamePlate, comp::Transform, comp::Network>([&](comp::NamePlate& name, comp::Transform& t, comp::Network& n)
+	scene->ForEachComponent<comp::Player, comp::Transform, comp::Network>([&](comp::Player& player, comp::Transform& t, comp::Network& n)
 		{
 			/*
 				Own players health should be displayed at the lower left corner.
@@ -77,16 +84,6 @@ void GameSystems::UpdatePlayerVisuals(Game* game)
 				const float width = (float)game->GetWindow()->GetWidth();
 				const float height = (float)game->GetWindow()->GetHeight();
 				Scene* scene = &game->GetScene("Game");
-				//Collection2D* collection = scene->GetCollection("dynamicPlayer" + std::to_string(i) + "namePlate");
-				//if (collection)
-				//{
-				//	rtd::Text* namePlate = dynamic_cast<rtd::Text*>(collection->elements[0].get());
-				//	if (namePlate)
-				//	{
-				//		namePlate->SetPosition(width / 2, height - (height / 8) - (height / 12));
-				//	}
-
-				//}
 				// Update healthbars position.
 				Collection2D* collHealth = scene->GetCollection("player" + std::to_string(i) + "Info");
 				if (collHealth)
@@ -167,7 +164,6 @@ void GameSystems::UpdatePlayerVisuals(Game* game)
 					}
 				}
 			}
-			i++;
+			i--;
 		});
-
 }

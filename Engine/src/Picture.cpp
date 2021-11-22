@@ -65,9 +65,9 @@ void rtd::Picture::OnHover()
 {
 }
 
-bool rtd::Picture::CheckClick()
+ElementState rtd::Picture::CheckClick()
 {
-	return false;
+	return ElementState::NONE;
 }
 
 bool rtd::Picture::CheckHover()

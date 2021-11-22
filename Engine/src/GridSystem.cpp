@@ -28,7 +28,7 @@ void GridSystem::Initialize(Vector2I mapSize, sm::Vector3 position, std::string 
 
 	std::vector<int> pixelValues;
 	m_gridSize = { width, height };
-	sm::Vector2 tileSize = { (float)m_mapSize.x / m_gridSize.x, (float)m_mapSize.y / m_gridSize.y };
+	m_tileSize = { (float)m_mapSize.x / m_gridSize.x, (float)m_mapSize.y / m_gridSize.y };
 
 	for (int i = 0; i < m_gridSize.x * m_gridSize.y * 4; i++)
 	{
@@ -62,8 +62,8 @@ void GridSystem::Initialize(Vector2I mapSize, sm::Vector3 position, std::string 
 			if (rgba == sm::Vector4{ 0, 0, 0, 255 })
 				tileTypeTemp = TileType::DEFAULT;
 
-			m_tileHalfWidth = (tileSize.x / 2.f);
-			sm::Vector3 tilePosition = { tileSize.x * row + m_tileHalfWidth, 0.f , (tileSize.y * -col) - m_tileHalfWidth };
+			m_tileHalfWidth = (m_tileSize.x / 2.f);
+			sm::Vector3 tilePosition = { m_tileSize.x * row + m_tileHalfWidth, 0.f , (m_tileSize.y * -col) - m_tileHalfWidth };
 
 			Tile tileTemp;
 			tileTemp.gridID = { col, row };
@@ -143,8 +143,8 @@ bool GridSystem::RemoveDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, 
 	if (tMin != FLT_MAX)
 	{
 		comp::Transform* closestTransform = closestEntity.GetComponent<comp::Transform>();
-		int clampedX = (int)((abs(closestTransform->position.x) / (m_tileHalfWidth * 2)));
-		int clampedZ = (int)((abs(closestTransform->position.z) / (m_tileHalfWidth * 2)));
+		int clampedX = static_cast<int>((abs(closestTransform->position.x) / m_tileSize.x));
+		int clampedZ = static_cast<int>((abs(closestTransform->position.z) / m_tileSize.y));
 
 		m_tiles[clampedZ][clampedX].type = TileType::EMPTY;
 		Node* node = aiHandler->GetNodeByID(m_tiles[clampedZ][clampedX].gridID);
@@ -185,41 +185,34 @@ bool GridSystem::RemoveDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, 
 
 bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, PathFinderManager* aiHandler)
 {
-	const float MAX_RADIUS = 20.f;
-	const float MIN_RADIUS = 10.f;
-
 	Plane_t plane;
 	plane.normal = { 0.0f, 1.0f, 0.0f };
 	sm::Vector3 pos;
-	bool tileFound = false;
 	bool canBuild = false;
 
-	sm::Vector3 localPlayer;
-	std::vector<sm::Vector3> entityPos;
+	dx::BoundingSphere localPlayer;
+	std::vector<dx::BoundingSphere> ePos;
 
 	// Save positions to calculate distances to the tile for players
-	m_scene->ForEachComponent<comp::Player, comp::Transform, comp::Network>([&](comp::Player& p, comp::Transform& t, comp::Network& net)
+	m_scene->ForEachComponent<comp::Player, comp::BoundingSphere, comp::Network>([&](comp::Player& p, comp::BoundingSphere& bs, comp::Network& net)
 		{
-			if (net.id != playerWhoPressedMouse)
+			if (net.id == playerWhoPressedMouse)
 			{
-				entityPos.push_back(t.position);
+				localPlayer = bs;
 			}
-			else
-			{
-				localPlayer = t.position;
-			}
+			ePos.push_back(bs);
 		});
 	// Do the same for all NPC entities
-	m_scene->ForEachComponent<comp::NPC, comp::Transform>([&](comp::NPC& p, comp::Transform& t)
+	m_scene->ForEachComponent<comp::NPC, comp::BoundingSphere>([&](comp::NPC& p, comp::BoundingSphere& bs)
 		{
-			entityPos.push_back(t.position);
+			ePos.push_back(bs);
 		});
 
 	if (mouseRay.Intersects(plane, &pos))
 	{
 
-		int clampedX = (int)((abs(pos.x) / (m_tileHalfWidth * 2)));
-		int clampedZ = (int)((abs(pos.z) / (m_tileHalfWidth * 2)));
+		int clampedX = static_cast<int>((abs(pos.x) / m_tileSize.x));
+		int clampedZ = static_cast<int>((abs(pos.z) / m_tileSize.y));
 		Tile tile = m_tiles[clampedZ][clampedX];
 
 		// Basically an AABB check
@@ -231,22 +224,26 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 		// Is mouse position we clicked at within the tiles bounds
 		if (pos.x > left && pos.x < right && pos.z < top && pos.z > bottom)
 		{
-			tileFound = true;
 			if (tile.type == TileType::EMPTY)
 			{
 				bool tileOccupied = false;
 				// Checking so the other entities doesnt occupy the tile
-				for (int i = 0; i < entityPos.size() && !tileOccupied; i++)
+				for (int i = 0; i < ePos.size() && !tileOccupied; i++)
 				{
 					// Is the entity occupying a tile?
-					if (entityPos[i].x > left && entityPos[i].x < right && entityPos[i].z < top && entityPos[i].z > bottom)
+
+					float closestX = max(left, min(ePos[i].Center.x, right));
+					float closestZ = max(bottom, min(ePos[i].Center.z, top));
+
+					sm::Vector3 pointToSphere = ePos[i].Center - sm::Vector3(closestX, 0.f, closestZ);
+					float distance = pointToSphere.Length();
+
+					if (distance < ePos[i].Radius)
 					{
 						tileOccupied = true;
 					}
 				}
-				if (!tileOccupied &&
-					sm::Vector3::Distance(tile.position, localPlayer) < MAX_RADIUS &&
-					sm::Vector3::Distance(tile.position, localPlayer) > MIN_RADIUS)
+				if (!tileOccupied)
 				{
 					m_tiles[clampedZ][clampedX].type = TileType::DEFENCE;
 
@@ -285,7 +282,7 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 							}
 						}
 					}
-					if (!aiHandler->PlayerAStar(localPlayer))
+					if (!aiHandler->PlayerAStar(localPlayer.Center))
 					{
 						m_scene->ForEachComponent<comp::Player, comp::Network>([&](comp::Player& p, comp::Network& net)
 							{

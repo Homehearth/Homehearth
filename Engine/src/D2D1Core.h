@@ -117,6 +117,14 @@ struct draw_text_t
 		this->x_stretch = x_stretch;
 		this->y_stretch = y_stretch;
 	}
+
+	draw_text_t(const draw_t& opts)
+	{
+		this->x_pos = opts.x_pos;
+		this->y_pos = opts.y_pos;
+		this->x_stretch = opts.width;
+		this->y_stretch = opts.height;
+	}
 };
 
 enum class Shapes
@@ -126,6 +134,7 @@ enum class Shapes
 	RECTANGLE_OUTLINED,
 	TRIANGLE_FILLED,
 	TRIANGLE_OUTLINED,
+	CIRCLE_OUTLINE,
 	NR_OF_SHAPES
 };
 
@@ -201,6 +210,12 @@ public:
 
 	static float GetDefaultFontSize();
 	static Window* GetWindow();
+	static ID2D1Factory* GetFactory();
+
+	/*
+		Change the color of the default brush.
+	*/
+	static void ChangeColorOfBrush(const D2D1_COLOR_F& newColor);
 
 	/*
 		Draw Text onto the window assigned in the parameter.
@@ -216,10 +231,15 @@ public:
 	static void DrawF(const draw_t& fig, const draw_shape_t& shape, const LineWidth& thickness = LineWidth::MEDIUM);
 
 	/*
+		Draws a shape with own specified geometry.
+	*/
+	static void DrawF(ID2D1PathGeometry* geometry);
+
+	/*
 		Draws a Bitmap onto the screen at the coordinates of
 		_DRAW specification.
 	*/
-	static void DrawP(const draw_t& fig, ID2D1Bitmap* texture = nullptr);
+	static void DrawP(const draw_t& fig, ID2D1Bitmap* texture = nullptr, const float& opacity = (1.0f));
 
 	/*
 		Run buffering D2D1 Draw commands.

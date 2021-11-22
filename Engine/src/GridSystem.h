@@ -16,7 +16,7 @@ enum class TileType
 struct Tile 
 {
 	TileType type					= TileType::DEFAULT;
-	Vector2I gridID				= { -1, -1 };
+	Vector2I gridID					= { -1, -1 };
 	float halfWidth					= 0;
 	sm::Vector3 position			= { 0, 0, 0 };
 };
@@ -34,6 +34,7 @@ private:
 public:
 									GridSystem();
 									~GridSystem();
+	sm::Vector2						m_tileSize;
 
 	/*GridSize is decided by the texture size, how many tiles in x and why, MapSize is how big the world is*/
 	void							Initialize(Vector2I mapSize, sm::Vector3 position, std::string fileName, HeadlessScene* scene);

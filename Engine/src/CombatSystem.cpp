@@ -118,6 +118,7 @@ Entity CombatSystem::CreateAttackEntity(Entity entity, HeadlessScene& scene, com
 
 	comp::Transform* t = attackEntity.AddComponent<comp::Transform>();
 	attackEntity.AddComponent<comp::Tag<TagType::DYNAMIC>>();
+	attackEntity.AddComponent<comp::Tag<TagType::NO_RESPONSE>>();
 
 	comp::BoundingSphere* bos = attackEntity.AddComponent<comp::BoundingSphere>();
 
@@ -148,6 +149,7 @@ Entity CombatSystem::CreateAttackEntity(Entity entity, HeadlessScene& scene, com
 
 	comp::Transform* t = attackEntity.AddComponent<comp::Transform>();
 	attackEntity.AddComponent<comp::Tag<TagType::DYNAMIC>>();
+	attackEntity.AddComponent<comp::Tag<TagType::NO_RESPONSE>>();
 
 	comp::BoundingSphere* bos = attackEntity.AddComponent<comp::BoundingSphere>();
 
@@ -183,17 +185,17 @@ void CombatSystem::AddCollisionMeleeBehavior(Entity entity, Entity attackEntity,
 			if (entity.IsNull())
 			{
 				thisEntity.GetComponent<comp::SelfDestruct>()->lifeTime = 0.f;
-				return NO_RESPONSE;
+				return;
 			}
 
 			if (other == entity)
-				return NO_RESPONSE;
+				return;
 
 			tag_bits goodOrBad = TagType::GOOD | TagType::BAD;
 			if ((entity.GetTags() & goodOrBad) ==
 				(other.GetTags() & goodOrBad))
 			{
-				return NO_RESPONSE; //these guys are on the same team
+				return; //these guys are on the same team
 			}
 
 			comp::Health* otherHealth = other.GetComponent<comp::Health>();
@@ -289,6 +291,7 @@ void CombatSystem::AddCollisionRangeBehavior(Entity entity, Entity attackEntity,
 					comp::TemporaryPhysics* p = other.AddComponent<comp::TemporaryPhysics>();
 					comp::TemporaryPhysics::Force force = {};
 					force.force = attackVel->vel;
+					force.actingTime = 0.7f;
 					p->forces.push_back(force);
 				}
 				else
@@ -314,6 +317,6 @@ void CombatSystem::AddCollisionRangeBehavior(Entity entity, Entity attackEntity,
 				}
 
 			}
-			return NO_RESPONSE;
+			return;
 		});
 }

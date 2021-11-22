@@ -13,4 +13,5 @@ enum TagType : tag_bits
 
 	GOOD = 128,
 	BAD = 256,
+	NO_RESPONSE = 1 << 9,
 };

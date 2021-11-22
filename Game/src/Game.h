@@ -20,6 +20,8 @@ private:
 	Entity m_mapEntity;
 
 	InputState m_inputState;
+	std::vector<InputState> m_savedInputs;
+
 
 	// Inherited via Engine
 	virtual bool OnStartup() override;
@@ -58,4 +60,5 @@ public:
 	Entity& GetLocalPlayer();
 
 	ParticleSystem* GetParticleSystem();
+	void UseShop(const ShopItem& whatToBuy);
 };
