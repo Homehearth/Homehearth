@@ -5,23 +5,10 @@ Node* PathFinderManager::FindClosestNode(sm::Vector3 position)
 {
 	Node* currentClosest = nullptr;
 
-	for (int j = 0; j < m_nodes.size(); j++)
-	{
-		for (int i = 0; i < m_nodes[j].size(); i++)
-		{
-			if (currentClosest)
-			{
-				if (sm::Vector3::Distance(currentClosest->position, position) > sm::Vector3::Distance(position, m_nodes[i][j]->position))
-				{
-					currentClosest = m_nodes[i][j].get();
-				}
-			}
-			else
-			{
-				currentClosest = m_nodes[i][j].get();
-			}
-		}
-	}
+	int clampedX = static_cast<int>(abs(position.x) / m_nodeSize.x);
+	int clampedZ = static_cast<int>(abs(position.z) / m_nodeSize.y);
+
+	currentClosest = m_nodes[clampedZ][clampedX].get();
 
 	return currentClosest;
 }
@@ -141,12 +128,9 @@ void PathFinderManager::CreateNodes(GridSystem* grid)
 			{
 				m_nodes[j][i]->connections.push_back(neighbor);
 			}
-
-
-
 		}
 	}
-
+	m_nodeSize = grid->m_tileSize;
 }
 
 PathFinderManager::PathFinderManager()

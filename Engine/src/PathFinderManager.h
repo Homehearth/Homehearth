@@ -5,6 +5,7 @@
 class PathFinderManager
 {
 private:
+	sm::Vector2 m_nodeSize;
 	std::vector<std::vector<std::shared_ptr<Node>>> m_nodes;
 	std::vector<Node*> GetNeighbors(GridSystem* grid, Tile* baseNode);
 	Node* GetDistantNode(sm::Vector3 position);

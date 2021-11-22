@@ -218,10 +218,10 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 #endif
 				m_players[m_localPID] = e;
 
-				if (e.GetComponent<comp::Transform>())
-				{
-					e.AddComponent <comp::EmitterParticle>("thisisfine.png", "thisisfine_Opacity.png", 100, PARTICLEMODE::SMOKE);
-				}
+				//if (e.GetComponent<comp::Transform>())
+				//{
+				//	e.AddComponent <comp::EmitterParticle>("thisisfine.png", "thisisfine_Opacity.png", 100, PARTICLEMODE::SMOKE);
+				//}
 			}
 			else if (e.GetComponent<comp::Player>())
 			{
