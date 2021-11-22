@@ -138,5 +138,5 @@ bool rtd::Healthbar::CheckHover()
 
 ElementState rtd::Healthbar::CheckClick()
 {
-    return ElementState::NONE;
+    return ElementState::INSIDE;
 }

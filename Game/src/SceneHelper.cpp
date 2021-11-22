@@ -201,10 +201,6 @@ namespace sceneHelp
 		portField->SetDescriptionText("Port:");
 		rtd::Button* connectButton = connectFields->AddElement<rtd::Button>("StartButton.png", draw_t((width / 2) - (width / 8.f), height - (height * 0.25f), width / 4.f, height * 0.15f));
 		scene.Add2DCollection(connectFields, "ConnectFields");
-		//rtd::Button* exitButton = connectFields->AddElement<rtd::Button>("demoExitButton.png", draw_t(0.0f, 0.0f, width / 24, height / 16));
-		//exitButton->SetOnPressedEvent([=] {
-		//game->Shutdown();
-		//	});
 
 		Collection2D* scrolldownMenu = new Collection2D;
 		rtd::Scroller* sc = scrolldownMenu->AddElement<rtd::Scroller>(draw_t(0.0f, -(height / 16) * 3.0f, width / 24.0f, (height / 16) * 3.0f), sm::Vector2(0, 0));

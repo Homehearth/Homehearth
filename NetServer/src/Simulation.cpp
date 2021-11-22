@@ -677,7 +677,7 @@ GridSystem& Simulation::GetGrid()
 
 Currency& Simulation::GetCurrency()
 {
-	return m_currency;
+	return m_currency;			
 }
 
 void Simulation::UseShop(const ShopItem& item, const uint32_t& player)
