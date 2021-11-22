@@ -55,6 +55,7 @@
 #include <queue>
 #include <condition_variable>
 #include <bitset>
+#include <algorithm>
 
 #include <functional>
 

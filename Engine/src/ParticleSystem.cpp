@@ -29,9 +29,8 @@ void ParticleSystem::InitializeParticles(entt::registry& reg, entt::entity ent)
 		tempParticle.position = newPosition;
 		tempParticle.type = emitter->type;
 		tempParticle.size = { 1, 1 };
-		tempParticle.color = { 1,0,0,1 };
-		tempParticle.velocity = (float)rand() / (RAND_MAX + 1) * (2.0 - (-2.0f)) + (-2.0f);
-
+		tempParticle.color = { 0,0,0,0 };
+		tempParticle.life = (float)(rand()) / float(RAND_MAX) * i;
 
 		particles[i] =  tempParticle;
 	}

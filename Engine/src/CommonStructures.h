@@ -416,10 +416,10 @@ struct Node
 ALIGN16
 struct Particle_t
 {
-	sm::Vector4		position;
+	sm::Vector4		position = { 0, 0, 0, 1 };
 	sm::Vector4		color;
 
-	sm::Vector2		size;
-	PARTICLEMODE	type = PARTICLEMODE::SPARKLES;
-	float			velocity = 0;
+	sm::Vector2		size = { 1, 1, };
+	PARTICLEMODE	type;
+	UINT			life = 0;
 };

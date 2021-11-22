@@ -448,7 +448,7 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 	m_spawnPoints.push(sm::Vector3(247.f, 0, -325.f));
 
 	// Create and add all waves to the queue.
-	CreateWaves();
+	//CreateWaves();
 
 	// Create Scenes associated with this Simulation
 	m_pLobbyScene = &m_pEngine->GetScene("Lobby_" + std::to_string(gameID));

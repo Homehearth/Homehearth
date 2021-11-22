@@ -2,12 +2,12 @@
 
 #define vertex particlesUAV[particleID.x]
 
-void BloodSimmulation(inout VertexParticleIn particle);
-void LeafSimmulation(inout VertexParticleIn particle);
-void WaterSplashSimmulation(inout VertexParticleIn particle);
-void SmokeSimmulation(inout VertexParticleIn particle, in uint id, in uint3 partcileID);
-void SparklesSimmulation(inout VertexParticleIn particle);
-void RainSimmulation(inout VertexParticleIn particle);
+void BloodSimmulation(inout VertexParticleIn particle, in uint id);
+void LeafSimmulation(inout VertexParticleIn particle, in uint id);
+void WaterSplashSimmulation(inout VertexParticleIn particle, in uint id);
+void SmokeSimmulation(inout VertexParticleIn particle, in uint id);
+void SparklesSimmulation(inout VertexParticleIn particle, in uint id);
+void RainSimmulation(inout VertexParticleIn particle, in uint id);
 
 [numthreads(1, 1, 1)]
 void main(uint3 particleID : SV_DispatchThreadID)
@@ -17,36 +17,44 @@ void main(uint3 particleID : SV_DispatchThreadID)
         id -= 100;
             
     if (vertex.type == 0)
-        BloodSimmulation(vertex);
+        BloodSimmulation(vertex, id);
     else if (vertex.type == 1)
-        LeafSimmulation(vertex);
+        LeafSimmulation(vertex, id);
     else if (vertex.type == 2)
-        WaterSplashSimmulation(vertex);
+        WaterSplashSimmulation(vertex, id);
     else if (vertex.type == 3)
-        SmokeSimmulation(vertex, id, particleID);
+        SmokeSimmulation(vertex, id);
     else if (vertex.type == 4)
-        SparklesSimmulation(vertex);
+        SparklesSimmulation(vertex, id);
     else if (vertex.type == 5)
-        RainSimmulation(vertex);
+        RainSimmulation(vertex, id);
 
+    vertex.life += deltaTime;
 }
 
-void BloodSimmulation(inout VertexParticleIn particle)
+void BloodSimmulation(inout VertexParticleIn particle, in uint id)
 {
-	
+    particle.pos.y += (abs(randomNumbers[id + counter] + counter)) * deltaTime;
+    particle.pos.x += ((randomNumbers[id + counter])) * deltaTime;
+    particle.pos.z += ((randomNumbers[id / 2])) * deltaTime;
+     
+    particle.size += randomNumbers[id + counter] * 2 * deltaTime;
+                    
+    if (particle.color.x > 20.f)
+        particle.color = 10.f;
 }
 
-void LeafSimmulation(inout VertexParticleIn particle)
+void LeafSimmulation(inout VertexParticleIn particle, in uint id)
 {
 }
 
-void WaterSplashSimmulation(inout VertexParticleIn particle)
+void WaterSplashSimmulation(inout VertexParticleIn particle, in uint id)
 {
 }
 
-void SmokeSimmulation(inout VertexParticleIn particle, in uint id, in uint3 partcileID)
-{  
-    if (particle.pos.y < emitterPosition.y + 50 + randomNumbers[id])
+void SmokeSimmulation(inout VertexParticleIn particle, in uint id)
+{
+    if (particle.life < (lifeTime + (randomNumbers[id + counter])))
     {
         //particle.pos.x -= (3 + abs(randomNumbers[id + counter])) * deltaTime;
         //particle.pos.z -= (3 + abs(randomNumbers[id + counter / 2])) * deltaTime;
@@ -75,19 +83,24 @@ void SmokeSimmulation(inout VertexParticleIn particle, in uint id, in uint3 part
         particle.pos.x += ((randomNumbers[id + counter])) * deltaTime;
         particle.pos.z += ((randomNumbers[id / 2])) * deltaTime;
      
-        particle.size += 1 * deltaTime;
+        particle.size += randomNumbers[id + counter] * 2 * deltaTime;
                     
-        if (particle.color.x > 20.f)
-            particle.color = 10.f;
+        //if (particle.color.x > 20.f)
+        //    particle.color = 10.f;
+        
+        
     }
     else
     {
-        particle.size = float2(1,1);
+        particle.size = float2(1, 1);
         particle.pos = emitterPosition;
+        particle.life = counter / 2;
+        particle.color = (0, 0, 0, 0);
+
     }
 }
 
-void SparklesSimmulation(inout VertexParticleIn particle)
+void SparklesSimmulation(inout VertexParticleIn particle, in uint id)
 {
     
     particle.size = float2(2, 2);
@@ -95,7 +108,7 @@ void SparklesSimmulation(inout VertexParticleIn particle)
 
 }
 
-void RainSimmulation(inout VertexParticleIn particle)
+void RainSimmulation(inout VertexParticleIn particle, in uint id)
 {
     float raise = 5  * deltaTime;
     

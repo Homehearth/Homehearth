@@ -64,16 +64,17 @@ namespace ecs
 
 		struct EmitterParticle
 		{
-			std::shared_ptr<RTexture> texture = nullptr;
-			std::shared_ptr<RTexture> opacityTexture = nullptr;
-			PARTICLEMODE type = PARTICLEMODE::BLOOD;
-			UINT nrOfParticles = 0;
+			PARTICLEMODE						type			= PARTICLEMODE::BLOOD;
+			UINT								nrOfParticles	= 0;
+			float								lifeTime		= 0.f;
 
-			ComPtr<ID3D11Buffer> particleBuffer;
-			ComPtr<ID3D11ShaderResourceView> particleSRV;
-			ComPtr<ID3D11UnorderedAccessView> particleUAV;
+			std::shared_ptr<RTexture>			texture			= nullptr;
+			std::shared_ptr<RTexture>			opacityTexture	= nullptr;
+			ComPtr<ID3D11Buffer>				particleBuffer	= nullptr;
+			ComPtr<ID3D11ShaderResourceView>	particleSRV		= nullptr;
+			ComPtr<ID3D11UnorderedAccessView>	particleUAV		= nullptr;
 
-			EmitterParticle(std::string textureName = "thisisfine.png ", std::string opacityTextureName = "thisisfine_Opacity.png", int amoutOfParticles = 10, PARTICLEMODE mode = PARTICLEMODE::BLOOD)
+			EmitterParticle(std::string textureName = "thisisfine.png ", std::string opacityTextureName = "thisisfine_Opacity.png", int amoutOfParticles = 10, PARTICLEMODE mode = PARTICLEMODE::BLOOD, float life = 2.f)
 			{
 				//If no texture name take default texture else use the given name
 				if (textureName == "")
@@ -87,9 +88,9 @@ namespace ecs
 				else
 					opacityTexture = ResourceManager::Get().GetResource<RTexture>(opacityTextureName);
 
-
-				nrOfParticles = (UINT)amoutOfParticles;
-				type = mode;
+				nrOfParticles	= (UINT)amoutOfParticles;
+				lifeTime		= life;
+				type			= mode;
 			}
 		};
 

@@ -12,7 +12,7 @@ void ParticlePass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 	DC->PSSetShader(PM->m_ParticlePixelShader.Get(), nullptr, 0);
 	DC->CSSetShader(PM->m_ParticleComputeShader.Get(), nullptr, 0);
 
-	DC->OMSetBlendState(PM->m_blendStateParticle.Get(), 0, 0xffffffff);
+	DC->OMSetBlendState(PM->m_blendStateAlphaBlending.Get(), 0, 0xffffffff);
 
 	DC->IASetVertexBuffers(0,1, &m_nullBuffer, &m_stride, &m_offset);
 	DC->GSSetConstantBuffers(1, 1, pCam->m_viewConstantBuffer.GetAddressOf());
@@ -71,7 +71,7 @@ void ParticlePass::Initialize(ID3D11DeviceContext* pContextDevice, PipelineManag
 void ParticlePass::Render(Scene* pScene)
 {
 	m_counter++;
-	if (m_counter >= 25)
+	if (m_counter >= 10)
 	{
 		m_counter = 0;
 	}
@@ -90,6 +90,7 @@ void ParticlePass::Render(Scene* pScene)
 		m_particleUpdate.emitterPosition = sm::Vector4(transform->position.x, transform->position.y, transform->position.z, 1.0f);
 		m_particleUpdate.deltaTime = Stats::Get().GetFrameTime();
 		m_particleUpdate.counter = m_counter;
+		m_particleUpdate.lifeTime = emitter->lifeTime;
 
 		m_constantBufferParticleUpdate.SetData(D3D11Core::Get().DeviceContext(), m_particleUpdate);
 		ID3D11Buffer* cb = { m_constantBufferParticleUpdate.GetBuffer() };
@@ -118,4 +119,6 @@ void ParticlePass::PostRender(ID3D11DeviceContext* pDeviceContext)
 
 	DC->GSSetShader(m_nullGS, nullptr, 0);
 	DC->CSSetShader(m_nullCS, nullptr, 0);
+
+	DC->OMSetBlendState(PM->m_blendStatepOpaque.Get(), 0, 0xffffffff);
 }
