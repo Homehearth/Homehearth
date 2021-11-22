@@ -421,5 +421,5 @@ struct Particle_t
 
 	sm::Vector2		size;
 	PARTICLEMODE	type = PARTICLEMODE::SPARKLES;
-	float			paddning = -1;
+	float			velocity = 0;
 };

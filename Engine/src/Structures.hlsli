@@ -68,7 +68,7 @@ struct VertexParticleIn
     float4 color            : COLOR;
     float2 size             : SIZE;
     uint   type             : TYPE;
-    float padding;
+    float  velocity         : VELOCITY;
 };
 
 struct VertexParticleOut

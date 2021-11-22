@@ -48,23 +48,32 @@ void SmokeSimmulation(inout VertexParticleIn particle, in uint id, in uint3 part
 {  
     if (particle.pos.y < emitterPosition.y + 50 + randomNumbers[id])
     {
-        particle.pos.x -= (3 + abs(randomNumbers[id + counter])) * deltaTime;
-        particle.pos.z -= (3 + abs(randomNumbers[id + counter / 2])) * deltaTime;
-                    
+        //particle.pos.x -= (3 + abs(randomNumbers[id + counter])) * deltaTime;
+        //particle.pos.z -= (3 + abs(randomNumbers[id + counter / 2])) * deltaTime;
+        
+        
+        //particle.pos.x += particle.velocity * deltaTime;
+        //particle.pos.y += (randomNumbers[id]) * deltaTime;
+        //particle.pos.z += particle.velocity * deltaTime;
+
 
         
-        if (partcileID.x % 2 == 0)
-        {
-            particle.pos.y += (2 + abs(randomNumbers[id + counter] + counter)) * deltaTime;
-            particle.pos.x -= (1 + abs(randomNumbers[id + counter])) * deltaTime;
-            particle.pos.z += (1 + abs(randomNumbers[id / 2])) * deltaTime;
-        }
-        else
-        {
-            particle.pos.y += (3 + abs(randomNumbers[id] + counter)) * deltaTime;
-            particle.pos.x += (1 + abs(randomNumbers[id] + counter)) * deltaTime;
-            particle.pos.z -= (1 + abs(randomNumbers[id + counter / 2])) * deltaTime;
-        }
+        //if (partcileID.x % 2 == 0)
+        //{
+        //    particle.pos.y += ( abs(randomNumbers[id + counter] + counter)) * deltaTime;
+        //    particle.pos.x += ( (randomNumbers[id + counter])) * deltaTime;
+        //    particle.pos.z += ( (randomNumbers[id / 2])) * deltaTime;
+        //}
+        //else
+        //{
+        //    particle.pos.y += ( abs(randomNumbers[id] + counter)) * deltaTime;
+        //    particle.pos.x += ( (randomNumbers[id] + counter)) * deltaTime;
+        //    particle.pos.z += ( (randomNumbers[id + counter / 2])) * deltaTime;
+        //}
+        
+        particle.pos.y += (abs(randomNumbers[id + counter] + counter)) * deltaTime;
+        particle.pos.x += ((randomNumbers[id + counter])) * deltaTime;
+        particle.pos.z += ((randomNumbers[id / 2])) * deltaTime;
      
         particle.size += 1 * deltaTime;
                     

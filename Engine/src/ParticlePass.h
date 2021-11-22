@@ -17,7 +17,8 @@ private:
 	UINT m_offset = sizeof(Particle_t);
 	UINT m_stride = 0;
 
-	int									m_counter = 0;
+	UINT								m_counter = 0;
+	UINT								m_nrOfRandomNumbers = 0;
 	std::vector<float>					m_randomNumbers;
 
 	dx::ConstantBuffer<ParticleUpdate>	m_constantBufferParticleUpdate;
