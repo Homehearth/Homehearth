@@ -1,5 +1,6 @@
 #include "EnginePCH.h"
 #include "ShadowPass.h"
+#include "RenderThreadHandler.h"
 
 //ID3D11DepthStencilView*& ShadowPass::EmplaceInMap(const unsigned int& index)
 //{
