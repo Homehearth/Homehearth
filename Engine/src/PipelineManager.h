@@ -66,6 +66,7 @@ public:
 	Shaders::VertexShader			m_animationVertexShader;
 	Shaders::VertexShader			m_skyboxVertexShader;
 
+	Shaders::PixelShader			m_depthPassPixelShader;
 	Shaders::PixelShader			m_defaultPixelShader;
 	Shaders::PixelShader			m_debugPixelShader;
 
@@ -81,6 +82,8 @@ public:
 		unsigned int arraySize, ComPtr<ID3D11UnorderedAccessView>& uav);
 
 	bool CreateStructuredBuffer(void* data, unsigned int byteStride, unsigned int arraySize, ResourceAccessView &rav);
+
+	void SetCullBack(bool cullNone);
 
 
 	//

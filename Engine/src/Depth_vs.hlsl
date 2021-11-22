@@ -1,10 +1,14 @@
 #include "Common.hlsli"
 
 // Depth pre-pass.
-float4 main(VertexIn input) : SV_POSITION
+VertexOut main(VertexIn input)
 {
-    float4 position = float4(input.pos, 1.0f);
-    position = mul(c_world, position);
-    position = mul(c_view, position);
-    return mul(c_projection, position);
+    VertexOut output;
+
+	output.pos = float4(input.pos, 1.0f);
+    output.pos = mul(c_world, output.pos);
+    output.pos = mul(c_view, output.pos);
+    output.pos = mul(c_projection, output.pos);
+    output.uv = input.uv;
+    return output;
 }

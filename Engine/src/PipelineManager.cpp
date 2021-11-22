@@ -160,14 +160,14 @@ bool PipelineManager::CreateStructuredBuffer(void* data, unsigned byteStride, un
 
 void PipelineManager::SetCullBack(bool cullNone)
 {
-    constexpr float blendFactor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
     if (cullNone)
     {
         m_d3d11->DeviceContext()->RSSetState(m_rasterState.Get());
-        m_d3d11->DeviceContext()->OMSetBlendState(m_blendOff.Get(), blendFactor, 0xffffffff);
+        m_d3d11->DeviceContext()->OMSetBlendState(m_blendOff.Get(), nullptr, 0xffffffff);
     }
     else
     {
+        constexpr float blendFactor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
         m_d3d11->DeviceContext()->RSSetState(m_rasterStateNoCulling.Get());
         m_d3d11->DeviceContext()->OMSetBlendState(m_blendOn.Get(), blendFactor, 0xffffffff);
     }
@@ -578,6 +578,12 @@ bool PipelineManager::CreateShaders()
     if (!m_depthPassVertexShader.Create("Depth_vs"))
     {
         LOG_WARNING("failed creating Depth_vs.");
+        return false;
+    }
+
+    if (!m_depthPassPixelShader.Create("Depth_ps"))
+    {
+        LOG_WARNING("failed creating Depth_ps.");
         return false;
     }
 

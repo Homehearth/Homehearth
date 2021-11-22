@@ -73,6 +73,7 @@ namespace ecs
 			basic_model_matrix_t		data;
 			bool						visible = true;
 			bool						isSolid = true;
+			bool						isOpaque = false;
 		};
 
 		struct Animator

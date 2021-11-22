@@ -13,22 +13,24 @@ void Renderer::Initialize(Window* pWindow)
 	m_d3d11 = &D3D11Core::Get();
 
 	AddPass(&m_basePass);		// solo pass.
-	
+    m_basePass.SetEnable(false);
+
 	AddPass(&m_depthPass);		// 1
     AddPass(&m_frustumPass);    // 2
     AddPass(&m_cullingPass);    // 3
-	AddPass(&m_opaqPass);		// 4
-	AddPass(&m_transPass);		// 5
-	AddPass(&m_animPass);		// 6
+	AddPass(&m_animPass);		// 4
+	AddPass(&m_opaqPass);		// 5
+	AddPass(&m_transPass);		// 6
 	AddPass(&m_decalPass);		// 7
 	AddPass(&m_skyPass);		// 8
-	AddPass(&m_shadowPass);
+	AddPass(&m_shadowPass);     // 9
 
 	m_depthPass.SetEnable(true);
     m_frustumPass.SetEnable(true);
     m_cullingPass.SetEnable(true);
 	m_opaqPass.SetEnable(true);
-	m_transPass.SetEnable(false);
+	m_transPass.SetEnable(true);
+    m_animPass.SetEnable(true);
 	m_decalPass.SetEnable(true);
 	m_skyPass.SetEnable(true);
 

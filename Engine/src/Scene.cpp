@@ -38,11 +38,12 @@ void Scene::Update(float dt)
 	GetCurrentCamera()->Update(dt);
 	BasicScene::Update(dt);
 
-	if (!m_renderableCopies.IsSwapped() &&
-		!m_renderableAnimCopies.IsSwapped())
+	if (!IsRender3DReady())
 	{
 		PROFILE_SCOPE("Copy Transforms");
 		m_renderableCopies[0].clear();
+		m_renderableCopiesOpaque[0].clear();
+		m_renderableCopiesTransparent[0].clear();
 		m_renderableAnimCopies[0].clear();
 
 		m_registry.view<comp::Renderable, comp::Transform>().each([&](entt::entity entity, comp::Renderable& r, comp::Transform& t)
@@ -55,12 +56,21 @@ void Scene::Update(float dt)
 				{
 					m_renderableAnimCopies[0].push_back({ r, *anim });
 				}
-				else
+				else if(r.isOpague) // Opaque.
 				{
+					m_renderableCopiesOpaque[0].push_back(r);
+					m_renderableCopies[0].push_back(r);
+				}
+				else // Transparent. 
+				{
+
+					m_renderableCopiesTransparent[0].push_back(r);
 					m_renderableCopies[0].push_back(r);
 				}
 			});
 		m_renderableCopies.Swap();
+		m_renderableCopiesOpaque.Swap();
+		m_renderableCopiesTransparent.Swap();
 		m_renderableAnimCopies.Swap();
 		GetCurrentCamera()->Swap();
 	}
@@ -130,6 +140,90 @@ void Scene::Render()
 		for (int i = inst.start; i < inst.stop; i++)
 		{
 			const auto& it = m_renderableCopies[1][i];
+			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
+			if (it.model)
+				it.model->Render(D3D11Core::Get().DeviceContext());
+		}
+	}
+
+	// Run any available Command lists from worker threads.
+	thread::RenderThreadHandler::ExecuteCommandLists();
+
+	// Emit event
+	publish<ESceneRender>();
+}
+
+void Scene::RenderOpaque()
+{
+	PROFILE_FUNCTION();
+
+	thread::RenderThreadHandler::Get().SetObjectsBuffer(&m_renderableCopiesOpaque);
+	// Divides up work between threads.
+	const render_instructions_t inst = thread::RenderThreadHandler::Get().Launch(static_cast<int>(m_renderableCopiesOpaque[1].size()));
+
+	ID3D11Buffer* const buffers[1] = { m_publicBuffer.GetBuffer() };
+	D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, buffers);
+
+	// Render everything on same thread.
+	if ((inst.start | inst.stop) == 0)
+	{
+		// System that renders Renderable component
+		for (const auto& it : m_renderableCopiesOpaque[1])
+		{
+			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
+			if (it.model)
+				it.model->Render(D3D11Core::Get().DeviceContext());
+		}
+	}
+	// Render third part of the scene with immediate context
+	else
+	{
+		// System that renders Renderable component
+		for (int i = inst.start; i < inst.stop; i++)
+		{
+			const auto& it = m_renderableCopiesOpaque[1][i];
+			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
+			if (it.model)
+				it.model->Render(D3D11Core::Get().DeviceContext());
+		}
+	}
+
+	// Run any available Command lists from worker threads.
+	thread::RenderThreadHandler::ExecuteCommandLists();
+
+	// Emit event
+	publish<ESceneRender>();
+}
+
+void Scene::RenderTransparent()
+{
+	PROFILE_FUNCTION();
+
+	thread::RenderThreadHandler::Get().SetObjectsBuffer(&m_renderableCopiesTransparent);
+	// Divides up work between threads.
+	const render_instructions_t inst = thread::RenderThreadHandler::Get().Launch(static_cast<int>(m_renderableCopiesTransparent[1].size()));
+
+	ID3D11Buffer* const buffers[1] = { m_publicBuffer.GetBuffer() };
+	D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, buffers);
+
+	// Render everything on same thread.
+	if ((inst.start | inst.stop) == 0)
+	{
+		// System that renders Renderable component
+		for (const auto& it : m_renderableCopiesTransparent[1])
+		{
+			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
+			if (it.model)
+				it.model->Render(D3D11Core::Get().DeviceContext());
+		}
+	}
+	// Render third part of the scene with immediate context
+	else
+	{
+		// System that renders Renderable component
+		for (int i = inst.start; i < inst.stop; i++)
+		{
+			const auto& it = m_renderableCopiesTransparent[1][i];
 			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
 			if (it.model)
 				it.model->Render(D3D11Core::Get().DeviceContext());
@@ -235,7 +329,10 @@ void Scene::RenderAnimation()
 
 bool Scene::IsRender3DReady() const
 {
-	return m_renderableCopies.IsSwapped() && m_renderableAnimCopies.IsSwapped();
+	return	m_renderableCopies.IsSwapped() &&
+			m_renderableCopiesOpaque.IsSwapped() &&
+			m_renderableCopiesTransparent.IsSwapped() &&
+			m_renderableAnimCopies.IsSwapped();
 }
 
 bool Scene::IsRenderDebugReady() const
@@ -256,6 +353,8 @@ Camera* Scene::GetCurrentCamera() const
 void Scene::ReadyForSwap()
 {
 	m_renderableCopies.ReadyForSwap();
+	m_renderableCopiesOpaque.ReadyForSwap();
+	m_renderableCopiesTransparent.ReadyForSwap();
 	m_debugRenderableCopies.ReadyForSwap();
 	m_renderableAnimCopies.ReadyForSwap();
 }

@@ -29,7 +29,7 @@ void TransPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 void TransPass::Render(Scene* pScene)
 {
 	// Transparent stuff.
-	pScene->Render();
+	pScene->RenderTransparent();
 }
 
 void TransPass::PostRender(ID3D11DeviceContext* pDeviceContext)

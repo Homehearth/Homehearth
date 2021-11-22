@@ -10,6 +10,8 @@ private:
 	bool m_IsRenderingColliders;
 	bool m_updateAnimation;
 	DoubleBuffer<std::vector<comp::Renderable>> m_renderableCopies;
+	DoubleBuffer<std::vector<comp::Renderable>> m_renderableCopiesTransparent;
+	DoubleBuffer<std::vector<comp::Renderable>> m_renderableCopiesOpaque;
 	DoubleBuffer<std::vector<comp::RenderableDebug>> m_debugRenderableCopies;
 	DoubleBuffer<std::vector<std::pair<comp::Renderable,comp::Animator>>> m_renderableAnimCopies;
 
@@ -42,8 +44,12 @@ public:
 	*/
 	void Update2D();
 
-	// Emit render event and render Renderable components
+	// Emit render event and render all non-animated renderable components. 
 	void Render();
+	// Renders all opaque non-animated renderable components.
+	void RenderOpaque();
+	// Renders all transparent non-animated renderable components.
+	void RenderTransparent();
 	void RenderDebug();
 	void RenderAnimation();
 	void Render2D();

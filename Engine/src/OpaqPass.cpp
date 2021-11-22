@@ -15,7 +15,7 @@ void OpaqPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 	DC->PSSetSamplers(1, 1, PM->m_linearSamplerState.GetAddressOf());
 	DC->PSSetSamplers(2, 1, PM->m_anisotropicSamplerState.GetAddressOf());
 	DC->PSSetSamplers(3, 1, PM->m_cubemapSamplerState.GetAddressOf());
-
+	
 	DC->RSSetViewports(1, &PM->m_viewport);
 	DC->RSSetState(PM->m_rasterState.Get());
 
@@ -29,7 +29,7 @@ void OpaqPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 void OpaqPass::Render(Scene* pScene)
 {
 	// Opaque stuff.
-	pScene->Render();
+	pScene->RenderOpaque();
 }
 
 void OpaqPass::PostRender(ID3D11DeviceContext* pDeviceContext)

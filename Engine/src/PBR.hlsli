@@ -15,8 +15,6 @@
 #define DIRECTIONAL_LIGHT 0
 #define POINT_LIGHT 1
 
-//static const float PI = 3.14159265359;
-
 /*
 ---------------------------------Normal distribution function---------------------------------
 Approximates the amount the surface's microfacets are aligned to the halfway vector, 
@@ -145,8 +143,6 @@ float3 DoDirectionlight(Light L, float3 normal)
 //Calculates the outgoing radiance level of each light
 void CalcRadiance(PixelIn input, float3 V, float3 N, float roughness, float metallic, float3 albedo, float3 lightPos, float3 radiance, float3 F0, out float3 rad)
 {
-    static const float PI = 3.14159265359;
-    
     //Calculate Light Radiance
     float3 lightDir = normalize(lightPos - input.worldPos.xyz);
     float3 H = normalize(V + lightDir);

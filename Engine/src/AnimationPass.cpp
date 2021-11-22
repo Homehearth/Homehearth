@@ -11,7 +11,6 @@ void AnimationPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
         m_skyboxRef->Bind(pDeviceContext);
     }
 
-    DC->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     DC->IASetInputLayout(PM->m_animationInputLayout.Get());
 
     DC->VSSetShader(PM->m_animationVertexShader.Get(), nullptr, 0);
@@ -20,12 +19,9 @@ void AnimationPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
     DC->VSSetConstantBuffers(1, 1, pCam->m_viewConstantBuffer.GetAddressOf());
     DC->PSSetConstantBuffers(1, 1, pCam->m_viewConstantBuffer.GetAddressOf());
 
-    //DC->PSSetShaderResources(0, 1, PM->m_depthBufferSRV.GetAddressOf());   // DepthBuffer.
-
     DC->PSSetSamplers(0, 1, PM->m_pointSamplerState.GetAddressOf());
     DC->PSSetSamplers(1, 1, PM->m_linearSamplerState.GetAddressOf());
     DC->PSSetSamplers(2, 1, PM->m_anisotropicSamplerState.GetAddressOf());
-    m_lights->Render(DC);
 
     DC->RSSetViewports(1, &PM->m_viewport);
     DC->RSSetState(PM->m_rasterState.Get());
