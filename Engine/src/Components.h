@@ -14,7 +14,6 @@ namespace ecs
 		VELOCITY,
 		ANIMATOR_NAME,
 		MESH_NAME,
-		NAME_PLATE,
 		HEALTH,
 		BOUNDING_ORIENTED_BOX,
 		BOUNDING_SPHERE,
@@ -120,11 +119,6 @@ namespace ecs
 		{
 			std::string name = "";
 		};
-
-		struct NamePlate
-		{
-			std::string namePlate;
-		};
 		
 		struct RenderableDebug
 		{
@@ -217,6 +211,8 @@ namespace ecs
 			float respawnTimer;
 			bool isReady = false;
 			bool reachable = true;
+
+			char name[12] = {};
 		};
 
 	

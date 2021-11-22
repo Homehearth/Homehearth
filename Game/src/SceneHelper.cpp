@@ -148,8 +148,6 @@ namespace sceneHelp
 				ImGui::End();
 				);
 
-				// Prediction
-				//engine->m_predictor.Predict(engine->GetScene("Game"));
 				//GameSystems::RenderIsCollidingSystem(scene);
 				GameSystems::UpdatePlayerVisuals(game);
 				Systems::LightSystem(scene, e.dt);

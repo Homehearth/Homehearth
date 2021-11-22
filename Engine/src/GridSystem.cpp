@@ -186,7 +186,7 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 
 							Entity tileEntity = m_scene->CreateEntity();
 							comp::Transform* transform = tileEntity.AddComponent<comp::Transform>();
-							transform->position = { tile.position.x , 5.f, tile.position.z };
+							transform->position = { tile.position.x , 5.f, tile.position.z };	
 							transform->scale = { 1.35f, 1.f, 1.35f };
 
 							comp::BoundingOrientedBox* collider = tileEntity.AddComponent<comp::BoundingOrientedBox>();
