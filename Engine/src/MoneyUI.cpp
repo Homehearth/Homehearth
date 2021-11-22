@@ -51,12 +51,12 @@ bool MoneyUI::CheckHover()
 	return false;
 }
 
-bool MoneyUI::CheckClick()
+ElementState MoneyUI::CheckClick()
 {
 	if (m_localMoney != m_networkMoney)
 	{
-		return true;
+		return ElementState::INSIDE;
 	}
 	else
-		return false;
+		return ElementState::NONE;
 }

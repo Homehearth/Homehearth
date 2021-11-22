@@ -360,6 +360,7 @@ Simulation::Simulation(Server* pServer, HeadlessEngine* pEngine)
 	m_spawnPoints.push(sm::Vector3(197.f, 0, -325.f));
 	m_spawnPoints.push(sm::Vector3(222.f, 0, -300.f));
 	m_spawnPoints.push(sm::Vector3(247.f, 0, -325.f));
+	m_shop.SetSimulation(this);
 }
 
 void Simulation::JoinLobby(uint32_t gameID, uint32_t playerID, const std::string& name)
@@ -394,6 +395,18 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 	m_pGameScene = &m_pEngine->GetScene("Game_" + std::to_string(gameID));
 	m_pGameScene->on<ESceneUpdate>([&](const ESceneUpdate& e, HeadlessScene& scene)
 		{
+#if GOD_MODE
+			/*
+				Infinite health.
+			*/
+			scene.ForEachComponent<comp::Player, comp::Health>([](comp::Player& p, comp::Health& h) {
+
+				h.currentHealth = h.maxHealth;
+
+				});
+
+#endif
+
 			//  run all game logic systems
 			{
 				PROFILE_SCOPE("Systems");
@@ -667,6 +680,11 @@ Currency& Simulation::GetCurrency()
 	return m_currency;
 }
 
+void Simulation::UseShop(const ShopItem& item, const uint32_t& player)
+{
+	m_shop.UseShop(item, player);
+}
+
 void Simulation::SetLobbyScene()
 {
 	m_pCurrentScene = m_pLobbyScene;
@@ -682,7 +700,7 @@ void Simulation::SetGameScene()
 	ResetGameScene();
 	m_pCurrentScene = m_pGameScene;
 	m_lobby.SetActive(false);
-#ifdef _DEBUG
+#ifdef GOD_MODE
 	// During debug give players 1000 gold/monies.
 	m_currency.GetAmountRef() = 1000;
 #endif

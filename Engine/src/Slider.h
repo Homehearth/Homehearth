@@ -53,6 +53,6 @@ namespace rtd
 		virtual void OnClick() override;
 		virtual void OnHover() override;
 		virtual bool CheckHover() override;
-		virtual bool CheckClick() override;
+		virtual ElementState CheckClick() override;
 	};
 }

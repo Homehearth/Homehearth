@@ -137,7 +137,7 @@ bool Slider::CheckHover()
 	return m_isHovering;
 }
 
-bool Slider::CheckClick()
+ElementState Slider::CheckClick()
 {
 	m_isHeld = false;
 	// Is within bounds?
@@ -149,8 +149,10 @@ bool Slider::CheckClick()
 		{
 			OnClick();
 			m_isHeld = true;
+
+			return ElementState::INSIDE;
 		}
 	}
 
-	return m_isHeld;
+	return ElementState::NONE;
 }

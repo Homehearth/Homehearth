@@ -213,6 +213,7 @@ namespace ecs
 			bool reachable = true;
 
 			char name[12] = {};
+			TowerTypes towerSelected = TowerTypes::SHORT;
 		};
 
 	
