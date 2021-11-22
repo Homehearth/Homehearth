@@ -10,21 +10,26 @@ private:
 	// The complete map of all shadows.
 	struct ShadowMap
 	{
-		ID3D11Texture2D* shadowTexture = nullptr;
-		ID3D11ShaderResourceView* shadowView = nullptr;
+		ComPtr<ID3D11Texture2D> shadowTexture;
+		ComPtr<ID3D11ShaderResourceView> shadowView;
 		unsigned int amount = 0;
 	}m_shadowMap;
 
 	// Single shadow section of shadow map.
 	struct ShadowSection
 	{
-		ID3D11DepthStencilView* shadowDepth = nullptr;
-		comp::Light light;
+		ComPtr<ID3D11DepthStencilView> shadowDepth;
+		ComPtr<ID3D11Buffer> lightBuffer;
 	};
 
 	std::vector<ShadowSection> m_shadows;
 
 	//ID3D11DepthStencilView*& EmplaceInMap(const unsigned int& index);
+
+	ComPtr<ID3D11DepthStencilView> CreateDepthView(uint32_t index);
+	ComPtr<ID3D11Buffer> CreateLightBuffer(light_t light);
+	void UpdateLightBuffer(ID3D11DeviceContext* context, ID3D11Buffer* buffer, light_t light);
+
 
 public:
 
@@ -35,7 +40,7 @@ public:
 	void CreateShadow(const comp::Light& light);
 
 	// Finalize and setup the shadow map.
-	void SetupMap();
+	void SetupMap(uint32_t arraySize);
 
 	// Inherited via IRenderPass
 	virtual void PreRender(Camera* pCam = nullptr, ID3D11DeviceContext* pDeviceContext = D3D11Core::Get().DeviceContext()) override;

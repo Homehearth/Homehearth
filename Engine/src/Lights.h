@@ -49,4 +49,6 @@ public:
 
 	//Everytime a new Entity gets the Light Component add it to m_lights
 	void Add(entt::registry& reg, entt::entity ent);
+
+	const std::vector<light_t>& GetLights() const;
 };
