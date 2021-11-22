@@ -14,7 +14,6 @@ namespace ecs
 		VELOCITY,
 		MESH_NAME,
 		ANIMATOR_NAME,
-		NAME_PLATE,
 		HEALTH,
 		BOUNDING_ORIENTED_BOX,
 		BOUNDING_SPHERE,
@@ -37,22 +36,21 @@ namespace ecs
 			sm::Vector3 position;
 			sm::Quaternion rotation;
 			sm::Vector3 scale = sm::Vector3(1);
+			
+			bool syncColliderScale = false;
 		};
 
 		struct Decal
 		{
-			RTexture* decal = nullptr;
 			sm::Matrix viewPoint;
 			// Life span in seconds.
-			float lifespan = 5.0f;
+			float lifespan = 10.0f;
 
-			Decal(const Transform& t, RTexture* decal = nullptr)
+			Decal(const Transform& t)
 			{
-				this->decal = decal;
-
 				// Be positioned slightly above.
 				sm::Vector3 position = t.position;
-				position.y += 10.0f;
+				position.y = 10.0f;
 				position.x += 0.0001f;
 				position.z -= 0.0001f;
 
@@ -128,12 +126,7 @@ namespace ecs
 		{
 			std::string name = "";
 		};
-
-		struct NamePlate
-		{
-			std::string namePlate = "";
-		};
-
+		
 		struct RenderableDebug
 		{
 			std::shared_ptr<RModel> 	model;
@@ -179,15 +172,22 @@ namespace ecs
 			std::vector<Force> forces;
 		};
 
+		struct BezierAnimation
+		{
+			float speed = 1.0f;
+			bool loop = false;
+			std::vector<sm::Vector3> translationPoints;
+			std::vector<sm::Vector3> scalePoints;
+			std::vector<sm::Quaternion> rotationPoints;
+			float time = 0.0f;
+
+			std::function<void()> onFinish;
+		};
+
 		struct Velocity
 		{
 			sm::Vector3 vel;
 			sm::Vector3 oldVel;
-
-			sm::Vector3 scaleVel = { 0, 0, 0 };
-			sm::Vector3 oldScaleVel;
-
-			bool applyToCollider = false;
 		};
 
 		struct Player
@@ -218,6 +218,9 @@ namespace ecs
 			float respawnTimer;
 			bool isReady = false;
 			bool reachable = true;
+
+			char name[12] = {};
+			TowerTypes towerSelected = TowerTypes::SHORT;
 		};
 
 	
@@ -304,6 +307,14 @@ namespace ecs
 			float healAmount = 40.f;
 			float range = 50.f;
 		};
+
+		struct HeroLeapAbility : public IAbility
+		{
+			float damage = 10.f;
+			float damageRadius = 20.f;
+			float maxRange = 30.f;
+		};
+
 
 		struct SelfDestruct
 		{

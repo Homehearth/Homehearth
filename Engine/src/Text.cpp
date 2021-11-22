@@ -84,7 +84,7 @@ bool Text::CheckHover()
     return false;
 }
 
-bool Text::CheckClick()
+ElementState Text::CheckClick()
 {
-    return false;
+    return ElementState::NONE;
 }

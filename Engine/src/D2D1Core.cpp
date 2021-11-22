@@ -116,7 +116,6 @@ const bool D2D1Core::Setup(Window* window)
 		IID_PPV_ARGS(&m_imageFactory));
 
 
-
 	return true;
 }
 
@@ -143,6 +142,16 @@ float D2D1Core::GetDefaultFontSize()
 Window* D2D1Core::GetWindow()
 {
 	return INSTANCE->m_windowPointer;
+}
+
+ID2D1Factory* D2D1Core::GetFactory()
+{
+	return INSTANCE->m_factory.Get();
+}
+
+void D2D1Core::ChangeColorOfBrush(const D2D1_COLOR_F& newColor)
+{
+	INSTANCE->m_solidBrush->SetColor(newColor);
 }
 
 void D2D1Core::DrawT(const std::string& text, const draw_text_t& opt)
@@ -240,7 +249,15 @@ void D2D1Core::DrawF(const draw_t& fig, const draw_shape_t& shape, const LineWid
 	INSTANCE->m_solidBrush->SetColor(oldColor);
 }
 
-void D2D1Core::DrawP(const draw_t& fig, ID2D1Bitmap* texture)
+void D2D1Core::DrawF(ID2D1PathGeometry* geometry = nullptr)
+{
+	if (geometry)
+	{
+		INSTANCE->m_renderTarget->DrawGeometry(geometry, INSTANCE->m_solidBrush.Get());
+	}
+}
+
+void D2D1Core::DrawP(const draw_t& fig, ID2D1Bitmap* texture, const float& opacity)
 {
 	if (texture == nullptr)
 		return;
@@ -253,7 +270,7 @@ void D2D1Core::DrawP(const draw_t& fig, ID2D1Bitmap* texture)
 	D2D1_RECT_F dest = D2D1::RectF(upperLeftCorner.x, upperLeftCorner.y,
 		(upperLeftCorner.x + fig.width), (upperLeftCorner.y + fig.height));
 
-	INSTANCE->m_renderTarget->DrawBitmap(texture, dest);
+	INSTANCE->m_renderTarget->DrawBitmap(texture, dest, opacity);
 }
 
 void D2D1Core::Begin()
