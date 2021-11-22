@@ -259,7 +259,8 @@ enum class GameMsg : uint8_t
 	Game_AddNPC,
 	Game_RemoveNPC,
 	Game_PlayerInput,
-	Game_Money
+	Game_Money,
+	Game_ChangeAnimation
 };
 
 /*

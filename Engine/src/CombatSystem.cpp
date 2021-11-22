@@ -275,6 +275,13 @@ void CombatSystem::AddCollisionRangeBehavior(Entity entity, Entity attackEntity,
 
 				thisEntity.GetComponent<comp::SelfDestruct>()->lifeTime = 0.f;
 
+				//Change animation when taken damage
+				comp::AnimationState* anim = other.GetComponent<comp::AnimationState>();
+				if (anim)
+				{
+					anim->toSend = EAnimationType::TAKE_DAMAGE;
+				}
+
 
 				comp::Velocity* attackVel = thisEntity.GetComponent<comp::Velocity>();
 				if (attackVel)

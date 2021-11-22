@@ -285,6 +285,7 @@ void Simulation::ResetPlayer(Entity player)
 
 	player.AddComponent<comp::MeshName>()->name = "Knight.fbx";
 	player.AddComponent<comp::AnimatorName>()->name = "Knight.anim";
+	player.AddComponent<comp::AnimationState>();
 
 	
 
@@ -333,6 +334,7 @@ void Simulation::ResetPlayer(Entity player)
 
 		player.AddComponent<comp::MeshName>()->name = "Monster.fbx";
 		player.AddComponent<comp::AnimatorName>()->name = "Monster.anim";
+		player.AddComponent<comp::AnimationState>();
 
 	}
 
@@ -513,6 +515,8 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 				
 				Systems::MovementSystem(scene, e.dt);
 				Systems::MovementColliderSystem(scene, e.dt);
+
+				ServerSystems::AnimatonSystem(this, scene);
 			}
 
 			if (!waveQueue.empty())

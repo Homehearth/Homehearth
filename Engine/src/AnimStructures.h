@@ -10,33 +10,48 @@ struct bone_t
 	int			parentIndex = -1;
 };
 
-/*
-	Also holds when the last 
-	keyframes was for that bone
-*/
-struct bone_keyFrames_t
+struct lastKeys_t
 {
-	std::string			name		= "";
-	sm::Matrix			inverseBind = {};
-	int					parentIndex = -1;
-	std::array<UINT, 3> lastKeys	= {};
+	UINT keys[3] = { 0,0,0 };
 };
 
-/*
-	Keyframes structures
-*/
-struct positionKey_t
+enum class EAnimationType : uint32_t
 {
-	double		time;
-	sm::Vector3 val;
+	NONE,
+	IDLE,
+	MOVE,
+	PRIMARY_ATTACK,
+	SECONDARY_ATTACK,
+	ABILITY1,
+	ABILITY2,
+	ABILITY3,
+	ABILITY4,
+	TAKE_DAMAGE,
+	PLACE_DEFENCE
 };
-struct scaleKey_t
+
+struct blendstate_t
 {
-	double		time;
-	sm::Vector3	val;
+	EAnimationType from;
+	EAnimationType to;
+
+	blendstate_t(EAnimationType x, EAnimationType y)
+	{
+		this->from = x;
+		this->to = y;
+	}
+	bool operator==(const blendstate_t& state) const
+	{
+		return from == state.from && to == state.to;
+	}
 };
-struct rotationKey_t
+
+struct blend_hash_fn
 {
-	double			time;
-	sm::Quaternion	val;
+	std::size_t operator() (const blendstate_t& state) const
+	{
+		std::size_t h1 = std::hash<EAnimationType>()(state.from);
+		std::size_t h2 = std::hash<EAnimationType>()(state.to);
+		return h1 ^ h2;
+	}
 };

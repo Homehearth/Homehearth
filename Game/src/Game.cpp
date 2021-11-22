@@ -453,6 +453,25 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		}
 		break;
 	}
+	case GameMsg::Game_ChangeAnimation:
+	{
+		uint32_t id;
+		EAnimationType animtype = EAnimationType::NONE;
+		msg >> id >> animtype;
+
+		if (m_gameEntities.find(id) != m_gameEntities.end())
+		{
+			comp::Animator* animComp = m_gameEntities.at(id).GetComponent<comp::Animator>();
+			if (animComp)
+			{
+				std::shared_ptr<RAnimator> anim = animComp->animator;
+				if (anim)
+				{
+					anim->ChangeAnimation(animtype);
+				}
+			}
+		}
+	}
 	}
 }
 void Game::PingServer()
@@ -596,14 +615,23 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 			{
 				std::string name;
 				msg >> name;
-				e.AddComponent<comp::Renderable>()->model = ResourceManager::Get().CopyResource<RModel>(name, true);
+				std::shared_ptr<RModel> model = ResourceManager::Get().CopyResource<RModel>(name, true);
+				if (model)
+				{
+					e.AddComponent<comp::Renderable>()->model = model;
+				}
 				break;
 			}
 			case ecs::Component::ANIMATOR_NAME:
 			{
 				std::string name;
 				msg >> name;
-				e.AddComponent<comp::Animator>()->animator = ResourceManager::Get().CopyResource<RAnimator>(name, true);
+				std::shared_ptr<RAnimator> animator = ResourceManager::Get().CopyResource<RAnimator>(name, true);
+				if (animator)
+				{
+					animator->RandomizeTime();
+					e.AddComponent<comp::Animator>()->animator = animator;
+				}
 				break;
 			}
 			case ecs::Component::NAME_PLATE:

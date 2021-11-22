@@ -1,18 +1,39 @@
 skel 			Knight.fbx
-anim 			idle 			Knight_Idle.fbx
-anim 			running 		Knight_Running.fbx
-anim 			slash 			Knight_Slash.fbx
-anim 			takeDamage 		Knight_TakeDamage.fbx
-anim			placeDefence	Knight_PlaceDefence.fbx
-currentAnim 	idle
+anim 			IDLE 				Knight_Idle.fbx
+anim 			MOVE 				Knight_Run.fbx
+anim 			PRIMARY_ATTACK 		Knight_Slash.fbx
+loopable 		0
+anim 			TAKE_DAMAGE 		Knight_TakeDamage.fbx
+loopable		0
+anim			PLACE_DEFENCE		Knight_PlaceDefence.fbx
+loopable		0
+defaultAnim		IDLE
 
 
-/*
-	Save for later
-*/
-//States between animations
-... Idle --> WalkForward
-Blendtime: 1.0s
+blendstate 		IDLE				MOVE				1.0
+blendstate 		MOVE				IDLE				0.2
 
-... Walk --> Idle
-Blendtime: 2.0s;
+
+blendstate		IDLE				PRIMARY_ATTACK		0
+blendstate		PRIMARY_ATTACK		IDLE				0.2
+
+
+blendstate 		IDLE				TAKE_DAMAGE			0
+blendstate		TAKE_DAMAGE			IDLE				0.2
+
+
+blendstate		IDLE 				PLACE_DEFENCE		0
+blendstate		PLACE_DEFENCE		IDLE				0.2
+	
+	
+blendstate		MOVE				TAKE_DAMAGE			0
+blendstate		TAKE_DAMAGE			MOVE				0.2
+	
+	
+blendstate		MOVE				PRIMARY_ATTACK		0
+blendstate		PRIMARY_ATTACK		MOVE				0.2
+	
+	
+blendstate		MOVE				PLACE_DEFENCE		0
+blendstate		PLACE_DEFENCE		MOVE				0.2
+
