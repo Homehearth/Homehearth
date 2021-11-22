@@ -139,7 +139,27 @@ void ShadowPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 
 void ShadowPass::Render(Scene* pScene)
 {
+	const render_instructions_t inst = thread::RenderThreadHandler::Get().DoShadows(m_shadowMap.amount);
 
+	/*
+		Everything renders on one single thread.
+	*/
+	if ((inst.start | inst.stop) == 0)
+	{
+		for (auto& shadow : m_shadows)
+		{
+			ID3D11RenderTargetView* nullTargets[8] = { nullptr };
+			D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(1, 1, shadow.lightBuffer.GetAddressOf());
+			D3D11Core::Get().DeviceContext()->OMSetRenderTargets(8, nullTargets, shadow.shadowDepth.Get());
+
+
+		}
+	}
+	else
+		// Main thread renders last part.
+	{
+
+	}
 }
 
 void ShadowPass::PostRender(ID3D11DeviceContext* pDeviceContext)

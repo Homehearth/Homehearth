@@ -73,6 +73,11 @@ namespace thread
 		static const render_instructions_t Launch(const int& amount_of_objects);
 
 		/*
+			
+		*/
+		static const render_instructions_t DoShadows(const int& amount_of_objects);
+
+		/*
 			Returns a bool that tells if the handler is currently running
 			or not.
 		*/

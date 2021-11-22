@@ -190,6 +190,16 @@ void Scene::RenderSkybox()
 	m_sky.Render();
 }
 
+void Scene::RenderShadow(const light_t& light)
+{
+	for (const auto& model : m_renderableCopies[1])
+	{
+		sm::Vector3 scale;
+		sm::Quaternion rot;
+		sm::Vector3 translation;
+	}
+}
+
 Skybox* Scene::GetSkybox()
 {
 	return &m_sky;

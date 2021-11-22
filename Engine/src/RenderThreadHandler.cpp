@@ -14,6 +14,7 @@ bool shouldRender = true;
 bool ShouldContinue();
 void RenderMain(const unsigned int id);
 void RenderJob(const unsigned int start, unsigned int stop, void* buffer, void* context);
+void RenderShadow(const unsigned int start, unsigned int stop, void* buffer, void* context);
 
 thread::RenderThreadHandler::RenderThreadHandler()
 {
@@ -137,6 +138,42 @@ const render_instructions_t thread::RenderThreadHandler::Launch(const int& amoun
 				auto f = [=](void* buffer, void* context)
 				{
 					RenderJob(start, stop, buffer, context);
+				};
+
+				INSTANCE.m_jobs.push_back(f);
+				main_start = stop;
+			}
+			cv.notify_all();
+		}
+
+		inst.start = main_start;
+		inst.stop = amount_of_objects;
+		INSTANCE.m_isActive = true;
+		return inst;
+	}
+
+	INSTANCE.m_isActive = false;
+	return inst;
+}
+
+const render_instructions_t thread::RenderThreadHandler::DoShadows(const int& amount_of_objects)
+{
+	render_instructions_t inst;
+	const unsigned int objects_per_thread = (unsigned int)std::floor((float)amount_of_objects / (float)(INSTANCE.m_amount + 1));
+	int main_start = 0;
+	if (objects_per_thread >= thread::THRESHOLD && amount_of_objects >= (int)(INSTANCE.m_amount + 1))
+	{
+		// Launch Threads
+		if (INSTANCE.m_isPooled)
+		{
+			for (unsigned int i = 0; i < INSTANCE.m_amount; i++)
+			{
+				const int start = i * objects_per_thread;
+				const int stop = start + objects_per_thread;
+				// Prepare job for threads.
+				auto f = [=](void* buffer, void* context)
+				{
+					RenderShadow(start, stop, buffer, context);
 				};
 
 				INSTANCE.m_jobs.push_back(f);
@@ -362,4 +399,10 @@ void RenderJob(const unsigned int start,
 	}
 
 	return;
+}
+
+void RenderShadow(const unsigned int start, unsigned int stop, void* buffer, void* context)
+{
+
+	std::cout << "LOOOOOOOOOOOL\n";
 }

@@ -48,6 +48,7 @@ public:
 	void RenderAnimation();
 	void Render2D();
 	void RenderSkybox();
+	void RenderShadow(const light_t& light);
 	Skybox* GetSkybox();
 
 	bool IsRenderReady() const;
