@@ -156,6 +156,11 @@ void Systems::HealthSystem(HeadlessScene& scene, float dt, uint32_t& money_ref)
 				else if(entity.GetComponent<comp::Tag<TagType::DEFENCE>>())
 				{
 					comp::Transform* buildTransform = entity.GetComponent<comp::Transform>();
+
+					Node* node = Blackboard::Get().GetAIHandler()->FindClosestNode(buildTransform->position);
+					node->reachable = true;
+					node->defencePlaced = false;
+					entity.Destroy();
 				}
 				else {
 					entity.Destroy();
