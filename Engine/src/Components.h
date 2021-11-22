@@ -338,6 +338,7 @@ namespace ecs
 	sm::Vector3 GetRight(const component::Transform& transform);
 	bool StepRotateTo(sm::Quaternion& rotation, const sm::Vector3& targetVector, float t);
 	bool StepTranslateTo(sm::Vector3& translation, const sm::Vector3& target, float t);
+	void RotateAroundAxis(sm::Quaternion& inout, sm::Vector3& axis, const float& angle);
 	
 	template<typename T>
 	void RegisterAsAbility()

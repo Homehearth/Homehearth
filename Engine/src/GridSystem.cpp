@@ -255,6 +255,10 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 					transform->position = { tile.position.x , 5.f, tile.position.z };
 					transform->scale = { 1.35f, 1.f, 1.35f };
 
+					/*sm::Vector3 angle = { 0,1,0 };
+					ecs::RotateAroundAxis(transform->rotation, angle, M_PI_2);*/
+
+
 					comp::BoundingOrientedBox* collider = tileEntity.AddComponent<comp::BoundingOrientedBox>();
 					collider->Extents = { m_tileHalfWidth, m_tileHalfWidth, m_tileHalfWidth };
 					tileEntity.AddComponent<comp::Tag<TagType::STATIC>>();
