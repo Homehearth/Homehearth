@@ -343,7 +343,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		uint8_t count;
 		msg >> count;
 
-		for (int i = static_cast<int>(count) - 1; i >= 0; i--)
+		for (uint8_t i = count; i > 0; i--)
 		{
 			char nameTemp[12] = {};
 			uint32_t playerID;
@@ -353,8 +353,8 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 
 			if (m_players.find(playerID) != m_players.end())
 			{
-				dynamic_cast<rtd::Text*>(GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i + 1))->elements[1].get())->SetText(name);
-				rtd::Text* plT = dynamic_cast<rtd::Text*>(GetScene("Game").GetCollection("dynamicPlayer" + std::to_string(i + 1) + "namePlate")->elements[0].get());
+				dynamic_cast<rtd::Text*>(GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i))->elements[1].get())->SetText(name);
+				rtd::Text* plT = dynamic_cast<rtd::Text*>(GetScene("Game").GetCollection("dynamicPlayer" + std::to_string(i) + "namePlate")->elements[0].get());
 				if (plT)
 				{
 					plT->SetText(name);
@@ -391,9 +391,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i + 1))->Hide();
 		}
 
-		Scene& gameScene = GetScene("Game");
-		// Map healthbars to players.
-		GameSystems::UpdateHealthbar(gameScene);
+		GameSystems::UpdateHealthbar(this);
 		break;
 
 	}

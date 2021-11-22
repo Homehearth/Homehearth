@@ -21,20 +21,20 @@ void GameSystems::RenderIsCollidingSystem(Scene& scene)
 }
 
 // Set all the healthbars to players.
-void GameSystems::UpdateHealthbar(Scene& scene)
+void GameSystems::UpdateHealthbar(Game* game)
 {
-	int i = 1;
-	scene.ForEachComponent<comp::Health, comp::Player>([&](Entity e, comp::Health& health, const comp::Player& player) {
-		// Safety check for now.
-		if (i < 5)
+	size_t i = game->m_players.size();
+
+	Scene* scene = &game->GetScene("Game");
+
+	scene->ForEachComponent<comp::Health, comp::Player>([&](Entity e, comp::Health& health, const comp::Player& player)
 		{
-			rtd::Healthbar* healthbar = dynamic_cast<rtd::Healthbar*>(scene.GetCollection("player" + std::to_string(i) + "Info")->elements[0].get());
+			rtd::Healthbar* healthbar = dynamic_cast<rtd::Healthbar*>(scene->GetCollection("player" + std::to_string(i) + "Info")->elements[0].get());
 			if (healthbar)
 			{
 				healthbar->SetHealthVariable(e);
 			}
-		}
-		i++;
+			i--;
 		});
 }
 
@@ -48,7 +48,7 @@ void GameSystems::CheckLOS(Game* game)
 	{
 		sm::Vector3 playerPos = t->position;
 		// Shoot a ray from cameras position to players position
-		Ray_t ray;	
+		Ray_t ray;
 		ray.origin = cam->m_position;
 		ray.dir = (t->position - ray.origin);
 		ray.dir.Normalize(ray.dir);
@@ -71,7 +71,7 @@ static bool STRECH_ONCE = true;
 
 void GameSystems::UpdatePlayerVisuals(Game* game)
 {
-	int i = 1;
+	size_t i = game->m_players.size();
 	Scene* scene = game->GetCurrentScene();
 
 	scene->ForEachComponent<comp::Player, comp::Transform, comp::Network>([&](comp::Player& player, comp::Transform& t, comp::Network& n)
@@ -164,6 +164,6 @@ void GameSystems::UpdatePlayerVisuals(Game* game)
 					}
 				}
 			}
-			i++;
+			i--;
 		});
 }
