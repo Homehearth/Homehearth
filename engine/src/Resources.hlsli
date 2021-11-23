@@ -104,6 +104,8 @@ Texture2D t_underWaterFloor  : register(t19);
 Texture2D t_waterTexture     : register(t20);
 Texture2D t_waterTextureN    : register(t21);
 
+RWTexture2D<float4> u_waterTexture   : register(u5);
+
 // Forward+
 //StructuredBuffer<PointLight> sb_pointLights : register();
 //StructuredBuffer<DirectionalLight> sb_directionalLights : register();
