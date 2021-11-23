@@ -969,7 +969,10 @@ void Simulation::SetGameScene()
 #ifdef GOD_MODE
 	// During debug give players 1000 gold/monies.
 	m_currency.GetAmountRef() = 1000;
-
+	for (auto& player : m_players)
+	{
+		player.second.AddComponent<comp::Tag<TagType::NO_RESPONSE>>();
+	}
 #endif
 }
 

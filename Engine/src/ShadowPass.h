@@ -8,7 +8,7 @@ struct ShadowSection
 {
 	ComPtr<ID3D11DepthStencilView> shadowDepth;
 	ComPtr<ID3D11Buffer> lightBuffer;
-	light_t light;
+	light_t* pLight;
 };
 
 class ShadowPass : public IRenderPass
@@ -24,12 +24,7 @@ private:
 	}m_shadowMap;
 
 	// Single shadow section of shadow map.
-	struct ShadowSection
-	{
-		ComPtr<ID3D11DepthStencilView> shadowDepth;
-		ComPtr<ID3D11Buffer> lightBuffer;
-		uint32_t lightIndex;
-	};
+	
 
 	std::vector<ShadowSection> m_shadows;
 
@@ -39,7 +34,6 @@ private:
 	ComPtr<ID3D11Buffer> CreateLightBuffer(light_t light);
 
 
-	void UpdateLightBuffer(ID3D11DeviceContext* context, ID3D11Buffer* buffer, light_t light);
 
 public:
 	static camera_Matrix_t GetLightMatrix(light_t light);
@@ -54,4 +48,6 @@ public:
 	virtual void PreRender(Camera* pCam = nullptr, ID3D11DeviceContext* pDeviceContext = D3D11Core::Get().DeviceContext()) override;
 	virtual void Render(Scene* pScene) override;
 	virtual void PostRender(ID3D11DeviceContext* pDeviceContext = D3D11Core::Get().DeviceContext()) override;
+	
+	void UpdateLightBuffer(ID3D11DeviceContext* context, ID3D11Buffer* buffer, light_t light);
 };

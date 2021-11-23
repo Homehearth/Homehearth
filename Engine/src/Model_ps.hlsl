@@ -54,9 +54,12 @@ float4 main(PixelIn input) : SV_TARGET
 				if ((saturate(texCoords.x) == texCoords.x) & (saturate(texCoords.y) == texCoords.y))
 				{
 					float closestDepth = t_shadowMaps.Sample(s_linear, float3(texCoords.xy, i)).r;
-					float currentDepth = pixelposLightSpace.z / pixelposLightSpace.w;
-					currentDepth = saturate(currentDepth);
+					//closestDepth = saturate(closestDepth);
+                    
+                    float currentDepth = pixelposLightSpace.z / pixelposLightSpace.w;
+					//currentDepth = saturate(currentDepth);
 					currentDepth -= 0.001f;
+                    
 					if (currentDepth > closestDepth)
 					{
 						shadowCoef = 1.0f;

@@ -418,7 +418,7 @@ void RenderShadow(const unsigned int start, unsigned int stop, void* buffer, voi
 	std::vector<ShadowSection>* m_shadows = (std::vector<ShadowSection>*)thread::RenderThreadHandler::Get().GetShadows();
 	dx::ConstantBuffer<basic_model_matrix_t>* m_buffer = (dx::ConstantBuffer<basic_model_matrix_t>*)buffer;
 	ID3D11DeviceContext* m_context = (ID3D11DeviceContext*)context;
-	IRenderPass* currentPass = thread::RenderThreadHandler::Get().GetRenderer()->GetCurrentPass();
+	ShadowPass* currentPass = dynamic_cast<ShadowPass*>(thread::RenderThreadHandler::Get().GetRenderer()->GetCurrentPass());
 	ID3D11CommandList* commandList = nullptr;
 
 	if (m_objects && m_shadows)
@@ -429,18 +429,20 @@ void RenderShadow(const unsigned int start, unsigned int stop, void* buffer, voi
 		// For each shadow.
 		for (int i = start; i < stop; i++)
 		{
+			currentPass->UpdateLightBuffer(m_context, (*m_shadows)[i].lightBuffer.Get(), *(*m_shadows)[i].pLight);
+
 			m_context->ClearDepthStencilView((*m_shadows)[i].shadowDepth.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 			ID3D11RenderTargetView* nullTargets[8] = { nullptr };
 			m_context->VSSetConstantBuffers(1, 1, (*m_shadows)[i].lightBuffer.GetAddressOf());
 			m_context->OMSetRenderTargets(8, nullTargets, (*m_shadows)[i].shadowDepth.Get());
-			const light_t& light = (*m_shadows)[i].light;
+			const light_t* light = (*m_shadows)[i].pLight;
 			// For each object in world.
 			for (int j = 0; j < (*m_objects)[1].size(); j++)
 			{
 				comp::Renderable* it = &(*m_objects)[1][j];
 				sm::Vector3 translation = it->data.worldMatrix.Translation();
-				float distance = (translation - sm::Vector3(light.position)).Length();
-				if (distance < light.range && it->isSolid && it->visible)
+				float distance = (translation - sm::Vector3(light->position)).Length();
+				if (distance < light->range && it->isSolid && it->visible)
 				{
 					ID3D11Buffer* const buffers[1] =
 					{

@@ -159,7 +159,7 @@ void Lights::Add(entt::registry& reg, entt::entity ent)
     m_lights.push_back(reg.get<comp::Light>(ent).lightData);
 }
 
-const std::vector<light_t>& Lights::GetLights() const
+std::vector<light_t>& Lights::GetLights()
 {
     return m_lights;
 }

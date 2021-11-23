@@ -135,19 +135,21 @@ void Game::OnUserUpdate(float deltaTime)
 				GameSystems::CheckLOS(this);
 			}
 			
-			scene.ForEachComponent<comp::Light>([&](comp::Light& l)
+			scene.ForEachComponent<comp::Light>([&](Entity e, comp::Light& l)
 				{
 					if (l.lightData.type == TypeLight::DIRECTIONAL)
 					{
 						sm::Vector3 dir = sm::Vector3::TransformNormal(sm::Vector3(l.lightData.direction), sm::Matrix::CreateRotationZ(dx::XMConvertToRadians(deltaTime * 10.f)));
 						l.lightData.direction = sm::Vector4(dir.x, dir.y, dir.z, 0.0f);
-						dir = sm::Vector3(l.lightData.direction);
+						
 						sm::Vector3 pos = l.lightData.position;
-						pos = playerPos - dir * 20;
+						float d = dir.Dot(sm::Vector3::Up);
+						pos = playerPos - dir * 90;
 						l.lightData.position = sm::Vector4(pos);
 						l.lightData.position.w = 1.f;
 
 					}
+					e.GetComponent<comp::BoundingSphere>()->Center = sm::Vector3(l.lightData.position);
 				});
 
 		}
