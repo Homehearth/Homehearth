@@ -11,9 +11,9 @@ namespace rtd
 	{
 	private:
 
-		std::shared_ptr<RBitMap> m_texture;
 		draw_t m_drawOpts;
 		std::unique_ptr<Border> m_border;
+		DoubleBuffer<std::shared_ptr<RBitMap>> m_texture;
 
 	public:
 
