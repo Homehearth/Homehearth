@@ -99,26 +99,6 @@ bool PipelineManager::CreateRenderTargetView()
     // Create the renderTargetView with the back buffer pointer.
     HRESULT hr = m_d3d11->Device()->CreateRenderTargetView(pBackBuffer, nullptr, m_backBuffer.GetAddressOf());
 
-    hr = m_d3d11->Device()->CreateRenderTargetView(pBackBuffer, nullptr, m_RTV_TextureEffectWaterMap.GetAddressOf());
-    if (FAILED(hr))
-        return false;
-
-    hr = m_d3d11->Device()->CreateRenderTargetView(pBackBuffer, nullptr, m_RTV_TextureEffectBlendMap.GetAddressOf());
-    if (FAILED(hr))
-        return false;
-
-    hr = m_d3d11->Device()->CreateRenderTargetView(pBackBuffer, nullptr, m_RTV_TextureEffectWaterFloorMap.GetAddressOf());
-    if (FAILED(hr))
-        return false;
-
-    hr = m_d3d11->Device()->CreateRenderTargetView(pBackBuffer, nullptr, m_RTV_TextureEffectWaterEdgeMap.GetAddressOf());
-    if (FAILED(hr))
-        return false;
-
-    hr = m_d3d11->Device()->CreateRenderTargetView(pBackBuffer, nullptr, m_RTV_TextureEffectWaterNormalMap.GetAddressOf());
-    if (FAILED(hr))
-        return false;
-
     // Release pointer to the back buffer.
     pBackBuffer->Release();
 
@@ -537,30 +517,10 @@ bool PipelineManager::CreateTextureEffectResources()
 
     HRESULT hr = {};
 
-    // RENDER TARGET VIEWS //
 
-    D3D11_RENDER_TARGET_VIEW_DESC renderTargetViewDesc;
-    renderTargetViewDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    renderTargetViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
-    renderTargetViewDesc.Texture2D.MipSlice = 0;
+    // UNORDERED ACCES VIEW //
 
-    hr = m_d3d11->Device()->CreateRenderTargetView(m_WaterAlbedoMap.get()->GetTexture2D(), nullptr, m_RTV_TextureEffectWaterMap.GetAddressOf());
-    if (FAILED(hr))
-        return false;
-
-    hr = m_d3d11->Device()->CreateRenderTargetView(m_WaterFloorAlbedoMap.get()->GetTexture2D(), nullptr, m_RTV_TextureEffectWaterFloorMap.GetAddressOf());
-    if (FAILED(hr))
-        return false;
-
-    hr = m_d3d11->Device()->CreateRenderTargetView(m_WaterEdgeAlbedoMap.get()->GetTexture2D(), nullptr, m_RTV_TextureEffectWaterEdgeMap.GetAddressOf());
-    if (FAILED(hr))
-        return false;
-
-    hr = m_d3d11->Device()->CreateRenderTargetView(m_WaterNormalMap.get()->GetTexture2D(), nullptr, m_RTV_TextureEffectWaterNormalMap.GetAddressOf());
-    if (FAILED(hr))
-        return false;
-
-    hr = m_d3d11->Device()->CreateRenderTargetView(m_WaterBlendAlbedoMap.get()->GetTexture2D(), nullptr, m_RTV_TextureEffectBlendMap.GetAddressOf());
+    hr = m_d3d11->Device()->CreateUnorderedAccessView(m_WaterFloorAlbedoMap.get()->GetTexture2D(), nullptr, m_UAV_TextureEffectWaterFloorMap.GetAddressOf());
     if (FAILED(hr))
         return false;
     return true;
