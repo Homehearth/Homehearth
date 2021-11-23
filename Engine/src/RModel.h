@@ -87,7 +87,7 @@ public:
 	//Get all of the texture coordinates for a model
 	const std::vector<sm::Vector2> GetTextureCoords() const;
 
-	//Get textures
+	//Get all the textures of the type from all materials
 	const std::vector<std::shared_ptr<RTexture>> GetTextures(const ETextureType& type) const;
 
 	/*

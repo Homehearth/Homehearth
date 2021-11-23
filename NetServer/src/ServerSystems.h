@@ -7,8 +7,10 @@ namespace EnemyManagement
 {
 	enum class EnemyType
 	{
-		Default,
-		Default2,
+		Default,  //Basic walkere zombie
+		Mage,     //Ranged enemy type
+		Runner,   //Zombie but faster...
+		BIGMOMMA, //Boss BIG MOMMA
 		ENUM_SIZE
 	};
 
@@ -45,4 +47,6 @@ namespace ServerSystems
 	
 	void CheckGameOver(Simulation* simulation, HeadlessScene& scene);
 	void TickBTSystem(Simulation* simulation, HeadlessScene& scene);
+
+	void AnimatonSystem(Simulation* simulation, HeadlessScene& scene);
 }

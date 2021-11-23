@@ -28,7 +28,7 @@ void Engine::Startup()
 
 	//Get heighest possible 16:9 resolution
 	//90% of the height
-	config.height = static_cast<UINT>(GetSystemMetrics(SM_CYSCREEN) * 0.50f);
+	config.height = static_cast<UINT>(GetSystemMetrics(SM_CYSCREEN) * 0.90f);
 	float aspectRatio = 16.0f / 9.0f;
 	config.width = static_cast<UINT>(aspectRatio * config.height);
 
@@ -43,6 +43,7 @@ void Engine::Startup()
 	D2D1Core::Initialize(&m_window);
 
 	m_renderer.Initialize(&m_window);
+	m_renderer.Setup(*this);
 
 	// Thread should be launched after s_engineRunning is set to true and D3D11 is initialized.
 	//
@@ -233,7 +234,7 @@ void Engine::drawImGUI() const
 				ImGui::Text(entityname.c_str());
 				ImGui::Text("Change 'mtl-file'");
 				char str[30] = "";
-				ImGui::InputText("New material", str, IM_ARRAYSIZE(str));
+				ImGui::InputText(entityname.c_str(), str, IM_ARRAYSIZE(str));
 				if (ImGui::IsKeyPressedMap(ImGuiKey_Enter))
 				{
 					renderable.model->ChangeMaterial(str);
@@ -241,6 +242,29 @@ void Engine::drawImGUI() const
 				ImGui::Spacing();
 			});
 	}
+
+	if (ImGui::CollapsingHeader("Animators"))
+	{
+		GetCurrentScene()->ForEachComponent<comp::Animator>([&](Entity& e, comp::Animator& animComp)
+			{
+				std::string entityname = "Entity: " + std::to_string(static_cast<int>((entt::entity)e));
+
+				const char* items[] = { "NONE", "IDLE", "WALK", "RUN", "PRIMARY_ATTACK", 
+										"SECONDARY_ATTACK", "ABILITY1", "ABILITY2", 
+										"ABILITY3", "ABILITY4", "TAKE_DAMAGE", "PLACE_DEFENCE" };
+				int index = (int)animComp.animator->GetCurrentState();
+
+				if (ImGui::ListBox(entityname.c_str(), &index, items, IM_ARRAYSIZE(items), 3))
+				{
+					if (animComp.animator)
+					{
+						animComp.animator->ChangeAnimation(EAnimationType(index));
+					}
+				}
+				ImGui::Spacing();
+			});
+	}
+
 	if (ImGui::CollapsingHeader("Light"))
 	{
 

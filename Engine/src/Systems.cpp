@@ -1,12 +1,10 @@
 #include "EnginePCH.h"
 #include "Systems.h"
 #include "Text.h"
-#include "Components.h"
 #include "Healthbar.h"
 
 Entity FindClosestPlayer(HeadlessScene& scene, sm::Vector3 position, comp::NPC* npc)
 {
-
 	comp::Transform* transformCurrentClosest = nullptr;
 
 	scene.ForEachComponent < comp::Player>([&](Entity& playerEntity, comp::Player& player)
@@ -68,6 +66,12 @@ void Systems::UpdateAbilities(HeadlessScene& scene, float dt)
 
 			if (ability->cooldownTimer <= 0.f && ability->delayTimer <= 0.f && ability->useTimer <= 0.f)
 				ability->isReady = true;
+
+			comp::Velocity* vel = entity.GetComponent<comp::Velocity>();
+			if (vel && ecs::IsUsing(ability))
+			{
+				vel->vel *= ability->movementSpeedAlt;
+			}
 		}
 	}
 
@@ -75,94 +79,134 @@ void Systems::UpdateAbilities(HeadlessScene& scene, float dt)
 
 void Systems::CombatSystem(HeadlessScene& scene, float dt)
 {
-	PROFILE_FUNCTION();
-	
-	// For Each entity that can attack.
-	scene.ForEachComponent<comp::AttackAbility, comp::Transform>([&](Entity entity, comp::AttackAbility& stats, comp::Transform& transform)
+	CombatSystem::UpdateCombatSystem(scene, dt);
+}
+
+void Systems::HealingSystem(HeadlessScene& scene, float dt)
+{
+	// HealAbility system
+	scene.ForEachComponent<comp::HealAbility, comp::Player>([&](Entity entity, comp::HealAbility& ability, comp::Player& player)
 		{
-			//
-			// attack LOGIC
-			//
-			sm::Vector3* updateTargetPoint = nullptr;
-			comp::Player* player = entity.GetComponent<comp::Player>();
-			if (player)
+			if (ecs::ReadyToUse(&ability))
 			{
-				updateTargetPoint = &player->mousePoint; // only update targetPoint if this is a player
-			}
-			if (ecs::ReadyToUse(&stats, updateTargetPoint))
-			{
-				//Creates an entity that's used to check collision if an attack lands.
-				Entity attackCollider = scene.CreateEntity();
-				comp::Transform* t = attackCollider.AddComponent<comp::Transform>();
-				comp::BoundingOrientedBox* box = attackCollider.AddComponent<comp::BoundingOrientedBox>();
+				LOG_INFO("Used healing ability");
+				Entity collider = scene.CreateEntity();
+				comp::Transform* transform = collider.AddComponent<comp::Transform>();
+				transform->position = entity.GetComponent<comp::Transform>()->position;
+				transform->scale = sm::Vector3(2);
+				transform->syncColliderScale = true;
 				
-				box->Extents = sm::Vector3(stats.attackRange * 0.5f, 10, stats.attackRange * 0.5f);
+				comp::BoundingSphere* sphere = collider.AddComponent<comp::BoundingSphere>();
+				sphere->Center = transform->position;
 				
-				sm::Vector3 targetDir = stats.targetPoint - transform.position;
-				targetDir.Normalize();
-				t->position = transform.position + targetDir * stats.attackRange * 0.5f + sm::Vector3(0, 4, 0);
-				t->rotation = transform.rotation;
-
-				box->Center = t->position;
-				box->Orientation = t->rotation;
-
-
-				comp::SelfDestruct* selfDestruct = attackCollider.AddComponent<comp::SelfDestruct>();
-				selfDestruct->lifeTime = stats.lifetime;
-
-				//If the attack is ranged add a velocity to the entity.
-				if (stats.isRanged)
-				{
-					sm::Vector3 vel = targetDir * stats.projectileSpeed;
-					attackCollider.AddComponent<comp::Velocity>()->vel = vel;
-					attackCollider.AddComponent<comp::MeshName>()->name = "Sphere.obj";
-				}
-				attackCollider.AddComponent<comp::Network>();
-
+				collider.AddComponent<comp::Tag<TagType::DYNAMIC>>();
 				
-				CollisionSystem::Get().AddOnCollision(attackCollider, [entity, &scene](Entity thisEntity, Entity other)
+				comp::BezierAnimation* a = collider.AddComponent<comp::BezierAnimation>();
+				a->scalePoints.push_back(transform->scale);
+				a->scalePoints.push_back(transform->scale + sm::Vector3(ability.range));
+				
+				collider.AddComponent<comp::SelfDestruct>()->lifeTime = ability.lifetime;
+				
+				collider.AddComponent<comp::Tag<TagType::NO_RESPONSE>>();
+
+				collider.AddComponent<comp::Network>();
+
+				CollisionSystem::Get().AddOnCollisionEnter(collider, [&, entity](Entity thisEntity, Entity other)
 					{
-						// is caster already dead
 						if (entity.IsNull())
-						{
-							thisEntity.GetComponent<comp::SelfDestruct>()->lifeTime = 0.f;
 							return;
+
+						comp::Health* h = other.GetComponent<comp::Health>();
+						if (h)
+						{
+							h->currentHealth += ability.healAmount;
+							scene.publish<EComponentUpdated>(other, ecs::Component::HEALTH);
 						}
 
-						if (other == entity)
-							return;
+					});
 
+			}
+		});
 
-						comp::Health* otherHealth = other.GetComponent<comp::Health>();
-						comp::AttackAbility* stats = entity.GetComponent<comp::AttackAbility>();
+}
 
-						if (otherHealth)
+void Systems::HeroLeapSystem(HeadlessScene& scene, float dt)
+{
+	scene.ForEachComponent<comp::Transform, comp::HeroLeapAbility>([&](Entity e, comp::Transform& t, comp::HeroLeapAbility& ability)
+		{
+			sm::Vector3* point = nullptr;
+			comp::Player* player = e.GetComponent<comp::Player>();
+			if (player)
+			{
+				point = &player->mousePoint;
+			}
+
+			if (ecs::ReadyToUse(&ability, point))
+			{
+				
+				comp::BezierAnimation* a = e.AddComponent<comp::BezierAnimation>();
+				a->translationPoints.push_back(t.position);
+				sm::Vector3 toTarget = ability.targetPoint - t.position;
+				float distance = toTarget.Length();
+				toTarget.Normalize();
+				distance = min(distance, ability.maxRange);
+				toTarget *= distance;
+
+				a->translationPoints.push_back(t.position);
+				a->translationPoints.push_back(t.position + sm::Vector3(0, 40, 0));
+				a->translationPoints.push_back(t.position + toTarget);
+				a->speed = ability.useTime;
+
+				a->onFinish = [&]()
+				{
+					Entity collider = scene.CreateEntity();
+					collider.AddComponent<comp::Transform>()->position = t.position;
+					comp::BoundingSphere* sphere = collider.AddComponent<comp::BoundingSphere>();
+					sphere->Center = t.position;
+					sphere->Radius = ability.damageRadius;
+
+					collider.AddComponent<comp::SelfDestruct>()->lifeTime = ability.lifetime;
+					collider.AddComponent<comp::Network>();
+					collider.AddComponent<comp::Tag<TagType::DYNAMIC>>();
+					collider.AddComponent<comp::Tag<TagType::NO_RESPONSE>>();
+
+					CollisionSystem::Get().AddOnCollisionEnter(collider, [=, &scene](Entity thisEntity, Entity other)
 						{
-							otherHealth->currentHealth -= stats->attackDamage;
-							// update Health on network
-							scene.publish<EComponentUpdated>(other, ecs::Component::HEALTH);
 
-							thisEntity.GetComponent<comp::SelfDestruct>()->lifeTime = 0.f;
-
-							comp::Velocity* attackVel = thisEntity.GetComponent<comp::Velocity>();
-							if (attackVel)
+							// is caster already dead
+							if (e.IsNull())
 							{
-								comp::TemporaryPhysics* p = other.AddComponent<comp::TemporaryPhysics>();
-								comp::TemporaryPhysics::Force force = {};
-								force.force = attackVel->vel;
-								p->forces.push_back(force);
+								thisEntity.GetComponent<comp::SelfDestruct>()->lifeTime = 0.f;
+								return;
 							}
-							else
-							{
 
-								sm::Vector3 toOther = other.GetComponent<comp::Transform>()->position - entity.GetComponent<comp::Transform>()->position;
+							if (other == e)
+								return;
+
+							tag_bits goodOrBad = TagType::GOOD | TagType::BAD;
+							if ((e.GetTags() & goodOrBad) ==
+								(other.GetTags() & goodOrBad))
+							{
+								return; //these guys are on the same team
+							}
+
+							comp::Health* otherHealth = other.GetComponent<comp::Health>();
+							comp::HeroLeapAbility* ability = e.GetComponent<comp::HeroLeapAbility>();
+
+							if (otherHealth)
+							{
+								otherHealth->currentHealth -= ability->damage;
+								// update Health on network
+								scene.publish<EComponentUpdated>(other, ecs::Component::HEALTH);
+
+								sm::Vector3 toOther = other.GetComponent<comp::Transform>()->position - thisEntity.GetComponent<comp::Transform>()->position;
 								toOther.Normalize();
 
 								comp::TemporaryPhysics* p = other.AddComponent<comp::TemporaryPhysics>();
 								comp::TemporaryPhysics::Force force = {};
 
-								force.force = toOther + sm::Vector3(0, 1, 0);
-								force.force *= stats->attackDamage;
+								force.force = toOther + sm::Vector3(0, 5, 0);
+								force.force *= ability->damage;
 
 								force.isImpulse = true;
 								force.drag = 0.0f;
@@ -172,29 +216,15 @@ void Systems::CombatSystem(HeadlessScene& scene, float dt)
 
 								auto gravity = ecs::GetGravityForce();
 								p->forces.push_back(gravity);
+								
 							}
-							
-						}
-					});
 
-		}
+						});
 
-	});
+				};
 
-
-}
-
-void Systems::HealingSystem(HeadlessScene& scene, float dt)
-{
-	// HealAbility system
-	scene.ForEachComponent<comp::HealAbility, comp::Player>([](comp::HealAbility& ability, comp::Player& player)
-		{
-			if (ecs::ReadyToUse(&ability))
-			{
-				LOG_INFO("Used healing ability");
 			}
 		});
-
 }
 
 void Systems::HealthSystem(HeadlessScene& scene, float dt, uint32_t& money_ref)
@@ -210,7 +240,7 @@ void Systems::HealthSystem(HeadlessScene& scene, float dt, uint32_t& money_ref)
 				// increase money
 				if (entity.GetComponent<comp::NPC>())
 				{
-					money_ref += 10;
+					money_ref += 2;
 				}
 
 				// if player
@@ -223,8 +253,10 @@ void Systems::HealthSystem(HeadlessScene& scene, float dt, uint32_t& money_ref)
 				else {
 					entity.Destroy();
 				}
-				
-
+			}
+			else if (health.currentHealth > health.maxHealth)
+			{
+				health.currentHealth = health.maxHealth;
 			}
 		});
 }
@@ -323,9 +355,8 @@ void Systems::MovementSystem(HeadlessScene& scene, float dt)
 					transform.position.y = 0.f;
 					velocity.vel.y = 0;
 				}
-
-
 				velocity.oldVel = velocity.vel; // updated old vel position
+
 			});
 	}
 }
@@ -340,6 +371,8 @@ void Systems::MovementColliderSystem(HeadlessScene& scene, float dt)
 		{
 			obb.Center = transform.position;
 			/*obb.Orientation = transform.rotation;*/
+			if (transform.syncColliderScale)
+				obb.Extents = transform.scale;
 		});
 
 	//BoundingSphere
@@ -347,6 +380,9 @@ void Systems::MovementColliderSystem(HeadlessScene& scene, float dt)
 	(comp::Transform& transform, comp::BoundingSphere& sphere)
 		{
 			sphere.Center = transform.position;
+			if (transform.syncColliderScale)
+				sphere.Radius = transform.scale.x;
+			
 		});
 }
 
@@ -367,63 +403,36 @@ void Systems::LightSystem(Scene& scene, float dt)
 
 }
 
-void Systems::AISystem(HeadlessScene& scene, PathFinderManager* aiHandler)
+void Systems::TransformAnimationSystem(HeadlessScene& scene, float dt)
 {
-	PROFILE_FUNCTION();
-
-	scene.ForEachComponent<comp::NPC>([&](Entity entity, comp::NPC& npc)
+	scene.ForEachComponent<comp::Transform, comp::BezierAnimation>([&](Entity e, comp::Transform& t, comp::BezierAnimation& a)
 		{
-			comp::Transform* transformNPC = entity.GetComponent<comp::Transform>();
-			Entity currentClosestPlayer;
-			//npc.currentNode = FindClosestNode(scene, transformNPC->position);
+			a.time += dt * (1.f / a.speed);
+			
+			if(a.translationPoints.size() > 0)
+				t.position = util::BezierCurve(a.translationPoints, a.time);
+			
+			if (a.scalePoints.size() > 0)
+				t.scale = util::BezierCurve(a.scalePoints, a.time);
 
-			Entity closestPlayer = FindClosestPlayer(scene, transformNPC->position, &npc);
-			comp::Velocity* velocityTowardsPlayer = entity.GetComponent<comp::Velocity>();
-			comp::Transform* transformCurrentClosestPlayer = closestPlayer.GetComponent<comp::Transform>();
+			if (a.rotationPoints.size() > 0)
+				t.rotation = util::BezierCurve(a.rotationPoints, a.time);
 
-			Node* closestNod = aiHandler->FindClosestNode(transformCurrentClosestPlayer->position);
-
-			if (sm::Vector3::Distance(transformNPC->position, transformCurrentClosestPlayer->position) <= npc.attackRange)
+			e.UpdateNetwork();
+			
+			if (a.time > 1.0f)
 			{
-				comp::AttackAbility* stats = entity.GetComponent<comp::AttackAbility>();
-
-				stats->targetPoint = transformCurrentClosestPlayer->position;
 				
-				if (ecs::UseAbility(stats))
+				if(a.onFinish)
+					a.onFinish();
+
+				a.time = 0.0f;
+				if (!a.loop)
 				{
-					// Enemy Attacked
-				};
-			}
-
-
-			switch (npc.state)
-			{
-			case comp::NPC::State::ASTAR:
-
-				if(npc.path.size() > 0)
-				{
-					npc.currentNode = npc.path.back();
-					if (velocityTowardsPlayer && npc.currentNode)
-					{
-						velocityTowardsPlayer->vel = npc.currentNode->position - transformNPC->position;
-						velocityTowardsPlayer->vel.Normalize();
-						velocityTowardsPlayer->vel *= npc.movementSpeed;
-					}
-
-					if(sm::Vector3::Distance(npc.currentNode->position, transformNPC->position) < 8.f)
-					{
-						npc.path.pop_back();
-					}
-					
+					e.RemoveComponent<comp::BezierAnimation>();
 				}
-				else
-				{
-					npc.currentNode = aiHandler->FindClosestNode(transformNPC->position);
-					aiHandler->AStarSearch(entity);
-					velocityTowardsPlayer->vel = sm::Vector3(0.f,0.f,0.f);
-				}
-
 
 			}
 		});
+
 }

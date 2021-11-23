@@ -30,16 +30,22 @@ void Renderer::Initialize(Window* pWindow)
 	m_decalPass.Create();
 	AddPass(&m_basePass);   // 2
 	AddPass(&m_animPass);	// 3
+	AddPass(&m_particlePass);	// 4
 	AddPass(&m_skyPass);
+	AddPass(&m_shadowPass);
+	AddPass(&m_dofPass);
+	
 
 	//m_depthPass.SetEnable(true);
 	m_basePass.SetEnable(true);
 	m_animPass.SetEnable(true);
 	m_decalPass.SetEnable(true);
+	m_particlePass.SetEnable(true);
 	m_skyPass.SetEnable(true);
+	m_dofPass.SetEnable(true);
 
 #ifdef _DEBUG
-	AddPass(&m_debugPass);  // 4
+	AddPass(&m_debugPass);  // 5
     m_debugPass.SetEnable(true);
 #endif
 
@@ -49,6 +55,20 @@ void Renderer::Initialize(Window* pWindow)
 	{
 		pass->Initialize(m_d3d11->DeviceContext(), &m_pipelineManager);
 	}
+
+	m_dofPass.Create(DoFType::VIGNETTE);
+}
+
+void Renderer::Setup(BasicEngine<Scene>& engine)
+{
+	engine.GetScene("Game").ForEachComponent<comp::Light>([&](comp::Light& l) {
+
+		m_shadowPass.CreateShadow(l);
+
+		});
+
+	m_shadowPass.SetupMap();
+
 }
 
 void Renderer::ClearFrame()
@@ -101,6 +121,11 @@ void Renderer::Render(Scene* pScene)
 IRenderPass* Renderer::GetCurrentPass() const
 {
 	return m_passes[m_currentPass];
+}
+
+DOFPass* Renderer::GetDoFPass()
+{
+	return &m_dofPass;
 }
 
 void Renderer::AddPass(IRenderPass* pass)

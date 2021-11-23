@@ -2,6 +2,9 @@
 	#error You may not include this header directly.
 #endif
 static const float PI = 3.14159265359;
+#define MAXWEIGHTS 8
+
+#include "Structures.hlsli"
 //---------------------------------------------------------------------------
 //	Constant buffers.
 //---------------------------------------------------------------------------
@@ -49,6 +52,14 @@ cbuffer IsCollidingCB : register(b5)
 {
     int c_colliding;
 }
+
+cbuffer ParticleUpdate : register(b8)
+{
+    float4 emitterPosition;
+    float deltaTime;
+    uint counter;
+}
+
 cbuffer DecalInfoCB : register(b10)
 {
     float4 infoData = float4(0.0f, 0.0f, 0.0f, 0.0f);
@@ -59,11 +70,29 @@ cbuffer DeltaCB : register(b6)
     float c_deltaTime;
 }
 
+cbuffer BlurSettings : register(b11)
+{
+    uint c_blurRadius;
+    bool c_useVertical;
+    uint c_blurType;
+    float padding;
+    float4 c_weights[MAXWEIGHTS / 4];
+}
 cbuffer TextureEffectCB : register(b7)
 {
     float c_frequency;
     float c_amplitude;
 };
+
+cbuffer InverseMatrices : register(b12)
+{
+    float4x4    c_inverseView;
+    float4x4    c_inverseProjection;
+    uint        c_dofType;
+    float3      dofPadding;
+}
+
+
 
 //---------------------------------------------------------------------------
 //	Samplers.
@@ -89,13 +118,17 @@ Texture2D t_aomap					: register(t5);
 Texture2D t_displace				: register(t6);
 Texture2D t_opacitymask				: register(t7);
 Texture2D<uint2> t_pointLightGrid	: register(t8);
-Texture2D t_decal : register(t12);
-Texture2D t_decalAlpha : register(t13);
+Texture2D t_decal                   : register(t12);
 
 // StructuredBuffers.
-StructuredBuffer<float4x4> sb_boneTransforms : register(t9); // read as column major, actually is row major.
-StructuredBuffer<Light> sb_lights : register(t10);
-StructuredBuffer<float4x4> sb_decaldata : register(t16);
+StructuredBuffer<float4x4> sb_boneTransforms        : register(t9); // read as column major, actually is row major.
+StructuredBuffer<Light> sb_lights                   : register(t10);
+StructuredBuffer<float4x4> sb_decaldata             : register(t16);
+StructuredBuffer<VertexParticleIn> particlesSRV     : register(t17);
+StructuredBuffer<float> randomNumbers               : register(t18);
+
+RWStructuredBuffer<VertexParticleIn> particlesUAV   : register(u7);
+
 
 //Nikkis stuff:
 Texture2D t_waterBlend       : register(t17);
@@ -123,6 +156,12 @@ Texture2D t_BRDFLUT : register(t99);
 
 // RWStructuredBuffers.
 
+//Blur Pass
+RWTexture2D<unorm float4> t_bufferRead      : register(u0);
+RWTexture2D<unorm float4> t_bufferOut       : register(u1);
+RWTexture2D<unorm float4> t_inFocus         : register(u2);
+RWTexture2D<unorm float4> t_outOfFocus      : register(u3);
+RWTexture2D<float4> t_dofOut                : register(u4);
 
 // Forward+
 //RWStructuredBuffer<PointLight> rw_pointLights : register();

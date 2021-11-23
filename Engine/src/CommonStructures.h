@@ -37,12 +37,28 @@ enum class TypeLight : UINT
 	POINT
 };
 
+enum class PARTICLEMODE : UINT
+{
+	BLOOD,
+	LEAF,
+	WATERSPLASH,
+	SMOKE,
+	SPARKLES,
+	RAIN,
+	DUST
+};
+
+enum class TowerTypes : UINT
+{
+	LONG,
+	SHORT
+};
+
 struct Vector2I
 {
 	int x = 0, y = 0;
 
-	Vector2I(int&& x, int&& y) :x(x), y(y) {};
-	Vector2I(int& x, int& y) :y(y), x(x) {};
+	Vector2I(int x, int y) :y(y), x(x) {};
 
 	Vector2I() = default;
 
@@ -50,14 +66,29 @@ struct Vector2I
 	{
 		return (x == other.x && y == other.y);
 	}
-
-	Vector2I& operator+(const Vector2I& other)
+	Vector2I operator+(const Vector2I& other)
+	{
+		return Vector2I(this->x + other.x, this->y + other.y);
+	}
+	Vector2I& operator+=(const Vector2I& other)
 	{
 		this->x += other.x;
 		this->y += other.y;
 
 		return *this;
 	}
+	Vector2I operator-(const Vector2I& other)
+	{
+		return Vector2I(this->x - other.x, this->y - other.y);
+	}
+	Vector2I& operator-=(const Vector2I& other)
+	{
+		this->x -= other.x;
+		this->y -= other.y;
+
+		return *this;
+	}
+
 };
 
 struct Plane_t
@@ -105,7 +136,7 @@ struct Ray_t
 		return discriminant > 0.0f;
 	}
 
-	bool Intersects(const dx::BoundingOrientedBox& boxCollider)
+	bool Intersects(const dx::BoundingOrientedBox& boxCollider, float* t = nullptr)
 	{
 
 		/*
@@ -177,11 +208,14 @@ struct Ray_t
 			}
 
 		}
+		if (t)
+		{
 
-		//if (tmin > 0)
-		//	t = tmin;
-		//else
-		//	t = tmax;
+			if (tmin > 0)
+				*t = tmin;
+			else
+				*t = tmax;
+		}
 
 		return true;
 	}
@@ -231,7 +265,33 @@ enum class GameMsg : uint8_t
 	Game_AddNPC,
 	Game_RemoveNPC,
 	Game_PlayerInput,
-	Game_Money
+	Game_Money,
+	Game_UseShop,
+	Game_ChangeAnimation
+};
+
+enum class ShopItem : uint8_t
+{
+	/*
+		Temporary proof of concept upgrades.
+	*/
+	Primary_Upgrade,
+	Secondary_Upgrade,
+	Tower_Upgrade,
+	Speed_Upgrade,
+	Heal,
+
+	/*
+		Lets the player build a 3x1 tower when pressing build key.
+	*/
+	LONG_TOWER,
+
+	/*
+		Lets the player build a 1x1 tower when pressing build key.
+	*/
+	SHORT_TOWER,
+
+	NR_OF
 };
 
 /*
@@ -333,11 +393,62 @@ struct Node
 	std::vector<Node*> connections;
 	Node* parent = nullptr;
 	bool reachable = true;
+	bool defencePlaced = false;
 	Node(Vector2I id) : id(id) {};
 
 	void ResetFGH()
 	{
 		f = FLT_MAX, g = FLT_MAX, h = FLT_MAX;
+	}
+	bool RemoveConnection(Node* connection)
+	{
+		for (int i = 0; i < connections.size(); i++)
+		{
+			if (connections[i] == connection)
+			{
+				connections.erase(connections.begin() + i);
+				return true;
+			}
+		}
+		return false;
+
+	}
+	bool RemoveConnection(size_t index)
+	{
+		if (index < connections.size())
+		{
+			connections.erase(connections.begin() + index);
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+
+	std::vector<Node*> GetDiagonalConnections()
+	{
+		std::vector<Node*> DiagConnections;
+		for (Node* connection : connections)
+		{
+			if (abs(connection->id.x - this->id.x) == 1 && abs(connection->id.y - this->id.y) == 1)
+			{
+				DiagConnections.push_back(connection);
+			}
+		}
+		return DiagConnections;
+	}
+	std::vector<Node*> GetAdjacentConnections()
+	{
+		std::vector<Node*> AdjConnections;
+		for (Node* connection : connections)
+		{
+			if (connection->id.x == this->id.x || connection->id.y == this->id.y)
+			{
+				AdjConnections.push_back(connection);
+			}
+		}
+		return AdjConnections;
 	}
 	bool ConnectionAlreadyExists(Node* other)
 	{
@@ -350,4 +461,15 @@ struct Node
 		}
 		return false;
 	}
+};
+
+ALIGN16
+struct Particle_t
+{
+	sm::Vector4		position;
+	sm::Vector4		color;
+
+	sm::Vector2		size;
+	PARTICLEMODE	type = PARTICLEMODE::SPARKLES;
+	float			paddning = -1;
 };

@@ -7,7 +7,7 @@ ServerGame::ServerGame()
 	:m_server(std::bind(&ServerGame::CheckIncoming, this, _1))
 {
 	m_nGameID = 0;
-	SetUpdateRate(60.f);
+	SetUpdateRate(Stats::Get().GetTickrate());
 }
 
 ServerGame::~ServerGame()
@@ -70,10 +70,8 @@ bool ServerGame::OnStartup()
 		exit(0);
 	}
 	m_inputThread = std::thread(&ServerGame::InputThread, this);
-	
-	LoadMapColliders("AllBounds.fbx");
-	//LoadMapColliders("MapBounds.obj");
 
+	LoadMapColliders("VillageColliders.fbx");
 
 	return true;
 }
@@ -87,13 +85,13 @@ void ServerGame::OnShutdown()
 void ServerGame::UpdateNetwork(float deltaTime)
 {
 	PROFILE_FUNCTION();
-	//static float timer = 0.0f;
-	//timer += deltaTime;
-	//if (timer >= 1.0f)
-	//{
-	//	LOG_INFO("Update: %f", 1.f / deltaTime);
-	//	timer = 0.0f;
-	//}
+	static float timer = 0.0f;
+	timer += deltaTime;
+	if (timer >= 1.0f)
+	{
+		LOG_INFO("Update: %f", 1.f / deltaTime);
+		timer = 0.0f;
+	}
 
 	// Check incoming messages
 	this->m_server.Update();
@@ -127,7 +125,7 @@ bool ServerGame::LoadMapColliders(const std::string& filename)
 	const aiScene* scene = importer.ReadFile
 	(
 		filepath,
-		aiProcess_JoinIdenticalVertices		|
+		aiProcess_JoinIdenticalVertices |
 		aiProcess_ConvertToLeftHanded
 	);
 
@@ -191,16 +189,22 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 	{
 		uint32_t playerID;
 		msg >> playerID;
-		std::string namePlate;
-		msg >> namePlate;
-		if (this->CreateSimulation(playerID, namePlate))
+		std::string name;
+		msg >> name;
+		uint32_t gameID;
+		gameID = this->CreateSimulation();
+		if (gameID != static_cast<uint32_t>(-1))
 		{
-			LOG_INFO("Created Game lobby!");
+			m_simulations.at(gameID)->JoinLobby(gameID, playerID, name);
 		}
 		else
 		{
-			LOG_ERROR("Failed to create Lobby!");
+			message<GameMsg> lobbyMsg;
+			lobbyMsg.header.id = GameMsg::Lobby_Invalid;
+			msg << std::string("Request denied: Invalid Lobby ID!");
+			m_server.SendToClient(playerID, lobbyMsg);
 		}
+
 		break;
 	}
 	case GameMsg::Lobby_Join:
@@ -209,19 +213,19 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 		msg >> gameID;
 		uint32_t playerID;
 		msg >> playerID;
-		std::string namePlate;
-		msg >> namePlate;
+		std::string name;
+		msg >> name;
 		if (m_simulations.find(gameID) != m_simulations.end())
 		{
-			m_simulations[gameID]->JoinLobby(playerID, gameID, namePlate);
+			m_simulations[gameID]->JoinLobby(gameID, playerID, name);
 		}
 		else
 		{
-			message<GameMsg> invalidLobbyMsg;
-			invalidLobbyMsg.header.id = GameMsg::Lobby_Invalid;
-			invalidLobbyMsg << std::string("Request denied: Invalid Lobby");
-			LOG_WARNING("Request denied: Invalid Lobby");
-			m_server.SendToClient(playerID, invalidLobbyMsg);
+			message<GameMsg> lobbyMsg;
+			lobbyMsg.header.id = GameMsg::Lobby_Invalid;
+			lobbyMsg << std::string("Request denied: Invalid Lobby");
+			LOG_WARNING("Player: %d tried to join an invalid lobby!", playerID);
+			m_server.SendToClient(playerID, lobbyMsg);
 		}
 		break;
 	}
@@ -233,17 +237,16 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 		msg >> playerID;
 		if (m_simulations.find(gameID) != m_simulations.end())
 		{
-			if (m_simulations[gameID]->LeaveLobby(playerID, gameID))
-			{
-				break;
-			}
+			m_simulations[gameID]->LeaveLobby(playerID);
 		}
-
-		message<GameMsg> invalidLobbyMsg;
-		invalidLobbyMsg.header.id = GameMsg::Lobby_Invalid;
-		invalidLobbyMsg << std::string("Player could not leave Lobby");
-		LOG_WARNING("Request denied: Player could not leave Lobby");
-		m_server.SendToClient(playerID, invalidLobbyMsg);
+		else
+		{
+			message<GameMsg> invalidLobbyMsg;
+			invalidLobbyMsg.header.id = GameMsg::Lobby_Invalid;
+			invalidLobbyMsg << std::string("Player could not leave Lobby");
+			LOG_WARNING("Request denied: Player could not leave Lobby");
+			m_server.SendToClient(playerID, invalidLobbyMsg);
+		}
 
 		break;
 	}
@@ -288,57 +291,43 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 
 		if (m_simulations.find(gameID) != m_simulations.end())
 		{
-			m_simulations.at(gameID)->GetPlayer(playerID)->GetComponent<comp::Player>()->classType = type;
+			Entity e = m_simulations.at(gameID)->GetPlayer(playerID);
+			if (!e.IsNull())
+			{
+				e.GetComponent<comp::Player>()->classType = type;
+			}
+			else
+			{
+				LOG_WARNING("Entity was null! Should not happen...");
+			}
 		}
 
 		break;
 	}
-	case GameMsg::Game_AddNPC:
+	case GameMsg::Game_UseShop:
 	{
+		uint32_t playerID;
 		uint32_t gameID;
-		uint32_t npcID;
-		msg >> gameID >> npcID;
+		ShopItem shopItem;
+		msg >> gameID >> playerID >> shopItem;
+
 		if (m_simulations.find(gameID) != m_simulations.end())
 		{
-			m_simulations.at(gameID)->AddNPC(npcID);
+			m_simulations.at(gameID)->UseShop(shopItem, playerID);
 		}
-		else
-		{
-			LOG_WARNING("Invalid GameID input for AddNPC");
-		}
-		break;
-	}
-	case GameMsg::Game_RemoveNPC:
-	{
-		uint32_t gameID;
-		uint32_t npcID;
-		msg >> gameID >> npcID;
-		if (m_simulations.find(gameID) != m_simulations.end())
-		{
-			m_simulations.at(gameID)->RemoveNPC(npcID);
-		}
-		else
-		{
-			LOG_WARNING("Invalid GameID input for AddNPC");
-		}
-		break;
 	}
 	}
 }
 
-bool ServerGame::CreateSimulation(uint32_t playerID, const std::string& mainPlayerPlate)
+uint32_t ServerGame::CreateSimulation()
 {
 	m_simulations[m_nGameID] = std::make_unique<Simulation>(&m_server, this);
-	if (!m_simulations[m_nGameID]->Create(playerID, m_nGameID, &m_mapColliders, mainPlayerPlate))
+	if (!m_simulations[m_nGameID]->Create(m_nGameID, &m_mapColliders))
 	{
 		m_simulations.erase(m_nGameID);
 
-		return false;
+		return static_cast<uint32_t>(-1);
 	}
-	//TEMP
-	m_simulations[m_nGameID]->AddNPC(m_server.PopNextUniqueID());
 
-	m_nGameID++;
-
-	return true;
+	return m_nGameID++;
 }

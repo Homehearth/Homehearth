@@ -101,6 +101,12 @@ std::string* rtd::TextField::RawGetBuffer()
 	return &m_stringText;
 }
 
+void rtd::TextField::SetActive()
+{
+	m_isUsed = true;
+	m_canvas->ShowBorder();
+}
+
 void rtd::TextField::Draw()
 {
 	if (m_canvas)
@@ -128,7 +134,7 @@ bool rtd::TextField::CheckHover()
 	return true;
 }
 
-bool rtd::TextField::CheckClick()
+ElementState rtd::TextField::CheckClick()
 {
 	if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED))
 	{
@@ -138,7 +144,7 @@ bool rtd::TextField::CheckClick()
 			InputSystem::Get().GetMousePos().y > m_opts.y_pos &&
 			InputSystem::Get().GetMousePos().y < m_opts.y_pos + m_opts.y_stretch)
 		{
-			return true;
+			return ElementState::INSIDE;
 		}
 		else
 		{
@@ -146,5 +152,5 @@ bool rtd::TextField::CheckClick()
 			m_canvas->HideBorder();
 		}
 	}
-	return false;
+	return ElementState::NONE;
 }

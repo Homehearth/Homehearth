@@ -7,7 +7,12 @@
 #include "IRenderPass.h"
 #include "PipelineManager.h"
 #include "DecalPass.h"
+#include "ShadowPass.h"
+#include "ParticlePass.h"
 #include "SkyboxPass.h"
+#include "BlurPass.h"
+#include "DepthOfFieldPass.h"
+#include "HeadlessEngine.h"
 
 
 class Renderer
@@ -24,7 +29,10 @@ private:
 	DebugPass		m_debugPass;
 	AnimationPass	m_animPass;
 	DecalPass		m_decalPass;
+	ParticlePass	m_particlePass;
 	SkyboxPass		m_skyPass;
+	ShadowPass		m_shadowPass;
+	DOFPass			m_dofPass;
 	unsigned int m_currentPass = 0;
 
 	// Update per frame related resources.
@@ -38,11 +46,14 @@ public:
 	virtual ~Renderer() = default;
 
 	void Initialize(Window* pWindow);
+	void Setup(BasicEngine<Scene>& engine);
 
 	void ClearFrame();
 
 	void Render(Scene* pScene);
 
 	IRenderPass* GetCurrentPass() const;
+	//TEMP PLZ REMOVE AFTER WE COME TO AN AGREEMENT ON WHICH DOF EFFECT TO USE
+	DOFPass* GetDoFPass();
 };
 
