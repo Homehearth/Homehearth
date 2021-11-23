@@ -16,6 +16,7 @@
 #include <shellapi.h>
 #include "MoneyUI.h"
 #include "AbilityUI.h"
+#include "ShopUI.h"
 
 // Used to show and hide shopMenu
 static bool toggle = false;
@@ -367,31 +368,31 @@ namespace sceneHelp
 		sc->SetPrimeButtonMeasurements(draw_t(0.0f, 0.0f, width / 24, height / 16));
 		scene.Add2DCollection(scrolldownMenu, "ScrolldownMenu");
 
-		shopMenu->AddElement<rtd::Canvas>(D2D1::ColorF(0.6f, 0.4f, 0.8f, 0.5f), draw_t(width / 24.0f, 0, width * 0.37f, height * 0.75f));
+		shopMenu->AddElement<rtd::ShopUI>("Shop.png", draw_t(width / 24.0f, 0, width * 0.37f, height * 0.75f))->SetVisiblity(false);
 		//shopMenu->AddElement<rtd::Button>("demoExitButton.png", draw_t(width / 24, 0.0f, width / 24, height / 16))->SetOnPressedEvent([=] {
 		//	
 		//	shopMenu->Hide();
 
 		//	});
-		shopMenu->AddElement<rtd::Button>("Button.png", draw_t((width / 24.f)  + ((width * 0.37f) * 0.5f) - width / 8.0f, height / 24.f, width / 4.0f, height / 8.0f))->SetOnPressedEvent([=] {
+		//shopMenu->AddElement<rtd::Button>("Button.png", draw_t((width / 24.f)  + ((width * 0.37f) * 0.5f) - width / 8.0f, height / 24.f, width / 4.0f, height / 8.0f))->SetOnPressedEvent([=] {
 
-			game->UseShop(ShopItem::LONG_TOWER);
+		//	game->UseShop(ShopItem::LONG_TOWER);
 
-			});
-		shopMenu->AddElement<rtd::Text>("Place Wide Towers", draw_text_t((width / 24.f) + ((width * 0.37f) * 0.5f) - width / 8.0f, height / 24.f, width / 4.0f, height / 8.0f));
-		shopMenu->AddElement<rtd::Button>("Button.png", draw_t((width / 24.f) + ((width * 0.37f) * 0.5f) - width / 8.0f, ((height / 24.f) * 2.0f) + height / 8.0f, width / 4.0f, height / 8.0f))->SetOnPressedEvent([=] {
+		//	});
+		//shopMenu->AddElement<rtd::Text>("Place Wide Towers", draw_text_t((width / 24.f) + ((width * 0.37f) * 0.5f) - width / 8.0f, height / 24.f, width / 4.0f, height / 8.0f));
+		//shopMenu->AddElement<rtd::Button>("Button.png", draw_t((width / 24.f) + ((width * 0.37f) * 0.5f) - width / 8.0f, ((height / 24.f) * 2.0f) + height / 8.0f, width / 4.0f, height / 8.0f))->SetOnPressedEvent([=] {
 
-			game->UseShop(ShopItem::SHORT_TOWER);
+		//	game->UseShop(ShopItem::SHORT_TOWER);
 
-			});
-		shopMenu->AddElement<rtd::Text>("Place Short Towers", draw_text_t((width / 24.f) + ((width * 0.37f) * 0.5f) - width / 8.0f, ((height / 24.f) * 2.0f) + height / 8.0f, width / 4.0f, height / 8.0f));
-		shopMenu->AddElement<rtd::Button>("Button.png", draw_t((width / 24.f) + ((width * 0.37f) * 0.5f) - width / 8.0f, ((height / 24.f) * 3.0f) + (height / 8.0f) * 2.0f, width / 4.0f, height / 8.0f))->SetOnPressedEvent([=] {
+		//	});
+		//shopMenu->AddElement<rtd::Text>("Place Short Towers", draw_text_t((width / 24.f) + ((width * 0.37f) * 0.5f) - width / 8.0f, ((height / 24.f) * 2.0f) + height / 8.0f, width / 4.0f, height / 8.0f));
+		//shopMenu->AddElement<rtd::Button>("Button.png", draw_t((width / 24.f) + ((width * 0.37f) * 0.5f) - width / 8.0f, ((height / 24.f) * 3.0f) + (height / 8.0f) * 2.0f, width / 4.0f, height / 8.0f))->SetOnPressedEvent([=] {
 
-			game->UseShop(ShopItem::Tower_Upgrade);
+		//	game->UseShop(ShopItem::Tower_Upgrade);
 
-			});
-		shopMenu->AddElement<rtd::Text>("Upgrade Towers", draw_text_t((width / 24.f) + ((width * 0.37f) * 0.5f) - width / 8.0f, ((height / 24.f) * 3.0f) + (height / 8.0f) * 2.0f, width / 4.0f, height / 8.0f));
-		shopMenu->Hide();
+		//	});
+		//shopMenu->AddElement<rtd::Text>("Upgrade Towers", draw_text_t((width / 24.f) + ((width * 0.37f) * 0.5f) - width / 8.0f, ((height / 24.f) * 3.0f) + (height / 8.0f) * 2.0f, width / 4.0f, height / 8.0f));
+		//shopMenu->Hide();
 		scene.Add2DCollection(shopMenu, "shopMenu");
 	}
 
@@ -456,18 +457,26 @@ namespace sceneHelp
 		scene.Add2DCollection(general, "AGeneral");
 
 		Collection2D* classButtons = new Collection2D;
+		rtd::Picture* warriorBorder = classButtons->AddElement<rtd::Picture>("Selected.png", draw_t((width / 3.33f) + (width / 15.0f) + (float)(width / 16) - 7.5f, height - (height / 6) - 7.5f, (width / 16.f) * 1.15f, (height / 9.f) * 1.15f));
+		rtd::Picture* mageBorder = classButtons->AddElement<rtd::Picture>("Selected.png", draw_t((width / 3.33f) + (float)(width / 20) - 7.5f, height - (height / 6) - 7.5f, (width / 16.f) * 1.15f, (height / 9.f) * 1.15f));
 		rtd::Button* mageButton = classButtons->AddElement<rtd::Button>("WizardIcon.png", draw_t((width / 3.33f) + (float)(width / 20), height - (height / 6), width / 16, height / 9));
+		mageBorder->SetVisiblity(false);
 		// FIX WHAT CLASS SYMBOL PLAYER HAS LATER
 		mageButton->SetOnPressedEvent([=]()
 			{
+				mageBorder->SetVisiblity(true);
+				warriorBorder->SetVisiblity(false);
 				desc->SetTexture("WizardDesc.png");
 				comp::Player* player = game->GetLocalPlayer().GetComponent<comp::Player>();
 				player->classType = comp::Player::Class::MAGE;
 				game->SendSelectedClass(player->classType);
 			});
+		
 		rtd::Button* warriorButton = classButtons->AddElement<rtd::Button>("WarriorIcon.png", draw_t((width / 3.33f) + (width / 15.0f) + (float)(width / 16), height - (height / 6), width / 16, height / 9));
 		warriorButton->SetOnPressedEvent([=]()
 			{
+				mageBorder->SetVisiblity(false);
+				warriorBorder->SetVisiblity(true);
 				desc->SetTexture("WarriorDesc.png");
 				comp::Player* player = game->GetLocalPlayer().GetComponent<comp::Player>();
 				player->classType = comp::Player::Class::WARRIOR;
@@ -623,9 +632,9 @@ namespace sceneHelp
 
 		rtd::TextField* lobbyField = lobbyCollection->AddElement<rtd::TextField>(draw_text_t(width / 8, height - (height / 3.33f), width / 4, D2D1Core::GetDefaultFontSize()));
 		lobbyField->SetDescriptionText("Input Lobby ID");
-		rtd::Button* startLobbyButton = lobbyCollection->AddElement<rtd::Button>("CreateLobby.png", draw_t(width / 2, height - (height / 6.f), width / 4, height / 8));
+		rtd::Button* startLobbyButton = lobbyCollection->AddElement<rtd::Button>("CreateLobby.png", draw_t((width / 2.0f) + (width / 8.0f), height - (height / 6.f), width / 4.f, height * 0.15f));
 		//lobbyCollection->AddElement<rtd::Text>("Create Lobby", draw_text_t(width / 2, height - (height / 6.f), width / 4, height / 8));
-		rtd::Button* lobbyButton = lobbyCollection->AddElement<rtd::Button>("joinLobby.png", draw_t(width / 8, height - (height / 6.f), width / 4, height / 8));
+		rtd::Button* lobbyButton = lobbyCollection->AddElement<rtd::Button>("joinLobby.png", draw_t(width / 8, height - (height / 6.f), width / 4.f, height * 0.15f));
 		//lobbyCollection->AddElement<rtd::Text>("Join Lobby", draw_text_t(width / 8, height - (height / 6.f), width / 4, height / 8));
 		rtd::Button* exitButton = lobbyCollection->AddElement<rtd::Button>("No.png", draw_t(0.0f, 0.0f, width / 24, height / 16));
 
