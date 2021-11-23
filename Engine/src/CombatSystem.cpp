@@ -42,7 +42,7 @@ void CombatSystem::UpdateTeleport(HeadlessScene& scene)
 
 	scene.ForEachComponent<comp::TeleportAbility, comp::Transform>([&](Entity entity, comp::TeleportAbility& teleportAbility, comp::Transform& transform)
 		{
-			PathFinderManager* pathFinderManager = Blackboard::Get().GetAIHandler();
+			PathFinderManager* pathFinderManager = Blackboard::Get().GetPathFindManager();
 			sm::Vector3* targetPoint = nullptr;
 			UpdateTargetPoint(entity, targetPoint);
 

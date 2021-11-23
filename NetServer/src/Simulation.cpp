@@ -473,7 +473,7 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 	//Gridsystem
 	m_grid.Initialize(gridOptions.mapSize, gridOptions.position, gridOptions.fileName, m_pGameScene);
 	//Create the nodes for AI handler on blackboard
-	Blackboard::Get().GetAIHandler()->CreateNodes(&m_grid);
+	Blackboard::Get().GetPathFindManager()->CreateNodes(&m_grid);
 
 #if RENDER_AINODES
 	std::vector<std::vector<std::shared_ptr<Node>>> nodes = m_aiHandler.GetNodes();

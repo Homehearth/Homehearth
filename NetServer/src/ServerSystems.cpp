@@ -47,11 +47,11 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 			attackAbility->cooldown = 1.0f;
 			attackAbility->attackDamage = 20.f;
 			attackAbility->lifetime = 5.0f;
-			attackAbility->attackRange = 7.f;
+			attackAbility->attackRange = 10.f;
 			attackAbility->useTime = 0.3f;
 			attackAbility->delay = 0.2f;
 			attackAbility->movementSpeedAlt = 0.0f;
-			behaviorTree->root = AIBehaviors::GetSimpleAIBehavior(entity);
+			behaviorTree->root = AIBehaviors::GetDestroyBuildingAIBehavior(entity);
 		}
 		break;
 	case EnemyType::Mage:
@@ -322,7 +322,7 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 			else if (p.lastInputState.rightMouse) // was pressed
 			{
 				LOG_INFO("Pressed right");
-				simulation->GetGrid().RemoveDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, Blackboard::Get().GetAIHandler());
+				simulation->GetGrid().RemoveDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, Blackboard::Get().GetPathFindManager());
 				if (ecs::UseAbility(e, p.secondaryAbilty, &p.mousePoint))
 				{
 					LOG_INFO("Used secondary");
@@ -333,7 +333,7 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 			//Place defence on grid
 			if (p.lastInputState.key_b && simulation->GetCurrency().GetAmount() >= 5)
 			{
-				if (simulation->GetGrid().PlaceDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, Blackboard::Get().GetAIHandler()))
+				if (simulation->GetGrid().PlaceDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, Blackboard::Get().GetPathFindManager()))
 				{
 					simulation->GetCurrency().GetAmountRef() -= 5;
 					anim.toSend = EAnimationType::PLACE_DEFENCE;

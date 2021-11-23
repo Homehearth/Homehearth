@@ -39,16 +39,16 @@ public:
 
 	template<typename T>
 	bool AddValue(std::string key, T value);
-	PathFinderManager* GetAIHandler();
+	PathFinderManager* GetPathFindManager();
 private:
 	Blackboard() = default;
 	std::unordered_map<std::string, std::unique_ptr<Base>> storage{};
-	PathFinderManager aiHandler;
+	PathFinderManager pathFindManager;
 };
 
-inline PathFinderManager* Blackboard::GetAIHandler()
+inline PathFinderManager* Blackboard::GetPathFindManager()
 {
-	return &this->aiHandler;
+	return &this->pathFindManager;
 }
 
 template <typename T>

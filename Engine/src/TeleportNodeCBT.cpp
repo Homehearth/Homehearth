@@ -13,7 +13,7 @@ BT::NodeStatus BT::TeleportNodeCBT::Tick()
 {
 	comp::TeleportAbility* teleportAbility = entity.GetComponent<comp::TeleportAbility>();
 	comp::Transform* transform = entity.GetComponent<comp::Transform>();
-	PathFinderManager * pathFinderManager = Blackboard::Get().GetAIHandler();
+	PathFinderManager * pathFinderManager = Blackboard::Get().GetPathFindManager();
 	Entity* currentTarget = Blackboard::Get().GetValue<Entity>("target" + std::to_string(entity));
 	if(!teleportAbility)
 	{
