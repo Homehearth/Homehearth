@@ -12,9 +12,8 @@ namespace ecs
 	{
 		TRANSFORM,
 		VELOCITY,
-		ANIMATOR_NAME,
 		MESH_NAME,
-		NAME_PLATE,
+		ANIMATOR_NAME,
 		HEALTH,
 		BOUNDING_ORIENTED_BOX,
 		BOUNDING_SPHERE,
@@ -37,28 +36,58 @@ namespace ecs
 			sm::Vector3 position;
 			sm::Quaternion rotation;
 			sm::Vector3 scale = sm::Vector3(1);
+			
+			bool syncColliderScale = false;
 		};
 
 		struct Decal
 		{
-			RTexture* decal = nullptr;
 			sm::Matrix viewPoint;
 			// Life span in seconds.
-			float lifespan = 5.0f;
+			float lifespan = 10.0f;
 
-			Decal(const Transform& t, RTexture* decal = nullptr)
+			Decal(const Transform& t)
 			{
-				this->decal = decal;
-
 				// Be positioned slightly above.
 				sm::Vector3 position = t.position;
-				position.y += 10.0f;
+				position.y = 10.0f;
 				position.x += 0.0001f;
 				position.z -= 0.0001f;
 
 				sm::Vector3 lookAt = t.position;
 				lookAt.y = 0;
 				viewPoint = dx::XMMatrixLookAtLH(position, lookAt, { 0.0f, 1.0f, 0.0f });
+			}
+		};
+
+		struct EmitterParticle
+		{
+			std::shared_ptr<RTexture> texture = nullptr;
+			std::shared_ptr<RTexture> opacityTexture = nullptr;
+			PARTICLEMODE type = PARTICLEMODE::BLOOD;
+			UINT nrOfParticles = 0;
+
+			ComPtr<ID3D11Buffer> particleBuffer;
+			ComPtr<ID3D11ShaderResourceView> particleSRV;
+			ComPtr<ID3D11UnorderedAccessView> particleUAV;
+
+			EmitterParticle(std::string textureName = "thisisfine.png ", std::string opacityTextureName = "thisisfine_Opacity.png", int amoutOfParticles = 10, PARTICLEMODE mode = PARTICLEMODE::BLOOD)
+			{
+				//If no texture name take default texture else use the given name
+				if (textureName == "")
+					texture = ResourceManager::Get().GetResource<RTexture>("thisisfine.png ");
+				else 
+					texture = ResourceManager::Get().GetResource<RTexture>(textureName);
+
+				//If no opacity texture name take default opacity texture else use given name
+				if (opacityTextureName == "")
+					opacityTexture = ResourceManager::Get().GetResource<RTexture>("thisisfine_Opacity.png");
+				else
+					opacityTexture = ResourceManager::Get().GetResource<RTexture>(opacityTextureName);
+
+
+				nrOfParticles = (UINT)amoutOfParticles;
+				type = mode;
 			}
 		};
 
@@ -78,7 +107,14 @@ namespace ecs
 
 		struct Animator
 		{
-			std::shared_ptr<RAnimator> animator;
+			std::shared_ptr<RAnimator>  animator;
+			bool						updating = true;
+		};
+
+		struct AnimationState
+		{
+			EAnimationType lastSend;	//Send to user last time
+			EAnimationType toSend;		//Going to be send this update
 		};
 
 		// Used on server side
@@ -90,11 +126,6 @@ namespace ecs
 		struct MeshName 
 		{
 			std::string name = "";
-		};
-
-		struct NamePlate
-		{
-			std::string namePlate;
 		};
 		
 		struct RenderableDebug
@@ -142,15 +173,22 @@ namespace ecs
 			std::vector<Force> forces;
 		};
 
+		struct BezierAnimation
+		{
+			float speed = 1.0f;
+			bool loop = false;
+			std::vector<sm::Vector3> translationPoints;
+			std::vector<sm::Vector3> scalePoints;
+			std::vector<sm::Quaternion> rotationPoints;
+			float time = 0.0f;
+
+			std::function<void()> onFinish;
+		};
+
 		struct Velocity
 		{
 			sm::Vector3 vel;
 			sm::Vector3 oldVel;
-
-			sm::Vector3 scaleVel = { 0, 0, 0 };
-			sm::Vector3 oldScaleVel;
-
-			bool applyToCollider = false;
 		};
 
 		struct Player
@@ -180,6 +218,10 @@ namespace ecs
 			sm::Vector3 spawnPoint;
 			float respawnTimer;
 			bool isReady = false;
+			bool reachable = true;
+
+			char name[12] = {};
+			TowerTypes towerSelected = TowerTypes::SHORT;
 		};
 
 	
@@ -235,6 +277,9 @@ namespace ecs
 			// lifetime of the ability, for instance lifetime of any created collider
 			float lifetime = 5.f;
 
+			float attackDamage = 5.f;
+
+			float attackRange = 10.0f;
 
 			// !DO NOT TOUCH!
 			bool isReady = false;
@@ -245,12 +290,17 @@ namespace ecs
 			sm::Vector3 targetPoint;
 		};
 
-		struct AttackAbility : public IAbility
+		struct MeleeAttackAbility : public IAbility
+		{
+			//Just to keep it not empty for now
+			float temp = 0.0f;
+		};
+
+		struct RangeAttackAbility : public IAbility
 		{
 			float attackDamage = 5.f;
-			float attackRange = 10.0f;
-			bool isRanged = false;
 			float projectileSpeed = 10.f;
+			float projectileSize = 1.0f;
 		};
 
 		struct HealAbility : public IAbility
@@ -258,6 +308,14 @@ namespace ecs
 			float healAmount = 40.f;
 			float range = 50.f;
 		};
+
+		struct HeroLeapAbility : public IAbility
+		{
+			float damage = 10.f;
+			float damageRadius = 20.f;
+			float maxRange = 30.f;
+		};
+
 
 		struct SelfDestruct
 		{

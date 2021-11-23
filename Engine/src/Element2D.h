@@ -43,6 +43,16 @@
 */
 
 /*
+	The state to determine where a press is done.
+*/
+enum class ElementState : UINT
+{
+	INSIDE,
+	OUTSIDE,
+	NONE
+};
+
+/*
 	Base-class for Rendering elements through D2D1
 */
 class Element2D
@@ -94,5 +104,5 @@ public:
 	Function used for Handler2D to call on OnClick.
 	Write the logic for detecting if anyone has clicked the element.
 	*/
-	virtual bool CheckClick() = 0;
+	virtual ElementState CheckClick() = 0;
 };

@@ -40,38 +40,38 @@ project "Engine"
     -- Note: create your files in 'src' folder on disk, then add them to a filter below (**filename).
     -- Else: specify the path relative to the this premake file.
     vpaths {
-        ["src/Engine"] = { "**EnginePCH.*" },
-            ["src/Engine/Core"] = { "**Engine.*", "**Scene.*", "**EventTypes.*", "**Window.*" },
-            ["src/Engine/Input"] = { "**InputSystem.*" },
-            ["src/Engine/GamePlay"] = { "**GridSystem.*", "**CollisionSystem.*" },
-            ["src/Engine/Thread"] = { "**multi_thread_manager.*", "**ThreadSyncer.*", "**RenderThreadHandler.*"},
-            ["src/Engine/AI/BehaviorTree"] = {"**BT.*"},
-            ["src/Engine/AI/BehaviorTree/CustomNodes"] = {"**CBT.*"},
-        ["src/Engine/Utility"] = { "**Timer.*", "**Profiler.*", "**Logger.*", "**Stats.*" },
-		["src/Engine/Elements"] = {"**Canvas.*", "**Picture.*", "**Border.*", "**Button.*", "**Text.*", "**TextField.*", "**Slider.*", "**Healthbar.*", "**Scroller.*"},
-        
-        ["src/Engine"] = {  },
-            ["src/Engine/Graphics/Renderer"] = {"**Renderer.*", "**PipelineManager.*", "**BackBuffer.*"},
+        ["src/Engine"] = { "**EnginePCH.*", "**CommonStructures.*" },
+            ["src/Engine/AI"] = { "**AISystem*", "**PathFinderManager.*", "**AIBehaviors.*" },  
+                ["src/Engine/AI/BehaviorTree"] = {"**BT.*"},
+                ["src/Engine/AI/BehaviorTree/CustomNodes"] = {"**CBT.*"},
+
+            ["src/Engine/Core"] = { "**Engine.*", "**EventTypes.*", "**Window.*" },
+            ["src/Engine/ECS"] = { "**Components.*",  "**Entity.*", "**Tags*" }, 
+            ["src/Engine/GamePlay"] = { "**GridSystem.*", "**CollisionSystem.*", "**CombatSystem.*", "**Systems.*" },
+
+             ["src/Engine/Graphics/Renderer"] = {"**Renderer.*", "**PipelineManager.*", "**DoubleBuffer.*"},
                 ["src/Engine/Graphics/Renderer/RenderPass"] = {"**Pass.*"},
-				["src/Engine/Graphics/Renderer2D"] = {"**Handler2D.*", "**Element2D.*", "**Collection2D.*"},
+			["src/Engine/Graphics/Renderer2D"] = {"**Handler2D.*", "**Element2D.*", "**Collection2D.*"},
             ["src/Engine/Graphics/D3D11"] = { "**D3D11Core.*" },
 			["src/Engine/Graphics/D2D1"] = { "**D2D1Core.*" },
-			
-			["src/Network"] = { "**Client.*" },
-			["src/Network/Prediction"] = {"**Predictor.*"},
 
-        ["src/Engine/Resources"] = { "**ResourceManager.*", "**GResource.*", "**RModel.*", "**RTexture.*", "**RMaterial.*"},
-            ["src/Engine/Resources/Shaders"] = { "**.hlsl" },
-                ["src/Engine/Resources/Shaders/Base"]  = { "**.hlsli", "**Shader.*" },
-			["src/Engine/Resources/Animation"] = {"**RAnimation.*", "**RAnimator.*", "**AnimStructures.*"},
+            ["src/Engine/Input"] = { "**InputSystem.*" },
 
-        ["src/Engine/Audio"] = {  },
-        ["src/Engine/Physics"] = {  },
-        ["src/Engine/Network"] = { "**Client.*" },
-        ["src/Engine/Animation"] = {  },
-        ["src/Engine/ECS"] = { "**Components.*",  "**Entity.*" }, 
-        ["src/Engine/AI"] = { "**AISystem*", "**PathFinderManager.*", "**AIBehaviors.*" },  
-		["src/Engine/Structures"] = { "**VertexStructure.*" }  
+            ["src/Engine/Resources"] = { "**ResourceManager.*", "**GResource.*", "**RModel.*", "**RTexture.*", "**RMaterial.*"},
+                ["src/Engine/Resources/Shaders"] = { "**.hlsl", "**.hlsli", "**Shader.*" },
+		        ["src/Engine/Resources/Animation"] = {"**RAnimation.*", "**RAnimator.*", "**AnimStructures.*"},
+
+            ["src/Engine/Scene"] = {"**Scene.*", "**Camera.*", "**Lights.*", "**ModelIdentifier.*", "**ParticleSystem.*" , "**Skybox.*" },
+            ["src/Engine/Thread"] = { "**multi_thread_manager.*", "**ThreadSyncer.*", "**RenderThreadHandler.*"},
+            
+		    ["src/Engine/UI Elements"] = {"**Canvas.*", "**Picture.*", "**Border.*", "**Button.*", "**Text.*", "**TextField.*", "**Slider.*", "**Healthbar.*", "**Scroller.*", "**MoneyUI.*"},
+            ["src/Engine/Utility"] = { "**Timer.*", "**Profiler.*", "**Logger.*", "**Stats.*" },
+        
+            ["src/Engine/Audio"] = {  },
+            ["src/Engine/Physics"] = {  },
+
+        ["src/Network"] = { "**Client.*" },
+			["src/Network/Prediction"] = {"**Predictor.*"}
     }
 
 

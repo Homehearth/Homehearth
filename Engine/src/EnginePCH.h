@@ -1,8 +1,11 @@
 #pragma once
 
 //Options
-#define RENDER_IMGUI 1
+#define RENDER_IMGUI 0
 #define PROFILER 1
+
+// Feel free to add more things to this, currently only gives more money :)
+#define GOD_MODE 0
 
 // Turn this to 1 if you want to see the very beautiful demo menu
 #define DRAW_TEMP_2D 0
@@ -105,6 +108,7 @@ namespace sm = dx::SimpleMath;
 
 //Utility
 #include "Timer.h"
+#include "utility.h"
 
 // Custom Global includes (Singletons)
 #include "Logger.h"
@@ -116,7 +120,6 @@ namespace sm = dx::SimpleMath;
 #include "Profiler.h"
 #include "ThreadSyncer.h"
 #include "Components.h"
-#include "SceneBuilder.h"
 #include "RenderThreadHandler.h"
 #include "Stats.h"
 

@@ -137,6 +137,17 @@ bool RMaterial::HasTexture(const ETextureType& type) const
     return foundTexture;
 }
 
+const std::shared_ptr<RTexture> RMaterial::GetTexture(const ETextureType& type) const
+{
+    std::shared_ptr<RTexture> texture;
+
+    if (HasTexture(type))
+    {
+        texture = m_textures[(UINT)type];
+    }
+    return texture;
+}
+
 bool RMaterial::Create(aiMaterial* aiMat, bool& useMTL)
 {
     /*
@@ -189,8 +200,8 @@ bool RMaterial::Create(aiMaterial* aiMat, bool& useMTL)
     }
     else
     {
-        textureTypeMap[ETextureType::metalness]         = aiTextureType::aiTextureType_METALNESS;
-        textureTypeMap[ETextureType::roughness]         = aiTextureType::aiTextureType_DIFFUSE_ROUGHNESS;
+        textureTypeMap[ETextureType::metalness]         = aiTextureType::aiTextureType_SPECULAR;
+        textureTypeMap[ETextureType::roughness]         = aiTextureType::aiTextureType_SHININESS;
         textureTypeMap[ETextureType::ambientOcclusion]  = aiTextureType::aiTextureType_AMBIENT_OCCLUSION;
     }
     

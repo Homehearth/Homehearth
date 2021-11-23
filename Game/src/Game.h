@@ -3,6 +3,7 @@
 #include <Engine.h>
 #include <GridSystem.h>
 #include "ModelIdentifier.h"
+#include "ParticleSystem.h"
 
 class Game : public Engine
 {
@@ -13,10 +14,14 @@ private:
 	GridSystem m_grid;
 	uint32_t m_waveTimer;
 	uint32_t m_money;
+	ParticleSystem m_particles;
+
 
 	Entity m_mapEntity;
 
 	InputState m_inputState;
+	std::vector<InputState> m_savedInputs;
+
 
 	// Inherited via Engine
 	virtual bool OnStartup() override;
@@ -53,4 +58,7 @@ public:
 	void SendSelectedClass(comp::Player::Class classType);
 
 	Entity& GetLocalPlayer();
+
+	ParticleSystem* GetParticleSystem();
+	void UseShop(const ShopItem& whatToBuy);
 };

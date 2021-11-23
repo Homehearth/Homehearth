@@ -24,6 +24,8 @@ void Renderer::Initialize(Window* pWindow)
 	AddPass(&m_decalPass);		// 7
 	AddPass(&m_skyPass);		// 8
 	AddPass(&m_shadowPass);     // 9
+    AddPass(&m_dofPass);
+    AddPass(&m_particlePass);
 
 	m_depthPass.SetEnable(true);
     m_frustumPass.SetEnable(true);
@@ -31,11 +33,9 @@ void Renderer::Initialize(Window* pWindow)
 	m_opaqPass.SetEnable(true);
 	m_transPass.SetEnable(true);
     m_animPass.SetEnable(true);
-	m_decalPass.SetEnable(true);
-	m_skyPass.SetEnable(true);
 
 #ifdef _DEBUG
-	AddPass(&m_debugPass);
+	AddPass(&m_debugPass); 
     m_debugPass.SetEnable(true);
 #endif
 
@@ -49,6 +49,7 @@ void Renderer::Initialize(Window* pWindow)
 	}
 
     m_isForwardPlusInitialized = false;
+	m_dofPass.Create(DoFType::VIGNETTE);
 }
 
 void Renderer::Setup(BasicEngine<Scene>& engine)
@@ -116,6 +117,11 @@ void Renderer::OnWindowResize()
 IRenderPass* Renderer::GetCurrentPass() const
 {
 	return m_passes[m_currentPass];
+}
+
+DOFPass* Renderer::GetDoFPass()
+{
+	return &m_dofPass;
 }
 
 void Renderer::AddPass(IRenderPass* pass)
@@ -268,8 +274,8 @@ bool Renderer::CreateLightGridRWB()
 
 bool Renderer::CreateLightIndexListRWB(const uint32_t& COUNT)
 {
-    // Size of the light index list: for a screen resolution of 1280×720 and
-    // a tile size of 16×16 results in a 80×45 (3, 600) light grid.
+    // Size of the light index list: for a screen resolution of 1280ï¿½720 and
+    // a tile size of 16ï¿½16 results in a 80ï¿½45 (3, 600) light grid.
     // Assuming an average of 100 lights per tile,
     // this would require a light index list of 360,000 indices.
     // Each light index cost 4 bytes (for a 32 - bit unsigned integer)

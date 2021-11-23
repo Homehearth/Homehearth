@@ -45,7 +45,7 @@ namespace rtd
 		virtual void Draw() override;
 		virtual void OnClick() override;
 		virtual void OnHover() override;
-		virtual bool CheckClick() override;
+		virtual ElementState CheckClick() override;
 
 		// Inherited via Element2D
 		virtual bool CheckHover() override;

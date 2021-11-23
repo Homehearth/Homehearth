@@ -3,7 +3,9 @@
 #endif
 
 static const float PI = 3.14159265359;
+#define MAXWEIGHTS 8
 
+#include "Structures.hlsli"
 //---------------------------------------------------------------------------
 //	Constant buffers.
 //---------------------------------------------------------------------------
@@ -64,11 +66,36 @@ cbuffer DispatchParamsCB : register (b7)
     uint4 numThreads;
 }
 
+cbuffer ParticleUpdate : register(b8)
+{
+    float4 emitterPosition;
+    float deltaTime;
+    uint counter;
+}
+
 cbuffer DecalInfoCB : register(b10)
 {
     float4 infoData = float4(0.0f, 0.0f, 0.0f, 0.0f);
 	float4x4 decal_projection;
 }
+
+cbuffer BlurSettings : register(b11)
+{
+    uint c_blurRadius;
+    bool c_useVertical;
+    uint c_blurType;
+    float padding;
+    float4 c_weights[MAXWEIGHTS / 4];
+}
+
+cbuffer InverseMatrices : register(b12)
+{
+    float4x4    c_inverseView;
+    float4x4    c_inverseProjection;
+    uint        c_dofType;
+    float3      dofPadding;
+}
+
 
 
 //---------------------------------------------------------------------------
@@ -107,6 +134,8 @@ StructuredBuffer<Frustum> sb_Frustums_in        : register(t11);    // Precomput
 StructuredBuffer<uint> sb_lightIndexList        : register(t15);
 StructuredBuffer<float4x4> sb_decaldata         : register(t16);
 StructuredBuffer<uint> LightIndexList           : register(t17);
+StructuredBuffer<VertexParticleIn> particlesSRV : register(t18);
+StructuredBuffer<float> randomNumbers           : register(t19);
 
 TextureCube t_radiance                          : register(t96);
 TextureCube t_irradiance                        : register(t97);
@@ -128,8 +157,16 @@ RWStructuredBuffer<uint> rw_trans_LightIndexCounter    : register(u2);
 // Light index lists and light grids.
 RWStructuredBuffer<uint> rw_opaq_LightIndexList        : register(u3);
 RWStructuredBuffer<uint> rw_trans_LightIndexList       : register(u4);
+//Blur Pass
+RWTexture2D<unorm float4> t_bufferRead      : register(u0);
+RWTexture2D<unorm float4> t_bufferOut       : register(u1);
+RWTexture2D<unorm float4> t_inFocus         : register(u2);
+RWTexture2D<unorm float4> t_outOfFocus      : register(u3);
+RWTexture2D<float4> t_dofOut                : register(u4);
 
-// Each “texel” is a 2-component unsigned integer vector.
+// Each ï¿½texelï¿½ is a 2-component unsigned integer vector.
 // The light grid texture is created using the R32G32_UINT format.
 RWTexture2D<uint2> rw_opaq_LightGrid                   : register(u5);
 RWTexture2D<uint2> rw_trans_LightGrid                  : register(u6);
+
+RWStructuredBuffer<VertexParticleIn> particlesUAV : register(u7);

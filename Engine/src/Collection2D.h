@@ -5,6 +5,8 @@ class Collection2D
 {
 private:
 
+	ElementState m_state = ElementState::NONE;
+
 public:
 	Collection2D();
 	virtual ~Collection2D();
@@ -12,6 +14,12 @@ public:
 	void UpdateCollection();
 	void Show();
 	void Hide();
+
+	/*
+		Return if button press was made inside any of the elements
+		linked to this collection.
+	*/
+	const ElementState& GetState() const;
 
 	std::vector<std::unique_ptr<Element2D>> elements;
 

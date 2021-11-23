@@ -35,7 +35,7 @@ public:
 	ComPtr<ID3D11Texture2D>			m_debugDepthStencilTexture;
 	ComPtr<ID3D11DepthStencilView>	m_debugDepthStencilView;
 	ComPtr<ID3D11ShaderResourceView>m_debugDepthBufferSRV;
-	
+
 	ComPtr<ID3D11DepthStencilState>	m_depthStencilStateLess;
 	ComPtr<ID3D11DepthStencilState>	m_depthStencilStateLessEqual;
 	ComPtr<ID3D11DepthStencilState> m_depthStencilStateGreater;
@@ -52,6 +52,8 @@ public:
 	ComPtr<ID3D11BlendState>		m_blendOn;
 	ComPtr<ID3D11BlendState>		m_blendOff;
 
+	ComPtr<ID3D11BlendState>		m_blendStateParticle;
+	
 	ComPtr<ID3D11SamplerState>		m_linearSamplerState;		//Low settings
 	ComPtr<ID3D11SamplerState>		m_anisotropicSamplerState;	//High settings
 	ComPtr<ID3D11SamplerState>		m_pointSamplerState;
@@ -60,11 +62,13 @@ public:
 	ComPtr<ID3D11InputLayout>		m_defaultInputLayout;
 	ComPtr<ID3D11InputLayout>		m_animationInputLayout;
 	ComPtr<ID3D11InputLayout>		m_skyboxInputLayout;
+	ComPtr<ID3D11InputLayout>		m_ParticleInputLayout;
 
 	Shaders::VertexShader			m_defaultVertexShader;
 	Shaders::VertexShader			m_depthPassVertexShader;
 	Shaders::VertexShader			m_animationVertexShader;
 	Shaders::VertexShader			m_skyboxVertexShader;
+	Shaders::VertexShader			m_ParticleVertexShader;
 
 	Shaders::PixelShader			m_depthPassPixelShader;
 	Shaders::PixelShader			m_defaultPixelShader;
@@ -74,6 +78,13 @@ public:
 	Shaders::ComputeShader			m_lightCulling;
 
 	Shaders::PixelShader			m_skyboxPixelShader;
+	Shaders::PixelShader			m_ParticlePixelShader;
+
+	Shaders::ComputeShader			m_ParticleComputeShader;
+	Shaders::GeometryShader			m_ParticleGeometryShader;
+	
+	Shaders::ComputeShader			m_blurComputeShader;
+	Shaders::ComputeShader			m_dofComputeShader;
 	
 	D3D11_VIEWPORT					m_viewport;
 
@@ -119,6 +130,12 @@ public:
 	ResourceAccessView opaq_LightGrid;
 	ResourceAccessView trans_LightGrid;
 
+	UINT							m_windowWidth;
+	UINT							m_windowHeight;
+	
+	// View space frustums for the grid cells used in ForwardPlus rendering.
+	ComPtr<ID3D11Buffer>				m_gridFrustum;
+	ComPtr<ID3D11ShaderResourceView>	m_gridFrustumSRV;
 private:
 	// INITIALIZE METHODS.
 	
@@ -129,6 +146,6 @@ private:
 	bool CreateSamplerStates();
 	bool CreateBlendStates();
 	bool CreateShaders();
-	bool CreateInputLayouts();	
+	bool CreateInputLayouts();
 	void SetViewport();
 };
