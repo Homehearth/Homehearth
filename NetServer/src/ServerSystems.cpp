@@ -51,7 +51,16 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 			attackAbility->useTime = 0.3f;
 			attackAbility->delay = 0.2f;
 			attackAbility->movementSpeedAlt = 0.0f;
-			behaviorTree->root = AIBehaviors::GetFocusBuildingAIBehavior(entity);
+
+			if(randomNum > 0.25f)
+			{
+				behaviorTree->root = AIBehaviors::GetFocusBuildingAIBehavior(entity);
+			}
+			else
+			{
+				behaviorTree->root = AIBehaviors::GetFocusPlayerAIBehavior(entity);
+			}
+				
 		}
 		break;
 	case EnemyType::Mage:
