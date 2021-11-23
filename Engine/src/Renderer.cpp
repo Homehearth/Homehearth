@@ -34,6 +34,7 @@ void Renderer::Initialize(Window* pWindow)
 	m_particlePass.SetEnable(true);
 	m_skyPass.SetEnable(true);
 	m_dofPass.SetEnable(true);
+	m_shadowPass.SetEnable(true);
 
 #ifdef _DEBUG
 	AddPass(&m_debugPass);  // 5
@@ -52,6 +53,7 @@ void Renderer::Initialize(Window* pWindow)
 
 void Renderer::Setup(BasicEngine<Scene>& engine)
 {
+	/*
 	engine.GetScene("Game").ForEachComponent<comp::Light>([&](comp::Light& l) {
 
 		m_shadowPass.CreateShadow(l);
@@ -59,6 +61,7 @@ void Renderer::Setup(BasicEngine<Scene>& engine)
 		});
 
 	m_shadowPass.SetupMap();
+	*/
 
 }
 

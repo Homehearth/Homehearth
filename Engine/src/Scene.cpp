@@ -194,9 +194,15 @@ void Scene::RenderShadow(const light_t& light)
 {
 	for (const auto& model : m_renderableCopies[1])
 	{
-		sm::Vector3 scale;
-		sm::Quaternion rot;
-		sm::Vector3 translation;
+		sm::Vector3 translation = model.data.worldMatrix.Translation();
+		float distance = (translation - sm::Vector3(light.position)).Length();
+		if (distance < light.range && model.isSolid && model.visible)
+		{
+			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), model.data);
+			ID3D11Buffer* buffer[] = { m_publicBuffer.GetBuffer() };
+			D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, buffer);
+			model.model->Render(D3D11Core::Get().DeviceContext());
+		}
 	}
 }
 

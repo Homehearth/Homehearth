@@ -523,6 +523,12 @@ bool PipelineManager::CreateShaders()
         return false;
     }
 
+    if (!m_shadowPixelShader.Create("Shadow_ps"))
+    {
+        LOG_WARNING("failed creating Shadow_ps.");
+        return false;
+    }
+
     if (!m_ParticleVertexShader.Create("Particle_vs"))
     {
         LOG_WARNING("failed creating Particle_vs.");

@@ -6,7 +6,7 @@ constexpr uint64_t SHADOW_SIZE = 4096;
 class ShadowPass : public IRenderPass
 {
 private:
-
+	D3D11_VIEWPORT m_viewport;
 	// The complete map of all shadows.
 	struct ShadowMap
 	{
@@ -20,6 +20,7 @@ private:
 	{
 		ComPtr<ID3D11DepthStencilView> shadowDepth;
 		ComPtr<ID3D11Buffer> lightBuffer;
+		light_t light;
 	};
 
 	std::vector<ShadowSection> m_shadows;

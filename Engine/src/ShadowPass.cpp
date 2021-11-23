@@ -9,6 +9,14 @@
 
 ShadowPass::ShadowPass()
 {
+	m_viewport.Height = SHADOW_SIZE;
+	m_viewport.Width = SHADOW_SIZE;
+	m_viewport.TopLeftX = 0.0f;
+	m_viewport.TopLeftY = 0.0f;
+
+	// Direct3D uses a depth buffer range of 0 to 1, hence:
+	m_viewport.MinDepth = 0.0f;
+	m_viewport.MaxDepth = 1.0f;
 }
 
 ComPtr<ID3D11DepthStencilView> ShadowPass::CreateDepthView(uint32_t index)
@@ -41,7 +49,7 @@ ComPtr<ID3D11Buffer> ShadowPass::CreateLightBuffer(light_t light)
 	D3D11_BUFFER_DESC desc = {};
 	desc.Usage = D3D11_USAGE_DEFAULT;
 	desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	desc.CPUAccessFlags = 0;
 	desc.ByteWidth = sizeof(camera_Matrix_t);
 	desc.StructureByteStride = 0;
 
@@ -51,13 +59,18 @@ ComPtr<ID3D11Buffer> ShadowPass::CreateLightBuffer(light_t light)
 	case TypeLight::DIRECTIONAL:
 	{
 		mat.view = dx::XMMatrixLookToLH(light.position, light.direction, sm::Vector3::Up);
-		mat.projection = dx::XMMatrixOrthographicLH(1000, 600, 1.f, 100.0f);
+	//	mat.projection = dx::XMMatrixOrthographicLH(1000, 600, 1.f, 1000.0f);
+		mat.projection = dx::XMMatrixPerspectiveFovLH(dx::XMConvertToRadians(90), 1.f, 1.f, 100.0f);
+
 		break;
 	}
 	case TypeLight::POINT:
 	{
+		/*
 		mat.view = dx::XMMatrixLookToLH(light.position, light.direction, sm::Vector3::Up);
-		mat.projection = dx::XMMatrixOrthographicLH(1000, 600, 1.f, 100.0f);
+		mat.projection = dx::XMMatrixPerspectiveFovLH(dx::XMConvertToRadians(90), 1.f, 1.f, 100.0f);
+		*/
+
 		break;
 	}
 	default:
@@ -83,16 +96,8 @@ void ShadowPass::SetupMap(uint32_t arraySize)
 	if (arraySize <= 0)
 		return;
 
-	if (m_shadowMap.shadowTexture)
-	{
-		m_shadowMap.shadowTexture->Release();
-		m_shadowMap.shadowTexture = nullptr;
-	}
-	if (m_shadowMap.shadowView)
-	{
-		m_shadowMap.shadowView->Release();
-		m_shadowMap.shadowView = nullptr;
-	}
+	m_shadowMap.shadowTexture = nullptr;
+	m_shadowMap.shadowView = nullptr;
 
 	D3D11_TEXTURE2D_DESC texDesc;
 	texDesc.Width = SHADOW_SIZE;
@@ -108,6 +113,20 @@ void ShadowPass::SetupMap(uint32_t arraySize)
 	texDesc.MiscFlags = 0;
 
 	HRESULT hr = D3D11Core::Get().Device()->CreateTexture2D(&texDesc, NULL, &m_shadowMap.shadowTexture);
+	if (FAILED(hr))
+	{
+		LOG_WARNING("Failed setting up shadows, No shadows will be drawn.");
+	}
+
+	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
+	srvDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
+	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DARRAY;
+	srvDesc.Texture2DArray.ArraySize = arraySize;
+	srvDesc.Texture2DArray.FirstArraySlice = 0;
+	srvDesc.Texture2DArray.MipLevels = 1;
+	srvDesc.Texture2DArray.MostDetailedMip = 0;
+
+	hr = D3D11Core::Get().Device()->CreateShaderResourceView(m_shadowMap.shadowTexture.Get(), &srvDesc, m_shadowMap.shadowView.GetAddressOf());
 	if (FAILED(hr))
 	{
 		LOG_WARNING("Failed setting up shadows, No shadows will be drawn.");
@@ -128,18 +147,31 @@ void ShadowPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 				ShadowSection section;
 				section.shadowDepth = this->CreateDepthView(i);
 				section.lightBuffer = this->CreateLightBuffer(lights[i]);
+				section.light = lights[i];
 				m_shadows.push_back(section);
 			}
 			m_shadowMap.amount = lights.size();
 		}
 	}
+	ID3D11ShaderResourceView* nullViews[] = { nullptr };
+	DC->PSSetShaderResources(13, 1, nullViews);
 
+	DC->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	DC->IASetInputLayout(PM->m_defaultInputLayout.Get());
 
+	DC->RSSetViewports(1, &m_viewport);
+	DC->RSSetState(PM->m_rasterState.Get());
+
+	DC->VSSetShader(PM->m_defaultVertexShader.Get(), nullptr, 0);
+	DC->PSSetShader(PM->m_shadowPixelShader.Get(), nullptr, 0);
+
+	DC->OMSetBlendState(PM->m_blendStateParticle.Get(), 0, UINT32_MAX);
 }
 
 void ShadowPass::Render(Scene* pScene)
 {
-	const render_instructions_t inst = thread::RenderThreadHandler::Get().DoShadows(m_shadowMap.amount);
+	//const render_instructions_t inst = thread::RenderThreadHandler::Get().DoShadows(m_shadowMap.amount);
+	const render_instructions_t inst;
 
 	/*
 		Everything renders on one single thread.
@@ -148,10 +180,13 @@ void ShadowPass::Render(Scene* pScene)
 	{
 		for (auto& shadow : m_shadows)
 		{
+			D3D11Core::Get().DeviceContext()->ClearDepthStencilView(shadow.shadowDepth.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 			ID3D11RenderTargetView* nullTargets[8] = { nullptr };
 			D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(1, 1, shadow.lightBuffer.GetAddressOf());
 			D3D11Core::Get().DeviceContext()->OMSetRenderTargets(8, nullTargets, shadow.shadowDepth.Get());
+			pScene->RenderShadow(shadow.light);
 
+			D3D11Core::Get().DeviceContext()->OMSetRenderTargets(8, nullTargets, nullptr);
 
 		}
 	}
@@ -164,8 +199,8 @@ void ShadowPass::Render(Scene* pScene)
 
 void ShadowPass::PostRender(ID3D11DeviceContext* pDeviceContext)
 {
-
-	//DC->PSSetShaderResources(0, )
+	
+	DC->PSSetShaderResources(13, 1, m_shadowMap.shadowView.GetAddressOf());
 
 
 }
