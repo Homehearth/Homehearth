@@ -1,6 +1,8 @@
 #include "EnginePCH.h"
 #include "GridSystem.h"
 #include "PathFinderManager.h"
+
+
 #define STB_IMAGE_IMPLEMENTATION
 
 GridSystem::GridSystem()
@@ -173,7 +175,10 @@ bool GridSystem::RemoveDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, 
 					}
 				});
 		}
+
+		Blackboard::Get().GetPathFindManager()->RemoveDefenseEntity(closestEntity);
 		closestEntity.Destroy();
+		
 		return true;
 	}
 	else
@@ -247,17 +252,20 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 				{
 					m_tiles[clampedZ][clampedX].type = TileType::DEFENCE;
 
-					Entity tileEntity = m_scene->CreateEntity();
-					comp::Transform* transform = tileEntity.AddComponent<comp::Transform>();
+					Entity defenseEntity = m_scene->CreateEntity();
+					comp::Transform* transform = defenseEntity.AddComponent<comp::Transform>();
 					transform->position = { tile.position.x , 5.f, tile.position.z };
 					transform->scale = { 1.35f, 1.f, 1.35f };
 
-					comp::BoundingOrientedBox* collider = tileEntity.AddComponent<comp::BoundingOrientedBox>();
+					comp::BoundingOrientedBox* collider = defenseEntity.AddComponent<comp::BoundingOrientedBox>();
 					collider->Extents = { m_tileHalfWidth, m_tileHalfWidth, m_tileHalfWidth };
-					tileEntity.AddComponent<comp::Tag<TagType::STATIC>>();
-					tileEntity.AddComponent<comp::Tag<TagType::DEFENCE>>();
-					tileEntity.AddComponent<comp::MeshName>()->name = "Defence.obj";
-					tileEntity.AddComponent<comp::Network>();
+					defenseEntity.AddComponent<comp::Tag<TagType::STATIC>>();
+					defenseEntity.AddComponent<comp::Tag<TagType::DEFENCE>>();
+					defenseEntity.AddComponent<comp::MeshName>()->name = "Defence.obj";
+					defenseEntity.AddComponent<comp::Health>();
+					defenseEntity.AddComponent<comp::Network>();
+					aiHandler->AddDefenseEntity(defenseEntity);
+
 					Node* node = aiHandler->GetNodeByID(Vector2I(clampedZ, clampedX));
 					node->defencePlaced = true;
 					node->reachable = false;
