@@ -121,17 +121,35 @@ void Game::OnUserUpdate(float deltaTime)
 {
 	this->UpdateInput();
 
-	if (GetCurrentScene() == &GetScene("Game"))
+	Scene& scene = GetScene("Game");
+
+	if (GetCurrentScene() == &scene)
 	{
 		if (m_players.find(m_localPID) != m_players.end())
 		{
 			sm::Vector3 playerPos = m_players.at(m_localPID).GetComponent<comp::Transform>()->position;
 
-			Camera* cam = GetScene("Game").GetCurrentCamera();
+			Camera* cam = scene.GetCurrentCamera();
 			if (cam->GetCameraType()  == CAMERATYPE::PLAY)
 			{
 				GameSystems::CheckLOS(this);
 			}
+			
+			scene.ForEachComponent<comp::Light>([&](comp::Light& l)
+				{
+					if (l.lightData.type == TypeLight::DIRECTIONAL)
+					{
+						sm::Vector3 dir = sm::Vector3::TransformNormal(sm::Vector3(l.lightData.direction), sm::Matrix::CreateRotationZ(dx::XMConvertToRadians(deltaTime * 10.f)));
+						l.lightData.direction = sm::Vector4(dir.x, dir.y, dir.z, 0.0f);
+						dir = sm::Vector3(l.lightData.direction);
+						sm::Vector3 pos = l.lightData.position;
+						pos = playerPos - dir * 20;
+						l.lightData.position = sm::Vector4(pos);
+						l.lightData.position.w = 1.f;
+
+					}
+				});
+
 		}
 	}
 }

@@ -36,6 +36,7 @@ public:
 	
 	ComPtr<ID3D11RasterizerState>	m_rasterState;
 	ComPtr<ID3D11RasterizerState>	m_rasterStateNoCulling;
+	ComPtr<ID3D11RasterizerState>	m_rasterStateFrontCulling;
 	ComPtr<ID3D11RasterizerState>	m_rasterStateWireframe;
 
 	ComPtr<ID3D11BlendState>		m_blendStatepOpaque;
