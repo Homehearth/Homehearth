@@ -1,6 +1,7 @@
 #include "EnginePCH.h"
 #include "RenderThreadHandler.h"
 #include "multi_thread_manager.h"
+#include "ShadowPass.h"
 #include <omp.h>
 
 #define INSTANCE thread::RenderThreadHandler::Get()
@@ -125,7 +126,7 @@ const render_instructions_t thread::RenderThreadHandler::Launch(const int& amoun
 	render_instructions_t inst;
 	const unsigned int objects_per_thread = (unsigned int)std::floor((float)amount_of_objects / (float)(INSTANCE.m_amount + 1));
 	int main_start = 0;
-	if (objects_per_thread >= thread::THRESHOLD && amount_of_objects >= (int)(INSTANCE.m_amount + 1))
+	if (objects_per_thread >= thread::BASE_THRESHOLD && amount_of_objects >= (int)(INSTANCE.m_amount + 1))
 	{
 		// Launch Threads
 		if (INSTANCE.m_isPooled)
@@ -161,7 +162,7 @@ const render_instructions_t thread::RenderThreadHandler::DoShadows(const int& am
 	render_instructions_t inst;
 	const unsigned int objects_per_thread = (unsigned int)std::floor((float)amount_of_objects / (float)(INSTANCE.m_amount + 1));
 	int main_start = 0;
-	if (objects_per_thread >= thread::THRESHOLD && amount_of_objects >= (int)(INSTANCE.m_amount + 1))
+	if (objects_per_thread >= thread::SHADOW_THRESHOLD && amount_of_objects >= (int)(INSTANCE.m_amount + 1))
 	{
 		// Launch Threads
 		if (INSTANCE.m_isPooled)
@@ -277,6 +278,16 @@ void thread::RenderThreadHandler::SetCamera(void* camera)
 void* thread::RenderThreadHandler::GetCamera()
 {
 	return INSTANCE.m_camera;
+}
+
+void thread::RenderThreadHandler::SetShadows(void* shadows)
+{
+	INSTANCE.m_shadows = shadows;
+}
+
+void* thread::RenderThreadHandler::GetShadows()
+{
+	return INSTANCE.m_shadows;
 }
 
 bool ShouldContinue()
@@ -403,6 +414,56 @@ void RenderJob(const unsigned int start,
 
 void RenderShadow(const unsigned int start, unsigned int stop, void* buffer, void* context)
 {
+	DoubleBuffer<std::vector<comp::Renderable>>* m_objects = (DoubleBuffer<std::vector<comp::Renderable>>*)thread::RenderThreadHandler::GetObjectsBuffer();
+	std::vector<ShadowSection>* m_shadows = (std::vector<ShadowSection>*)thread::RenderThreadHandler::Get().GetShadows();
+	dx::ConstantBuffer<basic_model_matrix_t>* m_buffer = (dx::ConstantBuffer<basic_model_matrix_t>*)buffer;
+	ID3D11DeviceContext* m_context = (ID3D11DeviceContext*)context;
+	IRenderPass* currentPass = thread::RenderThreadHandler::Get().GetRenderer()->GetCurrentPass();
+	ID3D11CommandList* commandList = nullptr;
 
-	std::cout << "LOOOOOOOOOOOL\n";
+	if (m_objects && m_shadows)
+	{
+		// Prerender.
+		currentPass->PreRender(nullptr, m_context);
+
+		// For each shadow.
+		for (int i = start; i < stop; i++)
+		{
+			m_context->ClearDepthStencilView((*m_shadows)[i].shadowDepth.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+			ID3D11RenderTargetView* nullTargets[8] = { nullptr };
+			m_context->VSSetConstantBuffers(1, 1, (*m_shadows)[i].lightBuffer.GetAddressOf());
+			m_context->OMSetRenderTargets(8, nullTargets, (*m_shadows)[i].shadowDepth.Get());
+			const light_t& light = (*m_shadows)[i].light;
+			// For each object in world.
+			for (int j = 0; j < (*m_objects)[1].size(); j++)
+			{
+				comp::Renderable* it = &(*m_objects)[1][j];
+				sm::Vector3 translation = it->data.worldMatrix.Translation();
+				float distance = (translation - sm::Vector3(light.position)).Length();
+				if (distance < light.range && it->isSolid && it->visible)
+				{
+					ID3D11Buffer* const buffers[1] =
+					{
+						m_buffer->GetBuffer()
+					};
+
+					m_buffer->SetData(m_context, it->data);
+					m_context->VSSetConstantBuffers(0, 1, buffers);
+					it->model->Render(m_context);
+				}
+			}
+
+			m_context->OMSetRenderTargets(8, nullTargets, nullptr);
+		}
+
+
+		// Postrender.
+		currentPass->PostRender(m_context);
+
+		HRESULT hr = m_context->FinishCommandList(false, &commandList);
+		EnterCriticalSection(&pushSection);
+		if(SUCCEEDED(hr))
+			thread::RenderThreadHandler::Get().InsertCommandList(std::move(commandList));
+		LeaveCriticalSection(&pushSection);
+	}
 }

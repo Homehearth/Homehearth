@@ -3,6 +3,14 @@
 
 constexpr uint64_t SHADOW_SIZE = 4096;
 
+// Single shadow section of shadow map.
+struct ShadowSection
+{
+	ComPtr<ID3D11DepthStencilView> shadowDepth;
+	ComPtr<ID3D11Buffer> lightBuffer;
+	light_t light;
+};
+
 class ShadowPass : public IRenderPass
 {
 private:

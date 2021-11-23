@@ -9,7 +9,6 @@ class Scene : public BasicScene<Scene>
 private:
 	bool m_IsRenderingColliders;
 	bool m_updateAnimation;
-	DoubleBuffer<std::vector<comp::Renderable>> m_renderableCopies;
 	DoubleBuffer<std::vector<comp::RenderableDebug>> m_debugRenderableCopies;
 	DoubleBuffer<std::vector<std::pair<comp::Renderable,comp::Animator>>> m_renderableAnimCopies;
 
@@ -28,6 +27,7 @@ private:
 	bool IsRender2DReady() const;
 
 public:
+	DoubleBuffer<std::vector<comp::Renderable>> m_renderableCopies;
 	Scene();
 
 	// Emit update event and update constant buffers

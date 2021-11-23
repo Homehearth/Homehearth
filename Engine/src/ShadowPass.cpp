@@ -175,6 +175,7 @@ void ShadowPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 	DC->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	DC->IASetInputLayout(PM->m_defaultInputLayout.Get());
 
+	DC->PSSetSamplers(1, 1, PM->m_linearSamplerState.GetAddressOf());
 	DC->RSSetViewports(1, &m_viewport);
 	DC->RSSetState(PM->m_rasterStateNoCulling.Get());
 
@@ -186,8 +187,11 @@ void ShadowPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 
 void ShadowPass::Render(Scene* pScene)
 {
-	//const render_instructions_t inst = thread::RenderThreadHandler::Get().DoShadows(m_shadowMap.amount);
-	const render_instructions_t inst;
+	PROFILE_FUNCTION();
+	thread::RenderThreadHandler::Get().SetObjectsBuffer(&pScene->m_renderableCopies);
+	thread::RenderThreadHandler::Get().SetShadows(&m_shadows);
+	const render_instructions_t inst = thread::RenderThreadHandler::Get().DoShadows(m_shadowMap.amount);
+	//const render_instructions_t inst;
 
 	/*
 		Everything renders on one single thread.
@@ -211,8 +215,21 @@ void ShadowPass::Render(Scene* pScene)
 	else
 		// Main thread renders last part.
 	{
+		for (int i = inst.start; i < inst.stop; i++)
+		{
+			const ShadowSection& shadow = m_shadows[i];
+			D3D11Core::Get().DeviceContext()->ClearDepthStencilView(shadow.shadowDepth.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+			ID3D11RenderTargetView* nullTargets[8] = { nullptr };
+			D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(1, 1, shadow.lightBuffer.GetAddressOf());
+			D3D11Core::Get().DeviceContext()->OMSetRenderTargets(8, nullTargets, shadow.shadowDepth.Get());
+			pScene->RenderShadow(shadow.light);
 
+			D3D11Core::Get().DeviceContext()->OMSetRenderTargets(8, nullTargets, nullptr);
+		}
+
+		thread::RenderThreadHandler::Get().ExecuteCommandLists();
 	}
+
 }
 
 void ShadowPass::PostRender(ID3D11DeviceContext* pDeviceContext)
