@@ -1,4 +1,4 @@
-GameScene.obj
+GameScene.fbx
 House5.obj
 House6.obj
 House7.obj
