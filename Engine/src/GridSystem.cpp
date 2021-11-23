@@ -1,6 +1,8 @@
 #include "EnginePCH.h"
 #include "GridSystem.h"
 #include "PathFinderManager.h"
+
+
 #define STB_IMAGE_IMPLEMENTATION
 
 GridSystem::GridSystem()
@@ -173,7 +175,10 @@ bool GridSystem::RemoveDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, 
 					}
 				});
 		}
+
+		Blackboard::Get().GetPathFindManager()->RemoveDefenseEntity(closestEntity);
 		closestEntity.Destroy();
+		
 		return true;
 	}
 	else

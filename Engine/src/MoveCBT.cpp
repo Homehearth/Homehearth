@@ -68,7 +68,6 @@ BT::NodeStatus BT::MoveCBT::Tick()
 		return BT::NodeStatus::FAILURE;
 	}
 
-	
 
 	if (npc->path.empty())
 	{
@@ -77,6 +76,9 @@ BT::NodeStatus BT::MoveCBT::Tick()
 
 		if(target)
 			targetTransform = target->GetComponent<comp::Transform>();
+
+		if (!targetTransform)
+			return BT::NodeStatus::FAILURE;
 
 		PathFinderManager* pathFindManager = Blackboard::Get().GetPathFindManager();
 		//Check if AI stands on a dead node (no connections to grid)

@@ -10,5 +10,7 @@ namespace BT
 		BT::NodeStatus Tick() override;
 	private:
 		Entity entity;
+		Timer changeTargetTimer;
+		float refreshRate;
 	};
 }

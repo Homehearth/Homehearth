@@ -51,7 +51,7 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 			attackAbility->useTime = 0.3f;
 			attackAbility->delay = 0.2f;
 			attackAbility->movementSpeedAlt = 0.0f;
-			behaviorTree->root = AIBehaviors::GetDestroyBuildingAIBehavior(entity);
+			behaviorTree->root = AIBehaviors::GetFocusBuildingAIBehavior(entity);
 		}
 		break;
 	case EnemyType::Mage:
@@ -77,7 +77,7 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		attackAbility->delay = 0.2f;
 		attackAbility->projectileSpeed = 50.f;
 		attackAbility->movementSpeedAlt = 0.0f;
-		behaviorTree->root = AIBehaviors::GetSimpleAIBehavior(entity);
+		behaviorTree->root = AIBehaviors::GetFocusPlayerAIBehavior(entity);
 	}
 		break;
 	case EnemyType::Runner:
@@ -97,7 +97,7 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		attackAbility->delay = 0.2f;
 		attackAbility->movementSpeedAlt = 0.0f;
 		npc->movementSpeed = 30.f;
-		behaviorTree->root = AIBehaviors::GetSimpleAIBehavior(entity);
+		behaviorTree->root = AIBehaviors::GetFocusPlayerAIBehavior(entity);
 		}
 		break;
 	case EnemyType::BIGMOMMA:
@@ -118,7 +118,7 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		attackAbility->movementSpeedAlt = 0.0f;
 		npc->movementSpeed = 10.f;
 		health->currentHealth = 1500.f;
-		behaviorTree->root = AIBehaviors::GetSimpleAIBehavior(entity);
+		behaviorTree->root = AIBehaviors::GetFocusPlayerAIBehavior(entity);
 	}
 	break;
 	default:

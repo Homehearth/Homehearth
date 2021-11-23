@@ -9,7 +9,7 @@ namespace AIBehaviors
 	//This functions can define different behaviors trees.
 	
 	//Simple ai that searches for the nearest playerand moves towards it
-	std::shared_ptr<BT::FallbackNode> GetSimpleAIBehavior(Entity entity);
+	std::shared_ptr<BT::FallbackNode> GetFocusPlayerAIBehavior(Entity entity);
 	//Ai that will focus on buildings instead of the players (may pick a player as a target if close enough...)
-	std::shared_ptr<BT::FallbackNode> GetDestroyBuildingAIBehavior(Entity entity);
+	std::shared_ptr<BT::FallbackNode> GetFocusBuildingAIBehavior(Entity entity);
 }

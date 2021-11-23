@@ -13,7 +13,6 @@ BT::NodeStatus BT::InRangeCBT::Tick()
 	comp::MeleeAttackAbility* attackMAbility = entity.GetComponent<comp::MeleeAttackAbility>();
 	comp::RangeAttackAbility* attackRAbility = entity.GetComponent<comp::RangeAttackAbility>();
 	Entity* target = Blackboard::Get().GetValue<Entity>("target" + std::to_string(entity));
-
 	if(transform == nullptr || attackMAbility && attackRAbility)
 	{
 		LOG_ERROR("Failed to get components from entity");
@@ -24,6 +23,14 @@ BT::NodeStatus BT::InRangeCBT::Tick()
 		LOG_ERROR("Failed to get target position");
 		return BT::NodeStatus::FAILURE;
 	}
+
+	comp::Transform* targetTransform = target->GetComponent<comp::Transform>();
+	if(targetTransform == nullptr)
+	{
+		LOG_ERROR("Failed to get target position");
+		return BT::NodeStatus::FAILURE;
+	}
+
 	if (attackMAbility)
 	{
 		if (sm::Vector3::Distance(transform->position, target->GetComponent<comp::Transform>()->position) <= attackMAbility->attackRange)
