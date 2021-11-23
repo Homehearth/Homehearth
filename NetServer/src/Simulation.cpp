@@ -351,7 +351,7 @@ void Simulation::ResetPlayer(Entity player)
 
 Simulation::Simulation(Server* pServer, HeadlessEngine* pEngine)
 	: m_pServer(pServer)
-	, m_pEngine(pEngine), m_pLobbyScene(nullptr), m_pGameScene(nullptr), m_pCurrentScene(nullptr), currentRound(0)
+	, m_pEngine(pEngine), m_pLobbyScene(nullptr), m_pGameScene(nullptr), m_pGameOverScene(nullptr),m_pCurrentScene(nullptr), currentRound(0)
 {
 	this->m_gameID = 0;
 	this->m_tick = 0;
@@ -693,6 +693,15 @@ void Simulation::SetLobbyScene()
 
 	this->Broadcast(msg);
 	m_lobby.SetActive(true);
+}
+
+void Simulation::SetGameOver()
+{
+	m_pCurrentScene = m_pGameOverScene;
+	message<GameMsg> msg;
+	msg.header.id = GameMsg::Game_Over;
+
+	this->Broadcast(msg);
 }
 
 void Simulation::SetGameScene()
