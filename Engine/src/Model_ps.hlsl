@@ -39,38 +39,39 @@ float4 main(PixelIn input) : SV_TARGET
     {
         if(sb_lights[i].enabled == 1)
         {
-			
-			float4x4 lightMat = sb_lights[i].lightMatrix;
-            
-            
-			float4 pixelposLightSpace = mul(lightMat, input.worldPos);
-			pixelposLightSpace.xy /= pixelposLightSpace.w;
-            
-			float2 texCoords;
-			texCoords.x = pixelposLightSpace.x * 0.5f + 0.5f;
-			texCoords.y = -pixelposLightSpace.y * 0.5f + 0.5f;
-            
 			float shadowCoef = 0.0f;
-			if ((saturate(texCoords.x) == texCoords.x) & (saturate(texCoords.y) == texCoords.y))
+			if (sb_lights[i].direction.y < 0)
 			{
-				float closestDepth = t_shadowMaps.Sample(s_linear, float3(texCoords.xy, i)).r;
-				float currentDepth = pixelposLightSpace.z / pixelposLightSpace.w;
-				currentDepth -= 0.001f;
-				if (currentDepth > closestDepth)
+				float4x4 lightMat = sb_lights[i].lightMatrix;
+            
+				float4 pixelposLightSpace = mul(lightMat, input.worldPos);
+				pixelposLightSpace.xy /= pixelposLightSpace.w;
+            
+				float2 texCoords;
+				texCoords.x = pixelposLightSpace.x * 0.5f + 0.5f;
+				texCoords.y = -pixelposLightSpace.y * 0.5f + 0.5f;
+            
+				if ((saturate(texCoords.x) == texCoords.x) & (saturate(texCoords.y) == texCoords.y))
 				{
-				    shadowCoef = 1.0f;
-					return float4(shadowCoef, 0, 0, 1.0f);
+					float closestDepth = t_shadowMaps.Sample(s_linear, float3(texCoords.xy, i)).r;
+					float currentDepth = pixelposLightSpace.z / pixelposLightSpace.w;
+					currentDepth = saturate(currentDepth);
+					currentDepth -= 0.001f;
+					if (currentDepth > closestDepth)
+					{
+						shadowCoef = 1.0f;
+						return float4(currentDepth - closestDepth, 0, 0, 1.0f);
+					}
 				}
 			}
-            
             
             switch (sb_lights[i].type)
             {
                 case 0:
-					lightCol += DoDirectionlight(sb_lights[i], N);
+					lightCol += DoDirectionlight(sb_lights[i], N) * (1.0f - shadowCoef);
                     break;
                 case 1:
-					lightCol += DoPointlight(sb_lights[i], input, N);
+					lightCol += DoPointlight(sb_lights[i], input, N) * (1.0f - shadowCoef);
                     break;
                 default:
                     break;

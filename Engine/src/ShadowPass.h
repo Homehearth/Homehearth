@@ -23,22 +23,29 @@ private:
 		unsigned int amount = 0;
 	}m_shadowMap;
 
+	// Single shadow section of shadow map.
+	struct ShadowSection
+	{
+		ComPtr<ID3D11DepthStencilView> shadowDepth;
+		ComPtr<ID3D11Buffer> lightBuffer;
+		uint32_t lightIndex;
+	};
+
 	std::vector<ShadowSection> m_shadows;
 
 	//ID3D11DepthStencilView*& EmplaceInMap(const unsigned int& index);
 
 	ComPtr<ID3D11DepthStencilView> CreateDepthView(uint32_t index);
 	ComPtr<ID3D11Buffer> CreateLightBuffer(light_t light);
+
+
 	void UpdateLightBuffer(ID3D11DeviceContext* context, ID3D11Buffer* buffer, light_t light);
 
-
 public:
+	static camera_Matrix_t GetLightMatrix(light_t light);
 
 	ShadowPass();
 	~ShadowPass();
-
-	// Register a shadow in the shadow map.
-	void CreateShadow(const comp::Light& light);
 
 	// Finalize and setup the shadow map.
 	void SetupMap(uint32_t arraySize);

@@ -129,12 +129,15 @@ void Lights::EditLight(light_t L, const int& index)
 {
     if (index < (int)m_lights.size() && index >= 0)
     {
+        camera_Matrix_t mat = ShadowPass::GetLightMatrix(L);
+
         switch (L.type)
         {
         case TypeLight::DIRECTIONAL:
         {
-            L.lightMatrix = dx::XMMatrixLookToLH(L.position, L.direction, sm::Vector3::Up);
-            L.lightMatrix *= dx::XMMatrixPerspectiveFovLH(dx::XMConvertToRadians(90), 1.0f, 1.f, 100.0f);
+            L.direction.Normalize();
+            L.lightMatrix = mat.view;
+            L.lightMatrix *= mat.projection;
             break;
         }
         case TypeLight::POINT:
