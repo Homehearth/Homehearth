@@ -5,10 +5,11 @@
 ALIGN16
 struct ParticleUpdate 
 {
-	sm::Vector4 emitterPosition;
+	sm::Vector4 emitterPosition;;
 	float deltaTime;
 	UINT counter;
 	UINT lifeTime;
+	float particleSizeMulitplier;
 };
 
 class ParticlePass :public IRenderPass

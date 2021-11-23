@@ -65,6 +65,7 @@ struct ComputeShaderIn
 struct VertexParticleIn
 {
     float4  pos             : POSITION;
+    float4  velocity        : VELOCITY;
     float4  color           : COLOR;
     float2  size            : SIZE;
     uint    type            : TYPE;

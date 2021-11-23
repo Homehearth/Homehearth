@@ -81,19 +81,29 @@ bool Game::OnStartup()
 	//Particles
 	Entity emitter = GetScene("Game").CreateEntity();
 	emitter.AddComponent<comp::Transform>()->position = {250, 5, -340};
-	emitter.AddComponent <comp::EmitterParticle>("smoke.png", "smoke_opacity.png", 200, PARTICLEMODE::SMOKE, 5.0f);
+	emitter.AddComponent <comp::EmitterParticle>("smoke.png", "smoke_opacity.png", 800, 1.f, PARTICLEMODE::SMOKE, 4.0f);
 
-	Entity emitter2 = GetScene("Game").CreateEntity();
-	emitter2.AddComponent<comp::Transform>()->position = { 250, 5,- 320 };
-	emitter2.AddComponent <comp::EmitterParticle>("thisisfine.png", "", 10, PARTICLEMODE::SPARKLES);
+	//Entity emitter2 = GetScene("Game").CreateEntity();
+	//emitter2.AddComponent<comp::Transform>()->position = { 250, 5,- 320 };
+	//emitter2.AddComponent <comp::EmitterParticle>("thisisfine.png", "", 10, 1.f, PARTICLEMODE::SPARKLES);
 
-	Entity emitter3 = GetScene("Game").CreateEntity();
-	emitter3.AddComponent<comp::Transform>()->position = { 250, 20, -300 };
-	emitter3.AddComponent <comp::EmitterParticle>("thisisfine.png", "", 20, PARTICLEMODE::RAIN);
+	//Entity emitter3 = GetScene("Game").CreateEntity();
+	//emitter3.AddComponent<comp::Transform>()->position = { 250, 20, -300 };
+	//emitter3.AddComponent <comp::EmitterParticle>("thisisfine.png", "", 20, 1.f, PARTICLEMODE::WATERSPLASH);
 	
-	Entity emitter4 = GetScene("Game").CreateEntity();
+	/*Entity emitter4 = GetScene("Game").CreateEntity();
 	emitter4.AddComponent<comp::Transform>()->position = { 240, 20, -300 };
-	emitter4.AddComponent <comp::EmitterParticle>("", "", 20, PARTICLEMODE::RAIN);
+	emitter4.AddComponent <comp::EmitterParticle>("", "", 20, 1.f, PARTICLEMODE::RAIN);	*/
+	
+	Entity emitter5 = GetScene("Game").CreateEntity();
+	emitter5.AddComponent<comp::Transform>()->position = { 220, 40, -340 };
+	emitter5.AddComponent <comp::EmitterParticle>("Blood.png", "", 20, 1.f , PARTICLEMODE::BLOOD, 2.0f);
+	
+	Entity waterSplash = GetScene("Game").CreateEntity();
+	waterSplash.AddComponent<comp::Transform>()->position = { 270, 13, -370 };
+	waterSplash.AddComponent <comp::EmitterParticle>("", "", 20, 1.f , PARTICLEMODE::WATERSPLASH, 4.0f);
+
+
 
 	return true;
 }

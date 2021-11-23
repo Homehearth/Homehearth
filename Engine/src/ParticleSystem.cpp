@@ -24,13 +24,12 @@ void ParticleSystem::InitializeParticles(entt::registry& reg, entt::entity ent)
 	for (int i = 0; i < emitter->nrOfParticles; i++)
 	{
 		Particle_t tempParticle;
-		sm::Vector3 position = entityPosition;
-		sm::Vector4 newPosition = { position.x, position.y , position.z, 1.0f };
-		tempParticle.position = newPosition;
+		tempParticle.position = sm::Vector4(entityPosition.x, entityPosition.y, entityPosition.z, emitter->speed);
 		tempParticle.type = emitter->type;
-		tempParticle.size = { 1, 1 };
-		tempParticle.color = { 0,0,0,0 };
-		tempParticle.life = (float)(rand()) / float(RAND_MAX) * i;
+		tempParticle.size = { 1 , 1 };
+		tempParticle.color = { 1,1,1,1 };
+		tempParticle.life = 0;
+		tempParticle.velocity = {0,0,0,0};
 
 		particles[i] =  tempParticle;
 	}

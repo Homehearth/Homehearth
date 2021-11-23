@@ -417,6 +417,7 @@ ALIGN16
 struct Particle_t
 {
 	sm::Vector4		position = { 0, 0, 0, 1 };
+	sm::Vector4		velocity = { 0, 0, 0, 1 };
 	sm::Vector4		color;
 
 	sm::Vector2		size = { 1, 1, };

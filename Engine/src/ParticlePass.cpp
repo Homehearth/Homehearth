@@ -3,6 +3,7 @@
 
 void ParticlePass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 {
+	//Binding genereal data
 	DC->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
 	DC->IASetInputLayout(PM->m_ParticleInputLayout.Get());
 
@@ -12,7 +13,7 @@ void ParticlePass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 	DC->PSSetShader(PM->m_ParticlePixelShader.Get(), nullptr, 0);
 	DC->CSSetShader(PM->m_ParticleComputeShader.Get(), nullptr, 0);
 
-	DC->OMSetBlendState(PM->m_blendStateAlphaBlending.Get(), 0, 0xffffffff);
+	DC->OMSetBlendState(PM->m_blendStateParticle.Get(), nullptr, 0xffffffff);
 
 	DC->IASetVertexBuffers(0,1, &m_nullBuffer, &m_stride, &m_offset);
 	DC->GSSetConstantBuffers(1, 1, pCam->m_viewConstantBuffer.GetAddressOf());
@@ -49,7 +50,7 @@ void ParticlePass::CreateRandomNumbers()
 	ZeroMemory(&SRVRandomNunmbers, sizeof(D3D11_SHADER_RESOURCE_VIEW_DESC));
 	SRVRandomNunmbers.Format = DXGI_FORMAT_UNKNOWN;
 	SRVRandomNunmbers.ViewDimension = D3D11_SRV_DIMENSION_BUFFER;
-	SRVRandomNunmbers.Buffer.NumElements = m_randomNumbers.size();
+	SRVRandomNunmbers.Buffer.NumElements = (UINT)m_randomNumbers.size();
 
 	if (FAILED(hr = D3D11Core::Get().Device()->CreateShaderResourceView(m_randomNumbersBuffer.Get(), &SRVRandomNunmbers, m_randomNumbersSRV.GetAddressOf())))
 	{
@@ -87,14 +88,17 @@ void ParticlePass::Render(Scene* pScene)
 		comp::EmitterParticle* emitter = entity.GetComponent<comp::EmitterParticle>();
 		comp::Transform* transform = entity.GetComponent<comp::Transform>();
 
+		//Constant buffer
 		m_particleUpdate.emitterPosition = sm::Vector4(transform->position.x, transform->position.y, transform->position.z, 1.0f);
 		m_particleUpdate.deltaTime = Stats::Get().GetFrameTime();
 		m_particleUpdate.counter = m_counter;
-		m_particleUpdate.lifeTime = emitter->lifeTime;
+		m_particleUpdate.lifeTime = (UINT)emitter->lifeTime;
+		m_particleUpdate.particleSizeMulitplier = emitter->sizeMulitplier;
 
 		m_constantBufferParticleUpdate.SetData(D3D11Core::Get().DeviceContext(), m_particleUpdate);
 		ID3D11Buffer* cb = { m_constantBufferParticleUpdate.GetBuffer() };
 
+		//Binding emitter speceific data
 		D3D11Core::Get().DeviceContext()->CSSetConstantBuffers(8, 1 , &cb);
 		D3D11Core::Get().DeviceContext()->CSSetUnorderedAccessViews(7, 1, emitter->particleUAV.GetAddressOf(), nullptr);
 
@@ -112,6 +116,7 @@ void ParticlePass::Render(Scene* pScene)
 
 void ParticlePass::PostRender(ID3D11DeviceContext* pDeviceContext)
 {
+	//Unbinding data
 	DC->VSSetShaderResources(17, 1, &m_nullSRV);
 	DC->GSSetConstantBuffers(1, 1, &m_nullBuffer);
 	DC->CSSetUnorderedAccessViews(7, 1, &m_nullUAV, nullptr);
