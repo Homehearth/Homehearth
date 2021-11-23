@@ -31,6 +31,11 @@ private:
 
 	std::vector<std::vector<Tile>>	m_tiles;
 
+private:
+	bool							InsideGrid(const int& xpos, const int& zpos) const;
+	//Get a tile offset of: 0, +1, -1, +2, -2, +3, -3... from the center
+	int								TileOffset(const int& index) const;
+
 public:
 									GridSystem();
 									~GridSystem();
