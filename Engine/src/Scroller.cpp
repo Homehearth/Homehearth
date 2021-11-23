@@ -9,7 +9,7 @@ void rtd::Scroller::Update()
     sm::Vector2 temp = m_currentPos;
     if (m_isPressed)
     {
-        m_currentPos = sm::Vector2::Lerp(m_currentPos, m_endPos, Stats::Get().GetUpdateTime() * 2.0f);
+        m_currentPos = sm::Vector2::Lerp(m_currentPos, m_endPos, Stats::Get().GetUpdateTime() * 5.0f);
         m_canvas.get()->SetPosition(m_currentPos.x, m_currentPos.y);
 
         for (size_t i = 0; i < m_buttons.size(); i++)
@@ -17,7 +17,7 @@ void rtd::Scroller::Update()
             m_buttons[i]->AddPosition(m_currentPos.x - temp.x, m_currentPos.y - temp.y);
 
             // Mini update
-            if (m_buttons[i]->CheckClick())
+            if (m_buttons[i]->CheckClick() == ElementState::INSIDE)
                 m_buttons[i]->OnClick();
             if (m_buttons[i]->CheckHover())
                 m_buttons[i]->OnHover();
@@ -25,7 +25,7 @@ void rtd::Scroller::Update()
     }
     else
     {
-        m_currentPos = sm::Vector2::Lerp(m_currentPos, sm::Vector2(m_startPos.x_pos, m_startPos.y_pos), Stats::Get().GetUpdateTime() * 3.0f);
+        m_currentPos = sm::Vector2::Lerp(m_currentPos, sm::Vector2(m_startPos.x_pos, m_startPos.y_pos), Stats::Get().GetUpdateTime() * 6.0f);
         m_canvas.get()->SetPosition(m_currentPos.x, m_currentPos.y);
 
         for (size_t i = 0; i < m_buttons.size(); i++)
@@ -33,7 +33,7 @@ void rtd::Scroller::Update()
             m_buttons[i]->AddPosition(m_currentPos.x - temp.x, m_currentPos.y - temp.y);
 
             // Mini update
-            if (m_buttons[i]->CheckClick())
+            if (m_buttons[i]->CheckClick() == ElementState::INSIDE)
                 m_buttons[i]->OnClick();
             if (m_buttons[i]->CheckHover())
                 m_buttons[i]->OnHover();
@@ -99,7 +99,15 @@ bool Scroller::CheckHover()
     return true;
 }
 
-bool Scroller::CheckClick()
+ElementState Scroller::CheckClick()
 {
-    return m_button->CheckClick();
+    ElementState state = m_button->CheckClick();
+
+    for (size_t i = 0; i < m_buttons.size(); i++)
+    {
+        if(state != ElementState::INSIDE)
+           state = m_buttons[i]->CheckClick();
+    }
+
+    return state;
 }

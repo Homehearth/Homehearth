@@ -5,6 +5,7 @@ House7.obj
 House8.obj
 House9.obj
 House10.obj
+Tree2.obj
 Tree3.obj
 Tree4.obj
 Tree5.obj
@@ -12,7 +13,7 @@ Tree6.obj
 Tree8.obj
 WaterMill.obj
 WaterMillHouse.obj
-House7And6Roof.obj
+HouseRoof.obj
 Knight.fbx
 Monster.fbx
 Barrel.obj

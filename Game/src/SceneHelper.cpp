@@ -15,6 +15,10 @@
 #include <windows.h>
 #include <shellapi.h>
 #include "MoneyUI.h"
+#include "AbilityUI.h"
+
+// Used to show and hide shopMenu
+static bool toggle = false;
 
 namespace sceneHelp
 {
@@ -153,8 +157,15 @@ namespace sceneHelp
 				ImGui::End();
 				);
 
-				// Prediction
-				//engine->m_predictor.Predict(engine->GetScene("Game"));
+				if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED))
+				{
+					if (game->GetCurrentScene()->GetCollection("shopMenu")->GetState() == ElementState::OUTSIDE &&
+						game->GetCurrentScene()->GetCollection("ScrolldownMenu")->GetState() == ElementState::OUTSIDE)
+					{
+						game->GetCurrentScene()->GetCollection("shopMenu")->Hide();
+							toggle = false;
+					}
+				}
 				//GameSystems::RenderIsCollidingSystem(scene);
 				GameSystems::UpdatePlayerVisuals(game);
 				Systems::LightSystem(scene, e.dt);
@@ -196,13 +207,9 @@ namespace sceneHelp
 		portField->SetDescriptionText("Port:");
 		rtd::Button* connectButton = connectFields->AddElement<rtd::Button>("StartButton.png", draw_t((width / 2) - (width / 8.f), height - (height * 0.25f), width / 4.f, height * 0.15f));
 		scene.Add2DCollection(connectFields, "ConnectFields");
-		//rtd::Button* exitButton = connectFields->AddElement<rtd::Button>("demoExitButton.png", draw_t(0.0f, 0.0f, width / 24, height / 16));
-		//exitButton->SetOnPressedEvent([=] {
-		//game->Shutdown();
-		//	});
 
-		Collection2D* test = new Collection2D;
-		rtd::Scroller* sc = test->AddElement<rtd::Scroller>(draw_t(0.0f, -(height / 16) * 3.0f, width / 24.0f, (height / 16) * 3.0f), sm::Vector2(0, 0));
+		Collection2D* scrolldownMenu = new Collection2D;
+		rtd::Scroller* sc = scrolldownMenu->AddElement<rtd::Scroller>(draw_t(0.0f, -(height / 16) * 3.0f, width / 24.0f, (height / 16) * 3.0f), sm::Vector2(0, 0));
 		sc->AddButton("demoExitButton.png", draw_t(0.0f, -(height / 16), width / 24, height / 16))->SetOnPressedEvent([=] {
 			game->Shutdown();
 			});
@@ -210,7 +217,7 @@ namespace sceneHelp
 			game->SetScene("Options");
 			});
 		sc->SetPrimeButtonMeasurements(draw_t(0.0f, 0.0f, width / 24, height / 16));
-		scene.Add2DCollection(test, "ScrolldownMenu");
+		scene.Add2DCollection(scrolldownMenu, "ScrolldownMenu");
 
 		rtd::Button* externalLinkBtn = connectFields->AddElement<rtd::Button>("Button.png", draw_t(width - width / 4.f, height - (height / 5), width / 8.f, height / 16));
 		externalLinkBtn->GetText()->SetScale(0.5f);
@@ -269,11 +276,9 @@ namespace sceneHelp
 			// You and Friend text
 			if (i == 0)
 			{
-				//playerHp->AddElement<rtd::Text>("You:", draw_text_t(0, (i * ((height / 12)) + (height / 32)), (width / 8), height / 16));
 			}
 			else
 			{
-				//playerHp->AddElement<rtd::Text>("Friend:", draw_text_t(0, (i * ((height / 12)) + (height / 32)), width / 8, height / 16));
 				playerHp->Hide();
 			}
 			scene.Add2DCollection(playerHp, "player" + std::to_string(i + 1) + "Info");
@@ -285,23 +290,6 @@ namespace sceneHelp
 		enemies->SetVisiblity(false);
 		scene.Add2DCollection(timerCollection, "timer");
 
-		//Collection2D* attackCollection = new Collection2D;
-		//attackCollection->AddElement<rtd::Text>("Attacks!", draw_text_t(0, height - (height / 6), (strlen("Attacks!") * D2D1Core::GetDefaultFontSize()) * 0.5f, D2D1Core::GetDefaultFontSize()));
-
-		//for (int i = 0; i < 1; i++)
-		//{
-		//	attackCollection->AddElement<rtd::Picture>(texture2, draw_t(0, height - (height / 8), width / 12, height / 8));
-		//}
-		//scene.Add2DCollection(attackCollection, "attacks");
-
-		//Collection2D* buildCollection = new Collection2D;
-		//buildCollection->AddElement<rtd::Text>("Builds!", draw_text_t(width - (strlen("Builds!") * D2D1Core::GetDefaultFontSize()), height - (height / 6), strlen("Builds!") * D2D1Core::GetDefaultFontSize(), D2D1Core::GetDefaultFontSize()));
-		//for (int i = 0; i < 1; i++)
-		//{
-		//	buildCollection->AddElement<rtd::Picture>(texture2, draw_t((width - (width / 12)) - (i * (width / 12)), height - (height / 8), width / 16, height / 9));
-		//}
-		//scene.Add2DCollection(buildCollection, "builds");
-
 		for (int i = 0; i < MAX_PLAYERS_PER_LOBBY; i++)
 		{
 			Collection2D* nameCollection = new Collection2D;
@@ -310,17 +298,74 @@ namespace sceneHelp
 			nameCollection->Hide();
 		}
 
-		Collection2D* buttons = new Collection2D;
-		rtd::Button* exitButton = buttons->AddElement<rtd::Button>("demoExitButton.png", draw_t(0.0f, 0.0f, width / 24, height / 16));
-		exitButton->SetOnPressedEvent([=] {
-			game->m_client.Disconnect();
-			game->Shutdown();
-			});
-		scene.Add2DCollection(buttons, "Buttons");
-
 		Collection2D* money = new Collection2D;
 		money->AddElement<rtd::MoneyUI>(draw_text_t(width - (width / 8.0f), D2D1Core::GetDefaultFontSize(), width / 8.0f, D2D1Core::GetDefaultFontSize()));
 		scene.Add2DCollection(money, "MoneyUI");
+
+		Collection2D* abilities = new Collection2D;
+		rtd::AbilityUI* primary = abilities->AddElement<rtd::AbilityUI>(draw_t(width - width / 16.0f, height - height / 4.0f, width / 16.0f, height / 9.0f), D2D1::ColorF(0, 1.0f), "UI_sword.png");
+		primary->SetActivateButton("LMB");
+		rtd::AbilityUI* secondary = abilities->AddElement<rtd::AbilityUI>(draw_t(width - width / 8.0f, height - height / 9.0f, width / 16.0f, height / 9.0f), D2D1::ColorF(0, 1.0f), "UI_sword.png");
+		secondary->SetActivateButton("RMB");
+		rtd::AbilityUI* third = abilities->AddElement<rtd::AbilityUI>(draw_t((width / 2.f) - ((width / 16.0f) * 2.0f), height - height / 12.0f, width / 16.0f, height / 12.0f), D2D1::ColorF(0, 1.0f), "slashAbilityDemo.png");
+		third->SetActivateButton("Q");
+		rtd::AbilityUI* fourth = abilities->AddElement<rtd::AbilityUI>(draw_t((width / 2.f) - ((width / 16.0f)), height - height / 12.0f, width / 16.0f, height / 12.0f), D2D1::ColorF(0, 1.0f), "someRandomAbilityIdkDemo.png");
+		fourth->SetActivateButton("E");
+		rtd::AbilityUI* fifth = abilities->AddElement<rtd::AbilityUI>(draw_t((width / 2.f), height - height / 12.0f, width / 16.0f, height / 12.0f), D2D1::ColorF(0.0f, 1.0f), "healAbilityDemo.png");
+		fifth->SetActivateButton("R");
+		rtd::AbilityUI* sixth = abilities->AddElement<rtd::AbilityUI>(draw_t((width / 2.f) + ((width / 16.0f)), height - height / 12.0f, width / 16.0f, height / 12.0f), D2D1::ColorF(0, 1.0f), "slashAbilityDemo.png");
+		sixth->SetActivateButton("C");
+		scene.Add2DCollection(abilities, "AbilityUI");
+
+		Collection2D* shopMenu = new Collection2D;
+		Collection2D* scrolldownMenu = new Collection2D;
+		rtd::Scroller* sc = scrolldownMenu->AddElement<rtd::Scroller>(draw_t(0.0f, -(height / 16) * 3.0f, width / 24.0f, (height / 16) * 3.0f), sm::Vector2(0, 0));
+		sc->AddButton("demoExitButton.png", draw_t(0.0f, -(height / 16), width / 24, height / 16))->SetOnPressedEvent([=] {
+			game->Shutdown();
+			});
+		
+		
+		sc->AddButton("demoShopIcon.png", draw_t(0.0f, -(height / 16) * 2.0f, width / 24, height / 16))->SetOnPressedEvent([=] {
+			if (!toggle)
+			{
+				shopMenu->Show();
+				toggle = true;
+			}
+			else
+			{
+				toggle = false;
+				shopMenu->Hide();
+			}
+			});
+		sc->SetPrimeButtonMeasurements(draw_t(0.0f, 0.0f, width / 24, height / 16));
+		scene.Add2DCollection(scrolldownMenu, "ScrolldownMenu");
+
+		shopMenu->AddElement<rtd::Canvas>(D2D1::ColorF(0.6f, 0.4f, 0.8f, 0.5f), draw_t(width / 24.0f, 0, width * 0.37f, height * 0.75f));
+		//shopMenu->AddElement<rtd::Button>("demoExitButton.png", draw_t(width / 24, 0.0f, width / 24, height / 16))->SetOnPressedEvent([=] {
+		//	
+		//	shopMenu->Hide();
+
+		//	});
+		shopMenu->AddElement<rtd::Button>("Button.png", draw_t((width / 24.f)  + ((width * 0.37f) * 0.5f) - width / 8.0f, height / 24.f, width / 4.0f, height / 8.0f))->SetOnPressedEvent([=] {
+
+			game->UseShop(ShopItem::LONG_TOWER);
+
+			});
+		shopMenu->AddElement<rtd::Text>("Place Wide Towers", draw_text_t((width / 24.f) + ((width * 0.37f) * 0.5f) - width / 8.0f, height / 24.f, width / 4.0f, height / 8.0f));
+		shopMenu->AddElement<rtd::Button>("Button.png", draw_t((width / 24.f) + ((width * 0.37f) * 0.5f) - width / 8.0f, ((height / 24.f) * 2.0f) + height / 8.0f, width / 4.0f, height / 8.0f))->SetOnPressedEvent([=] {
+
+			game->UseShop(ShopItem::SHORT_TOWER);
+
+			});
+		shopMenu->AddElement<rtd::Text>("Place Short Towers", draw_text_t((width / 24.f) + ((width * 0.37f) * 0.5f) - width / 8.0f, ((height / 24.f) * 2.0f) + height / 8.0f, width / 4.0f, height / 8.0f));
+		shopMenu->AddElement<rtd::Button>("Button.png", draw_t((width / 24.f) + ((width * 0.37f) * 0.5f) - width / 8.0f, ((height / 24.f) * 3.0f) + (height / 8.0f) * 2.0f, width / 4.0f, height / 8.0f))->SetOnPressedEvent([=] {
+
+			game->UseShop(ShopItem::Tower_Upgrade);
+
+			});
+		shopMenu->AddElement<rtd::Text>("Upgrade Towers", draw_text_t((width / 24.f) + ((width * 0.37f) * 0.5f) - width / 8.0f, ((height / 24.f) * 3.0f) + (height / 8.0f) * 2.0f, width / 4.0f, height / 8.0f));
+		shopMenu->Hide();
+		scene.Add2DCollection(shopMenu, "shopMenu");
 	}
 
 	void SetupInLobbyScreen(Game* game)
@@ -438,15 +483,18 @@ namespace sceneHelp
 
 		// Declaration
 		Collection2D* backButton = new Collection2D;
+		Collection2D* visualMenu = new Collection2D;
+		Collection2D* resolutionMenu = new Collection2D;
+		Collection2D* miscMenu = new Collection2D;
 
 		Collection2D* menu = new Collection2D;
 		rtd::Button* soundsButton = menu->AddElement<rtd::Button>("Button.png", draw_t(width / 8.0f, height / 8.0f, width / 4.0f, height / 8.0f));
-		rtd::Button* resolutionButton = menu->AddElement<rtd::Button>("Button.png", draw_t((width / 8.0f) * 5.0f, (height / 8.0f), width / 4.0f, height / 8.0f));
+		rtd::Button* visualButton = menu->AddElement<rtd::Button>("Button.png", draw_t((width / 8.0f) * 5.0f, (height / 8.0f), width / 4.0f, height / 8.0f));
 		rtd::Button* helpButton = menu->AddElement<rtd::Button>("Button.png", draw_t((width / 8.0f) * 5.0f, (height / 8.0f) * 4.0f, width / 4.0f, height / 8.0f));
 		helpButton->SetOnPressedEvent([=] {
 
 			helpText->Show();
-			backButton->Hide();
+			backButton->Show();
 			menu->Hide();
 
 			});
@@ -461,7 +509,15 @@ namespace sceneHelp
 			});
 
 		menu->AddElement<rtd::Text>("Sounds", draw_text_t(width / 8.0f, height / 8.0f, width / 4.0f, height / 8.0f));
-		menu->AddElement<rtd::Text>("Resolution", draw_text_t((width / 8.0f) * 5.0f, (height / 8.0f), width / 4.0f, height / 8.0f));
+
+		visualButton->SetOnPressedEvent([=] {
+
+			menu->Hide();
+			backButton->Show();
+			visualMenu->Show();
+
+			});
+		menu->AddElement<rtd::Text>("Visuals", draw_text_t((width / 8.0f) * 5.0f, (height / 8.0f), width / 4.0f, height / 8.0f));
 		soundsButton->SetOnPressedEvent([=]() {
 
 			soundCollection->Show();
@@ -469,30 +525,56 @@ namespace sceneHelp
 			backButton->Show();
 
 			});
+
+		visualMenu->AddElement<rtd::Button>("Button.png", draw_t(width / 8.0f, height / 8.0f, width / 4.0f, height / 8.0f))->SetOnPressedEvent([=] {
+			
+			resolutionMenu->Show();
+			visualMenu->Hide();
+			
+			});
+		visualMenu->AddElement<rtd::Text>("Resolution", draw_t(width / 8.0f, height / 8.0f, width / 4.0f, height / 8.0f));
+		visualMenu->AddElement<rtd::Button>("Button.png", draw_t((width / 8.0f) * 5.0f, (height / 8.0f), width / 4.0f, height / 8.0f))->SetOnPressedEvent([=] {
+			
+			//visualMenu->Hide();
+			//miscMenu->Show();
+			
+			});
+		visualMenu->AddElement<rtd::Text>("Misc.", draw_t((width / 8.0f) * 5.0f, (height / 8.0f), width / 4.0f, height / 8.0f));
+
+
+		miscMenu->Hide();
+		resolutionMenu->Hide();
+		visualMenu->Hide();
+		scene.Add2DCollection(miscMenu, "miscMenu");
+		scene.Add2DCollection(resolutionMenu, "resolutionMenu");
+		scene.Add2DCollection(visualMenu, "visualMenu");
 		scene.Add2DCollection(menu, "MenuButtons");
 
 		rtd::Button* gb = backButton->AddElement<rtd::Button>("Button.png", draw_t((width / 2.0f) - (width / 8.0f), height - (height / 4.0f), width / 4.0f, height / 8.0f));
 		backButton->AddElement<rtd::Text>("Go Back", draw_text_t((width / 2.0f) - (width / 8.0f), height - (height / 4.0f), width / 4.0f, height / 8.0f));
 		gb->SetOnPressedEvent([=] {
 
+			helpText->Hide();
 			soundCollection->Hide();
 			menu->Show();
 			backButton->Hide();
+			visualMenu->Hide();
+			resolutionMenu->Hide();
 
 			});
 		backButton->Hide();
 		scene.Add2DCollection(backButton, "returnButton");
 
 		helpText->AddElement<rtd::Text>("Insert super helpful text here for all the noobs.", draw_text_t(0.0f, 0.0f, width, height - (height / 8.0f)));
-		rtd::Button* goback = helpText->AddElement<rtd::Button>("Button.png", draw_t((width / 2.0f) - (width / 8.0f), height - (height / 4.0f), width / 4.0f, height / 8.0f));
-		helpText->AddElement<rtd::Text>("Go Back", draw_text_t((width / 2.0f) - (width / 8.0f), height - (height / 4.0f), width / 4.0f, height / 8.0f));
-		goback->SetOnPressedEvent([=] {
+		//rtd::Button* goback = backButton->AddElement<rtd::Button>("Button.png", draw_t((width / 2.0f) - (width / 8.0f), height - (height / 4.0f), width / 4.0f, height / 8.0f));
+		//backButton->AddElement<rtd::Text>("Go Back", draw_text_t((width / 2.0f) - (width / 8.0f), height - (height / 4.0f), width / 4.0f, height / 8.0f));
+		//goback->SetOnPressedEvent([=] {
 
-			helpText->Hide();
-			menu->Show();
-			backButton->Show();
+		//	helpText->Hide();
+		//	menu->Show();
+		//	backButton->Show();
 
-			});
+		//	});
 		helpText->Hide();
 		scene.Add2DCollection(helpText, "HelpText");
 
@@ -750,23 +832,23 @@ namespace sceneHelp
 			size_t count = filename.find_last_of('.');
 			filename = filename.substr(0, count);
 
-			if (House5 == filename)
+			if (House5 == filename || Door5 == filename)
 			{
 				game->m_models[ModelID::HOUSE5].push_back(e);
 			}
-			else if (House6 == filename)
+			else if (House6 == filename || Door6 == filename)
 			{
 				game->m_models[ModelID::HOUSE6].push_back(e);
 			}
-			else if (House7 == filename)
+			else if (House7 == filename || Door7 == filename)
 			{
 				game->m_models[ModelID::HOUSE7].push_back(e);
 			}
-			else if (House8 == filename)
+			else if (House8 == filename || Door8 == filename)
 			{
 				game->m_models[ModelID::HOUSE8].push_back(e);
 			}
-			else if (House9 == filename)
+			else if (House9 == filename || Door9 == filename)
 			{
 				game->m_models[ModelID::HOUSE9].push_back(e);
 			}
@@ -778,19 +860,19 @@ namespace sceneHelp
 			{
 				game->m_models[ModelID::TREE2].push_back(e);
 			}
-			else if (Tree2 == filename)
+			else if (Tree3 == filename)
 			{
 				game->m_models[ModelID::TREE3].push_back(e);
 			}
-			else if (Tree2 == filename)
+			else if (Tree5 == filename)
 			{
 				game->m_models[ModelID::TREE5].push_back(e);
 			}
-			else if (Tree2 == filename)
+			else if (Tree6 == filename)
 			{
 				game->m_models[ModelID::TREE6].push_back(e);
 			}
-			else if (Tree2 == filename)
+			else if (Tree8 == filename)
 			{
 				game->m_models[ModelID::TREE8].push_back(e);
 			}

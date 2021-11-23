@@ -1,6 +1,5 @@
 #pragma once
 #include "IRenderPass.h"
-#include "Components.h"
 
 constexpr uint64_t SHADOW_SIZE = 4096;
 
