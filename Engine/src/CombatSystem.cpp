@@ -198,6 +198,12 @@ void CombatSystem::AddCollisionMeleeBehavior(Entity entity, Entity attackEntity,
 				return; //these guys are on the same team
 			}
 
+			if ((entity.GetTags() & TagType::GOOD) && (other.GetTags() & TagType::DEFENCE)
+				|| (entity.GetTags() & TagType::DEFENCE) && (other.GetTags() & TagType::GOOD))
+			{
+				return; //good vs defense are on the same team aswell
+			}
+
 			comp::Health* otherHealth = other.GetComponent<comp::Health>();
 			comp::MeleeAttackAbility* attackAbility = entity.GetComponent<comp::MeleeAttackAbility>();
 
@@ -241,7 +247,7 @@ void CombatSystem::AddCollisionMeleeBehavior(Entity entity, Entity attackEntity,
 				}
 
 			}
-			return NO_RESPONSE;
+			return;
 		});
 }
 
@@ -317,6 +323,6 @@ void CombatSystem::AddCollisionRangeBehavior(Entity entity, Entity attackEntity,
 				}
 
 			}
-			return;
+			return NO_RESPONSE;
 		});
 }

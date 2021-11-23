@@ -9,7 +9,7 @@
 #include "BlackboardBT.h"
 
 //Costum nodes
-#include "FindTargetCBT.h"
+#include "FindPlayerTargetCBT.h"
 #include "MoveCBT.h"
 #include "AttackCBT.h"
 #include "InRangeCBT.h"

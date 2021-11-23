@@ -43,3 +43,7 @@ std::shared_ptr<BT::FallbackNode> AIBehaviors::GetSimpleAIBehavior(Entity entity
 
 	return root;
 }
+
+std::shared_ptr<BT::FallbackNode> AIBehaviors::GetDestroyBuildingAIBehavior(Entity entity)
+{
+}
