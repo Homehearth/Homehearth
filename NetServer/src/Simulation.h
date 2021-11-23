@@ -101,6 +101,7 @@ public:
 	Currency& GetCurrency();
 
 	void SetLobbyScene();
+	void SetGameOver();
 	void SetGameScene();
 	void ResetGameScene();
 	

@@ -241,7 +241,7 @@ enum class GameMsg : uint8_t
 	Lobby_Update,
 	Lobby_PlayerLeft,
 	Lobby_PlayerJoin,
-
+	
 	Server_AssignID,
 	Server_GetPing,
 
@@ -260,7 +260,8 @@ enum class GameMsg : uint8_t
 	Game_RemoveNPC,
 	Game_PlayerInput,
 	Game_Money,
-	Game_ChangeAnimation
+	Game_ChangeAnimation,
+	Game_Over
 };
 
 /*

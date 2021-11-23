@@ -332,6 +332,10 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		SetScene("Lobby");
 		break;
 	}
+	case GameMsg::Game_Over:
+	{
+		break;
+	}
 	case GameMsg::Lobby_Accepted:
 	{
 		msg >> m_gameID;

@@ -102,6 +102,12 @@ namespace sceneHelp
 		SetupOptionsScreen(game);
 	}
 
+	void CreateGameOverScene(Game* game)
+	{
+		Scene& gameOverMeny = game->GetScene("GameOver");
+		SetupGameOverScreen(game);
+	}
+
 	void CreateGameScene(Game* game)
 	{
 		Scene& gameScene = game->GetScene("Game");
@@ -504,6 +510,13 @@ namespace sceneHelp
 		loadingScreen->AddElement<rtd::Text>("Loading!", draw_text_t((width / 2.f) - (strlen("Loading!") * D2D1Core::GetDefaultFontSize() * 0.5f), (height / 2.f) - D2D1Core::GetDefaultFontSize(), strlen("Loading!") * D2D1Core::GetDefaultFontSize(), D2D1Core::GetDefaultFontSize()));
 
 		scene.Add2DCollection(loadingScreen, "LoadingScreen");
+	}
+
+	void SetupGameOverScreen(Game* game)
+	{
+		const float width = (float)game->GetWindow()->GetWidth();
+		const float height = (float)game->GetWindow()->GetHeight();
+		Scene& scene = game->GetScene("GameOver");
 	}
 
 	void SetupLobbyJoinScreen(Game* game)
