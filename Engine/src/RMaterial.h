@@ -14,10 +14,9 @@ const UINT T2D_STARTSLOT		= 1;
 	* "mtllib ../Materials/Barrel.mtl"
 
 	---PBR---
-	Assimp can't load in pbr-material for mtl-files
-	Have to use following for it to work:
+	PBR with assimp is a bit weird. 
+	Have to use the following for it work.
 
-	--- OBJ ---
 	* Albedo				"map_Kd   Object_Albedo.png"
 	* Normal				"map_Kn   Object_Normal.png"
 	* Metalness				"map_ns   Object_Metalness.png"
@@ -25,13 +24,6 @@ const UINT T2D_STARTSLOT		= 1;
 	* Ambient occlusion		"map_Ka	  Object_AO.png"
 	* Displacement			"map_disp Object_Displace.png"
 	* Opacitymask			"map_d	  Object_Opacity.png"
-	
-	--- FBX material with assimp ---
-	* Principled BSDF
-	* Albedo	== base color
-	* Normal	== normalchannel
-	* Rougness	== roughnesschannel
-	* Metalness == specular
 */
 
 /*
