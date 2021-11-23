@@ -56,7 +56,7 @@ void Scene::Update(float dt)
 				{
 					m_renderableAnimCopies[0].push_back({ r, *anim });
 				}
-				else if(r.isOpague) // Opaque.
+				else if(r.isSolid) // isOpaque.
 				{
 					m_renderableCopiesOpaque[0].push_back(r);
 					m_renderableCopies[0].push_back(r);

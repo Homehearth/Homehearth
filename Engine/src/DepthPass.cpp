@@ -29,8 +29,6 @@ void DepthPass::Render(Scene* pScene)
 
 	// Render trans.
 	pScene->RenderTransparent(); // Alpha Mesh
-
-    PM->SetCullBack(true);
 }
 
 void DepthPass::PostRender(ID3D11DeviceContext* pDeviceContext)
