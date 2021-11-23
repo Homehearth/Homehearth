@@ -401,18 +401,18 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		if (m_players.find(m_localPID) != m_players.end())
 		{
 			comp::Player* player = m_players.at(m_localPID).GetComponent<comp::Player>();
-			rtd::Text* readyText = dynamic_cast<rtd::Text*>(GetScene("Lobby").GetCollection("StartGame")->elements[1].get());
-			if (readyText)
-			{
-				if (player->isReady)
-				{
-					readyText->SetText("Ready");
-				}
-				else
-				{
-					readyText->SetText("Not ready");
-				}
-			}
+			//rtd::Text* readyText = dynamic_cast<rtd::Text*>(GetScene("Lobby").GetCollection("StartGame")->elements[1].get());
+			//if (readyText)
+			//{
+			//	if (player->isReady)
+			//	{
+			//		readyText->SetText("Ready");
+			//	}
+			//	else
+			//	{
+			//		readyText->SetText("Not ready");
+			//	}
+			//}
 		}
 
 		dynamic_cast<rtd::Text*>(GetScene("Lobby").GetCollection("LobbyDesc")->elements[1].get())->SetText("Lobby ID: " + std::to_string(m_gameID));
