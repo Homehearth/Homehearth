@@ -5,23 +5,10 @@ Node* PathFinderManager::FindClosestNode(sm::Vector3 position)
 {
 	Node* currentClosest = nullptr;
 
-	for (int j = 0; j < m_nodes.size(); j++)
-	{
-		for (int i = 0; i < m_nodes[j].size(); i++)
-		{
-			if (currentClosest)
-			{
-				if (sm::Vector3::Distance(currentClosest->position, position) > sm::Vector3::Distance(position, m_nodes[i][j]->position))
-				{
-					currentClosest = m_nodes[i][j].get();
-				}
-			}
-			else
-			{
-				currentClosest = m_nodes[i][j].get();
-			}
-		}
-	}
+	int clampedX = static_cast<int>(abs(position.x) / m_nodeSize.x);
+	int clampedZ = static_cast<int>(abs(position.z) / m_nodeSize.y);
+
+	currentClosest = m_nodes[clampedZ][clampedX].get();
 
 	return currentClosest;
 }
@@ -46,34 +33,46 @@ bool PathFinderManager::IsInVector(std::vector<Node*> vector, Node* node)
 std::vector<Node*> PathFinderManager::GetNeighbors(GridSystem* grid, Tile* baseNode)
 {
 	std::vector<Node*> neighbors;
-	if ((baseNode->type == TileType::DEFAULT || baseNode->type == TileType::EMPTY))
+
+	Tile* currentTile = nullptr;
+
+	for (int newX = -1; newX <= 1; newX++)
 	{
-		Tile* currentTile = nullptr;
-
-		for (int newX = -1; newX <= 1; newX++)
+		for (int newY = -1; newY <= 1; newY++)
 		{
-			for (int newY = -1; newY <= 1; newY++)
+			if (baseNode->gridID.x + newX >= grid->GetGridSize().x || baseNode->gridID.y + newY >= grid->GetGridSize().y
+				|| baseNode->gridID.x + newX < 0 || baseNode->gridID.y + newY < 0)
+				continue;
+
+			if (newX == 0 && newY == 0)
 			{
-				if (baseNode->gridID.x + newX >= grid->GetGridSize().x || baseNode->gridID.y + newY >= grid->GetGridSize().y
-					|| baseNode->gridID.x + newX < 0 || baseNode->gridID.y + newY < 0)
-					continue;
+				continue;
+			}
 
-				if (newX == 0 && newY == 0)
-				{
-					continue;
-				}
+			currentTile = grid->GetTile(Vector2I(baseNode->gridID.x + newX, baseNode->gridID.y + newY));
 
-				currentTile = grid->GetTile(Vector2I(baseNode->gridID.x + newX, baseNode->gridID.y + newY));
+			neighbors.push_back(AddNode(currentTile->gridID));
 
-				if (currentTile->type == TileType::DEFAULT || currentTile->type == TileType::EMPTY)
-				{
-					neighbors.push_back(AddNode(currentTile->gridID));
-				}
 
+		}
+	}
+
+	return neighbors;
+}
+
+Node* PathFinderManager::GetDistantNode(sm::Vector3 position)
+{
+	for (int i = 0; i < m_nodes.size(); i++)
+	{
+		for (int j = 0; j < m_nodes[i].size(); j++)
+		{
+			if (!m_nodes[i][j]->defencePlaced && m_nodes[i][j]->reachable && sm::Vector3::Distance(position, m_nodes[i][j]->position) >= 100)
+			{
+				return m_nodes[i][j].get();
 			}
 		}
 	}
-	return neighbors;
+	return nullptr;
 }
 
 Node* PathFinderManager::GetNodeByID(Vector2I id) const
@@ -111,32 +110,27 @@ void PathFinderManager::CreateNodes(GridSystem* grid)
 	{
 		for (int i = 0; i < grid->GetGridSize().y; i++)
 		{
-			Tile* tile = grid->GetTile(Vector2I(j,i));
+			Tile* tile = grid->GetTile(Vector2I(j, i));
 
 			Vector2I nodeID = tile->gridID;
 
 			Node* currentNode = AddNode(tile->gridID);
 			currentNode->position = tile->position;
-			if (tile->type == TileType::DEFENCE || tile->type == TileType::UNPLACABLE ||
+			if (tile->type == TileType::DEFENCE ||
+				tile->type == TileType::UNPLACABLE ||
 				tile->type == TileType::BUILDING)
 			{
 				currentNode->reachable = false;
 			}
-			else
+
+			std::vector<Node*> neighbors = GetNeighbors(grid, tile);
+			for (auto neighbor : neighbors)
 			{
-				std::vector<Node*> neighbors = GetNeighbors(grid, tile);
-				for (auto neighbor : neighbors)
-				{
-					
-					if (neighbor->reachable)
-						m_nodes[j][i]->connections.push_back(neighbor);
-				}
+				m_nodes[j][i]->connections.push_back(neighbor);
 			}
-
-
 		}
 	}
-
+	m_nodeSize = grid->m_tileSize;
 }
 
 PathFinderManager::PathFinderManager()
@@ -162,8 +156,8 @@ void PathFinderManager::AStarSearch(Entity npc)
 	openList.push_back(startingNode);
 
 	//Gets the target that findTargetNode has picked for this entity
-	Entity* target= Blackboard::Get().GetValue<Entity>("target" + std::to_string(npc));
-	if(target == nullptr)
+	Entity* target = Blackboard::Get().GetValue<Entity>("target" + std::to_string(npc));
+	if (target == nullptr)
 	{
 		LOG_INFO("Target was nullptr...");
 		return;
@@ -173,20 +167,97 @@ void PathFinderManager::AStarSearch(Entity npc)
 	Node* goalNode = FindClosestNode(target->GetComponent<comp::Transform>()->position);
 
 	//Cancel if its a dead node (no connections)
-	if(!goalNode->reachable)
+	if (!goalNode->reachable)
 	{
 		return;
 	}
+	if (target->GetComponent<comp::Player>()->reachable)
+	{
+		npcComp->path.clear();
+		while (!openList.empty())
+		{
+			Node* currentNode = openList.at(0);
+			int ind = 0;
+			for (int i = 1; i < openList.size(); i++)
+			{
+				if (openList[i]->f < currentNode->f)
+				{
+					currentNode = openList[i];
+					ind = i;
+				}
+			}
+			openList.erase(openList.begin() + ind);
+			closedList.emplace_back(currentNode);
 
-	npcComp->path.clear();
+			if (currentNode == goalNode)
+			{
+				//Trace the path back
+				if (goalNode->parent)
+				{
+					while (currentNode != startingNode)
+					{
+						npcComp->path.push_back(currentNode);
+						currentNode = currentNode->parent;
+					}
+				}
 
-	while(!openList.empty())
+				for (Node* node : openList)
+				{
+					node->ResetFGH();
+					node->parent = nullptr;
+				}
+				for (Node* node : closedList)
+				{
+					node->ResetFGH();
+					node->parent = nullptr;
+				}
+				return;
+			}
+
+			for (Node* neighbour : currentNode->connections)
+			{
+				float gNew, hNew, fNew;
+				if (IsInVector(closedList, neighbour) || neighbour->defencePlaced || !neighbour->reachable)
+				{
+					continue;
+				}
+
+				gNew = currentNode->g + sm::Vector3::Distance(neighbour->position, currentNode->position);
+				hNew = sm::Vector3::Distance(goalNode->position, neighbour->position);
+				fNew = gNew + hNew;
+
+				if (gNew < currentNode->g || !IsInVector(openList, neighbour))
+				{
+					neighbour->g = gNew;
+					neighbour->h = hNew;
+					neighbour->f = fNew;
+
+					neighbour->parent = currentNode;
+
+					openList.emplace_back(neighbour);
+				}
+			}
+		}
+	}
+
+}
+
+bool PathFinderManager::PlayerAStar(sm::Vector3 playerPos)
+{
+	std::vector<Node*> openList, closedList;
+	Node* startingNode = FindClosestNode(playerPos);
+	startingNode->g = 0.0f;
+	startingNode->h = 0.0f;
+	startingNode->f = 0.0f;
+	openList.push_back(startingNode);
+	Node* goalNode = GetDistantNode(playerPos);
+	while (!openList.empty())
 	{
 		Node* currentNode = openList.at(0);
 		int ind = 0;
 		for (int i = 1; i < openList.size(); i++)
 		{
-			if(openList[i]->f < currentNode->f)
+			if (openList[i]->f < currentNode->f)
 			{
 				currentNode = openList[i];
 				ind = i;
@@ -195,33 +266,25 @@ void PathFinderManager::AStarSearch(Entity npc)
 		openList.erase(openList.begin() + ind);
 		closedList.emplace_back(currentNode);
 
-		if(currentNode == goalNode)
+		if (currentNode == goalNode)
 		{
-			//Trace the path back
-			if (goalNode->parent)
+			for (Node* node : openList)
 			{
-				while (currentNode != startingNode)
-				{
-					npcComp->path.push_back(currentNode);
-					currentNode = currentNode->parent;
-				}
+				node->ResetFGH();
+				node->parent = nullptr;
 			}
-
-			for (int i = 0; i < m_nodes.size(); i++)
+			for (Node* node : closedList)
 			{
-				for (int j = 0; j < m_nodes[i].size(); j++)
-				{
-					m_nodes[i][j]->parent = nullptr;
-					m_nodes[i][j]->ResetFGH();
-				}
+				node->ResetFGH();
+				node->parent = nullptr;
 			}
-			return;
+			return true;
 		}
 
-		for (auto neighbour : currentNode->connections)
+		for (Node* neighbour : currentNode->connections)
 		{
 			float gNew, hNew, fNew;
-			if(IsInVector(closedList, neighbour))
+			if (IsInVector(closedList, neighbour) || neighbour->defencePlaced || !neighbour->reachable)
 			{
 				continue;
 			}
@@ -230,7 +293,7 @@ void PathFinderManager::AStarSearch(Entity npc)
 			hNew = sm::Vector3::Distance(goalNode->position, neighbour->position);
 			fNew = gNew + hNew;
 
-			if(gNew < currentNode->g || !IsInVector(openList, neighbour))
+			if (gNew < currentNode->g || !IsInVector(openList, neighbour))
 			{
 				neighbour->g = gNew;
 				neighbour->h = hNew;
@@ -242,15 +305,17 @@ void PathFinderManager::AStarSearch(Entity npc)
 			}
 		}
 	}
-
-	for (int i = 0; i < m_nodes.size(); i++)
+	for (Node* node : openList)
 	{
-		for (int j = 0; j < m_nodes[i].size(); j++)
-		{
-			m_nodes[i][j]->parent = nullptr;
-			m_nodes[i][j]->ResetFGH();
-		}
+		node->ResetFGH();
+		node->parent = nullptr;
 	}
+	for (Node* node : closedList)
+	{
+		node->ResetFGH();
+		node->parent = nullptr;
+	}
+	return false;
 }
 
 bool PathFinderManager::ReachedNode(const Entity npc)

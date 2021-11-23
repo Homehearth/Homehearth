@@ -1,6 +1,5 @@
 #pragma once
 #include "EventTypes.h"
-#include "Components.h"
 #include "DoubleBuffer.h"
 #include "Entity.h"
 #include "Camera.h"

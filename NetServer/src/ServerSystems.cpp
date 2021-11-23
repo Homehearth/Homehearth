@@ -22,15 +22,16 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 	comp::Transform* transform = entity.AddComponent<comp::Transform>();
 	comp::Health* health = entity.AddComponent<comp::Health>();
 	comp::MeshName* meshName = entity.AddComponent<comp::MeshName>();
-	//comp::BoundingOrientedBox* obb = entity.AddComponent<comp::BoundingOrientedBox>();
+	comp::AnimatorName* animatorName = entity.AddComponent<comp::AnimatorName>();
+	comp::AnimationState* animationState = entity.AddComponent<comp::AnimationState>();
 	comp::BoundingSphere* bos = entity.AddComponent<comp::BoundingSphere>();
 	comp::Velocity* velocity = entity.AddComponent<comp::Velocity>();
-	comp::AttackAbility* attackAbility = entity.AddComponent<comp::AttackAbility>();
 	comp::BehaviorTree* behaviorTree = entity.AddComponent<comp::BehaviorTree>();
 	switch (type)
 	{
 	case EnemyType::Default:
 		{
+			comp::MeleeAttackAbility* attackAbility = entity.AddComponent<comp::MeleeAttackAbility>();
 			// ---DEFAULT ENEMY---
 			transform->position = spawnP;
 			//Generate float between 0.0 and 0.5 (give monster a slightly different height?)
@@ -38,33 +39,58 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 
 			transform->scale = { 1.8f, 1.8f+randomNum, 1.8f };
 			meshName->name = "Monster.fbx";
-			entity.AddComponent<comp::AnimatorName>()->name = "Monster.anim";
+			animatorName->name = "Monster.anim";
+
 			bos->Radius = 3.f;
 
 			npc->movementSpeed = 15.f;
 			attackAbility->cooldown = 1.0f;
 			attackAbility->attackDamage = 20.f;
-			attackAbility->lifetime = 0.3f;
-			attackAbility->isRanged = false;
-			attackAbility->attackRange = 7.0f;
+			attackAbility->lifetime = 5.0f;
+			attackAbility->attackRange = 7.f;
 			attackAbility->useTime = 0.3f;
 			attackAbility->delay = 0.2f;
 			attackAbility->movementSpeedAlt = 0.0f;
 			behaviorTree->root = AIBehaviors::GetSimpleAIBehavior(entity);
 		}
 		break;
+	case EnemyType::Mage:
+	{
+		comp::RangeAttackAbility* attackAbility = entity.AddComponent<comp::RangeAttackAbility>();
+		// ---DEFAULT ENEMY---
+		transform->position = spawnP;
+		//Generate float between 0.0 and 0.5 (give monster a slightly different height?)
+		float randomNum = static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (0.5)));
+
+		transform->scale = { 1.8f, 0.5f + randomNum, 1.8f };
+		meshName->name = "Monster.fbx";
+		animatorName->name = "Monster.anim";
+		bos->Radius = 3.f;
+
+		npc->movementSpeed = 15.f;
+		attackAbility->cooldown = 3.0f;
+		attackAbility->attackDamage = 20.f;
+		attackAbility->lifetime = 5.0f;
+		attackAbility->attackRange = 60.f;
+		attackAbility->useTime = 0.3f;
+		attackAbility->delay = 0.2f;
+		attackAbility->projectileSpeed = 50.f;
+		attackAbility->movementSpeedAlt = 0.0f;
+		behaviorTree->root = AIBehaviors::GetSimpleAIBehavior(entity);
+	}
+		break;
 	case EnemyType::Runner:
 		{
+		comp::MeleeAttackAbility* attackAbility = entity.AddComponent<comp::MeleeAttackAbility>();
 		// ---Fast Zombie ENEMY---
 		transform->position = spawnP;
 		transform->scale = { 1.8f, 3.f, 1.8f };
 		meshName->name = "Monster.fbx";
-		entity.AddComponent<comp::AnimatorName>()->name = "Monster.anim";
+		animatorName->name = "Monster.anim";
 		bos->Radius = 3.f;
 		attackAbility->cooldown = 1.0f;
 		attackAbility->attackDamage = 20.f;
 		attackAbility->lifetime = 0.3f;
-		attackAbility->isRanged = false;
 		attackAbility->attackRange = 7.0f;
 		attackAbility->useTime = 0.3f;
 		attackAbility->delay = 0.2f;
@@ -75,16 +101,16 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		break;
 	case EnemyType::BIGMOMMA:
 	{
+		comp::MeleeAttackAbility* attackAbility = entity.AddComponent<comp::MeleeAttackAbility>();
 		// ---BOSS ENEMY---
 		transform->position = spawnP;
 		transform->scale = { 3.8f, 6.f, 3.8f };
 		meshName->name = "Monster.fbx";
-		entity.AddComponent<comp::AnimatorName>()->name = "Monster.anim";
+		animatorName->name = "Monster.anim";
 		bos->Radius = 3.f;
 		attackAbility->cooldown = 1.0f;
 		attackAbility->attackDamage = 20.f;
 		attackAbility->lifetime = 0.3f;
-		attackAbility->isRanged = false;
 		attackAbility->attackRange = 20.0f;
 		attackAbility->useTime = 0.3f;
 		attackAbility->delay = 0.2f;
@@ -238,7 +264,7 @@ void ServerSystems::NextWaveConditions(Simulation* simulation, Timer& timer, int
 
 void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene& scene, float dt)
 {
-	scene.ForEachComponent<comp::Player, comp::Transform, comp::Velocity>([](comp::Player& p, comp::Transform& t, comp::Velocity& v)
+	scene.ForEachComponent<comp::Player, comp::Transform, comp::Velocity>([&](comp::Player& p, comp::Transform& t, comp::Velocity& v)
 		{
 			// update velocity
 			sm::Vector3 vel = sm::Vector3(static_cast<float>(p.lastInputState.axisHorizontal), 0, static_cast<float>(p.lastInputState.axisVertical));
@@ -257,7 +283,7 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 			v.vel = vel;
 		});
 
-	scene.ForEachComponent<comp::Player>([&](Entity e, comp::Player& p)
+	scene.ForEachComponent<comp::Player, comp::AnimationState>([&](Entity e, comp::Player& p, comp::AnimationState& anim)
 		{
 			// Do stuff based on input
 
@@ -271,6 +297,11 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 				LOG_WARNING("Mouse click ray missed walking plane. Should not happen...");
 			}
 
+			if (p.state == comp::Player::State::WALK)
+				anim.toSend = EAnimationType::MOVE;
+			else
+				anim.toSend = EAnimationType::IDLE;
+
 			// check if using abilities
 			if (p.lastInputState.leftMouse) // is held
 			{
@@ -278,7 +309,7 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 				if (ecs::UseAbility(e, p.primaryAbilty, &p.mousePoint))
 				{
 					LOG_INFO("Used primary");
-
+					anim.toSend = EAnimationType::PRIMARY_ATTACK;
 				}
 
 				// make sure movement alteration is not applied when using, because then its applied atomatically
@@ -290,17 +321,23 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 			else if (p.lastInputState.rightMouse) // was pressed
 			{
 				LOG_INFO("Pressed right");
+				simulation->GetGrid().RemoveDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, Blackboard::Get().GetAIHandler());
 				if (ecs::UseAbility(e, p.secondaryAbilty, &p.mousePoint))
 				{
-
+					LOG_INFO("Used secondary");
+					anim.toSend = EAnimationType::SECONDARY_ATTACK;
 				}
 			}
 
 			//Place defence on grid
 			if (p.lastInputState.key_b && simulation->GetCurrency().GetAmount() >= 5)
+			{
 				if (simulation->GetGrid().PlaceDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, Blackboard::Get().GetAIHandler()))
+				{
 					simulation->GetCurrency().GetAmountRef() -= 5;
-
+					anim.toSend = EAnimationType::PLACE_DEFENCE;
+				}
+			}
 		});
 
 
@@ -322,6 +359,8 @@ void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& sce
 		{
 			if(!health.isAlive)
 			{
+				//CHANGE TO DEAD ANIMATION?
+
 				comp::Velocity* vel = e.GetComponent<comp::Velocity>();
 				if (vel)
 				{
@@ -413,5 +452,23 @@ void ServerSystems::TickBTSystem(Simulation* simulation, HeadlessScene& scene)
 	scene.ForEachComponent<comp::BehaviorTree>([&](Entity entity,comp::BehaviorTree& bt)
 		{
 			bt.root->Tick();
+		});
+}
+
+void ServerSystems::AnimatonSystem(Simulation* simulation, HeadlessScene& scene)
+{
+	scene.ForEachComponent<comp::Network, comp::AnimationState>([&](comp::Network& net, comp::AnimationState& anim)
+		{
+			//Have to send every time - otherwise animations can be locked to one
+			if (anim.toSend != EAnimationType::NONE)
+			{
+				message<GameMsg>msg;
+				msg.header.id = GameMsg::Game_ChangeAnimation;
+				msg << anim.toSend << net.id;
+				simulation->Broadcast(msg);
+
+				anim.lastSend = anim.toSend;
+				anim.toSend = EAnimationType::NONE;
+			}
 		});
 }

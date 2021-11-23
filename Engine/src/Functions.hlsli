@@ -44,3 +44,16 @@ void SampleTextures(PixelIn input, inout float3 albedo, inout float3 N, inout fl
         ao = t_aomap.Sample(s_linear, input.uv).r;
     }
 }
+
+
+float4 ViewPosFromDepth(float depth, float2 texCoord)
+{
+    float z = depth * 2.0 - 1.0;
+    
+    float4 clipSpacePos = float4(texCoord * 2.0 - 1.0, z, 1.0);
+    float4 viewSpacePosition = mul(c_inverseProjection, clipSpacePos);
+    
+    viewSpacePosition /= viewSpacePosition.w;
+    
+    return viewSpacePosition;
+}

@@ -49,7 +49,7 @@ namespace rtd
 
 		virtual bool CheckHover() override;
 
-		virtual bool CheckClick() override;
+		virtual ElementState CheckClick() override;
 
 	};
 

@@ -137,6 +137,17 @@ bool RMaterial::HasTexture(const ETextureType& type) const
     return foundTexture;
 }
 
+const std::shared_ptr<RTexture> RMaterial::GetTexture(const ETextureType& type) const
+{
+    std::shared_ptr<RTexture> texture;
+
+    if (HasTexture(type))
+    {
+        texture = m_textures[(UINT)type];
+    }
+    return texture;
+}
+
 bool RMaterial::Create(aiMaterial* aiMat)
 {
     /*

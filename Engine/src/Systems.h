@@ -2,6 +2,7 @@
 #include "Scene.h"
 #include "CollisionSystem.h"
 #include "PathFinderManager.h"
+#include "CombatSystem.h"
 
 namespace Systems
 {
@@ -9,6 +10,7 @@ namespace Systems
 	void UpdateAbilities(HeadlessScene& scene, float dt);
 	void CombatSystem(HeadlessScene& scene, float dt);
 	void HealingSystem(HeadlessScene& scene, float dt);
+	void HeroLeapSystem(HeadlessScene& scene, float dt);
 
 	void HealthSystem(HeadlessScene& scene, float dt, uint32_t& money_ref);
 	void SelfDestructSystem(HeadlessScene& scene, float dt);
@@ -16,6 +18,8 @@ namespace Systems
 	void MovementSystem(HeadlessScene& scene, float dt);
 	void MovementColliderSystem(HeadlessScene& scene, float dt);
 	void LightSystem(Scene& scene, float dt);
+
+	void TransformAnimationSystem(HeadlessScene& scene, float dt);
 
 	template<typename Collider1, typename Collider2>
 	void CheckCollisions(HeadlessScene& scene, float dt);
@@ -53,16 +57,19 @@ inline void Systems::CheckCollisions(HeadlessScene& scene, float dt)
 				Entity e1(*scene.GetRegistry(), *entity1);
 				Entity e2(*scene.GetRegistry(), *entity2);
 
-				if(e1.GetComponent<comp::Tag<DYNAMIC>>() || e2.GetComponent<comp::Tag<DYNAMIC>>())
+				if (e1.GetComponent<comp::Tag<DYNAMIC>>() || e2.GetComponent<comp::Tag<DYNAMIC>>())
 				{
 					CollisionInfo_t collisionInfo = CollisionSystem::Get().Intersection(e1, e2);
 					if (collisionInfo.hasCollided)
 					{
+
 						if (CollisionSystem::Get().AddPair(e1, e2))
-							if(CollisionSystem::Get().OnCollisionEnter(e1, e2))
-								CollisionSystem::Get().CollisionResponse(collisionInfo, e1, e2);
+							CollisionSystem::Get().OnCollisionEnter(e1, e2);
 
 						CollisionSystem::Get().OnCollision(e1, e2);
+
+						if (!e1.HasComponent<comp::Tag<TagType::NO_RESPONSE>>() && !e2.HasComponent<comp::Tag<TagType::NO_RESPONSE>>())
+							CollisionSystem::Get().CollisionResponse(collisionInfo, e1, e2);
 					}
 					else
 					{

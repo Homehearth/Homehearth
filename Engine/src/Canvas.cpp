@@ -102,21 +102,24 @@ void rtd::Canvas::OnHover()
 
 }
 
-bool rtd::Canvas::CheckClick()
+ElementState rtd::Canvas::CheckClick()
 {
 	// CheckCollisions if mouse key is pressed.
-	// Is within bounds?
-	m_isClicked = false;
-	if (CheckHover())
+	if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED))
 	{
-		OnHover();
-		if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED))
+		// Is within bounds?
+		if (InputSystem::Get().GetMousePos().x > m_drawOpts.x_pos &&
+			InputSystem::Get().GetMousePos().x < m_drawOpts.x_pos + m_drawOpts.width &&
+			InputSystem::Get().GetMousePos().y > m_drawOpts.y_pos &&
+			InputSystem::Get().GetMousePos().y < m_drawOpts.y_pos + m_drawOpts.height)
 		{
-			OnClick();
-			m_isClicked = true;
+			return ElementState::INSIDE;
 		}
+		else
+			return ElementState::OUTSIDE;
 	}
-	return false;
+
+	return ElementState::NONE;
 }
 
 bool rtd::Canvas::CheckHover()
