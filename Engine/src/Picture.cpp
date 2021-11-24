@@ -52,6 +52,12 @@ void rtd::Picture::UpdatePos(const draw_t& new_pos)
 	m_drawOpts = new_pos;
 }
 
+void rtd::Picture::SetPosition(const FLOAT& x, const FLOAT& y)
+{
+	m_drawOpts.x_pos = x;
+	m_drawOpts.y_pos = y;
+}
+
 void rtd::Picture::SetOpacity(const FLOAT& opacity)
 {
 	m_opacity = opacity;

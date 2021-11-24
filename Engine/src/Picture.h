@@ -41,6 +41,8 @@ namespace rtd
 		// Update the position.
 		void UpdatePos(const draw_t& new_pos);
 
+		void SetPosition(const FLOAT& x, const FLOAT& y);
+
 		void SetOpacity(const FLOAT& opacity);
 
 		// Inherited via Element2D

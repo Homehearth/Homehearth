@@ -180,7 +180,6 @@ namespace sceneHelp
 						game->GetCurrentScene()->GetCollection("ScrolldownMenu")->GetState() == ElementState::OUTSIDE)
 					{
 						game->GetCurrentScene()->GetCollection("shopMenu")->Hide();
-						toggle = false;
 					}
 
 					if (game->GetCurrentScene()->GetCollection("inGameMenu")->GetState() == ElementState::OUTSIDE &&
@@ -331,7 +330,7 @@ namespace sceneHelp
 		}
 
 		Collection2D* money = new Collection2D;
-		money->AddElement<rtd::MoneyUI>(draw_text_t(width - (width / 8.0f), D2D1Core::GetDefaultFontSize(), width / 8.0f, D2D1Core::GetDefaultFontSize()));
+		rtd::MoneyUI* mMoney = money->AddElement<rtd::MoneyUI>(draw_text_t(width - (width / 8.0f), D2D1Core::GetDefaultFontSize(), width / 8.0f, D2D1Core::GetDefaultFontSize()));
 		scene.Add2DCollection(money, "MoneyUI");
 
 		Collection2D* abilities = new Collection2D;
@@ -371,21 +370,12 @@ namespace sceneHelp
 		
 		
 		sc->AddButton("ShopIcon.png", draw_t(0.0f, -(height / 16) * 2.0f, width / 24, height / 16))->SetOnPressedEvent([=] {
-			if (!toggle)
-			{
 				shopMenu->Show();
-				toggle = true;
-			}
-			else
-			{
-				toggle = false;
-				shopMenu->Hide();
-			}
 			});
 		sc->SetPrimeButtonMeasurements(draw_t(0.0f, 0.0f, width / 24, height / 16));
 		scene.Add2DCollection(scrolldownMenu, "ScrolldownMenu");
 
-		rtd::ShopUI* shop = shopMenu->AddElement<rtd::ShopUI>("Shop.png", draw_t(width / 24.0f, 0, width * 0.37f, height * 0.75f));
+		rtd::ShopUI* shop = shopMenu->AddElement<rtd::ShopUI>("Shop.png", draw_t(width / 24.0f, (height / 16), width * 0.25f, height * 0.5f));
 		shop->SetOnPressedEvent(0, [=] {
 			game->UseShop(ShopItem::SHORT_TOWER);
 			shopMenu->Hide();
@@ -397,10 +387,13 @@ namespace sceneHelp
 		shop->SetOnPressedEvent(2, [=] {
 			game->UseShop(ShopItem::Primary_Upgrade);
 			});
+		shop->SetOnPressedEvent(3, [=] {
+			game->UseShop(ShopItem::Primary_Upgrade);
+			});
 		shop->SetOnPressedEvent(4, [=] {
 			game->UseShop(ShopItem::Heal);
 			});
-
+		shop->SetMoneyRef(mMoney);
 		shopMenu->Hide();
 		scene.Add2DCollection(shopMenu, "shopMenu");
 	}
