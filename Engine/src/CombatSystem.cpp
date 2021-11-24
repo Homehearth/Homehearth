@@ -39,7 +39,7 @@ void CombatSystem::UpdateRange(HeadlessScene& scene)
 
 void CombatSystem::UpdateTeleport(HeadlessScene& scene)
 {
-	scene.ForEachComponent<comp::TeleportAbility, comp::Transform>([&](Entity entity, comp::TeleportAbility& teleportAbility, comp::Transform& transform)
+	scene.ForEachComponent<comp::BlinkAbility, comp::Transform>([&](Entity entity, comp::BlinkAbility& teleportAbility, comp::Transform& transform)
 		{
 			PathFinderManager* pathFinderManager = Blackboard::Get().GetPathFindManager();
 			sm::Vector3* targetPoint = nullptr;
@@ -82,6 +82,34 @@ void CombatSystem::UpdateTeleport(HeadlessScene& scene)
 		});
 }
 
+void CombatSystem::UpdateDash(HeadlessScene& scene)
+{
+	scene.ForEachComponent<comp::DashAbility, comp::Transform>([&](Entity entity, comp::DashAbility& dashAbility, comp::Transform& transform)
+		{
+			PathFinderManager* pathFinderManager = Blackboard::Get().GetPathFindManager();
+			sm::Vector3* targetPoint = nullptr;
+
+			comp::Player* player = entity.GetComponent<comp::Player>();
+			if (player)
+			{
+				targetPoint = &player->mousePoint; // only update targetPoint if this is a player
+			}
+
+			if (ecs::ReadyToUse(&dashAbility, nullptr))
+			{
+				//dashAbility.velocityBeforeDash = entity.GetComponent<comp::Velocity>()->vel;
+			}
+			if(ecs::IsUsing(&dashAbility))
+			{
+				entity.GetComponent<comp::Velocity>()->vel = dashAbility.velocityBeforeDash * dashAbility.force;
+			}
+			else
+			{
+				dashAbility.velocityBeforeDash = entity.GetComponent<comp::Velocity>()->vel;
+			}
+		});
+}
+
 
 void CombatSystem::UpdateCombatSystem(HeadlessScene& scene, float dt)
 {
@@ -95,6 +123,9 @@ void CombatSystem::UpdateCombatSystem(HeadlessScene& scene, float dt)
 
 	//For each entity that can use teleport
 	UpdateTeleport(scene);
+
+	//For each entity that can use Dash
+	UpdateDash(scene);
 }
 
 

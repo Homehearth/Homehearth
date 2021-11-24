@@ -207,6 +207,7 @@ namespace ecs
 
 			entt::meta_type primaryAbilty;
 			entt::meta_type secondaryAbilty;
+			entt::meta_type moveAbilty;
 
 			float runSpeed;
 
@@ -285,33 +286,12 @@ namespace ecs
 			sm::Vector3 targetPoint;
 		};
 
+		//---------- WARRIOR ABILITIES ----------
 		struct MeleeAttackAbility : public IAbility
 		{
 			//Just to keep it not empty for now
 			float attackDamage = 5.f;
 			float attackRange = 10.0f;
-		};
-
-		struct RangeAttackAbility : public IAbility
-		{
-			float attackDamage = 5.f;
-			float attackRange = 10.0f;
-			float projectileSpeed = 10.f;
-			float projectileSize = 1.0f;
-		};
-
-
-		struct TeleportAbility : public IAbility
-		{
-			//The distance ability teleports Entity forward 
-			float distance = 8.0f;
-		};
-
-
-		struct HealAbility : public IAbility
-		{
-			float healAmount = 40.f;
-			float range = 50.f;
 		};
 
 		struct HeroLeapAbility : public IAbility
@@ -320,6 +300,39 @@ namespace ecs
 			float damageRadius = 20.f;
 			float maxRange = 30.f;
 		};
+
+		struct DashAbility : public IAbility
+		{
+			//The duration for the force
+			float duration = 1.0f;
+			//amount of force applied when used
+			float force = 25.0f;
+			//Store velocity that was before dash was applied
+			sm::Vector3 velocityBeforeDash = { 0.0f,0.0f,0.0f };
+		};
+		//------------------END----------------------
+
+		//---------- MAGE ABILITIES ----------
+		struct RangeAttackAbility : public IAbility
+		{
+			float attackDamage = 5.f;
+			float attackRange = 10.0f;
+			float projectileSpeed = 10.f;
+			float projectileSize = 1.0f;
+		};
+
+		struct HealAbility : public IAbility
+		{
+			float healAmount = 40.f;
+			float range = 50.f;
+		};
+		struct BlinkAbility : public IAbility
+		{
+			//The distance ability teleports Entity forward 
+			float distance = 50.0f;
+		};
+		//------------------END----------------------
+
 
 
 		struct SelfDestruct

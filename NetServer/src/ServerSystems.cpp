@@ -66,7 +66,7 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 	case EnemyType::Mage:
 	{
 		comp::RangeAttackAbility* attackAbility = entity.AddComponent<comp::RangeAttackAbility>();
-		comp::TeleportAbility* teleportAbility = entity.AddComponent<comp::TeleportAbility>();
+		comp::BlinkAbility* teleportAbility = entity.AddComponent<comp::BlinkAbility>();
 		// ---DEFAULT ENEMY---
 		transform->position = spawnP;
 		//Generate float between 0.0 and 0.5 (give monster a slightly different height?)
@@ -336,6 +336,15 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 				{
 					LOG_INFO("Used secondary");
 					anim.toSend = EAnimationType::SECONDARY_ATTACK;
+				}
+			}
+
+			if(p.lastInputState.key_shift)
+			{
+				if (ecs::UseAbility(e, p.moveAbilty, &p.mousePoint))
+				{
+					LOG_INFO("Used moveAbility");
+					//anim.toSend = EAnimationType::MOVE_ABILITY;
 				}
 			}
 

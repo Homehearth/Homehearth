@@ -657,6 +657,10 @@ void Game::UpdateInput()
 	{
 		m_inputState.key_b = true;
 	}
+	if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::LeftShift, KeyState::PRESSED))
+	{
+		m_inputState.key_shift = true;
+	}
 
 	m_savedInputs.push_back(m_inputState);
 	//TEMP PLZ REMOVE AFTER WE COME TO AN AGREEMENT ON WHICH DOF EFFECT TO USE

@@ -228,6 +228,7 @@ struct InputState
 	bool leftMouse : 1;
 	bool rightMouse : 1;
 	bool key_b : 1;
+	bool key_shift : 1;
 
 	Ray_t mouseRay;
 
