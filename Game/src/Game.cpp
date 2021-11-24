@@ -81,7 +81,7 @@ bool Game::OnStartup()
 	//Particles
 	Entity emitter = GetScene("Game").CreateEntity();
 	emitter.AddComponent<comp::Transform>()->position = {250, 5, -340};
-	emitter.AddComponent <comp::EmitterParticle>("smoke.png", "smoke_opacity.png", 800, 1.f, PARTICLEMODE::SMOKE, 4.0f);
+	emitter.AddComponent <comp::EmitterParticle>("smoke.png", "smoke_opacity.png", 800, 8.f, PARTICLEMODE::SMOKE, 4.0f);
 
 	//Entity emitter2 = GetScene("Game").CreateEntity();
 	//emitter2.AddComponent<comp::Transform>()->position = { 250, 5,- 320 };

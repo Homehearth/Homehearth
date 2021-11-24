@@ -32,6 +32,8 @@ void main(uint3 particleID : SV_DispatchThreadID)
         RainSimmulation(vertex, id);
 
     vertex.life += deltaTime;
+    //vertex.size += particleSizeMulitplier * deltaTime;
+
 }
 
 void BloodSimmulation(inout VertexParticleIn particle, in uint id)
@@ -47,8 +49,15 @@ void BloodSimmulation(inout VertexParticleIn particle, in uint id)
 
         particle.pos += particle.velocity * deltaTime;
         
-        particle.velocity.y -= 5.82f * deltaTime;
+        particle.velocity.y -= 4.82f * deltaTime;
         
+        if (particle.size.x >= 0)
+        {
+            float sizeChange = abs((randomNumbers[id + counter]) * deltaTime);
+            particle.size -= sizeChange * particleSizeMulitplier;
+        }
+
+
         //particle.pos.y -= 0.9f * deltaTime;
     
         //float lerpValue;
@@ -111,7 +120,10 @@ void WaterSplashSimmulation(inout VertexParticleIn particle, in uint id)
         particle.velocity.y -= 9.82f * deltaTime;
         
         if (particle.size.x >= 0)
-            particle.size -= abs(randomNumbers[id] * deltaTime);
+        {
+            float sizeChange = abs((randomNumbers[id + counter]) * deltaTime);
+            particle.size -= sizeChange * particleSizeMulitplier;
+        }
     }
     else
     {
@@ -141,8 +153,8 @@ void SmokeSimmulation(inout VertexParticleIn particle, in uint id)
         
         particle.velocity.y += 5.82f * deltaTime;
         
-        
-        particle.size += randomNumbers[id + counter] * deltaTime;
+        float sizeChange = randomNumbers[id + counter] * deltaTime;
+        particle.size += sizeChange * particleSizeMulitplier;
         
         if (particle.color.a >= 0 && particle.life >= particleLifeTime - 1.5)
             particle.color.a -= deltaTime;
@@ -171,7 +183,10 @@ void SparklesSimmulation(inout VertexParticleIn particle, in uint id)
         particle.pos.z += (2.0f * randomNumbers[id + counter]) * deltaTime;
         
         if (particle.size.x >= 0)
-            particle.size -= abs(randomNumbers[id] * deltaTime);
+        {
+            float sizeChange = abs((randomNumbers[id + counter]) * deltaTime);
+            particle.size -= sizeChange * particleSizeMulitplier;
+        }
     }
     else
     {
