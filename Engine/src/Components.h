@@ -244,6 +244,9 @@ namespace ecs
 		{
 			light_t lightData;
 			int index;
+			float flickerTimer = 1.f;
+			float maxFlickerTime = 1.f;
+			bool increase;
 		};
 
 		struct Health
