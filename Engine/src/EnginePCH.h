@@ -49,6 +49,7 @@
 #include <fstream>
 #include <fcntl.h>
 #include <io.h>
+#include <conio.h>
 #include <memory>
 #include <cassert> 
 #include <unordered_map>
@@ -83,7 +84,6 @@ namespace dx = DirectX;
 // DirectXTK
 #include <SimpleMath.h>
 #include <BufferHelpers.h>
-#include <Audio.h>
 #include <Keyboard.h>
 #include <Mouse.h>
 namespace sm = dx::SimpleMath;
@@ -95,6 +95,9 @@ namespace sm = dx::SimpleMath;
 #include "Systems.h"
 #include "CollisionSystem.h"
 
+// Audio
+#include <irrKlang.h>
+#include "SoundHandler.h"
 
 // imGUI
 #include <imgui.h>

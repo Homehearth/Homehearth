@@ -41,6 +41,8 @@ namespace sceneHelp
 
 	void CreateMainMenuScene(Game* game)
 	{
+		SoundHandler::Get().PlayMainMenuTheme();
+
 		// Scene logic
 		Scene& mainMenuScene = game->GetScene("MainMenu");
 		SetupMainMenuScreen(game);

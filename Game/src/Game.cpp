@@ -652,6 +652,7 @@ void Game::UpdateInput()
 	if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::HELD))
 	{
 		m_inputState.leftMouse = true;
+		SoundHandler::Get().PlayOnClick();
 	}
 	if (InputSystem::Get().CheckMouseKey(MouseKey::RIGHT, KeyState::PRESSED))
 	{
