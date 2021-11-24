@@ -12,11 +12,14 @@ namespace rtd
 		draw_t m_drawOpts;
 
 		bool m_buttonHovering[3] = {false};
+		std::function<void()> m_functions[3];
 
 	public:
 
 		MenuUI(const std::string& texturePath, const draw_t& opts);
 		~MenuUI() = default;
+
+		void SetOnPressedEvent(unsigned int index, std::function<void()> func);
 
 		// Inherited via Element2D
 		virtual void Draw() override;

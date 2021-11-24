@@ -37,7 +37,7 @@ bool ShopUI::CheckHover()
 		InputSystem::Get().GetMousePos().y < m_drawOpts.y_pos + m_drawOpts.height * 0.45f)
 	{
 		m_buttonHovering[0] = true;
-		LOG_INFO("1x1 Defence hovering");
+		//LOG_INFO("1x1 Defence hovering");
 	}
 
 	// 1x3 defence button.
@@ -47,7 +47,7 @@ bool ShopUI::CheckHover()
 		InputSystem::Get().GetMousePos().y < m_drawOpts.y_pos + m_drawOpts.height * 0.45f)
 	{
 		m_buttonHovering[1] = true;
-		LOG_INFO("1x3 Defence hovering");
+		//LOG_INFO("1x3 Defence hovering");
 	}
 
 	// Attack button.
@@ -57,7 +57,7 @@ bool ShopUI::CheckHover()
 		InputSystem::Get().GetMousePos().y < m_drawOpts.y_pos + m_drawOpts.height * 0.75f)
 	{
 		m_buttonHovering[2] = true;
-		LOG_INFO("Attack Upgrade hovering");
+		//LOG_INFO("Attack Upgrade hovering");
 	}
 
 	// Armour button.
@@ -67,7 +67,7 @@ bool ShopUI::CheckHover()
 		InputSystem::Get().GetMousePos().y < m_drawOpts.y_pos + m_drawOpts.height * 0.75f)
 	{
 		m_buttonHovering[3] = true;
-		LOG_INFO("Armor Upgrade hovering");
+		//LOG_INFO("Armor Upgrade hovering");
 	}
 
 	// Health button.
@@ -77,7 +77,7 @@ bool ShopUI::CheckHover()
 		InputSystem::Get().GetMousePos().y < m_drawOpts.y_pos + m_drawOpts.height * 0.75f)
 	{
 		m_buttonHovering[4] = true;
-		LOG_INFO("Health Upgrade hovering");
+		//LOG_INFO("Health Upgrade hovering");
 	}
 
 	// Main shop UI bounds.
@@ -90,7 +90,7 @@ bool ShopUI::CheckHover()
 		return true;
 	}
 
-	LOG_INFO("NONE HOVERING");
+	//LOG_INFO("NONE HOVERING");
 
 	m_buttonHovering[0] = false;
 	m_buttonHovering[1] = false;

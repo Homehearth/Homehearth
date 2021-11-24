@@ -321,8 +321,6 @@ namespace sceneHelp
 
 		Collection2D* timerCollection = new Collection2D;
 		timerCollection->AddElement<rtd::Text>("0", draw_text_t(0, 0, width, height / 16.f));
-		//rtd::Text* enemies = timerCollection->AddElement<rtd::Text>("Enemies", draw_text_t(width - (width / 8), 0, width / 8, height / 16.f));
-		//enemies->SetVisiblity(false);
 		scene.Add2DCollection(timerCollection, "timer");
 
 		for (int i = 0; i < MAX_PLAYERS_PER_LOBBY; i++)
@@ -353,7 +351,11 @@ namespace sceneHelp
 		scene.Add2DCollection(abilities, "AbilityUI");
 
 		Collection2D* pauseMenu = new Collection2D;
-		pauseMenu->AddElement<rtd::MenuUI>("Menu.png", draw_t(width * 0.5f - width * 0.125f, height * 0.25f, width * 0.25f, height * 0.5f));
+		rtd::MenuUI* inGameMenu = pauseMenu->AddElement<rtd::MenuUI>("Menu.png", draw_t(width * 0.5f - width * 0.125f, height * 0.25f, width * 0.25f, height * 0.5f));
+		inGameMenu->SetOnPressedEvent(2, [=] 
+			{
+				pauseMenu->Hide();
+			});
 		scene.Add2DCollection(pauseMenu, "inGameMenu");
 		pauseMenu->Hide();
 

@@ -83,7 +83,7 @@ void Scroller::Draw()
 
 void Scroller::OnClick()
 {
-    m_isPressed = !m_isPressed;
+
 }
 
 void Scroller::OnHover()
@@ -91,9 +91,6 @@ void Scroller::OnHover()
     this->Update();
 }
 
-/*
-    Temp update.
-*/
 bool Scroller::CheckHover()
 {
     return true;
@@ -102,6 +99,10 @@ bool Scroller::CheckHover()
 ElementState Scroller::CheckClick()
 {
     ElementState state = m_button->CheckClick();
+    if (state == ElementState::INSIDE)
+    {
+        m_isPressed = !m_isPressed;
+    }
 
     for (size_t i = 0; i < m_buttons.size(); i++)
     {
