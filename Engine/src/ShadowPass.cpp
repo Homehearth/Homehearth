@@ -77,16 +77,13 @@ camera_Matrix_t ShadowPass::GetLightMatrix(light_t light)
 	case TypeLight::DIRECTIONAL:
 	{
 		mat.view = dx::XMMatrixLookToLH(light.position, light.direction, sm::Vector3::Up);
-		mat.projection = dx::XMMatrixOrthographicLH(SHADOW_SIZE / 20, SHADOW_SIZE / 30, 0.f, 400.0f);
+		mat.projection = dx::XMMatrixOrthographicLH(SHADOW_SIZE / 20, SHADOW_SIZE / 30, 0.1f, 400.0f);
 		break;
 	}
 	case TypeLight::POINT:
 	{
-		/*
-		mat.view = dx::XMMatrixLookToLH(light.position, light.direction, sm::Vector3::Up);
-		mat.projection = dx::XMMatrixPerspectiveFovLH(dx::XMConvertToRadians(90), 1.f, 1.f, 100.0f);
-		*/
-
+		mat.view = dx::XMMatrixLookToLH(light.position, sm::Vector3::Forward, sm::Vector3::Up);
+		mat.projection = dx::XMMatrixPerspectiveFovLH(dx::XMConvertToRadians(120), 1.f, 0.1f, 100.f);
 		break;
 	}
 	default:
@@ -195,7 +192,6 @@ void ShadowPass::Render(Scene* pScene)
 	{
 		for (auto& shadow : m_shadows)
 		{
-			const auto& lights = m_lights->GetLights();
 			this->UpdateLightBuffer(D3D11Core::Get().DeviceContext(), shadow.lightBuffer.Get(), *shadow.pLight);
 			D3D11Core::Get().DeviceContext()->ClearDepthStencilView(shadow.shadowDepth.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 			ID3D11RenderTargetView* nullTargets[8] = { nullptr };
@@ -213,7 +209,6 @@ void ShadowPass::Render(Scene* pScene)
 		for (int i = inst.start; i < inst.stop; i++)
 		{
 			const ShadowSection& shadow = m_shadows[i];
-			const auto& lights = m_lights->GetLights();
 			this->UpdateLightBuffer(D3D11Core::Get().DeviceContext(), shadow.lightBuffer.Get(), *shadow.pLight);
 			D3D11Core::Get().DeviceContext()->ClearDepthStencilView(shadow.shadowDepth.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 			ID3D11RenderTargetView* nullTargets[8] = { nullptr };
@@ -232,4 +227,8 @@ void ShadowPass::Render(Scene* pScene)
 void ShadowPass::PostRender(ID3D11DeviceContext* pDeviceContext)
 {
 	DC->PSSetShaderResources(13, 1, m_shadowMap.shadowView.GetAddressOf());
+}
+
+void ShadowPass::ImGuiShowTextures() {
+	ImGui::Image((void*)m_shadowMap.shadowView.Get(), ImVec2(400, 400));
 }

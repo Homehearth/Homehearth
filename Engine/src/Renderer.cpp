@@ -122,6 +122,11 @@ DOFPass* Renderer::GetDoFPass()
 	return &m_dofPass;
 }
 
+void Renderer::ImGuiShowTextures()
+{
+	m_shadowPass.ImGuiShowTextures();
+}
+
 void Renderer::AddPass(IRenderPass* pass)
 {
 	m_passes.emplace_back(pass);

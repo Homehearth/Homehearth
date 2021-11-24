@@ -112,7 +112,7 @@ void Game::OnUserUpdate(float deltaTime)
 			Camera* cam = scene.GetCurrentCamera();
 			if (cam->GetCameraType()  == CAMERATYPE::PLAY)
 			{
-				GameSystems::CheckLOS(this);
+				//GameSystems::CheckLOS(this);
 			}
 			
 			scene.ForEachComponent<comp::Light>([&](Entity e, comp::Light& l)

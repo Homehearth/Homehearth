@@ -50,4 +50,6 @@ public:
 	virtual void PostRender(ID3D11DeviceContext* pDeviceContext = D3D11Core::Get().DeviceContext()) override;
 	
 	void UpdateLightBuffer(ID3D11DeviceContext* context, ID3D11Buffer* buffer, light_t light);
+
+	void ImGuiShowTextures() override;
 };

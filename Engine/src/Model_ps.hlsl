@@ -40,40 +40,62 @@ float4 main(PixelIn input) : SV_TARGET
         if(sb_lights[i].enabled == 1)
         {
 			float4x4 lightMat = sb_lights[i].lightMatrix;
+			float shadowCoef = 0.0f;
             
 			float4 pixelposLightSpace = mul(lightMat, input.worldPos);
-			pixelposLightSpace.xy /= pixelposLightSpace.w;
-            
-			float2 texCoords;
-			texCoords.x = pixelposLightSpace.x * 0.5f + 0.5f;
-			texCoords.y = -pixelposLightSpace.y * 0.5f + 0.5f;
-            
-			float shadowCoef = 0.0f;
-			if ((saturate(texCoords.x) == texCoords.x) & (saturate(texCoords.y) == texCoords.y))
-			{
-				float closestDepth = t_shadowMaps.Sample(s_linear, float3(texCoords.xy, i)).r;
-				//closestDepth = saturate(closestDepth);
-                    
-                float currentDepth = pixelposLightSpace.z / pixelposLightSpace.w;
-				currentDepth = saturate(currentDepth);
-				currentDepth -= 0.001f;
-                    
-				if (currentDepth > closestDepth)
-				{
-                    shadowCoef = 1.0f;
-					//return float4(currentDepth - closestDepth, 0, 0, 1.0f);
-				}
-			}
 			
-            
             switch (sb_lights[i].type)
             {
                 case 0:
+                {
+                    pixelposLightSpace.xy /= pixelposLightSpace.w;
+            
+                    float2 texCoords;
+                    texCoords.x = pixelposLightSpace.x * 0.5f + 0.5f;
+                    texCoords.y = -pixelposLightSpace.y * 0.5f + 0.5f;
+            
+                    if ((saturate(texCoords.x) == texCoords.x) & (saturate(texCoords.y) == texCoords.y))
+			        {
+                        float closestDepth = t_shadowMaps.Sample(s_linear, float3(texCoords.xy, i)).r;
+				    
+                        float currentDepth = pixelposLightSpace.z / pixelposLightSpace.w;
+                        currentDepth = saturate(currentDepth);
+                        currentDepth -= 0.001f;
+                    
+                        if (currentDepth > closestDepth)
+                        {
+                            shadowCoef = 1.0f;
+                        }
+			        }
+                    
 					lightCol += DoDirectionlight(sb_lights[i], N) * (1.0f - shadowCoef);
                     break;
+                }
                 case 1:
-					lightCol += DoPointlight(sb_lights[i], input, N) * (1.0f - shadowCoef);
+				{
+                    
+                    float len = length(pixelposLightSpace.xyz);
+                    pixelposLightSpace.xyz /= pixelposLightSpace.w;
+            
+                    float2 texCoords;
+                    texCoords.x = pixelposLightSpace.x * 0.5f + 0.5f;
+                    texCoords.y = -pixelposLightSpace.y * 0.5f + 0.5f;
+                    
+                    float closestDepth = t_shadowMaps.Sample(s_linear, float3(texCoords.xy, i)).r;
+                    
+                    float currentDepth = pixelposLightSpace.z;
+                    currentDepth = saturate(currentDepth);
+                    currentDepth -= 0.001f;
+                    
+                    if (currentDepth > closestDepth)
+                    {
+                        shadowCoef = 1.0f;
+                        return float4(currentDepth - closestDepth, 0, 0, 1.0f);
+                    }
+                    
+                    lightCol += DoPointlight(sb_lights[i], input, N) * (1.0f - shadowCoef);
                     break;
+                }
                 default:
                     break;
             }
