@@ -153,8 +153,8 @@ namespace sceneHelp
 
 		//Entity dirLight = CreateLightEntity(gameScene, { 330.0f, 20.0f, -333.3f , 1.0f }, { -1.0f, -0.5f, 0.f, 0.f }, { 15.f, 15.f, 15.f, 0.f }, 1000.0f, TypeLight::DIRECTIONAL, 1);
 		CreateLightEntity(gameScene, { 330.0f, 20.0f, -333.3f , 1.0f }, { -1.0f, -0.5f, 0.f, 0.f }, { 15.f, 15.f, 15.f, 0.f }, 1000.0f, TypeLight::DIRECTIONAL, 1);
-		CreateLightEntity(gameScene, { 330.0f, 20.0f, -333.3f , 1.0f }, { -1.0f, -0.5f, 0.f, 0.f }, { 15.f, 15.f, 15.f, 0.f }, 1000.0f, TypeLight::DIRECTIONAL, 1);
-		CreateLightEntity(gameScene, { 330.0f, 20.0f, -333.3f , 1.0f }, { -1.0f, -0.5f, 0.f, 0.f }, { 15.f, 15.f, 15.f, 0.f }, 1000.0f, TypeLight::DIRECTIONAL, 1);
+		//CreateLightEntity(gameScene, { 330.0f, 20.0f, -333.3f , 1.0f }, { -1.0f, -0.5f, 0.f, 0.f }, { 15.f, 15.f, 15.f, 0.f }, 1000.0f, TypeLight::DIRECTIONAL, 1);
+		//CreateLightEntity(gameScene, { 330.0f, 20.0f, -333.3f , 1.0f }, { -1.0f, -0.5f, 0.f, 0.f }, { 15.f, 15.f, 15.f, 0.f }, 1000.0f, TypeLight::DIRECTIONAL, 1);
 
 
 		InputSystem::Get().SetCamera(gameScene.GetCurrentCamera());
