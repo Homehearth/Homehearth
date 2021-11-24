@@ -206,6 +206,18 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 	/*
 		TEMP WILL BE SEND FROM PLAYER SOON
 	*/
+	/*enum class EDefenceType
+	{
+		def1x1,
+		def1x3
+	};
+	enum class ERotatation
+	{
+		degress_0,
+		degress_90,
+
+	};*/
+
 	UINT numberOfDefences = 3;
 	bool zdirection = true;
 
@@ -238,11 +250,17 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 		int centerTileX = static_cast<int>(std::abs(pos.x) / m_tileSize.x);
 		int centerTileZ = static_cast<int>(std::abs(pos.z) / m_tileSize.y);
 
+		//Check player distance from placed defence
+		Tile touchedTile = m_tiles[centerTileZ][centerTileX];
+		float tilePlayerDistance = (localPlayer.Center - touchedTile.position).Length();
+		if (tilePlayerDistance >= m_gridSize.x * 3)
+			tileOccupied = true;
+
 		//Check if it was okay to place all the defences here
 		for (UINT d = 0; d < numberOfDefences && !tileOccupied; d++)
 		{
-			int xPos = centerTileX;
-			int zPos = centerTileZ + TileOffset(d);
+			int xPos = centerTileX; // + TileOffset(d);
+			int zPos = centerTileZ; // +TileOffset(d);;
 			if (zdirection)
 				zPos += TileOffset(d);
 			else
@@ -281,8 +299,8 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 		{
 			for (UINT d = 0; d < numberOfDefences; d++)
 			{
-				int xPos = centerTileX;
-				int zPos = centerTileZ;
+				int xPos = centerTileX; //+ TileOffset(d);
+				int zPos = centerTileZ; //+ TileOffset(d);
 				
 				if (zdirection)
 					zPos += TileOffset(d);
@@ -299,6 +317,9 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 				comp::Transform* transform = tileEntity.AddComponent<comp::Transform>();
 				transform->position = { tile.position.x , 5.f, tile.position.z };
 				transform->scale = { 1.35f, 1.f, 1.35f };
+
+				//transform->rotation = { 0.f, 0.785398163f, 0.f };
+
 				comp::BoundingOrientedBox* collider = tileEntity.AddComponent<comp::BoundingOrientedBox>();
 				collider->Extents = { m_tileHalfWidth, m_tileHalfWidth, m_tileHalfWidth };
 				tileEntity.AddComponent<comp::Tag<TagType::STATIC>>();
