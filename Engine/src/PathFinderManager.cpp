@@ -5,23 +5,10 @@ Node* PathFinderManager::FindClosestNode(sm::Vector3 position)
 {
 	Node* currentClosest = nullptr;
 
-	for (int j = 0; j < m_nodes.size(); j++)
-	{
-		for (int i = 0; i < m_nodes[j].size(); i++)
-		{
-			if (currentClosest)
-			{
-				if (sm::Vector3::Distance(currentClosest->position, position) > sm::Vector3::Distance(position, m_nodes[i][j]->position))
-				{
-					currentClosest = m_nodes[i][j].get();
-				}
-			}
-			else
-			{
-				currentClosest = m_nodes[i][j].get();
-			}
-		}
-	}
+	int clampedX = static_cast<int>(abs(position.x) / m_nodeSize.x);
+	int clampedZ = static_cast<int>(abs(position.z) / m_nodeSize.y);
+
+	currentClosest = m_nodes[clampedZ][clampedX].get();
 
 	return currentClosest;
 }
@@ -29,6 +16,23 @@ Node* PathFinderManager::FindClosestNode(sm::Vector3 position)
 std::vector<std::vector<std::shared_ptr<Node>>>& PathFinderManager::GetNodes()
 {
 	return m_nodes;
+}
+
+std::unordered_map<Entity, Entity> PathFinderManager::GetDefenseEntities()
+{
+	return defenseEntities;
+}
+
+void PathFinderManager::AddDefenseEntity(Entity entity)
+{
+	if(!entity.IsNull())
+		defenseEntities.insert(std::make_pair(entity, entity));
+}
+
+void PathFinderManager::RemoveDefenseEntity(Entity entity)
+{
+	if(!entity.IsNull())
+		defenseEntities.erase(entity);
 }
 
 bool PathFinderManager::IsInVector(std::vector<Node*> vector, Node* node)
@@ -141,12 +145,9 @@ void PathFinderManager::CreateNodes(GridSystem* grid)
 			{
 				m_nodes[j][i]->connections.push_back(neighbor);
 			}
-
-
-
 		}
 	}
-
+	m_nodeSize = grid->m_tileSize;
 }
 
 PathFinderManager::PathFinderManager()
@@ -182,76 +183,97 @@ void PathFinderManager::AStarSearch(Entity npc)
 
 	Node* goalNode = FindClosestNode(target->GetComponent<comp::Transform>()->position);
 
-	//Cancel if its a dead node (no connections)
-	if (!goalNode->reachable)
+	//If goal is a defense
+	if(goalNode->defencePlaced)
+	{
+		Node* currentNode = nullptr;
+		//Go through all neighbours and find the one closest that is reachable
+		for (auto& neighbour : goalNode->connections)
+		{
+			if(neighbour->reachable && currentNode == nullptr)
+			{
+				currentNode = neighbour;
+			}
+			else if(neighbour->reachable && sm::Vector3::Distance(npcTransform->position, neighbour->position) < sm::Vector3::Distance(npcTransform->position, currentNode->position))
+			{
+				currentNode = neighbour;
+			}
+		}
+		if(currentNode == nullptr)
+		{
+			return;
+		}
+
+		goalNode = currentNode;
+	}
+	//If goal is a dead node cancel
+	else if (!goalNode->reachable)
 	{
 		return;
 	}
-	if (target->GetComponent<comp::Player>()->reachable)
+
+	npcComp->path.clear();
+	while (!openList.empty())
 	{
-		npcComp->path.clear();
-		while (!openList.empty())
+		Node* currentNode = openList.at(0);
+		int ind = 0;
+		for (int i = 1; i < openList.size(); i++)
 		{
-			Node* currentNode = openList.at(0);
-			int ind = 0;
-			for (int i = 1; i < openList.size(); i++)
+			if (openList[i]->f < currentNode->f)
 			{
-				if (openList[i]->f < currentNode->f)
+				currentNode = openList[i];
+				ind = i;
+			}
+		}
+		openList.erase(openList.begin() + ind);
+		closedList.emplace_back(currentNode);
+
+		if (currentNode == goalNode)
+		{
+			//Trace the path back
+			if (goalNode->parent)
+			{
+				while (currentNode != startingNode)
 				{
-					currentNode = openList[i];
-					ind = i;
+					npcComp->path.push_back(currentNode);
+					currentNode = currentNode->parent;
 				}
 			}
-			openList.erase(openList.begin() + ind);
-			closedList.emplace_back(currentNode);
 
-			if (currentNode == goalNode)
+			for (Node* node : openList)
 			{
-				//Trace the path back
-				if (goalNode->parent)
-				{
-					while (currentNode != startingNode)
-					{
-						npcComp->path.push_back(currentNode);
-						currentNode = currentNode->parent;
-					}
-				}
+				node->ResetFGH();
+				node->parent = nullptr;
+			}
+			for (Node* node : closedList)
+			{
+				node->ResetFGH();
+				node->parent = nullptr;
+			}
+			return;
+		}
 
-				for (Node* node : openList)
-				{
-					node->ResetFGH();
-					node->parent = nullptr;
-				}
-				for (Node* node : closedList)
-				{
-					node->ResetFGH();
-					node->parent = nullptr;
-				}
-				return;
+		for (Node* neighbour : currentNode->connections)
+		{
+			float gNew, hNew, fNew;
+			if (IsInVector(closedList, neighbour) || neighbour->defencePlaced || !neighbour->reachable)
+			{
+				continue;
 			}
 
-			for (Node* neighbour : currentNode->connections)
+			gNew = currentNode->g + sm::Vector3::Distance(neighbour->position, currentNode->position);
+			hNew = sm::Vector3::Distance(goalNode->position, neighbour->position);
+			fNew = gNew + hNew;
+
+			if (gNew < currentNode->g || !IsInVector(openList, neighbour))
 			{
-				float gNew, hNew, fNew;
-				if (IsInVector(closedList, neighbour) || neighbour->defencePlaced || !neighbour->reachable)
-				{
-					continue;
-				}
+				neighbour->g = gNew;
+				neighbour->h = hNew;
+				neighbour->f = fNew;
 
-				gNew = currentNode->g + sm::Vector3::Distance(neighbour->position, currentNode->position);
-				hNew = sm::Vector3::Distance(goalNode->position, neighbour->position);
-				fNew = gNew + hNew;
+				neighbour->parent = currentNode;
 
-				if (gNew < currentNode->g || !IsInVector(openList, neighbour))
-				{
-					neighbour->g = gNew;
-					neighbour->h = hNew;
-					neighbour->f = fNew;
-
-					neighbour->parent = currentNode;
-
-					openList.emplace_back(neighbour);
-				}
+				openList.emplace_back(neighbour);
 			}
 		}
 	}

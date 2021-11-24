@@ -12,9 +12,8 @@ namespace ecs
 	{
 		TRANSFORM,
 		VELOCITY,
-		ANIMATOR_NAME,
 		MESH_NAME,
-		NAME_PLATE,
+		ANIMATOR_NAME,
 		HEALTH,
 		BOUNDING_ORIENTED_BOX,
 		BOUNDING_SPHERE,
@@ -37,22 +36,21 @@ namespace ecs
 			sm::Vector3 position;
 			sm::Quaternion rotation;
 			sm::Vector3 scale = sm::Vector3(1);
+			
+			bool syncColliderScale = false;
 		};
 
 		struct Decal
 		{
-			RTexture* decal = nullptr;
 			sm::Matrix viewPoint;
 			// Life span in seconds.
-			float lifespan = 5.0f;
+			float lifespan = 10.0f;
 
-			Decal(const Transform& t, RTexture* decal = nullptr)
+			Decal(const Transform& t)
 			{
-				this->decal = decal;
-
 				// Be positioned slightly above.
 				sm::Vector3 position = t.position;
-				position.y += 10.0f;
+				position.y = 10.0f;
 				position.x += 0.0001f;
 				position.z -= 0.0001f;
 
@@ -113,7 +111,14 @@ namespace ecs
 
 		struct Animator
 		{
-			std::shared_ptr<RAnimator> animator;
+			std::shared_ptr<RAnimator>  animator;
+			bool						updating = true;
+		};
+
+		struct AnimationState
+		{
+			EAnimationType lastSend;	//Send to user last time
+			EAnimationType toSend;		//Going to be send this update
 		};
 
 		// Used on server side
@@ -125,11 +130,6 @@ namespace ecs
 		struct MeshName 
 		{
 			std::string name = "";
-		};
-
-		struct NamePlate
-		{
-			std::string namePlate;
 		};
 		
 		struct RenderableDebug
@@ -177,15 +177,22 @@ namespace ecs
 			std::vector<Force> forces;
 		};
 
+		struct BezierAnimation
+		{
+			float speed = 1.0f;
+			bool loop = false;
+			std::vector<sm::Vector3> translationPoints;
+			std::vector<sm::Vector3> scalePoints;
+			std::vector<sm::Quaternion> rotationPoints;
+			float time = 0.0f;
+
+			std::function<void()> onFinish;
+		};
+
 		struct Velocity
 		{
 			sm::Vector3 vel;
 			sm::Vector3 oldVel;
-
-			sm::Vector3 scaleVel = { 0, 0, 0 };
-			sm::Vector3 oldScaleVel;
-
-			bool applyToCollider = false;
 		};
 
 		struct Player
@@ -194,6 +201,7 @@ namespace ecs
 			{
 				IDLE,
 				LOOK_TO_MOUSE,
+				SPECTATING,
 				WALK
 			} state = State::IDLE;
 
@@ -216,6 +224,9 @@ namespace ecs
 			float respawnTimer;
 			bool isReady = false;
 			bool reachable = true;
+
+			char name[12] = {};
+			TowerTypes towerSelected = TowerTypes::SHORT;
 		};
 
 	
@@ -239,6 +250,9 @@ namespace ecs
 		{
 			light_t lightData;
 			int index;
+			float flickerTimer = 1.f;
+			float maxFlickerTime = 1.f;
+			bool increase;
 		};
 
 		struct Health
@@ -271,10 +285,6 @@ namespace ecs
 			// lifetime of the ability, for instance lifetime of any created collider
 			float lifetime = 5.f;
 
-			float attackDamage = 5.f;
-
-			float attackRange = 10.0f;
-
 			// !DO NOT TOUCH!
 			bool isReady = false;
 			// !DO NOT TOUCH!
@@ -287,21 +297,41 @@ namespace ecs
 		struct MeleeAttackAbility : public IAbility
 		{
 			//Just to keep it not empty for now
-			float temp = 0.0f;
+			float attackDamage = 5.f;
+			float attackRange = 10.0f;
 		};
 
 		struct RangeAttackAbility : public IAbility
 		{
 			float attackDamage = 5.f;
+			float attackRange = 10.0f;
 			float projectileSpeed = 10.f;
 			float projectileSize = 1.0f;
 		};
+
+
+		struct TeleportAbility : public IAbility
+		{
+			//The distance ability teleports Entity forward 
+			float distance = 8.0f;
+			//The point direction ability will teleport towards
+			sm::Vector3 targetPoint = { 0.f,0.0f,0.0f };
+		};
+
 
 		struct HealAbility : public IAbility
 		{
 			float healAmount = 40.f;
 			float range = 50.f;
 		};
+
+		struct HeroLeapAbility : public IAbility
+		{
+			float damage = 10.f;
+			float damageRadius = 20.f;
+			float maxRange = 30.f;
+		};
+
 
 		struct SelfDestruct
 		{

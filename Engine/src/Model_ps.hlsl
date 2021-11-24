@@ -79,7 +79,7 @@ float4 main(PixelIn input) : SV_TARGET
             if ((saturate(texCoords.x) == texCoords.x) & (saturate(texCoords.y) == texCoords.y))
             {
                 float3 color = t_decal.Sample(s_linear, texCoords).xyz;
-                float alpha = t_decalAlpha.Sample(s_linear, texCoords).r;
+                float alpha = t_decal.Sample(s_linear, texCoords).r;
                 
                 if (alpha > 0.4f)
                 {
@@ -96,6 +96,7 @@ float4 main(PixelIn input) : SV_TARGET
     }
     
     float3 color = ambient + Lo;
+    //color *= exposure;
     
     //HDR tonemapping
 	color = color / (color + float3(1.0, 1.0, 1.0));

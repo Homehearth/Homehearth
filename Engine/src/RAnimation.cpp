@@ -19,10 +19,12 @@ RAnimation::~RAnimation()
 	m_keyFrames.clear();
 }
 
+/* 
+	Private functions
+*/
 void RAnimation::LoadPositions(const std::string& bonename, aiNodeAnim* channel)
 {
-	KeyFrames keyframes;
-	positionKey_t pos;
+	keyFrames_t keyframes;
 
 	//Keyframe exist - copy values
 	auto key = m_keyFrames.find(bonename);
@@ -35,10 +37,7 @@ void RAnimation::LoadPositions(const std::string& bonename, aiNodeAnim* channel)
 	keyframes.position.reserve(size_t(channel->mNumPositionKeys));
 	for (UINT i = 0; i < channel->mNumPositionKeys; i++)
 	{
-		pos.time = channel->mPositionKeys[i].mTime;
-		const aiVector3D aiPos = channel->mPositionKeys[i].mValue;
-		pos.val = { aiPos.x, aiPos.y, aiPos.z };
-		keyframes.position.push_back(pos);
+		keyframes.position.push_back({ channel->mPositionKeys[i].mTime, sm::Vector3(&channel->mPositionKeys[i].mValue.x) });
 	}
 
 	m_keyFrames[bonename] = keyframes;
@@ -46,8 +45,7 @@ void RAnimation::LoadPositions(const std::string& bonename, aiNodeAnim* channel)
 
 void RAnimation::LoadScales(const std::string& bonename, aiNodeAnim* channel)
 {
-	KeyFrames keyframes;
-	scaleKey_t scl;
+	keyFrames_t keyframes;
 
 	//Keyframe exist - copy values
 	auto key = m_keyFrames.find(bonename);
@@ -60,10 +58,7 @@ void RAnimation::LoadScales(const std::string& bonename, aiNodeAnim* channel)
 	keyframes.scale.reserve(size_t(channel->mNumScalingKeys));
 	for (UINT i = 0; i < channel->mNumScalingKeys; i++)
 	{
-		scl.time = channel->mScalingKeys[i].mTime;
-		const aiVector3D aiScl = channel->mScalingKeys[i].mValue;
-		scl.val = { aiScl.x, aiScl.y, aiScl.z };
-		keyframes.scale.push_back(scl);
+		keyframes.scale.push_back({ channel->mScalingKeys[i].mTime, sm::Vector3(&channel->mScalingKeys[i].mValue.x) });
 	}
 
 	m_keyFrames[bonename] = keyframes;
@@ -71,7 +66,7 @@ void RAnimation::LoadScales(const std::string& bonename, aiNodeAnim* channel)
 
 void RAnimation::LoadRotations(const std::string& bonename, aiNodeAnim* channel)
 {
-	KeyFrames keyframes;
+	keyFrames_t keyframes;
 	rotationKey_t rot;
 
 	//Keyframe exist - copy values
@@ -88,7 +83,6 @@ void RAnimation::LoadRotations(const std::string& bonename, aiNodeAnim* channel)
 		rot.time = channel->mRotationKeys[i].mTime;
 		const aiQuaternion aiRot = channel->mRotationKeys[i].mValue;
 		rot.val = { aiRot.x, aiRot.y, aiRot.z, aiRot.w };
-		rot.val.Normalize();
 		keyframes.rotation.push_back(rot);
 	}
 
@@ -127,6 +121,89 @@ void RAnimation::LoadKeyframes(const aiAnimation* animation)
 	}
 }
 
+/* 
+	Public functions
+*/
+void RAnimation::Create(const aiAnimation* animation)
+{
+	m_duration = animation->mDuration;
+	m_ticksPerFrame = animation->mTicksPerSecond;
+
+	//Load in all the keyframes
+	LoadKeyframes(animation);
+}
+
+bool RAnimation::Create(const std::string& filename)
+{
+	std::string filepath = ANIMATIONPATH + filename;
+	Assimp::Importer importer;
+
+	//Will remove extra text on bones like: "_$AssimpFbx$_"...
+	importer.SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, false);
+
+	const aiScene* scene = importer.ReadFile(filepath, aiProcess_MakeLeftHanded);
+
+	//Check if readfile was successful
+	if (!scene || !scene->mRootNode)
+	{
+#ifdef _DEBUG
+		LOG_WARNING("Assimp error: %s", importer.GetErrorString());
+#endif 
+		importer.FreeScene();
+		return false;
+	}
+
+	if (!scene->HasAnimations())
+	{
+#ifdef _DEBUG
+		std::cout << "The file " << filename << " does not have any animations..." << std::endl;
+#endif
+		importer.FreeScene();
+		return false;
+	}
+
+	//Only supports to load in the first animation
+	const aiAnimation* animation = scene->mAnimations[0];
+
+	m_duration = animation->mDuration;
+	m_ticksPerFrame = animation->mTicksPerSecond;
+
+	//Load in all the keyframes - works with only one animation at time
+	LoadKeyframes(animation);
+
+	//#ifdef _DEBUG
+	//	LOG_INFO("Loaded animation: %s\n", filename.c_str());
+	//#endif // _DEBUG
+
+	importer.FreeScene();
+	return true;
+}
+
+void RAnimation::SetLoopable(bool& enable)
+{
+	m_isLoopable = enable;
+}
+
+bool RAnimation::IsLoopable() const
+{
+	return m_isLoopable;
+}
+
+void RAnimation::SetTicksPerFrame(const double& speed)
+{
+	m_ticksPerFrame = speed;
+}
+
+const double& RAnimation::GetTicksPerFrame() const
+{
+	return m_ticksPerFrame;
+}
+
+const double& RAnimation::GetDuraction() const
+{
+	return m_duration;
+}
+
 const sm::Vector3 RAnimation::GetPosition(const std::string& bonename, const double& currentFrame, UINT& lastKey, bool interpolate) const
 {
 	sm::Vector3 finalVec;
@@ -140,7 +217,8 @@ const sm::Vector3 RAnimation::GetPosition(const std::string& bonename, const dou
 		Usually does the search for 1-3 times instead of search everything from start.
 	*/
 	bool foundKey = false;
-	while (!foundKey)
+	UINT counter = 0;
+	while (!foundKey && counter < nrOfKeys)
 	{
 		if (m_keyFrames.at(bonename).position[closestLeft].time < currentFrame &&
 			m_keyFrames.at(bonename).position[closestRight].time > currentFrame)
@@ -152,6 +230,7 @@ const sm::Vector3 RAnimation::GetPosition(const std::string& bonename, const dou
 			closestLeft = closestRight;
 			closestRight = (closestRight + 1) % nrOfKeys;
 		}
+		counter++;
 	}
 
 	if (interpolate)
@@ -185,7 +264,8 @@ const sm::Vector3 RAnimation::GetScale(const std::string& bonename, const double
 		Usually does the search for 1-3 times instead of search everything from start.
 	*/
 	bool foundKey = false;
-	while (!foundKey)
+	UINT counter = 0;
+	while (!foundKey && counter < nrOfKeys)
 	{
 		if (m_keyFrames.at(bonename).scale[closestLeft].time < currentFrame &&
 			m_keyFrames.at(bonename).scale[closestRight].time > currentFrame)
@@ -197,6 +277,7 @@ const sm::Vector3 RAnimation::GetScale(const std::string& bonename, const double
 			closestLeft = closestRight;
 			closestRight = (closestRight + 1) % nrOfKeys;
 		}
+		counter++;
 	}
 
 	if (interpolate)
@@ -230,7 +311,8 @@ const sm::Quaternion RAnimation::GetRotation(const std::string& bonename, const 
 		Usually does the search for 1-3 times instead of search everything from start.
 	*/
 	bool foundKey = false;
-	while (!foundKey)
+	UINT counter = 0;
+	while (!foundKey && counter < nrOfKeys)
 	{
 		if (m_keyFrames.at(bonename).rotation[closestLeft].time < currentFrame &&
 			m_keyFrames.at(bonename).rotation[closestRight].time > currentFrame)
@@ -242,6 +324,7 @@ const sm::Quaternion RAnimation::GetRotation(const std::string& bonename, const 
 			closestLeft = closestRight;
 			closestRight = (closestRight + 1) % nrOfKeys;
 		}
+		counter++;
 	}
 
 	if (interpolate)
@@ -263,27 +346,7 @@ const sm::Quaternion RAnimation::GetRotation(const std::string& bonename, const 
 	return finalQuat;
 }
 
-bool RAnimation::IsLoopable() const
-{
-	return m_isLoopable;
-}
-
-void RAnimation::SetLoopable(bool& enable)
-{
-	m_isLoopable = enable;
-}
-
-const double& RAnimation::GetTicksPerFrame() const
-{
-	return m_ticksPerFrame;
-}
-
-const double& RAnimation::GetDuraction() const
-{
-	return m_duration;
-}
-
-const sm::Matrix RAnimation::GetMatrix(const std::string& bonename, const double& currentFrame, std::array<UINT, 3>& lastKeys, bool interpolate)
+const sm::Matrix RAnimation::GetMatrix(const std::string& bonename, const double& currentFrame, UINT (&lastKeys)[3], bool interpolate) const
 {
 	sm::Matrix finalMatrix = sm::Matrix::Identity;
 
@@ -297,64 +360,5 @@ const sm::Matrix RAnimation::GetMatrix(const std::string& bonename, const double
 		//Row major: Scale * Rotation * Translation
 		finalMatrix = sm::Matrix::CreateScale(scl) * sm::Matrix::CreateFromQuaternion(rot) * sm::Matrix::CreateTranslation(pos);
 	}
-
 	return finalMatrix;
-}
-
-void RAnimation::Create(const aiAnimation* animation)
-{
-	m_duration = animation->mDuration;
-	m_ticksPerFrame = animation->mTicksPerSecond;
-	
-	//Load in all the keyframes
-	LoadKeyframes(animation);
-
-}
-
-bool RAnimation::Create(const std::string& filename)
-{
-	std::string filepath = ANIMATIONPATH + filename;
-	Assimp::Importer importer;
-
-	//Will remove extra text on bones like: "_$AssimpFbx$_"...
-	importer.SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, false);
-
-    const aiScene* scene = importer.ReadFile(filepath, 
-											aiProcess_FlipWindingOrder |
-											aiProcess_MakeLeftHanded);
-
-    //Check if readfile was successful
-    if (!scene || !scene->mRootNode)
-	{
-#ifdef _DEBUG
-        LOG_WARNING("Assimp error: %s", importer.GetErrorString());
-#endif 
-        importer.FreeScene();
-        return false;
-    }
-
-	if (!scene->HasAnimations())
-	{
-#ifdef _DEBUG
-		std::cout << "The file " << filename << " does not have any animations..." << std::endl;
-#endif
-		importer.FreeScene();
-		return false;
-	}
-
-	//Only supports to load in the first animation
-	const aiAnimation* animation = scene->mAnimations[0];
-
-	m_duration = animation->mDuration;
-	m_ticksPerFrame = animation->mTicksPerSecond;
-	
-	//Load in all the keyframes - works with only one animation at time
-	LoadKeyframes(animation);
-	
-//#ifdef _DEBUG
-//	LOG_INFO("Loaded animation: %s\n", filename.c_str());
-//#endif // _DEBUG
-
-	importer.FreeScene();
-	return true;
 }

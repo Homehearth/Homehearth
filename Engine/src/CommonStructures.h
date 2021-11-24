@@ -48,6 +48,12 @@ enum class PARTICLEMODE : UINT
 	DUST
 };
 
+enum class TowerTypes : UINT
+{
+	LONG,
+	SHORT
+};
+
 struct Vector2I
 {
 	int x = 0, y = 0;
@@ -241,7 +247,7 @@ enum class GameMsg : uint8_t
 	Lobby_Update,
 	Lobby_PlayerLeft,
 	Lobby_PlayerJoin,
-
+	
 	Server_AssignID,
 	Server_GetPing,
 
@@ -259,7 +265,36 @@ enum class GameMsg : uint8_t
 	Game_AddNPC,
 	Game_RemoveNPC,
 	Game_PlayerInput,
-	Game_Money
+	Game_Money,
+	Game_UseShop,
+	Game_ChangeAnimation,
+	Game_StartSpectate,
+	Game_StopSpectate,
+	Game_Over
+};
+
+enum class ShopItem : uint8_t
+{
+	/*
+		Temporary proof of concept upgrades.
+	*/
+	Primary_Upgrade,
+	Secondary_Upgrade,
+	Tower_Upgrade,
+	Speed_Upgrade,
+	Heal,
+
+	/*
+		Lets the player build a 3x1 tower when pressing build key.
+	*/
+	LONG_TOWER,
+
+	/*
+		Lets the player build a 1x1 tower when pressing build key.
+	*/
+	SHORT_TOWER,
+
+	NR_OF
 };
 
 /*
@@ -319,11 +354,11 @@ struct light_t
 {
 	sm::Vector4 position = {};	//Only in use on Point Lights
 	sm::Vector4 direction = {};	//Only in use on Directional Lights
-	sm::Vector4 color = {};	//Color and Intensity of the Lamp
+	sm::Vector4 color = {};	//Color of the Lamp
 	float		range = 0;	//Only in use on Point Lights
 	TypeLight	type = TypeLight::DIRECTIONAL;	// 0 = Directional, 1 = Point
 	UINT		enabled = 0;	// 0 = Off, 1 = On
-	float		padding = 0;
+	float		intensity = 0;	//Intensity of the Lamp
 };
 
 static struct GridProperties_t

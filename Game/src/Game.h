@@ -20,6 +20,8 @@ private:
 	Entity m_mapEntity;
 
 	InputState m_inputState;
+	std::vector<InputState> m_savedInputs;
+
 
 	// Inherited via Engine
 	virtual bool OnStartup() override;
@@ -40,6 +42,7 @@ public:
 	Client m_client;
 	uint32_t m_localPID;
 	uint32_t m_gameID;
+	uint32_t m_spectatingID;
 	std::string m_playerName;
 	std::unordered_map<ModelID, std::vector<Entity>> m_models;
 	std::vector<std::pair<ModelID, dx::BoundingSphere>> m_LOSColliders;
@@ -58,4 +61,5 @@ public:
 	Entity& GetLocalPlayer();
 
 	ParticleSystem* GetParticleSystem();
+	void UseShop(const ShopItem& whatToBuy);
 };

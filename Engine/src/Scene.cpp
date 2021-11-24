@@ -4,7 +4,7 @@
 #include "Systems.h"
 
 Scene::Scene()
-	: m_IsRenderingColliders(true), m_updateAnimation(true)
+	: m_IsRenderingColliders(true)
 {
 	m_publicBuffer.Create(D3D11Core::Get().Device());
 	m_publicDecalBuffer.Create(D3D11Core::Get().Device());
@@ -20,15 +20,13 @@ Scene::Scene()
 
 void Scene::Update(float dt)
 {
-	//Update all the animations
-	if (m_updateAnimation)
-	{
-		m_registry.view<comp::Animator>().each([&](comp::Animator& anim)
-			{
-				if (anim.animator)
-					anim.animator->Update();
-			});
-	}
+	//Update all the animations that can be updated
+	m_registry.view<comp::Animator>().each([&](comp::Animator& anim)
+		{
+			if (anim.animator && anim.updating)
+				anim.animator->Update();
+		});
+	
 	
 
 	m_2dHandler.Update();
@@ -119,6 +117,7 @@ void Scene::Render()
 		for (const auto& it : m_renderableCopies[1])
 		{
 			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
+
 			if (it.model)
 				it.model->Render(D3D11Core::Get().DeviceContext());
 		}
@@ -131,6 +130,7 @@ void Scene::Render()
 		{
 			const auto& it = m_renderableCopies[1][i];
 			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
+
 			if (it.model)
 				it.model->Render(D3D11Core::Get().DeviceContext());
 		}
