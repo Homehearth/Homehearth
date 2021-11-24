@@ -192,6 +192,8 @@ void Scene::RenderSkybox()
 
 void Scene::RenderShadow(const light_t& light)
 {
+	if (!light.enabled) return;
+
 	for (const auto& model : m_renderableCopies[1])
 	{
 		sm::Vector3 translation = model.data.worldMatrix.Translation();

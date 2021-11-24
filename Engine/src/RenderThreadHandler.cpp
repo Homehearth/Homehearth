@@ -429,13 +429,18 @@ void RenderShadow(const unsigned int start, unsigned int stop, void* buffer, voi
 		// For each shadow.
 		for (int i = start; i < stop; i++)
 		{
-			currentPass->UpdateLightBuffer(m_context, (*m_shadows)[i].lightBuffer.Get(), *(*m_shadows)[i].pLight);
+			auto& shadow = (*m_shadows)[i];
+			currentPass->UpdateLightBuffer(m_context, shadow.lightBuffer.Get(), *shadow.pLight);
+			m_context->ClearDepthStencilView(shadow.shadowDepth.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
-			m_context->ClearDepthStencilView((*m_shadows)[i].shadowDepth.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+			const light_t* light = shadow.pLight;
+			if (!light->enabled)
+				continue;
+
 			ID3D11RenderTargetView* nullTargets[8] = { nullptr };
-			m_context->VSSetConstantBuffers(1, 1, (*m_shadows)[i].lightBuffer.GetAddressOf());
-			m_context->OMSetRenderTargets(8, nullTargets, (*m_shadows)[i].shadowDepth.Get());
-			const light_t* light = (*m_shadows)[i].pLight;
+			m_context->VSSetConstantBuffers(1, 1, shadow.lightBuffer.GetAddressOf());
+			m_context->OMSetRenderTargets(8, nullTargets, shadow.shadowDepth.Get());
+
 			// For each object in world.
 			for (int j = 0; j < (*m_objects)[1].size(); j++)
 			{
