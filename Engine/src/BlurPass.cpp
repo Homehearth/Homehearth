@@ -46,6 +46,7 @@ void BlurPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 		if(FAILED(D3D11Core::Get().SwapChain()->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&backBuff))))
 			return;
 		DC->CopyResource(m_backBufferRead.Get(), backBuff);
+		backBuff->Release();
 		DC->CSSetUnorderedAccessViews(0, 1, m_backBufferReadView.GetAddressOf(), nullptr);
 		DC->CSSetUnorderedAccessViews(1, 1, m_backBufferView.GetAddressOf(), nullptr);
 

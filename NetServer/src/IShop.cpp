@@ -16,7 +16,7 @@ void IShop::UseShop(const ShopItem& whatToBuy, const uint32_t& player)
 		if (m_sim->GetPlayer(player))
 		{
 			// Upgrade if melee.
-			comp::MeleeAttackAbility* m = m_sim->GetPlayer(player)->GetComponent<comp::MeleeAttackAbility>();
+			comp::MeleeAttackAbility* m = m_sim->GetPlayer(player).GetComponent<comp::MeleeAttackAbility>();
 			if (m && m_sim->GetCurrency().GetAmountRef() >= 10)
 			{
 				m->attackDamage += .5f;
@@ -24,7 +24,7 @@ void IShop::UseShop(const ShopItem& whatToBuy, const uint32_t& player)
 			}
 
 			// Upgrade if ranged.
-			comp::RangeAttackAbility* r = m_sim->GetPlayer(player)->GetComponent<comp::RangeAttackAbility>();
+			comp::RangeAttackAbility* r = m_sim->GetPlayer(player).GetComponent<comp::RangeAttackAbility>();
 			if (r && m_sim->GetCurrency().GetAmountRef() >= 10)
 			{
 				r->attackDamage += .5f;
@@ -54,7 +54,7 @@ void IShop::UseShop(const ShopItem& whatToBuy, const uint32_t& player)
 	{
 		if (m_sim->GetPlayer(player))
 		{
-			comp::Health* h = m_sim->GetPlayer(player)->GetComponent<comp::Health>();
+			comp::Health* h = m_sim->GetPlayer(player).GetComponent<comp::Health>();
 			if (h)
 			{
 				h->currentHealth = h->maxHealth;
@@ -66,7 +66,7 @@ void IShop::UseShop(const ShopItem& whatToBuy, const uint32_t& player)
 	{
 		if (m_sim->GetPlayer(player))
 		{
-			m_sim->GetPlayer(player)->GetComponent<comp::Player>()->towerSelected = TowerTypes::LONG;
+			m_sim->GetPlayer(player).GetComponent<comp::Player>()->towerSelected = TowerTypes::LONG;
 		}
 		break;
 	}
@@ -74,7 +74,7 @@ void IShop::UseShop(const ShopItem& whatToBuy, const uint32_t& player)
 	{
 		if (m_sim->GetPlayer(player))
 		{
-			m_sim->GetPlayer(player)->GetComponent<comp::Player>()->towerSelected = TowerTypes::SHORT;
+			m_sim->GetPlayer(player).GetComponent<comp::Player>()->towerSelected = TowerTypes::SHORT;
 		}
 		break;
 	}

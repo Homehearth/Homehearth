@@ -78,8 +78,10 @@ cbuffer BlurSettings : register(b11)
 
 cbuffer InverseMatrices : register(b12)
 {
-    float4x4 c_inverseView;
-    float4x4 c_inverseProjection;
+    float4x4    c_inverseView;
+    float4x4    c_inverseProjection;
+    uint        c_dofType;
+    float3      dofPadding;
 }
 
 

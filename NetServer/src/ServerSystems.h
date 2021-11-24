@@ -47,4 +47,6 @@ namespace ServerSystems
 	
 	void CheckGameOver(Simulation* simulation, HeadlessScene& scene);
 	void TickBTSystem(Simulation* simulation, HeadlessScene& scene);
+
+	void AnimatonSystem(Simulation* simulation, HeadlessScene& scene);
 }

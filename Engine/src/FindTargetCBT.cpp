@@ -25,7 +25,7 @@ BT::NodeStatus BT::FindTargetCBT::Tick()
 		LOG_ERROR("The enemy have no transform");
 		return BT::NodeStatus::FAILURE;
 	}
-	PathFinderManager* aihandler = Blackboard::Get().GetAIHandler();
+	PathFinderManager* aihandler = Blackboard::Get().GetPathFindManager();
 
 	//Find the nearest player and set that position as target
 	Entity nearestPlayer;

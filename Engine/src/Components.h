@@ -12,9 +12,8 @@ namespace ecs
 	{
 		TRANSFORM,
 		VELOCITY,
-		ANIMATOR_NAME,
 		MESH_NAME,
-		NAME_PLATE,
+		ANIMATOR_NAME,
 		HEALTH,
 		BOUNDING_ORIENTED_BOX,
 		BOUNDING_SPHERE,
@@ -107,7 +106,14 @@ namespace ecs
 
 		struct Animator
 		{
-			std::shared_ptr<RAnimator> animator;
+			std::shared_ptr<RAnimator>  animator;
+			bool						updating = true;
+		};
+
+		struct AnimationState
+		{
+			EAnimationType lastSend;	//Send to user last time
+			EAnimationType toSend;		//Going to be send this update
 		};
 
 		// Used on server side
@@ -119,11 +125,6 @@ namespace ecs
 		struct MeshName 
 		{
 			std::string name = "";
-		};
-
-		struct NamePlate
-		{
-			std::string namePlate;
 		};
 		
 		struct RenderableDebug
@@ -217,6 +218,8 @@ namespace ecs
 			float respawnTimer;
 			bool isReady = false;
 			bool reachable = true;
+
+			char name[12] = {};
 			TowerTypes towerSelected = TowerTypes::SHORT;
 		};
 
@@ -273,10 +276,6 @@ namespace ecs
 			// lifetime of the ability, for instance lifetime of any created collider
 			float lifetime = 5.f;
 
-			float attackDamage = 5.f;
-
-			float attackRange = 10.0f;
-
 			// !DO NOT TOUCH!
 			bool isReady = false;
 			// !DO NOT TOUCH!
@@ -289,15 +288,27 @@ namespace ecs
 		struct MeleeAttackAbility : public IAbility
 		{
 			//Just to keep it not empty for now
-			float temp = 0.0f;
+			float attackDamage = 5.f;
+			float attackRange = 10.0f;
 		};
 
 		struct RangeAttackAbility : public IAbility
 		{
 			float attackDamage = 5.f;
+			float attackRange = 10.0f;
 			float projectileSpeed = 10.f;
 			float projectileSize = 1.0f;
 		};
+
+
+		struct TeleportAbility : public IAbility
+		{
+			//The distance ability teleports Entity forward 
+			float distance = 8.0f;
+			//The point direction ability will teleport towards
+			sm::Vector3 targetPoint = { 0.f,0.0f,0.0f };
+		};
+
 
 		struct HealAbility : public IAbility
 		{

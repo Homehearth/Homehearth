@@ -51,7 +51,7 @@ namespace sceneHelp
 		SetupMainMenuScreen(game);
 
 		Entity backgroundScene = mainMenuScene.CreateEntity();
-		backgroundScene.AddComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>("GameSceneAll.obj");
+		backgroundScene.AddComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>("GameSceneAll.fbx");
 		backgroundScene.AddComponent<comp::Transform>();
 		mainMenuScene.GetRegistry()->on_construct<comp::Light>().connect<&Lights::Add>(mainMenuScene.GetLights());
 
@@ -116,6 +116,12 @@ namespace sceneHelp
 		SetupOptionsScreen(game);
 	}
 
+	void CreateGameOverScene(Game* game)
+	{
+		Scene& gameOverMeny = game->GetScene("GameOver");
+		SetupGameOverScreen(game);
+	}
+
 	void CreateGameScene(Game* game)
 	{
 		Scene& gameScene = game->GetScene("Game");
@@ -174,7 +180,7 @@ namespace sceneHelp
 						game->GetCurrentScene()->GetCollection("ScrolldownMenu")->GetState() == ElementState::OUTSIDE)
 					{
 						game->GetCurrentScene()->GetCollection("shopMenu")->Hide();
-							toggle = false;
+						toggle = false;
 					}
 
 					if (game->GetCurrentScene()->GetCollection("inGameMenu")->GetState() == ElementState::OUTSIDE &&
@@ -183,9 +189,6 @@ namespace sceneHelp
 						game->GetCurrentScene()->GetCollection("inGameMenu")->Hide();
 					}
 				}
-
-				// Prediction
-				//engine->m_predictor.Predict(engine->GetScene("Game"));
 				//GameSystems::RenderIsCollidingSystem(scene);
 				GameSystems::UpdatePlayerVisuals(game);
 				Systems::LightSystem(scene, e.dt);
@@ -238,10 +241,6 @@ namespace sceneHelp
 		portField->SetDescriptionText("Port:");
 		rtd::Button* connectButton = connectFields->AddElement<rtd::Button>("Start.png", draw_t((width / 2) - (width / 8.f), height - (height * 0.25f), width / 4.f, height * 0.15f));
 		scene.Add2DCollection(connectFields, "ConnectFields");
-		//rtd::Button* exitButton = connectFields->AddElement<rtd::Button>("demoExitButton.png", draw_t(0.0f, 0.0f, width / 24, height / 16));
-		//exitButton->SetOnPressedEvent([=] {
-		//game->Shutdown();
-		//	});
 
 		Collection2D* scrolldownMenu = new Collection2D;
 		rtd::Scroller* sc = scrolldownMenu->AddElement<rtd::Scroller>(draw_t(0.0f, -(height / 16) * 3.0f, width / 24.0f, (height / 16) * 3.0f), sm::Vector2(0, 0));
@@ -534,7 +533,7 @@ namespace sceneHelp
 
 			});
 		menu->AddElement<rtd::Text>("Help", draw_text_t((width / 8.0f) * 5.0f, (height / 8.0f) * 4.0f, width / 4.0f, height / 8.0f));
-		
+
 		rtd::Button* returnTo = menu->AddElement<rtd::Button>("Button.png", draw_t((width / 2.0f) - (width / 8.0f), height - (height / 4.0f), width / 4.0f, height / 8.0f));
 		menu->AddElement<rtd::Text>("Go Back", draw_text_t((width / 2.0f) - (width / 8.0f), height - (height / 4.0f), width / 4.0f, height / 8.0f));
 		returnTo->SetOnPressedEvent([=] {
@@ -562,17 +561,17 @@ namespace sceneHelp
 			});
 
 		visualMenu->AddElement<rtd::Button>("Button.png", draw_t(width / 8.0f, height / 8.0f, width / 4.0f, height / 8.0f))->SetOnPressedEvent([=] {
-			
+
 			resolutionMenu->Show();
 			visualMenu->Hide();
-			
+
 			});
 		visualMenu->AddElement<rtd::Text>("Resolution", draw_t(width / 8.0f, height / 8.0f, width / 4.0f, height / 8.0f));
 		visualMenu->AddElement<rtd::Button>("Button.png", draw_t((width / 8.0f) * 5.0f, (height / 8.0f), width / 4.0f, height / 8.0f))->SetOnPressedEvent([=] {
-			
+
 			//visualMenu->Hide();
 			//miscMenu->Show();
-			
+
 			});
 		visualMenu->AddElement<rtd::Text>("Misc.", draw_t((width / 8.0f) * 5.0f, (height / 8.0f), width / 4.0f, height / 8.0f));
 
@@ -627,6 +626,26 @@ namespace sceneHelp
 		loadingScreen->AddElement<rtd::Text>("Loading!", draw_text_t((width / 2.f) - (strlen("Loading!") * D2D1Core::GetDefaultFontSize() * 0.5f), (height / 2.f) - D2D1Core::GetDefaultFontSize(), strlen("Loading!") * D2D1Core::GetDefaultFontSize(), D2D1Core::GetDefaultFontSize()));
 
 		scene.Add2DCollection(loadingScreen, "LoadingScreen");
+	}
+
+	void SetupGameOverScreen(Game* game)
+	{
+		const float width = (float)game->GetWindow()->GetWidth();
+		const float height = (float)game->GetWindow()->GetHeight();
+		Scene& scene = game->GetScene("GameOver");
+
+		Collection2D* gameOverCollection = new Collection2D;
+		rtd::Text* gameOverField = gameOverCollection->AddElement<rtd::Text>("Game Over", draw_text_t((width / 2.f) - (strlen("Game Over") * D2D1Core::GetDefaultFontSize() * 0.5f), (height / 5.f) - D2D1Core::GetDefaultFontSize(), strlen("Game Over") * D2D1Core::GetDefaultFontSize(), D2D1Core::GetDefaultFontSize()));
+		gameOverField->SetText("Game Over");
+		rtd::Button* mainMenuButton = gameOverCollection->AddElement<rtd::Button>("Button.png", draw_t((width / 2) - (width / 8), height - (height / 6.f), width / 4, height / 8));
+		gameOverCollection->AddElement<rtd::Text>("Main Menu", draw_text_t((width / 2) - (width / 8), height - (height / 6.f), width / 4, height / 8));
+		mainMenuButton->SetOnPressedEvent([=]
+			{
+				game->m_client.Disconnect();
+			});
+
+		scene.Add2DCollection(gameOverCollection, "GameOver");
+
 	}
 
 	void SetupLobbyJoinScreen(Game* game)

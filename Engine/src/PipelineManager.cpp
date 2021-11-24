@@ -8,6 +8,8 @@ PipelineManager::PipelineManager()
 	, m_d3d11(&D3D11Core::Get())
 	, m_viewport()
 {
+    m_windowWidth = 0;
+    m_windowHeight = 0;
 }
 
 void PipelineManager::Initialize(Window* pWindow, ID3D11DeviceContext* context)
@@ -513,7 +515,13 @@ bool PipelineManager::CreateShaders()
 
     if (!m_skyboxVertexShader.Create("Skybox_vs"))
     {
-        LOG_WARNING("failed creating Skox_vs.");
+        LOG_WARNING("failed creating Skybox_vs.");
+        return false;
+    }
+
+    if (!m_skyboxPixelShader.Create("Skybox_ps"))
+    {
+        LOG_WARNING("failed creating Skybox_ps.");
         return false;
     }
 

@@ -50,7 +50,7 @@ void Renderer::Initialize(Window* pWindow)
 		pass->Initialize(m_d3d11->DeviceContext(), &m_pipelineManager);
 	}
 
-	m_dofPass.Create();
+	m_dofPass.Create(DoFType::VIGNETTE);
 }
 
 void Renderer::Setup(BasicEngine<Scene>& engine)
@@ -115,6 +115,11 @@ void Renderer::Render(Scene* pScene)
 IRenderPass* Renderer::GetCurrentPass() const
 {
 	return m_passes[m_currentPass];
+}
+
+DOFPass* Renderer::GetDoFPass()
+{
+	return &m_dofPass;
 }
 
 void Renderer::AddPass(IRenderPass* pass)

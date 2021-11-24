@@ -1,6 +1,27 @@
 skel			Monster.fbx
-anim 			idle 			Monster_Idle.fbx
-anim 			walk 			Monster_Walk.fbx
-anim 			attack 			Monster_Attack.fbx
-anim 			takeDamage 		Monster_TakeDamage.fbx
-currentAnim 	walk
+anim 			IDLE 				Monster_Idle.fbx
+anim 			MOVE 				Monster_Walk.fbx
+anim 			PRIMARY_ATTACK 		Monster_Attack.fbx
+loopable		0
+anim 			TAKE_DAMAGE 		Monster_TakeDamage.fbx
+loopable		0
+defaultAnim 	IDLE
+
+blendstate		IDLE				MOVE				1.4
+blendstate 		MOVE				IDLE				0.5
+
+	
+----NO----		IDLE				PRIMARY_ATTACK		0
+----NO----		PRIMARY_ATTACK		IDLE				0
+														 
+														 
+blendstate		IDLE				TAKE_DAMAGE			0.5
+blendstate		TAKE_DAMAGE			IDLE				0.5
+														 
+														 
+----NO----		MOVE				PRIMARY_ATTACK		0
+blendstate		PRIMARY_ATTACK		MOVE				0.5
+														 
+														 
+blendstate		MOVE				TAKE_DAMAGE			0.5
+blendstate		TAKE_DAMAGE			MOVE				0.5

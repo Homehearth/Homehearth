@@ -198,17 +198,20 @@ CollisionInfo_t CollisionSystem::Intersection(Entity entity1, Entity entity2)
 		sm::Vector3 sCenter = p1BoS->Center;
 		// Put the sphere in the obb's local space
 		sCenter = sm::Vector3::Transform(sCenter, obbInverse);
-		sCenter.y = 0.f;
+		//sCenter.y = 0.f;
 
 		float minX = (-p2OBB->Extents.x);
 		float maxX = p2OBB->Extents.x;
+		float minY = (-p2OBB->Extents.y);
+		float maxY = p2OBB->Extents.y;
 		float minZ = (-p2OBB->Extents.z);
 		float maxZ = p2OBB->Extents.z;
 
 		// Get the closest point on the OBB that is inside the sphere
 		float closestX = max(minX, min(sCenter.x, maxX));
+		float closestY = max(minY, min(sCenter.y, maxY));
 		float closestZ = max(minZ, min(sCenter.z, maxZ));
-		sm::Vector3 ClosestPoint = { closestX, 0.f, closestZ };
+		sm::Vector3 ClosestPoint = { closestX, closestY, closestZ };
 		sm::Vector3 pointToSphere = sCenter - ClosestPoint;
 
 		float distance = pointToSphere.Length();
@@ -358,7 +361,7 @@ void CollisionSystem::CollisionResponse(CollisionInfo_t collisionInfo, Entity en
 		if (transform)
 		{
 			transform->position = transform->position + sm::Vector3(collisionInfo.smallestVec * collisionInfo.overlap);
-			transform->position.y = 0.f;
+			//transform->position.y = 0.f;
 
 			if (BoS)
 			{
@@ -379,7 +382,7 @@ void CollisionSystem::CollisionResponse(CollisionInfo_t collisionInfo, Entity en
 		if (transform1)
 		{
 			transform1->position = transform1->position + (sm::Vector3(collisionInfo.smallestVec * collisionInfo.overlap * -1.0f));
-			transform1->position.y = 0.f;
+			//transform1->position.y = 0.f;
 
 			if (BoS1)
 			{
@@ -391,7 +394,7 @@ void CollisionSystem::CollisionResponse(CollisionInfo_t collisionInfo, Entity en
 		if (transform2)
 		{
 			transform2->position = transform2->position + (sm::Vector3(collisionInfo.smallestVec * collisionInfo.overlap));
-			transform2->position.y = 0.f;
+			//transform2->position.y = 0.f;
 
 			if (BoS2)
 			{
