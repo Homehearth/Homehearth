@@ -268,6 +268,8 @@ enum class GameMsg : uint8_t
 	Game_Money,
 	Game_UseShop,
 	Game_ChangeAnimation,
+	Game_StartSpectate,
+	Game_StopSpectate,
 	Game_Over
 };
 

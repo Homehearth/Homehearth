@@ -665,6 +665,11 @@ HeadlessScene* Simulation::GetLobbyScene() const
 	return m_pLobbyScene;
 }
 
+HeadlessScene* Simulation::GetGameOverScene() const
+{
+	return m_pGameOverScene;
+}
+
 HeadlessScene* Simulation::GetGameScene() const
 {
 	return m_pGameScene;

@@ -13,6 +13,7 @@ Game::Game()
 	, Engine()
 {
 	this->m_localPID = -1;
+	this->m_spectatingID = -1;
 	this->m_money = 0;
 	this->m_gameID = -1;
 	this->m_waveTimer = 0;
@@ -159,7 +160,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 				entity = m_gameEntities.at(entityID);
 				UpdateEntityFromMessage(entity, msg);
 			}
-			else 
+			else
 			{
 
 				LOG_WARNING("Updating: Entity %u not in m_gameEntities, should not happen...", entityID);
@@ -186,7 +187,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 				entity = m_gameEntities.at(entityID);
 				UpdateEntityFromMessage(entity, msg);
 			}
-			else 
+			else
 			{
 				LOG_WARNING("Updating component: Entity %u not in m_gameEntities, should not happen...", entityID);
 			}
@@ -374,18 +375,18 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		if (m_players.find(m_localPID) != m_players.end())
 		{
 			comp::Player* player = m_players.at(m_localPID).GetComponent<comp::Player>();
-				rtd::Text* readyText = dynamic_cast<rtd::Text*>(GetScene("Lobby").GetCollection("StartGame")->elements[1].get());
-				if (readyText)
+			rtd::Text* readyText = dynamic_cast<rtd::Text*>(GetScene("Lobby").GetCollection("StartGame")->elements[1].get());
+			if (readyText)
+			{
+				if (player->isReady)
 				{
-					if (player->isReady)
-					{
-						readyText->SetText("Ready");
-					}
-					else
-					{
-						readyText->SetText("Not ready");
-					}
+					readyText->SetText("Ready");
 				}
+				else
+				{
+					readyText->SetText("Not ready");
+				}
+			}
 		}
 
 		dynamic_cast<rtd::Text*>(GetScene("Lobby").GetCollection("LobbyDesc")->elements[1].get())->SetText("Lobby ID: " + std::to_string(m_gameID));
@@ -431,6 +432,44 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 				}
 			}
 		}
+		break;
+	}
+	case GameMsg::Game_StartSpectate:
+	{
+		m_players.at(m_localPID).GetComponent<comp::Player>()->state = comp::Player::State::SPECTATING;
+		auto it = m_players.begin();
+		while (it != m_players.end())
+		{
+			if (it->first != m_localPID && it->second.GetComponent<comp::Health>()->isAlive)
+			{
+				GetScene("Game").ForEachComponent<comp::Tag<TagType::CAMERA>>([&](Entity entt, comp::Tag<TagType::CAMERA>& t)
+					{
+						comp::Camera3D* c = entt.GetComponent<comp::Camera3D>();
+						if (c)
+						{
+							c->camera.SetFollowEntity(m_players.at(it->first));
+						}
+					});
+				m_spectatingID = it->first;
+				break;
+			}
+			it++;
+		}
+		break;
+	}
+	case GameMsg::Game_StopSpectate:
+	{
+		m_players.at(m_localPID).GetComponent<comp::Player>()->state = comp::Player::State::IDLE;
+		GetScene("Game").ForEachComponent<comp::Tag<TagType::CAMERA>>([&](Entity entt, comp::Tag<TagType::CAMERA>& t)
+			{
+				comp::Camera3D* c = entt.GetComponent<comp::Camera3D>();
+				if (c)
+				{
+					c->camera.SetFollowEntity(m_players.at(m_localPID));
+				}
+			});
+		m_spectatingID = -1;
+		break;
 	}
 	}
 }
@@ -656,6 +695,29 @@ void Game::UpdateInput()
 	if (InputSystem::Get().CheckMouseKey(MouseKey::RIGHT, KeyState::PRESSED))
 	{
 		m_inputState.rightMouse = true;
+		if (m_localPID != -1 && m_players.size() > 0 && m_players.at(m_localPID).GetComponent<comp::Player>()->state == comp::Player::State::SPECTATING)
+		{
+
+			auto it = m_players.begin();
+			while (it != m_players.end())
+			{
+				if (it->first != m_localPID && it->first != m_spectatingID && it->second.GetComponent<comp::Health>()->isAlive)
+				{
+					GetScene("Game").ForEachComponent<comp::Tag<TagType::CAMERA>>([&](Entity entt, comp::Tag<TagType::CAMERA>& t)
+						{
+							comp::Camera3D* c = entt.GetComponent<comp::Camera3D>();
+							if (c)
+							{
+								c->camera.SetFollowEntity(m_players.at(it->first));
+							}
+						});
+					m_spectatingID = it->first;
+					break;
+				}
+				it++;
+			}
+
+		}
 	}
 	m_inputState.mouseRay = InputSystem::Get().GetMouseRay();
 	// temp
@@ -665,6 +727,8 @@ void Game::UpdateInput()
 	}
 
 	m_savedInputs.push_back(m_inputState);
+
+
 	//TEMP PLZ REMOVE AFTER WE COME TO AN AGREEMENT ON WHICH DOF EFFECT TO USE
 	if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::D1, KeyState::PRESSED))
 	{
