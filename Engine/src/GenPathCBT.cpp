@@ -12,7 +12,7 @@ BT::GenPathCBT::GenPathCBT(const std::string& name, Entity entity)
 
 BT::NodeStatus BT::GenPathCBT::Tick()
 {
-	PathFinderManager* aiHandler = Blackboard::Get().GetAIHandler();
+	PathFinderManager* aiHandler = Blackboard::Get().GetPathFindManager();
 
 	if(aiHandler != nullptr)
 	{

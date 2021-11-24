@@ -1,6 +1,8 @@
 #include "EnginePCH.h"
 #include "GridSystem.h"
 #include "PathFinderManager.h"
+
+
 #define STB_IMAGE_IMPLEMENTATION
 
 GridSystem::GridSystem()
@@ -191,7 +193,10 @@ bool GridSystem::RemoveDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, 
 					}
 				});
 		}
+
+		Blackboard::Get().GetPathFindManager()->RemoveDefenseEntity(closestEntity);
 		closestEntity.Destroy();
+		
 		return true;
 	}
 	else
@@ -324,8 +329,9 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 				collider->Extents = { m_tileHalfWidth, m_tileHalfWidth, m_tileHalfWidth };
 				tileEntity.AddComponent<comp::Tag<TagType::STATIC>>();
 				tileEntity.AddComponent<comp::Tag<TagType::DEFENCE>>();
-				tileEntity.AddComponent<comp::MeshName>()->name = "Defence.obj";
+				defenseEntity.AddComponent<comp::Health>();
 				tileEntity.AddComponent<comp::Network>();
+				tileEntity.AddComponent<comp::MeshName>()->name = "Defence.obj";
 				Node* node = aiHandler->GetNodeByID(Vector2I(zPos, xPos));
 				node->defencePlaced = true;
 				node->reachable = false;

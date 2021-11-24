@@ -70,6 +70,7 @@ bool Game::OnStartup()
 	sceneHelp::CreateGameScene(this);
 	sceneHelp::CreateMainMenuScene(this);
 	sceneHelp::CreateJoinLobbyScene(this);
+	sceneHelp::CreateGameOverScene(this);
 
 	sceneHelp::CreateOptionsScene(this);
 	// Set Current Scene
@@ -160,6 +161,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			}
 			else 
 			{
+
 				LOG_WARNING("Updating: Entity %u not in m_gameEntities, should not happen...", entityID);
 			}
 		}
@@ -273,6 +275,11 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			it++;
 		}
 		SetScene("Lobby");
+		break;
+	}
+	case GameMsg::Game_Over:
+	{
+		SetScene("GameOver");
 		break;
 	}
 	case GameMsg::Lobby_Accepted:
