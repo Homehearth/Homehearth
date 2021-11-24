@@ -57,13 +57,13 @@ float4 main(PixelIn input) : SV_TARGET
 					//closestDepth = saturate(closestDepth);
                     
                     float currentDepth = pixelposLightSpace.z / pixelposLightSpace.w;
-					//currentDepth = saturate(currentDepth);
+					currentDepth = saturate(currentDepth);
 					currentDepth -= 0.001f;
                     
 					if (currentDepth > closestDepth)
 					{
-						shadowCoef = 1.0f;
-						return float4(currentDepth - closestDepth, 0, 0, 1.0f);
+                        shadowCoef = 1.0f;
+						//return float4(currentDepth - closestDepth, 0, 0, 1.0f);
 					}
 				}
 			}
