@@ -758,7 +758,6 @@ void Simulation::ResetGameScene()
 	m_currency.Zero();
 
 	LOG_INFO("%lld", m_pGameScene->GetRegistry()->size());
-	CreateWaves();
 }
 
 void Simulation::SendEntities(const std::vector<Entity>& entities, GameMsg msgID, const std::bitset<ecs::Component::COMPONENT_MAX>& componentMask)

@@ -120,8 +120,11 @@ void Game::OnUserUpdate(float deltaTime)
 					if (l.lightData.type == TypeLight::DIRECTIONAL)
 					{
 						sm::Vector3 dir = sm::Vector3::TransformNormal(sm::Vector3(l.lightData.direction), sm::Matrix::CreateRotationZ(dx::XMConvertToRadians(deltaTime * 10.f)));
+						l.lightData.enabled = true;
+						if (dir.y > 0)
+							l.lightData.enabled = false;
+
 						l.lightData.direction = sm::Vector4(dir.x, dir.y, dir.z, 0.0f);
-						
 						sm::Vector3 pos = l.lightData.position;
 						float d = dir.Dot(sm::Vector3::Up);
 						pos = playerPos - dir * 200;

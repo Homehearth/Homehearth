@@ -174,7 +174,7 @@ void ShadowPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 
 	DC->PSSetSamplers(1, 1, PM->m_linearSamplerState.GetAddressOf());
 	DC->RSSetViewports(1, &m_viewport);
-	DC->RSSetState(PM->m_rasterState.Get());
+	DC->RSSetState(PM->m_rasterStateNoCulling.Get());
 
 	DC->VSSetShader(PM->m_defaultVertexShader.Get(), nullptr, 0);
 	DC->PSSetShader(PM->m_shadowPixelShader.Get(), nullptr, 0);
