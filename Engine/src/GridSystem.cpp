@@ -33,6 +33,16 @@ int GridSystem::TileOffset(const int& index) const
 	return offset;
 }
 
+std::vector<Tile> GridSystem::GetTilesWithEntityID(const uint32_t& id) const
+{
+	std::vector<Tile> allTiles;
+
+
+
+
+	return allTiles;
+}
+
 void GridSystem::Initialize(Vector2I mapSize, sm::Vector3 position, std::string fileName, HeadlessScene* scene)
 {
 	m_scene = scene;
@@ -166,7 +176,13 @@ bool GridSystem::RemoveDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, 
 		int clampedX = static_cast<int>((abs(closestTransform->position.x) / m_tileSize.x));
 		int clampedZ = static_cast<int>((abs(closestTransform->position.z) / m_tileSize.y));
 
-		m_tiles[clampedZ][clampedX].type = TileType::EMPTY;
+		/*
+			TODO: Check if there is other tiles around that need to be cleared
+
+			Check the size of the boundingbox. Remove every tile that is within the area
+
+		*/
+
 		Node* node = aiHandler->GetNodeByID(m_tiles[clampedZ][clampedX].gridID);
 		node->defencePlaced = false;
 		node->reachable = true;
@@ -207,35 +223,22 @@ bool GridSystem::RemoveDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, 
 
 
 bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, PathFinderManager* aiHandler)
-{
-	/*
-		TEMP WILL BE SEND FROM PLAYER SOON
-	*/
-	/*enum class EDefenceType
-	{
-		def1x1,
-		def1x3
-	};
-	enum class ERotatation
-	{
-		degress_0,
-		degress_90,
-
-	};*/
-
-	UINT numberOfDefences = 3;
-	bool zdirection = true;
-
+{	
+	//Player that placed defence
+	dx::BoundingSphere localPlayerSphere;
+	comp::Player player;
 
 	/*
 		Save all the positions of the players and NPCs
 	*/
 	std::vector<dx::BoundingSphere> ePos;
-	dx::BoundingSphere localPlayer;
 	m_scene->ForEachComponent<comp::Player, comp::BoundingSphere, comp::Network>([&](comp::Player& p, comp::BoundingSphere& bs, comp::Network& net)
 		{
 			if (net.id == playerWhoPressedMouse)
-				localPlayer = bs;
+			{
+				localPlayerSphere = bs;
+				player = p;
+			}
 			ePos.push_back(bs);
 		});
 	m_scene->ForEachComponent<comp::NPC, comp::BoundingSphere>([&](comp::NPC& p, comp::BoundingSphere& bs)
@@ -243,30 +246,34 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 			ePos.push_back(bs);
 		});
 
-	// Touched the plane
 	Plane_t plane;
 	plane.normal = { 0.0f, 1.0f, 0.0f };
 	sm::Vector3 pos;
 	if (mouseRay.Intersects(plane, &pos))
 	{
-		bool tileOccupied = false;
+		bool okayToPlace = true;
 
 		//Tile touched
 		int centerTileX = static_cast<int>(std::abs(pos.x) / m_tileSize.x);
 		int centerTileZ = static_cast<int>(std::abs(pos.z) / m_tileSize.y);
 
-		//Check player distance from placed defence
-		Tile touchedTile = m_tiles[centerTileZ][centerTileX];
-		float tilePlayerDistance = (localPlayer.Center - touchedTile.position).Length();
-		if (tilePlayerDistance >= m_gridSize.x * 3)
-			tileOccupied = true;
+		//Check distance between player and the tile what we touched
+		float tileToPlayerDistance = (localPlayerSphere.Center - m_tiles[centerTileZ][centerTileX].position).Length();
+		if (tileToPlayerDistance >= player.buildDistance)
+			okayToPlace = false;
+
+		UINT numberOfDefences = 0;
+		if (player.towerSelected == EDefenceType::SMALL)
+			numberOfDefences = 1;
+		else if (player.towerSelected == EDefenceType::LARGE)
+			numberOfDefences = 3;
 
 		//Check if it was okay to place all the defences here
-		for (UINT d = 0; d < numberOfDefences && !tileOccupied; d++)
+		for (UINT d = 0; d < numberOfDefences && okayToPlace; d++)
 		{
-			int xPos = centerTileX; // + TileOffset(d);
-			int zPos = centerTileZ; // +TileOffset(d);;
-			if (zdirection)
+			int xPos = centerTileX;
+			int zPos = centerTileZ;
+			if (player.rotateDefence)
 				zPos += TileOffset(d);
 			else
 				xPos += TileOffset(d);
@@ -275,63 +282,49 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 			
 			//Check the tiles current type
 			if (tile.type != TileType::EMPTY)
-				tileOccupied = true;
+				okayToPlace = false;
 
 			//Make sure we are within the grid
 			if (InsideGrid(xPos, zPos))
 			{
+				//Each side of the tile
+				float right		= tile.position.x + tile.halfWidth;
+				float left		= tile.position.x - tile.halfWidth;
+				float top		= tile.position.z + tile.halfWidth;
+				float bottom	= tile.position.z - tile.halfWidth;
+
 				// Checking so the other entities doesnt occupy the tile
-				for (int i = 0; i < ePos.size() && !tileOccupied; i++)
+				for (int i = 0; i < ePos.size() && okayToPlace; i++)
 				{
-					/*
-						TODO: Need to fix this! Something is wrong
-					*/
+					float closestX = max(left, min(ePos[i].Center.x, right));
+					float closestZ = max(bottom, min(ePos[i].Center.z, top));
 
-					//Distance between the entity and the tile that is going to be placed
-					float distance = sm::Vector3(ePos[i].Center - tile.position).Length();
+					//Distance between the tiles closest side and the entity
+					float distance = (ePos[i].Center - sm::Vector3(closestX, 0.f, closestZ)).Length();
 
-					//Checking radius of the tile and the entity
-					if (distance < tile.halfWidth || distance < ePos[i].Radius)
+					//To close
+					if (distance < ePos[i].Radius)
 					{
-						tileOccupied = true;
+						okayToPlace = false;
 					}
 				}
 			}
 		}
 
 		// Okay to place defence here - JUST DO IT!
-		if (!tileOccupied)
+		if (okayToPlace)
 		{
 			for (UINT d = 0; d < numberOfDefences; d++)
 			{
-				int xPos = centerTileX; //+ TileOffset(d);
-				int zPos = centerTileZ; //+ TileOffset(d);
-				
-				if (zdirection)
+				int xPos = centerTileX;
+				int zPos = centerTileZ;
+				if (player.rotateDefence)
 					zPos += TileOffset(d);
 				else
 					xPos += TileOffset(d);
 
-				Tile tile = m_tiles[zPos][xPos];
-
-				/*
-					Create the tile entity
-				*/
 				m_tiles[zPos][xPos].type = TileType::DEFENCE;
-				Entity tileEntity = m_scene->CreateEntity();
-				comp::Transform* transform = tileEntity.AddComponent<comp::Transform>();
-				transform->position = { tile.position.x , 5.f, tile.position.z };
-				transform->scale = { 1.35f, 1.f, 1.35f };
 
-				//transform->rotation = { 0.f, 0.785398163f, 0.f };
-
-				comp::BoundingOrientedBox* collider = tileEntity.AddComponent<comp::BoundingOrientedBox>();
-				collider->Extents = { m_tileHalfWidth, m_tileHalfWidth, m_tileHalfWidth };
-				tileEntity.AddComponent<comp::Tag<TagType::STATIC>>();
-				tileEntity.AddComponent<comp::Tag<TagType::DEFENCE>>();
-				tileEntity.AddComponent<comp::Health>();
-				tileEntity.AddComponent<comp::Network>();
-				tileEntity.AddComponent<comp::MeshName>()->name = "Defence.obj";
 				Node* node = aiHandler->GetNodeByID(Vector2I(zPos, xPos));
 				node->defencePlaced = true;
 				node->reachable = false;
@@ -355,7 +348,7 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 						}
 					}
 				}
-				if (!aiHandler->PlayerAStar(localPlayer.Center))
+				if (!aiHandler->PlayerAStar(localPlayerSphere.Center))
 				{
 					m_scene->ForEachComponent<comp::Player, comp::Network>([&](comp::Player& p, comp::Network& net)
 						{
@@ -366,6 +359,43 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 						});
 				}
 			}
+
+			/*
+				Create the model for this tiles
+			*/
+			Tile centerTile = m_tiles[centerTileZ][centerTileX];
+
+			Entity tileEntity = m_scene->CreateEntity();
+			comp::Transform* transform = tileEntity.AddComponent<comp::Transform>();
+			transform->position = { centerTile.position.x , 5.f, centerTile.position.z };
+
+			if (player.rotateDefence)
+				transform->rotation = sm::Quaternion::CreateFromYawPitchRoll(static_cast<float>(PI / 2.f), 0.f, 0.f);
+
+			comp::BoundingOrientedBox* collider = tileEntity.AddComponent<comp::BoundingOrientedBox>();
+			tileEntity.AddComponent<comp::Tag<TagType::STATIC>>();
+			tileEntity.AddComponent<comp::Tag<TagType::DEFENCE>>();
+			tileEntity.AddComponent<comp::Network>();
+			comp::Health* health = tileEntity.AddComponent<comp::Health>();
+
+			if (player.towerSelected == EDefenceType::SMALL)
+			{
+				health->currentHealth	= 100.0f;
+				health->maxHealth		= 100.0f;
+				tileEntity.AddComponent<comp::MeshName>()->name = "Defence1x1.obj";
+				collider->Extents		= { m_tileHalfWidth, m_tileHalfWidth, m_tileHalfWidth };
+			}
+			else if (player.towerSelected == EDefenceType::LARGE)
+			{
+				health->currentHealth	= 300.0f;
+				health->maxHealth		= 300.0f;
+				tileEntity.AddComponent<comp::MeshName>()->name = "Defence1x3.obj";
+				if (player.rotateDefence)
+					collider->Extents = { m_tileHalfWidth, m_tileHalfWidth, m_tileHalfWidth * 3 };
+				else
+					collider->Extents = { m_tileHalfWidth * 3, m_tileHalfWidth, m_tileHalfWidth };
+			}
+
 			return true;
 		}
 	}

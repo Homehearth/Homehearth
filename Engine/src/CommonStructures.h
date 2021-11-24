@@ -48,10 +48,10 @@ enum class PARTICLEMODE : UINT
 	DUST
 };
 
-enum class TowerTypes : UINT
+enum class EDefenceType : UINT
 {
-	LONG,
-	SHORT
+	SMALL,	//1x1
+	LARGE	//1x3
 };
 
 struct Vector2I

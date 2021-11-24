@@ -11,7 +11,6 @@
 #define DRAW_TEMP_2D 0
 #define DEBUG_SNAPSHOT 1
 
-#define USE_MIPMAPS 1
 #define RENDER_GRID 0
 
 #define RENDER_AINODES 0

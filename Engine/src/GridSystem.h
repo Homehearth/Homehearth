@@ -15,11 +15,13 @@ enum class TileType
 
 struct Tile 
 {
-	TileType type					= TileType::DEFAULT;
-	Vector2I gridID					= { -1, -1 };
-	float halfWidth					= 0;
+	TileType	type				= TileType::DEFAULT;
+	Vector2I	gridID				= { -1, -1 };
+	float		halfWidth			= 0;
 	sm::Vector3 position			= { 0, 0, 0 };
+	uint32_t	netID				= UINT32_MAX;
 };
+
 class GridSystem
 {
 private:
@@ -35,6 +37,8 @@ private:
 	bool							InsideGrid(const int& xpos, const int& zpos) const;
 	//Get a tile offset of: 0, +1, -1, +2, -2, +3, -3... from the center
 	int								TileOffset(const int& index) const;
+	
+	std::vector<Tile>				GetTilesWithEntityID(const uint32_t& id) const;
 
 public:
 									GridSystem();
