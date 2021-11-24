@@ -329,7 +329,7 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 				collider->Extents = { m_tileHalfWidth, m_tileHalfWidth, m_tileHalfWidth };
 				tileEntity.AddComponent<comp::Tag<TagType::STATIC>>();
 				tileEntity.AddComponent<comp::Tag<TagType::DEFENCE>>();
-				defenseEntity.AddComponent<comp::Health>();
+				tileEntity.AddComponent<comp::Health>();
 				tileEntity.AddComponent<comp::Network>();
 				tileEntity.AddComponent<comp::MeshName>()->name = "Defence.obj";
 				Node* node = aiHandler->GetNodeByID(Vector2I(zPos, xPos));
