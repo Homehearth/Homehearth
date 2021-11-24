@@ -196,6 +196,7 @@ namespace ecs
 			{
 				IDLE,
 				LOOK_TO_MOUSE,
+				SPECTATING,
 				WALK
 			} state = State::IDLE;
 

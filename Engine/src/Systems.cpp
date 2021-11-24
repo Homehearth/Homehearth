@@ -233,7 +233,7 @@ void Systems::HealthSystem(HeadlessScene& scene, float dt, uint32_t& money_ref)
 	scene.ForEachComponent<comp::Health>([&](Entity& entity, comp::Health& health)
 		{
 			//Check if something should be dead, and if so set isAlive to false
-			if (health.currentHealth <= 0)
+			if (health.currentHealth <= 0 && health.isAlive)
 			{
 				comp::Network* net = entity.GetComponent<comp::Network>();
 				health.isAlive = false;
@@ -248,6 +248,7 @@ void Systems::HealthSystem(HeadlessScene& scene, float dt, uint32_t& money_ref)
 				if (p)
 				{
 					p->respawnTimer = 10.f;
+					p->state = comp::Player::State::SPECTATING;
 					entity.RemoveComponent<comp::Tag<TagType::DYNAMIC>>();
 				}
 				else if(entity.GetComponent<comp::Tag<TagType::DEFENCE>>())
