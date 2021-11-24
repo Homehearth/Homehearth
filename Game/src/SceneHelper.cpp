@@ -351,6 +351,10 @@ namespace sceneHelp
 
 		Collection2D* pauseMenu = new Collection2D;
 		rtd::MenuUI* inGameMenu = pauseMenu->AddElement<rtd::MenuUI>("Menu.png", draw_t(width * 0.5f - width * 0.125f, height * 0.25f, width * 0.25f, height * 0.5f));
+		inGameMenu->SetOnPressedEvent(0, [=]
+			{
+				game->Shutdown();
+			});
 		inGameMenu->SetOnPressedEvent(2, [=] 
 			{
 				pauseMenu->Hide();
