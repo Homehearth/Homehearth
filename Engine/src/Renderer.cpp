@@ -23,7 +23,7 @@ void Renderer::Initialize(Window* pWindow)
 	AddPass(&m_particlePass);	// 4
 	AddPass(&m_skyPass);
 	AddPass(&m_shadowPass);
-	AddPass(&m_dofPass);
+	//AddPass(&m_dofPass);
 	
 
 	//m_depthPass.SetEnable(true);
@@ -32,7 +32,7 @@ void Renderer::Initialize(Window* pWindow)
 	m_decalPass.SetEnable(true);
 	m_particlePass.SetEnable(true);
 	m_skyPass.SetEnable(true);
-	m_dofPass.SetEnable(true);
+	//m_dofPass.SetEnable(true);
 
 #ifdef _DEBUG
 	AddPass(&m_debugPass);  // 5

@@ -62,16 +62,19 @@ namespace ecs
 
 		struct EmitterParticle
 		{
-			std::shared_ptr<RTexture> texture = nullptr;
-			std::shared_ptr<RTexture> opacityTexture = nullptr;
-			PARTICLEMODE type = PARTICLEMODE::BLOOD;
-			UINT nrOfParticles = 0;
+			UINT								nrOfParticles = 0;
+			PARTICLEMODE						type			= PARTICLEMODE::BLOOD;
+			float								lifeTime		= 0.f;
+			float								sizeMulitplier	= 0.f;
+			float								speed			= 0.f;
 
-			ComPtr<ID3D11Buffer> particleBuffer;
-			ComPtr<ID3D11ShaderResourceView> particleSRV;
-			ComPtr<ID3D11UnorderedAccessView> particleUAV;
+			std::shared_ptr<RTexture>			texture			= nullptr;
+			std::shared_ptr<RTexture>			opacityTexture	= nullptr;
+			ComPtr<ID3D11Buffer>				particleBuffer	= nullptr;
+			ComPtr<ID3D11ShaderResourceView>	particleSRV		= nullptr;
+			ComPtr<ID3D11UnorderedAccessView>	particleUAV		= nullptr;
 
-			EmitterParticle(std::string textureName = "thisisfine.png ", std::string opacityTextureName = "thisisfine_Opacity.png", int amoutOfParticles = 10, PARTICLEMODE mode = PARTICLEMODE::BLOOD)
+			EmitterParticle(std::string textureName = "thisisfine.png ", std::string opacityTextureName = "thisisfine_Opacity.png", int nrOfParticles = 10, float sizeMulitplier = 1.f, PARTICLEMODE type = PARTICLEMODE::BLOOD, float lifeTime = 2.f, float speed = 1)
 			{
 				//If no texture name take default texture else use the given name
 				if (textureName == "")
@@ -85,9 +88,11 @@ namespace ecs
 				else
 					opacityTexture = ResourceManager::Get().GetResource<RTexture>(opacityTextureName);
 
-
-				nrOfParticles = (UINT)amoutOfParticles;
-				type = mode;
+				this->nrOfParticles		= (UINT)nrOfParticles;
+				this->type				= type;
+				this->lifeTime			= lifeTime;
+				this->sizeMulitplier	= sizeMulitplier;
+				this->speed				= speed;
 			}
 		};
 
@@ -196,6 +201,7 @@ namespace ecs
 			{
 				IDLE,
 				LOOK_TO_MOUSE,
+				SPECTATING,
 				WALK
 			} state = State::IDLE;
 
@@ -245,6 +251,9 @@ namespace ecs
 		{
 			light_t lightData;
 			int index;
+			float flickerTimer = 1.f;
+			float maxFlickerTime = 1.f;
+			bool increase;
 		};
 
 		struct Health

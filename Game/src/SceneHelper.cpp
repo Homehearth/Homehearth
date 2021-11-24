@@ -22,7 +22,7 @@ static bool toggle = false;
 
 namespace sceneHelp
 {
-	Entity CreateLightEntity(Scene& scene, sm::Vector4 pos, sm::Vector4 dir, sm::Vector4 col, float range, TypeLight type, UINT enabled)
+	Entity CreateLightEntity(Scene& scene, sm::Vector4 pos, sm::Vector4 dir, sm::Vector4 col, float range, float intensity, TypeLight type, UINT enabled)
 	{
 		Entity lightEntity = scene.CreateEntity();
 
@@ -33,6 +33,8 @@ namespace sceneHelp
 		lightEntity.GetComponent<comp::Light>()->lightData.range = range;
 		lightEntity.GetComponent<comp::Light>()->lightData.type = type;
 		lightEntity.GetComponent<comp::Light>()->lightData.enabled = enabled;
+		lightEntity.GetComponent<comp::Light>()->lightData.intensity = intensity;
+		lightEntity.GetComponent<comp::Light>()->maxFlickerTime = (float)(rand() % 10 + 1) / 10.f;
 
 		scene.GetLights()->EditLight(lightEntity.GetComponent<comp::Light>()->lightData, lightEntity.GetComponent<comp::Light>()->index);
 
@@ -142,9 +144,14 @@ namespace sceneHelp
 		gameScene.SetCurrentCameraEntity(cameraEntity);
 
 		// DONT TOUCH
-		CreateLightEntity(gameScene, { 0.f, 0.f, 0.f, 0.f }, { -1.0f, -0.5f, 0.f, 0.f }, { 15.f, 15.f, 15.f, 0.f }, 0, TypeLight::DIRECTIONAL, 1);
-		CreateLightEntity(gameScene, { 266.f, 29.f, -320.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 142.f, 10.f, 0.f }, 20.f, TypeLight::POINT, 1);
-		CreateLightEntity(gameScene, { 348.5f, 29.f, 325.5f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 142.f, 10.f, 0.f }, 2.f, TypeLight::POINT, 1);
+		CreateLightEntity(gameScene, { 0.f, 0.f, 0.f, 0.f }, { -1.0f, -0.5f, 0.f, 0.f }, { 50.f, 50.f, 50.f, 0.f }, 0, 0.09f, TypeLight::DIRECTIONAL, 1);
+		CreateLightEntity(gameScene, { 266.f, 29.f, -320.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 30.f, 0.f, 0.f }, 20.f, 1.f,TypeLight::POINT, 1);
+		CreateLightEntity(gameScene, { 348.f, 29.f, -325.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 30.f, 0.f, 0.f }, 20.f, 1.f,TypeLight::POINT, 1);
+		CreateLightEntity(gameScene, { 310.f, 29.f, -305.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 30.f, 0.f, 0.f }, 20.f, 1.f,TypeLight::POINT, 1);
+		CreateLightEntity(gameScene, { 307.f, 29.f, -350.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 30.f, 0.f, 0.f }, 20.f, 1.f,TypeLight::POINT, 1);
+		CreateLightEntity(gameScene, { 181.f, 29.f, -314.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 30.f, 0.f, 0.f }, 20.f, 1.f,TypeLight::POINT, 1);
+		CreateLightEntity(gameScene, { 196.f, 29.f, -258.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 30.f, 0.f, 0.f }, 20.f, 1.f,TypeLight::POINT, 1);
+		CreateLightEntity(gameScene, { 337.f, 29.f, -397.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 30.f, 0.f, 0.f }, 20.f, 1.f,TypeLight::POINT, 1);
 
 		InputSystem::Get().SetCamera(gameScene.GetCurrentCamera());
 

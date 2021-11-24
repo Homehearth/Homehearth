@@ -404,7 +404,7 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 	this->m_lobby.Init(this);
 
 	// Create and add all waves to the queue.
-	CreateWaves();
+	//CreateWaves();
 
 	// Create Scenes associated with this Simulation
 	m_pLobbyScene = &m_pEngine->GetScene("Lobby_" + std::to_string(gameID));
@@ -680,6 +680,11 @@ void Simulation::BuildMapColliders(std::vector<dx::BoundingOrientedBox>* mapColl
 HeadlessScene* Simulation::GetLobbyScene() const
 {
 	return m_pLobbyScene;
+}
+
+HeadlessScene* Simulation::GetGameOverScene() const
+{
+	return m_pGameOverScene;
 }
 
 HeadlessScene* Simulation::GetGameScene() const

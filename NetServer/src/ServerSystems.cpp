@@ -30,39 +30,39 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 	switch (type)
 	{
 	case EnemyType::Default:
+	{
+		comp::MeleeAttackAbility* attackAbility = entity.AddComponent<comp::MeleeAttackAbility>();
+		// ---DEFAULT ENEMY---
+		transform->position = spawnP;
+		//Generate float between 0.0 and 0.5 (give monster a slightly different height?)
+		float randomNum = static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (0.5)));
+
+		transform->scale = { 1.8f, 1.8f + randomNum, 1.8f };
+		meshName->name = "Monster.fbx";
+		animatorName->name = "Monster.anim";
+
+		bos->Radius = 3.f;
+
+		npc->movementSpeed = 15.f;
+		attackAbility->cooldown = 1.0f;
+		attackAbility->attackDamage = 20.f;
+		attackAbility->lifetime = 5.0f;
+		attackAbility->attackRange = 10.f;
+		attackAbility->useTime = 0.3f;
+		attackAbility->delay = 0.2f;
+		attackAbility->movementSpeedAlt = 0.0f;
+
+		if (randomNum > 0.25f)
 		{
-			comp::MeleeAttackAbility* attackAbility = entity.AddComponent<comp::MeleeAttackAbility>();
-			// ---DEFAULT ENEMY---
-			transform->position = spawnP;
-			//Generate float between 0.0 and 0.5 (give monster a slightly different height?)
-			float randomNum = static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (0.5)));
-
-			transform->scale = { 1.8f, 1.8f+randomNum, 1.8f };
-			meshName->name = "Monster.fbx";
-			animatorName->name = "Monster.anim";
-
-			bos->Radius = 3.f;
-
-			npc->movementSpeed = 15.f;
-			attackAbility->cooldown = 1.0f;
-			attackAbility->attackDamage = 20.f;
-			attackAbility->lifetime = 5.0f;
-			attackAbility->attackRange = 10.f;
-			attackAbility->useTime = 0.3f;
-			attackAbility->delay = 0.2f;
-			attackAbility->movementSpeedAlt = 0.0f;
-
-			if(randomNum > 0.25f)
-			{
-				behaviorTree->root = AIBehaviors::GetFocusBuildingAIBehavior(entity);
-			}
-			else
-			{
-				behaviorTree->root = AIBehaviors::GetFocusPlayerAIBehavior(entity);
-			}
-				
+			behaviorTree->root = AIBehaviors::GetFocusBuildingAIBehavior(entity);
 		}
-		break;
+		else
+		{
+			behaviorTree->root = AIBehaviors::GetFocusPlayerAIBehavior(entity);
+		}
+
+	}
+	break;
 	case EnemyType::Mage:
 	{
 		comp::RangeAttackAbility* attackAbility = entity.AddComponent<comp::RangeAttackAbility>();
@@ -88,9 +88,9 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		attackAbility->movementSpeedAlt = 0.0f;
 		behaviorTree->root = AIBehaviors::GetFocusPlayerAIBehavior(entity);
 	}
-		break;
+	break;
 	case EnemyType::Runner:
-		{
+	{
 		comp::MeleeAttackAbility* attackAbility = entity.AddComponent<comp::MeleeAttackAbility>();
 		// ---Fast Zombie ENEMY---
 		transform->position = spawnP;
@@ -107,8 +107,8 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		attackAbility->movementSpeedAlt = 0.0f;
 		npc->movementSpeed = 30.f;
 		behaviorTree->root = AIBehaviors::GetFocusPlayerAIBehavior(entity);
-		}
-		break;
+	}
+	break;
 	case EnemyType::BIGMOMMA:
 	{
 		comp::MeleeAttackAbility* attackAbility = entity.AddComponent<comp::MeleeAttackAbility>();
@@ -131,8 +131,8 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 	}
 	break;
 	default:
-			LOG_WARNING("Attempted to create unknown EnemyType.")
-		break;
+		LOG_WARNING("Attempted to create unknown EnemyType.")
+			break;
 	}
 
 	return entity;
@@ -149,7 +149,7 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 void SpawnZoneWave(Simulation* simulation, Wave& currentWave)
 {
 	LOG_INFO("[WaveSystem] spawns a zone wave...");
-	
+
 	const int min = 30;
 	const int max = 70;
 	const float deg2rad = 3.14f / 180.f;
@@ -191,7 +191,7 @@ void SpawnZoneWave(Simulation* simulation, Wave& currentWave)
 void SpawnSwarmWave(Simulation* simulation, Wave& currentWave)
 {
 	LOG_INFO("[WaveSystem] spawns a swarm wave...");
-	
+
 	const float distance = currentWave.GetDistance();
 	const float deg2rad = 3.14f / 180.f;
 	int nrOfEnemies = 0;
@@ -226,7 +226,7 @@ void SpawnSwarmWave(Simulation* simulation, Wave& currentWave)
  *@param waveInfo      Contains configurations for the wave system.
  */
 void ServerSystems::WaveSystem(Simulation* simulation,
-                               std::queue<Wave>& waves)
+	std::queue<Wave>& waves)
 {
 	//initialize a new wave
 	if (!waves.empty())
@@ -236,22 +236,22 @@ void ServerSystems::WaveSystem(Simulation* simulation,
 		switch (waveType)
 		{
 		case EnemyManagement::WaveType::Zone:
-			{
-				SpawnZoneWave(simulation, waves.front());
-			}
-			break;
+		{
+			SpawnZoneWave(simulation, waves.front());
+		}
+		break;
 
 		case EnemyManagement::WaveType::Swarm:
-			{
-				SpawnSwarmWave(simulation, waves.front());
-			}
-			break;
+		{
+			SpawnSwarmWave(simulation, waves.front());
+		}
+		break;
 
 		default:
-			{
-				LOG_WARNING("[ServerSystems]::WaveSystem failed to initialize a wave spawn, [Controll the wave type]");
-			}
-			break;
+		{
+			LOG_WARNING("[ServerSystems]::WaveSystem failed to initialize a wave spawn, [Controll the wave type]");
+		}
+		break;
 		}
 
 		//Add count and pop from queue
@@ -323,7 +323,7 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 				}
 
 				// make sure movement alteration is not applied when using, because then its applied atomatically
-				if (!ecs::IsUsing(e, p.primaryAbilty)) 
+				if (!ecs::IsUsing(e, p.primaryAbilty))
 				{
 					e.GetComponent<comp::Velocity>()->vel *= ecs::GetAbility(e, p.primaryAbilty)->movementSpeedAlt;
 				}
@@ -374,9 +374,9 @@ void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& sce
 
 		});
 
-	scene.ForEachComponent<comp::Player, comp::Health>([&](Entity e, comp::Player& p, comp::Health& health)
+	scene.ForEachComponent<comp::Player, comp::Health, comp::Network>([&](Entity e, comp::Player& p, comp::Health& health, comp::Network n)
 		{
-			if(!health.isAlive)
+			if (!health.isAlive)
 			{
 				//CHANGE TO DEAD ANIMATION?
 
@@ -386,13 +386,22 @@ void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& sce
 					// dont move if dead
 					vel->vel = sm::Vector3::Zero;
 				}
-
+				if (p.state != comp::Player::State::SPECTATING)
+				{
+					p.state = comp::Player::State::SPECTATING;
+					message<GameMsg> msg;
+					msg.header.id = GameMsg::Game_StartSpectate;
+					
+					simulation->SendMsg(n.id, msg);
+				}
 				p.respawnTimer -= dt;
 
-				if(p.respawnTimer < 0.01f)
+				if (p.respawnTimer < 0.01f)
 				{
 					simulation->ResetPlayer(e);
-
+					message<GameMsg> msg;
+					msg.header.id = GameMsg::Game_StopSpectate	;
+					simulation->SendMsg(n.id, msg);
 					LOG_INFO("Player id %u Respawnd...", e.GetComponent<comp::Network>()->id);
 				}
 			}
@@ -414,14 +423,14 @@ void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& sce
 				p.fowardDir = dir;
 			}
 		});
-	
+
 	// if player is turning, turns until forward is reached
 	scene.ForEachComponent<comp::Player, comp::Transform>([&](Entity e, comp::Player& p, comp::Transform& t)
 		{
 			if (p.state == comp::Player::State::WALK || p.state == comp::Player::State::LOOK_TO_MOUSE)
 			{
 				float time = dt * p.runSpeed * 0.5f;
-				
+
 				if (ecs::StepRotateTo(t.rotation, p.fowardDir, time))
 				{
 					p.state = comp::Player::State::IDLE;
@@ -450,7 +459,7 @@ void ServerSystems::CheckGameOver(Simulation* simulation, HeadlessScene& scene)
 	PROFILE_FUNCTION();
 
 	bool gameOver = true;
-	
+
 	//Check if all players is dead
 	scene.ForEachComponent<comp::Player, comp::Health>([&](comp::Player& p, comp::Health& h)
 		{
@@ -468,7 +477,7 @@ void ServerSystems::CheckGameOver(Simulation* simulation, HeadlessScene& scene)
 
 void ServerSystems::TickBTSystem(Simulation* simulation, HeadlessScene& scene)
 {
-	scene.ForEachComponent<comp::BehaviorTree>([&](Entity entity,comp::BehaviorTree& bt)
+	scene.ForEachComponent<comp::BehaviorTree>([&](Entity entity, comp::BehaviorTree& bt)
 		{
 			bt.root->Tick();
 		});
