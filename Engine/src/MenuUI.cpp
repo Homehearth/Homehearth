@@ -78,17 +78,17 @@ ElementState rtd::MenuUI::CheckClick()
 			if (m_buttonHovering[0])
 			{
 				if (m_functions[0])
-					m_functions[0];
+					m_functions[0]();
 			}
 			if (m_buttonHovering[1])
 			{
 				if (m_functions[1])
-					m_functions[1];
+					m_functions[1]();
 			}
 			if (m_buttonHovering[2])
 			{
 				if (m_functions[2])
-					m_functions[2];
+					m_functions[2]();
 			}
 			return ElementState::INSIDE;
 		}

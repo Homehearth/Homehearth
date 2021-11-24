@@ -112,27 +112,27 @@ ElementState ShopUI::CheckClick()
 			if (m_buttonHovering[0])
 			{
 				if(m_functions[0])
-					m_functions[0];
+					m_functions[0]();
 			}
 			if (m_buttonHovering[1])
 			{
 				if (m_functions[1])
-					m_functions[1];
+					m_functions[1]();
 			}
 			if (m_buttonHovering[2])
 			{
 				if (m_functions[2])
-					m_functions[2];
+					m_functions[2]();
 			}
 			if (m_buttonHovering[3])
 			{
 				if (m_functions[3])
-					m_functions[3];
+					m_functions[3]();
 			}
 			if (m_buttonHovering[4])
 			{
 				if (m_functions[4])
-					m_functions[4];
+					m_functions[4]();
 			}
 			return ElementState::INSIDE;
 		}
