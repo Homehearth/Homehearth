@@ -16,6 +16,8 @@
 #include <shellapi.h>
 #include "MoneyUI.h"
 #include "AbilityUI.h"
+#include "ShopUI.h"
+#include "MenuUI.h"
 
 // Used to show and hide shopMenu
 static bool toggle = false;
@@ -36,6 +38,9 @@ namespace sceneHelp
 
 		scene.GetLights()->EditLight(lightEntity.GetComponent<comp::Light>()->lightData, lightEntity.GetComponent<comp::Light>()->index);
 
+		lightEntity.AddComponent<comp::BoundingSphere>();
+
+
 		return lightEntity;
 	}
 
@@ -46,8 +51,13 @@ namespace sceneHelp
 		SetupMainMenuScreen(game);
 
 		Entity backgroundScene = mainMenuScene.CreateEntity();
-		backgroundScene.AddComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>("GameSceneAll.obj");
+		backgroundScene.AddComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>("GameSceneAll.fbx");
 		backgroundScene.AddComponent<comp::Transform>();
+		mainMenuScene.GetRegistry()->on_construct<comp::Light>().connect<&Lights::Add>(mainMenuScene.GetLights());
+
+		CreateLightEntity(mainMenuScene, { 330.0f, 20.0f, -333.3f , 1.0f }, { -1.0f, -0.5f, 0.f, 0.f }, { 15.f, 15.f, 15.f, 0.f }, 1000.0f, TypeLight::DIRECTIONAL, 1);
+		CreateLightEntity(mainMenuScene, { 330.0f, 20.0f, -333.3f , 1.0f }, { -1.0f, -0.5f, 0.f, 0.f }, { 15.f, 15.f, 15.f, 0.f }, 1000.0f, TypeLight::DIRECTIONAL, 1);
+		CreateLightEntity(mainMenuScene, { 330.0f, 20.0f, -333.3f , 1.0f }, { -1.0f, -0.5f, 0.f, 0.f }, { 15.f, 15.f, 15.f, 0.f }, 1000.0f, TypeLight::DIRECTIONAL, 1);
 
 		comp::Transform test;
 		test.position = { 330.0f, 1.0f, -333.3f };
@@ -106,6 +116,12 @@ namespace sceneHelp
 		SetupOptionsScreen(game);
 	}
 
+	void CreateGameOverScene(Game* game)
+	{
+		Scene& gameOverMeny = game->GetScene("GameOver");
+		SetupGameOverScreen(game);
+	}
+
 	void CreateGameScene(Game* game)
 	{
 		Scene& gameScene = game->GetScene("Game");
@@ -136,15 +152,22 @@ namespace sceneHelp
 		gameScene.SetCurrentCameraEntity(cameraEntity);
 
 		// DONT TOUCH
+		/*
 		CreateLightEntity(gameScene, { 0.f, 0.f, 0.f, 0.f }, { -1.0f, -0.5f, 0.f, 0.f }, { 15.f, 15.f, 15.f, 0.f }, 0, TypeLight::DIRECTIONAL, 1);
 		CreateLightEntity(gameScene, { 266.f, 29.f, -320.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 142.f, 10.f, 0.f }, 20.f, TypeLight::POINT, 1);
 		CreateLightEntity(gameScene, { 348.5f, 29.f, 325.5f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 142.f, 10.f, 0.f }, 2.f, TypeLight::POINT, 1);
+		*/
+
+		//Entity dirLight = CreateLightEntity(gameScene, { 330.0f, 20.0f, -333.3f , 1.0f }, { -1.0f, -0.5f, 0.f, 0.f }, { 15.f, 15.f, 15.f, 0.f }, 1000.0f, TypeLight::DIRECTIONAL, 1);
+		CreateLightEntity(gameScene, { 330.0f, 20.0f, -333.3f , 1.0f }, { -1.0f, -0.5f, 0.f, 0.f }, { 15.f, 15.f, 15.f, 0.f }, 1000.0f, TypeLight::DIRECTIONAL, 1);
+		//CreateLightEntity(gameScene, { 330.0f, 20.0f, -333.3f , 1.0f }, { -1.0f, -0.5f, 0.f, 0.f }, { 15.f, 15.f, 15.f, 0.f }, 1000.0f, TypeLight::DIRECTIONAL, 1);
+		//CreateLightEntity(gameScene, { 330.0f, 20.0f, -333.3f , 1.0f }, { -1.0f, -0.5f, 0.f, 0.f }, { 15.f, 15.f, 15.f, 0.f }, 1000.0f, TypeLight::DIRECTIONAL, 1);
+
 
 		InputSystem::Get().SetCamera(gameScene.GetCurrentCamera());
 
 		gameScene.on<ESceneUpdate>([cameraEntity, debugCameraEntity, game](const ESceneUpdate& e, Scene& scene)
 			{
-
 				IMGUI(
 					ImGui::Begin("Scene");
 				ImGui::Text("Game");
@@ -157,7 +180,12 @@ namespace sceneHelp
 						game->GetCurrentScene()->GetCollection("ScrolldownMenu")->GetState() == ElementState::OUTSIDE)
 					{
 						game->GetCurrentScene()->GetCollection("shopMenu")->Hide();
-							toggle = false;
+					}
+
+					if (game->GetCurrentScene()->GetCollection("inGameMenu")->GetState() == ElementState::OUTSIDE &&
+						game->GetCurrentScene()->GetCollection("ScrolldownMenu")->GetState() == ElementState::OUTSIDE)
+					{
+						game->GetCurrentScene()->GetCollection("inGameMenu")->Hide();
 					}
 				}
 				//GameSystems::RenderIsCollidingSystem(scene);
@@ -175,10 +203,21 @@ namespace sceneHelp
 					else if (scene.GetCurrentCamera()->GetCameraType() == CAMERATYPE::PLAY)
 					{
 						scene.SetCurrentCameraEntity(debugCameraEntity);
-						InputSystem::Get().SwitchMouseMode();
+						if (InputSystem::Get().IsMouseRelative())
+						{
+							InputSystem::Get().SwitchMouseMode();
+						}
 						LOG_INFO("Debug Camera selected");
 					}
 				}
+				if (InputSystem::Get().CheckMouseKey(MouseKey::RIGHT, KeyState::PRESSED))
+				{
+					if (scene.GetCurrentCamera()->GetCameraType() == CAMERATYPE::DEBUG)
+					{
+						InputSystem::Get().SwitchMouseMode();
+					}
+				}
+
 #endif // DEBUG
 			});
 	}
@@ -199,18 +238,18 @@ namespace sceneHelp
 		ipField->SetDescriptionText("IP Address:");
 		rtd::TextField* portField = connectFields->AddElement<rtd::TextField>(draw_text_t(width / 4 + (width / 3.33f), height * 0.55f, width * 0.15f, D2D1Core::GetDefaultFontSize()), 6);
 		portField->SetDescriptionText("Port:");
-		rtd::Button* connectButton = connectFields->AddElement<rtd::Button>("StartButton.png", draw_t((width / 2) - (width / 8.f), height - (height * 0.25f), width / 4.f, height * 0.15f));
+		rtd::Button* connectButton = connectFields->AddElement<rtd::Button>("Start.png", draw_t((width / 2) - (width / 8.f), height - (height * 0.25f), width / 4.f, height * 0.15f));
 		scene.Add2DCollection(connectFields, "ConnectFields");
 
 		Collection2D* scrolldownMenu = new Collection2D;
-		rtd::Scroller* sc = scrolldownMenu->AddElement<rtd::Scroller>(draw_t(0.0f, -(height / 16) * 3.0f, width / 24.0f, (height / 16) * 3.0f), sm::Vector2(0, 0));
-		sc->AddButton("demoExitButton.png", draw_t(0.0f, -(height / 16), width / 24, height / 16))->SetOnPressedEvent([=] {
+		rtd::Scroller* sc = scrolldownMenu->AddElement<rtd::Scroller>(draw_t(0.0f, -(height / 14) * 3.0f, width / 24.0f, (height / 16) * 3.0f), sm::Vector2(0, 0));
+		sc->AddButton("No.png", draw_t(0.0f, -(height / 14), width / 24, height / 14))->SetOnPressedEvent([=] {
 			game->Shutdown();
 			});
-		sc->AddButton("demo_options_button.png", draw_t(0.0f, -(height / 16) * 2.0f, width / 24, height / 16))->SetOnPressedEvent([=] {
+		sc->AddButton("SettingsIcon.png", draw_t(0.0f, -(height / 14) * 2.0f, width / 24, height / 14))->SetOnPressedEvent([=] {
 			game->SetScene("Options");
 			});
-		sc->SetPrimeButtonMeasurements(draw_t(0.0f, 0.0f, width / 24, height / 16));
+		sc->SetPrimeButtonMeasurements(draw_t(0.0f, 0.0f, width / 24, height / 14));
 		scene.Add2DCollection(scrolldownMenu, "ScrolldownMenu");
 
 		rtd::Button* externalLinkBtn = connectFields->AddElement<rtd::Button>("Button.png", draw_t(width - width / 4.f, height - (height / 5), width / 8.f, height / 16));
@@ -280,8 +319,6 @@ namespace sceneHelp
 
 		Collection2D* timerCollection = new Collection2D;
 		timerCollection->AddElement<rtd::Text>("0", draw_text_t(0, 0, width, height / 16.f));
-		rtd::Text* enemies = timerCollection->AddElement<rtd::Text>("Enemies", draw_text_t(width - (width / 8), 0, width / 8, height / 16.f));
-		enemies->SetVisiblity(false);
 		scene.Add2DCollection(timerCollection, "timer");
 
 		for (int i = 0; i < MAX_PLAYERS_PER_LOBBY; i++)
@@ -293,7 +330,7 @@ namespace sceneHelp
 		}
 
 		Collection2D* money = new Collection2D;
-		money->AddElement<rtd::MoneyUI>(draw_text_t(width - (width / 8.0f), D2D1Core::GetDefaultFontSize(), width / 8.0f, D2D1Core::GetDefaultFontSize()));
+		rtd::MoneyUI* mMoney = money->AddElement<rtd::MoneyUI>(draw_text_t(width - (width / 8.0f), D2D1Core::GetDefaultFontSize(), width / 8.0f, D2D1Core::GetDefaultFontSize()));
 		scene.Add2DCollection(money, "MoneyUI");
 
 		Collection2D* abilities = new Collection2D;
@@ -311,53 +348,52 @@ namespace sceneHelp
 		sixth->SetActivateButton("C");
 		scene.Add2DCollection(abilities, "AbilityUI");
 
+		Collection2D* pauseMenu = new Collection2D;
+		rtd::MenuUI* inGameMenu = pauseMenu->AddElement<rtd::MenuUI>("Menu.png", draw_t(width * 0.5f - width * 0.125f, height * 0.25f, width * 0.25f, height * 0.5f));
+		inGameMenu->SetOnPressedEvent(0, [=]
+			{
+				game->Shutdown();
+			});
+		inGameMenu->SetOnPressedEvent(2, [=] 
+			{
+				pauseMenu->Hide();
+			});
+		scene.Add2DCollection(pauseMenu, "inGameMenu");
+		pauseMenu->Hide();
+
 		Collection2D* shopMenu = new Collection2D;
 		Collection2D* scrolldownMenu = new Collection2D;
-		rtd::Scroller* sc = scrolldownMenu->AddElement<rtd::Scroller>(draw_t(0.0f, -(height / 16) * 3.0f, width / 24.0f, (height / 16) * 3.0f), sm::Vector2(0, 0));
-		sc->AddButton("demoExitButton.png", draw_t(0.0f, -(height / 16), width / 24, height / 16))->SetOnPressedEvent([=] {
-			game->Shutdown();
+		rtd::Scroller* sc = scrolldownMenu->AddElement<rtd::Scroller>(draw_t(0.0f, -(height / 14) * 3.0f, width / 24.0f, (height / 16) * 3.0f), sm::Vector2(0, 0));
+		sc->AddButton("No.png", draw_t(0.0f, -(height / 14), width / 24, height / 14))->SetOnPressedEvent([=] {
+			pauseMenu->Show();
 			});
 		
 		
-		sc->AddButton("demoShopIcon.png", draw_t(0.0f, -(height / 16) * 2.0f, width / 24, height / 16))->SetOnPressedEvent([=] {
-			if (!toggle)
-			{
+		sc->AddButton("ShopIcon.png", draw_t(0.0f, -(height / 14) * 2.0f, width / 24, height / 14))->SetOnPressedEvent([=] {
 				shopMenu->Show();
-				toggle = true;
-			}
-			else
-			{
-				toggle = false;
-				shopMenu->Hide();
-			}
 			});
-		sc->SetPrimeButtonMeasurements(draw_t(0.0f, 0.0f, width / 24, height / 16));
+		sc->SetPrimeButtonMeasurements(draw_t(0.0f, 0.0f, width / 24, height / 14));
 		scene.Add2DCollection(scrolldownMenu, "ScrolldownMenu");
 
-		shopMenu->AddElement<rtd::Canvas>(D2D1::ColorF(0.6f, 0.4f, 0.8f, 0.5f), draw_t(width / 24.0f, 0, width * 0.37f, height * 0.75f));
-		//shopMenu->AddElement<rtd::Button>("demoExitButton.png", draw_t(width / 24, 0.0f, width / 24, height / 16))->SetOnPressedEvent([=] {
-		//	
-		//	shopMenu->Hide();
-
-		//	});
-		shopMenu->AddElement<rtd::Button>("Button.png", draw_t((width / 24.f)  + ((width * 0.37f) * 0.5f) - width / 8.0f, height / 24.f, width / 4.0f, height / 8.0f))->SetOnPressedEvent([=] {
-
-			game->UseShop(ShopItem::LONG_TOWER);
-
-			});
-		shopMenu->AddElement<rtd::Text>("Place Wide Towers", draw_text_t((width / 24.f) + ((width * 0.37f) * 0.5f) - width / 8.0f, height / 24.f, width / 4.0f, height / 8.0f));
-		shopMenu->AddElement<rtd::Button>("Button.png", draw_t((width / 24.f) + ((width * 0.37f) * 0.5f) - width / 8.0f, ((height / 24.f) * 2.0f) + height / 8.0f, width / 4.0f, height / 8.0f))->SetOnPressedEvent([=] {
-
+		rtd::ShopUI* shop = shopMenu->AddElement<rtd::ShopUI>("Shop.png", draw_t(width / 24.0f, (height / 16), width * 0.25f, height * 0.5f));
+		shop->SetOnPressedEvent(0, [=] {
 			game->UseShop(ShopItem::SHORT_TOWER);
-
+			shopMenu->Hide();
 			});
-		shopMenu->AddElement<rtd::Text>("Place Short Towers", draw_text_t((width / 24.f) + ((width * 0.37f) * 0.5f) - width / 8.0f, ((height / 24.f) * 2.0f) + height / 8.0f, width / 4.0f, height / 8.0f));
-		shopMenu->AddElement<rtd::Button>("Button.png", draw_t((width / 24.f) + ((width * 0.37f) * 0.5f) - width / 8.0f, ((height / 24.f) * 3.0f) + (height / 8.0f) * 2.0f, width / 4.0f, height / 8.0f))->SetOnPressedEvent([=] {
-
-			game->UseShop(ShopItem::Tower_Upgrade);
-
+		shop->SetOnPressedEvent(1, [=] {
+			game->UseShop(ShopItem::LONG_TOWER);
+			shopMenu->Hide();
 			});
-		shopMenu->AddElement<rtd::Text>("Upgrade Towers", draw_text_t((width / 24.f) + ((width * 0.37f) * 0.5f) - width / 8.0f, ((height / 24.f) * 3.0f) + (height / 8.0f) * 2.0f, width / 4.0f, height / 8.0f));
+		shop->SetOnPressedEvent(2, [=] {
+			game->UseShop(ShopItem::Primary_Upgrade);
+			});
+		shop->SetOnPressedEvent(3, [=] {
+			game->UseShop(ShopItem::Primary_Upgrade);
+			});
+		shop->SetOnPressedEvent(4, [=] {
+			game->UseShop(ShopItem::Heal);
+			});
+		shop->SetMoneyRef(mMoney);
 		shopMenu->Hide();
 		scene.Add2DCollection(shopMenu, "shopMenu");
 	}
@@ -373,9 +409,9 @@ namespace sceneHelp
 		{
 			Collection2D* playerIcon = new Collection2D;
 
-			playerIcon->AddElement<rtd::Canvas>(D2D1::ColorF(0.7f, 0.5f, 0.2f), draw_t(width / 16, (height / 12) * (i + 1) + (height / 12) * i, width / 4, height / 8));
-			playerIcon->AddElement<rtd::Text>("Player " + std::to_string(i + 1), draw_text_t(width / 16, (height / 12) * (i + 1) + (height / 12) * i, width / 4, height / 8));
-			playerIcon->AddElement<rtd::Picture>("warriorIconDemo.png", draw_t((width / 8) + (width / 4), (height / 12) * (i + 1) + (height / 12) * i, width / 16, height / 8));
+			playerIcon->AddElement<rtd::Canvas>(D2D1::ColorF(0.7f, 0.5f, 0.2f), draw_t(width / 16, (height / 12) * (i + 1) + (height / 12) * i, width / 4, height / 9));
+			playerIcon->AddElement<rtd::Text>("Player " + std::to_string(i + 1), draw_text_t(width / 16, (height / 12) * (i + 1) + (height / 12) * i, width / 4, height / 9));
+			playerIcon->AddElement<rtd::Picture>("WarriorIcon.png", draw_t((width / 8) + (width / 4), (height / 12) * (i + 1) + (height / 12) * i, width / 16, height / 9));
 			scene.Add2DCollection(playerIcon, "playerIcon" + std::to_string(i + 1));
 
 			// Hide everyother player other than first.
@@ -383,22 +419,9 @@ namespace sceneHelp
 				playerIcon->Hide();
 		}
 
-		const std::string& desc = "##--Description--##";
 		Collection2D* classTextCanvas = new Collection2D;
-		classTextCanvas->AddElement<rtd::Canvas>(D2D1::ColorF(1.0f, 1.0f, 1.0f), draw_t(width / 2, 0, (width / 2.12f), height - (height / 4)));
-		classTextCanvas->AddElement<rtd::Text>(desc, draw_text_t(width / 2, 0, width / 2, 24));
+		rtd::Picture* desc = classTextCanvas->AddElement<rtd::Picture>("WarriorDesc.png", draw_t((width / 2) + (width / 10.f), 10.0f, (width / 3.33f), height - (height / 6.0f)));
 		scene.Add2DCollection(classTextCanvas, "ClassTextCanvas");
-
-		Collection2D* warriorDesc = new Collection2D;
-		const std::string& warriorString = "Warrior\nYour name is Carl, you have been training your whole life for this moment.\nIt started as a beautiful day in your village and all of a sudden monsters attacked!\nYou specialize in close combat and protecting your friends.";
-		warriorDesc->AddElement<rtd::Text>(warriorString, draw_text_t(width / 2, 0, (width / 2.12f), height - (height / 4)));
-		scene.Add2DCollection(warriorDesc, "WarriorText");
-
-		const std::string& mageString = "Mage\nMr. Jackson how you've been?\nOur peaceful village is currently under attack and we would like to request your help!\nYour magic is quite frankly unchallenged being in long range surely is an advantage.\n\nYours truly,\n Dying villager.";
-		Collection2D* mageDesc = new Collection2D;
-		mageDesc->AddElement<rtd::Text>(mageString, draw_text_t(width / 2, 0, (width / 2.12f), height - (height / 4)));
-		mageDesc->Hide();
-		scene.Add2DCollection(mageDesc, "MageText");
 
 		Collection2D* lobbyDesc = new Collection2D;
 		lobbyDesc->AddElement<rtd::Canvas>(D2D1::ColorF(1.0f, 1.0f, 1.0f), draw_t((width / 16), height - (height / 6), (width / 4), height / 12));
@@ -409,8 +432,8 @@ namespace sceneHelp
 		scene.Add2DCollection(lobbyDesc, "LobbyDesc");
 
 		Collection2D* startGame = new Collection2D;
-		rtd::Button* startGameButton = startGame->AddElement<rtd::Button>("Button.png", draw_t((width / 2) + (width / 10.f), height - (height / 5.0f), (width / 3.33f), (height / 6.f)), false);
-		rtd::Text* readyText = startGame->AddElement<rtd::Text>("Not ready", draw_text_t((width / 2) + (width / 10.f), height - (height / 5.0f), (width / 3.33f), (height / 6.f)));
+		rtd::Button* startGameButton = startGame->AddElement<rtd::Button>("NotReady.png", draw_t((width / 2) + (width / 10.f), height - (height / 5.0f), (width / 3.33f), (height / 6.f)), false);
+		//rtd::Text* readyText = startGame->AddElement<rtd::Text>("Not ready", draw_text_t((width / 2) + (width / 10.f), height - (height / 5.0f), (width / 3.33f), (height / 6.f)));
 		startGameButton->SetOnPressedEvent([=]()
 			{
 				comp::Player* player = game->GetLocalPlayer().GetComponent<comp::Player>();
@@ -421,7 +444,7 @@ namespace sceneHelp
 
 		Collection2D* general = new Collection2D;
 		general->AddElement<rtd::Canvas>(D2D1::ColorF(.2f, .2f, .2f), draw_t(0.0f, 0.0f, width, height));
-		rtd::Button* exitButton = general->AddElement<rtd::Button>("demoExitButton.png", draw_t(0.0f, 0.0f, width / 24, height / 16), false);
+		rtd::Button* exitButton = general->AddElement<rtd::Button>("No.png", draw_t(0.0f, 0.0f, width / 24, height / 14), false);
 		exitButton->SetOnPressedEvent([=]()
 			{
 				comp::Player* player = game->GetLocalPlayer().GetComponent<comp::Player>();
@@ -436,21 +459,27 @@ namespace sceneHelp
 		scene.Add2DCollection(general, "AGeneral");
 
 		Collection2D* classButtons = new Collection2D;
-		rtd::Button* mageButton = classButtons->AddElement<rtd::Button>("mageIconDemo.png", draw_t((width / 3.33f) + (float)(width / 20), height - (height / 6), width / 24, height / 16));
+		rtd::Picture* warriorBorder = classButtons->AddElement<rtd::Picture>("Selected.png", draw_t((width / 3.33f) + (width / 15.0f) + (float)(width / 16) - 7.5f, height - (height / 6) - 7.5f, (width / 16.f) * 1.15f, (height / 9.f) * 1.15f));
+		rtd::Picture* mageBorder = classButtons->AddElement<rtd::Picture>("Selected.png", draw_t((width / 3.33f) + (float)(width / 20) - 7.5f, height - (height / 6) - 7.5f, (width / 16.f) * 1.15f, (height / 9.f) * 1.15f));
+		rtd::Button* mageButton = classButtons->AddElement<rtd::Button>("WizardIcon.png", draw_t((width / 3.33f) + (float)(width / 20), height - (height / 6), width / 16, height / 9));
+		mageBorder->SetVisiblity(false);
 		// FIX WHAT CLASS SYMBOL PLAYER HAS LATER
 		mageButton->SetOnPressedEvent([=]()
 			{
-				warriorDesc->Hide();
-				mageDesc->Show();
+				mageBorder->SetVisiblity(true);
+				warriorBorder->SetVisiblity(false);
+				desc->SetTexture("WizardDesc.png");
 				comp::Player* player = game->GetLocalPlayer().GetComponent<comp::Player>();
 				player->classType = comp::Player::Class::MAGE;
 				game->SendSelectedClass(player->classType);
 			});
-		rtd::Button* warriorButton = classButtons->AddElement<rtd::Button>("warriorIconDemo.png", draw_t((width / 3.33f) + (width / 20.0f) + (float)(width / 20), height - (height / 6), width / 24, height / 16));
+		
+		rtd::Button* warriorButton = classButtons->AddElement<rtd::Button>("WarriorIcon.png", draw_t((width / 3.33f) + (width / 15.0f) + (float)(width / 16), height - (height / 6), width / 16, height / 9));
 		warriorButton->SetOnPressedEvent([=]()
 			{
-				mageDesc->Hide();
-				warriorDesc->Show();
+				mageBorder->SetVisiblity(false);
+				warriorBorder->SetVisiblity(true);
+				desc->SetTexture("WarriorDesc.png");
 				comp::Player* player = game->GetLocalPlayer().GetComponent<comp::Player>();
 				player->classType = comp::Player::Class::WARRIOR;
 				game->SendSelectedClass(player->classType);
@@ -493,7 +522,7 @@ namespace sceneHelp
 
 			});
 		menu->AddElement<rtd::Text>("Help", draw_text_t((width / 8.0f) * 5.0f, (height / 8.0f) * 4.0f, width / 4.0f, height / 8.0f));
-		
+
 		rtd::Button* returnTo = menu->AddElement<rtd::Button>("Button.png", draw_t((width / 2.0f) - (width / 8.0f), height - (height / 4.0f), width / 4.0f, height / 8.0f));
 		menu->AddElement<rtd::Text>("Go Back", draw_text_t((width / 2.0f) - (width / 8.0f), height - (height / 4.0f), width / 4.0f, height / 8.0f));
 		returnTo->SetOnPressedEvent([=] {
@@ -521,17 +550,17 @@ namespace sceneHelp
 			});
 
 		visualMenu->AddElement<rtd::Button>("Button.png", draw_t(width / 8.0f, height / 8.0f, width / 4.0f, height / 8.0f))->SetOnPressedEvent([=] {
-			
+
 			resolutionMenu->Show();
 			visualMenu->Hide();
-			
+
 			});
 		visualMenu->AddElement<rtd::Text>("Resolution", draw_t(width / 8.0f, height / 8.0f, width / 4.0f, height / 8.0f));
 		visualMenu->AddElement<rtd::Button>("Button.png", draw_t((width / 8.0f) * 5.0f, (height / 8.0f), width / 4.0f, height / 8.0f))->SetOnPressedEvent([=] {
-			
+
 			//visualMenu->Hide();
 			//miscMenu->Show();
-			
+
 			});
 		visualMenu->AddElement<rtd::Text>("Misc.", draw_t((width / 8.0f) * 5.0f, (height / 8.0f), width / 4.0f, height / 8.0f));
 
@@ -588,6 +617,26 @@ namespace sceneHelp
 		scene.Add2DCollection(loadingScreen, "LoadingScreen");
 	}
 
+	void SetupGameOverScreen(Game* game)
+	{
+		const float width = (float)game->GetWindow()->GetWidth();
+		const float height = (float)game->GetWindow()->GetHeight();
+		Scene& scene = game->GetScene("GameOver");
+
+		Collection2D* gameOverCollection = new Collection2D;
+		rtd::Text* gameOverField = gameOverCollection->AddElement<rtd::Text>("Game Over", draw_text_t((width / 2.f) - (strlen("Game Over") * D2D1Core::GetDefaultFontSize() * 0.5f), (height / 5.f) - D2D1Core::GetDefaultFontSize(), strlen("Game Over") * D2D1Core::GetDefaultFontSize(), D2D1Core::GetDefaultFontSize()));
+		gameOverField->SetText("Game Over");
+		rtd::Button* mainMenuButton = gameOverCollection->AddElement<rtd::Button>("Button.png", draw_t((width / 2) - (width / 8), height - (height / 6.f), width / 4, height / 8));
+		gameOverCollection->AddElement<rtd::Text>("Main Menu", draw_text_t((width / 2) - (width / 8), height - (height / 6.f), width / 4, height / 8));
+		mainMenuButton->SetOnPressedEvent([=]
+			{
+				game->m_client.Disconnect();
+			});
+
+		scene.Add2DCollection(gameOverCollection, "GameOver");
+
+	}
+
 	void SetupLobbyJoinScreen(Game* game)
 	{
 		const float width = (float)game->GetWindow()->GetWidth();
@@ -605,11 +654,11 @@ namespace sceneHelp
 
 		rtd::TextField* lobbyField = lobbyCollection->AddElement<rtd::TextField>(draw_text_t(width / 8, height - (height / 3.33f), width / 4, D2D1Core::GetDefaultFontSize()));
 		lobbyField->SetDescriptionText("Input Lobby ID");
-		rtd::Button* startLobbyButton = lobbyCollection->AddElement<rtd::Button>("Button.png", draw_t(width / 2, height - (height / 6.f), width / 4, height / 8));
-		lobbyCollection->AddElement<rtd::Text>("Create Lobby", draw_text_t(width / 2, height - (height / 6.f), width / 4, height / 8));
-		rtd::Button* lobbyButton = lobbyCollection->AddElement<rtd::Button>("Button.png", draw_t(width / 8, height - (height / 6.f), width / 4, height / 8));
-		lobbyCollection->AddElement<rtd::Text>("Join Lobby", draw_text_t(width / 8, height - (height / 6.f), width / 4, height / 8));
-		rtd::Button* exitButton = lobbyCollection->AddElement<rtd::Button>("demoExitButton.png", draw_t(0.0f, 0.0f, width / 24, height / 16));
+		rtd::Button* startLobbyButton = lobbyCollection->AddElement<rtd::Button>("CreateLobby.png", draw_t((width / 2.0f) + (width / 8.0f), height - (height / 6.f), width / 4.f, height * 0.15f));
+		//lobbyCollection->AddElement<rtd::Text>("Create Lobby", draw_text_t(width / 2, height - (height / 6.f), width / 4, height / 8));
+		rtd::Button* lobbyButton = lobbyCollection->AddElement<rtd::Button>("joinLobby.png", draw_t(width / 8, height - (height / 6.f), width / 4.f, height * 0.15f));
+		//lobbyCollection->AddElement<rtd::Text>("Join Lobby", draw_text_t(width / 8, height - (height / 6.f), width / 4, height / 8));
+		rtd::Button* exitButton = lobbyCollection->AddElement<rtd::Button>("No.png", draw_t(0.0f, 0.0f, width / 24, height / 14));
 
 		exitButton->SetOnPressedEvent([=]
 			{

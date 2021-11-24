@@ -2,6 +2,8 @@
 
 float4 main(PixelIn input) : SV_TARGET
 {
+    //return t_shadowMaps.Sample(s_linear, float3(input.uv, 0.0f));
+
     static unsigned int rolls = infoData.x;
     
 	float3 camPos = c_cameraPosition.xyz;
@@ -32,18 +34,45 @@ float4 main(PixelIn input) : SV_TARGET
     float3 Lo = float3(0.f, 0.f, 0.f);
     float3 rad = float3(0.f, 0.f, 0.f);
     float3 lightCol = float3(0.f, 0.f, 0.f);
-    
+    [loop]
     for (int i = 0; i < c_info.x; i++)
     {
         if(sb_lights[i].enabled == 1)
         {
+			float4x4 lightMat = sb_lights[i].lightMatrix;
+            
+			float4 pixelposLightSpace = mul(lightMat, input.worldPos);
+			pixelposLightSpace.xy /= pixelposLightSpace.w;
+            
+			float2 texCoords;
+			texCoords.x = pixelposLightSpace.x * 0.5f + 0.5f;
+			texCoords.y = -pixelposLightSpace.y * 0.5f + 0.5f;
+            
+			float shadowCoef = 0.0f;
+			if ((saturate(texCoords.x) == texCoords.x) & (saturate(texCoords.y) == texCoords.y))
+			{
+				float closestDepth = t_shadowMaps.Sample(s_linear, float3(texCoords.xy, i)).r;
+				//closestDepth = saturate(closestDepth);
+                    
+                float currentDepth = pixelposLightSpace.z / pixelposLightSpace.w;
+				currentDepth = saturate(currentDepth);
+				currentDepth -= 0.001f;
+                    
+				if (currentDepth > closestDepth)
+				{
+                    shadowCoef = 1.0f;
+					//return float4(currentDepth - closestDepth, 0, 0, 1.0f);
+				}
+			}
+			
+            
             switch (sb_lights[i].type)
             {
                 case 0:
-                    lightCol += DoDirectionlight(sb_lights[i], N);
+					lightCol += DoDirectionlight(sb_lights[i], N) * (1.0f - shadowCoef);
                     break;
                 case 1:
-                    lightCol += DoPointlight(sb_lights[i], input, N);
+					lightCol += DoPointlight(sb_lights[i], input, N) * (1.0f - shadowCoef);
                     break;
                 default:
                     break;
@@ -58,6 +87,7 @@ float4 main(PixelIn input) : SV_TARGET
     float3 ambient = float3(0.7f, 0.15f, 0.5f) * albedo * ao;
     ambient = ambientIBL(albedo, N, V, F0, metallic, roughness, ao);
     
+  
     /*
         This part of the code calculates if a decal should be present at this location.
         if-statement is to make sure the decal only gets placed on the world scene since its below 1.0f and everything else if either 1.0f or above.

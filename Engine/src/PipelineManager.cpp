@@ -227,6 +227,12 @@ bool PipelineManager::CreateRasterizerStates()
     // Create the rasterizer state from the description we just filled out.
     HRESULT hr = m_d3d11->Device()->CreateRasterizerState(&rasterizerDesc, m_rasterState.GetAddressOf());
 
+
+    rasterizerDesc.CullMode = D3D11_CULL_MODE::D3D11_CULL_FRONT;
+    // Create front face culling rasterizer state.
+    hr = m_d3d11->Device()->CreateRasterizerState(&rasterizerDesc, m_rasterStateFrontCulling.GetAddressOf());
+
+
     // Setup a raster description with no back face culling.
     rasterizerDesc.CullMode = D3D11_CULL_NONE;
 
@@ -528,6 +534,12 @@ bool PipelineManager::CreateShaders()
     if (!m_debugPixelShader.Create("Debug_ps"))
     {
         LOG_WARNING("failed creating Debug_ps.");
+        return false;
+    }
+
+    if (!m_shadowPixelShader.Create("Shadow_ps"))
+    {
+        LOG_WARNING("failed creating Shadow_ps.");
         return false;
     }
 

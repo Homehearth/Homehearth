@@ -1,6 +1,5 @@
 #include "common.hlsli"
 
-
 [numthreads(8, 8, 1)]
 void main( uint3 DTid : SV_DispatchThreadID )
 {
@@ -20,6 +19,7 @@ void main( uint3 DTid : SV_DispatchThreadID )
     
         width /= 2;
         height /= 2;
+        height -= 50;
     
         float2 focus = float2(width, height);
         float4 focusPoint = ViewPosFromDepth(t_depth[focus].x, focus);

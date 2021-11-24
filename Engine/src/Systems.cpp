@@ -249,6 +249,17 @@ void Systems::HealthSystem(HeadlessScene& scene, float dt, uint32_t& money_ref)
 					p->respawnTimer = 10.f;
 					entity.RemoveComponent<comp::Tag<TagType::DYNAMIC>>();
 				}
+				else if(entity.GetComponent<comp::Tag<TagType::DEFENCE>>())
+				{
+					comp::Transform* buildTransform = entity.GetComponent<comp::Transform>();
+
+					Node* node = Blackboard::Get().GetPathFindManager()->FindClosestNode(buildTransform->position);
+					//Remove from the container map so ai wont consider this defense
+					Blackboard::Get().GetPathFindManager()->RemoveDefenseEntity(entity);
+					node->reachable = true;
+					node->defencePlaced = false;
+					entity.Destroy();
+				}
 				else {
 					entity.Destroy();
 				}

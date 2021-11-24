@@ -30,6 +30,7 @@ private:
 
 	HeadlessScene* m_pLobbyScene;
 	HeadlessScene* m_pGameScene;
+	HeadlessScene* m_pGameOverScene;
 	HeadlessScene* m_pCurrentScene;
 
 	std::vector<Entity> m_addedEntities;
@@ -77,12 +78,14 @@ public:
 	void UpdateInput(InputState state, uint32_t playerID);
 
 	HeadlessScene* GetLobbyScene() const;
+	HeadlessScene* GetGameOverScene() const;
 	HeadlessScene* GetGameScene() const;
 
 	GridSystem& GetGrid();
 	Currency& GetCurrency();
 
 	void SetLobbyScene();
+	void SetGameOver();
 	void SetGameScene();
 	void ResetGameScene();
 	

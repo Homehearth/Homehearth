@@ -70,6 +70,7 @@ bool Game::OnStartup()
 	sceneHelp::CreateGameScene(this);
 	sceneHelp::CreateMainMenuScene(this);
 	sceneHelp::CreateJoinLobbyScene(this);
+	sceneHelp::CreateGameOverScene(this);
 
 	sceneHelp::CreateOptionsScene(this);
 	// Set Current Scene
@@ -100,13 +101,42 @@ void Game::OnUserUpdate(float deltaTime)
 {
 	this->UpdateInput();
 
-	//if (GetCurrentScene() == &GetScene("Game"))
-	//{
-	//	if (m_players.find(m_localPID) != m_players.end())
-	//	{
-	//		GameSystems::CheckLOS(this);
-	//	}
-	//}
+	Scene& scene = GetScene("Game");
+
+	if (GetCurrentScene() == &scene)
+	{
+		if (m_players.find(m_localPID) != m_players.end())
+		{
+			// sm::Vector3 playerPos = m_players.at(m_localPID).GetComponent<comp::Transform>()->position;
+
+			// Camera* cam = scene.GetCurrentCamera();
+			// if (cam->GetCameraType()  == CAMERATYPE::PLAY)
+			// {
+			// 	GameSystems::CheckLOS(this);
+			// }
+			
+			scene.ForEachComponent<comp::Light>([&](Entity e, comp::Light& l)
+				{
+					if (l.lightData.type == TypeLight::DIRECTIONAL)
+					{
+						sm::Vector3 dir = sm::Vector3::TransformNormal(sm::Vector3(l.lightData.direction), sm::Matrix::CreateRotationZ(dx::XMConvertToRadians(deltaTime * 10.f)));
+						l.lightData.enabled = true;
+						if (dir.y > 0)
+							l.lightData.enabled = false;
+
+						l.lightData.direction = sm::Vector4(dir.x, dir.y, dir.z, 0.0f);
+						sm::Vector3 pos = l.lightData.position;
+						float d = dir.Dot(sm::Vector3::Up);
+						pos = playerPos - dir * 200;
+						l.lightData.position = sm::Vector4(pos);
+						l.lightData.position.w = 1.f;
+
+					}
+					e.GetComponent<comp::BoundingSphere>()->Center = sm::Vector3(l.lightData.position);
+				});
+
+		}
+	}
 }
 
 void Game::OnShutdown()
@@ -160,6 +190,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			}
 			else 
 			{
+
 				LOG_WARNING("Updating: Entity %u not in m_gameEntities, should not happen...", entityID);
 			}
 		}
@@ -275,6 +306,11 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		SetScene("Lobby");
 		break;
 	}
+	case GameMsg::Game_Over:
+	{
+		SetScene("GameOver");
+		break;
+	}
 	case GameMsg::Lobby_Accepted:
 	{
 		msg >> m_gameID;
@@ -367,18 +403,18 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		if (m_players.find(m_localPID) != m_players.end())
 		{
 			comp::Player* player = m_players.at(m_localPID).GetComponent<comp::Player>();
-				rtd::Text* readyText = dynamic_cast<rtd::Text*>(GetScene("Lobby").GetCollection("StartGame")->elements[1].get());
-				if (readyText)
+			rtd::Button* readyText = dynamic_cast<rtd::Button*>(GetScene("Lobby").GetCollection("StartGame")->elements[0].get());
+			if (readyText)
+			{
+				if (player->isReady)
 				{
-					if (player->isReady)
-					{
-						readyText->SetText("Ready");
-					}
-					else
-					{
-						readyText->SetText("Not ready");
-					}
+					readyText->GetPicture()->SetTexture("Ready.png");
 				}
+				else
+				{
+					readyText->GetPicture()->SetTexture("NotReady.png");
+				}
+			}
 		}
 
 		dynamic_cast<rtd::Text*>(GetScene("Lobby").GetCollection("LobbyDesc")->elements[1].get())->SetText("Lobby ID: " + std::to_string(m_gameID));
@@ -424,6 +460,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 				}
 			}
 		}
+		break;
 	}
 	}
 }
