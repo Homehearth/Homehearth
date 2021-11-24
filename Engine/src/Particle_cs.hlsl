@@ -43,11 +43,9 @@ void BloodSimmulation(inout VertexParticleIn particle, in uint id)
     if (particle.life < particleLifeTime)
     {
                 
-        particle.velocity.x += (5.0f * randomNumbers[id]) * deltaTime;
-        particle.velocity.y += (4.0f * randomNumbers[id + 1]) * deltaTime;
-        particle.velocity.z += (5.0f * randomNumbers[id + counter]) * deltaTime;
 
-        particle.pos += particle.velocity * deltaTime;
+
+        particle.pos += (particle.velocity * 10) * deltaTime;
         
         particle.velocity.y -= 4.82f * deltaTime;
         
@@ -75,11 +73,13 @@ void BloodSimmulation(inout VertexParticleIn particle, in uint id)
     }
     else
     {
-        particle.size = float2(1, 1);
+        particle.size = float2(2, 2);
         particle.pos = emitterPosition;
         particle.life = 0;
-        particle.velocity = (0, 0, 0, 0);
 
+        particle.velocity.x = (randomNumbers[id]);
+        particle.velocity.y = (randomNumbers[id + 1]) ;
+        particle.velocity.z = (randomNumbers[id + counter]);
     }
     
 
@@ -118,6 +118,7 @@ void WaterSplashSimmulation(inout VertexParticleIn particle, in uint id)
         particle.pos += particle.velocity * deltaTime;
         
         particle.velocity.y -= 9.82f * deltaTime;
+        particle.color += deltaTime;
         
         if (particle.size.x >= 0)
         {
@@ -132,6 +133,7 @@ void WaterSplashSimmulation(inout VertexParticleIn particle, in uint id)
         particle.pos = emitterPosition; //+ randomNumbers[counter];
         particle.velocity = (0, 0, 0, 0);
         particle.life = 0;
+        particle.color = (0, 0, 0.5, 0.5);
     }
 }
 
@@ -141,35 +143,34 @@ void SmokeSimmulation(inout VertexParticleIn particle, in uint id)
     
     if (particle.life < particleLifeTime)
     {
-        //particle.pos.y += (abs(randomNumbers[id])) * deltaTime;
-        //particle.pos.z -= ((randomNumbers[id + counter])) * deltaTime;
-        //particle.pos.x += ((randomNumbers[id / 2])) * deltaTime;
         
-        particle.velocity.x += (1.0f * randomNumbers[id]) * deltaTime;
-        particle.velocity.y += (1.0f * randomNumbers[id + 1]) * deltaTime;
-        particle.velocity.z += (1.0f * randomNumbers[id + counter]) * deltaTime;
+        particle.velocity.x += (randomNumbers[id]) * deltaTime;
+        particle.velocity.y += (randomNumbers[id + 1]) * deltaTime;
+        particle.velocity.z += (randomNumbers[id + counter]) * deltaTime;
 
         particle.pos += particle.velocity * deltaTime;
         
-        particle.velocity.y += 5.82f * deltaTime;
+        particle.velocity.y += 9.82 * deltaTime;
         
-        float sizeChange = randomNumbers[id + counter] * deltaTime;
+        float sizeChange = abs(randomNumbers[id + counter]) * deltaTime;
         particle.size += sizeChange * particleSizeMulitplier;
         
         if (particle.color.a >= 0 && particle.life >= particleLifeTime - 1.5)
-            particle.color.a -= deltaTime;
-        
-        //particle.color.rgb += deltaTime;
-        
+        {
+            particle.color.a -= 2.5 * deltaTime;
+            //particle.color.rgb -= deltaTime;
+        }
     }
     else
     {
         particle.size = float2(1, 1);
         particle.pos = emitterPosition;
-        particle.life = counter;
+        //particle.pos.x = emitterPosition.x + (randomNumbers[id] * 4);
+        //particle.pos.z = emitterPosition.z + (randomNumbers[id + 1] *4);
+        //particle.pos.y = emitterPosition.y + (randomNumbers[id] * lifeTime);
+        particle.life = 0;
         particle.color.a = 1;
-        particle.velocity = (0, 0, 0, 0);
-
+        particle.velocity = (0, 0, 10, 0);
     }
 }
 

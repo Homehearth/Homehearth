@@ -81,7 +81,11 @@ bool Game::OnStartup()
 	//Particles
 	Entity emitter = GetScene("Game").CreateEntity();
 	emitter.AddComponent<comp::Transform>()->position = {250, 5, -340};
-	emitter.AddComponent <comp::EmitterParticle>("smoke.png", "smoke_opacity.png", 800, 8.f, PARTICLEMODE::SMOKE, 4.0f);
+	emitter.AddComponent <comp::EmitterParticle>("smoke.png", "smoke_opacity.png", 800, 2.f, PARTICLEMODE::SMOKE, 4.0f);	
+	
+	Entity emitterS = GetScene("Game").CreateEntity();
+	emitterS.AddComponent<comp::Transform>()->position = {178, 15, -338};
+	emitterS.AddComponent <comp::EmitterParticle>("smoke.png", "smoke_opacity.png", 1200, 2.f, PARTICLEMODE::SMOKE, 4.2f);
 
 	//Entity emitter2 = GetScene("Game").CreateEntity();
 	//emitter2.AddComponent<comp::Transform>()->position = { 250, 5,- 320 };
@@ -91,17 +95,17 @@ bool Game::OnStartup()
 	//emitter3.AddComponent<comp::Transform>()->position = { 250, 20, -300 };
 	//emitter3.AddComponent <comp::EmitterParticle>("thisisfine.png", "", 20, 1.f, PARTICLEMODE::WATERSPLASH);
 	
-	/*Entity emitter4 = GetScene("Game").CreateEntity();
-	emitter4.AddComponent<comp::Transform>()->position = { 240, 20, -300 };
-	emitter4.AddComponent <comp::EmitterParticle>("", "", 20, 1.f, PARTICLEMODE::RAIN);	*/
-	
+	Entity emitter4 = GetScene("Game").CreateEntity();
+	emitter4.AddComponent<comp::Transform>()->position = { 240, 6, -300 };
+	emitter4.AddComponent <comp::EmitterParticle>("Blood.png", "", 50, 8.f, PARTICLEMODE::BLOOD, 1.5f);
+
 	Entity emitter5 = GetScene("Game").CreateEntity();
 	emitter5.AddComponent<comp::Transform>()->position = { 220, 40, -340 };
-	emitter5.AddComponent <comp::EmitterParticle>("Blood.png", "", 20, 1.f , PARTICLEMODE::BLOOD, 2.0f);
+	emitter5.AddComponent <comp::EmitterParticle>("Blood.png", "", 50, 8.f , PARTICLEMODE::BLOOD, 1.5f);
 	
 	Entity waterSplash = GetScene("Game").CreateEntity();
 	waterSplash.AddComponent<comp::Transform>()->position = { 270, 13, -370 };
-	waterSplash.AddComponent <comp::EmitterParticle>("", "", 20, 1.f , PARTICLEMODE::WATERSPLASH, 4.0f);
+	waterSplash.AddComponent <comp::EmitterParticle>("waterSplash.png", "", 100, 1.f , PARTICLEMODE::WATERSPLASH, 4.0f);
 
 
 
@@ -265,7 +269,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 
 				if (e.GetComponent<comp::Transform>())
 				{
-					//e.AddComponent <comp::EmitterParticle>("thisisfine.png", "thisisfine_Opacity.png", 100, PARTICLEMODE::SMOKE);
+					//e.AddComponent <comp::EmitterParticle>("Blood.png", "", 50, 8.f, PARTICLEMODE::BLOOD, 1.5f);
 				}
 
 				GetScene("Game").ForEachComponent<comp::Tag<TagType::CAMERA>>([&](Entity entt, comp::Tag<TagType::CAMERA>& t)

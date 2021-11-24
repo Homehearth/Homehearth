@@ -31,6 +31,17 @@ void ParticleSystem::InitializeParticles(entt::registry& reg, entt::entity ent)
 		tempParticle.life = 0;
 		tempParticle.velocity = {0,0,0,0};
 
+		if (tempParticle.type == PARTICLEMODE::BLOOD)
+		{
+			tempParticle.velocity.x = (float)rand() / (RAND_MAX + 1) * (2.0 - (-2.0f)) + (-2.0f);
+			tempParticle.velocity.y = (float)rand() / (RAND_MAX + 1) * (2.0 - (-2.0f)) + (-2.0f);
+			tempParticle.velocity.z = (float)rand() / (RAND_MAX + 1) * (2.0 - (-2.0f)) + (-2.0f);
+		}
+		if (tempParticle.type == PARTICLEMODE::WATERSPLASH)
+		{
+			tempParticle.color = { 0,0,0.5,0.5 };
+		}
+
 		particles[i] =  tempParticle;
 	}
 
