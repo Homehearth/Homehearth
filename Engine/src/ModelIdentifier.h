@@ -33,7 +33,7 @@ const std::string Door6			= "Door6";
 const std::string Door7			= "Door7";
 const std::string Door8			= "Door8";
 const std::string Door9			= "Door9";
-const std::string Water			= "WaterMesh";
+//const std::string Water			= "WaterMesh";
 
 //non transparent
 const std::string WaterEdge     = "WaterEdgeMesh";

@@ -108,8 +108,14 @@ public:
 	std::shared_ptr<RTexture> m_WaterAlbedoMap;
 	std::shared_ptr<RTexture> m_WaterNormalMap;
 	std::shared_ptr<RTexture> m_WaterEdgeAlbedoMap;
-	std::shared_ptr<RTexture> m_WaterFloorAlbedoMap;
+	ComPtr<ID3D11Texture2D>	 m_WaterFloorAlbedoMap;
 	std::shared_ptr<RTexture> m_WaterBlendAlbedoMap;
+
+	std::shared_ptr<RTexture> m_ModdedWaterAlbedoMap;
+	std::shared_ptr<RTexture> m_ModdedWaterNormalMap;
+	std::shared_ptr<RTexture> m_ModdedWaterEdgeAlbedoMap;
+	std::shared_ptr<RTexture> m_ModdedWaterFloorAlbedoMap;
+	std::shared_ptr<RTexture> m_ModdedWaterBlendAlbedoMap;
 
 private:
 	// INITIALIZE METHODS.

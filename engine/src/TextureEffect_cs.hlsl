@@ -23,7 +23,6 @@
           This is why Direction and Distance is needed.
         - A value between 0 and 1 can mean so and so many pixels: Distance / Value 0 - 1 (gray value) = new pixel placement. (I tihnk)
     
-    UV displacement:
     https://gamedevelopment.tutsplus.com/tutorials/using-displacement-shaders-to-create-an-underwater-effect--cms-27191
 
 How do do shit: 
@@ -47,10 +46,36 @@ How do do shit:
     - hårdkodas först. 
 */
 
-[numthreads(1024, 1, 1)]
-void main( ComputeShaderIn input)
+RWTexture2D<float4> Result;
+
+[numthreads(32, 32, 1)]
+void main(uint3 id : SV_DispatchThreadID)
 {
+    //Green
+    float4 newVector2 = float4(0, 1, 0, 1);
     
+    //Displacement
+    uint2 discplacement = { 1, 0 };
+
+    //Dimention
+    float2 dimentions = { 0, 0 };
+    t_waterFloorTexture.GetDimensions(dimentions.x, dimentions.y);
+   
+    // Get the current pixel's normalized pos
+    uint2 uv = id.xy / dimentions; 
     
+    //Test
+    uv.y += uv.x; //Moves the y by the current pixels x
+    
+    //add displacement
+    //uv += discplacement;
+    
+    //Get the pixel at said destination.
+    float4 color = t_waterFloorTexture[uv.xy];
+    
+    //float4 newVector = lerp(u_waterFloorTexture[int2(id.x, id.y)], float4(0, 1, 0, 1), 0.01);
+    
+    //Puts the color on the current pixel. 
+    u_waterFloorTexture[id.xy] = color;
     
 }
