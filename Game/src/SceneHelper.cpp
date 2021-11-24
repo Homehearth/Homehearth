@@ -17,6 +17,7 @@
 #include "MoneyUI.h"
 #include "AbilityUI.h"
 #include "ShopUI.h"
+#include "MenuUI.h"
 
 // Used to show and hide shopMenu
 static bool toggle = false;
@@ -174,6 +175,12 @@ namespace sceneHelp
 					{
 						game->GetCurrentScene()->GetCollection("shopMenu")->Hide();
 							toggle = false;
+					}
+
+					if (game->GetCurrentScene()->GetCollection("inGameMenu")->GetState() == ElementState::OUTSIDE &&
+						game->GetCurrentScene()->GetCollection("ScrolldownMenu")->GetState() == ElementState::OUTSIDE)
+					{
+						game->GetCurrentScene()->GetCollection("inGameMenu")->Hide();
 					}
 				}
 
@@ -345,11 +352,16 @@ namespace sceneHelp
 		sixth->SetActivateButton("C");
 		scene.Add2DCollection(abilities, "AbilityUI");
 
+		Collection2D* pauseMenu = new Collection2D;
+		pauseMenu->AddElement<rtd::MenuUI>("Menu.png", draw_t(width * 0.5f - width * 0.125f, height * 0.25f, width * 0.25f, height * 0.5f));
+		scene.Add2DCollection(pauseMenu, "inGameMenu");
+		pauseMenu->Hide();
+
 		Collection2D* shopMenu = new Collection2D;
 		Collection2D* scrolldownMenu = new Collection2D;
 		rtd::Scroller* sc = scrolldownMenu->AddElement<rtd::Scroller>(draw_t(0.0f, -(height / 16) * 3.0f, width / 24.0f, (height / 16) * 3.0f), sm::Vector2(0, 0));
 		sc->AddButton("No.png", draw_t(0.0f, -(height / 16), width / 24, height / 16))->SetOnPressedEvent([=] {
-			game->Shutdown();
+			pauseMenu->Show();
 			});
 		
 		
