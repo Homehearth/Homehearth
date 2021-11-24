@@ -421,6 +421,6 @@ struct Particle_t
 	sm::Vector4		color;
 
 	sm::Vector2		size = { 1, 1, };
-	PARTICLEMODE	type;
+	PARTICLEMODE	type = PARTICLEMODE::BLOOD;
 	UINT			life = 0;
 };

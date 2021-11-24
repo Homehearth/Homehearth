@@ -4,12 +4,14 @@
 #include "CommonStructures.h"
 
 PipelineManager::PipelineManager()
-	: m_window(nullptr)
-	, m_d3d11(&D3D11Core::Get())
-	, m_viewport()
+    : m_window(nullptr)
+    , m_d3d11(&D3D11Core::Get())
+    , m_viewport()
 {
     m_windowWidth = 0;
     m_windowHeight = 0;
+
+    m_context = nullptr;
 }
 
 void PipelineManager::Initialize(Window* pWindow, ID3D11DeviceContext* context)

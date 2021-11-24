@@ -31,7 +31,7 @@ void ParticlePass::CreateRandomNumbers()
 	D3D11_BUFFER_DESC bufferDescNR;
 	ZeroMemory(&bufferDescNR, sizeof(D3D11_BUFFER_DESC));
 	bufferDescNR.Usage = D3D11_USAGE_DEFAULT;
-	bufferDescNR.ByteWidth = sizeof(float) * m_randomNumbers.size();
+	bufferDescNR.ByteWidth = sizeof(UINT) * m_randomNumbers.size();
 	bufferDescNR.BindFlags = D3D11_BIND_SHADER_RESOURCE;
 	bufferDescNR.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
 	bufferDescNR.StructureByteStride = sizeof(float);

@@ -53,6 +53,7 @@ void BloodSimmulation(inout VertexParticleIn particle, in uint id)
         {
             float sizeChange = abs((randomNumbers[id + counter]) * deltaTime);
             particle.size -= sizeChange * particleSizeMulitplier;
+            particle.color.rgb += 1.0 * deltaTime;
         }
 
 
@@ -77,6 +78,8 @@ void BloodSimmulation(inout VertexParticleIn particle, in uint id)
         particle.pos = emitterPosition;
         particle.life = 0;
 
+        particle.color = float4(0.8, 0.8 ,0.8 ,1 );
+        
         particle.velocity.x = (randomNumbers[id]);
         particle.velocity.y = (randomNumbers[id + 1]) ;
         particle.velocity.z = (randomNumbers[id + counter]);
@@ -131,9 +134,9 @@ void WaterSplashSimmulation(inout VertexParticleIn particle, in uint id)
         particle.size = float2(1.5, 1.5);
         //particle.pos = (emitterPosition.x + (randomNumbers[id + counter] / 10.f) , emitterPosition.y + (randomNumbers[id]/10.f), emitterPosition.z, emitterPosition.w);
         particle.pos = emitterPosition; //+ randomNumbers[counter];
-        particle.velocity = (0, 0, 0, 0);
+        particle.velocity = float4(0, 0, 0, 0);
         particle.life = 0;
-        particle.color = (0, 0, 0.5, 0.5);
+        particle.color = float4(0, 0, 0.5, 0.5);
     }
 }
 
@@ -145,7 +148,7 @@ void SmokeSimmulation(inout VertexParticleIn particle, in uint id)
     {
         
         particle.velocity.x += (randomNumbers[id]) * deltaTime;
-        particle.velocity.y += (randomNumbers[id + 1]) * deltaTime;
+        particle.velocity.y += abs(randomNumbers[id + 1]) * deltaTime;
         particle.velocity.z += (randomNumbers[id + counter]) * deltaTime;
 
         particle.pos += particle.velocity * deltaTime;
@@ -170,7 +173,7 @@ void SmokeSimmulation(inout VertexParticleIn particle, in uint id)
         //particle.pos.y = emitterPosition.y + (randomNumbers[id] * lifeTime);
         particle.life = 0;
         particle.color.a = 1;
-        particle.velocity = (0, 0, 10, 0);
+        particle.velocity = float4(0, 0, 0, 0);
     }
 }
 
