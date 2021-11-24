@@ -456,7 +456,8 @@ void RenderShadow(const unsigned int start, unsigned int stop, void* buffer, voi
 
 					m_buffer->SetData(m_context, it->data);
 					m_context->VSSetConstantBuffers(0, 1, buffers);
-					it->model->Render(m_context);
+					if (it->model)
+						it->model->Render(m_context);
 				}
 			}
 

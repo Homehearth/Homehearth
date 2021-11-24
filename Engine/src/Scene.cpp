@@ -202,7 +202,8 @@ void Scene::RenderShadow(const light_t& light)
 			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), model.data);
 			ID3D11Buffer* buffer[] = { m_publicBuffer.GetBuffer() };
 			D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, buffer);
-			model.model->Render(D3D11Core::Get().DeviceContext());
+			if(model.model)
+				model.model->Render(D3D11Core::Get().DeviceContext());
 		}
 	}
 }

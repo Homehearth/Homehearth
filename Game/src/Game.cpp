@@ -411,6 +411,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 				{
 					readyText->GetPicture()->SetTexture("NotReady.png");
 				}
+			}
 		}
 
 		dynamic_cast<rtd::Text*>(GetScene("Lobby").GetCollection("LobbyDesc")->elements[1].get())->SetText("Lobby ID: " + std::to_string(m_gameID));
@@ -456,6 +457,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 				}
 			}
 		}
+		break;
 	}
 	}
 }
