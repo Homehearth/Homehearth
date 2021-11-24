@@ -77,7 +77,7 @@ camera_Matrix_t ShadowPass::GetLightMatrix(light_t light)
 	case TypeLight::DIRECTIONAL:
 	{
 		mat.view = dx::XMMatrixLookToLH(light.position, light.direction, sm::Vector3::Up);
-		mat.projection = dx::XMMatrixOrthographicLH(SHADOW_SIZE / 30, SHADOW_SIZE / 30, 0.f, 500.0f);
+		mat.projection = dx::XMMatrixOrthographicLH(SHADOW_SIZE / 30, SHADOW_SIZE / 30, 0.f, 200.0f);
 		break;
 	}
 	case TypeLight::POINT:
@@ -174,12 +174,10 @@ void ShadowPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 
 	DC->PSSetSamplers(1, 1, PM->m_linearSamplerState.GetAddressOf());
 	DC->RSSetViewports(1, &m_viewport);
-	DC->RSSetState(PM->m_rasterStateNoCulling.Get());
+	DC->RSSetState(PM->m_rasterState.Get());
 
 	DC->VSSetShader(PM->m_defaultVertexShader.Get(), nullptr, 0);
 	DC->PSSetShader(PM->m_shadowPixelShader.Get(), nullptr, 0);
-
-	DC->OMSetBlendState(PM->m_blendStateParticle.Get(), 0, UINT32_MAX);
 }
 
 void ShadowPass::Render(Scene* pScene)
@@ -233,8 +231,5 @@ void ShadowPass::Render(Scene* pScene)
 
 void ShadowPass::PostRender(ID3D11DeviceContext* pDeviceContext)
 {
-	
 	DC->PSSetShaderResources(13, 1, m_shadowMap.shadowView.GetAddressOf());
-
-
 }

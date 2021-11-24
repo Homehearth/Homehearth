@@ -25,6 +25,8 @@ void Renderer::Initialize(Window* pWindow)
 	AddPass(&m_skyPass);
 
 	AddPass(&m_dofPass);
+
+	m_basePass.m_pShadowPass = &m_shadowPass;
 	
 
 	//m_depthPass.SetEnable(true);

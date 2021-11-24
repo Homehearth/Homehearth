@@ -455,9 +455,6 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 	m_spawnPoints.push(sm::Vector3(222.f, 0, -300.f));
 	m_spawnPoints.push(sm::Vector3(247.f, 0, -325.f));
 
-	// Create and add all waves to the queue.
-	CreateWaves();
-
 	// Create Scenes associated with this Simulation
 	m_pLobbyScene = &m_pEngine->GetScene("Lobby_" + std::to_string(gameID));
 	m_pLobbyScene->on<ESceneUpdate>([&](const ESceneUpdate& e, HeadlessScene& scene)
@@ -536,9 +533,10 @@ bool Simulation::Create(uint32_t playerID, uint32_t gameID, std::vector<dx::Boun
 
 			if (!waveQueue.empty())
 				ServerSystems::NextWaveConditions(this, waveTimer, waveQueue.front().GetTimeLimit());
+#if SPAWN_MONSTERS
 			else
 				this->CreateWaves();
-			//LOG_INFO("GAME Scene %d", m_gameID);
+#endif // SPAWN_MONSTERS
 		});
 
 	//On all enemies wiped, activate the next wave.
@@ -966,12 +964,13 @@ void Simulation::SetGameScene()
 {
 	ResetGameScene();
 	m_pCurrentScene = m_pGameScene;
-#ifdef GOD_MODE
+#if GOD_MODE
 	// During debug give players 1000 gold/monies.
 	m_currency.GetAmountRef() = 1000;
 	for (auto& player : m_players)
 	{
 		player.second.AddComponent<comp::Tag<TagType::NO_RESPONSE>>();
+		player.second.RemoveComponent<comp::Tag<TagType::GOOD>>();
 	}
 #endif
 }
@@ -1005,7 +1004,6 @@ void Simulation::ResetGameScene()
 	m_currency.Zero();
 
 	LOG_INFO("%lld", m_pGameScene->GetRegistry()->size());
-	CreateWaves();
 
 }
 
