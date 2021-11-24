@@ -242,14 +242,14 @@ namespace sceneHelp
 		scene.Add2DCollection(connectFields, "ConnectFields");
 
 		Collection2D* scrolldownMenu = new Collection2D;
-		rtd::Scroller* sc = scrolldownMenu->AddElement<rtd::Scroller>(draw_t(0.0f, -(height / 16) * 3.0f, width / 24.0f, (height / 16) * 3.0f), sm::Vector2(0, 0));
-		sc->AddButton("No.png", draw_t(0.0f, -(height / 16), width / 24, height / 16))->SetOnPressedEvent([=] {
+		rtd::Scroller* sc = scrolldownMenu->AddElement<rtd::Scroller>(draw_t(0.0f, -(height / 14) * 3.0f, width / 24.0f, (height / 16) * 3.0f), sm::Vector2(0, 0));
+		sc->AddButton("No.png", draw_t(0.0f, -(height / 14), width / 24, height / 14))->SetOnPressedEvent([=] {
 			game->Shutdown();
 			});
-		sc->AddButton("SettingsIcon.png", draw_t(0.0f, -(height / 16) * 2.0f, width / 24, height / 16))->SetOnPressedEvent([=] {
+		sc->AddButton("SettingsIcon.png", draw_t(0.0f, -(height / 14) * 2.0f, width / 24, height / 14))->SetOnPressedEvent([=] {
 			game->SetScene("Options");
 			});
-		sc->SetPrimeButtonMeasurements(draw_t(0.0f, 0.0f, width / 24, height / 16));
+		sc->SetPrimeButtonMeasurements(draw_t(0.0f, 0.0f, width / 24, height / 14));
 		scene.Add2DCollection(scrolldownMenu, "ScrolldownMenu");
 
 		rtd::Button* externalLinkBtn = connectFields->AddElement<rtd::Button>("Button.png", draw_t(width - width / 4.f, height - (height / 5), width / 8.f, height / 16));
@@ -363,16 +363,16 @@ namespace sceneHelp
 
 		Collection2D* shopMenu = new Collection2D;
 		Collection2D* scrolldownMenu = new Collection2D;
-		rtd::Scroller* sc = scrolldownMenu->AddElement<rtd::Scroller>(draw_t(0.0f, -(height / 16) * 3.0f, width / 24.0f, (height / 16) * 3.0f), sm::Vector2(0, 0));
-		sc->AddButton("No.png", draw_t(0.0f, -(height / 16), width / 24, height / 16))->SetOnPressedEvent([=] {
+		rtd::Scroller* sc = scrolldownMenu->AddElement<rtd::Scroller>(draw_t(0.0f, -(height / 14) * 3.0f, width / 24.0f, (height / 16) * 3.0f), sm::Vector2(0, 0));
+		sc->AddButton("No.png", draw_t(0.0f, -(height / 14), width / 24, height / 14))->SetOnPressedEvent([=] {
 			pauseMenu->Show();
 			});
 		
 		
-		sc->AddButton("ShopIcon.png", draw_t(0.0f, -(height / 16) * 2.0f, width / 24, height / 16))->SetOnPressedEvent([=] {
+		sc->AddButton("ShopIcon.png", draw_t(0.0f, -(height / 14) * 2.0f, width / 24, height / 14))->SetOnPressedEvent([=] {
 				shopMenu->Show();
 			});
-		sc->SetPrimeButtonMeasurements(draw_t(0.0f, 0.0f, width / 24, height / 16));
+		sc->SetPrimeButtonMeasurements(draw_t(0.0f, 0.0f, width / 24, height / 14));
 		scene.Add2DCollection(scrolldownMenu, "ScrolldownMenu");
 
 		rtd::ShopUI* shop = shopMenu->AddElement<rtd::ShopUI>("Shop.png", draw_t(width / 24.0f, (height / 16), width * 0.25f, height * 0.5f));
@@ -444,7 +444,7 @@ namespace sceneHelp
 
 		Collection2D* general = new Collection2D;
 		general->AddElement<rtd::Canvas>(D2D1::ColorF(.2f, .2f, .2f), draw_t(0.0f, 0.0f, width, height));
-		rtd::Button* exitButton = general->AddElement<rtd::Button>("No.png", draw_t(0.0f, 0.0f, width / 24, height / 16), false);
+		rtd::Button* exitButton = general->AddElement<rtd::Button>("No.png", draw_t(0.0f, 0.0f, width / 24, height / 14), false);
 		exitButton->SetOnPressedEvent([=]()
 			{
 				comp::Player* player = game->GetLocalPlayer().GetComponent<comp::Player>();
@@ -658,7 +658,7 @@ namespace sceneHelp
 		//lobbyCollection->AddElement<rtd::Text>("Create Lobby", draw_text_t(width / 2, height - (height / 6.f), width / 4, height / 8));
 		rtd::Button* lobbyButton = lobbyCollection->AddElement<rtd::Button>("joinLobby.png", draw_t(width / 8, height - (height / 6.f), width / 4.f, height * 0.15f));
 		//lobbyCollection->AddElement<rtd::Text>("Join Lobby", draw_text_t(width / 8, height - (height / 6.f), width / 4, height / 8));
-		rtd::Button* exitButton = lobbyCollection->AddElement<rtd::Button>("No.png", draw_t(0.0f, 0.0f, width / 24, height / 16));
+		rtd::Button* exitButton = lobbyCollection->AddElement<rtd::Button>("No.png", draw_t(0.0f, 0.0f, width / 24, height / 14));
 
 		exitButton->SetOnPressedEvent([=]
 			{
