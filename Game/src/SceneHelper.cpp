@@ -385,31 +385,23 @@ namespace sceneHelp
 		sc->SetPrimeButtonMeasurements(draw_t(0.0f, 0.0f, width / 24, height / 16));
 		scene.Add2DCollection(scrolldownMenu, "ScrolldownMenu");
 
-		shopMenu->AddElement<rtd::ShopUI>("Shop.png", draw_t(width / 24.0f, 0, width * 0.37f, height * 0.75f))->SetVisiblity(false);
-		//shopMenu->AddElement<rtd::Button>("demoExitButton.png", draw_t(width / 24, 0.0f, width / 24, height / 16))->SetOnPressedEvent([=] {
-		//	
-		//	shopMenu->Hide();
+		rtd::ShopUI* shop = shopMenu->AddElement<rtd::ShopUI>("Shop.png", draw_t(width / 24.0f, 0, width * 0.37f, height * 0.75f));
+		shop->SetOnPressedEvent(0, [=] {
+			game->UseShop(ShopItem::SHORT_TOWER);
+			shopMenu->Hide();
+			});
+		shop->SetOnPressedEvent(1, [=] {
+			game->UseShop(ShopItem::LONG_TOWER);
+			shopMenu->Hide();
+			});
+		shop->SetOnPressedEvent(2, [=] {
+			game->UseShop(ShopItem::Primary_Upgrade);
+			});
+		shop->SetOnPressedEvent(4, [=] {
+			game->UseShop(ShopItem::Heal);
+			});
 
-		//	});
-		//shopMenu->AddElement<rtd::Button>("Button.png", draw_t((width / 24.f)  + ((width * 0.37f) * 0.5f) - width / 8.0f, height / 24.f, width / 4.0f, height / 8.0f))->SetOnPressedEvent([=] {
-
-		//	game->UseShop(ShopItem::LONG_TOWER);
-
-		//	});
-		//shopMenu->AddElement<rtd::Text>("Place Wide Towers", draw_text_t((width / 24.f) + ((width * 0.37f) * 0.5f) - width / 8.0f, height / 24.f, width / 4.0f, height / 8.0f));
-		//shopMenu->AddElement<rtd::Button>("Button.png", draw_t((width / 24.f) + ((width * 0.37f) * 0.5f) - width / 8.0f, ((height / 24.f) * 2.0f) + height / 8.0f, width / 4.0f, height / 8.0f))->SetOnPressedEvent([=] {
-
-		//	game->UseShop(ShopItem::SHORT_TOWER);
-
-		//	});
-		//shopMenu->AddElement<rtd::Text>("Place Short Towers", draw_text_t((width / 24.f) + ((width * 0.37f) * 0.5f) - width / 8.0f, ((height / 24.f) * 2.0f) + height / 8.0f, width / 4.0f, height / 8.0f));
-		//shopMenu->AddElement<rtd::Button>("Button.png", draw_t((width / 24.f) + ((width * 0.37f) * 0.5f) - width / 8.0f, ((height / 24.f) * 3.0f) + (height / 8.0f) * 2.0f, width / 4.0f, height / 8.0f))->SetOnPressedEvent([=] {
-
-		//	game->UseShop(ShopItem::Tower_Upgrade);
-
-		//	});
-		//shopMenu->AddElement<rtd::Text>("Upgrade Towers", draw_text_t((width / 24.f) + ((width * 0.37f) * 0.5f) - width / 8.0f, ((height / 24.f) * 3.0f) + (height / 8.0f) * 2.0f, width / 4.0f, height / 8.0f));
-		//shopMenu->Hide();
+		shopMenu->Hide();
 		scene.Add2DCollection(shopMenu, "shopMenu");
 	}
 
