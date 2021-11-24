@@ -528,8 +528,15 @@ bool PipelineManager::CreateTextureEffectConstantBuffer()
 
 bool PipelineManager::CreateTextureEffectResources()
 {
-    // Create render textures, target views and shader resource views here
+    /*
+    * Get all the textures needed. 
+    * Create original resource textures (to reference from and not modify, the modifications happenes on the material that is already on the model)
+    * Create URV for the texture that will be modefied.
+    * Create SRV for the texture that wont. 
+    */
 
+
+    // Create render textures, target views and shader resource views here
     m_WaterBlendAlbedoMap = ResourceManager::Get().GetResource<RTexture>("WaterBlendMap.jpg");
 
     //Get all models needed
@@ -546,23 +553,54 @@ bool PipelineManager::CreateTextureEffectResources()
     m_WaterAlbedoMap       = m_WaterModel.get()->GetTextures(ETextureType::albedo)[0];
     m_WaterNormalMap       = m_WaterModel.get()->GetTextures(ETextureType::normal)[0];
     m_WaterEdgeAlbedoMap   = m_WaterEdgeModel.get()->GetTextures(ETextureType::albedo)[0];
-    m_WaterFloorAlbedoMap  = m_WaterFloorModel.get()->GetTextures(ETextureType::albedo)[0];
+    m_ModdedWaterFloorAlbedoMap = m_WaterFloorModel.get()->GetTextures(ETextureType::albedo)[0];
 
     //Get the SRV:s from the textures
     m_SRV_TextureEffectWaterEdgeMap    = m_WaterEdgeAlbedoMap.get()->GetShaderView();
-    m_SRV_TextureEffectWaterFloorMap   = m_WaterFloorAlbedoMap.get()->GetShaderView();
+    m_SRV_TextureEffectWaterFloorMap   = m_ModdedWaterFloorAlbedoMap.get()->GetShaderView();
     m_SRV_TextureEffectWaterMap        = m_WaterAlbedoMap.get()->GetShaderView();
     m_SRV_TextureEffectWaterNormalMap  = m_WaterNormalMap.get()->GetShaderView();
     m_SRV_TextureEffectBlendMap        = m_WaterBlendAlbedoMap.get()->GetShaderView();
 
     HRESULT hr = {};
 
+    // CREATE TEXTURE 2D //
+    // Create texture to keep original resource of water floor //
+    const unsigned int textureWidth = 256;
+    const unsigned int textureHeight = 256;
 
-    // UNORDERED ACCES VIEW //
+    D3D11_TEXTURE2D_DESC desc;
+    desc.Width = textureWidth;
+    desc.Height = textureHeight;
+    desc.MiscFlags = 0;
+    desc.MipLevels = 9;
+    desc.ArraySize = 1;
+    desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    desc.SampleDesc.Count = 1;
+    desc.SampleDesc.Quality = 0;
+    desc.Usage = D3D11_USAGE_DEFAULT;
+    desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+    desc.CPUAccessFlags = 0;
+    desc.MiscFlags = 0;
 
-    hr = m_d3d11->Device()->CreateUnorderedAccessView(m_WaterFloorAlbedoMap.get()->GetTexture2D(), nullptr, m_UAV_TextureEffectWaterFloorMap.GetAddressOf());
+    //Cretae original resource reference texture
+    hr = m_d3d11->Device()->CreateTexture2D(&desc, nullptr, &m_WaterFloorAlbedoMap);
     if (FAILED(hr))
         return false;
+    
+    // Copy Original resource to original resource reference texture. 
+    m_d3d11->DeviceContext()->CopyResource(m_WaterFloorAlbedoMap.Get(), m_ModdedWaterFloorAlbedoMap.get()->GetTexture2D());
+
+    // UNORDERED ACCES VIEW //
+    hr = m_d3d11->Device()->CreateUnorderedAccessView(m_ModdedWaterFloorAlbedoMap.get()->GetTexture2D(), nullptr, m_UAV_TextureEffectWaterFloorMap.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+
+    // SHADER RESOURCE VIEW //
+    hr = m_d3d11->Device()->CreateShaderResourceView(m_WaterFloorAlbedoMap.Get(), nullptr, m_SRV_TextureEffectWaterFloorMap.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+
     return true;
 }
 
