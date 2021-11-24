@@ -1,5 +1,4 @@
 #include "EnginePCH.h"
-#include "Systems.h"
 #include "Text.h"
 #include "Healthbar.h"
 
@@ -434,5 +433,20 @@ void Systems::TransformAnimationSystem(HeadlessScene& scene, float dt)
 
 			}
 		});
+}
 
+void Systems::FetchCollidingList(HeadlessScene& scene, QuadTree* qt)
+{
+	scene.ForEachComponent<comp::ColliderList, comp::BoundingSphere>([&](Entity& e, comp::ColliderList& cl, comp::BoundingSphere& bs)
+		{
+			qt->Query(cl.list, bs);
+		});
+}
+
+void Systems::ClearCollidingList(HeadlessScene& scene)
+{
+	scene.ForEachComponent<comp::ColliderList>([](Entity& e, comp::ColliderList& cl)
+		{
+			cl.list.clear();
+		});
 }

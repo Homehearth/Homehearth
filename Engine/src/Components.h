@@ -223,7 +223,10 @@ namespace ecs
 			TowerTypes towerSelected = TowerTypes::SHORT;
 		};
 
-	
+		struct ColliderList
+		{
+			std::vector<Entity> list;
+		};
 
 		struct NPC
 		{

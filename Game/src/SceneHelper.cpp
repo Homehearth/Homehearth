@@ -711,6 +711,10 @@ namespace sceneHelp
 			{
 				modelID = ModelID::HOUSE9;
 			}
+			else if (House10 == filename)
+			{
+				modelID = ModelID::HOUSE10;
+			}
 			else if (HouseRoof == filename)
 			{
 				modelID = ModelID::HOUSEROOF;
@@ -838,6 +842,10 @@ namespace sceneHelp
 			else if (House9 == filename || Door9 == filename)
 			{
 				game->m_models[ModelID::HOUSE9].push_back(e);
+			}
+			else if (House10 == filename || Door10 == filename)
+			{
+				game->m_models[ModelID::HOUSE10].push_back(e);
 			}
 			else if (HouseRoof == filename)
 			{

@@ -75,23 +75,23 @@ bool Game::OnStartup()
 	// Set Current Scene
 	SetScene("MainMenu");
 
-	Entity emitter = GetScene("Game").CreateEntity();
-	emitter.AddComponent<comp::Transform>()->position = { 250, 5, -340 };
-	emitter.AddComponent <comp::EmitterParticle>("thisisfine.png", "", 50, PARTICLEMODE::SMOKE);
+	//Entity emitter = GetScene("Game").CreateEntity();
+	//emitter.AddComponent<comp::Transform>()->position = { 250, 5, -340 };
+	//emitter.AddComponent <comp::EmitterParticle>("thisisfine.png", "", 50, PARTICLEMODE::SMOKE);
 
 
-	Entity emitter2 = GetScene("Game").CreateEntity();
-	emitter2.AddComponent<comp::Transform>()->position = { 250, 5,-320 };
-	emitter2.AddComponent <comp::EmitterParticle>("thisisfine.png", "", 10, PARTICLEMODE::SPARKLES);
+	//Entity emitter2 = GetScene("Game").CreateEntity();
+	//emitter2.AddComponent<comp::Transform>()->position = { 250, 5,-320 };
+	//emitter2.AddComponent <comp::EmitterParticle>("thisisfine.png", "", 10, PARTICLEMODE::SPARKLES);
 
 
-	Entity emitter3 = GetScene("Game").CreateEntity();
-	emitter3.AddComponent<comp::Transform>()->position = { 250, 20, -300 };
-	emitter3.AddComponent <comp::EmitterParticle>("thisisfine.png", "", 20, PARTICLEMODE::RAIN);
+	//Entity emitter3 = GetScene("Game").CreateEntity();
+	//emitter3.AddComponent<comp::Transform>()->position = { 250, 20, -300 };
+	//emitter3.AddComponent <comp::EmitterParticle>("thisisfine.png", "", 20, PARTICLEMODE::RAIN);
 
-	Entity emitter4 = GetScene("Game").CreateEntity();
-	emitter4.AddComponent<comp::Transform>()->position = { 240, 20, -300 };
-	emitter4.AddComponent <comp::EmitterParticle>("", "", 20, PARTICLEMODE::RAIN);
+	//Entity emitter4 = GetScene("Game").CreateEntity();
+	//emitter4.AddComponent<comp::Transform>()->position = { 240, 20, -300 };
+	//emitter4.AddComponent <comp::EmitterParticle>("", "", 20, PARTICLEMODE::RAIN);
 
 	return true;
 }
@@ -100,13 +100,13 @@ void Game::OnUserUpdate(float deltaTime)
 {
 	this->UpdateInput();
 
-	if (GetCurrentScene() == &GetScene("Game"))
-	{
-		if (m_players.find(m_localPID) != m_players.end())
-		{
-			GameSystems::CheckLOS(this);
-		}
-	}
+	//if (GetCurrentScene() == &GetScene("Game"))
+	//{
+	//	if (m_players.find(m_localPID) != m_players.end())
+	//	{
+	//		GameSystems::CheckLOS(this);
+	//	}
+	//}
 }
 
 void Game::OnShutdown()

@@ -276,6 +276,7 @@ void Simulation::ResetPlayer(Entity player)
 	player.AddComponent<comp::MeshName>()->name = "Knight.fbx";
 	player.AddComponent<comp::AnimatorName>()->name = "Knight.anim";
 	player.AddComponent<comp::AnimationState>();
+	player.AddComponent<comp::ColliderList>();
 
 	// only if Melee
 	if (playerComp->classType == comp::Player::Class::WARRIOR)
@@ -358,6 +359,9 @@ Simulation::Simulation(Server* pServer, HeadlessEngine* pEngine)
 	this->m_gameID = 0;
 	this->m_tick = 0;
 
+	dx::BoundingBox bounds = { dx::XMFLOAT3(247, 0, -300), dx::XMFLOAT3(190, 50, 170) };
+	qt = std::make_unique<QuadTree>(bounds);
+
 	m_spawnPoints.push(sm::Vector3(220.f, 0, -353.f));
 	m_spawnPoints.push(sm::Vector3(197.f, 0, -325.f));
 	m_spawnPoints.push(sm::Vector3(222.f, 0, -300.f));
@@ -389,7 +393,7 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 	this->m_lobby.Init(this);
 
 	// Create and add all waves to the queue.
-	CreateWaves();
+	//CreateWaves();
 
 	// Create Scenes associated with this Simulation
 	m_pLobbyScene = &m_pEngine->GetScene("Lobby_" + std::to_string(gameID));
@@ -434,6 +438,8 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 				Systems::MovementSystem(scene, e.dt);
 				Systems::MovementColliderSystem(scene, e.dt);
 
+				Systems::FetchCollidingList(scene, qt.get());
+
 				{
 					PROFILE_SCOPE("Collision Box/Box");
 					//Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(scene, e.dt);
@@ -447,13 +453,13 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 					Systems::CheckCollisions<comp::BoundingSphere, comp::BoundingSphere>(scene, e.dt);
 				}
 				ServerSystems::AnimatonSystem(this, scene);
+				Systems::ClearCollidingList(scene);
 			}
 
-			if (!waveQueue.empty())
-				ServerSystems::NextWaveConditions(this, waveTimer, waveQueue.front().GetTimeLimit());
-			else
-				this->CreateWaves();
-			//LOG_INFO("GAME Scene %d", m_gameID);
+			//if (!waveQueue.empty())
+			//	ServerSystems::NextWaveConditions(this, waveTimer, waveQueue.front().GetTimeLimit());
+			//else
+			//	this->CreateWaves();
 		});
 
 	//On all enemies wiped, activate the next wave.
@@ -659,6 +665,7 @@ void Simulation::BuildMapColliders(std::vector<dx::BoundingOrientedBox>* mapColl
 		obb->Orientation = mapColliders->at(i).Orientation;
 		collider.AddComponent<comp::Tag<TagType::STATIC>>();
 		//collider.AddComponent<comp::Network>();
+		qt->Insert(collider);
 	}
 }
 
@@ -864,6 +871,7 @@ bool Simulation::IsEmpty() const
 void Simulation::ReadyCheck(uint32_t playerID)
 {
 	bool allReady = m_lobby.ReadyCheck(playerID);
+	m_lobby.Update();
 
 	if (allReady)
 	{
