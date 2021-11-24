@@ -310,16 +310,24 @@ void Simulation::ResetPlayer(Entity player)
 		attackAbility->delay = 0.1f;
 		playerComp->primaryAbilty = entt::resolve<comp::RangeAttackAbility>();
 
-		comp::HealAbility* healAbility = player.AddComponent<comp::HealAbility>();
-		healAbility->cooldown = 5.0f;
-		healAbility->delay = 0.0f;
-		healAbility->healAmount = 30.f;
-		healAbility->lifetime = 1.5f;
-		healAbility->range = 50.f;
-		healAbility->useTime = 1.0f;
+		//comp::HealAbility* healAbility = player.AddComponent<comp::HealAbility>();
+		//healAbility->cooldown = 5.0f;
+		//healAbility->delay = 0.0f;
+		//healAbility->healAmount = 30.f;
+		//healAbility->lifetime = 1.5f;
+		//healAbility->range = 50.f;
+		//healAbility->useTime = 1.0f;
 
-		playerComp->secondaryAbilty = entt::resolve<comp::HealAbility>();
+		//playerComp->secondaryAbilty = entt::resolve<comp::HealAbility>();
 
+		comp::TeleportAbility* blinkAbility = player.AddComponent<comp::TeleportAbility>();
+		blinkAbility->cooldown = 1.0f;
+		blinkAbility->delay = 0.1f;
+		blinkAbility->distance = 50.f;
+		blinkAbility->lifetime = 0.1f;
+		blinkAbility->useTime = 0.1f;
+
+		playerComp->secondaryAbilty = entt::resolve<comp::TeleportAbility>();
 
 		player.AddComponent<comp::MeshName>()->name = "Monster.fbx";
 		player.AddComponent<comp::AnimatorName>()->name = "Monster.anim";

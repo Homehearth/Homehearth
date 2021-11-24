@@ -305,8 +305,6 @@ namespace ecs
 		{
 			//The distance ability teleports Entity forward 
 			float distance = 8.0f;
-			//The point direction ability will teleport towards
-			sm::Vector3 targetPoint = { 0.f,0.0f,0.0f };
 		};
 
 
