@@ -225,7 +225,7 @@ namespace ecs
 
 		struct ColliderList
 		{
-			std::vector<Entity> list;
+			std::set<Entity> list;
 		};
 
 		struct NPC

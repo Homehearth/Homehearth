@@ -107,7 +107,7 @@ void Game::OnUserUpdate(float deltaTime)
 	{
 		if (m_players.find(m_localPID) != m_players.end())
 		{
-			// sm::Vector3 playerPos = m_players.at(m_localPID).GetComponent<comp::Transform>()->position;
+			sm::Vector3 playerPos = m_players.at(m_localPID).GetComponent<comp::Transform>()->position;
 
 			// Camera* cam = scene.GetCurrentCamera();
 			// if (cam->GetCameraType()  == CAMERATYPE::PLAY)

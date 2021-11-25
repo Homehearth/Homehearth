@@ -1,10 +1,11 @@
 #include "EnginePCH.h"
 #include "QuadTree.h"
 
-QuadTree::QuadTree(dx::BoundingBox boundary)
+QuadTree::QuadTree(dx::BoundingBox boundary, int level)
 {
 	m_boundary = boundary;
 	m_divided = false;
+	m_level = level;
 }
 
 QuadTree::~QuadTree()
@@ -34,36 +35,29 @@ bool QuadTree::Insert(const Entity& e)
 {
 	dx::BoundingOrientedBox collider = *e.GetComponent<comp::BoundingOrientedBox>();
 
-	if (m_boundary.Contains(collider) == dx::ContainmentType::DISJOINT)
+	if (!m_boundary.Intersects(collider) || m_level > MAX_LEVELS)
 	{
 		return false;
 	}
 
-	if (m_entities.size() < MAX_OBJECTS)
+	if (m_level == MAX_LEVELS)
 	{
-		m_entities.push_back(e);
+		m_entities.insert(e);
 		return true;
 	}
 
-	// Divive the QuadTree into 4 new subsections and pass the leaf nodes the current quads items
-	if (!m_divided)
+	// Divide the QuadTree into 4 new subsections and pass the leaf nodes the current quads items
+	if (!m_divided && m_level < MAX_LEVELS)
 	{
 		Split();
-
-		for (size_t i = 0; i < m_entities.size(); i++)
-		{
-			this->Insert(std::move(m_entities[i]));
-		}
-		m_entities.clear();
 	}
 
-	if (this->NorthWest->Insert(e) || this->NorthEast->Insert(e) ||
-		this->SouthWest->Insert(e) || this->SouthEast->Insert(e))
-	{
-		return true;
-	}
+	this->NorthWest->Insert(e);
+	this->NorthEast->Insert(e);
+	this->SouthWest->Insert(e);
+	this->SouthEast->Insert(e);
 
-	return false;
+	return true;
 }
 
 void QuadTree::Split()
@@ -80,24 +74,24 @@ void QuadTree::Split()
 	dx::BoundingBox sw(dx::XMFLOAT3(x - width, y, z - deep), dx::XMFLOAT3(width, height, deep));
 	dx::BoundingBox se(dx::XMFLOAT3(x + width, y, z - deep), dx::XMFLOAT3(width, height, deep));
 
-	this->NorthWest = std::make_unique<QuadTree>(nw);
-	this->NorthEast = std::make_unique<QuadTree>(ne);
-	this->SouthWest = std::make_unique<QuadTree>(sw);
-	this->SouthEast = std::make_unique<QuadTree>(se);
+	this->NorthWest = std::make_unique<QuadTree>(nw, m_level + 1);
+	this->NorthEast = std::make_unique<QuadTree>(ne, m_level + 1);
+	this->SouthWest = std::make_unique<QuadTree>(sw, m_level + 1);
+	this->SouthEast = std::make_unique<QuadTree>(se, m_level + 1);
 
 	m_divided = true;
 }
 
-void QuadTree::Query(std::vector<Entity>& returnVec, const dx::BoundingSphere& range)
+void QuadTree::Query(std::set<Entity>& returnVec, const dx::BoundingSphere& range)
 {
-	if (!m_boundary.Contains(range))
+	if (!m_boundary.Intersects(range))
 	{
 		return;
 	}
 
-	for (size_t i = 0; i < m_entities.size(); i++)
+	for (auto entity : m_entities)
 	{
-		returnVec.push_back(m_entities[i]);
+		returnVec.insert(entity);
 	}
 
 	if (m_divided)

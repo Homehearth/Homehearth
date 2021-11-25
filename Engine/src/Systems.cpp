@@ -451,6 +451,7 @@ void Systems::FetchCollidingList(HeadlessScene& scene, QuadTree* qt)
 	scene.ForEachComponent<comp::ColliderList, comp::BoundingSphere>([&](Entity& e, comp::ColliderList& cl, comp::BoundingSphere& bs)
 		{
 			qt->Query(cl.list, bs);
+			LOG_INFO("%d", (int)cl.list.size());
 		});
 }
 

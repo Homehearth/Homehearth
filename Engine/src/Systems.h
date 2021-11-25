@@ -35,17 +35,17 @@ template<typename Collider1, typename Collider2>
 inline void Systems::CheckCollisions(HeadlessScene& scene, float dt)
 {
 	// check objects by using QuadTree
-	if (std::is_same<Collider2, dx::BoundingOrientedBox>::value)
+	if (std::is_same<Collider2, dx::BoundingOrientedBox>::value || std::is_same<Collider1, dx::BoundingOrientedBox>::value)
 	{
 		scene.ForEachComponent<comp::ColliderList>([](Entity& e, comp::ColliderList& cl) 
 			{
-				for (size_t i = 0; i < cl.list.size(); i++)
+				for (auto entity : cl.list)
 				{
-					CollisionInfo_t collisionInfo = CollisionSystem::Get().Intersection(e, cl.list[i]);
+					CollisionInfo_t collisionInfo = CollisionSystem::Get().Intersection(e, entity);
 
 					if (collisionInfo.hasCollided)
 					{
-						CollisionSystem::Get().CollisionResponse(collisionInfo, e, cl.list[i]);
+						CollisionSystem::Get().CollisionResponse(collisionInfo, e, entity);
 					}
 				}
 			});

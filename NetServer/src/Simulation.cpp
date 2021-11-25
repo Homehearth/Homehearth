@@ -357,7 +357,7 @@ Simulation::Simulation(Server* pServer, HeadlessEngine* pEngine)
 	this->m_gameID = 0;
 	this->m_tick = 0;
 
-	dx::BoundingBox bounds = { dx::XMFLOAT3(247, 0, -300), dx::XMFLOAT3(190, 50, 170) };
+	dx::BoundingBox bounds = { dx::XMFLOAT3(250, 0, -320), dx::XMFLOAT3(190, 50, 170) };
 	qt = std::make_unique<QuadTree>(bounds);
 
 	m_spawnPoints.push(sm::Vector3(220.f, 0, -353.f));
@@ -454,12 +454,12 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 				Systems::ClearCollidingList(scene);
 			}
 
-			if (!waveQueue.empty())
-				ServerSystems::NextWaveConditions(this, waveTimer, waveQueue.front().GetTimeLimit());
-#if SPAWN_MONSTERS
-			else
-				this->CreateWaves();
-#endif // SPAWN_MONSTERS
+//			if (!waveQueue.empty())
+//				ServerSystems::NextWaveConditions(this, waveTimer, waveQueue.front().GetTimeLimit());
+//#if SPAWN_MONSTERS
+//			else
+//				this->CreateWaves();
+//#endif // SPAWN_MONSTERS
 		});
 
 	//On all enemies wiped, activate the next wave.

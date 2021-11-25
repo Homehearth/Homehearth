@@ -81,17 +81,16 @@ void ServerGame::OnShutdown()
 	m_inputThread.join();
 }
 
-
 void ServerGame::UpdateNetwork(float deltaTime)
 {
-	//PROFILE_FUNCTION();
-	//static float timer = 0.0f;
-	//timer += deltaTime;
-	//if (timer >= 1.0f)
-	//{
-	//	LOG_INFO("Update: %f", 1.f / deltaTime);
-	//	timer = 0.0f;
-	//}
+	PROFILE_FUNCTION();
+	static float timer = 0.0f;
+	timer += deltaTime;
+	if (timer >= 1.0f)
+	{
+		LOG_INFO("Update: %f", 1.f / deltaTime);
+		timer = 0.0f;
+	}
 
 	// Check incoming messages
 	this->m_server.Update();
