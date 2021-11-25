@@ -19,12 +19,13 @@ void ParticleSystem::InitializeParticles(entt::registry& reg, entt::entity ent)
 {
 	comp::EmitterParticle* emitter = &reg.get<comp::EmitterParticle>(ent);
 	sm::Vector3 entityPosition = reg.get<comp::Transform>(ent).position;
-	std::vector<Particle_t> particles(emitter->nrOfParticles);
+	entityPosition = sm::Vector3{ entityPosition.x + emitter->positionOffset.x, entityPosition.y + emitter->positionOffset.y, entityPosition.z + emitter->positionOffset.z };
 
+	std::vector<Particle_t> particles(emitter->nrOfParticles);
 	for (int i = 0; i < emitter->nrOfParticles; i++)
 	{
 		Particle_t tempParticle;
-		tempParticle.position = sm::Vector4(entityPosition.x, entityPosition.y, entityPosition.z, emitter->speed);
+		tempParticle.position = sm::Vector4(entityPosition.x , entityPosition.y, entityPosition.z, emitter->speed);
 		tempParticle.type = emitter->type;
 		tempParticle.size = { 1 , 1 };
 		tempParticle.color = { 1,1,1,1 };
