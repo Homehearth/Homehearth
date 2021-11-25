@@ -4,34 +4,34 @@
 SoundHandler::SoundHandler()
 {
     // Start the sound engine with default parameters.
-    m_engine = irrklang::createIrrKlangDevice();
+    m_soundEngine = irrklang::createIrrKlangDevice();
 
-    if (m_engine == nullptr)
+    if (m_soundEngine == nullptr)
     {
         LOG_ERROR("failed starting up the irrklang sound engine.")
     }
     else
     {
-        m_engine->setDefault3DSoundMinDistance(40.0f);
-        m_engine->setRolloffFactor(70.0f);
-        m_engine->setSoundVolume(0.5f);
+        m_soundEngine->setDefault3DSoundMinDistance(40.0f);
+        m_soundEngine->setRolloffFactor(70.0f);
+        m_soundEngine->setSoundVolume(0.5f);
 
         LOG_INFO("Irrklang sound engine successfully loaded.")
     }
 
-    // Create the sound object
-    m_ss = m_engine->addSoundSourceFromFile("../Assets/Sounds/on_click.wav");
-    m_ss2 = m_engine->addSoundSourceFromFile("../Assets/Sounds/main_theme.mp3");
-    PlayMainMenuTheme();
+    // TEST
+    AddSoundSource("../Assets/Sounds/on_click.wav");
+    AddSoundSource("../Assets/Sounds/main_theme.mp3", "main_theme");
+
 }
 
 SoundHandler::~SoundHandler()
 {
-    if(m_engine != nullptr)
+    if(m_soundEngine != nullptr)
     {
-        m_engine->stopAllSounds();
-        m_engine->removeAllSoundSources();
-        m_engine->drop();
+        m_soundEngine->stopAllSounds();
+        m_soundEngine->removeAllSoundSources();
+        m_soundEngine->drop();
     }
 }
 
@@ -41,31 +41,104 @@ SoundHandler& SoundHandler::Get()
     return s_instance;
 }
 
-void SoundHandler::AddSound(const std::string &filePath)
+void SoundHandler::Update()
 {
-	// parse filename.
-    // check if it already excists.
-    // load and save it to map.
-    // LOG_INFO
+    m_soundEngine->update();
 }
 
-void SoundHandler::PlayOnClick()
+void SoundHandler::AddSoundSource(const std::string &filePath)
 {
-    if (m_engine->isCurrentlyPlaying(m_ss))
-    {
-        LOG_INFO("on_click.wav is playing")
-    }
-    else
-        m_engine->play2D(m_ss);
+    // Parse filename.
+    std::string sourceName = filePath.substr(filePath.find_last_of('/') + 1);
+    const size_t nameLength = sourceName.find_last_of('.');
+    sourceName = sourceName.substr(0, nameLength);
+
+    AddSoundSource(filePath, sourceName);
 }
 
-void SoundHandler::PlayMainMenuTheme()
+void SoundHandler::AddSoundSource(const std::string& filePath, const std::string& name)
 {
-    if (m_engine->isCurrentlyPlaying(m_ss2))
+    // Check if the audio already exists.
+    m_iterator = m_soundSources.find(name);
+    if (m_iterator == m_soundSources.end())
     {
-        LOG_INFO("main_theme is playing")
+        irrklang::ISoundSource* newSoundSrc = m_soundEngine->addSoundSourceFromFile(filePath.c_str());
+        m_soundSources.emplace(name, newSoundSrc);
+        LOG_INFO("'%s' added to SoundHandler", name.c_str())
     }
     else
-        m_engine->play2D(m_ss2);
+    {
+        LOG_WARNING("failed to add '%s' to SoundHandler", name.c_str())
+    }
 }
+
+irrklang::ISound* SoundHandler::Create2DSound(const std::string& name, bool playSound)
+{
+    irrklang::ISound * sound = nullptr;
+
+    m_iterator = m_soundSources.find(name);
+    if (m_iterator != m_soundSources.end())
+    {
+    	sound = m_soundEngine->play2D(m_soundSources[name], false, true, false, false);
+        sound->setIsPaused(!playSound);
+        LOG_INFO("created a new instance of '%s'", name.c_str())
+    }
+
+    return sound;
+}
+
+irrklang::ISound* SoundHandler::CreateUnique2DSound(const std::string& name, bool playSound)
+{
+    irrklang::ISound* sound = nullptr;
+
+    m_iterator = m_soundSources.find(name);
+    if (m_iterator != m_soundSources.end())
+    {
+        if(!m_soundEngine->isCurrentlyPlaying(m_iterator->second))
+        {
+	        sound = m_soundEngine->play2D(m_soundSources[name], false, true, false, false);
+	        sound->setIsPaused(!playSound);
+	        LOG_INFO("created a new instance of '%s'", name.c_str())
+        }
+    }
+
+    return sound;
+}
+
+void SoundHandler::Toggle2DMusic(const std::string& name)
+{
+    m_iterator = m_soundSources.find(name);
+    if (m_iterator != m_soundSources.end())
+    {
+        if(m_soundEngine->isCurrentlyPlaying(m_iterator->second))
+        {
+            m_soundEngine->stopAllSoundsOfSoundSource(m_iterator->second);
+        }
+        else
+        {
+            m_soundEngine->play2D(m_iterator->second);
+        }
+
+        LOG_INFO("toggled '%s'", name.c_str())
+    }
+}
+
+void SoundHandler::Set2DMusic(const std::string& name, bool playMusic)
+{
+    m_iterator = m_soundSources.find(name);
+    if (m_iterator != m_soundSources.end())
+    {
+        const bool isPlaying = m_soundEngine->isCurrentlyPlaying(m_iterator->second);
+
+        if (isPlaying && !playMusic)
+        {
+            m_soundEngine->stopAllSoundsOfSoundSource(m_iterator->second);
+        }
+        else if (!isPlaying && playMusic)
+        {
+            m_soundEngine->play2D(m_iterator->second);
+        }
+    }
+}
+
 

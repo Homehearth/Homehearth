@@ -277,6 +277,28 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		SetScene("Lobby");
 		break;
 	}
+	case GameMsg::Game_PlaySound:
+	{
+		// Check Sound Type.
+		uint8_t type;
+		msg >> type;
+
+		// Get Position of the Entity.
+		uint32_t entityID;
+		msg >> entityID;
+
+		Entity entity;
+		if (m_gameEntities.find(entityID) != m_gameEntities.end())
+		{
+			entity = m_gameEntities.at(entityID);
+			UpdateEntityFromMessage(entity, msg);
+		}
+
+		// Execute Sound.
+
+
+		break;
+	}
 	case GameMsg::Game_Over:
 	{
 		SetScene("GameOver");
@@ -652,11 +674,12 @@ void Game::UpdateInput()
 	if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::HELD))
 	{
 		m_inputState.leftMouse = true;
-		SoundHandler::Get().PlayOnClick();
+		SoundHandler::Get().CreateUnique2DSound("on_click");
 	}
 	if (InputSystem::Get().CheckMouseKey(MouseKey::RIGHT, KeyState::PRESSED))
 	{
 		m_inputState.rightMouse = true;
+		SoundHandler::Get().Toggle2DMusic("main_theme");
 	}
 	m_inputState.mouseRay = InputSystem::Get().GetMouseRay();
 	// temp

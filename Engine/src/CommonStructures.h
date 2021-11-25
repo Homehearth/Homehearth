@@ -259,7 +259,7 @@ enum class GameMsg : uint8_t
 	Game_RemoveEntity,
 	Game_BackToLobby,
 	Game_WaveTimer,
-
+	Game_PlaySound,
 	Game_ClassSelected,
 	Game_PlayerAttack,
 	Game_AddNPC,
