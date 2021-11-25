@@ -5,6 +5,7 @@
 #include "ResourceManager.h"
 #include "BehaviorTreeBT.h"
 #include <stack>
+#include "ModelIdentifier.h"
 
 namespace ecs
 {
@@ -124,12 +125,12 @@ namespace ecs
 		// Used on server side
 		struct AnimatorName 
 		{
-			std::string name = "";
+			AnimName name;
 		};
 	
 		struct MeshName 
 		{
-			std::string name = "";
+			NameType name;
 		};
 		
 		struct RenderableDebug

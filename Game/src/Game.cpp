@@ -79,11 +79,11 @@ bool Game::OnStartup()
 
 	//Particles
 	Entity emitter = GetScene("Game").CreateEntity();
-	emitter.AddComponent<comp::Transform>()->position = {250, 5, -340};
-	emitter.AddComponent <comp::EmitterParticle>("smoke.png", "smoke_opacity.png", 800, 2.f, PARTICLEMODE::SMOKE, 4.0f);	
-	
+	emitter.AddComponent<comp::Transform>()->position = { 250, 5, -340 };
+	emitter.AddComponent <comp::EmitterParticle>("smoke.png", "smoke_opacity.png", 800, 2.f, PARTICLEMODE::SMOKE, 4.0f);
+
 	Entity emitterS = GetScene("Game").CreateEntity();
-	emitterS.AddComponent<comp::Transform>()->position = {178, 15, -338};
+	emitterS.AddComponent<comp::Transform>()->position = { 178, 15, -338 };
 	emitterS.AddComponent <comp::EmitterParticle>("smoke.png", "smoke_opacity.png", 1200, 2.f, PARTICLEMODE::SMOKE, 4.2f);
 
 	//Entity emitter2 = GetScene("Game").CreateEntity();
@@ -93,18 +93,18 @@ bool Game::OnStartup()
 	//Entity emitter3 = GetScene("Game").CreateEntity();
 	//emitter3.AddComponent<comp::Transform>()->position = { 250, 20, -300 };
 	//emitter3.AddComponent <comp::EmitterParticle>("thisisfine.png", "", 20, 1.f, PARTICLEMODE::WATERSPLASH);
-	
+
 	Entity emitter4 = GetScene("Game").CreateEntity();
 	emitter4.AddComponent<comp::Transform>()->position = { 240, 6, -300 };
 	emitter4.AddComponent <comp::EmitterParticle>("Blood.png", "", 50, 8.f, PARTICLEMODE::BLOOD, 1.5f);
 
 	Entity emitter5 = GetScene("Game").CreateEntity();
 	emitter5.AddComponent<comp::Transform>()->position = { 220, 40, -340 };
-	emitter5.AddComponent <comp::EmitterParticle>("Blood.png", "", 50, 8.f , PARTICLEMODE::BLOOD, 1.5f);
-	
+	emitter5.AddComponent <comp::EmitterParticle>("Blood.png", "", 50, 8.f, PARTICLEMODE::BLOOD, 1.5f);
+
 	Entity waterSplash = GetScene("Game").CreateEntity();
 	waterSplash.AddComponent<comp::Transform>()->position = { 270, 13, -370 };
-	waterSplash.AddComponent <comp::EmitterParticle>("waterSplash.png", "", 100, 1.f , PARTICLEMODE::WATERSPLASH, 4.0f);
+	waterSplash.AddComponent <comp::EmitterParticle>("waterSplash.png", "", 100, 1.f, PARTICLEMODE::WATERSPLASH, 4.0f);
 
 
 	return true;
@@ -127,7 +127,7 @@ void Game::OnUserUpdate(float deltaTime)
 			// {
 			// 	GameSystems::CheckLOS(this);
 			// }
-			
+
 			scene.ForEachComponent<comp::Light>([&](Entity e, comp::Light& l)
 				{
 					if (l.lightData.type == TypeLight::DIRECTIONAL)
@@ -660,9 +660,33 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 			}
 			case ecs::Component::MESH_NAME:
 			{
-				std::string name;
+				NameType name;
 				msg >> name;
-				std::shared_ptr<RModel> model = ResourceManager::Get().CopyResource<RModel>(name, true);
+				std::string nameString;
+				switch (name)
+				{
+				case NameType::MESH_DEFENCE:
+				{
+					nameString = "Defense.obj";
+					break;
+				}
+				case NameType::MESH_KNIGHT:
+				{
+					nameString = "Knight.fbx";
+					break;
+				}
+				case NameType::MESH_MONSTER:
+				{
+					nameString = "Monster.fbx";
+					break;
+				}
+				case NameType::MESH_SPHERE:
+				{
+					nameString = "Sphere.obj";
+					break;
+				}
+				}
+				std::shared_ptr<RModel> model = ResourceManager::Get().CopyResource<RModel>(nameString, true);
 				if (model)
 				{
 					e.AddComponent<comp::Renderable>()->model = model;
@@ -671,9 +695,23 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 			}
 			case ecs::Component::ANIMATOR_NAME:
 			{
-				std::string name;
+				AnimName name;
 				msg >> name;
-				std::shared_ptr<RAnimator> animator = ResourceManager::Get().CopyResource<RAnimator>(name, true);
+				std::string nameString;
+				switch (name)
+				{
+				case AnimName::ANIM_KNIGHT:
+				{
+					nameString = "Knight.anim";
+					break;
+				}
+				case AnimName::ANIM_MONSTER:
+				{
+					nameString = "Monster.anim";
+					break;
+				}
+				}
+				std::shared_ptr<RAnimator> animator = ResourceManager::Get().CopyResource<RAnimator>(nameString, true);
 				if (animator)
 				{
 					animator->RandomizeTime();

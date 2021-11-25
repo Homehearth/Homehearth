@@ -1,5 +1,4 @@
 #pragma once
-#include "EnginePCH.h"
 
 enum class ModelID : uint16_t
 {
@@ -35,3 +34,18 @@ const std::string Door7			= "Door7";
 const std::string Door8			= "Door8";
 const std::string Door9			= "Door9";
 const std::string Door10		= "Door10";
+
+enum class AnimName : uint16_t
+{
+	ANIM_NONE,
+	ANIM_KNIGHT,
+	ANIM_MONSTER
+};
+
+enum class NameType : uint32_t
+{
+	MESH_DEFENCE,
+	MESH_KNIGHT,
+	MESH_MONSTER,
+	MESH_SPHERE,
+};

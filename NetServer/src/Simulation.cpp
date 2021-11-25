@@ -157,8 +157,8 @@ void Simulation::ResetPlayer(Entity player)
 		firstTimeAdded = true;
 	}
 
-	player.AddComponent<comp::MeshName>()->name = "Knight.fbx";
-	player.AddComponent<comp::AnimatorName>()->name = "Knight.anim";
+	player.AddComponent<comp::MeshName>()->name = NameType::MESH_KNIGHT;
+	player.AddComponent<comp::AnimatorName>()->name = AnimName::ANIM_KNIGHT;
 	player.AddComponent<comp::AnimationState>();
 	player.AddComponent<comp::ColliderList>();
 
@@ -225,8 +225,8 @@ void Simulation::ResetPlayer(Entity player)
 
 		playerComp->moveAbilty = entt::resolve<comp::BlinkAbility>();
 
-		player.AddComponent<comp::MeshName>()->name = "Monster.fbx";
-		player.AddComponent<comp::AnimatorName>()->name = "Monster.anim";
+		player.AddComponent<comp::MeshName>()->name = NameType::MESH_MONSTER;
+		player.AddComponent<comp::AnimatorName>()->name = AnimName::ANIM_MONSTER;
 		player.AddComponent<comp::AnimationState>();
 
 	}

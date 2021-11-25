@@ -39,8 +39,8 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		float randomNum = static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (0.5)));
 
 		transform->scale = { 1.8f, 1.8f + randomNum, 1.8f };
-		meshName->name = "Monster.fbx";
-		animatorName->name = "Monster.anim";
+		meshName->name = NameType::MESH_MONSTER;
+		animatorName->name = AnimName::ANIM_MONSTER;
 
 		bos->Radius = 3.f;
 
@@ -74,8 +74,8 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		float randomNum = static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (0.5)));
 
 		transform->scale = { 1.8f, 0.5f + randomNum, 1.8f };
-		meshName->name = "Monster.fbx";
-		animatorName->name = "Monster.anim";
+		meshName->name = NameType::MESH_MONSTER;
+		animatorName->name = AnimName::ANIM_MONSTER;
 		bos->Radius = 3.f;
 
 		npc->movementSpeed = 15.f;
@@ -96,8 +96,8 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		// ---Fast Zombie ENEMY---
 		transform->position = spawnP;
 		transform->scale = { 1.8f, 3.f, 1.8f };
-		meshName->name = "Monster.fbx";
-		animatorName->name = "Monster.anim";
+		meshName->name = NameType::MESH_MONSTER;
+		animatorName->name = AnimName::ANIM_MONSTER;
 		bos->Radius = 3.f;
 		attackAbility->cooldown = 1.0f;
 		attackAbility->attackDamage = 20.f;
@@ -116,8 +116,8 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		// ---BOSS ENEMY---
 		transform->position = spawnP;
 		transform->scale = { 3.8f, 6.f, 3.8f };
-		meshName->name = "Monster.fbx";
-		animatorName->name = "Monster.anim";
+		meshName->name = NameType::MESH_MONSTER;
+		animatorName->name = AnimName::ANIM_MONSTER;
 		bos->Radius = 3.f;
 		attackAbility->cooldown = 1.0f;
 		attackAbility->attackDamage = 20.f;

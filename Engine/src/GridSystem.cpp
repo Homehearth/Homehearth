@@ -261,7 +261,7 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 					collider->Extents = { m_tileHalfWidth, m_tileHalfWidth, m_tileHalfWidth };
 					defenseEntity.AddComponent<comp::Tag<TagType::STATIC>>();
 					defenseEntity.AddComponent<comp::Tag<TagType::DEFENCE>>();
-					defenseEntity.AddComponent<comp::MeshName>()->name = "Defence.obj";
+					defenseEntity.AddComponent<comp::MeshName>()->name = NameType::MESH_DEFENCE;
 					defenseEntity.AddComponent<comp::Health>();
 					defenseEntity.AddComponent<comp::Network>();
 					aiHandler->AddDefenseEntity(defenseEntity);

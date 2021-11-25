@@ -199,7 +199,7 @@ Entity CombatSystem::CreateAttackEntity(Entity entity, HeadlessScene& scene, com
 
 	sm::Vector3 vel = targetDir * stats->projectileSpeed;
 	attackEntity.AddComponent<comp::Velocity>()->vel = vel;
-	attackEntity.AddComponent<comp::MeshName>()->name = "Sphere.obj";
+	attackEntity.AddComponent<comp::MeshName>()->name = NameType::MESH_SPHERE;
 
 	attackEntity.AddComponent<comp::Network>();
 
