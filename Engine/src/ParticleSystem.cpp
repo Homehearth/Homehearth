@@ -24,13 +24,23 @@ void ParticleSystem::InitializeParticles(entt::registry& reg, entt::entity ent)
 	for (int i = 0; i < emitter->nrOfParticles; i++)
 	{
 		Particle_t tempParticle;
-		sm::Vector3 position = entityPosition;
-		sm::Vector4 newPosition = { position.x, position.y * (float)(rand()) / float(RAND_MAX) * 1 + i, position.z, 1.0f };
-		tempParticle.position = newPosition;
+		tempParticle.position = sm::Vector4(entityPosition.x, entityPosition.y, entityPosition.z, emitter->speed);
 		tempParticle.type = emitter->type;
-		tempParticle.size = { 1, 1 };
-		tempParticle.color = { 1,0,0,1 };
+		tempParticle.size = { 1 , 1 };
+		tempParticle.color = { 1,1,1,1 };
+		tempParticle.life = 0;
+		tempParticle.velocity = {0,0,0,0};
 
+		if (tempParticle.type == PARTICLEMODE::BLOOD)
+		{
+			tempParticle.velocity.x = (float)rand() / (RAND_MAX + 1) * (2.0f - (-2.0f)) + (-2.0f);
+			tempParticle.velocity.y = (float)rand() / (RAND_MAX + 1) * (2.0f - (-2.0f)) + (-2.0f);
+			tempParticle.velocity.z = (float)rand() / (RAND_MAX + 1) * (2.0f - (-2.0f)) + (-2.0f);
+		}
+		if (tempParticle.type == PARTICLEMODE::WATERSPLASH)
+		{
+			tempParticle.color = { 0,0,0.5,0.5 };
+		}
 
 		particles[i] =  tempParticle;
 	}
