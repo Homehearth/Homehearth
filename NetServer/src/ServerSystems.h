@@ -26,9 +26,11 @@ namespace EnemyManagement
 		std::vector<std::pair<EnemyManagement::EnemyType, int>> enemiesPerType;
 		sm::Vector2 origo;      ///< The point the wave is based on when spawning enemies
 	};
-	
+	//
 	Entity CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, EnemyType type = EnemyType::Default);
 
+	//Creates the waves containing all the enemies. resets all waves when this function is called on.
+	void CreateWaves(std::queue<Wave>& waveQueue, int currentRound);
 }
 
 namespace PlayerManagement

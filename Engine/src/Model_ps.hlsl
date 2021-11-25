@@ -126,6 +126,7 @@ float4 main(PixelIn input) : SV_TARGET
     }
     
     float3 color = ambient + Lo;
+    //color *= exposure;
     
     //HDR tonemapping
 	color = color / (color + float3(1.0, 1.0, 1.0));

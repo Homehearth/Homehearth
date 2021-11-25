@@ -59,7 +59,9 @@
 #include <queue>
 #include <condition_variable>
 #include <bitset>
+#include <algorithm>
 
+#include <cmath>
 #include <functional>
 
 #define ALIGN16 __declspec(align(16)) 
@@ -110,7 +112,6 @@ namespace sm = dx::SimpleMath;
 //Utility
 #include "Timer.h"
 #include "utility.h"
-
 // Custom Global includes (Singletons)
 #include "Logger.h"
 #include "multi_thread_manager.h"

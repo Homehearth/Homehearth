@@ -8,6 +8,7 @@
 #include "AIBehaviors.h"
 #include "Lobby.h"
 #include "IShop.h"
+#include "QuadTree.h"
 /*
 		Simulation defines each ongoing simulation from the perspective of the server
 		gameID identifies the simulation which each player has to give the server to keep track
@@ -25,6 +26,7 @@ private:
 	Currency m_currency;
 	Lobby m_lobby;
 	IShop m_shop;
+	std::unique_ptr<QuadTree> qt;
 
 	HeadlessScene* m_pLobbyScene;
 	HeadlessScene* m_pGameScene;
@@ -66,8 +68,6 @@ public:
 	void LeaveLobby(uint32_t playerID);
 
 	bool Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* mapColliders);
-	//Creates the waves needed to spawn enemies
-	void CreateWaves();
 	void Destroy();
 
 	void NextTick();

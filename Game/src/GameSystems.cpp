@@ -87,6 +87,7 @@ void GameSystems::RenderIsCollidingSystem(Scene& scene)
 		});
 }
 
+
 // Set all the healthbars to players.
 void GameSystems::UpdateHealthbar(Game* game)
 {
