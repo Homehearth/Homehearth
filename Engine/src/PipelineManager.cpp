@@ -535,7 +535,6 @@ bool PipelineManager::CreateTextureEffectResources()
     * Create SRV for the texture that wont. 
     */
 
-
     // Create render textures, target views and shader resource views here
     m_WaterBlendAlbedoMap = ResourceManager::Get().GetResource<RTexture>("WaterBlendMap.jpg");
 
@@ -544,33 +543,31 @@ bool PipelineManager::CreateTextureEffectResources()
     m_WaterEdgeModel  = ResourceManager::Get().GetResource<RModel>("WaterEdgeMesh.obj");
     m_WaterFloorModel = ResourceManager::Get().GetResource<RModel>("WaterFloorMesh.obj");
 
-    //Get the UV_s from the models
-    m_WaterUV       = m_WaterModel.get()->GetTextureCoords();
-    m_WaterEdgeUV   = m_WaterEdgeModel.get()->GetTextureCoords();
-    m_WaterFloorUV  = m_WaterFloorModel.get()->GetTextureCoords();
 
     //Get the textures from the models
-    m_WaterAlbedoMap       = m_WaterModel.get()->GetTextures(ETextureType::albedo)[0];
-    m_WaterNormalMap       = m_WaterModel.get()->GetTextures(ETextureType::normal)[0];
-    m_WaterEdgeAlbedoMap   = m_WaterEdgeModel.get()->GetTextures(ETextureType::albedo)[0];
+    m_ModdedWaterAlbedoMap       = m_WaterModel.get()->GetTextures(ETextureType::albedo)[0];
+    m_ModdedWaterNormalMap       = m_WaterModel.get()->GetTextures(ETextureType::normal)[0];
+    m_ModdedWaterEdgeAlbedoMap   = m_WaterEdgeModel.get()->GetTextures(ETextureType::albedo)[0];
     m_ModdedWaterFloorAlbedoMap = m_WaterFloorModel.get()->GetTextures(ETextureType::albedo)[0];
 
     //Disable bitmaps
-    m_WaterAlbedoMap->DisableMipmaps();
-    m_WaterNormalMap->DisableMipmaps();
-    m_WaterEdgeAlbedoMap->DisableMipmaps();
+    m_ModdedWaterAlbedoMap->DisableMipmaps();
+    m_ModdedWaterNormalMap->DisableMipmaps();
+    m_ModdedWaterEdgeAlbedoMap->DisableMipmaps();
     m_ModdedWaterFloorAlbedoMap->DisableMipmaps();
 
     //Get the SRV:s from the textures
-    m_SRV_TextureEffectWaterEdgeMap    = m_WaterEdgeAlbedoMap.get()->GetShaderView();
+    m_SRV_TextureEffectWaterEdgeMap    = m_ModdedWaterEdgeAlbedoMap.get()->GetShaderView();
     m_SRV_TextureEffectWaterFloorMap   = m_ModdedWaterFloorAlbedoMap.get()->GetShaderView();
-    m_SRV_TextureEffectWaterMap        = m_WaterAlbedoMap.get()->GetShaderView();
-    m_SRV_TextureEffectWaterNormalMap  = m_WaterNormalMap.get()->GetShaderView();
-    m_SRV_TextureEffectBlendMap        = m_WaterBlendAlbedoMap.get()->GetShaderView();
+    m_SRV_TextureEffectWaterMap        = m_ModdedWaterAlbedoMap.get()->GetShaderView();
+    m_SRV_TextureEffectWaterNormalMap  = m_ModdedWaterNormalMap.get()->GetShaderView();
+    m_SRV_TextureEffectBlendMap        = m_ModdedWaterBlendAlbedoMap.get()->GetShaderView();
 
     HRESULT hr = {};
 
-    // CREATE TEXTURE 2D //
+    //  CREATE WATER REFRACTION EFFECT RESOURCES  //
+    
+        // CREATE TEXTURE 2D //
     // Create texture to keep original resource of water floor //
     const unsigned int textureWidth = 256;
     const unsigned int textureHeight = 256;
@@ -589,7 +586,7 @@ bool PipelineManager::CreateTextureEffectResources()
     desc.CPUAccessFlags = 0;
     desc.MiscFlags = 0;
 
-    //Cretae original resource reference texture
+    //Create original resource reference texture
     hr = m_d3d11->Device()->CreateTexture2D(&desc, nullptr, &m_WaterFloorAlbedoMap);
     if (FAILED(hr))
         return false;
@@ -604,6 +601,53 @@ bool PipelineManager::CreateTextureEffectResources()
 
     // SHADER RESOURCE VIEW //
     hr = m_d3d11->Device()->CreateShaderResourceView(m_WaterFloorAlbedoMap.Get(), nullptr, m_SRV_TextureEffectWaterFloorMap.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+
+
+    //  CREATE WATER EFFECT RESOURCES  //
+    /*
+    Create texture to keep original resource of water
+    It has the same size at the eater floor so use the same desc.
+    */
+
+        // ALBEDO MAP //
+
+    //Create original resource reference texture
+    hr = m_d3d11->Device()->CreateTexture2D(&desc, nullptr, &m_WaterAlbedoMap);
+    if (FAILED(hr))
+        return false;
+
+    // Copy Original resource to original resource reference texture. 
+    m_d3d11->DeviceContext()->CopyResource(m_WaterAlbedoMap.Get(), m_ModdedWaterAlbedoMap.get()->GetTexture2D());
+
+    // UNORDERED ACCES VIEW //
+    hr = m_d3d11->Device()->CreateUnorderedAccessView(m_ModdedWaterAlbedoMap.get()->GetTexture2D(), nullptr, m_UAV_TextureEffectWaterMap.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+
+    // SHADER RESOURCE VIEW //
+    hr = m_d3d11->Device()->CreateShaderResourceView(m_WaterAlbedoMap.Get(), nullptr, m_SRV_TextureEffectWaterMap.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+
+        // NORMAL MAP //
+
+        //Create original resource reference texture
+    hr = m_d3d11->Device()->CreateTexture2D(&desc, nullptr, &m_WaterNormalMap);
+    if (FAILED(hr))
+        return false;
+
+    // Copy Original resource to original resource reference texture. 
+    m_d3d11->DeviceContext()->CopyResource(m_WaterNormalMap.Get(), m_ModdedWaterNormalMap.get()->GetTexture2D());
+
+    // UNORDERED ACCES VIEW //
+    hr = m_d3d11->Device()->CreateUnorderedAccessView(m_ModdedWaterNormalMap.get()->GetTexture2D(), nullptr, m_UAV_TextureEffectWaterNormalMap.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+
+    // SHADER RESOURCE VIEW //
+    hr = m_d3d11->Device()->CreateShaderResourceView(m_WaterNormalMap.Get(), nullptr, m_SRV_TextureEffectWaterNormalMap.GetAddressOf());
     if (FAILED(hr))
         return false;
 
@@ -665,7 +709,25 @@ bool PipelineManager::CreateShaders()
         LOG_WARNING("failed to create textureEffect_vs");
         return false;
     }
+    
+    if (!m_WaterEffectComputeShader.Create("waterEffect_cs"))
+    {
+        LOG_WARNING("failed to create waterEffect_cs");
+        return false;
+    }
 
+    if (!m_WaterEffectPixelShader.Create("waterEffect_ps"))
+    {
+        LOG_WARNING("failed to create waterEffect_ps");
+        return false;
+    }
+
+    if (!m_WaterEffectVertexShader.Create("waterEffect_vs"))
+    {
+        LOG_WARNING("failed to create waterEffect_vs");
+        return false;
+    }
+    
     if (!m_debugPixelShader.Create("Debug_ps"))
     {
         LOG_WARNING("failed creating Debug_ps.");

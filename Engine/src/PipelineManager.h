@@ -83,9 +83,14 @@ public:
 
 
 	// Nikkis stuff
-	Shaders::VertexShader             m_textureEffectVertexShader;  // Nikki's dummy water effect vertex shader.
-	Shaders::ComputeShader            m_textureEffectComputeShader; // Nikki's water effect compute shader.
-	Shaders::PixelShader              m_textureEffectPixelShader;   // Nikki's water effect pixel shader.
+	Shaders::VertexShader             m_textureEffectVertexShader;  // Dummy.
+	Shaders::ComputeShader            m_textureEffectComputeShader; // Water refraction effect compute shader.
+	Shaders::PixelShader              m_textureEffectPixelShader;   // Dummy.
+
+	Shaders::VertexShader             m_WaterEffectVertexShader;  // Dummy.
+	Shaders::ComputeShader            m_WaterEffectComputeShader; // Water effect compute shader.
+	Shaders::PixelShader              m_WaterEffectPixelShader;   // Dummy.
+
 	ComPtr<ID3D11Buffer>			  m_textureEffectConstantBuffer;
 	ComPtr<ID3D11Buffer>              m_deltaTimeBuffer;
 
@@ -94,22 +99,22 @@ public:
 	ComPtr<ID3D11ShaderResourceView>  m_SRV_TextureEffectWaterFloorMap;
 	ComPtr<ID3D11ShaderResourceView>  m_SRV_TextureEffectWaterEdgeMap;
 	ComPtr<ID3D11ShaderResourceView>  m_SRV_TextureEffectWaterNormalMap;
-	ComPtr<ID3D11UnorderedAccessView> m_UAV_TextureEffectWaterFloorMap;
 
+	ComPtr<ID3D11UnorderedAccessView> m_UAV_TextureEffectBlendMap;
+	ComPtr<ID3D11UnorderedAccessView> m_UAV_TextureEffectWaterMap;
+	ComPtr<ID3D11UnorderedAccessView> m_UAV_TextureEffectWaterFloorMap;
+	ComPtr<ID3D11UnorderedAccessView> m_UAV_TextureEffectWaterEdgeMap;
+	ComPtr<ID3D11UnorderedAccessView> m_UAV_TextureEffectWaterNormalMap;
 
 	std::shared_ptr<RModel> m_WaterModel;
 	std::shared_ptr<RModel> m_WaterEdgeModel;
 	std::shared_ptr<RModel> m_WaterFloorModel;
 
-	std::vector<sm::Vector2> m_WaterUV;
-	std::vector<sm::Vector2> m_WaterEdgeUV;
-	std::vector<sm::Vector2> m_WaterFloorUV;
-
-	std::shared_ptr<RTexture> m_WaterAlbedoMap;
-	std::shared_ptr<RTexture> m_WaterNormalMap;
-	std::shared_ptr<RTexture> m_WaterEdgeAlbedoMap;
-	ComPtr<ID3D11Texture2D>	 m_WaterFloorAlbedoMap;
-	std::shared_ptr<RTexture> m_WaterBlendAlbedoMap;
+	ComPtr<ID3D11Texture2D> m_WaterAlbedoMap;
+	ComPtr<ID3D11Texture2D> m_WaterNormalMap;
+	ComPtr<ID3D11Texture2D> m_WaterEdgeAlbedoMap;
+	ComPtr<ID3D11Texture2D>	m_WaterFloorAlbedoMap;
+	std::shared_ptr<RTexture> m_WaterBlendAlbedoMap; //This one is a stand alone texture and is not found on a model.
 
 	std::shared_ptr<RTexture> m_ModdedWaterAlbedoMap;
 	std::shared_ptr<RTexture> m_ModdedWaterNormalMap;

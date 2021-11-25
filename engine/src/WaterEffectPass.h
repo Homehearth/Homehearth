@@ -1,11 +1,12 @@
 #pragma once
 #pragma once
+#pragma once
 #include "IRenderPass.h"
 
 //--------------------------------------
-// Water refraction effect on the water floor and water edge meshes.
+// Water effect on the water mesh.
 //--------------------------------------
-class TextureEffectPass : public IRenderPass
+class WaterEffectPass : public IRenderPass
 {
 private:
 
@@ -14,8 +15,8 @@ private:
 	texture_effect_t m_CBuffer;
 
 public:
-	TextureEffectPass() = default;
-	virtual ~TextureEffectPass() = default;
+	WaterEffectPass() = default;
+	virtual ~WaterEffectPass() = default;
 
 	void PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext = D3D11Core::Get().DeviceContext()) override;
 

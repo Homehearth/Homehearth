@@ -1,6 +1,4 @@
-//Texture2D diffuseTexture : register(t13);
-//Texture2D dissplacementTexture : register(t14);
-//SamplerState pointSampler : register(s1);
+
 #include "Common.hlsli"
 
 /*
@@ -58,9 +56,6 @@ void main(uint3 id : SV_DispatchThreadID)
     
     //Displacement
     uint2 discplacement = { 10, 0 };
-    
-    //eh
-    uint fakeSine = 1;
 
     //Dimention
     float2 dimentions = { 0, 0 };
@@ -69,7 +64,7 @@ void main(uint3 id : SV_DispatchThreadID)
     // Get the current pixel's normalized pos
     uint2 uv = id.xy; 
   
-    
+    //Wave
     uv.y += cos(uv.x * 25 + (c_counter + 10)) * 10;
 
     
