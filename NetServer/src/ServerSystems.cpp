@@ -138,6 +138,118 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 	return entity;
 }
 
+void EnemyManagement::CreateWaves(std::queue<Wave>& waveQueue, int currentRound)
+{
+	//Reeset wavequeu
+	while (!waveQueue.empty())
+	{
+		waveQueue.pop();
+	}
+
+	//left bottom corner { 490.f, -150.0f });   right bottom corner { 170, -80.0f }
+	//left top corner { 520.f, -540.0f }        right top corner { 80.0f, -500.0f }
+	Wave wave1, wave2, wave3, wave4, wave5; // Default: WaveType::Zone
+	{
+		Wave::Group group1;
+		group1.AddEnemy(EnemyType::Default, 2 + 2 * currentRound);
+		group1.SetSpawnPoint({ 490.f, -150.0f });
+		wave1.SetTimeLimit(5 * currentRound);
+		wave1.AddGroup(group1);
+	}
+
+	{ // Wave_2
+		Wave::Group group1, group2;
+
+		group1.AddEnemy(EnemyType::Default, 1 + currentRound);
+		group2.AddEnemy(EnemyType::Default, 2 + currentRound);
+		group2.AddEnemy(EnemyType::Runner, 1 + 2 * currentRound);
+		group1.SetSpawnPoint({ 490.f, -150.0f });
+		group2.SetSpawnPoint({ 170, -80.0f });
+		wave2.AddGroup(group1);
+		wave2.AddGroup(group2);
+		wave2.SetTimeLimit(30);
+	}
+
+
+	{ // Wave_3
+		Wave::Group group1, group2, group3, group4;
+
+		group1.AddEnemy(EnemyType::Default, 3 + currentRound);
+		group1.AddEnemy(EnemyType::Runner, 1 + 1 * currentRound);
+		group1.SetSpawnPoint({ 490.f, -150.0f });
+
+		group2.AddEnemy(EnemyType::Default, 3 + currentRound);
+		group2.AddEnemy(EnemyType::Runner, 1 + currentRound);
+		group2.SetSpawnPoint({ 170, -80.0f });
+
+		group3.AddEnemy(EnemyType::Default, 3 + currentRound);
+		group3.SetSpawnPoint({ 80.0f, -500.0f });
+
+		group4.AddEnemy(EnemyType::Default, 2 + currentRound);
+		group4.SetSpawnPoint({ 520.f, -540.0f });
+
+		wave3.AddGroup(group1);
+		wave3.AddGroup(group2);
+		wave3.AddGroup(group3);
+		wave3.AddGroup(group4);
+		wave3.SetTimeLimit(45);
+	}
+
+	{ // Wave_4
+		Wave::Group group1, group2, group3, group4;
+
+		group1.AddEnemy(EnemyType::Default, 4 + currentRound);
+		group1.AddEnemy(EnemyType::Runner, 1 + currentRound);
+		group1.SetSpawnPoint({ 490.f, -150.0f });
+
+		group2.AddEnemy(EnemyType::Default, 4 + currentRound);
+		group2.AddEnemy(EnemyType::Runner, 1 + currentRound);
+		group2.SetSpawnPoint({ 170, -80.0f });
+
+		group3.AddEnemy(EnemyType::Default, 2 + currentRound);
+		group3.AddEnemy(EnemyType::Runner, 2 + currentRound);
+		group3.SetSpawnPoint({ 80.0f, -500.0f });
+
+		group4.AddEnemy(EnemyType::Default, 4 + currentRound);
+		group4.AddEnemy(EnemyType::Runner, 1 + currentRound);
+		group4.SetSpawnPoint({ 520.f, -540.0f });
+
+		wave4.AddGroup(group1);
+		wave4.AddGroup(group2);
+		wave4.AddGroup(group3);
+		wave4.AddGroup(group4);
+		wave4.SetTimeLimit(45);
+	}
+
+	{ // Wave_5 BOSS
+		Wave::Group group1, group2, group3, group4;
+
+		group1.AddEnemy(EnemyType::Mage, 2 + currentRound);
+		group1.AddEnemy(EnemyType::BIGMOMMA, 1);
+		group1.SetSpawnPoint({ 490.f, -150.0f });
+
+		group2.AddEnemy(EnemyType::Default, 1 + currentRound);
+		group2.SetSpawnPoint({ 170, -80.0f });
+
+		group3.AddEnemy(EnemyType::Default, 2 + currentRound);
+		group3.SetSpawnPoint({ 80.0f, -500.0f });
+
+		group4.AddEnemy(EnemyType::Default, 1 + currentRound);
+		group4.SetSpawnPoint({ 520.f, -540.0f });
+
+		wave5.AddGroup(group1);
+		wave5.AddGroup(group2);
+		wave5.AddGroup(group3);
+		wave5.AddGroup(group4);
+		wave5.SetTimeLimit(45);
+	}
+
+	waveQueue.emplace(wave1);
+	waveQueue.emplace(wave2);
+	waveQueue.emplace(wave3);
+	waveQueue.emplace(wave4);
+	waveQueue.emplace(wave5);
+}
 
 
 /**Spawn the enemies randomly within a circular zone based on the specified point
