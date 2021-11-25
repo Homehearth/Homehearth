@@ -33,10 +33,10 @@ private:
 	ComPtr<ID3D11DepthStencilView> CreateDepthView(uint32_t index);
 	ComPtr<ID3D11Buffer> CreateLightBuffer(light_t light);
 
-
+	void RenderWithImmidiateContext(Scene* pScene, const ShadowSection& shadow);
 
 public:
-	static camera_Matrix_t GetLightMatrix(light_t light);
+	static camera_Matrix_t GetLightMatrix(light_t light, sm::Vector3 direction);
 
 	ShadowPass();
 	~ShadowPass();
@@ -49,7 +49,7 @@ public:
 	virtual void Render(Scene* pScene) override;
 	virtual void PostRender(ID3D11DeviceContext* pDeviceContext = D3D11Core::Get().DeviceContext()) override;
 	
-	void UpdateLightBuffer(ID3D11DeviceContext* context, ID3D11Buffer* buffer, light_t light);
+	void UpdateLightBuffer(ID3D11DeviceContext* context, ID3D11Buffer* buffer, light_t light, sm::Vector3 direction);
 
 	void ImGuiShowTextures() override;
 };

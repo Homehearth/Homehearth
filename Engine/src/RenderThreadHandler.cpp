@@ -17,6 +17,8 @@ void RenderMain(const unsigned int id);
 void RenderJob(const unsigned int start, unsigned int stop, void* buffer, void* context);
 void RenderShadow(const unsigned int start, unsigned int stop, void* buffer, void* context);
 
+void RenderObjectsInRange(DoubleBuffer<std::vector<comp::Renderable>>* objects, dx::ConstantBuffer<basic_model_matrix_t>* buffer, ID3D11DeviceContext* context, sm::Vector3 point, float range);
+
 thread::RenderThreadHandler::RenderThreadHandler()
 {
 	m_workerThreads = nullptr;
@@ -430,37 +432,45 @@ void RenderShadow(const unsigned int start, unsigned int stop, void* buffer, voi
 		for (int i = start; i < stop; i++)
 		{
 			auto& shadow = (*m_shadows)[i];
-			currentPass->UpdateLightBuffer(m_context, shadow.lightBuffer.Get(), *shadow.pLight);
-			m_context->ClearDepthStencilView(shadow.shadowDepth.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-
 			const light_t* light = shadow.pLight;
+			
 			if (!light->enabled)
 				continue;
 
-			ID3D11RenderTargetView* nullTargets[8] = { nullptr };
+			m_context->ClearDepthStencilView(shadow.shadowDepth.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 			m_context->VSSetConstantBuffers(1, 1, shadow.lightBuffer.GetAddressOf());
+			ID3D11RenderTargetView* nullTargets[8] = { nullptr };
 			m_context->OMSetRenderTargets(8, nullTargets, shadow.shadowDepth.Get());
-
-			// For each object in world.
-			for (int j = 0; j < (*m_objects)[1].size(); j++)
+			switch (shadow.pLight->type)
 			{
-				comp::Renderable* it = &(*m_objects)[1][j];
-				sm::Vector3 translation = it->data.worldMatrix.Translation();
-				float distance = (translation - sm::Vector3(light->position)).Length();
-				if (distance < light->range && it->isSolid && it->visible)
-				{
-					ID3D11Buffer* const buffers[1] =
-					{
-						m_buffer->GetBuffer()
-					};
+			case TypeLight::DIRECTIONAL:
+			{
+				currentPass->UpdateLightBuffer(m_context, shadow.lightBuffer.Get(), *shadow.pLight, sm::Vector3(shadow.pLight->direction));
+				m_context->VSSetShader(currentPass->GetPipelineManager()->m_defaultVertexShader.Get(), nullptr, 0);
+				RenderObjectsInRange(m_objects, m_buffer, m_context, sm::Vector3(light->position), light->range);
 
-					m_buffer->SetData(m_context, it->data);
-					m_context->VSSetConstantBuffers(0, 1, buffers);
-					if (it->model)
-						it->model->Render(m_context);
-				}
+
+				break;
+			}
+			case TypeLight::POINT:
+			{
+				currentPass->UpdateLightBuffer(m_context, shadow.lightBuffer.Get(), *shadow.pLight, sm::Vector3::Down);
+				m_context->VSSetShader(currentPass->GetPipelineManager()->m_paraboloidVertexShader.Get(), nullptr, 0);
+				RenderObjectsInRange(m_objects, m_buffer, m_context, sm::Vector3(light->position), light->range);
+				/*
+				currentPass->UpdateLightBuffer(m_context, shadow.lightBuffer.Get(), *shadow.pLight, sm::Vector3::Up);
+				RenderObjectsInRange(m_objects, m_buffer, m_context, sm::Vector3(light->position), light->range);
+				*/
+
+
+				break;
+			}
+			default:
+				break;
 			}
 
+			// For each object in world.
+			
 			m_context->OMSetRenderTargets(8, nullTargets, nullptr);
 		}
 
@@ -473,5 +483,28 @@ void RenderShadow(const unsigned int start, unsigned int stop, void* buffer, voi
 		if(SUCCEEDED(hr))
 			thread::RenderThreadHandler::Get().InsertCommandList(std::move(commandList));
 		LeaveCriticalSection(&pushSection);
+	}
+}
+
+void RenderObjectsInRange(DoubleBuffer<std::vector<comp::Renderable>>* objects, dx::ConstantBuffer<basic_model_matrix_t>* buffer, ID3D11DeviceContext* context, sm::Vector3 point, float range)
+{
+	// For each object in world.
+	for (int j = 0; j < (*objects)[1].size(); j++)
+	{
+		comp::Renderable* it = &(*objects)[1][j];
+		sm::Vector3 translation = it->data.worldMatrix.Translation();
+		float distance = (translation - sm::Vector3(point)).Length();
+		if (distance < range && it->isSolid && it->visible)
+		{
+			ID3D11Buffer* const buffers[1] =
+			{
+				buffer->GetBuffer()
+			};
+
+			buffer->SetData(context, it->data);
+			context->VSSetConstantBuffers(0, 1, buffers);
+			if (it->model)
+				it->model->Render(context);
+		}
 	}
 }

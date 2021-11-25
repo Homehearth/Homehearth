@@ -65,6 +65,9 @@ public:
 	Shaders::PixelShader			m_debugPixelShader;
 	Shaders::PixelShader			m_skyboxPixelShader;
 	Shaders::PixelShader			m_ParticlePixelShader;
+
+	//Shadows
+	Shaders::VertexShader			m_paraboloidVertexShader;
 	Shaders::PixelShader			m_shadowPixelShader;
 
 	Shaders::ComputeShader			m_ParticleComputeShader;

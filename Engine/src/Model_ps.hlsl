@@ -42,7 +42,8 @@ float4 main(PixelIn input) : SV_TARGET
 			float4x4 lightMat = sb_lights[i].lightMatrix;
 			float shadowCoef = 0.0f;
             
-			float4 pixelposLightSpace = mul(lightMat, input.worldPos);
+            // position of this pixel in the light clip space
+            float4 pixelposLightSpace = mul(lightMat, input.worldPos);
 			
             switch (sb_lights[i].type)
             {
@@ -73,20 +74,21 @@ float4 main(PixelIn input) : SV_TARGET
                 }
                 case 1:
 				{
-                    
                     float len = length(pixelposLightSpace.xyz);
-                    pixelposLightSpace.xyz /= pixelposLightSpace.w;
-            
-                    float2 texCoords;
-                    texCoords.x = pixelposLightSpace.x * 0.5f + 0.5f;
-                    texCoords.y = -pixelposLightSpace.y * 0.5f + 0.5f;
-                    
-                    float closestDepth = t_shadowMaps.Sample(s_linear, float3(texCoords.xy, i)).r;
-                    
-                    float currentDepth = pixelposLightSpace.z;
-                    currentDepth = saturate(currentDepth);
-                    currentDepth -= 0.001f;
-                    
+                    pixelposLightSpace.xyz /= len;
+                    float closestDepth = 1.0f;
+                    float currentDepth = 0.0f;
+
+                    if(pixelposLightSpace.z >= 0.0f)
+                    {
+                        
+                        float2 front;
+                        front.x = (pixelposLightSpace.x / (1.0f + pixelposLightSpace.z)) * 0.5f + 0.5f;
+                        front.y = 1.0f - ((pixelposLightSpace.y / (1.0f + pixelposLightSpace.z)) * 0.5f + 0.5f);
+                        currentDepth = (len - 0.1f) / (500.f - 0.1f);
+                        currentDepth -= 0.001f;
+                        closestDepth = t_shadowMaps.Sample(s_linear, float3(front.xy, i)).r;
+                    }
                     if (currentDepth > closestDepth)
                     {
                         shadowCoef = 1.0f;

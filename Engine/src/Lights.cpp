@@ -129,20 +129,22 @@ void Lights::EditLight(light_t L, const int& index)
 {
     if (index < (int)m_lights.size() && index >= 0)
     {
-        camera_Matrix_t mat = ShadowPass::GetLightMatrix(L);
 
         switch (L.type)
         {
         case TypeLight::DIRECTIONAL:
         {
             L.direction.Normalize();
+            camera_Matrix_t mat = ShadowPass::GetLightMatrix(L, sm::Vector3(L.direction));
             L.lightMatrix = mat.view;
             L.lightMatrix *= mat.projection;
             break;
         }
         case TypeLight::POINT:
         {
-            L.lightMatrix.Translation(sm::Vector3(L.position));
+            camera_Matrix_t mat = ShadowPass::GetLightMatrix(L, sm::Vector3::Down);
+            L.lightMatrix = mat.view;
+            L.lightMatrix *= mat.projection;
             break;
         }
         default:
