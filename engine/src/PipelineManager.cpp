@@ -555,6 +555,12 @@ bool PipelineManager::CreateTextureEffectResources()
     m_WaterEdgeAlbedoMap   = m_WaterEdgeModel.get()->GetTextures(ETextureType::albedo)[0];
     m_ModdedWaterFloorAlbedoMap = m_WaterFloorModel.get()->GetTextures(ETextureType::albedo)[0];
 
+    //Disable bitmaps
+    m_WaterAlbedoMap->DisableMipmaps();
+    m_WaterNormalMap->DisableMipmaps();
+    m_WaterEdgeAlbedoMap->DisableMipmaps();
+    m_ModdedWaterFloorAlbedoMap->DisableMipmaps();
+
     //Get the SRV:s from the textures
     m_SRV_TextureEffectWaterEdgeMap    = m_WaterEdgeAlbedoMap.get()->GetShaderView();
     m_SRV_TextureEffectWaterFloorMap   = m_ModdedWaterFloorAlbedoMap.get()->GetShaderView();
@@ -573,7 +579,7 @@ bool PipelineManager::CreateTextureEffectResources()
     desc.Width = textureWidth;
     desc.Height = textureHeight;
     desc.MiscFlags = 0;
-    desc.MipLevels = 9;
+    desc.MipLevels = 1;
     desc.ArraySize = 1;
     desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
     desc.SampleDesc.Count = 1;

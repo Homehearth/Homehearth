@@ -82,6 +82,8 @@ cbuffer TextureEffectCB : register(b7)
 {
     float c_frequency;
     float c_amplitude;
+    float c_counter;
+    float c_padding;
 };
 
 cbuffer InverseMatrices : register(b12)
