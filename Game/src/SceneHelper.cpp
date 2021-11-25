@@ -519,30 +519,38 @@ namespace sceneHelp
 		scene.Add2DCollection(general, "AGeneral");
 
 		Collection2D* classButtons = new Collection2D;
-		rtd::Picture* warriorBorder = classButtons->AddElement<rtd::Picture>("Selected.png", draw_t((width / 3.33f) + (width / 15.0f) + (float)(width / 16) - 7.5f, height - (height / 6) - 7.5f, (width / 16.f) * 1.15f, (height / 9.f) * 1.15f));
-		rtd::Picture* mageBorder = classButtons->AddElement<rtd::Picture>("Selected.png", draw_t((width / 3.33f) + (float)(width / 20) - 7.5f, height - (height / 6) - 7.5f, (width / 16.f) * 1.15f, (height / 9.f) * 1.15f));
+		//rtd::Picture* warriorBorder = classButtons->AddElement<rtd::Picture>("Selected.png", draw_t((width / 3.33f) + (width / 15.0f) + (float)(width / 16) - 7.5f, height - (height / 6) - 7.5f, (width / 16.f) * 1.15f, (height / 9.f) * 1.15f));
+		//rtd::Picture* mageBorder = classButtons->AddElement<rtd::Picture>("Selected.png", draw_t((width / 3.33f) + (float)(width / 20) - 7.5f, height - (height / 6) - 7.5f, (width / 16.f) * 1.15f, (height / 9.f) * 1.15f));
 		rtd::Button* mageButton = classButtons->AddElement<rtd::Button>("WizardIcon.png", draw_t((width / 3.33f) + (float)(width / 20), height - (height / 6), width / 16, height / 9));
-		mageBorder->SetVisiblity(false);
+		rtd::Button* warriorButton = classButtons->AddElement<rtd::Button>("WarriorIcon.png", draw_t((width / 3.33f) + (width / 15.0f) + (float)(width / 16), height - (height / 6), width / 16, height / 9));
+		
+		//mageBorder->SetVisiblity(false);
 		// FIX WHAT CLASS SYMBOL PLAYER HAS LATER
 		mageButton->SetOnPressedEvent([=]()
 			{
-				mageBorder->SetVisiblity(true);
-				warriorBorder->SetVisiblity(false);
+				//mageBorder->SetVisiblity(true);
+				//warriorBorder->SetVisiblity(false);
 				desc->SetTexture("WizardDesc.png");
 				comp::Player* player = game->GetLocalPlayer().GetComponent<comp::Player>();
 				player->classType = comp::Player::Class::MAGE;
 				game->SendSelectedClass(player->classType);
+				mageButton->GetBorder()->SetColor(D2D1::ColorF(0.0f, 1.0f, 0.2f));
+				mageButton->GetBorder()->SetVisiblity(true);
+				warriorButton->GetBorder()->SetVisiblity(false);
 			});
 		
-		rtd::Button* warriorButton = classButtons->AddElement<rtd::Button>("WarriorIcon.png", draw_t((width / 3.33f) + (width / 15.0f) + (float)(width / 16), height - (height / 6), width / 16, height / 9));
+		
 		warriorButton->SetOnPressedEvent([=]()
 			{
-				mageBorder->SetVisiblity(false);
-				warriorBorder->SetVisiblity(true);
+				//mageBorder->SetVisiblity(false);
+				//warriorBorder->SetVisiblity(true);
 				desc->SetTexture("WarriorDesc.png");
 				comp::Player* player = game->GetLocalPlayer().GetComponent<comp::Player>();
 				player->classType = comp::Player::Class::WARRIOR;
 				game->SendSelectedClass(player->classType);
+				warriorButton->GetBorder()->SetColor(D2D1::ColorF(0.0f, 1.0f, 0.2f));
+				warriorButton->GetBorder()->SetVisiblity(true);
+				mageButton->GetBorder()->SetVisiblity(false);
 			});
 
 		scene.Add2DCollection(classButtons, "ClassButtons");
