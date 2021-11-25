@@ -3,7 +3,7 @@
 #include "IRenderPass.h"
 
 //--------------------------------------
-// Forward Rendering, or GeometryPass.
+// Water refraction effect on the water floor and water edge meshes.
 //--------------------------------------
 class TextureEffectPass : public IRenderPass
 {
