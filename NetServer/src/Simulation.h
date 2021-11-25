@@ -68,8 +68,6 @@ public:
 	void LeaveLobby(uint32_t playerID);
 
 	bool Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* mapColliders);
-	//Creates the waves needed to spawn enemies
-	void CreateWaves();
 	void Destroy();
 
 	void NextTick();

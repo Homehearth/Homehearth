@@ -59,6 +59,8 @@ cbuffer ParticleUpdate : register(b8)
     float4 emitterPosition;
     float deltaTime;
     uint counter;
+    uint lifeTime;
+    float particleSizeMulitplier;
 }
 
 cbuffer DecalInfoCB : register(b10)

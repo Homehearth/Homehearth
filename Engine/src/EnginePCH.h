@@ -59,7 +59,9 @@
 #include <queue>
 #include <condition_variable>
 #include <bitset>
+#include <algorithm>
 
+#include <cmath>
 #include <functional>
 
 #define ALIGN16 __declspec(align(16)) 
