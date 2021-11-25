@@ -4,10 +4,14 @@
 #include "CommonStructures.h"
 
 PipelineManager::PipelineManager()
-	: m_window(nullptr)
-	, m_d3d11(&D3D11Core::Get())
-	, m_viewport()
+    : m_window(nullptr)
+    , m_d3d11(&D3D11Core::Get())
+    , m_viewport()
 {
+    m_windowWidth = 0;
+    m_windowHeight = 0;
+
+    m_context = nullptr;
 }
 
 void PipelineManager::Initialize(Window* pWindow, ID3D11DeviceContext* context)
@@ -75,6 +79,8 @@ void PipelineManager::Initialize(Window* pWindow, ID3D11DeviceContext* context)
 
     // Set Viewport.
     this->SetViewport();
+    m_windowWidth = m_window->GetWidth();
+    m_windowHeight = m_window->GetHeight();
 }
 
 bool PipelineManager::CreateRenderTargetView()
@@ -343,6 +349,8 @@ bool PipelineManager::CreateBlendStates()
     blendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
     blendDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ZERO;
 
+
+
     HRESULT hr = m_d3d11->Device()->CreateBlendState(&blendDesc, m_blendStateAlphaBlending.GetAddressOf());
     if (FAILED(hr))
         return false;
@@ -362,6 +370,28 @@ bool PipelineManager::CreateBlendStates()
 	// "...the quality is significantly improved when used in conjunction with MSAA".
     blendStateDesc.AlphaToCoverageEnable = 1;
     hr = m_d3d11->Device()->CreateBlendState(&blendStateDesc, m_blendStateDepthOnlyAlphaToCoverage.GetAddressOf());
+
+    D3D11_BLEND_DESC blendStateParticleDesc = {};
+    //blendStateParticleDesc.AlphaToCoverageEnable = true;
+    //blendStateParticleDesc.IndependentBlendEnable = true;     // can be true 
+    blendStateParticleDesc.RenderTarget[0].BlendEnable = true;
+    blendStateParticleDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+    blendStateParticleDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+    blendStateParticleDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+    blendStateParticleDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ZERO;
+    blendStateParticleDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+    blendStateParticleDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+    blendStateParticleDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+
+
+    hr = m_d3d11->Device()->CreateBlendState(&blendStateParticleDesc, m_blendStateParticle.GetAddressOf());
+
+
+    if (FAILED(hr))
+    {
+        LOG_ERROR("Couldnt create particle UAV");
+        return false;
+    }
 
 	return !FAILED(hr);
 }
@@ -444,6 +474,23 @@ bool PipelineManager::CreateInputLayouts()
         return false;
     }
 
+    std::string shaderByteCodeParticle = m_ParticleVertexShader.GetShaderByteCode();
+    D3D11_INPUT_ELEMENT_DESC particleVertexShaderDesc[] =
+    {
+        {"POSITION",    0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,                0,                   D3D11_INPUT_PER_VERTEX_DATA, 0},
+        {"VELOCITY",    0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,    D3D11_APPEND_ALIGNED_ELEMENT,    D3D11_INPUT_PER_VERTEX_DATA, 0},
+        {"COLOR",       0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,    D3D11_APPEND_ALIGNED_ELEMENT,    D3D11_INPUT_PER_VERTEX_DATA, 0},
+        {"SIZE",        0, DXGI_FORMAT_R32G32B32_FLOAT,    0,    D3D11_APPEND_ALIGNED_ELEMENT,    D3D11_INPUT_PER_VERTEX_DATA, 0},
+        {"TYPE",        0, DXGI_FORMAT_R32_UINT,           0,    D3D11_APPEND_ALIGNED_ELEMENT,    D3D11_INPUT_PER_VERTEX_DATA, 0},
+        {"LIFE",        0, DXGI_FORMAT_R32_FLOAT,          0,    D3D11_APPEND_ALIGNED_ELEMENT,    D3D11_INPUT_PER_VERTEX_DATA, 0}
+    };
+
+    if (FAILED(hr = D3D11Core::Get().Device()->CreateInputLayout(particleVertexShaderDesc, ARRAYSIZE(particleVertexShaderDesc), shaderByteCodeParticle.c_str(), shaderByteCodeParticle.length(), &m_ParticleInputLayout)))
+    {
+        LOG_WARNING("failed creating m_ParticleInputLayout.");
+        return false;
+    }
+
     return !FAILED(hr);
 }
 
@@ -469,7 +516,13 @@ bool PipelineManager::CreateShaders()
 
     if (!m_skyboxVertexShader.Create("Skybox_vs"))
     {
-        LOG_WARNING("failed creating Skox_vs.");
+        LOG_WARNING("failed creating Skybox_vs.");
+        return false;
+    }
+
+    if (!m_skyboxPixelShader.Create("Skybox_ps"))
+    {
+        LOG_WARNING("failed creating Skybox_ps.");
         return false;
     }
 
@@ -485,9 +538,39 @@ bool PipelineManager::CreateShaders()
         return false;
     }
 
-    if (!m_skyboxPixelShader.Create("Skybox_ps"))
+    if (!m_ParticleVertexShader.Create("Particle_vs"))
     {
-        LOG_WARNING("failed creating Skybox_ps.");
+        LOG_WARNING("failed creating Particle_vs.");
+        return false;
+    }
+
+    if (!m_ParticlePixelShader.Create("Particle_ps"))
+    {
+        LOG_WARNING("failed creating Particle_ps.");
+        return false;
+    }
+
+    if (!m_ParticleGeometryShader.Create("Particle_gs"))
+    {
+        LOG_WARNING("failed creating Particle_gs.");
+        return false;
+    }    
+
+    if (!m_ParticleComputeShader.Create("Particle_cs"))
+    {
+        LOG_WARNING("failed creating Particle_cs.");
+        return false;
+    }
+
+    if (!m_blurComputeShader.Create("Blur_CS"))
+    {
+        LOG_WARNING("failed creating Blur_CS");
+        return false;
+    }
+
+    if (!m_dofComputeShader.Create("DOF_cs"))
+    {
+        LOG_WARNING("failed creating DOF_cs");
         return false;
     }
 

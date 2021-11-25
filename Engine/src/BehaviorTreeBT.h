@@ -14,3 +14,4 @@
 #include "AttackCBT.h"
 #include "InRangeCBT.h"
 #include "GenPathCBT.h"
+#include "FindBuildingTargetCBT.h"

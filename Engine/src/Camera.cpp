@@ -190,9 +190,7 @@ void Camera::Update(const float& deltaTime)
 void Camera::SetFollowEntity(const Entity& entity)
 {
 	m_targetEntity = entity;
-	m_target = entity.GetComponent<comp::Transform>()->position;
 }
-
 
 //Get functions
 sm::Matrix Camera::GetView() const

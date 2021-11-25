@@ -1,6 +1,4 @@
 #pragma once
-#include "EnginePCH.h"
-#include "Components.h"
 
 enum class CAMERATYPE
 {

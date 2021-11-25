@@ -13,12 +13,11 @@ Game::Game()
 	, Engine()
 {
 	this->m_localPID = -1;
+	this->m_spectatingID = -1;
 	this->m_money = 0;
 	this->m_gameID = -1;
 	this->m_waveTimer = 0;
 }
-
-
 
 Game::~Game()
 {
@@ -27,7 +26,6 @@ Game::~Game()
 		m_client.Disconnect();
 	}
 }
-
 
 void Game::UpdateNetwork(float deltaTime)
 {
@@ -73,59 +71,57 @@ bool Game::OnStartup()
 	sceneHelp::CreateGameScene(this);
 	sceneHelp::CreateMainMenuScene(this);
 	sceneHelp::CreateJoinLobbyScene(this);
+	sceneHelp::CreateGameOverScene(this);
 
 	sceneHelp::CreateOptionsScene(this);
 	// Set Current Scene
 	SetScene("MainMenu");
+
+	//Particles
+	Entity emitter = GetScene("Game").CreateEntity();
+	emitter.AddComponent<comp::Transform>()->position = {250, 5, -340};
+	emitter.AddComponent <comp::EmitterParticle>("smoke.png", "smoke_opacity.png", 800, 2.f, PARTICLEMODE::SMOKE, 4.0f);	
+	
+	Entity emitterS = GetScene("Game").CreateEntity();
+	emitterS.AddComponent<comp::Transform>()->position = {178, 15, -338};
+	emitterS.AddComponent <comp::EmitterParticle>("smoke.png", "smoke_opacity.png", 1200, 2.f, PARTICLEMODE::SMOKE, 4.2f);
+
+	//Entity emitter2 = GetScene("Game").CreateEntity();
+	//emitter2.AddComponent<comp::Transform>()->position = { 250, 5,- 320 };
+	//emitter2.AddComponent <comp::EmitterParticle>("thisisfine.png", "", 10, 1.f, PARTICLEMODE::SPARKLES);
+
+	//Entity emitter3 = GetScene("Game").CreateEntity();
+	//emitter3.AddComponent<comp::Transform>()->position = { 250, 20, -300 };
+	//emitter3.AddComponent <comp::EmitterParticle>("thisisfine.png", "", 20, 1.f, PARTICLEMODE::WATERSPLASH);
+	
+	Entity emitter4 = GetScene("Game").CreateEntity();
+	emitter4.AddComponent<comp::Transform>()->position = { 240, 6, -300 };
+	emitter4.AddComponent <comp::EmitterParticle>("Blood.png", "", 50, 8.f, PARTICLEMODE::BLOOD, 1.5f);
+
+	Entity emitter5 = GetScene("Game").CreateEntity();
+	emitter5.AddComponent<comp::Transform>()->position = { 220, 40, -340 };
+	emitter5.AddComponent <comp::EmitterParticle>("Blood.png", "", 50, 8.f , PARTICLEMODE::BLOOD, 1.5f);
+	
+	Entity waterSplash = GetScene("Game").CreateEntity();
+	waterSplash.AddComponent<comp::Transform>()->position = { 270, 13, -370 };
+	waterSplash.AddComponent <comp::EmitterParticle>("waterSplash.png", "", 100, 1.f , PARTICLEMODE::WATERSPLASH, 4.0f);
+
 
 	return true;
 }
 
 void Game::OnUserUpdate(float deltaTime)
 {
-	/*
-if (GetCurrentScene() == &GetScene("Game") && GetCurrentScene()->GetCurrentCamera()->GetCameraType() == CAMERATYPE::PLAY)
-{
-	if (m_players.find(m_localPID) != m_players.end())
-	{
-		comp::Transform* t = m_players.at(m_localPID).GetComponent<comp::Transform>();
-
-		int x = InputSystem::Get().GetAxis(Axis::HORIZONTAL);
-		int z = InputSystem::Get().GetAxis(Axis::VERTICAL);
-		if (x || z)
-		{
-			t->position.x += 10.f * deltaTime * x;
-			t->position.z += 10.f * deltaTime * z;
-
-			predictedPositions.push_back(*t);
-		}
-
-		//LOG_INFO("Predicted size: %llu", predictedPositions.size());
-		if (sm::Vector3::Distance(t->position, test.position) > m_predictionThreshhold)
-		{
-			t->position.x = test.position.x;
-			t->position.z = test.position.z;
-		}
-	}
-}
-		*/
+	this->UpdateInput();
 
 	if (GetCurrentScene() == &GetScene("Game"))
 	{
-		//if (m_players.find(m_localPID) != m_players.end())
-		//{
-		//	sm::Vector3 playerPos = m_players.at(m_localPID).GetComponent<comp::Transform>()->position;
-
-		//	Camera* cam = GetScene("Game").GetCurrentCamera();
-		//	if (cam->GetCameraType()  == CAMERATYPE::PLAY)
-		//	{
-		//		GameSystems::CheckLOS(this);
-		//	}
-		//}
-		this->UpdateInput();
+		if (m_players.find(m_localPID) != m_players.end())
+		{
+			GameSystems::CheckLOS(this);
+		}
 	}
 }
-
 
 void Game::OnShutdown()
 {
@@ -134,7 +130,6 @@ void Game::OnShutdown()
 	m_models.clear();
 	m_LOSColliders.clear();
 }
-
 
 void Game::CheckIncoming(message<GameMsg>& msg)
 {
@@ -160,6 +155,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	}
 	case GameMsg::Game_Snapshot:
 	{
+		m_savedInputs.clear();
 		uint32_t currentTick;
 		msg >> currentTick;
 		uint32_t count;
@@ -176,9 +172,10 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 				entity = m_gameEntities.at(entityID);
 				UpdateEntityFromMessage(entity, msg);
 			}
-			else {
-				LOG_WARNING("Updating: Entity %u not in m_gameEntities, should not happen...", entityID);
+			else
+			{
 
+				LOG_WARNING("Updating: Entity %u not in m_gameEntities, should not happen...", entityID);
 			}
 		}
 
@@ -202,9 +199,9 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 				entity = m_gameEntities.at(entityID);
 				UpdateEntityFromMessage(entity, msg);
 			}
-			else {
+			else
+			{
 				LOG_WARNING("Updating component: Entity %u not in m_gameEntities, should not happen...", entityID);
-
 			}
 		}
 
@@ -236,30 +233,17 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 #endif
 				m_players[m_localPID] = e;
 
-				GetScene("Game").ForEachComponent<comp::Tag<TagType::CAMERA>>([&](Entity entt, comp::Tag<TagType::CAMERA>& t)
-					{
-						comp::Camera3D* c = entt.GetComponent<comp::Camera3D>();
-						if (c)
-						{
-							c->camera.SetFollowEntity(e);
-						}
-					});
+				//if (e.GetComponent<comp::Transform>())
+				//{
+				//	e.AddComponent <comp::EmitterParticle>("thisisfine.png", "thisisfine_Opacity.png", 100, PARTICLEMODE::SMOKE);
+				//}
 			}
 			else if (e.GetComponent<comp::Player>())
 			{
 				LOG_INFO("A remote player added!");
 				m_players[e.GetComponent<comp::Network>()->id] = e;
 			}
-
 		}
-
-		if (GetCurrentScene() == &GetScene("Loading"))
-		{
-			SetScene("Lobby");
-		}
-#ifdef _DEBUG
-		LOG_INFO("Successfully loaded all entities!");
-#endif
 
 		break;
 	}
@@ -289,7 +273,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 				m_players.at(id).Destroy();
 				m_players.erase(id);
 			}
-
 		}
 #ifdef _DEBUG
 		LOG_INFO("Removed %u entities", count);
@@ -307,12 +290,23 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		SetScene("Lobby");
 		break;
 	}
+	case GameMsg::Game_Over:
+	{
+		SetScene("GameOver");
+		break;
+	}
 	case GameMsg::Lobby_Accepted:
 	{
 		msg >> m_gameID;
+
 		this->SetScene("Loading");
 		sceneHelp::LoadAllAssets(this);
 		sceneHelp::LoadMapColliders(this);
+
+#ifdef _DEBUG
+		LOG_INFO("Successfully loaded all Assets!");
+#endif
+		SetScene("Lobby");
 
 		LOG_INFO("You are now in lobby: %lu", m_gameID);
 		break;
@@ -339,7 +333,17 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	}
 	case GameMsg::Game_Start:
 	{
+		GetScene("Game").ForEachComponent<comp::Tag<TagType::CAMERA>>([&](Entity entt, comp::Tag<TagType::CAMERA>& t)
+			{
+				comp::Camera3D* c = entt.GetComponent<comp::Camera3D>();
+				if (c)
+				{
+					c->camera.SetFollowEntity(m_players.at(m_localPID));
+				}
+			});
+
 		SetScene("Game");
+		thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::ADAPTIVE);
 		break;
 	}
 	case GameMsg::Game_WaveTimer:
@@ -357,30 +361,29 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	}
 	case GameMsg::Lobby_Update:
 	{
-		uint32_t count;
+		uint8_t count;
 		msg >> count;
-		std::string ids[MAX_PLAYERS_PER_LOBBY];
 
-		for (uint32_t i = 0; i < count; i++)
+		for (uint8_t i = count; i > 0; i--)
 		{
-			std::string playerPlate;
+			char nameTemp[12] = {};
 			uint32_t playerID;
-			msg >> playerPlate;
+			msg >> nameTemp;
 			msg >> playerID;
-			ids[i] = playerPlate;
+			std::string name(nameTemp);
 
 			if (m_players.find(playerID) != m_players.end())
 			{
-				m_players.at(playerID).GetComponent<comp::NamePlate>()->namePlate = playerPlate;
-				dynamic_cast<rtd::Text*>(GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i + 1))->elements[1].get())->SetText(playerPlate);
-				rtd::Text* plT = dynamic_cast<rtd::Text*>(GetScene("Game").GetCollection("dynamicPlayer" + std::to_string(i + 1) + "namePlate")->elements[0].get());
+				dynamic_cast<rtd::Text*>(GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i))->elements[1].get())->SetText(name);
+				rtd::Text* plT = dynamic_cast<rtd::Text*>(GetScene("Game").GetCollection("dynamicPlayer" + std::to_string(i) + "namePlate")->elements[0].get());
 				if (plT)
 				{
-					plT->SetText(playerPlate);
+					plT->SetText(name);
 					plT->SetStretch(D2D1Core::GetDefaultFontSize() * plT->GetText().length(), D2D1Core::GetDefaultFontSize());
 				}
 			}
 		}
+
 		if (m_players.find(m_localPID) != m_players.end())
 		{
 			comp::Player* player = m_players.at(m_localPID).GetComponent<comp::Player>();
@@ -400,7 +403,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 
 		dynamic_cast<rtd::Text*>(GetScene("Lobby").GetCollection("LobbyDesc")->elements[1].get())->SetText("Lobby ID: " + std::to_string(m_gameID));
 
-
 		for (uint32_t i = 0; i < count; i++)
 		{
 			GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i + 1))->Show();
@@ -410,10 +412,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i + 1))->Hide();
 		}
 
-		Scene& gameScene = GetScene("Game");
-		// Map healthbars to players.
-		GameSystems::UpdateHealthbar(gameScene);
-		//GameSystems::UpdateMainPlayer(this);
+		GameSystems::UpdateHealthbar(this);
 		break;
 
 	}
@@ -425,6 +424,63 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		{
 			elem->SetNewMoney(m_money);
 		}
+		break;
+	}
+	case GameMsg::Game_ChangeAnimation:
+	{
+		uint32_t id;
+		EAnimationType animtype = EAnimationType::NONE;
+		msg >> id >> animtype;
+
+		if (m_gameEntities.find(id) != m_gameEntities.end())
+		{
+			comp::Animator* animComp = m_gameEntities.at(id).GetComponent<comp::Animator>();
+			if (animComp)
+			{
+				std::shared_ptr<RAnimator> anim = animComp->animator;
+				if (anim)
+				{
+					anim->ChangeAnimation(animtype);
+				}
+			}
+		}
+		break;
+	}
+	case GameMsg::Game_StartSpectate:
+	{
+		m_players.at(m_localPID).GetComponent<comp::Player>()->state = comp::Player::State::SPECTATING;
+		auto it = m_players.begin();
+		while (it != m_players.end())
+		{
+			if (it->first != m_localPID && it->second.GetComponent<comp::Health>()->isAlive)
+			{
+				GetScene("Game").ForEachComponent<comp::Tag<TagType::CAMERA>>([&](Entity entt, comp::Tag<TagType::CAMERA>& t)
+					{
+						comp::Camera3D* c = entt.GetComponent<comp::Camera3D>();
+						if (c)
+						{
+							c->camera.SetFollowEntity(m_players.at(it->first));
+						}
+					});
+				m_spectatingID = it->first;
+				break;
+			}
+			it++;
+		}
+		break;
+	}
+	case GameMsg::Game_StopSpectate:
+	{
+		m_players.at(m_localPID).GetComponent<comp::Player>()->state = comp::Player::State::IDLE;
+		GetScene("Game").ForEachComponent<comp::Tag<TagType::CAMERA>>([&](Entity entt, comp::Tag<TagType::CAMERA>& t)
+			{
+				comp::Camera3D* c = entt.GetComponent<comp::Camera3D>();
+				if (c)
+				{
+					c->camera.SetFollowEntity(m_players.at(m_localPID));
+				}
+			});
+		m_spectatingID = -1;
 		break;
 	}
 	}
@@ -527,14 +583,27 @@ void Game::SendSelectedClass(comp::Player::Class classType)
 	m_client.Send(msg);
 }
 
+ParticleSystem* Game::GetParticleSystem()
+{
+	return &m_particles;
+}
+
 Entity& Game::GetLocalPlayer()
 {
 	return this->m_players.at(m_localPID);
 }
 
+void Game::UseShop(const ShopItem& whatToBuy)
+{
+	network::message<GameMsg> msg;
+	msg.header.id = GameMsg::Game_UseShop;
+	msg << whatToBuy << m_localPID << m_gameID;
+
+	m_client.Send(msg);
+}
+
 void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 {
-
 	uint32_t bits;
 	msg >> bits;
 	std::bitset<ecs::Component::COMPONENT_MAX> compSet(bits);
@@ -551,7 +620,6 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 				msg >> t;
 				t.rotation.Normalize();
 				e.AddComponent<comp::Transform>(t);
-				//m_predictor.Add(e.GetComponent<comp::Network>()->id, t);
 				break;
 			}
 			case ecs::Component::VELOCITY:
@@ -565,21 +633,23 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 			{
 				std::string name;
 				msg >> name;
-				e.AddComponent<comp::Renderable>()->model = ResourceManager::Get().CopyResource<RModel>(name, true);
+				std::shared_ptr<RModel> model = ResourceManager::Get().CopyResource<RModel>(name, true);
+				if (model)
+				{
+					e.AddComponent<comp::Renderable>()->model = model;
+				}
 				break;
 			}
 			case ecs::Component::ANIMATOR_NAME:
 			{
 				std::string name;
 				msg >> name;
-				e.AddComponent<comp::Animator>()->animator = ResourceManager::Get().CopyResource<RAnimator>(name, true);
-				break;
-			}
-			case ecs::Component::NAME_PLATE:
-			{
-				std::string name;
-				msg >> name;
-				e.AddComponent<comp::NamePlate>()->namePlate = name;
+				std::shared_ptr<RAnimator> animator = ResourceManager::Get().CopyResource<RAnimator>(name, true);
+				if (animator)
+				{
+					animator->RandomizeTime();
+					e.AddComponent<comp::Animator>()->animator = animator;
+				}
 				break;
 			}
 			case ecs::Component::HEALTH:
@@ -615,6 +685,7 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 				comp::Player p;
 				msg >> p;
 				e.AddComponent<comp::Player>(p);
+
 				break;
 			}
 			default:
@@ -623,7 +694,6 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 			}
 		}
 	}
-
 }
 
 void Game::UpdateInput()
@@ -637,11 +707,52 @@ void Game::UpdateInput()
 	if (InputSystem::Get().CheckMouseKey(MouseKey::RIGHT, KeyState::PRESSED))
 	{
 		m_inputState.rightMouse = true;
+		if (m_localPID != -1 && m_players.size() > 0 && m_players.at(m_localPID).GetComponent<comp::Player>()->state == comp::Player::State::SPECTATING)
+		{
+
+			auto it = m_players.begin();
+			while (it != m_players.end())
+			{
+				if (it->first != m_localPID && it->first != m_spectatingID && it->second.GetComponent<comp::Health>()->isAlive)
+				{
+					GetScene("Game").ForEachComponent<comp::Tag<TagType::CAMERA>>([&](Entity entt, comp::Tag<TagType::CAMERA>& t)
+						{
+							comp::Camera3D* c = entt.GetComponent<comp::Camera3D>();
+							if (c)
+							{
+								c->camera.SetFollowEntity(m_players.at(it->first));
+							}
+						});
+					m_spectatingID = it->first;
+					break;
+				}
+				it++;
+			}
+
+		}
 	}
 	m_inputState.mouseRay = InputSystem::Get().GetMouseRay();
 	// temp
 	if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::B, KeyState::PRESSED))
 	{
 		m_inputState.key_b = true;
+	}
+	if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::LeftShift, KeyState::PRESSED))
+	{
+		m_inputState.key_shift = true;
+	}
+
+	m_savedInputs.push_back(m_inputState);
+
+
+	//TEMP PLZ REMOVE AFTER WE COME TO AN AGREEMENT ON WHICH DOF EFFECT TO USE
+	if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::D1, KeyState::PRESSED))
+	{
+		thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::ADAPTIVE);
+	}
+
+	if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::D2, KeyState::PRESSED))
+	{
+		thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::VIGNETTE);
 	}
 }

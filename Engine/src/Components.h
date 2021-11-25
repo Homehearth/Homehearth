@@ -12,9 +12,8 @@ namespace ecs
 	{
 		TRANSFORM,
 		VELOCITY,
-		ANIMATOR_NAME,
 		MESH_NAME,
-		NAME_PLATE,
+		ANIMATOR_NAME,
 		HEALTH,
 		BOUNDING_ORIENTED_BOX,
 		BOUNDING_SPHERE,
@@ -37,28 +36,63 @@ namespace ecs
 			sm::Vector3 position;
 			sm::Quaternion rotation;
 			sm::Vector3 scale = sm::Vector3(1);
+			
+			bool syncColliderScale = false;
 		};
 
 		struct Decal
 		{
-			RTexture* decal = nullptr;
 			sm::Matrix viewPoint;
 			// Life span in seconds.
-			float lifespan = 5.0f;
+			float lifespan = 10.0f;
 
-			Decal(const Transform& t, RTexture* decal = nullptr)
+			Decal(const Transform& t)
 			{
-				this->decal = decal;
-
 				// Be positioned slightly above.
 				sm::Vector3 position = t.position;
-				position.y += 10.0f;
+				position.y = 10.0f;
 				position.x += 0.0001f;
 				position.z -= 0.0001f;
 
 				sm::Vector3 lookAt = t.position;
 				lookAt.y = 0;
 				viewPoint = dx::XMMatrixLookAtLH(position, lookAt, { 0.0f, 1.0f, 0.0f });
+			}
+		};
+
+		struct EmitterParticle
+		{
+			UINT								nrOfParticles = 0;
+			PARTICLEMODE						type			= PARTICLEMODE::BLOOD;
+			float								lifeTime		= 0.f;
+			float								sizeMulitplier	= 0.f;
+			float								speed			= 0.f;
+
+			std::shared_ptr<RTexture>			texture			= nullptr;
+			std::shared_ptr<RTexture>			opacityTexture	= nullptr;
+			ComPtr<ID3D11Buffer>				particleBuffer	= nullptr;
+			ComPtr<ID3D11ShaderResourceView>	particleSRV		= nullptr;
+			ComPtr<ID3D11UnorderedAccessView>	particleUAV		= nullptr;
+
+			EmitterParticle(std::string textureName = "thisisfine.png ", std::string opacityTextureName = "thisisfine_Opacity.png", int nrOfParticles = 10, float sizeMulitplier = 1.f, PARTICLEMODE type = PARTICLEMODE::BLOOD, float lifeTime = 2.f, float speed = 1)
+			{
+				//If no texture name take default texture else use the given name
+				if (textureName == "")
+					texture = ResourceManager::Get().GetResource<RTexture>("thisisfine.png ");
+				else 
+					texture = ResourceManager::Get().GetResource<RTexture>(textureName);
+
+				//If no opacity texture name take default opacity texture else use given name
+				if (opacityTextureName == "")
+					opacityTexture = ResourceManager::Get().GetResource<RTexture>("thisisfine_Opacity.png");
+				else
+					opacityTexture = ResourceManager::Get().GetResource<RTexture>(opacityTextureName);
+
+				this->nrOfParticles		= (UINT)nrOfParticles;
+				this->type				= type;
+				this->lifeTime			= lifeTime;
+				this->sizeMulitplier	= sizeMulitplier;
+				this->speed				= speed;
 			}
 		};
 
@@ -77,7 +111,14 @@ namespace ecs
 
 		struct Animator
 		{
-			std::shared_ptr<RAnimator> animator;
+			std::shared_ptr<RAnimator>  animator;
+			bool						updating = true;
+		};
+
+		struct AnimationState
+		{
+			EAnimationType lastSend;	//Send to user last time
+			EAnimationType toSend;		//Going to be send this update
 		};
 
 		// Used on server side
@@ -89,11 +130,6 @@ namespace ecs
 		struct MeshName 
 		{
 			std::string name = "";
-		};
-
-		struct NamePlate
-		{
-			std::string namePlate;
 		};
 		
 		struct RenderableDebug
@@ -141,15 +177,22 @@ namespace ecs
 			std::vector<Force> forces;
 		};
 
+		struct BezierAnimation
+		{
+			float speed = 1.0f;
+			bool loop = false;
+			std::vector<sm::Vector3> translationPoints;
+			std::vector<sm::Vector3> scalePoints;
+			std::vector<sm::Quaternion> rotationPoints;
+			float time = 0.0f;
+
+			std::function<void()> onFinish;
+		};
+
 		struct Velocity
 		{
 			sm::Vector3 vel;
 			sm::Vector3 oldVel;
-
-			sm::Vector3 scaleVel = { 0, 0, 0 };
-			sm::Vector3 oldScaleVel;
-
-			bool applyToCollider = false;
 		};
 
 		struct Player
@@ -158,6 +201,7 @@ namespace ecs
 			{
 				IDLE,
 				LOOK_TO_MOUSE,
+				SPECTATING,
 				WALK
 			} state = State::IDLE;
 
@@ -169,6 +213,7 @@ namespace ecs
 
 			entt::meta_type primaryAbilty;
 			entt::meta_type secondaryAbilty;
+			entt::meta_type moveAbilty;
 
 			float runSpeed;
 
@@ -180,6 +225,9 @@ namespace ecs
 			float respawnTimer;
 			bool isReady = false;
 			bool reachable = true;
+
+			char name[12] = {};
+			TowerTypes towerSelected = TowerTypes::SHORT;
 		};
 
 	
@@ -203,6 +251,9 @@ namespace ecs
 		{
 			light_t lightData;
 			int index;
+			float flickerTimer = 1.f;
+			float maxFlickerTime = 1.f;
+			bool increase;
 		};
 
 		struct Health
@@ -235,10 +286,6 @@ namespace ecs
 			// lifetime of the ability, for instance lifetime of any created collider
 			float lifetime = 5.f;
 
-			float attackDamage = 5.f;
-
-			float attackRange = 10.0f;
-
 			// !DO NOT TOUCH!
 			bool isReady = false;
 			// !DO NOT TOUCH!
@@ -248,15 +295,37 @@ namespace ecs
 			sm::Vector3 targetPoint;
 		};
 
+		//---------- WARRIOR ABILITIES ----------
 		struct MeleeAttackAbility : public IAbility
 		{
 			//Just to keep it not empty for now
-			float temp = 0.0f;
+			float attackDamage = 5.f;
+			float attackRange = 10.0f;
 		};
 
+		struct HeroLeapAbility : public IAbility
+		{
+			float damage = 10.f;
+			float damageRadius = 20.f;
+			float maxRange = 30.f;
+		};
+
+		struct DashAbility : public IAbility
+		{
+			//The duration for the force
+			float duration = 1.0f;
+			//amount of force applied when used
+			float force = 25.0f;
+			//Store velocity that was before dash was applied
+			sm::Vector3 velocityBeforeDash = { 0.0f,0.0f,0.0f };
+		};
+		//------------------END----------------------
+
+		//---------- MAGE ABILITIES ----------
 		struct RangeAttackAbility : public IAbility
 		{
 			float attackDamage = 5.f;
+			float attackRange = 10.0f;
 			float projectileSpeed = 10.f;
 			float projectileSize = 1.0f;
 		};
@@ -266,6 +335,14 @@ namespace ecs
 			float healAmount = 40.f;
 			float range = 50.f;
 		};
+		struct BlinkAbility : public IAbility
+		{
+			//The distance ability teleports Entity forward 
+			float distance = 50.0f;
+		};
+		//------------------END----------------------
+
+
 
 		struct SelfDestruct
 		{
