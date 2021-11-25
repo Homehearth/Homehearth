@@ -174,20 +174,42 @@ namespace sceneHelp
 				ImGui::End();
 				);
 
+				Collection2D* bullColl = game->GetCurrentScene()->GetCollection("bullDoze");
+				rtd::Picture* bullIcon = dynamic_cast<rtd::Picture*>(bullColl->elements[0].get());
+				if (bullIcon)
+				{
+					if (game->GetCurrentMode() == Mode::DESTROY_MODE)
+					{
+						bullColl->Show();
+						bullIcon->SetPosition((FLOAT)InputSystem::Get().GetMousePos().x, (FLOAT)InputSystem::Get().GetMousePos().y);
+					}
+					else
+					{
+						bullColl->Hide();
+					}
+				}
+
 				if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED))
 				{
 					if (game->GetCurrentScene()->GetCollection("shopMenu")->GetState() == ElementState::OUTSIDE &&
 						game->GetCurrentScene()->GetCollection("ScrolldownMenu")->GetState() == ElementState::OUTSIDE)
 					{
 						game->GetCurrentScene()->GetCollection("shopMenu")->Hide();
+						game->SetMode(Mode::PLAY_MODE);
+						bullColl->Hide();
 					}
 
 					if (game->GetCurrentScene()->GetCollection("inGameMenu")->GetState() == ElementState::OUTSIDE &&
 						game->GetCurrentScene()->GetCollection("ScrolldownMenu")->GetState() == ElementState::OUTSIDE)
 					{
 						game->GetCurrentScene()->GetCollection("inGameMenu")->Hide();
+						game->SetMode(Mode::PLAY_MODE);
+						bullColl->Hide();
 					}
 				}
+
+
+				GameSystems::DisplayUpgradeDefences(game);
 				//GameSystems::RenderIsCollidingSystem(scene);
 				GameSystems::UpdatePlayerVisuals(game);
 				Systems::LightSystem(scene, e.dt);
@@ -299,6 +321,12 @@ namespace sceneHelp
 		float width = (float)game->GetWindow()->GetWidth();
 		float height = (float)game->GetWindow()->GetHeight();
 
+		// Picture that will be drawn when player is in destroy mode.
+		Collection2D* bullDoze = new Collection2D;
+		bullDoze->AddElement<rtd::Picture>("No.png", draw_t(0.0f, 0.0f, width / 24, height / 14));
+		bullDoze->Hide();
+		scene.Add2DCollection(bullDoze, "bullDoze");
+
 		for (int i = 0; i < MAX_PLAYERS_PER_LOBBY; i++)
 		{
 			Collection2D* playerHp = new Collection2D;
@@ -354,6 +382,10 @@ namespace sceneHelp
 			{
 				game->Shutdown();
 			});
+		inGameMenu->SetOnPressedEvent(1, [=]
+			{
+				pauseMenu->Hide();
+			});
 		inGameMenu->SetOnPressedEvent(2, [=] 
 			{
 				pauseMenu->Hide();
@@ -371,31 +403,60 @@ namespace sceneHelp
 		
 		sc->AddButton("ShopIcon.png", draw_t(0.0f, -(height / 14) * 2.0f, width / 24, height / 14))->SetOnPressedEvent([=] {
 				shopMenu->Show();
+				bullDoze->Hide();
 			});
 		sc->SetPrimeButtonMeasurements(draw_t(0.0f, 0.0f, width / 24, height / 14));
 		scene.Add2DCollection(scrolldownMenu, "ScrolldownMenu");
 
 		rtd::ShopUI* shop = shopMenu->AddElement<rtd::ShopUI>("Shop.png", draw_t(width / 24.0f, (height / 16), width * 0.25f, height * 0.5f));
+		// 1x1 tower button.
 		shop->SetOnPressedEvent(0, [=] {
 			game->UseShop(ShopItem::SHORT_TOWER);
-			shopMenu->Hide();
+			//shopMenu->Hide();
+			game->SetMode(Mode::BUILD_MODE);
+			bullDoze->Hide();
 			});
+		// 1x3 tower button.
 		shop->SetOnPressedEvent(1, [=] {
 			game->UseShop(ShopItem::LONG_TOWER);
-			shopMenu->Hide();
+			//shopMenu->Hide();
+			game->SetMode(Mode::BUILD_MODE);
+			bullDoze->Hide();
 			});
+		// Primary upgrade button.
 		shop->SetOnPressedEvent(2, [=] {
 			game->UseShop(ShopItem::Primary_Upgrade);
+			game->SetMode(Mode::PLAY_MODE);
+			bullDoze->Hide();
 			});
+		// Armor upgrade button.
 		shop->SetOnPressedEvent(3, [=] {
 			game->UseShop(ShopItem::Primary_Upgrade);
+			game->SetMode(Mode::PLAY_MODE);
+			bullDoze->Hide();
 			});
+		// Heal button.
 		shop->SetOnPressedEvent(4, [=] {
 			game->UseShop(ShopItem::Heal);
+			game->SetMode(Mode::PLAY_MODE);
+			bullDoze->Hide();
+			});
+		// Remove defences button.
+		shop->SetOnPressedEvent(5, [=] {
+			game->SetMode(Mode::DESTROY_MODE);
+			bullDoze->Show();
 			});
 		shop->SetMoneyRef(mMoney);
 		shopMenu->Hide();
 		scene.Add2DCollection(shopMenu, "shopMenu");
+
+		Collection2D* priceTag = new Collection2D;
+		priceTag->AddElement<rtd::Picture>("EnoughMoneySign.png", draw_t(0.0f, 0.0f, width * 0.15f, height * 0.075f));
+		priceTag->AddElement<rtd::Text>("Cost: UNK", draw_t(0.0f, 0.0f, width * 0.15f, height * 0.075f));
+		priceTag->Hide();
+		scene.Add2DCollection(priceTag, "priceTag");
+
+
 	}
 
 	void SetupInLobbyScreen(Game* game)

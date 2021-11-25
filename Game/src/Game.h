@@ -15,6 +15,7 @@ private:
 	uint32_t m_waveTimer;
 	uint32_t m_money;
 	ParticleSystem m_particles;
+	Mode m_mode = Mode::PLAY_MODE;
 
 
 	Entity m_mapEntity;
@@ -53,6 +54,9 @@ public:
 	virtual ~Game();
 	void JoinLobby(uint32_t lobbyID);
 	void CreateLobby();
+	const Mode& GetCurrentMode() const;
+	void SetMode(const Mode& mode);
+	const uint32_t& GetMoney() const;
 	
 	void SendStartGame();
 	void SendSelectedClass(comp::Player::Class classType);
@@ -61,4 +65,5 @@ public:
 
 	ParticleSystem* GetParticleSystem();
 	void UseShop(const ShopItem& whatToBuy);
+	void UpgradeDefence(const uint32_t& id);
 };

@@ -328,10 +328,8 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 					e.GetComponent<comp::Velocity>()->vel *= ecs::GetAbility(e, p.primaryAbilty)->movementSpeedAlt;
 				}
 			}
-			else if (p.lastInputState.rightMouse) // was pressed
+			else if (p.lastInputState.rightMouse)
 			{
-				LOG_INFO("Pressed right");
-				simulation->GetGrid().RemoveDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, Blackboard::Get().GetPathFindManager());
 				if (ecs::UseAbility(e, p.secondaryAbilty, &p.mousePoint))
 				{
 					LOG_INFO("Used secondary");
@@ -339,12 +337,18 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 				}
 			}
 
+			if (p.lastInputState.key_r) // was pressed
+			{
+				LOG_INFO("Pressed right");
+				simulation->GetGrid().RemoveDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, Blackboard::Get().GetPathFindManager());
+			}
+
 			//Place defence on grid
 			if (p.lastInputState.key_b && simulation->GetCurrency().GetAmount() >= 5)
 			{
 				if (simulation->GetGrid().PlaceDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, Blackboard::Get().GetPathFindManager()))
 				{
-					simulation->GetCurrency().GetAmountRef() -= 5;
+					simulation->GetCurrency().GetAmountRef() -= 10;
 					anim.toSend = EAnimationType::PLACE_DEFENCE;
 				}
 			}

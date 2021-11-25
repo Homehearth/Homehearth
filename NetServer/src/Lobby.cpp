@@ -81,6 +81,7 @@ void Lobby::Update()
 	{
 		msg << it->first;
 		msg << it->second.GetComponent<comp::Player>()->name;
+		msg << it->second.GetComponent<comp::Player>()->classType;
 		it++;
 	}
 

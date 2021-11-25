@@ -105,6 +105,16 @@ void Simulation::InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg, c
 			}
 			break;
 		}
+		case ecs::Component::COST:
+		{
+			comp::Cost* c = entity.GetComponent<comp::Cost>();
+			if (c)
+			{
+				compSet.set(ecs::Component::COST);
+				msg << *c;
+			}
+			break;
+		}
 		default:
 			LOG_WARNING("Trying to send unimplemented component %u", i);
 			break;
@@ -533,8 +543,9 @@ void Simulation::SendSnapshot()
 
 		std::bitset<ecs::Component::COMPONENT_MAX> compMask;
 		compMask.set(ecs::Component::TRANSFORM);
-#if DEBUG_SNAPSHOT
 		compMask.set(ecs::Component::BOUNDING_ORIENTED_BOX);
+		compMask.set(ecs::Component::COST);
+#if DEBUG_SNAPSHOT
 		compMask.set(ecs::Component::BOUNDING_SPHERE);
 #endif
 
@@ -683,6 +694,34 @@ void Simulation::UseShop(const ShopItem& item, const uint32_t& player)
 	m_shop.UseShop(item, player);
 }
 
+void Simulation::UpgradeDefence(const uint32_t& id)
+{
+	m_pCurrentScene->ForEachComponent<comp::Network>([&](Entity e, comp::Network& n) {
+
+		if (n.id == id)
+		{
+			comp::Cost* c = e.GetComponent<comp::Cost>();
+			comp::Health* h = e.GetComponent<comp::Health>();
+
+			if (c && h)
+			{
+				if (m_currency.GetAmount() >= c->cost)
+				{
+					c->cost += 5;
+					// Add upgrades here.
+					h->maxHealth += 35;
+					h->currentHealth += 35;
+
+					// Cost is here.
+					m_currency.GetAmountRef() -= c->cost;
+					e.UpdateNetwork();
+				}
+			}
+		}
+
+		});
+}
+
 void Simulation::SetLobbyScene()
 {
 	m_pCurrentScene = m_pLobbyScene;
@@ -709,7 +748,7 @@ void Simulation::SetGameScene()
 	m_lobby.SetActive(false);
 #if GOD_MODE
 	// During debug give players 1000 gold/monies.
-	m_currency.GetAmountRef() = 1000;
+	m_currency.GetAmountRef() = 5000;
 	for (auto& player : m_lobby.m_players)
 	{
 		player.second.AddComponent<comp::Tag<TagType::NO_RESPONSE>>();

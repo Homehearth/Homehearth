@@ -384,6 +384,8 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		{
 			char nameTemp[12] = {};
 			uint32_t playerID;
+			comp::Player::Class classType;
+			msg >> classType;
 			msg >> nameTemp;
 			msg >> playerID;
 			std::string name(nameTemp);
@@ -392,10 +394,28 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			{
 				dynamic_cast<rtd::Text*>(GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i))->elements[1].get())->SetText(name);
 				rtd::Text* plT = dynamic_cast<rtd::Text*>(GetScene("Game").GetCollection("dynamicPlayer" + std::to_string(i) + "namePlate")->elements[0].get());
+				rtd::Picture* plP = dynamic_cast<rtd::Picture*>(GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i))->elements[2].get());
 				if (plT)
 				{
 					plT->SetText(name);
 					plT->SetStretch(D2D1Core::GetDefaultFontSize() * plT->GetText().length(), D2D1Core::GetDefaultFontSize());
+				}
+
+				if (plP)
+				{
+					switch (classType)
+					{
+					case comp::Player::Class::MAGE:
+					{
+						plP->SetTexture("WizardIcon.png");
+						break;
+					}
+					case comp::Player::Class::WARRIOR:
+					{
+						plP->SetTexture("WarriorIcon.png");
+						break;
+					}
+					}
 				}
 			}
 		}
@@ -509,6 +529,21 @@ void Game::CreateLobby()
 	}
 }
 
+const Mode& Game::GetCurrentMode() const
+{
+	return m_mode;
+}
+
+void Game::SetMode(const Mode& mode)
+{
+	m_mode = mode;
+}
+
+const uint32_t& Game::GetMoney() const
+{
+	return m_money;
+}
+
 void Game::OnClientDisconnect()
 {
 	this->m_gameID = -1;
@@ -577,6 +612,15 @@ void Game::UseShop(const ShopItem& whatToBuy)
 	network::message<GameMsg> msg;
 	msg.header.id = GameMsg::Game_UseShop;
 	msg << whatToBuy << m_localPID << m_gameID;
+
+	m_client.Send(msg);
+}
+
+void Game::UpgradeDefence(const uint32_t& id)
+{
+	network::message<GameMsg> msg;
+	msg.header.id = GameMsg::Game_UpgradeDefence;
+	msg << id << m_localPID << m_gameID;
 
 	m_client.Send(msg);
 }
@@ -667,6 +711,13 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 
 				break;
 			}
+			case ecs::Component::COST:
+			{
+				comp::Cost c;
+				msg >> c;
+				e.AddComponent<comp::Cost>(c);
+				break;
+			}
 			default:
 				LOG_WARNING("Retrieved unimplemented component %u", i);
 				break;
@@ -688,10 +739,20 @@ void Game::UpdateInput()
 		m_inputState.rightMouse = true;
 	}
 	m_inputState.mouseRay = InputSystem::Get().GetMouseRay();
-	// temp
-	if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::B, KeyState::PRESSED))
+
+	if (m_mode == Mode::DESTROY_MODE)
 	{
-		m_inputState.key_b = true;
+		if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::R, KeyState::PRESSED))
+		{
+			m_inputState.key_r = true;
+		}
+	}
+	else if (m_mode == Mode::BUILD_MODE)
+	{
+		if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::B, KeyState::PRESSED))
+		{
+			m_inputState.key_b = true;
+		}
 	}
 
 	m_savedInputs.push_back(m_inputState);

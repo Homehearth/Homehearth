@@ -228,6 +228,7 @@ struct InputState
 	bool leftMouse : 1;
 	bool rightMouse : 1;
 	bool key_b : 1;
+	bool key_r : 1;
 
 	Ray_t mouseRay;
 
@@ -267,6 +268,7 @@ enum class GameMsg : uint8_t
 	Game_PlayerInput,
 	Game_Money,
 	Game_UseShop,
+	Game_UpgradeDefence,
 	Game_ChangeAnimation,
 	Game_Over
 };
@@ -293,6 +295,16 @@ enum class ShopItem : uint8_t
 	SHORT_TOWER,
 
 	NR_OF
+};
+
+enum class Mode : uint8_t
+{
+	// Normal play mode fighting against monsters.
+	PLAY_MODE,
+	// Build mode allows players to build defences.
+	BUILD_MODE,
+	// Destroy mode allows players to remove their defences.
+	DESTROY_MODE
 };
 
 /*

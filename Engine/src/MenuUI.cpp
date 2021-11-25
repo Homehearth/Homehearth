@@ -40,7 +40,6 @@ bool rtd::MenuUI::CheckHover()
 		InputSystem::Get().GetMousePos().y > m_drawOpts.y_pos + m_drawOpts.height * 0.07f &&
 		InputSystem::Get().GetMousePos().y < m_drawOpts.y_pos + m_drawOpts.height * 0.25f)
 	{
-		//LOG_INFO("Hovering over Quit Button.")
 		m_buttonHovering[0] = true;
 	}
 
@@ -50,8 +49,7 @@ bool rtd::MenuUI::CheckHover()
 		InputSystem::Get().GetMousePos().y > m_drawOpts.y_pos + m_drawOpts.height * 0.38f &&
 		InputSystem::Get().GetMousePos().y < m_drawOpts.y_pos + m_drawOpts.height * 0.60f)
 	{
-		//LOG_INFO("Hovering over Settings Button.")
-		m_buttonHovering[0] = true;
+		m_buttonHovering[1] = true;
 	}
 
 
@@ -61,7 +59,6 @@ bool rtd::MenuUI::CheckHover()
 		InputSystem::Get().GetMousePos().y > m_drawOpts.y_pos + m_drawOpts.height * 0.66f &&
 		InputSystem::Get().GetMousePos().y < m_drawOpts.y_pos + m_drawOpts.height * 0.91f)
 	{
-		//LOG_INFO("Hovering over Continue Button.")
 		m_buttonHovering[2] = true;
 	}
 
