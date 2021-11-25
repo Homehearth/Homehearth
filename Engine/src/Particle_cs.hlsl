@@ -78,10 +78,10 @@ void BloodSimmulation(inout VertexParticleIn particle, in uint id)
         particle.pos = emitterPosition;
         particle.life = 0;
 
-        particle.color = float4(0.8, 0.8 ,0.8 ,1 );
+        particle.color = float4(0.8, 0.8, 0.8, 1);
         
         particle.velocity.x = (randomNumbers[id]);
-        particle.velocity.y = (randomNumbers[id + 1]) ;
+        particle.velocity.y = (randomNumbers[id + 1]);
         particle.velocity.z = (randomNumbers[id + counter]);
     }
     

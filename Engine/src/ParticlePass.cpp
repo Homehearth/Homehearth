@@ -89,7 +89,7 @@ void ParticlePass::Render(Scene* pScene)
 		comp::Transform* transform = entity.GetComponent<comp::Transform>();
 
 		//Constant buffer
-		m_particleUpdate.emitterPosition = sm::Vector4(transform->position.x, transform->position.y, transform->position.z, 1.0f);
+		m_particleUpdate.emitterPosition = sm::Vector4(transform->position.x + emitter->positionOffset.x, transform->position.y + emitter->positionOffset.y, transform->position.z + emitter->positionOffset.z, 1.0f);
 		m_particleUpdate.deltaTime = Stats::Get().GetFrameTime();
 		m_particleUpdate.counter = m_counter;
 		m_particleUpdate.lifeTime = (UINT)emitter->lifeTime;

@@ -95,6 +95,16 @@ void Simulation::InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg, c
 			}
 			break;
 		}
+		case ecs::Component::PARTICLEMITTER:
+		{
+			comp::PARTICLEEMITTER* p = entity.GetComponent<comp::PARTICLEEMITTER>();
+			if (p)
+			{
+				compSet.set(ecs::Component::PARTICLEMITTER);
+				msg << *p;
+			}
+			break;
+		}
 		case ecs::Component::PLAYER:
 		{
 			comp::Player* p = entity.GetComponent<comp::Player>();
@@ -387,7 +397,7 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 	this->m_lobby.Init(this);
 
 	// Create and add all waves to the queue.
-	//CreateWaves();
+	CreateWaves();
 
 	// Create Scenes associated with this Simulation
 	m_pLobbyScene = &m_pEngine->GetScene("Lobby_" + std::to_string(gameID));

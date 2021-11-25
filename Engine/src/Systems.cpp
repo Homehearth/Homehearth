@@ -428,7 +428,7 @@ void Systems::LightSystem(Scene& scene, float dt)
 				else
 					light.flickerTimer -= dt * (rand() % 2 + 1);
 
-				light.lightData.intensity = util::Lerp(0.5f, 1.2f, light.flickerTimer);
+				light.lightData.intensity = util::Lerp(0.5f, 0.7f, light.flickerTimer);
 			}			
 
 			scene.GetLights()->EditLight(light.lightData, light.index);
