@@ -293,9 +293,6 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 	this->m_gameID = gameID;
 	this->m_lobby.Init(this);
 
-	// Create and add all waves to the queue.
-	//CreateWaves();
-
 	// Create Scenes associated with this Simulation
 	m_pLobbyScene = &m_pEngine->GetScene("Lobby_" + std::to_string(gameID));
 
