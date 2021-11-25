@@ -57,9 +57,9 @@ namespace sceneHelp
 		backgroundScene.AddComponent<comp::Transform>();
 		mainMenuScene.GetRegistry()->on_construct<comp::Light>().connect<&Lights::Add>(mainMenuScene.GetLights());
 
-		CreateLightEntity(mainMenuScene, { 330.0f, 20.0f, -333.3f , 1.0f }, { -1.0f, -0.5f, 0.f, 0.f }, { 15.f, 15.f, 15.f, 0.f }, 1000.0f, TypeLight::DIRECTIONAL, 1);
-		CreateLightEntity(mainMenuScene, { 330.0f, 20.0f, -333.3f , 1.0f }, { -1.0f, -0.5f, 0.f, 0.f }, { 15.f, 15.f, 15.f, 0.f }, 1000.0f, TypeLight::DIRECTIONAL, 1);
-		CreateLightEntity(mainMenuScene, { 330.0f, 20.0f, -333.3f , 1.0f }, { -1.0f, -0.5f, 0.f, 0.f }, { 15.f, 15.f, 15.f, 0.f }, 1000.0f, TypeLight::DIRECTIONAL, 1);
+		CreateLightEntity(mainMenuScene, { 330.0f, 20.0f, -333.3f , 1.0f }, { -1.0f, -0.5f, 0.f, 0.f }, { 15.f, 15.f, 15.f, 0.f }, 1000.0f, 0.09f, TypeLight::DIRECTIONAL, 1);
+		CreateLightEntity(mainMenuScene, { 330.0f, 20.0f, -333.3f , 1.0f }, { -1.0f, -0.5f, 0.f, 0.f }, { 15.f, 15.f, 15.f, 0.f }, 1000.0f, 0.09f, TypeLight::DIRECTIONAL, 1);
+		CreateLightEntity(mainMenuScene, { 330.0f, 20.0f, -333.3f , 1.0f }, { -1.0f, -0.5f, 0.f, 0.f }, { 15.f, 15.f, 15.f, 0.f }, 1000.0f, 0.09f, TypeLight::DIRECTIONAL, 1);
 
 		comp::Transform test;
 		test.position = { 330.0f, 1.0f, -333.3f };
