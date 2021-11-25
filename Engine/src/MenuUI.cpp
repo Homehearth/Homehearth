@@ -30,20 +30,35 @@ void rtd::MenuUI::OnHover()
 
 bool rtd::MenuUI::CheckHover()
 {
+	m_buttonHovering[0] = false;
+	m_buttonHovering[1] = false;
+	m_buttonHovering[2] = false;
+
 	// Quit button
 	if (InputSystem::Get().GetMousePos().x > m_drawOpts.x_pos + m_drawOpts.width * 0.15f &&
 		InputSystem::Get().GetMousePos().x < m_drawOpts.x_pos + m_drawOpts.width * 0.85f &&
 		InputSystem::Get().GetMousePos().y > m_drawOpts.y_pos + m_drawOpts.height * 0.07f &&
-		InputSystem::Get().GetMousePos().y < m_drawOpts.y_pos + m_drawOpts.height * 0.30f)
+		InputSystem::Get().GetMousePos().y < m_drawOpts.y_pos + m_drawOpts.height * 0.25f)
 	{
 		//LOG_INFO("Hovering over Quit Button.")
 		m_buttonHovering[0] = true;
 	}
 
+	// Settings button
+	if (InputSystem::Get().GetMousePos().x > m_drawOpts.x_pos + m_drawOpts.width * 0.15f &&
+		InputSystem::Get().GetMousePos().x < m_drawOpts.x_pos + m_drawOpts.width * 0.85f &&
+		InputSystem::Get().GetMousePos().y > m_drawOpts.y_pos + m_drawOpts.height * 0.38f &&
+		InputSystem::Get().GetMousePos().y < m_drawOpts.y_pos + m_drawOpts.height * 0.60f)
+	{
+		//LOG_INFO("Hovering over Settings Button.")
+		m_buttonHovering[0] = true;
+	}
+
+
 	// Continue button.
 	if (InputSystem::Get().GetMousePos().x > m_drawOpts.x_pos + m_drawOpts.width * 0.15f &&
 		InputSystem::Get().GetMousePos().x < m_drawOpts.x_pos + m_drawOpts.width * 0.85f &&
-		InputSystem::Get().GetMousePos().y > m_drawOpts.y_pos + m_drawOpts.height * 0.63f &&
+		InputSystem::Get().GetMousePos().y > m_drawOpts.y_pos + m_drawOpts.height * 0.66f &&
 		InputSystem::Get().GetMousePos().y < m_drawOpts.y_pos + m_drawOpts.height * 0.91f)
 	{
 		//LOG_INFO("Hovering over Continue Button.")
@@ -60,10 +75,6 @@ bool rtd::MenuUI::CheckHover()
 		return true;
 	}
 
-	m_buttonHovering[0] = false;
-	m_buttonHovering[1] = false;
-	m_buttonHovering[2] = false;
-
 	m_texture->SetOpacity(.55f);
 	return false;
 }
@@ -78,18 +89,19 @@ ElementState rtd::MenuUI::CheckClick()
 			if (m_buttonHovering[0])
 			{
 				if (m_functions[0])
-					m_functions[0];
+					m_functions[0]();
 			}
 			if (m_buttonHovering[1])
 			{
 				if (m_functions[1])
-					m_functions[1];
+					m_functions[1]();
 			}
 			if (m_buttonHovering[2])
 			{
 				if (m_functions[2])
-					m_functions[2];
+					m_functions[2]();
 			}
+
 			return ElementState::INSIDE;
 		}
     }

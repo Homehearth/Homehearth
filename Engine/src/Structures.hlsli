@@ -64,11 +64,12 @@ struct ComputeShaderIn
 
 struct VertexParticleIn
 {
-    float4 pos              : POSITION;
-    float4 color            : COLOR;
-    float2 size             : SIZE;
-    uint   type             : TYPE;
-    float padding;
+    float4  pos             : POSITION;
+    float4  velocity        : VELOCITY;
+    float4  color           : COLOR;
+    float2  size            : SIZE;
+    uint    type            : TYPE;
+    float   life            : LIFE;
 };
 
 struct VertexParticleOut
@@ -95,7 +96,7 @@ struct Light
     int    type;        // 0 = Directional, 1 = Point
     uint   enabled;     // 0 = Off, 1 = On
 	float4x4 lightMatrix;
-    float  padding;
+    float  intensity;
 };
 
 struct Plane

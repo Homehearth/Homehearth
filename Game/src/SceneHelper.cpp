@@ -24,7 +24,7 @@ static bool toggle = false;
 
 namespace sceneHelp
 {
-	Entity CreateLightEntity(Scene& scene, sm::Vector4 pos, sm::Vector4 dir, sm::Vector4 col, float range, TypeLight type, UINT enabled)
+	Entity CreateLightEntity(Scene& scene, sm::Vector4 pos, sm::Vector4 dir, sm::Vector4 col, float range, float intensity, TypeLight type, UINT enabled)
 	{
 		Entity lightEntity = scene.CreateEntity();
 
@@ -35,6 +35,8 @@ namespace sceneHelp
 		lightEntity.GetComponent<comp::Light>()->lightData.range = range;
 		lightEntity.GetComponent<comp::Light>()->lightData.type = type;
 		lightEntity.GetComponent<comp::Light>()->lightData.enabled = enabled;
+		lightEntity.GetComponent<comp::Light>()->lightData.intensity = intensity;
+		lightEntity.GetComponent<comp::Light>()->maxFlickerTime = (float)(rand() % 10 + 1) / 10.f;
 
 		scene.GetLights()->EditLight(lightEntity.GetComponent<comp::Light>()->lightData, lightEntity.GetComponent<comp::Light>()->index);
 
@@ -55,9 +57,9 @@ namespace sceneHelp
 		backgroundScene.AddComponent<comp::Transform>();
 		mainMenuScene.GetRegistry()->on_construct<comp::Light>().connect<&Lights::Add>(mainMenuScene.GetLights());
 
-		CreateLightEntity(mainMenuScene, { 330.0f, 20.0f, -333.3f , 1.0f }, { -1.0f, -0.5f, 0.f, 0.f }, { 15.f, 15.f, 15.f, 0.f }, 1000.0f, TypeLight::DIRECTIONAL, 1);
-		CreateLightEntity(mainMenuScene, { 330.0f, 20.0f, -333.3f , 1.0f }, { -1.0f, -0.5f, 0.f, 0.f }, { 15.f, 15.f, 15.f, 0.f }, 1000.0f, TypeLight::DIRECTIONAL, 1);
-		CreateLightEntity(mainMenuScene, { 330.0f, 20.0f, -333.3f , 1.0f }, { -1.0f, -0.5f, 0.f, 0.f }, { 15.f, 15.f, 15.f, 0.f }, 1000.0f, TypeLight::DIRECTIONAL, 1);
+		CreateLightEntity(mainMenuScene, { 330.0f, 20.0f, -333.3f , 1.0f }, { -1.0f, -0.5f, 0.f, 0.f }, { 15.f, 15.f, 15.f, 0.f }, 1000.0f, 0.09f, TypeLight::DIRECTIONAL, 1);
+		CreateLightEntity(mainMenuScene, { 330.0f, 20.0f, -333.3f , 1.0f }, { -1.0f, -0.5f, 0.f, 0.f }, { 15.f, 15.f, 15.f, 0.f }, 1000.0f, 0.09f, TypeLight::DIRECTIONAL, 1);
+		CreateLightEntity(mainMenuScene, { 330.0f, 20.0f, -333.3f , 1.0f }, { -1.0f, -0.5f, 0.f, 0.f }, { 15.f, 15.f, 15.f, 0.f }, 1000.0f, 0.09f, TypeLight::DIRECTIONAL, 1);
 
 		comp::Transform test;
 		test.position = { 330.0f, 1.0f, -333.3f };
@@ -152,16 +154,18 @@ namespace sceneHelp
 		gameScene.SetCurrentCameraEntity(cameraEntity);
 
 		// DONT TOUCH
-		/*
-		CreateLightEntity(gameScene, { 0.f, 0.f, 0.f, 0.f }, { -1.0f, -0.5f, 0.f, 0.f }, { 15.f, 15.f, 15.f, 0.f }, 5000.f, TypeLight::DIRECTIONAL, 1);
-		CreateLightEntity(gameScene, { 266.f, 29.f, -320.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 142.f, 10.f, 0.f }, 20.f, TypeLight::POINT, 1);
-		CreateLightEntity(gameScene, { 348.5f, 29.f, 325.5f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 142.f, 10.f, 0.f }, 2.f, TypeLight::POINT, 1);
-		*/
 		CreateLightEntity(gameScene, { 266.f, 29.f, -320.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 142.f, 10.f, 0.f }, 1000.f, TypeLight::POINT, 1);
-		//CreateLightEntity(gameScene, { 348.5f, 29.f, 325.5f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 142.f, 10.f, 0.f }, 1000.f, TypeLight::POINT, 1);
-
-		//CreateLightEntity(gameScene, { 330.0f, 20.0f, -333.3f , 1.0f }, { -1.0f, -0.5f, 0.f, 0.f }, { 15.f, 15.f, 15.f, 0.f }, 1000.0f, TypeLight::DIRECTIONAL, 1);
 		
+		/*
+		CreateLightEntity(gameScene, { 0.f, 0.f, 0.f, 0.f }, { -1.0f, -0.5f, 0.f, 0.f }, { 50.f, 50.f, 50.f, 0.f }, 1000.f, 0.09f, TypeLight::DIRECTIONAL, 1);
+		CreateLightEntity(gameScene, { 266.f, 29.f, -320.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 30.f, 0.f, 0.f }, 20.f, 1.f,TypeLight::POINT, 1);
+		CreateLightEntity(gameScene, { 348.f, 29.f, -325.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 30.f, 0.f, 0.f }, 20.f, 1.f,TypeLight::POINT, 1);
+		CreateLightEntity(gameScene, { 310.f, 29.f, -305.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 30.f, 0.f, 0.f }, 20.f, 1.f,TypeLight::POINT, 1);
+		CreateLightEntity(gameScene, { 307.f, 29.f, -350.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 30.f, 0.f, 0.f }, 20.f, 1.f,TypeLight::POINT, 1);
+		CreateLightEntity(gameScene, { 181.f, 29.f, -314.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 30.f, 0.f, 0.f }, 20.f, 1.f,TypeLight::POINT, 1);
+		CreateLightEntity(gameScene, { 196.f, 29.f, -258.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 30.f, 0.f, 0.f }, 20.f, 1.f,TypeLight::POINT, 1);
+		CreateLightEntity(gameScene, { 337.f, 29.f, -397.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 30.f, 0.f, 0.f }, 20.f, 1.f,TypeLight::POINT, 1);
+		*/
 
 		InputSystem::Get().SetCamera(gameScene.GetCurrentCamera());
 
@@ -179,7 +183,6 @@ namespace sceneHelp
 						game->GetCurrentScene()->GetCollection("ScrolldownMenu")->GetState() == ElementState::OUTSIDE)
 					{
 						game->GetCurrentScene()->GetCollection("shopMenu")->Hide();
-						toggle = false;
 					}
 
 					if (game->GetCurrentScene()->GetCollection("inGameMenu")->GetState() == ElementState::OUTSIDE &&
@@ -242,14 +245,14 @@ namespace sceneHelp
 		scene.Add2DCollection(connectFields, "ConnectFields");
 
 		Collection2D* scrolldownMenu = new Collection2D;
-		rtd::Scroller* sc = scrolldownMenu->AddElement<rtd::Scroller>(draw_t(0.0f, -(height / 16) * 3.0f, width / 24.0f, (height / 16) * 3.0f), sm::Vector2(0, 0));
-		sc->AddButton("No.png", draw_t(0.0f, -(height / 16), width / 24, height / 16))->SetOnPressedEvent([=] {
+		rtd::Scroller* sc = scrolldownMenu->AddElement<rtd::Scroller>(draw_t(0.0f, -(height / 14) * 3.0f, width / 24.0f, (height / 16) * 3.0f), sm::Vector2(0, 0));
+		sc->AddButton("No.png", draw_t(0.0f, -(height / 14), width / 24, height / 14))->SetOnPressedEvent([=] {
 			game->Shutdown();
 			});
-		sc->AddButton("SettingsIcon.png", draw_t(0.0f, -(height / 16) * 2.0f, width / 24, height / 16))->SetOnPressedEvent([=] {
+		sc->AddButton("SettingsIcon.png", draw_t(0.0f, -(height / 14) * 2.0f, width / 24, height / 14))->SetOnPressedEvent([=] {
 			game->SetScene("Options");
 			});
-		sc->SetPrimeButtonMeasurements(draw_t(0.0f, 0.0f, width / 24, height / 16));
+		sc->SetPrimeButtonMeasurements(draw_t(0.0f, 0.0f, width / 24, height / 14));
 		scene.Add2DCollection(scrolldownMenu, "ScrolldownMenu");
 
 		rtd::Button* externalLinkBtn = connectFields->AddElement<rtd::Button>("Button.png", draw_t(width - width / 4.f, height - (height / 5), width / 8.f, height / 16));
@@ -330,7 +333,7 @@ namespace sceneHelp
 		}
 
 		Collection2D* money = new Collection2D;
-		money->AddElement<rtd::MoneyUI>(draw_text_t(width - (width / 8.0f), D2D1Core::GetDefaultFontSize(), width / 8.0f, D2D1Core::GetDefaultFontSize()));
+		rtd::MoneyUI* mMoney = money->AddElement<rtd::MoneyUI>(draw_text_t(width - (width / 8.0f), D2D1Core::GetDefaultFontSize(), width / 8.0f, D2D1Core::GetDefaultFontSize()));
 		scene.Add2DCollection(money, "MoneyUI");
 
 		Collection2D* abilities = new Collection2D;
@@ -350,6 +353,10 @@ namespace sceneHelp
 
 		Collection2D* pauseMenu = new Collection2D;
 		rtd::MenuUI* inGameMenu = pauseMenu->AddElement<rtd::MenuUI>("Menu.png", draw_t(width * 0.5f - width * 0.125f, height * 0.25f, width * 0.25f, height * 0.5f));
+		inGameMenu->SetOnPressedEvent(0, [=]
+			{
+				game->Shutdown();
+			});
 		inGameMenu->SetOnPressedEvent(2, [=] 
 			{
 				pauseMenu->Hide();
@@ -359,52 +366,38 @@ namespace sceneHelp
 
 		Collection2D* shopMenu = new Collection2D;
 		Collection2D* scrolldownMenu = new Collection2D;
-		rtd::Scroller* sc = scrolldownMenu->AddElement<rtd::Scroller>(draw_t(0.0f, -(height / 16) * 3.0f, width / 24.0f, (height / 16) * 3.0f), sm::Vector2(0, 0));
-		sc->AddButton("No.png", draw_t(0.0f, -(height / 16), width / 24, height / 16))->SetOnPressedEvent([=] {
+		rtd::Scroller* sc = scrolldownMenu->AddElement<rtd::Scroller>(draw_t(0.0f, -(height / 14) * 3.0f, width / 24.0f, (height / 16) * 3.0f), sm::Vector2(0, 0));
+		sc->AddButton("No.png", draw_t(0.0f, -(height / 14), width / 24, height / 14))->SetOnPressedEvent([=] {
 			pauseMenu->Show();
 			});
 		
 		
-		sc->AddButton("ShopIcon.png", draw_t(0.0f, -(height / 16) * 2.0f, width / 24, height / 16))->SetOnPressedEvent([=] {
-			if (!toggle)
-			{
+		sc->AddButton("ShopIcon.png", draw_t(0.0f, -(height / 14) * 2.0f, width / 24, height / 14))->SetOnPressedEvent([=] {
 				shopMenu->Show();
-				toggle = true;
-			}
-			else
-			{
-				toggle = false;
-				shopMenu->Hide();
-			}
 			});
-		sc->SetPrimeButtonMeasurements(draw_t(0.0f, 0.0f, width / 24, height / 16));
+		sc->SetPrimeButtonMeasurements(draw_t(0.0f, 0.0f, width / 24, height / 14));
 		scene.Add2DCollection(scrolldownMenu, "ScrolldownMenu");
 
-		shopMenu->AddElement<rtd::ShopUI>("Shop.png", draw_t(width / 24.0f, 0, width * 0.37f, height * 0.75f))->SetVisiblity(false);
-		//shopMenu->AddElement<rtd::Button>("demoExitButton.png", draw_t(width / 24, 0.0f, width / 24, height / 16))->SetOnPressedEvent([=] {
-		//	
-		//	shopMenu->Hide();
-
-		//	});
-		//shopMenu->AddElement<rtd::Button>("Button.png", draw_t((width / 24.f)  + ((width * 0.37f) * 0.5f) - width / 8.0f, height / 24.f, width / 4.0f, height / 8.0f))->SetOnPressedEvent([=] {
-
-		//	game->UseShop(ShopItem::LONG_TOWER);
-
-		//	});
-		//shopMenu->AddElement<rtd::Text>("Place Wide Towers", draw_text_t((width / 24.f) + ((width * 0.37f) * 0.5f) - width / 8.0f, height / 24.f, width / 4.0f, height / 8.0f));
-		//shopMenu->AddElement<rtd::Button>("Button.png", draw_t((width / 24.f) + ((width * 0.37f) * 0.5f) - width / 8.0f, ((height / 24.f) * 2.0f) + height / 8.0f, width / 4.0f, height / 8.0f))->SetOnPressedEvent([=] {
-
-		//	game->UseShop(ShopItem::SHORT_TOWER);
-
-		//	});
-		//shopMenu->AddElement<rtd::Text>("Place Short Towers", draw_text_t((width / 24.f) + ((width * 0.37f) * 0.5f) - width / 8.0f, ((height / 24.f) * 2.0f) + height / 8.0f, width / 4.0f, height / 8.0f));
-		//shopMenu->AddElement<rtd::Button>("Button.png", draw_t((width / 24.f) + ((width * 0.37f) * 0.5f) - width / 8.0f, ((height / 24.f) * 3.0f) + (height / 8.0f) * 2.0f, width / 4.0f, height / 8.0f))->SetOnPressedEvent([=] {
-
-		//	game->UseShop(ShopItem::Tower_Upgrade);
-
-		//	});
-		//shopMenu->AddElement<rtd::Text>("Upgrade Towers", draw_text_t((width / 24.f) + ((width * 0.37f) * 0.5f) - width / 8.0f, ((height / 24.f) * 3.0f) + (height / 8.0f) * 2.0f, width / 4.0f, height / 8.0f));
-		//shopMenu->Hide();
+		rtd::ShopUI* shop = shopMenu->AddElement<rtd::ShopUI>("Shop.png", draw_t(width / 24.0f, (height / 16), width * 0.25f, height * 0.5f));
+		shop->SetOnPressedEvent(0, [=] {
+			game->UseShop(ShopItem::SHORT_TOWER);
+			shopMenu->Hide();
+			});
+		shop->SetOnPressedEvent(1, [=] {
+			game->UseShop(ShopItem::LONG_TOWER);
+			shopMenu->Hide();
+			});
+		shop->SetOnPressedEvent(2, [=] {
+			game->UseShop(ShopItem::Primary_Upgrade);
+			});
+		shop->SetOnPressedEvent(3, [=] {
+			game->UseShop(ShopItem::Primary_Upgrade);
+			});
+		shop->SetOnPressedEvent(4, [=] {
+			game->UseShop(ShopItem::Heal);
+			});
+		shop->SetMoneyRef(mMoney);
+		shopMenu->Hide();
 		scene.Add2DCollection(shopMenu, "shopMenu");
 	}
 
@@ -454,7 +447,7 @@ namespace sceneHelp
 
 		Collection2D* general = new Collection2D;
 		general->AddElement<rtd::Canvas>(D2D1::ColorF(.2f, .2f, .2f), draw_t(0.0f, 0.0f, width, height));
-		rtd::Button* exitButton = general->AddElement<rtd::Button>("No.png", draw_t(0.0f, 0.0f, width / 24, height / 16), false);
+		rtd::Button* exitButton = general->AddElement<rtd::Button>("No.png", draw_t(0.0f, 0.0f, width / 24, height / 14), false);
 		exitButton->SetOnPressedEvent([=]()
 			{
 				comp::Player* player = game->GetLocalPlayer().GetComponent<comp::Player>();
@@ -668,7 +661,7 @@ namespace sceneHelp
 		//lobbyCollection->AddElement<rtd::Text>("Create Lobby", draw_text_t(width / 2, height - (height / 6.f), width / 4, height / 8));
 		rtd::Button* lobbyButton = lobbyCollection->AddElement<rtd::Button>("joinLobby.png", draw_t(width / 8, height - (height / 6.f), width / 4.f, height * 0.15f));
 		//lobbyCollection->AddElement<rtd::Text>("Join Lobby", draw_text_t(width / 8, height - (height / 6.f), width / 4, height / 8));
-		rtd::Button* exitButton = lobbyCollection->AddElement<rtd::Button>("No.png", draw_t(0.0f, 0.0f, width / 24, height / 16));
+		rtd::Button* exitButton = lobbyCollection->AddElement<rtd::Button>("No.png", draw_t(0.0f, 0.0f, width / 24, height / 14));
 
 		exitButton->SetOnPressedEvent([=]
 			{
@@ -769,6 +762,10 @@ namespace sceneHelp
 			else if (House9 == filename)
 			{
 				modelID = ModelID::HOUSE9;
+			}
+			else if (House10 == filename)
+			{
+				modelID = ModelID::HOUSE10;
 			}
 			else if (HouseRoof == filename)
 			{
@@ -897,6 +894,10 @@ namespace sceneHelp
 			else if (House9 == filename || Door9 == filename)
 			{
 				game->m_models[ModelID::HOUSE9].push_back(e);
+			}
+			else if (House10 == filename || Door10 == filename)
+			{
+				game->m_models[ModelID::HOUSE10].push_back(e);
 			}
 			else if (HouseRoof == filename)
 			{

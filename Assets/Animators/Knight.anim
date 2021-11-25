@@ -10,7 +10,7 @@ loopable		0
 defaultAnim		IDLE
 
 
-blendstate 		IDLE				MOVE				1.0
+blendstate 		IDLE				MOVE				0.2
 blendstate 		MOVE				IDLE				0.2
 
 

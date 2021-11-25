@@ -31,6 +31,16 @@ void rtd::MoneyUI::SetNewMoney(const uint32_t& moneyRef)
 	m_networkMoney = moneyRef;
 }
 
+const uint32_t& rtd::MoneyUI::GetNetworkMoney() const
+{
+	return m_networkMoney;
+}
+
+const uint32_t& rtd::MoneyUI::GetLocalMoney() const
+{
+	return m_localMoney;
+}
+
 void MoneyUI::Draw()
 {
 	if (m_text)

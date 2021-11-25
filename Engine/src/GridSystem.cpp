@@ -298,11 +298,10 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 								}
 							});
 					}
+					return true;
 				}
-				return true;
 			}
 		}
-
 	}
 	return false;
 }
