@@ -18,18 +18,22 @@ private:
 	ETextureChannelType					m_format;
 	ComPtr<ID3D11ShaderResourceView>	m_shaderView;
 	ComPtr<ID3D11Texture2D>				m_texture2D;
+	bool								m_useMipmaps;
+	std::string							m_filename;
 	bool StandardSetup(unsigned char* image, const UINT& width, const UINT& height);
 	bool GenerateMipMaps(unsigned char* image, const UINT& width, const UINT& height);
 
 public:
 	RTexture();
-	RTexture(ETextureChannelType format);
+	RTexture(ETextureChannelType format, bool useMipmaps = true);
 	~RTexture();
 
 	// Inherited via GResource
 	virtual bool Create(const std::string& filename) override;
 	ID3D11ShaderResourceView*& GetShaderView();
 	ID3D11Texture2D*& GetTexture2D();
+	const std::string& GetFilename() const;
+	const bool& DisableMipmaps();
 };
 
 class RBitMap : public resource::GResource

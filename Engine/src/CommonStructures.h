@@ -333,13 +333,9 @@ struct basic_model_matrix_t
 ALIGN16
 struct texture_effect_t
 {
-	float frequency;
-	float amplitude;
-};
-
-struct texture_effect_UVs_t
-{
-
+	float frequency = 0.f;
+	float amplitude = 0.f;
+	float counter   = 0.f;
 };
 
 ALIGN16

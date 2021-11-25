@@ -27,8 +27,8 @@ void TextureEffectPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceCont
     {
         DC->PSSetConstantBuffers(0, 0, nullptr);
         DC->VSSetConstantBuffers(0, 0, nullptr);
-        DC->CSSetConstantBuffers(6, 1, PM->m_deltaTimeBuffer.GetAddressOf());
-        DC->CSSetConstantBuffers(3, 1, PM->m_textureEffectConstantBuffer.GetAddressOf());
+        //DC->CSSetConstantBuffers(6, 1, PM->m_deltaTimeBuffer.GetAddressOf());
+        DC->CSSetConstantBuffers(7, 1, PM->m_textureEffectConstantBuffer.GetAddressOf());
     }
 
     
@@ -58,30 +58,22 @@ void TextureEffectPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceCont
         ID3D11ShaderResourceView* const kill = { nullptr };
         DC->CSSetShaderResources(19, 1, &kill);
     }
-
-    // RESET TEXTURES
-    {
-
-    }
 }
 
 void TextureEffectPass::Render(Scene* pScene)
 {
-    // Render objects.
-    // pScene->Render();
+    // Update constantbuffer here!
+    m_CBuffer.amplitude = 0.05f;
+    m_CBuffer.frequency = 25.f;
+    m_CBuffer.counter += Stats::Get().GetFrameTime();
+    D3D11Core::Get().DeviceContext()->UpdateSubresource(PM->m_textureEffectConstantBuffer.Get(), 0, nullptr, &m_CBuffer, 0, 0);
 }
 
 void TextureEffectPass::PostRender(ID3D11DeviceContext* pDeviceContext)
 {
-    // Update constantbuffer here!
-    m_CBuffer.amplitude = 0.05f;
-    m_CBuffer.frequency = 25.f;
-    D3D11Core::Get().DeviceContext()->UpdateSubresource(PM->m_textureEffectConstantBuffer.Get(), 0, nullptr, &m_CBuffer, 0, 0);
-    
     //Unbind SRV again.
     ID3D11ShaderResourceView* const kill = { nullptr };
     pDeviceContext->CSSetShaderResources(19, 1, &kill);
-
 }
 
 
