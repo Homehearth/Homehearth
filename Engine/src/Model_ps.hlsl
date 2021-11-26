@@ -45,6 +45,8 @@ float4 main(PixelIn input) : SV_TARGET
             // position of this pixel in the light clip space
             float4 pixelposLightSpace = mul(lightMat, input.worldPos);
 			
+            int shadowIndex = sb_lights[i].shadowIndex;
+            
             switch (sb_lights[i].type)
             {
                 case 0:
@@ -57,7 +59,7 @@ float4 main(PixelIn input) : SV_TARGET
             
                     if ((saturate(texCoords.x) == texCoords.x) & (saturate(texCoords.y) == texCoords.y))
 			        {
-                        float closestDepth = t_shadowMaps.Sample(s_linear, float3(texCoords.xy, i)).r;
+                        float closestDepth = t_shadowMaps.Sample(s_linear, float3(texCoords.xy, shadowIndex)).r;
 				    
                         float currentDepth = pixelposLightSpace.z / pixelposLightSpace.w;
                         currentDepth = saturate(currentDepth);
@@ -81,18 +83,17 @@ float4 main(PixelIn input) : SV_TARGET
 
                     if(pixelposLightSpace.z >= 0.0f)
                     {
-                        
                         float2 front;
                         front.x = (pixelposLightSpace.x / (1.0f + pixelposLightSpace.z)) * 0.5f + 0.5f;
                         front.y = 1.0f - ((pixelposLightSpace.y / (1.0f + pixelposLightSpace.z)) * 0.5f + 0.5f);
                         currentDepth = (len - 0.1f) / (500.f - 0.1f);
                         currentDepth -= 0.001f;
-                        closestDepth = t_shadowMaps.Sample(s_linear, float3(front.xy, i)).r;
+                        closestDepth = t_shadowMaps.Sample(s_linear, float3(front.xy, shadowIndex)).r;
                     }
                     if (currentDepth > closestDepth)
                     {
                         shadowCoef = 1.0f;
-                        return float4(currentDepth - closestDepth, 0, 0, 1.0f);
+                        return float4(1, 0, 0, 1.0f);
                     }
                     
                     lightCol += DoPointlight(sb_lights[i], input, N) * (1.0f - shadowCoef);

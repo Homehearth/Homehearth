@@ -95,8 +95,10 @@ struct Light
     float  range;       //Only in use on Point Lights
     int    type;        // 0 = Directional, 1 = Point
     uint   enabled;     // 0 = Off, 1 = On
+    float    intensity;
 	float4x4 lightMatrix;
-    float  intensity;
+    int      shadowIndex;
+    float3 padding;
 };
 
 struct Plane

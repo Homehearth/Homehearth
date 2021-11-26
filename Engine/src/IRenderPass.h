@@ -40,5 +40,7 @@ public:
 	virtual void PostRender(ID3D11DeviceContext* pDeviceContext = D3D11Core::Get().DeviceContext()) = 0;
 	virtual void SetLights(Lights* light);
 
+	unsigned int GetLightCount(TypeLight type) const;
+
 	virtual void ImGuiShowTextures() {};
 };

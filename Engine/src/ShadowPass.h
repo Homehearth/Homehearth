@@ -6,7 +6,7 @@ constexpr uint64_t SHADOW_SIZE = 4096;
 // Single shadow section of shadow map.
 struct ShadowSection
 {
-	ComPtr<ID3D11DepthStencilView> shadowDepth;
+	ComPtr<ID3D11DepthStencilView> shadowDepth[2];
 	ComPtr<ID3D11Buffer> lightBuffer;
 	light_t* pLight;
 };
@@ -29,6 +29,7 @@ private:
 	std::vector<ShadowSection> m_shadows;
 
 	//ID3D11DepthStencilView*& EmplaceInMap(const unsigned int& index);
+
 
 	ComPtr<ID3D11DepthStencilView> CreateDepthView(uint32_t index);
 	ComPtr<ID3D11Buffer> CreateLightBuffer(light_t light);

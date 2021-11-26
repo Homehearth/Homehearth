@@ -437,10 +437,10 @@ void RenderShadow(const unsigned int start, unsigned int stop, void* buffer, voi
 			if (!light->enabled)
 				continue;
 
-			m_context->ClearDepthStencilView(shadow.shadowDepth.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+			m_context->ClearDepthStencilView(shadow.shadowDepth[0].Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 			m_context->VSSetConstantBuffers(1, 1, shadow.lightBuffer.GetAddressOf());
 			ID3D11RenderTargetView* nullTargets[8] = { nullptr };
-			m_context->OMSetRenderTargets(8, nullTargets, shadow.shadowDepth.Get());
+			m_context->OMSetRenderTargets(8, nullTargets, shadow.shadowDepth[0].Get());
 			switch (shadow.pLight->type)
 			{
 			case TypeLight::DIRECTIONAL:
