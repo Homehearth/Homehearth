@@ -113,7 +113,6 @@ bool Game::OnStartup()
 void Game::OnUserUpdate(float deltaTime)
 {
 	this->UpdateInput();
-	float currentTime;
 	Scene& scene = GetScene("Game");
 	if (m_players.find(m_localPID) != m_players.end())
 	{
