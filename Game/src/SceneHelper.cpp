@@ -625,13 +625,9 @@ namespace sceneHelp
 			});
 		visualMenu->AddElement<rtd::Text>("Resolution", draw_t(width / 8.0f, height / 8.0f, width / 4.0f, height / 8.0f));
 		visualMenu->AddElement<rtd::Button>("Button.png", draw_t((width / 8.0f) * 5.0f, (height / 8.0f), width / 4.0f, height / 8.0f))->SetOnPressedEvent([=] {
-
-			//visualMenu->Hide();
-			//miscMenu->Show();
-
+			visualMenu->Hide();
 			});
 		visualMenu->AddElement<rtd::Text>("Misc.", draw_t((width / 8.0f) * 5.0f, (height / 8.0f), width / 4.0f, height / 8.0f));
-
 
 		miscMenu->Hide();
 		resolutionMenu->Hide();
@@ -657,15 +653,6 @@ namespace sceneHelp
 		scene.Add2DCollection(backButton, "returnButton");
 
 		helpText->AddElement<rtd::Text>("Insert super helpful text here for all the noobs.", draw_text_t(0.0f, 0.0f, width, height - (height / 8.0f)));
-		//rtd::Button* goback = backButton->AddElement<rtd::Button>("Button.png", draw_t((width / 2.0f) - (width / 8.0f), height - (height / 4.0f), width / 4.0f, height / 8.0f));
-		//backButton->AddElement<rtd::Text>("Go Back", draw_text_t((width / 2.0f) - (width / 8.0f), height - (height / 4.0f), width / 4.0f, height / 8.0f));
-		//goback->SetOnPressedEvent([=] {
-
-		//	helpText->Hide();
-		//	menu->Show();
-		//	backButton->Show();
-
-		//	});
 		helpText->Hide();
 		scene.Add2DCollection(helpText, "HelpText");
 

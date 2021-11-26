@@ -64,7 +64,7 @@ void Game::UpdateNetwork(float deltaTime)
 
 bool Game::OnStartup()
 {
-	m_masterVolume = std::stoi(OptionSystem::Get().GetOption("MasterVolume"));
+	m_masterVolume = std::stof(OptionSystem::Get().GetOption("MasterVolume"));
 	sceneHelp::CreateLoadingScene(this);
 	SetScene("Loading");
 
