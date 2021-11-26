@@ -24,7 +24,7 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 	comp::MeshName* meshName = entity.AddComponent<comp::MeshName>();
 	comp::AnimatorName* animatorName = entity.AddComponent<comp::AnimatorName>();
 	comp::AnimationState* animationState = entity.AddComponent<comp::AnimationState>();
-	comp::BoundingSphere* bos = entity.AddComponent<comp::BoundingSphere>();
+	comp::SphereCollider* bos = entity.AddComponent<comp::SphereCollider>();
 	comp::Velocity* velocity = entity.AddComponent<comp::Velocity>();
 	comp::BehaviorTree* behaviorTree = entity.AddComponent<comp::BehaviorTree>();
 	switch (type)
@@ -38,8 +38,8 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		float randomNum = static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (0.5)));
 
 		transform->scale = { 1.8f, 1.8f + randomNum, 1.8f };
-		meshName->name = "Monster.fbx";
-		animatorName->name = "Monster.anim";
+		meshName->name = NameType::MESH_MONSTER;
+		animatorName->name = AnimName::ANIM_MONSTER;
 
 		bos->Radius = 3.f;
 
@@ -66,15 +66,15 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 	case EnemyType::Mage:
 	{
 		comp::RangeAttackAbility* attackAbility = entity.AddComponent<comp::RangeAttackAbility>();
-		comp::TeleportAbility* teleportAbility = entity.AddComponent<comp::TeleportAbility>();
+		comp::BlinkAbility* teleportAbility = entity.AddComponent<comp::BlinkAbility>();
 		// ---DEFAULT ENEMY---
 		transform->position = spawnP;
 		//Generate float between 0.0 and 0.5 (give monster a slightly different height?)
 		float randomNum = static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (0.5)));
 
 		transform->scale = { 1.8f, 0.5f + randomNum, 1.8f };
-		meshName->name = "Monster.fbx";
-		animatorName->name = "Monster.anim";
+		meshName->name = NameType::MESH_MONSTER;
+		animatorName->name = AnimName::ANIM_MONSTER;
 		bos->Radius = 3.f;
 
 		npc->movementSpeed = 15.f;
@@ -95,8 +95,8 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		// ---Fast Zombie ENEMY---
 		transform->position = spawnP;
 		transform->scale = { 1.8f, 3.f, 1.8f };
-		meshName->name = "Monster.fbx";
-		animatorName->name = "Monster.anim";
+		meshName->name = NameType::MESH_MONSTER;
+		animatorName->name = AnimName::ANIM_MONSTER;
 		bos->Radius = 3.f;
 		attackAbility->cooldown = 1.0f;
 		attackAbility->attackDamage = 20.f;
@@ -115,8 +115,8 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		// ---BOSS ENEMY---
 		transform->position = spawnP;
 		transform->scale = { 3.8f, 6.f, 3.8f };
-		meshName->name = "Monster.fbx";
-		animatorName->name = "Monster.anim";
+		meshName->name = NameType::MESH_MONSTER;
+		animatorName->name = AnimName::ANIM_MONSTER;
 		bos->Radius = 3.f;
 		attackAbility->cooldown = 1.0f;
 		attackAbility->attackDamage = 20.f;
@@ -138,6 +138,118 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 	return entity;
 }
 
+void EnemyManagement::CreateWaves(std::queue<Wave>& waveQueue, int currentRound)
+{
+	//Reeset wavequeu
+	while (!waveQueue.empty())
+	{
+		waveQueue.pop();
+	}
+
+	//left bottom corner { 490.f, -150.0f });   right bottom corner { 170, -80.0f }
+	//left top corner { 520.f, -540.0f }        right top corner { 80.0f, -500.0f }
+	Wave wave1, wave2, wave3, wave4, wave5; // Default: WaveType::Zone
+	{
+		Wave::Group group1;
+		group1.AddEnemy(EnemyType::Default, 2 + 2 * currentRound);
+		group1.SetSpawnPoint({ 490.f, -150.0f });
+		wave1.SetTimeLimit(5 * currentRound);
+		wave1.AddGroup(group1);
+	}
+
+	{ // Wave_2
+		Wave::Group group1, group2;
+
+		group1.AddEnemy(EnemyType::Default, 1 + currentRound);
+		group2.AddEnemy(EnemyType::Default, 2 + currentRound);
+		group2.AddEnemy(EnemyType::Runner, 1 + 2 * currentRound);
+		group1.SetSpawnPoint({ 490.f, -150.0f });
+		group2.SetSpawnPoint({ 170, -80.0f });
+		wave2.AddGroup(group1);
+		wave2.AddGroup(group2);
+		wave2.SetTimeLimit(30);
+	}
+
+
+	{ // Wave_3
+		Wave::Group group1, group2, group3, group4;
+
+		group1.AddEnemy(EnemyType::Default, 3 + currentRound);
+		group1.AddEnemy(EnemyType::Runner, 1 + 1 * currentRound);
+		group1.SetSpawnPoint({ 490.f, -150.0f });
+
+		group2.AddEnemy(EnemyType::Default, 3 + currentRound);
+		group2.AddEnemy(EnemyType::Runner, 1 + currentRound);
+		group2.SetSpawnPoint({ 170, -80.0f });
+
+		group3.AddEnemy(EnemyType::Default, 3 + currentRound);
+		group3.SetSpawnPoint({ 80.0f, -500.0f });
+
+		group4.AddEnemy(EnemyType::Default, 2 + currentRound);
+		group4.SetSpawnPoint({ 520.f, -540.0f });
+
+		wave3.AddGroup(group1);
+		wave3.AddGroup(group2);
+		wave3.AddGroup(group3);
+		wave3.AddGroup(group4);
+		wave3.SetTimeLimit(45);
+	}
+
+	{ // Wave_4
+		Wave::Group group1, group2, group3, group4;
+
+		group1.AddEnemy(EnemyType::Default, 4 + currentRound);
+		group1.AddEnemy(EnemyType::Runner, 1 + currentRound);
+		group1.SetSpawnPoint({ 490.f, -150.0f });
+
+		group2.AddEnemy(EnemyType::Default, 4 + currentRound);
+		group2.AddEnemy(EnemyType::Runner, 1 + currentRound);
+		group2.SetSpawnPoint({ 170, -80.0f });
+
+		group3.AddEnemy(EnemyType::Default, 2 + currentRound);
+		group3.AddEnemy(EnemyType::Runner, 2 + currentRound);
+		group3.SetSpawnPoint({ 80.0f, -500.0f });
+
+		group4.AddEnemy(EnemyType::Default, 4 + currentRound);
+		group4.AddEnemy(EnemyType::Runner, 1 + currentRound);
+		group4.SetSpawnPoint({ 520.f, -540.0f });
+
+		wave4.AddGroup(group1);
+		wave4.AddGroup(group2);
+		wave4.AddGroup(group3);
+		wave4.AddGroup(group4);
+		wave4.SetTimeLimit(45);
+	}
+
+	{ // Wave_5 BOSS
+		Wave::Group group1, group2, group3, group4;
+
+		group1.AddEnemy(EnemyType::Mage, 2 + currentRound);
+		group1.AddEnemy(EnemyType::BIGMOMMA, 1);
+		group1.SetSpawnPoint({ 490.f, -150.0f });
+
+		group2.AddEnemy(EnemyType::Default, 1 + currentRound);
+		group2.SetSpawnPoint({ 170, -80.0f });
+
+		group3.AddEnemy(EnemyType::Default, 2 + currentRound);
+		group3.SetSpawnPoint({ 80.0f, -500.0f });
+
+		group4.AddEnemy(EnemyType::Default, 1 + currentRound);
+		group4.SetSpawnPoint({ 520.f, -540.0f });
+
+		wave5.AddGroup(group1);
+		wave5.AddGroup(group2);
+		wave5.AddGroup(group3);
+		wave5.AddGroup(group4);
+		wave5.SetTimeLimit(45);
+	}
+
+	waveQueue.emplace(wave1);
+	waveQueue.emplace(wave2);
+	waveQueue.emplace(wave3);
+	waveQueue.emplace(wave4);
+	waveQueue.emplace(wave5);
+}
 
 
 /**Spawn the enemies randomly within a circular zone based on the specified point
@@ -266,9 +378,10 @@ void ServerSystems::WaveSystem(Simulation* simulation,
 void ServerSystems::NextWaveConditions(Simulation* simulation, Timer& timer, int timeToFinish)
 {
 	//Publish event when timeToFinish been exceeded.
-	if (timer.GetElapsedTime() > timeToFinish)
+	if (simulation->m_timeCycler.GetSwitch())
 	{
 		simulation->GetGameScene()->publish<ESceneCallWaveSystem>(0.0f);
+		simulation->m_timeCycler.Switch();
 	}
 }
 
@@ -339,8 +452,17 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 				}
 			}
 
+			if(p.lastInputState.key_shift)
+			{
+				if (ecs::UseAbility(e, p.moveAbilty, &p.mousePoint))
+				{
+					LOG_INFO("Used moveAbility");
+					//anim.toSend = EAnimationType::MOVE_ABILITY;
+				}
+			}
+
 			//Place defence on grid
-			if (p.lastInputState.key_b && simulation->GetCurrency().GetAmount() >= 5)
+			if (p.lastInputState.key_b && simulation->GetCurrency().GetAmount() >= 5 && simulation->m_timeCycler.GetTimePeriod() == Cycle::DAY)
 			{
 				if (simulation->GetGrid().PlaceDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, Blackboard::Get().GetPathFindManager()))
 				{

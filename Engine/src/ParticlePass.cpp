@@ -25,13 +25,13 @@ void ParticlePass::CreateRandomNumbers()
 
 	HRESULT hr;
 
-	for (int i = 0; i < m_nrOfRandomNumbers; i++)
-		m_randomNumbers.push_back((float)rand() / (RAND_MAX + 1) * (2.0 - (-2.0f)) + (-2.0f));
+	for (UINT i = 0; i < m_nrOfRandomNumbers; i++)
+		m_randomNumbers.push_back(static_cast<float>(rand() / (RAND_MAX + 1.f) * (2.f - (-2.f)) + (-2.f)));
 
 	D3D11_BUFFER_DESC bufferDescNR;
 	ZeroMemory(&bufferDescNR, sizeof(D3D11_BUFFER_DESC));
 	bufferDescNR.Usage = D3D11_USAGE_DEFAULT;
-	bufferDescNR.ByteWidth = sizeof(UINT) * m_randomNumbers.size();
+	bufferDescNR.ByteWidth = static_cast<UINT>(sizeof(UINT) * m_randomNumbers.size());
 	bufferDescNR.BindFlags = D3D11_BIND_SHADER_RESOURCE;
 	bufferDescNR.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
 	bufferDescNR.StructureByteStride = sizeof(float);

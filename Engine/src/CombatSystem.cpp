@@ -39,45 +39,73 @@ void CombatSystem::UpdateRange(HeadlessScene& scene)
 
 void CombatSystem::UpdateTeleport(HeadlessScene& scene)
 {
-
-	scene.ForEachComponent<comp::TeleportAbility, comp::Transform>([&](Entity entity, comp::TeleportAbility& teleportAbility, comp::Transform& transform)
+	scene.ForEachComponent<comp::BlinkAbility, comp::Transform>([&](Entity entity, comp::BlinkAbility& teleportAbility, comp::Transform& transform)
 		{
 			PathFinderManager* pathFinderManager = Blackboard::Get().GetPathFindManager();
 			sm::Vector3* targetPoint = nullptr;
-			UpdateTargetPoint(entity, targetPoint);
 
-
+			comp::Player* player = entity.GetComponent<comp::Player>();
+			if (player)
+			{
+				targetPoint = &player->mousePoint; // only update targetPoint if this is a player
+			}
 
 			if (ecs::ReadyToUse(&teleportAbility, nullptr))
 			{
-				//Lower length of vector by 25% every try
 				float decreaseValue = 0.75f;
 				if (targetPoint)
 				{
-					targetPoint->Normalize();
-					*targetPoint *= teleportAbility.distance;
+					sm::Vector3 direction = *targetPoint - transform.position;
+					direction.Normalize();
+					direction *= teleportAbility.distance;
 
 					bool hasSetTarget = false;
-
-					while (!hasSetTarget && targetPoint->Length() > 4.0f)
+					while (!hasSetTarget && direction.Length() > 7.0f)
 					{
-						sm::Vector3 newPos = transform.position + *targetPoint;
-
+						sm::Vector3 newPos = transform.position + direction;
 						if (pathFinderManager->FindClosestNode(newPos)->reachable)
 						{
-							teleportAbility.targetPoint = newPos;
-							LOG_INFO("Succesfully teleported");
+							entity.GetComponent<comp::Transform>()->position = transform.position + direction;
 							hasSetTarget = true;
 						}
 						else
 						{
-							*targetPoint *= decreaseValue;
+							//Lower length of vector by 25% every failed try
+							direction *= decreaseValue;
 						}
 
 					}
 				}
 
-				entity.GetComponent<comp::Transform>()->position = transform.position + teleportAbility.targetPoint;
+				
+			}
+		});
+}
+
+void CombatSystem::UpdateDash(HeadlessScene& scene)
+{
+	scene.ForEachComponent<comp::DashAbility, comp::Transform>([&](Entity entity, comp::DashAbility& dashAbility, comp::Transform& transform)
+		{
+			PathFinderManager* pathFinderManager = Blackboard::Get().GetPathFindManager();
+			sm::Vector3* targetPoint = nullptr;
+
+			comp::Player* player = entity.GetComponent<comp::Player>();
+			if (player)
+			{
+				targetPoint = &player->mousePoint; // only update targetPoint if this is a player
+			}
+
+			if (ecs::ReadyToUse(&dashAbility, nullptr))
+			{
+				//dashAbility.velocityBeforeDash = entity.GetComponent<comp::Velocity>()->vel;
+			}
+			if(ecs::IsUsing(&dashAbility))
+			{
+				entity.GetComponent<comp::Velocity>()->vel = dashAbility.velocityBeforeDash * dashAbility.force;
+			}
+			else
+			{
+				dashAbility.velocityBeforeDash = entity.GetComponent<comp::Velocity>()->vel;
 			}
 		});
 }
@@ -95,6 +123,9 @@ void CombatSystem::UpdateCombatSystem(HeadlessScene& scene, float dt)
 
 	//For each entity that can use teleport
 	UpdateTeleport(scene);
+
+	//For each entity that can use Dash
+	UpdateDash(scene);
 }
 
 
@@ -120,7 +151,7 @@ Entity CombatSystem::CreateAttackEntity(Entity entity, HeadlessScene& scene, com
 	attackEntity.AddComponent<comp::Tag<TagType::DYNAMIC>>();
 	attackEntity.AddComponent<comp::Tag<TagType::NO_RESPONSE>>();
 
-	comp::BoundingSphere* bos = attackEntity.AddComponent<comp::BoundingSphere>();
+	comp::SphereCollider* bos = attackEntity.AddComponent<comp::SphereCollider>();
 
 	bos->Radius = stats->attackRange;
 
@@ -151,7 +182,7 @@ Entity CombatSystem::CreateAttackEntity(Entity entity, HeadlessScene& scene, com
 	attackEntity.AddComponent<comp::Tag<TagType::DYNAMIC>>();
 	attackEntity.AddComponent<comp::Tag<TagType::NO_RESPONSE>>();
 
-	comp::BoundingSphere* bos = attackEntity.AddComponent<comp::BoundingSphere>();
+	comp::SphereCollider* bos = attackEntity.AddComponent<comp::SphereCollider>();
 
 	bos->Radius = stats->projectileSize;
 
@@ -168,7 +199,7 @@ Entity CombatSystem::CreateAttackEntity(Entity entity, HeadlessScene& scene, com
 
 	sm::Vector3 vel = targetDir * stats->projectileSpeed;
 	attackEntity.AddComponent<comp::Velocity>()->vel = vel;
-	attackEntity.AddComponent<comp::MeshName>()->name = "Sphere.obj";
+	attackEntity.AddComponent<comp::MeshName>()->name = NameType::MESH_SPHERE;
 
 	attackEntity.AddComponent<comp::Network>();
 

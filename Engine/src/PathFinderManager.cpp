@@ -8,6 +8,11 @@ Node* PathFinderManager::FindClosestNode(sm::Vector3 position)
 	int clampedX = static_cast<int>(abs(position.x) / m_nodeSize.x);
 	int clampedZ = static_cast<int>(abs(position.z) / m_nodeSize.y);
 
+	if (clampedX > 69)
+		clampedX = 69;
+	if (clampedZ > 69)
+		clampedZ = 69;
+
 	currentClosest = m_nodes[clampedZ][clampedX].get();
 
 	return currentClosest;

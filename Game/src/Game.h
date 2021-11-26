@@ -12,10 +12,11 @@ private:
 	std::unordered_map<uint32_t, Entity> m_gameEntities;
 
 	GridSystem m_grid;
-	uint32_t m_waveTimer;
+	float m_elapsedCycleTime = 0;
+	uint32_t m_waveTimer = 0;
 	uint32_t m_money;
 	ParticleSystem m_particles;
-
+	Cycle m_serverCycle = Cycle::DAY;
 
 	Entity m_mapEntity;
 

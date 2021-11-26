@@ -18,7 +18,8 @@ namespace thread
 	for it to be considered benefitable to divide up the rendering
 	between threads.
 	*/
-	const int THRESHOLD = 1;
+	const int BASE_THRESHOLD = 1;
+	const int SHADOW_THRESHOLD = 1;
 
 	class RenderThreadHandler
 	{
@@ -33,6 +34,7 @@ namespace thread
 		bool m_isPooled = false;
 		void* m_objects;
 		void* m_camera;
+		void* m_shadows;
 		bool m_isActive;
 
 		unsigned int m_amount;
@@ -71,6 +73,11 @@ namespace thread
 			0/false - Rendered on separate threads.
 		*/
 		static const render_instructions_t Launch(const int& amount_of_objects);
+
+		/*
+			
+		*/
+		static const render_instructions_t DoShadows(const int& amount_of_objects);
 
 		/*
 			Returns a bool that tells if the handler is currently running
@@ -132,5 +139,8 @@ namespace thread
 
 		static void SetCamera(void* camera);
 		static void* GetCamera();
+
+		static void SetShadows(void* shadows);
+		static void* GetShadows();
 	};
 }

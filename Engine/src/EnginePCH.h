@@ -5,7 +5,8 @@
 #define PROFILER 1
 
 // Feel free to add more things to this, currently only gives more money :)
-#define GOD_MODE 1
+#define GOD_MODE 0
+#define SPAWN_MONSTERS 1
 
 // Turn this to 1 if you want to see the very beautiful demo menu
 #define DRAW_TEMP_2D 0
@@ -111,7 +112,7 @@ namespace sm = dx::SimpleMath;
 //Utility
 #include "Timer.h"
 #include "utility.h"
-
+#include "ModelIdentifier.h"
 // Custom Global includes (Singletons)
 #include "Logger.h"
 #include "multi_thread_manager.h"

@@ -5,6 +5,7 @@
 #include "ResourceManager.h"
 #include "BehaviorTreeBT.h"
 #include <stack>
+#include "ModelIdentifier.h"
 
 namespace ecs
 {
@@ -24,20 +25,29 @@ namespace ecs
 		COMPONENT_MAX = 32
 	};
 
-	namespace component {
+	namespace component 
+	{
+		struct OrientedBoxCollider : dx::BoundingOrientedBox
+		{
+			// Empty for now
+		};
 
-		//Collider components
-		using DirectX::BoundingOrientedBox;
-		using DirectX::BoundingSphere;
-		using dx::BoundingBox;
-		
+		struct SphereCollider : dx::BoundingSphere
+		{
+			std::set<Entity> list;
+		};
+
+		struct BoxCollider : dx::BoundingBox
+		{
+			// Empty for now
+		};
 
 		struct Transform
 		{
 			sm::Vector3 position;
 			sm::Quaternion rotation;
 			sm::Vector3 scale = sm::Vector3(1);
-			
+
 			bool syncColliderScale = false;
 		};
 
@@ -181,16 +191,16 @@ namespace ecs
 		};
 
 		// Used on server side
-		struct AnimatorName 
+		struct AnimatorName
 		{
-			std::string name = "";
+			AnimName name;
 		};
-	
-		struct MeshName 
+
+		struct MeshName
 		{
-			std::string name = "";
+			NameType name;
 		};
-		
+
 		struct RenderableDebug
 		{
 			std::shared_ptr<RModel> 	model;
@@ -198,9 +208,9 @@ namespace ecs
 			collider_hit_t				isColliding;
 			void InitRenderable(entt::registry& reg, const entt::entity curr)
 			{
-				BoundingOrientedBox* obb = reg.try_get<BoundingOrientedBox>(curr);
-				BoundingSphere* sphere = reg.try_get<BoundingSphere>(curr);
-				BoundingBox* box = reg.try_get<BoundingBox>(curr);
+				OrientedBoxCollider* obb = reg.try_get<OrientedBoxCollider>(curr);
+				SphereCollider* sphere = reg.try_get<SphereCollider>(curr);
+				BoxCollider* box = reg.try_get<BoxCollider>(curr);
 				if (obb != nullptr)
 				{
 					model = ResourceManager::Get().GetResource<RModel>("Cube.obj");
@@ -220,7 +230,7 @@ namespace ecs
 		{
 			std::shared_ptr<BT::ParentNode> root;
 		};
-		
+
 
 		struct TemporaryPhysics
 		{
@@ -272,6 +282,7 @@ namespace ecs
 
 			entt::meta_type primaryAbilty;
 			entt::meta_type secondaryAbilty;
+			entt::meta_type moveAbilty;
 
 			float runSpeed;
 
@@ -287,8 +298,6 @@ namespace ecs
 			char name[12] = {};
 			TowerTypes towerSelected = TowerTypes::SHORT;
 		};
-
-	
 
 		struct NPC
 		{
@@ -327,7 +336,7 @@ namespace ecs
 			float cooldown = 1.5f;
 			// !DO NOT TOUCH!
 			float cooldownTimer = 0.f;
-			
+
 			// set this for delay before ability is actually used after the cooldown is done and the ecs::UseAbility has bee called
 			float delay = 0.1f;
 			// !DO NOT TOUCH!
@@ -353,35 +362,12 @@ namespace ecs
 			sm::Vector3 targetPoint;
 		};
 
+		//---------- WARRIOR ABILITIES ----------
 		struct MeleeAttackAbility : public IAbility
 		{
 			//Just to keep it not empty for now
 			float attackDamage = 5.f;
 			float attackRange = 10.0f;
-		};
-
-		struct RangeAttackAbility : public IAbility
-		{
-			float attackDamage = 5.f;
-			float attackRange = 10.0f;
-			float projectileSpeed = 10.f;
-			float projectileSize = 1.0f;
-		};
-
-
-		struct TeleportAbility : public IAbility
-		{
-			//The distance ability teleports Entity forward 
-			float distance = 8.0f;
-			//The point direction ability will teleport towards
-			sm::Vector3 targetPoint = { 0.f,0.0f,0.0f };
-		};
-
-
-		struct HealAbility : public IAbility
-		{
-			float healAmount = 40.f;
-			float range = 50.f;
 		};
 
 		struct HeroLeapAbility : public IAbility
@@ -390,6 +376,39 @@ namespace ecs
 			float damageRadius = 20.f;
 			float maxRange = 30.f;
 		};
+
+		struct DashAbility : public IAbility
+		{
+			//The duration for the force
+			float duration = 1.0f;
+			//amount of force applied when used
+			float force = 25.0f;
+			//Store velocity that was before dash was applied
+			sm::Vector3 velocityBeforeDash = { 0.0f,0.0f,0.0f };
+		};
+		//------------------END----------------------
+
+		//---------- MAGE ABILITIES ----------
+		struct RangeAttackAbility : public IAbility
+		{
+			float attackDamage = 5.f;
+			float attackRange = 10.0f;
+			float projectileSpeed = 10.f;
+			float projectileSize = 1.0f;
+		};
+
+		struct HealAbility : public IAbility
+		{
+			float healAmount = 40.f;
+			float range = 50.f;
+		};
+		struct BlinkAbility : public IAbility
+		{
+			//The distance ability teleports Entity forward 
+			float distance = 50.0f;
+		};
+		//------------------END----------------------
+
 
 
 		struct SelfDestruct
@@ -425,7 +444,7 @@ namespace ecs
 	sm::Vector3 GetRight(const component::Transform& transform);
 	bool StepRotateTo(sm::Quaternion& rotation, const sm::Vector3& targetVector, float t);
 	bool StepTranslateTo(sm::Vector3& translation, const sm::Vector3& target, float t);
-	
+
 	template<typename T>
 	void RegisterAsAbility()
 	{
@@ -445,7 +464,7 @@ namespace ecs
 				.base<component::ITag>()
 				.func<&Entity::GetComponentRef<T>, entt::as_ref_t>("get"_hs)
 				.func<&Entity::HasComponent<T>>("has"_hs);
-			
+
 			LOG_INFO("Registered tag %s", entt::resolve<T>().info().name().data());
 		}
 	}

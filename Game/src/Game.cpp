@@ -92,24 +92,41 @@ bool Game::OnStartup()
 void Game::OnUserUpdate(float deltaTime)
 {
 	this->UpdateInput();
-
-	if (GetCurrentScene() == &GetScene("Game"))
+	Scene& scene = GetScene("Game");
+	if (m_players.find(m_localPID) != m_players.end())
 	{
-		if (m_players.find(m_localPID) != m_players.end())
+		sm::Vector3 playerPos = m_players.at(m_localPID).GetComponent<comp::Transform>()->position;
+
+		if (m_elapsedCycleTime <= m_waveTimer && (m_serverCycle == Cycle::DAY || m_serverCycle == Cycle::MORNING))
 		{
-			GameSystems::CheckLOS(this);
-		}
-
-		GetCurrentScene()->ForEachComponent<comp::EmitterParticle>([&](Entity e, comp::EmitterParticle& emitter)
-			{
-
-				if (emitter.hasDeathTimer == true && emitter.lifeLived <= emitter.lifeTime)
+			m_elapsedCycleTime += deltaTime;
+			scene.ForEachComponent<comp::Light>([&](Entity e, comp::Light& l)
 				{
-					emitter.lifeLived += Stats::Get().GetFrameTime();
-				}
-				else if (emitter.hasDeathTimer == true && emitter.lifeLived >= emitter.lifeTime)
-					e.RemoveComponent<comp::EmitterParticle>();
-			});
+					switch(l.lightData.type)
+					{
+					case TypeLight::DIRECTIONAL:
+					{
+						l.lightData.direction = { -1.0f, 0.0f, 0.f, 0.f };
+						sm::Vector3 dir = sm::Vector3::TransformNormal(sm::Vector3(l.lightData.direction), sm::Matrix::CreateRotationZ(dx::XMConvertToRadians((180.0f / ((float)TIME_LIMIT_DAY + (float)TIME_LIMIT_MORNING)) * (m_elapsedCycleTime))));
+
+						l.lightData.direction = sm::Vector4(dir.x, dir.y, dir.z, 0.0f);
+						sm::Vector3 pos = l.lightData.position;
+						pos = playerPos - dir * 200;
+						l.lightData.position = sm::Vector4(pos);
+						l.lightData.position.w = 1.f;
+						break;
+					}
+					case TypeLight::POINT:
+					{
+						l.lightData.enabled = false;
+						break;
+					}
+					default:
+						break;
+					}
+					e.GetComponent<comp::SphereCollider>()->Center = sm::Vector3(l.lightData.position);
+				});
+		}
 	}
 }
 
@@ -164,7 +181,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			}
 			else
 			{
-
 				LOG_WARNING("Updating: Entity %u not in m_gameEntities, should not happen...", entityID);
 			}
 		}
@@ -338,14 +354,61 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	}
 	case GameMsg::Game_WaveTimer:
 	{
+		msg >> m_serverCycle;
 		msg >> m_waveTimer;
-		Element2D* elem = GetScene("Game").GetCollection("timer")->elements[0].get();
-		if (elem)
+		switch (m_serverCycle)
 		{
-			if (m_waveTimer > 0)
-				dynamic_cast<rtd::Text*>(elem)->SetText("\nUntil next Wave:\n" + std::to_string(m_waveTimer));
-			else
-				dynamic_cast<rtd::Text*>(elem)->SetText("\nUnder Attack!");
+		case Cycle::DAY:
+		{
+			Scene& scene = GetScene("Game");
+			// Change light when day.
+			scene.ForEachComponent<comp::Light>([&](Entity e, comp::Light& l)
+				{
+					if (l.lightData.type == TypeLight::DIRECTIONAL)
+					{
+						l.lightData.enabled = true;
+					}
+				});
+			break;
+		}
+		case Cycle::NIGHT:
+		{
+			Scene& scene = GetScene("Game");
+			// Change light on Night.
+			m_elapsedCycleTime = 0.0f;
+			scene.ForEachComponent<comp::Light>([&](Entity e, comp::Light& l)
+				{ 
+					switch (l.lightData.type)
+					{
+					case TypeLight::DIRECTIONAL:
+					{
+						l.lightData.enabled = false;
+						break;
+					}
+					case TypeLight::POINT:
+					{
+						l.lightData.enabled = true;
+						break;
+					}
+					}
+				});
+			break;
+		}
+		case Cycle::MORNING:
+		{
+			Scene& scene = GetScene("Game");
+			// Change light on Morning.
+			scene.ForEachComponent<comp::Light>([&](Entity e, comp::Light& l)
+				{
+					if (l.lightData.type == TypeLight::DIRECTIONAL)
+					{
+						l.lightData.enabled = true;
+					}
+				});
+			break;
+		}
+		default:
+			break;
 		}
 		break;
 	}
@@ -377,16 +440,16 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		if (m_players.find(m_localPID) != m_players.end())
 		{
 			comp::Player* player = m_players.at(m_localPID).GetComponent<comp::Player>();
-			rtd::Text* readyText = dynamic_cast<rtd::Text*>(GetScene("Lobby").GetCollection("StartGame")->elements[1].get());
+			rtd::Button* readyText = dynamic_cast<rtd::Button*>(GetScene("Lobby").GetCollection("StartGame")->elements[0].get());
 			if (readyText)
 			{
 				if (player->isReady)
 				{
-					readyText->SetText("Ready");
+					readyText->GetPicture()->SetTexture("NotReady.png");
 				}
 				else
 				{
-					readyText->SetText("Not ready");
+					readyText->GetPicture()->SetTexture("Ready.png");
 				}
 			}
 		}
@@ -621,9 +684,33 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 			}
 			case ecs::Component::MESH_NAME:
 			{
-				std::string name;
+				NameType name;
 				msg >> name;
-				std::shared_ptr<RModel> model = ResourceManager::Get().CopyResource<RModel>(name, true);
+				std::string nameString;
+				switch (name)
+				{
+				case NameType::MESH_DEFENCE:
+				{
+					nameString = "Defense.obj";
+					break;
+				}
+				case NameType::MESH_KNIGHT:
+				{
+					nameString = "Knight.fbx";
+					break;
+				}
+				case NameType::MESH_MONSTER:
+				{
+					nameString = "Monster.fbx";
+					break;
+				}
+				case NameType::MESH_SPHERE:
+				{
+					nameString = "Sphere.obj";
+					break;
+				}
+				}
+				std::shared_ptr<RModel> model = ResourceManager::Get().CopyResource<RModel>(nameString, true);
 				if (model)
 				{
 					e.AddComponent<comp::Renderable>()->model = model;
@@ -632,9 +719,23 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 			}
 			case ecs::Component::ANIMATOR_NAME:
 			{
-				std::string name;
+				AnimName name;
 				msg >> name;
-				std::shared_ptr<RAnimator> animator = ResourceManager::Get().CopyResource<RAnimator>(name, true);
+				std::string nameString;
+				switch (name)
+				{
+				case AnimName::ANIM_KNIGHT:
+				{
+					nameString = "Knight.anim";
+					break;
+				}
+				case AnimName::ANIM_MONSTER:
+				{
+					nameString = "Monster.anim";
+					break;
+				}
+				}
+				std::shared_ptr<RAnimator> animator = ResourceManager::Get().CopyResource<RAnimator>(nameString, true);
 				if (animator)
 				{
 					animator->RandomizeTime();
@@ -651,16 +752,21 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 			}
 			case ecs::Component::BOUNDING_ORIENTED_BOX:
 			{
-				comp::BoundingOrientedBox box;
+				dx::BoundingOrientedBox box;
 				msg >> box;
-				e.AddComponent<comp::BoundingOrientedBox>(box);
+				comp::OrientedBoxCollider* collider = e.AddComponent<comp::OrientedBoxCollider>();
+				collider->Center = box.Center;
+				collider->Extents = box.Extents;
+				collider->Orientation = box.Orientation;
 				break;
 			}
 			case ecs::Component::BOUNDING_SPHERE:
 			{
-				comp::BoundingSphere s;
+				dx::BoundingSphere s;
 				msg >> s;
-				e.AddComponent<comp::BoundingSphere>(s);
+				comp::SphereCollider* collider = e.AddComponent<comp::SphereCollider>();
+				collider->Center = s.Center;
+				collider->Radius = s.Radius;
 				break;
 			}
 			case ecs::Component::LIGHT:
@@ -733,6 +839,10 @@ void Game::UpdateInput()
 	if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::B, KeyState::PRESSED))
 	{
 		m_inputState.key_b = true;
+	}
+	if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::LeftShift, KeyState::PRESSED))
+	{
+		m_inputState.key_shift = true;
 	}
 
 	m_savedInputs.push_back(m_inputState);
