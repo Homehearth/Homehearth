@@ -17,7 +17,7 @@ void RenderMain(const unsigned int id);
 void RenderJob(const unsigned int start, unsigned int stop, void* buffer, void* context);
 void RenderShadow(const unsigned int start, unsigned int stop, void* buffer, void* context);
 
-void RenderObjectsInRange(DoubleBuffer<std::vector<comp::Renderable>>* objects, dx::ConstantBuffer<basic_model_matrix_t>* buffer, ID3D11DeviceContext* context, sm::Vector3 point, float range);
+void RenderObjects(DoubleBuffer<std::vector<comp::Renderable>>* objects, dx::ConstantBuffer<basic_model_matrix_t>* buffer, ID3D11DeviceContext* context);
 
 thread::RenderThreadHandler::RenderThreadHandler()
 {
@@ -447,7 +447,7 @@ void RenderShadow(const unsigned int start, unsigned int stop, void* buffer, voi
 			{
 				currentPass->UpdateLightBuffer(m_context, shadow.lightBuffer.Get(), *shadow.pLight, sm::Vector3(shadow.pLight->direction));
 				m_context->VSSetShader(currentPass->GetPipelineManager()->m_defaultVertexShader.Get(), nullptr, 0);
-				RenderObjectsInRange(m_objects, m_buffer, m_context, sm::Vector3(light->position), light->range);
+				RenderObjects(m_objects, m_buffer, m_context);
 
 
 				break;
@@ -458,11 +458,11 @@ void RenderShadow(const unsigned int start, unsigned int stop, void* buffer, voi
 
 				currentPass->UpdateLightBuffer(m_context, shadow.lightBuffer.Get(), *shadow.pLight, sm::Vector3::Down);
 				m_context->VSSetShader(currentPass->GetPipelineManager()->m_paraboloidVertexShader.Get(), nullptr, 0);
-				RenderObjectsInRange(m_objects, m_buffer, m_context, sm::Vector3(light->position), light->range);
+				RenderObjects(m_objects, m_buffer, m_context);
 				
 				m_context->OMSetRenderTargets(8, nullTargets, shadow.shadowDepth[1].Get());
 				currentPass->UpdateLightBuffer(m_context, shadow.lightBuffer.Get(), *shadow.pLight, sm::Vector3::Up);
-				RenderObjectsInRange(m_objects, m_buffer, m_context, sm::Vector3(light->position), light->range);
+				RenderObjects(m_objects, m_buffer, m_context);
 
 
 				break;
@@ -488,15 +488,13 @@ void RenderShadow(const unsigned int start, unsigned int stop, void* buffer, voi
 	}
 }
 
-void RenderObjectsInRange(DoubleBuffer<std::vector<comp::Renderable>>* objects, dx::ConstantBuffer<basic_model_matrix_t>* buffer, ID3D11DeviceContext* context, sm::Vector3 point, float range)
+void RenderObjects(DoubleBuffer<std::vector<comp::Renderable>>* objects, dx::ConstantBuffer<basic_model_matrix_t>* buffer, ID3D11DeviceContext* context)
 {
 	// For each object in world.
 	for (int j = 0; j < (*objects)[1].size(); j++)
 	{
 		comp::Renderable* it = &(*objects)[1][j];
-		sm::Vector3 translation = it->data.worldMatrix.Translation();
-		float distance = (translation - sm::Vector3(point)).Length();
-		if (distance < range && it->isSolid && it->visible)
+		if (it->isSolid && it->visible)
 		{
 			ID3D11Buffer* const buffers[1] =
 			{

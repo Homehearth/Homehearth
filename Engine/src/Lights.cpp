@@ -150,8 +150,10 @@ void Lights::EditLight(light_t L, const int& index)
         default:
             break;
         }
-
+        // save the shadowIndex so it does not get overwritten
+        int shadowIndex = m_lights[index].shadowIndex;
         m_lights[index] = L;
+        m_lights[index].shadowIndex = shadowIndex;
     }
 }
 

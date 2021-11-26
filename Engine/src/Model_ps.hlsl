@@ -43,7 +43,7 @@ float4 main(PixelIn input) : SV_TARGET
 			float shadowCoef = 0.0f;
             
             // position of this pixel in the light clip space
-            float4 pixelposLightSpace = mul(lightMat, input.worldPos);
+            float4 pixelposLightSpace = mul(lightMat, float4(input.worldPos.xyz, 1.0f));
 			
             int shadowIndex = sb_lights[i].shadowIndex;
             
@@ -132,7 +132,7 @@ float4 main(PixelIn input) : SV_TARGET
         [loop]
         for (unsigned int j = 0; j < rolls; j++)
         {
-            float4 decal_pos = mul(sb_decaldata[j], input.worldPos);
+            float4 decal_pos = mul(sb_decaldata[j], float4(input.worldPos.xyz, 1.0f));
             decal_pos = mul(decal_projection, decal_pos);
 
             // This is the same as shadow-mapping but instead of having different maps we have different view points.

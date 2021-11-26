@@ -197,11 +197,12 @@ void ShadowPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 				section.shadowDepth[0] = this->CreateDepthView(shadowIndex);
 				section.lightBuffer = this->CreateLightBuffer(lights[i]);
 				section.pLight = &lights[i];
-				section.pLight->shadowIndex = shadowIndex;
+				lights[i].shadowIndex = shadowIndex; // this is somewhere changed back to 0 after this shadow pass
+
 				if (section.pLight->type == TypeLight::POINT)
 				{
-					section.shadowDepth[1] = this->CreateDepthView(shadowIndex + 1);
 					shadowIndex++;
+					section.shadowDepth[1] = this->CreateDepthView(shadowIndex);
 				}
 				shadowIndex++;
 				m_shadows.push_back(section);
@@ -210,6 +211,7 @@ void ShadowPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 		}
 	}
 
+	
 	ID3D11ShaderResourceView* nullViews[] = { nullptr };
 	DC->PSSetShaderResources(13, 1, nullViews);
 
@@ -222,6 +224,9 @@ void ShadowPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 
 	DC->VSSetShader(PM->m_defaultVertexShader.Get(), nullptr, 0);
 	DC->PSSetShader(PM->m_shadowPixelShader.Get(), nullptr, 0);
+
+	m_lights->Render(DC);
+
 }
 
 void ShadowPass::Render(Scene* pScene)
