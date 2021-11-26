@@ -54,6 +54,16 @@ void Cycler::Update(Simulation* sim)
 		// The night has reached its limit and switches to day.
 		if (elapsed >= TIME_LIMIT_NIGHT)
 		{
+			m_timePeriod = Cycle::MORNING;
+			m_time.Start();
+		}
+		break;
+	}
+	case Cycle::MORNING:
+	{
+		uint32_t elapsed = (uint32_t)m_time.GetElapsedTime();
+		if (elapsed >= TIME_LIMIT_MORNING)
+		{
 			m_timePeriod = Cycle::DAY;
 			m_time.Start();
 		}
