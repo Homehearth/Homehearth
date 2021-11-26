@@ -29,7 +29,7 @@ void GameSystems::DisplayUpgradeDefences(Game* game)
 		uint32_t cost;
 
 		Ray_t mouseRay = InputSystem::Get().GetMouseRay();
-		scene.ForEachComponent<comp::BoundingOrientedBox, comp::Cost, comp::Network>([&](comp::BoundingOrientedBox& box, comp::Cost& c, comp::Network& n) {
+		scene.ForEachComponent<comp::OrientedBoxCollider, comp::Cost, comp::Network>([&](comp::OrientedBoxCollider& box, comp::Cost& c, comp::Network& n) {
 
 			float nt;
 			if (mouseRay.Intersects(box, &nt))

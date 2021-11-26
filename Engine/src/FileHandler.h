@@ -59,7 +59,7 @@ public:
 template<typename T>
 inline bool FileHandler::Dump(std::vector<T>& output)
 {
-	static_assert(std::is_standard_layout<T>::value, "Data is too complex for output");
+	//static_assert(std::is_standard_layout<T>::value, "Data is too complex for output");
 
 	if (m_stream.is_open())
 	{
@@ -84,7 +84,7 @@ inline bool FileHandler::Dump(std::vector<T>& output)
 template<typename T>
 inline bool FileHandler::Dump(std::vector<T>& output, const FileFormat& format)
 {
-	static_assert(std::is_standard_layout<T>::value, "Data is too complex for output");
+	//static_assert(std::is_standard_layout<T>::value, "Data is too complex for output");
 
 	if (m_stream.is_open())
 	{
