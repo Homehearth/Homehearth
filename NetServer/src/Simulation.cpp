@@ -364,7 +364,7 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 				{
 					PROFILE_SCOPE("Abilities and Combat");
 					Systems::UpdateAbilities(scene, e.dt);
-					Systems::CombatSystem(scene, e.dt);
+					ServerSystems::CombatSystem(scene, e.dt);
 					Systems::HealingSystem(scene, e.dt);
 					Systems::HeroLeapSystem(scene, e.dt);
 					Systems::HealthSystem(scene, e.dt, m_currency.GetAmountRef());
