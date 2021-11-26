@@ -480,7 +480,6 @@ void Engine::Update(float dt)
 
 		IMGUI(
 			drawImGUI();
-			m_renderer.ImGuiShowTextures();
 
 			ImGui::EndFrame();
 			m_imguiMutex.unlock();
