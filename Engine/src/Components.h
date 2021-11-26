@@ -69,6 +69,8 @@ namespace ecs
 			float								lifeTime		= 0.f;
 			float								sizeMulitplier	= 0.f;
 			float								speed			= 0.f;
+			bool								hasDeathTimer	= false;
+			float								lifeLived		= 0.f;
 
 			std::string textureName								= "";
 			std::string opacityTextureName						= "";
@@ -79,7 +81,7 @@ namespace ecs
 			ComPtr<ID3D11ShaderResourceView>	particleSRV		= nullptr;
 			ComPtr<ID3D11UnorderedAccessView>	particleUAV		= nullptr;
 
-			EmitterParticle(sm::Vector3 positionOffset = {0,0,0}, int nrOfParticles = 10, float sizeMulitplier = 1.f, PARTICLEMODE type = PARTICLEMODE::BLOOD, float lifeTime = 2.f, float speed = 1)
+			EmitterParticle(sm::Vector3 positionOffset = {0,0,0}, int nrOfParticles = 10, float sizeMulitplier = 1.f, PARTICLEMODE type = PARTICLEMODE::BLOOD, float lifeTime = 2.f, float speed = 1, bool hasDeathTimer = false)
 			{
 				if (type == PARTICLEMODE::BLOOD)
 				{
@@ -126,6 +128,7 @@ namespace ecs
 				this->sizeMulitplier	= sizeMulitplier;
 				this->speed				= speed;
 				this->positionOffset	= positionOffset;
+				this->hasDeathTimer		= hasDeathTimer;
 			}
 		};
 
@@ -137,8 +140,10 @@ namespace ecs
 			float			lifeTime		= 0.f;
 			float			sizeMulitplier	= 0.f;
 			float			speed			= 0.f;
+			bool			hasDeathTimer	= false;
+			float			lifeLived		= 0.f;
 
-			PARTICLEEMITTER(sm::Vector3 positionOffset = { 0,0,0 }, int nrOfParticles = 10, float sizeMulitplier = 1.f, PARTICLEMODE type = PARTICLEMODE::BLOOD, float lifeTime = 2.f, float speed = 1)
+			PARTICLEEMITTER(sm::Vector3 positionOffset = { 0,0,0 }, int nrOfParticles = 10, float sizeMulitplier = 1.f, PARTICLEMODE type = PARTICLEMODE::BLOOD, float lifeTime = 2.f, float speed = 1, bool hasDeathTimer = false)
 			{
 				this->nrOfParticles		= (UINT)nrOfParticles;
 				this->type				= type;
@@ -146,8 +151,8 @@ namespace ecs
 				this->sizeMulitplier	= sizeMulitplier;
 				this->speed				= speed;
 				this->positionOffset	= positionOffset;
+				this->hasDeathTimer		= hasDeathTimer;
 			}
-
 		};
 
 		struct Network

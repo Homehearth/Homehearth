@@ -78,33 +78,21 @@ bool Game::OnStartup()
 	SetScene("MainMenu");
 
 	//////Particles
-	//Entity emitter = GetScene("Game").CreateEntity();
-	//emitter.AddComponent<comp::Transform>()->position = {250, 5, -340};
-	//emitter.AddComponent <comp::EmitterParticle>(800, 2.f, PARTICLEMODE::SMOKE, 4.0f);	
-	//
-	//Entity emitterS = GetScene("Game").CreateEntity();
-	//emitterS.AddComponent<comp::Transform>()->position = {178, 15, -338};
-	//emitterS.AddComponent <comp::EmitterParticle>(1200, 2.f, PARTICLEMODE::SMOKE, 4.2f);
+	Entity emitter = GetScene("Game").CreateEntity();
+	emitter.AddComponent<comp::Transform>()->position = { 220, 40, -340 };
+	emitter.AddComponent <comp::EmitterParticle>(sm::Vector3{ 0,0,0 }, 800, 2.f, PARTICLEMODE::SMOKE, 4.0f, 1.f, false);
 
-	////Entity emitter2 = GetScene("Game").CreateEntity();
-	////emitter2.AddComponent<comp::Transform>()->position = { 250, 5,- 320 };
-	////emitter2.AddComponent <comp::EmitterParticle>("thisisfine.png", "", 10, 1.f, PARTICLEMODE::SPARKLES);
-
-	////Entity emitter3 = GetScene("Game").CreateEntity();
-	////emitter3.AddComponent<comp::Transform>()->position = { 250, 20, -300 };
-	////emitter3.AddComponent <comp::EmitterParticle>("thisisfine.png", "", 20, 1.f, PARTICLEMODE::WATERSPLASH);
-	//
-	///*Entity emitter4 = GetScene("Game").CreateEntity();
-	//emitter4.AddComponent<comp::Transform>()->position = { 240, 6, -300 };
-	//emitter4.AddComponent <comp::EmitterParticle>("Blood.png", "", 50, 8.f, PARTICLEMODE::BLOOD, 1.5f);*/
-
-	//Entity emitter5 = GetScene("Game").CreateEntity();
-	//emitter5.AddComponent<comp::Transform>()->position = { 220, 40, -340 };
-	//emitter5.AddComponent <comp::EmitterParticle>(800, 2.f, PARTICLEMODE::SMOKE, 4.0f);
-	//
-	//Entity waterSplash = GetScene("Game").CreateEntity();
-	//waterSplash.AddComponent<comp::Transform>()->position = { 270, 13, -370 };
-	//waterSplash.AddComponent <comp::EmitterParticle>(100, 1.f , PARTICLEMODE::WATERSPLASH, 4.0f);
+	/*Entity emitter2 = GetScene("Game").CreateEntity();
+	emitter2.AddComponent<comp::Transform>()->position = { 250, 5,- 320 };
+	emitter2.AddComponent <comp::EmitterParticle>(sm::Vector3{ 0,0,0 }, 10, 1.f, PARTICLEMODE::SPARKLES, 1.f, false);*/
+	
+	Entity emitter4 = GetScene("Game").CreateEntity();
+	emitter4.AddComponent<comp::Transform>()->position = { 250, 5, -340 };
+	emitter4.AddComponent<comp::EmitterParticle>(sm::Vector3{0,0,0}, 50, 2.f, PARTICLEMODE::BLOOD, 0.5f, 1.f, false);
+	
+	Entity waterSplash = GetScene("Game").CreateEntity();
+	waterSplash.AddComponent<comp::Transform>()->position = { 270, 13, -370 };
+	waterSplash.AddComponent <comp::EmitterParticle>(sm::Vector3{ 0,0,0 }, 100, 1.f , PARTICLEMODE::WATERSPLASH, 4.0f, 1.f, false);
 
 	return true;
 }
@@ -119,6 +107,17 @@ void Game::OnUserUpdate(float deltaTime)
 		{
 			GameSystems::CheckLOS(this);
 		}
+
+		GetCurrentScene()->ForEachComponent<comp::EmitterParticle>([&](Entity e, comp::EmitterParticle& emitter)
+			{
+
+				if (emitter.hasDeathTimer == true && emitter.lifeLived <= emitter.lifeTime)
+				{
+					emitter.lifeLived += Stats::Get().GetFrameTime();
+				}
+				else if (emitter.hasDeathTimer == true && emitter.lifeLived >= emitter.lifeTime)
+					e.RemoveComponent<comp::EmitterParticle>();
+			});
 	}
 }
 
@@ -683,7 +682,7 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 			{
 				comp::PARTICLEEMITTER p;
 				msg >> p;
-				e.AddComponent<comp::EmitterParticle>(p.positionOffset, (int)p.nrOfParticles, p.sizeMulitplier, p.type, p.lifeTime, p.speed);
+				e.AddComponent<comp::EmitterParticle>(p.positionOffset, (int)p.nrOfParticles, p.sizeMulitplier, p.type, p.lifeTime, p.speed, p.hasDeathTimer);
 				break;
 			}
 			case ecs::Component::PLAYER:

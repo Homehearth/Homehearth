@@ -210,12 +210,18 @@ void CombatSystem::AddCollisionMeleeBehavior(Entity entity, Entity attackEntity,
 			if (otherHealth && attackAbility)
 			{
 				otherHealth->currentHealth -= attackAbility->attackDamage;
+				
+				// Blood particle
+				if (other.GetComponent<comp::PARTICLEEMITTER>())
+				{
+					other.RemoveComponent<comp::PARTICLEEMITTER>();
+				}
+				other.AddComponent<comp::PARTICLEEMITTER>(sm::Vector3{ 0,6,0 }, 50, 3.f, PARTICLEMODE::BLOOD, 1.5f, 1.f, true);
+				
 				// update Health on network
-
-				other.AddComponent<comp::PARTICLEEMITTER>(sm::Vector3{ 0,6,0 }, 50, 8.f, PARTICLEMODE::BLOOD, 1.5f, 1.0f);
-
 				scene.publish<EComponentUpdated>(other, ecs::Component::HEALTH);
 				scene.publish<EComponentUpdated>(other, ecs::Component::PARTICLEMITTER);
+
 
 				thisEntity.GetComponent<comp::SelfDestruct>()->lifeTime = 0.f;
 
@@ -283,17 +289,12 @@ void CombatSystem::AddCollisionRangeBehavior(Entity entity, Entity attackEntity,
 			{
 				otherHealth->currentHealth -= attackAbility->attackDamage;
 				
-				//Broadcast particle stuff
-
-				//message<GameMsg> msg;
-				//msg.header.id = GameMsg::Game_PlayParticle;
-
-				//uint32_t networkID = other.GetComponent<comp::Network>()->id;
-				//PARTICLEMODE particleType = PARTICLEMODE::BLOOD;
-
-				//msg << networkID << particleType;
-				//
-				other.AddComponent<comp::PARTICLEEMITTER>(sm::Vector3{0,10,0}, 50, 8.f, PARTICLEMODE::BLOOD, 1.5f, 1.0f);
+				// Blood particle
+				if (other.GetComponent<comp::PARTICLEEMITTER>())
+				{
+					other.RemoveComponent<comp::PARTICLEEMITTER>();
+				}
+				other.AddComponent<comp::PARTICLEEMITTER>(sm::Vector3{ 0,6,0 }, 50, 5.f, PARTICLEMODE::BLOOD, 1.5f, 1.f, true);
 
 				// update Health on network
 				scene.publish<EComponentUpdated>(other, ecs::Component::HEALTH);

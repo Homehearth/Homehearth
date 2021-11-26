@@ -586,6 +586,20 @@ void Simulation::Update(float dt)
 	PROFILE_FUNCTION();
 	if (m_pCurrentScene)
 		m_pCurrentScene->Update(dt);
+
+
+	m_pGameScene->ForEachComponent<comp::PARTICLEEMITTER>([&](Entity& e, comp::PARTICLEEMITTER& emitter)
+		{
+			
+			if (emitter.hasDeathTimer == true && emitter.lifeLived <= emitter.lifeTime)
+			{
+				emitter.lifeLived += Stats::Get().GetFrameTime();
+			}
+			else if (emitter.hasDeathTimer == true && emitter.lifeLived >= emitter.lifeTime)
+			{
+				e.RemoveComponent<comp::PARTICLEEMITTER>();
+			}
+		});
 }
 
 void Simulation::UpdateInput(InputState state, uint32_t playerID)

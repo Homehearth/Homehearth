@@ -25,7 +25,7 @@ void ParticleSystem::InitializeParticles(entt::registry& reg, entt::entity ent)
 	for (int i = 0; i < emitter->nrOfParticles; i++)
 	{
 		Particle_t tempParticle;
-		tempParticle.position = sm::Vector4(entityPosition.x , entityPosition.y, entityPosition.z, emitter->speed);
+		tempParticle.position = sm::Vector4(entityPosition.x , entityPosition.y, entityPosition.z, 1.f);
 		tempParticle.type = emitter->type;
 		tempParticle.size = { 1 , 1 };
 		tempParticle.color = { 1,1,1,1 };
@@ -34,13 +34,13 @@ void ParticleSystem::InitializeParticles(entt::registry& reg, entt::entity ent)
 
 		if (tempParticle.type == PARTICLEMODE::BLOOD)
 		{
-			tempParticle.velocity.x = (float)rand() / (RAND_MAX + 1) * (2.0f - (-2.0f)) + (-2.0f);
-			tempParticle.velocity.y = (float)rand() / (RAND_MAX + 1) * (2.0f - (-2.0f)) + (-2.0f);
-			tempParticle.velocity.z = (float)rand() / (RAND_MAX + 1) * (2.0f - (-2.0f)) + (-2.0f);
+			tempParticle.velocity.x = (float)rand() / (RAND_MAX + 1.f) * (2.0f - (-2.0f)) + (-2.0f);
+			tempParticle.velocity.y = (float)rand() / (RAND_MAX + 1.f) * (2.0f - (-2.0f)) + (-2.0f);
+			tempParticle.velocity.z = (float)rand() / (RAND_MAX + 1.f) * (2.0f - (-2.0f)) + (-2.0f);
 		}
 		if (tempParticle.type == PARTICLEMODE::WATERSPLASH)
 		{
-			tempParticle.color = { 0,0,0.5,0.5 };
+			tempParticle.color = { 0.f, 0.f, 0.5f, 0.5f };
 		}
 
 		particles[i] =  tempParticle;
