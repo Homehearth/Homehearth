@@ -5,6 +5,7 @@
 #include "SceneHelper.h"
 #include "Healthbar.h"
 #include "MoneyUI.h"
+#include "OptionSystem.h"
 
 using namespace std::placeholders;
 
@@ -63,6 +64,7 @@ void Game::UpdateNetwork(float deltaTime)
 
 bool Game::OnStartup()
 {
+	m_masterVolume = std::stoi(OptionSystem::Get().GetOption("MasterVolume"));
 	sceneHelp::CreateLoadingScene(this);
 	SetScene("Loading");
 

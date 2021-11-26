@@ -49,7 +49,6 @@ public:
 	std::vector<std::pair<ModelID, dx::BoundingSphere>> m_LOSColliders;
 	std::unordered_map<uint32_t, Entity> m_players;
 
-	float m_masterVolume = 5.0f;
 
 	Game();
 	virtual ~Game();

@@ -146,6 +146,7 @@ const std::string FONTPATH		= "../Assets/Fonts/";
 const std::string BOUNDSPATH	= "../Assets/Bounds/";
 const std::string ASSETLOADER	= "../Assets/Models/Loader.txt";
 const std::string BOUNDSLOADER	= "../Assets/Bounds/Loader.txt";
+const std::string OPTIONPATH = "../Assets/Options/Options.txt";
 
 
 template<typename Type>
