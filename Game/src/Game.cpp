@@ -145,7 +145,7 @@ void Game::OnUserUpdate(float deltaTime)
 					default:
 						break;
 					}
-					e.GetComponent<comp::BoundingSphere>()->Center = sm::Vector3(l.lightData.position);
+					e.GetComponent<comp::SphereCollider>()->Center = sm::Vector3(l.lightData.position);
 				});
 		}
 	}
@@ -202,7 +202,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			}
 			else
 			{
-
 				LOG_WARNING("Updating: Entity %u not in m_gameEntities, should not happen...", entityID);
 			}
 		}
@@ -467,11 +466,11 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			{
 				if (player->isReady)
 				{
-					readyText->GetPicture()->SetTexture("Ready.png");
+					readyText->GetPicture()->SetTexture("NotReady.png");
 				}
 				else
 				{
-					readyText->GetPicture()->SetTexture("NotReady.png");
+					readyText->GetPicture()->SetTexture("Ready.png");
 				}
 			}
 		}
@@ -774,16 +773,21 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 			}
 			case ecs::Component::BOUNDING_ORIENTED_BOX:
 			{
-				comp::BoundingOrientedBox box;
+				dx::BoundingOrientedBox box;
 				msg >> box;
-				e.AddComponent<comp::BoundingOrientedBox>(box);
+				comp::OrientedBoxCollider* collider = e.AddComponent<comp::OrientedBoxCollider>();
+				collider->Center = box.Center;
+				collider->Extents = box.Extents;
+				collider->Orientation = box.Orientation;
 				break;
 			}
 			case ecs::Component::BOUNDING_SPHERE:
 			{
-				comp::BoundingSphere s;
+				dx::BoundingSphere s;
 				msg >> s;
-				e.AddComponent<comp::BoundingSphere>(s);
+				comp::SphereCollider* collider = e.AddComponent<comp::SphereCollider>();
+				collider->Center = s.Center;
+				collider->Radius = s.Radius;
 				break;
 			}
 			case ecs::Component::LIGHT:

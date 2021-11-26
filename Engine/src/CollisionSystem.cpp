@@ -173,8 +173,8 @@ CollisionInfo_t CollisionSystem::Intersection(Entity entity1, Entity entity2)
 	// Sphere - Sphere
 	if (p1Tags & TagType::DYNAMIC && p2Tags & TagType::DYNAMIC)
 	{
-		comp::BoundingSphere* p1BoS = entity1.GetComponent<comp::BoundingSphere>();
-		comp::BoundingSphere* p2BoS = entity2.GetComponent<comp::BoundingSphere>();
+		comp::SphereCollider* p1BoS = entity1.GetComponent<comp::SphereCollider>();
+		comp::SphereCollider* p2BoS = entity2.GetComponent<comp::SphereCollider>();
 		sm::Vector3 vec = sm::Vector3(p2BoS->Center) - sm::Vector3(p1BoS->Center);
 		float distance = vec.Length();
 		vec.Normalize();
@@ -189,8 +189,8 @@ CollisionInfo_t CollisionSystem::Intersection(Entity entity1, Entity entity2)
 	//Sphere - OBB
 	else if (p1Tags & TagType::DYNAMIC && p2Tags & TagType::STATIC)
 	{
-		comp::BoundingSphere* p1BoS = entity1.GetComponent<comp::BoundingSphere>();
-		comp::BoundingOrientedBox* p2OBB = entity2.GetComponent<comp::BoundingOrientedBox>();
+		comp::SphereCollider* p1BoS = entity1.GetComponent<comp::SphereCollider>();
+		comp::OrientedBoxCollider* p2OBB = entity2.GetComponent<comp::OrientedBoxCollider>();
 
 		sm::Matrix Translation = sm::Matrix::CreateTranslation(p2OBB->Center).Invert();
 		sm::Matrix Rotation = sm::Matrix::CreateFromQuaternion(p2OBB->Orientation).Transpose();
@@ -357,7 +357,7 @@ void CollisionSystem::CollisionResponse(CollisionInfo_t collisionInfo, Entity en
 	if (p1Tags & TagType::DYNAMIC && p2Tags & TagType::STATIC)
 	{
 		comp::Transform* transform = entity1.GetComponent<comp::Transform>();
-		comp::BoundingSphere* BoS = entity1.GetComponent<comp::BoundingSphere>();
+		comp::SphereCollider* BoS = entity1.GetComponent<comp::SphereCollider>();
 		if (transform)
 		{
 			transform->position = transform->position + sm::Vector3(collisionInfo.smallestVec * collisionInfo.overlap);
@@ -376,8 +376,8 @@ void CollisionSystem::CollisionResponse(CollisionInfo_t collisionInfo, Entity en
 	{
 		comp::Transform* transform1 = entity1.GetComponent<comp::Transform>();
 		comp::Transform* transform2 = entity2.GetComponent<comp::Transform>();
-		comp::BoundingSphere* BoS1 = entity1.GetComponent<comp::BoundingSphere>();
-		comp::BoundingSphere* BoS2 = entity2.GetComponent<comp::BoundingSphere>();
+		comp::SphereCollider* BoS1 = entity1.GetComponent<comp::SphereCollider>();
+		comp::SphereCollider* BoS2 = entity2.GetComponent<comp::SphereCollider>();
 		//Dynamic
 		if (transform1)
 		{

@@ -29,11 +29,6 @@ Entity FindClosestPlayer(HeadlessScene& scene, sm::Vector3 position, comp::NPC* 
 	return npc->currentClosest;
 }
 
-
-
-
-
-
 void Systems::UpdateAbilities(HeadlessScene& scene, float dt)
 {
 	PROFILE_FUNCTION();
@@ -46,7 +41,7 @@ void Systems::UpdateAbilities(HeadlessScene& scene, float dt)
 		{
 			Entity entity(*scene.GetRegistry(), e);
 			auto instance = type.func("get"_hs).invoke({}, entity);
-			
+
 			comp::IAbility* ability = instance.try_cast<comp::IAbility>();
 			if (!ability)
 			{
@@ -56,7 +51,7 @@ void Systems::UpdateAbilities(HeadlessScene& scene, float dt)
 			// Decreases cooldown between attacks.
 			if (ability->delayTimer > 0.f)
 				ability->delayTimer -= dt;
-					
+
 			if (ability->useTimer > 0.f)
 				ability->useTimer -= dt;
 
@@ -94,18 +89,18 @@ void Systems::HealingSystem(HeadlessScene& scene, float dt)
 				transform->position = entity.GetComponent<comp::Transform>()->position;
 				transform->scale = sm::Vector3(2);
 				transform->syncColliderScale = true;
-				
-				comp::BoundingSphere* sphere = collider.AddComponent<comp::BoundingSphere>();
+
+				comp::SphereCollider* sphere = collider.AddComponent<comp::SphereCollider>();
 				sphere->Center = transform->position;
-				
+
 				collider.AddComponent<comp::Tag<TagType::DYNAMIC>>();
-				
+
 				comp::BezierAnimation* a = collider.AddComponent<comp::BezierAnimation>();
 				a->scalePoints.push_back(transform->scale);
 				a->scalePoints.push_back(transform->scale + sm::Vector3(ability.range));
-				
+
 				collider.AddComponent<comp::SelfDestruct>()->lifeTime = ability.lifetime;
-				
+
 				collider.AddComponent<comp::Tag<TagType::NO_RESPONSE>>();
 
 				collider.AddComponent<comp::Network>();
@@ -121,9 +116,7 @@ void Systems::HealingSystem(HeadlessScene& scene, float dt)
 							h->currentHealth += ability.healAmount;
 							scene.publish<EComponentUpdated>(other, ecs::Component::HEALTH);
 						}
-
 					});
-
 			}
 		});
 
@@ -142,7 +135,6 @@ void Systems::HeroLeapSystem(HeadlessScene& scene, float dt)
 
 			if (ecs::ReadyToUse(&ability, point))
 			{
-				
 				comp::BezierAnimation* a = e.AddComponent<comp::BezierAnimation>();
 				a->translationPoints.push_back(t.position);
 				sm::Vector3 toTarget = ability.targetPoint - t.position;
@@ -160,7 +152,7 @@ void Systems::HeroLeapSystem(HeadlessScene& scene, float dt)
 				{
 					Entity collider = scene.CreateEntity();
 					collider.AddComponent<comp::Transform>()->position = t.position;
-					comp::BoundingSphere* sphere = collider.AddComponent<comp::BoundingSphere>();
+					comp::SphereCollider* sphere = collider.AddComponent<comp::SphereCollider>();
 					sphere->Center = t.position;
 					sphere->Radius = ability.damageRadius;
 
@@ -171,7 +163,6 @@ void Systems::HeroLeapSystem(HeadlessScene& scene, float dt)
 
 					CollisionSystem::Get().AddOnCollisionEnter(collider, [=, &scene](Entity thisEntity, Entity other)
 						{
-
 							// is caster already dead
 							if (e.IsNull())
 							{
@@ -215,13 +206,10 @@ void Systems::HeroLeapSystem(HeadlessScene& scene, float dt)
 
 								auto gravity = ecs::GetGravityForce();
 								p->forces.push_back(gravity);
-								
+
 							}
-
 						});
-
 				};
-
 			}
 		});
 }
@@ -250,7 +238,7 @@ void Systems::HealthSystem(HeadlessScene& scene, float dt, uint32_t& money_ref)
 					p->state = comp::Player::State::SPECTATING;
 					entity.RemoveComponent<comp::Tag<TagType::DYNAMIC>>();
 				}
-				else if(entity.GetComponent<comp::Tag<TagType::DEFENCE>>())
+				else if (entity.GetComponent<comp::Tag<TagType::DEFENCE>>())
 				{
 					comp::Transform* buildTransform = entity.GetComponent<comp::Transform>();
 
@@ -261,7 +249,8 @@ void Systems::HealthSystem(HeadlessScene& scene, float dt, uint32_t& money_ref)
 					node->defencePlaced = false;
 					entity.Destroy();
 				}
-				else {
+				else
+				{
 					entity.Destroy();
 				}
 			}
@@ -353,7 +342,6 @@ void Systems::MovementSystem(HeadlessScene& scene, float dt)
 		scene.ForEachComponent<comp::Transform, comp::Velocity>([&, dt]
 		(Entity e, comp::Transform& transform, comp::Velocity& velocity)
 			{
-
 				if (velocity.vel.Length() > 0.01f)
 				{
 					e.UpdateNetwork();
@@ -367,7 +355,6 @@ void Systems::MovementSystem(HeadlessScene& scene, float dt)
 					velocity.vel.y = 0;
 				}
 				velocity.oldVel = velocity.vel; // updated old vel position
-
 			});
 	}
 }
@@ -377,8 +364,8 @@ void Systems::MovementColliderSystem(HeadlessScene& scene, float dt)
 	PROFILE_FUNCTION();
 
 	//BoundingOrientedBox
-	scene.ForEachComponent<comp::Transform, comp::BoundingOrientedBox>([&, dt]
-	(comp::Transform& transform, comp::BoundingOrientedBox& obb)
+	scene.ForEachComponent<comp::Transform, comp::OrientedBoxCollider>([&, dt]
+	(comp::Transform& transform, comp::OrientedBoxCollider& obb)
 		{
 			obb.Center = transform.position;
 			/*obb.Orientation = transform.rotation;*/
@@ -387,31 +374,29 @@ void Systems::MovementColliderSystem(HeadlessScene& scene, float dt)
 		});
 
 	//BoundingSphere
-	scene.ForEachComponent<comp::Transform, comp::BoundingSphere>([&, dt]
-	(comp::Transform& transform, comp::BoundingSphere& sphere)
+	scene.ForEachComponent<comp::Transform, comp::SphereCollider>([&, dt]
+	(comp::Transform& transform, comp::SphereCollider& sphere)
 		{
 			sphere.Center = transform.position;
 			if (transform.syncColliderScale)
 				sphere.Radius = transform.scale.x;
-			
+
 		});
 }
 
 void Systems::LightSystem(Scene& scene, float dt)
 {
-	
+
 	//If you update the lightData update the info to the GPU
 	scene.ForEachComponent<comp::Light>([&](Entity e, comp::Light& light)
 		{
-			
-
 			//If an Entity has both a Light and Transform component use Transform for position
 			comp::Transform* t = e.GetComponent<comp::Transform>();
 			if (t)
 			{
 				light.lightData.position = sm::Vector4(t->position.x, t->position.y, t->position.z, 1.f);
 			}
-			
+
 			if (light.lightData.type == TypeLight::POINT)
 			{
 				if (light.flickerTimer >= light.maxFlickerTime)
@@ -428,12 +413,10 @@ void Systems::LightSystem(Scene& scene, float dt)
 					light.flickerTimer -= dt * (rand() % 2 + 1);
 
 				light.lightData.intensity = util::Lerp(0.5f, 1.2f, light.flickerTimer);
-			}			
+			}
 
 			scene.GetLights()->EditLight(light.lightData, light.index);
 		});
-
-
 }
 
 void Systems::TransformAnimationSystem(HeadlessScene& scene, float dt)
@@ -441,10 +424,10 @@ void Systems::TransformAnimationSystem(HeadlessScene& scene, float dt)
 	scene.ForEachComponent<comp::Transform, comp::BezierAnimation>([&](Entity e, comp::Transform& t, comp::BezierAnimation& a)
 		{
 			a.time += dt * (1.f / a.speed);
-			
-			if(a.translationPoints.size() > 0)
+
+			if (a.translationPoints.size() > 0)
 				t.position = util::BezierCurve(a.translationPoints, a.time);
-			
+
 			if (a.scalePoints.size() > 0)
 				t.scale = util::BezierCurve(a.scalePoints, a.time);
 
@@ -452,11 +435,10 @@ void Systems::TransformAnimationSystem(HeadlessScene& scene, float dt)
 				t.rotation = util::BezierCurve(a.rotationPoints, a.time);
 
 			e.UpdateNetwork();
-			
+
 			if (a.time > 1.0f)
 			{
-				
-				if(a.onFinish)
+				if (a.onFinish)
 					a.onFinish();
 
 				a.time = 0.0f;
@@ -464,23 +446,64 @@ void Systems::TransformAnimationSystem(HeadlessScene& scene, float dt)
 				{
 					e.RemoveComponent<comp::BezierAnimation>();
 				}
-
 			}
 		});
 }
 
-void Systems::FetchCollidingList(HeadlessScene& scene, QuadTree* qt)
+void Systems::UpdateDynamicQT(HeadlessScene& scene, QuadTree* qtDynamic)
 {
-	scene.ForEachComponent<comp::ColliderList, comp::BoundingSphere>([&](Entity& e, comp::ColliderList& cl, comp::BoundingSphere& bs)
+	scene.ForEachComponent<comp::SphereCollider>([&](Entity& e, comp::SphereCollider& bs)
 		{
-			qt->Query(cl.list, bs);
+			qtDynamic->Insert(e);
+		});
+}
+
+void Systems::CheckCollisions(HeadlessScene& scene, float dt)
+{
+	scene.ForEachComponent<comp::SphereCollider>([](Entity& e1, comp::SphereCollider& s)
+		{
+			for (auto e2 : s.list)
+			{
+				CollisionInfo_t collisionInfo = CollisionSystem::Get().Intersection(e1, e2);
+
+				if (collisionInfo.hasCollided)
+				{
+					if (CollisionSystem::Get().AddPair(e1, e2))
+					{
+						CollisionSystem::Get().OnCollisionEnter(e1, e2);
+					}
+
+					CollisionSystem::Get().OnCollision(e1, e2);
+
+					if (!e1.HasComponent<comp::Tag<TagType::NO_RESPONSE>>() && !e2.HasComponent<comp::Tag<TagType::NO_RESPONSE>>())
+					{
+						CollisionSystem::Get().CollisionResponse(collisionInfo, e1, e2);
+					}
+				}
+				else
+				{
+					if (CollisionSystem::Get().RemovePair(e1, e2))
+					{
+						CollisionSystem::Get().OnCollisionExit(e1, e2);
+					}
+				}
+			}
+		});
+}
+
+void Systems::FetchCollidingList(HeadlessScene& scene, QuadTree* qt, QuadTree* qtDynamic)
+{
+	scene.ForEachComponent<comp::SphereCollider>([&](Entity& e, comp::SphereCollider& s)
+		{
+			qt->Query(s.list, s);
+			qtDynamic->Query(s.list, s);
 		});
 }
 
 void Systems::ClearCollidingList(HeadlessScene& scene)
 {
-	scene.ForEachComponent<comp::ColliderList>([](Entity& e, comp::ColliderList& cl)
+	scene.ForEachComponent<comp::SphereCollider>([](Entity& e, comp::SphereCollider& s)
 		{
-			cl.list.clear();
+			s.list.clear();
 		});
 }

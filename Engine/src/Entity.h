@@ -71,7 +71,6 @@ inline T* Entity::GetComponent() const
 	if (this->IsNull())
 	{
 		return nullptr;
-		//throw std::runtime_error("Entity was a null entity");
 	}
 	return m_pRegistry->try_get<T>(m_entity);
 }

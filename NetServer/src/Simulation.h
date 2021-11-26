@@ -28,6 +28,7 @@ private:
 	Lobby m_lobby;
 	IShop m_shop;
 	std::unique_ptr<QuadTree> qt;
+	std::unique_ptr<QuadTree> qtDynamic;
 
 	HeadlessScene* m_pLobbyScene;
 	HeadlessScene* m_pGameScene;
