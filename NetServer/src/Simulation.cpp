@@ -325,27 +325,46 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 			//  run all game logic systems
 			{
 				PROFILE_SCOPE("Systems");
-
 				ServerSystems::CheckGameOver(this, scene);
 				{
 					PROFILE_SCOPE("Update QuadTree");
 					Systems::UpdateDynamicQT(scene, qtDynamic.get());
 				}
+				m_timeCycler.Update(this);
 				AIBehaviors::UpdateBlackBoard(scene);
 
-				ServerSystems::TickBTSystem(this, scene);
-				ServerSystems::UpdatePlayerWithInput(this, scene, e.dt);
-				ServerSystems::PlayerStateSystem(this, scene, e.dt);
+				{
+					PROFILE_SCOPE("BT Tick");
+					ServerSystems::TickBTSystem(this, scene);
+				}
+				{
+					PROFILE_SCOPE("Input from Player");
+					ServerSystems::UpdatePlayerWithInput(this, scene, e.dt);
+				}
 
 				Systems::UpdateAbilities(scene, e.dt);
 				Systems::CombatSystem(scene, e.dt);
 				Systems::HealingSystem(scene, e.dt);
 				//Systems::HeroLeapSystem(scene, e.dt);
+				{
+					PROFILE_SCOPE("Player state");
+					ServerSystems::PlayerStateSystem(this, scene, e.dt);
+				}
 
-				Systems::HealthSystem(scene, e.dt, m_currency.GetAmountRef());
-				Systems::SelfDestructSystem(scene, e.dt);
+				{
+					PROFILE_SCOPE("Abilities and Combat");
+					Systems::UpdateAbilities(scene, e.dt);
+					Systems::CombatSystem(scene, e.dt);
+					Systems::HealingSystem(scene, e.dt);
+					Systems::HeroLeapSystem(scene, e.dt);
+					Systems::HealthSystem(scene, e.dt, m_currency.GetAmountRef());
+					Systems::SelfDestructSystem(scene, e.dt);
+				}
 
-				Systems::TransformAnimationSystem(scene, e.dt);
+				{
+					PROFILE_SCOPE("Animation Transform");
+					Systems::TransformAnimationSystem(scene, e.dt);
+				}
 
 				Systems::MovementSystem(scene, e.dt);
 				Systems::MovementColliderSystem(scene, e.dt);
@@ -367,6 +386,8 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 					qtDynamic->Clear();
 				}
 			}
+
+
 
 			if (!waveQueue.empty())
 				ServerSystems::NextWaveConditions(this, waveTimer, waveQueue.front().GetTimeLimit());
@@ -469,8 +490,8 @@ void Simulation::SendSnapshot()
 			// Update wave timer to clients.
 			network::message<GameMsg> msg2;
 			msg2.header.id = GameMsg::Game_WaveTimer;
-			uint32_t timer = (uint32_t)waveQueue.front().GetTimeLimit() - (uint32_t)waveTimer.GetElapsedTime<std::chrono::seconds>();
-			msg2 << timer;
+			msg2 << m_timeCycler.GetElapsedTime();
+			msg2 << m_timeCycler.GetTimePeriod();
 			this->Broadcast(msg2);
 		}
 		network::message<GameMsg> msg3;
@@ -813,6 +834,7 @@ void Simulation::ReadyCheck(uint32_t playerID)
 		msg.header.id = GameMsg::Game_Start;
 
 		this->Broadcast(msg);
+		m_timeCycler.OnStart();
 	}
 }
 

@@ -22,6 +22,7 @@
 // Used to show and hide shopMenu
 static bool toggle = false;
 
+
 namespace sceneHelp
 {
 	Entity CreateLightEntity(Scene& scene, sm::Vector4 pos, sm::Vector4 dir, sm::Vector4 col, float range, float intensity, TypeLight type, UINT enabled)
@@ -154,14 +155,14 @@ namespace sceneHelp
 		gameScene.SetCurrentCameraEntity(cameraEntity);
 
 		// DONT TOUCH
-		CreateLightEntity(gameScene, { 0.f, 0.f, 0.f, 0.f }, { -1.0f, -0.5f, 0.f, 0.f }, { 50.f, 50.f, 50.f, 0.f }, 1000.f, 0.09f, TypeLight::DIRECTIONAL, 1);
-		CreateLightEntity(gameScene, { 266.f, 29.f, -320.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 30.f, 0.f, 0.f }, 20.f, 1.f,TypeLight::POINT, 1);
-		CreateLightEntity(gameScene, { 348.f, 29.f, -325.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 30.f, 0.f, 0.f }, 20.f, 1.f,TypeLight::POINT, 1);
-		CreateLightEntity(gameScene, { 310.f, 29.f, -305.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 30.f, 0.f, 0.f }, 20.f, 1.f,TypeLight::POINT, 1);
-		CreateLightEntity(gameScene, { 307.f, 29.f, -350.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 30.f, 0.f, 0.f }, 20.f, 1.f,TypeLight::POINT, 1);
-		CreateLightEntity(gameScene, { 181.f, 29.f, -314.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 30.f, 0.f, 0.f }, 20.f, 1.f,TypeLight::POINT, 1);
-		CreateLightEntity(gameScene, { 196.f, 29.f, -258.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 30.f, 0.f, 0.f }, 20.f, 1.f,TypeLight::POINT, 1);
-		CreateLightEntity(gameScene, { 337.f, 29.f, -397.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 30.f, 0.f, 0.f }, 20.f, 1.f,TypeLight::POINT, 1);
+		CreateLightEntity(gameScene, { 0.f, 0.f, 0.f, 0.f }, { -1.0f, 0.0f, 0.f, 0.f }, { 50.f, 50.f, 50.f, 0.f }, 1000.f, 0.09f, TypeLight::DIRECTIONAL, 1);
+		CreateLightEntity(gameScene, { 266.f, 29.f, -320.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 30.f, 0.f, 0.f }, 20.f, 1.f,TypeLight::POINT, 0);
+		CreateLightEntity(gameScene, { 348.f, 29.f, -325.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 30.f, 0.f, 0.f }, 20.f, 1.f,TypeLight::POINT, 0);
+		CreateLightEntity(gameScene, { 310.f, 29.f, -305.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 30.f, 0.f, 0.f }, 20.f, 1.f,TypeLight::POINT, 0);
+		CreateLightEntity(gameScene, { 307.f, 29.f, -350.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 30.f, 0.f, 0.f }, 20.f, 1.f,TypeLight::POINT, 0);
+		CreateLightEntity(gameScene, { 181.f, 29.f, -314.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 30.f, 0.f, 0.f }, 20.f, 1.f,TypeLight::POINT, 0);
+		CreateLightEntity(gameScene, { 196.f, 29.f, -258.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 30.f, 0.f, 0.f }, 20.f, 1.f,TypeLight::POINT, 0);
+		CreateLightEntity(gameScene, { 337.f, 29.f, -397.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 30.f, 0.f, 0.f }, 20.f, 1.f,TypeLight::POINT, 0);
 
 		InputSystem::Get().SetCamera(gameScene.GetCurrentCamera());
 
@@ -316,9 +317,9 @@ namespace sceneHelp
 			scene.Add2DCollection(playerHp, "player" + std::to_string(i + 1) + "Info");
 		}
 
-		Collection2D* timerCollection = new Collection2D;
-		timerCollection->AddElement<rtd::Text>("0", draw_text_t(0, 0, width, height / 16.f));
-		scene.Add2DCollection(timerCollection, "timer");
+		//Collection2D* timerCollection = new Collection2D;
+		//timerCollection->AddElement<rtd::Text>("0", draw_text_t(0, 0, width, height / 16.f));
+		//scene.Add2DCollection(timerCollection, "timer");
 
 		for (int i = 0; i < MAX_PLAYERS_PER_LOBBY; i++)
 		{

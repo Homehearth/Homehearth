@@ -113,41 +113,40 @@ bool Game::OnStartup()
 void Game::OnUserUpdate(float deltaTime)
 {
 	this->UpdateInput();
-
 	Scene& scene = GetScene("Game");
-
-	if (GetCurrentScene() == &scene)
+	if (m_players.find(m_localPID) != m_players.end())
 	{
-		if (m_players.find(m_localPID) != m_players.end())
+		sm::Vector3 playerPos = m_players.at(m_localPID).GetComponent<comp::Transform>()->position;
+
+		if (m_elapsedCycleTime <= m_waveTimer && (m_serverCycle == Cycle::DAY || m_serverCycle == Cycle::MORNING))
 		{
-			sm::Vector3 playerPos = m_players.at(m_localPID).GetComponent<comp::Transform>()->position;
-
-			// Camera* cam = scene.GetCurrentCamera();
-			// if (cam->GetCameraType()  == CAMERATYPE::PLAY)
-			// {
-			// 	GameSystems::CheckLOS(this);
-			// }
-
+			m_elapsedCycleTime += deltaTime;
 			scene.ForEachComponent<comp::Light>([&](Entity e, comp::Light& l)
 				{
-					if (l.lightData.type == TypeLight::DIRECTIONAL)
+					switch(l.lightData.type)
 					{
-						sm::Vector3 dir = sm::Vector3::TransformNormal(sm::Vector3(l.lightData.direction), sm::Matrix::CreateRotationZ(dx::XMConvertToRadians(deltaTime * 10.f)));
-						l.lightData.enabled = true;
-						if (dir.y > 0)
-							l.lightData.enabled = false;
+					case TypeLight::DIRECTIONAL:
+					{
+						l.lightData.direction = { -1.0f, 0.0f, 0.f, 0.f };
+						sm::Vector3 dir = sm::Vector3::TransformNormal(sm::Vector3(l.lightData.direction), sm::Matrix::CreateRotationZ(dx::XMConvertToRadians((180.0f / ((float)TIME_LIMIT_DAY + (float)TIME_LIMIT_MORNING)) * (m_elapsedCycleTime))));
 
 						l.lightData.direction = sm::Vector4(dir.x, dir.y, dir.z, 0.0f);
 						sm::Vector3 pos = l.lightData.position;
-						float d = dir.Dot(sm::Vector3::Up);
 						pos = playerPos - dir * 200;
 						l.lightData.position = sm::Vector4(pos);
 						l.lightData.position.w = 1.f;
-
+						break;
+					}
+					case TypeLight::POINT:
+					{
+						l.lightData.enabled = false;
+						break;
+					}
+					default:
+						break;
 					}
 					e.GetComponent<comp::SphereCollider>()->Center = sm::Vector3(l.lightData.position);
 				});
-
 		}
 	}
 }
@@ -376,14 +375,61 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	}
 	case GameMsg::Game_WaveTimer:
 	{
+		msg >> m_serverCycle;
 		msg >> m_waveTimer;
-		Element2D* elem = GetScene("Game").GetCollection("timer")->elements[0].get();
-		if (elem)
+		switch (m_serverCycle)
 		{
-			if (m_waveTimer > 0)
-				dynamic_cast<rtd::Text*>(elem)->SetText("\nUntil next Wave:\n" + std::to_string(m_waveTimer));
-			else
-				dynamic_cast<rtd::Text*>(elem)->SetText("\nUnder Attack!");
+		case Cycle::DAY:
+		{
+			Scene& scene = GetScene("Game");
+			// Change light when day.
+			scene.ForEachComponent<comp::Light>([&](Entity e, comp::Light& l)
+				{
+					if (l.lightData.type == TypeLight::DIRECTIONAL)
+					{
+						l.lightData.enabled = true;
+					}
+				});
+			break;
+		}
+		case Cycle::NIGHT:
+		{
+			Scene& scene = GetScene("Game");
+			// Change light on Night.
+			m_elapsedCycleTime = 0.0f;
+			scene.ForEachComponent<comp::Light>([&](Entity e, comp::Light& l)
+				{ 
+					switch (l.lightData.type)
+					{
+					case TypeLight::DIRECTIONAL:
+					{
+						l.lightData.enabled = false;
+						break;
+					}
+					case TypeLight::POINT:
+					{
+						l.lightData.enabled = true;
+						break;
+					}
+					}
+				});
+			break;
+		}
+		case Cycle::MORNING:
+		{
+			Scene& scene = GetScene("Game");
+			// Change light on Morning.
+			scene.ForEachComponent<comp::Light>([&](Entity e, comp::Light& l)
+				{
+					if (l.lightData.type == TypeLight::DIRECTIONAL)
+					{
+						l.lightData.enabled = true;
+					}
+				});
+			break;
+		}
+		default:
+			break;
 		}
 		break;
 	}
