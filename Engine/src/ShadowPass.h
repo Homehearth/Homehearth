@@ -1,7 +1,8 @@
 #pragma once
 #include "IRenderPass.h"
 
-constexpr uint64_t SHADOW_SIZE = 4096;
+constexpr uint64_t SHADOW_SIZE = 2048;
+
 
 // Single shadow section of shadow map.
 struct ShadowSection

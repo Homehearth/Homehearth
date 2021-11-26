@@ -115,7 +115,7 @@ camera_Matrix_t ShadowPass::GetLightMatrix(light_t light, sm::Vector3 direction)
 	case TypeLight::DIRECTIONAL:
 	{
 		mat.view = dx::XMMatrixLookToLH(light.position, direction, sm::Vector3::Up);
-		mat.projection = dx::XMMatrixOrthographicLH(SHADOW_SIZE / 20, SHADOW_SIZE / 30, 0.1f, 400.0f);
+		mat.projection = dx::XMMatrixOrthographicLH(500, 500, 0.1f, 400.0f);
 		break;
 	}
 	case TypeLight::POINT:
