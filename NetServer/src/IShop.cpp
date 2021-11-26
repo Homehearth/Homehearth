@@ -52,6 +52,9 @@ void IShop::UseShop(const ShopItem& whatToBuy, const uint32_t& player)
 	}
 	case ShopItem::Heal:
 	{
+		if (m_sim->GetCurrency().GetAmount() < 5)
+			break;
+
 		if (m_sim->GetPlayer(player))
 		{
 			comp::Health* h = m_sim->GetPlayer(player).GetComponent<comp::Health>();
@@ -60,6 +63,8 @@ void IShop::UseShop(const ShopItem& whatToBuy, const uint32_t& player)
 				h->currentHealth = h->maxHealth;
 			}
 		}
+
+		m_sim->GetCurrency().GetAmountRef() -= 5;
 		break;
 	}
 	case ShopItem::LONG_TOWER:

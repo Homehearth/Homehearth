@@ -129,120 +129,6 @@ message<GameMsg> Simulation::AllEntitiesMessage()const
 	return msg;
 }
 
-void Simulation::CreateWaves()
-{
-	using namespace EnemyManagement;
-	//Reeset wavequeu
-	while (!waveQueue.empty())
-	{
-		waveQueue.pop();
-	}
-
-	//left bottom corner { 490.f, -150.0f });   right bottom corner { 170, -80.0f }
-	//left top corner { 520.f, -540.0f }        right top corner { 80.0f, -500.0f }
-	Wave wave1, wave2, wave3, wave4, wave5; // Default: WaveType::Zone
-	{
-		Wave::Group group1;
-		group1.AddEnemy(EnemyType::Default,2 + 2 * currentRound);
-		group1.SetSpawnPoint({ 490.f, -150.0f });
-		wave1.SetTimeLimit(5 * currentRound);
-		wave1.AddGroup(group1);
-	}
-
-	{ // Wave_2
-		Wave::Group group1, group2;
-
-		group1.AddEnemy(EnemyType::Default, 1 + currentRound);
-		group2.AddEnemy(EnemyType::Default, 2 + currentRound);
-		group2.AddEnemy(EnemyType::Runner, 1 + 2 * currentRound);
-		group1.SetSpawnPoint({ 490.f, -150.0f });
-		group2.SetSpawnPoint({ 170, -80.0f });
-		wave2.AddGroup(group1);
-		wave2.AddGroup(group2);
-		wave2.SetTimeLimit(30);
-	}
-
-
-	{ // Wave_3
-		Wave::Group group1, group2, group3, group4;
-
-		group1.AddEnemy(EnemyType::Default, 3 + currentRound);
-		group1.AddEnemy(EnemyType::Runner, 1 + 1 * currentRound);
-		group1.SetSpawnPoint({ 490.f, -150.0f });
-
-		group2.AddEnemy(EnemyType::Default, 3 + currentRound);
-		group2.AddEnemy(EnemyType::Runner, 1 + currentRound);
-		group2.SetSpawnPoint({ 170, -80.0f });
-
-		group3.AddEnemy(EnemyType::Default, 3 + currentRound);
-		group3.SetSpawnPoint({ 80.0f, -500.0f });
-
-		group4.AddEnemy(EnemyType::Default, 2 + currentRound);
-		group4.SetSpawnPoint({ 520.f, -540.0f });
-
-		wave3.AddGroup(group1);
-		wave3.AddGroup(group2);
-		wave3.AddGroup(group3);
-		wave3.AddGroup(group4);
-		wave3.SetTimeLimit(45);
-	}
-
-	{ // Wave_4
-		Wave::Group group1, group2, group3, group4;
-
-		group1.AddEnemy(EnemyType::Default, 4 + currentRound);
-		group1.AddEnemy(EnemyType::Runner, 1 + currentRound);
-		group1.SetSpawnPoint({ 490.f, -150.0f });
-
-		group2.AddEnemy(EnemyType::Default, 4 + currentRound);
-		group2.AddEnemy(EnemyType::Runner, 1 + currentRound);
-		group2.SetSpawnPoint({ 170, -80.0f });
-
-		group3.AddEnemy(EnemyType::Default, 2 + currentRound);
-		group3.AddEnemy(EnemyType::Runner, 2 + currentRound);
-		group3.SetSpawnPoint({ 80.0f, -500.0f });
-
-		group4.AddEnemy(EnemyType::Default, 4 + currentRound);
-		group4.AddEnemy(EnemyType::Runner, 1 + currentRound);
-		group4.SetSpawnPoint({ 520.f, -540.0f });
-
-		wave4.AddGroup(group1);
-		wave4.AddGroup(group2);
-		wave4.AddGroup(group3);
-		wave4.AddGroup(group4);
-		wave4.SetTimeLimit(45);
-	}
-
-	{ // Wave_5 BOSS
-		Wave::Group group1, group2, group3, group4;
-
-		group1.AddEnemy(EnemyType::Mage, 2 + currentRound);
-		group1.AddEnemy(EnemyType::BIGMOMMA, 1);
-		group1.SetSpawnPoint({ 490.f, -150.0f });
-
-		group2.AddEnemy(EnemyType::Default, 1 + currentRound);
-		group2.SetSpawnPoint({ 170, -80.0f });
-
-		group3.AddEnemy(EnemyType::Default, 2 + currentRound);
-		group3.SetSpawnPoint({ 80.0f, -500.0f });
-
-		group4.AddEnemy(EnemyType::Default, 1 + currentRound);
-		group4.SetSpawnPoint({ 520.f, -540.0f });
-
-		wave5.AddGroup(group1);
-		wave5.AddGroup(group2);
-		wave5.AddGroup(group3);
-		wave5.AddGroup(group4);
-		wave5.SetTimeLimit(45);
-	}
-
-	//waveQueue.emplace(wave1);
-	/*waveQueue.emplace(wave2);
-	waveQueue.emplace(wave3);
-	waveQueue.emplace(wave4);
-	waveQueue.emplace(wave5);*/
-}
-
 void Simulation::ResetPlayer(Entity player)
 {
 	comp::Player* playerComp = player.GetComponent<comp::Player>();
@@ -271,9 +157,10 @@ void Simulation::ResetPlayer(Entity player)
 		firstTimeAdded = true;
 	}
 
-	player.AddComponent<comp::MeshName>()->name = "Knight.fbx";
-	player.AddComponent<comp::AnimatorName>()->name = "Knight.anim";
+	player.AddComponent<comp::MeshName>()->name = NameType::MESH_KNIGHT;
+	player.AddComponent<comp::AnimatorName>()->name = AnimName::ANIM_KNIGHT;
 	player.AddComponent<comp::AnimationState>();
+	player.AddComponent<comp::ColliderList>();
 
 	// only if Melee
 	if (playerComp->classType == comp::Player::Class::WARRIOR)
@@ -296,6 +183,15 @@ void Simulation::ResetPlayer(Entity player)
 		leap->damageRadius = 20.f;
 
 		playerComp->secondaryAbilty = entt::resolve<comp::HeroLeapAbility>();
+
+		comp::DashAbility* dashAbility = player.AddComponent<comp::DashAbility>();
+		dashAbility->cooldown = 1.0f;
+		dashAbility->delay = 0.0f;
+		dashAbility->force = 10.f;
+		dashAbility->lifetime = 0.0f;
+		dashAbility->useTime = 0.20f;
+
+		playerComp->moveAbilty = entt::resolve<comp::DashAbility>();
 
 	}
 	else if (playerComp->classType == comp::Player::Class::MAGE)
@@ -320,9 +216,17 @@ void Simulation::ResetPlayer(Entity player)
 
 		playerComp->secondaryAbilty = entt::resolve<comp::HealAbility>();
 
+		comp::BlinkAbility* blinkAbility = player.AddComponent<comp::BlinkAbility>();
+		blinkAbility->cooldown = 1.0f;
+		blinkAbility->delay = 0.1f;
+		blinkAbility->distance = 50.f;
+		blinkAbility->lifetime = 0.1f;
+		blinkAbility->useTime = 0.1f;
 
-		player.AddComponent<comp::MeshName>()->name = "Monster.fbx";
-		player.AddComponent<comp::AnimatorName>()->name = "Monster.anim";
+		playerComp->moveAbilty = entt::resolve<comp::BlinkAbility>();
+
+		player.AddComponent<comp::MeshName>()->name = NameType::MESH_MONSTER;
+		player.AddComponent<comp::AnimatorName>()->name = AnimName::ANIM_MONSTER;
 		player.AddComponent<comp::AnimationState>();
 
 	}
@@ -356,6 +260,9 @@ Simulation::Simulation(Server* pServer, HeadlessEngine* pEngine)
 	this->m_gameID = 0;
 	this->m_tick = 0;
 
+	dx::BoundingBox bounds = { dx::XMFLOAT3(250, 0, -320), dx::XMFLOAT3(190, 50, 170) };
+	qt = std::make_unique<QuadTree>(bounds);
+
 	m_spawnPoints.push(sm::Vector3(220.f, 0, -353.f));
 	m_spawnPoints.push(sm::Vector3(197.f, 0, -325.f));
 	m_spawnPoints.push(sm::Vector3(222.f, 0, -300.f));
@@ -385,9 +292,6 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 {
 	this->m_gameID = gameID;
 	this->m_lobby.Init(this);
-
-	// Create and add all waves to the queue.
-	CreateWaves();
 
 	// Create Scenes associated with this Simulation
 	m_pLobbyScene = &m_pEngine->GetScene("Lobby_" + std::to_string(gameID));
@@ -432,6 +336,8 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 				Systems::MovementSystem(scene, e.dt);
 				Systems::MovementColliderSystem(scene, e.dt);
 
+				Systems::FetchCollidingList(scene, qt.get());
+
 				{
 					PROFILE_SCOPE("Collision Box/Box");
 					//Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(scene, e.dt);
@@ -445,13 +351,13 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 					Systems::CheckCollisions<comp::BoundingSphere, comp::BoundingSphere>(scene, e.dt);
 				}
 				ServerSystems::AnimatonSystem(this, scene);
+				Systems::ClearCollidingList(scene);
 			}
 
 			if (!waveQueue.empty())
 				ServerSystems::NextWaveConditions(this, waveTimer, waveQueue.front().GetTimeLimit());
 			else
-				this->CreateWaves();
-			//LOG_INFO("GAME Scene %d", m_gameID);
+				EnemyManagement::CreateWaves(waveQueue, currentRound++);
 		});
 
 	//On all enemies wiped, activate the next wave.
@@ -657,12 +563,18 @@ void Simulation::BuildMapColliders(std::vector<dx::BoundingOrientedBox>* mapColl
 		obb->Orientation = mapColliders->at(i).Orientation;
 		collider.AddComponent<comp::Tag<TagType::STATIC>>();
 		//collider.AddComponent<comp::Network>();
+		qt->Insert(collider);
 	}
 }
 
 HeadlessScene* Simulation::GetLobbyScene() const
 {
 	return m_pLobbyScene;
+}
+
+HeadlessScene* Simulation::GetGameOverScene() const
+{
+	return m_pGameOverScene;
 }
 
 HeadlessScene* Simulation::GetGameScene() const
@@ -709,9 +621,14 @@ void Simulation::SetGameScene()
 	ResetGameScene();
 	m_pCurrentScene = m_pGameScene;
 	m_lobby.SetActive(false);
-#ifdef GOD_MODE
+#if GOD_MODE
 	// During debug give players 1000 gold/monies.
 	m_currency.GetAmountRef() = 1000;
+	for (auto& player : m_lobby.m_players)
+	{
+		player.second.AddComponent<comp::Tag<TagType::NO_RESPONSE>>();
+		player.second.RemoveComponent<comp::Tag<TagType::GOOD>>();
+	}
 #endif
 }
 
@@ -755,7 +672,7 @@ void Simulation::ResetGameScene()
 	m_currency.Zero();
 
 	LOG_INFO("%lld", m_pGameScene->GetRegistry()->size());
-	CreateWaves();
+	EnemyManagement::CreateWaves(waveQueue, currentRound++);
 }
 
 void Simulation::SendEntities(const std::vector<Entity>& entities, GameMsg msgID, const std::bitset<ecs::Component::COMPONENT_MAX>& componentMask)
@@ -871,6 +788,7 @@ bool Simulation::IsEmpty() const
 void Simulation::ReadyCheck(uint32_t playerID)
 {
 	bool allReady = m_lobby.ReadyCheck(playerID);
+	m_lobby.Update();
 
 	if (allReady)
 	{

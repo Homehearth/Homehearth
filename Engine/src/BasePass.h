@@ -1,5 +1,6 @@
 #pragma once
 #include "IRenderPass.h"
+#include "ShadowPass.h"
 
 //--------------------------------------
 // Forward Rendering, or GeometryPass.
@@ -8,6 +9,8 @@ class BasePass : public IRenderPass
 {
 public:
 	Skybox* m_skyboxRef = nullptr;
+	ShadowPass* m_pShadowPass = nullptr;
+
 	BasePass() = default;
 	virtual ~BasePass() = default;
 

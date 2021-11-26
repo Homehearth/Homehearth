@@ -6,10 +6,11 @@
 
 // Feel free to add more things to this, currently only gives more money :)
 #define GOD_MODE 0
+#define SPAWN_MONSTERS 1
 
 // Turn this to 1 if you want to see the very beautiful demo menu
 #define DRAW_TEMP_2D 0
-#define DEBUG_SNAPSHOT 1
+#define DEBUG_SNAPSHOT 0
 
 #define RENDER_GRID 0
 
@@ -57,7 +58,9 @@
 #include <queue>
 #include <condition_variable>
 #include <bitset>
+#include <algorithm>
 
+#include <cmath>
 #include <functional>
 
 #define ALIGN16 __declspec(align(16)) 
@@ -108,7 +111,7 @@ namespace sm = dx::SimpleMath;
 //Utility
 #include "Timer.h"
 #include "utility.h"
-
+#include "ModelIdentifier.h"
 // Custom Global includes (Singletons)
 #include "Logger.h"
 #include "multi_thread_manager.h"

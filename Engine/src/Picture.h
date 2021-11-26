@@ -11,9 +11,10 @@ namespace rtd
 	{
 	private:
 
-		std::shared_ptr<RBitMap> m_texture;
 		draw_t m_drawOpts;
 		std::unique_ptr<Border> m_border;
+		DoubleBuffer<std::shared_ptr<RBitMap>> m_texture;
+		FLOAT m_opacity = 1.0f;
 
 	public:
 
@@ -39,6 +40,10 @@ namespace rtd
 
 		// Update the position.
 		void UpdatePos(const draw_t& new_pos);
+
+		void SetPosition(const FLOAT& x, const FLOAT& y);
+
+		void SetOpacity(const FLOAT& opacity);
 
 		// Inherited via Element2D
 		virtual void Draw() override;

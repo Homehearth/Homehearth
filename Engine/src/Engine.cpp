@@ -28,7 +28,7 @@ void Engine::Startup()
 
 	//Get heighest possible 16:9 resolution
 	//90% of the height
-	config.height = static_cast<UINT>(GetSystemMetrics(SM_CYSCREEN) * 0.90f);
+	config.height = static_cast<UINT>(GetSystemMetrics(SM_CYSCREEN) * 0.50f);
 	float aspectRatio = 16.0f / 9.0f;
 	config.width = static_cast<UINT>(aspectRatio * config.height);
 
@@ -277,6 +277,7 @@ void Engine::drawImGUI() const
 				ImGui::SameLine();
 				std::string index = std::to_string(light.index);
 				ImGui::Text("Light index: %d", light.index);
+
 				bool edited = false;
 				if (ImGui::ColorEdit4(("Color##" + index).c_str(), (float*)&light.lightData.color)) 
 					edited = true;
