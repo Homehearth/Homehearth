@@ -167,8 +167,12 @@ bool ServerGame::LoadHouseColliders(const std::string& filename)
 		dx::XMFLOAT3 extents = { scl.x / 2.f, scl.y / 2.f, scl.z / 2.f };
 		dx::XMFLOAT4 orientation = { rot.x, rot.y, rot.z, rot.w };
 
-		dx::BoundingOrientedBox bob = { center, extents, orientation };
-		m_houseColliders.insert(std::pair<std::string, dx::BoundingOrientedBox>(filename, bob));
+		comp::OrientedBoxCollider bob;
+		bob.Center = center;
+		bob.Extents = extents;
+		bob.Orientation = orientation;
+
+		m_houseColliders.insert(std::pair<std::string, comp::OrientedBoxCollider>(filename, bob));
 	}
 	return true;
 }

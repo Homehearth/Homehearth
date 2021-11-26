@@ -296,7 +296,7 @@ void Simulation::LeaveLobby(uint32_t playerID)
 	m_pServer->SendToClient(playerID, accMsg);
 }
 
-bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* mapColliders, std::unordered_map<std::string,dx::BoundingOrientedBox>* houseColliders)
+bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* mapColliders, std::unordered_map<std::string, comp::OrientedBoxCollider>* houseColliders)
 {
 	this->m_gameID = gameID;
 	this->m_lobby.Init(this);
@@ -882,8 +882,8 @@ void Simulation::InitializeHouses()
 	house5.AddComponent<comp::Transform>();
 	house5.AddComponent<comp::Tag<TagType::STATIC>>();
 	house5.AddComponent<comp::House>();
-	comp::BoundingOrientedBox* tempObb = &this->houseColliders->at("House5.fbx");
-	comp::BoundingOrientedBox* obb = house5.AddComponent<comp::BoundingOrientedBox>();
+	comp::OrientedBoxCollider* tempObb = &this->houseColliders->at("House5.fbx");
+	comp::OrientedBoxCollider* obb = house5.AddComponent<comp::OrientedBoxCollider>();
 	obb->Center = tempObb->Center;
 	obb->Center.y = 0.0f;
 	obb->Extents = tempObb->Extents;

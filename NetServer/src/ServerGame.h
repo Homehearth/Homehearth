@@ -12,7 +12,7 @@ private:
 	uint32_t m_nGameID;
 	std::unordered_map<uint32_t, std::unique_ptr<Simulation>> m_simulations;
 	std::vector<dx::BoundingOrientedBox> m_mapColliders;
-	std::unordered_map<std::string,dx::BoundingOrientedBox> m_houseColliders;
+	std::unordered_map<std::string,comp::OrientedBoxCollider> m_houseColliders;
 
 	// Load in all the colliders from a file
 	bool LoadMapColliders(const std::string& filename);
