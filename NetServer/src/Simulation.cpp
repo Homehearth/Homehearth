@@ -317,26 +317,46 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 
 				ServerSystems::CheckGameOver(this, scene);
 
-				AIBehaviors::UpdateBlackBoard(scene);
+				{
+					PROFILE_SCOPE("BlackBoard Update");
+					AIBehaviors::UpdateBlackBoard(scene);
+				}
 
-				ServerSystems::TickBTSystem(this, scene);
-				ServerSystems::UpdatePlayerWithInput(this, scene, e.dt);
-				ServerSystems::PlayerStateSystem(this, scene, e.dt);
+				{
+					PROFILE_SCOPE("BT Tick");
+					ServerSystems::TickBTSystem(this, scene);
+				}
+				{
+					PROFILE_SCOPE("Input from Player");
+					ServerSystems::UpdatePlayerWithInput(this, scene, e.dt);
+				}
 
-				Systems::UpdateAbilities(scene, e.dt);
-				Systems::CombatSystem(scene, e.dt);
-				Systems::HealingSystem(scene, e.dt);
-				Systems::HeroLeapSystem(scene, e.dt);
+				{
+					PROFILE_SCOPE("Player state");
+					ServerSystems::PlayerStateSystem(this, scene, e.dt);
+				}
 
-				Systems::HealthSystem(scene, e.dt, m_currency.GetAmountRef());
-				Systems::SelfDestructSystem(scene, e.dt);
+				{
+					PROFILE_SCOPE("Abilities and Combat");
+					Systems::UpdateAbilities(scene, e.dt);
+					Systems::CombatSystem(scene, e.dt);
+					Systems::HealingSystem(scene, e.dt);
+					Systems::HeroLeapSystem(scene, e.dt);
+					Systems::HealthSystem(scene, e.dt, m_currency.GetAmountRef());
+					Systems::SelfDestructSystem(scene, e.dt);
+				}
 
-				Systems::TransformAnimationSystem(scene, e.dt);
+				{
+					PROFILE_SCOPE("Animation Transform");
+					Systems::TransformAnimationSystem(scene, e.dt);
+				}
 
-				Systems::MovementSystem(scene, e.dt);
-				Systems::MovementColliderSystem(scene, e.dt);
-
-				Systems::FetchCollidingList(scene, qt.get());
+				{
+					PROFILE_SCOPE("Movement and Collision");
+					Systems::MovementSystem(scene, e.dt);
+					Systems::MovementColliderSystem(scene, e.dt);
+					Systems::FetchCollidingList(scene, qt.get());
+				}
 
 				{
 					PROFILE_SCOPE("Collision Box/Box");
@@ -350,11 +370,20 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 					PROFILE_SCOPE("Collision Sphere/Sphere");
 					Systems::CheckCollisions<comp::BoundingSphere, comp::BoundingSphere>(scene, e.dt);
 				}
-				ServerSystems::AnimatonSystem(this, scene);
+
+				{
+					PROFILE_SCOPE("Animation");
+					ServerSystems::AnimatonSystem(this, scene);
+				}
 				Systems::ClearCollidingList(scene);
+
+				{
+					PROFILE_SCOPE("Day and Night Update");
+					m_timeCycler.Update(this);
+				}
 			}
 
-			m_timeCycler.Update();
+
 
 			if (!waveQueue.empty())
 				ServerSystems::NextWaveConditions(this, waveTimer, waveQueue.front().GetTimeLimit());
