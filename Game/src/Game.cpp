@@ -346,7 +346,10 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			SoundHandler::Get().PlayUnique2DSound("Enemy_OnDeath");
 			break;
 		default:
+			{
+				LOG_WARNING("Should not happen. Unknown SoundType!")
 			break;
+			}
 		}
 
 		break;
@@ -409,7 +412,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		SetScene("Game");
 		thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::ADAPTIVE);
 
-		SoundHandler::Get().SetCurrentMusic("gameplay_theme");
+		//SoundHandler::Get().SetCurrentMusic("gameplay_theme");
 
 		break;
 	}

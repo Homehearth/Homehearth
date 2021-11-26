@@ -134,7 +134,7 @@ void Systems::HeroLeapSystem(HeadlessScene& scene, float dt)
 				auto audio = e.GetComponent<comp::AudioState>();
 				audio->type = ESoundEvent::Player_OnLeap;
 				audio->shouldBroadcast = true;
-				audio->position = t.position;
+				audio->position = sm::Vector3(0.f, 0.f, 0.f);
 
 				comp::BezierAnimation* a = e.AddComponent<comp::BezierAnimation>();
 				a->translationPoints.push_back(t.position);
