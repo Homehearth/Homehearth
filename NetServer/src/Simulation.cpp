@@ -314,8 +314,11 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 			//  run all game logic systems
 			{
 				PROFILE_SCOPE("Systems");
-
 				ServerSystems::CheckGameOver(this, scene);
+				{
+					PROFILE_SCOPE("Day and Night Update");
+					m_timeCycler.Update(this);
+				}
 
 				{
 					PROFILE_SCOPE("BlackBoard Update");
@@ -377,10 +380,7 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 				}
 				Systems::ClearCollidingList(scene);
 
-				{
-					PROFILE_SCOPE("Day and Night Update");
-					m_timeCycler.Update(this);
-				}
+
 			}
 
 
