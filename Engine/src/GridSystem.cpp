@@ -377,13 +377,13 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 			{
 				health->currentHealth	= 100.0f;
 				health->maxHealth		= 100.0f;
-				tileEntity.AddComponent<comp::MeshName>()->name = "Defence1x1.obj";
+				tileEntity.AddComponent<comp::MeshName>()->name = NameType::MESH_DEFENCE1X1;
 			}
 			else if (player.towerSelected	== EDefenceType::LARGE)
 			{
 				health->currentHealth	= 300.0f;
 				health->maxHealth		= 300.0f;
-				tileEntity.AddComponent<comp::MeshName>()->name = "Defence1x3.obj";
+				tileEntity.AddComponent<comp::MeshName>()->name = NameType::MESH_DEFENCE1X3;
 			}
 
 			return true;

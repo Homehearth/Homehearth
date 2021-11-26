@@ -50,13 +50,6 @@ namespace ecs {
         return sm::Vector3::Distance(translation, target) < 0.01f;
     }
 
-    void RotateAroundAxis(sm::Quaternion& inout, sm::Vector3& axis, const float& angle)
-    {
-        axis.Normalize();
-        inout = sm::Quaternion::CreateFromAxisAngle(axis, angle);
-        inout.Normalize();
-    }
-
     bool UseAbility(component::IAbility* abilityComponent, sm::Vector3* targetPoint)
     {
         if (targetPoint)

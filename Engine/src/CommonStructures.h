@@ -223,12 +223,13 @@ struct Ray_t
 
 struct InputState
 {
-	int axisHorizontal : 2;
-	int axisVertical : 2;
-	bool leftMouse : 1;
-	bool rightMouse : 1;
-	bool key_b : 1;
-	bool key_shift : 1;
+	int		axisHorizontal	: 2;
+	int		axisVertical	: 2;
+	bool	leftMouse		: 1;
+	bool	rightMouse		: 1;
+	bool	key_b			: 1;
+	bool	key_shift		: 1;
+	int		mousewheelDir	: 2;
 
 	Ray_t mouseRay;
 
