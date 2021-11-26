@@ -379,9 +379,10 @@ void ServerSystems::WaveSystem(Simulation* simulation,
 void ServerSystems::NextWaveConditions(Simulation* simulation, Timer& timer, int timeToFinish)
 {
 	//Publish event when timeToFinish been exceeded.
-	if (timer.GetElapsedTime() > timeToFinish)
+	if (simulation->m_timeCycler.GetSwitch())
 	{
 		simulation->GetGameScene()->publish<ESceneCallWaveSystem>(0.0f);
+		simulation->m_timeCycler.Switch();
 	}
 }
 

@@ -354,6 +354,8 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 				Systems::ClearCollidingList(scene);
 			}
 
+			m_timeCycler.Update();
+
 			if (!waveQueue.empty())
 				ServerSystems::NextWaveConditions(this, waveTimer, waveQueue.front().GetTimeLimit());
 			else
@@ -455,8 +457,8 @@ void Simulation::SendSnapshot()
 			// Update wave timer to clients.
 			network::message<GameMsg> msg2;
 			msg2.header.id = GameMsg::Game_WaveTimer;
-			uint32_t timer = (uint32_t)waveQueue.front().GetTimeLimit() - (uint32_t)waveTimer.GetElapsedTime<std::chrono::seconds>();
-			msg2 << timer;
+			msg2 << m_timeCycler.GetElapsedTime();
+			msg2 << m_timeCycler.GetTimePeriod();
 			this->Broadcast(msg2);
 		}
 		network::message<GameMsg> msg3;
@@ -798,6 +800,7 @@ void Simulation::ReadyCheck(uint32_t playerID)
 		msg.header.id = GameMsg::Game_Start;
 
 		this->Broadcast(msg);
+		m_timeCycler.OnStart();
 	}
 }
 

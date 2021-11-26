@@ -9,6 +9,7 @@
 #include "Lobby.h"
 #include "IShop.h"
 #include "QuadTree.h"
+#include "Cycler.h"
 /*
 		Simulation defines each ongoing simulation from the perspective of the server
 		gameID identifies the simulation which each player has to give the server to keep track
@@ -60,6 +61,7 @@ private:
 	void BuildMapColliders(std::vector<dx::BoundingOrientedBox>* mapColliders);
 
 public:
+	Cycler m_timeCycler;
 	Simulation(Server* pServer, HeadlessEngine* pEngine);
 	virtual ~Simulation() = default;
 	
