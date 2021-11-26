@@ -38,7 +38,7 @@ void main(uint3 particleID : SV_DispatchThreadID)
 
 void BloodSimmulation(inout VertexParticleIn particle, in uint id)
 {
-    float particleLifeTime = (lifeTime - (randomNumbers[id + counter]/2 * deltaTime));
+    float particleLifeTime = (lifeTime); //- (randomNumbers[id + counter] / 2 * deltaTime));
     
     if (particle.life < particleLifeTime)
     {
@@ -46,14 +46,14 @@ void BloodSimmulation(inout VertexParticleIn particle, in uint id)
         
         particle.velocity.y -= 4.82f * deltaTime;
         
-        if (particle.size.x >= 0 && particle.life <= particleLifeTime/3) 
+        if (particle.size.x >= 0 && particle.life <= particleLifeTime / 3)
         {
             float sizeChange = abs((randomNumbers[id + counter]) * deltaTime);
-            particle.size -= sizeChange * (lifeTime + particleSizeMulitplier + (10.f* deltaTime));
+            particle.size -= sizeChange * ((lifeTime + particleSizeMulitplier)*0.7f);
             particle.color.rgb += 1.0f * deltaTime;
         }
-        if (particle.size.x >= 0 ) 
-            particle.size -= deltaTime;
+        //if (particle.size.x >= 0) 
+        //    particle.size -= abs(randomNumbers[id + counter]) / 10.f;
 
     }
     else

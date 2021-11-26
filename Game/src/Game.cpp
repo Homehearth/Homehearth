@@ -77,19 +77,11 @@ bool Game::OnStartup()
 	// Set Current Scene
 	SetScene("MainMenu");
 
-	//////Particles
-	Entity emitter = GetScene("Game").CreateEntity();
-	emitter.AddComponent<comp::Transform>()->position = { 220, 40, -340 };
-	emitter.AddComponent <comp::EmitterParticle>(sm::Vector3{ 0,0,0 }, 800, 2.f, PARTICLEMODE::SMOKE, 4.0f, 1.f, false);
-
-	/*Entity emitter2 = GetScene("Game").CreateEntity();
-	emitter2.AddComponent<comp::Transform>()->position = { 250, 5,- 320 };
-	emitter2.AddComponent <comp::EmitterParticle>(sm::Vector3{ 0,0,0 }, 10, 1.f, PARTICLEMODE::SPARKLES, 1.f, false);*/
-	
+	//Particles
 	Entity emitter4 = GetScene("Game").CreateEntity();
 	emitter4.AddComponent<comp::Transform>()->position = { 250, 5, -340 };
-	emitter4.AddComponent<comp::EmitterParticle>(sm::Vector3{0,0,0}, 50, 2.f, PARTICLEMODE::BLOOD, 0.5f, 1.f, false);
-	
+	emitter4.AddComponent <comp::EmitterParticle>(sm::Vector3{ 0,0,0 }, 800, 2.f, PARTICLEMODE::SMOKE, 4.0f, 1.f, false);
+
 	Entity waterSplash = GetScene("Game").CreateEntity();
 	waterSplash.AddComponent<comp::Transform>()->position = { 270, 13, -370 };
 	waterSplash.AddComponent <comp::EmitterParticle>(sm::Vector3{ 0,0,0 }, 100, 1.f , PARTICLEMODE::WATERSPLASH, 4.0f, 1.f, false);
