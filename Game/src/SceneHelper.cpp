@@ -22,6 +22,7 @@
 // Used to show and hide shopMenu
 static bool toggle = false;
 
+
 namespace sceneHelp
 {
 	Entity CreateLightEntity(Scene& scene, sm::Vector4 pos, sm::Vector4 dir, sm::Vector4 col, float range, float intensity, TypeLight type, UINT enabled)
