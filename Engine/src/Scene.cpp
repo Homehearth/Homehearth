@@ -68,8 +68,8 @@ void Scene::Update(float dt)
 		m_debugRenderableCopies[0].clear();
 		m_registry.view<comp::RenderableDebug>().each([&](entt::entity entity, comp::RenderableDebug& r)
 			{
-				comp::BoundingOrientedBox* obb = m_registry.try_get<comp::BoundingOrientedBox>(entity);
-				comp::BoundingSphere* sphere = m_registry.try_get<comp::BoundingSphere>(entity);
+				comp::OrientedBoxCollider* obb = m_registry.try_get<comp::OrientedBoxCollider>(entity);
+				comp::SphereCollider* sphere = m_registry.try_get<comp::SphereCollider>(entity);
 
 				comp::Transform transform;
 				transform.rotation = sm::Quaternion::Identity;

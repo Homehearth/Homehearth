@@ -24,10 +24,9 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 	comp::MeshName* meshName = entity.AddComponent<comp::MeshName>();
 	comp::AnimatorName* animatorName = entity.AddComponent<comp::AnimatorName>();
 	comp::AnimationState* animationState = entity.AddComponent<comp::AnimationState>();
-	comp::BoundingSphere* bos = entity.AddComponent<comp::BoundingSphere>();
+	comp::SphereCollider* bos = entity.AddComponent<comp::SphereCollider>();
 	comp::Velocity* velocity = entity.AddComponent<comp::Velocity>();
 	comp::BehaviorTree* behaviorTree = entity.AddComponent<comp::BehaviorTree>();
-	entity.AddComponent<comp::ColliderList>();
 	switch (type)
 	{
 	case EnemyType::Default:
@@ -39,8 +38,8 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		float randomNum = static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (0.5)));
 
 		transform->scale = { 1.8f, 1.8f + randomNum, 1.8f };
-		meshName->name = "Monster.fbx";
-		animatorName->name = "Monster.anim";
+		meshName->name = NameType::MESH_MONSTER;
+		animatorName->name = AnimName::ANIM_MONSTER;
 
 		bos->Radius = 3.f;
 
@@ -74,8 +73,8 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		float randomNum = static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (0.5)));
 
 		transform->scale = { 1.8f, 0.5f + randomNum, 1.8f };
-		meshName->name = "Monster.fbx";
-		animatorName->name = "Monster.anim";
+		meshName->name = NameType::MESH_MONSTER;
+		animatorName->name = AnimName::ANIM_MONSTER;
 		bos->Radius = 3.f;
 
 		npc->movementSpeed = 15.f;
@@ -96,8 +95,8 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		// ---Fast Zombie ENEMY---
 		transform->position = spawnP;
 		transform->scale = { 1.8f, 3.f, 1.8f };
-		meshName->name = "Monster.fbx";
-		animatorName->name = "Monster.anim";
+		meshName->name = NameType::MESH_MONSTER;
+		animatorName->name = AnimName::ANIM_MONSTER;
 		bos->Radius = 3.f;
 		attackAbility->cooldown = 1.0f;
 		attackAbility->attackDamage = 20.f;
@@ -116,8 +115,8 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		// ---BOSS ENEMY---
 		transform->position = spawnP;
 		transform->scale = { 3.8f, 6.f, 3.8f };
-		meshName->name = "Monster.fbx";
-		animatorName->name = "Monster.anim";
+		meshName->name = NameType::MESH_MONSTER;
+		animatorName->name = AnimName::ANIM_MONSTER;
 		bos->Radius = 3.f;
 		attackAbility->cooldown = 1.0f;
 		attackAbility->attackDamage = 20.f;
@@ -379,9 +378,10 @@ void ServerSystems::WaveSystem(Simulation* simulation,
 void ServerSystems::NextWaveConditions(Simulation* simulation, Timer& timer, int timeToFinish)
 {
 	//Publish event when timeToFinish been exceeded.
-	if (timer.GetElapsedTime() > timeToFinish)
+	if (simulation->m_timeCycler.GetSwitch())
 	{
 		simulation->GetGameScene()->publish<ESceneCallWaveSystem>(0.0f);
+		simulation->m_timeCycler.Switch();
 	}
 }
 
@@ -462,7 +462,7 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 			}
 
 			//Place defence on grid
-			if (p.lastInputState.key_b && simulation->GetCurrency().GetAmount() >= 5)
+			if (p.lastInputState.key_b && simulation->GetCurrency().GetAmount() >= 5 && simulation->m_timeCycler.GetTimePeriod() == Cycle::DAY)
 			{
 				if (simulation->GetGrid().PlaceDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, Blackboard::Get().GetPathFindManager()))
 				{

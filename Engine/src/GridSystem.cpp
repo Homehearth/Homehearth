@@ -131,7 +131,7 @@ bool GridSystem::RemoveDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, 
 	float t = 0;
 	float tMin = FLT_MAX;
 	Entity closestEntity;
-	m_scene->ForEachComponent<comp::Transform, comp::Tag<TagType::DEFENCE>, comp::BoundingOrientedBox>([&](Entity e, comp::Transform& transform, comp::Tag<TagType::DEFENCE>& d, comp::BoundingOrientedBox& b)
+	m_scene->ForEachComponent<comp::Transform, comp::Tag<TagType::DEFENCE>, comp::OrientedBoxCollider>([&](Entity e, comp::Transform& transform, comp::Tag<TagType::DEFENCE>& d, comp::OrientedBoxCollider& b)
 		{
 			if (mouseRay.Intersects(b, &t))
 			{
@@ -199,7 +199,7 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 	std::vector<dx::BoundingSphere> ePos;
 
 	// Save positions to calculate distances to the tile for players
-	m_scene->ForEachComponent<comp::Player, comp::BoundingSphere, comp::Network>([&](comp::Player& p, comp::BoundingSphere& bs, comp::Network& net)
+	m_scene->ForEachComponent<comp::Player, comp::SphereCollider, comp::Network>([&](comp::Player& p, comp::SphereCollider bs, comp::Network& net)
 		{
 			if (net.id == playerWhoPressedMouse)
 			{
@@ -208,7 +208,7 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 			ePos.push_back(bs);
 		});
 	// Do the same for all NPC entities
-	m_scene->ForEachComponent<comp::NPC, comp::BoundingSphere>([&](comp::NPC& p, comp::BoundingSphere& bs)
+	m_scene->ForEachComponent<comp::NPC, comp::SphereCollider>([&](comp::NPC& p, comp::SphereCollider& bs)
 		{
 			ePos.push_back(bs);
 		});
@@ -257,11 +257,11 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 					transform->position = { tile.position.x , 5.f, tile.position.z };
 					transform->scale = { 1.35f, 1.f, 1.35f };
 
-					comp::BoundingOrientedBox* collider = defenseEntity.AddComponent<comp::BoundingOrientedBox>();
+					comp::OrientedBoxCollider* collider = defenseEntity.AddComponent<comp::OrientedBoxCollider>();
 					collider->Extents = { m_tileHalfWidth, m_tileHalfWidth, m_tileHalfWidth };
 					defenseEntity.AddComponent<comp::Tag<TagType::STATIC>>();
 					defenseEntity.AddComponent<comp::Tag<TagType::DEFENCE>>();
-					defenseEntity.AddComponent<comp::MeshName>()->name = "Defence.obj";
+					defenseEntity.AddComponent<comp::MeshName>()->name = NameType::MESH_DEFENCE;
 					defenseEntity.AddComponent<comp::Health>();
 					defenseEntity.AddComponent<comp::Network>();
 					aiHandler->AddDefenseEntity(defenseEntity);

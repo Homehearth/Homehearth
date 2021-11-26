@@ -429,7 +429,7 @@ void RenderShadow(const unsigned int start, unsigned int stop, void* buffer, voi
 		currentPass->PreRender(nullptr, m_context);
 
 		// For each shadow.
-		for (int i = start; i < stop; i++)
+		for (unsigned int i = start; i < stop; i++)
 		{
 			auto& shadow = (*m_shadows)[i];
 			const light_t* light = shadow.pLight;
