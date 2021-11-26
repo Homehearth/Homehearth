@@ -93,26 +93,32 @@ void ServerGame::UpdateNetwork(float deltaTime)
 		timer = 0.0f;
 	}
 
-	// Check incoming messages
-	this->m_server.Update();
-
-	// Update the simulations
-	for (auto it = m_simulations.begin(); it != m_simulations.end();)
 	{
-		if (it->second->IsEmpty())
+		PROFILE_SCOPE("Server UPDATE");
+		// Check incoming messages
+		this->m_server.Update();
+	}
+
+	{
+		PROFILE_SCOPE("Simulations UPDATE");
+		// Update the simulations
+		for (auto it = m_simulations.begin(); it != m_simulations.end();)
 		{
-			it->second->Destroy();
-			LOG_INFO("Destroyed empty lobby %d", it->first);
-			it = m_simulations.erase(it);
-		}
-		else
-		{
-			// Update the simulation
-			it->second->Update(deltaTime);
-			// Send the snapshot of the updated simulation to all clients in the sim
-			it->second->SendSnapshot();
-			it->second->NextTick();
-			it++;
+			if (it->second->IsEmpty())
+			{
+				it->second->Destroy();
+				LOG_INFO("Destroyed empty lobby %d", it->first);
+				it = m_simulations.erase(it);
+			}
+			else
+			{
+				// Update the simulation
+				it->second->Update(deltaTime);
+				// Send the snapshot of the updated simulation to all clients in the sim
+				it->second->SendSnapshot();
+				it->second->NextTick();
+				it++;
+			}
 		}
 	}
 }

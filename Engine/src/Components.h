@@ -24,20 +24,29 @@ namespace ecs
 		COMPONENT_MAX = 32
 	};
 
-	namespace component {
+	namespace component 
+	{
+		struct OrientedBoxCollider : dx::BoundingOrientedBox
+		{
+			// Empty for now
+		};
 
-		//Collider components
-		using DirectX::BoundingOrientedBox;
-		using DirectX::BoundingSphere;
-		using dx::BoundingBox;
-		
+		struct SphereCollider : dx::BoundingSphere
+		{
+			std::set<Entity> list;
+		};
+
+		struct BoxCollider : dx::BoundingBox
+		{
+			// Empty for now
+		};
 
 		struct Transform
 		{
 			sm::Vector3 position;
 			sm::Quaternion rotation;
 			sm::Vector3 scale = sm::Vector3(1);
-			
+
 			bool syncColliderScale = false;
 		};
 
@@ -64,23 +73,23 @@ namespace ecs
 		struct EmitterParticle
 		{
 			UINT								nrOfParticles = 0;
-			PARTICLEMODE						type			= PARTICLEMODE::BLOOD;
-			float								lifeTime		= 0.f;
-			float								sizeMulitplier	= 0.f;
-			float								speed			= 0.f;
+			PARTICLEMODE						type = PARTICLEMODE::BLOOD;
+			float								lifeTime = 0.f;
+			float								sizeMulitplier = 0.f;
+			float								speed = 0.f;
 
-			std::shared_ptr<RTexture>			texture			= nullptr;
-			std::shared_ptr<RTexture>			opacityTexture	= nullptr;
-			ComPtr<ID3D11Buffer>				particleBuffer	= nullptr;
-			ComPtr<ID3D11ShaderResourceView>	particleSRV		= nullptr;
-			ComPtr<ID3D11UnorderedAccessView>	particleUAV		= nullptr;
+			std::shared_ptr<RTexture>			texture = nullptr;
+			std::shared_ptr<RTexture>			opacityTexture = nullptr;
+			ComPtr<ID3D11Buffer>				particleBuffer = nullptr;
+			ComPtr<ID3D11ShaderResourceView>	particleSRV = nullptr;
+			ComPtr<ID3D11UnorderedAccessView>	particleUAV = nullptr;
 
 			EmitterParticle(std::string textureName = "thisisfine.png ", std::string opacityTextureName = "thisisfine_Opacity.png", int nrOfParticles = 10, float sizeMulitplier = 1.f, PARTICLEMODE type = PARTICLEMODE::BLOOD, float lifeTime = 2.f, float speed = 1)
 			{
 				//If no texture name take default texture else use the given name
 				if (textureName == "")
 					texture = ResourceManager::Get().GetResource<RTexture>("thisisfine.png ");
-				else 
+				else
 					texture = ResourceManager::Get().GetResource<RTexture>(textureName);
 
 				//If no opacity texture name take default opacity texture else use given name
@@ -89,11 +98,11 @@ namespace ecs
 				else
 					opacityTexture = ResourceManager::Get().GetResource<RTexture>(opacityTextureName);
 
-				this->nrOfParticles		= (UINT)nrOfParticles;
-				this->type				= type;
-				this->lifeTime			= lifeTime;
-				this->sizeMulitplier	= sizeMulitplier;
-				this->speed				= speed;
+				this->nrOfParticles = (UINT)nrOfParticles;
+				this->type = type;
+				this->lifeTime = lifeTime;
+				this->sizeMulitplier = sizeMulitplier;
+				this->speed = speed;
 			}
 		};
 
@@ -123,16 +132,16 @@ namespace ecs
 		};
 
 		// Used on server side
-		struct AnimatorName 
+		struct AnimatorName
 		{
 			AnimName name;
 		};
-	
-		struct MeshName 
+
+		struct MeshName
 		{
 			NameType name;
 		};
-		
+
 		struct RenderableDebug
 		{
 			std::shared_ptr<RModel> 	model;
@@ -140,9 +149,9 @@ namespace ecs
 			collider_hit_t				isColliding;
 			void InitRenderable(entt::registry& reg, const entt::entity curr)
 			{
-				BoundingOrientedBox* obb = reg.try_get<BoundingOrientedBox>(curr);
-				BoundingSphere* sphere = reg.try_get<BoundingSphere>(curr);
-				BoundingBox* box = reg.try_get<BoundingBox>(curr);
+				OrientedBoxCollider* obb = reg.try_get<OrientedBoxCollider>(curr);
+				SphereCollider* sphere = reg.try_get<SphereCollider>(curr);
+				BoxCollider* box = reg.try_get<BoxCollider>(curr);
 				if (obb != nullptr)
 				{
 					model = ResourceManager::Get().GetResource<RModel>("Cube.obj");
@@ -237,11 +246,6 @@ namespace ecs
 			TowerTypes towerSelected = TowerTypes::SHORT;
 		};
 
-		struct ColliderList
-		{
-			std::set<Entity> list;
-		};
-
 		struct NPC
 		{
 			enum class State
@@ -279,7 +283,7 @@ namespace ecs
 			float cooldown = 1.5f;
 			// !DO NOT TOUCH!
 			float cooldownTimer = 0.f;
-			
+
 			// set this for delay before ability is actually used after the cooldown is done and the ecs::UseAbility has bee called
 			float delay = 0.1f;
 			// !DO NOT TOUCH!
@@ -387,7 +391,7 @@ namespace ecs
 	sm::Vector3 GetRight(const component::Transform& transform);
 	bool StepRotateTo(sm::Quaternion& rotation, const sm::Vector3& targetVector, float t);
 	bool StepTranslateTo(sm::Vector3& translation, const sm::Vector3& target, float t);
-	
+
 	template<typename T>
 	void RegisterAsAbility()
 	{
@@ -407,7 +411,7 @@ namespace ecs
 				.base<component::ITag>()
 				.func<&Entity::GetComponentRef<T>, entt::as_ref_t>("get"_hs)
 				.func<&Entity::HasComponent<T>>("has"_hs);
-			
+
 			LOG_INFO("Registered tag %s", entt::resolve<T>().info().name().data());
 		}
 	}
