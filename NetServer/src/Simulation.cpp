@@ -67,21 +67,28 @@ void Simulation::InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg, c
 		}
 		case ecs::Component::BOUNDING_ORIENTED_BOX:
 		{
-			comp::BoundingOrientedBox* b = entity.GetComponent<comp::BoundingOrientedBox>();
+			comp::OrientedBoxCollider* b = entity.GetComponent<comp::OrientedBoxCollider>();
 			if (b)
 			{
+				dx::BoundingOrientedBox obb;
+				obb.Center = b->Center;
+				obb.Extents = b->Extents;
+				obb.Orientation = b->Orientation;
 				compSet.set(ecs::Component::BOUNDING_ORIENTED_BOX);
-				msg << *b;
+				msg << obb;
 			}
 			break;
 		}
 		case ecs::Component::BOUNDING_SPHERE:
 		{
-			comp::BoundingSphere* bs = entity.GetComponent<comp::BoundingSphere>();
+			comp::SphereCollider* bs = entity.GetComponent<comp::SphereCollider>();
 			if (bs)
 			{
+				dx::BoundingSphere sphere;
+				sphere.Center = bs->Center;
+				sphere.Radius = bs->Radius;
 				compSet.set(ecs::Component::BOUNDING_SPHERE);
-				msg << *bs;
+				msg << sphere;
 			}
 			break;
 		}
@@ -160,7 +167,6 @@ void Simulation::ResetPlayer(Entity player)
 	player.AddComponent<comp::MeshName>()->name = NameType::MESH_KNIGHT;
 	player.AddComponent<comp::AnimatorName>()->name = AnimName::ANIM_KNIGHT;
 	player.AddComponent<comp::AnimationState>();
-	player.AddComponent<comp::ColliderList>();
 
 	// only if Melee
 	if (playerComp->classType == comp::Player::Class::WARRIOR)
@@ -235,7 +241,7 @@ void Simulation::ResetPlayer(Entity player)
 	health->currentHealth = 100.f;
 	health->isAlive = true;
 
-	player.AddComponent<comp::BoundingSphere>()->Radius = 3.f;
+	player.AddComponent<comp::SphereCollider>()->Radius = 3.f;
 
 	//Collision will handle this entity as a dynamic one
 	player.AddComponent<comp::Tag<TagType::DYNAMIC>>();
@@ -255,13 +261,15 @@ void Simulation::ResetPlayer(Entity player)
 
 Simulation::Simulation(Server* pServer, HeadlessEngine* pEngine)
 	: m_pServer(pServer)
-	, m_pEngine(pEngine), m_pLobbyScene(nullptr), m_pGameScene(nullptr), m_pGameOverScene(nullptr),m_pCurrentScene(nullptr), currentRound(0)
+	, m_pEngine(pEngine), m_pLobbyScene(nullptr), m_pGameScene(nullptr), m_pGameOverScene(nullptr), m_pCurrentScene(nullptr), currentRound(0)
 {
 	this->m_gameID = 0;
 	this->m_tick = 0;
 
 	dx::BoundingBox bounds = { dx::XMFLOAT3(250, 0, -320), dx::XMFLOAT3(190, 50, 170) };
 	qt = std::make_unique<QuadTree>(bounds);
+
+	qtDynamic = std::make_unique<QuadTree>(bounds);
 
 	m_spawnPoints.push(sm::Vector3(220.f, 0, -353.f));
 	m_spawnPoints.push(sm::Vector3(197.f, 0, -325.f));
@@ -293,6 +301,8 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 	this->m_gameID = gameID;
 	this->m_lobby.Init(this);
 
+	EnemyManagement::CreateWaves(waveQueue, currentRound);
+
 	// Create Scenes associated with this Simulation
 	m_pLobbyScene = &m_pEngine->GetScene("Lobby_" + std::to_string(gameID));
 
@@ -307,7 +317,7 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 
 				h.currentHealth = h.maxHealth;
 
-				});
+});
 
 #endif
 
@@ -316,7 +326,10 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 				PROFILE_SCOPE("Systems");
 
 				ServerSystems::CheckGameOver(this, scene);
-
+				{
+					PROFILE_SCOPE("Update QuadTree");
+					Systems::UpdateDynamicQT(scene, qtDynamic.get());
+				}
 				AIBehaviors::UpdateBlackBoard(scene);
 
 				ServerSystems::TickBTSystem(this, scene);
@@ -336,22 +349,22 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 				Systems::MovementSystem(scene, e.dt);
 				Systems::MovementColliderSystem(scene, e.dt);
 
-				Systems::FetchCollidingList(scene, qt.get());
+				{
+					PROFILE_SCOPE("Fetch Collision List");
+					Systems::FetchCollidingList(scene, qt.get(), qtDynamic.get());
+				}
+				{
+					PROFILE_SCOPE("Collision");
+					Systems::CheckCollisions(scene, e.dt);
+				}
+
+				ServerSystems::AnimatonSystem(this, scene);
 
 				{
-					PROFILE_SCOPE("Collision Box/Box");
-					//Systems::CheckCollisions<comp::BoundingOrientedBox, comp::BoundingOrientedBox>(scene, e.dt);
+					PROFILE_SCOPE("Clear quad tree");
+					Systems::ClearCollidingList(scene);
+					qtDynamic->Clear();
 				}
-				{
-					PROFILE_SCOPE("Collision Sphere/Box");
-					Systems::CheckCollisions<comp::BoundingSphere, comp::BoundingOrientedBox>(scene, e.dt);
-				}
-				{
-					PROFILE_SCOPE("Collision Sphere/Sphere");
-					Systems::CheckCollisions<comp::BoundingSphere, comp::BoundingSphere>(scene, e.dt);
-				}
-				ServerSystems::AnimatonSystem(this, scene);
-				Systems::ClearCollidingList(scene);
 			}
 
 			if (!waveQueue.empty())
@@ -393,7 +406,7 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 				cube.AddComponent<comp::Transform>()->position = nodes[y][x].get()->position;
 				cube.AddComponent<comp::MeshName>()->name = "Cube.obj";
 				cube.AddComponent<comp::Network>();
-			}
+}
 
 		}
 	}
@@ -463,7 +476,7 @@ void Simulation::SendSnapshot()
 		msg3.header.id = GameMsg::Game_Money;
 		msg3 << m_currency.GetAmount();
 		this->Broadcast(msg3);
-	}
+		}
 	else
 	{
 		if (m_tick % 30 == 0)
@@ -475,7 +488,7 @@ void Simulation::SendSnapshot()
 	// All destroyed Entities
 	this->SendRemoveEntities(m_removedEntities);
 	m_removedEntities.clear();
-}
+	}
 
 void Simulation::Update(float dt)
 {
@@ -557,7 +570,7 @@ void Simulation::BuildMapColliders(std::vector<dx::BoundingOrientedBox>* mapColl
 	for (size_t i = 0; i < mapColliders->size(); i++)
 	{
 		collider = m_pGameScene->CreateEntity();
-		dx::BoundingOrientedBox* obb = collider.AddComponent<comp::BoundingOrientedBox>();
+		comp::OrientedBoxCollider* obb = collider.AddComponent<comp::OrientedBoxCollider>();
 		obb->Center = mapColliders->at(i).Center;
 		obb->Extents = mapColliders->at(i).Extents;
 		obb->Orientation = mapColliders->at(i).Orientation;
@@ -589,7 +602,7 @@ GridSystem& Simulation::GetGrid()
 
 Currency& Simulation::GetCurrency()
 {
-	return m_currency;			
+	return m_currency;
 }
 
 void Simulation::UseShop(const ShopItem& item, const uint32_t& player)
@@ -794,6 +807,7 @@ void Simulation::ReadyCheck(uint32_t playerID)
 	{
 		// Start the game.
 		SetGameScene();
+
 		network::message<GameMsg> msg;
 		msg.header.id = GameMsg::Game_Start;
 

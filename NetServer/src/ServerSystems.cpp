@@ -24,10 +24,9 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 	comp::MeshName* meshName = entity.AddComponent<comp::MeshName>();
 	comp::AnimatorName* animatorName = entity.AddComponent<comp::AnimatorName>();
 	comp::AnimationState* animationState = entity.AddComponent<comp::AnimationState>();
-	comp::BoundingSphere* bos = entity.AddComponent<comp::BoundingSphere>();
+	comp::SphereCollider* bos = entity.AddComponent<comp::SphereCollider>();
 	comp::Velocity* velocity = entity.AddComponent<comp::Velocity>();
 	comp::BehaviorTree* behaviorTree = entity.AddComponent<comp::BehaviorTree>();
-	entity.AddComponent<comp::ColliderList>();
 	switch (type)
 	{
 	case EnemyType::Default:
