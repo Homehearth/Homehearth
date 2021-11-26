@@ -180,7 +180,7 @@ void Simulation::ResetPlayer(Entity player)
 
 		playerComp->primaryAbilty = entt::resolve<comp::MeleeAttackAbility>();
 
-		comp::HeroLeapAbility* leap = player.AddComponent<comp::HeroLeapAbility>();
+		/*comp::HeroLeapAbility* leap = player.AddComponent<comp::HeroLeapAbility>();
 		leap->cooldown = 5.0f;
 		leap->delay = 0.0f;
 		leap->lifetime = 0.5f;
@@ -188,7 +188,8 @@ void Simulation::ResetPlayer(Entity player)
 		leap->useTime = 0.5f;
 		leap->damageRadius = 20.f;
 
-		playerComp->secondaryAbilty = entt::resolve<comp::HeroLeapAbility>();
+		playerComp->secondaryAbilty = entt::resolve<comp::HeroLeapAbility>();*/
+		playerComp->secondaryAbilty = entt::resolve<comp::MeleeAttackAbility>();
 
 		comp::DashAbility* dashAbility = player.AddComponent<comp::DashAbility>();
 		dashAbility->cooldown = 1.0f;
@@ -339,7 +340,7 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 				Systems::UpdateAbilities(scene, e.dt);
 				Systems::CombatSystem(scene, e.dt);
 				Systems::HealingSystem(scene, e.dt);
-				Systems::HeroLeapSystem(scene, e.dt);
+				//Systems::HeroLeapSystem(scene, e.dt);
 
 				Systems::HealthSystem(scene, e.dt, m_currency.GetAmountRef());
 				Systems::SelfDestructSystem(scene, e.dt);
