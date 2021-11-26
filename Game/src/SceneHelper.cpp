@@ -898,4 +898,21 @@ namespace sceneHelp
 			}
 		}
 	}
+
+	void LoadAllSounds()
+	{
+		auto& SH = SoundHandler::Get();
+		SH.AddSoundSource("../Assets/Sounds/gameplay_theme.mp3");
+		SH.AddSoundSource("../Assets/Sounds/Player_OnMovement.wav");
+		SH.AddSoundSource("../Assets/Sounds/Player_OnMeleeAttack.wav");
+		SH.AddSoundSource("../Assets/Sounds/Player_OnRangeAttack.wav");
+		SH.AddSoundSource("../Assets/Sounds/Player_OnDmgDealt.wav");
+		SH.AddSoundSource("../Assets/Sounds/Player_OnDmgRecieved.wav");
+		SH.AddSoundSource("../Assets/Sounds/Player_OnCastHealing.wav");
+		SH.AddSoundSource("../Assets/Sounds/Player_OnHealingRecieved.wav");
+		SH.AddSoundSource("../Assets/Sounds/Player_OnLeap.wav");
+		SH.AddSoundSource("../Assets/Sounds/Player_OnDeath.wav");
+		SH.AddSoundSource("../Assets/Sounds/Player_OnRespawn.wav");
+		SH.AddSoundSource("../Assets/Sounds/Enemy_OnDeath.wav");
+	}
 }

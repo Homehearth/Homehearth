@@ -2,6 +2,7 @@
 #include "SoundHandler.h"
 
 SoundHandler::SoundHandler()
+	: m_currentMusic(nullptr)
 {
     // Start the sound engine with default parameters.
     m_soundEngine = irrklang::createIrrKlangDevice();
@@ -18,11 +19,18 @@ SoundHandler::SoundHandler()
 
         LOG_INFO("Irrklang sound engine successfully loaded.")
     }
+}
 
-    // TEST
-    AddSoundSource("../Assets/Sounds/on_click.wav");
-    AddSoundSource("../Assets/Sounds/main_theme.mp3", "main_theme");
+void SoundHandler::UpdateCurrentMusic(irrklang::ISoundSource* musicSrc, bool loopMusic)
+{
+    if(m_currentMusic != nullptr)
+    {
+        m_currentMusic->stop();
+        m_currentMusic->drop();
+    }
 
+    m_currentMusic = m_soundEngine->play2D(musicSrc, loopMusic, true, false, false);
+    m_currentMusic->setIsPaused(false);
 }
 
 SoundHandler::~SoundHandler()
@@ -63,16 +71,19 @@ void SoundHandler::AddSoundSource(const std::string& filePath, const std::string
     if (m_iterator == m_soundSources.end())
     {
         irrklang::ISoundSource* newSoundSrc = m_soundEngine->addSoundSourceFromFile(filePath.c_str());
-        m_soundSources.emplace(name, newSoundSrc);
-        LOG_INFO("'%s' added to SoundHandler", name.c_str())
-    }
-    else
-    {
-        LOG_WARNING("failed to add '%s' to SoundHandler", name.c_str())
+        if(newSoundSrc != nullptr)
+        {
+			m_soundSources.emplace(name, newSoundSrc);
+			LOG_INFO("'%s' added to SoundHandler", name.c_str())
+        }
+        else
+        {
+            LOG_WARNING("failed to add '%s' to SoundHandler", name.c_str())
+        }
     }
 }
 
-irrklang::ISound* SoundHandler::Create2DSound(const std::string& name, bool playSound)
+irrklang::ISound* SoundHandler::Play2DSound(const std::string& name, bool playSound)
 {
     irrklang::ISound * sound = nullptr;
 
@@ -87,7 +98,7 @@ irrklang::ISound* SoundHandler::Create2DSound(const std::string& name, bool play
     return sound;
 }
 
-irrklang::ISound* SoundHandler::CreateUnique2DSound(const std::string& name, bool playSound)
+irrklang::ISound* SoundHandler::PlayUnique2DSound(const std::string& name, bool playSound)
 {
     irrklang::ISound* sound = nullptr;
 
@@ -105,40 +116,59 @@ irrklang::ISound* SoundHandler::CreateUnique2DSound(const std::string& name, boo
     return sound;
 }
 
-void SoundHandler::Toggle2DMusic(const std::string& name)
-{
-    m_iterator = m_soundSources.find(name);
-    if (m_iterator != m_soundSources.end())
-    {
-        if(m_soundEngine->isCurrentlyPlaying(m_iterator->second))
-        {
-            m_soundEngine->stopAllSoundsOfSoundSource(m_iterator->second);
-        }
-        else
-        {
-            m_soundEngine->play2D(m_iterator->second);
-        }
-
-        LOG_INFO("toggled '%s'", name.c_str())
-    }
-}
-
-void SoundHandler::Set2DMusic(const std::string& name, bool playMusic)
+void SoundHandler::SetCurrentMusic(const std::string& name, bool loopMusic)
 {
     m_iterator = m_soundSources.find(name);
     if (m_iterator != m_soundSources.end())
     {
         const bool isPlaying = m_soundEngine->isCurrentlyPlaying(m_iterator->second);
-
-        if (isPlaying && !playMusic)
+        if (isPlaying)
         {
             m_soundEngine->stopAllSoundsOfSoundSource(m_iterator->second);
         }
-        else if (!isPlaying && playMusic)
+        
+        UpdateCurrentMusic(m_iterator->second, loopMusic);
+    }
+}
+
+irrklang::ISound* SoundHandler::GetCurrentMusic()
+{
+    return m_currentMusic;
+}
+
+irrklang::ISound* SoundHandler::Play3DSound(const std::string& name, const sm::Vector3 &pos, bool playSound)
+{
+    irrklang::ISound* sound = nullptr;
+
+    m_iterator = m_soundSources.find(name);
+    if (m_iterator != m_soundSources.end())
+    {
+        sound = m_soundEngine->play3D(m_soundSources[name],{ pos.x, pos.y, pos.z },
+            false, true, false, false);
+        sound->setIsPaused(!playSound);
+        LOG_INFO("created a new instance of '%s'", name.c_str())
+    }
+
+    return sound;
+}
+
+irrklang::ISound* SoundHandler::PlayUnique3DSound(const std::string& name, const sm::Vector3& pos, bool playSound)
+{
+    irrklang::ISound* sound = nullptr;
+
+    m_iterator = m_soundSources.find(name);
+    if (m_iterator != m_soundSources.end())
+    {
+        if (!m_soundEngine->isCurrentlyPlaying(m_iterator->second))
         {
-            m_soundEngine->play2D(m_iterator->second);
+            sound = m_soundEngine->play3D(m_soundSources[name], { pos.x, pos.y, pos.z },
+                false, true, false, false);
+            sound->setIsPaused(!playSound);
+            LOG_INFO("created a new instance of '%s'", name.c_str())
         }
     }
+
+    return sound;
 }
 
 

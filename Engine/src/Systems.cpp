@@ -77,11 +77,6 @@ void Systems::UpdateAbilities(HeadlessScene& scene, float dt)
 
 }
 
-void Systems::CombatSystem(HeadlessScene& scene, float dt)
-{
-	CombatSystem::UpdateCombatSystem(scene, dt);
-}
-
 void Systems::HealingSystem(HeadlessScene& scene, float dt)
 {
 	// HealAbility system
@@ -143,7 +138,8 @@ void Systems::HeroLeapSystem(HeadlessScene& scene, float dt)
 
 			if (ecs::ReadyToUse(&ability, point))
 			{
-				
+				e.GetComponent<comp::AudioState>()->type = ESoundEvent::Player_OnLeap;
+
 				comp::BezierAnimation* a = e.AddComponent<comp::BezierAnimation>();
 				a->translationPoints.push_back(t.position);
 				sm::Vector3 toTarget = ability.targetPoint - t.position;
@@ -216,7 +212,6 @@ void Systems::HeroLeapSystem(HeadlessScene& scene, float dt)
 
 								auto gravity = ecs::GetGravityForce();
 								p->forces.push_back(gravity);
-								
 							}
 
 						});

@@ -121,6 +121,15 @@ namespace ecs
 			EAnimationType toSend;		//Going to be send this update
 		};
 
+		struct AudioState
+		{
+			ESoundEvent type;
+			sm::Vector3 position;
+			float volume;
+			bool is3D;
+			bool shouldBroadcast;
+		};
+
 		// Used on server side
 		struct AnimatorName 
 		{

@@ -236,6 +236,17 @@ void Simulation::ResetPlayer(Entity player)
 
 	player.AddComponent<comp::BoundingSphere>()->Radius = 3.f;
 
+	//
+	// AudioState
+	//
+	auto audio = player.AddComponent<comp::AudioState>();
+	audio->type = ESoundEvent::NONE;
+	audio->position = transform->position;
+	audio->volume = 1.0f;
+	audio->is3D = false;
+	audio->shouldBroadcast = false;
+
+
 	//Collision will handle this entity as a dynamic one
 	player.AddComponent<comp::Tag<TagType::DYNAMIC>>();
 	player.AddComponent<comp::Tag<TagType::GOOD>>(); // this is a good guy, he will call you back
@@ -323,7 +334,7 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 				ServerSystems::PlayerStateSystem(this, scene, e.dt);
 
 				Systems::UpdateAbilities(scene, e.dt);
-				Systems::CombatSystem(scene, e.dt);
+				ServerSystems::CombatSystem(scene, e.dt);
 				Systems::HealingSystem(scene, e.dt);
 				Systems::HeroLeapSystem(scene, e.dt);
 
@@ -348,6 +359,7 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 					Systems::CheckCollisions<comp::BoundingSphere, comp::BoundingSphere>(scene, e.dt);
 				}
 				ServerSystems::AnimatonSystem(this, scene);
+				ServerSystems::SoundSystem(this, scene);
 			}
 
 			if (!waveQueue.empty())

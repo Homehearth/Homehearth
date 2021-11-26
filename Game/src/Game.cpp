@@ -292,28 +292,42 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	}
 	case GameMsg::Game_PlaySound:
 	{
-		// Check Sound Type.
-		uint8_t type;
+		// Extract Sound Information.
+		ESoundEvent type;
+		sm::Vector3 position;
+		bool is3D, shouldBroadcast;
+		float volume;
+
+		msg >> shouldBroadcast;
+		msg >> is3D;
+		msg >> volume;
+		msg >> position;
 		msg >> type;
 
-		// Get Position of the Entity.
-		uint32_t entityID;
-		msg >> entityID;
-
-		Entity entity;
-		if (m_gameEntities.find(entityID) != m_gameEntities.end())
+		switch(type)
 		{
-			entity = m_gameEntities.at(entityID);
-			UpdateEntityFromMessage(entity, msg);
+		case ESoundEvent::Player_OnMeleeAttack:
+			SoundHandler::Get().PlayUnique2DSound("Player_OnMeleeAttack");
+			break;
+		case ESoundEvent::Player_OnDmgRecieved:
+			SoundHandler::Get().PlayUnique2DSound("Player_OnDmgRecieved");
+			break;
+		case ESoundEvent::Player_OnLeap:
+			SoundHandler::Get().PlayUnique3DSound("Player_OnLeap", position);
+			break;
+		case ESoundEvent::Enemy_OnDeath:
+			SoundHandler::Get().PlayUnique2DSound("Enemy_OnDeath");
+			break;
+		default:
+			break;
 		}
-
-		// Execute Sound.
-
 
 		break;
 	}
 	case GameMsg::Game_Over:
 	{
+		auto sound = SoundHandler::Get().GetCurrentMusic();
+		sound->stop();
 		SetScene("GameOver");
 		break;
 	}
@@ -323,6 +337,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 
 		this->SetScene("Loading");
 		sceneHelp::LoadAllAssets(this);
+		sceneHelp::LoadAllSounds();
 		sceneHelp::LoadMapColliders(this);
 
 #ifdef _DEBUG
@@ -366,6 +381,9 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 
 		SetScene("Game");
 		thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::ADAPTIVE);
+
+		SoundHandler::Get().SetCurrentMusic("gameplay_theme");
+
 		break;
 	}
 	case GameMsg::Game_WaveTimer:

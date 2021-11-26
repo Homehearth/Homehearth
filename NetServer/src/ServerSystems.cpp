@@ -1,6 +1,8 @@
 #include "NetServerPCH.h"
 #include "Wave.h"
 #include "ServerSystems.h"
+
+#include "CombatSystem.h"
 #include "Simulation.h"
 
 
@@ -611,4 +613,42 @@ void ServerSystems::AnimatonSystem(Simulation* simulation, HeadlessScene& scene)
 				anim.toSend = EAnimationType::NONE;
 			}
 		});
+}
+
+void ServerSystems::SoundSystem(Simulation* simulation, HeadlessScene& scene)
+{
+	scene.ForEachComponent<comp::Network, comp::AudioState>([&](comp::Network& net, comp::AudioState& audio)
+		{
+			if (audio.type != ESoundEvent::NONE)
+			{
+				message<GameMsg>msg;
+				msg.header.id = GameMsg::Game_PlaySound;
+				msg << audio.type;
+				msg << audio.position;
+				msg << audio.volume;
+				msg << audio.is3D;
+				msg << audio.shouldBroadcast;
+
+				if(audio.shouldBroadcast)
+				{
+					simulation->Broadcast(msg);
+				}
+				else
+				{
+					simulation->SendMsg(net.id, msg);
+				}
+				
+				// Reset.
+				audio.type = ESoundEvent::NONE;
+				audio.position = sm::Vector3{0.f, 0.f, 0.f};
+				audio.is3D = false;
+				audio.shouldBroadcast = false;
+				audio.volume = 1.0f;
+			}
+		});
+}
+
+void ServerSystems::CombatSystem(HeadlessScene& scene, float dt)
+{
+	CombatSystem::UpdateCombatSystem(scene, dt);
 }

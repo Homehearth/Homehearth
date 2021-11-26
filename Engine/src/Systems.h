@@ -2,13 +2,12 @@
 #include "Scene.h"
 #include "CollisionSystem.h"
 #include "PathFinderManager.h"
-#include "CombatSystem.h"
+//#include "CombatSystem.h"
 
 namespace Systems
 {
 	// abilities
 	void UpdateAbilities(HeadlessScene& scene, float dt);
-	void CombatSystem(HeadlessScene& scene, float dt);
 	void HealingSystem(HeadlessScene& scene, float dt);
 	void HeroLeapSystem(HeadlessScene& scene, float dt);
 

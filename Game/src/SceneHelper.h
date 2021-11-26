@@ -26,4 +26,5 @@ namespace sceneHelp
 
 	bool LoadMapColliders(Game* game);
 	void LoadAllAssets(Game* game);
+	void LoadAllSounds();
 }

@@ -274,6 +274,31 @@ enum class GameMsg : uint8_t
 	Game_Over
 };
 
+enum class ESoundEvent : uint32_t
+{
+	NONE,
+	Player_OnMovement,
+	Player_OnMeleeAttack,
+	Player_OnRangeAttack,
+	Player_OnDmgDealt,
+	Player_OnDmgRecieved,
+	Player_OnCastHealing,
+	Player_OnHealingRecieved,
+	Player_OnLeap,
+	Player_OnDash,
+	Player_OnDeath,
+	Player_OnRespawn,
+
+	Enemy_OnMovement,
+	Enemy_MeleeAttack,
+	Enemy_RangeAttack,
+	Enemy_OnDmgDealt,
+	Enemy_OnDmgRecieved,
+	Enemy_OnDeath,
+	ENUM_SIZE
+};
+
+
 enum class ShopItem : uint8_t
 {
 	/*
