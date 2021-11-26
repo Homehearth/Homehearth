@@ -40,7 +40,7 @@ private:
 	std::unordered_map<ecs::Component, std::vector<Entity>> m_updatedComponents;
 
 	int currentRound;
-
+	std::unordered_map<std::string, dx::BoundingOrientedBox>* houseColliders;
 	void InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg, const std::bitset<ecs::Component::COMPONENT_MAX>& componentMask = UINT32_MAX) const;
 	message<GameMsg> AllEntitiesMessage()const;
 
@@ -58,6 +58,7 @@ private:
 	void OnComponentUpdated(Entity entity, ecs::Component component);
 
 	void BuildMapColliders(std::vector<dx::BoundingOrientedBox>* mapColliders);
+	void InitializeHouses();
 
 public:
 	Simulation(Server* pServer, HeadlessEngine* pEngine);
@@ -67,7 +68,7 @@ public:
 	void JoinLobby(uint32_t gameID, uint32_t playerID, const std::string& name = "Noobie");
 	void LeaveLobby(uint32_t playerID);
 
-	bool Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* mapColliders);
+	bool Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* mapColliders, std::unordered_map<std::string, dx::BoundingOrientedBox>* houseColliders);
 	void Destroy();
 
 	void NextTick();
@@ -108,3 +109,6 @@ public:
 
 	void UseShop(const ShopItem& item, const uint32_t& player);
 };
+
+
+

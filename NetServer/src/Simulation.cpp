@@ -255,7 +255,7 @@ void Simulation::ResetPlayer(Entity player)
 
 Simulation::Simulation(Server* pServer, HeadlessEngine* pEngine)
 	: m_pServer(pServer)
-	, m_pEngine(pEngine), m_pLobbyScene(nullptr), m_pGameScene(nullptr), m_pGameOverScene(nullptr),m_pCurrentScene(nullptr), currentRound(0)
+	, m_pEngine(pEngine), m_pLobbyScene(nullptr), m_pGameScene(nullptr), m_pGameOverScene(nullptr),m_pCurrentScene(nullptr), currentRound(0), houseColliders(nullptr)
 {
 	this->m_gameID = 0;
 	this->m_tick = 0;
@@ -288,7 +288,7 @@ void Simulation::LeaveLobby(uint32_t playerID)
 	m_pServer->SendToClient(playerID, accMsg);
 }
 
-bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* mapColliders)
+bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* mapColliders, std::unordered_map<std::string,dx::BoundingOrientedBox>* houseColliders)
 {
 	this->m_gameID = gameID;
 	this->m_lobby.Init(this);
@@ -297,6 +297,9 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 	m_pLobbyScene = &m_pEngine->GetScene("Lobby_" + std::to_string(gameID));
 
 	m_pGameScene = &m_pEngine->GetScene("Game_" + std::to_string(gameID));
+
+	this->houseColliders = houseColliders;
+
 	m_pGameScene->on<ESceneUpdate>([&](const ESceneUpdate& e, HeadlessScene& scene)
 		{
 #if GOD_MODE
@@ -375,6 +378,8 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 		{
 			OnComponentUpdated(e.entity, e.component);
 		});
+
+
 
 	//Gridsystem
 	m_grid.Initialize(gridOptions.mapSize, gridOptions.position, gridOptions.fileName, m_pGameScene);
@@ -672,6 +677,8 @@ void Simulation::ResetGameScene()
 	m_currency.Zero();
 
 	LOG_INFO("%lld", m_pGameScene->GetRegistry()->size());
+
+	InitializeHouses();
 	EnemyManagement::CreateWaves(waveQueue, currentRound++);
 }
 
@@ -832,4 +839,23 @@ void Simulation::BroadcastUDP(message<GameMsg>& msg, uint32_t exclude) const
 Entity Simulation::GetPlayer(uint32_t playerID) const
 {
 	return m_lobby.GetPlayer(playerID);
+}
+
+void Simulation::InitializeHouses()
+{
+	Entity house5 = this->GetGameScene()->CreateEntity();
+	Entity door5 = this->GetGameScene()->CreateEntity();
+
+	house5.AddComponent<comp::MeshName>()->name = NameType::MESH_HOUSE5;
+	house5.AddComponent<comp::Transform>();
+	house5.AddComponent<comp::Tag<TagType::STATIC>>();
+	house5.AddComponent<comp::House>();
+	comp::BoundingOrientedBox* tempObb = &this->houseColliders->at("House5.fbx");
+	comp::BoundingOrientedBox* obb = house5.AddComponent<comp::BoundingOrientedBox>();
+	obb->Center = tempObb->Center;
+	obb->Center.y = 0.0f;
+	obb->Extents = tempObb->Extents;
+	obb->Orientation = tempObb->Orientation;
+	house5.AddComponent<comp::Network>();
+	//obb =
 }

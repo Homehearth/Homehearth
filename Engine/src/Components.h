@@ -162,6 +162,12 @@ namespace ecs
 		{
 			std::shared_ptr<BT::ParentNode> root;
 		};
+
+		struct House
+		{
+			Entity door;
+			bool isOpen;
+		};
 		
 
 		struct TemporaryPhysics

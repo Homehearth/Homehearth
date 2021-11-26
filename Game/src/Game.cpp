@@ -685,6 +685,32 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 					nameString = "Sphere.obj";
 					break;
 				}
+				case NameType::MESH_HOUSE5:
+					{
+					nameString = "House5.fbx";
+					break;
+					}
+				case NameType::MESH_HOUSE6:
+				{
+					nameString = "House6.fbx";
+					break;
+				}
+				case NameType::MESH_HOUSE7:
+				{
+					nameString = "House7.fbx";
+					break;
+				}
+				case NameType::MESH_HOUSE8:
+				{
+					nameString = "House8.fbx";
+					break;
+				}
+				case NameType::MESH_HOUSE9:
+				{
+					nameString = "House9.fbx";
+					break;
+				}
+
 				}
 				std::shared_ptr<RModel> model = ResourceManager::Get().CopyResource<RModel>(nameString, true);
 				if (model)
