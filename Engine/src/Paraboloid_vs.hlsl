@@ -10,7 +10,7 @@ VertexOut main(VertexIn input)
     output.pos = mul(c_view, output.pos);
     output.pos = mul(c_projection, output.pos);
 
-    output.pos = ClipSpaceToParaboloidMapSpace(output.pos);
+    output.pos = ClipSpaceToParaboloidMapSpace(output.pos, output.worldPos.z);
     
     output.normal = mul((float3x3) c_world, input.normal);
     output.uv = input.uv;

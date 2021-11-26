@@ -87,13 +87,16 @@ void ShadowPass::RenderWithImmidiateContext(Scene* pScene, const ShadowSection& 
 	}
 	case TypeLight::POINT:
 	{
-		this->UpdateLightBuffer(D3D11Core::Get().DeviceContext(), shadow.lightBuffer.Get(), *shadow.pLight, sm::Vector3::Down);
+		D3D11Core::Get().DeviceContext()->ClearDepthStencilView(shadow.shadowDepth[1].Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 		D3D11Core::Get().DeviceContext()->VSSetShader(PM->m_paraboloidVertexShader.Get(), nullptr, 0);
+
+		this->UpdateLightBuffer(D3D11Core::Get().DeviceContext(), shadow.lightBuffer.Get(), *shadow.pLight, sm::Vector3::Down);
 		pScene->RenderShadow(*shadow.pLight);
-		/*
+
+		D3D11Core::Get().DeviceContext()->OMSetRenderTargets(8, nullTargets, shadow.shadowDepth[1].Get());
+		
 		this->UpdateLightBuffer(D3D11Core::Get().DeviceContext(), shadow.lightBuffer.Get(), *shadow.pLight, sm::Vector3::Up);
 		pScene->RenderShadow(*shadow.pLight);
-		*/
 
 		break;
 	}
@@ -187,18 +190,20 @@ void ShadowPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 			unsigned int arraySize = this->GetLightCount(TypeLight::DIRECTIONAL) + 2 * this->GetLightCount(TypeLight::POINT);
 			SetupMap(arraySize);
 			m_shadows.clear();
+			unsigned int shadowIndex = 0;
 			for (unsigned int i = 0; i < static_cast<unsigned int>(lights.size()); i++)
 			{
 				ShadowSection section;
-				section.shadowDepth[0] = this->CreateDepthView(i);
+				section.shadowDepth[0] = this->CreateDepthView(shadowIndex);
 				section.lightBuffer = this->CreateLightBuffer(lights[i]);
 				section.pLight = &lights[i];
-				section.pLight->shadowIndex = i;
+				section.pLight->shadowIndex = shadowIndex;
 				if (section.pLight->type == TypeLight::POINT)
 				{
-					section.shadowDepth[1] = this->CreateDepthView(i + 1);
-					i++;
+					section.shadowDepth[1] = this->CreateDepthView(shadowIndex + 1);
+					shadowIndex++;
 				}
+				shadowIndex++;
 				m_shadows.push_back(section);
 			}
 			m_shadowMap.amount = lights.size();

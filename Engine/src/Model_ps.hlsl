@@ -80,20 +80,29 @@ float4 main(PixelIn input) : SV_TARGET
                     pixelposLightSpace.xyz /= len;
                     float closestDepth = 1.0f;
                     float currentDepth = 0.0f;
-
+                    float2 texCoords;
+                    
                     if(pixelposLightSpace.z >= 0.0f)
                     {
-                        float2 front;
-                        front.x = (pixelposLightSpace.x / (1.0f + pixelposLightSpace.z)) * 0.5f + 0.5f;
-                        front.y = 1.0f - ((pixelposLightSpace.y / (1.0f + pixelposLightSpace.z)) * 0.5f + 0.5f);
+                        //bottom Paraboloid
+                        texCoords.x = (pixelposLightSpace.x / (1.0f + pixelposLightSpace.z)) * 0.5f + 0.5f;
+                        texCoords.y = 1.0f - ((pixelposLightSpace.y / (1.0f + pixelposLightSpace.z)) * 0.5f + 0.5f);
                         currentDepth = (len - 0.1f) / (500.f - 0.1f);
                         currentDepth -= 0.001f;
-                        closestDepth = t_shadowMaps.Sample(s_linear, float3(front.xy, shadowIndex)).r;
+                        closestDepth = t_shadowMaps.Sample(s_linear, float3(texCoords, shadowIndex)).r;
+                    }
+                    else
+                    {
+                        //Top Paraboloid
+                        texCoords.x = 1.0f - (pixelposLightSpace.x / (1.0f - pixelposLightSpace.z)) * 0.5f + 0.5f;
+                        texCoords.y = 1.0f - ((pixelposLightSpace.y / (1.0f - pixelposLightSpace.z)) * 0.5f + 0.5f);
+                        currentDepth = (len - 0.1f) / (500.f - 0.1f);
+                        currentDepth -= 0.001f;
+                        closestDepth = t_shadowMaps.Sample(s_linear, float3(texCoords, shadowIndex + 1)).r;
                     }
                     if (currentDepth > closestDepth)
                     {
                         shadowCoef = 1.0f;
-                        return float4(1, 0, 0, 1.0f);
                     }
                     
                     lightCol += DoPointlight(sb_lights[i], input, N) * (1.0f - shadowCoef);

@@ -67,19 +67,18 @@ float4 ProjectionPosFromDepth(float depth, float2 texCoord)
 }
 
 
-float4 ClipSpaceToParaboloidMapSpace(float4 pos)
+float4 ClipSpaceToParaboloidMapSpace(float4 pos, out float clipDepth)
 {
     pos.xyz /= pos.w;
     float len = length(pos.xyz);
     pos /= len;
     
+    clipDepth = pos.z;
+    
     pos.z++;
     pos.xy /= pos.z;
     pos.z = (len - 0.1f) / (500.0f - 0.1f);
     if(pos.z > 0.0f)
-    {
-        pos.w = 1.0f;
-        return pos;
-    }
-    return float4(0, 0, 0, 0);
+    pos.w = 1.0f;
+    return pos;
 }

@@ -454,13 +454,15 @@ void RenderShadow(const unsigned int start, unsigned int stop, void* buffer, voi
 			}
 			case TypeLight::POINT:
 			{
+				m_context->ClearDepthStencilView(shadow.shadowDepth[1].Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+
 				currentPass->UpdateLightBuffer(m_context, shadow.lightBuffer.Get(), *shadow.pLight, sm::Vector3::Down);
 				m_context->VSSetShader(currentPass->GetPipelineManager()->m_paraboloidVertexShader.Get(), nullptr, 0);
 				RenderObjectsInRange(m_objects, m_buffer, m_context, sm::Vector3(light->position), light->range);
-				/*
+				
+				m_context->OMSetRenderTargets(8, nullTargets, shadow.shadowDepth[1].Get());
 				currentPass->UpdateLightBuffer(m_context, shadow.lightBuffer.Get(), *shadow.pLight, sm::Vector3::Up);
 				RenderObjectsInRange(m_objects, m_buffer, m_context, sm::Vector3(light->position), light->range);
-				*/
 
 
 				break;
