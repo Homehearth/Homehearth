@@ -334,7 +334,7 @@ void Engine::drawImGUI() const
 		ImGui::Text("Bounding Oriented Box");
 		ImGui::Spacing();
 
-		GetCurrentScene()->ForEachComponent<comp::BoundingOrientedBox>([&](Entity& e, comp::BoundingOrientedBox& box)
+		GetCurrentScene()->ForEachComponent<comp::OrientedBoxCollider>([&](Entity& e, comp::OrientedBoxCollider& box)
 			{
 				std::string id = std::to_string(static_cast<int>((entt::entity)e));
 				
@@ -350,7 +350,7 @@ void Engine::drawImGUI() const
 
 		ImGui::Text("Bounding Sphere");
 		ImGui::Spacing();
-		GetCurrentScene()->ForEachComponent<comp::BoundingSphere>([&](Entity& e, comp::BoundingSphere& s)
+		GetCurrentScene()->ForEachComponent<comp::SphereCollider>([&](Entity& e, comp::SphereCollider& s)
 			{
 				std::string id = std::to_string(static_cast<int>((entt::entity)e));
 

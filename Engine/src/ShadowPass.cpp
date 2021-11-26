@@ -152,7 +152,7 @@ void ShadowPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 		auto& lights = m_lights->GetLights();
 		if (m_shadowMap.amount != lights.size())
 		{
-			SetupMap(lights.size());
+			SetupMap(static_cast<uint32_t>(lights.size()));
 			m_shadows.clear();
 			for (unsigned int i = 0; i < static_cast<unsigned int>(lights.size()); i++)
 			{
@@ -162,7 +162,7 @@ void ShadowPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 				section.pLight = &lights[i];
 				m_shadows.push_back(section);
 			}
-			m_shadowMap.amount = lights.size();
+			m_shadowMap.amount = static_cast<unsigned int>(lights.size());
 		}
 	}
 

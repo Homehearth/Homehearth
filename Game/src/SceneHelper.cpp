@@ -22,6 +22,7 @@
 // Used to show and hide shopMenu
 static bool toggle = false;
 
+
 namespace sceneHelp
 {
 	Entity CreateLightEntity(Scene& scene, sm::Vector4 pos, sm::Vector4 dir, sm::Vector4 col, float range, float intensity, TypeLight type, UINT enabled)
@@ -40,7 +41,7 @@ namespace sceneHelp
 
 		scene.GetLights()->EditLight(lightEntity.GetComponent<comp::Light>()->lightData, lightEntity.GetComponent<comp::Light>()->index);
 
-		lightEntity.AddComponent<comp::BoundingSphere>();
+		lightEntity.AddComponent<comp::SphereCollider>();
 
 
 		return lightEntity;
@@ -131,8 +132,8 @@ namespace sceneHelp
 
 		//Construct collider meshes if colliders are added.
 		gameScene.GetRegistry()->on_construct<comp::RenderableDebug>().connect<entt::invoke<&comp::RenderableDebug::InitRenderable>>();
-		gameScene.GetRegistry()->on_construct<comp::BoundingOrientedBox>().connect<&entt::registry::emplace_or_replace<comp::RenderableDebug>>();
-		gameScene.GetRegistry()->on_construct<comp::BoundingSphere>().connect<&entt::registry::emplace_or_replace<comp::RenderableDebug>>();
+		gameScene.GetRegistry()->on_construct<comp::OrientedBoxCollider>().connect<&entt::registry::emplace_or_replace<comp::RenderableDebug>>();
+		gameScene.GetRegistry()->on_construct<comp::SphereCollider>().connect<&entt::registry::emplace_or_replace<comp::RenderableDebug>>();
 		gameScene.GetRegistry()->on_construct<comp::Light>().connect<&Lights::Add>(gameScene.GetLights());
 
 		game->GetParticleSystem()->Initialize(D3D11Core::Get().Device());
@@ -154,14 +155,14 @@ namespace sceneHelp
 		gameScene.SetCurrentCameraEntity(cameraEntity);
 
 		// DONT TOUCH
-		CreateLightEntity(gameScene, { 0.f, 0.f, 0.f, 0.f }, { -1.0f, -0.5f, 0.f, 0.f }, { 50.f, 50.f, 50.f, 0.f }, 1000.f, 0.09f, TypeLight::DIRECTIONAL, 1);
-		CreateLightEntity(gameScene, { 266.f, 29.f, -320.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 30.f, 0.f, 0.f }, 20.f, 1.f,TypeLight::POINT, 1);
-		CreateLightEntity(gameScene, { 348.f, 29.f, -325.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 30.f, 0.f, 0.f }, 20.f, 1.f,TypeLight::POINT, 1);
-		CreateLightEntity(gameScene, { 310.f, 29.f, -305.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 30.f, 0.f, 0.f }, 20.f, 1.f,TypeLight::POINT, 1);
-		CreateLightEntity(gameScene, { 307.f, 29.f, -350.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 30.f, 0.f, 0.f }, 20.f, 1.f,TypeLight::POINT, 1);
-		CreateLightEntity(gameScene, { 181.f, 29.f, -314.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 30.f, 0.f, 0.f }, 20.f, 1.f,TypeLight::POINT, 1);
-		CreateLightEntity(gameScene, { 196.f, 29.f, -258.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 30.f, 0.f, 0.f }, 20.f, 1.f,TypeLight::POINT, 1);
-		CreateLightEntity(gameScene, { 337.f, 29.f, -397.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 30.f, 0.f, 0.f }, 20.f, 1.f,TypeLight::POINT, 1);
+		CreateLightEntity(gameScene, { 0.f, 0.f, 0.f, 0.f }, { -1.0f, 0.0f, 0.f, 0.f }, { 50.f, 50.f, 50.f, 0.f }, 1000.f, 0.09f, TypeLight::DIRECTIONAL, 1);
+		CreateLightEntity(gameScene, { 266.f, 29.f, -320.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 30.f, 0.f, 0.f }, 20.f, 1.f,TypeLight::POINT, 0);
+		CreateLightEntity(gameScene, { 348.f, 29.f, -325.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 30.f, 0.f, 0.f }, 20.f, 1.f,TypeLight::POINT, 0);
+		CreateLightEntity(gameScene, { 310.f, 29.f, -305.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 30.f, 0.f, 0.f }, 20.f, 1.f,TypeLight::POINT, 0);
+		CreateLightEntity(gameScene, { 307.f, 29.f, -350.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 30.f, 0.f, 0.f }, 20.f, 1.f,TypeLight::POINT, 0);
+		CreateLightEntity(gameScene, { 181.f, 29.f, -314.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 30.f, 0.f, 0.f }, 20.f, 1.f,TypeLight::POINT, 0);
+		CreateLightEntity(gameScene, { 196.f, 29.f, -258.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 30.f, 0.f, 0.f }, 20.f, 1.f,TypeLight::POINT, 0);
+		CreateLightEntity(gameScene, { 337.f, 29.f, -397.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 30.f, 0.f, 0.f }, 20.f, 1.f,TypeLight::POINT, 0);
 
 		InputSystem::Get().SetCamera(gameScene.GetCurrentCamera());
 
@@ -344,9 +345,9 @@ namespace sceneHelp
 			scene.Add2DCollection(playerHp, "player" + std::to_string(i + 1) + "Info");
 		}
 
-		Collection2D* timerCollection = new Collection2D;
-		timerCollection->AddElement<rtd::Text>("0", draw_text_t(0, 0, width, height / 16.f));
-		scene.Add2DCollection(timerCollection, "timer");
+		//Collection2D* timerCollection = new Collection2D;
+		//timerCollection->AddElement<rtd::Text>("0", draw_text_t(0, 0, width, height / 16.f));
+		//scene.Add2DCollection(timerCollection, "timer");
 
 		for (int i = 0; i < MAX_PLAYERS_PER_LOBBY; i++)
 		{
@@ -369,7 +370,7 @@ namespace sceneHelp
 		third->SetActivateButton("Q");
 		rtd::AbilityUI* fourth = abilities->AddElement<rtd::AbilityUI>(draw_t((width / 2.f) - ((width / 16.0f)), height - height / 12.0f, width / 16.0f, height / 12.0f), D2D1::ColorF(0, 1.0f), "someRandomAbilityIdkDemo.png");
 		fourth->SetActivateButton("E");
-		rtd::AbilityUI* fifth = abilities->AddElement<rtd::AbilityUI>(draw_t((width / 2.f), height - height / 12.0f, width / 16.0f, height / 12.0f), D2D1::ColorF(0.0f, 1.0f), "healAbilityDemo.png");
+		rtd::AbilityUI* fifth = abilities->AddElement<rtd::AbilityUI>(draw_t((width / 2.f), height - height / 12.0f, width / 16.0f, height / 12.0f), D2D1::ColorF(0, 1.0f), "healAbilityDemo.png");
 		fifth->SetActivateButton("R");
 		rtd::AbilityUI* sixth = abilities->AddElement<rtd::AbilityUI>(draw_t((width / 2.f) + ((width / 16.0f)), height - height / 12.0f, width / 16.0f, height / 12.0f), D2D1::ColorF(0, 1.0f), "slashAbilityDemo.png");
 		sixth->SetActivateButton("C");
@@ -492,7 +493,7 @@ namespace sceneHelp
 		scene.Add2DCollection(lobbyDesc, "LobbyDesc");
 
 		Collection2D* startGame = new Collection2D;
-		rtd::Button* startGameButton = startGame->AddElement<rtd::Button>("NotReady.png", draw_t((width / 2) + (width / 10.f), height - (height / 5.0f), (width / 3.33f), (height / 6.f)), false);
+		rtd::Button* startGameButton = startGame->AddElement<rtd::Button>("Ready.png", draw_t((width / 2) + (width / 10.f), height - (height / 5.0f), (width / 3.33f), (height / 6.f)), false);
 		//rtd::Text* readyText = startGame->AddElement<rtd::Text>("Not ready", draw_text_t((width / 2) + (width / 10.f), height - (height / 5.0f), (width / 3.33f), (height / 6.f)));
 		startGameButton->SetOnPressedEvent([=]()
 			{
