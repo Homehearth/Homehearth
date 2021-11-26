@@ -29,7 +29,7 @@ void Engine::Startup()
 
 	//Get heighest possible 16:9 resolution
 	//90% of the height
-	config.height = static_cast<UINT>(GetSystemMetrics(SM_CYSCREEN) * 0.90f);
+	config.height = static_cast<UINT>(GetSystemMetrics(SM_CYSCREEN) * 0.50f);
 	float aspectRatio = 16.0f / 9.0f;
 	config.width = static_cast<UINT>(aspectRatio * config.height);
 
@@ -265,6 +265,7 @@ void Engine::drawImGUI() const
 				ImGui::SameLine();
 				std::string index = std::to_string(light.index);
 				ImGui::Text("Light index: %d", light.index);
+
 				bool edited = false;
 				if (ImGui::ColorEdit4(("Color##" + index).c_str(), (float*)&light.lightData.color)) 
 					edited = true;
@@ -315,7 +316,7 @@ void Engine::drawImGUI() const
 		ImGui::Text("Bounding Oriented Box");
 		ImGui::Spacing();
 
-		GetCurrentScene()->ForEachComponent<comp::BoundingOrientedBox>([&](Entity& e, comp::BoundingOrientedBox& box)
+		GetCurrentScene()->ForEachComponent<comp::OrientedBoxCollider>([&](Entity& e, comp::OrientedBoxCollider& box)
 			{
 				std::string id = std::to_string(static_cast<int>((entt::entity)e));
 				
@@ -331,7 +332,7 @@ void Engine::drawImGUI() const
 
 		ImGui::Text("Bounding Sphere");
 		ImGui::Spacing();
-		GetCurrentScene()->ForEachComponent<comp::BoundingSphere>([&](Entity& e, comp::BoundingSphere& s)
+		GetCurrentScene()->ForEachComponent<comp::SphereCollider>([&](Entity& e, comp::SphereCollider& s)
 			{
 				std::string id = std::to_string(static_cast<int>((entt::entity)e));
 

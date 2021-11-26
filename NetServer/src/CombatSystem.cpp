@@ -152,7 +152,7 @@ Entity CombatSystem::CreateAttackEntity(Entity entity, HeadlessScene& scene, com
 	attackEntity.AddComponent<comp::Tag<TagType::DYNAMIC>>();
 	attackEntity.AddComponent<comp::Tag<TagType::NO_RESPONSE>>();
 
-	comp::BoundingSphere* bos = attackEntity.AddComponent<comp::BoundingSphere>();
+	comp::SphereCollider* bos = attackEntity.AddComponent<comp::SphereCollider>();
 
 	bos->Radius = stats->attackRange;
 
@@ -183,7 +183,7 @@ Entity CombatSystem::CreateAttackEntity(Entity entity, HeadlessScene& scene, com
 	attackEntity.AddComponent<comp::Tag<TagType::DYNAMIC>>();
 	attackEntity.AddComponent<comp::Tag<TagType::NO_RESPONSE>>();
 
-	comp::BoundingSphere* bos = attackEntity.AddComponent<comp::BoundingSphere>();
+	comp::SphereCollider* bos = attackEntity.AddComponent<comp::SphereCollider>();
 
 	bos->Radius = stats->projectileSize;
 
@@ -200,7 +200,7 @@ Entity CombatSystem::CreateAttackEntity(Entity entity, HeadlessScene& scene, com
 
 	sm::Vector3 vel = targetDir * stats->projectileSpeed;
 	attackEntity.AddComponent<comp::Velocity>()->vel = vel;
-	attackEntity.AddComponent<comp::MeshName>()->name = "Sphere.obj";
+	attackEntity.AddComponent<comp::MeshName>()->name = NameType::MESH_SPHERE;
 
 	attackEntity.AddComponent<comp::Network>();
 

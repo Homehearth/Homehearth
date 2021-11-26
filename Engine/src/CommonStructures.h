@@ -3,6 +3,22 @@
 constexpr int MAX_PLAYERS_PER_LOBBY = 4;
 constexpr int MAX_HEALTH = 100;
 
+
+
+/*
+	Change these to tweak the day and night cycle timers.
+*/
+constexpr uint32_t TIME_LIMIT_DAY = 60;
+constexpr uint32_t TIME_LIMIT_NIGHT = 50;
+constexpr uint32_t TIME_LIMIT_MORNING = 10;
+
+enum class Cycle : UINT
+{
+	DAY,
+	NIGHT,
+	MORNING,
+};
+
 struct Currency
 {
 private:
@@ -384,6 +400,7 @@ struct light_t
 	float		range = 0;	//Only in use on Point Lights
 	TypeLight	type = TypeLight::DIRECTIONAL;	// 0 = Directional, 1 = Point
 	UINT		enabled = 0;	// 0 = Off, 1 = On
+	sm::Matrix lightMatrix = sm::Matrix::Identity;
 	float		intensity = 0;	//Intensity of the Lamp
 };
 
