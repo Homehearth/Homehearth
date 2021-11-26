@@ -12,7 +12,8 @@ private:
 	std::unordered_map<uint32_t, Entity> m_gameEntities;
 
 	GridSystem m_grid;
-	float m_currentTime = 0;
+	float m_elapsedCycleTime = 0;
+	float m_lastFrameTime = 0;
 	uint32_t m_waveTimer = 0;
 	uint32_t m_money;
 	ParticleSystem m_particles;

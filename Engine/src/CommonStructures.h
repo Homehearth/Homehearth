@@ -9,7 +9,7 @@ constexpr int MAX_HEALTH = 100;
 	Change these to tweak the day and night cycle timers.
 */
 constexpr uint32_t TIME_LIMIT_DAY = 60;
-constexpr uint32_t TIME_LIMIT_NIGHT = 75;
+constexpr uint32_t TIME_LIMIT_NIGHT = 10;
 
 enum class Cycle : UINT
 {
