@@ -236,8 +236,8 @@ void Simulation::CreateWaves()
 		wave5.SetTimeLimit(45);
 	}
 
-	/*waveQueue.emplace(wave1);
-	waveQueue.emplace(wave2);
+	//waveQueue.emplace(wave1);
+	/*waveQueue.emplace(wave2);
 	waveQueue.emplace(wave3);
 	waveQueue.emplace(wave4);
 	waveQueue.emplace(wave5);*/

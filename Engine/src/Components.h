@@ -227,6 +227,10 @@ namespace ecs
 			bool		 rotateDefence = false;
 		};
 
+		struct TileSet
+		{
+			std::vector<std::pair<UINT, UINT>> coordinates;
+		};
 	
 
 		struct NPC
