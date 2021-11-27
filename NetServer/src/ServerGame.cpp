@@ -72,8 +72,13 @@ bool ServerGame::OnStartup()
 	m_inputThread = std::thread(&ServerGame::InputThread, this);
 
 	LoadMapColliders("VillageColliders.fbx");
-	LoadHouseColliders("House5.fbx");
-
+	LoadHouseColliders("House5_Collider.fbx");
+	LoadHouseColliders("House6_Collider.fbx");
+	LoadHouseColliders("House7_Collider.fbx");
+	LoadHouseColliders("House8_Collider.fbx");
+	LoadHouseColliders("House9_Collider.fbx");
+	LoadHouseColliders("House10_Collider.fbx");
+	LoadHouseColliders("WaterMillHouse_Collider.fbx");
 	return true;
 }
 

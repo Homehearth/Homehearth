@@ -60,7 +60,6 @@ private:
 	void OnComponentUpdated(Entity entity, ecs::Component component);
 
 	void BuildMapColliders(std::vector<dx::BoundingOrientedBox>* mapColliders);
-	void InitializeHouses();
 
 public:
 	Cycler m_timeCycler;

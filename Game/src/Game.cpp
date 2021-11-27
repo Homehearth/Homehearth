@@ -730,6 +730,16 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 					nameString = "Sphere.obj";
 					break;
 				}
+				case NameType::MESH_WATERMILL:
+				{
+					nameString = "WaterMill.fbx";
+					break;
+				}
+				case NameType::MESH_WATERMILLHOUSE:
+				{
+					nameString = "WaterMillHouse.fbx";
+					break;
+				}
 				case NameType::MESH_HOUSE5:
 					{
 					nameString = "House5.fbx";
@@ -755,7 +765,51 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 					nameString = "House9.fbx";
 					break;
 				}
-
+				case NameType::MESH_HOUSE10:
+				{
+					nameString = "House10.fbx";
+					break;
+				}
+				case NameType::MESH_DOOR1:
+				{
+					nameString = "Door1.fbx";
+					break;
+				}
+				case NameType::MESH_DOOR5:
+				{
+					nameString = "Door5.fbx";
+					break;
+				}
+				case NameType::MESH_DOOR6:
+				{
+					nameString = "Door6.fbx";
+					break;
+				}
+				case NameType::MESH_DOOR7:
+				{
+					nameString = "Door7.fbx";
+					break;
+				}
+				case NameType::MESH_DOOR8:
+				{
+					nameString = "Door8.fbx";
+					break;
+				}
+				case NameType::MESH_DOOR9:
+				{
+					nameString = "Door9.fbx";
+					break;
+				}
+				case NameType::MESH_DOOR10:
+				{
+					nameString = "Door10.fbx";
+					break;
+				}
+				case NameType::MESH_HOUSEROOF:
+				{
+					nameString = "HouseRoof.fbx";
+					break;
+				}
 				}
 				std::shared_ptr<RModel> model = ResourceManager::Get().CopyResource<RModel>(nameString, true);
 				if (model)

@@ -708,7 +708,7 @@ void Simulation::ResetGameScene()
 
 	LOG_INFO("%lld", m_pGameScene->GetRegistry()->size());
 
-	InitializeHouses();
+	HouseManagement::InitializeHouses(*this->GetGameScene(),qt.get(),*houseColliders);
 	EnemyManagement::CreateWaves(waveQueue, currentRound++);
 }
 
@@ -717,7 +717,7 @@ void Simulation::SendEntities(const std::vector<Entity>& entities, GameMsg msgID
 	if (entities.size() == 0)
 		return;
 
-	const size_t PACKET_CHUNK_SIZE = 10;
+	const size_t PACKET_CHUNK_SIZE = 20;
 
 	uint32_t sent = 0;
 	message<GameMsg> msg;
@@ -873,21 +873,4 @@ Entity Simulation::GetPlayer(uint32_t playerID) const
 	return m_lobby.GetPlayer(playerID);
 }
 
-void Simulation::InitializeHouses()
-{
-	Entity house5 = this->GetGameScene()->CreateEntity();
-	Entity door5 = this->GetGameScene()->CreateEntity();
 
-	house5.AddComponent<comp::MeshName>()->name = NameType::MESH_HOUSE5;
-	house5.AddComponent<comp::Transform>();
-	house5.AddComponent<comp::Tag<TagType::STATIC>>();
-	house5.AddComponent<comp::House>();
-	comp::OrientedBoxCollider* tempObb = &this->houseColliders->at("House5.fbx");
-	comp::OrientedBoxCollider* obb = house5.AddComponent<comp::OrientedBoxCollider>();
-	obb->Center = tempObb->Center;
-	obb->Center.y = 0.0f;
-	obb->Extents = tempObb->Extents;
-	obb->Orientation = tempObb->Orientation;
-	house5.AddComponent<comp::Network>();
-	//obb =
-}

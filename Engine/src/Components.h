@@ -175,6 +175,7 @@ namespace ecs
 		struct House
 		{
 			Entity door;
+			Entity houseRoof;
 			bool isOpen;
 		};
 		
