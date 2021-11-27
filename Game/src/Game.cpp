@@ -130,7 +130,7 @@ void Game::OnUserUpdate(float deltaTime)
 					case TypeLight::DIRECTIONAL:
 					{
 						l.lightData.direction = { -1.0f, 0.0f, 0.f, 0.f };
-						sm::Vector3 dir = sm::Vector3::TransformNormal(sm::Vector3(l.lightData.direction), sm::Matrix::CreateRotationZ(dx::XMConvertToRadians((180.0f / ((float)TIME_LIMIT_DAY + (float)TIME_LIMIT_MORNING)) * (m_elapsedCycleTime))));
+						sm::Vector3 dir = sm::Vector3::TransformNormal(sm::Vector3(l.lightData.direction), sm::Matrix::CreateRotationZ(dx::XMConvertToRadians(ROTATION) * (m_elapsedCycleTime)));
 
 						l.lightData.direction = sm::Vector4(dir.x, dir.y, dir.z, 0.0f);
 						sm::Vector3 pos = l.lightData.position;
@@ -629,6 +629,11 @@ void Game::CreateLobby()
 const Mode& Game::GetCurrentMode() const
 {
 	return m_mode;
+}
+
+const Cycle& Game::GetCurrentCycle() const
+{
+	return m_serverCycle;
 }
 
 void Game::SetMode(const Mode& mode)

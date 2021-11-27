@@ -56,6 +56,7 @@ public:
 	void JoinLobby(uint32_t lobbyID);
 	void CreateLobby();
 	const Mode& GetCurrentMode() const;
+	const Cycle& GetCurrentCycle() const;
 	void SetMode(const Mode& mode);
 	const uint32_t& GetMoney() const;
 	

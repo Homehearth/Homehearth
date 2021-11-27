@@ -402,8 +402,11 @@ namespace sceneHelp
 		
 		
 		sc->AddButton("ShopIcon.png", draw_t(0.0f, -(height / 14) * 2.0f, width / 24, height / 14))->SetOnPressedEvent([=] {
+			if (game->GetCurrentCycle() == Cycle::DAY)
+			{
 				shopMenu->Show();
 				bullDoze->Hide();
+			}
 			});
 		sc->SetPrimeButtonMeasurements(draw_t(0.0f, 0.0f, width / 24, height / 14));
 		scene.Add2DCollection(scrolldownMenu, "ScrolldownMenu");

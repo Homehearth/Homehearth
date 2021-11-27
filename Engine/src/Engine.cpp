@@ -16,7 +16,6 @@ Engine::Engine()
 	: BasicEngine()
 {
 	LOG_INFO("Engine(): " __TIMESTAMP__);
-
 }
 
 void Engine::Startup()
@@ -30,7 +29,7 @@ void Engine::Startup()
 
 	//Get heighest possible 16:9 resolution
 	//90% of the height
-	config.height = static_cast<UINT>(GetSystemMetrics(SM_CYSCREEN) * 0.50f);
+	config.height = static_cast<UINT>(GetSystemMetrics(SM_CYSCREEN) * 0.90f);
 	float aspectRatio = 16.0f / 9.0f;
 	config.width = static_cast<UINT>(aspectRatio * config.height);
 

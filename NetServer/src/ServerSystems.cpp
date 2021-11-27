@@ -450,7 +450,7 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 				}
 			}
 
-			if (p.lastInputState.key_r) // was pressed
+			if (p.lastInputState.key_r && simulation->m_timeCycler.GetTimePeriod() == Cycle::DAY) // was pressed
 			{
 				LOG_INFO("Pressed right");
 				simulation->GetGrid().RemoveDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, Blackboard::Get().GetPathFindManager());
