@@ -1,15 +1,23 @@
-skel 			Knight.fbx
+skel 								Knight.fbx
 anim 			IDLE 				Knight_Idle.fbx
 anim 			MOVE 				Knight_Run.fbx
 anim 			PRIMARY_ATTACK 		Knight_Slash.fbx
-loopable 		0
 anim 			TAKE_DAMAGE 		Knight_TakeDamage.fbx
-loopable		0
 anim			PLACE_DEFENCE		Knight_PlaceDefence.fbx
-loopable		0
 defaultAnim		IDLE
 
 
+loopable		PRIMARY_ATTACK		0
+loopable		TAKE_DAMAGE			0
+loopable		PLACE_DEFENCE		0
+
+
+upperbody		PRIMARY_ATTACK		QuickRigCharacter_Spine
+upperbody		TAKE_DAMAGE			QuickRigCharacter_Spine
+upperbody		PLACE_DEFENCE		QuickRigCharacter_Spine
+
+
+//Blendstates
 blendstate 		IDLE				MOVE				0.2
 blendstate 		MOVE				IDLE				0.2
 

@@ -66,7 +66,7 @@ public:
 	bool IsLoopable() const;
 	void SetTicksPerFrame(const double& speed);
 	const double& GetTicksPerFrame() const;
-	const double& GetDuraction() const;
+	const double& GetDuration() const;
 
 	/*
 		Data for doing animation

@@ -199,7 +199,7 @@ const double& RAnimation::GetTicksPerFrame() const
 	return m_ticksPerFrame;
 }
 
-const double& RAnimation::GetDuraction() const
+const double& RAnimation::GetDuration() const
 {
 	return m_duration;
 }

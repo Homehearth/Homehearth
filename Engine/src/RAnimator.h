@@ -20,18 +20,35 @@ private:
 	std::unordered_map<std::string, UINT>	m_nameToBone;
 
 	//States
-	EAnimationType m_currentType;
+	/*EAnimationType m_currentType;
 	EAnimationType m_nextType;
 	EAnimationType m_defaultType;
+
+	EAnimationType m_lowerbody;
+	EAnimationType m_upperbody;*/
+	//REMOVE LATER ^^^^
+
+
+	EAnimationType m_currentState;
+	EAnimationType m_nextState;
+	EAnimationType m_upperState;
+
 	
 	struct animation_t
 	{
+		//Shared data
 		std::shared_ptr<RAnimation>					animation;
+
+		//Specific data for this animation in this animator
 		double										frameTimer	= 0;
 		double										blendTimer	= 0;
 		double										currentTick	= 0;
 		std::unordered_map<std::string, lastKeys_t> lastKeys;
 		bool										reachedEnd	= false;
+
+		//Will not get reseted
+		bool										isUpperBody	= false;
+		std::string									devideBone  = "";
 	};
 
 	//All the animations
@@ -40,8 +57,8 @@ private:
 	//Blendstates
 	std::unordered_map<blendstate_t, double, blend_hash_fn> m_blendStates;
 
-	//Matrices that is going up to the GPU - structure buffer
-	std::vector<sm::Matrix>			 m_localMatrices;	//In modelspace
+	//Matrices that is going up to the GPU - structure buffer - in modelspace
+	std::vector<sm::Matrix>			 m_localMatrices;
 	ComPtr<ID3D11Buffer>			 m_bonesSB_Buffer;
 	ComPtr<ID3D11ShaderResourceView> m_bonesSB_RSV;
 
@@ -57,12 +74,43 @@ private:
 	//Reset the time of currentFrametime
 	void ResetAnimation(const EAnimationType& type);
 
-	//Update the time for an animation
-	void UpdateTime(const EAnimationType& type);
+	//Update the time for an animation. Return false when reached end
+	bool UpdateTime(const EAnimationType& type);
 
-	void RegularAnimation();
-	void BlendAnimations();
+	//Animation with only one state
+	void RegularAnimation(const EAnimationType& state);
+
+	//Blend between two animations
+	void BlendAnimations(const EAnimationType& state1, const EAnimationType& state2);
+
+	//Animate the lower body as usual and swap to upper when reached a bone
+	void UpperLowerbodyAnimation(const EAnimationType& upper, const EAnimationType& lower);
+
+	void BlendUpperBodyAnimations(const EAnimationType& state1, const EAnimationType& state2, const EAnimationType& upper);
+
 	void SwapAnimationState();
+
+	/*
+	Examplecode
+	
+	Update()
+	{
+		if (upperanim != NONE)
+		{
+			int devideBoneID = -1;
+
+			//for (i = 0; i < standard.size() && devideBoneID == -1; i++)
+				if (standard[i].name == devidebone)
+					devideBoneID = i;
+				//Do the blending if needed
+
+			//Upper
+			if (devideBoneID != -1)
+			//for (i = devideBoneID; i < upper.size(); i++)
+				//Do blending if needed
+		}
+	}
+	*/
 
 public:
 	RAnimator();
