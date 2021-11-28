@@ -91,25 +91,18 @@ private:
 	void SwapAnimationState();
 
 	/*
-	Examplecode
-	
-	Update()
-	{
-		if (upperanim != NONE)
+		Upperbody update
+
+		Fix a m_bonePoseAbsolute - can update from other parts later
+
+		BlendAnimations() from start until we reached the devidebone
+		BlendAnimations(upper, ???)
+
+
+		for (from devideBone -> till end)
 		{
-			int devideBoneID = -1;
-
-			//for (i = 0; i < standard.size() && devideBoneID == -1; i++)
-				if (standard[i].name == devidebone)
-					devideBoneID = i;
-				//Do the blending if needed
-
-			//Upper
-			if (devideBoneID != -1)
-			//for (i = devideBoneID; i < upper.size(); i++)
-				//Do blending if needed
+			blend if needed between this and other
 		}
-	}
 	*/
 
 public:
