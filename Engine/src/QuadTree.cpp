@@ -33,11 +33,24 @@ void QuadTree::GetSize(size_t& size)
 
 bool QuadTree::Insert(const Entity& e)
 {
-	dx::BoundingOrientedBox collider = *e.GetComponent<comp::BoundingOrientedBox>();
-
-	if (!m_boundary.Intersects(collider) || m_level > MAX_LEVELS)
+	comp::OrientedBoxCollider* colliderBox = e.GetComponent<comp::OrientedBoxCollider>();
+	if (colliderBox)
 	{
-		return false;
+		if (!m_boundary.Intersects(*colliderBox) || m_level > MAX_LEVELS)
+		{
+			return false;
+		}
+	}
+	else
+	{
+		comp::SphereCollider* colliderSphere = e.GetComponent<comp::SphereCollider>();
+		if (colliderSphere)
+		{
+			if (!m_boundary.Intersects(*colliderSphere) || m_level > MAX_LEVELS)
+			{
+				return false;
+			}
+		}
 	}
 
 	if (m_level == MAX_LEVELS)
@@ -58,6 +71,22 @@ bool QuadTree::Insert(const Entity& e)
 	this->SouthEast->Insert(e);
 
 	return true;
+}
+
+void QuadTree::Clear()
+{
+	if (m_entities.size() > 0)
+	{
+		m_entities.clear();
+	}
+
+	if (m_divided && m_level <= MAX_LEVELS)
+	{
+		this->NorthWest->Clear();
+		this->NorthEast->Clear();
+		this->SouthWest->Clear();
+		this->SouthEast->Clear();
+	}
 }
 
 void QuadTree::Split()
@@ -82,7 +111,7 @@ void QuadTree::Split()
 	m_divided = true;
 }
 
-void QuadTree::Query(std::set<Entity>& returnVec, const dx::BoundingSphere& range)
+void QuadTree::Query(std::set<Entity>& returnVec, const comp::SphereCollider& range)
 {
 	if (!m_boundary.Intersects(range))
 	{
