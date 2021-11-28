@@ -359,7 +359,7 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 			tileEntity.AddComponent<comp::TileSet>()->coordinates = coordinates;
 			
 			comp::Transform*			transform	= tileEntity.AddComponent<comp::Transform>();
-			comp::BoundingOrientedBox*	collider	= tileEntity.AddComponent<comp::BoundingOrientedBox>();
+			comp::OrientedBoxCollider*	collider	= tileEntity.AddComponent<comp::OrientedBoxCollider>();
 			comp::Health*				health		= tileEntity.AddComponent<comp::Health>();
 			transform->position = { centerTile.position.x, 5.f, centerTile.position.z };
 

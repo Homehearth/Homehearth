@@ -66,28 +66,29 @@ void IShop::UseShop(const ShopItem& whatToBuy, const uint32_t& player)
 				}
 			}
 
-		m_sim->GetCurrency().GetAmountRef() -= 5;
-		break;
-	}
-	case ShopItem::LONG_TOWER:
-	{
-		if (m_sim->GetPlayer(player))
-		{
-			m_sim->GetPlayer(player).GetComponent<comp::Player>()->towerSelected = EDefenceType::LARGE;
+			m_sim->GetCurrency().GetAmountRef() -= 5;
+			break;
 		}
-		break;
-	}
-	case ShopItem::SHORT_TOWER:
-	{
-		if (m_sim->GetPlayer(player))
+		case ShopItem::LONG_TOWER:
 		{
-			m_sim->GetPlayer(player).GetComponent<comp::Player>()->towerSelected = EDefenceType::SMALL;
+			if (m_sim->GetPlayer(player))
+			{
+				m_sim->GetPlayer(player).GetComponent<comp::Player>()->towerSelected = EDefenceType::LARGE;
+			}
+			break;
 		}
-		break;
-	}
-	default:
-	{
-		break;
-	}
+		case ShopItem::SHORT_TOWER:
+		{
+			if (m_sim->GetPlayer(player))
+			{
+				m_sim->GetPlayer(player).GetComponent<comp::Player>()->towerSelected = EDefenceType::SMALL;
+			}
+			break;
+		}
+		default:
+		{
+			break;
+		}
+		}
 	}
 }
