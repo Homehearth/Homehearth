@@ -69,6 +69,8 @@ void Lobby::AddPlayer(uint32_t gameID, uint32_t playerID, const std::string& nam
 	m_simRef->SendAllEntitiesToPlayer(playerID);
 
 	this->CreatePlayerEntity(playerID, name);
+
+	this->Update();
 }
 
 void Lobby::Update()

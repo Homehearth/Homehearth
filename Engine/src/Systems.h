@@ -24,7 +24,7 @@ namespace Systems
 
 	void UpdateDynamicQT(HeadlessScene& scene, QuadTree* qtDynamic);
 	void FetchCollidingList(HeadlessScene& scene, QuadTree* qt, QuadTree* qtDynamic);
-	void ClearCollidingList(HeadlessScene& scene);
+	void ClearCollidingList(HeadlessScene& scene, QuadTree* qtDynamic);
 
 	void CheckCollisions(HeadlessScene& scene, float dt);
 

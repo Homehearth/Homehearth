@@ -80,7 +80,7 @@ void QuadTree::Clear()
 		m_entities.clear();
 	}
 
-	if (m_divided && m_level <= MAX_LEVELS)
+	if (m_divided)
 	{
 		this->NorthWest->Clear();
 		this->NorthEast->Clear();

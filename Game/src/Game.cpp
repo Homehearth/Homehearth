@@ -123,7 +123,7 @@ void Game::OnUserUpdate(float deltaTime)
 			m_elapsedCycleTime += deltaTime;
 			scene.ForEachComponent<comp::Light>([&](Entity e, comp::Light& l)
 				{
-					switch(l.lightData.type)
+					switch (l.lightData.type)
 					{
 					case TypeLight::DIRECTIONAL:
 					{
@@ -184,8 +184,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	case GameMsg::Game_Snapshot:
 	{
 		m_savedInputs.clear();
-		uint32_t currentTick;
-		msg >> currentTick;
 		uint32_t count;
 		msg >> count;
 
@@ -210,8 +208,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	}
 	case GameMsg::Game_UpdateComponent:
 	{
-		uint32_t currentTick;
-		msg >> currentTick;
 		uint32_t count; // Could be more than one Entity
 		msg >> count;
 
@@ -236,8 +232,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	}
 	case GameMsg::Game_AddEntity:
 	{
-		uint32_t currentTick;
-		msg >> currentTick;
 		uint32_t count; // Could be more than one Entity
 		msg >> count;
 #ifdef _DEBUG
@@ -398,7 +392,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			// Change light on Night.
 			m_elapsedCycleTime = 0.0f;
 			scene.ForEachComponent<comp::Light>([&](Entity e, comp::Light& l)
-				{ 
+				{
 					switch (l.lightData.type)
 					{
 					case TypeLight::DIRECTIONAL:
@@ -730,7 +724,13 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 					nameString = "Sphere.obj";
 					break;
 				}
+				default:
+				{
+					nameString = "Cube.obj";
+					break;
 				}
+				}
+
 				std::shared_ptr<RModel> model = ResourceManager::Get().CopyResource<RModel>(nameString, true);
 				if (model)
 				{
@@ -756,11 +756,14 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 					break;
 				}
 				}
-				std::shared_ptr<RAnimator> animator = ResourceManager::Get().CopyResource<RAnimator>(nameString, true);
-				if (animator)
+				if (nameString.length() > 0)
 				{
-					animator->RandomizeTime();
-					e.AddComponent<comp::Animator>()->animator = animator;
+					std::shared_ptr<RAnimator> animator = ResourceManager::Get().CopyResource<RAnimator>(nameString, true);
+					if (animator)
+					{
+						animator->RandomizeTime();
+						e.AddComponent<comp::Animator>()->animator = animator;
+					}
 				}
 				break;
 			}
@@ -788,13 +791,6 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 				comp::SphereCollider* collider = e.AddComponent<comp::SphereCollider>();
 				collider->Center = s.Center;
 				collider->Radius = s.Radius;
-				break;
-			}
-			case ecs::Component::LIGHT:
-			{
-				comp::Light l;
-				msg >> l;
-				e.AddComponent<comp::Light>(l);
 				break;
 			}
 			case ecs::Component::PLAYER:
