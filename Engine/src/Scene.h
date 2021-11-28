@@ -22,11 +22,13 @@ private:
 	Lights m_lights;
 	Skybox m_sky;
 
+
 	bool IsRender3DReady() const;
 	bool IsRenderDebugReady() const;
 	bool IsRender2DReady() const;
 
 public:
+	uint32_t* m_localPIDRef;
 	DoubleBuffer<std::vector<comp::Renderable>> m_renderableCopies;
 	Scene();
 

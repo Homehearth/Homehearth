@@ -78,12 +78,13 @@ cbuffer BlurSettings : register(b11)
     float4 c_weights[MAXWEIGHTS / 4];
 }
 
-cbuffer InverseMatrices : register(b12)
+cbuffer DoFSettings : register(b12)
 {
     float4x4    c_inverseView;
     float4x4    c_inverseProjection;
     uint        c_dofType;
     float3      dofPadding;
+    float4      c_playerPosView;
 }
 
 

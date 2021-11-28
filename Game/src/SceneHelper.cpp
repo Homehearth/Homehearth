@@ -128,6 +128,7 @@ namespace sceneHelp
 	void CreateGameScene(Game* game)
 	{
 		Scene& gameScene = game->GetScene("Game");
+		gameScene.m_localPIDRef = &game->m_localPID;
 		SetupInGameScreen(game);
 
 		//Construct collider meshes if colliders are added.
