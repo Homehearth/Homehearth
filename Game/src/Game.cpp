@@ -802,14 +802,29 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 					nameString = "WaterMillHouse.fbx";
 					break;
 				}
+				case NameType::MESH_RUINED_WATERMILLHOUSE:
+				{
+					nameString = "WaterMillHousePile.fbx";
+					break;
+				}
 				case NameType::MESH_HOUSE5:
 					{
 					nameString = "House5.fbx";
 					break;
 					}
+				case NameType::MESH_RUINED_HOUSE5:
+				{
+					nameString = "House5Pile.fbx";
+					break;
+				}
 				case NameType::MESH_HOUSE6:
 				{
 					nameString = "House6.fbx";
+					break;
+				}
+				case NameType::MESH_RUINED_HOUSE6:
+				{
+					nameString = "House6Pile.fbx";
 					break;
 				}
 				case NameType::MESH_HOUSE7:
@@ -817,9 +832,19 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 					nameString = "House7.fbx";
 					break;
 				}
+				case NameType::MESH_RUINED_HOUSE7:
+				{
+					nameString = "House7Pile.fbx";
+					break;
+				}
 				case NameType::MESH_HOUSE8:
 				{
 					nameString = "House8.fbx";
+					break;
+				}
+				case NameType::MESH_RUINED_HOUSE8:
+				{
+					nameString = "House8Pile.fbx";
 					break;
 				}
 				case NameType::MESH_HOUSE9:
@@ -827,9 +852,19 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 					nameString = "House9.fbx";
 					break;
 				}
+				case NameType::MESH_RUINED_HOUSE9:
+				{
+					nameString = "House9Pile.fbx";
+					break;
+				}
 				case NameType::MESH_HOUSE10:
 				{
 					nameString = "House10.fbx";
+					break;
+				}
+				case NameType::MESH_RUINED_HOUSE10:
+				{
+					nameString = "House10Pile.fbx";
 					break;
 				}
 				case NameType::MESH_DOOR1:
