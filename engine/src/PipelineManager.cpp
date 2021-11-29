@@ -552,9 +552,9 @@ bool PipelineManager::CreateTextureEffectResources()
     m_ModdedWaterBlendAlbedoMap = ResourceManager::Get().GetResource<RTexture>("WaterBlendMap.jpg");
 
     //Get all models needed
-    m_WaterModel      = ResourceManager::Get().GetResource<RModel>("WaterMesh.obj");
-    m_WaterEdgeModel  = ResourceManager::Get().GetResource<RModel>("WaterEdgeMesh.obj");
-    m_WaterFloorModel = ResourceManager::Get().GetResource<RModel>("WaterFloorMesh.obj");
+    m_WaterModel      = ResourceManager::Get().GetResource<RModel>("WaterMesh.fbx");
+    m_WaterEdgeModel  = ResourceManager::Get().GetResource<RModel>("WaterEdgeMesh.fbx");
+    m_WaterFloorModel = ResourceManager::Get().GetResource<RModel>("WaterFloorMesh.fbx");
 
 
     //Get the textures from the models
