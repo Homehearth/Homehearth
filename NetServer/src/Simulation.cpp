@@ -504,7 +504,53 @@ void Simulation::SendSnapshot()
 		msg3.header.id = GameMsg::Game_Money;
 		msg3 << m_currency.GetAmount();
 		this->Broadcast(msg3);
+
+		// Send Abilities
+		{
+			for (auto i = m_lobby.m_players.begin(); i != m_lobby.m_players.end(); i++)
+			{
+				network::message<GameMsg> msg4;
+				msg4.header.id = GameMsg::Game_Cooldown;
+				Entity p = i->second;
+				uint32_t count = 0;
+				comp::MeleeAttackAbility* melee = p.GetComponent<comp::MeleeAttackAbility>();
+				comp::RangeAttackAbility* range = p.GetComponent<comp::RangeAttackAbility>();
+				comp::BlinkAbility* blink = p.GetComponent<comp::BlinkAbility>();
+				comp::DashAbility* dash = p.GetComponent<comp::DashAbility>();
+				comp::HealAbility* heal = p.GetComponent<comp::HealAbility>();
+				if (melee)
+				{
+					count++;
+					msg4 << AbilityIndex::Primary << melee->cooldownTimer;
+				}
+				else if (range)
+				{
+					count++;
+					msg4 << AbilityIndex::Primary << range->cooldownTimer;
+				}
+
+				if (blink)
+				{
+					count++;
+					msg4 << AbilityIndex::Dodge << blink->cooldownTimer;
+				}
+				else if (dash)
+				{
+					count++;
+					msg4 << AbilityIndex::Dodge << dash->cooldownTimer;
+				}
+
+				if (heal)
+				{
+					count++;
+					msg4 << AbilityIndex::Secondary << heal->cooldownTimer;
+				}
+
+				msg4 << count;
+				m_pServer->SendToClient(i->first, msg4);
+			}
 		}
+	}
 	else
 	{
 		if (m_tick % 30 == 0)

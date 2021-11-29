@@ -68,4 +68,8 @@ public:
 	ParticleSystem* GetParticleSystem();
 	void UseShop(const ShopItem& whatToBuy);
 	void UpgradeDefence(const uint32_t& id);
+
+	float m_primaryCooldown = 0.0f;
+	float m_secondaryCooldown = 0.0f;
+	float m_dodgeCooldown = 0.0f;
 };

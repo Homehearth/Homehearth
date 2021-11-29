@@ -288,9 +288,19 @@ enum class GameMsg : uint8_t
 	Game_UseShop,
 	Game_UpgradeDefence,
 	Game_ChangeAnimation,
+	Game_Cooldown,
 	Game_StartSpectate,
 	Game_StopSpectate,
 	Game_Over
+};
+
+enum class AbilityIndex : uint8_t
+{
+	Primary,
+	Secondary,
+	Dodge,
+
+	DEFAULT
 };
 
 enum class ShopItem : uint8_t

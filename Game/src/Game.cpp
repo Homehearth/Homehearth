@@ -542,6 +542,41 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		}
 		break;
 	}
+	case GameMsg::Game_Cooldown:
+	{
+		uint32_t count = 0;
+		msg >> count;
+
+		for (int i = 0; i < count; i++)
+		{
+			float cooldown = 0.0f;
+			msg >> cooldown;
+
+			AbilityIndex index = AbilityIndex::DEFAULT;
+			msg >> index;
+			switch (index)
+			{
+			case AbilityIndex::Primary:
+			{
+				m_primaryCooldown = cooldown;
+				break;
+			}
+			case AbilityIndex::Secondary:
+			{
+				m_secondaryCooldown = cooldown;
+				break;
+			}
+			case AbilityIndex::Dodge:
+			{
+				m_dodgeCooldown = cooldown;
+				break;
+			}
+			default:
+				break;
+			}
+		}
+		break;
+	}
 	case GameMsg::Game_StartSpectate:
 	{
 		m_players.at(m_localPID).GetComponent<comp::Player>()->state = comp::Player::State::SPECTATING;
