@@ -100,7 +100,7 @@ namespace ecs
 			{
 				if (type == PARTICLEMODE::BLOOD)
 				{
-					textureName = "Blood.png";
+					textureName = "BloodParticle.png";
 					opacityTextureName = "round_Opacity.png";
 				}
 				else if (type == PARTICLEMODE::LEAF)
