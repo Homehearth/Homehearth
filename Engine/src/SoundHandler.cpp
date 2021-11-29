@@ -143,6 +143,7 @@ irrklang::ISound* SoundHandler::Play3DSound(const std::string& name, const sm::V
     {
         sound = m_soundEngine->play3D(m_soundSources[name],{ pos.x, pos.y, pos.z },
             false, true, false, false);
+        sound->setMinDistance(25.0f);
         sound->setIsPaused(!playSound);
     }
 

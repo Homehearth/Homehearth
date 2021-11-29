@@ -37,7 +37,6 @@ private:
 	void OnClientDisconnect();
 	
 	void UpdateEntityFromMessage(Entity entity, message<GameMsg>& msg);
-	void UpdateSoundListener(Entity entity);
 
 	void UpdateInput();
 
