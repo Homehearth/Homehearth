@@ -30,7 +30,7 @@ namespace network
 		void clear()
 		{
 			payload.clear();
-			header = {};
+			header.size = 0;
 		}
 
 		friend std::ostream& operator <<(std::ostream& os, const message<T>& msg)

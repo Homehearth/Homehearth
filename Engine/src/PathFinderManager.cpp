@@ -18,6 +18,11 @@ Node* PathFinderManager::FindClosestNode(sm::Vector3 position)
 	return currentClosest;
 }
 
+float PathFinderManager::GetNodeSize() const
+{
+	return this->m_nodeSize.x;
+}
+
 std::vector<std::vector<std::shared_ptr<Node>>>& PathFinderManager::GetNodes()
 {
 	return m_nodes;

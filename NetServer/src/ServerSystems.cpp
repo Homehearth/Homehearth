@@ -167,7 +167,7 @@ void EnemyManagement::CreateWaves(std::queue<Wave>& waveQueue, int currentRound)
 		group2.SetSpawnPoint({ 170, -80.0f });
 		wave2.AddGroup(group1);
 		wave2.AddGroup(group2);
-		wave2.SetTimeLimit(30);
+		wave2.SetTimeLimit(30);	
 	}
 
 
@@ -513,9 +513,9 @@ void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& sce
 				{
 					simulation->ResetPlayer(e);
 					message<GameMsg> msg;
-					msg.header.id = GameMsg::Game_StopSpectate	;
+					msg.header.id = GameMsg::Game_StopSpectate;
 					simulation->SendMsg(n.id, msg);
-					LOG_INFO("Player id %u Respawnd...", e.GetComponent<comp::Network>()->id);
+					LOG_INFO("Player %u respawned...", e.GetComponent<comp::Network>()->id);
 				}
 			}
 		});

@@ -92,16 +92,6 @@ void Simulation::InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg, c
 			}
 			break;
 		}
-		case ecs::Component::LIGHT:
-		{
-			comp::Light* l = entity.GetComponent<comp::Light>();
-			if (l)
-			{
-				compSet.set(ecs::Component::LIGHT);
-				msg << *l;
-			}
-			break;
-		}
 		case ecs::Component::PLAYER:
 		{
 			comp::Player* p = entity.GetComponent<comp::Player>();
@@ -120,20 +110,6 @@ void Simulation::InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg, c
 
 	msg << static_cast<uint32_t>(compSet.to_ulong());
 	msg << entity.GetComponent<comp::Network>()->id;
-}
-
-message<GameMsg> Simulation::AllEntitiesMessage()const
-{
-	message<GameMsg> msg;
-	msg.header.id = GameMsg::Game_AddEntity;
-	uint32_t count = 0;
-	m_pGameScene->ForEachComponent<comp::Network>([&](Entity e, comp::Network& n)
-		{
-			InsertEntityIntoMessage(e, msg);
-			count++;
-		});
-	msg << count;
-	return msg;
 }
 
 void Simulation::ResetPlayer(Entity player)
@@ -172,11 +148,12 @@ void Simulation::ResetPlayer(Entity player)
 	if (playerComp->classType == comp::Player::Class::WARRIOR)
 	{
 		comp::MeleeAttackAbility* attackAbility = player.AddComponent<comp::MeleeAttackAbility>();
-		attackAbility->cooldown = 0.3f;
-		attackAbility->attackDamage = 40.f;
+		attackAbility->cooldown = 0.75f;
+		attackAbility->attackDamage = 20.f;
 		attackAbility->lifetime = 0.2f;
 		attackAbility->useTime = 0.2f;
-		attackAbility->delay = 0.1f;
+		attackAbility->delay = 0.3f;
+		attackAbility->attackRange = 6.f;
 
 		playerComp->primaryAbilty = entt::resolve<comp::MeleeAttackAbility>();
 
@@ -192,9 +169,9 @@ void Simulation::ResetPlayer(Entity player)
 		playerComp->secondaryAbilty = entt::resolve<comp::MeleeAttackAbility>();
 
 		comp::DashAbility* dashAbility = player.AddComponent<comp::DashAbility>();
-		dashAbility->cooldown = 1.0f;
+		dashAbility->cooldown = 6.0f;
 		dashAbility->delay = 0.0f;
-		dashAbility->force = 10.f;
+		dashAbility->force = 7.f;
 		dashAbility->lifetime = 0.0f;
 		dashAbility->useTime = 0.20f;
 
@@ -224,7 +201,7 @@ void Simulation::ResetPlayer(Entity player)
 		playerComp->secondaryAbilty = entt::resolve<comp::HealAbility>();
 
 		comp::BlinkAbility* blinkAbility = player.AddComponent<comp::BlinkAbility>();
-		blinkAbility->cooldown = 1.0f;
+		blinkAbility->cooldown = 6.0f;
 		blinkAbility->delay = 0.1f;
 		blinkAbility->distance = 50.f;
 		blinkAbility->lifetime = 0.1f;
@@ -267,7 +244,7 @@ Simulation::Simulation(Server* pServer, HeadlessEngine* pEngine)
 	this->m_gameID = 0;
 	this->m_tick = 0;
 
-	dx::BoundingBox bounds = { dx::XMFLOAT3(250, 0, -320), dx::XMFLOAT3(190, 50, 170) };
+	dx::BoundingBox bounds = { dx::XMFLOAT3(250, 0, -320), dx::XMFLOAT3(230, 50, 220) };
 	qt = std::make_unique<QuadTree>(bounds);
 
 	qtDynamic = std::make_unique<QuadTree>(bounds);
@@ -318,21 +295,25 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 
 				h.currentHealth = h.maxHealth;
 
-});
+				});
 
 #endif
 
 			//  run all game logic systems
 			{
 				PROFILE_SCOPE("Systems");
+
 				ServerSystems::CheckGameOver(this, scene);
 				{
 					PROFILE_SCOPE("Update QuadTree");
 					Systems::UpdateDynamicQT(scene, qtDynamic.get());
 				}
 				m_timeCycler.Update(this);
-				AIBehaviors::UpdateBlackBoard(scene);
 
+				{
+					PROFILE_SCOPE("Update blackboard");
+					AIBehaviors::UpdateBlackBoard(scene);
+				}
 				{
 					PROFILE_SCOPE("BT Tick");
 					ServerSystems::TickBTSystem(this, scene);
@@ -341,11 +322,6 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 					PROFILE_SCOPE("Input from Player");
 					ServerSystems::UpdatePlayerWithInput(this, scene, e.dt);
 				}
-
-				Systems::UpdateAbilities(scene, e.dt);
-				Systems::CombatSystem(scene, e.dt);
-				Systems::HealingSystem(scene, e.dt);
-				//Systems::HeroLeapSystem(scene, e.dt);
 				{
 					PROFILE_SCOPE("Player state");
 					ServerSystems::PlayerStateSystem(this, scene, e.dt);
@@ -356,7 +332,6 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 					Systems::UpdateAbilities(scene, e.dt);
 					Systems::CombatSystem(scene, e.dt);
 					Systems::HealingSystem(scene, e.dt);
-					Systems::HeroLeapSystem(scene, e.dt);
 					Systems::HealthSystem(scene, e.dt, m_currency.GetAmountRef());
 					Systems::SelfDestructSystem(scene, e.dt);
 				}
@@ -366,8 +341,14 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 					Systems::TransformAnimationSystem(scene, e.dt);
 				}
 
-				Systems::MovementSystem(scene, e.dt);
-				Systems::MovementColliderSystem(scene, e.dt);
+				{
+					PROFILE_SCOPE("Movement system");
+					Systems::MovementSystem(scene, e.dt);
+				}
+				{
+					PROFILE_SCOPE("Movement collider system");
+					Systems::MovementColliderSystem(scene, e.dt);
+				}
 
 				{
 					PROFILE_SCOPE("Fetch Collision List");
@@ -378,21 +359,23 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 					Systems::CheckCollisions(scene, e.dt);
 				}
 
-				ServerSystems::AnimatonSystem(this, scene);
-
+				{
+					PROFILE_SCOPE("Animation system");
+					ServerSystems::AnimatonSystem(this, scene);
+				}
 				{
 					PROFILE_SCOPE("Clear quad tree");
-					Systems::ClearCollidingList(scene);
-					qtDynamic->Clear();
+					Systems::ClearCollidingList(scene, qtDynamic.get());
+				}
+
+				{
+					PROFILE_SCOPE("Create waves");
+					if (!waveQueue.empty())
+						ServerSystems::NextWaveConditions(this, waveTimer, waveQueue.front().GetTimeLimit());
+					else
+						EnemyManagement::CreateWaves(waveQueue, currentRound++);
 				}
 			}
-
-
-
-			if (!waveQueue.empty())
-				ServerSystems::NextWaveConditions(this, waveTimer, waveQueue.front().GetTimeLimit());
-			else
-				EnemyManagement::CreateWaves(waveQueue, currentRound++);
 		});
 
 	//On all enemies wiped, activate the next wave.
@@ -428,7 +411,7 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 				cube.AddComponent<comp::Transform>()->position = nodes[y][x].get()->position;
 				cube.AddComponent<comp::MeshName>()->name = "Cube.obj";
 				cube.AddComponent<comp::Network>();
-}
+			}
 
 		}
 	}
@@ -498,7 +481,7 @@ void Simulation::SendSnapshot()
 		msg3.header.id = GameMsg::Game_Money;
 		msg3 << m_currency.GetAmount();
 		this->Broadcast(msg3);
-		}
+	}
 	else
 	{
 		if (m_tick % 30 == 0)
@@ -510,7 +493,7 @@ void Simulation::SendSnapshot()
 	// All destroyed Entities
 	this->SendRemoveEntities(m_removedEntities);
 	m_removedEntities.clear();
-	}
+}
 
 void Simulation::Update(float dt)
 {
@@ -597,6 +580,10 @@ void Simulation::BuildMapColliders(std::vector<dx::BoundingOrientedBox>* mapColl
 		obb->Extents = mapColliders->at(i).Extents;
 		obb->Orientation = mapColliders->at(i).Orientation;
 		collider.AddComponent<comp::Tag<TagType::STATIC>>();
+		if (i > 72)
+		{
+			collider.AddComponent<comp::Tag<TagType::MAP_BOUNDS>>();
+		}
 		//collider.AddComponent<comp::Network>();
 		qt->Insert(collider);
 	}
@@ -717,20 +704,19 @@ void Simulation::SendEntities(const std::vector<Entity>& entities, GameMsg msgID
 
 	const size_t PACKET_CHUNK_SIZE = 10;
 
-	uint32_t sent = 0;
+	uint32_t count = 0;
 	message<GameMsg> msg;
 	msg.header.id = msgID;
-
+	
 	for (size_t i = 0; i < entities.size(); i++)
 	{
 		if (!entities[i].IsNull())
 		{
 			InsertEntityIntoMessage(entities[i], msg, componentMask);
-			sent++;
-			if (sent == PACKET_CHUNK_SIZE || i == entities.size() - 1)
+			count++;
+			if (count == PACKET_CHUNK_SIZE || i == entities.size() - 1)
 			{
-				msg << sent;
-				msg << GetTick();
+				msg << count;
 
 				if (msgID == GameMsg::Game_Snapshot)
 				{
@@ -741,7 +727,7 @@ void Simulation::SendEntities(const std::vector<Entity>& entities, GameMsg msgID
 					this->Broadcast(msg);
 				}
 				msg.clear();
-				sent = 0;
+				count = 0;
 			}
 		}
 	}
@@ -761,7 +747,6 @@ void Simulation::SendAllEntitiesToPlayer(uint32_t playerID) const
 	if (count > 0)
 	{
 		msg << count;
-		msg << GetTick();
 
 		this->m_pServer->SendToClient(playerID, msg);
 	}
@@ -788,16 +773,24 @@ void Simulation::SendRemoveEntities(const std::vector<uint32_t> entitiesNetIDs)
 	if (entitiesNetIDs.size() == 0)
 		return;
 
+	const size_t PACKET_CHUNK_SIZE = 10;
+
+	uint32_t count = 0;
 	message<GameMsg> msg;
 	msg.header.id = GameMsg::Game_RemoveEntity;
 
-	for (uint32_t e : entitiesNetIDs)
+	for (size_t i = 0; i < entitiesNetIDs.size(); i++)
 	{
-		msg << e;
+		msg << entitiesNetIDs[i];
+		count++;
+		if (count == PACKET_CHUNK_SIZE || i == entitiesNetIDs.size() - 1)
+		{
+			msg << count;
+			this->Broadcast(msg);
+			count = 0;
+			msg.clear();
+		}
 	}
-	msg << static_cast<uint32_t>(entitiesNetIDs.size());
-
-	this->Broadcast(msg);
 }
 
 void Simulation::SendMsg(uint32_t playerID, message<GameMsg>& msg) const

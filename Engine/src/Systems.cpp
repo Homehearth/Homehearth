@@ -500,10 +500,12 @@ void Systems::FetchCollidingList(HeadlessScene& scene, QuadTree* qt, QuadTree* q
 		});
 }
 
-void Systems::ClearCollidingList(HeadlessScene& scene)
+void Systems::ClearCollidingList(HeadlessScene& scene, QuadTree* qtDynamic)
 {
-	scene.ForEachComponent<comp::SphereCollider>([](Entity& e, comp::SphereCollider& s)
+	scene.ForEachComponent<comp::SphereCollider>([&](Entity& e, comp::SphereCollider& s)
 		{
 			s.list.clear();
 		});
+
+	qtDynamic->Clear();
 }
