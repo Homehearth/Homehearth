@@ -261,7 +261,7 @@ void Simulation::ResetPlayer(Entity player)
 
 Simulation::Simulation(Server* pServer, HeadlessEngine* pEngine)
 	: m_pServer(pServer)
-	, m_pEngine(pEngine), m_pLobbyScene(nullptr), m_pGameScene(nullptr), m_pGameOverScene(nullptr),m_pCurrentScene(nullptr), currentRound(0), houseColliders(nullptr)
+	, m_pEngine(pEngine), m_pLobbyScene(nullptr), m_pGameScene(nullptr), m_pGameOverScene(nullptr),m_pCurrentScene(nullptr), currentRound(0)
 {
 	this->m_gameID = 0;
 	this->m_tick = 0;
@@ -308,7 +308,7 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 
 	m_pGameScene = &m_pEngine->GetScene("Game_" + std::to_string(gameID));
 
-	this->houseColliders = houseColliders;
+	houseManager.SetHouseColliders(houseColliders);
 
 	m_pGameScene->on<ESceneUpdate>([&](const ESceneUpdate& e, HeadlessScene& scene)
 		{
@@ -708,7 +708,7 @@ void Simulation::ResetGameScene()
 
 	LOG_INFO("%lld", m_pGameScene->GetRegistry()->size());
 
-	HouseManagement::InitializeHouses(*this->GetGameScene(),qt.get(),*houseColliders);
+	//HouseManagement::InitializeHouses(*this->GetGameScene(),qt.get(),*houseColliders);
 	EnemyManagement::CreateWaves(waveQueue, currentRound++);
 }
 
