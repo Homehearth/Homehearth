@@ -618,33 +618,35 @@ void ServerSystems::AnimatonSystem(Simulation* simulation, HeadlessScene& scene)
 
 void ServerSystems::SoundSystem(Simulation* simulation, HeadlessScene& scene)
 {
-	scene.ForEachComponent<comp::Network, comp::AudioState>([&](comp::Network& net, comp::AudioState& audio)
+	scene.ForEachComponent<comp::Network, comp::AudioState>([&](comp::Network& net, comp::AudioState& audioState)
 		{
-			if (audio.type != ESoundEvent::NONE)
+			if(!audioState.data.empty())
 			{
+				const int COUNT = audioState.data.size();
 				message<GameMsg>msg;
 				msg.header.id = GameMsg::Game_PlaySound;
-				msg << audio.type;
-				msg << audio.position;
-				msg << audio.volume;
-				msg << audio.is3D;
-				msg << audio.shouldBroadcast;
+				audio_t audio = {};
 
-				if(audio.shouldBroadcast)
+				for(int i = 0; i < COUNT; i++)
 				{
-					simulation->Broadcast(msg);
+					audio = audioState.data.front();
+					msg << audio.type;
+					msg << audio.position;
+					msg << audio.volume;
+					msg << audio.is3D;
+					msg << audio.shouldBroadcast;
+
+					if(audio.shouldBroadcast)
+					{
+						simulation->Broadcast(msg);
+					}
+					else
+					{
+						simulation->SendMsg(net.id, msg);
+					}
+
+					audioState.data.pop();
 				}
-				else
-				{
-					simulation->SendMsg(net.id, msg);
-				}
-				
-				// Reset.
-				audio.type = ESoundEvent::NONE;
-				audio.position = sm::Vector3{0.f, 0.f, 0.f};
-				audio.is3D = false;
-				audio.shouldBroadcast = false;
-				audio.volume = 1.0f;
 			}
 		});
 }

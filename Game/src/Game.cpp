@@ -199,6 +199,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			{
 				entity = m_gameEntities.at(entityID);
 				UpdateEntityFromMessage(entity, msg);
+				UpdateSoundListener(entity); // if a player moves, we need to update the sound listener for 3D sounds.
 			}
 			else
 			{
@@ -225,6 +226,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			{
 				entity = m_gameEntities.at(entityID);
 				UpdateEntityFromMessage(entity, msg);
+				UpdateSoundListener(entity); // if a player moves, we need to update the sound listener for 3D sounds.
 			}
 			else
 			{
@@ -340,7 +342,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			SoundHandler::Get().PlayUnique2DSound("Player_OnDmgRecieved");
 			break;
 		case ESoundEvent::Player_OnLeap:
-			SoundHandler::Get().PlayUnique3DSound("Player_OnLeap", position);
+			SoundHandler::Get().Play3DSound("Player_OnLeap", position);
 			break;
 		case ESoundEvent::Enemy_OnDeath:
 			SoundHandler::Get().PlayUnique2DSound("Enemy_OnDeath");
@@ -412,7 +414,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		SetScene("Game");
 		thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::ADAPTIVE);
 
-		//SoundHandler::Get().SetCurrentMusic("gameplay_theme");
+		SoundHandler::Get().SetCurrentMusic("gameplay_theme");
 
 		break;
 	}
@@ -853,6 +855,15 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 				break;
 			}
 		}
+	}
+}
+
+void Game::UpdateSoundListener(Entity entity)
+{
+	if(entity.GetComponent<comp::Player>())
+	{
+		SoundHandler::Get().SetListenerPosition(entity.GetComponent<comp::Transform>()->position, 
+			entity.GetComponent<comp::Player>()->fowardDir);
 	}
 }
 

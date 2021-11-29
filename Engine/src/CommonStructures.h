@@ -502,3 +502,12 @@ struct Particle_t
 	PARTICLEMODE	type = PARTICLEMODE::BLOOD;
 	UINT			life = 0;
 };
+
+struct audio_t
+{
+	ESoundEvent type;
+	sm::Vector3 position;
+	float volume;
+	bool is3D;
+	bool shouldBroadcast;
+};

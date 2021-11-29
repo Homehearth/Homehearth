@@ -16,7 +16,9 @@ void CombatSystem::UpdateMelee(HeadlessScene& scene)
 
 			if(entity.GetComponent<comp::Player>())
 			{
-				entity.GetComponent<comp::AudioState>()->type = ESoundEvent::Player_OnMeleeAttack;
+				audio_t audio;
+				audio.type = ESoundEvent::Player_OnMeleeAttack;
+				entity.GetComponent<comp::AudioState>()->data.emplace(audio);
 			}
 		}
 	});
@@ -247,7 +249,11 @@ void CombatSystem::AddCollisionMeleeBehavior(Entity entity, Entity attackEntity,
 
 				// Add some sound effects
 				if(other.GetComponent<comp::Player>())
-					other.GetComponent<comp::AudioState>()->type = ESoundEvent::Player_OnDmgRecieved;
+				{
+					audio_t audio;
+					audio.type = ESoundEvent::Player_OnDmgRecieved;
+					other.GetComponent<comp::AudioState>()->data.emplace(audio);
+				}
 
 				thisEntity.GetComponent<comp::SelfDestruct>()->lifeTime = 0.f;
 
@@ -317,7 +323,11 @@ void CombatSystem::AddCollisionRangeBehavior(Entity entity, Entity attackEntity,
 
 				// Add some sound effects
 				if (other.GetComponent<comp::Player>())
-					other.GetComponent<comp::AudioState>()->type = ESoundEvent::Player_OnDmgRecieved;
+				{
+					audio_t audio;
+					audio.type = ESoundEvent::Player_OnDmgRecieved;
+					entity.GetComponent<comp::AudioState>()->data.emplace(audio);
+				}
 
 				thisEntity.GetComponent<comp::SelfDestruct>()->lifeTime = 0.f;
 

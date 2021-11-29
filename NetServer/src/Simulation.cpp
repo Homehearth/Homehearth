@@ -246,13 +246,7 @@ void Simulation::ResetPlayer(Entity player)
 	//
 	// AudioState
 	//
-	auto audio = player.AddComponent<comp::AudioState>();
-	audio->type = ESoundEvent::NONE;
-	audio->position = transform->position;
-	audio->volume = 1.0f;
-	audio->is3D = false;
-	audio->shouldBroadcast = false;
-
+	player.AddComponent<comp::AudioState>();
 
 	//Collision will handle this entity as a dynamic one
 	player.AddComponent<comp::Tag<TagType::DYNAMIC>>();

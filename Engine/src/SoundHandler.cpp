@@ -92,7 +92,6 @@ irrklang::ISound* SoundHandler::Play2DSound(const std::string& name, bool playSo
     {
     	sound = m_soundEngine->play2D(m_soundSources[name], false, true, false, false);
         sound->setIsPaused(!playSound);
-        LOG_INFO("created a new instance of '%s'", name.c_str())
     }
 
     return sound;
@@ -109,7 +108,6 @@ irrklang::ISound* SoundHandler::PlayUnique2DSound(const std::string& name, bool 
         {
 	        sound = m_soundEngine->play2D(m_soundSources[name], false, true, false, false);
 	        sound->setIsPaused(!playSound);
-	        LOG_INFO("created a new instance of '%s'", name.c_str())
         }
     }
 
@@ -146,7 +144,6 @@ irrklang::ISound* SoundHandler::Play3DSound(const std::string& name, const sm::V
         sound = m_soundEngine->play3D(m_soundSources[name],{ pos.x, pos.y, pos.z },
             false, true, false, false);
         sound->setIsPaused(!playSound);
-        LOG_INFO("created a new instance of '%s'", name.c_str())
     }
 
     return sound;
@@ -164,11 +161,16 @@ irrklang::ISound* SoundHandler::PlayUnique3DSound(const std::string& name, const
             sound = m_soundEngine->play3D(m_soundSources[name], { pos.x, pos.y, pos.z },
                 false, true, false, false);
             sound->setIsPaused(!playSound);
-            LOG_INFO("created a new instance of '%s'", name.c_str())
         }
     }
 
     return sound;
+}
+
+void SoundHandler::SetListenerPosition(const sm::Vector3& pos, const sm::Vector3& lookDir)
+{
+    m_soundEngine->setListenerPosition({ pos.x, pos.y, pos.z },
+        { lookDir.x, lookDir.y, lookDir.z });
 }
 
 

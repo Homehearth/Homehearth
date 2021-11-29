@@ -133,11 +133,7 @@ namespace ecs
 
 		struct AudioState
 		{
-			ESoundEvent type;
-			sm::Vector3 position;
-			float volume;
-			bool is3D;
-			bool shouldBroadcast;
+			std::queue<audio_t> data;
 		};
 
 		// Used on server side

@@ -93,4 +93,13 @@ public:
 	 * \return Returns a pointer to the created and played sound.
 	 */
 	irrklang::ISound* PlayUnique3DSound(const std::string& name, const sm::Vector3& pos, bool playSound = true);
+
+
+
+	/**
+	 * \brief Set the position of the Listener, which is required for 3D sounds to work properly.
+	 * \param pos The position.
+	 * \param lookDir The look direction.
+	 */
+	void SetListenerPosition(const sm::Vector3& pos, const sm::Vector3& lookDir);
 };

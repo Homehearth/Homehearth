@@ -36,6 +36,7 @@ private:
 	void OnClientDisconnect();
 	
 	void UpdateEntityFromMessage(Entity entity, message<GameMsg>& msg);
+	void UpdateSoundListener(Entity entity);
 
 	void UpdateInput();
 
@@ -64,3 +65,4 @@ public:
 	ParticleSystem* GetParticleSystem();
 	void UseShop(const ShopItem& whatToBuy);
 };
+
