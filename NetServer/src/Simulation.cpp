@@ -92,6 +92,16 @@ void Simulation::InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg, c
 			}
 			break;
 		}
+		case ecs::Component::PARTICLEMITTER:
+		{
+			comp::PARTICLEEMITTER* p = entity.GetComponent<comp::PARTICLEEMITTER>();
+			if (p)
+			{
+				compSet.set(ecs::Component::PARTICLEMITTER);
+				msg << *p;
+			}
+			break;
+		}
 		case ecs::Component::PLAYER:
 		{
 			comp::Player* p = entity.GetComponent<comp::Player>();
@@ -504,6 +514,8 @@ void Simulation::Update(float dt)
 	PROFILE_FUNCTION();
 	if (m_pCurrentScene)
 		m_pCurrentScene->Update(dt);
+
+	ServerSystems::DeathParticleTimer(*m_pGameScene);
 }
 
 void Simulation::UpdateInput(InputState state, uint32_t playerID)

@@ -269,6 +269,8 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 					aiHandler->AddDefenseEntity(defenseEntity);
 					dynamicQT->Insert(defenseEntity);
 
+					//Send building particles
+
 					Node* node = aiHandler->GetNodeByID(Vector2I(clampedZ, clampedX));
 					node->defencePlaced = true;
 					node->reachable = false;

@@ -8,7 +8,7 @@ struct ParticleUpdate
 	sm::Vector4 emitterPosition;;
 	float deltaTime;
 	UINT counter;
-	UINT lifeTime;
+	float lifeTime;
 	float particleSizeMulitplier;
 };
 
