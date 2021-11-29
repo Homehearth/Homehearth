@@ -1,9 +1,4 @@
 #pragma once
-
-class Simulation;
-
-constexpr float SPREE_TIME = 3.0f;
-
 class SpreeHandler
 {
 private:

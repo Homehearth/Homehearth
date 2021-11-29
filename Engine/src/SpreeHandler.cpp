@@ -2,6 +2,9 @@
 #include "Engine.h"
 #include "SpreeHandler.h"
 
+// Change this to change the time before spree resets.
+constexpr float SPREE_TIME = 3.0f;
+
 SpreeHandler::SpreeHandler()
 {
 
