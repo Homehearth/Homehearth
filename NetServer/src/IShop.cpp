@@ -19,25 +19,27 @@ void IShop::UseShop(const ShopItem& whatToBuy, const uint32_t& player)
 			{
 				// Upgrade if melee.
 				comp::MeleeAttackAbility* m = m_sim->GetPlayer(player).GetComponent<comp::MeleeAttackAbility>();
-				if (m && m_sim->GetCurrency().GetAmountRef() >= 10)
+				if (m && m_sim->GetCurrency() >= 10)
 				{
 					m->attackDamage += .5f;
-					m_sim->GetCurrency().GetAmountRef() -= 10;
+					m_sim->GetCurrency() -= 10;
+					m_sim->GetCurrency().hasUpdated = true;
 				}
 
 				// Upgrade if ranged.
 				comp::RangeAttackAbility* r = m_sim->GetPlayer(player).GetComponent<comp::RangeAttackAbility>();
-				if (r && m_sim->GetCurrency().GetAmountRef() >= 10)
+				if (r && m_sim->GetCurrency() >= 10)
 				{
 					r->attackDamage += .5f;
-					m_sim->GetCurrency().GetAmountRef() -= 10;
+					m_sim->GetCurrency() -= 10;
+					m_sim->GetCurrency().hasUpdated = true;
 				}
 			}
 			break;
 		}
 		case ShopItem::Tower_Upgrade:
 		{
-			if (m_sim->GetCurrency().GetAmount() < 20)
+			if (m_sim->GetCurrency() < 20)
 				break;
 
 			/*Upgrade a tower or ALL towers?*/
@@ -48,13 +50,13 @@ void IShop::UseShop(const ShopItem& whatToBuy, const uint32_t& player)
 
 			//	});
 
-			m_sim->GetCurrency().GetAmountRef() -= 20;
+			m_sim->GetCurrency() -= 20;
 
 			break;
 		}
 		case ShopItem::Heal:
 		{
-			if (m_sim->GetCurrency().GetAmount() < 5)
+			if (m_sim->GetCurrency() < 5)
 				break;
 
 			if (m_sim->GetPlayer(player))
@@ -66,7 +68,7 @@ void IShop::UseShop(const ShopItem& whatToBuy, const uint32_t& player)
 				}
 			}
 
-			m_sim->GetCurrency().GetAmountRef() -= 5;
+			m_sim->GetCurrency() -= 5;
 			break;
 		}
 		case ShopItem::LONG_TOWER:

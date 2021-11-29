@@ -1,8 +1,8 @@
 #pragma once
 
 //Options
-#define RENDER_IMGUI 1
-#define PROFILER 1
+#define RENDER_IMGUI 0
+#define PROFILER 0
 
 // Feel free to add more things to this, currently only gives more money :)
 #define GOD_MODE 1
@@ -10,7 +10,7 @@
 
 // Turn this to 1 if you want to see the very beautiful demo menu
 #define DRAW_TEMP_2D 0
-#define DEBUG_SNAPSHOT 1
+#define DEBUG_SNAPSHOT 0
 
 #define RENDER_GRID 0
 
@@ -145,7 +145,9 @@ const std::string ANIMATORPATH	= "../Assets/Animators/";
 const std::string FONTPATH		= "../Assets/Fonts/";
 const std::string BOUNDSPATH	= "../Assets/Bounds/";
 const std::string ASSETLOADER	= "../Assets/Models/Loader.txt";
+const std::string RESOURCELOADER = "../Assets/Models/ResourceLoader.txt";
 const std::string BOUNDSLOADER	= "../Assets/Bounds/Loader.txt";
+const std::string OPTIONPATH = "../Assets/Options/Options.txt";
 
 
 template<typename Type>

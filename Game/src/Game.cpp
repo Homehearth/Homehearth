@@ -5,6 +5,7 @@
 #include "SceneHelper.h"
 #include "Healthbar.h"
 #include "MoneyUI.h"
+#include "OptionSystem.h"
 
 using namespace std::placeholders;
 
@@ -63,6 +64,7 @@ void Game::UpdateNetwork(float deltaTime)
 
 bool Game::OnStartup()
 {
+	m_masterVolume = std::stof(OptionSystem::Get().GetOption("MasterVolume"));
 	sceneHelp::CreateLoadingScene(this);
 	SetScene("Loading");
 
@@ -78,34 +80,13 @@ bool Game::OnStartup()
 	SetScene("MainMenu");
 
 	//Particles
-	Entity emitter = GetScene("Game").CreateEntity();
-	emitter.AddComponent<comp::Transform>()->position = { 250, 5, -340 };
-	emitter.AddComponent <comp::EmitterParticle>("smoke.png", "smoke_opacity.png", 800, 2.f, PARTICLEMODE::SMOKE, 4.0f);
-
-	Entity emitterS = GetScene("Game").CreateEntity();
-	emitterS.AddComponent<comp::Transform>()->position = { 178, 15, -338 };
-	emitterS.AddComponent <comp::EmitterParticle>("smoke.png", "smoke_opacity.png", 1200, 2.f, PARTICLEMODE::SMOKE, 4.2f);
-
-	//Entity emitter2 = GetScene("Game").CreateEntity();
-	//emitter2.AddComponent<comp::Transform>()->position = { 250, 5,- 320 };
-	//emitter2.AddComponent <comp::EmitterParticle>("thisisfine.png", "", 10, 1.f, PARTICLEMODE::SPARKLES);
-
-	//Entity emitter3 = GetScene("Game").CreateEntity();
-	//emitter3.AddComponent<comp::Transform>()->position = { 250, 20, -300 };
-	//emitter3.AddComponent <comp::EmitterParticle>("thisisfine.png", "", 20, 1.f, PARTICLEMODE::WATERSPLASH);
-
 	Entity emitter4 = GetScene("Game").CreateEntity();
-	emitter4.AddComponent<comp::Transform>()->position = { 240, 6, -300 };
-	emitter4.AddComponent <comp::EmitterParticle>("Blood.png", "", 50, 8.f, PARTICLEMODE::BLOOD, 1.5f);
-
-	Entity emitter5 = GetScene("Game").CreateEntity();
-	emitter5.AddComponent<comp::Transform>()->position = { 220, 40, -340 };
-	emitter5.AddComponent <comp::EmitterParticle>("Blood.png", "", 50, 8.f, PARTICLEMODE::BLOOD, 1.5f);
+	emitter4.AddComponent<comp::Transform>()->position = { 250, 5, -340 };
+	emitter4.AddComponent <comp::EmitterParticle>(sm::Vector3{ 0,0,0 }, 800, 2.f, PARTICLEMODE::SMOKE, 4.0f, 1.f, false);
 
 	Entity waterSplash = GetScene("Game").CreateEntity();
 	waterSplash.AddComponent<comp::Transform>()->position = { 270, 13, -370 };
-	waterSplash.AddComponent <comp::EmitterParticle>("waterSplash.png", "", 100, 1.f, PARTICLEMODE::WATERSPLASH, 4.0f);
-
+	waterSplash.AddComponent <comp::EmitterParticle>(sm::Vector3{ 0,0,0 }, 100, 1.f , PARTICLEMODE::WATERSPLASH, 4.0f, 1.f, false);
 
 	return true;
 }
@@ -118,17 +99,19 @@ void Game::OnUserUpdate(float deltaTime)
 	{
 		sm::Vector3 playerPos = m_players.at(m_localPID).GetComponent<comp::Transform>()->position;
 
+		GameSystems::DeathParticleTimer(scene);
+
 		if (m_elapsedCycleTime <= m_waveTimer && (m_serverCycle == Cycle::DAY || m_serverCycle == Cycle::MORNING))
 		{
 			m_elapsedCycleTime += deltaTime;
 			scene.ForEachComponent<comp::Light>([&](Entity e, comp::Light& l)
 				{
-					switch(l.lightData.type)
+					switch (l.lightData.type)
 					{
 					case TypeLight::DIRECTIONAL:
 					{
 						l.lightData.direction = { -1.0f, 0.0f, 0.f, 0.f };
-						sm::Vector3 dir = sm::Vector3::TransformNormal(sm::Vector3(l.lightData.direction), sm::Matrix::CreateRotationZ(dx::XMConvertToRadians((180.0f / ((float)TIME_LIMIT_DAY + (float)TIME_LIMIT_MORNING)) * (m_elapsedCycleTime))));
+						sm::Vector3 dir = sm::Vector3::TransformNormal(sm::Vector3(l.lightData.direction), sm::Matrix::CreateRotationZ(dx::XMConvertToRadians(ROTATION) * (m_elapsedCycleTime)));
 
 						l.lightData.direction = sm::Vector4(dir.x, dir.y, dir.z, 0.0f);
 						sm::Vector3 pos = l.lightData.position;
@@ -184,8 +167,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	case GameMsg::Game_Snapshot:
 	{
 		m_savedInputs.clear();
-		uint32_t currentTick;
-		msg >> currentTick;
 		uint32_t count;
 		msg >> count;
 
@@ -210,8 +191,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	}
 	case GameMsg::Game_UpdateComponent:
 	{
-		uint32_t currentTick;
-		msg >> currentTick;
 		uint32_t count; // Could be more than one Entity
 		msg >> count;
 
@@ -236,8 +215,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	}
 	case GameMsg::Game_AddEntity:
 	{
-		uint32_t currentTick;
-		msg >> currentTick;
 		uint32_t count; // Could be more than one Entity
 		msg >> count;
 #ifdef _DEBUG
@@ -327,7 +304,8 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		msg >> m_gameID;
 
 		this->SetScene("Loading");
-		sceneHelp::LoadAllAssets(this);
+		sceneHelp::LoadGameScene(this);
+		sceneHelp::LoadResources(this);
 		sceneHelp::LoadMapColliders(this);
 
 #ifdef _DEBUG
@@ -398,7 +376,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			// Change light on Night.
 			m_elapsedCycleTime = 0.0f;
 			scene.ForEachComponent<comp::Light>([&](Entity e, comp::Light& l)
-				{ 
+				{
 					switch (l.lightData.type)
 					{
 					case TypeLight::DIRECTIONAL:
@@ -442,6 +420,8 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		{
 			char nameTemp[12] = {};
 			uint32_t playerID;
+			comp::Player::Class classType;
+			msg >> classType;
 			msg >> nameTemp;
 			msg >> playerID;
 			std::string name(nameTemp);
@@ -450,10 +430,28 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			{
 				dynamic_cast<rtd::Text*>(GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i))->elements[1].get())->SetText(name);
 				rtd::Text* plT = dynamic_cast<rtd::Text*>(GetScene("Game").GetCollection("dynamicPlayer" + std::to_string(i) + "namePlate")->elements[0].get());
+				rtd::Picture* plP = dynamic_cast<rtd::Picture*>(GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i))->elements[2].get());
 				if (plT)
 				{
 					plT->SetText(name);
 					plT->SetStretch(D2D1Core::GetDefaultFontSize() * plT->GetText().length(), D2D1Core::GetDefaultFontSize());
+				}
+
+				if (plP)
+				{
+					switch (classType)
+					{
+					case comp::Player::Class::MAGE:
+					{
+						plP->SetTexture("WizardIcon.png");
+						break;
+					}
+					case comp::Player::Class::WARRIOR:
+					{
+						plP->SetTexture("WarriorIcon.png");
+						break;
+					}
+					}
 				}
 			}
 		}
@@ -516,6 +514,41 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 				{
 					anim->ChangeAnimation(animtype);
 				}
+			}
+		}
+		break;
+	}
+	case GameMsg::Game_Cooldown:
+	{
+		uint32_t count = 0;
+		msg >> count;
+
+		for (uint32_t i = 0; i < count; i++)
+		{
+			float cooldown = 0.0f;
+			msg >> cooldown;
+
+			AbilityIndex index = AbilityIndex::DEFAULT;
+			msg >> index;
+			switch (index)
+			{
+			case AbilityIndex::Primary:
+			{
+				m_primaryCooldown = cooldown;
+				break;
+			}
+			case AbilityIndex::Secondary:
+			{
+				m_secondaryCooldown = cooldown;
+				break;
+			}
+			case AbilityIndex::Dodge:
+			{
+				m_dodgeCooldown = cooldown;
+				break;
+			}
+			default:
+				break;
 			}
 		}
 		break;
@@ -604,6 +637,26 @@ void Game::CreateLobby()
 	}
 }
 
+const Mode& Game::GetCurrentMode() const
+{
+	return m_mode;
+}
+
+const Cycle& Game::GetCurrentCycle() const
+{
+	return m_serverCycle;
+}
+
+void Game::SetMode(const Mode& mode)
+{
+	m_mode = mode;
+}
+
+const uint32_t& Game::GetMoney() const
+{
+	return m_money;
+}
+
 void Game::OnClientDisconnect()
 {
 	this->m_gameID = -1;
@@ -676,6 +729,15 @@ void Game::UseShop(const ShopItem& whatToBuy)
 	m_client.Send(msg);
 }
 
+void Game::UpgradeDefence(const uint32_t& id)
+{
+	network::message<GameMsg> msg;
+	msg.header.id = GameMsg::Game_UpgradeDefence;
+	msg << id << m_localPID << m_gameID;
+
+	m_client.Send(msg);
+}
+
 void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 {
 	uint32_t bits;
@@ -735,7 +797,13 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 					nameString = "Sphere.obj";
 					break;
 				}
+				default:
+				{
+					nameString = "Cube.obj";
+					break;
 				}
+				}
+
 				std::shared_ptr<RModel> model = ResourceManager::Get().CopyResource<RModel>(nameString, true);
 				if (model)
 				{
@@ -761,11 +829,14 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 					break;
 				}
 				}
-				std::shared_ptr<RAnimator> animator = ResourceManager::Get().CopyResource<RAnimator>(nameString, true);
-				if (animator)
+				if (nameString.length() > 0)
 				{
-					animator->RandomizeTime();
-					e.AddComponent<comp::Animator>()->animator = animator;
+					std::shared_ptr<RAnimator> animator = ResourceManager::Get().CopyResource<RAnimator>(nameString, true);
+					if (animator)
+					{
+						animator->RandomizeTime();
+						e.AddComponent<comp::Animator>()->animator = animator;
+					}
 				}
 				break;
 			}
@@ -795,11 +866,11 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 				collider->Radius = s.Radius;
 				break;
 			}
-			case ecs::Component::LIGHT:
+			case ecs::Component::PARTICLEMITTER:
 			{
-				comp::Light l;
-				msg >> l;
-				e.AddComponent<comp::Light>(l);
+				comp::PARTICLEEMITTER p;
+				msg >> p;
+				e.AddComponent<comp::EmitterParticle>(p.positionOffset, (int)p.nrOfParticles, p.sizeMulitplier, p.type, p.lifeTime, p.speed, p.hasDeathTimer);
 				break;
 			}
 			case ecs::Component::PLAYER:
@@ -808,6 +879,13 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 				msg >> p;
 				e.AddComponent<comp::Player>(p);
 
+				break;
+			}
+			case ecs::Component::COST:
+			{
+				comp::Cost c;
+				msg >> c;
+				e.AddComponent<comp::Cost>(c);
 				break;
 			}
 			default:
@@ -856,10 +934,20 @@ void Game::UpdateInput()
 		}
 	}
 	m_inputState.mouseRay = InputSystem::Get().GetMouseRay();
-	// temp
-	if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::B, KeyState::PRESSED))
+
+	if (m_mode == Mode::DESTROY_MODE)
 	{
-		m_inputState.key_b = true;
+		if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::R, KeyState::PRESSED))
+		{
+			m_inputState.key_r = true;
+		}
+	}
+	else if (m_mode == Mode::BUILD_MODE)
+	{
+		if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::B, KeyState::PRESSED))
+		{
+			m_inputState.key_b = true;
+		}
 	}
 	if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::LeftShift, KeyState::PRESSED))
 	{

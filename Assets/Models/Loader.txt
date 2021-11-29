@@ -14,13 +14,6 @@ Tree8.fbx
 WaterMill.fbx
 WaterMillHouse.fbx
 HouseRoof.fbx
-Knight.fbx
-Monster.fbx
-Barrel.obj
-Defence.obj
-Defence1x1.obj
-Defence1x3.obj
-Plane1.obj
 Door1.fbx
 Door5.fbx
 Door6.fbx

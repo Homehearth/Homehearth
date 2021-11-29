@@ -11,6 +11,7 @@ constexpr int MAX_HEALTH = 100;
 constexpr uint32_t TIME_LIMIT_DAY = 60;
 constexpr uint32_t TIME_LIMIT_NIGHT = 50;
 constexpr uint32_t TIME_LIMIT_MORNING = 10;
+constexpr float ROTATION = 180.0f / (float)(TIME_LIMIT_DAY + TIME_LIMIT_MORNING);
 
 enum class Cycle : UINT
 {
@@ -29,14 +30,31 @@ public:
 	{
 		return m_amount;
 	}
-	uint32_t& GetAmountRef()
-	{
-		return m_amount;
-	}
 	void Zero()
 	{
 		m_amount = 0;
 	}
+	void operator +=(uint32_t money)
+	{
+		m_amount += money;
+	}
+	void operator -=(uint32_t money)
+	{
+		m_amount -= money;
+	}
+	void operator = (uint32_t money)
+	{
+		m_amount = money;
+	}
+	bool operator >= (uint32_t money)
+	{
+		return m_amount >= money;
+	}
+	bool operator < (uint32_t money)
+	{
+		return m_amount < money;
+	}
+	bool hasUpdated = false;
 };
 
 struct MinMaxProj_t
@@ -245,6 +263,7 @@ struct InputState
 	bool	rightMouse		: 1;
 	bool	key_b			: 1;
 	bool	key_shift		: 1;
+	bool	key_r			: 1;
 	int		mousewheelDir	: 2;
 
 	Ray_t mouseRay;
@@ -285,10 +304,21 @@ enum class GameMsg : uint8_t
 	Game_PlayerInput,
 	Game_Money,
 	Game_UseShop,
+	Game_UpgradeDefence,
 	Game_ChangeAnimation,
+	Game_Cooldown,
 	Game_StartSpectate,
 	Game_StopSpectate,
 	Game_Over
+};
+
+enum class AbilityIndex : uint8_t
+{
+	Primary,
+	Secondary,
+	Dodge,
+
+	DEFAULT
 };
 
 enum class ShopItem : uint8_t
@@ -313,6 +343,16 @@ enum class ShopItem : uint8_t
 	SHORT_TOWER,
 
 	NR_OF
+};
+
+enum class Mode : uint8_t
+{
+	// Normal play mode fighting against monsters.
+	PLAY_MODE,
+	// Build mode allows players to build defences.
+	BUILD_MODE,
+	// Destroy mode allows players to remove their defences.
+	DESTROY_MODE
 };
 
 /*

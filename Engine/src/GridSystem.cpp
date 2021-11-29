@@ -1,6 +1,7 @@
 #include "EnginePCH.h"
 #include "GridSystem.h"
 #include "PathFinderManager.h"
+#include "QuadTree.h"
 
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -211,7 +212,8 @@ bool GridSystem::RemoveDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, 
 	}
 }
 
-bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, PathFinderManager* aiHandler)
+
+bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, PathFinderManager* aiHandler, QuadTree* dynamicQT)
 {	
 	//Player that placed defence
 	dx::BoundingSphere localPlayerSphere;
@@ -310,7 +312,6 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 			{
 				int zPos = coordinates[t].first;
 				int xPos = coordinates[t].second;
-				m_tiles[zPos][xPos].type = TileType::DEFENCE;
 
 				Node* node = aiHandler->GetNodeByID(Vector2I(zPos, xPos));
 				node->defencePlaced = true;
@@ -385,6 +386,7 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 				health->maxHealth		= 300.0f;
 				tileEntity.AddComponent<comp::MeshName>()->name = NameType::MESH_DEFENCE1X3;
 			}
+			dynamicQT->Insert(tileEntity);
 
 			return true;
 		}
