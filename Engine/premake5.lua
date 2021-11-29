@@ -56,7 +56,9 @@ project "Engine"
 			["src/Engine/Graphics/D2D1"] = { "**D2D1Core.*" },
 
             ["src/Engine/Input"] = { "**InputSystem.*" },
-
+			
+			["src/Engine/Options"] = { "**OptionSystem.*", "**FileHandler.*" },
+			
             ["src/Engine/Resources"] = { "**ResourceManager.*", "**GResource.*", "**RModel.*", "**RTexture.*", "**RMaterial.*"},
                 ["src/Engine/Resources/Shaders"] = { "**.hlsl", "**.hlsli", "**Shader.*" },
 		        ["src/Engine/Resources/Animation"] = {"**RAnimation.*", "**RAnimator.*", "**AnimStructures.*"},

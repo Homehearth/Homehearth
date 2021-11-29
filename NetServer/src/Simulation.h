@@ -109,4 +109,5 @@ public:
 	Entity GetPlayer(uint32_t playerID)const;
 
 	void UseShop(const ShopItem& item, const uint32_t& player);
+	void UpgradeDefence(const uint32_t& id);
 };

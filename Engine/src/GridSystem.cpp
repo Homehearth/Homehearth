@@ -266,6 +266,7 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 					defenseEntity.AddComponent<comp::MeshName>()->name = NameType::MESH_DEFENCE;
 					defenseEntity.AddComponent<comp::Health>();
 					defenseEntity.AddComponent<comp::Network>();
+					defenseEntity.AddComponent<comp::Cost>()->cost = 5;
 					aiHandler->AddDefenseEntity(defenseEntity);
 					dynamicQT->Insert(defenseEntity);
 
