@@ -309,8 +309,19 @@ namespace ecs
 			bool reachable = true;
 
 			char name[12] = {};
-			TowerTypes towerSelected = TowerTypes::SHORT;
+
+			//Place defence option
+			EDefenceType towerSelected = EDefenceType::SMALL;
+			float		 buildDistance = 24.0f;		//A tiles width is ~8
+			bool		 rotateDefence = false;
 		};
+
+		
+		struct TileSet
+		{
+			std::vector<std::pair<UINT, UINT>> coordinates;
+		};
+	
 
 		struct NPC
 		{

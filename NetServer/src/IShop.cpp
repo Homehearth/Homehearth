@@ -75,7 +75,7 @@ void IShop::UseShop(const ShopItem& whatToBuy, const uint32_t& player)
 		{
 			if (m_sim->GetPlayer(player))
 			{
-				m_sim->GetPlayer(player).GetComponent<comp::Player>()->towerSelected = TowerTypes::LONG;
+				m_sim->GetPlayer(player).GetComponent<comp::Player>()->towerSelected = EDefenceType::LARGE;
 			}
 			break;
 		}
@@ -83,7 +83,7 @@ void IShop::UseShop(const ShopItem& whatToBuy, const uint32_t& player)
 		{
 			if (m_sim->GetPlayer(player))
 			{
-				m_sim->GetPlayer(player).GetComponent<comp::Player>()->towerSelected = TowerTypes::SHORT;
+				m_sim->GetPlayer(player).GetComponent<comp::Player>()->towerSelected = EDefenceType::SMALL;
 			}
 			break;
 		}
