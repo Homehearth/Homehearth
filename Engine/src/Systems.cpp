@@ -230,6 +230,7 @@ void Systems::HealthSystem(HeadlessScene& scene, float dt, uint32_t& money_ref)
 					money_ref += 2;
 				}
 
+				comp::House* house = entity.GetComponent<comp::House>();
 				// if player
 				comp::Player* p = entity.GetComponent<comp::Player>();
 				if (p)
@@ -247,6 +248,12 @@ void Systems::HealthSystem(HeadlessScene& scene, float dt, uint32_t& money_ref)
 					Blackboard::Get().GetPathFindManager()->RemoveDefenseEntity(entity);
 					node->reachable = true;
 					node->defencePlaced = false;
+					entity.Destroy();
+				}
+				else if(house)
+				{
+					house->houseRoof.Destroy();
+					house->door.Destroy();
 					entity.Destroy();
 				}
 				else

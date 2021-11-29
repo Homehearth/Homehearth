@@ -642,6 +642,7 @@ Entity HouseManagement::CreateHouse(HeadlessScene& scene, NameType houseType, Na
 	house.AddComponent<comp::Transform>();
 	house.AddComponent<comp::Tag<TagType::STATIC>>();
 	house.AddComponent<comp::Network>();
+	house.AddComponent<comp::Health>();
 
 	if(doorType != NameType::EMPTY)
 	{
