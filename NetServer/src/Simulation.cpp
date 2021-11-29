@@ -144,8 +144,6 @@ void Simulation::ResetPlayer(Entity player)
 	playerComp->runSpeed = 25.f;
 	playerComp->state = comp::Player::State::IDLE;
 	playerComp->isReady = false;
-	playerComp->spawnPoint = m_spawnPoints.front();
-	m_spawnPoints.pop();
 
 	comp::Transform* transform = player.AddComponent<comp::Transform>();
 	transform->position = playerComp->spawnPoint;
@@ -269,10 +267,10 @@ Simulation::Simulation(Server* pServer, HeadlessEngine* pEngine)
 
 	qtDynamic = std::make_unique<QuadTree>(bounds);
 
-	m_spawnPoints.push(sm::Vector3(220.f, 0, -353.f));
-	m_spawnPoints.push(sm::Vector3(197.f, 0, -325.f));
-	m_spawnPoints.push(sm::Vector3(222.f, 0, -300.f));
-	m_spawnPoints.push(sm::Vector3(247.f, 0, -325.f));
+	m_spawnPoints.push(TL);
+	m_spawnPoints.push(TR);
+	m_spawnPoints.push(BL);
+	m_spawnPoints.push(BR);
 	m_shop.SetSimulation(this);
 }
 
@@ -286,10 +284,10 @@ void Simulation::LeaveLobby(uint32_t playerID)
 	this->SendRemoveAllEntitiesToPlayer(playerID);
 
 	m_lobby.RemovePlayer(playerID);
-
 	// Send to client the message with the new game ID
 	message<GameMsg> accMsg;
 	accMsg.header.id = GameMsg::Lobby_AcceptedLeave;
+
 
 	m_pServer->SendToClient(playerID, accMsg);
 }
@@ -355,7 +353,7 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 					Systems::UpdateAbilities(scene, e.dt);
 					Systems::CombatSystem(scene, e.dt);
 					Systems::HealingSystem(scene, e.dt);
-					ServerSystems::HealthSystem(scene, e.dt, m_currency, houseManager, qt.get());
+					ServerSystems::HealthSystem(scene, e.dt, m_currency, houseManager, qt.get(), m_grid);
 					Systems::SelfDestructSystem(scene, e.dt);
 				}
 
@@ -560,10 +558,7 @@ void Simulation::SendSnapshot()
 	}
 	else
 	{
-		if (m_tick % 30 == 0)
-		{
-			m_lobby.Update();
-		}
+		m_lobby.Update();
 	}
 
 	// All destroyed Entities
@@ -658,6 +653,7 @@ void Simulation::BuildMapColliders(std::vector<dx::BoundingOrientedBox>* mapColl
 		obb->Extents = mapColliders->at(i).Extents;
 		obb->Orientation = mapColliders->at(i).Orientation;
 		collider.AddComponent<comp::Tag<TagType::STATIC>>();
+		// Map bounds is loaded in last, 4 obbs surrounding village put the correct tag for collision system
 		if (i > mapColliders->size() - 4)
 		{
 			collider.AddComponent<comp::Tag<TagType::MAP_BOUNDS>>();
@@ -749,6 +745,7 @@ void Simulation::SetGameScene()
 	ResetGameScene();
 	m_pCurrentScene = m_pGameScene;
 	m_lobby.SetActive(false);
+
 #if GOD_MODE
 	// During debug give players 1000 gold/monies.
 	m_currency = 1000;
@@ -773,10 +770,10 @@ void Simulation::ResetGameScene()
 		m_spawnPoints.pop();
 	}
 
-	m_spawnPoints.push(sm::Vector3(220.f, 0, -353.f));
-	m_spawnPoints.push(sm::Vector3(197.f, 0, -325.f));
-	m_spawnPoints.push(sm::Vector3(222.f, 0, -300.f));
-	m_spawnPoints.push(sm::Vector3(247.f, 0, -325.f));
+	m_spawnPoints.push(TL);
+	m_spawnPoints.push(TR);
+	m_spawnPoints.push(BL);
+	m_spawnPoints.push(BR);
 
 	this->m_pGameScene->ForEachComponent<comp::Network>([&](Entity e, comp::Network& n)
 		{
@@ -929,6 +926,11 @@ void Simulation::ReadyCheck(uint32_t playerID)
 
 	if (allReady)
 	{
+		m_pGameScene->ForEachComponent<comp::Player>([&](Entity& e, comp::Player& p)
+			{
+				p.spawnPoint = m_spawnPoints.front();
+				m_spawnPoints.pop();
+			});
 		// Start the game.
 		SetGameScene();
 

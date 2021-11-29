@@ -22,11 +22,13 @@ private:
 	Lights m_lights;
 	Skybox m_sky;
 
+
 	bool IsRender3DReady() const;
 	bool IsRenderDebugReady() const;
 	bool IsRender2DReady() const;
 
 public:
+	uint32_t* m_localPIDRef;
 	DoubleBuffer<std::vector<comp::Renderable>> m_renderableCopies;
 	Scene();
 
@@ -48,7 +50,10 @@ public:
 	void RenderAnimation();
 	void Render2D();
 	void RenderSkybox();
-	void RenderShadow(const light_t& light);
+
+	void RenderShadow();
+	void RenderShadowAnimation();
+
 	Skybox* GetSkybox();
 
 	bool IsRenderReady() const;
@@ -63,6 +68,7 @@ public:
 	//ImGui data for disable/enable 
 	bool* GetIsRenderingColliders();
 	Lights* GetLights();
+	void UpdateSkybox(float pTime);
 	
 	DoubleBuffer<std::vector<comp::Renderable>>*		GetBuffers();
 	DoubleBuffer<std::vector<comp::Renderable>>*		GetTransparentBuffers();

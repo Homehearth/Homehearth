@@ -1,8 +1,8 @@
 #pragma once
 
 //Options
-#define RENDER_IMGUI 0
-#define PROFILER 0
+#define RENDER_IMGUI 1
+#define PROFILER 1
 
 // Feel free to add more things to this, currently only gives more money :)
 #define GOD_MODE 0
@@ -12,7 +12,6 @@
 #define DRAW_TEMP_2D 0
 #define DEBUG_SNAPSHOT 0
 
-#define USE_MIPMAPS 1
 #define RENDER_GRID 0
 
 #define RENDER_AINODES 0
