@@ -9,14 +9,18 @@
 
 ShadowPass::ShadowPass()
 {
-	m_viewport.Height = SHADOW_SIZE;
-	m_viewport.Width = SHADOW_SIZE;
+	m_shadowSize = 2048;
+
+
+	m_viewport.Height = m_shadowSize;
+	m_viewport.Width = m_shadowSize;
 	m_viewport.TopLeftX = 0.0f;
 	m_viewport.TopLeftY = 0.0f;
 
 	// Direct3D uses a depth buffer range of 0 to 1, hence:
 	m_viewport.MinDepth = 0.0f;
 	m_viewport.MaxDepth = 1.0f;
+
 }
 
 ComPtr<ID3D11DepthStencilView> ShadowPass::CreateDepthView(uint32_t index)
@@ -137,8 +141,22 @@ void ShadowPass::UpdateLightBuffer(ID3D11DeviceContext* context, ID3D11Buffer* b
 	context->UpdateSubresource(buffer, 0, nullptr, &mat, 0, 0);
 }
 
+void ShadowPass::SetShadowMapSize(uint32_t size)
+{
+	m_shadowSize = size;
+	m_viewport.Height = m_shadowSize;
+	m_viewport.Width = m_shadowSize;
 
-void ShadowPass::SetupMap(uint32_t arraySize)
+	SetupMap();
+}
+
+uint32_t ShadowPass::GetShadowMapSize() const
+{
+	return m_shadowSize;
+}
+
+
+void ShadowPass::CreateMap(uint32_t arraySize)
 {
 	if (arraySize <= 0)
 		return;
@@ -147,8 +165,8 @@ void ShadowPass::SetupMap(uint32_t arraySize)
 	m_shadowMap.shadowView = nullptr;
 
 	D3D11_TEXTURE2D_DESC texDesc;
-	texDesc.Width = SHADOW_SIZE;
-	texDesc.Height = SHADOW_SIZE;
+	texDesc.Width = m_shadowSize;
+	texDesc.Height = m_shadowSize;
 	texDesc.MipLevels = 1;
 	texDesc.ArraySize = (UINT)arraySize;
 	texDesc.Format = DXGI_FORMAT_R24G8_TYPELESS;
@@ -180,6 +198,32 @@ void ShadowPass::SetupMap(uint32_t arraySize)
 	}
 }
 
+void ShadowPass::SetupMap()
+{
+	auto& lights = m_lights->GetLights();
+	unsigned int arraySize = this->GetLightCount(TypeLight::DIRECTIONAL) + 2 * this->GetLightCount(TypeLight::POINT);
+	CreateMap(arraySize);
+	m_shadows.clear();
+	unsigned int shadowIndex = 0;
+	for (unsigned int i = 0; i < static_cast<unsigned int>(lights.size()); i++)
+	{
+		ShadowSection section;
+		section.shadowDepth[0] = this->CreateDepthView(shadowIndex);
+		section.lightBuffer = this->CreateLightBuffer(lights[i]);
+		section.pLight = &lights[i];
+		lights[i].shadowIndex = shadowIndex; // this is somewhere changed back to 0 after this shadow pass
+
+		if (section.pLight->type == TypeLight::POINT)
+		{
+			shadowIndex++;
+			section.shadowDepth[1] = this->CreateDepthView(shadowIndex);
+		}
+		shadowIndex++;
+		m_shadows.push_back(section);
+	}
+	m_shadowMap.amount = static_cast<unsigned int>(lights.size());
+}
+
 void ShadowPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 {
 	if (pDeviceContext == D3D11Core::Get().DeviceContext())
@@ -187,27 +231,7 @@ void ShadowPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 		auto& lights = m_lights->GetLights();
 		if (m_shadowMap.amount != lights.size())
 		{
-			unsigned int arraySize = this->GetLightCount(TypeLight::DIRECTIONAL) + 2 * this->GetLightCount(TypeLight::POINT);
-			SetupMap(arraySize);
-			m_shadows.clear();
-			unsigned int shadowIndex = 0;
-			for (unsigned int i = 0; i < static_cast<unsigned int>(lights.size()); i++)
-			{
-				ShadowSection section;
-				section.shadowDepth[0] = this->CreateDepthView(shadowIndex);
-				section.lightBuffer = this->CreateLightBuffer(lights[i]);
-				section.pLight = &lights[i];
-				lights[i].shadowIndex = shadowIndex; // this is somewhere changed back to 0 after this shadow pass
-
-				if (section.pLight->type == TypeLight::POINT)
-				{
-					shadowIndex++;
-					section.shadowDepth[1] = this->CreateDepthView(shadowIndex);
-				}
-				shadowIndex++;
-				m_shadows.push_back(section);
-			}
-			m_shadowMap.amount = static_cast<unsigned int>(lights.size());
+			SetupMap();
 		}
 	}
 
