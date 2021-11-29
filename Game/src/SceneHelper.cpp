@@ -224,8 +224,9 @@ namespace sceneHelp
 
 				// Need to update Listener to make 3D sound work properly.
 				const auto thePlayer = game->GetLocalPlayer();
-				SoundHandler::Get().SetListenerPosition(thePlayer.GetComponent<comp::Transform>()->position,
-					thePlayer.GetComponent<comp::Player>()->fowardDir);
+				const auto lookDir = DirectX::XMVector3Rotate({ 0.f, 1.f, 0.1f },
+					scene.GetCurrentCamera()->GetRotation());
+				SoundHandler::Get().SetListenerPosition(thePlayer.GetComponent<comp::Transform>()->position, lookDir);
 				SoundHandler::Get().Update();
 
 #ifdef _DEBUG
