@@ -486,6 +486,7 @@ namespace sceneHelp
 			playerIcon->AddElement<rtd::Canvas>(D2D1::ColorF(0.7f, 0.5f, 0.2f), draw_t(width / 16, (height / 12) * (i + 1) + (height / 12) * i, width / 4, height / 9));
 			playerIcon->AddElement<rtd::Text>("Player " + std::to_string(i + 1), draw_text_t(width / 16, (height / 12) * (i + 1) + (height / 12) * i, width / 4, height / 9));
 			playerIcon->AddElement<rtd::Picture>("WarriorIcon.png", draw_t((width / 8) + (width / 4), (height / 12) * (i + 1) + (height / 12) * i, width / 16, height / 9));
+			playerIcon->AddElement<rtd::Picture>("No.png", draw_t(((width / 8) * 2) + (width / 4), (height / 12) * (i + 1) + (height / 12) * i, width / 16, height / 9))->SetVisiblity(false);
 			scene.Add2DCollection(playerIcon, "playerIcon" + std::to_string(i + 1));
 		}
 

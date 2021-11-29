@@ -421,6 +421,8 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			char nameTemp[12] = {};
 			uint32_t playerID;
 			comp::Player::Class classType;
+			bool isReady = false;
+			msg >> isReady;
 			msg >> classType;
 			msg >> nameTemp;
 			msg >> playerID;
@@ -453,6 +455,13 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 					}
 					}
 				}
+
+				if (isReady)
+				{
+					dynamic_cast<rtd::Picture*>(GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i))->elements[3].get())->SetVisiblity(true);
+				}
+				else
+					dynamic_cast<rtd::Picture*>(GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i))->elements[3].get())->SetVisiblity(false);
 			}
 		}
 
@@ -477,7 +486,10 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 
 		for (uint32_t i = 0; i < count; i++)
 		{
-			GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i + 1))->Show();
+			Collection2D* coll = GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i + 1));
+			coll->elements[0].get()->SetVisiblity(true);
+			coll->elements[1].get()->SetVisiblity(true);
+			coll->elements[2].get()->SetVisiblity(true);
 		}
 		for (uint32_t i = count; i < MAX_PLAYERS_PER_LOBBY; i++)
 		{

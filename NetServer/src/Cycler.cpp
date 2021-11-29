@@ -19,8 +19,7 @@ Cycler::Cycler()
 void Cycler::OnStart()
 {
 	m_time.Start();
-	m_timePeriod = Cycle::NIGHT;
-	m_shouldSwitch = true;
+	m_timePeriod = Cycle::DAY;
 }
 
 void Cycler::Update(Simulation* sim)
