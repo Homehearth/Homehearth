@@ -214,7 +214,7 @@ void Systems::HeroLeapSystem(HeadlessScene& scene, float dt)
 		});
 }
 
-void Systems::HealthSystem(HeadlessScene& scene, float dt, uint32_t& money_ref)
+void Systems::HealthSystem(HeadlessScene& scene, float dt, Currency& money_ref)
 {
 	//Entity destoys self if health <= 0
 	scene.ForEachComponent<comp::Health>([&](Entity& entity, comp::Health& health)
@@ -225,9 +225,10 @@ void Systems::HealthSystem(HeadlessScene& scene, float dt, uint32_t& money_ref)
 				comp::Network* net = entity.GetComponent<comp::Network>();
 				health.isAlive = false;
 				// increase money
-				if (entity.GetComponent<comp::NPC>())
+				if (entity.GetComponent<comp::Tag<TagType::BAD>>())
 				{
-					money_ref += 2;
+					money_ref += 5;
+					money_ref.hasUpdated = true;
 				}
 
 				comp::House* house = entity.GetComponent<comp::House>();
@@ -399,7 +400,6 @@ void Systems::MovementColliderSystem(HeadlessScene& scene, float dt)
 
 void Systems::LightSystem(Scene& scene, float dt)
 {
-
 	//If you update the lightData update the info to the GPU
 	scene.ForEachComponent<comp::Light>([&](Entity e, comp::Light& light)
 		{
@@ -425,8 +425,8 @@ void Systems::LightSystem(Scene& scene, float dt)
 				else
 					light.flickerTimer -= dt * (rand() % 2 + 1);
 
-				light.lightData.intensity = util::Lerp(0.5f, 1.2f, light.flickerTimer);
-			}
+				light.lightData.intensity = util::Lerp(0.5f, 0.7f, light.flickerTimer);
+			}			
 
 			scene.GetLights()->EditLight(light.lightData, light.index);
 		});
@@ -513,10 +513,12 @@ void Systems::FetchCollidingList(HeadlessScene& scene, QuadTree* qt, QuadTree* q
 		});
 }
 
-void Systems::ClearCollidingList(HeadlessScene& scene)
+void Systems::ClearCollidingList(HeadlessScene& scene, QuadTree* qtDynamic)
 {
-	scene.ForEachComponent<comp::SphereCollider>([](Entity& e, comp::SphereCollider& s)
+	scene.ForEachComponent<comp::SphereCollider>([&](Entity& e, comp::SphereCollider& s)
 		{
 			s.list.clear();
 		});
+
+	qtDynamic->Clear();
 }

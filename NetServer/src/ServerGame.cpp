@@ -79,6 +79,8 @@ bool ServerGame::OnStartup()
 	LoadHouseColliders("House9_Collider.fbx");
 	LoadHouseColliders("House10_Collider.fbx");
 	LoadHouseColliders("WaterMillHouse_Collider.fbx");
+	LoadMapColliders("MapBounds.fbx");
+
 	return true;
 }
 
@@ -380,6 +382,19 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 		{
 			m_simulations.at(gameID)->UseShop(shopItem, playerID);
 		}
+		break;
+	}
+	case GameMsg::Game_UpgradeDefence:
+	{
+		uint32_t playerID;
+		uint32_t gameID;
+		uint32_t id;
+		msg >> gameID >> playerID >> id;
+		if (m_simulations.find(gameID) != m_simulations.end())
+		{
+			m_simulations.at(gameID)->UpgradeDefence(id);
+		}
+		break;
 	}
 	}
 }

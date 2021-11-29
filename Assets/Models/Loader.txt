@@ -5,11 +5,6 @@ Tree4.fbx
 Tree5.fbx
 Tree6.fbx
 Tree8.fbx
-Knight.fbx
-Monster.fbx
-Barrel.obj
-Defence.obj
-Plane1.obj
 WaterMesh.fbx
 WaterFloorMesh.fbx
 WaterEdgeMesh.fbx

@@ -38,50 +38,34 @@ void main(uint3 particleID : SV_DispatchThreadID)
 
 void BloodSimmulation(inout VertexParticleIn particle, in uint id)
 {
-    float particleLifeTime = (lifeTime + (randomNumbers[id + counter] * deltaTime));
+    float particleLifeTime = (lifeTime); //- (randomNumbers[id + counter] / 2 * deltaTime));
     
     if (particle.life < particleLifeTime)
     {
-                
-
-
-        particle.pos += (particle.velocity * 10) * deltaTime;
+        particle.pos += (particle.velocity * 10.f) * deltaTime;
         
         particle.velocity.y -= 4.82f * deltaTime;
         
-        if (particle.size.x >= 0)
+        if (particle.size.x >= 0 && particle.life <= particleLifeTime / 3)
         {
             float sizeChange = abs((randomNumbers[id + counter]) * deltaTime);
-            particle.size -= sizeChange * particleSizeMulitplier;
-            particle.color.rgb += 1.0 * deltaTime;
+            particle.size -= sizeChange * ((lifeTime + particleSizeMulitplier)*0.7f);
+            particle.color.rgb += 1.0f * deltaTime;
         }
+        //if (particle.size.x >= 0) 
+        //    particle.size -= abs(randomNumbers[id + counter]) / 10.f;
 
-
-        //particle.pos.y -= 0.9f * deltaTime;
-    
-        //float lerpValue;
-        //lerp(particle.pos.y, emitterPosition.y, lerpValue);
-        //particle.pos.y = lerpValue;
-        
-        //particle.pos.x += (5.0f * randomNumbers[id]) * deltaTime;
-        //particle.pos.y += (4.0f * randomNumbers[id + 1]) * deltaTime;
-        //particle.pos.z += (5.0f * randomNumbers[id + counter]) * deltaTime;
-
-        //particle.pos.y -= 0.9f * deltaTime;
-        
-        //if (particle.size.x >= 0)
-        //    particle.size -= abs((randomNumbers[id]) * deltaTime);
     }
     else
     {
-        particle.size = float2(2, 2);
+        particle.size = float2(particleSizeMulitplier, particleSizeMulitplier);
         particle.pos = emitterPosition;
-        particle.life = 0;
+        particle.life = 0.f;
 
-        particle.color = float4(0.8, 0.8 ,0.8 ,1 );
+        particle.color = float4(0.8f, 0.8f, 0.8f, 1.f);
         
         particle.velocity.x = (randomNumbers[id]);
-        particle.velocity.y = (randomNumbers[id + 1]) ;
+        particle.velocity.y = (randomNumbers[id + 1]);
         particle.velocity.z = (randomNumbers[id + counter]);
     }
     
@@ -90,7 +74,7 @@ void BloodSimmulation(inout VertexParticleIn particle, in uint id)
 
 void LeafSimmulation(inout VertexParticleIn particle, in uint id)
 {
-    if (particle.life < (lifeTime + (randomNumbers[id + counter])))
+    if (particle.life < (lifeTime - (randomNumbers[id + counter])))
     {
         //particle.pos.y -= 1 * deltaTime;
         //particle.pos.x += cos(counter);
@@ -110,7 +94,7 @@ void LeafSimmulation(inout VertexParticleIn particle, in uint id)
 
 void WaterSplashSimmulation(inout VertexParticleIn particle, in uint id)
 {
-    if (particle.life < (lifeTime + (randomNumbers[id + counter])))
+    if (particle.life < (lifeTime - (randomNumbers[id + counter])))
     {
         particle.pos.x += (2.0f * randomNumbers[id]) * deltaTime;
         //particle.pos.y += ;//(2.0f * randomNumbers[id + 1]) * deltaTime;
@@ -142,7 +126,7 @@ void WaterSplashSimmulation(inout VertexParticleIn particle, in uint id)
 
 void SmokeSimmulation(inout VertexParticleIn particle, in uint id)
 {
-    float particleLifeTime = (lifeTime + (randomNumbers[id + counter]));
+    float particleLifeTime = (lifeTime - (randomNumbers[id + counter]));
     
     if (particle.life < particleLifeTime)
     {
@@ -180,7 +164,7 @@ void SmokeSimmulation(inout VertexParticleIn particle, in uint id)
 void SparklesSimmulation(inout VertexParticleIn particle, in uint id)
 {
     
-    if (particle.life < (lifeTime + (randomNumbers[id + counter])))
+    if (particle.life < (lifeTime - (randomNumbers[id + counter])))
     {
         particle.pos.x += (2.0f * randomNumbers[id]) * deltaTime;
         particle.pos.y += (2.0f * randomNumbers[id + 1]) * deltaTime;
