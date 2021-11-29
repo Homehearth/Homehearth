@@ -214,7 +214,7 @@ void Systems::HeroLeapSystem(HeadlessScene& scene, float dt)
 		});
 }
 
-void Systems::HealthSystem(HeadlessScene& scene, float dt, uint32_t& money_ref)
+void Systems::HealthSystem(HeadlessScene& scene, float dt, Currency& money_ref)
 {
 	//Entity destoys self if health <= 0
 	scene.ForEachComponent<comp::Health>([&](Entity& entity, comp::Health& health)
@@ -228,6 +228,7 @@ void Systems::HealthSystem(HeadlessScene& scene, float dt, uint32_t& money_ref)
 				if (entity.GetComponent<comp::NPC>())
 				{
 					money_ref += 2;
+					money_ref.hasUpdated = true;
 				}
 
 				// if player
@@ -386,7 +387,6 @@ void Systems::MovementColliderSystem(HeadlessScene& scene, float dt)
 
 void Systems::LightSystem(Scene& scene, float dt)
 {
-
 	//If you update the lightData update the info to the GPU
 	scene.ForEachComponent<comp::Light>([&](Entity e, comp::Light& light)
 		{

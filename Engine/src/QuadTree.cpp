@@ -118,9 +118,17 @@ void QuadTree::Query(std::set<Entity>& returnVec, const comp::SphereCollider& ra
 		return;
 	}
 
-	for (auto entity : m_entities)
+	for (auto it = m_entities.begin(); it != m_entities.end();)
 	{
-		returnVec.insert(entity);
+		if (it->IsNull())
+		{
+			it = m_entities.erase(it);
+		}
+		else
+		{
+			returnVec.insert(*it);
+			it++;
+		}
 	}
 
 	if (m_divided)

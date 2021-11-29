@@ -154,7 +154,7 @@ namespace sceneHelp
 
 		gameScene.SetCurrentCameraEntity(cameraEntity);
 
-		// DONT TOUCH
+		// The sun
 		CreateLightEntity(gameScene, { 0.f, 0.f, 0.f, 0.f }, { -1.0f, 0.0f, 0.f, 0.f }, { 50.f, 50.f, 50.f, 0.f }, 1000.f, 0.09f, TypeLight::DIRECTIONAL, 1);
 		// LEFT OF WELL
 		CreateLightEntity(gameScene, { 268.2f, 29.f, -320.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 30.f, 0.f, 0.f }, 20.f, 1.f,TypeLight::POINT, 0);
@@ -851,7 +851,27 @@ namespace sceneHelp
 		return true;
 	}
 
-	void LoadAllAssets(Game* game)
+	void LoadResources(Game* game)
+	{
+		std::fstream file;
+		file.open(RESOURCELOADER);
+		if (!file.is_open())
+		{
+			LOG_ERROR("Failed to load GameScene!");
+			return;
+		}
+
+		while (!file.eof())
+		{
+			std::string filename;
+
+			file >> filename;
+
+			ResourceManager::Get().GetResource<RModel>(filename);
+		}
+	}
+
+	void LoadGameScene(Game* game)
 	{
 		std::fstream file;
 		file.open(ASSETLOADER);

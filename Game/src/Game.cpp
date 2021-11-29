@@ -321,7 +321,8 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		msg >> m_gameID;
 
 		this->SetScene("Loading");
-		sceneHelp::LoadAllAssets(this);
+		sceneHelp::LoadGameScene(this);
+		sceneHelp::LoadResources(this);
 		sceneHelp::LoadMapColliders(this);
 
 #ifdef _DEBUG
@@ -706,7 +707,7 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 				{
 				case NameType::MESH_DEFENCE:
 				{
-					nameString = "Defense.obj";
+					nameString = "Defence.obj";
 					break;
 				}
 				case NameType::MESH_KNIGHT:
