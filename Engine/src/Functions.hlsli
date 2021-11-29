@@ -65,3 +65,41 @@ float4 ProjectionPosFromDepth(float depth, float2 texCoord)
     float4 clipSpacePos = float4(texCoord * 2.0 - 1.0, z, 1.0);
     return clipSpacePos;
 }
+
+
+float4 ClipSpaceToParaboloidMapSpace(float4 pos, out float clipDepth)
+{
+    pos.xyz /= pos.w;
+    float len = length(pos.xyz);
+    pos /= len;
+    
+    clipDepth = pos.z;
+    
+    pos.z++;
+    pos.xy /= pos.z;
+    pos.z = (len - 0.1f) / (500.0f - 0.1f);
+    if(pos.z > 0.0f)
+    pos.w = 1.0f;
+    return pos;
+}
+
+
+float SampleShadowMap(float2 texCoords, int shadowIndex, float currentDepth, int size, int kernalSize)
+{
+    float texelSize = 1.f / size;
+    float shadowCoef = 0.0f;
+	// blur
+    int offset = (kernalSize / 2);
+    
+    for (int i = -offset; i <= offset; i++)
+    {
+        for (int j = -offset; j <= offset; j++)
+        {
+            float depth = t_shadowMaps.Sample(s_linear, float3(texCoords + float2(i, j) * texelSize, shadowIndex)).r;
+            shadowCoef += depth < currentDepth ? 1.0f : 0.0f;
+        }
+    }
+
+    shadowCoef /= kernalSize * kernalSize;
+    return shadowCoef;
+}

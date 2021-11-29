@@ -22,7 +22,7 @@ void ParticleSystem::InitializeParticles(entt::registry& reg, entt::entity ent)
 	entityPosition = sm::Vector3{ entityPosition.x + emitter->positionOffset.x, entityPosition.y + emitter->positionOffset.y, entityPosition.z + emitter->positionOffset.z };
 
 	std::vector<Particle_t> particles(emitter->nrOfParticles);
-	for (int i = 0; i < emitter->nrOfParticles; i++)
+	for (UINT i = 0; i < emitter->nrOfParticles; i++)
 	{
 		Particle_t tempParticle;
 		tempParticle.position = sm::Vector4(entityPosition.x , entityPosition.y, entityPosition.z, 1.f);

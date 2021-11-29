@@ -11,6 +11,7 @@ constexpr int MAX_HEALTH = 100;
 constexpr uint32_t TIME_LIMIT_DAY = 60;
 constexpr uint32_t TIME_LIMIT_NIGHT = 50;
 constexpr uint32_t TIME_LIMIT_MORNING = 10;
+constexpr float ROTATION = 180.0f / (float)(TIME_LIMIT_DAY + TIME_LIMIT_MORNING);
 
 enum class Cycle : UINT
 {
@@ -262,6 +263,7 @@ struct InputState
 	bool rightMouse : 1;
 	bool key_b : 1;
 	bool key_shift : 1;
+	bool key_r : 1;
 
 	Ray_t mouseRay;
 
@@ -301,10 +303,21 @@ enum class GameMsg : uint8_t
 	Game_PlayerInput,
 	Game_Money,
 	Game_UseShop,
+	Game_UpgradeDefence,
 	Game_ChangeAnimation,
+	Game_Cooldown,
 	Game_StartSpectate,
 	Game_StopSpectate,
 	Game_Over
+};
+
+enum class AbilityIndex : uint8_t
+{
+	Primary,
+	Secondary,
+	Dodge,
+
+	DEFAULT
 };
 
 enum class ShopItem : uint8_t
@@ -329,6 +342,16 @@ enum class ShopItem : uint8_t
 	SHORT_TOWER,
 
 	NR_OF
+};
+
+enum class Mode : uint8_t
+{
+	// Normal play mode fighting against monsters.
+	PLAY_MODE,
+	// Build mode allows players to build defences.
+	BUILD_MODE,
+	// Destroy mode allows players to remove their defences.
+	DESTROY_MODE
 };
 
 /*
@@ -386,14 +409,15 @@ struct camera_Matrix_t
 ALIGN16
 struct light_t
 {
-	sm::Vector4 position = {};	//Only in use on Point Lights
-	sm::Vector4 direction = {};	//Only in use on Directional Lights
-	sm::Vector4 color = {};	//Color of the Lamp
-	float		range = 0;	//Only in use on Point Lights
-	TypeLight	type = TypeLight::DIRECTIONAL;	// 0 = Directional, 1 = Point
+	sm::Vector4 position = {};	//Only in use on Point Lights						
+	sm::Vector4 direction = {};	//Only in use on Directional Lights					
+	sm::Vector4 color = {};	//Color of the Lamp										
+	float		range = 0;	//Only in use on Point Lights							
+	TypeLight	type = TypeLight::DIRECTIONAL;	// 0 = Directional, 1 = Point		
 	UINT		enabled = 0;	// 0 = Off, 1 = On
+	float intensity = 0;	//Intensity of the Lamp
 	sm::Matrix lightMatrix = sm::Matrix::Identity;
-	float		intensity = 0;	//Intensity of the Lamp
+	int	shadowIndex = 0;
 };
 
 static struct GridProperties_t
