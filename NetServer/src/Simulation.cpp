@@ -351,7 +351,7 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 					Systems::UpdateAbilities(scene, e.dt);
 					Systems::CombatSystem(scene, e.dt);
 					Systems::HealingSystem(scene, e.dt);
-					Systems::HealthSystem(scene, e.dt, m_currency);
+					Systems::HealthSystem(scene, e.dt, m_currency, m_spreeHandler);
 					Systems::SelfDestructSystem(scene, e.dt);
 				}
 
@@ -396,6 +396,7 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 				}
 
 				m_timeCycler.Update(this);
+				m_spreeHandler.Update();
 			}
 		});
 
@@ -553,6 +554,11 @@ void Simulation::SendSnapshot()
 				m_pServer->SendToClient(i->first, msg4);
 			}
 		}
+
+		network::message<GameMsg> msg5;
+		msg5.header.id = GameMsg::Game_Spree;
+		msg5 << (uint32_t)m_spreeHandler.GetSpree();
+		this->Broadcast(msg5);
 	}
 	else
 	{

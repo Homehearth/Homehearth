@@ -214,7 +214,7 @@ void Systems::HeroLeapSystem(HeadlessScene& scene, float dt)
 		});
 }
 
-void Systems::HealthSystem(HeadlessScene& scene, float dt, Currency& money_ref)
+void Systems::HealthSystem(HeadlessScene& scene, float dt, Currency& money_ref, SpreeHandler& spree)
 {
 	//Entity destoys self if health <= 0
 	scene.ForEachComponent<comp::Health>([&](Entity& entity, comp::Health& health)
@@ -227,8 +227,9 @@ void Systems::HealthSystem(HeadlessScene& scene, float dt, Currency& money_ref)
 				// increase money
 				if (entity.GetComponent<comp::Tag<TagType::BAD>>())
 				{
-					money_ref += 5;
+					money_ref += 5 * spree.GetSpree();
 					money_ref.hasUpdated = true;
+					spree.AddSpree();
 				}
 
 				// if player

@@ -351,6 +351,16 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::ADAPTIVE);
 		break;
 	}
+	case GameMsg::Game_Spree:
+	{
+		msg >> m_currentSpree;
+		rtd::Text* txt = dynamic_cast<rtd::Text*>(GetScene("Game").GetCollection("SpreeText")->elements[0].get());
+		if (txt)
+		{
+			txt->SetText("X" + std::to_string(m_currentSpree));
+		}
+		break;
+	}
 	case GameMsg::Game_WaveTimer:
 	{
 		msg >> m_serverCycle;

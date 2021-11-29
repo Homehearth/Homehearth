@@ -298,6 +298,7 @@ enum class GameMsg : uint8_t
 
 	Game_ClassSelected,
 	Game_PlayerAttack,
+	Game_Spree,
 	Game_AddNPC,
 	Game_RemoveNPC,
 	Game_PlayerInput,

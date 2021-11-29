@@ -469,7 +469,9 @@ namespace sceneHelp
 		priceTag->Hide();
 		scene.Add2DCollection(priceTag, "priceTag");
 
-
+		Collection2D* spreeText = new Collection2D;
+		spreeText->AddElement<rtd::Text>("X1", draw_t(width - (width / 12.f), height / 2.f, width / 12.f, height / 4.0f));
+		scene.Add2DCollection(spreeText, "SpreeText");
 	}
 
 	void SetupInLobbyScreen(Game* game)
