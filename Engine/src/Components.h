@@ -265,6 +265,13 @@ namespace ecs
 
 		struct Player
 		{
+			enum class PlayerType : uint16_t
+			{
+				PLAYER_ONE = 1,
+				PLAYER_TWO = 2,
+				PLAYER_THREE = 3,
+				PLAYER_FOUR = 4
+			} playerType = PlayerType::PLAYER_ONE;
 			enum class State
 			{
 				IDLE,
