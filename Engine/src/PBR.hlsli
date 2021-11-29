@@ -83,22 +83,21 @@ float3 DoPointlight(Light L, PixelIn input, float3 normal)
     
     float3 N = normalize(normal);
     
-    float3 diff = L.color.xyz * L.intensity;
+    float3 diff = L.color.xyz;
     
     float diffuseFactor = max(dot(VL, N), 0.0f);
     diff *= diffuseFactor;
     float3 radiance = 0;
-    if(diffuseFactor <= 0.)
+    if (diffuseFactor <= 0.)
     {
         radiance = diff; //multiply here with shadowCoeff if shadows
     }
     else
     {
         float D = max(distance - L.range, 0.f);
-        
         float denom = D / L.range + 0.75f;
         float attenuation = 1.f / (denom * denom);
-        float cutoff = 0.1f;
+        float cutoff = 0.01f;
         
         attenuation = (attenuation - cutoff) / (1 - cutoff);
         attenuation = max(attenuation, 0.f);
@@ -106,8 +105,9 @@ float3 DoPointlight(Light L, PixelIn input, float3 normal)
         diff *= attenuation;
         
         radiance = diff; //multiply here with shadowCoeff if shadows
-    }   
+    }
     
+    radiance *= L.intensity;
     return radiance;
 }
 
@@ -129,9 +129,7 @@ float3 DoDirectionlight(Light L, float3 normal)
 
 //Calculates the outgoing radiance level of each light
 void CalcRadiance(PixelIn input, float3 V, float3 N, float roughness, float metallic, float3 albedo, float3 lightPos, float3 radiance, float3 F0, out float3 rad)
-{
-    static const float PI = 3.14159265359;
-    
+{   
     //Calculate Light Radiance
     float3 lightDir = normalize(lightPos - input.worldPos.xyz);
     float3 H = normalize(V + lightDir);

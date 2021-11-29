@@ -80,7 +80,7 @@ bool Game::OnStartup()
 	SetScene("MainMenu");
 
 	//Particles
-	ResourceManager::Get().GetResource<RTexture>("Blood.png");
+	ResourceManager::Get().GetResource<RTexture>("BloodParticle.png");
 	Entity emitter4 = GetScene("Game").CreateEntity();
 	emitter4.AddComponent<comp::Transform>()->position = { 250, 5, -340 };
 	emitter4.AddComponent <comp::EmitterParticle>(sm::Vector3{ 0,0,0 }, 800, 2.f, PARTICLEMODE::SMOKE, 4.0f, 1.f, false);
