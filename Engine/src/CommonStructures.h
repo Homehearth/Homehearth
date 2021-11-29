@@ -30,14 +30,31 @@ public:
 	{
 		return m_amount;
 	}
-	uint32_t& GetAmountRef()
-	{
-		return m_amount;
-	}
 	void Zero()
 	{
 		m_amount = 0;
 	}
+	void operator +=(uint32_t money)
+	{
+		m_amount += money;
+	}
+	void operator -=(uint32_t money)
+	{
+		m_amount -= money;
+	}
+	void operator = (uint32_t money)
+	{
+		m_amount = money;
+	}
+	bool operator >= (uint32_t money)
+	{
+		return m_amount >= money;
+	}
+	bool operator < (uint32_t money)
+	{
+		return m_amount < money;
+	}
+	bool hasUpdated = false;
 };
 
 struct MinMaxProj_t

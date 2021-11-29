@@ -80,34 +80,13 @@ bool Game::OnStartup()
 	SetScene("MainMenu");
 
 	//Particles
-	Entity emitter = GetScene("Game").CreateEntity();
-	emitter.AddComponent<comp::Transform>()->position = { 250, 5, -340 };
-	emitter.AddComponent <comp::EmitterParticle>("smoke.png", "smoke_opacity.png", 800, 2.f, PARTICLEMODE::SMOKE, 4.0f);
-
-	Entity emitterS = GetScene("Game").CreateEntity();
-	emitterS.AddComponent<comp::Transform>()->position = { 178, 15, -338 };
-	emitterS.AddComponent <comp::EmitterParticle>("smoke.png", "smoke_opacity.png", 1200, 2.f, PARTICLEMODE::SMOKE, 4.2f);
-
-	//Entity emitter2 = GetScene("Game").CreateEntity();
-	//emitter2.AddComponent<comp::Transform>()->position = { 250, 5,- 320 };
-	//emitter2.AddComponent <comp::EmitterParticle>("thisisfine.png", "", 10, 1.f, PARTICLEMODE::SPARKLES);
-
-	//Entity emitter3 = GetScene("Game").CreateEntity();
-	//emitter3.AddComponent<comp::Transform>()->position = { 250, 20, -300 };
-	//emitter3.AddComponent <comp::EmitterParticle>("thisisfine.png", "", 20, 1.f, PARTICLEMODE::WATERSPLASH);
-
 	Entity emitter4 = GetScene("Game").CreateEntity();
-	emitter4.AddComponent<comp::Transform>()->position = { 240, 6, -300 };
-	emitter4.AddComponent <comp::EmitterParticle>("Blood.png", "", 50, 8.f, PARTICLEMODE::BLOOD, 1.5f);
-
-	Entity emitter5 = GetScene("Game").CreateEntity();
-	emitter5.AddComponent<comp::Transform>()->position = { 220, 40, -340 };
-	emitter5.AddComponent <comp::EmitterParticle>("Blood.png", "", 50, 8.f, PARTICLEMODE::BLOOD, 1.5f);
+	emitter4.AddComponent<comp::Transform>()->position = { 250, 5, -340 };
+	emitter4.AddComponent <comp::EmitterParticle>(sm::Vector3{ 0,0,0 }, 800, 2.f, PARTICLEMODE::SMOKE, 4.0f, 1.f, false);
 
 	Entity waterSplash = GetScene("Game").CreateEntity();
 	waterSplash.AddComponent<comp::Transform>()->position = { 270, 13, -370 };
-	waterSplash.AddComponent <comp::EmitterParticle>("waterSplash.png", "", 100, 1.f, PARTICLEMODE::WATERSPLASH, 4.0f);
-
+	waterSplash.AddComponent <comp::EmitterParticle>(sm::Vector3{ 0,0,0 }, 100, 1.f , PARTICLEMODE::WATERSPLASH, 4.0f, 1.f, false);
 
 	return true;
 }
@@ -120,12 +99,14 @@ void Game::OnUserUpdate(float deltaTime)
 	{
 		sm::Vector3 playerPos = m_players.at(m_localPID).GetComponent<comp::Transform>()->position;
 
+		GameSystems::DeathParticleTimer(scene);
+
 		if (m_elapsedCycleTime <= m_waveTimer && (m_serverCycle == Cycle::DAY || m_serverCycle == Cycle::MORNING))
 		{
 			m_elapsedCycleTime += deltaTime;
 			scene.ForEachComponent<comp::Light>([&](Entity e, comp::Light& l)
 				{
-					switch(l.lightData.type)
+					switch (l.lightData.type)
 					{
 					case TypeLight::DIRECTIONAL:
 					{
@@ -186,8 +167,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	case GameMsg::Game_Snapshot:
 	{
 		m_savedInputs.clear();
-		uint32_t currentTick;
-		msg >> currentTick;
 		uint32_t count;
 		msg >> count;
 
@@ -212,8 +191,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	}
 	case GameMsg::Game_UpdateComponent:
 	{
-		uint32_t currentTick;
-		msg >> currentTick;
 		uint32_t count; // Could be more than one Entity
 		msg >> count;
 
@@ -238,8 +215,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	}
 	case GameMsg::Game_AddEntity:
 	{
-		uint32_t currentTick;
-		msg >> currentTick;
 		uint32_t count; // Could be more than one Entity
 		msg >> count;
 #ifdef _DEBUG
@@ -329,7 +304,8 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		msg >> m_gameID;
 
 		this->SetScene("Loading");
-		sceneHelp::LoadAllAssets(this);
+		sceneHelp::LoadGameScene(this);
+		sceneHelp::LoadResources(this);
 		sceneHelp::LoadMapColliders(this);
 
 #ifdef _DEBUG
@@ -400,7 +376,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			// Change light on Night.
 			m_elapsedCycleTime = 0.0f;
 			scene.ForEachComponent<comp::Light>([&](Entity e, comp::Light& l)
-				{ 
+				{
 					switch (l.lightData.type)
 					{
 					case TypeLight::DIRECTIONAL:
@@ -798,7 +774,7 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 				{
 				case NameType::MESH_DEFENCE:
 				{
-					nameString = "Defense.obj";
+					nameString = "Defence.obj";
 					break;
 				}
 				case NameType::MESH_KNIGHT:
@@ -816,7 +792,13 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 					nameString = "Sphere.obj";
 					break;
 				}
+				default:
+				{
+					nameString = "Cube.obj";
+					break;
 				}
+				}
+
 				std::shared_ptr<RModel> model = ResourceManager::Get().CopyResource<RModel>(nameString, true);
 				if (model)
 				{
@@ -842,11 +824,14 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 					break;
 				}
 				}
-				std::shared_ptr<RAnimator> animator = ResourceManager::Get().CopyResource<RAnimator>(nameString, true);
-				if (animator)
+				if (nameString.length() > 0)
 				{
-					animator->RandomizeTime();
-					e.AddComponent<comp::Animator>()->animator = animator;
+					std::shared_ptr<RAnimator> animator = ResourceManager::Get().CopyResource<RAnimator>(nameString, true);
+					if (animator)
+					{
+						animator->RandomizeTime();
+						e.AddComponent<comp::Animator>()->animator = animator;
+					}
 				}
 				break;
 			}
@@ -876,11 +861,11 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 				collider->Radius = s.Radius;
 				break;
 			}
-			case ecs::Component::LIGHT:
+			case ecs::Component::PARTICLEMITTER:
 			{
-				comp::Light l;
-				msg >> l;
-				e.AddComponent<comp::Light>(l);
+				comp::PARTICLEEMITTER p;
+				msg >> p;
+				e.AddComponent<comp::EmitterParticle>(p.positionOffset, (int)p.nrOfParticles, p.sizeMulitplier, p.type, p.lifeTime, p.speed, p.hasDeathTimer);
 				break;
 			}
 			case ecs::Component::PLAYER:

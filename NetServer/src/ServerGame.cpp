@@ -72,6 +72,7 @@ bool ServerGame::OnStartup()
 	m_inputThread = std::thread(&ServerGame::InputThread, this);
 
 	LoadMapColliders("VillageColliders.fbx");
+	LoadMapColliders("MapBounds.fbx");
 
 	return true;
 }

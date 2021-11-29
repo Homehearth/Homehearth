@@ -52,7 +52,7 @@ void CombatSystem::UpdateTeleport(HeadlessScene& scene)
 
 			if (ecs::ReadyToUse(&teleportAbility, nullptr))
 			{
-				float decreaseValue = 0.75f;
+				const float decreaseValue = 0.90f;
 				if (targetPoint)
 				{
 					sm::Vector3 direction = *targetPoint - transform.position;
@@ -60,7 +60,7 @@ void CombatSystem::UpdateTeleport(HeadlessScene& scene)
 					direction *= teleportAbility.distance;
 
 					bool hasSetTarget = false;
-					while (!hasSetTarget && direction.Length() > 7.0f)
+					while (!hasSetTarget && direction.Length() > pathFinderManager->GetNodeSize())
 					{
 						sm::Vector3 newPos = transform.position + direction;
 						if (pathFinderManager->FindClosestNode(newPos)->reachable)
@@ -70,14 +70,11 @@ void CombatSystem::UpdateTeleport(HeadlessScene& scene)
 						}
 						else
 						{
-							//Lower length of vector by 25% every failed try
+							//Lower length of vector by 10% every failed try
 							direction *= decreaseValue;
 						}
-
 					}
 				}
-
-				
 			}
 		});
 }
@@ -154,13 +151,17 @@ Entity CombatSystem::CreateAttackEntity(Entity entity, HeadlessScene& scene, com
 	comp::SphereCollider* bos = attackEntity.AddComponent<comp::SphereCollider>();
 
 	bos->Radius = stats->attackRange;
+	float attackRangeMultiplier = 1.f;
+	if (entity.GetComponent<comp::Player>())
+	{
+		attackRangeMultiplier = 1.3f;
+	}
 
 	sm::Vector3 targetDir = stats->targetPoint - transform->position;
 	targetDir.Normalize();
-	t->position = transform->position + targetDir * stats->attackRange * 0.5f + sm::Vector3(0, 4, 0);
+	t->position = transform->position + targetDir * stats->attackRange * attackRangeMultiplier;
+	t->position.y = bos->Radius;
 	t->rotation = transform->rotation;
-
-	bos->Center = t->position;
 
 	comp::SelfDestruct* selfDestruct = attackEntity.AddComponent<comp::SelfDestruct>();
 	selfDestruct->lifeTime = stats->lifetime;
@@ -169,8 +170,6 @@ Entity CombatSystem::CreateAttackEntity(Entity entity, HeadlessScene& scene, com
 
 	return attackEntity;
 }
-
-
 
 Entity CombatSystem::CreateAttackEntity(Entity entity, HeadlessScene& scene, comp::Transform* transform,
 	comp::RangeAttackAbility* stats)
@@ -241,8 +240,18 @@ void CombatSystem::AddCollisionMeleeBehavior(Entity entity, Entity attackEntity,
 			if (otherHealth && attackAbility)
 			{
 				otherHealth->currentHealth -= attackAbility->attackDamage;
+				
+				// Blood particle
+				if (other.GetComponent<comp::PARTICLEEMITTER>())
+				{
+					other.RemoveComponent<comp::PARTICLEEMITTER>();
+				}
+				other.AddComponent<comp::PARTICLEEMITTER>(sm::Vector3{ 0,6,0 }, 50, 3.f, PARTICLEMODE::BLOOD, 1.5f, 1.f, true);
+				
 				// update Health on network
 				scene.publish<EComponentUpdated>(other, ecs::Component::HEALTH);
+				scene.publish<EComponentUpdated>(other, ecs::Component::PARTICLEMITTER);
+
 
 				thisEntity.GetComponent<comp::SelfDestruct>()->lifeTime = 0.f;
 
@@ -265,11 +274,11 @@ void CombatSystem::AddCollisionMeleeBehavior(Entity entity, Entity attackEntity,
 					comp::TemporaryPhysics::Force force = {};
 
 					force.force = toOther + sm::Vector3(0, 1, 0);
-					force.force *= attackAbility->attackDamage;
+					force.force *= attackAbility->attackDamage * 1.5f;
 
 					force.isImpulse = true;
 					force.drag = 0.0f;
-					force.actingTime = 0.7f;
+					force.actingTime = 0.2f;
 
 					p->forces.push_back(force);
 
@@ -309,8 +318,17 @@ void CombatSystem::AddCollisionRangeBehavior(Entity entity, Entity attackEntity,
 			if (otherHealth && attackAbility)
 			{
 				otherHealth->currentHealth -= attackAbility->attackDamage;
+				
+				// Blood particle
+				if (other.GetComponent<comp::PARTICLEEMITTER>())
+				{
+					other.RemoveComponent<comp::PARTICLEEMITTER>();
+				}
+				other.AddComponent<comp::PARTICLEEMITTER>(sm::Vector3{ 0,6,0 }, 50, 5.f, PARTICLEMODE::BLOOD, 1.5f, 1.f, true);
+
 				// update Health on network
 				scene.publish<EComponentUpdated>(other, ecs::Component::HEALTH);
+				scene.publish<EComponentUpdated>(other, ecs::Component::PARTICLEMITTER);
 
 				thisEntity.GetComponent<comp::SelfDestruct>()->lifeTime = 0.f;
 

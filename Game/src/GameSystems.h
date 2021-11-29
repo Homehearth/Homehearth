@@ -11,4 +11,5 @@ namespace GameSystems
 	void CheckLOS(Game* game);
 	void UpdatePlayerVisuals(Game* game);
 	void DisplayUpgradeDefences(Game* game);
+	void DeathParticleTimer(Scene& scene);
 }

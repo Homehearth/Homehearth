@@ -235,3 +235,16 @@ void GameSystems::UpdatePlayerVisuals(Game* game)
 			i--;
 		});
 }
+
+void GameSystems::DeathParticleTimer(Scene& scene)
+{
+	scene.ForEachComponent<comp::EmitterParticle>([&](Entity e, comp::EmitterParticle& emitter)
+		{
+			if (emitter.hasDeathTimer == true && emitter.lifeLived <= emitter.lifeTime)
+			{
+				emitter.lifeLived += Stats::Get().GetFrameTime();
+			}
+			else if (emitter.hasDeathTimer == true && emitter.lifeLived >= emitter.lifeTime)
+				e.RemoveComponent<comp::EmitterParticle>();
+		});
+}
