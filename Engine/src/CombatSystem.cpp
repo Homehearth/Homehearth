@@ -240,17 +240,24 @@ void CombatSystem::AddCollisionMeleeBehavior(Entity entity, Entity attackEntity,
 			if (otherHealth && attackAbility)
 			{
 				otherHealth->currentHealth -= attackAbility->attackDamage;
-				
-				// Blood particle
-				if (other.GetComponent<comp::PARTICLEEMITTER>())
+				if (other.GetComponent<comp::Tag<TagType::DEFENCE>>())
 				{
-					other.RemoveComponent<comp::PARTICLEEMITTER>();
+					//TODO: add building particles
 				}
-				other.AddComponent<comp::PARTICLEEMITTER>(sm::Vector3{ 0,6,0 }, 50, 3.f, PARTICLEMODE::BLOOD, 1.5f, 1.f, true);
+				else
+				{
+					// Blood particle
+					if (other.GetComponent<comp::PARTICLEEMITTER>())
+					{
+						other.RemoveComponent<comp::PARTICLEEMITTER>();
+					}
+					other.AddComponent<comp::PARTICLEEMITTER>(sm::Vector3{ 0,6,0 }, 50, 5.f, PARTICLEMODE::BLOOD, 1.5f, 1.f, true);
+
+					scene.publish<EComponentUpdated>(other, ecs::Component::PARTICLEMITTER);
+				}
 				
 				// update Health on network
 				scene.publish<EComponentUpdated>(other, ecs::Component::HEALTH);
-				scene.publish<EComponentUpdated>(other, ecs::Component::PARTICLEMITTER);
 
 
 				thisEntity.GetComponent<comp::SelfDestruct>()->lifeTime = 0.f;
@@ -319,16 +326,26 @@ void CombatSystem::AddCollisionRangeBehavior(Entity entity, Entity attackEntity,
 			{
 				otherHealth->currentHealth -= attackAbility->attackDamage;
 				
-				// Blood particle
-				if (other.GetComponent<comp::PARTICLEEMITTER>())
+
+				if (other.GetComponent<comp::Tag<TagType::DEFENCE>>())
 				{
-					other.RemoveComponent<comp::PARTICLEEMITTER>();
+					//TODO: add building particles
 				}
-				other.AddComponent<comp::PARTICLEEMITTER>(sm::Vector3{ 0,6,0 }, 50, 5.f, PARTICLEMODE::BLOOD, 1.5f, 1.f, true);
+				else 
+				{
+					// Blood particle
+					if (other.GetComponent<comp::PARTICLEEMITTER>())
+					{
+						other.RemoveComponent<comp::PARTICLEEMITTER>();
+					}
+					other.AddComponent<comp::PARTICLEEMITTER>(sm::Vector3{ 0,6,0 }, 50, 5.f, PARTICLEMODE::BLOOD, 1.5f, 1.f, true);
+
+					scene.publish<EComponentUpdated>(other, ecs::Component::PARTICLEMITTER);
+				}
+				
 
 				// update Health on network
 				scene.publish<EComponentUpdated>(other, ecs::Component::HEALTH);
-				scene.publish<EComponentUpdated>(other, ecs::Component::PARTICLEMITTER);
 
 				thisEntity.GetComponent<comp::SelfDestruct>()->lifeTime = 0.f;
 

@@ -2,6 +2,73 @@
 #include "EnginePCH.h"
 #include "Healthbar.h"
 #include "Game.h"
+#include "Picture.h"
+
+void GameSystems::DisplayUpgradeDefences(Game* game)
+{
+	Collection2D* coll = game->GetCurrentScene()->GetCollection("priceTag");
+	// Display only if in Build mode..
+	if (game->GetCurrentMode() == Mode::BUILD_MODE && game->GetCurrentCycle() == Cycle::DAY)
+	{
+		Scene& scene = *game->GetCurrentScene();
+		bool shouldNotShow = true;
+		const unsigned int width = D2D1Core::GetWindow()->GetWidth();
+		const unsigned int height = D2D1Core::GetWindow()->GetHeight();
+
+		bool pressed = false;
+		if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::R, KeyState::PRESSED))
+		{
+			pressed = true;
+		}
+
+
+		float t = 9999;
+		rtd::Picture* pc = dynamic_cast<rtd::Picture*>(coll->elements[0].get());
+		rtd::Text* tc = dynamic_cast<rtd::Text*>(coll->elements[1].get());
+		uint32_t id;
+		uint32_t cost;
+
+		Ray_t mouseRay = InputSystem::Get().GetMouseRay();
+		scene.ForEachComponent<comp::OrientedBoxCollider, comp::Cost, comp::Network>([&](comp::OrientedBoxCollider& box, comp::Cost& c, comp::Network& n) {
+
+			float nt;
+			if (mouseRay.Intersects(box, &nt))
+			{
+				if (nt < t)
+				{
+					t = nt;
+					id = n.id;
+					cost = c.cost;
+				}
+
+				shouldNotShow = false;
+			}
+
+			});
+
+		// Update the UI to reflect on the closest defence to the mouse pointer.
+		if (pc && tc)
+		{
+			pc->SetPosition((FLOAT)InputSystem::Get().GetMousePos().x, (FLOAT)InputSystem::Get().GetMousePos().y);
+			tc->SetPosition((FLOAT)InputSystem::Get().GetMousePos().x + width * 0.019f, (FLOAT)InputSystem::Get().GetMousePos().y);
+			tc->SetText("Cost: " + std::to_string(cost));
+			if (game->GetMoney() < cost)
+				pc->SetTexture("NotEnoughMoneySign.png");
+			else
+				pc->SetTexture("EnoughMoneySign.png");
+			coll->Show();
+			if (pressed)
+			{
+				game->UpgradeDefence(id);
+			}
+		}
+
+		if (shouldNotShow)
+			coll->Hide();
+	}
+	else
+		coll->Hide();
+}
 
 //System to render collider mesh red if collider is colliding with another collider
 void GameSystems::RenderIsCollidingSystem(Scene& scene)
