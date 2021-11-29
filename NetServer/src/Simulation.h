@@ -10,6 +10,7 @@
 #include "IShop.h"
 #include "QuadTree.h"
 #include "Cycler.h"
+#include "HouseManager.h"
 /*
 		Simulation defines each ongoing simulation from the perspective of the server
 		gameID identifies the simulation which each player has to give the server to keep track
@@ -42,7 +43,7 @@ private:
 	std::unordered_map<ecs::Component, std::vector<Entity>> m_updatedComponents;
 
 	int currentRound;
-
+	
 	void InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg, const std::bitset<ecs::Component::COMPONENT_MAX>& componentMask = UINT32_MAX) const;
 	message<GameMsg> AllEntitiesMessage()const;
 
@@ -52,7 +53,8 @@ private:
 	Timer waveTimer;
 	std::queue<Wave> waveQueue;
 	std::queue<sm::Vector3> m_spawnPoints;
-	
+	HouseManager houseManager;
+
 	void OnNetworkEntityCreate(entt::registry& reg, entt::entity entity);
 	void OnNetworkEntityDestroy(entt::registry& reg, entt::entity entity);
 
