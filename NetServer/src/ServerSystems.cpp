@@ -490,7 +490,7 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 
 }
 
-void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money_ref, HouseManager houseManager, QuadTree* qt)
+void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money_ref, HouseManager houseManager, QuadTree* qt, GridSystem& grid)
 {
 	//Entity destoys self if health <= 0
 	scene.ForEachComponent<comp::Health>([&](Entity& entity, comp::Health& health)
@@ -506,8 +506,9 @@ void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money
 					money_ref += 5;
 					money_ref.hasUpdated = true;
 				}
-				comp::House* house = entity.GetComponent<comp::House>();
+
 				// if player
+				comp::House* house = entity.GetComponent<comp::House>();
 				comp::Player* p = entity.GetComponent<comp::Player>();
 				if (p)
 				{
@@ -524,6 +525,9 @@ void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money
 					Blackboard::Get().GetPathFindManager()->RemoveDefenseEntity(entity);
 					node->reachable = true;
 					node->defencePlaced = false;
+
+					//Removing the defence and its neighbours if needed
+					grid.RemoveDefence(entity);
 					entity.Destroy();
 				}
 				else if (house)
