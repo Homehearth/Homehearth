@@ -3,6 +3,7 @@
 #include <omp.h>
 #include "Camera.h"
 #include "GridSystem.h"
+#include "OptionSystem.h"
 
 /*
 	We only need the loading screen rendered once. 
@@ -19,7 +20,7 @@ Engine::Engine()
 
 void Engine::Startup()
 {
-	
+	OptionSystem::Get().OnStartUp();
 	T_INIT(1, thread::ThreadType::POOL_FIFO);
 	srand(static_cast<unsigned>(time(NULL)));
 
@@ -104,6 +105,10 @@ void Engine::Run()
     T_DESTROY();
     D2D1Core::Destroy();
 	ResourceManager::Get().Destroy();
+
+
+	OptionSystem::Get().SetOption("MasterVolume", std::to_string(m_masterVolume));
+	OptionSystem::Get().OnShutdown();
 }
 
 

@@ -20,6 +20,7 @@ namespace ecs
 		BOUNDING_SPHERE,
 		PARTICLEMITTER,
 		PLAYER,
+		COST,
 		COMPONENT_COUNT,
 		COMPONENT_MAX = 32
 	};
@@ -48,6 +49,11 @@ namespace ecs
 			sm::Vector3 scale = sm::Vector3(1);
 
 			bool syncColliderScale = false;
+		};
+
+		struct Cost
+		{
+			uint32_t cost;
 		};
 
 		struct Decal
