@@ -475,10 +475,10 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 
 				if (isReady)
 				{
-					dynamic_cast<rtd::Picture*>(GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i))->elements[3].get())->SetVisiblity(true);
+					dynamic_cast<rtd::Picture*>(GetScene("Lobby").GetCollection("playerIcon" + std::to_string(static_cast<uint16_t>(p->playerType)))->elements[3].get())->SetVisiblity(true);
 				}
 				else
-					dynamic_cast<rtd::Picture*>(GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i))->elements[3].get())->SetVisiblity(false);
+					dynamic_cast<rtd::Picture*>(GetScene("Lobby").GetCollection("playerIcon" + std::to_string(static_cast<uint16_t>(p->playerType)))->elements[3].get())->SetVisiblity(false);
 			}
 		}
 
