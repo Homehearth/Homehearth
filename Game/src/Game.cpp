@@ -84,7 +84,7 @@ bool Game::OnStartup()
 
 	Entity waterSplash = GetScene("Game").CreateEntity();
 	waterSplash.AddComponent<comp::Transform>()->position = { 270, 13, -370 };
-	waterSplash.AddComponent <comp::EmitterParticle>(sm::Vector3{ 0,0,0 }, 100, 1.f , PARTICLEMODE::WATERSPLASH, 4.0f, 1.f, false);
+	waterSplash.AddComponent <comp::EmitterParticle>(sm::Vector3{ 0,0,0 }, 100, 1.f, PARTICLEMODE::WATERSPLASH, 4.0f, 1.f, false);
 
 	return true;
 }
@@ -272,6 +272,11 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			// Was the entity a player?
 			if (m_players.find(id) != m_players.end())
 			{
+				comp::Player* p = m_players.at(id).GetComponent<comp::Player>();
+
+				GetScene("Game").GetCollection("player" + std::to_string(static_cast<uint16_t>(p->playerType)) + "Info")->Hide();
+				GetScene("Game").GetCollection("dynamicPlayer" + std::to_string(static_cast<uint16_t>(p->playerType)) + "namePlate")->Hide();
+
 				m_players.at(id).Destroy();
 				m_players.erase(id);
 			}
@@ -535,7 +540,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		break;
 	}
 	}
-}
+	}
 void Game::PingServer()
 {
 	message<GameMsg> msg = {};
