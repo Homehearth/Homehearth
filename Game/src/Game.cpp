@@ -317,7 +317,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			switch(type)
 			{
 			case ESoundEvent::Player_OnMeleeAttack:
-				SoundHandler::Get().PlayUnique2DSound("Player_OnMeleeAttack");
+				SoundHandler::Get().Play3DSound("Player_OnMeleeAttack", position);
 				break;
 			case ESoundEvent::Player_OnDmgRecieved:
 				SoundHandler::Get().PlayUnique2DSound("Player_OnDmgRecieved");
