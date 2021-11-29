@@ -397,16 +397,15 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 			}
 
 
-				{
-					PROFILE_SCOPE("Create waves");
-					if (!waveQueue.empty())
-						ServerSystems::NextWaveConditions(this, waveTimer, waveQueue.front().GetTimeLimit());
-					else
-						EnemyManagement::CreateWaves(waveQueue, currentRound++);
-				}
+			{
+				PROFILE_SCOPE("Create waves");
+				if (!waveQueue.empty())
+					ServerSystems::NextWaveConditions(this, waveTimer, waveQueue.front().GetTimeLimit());
+				else
+					EnemyManagement::CreateWaves(waveQueue, currentRound++);
 			}
 		});
-
+	
 	//On all enemies wiped, activate the next wave.
 	m_pGameScene->on<ESceneCallWaveSystem>([&](const ESceneCallWaveSystem& dt, HeadlessScene& scene)
 		{
