@@ -82,12 +82,15 @@ void HouseManager::AddCollider(NameType houseType, Entity house)
 
 Entity HouseManager::CreateHouse(HeadlessScene& scene, NameType houseType, NameType doorType, NameType roofType)
 {
-	Entity house = scene.CreateEntity();
-	house.AddComponent<comp::MeshName>()->name = houseType;
-	house.AddComponent<comp::Transform>();
-	house.AddComponent<comp::Tag<TagType::STATIC>>();
-	house.AddComponent<comp::Network>();
-	house.AddComponent<comp::Health>();
+	Entity houseEntity = scene.CreateEntity();
+	houseEntity.AddComponent<comp::MeshName>()->name = houseType;
+	houseEntity.AddComponent<comp::Transform>();
+	houseEntity.AddComponent<comp::Tag<TagType::STATIC>>();
+	houseEntity.AddComponent<comp::Network>();
+	houseEntity.AddComponent<comp::Health>();
+
+	comp::House* house = houseEntity.AddComponent<comp::House>();
+	house->houseType = houseType;
 
 	if (doorType != NameType::EMPTY)
 	{
@@ -95,7 +98,8 @@ Entity HouseManager::CreateHouse(HeadlessScene& scene, NameType houseType, NameT
 		door.AddComponent<comp::MeshName>()->name = doorType;
 		door.AddComponent<comp::Transform>();
 		door.AddComponent<comp::Network>();
-		house.AddComponent<comp::House>()->door = door;
+		house->door = door;
+		house->doorType = doorType;
 	}
 
 	if (roofType != NameType::EMPTY)
@@ -104,16 +108,51 @@ Entity HouseManager::CreateHouse(HeadlessScene& scene, NameType houseType, NameT
 		roof.AddComponent<comp::MeshName>()->name = roofType;
 		roof.AddComponent<comp::Transform>();
 		roof.AddComponent<comp::Network>();
-		house.GetComponent<comp::House>()->houseRoof = roof;
+		houseEntity.GetComponent<comp::House>()->houseRoof = roof;
+		house->roofType = roofType;
 	}
 	comp::OrientedBoxCollider* obb;
 
-	AddCollider(houseType, house);
+	AddCollider(houseType, houseEntity);
 
-	return house;
+	return houseEntity;
 }
 
 void HouseManager::SetHouseColliders(std::unordered_map<std::string, comp::OrientedBoxCollider>* houseColliders)
 {
 	this->houseColliders = houseColliders;
+}
+
+NameType HouseManager::GetRuinedHouseType(NameType houseType)
+{
+	if(houseType == NameType::MESH_HOUSE5)
+	{
+		return NameType::MESH_RUINED_HOUSE5;
+	}
+	if(houseType == NameType::MESH_HOUSE6)
+	{
+		return NameType::MESH_RUINED_HOUSE6;
+	}
+	if (houseType == NameType::MESH_HOUSE7)
+	{
+		return NameType::MESH_RUINED_HOUSE7;
+	}
+	if (houseType == NameType::MESH_HOUSE8)
+	{
+		return NameType::MESH_RUINED_HOUSE8;
+	}
+	if (houseType == NameType::MESH_HOUSE9)
+	{
+		return NameType::MESH_RUINED_HOUSE9;
+	}
+	if (houseType == NameType::MESH_HOUSE10)
+	{
+		return NameType::MESH_RUINED_HOUSE10;
+	}
+	if (houseType == NameType::MESH_WATERMILLHOUSE)
+	{
+		return NameType::MESH_RUINED_WATERMILLHOUSE;
+	}
+
+	return NameType::EMPTY;
 }

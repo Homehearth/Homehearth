@@ -214,60 +214,7 @@ void Systems::HeroLeapSystem(HeadlessScene& scene, float dt)
 		});
 }
 
-void Systems::HealthSystem(HeadlessScene& scene, float dt, Currency& money_ref)
-{
-	//Entity destoys self if health <= 0
-	scene.ForEachComponent<comp::Health>([&](Entity& entity, comp::Health& health)
-		{
-			//Check if something should be dead, and if so set isAlive to false
-			if (health.currentHealth <= 0 && health.isAlive)
-			{
-				comp::Network* net = entity.GetComponent<comp::Network>();
-				health.isAlive = false;
-				// increase money
-				if (entity.GetComponent<comp::Tag<TagType::BAD>>())
-				{
-					money_ref += 5;
-					money_ref.hasUpdated = true;
-				}
 
-				comp::House* house = entity.GetComponent<comp::House>();
-				// if player
-				comp::Player* p = entity.GetComponent<comp::Player>();
-				if (p)
-				{
-					p->respawnTimer = 10.f;
-					p->state = comp::Player::State::SPECTATING;
-					entity.RemoveComponent<comp::Tag<TagType::DYNAMIC>>();
-				}
-				else if (entity.GetComponent<comp::Tag<TagType::DEFENCE>>())
-				{
-					comp::Transform* buildTransform = entity.GetComponent<comp::Transform>();
-
-					Node* node = Blackboard::Get().GetPathFindManager()->FindClosestNode(buildTransform->position);
-					//Remove from the container map so ai wont consider this defense
-					Blackboard::Get().GetPathFindManager()->RemoveDefenseEntity(entity);
-					node->reachable = true;
-					node->defencePlaced = false;
-					entity.Destroy();
-				}
-				else if(house)
-				{
-					house->houseRoof.Destroy();
-					house->door.Destroy();
-					entity.Destroy();
-				}
-				else
-				{
-					entity.Destroy();
-				}
-			}
-			else if (health.currentHealth > health.maxHealth)
-			{
-				health.currentHealth = health.maxHealth;
-			}
-		});
-}
 
 void Systems::SelfDestructSystem(HeadlessScene& scene, float dt)
 {

@@ -2,6 +2,7 @@
 #include "Wave.h"
 #include "ServerSystems.h"
 #include "Simulation.h"
+#include "HouseManager.h"
 
 
 /**Creates an enemy entity at specified point.
@@ -479,6 +480,63 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 
 
 }
+
+void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money_ref, HouseManager houseManager, QuadTree* qt)
+{
+	//Entity destoys self if health <= 0
+	scene.ForEachComponent<comp::Health>([&](Entity& entity, comp::Health& health)
+		{
+			//Check if something should be dead, and if so set isAlive to false
+			if (health.currentHealth <= 0 && health.isAlive)
+			{
+				comp::Network* net = entity.GetComponent<comp::Network>();
+				health.isAlive = false;
+				// increase money
+				if (entity.GetComponent<comp::Tag<TagType::BAD>>())
+				{
+					money_ref += 5;
+					money_ref.hasUpdated = true;
+				}
+				comp::House* house = entity.GetComponent<comp::House>();
+				// if player
+				comp::Player* p = entity.GetComponent<comp::Player>();
+				if (p)
+				{
+					p->respawnTimer = 10.f;
+					p->state = comp::Player::State::SPECTATING;
+					entity.RemoveComponent<comp::Tag<TagType::DYNAMIC>>();
+				}
+				else if (entity.GetComponent<comp::Tag<TagType::DEFENCE>>())
+				{
+					comp::Transform* buildTransform = entity.GetComponent<comp::Transform>();
+
+					Node* node = Blackboard::Get().GetPathFindManager()->FindClosestNode(buildTransform->position);
+					//Remove from the container map so ai wont consider this defense
+					Blackboard::Get().GetPathFindManager()->RemoveDefenseEntity(entity);
+					node->reachable = true;
+					node->defencePlaced = false;
+					entity.Destroy();
+				}
+				else if (house)
+				{
+					Entity newHouse = houseManager.CreateHouse(scene, houseManager.GetRuinedHouseType(house->houseType), NameType::EMPTY, NameType::EMPTY);
+					qt->Insert(newHouse);
+					house->houseRoof.Destroy();
+					house->door.Destroy();
+					entity.Destroy();
+				}
+				else
+				{
+					entity.Destroy();
+				}
+			}
+			else if (health.currentHealth > health.maxHealth)
+			{
+				health.currentHealth = health.maxHealth;
+			}
+		});
+}
+
 
 void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& scene, float dt)
 {

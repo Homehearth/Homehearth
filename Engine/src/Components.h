@@ -238,6 +238,9 @@ namespace ecs
 
 		struct House
 		{
+			NameType houseType = NameType::EMPTY;
+			NameType doorType = NameType::EMPTY;
+			NameType roofType = NameType::EMPTY;
 			Entity door;
 			Entity houseRoof;
 			bool isOpen;
