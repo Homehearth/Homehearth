@@ -80,6 +80,7 @@ bool Game::OnStartup()
 	SetScene("MainMenu");
 
 	//Particles
+	ResourceManager::Get().GetResource<RTexture>("BloodParticle.png");
 	Entity emitter4 = GetScene("Game").CreateEntity();
 	emitter4.AddComponent<comp::Transform>()->position = { 250, 5, -340 };
 	emitter4.AddComponent <comp::EmitterParticle>(sm::Vector3{ 0,0,0 }, 800, 2.f, PARTICLEMODE::SMOKE, 4.0f, 1.f, false);
@@ -433,9 +434,10 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 
 			if (m_players.find(playerID) != m_players.end())
 			{
-				dynamic_cast<rtd::Text*>(GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i + 1))->elements[1].get())->SetText(name);
-				rtd::Text* plT = dynamic_cast<rtd::Text*>(GetScene("Game").GetCollection("dynamicPlayer" + std::to_string(i + 1) + "namePlate")->elements[0].get());
-				rtd::Picture* plP = dynamic_cast<rtd::Picture*>(GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i + 1))->elements[2].get());
+				comp::Player* p = m_players.at(playerID).GetComponent<comp::Player>();
+				dynamic_cast<rtd::Text*>(GetScene("Lobby").GetCollection("playerIcon" + std::to_string(static_cast<uint16_t>(p->playerType)))->elements[1].get())->SetText(name);
+				rtd::Text* plT = dynamic_cast<rtd::Text*>(GetScene("Game").GetCollection("dynamicPlayer" + std::to_string(static_cast<uint16_t>(p->playerType)) + "namePlate")->elements[0].get());
+				rtd::Picture* plP = dynamic_cast<rtd::Picture*>(GetScene("Lobby").GetCollection("playerIcon" + std::to_string(static_cast<uint16_t>(p->playerType)))->elements[2].get());
 				if (plT)
 				{
 					plT->SetText(name);
@@ -777,9 +779,14 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 				std::string nameString;
 				switch (name)
 				{
-				case NameType::MESH_DEFENCE:
+				case NameType::MESH_DEFENCE1X1:
 				{
-					nameString = "Defence.obj";
+					nameString = "Defence1x1.obj";
+					break;
+				}
+				case NameType::MESH_DEFENCE1X3:
+				{
+					nameString = "Defence1x3.obj";
 					break;
 				}
 				case NameType::MESH_KNIGHT:
@@ -900,6 +907,8 @@ void Game::UpdateInput()
 {
 	m_inputState.axisHorizontal = InputSystem::Get().GetAxis(Axis::HORIZONTAL);
 	m_inputState.axisVertical = InputSystem::Get().GetAxis(Axis::VERTICAL);
+	m_inputState.mousewheelDir = InputSystem::Get().GetMouseWheelDirection();
+
 	if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::HELD))
 	{
 		m_inputState.leftMouse = true;

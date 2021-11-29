@@ -82,10 +82,10 @@ enum class PARTICLEMODE : UINT
 	DUST
 };
 
-enum class TowerTypes : UINT
+enum class EDefenceType : UINT
 {
-	LONG,
-	SHORT
+	SMALL,	//1x1
+	LARGE	//1x3
 };
 
 struct Vector2I
@@ -257,13 +257,14 @@ struct Ray_t
 
 struct InputState
 {
-	int axisHorizontal : 2;
-	int axisVertical : 2;
-	bool leftMouse : 1;
-	bool rightMouse : 1;
-	bool key_b : 1;
-	bool key_shift : 1;
-	bool key_r : 1;
+	int		axisHorizontal	: 2;
+	int		axisVertical	: 2;
+	bool	leftMouse		: 1;
+	bool	rightMouse		: 1;
+	bool	key_b			: 1;
+	bool	key_shift		: 1;
+	bool	key_r			: 1;
+	int		mousewheelDir	: 2;
 
 	Ray_t mouseRay;
 

@@ -51,8 +51,10 @@ public:
 
 	bool Create(BlurLevel pLevel, BlurType pType);
 
+	void PreRenderTexture(Camera* pCam = nullptr, ID3D11DeviceContext* pDeviceContext = D3D11Core::Get().DeviceContext(), ID3D11Texture2D* pTexture = nullptr);
+
 	// Inherited via IRenderPass
-	virtual void PreRender(Camera* pCam = nullptr, ID3D11DeviceContext* pDeviceContext = D3D11Core::Get().DeviceContext()) override;
+	virtual void PreRender(Camera* pCam = nullptr, ID3D11DeviceContext* pDeviceContext = D3D11Core::Get().DeviceContext())	override;
 	virtual void Render(Scene* pScene) override;
 	virtual void PostRender(ID3D11DeviceContext* pDeviceContext = D3D11Core::Get().DeviceContext()) override;
 
