@@ -4,7 +4,7 @@ float4 main(PixelInSB input) : SV_TARGET
 {
 	//SAMPLE FROM CUBEMAP
     
-    float3 color = pow(max(t_sky.Sample(s_cubeSamp, input.texCoord), 0.0f), 2.2f).rgb;
+    float3 color = pow(max(t_sky.Sample(s_cubeSamp, input.texCoord), 0.0f), 2.2f).rgb * c_tint;
     
     //HDR tonemapping
     color = color / (color + float3(1.0, 1.0, 1.0));

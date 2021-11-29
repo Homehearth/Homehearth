@@ -156,7 +156,7 @@ void CalcRadiance(PixelIn input, float3 V, float3 N, float roughness, float meta
 
 float3 ambientIBL(float3 albedo, float3 N, float3 V, float3 F0, float metallic, float roughness, float ao)
 {
-     //Reflection Vector
+    //Reflection Vector
     float3 R = reflect(-V, N);
     
     float3 F = FresnelSchlickRoughness(max(dot(N, V), 0.0f), F0, roughness);
@@ -164,11 +164,11 @@ float3 ambientIBL(float3 albedo, float3 N, float3 V, float3 F0, float metallic, 
     float3 kD = 1.0f - kS;
     kD *= (1.0f - metallic);
     
-    float3 irradiance = pow(max(t_irradiance.Sample(s_linear, N).rgb, 0.0f), 2.2f);
+    float3 irradiance = pow(max(t_irradiance.Sample(s_linear, N).rgb, 0.0f), 2.2f) * c_tint;
     float3 diffuse = albedo * irradiance;
     
     const float MAX_REF_LOD = 4.0f;
-    float3 prefilteredColor = pow(max(t_radiance.SampleLevel(s_linear, R, roughness * MAX_REF_LOD).rgb, 0.0f), 2.2f);
+    float3 prefilteredColor = pow(max(t_radiance.SampleLevel(s_linear, R, roughness * MAX_REF_LOD).rgb, 0.0f), 2.2f) * c_tint;
     float2 brdf = t_BRDFLUT.Sample(s_linear, float2(max(dot(N, V), 0.0f), roughness)).rg;
     float3 specular = prefilteredColor * (F * brdf.x + brdf.y);
 

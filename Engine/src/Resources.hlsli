@@ -3,6 +3,7 @@
 #endif
 
 static const float PI = 3.14159265359;
+static const float3 tint = float3(0.93f, 0.05f, 0.58f);
 #define MAXWEIGHTS 8
 
 #include "Structures.hlsli"
@@ -85,6 +86,11 @@ cbuffer DoFSettings : register(b12)
     uint        c_dofType;
     float3      dofPadding;
     float4      c_playerPosView;
+}
+cbuffer SkyboxTint : register(b13)
+{
+    float3      c_tint = 1.f;
+    float       pad;
 }
 
 
