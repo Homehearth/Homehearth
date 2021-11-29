@@ -89,14 +89,16 @@ struct PixelParticleIn
 
 struct Light
 {
-    float4 position;    //Only in use on Point Lights
-    float4 direction;   //Only in use on Directional Lights
-    float4 color;       //Color and Intensity of the Lamp
-    float  range;       //Only in use on Point Lights
-    int    type;        // 0 = Directional, 1 = Point
-    uint   enabled;     // 0 = Off, 1 = On
-	float4x4 lightMatrix;
-    float  intensity;
+    float4      position;    //Only in use on Point Lights
+    float4      direction;   //Only in use on Directional Lights
+    float4      color;       //Color and Intensity of the Lamp
+    float       range;       //Only in use on Point Lights
+    int         type;        // 0 = Directional, 1 = Point
+    uint        enabled;     // 0 = Off, 1 = On
+    float       intensity;
+	float4x4    lightMatrix; // Matrix to transform world point to light clip-space
+    int         shadowIndex; // index in to the shadowmap array
+    float3      padding;
 };
 
 struct Plane
