@@ -40,40 +40,79 @@ float4 main(PixelIn input) : SV_TARGET
         if(sb_lights[i].enabled == 1)
         {
 			float4x4 lightMat = sb_lights[i].lightMatrix;
-            
-			float4 pixelposLightSpace = mul(lightMat, input.worldPos);
-			pixelposLightSpace.xy /= pixelposLightSpace.w;
-            
-			float2 texCoords;
-			texCoords.x = pixelposLightSpace.x * 0.5f + 0.5f;
-			texCoords.y = -pixelposLightSpace.y * 0.5f + 0.5f;
-            
 			float shadowCoef = 0.0f;
-			if ((saturate(texCoords.x) == texCoords.x) & (saturate(texCoords.y) == texCoords.y))
-			{
-				float closestDepth = t_shadowMaps.Sample(s_linear, float3(texCoords.xy, i)).r;
-				//closestDepth = saturate(closestDepth);
-                    
-                float currentDepth = pixelposLightSpace.z / pixelposLightSpace.w;
-				currentDepth = saturate(currentDepth);
-				currentDepth -= 0.001f;
-                    
-				if (currentDepth > closestDepth)
-				{
-                    shadowCoef = 1.0f;
-					//return float4(currentDepth - closestDepth, 0, 0, 1.0f);
-				}
-			}
+            
+            // position of this pixel in the light clip space
+            float4 pixelposLightSpace = mul(lightMat, float4(input.worldPos.xyz, 1.0f));
 			
+            int shadowIndex = sb_lights[i].shadowIndex;
+            
+            uint width, height, elementCount;
+            t_shadowMaps.GetDimensions(width, height, elementCount);
+            int shadowMapSize = width;
+            
+            int blurKernalSize = 5;
+            
             
             switch (sb_lights[i].type)
             {
                 case 0:
+                {
+                    pixelposLightSpace.xy /= pixelposLightSpace.w;
+            
+                    float2 texCoords;
+                    texCoords.x = pixelposLightSpace.x * 0.5f + 0.5f;
+                    texCoords.y = -pixelposLightSpace.y * 0.5f + 0.5f;
+            
+                    if ((saturate(texCoords.x) == texCoords.x) & (saturate(texCoords.y) == texCoords.y))
+			        {
+                        //calculate current fragment depth
+                        float currentDepth = pixelposLightSpace.z / pixelposLightSpace.w;
+                        currentDepth = saturate(currentDepth);
+                        currentDepth -= 0.001f;
+                    
+                        shadowCoef = SampleShadowMap(texCoords, shadowIndex, currentDepth, shadowMapSize, blurKernalSize);
+                    }
+                    
 					lightCol += DoDirectionlight(sb_lights[i], N) * (1.0f - shadowCoef);
                     break;
+                }
                 case 1:
-					lightCol += DoPointlight(sb_lights[i], input, N) * (1.0f - shadowCoef);
+				{
+                    float len = length(pixelposLightSpace.xyz);
+                    pixelposLightSpace.xyz /= len;
+                    float closestDepth = 1.0f;
+                    float currentDepth = 0.0f;
+                    float2 texCoords;
+                    
+                    if(pixelposLightSpace.z >= 0.0f)
+                    {
+                        //bottom Paraboloid
+                        texCoords.x = (pixelposLightSpace.x / (1.0f + pixelposLightSpace.z)) * 0.5f + 0.5f;
+                        texCoords.y = 1.0f - ((pixelposLightSpace.y / (1.0f + pixelposLightSpace.z)) * 0.5f + 0.5f);
+
+                        //calculate current fragment depth
+                        currentDepth = (len - 0.1f) / (500.f - 0.1f);
+                        currentDepth -= 0.001f;
+                        
+
+                        shadowCoef = SampleShadowMap(texCoords, shadowIndex, currentDepth, shadowMapSize, blurKernalSize);
+                        
+                    }
+                    else
+                    {
+                        //Top Paraboloid
+                        texCoords.x = 1.0f - (pixelposLightSpace.x / (1.0f - pixelposLightSpace.z)) * 0.5f + 0.5f;
+                        texCoords.y = 1.0f - ((pixelposLightSpace.y / (1.0f - pixelposLightSpace.z)) * 0.5f + 0.5f);
+                        currentDepth = (len - 0.1f) / (500.f - 0.1f);
+                        currentDepth -= 0.001f;
+                        
+                        shadowCoef = SampleShadowMap(texCoords, shadowIndex, currentDepth, shadowMapSize, blurKernalSize);
+
+                    }
+                    lightCol += DoPointlight(sb_lights[i], input, N) * (1.0f - shadowCoef);
                     break;
+                }
                 default:
                     break;
             }
@@ -98,7 +137,7 @@ float4 main(PixelIn input) : SV_TARGET
         [loop]
         for (unsigned int j = 0; j < rolls; j++)
         {
-            float4 decal_pos = mul(sb_decaldata[j], input.worldPos);
+            float4 decal_pos = mul(sb_decaldata[j], float4(input.worldPos.xyz, 1.0f));
             decal_pos = mul(decal_projection, decal_pos);
 
             // This is the same as shadow-mapping but instead of having different maps we have different view points.

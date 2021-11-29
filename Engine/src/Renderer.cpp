@@ -135,6 +135,21 @@ DOFPass* Renderer::GetDoFPass()
 	return &m_dofPass;
 }
 
+void Renderer::SetShadowMapSize(uint32_t size)
+{
+	m_shadowPass.SetShadowMapSize(size);
+}
+
+uint32_t Renderer::GetShadowMapSize() const
+{
+	return m_shadowPass.GetShadowMapSize();
+}
+
+void Renderer::ImGuiShowTextures()
+{
+	m_shadowPass.ImGuiShowTextures();
+}
+
 void Renderer::AddPass(IRenderPass* pass)
 {
 	m_passes.emplace_back(pass);

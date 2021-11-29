@@ -2,7 +2,7 @@
 
 //Options
 #define RENDER_IMGUI 1
-#define PROFILER 1
+#define PROFILER 0
 
 // Feel free to add more things to this, currently only gives more money :)
 #define GOD_MODE 1
