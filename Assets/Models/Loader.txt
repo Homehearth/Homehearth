@@ -26,5 +26,6 @@ Door7.obj
 Door8.obj
 Door9.obj
 Door10.obj
+WaterMesh.obj
 WaterFloorMesh.obj
 WaterEdgeMesh.obj

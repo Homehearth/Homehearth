@@ -13,7 +13,7 @@
 #include "BlurPass.h"
 #include "DepthOfFieldPass.h"
 #include "HeadlessEngine.h"
-
+#include "WaterEffectPass.h"
 
 class Renderer
 {
@@ -22,9 +22,10 @@ private:
 	PipelineManager m_pipelineManager;
 	std::vector<IRenderPass*> m_passes;
 	
-	BasePass m_basePass;	// Forward Rendering.
-	DepthPass m_depthPass;	// Forward Plus (1st pass).
-	TextureEffectPass m_textureEffectPass; // Water effect pass.
+	BasePass          m_basePass;	// Forward Rendering.
+	DepthPass         m_depthPass;	// Forward Plus (1st pass).
+	TextureEffectPass m_textureEffectPass; // Water refraction effect pass.
+	WaterEffectPass   m_waterEffectPass; // Water effect pass.  
 
 	DebugPass		m_debugPass;
 	AnimationPass	m_animPass;

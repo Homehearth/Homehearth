@@ -54,12 +54,24 @@ void TextureEffectPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceCont
         ID3D11ShaderResourceView* const kill = { nullptr };
         DC->CSSetShaderResources(19, 1, &kill);
     }
+
+    //UNBIND URV:S
+    {
+        ID3D11UnorderedAccessView* const kill = { nullptr };
+        DC->CSSetUnorderedAccessViews(5, 1, &kill, nullptr);
+    }
 }
 
 void TextureEffectPass::Render(Scene* pScene)
 {
+    //Reset timer at some point
+    if (m_CBuffer.counter > 1000)
+    {
+        m_CBuffer.counter = 0;
+    }
+
     // Update constantbuffer here!
-    m_CBuffer.amplitude = 0.05f;
+    m_CBuffer.amplitude = 10.f;
     m_CBuffer.frequency = 25.f;
     m_CBuffer.counter += Stats::Get().GetFrameTime();
     D3D11Core::Get().DeviceContext()->UpdateSubresource(PM->m_textureEffectConstantBuffer.Get(), 0, nullptr, &m_CBuffer, 0, 0);

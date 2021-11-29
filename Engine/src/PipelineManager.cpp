@@ -536,7 +536,7 @@ bool PipelineManager::CreateTextureEffectResources()
     */
 
     // Create render textures, target views and shader resource views here
-    m_WaterBlendAlbedoMap = ResourceManager::Get().GetResource<RTexture>("WaterBlendMap.jpg");
+    m_ModdedWaterBlendAlbedoMap = ResourceManager::Get().GetResource<RTexture>("WaterBlendMap.jpg");
 
     //Get all models needed
     m_WaterModel      = ResourceManager::Get().GetResource<RModel>("WaterMesh.obj");
@@ -548,13 +548,14 @@ bool PipelineManager::CreateTextureEffectResources()
     m_ModdedWaterAlbedoMap       = m_WaterModel.get()->GetTextures(ETextureType::albedo)[0];
     m_ModdedWaterNormalMap       = m_WaterModel.get()->GetTextures(ETextureType::normal)[0];
     m_ModdedWaterEdgeAlbedoMap   = m_WaterEdgeModel.get()->GetTextures(ETextureType::albedo)[0];
-    m_ModdedWaterFloorAlbedoMap = m_WaterFloorModel.get()->GetTextures(ETextureType::albedo)[0];
+    m_ModdedWaterFloorAlbedoMap  = m_WaterFloorModel.get()->GetTextures(ETextureType::albedo)[0];
 
     //Disable bitmaps
     m_ModdedWaterAlbedoMap->DisableMipmaps();
     m_ModdedWaterNormalMap->DisableMipmaps();
     m_ModdedWaterEdgeAlbedoMap->DisableMipmaps();
     m_ModdedWaterFloorAlbedoMap->DisableMipmaps();
+    m_ModdedWaterBlendAlbedoMap->DisableMipmaps();
 
     //Get the SRV:s from the textures
     m_SRV_TextureEffectWaterEdgeMap    = m_ModdedWaterEdgeAlbedoMap.get()->GetShaderView();
@@ -631,9 +632,10 @@ bool PipelineManager::CreateTextureEffectResources()
     if (FAILED(hr))
         return false;
 
+
         // NORMAL MAP //
 
-        //Create original resource reference texture
+    //Create original resource reference texture
     hr = m_d3d11->Device()->CreateTexture2D(&desc, nullptr, &m_WaterNormalMap);
     if (FAILED(hr))
         return false;
@@ -648,6 +650,28 @@ bool PipelineManager::CreateTextureEffectResources()
 
     // SHADER RESOURCE VIEW //
     hr = m_d3d11->Device()->CreateShaderResourceView(m_WaterNormalMap.Get(), nullptr, m_SRV_TextureEffectWaterNormalMap.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+
+        // BLEND MAP //
+    /*
+    * The blendmap need only be read as i'll put the color right on top of the modefied water texture. 
+    * A SRV already exists fpr the blendmap provided by the RTexture class. 
+    * NVM i need it. 
+    */
+
+
+    //Create original resource reference texture
+    hr = m_d3d11->Device()->CreateTexture2D(&desc, nullptr, &m_WaterBlendAlbedoMap);
+    if (FAILED(hr))
+        return false;
+
+    // Copy Original resource to original resource reference texture. 
+    m_d3d11->DeviceContext()->CopyResource(m_WaterBlendAlbedoMap.Get(), m_ModdedWaterBlendAlbedoMap.get()->GetTexture2D());
+
+
+    // UNORDERED ACCES VIEW //
+    hr = m_d3d11->Device()->CreateUnorderedAccessView(m_ModdedWaterBlendAlbedoMap.get()->GetTexture2D(), nullptr, m_UAV_TextureEffectBlendMap.GetAddressOf());
     if (FAILED(hr))
         return false;
 
