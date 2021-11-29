@@ -225,9 +225,9 @@ void Systems::HealthSystem(HeadlessScene& scene, float dt, uint32_t& money_ref)
 				comp::Network* net = entity.GetComponent<comp::Network>();
 				health.isAlive = false;
 				// increase money
-				if (entity.GetComponent<comp::NPC>())
+				if (entity.GetComponent<comp::Tag<TagType::BAD>>())
 				{
-					money_ref += 2;
+					money_ref += 5;
 				}
 
 				// if player
