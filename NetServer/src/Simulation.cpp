@@ -802,7 +802,7 @@ void Simulation::ResetGameScene()
 
 	LOG_INFO("%lld", m_pGameScene->GetRegistry()->size());
 
-	//HouseManagement::InitializeHouses(*this->GetGameScene(),qt.get(),*houseColliders);
+	houseManager.InitializeHouses(*this->GetGameScene(),qt.get());
 	EnemyManagement::CreateWaves(waveQueue, currentRound++);
 }
 
