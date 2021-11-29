@@ -25,6 +25,7 @@ namespace sceneHelp
 	void SetupGameOverScreen(Game* game);
 
 	bool LoadMapColliders(Game* game);
-	void LoadAllAssets(Game* game);
+	void LoadGameScene(Game* game);
+	void LoadResources(Game* game);
 	void LoadAllSounds();
 }

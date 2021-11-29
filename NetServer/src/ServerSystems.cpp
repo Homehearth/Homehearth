@@ -169,7 +169,7 @@ void EnemyManagement::CreateWaves(std::queue<Wave>& waveQueue, int currentRound)
 		group2.SetSpawnPoint({ 170, -80.0f });
 		wave2.AddGroup(group1);
 		wave2.AddGroup(group2);
-		wave2.SetTimeLimit(30);
+		wave2.SetTimeLimit(30);	
 	}
 
 
@@ -387,7 +387,7 @@ void ServerSystems::NextWaveConditions(Simulation* simulation, Timer& timer, int
 	}
 }
 
-void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene& scene, float dt)
+void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene& scene, float dt, QuadTree* dynamicQT)
 {
 	scene.ForEachComponent<comp::Player, comp::Transform, comp::Velocity>([&](comp::Player& p, comp::Transform& t, comp::Velocity& v)
 		{
@@ -443,15 +443,19 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 					e.GetComponent<comp::Velocity>()->vel *= ecs::GetAbility(e, p.primaryAbilty)->movementSpeedAlt;
 				}
 			}
-			else if (p.lastInputState.rightMouse) // was pressed
+			else if (p.lastInputState.rightMouse)
 			{
-				LOG_INFO("Pressed right");
-				simulation->GetGrid().RemoveDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, Blackboard::Get().GetPathFindManager());
 				if (ecs::UseAbility(e, p.secondaryAbilty, &p.mousePoint))
 				{
 					LOG_INFO("Used secondary");
 					anim.toSend = EAnimationType::SECONDARY_ATTACK;
 				}
+			}
+
+			if (p.lastInputState.key_r && simulation->m_timeCycler.GetTimePeriod() == Cycle::DAY) // was pressed
+			{
+				LOG_INFO("Pressed right");
+				simulation->GetGrid().RemoveDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, Blackboard::Get().GetPathFindManager());
 			}
 
 			if(p.lastInputState.key_shift)
@@ -466,9 +470,10 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 			//Place defence on grid
 			if (p.lastInputState.key_b && simulation->GetCurrency().GetAmount() >= 5 && simulation->m_timeCycler.GetTimePeriod() == Cycle::DAY)
 			{
-				if (simulation->GetGrid().PlaceDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, Blackboard::Get().GetPathFindManager()))
+				if (simulation->GetGrid().PlaceDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, Blackboard::Get().GetPathFindManager(), dynamicQT))
 				{
-					simulation->GetCurrency().GetAmountRef() -= 5;
+					simulation->GetCurrency() -= 10;
+					simulation->GetCurrency().hasUpdated = true;
 					anim.toSend = EAnimationType::PLACE_DEFENCE;
 				}
 			}
@@ -515,9 +520,9 @@ void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& sce
 				{
 					simulation->ResetPlayer(e);
 					message<GameMsg> msg;
-					msg.header.id = GameMsg::Game_StopSpectate	;
+					msg.header.id = GameMsg::Game_StopSpectate;
 					simulation->SendMsg(n.id, msg);
-					LOG_INFO("Player id %u Respawnd...", e.GetComponent<comp::Network>()->id);
+					LOG_INFO("Player %u respawned...", e.GetComponent<comp::Network>()->id);
 				}
 			}
 		});
@@ -659,7 +664,7 @@ void ServerSystems::SoundSystem(Simulation* simulation, HeadlessScene& scene)
 				// Send all msg.
 				//
 				broadcastMsg << nrOfBroadcasts;
-				simulation->SendMsg(net.id, broadcastMsg);
+				simulation->Broadcast(net.id, broadcastMsg);
 
 				singleMsg << COUNT - nrOfBroadcasts;
 				simulation->SendMsg(net.id, singleMsg);
@@ -670,4 +675,18 @@ void ServerSystems::SoundSystem(Simulation* simulation, HeadlessScene& scene)
 void ServerSystems::CombatSystem(HeadlessScene& scene, float dt)
 {
 	CombatSystem::UpdateCombatSystem(scene, dt);
+}
+void ServerSystems::DeathParticleTimer(HeadlessScene& scene)
+{
+	scene.ForEachComponent<comp::PARTICLEEMITTER>([&](Entity& e, comp::PARTICLEEMITTER& emitter)
+		{
+			if (emitter.hasDeathTimer == true && emitter.lifeLived <= emitter.lifeTime)
+			{
+				emitter.lifeLived += Stats::Get().GetFrameTime();
+			}
+			else if (emitter.hasDeathTimer == true && emitter.lifeLived >= emitter.lifeTime)
+			{
+				e.RemoveComponent<comp::PARTICLEEMITTER>();
+			}
+		});
 }

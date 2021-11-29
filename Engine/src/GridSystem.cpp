@@ -1,6 +1,7 @@
 #include "EnginePCH.h"
 #include "GridSystem.h"
 #include "PathFinderManager.h"
+#include "QuadTree.h"
 
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -188,7 +189,7 @@ bool GridSystem::RemoveDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, 
 }
 
 
-bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, PathFinderManager* aiHandler)
+bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, PathFinderManager* aiHandler, QuadTree* dynamicQT)
 {
 	Plane_t plane;
 	plane.normal = { 0.0f, 1.0f, 0.0f };
@@ -259,12 +260,17 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 
 					comp::OrientedBoxCollider* collider = defenseEntity.AddComponent<comp::OrientedBoxCollider>();
 					collider->Extents = { m_tileHalfWidth, m_tileHalfWidth, m_tileHalfWidth };
+					collider->Center = transform->position;
 					defenseEntity.AddComponent<comp::Tag<TagType::STATIC>>();
 					defenseEntity.AddComponent<comp::Tag<TagType::DEFENCE>>();
 					defenseEntity.AddComponent<comp::MeshName>()->name = NameType::MESH_DEFENCE;
 					defenseEntity.AddComponent<comp::Health>();
 					defenseEntity.AddComponent<comp::Network>();
+					defenseEntity.AddComponent<comp::Cost>()->cost = 5;
 					aiHandler->AddDefenseEntity(defenseEntity);
+					dynamicQT->Insert(defenseEntity);
+
+					//Send building particles
 
 					Node* node = aiHandler->GetNodeByID(Vector2I(clampedZ, clampedX));
 					node->defencePlaced = true;

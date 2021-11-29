@@ -18,6 +18,11 @@ Node* PathFinderManager::FindClosestNode(sm::Vector3 position)
 	return currentClosest;
 }
 
+float PathFinderManager::GetNodeSize() const
+{
+	return this->m_nodeSize.x;
+}
+
 std::vector<std::vector<std::shared_ptr<Node>>>& PathFinderManager::GetNodes()
 {
 	return m_nodes;
@@ -293,7 +298,8 @@ bool PathFinderManager::PlayerAStar(sm::Vector3 playerPos)
 	startingNode->h = 0.0f;
 	startingNode->f = 0.0f;
 	openList.push_back(startingNode);
-	Node* goalNode = GetDistantNode(playerPos);
+	Node* goalNode = m_nodes[0][0].get();
+	//Node* goalNode = GetDistantNode(playerPos);
 	while (!openList.empty())
 	{
 		Node* currentNode = openList.at(0);

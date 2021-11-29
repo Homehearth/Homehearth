@@ -3,8 +3,7 @@
 class QuadTree
 {
 private:
-	static const int				MAX_LEVELS = 5;
-	static const int				MAX_OBJECTS = 3;
+	static const int				MAX_LEVELS = 6;
 	std::set<Entity>				m_entities;
 	dx::BoundingBox					m_boundary;
 	bool							m_divided;
