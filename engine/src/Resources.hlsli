@@ -58,6 +58,8 @@ cbuffer ParticleUpdate : register(b8)
     float4 emitterPosition;
     float deltaTime;
     uint counter;
+    float lifeTime;
+    float particleSizeMulitplier;
 }
 
 cbuffer DecalInfoCB : register(b10)
@@ -121,6 +123,7 @@ Texture2D t_displace				: register(t6);
 Texture2D t_opacitymask				: register(t7);
 Texture2D<uint2> t_pointLightGrid	: register(t8);
 Texture2D t_decal                   : register(t12);
+Texture2DArray t_shadowMaps         : register(t13);
 
 // StructuredBuffers.
 StructuredBuffer<float4x4> sb_boneTransforms        : register(t9); // read as column major, actually is row major.
