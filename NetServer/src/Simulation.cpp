@@ -711,7 +711,7 @@ void Simulation::UpgradeDefence(const uint32_t& id)
 					h->currentHealth += 35;
 
 					// Cost is here.
-					m_currency.GetAmountRef() -= c->cost;
+					m_currency -= c->cost;
 					e.UpdateNetwork();
 				}
 			}
