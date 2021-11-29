@@ -100,7 +100,7 @@ namespace ecs
 			{
 				if (type == PARTICLEMODE::BLOOD)
 				{
-					textureName = "Blood.png";
+					textureName = "BloodParticle.png";
 					opacityTextureName = "round_Opacity.png";
 				}
 				else if (type == PARTICLEMODE::LEAF)
@@ -181,6 +181,7 @@ namespace ecs
 			basic_model_matrix_t		data;
 			bool						visible = true;
 			bool						isSolid = true;
+			bool						castShadow = true;
 		};
 
 		struct Animator
@@ -271,6 +272,13 @@ namespace ecs
 
 		struct Player
 		{
+			enum class PlayerType : uint16_t
+			{
+				PLAYER_ONE = 1,
+				PLAYER_TWO = 2,
+				PLAYER_THREE = 3,
+				PLAYER_FOUR = 4
+			} playerType = PlayerType::PLAYER_ONE;
 			enum class State
 			{
 				IDLE,
@@ -301,8 +309,19 @@ namespace ecs
 			bool reachable = true;
 
 			char name[12] = {};
-			TowerTypes towerSelected = TowerTypes::SHORT;
+
+			//Place defence option
+			EDefenceType towerSelected = EDefenceType::SMALL;
+			float		 buildDistance = 24.0f;		//A tiles width is ~8
+			bool		 rotateDefence = false;
 		};
+
+		
+		struct TileSet
+		{
+			std::vector<std::pair<UINT, UINT>> coordinates;
+		};
+	
 
 		struct NPC
 		{

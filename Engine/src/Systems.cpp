@@ -214,7 +214,7 @@ void Systems::HeroLeapSystem(HeadlessScene& scene, float dt)
 		});
 }
 
-void Systems::HealthSystem(HeadlessScene& scene, float dt, Currency& money_ref, SpreeHandler& spree)
+void Systems::HealthSystem(HeadlessScene& scene, float dt, Currency& money_ref, SpreeHandler& spree, GridSystem& grid)
 {
 	//Entity destoys self if health <= 0
 	scene.ForEachComponent<comp::Health>([&](Entity& entity, comp::Health& health)
@@ -243,12 +243,15 @@ void Systems::HealthSystem(HeadlessScene& scene, float dt, Currency& money_ref, 
 				else if (entity.GetComponent<comp::Tag<TagType::DEFENCE>>())
 				{
 					comp::Transform* buildTransform = entity.GetComponent<comp::Transform>();
-
+					
 					Node* node = Blackboard::Get().GetPathFindManager()->FindClosestNode(buildTransform->position);
 					//Remove from the container map so ai wont consider this defense
 					Blackboard::Get().GetPathFindManager()->RemoveDefenseEntity(entity);
 					node->reachable = true;
 					node->defencePlaced = false;
+
+					//Removing the defence and its neighbours if needed
+					grid.RemoveDefence(entity);
 					entity.Destroy();
 				}
 				else

@@ -351,7 +351,7 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 					Systems::UpdateAbilities(scene, e.dt);
 					Systems::CombatSystem(scene, e.dt);
 					Systems::HealingSystem(scene, e.dt);
-					Systems::HealthSystem(scene, e.dt, m_currency, m_spreeHandler);
+					Systems::HealthSystem(scene, e.dt, m_currency, m_spreeHandler, m_grid);
 					Systems::SelfDestructSystem(scene, e.dt);
 				}
 
@@ -660,6 +660,7 @@ void Simulation::BuildMapColliders(std::vector<dx::BoundingOrientedBox>* mapColl
 		obb->Extents = mapColliders->at(i).Extents;
 		obb->Orientation = mapColliders->at(i).Orientation;
 		collider.AddComponent<comp::Tag<TagType::STATIC>>();
+		// Map bounds is loaded in last, 4 obbs surrounding village put the correct tag for collision system
 		if (i > mapColliders->size() - 4)
 		{
 			collider.AddComponent<comp::Tag<TagType::MAP_BOUNDS>>();
@@ -751,6 +752,7 @@ void Simulation::SetGameScene()
 	ResetGameScene();
 	m_pCurrentScene = m_pGameScene;
 	m_lobby.SetActive(false);
+
 #if GOD_MODE
 	// During debug give players 1000 gold/monies.
 	m_currency = 1000;

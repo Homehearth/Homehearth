@@ -117,7 +117,7 @@ Window* Engine::GetWindow()
 	return &m_window;
 }
 
-void Engine::drawImGUI() const
+void Engine::drawImGUI()
 {
 	//Containers for plotting
 	static std::vector<float> fpsContainer;
@@ -225,8 +225,6 @@ void Engine::drawImGUI() const
 				}
 				ImGui::Spacing();
 			});
-
-		
 	}
 	
 	if (ImGui::CollapsingHeader("Renderable"))
@@ -272,7 +270,6 @@ void Engine::drawImGUI() const
 
 	if (ImGui::CollapsingHeader("Light"))
 	{
-
 		GetCurrentScene()->ForEachComponent<comp::Light>([&](Entity& e, comp::Light& light)
 			{
 				std::string entityname = "Entity: " + std::to_string(static_cast<int>((entt::entity)e));
@@ -309,6 +306,7 @@ void Engine::drawImGUI() const
 				}
 
 				ImGui::Spacing();
+
 			});
 
 	}
@@ -393,6 +391,19 @@ void Engine::drawImGUI() const
 	{
 		ImGui::Checkbox("Render Colliders", GetCurrentScene()->GetIsRenderingColliders());
 	};
+
+	int size = m_renderer.GetShadowMapSize();
+	if (ImGui::InputInt("ShadowMapResolution", &size, 1024))
+	{
+		size = max(size, 64);
+		m_renderer.SetShadowMapSize(size);
+	}
+
+	if (ImGui::CollapsingHeader("Preview ShadowMap"))
+	{
+		m_renderer.ImGuiShowTextures();
+	}
+
 	ImGui::End();
 	
 }
@@ -484,6 +495,7 @@ void Engine::Update(float dt)
 
 		IMGUI(
 			drawImGUI();
+
 			ImGui::EndFrame();
 			m_imguiMutex.unlock();
 		);
