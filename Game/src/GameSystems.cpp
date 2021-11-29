@@ -30,7 +30,7 @@ void GameSystems::UpdateHealthbar(Game* game)
 
 	scene->ForEachComponent<comp::Health, comp::Player>([&](Entity e, comp::Health& health, const comp::Player& player)
 		{
-			rtd::Healthbar* healthbar = dynamic_cast<rtd::Healthbar*>(scene->GetCollection("player" + std::to_string(i) + "Info")->elements[0].get());
+			rtd::Healthbar* healthbar = dynamic_cast<rtd::Healthbar*>(scene->GetCollection("player" + std::to_string(static_cast<uint16_t>(player.playerType)) + "Info")->elements[0].get());
 			if (healthbar)
 			{
 				healthbar->SetHealthVariable(e);
@@ -72,7 +72,6 @@ static bool STRECH_ONCE = true;
 
 void GameSystems::UpdatePlayerVisuals(Game* game)
 {
-	size_t i = game->m_players.size();
 	Scene* scene = game->GetCurrentScene();
 
 	scene->ForEachComponent<comp::Player, comp::Transform, comp::Network>([&](comp::Player& player, comp::Transform& t, comp::Network& n)
@@ -86,7 +85,7 @@ void GameSystems::UpdatePlayerVisuals(Game* game)
 				const float height = (float)game->GetWindow()->GetHeight();
 				Scene* scene = &game->GetScene("Game");
 				// Update healthbars position.
-				Collection2D* collHealth = scene->GetCollection("player" + std::to_string(i) + "Info");
+				Collection2D* collHealth = scene->GetCollection("player" + std::to_string(static_cast<uint16_t>(player.playerType)) + "Info");
 				if (collHealth)
 				{
 					rtd::Healthbar* health = dynamic_cast<rtd::Healthbar*>(collHealth->elements[0].get());
@@ -105,7 +104,7 @@ void GameSystems::UpdatePlayerVisuals(Game* game)
 			}
 			else
 			{
-				Collection2D* collection = scene->GetCollection("dynamicPlayer" + std::to_string(i) + "namePlate");
+				Collection2D* collection = scene->GetCollection("dynamicPlayer" + std::to_string(static_cast<uint16_t>(player.playerType)) + "namePlate");
 				if (collection)
 				{
 					rtd::Text* namePlate = dynamic_cast<rtd::Text*>(collection->elements[0].get());
@@ -116,7 +115,8 @@ void GameSystems::UpdatePlayerVisuals(Game* game)
 						if (cam->GetCameraMatrixes())
 						{
 							// Conversion from World space to NDC space.
-							sm::Vector4 oldP = { t.position.x, t.position.y + 21.f, t.position.z, 1.0f };
+							const float offsetName = 21.f;
+							sm::Vector4 oldP = { t.position.x, t.position.y + offsetName, t.position.z, 1.0f };
 							sm::Vector4 newP = dx::XMVector4Transform(oldP, cam->GetCameraMatrixes()->view);
 							newP = dx::XMVector4Transform(newP, cam->GetCameraMatrixes()->projection);
 							newP.x /= newP.w;
@@ -135,13 +135,14 @@ void GameSystems::UpdatePlayerVisuals(Game* game)
 								namePlate->SetVisiblity(false);
 
 							// Update healthbars position.
-							Collection2D* collHealth = scene->GetCollection("player" + std::to_string(i) + "Info");
+							Collection2D* collHealth = scene->GetCollection("player" + std::to_string(static_cast<uint16_t>(player.playerType)) + "Info");
 							if (collHealth)
 							{
 								rtd::Healthbar* health = dynamic_cast<rtd::Healthbar*>(collHealth->elements[0].get());
 								if (health)
 								{
-									sm::Vector4 oldPp = { t.position.x, t.position.y + 17.0f, t.position.z, 1.0f };
+									const float offsetHPBar = 17.f;
+									sm::Vector4 oldPp = { t.position.x, t.position.y + offsetHPBar, t.position.z, 1.0f };
 									sm::Vector4 newPp = dx::XMVector4Transform(oldPp, cam->GetCameraMatrixes()->view);
 									newPp = dx::XMVector4Transform(newPp, cam->GetCameraMatrixes()->projection);
 									newPp.x /= newPp.w;
@@ -165,6 +166,18 @@ void GameSystems::UpdatePlayerVisuals(Game* game)
 					}
 				}
 			}
-			i--;
+		});
+}
+
+void GameSystems::DeathParticleTimer(Scene& scene)
+{
+	scene.ForEachComponent<comp::EmitterParticle>([&](Entity e, comp::EmitterParticle& emitter)
+		{
+			if (emitter.hasDeathTimer == true && emitter.lifeLived <= emitter.lifeTime)
+			{
+				emitter.lifeLived += Stats::Get().GetFrameTime();
+			}
+			else if (emitter.hasDeathTimer == true && emitter.lifeLived >= emitter.lifeTime)
+				e.RemoveComponent<comp::EmitterParticle>();
 		});
 }

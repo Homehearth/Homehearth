@@ -385,7 +385,7 @@ void ServerSystems::NextWaveConditions(Simulation* simulation, Timer& timer, int
 	}
 }
 
-void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene& scene, float dt)
+void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene& scene, float dt, QuadTree* dynamicQT)
 {
 	scene.ForEachComponent<comp::Player, comp::Transform, comp::Velocity>([&](comp::Player& p, comp::Transform& t, comp::Velocity& v)
 		{
@@ -464,9 +464,10 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 			//Place defence on grid
 			if (p.lastInputState.key_b && simulation->GetCurrency().GetAmount() >= 5 && simulation->m_timeCycler.GetTimePeriod() == Cycle::DAY)
 			{
-				if (simulation->GetGrid().PlaceDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, Blackboard::Get().GetPathFindManager()))
+				if (simulation->GetGrid().PlaceDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, Blackboard::Get().GetPathFindManager(), dynamicQT))
 				{
-					simulation->GetCurrency().GetAmountRef() -= 5;
+					simulation->GetCurrency() -= 5;
+					simulation->GetCurrency().hasUpdated = true;
 					anim.toSend = EAnimationType::PLACE_DEFENCE;
 				}
 			}
@@ -610,6 +611,21 @@ void ServerSystems::AnimatonSystem(Simulation* simulation, HeadlessScene& scene)
 
 				anim.lastSend = anim.toSend;
 				anim.toSend = EAnimationType::NONE;
+			}
+		});
+}
+
+void ServerSystems::DeathParticleTimer(HeadlessScene& scene)
+{
+	scene.ForEachComponent<comp::PARTICLEEMITTER>([&](Entity& e, comp::PARTICLEEMITTER& emitter)
+		{
+			if (emitter.hasDeathTimer == true && emitter.lifeLived <= emitter.lifeTime)
+			{
+				emitter.lifeLived += Stats::Get().GetFrameTime();
+			}
+			else if (emitter.hasDeathTimer == true && emitter.lifeLived >= emitter.lifeTime)
+			{
+				e.RemoveComponent<comp::PARTICLEEMITTER>();
 			}
 		});
 }

@@ -92,6 +92,16 @@ void Simulation::InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg, c
 			}
 			break;
 		}
+		case ecs::Component::PARTICLEMITTER:
+		{
+			comp::PARTICLEEMITTER* p = entity.GetComponent<comp::PARTICLEEMITTER>();
+			if (p)
+			{
+				compSet.set(ecs::Component::PARTICLEMITTER);
+				msg << *p;
+			}
+			break;
+		}
 		case ecs::Component::PLAYER:
 		{
 			comp::Player* p = entity.GetComponent<comp::Player>();
@@ -320,7 +330,7 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 				}
 				{
 					PROFILE_SCOPE("Input from Player");
-					ServerSystems::UpdatePlayerWithInput(this, scene, e.dt);
+					ServerSystems::UpdatePlayerWithInput(this, scene, e.dt, qt.get());
 				}
 				{
 					PROFILE_SCOPE("Player state");
@@ -332,7 +342,7 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 					Systems::UpdateAbilities(scene, e.dt);
 					Systems::CombatSystem(scene, e.dt);
 					Systems::HealingSystem(scene, e.dt);
-					Systems::HealthSystem(scene, e.dt, m_currency.GetAmountRef());
+					Systems::HealthSystem(scene, e.dt, m_currency);
 					Systems::SelfDestructSystem(scene, e.dt);
 				}
 
@@ -477,10 +487,14 @@ void Simulation::SendSnapshot()
 			msg2 << m_timeCycler.GetTimePeriod();
 			this->Broadcast(msg2);
 		}
-		network::message<GameMsg> msg3;
-		msg3.header.id = GameMsg::Game_Money;
-		msg3 << m_currency.GetAmount();
-		this->Broadcast(msg3);
+		if (m_currency.hasUpdated)
+		{
+			network::message<GameMsg> msg3;
+			msg3.header.id = GameMsg::Game_Money;
+			msg3 << m_currency.GetAmount();
+			this->Broadcast(msg3);
+			m_currency.hasUpdated = false;
+		}
 	}
 	else
 	{
@@ -500,6 +514,8 @@ void Simulation::Update(float dt)
 	PROFILE_FUNCTION();
 	if (m_pCurrentScene)
 		m_pCurrentScene->Update(dt);
+
+	ServerSystems::DeathParticleTimer(*m_pGameScene);
 }
 
 void Simulation::UpdateInput(InputState state, uint32_t playerID)
@@ -580,7 +596,8 @@ void Simulation::BuildMapColliders(std::vector<dx::BoundingOrientedBox>* mapColl
 		obb->Extents = mapColliders->at(i).Extents;
 		obb->Orientation = mapColliders->at(i).Orientation;
 		collider.AddComponent<comp::Tag<TagType::STATIC>>();
-		if (i > 72)
+		// Map bounds is loaded in last, 4 obbs surrounding village put the correct tag for collision system
+		if (i > mapColliders->size() - 4)
 		{
 			collider.AddComponent<comp::Tag<TagType::MAP_BOUNDS>>();
 		}
@@ -645,10 +662,11 @@ void Simulation::SetGameScene()
 	m_lobby.SetActive(false);
 #if GOD_MODE
 	// During debug give players 1000 gold/monies.
-	m_currency.GetAmountRef() = 1000;
+	m_currency = 1000;
+	m_currency.hasUpdated = true;
 	for (auto& player : m_lobby.m_players)
 	{
-		player.second.AddComponent<comp::Tag<TagType::NO_RESPONSE>>();
+		//player.second.AddComponent<comp::Tag<TagType::NO_RESPONSE>>();
 		player.second.RemoveComponent<comp::Tag<TagType::GOOD>>();
 	}
 #endif
@@ -707,7 +725,7 @@ void Simulation::SendEntities(const std::vector<Entity>& entities, GameMsg msgID
 	uint32_t count = 0;
 	message<GameMsg> msg;
 	msg.header.id = msgID;
-	
+
 	for (size_t i = 0; i < entities.size(); i++)
 	{
 		if (!entities[i].IsNull())

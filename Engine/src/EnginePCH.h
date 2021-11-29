@@ -5,8 +5,8 @@
 #define PROFILER 0
 
 // Feel free to add more things to this, currently only gives more money :)
-#define GOD_MODE 0
-#define SPAWN_MONSTERS 0
+#define GOD_MODE 1
+#define SPAWN_MONSTERS 1
 
 // Turn this to 1 if you want to see the very beautiful demo menu
 #define DRAW_TEMP_2D 0
@@ -146,6 +146,7 @@ const std::string ANIMATORPATH	= "../Assets/Animators/";
 const std::string FONTPATH		= "../Assets/Fonts/";
 const std::string BOUNDSPATH	= "../Assets/Bounds/";
 const std::string ASSETLOADER	= "../Assets/Models/Loader.txt";
+const std::string RESOURCELOADER = "../Assets/Models/ResourceLoader.txt";
 const std::string BOUNDSLOADER	= "../Assets/Bounds/Loader.txt";
 
 

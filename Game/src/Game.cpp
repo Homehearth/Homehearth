@@ -78,34 +78,13 @@ bool Game::OnStartup()
 	SetScene("MainMenu");
 
 	//Particles
-	Entity emitter = GetScene("Game").CreateEntity();
-	emitter.AddComponent<comp::Transform>()->position = { 250, 5, -340 };
-	emitter.AddComponent <comp::EmitterParticle>("smoke.png", "smoke_opacity.png", 800, 2.f, PARTICLEMODE::SMOKE, 4.0f);
-
-	Entity emitterS = GetScene("Game").CreateEntity();
-	emitterS.AddComponent<comp::Transform>()->position = { 178, 15, -338 };
-	emitterS.AddComponent <comp::EmitterParticle>("smoke.png", "smoke_opacity.png", 1200, 2.f, PARTICLEMODE::SMOKE, 4.2f);
-
-	//Entity emitter2 = GetScene("Game").CreateEntity();
-	//emitter2.AddComponent<comp::Transform>()->position = { 250, 5,- 320 };
-	//emitter2.AddComponent <comp::EmitterParticle>("thisisfine.png", "", 10, 1.f, PARTICLEMODE::SPARKLES);
-
-	//Entity emitter3 = GetScene("Game").CreateEntity();
-	//emitter3.AddComponent<comp::Transform>()->position = { 250, 20, -300 };
-	//emitter3.AddComponent <comp::EmitterParticle>("thisisfine.png", "", 20, 1.f, PARTICLEMODE::WATERSPLASH);
-
 	Entity emitter4 = GetScene("Game").CreateEntity();
-	emitter4.AddComponent<comp::Transform>()->position = { 240, 6, -300 };
-	emitter4.AddComponent <comp::EmitterParticle>("Blood.png", "", 50, 8.f, PARTICLEMODE::BLOOD, 1.5f);
-
-	Entity emitter5 = GetScene("Game").CreateEntity();
-	emitter5.AddComponent<comp::Transform>()->position = { 220, 40, -340 };
-	emitter5.AddComponent <comp::EmitterParticle>("Blood.png", "", 50, 8.f, PARTICLEMODE::BLOOD, 1.5f);
+	emitter4.AddComponent<comp::Transform>()->position = { 250, 5, -340 };
+	emitter4.AddComponent <comp::EmitterParticle>(sm::Vector3{ 0,0,0 }, 800, 2.f, PARTICLEMODE::SMOKE, 4.0f, 1.f, false);
 
 	Entity waterSplash = GetScene("Game").CreateEntity();
 	waterSplash.AddComponent<comp::Transform>()->position = { 270, 13, -370 };
-	waterSplash.AddComponent <comp::EmitterParticle>("waterSplash.png", "", 100, 1.f, PARTICLEMODE::WATERSPLASH, 4.0f);
-
+	waterSplash.AddComponent <comp::EmitterParticle>(sm::Vector3{ 0,0,0 }, 100, 1.f, PARTICLEMODE::WATERSPLASH, 4.0f, 1.f, false);
 
 	return true;
 }
@@ -117,6 +96,8 @@ void Game::OnUserUpdate(float deltaTime)
 	if (m_players.find(m_localPID) != m_players.end())
 	{
 		sm::Vector3 playerPos = m_players.at(m_localPID).GetComponent<comp::Transform>()->position;
+
+		GameSystems::DeathParticleTimer(scene);
 
 		if (m_elapsedCycleTime <= m_waveTimer && (m_serverCycle == Cycle::DAY || m_serverCycle == Cycle::MORNING))
 		{
@@ -291,6 +272,11 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			// Was the entity a player?
 			if (m_players.find(id) != m_players.end())
 			{
+				comp::Player* p = m_players.at(id).GetComponent<comp::Player>();
+
+				GetScene("Game").GetCollection("player" + std::to_string(static_cast<uint16_t>(p->playerType)) + "Info")->Hide();
+				GetScene("Game").GetCollection("dynamicPlayer" + std::to_string(static_cast<uint16_t>(p->playerType)) + "namePlate")->Hide();
+
 				m_players.at(id).Destroy();
 				m_players.erase(id);
 			}
@@ -321,7 +307,8 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		msg >> m_gameID;
 
 		this->SetScene("Loading");
-		sceneHelp::LoadAllAssets(this);
+		sceneHelp::LoadGameScene(this);
+		sceneHelp::LoadResources(this);
 		sceneHelp::LoadMapColliders(this);
 
 #ifdef _DEBUG
@@ -432,7 +419,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		uint8_t count;
 		msg >> count;
 
-		for (uint8_t i = count; i > 0; i--)
+		for (uint8_t i = 0; i < count; i++)
 		{
 			char nameTemp[12] = {};
 			uint32_t playerID;
@@ -442,8 +429,9 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 
 			if (m_players.find(playerID) != m_players.end())
 			{
-				dynamic_cast<rtd::Text*>(GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i))->elements[1].get())->SetText(name);
-				rtd::Text* plT = dynamic_cast<rtd::Text*>(GetScene("Game").GetCollection("dynamicPlayer" + std::to_string(i) + "namePlate")->elements[0].get());
+				comp::Player* p = m_players.at(playerID).GetComponent<comp::Player>();
+				dynamic_cast<rtd::Text*>(GetScene("Lobby").GetCollection("playerIcon" + std::to_string(static_cast<uint16_t>(p->playerType)))->elements[1].get())->SetText(name);
+				rtd::Text* plT = dynamic_cast<rtd::Text*>(GetScene("Game").GetCollection("dynamicPlayer" + std::to_string(static_cast<uint16_t>(p->playerType)) + "namePlate")->elements[0].get());
 				if (plT)
 				{
 					plT->SetText(name);
@@ -552,7 +540,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		break;
 	}
 	}
-}
+	}
 void Game::PingServer()
 {
 	message<GameMsg> msg = {};
@@ -706,7 +694,7 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 				{
 				case NameType::MESH_DEFENCE:
 				{
-					nameString = "Defense.obj";
+					nameString = "Defence.obj";
 					break;
 				}
 				case NameType::MESH_KNIGHT:
@@ -791,6 +779,13 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 				comp::SphereCollider* collider = e.AddComponent<comp::SphereCollider>();
 				collider->Center = s.Center;
 				collider->Radius = s.Radius;
+				break;
+			}
+			case ecs::Component::PARTICLEMITTER:
+			{
+				comp::PARTICLEEMITTER p;
+				msg >> p;
+				e.AddComponent<comp::EmitterParticle>(p.positionOffset, (int)p.nrOfParticles, p.sizeMulitplier, p.type, p.lifeTime, p.speed, p.hasDeathTimer);
 				break;
 			}
 			case ecs::Component::PLAYER:

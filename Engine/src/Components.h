@@ -18,6 +18,7 @@ namespace ecs
 		HEALTH,
 		BOUNDING_ORIENTED_BOX,
 		BOUNDING_SPHERE,
+		PARTICLEMITTER,
 		PLAYER,
 		COMPONENT_COUNT,
 		COMPONENT_MAX = 32
@@ -71,37 +72,95 @@ namespace ecs
 
 		struct EmitterParticle
 		{
-			UINT								nrOfParticles = 0;
-			PARTICLEMODE						type = PARTICLEMODE::BLOOD;
-			float								lifeTime = 0.f;
-			float								sizeMulitplier = 0.f;
-			float								speed = 0.f;
+			sm::Vector3							positionOffset	= { 0,0,0 };
+			UINT								nrOfParticles	= 0;
+			PARTICLEMODE						type			= PARTICLEMODE::BLOOD;
+			float								lifeTime		= 0.f;
+			float								sizeMulitplier	= 0.f;
+			float								speed			= 0.f;
+			bool								hasDeathTimer	= false;
+			float								lifeLived		= 0.f;
 
-			std::shared_ptr<RTexture>			texture = nullptr;
-			std::shared_ptr<RTexture>			opacityTexture = nullptr;
-			ComPtr<ID3D11Buffer>				particleBuffer = nullptr;
-			ComPtr<ID3D11ShaderResourceView>	particleSRV = nullptr;
-			ComPtr<ID3D11UnorderedAccessView>	particleUAV = nullptr;
+			std::string textureName								= "";
+			std::string opacityTextureName						= "";
 
-			EmitterParticle(std::string textureName = "thisisfine.png ", std::string opacityTextureName = "thisisfine_Opacity.png", int nrOfParticles = 10, float sizeMulitplier = 1.f, PARTICLEMODE type = PARTICLEMODE::BLOOD, float lifeTime = 2.f, float speed = 1)
+			std::shared_ptr<RTexture>			texture			= nullptr;
+			std::shared_ptr<RTexture>			opacityTexture	= nullptr;
+			ComPtr<ID3D11Buffer>				particleBuffer	= nullptr;
+			ComPtr<ID3D11ShaderResourceView>	particleSRV		= nullptr;
+			ComPtr<ID3D11UnorderedAccessView>	particleUAV		= nullptr;
+
+			EmitterParticle(sm::Vector3 positionOffset = {0,0,0}, int nrOfParticles = 10, float sizeMulitplier = 1.f, PARTICLEMODE type = PARTICLEMODE::BLOOD, float lifeTime = 2.f, float speed = 1, bool hasDeathTimer = false)
 			{
-				//If no texture name take default texture else use the given name
-				if (textureName == "")
-					texture = ResourceManager::Get().GetResource<RTexture>("thisisfine.png ");
-				else
-					texture = ResourceManager::Get().GetResource<RTexture>(textureName);
+				if (type == PARTICLEMODE::BLOOD)
+				{
+					textureName = "Blood.png";
+					opacityTextureName = "round_Opacity.png";
+				}
+				else if (type == PARTICLEMODE::LEAF)
+				{
+					textureName = "thisisfine.png";
+					opacityTextureName = "round_Opacity.png";
+				}
+				else if (type == PARTICLEMODE::WATERSPLASH)
+				{
+					textureName = "waterSplash.png";
+					opacityTextureName = "round_Opacity.png";
+				}
+				else if (type == PARTICLEMODE::SMOKE)
+				{
+					textureName = "smoke.png";
+					opacityTextureName = "smoke_opacity.png";
+				}
+				else if (type == PARTICLEMODE::SPARKLES)
+				{
+					textureName = "thisisfine.png";
+					opacityTextureName = "round_Opacity.png";
+				}
+				else if (type == PARTICLEMODE::RAIN)
+				{
+					textureName = "thisisfine.png";
+					opacityTextureName = "round_Opacity.png";
+				}
+				else if (type == PARTICLEMODE::DUST)
+				{
+					textureName = "thisisfine.png";
+					opacityTextureName = "round_Opacity.png";
+				}
 
-				//If no opacity texture name take default opacity texture else use given name
-				if (opacityTextureName == "")
-					opacityTexture = ResourceManager::Get().GetResource<RTexture>("thisisfine_Opacity.png");
-				else
-					opacityTexture = ResourceManager::Get().GetResource<RTexture>(opacityTextureName);
+				texture = ResourceManager::Get().GetResource<RTexture>(textureName);
+				opacityTexture = ResourceManager::Get().GetResource<RTexture>(opacityTextureName);
 
-				this->nrOfParticles = (UINT)nrOfParticles;
-				this->type = type;
-				this->lifeTime = lifeTime;
-				this->sizeMulitplier = sizeMulitplier;
-				this->speed = speed;
+				this->nrOfParticles		= (UINT)nrOfParticles;
+				this->type				= type;
+				this->lifeTime			= lifeTime;
+				this->sizeMulitplier	= sizeMulitplier;
+				this->speed				= speed;
+				this->positionOffset	= positionOffset;
+				this->hasDeathTimer		= hasDeathTimer;
+			}
+		};
+
+		struct PARTICLEEMITTER 
+		{
+			sm::Vector3		positionOffset	= { 0,0,0 };
+			UINT			nrOfParticles	= 0;
+			PARTICLEMODE	type			= PARTICLEMODE::BLOOD;
+			float			lifeTime		= 0.f;
+			float			sizeMulitplier	= 0.f;
+			float			speed			= 0.f;
+			bool			hasDeathTimer	= false;
+			float			lifeLived		= 0.f;
+
+			PARTICLEEMITTER(sm::Vector3 positionOffset = { 0,0,0 }, int nrOfParticles = 10, float sizeMulitplier = 1.f, PARTICLEMODE type = PARTICLEMODE::BLOOD, float lifeTime = 2.f, float speed = 1, bool hasDeathTimer = false)
+			{
+				this->nrOfParticles		= (UINT)nrOfParticles;
+				this->type				= type;
+				this->lifeTime			= lifeTime;
+				this->sizeMulitplier	= sizeMulitplier;
+				this->speed				= speed;
+				this->positionOffset	= positionOffset;
+				this->hasDeathTimer		= hasDeathTimer;
 			}
 		};
 
@@ -207,6 +266,13 @@ namespace ecs
 
 		struct Player
 		{
+			enum class PlayerType : uint16_t
+			{
+				PLAYER_ONE = 1,
+				PLAYER_TWO = 2,
+				PLAYER_THREE = 3,
+				PLAYER_FOUR = 4
+			} playerType = PlayerType::PLAYER_ONE;
 			enum class State
 			{
 				IDLE,
