@@ -533,7 +533,9 @@ namespace sceneHelp
 		//rtd::Picture* mageBorder = classButtons->AddElement<rtd::Picture>("Selected.png", draw_t((width / 3.33f) + (float)(width / 20) - 7.5f, height - (height / 6) - 7.5f, (width / 16.f) * 1.15f, (height / 9.f) * 1.15f));
 		rtd::Button* mageButton = classButtons->AddElement<rtd::Button>("WizardIcon.png", draw_t((width / 3.33f) + (float)(width / 20), height - (height / 6), width / 16, height / 9));
 		rtd::Button* warriorButton = classButtons->AddElement<rtd::Button>("WarriorIcon.png", draw_t((width / 3.33f) + (width / 15.0f) + (float)(width / 16), height - (height / 6), width / 16, height / 9));
-		
+		warriorButton->GetBorder()->SetColor(D2D1::ColorF(0.0f, 1.0f, 0.2f));
+		warriorButton->GetBorder()->SetVisiblity(true);
+
 		//mageBorder->SetVisiblity(false);
 		// FIX WHAT CLASS SYMBOL PLAYER HAS LATER
 		mageButton->SetOnPressedEvent([=]()

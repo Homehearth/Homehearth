@@ -328,7 +328,6 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 					PROFILE_SCOPE("Update QuadTree");
 					Systems::UpdateDynamicQT(scene, qtDynamic.get());
 				}
-				m_timeCycler.Update(this);
 
 				{
 					PROFILE_SCOPE("Update blackboard");
@@ -395,6 +394,8 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 					else
 						EnemyManagement::CreateWaves(waveQueue, currentRound++);
 				}
+
+				m_timeCycler.Update(this);
 			}
 		});
 
