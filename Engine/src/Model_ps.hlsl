@@ -47,6 +47,13 @@ float4 main(PixelIn input) : SV_TARGET
 			
             int shadowIndex = sb_lights[i].shadowIndex;
             
+            uint width, height, elementCount;
+            t_shadowMaps.GetDimensions(width, height, elementCount);
+            int shadowMapSize = width;
+            
+            int blurKernalSize = 5;
+            
+            
             switch (sb_lights[i].type)
             {
                 case 0:
@@ -59,17 +66,13 @@ float4 main(PixelIn input) : SV_TARGET
             
                     if ((saturate(texCoords.x) == texCoords.x) & (saturate(texCoords.y) == texCoords.y))
 			        {
-                        float closestDepth = t_shadowMaps.Sample(s_linear, float3(texCoords.xy, shadowIndex)).r;
-				    
+                        //calculate current fragment depth
                         float currentDepth = pixelposLightSpace.z / pixelposLightSpace.w;
                         currentDepth = saturate(currentDepth);
                         currentDepth -= 0.001f;
                     
-                        if (currentDepth > closestDepth)
-                        {
-                            shadowCoef = 1.0f;
-                        }
-			        }
+                        shadowCoef = SampleShadowMap(texCoords, shadowIndex, currentDepth, shadowMapSize, blurKernalSize);
+                    }
                     
 					lightCol += DoDirectionlight(sb_lights[i], N) * (1.0f - shadowCoef);
                     break;
@@ -87,9 +90,14 @@ float4 main(PixelIn input) : SV_TARGET
                         //bottom Paraboloid
                         texCoords.x = (pixelposLightSpace.x / (1.0f + pixelposLightSpace.z)) * 0.5f + 0.5f;
                         texCoords.y = 1.0f - ((pixelposLightSpace.y / (1.0f + pixelposLightSpace.z)) * 0.5f + 0.5f);
+
+                        //calculate current fragment depth
                         currentDepth = (len - 0.1f) / (500.f - 0.1f);
                         currentDepth -= 0.001f;
-                        closestDepth = t_shadowMaps.Sample(s_linear, float3(texCoords, shadowIndex)).r;
+                        
+
+                        shadowCoef = SampleShadowMap(texCoords, shadowIndex, currentDepth, shadowMapSize, blurKernalSize);
+                        
                     }
                     else
                     {
@@ -98,13 +106,10 @@ float4 main(PixelIn input) : SV_TARGET
                         texCoords.y = 1.0f - ((pixelposLightSpace.y / (1.0f - pixelposLightSpace.z)) * 0.5f + 0.5f);
                         currentDepth = (len - 0.1f) / (500.f - 0.1f);
                         currentDepth -= 0.001f;
-                        closestDepth = t_shadowMaps.Sample(s_linear, float3(texCoords, shadowIndex + 1)).r;
+                        
+                        shadowCoef = SampleShadowMap(texCoords, shadowIndex, currentDepth, shadowMapSize, blurKernalSize);
+
                     }
-                    if (currentDepth > closestDepth)
-                    {
-                        shadowCoef = 1.0f;
-                    }
-                    
                     lightCol += DoPointlight(sb_lights[i], input, N) * (1.0f - shadowCoef);
                     break;
                 }

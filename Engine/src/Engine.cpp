@@ -388,7 +388,7 @@ void Engine::drawImGUI()
 	};
 
 	int size = m_renderer.GetShadowMapSize();
-	if (ImGui::InputInt("ShadowMapResolution", &size, 64))
+	if (ImGui::InputInt("ShadowMapResolution", &size, 1024))
 	{
 		size = max(size, 64);
 		m_renderer.SetShadowMapSize(size);

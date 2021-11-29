@@ -4,7 +4,7 @@
 
 ShadowPass::ShadowPass()
 {
-	m_shadowSize = 1024;
+	m_shadowSize = 2048;
 
 
 	m_viewport.Height = m_shadowSize;
