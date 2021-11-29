@@ -553,10 +553,7 @@ void Simulation::SendSnapshot()
 	}
 	else
 	{
-		if (m_tick % 30 == 0)
-		{
-			m_lobby.Update();
-		}
+		m_lobby.Update();
 	}
 
 	// All destroyed Entities
