@@ -144,8 +144,6 @@ void Simulation::ResetPlayer(Entity player)
 	playerComp->runSpeed = 25.f;
 	playerComp->state = comp::Player::State::IDLE;
 	playerComp->isReady = false;
-	playerComp->spawnPoint = m_spawnPoints.front();
-	m_spawnPoints.pop();
 
 	comp::Transform* transform = player.AddComponent<comp::Transform>();
 	transform->position = playerComp->spawnPoint;
@@ -269,10 +267,10 @@ Simulation::Simulation(Server* pServer, HeadlessEngine* pEngine)
 
 	qtDynamic = std::make_unique<QuadTree>(bounds);
 
-	m_spawnPoints.push(sm::Vector3(220.f, 0, -353.f));
-	m_spawnPoints.push(sm::Vector3(197.f, 0, -325.f));
-	m_spawnPoints.push(sm::Vector3(222.f, 0, -300.f));
-	m_spawnPoints.push(sm::Vector3(247.f, 0, -325.f));
+	m_spawnPoints.push(TL);
+	m_spawnPoints.push(TR);
+	m_spawnPoints.push(BL);
+	m_spawnPoints.push(BR);
 	m_shop.SetSimulation(this);
 }
 
@@ -286,10 +284,10 @@ void Simulation::LeaveLobby(uint32_t playerID)
 	this->SendRemoveAllEntitiesToPlayer(playerID);
 
 	m_lobby.RemovePlayer(playerID);
-
 	// Send to client the message with the new game ID
 	message<GameMsg> accMsg;
 	accMsg.header.id = GameMsg::Lobby_AcceptedLeave;
+
 
 	m_pServer->SendToClient(playerID, accMsg);
 }
@@ -769,10 +767,10 @@ void Simulation::ResetGameScene()
 		m_spawnPoints.pop();
 	}
 
-	m_spawnPoints.push(sm::Vector3(220.f, 0, -353.f));
-	m_spawnPoints.push(sm::Vector3(197.f, 0, -325.f));
-	m_spawnPoints.push(sm::Vector3(222.f, 0, -300.f));
-	m_spawnPoints.push(sm::Vector3(247.f, 0, -325.f));
+	m_spawnPoints.push(TL);
+	m_spawnPoints.push(TR);
+	m_spawnPoints.push(BL);
+	m_spawnPoints.push(BR);
 
 	this->m_pGameScene->ForEachComponent<comp::Network>([&](Entity e, comp::Network& n)
 		{
@@ -923,6 +921,11 @@ void Simulation::ReadyCheck(uint32_t playerID)
 
 	if (allReady)
 	{
+		m_pGameScene->ForEachComponent<comp::Player>([&](Entity& e, comp::Player& p)
+			{
+				p.spawnPoint = m_spawnPoints.front();
+				m_spawnPoints.pop();
+			});
 		// Start the game.
 		SetGameScene();
 

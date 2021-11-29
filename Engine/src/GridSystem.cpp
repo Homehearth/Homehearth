@@ -196,8 +196,8 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 	sm::Vector3 pos;
 	bool canBuild = false;
 
-	dx::BoundingSphere localPlayer;
-	std::vector<dx::BoundingSphere> ePos;
+	comp::SphereCollider localPlayer;
+	std::vector<comp::SphereCollider> ePos;
 
 	// Save positions to calculate distances to the tile for players
 	m_scene->ForEachComponent<comp::Player, comp::SphereCollider, comp::Network>([&](comp::Player& p, comp::SphereCollider bs, comp::Network& net)
