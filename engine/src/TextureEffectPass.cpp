@@ -1,8 +1,6 @@
 #include "EnginePCH.h"
 #include "TextureEffectPass.h"
-
 #include "PipelineManager.h"
-
 
 
 void TextureEffectPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
@@ -48,18 +46,6 @@ void TextureEffectPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceCont
         //const int groupCount = static_cast<int>(ceil(m_MAX_PIXELS));
         DC->Dispatch(8, 8, 1);
     }
-
-    // UNBIND SRV:S
-    {
-        ID3D11ShaderResourceView* const kill = { nullptr };
-        DC->CSSetShaderResources(19, 1, &kill);
-    }
-
-    //UNBIND URV:S
-    {
-        ID3D11UnorderedAccessView* const kill = { nullptr };
-        DC->CSSetUnorderedAccessViews(5, 1, &kill, nullptr);
-    }
 }
 
 void TextureEffectPass::Render(Scene* pScene)
@@ -79,9 +65,28 @@ void TextureEffectPass::Render(Scene* pScene)
 
 void TextureEffectPass::PostRender(ID3D11DeviceContext* pDeviceContext)
 {
-    //Unbind SRV again.
-    ID3D11ShaderResourceView* const kill = { nullptr };
-    pDeviceContext->CSSetShaderResources(19, 1, &kill);
+    // UNBIND SRV:S
+    {
+        ID3D11ShaderResourceView* const kill = { nullptr };
+        DC->CSSetShaderResources(19, 1, &kill);
+    }
+
+    //UNBIND URV:S
+    {
+        ID3D11UnorderedAccessView* const kill = { nullptr };
+        DC->CSSetUnorderedAccessViews(5, 1, &kill, nullptr);
+    }
+
+    //UNBIUND SHADER:S
+    {
+        ID3D11VertexShader* kill = nullptr;
+        ID3D11PixelShader* kill2 = nullptr;
+        ID3D11ComputeShader* kill3 = nullptr;
+
+        DC->VSSetShader(kill, nullptr, 0);
+        DC->PSSetShader(kill2, nullptr, 0);
+        DC->CSSetShader(kill3, nullptr, 0);
+    }
 }
 
 
