@@ -18,7 +18,8 @@ void CombatSystem::UpdateMelee(HeadlessScene& scene)
 			{
 				audio_t audio;
 				audio.type = ESoundEvent::Player_OnMeleeAttack;
-				audio.position = transform.position;
+				audio.position = entity.GetComponent<comp::Transform>()->position;
+				audio.shouldBroadcast = true;
 				entity.GetComponent<comp::AudioState>()->data.emplace(audio);
 			}
 		}
