@@ -180,7 +180,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			{
 				entity = m_gameEntities.at(entityID);
 				UpdateEntityFromMessage(entity, msg);
-				UpdateSoundListener(entity); // if a player moves, we need to update the sound listener for 3D sounds.
 			}
 			else
 			{
@@ -205,7 +204,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			{
 				entity = m_gameEntities.at(entityID);
 				UpdateEntityFromMessage(entity, msg);
-				UpdateSoundListener(entity); // if a player moves, we need to update the sound listener for 3D sounds.
 			}
 			else
 			{
@@ -306,7 +304,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			// Extract Sound Information.
 			ESoundEvent type;
 			sm::Vector3 position;
-			bool is3D, shouldBroadcast;
+			bool is3D;
 			float volume;
 
 			msg >> is3D;
@@ -938,15 +936,6 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 				break;
 			}
 		}
-	}
-}
-
-void Game::UpdateSoundListener(Entity entity)
-{
-	if(entity.GetComponent<comp::Player>())
-	{
-		SoundHandler::Get().SetListenerPosition(entity.GetComponent<comp::Transform>()->position, 
-			entity.GetComponent<comp::Player>()->fowardDir);
 	}
 }
 
