@@ -771,6 +771,18 @@ bool PipelineManager::CreateShaders()
         return false;
     }
 
+    if (!m_paraboloidVertexShader.Create("Paraboloid_vs"))
+    {
+        LOG_WARNING("failed creating Paraboloid_vs.");
+        return false;
+    }
+    
+    if (!m_paraboloidAnimationVertexShader.Create("ParaboloidAnim_vs"))
+    {
+        LOG_WARNING("failed creating ParaboloidAnim_vs.");
+        return false;
+    }
+    
     if (!m_shadowPixelShader.Create("Shadow_ps"))
     {
         LOG_WARNING("failed creating Shadow_ps.");
