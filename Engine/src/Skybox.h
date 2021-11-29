@@ -20,7 +20,6 @@ private:
 	sm::Vector3 m_tintCol				= {};
 
 	float m_currentTime;
-	Cycle m_currentCycleState;
 
 	bool CreateVertIndBuffers();
 	bool CreateTextureAndSRV(const std::string& fileName);
@@ -36,5 +35,5 @@ public:
 
 	void Render();
 	void Bind(ID3D11DeviceContext* dc);
-	void UpdateTime(float pTime, Cycle pCycle);
+	void UpdateTime(float pTime);
 };
