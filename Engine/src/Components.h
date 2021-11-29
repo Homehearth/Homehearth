@@ -98,20 +98,19 @@ namespace ecs
 
 			EmitterParticle(sm::Vector3 positionOffset = {0,0,0}, int nrOfParticles = 10, float sizeMulitplier = 1.f, PARTICLEMODE type = PARTICLEMODE::BLOOD, float lifeTime = 2.f, float speed = 1, bool hasDeathTimer = false)
 			{
+				textureName = "thisisfine.png";
+				opacityTextureName = "round_Opacity.png";
+
 				if (type == PARTICLEMODE::BLOOD)
 				{
 					textureName = "Blood.png";
-					opacityTextureName = "round_Opacity.png";
 				}
 				else if (type == PARTICLEMODE::LEAF)
 				{
-					textureName = "thisisfine.png";
-					opacityTextureName = "round_Opacity.png";
 				}
 				else if (type == PARTICLEMODE::WATERSPLASH)
 				{
 					textureName = "waterSplash.png";
-					opacityTextureName = "round_Opacity.png";
 				}
 				else if (type == PARTICLEMODE::SMOKE)
 				{
@@ -120,18 +119,12 @@ namespace ecs
 				}
 				else if (type == PARTICLEMODE::SPARKLES)
 				{
-					textureName = "thisisfine.png";
-					opacityTextureName = "round_Opacity.png";
 				}
 				else if (type == PARTICLEMODE::RAIN)
 				{
-					textureName = "thisisfine.png";
-					opacityTextureName = "round_Opacity.png";
 				}
 				else if (type == PARTICLEMODE::DUST)
 				{
-					textureName = "thisisfine.png";
-					opacityTextureName = "round_Opacity.png";
 				}
 
 				texture = ResourceManager::Get().GetResource<RTexture>(textureName);
