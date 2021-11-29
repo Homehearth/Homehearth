@@ -494,7 +494,7 @@ void RenderObjects(DoubleBuffer<std::vector<comp::Renderable>>* objects, dx::Con
 	for (int j = 0; j < (*objects)[1].size(); j++)
 	{
 		comp::Renderable* it = &(*objects)[1][j];
-		if (it->isSolid && it->visible)
+		if (it->isSolid && it->visible && it->castShadow)
 		{
 			ID3D11Buffer* const buffers[1] =
 			{

@@ -2,14 +2,9 @@
 #include "ShadowPass.h"
 #include "RenderThreadHandler.h"
 
-//ID3D11DepthStencilView*& ShadowPass::EmplaceInMap(const unsigned int& index)
-//{
-//	// TODO: insert return statement here
-//}
-
 ShadowPass::ShadowPass()
 {
-	m_shadowSize = 2048;
+	m_shadowSize = 1024;
 
 
 	m_viewport.Height = m_shadowSize;
@@ -88,7 +83,7 @@ void ShadowPass::RenderWithImmidiateContext(Scene* pScene, const ShadowSection& 
 	{
 		this->UpdateLightBuffer(D3D11Core::Get().DeviceContext(), shadow.lightBuffer.Get(), *shadow.pLight, sm::Vector3(shadow.pLight->direction));
 		D3D11Core::Get().DeviceContext()->VSSetShader(PM->m_defaultVertexShader.Get(), nullptr, 0);
-		pScene->RenderShadow(*shadow.pLight);
+		pScene->RenderShadow();
 		break;
 	}
 	case TypeLight::POINT:
@@ -97,12 +92,12 @@ void ShadowPass::RenderWithImmidiateContext(Scene* pScene, const ShadowSection& 
 		D3D11Core::Get().DeviceContext()->VSSetShader(PM->m_paraboloidVertexShader.Get(), nullptr, 0);
 
 		this->UpdateLightBuffer(D3D11Core::Get().DeviceContext(), shadow.lightBuffer.Get(), *shadow.pLight, sm::Vector3::Down);
-		pScene->RenderShadow(*shadow.pLight);
+		pScene->RenderShadow();
 
 		D3D11Core::Get().DeviceContext()->OMSetRenderTargets(8, nullTargets, shadow.shadowDepth[1].Get());
 		
 		this->UpdateLightBuffer(D3D11Core::Get().DeviceContext(), shadow.lightBuffer.Get(), *shadow.pLight, sm::Vector3::Up);
-		pScene->RenderShadow(*shadow.pLight);
+		pScene->RenderShadow();
 
 		break;
 	}
@@ -246,7 +241,7 @@ void ShadowPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 
 	DC->PSSetSamplers(1, 1, PM->m_linearSamplerState.GetAddressOf());
 	DC->RSSetViewports(1, &m_viewport);
-	DC->RSSetState(PM->m_rasterStateNoCulling.Get());
+	DC->RSSetState(PM->m_rasterState.Get());
 
 	DC->VSSetShader(PM->m_defaultVertexShader.Get(), nullptr, 0);
 	DC->PSSetShader(PM->m_shadowPixelShader.Get(), nullptr, 0);
@@ -288,13 +283,14 @@ void ShadowPass::Render(Scene* pScene)
 
 	D3D11Core::Get().DeviceContext()->IASetInputLayout(PM->m_animationInputLayout.Get());
 	D3D11Core::Get().DeviceContext()->VSSetShader(PM->m_animationVertexShader.Get(), nullptr, 0);
+	D3D11Core::Get().DeviceContext()->RSSetViewports(1, &m_viewport);
+	ID3D11RenderTargetView* nullTargets[8] = { nullptr };
 	for (const auto& shadow : m_shadows)
 	{
 		if (!shadow.pLight->enabled)
 			continue;
 
 		D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(1, 1, shadow.lightBuffer.GetAddressOf());
-		ID3D11RenderTargetView* nullTargets[8] = { nullptr };
 		D3D11Core::Get().DeviceContext()->OMSetRenderTargets(8, nullTargets, shadow.shadowDepth[0].Get());
 		switch (shadow.pLight->type)
 		{
@@ -302,7 +298,7 @@ void ShadowPass::Render(Scene* pScene)
 		{
 			this->UpdateLightBuffer(D3D11Core::Get().DeviceContext(), shadow.lightBuffer.Get(), *shadow.pLight, sm::Vector3(shadow.pLight->direction));
 			D3D11Core::Get().DeviceContext()->VSSetShader(PM->m_animationVertexShader.Get(), nullptr, 0);
-			pScene->RenderAnimation();
+			pScene->RenderShadowAnimation();
 
 			break;
 		}
@@ -311,13 +307,13 @@ void ShadowPass::Render(Scene* pScene)
 			D3D11Core::Get().DeviceContext()->VSSetShader(PM->m_paraboloidAnimationVertexShader.Get(), nullptr, 0);
 
 			this->UpdateLightBuffer(D3D11Core::Get().DeviceContext(), shadow.lightBuffer.Get(), *shadow.pLight, sm::Vector3::Down);
-			pScene->RenderAnimation();
+			pScene->RenderShadowAnimation();
 
 			D3D11Core::Get().DeviceContext()->OMSetRenderTargets(8, nullTargets, shadow.shadowDepth[1].Get());
 
 			this->UpdateLightBuffer(D3D11Core::Get().DeviceContext(), shadow.lightBuffer.Get(), *shadow.pLight, sm::Vector3::Up);
-			pScene->RenderAnimation();
-			
+			pScene->RenderShadowAnimation();
+
 
 			break;
 		}
@@ -325,6 +321,8 @@ void ShadowPass::Render(Scene* pScene)
 			break;
 		}
 	}
+	D3D11Core::Get().DeviceContext()->OMSetRenderTargets(8, nullTargets, nullptr);
+
 
 }
 

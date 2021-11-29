@@ -183,20 +183,37 @@ void Scene::RenderSkybox()
 	m_sky.Render();
 }
 
-void Scene::RenderShadow(const light_t& light)
+void Scene::RenderShadow()
 {
-	if (!light.enabled) 
-		return;
-
 	for (const auto& model : m_renderableCopies[1])
 	{
-		if (model.isSolid && model.visible)
+		if (model.isSolid && model.visible && model.castShadow)
 		{
 			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), model.data);
 			ID3D11Buffer* buffer[] = { m_publicBuffer.GetBuffer() };
 			D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, buffer);
 			if(model.model)
 				model.model->Render(D3D11Core::Get().DeviceContext());
+		}
+	}
+}
+
+void Scene::RenderShadowAnimation()
+{
+	PROFILE_FUNCTION();
+
+	for (auto& it : m_renderableAnimCopies[1])
+	{
+		if (it.first.isSolid && it.first.visible && it.first.castShadow)
+		{
+			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.first.data);
+			ID3D11Buffer* const buffer = {
+				m_publicBuffer.GetBuffer()
+			};
+			D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, &buffer);
+			it.second.animator->Bind();
+			it.first.model->Render(D3D11Core::Get().DeviceContext());
+			it.second.animator->Unbind();
 		}
 	}
 }
