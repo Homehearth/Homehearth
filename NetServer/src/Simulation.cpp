@@ -501,13 +501,13 @@ void Simulation::SendSnapshot()
 			this->Broadcast(msg2);
 		}
 
-		if (m_currency.hasUpdated)
+		if (m_currency.m_hasUpdated)
 		{
 			network::message<GameMsg> msg3;
 			msg3.header.id = GameMsg::Game_Money;
 			msg3 << m_currency.GetAmount();
 			this->Broadcast(msg3);
-			m_currency.hasUpdated = false;
+			m_currency.m_hasUpdated = false;
 		}
 		// Send Abilities
 		{

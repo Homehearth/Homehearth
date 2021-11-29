@@ -26,6 +26,8 @@ private:
 	uint32_t m_amount = 0;
 
 public:
+	bool m_hasUpdated = false;
+
 	uint32_t GetAmount()const
 	{
 		return m_amount;
@@ -37,14 +39,17 @@ public:
 	void operator +=(uint32_t money)
 	{
 		m_amount += money;
+		m_hasUpdated = true;
 	}
 	void operator -=(uint32_t money)
 	{
 		m_amount -= money;
+		m_hasUpdated = true;
 	}
 	void operator = (uint32_t money)
 	{
 		m_amount = money;
+		m_hasUpdated = true;
 	}
 	bool operator >= (uint32_t money)
 	{
@@ -54,7 +59,7 @@ public:
 	{
 		return m_amount < money;
 	}
-	bool hasUpdated = false;
+
 };
 
 struct MinMaxProj_t

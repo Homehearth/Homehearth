@@ -228,7 +228,6 @@ void Systems::HealthSystem(HeadlessScene& scene, float dt, Currency& money_ref, 
 				if (entity.GetComponent<comp::Tag<TagType::BAD>>())
 				{
 					money_ref += 5 * spree.GetSpree();
-					money_ref.hasUpdated = true;
 					spree.AddSpree();
 				}
 
