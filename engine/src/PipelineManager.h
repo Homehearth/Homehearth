@@ -114,7 +114,7 @@ public:
 	ComPtr<ID3D11Texture2D> m_WaterNormalMap;
 	ComPtr<ID3D11Texture2D> m_WaterEdgeAlbedoMap;
 	ComPtr<ID3D11Texture2D>	m_WaterFloorAlbedoMap;
-	std::shared_ptr<RTexture> m_WaterBlendAlbedoMap; //This one is a stand alone texture and is not found on a model.
+	ComPtr<ID3D11Texture2D> m_WaterBlendAlbedoMap; //This one is a stand alone texture and is not found on a model.
 
 	std::shared_ptr<RTexture> m_ModdedWaterAlbedoMap;
 	std::shared_ptr<RTexture> m_ModdedWaterNormalMap;
