@@ -65,6 +65,7 @@ public:
 	//ImGui data for disable/enable 
 	bool* GetIsRenderingColliders();
 	Lights* GetLights();
+	void UpdateSkybox(float pTime, Cycle pCycle);
 	
 	DoubleBuffer<std::vector<comp::Renderable>>*		GetBuffers();
 	DoubleBuffer<std::vector<comp::Renderable>>*		GetTransparentBuffers();

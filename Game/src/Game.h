@@ -12,11 +12,10 @@ private:
 	std::unordered_map<uint32_t, Entity> m_gameEntities;
 
 	GridSystem m_grid;
-	float m_elapsedCycleTime = 0;
 	uint32_t m_waveTimer = 0;
 	uint32_t m_money;
 	ParticleSystem m_particles;
-	Cycle m_serverCycle = Cycle::DAY;
+	
 
 	Entity m_mapEntity;
 
@@ -50,6 +49,9 @@ public:
 	std::unordered_map<uint32_t, Entity> m_players;
 
 	float m_masterVolume = 5.0f;
+
+	float m_elapsedCycleTime = 0;
+	Cycle m_serverCycle = Cycle::DAY;
 
 	Game();
 	virtual ~Game();

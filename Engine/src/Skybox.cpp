@@ -126,13 +126,31 @@ bool Skybox::CreateConstBuffer()
 
 void Skybox::Update(ID3D11DeviceContext* dc = DCSB)
 {
-	m_tintCol = util::Lerp(m_tintColNight, m_tintColDay, 1.0f);
+	if (m_currentTime == 0.f)
+		m_tintCol = m_tintColNight;
+	else if (m_currentTime > 0 && m_currentTime < 10.f)
+		m_tintCol = util::Lerp(m_tintColNight, m_tintColMorning, m_currentTime / 10.f);
+	else if (m_currentTime == 10.f)
+		m_tintCol = m_tintColMorning;
+	else if (m_currentTime > 10 && m_currentTime < 20.f)
+		m_tintCol = util::Lerp(m_tintColMorning, m_tintColDay, m_currentTime / 20.f);
+	else if (m_currentTime == 20.f)
+		m_tintCol = m_tintColDay;
+	else if (m_currentTime > 20.f && m_currentTime < 40)
+		m_tintCol = m_tintColDay;
+	else if (m_currentTime > 40.f && m_currentTime < 50.f)
+		m_tintCol = util::Lerp(m_tintColDay, m_tintColEvening, m_currentTime / 50.f);
+	else if(m_currentTime > 50.f && m_currentTime <= TIME_LIMIT_DAY)
+		m_tintCol = util::Lerp(m_tintColEvening, m_tintColNight, m_currentTime / TIME_LIMIT_DAY);
+
 	dc->UpdateSubresource(m_constBuffer.Get(), 0, nullptr, &m_tintCol, 0, 0);
 }
 
 Skybox::Skybox()
 {
 	nrOfIndices = 0;
+	m_currentCycleState = Cycle::DAY;
+	m_currentTime = 0.f;
 }
 
 Skybox::~Skybox()
@@ -172,4 +190,10 @@ void Skybox::Bind(ID3D11DeviceContext* dc = DCSB)
 	dc->PSSetConstantBuffers(13, 1, m_constBuffer.GetAddressOf());
 
 	Update(dc);
+}
+
+void Skybox::UpdateTime(float pTime, Cycle pCycle)
+{
+	m_currentTime = pTime;
+	m_currentCycleState = pCycle;
 }

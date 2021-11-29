@@ -199,6 +199,8 @@ namespace sceneHelp
 				//GameSystems::RenderIsCollidingSystem(scene);
 				GameSystems::UpdatePlayerVisuals(game);
 				Systems::LightSystem(scene, e.dt);
+				game->GetCurrentScene()->UpdateSkybox(game->m_elapsedCycleTime, game->m_serverCycle);
+				LOG_INFO("Time: %f", game->m_elapsedCycleTime);
 #ifdef _DEBUG
 				if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Space, KeyState::RELEASED))
 				{

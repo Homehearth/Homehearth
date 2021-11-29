@@ -16,8 +16,11 @@ private:
 	sm::Vector3 m_tintColNight			= { 0.04f, 0.06f, 0.20f }; //Tint Color Night:		0.04f, 0.06f, 0.20f
 	sm::Vector3 m_tintColDay			= { 1.00f, 1.00f, 1.00f }; //Tint Color Day:		1.00f, 1.00f, 1.00f
 	sm::Vector3 m_tintColMorning		= { 0.95f, 0.65f, 0.15f }; //Tint Color Morning:	0.95f, 0.65f, 0.15f
-	sm::Vector3 m_tintColEvening		= { 0.93f, 0.05f, 0.58f }; //Tint Color Evening:	0.93f, 0.05f, 0.58f
-	sm::Vector3 m_tintCol				= {};	
+	sm::Vector3 m_tintColEvening		= { 0.93f, 0.58f, 0.05f }; //Tint Color Evening:	0.93f, 0.05f, 0.58f
+	sm::Vector3 m_tintCol				= {};
+
+	float m_currentTime;
+	Cycle m_currentCycleState;
 
 	bool CreateVertIndBuffers();
 	bool CreateTextureAndSRV(const std::string& fileName);
@@ -33,4 +36,5 @@ public:
 
 	void Render();
 	void Bind(ID3D11DeviceContext* dc);
+	void UpdateTime(float pTime, Cycle pCycle);
 };

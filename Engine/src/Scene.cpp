@@ -302,6 +302,11 @@ Lights* Scene::GetLights()
 	return &m_lights;
 }
 
+void Scene::UpdateSkybox(float pTime, Cycle pCycle)
+{
+	m_sky.UpdateTime(pTime, pCycle);
+}
+
 DoubleBuffer<std::vector<comp::Renderable>>* Scene::GetBuffers()
 {
 	return &m_renderableCopies;
