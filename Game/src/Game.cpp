@@ -321,36 +321,41 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	}
 	case GameMsg::Game_PlaySound:
 	{
-		// Extract Sound Information.
-		ESoundEvent type;
-		sm::Vector3 position;
-		bool is3D, shouldBroadcast;
-		float volume;
+		uint32_t nrOfSounds;
+		msg >> nrOfSounds;
 
-		msg >> shouldBroadcast;
-		msg >> is3D;
-		msg >> volume;
-		msg >> position;
-		msg >> type;
-
-		switch(type)
+		for (uint32_t i = 0; i < nrOfSounds; i++)
 		{
-		case ESoundEvent::Player_OnMeleeAttack:
-			SoundHandler::Get().PlayUnique2DSound("Player_OnMeleeAttack");
-			break;
-		case ESoundEvent::Player_OnDmgRecieved:
-			SoundHandler::Get().PlayUnique2DSound("Player_OnDmgRecieved");
-			break;
-		case ESoundEvent::Player_OnLeap:
-			SoundHandler::Get().Play3DSound("Player_OnLeap", position);
-			break;
-		case ESoundEvent::Enemy_OnDeath:
-			SoundHandler::Get().PlayUnique2DSound("Enemy_OnDeath");
-			break;
-		default:
+			// Extract Sound Information.
+			ESoundEvent type;
+			sm::Vector3 position;
+			bool is3D, shouldBroadcast;
+			float volume;
+
+			msg >> is3D;
+			msg >> volume;
+			msg >> position;
+			msg >> type;
+
+			switch(type)
 			{
-				LOG_WARNING("Should not happen. Unknown SoundType!")
-			break;
+			case ESoundEvent::Player_OnMeleeAttack:
+				SoundHandler::Get().PlayUnique2DSound("Player_OnMeleeAttack");
+				break;
+			case ESoundEvent::Player_OnDmgRecieved:
+				SoundHandler::Get().PlayUnique2DSound("Player_OnDmgRecieved");
+				break;
+			case ESoundEvent::Player_OnLeap:
+				SoundHandler::Get().Play3DSound("Player_OnLeap", position);
+				break;
+			case ESoundEvent::Enemy_OnDeath:
+				SoundHandler::Get().PlayUnique2DSound("Enemy_OnDeath");
+				break;
+			default:
+				{
+					LOG_WARNING("Should not happen. Unknown SoundType!")
+				break;
+				}
 			}
 		}
 
