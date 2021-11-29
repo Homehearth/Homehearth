@@ -42,7 +42,7 @@ private:
 	std::unordered_map<ecs::Component, std::vector<Entity>> m_updatedComponents;
 
 	int currentRound;
-	std::unordered_map<std::string, comp::OrientedBoxCollider>* houseColliders;
+
 	void InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg, const std::bitset<ecs::Component::COMPONENT_MAX>& componentMask = UINT32_MAX) const;
 	message<GameMsg> AllEntitiesMessage()const;
 

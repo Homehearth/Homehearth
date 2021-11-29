@@ -8,7 +8,7 @@ public:
 	Entity CreateHouse(HeadlessScene& scene, NameType houseType, NameType doorType, NameType roofType);
 
 private:
-
+	std::unordered_map<std::string, comp::OrientedBoxCollider> houseColliders;
 
 };
 

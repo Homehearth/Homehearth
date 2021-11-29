@@ -33,12 +33,6 @@ namespace EnemyManagement
 	void CreateWaves(std::queue<Wave>& waveQueue, int currentRound);
 }
 
-namespace HouseManagement
-{
-	void InitializeHouses(HeadlessScene& scene, QuadTree* qt, std::unordered_map<std::string, comp::OrientedBoxCollider>& houseColliders);
-	Entity CreateHouse(HeadlessScene& scene, NameType houseType, NameType doorType, NameType roofType, comp::OrientedBoxCollider* houseCollider);
-}
-
 /*! Namespace to manage the server's various ECS systems. */
 namespace ServerSystems
 {
