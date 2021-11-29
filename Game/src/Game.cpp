@@ -116,7 +116,7 @@ void Game::OnUserUpdate(float deltaTime)
 
 						l.lightData.direction = sm::Vector4(dir.x, dir.y, dir.z, 0.0f);
 						sm::Vector3 pos = l.lightData.position;
-						pos = playerPos - dir * 200;
+						pos = playerPos - dir * 400;
 						l.lightData.position = sm::Vector4(pos);
 						l.lightData.position.w = 1.f;
 						break;
