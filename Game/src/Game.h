@@ -1,7 +1,6 @@
 #pragma once
 #include <EnginePCH.h>
 #include <Engine.h>
-#include <GridSystem.h>
 #include "ModelIdentifier.h"
 #include "ParticleSystem.h"
 
@@ -11,7 +10,6 @@ private:
 	std::chrono::system_clock::time_point m_timeThen;
 	std::unordered_map<uint32_t, Entity> m_gameEntities;
 
-	GridSystem m_grid;
 	float m_elapsedCycleTime = 0;
 	uint32_t m_waveTimer = 0;
 	uint32_t m_money;

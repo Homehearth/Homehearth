@@ -212,6 +212,21 @@ bool GridSystem::RemoveDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, 
 	}
 }
 
+void GridSystem::RemoveDefence(const Entity& entity)
+{
+	comp::TileSet* tileset = entity.GetComponent<comp::TileSet>();
+	if (tileset)
+	{
+		//Go throgh all the tiles and fix them
+		for (size_t i = 0; i < tileset->coordinates.size(); i++)
+		{
+			int zpos = tileset->coordinates[i].first;
+			int xpos = tileset->coordinates[i].second;
+			m_tiles[zpos][xpos].type = TileType::EMPTY;
+		}
+	}
+}
+
 
 bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, PathFinderManager* aiHandler, QuadTree* dynamicQT)
 {	

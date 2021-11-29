@@ -41,12 +41,20 @@ public:
 									~GridSystem();
 	sm::Vector2						m_tileSize;
 
-	/*GridSize is decided by the texture size, how many tiles in x and why, MapSize is how big the world is*/
+	//GridSize is decided by the texture size, how many tiles in x and why, MapSize is how big the world is
 	void							Initialize(Vector2I mapSize, sm::Vector3 position, std::string fileName, HeadlessScene* scene);
+	
+	//Delete a defence where the mouse is
 	bool							RemoveDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, PathFinderManager* aiHandler);
+	
+	//Delete the defence from an entity
+	void							RemoveDefence(const Entity& entity);
+
+	//Place defence where the mouse is
 	bool							PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, PathFinderManager* aiHandler, QuadTree* dynamicQT);
-	uint32_t						GetTileCount() const;
+
 	//Get functions
+	uint32_t						GetTileCount() const;
 	Vector2I						GetGridSize() const;
 	Tile*							GetTile(Vector2I& id);
 	std::vector<Entity>*			GetTileEntities();
