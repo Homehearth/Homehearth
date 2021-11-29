@@ -266,18 +266,18 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 					bloodDecal.AddComponent<comp::Decal>(*m_gameEntities.at(id).GetComponent<comp::Transform>());
 				}
 
+				comp::Player* p = m_gameEntities.at(id).GetComponent<comp::Player>();
+				if (p)
+				{
+					GetScene("Game").GetCollection("player" + std::to_string(static_cast<uint16_t>(p->playerType)) + "Info")->Hide();
+					GetScene("Game").GetCollection("dynamicPlayer" + std::to_string(static_cast<uint16_t>(p->playerType)) + "namePlate")->Hide();
+				}
 				m_gameEntities.at(id).Destroy();
 				m_gameEntities.erase(id);
 			}
 			// Was the entity a player?
 			if (m_players.find(id) != m_players.end())
 			{
-				comp::Player* p = m_players.at(id).GetComponent<comp::Player>();
-
-				GetScene("Game").GetCollection("player" + std::to_string(static_cast<uint16_t>(p->playerType)) + "Info")->Hide();
-				GetScene("Game").GetCollection("dynamicPlayer" + std::to_string(static_cast<uint16_t>(p->playerType)) + "namePlate")->Hide();
-
-				m_players.at(id).Destroy();
 				m_players.erase(id);
 			}
 		}
