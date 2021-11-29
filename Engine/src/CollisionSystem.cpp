@@ -189,6 +189,10 @@ CollisionInfo_t CollisionSystem::Intersection(Entity entity1, Entity entity2)
 	//Sphere - OBB
 	else if (p1Tags & TagType::DYNAMIC && p2Tags & TagType::STATIC)
 	{
+		if (p2Tags & TagType::MAP_BOUNDS && !entity1.GetComponent<comp::Player>())
+		{
+			return { false, 0.0f, sm::Vector3::Zero };
+		}
 		comp::SphereCollider* p1BoS = entity1.GetComponent<comp::SphereCollider>();
 		comp::OrientedBoxCollider* p2OBB = entity2.GetComponent<comp::OrientedBoxCollider>();
 

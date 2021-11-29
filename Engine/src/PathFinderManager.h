@@ -29,5 +29,6 @@ public:
 	bool PlayerAStar(sm::Vector3 playerPos);
 	bool ReachedNode(const Entity npc);
 	Node* FindClosestNode(sm::Vector3 position);
+	float GetNodeSize()const;
 };
 

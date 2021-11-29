@@ -155,15 +155,22 @@ namespace sceneHelp
 
 		gameScene.SetCurrentCameraEntity(cameraEntity);
 
-		// DONT TOUCH
+		// The sun
 		CreateLightEntity(gameScene, { 0.f, 0.f, 0.f, 0.f }, { -1.0f, 0.0f, 0.f, 0.f }, { 50.f, 50.f, 50.f, 0.f }, 1000.f, 0.09f, TypeLight::DIRECTIONAL, 1);
-		CreateLightEntity(gameScene, { 266.f, 29.f, -320.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 30.f, 0.f, 0.f }, 20.f, 1.f,TypeLight::POINT, 0);
-		CreateLightEntity(gameScene, { 348.f, 29.f, -325.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 30.f, 0.f, 0.f }, 20.f, 1.f,TypeLight::POINT, 0);
+		// LEFT OF WELL
+		CreateLightEntity(gameScene, { 268.2f, 29.f, -320.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 30.f, 0.f, 0.f }, 20.f, 1.f,TypeLight::POINT, 0);
+		// FURTHEST LEFT AND FURTHEST SOUTH
+		CreateLightEntity(gameScene, { 347.5f, 29.f, -323.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 30.f, 0.f, 0.f }, 20.f, 1.f,TypeLight::POINT, 0);
+		// NEXT TO THE BRIDGE GOING SOUTH
 		CreateLightEntity(gameScene, { 310.f, 29.f, -305.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 30.f, 0.f, 0.f }, 20.f, 1.f,TypeLight::POINT, 0);
+		// NEXT TO THE LEFT BRIDGE ON THE LEFT SIDE OF IT
 		CreateLightEntity(gameScene, { 307.f, 29.f, -350.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 30.f, 0.f, 0.f }, 20.f, 1.f,TypeLight::POINT, 0);
-		CreateLightEntity(gameScene, { 181.f, 29.f, -314.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 30.f, 0.f, 0.f }, 20.f, 1.f,TypeLight::POINT, 0);
-		CreateLightEntity(gameScene, { 196.f, 29.f, -258.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 30.f, 0.f, 0.f }, 20.f, 1.f,TypeLight::POINT, 0);
-		CreateLightEntity(gameScene, { 337.f, 29.f, -397.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 30.f, 0.f, 0.f }, 20.f, 1.f,TypeLight::POINT, 0);
+		// RIGHT OF THE WELL BETWEEN THE 2 HOUSES
+		CreateLightEntity(gameScene, { 177.f, 29.f, -313.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 30.f, 0.f, 0.f }, 20.f, 1.f,TypeLight::POINT, 0);
+		// FURTHEST RIGHT AND FURTHEST SOUTH
+		CreateLightEntity(gameScene, { 193.5f, 29.f, -261.5f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 30.f, 0.f, 0.f }, 20.f, 1.f,TypeLight::POINT, 0);
+		// LEFT OF WATERMILL
+		CreateLightEntity(gameScene, { 338.5f, 29.f, -397.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 30.f, 0.f, 0.f }, 20.f, 1.f,TypeLight::POINT, 0);
 
 		InputSystem::Get().SetCamera(gameScene.GetCurrentCamera());
 
@@ -414,10 +421,6 @@ namespace sceneHelp
 			playerIcon->AddElement<rtd::Text>("Player " + std::to_string(i + 1), draw_text_t(width / 16, (height / 12) * (i + 1) + (height / 12) * i, width / 4, height / 9));
 			playerIcon->AddElement<rtd::Picture>("WarriorIcon.png", draw_t((width / 8) + (width / 4), (height / 12) * (i + 1) + (height / 12) * i, width / 16, height / 9));
 			scene.Add2DCollection(playerIcon, "playerIcon" + std::to_string(i + 1));
-
-			// Hide everyother player other than first.
-			if (i > 0)
-				playerIcon->Hide();
 		}
 
 		Collection2D* classTextCanvas = new Collection2D;
@@ -849,7 +852,27 @@ namespace sceneHelp
 		return true;
 	}
 
-	void LoadAllAssets(Game* game)
+	void LoadResources(Game* game)
+	{
+		std::fstream file;
+		file.open(RESOURCELOADER);
+		if (!file.is_open())
+		{
+			LOG_ERROR("Failed to load GameScene!");
+			return;
+		}
+
+		while (!file.eof())
+		{
+			std::string filename;
+
+			file >> filename;
+
+			ResourceManager::Get().GetResource<RModel>(filename);
+		}
+	}
+
+	void LoadGameScene(Game* game)
 	{
 		std::fstream file;
 		file.open(ASSETLOADER);

@@ -44,7 +44,6 @@ private:
 	int currentRound;
 
 	void InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg, const std::bitset<ecs::Component::COMPONENT_MAX>& componentMask = UINT32_MAX) const;
-	message<GameMsg> AllEntitiesMessage()const;
 
 	uint32_t GetTick()const;
 
