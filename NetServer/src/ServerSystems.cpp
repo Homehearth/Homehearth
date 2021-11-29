@@ -623,10 +623,15 @@ void ServerSystems::SoundSystem(Simulation* simulation, HeadlessScene& scene)
 			if(!audioState.data.empty())
 			{
 				const int COUNT = audioState.data.size();
-				message<GameMsg>msg;
-				msg.header.id = GameMsg::Game_PlaySound;
 				audio_t audio = {};
 
+				message<GameMsg> msg;
+				msg.header.id = GameMsg::Game_PlaySound;
+
+				std::queue<message<GameMsg>> sendMsgQueue;
+				std::queue<message<GameMsg>> broadcastQueue;
+
+				// Loop trough all sounds.
 				for(int i = 0; i < COUNT; i++)
 				{
 					audio = audioState.data.front();
@@ -636,16 +641,34 @@ void ServerSystems::SoundSystem(Simulation* simulation, HeadlessScene& scene)
 					msg << audio.is3D;
 					msg << audio.shouldBroadcast;
 
+					// Add msg to given queue.
 					if(audio.shouldBroadcast)
 					{
-						simulation->Broadcast(msg);
+						broadcastQueue.emplace(msg);
 					}
 					else
 					{
-						simulation->SendMsg(net.id, msg);
+						sendMsgQueue.emplace(msg);
 					}
 
 					audioState.data.pop();
+				}
+
+				//
+				// Send all msg.
+				//
+				while(!sendMsgQueue.empty())
+				{
+					msg = sendMsgQueue.front();
+					simulation->SendMsg(net.id, msg);
+					sendMsgQueue.pop();
+				}
+
+				while (!broadcastQueue.empty())
+				{
+					msg = broadcastQueue.front();
+					simulation->Broadcast(msg);
+					broadcastQueue.pop();
 				}
 			}
 		});
