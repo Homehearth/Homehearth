@@ -103,7 +103,7 @@ namespace ecs
 
 				if (type == PARTICLEMODE::BLOOD)
 				{
-					textureName = "Blood.png";
+					textureName = "BloodParticle.png";
 				}
 				else if (type == PARTICLEMODE::LEAF)
 				{
