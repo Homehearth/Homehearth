@@ -97,6 +97,8 @@ void Game::OnUserUpdate(float deltaTime)
 	{
 		sm::Vector3 playerPos = m_players.at(m_localPID).GetComponent<comp::Transform>()->position;
 
+		GameSystems::DeathParticleTimer(scene);
+
 		if (m_elapsedCycleTime <= m_waveTimer && (m_serverCycle == Cycle::DAY || m_serverCycle == Cycle::MORNING))
 		{
 			m_elapsedCycleTime += deltaTime;

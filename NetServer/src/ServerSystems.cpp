@@ -613,3 +613,18 @@ void ServerSystems::AnimatonSystem(Simulation* simulation, HeadlessScene& scene)
 			}
 		});
 }
+
+void ServerSystems::DeathParticleTimer(HeadlessScene& scene)
+{
+	scene.ForEachComponent<comp::PARTICLEEMITTER>([&](Entity& e, comp::PARTICLEEMITTER& emitter)
+		{
+			if (emitter.hasDeathTimer == true && emitter.lifeLived <= emitter.lifeTime)
+			{
+				emitter.lifeLived += Stats::Get().GetFrameTime();
+			}
+			else if (emitter.hasDeathTimer == true && emitter.lifeLived >= emitter.lifeTime)
+			{
+				e.RemoveComponent<comp::PARTICLEEMITTER>();
+			}
+		});
+}
