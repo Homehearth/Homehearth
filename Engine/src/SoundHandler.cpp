@@ -143,7 +143,7 @@ irrklang::ISound* SoundHandler::Play3DSound(const std::string& name, const sm::V
     {
         sound = m_soundEngine->play3D(m_soundSources[name],{ pos.x, pos.y, pos.z },
             false, true, false, false);
-        sound->setMinDistance(25.0f);
+        sound->setMinDistance(500.f);
         sound->setIsPaused(!playSound);
     }
 
@@ -172,6 +172,16 @@ void SoundHandler::SetListenerPosition(const sm::Vector3& pos, const sm::Vector3
 {
     m_soundEngine->setListenerPosition({ pos.x, pos.y, pos.z },
         { lookDir.x, lookDir.y, lookDir.z });
+}
+
+void SoundHandler::AddToQueue(const audio_t& audio)
+{
+    m_audioQueue.emplace(audio);
+}
+
+std::queue<audio_t> SoundHandler::GetQueue()
+{
+    return m_audioQueue;
 }
 
 

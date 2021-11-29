@@ -298,40 +298,26 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	{
 		uint32_t nrOfSounds;
 		msg >> nrOfSounds;
+		audio_t audio = { };
 
 		for (uint32_t i = 0; i < nrOfSounds; i++)
 		{
 			// Extract Sound Information.
-			ESoundEvent type;
-			sm::Vector3 position;
-			bool is3D;
-			float volume;
+			msg >> audio.is3D;
+			msg >> audio.volume;
+			msg >> audio.position;
+			msg >> audio.type;
 
-			msg >> is3D;
-			msg >> volume;
-			msg >> position;
-			msg >> type;
-
-			switch(type)
+			switch (audio.type)
 			{
 			case ESoundEvent::Player_OnMeleeAttack:
-				SoundHandler::Get().Play3DSound("Player_OnMeleeAttack", position);
-				break;
-			case ESoundEvent::Player_OnDmgRecieved:
-				SoundHandler::Get().PlayUnique2DSound("Player_OnDmgRecieved");
-				break;
-			case ESoundEvent::Player_OnLeap:
-				SoundHandler::Get().Play3DSound("Player_OnLeap", position);
-				break;
-			case ESoundEvent::Enemy_OnDeath:
-				SoundHandler::Get().PlayUnique2DSound("Enemy_OnDeath");
+				SoundHandler::Get().Play3DSound("Player_OnMeleeAttack", audio.position);
 				break;
 			default:
-				{
-					LOG_WARNING("Should not happen. Unknown SoundType!")
 				break;
-				}
 			}
+
+			//SoundHandler::Get().AddToQueue(audio);
 		}
 
 		break;
@@ -640,6 +626,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	}
 	}
 }
+
 void Game::PingServer()
 {
 	message<GameMsg> msg = {};

@@ -18,10 +18,13 @@ private:
 
 	irrklang::ISound* m_currentMusic;
 
+	std::queue<audio_t> m_audioQueue;
+	std::vector<irrklang::ISound*> m_activeSounds;
+
 	void UpdateCurrentMusic(irrklang::ISoundSource* music, bool loopMusic);
 public:
 	virtual ~SoundHandler();
-	
+
 	/**
 	 * \brief Creates and/or returns an instance of the SoundHandler class.
 	 * \return Returns an instance of the SoundHandler class.
@@ -94,12 +97,13 @@ public:
 	 */
 	irrklang::ISound* PlayUnique3DSound(const std::string& name, const sm::Vector3& pos, bool playSound = true);
 
-
-
 	/**
 	 * \brief Set the position of the Listener, which is required for 3D sounds to work properly.
 	 * \param pos The position.
 	 * \param lookDir The look direction.
 	 */
 	void SetListenerPosition(const sm::Vector3& pos, const sm::Vector3& lookDir);
+
+	void AddToQueue(const audio_t &audio);
+	std::queue<audio_t> GetQueue();
 };

@@ -663,11 +663,17 @@ void ServerSystems::SoundSystem(Simulation* simulation, HeadlessScene& scene)
 				//
 				// Send all msg.
 				//
-				broadcastMsg << nrOfBroadcasts;
-				simulation->Broadcast(broadcastMsg);
+				if(nrOfBroadcasts > 0)
+				{
+					broadcastMsg << nrOfBroadcasts;
+					simulation->Broadcast(broadcastMsg);
+				}
 
-				singleMsg << COUNT - nrOfBroadcasts;
-				simulation->SendMsg(net.id, singleMsg);
+				if (COUNT - nrOfBroadcasts > 0)
+				{
+					singleMsg << COUNT - nrOfBroadcasts;
+					simulation->SendMsg(net.id, singleMsg);
+				}
 			}
 		});
 }

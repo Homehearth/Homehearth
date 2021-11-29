@@ -221,10 +221,13 @@ namespace sceneHelp
 				GameSystems::UpdatePlayerVisuals(game);
 				Systems::LightSystem(scene, e.dt);
 
+
 				// Need to update Listener to make 3D sound work properly.
 				const auto thePlayer = game->GetLocalPlayer();
 				SoundHandler::Get().SetListenerPosition(thePlayer.GetComponent<comp::Transform>()->position,
 					thePlayer.GetComponent<comp::Player>()->fowardDir);
+				SoundHandler::Get().Update();
+
 #ifdef _DEBUG
 				if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Space, KeyState::RELEASED))
 				{

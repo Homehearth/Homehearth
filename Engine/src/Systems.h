@@ -27,4 +27,5 @@ namespace Systems
 	void CheckCollisions(HeadlessScene& scene, float dt);
 
 	void AISystem(HeadlessScene& scene, PathFinderManager* aiHandler);
+
 }
