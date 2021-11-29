@@ -68,6 +68,7 @@ public:
 
 	//Shadows
 	Shaders::VertexShader			m_paraboloidVertexShader;
+	Shaders::VertexShader			m_paraboloidAnimationVertexShader;
 	Shaders::PixelShader			m_shadowPixelShader;
 
 	Shaders::ComputeShader			m_ParticleComputeShader;

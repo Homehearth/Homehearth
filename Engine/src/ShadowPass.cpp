@@ -75,6 +75,9 @@ ComPtr<ID3D11Buffer> ShadowPass::CreateLightBuffer(light_t light)
 
 void ShadowPass::RenderWithImmidiateContext(Scene* pScene, const ShadowSection& shadow)
 {
+	if (!shadow.pLight->enabled)
+		return;
+
 	D3D11Core::Get().DeviceContext()->ClearDepthStencilView(shadow.shadowDepth[0].Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 	D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(1, 1, shadow.lightBuffer.GetAddressOf());
 	ID3D11RenderTargetView* nullTargets[8] = { nullptr };
@@ -86,7 +89,6 @@ void ShadowPass::RenderWithImmidiateContext(Scene* pScene, const ShadowSection& 
 		this->UpdateLightBuffer(D3D11Core::Get().DeviceContext(), shadow.lightBuffer.Get(), *shadow.pLight, sm::Vector3(shadow.pLight->direction));
 		D3D11Core::Get().DeviceContext()->VSSetShader(PM->m_defaultVertexShader.Get(), nullptr, 0);
 		pScene->RenderShadow(*shadow.pLight);
-
 		break;
 	}
 	case TypeLight::POINT:
@@ -281,6 +283,47 @@ void ShadowPass::Render(Scene* pScene)
 		}
 
 		thread::RenderThreadHandler::Get().ExecuteCommandLists();
+	}
+
+
+	D3D11Core::Get().DeviceContext()->IASetInputLayout(PM->m_animationInputLayout.Get());
+	D3D11Core::Get().DeviceContext()->VSSetShader(PM->m_animationVertexShader.Get(), nullptr, 0);
+	for (const auto& shadow : m_shadows)
+	{
+		if (!shadow.pLight->enabled)
+			continue;
+
+		D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(1, 1, shadow.lightBuffer.GetAddressOf());
+		ID3D11RenderTargetView* nullTargets[8] = { nullptr };
+		D3D11Core::Get().DeviceContext()->OMSetRenderTargets(8, nullTargets, shadow.shadowDepth[0].Get());
+		switch (shadow.pLight->type)
+		{
+		case TypeLight::DIRECTIONAL:
+		{
+			this->UpdateLightBuffer(D3D11Core::Get().DeviceContext(), shadow.lightBuffer.Get(), *shadow.pLight, sm::Vector3(shadow.pLight->direction));
+			D3D11Core::Get().DeviceContext()->VSSetShader(PM->m_animationVertexShader.Get(), nullptr, 0);
+			pScene->RenderAnimation();
+
+			break;
+		}
+		case TypeLight::POINT:
+		{
+			D3D11Core::Get().DeviceContext()->VSSetShader(PM->m_paraboloidAnimationVertexShader.Get(), nullptr, 0);
+
+			this->UpdateLightBuffer(D3D11Core::Get().DeviceContext(), shadow.lightBuffer.Get(), *shadow.pLight, sm::Vector3::Down);
+			pScene->RenderAnimation();
+
+			D3D11Core::Get().DeviceContext()->OMSetRenderTargets(8, nullTargets, shadow.shadowDepth[1].Get());
+
+			this->UpdateLightBuffer(D3D11Core::Get().DeviceContext(), shadow.lightBuffer.Get(), *shadow.pLight, sm::Vector3::Up);
+			pScene->RenderAnimation();
+			
+
+			break;
+		}
+		default:
+			break;
+		}
 	}
 
 }

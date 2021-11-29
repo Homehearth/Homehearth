@@ -138,9 +138,6 @@ void Scene::Render()
 
 	// Run any available Command lists from worker threads.
 	thread::RenderThreadHandler::ExecuteCommandLists();
-
-	// Emit event
-	publish<ESceneRender>();
 }
 
 void Scene::RenderDebug()
@@ -170,9 +167,6 @@ void Scene::RenderDebug()
 			if (it.model)
 				it.model->Render(D3D11Core::Get().DeviceContext());
 		}
-
-		// Emit event
-		publish<ESceneRender>();
 		m_debugRenderableCopies.ReadyForSwap();
 	}
 
@@ -191,7 +185,8 @@ void Scene::RenderSkybox()
 
 void Scene::RenderShadow(const light_t& light)
 {
-	if (!light.enabled) return;
+	if (!light.enabled) 
+		return;
 
 	for (const auto& model : m_renderableCopies[1])
 	{
@@ -246,9 +241,6 @@ void Scene::RenderAnimation()
 		it.first.model->Render(D3D11Core::Get().DeviceContext());
 		it.second.animator->Unbind();
 	}
-	// Emit event
-	publish<ESceneRender>();
-
 }
 
 bool Scene::IsRender3DReady() const
