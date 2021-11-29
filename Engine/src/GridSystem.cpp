@@ -272,7 +272,6 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 			else
 				xPos += TileOffset(d);
 			
-			coordinates.push_back({ zPos, xPos });
 			Tile tile = m_tiles[zPos][xPos];
 
 			//Check the tiles current type
@@ -302,6 +301,7 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 						okayToPlace = false;
 				}
 			}
+			coordinates.push_back({ zPos, xPos });
 		}
 
 		// Okay to place defence here - JUST DO IT!
@@ -312,6 +312,7 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 			{
 				int zPos = coordinates[t].first;
 				int xPos = coordinates[t].second;
+				m_tiles[zPos][xPos].type = TileType::DEFENCE;
 
 				Node* node = aiHandler->GetNodeByID(Vector2I(zPos, xPos));
 				node->defencePlaced = true;
@@ -363,6 +364,7 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 			comp::OrientedBoxCollider*	collider	= tileEntity.AddComponent<comp::OrientedBoxCollider>();
 			comp::Health*				health		= tileEntity.AddComponent<comp::Health>();
 			transform->position = { centerTile.position.x, 5.f, centerTile.position.z };
+			collider->Center = transform->position;
 
 			if (player.rotateDefence)
 			{

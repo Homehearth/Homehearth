@@ -744,6 +744,7 @@ void Simulation::SetGameScene()
 	ResetGameScene();
 	m_pCurrentScene = m_pGameScene;
 	m_lobby.SetActive(false);
+
 #if GOD_MODE
 	// During debug give players 1000 gold/monies.
 	m_currency = 1000;
