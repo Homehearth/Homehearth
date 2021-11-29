@@ -19,6 +19,9 @@ namespace rtd
 		MoneyUI(const draw_text_t& opts);
 		void SetNewMoney(const uint32_t& moneyRef);
 
+		const uint32_t& GetNetworkMoney() const;
+		const uint32_t& GetLocalMoney() const;
+
 		// Inherited via Element2D
 		virtual void Draw() override;
 

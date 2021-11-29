@@ -3,6 +3,7 @@
 #include <omp.h>
 #include "Camera.h"
 #include "GridSystem.h"
+#include "OptionSystem.h"
 
 /*
 	We only need the loading screen rendered once. 
@@ -19,7 +20,7 @@ Engine::Engine()
 
 void Engine::Startup()
 {
-	
+	OptionSystem::Get().OnStartUp();
 	T_INIT(1, thread::ThreadType::POOL_FIFO);
 	srand(static_cast<unsigned>(time(NULL)));
 
@@ -104,6 +105,10 @@ void Engine::Run()
     T_DESTROY();
     D2D1Core::Destroy();
 	ResourceManager::Get().Destroy();
+
+
+	OptionSystem::Get().SetOption("MasterVolume", std::to_string(m_masterVolume));
+	OptionSystem::Get().OnShutdown();
 }
 
 
@@ -277,6 +282,7 @@ void Engine::drawImGUI() const
 				ImGui::SameLine();
 				std::string index = std::to_string(light.index);
 				ImGui::Text("Light index: %d", light.index);
+
 				bool edited = false;
 				if (ImGui::ColorEdit4(("Color##" + index).c_str(), (float*)&light.lightData.color)) 
 					edited = true;
@@ -327,7 +333,7 @@ void Engine::drawImGUI() const
 		ImGui::Text("Bounding Oriented Box");
 		ImGui::Spacing();
 
-		GetCurrentScene()->ForEachComponent<comp::BoundingOrientedBox>([&](Entity& e, comp::BoundingOrientedBox& box)
+		GetCurrentScene()->ForEachComponent<comp::OrientedBoxCollider>([&](Entity& e, comp::OrientedBoxCollider& box)
 			{
 				std::string id = std::to_string(static_cast<int>((entt::entity)e));
 				
@@ -343,7 +349,7 @@ void Engine::drawImGUI() const
 
 		ImGui::Text("Bounding Sphere");
 		ImGui::Spacing();
-		GetCurrentScene()->ForEachComponent<comp::BoundingSphere>([&](Entity& e, comp::BoundingSphere& s)
+		GetCurrentScene()->ForEachComponent<comp::SphereCollider>([&](Entity& e, comp::SphereCollider& s)
 			{
 				std::string id = std::to_string(static_cast<int>((entt::entity)e));
 

@@ -1,6 +1,9 @@
 #include "EnginePCH.h"
 #include "GridSystem.h"
 #include "PathFinderManager.h"
+#include "QuadTree.h"
+
+
 #define STB_IMAGE_IMPLEMENTATION
 
 GridSystem::GridSystem()
@@ -129,7 +132,7 @@ bool GridSystem::RemoveDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, 
 	float t = 0;
 	float tMin = FLT_MAX;
 	Entity closestEntity;
-	m_scene->ForEachComponent<comp::Transform, comp::Tag<TagType::DEFENCE>, comp::BoundingOrientedBox>([&](Entity e, comp::Transform& transform, comp::Tag<TagType::DEFENCE>& d, comp::BoundingOrientedBox& b)
+	m_scene->ForEachComponent<comp::Transform, comp::Tag<TagType::DEFENCE>, comp::OrientedBoxCollider>([&](Entity e, comp::Transform& transform, comp::Tag<TagType::DEFENCE>& d, comp::OrientedBoxCollider& b)
 		{
 			if (mouseRay.Intersects(b, &t))
 			{
@@ -173,7 +176,10 @@ bool GridSystem::RemoveDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, 
 					}
 				});
 		}
+
+		Blackboard::Get().GetPathFindManager()->RemoveDefenseEntity(closestEntity);
 		closestEntity.Destroy();
+		
 		return true;
 	}
 	else
@@ -183,7 +189,7 @@ bool GridSystem::RemoveDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, 
 }
 
 
-bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, PathFinderManager* aiHandler)
+bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, PathFinderManager* aiHandler, QuadTree* dynamicQT)
 {
 	Plane_t plane;
 	plane.normal = { 0.0f, 1.0f, 0.0f };
@@ -194,7 +200,7 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 	std::vector<dx::BoundingSphere> ePos;
 
 	// Save positions to calculate distances to the tile for players
-	m_scene->ForEachComponent<comp::Player, comp::BoundingSphere, comp::Network>([&](comp::Player& p, comp::BoundingSphere& bs, comp::Network& net)
+	m_scene->ForEachComponent<comp::Player, comp::SphereCollider, comp::Network>([&](comp::Player& p, comp::SphereCollider bs, comp::Network& net)
 		{
 			if (net.id == playerWhoPressedMouse)
 			{
@@ -203,7 +209,7 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 			ePos.push_back(bs);
 		});
 	// Do the same for all NPC entities
-	m_scene->ForEachComponent<comp::NPC, comp::BoundingSphere>([&](comp::NPC& p, comp::BoundingSphere& bs)
+	m_scene->ForEachComponent<comp::NPC, comp::SphereCollider>([&](comp::NPC& p, comp::SphereCollider& bs)
 		{
 			ePos.push_back(bs);
 		});
@@ -247,17 +253,25 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 				{
 					m_tiles[clampedZ][clampedX].type = TileType::DEFENCE;
 
-					Entity tileEntity = m_scene->CreateEntity();
-					comp::Transform* transform = tileEntity.AddComponent<comp::Transform>();
+					Entity defenseEntity = m_scene->CreateEntity();
+					comp::Transform* transform = defenseEntity.AddComponent<comp::Transform>();
 					transform->position = { tile.position.x , 5.f, tile.position.z };
 					transform->scale = { 1.35f, 1.f, 1.35f };
 
-					comp::BoundingOrientedBox* collider = tileEntity.AddComponent<comp::BoundingOrientedBox>();
+					comp::OrientedBoxCollider* collider = defenseEntity.AddComponent<comp::OrientedBoxCollider>();
 					collider->Extents = { m_tileHalfWidth, m_tileHalfWidth, m_tileHalfWidth };
-					tileEntity.AddComponent<comp::Tag<TagType::STATIC>>();
-					tileEntity.AddComponent<comp::Tag<TagType::DEFENCE>>();
-					tileEntity.AddComponent<comp::MeshName>()->name = "Defence.obj";
-					tileEntity.AddComponent<comp::Network>();
+					collider->Center = transform->position;
+					defenseEntity.AddComponent<comp::Tag<TagType::STATIC>>();
+					defenseEntity.AddComponent<comp::Tag<TagType::DEFENCE>>();
+					defenseEntity.AddComponent<comp::MeshName>()->name = NameType::MESH_DEFENCE;
+					defenseEntity.AddComponent<comp::Health>();
+					defenseEntity.AddComponent<comp::Network>();
+					defenseEntity.AddComponent<comp::Cost>()->cost = 5;
+					aiHandler->AddDefenseEntity(defenseEntity);
+					dynamicQT->Insert(defenseEntity);
+
+					//Send building particles
+
 					Node* node = aiHandler->GetNodeByID(Vector2I(clampedZ, clampedX));
 					node->defencePlaced = true;
 					node->reachable = false;
@@ -290,11 +304,10 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 								}
 							});
 					}
+					return true;
 				}
-				return true;
 			}
 		}
-
 	}
 	return false;
 }

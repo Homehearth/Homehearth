@@ -83,7 +83,7 @@ float3 DoPointlight(Light L, PixelIn input, float3 normal)
     
     float3 N = normalize(normal);
     
-    float3 diff = float3(1.0f, 1.0f, 1.0f);
+    float3 diff = L.color.xyz * L.intensity;
     
     float diffuseFactor = max(dot(VL, N), 0.0f);
     diff *= diffuseFactor;
@@ -117,7 +117,7 @@ float3 DoDirectionlight(Light L, float3 normal)
     float3 N = normalize(normal);
     float3 VL = -normalize(L.direction.xyz);
     
-    float3 diff = L.color.xyz;
+    float3 diff = L.color.xyz * L.intensity;
     
     float diffuseFactor = max(dot(VL, N), 0.0f);
     

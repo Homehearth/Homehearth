@@ -3,6 +3,7 @@ House6.fbx
 House7.fbx
 House8.fbx
 House9.fbx
+House10.fbx
 HouseRoof.fbx
 Tree2.fbx
 Tree3.fbx

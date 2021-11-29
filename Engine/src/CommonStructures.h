@@ -3,6 +3,23 @@
 constexpr int MAX_PLAYERS_PER_LOBBY = 4;
 constexpr int MAX_HEALTH = 100;
 
+
+
+/*
+	Change these to tweak the day and night cycle timers.
+*/
+constexpr uint32_t TIME_LIMIT_DAY = 60;
+constexpr uint32_t TIME_LIMIT_NIGHT = 50;
+constexpr uint32_t TIME_LIMIT_MORNING = 10;
+constexpr float ROTATION = 180.0f / (float)(TIME_LIMIT_DAY + TIME_LIMIT_MORNING);
+
+enum class Cycle : UINT
+{
+	DAY,
+	NIGHT,
+	MORNING,
+};
+
 struct Currency
 {
 private:
@@ -13,14 +30,31 @@ public:
 	{
 		return m_amount;
 	}
-	uint32_t& GetAmountRef()
-	{
-		return m_amount;
-	}
 	void Zero()
 	{
 		m_amount = 0;
 	}
+	void operator +=(uint32_t money)
+	{
+		m_amount += money;
+	}
+	void operator -=(uint32_t money)
+	{
+		m_amount -= money;
+	}
+	void operator = (uint32_t money)
+	{
+		m_amount = money;
+	}
+	bool operator >= (uint32_t money)
+	{
+		return m_amount >= money;
+	}
+	bool operator < (uint32_t money)
+	{
+		return m_amount < money;
+	}
+	bool hasUpdated = false;
 };
 
 struct MinMaxProj_t
@@ -228,6 +262,8 @@ struct InputState
 	bool leftMouse : 1;
 	bool rightMouse : 1;
 	bool key_b : 1;
+	bool key_shift : 1;
+	bool key_r : 1;
 
 	Ray_t mouseRay;
 
@@ -247,7 +283,7 @@ enum class GameMsg : uint8_t
 	Lobby_Update,
 	Lobby_PlayerLeft,
 	Lobby_PlayerJoin,
-
+	
 	Server_AssignID,
 	Server_GetPing,
 
@@ -267,7 +303,21 @@ enum class GameMsg : uint8_t
 	Game_PlayerInput,
 	Game_Money,
 	Game_UseShop,
-	Game_ChangeAnimation
+	Game_UpgradeDefence,
+	Game_ChangeAnimation,
+	Game_Cooldown,
+	Game_StartSpectate,
+	Game_StopSpectate,
+	Game_Over
+};
+
+enum class AbilityIndex : uint8_t
+{
+	Primary,
+	Secondary,
+	Dodge,
+
+	DEFAULT
 };
 
 enum class ShopItem : uint8_t
@@ -292,6 +342,16 @@ enum class ShopItem : uint8_t
 	SHORT_TOWER,
 
 	NR_OF
+};
+
+enum class Mode : uint8_t
+{
+	// Normal play mode fighting against monsters.
+	PLAY_MODE,
+	// Build mode allows players to build defences.
+	BUILD_MODE,
+	// Destroy mode allows players to remove their defences.
+	DESTROY_MODE
 };
 
 /*
@@ -365,11 +425,12 @@ struct light_t
 {
 	sm::Vector4 position = {};	//Only in use on Point Lights
 	sm::Vector4 direction = {};	//Only in use on Directional Lights
-	sm::Vector4 color = {};	//Color and Intensity of the Lamp
+	sm::Vector4 color = {};	//Color of the Lamp
 	float		range = 0;	//Only in use on Point Lights
 	TypeLight	type = TypeLight::DIRECTIONAL;	// 0 = Directional, 1 = Point
 	UINT		enabled = 0;	// 0 = Off, 1 = On
-	float		padding = 0;
+	sm::Matrix lightMatrix = sm::Matrix::Identity;
+	float		intensity = 0;	//Intensity of the Lamp
 };
 
 static struct GridProperties_t
@@ -462,10 +523,11 @@ struct Node
 ALIGN16
 struct Particle_t
 {
-	sm::Vector4		position;
+	sm::Vector4		position = { 0, 0, 0, 1 };
+	sm::Vector4		velocity = { 0, 0, 0, 1 };
 	sm::Vector4		color;
 
-	sm::Vector2		size;
-	PARTICLEMODE	type = PARTICLEMODE::SPARKLES;
-	float			paddning = -1;
+	sm::Vector2		size = { 1, 1, };
+	PARTICLEMODE	type = PARTICLEMODE::BLOOD;
+	UINT			life = 0;
 };

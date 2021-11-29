@@ -30,6 +30,10 @@ void BasePass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 
     DC->OMSetRenderTargets(1, PM->m_backBuffer.GetAddressOf(), PM->m_depthStencilView.Get());
     DC->OMSetDepthStencilState(PM->m_depthStencilStateLessEqual.Get(), 0);
+
+    if(m_pShadowPass)
+        m_pShadowPass->PostRender(DC);
+
 }
 
 void BasePass::Render(Scene* pScene)

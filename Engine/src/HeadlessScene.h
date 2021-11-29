@@ -13,7 +13,6 @@ protected:
 	entt::registry m_registry;
 
 public:
-
 	BasicScene();
 	virtual ~BasicScene() = default;
 	BasicScene(const BasicScene&) = delete;

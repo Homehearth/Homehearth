@@ -8,6 +8,8 @@
 #include "AIBehaviors.h"
 #include "Lobby.h"
 #include "IShop.h"
+#include "QuadTree.h"
+#include "Cycler.h"
 /*
 		Simulation defines each ongoing simulation from the perspective of the server
 		gameID identifies the simulation which each player has to give the server to keep track
@@ -25,9 +27,12 @@ private:
 	Currency m_currency;
 	Lobby m_lobby;
 	IShop m_shop;
+	std::unique_ptr<QuadTree> qt;
+	std::unique_ptr<QuadTree> qtDynamic;
 
 	HeadlessScene* m_pLobbyScene;
 	HeadlessScene* m_pGameScene;
+	HeadlessScene* m_pGameOverScene;
 	HeadlessScene* m_pCurrentScene;
 
 	std::vector<Entity> m_addedEntities;
@@ -39,7 +44,6 @@ private:
 	int currentRound;
 
 	void InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg, const std::bitset<ecs::Component::COMPONENT_MAX>& componentMask = UINT32_MAX) const;
-	message<GameMsg> AllEntitiesMessage()const;
 
 	uint32_t GetTick()const;
 
@@ -57,6 +61,7 @@ private:
 	void BuildMapColliders(std::vector<dx::BoundingOrientedBox>* mapColliders);
 
 public:
+	Cycler m_timeCycler;
 	Simulation(Server* pServer, HeadlessEngine* pEngine);
 	virtual ~Simulation() = default;
 	
@@ -65,8 +70,6 @@ public:
 	void LeaveLobby(uint32_t playerID);
 
 	bool Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* mapColliders);
-	//Creates the waves needed to spawn enemies
-	void CreateWaves();
 	void Destroy();
 
 	void NextTick();
@@ -75,12 +78,14 @@ public:
 	void UpdateInput(InputState state, uint32_t playerID);
 
 	HeadlessScene* GetLobbyScene() const;
+	HeadlessScene* GetGameOverScene() const;
 	HeadlessScene* GetGameScene() const;
 
 	GridSystem& GetGrid();
 	Currency& GetCurrency();
 
 	void SetLobbyScene();
+	void SetGameOver();
 	void SetGameScene();
 	void ResetGameScene();
 	
@@ -104,4 +109,5 @@ public:
 	Entity GetPlayer(uint32_t playerID)const;
 
 	void UseShop(const ShopItem& item, const uint32_t& player);
+	void UpgradeDefence(const uint32_t& id);
 };

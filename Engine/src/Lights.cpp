@@ -129,6 +129,26 @@ void Lights::EditLight(light_t L, const int& index)
 {
     if (index < (int)m_lights.size() && index >= 0)
     {
+        camera_Matrix_t mat = ShadowPass::GetLightMatrix(L);
+
+        switch (L.type)
+        {
+        case TypeLight::DIRECTIONAL:
+        {
+            L.direction.Normalize();
+            L.lightMatrix = mat.view;
+            L.lightMatrix *= mat.projection;
+            break;
+        }
+        case TypeLight::POINT:
+        {
+            L.lightMatrix.Translation(sm::Vector3(L.position));
+            break;
+        }
+        default:
+            break;
+        }
+
         m_lights[index] = L;
     }
 }
@@ -137,4 +157,9 @@ void Lights::Add(entt::registry& reg, entt::entity ent)
 {
     reg.get<comp::Light>(ent).index = (int)m_lights.size();
     m_lights.push_back(reg.get<comp::Light>(ent).lightData);
+}
+
+std::vector<light_t>& Lights::GetLights()
+{
+    return m_lights;
 }

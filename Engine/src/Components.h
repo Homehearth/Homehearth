@@ -5,6 +5,7 @@
 #include "ResourceManager.h"
 #include "BehaviorTreeBT.h"
 #include <stack>
+#include "ModelIdentifier.h"
 
 namespace ecs
 {
@@ -17,27 +18,42 @@ namespace ecs
 		HEALTH,
 		BOUNDING_ORIENTED_BOX,
 		BOUNDING_SPHERE,
-		LIGHT,
+		PARTICLEMITTER,
 		PLAYER,
+		COST,
 		COMPONENT_COUNT,
 		COMPONENT_MAX = 32
 	};
 
-	namespace component {
+	namespace component 
+	{
+		struct OrientedBoxCollider : dx::BoundingOrientedBox
+		{
+			// Empty for now
+		};
 
-		//Collider components
-		using DirectX::BoundingOrientedBox;
-		using DirectX::BoundingSphere;
-		using dx::BoundingBox;
-		
+		struct SphereCollider : dx::BoundingSphere
+		{
+			std::set<Entity> list;
+		};
+
+		struct BoxCollider : dx::BoundingBox
+		{
+			// Empty for now
+		};
 
 		struct Transform
 		{
 			sm::Vector3 position;
 			sm::Quaternion rotation;
 			sm::Vector3 scale = sm::Vector3(1);
-			
+
 			bool syncColliderScale = false;
+		};
+
+		struct Cost
+		{
+			uint32_t cost;
 		};
 
 		struct Decal
@@ -62,32 +78,95 @@ namespace ecs
 
 		struct EmitterParticle
 		{
-			std::shared_ptr<RTexture> texture = nullptr;
-			std::shared_ptr<RTexture> opacityTexture = nullptr;
-			PARTICLEMODE type = PARTICLEMODE::BLOOD;
-			UINT nrOfParticles = 0;
+			sm::Vector3							positionOffset	= { 0,0,0 };
+			UINT								nrOfParticles	= 0;
+			PARTICLEMODE						type			= PARTICLEMODE::BLOOD;
+			float								lifeTime		= 0.f;
+			float								sizeMulitplier	= 0.f;
+			float								speed			= 0.f;
+			bool								hasDeathTimer	= false;
+			float								lifeLived		= 0.f;
 
-			ComPtr<ID3D11Buffer> particleBuffer;
-			ComPtr<ID3D11ShaderResourceView> particleSRV;
-			ComPtr<ID3D11UnorderedAccessView> particleUAV;
+			std::string textureName								= "";
+			std::string opacityTextureName						= "";
 
-			EmitterParticle(std::string textureName = "thisisfine.png ", std::string opacityTextureName = "thisisfine_Opacity.png", int amoutOfParticles = 10, PARTICLEMODE mode = PARTICLEMODE::BLOOD)
+			std::shared_ptr<RTexture>			texture			= nullptr;
+			std::shared_ptr<RTexture>			opacityTexture	= nullptr;
+			ComPtr<ID3D11Buffer>				particleBuffer	= nullptr;
+			ComPtr<ID3D11ShaderResourceView>	particleSRV		= nullptr;
+			ComPtr<ID3D11UnorderedAccessView>	particleUAV		= nullptr;
+
+			EmitterParticle(sm::Vector3 positionOffset = {0,0,0}, int nrOfParticles = 10, float sizeMulitplier = 1.f, PARTICLEMODE type = PARTICLEMODE::BLOOD, float lifeTime = 2.f, float speed = 1, bool hasDeathTimer = false)
 			{
-				//If no texture name take default texture else use the given name
-				if (textureName == "")
-					texture = ResourceManager::Get().GetResource<RTexture>("thisisfine.png ");
-				else 
-					texture = ResourceManager::Get().GetResource<RTexture>(textureName);
+				if (type == PARTICLEMODE::BLOOD)
+				{
+					textureName = "BloodParticle.png";
+					opacityTextureName = "round_Opacity.png";
+				}
+				else if (type == PARTICLEMODE::LEAF)
+				{
+					textureName = "thisisfine.png";
+					opacityTextureName = "round_Opacity.png";
+				}
+				else if (type == PARTICLEMODE::WATERSPLASH)
+				{
+					textureName = "waterSplash.png";
+					opacityTextureName = "round_Opacity.png";
+				}
+				else if (type == PARTICLEMODE::SMOKE)
+				{
+					textureName = "smoke.png";
+					opacityTextureName = "smoke_opacity.png";
+				}
+				else if (type == PARTICLEMODE::SPARKLES)
+				{
+					textureName = "thisisfine.png";
+					opacityTextureName = "round_Opacity.png";
+				}
+				else if (type == PARTICLEMODE::RAIN)
+				{
+					textureName = "thisisfine.png";
+					opacityTextureName = "round_Opacity.png";
+				}
+				else if (type == PARTICLEMODE::DUST)
+				{
+					textureName = "thisisfine.png";
+					opacityTextureName = "round_Opacity.png";
+				}
 
-				//If no opacity texture name take default opacity texture else use given name
-				if (opacityTextureName == "")
-					opacityTexture = ResourceManager::Get().GetResource<RTexture>("thisisfine_Opacity.png");
-				else
-					opacityTexture = ResourceManager::Get().GetResource<RTexture>(opacityTextureName);
+				texture = ResourceManager::Get().GetResource<RTexture>(textureName);
+				opacityTexture = ResourceManager::Get().GetResource<RTexture>(opacityTextureName);
 
+				this->nrOfParticles		= (UINT)nrOfParticles;
+				this->type				= type;
+				this->lifeTime			= lifeTime;
+				this->sizeMulitplier	= sizeMulitplier;
+				this->speed				= speed;
+				this->positionOffset	= positionOffset;
+				this->hasDeathTimer		= hasDeathTimer;
+			}
+		};
 
-				nrOfParticles = (UINT)amoutOfParticles;
-				type = mode;
+		struct PARTICLEEMITTER 
+		{
+			sm::Vector3		positionOffset	= { 0,0,0 };
+			UINT			nrOfParticles	= 0;
+			PARTICLEMODE	type			= PARTICLEMODE::BLOOD;
+			float			lifeTime		= 0.f;
+			float			sizeMulitplier	= 0.f;
+			float			speed			= 0.f;
+			bool			hasDeathTimer	= false;
+			float			lifeLived		= 0.f;
+
+			PARTICLEEMITTER(sm::Vector3 positionOffset = { 0,0,0 }, int nrOfParticles = 10, float sizeMulitplier = 1.f, PARTICLEMODE type = PARTICLEMODE::BLOOD, float lifeTime = 2.f, float speed = 1, bool hasDeathTimer = false)
+			{
+				this->nrOfParticles		= (UINT)nrOfParticles;
+				this->type				= type;
+				this->lifeTime			= lifeTime;
+				this->sizeMulitplier	= sizeMulitplier;
+				this->speed				= speed;
+				this->positionOffset	= positionOffset;
+				this->hasDeathTimer		= hasDeathTimer;
 			}
 		};
 
@@ -117,16 +196,16 @@ namespace ecs
 		};
 
 		// Used on server side
-		struct AnimatorName 
+		struct AnimatorName
 		{
-			std::string name = "";
+			AnimName name;
 		};
-	
-		struct MeshName 
+
+		struct MeshName
 		{
-			std::string name = "";
+			NameType name;
 		};
-		
+
 		struct RenderableDebug
 		{
 			std::shared_ptr<RModel> 	model;
@@ -134,9 +213,9 @@ namespace ecs
 			collider_hit_t				isColliding;
 			void InitRenderable(entt::registry& reg, const entt::entity curr)
 			{
-				BoundingOrientedBox* obb = reg.try_get<BoundingOrientedBox>(curr);
-				BoundingSphere* sphere = reg.try_get<BoundingSphere>(curr);
-				BoundingBox* box = reg.try_get<BoundingBox>(curr);
+				OrientedBoxCollider* obb = reg.try_get<OrientedBoxCollider>(curr);
+				SphereCollider* sphere = reg.try_get<SphereCollider>(curr);
+				BoxCollider* box = reg.try_get<BoxCollider>(curr);
 				if (obb != nullptr)
 				{
 					model = ResourceManager::Get().GetResource<RModel>("Cube.obj");
@@ -156,7 +235,7 @@ namespace ecs
 		{
 			std::shared_ptr<BT::ParentNode> root;
 		};
-		
+
 
 		struct TemporaryPhysics
 		{
@@ -196,6 +275,7 @@ namespace ecs
 			{
 				IDLE,
 				LOOK_TO_MOUSE,
+				SPECTATING,
 				WALK
 			} state = State::IDLE;
 
@@ -207,6 +287,7 @@ namespace ecs
 
 			entt::meta_type primaryAbilty;
 			entt::meta_type secondaryAbilty;
+			entt::meta_type moveAbilty;
 
 			float runSpeed;
 
@@ -222,8 +303,6 @@ namespace ecs
 			char name[12] = {};
 			TowerTypes towerSelected = TowerTypes::SHORT;
 		};
-
-	
 
 		struct NPC
 		{
@@ -244,6 +323,9 @@ namespace ecs
 		{
 			light_t lightData;
 			int index;
+			float flickerTimer = 1.f;
+			float maxFlickerTime = 1.f;
+			bool increase;
 		};
 
 		struct Health
@@ -259,7 +341,7 @@ namespace ecs
 			float cooldown = 1.5f;
 			// !DO NOT TOUCH!
 			float cooldownTimer = 0.f;
-			
+
 			// set this for delay before ability is actually used after the cooldown is done and the ecs::UseAbility has bee called
 			float delay = 0.1f;
 			// !DO NOT TOUCH!
@@ -276,10 +358,6 @@ namespace ecs
 			// lifetime of the ability, for instance lifetime of any created collider
 			float lifetime = 5.f;
 
-			float attackDamage = 5.f;
-
-			float attackRange = 10.0f;
-
 			// !DO NOT TOUCH!
 			bool isReady = false;
 			// !DO NOT TOUCH!
@@ -289,15 +367,37 @@ namespace ecs
 			sm::Vector3 targetPoint;
 		};
 
+		//---------- WARRIOR ABILITIES ----------
 		struct MeleeAttackAbility : public IAbility
 		{
 			//Just to keep it not empty for now
-			float temp = 0.0f;
+			float attackDamage = 5.f;
+			float attackRange = 10.0f;
 		};
 
+		struct HeroLeapAbility : public IAbility
+		{
+			float damage = 10.f;
+			float damageRadius = 20.f;
+			float maxRange = 30.f;
+		};
+
+		struct DashAbility : public IAbility
+		{
+			//The duration for the force
+			float duration = 1.0f;
+			//amount of force applied when used
+			float force = 25.0f;
+			//Store velocity that was before dash was applied
+			sm::Vector3 velocityBeforeDash = { 0.0f,0.0f,0.0f };
+		};
+		//------------------END----------------------
+
+		//---------- MAGE ABILITIES ----------
 		struct RangeAttackAbility : public IAbility
 		{
 			float attackDamage = 5.f;
+			float attackRange = 10.0f;
 			float projectileSpeed = 10.f;
 			float projectileSize = 1.0f;
 		};
@@ -307,13 +407,13 @@ namespace ecs
 			float healAmount = 40.f;
 			float range = 50.f;
 		};
-
-		struct HeroLeapAbility : public IAbility
+		struct BlinkAbility : public IAbility
 		{
-			float damage = 10.f;
-			float damageRadius = 20.f;
-			float maxRange = 30.f;
+			//The distance ability teleports Entity forward 
+			float distance = 50.0f;
 		};
+		//------------------END----------------------
+
 
 
 		struct SelfDestruct
@@ -349,7 +449,7 @@ namespace ecs
 	sm::Vector3 GetRight(const component::Transform& transform);
 	bool StepRotateTo(sm::Quaternion& rotation, const sm::Vector3& targetVector, float t);
 	bool StepTranslateTo(sm::Vector3& translation, const sm::Vector3& target, float t);
-	
+
 	template<typename T>
 	void RegisterAsAbility()
 	{
@@ -369,7 +469,7 @@ namespace ecs
 				.base<component::ITag>()
 				.func<&Entity::GetComponentRef<T>, entt::as_ref_t>("get"_hs)
 				.func<&Entity::HasComponent<T>>("has"_hs);
-			
+
 			LOG_INFO("Registered tag %s", entt::resolve<T>().info().name().data());
 		}
 	}
