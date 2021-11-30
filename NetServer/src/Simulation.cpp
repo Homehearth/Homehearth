@@ -498,7 +498,7 @@ void Simulation::SendSnapshot()
 			msg2.header.id = GameMsg::Game_WaveTimer;
 			msg2 << m_timeCycler.GetElapsedTime();
 			msg2 << m_timeCycler.GetTimePeriod();
-			this->BroadcastUDP(msg2);
+			this->Broadcast(msg2);
 		}
 
 		if (m_currency.hasUpdated)
@@ -542,7 +542,7 @@ void Simulation::SendSnapshot()
 				{
 					count++;
 					msg4 << AbilityIndex::Dodge << dash->cooldownTimer;
-				}
+				} 
 
 				if (heal)
 				{
@@ -962,11 +962,12 @@ void Simulation::BroadcastUDP(message<GameMsg>& msg, uint32_t exclude) const
 {
 	auto it = m_lobby.m_players.begin();
 
+	msg << msg.header.id;
+
 	while (it != m_lobby.m_players.end())
 	{
 		if (exclude != it->first)
 		{
-			msg << msg.header.id;
 			m_pServer->SendToClientUDP(it->first, msg);
 		}
 		it++;
