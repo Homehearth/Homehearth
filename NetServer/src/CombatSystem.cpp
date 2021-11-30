@@ -19,7 +19,7 @@ void CombatSystem::UpdateMelee(HeadlessScene& scene)
 				audio_t audio;
 				audio.type = ESoundEvent::Player_OnMeleeAttack;
 				audio.position = entity.GetComponent<comp::Transform>()->position;
-				audio.shouldBroadcast = false;
+				audio.shouldBroadcast = true;
 				audio.playLooped = false;
 				audio.is3D = true;
 				audio.minDistance = 100.f;

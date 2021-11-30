@@ -33,6 +33,7 @@ void SoundHandler::UpdateCurrentMusic(irrklang::ISoundSource* musicSrc, bool loo
     }
 
     m_currentMusic = m_soundEngine->play2D(musicSrc, loopMusic, true, false, false);
+    m_currentMusic->setVolume(0.5f);
     m_currentMusic->setIsPaused(false);
 }
 
