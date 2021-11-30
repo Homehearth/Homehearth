@@ -186,17 +186,20 @@ namespace sceneHelp
 				);
 
 				Collection2D* bullColl = game->GetCurrentScene()->GetCollection("bullDoze");
-				rtd::Picture* bullIcon = dynamic_cast<rtd::Picture*>(bullColl->elements[0].get());
-				if (bullIcon)
+				if (bullColl)
 				{
-					if (game->GetCurrentMode() == Mode::DESTROY_MODE)
+					rtd::Picture* bullIcon = dynamic_cast<rtd::Picture*>(bullColl->elements[0].get());
+					if (bullIcon)
 					{
-						bullColl->Show();
-						bullIcon->SetPosition((FLOAT)InputSystem::Get().GetMousePos().x, (FLOAT)InputSystem::Get().GetMousePos().y);
-					}
-					else
-					{
-						bullColl->Hide();
+						if (game->GetCurrentMode() == Mode::DESTROY_MODE)
+						{
+							bullColl->Show();
+							bullIcon->SetPosition((FLOAT)InputSystem::Get().GetMousePos().x, (FLOAT)InputSystem::Get().GetMousePos().y);
+						}
+						else
+						{
+							bullColl->Hide();
+						}
 					}
 				}
 

@@ -29,10 +29,10 @@ private:
 	IShop m_shop;
 	std::unique_ptr<QuadTree> qt;
 	std::unique_ptr<QuadTree> qtDynamic;
-	sm::Vector3 TL = { 220.f, 0, -353.f };
-	sm::Vector3 TR = { 197.f, 0, -325.f };
-	sm::Vector3 BR = { 222.f, 0, -300.f };
-	sm::Vector3 BL = { 247.f, 0, -325.f };
+	sm::Vector3 TL = { 220.f, 0.75f, -353.f };
+	sm::Vector3 TR = { 197.f, 0.75f, -325.f };
+	sm::Vector3 BR = { 222.f, 0.75f, -300.f };
+	sm::Vector3 BL = { 247.f, 0.75f, -325.f };
 
 	HeadlessScene* m_pLobbyScene;
 	HeadlessScene* m_pGameScene;
