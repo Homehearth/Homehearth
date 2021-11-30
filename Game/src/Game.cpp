@@ -404,6 +404,8 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		audio.isUnique = true;
 		audio.playLooped = false;
 		SoundHandler::Get().PlaySound("Player_OnDeath", audio);
+		audio.volume = 0.5f;
+		SoundHandler::Get().PlaySound("OnGameOver", audio);
 
 		SetScene("GameOver");
 		break;

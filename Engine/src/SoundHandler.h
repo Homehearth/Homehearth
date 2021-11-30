@@ -17,9 +17,7 @@ private:
 	std::unordered_map<std::string, irrklang::ISoundSource*>::iterator m_iterator;
 
 	irrklang::ISound* m_currentMusic;
-
-	std::vector<irrklang::ISound*> m_activeSounds;
-
+	
 	void UpdateCurrentMusic(irrklang::ISoundSource* music, bool loopMusic);
 
 	void LoadAllSounds();

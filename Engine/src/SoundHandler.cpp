@@ -43,6 +43,7 @@ void SoundHandler::LoadAllSounds()
     AddSoundSource("../Assets/Sounds/NightTheme.wav");
     AddSoundSource("../Assets/Sounds/MenuTheme.mp3");
     AddSoundSource("../Assets/Sounds/ButtonClick.mp3");
+    AddSoundSource("../Assets/Sounds/OnGameOver.wav");
 
     AddSoundSource("../Assets/Sounds/Player_OnMovement.wav");
     AddSoundSource("../Assets/Sounds/Player_OnMeleeAttack.wav");
@@ -79,15 +80,6 @@ SoundHandler& SoundHandler::Get()
 void SoundHandler::Update()
 {
     m_soundEngine->update();
-
-    //for (int i = 0; i < m_activeSounds.size(); i++)
-    //{
-	   // if(m_activeSounds[i] != nullptr && m_activeSounds[i]->isFinished())
-	   // {
-    //        m_activeSounds[i]->drop();
-    //        m_activeSounds.erase(m_activeSounds.begin() + i);
-	   // }
-    //}
 }
 
 void SoundHandler::AddSoundSource(const std::string &filePath)
@@ -147,12 +139,12 @@ irrklang::ISound* SoundHandler::PlaySound(const std::string& name, const audio_t
 {
     irrklang::ISound* sound = nullptr;
 
-    // Check if Sound exists.
+    // Check if Sound Src exists.
     m_iterator = m_soundSources.find(name);
     if (m_iterator != m_soundSources.end())
     {
-        // This is a condition which will not result in playing the sound.
-        if (m_soundEngine->isCurrentlyPlaying(m_iterator->second) && data.isUnique) 
+        // isUnique condition check.
+        if (m_soundEngine->isCurrentlyPlaying(m_iterator->second) && data.isUnique)
             return sound;
 
         if(data.is3D)
@@ -174,9 +166,6 @@ irrklang::ISound* SoundHandler::PlaySound(const std::string& name, const audio_t
         	sound->setVolume(volume);
             sound->setIsPaused(false);
         }
-
-        // Add to current active sounds.
-        //m_activeSounds.emplace_back(sound);
     }
 
     return sound;
