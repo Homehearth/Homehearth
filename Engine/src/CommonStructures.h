@@ -270,7 +270,7 @@ struct InputState
 	bool	key_b			: 1;
 	bool	key_shift		: 1;
 	bool	key_r			: 1;
-	int		mousewheelDir	: 2;
+	int		mousewheelDir	: 8;
 
 	Ray_t mouseRay;
 

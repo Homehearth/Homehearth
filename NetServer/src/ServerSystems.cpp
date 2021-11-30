@@ -503,6 +503,8 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 			//Rotate defences 90 or not
 			if (p.lastInputState.mousewheelDir != 0)
 			{
+				std::cout << "Server, wheel: " << p.lastInputState.mousewheelDir << std::endl;
+
 				if (p.lastInputState.mousewheelDir > 0)
 					p.rotateDefence = true;
 				else if (p.lastInputState.mousewheelDir < 0)

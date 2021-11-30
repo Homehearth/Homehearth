@@ -998,6 +998,9 @@ void Game::UpdateInput()
 	m_inputState.axisHorizontal = InputSystem::Get().GetAxis(Axis::HORIZONTAL);
 	m_inputState.axisVertical = InputSystem::Get().GetAxis(Axis::VERTICAL);
 	m_inputState.mousewheelDir = InputSystem::Get().GetMouseWheelDirection();
+	
+	if (m_inputState.mousewheelDir != 0)
+		std::cout << "Inputstate: " << m_inputState.mousewheelDir << std::endl;
 
 	if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED))
 	{
