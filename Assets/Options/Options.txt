@@ -1,3 +1,0 @@
-BlurType 0
-Resolution 1920x1080
-MasterVolume 0.853226

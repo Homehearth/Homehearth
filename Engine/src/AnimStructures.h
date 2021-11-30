@@ -28,7 +28,8 @@ enum class EAnimationType : uint32_t
 	ABILITY3,
 	ABILITY4,
 	TAKE_DAMAGE,
-	PLACE_DEFENCE
+	PLACE_DEFENCE,
+	DEAD
 };
 
 struct blendstate_t

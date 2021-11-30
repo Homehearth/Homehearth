@@ -158,7 +158,7 @@ void Simulation::ResetPlayer(Entity player)
 		firstTimeAdded = true;
 	}
 
-	player.AddComponent<comp::MeshName>()->name = NameType::MESH_KNIGHT;
+	player.AddComponent<comp::MeshName>()->name		= NameType::MESH_KNIGHT;
 	player.AddComponent<comp::AnimatorName>()->name = AnimName::ANIM_KNIGHT;
 	player.AddComponent<comp::AnimationState>();
 
@@ -227,8 +227,8 @@ void Simulation::ResetPlayer(Entity player)
 
 		playerComp->moveAbilty = entt::resolve<comp::BlinkAbility>();
 
-		player.AddComponent<comp::MeshName>()->name = NameType::MESH_MONSTER;
-		player.AddComponent<comp::AnimatorName>()->name = AnimName::ANIM_MONSTER;
+		player.AddComponent<comp::MeshName>()->name		= NameType::MESH_MAGE;
+		player.AddComponent<comp::AnimatorName>()->name = AnimName::ANIM_MAGE;
 		player.AddComponent<comp::AnimationState>();
 
 	}
@@ -326,7 +326,6 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 					PROFILE_SCOPE("Update QuadTree");
 					Systems::UpdateDynamicQT(scene, qtDynamic.get());
 				}
-				m_timeCycler.Update(this);
 
 				{
 					PROFILE_SCOPE("Update blackboard");
@@ -350,7 +349,7 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 					Systems::UpdateAbilities(scene, e.dt);
 					Systems::CombatSystem(scene, e.dt);
 					Systems::HealingSystem(scene, e.dt);
-					Systems::HealthSystem(scene, e.dt, m_currency, m_grid);
+					Systems::HealthSystem(scene, e.dt, m_currency, m_spreeHandler, m_grid);
 					Systems::SelfDestructSystem(scene, e.dt);
 				}
 
@@ -390,6 +389,9 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 					else
 						EnemyManagement::CreateWaves(waveQueue, currentRound++);
 				}
+
+				m_timeCycler.Update(this);
+				m_spreeHandler.Update();
 			}
 		});
 
@@ -493,13 +495,13 @@ void Simulation::SendSnapshot()
 			this->BroadcastUDP(msg2);
 		}
 
-		if (m_currency.hasUpdated)
+		if (m_currency.m_hasUpdated)
 		{
 			network::message<GameMsg> msg3;
 			msg3.header.id = GameMsg::Game_Money;
 			msg3 << m_currency.GetAmount();
 			this->Broadcast(msg3);
-			m_currency.hasUpdated = false;
+			m_currency.m_hasUpdated = false;
 		}
 		// Send Abilities
 		{
@@ -547,6 +549,11 @@ void Simulation::SendSnapshot()
 				m_pServer->SendToClientUDP(i->first, msg4);
 			}
 		}
+
+		network::message<GameMsg> msg5;
+		msg5.header.id = GameMsg::Game_Spree;
+		msg5 << (uint32_t)m_spreeHandler.GetSpree();
+		this->Broadcast(msg5);
 	}
 	else
 	{
@@ -745,7 +752,6 @@ void Simulation::SetGameScene()
 #if GOD_MODE
 	// During debug give players 1000 gold/monies.
 	m_currency = 1000;
-	m_currency.hasUpdated = true;
 	for (auto& player : m_lobby.m_players)
 	{
 		//player.second.AddComponent<comp::Tag<TagType::NO_RESPONSE>>();
