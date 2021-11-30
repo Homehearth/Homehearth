@@ -146,6 +146,12 @@ project "Engine"
 	{
 		--Does not work... "../Game/build/bin/" .. outputdir .. "/Game/assimp-vc142-mt
 		os.copyfile("../ThirdParty/assimp/lib/assimp-vc142-mt.dll" , "../Game/build/bin/Debug-windows-x86_64/Game/assimp-vc142-mt.dll"),
+        os.copyfile("../ThirdParty/irrKlang/dlls/ikpFlac.dll" , "../Game/build/bin/Debug-windows-x86_64/Game/ikpFlac.dll"),
         os.copyfile("../ThirdParty/irrKlang/dlls/irrKlang.dll" , "../Game/build/bin/Debug-windows-x86_64/Game/irrKlang.dll"),
-        os.copyfile("../ThirdParty/irrKlang/dlls/ikpMP3.dll" , "../Game/build/bin/Debug-windows-x86_64/Game/ikpMP3.dll")
+        os.copyfile("../ThirdParty/irrKlang/dlls/ikpMP3.dll" , "../Game/build/bin/Debug-windows-x86_64/Game/ikpMP3.dll"),
+
+        os.copyfile("../ThirdParty/assimp/lib/assimp-vc142-mt.dll" , "../Game/build/bin/Release-windows-x86_64/Game/assimp-vc142-mt.dll"),
+        os.copyfile("../ThirdParty/irrKlang/dlls/ikpFlac.dll" , "../Game/build/bin/Debug-windows-x86_64/Game/ikpFlac.dll"),
+        os.copyfile("../ThirdParty/irrKlang/dlls/irrKlang.dll" , "../Game/build/bin/Release-windows-x86_64/Game/irrKlang.dll"),
+        os.copyfile("../ThirdParty/irrKlang/dlls/ikpMP3.dll" , "../Game/build/bin/Release-windows-x86_64/Game/ikpMP3.dll")
 	}
