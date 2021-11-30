@@ -22,6 +22,7 @@ BT::NodeStatus BT::GenPathCBT::Tick()
 		if(npc->path.empty() || generatePathTimer.GetElapsedTime<std::chrono::seconds>() > refreshRate)
 		{
 			generatePathTimer.Start();
+			
 			aiHandler->AStarSearch(entity);
 		}
 
