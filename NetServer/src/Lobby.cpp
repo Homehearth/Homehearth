@@ -8,6 +8,29 @@ void Lobby::CreatePlayerEntity(uint32_t playerID, const std::string& name)
 	Entity player = m_simRef->GetGameScene()->CreateEntity();
 
 	comp::Player* playerComp = player.AddComponent<comp::Player>();
+	switch (m_players.size())
+	{
+	case 0:
+	{
+		playerComp->playerType = comp::Player::PlayerType::PLAYER_ONE;
+		break;
+	}
+	case 1:
+	{
+		playerComp->playerType = comp::Player::PlayerType::PLAYER_TWO;
+		break;
+	}
+	case 2:
+	{
+		playerComp->playerType = comp::Player::PlayerType::PLAYER_THREE;
+		break;
+	}
+	case 3:
+	{
+		playerComp->playerType = comp::Player::PlayerType::PLAYER_FOUR;
+		break;
+	}
+	}
 	memcpy(playerComp->name, name.c_str(), name.length());
 	player.AddComponent<comp::Network>(playerID);
 
@@ -81,6 +104,7 @@ void Lobby::Update()
 	{
 		msg << it->first;
 		msg << it->second.GetComponent<comp::Player>()->name;
+		msg << it->second.GetComponent<comp::Player>()->classType;
 		it++;
 	}
 

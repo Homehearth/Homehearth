@@ -14,6 +14,7 @@ void ParticlePass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 	DC->CSSetShader(PM->m_ParticleComputeShader.Get(), nullptr, 0);
 
 	DC->OMSetBlendState(PM->m_blendStateParticle.Get(), nullptr, 0xffffffff);
+	DC->OMSetRenderTargets(1, PM->m_backBuffer.GetAddressOf(), PM->m_depthStencilView.Get());
 
 	DC->IASetVertexBuffers(0,1, &m_nullBuffer, &m_stride, &m_offset);
 	DC->GSSetConstantBuffers(1, 1, pCam->m_viewConstantBuffer.GetAddressOf());
@@ -25,13 +26,13 @@ void ParticlePass::CreateRandomNumbers()
 
 	HRESULT hr;
 
-	for (int i = 0; i < m_nrOfRandomNumbers; i++)
-		m_randomNumbers.push_back((float)rand() / (RAND_MAX + 1) * (2.0 - (-2.0f)) + (-2.0f));
+	for (UINT i = 0; i < m_nrOfRandomNumbers; i++)
+		m_randomNumbers.push_back(static_cast<float>(rand() / (RAND_MAX + 1.f) * (2.f - (-2.f)) + (-2.f)));
 
 	D3D11_BUFFER_DESC bufferDescNR;
 	ZeroMemory(&bufferDescNR, sizeof(D3D11_BUFFER_DESC));
 	bufferDescNR.Usage = D3D11_USAGE_DEFAULT;
-	bufferDescNR.ByteWidth = sizeof(UINT) * m_randomNumbers.size();
+	bufferDescNR.ByteWidth = static_cast<UINT>(sizeof(UINT) * m_randomNumbers.size());
 	bufferDescNR.BindFlags = D3D11_BIND_SHADER_RESOURCE;
 	bufferDescNR.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
 	bufferDescNR.StructureByteStride = sizeof(float);
@@ -85,32 +86,35 @@ void ParticlePass::Render(Scene* pScene)
 	
 	for (auto entity : enities)
 	{
+
 		comp::EmitterParticle* emitter = entity.GetComponent<comp::EmitterParticle>();
 		comp::Transform* transform = entity.GetComponent<comp::Transform>();
+		if (emitter)
+		{
+			//Constant buffer
+			m_particleUpdate.emitterPosition = sm::Vector4(transform->position.x + emitter->positionOffset.x, transform->position.y + emitter->positionOffset.y, transform->position.z + emitter->positionOffset.z, 1.f);
+			m_particleUpdate.deltaTime = Stats::Get().GetFrameTime();
+			m_particleUpdate.counter = m_counter;
+			m_particleUpdate.lifeTime = emitter->lifeTime;
+			m_particleUpdate.particleSizeMulitplier = emitter->sizeMulitplier;
 
-		//Constant buffer
-		m_particleUpdate.emitterPosition = sm::Vector4(transform->position.x, transform->position.y, transform->position.z, 1.0f);
-		m_particleUpdate.deltaTime = Stats::Get().GetFrameTime();
-		m_particleUpdate.counter = m_counter;
-		m_particleUpdate.lifeTime = (UINT)emitter->lifeTime;
-		m_particleUpdate.particleSizeMulitplier = emitter->sizeMulitplier;
+			m_constantBufferParticleUpdate.SetData(D3D11Core::Get().DeviceContext(), m_particleUpdate);
+			ID3D11Buffer* cb = { m_constantBufferParticleUpdate.GetBuffer() };
 
-		m_constantBufferParticleUpdate.SetData(D3D11Core::Get().DeviceContext(), m_particleUpdate);
-		ID3D11Buffer* cb = { m_constantBufferParticleUpdate.GetBuffer() };
+			//Binding emitter speceific data
+			D3D11Core::Get().DeviceContext()->CSSetConstantBuffers(8, 1, &cb);
+			D3D11Core::Get().DeviceContext()->CSSetUnorderedAccessViews(7, 1, emitter->particleUAV.GetAddressOf(), nullptr);
 
-		//Binding emitter speceific data
-		D3D11Core::Get().DeviceContext()->CSSetConstantBuffers(8, 1 , &cb);
-		D3D11Core::Get().DeviceContext()->CSSetUnorderedAccessViews(7, 1, emitter->particleUAV.GetAddressOf(), nullptr);
+			D3D11Core::Get().DeviceContext()->Dispatch(emitter->nrOfParticles, 1, 1);
+			D3D11Core::Get().DeviceContext()->CSSetUnorderedAccessViews(7, 1, &m_nullUAV, nullptr);
 
-		D3D11Core::Get().DeviceContext()->Dispatch(emitter->nrOfParticles, 1, 1);
-		D3D11Core::Get().DeviceContext()->CSSetUnorderedAccessViews(7, 1, &m_nullUAV, nullptr);
+			D3D11Core::Get().DeviceContext()->PSSetShaderResources(1, 1, &emitter->texture->GetShaderView());
+			D3D11Core::Get().DeviceContext()->PSSetShaderResources(7, 1, &emitter->opacityTexture->GetShaderView());
+			D3D11Core::Get().DeviceContext()->VSSetShaderResources(17, 1, emitter->particleSRV.GetAddressOf());
 
-		D3D11Core::Get().DeviceContext()->PSSetShaderResources(1, 1, &emitter->texture->GetShaderView());
-		D3D11Core::Get().DeviceContext()->PSSetShaderResources(7, 1, &emitter->opacityTexture->GetShaderView());
-		D3D11Core::Get().DeviceContext()->VSSetShaderResources(17, 1, emitter->particleSRV.GetAddressOf());
-
-		D3D11Core::Get().DeviceContext()->DrawInstanced(1, emitter->nrOfParticles, 0, 0);
-		D3D11Core::Get().DeviceContext()->VSSetShaderResources(17, 1, &m_nullSRV);
+			D3D11Core::Get().DeviceContext()->DrawInstanced(1, emitter->nrOfParticles, 0, 0);
+			D3D11Core::Get().DeviceContext()->VSSetShaderResources(17, 1, &m_nullSRV);
+		}	
 	}
 }
 
@@ -126,4 +130,5 @@ void ParticlePass::PostRender(ID3D11DeviceContext* pDeviceContext)
 	DC->CSSetShader(m_nullCS, nullptr, 0);
 
 	DC->OMSetBlendState(PM->m_blendStatepOpaque.Get(), 0, 0xffffffff);
+
 }

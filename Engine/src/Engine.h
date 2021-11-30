@@ -32,11 +32,13 @@ private:
 	void Run() override;
 
 	// IMGUI
-	void drawImGUI() const;
+	void drawImGUI();
 
 	virtual void OnUserUpdate(float deltaTime) = 0;
 
 public:
+
+	float m_masterVolume = 5.0f;
 	Engine();
 	Engine(const Engine& other) = delete;
 	Engine(Engine&& other) = delete;

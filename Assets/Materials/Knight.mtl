@@ -1,0 +1,30 @@
+newmtl Arm2SG
+map_Kd Arm.png
+map_Kn ArmN.png
+
+newmtl Leg2SG
+map_Kd leg.png
+map_Kn LegN.png
+
+newmtl Shoe2SG
+map_Kd Shoe.png
+map_Kn ShoeN.png
+
+newmtl ChestplateSG
+map_Kd chestplate.png
+map_Kn ChestPlateN.png
+
+newmtl HelmetSG
+map_Kd Helmet.png
+map_Kn HelmetN.png
+
+newmtl BodySG
+map_Kd Body2.png
+
+newmtl SheildSG
+map_Kd Sheald.png
+map_Kn ShealdN.png
+
+newmtl SwardSG
+map_Kd Sword.png
+map_Kn SwordN.png

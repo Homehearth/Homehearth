@@ -3,6 +3,7 @@
 #include <omp.h>
 #include "Camera.h"
 #include "GridSystem.h"
+#include "OptionSystem.h"
 
 /*
 	We only need the loading screen rendered once. 
@@ -19,7 +20,7 @@ Engine::Engine()
 
 void Engine::Startup()
 {
-	
+	OptionSystem::Get().OnStartUp();
 	T_INIT(1, thread::ThreadType::POOL_FIFO);
 	srand(static_cast<unsigned>(time(NULL)));
 
@@ -28,7 +29,7 @@ void Engine::Startup()
 
 	//Get heighest possible 16:9 resolution
 	//90% of the height
-	config.height = static_cast<UINT>(GetSystemMetrics(SM_CYSCREEN) * 0.90f);
+	config.height = static_cast<UINT>(GetSystemMetrics(SM_CYSCREEN) * 0.85f);
 	float aspectRatio = 16.0f / 9.0f;
 	config.width = static_cast<UINT>(aspectRatio * config.height);
 
@@ -104,6 +105,10 @@ void Engine::Run()
     T_DESTROY();
     D2D1Core::Destroy();
 	ResourceManager::Get().Destroy();
+
+
+	OptionSystem::Get().SetOption("MasterVolume", std::to_string(m_masterVolume));
+	OptionSystem::Get().OnShutdown();
 }
 
 
@@ -112,7 +117,7 @@ Window* Engine::GetWindow()
 	return &m_window;
 }
 
-void Engine::drawImGUI() const
+void Engine::drawImGUI()
 {
 	//Containers for plotting
 	static std::vector<float> fpsContainer;
@@ -220,8 +225,6 @@ void Engine::drawImGUI() const
 				}
 				ImGui::Spacing();
 			});
-
-		
 	}
 	
 	if (ImGui::CollapsingHeader("Renderable"))
@@ -267,7 +270,6 @@ void Engine::drawImGUI() const
 
 	if (ImGui::CollapsingHeader("Light"))
 	{
-
 		GetCurrentScene()->ForEachComponent<comp::Light>([&](Entity& e, comp::Light& light)
 			{
 				std::string entityname = "Entity: " + std::to_string(static_cast<int>((entt::entity)e));
@@ -277,6 +279,7 @@ void Engine::drawImGUI() const
 				ImGui::SameLine();
 				std::string index = std::to_string(light.index);
 				ImGui::Text("Light index: %d", light.index);
+
 				bool edited = false;
 				if (ImGui::ColorEdit4(("Color##" + index).c_str(), (float*)&light.lightData.color)) 
 					edited = true;
@@ -303,6 +306,7 @@ void Engine::drawImGUI() const
 				}
 
 				ImGui::Spacing();
+
 			});
 
 	}
@@ -327,7 +331,7 @@ void Engine::drawImGUI() const
 		ImGui::Text("Bounding Oriented Box");
 		ImGui::Spacing();
 
-		GetCurrentScene()->ForEachComponent<comp::BoundingOrientedBox>([&](Entity& e, comp::BoundingOrientedBox& box)
+		GetCurrentScene()->ForEachComponent<comp::OrientedBoxCollider>([&](Entity& e, comp::OrientedBoxCollider& box)
 			{
 				std::string id = std::to_string(static_cast<int>((entt::entity)e));
 				
@@ -343,7 +347,7 @@ void Engine::drawImGUI() const
 
 		ImGui::Text("Bounding Sphere");
 		ImGui::Spacing();
-		GetCurrentScene()->ForEachComponent<comp::BoundingSphere>([&](Entity& e, comp::BoundingSphere& s)
+		GetCurrentScene()->ForEachComponent<comp::SphereCollider>([&](Entity& e, comp::SphereCollider& s)
 			{
 				std::string id = std::to_string(static_cast<int>((entt::entity)e));
 
@@ -387,6 +391,19 @@ void Engine::drawImGUI() const
 	{
 		ImGui::Checkbox("Render Colliders", GetCurrentScene()->GetIsRenderingColliders());
 	};
+
+	int size = m_renderer.GetShadowMapSize();
+	if (ImGui::InputInt("ShadowMapResolution", &size, 1024))
+	{
+		size = max(size, 64);
+		m_renderer.SetShadowMapSize(size);
+	}
+
+	if (ImGui::CollapsingHeader("Preview ShadowMap"))
+	{
+		m_renderer.ImGuiShowTextures();
+	}
+
 	ImGui::End();
 	
 }
@@ -478,6 +495,7 @@ void Engine::Update(float dt)
 
 		IMGUI(
 			drawImGUI();
+
 			ImGui::EndFrame();
 			m_imguiMutex.unlock();
 		);

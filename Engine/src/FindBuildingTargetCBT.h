@@ -12,5 +12,6 @@ namespace BT
 		Entity entity;
 		Timer changeTargetTimer;
 		float refreshRate;
+		float aggroRange;
 	};
 }

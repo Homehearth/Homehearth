@@ -15,7 +15,7 @@ Scene::Scene()
 	m_defaultCamera.AddComponent<comp::Camera3D>()->camera.Initialize(sm::Vector3(0, 0, 0), sm::Vector3(0, 0, 1), sm::Vector3(0, 1, 0), sm::Vector2(1000, 1000), CAMERATYPE::DEFAULT);
 	SetCurrentCameraEntity(m_defaultCamera);
 
-	m_sky.Initialize("kiara1dawn.dds");
+	m_sky.Initialize("storm.dds");
 }
 
 void Scene::Update(float dt)
@@ -68,8 +68,8 @@ void Scene::Update(float dt)
 		m_debugRenderableCopies[0].clear();
 		m_registry.view<comp::RenderableDebug>().each([&](entt::entity entity, comp::RenderableDebug& r)
 			{
-				comp::BoundingOrientedBox* obb = m_registry.try_get<comp::BoundingOrientedBox>(entity);
-				comp::BoundingSphere* sphere = m_registry.try_get<comp::BoundingSphere>(entity);
+				comp::OrientedBoxCollider* obb = m_registry.try_get<comp::OrientedBoxCollider>(entity);
+				comp::SphereCollider* sphere = m_registry.try_get<comp::SphereCollider>(entity);
 
 				comp::Transform transform;
 				transform.rotation = sm::Quaternion::Identity;
@@ -138,9 +138,6 @@ void Scene::Render()
 
 	// Run any available Command lists from worker threads.
 	thread::RenderThreadHandler::ExecuteCommandLists();
-
-	// Emit event
-	publish<ESceneRender>();
 }
 
 void Scene::RenderDebug()
@@ -170,9 +167,6 @@ void Scene::RenderDebug()
 			if (it.model)
 				it.model->Render(D3D11Core::Get().DeviceContext());
 		}
-
-		// Emit event
-		publish<ESceneRender>();
 		m_debugRenderableCopies.ReadyForSwap();
 	}
 
@@ -187,6 +181,41 @@ void Scene::Render2D()
 void Scene::RenderSkybox()
 {
 	m_sky.Render();
+}
+
+void Scene::RenderShadow()
+{
+	for (const auto& model : m_renderableCopies[1])
+	{
+		if (model.isSolid && model.visible && model.castShadow)
+		{
+			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), model.data);
+			ID3D11Buffer* buffer[] = { m_publicBuffer.GetBuffer() };
+			D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, buffer);
+			if(model.model)
+				model.model->Render(D3D11Core::Get().DeviceContext());
+		}
+	}
+}
+
+void Scene::RenderShadowAnimation()
+{
+	PROFILE_FUNCTION();
+
+	for (auto& it : m_renderableAnimCopies[1])
+	{
+		if (it.first.isSolid && it.first.visible && it.first.castShadow)
+		{
+			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.first.data);
+			ID3D11Buffer* const buffer = {
+				m_publicBuffer.GetBuffer()
+			};
+			D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, &buffer);
+			it.second.animator->Bind();
+			it.first.model->Render(D3D11Core::Get().DeviceContext());
+			it.second.animator->Unbind();
+		}
+	}
 }
 
 Skybox* Scene::GetSkybox()
@@ -229,9 +258,6 @@ void Scene::RenderAnimation()
 		it.first.model->Render(D3D11Core::Get().DeviceContext());
 		it.second.animator->Unbind();
 	}
-	// Emit event
-	publish<ESceneRender>();
-
 }
 
 bool Scene::IsRender3DReady() const
@@ -281,6 +307,11 @@ bool* Scene::GetIsRenderingColliders()
 Lights* Scene::GetLights()
 {
 	return &m_lights;
+}
+
+void Scene::UpdateSkybox(float pTime)
+{
+	m_sky.UpdateTime(pTime);
 }
 
 DoubleBuffer<std::vector<comp::Renderable>>* Scene::GetBuffers()

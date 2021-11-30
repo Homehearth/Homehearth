@@ -72,6 +72,7 @@ bool ServerGame::OnStartup()
 	m_inputThread = std::thread(&ServerGame::InputThread, this);
 
 	LoadMapColliders("VillageColliders.fbx");
+	LoadMapColliders("MapBounds.fbx");
 
 	return true;
 }
@@ -80,7 +81,6 @@ void ServerGame::OnShutdown()
 {
 	m_inputThread.join();
 }
-
 
 void ServerGame::UpdateNetwork(float deltaTime)
 {
@@ -93,26 +93,32 @@ void ServerGame::UpdateNetwork(float deltaTime)
 		timer = 0.0f;
 	}
 
-	// Check incoming messages
-	this->m_server.Update();
-
-	// Update the simulations
-	for (auto it = m_simulations.begin(); it != m_simulations.end();)
 	{
-		if (it->second->IsEmpty())
+		PROFILE_SCOPE("Server UPDATE");
+		// Check incoming messages
+		this->m_server.Update();
+	}
+
+	{
+		PROFILE_SCOPE("Simulations UPDATE");
+		// Update the simulations
+		for (auto it = m_simulations.begin(); it != m_simulations.end();)
 		{
-			it->second->Destroy();
-			LOG_INFO("Destroyed empty lobby %d", it->first);
-			it = m_simulations.erase(it);
-		}
-		else
-		{
-			// Update the simulation
-			it->second->Update(deltaTime);
-			// Send the snapshot of the updated simulation to all clients in the sim
-			it->second->SendSnapshot();
-			it->second->NextTick();
-			it++;
+			if (it->second->IsEmpty())
+			{
+				it->second->Destroy();
+				LOG_INFO("Destroyed empty lobby %d", it->first);
+				it = m_simulations.erase(it);
+			}
+			else
+			{
+				// Update the simulation
+				it->second->Update(deltaTime);
+				// Send the snapshot of the updated simulation to all clients in the sim
+				it->second->SendSnapshot();
+				it->second->NextTick();
+				it++;
+			}
 		}
 	}
 }
@@ -182,7 +188,7 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 		uint32_t playerID;
 		msg >> playerID;
 		this->m_server.SendToClient(playerID, msg);
-		LOG_INFO("Client on with ID: %ld is pinging server", playerID);
+		//LOG_INFO("Client on with ID: %ld is pinging server", playerID);
 		break;
 	}
 	case GameMsg::Lobby_Create:
@@ -315,6 +321,19 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 		{
 			m_simulations.at(gameID)->UseShop(shopItem, playerID);
 		}
+		break;
+	}
+	case GameMsg::Game_UpgradeDefence:
+	{
+		uint32_t playerID;
+		uint32_t gameID;
+		uint32_t id;
+		msg >> gameID >> playerID >> id;
+		if (m_simulations.find(gameID) != m_simulations.end())
+		{
+			m_simulations.at(gameID)->UpgradeDefence(id);
+		}
+		break;
 	}
 	}
 }

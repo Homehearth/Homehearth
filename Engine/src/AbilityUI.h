@@ -17,6 +17,7 @@ namespace rtd
 		draw_t m_opts;
 		D2D1_COLOR_F m_borderColor;
 
+		float* m_ref = nullptr;
 		float m_cooldown = 0.0f;
 		std::string m_buttonPress;
 
@@ -38,6 +39,11 @@ namespace rtd
 			Set the border surrounding the ability to round.
 		*/
 		void SetRoundBorder(const float& radius);
+
+		/*
+			Set the reference to the cooldown object.
+		*/
+		void SetReference(float* ref);
 
 		// Inherited via Element2D
 		virtual void Draw() override;
