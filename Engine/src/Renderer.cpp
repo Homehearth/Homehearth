@@ -19,6 +19,7 @@ void Renderer::Initialize(Window* pWindow)
 	AddPass(&m_decalPass);
 	m_decalPass.Create();
 	AddPass(&m_shadowPass);
+	m_shadowPass.StartUp();
 	AddPass(&m_basePass);   // 2
 	AddPass(&m_animPass);	// 3
 	AddPass(&m_skyPass);
@@ -108,6 +109,11 @@ void Renderer::Render(Scene* pScene)
 				pScene->GetCurrentCamera()->ReadySwap();
 				pScene->ReadyForSwap();
 			}
+			else
+			{
+				pScene->GetCurrentCamera()->ReadySwap();
+				pScene->ReadyForSwap();
+			}
 		}
 	}
 }
@@ -120,6 +126,11 @@ IRenderPass* Renderer::GetCurrentPass() const
 DOFPass* Renderer::GetDoFPass()
 {
 	return &m_dofPass;
+}
+
+ShadowPass* Renderer::GetShadowPass()
+{
+	return &m_shadowPass;
 }
 
 void Renderer::SetShadowMapSize(uint32_t size)
