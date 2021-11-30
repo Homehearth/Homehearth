@@ -568,11 +568,11 @@ void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& sce
 
 		});
 
-	scene.ForEachComponent<comp::Player, comp::Health, comp::Network>([&](Entity e, comp::Player& p, comp::Health& health, comp::Network n)
+	scene.ForEachComponent<comp::Player, comp::Health, comp::Network, comp::AnimationState>([&](Entity e, comp::Player& p, comp::Health& health, comp::Network n, comp::AnimationState anim)
 		{
 			if (!health.isAlive)
 			{
-				//CHANGE TO DEAD ANIMATION?
+				anim.toSend = EAnimationType::DEAD;
 
 				comp::Velocity* vel = e.GetComponent<comp::Velocity>();
 				if (vel)

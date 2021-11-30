@@ -33,8 +33,8 @@ void Engine::Startup()
 	float aspectRatio = 16.0f / 9.0f;
 	config.width = static_cast<UINT>(aspectRatio * config.height);*/
 
-	config.height = std::stod(OptionSystem::Get().GetOption("WindowHeight"));
-	config.width = std::stod(OptionSystem::Get().GetOption("WindowWidth"));
+	config.height = std::stoi(OptionSystem::Get().GetOption("WindowHeight"));
+	config.width = std::stoi(OptionSystem::Get().GetOption("WindowWidth"));
 
 	if ((config.width | config.height) == 0)
 	{
