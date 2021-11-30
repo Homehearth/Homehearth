@@ -182,14 +182,13 @@ void D2D1Core::DrawT(const std::string& text, const draw_text_t& opt)
 		
 		INSTANCE->m_renderTarget->SetTransform(D2D1::Matrix3x2F::Scale(D2D1::SizeF(opt.scale, opt.scale), D2D1::Point2F(opt.x_pos, opt.y_pos)));
 
-		INSTANCE->m_solidBrush.Get()->SetColor({ 0.f, 0.f, 0.f, 1.f });
+		INSTANCE->m_solidBrush.Get()->SetColor({ .8f, 0.57f, 0.0f, 1.f });
 		INSTANCE->m_renderTarget->DrawTextW(pwcsName,
 			(UINT32)text.length(),
 			current_format,
 			layoutRect,
 			INSTANCE->m_solidBrush.Get()
 		);
-		INSTANCE->m_solidBrush.Get()->SetColor({ 1.f, 1.f, 1.f, 1.f });
 
 		delete[] pwcsName;
 	}
@@ -291,7 +290,7 @@ const bool D2D1Core::CreateImage(const std::string& filename, ID2D1Bitmap** p_po
 		Setup searchpath, convert char* to WCHAR*
 		Load Bitmap from file.
 	*/
-	std::string searchPath = TEXTUREPATH;
+	std::string searchPath = UIPATH;
 	searchPath.append(filename);
 	const char* t = searchPath.c_str();
 	const WCHAR* pwcsName;
