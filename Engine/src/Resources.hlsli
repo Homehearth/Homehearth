@@ -136,16 +136,17 @@ RWStructuredBuffer<VertexParticleIn> particlesUAV   : register(u7);
 
 
 //Nikkis stuff:
-Texture2D t_waterBlend         : register(t17);
+
 Texture2D t_underWaterEdge     : register(t18);
 Texture2D t_waterFloorTexture  : register(t19);
 Texture2D t_waterTexture       : register(t20);
 Texture2D t_waterTextureN      : register(t21);
+Texture2D t_waterBlend         : register(t22);
 
-RWTexture2D<float4> u_waterFloorTexture : register(u5);
+RWTexture2D<unorm float4> u_waterFloorTexture : register(u5);
 RWTexture2D<float4> u_waterTexture      : register(u6);
 RWTexture2D<float4> u_waterTextureN     : register(u7);
-RWTexture2D<float4> u_waterBlend        : register(u5);
+//RWTexture2D<float4> u_waterBlend        : register(u5);
 RWTexture2D<float4> u_underWaterEdge    : register(u9);
 
 // Forward+

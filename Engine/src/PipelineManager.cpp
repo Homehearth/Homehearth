@@ -569,13 +569,6 @@ bool PipelineManager::CreateTextureEffectResources()
     m_ModdedWaterFloorAlbedoMap->DisableMipmaps();
     m_ModdedWaterBlendAlbedoMap->DisableMipmaps();
 
-    //Get the SRV:s from the textures
-    //m_SRV_TextureEffectWaterEdgeMap    = m_ModdedWaterEdgeAlbedoMap.get()->GetShaderView();
-    m_SRV_TextureEffectWaterFloorMap   = m_ModdedWaterFloorAlbedoMap.get()->GetShaderView();
-    m_SRV_TextureEffectWaterMap        = m_ModdedWaterAlbedoMap.get()->GetShaderView();
-    m_SRV_TextureEffectWaterNormalMap  = m_ModdedWaterNormalMap.get()->GetShaderView();
-    //m_SRV_TextureEffectBlendMap        = m_ModdedWaterBlendAlbedoMap.get()->GetShaderView();
-
     HRESULT hr = {};
 
     //  CREATE WATER REFRACTION EFFECT RESOURCES  //
@@ -600,7 +593,7 @@ bool PipelineManager::CreateTextureEffectResources()
     desc.MiscFlags = 0;
 
     //Create original resource reference texture
-    hr = m_d3d11->Device()->CreateTexture2D(&desc, nullptr, &m_WaterFloorAlbedoMap);
+    hr = m_d3d11->Device()->CreateTexture2D(&desc, nullptr, m_WaterFloorAlbedoMap.GetAddressOf());
     if (FAILED(hr))
         return false;
     
@@ -627,7 +620,7 @@ bool PipelineManager::CreateTextureEffectResources()
         // ALBEDO MAP //
 
     //Create original resource reference texture
-    hr = m_d3d11->Device()->CreateTexture2D(&desc, nullptr, &m_WaterAlbedoMap);
+    hr = m_d3d11->Device()->CreateTexture2D(&desc, nullptr, m_WaterAlbedoMap.GetAddressOf());
     if (FAILED(hr))
         return false;
 
@@ -683,7 +676,12 @@ bool PipelineManager::CreateTextureEffectResources()
 
 
     // UNORDERED ACCES VIEW //
-    //hr = m_d3d11->Device()->CreateUnorderedAccessView(m_ModdedWaterBlendAlbedoMap.get()->GetTexture2D(), nullptr, m_UAV_TextureEffectBlendMap.GetAddressOf());
+    hr = m_d3d11->Device()->CreateUnorderedAccessView(m_ModdedWaterBlendAlbedoMap.get()->GetTexture2D(), nullptr, m_UAV_TextureEffectBlendMap.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+
+    // SHADER RESOURCE VIEW //
+    hr = m_d3d11->Device()->CreateShaderResourceView(m_WaterBlendAlbedoMap.Get(), nullptr, m_SRV_TextureEffectBlendMap.GetAddressOf());
     if (FAILED(hr))
         return false;
 
@@ -728,41 +726,41 @@ bool PipelineManager::CreateShaders()
         return false;
     }
 
-    //if (!m_textureEffectComputeShader.Create("textureEffect_cs"))
-    //{
-    //    LOG_WARNING("failed to create textureEffect_cs");
-    //    return false;
-    //}
+    if (!m_textureEffectComputeShader.Create("textureEffect_cs"))
+    {
+        LOG_WARNING("failed to create textureEffect_cs");
+        return false;
+    }
 
-    //if (!m_textureEffectPixelShader.Create("textureEffect_ps"))
-    //{
-    //    LOG_WARNING("failed to create textureEffect_ps");
-    //    return false;
-    //}
+    if (!m_textureEffectPixelShader.Create("textureEffect_ps"))
+    {
+        LOG_WARNING("failed to create textureEffect_ps");
+        return false;
+    }
 
-    //if (!m_textureEffectVertexShader.Create("textureEffect_vs"))
-    //{
-    //    LOG_WARNING("failed to create textureEffect_vs");
-    //    return false;
-    //}
-    //
-    //if (!m_WaterEffectComputeShader.Create("waterEffect_cs"))
-    //{
-    //    LOG_WARNING("failed to create waterEffect_cs");
-    //    return false;
-    //}
+    if (!m_textureEffectVertexShader.Create("textureEffect_vs"))
+    {
+        LOG_WARNING("failed to create textureEffect_vs");
+        return false;
+    }
+    
+    if (!m_WaterEffectComputeShader.Create("waterEffect_cs"))
+    {
+        LOG_WARNING("failed to create waterEffect_cs");
+        return false;
+    }
 
-    //if (!m_WaterEffectPixelShader.Create("waterEffect_ps"))
-    //{
-    //    LOG_WARNING("failed to create waterEffect_ps");
-    //    return false;
-    //}
+    if (!m_WaterEffectPixelShader.Create("waterEffect_ps"))
+    {
+        LOG_WARNING("failed to create waterEffect_ps");
+        return false;
+    }
 
-    //if (!m_WaterEffectVertexShader.Create("waterEffect_vs"))
-    //{
-    //    LOG_WARNING("failed to create waterEffect_vs");
-    //    return false;
-    //}
+    if (!m_WaterEffectVertexShader.Create("waterEffect_vs"))
+    {
+        LOG_WARNING("failed to create waterEffect_vs");
+        return false;
+    }
     
     if (!m_debugPixelShader.Create("Debug_ps"))
     {
