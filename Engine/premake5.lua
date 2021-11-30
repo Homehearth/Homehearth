@@ -47,7 +47,7 @@ project "Engine"
 
             ["src/Engine/Core"] = { "**Engine.*", "**EventTypes.*", "**Window.*" },
             ["src/Engine/ECS"] = { "**Components.*",  "**Entity.*", "**Tags*" }, 
-            ["src/Engine/GamePlay"] = { "**GridSystem.*", "**CollisionSystem.*", "**CombatSystem.*", "**Systems.*" },
+            ["src/Engine/GamePlay"] = { "**GridSystem.*", "**CollisionSystem.*", "**CombatSystem.*", "**Systems.*", "**SpreeHandler.*" },
 
              ["src/Engine/Graphics/Renderer"] = {"**Renderer.*", "**PipelineManager.*", "**DoubleBuffer.*"},
                 ["src/Engine/Graphics/Renderer/RenderPass"] = {"**Pass.*"},

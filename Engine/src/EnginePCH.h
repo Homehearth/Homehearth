@@ -1,8 +1,8 @@
 #pragma once
 
 //Options
-#define RENDER_IMGUI 1
-#define PROFILER 1
+#define RENDER_IMGUI 0
+#define PROFILER 0
 
 // Feel free to add more things to this, currently only gives more money :)
 #define GOD_MODE 1
@@ -141,6 +141,7 @@ EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 const std::string MODELPATH		= "../Assets/Models/";		//"../../../../../Assets/Models/"
 const std::string MATERIALPATH	= "../Assets/Materials/";
 const std::string TEXTUREPATH	= "../Assets/Textures/";
+const std::string UIPATH = "../Assets/UI/";
 const std::string ANIMATIONPATH = "../Assets/Animations/";
 const std::string ANIMATORPATH	= "../Assets/Animators/";
 const std::string FONTPATH		= "../Assets/Fonts/";

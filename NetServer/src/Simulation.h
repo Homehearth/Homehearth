@@ -10,6 +10,7 @@
 #include "IShop.h"
 #include "QuadTree.h"
 #include "Cycler.h"
+#include "SpreeHandler.h"
 /*
 		Simulation defines each ongoing simulation from the perspective of the server
 		gameID identifies the simulation which each player has to give the server to keep track
@@ -27,6 +28,7 @@ private:
 	Currency m_currency;
 	Lobby m_lobby;
 	IShop m_shop;
+	SpreeHandler m_spreeHandler;
 	std::unique_ptr<QuadTree> qt;
 	std::unique_ptr<QuadTree> qtDynamic;
 	sm::Vector3 TL = { 220.f, 0.75f, -353.f };
