@@ -814,11 +814,8 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 				msg >> name;
 				if (!skip)
 				{
-					nameString = "Sphere.obj";
-					break;
-				}
-				switch (name)
-				{
+					switch (name)
+					{
 					case NameType::MESH_WATERMILL:
 					{
 						nameString = "WaterMill.fbx";
@@ -964,12 +961,14 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 						nameString = "Cube.obj";
 						break;
 					}
+					}
+					std::shared_ptr<RModel> model = ResourceManager::Get().CopyResource<RModel>(nameString, true);
+					if (model)
+					{
+						e.AddComponent<comp::Renderable>()->model = model;
+					}
 				}
-				std::shared_ptr<RModel> model = ResourceManager::Get().CopyResource<RModel>(nameString, true);
-				if (model)
-				{
-					e.AddComponent<comp::Renderable>()->model = model;
-				}
+				break;
 			}
 			case ecs::Component::ANIMATOR_NAME:
 			{
