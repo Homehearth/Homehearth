@@ -102,9 +102,12 @@ void Game::OnUserUpdate(float deltaTime)
 
 		GameSystems::DeathParticleTimer(scene);
 
-		if (m_elapsedCycleTime <= m_waveTimer && (m_serverCycle == Cycle::DAY || m_serverCycle == Cycle::MORNING))
+		if (m_elapsedCycleTime <= m_waveTimer)
 		{
-			m_elapsedCycleTime += deltaTime;
+			if (m_serverCycle == Cycle::DAY || m_serverCycle == Cycle::MORNING)
+			{
+				m_elapsedCycleTime += deltaTime;
+			}
 			scene.ForEachComponent<comp::Light>([&](Entity e, comp::Light& l)
 				{
 					switch (l.lightData.type)
@@ -117,13 +120,19 @@ void Game::OnUserUpdate(float deltaTime)
 						l.lightData.direction = sm::Vector4(dir.x, dir.y, dir.z, 0.0f);
 						sm::Vector3 pos = l.lightData.position;
 						pos = playerPos - dir * 400;
+
+						pos = util::Lerp(sm::Vector3(l.lightData.position), pos, deltaTime * 10);
 						l.lightData.position = sm::Vector4(pos);
+
 						l.lightData.position.w = 1.f;
 						break;
 					}
 					case TypeLight::POINT:
 					{
-						l.lightData.enabled = false;
+						if (m_serverCycle == Cycle::DAY || m_serverCycle == Cycle::MORNING)
+						{
+							l.lightData.enabled = false;
+						}
 						break;
 					}
 					default:
