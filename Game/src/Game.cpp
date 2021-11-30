@@ -831,6 +831,11 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 						nameString = "Knight.fbx";
 						break;
 					}
+					case NameType::MESH_MAGE:
+					{
+						nameString = "Mage.fbx";
+						break;
+					}
 					case NameType::MESH_MONSTER:
 					{
 						nameString = "Monster.fbx";
@@ -873,6 +878,11 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 					case AnimName::ANIM_MONSTER:
 					{
 						nameString = "Monster.anim";
+						break;
+					}
+					case AnimName::ANIM_MAGE:
+					{
+						nameString = "Mage.anim";
 						break;
 					}
 					}

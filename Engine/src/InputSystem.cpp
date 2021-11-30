@@ -109,7 +109,7 @@ bool InputSystem::CheckMouseKey(const MouseKey mouseButton, const KeyState state
 
 int InputSystem::GetMouseWheelDirection()
 {
-	int currentValue = m_mouse->GetState().scrollWheelValue;
+	int currentValue = m_mouseState.scrollWheelValue;
 	m_mouse->Get().ResetScrollWheelValue();
 	
 	//Backwards
