@@ -35,6 +35,8 @@ private:
 	bool							InsideGrid(const int& xpos, const int& zpos) const;
 	//Get a tile offset of: 0, +1, -1, +2, -2, +3, -3... from the center
 	int								TileOffset(const int& index) const;
+	//Send in what tiles we are checking and calculate the centerpoint of them
+	sm::Vector3						CalcCenterPoint(const std::vector<std::pair<UINT, UINT>>& coordinates);
 	
 public:
 									GridSystem();
@@ -49,6 +51,11 @@ public:
 	
 	//Delete the defence from an entity
 	void							RemoveDefence(const Entity& entity);
+
+	//Check if it's okay to place a defence on this location
+	//Return a vector of all the locations that was okay
+	std::vector<std::pair<UINT, UINT>>	CheckDefenceLocation(Ray_t& mouseRay, const uint32_t& playerID);
+
 
 	//Place defence where the mouse is
 	bool							PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, PathFinderManager* aiHandler, QuadTree* dynamicQT);
