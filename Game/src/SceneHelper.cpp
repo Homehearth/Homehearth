@@ -1227,6 +1227,8 @@ namespace sceneHelp
 			}
 		}
 
+		file.close();
+
 		return true;
 	}
 
@@ -1248,6 +1250,25 @@ namespace sceneHelp
 
 			ResourceManager::Get().GetResource<RModel>(filename);
 		}
+
+		file.close();
+
+		file.open(TEXTUREPATH + "Loader.txt");
+		if (!file.is_open())
+		{
+			LOG_ERROR("Failed to load textures!");
+			return;
+		}
+
+		while (!file.eof())
+		{
+			std::string filename;
+
+			file >> filename;
+
+			ResourceManager::Get().GetResource<RModel>(filename);
+		}
+		file.close();
 	}
 
 	void LoadGameScene(Game* game)
@@ -1323,5 +1344,7 @@ namespace sceneHelp
 				game->m_models[ModelID::TREE8].push_back(e);
 			}
 		}
+
+		file.close();
 	}
 }
