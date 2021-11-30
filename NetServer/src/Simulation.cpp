@@ -752,7 +752,6 @@ void Simulation::SetGameScene()
 #if GOD_MODE
 	// During debug give players 1000 gold/monies.
 	m_currency = 1000;
-	m_currency.hasUpdated = true;
 	for (auto& player : m_lobby.m_players)
 	{
 		//player.second.AddComponent<comp::Tag<TagType::NO_RESPONSE>>();
