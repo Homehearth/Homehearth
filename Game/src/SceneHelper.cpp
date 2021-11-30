@@ -727,7 +727,7 @@ namespace sceneHelp
 		}
 		default:
 		{
-			ShadowType = 0;
+			ShadowType = 1;
 			break;
 		}
 		}
