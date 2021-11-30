@@ -362,7 +362,7 @@ void CollisionSystem::CollisionResponse(CollisionInfo_t collisionInfo, Entity en
 		if (transform)
 		{
 			transform->position = transform->position + sm::Vector3(collisionInfo.smallestVec * collisionInfo.overlap);
-			transform->position.y = 0.f;
+			transform->position.y = 0.75f;
 
 			if (BoS)
 			{
@@ -383,7 +383,7 @@ void CollisionSystem::CollisionResponse(CollisionInfo_t collisionInfo, Entity en
 		if (transform1)
 		{
 			transform1->position = transform1->position + (sm::Vector3(collisionInfo.smallestVec * collisionInfo.overlap * -1.0f));
-			transform1->position.y = 0.f;
+			transform1->position.y = 0.75f;
 
 			if (BoS1)
 			{
@@ -395,7 +395,7 @@ void CollisionSystem::CollisionResponse(CollisionInfo_t collisionInfo, Entity en
 		if (transform2)
 		{
 			transform2->position = transform2->position + (sm::Vector3(collisionInfo.smallestVec * collisionInfo.overlap));
-			transform2->position.y = 0.f;
+			transform2->position.y = 0.75f;
 
 			if (BoS2)
 			{

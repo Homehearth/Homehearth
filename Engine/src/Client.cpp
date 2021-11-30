@@ -36,7 +36,7 @@ void Client::Update(size_t nMaxMessage)
 	while (nMessageCount < nMaxMessage && !m_qPrioMessagesIn.empty())
 	{
 		auto msg = m_qPrioMessagesIn.pop_front();
-		msg.header.id = GameMsg::Game_Snapshot;
+		msg >> msg.header.id;
 
 		this->OnMessageReceived(msg);
 		
