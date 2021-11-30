@@ -490,7 +490,10 @@ void Simulation::SendSnapshot()
 			msg2.header.id = GameMsg::Game_WaveTimer;
 			msg2 << m_timeCycler.GetElapsedTime();
 			msg2 << m_timeCycler.GetTimePeriod();
-			this->BroadcastUDP(msg2);
+			this->BroadcastUDP(msg2);	for (auto& player : m_lobby.m_players)
+			{
+				player.second.RemoveComponent<comp::Tag<TagType::GOOD>>();
+			}
 		}
 
 		if (m_currency.hasUpdated)
@@ -691,29 +694,28 @@ void Simulation::UseShop(const ShopItem& item, const uint32_t& player)
 
 void Simulation::UpgradeDefence(const uint32_t& id)
 {
-	m_pCurrentScene->ForEachComponent<comp::Network>([&](Entity e, comp::Network& n) {
-
-		if (n.id == id)
+	m_pCurrentScene->ForEachComponent<comp::Network>([&](Entity e, comp::Network& n)
 		{
-			comp::Cost* c = e.GetComponent<comp::Cost>();
-			comp::Health* h = e.GetComponent<comp::Health>();
-
-			if (c && h)
+			if (n.id == id)
 			{
-				if (m_currency >= c->cost)
-				{
-					c->cost += 5;
-					// Add upgrades here.
-					h->maxHealth += 35;
-					h->currentHealth += 35;
+				comp::Cost* c = e.GetComponent<comp::Cost>();
+				comp::Health* h = e.GetComponent<comp::Health>();
 
-					// Cost is here.
-					m_currency -= c->cost;
-					e.UpdateNetwork();
+				if (c && h)
+				{
+					if (m_currency >= c->cost)
+					{
+						c->cost += 5;
+						// Add upgrades here.
+						h->maxHealth += 35;
+						h->currentHealth += 35;
+
+						// Cost is here.
+						m_currency -= c->cost;
+						e.UpdateNetwork();
+					}
 				}
 			}
-		}
-
 		});
 }
 
@@ -748,7 +750,13 @@ void Simulation::SetGameScene()
 	m_currency.hasUpdated = true;
 	for (auto& player : m_lobby.m_players)
 	{
-		//player.second.AddComponent<comp::Tag<TagType::NO_RESPONSE>>();
+		player.second.RemoveComponent<comp::Tag<TagType::GOOD>>();
+	}
+#endif
+
+#if NO_CLIP
+	for (auto& player : m_lobby.m_players)
+	{
 		player.second.RemoveComponent<comp::Tag<TagType::GOOD>>();
 	}
 #endif
@@ -790,7 +798,7 @@ void Simulation::ResetGameScene()
 		msg << count;
 		this->Broadcast(msg);
 	}
-	
+
 	m_currency.Zero();
 
 	LOG_INFO("%lld", m_pGameScene->GetRegistry()->size());

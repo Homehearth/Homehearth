@@ -246,7 +246,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 				}
 
 				// Spawn blood splat when enemy dies.
-				if (m_gameEntities.at(id).GetComponent<comp::Transform>() && m_gameEntities.at(id).GetComponent<comp::Health>())
+				if (m_gameEntities.at(id).GetComponent<comp::Tag<TagType::BAD>>())
 				{
 					Entity bloodDecal = GetCurrentScene()->CreateEntity();
 					bloodDecal.AddComponent<comp::Decal>(*m_gameEntities.at(id).GetComponent<comp::Transform>());

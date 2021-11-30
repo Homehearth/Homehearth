@@ -556,7 +556,7 @@ void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& sce
 		{
 			if (p.state == comp::Player::State::WALK || p.state == comp::Player::State::LOOK_TO_MOUSE)
 			{
-				float time = dt * p.runSpeed * 0.5f;
+				float time = dt * p.runSpeed * 0.4f;
 
 				if (ecs::StepRotateTo(t.rotation, p.fowardDir, time))
 				{

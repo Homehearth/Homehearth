@@ -95,12 +95,12 @@ int Cycler::OnNight(Simulation* sim)
 	return count;
 }
 
-const Cycle& Cycler::GetTimePeriod() const
+Cycle Cycler::GetTimePeriod() const
 {
 	return m_timePeriod;
 }
 
-const bool& Cycler::GetSwitch() const
+bool Cycler::GetSwitch() const
 {
 	return m_shouldSwitch;
 }

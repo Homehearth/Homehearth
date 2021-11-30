@@ -373,6 +373,7 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 			tileEntity.AddComponent<comp::Network>();
 			coordinates.shrink_to_fit();
 			tileEntity.AddComponent<comp::TileSet>()->coordinates = coordinates;
+			tileEntity.AddComponent<comp::Cost>()->cost = 5;
 			
 			comp::Transform*			transform	= tileEntity.AddComponent<comp::Transform>();
 			comp::OrientedBoxCollider*	collider	= tileEntity.AddComponent<comp::OrientedBoxCollider>();

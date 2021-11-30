@@ -5,7 +5,8 @@
 #define PROFILER 1
 
 // Feel free to add more things to this, currently only gives more money :)
-#define GOD_MODE 0
+#define GOD_MODE 1
+#define NO_CLIP 0
 #define SPAWN_MONSTERS 1
 
 // Turn this to 1 if you want to see the very beautiful demo menu
