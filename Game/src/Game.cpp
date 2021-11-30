@@ -354,7 +354,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			});
 
 		SetScene("Game");
-		thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::ADAPTIVE);
 		break;
 	}
 	case GameMsg::Game_Spree:
@@ -986,14 +985,14 @@ void Game::UpdateInput()
 	m_savedInputs.push_back(m_inputState);
 
 
-	//TEMP PLZ REMOVE AFTER WE COME TO AN AGREEMENT ON WHICH DOF EFFECT TO USE
-	if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::D1, KeyState::PRESSED))
-	{
-		thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::ADAPTIVE);
-	}
+	////TEMP PLZ REMOVE AFTER WE COME TO AN AGREEMENT ON WHICH DOF EFFECT TO USE
+	//if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::D1, KeyState::PRESSED))
+	//{
+	//	thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::ADAPTIVE);
+	//}
 
-	if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::D2, KeyState::PRESSED))
-	{
-		thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::VIGNETTE);
-	}
+	//if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::D2, KeyState::PRESSED))
+	//{
+	//	thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::VIGNETTE);
+	//}
 }

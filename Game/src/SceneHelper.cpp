@@ -17,6 +17,7 @@
 #include "MoneyUI.h"
 #include "AbilityUI.h"
 #include "ShopUI.h"
+#include "OptionSystem.h"
 #include "MenuUI.h"
 
 // Used to show and hide shopMenu
@@ -644,10 +645,134 @@ namespace sceneHelp
 
 			});
 		visualMenu->AddElement<rtd::Text>("Resolution", draw_t(width / 8.0f, height / 8.0f, width / 4.0f, height / 8.0f));
-		visualMenu->AddElement<rtd::Button>("Button.png", draw_t((width / 8.0f) * 5.0f, (height / 8.0f), width / 4.0f, height / 8.0f))->SetOnPressedEvent([=] {
+		visualMenu->AddElement<rtd::Button>("Button.png", draw_t((width / 8.0f), (height / 8.0f) * 4.0f, width / 4.0f, height / 8.0f))->SetOnPressedEvent([=] {
 			visualMenu->Hide();
+			miscMenu->Show();
 			});
-		visualMenu->AddElement<rtd::Text>("Misc.", draw_t((width / 8.0f) * 5.0f, (height / 8.0f), width / 4.0f, height / 8.0f));
+		visualMenu->AddElement<rtd::Text>("Misc.", draw_t((width / 8.0f), (height / 8.0f * 4.0f), width / 4.0f, height / 8.0f));
+
+		// Misc Menu options.
+
+		// Blur option.
+		static DoFType type = DoFType::DEFAULT;
+		std::string savedBlur = OptionSystem::Get().GetOption("BlurType");
+		type = static_cast<DoFType>(std::stod(savedBlur));
+		rtd::Button* blurButton = miscMenu->AddElement<rtd::Button>("Button.png", draw_t(width / 8.0f, height / 8.0f, width / 4.0f, height / 8.0f));
+		rtd::Text* blurType = miscMenu->AddElement<rtd::Text>("Blur Type: Adaptive", draw_t(width / 8.0f, height / 8.0f, width / 4.0f, height / 8.0f));
+		
+		// Toggle when the game starts.
+		switch (type)
+		{
+		case DoFType::VIGNETTE:
+		{
+			blurType->SetText("Blur Type: Static");
+			break;
+		}
+		case DoFType::DEFAULT:
+		{
+			blurType->SetText("Blur Type: NONE");
+			break;
+		}
+		case DoFType::ADAPTIVE:
+		{
+			blurType->SetText("Blur Type: Adaptive");
+			break;
+		}
+		default:
+		{
+			type = DoFType::DEFAULT;
+			break;
+		}
+		}
+		
+		blurButton->SetOnPressedEvent([=] {
+			// Toggle between types.
+			switch (type)
+			{
+			case DoFType::ADAPTIVE:
+			{
+				type = DoFType::VIGNETTE;
+				blurType->SetText("Blur Type: Static");
+				thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::VIGNETTE);
+				OptionSystem::Get().SetOption("BlurType", std::string("2"));
+				break;
+			}
+			case DoFType::VIGNETTE:
+			{
+				type = DoFType::DEFAULT;
+				blurType->SetText("Blur Type: NONE");
+				thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::DEFAULT);
+				OptionSystem::Get().SetOption("BlurType", std::string("0"));
+				break;
+			}
+			case DoFType::DEFAULT:
+			{
+				type = DoFType::ADAPTIVE;
+				blurType->SetText("Blur Type: Adaptive");
+				thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::ADAPTIVE);
+				OptionSystem::Get().SetOption("BlurType", std::string("1"));
+				break;
+			}
+			default:
+				break;
+			}
+			
+			});
+
+		// Shadows toggle.
+		static int ShadowType = std::stod(OptionSystem::Get().GetOption("Shadows"));
+		
+
+		
+		rtd::Button* shadowButton = miscMenu->AddElement<rtd::Button>("Button.png", draw_t((width / 8.0f) * 5.0f, height / 8.0f, width / 4.0f, height / 8.0f));
+		rtd::Text* shadowType = miscMenu->AddElement<rtd::Text>("Shadows: ON", draw_t((width / 8.0f) * 5.0f, height / 8.0f, width / 4.0f, height / 8.0f));
+		
+		switch (ShadowType)
+		{
+		case 0: // OFF
+		{
+			shadowType->SetText("Shadows: OFF");
+			thread::RenderThreadHandler::Get().GetRenderer()->GetShadowPass()->SetEnable(false);
+			break;
+		}
+		case 1: // ON
+		{
+			shadowType->SetText("Shadows: ON");
+			thread::RenderThreadHandler::Get().GetRenderer()->GetShadowPass()->SetEnable(true);
+			break;
+		}
+		default:
+		{
+			ShadowType = 0;
+			break;
+		}
+		}
+		
+		shadowButton->SetOnPressedEvent([=] {
+
+			switch (ShadowType)
+			{
+			case 0: // OFF
+			{
+				ShadowType = 1;
+				shadowType->SetText("Shadows: ON");
+				OptionSystem::Get().SetOption("Shadows", std::string("1"));
+				thread::RenderThreadHandler::Get().GetRenderer()->GetShadowPass()->SetEnable(true);
+				break;
+			}
+			case 1: // ON
+			{
+				ShadowType = 0;
+				shadowType->SetText("Shadows: OFF");
+				OptionSystem::Get().SetOption("Shadows", std::string("0"));
+				thread::RenderThreadHandler::Get().GetRenderer()->GetShadowPass()->SetEnable(false);
+				break;
+			}
+			default:
+				break;
+			}
+
+			});
 
 		miscMenu->Hide();
 		resolutionMenu->Hide();
@@ -666,6 +791,7 @@ namespace sceneHelp
 			menu->Show();
 			backButton->Hide();
 			visualMenu->Hide();
+			miscMenu->Hide();
 			resolutionMenu->Hide();
 
 			});

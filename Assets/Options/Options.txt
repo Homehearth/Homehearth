@@ -1,3 +1,4 @@
-BlurType 0
+BlurType 2
+Shadows 1
 Resolution 1920x1080
-MasterVolume 0.853226
+MasterVolume 0.031250

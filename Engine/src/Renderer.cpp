@@ -127,6 +127,11 @@ DOFPass* Renderer::GetDoFPass()
 	return &m_dofPass;
 }
 
+ShadowPass* Renderer::GetShadowPass()
+{
+	return &m_shadowPass;
+}
+
 void Renderer::SetShadowMapSize(uint32_t size)
 {
 	m_shadowPass.SetShadowMapSize(size);
