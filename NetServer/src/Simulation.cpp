@@ -175,16 +175,9 @@ void Simulation::ResetPlayer(Entity player)
 
 		playerComp->primaryAbilty = entt::resolve<comp::MeleeAttackAbility>();
 
-		/*comp::HeroLeapAbility* leap = player.AddComponent<comp::HeroLeapAbility>();
-		leap->cooldown = 5.0f;
-		leap->delay = 0.0f;
-		leap->lifetime = 0.5f;
-		leap->movementSpeedAlt = 0.0f;
-		leap->useTime = 0.5f;
-		leap->damageRadius = 20.f;
-
-		playerComp->secondaryAbilty = entt::resolve<comp::HeroLeapAbility>();*/
+		// TEMP
 		playerComp->secondaryAbilty = entt::resolve<comp::MeleeAttackAbility>();
+		// END TEMP
 
 		comp::DashAbility* dashAbility = player.AddComponent<comp::DashAbility>();
 		dashAbility->cooldown = 6.0f;
@@ -202,7 +195,7 @@ void Simulation::ResetPlayer(Entity player)
 		attackAbility->cooldown = 0.5f;
 		attackAbility->attackDamage = 20.f;
 		attackAbility->lifetime = 2.0f;
-		attackAbility->projectileSpeed = 40.f;
+		attackAbility->projectileSpeed = 60.f;
 		attackAbility->attackRange = 2.0f;
 		attackAbility->useTime = 0.3f;
 		attackAbility->delay = 0.1f;
@@ -212,9 +205,10 @@ void Simulation::ResetPlayer(Entity player)
 		healAbility->cooldown = 5.0f;
 		healAbility->delay = 0.0f;
 		healAbility->healAmount = 30.f;
-		healAbility->lifetime = 1.5f;
-		healAbility->range = 50.f;
+		healAbility->lifetime = 1.0f;
+		healAbility->range = 30.f;
 		healAbility->useTime = 1.0f;
+		healAbility->movementSpeedAlt = 1.0f;
 
 		playerComp->secondaryAbilty = entt::resolve<comp::HealAbility>();
 
@@ -359,10 +353,10 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 					Systems::SelfDestructSystem(scene, e.dt);
 				}
 
-				//{
-				//	PROFILE_SCOPE("Animation Transform");
-				//	Systems::TransformAnimationSystem(scene, e.dt);
-				//}
+				{
+					PROFILE_SCOPE("Animation Transform");
+					Systems::TransformAnimationSystem(scene, e.dt);
+				}
 
 				{
 					PROFILE_SCOPE("Movement collider system");

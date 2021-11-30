@@ -115,6 +115,8 @@ void CombatSystem::UpdateDash(HeadlessScene& scene)
 			{
 				dashAbility.velocityBeforeDash = entity.GetComponent<comp::Velocity>()->vel;
 			}
+
+
 		});
 }
 
