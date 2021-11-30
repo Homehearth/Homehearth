@@ -11,7 +11,6 @@ float4 main(PixelIn input) : SV_TARGET
     float3 albedo = 1.f;
     float metallic = 0.0f;
     float roughness = 0.0f;
-    float exposure = 0.1f;
     const float gamma = 1.f / 2.2f;
     
     //Normal Vector
@@ -21,6 +20,9 @@ float4 main(PixelIn input) : SV_TARGET
     
     //If an object has a texture, sample from it else use default values.
     SampleTextures(input, albedo, N, roughness, metallic, ao);
+    //albedo = ACESFitted(albedo);
+    
+    //If normal texture exists, sample from it
 
     //---------------------------------PBR-Shading Calculations---------------------------------
     
@@ -154,9 +156,10 @@ float4 main(PixelIn input) : SV_TARGET
                 {
                     color = (color * ambient) + Lo;
                     //HDR tonemapping
-                    color = color / (color + float3(1.0, 1.0, 1.0));
+                    //color = color / (color + float3(1.0, 1.0, 1.0));
                     //Gamma correct
-                    color = pow(max(color, 0.0f), float3(1.0 / 2.2, 1.0 / 2.2, 1.0 / 2.2));
+                    //color = pow(max(color, 0.0f), float3(1.0 / 2.2, 1.0 / 2.2, 1.0 / 2.2));
+                    color = ACESFitted(color);
                     return float4(color, alpha);
                 }
 
@@ -165,11 +168,8 @@ float4 main(PixelIn input) : SV_TARGET
     }
     
     float3 color = ambient + Lo;
-    //color *= exposure;
-    
-    //HDR tonemapping
-	color = color / (color + float3(1.0, 1.0, 1.0));
-    //Gamma correct
+    //Cool ACES tonemapping
+    color = ACESFitted(color);
     color = pow(max(color, 0.0f), float3(gamma, gamma, gamma));
     
     return float4(color, 5.0f);
