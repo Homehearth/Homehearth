@@ -159,7 +159,7 @@ namespace sceneHelp
 		float pointRange = 9.f;
 
 		// The sun
-		CreateLightEntity(gameScene, { 0.f, 0.f, 0.f, 0.f }, { -1.0f, 0.0f, 0.f, 0.f }, { 255.f, 185, 150, 0.f }, 1000.f, 0.09f, TypeLight::DIRECTIONAL, 1);
+		CreateLightEntity(gameScene, { 0.f, 0.f, 0.f, 0.f }, { -1.0f, 0.0f, -1.f, 0.f }, { 255.f, 185, 150, 0.f }, 1000.f, 0.09f, TypeLight::DIRECTIONAL, 1);
 		// LEFT OF WELL
 		CreateLightEntity(gameScene, { 268.2f, 28.f, -320.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 185.f, 100.f, 0.f }, pointRange, 0.4f,TypeLight::POINT, 0);
 		// FURTHEST LEFT AND FURTHEST SOUTH
@@ -186,17 +186,20 @@ namespace sceneHelp
 				);
 
 				Collection2D* bullColl = game->GetCurrentScene()->GetCollection("bullDoze");
-				rtd::Picture* bullIcon = dynamic_cast<rtd::Picture*>(bullColl->elements[0].get());
-				if (bullIcon)
+				if (bullColl)
 				{
-					if (game->GetCurrentMode() == Mode::DESTROY_MODE)
+					rtd::Picture* bullIcon = dynamic_cast<rtd::Picture*>(bullColl->elements[0].get());
+					if (bullIcon)
 					{
-						bullColl->Show();
-						bullIcon->SetPosition((FLOAT)InputSystem::Get().GetMousePos().x, (FLOAT)InputSystem::Get().GetMousePos().y);
-					}
-					else
-					{
-						bullColl->Hide();
+						if (game->GetCurrentMode() == Mode::DESTROY_MODE)
+						{
+							bullColl->Show();
+							bullIcon->SetPosition((FLOAT)InputSystem::Get().GetMousePos().x, (FLOAT)InputSystem::Get().GetMousePos().y);
+						}
+						else
+						{
+							bullColl->Hide();
+						}
 					}
 				}
 
