@@ -1,4 +1,6 @@
 BlurType 2
 Shadows 1
-Resolution 1920x1080
-MasterVolume 0.031250
+ShadowQuality Medium
+MasterVolume 0.882258
+WindowHeight 1080
+WindowWidth 1920

@@ -721,9 +721,6 @@ namespace sceneHelp
 
 		// Shadows toggle.
 		static int ShadowType = std::stod(OptionSystem::Get().GetOption("Shadows"));
-		
-
-		
 		rtd::Button* shadowButton = miscMenu->AddElement<rtd::Button>("Button.png", draw_t((width / 8.0f) * 5.0f, height / 8.0f, width / 4.0f, height / 8.0f));
 		rtd::Text* shadowType = miscMenu->AddElement<rtd::Text>("Shadows: ON", draw_t((width / 8.0f) * 5.0f, height / 8.0f, width / 4.0f, height / 8.0f));
 		
@@ -773,6 +770,156 @@ namespace sceneHelp
 			}
 
 			});
+
+		// Shadow Quality Settings
+
+		static std::string shadowQuality = OptionSystem::Get().GetOption("ShadowQuality");
+		rtd::Button* shadowSizeButton = miscMenu->AddElement<rtd::Button>("Button.png", draw_t((width / 8.0f) * 5.0f, (height / 8.0f) * 4.0f, width / 4.0f, height / 8.0f));
+		rtd::Text* shadowSize = miscMenu->AddElement<rtd::Text>("Shadows Quality: LOW", draw_t((width / 8.0f) * 5.0f, (height / 8.0f) * 4.0f, width / 4.0f, height / 8.0f));
+
+		if (shadowQuality == "Low")
+		{
+			shadowSize->SetText("Shadows Quality: LOW");
+		}
+		else if (shadowQuality == "Medium")
+		{
+			shadowSize->SetText("Shadows Quality: MEDIUM");
+		}
+		else if (shadowQuality == "High")
+		{
+			shadowSize->SetText("Shadows Quality: HIGH");
+		}
+		else
+		{
+			shadowSize->SetText("Shadows Quality: MEDIUM");
+			shadowQuality = "Medium";
+			OptionSystem::Get().SetOption("ShadowQuality", std::string("Medium"));
+		}
+
+		shadowSizeButton->SetOnPressedEvent([=] {
+
+			if (shadowQuality == "Low")
+			{
+				shadowSize->SetText("Shadows Quality: MEDIUM");
+				shadowQuality = "Medium";
+				thread::RenderThreadHandler::Get().GetRenderer()->GetShadowPass()->SetShadowMapSize(2048);
+			}
+			else if (shadowQuality == "Medium")
+			{
+				shadowSize->SetText("Shadows Quality: HIGH");
+				shadowQuality = "High";
+				thread::RenderThreadHandler::Get().GetRenderer()->GetShadowPass()->SetShadowMapSize(4096);
+			}
+			else if (shadowQuality == "High")
+			{
+				shadowSize->SetText("Shadows Quality: LOW");
+				shadowQuality = "Low";
+				thread::RenderThreadHandler::Get().GetRenderer()->GetShadowPass()->SetShadowMapSize(1024);
+			}
+			OptionSystem::Get().SetOption("ShadowQuality", shadowQuality);
+
+			});
+
+
+		/*
+			Window Size Options
+		*/
+
+		static int winWidth = std::stod(OptionSystem::Get().GetOption("WindowWidth"));
+		static int winHeight = std::stod(OptionSystem::Get().GetOption("WindowHeight"));
+		rtd::Button* windowSizeButton = resolutionMenu->AddElement<rtd::Button>("Button.png", draw_t((width / 8.0f) * 5.0f, (height / 8.0f) * 4.0f, width / 4.0f, height / 8.0f));
+		rtd::Text* windowSize = resolutionMenu->AddElement<rtd::Text>("Window Size: 1920x1080", draw_t((width / 8.0f) * 5.0f, (height / 8.0f) * 4.0f, width / 4.0f, height / 8.0f));
+
+		rtd::Button* tipSizeButton = resolutionMenu->AddElement<rtd::Button>("Button.png", draw_t((width / 8.0f) * 5.0f, (height / 8.0f), width / 4.0f, height / 8.0f));
+		rtd::Text* tipSizeText = resolutionMenu->AddElement<rtd::Text>("A restart is required for effects to change.", draw_t((width / 8.0f) * 5.0f, (height / 8.0f), width / 4.0f, height / 8.0f));
+
+		switch (winWidth)
+		{
+		case 1920:
+		{
+			windowSize->SetText("Window Size: 1920x1080");
+			break;
+		}
+		case 2560:
+		{
+			windowSize->SetText("Window Size: 2560x1440");
+			break;
+		}
+		case 1408:
+		{
+			windowSize->SetText("Window Size: 1408x792");
+			break;
+		}
+		case 1536:
+		{
+			windowSize->SetText("Window Size: 1536x864");
+			break;
+		}
+		case 1632:
+		{
+			windowSize->SetText("Window Size: 1632x918");
+			break;
+		}
+		default:
+		{
+			winWidth = 1920;
+			winHeight = 1080;
+			break;
+		}
+		};
+
+		windowSizeButton->SetOnPressedEvent([=] {
+
+			switch (winWidth)
+			{
+			case 1920:
+			{
+				windowSize->SetText("Window Size: 2560x1440");
+				winWidth = 2560;
+				winHeight = 1440;
+				break;
+			}
+			case 2560:
+			{
+				windowSize->SetText("Window Size: 1408x792");
+				winWidth = 1408;
+				winHeight = 792;
+				break;
+			}
+			case 1408:
+			{
+				windowSize->SetText("Window Size: 1536x864");
+				winWidth = 1536;
+				winHeight = 864;
+				break;
+			}
+			case 1536:
+			{
+				windowSize->SetText("Window Size: 1632x918");
+				winWidth = 1632;
+				winHeight = 918;
+				break;
+			}
+			case 1632:
+			{
+				windowSize->SetText("Window Size: 1920x1080");
+				winWidth = 1920;
+				winHeight = 1080;
+				break;
+			}
+			default:
+			{
+				winWidth = 1920;
+				winHeight = 1080;
+				break;
+			}
+			};
+
+			OptionSystem::Get().SetOption("WindowWidth", std::to_string(winWidth));
+			OptionSystem::Get().SetOption("WindowHeight", std::to_string(winHeight));
+
+			});
+
 
 		miscMenu->Hide();
 		resolutionMenu->Hide();

@@ -19,6 +19,7 @@ void Renderer::Initialize(Window* pWindow)
 	AddPass(&m_decalPass);
 	m_decalPass.Create();
 	AddPass(&m_shadowPass);
+	m_shadowPass.StartUp();
 	AddPass(&m_basePass);   // 2
 	AddPass(&m_animPass);	// 3
 	AddPass(&m_skyPass);
