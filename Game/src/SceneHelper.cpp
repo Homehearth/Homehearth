@@ -54,33 +54,8 @@ namespace sceneHelp
 		Scene& mainMenuScene = game->GetScene("MainMenu");
 		SetupMainMenuScreen(game);
 
-		Entity backgroundScene = mainMenuScene.CreateEntity();
-		backgroundScene.AddComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>("GameSceneAll.fbx");
-		backgroundScene.AddComponent<comp::Transform>();
-		mainMenuScene.GetRegistry()->on_construct<comp::Light>().connect<&Lights::Add>(mainMenuScene.GetLights());
-/*
-		CreateLightEntity(mainMenuScene, { 330.0f, 20.0f, -333.3f , 1.0f }, { -1.0f, -0.5f, 0.f, 0.f }, { 15.f, 15.f, 15.f, 0.f }, 1000.0f, 0.09f, TypeLight::DIRECTIONAL, 1);
-		CreateLightEntity(mainMenuScene, { 330.0f, 20.0f, -333.3f , 1.0f }, { -1.0f, -0.5f, 0.f, 0.f }, { 15.f, 15.f, 15.f, 0.f }, 1000.0f, 0.09f, TypeLight::DIRECTIONAL, 1);
-		CreateLightEntity(mainMenuScene, { 330.0f, 20.0f, -333.3f , 1.0f }, { -1.0f, -0.5f, 0.f, 0.f }, { 15.f, 15.f, 15.f, 0.f }, 1000.0f, 0.09f, TypeLight::DIRECTIONAL, 1);
-*/
-
-		comp::Transform test;
-		test.position = { 330.0f, 1.0f, -333.3f };
-		Entity blood = mainMenuScene.CreateEntity();
-		blood.AddComponent<comp::Decal>(test);
-
-		mainMenuScene.GetCurrentCamera()->Initialize(sm::Vector3(0, 0, 0), sm::Vector3(0, 0, 1), sm::Vector3(0, 1, 0),
-			sm::Vector2((float)game->GetWindow()->GetWidth(), (float)game->GetWindow()->GetHeight()), CAMERATYPE::DEFAULT);
-		mainMenuScene.GetCurrentCamera()->m_position = sm::Vector3(350.f, 30.f, -250.f);
-
 		mainMenuScene.on<ESceneUpdate>([](const ESceneUpdate& e, Scene& scene)
 			{
-				static float d = 0.0f;
-				d += e.dt;
-				float angle = ((std::sin(d) + 1) * 0.5f) * dx::g_XMPi[0] * 0.05f;
-
-				scene.GetCurrentCamera()->m_rotation = sm::Quaternion::CreateFromAxisAngle(sm::Vector3(0, 1, 0), angle + dx::XMConvertToRadians(170.0f - 30.f));
-
 				IMGUI(
 					ImGui::Begin("Scene");
 				ImGui::Text("MainMenu");
@@ -264,9 +239,9 @@ namespace sceneHelp
 		float width = (float)game->GetWindow()->GetWidth();
 		float height = (float)game->GetWindow()->GetHeight();
 
-		Collection2D* menuText = new Collection2D;
-		menuText->AddElement<rtd::Text>("Welcome To Homehearth!", draw_text_t(0.f, 0.0f, width, height / 2.f));
-		scene.Add2DCollection(menuText, "MenuText");
+		Collection2D* mainMenu = new Collection2D;
+		mainMenu->AddElement<rtd::Picture>("MainMenu.png", draw_t(0, 0, width, height));
+		scene.Add2DCollection(mainMenu, "AMainMenu");
 
 		Collection2D* connectFields = new Collection2D;
 		rtd::TextField* ipField = connectFields->AddElement<rtd::TextField>(draw_text_t((width / 4), height * 0.55f, width * 0.25f, D2D1Core::GetDefaultFontSize()), 15, true);
@@ -491,7 +466,7 @@ namespace sceneHelp
 		{
 			Collection2D* playerIcon = new Collection2D;
 
-			playerIcon->AddElement<rtd::Canvas>(D2D1::ColorF(0.7f, 0.5f, 0.2f), draw_t(width / 16, (height / 12) * (i + 1) + (height / 12) * i, width / 4, height / 9));
+			playerIcon->AddElement<rtd::Picture>("Button.png", draw_t(width / 16, (height / 12) * (i + 1) + (height / 12) * i, width / 4, height / 9));
 			playerIcon->AddElement<rtd::Text>("Player " + std::to_string(i + 1), draw_text_t(width / 16, (height / 12) * (i + 1) + (height / 12) * i, width / 4, height / 9));
 			playerIcon->AddElement<rtd::Picture>("WarriorIcon.png", draw_t((width / 8) + (width / 4), (height / 12) * (i + 1) + (height / 12) * i, width / 16, height / 9));
 			playerIcon->AddElement<rtd::Picture>("No.png", draw_t(((width / 8) * 2) + (width / 4), (height / 12) * (i + 1) + (height / 12) * i, width / 16, height / 9))->SetVisiblity(false);
@@ -522,7 +497,7 @@ namespace sceneHelp
 		scene.Add2DCollection(startGame, "StartGame");
 
 		Collection2D* general = new Collection2D;
-		general->AddElement<rtd::Canvas>(D2D1::ColorF(.2f, .2f, .2f), draw_t(0.0f, 0.0f, width, height));
+		general->AddElement<rtd::Picture>("MenuBG.png", draw_t(0, 0, width, height));
 		rtd::Button* exitButton = general->AddElement<rtd::Button>("No.png", draw_t(0.0f, 0.0f, width / 24, height / 14), false);
 		exitButton->SetOnPressedEvent([=]()
 			{
@@ -584,6 +559,10 @@ namespace sceneHelp
 		Scene& scene = game->GetScene("Options");
 
 		Collection2D* helpText = new Collection2D;
+		Collection2D* menuBG = new Collection2D;
+
+		menuBG->AddElement<rtd::Picture>("MenuBG.png", draw_t(0, 0, width, height));
+		scene.Add2DCollection(menuBG, "AMenuBG");
 
 		Collection2D* soundCollection = new Collection2D;
 		rtd::Slider* sl = soundCollection->AddElement<rtd::Slider>(D2D1::ColorF(0.0f, 0.0f, 0.0f), draw_t((width / 2) - (width / 9), height / 5, width / 9, height / 16), &game->m_masterVolume, 1.0f, 0.0f);
@@ -959,8 +938,7 @@ namespace sceneHelp
 
 		Collection2D* loadingScreen = new Collection2D;
 
-		loadingScreen->AddElement<rtd::Picture>("oohstonefigures.jpg", (draw_t(0.0f, 0.0f, width, height)));
-		loadingScreen->AddElement<rtd::Text>("Loading!", draw_text_t((width / 2.f) - (strlen("Loading!") * D2D1Core::GetDefaultFontSize() * 0.5f), (height / 2.f) - D2D1Core::GetDefaultFontSize(), strlen("Loading!") * D2D1Core::GetDefaultFontSize(), D2D1Core::GetDefaultFontSize()));
+		loadingScreen->AddElement<rtd::Picture>("LoadingScreen.png", (draw_t(0.0f, 0.0f, width, height)));
 
 		scene.Add2DCollection(loadingScreen, "LoadingScreen");
 	}
@@ -999,6 +977,7 @@ namespace sceneHelp
 		scene.Add2DCollection(nameCollection, "nameInput");
 
 		Collection2D* lobbyCollection = new Collection2D;
+		lobbyCollection->AddElement<rtd::Picture>("MenuBG.png", draw_t(0, 0, width, height));
 
 		rtd::TextField* lobbyField = lobbyCollection->AddElement<rtd::TextField>(draw_text_t(width / 8, height - (height / 3.33f), width / 4, D2D1Core::GetDefaultFontSize()));
 		lobbyField->SetDescriptionText("Input Lobby ID");
