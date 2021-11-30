@@ -653,7 +653,7 @@ void ServerSystems::CheckGameOver(Simulation* simulation, HeadlessScene& scene)
 	PROFILE_FUNCTION();
 
 	bool gameOver = true;
-
+	bool isHousesDestroyed = true;
 	//Check if all players is dead
 	scene.ForEachComponent<comp::Player, comp::Health>([&](comp::Player& p, comp::Health& h)
 		{
@@ -663,7 +663,16 @@ void ServerSystems::CheckGameOver(Simulation* simulation, HeadlessScene& scene)
 			}
 		});
 
-	if (gameOver)
+	scene.ForEachComponent<comp::House>([&](comp::House& house)
+		{
+			if (!house.isDead)
+			{
+				isHousesDestroyed = false;
+			}
+		});
+
+
+	if (gameOver || isHousesDestroyed)
 	{
 		simulation->SetGameOver();
 	}
