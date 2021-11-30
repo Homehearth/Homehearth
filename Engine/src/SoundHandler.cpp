@@ -44,16 +44,17 @@ void SoundHandler::LoadAllSounds()
     AddSoundSource("../Assets/Sounds/ButtonClick.mp3");
 
     AddSoundSource("../Assets/Sounds/Player_OnMovement.wav");
-    AddSoundSource("../Assets/Sounds/Player_OnMeleeAttack1.wav");
-    AddSoundSource("../Assets/Sounds/Player_OnMeleeAttack2.wav");
-    AddSoundSource("../Assets/Sounds/Player_OnMeleeAttack3.wav");
+    AddSoundSource("../Assets/Sounds/Player_OnMeleeAttack.wav");
+    AddSoundSource("../Assets/Sounds/Player_OnMeleeAttackHit1.wav");
+    AddSoundSource("../Assets/Sounds/Player_OnMeleeAttackHit2.wav");
+    AddSoundSource("../Assets/Sounds/Player_OnMeleeAttackHit3.wav");
     AddSoundSource("../Assets/Sounds/Player_OnRangeAttack.wav");
     AddSoundSource("../Assets/Sounds/Player_OnDmgDealt.wav");
     AddSoundSource("../Assets/Sounds/Player_OnDmgRecieved.wav");
     AddSoundSource("../Assets/Sounds/Player_OnCastHealing.wav");
     AddSoundSource("../Assets/Sounds/Player_OnHealingRecieved.wav");
     AddSoundSource("../Assets/Sounds/Player_OnLeap.wav");
-    AddSoundSource("../Assets/Sounds/Player_OnDeath.ogg");
+    AddSoundSource("../Assets/Sounds/Player_OnDeath.wav");
     AddSoundSource("../Assets/Sounds/Player_OnRespawn.wav");
     AddSoundSource("../Assets/Sounds/Enemy_OnDeath.wav");
 }

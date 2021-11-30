@@ -333,9 +333,12 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			switch (data.type)
 			{
 			case ESoundEvent::Player_OnMeleeAttack:
+				SH->PlaySound("Player_OnMeleeAttack", data);
+			break;
+			case ESoundEvent::Player_OnMeleeAttackHit:
 				{
 					int version = rand() % 3 + 1;
-					std::string onAttackName = "Player_OnMeleeAttack" + std::to_string(version);
+					std::string onAttackName = "Player_OnMeleeAttackHit" + std::to_string(version);
 					SH->PlaySound(onAttackName, data);
 				}
 				break;
@@ -396,8 +399,13 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	}
 	case GameMsg::Game_Over:
 	{
-		auto sound = SoundHandler::Get().GetCurrentMusic();
-		sound->stop();
+		SoundHandler::Get().GetCurrentMusic()->stop();
+
+		audio_t audio = {};
+		audio.isUnique = true;
+		audio.playLooped = false;
+		SoundHandler::Get().PlaySound("Player_OnDeath", audio);
+
 		SetScene("GameOver");
 		break;
 	}
