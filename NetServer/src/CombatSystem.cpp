@@ -16,7 +16,7 @@ void CombatSystem::UpdateMelee(HeadlessScene& scene)
 
 			if(entity.GetComponent<comp::Player>())
 			{
-				audio_t audio;
+				audio_t audio = {};
 				audio.type = ESoundEvent::Player_OnMeleeAttack;
 				audio.position = entity.GetComponent<comp::Transform>()->position;
 				audio.shouldBroadcast = true;
@@ -46,7 +46,7 @@ void CombatSystem::UpdateRange(HeadlessScene& scene)
 			Entity attackEntity = CreateAttackEntity(entity, scene, &transform, &stats);
 			AddCollisionRangeBehavior(entity, attackEntity, scene);
 
-			audio_t audio;
+			audio_t audio = {};
 			audio.type = ESoundEvent::Player_OnRangeAttack;
 			audio.position = entity.GetComponent<comp::Transform>()->position;
 			audio.shouldBroadcast = true;
@@ -118,7 +118,7 @@ void CombatSystem::UpdateDash(HeadlessScene& scene)
 			if (ecs::ReadyToUse(&dashAbility, nullptr))
 			{
 				//dashAbility.velocityBeforeDash = entity.GetComponent<comp::Velocity>()->vel;
-				audio_t audio;
+				audio_t audio = {};
 				audio.type = ESoundEvent::Player_OnCastDash;
 				audio.position = entity.GetComponent<comp::Transform>()->position;
 				audio.shouldBroadcast = true;
