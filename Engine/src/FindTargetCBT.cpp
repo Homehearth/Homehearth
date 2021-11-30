@@ -53,7 +53,7 @@ BT::NodeStatus BT::FindTargetCBT::Tick()
 		}
 
 		//Missing components
-		if (!playerTransform || !playerHealth || !currentNearest || !nearestPlayer.GetComponent<comp::Player>()->reachable)
+		if (!playerTransform || !playerHealth || !currentNearest || !player.GetComponent<comp::Player>()->reachable)
 			continue;
 
 		Node* closestNode = pathFinderManager->FindClosestNode(playerTransform->position);
