@@ -110,7 +110,7 @@ void Lobby::Update()
 
 	msg << static_cast<uint8_t>(m_players.size());
 
-	m_simRef->Broadcast(msg);
+	m_simRef->BroadcastUDP(msg);
 }
 
 bool Lobby::IsActive() const
