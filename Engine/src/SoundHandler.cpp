@@ -161,7 +161,7 @@ irrklang::ISound* SoundHandler::PlaySound(const std::string& name, const audio_t
                 data.playLooped, true, false, false);
 
             const float minDist = (data.minDistance <= 0) ? m_soundEngine->getDefault3DSoundMinDistance() : data.minDistance;
-            const float volume = (data.volume == 0) ? 1.0f : data.volume;
+            const float volume = (data.volume <= 0.1f) ? 1.0f : data.volume;
 
             sound->setMinDistance(minDist);
             sound->setVolume(data.volume);
@@ -170,7 +170,7 @@ irrklang::ISound* SoundHandler::PlaySound(const std::string& name, const audio_t
         else
         {
             sound = m_soundEngine->play2D(m_soundSources[name], data.playLooped, true, false, false);
-            const float volume = (data.volume == 0) ? 1.f : data.volume;
+            const float volume = (data.volume <= 0.1f) ? 1.0f : data.volume;
         	sound->setVolume(volume);
             sound->setIsPaused(false);
         }
