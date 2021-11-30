@@ -130,8 +130,8 @@ void ShadowPass::UpdateLightBuffer(ID3D11DeviceContext* context, ID3D11Buffer* b
 void ShadowPass::SetShadowMapSize(uint32_t size)
 {
 	m_shadowSize = size;
-	m_viewport.Height = m_shadowSize;
-	m_viewport.Width = m_shadowSize;
+	m_viewport.Height = static_cast<FLOAT>(m_shadowSize);
+	m_viewport.Width =	static_cast<FLOAT>(m_shadowSize);
 
 	SetupMap();
 }
@@ -339,8 +339,8 @@ void ShadowPass::StartUp()
 
 
 
-	m_viewport.Height = m_shadowSize;
-	m_viewport.Width = m_shadowSize;
+	m_viewport.Height = static_cast<FLOAT>(m_shadowSize);
+	m_viewport.Width  =	static_cast<FLOAT>(m_shadowSize);
 	m_viewport.TopLeftX = 0.0f;
 	m_viewport.TopLeftY = 0.0f;
 

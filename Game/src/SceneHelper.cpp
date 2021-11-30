@@ -707,7 +707,7 @@ namespace sceneHelp
 			});
 
 		// Shadows toggle.
-		static int ShadowType = std::stod(OptionSystem::Get().GetOption("Shadows"));
+		static int ShadowType = std::stoi(OptionSystem::Get().GetOption("Shadows"));
 		rtd::Button* shadowButton = miscMenu->AddElement<rtd::Button>("Button.png", draw_t((width / 8.0f) * 5.0f, height / 8.0f, width / 4.0f, height / 8.0f));
 		rtd::Text* shadowType = miscMenu->AddElement<rtd::Text>("Shadows: ON", draw_t((width / 8.0f) * 5.0f, height / 8.0f, width / 4.0f, height / 8.0f));
 		
@@ -814,8 +814,8 @@ namespace sceneHelp
 			Window Size Options
 		*/
 
-		static int winWidth = std::stod(OptionSystem::Get().GetOption("WindowWidth"));
-		static int winHeight = std::stod(OptionSystem::Get().GetOption("WindowHeight"));
+		static int winWidth = std::stoi(OptionSystem::Get().GetOption("WindowWidth"));
+		static int winHeight = std::stoi(OptionSystem::Get().GetOption("WindowHeight"));
 		rtd::Button* windowSizeButton = resolutionMenu->AddElement<rtd::Button>("Button.png", draw_t((width / 8.0f) * 5.0f, (height / 8.0f) * 4.0f, width / 4.0f, height / 8.0f));
 		rtd::Text* windowSize = resolutionMenu->AddElement<rtd::Text>("Window Size: 1920x1080", draw_t((width / 8.0f) * 5.0f, (height / 8.0f) * 4.0f, width / 4.0f, height / 8.0f));
 
