@@ -53,13 +53,13 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		attackAbility->delay = 0.2f;
 		attackAbility->movementSpeedAlt = 0.0f;
 
-		if (randomNum > 0.25f)
+		//if (randomNum > 0.25f)
 		{
 			behaviorTree->root = AIBehaviors::GetFocusBuildingAIBehavior(entity);
 		}
-		else
+		//else
 		{
-			behaviorTree->root = AIBehaviors::GetFocusPlayerAIBehavior(entity);
+			//behaviorTree->root = AIBehaviors::GetFocusPlayerAIBehavior(entity);
 		}
 
 	}
@@ -154,7 +154,7 @@ void EnemyManagement::CreateWaves(std::queue<Wave>& waveQueue, int currentRound)
 		Wave::Group group1;
 		group1.AddEnemy(EnemyType::Default, 2 + 2 * currentRound);
 		group1.SetSpawnPoint({ 490.f, -150.0f });
-		wave1.SetTimeLimit(5 * currentRound);
+		wave1.SetTimeLimit(5);
 		wave1.AddGroup(group1);
 	}
 
@@ -532,8 +532,14 @@ void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money
 				}
 				else if (house)
 				{
+					//Create a new entity with the ruined mesh
 					Entity newHouse = houseManager.CreateHouse(scene, houseManager.GetRuinedHouseType(house->houseType), NameType::EMPTY, NameType::EMPTY);
 					qt->Insert(newHouse);
+
+					//Remove house from blackboard
+					Blackboard::Get().GetValue<Houses_t>("houses")->houses.erase(entity);
+
+					//Destroy House entities with roof and door
 					house->houseRoof.Destroy();
 					house->door.Destroy();
 					entity.Destroy();

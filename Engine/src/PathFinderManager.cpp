@@ -169,10 +169,10 @@ PathFinderManager::~PathFinderManager()
 	m_nodes.clear();
 }
 
-void PathFinderManager::AStarSearch(Entity npc)
+void PathFinderManager::AStarSearch(Entity npcEntity)
 {
-	comp::Transform* npcTransform = npc.GetComponent<comp::Transform>();
-	comp::NPC* npcComp = npc.GetComponent<comp::NPC>();
+	comp::Transform* npcTransform = npcEntity.GetComponent<comp::Transform>();
+	comp::NPC* npcComp = npcEntity.GetComponent<comp::NPC>();
 
 
 	npcComp->currentNode->g = 0.0f;
@@ -183,18 +183,77 @@ void PathFinderManager::AStarSearch(Entity npc)
 	openList.push_back(startingNode);
 
 	//Gets the target that findTargetNode has picked for this entity
-	Entity* target = Blackboard::Get().GetValue<Entity>("target" + std::to_string(npc));
+	Entity* target = Blackboard::Get().GetValue<Entity>("target" + std::to_string(npcEntity));
+	comp::House* house = target->GetComponent<comp::House>();
 	if (target == nullptr)
 	{
 		LOG_INFO("Target was nullptr...");
 		return;
 	}
 
-
+	
 	Node* goalNode = FindClosestNode(target->GetComponent<comp::Transform>()->position);
 
+	//Need to take OBB center to get correct world position for houses
+	if (house)
+	{
+		comp::SphereCollider* p1BoS = npcEntity.GetComponent<comp::SphereCollider>();
+		comp::OrientedBoxCollider* p2OBB = target->GetComponent<comp::OrientedBoxCollider>();
+
+		sm::Vector3 sCenter = p1BoS->Center;
+		sCenter.y = 0.f;
+
+		float minX = (p2OBB->Center.x - p2OBB->Extents.x);
+		float maxX = (p2OBB->Center.x + p2OBB->Extents.x);
+		float minZ = (p2OBB->Center.z - p2OBB->Extents.z);
+		float maxZ = (p2OBB->Center.z + p2OBB->Extents.z);
+
+		// Get the closest point on the OBB that is inside the sphere
+		float closestX = max(minX, min(sCenter.x, maxX));
+		float closestZ = max(minZ, min(sCenter.z, maxZ));
+		sm::Vector3 ClosestPoint = { closestX, 0.f, closestZ };
+		sm::Vector3 pointToSphere = sCenter - ClosestPoint;
+
+		float distance = pointToSphere.Length();
+
+		// If the distance between the point that is inside the Sphere (on the OBB) 
+		// is less that the radius we are intersecting
+		//if (distance < p1BoS->Radius)
+		{
+			// DeltaLeft, DeltaRight, DeltaTop, DeltaBottom
+			float dl = abs(sCenter.x - minX);
+			float dr = abs(sCenter.x - maxX);
+			float dt = abs(sCenter.z - minZ);
+			float db = abs(sCenter.z - maxZ);
+
+			float clampX = sCenter.x;
+			float clampZ = sCenter.z;
+
+			// Clamp to the nearest face of the OBB
+			if (dt < db && dt < dl && dt < dr)
+			{
+				clampZ = minZ;
+			}
+			else if (db < dl && db < dr)
+			{
+				clampZ = maxZ;
+			}
+			else if (dl < dr)
+			{
+				clampX = minX;
+			}
+			else
+			{
+				clampX = maxX;
+			}
+
+			sm::Vector3 closestPoint = { clampX, 0.f, clampZ };
+
+			goalNode = FindClosestNode(closestPoint);
+		}
+	}
 	//If goal is a defense
-	if(goalNode->defencePlaced)
+	else if(goalNode->defencePlaced)
 	{
 		Node* currentNode = nullptr;
 		//Go through all neighbours and find the one closest that is reachable
@@ -367,10 +426,10 @@ bool PathFinderManager::PlayerAStar(sm::Vector3 playerPos)
 	return false;
 }
 
-bool PathFinderManager::ReachedNode(const Entity npc)
+bool PathFinderManager::ReachedNode(const Entity npcEntity)
 {
-	comp::NPC* npcComp = npc.GetComponent<comp::NPC>();
-	comp::Transform* transformComp = npc.GetComponent<comp::Transform>();
+	comp::NPC* npcComp = npcEntity.GetComponent<comp::NPC>();
+	comp::Transform* transformComp = npcEntity.GetComponent<comp::Transform>();
 	if (npcComp->currentNode && sm::Vector3::Distance(transformComp->position, npcComp->currentNode->position) < .2f)
 	{
 		return true;

@@ -46,7 +46,7 @@ BT::NodeStatus BT::FindTargetCBT::Tick()
 			continue;
 		}
 
-		//If we have a target assign transform component
+		//If we have a target assign a transform component
 		if(!nearestPlayer.IsNull())
 		{
 			currentNearest = nearestPlayer.GetComponent<comp::Transform>();
