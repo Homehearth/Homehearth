@@ -5,6 +5,8 @@ float4 main(PixelIn input) : SV_TARGET
     //return t_shadowMaps.Sample(s_linear, float3(input.uv, 0.0f));
 
     static unsigned int rolls = infoData.x;
+    const float LIGHT_RANGE = 215.0f;
+    const float LIGHT_VOLUME_RANGE = 250.0f;
     const unsigned int STEPS = 50;
     const float SCATTERING = 1.0f;
     
@@ -76,33 +78,34 @@ float4 main(PixelIn input) : SV_TARGET
                         shadowCoef = SampleShadowMap(texCoords, shadowIndex, currentDepth, shadowMapSize, blurKernalSize);
                     }
                     
-                    
                     // Volumetric Lighting
-                        float3 currentPos = camPos;
-                        float3 rayVector = input.worldPos.xyz - camPos;
-                        float3 rayDir = rayVector / length(rayVector);
-                        float3 stepLength = length(rayVector) / STEPS;
-                        float3 step = rayDir * stepLength;
-                      
-                    [unroll]
-                        for (int j = 0; j < STEPS; j++)
+                        if (length(camPos - input.worldPos.xyz) < LIGHT_VOLUME_RANGE)
                         {
+                            float3 currentPos = camPos;
+                            float3 rayVector = input.worldPos.xyz - camPos;
+                            float3 rayDir = rayVector / length(rayVector);
+                            float3 stepLength = length(rayVector) / STEPS;
+                            float3 step = rayDir * stepLength;
+                            [unroll]
+                            for (int j = 0; j < STEPS; j++)
+                            {
                         // Camera position in shadow space.
-                            float4 cameraShadowSpace = mul(lightMat, float4(currentPos, 1.0f));
-                            float2 shadowCoords;
+                                float4 cameraShadowSpace = mul(lightMat, float4(currentPos, 1.0f));
+                                float2 shadowCoords;
                         
                         // Sample the depth of current position.
-                            shadowCoords.x = cameraShadowSpace.x * 0.5f + 0.5f;
-                            shadowCoords.y = -cameraShadowSpace.y * 0.5f + 0.5f;
-                            float depth = t_shadowMaps.Sample(s_linear, float3(shadowCoords, shadowIndex));
-                            if (depth > cameraShadowSpace.z)
-                            {
-                                lightVolume += float3(SCATTERING, SCATTERING, SCATTERING);
-                            }
+                                shadowCoords.x = cameraShadowSpace.x * 0.5f + 0.5f;
+                                shadowCoords.y = -cameraShadowSpace.y * 0.5f + 0.5f;
+                                float depth = t_shadowMaps.Sample(s_linear, float3(shadowCoords, shadowIndex));
+                                if (depth > cameraShadowSpace.z & ((saturate(shadowCoords.x) == shadowCoords.x) & (saturate(shadowCoords.y) == shadowCoords.y)))
+                                {
+                                    lightVolume += float3(SCATTERING, SCATTERING, SCATTERING);
+                                }
                         
-                            currentPos += step;
+                                currentPos += step;
+                            }
+                            lightVolume /= STEPS;
                         }
-                        lightVolume /= STEPS;
                    
                     
                     lightCol += DoDirectionlight(sb_lights[i], N) * (1.0f - shadowCoef);
@@ -110,38 +113,41 @@ float4 main(PixelIn input) : SV_TARGET
                 }
                 case 1:
 				{
-                    float len = length(pixelposLightSpace.xyz);
-                    pixelposLightSpace.xyz /= len;
-                    float closestDepth = 1.0f;
-                    float currentDepth = 0.0f;
-                    float2 texCoords;
-                    
-                    if(pixelposLightSpace.z >= 0.0f)
+                    if (length(camPos - sb_lights[i].position.xyz) < LIGHT_RANGE)
                     {
-                        //bottom Paraboloid
-                        texCoords.x = (pixelposLightSpace.x / (1.0f + pixelposLightSpace.z)) * 0.5f + 0.5f;
-                        texCoords.y = 1.0f - ((pixelposLightSpace.y / (1.0f + pixelposLightSpace.z)) * 0.5f + 0.5f);
+                        float len = length(pixelposLightSpace.xyz);
+                        pixelposLightSpace.xyz /= len;
+                        float closestDepth = 1.0f;
+                        float currentDepth = 0.0f;
+                        float2 texCoords;
+                     
+                        if(pixelposLightSpace.z >= 0.0f)
+                        {
+                            //bottom Paraboloid
+                            texCoords.x = (pixelposLightSpace.x / (1.0f + pixelposLightSpace.z)) * 0.5f + 0.5f;
+                            texCoords.y = 1.0f - ((pixelposLightSpace.y / (1.0f + pixelposLightSpace.z)) * 0.5f + 0.5f);
 
-                        //calculate current fragment depth
-                        currentDepth = (len - 0.1f) / (500.f - 0.1f);
-                        currentDepth -= 0.001f;
+                            //calculate current fragment depth
+                            currentDepth = (len - 0.1f) / (500.f - 0.1f);
+                            currentDepth -= 0.001f;
                         
 
-                        shadowCoef = SampleShadowMap(texCoords, shadowIndex, currentDepth, shadowMapSize, blurKernalSize);
+                            shadowCoef = SampleShadowMap(texCoords, shadowIndex, currentDepth, shadowMapSize, blurKernalSize);
                         
+                        }
+                        else
+                        {
+                            //Top Paraboloid
+                            texCoords.x = 1.0f - (pixelposLightSpace.x / (1.0f - pixelposLightSpace.z)) * 0.5f + 0.5f;
+                            texCoords.y = 1.0f - ((pixelposLightSpace.y / (1.0f - pixelposLightSpace.z)) * 0.5f + 0.5f);
+                            currentDepth = (len - 0.1f) / (500.f - 0.1f);
+                            currentDepth -= 0.001f;
+                        
+                            shadowCoef = SampleShadowMap(texCoords, shadowIndex, currentDepth, shadowMapSize, blurKernalSize);
+
+                        }
+                        lightCol += DoPointlight(sb_lights[i], input, N) * (1.0f - shadowCoef);
                     }
-                    else
-                    {
-                        //Top Paraboloid
-                        texCoords.x = 1.0f - (pixelposLightSpace.x / (1.0f - pixelposLightSpace.z)) * 0.5f + 0.5f;
-                        texCoords.y = 1.0f - ((pixelposLightSpace.y / (1.0f - pixelposLightSpace.z)) * 0.5f + 0.5f);
-                        currentDepth = (len - 0.1f) / (500.f - 0.1f);
-                        currentDepth -= 0.001f;
-                        
-                        shadowCoef = SampleShadowMap(texCoords, shadowIndex, currentDepth, shadowMapSize, blurKernalSize);
-
-                    }
-                    lightCol += DoPointlight(sb_lights[i], input, N) * (1.0f - shadowCoef);
                     break;
                 }
                 default:
@@ -199,7 +205,7 @@ float4 main(PixelIn input) : SV_TARGET
                     colorDecal = colorDecal / (colorDecal + float3(1.0, 1.0, 1.0));
                     //Gamma correct
                     colorDecal = pow(max(colorDecal, 0.0f), float3(1.0 / 2.2, 1.0 / 2.2, 1.0 / 2.2));
-                    colorDecal = lerp(colorDecal, fogColor, fogFactor);
+                    colorDecal = lerp(colorDecal, fogColor.xyz, fogFactor);
                     return float4(colorDecal, alpha);
                 }
 
@@ -209,14 +215,14 @@ float4 main(PixelIn input) : SV_TARGET
     
     
     
-    float3 color = (ambient + Lo) * pow(lightVolumeFactor, 4.0f);
+    float3 color = (ambient + Lo) * pow(lightVolumeFactor, 2.5f);
     
     //HDR tonemapping
 	color = color / (color + float3(1.0, 1.0, 1.0));
     //Gamma correct
     color = pow(max(color, 0.0f), float3(gamma, gamma, gamma));
     
-    color = lerp(color, fogColor, fogFactor);
+    color = lerp(color, fogColor.xyz, fogFactor);
 
     return float4(color, 5.0f);
 }
