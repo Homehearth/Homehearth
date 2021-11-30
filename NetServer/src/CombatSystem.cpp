@@ -20,6 +20,10 @@ void CombatSystem::UpdateMelee(HeadlessScene& scene)
 				audio.type = ESoundEvent::Player_OnMeleeAttack;
 				audio.position = entity.GetComponent<comp::Transform>()->position;
 				audio.shouldBroadcast = false;
+				audio.playLooped = false;
+				audio.is3D = true;
+				audio.minDistance = 100.f;
+				audio.volume = 10.f;
 				entity.GetComponent<comp::AudioState>()->data.emplace(audio);
 			}
 		}
@@ -247,6 +251,7 @@ void CombatSystem::AddCollisionMeleeBehavior(Entity entity, Entity attackEntity,
 			if (otherHealth && attackAbility)
 			{
 				otherHealth->currentHealth -= attackAbility->attackDamage;
+				
 				if (other.GetComponent<comp::Tag<TagType::DEFENCE>>())
 				{
 					//TODO: add building particles
@@ -271,6 +276,12 @@ void CombatSystem::AddCollisionMeleeBehavior(Entity entity, Entity attackEntity,
 				{
 					audio_t audio;
 					audio.type = ESoundEvent::Player_OnDmgRecieved;
+					audio.position = other.GetComponent<comp::Transform>()->position;
+					audio.isUnique = false;
+					audio.shouldBroadcast = false;
+					audio.playLooped = false;
+					audio.is3D = false;
+					audio.volume = 10.f;
 					other.GetComponent<comp::AudioState>()->data.emplace(audio);
 				}
 
@@ -364,7 +375,13 @@ void CombatSystem::AddCollisionRangeBehavior(Entity entity, Entity attackEntity,
 				{
 					audio_t audio;
 					audio.type = ESoundEvent::Player_OnDmgRecieved;
-					entity.GetComponent<comp::AudioState>()->data.emplace(audio);
+					audio.position = other.GetComponent<comp::Transform>()->position;
+					audio.isUnique = false;
+					audio.shouldBroadcast = false;
+					audio.playLooped = false;
+					audio.is3D = false;
+					audio.volume = 10.f;
+					other.GetComponent<comp::AudioState>()->data.emplace(audio);
 				}
 
 				thisEntity.GetComponent<comp::SelfDestruct>()->lifeTime = 0.f;

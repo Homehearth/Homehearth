@@ -296,28 +296,85 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	}
 	case GameMsg::Game_PlaySound:
 	{
-		uint32_t nrOfSounds;
+		uint32_t nrOfSounds = 0u;
 		msg >> nrOfSounds;
-		audio_t audio = { };
+
+		audio_t data = {};
+
+		const auto SH = &SoundHandler::Get();
 
 		for (uint32_t i = 0; i < nrOfSounds; i++)
 		{
 			// Extract Sound Information.
-			msg >> audio.is3D;
-			msg >> audio.volume;
-			msg >> audio.position;
-			msg >> audio.type;
+			msg >> data.playLooped;
+			msg >> data.shouldBroadcast;
+			msg >> data.isUnique;
+			msg >> data.is3D;
+			msg >> data.minDistance;
+			msg >> data.volume;
+			msg >> data.position;
+			msg >> data.type;
 
-			switch (audio.type)
+			switch (data.type)
 			{
 			case ESoundEvent::Player_OnMeleeAttack:
-				SoundHandler::Get().Play3DSound("Player_OnMeleeAttack", audio.position);
+				{
+					int version = rand() % 3 + 1;
+					std::string onAttackName = "Player_OnMeleeAttack" + std::to_string(version);
+					SH->PlaySound(onAttackName, data);
+				}
+				break;
+			case ESoundEvent::Player_OnMovement:
+				SH->PlaySound("Player_OnMovement", data);
+				break;
+			case ESoundEvent::Player_OnRangeAttack:
+				SH->PlaySound("Player_OnRangeAttack", data);
+				break;
+			case ESoundEvent::Player_OnDmgDealt:
+				SH->PlaySound("Player_OnDmgDealt", data);
+				break;
+			case ESoundEvent::Player_OnDmgRecieved:
+				SH->PlaySound("Player_OnDmgRecieved", data);
+				break;
+			case ESoundEvent::Player_OnCastHealing:
+				SH->PlaySound("Player_OnCastHealing", data);
+				break;
+			case ESoundEvent::Player_OnHealingRecieved:
+				SH->PlaySound("Player_OnHealingRecieved", data);
+				break;
+			case ESoundEvent::Player_OnLeap:
+				SH->PlaySound("Player_OnLeap", data);
+				break;
+			case ESoundEvent::Player_OnDash:
+				SH->PlaySound("Player_OnDash", data);
+				break;
+			case ESoundEvent::Player_OnDeath:
+				SH->PlaySound("Player_OnDeath", data);
+				break;
+			case ESoundEvent::Player_OnRespawn:
+				SH->PlaySound("Player_OnRespawn", data);
+				break;
+			case ESoundEvent::Enemy_OnMovement:
+				SH->PlaySound("Enemy_OnMovement", data);
+				break;
+			case ESoundEvent::Enemy_MeleeAttack:
+				SH->PlaySound("Enemy_MeleeAttack", data);
+				break;
+			case ESoundEvent::Enemy_RangeAttack:
+				SH->PlaySound("Enemy_RangeAttack", data);
+				break;
+			case ESoundEvent::Enemy_OnDmgDealt:
+				SH->PlaySound("Enemy_OnDmgDealt", data);
+				break;
+			case ESoundEvent::Enemy_OnDmgRecieved:
+				SH->PlaySound("Enemy_OnDmgRecieved", data);
+				break;
+			case ESoundEvent::Enemy_OnDeath:
+				SH->PlaySound("Enemy_OnDeath", data);
 				break;
 			default:
 				break;
 			}
-
-			//SoundHandler::Get().AddToQueue(audio);
 		}
 
 		break;
@@ -336,7 +393,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		this->SetScene("Loading");
 		sceneHelp::LoadGameScene(this);
 		sceneHelp::LoadResources(this);
-		sceneHelp::LoadAllSounds();
 		sceneHelp::LoadMapColliders(this);
 
 #ifdef _DEBUG
@@ -381,8 +437,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		SetScene("Game");
 		thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::ADAPTIVE);
 
-		SoundHandler::Get().SetCurrentMusic("gameplay_theme");
-
 		break;
 	}
 	case GameMsg::Game_WaveTimer:
@@ -394,6 +448,9 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		case Cycle::DAY:
 		{
 			Scene& scene = GetScene("Game");
+
+			SoundHandler::Get().SetCurrentMusic("DayTheme");
+
 			// Change light when day.
 			scene.ForEachComponent<comp::Light>([&](Entity e, comp::Light& l)
 				{
@@ -407,6 +464,9 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		case Cycle::NIGHT:
 		{
 			Scene& scene = GetScene("Game");
+
+			SoundHandler::Get().SetCurrentMusic("NightTheme");
+
 			// Change light on Night.
 			m_elapsedCycleTime = 0.0f;
 			scene.ForEachComponent<comp::Light>([&](Entity e, comp::Light& l)

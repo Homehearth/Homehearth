@@ -53,6 +53,8 @@ namespace sceneHelp
 		Scene& mainMenuScene = game->GetScene("MainMenu");
 		SetupMainMenuScreen(game);
 
+		SoundHandler::Get().SetCurrentMusic("MenuTheme");
+
 		Entity backgroundScene = mainMenuScene.CreateEntity();
 		backgroundScene.AddComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>("GameSceneAll.fbx");
 		backgroundScene.AddComponent<comp::Transform>();
@@ -91,6 +93,7 @@ namespace sceneHelp
 	{
 		Scene& lobbyScene = game->GetScene("Lobby");
 		SetupInLobbyScreen(game);
+
 		lobbyScene.on<ESceneUpdate>([](const ESceneUpdate& e, Scene& scene)
 			{
 				IMGUI(
@@ -744,6 +747,7 @@ namespace sceneHelp
 				if (nameInputField->RawGetBuffer()->length() > 0)
 				{
 					game->m_playerName = *nameInputField->RawGetBuffer();
+
 					game->CreateLobby();
 
 					// Update own name.
@@ -1017,20 +1021,4 @@ namespace sceneHelp
 		}
 	}
 
-	void LoadAllSounds()
-	{
-		auto& SH = SoundHandler::Get();
-		SH.AddSoundSource("../Assets/Sounds/gameplay_theme.mp3");
-		SH.AddSoundSource("../Assets/Sounds/Player_OnMovement.wav");
-		SH.AddSoundSource("../Assets/Sounds/Player_OnMeleeAttack.wav");
-		SH.AddSoundSource("../Assets/Sounds/Player_OnRangeAttack.wav");
-		SH.AddSoundSource("../Assets/Sounds/Player_OnDmgDealt.wav");
-		SH.AddSoundSource("../Assets/Sounds/Player_OnDmgRecieved.wav");
-		SH.AddSoundSource("../Assets/Sounds/Player_OnCastHealing.wav");
-		SH.AddSoundSource("../Assets/Sounds/Player_OnHealingRecieved.wav");
-		SH.AddSoundSource("../Assets/Sounds/Player_OnLeap.wav");
-		SH.AddSoundSource("../Assets/Sounds/Player_OnDeath.wav");
-		SH.AddSoundSource("../Assets/Sounds/Player_OnRespawn.wav");
-		SH.AddSoundSource("../Assets/Sounds/Enemy_OnDeath.wav");
-	}
 }

@@ -548,6 +548,9 @@ struct audio_t
 	ESoundEvent type;
 	sm::Vector3 position;
 	float volume;
+	float minDistance;
 	bool is3D;
+	bool isUnique;
 	bool shouldBroadcast;
+	bool playLooped;
 };

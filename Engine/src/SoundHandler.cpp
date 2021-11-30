@@ -19,6 +19,8 @@ SoundHandler::SoundHandler()
 
         LOG_INFO("Irrklang sound engine successfully loaded.")
     }
+
+    LoadAllSounds();
 }
 
 void SoundHandler::UpdateCurrentMusic(irrklang::ISoundSource* musicSrc, bool loopMusic)
@@ -27,10 +29,33 @@ void SoundHandler::UpdateCurrentMusic(irrklang::ISoundSource* musicSrc, bool loo
     {
         m_currentMusic->stop();
         m_currentMusic->drop();
+        m_currentMusic = nullptr;
     }
 
     m_currentMusic = m_soundEngine->play2D(musicSrc, loopMusic, true, false, false);
     m_currentMusic->setIsPaused(false);
+}
+
+void SoundHandler::LoadAllSounds()
+{
+    AddSoundSource("../Assets/Sounds/DayTheme.wav");
+    AddSoundSource("../Assets/Sounds/NightTheme.wav");
+    AddSoundSource("../Assets/Sounds/MenuTheme.mp3");
+    AddSoundSource("../Assets/Sounds/ButtonClick.mp3");
+
+    AddSoundSource("../Assets/Sounds/Player_OnMovement.wav");
+    AddSoundSource("../Assets/Sounds/Player_OnMeleeAttack1.wav");
+    AddSoundSource("../Assets/Sounds/Player_OnMeleeAttack2.wav");
+    AddSoundSource("../Assets/Sounds/Player_OnMeleeAttack3.wav");
+    AddSoundSource("../Assets/Sounds/Player_OnRangeAttack.wav");
+    AddSoundSource("../Assets/Sounds/Player_OnDmgDealt.wav");
+    AddSoundSource("../Assets/Sounds/Player_OnDmgRecieved.wav");
+    AddSoundSource("../Assets/Sounds/Player_OnCastHealing.wav");
+    AddSoundSource("../Assets/Sounds/Player_OnHealingRecieved.wav");
+    AddSoundSource("../Assets/Sounds/Player_OnLeap.wav");
+    AddSoundSource("../Assets/Sounds/Player_OnDeath.ogg");
+    AddSoundSource("../Assets/Sounds/Player_OnRespawn.wav");
+    AddSoundSource("../Assets/Sounds/Enemy_OnDeath.wav");
 }
 
 SoundHandler::~SoundHandler()
@@ -52,6 +77,15 @@ SoundHandler& SoundHandler::Get()
 void SoundHandler::Update()
 {
     m_soundEngine->update();
+
+    //for (int i = 0; i < m_activeSounds.size(); i++)
+    //{
+	   // if(m_activeSounds[i] != nullptr && m_activeSounds[i]->isFinished())
+	   // {
+    //        m_activeSounds[i]->drop();
+    //        m_activeSounds.erase(m_activeSounds.begin() + i);
+	   // }
+    //}
 }
 
 void SoundHandler::AddSoundSource(const std::string &filePath)
@@ -83,49 +117,16 @@ void SoundHandler::AddSoundSource(const std::string& filePath, const std::string
     }
 }
 
-irrklang::ISound* SoundHandler::Play2DSound(const std::string& name, bool playSound)
-{
-    irrklang::ISound * sound = nullptr;
-
-    m_iterator = m_soundSources.find(name);
-    if (m_iterator != m_soundSources.end())
-    {
-    	sound = m_soundEngine->play2D(m_soundSources[name], false, true, false, false);
-        sound->setIsPaused(!playSound);
-    }
-
-    return sound;
-}
-
-irrklang::ISound* SoundHandler::PlayUnique2DSound(const std::string& name, bool playSound)
-{
-    irrklang::ISound* sound = nullptr;
-
-    m_iterator = m_soundSources.find(name);
-    if (m_iterator != m_soundSources.end())
-    {
-        if(!m_soundEngine->isCurrentlyPlaying(m_iterator->second))
-        {
-	        sound = m_soundEngine->play2D(m_soundSources[name], false, true, false, false);
-	        sound->setIsPaused(!playSound);
-        }
-    }
-
-    return sound;
-}
-
 void SoundHandler::SetCurrentMusic(const std::string& name, bool loopMusic)
 {
     m_iterator = m_soundSources.find(name);
     if (m_iterator != m_soundSources.end())
     {
-        const bool isPlaying = m_soundEngine->isCurrentlyPlaying(m_iterator->second);
-        if (isPlaying)
+        if (!m_soundEngine->isCurrentlyPlaying(m_iterator->second))
         {
-            m_soundEngine->stopAllSoundsOfSoundSource(m_iterator->second);
+            LOG_INFO("'%s' is set as current music", name.c_str())
+        	UpdateCurrentMusic(m_iterator->second, loopMusic);
         }
-        
-        UpdateCurrentMusic(m_iterator->second, loopMusic);
     }
 }
 
@@ -134,54 +135,49 @@ irrklang::ISound* SoundHandler::GetCurrentMusic()
     return m_currentMusic;
 }
 
-irrklang::ISound* SoundHandler::Play3DSound(const std::string& name, const sm::Vector3 &pos, bool playSound)
-{
-    irrklang::ISound* sound = nullptr;
-
-    m_iterator = m_soundSources.find(name);
-    if (m_iterator != m_soundSources.end())
-    {
-        sound = m_soundEngine->play3D(m_soundSources[name],{ pos.x, pos.y, pos.z },
-            false, true, false, false);
-        sound->setMinDistance(100.f);
-        sound->setIsPaused(!playSound);
-    }
-
-    return sound;
-}
-
-irrklang::ISound* SoundHandler::PlayUnique3DSound(const std::string& name, const sm::Vector3& pos, bool playSound)
-{
-    irrklang::ISound* sound = nullptr;
-
-    m_iterator = m_soundSources.find(name);
-    if (m_iterator != m_soundSources.end())
-    {
-        if (!m_soundEngine->isCurrentlyPlaying(m_iterator->second))
-        {
-            sound = m_soundEngine->play3D(m_soundSources[name], { pos.x, pos.y, pos.z },
-                false, true, false, false);
-            sound->setIsPaused(!playSound);
-        }
-    }
-
-    return sound;
-}
-
 void SoundHandler::SetListenerPosition(const sm::Vector3& pos, const sm::Vector3& lookDir)
 {
     m_soundEngine->setListenerPosition({ pos.x, pos.y, pos.z },
         { lookDir.x, lookDir.y, lookDir.z });
 }
 
-void SoundHandler::AddToQueue(const audio_t& audio)
+irrklang::ISound* SoundHandler::PlaySound(const std::string& name, const audio_t& data)
 {
-    m_audioQueue.emplace(audio);
-}
+    irrklang::ISound* sound = nullptr;
 
-std::queue<audio_t> SoundHandler::GetQueue()
-{
-    return m_audioQueue;
+    // Check if Sound exists.
+    m_iterator = m_soundSources.find(name);
+    if (m_iterator != m_soundSources.end())
+    {
+        // This is a condition which will not result in playing the sound.
+        if (m_soundEngine->isCurrentlyPlaying(m_iterator->second) && data.isUnique) 
+            return sound;
+
+        if(data.is3D)
+        {
+            sound = m_soundEngine->play3D(m_soundSources[name], { data.position.x, data.position.y, data.position.z },
+                data.playLooped, true, false, false);
+
+            const float minDist = (data.minDistance <= 0) ? m_soundEngine->getDefault3DSoundMinDistance() : data.minDistance;
+            const float volume = (data.volume == 0) ? 1.0f : data.volume;
+
+            sound->setMinDistance(minDist);
+            sound->setVolume(data.volume);
+            sound->setIsPaused(false);
+        }
+        else
+        {
+            sound = m_soundEngine->play2D(m_soundSources[name], data.playLooped, true, false, false);
+            const float volume = (data.volume == 0) ? 1.f : data.volume;
+        	sound->setVolume(volume);
+            sound->setIsPaused(false);
+        }
+
+        // Add to current active sounds.
+        //m_activeSounds.emplace_back(sound);
+    }
+
+    return sound;
 }
 
 

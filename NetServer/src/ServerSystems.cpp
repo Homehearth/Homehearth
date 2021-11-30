@@ -635,7 +635,7 @@ void ServerSystems::SoundSystem(Simulation* simulation, HeadlessScene& scene)
 				int nrOfBroadcasts = 0;
 				singleMsg.header.id = GameMsg::Game_PlaySound;
 				broadcastMsg.header.id = GameMsg::Game_PlaySound;
-
+				
 				// Loop trough all sounds.
 				for(int i = 0; i < COUNT; i++)
 				{
@@ -646,7 +646,11 @@ void ServerSystems::SoundSystem(Simulation* simulation, HeadlessScene& scene)
 						broadcastMsg << audio.type;
 						broadcastMsg << audio.position;
 						broadcastMsg << audio.volume;
+						broadcastMsg << audio.minDistance;
 						broadcastMsg << audio.is3D;
+						broadcastMsg << audio.isUnique;
+						broadcastMsg << audio.shouldBroadcast;
+						broadcastMsg << audio.playLooped;
 						nrOfBroadcasts++;
 					}
 					else
@@ -654,14 +658,18 @@ void ServerSystems::SoundSystem(Simulation* simulation, HeadlessScene& scene)
 						singleMsg << audio.type;
 						singleMsg << audio.position;
 						singleMsg << audio.volume;
+						singleMsg << audio.minDistance;
 						singleMsg << audio.is3D;
+						singleMsg << audio.isUnique;
+						singleMsg << audio.shouldBroadcast;
+						singleMsg << audio.playLooped;
 					}
 
 					audioState.data.pop();
 				}
 
 				//
-				// Send all msg.
+				// Send all msgs.
 				//
 				if(nrOfBroadcasts > 0)
 				{
