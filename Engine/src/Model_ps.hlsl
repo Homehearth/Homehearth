@@ -174,12 +174,13 @@ float4 main(PixelIn input) : SV_TARGET
     
     // FOG
     input.worldPos.y = 0;
-    float3 toCenter = float3(247, 0, -321) - input.worldPos.xyz;
+    float3 toCenter = float3(247, 0, -350) - input.worldPos.xyz;
     float distanceToCenter = length(toCenter);
 
-    float4 fogColor = float4(0.5f, 0.5f, 0.5f, 1);
+    float4 fogColor = float4(0.04f, 0.06f, 0.2f, 1);
+    //float4 fogColor = float4(0.5f, 0.5f, 0.5f, 1);
 
-    float fogFactor = saturate((distanceToCenter - 150) / 100);
+    float fogFactor = saturate((distanceToCenter - 110.f) / 100.f);
     color = lerp(color, fogColor, fogFactor);
 
     return float4(color, 5.0f);
