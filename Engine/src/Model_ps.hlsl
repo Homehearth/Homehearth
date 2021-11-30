@@ -5,7 +5,7 @@ float4 main(PixelIn input) : SV_TARGET
     //return t_shadowMaps.Sample(s_linear, float3(input.uv, 0.0f));
 
     static unsigned int rolls = infoData.x;
-    const unsigned int STEPS = 100;
+    const unsigned int STEPS = 50;
     const float SCATTERING = 1.0f;
     
     float3 lightVolume = float3(0.0f, 0.0f, 0.0f);
@@ -14,7 +14,6 @@ float4 main(PixelIn input) : SV_TARGET
     float3 albedo = 1.f;
     float metallic = 0.0f;
     float roughness = 0.0f;
-    float exposure = 0.1f;
     const float gamma = 1.f / 2.2f;
     
     //Normal Vector
@@ -158,6 +157,16 @@ float4 main(PixelIn input) : SV_TARGET
     float3 ambient = float3(0.7f, 0.15f, 0.5f) * albedo * ao;
     ambient = ambientIBL(albedo, N, V, F0, metallic, roughness, ao);
     
+    // FOG
+    input.worldPos.y = 0;
+    float3 toCenter = float3(247, 0, -350) - input.worldPos.xyz;
+    float distanceToCenter = length(toCenter);
+
+    float4 fogColor = float4(0.04f, 0.06f, 0.2f, 1);
+    //float4 fogColor = float4(0.5f, 0.5f, 0.5f, 1);
+
+    float fogFactor = saturate((distanceToCenter - 110.f) / 100.f);
+    float lightVolumeFactor = lightVolume > 0.0f ? lightVolume : 1.0f;
   
     /*
         This part of the code calculates if a decal should be present at this location.
@@ -179,42 +188,34 @@ float4 main(PixelIn input) : SV_TARGET
         
             if ((saturate(texCoords.x) == texCoords.x) & (saturate(texCoords.y) == texCoords.y))
             {
-                float3 color = t_decal.Sample(s_linear, texCoords).xyz;
-                float alpha = t_decal.Sample(s_linear, texCoords).r;
+                float3 albedoDecal  = t_decal.Sample(s_linear, texCoords).xyz;
+                float alpha         = t_decal.Sample(s_linear, texCoords).r;
                 
                 if (alpha > 0.4f)
                 {
-                    color = (color * ambient) + Lo;
+                    float3 colorDecal = (ambientIBL(albedoDecal, float3(0, 1, 0), V, F0, 0.f, 0.2f, 1.f) + Lo) * pow(lightVolumeFactor, 4.0f);
+                    
                     //HDR tonemapping
-                    color = color / (color + float3(1.0, 1.0, 1.0));
+                    colorDecal = colorDecal / (colorDecal + float3(1.0, 1.0, 1.0));
                     //Gamma correct
-                    color = pow(max(color, 0.0f), float3(1.0 / 2.2, 1.0 / 2.2, 1.0 / 2.2));
-                    return float4(color, alpha);
+                    colorDecal = pow(max(colorDecal, 0.0f), float3(1.0 / 2.2, 1.0 / 2.2, 1.0 / 2.2));
+                    colorDecal = lerp(colorDecal, fogColor, fogFactor);
+                    return float4(colorDecal, alpha);
                 }
 
             }
         }
     }
     
-    float lightVolumeFactor = lightVolume > 0.0f ? lightVolume : 1.0f;
+    
     
     float3 color = (ambient + Lo) * pow(lightVolumeFactor, 4.0f);
-    //color *= exposure;
     
     //HDR tonemapping
 	color = color / (color + float3(1.0, 1.0, 1.0));
     //Gamma correct
     color = pow(max(color, 0.0f), float3(gamma, gamma, gamma));
     
-    // FOG
-    input.worldPos.y = 0;
-    float3 toCenter = float3(247, 0, -350) - input.worldPos.xyz;
-    float distanceToCenter = length(toCenter);
-
-    float4 fogColor = float4(0.04f, 0.06f, 0.2f, 1);
-    //float4 fogColor = float4(0.5f, 0.5f, 0.5f, 1);
-
-    float fogFactor = saturate((distanceToCenter - 110.f) / 100.f);
     color = lerp(color, fogColor, fogFactor);
 
     return float4(color, 5.0f);

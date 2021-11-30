@@ -257,12 +257,14 @@ namespace sceneHelp
 					if (scene.GetCurrentCamera()->GetCameraType() == CAMERATYPE::DEBUG)
 					{
 						scene.SetCurrentCameraEntity(cameraEntity);
+						scene.GetCurrentCamera()->SetNearFarPlane(40.f, 200.f);
 						InputSystem::Get().SwitchMouseMode();
 						LOG_INFO("Game Camera selected");
 					}
 					else if (scene.GetCurrentCamera()->GetCameraType() == CAMERATYPE::PLAY)
 					{
 						scene.SetCurrentCameraEntity(debugCameraEntity);
+						scene.GetCurrentCamera()->SetNearFarPlane(0.1f, 400.f);
 						if (InputSystem::Get().IsMouseRelative())
 						{
 							InputSystem::Get().SwitchMouseMode();
@@ -754,19 +756,19 @@ namespace sceneHelp
 			});
 
 		// Shadows toggle.
-		static int ShadowType = std::stod(OptionSystem::Get().GetOption("Shadows"));
+		static int ShadowType = std::stoi(OptionSystem::Get().GetOption("Shadows"));
 		rtd::Button* shadowButton = miscMenu->AddElement<rtd::Button>("Button.png", draw_t((width / 8.0f) * 5.0f, height / 8.0f, width / 4.0f, height / 8.0f));
 		rtd::Text* shadowType = miscMenu->AddElement<rtd::Text>("Shadows: ON", draw_t((width / 8.0f) * 5.0f, height / 8.0f, width / 4.0f, height / 8.0f));
 		
 		switch (ShadowType)
 		{
-		case 0: // OFF
+		case 1: // OFF
 		{
 			shadowType->SetText("Shadows: OFF");
 			thread::RenderThreadHandler::Get().GetRenderer()->GetShadowPass()->SetEnable(false);
 			break;
 		}
-		case 1: // ON
+		case 2: // ON
 		{
 			shadowType->SetText("Shadows: ON");
 			thread::RenderThreadHandler::Get().GetRenderer()->GetShadowPass()->SetEnable(true);
@@ -774,28 +776,30 @@ namespace sceneHelp
 		}
 		default:
 		{
-			ShadowType = 0;
+			ShadowType = 2;
 			break;
 		}
 		}
+
+		OptionSystem::Get().SetOption("Shadows", std::to_string(ShadowType));
 		
 		shadowButton->SetOnPressedEvent([=] {
 
 			switch (ShadowType)
 			{
-			case 0: // OFF
+			case 1: // OFF
 			{
-				ShadowType = 1;
+				ShadowType = 2;
 				shadowType->SetText("Shadows: ON");
-				OptionSystem::Get().SetOption("Shadows", std::string("1"));
+				OptionSystem::Get().SetOption("Shadows", std::string("2"));
 				thread::RenderThreadHandler::Get().GetRenderer()->GetShadowPass()->SetEnable(true);
 				break;
 			}
-			case 1: // ON
+			case 2: // ON
 			{
-				ShadowType = 0;
+				ShadowType = 1;
 				shadowType->SetText("Shadows: OFF");
-				OptionSystem::Get().SetOption("Shadows", std::string("0"));
+				OptionSystem::Get().SetOption("Shadows", std::string("1"));
 				thread::RenderThreadHandler::Get().GetRenderer()->GetShadowPass()->SetEnable(false);
 				break;
 			}
@@ -859,8 +863,8 @@ namespace sceneHelp
 			Window Size Options
 		*/
 
-		static int winWidth = std::stod(OptionSystem::Get().GetOption("WindowWidth"));
-		static int winHeight = std::stod(OptionSystem::Get().GetOption("WindowHeight"));
+		static int winWidth = std::stoi(OptionSystem::Get().GetOption("WindowWidth"));
+		static int winHeight = std::stoi(OptionSystem::Get().GetOption("WindowHeight"));
 		rtd::Button* windowSizeButton = resolutionMenu->AddElement<rtd::Button>("Button.png", draw_t((width / 8.0f) * 5.0f, (height / 8.0f) * 4.0f, width / 4.0f, height / 8.0f));
 		rtd::Text* windowSize = resolutionMenu->AddElement<rtd::Text>("Window Size: 1920x1080", draw_t((width / 8.0f) * 5.0f, (height / 8.0f) * 4.0f, width / 4.0f, height / 8.0f));
 
