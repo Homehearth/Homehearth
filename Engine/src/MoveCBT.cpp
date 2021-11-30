@@ -72,6 +72,7 @@ BT::NodeStatus BT::MoveCBT::Tick()
 	if (npc->path.empty())
 	{
 		Entity* target = Blackboard::Get().GetValue<Entity>("target" + std::to_string(entity));
+		comp::House* house = target->GetComponent<comp::House>();
 		comp::Transform* targetTransform = nullptr;
 
 		if(target)
@@ -97,6 +98,17 @@ BT::NodeStatus BT::MoveCBT::Tick()
 		else if(pathFindManager->FindClosestNode(target->GetComponent<comp::Transform>()->position)->defencePlaced && targetTransform)
 		{
 			velocity->vel = targetTransform->position - transform->position;
+			velocity->vel.Normalize();
+			velocity->vel *= npc->movementSpeed;
+		}
+		else if(house)
+		{
+			comp::OrientedBoxCollider* obb = entity.GetComponent<comp::OrientedBoxCollider>();
+			if (obb == nullptr)
+				return BT::NodeStatus::FAILURE;
+
+			sm::Vector3 position = obb->Center;
+			velocity->vel = position - transform->position;
 			velocity->vel.Normalize();
 			velocity->vel *= npc->movementSpeed;
 		}

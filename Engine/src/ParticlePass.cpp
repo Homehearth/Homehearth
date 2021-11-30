@@ -89,7 +89,7 @@ void ParticlePass::Render(Scene* pScene)
 
 		comp::EmitterParticle* emitter = entity.GetComponent<comp::EmitterParticle>();
 		comp::Transform* transform = entity.GetComponent<comp::Transform>();
-		if (emitter)
+		if (emitter && transform)
 		{
 			//Constant buffer
 			m_particleUpdate.emitterPosition = sm::Vector4(transform->position.x + emitter->positionOffset.x, transform->position.y + emitter->positionOffset.y, transform->position.z + emitter->positionOffset.z, 1.f);

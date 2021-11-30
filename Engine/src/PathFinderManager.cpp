@@ -169,10 +169,10 @@ PathFinderManager::~PathFinderManager()
 	m_nodes.clear();
 }
 
-void PathFinderManager::AStarSearch(Entity npc)
+void PathFinderManager::AStarSearch(Entity npcEntity)
 {
-	comp::Transform* npcTransform = npc.GetComponent<comp::Transform>();
-	comp::NPC* npcComp = npc.GetComponent<comp::NPC>();
+	comp::Transform* npcTransform = npcEntity.GetComponent<comp::Transform>();
+	comp::NPC* npcComp = npcEntity.GetComponent<comp::NPC>();
 
 
 	npcComp->currentNode->g = 0.0f;
@@ -183,18 +183,24 @@ void PathFinderManager::AStarSearch(Entity npc)
 	openList.push_back(startingNode);
 
 	//Gets the target that findTargetNode has picked for this entity
-	Entity* target = Blackboard::Get().GetValue<Entity>("target" + std::to_string(npc));
+	Entity* target = Blackboard::Get().GetValue<Entity>("target" + std::to_string(npcEntity));
+	comp::House* house = target->GetComponent<comp::House>();
 	if (target == nullptr)
 	{
 		LOG_INFO("Target was nullptr...");
 		return;
 	}
 
-
+	
 	Node* goalNode = FindClosestNode(target->GetComponent<comp::Transform>()->position);
 
+	//Need to take OBB center to get correct world position for houses
+	if (house && house->attackNode)
+	{
+		goalNode = house->attackNode;
+	}
 	//If goal is a defense
-	if(goalNode->defencePlaced)
+	else if(goalNode->defencePlaced)
 	{
 		Node* currentNode = nullptr;
 		//Go through all neighbours and find the one closest that is reachable
@@ -367,10 +373,10 @@ bool PathFinderManager::PlayerAStar(sm::Vector3 playerPos)
 	return false;
 }
 
-bool PathFinderManager::ReachedNode(const Entity npc)
+bool PathFinderManager::ReachedNode(const Entity npcEntity)
 {
-	comp::NPC* npcComp = npc.GetComponent<comp::NPC>();
-	comp::Transform* transformComp = npc.GetComponent<comp::Transform>();
+	comp::NPC* npcComp = npcEntity.GetComponent<comp::NPC>();
+	comp::Transform* transformComp = npcEntity.GetComponent<comp::Transform>();
 	if (npcComp->currentNode && sm::Vector3::Distance(transformComp->position, npcComp->currentNode->position) < .2f)
 	{
 		return true;

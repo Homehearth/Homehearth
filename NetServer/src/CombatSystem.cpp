@@ -4,10 +4,10 @@
 void CombatSystem::UpdateMelee(HeadlessScene& scene)
 {
 	scene.ForEachComponent<comp::MeleeAttackAbility, comp::Transform>([&](Entity entity, comp::MeleeAttackAbility& stats, comp::Transform& transform)
-	{
-		sm::Vector3* updateTargetPoint = nullptr;
+		{
+			sm::Vector3* updateTargetPoint = nullptr;
 
-		UpdateTargetPoint(entity, updateTargetPoint);
+			UpdateTargetPoint(entity, updateTargetPoint);
 
 		if (ecs::ReadyToUse(&stats, updateTargetPoint))
 		{
@@ -36,10 +36,10 @@ void CombatSystem::UpdateMelee(HeadlessScene& scene)
 void CombatSystem::UpdateRange(HeadlessScene& scene)
 {
 	scene.ForEachComponent<comp::RangeAttackAbility, comp::Transform>([&](Entity entity, comp::RangeAttackAbility& stats, comp::Transform& transform)
-	{
-		sm::Vector3* updateTargetPoint = nullptr;
+		{
+			sm::Vector3* updateTargetPoint = nullptr;
 
-		UpdateTargetPoint(entity, updateTargetPoint);
+			UpdateTargetPoint(entity, updateTargetPoint);
 
 		if (ecs::ReadyToUse(&stats, updateTargetPoint))
 		{
@@ -90,6 +90,10 @@ void CombatSystem::UpdateTeleport(HeadlessScene& scene)
 						{
 							entity.GetComponent<comp::Transform>()->position = transform.position + direction;
 							hasSetTarget = true;
+							if (pathFinderManager->PlayerAStar(entity.GetComponent<comp::Transform>()->position))
+							{
+								player->reachable = true;
+							}
 						}
 						else
 						{
@@ -129,7 +133,7 @@ void CombatSystem::UpdateDash(HeadlessScene& scene)
 				audio.volume = 10.f;
 				entity.GetComponent<comp::AudioState>()->data.emplace(audio);
 			}
-			if(ecs::IsUsing(&dashAbility))
+			if (ecs::IsUsing(&dashAbility))
 			{
 				entity.GetComponent<comp::Velocity>()->vel = dashAbility.velocityBeforeDash * dashAbility.force;
 			}
@@ -291,7 +295,7 @@ void CombatSystem::AddCollisionMeleeBehavior(Entity entity, Entity attackEntity,
 
 					scene.publish<EComponentUpdated>(other, ecs::Component::PARTICLEMITTER);
 				}
-				
+
 				// update Health on network
 				scene.publish<EComponentUpdated>(other, ecs::Component::HEALTH);
 
@@ -372,13 +376,13 @@ void CombatSystem::AddCollisionRangeBehavior(Entity entity, Entity attackEntity,
 			if (otherHealth && attackAbility)
 			{
 				otherHealth->currentHealth -= attackAbility->attackDamage;
-				
+
 
 				if (other.GetComponent<comp::Tag<TagType::DEFENCE>>())
 				{
 					//TODO: add building particles
 				}
-				else 
+				else
 				{
 					// Blood particle
 					if (other.GetComponent<comp::PARTICLEEMITTER>())
@@ -389,7 +393,7 @@ void CombatSystem::AddCollisionRangeBehavior(Entity entity, Entity attackEntity,
 
 					scene.publish<EComponentUpdated>(other, ecs::Component::PARTICLEMITTER);
 				}
-				
+
 
 				// update Health on network
 				scene.publish<EComponentUpdated>(other, ecs::Component::HEALTH);

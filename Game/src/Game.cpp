@@ -461,6 +461,16 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 
 		break;
 	}
+	case GameMsg::Game_Spree:
+	{
+		msg >> m_currentSpree;
+		rtd::Text* txt = dynamic_cast<rtd::Text*>(GetScene("Game").GetCollection("SpreeText")->elements[0].get());
+		if (txt)
+		{
+			txt->SetText("X" + std::to_string(m_currentSpree));
+		}
+		break;
+	}
 	case GameMsg::Game_WaveTimer:
 	{
 		msg >> m_serverCycle;
@@ -537,6 +547,8 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			char nameTemp[12] = {};
 			uint32_t playerID;
 			comp::Player::Class classType;
+			bool isReady = false;
+			msg >> isReady;
 			msg >> classType;
 			msg >> nameTemp;
 			msg >> playerID;
@@ -570,6 +582,13 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 					}
 					}
 				}
+
+				if (isReady)
+				{
+					dynamic_cast<rtd::Picture*>(GetScene("Lobby").GetCollection("playerIcon" + std::to_string(static_cast<uint16_t>(p->playerType)))->elements[3].get())->SetVisiblity(true);
+				}
+				else
+					dynamic_cast<rtd::Picture*>(GetScene("Lobby").GetCollection("playerIcon" + std::to_string(static_cast<uint16_t>(p->playerType)))->elements[3].get())->SetVisiblity(false);
 			}
 		}
 
@@ -594,7 +613,10 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 
 		for (uint32_t i = 0; i < count; i++)
 		{
-			GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i + 1))->Show();
+			Collection2D* coll = GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i + 1));
+			coll->elements[0].get()->SetVisiblity(true);
+			coll->elements[1].get()->SetVisiblity(true);
+			coll->elements[2].get()->SetVisiblity(true);
 		}
 		for (uint32_t i = count; i < MAX_PLAYERS_PER_LOBBY; i++)
 		{
@@ -890,13 +912,128 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 			}
 			case ecs::Component::MESH_NAME:
 			{
+				std::string nameString;
 				NameType name;
 				msg >> name;
 				if (!skip)
 				{
-					std::string nameString;
 					switch (name)
 					{
+					case NameType::MESH_WATERMILL:
+					{
+						nameString = "WaterMill.fbx";
+						break;
+					}
+					case NameType::MESH_WATERMILLHOUSE:
+					{
+						nameString = "WaterMillHouse.fbx";
+						break;
+					}
+					case NameType::MESH_RUINED_WATERMILLHOUSE:
+					{
+						nameString = "WaterMillHousePile.fbx";
+						break;
+					}
+					case NameType::MESH_HOUSE5:
+					{
+						nameString = "House5.fbx";
+						break;
+					}
+					case NameType::MESH_RUINED_HOUSE5:
+					{
+						nameString = "House5Pile.fbx";
+						break;
+					}
+					case NameType::MESH_HOUSE6:
+					{
+						nameString = "House6.fbx";
+						break;
+					}
+					case NameType::MESH_RUINED_HOUSE6:
+					{
+						nameString = "House6Pile.fbx";
+						break;
+					}
+					case NameType::MESH_HOUSE7:
+					{
+						nameString = "House7.fbx";
+						break;
+					}
+					case NameType::MESH_RUINED_HOUSE7:
+					{
+						nameString = "House7Pile.fbx";
+						break;
+					}
+					case NameType::MESH_HOUSE8:
+					{
+						nameString = "House8.fbx";
+						break;
+					}
+					case NameType::MESH_RUINED_HOUSE8:
+					{
+						nameString = "House8Pile.fbx";
+						break;
+					}
+					case NameType::MESH_HOUSE9:
+					{
+						nameString = "House9.fbx";
+						break;
+					}
+					case NameType::MESH_RUINED_HOUSE9:
+					{
+						nameString = "House9Pile.fbx";
+						break;
+					}
+					case NameType::MESH_HOUSE10:
+					{
+						nameString = "House10.fbx";
+						break;
+					}
+					case NameType::MESH_RUINED_HOUSE10:
+					{
+						nameString = "House10Pile.fbx";
+						break;
+					}
+					case NameType::MESH_DOOR1:
+					{
+						nameString = "Door1.fbx";
+						break;
+					}
+					case NameType::MESH_DOOR5:
+					{
+						nameString = "Door5.fbx";
+						break;
+					}
+					case NameType::MESH_DOOR6:
+					{
+						nameString = "Door6.fbx";
+						break;
+					}
+					case NameType::MESH_DOOR7:
+					{
+						nameString = "Door7.fbx";
+						break;
+					}
+					case NameType::MESH_DOOR8:
+					{
+						nameString = "Door8.fbx";
+						break;
+					}
+					case NameType::MESH_DOOR9:
+					{
+						nameString = "Door9.fbx";
+						break;
+					}
+					case NameType::MESH_DOOR10:
+					{
+						nameString = "Door10.fbx";
+						break;
+					}
+					case NameType::MESH_HOUSEROOF:
+					{
+						nameString = "HouseRoof.fbx";
+						break;
+					}
 					case NameType::MESH_DEFENCE1X1:
 					{
 						nameString = "Defence1x1.obj";
@@ -910,6 +1047,11 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 					case NameType::MESH_KNIGHT:
 					{
 						nameString = "Knight.fbx";
+						break;
+					}
+					case NameType::MESH_MAGE:
+					{
+						nameString = "Mage.fbx";
 						break;
 					}
 					case NameType::MESH_MONSTER:
@@ -928,7 +1070,6 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 						break;
 					}
 					}
-
 					std::shared_ptr<RModel> model = ResourceManager::Get().CopyResource<RModel>(nameString, true);
 					if (model)
 					{
@@ -954,6 +1095,11 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 					case AnimName::ANIM_MONSTER:
 					{
 						nameString = "Monster.anim";
+						break;
+					}
+					case AnimName::ANIM_MAGE:
+					{
+						nameString = "Mage.anim";
 						break;
 					}
 					}
@@ -1101,14 +1247,17 @@ void Game::UpdateInput()
 		m_inputState.key_shift = true;
 	}
 
-	//TEMP PLZ REMOVE AFTER WE COME TO AN AGREEMENT ON WHICH DOF EFFECT TO USE
-	if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::D1, KeyState::PRESSED))
-	{
-		thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::ADAPTIVE);
-	}
+	//m_savedInputs.push_back(m_inputState);
 
-	if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::D2, KeyState::PRESSED))
-	{
-		thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::VIGNETTE);
-	}
+
+	////TEMP PLZ REMOVE AFTER WE COME TO AN AGREEMENT ON WHICH DOF EFFECT TO USE
+	//if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::D1, KeyState::PRESSED))
+	//{
+	//	thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::ADAPTIVE);
+	//}
+
+	//if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::D2, KeyState::PRESSED))
+	//{
+	//	thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::VIGNETTE);
+	//}
 }

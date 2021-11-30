@@ -158,7 +158,7 @@ void Simulation::ResetPlayer(Entity player)
 		firstTimeAdded = true;
 	}
 
-	player.AddComponent<comp::MeshName>()->name = NameType::MESH_KNIGHT;
+	player.AddComponent<comp::MeshName>()->name		= NameType::MESH_KNIGHT;
 	player.AddComponent<comp::AnimatorName>()->name = AnimName::ANIM_KNIGHT;
 	player.AddComponent<comp::AnimationState>();
 
@@ -221,8 +221,8 @@ void Simulation::ResetPlayer(Entity player)
 
 		playerComp->moveAbilty = entt::resolve<comp::BlinkAbility>();
 
-		player.AddComponent<comp::MeshName>()->name = NameType::MESH_MONSTER;
-		player.AddComponent<comp::AnimatorName>()->name = AnimName::ANIM_MONSTER;
+		player.AddComponent<comp::MeshName>()->name		= NameType::MESH_MAGE;
+		player.AddComponent<comp::AnimatorName>()->name = AnimName::ANIM_MAGE;
 		player.AddComponent<comp::AnimationState>();
 
 	}
@@ -256,7 +256,7 @@ void Simulation::ResetPlayer(Entity player)
 
 Simulation::Simulation(Server* pServer, HeadlessEngine* pEngine)
 	: m_pServer(pServer)
-	, m_pEngine(pEngine), m_pLobbyScene(nullptr), m_pGameScene(nullptr), m_pGameOverScene(nullptr), m_pCurrentScene(nullptr), currentRound(0)
+	, m_pEngine(pEngine), m_pLobbyScene(nullptr), m_pGameScene(nullptr), m_pGameOverScene(nullptr),m_pCurrentScene(nullptr), currentRound(0)
 {
 	this->m_gameID = 0;
 	this->m_tick = 0;
@@ -291,7 +291,7 @@ void Simulation::LeaveLobby(uint32_t playerID)
 	m_pServer->SendToClient(playerID, accMsg);
 }
 
-bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* mapColliders)
+bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* mapColliders, std::unordered_map<std::string, comp::OrientedBoxCollider>* houseColliders)
 {
 	this->m_gameID = gameID;
 	this->m_lobby.Init(this);
@@ -302,6 +302,9 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 	m_pLobbyScene = &m_pEngine->GetScene("Lobby_" + std::to_string(gameID));
 
 	m_pGameScene = &m_pEngine->GetScene("Game_" + std::to_string(gameID));
+
+	houseManager.SetHouseColliders(houseColliders);
+
 	m_pGameScene->on<ESceneUpdate>([&](const ESceneUpdate& e, HeadlessScene& scene)
 		{
 #if GOD_MODE
@@ -325,7 +328,6 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 					PROFILE_SCOPE("Update QuadTree");
 					Systems::UpdateDynamicQT(scene, qtDynamic.get());
 				}
-				m_timeCycler.Update(this);
 
 				{
 					PROFILE_SCOPE("Update blackboard");
@@ -349,7 +351,7 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 					Systems::UpdateAbilities(scene, e.dt);
 					ServerSystems::CombatSystem(scene, e.dt);
 					Systems::HealingSystem(scene, e.dt);
-					Systems::HealthSystem(scene, e.dt, m_currency, m_grid);
+					ServerSystems::HealthSystem(scene, e.dt, m_currency, houseManager, qt.get(), m_grid, m_spreeHandler);
 					Systems::SelfDestructSystem(scene, e.dt);
 				}
 
@@ -385,13 +387,16 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 				ServerSystems::SoundSystem(this, scene);
 			}
 
+				{
+					PROFILE_SCOPE("Create waves");
+					if (!waveQueue.empty())
+						ServerSystems::NextWaveConditions(this, waveTimer, waveQueue.front().GetTimeLimit());
+					else
+						EnemyManagement::CreateWaves(waveQueue, currentRound++);
+				}
 
-			{
-				PROFILE_SCOPE("Create waves");
-				if (!waveQueue.empty())
-					ServerSystems::NextWaveConditions(this, waveTimer, waveQueue.front().GetTimeLimit());
-				else
-					EnemyManagement::CreateWaves(waveQueue, currentRound++);
+				m_timeCycler.Update(this);
+				m_spreeHandler.Update();
 			}
 		});
 	
@@ -409,6 +414,8 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 		{
 			OnComponentUpdated(e.entity, e.component);
 		});
+
+
 
 	//Gridsystem
 	m_grid.Initialize(gridOptions.mapSize, gridOptions.position, gridOptions.fileName, m_pGameScene);
@@ -495,13 +502,13 @@ void Simulation::SendSnapshot()
 			this->Broadcast(msg2);
 		}
 
-		if (m_currency.hasUpdated)
+		if (m_currency.m_hasUpdated)
 		{
 			network::message<GameMsg> msg3;
 			msg3.header.id = GameMsg::Game_Money;
 			msg3 << m_currency.GetAmount();
 			this->Broadcast(msg3);
-			m_currency.hasUpdated = false;
+			m_currency.m_hasUpdated = false;
 		}
 		// Send Abilities
 		{
@@ -549,6 +556,11 @@ void Simulation::SendSnapshot()
 				m_pServer->SendToClientUDP(i->first, msg4);
 			}
 		}
+
+		network::message<GameMsg> msg5;
+		msg5.header.id = GameMsg::Game_Spree;
+		msg5 << (uint32_t)m_spreeHandler.GetSpree();
+		this->Broadcast(msg5);
 	}
 	else
 	{
@@ -747,7 +759,6 @@ void Simulation::SetGameScene()
 #if GOD_MODE
 	// During debug give players 1000 gold/monies.
 	m_currency = 1000;
-	m_currency.hasUpdated = true;
 	for (auto& player : m_lobby.m_players)
 	{
 		//player.second.AddComponent<comp::Tag<TagType::NO_RESPONSE>>();
@@ -796,6 +807,8 @@ void Simulation::ResetGameScene()
 	m_currency.Zero();
 
 	LOG_INFO("%lld", m_pGameScene->GetRegistry()->size());
+
+	houseManager.InitializeHouses(*this->GetGameScene(),qt.get());
 	EnemyManagement::CreateWaves(waveQueue, currentRound++);
 }
 
@@ -804,7 +817,7 @@ void Simulation::SendEntities(const std::vector<Entity>& entities, GameMsg msgID
 	if (entities.size() == 0)
 		return;
 
-	const size_t PACKET_CHUNK_SIZE = 10;
+	const size_t PACKET_CHUNK_SIZE = 20;
 
 	uint32_t count = 0;
 	message<GameMsg> msg;
@@ -972,3 +985,5 @@ Entity Simulation::GetPlayer(uint32_t playerID) const
 {
 	return m_lobby.GetPlayer(playerID);
 }
+
+

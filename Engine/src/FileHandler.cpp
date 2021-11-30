@@ -76,19 +76,25 @@ void FileHandler::Open(const std::string& filePath, const bool& isInput)
 	{
 	case true:
 	{
-		m_stream.open(filePath, std::ios_base::in);
+		m_stream.open(filePath, std::fstream::in);
 		break;
 	}
 	case false:
 	{
-		m_stream.open(filePath, std::ios_base::out);
+		m_stream.open(filePath, std::fstream::out);
 		break;
 	}
 	}
 
 	if (!m_stream.is_open())
 	{
-		LOG_WARNING("Couldn't open file %s", filePath.c_str());
+		//LOG_WARNING("Couldn't open file %s", filePath.c_str());
+
+		// Create file if not existing.
+		m_stream.open(filePath, std::fstream::app);
+		if (m_stream.is_open())
+			m_stream.close();
+		m_filePath = filePath;
 	}
 	else
 		m_filePath = filePath;
