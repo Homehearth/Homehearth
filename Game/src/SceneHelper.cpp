@@ -713,13 +713,13 @@ namespace sceneHelp
 		
 		switch (ShadowType)
 		{
-		case 0: // OFF
+		case 1: // OFF
 		{
 			shadowType->SetText("Shadows: OFF");
 			thread::RenderThreadHandler::Get().GetRenderer()->GetShadowPass()->SetEnable(false);
 			break;
 		}
-		case 1: // ON
+		case 2: // ON
 		{
 			shadowType->SetText("Shadows: ON");
 			thread::RenderThreadHandler::Get().GetRenderer()->GetShadowPass()->SetEnable(true);
@@ -727,28 +727,30 @@ namespace sceneHelp
 		}
 		default:
 		{
-			ShadowType = 1;
+			ShadowType = 2;
 			break;
 		}
 		}
+
+		OptionSystem::Get().SetOption("Shadows", std::to_string(ShadowType));
 		
 		shadowButton->SetOnPressedEvent([=] {
 
 			switch (ShadowType)
 			{
-			case 0: // OFF
+			case 1: // OFF
 			{
-				ShadowType = 1;
+				ShadowType = 2;
 				shadowType->SetText("Shadows: ON");
-				OptionSystem::Get().SetOption("Shadows", std::string("1"));
+				OptionSystem::Get().SetOption("Shadows", std::string("2"));
 				thread::RenderThreadHandler::Get().GetRenderer()->GetShadowPass()->SetEnable(true);
 				break;
 			}
-			case 1: // ON
+			case 2: // ON
 			{
-				ShadowType = 0;
+				ShadowType = 1;
 				shadowType->SetText("Shadows: OFF");
-				OptionSystem::Get().SetOption("Shadows", std::string("0"));
+				OptionSystem::Get().SetOption("Shadows", std::string("1"));
 				thread::RenderThreadHandler::Get().GetRenderer()->GetShadowPass()->SetEnable(false);
 				break;
 			}
