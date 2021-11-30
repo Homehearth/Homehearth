@@ -114,7 +114,7 @@ void Game::OnUserUpdate(float deltaTime)
 					{
 					case TypeLight::DIRECTIONAL:
 					{
-						l.lightData.direction = { -1.0f, 0.0f, 0.f, 0.f };
+						l.lightData.direction = { -1.0f, 0.0f, -1.f, 0.f };
 						sm::Vector3 dir = sm::Vector3::TransformNormal(sm::Vector3(l.lightData.direction), sm::Matrix::CreateRotationZ(dx::XMConvertToRadians(ROTATION) * (m_elapsedCycleTime)));
 
 						l.lightData.direction = sm::Vector4(dir.x, dir.y, dir.z, 0.0f);
