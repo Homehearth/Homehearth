@@ -5,7 +5,7 @@ float4 main(PixelIn input) : SV_TARGET
     //return t_shadowMaps.Sample(s_linear, float3(input.uv, 0.0f));
 
     static unsigned int rolls = infoData.x;
-    const unsigned int STEPS = 100;
+    const unsigned int STEPS = 50;
     const float SCATTERING = 1.0f;
     
     float3 lightVolume = float3(0.0f, 0.0f, 0.0f);
