@@ -9,6 +9,7 @@ struct VertexIn
     float3 normal           : NORMAL;
     float3 tangent          : TANGENT;
     float3 biTangent        : BINORMAL;
+    float3 color            : COLOR;
 };
 
 struct VertexOut
@@ -19,6 +20,7 @@ struct VertexOut
     float3 tangent          : TANGENT;
     float3 biTangent        : BINORMAL;
     float4 worldPos         : WORLDPOSITION;
+    float3 color            : COLOR;
 };
 
 struct VertexBoneIn
@@ -30,6 +32,7 @@ struct VertexBoneIn
     float3 biTangent        : BINORMAL;
     uint4  boneIDs          : BONEIDS;
     float4 boneWeights      : BONEWEIGHTS;
+    float3 color            : COLOR;
 };
 
 struct VertexOutSB
@@ -46,6 +49,7 @@ struct PixelIn
     float3 tangent          : TANGENT;
     float3 biTangent        : BINORMAL;
     float4 worldPos         : WORLDPOSITION;
+    float3 color            : COLOR;
 };
 
 struct PixelInSB

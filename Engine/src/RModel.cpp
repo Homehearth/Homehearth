@@ -216,6 +216,10 @@ bool RModel::CombineMeshes(std::vector<aiMesh*>& submeshes, submesh_t& submesh, 
             vert.normal     = { aimesh->mNormals[v].x,          aimesh->mNormals[v].y,        aimesh->mNormals[v].z     };
             vert.tangent    = { aimesh->mTangents[v].x,         aimesh->mTangents[v].y,       aimesh->mTangents[v].z    };
             vert.bitanget   = { aimesh->mBitangents[v].x,       aimesh->mBitangents[v].y,     aimesh->mBitangents[v].z  };
+            
+            //Only accept the first colorset for now
+            if (aimesh->HasVertexColors(0))
+                vert.color  = { aimesh->mColors[0][v].r,        aimesh->mColors[0][v].g,      aimesh->mColors[0][v].b   };
             simpleVertices.push_back(vert);
             
             if (aimesh->HasBones())
@@ -226,6 +230,7 @@ bool RModel::CombineMeshes(std::vector<aiMesh*>& submeshes, submesh_t& submesh, 
                 animVert.normal     = vert.normal;
                 animVert.tangent    = vert.tangent;
                 animVert.bitanget   = vert.bitanget;
+                animVert.color      = vert.color;
                 skeletonVertices.push_back(animVert);
             }
         }
