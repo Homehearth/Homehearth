@@ -205,7 +205,8 @@ float4 main(PixelIn input) : SV_TARGET
                     float3 colorDecal = (ambientIBL(albedoDecal, float3(0, 1, 0), V, F0, 0.f, 0.2f, 1.f) + Lo) * pow(lightVolumeFactor, 4.0f);
                     
                     //HDR tonemapping
-                    colorDecal = colorDecal / (colorDecal + float3(1.0, 1.0, 1.0));
+                    //colorDecal = colorDecal / (colorDecal + float3(1.0, 1.0, 1.0));
+                    colorDecal = ACESFitted(colorDecal);
                     //Gamma correct
                     colorDecal = pow(max(colorDecal, 0.0f), float3(1.0 / 2.2, 1.0 / 2.2, 1.0 / 2.2));
                     colorDecal = lerp(colorDecal, fogColor.xyz, fogFactor);
@@ -221,7 +222,8 @@ float4 main(PixelIn input) : SV_TARGET
     float3 color = (ambient + Lo) * pow(lightVolumeFactor, 2.5f);
     
     //HDR tonemapping
-	color = color / (color + float3(1.0, 1.0, 1.0));
+	//color = color / (color + float3(1.0, 1.0, 1.0));
+    color = ACESFitted(color);
     //Gamma correct
     color = pow(max(color, 0.0f), float3(gamma, gamma, gamma));
     
