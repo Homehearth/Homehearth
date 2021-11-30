@@ -81,8 +81,11 @@ public:
 	//Get the vector of lights
 	const std::vector<light_t>& GetLights() const;
 
-	//Get all of the texture coordinates for a model
+	//Get all of the texture coordinates for the model
 	const std::vector<sm::Vector2> GetTextureCoords() const;
+	
+	//Get all the vertex colors for the model
+	const std::vector<sm::Vector3> GetVertexColors() const;
 
 	//Get all the textures of the type from all materials
 	const std::vector<std::shared_ptr<RTexture>> GetTextures(const ETextureType& type) const;
