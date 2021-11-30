@@ -251,6 +251,7 @@ void Systems::HealthSystem(HeadlessScene& scene, float dt, Currency& money_ref, 
 
 					//Removing the defence and its neighbours if needed
 					grid.RemoveDefence(entity);
+
 					entity.Destroy();
 				}
 				else
