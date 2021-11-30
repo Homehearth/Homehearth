@@ -1,6 +1,6 @@
 BlurType 1
 Shadows 1
 ShadowQuality Medium
-MasterVolume 0.684476
+MasterVolume 0.418169
 WindowHeight 918
 WindowWidth 1632
