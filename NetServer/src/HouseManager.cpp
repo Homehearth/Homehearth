@@ -154,12 +154,12 @@ void HouseManager::AddCollider(NameType houseType, Entity house) const
 		if (houseType == NameType::MESH_RUINED_WATERMILLHOUSE)
 		{
 			houseComp->attackNode = nullptr;
-			houseComp->isDead = false;
+			houseComp->isDead = true;
 		}
 		else
 		{
 			houseComp->attackNode = Blackboard::Get().GetPathFindManager()->GetNodes()[43][34].get();
-			houseComp->isDead = true;
+			houseComp->isDead = false;
 		}
 	}
 }
