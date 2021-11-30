@@ -166,12 +166,12 @@ void Simulation::ResetPlayer(Entity player)
 	if (playerComp->classType == comp::Player::Class::WARRIOR)
 	{
 		comp::MeleeAttackAbility* attackAbility = player.AddComponent<comp::MeleeAttackAbility>();
-		attackAbility->cooldown = 0.75f;
+		attackAbility->cooldown = 0.50f;
 		attackAbility->attackDamage = 20.f;
 		attackAbility->lifetime = 0.2f;
 		attackAbility->useTime = 0.2f;
-		attackAbility->delay = 0.3f;
-		attackAbility->attackRange = 6.f;
+		attackAbility->delay = 0.2f;
+		attackAbility->attackRange = 8.f;
 
 		playerComp->primaryAbilty = entt::resolve<comp::MeleeAttackAbility>();
 
@@ -353,18 +353,15 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 					Systems::SelfDestructSystem(scene, e.dt);
 				}
 
-				{
-					PROFILE_SCOPE("Animation Transform");
-					Systems::TransformAnimationSystem(scene, e.dt);
-				}
+				//{
+				//	PROFILE_SCOPE("Animation Transform");
+				//	Systems::TransformAnimationSystem(scene, e.dt);
+				//}
 
-				{
-					PROFILE_SCOPE("Movement system");
-					Systems::MovementSystem(scene, e.dt);
-				}
 				{
 					PROFILE_SCOPE("Movement collider system");
 					Systems::MovementColliderSystem(scene, e.dt);
+					Systems::MovementSystem(scene, e.dt);
 				}
 
 				{
@@ -403,7 +400,6 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 		{
 			waveTimer.Start();
 			ServerSystems::WaveSystem(this, waveQueue);
-
 		});
 
 	m_pGameScene->GetRegistry()->on_construct<comp::Network>().connect<&Simulation::OnNetworkEntityCreate>(this);
@@ -496,7 +492,7 @@ void Simulation::SendSnapshot()
 			msg2.header.id = GameMsg::Game_WaveTimer;
 			msg2 << m_timeCycler.GetElapsedTime();
 			msg2 << m_timeCycler.GetTimePeriod();
-			this->Broadcast(msg2);
+			this->BroadcastUDP(msg2);
 		}
 
 		if (m_currency.m_hasUpdated)
@@ -549,7 +545,8 @@ void Simulation::SendSnapshot()
 				}
 
 				msg4 << count;
-				m_pServer->SendToClient(i->first, msg4);
+				msg4 << msg4.header.id;
+				m_pServer->SendToClientUDP(i->first, msg4);
 			}
 		}
 
@@ -627,9 +624,13 @@ void Simulation::OnNetworkEntityDestroy(entt::registry& reg, entt::entity entity
 void Simulation::OnNetworkEntityUpdated(entt::registry& reg, entt::entity entity)
 {
 	Entity e(reg, entity);
-	if (std::find(m_updatedEntities.begin(), m_updatedEntities.end(), e) == m_updatedEntities.end())
+
+	if (!e.IsNull())
 	{
-		m_updatedEntities.push_back(e);
+		if (std::find(m_updatedEntities.begin(), m_updatedEntities.end(), e) == m_updatedEntities.end())
+		{
+			m_updatedEntities.push_back(e);
+		}
 	}
 }
 void Simulation::OnComponentUpdated(Entity entity, ecs::Component component)
@@ -656,7 +657,7 @@ void Simulation::BuildMapColliders(std::vector<dx::BoundingOrientedBox>* mapColl
 		obb->Orientation = mapColliders->at(i).Orientation;
 		collider.AddComponent<comp::Tag<TagType::STATIC>>();
 		// Map bounds is loaded in last, 4 obbs surrounding village put the correct tag for collision system
-		if (i > mapColliders->size() - 4)
+		if (i > mapColliders->size() - 6)
 		{
 			collider.AddComponent<comp::Tag<TagType::MAP_BOUNDS>>();
 		}
@@ -706,7 +707,7 @@ void Simulation::UpgradeDefence(const uint32_t& id)
 
 			if (c && h)
 			{
-				if (m_currency.GetAmount() >= c->cost)
+				if (m_currency >= c->cost)
 				{
 					c->cost += 5;
 					// Add upgrades here.
@@ -796,7 +797,7 @@ void Simulation::ResetGameScene()
 		msg << count;
 		this->Broadcast(msg);
 	}
-
+	
 	m_currency.Zero();
 
 	LOG_INFO("%lld", m_pGameScene->GetRegistry()->size());
@@ -964,6 +965,7 @@ void Simulation::BroadcastUDP(message<GameMsg>& msg, uint32_t exclude) const
 	{
 		if (exclude != it->first)
 		{
+			msg << msg.header.id;
 			m_pServer->SendToClientUDP(it->first, msg);
 		}
 		it++;
