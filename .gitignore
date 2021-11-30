@@ -46,6 +46,7 @@ Generated\ Files/
 [Ee]ngine/*.cso
 [Gg]ame/*.cso
 [Gg]ame/*.ini
+[Aa]ssets/[Oo]ptions/*.txt
 **.txt
 *.txt
 
