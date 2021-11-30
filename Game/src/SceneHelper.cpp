@@ -199,24 +199,25 @@ namespace sceneHelp
 						bullColl->Hide();
 					}
 				}
-
+			
 				if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED))
 				{
-					if (game->GetCurrentScene()->GetCollection("shopMenu")->GetState() == ElementState::OUTSIDE &&
+					/*if (game->GetCurrentScene()->GetCollection("shopMenu")->GetState() == ElementState::OUTSIDE &&
 						game->GetCurrentScene()->GetCollection("ScrolldownMenu")->GetState() == ElementState::OUTSIDE)
 					{
 						game->GetCurrentScene()->GetCollection("shopMenu")->Hide();
 						game->SetMode(ShopMode::PLAY);
 						bullColl->Hide();
 					}
+					*/
 
-					if (game->GetCurrentScene()->GetCollection("inGameMenu")->GetState() == ElementState::OUTSIDE &&
+					/*if (game->GetCurrentScene()->GetCollection("inGameMenu")->GetState() == ElementState::OUTSIDE &&
 						game->GetCurrentScene()->GetCollection("ScrolldownMenu")->GetState() == ElementState::OUTSIDE)
 					{
 						game->GetCurrentScene()->GetCollection("inGameMenu")->Hide();
 						game->SetMode(ShopMode::PLAY);
 						bullColl->Hide();
-					}
+					}*/
 				}
 
 

@@ -930,7 +930,7 @@ void Game::UpdateInput()
 	m_inputState.axisVertical = InputSystem::Get().GetAxis(Axis::VERTICAL);
 	m_inputState.mousewheelDir = InputSystem::Get().GetMouseWheelDirection();
 
-	if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::HELD))
+	if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED))
 	{
 		m_inputState.leftMouse = true;
 	}

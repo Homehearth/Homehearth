@@ -65,8 +65,6 @@ sm::Vector3 GridSystem::CalcCenterPoint(const std::vector<std::pair<UINT, UINT>>
 				min.z = minTile.z;
 			if (maxTile.z > max.z)
 				max.z = maxTile.z;
-
-			std::cout << "Done" << std::endl;
 		}
 
 		center = (min + max) / 2.f;
