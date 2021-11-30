@@ -20,8 +20,6 @@ private:
 	Entity m_mapEntity;
 
 	InputState m_inputState;
-	std::vector<InputState> m_savedInputs;
-
 
 	// Inherited via Engine
 	virtual bool OnStartup() override;
@@ -34,7 +32,7 @@ private:
 	void PingServer();
 	void OnClientDisconnect();
 	
-	void UpdateEntityFromMessage(Entity entity, message<GameMsg>& msg);
+	void UpdateEntityFromMessage(Entity entity, message<GameMsg>& msg, bool skip = false);
 
 	void UpdateInput();
 
@@ -72,4 +70,5 @@ public:
 	float m_primaryCooldown = 0.0f;
 	float m_secondaryCooldown = 0.0f;
 	float m_dodgeCooldown = 0.0f;
+	uint32_t m_currentSpree = 1;
 };

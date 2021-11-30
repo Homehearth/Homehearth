@@ -472,7 +472,6 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 				if (simulation->GetGrid().PlaceDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, Blackboard::Get().GetPathFindManager(), dynamicQT))
 				{
 					simulation->GetCurrency() -= 10;
-					simulation->GetCurrency().hasUpdated = true;
 					anim.toSend = EAnimationType::PLACE_DEFENCE;
 				}
 			}

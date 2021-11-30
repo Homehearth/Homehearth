@@ -3,6 +3,7 @@ anim 			IDLE 				Knight_Idle.fbx
 anim 			MOVE 				Knight_Run.fbx
 anim 			PRIMARY_ATTACK 		Knight_Slash.fbx
 loopable 		0
+tickSpeed		38
 anim 			TAKE_DAMAGE 		Knight_TakeDamage.fbx
 loopable		0
 anim			PLACE_DEFENCE		Knight_PlaceDefence.fbx

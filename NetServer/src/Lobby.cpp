@@ -105,12 +105,13 @@ void Lobby::Update()
 		msg << it->first;
 		msg << it->second.GetComponent<comp::Player>()->name;
 		msg << it->second.GetComponent<comp::Player>()->classType;
+		msg << it->second.GetComponent<comp::Player>()->isReady;
 		it++;
 	}
 
 	msg << static_cast<uint8_t>(m_players.size());
 
-	m_simRef->Broadcast(msg);
+	m_simRef->BroadcastUDP(msg);
 }
 
 bool Lobby::IsActive() const

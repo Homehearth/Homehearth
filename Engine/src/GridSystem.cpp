@@ -87,9 +87,9 @@ void GridSystem::Initialize(Vector2I mapSize, sm::Vector3 position, std::string 
 			sm::Vector3 tilePosition = { m_tileSize.x * row + m_tileHalfWidth, 0.f , (m_tileSize.y * -col) - m_tileHalfWidth };
 
 			Tile tileTemp;
-			tileTemp.gridID		= { col, row };
-			tileTemp.type		= tileTypeTemp;
-			tileTemp.position	= tilePosition;
+			tileTemp.gridID = { col, row };
+			tileTemp.type = tileTypeTemp;
+			tileTemp.position = tilePosition;
 
 			if (rowTilesTemp.size() < m_gridSize.x)
 				rowTilesTemp.push_back(tileTemp);
@@ -203,7 +203,7 @@ bool GridSystem::RemoveDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, 
 
 		Blackboard::Get().GetPathFindManager()->RemoveDefenseEntity(closestEntity);
 		closestEntity.Destroy();
-		
+
 		return true;
 	}
 	else
@@ -223,12 +223,39 @@ void GridSystem::RemoveDefence(const Entity& entity)
 			int zpos = tileset->coordinates[i].first;
 			int xpos = tileset->coordinates[i].second;
 			m_tiles[zpos][xpos].type = TileType::EMPTY;
+			Node* node = Blackboard::Get().GetPathFindManager()->GetNodeByID(m_tiles[zpos][xpos].gridID);
+			node->defencePlaced = false;
+			node->reachable = true;
+			std::vector<Node*> diagNeighbors = node->GetDiagonalConnections();
+			for (Node* diagNeighbor : diagNeighbors)
+			{
+				if (diagNeighbor->defencePlaced || !diagNeighbor->reachable)
+				{
+					Vector2I difference = node->id - diagNeighbor->id;
+					Node* node1 = Blackboard::Get().GetPathFindManager()->GetNodeByID(Vector2I(diagNeighbor->id.x + difference.x, diagNeighbor->id.y));
+					Node* node2 = Blackboard::Get().GetPathFindManager()->GetNodeByID(Vector2I(diagNeighbor->id.x, diagNeighbor->id.y + difference.y));
+
+					node1->connections.push_back(node2);
+					node2->connections.push_back(node1);
+				}
+			}
+
+			m_scene->ForEachComponent<comp::Player, comp::Transform>([&](comp::Player& p, comp::Transform& transform)
+				{
+					if (Blackboard::Get().GetPathFindManager()->PlayerAStar(transform.position))
+					{
+						p.reachable = true;
+					}
+				});
+
 		}
+		Blackboard::Get().GetPathFindManager()->RemoveDefenseEntity(entity);
+
 	}
 }
 
 bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, PathFinderManager* aiHandler, QuadTree* dynamicQT)
-{	
+{
 	//Player that placed defence
 	comp::SphereCollider localPlayerSphere;
 	comp::Player player;
@@ -268,9 +295,9 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 			okayToPlace = false;
 
 		UINT numberOfDefences = 0;
-		if (player.towerSelected		== EDefenceType::SMALL)
+		if (player.towerSelected == EDefenceType::SMALL)
 			numberOfDefences = 1;
-		else if (player.towerSelected	== EDefenceType::LARGE)
+		else if (player.towerSelected == EDefenceType::LARGE)
 			numberOfDefences = 3;
 
 		//All the coordinates of the tiles
@@ -285,7 +312,7 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 				zPos += TileOffset(d);
 			else
 				xPos += TileOffset(d);
-			
+
 			Tile tile = m_tiles[zPos][xPos];
 
 			//Check the tiles current type
@@ -296,10 +323,10 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 			if (InsideGrid(xPos, zPos))
 			{
 				//Each side of the tile
-				float right		= tile.position.x + m_tileHalfWidth;
-				float left		= tile.position.x - m_tileHalfWidth;
-				float top		= tile.position.z + m_tileHalfWidth;
-				float bottom	= tile.position.z - m_tileHalfWidth;
+				float right = tile.position.x + m_tileHalfWidth;
+				float left = tile.position.x - m_tileHalfWidth;
+				float top = tile.position.z + m_tileHalfWidth;
+				float bottom = tile.position.z - m_tileHalfWidth;
 
 				// Checking so the other entities doesnt occupy the tile
 				for (int i = 0; i < ePos.size() && okayToPlace; i++)
@@ -331,7 +358,6 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 				Node* node = aiHandler->GetNodeByID(Vector2I(zPos, xPos));
 				node->defencePlaced = true;
 				node->reachable = false;
-
 				//Check if connections need to be severed
 				std::vector<Node*> diagNeighbors = node->GetDiagonalConnections();
 				for (Node* diagNeighbor : diagNeighbors)
@@ -367,16 +393,17 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 				Create the model for this tiles
 			*/
 			Tile centerTile = m_tiles[centerTileZ][centerTileX];
-			Entity tileEntity = m_scene->CreateEntity();
-			tileEntity.AddComponent<comp::Tag<TagType::STATIC>>();
-			tileEntity.AddComponent<comp::Tag<TagType::DEFENCE>>();
-			tileEntity.AddComponent<comp::Network>();
+			Entity defenceEntity = m_scene->CreateEntity();
+			defenceEntity.AddComponent<comp::Tag<TagType::STATIC>>();
+			defenceEntity.AddComponent<comp::Tag<TagType::DEFENCE>>();
+			defenceEntity.AddComponent<comp::Network>();
 			coordinates.shrink_to_fit();
-			tileEntity.AddComponent<comp::TileSet>()->coordinates = coordinates;
-			
-			comp::Transform*			transform	= tileEntity.AddComponent<comp::Transform>();
-			comp::OrientedBoxCollider*	collider	= tileEntity.AddComponent<comp::OrientedBoxCollider>();
-			comp::Health*				health		= tileEntity.AddComponent<comp::Health>();
+			defenceEntity.AddComponent<comp::TileSet>()->coordinates = coordinates;
+			aiHandler->AddDefenseEntity(defenceEntity);
+
+			comp::Transform* transform = defenceEntity.AddComponent<comp::Transform>();
+			comp::OrientedBoxCollider* collider = defenceEntity.AddComponent<comp::OrientedBoxCollider>();
+			comp::Health* health = defenceEntity.AddComponent<comp::Health>();
 			transform->position = { centerTile.position.x, 5.f, centerTile.position.z };
 			collider->Center = transform->position;
 
@@ -386,23 +413,23 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 				collider->Extents = { m_tileHalfWidth, m_tileHalfWidth, m_tileHalfWidth * numberOfDefences };
 			}
 			else
-			{ 
+			{
 				collider->Extents = { m_tileHalfWidth * numberOfDefences, m_tileHalfWidth, m_tileHalfWidth };
 			}
-			
-			if (player.towerSelected		== EDefenceType::SMALL)
+
+			if (player.towerSelected == EDefenceType::SMALL)
 			{
-				health->currentHealth	= 100.0f;
-				health->maxHealth		= 100.0f;
-				tileEntity.AddComponent<comp::MeshName>()->name = NameType::MESH_DEFENCE1X1;
+				health->currentHealth = 100.0f;
+				health->maxHealth = 100.0f;
+				defenceEntity.AddComponent<comp::MeshName>()->name = NameType::MESH_DEFENCE1X1;
 			}
-			else if (player.towerSelected	== EDefenceType::LARGE)
+			else if (player.towerSelected == EDefenceType::LARGE)
 			{
-				health->currentHealth	= 300.0f;
-				health->maxHealth		= 300.0f;
-				tileEntity.AddComponent<comp::MeshName>()->name = NameType::MESH_DEFENCE1X3;
+				health->currentHealth = 300.0f;
+				health->maxHealth = 300.0f;
+				defenceEntity.AddComponent<comp::MeshName>()->name = NameType::MESH_DEFENCE1X3;
 			}
-			dynamicQT->Insert(tileEntity);
+			dynamicQT->Insert(defenceEntity);
 
 			return true;
 		}

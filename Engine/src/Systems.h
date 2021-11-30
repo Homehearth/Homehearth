@@ -4,6 +4,7 @@
 #include "PathFinderManager.h"
 #include "CombatSystem.h"
 #include "QuadTree.h"
+#include "SpreeHandler.h"
 
 namespace Systems
 {
