@@ -16,10 +16,12 @@ void Renderer::Initialize(Window* pWindow)
 		Had to disable the depth pass to get alpha testing to work correctly... -Filip
 	*/
 	//AddPass(&m_depthPass);  // 1
-	AddPass(&m_decalPass);
-	m_decalPass.Create();
 	AddPass(&m_shadowPass);
 	m_shadowPass.StartUp();
+
+	AddPass(&m_decalPass);
+	m_decalPass.Create();
+
 	AddPass(&m_basePass);   // 2
 	AddPass(&m_animPass);	// 3
 	AddPass(&m_skyPass);
