@@ -159,7 +159,7 @@ namespace sceneHelp
 		float pointRange = 9.f;
 
 		// The sun
-		CreateLightEntity(gameScene, { 0.f, 0.f, 0.f, 0.f }, { -1.0f, 0.0f, 0.f, 0.f }, { 255.f, 185, 150, 0.f }, 1000.f, 0.09f, TypeLight::DIRECTIONAL, 1);
+		CreateLightEntity(gameScene, { 0.f, 0.f, 0.f, 0.f }, { -1.0f, 0.0f, -1.f, 0.f }, { 255.f, 185, 150, 0.f }, 1000.f, 0.09f, TypeLight::DIRECTIONAL, 1);
 		// LEFT OF WELL
 		CreateLightEntity(gameScene, { 268.2f, 28.f, -320.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 185.f, 100.f, 0.f }, pointRange, 0.4f,TypeLight::POINT, 0);
 		// FURTHEST LEFT AND FURTHEST SOUTH
