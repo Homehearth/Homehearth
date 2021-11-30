@@ -4,8 +4,8 @@
 BT::FindBuildingTargetCBT::FindBuildingTargetCBT(const std::string& name, Entity entity)
 	:ActionNode(name),
 	entity(entity),
-	refreshRate(1.0f),
-	aggroRange(20.f)
+	refreshRate(5.0f),
+	aggroRange(25.f)
 {
 	changeTargetTimer.Start();
 }
@@ -20,6 +20,8 @@ BT::NodeStatus BT::FindBuildingTargetCBT::Tick()
 	std::unordered_map<Entity, Entity> defenseEntities = Blackboard::Get().GetPathFindManager()->GetDefenseEntities();
 	//Get AI's transform component
 	comp::Transform* transform = this->entity.GetComponent<comp::Transform>();
+
+	Entity* targetEntity = Blackboard::Get().GetValue<Entity>("target" + std::to_string(entity));
 
 	Entity currentTarget;
 	if (playersEntity)
@@ -57,28 +59,29 @@ BT::NodeStatus BT::FindBuildingTargetCBT::Tick()
 	//Check Houses
 	if (housesEntities)
 	{
-		//If a player is close enough target it
+		//If a house is close enough target it
 		for (auto house : housesEntities->houses)
 		{
 			//Need OBB for houses it holds the correct world position in Center vector
 			comp::OrientedBoxCollider* houseOBB = house.second.GetComponent<comp::OrientedBoxCollider>();
-			if (houseOBB == nullptr)
+			if (houseOBB == nullptr || !house.second.GetComponent<comp::House>()->attackNode)
 				continue;
 
 			sm::Vector3 housePosition = houseOBB->Center;
 			housePosition.y = 0.0f;
 			comp::Health* houseHealth = house.second.GetComponent<comp::Health>();
+			comp::House* houseComp = house.second.GetComponent<comp::House>();
 			//If missing components skip
-			if (houseOBB == nullptr || houseHealth == nullptr)
+			if (houseOBB == nullptr || houseHealth == nullptr || houseComp == nullptr)
 				continue;
 			//If no target has been set, take the first one close enough for the aggro range and is alive
-			if (currentTarget.IsNull() && sm::Vector3::Distance(transform->position, housePosition) < 40.f && houseHealth->isAlive)
+			if (currentTarget.IsNull() && houseHealth->isAlive && houseComp->attackNode->reachable)
 			{
 				currentTarget = house.second;
 			}
 			//If another house is closer change to it
 			else if (!currentTarget.IsNull() && sm::Vector3::Distance(transform->position, housePosition) <
-				sm::Vector3::Distance(transform->position, currentTarget.GetComponent<comp::Transform>()->position))
+				sm::Vector3::Distance(transform->position, currentTarget.GetComponent<comp::OrientedBoxCollider>()->Center) && houseComp->attackNode->reachable)
 			{
 				currentTarget = house.second;
 			}

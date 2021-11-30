@@ -19,6 +19,7 @@ void HouseManager::InitializeHouses(HeadlessScene& scene, QuadTree* qt)
 	Entity waterMill = CreateHouse(scene, NameType::MESH_WATERMILL, NameType::EMPTY, NameType::EMPTY);
 
 	//Insert houses to quad tree
+
 	qt->Insert(house5);
 	qt->Insert(house6);
 	qt->Insert(house7);
@@ -37,6 +38,15 @@ void HouseManager::AddCollider(NameType houseType, Entity house) const
 		obb->Extents = houseColliders->at("House5_Collider.fbx").Extents;
 		obb->Orientation = houseColliders->at("House5_Collider.fbx").Orientation;
 		obb->Center.y = 0.0f;
+
+		if(houseType == NameType::MESH_RUINED_HOUSE5)
+		{
+			house.GetComponent<comp::House>()->attackNode = nullptr;
+		}
+		else
+		{
+			house.GetComponent<comp::House>()->attackNode = Blackboard::Get().GetPathFindManager()->GetNodes()[39][18].get();
+		}
 	}
 	else if (houseType == NameType::MESH_HOUSE6 || houseType == NameType::MESH_RUINED_HOUSE6)
 	{
@@ -45,6 +55,14 @@ void HouseManager::AddCollider(NameType houseType, Entity house) const
 		obb->Extents = houseColliders->at("House6_Collider.fbx").Extents;
 		obb->Orientation = houseColliders->at("House6_Collider.fbx").Orientation;
 		obb->Center.y = 0.0f;
+		if (houseType == NameType::MESH_RUINED_HOUSE6)
+		{
+			house.GetComponent<comp::House>()->attackNode = nullptr;
+		}
+		else
+		{
+			house.GetComponent<comp::House>()->attackNode = Blackboard::Get().GetPathFindManager()->GetNodes()[42][27].get();
+		}
 	}
 	else if (houseType == NameType::MESH_HOUSE7 || houseType == NameType::MESH_RUINED_HOUSE7)
 	{
@@ -53,6 +71,14 @@ void HouseManager::AddCollider(NameType houseType, Entity house) const
 		obb->Extents = houseColliders->at("House7_Collider.fbx").Extents;
 		obb->Orientation = houseColliders->at("House7_Collider.fbx").Orientation;
 		obb->Center.y = 0.0f;
+		if (houseType == NameType::MESH_RUINED_HOUSE7)
+		{
+			house.GetComponent<comp::House>()->attackNode = nullptr;
+		}
+		else
+		{
+			house.GetComponent<comp::House>()->attackNode = Blackboard::Get().GetPathFindManager()->GetNodes()[42][22].get();
+		}
 	}
 	else if (houseType == NameType::MESH_HOUSE8 || houseType == NameType::MESH_RUINED_HOUSE8)
 	{
@@ -61,6 +87,14 @@ void HouseManager::AddCollider(NameType houseType, Entity house) const
 		obb->Extents = houseColliders->at("House8_Collider.fbx").Extents;
 		obb->Orientation = houseColliders->at("House8_Collider.fbx").Orientation;
 		obb->Center.y = 0.0f;
+		if (houseType == NameType::MESH_RUINED_HOUSE8)
+		{
+			house.GetComponent<comp::House>()->attackNode = nullptr;
+		}
+		else
+		{
+			house.GetComponent<comp::House>()->attackNode = Blackboard::Get().GetPathFindManager()->GetNodes()[44][42].get();
+		}
 	}
 	else if (houseType == NameType::MESH_HOUSE9 || houseType == NameType::MESH_RUINED_HOUSE9)
 	{
@@ -69,6 +103,14 @@ void HouseManager::AddCollider(NameType houseType, Entity house) const
 		obb->Extents = houseColliders->at("House9_Collider.fbx").Extents;
 		obb->Orientation = houseColliders->at("House9_Collider.fbx").Orientation;
 		obb->Center.y = 0.0f;
+		if (houseType == NameType::MESH_RUINED_HOUSE9)
+		{
+			house.GetComponent<comp::House>()->attackNode = nullptr;
+		}
+		else
+		{
+			house.GetComponent<comp::House>()->attackNode = Blackboard::Get().GetPathFindManager()->GetNodes()[33][22].get();
+		}
 	}
 	else if (houseType == NameType::MESH_HOUSE10 || houseType == NameType::MESH_RUINED_HOUSE10)
 	{
@@ -77,6 +119,16 @@ void HouseManager::AddCollider(NameType houseType, Entity house) const
 		obb->Extents = houseColliders->at("House10_Collider.fbx").Extents;
 		obb->Orientation = houseColliders->at("House10_Collider.fbx").Orientation;
 		obb->Center.y = 0.0f;
+
+		if (houseType == NameType::MESH_RUINED_HOUSE10)
+		{
+			house.GetComponent<comp::House>()->attackNode = nullptr;
+		}
+		else
+		{
+			house.GetComponent<comp::House>()->attackNode = Blackboard::Get().GetPathFindManager()->GetNodes()[28][34].get();
+		}
+
 	}
 	else if (houseType == NameType::MESH_WATERMILLHOUSE || houseType == NameType::MESH_RUINED_WATERMILLHOUSE)
 	{
@@ -85,6 +137,14 @@ void HouseManager::AddCollider(NameType houseType, Entity house) const
 		obb->Extents = houseColliders->at("WaterMillHouse_Collider.fbx").Extents;
 		obb->Orientation = houseColliders->at("WaterMillHouse_Collider.fbx").Orientation;
 		obb->Center.y = 0.0f;
+		if (houseType == NameType::MESH_RUINED_WATERMILLHOUSE)
+		{
+			house.GetComponent<comp::House>()->attackNode = nullptr;
+		}
+		else
+		{
+			house.GetComponent<comp::House>()->attackNode = Blackboard::Get().GetPathFindManager()->GetNodes()[43][34].get();
+		}
 	}
 }
 

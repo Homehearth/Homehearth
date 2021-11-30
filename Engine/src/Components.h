@@ -244,6 +244,7 @@ namespace ecs
 			NameType roofType = NameType::EMPTY;
 			Entity door;
 			Entity houseRoof;
+			Node* attackNode = nullptr; //AI can walk to this node to attack this house
 			bool isOpen;
 		};
 		
