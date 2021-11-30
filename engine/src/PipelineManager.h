@@ -100,13 +100,13 @@ public:
 	ComPtr<ID3D11Buffer>			  m_textureEffectConstantBuffer;
 	//ComPtr<ID3D11Buffer>              m_deltaTimeBuffer;
 
-	//ComPtr<ID3D11ShaderResourceView>  m_SRV_TextureEffectBlendMap;
+	ComPtr<ID3D11ShaderResourceView>  m_SRV_TextureEffectBlendMap;
 	ComPtr<ID3D11ShaderResourceView>  m_SRV_TextureEffectWaterMap;
 	ComPtr<ID3D11ShaderResourceView>  m_SRV_TextureEffectWaterFloorMap;
 	//ComPtr<ID3D11ShaderResourceView>  m_SRV_TextureEffectWaterEdgeMap;
 	ComPtr<ID3D11ShaderResourceView>  m_SRV_TextureEffectWaterNormalMap;
 
-	//ComPtr<ID3D11UnorderedAccessView> m_UAV_TextureEffectBlendMap;
+	ComPtr<ID3D11UnorderedAccessView> m_UAV_TextureEffectBlendMap;
 	ComPtr<ID3D11UnorderedAccessView> m_UAV_TextureEffectWaterMap;
 	ComPtr<ID3D11UnorderedAccessView> m_UAV_TextureEffectWaterFloorMap;
 	//ComPtr<ID3D11UnorderedAccessView> m_UAV_TextureEffectWaterEdgeMap;
