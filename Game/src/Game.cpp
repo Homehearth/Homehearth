@@ -809,6 +809,7 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 			}
 			case ecs::Component::MESH_NAME:
 			{
+				std::string nameString;
 				NameType name;
 				msg >> name;
 				if (!skip)
@@ -816,130 +817,123 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 					nameString = "Sphere.obj";
 					break;
 				}
-				case NameType::MESH_WATERMILL:
+				switch (name)
 				{
-					nameString = "WaterMill.fbx";
-					break;
-				}
-				case NameType::MESH_WATERMILLHOUSE:
-				{
-					nameString = "WaterMillHouse.fbx";
-					break;
-				}
-				case NameType::MESH_RUINED_WATERMILLHOUSE:
-				{
-					nameString = "WaterMillHousePile.fbx";
-					break;
-				}
-				case NameType::MESH_HOUSE5:
+					case NameType::MESH_WATERMILL:
 					{
-					nameString = "House5.fbx";
-					break;
+						nameString = "WaterMill.fbx";
+						break;
 					}
-				case NameType::MESH_RUINED_HOUSE5:
-				{
-					nameString = "House5Pile.fbx";
-					break;
-				}
-				case NameType::MESH_HOUSE6:
-				{
-					nameString = "House6.fbx";
-					break;
-				}
-				case NameType::MESH_RUINED_HOUSE6:
-				{
-					nameString = "House6Pile.fbx";
-					break;
-				}
-				case NameType::MESH_HOUSE7:
-				{
-					nameString = "House7.fbx";
-					break;
-				}
-				case NameType::MESH_RUINED_HOUSE7:
-				{
-					nameString = "House7Pile.fbx";
-					break;
-				}
-				case NameType::MESH_HOUSE8:
-				{
-					nameString = "House8.fbx";
-					break;
-				}
-				case NameType::MESH_RUINED_HOUSE8:
-				{
-					nameString = "House8Pile.fbx";
-					break;
-				}
-				case NameType::MESH_HOUSE9:
-				{
-					nameString = "House9.fbx";
-					break;
-				}
-				case NameType::MESH_RUINED_HOUSE9:
-				{
-					nameString = "House9Pile.fbx";
-					break;
-				}
-				case NameType::MESH_HOUSE10:
-				{
-					nameString = "House10.fbx";
-					break;
-				}
-				case NameType::MESH_RUINED_HOUSE10:
-				{
-					nameString = "House10Pile.fbx";
-					break;
-				}
-				case NameType::MESH_DOOR1:
-				{
-					nameString = "Door1.fbx";
-					break;
-				}
-				case NameType::MESH_DOOR5:
-				{
-					nameString = "Door5.fbx";
-					break;
-				}
-				case NameType::MESH_DOOR6:
-				{
-					nameString = "Door6.fbx";
-					break;
-				}
-				case NameType::MESH_DOOR7:
-				{
-					nameString = "Door7.fbx";
-					break;
-				}
-				case NameType::MESH_DOOR8:
-				{
-					nameString = "Door8.fbx";
-					break;
-				}
-				case NameType::MESH_DOOR9:
-				{
-					nameString = "Door9.fbx";
-					break;
-				}
-				case NameType::MESH_DOOR10:
-				{
-					nameString = "Door10.fbx";
-					break;
-				}
-				case NameType::MESH_HOUSEROOF:
-				{
-					nameString = "HouseRoof.fbx";
-					break;
-				}
-				default:
-				{
-					nameString = "Cube.obj";
-					break;
-				}
-				}
-					std::string nameString;
-					switch (name)
+					case NameType::MESH_WATERMILLHOUSE:
 					{
+						nameString = "WaterMillHouse.fbx";
+						break;
+					}
+					case NameType::MESH_RUINED_WATERMILLHOUSE:
+					{
+						nameString = "WaterMillHousePile.fbx";
+						break;
+					}
+					case NameType::MESH_HOUSE5:
+					{
+						nameString = "House5.fbx";
+						break;
+					}
+					case NameType::MESH_RUINED_HOUSE5:
+					{
+						nameString = "House5Pile.fbx";
+						break;
+					}
+					case NameType::MESH_HOUSE6:
+					{
+						nameString = "House6.fbx";
+						break;
+					}
+					case NameType::MESH_RUINED_HOUSE6:
+					{
+						nameString = "House6Pile.fbx";
+						break;
+					}
+					case NameType::MESH_HOUSE7:
+					{
+						nameString = "House7.fbx";
+						break;
+					}
+					case NameType::MESH_RUINED_HOUSE7:
+					{
+						nameString = "House7Pile.fbx";
+						break;
+					}
+					case NameType::MESH_HOUSE8:
+					{
+						nameString = "House8.fbx";
+						break;
+					}
+					case NameType::MESH_RUINED_HOUSE8:
+					{
+						nameString = "House8Pile.fbx";
+						break;
+					}
+					case NameType::MESH_HOUSE9:
+					{
+						nameString = "House9.fbx";
+						break;
+					}
+					case NameType::MESH_RUINED_HOUSE9:
+					{
+						nameString = "House9Pile.fbx";
+						break;
+					}
+					case NameType::MESH_HOUSE10:
+					{
+						nameString = "House10.fbx";
+						break;
+					}
+					case NameType::MESH_RUINED_HOUSE10:
+					{
+						nameString = "House10Pile.fbx";
+						break;
+					}
+					case NameType::MESH_DOOR1:
+					{
+						nameString = "Door1.fbx";
+						break;
+					}
+					case NameType::MESH_DOOR5:
+					{
+						nameString = "Door5.fbx";
+						break;
+					}
+					case NameType::MESH_DOOR6:
+					{
+						nameString = "Door6.fbx";
+						break;
+					}
+					case NameType::MESH_DOOR7:
+					{
+						nameString = "Door7.fbx";
+						break;
+					}
+					case NameType::MESH_DOOR8:
+					{
+						nameString = "Door8.fbx";
+						break;
+					}
+					case NameType::MESH_DOOR9:
+					{
+						nameString = "Door9.fbx";
+						break;
+					}
+					case NameType::MESH_DOOR10:
+					{
+						nameString = "Door10.fbx";
+						break;
+					}
+					case NameType::MESH_HOUSEROOF:
+					{
+						nameString = "HouseRoof.fbx";
+						break;
+					}
 					case NameType::MESH_DEFENCE1X1:
 					{
 						nameString = "Defence1x1.obj";
@@ -970,15 +964,12 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 						nameString = "Cube.obj";
 						break;
 					}
-					}
-
-					std::shared_ptr<RModel> model = ResourceManager::Get().CopyResource<RModel>(nameString, true);
-					if (model)
-					{
-						e.AddComponent<comp::Renderable>()->model = model;
-					}
 				}
-				break;
+				std::shared_ptr<RModel> model = ResourceManager::Get().CopyResource<RModel>(nameString, true);
+				if (model)
+				{
+					e.AddComponent<comp::Renderable>()->model = model;
+				}
 			}
 			case ecs::Component::ANIMATOR_NAME:
 			{
