@@ -44,6 +44,7 @@ void SoundHandler::LoadAllSounds()
     AddSoundSource("../Assets/Sounds/MenuTheme.mp3");
     AddSoundSource("../Assets/Sounds/ButtonClick.mp3");
     AddSoundSource("../Assets/Sounds/OnGameOver.wav");
+    AddSoundSource("../Assets/Sounds/OnJoinLobby.wav");
 
     AddSoundSource("../Assets/Sounds/Player_OnMovement.wav");
     AddSoundSource("../Assets/Sounds/Player_OnMeleeAttack.wav");
@@ -54,8 +55,8 @@ void SoundHandler::LoadAllSounds()
     AddSoundSource("../Assets/Sounds/Player_OnDmgDealt.wav");
     AddSoundSource("../Assets/Sounds/Player_OnDmgRecieved.wav");
     AddSoundSource("../Assets/Sounds/Player_OnCastHealing.wav");
+    AddSoundSource("../Assets/Sounds/Player_OnCastDash.wav");
     AddSoundSource("../Assets/Sounds/Player_OnHealingRecieved.wav");
-    AddSoundSource("../Assets/Sounds/Player_OnLeap.wav");
     AddSoundSource("../Assets/Sounds/Player_OnDeath.wav");
     AddSoundSource("../Assets/Sounds/Player_OnRespawn.wav");
     AddSoundSource("../Assets/Sounds/Enemy_OnDeath.wav");

@@ -322,6 +322,7 @@ enum class ESoundEvent : uint32_t
 	Player_OnDmgDealt,
 	Player_OnDmgRecieved,
 	Player_OnCastHealing,
+	Player_OnCastDash,
 	Player_OnHealingRecieved,
 	Player_OnLeap,
 	Player_OnDash,

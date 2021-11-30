@@ -118,6 +118,16 @@ void CombatSystem::UpdateDash(HeadlessScene& scene)
 			if (ecs::ReadyToUse(&dashAbility, nullptr))
 			{
 				//dashAbility.velocityBeforeDash = entity.GetComponent<comp::Velocity>()->vel;
+				audio_t audio;
+				audio.type = ESoundEvent::Player_OnCastDash;
+				audio.position = entity.GetComponent<comp::Transform>()->position;
+				audio.shouldBroadcast = true;
+				audio.isUnique = false;
+				audio.playLooped = false;
+				audio.is3D = true;
+				audio.minDistance = 100.f;
+				audio.volume = 10.f;
+				entity.GetComponent<comp::AudioState>()->data.emplace(audio);
 			}
 			if(ecs::IsUsing(&dashAbility))
 			{

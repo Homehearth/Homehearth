@@ -359,11 +359,8 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			case ESoundEvent::Player_OnHealingRecieved:
 				SH->PlaySound("Player_OnHealingRecieved", data);
 				break;
-			case ESoundEvent::Player_OnLeap:
-				SH->PlaySound("Player_OnLeap", data);
-				break;
-			case ESoundEvent::Player_OnDash:
-				SH->PlaySound("Player_OnDash", data);
+			case ESoundEvent::Player_OnCastDash:
+				SH->PlaySound("Player_OnCastDash", data);
 				break;
 			case ESoundEvent::Player_OnDeath:
 				SH->PlaySound("Player_OnDeath", data);
@@ -371,6 +368,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			case ESoundEvent::Player_OnRespawn:
 				SH->PlaySound("Player_OnRespawn", data);
 				break;
+			//--------------------	ENEMY	--------------------------------------
 			case ESoundEvent::Enemy_OnMovement:
 				SH->PlaySound("Enemy_OnMovement", data);
 				break;
