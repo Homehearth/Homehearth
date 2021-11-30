@@ -47,6 +47,7 @@ Generated\ Files/
 [Gg]ame/*.cso
 [Gg]ame/*.ini
 **.txt
+*.txt
 
 # NUNIT
 *.VisualState.xml
