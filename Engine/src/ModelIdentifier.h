@@ -48,4 +48,5 @@ enum class NameType : uint32_t
 	MESH_KNIGHT,
 	MESH_MONSTER,
 	MESH_SPHERE,
+	MESH_MAGE
 };

@@ -229,8 +229,8 @@ void Simulation::ResetPlayer(Entity player)
 
 		playerComp->moveAbilty = entt::resolve<comp::BlinkAbility>();
 
-		player.AddComponent<comp::MeshName>()->name = NameType::MESH_MONSTER;
-		player.AddComponent<comp::AnimatorName>()->name = AnimName::ANIM_MONSTER;
+		player.AddComponent<comp::MeshName>()->name = NameType::MESH_MAGE;
+		player.AddComponent<comp::AnimatorName>()->name = AnimName::ANIM_KNIGHT;
 		player.AddComponent<comp::AnimationState>();
 
 	}

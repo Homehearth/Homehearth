@@ -38,9 +38,15 @@ void ParticleSystem::InitializeParticles(entt::registry& reg, entt::entity ent)
 			tempParticle.velocity.y = (float)rand() / (RAND_MAX + 1.f) * (2.0f - (-2.0f)) + (-2.0f);
 			tempParticle.velocity.z = (float)rand() / (RAND_MAX + 1.f) * (2.0f - (-2.0f)) + (-2.0f);
 		}
-		if (tempParticle.type == PARTICLEMODE::WATERSPLASH)
+		else if (tempParticle.type == PARTICLEMODE::WATERSPLASH)
 		{
 			tempParticle.color = { 0.f, 0.f, 0.5f, 0.5f };
+		}
+		else if (tempParticle.type == PARTICLEMODE::SMOKEAREA) 
+		{
+			tempParticle.position.x = (float)rand() / (RAND_MAX + 1.f) * (1.0f - (-1.0f)) + (-1.0f);
+			tempParticle.position.y = (float)rand() / (RAND_MAX + 1.f) * (1.0f - (-1.0f)) + (-1.0f);
+			tempParticle.position.z = (float)rand() / (RAND_MAX + 1.f) * (1.0f - (-1.0f)) + (-1.0f);
 		}
 
 		particles[i] =  tempParticle;

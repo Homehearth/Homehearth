@@ -112,7 +112,7 @@ namespace ecs
 				{
 					textureName = "waterSplash.png";
 				}
-				else if (type == PARTICLEMODE::SMOKE)
+				else if (type == PARTICLEMODE::SMOKEPOINT || type == PARTICLEMODE::SMOKEAREA)
 				{
 					textureName = "smoke.png";
 					opacityTextureName = "smoke_opacity.png";
