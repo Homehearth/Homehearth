@@ -496,7 +496,6 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 				if (simulation->GetGrid().PlaceDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, Blackboard::Get().GetPathFindManager(), dynamicQT))
 				{
 					simulation->GetCurrency() -= 10;
-					simulation->GetCurrency().hasUpdated = true;
 					anim.toSend = EAnimationType::PLACE_DEFENCE;
 				}
 			}*/
@@ -526,11 +525,11 @@ void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& sce
 
 		});
 
-	scene.ForEachComponent<comp::Player, comp::Health, comp::Network>([&](Entity e, comp::Player& p, comp::Health& health, comp::Network n)
+	scene.ForEachComponent<comp::Player, comp::Health, comp::Network, comp::AnimationState>([&](Entity e, comp::Player& p, comp::Health& health, comp::Network n, comp::AnimationState anim)
 		{
 			if (!health.isAlive)
 			{
-				//CHANGE TO DEAD ANIMATION?
+				anim.toSend = EAnimationType::DEAD;
 
 				comp::Velocity* vel = e.GetComponent<comp::Velocity>();
 				if (vel)

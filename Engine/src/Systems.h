@@ -4,6 +4,7 @@
 #include "PathFinderManager.h"
 #include "CombatSystem.h"
 #include "QuadTree.h"
+#include "SpreeHandler.h"
 
 namespace Systems
 {
@@ -13,7 +14,7 @@ namespace Systems
 	void HealingSystem(HeadlessScene& scene, float dt);
 	void HeroLeapSystem(HeadlessScene& scene, float dt);
 
-	void HealthSystem(HeadlessScene& scene, float dt, Currency& money_ref, GridSystem& grid);
+	void HealthSystem(HeadlessScene& scene, float dt, Currency& money_ref, SpreeHandler& spree, GridSystem& grid);
 	void SelfDestructSystem(HeadlessScene& scene, float dt);
 
 	void MovementSystem(HeadlessScene& scene, float dt);

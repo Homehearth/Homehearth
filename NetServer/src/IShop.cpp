@@ -23,7 +23,6 @@ void IShop::UseShop(const ShopItem& whatToBuy, const uint32_t& player)
 				{
 					m->attackDamage += .5f;
 					m_sim->GetCurrency() -= 10;
-					m_sim->GetCurrency().hasUpdated = true;
 				}
 
 				// Upgrade if ranged.
@@ -32,26 +31,8 @@ void IShop::UseShop(const ShopItem& whatToBuy, const uint32_t& player)
 				{
 					r->attackDamage += .5f;
 					m_sim->GetCurrency() -= 10;
-					m_sim->GetCurrency().hasUpdated = true;
 				}
 			}
-			break;
-		}
-		case ShopItem::Tower_Upgrade:
-		{
-			if (m_sim->GetCurrency() < 20)
-				break;
-
-			/*Upgrade a tower or ALL towers?*/
-			//m_pCurrentScene->ForEachComponent<comp::Health, comp::Tag<TagType::STATIC>>([&](comp::Health& h, comp::Tag<TagType::STATIC>& t) {
-
-			//	h.maxHealth += 20;
-			//	h.currentHealth += 20;
-
-			//	});
-
-			m_sim->GetCurrency() -= 20;
-
 			break;
 		}
 		case ShopItem::Heal:
@@ -64,7 +45,7 @@ void IShop::UseShop(const ShopItem& whatToBuy, const uint32_t& player)
 				comp::Health* h = m_sim->GetPlayer(player).GetComponent<comp::Health>();
 				if (h)
 				{
-					h->currentHealth = h->maxHealth;
+					h->currentHealth += 25;
 				}
 			}
 

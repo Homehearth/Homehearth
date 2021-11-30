@@ -39,6 +39,9 @@ public:
 	ShadowPass();
 	~ShadowPass();
 
+	// Does this instead of default constructor.
+	void StartUp();
+
 	// Finalize and setup the shadow map.
 	void SetupMap();
 
