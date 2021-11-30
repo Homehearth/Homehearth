@@ -284,7 +284,7 @@ enum class GameMsg : uint8_t
 	Lobby_Update,
 	Lobby_PlayerLeft,
 	Lobby_PlayerJoin,
-	
+
 	Server_AssignID,
 	Server_GetPing,
 
@@ -309,7 +309,8 @@ enum class GameMsg : uint8_t
 	Game_Cooldown,
 	Game_StartSpectate,
 	Game_StopSpectate,
-	Game_Over
+	Game_Over,
+	Game_UpdateShopMode
 };
 
 enum class AbilityIndex : uint8_t
@@ -332,27 +333,24 @@ enum class ShopItem : uint8_t
 	Speed_Upgrade,
 	Heal,
 
-	/*
-		Lets the player build a 3x1 tower when pressing build key.
-	*/
-	LONG_TOWER,
+	//Lets the player build a 3x1 tower when pressing build key.
+	Long_Tower,
 
-	/*
-		Lets the player build a 1x1 tower when pressing build key.
-	*/
-	SHORT_TOWER,
+	//Lets the player build a 1x1 tower when pressing build key.
+	Short_Tower,
 
 	NR_OF
 };
 
-enum class Mode : uint8_t
+enum class ShopMode : uint8_t
 {
+	NONE,
 	// Normal play mode fighting against monsters.
-	PLAY_MODE,
+	PLAY,
 	// Build mode allows players to build defences.
-	BUILD_MODE,
+	BUILD,
 	// Destroy mode allows players to remove their defences.
-	DESTROY_MODE
+	DESTROY
 };
 
 /*

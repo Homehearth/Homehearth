@@ -189,7 +189,7 @@ namespace sceneHelp
 				rtd::Picture* bullIcon = dynamic_cast<rtd::Picture*>(bullColl->elements[0].get());
 				if (bullIcon)
 				{
-					if (game->GetCurrentMode() == Mode::DESTROY_MODE)
+					if (game->GetCurrentMode() == ShopMode::DESTROY)
 					{
 						bullColl->Show();
 						bullIcon->SetPosition((FLOAT)InputSystem::Get().GetMousePos().x, (FLOAT)InputSystem::Get().GetMousePos().y);
@@ -206,7 +206,7 @@ namespace sceneHelp
 						game->GetCurrentScene()->GetCollection("ScrolldownMenu")->GetState() == ElementState::OUTSIDE)
 					{
 						game->GetCurrentScene()->GetCollection("shopMenu")->Hide();
-						game->SetMode(Mode::PLAY_MODE);
+						game->SetMode(ShopMode::PLAY);
 						bullColl->Hide();
 					}
 
@@ -214,7 +214,7 @@ namespace sceneHelp
 						game->GetCurrentScene()->GetCollection("ScrolldownMenu")->GetState() == ElementState::OUTSIDE)
 					{
 						game->GetCurrentScene()->GetCollection("inGameMenu")->Hide();
-						game->SetMode(Mode::PLAY_MODE);
+						game->SetMode(ShopMode::PLAY);
 						bullColl->Hide();
 					}
 				}
@@ -429,39 +429,39 @@ namespace sceneHelp
 		rtd::ShopUI* shop = shopMenu->AddElement<rtd::ShopUI>("Shop.png", draw_t(width / 24.0f, (height / 16), width * 0.25f, height * 0.5f));
 		// 1x1 tower button.
 		shop->SetOnPressedEvent(0, [=] {
-			game->UseShop(ShopItem::SHORT_TOWER);
+			game->UseShop(ShopItem::Short_Tower);
 			//shopMenu->Hide();
-			game->SetMode(Mode::BUILD_MODE);
+			game->SetMode(ShopMode::BUILD);
 			bullDoze->Hide();
 			});
 		// 1x3 tower button.
 		shop->SetOnPressedEvent(1, [=] {
-			game->UseShop(ShopItem::LONG_TOWER);
+			game->UseShop(ShopItem::Long_Tower);
 			//shopMenu->Hide();
-			game->SetMode(Mode::BUILD_MODE);
+			game->SetMode(ShopMode::BUILD);
 			bullDoze->Hide();
 			});
 		// Primary upgrade button.
 		shop->SetOnPressedEvent(2, [=] {
 			game->UseShop(ShopItem::Primary_Upgrade);
-			game->SetMode(Mode::PLAY_MODE);
+			game->SetMode(ShopMode::PLAY);
 			bullDoze->Hide();
 			});
 		// Armor upgrade button.
 		shop->SetOnPressedEvent(3, [=] {
 			game->UseShop(ShopItem::Primary_Upgrade);
-			game->SetMode(Mode::PLAY_MODE);
+			game->SetMode(ShopMode::PLAY);
 			bullDoze->Hide();
 			});
 		// Heal button.
 		shop->SetOnPressedEvent(4, [=] {
 			game->UseShop(ShopItem::Heal);
-			game->SetMode(Mode::PLAY_MODE);
+			game->SetMode(ShopMode::PLAY);
 			bullDoze->Hide();
 			});
 		// Remove defences button.
 		shop->SetOnPressedEvent(5, [=] {
-			game->SetMode(Mode::DESTROY_MODE);
+			game->SetMode(ShopMode::DESTROY);
 			bullDoze->Show();
 			});
 		shop->SetMoneyRef(mMoney);

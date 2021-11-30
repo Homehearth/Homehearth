@@ -335,6 +335,17 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 		}
 		break;
 	}
+	case GameMsg::Game_UpdateShopMode:
+	{
+		ShopMode mode;
+		uint32_t playerID;
+		uint32_t gameID;
+		msg >> gameID >> playerID >> mode;
+		if (m_simulations.find(gameID) != m_simulations.end())
+		{
+			m_simulations.at(gameID)->GetPlayer(playerID).GetComponent<comp::Player>()->shopmode = mode;
+		}
+	}
 	}
 }
 

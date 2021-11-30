@@ -644,9 +644,17 @@ void Game::CreateLobby()
 	}
 }
 
-const Mode& Game::GetCurrentMode() const
+const ShopMode& Game::GetCurrentMode() const
 {
-	return m_mode;
+	if (m_players.find(m_localPID) != m_players.end())
+	{
+		comp::Player* playerComp = m_players.at(m_localPID).GetComponent<comp::Player>();
+		if (playerComp)
+		{
+			return playerComp->shopmode;
+		}
+	}
+	return ShopMode::NONE;
 }
 
 const Cycle& Game::GetCurrentCycle() const
@@ -654,9 +662,22 @@ const Cycle& Game::GetCurrentCycle() const
 	return m_serverCycle;
 }
 
-void Game::SetMode(const Mode& mode)
+void Game::SetMode(const ShopMode& mode)
 {
-	m_mode = mode;
+	if (m_players.find(m_localPID) != m_players.end()) 
+	{
+		comp::Player* playerComp = m_players.at(m_localPID).GetComponent<comp::Player>();
+		if (playerComp)
+		{
+			playerComp->shopmode = mode;
+
+			//Update the server
+			network::message<GameMsg> msg;
+			msg.header.id = GameMsg::Game_UpdateShopMode;
+			msg << mode << m_localPID << m_gameID;
+			m_client.Send(msg);
+		}
+	}
 }
 
 const uint32_t& Game::GetMoney() const
@@ -942,7 +963,7 @@ void Game::UpdateInput()
 	}
 	m_inputState.mouseRay = InputSystem::Get().GetMouseRay();
 
-	if (m_mode == Mode::DESTROY_MODE)
+	/*if (m_mode == Mode::DESTROY_MODE)
 	{
 		if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::R, KeyState::PRESSED))
 		{
@@ -955,7 +976,18 @@ void Game::UpdateInput()
 		{
 			m_inputState.key_b = true;
 		}
+	}*/
+	//TEMP
+	if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::R, KeyState::PRESSED))
+	{
+		m_inputState.key_r = true;
 	}
+	if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::B, KeyState::PRESSED))
+	{
+		m_inputState.key_b = true;
+	}
+
+
 	if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::LeftShift, KeyState::PRESSED))
 	{
 		m_inputState.key_shift = true;

@@ -14,7 +14,6 @@ private:
 	uint32_t m_waveTimer = 0;
 	uint32_t m_money;
 	ParticleSystem m_particles;
-	Mode m_mode = Mode::PLAY_MODE;
 	Cycle m_serverCycle = Cycle::DAY;
 
 	Entity m_mapEntity;
@@ -55,9 +54,9 @@ public:
 	virtual ~Game();
 	void JoinLobby(uint32_t lobbyID);
 	void CreateLobby();
-	const Mode& GetCurrentMode() const;
+	const ShopMode& GetCurrentMode() const;
 	const Cycle& GetCurrentCycle() const;
-	void SetMode(const Mode& mode);
+	void SetMode(const ShopMode& mode);
 	const uint32_t& GetMoney() const;
 	
 	void SendStartGame();
