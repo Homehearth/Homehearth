@@ -184,11 +184,11 @@ void PathFinderManager::AStarSearch(Entity npc)
 
 	//Gets the target that findTargetNode has picked for this entity
 	Entity* target = Blackboard::Get().GetValue<Entity>("target" + std::to_string(npc));
-	if (target == nullptr)
-	{
-		LOG_INFO("Target was nullptr...");
-		return;
-	}
+	//if (target == nullptr)
+	//{
+	//	LOG_INFO("Target was nullptr...");
+	//	return;
+	//}
 
 
 	Node* goalNode = FindClosestNode(target->GetComponent<comp::Transform>()->position);

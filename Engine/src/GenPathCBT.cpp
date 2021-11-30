@@ -18,8 +18,13 @@ BT::NodeStatus BT::GenPathCBT::Tick()
 	{
 		comp::NPC* npc = entity.GetComponent<comp::NPC>();
 		npc->currentNode = aiHandler->FindClosestNode(entity.GetComponent<comp::Transform>()->position);
-
-		if(npc->path.empty() || generatePathTimer.GetElapsedTime<std::chrono::seconds>() > refreshRate)
+		Entity* target = Blackboard::Get().GetValue<Entity>("target" + std::to_string(entity));
+		if (target == nullptr)
+		{
+			LOG_INFO("Target was nullptr...");
+			return BT::NodeStatus::FAILURE;
+		}
+		if(target->GetComponent<comp::Player>()->reachable && (npc->path.empty() || generatePathTimer.GetElapsedTime<std::chrono::seconds>() > refreshRate))
 		{
 			generatePathTimer.Start();
 			
