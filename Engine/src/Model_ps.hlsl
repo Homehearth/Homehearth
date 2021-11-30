@@ -5,7 +5,7 @@ float4 main(PixelIn input) : SV_TARGET
     //return t_shadowMaps.Sample(s_linear, float3(input.uv, 0.0f));
 
     static unsigned int rolls = infoData.x;
-    const unsigned int STEPS = 50;
+    const unsigned int STEPS = 100;
     const float SCATTERING = 1.0f;
     
     float3 lightVolume = float3(0.0f, 0.0f, 0.0f);
@@ -79,31 +79,31 @@ float4 main(PixelIn input) : SV_TARGET
                     
                     
                     // Volumetric Lighting
-                    float3 currentPos = camPos;
-                    float3 rayVector = input.worldPos.xyz - camPos;
-                    float3 rayDir = rayVector / length(rayVector);
-                    float3 stepLength = length(rayVector) / STEPS;
-                    float3 step = rayDir * stepLength;
+                        float3 currentPos = camPos;
+                        float3 rayVector = input.worldPos.xyz - camPos;
+                        float3 rayDir = rayVector / length(rayVector);
+                        float3 stepLength = length(rayVector) / STEPS;
+                        float3 step = rayDir * stepLength;
                       
                     [unroll]
-                    for (int j = 0; j < STEPS; j++)
-                    {
+                        for (int j = 0; j < STEPS; j++)
+                        {
                         // Camera position in shadow space.
-                        float4 cameraShadowSpace = mul(lightMat, float4(currentPos, 1.0f));
-                        float2 shadowCoords;
+                            float4 cameraShadowSpace = mul(lightMat, float4(currentPos, 1.0f));
+                            float2 shadowCoords;
                         
                         // Sample the depth of current position.
-                        shadowCoords.x = cameraShadowSpace.x * 0.5f + 0.5f;
-                        shadowCoords.y = -cameraShadowSpace.y * 0.5f + 0.5f;
-                        float depth = t_shadowMaps.Sample(s_linear, float3(shadowCoords, shadowIndex));
-                        if(depth > cameraShadowSpace.z)
-                        {
-                            lightVolume += float3(SCATTERING, SCATTERING, SCATTERING);
-                        }
+                            shadowCoords.x = cameraShadowSpace.x * 0.5f + 0.5f;
+                            shadowCoords.y = -cameraShadowSpace.y * 0.5f + 0.5f;
+                            float depth = t_shadowMaps.Sample(s_linear, float3(shadowCoords, shadowIndex));
+                            if (depth > cameraShadowSpace.z)
+                            {
+                                lightVolume += float3(SCATTERING, SCATTERING, SCATTERING);
+                            }
                         
-                        currentPos += step;
-                    }
-                    lightVolume /= STEPS;
+                            currentPos += step;
+                        }
+                        lightVolume /= STEPS;
                    
                     
                     lightCol += DoDirectionlight(sb_lights[i], N) * (1.0f - shadowCoef);
