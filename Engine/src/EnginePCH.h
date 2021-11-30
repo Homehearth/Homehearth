@@ -140,6 +140,7 @@ EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 const std::string MODELPATH		= "../Assets/Models/";		//"../../../../../Assets/Models/"
 const std::string MATERIALPATH	= "../Assets/Materials/";
 const std::string TEXTUREPATH	= "../Assets/Textures/";
+const std::string UIPATH = "../Assets/UI/";
 const std::string ANIMATIONPATH = "../Assets/Animations/";
 const std::string ANIMATORPATH	= "../Assets/Animators/";
 const std::string FONTPATH		= "../Assets/Fonts/";

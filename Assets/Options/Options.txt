@@ -1,6 +1,6 @@
-BlurType 0
+BlurType 1
 Shadows 1
-ShadowQuality Low
+ShadowQuality High
 MasterVolume 0.684476
 WindowHeight 918
 WindowWidth 1632
