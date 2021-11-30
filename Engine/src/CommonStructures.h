@@ -35,6 +35,7 @@ public:
 	void Zero()
 	{
 		m_amount = 0;
+		m_hasUpdated = true;
 	}
 	void operator +=(uint32_t money)
 	{
