@@ -377,9 +377,9 @@ void CombatSystem::AddCollisionRangeBehavior(Entity entity, Entity attackEntity,
 					audio.type = ESoundEvent::Player_OnDmgRecieved;
 					audio.position = other.GetComponent<comp::Transform>()->position;
 					audio.isUnique = false;
-					audio.shouldBroadcast = false;
+					audio.shouldBroadcast = true;
 					audio.playLooped = false;
-					audio.is3D = false;
+					audio.is3D = true;
 					audio.volume = 10.f;
 					other.GetComponent<comp::AudioState>()->data.emplace(audio);
 				}
