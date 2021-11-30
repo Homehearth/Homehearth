@@ -172,5 +172,15 @@ float4 main(PixelIn input) : SV_TARGET
     //Gamma correct
     color = pow(max(color, 0.0f), float3(gamma, gamma, gamma));
     
+    // FOG
+    input.worldPos.y = 0;
+    float3 toCenter = float3(247, 0, -321) - input.worldPos.xyz;
+    float distanceToCenter = length(toCenter);
+
+    float4 fogColor = float4(0.5f, 0.5f, 0.5f, 1);
+
+    float fogFactor = saturate((distanceToCenter - 150) / 100);
+    color = lerp(color, fogColor, fogFactor);
+
     return float4(color, 5.0f);
 }
