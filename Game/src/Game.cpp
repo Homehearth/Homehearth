@@ -102,45 +102,46 @@ void Game::OnUserUpdate(float deltaTime)
 
 		GameSystems::DeathParticleTimer(scene);
 
-		if (m_elapsedCycleTime <= m_waveTimer)
+		if (m_elapsedCycleTime <= m_waveTimer && (m_serverCycle == Cycle::DAY || m_serverCycle == Cycle::MORNING))
 		{
-			if (m_serverCycle == Cycle::DAY || m_serverCycle == Cycle::MORNING)
-			{
-				m_elapsedCycleTime += deltaTime;
-			}
-			scene.ForEachComponent<comp::Light>([&](Entity e, comp::Light& l)
-				{
-					switch (l.lightData.type)
-					{
-					case TypeLight::DIRECTIONAL:
-					{
-						l.lightData.direction = { -1.0f, 0.0f, 0.f, 0.f };
-						sm::Vector3 dir = sm::Vector3::TransformNormal(sm::Vector3(l.lightData.direction), sm::Matrix::CreateRotationZ(dx::XMConvertToRadians(ROTATION) * (m_elapsedCycleTime)));
-
-						l.lightData.direction = sm::Vector4(dir.x, dir.y, dir.z, 0.0f);
-						sm::Vector3 pos = l.lightData.position;
-						pos = playerPos - dir * 400;
-
-						pos = util::Lerp(sm::Vector3(l.lightData.position), pos, deltaTime * 10);
-						l.lightData.position = sm::Vector4(pos);
-
-						l.lightData.position.w = 1.f;
-						break;
-					}
-					case TypeLight::POINT:
-					{
-						if (m_serverCycle == Cycle::DAY || m_serverCycle == Cycle::MORNING)
-						{
-							l.lightData.enabled = false;
-						}
-						break;
-					}
-					default:
-						break;
-					}
-					e.GetComponent<comp::SphereCollider>()->Center = sm::Vector3(l.lightData.position);
-				});
+			m_elapsedCycleTime += deltaTime;
 		}
+		scene.ForEachComponent<comp::Light>([&](Entity e, comp::Light& l)
+			{
+				switch (l.lightData.type)
+				{
+				case TypeLight::DIRECTIONAL:
+				{
+					l.lightData.direction = { -1.0f, 0.0f, 0.f, 0.f };
+					sm::Vector3 dir = sm::Vector3::TransformNormal(sm::Vector3(l.lightData.direction), sm::Matrix::CreateRotationZ(dx::XMConvertToRadians(ROTATION) * (m_elapsedCycleTime)));
+
+					l.lightData.direction = sm::Vector4(dir.x, dir.y, dir.z, 0.0f);
+					sm::Vector3 pos = l.lightData.position;
+					pos = playerPos - dir * 400;
+
+					if (m_serverCycle == Cycle::DAY || m_serverCycle == Cycle::MORNING)
+					{
+						pos = util::Lerp(sm::Vector3(l.lightData.position), pos, deltaTime * 10);
+					}
+					l.lightData.position = sm::Vector4(pos);
+
+
+					l.lightData.position.w = 1.f;
+					break;
+				}
+				case TypeLight::POINT:
+				{
+					if (m_serverCycle == Cycle::DAY || m_serverCycle == Cycle::MORNING)
+					{
+						l.lightData.enabled = false;
+					}
+					break;
+				}
+				default:
+					break;
+				}
+				e.GetComponent<comp::SphereCollider>()->Center = sm::Vector3(l.lightData.position);
+			});
 	}
 }
 
