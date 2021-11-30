@@ -31,7 +31,7 @@ private:
 	void Run() override;
 
 	// IMGUI
-	void drawImGUI() const;
+	void drawImGUI();
 
 	virtual void OnUserUpdate(float deltaTime) = 0;
 

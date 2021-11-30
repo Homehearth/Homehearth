@@ -80,13 +80,14 @@ bool Game::OnStartup()
 	SetScene("MainMenu");
 
 	//Particles
+	ResourceManager::Get().GetResource<RTexture>("BloodParticle.png");
 	Entity emitter4 = GetScene("Game").CreateEntity();
 	emitter4.AddComponent<comp::Transform>()->position = { 250, 5, -340 };
 	emitter4.AddComponent <comp::EmitterParticle>(sm::Vector3{ 0,0,0 }, 800, 2.f, PARTICLEMODE::SMOKE, 4.0f, 1.f, false);
 
 	Entity waterSplash = GetScene("Game").CreateEntity();
 	waterSplash.AddComponent<comp::Transform>()->position = { 270, 13, -370 };
-	waterSplash.AddComponent <comp::EmitterParticle>(sm::Vector3{ 0,0,0 }, 100, 1.f , PARTICLEMODE::WATERSPLASH, 4.0f, 1.f, false);
+	waterSplash.AddComponent <comp::EmitterParticle>(sm::Vector3{ 0,0,0 }, 100, 1.f, PARTICLEMODE::WATERSPLASH, 4.0f, 1.f, false);
 
 	return true;
 }
@@ -101,28 +102,37 @@ void Game::OnUserUpdate(float deltaTime)
 
 		GameSystems::DeathParticleTimer(scene);
 
-		if (m_elapsedCycleTime <= m_waveTimer && (m_serverCycle == Cycle::DAY || m_serverCycle == Cycle::MORNING))
+		if (m_elapsedCycleTime <= m_waveTimer)
 		{
-			m_elapsedCycleTime += deltaTime;
+			if (m_serverCycle == Cycle::DAY || m_serverCycle == Cycle::MORNING)
+			{
+				m_elapsedCycleTime += deltaTime;
+			}
 			scene.ForEachComponent<comp::Light>([&](Entity e, comp::Light& l)
 				{
 					switch (l.lightData.type)
 					{
 					case TypeLight::DIRECTIONAL:
 					{
-						l.lightData.direction = { -1.0f, 0.0f, 0.f, 0.f };
+						l.lightData.direction = { -1.0f, 0.0f, -1.f, 0.f };
 						sm::Vector3 dir = sm::Vector3::TransformNormal(sm::Vector3(l.lightData.direction), sm::Matrix::CreateRotationZ(dx::XMConvertToRadians(ROTATION) * (m_elapsedCycleTime)));
 
 						l.lightData.direction = sm::Vector4(dir.x, dir.y, dir.z, 0.0f);
 						sm::Vector3 pos = l.lightData.position;
-						pos = playerPos - dir * 200;
+						pos = playerPos - dir * 400;
+
+						pos = util::Lerp(sm::Vector3(l.lightData.position), pos, deltaTime * 10);
 						l.lightData.position = sm::Vector4(pos);
+
 						l.lightData.position.w = 1.f;
 						break;
 					}
 					case TypeLight::POINT:
 					{
-						l.lightData.enabled = false;
+						if (m_serverCycle == Cycle::DAY || m_serverCycle == Cycle::MORNING)
+						{
+							l.lightData.enabled = false;
+						}
 						break;
 					}
 					default:
@@ -268,13 +278,18 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 					bloodDecal.AddComponent<comp::Decal>(*m_gameEntities.at(id).GetComponent<comp::Transform>());
 				}
 
+				comp::Player* p = m_gameEntities.at(id).GetComponent<comp::Player>();
+				if (p)
+				{
+					GetScene("Game").GetCollection("player" + std::to_string(static_cast<uint16_t>(p->playerType)) + "Info")->Hide();
+					GetScene("Game").GetCollection("dynamicPlayer" + std::to_string(static_cast<uint16_t>(p->playerType)) + "namePlate")->Hide();
+				}
 				m_gameEntities.at(id).Destroy();
 				m_gameEntities.erase(id);
 			}
 			// Was the entity a player?
 			if (m_players.find(id) != m_players.end())
 			{
-				m_players.at(id).Destroy();
 				m_players.erase(id);
 			}
 		}
@@ -510,7 +525,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		uint8_t count;
 		msg >> count;
 
-		for (uint8_t i = count; i > 0; i--)
+		for (uint8_t i = 0; i < count; i++)
 		{
 			char nameTemp[12] = {};
 			uint32_t playerID;
@@ -522,9 +537,10 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 
 			if (m_players.find(playerID) != m_players.end())
 			{
-				dynamic_cast<rtd::Text*>(GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i))->elements[1].get())->SetText(name);
-				rtd::Text* plT = dynamic_cast<rtd::Text*>(GetScene("Game").GetCollection("dynamicPlayer" + std::to_string(i) + "namePlate")->elements[0].get());
-				rtd::Picture* plP = dynamic_cast<rtd::Picture*>(GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i))->elements[2].get());
+				comp::Player* p = m_players.at(playerID).GetComponent<comp::Player>();
+				dynamic_cast<rtd::Text*>(GetScene("Lobby").GetCollection("playerIcon" + std::to_string(static_cast<uint16_t>(p->playerType)))->elements[1].get())->SetText(name);
+				rtd::Text* plT = dynamic_cast<rtd::Text*>(GetScene("Game").GetCollection("dynamicPlayer" + std::to_string(static_cast<uint16_t>(p->playerType)) + "namePlate")->elements[0].get());
+				rtd::Picture* plP = dynamic_cast<rtd::Picture*>(GetScene("Lobby").GetCollection("playerIcon" + std::to_string(static_cast<uint16_t>(p->playerType)))->elements[2].get());
 				if (plT)
 				{
 					plT->SetText(name);
@@ -685,8 +701,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		break;
 	}
 	}
-}
-
+	}
 void Game::PingServer()
 {
 	message<GameMsg> msg = {};
@@ -867,9 +882,14 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 				std::string nameString;
 				switch (name)
 				{
-				case NameType::MESH_DEFENCE:
+				case NameType::MESH_DEFENCE1X1:
 				{
-					nameString = "Defence.obj";
+					nameString = "Defence1x1.obj";
+					break;
+				}
+				case NameType::MESH_DEFENCE1X3:
+				{
+					nameString = "Defence1x3.obj";
 					break;
 				}
 				case NameType::MESH_KNIGHT:
@@ -990,6 +1010,8 @@ void Game::UpdateInput()
 {
 	m_inputState.axisHorizontal = InputSystem::Get().GetAxis(Axis::HORIZONTAL);
 	m_inputState.axisVertical = InputSystem::Get().GetAxis(Axis::VERTICAL);
+	m_inputState.mousewheelDir = InputSystem::Get().GetMouseWheelDirection();
+
 	if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::HELD))
 	{
 		m_inputState.leftMouse = true;

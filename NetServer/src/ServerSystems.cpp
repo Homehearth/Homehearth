@@ -477,6 +477,15 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 					anim.toSend = EAnimationType::PLACE_DEFENCE;
 				}
 			}
+
+			//Rotate defences 90 or not
+			if (p.lastInputState.mousewheelDir != 0)
+			{
+				if (p.lastInputState.mousewheelDir > 0)
+					p.rotateDefence = true;
+				else if (p.lastInputState.mousewheelDir < 0)
+					p.rotateDefence = false;
+			}
 		});
 
 

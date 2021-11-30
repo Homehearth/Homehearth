@@ -41,6 +41,7 @@ void DOFPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 	backBuffInFocus->Release();
 
 	m_blurPass.PreRender(pCam, DC);
+	m_blurPass.Render(nullptr);
 
 	ID3D11Texture2D* backBuffOutOfFocus = nullptr;
 	if (FAILED(D3D11Core::Get().SwapChain()->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&backBuffOutOfFocus))))
@@ -55,7 +56,6 @@ void DOFPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 	m_dofHelp.inverseView = pCam->GetView().Invert();
 	m_dofHelp.inverseProjection = pCam->GetProjection().Invert();
 	m_dofHelp.dofType = UINT(m_currentType);
-	DC->UpdateSubresource(m_constBuff.Get(), 0, nullptr, &m_dofHelp, 0, 0);
 
 	DC->CSSetUnorderedAccessViews(2, 1, m_inFocusView.GetAddressOf(), nullptr);
 	DC->CSSetUnorderedAccessViews(3, 1, m_outOfFocusView.GetAddressOf(), nullptr);
@@ -66,6 +66,16 @@ void DOFPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 
 void DOFPass::Render(Scene* pScene)
 {
+	pScene->ForEachComponent<comp::Player, comp::Network>([&](Entity& playerEntity, comp::Player& player, comp::Network& network)
+		{
+			if (*pScene->m_localPIDRef == network.id && network.id != UINT32_MAX)
+			{
+				m_dofHelp.playerPosView = sm::Vector4::Transform(sm::Vector4(playerEntity.GetComponent<comp::Transform>()->position), 
+					m_dofHelp.inverseView.Invert());
+			}
+		});
+
+	D3D11Core::Get().DeviceContext()->UpdateSubresource(m_constBuff.Get(), 0, nullptr, &m_dofHelp, 0, 0);
 	D3D11Core::Get().DeviceContext()->Dispatch(PM->m_windowWidth / 8, PM->m_windowHeight / 8, 1);
 	ID3D11Texture2D* outText = nullptr;
 	if (FAILED(D3D11Core::Get().SwapChain()->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&outText))))
@@ -136,5 +146,5 @@ bool DOFPass::CreateBuffer()
 
 	HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&desc, nullptr, m_constBuff.GetAddressOf());
 
-	return true;
+	return !FAILED(hr);
 }

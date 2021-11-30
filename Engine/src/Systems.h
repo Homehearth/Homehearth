@@ -11,7 +11,7 @@ namespace Systems
 	void HealingSystem(HeadlessScene& scene, float dt);
 	void HeroLeapSystem(HeadlessScene& scene, float dt);
 
-	void HealthSystem(HeadlessScene& scene, float dt, Currency& money_ref);
+	void HealthSystem(HeadlessScene& scene, float dt, Currency& money_ref, GridSystem& grid);
 	void SelfDestructSystem(HeadlessScene& scene, float dt);
 
 	void MovementSystem(HeadlessScene& scene, float dt);

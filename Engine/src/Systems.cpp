@@ -208,7 +208,7 @@ void Systems::HeroLeapSystem(HeadlessScene& scene, float dt)
 		});
 }
 
-void Systems::HealthSystem(HeadlessScene& scene, float dt, Currency& money_ref)
+void Systems::HealthSystem(HeadlessScene& scene, float dt, Currency& money_ref, GridSystem& grid)
 {
 	//Entity destoys self if health <= 0
 	scene.ForEachComponent<comp::Health>([&](Entity& entity, comp::Health& health)
@@ -236,12 +236,15 @@ void Systems::HealthSystem(HeadlessScene& scene, float dt, Currency& money_ref)
 				else if (entity.GetComponent<comp::Tag<TagType::DEFENCE>>())
 				{
 					comp::Transform* buildTransform = entity.GetComponent<comp::Transform>();
-
+					
 					Node* node = Blackboard::Get().GetPathFindManager()->FindClosestNode(buildTransform->position);
 					//Remove from the container map so ai wont consider this defense
 					Blackboard::Get().GetPathFindManager()->RemoveDefenseEntity(entity);
 					node->reachable = true;
 					node->defencePlaced = false;
+
+					//Removing the defence and its neighbours if needed
+					grid.RemoveDefence(entity);
 					entity.Destroy();
 				}
 				else
@@ -407,7 +410,7 @@ void Systems::LightSystem(Scene& scene, float dt)
 					light.flickerTimer -= dt * (rand() % 2 + 1);
 
 				light.lightData.intensity = util::Lerp(0.5f, 0.7f, light.flickerTimer);
-			}			
+			}
 
 			scene.GetLights()->EditLight(light.lightData, light.index);
 		});
@@ -454,31 +457,43 @@ void Systems::UpdateDynamicQT(HeadlessScene& scene, QuadTree* qtDynamic)
 
 void Systems::CheckCollisions(HeadlessScene& scene, float dt)
 {
-	scene.ForEachComponent<comp::SphereCollider>([](Entity& e1, comp::SphereCollider& s)
+	scene.ForEachComponent<comp::SphereCollider>([&](Entity& e1, comp::SphereCollider& s)
 		{
 			for (auto e2 : s.list)
 			{
-				CollisionInfo_t collisionInfo = CollisionSystem::Get().Intersection(e1, e2);
-
-				if (collisionInfo.hasCollided)
+				if (e1 != e2)
 				{
-					if (CollisionSystem::Get().AddPair(e1, e2))
+					CollisionInfo_t collisionInfo = CollisionSystem::Get().Intersection(e1, e2);
+
+					if (!e2.GetComponent<comp::Tag<TagType::STATIC>>())
 					{
-						CollisionSystem::Get().OnCollisionEnter(e1, e2);
+						comp::SphereCollider* s2 = e2.GetComponent<comp::SphereCollider>();
+						if (s2)
+						{
+							s2->list.erase(e1);
+						}
 					}
 
-					CollisionSystem::Get().OnCollision(e1, e2);
+					if (collisionInfo.hasCollided)
+					{
+						if (CollisionSystem::Get().AddPair(e1, e2))
+						{
+							CollisionSystem::Get().OnCollisionEnter(e1, e2);
+						}
 
-					if (!e1.HasComponent<comp::Tag<TagType::NO_RESPONSE>>() && !e2.HasComponent<comp::Tag<TagType::NO_RESPONSE>>())
-					{
-						CollisionSystem::Get().CollisionResponse(collisionInfo, e1, e2);
+						CollisionSystem::Get().OnCollision(e1, e2);
+
+						if (!e1.HasComponent<comp::Tag<TagType::NO_RESPONSE>>() && !e2.HasComponent<comp::Tag<TagType::NO_RESPONSE>>())
+						{
+							CollisionSystem::Get().CollisionResponse(collisionInfo, e1, e2);
+						}
 					}
-				}
-				else
-				{
-					if (CollisionSystem::Get().RemovePair(e1, e2))
+					else
 					{
-						CollisionSystem::Get().OnCollisionExit(e1, e2);
+						if (CollisionSystem::Get().RemovePair(e1, e2))
+						{
+							CollisionSystem::Get().OnCollisionExit(e1, e2);
+						}
 					}
 				}
 			}

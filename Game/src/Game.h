@@ -1,7 +1,6 @@
 #pragma once
 #include <EnginePCH.h>
 #include <Engine.h>
-#include <GridSystem.h>
 #include "ModelIdentifier.h"
 #include "ParticleSystem.h"
 
@@ -12,7 +11,6 @@ private:
 	std::unordered_map<uint32_t, Entity> m_gameEntities;
 
 	GridSystem m_grid;
-	float m_elapsedCycleTime = 0;
 	uint32_t m_waveTimer = 0;
 	uint32_t m_money;
 	ParticleSystem m_particles;
@@ -50,6 +48,8 @@ public:
 	std::vector<std::pair<ModelID, dx::BoundingSphere>> m_LOSColliders;
 	std::unordered_map<uint32_t, Entity> m_players;
 
+
+	float m_elapsedCycleTime = 0;
 
 	Game();
 	virtual ~Game();
