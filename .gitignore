@@ -365,4 +365,5 @@ healthchecksdb
 # Textfiles
 **.txt
 *.txt
+Assets/Options/*.txt
 /Game/imgui.ini~Dev
