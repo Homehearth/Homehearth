@@ -1,6 +1,6 @@
-BlurType 2
+BlurType 0
 Shadows 1
-ShadowQuality Medium
-MasterVolume 0.882258
-WindowHeight 1080
-WindowWidth 1920
+ShadowQuality Low
+MasterVolume 0.684476
+WindowHeight 918
+WindowWidth 1632
