@@ -163,7 +163,7 @@ void RAnimator::UpdateTime(const EAnimationType& type)
 		//We dont add to the timer if we reached the end
 		if (!anim->reachedEnd)
 		{
-			double tick = anim->animation->GetTicksPerFrame() * Stats::Get().GetUpdateTime();
+			double tick = anim->animation->GetTicksPerFrame() * Stats::Get().GetFrameTime();
 
 			if (anim->currentTick != tick)
 			{

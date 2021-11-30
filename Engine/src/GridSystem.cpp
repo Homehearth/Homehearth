@@ -227,17 +227,16 @@ void GridSystem::RemoveDefence(const Entity& entity)
 	}
 }
 
-
 bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, PathFinderManager* aiHandler, QuadTree* dynamicQT)
 {	
 	//Player that placed defence
-	dx::BoundingSphere localPlayerSphere;
+	comp::SphereCollider localPlayerSphere;
 	comp::Player player;
 
 	/*
 		Save all the positions of the players and NPCs
 	*/
-	std::vector<dx::BoundingSphere> ePos;
+	std::vector<comp::SphereCollider> ePos;
 	m_scene->ForEachComponent<comp::Player, comp::SphereCollider, comp::Network>([&](comp::Player& p, comp::SphereCollider bs, comp::Network& net)
 		{
 			if (net.id == playerWhoPressedMouse)
