@@ -10,6 +10,17 @@ Renderer::Renderer()
 void Renderer::Initialize(Window* pWindow)
 {
 	m_pipelineManager.Initialize(pWindow);
+
+    m_d3d11 = &D3D11Core::Get();
+    m_basePass.SetEnable(true);
+    m_depthPass.SetEnable(true);
+    m_textureEffectPass.SetEnable(true);
+	m_waterEffectPass.SetEnable(true);
+
+    //AddPass(&m_depthPass);
+    AddPass(&m_basePass);
+    AddPass(&m_textureEffectPass);
+	AddPass(&m_waterEffectPass);
 	m_d3d11 = &D3D11Core::Get();
 
 	//AddPass(&m_depthPass);  
@@ -68,15 +79,17 @@ void Renderer::Setup(BasicEngine<Scene>& engine)
 
 void Renderer::ClearFrame()
 {
-    // Clear the back buffer.
-    const float m_clearColor[4] = { 0.5f, 0.5f, 0.5f, 1.0f };
-    m_d3d11->DeviceContext()->ClearRenderTargetView(m_pipelineManager.m_backBuffer.Get(), m_clearColor);
-    m_d3d11->DeviceContext()->ClearDepthStencilView(m_pipelineManager.m_depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-    m_d3d11->DeviceContext()->ClearDepthStencilView(m_pipelineManager.m_debugDepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+	// Clear the back buffer.
+	const float m_clearColor[4] = { 0.5f, 0.5f, 0.5f, 1.0f };
+	m_d3d11->DeviceContext()->ClearRenderTargetView(m_pipelineManager.m_backBuffer.Get(), m_clearColor);
+	m_d3d11->DeviceContext()->ClearDepthStencilView(m_pipelineManager.m_depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+	m_d3d11->DeviceContext()->ClearDepthStencilView(m_pipelineManager.m_debugDepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+
 }
 
 void Renderer::Render(Scene* pScene)
 {
+
 	if (pScene)
 	{
 		if (!m_passes.empty())
