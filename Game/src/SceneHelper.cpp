@@ -1393,6 +1393,19 @@ namespace sceneHelp
 			{
 				game->m_models[ModelID::TREE8].push_back(e);
 			}
+			//else if (Water == filename)
+			//{
+			//	e.AddComponent<comp::Tag<TagType::TEXTUREEFFECT>>();
+			//	game->m_models[ModelID::WATER].push_back(e);
+			//}
+			else if (WaterEdge == filename)
+			{
+				e.AddComponent<comp::Tag<TagType::TEXTUREEFFECT>>();
+			}
+			else if (WaterFloor == filename)
+			{
+				e.AddComponent<comp::Tag<TagType::TEXTUREEFFECT>>();
+			}
 		}
 
 		file.close();

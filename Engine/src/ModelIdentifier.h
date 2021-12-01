@@ -12,7 +12,8 @@ enum class ModelID : uint16_t
 	TREE3,
 	TREE5,
 	TREE6,
-	TREE8
+	TREE8,
+	WATER
 };
 
 const std::string House5		= "House5";
@@ -31,6 +32,11 @@ const std::string Door6			= "Door6";
 const std::string Door7			= "Door7";
 const std::string Door8			= "Door8";
 const std::string Door9			= "Door9";
+//const std::string Water			= "WaterMesh";
+
+//non transparent
+const std::string WaterEdge     = "WaterEdgeMesh";
+const std::string WaterFloor    = "WaterFloorMesh";
 const std::string Door10		= "Door10";
 
 enum class AnimName : uint16_t
