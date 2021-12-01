@@ -51,9 +51,9 @@ void ParticleSystem::InitializeParticles(entt::registry& reg, entt::entity ent)
 		}
 		else if (tempParticle.type == PARTICLEMODE::SMOKEAREA) 
 		{
-			tempParticle.position.x = (float)rand() / (RAND_MAX + 1.f) * (1.0f - (-1.0f)) + (-1.0f);
-			tempParticle.position.y = (float)rand() / (RAND_MAX + 1.f) * (1.0f - (-1.0f)) + (-1.0f);
-			tempParticle.position.z = (float)rand() / (RAND_MAX + 1.f) * (1.0f - (-1.0f)) + (-1.0f);
+			tempParticle.position.x += (float)rand() / (RAND_MAX + 1.f) * (1.0f - (-1.0f)) + (-1.0f);
+			tempParticle.position.y += (float)rand() / (RAND_MAX + 1.f) * (1.0f - (-1.0f)) + (-1.0f);
+			tempParticle.position.z += (float)rand() / (RAND_MAX + 1.f) * (1.0f - (-1.0f)) + (-1.0f);
 		}
 
 		particles[i] =  tempParticle;
