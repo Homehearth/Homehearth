@@ -175,6 +175,9 @@ void GridSystem::Initialize(Vector2I mapSize, sm::Vector3 position, std::string 
 
 std::vector<Entity> GridSystem::UpdateHoverDefence()
 {
+	/*
+		Not fully optimized but works for now
+	*/
 	std::vector<Entity> entities;
 
 	//Go through the players
@@ -183,11 +186,16 @@ std::vector<Entity> GridSystem::UpdateHoverDefence()
 			//Did not find the hover defence for this player
 			if (m_hoveredDefences.find(net.id) == m_hoveredDefences.end())
 			{
-				Entity newEntity = m_scene->CreateEntity();
-				newEntity.AddComponent<comp::Transform>();
-				newEntity.AddComponent<comp::Network>();
-				newEntity.AddComponent<comp::MeshName>()->name = NameType::MESH_DEFENCE1X3;
-				m_hoveredDefences[net.id] = newEntity;
+				Entity entity1 = m_scene->CreateEntity();
+				entity1.AddComponent<comp::Transform>();
+				entity1.AddComponent<comp::Network>();
+				entity1.AddComponent<comp::MeshName>()->name = NameType::MESH_DEFENCE1X1;
+				
+				Entity entity2 = m_scene->CreateEntity();
+				entity2.AddComponent<comp::Transform>();
+				entity2.AddComponent<comp::Network>();
+				entity2.AddComponent<comp::MeshName>()->name = NameType::MESH_DEFENCE1X3;
+				m_hoveredDefences[net.id] = {entity1, entity2};
 			}
 			else
 			{
@@ -206,26 +214,52 @@ std::vector<Entity> GridSystem::UpdateHoverDefence()
 							pos = m_tiles[centerTileZ][centerTileX].position;
 						pos.y = 5.f;
 
-						comp::Transform* transform = m_hoveredDefences.at(net.id).GetComponent<comp::Transform>();
-						transform->position = pos;
-						if (player.rotateDefence)
-							transform->rotation = sm::Quaternion::CreateFromYawPitchRoll(static_cast<float>(PI / 2.f), 0.f, 0.f);
-						else
-							transform->rotation = sm::Quaternion(0, 0, 0, 0);
-					}
+						comp::Transform* transform;
+						
+						if (player.shopItem == ShopItem::Defence1x1)
+						{
+							transform = m_hoveredDefences.at(net.id).def1x1.GetComponent<comp::Transform>();
+							transform->position = pos;
+							if (player.rotateDefence)
+								transform->rotation = sm::Quaternion::CreateFromYawPitchRoll(static_cast<float>(PI / 2.f), 0.f, 0.f);
+							else
+								transform->rotation = sm::Quaternion(0, 0, 0, 0);
 
-					if (player.shopItem == ShopItem::Defence1x1)
-						m_hoveredDefences.at(net.id).GetComponent<comp::MeshName>()->name = NameType::MESH_DEFENCE1X1;
-					else if (player.shopItem == ShopItem::Defence1x3)
-						m_hoveredDefences.at(net.id).GetComponent<comp::MeshName>()->name = NameType::MESH_DEFENCE1X3;
+							m_hoveredDefences.at(net.id).def1x1.GetComponent<comp::MeshName>()->name = NameType::MESH_DEFENCE1X1;
+
+							entities.push_back(m_hoveredDefences.at(net.id).def1x1);
+						}
+						else if (player.shopItem == ShopItem::Defence1x3)
+						{
+							transform = m_hoveredDefences.at(net.id).def1x3.GetComponent<comp::Transform>();
+							transform->position = pos;
+							if (player.rotateDefence)
+								transform->rotation = sm::Quaternion::CreateFromYawPitchRoll(static_cast<float>(PI / 2.f), 0.f, 0.f);
+							else
+								transform->rotation = sm::Quaternion(0, 0, 0, 0);
+
+							m_hoveredDefences.at(net.id).def1x3.GetComponent<comp::MeshName>()->name = NameType::MESH_DEFENCE1X3;
+
+							entities.push_back(m_hoveredDefences.at(net.id).def1x3);
+						}
+					}
 				}
 				else
 				{
-					m_hoveredDefences.at(net.id).GetComponent<comp::Transform>()->position = { 0,0,0 };
+					comp::Transform* trans1 = m_hoveredDefences.at(net.id).def1x1.GetComponent<comp::Transform>();
+					if (trans1->position != sm::Vector3(0, 0, 0))
+					{
+						trans1->position = sm::Vector3(0,0,0);
+						entities.push_back(m_hoveredDefences.at(net.id).def1x1);
+					}
+					comp::Transform* trans2 = m_hoveredDefences.at(net.id).def1x3.GetComponent<comp::Transform>();
+					if (trans2->position != sm::Vector3(0, 0, 0))
+					{
+						trans2->position = sm::Vector3(0, 0, 0);
+						entities.push_back(m_hoveredDefences.at(net.id).def1x3);
+					}
 				}
 			}
-
-			entities.push_back(m_hoveredDefences.at(net.id));
 		});
 
 	return entities;

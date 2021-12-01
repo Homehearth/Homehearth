@@ -31,7 +31,12 @@ private:
 	HeadlessScene*					m_scene;
 	std::vector<std::vector<Tile>>	m_tiles;
 
-	std::unordered_map<uint32_t, Entity> m_hoveredDefences;
+	struct defences
+	{
+		Entity def1x1;
+		Entity def1x3;
+	};
+	std::unordered_map<uint32_t, defences> m_hoveredDefences;
 
 private:
 	bool							InsideGrid(const int& xpos, const int& zpos) const;

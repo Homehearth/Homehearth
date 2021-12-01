@@ -283,9 +283,7 @@ struct InputState
 	int		axisVertical	: 2;
 	bool	leftMouse		: 1;
 	bool	rightMouse		: 1;
-	bool	key_b			: 1;
 	bool	key_shift		: 1;
-	bool	key_r			: 1;
 	int		mousewheelDir	: 8;
 
 	Ray_t mouseRay;
@@ -332,8 +330,7 @@ enum class GameMsg : uint8_t
 	Game_Cooldown,
 	Game_StartSpectate,
 	Game_StopSpectate,
-	Game_Over,
-	Game_SetVisible
+	Game_Over
 };
 
 enum class ESoundEvent : uint32_t
