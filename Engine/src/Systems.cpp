@@ -372,22 +372,31 @@ void Systems::LightSystem(Scene& scene, float dt)
 				light.lightData.position = sm::Vector4(t->position.x, t->position.y, t->position.z, 1.f);
 			}
 
-			if (light.lightData.type == TypeLight::POINT)
+			if (light.lightData.type == TypeLight::POINT && light.lightData.enabled)
 			{
-				if (light.flickerTimer >= light.maxFlickerTime)
-					light.increase = false;
-				else if (light.flickerTimer <= 0.f)
+				if (light.enabledTimer > 0.f)
 				{
-					light.increase = true;
-					light.maxFlickerTime = (float)(rand() % 10 + 1) / 10.f;
+					light.enabledTimer -= dt;
+					light.lightData.intensity = util::Lerp(light.lightData.intensity, 0.3f, dt);
 				}
-
-				if (light.increase)
-					light.flickerTimer += dt * (rand() % 2 + 1);
 				else
-					light.flickerTimer -= dt * (rand() % 2 + 1);
+				{
+					if (light.flickerTimer >= light.maxFlickerTime)
+						light.increase = false;
+					else if (light.flickerTimer <= 0.f)
+					{
+						light.increase = true;
+						light.maxFlickerTime = (float)(rand() % 10 + 1) / 10.f;
+					}
 
-				light.lightData.intensity = util::Lerp(0.3f, 0.4f, light.flickerTimer);
+					if (light.increase)
+						light.flickerTimer += dt * (rand() % 2 + 1);
+					else
+						light.flickerTimer -= dt * (rand() % 2 + 1);
+
+					light.lightData.intensity = util::Lerp(0.5f, 0.7f, light.flickerTimer);
+				}				
+							
 			}
 
 			scene.GetLights()->EditLight(light.lightData, light.index);
