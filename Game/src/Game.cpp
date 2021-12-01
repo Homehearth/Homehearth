@@ -397,7 +397,13 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		audio.volume = 0.5f;
 		SoundHandler::Get().PlaySound("OnGameOver", audio);
 
+		uint32_t gatheredMoney, wavesSurvived;
+		msg >> wavesSurvived >> gatheredMoney;
 		SetScene("GameOver");
+		rtd::Text* scoreText = dynamic_cast<rtd::Text*>(GetScene("GameOver").GetCollection("GameOver")->elements[1].get());
+		scoreText->SetText("Score: " + std::to_string(gatheredMoney));
+		rtd::Text* wavesText = dynamic_cast<rtd::Text*>(GetScene("GameOver").GetCollection("GameOver")->elements[2].get());
+		wavesText->SetText("Waves: " + std::to_string(wavesSurvived));
 		break;
 	}
 	case GameMsg::Lobby_Accepted:
@@ -841,6 +847,7 @@ void Game::OnClientDisconnect()
 	m_gameEntities.clear();
 	LOG_INFO("Disconnected from server!");
 }
+
 
 void Game::SendStartGame()
 {

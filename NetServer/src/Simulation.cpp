@@ -260,6 +260,7 @@ Simulation::Simulation(Server* pServer, HeadlessEngine* pEngine)
 {
 	this->m_gameID = 0;
 	this->m_tick = 0;
+	this->m_wavesSurvived = 0;
 
 	dx::BoundingBox bounds = { dx::XMFLOAT3(250, 0, -320), dx::XMFLOAT3(230, 50, 220) };
 	qt = std::make_unique<QuadTree>(bounds);
@@ -701,6 +702,11 @@ Currency& Simulation::GetCurrency()
 	return m_currency;
 }
 
+void Simulation::IncreaseWavesSurvived()
+{
+	this->m_wavesSurvived++;
+}
+
 void Simulation::UseShop(const ShopItem& item, const uint32_t& player)
 {
 	m_shop.UseShop(item, player);
@@ -748,7 +754,7 @@ void Simulation::SetGameOver()
 	m_pCurrentScene = m_pGameOverScene;
 	message<GameMsg> msg;
 	msg.header.id = GameMsg::Game_Over;
-
+	msg << m_currency.GetTotalGathered() << m_wavesSurvived - 1;
 	this->Broadcast(msg);
 }
 
