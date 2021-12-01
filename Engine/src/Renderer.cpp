@@ -37,6 +37,7 @@ void Renderer::Initialize(Window* pWindow)
 	AddPass(&m_particlePass);	// 8
 
 	m_basePass.m_pShadowPass = &m_shadowPass;
+	m_animPass.m_pShadowPass = &m_shadowPass;
 	
 
 	//m_depthPass.SetEnable(true);

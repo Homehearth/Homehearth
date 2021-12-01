@@ -1,7 +1,7 @@
 #pragma once
 
 //Options
-#define RENDER_IMGUI 1
+#define RENDER_IMGUI 0
 #define PROFILER 0
 
 // Feel free to add more things to this, currently only gives more money :)
