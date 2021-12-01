@@ -17,7 +17,7 @@ void CombatSystem::UpdateMelee(HeadlessScene& scene)
 			audio_t audio = {
 				ESoundEvent::NONE,
 				entity.GetComponent<comp::Transform>()->position,
-				10.f,
+				1.f,
 				50.f,
 				true,
 				false,
@@ -61,7 +61,7 @@ void CombatSystem::UpdateRange(HeadlessScene& scene)
 			audio_t audio = {
 				ESoundEvent::NONE,
 				entity.GetComponent<comp::Transform>()->position,
-				10.f,
+				1.f,
 				100.f,
 				true,
 				false,
@@ -148,7 +148,7 @@ void CombatSystem::UpdateDash(HeadlessScene& scene)
 				audio_t audio = {
 					ESoundEvent::Player_OnCastDash,
 					entity.GetComponent<comp::Transform>()->position,
-					10.f,
+					1.f,
 					100.f,
 					true,
 					false,
@@ -347,6 +347,8 @@ void CombatSystem::AddCollisionMeleeBehavior(Entity entity, Entity attackEntity,
 				}
 				else if (other.GetComponent<comp::Tag<STATIC>>() && entity.GetComponent<comp::Player>())
 				{
+					audio.shouldBroadcast = true;
+					audio.is3D = true;
 					audio.type = ESoundEvent::Player_OnMeleeAttackHit;
 				}
 
@@ -440,17 +442,37 @@ void CombatSystem::AddCollisionRangeBehavior(Entity entity, Entity attackEntity,
 				scene.publish<EComponentUpdated>(other, ecs::Component::HEALTH);
 
 				// Add some sound effects
+
+				audio_t audio = {
+					ESoundEvent::NONE,
+					entity.GetComponent<comp::Transform>()->position,
+					1.f,
+					100.f,
+					false,
+					false,
+					false,
+					false,
+				};
+
+				comp::AudioState* audioState = other.GetComponent<comp::AudioState>();
 				if (other.GetComponent<comp::Player>())
 				{
-					audio_t audio;
 					audio.type = ESoundEvent::Player_OnDmgRecieved;
-					audio.position = other.GetComponent<comp::Transform>()->position;
-					audio.isUnique = false;
+				}
+				else if (other.GetComponent<comp::NPC>())
+				{
+					audio.type = ESoundEvent::Enemy_OnDmgRecieved;
+				}
+				else if (other.GetComponent<comp::Tag<STATIC>>() && entity.GetComponent<comp::Player>())
+				{
 					audio.shouldBroadcast = true;
-					audio.playLooped = false;
 					audio.is3D = true;
-					audio.volume = 10.f;
-					other.GetComponent<comp::AudioState>()->data.emplace(audio);
+					audio.type = ESoundEvent::Player_OnRangeAttackHit;
+				}
+
+				if (audioState)
+				{
+					audioState->data.emplace(audio);
 				}
 
 				thisEntity.GetComponent<comp::SelfDestruct>()->lifeTime = 0.f;

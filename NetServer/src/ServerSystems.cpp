@@ -559,7 +559,7 @@ void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money
 					//Remove house from blackboard
 					Blackboard::Get().GetValue<Houses_t>("houses")->houses.erase(entity);
 
-					//audio.position = entity.GetComponent<comp::OrientedBoxCollider>()->Center;
+					audio.position = entity.GetComponent<comp::OrientedBoxCollider>()->Center;
 					audio.type = ESoundEvent::Game_OnHouseDestroyed;
 
 					//Destroy House entities with roof and door

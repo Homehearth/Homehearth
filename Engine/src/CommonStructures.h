@@ -326,6 +326,7 @@ enum class ESoundEvent : uint32_t
 	Player_OnMeleeAttack,
 	Player_OnMeleeAttackHit,
 	Player_OnRangeAttack,
+	Player_OnRangeAttackHit,
 	Player_OnDmgDealt,
 	Player_OnDmgRecieved,
 	Player_OnCastHealing,

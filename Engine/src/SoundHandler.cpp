@@ -41,10 +41,9 @@ void SoundHandler::LoadAllSounds()
 {
     AddSoundSource("../Assets/Sounds/DayTheme.wav");
     AddSoundSource("../Assets/Sounds/NightTheme.wav");
-    AddSoundSource("../Assets/Sounds/MenuTheme.mp3");
-    AddSoundSource("../Assets/Sounds/ButtonClick.wav");
+    AddSoundSource("../Assets/Sounds/MenuTheme.wav");
+    AddSoundSource("../Assets/Sounds/ButtonClick.wav"); // this sounds is for all buttons and is placed in Button.cpp.
     AddSoundSource("../Assets/Sounds/OnGameOver.wav");
-    AddSoundSource("../Assets/Sounds/BreakSound2.wav");
 
     AddSoundSource("../Assets/Sounds/Game_OnDefencePlaced.mp3");
     AddSoundSource("../Assets/Sounds/Game_OnDefenceDestroyed.wav");
@@ -57,13 +56,14 @@ void SoundHandler::LoadAllSounds()
     AddSoundSource("../Assets/Sounds/Player_OnMeleeAttackHit2.wav");
     AddSoundSource("../Assets/Sounds/Player_OnMeleeAttackHit3.wav");
     AddSoundSource("../Assets/Sounds/Player_OnRangeAttack.wav");
+    AddSoundSource("../Assets/Sounds/Player_OnRangeAttackHit.wav");
     AddSoundSource("../Assets/Sounds/Player_OnDmgDealt.wav");
     AddSoundSource("../Assets/Sounds/Player_OnDmgRecieved.wav");
     AddSoundSource("../Assets/Sounds/Player_OnCastHealing.wav");
     AddSoundSource("../Assets/Sounds/Player_OnCastDash.wav");
-    AddSoundSource("../Assets/Sounds/Player_OnHealingRecieved.wav");
+    AddSoundSource("../Assets/Sounds/Player_OnHealingRecieved.wav");    // do not exist
     AddSoundSource("../Assets/Sounds/Player_OnDeath.wav");
-    AddSoundSource("../Assets/Sounds/Player_OnRespawn.wav");
+    AddSoundSource("../Assets/Sounds/Player_OnRespawn.wav");    // do not exist
 
     AddSoundSource("../Assets/Sounds/Enemy_OnMeleeAttack1.mp3");
     AddSoundSource("../Assets/Sounds/Enemy_OnMeleeAttack2.mp3");
@@ -71,7 +71,8 @@ void SoundHandler::LoadAllSounds()
     AddSoundSource("../Assets/Sounds/Enemy_OnMeleeAttack4.mp3");
     AddSoundSource("../Assets/Sounds/Enemy_OnMeleeAttack5.mp3");
     AddSoundSource("../Assets/Sounds/Enemy_OnMeleeAttack6.mp3");
-    AddSoundSource("../Assets/Sounds/Enemy_OnDeath.ogg");
+    AddSoundSource("../Assets/Sounds/Enemy_OnDmgRecieved.ogg");
+    AddSoundSource("../Assets/Sounds/Enemy_OnDeath.wav");   
 }
 
 SoundHandler::~SoundHandler()

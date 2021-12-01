@@ -318,6 +318,9 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			case ESoundEvent::Player_OnRangeAttack:
 				SH->PlaySound("Player_OnRangeAttack", data);
 				break;
+			case ESoundEvent::Player_OnRangeAttackHit:
+				SH->PlaySound("Player_OnRangeAttackHit", data);
+				break;
 			case ESoundEvent::Player_OnDmgDealt:
 				SH->PlaySound("Player_OnDmgDealt", data);
 				break;
