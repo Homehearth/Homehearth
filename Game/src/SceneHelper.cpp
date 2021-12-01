@@ -1059,6 +1059,35 @@ namespace sceneHelp
 
 			});
 
+		rtd::Button* windowToggleButton = resolutionMenu->AddElement<rtd::Button>("Button.png", draw_t((width / 8.0f), (height / 8.0f), width / 4.0f, height / 8.0f));
+		rtd::Text* windowToggle = resolutionMenu->AddElement<rtd::Text>("Fullscreen", draw_t((width / 8.0f), (height / 8.0f), width / 4.0f, height / 8.0f));
+		static int fullscreen = std::stoi(OptionSystem::Get().GetOption("Fullscreen"));
+
+		if (fullscreen == 0)
+		{
+			windowToggle->SetText("Windowed");
+		}
+		else
+		{
+			windowToggle->SetText("Fullscreen");
+		}
+		
+		windowToggleButton->SetOnPressedEvent([=] {
+
+			if (fullscreen == 0)
+			{
+				windowToggle->SetText("Fullscreen");
+				fullscreen = 1;
+			}
+			else
+			{
+				windowToggle->SetText("Windowed");
+				fullscreen = 0;
+			}
+
+			OptionSystem::Get().SetOption("Fullscreen", std::to_string(fullscreen));
+
+			});
 
 		miscMenu->Hide();
 		resolutionMenu->Hide();
