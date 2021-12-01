@@ -24,7 +24,7 @@ struct Currency
 {
 private:
 	uint32_t m_amount = 0;
-
+	uint32_t m_totalGathered = 0;
 public:
 	bool m_hasUpdated = false;
 
@@ -32,8 +32,21 @@ public:
 	{
 		return m_amount;
 	}
+	uint32_t GetTotalGathered() const
+	{
+		return m_totalGathered;
+	}
+	void IncreaseTotal(uint32_t amount)
+	{
+		m_totalGathered += amount;
+	}
+	void DecreaseTotal(uint32_t amount)
+	{
+		m_totalGathered -= amount;
+	}
 	void Zero()
 	{
+		m_totalGathered = 0;
 		m_amount = 0;
 		m_hasUpdated = true;
 	}

@@ -964,6 +964,7 @@ namespace sceneHelp
 		Collection2D* gameOverCollection = new Collection2D;
 		rtd::Text* gameOverField = gameOverCollection->AddElement<rtd::Text>("Game Over", draw_text_t((width / 2.f) - (strlen("Game Over") * D2D1Core::GetDefaultFontSize() * 0.5f), (height / 5.f) - D2D1Core::GetDefaultFontSize(), strlen("Game Over") * D2D1Core::GetDefaultFontSize(), D2D1Core::GetDefaultFontSize()));
 		gameOverField->SetText("Game Over");
+		rtd::Text* scoreField = gameOverCollection->AddElement<rtd::Text>("Score: " + std::to_string(game->GetGatheredMoney()), draw_text_t((width / 2.f) - (strlen("Score: ") - strlen(std::to_string(game->GetGatheredMoney()).c_str()) * D2D1Core::GetDefaultFontSize() * 0.5f), (height / 3.f) - D2D1Core::GetDefaultFontSize(), strlen("Score: ") * D2D1Core::GetDefaultFontSize(), D2D1Core::GetDefaultFontSize()));
 		rtd::Button* mainMenuButton = gameOverCollection->AddElement<rtd::Button>("Button.png", draw_t((width / 2) - (width / 8), height - (height / 6.f), width / 4, height / 8));
 		gameOverCollection->AddElement<rtd::Text>("Main Menu", draw_text_t((width / 2) - (width / 8), height - (height / 6.f), width / 4, height / 8));
 		mainMenuButton->SetOnPressedEvent([=]

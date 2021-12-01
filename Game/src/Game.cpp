@@ -16,6 +16,7 @@ Game::Game()
 	this->m_localPID = -1;
 	this->m_spectatingID = -1;
 	this->m_money = 0;
+	this->m_gatheredMoney = 0;
 	this->m_gameID = -1;
 	this->m_waveTimer = 0;
 }
@@ -310,7 +311,10 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	}
 	case GameMsg::Game_Over:
 	{
+		msg >> m_gatheredMoney;
 		SetScene("GameOver");
+		rtd::Text* scoreText = dynamic_cast<rtd::Text*>(GetScene("GameOver").GetCollection("GameOver")->elements[1].get());
+		scoreText->SetText("Score: " + std::to_string(m_gatheredMoney));
 		break;
 	}
 	case GameMsg::Lobby_Accepted:
@@ -726,6 +730,11 @@ void Game::OnClientDisconnect()
 	m_players.clear();
 	m_gameEntities.clear();
 	LOG_INFO("Disconnected from server!");
+}
+
+const uint32_t& Game::GetGatheredMoney() const
+{
+	return this->m_gatheredMoney;
 }
 
 void Game::SendStartGame()

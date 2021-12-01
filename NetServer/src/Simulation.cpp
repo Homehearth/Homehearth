@@ -744,7 +744,7 @@ void Simulation::SetGameOver()
 	m_pCurrentScene = m_pGameOverScene;
 	message<GameMsg> msg;
 	msg.header.id = GameMsg::Game_Over;
-
+	msg << m_currency.GetTotalGathered();
 	this->Broadcast(msg);
 }
 
