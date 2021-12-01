@@ -428,9 +428,10 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 			// check if using abilities
 			if (p.lastInputState.leftMouse) // is held
 			{
-				switch (p.shopmode)
+				switch (p.shopItem)
 				{
-				case ShopMode::PLAY:
+				//In playmode
+				case ShopItem::None:
 				{
 					p.state = comp::Player::State::LOOK_TO_MOUSE; // set state even if ability is not ready for use yet
 					if (ecs::UseAbility(e, p.primaryAbilty, &p.mousePoint))
@@ -445,14 +446,15 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 					}
 					break;
 				}
-				case ShopMode::BUILD:
+				case ShopItem::Defence1x1:
+				case ShopItem::Defence1x3:
 				{
 					if (simulation->m_timeCycler.GetTimePeriod() == Cycle::DAY)
 					{
 						uint32_t cost = 0;
-						if (p.towerSelected == EDefenceType::SMALL)
+						if (p.shopItem == ShopItem::Defence1x1)
 							cost = 10;
-						else if (p.towerSelected == EDefenceType::LARGE)
+						else if (p.shopItem == ShopItem::Defence1x3)
 							cost = 30;
 
 						if (simulation->GetCurrency().GetAmount() >= cost)
@@ -466,7 +468,7 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 					}
 					break;
 				}
-				case ShopMode::DESTROY:
+				case ShopItem::Destroy_Tool:
 				{
 					simulation->GetGrid().RemoveDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, Blackboard::Get().GetPathFindManager());
 					break;

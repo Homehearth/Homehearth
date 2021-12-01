@@ -88,11 +88,11 @@ enum class PARTICLEMODE : UINT
 	DUST
 };
 
-enum class EDefenceType : UINT
-{
-	SMALL,	//1x1
-	LARGE	//1x3
-};
+//enum class EDefenceType : UINT
+//{
+//	SMALL,	//1x1
+//	LARGE	//1x3
+//};
 
 struct Vector2I
 {
@@ -310,14 +310,13 @@ enum class GameMsg : uint8_t
 	Game_RemoveNPC,
 	Game_PlayerInput,
 	Game_Money,
-	Game_UseShop,
+	Game_UpdateShopItem,
 	Game_UpgradeDefence,
 	Game_ChangeAnimation,
 	Game_Cooldown,
 	Game_StartSpectate,
 	Game_StopSpectate,
 	Game_Over,
-	Game_UpdateShopMode
 };
 
 enum class AbilityIndex : uint8_t
@@ -331,33 +330,16 @@ enum class AbilityIndex : uint8_t
 
 enum class ShopItem : uint8_t
 {
-	/*
-		Temporary proof of concept upgrades.
-	*/
+	None,
 	Primary_Upgrade,
 	Secondary_Upgrade,
 	Tower_Upgrade,
 	Speed_Upgrade,
 	Heal,
-
-	//Lets the player build a 3x1 tower when pressing build key.
-	Long_Tower,
-
-	//Lets the player build a 1x1 tower when pressing build key.
-	Short_Tower,
-
+	Defence1x1,		//Lets the player build a 1x3 tower when pressing build key.
+	Defence1x3,		//Lets the player build a 1x1 tower when pressing build key.
+	Destroy_Tool,
 	NR_OF
-};
-
-enum class ShopMode : uint8_t
-{
-	NONE,
-	// Normal play mode fighting against monsters.
-	PLAY,
-	// Build mode allows players to build defences.
-	BUILD,
-	// Destroy mode allows players to remove their defences.
-	DESTROY
 };
 
 /*

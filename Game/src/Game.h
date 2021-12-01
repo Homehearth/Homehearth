@@ -15,9 +15,7 @@ private:
 	uint32_t m_money;
 	ParticleSystem m_particles;
 	Cycle m_serverCycle = Cycle::DAY;
-
 	Entity m_mapEntity;
-
 	InputState m_inputState;
 
 	// Inherited via Engine
@@ -44,17 +42,13 @@ public:
 	std::unordered_map<ModelID, std::vector<Entity>> m_models;
 	std::vector<std::pair<ModelID, dx::BoundingSphere>> m_LOSColliders;
 	std::unordered_map<uint32_t, Entity> m_players;
-
-
 	float m_elapsedCycleTime = 0;
 
 	Game();
 	virtual ~Game();
 	void JoinLobby(uint32_t lobbyID);
 	void CreateLobby();
-	const ShopMode& GetCurrentMode() const;
 	const Cycle& GetCurrentCycle() const;
-	void SetMode(const ShopMode& mode);
 	const uint32_t& GetMoney() const;
 	
 	void SendStartGame();
@@ -63,7 +57,10 @@ public:
 	Entity& GetLocalPlayer();
 
 	ParticleSystem* GetParticleSystem();
-	void UseShop(const ShopItem& whatToBuy);
+	
+	//Using the shop
+	void SetShopItem(const ShopItem& whatToBuy);
+	const ShopItem GetShopItem() const;
 	void UpgradeDefence(const uint32_t& id);
 
 	float m_primaryCooldown = 0.0f;

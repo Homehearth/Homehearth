@@ -311,10 +311,9 @@ namespace ecs
 			char name[12] = {};
 
 			//Place defence option
-			EDefenceType	towerSelected = EDefenceType::SMALL;
 			float			buildDistance = 24.0f;		//A tiles width is ~8
 			bool			rotateDefence = false;
-			ShopMode		shopmode	  = ShopMode::PLAY;
+			ShopItem		shopItem	  = ShopItem::None;
 		};
 
 		

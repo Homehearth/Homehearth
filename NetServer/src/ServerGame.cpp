@@ -310,7 +310,7 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 
 		break;
 	}
-	case GameMsg::Game_UseShop:
+	case GameMsg::Game_UpdateShopItem:
 	{
 		uint32_t playerID;
 		uint32_t gameID;
@@ -319,6 +319,7 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 
 		if (m_simulations.find(gameID) != m_simulations.end())
 		{
+			m_simulations.at(gameID)->GetPlayer(playerID).GetComponent<comp::Player>()->shopItem = shopItem;
 			m_simulations.at(gameID)->UseShop(shopItem, playerID);
 		}
 		break;
@@ -334,17 +335,6 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 			m_simulations.at(gameID)->UpgradeDefence(id);
 		}
 		break;
-	}
-	case GameMsg::Game_UpdateShopMode:
-	{
-		ShopMode mode;
-		uint32_t playerID;
-		uint32_t gameID;
-		msg >> gameID >> playerID >> mode;
-		if (m_simulations.find(gameID) != m_simulations.end())
-		{
-			m_simulations.at(gameID)->GetPlayer(playerID).GetComponent<comp::Player>()->shopmode = mode;
-		}
 	}
 	}
 }

@@ -298,9 +298,10 @@ std::vector<std::pair<UINT, UINT>> GridSystem::CheckDefenceLocation(Ray_t& mouse
 				okayToPlace = false;
 
 			UINT numberOfDefences = 0;
-			if (player.towerSelected == EDefenceType::SMALL)
+			ShopItem shopitem = player.shopItem;
+			if (shopitem == ShopItem::Defence1x1)
 				numberOfDefences = 1;
-			else if (player.towerSelected == EDefenceType::LARGE)
+			else if (shopitem == ShopItem::Defence1x3)
 				numberOfDefences = 3;
 
 			//Check if it was okay to place all the defences here
@@ -347,6 +348,8 @@ std::vector<std::pair<UINT, UINT>> GridSystem::CheckDefenceLocation(Ray_t& mouse
 				else
 					okayToPlace = false;
 			}
+			if (numberOfDefences == 0)
+				okayToPlace = false;
 		}
 	}
 	else
@@ -434,36 +437,43 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 		collider->Center = transform->position;
 		
 		UINT numberOfDefences = 0;
-		if (player.towerSelected == EDefenceType::SMALL)
+		ShopItem shopitem = player.shopItem;
+		if (shopitem == ShopItem::Defence1x1)
 			numberOfDefences = 1;
-		else if (player.towerSelected == EDefenceType::LARGE)
+		else if (shopitem == ShopItem::Defence1x3)
 			numberOfDefences = 3;
 
-		if (player.rotateDefence)
+		if (numberOfDefences != 0)
 		{
-			transform->rotation = sm::Quaternion::CreateFromYawPitchRoll(static_cast<float>(PI / 2.f), 0.f, 0.f);
-			collider->Extents = { m_tileHalfWidth, m_tileHalfWidth, m_tileHalfWidth * numberOfDefences };
+			if (player.rotateDefence)
+			{
+				transform->rotation = sm::Quaternion::CreateFromYawPitchRoll(static_cast<float>(PI / 2.f), 0.f, 0.f);
+				collider->Extents = { m_tileHalfWidth, m_tileHalfWidth, m_tileHalfWidth * numberOfDefences };
+			}
+			else
+			{
+				collider->Extents = { m_tileHalfWidth * numberOfDefences, m_tileHalfWidth, m_tileHalfWidth };
+			}
+
+			if (shopitem == ShopItem::Defence1x1)
+			{
+				health->maxHealth = 100.0f;
+				health->currentHealth = health->maxHealth;
+				tileEntity.AddComponent<comp::MeshName>()->name = NameType::MESH_DEFENCE1X1;
+			}
+			else if (shopitem == ShopItem::Defence1x3)
+			{
+				health->maxHealth = 300.0f;
+				health->currentHealth = health->maxHealth;
+				tileEntity.AddComponent<comp::MeshName>()->name = NameType::MESH_DEFENCE1X3;
+			}
+			dynamicQT->Insert(tileEntity);
+			return true;
 		}
 		else
 		{
-			collider->Extents = { m_tileHalfWidth * numberOfDefences, m_tileHalfWidth, m_tileHalfWidth };
+			return false;
 		}
-
-		if (player.towerSelected == EDefenceType::SMALL)
-		{
-			health->maxHealth		= 100.0f;
-			health->currentHealth	= health->maxHealth;
-			tileEntity.AddComponent<comp::MeshName>()->name = NameType::MESH_DEFENCE1X1;
-		}
-		else if (player.towerSelected == EDefenceType::LARGE)
-		{
-			health->maxHealth		= 300.0f;
-			health->currentHealth	= health->maxHealth;
-			tileEntity.AddComponent<comp::MeshName>()->name = NameType::MESH_DEFENCE1X3;
-		}
-		dynamicQT->Insert(tileEntity);
-
-		return true;
 	}
 	else
 	{

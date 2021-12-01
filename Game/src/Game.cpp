@@ -673,41 +673,41 @@ void Game::CreateLobby()
 	}
 }
 
-const ShopMode& Game::GetCurrentMode() const
-{
-	if (m_players.find(m_localPID) != m_players.end())
-	{
-		comp::Player* playerComp = m_players.at(m_localPID).GetComponent<comp::Player>();
-		if (playerComp)
-		{
-			return playerComp->shopmode;
-		}
-	}
-	return ShopMode::NONE;
-}
+//const ShopMode& Game::GetCurrentMode() const
+//{
+//	if (m_players.find(m_localPID) != m_players.end())
+//	{
+//		comp::Player* playerComp = m_players.at(m_localPID).GetComponent<comp::Player>();
+//		if (playerComp)
+//		{
+//			return playerComp->shopmode;
+//		}
+//	}
+//	return ShopMode::NONE;
+//}
 
 const Cycle& Game::GetCurrentCycle() const
 {
 	return m_serverCycle;
 }
 
-void Game::SetMode(const ShopMode& mode)
-{
-	if (m_players.find(m_localPID) != m_players.end()) 
-	{
-		comp::Player* playerComp = m_players.at(m_localPID).GetComponent<comp::Player>();
-		if (playerComp)
-		{
-			playerComp->shopmode = mode;
-
-			//Update the server
-			network::message<GameMsg> msg;
-			msg.header.id = GameMsg::Game_UpdateShopMode;
-			msg << mode << m_localPID << m_gameID;
-			m_client.Send(msg);
-		}
-	}
-}
+//void Game::SetMode(const ShopMode& mode)
+//{
+//	if (m_players.find(m_localPID) != m_players.end()) 
+//	{
+//		comp::Player* playerComp = m_players.at(m_localPID).GetComponent<comp::Player>();
+//		if (playerComp)
+//		{
+//			playerComp->shopmode = mode;
+//
+//			//Update the server
+//			network::message<GameMsg> msg;
+//			msg.header.id = GameMsg::Game_UpdateShopMode;
+//			msg << mode << m_localPID << m_gameID;
+//			m_client.Send(msg);
+//		}
+//	}
+//}
 
 const uint32_t& Game::GetMoney() const
 {
@@ -777,13 +777,27 @@ Entity& Game::GetLocalPlayer()
 	return this->m_players.at(m_localPID);
 }
 
-void Game::UseShop(const ShopItem& whatToBuy)
+void Game::SetShopItem(const ShopItem& whatToBuy)
 {
-	network::message<GameMsg> msg;
-	msg.header.id = GameMsg::Game_UseShop;
-	msg << whatToBuy << m_localPID << m_gameID;
+	if (m_players.find(m_localPID) != m_players.end())
+	{
+		m_players.at(m_localPID).GetComponent<comp::Player>()->shopItem = whatToBuy;
+	}
 
+	network::message<GameMsg> msg;
+	msg.header.id = GameMsg::Game_UpdateShopItem;
+	msg << whatToBuy << m_localPID << m_gameID;
 	m_client.Send(msg);
+}
+
+const ShopItem Game::GetShopItem() const
+{
+	ShopItem item = ShopItem::None;
+	if (m_players.find(m_localPID) != m_players.end())
+	{
+		item = m_players.at(m_localPID).GetComponent<comp::Player>()->shopItem;
+	}
+	return item;
 }
 
 void Game::UpgradeDefence(const uint32_t& id)
@@ -1008,15 +1022,15 @@ void Game::UpdateInput()
 	}
 	if (InputSystem::Get().CheckMouseKey(MouseKey::RIGHT, KeyState::PRESSED))
 	{
-		switch (GetCurrentMode())
+		switch (GetShopItem())
 		{
-		case ShopMode::BUILD:
-		case ShopMode::DESTROY:
+		case ShopItem::Defence1x1:
+		case ShopItem::Defence1x3:
 		{
-			SetMode(ShopMode::PLAY);
+			SetShopItem(ShopItem::None);
 			break;
 		}
-		case ShopMode::PLAY:
+		case ShopItem::None:
 		{
 			m_inputState.rightMouse = true;
 			if (m_localPID != -1 && m_players.size() > 0 && m_players.at(m_localPID).GetComponent<comp::Player>()->state == comp::Player::State::SPECTATING)
@@ -1050,18 +1064,4 @@ void Game::UpdateInput()
 	{
 		m_inputState.key_shift = true;
 	}
-
-	//m_savedInputs.push_back(m_inputState);
-
-
-	////TEMP PLZ REMOVE AFTER WE COME TO AN AGREEMENT ON WHICH DOF EFFECT TO USE
-	//if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::D1, KeyState::PRESSED))
-	//{
-	//	thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::ADAPTIVE);
-	//}
-
-	//if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::D2, KeyState::PRESSED))
-	//{
-	//	thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::VIGNETTE);
-	//}
 }
