@@ -358,25 +358,29 @@ namespace sceneHelp
 		}
 
 		Collection2D* money = new Collection2D;
-		rtd::MoneyUI* mMoney = money->AddElement<rtd::MoneyUI>(draw_text_t(width - (width / 8.0f), D2D1Core::GetDefaultFontSize(), width / 8.0f, D2D1Core::GetDefaultFontSize()));
+		rtd::MoneyUI* mMoney = money->AddElement<rtd::MoneyUI>(draw_text_t(width - (width / 8.0f), 0.0f, width / 8.0f, height / 11.0f));
 		scene.Add2DCollection(money, "MoneyUI");
 
 		Collection2D* abilities = new Collection2D;
-		rtd::AbilityUI* primary = abilities->AddElement<rtd::AbilityUI>(draw_t(width - width / 16.0f, height - height / 4.0f, width / 16.0f, height / 9.0f), D2D1::ColorF(0, 1.0f), "UI_sword.png");
-		primary->SetActivateButton("LMB");
-		primary->SetReference(&game->m_primaryCooldown);
-		rtd::AbilityUI* secondary = abilities->AddElement<rtd::AbilityUI>(draw_t(width - width / 8.0f, height - height / 9.0f, width / 16.0f, height / 9.0f), D2D1::ColorF(0, 1.0f), "UI_sword.png");
-		secondary->SetActivateButton("RMB");
-		secondary->SetReference(&game->m_secondaryCooldown);
-		rtd::AbilityUI* third = abilities->AddElement<rtd::AbilityUI>(draw_t((width / 2.f) - ((width / 16.0f) * 2.0f), height - height / 12.0f, width / 16.0f, height / 12.0f), D2D1::ColorF(0, 1.0f), "slashAbilityDemo.png");
-		third->SetActivateButton("Shift");
-		third->SetReference(&game->m_dodgeCooldown);
-		rtd::AbilityUI* fourth = abilities->AddElement<rtd::AbilityUI>(draw_t((width / 2.f) - ((width / 16.0f)), height - height / 12.0f, width / 16.0f, height / 12.0f), D2D1::ColorF(0, 1.0f), "someRandomAbilityIdkDemo.png");
-		fourth->SetActivateButton("E");
-		rtd::AbilityUI* fifth = abilities->AddElement<rtd::AbilityUI>(draw_t((width / 2.f), height - height / 12.0f, width / 16.0f, height / 12.0f), D2D1::ColorF(0, 1.0f), "healAbilityDemo.png");
-		fifth->SetActivateButton("R");
-		rtd::AbilityUI* sixth = abilities->AddElement<rtd::AbilityUI>(draw_t((width / 2.f) + ((width / 16.0f)), height - height / 12.0f, width / 16.0f, height / 12.0f), D2D1::ColorF(0, 1.0f), "slashAbilityDemo.png");
-		sixth->SetActivateButton("C");
+		//rtd::AbilityUI* primary = abilities->AddElement<rtd::AbilityUI>(draw_t(width - width / 16.0f, height - height / 4.0f, width / 16.0f, height / 9.0f), D2D1::ColorF(0, 1.0f), "UI_sword.png");
+		//primary->SetActivateButton("LMB");
+		//primary->SetReference(&game->m_primaryCooldown);
+		//rtd::AbilityUI* secondary = abilities->AddElement<rtd::AbilityUI>(draw_t(width - width / 8.0f, height - height / 9.0f, width / 16.0f, height / 9.0f), D2D1::ColorF(0, 1.0f), "UI_sword.png");
+		//secondary->SetActivateButton("RMB");
+		//secondary->SetReference(&game->m_secondaryCooldown);
+		rtd::Picture* abilityBar = abilities->AddElement<rtd::Picture>("AbilityBar.png", draw_t((width / 2.f) - ((width / 16.0f) * 2.0f) - (width / 256.0f), height - height / 9.0f, (width / 16.0f) * 5.0f, height / 9.0f));
+
+		rtd::AbilityUI* third = abilities->AddElement<rtd::AbilityUI>(draw_t((width / 2.f) - ((width / 16.0f) * 2.0f), height - height / 10.0f, width / 18.0f, height / 11.0f), D2D1::ColorF(0, 1.0f), "Attack2.png");
+		third->SetActivateButton("LMB");
+		third->SetReference(&game->m_primaryCooldown);
+		rtd::AbilityUI* fourth = abilities->AddElement<rtd::AbilityUI>(draw_t((width / 2.f) - ((width / 16.0f)), height - height / 10.0f, width / 18.0f, height / 11.0f), D2D1::ColorF(0, 1.0f), "Block.png");
+		fourth->SetActivateButton("RMB");
+		fourth->SetReference(&game->m_secondaryCooldown);
+		rtd::AbilityUI* fifth = abilities->AddElement<rtd::AbilityUI>(draw_t((width / 2.f), height - height / 10.0f, width / 18.0f, height / 11.0f), D2D1::ColorF(0, 1.0f), "Dodge.png");
+		fifth->SetActivateButton("Shift");
+		fifth->SetReference(&game->m_dodgeCooldown);
+		rtd::AbilityUI* sixth = abilities->AddElement<rtd::AbilityUI>(draw_t((width / 2.f) + ((width / 16.0f)), height - height / 10.0f, width / 18.0f, height / 11.0f), D2D1::ColorF(0, 1.0f), "LockedIcon.png");
+		rtd::AbilityUI* seventh = abilities->AddElement<rtd::AbilityUI>(draw_t((width / 2.f) + ((width / 8.0f)), height - height / 10.0f, width / 18.0f, height / 11.0f), D2D1::ColorF(0, 1.0f), "LockedIcon.png");
 		scene.Add2DCollection(abilities, "AbilityUI");
 
 		Collection2D* pauseMenu = new Collection2D;
@@ -468,7 +472,7 @@ namespace sceneHelp
 		scene.Add2DCollection(priceTag, "priceTag");
 
 		Collection2D* spreeText = new Collection2D;
-		spreeText->AddElement<rtd::Text>("X1", draw_t(width - (width / 12.f), height / 2.f, width / 12.f, height / 4.0f));
+		spreeText->AddElement<rtd::Text>("X1", draw_t(width - (width / 12.f), height - (height / 8.0f), width / 12.f, height / 8.0f));
 		scene.Add2DCollection(spreeText, "SpreeText");
 	}
 
@@ -550,6 +554,9 @@ namespace sceneHelp
 				mageButton->GetBorder()->SetColor(D2D1::ColorF(0.0f, 1.0f, 0.2f));
 				mageButton->GetBorder()->SetVisiblity(true);
 				warriorButton->GetBorder()->SetVisiblity(false);
+
+				dynamic_cast<rtd::AbilityUI*>(game->GetScene("Game").GetCollection("AbilityUI")->elements[1].get())->SetTexture("Attack.png");
+				dynamic_cast<rtd::AbilityUI*>(game->GetScene("Game").GetCollection("AbilityUI")->elements[2].get())->SetTexture("Heal.png");
 			});
 		
 		
@@ -564,6 +571,8 @@ namespace sceneHelp
 				warriorButton->GetBorder()->SetColor(D2D1::ColorF(0.0f, 1.0f, 0.2f));
 				warriorButton->GetBorder()->SetVisiblity(true);
 				mageButton->GetBorder()->SetVisiblity(false);
+				dynamic_cast<rtd::AbilityUI*>(game->GetScene("Game").GetCollection("AbilityUI")->elements[1].get())->SetTexture("Attack2.png");
+				dynamic_cast<rtd::AbilityUI*>(game->GetScene("Game").GetCollection("AbilityUI")->elements[2].get())->SetTexture("Block.png");
 			});
 
 		scene.Add2DCollection(classButtons, "ClassButtons");

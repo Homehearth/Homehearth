@@ -21,7 +21,7 @@ void IShop::UseShop(const ShopItem& whatToBuy, const uint32_t& player)
 				comp::MeleeAttackAbility* m = m_sim->GetPlayer(player).GetComponent<comp::MeleeAttackAbility>();
 				if (m && m_sim->GetCurrency() >= 10)
 				{
-					m->attackDamage += .5f;
+					m->attackDamage += 2.5f;
 					m_sim->GetCurrency() -= 10;
 				}
 
@@ -29,7 +29,7 @@ void IShop::UseShop(const ShopItem& whatToBuy, const uint32_t& player)
 				comp::RangeAttackAbility* r = m_sim->GetPlayer(player).GetComponent<comp::RangeAttackAbility>();
 				if (r && m_sim->GetCurrency() >= 10)
 				{
-					r->attackDamage += .5f;
+					r->attackDamage += 2.5f;
 					m_sim->GetCurrency() -= 10;
 				}
 			}
@@ -47,6 +47,8 @@ void IShop::UseShop(const ShopItem& whatToBuy, const uint32_t& player)
 				{
 					h->currentHealth += 25;
 				}
+
+				m_sim->GetPlayer(player).UpdateNetwork();
 			}
 
 			m_sim->GetCurrency() -= 5;
