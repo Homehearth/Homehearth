@@ -3,12 +3,13 @@
 
 void AIBehaviors::UpdateBlackBoard(HeadlessScene& scene)
 {
-	PlayersPosition_t players;
+	PlayersPosition_t players = *Blackboard::Get().GetValue<PlayersPosition_t>("players");
 	scene.ForEachComponent<comp::Player, comp::Transform>([&](Entity entity, comp::Player& player, comp::Transform& transform)
 	{
 			players.players.emplace_back(entity);
 	});
 	Blackboard::Get().AddValue("players", players);
+
 }
 
 std::shared_ptr<BT::FallbackNode> AIBehaviors::GetFocusPlayerAIBehavior(Entity entity)

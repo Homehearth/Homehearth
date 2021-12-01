@@ -19,15 +19,15 @@ BT::NodeStatus BT::HideVillagerCBT::Tick()
 		LOG_WARNING("Failed to get components/values...");
 		return BT::NodeStatus::FAILURE;
 	}
-	if (*cycle == Cycle::NIGHT && villager->isHiding)
+	if (*cycle == Cycle::NIGHT && villager->isHiding && !villager->homeHouse.IsNull())
 	{
 		//Keep villager hidden by posting this as success
 		return BT::NodeStatus::SUCCESS;
 	}
 
-	if(*cycle == Cycle::NIGHT && !villager->isHiding)
+	if(*cycle == Cycle::NIGHT && !villager->isHiding && !villager->homeHouse.IsNull())
 	{
-		if(sm::Vector3::Distance(transform->position, villager->homeNode->position) < 7.f)
+		if(sm::Vector3::Distance(transform->position, villager->homeHouse.GetComponent<comp::House>()->attackNode->position) < 7.f)
 		{
 			//Hide the villager.
 			transform->position.y = 999.f; //hides npc high in the sky!
@@ -37,11 +37,20 @@ BT::NodeStatus BT::HideVillagerCBT::Tick()
 			return BT::NodeStatus::SUCCESS;
 		}
 	}
-	if(*cycle == Cycle::MORNING && villager->isHiding)
+	if(*cycle == Cycle::MORNING || *cycle == Cycle::DAY && villager->isHiding)
 	{
 		//Pop villager out again.
-		transform->position.y = 0.75f;
+		transform->position.y = 0.0f;
 		villager->isHiding = false;
+		entity.UpdateNetwork();
+		return BT::NodeStatus::SUCCESS;
+	}
+	if(villager->homeHouse.IsNull() && villager->isHiding)
+	{
+		//Pop villager out again.
+		transform->position.y = 0.0f;
+		villager->isHiding = false;
+		villager->isFleeing = true;
 		entity.UpdateNetwork();
 		return BT::NodeStatus::SUCCESS;
 	}

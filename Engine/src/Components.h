@@ -237,7 +237,6 @@ namespace ecs
 
 		struct Villager
 		{
-			Node* homeNode;
 			std::vector<Node*> path;
 			//Stress implementation - fix later -
 			std::vector<sm::Vector3> idlePos = {sm::Vector3(250.f, 0.f, -320.f),
@@ -247,8 +246,10 @@ namespace ecs
 												sm::Vector3(330.f, 0.f, -285.f),
 												sm::Vector3(135.f, 0.f, -374.f)}; //Positions villager can go and idle at
 			Node* currentNode;
+			Entity homeHouse;
 			float movementSpeed = 15.f;
 			bool isHiding = false;
+			bool isFleeing = false;
 		};
 
 		struct House

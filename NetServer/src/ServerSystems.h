@@ -35,7 +35,7 @@ namespace EnemyManagement
 }
 namespace VillagerManagement
 {
-	Entity CreateVillager(HeadlessScene& scene, Node* homeNode);
+	Entity CreateVillager(HeadlessScene& scene, Entity homeHouse);
 }
 
 /*! Namespace to manage the server's various ECS systems. */

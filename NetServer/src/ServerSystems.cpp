@@ -829,7 +829,7 @@ void ServerSystems::DeathParticleTimer(HeadlessScene& scene)
 		});
 }
 
-Entity VillagerManagement::CreateVillager(HeadlessScene& scene, Node* homeNode)
+Entity VillagerManagement::CreateVillager(HeadlessScene& scene, Entity homeHouse)
 {
 	Entity entity = scene.CreateEntity();
 	entity.AddComponent<comp::Network>();
@@ -846,9 +846,10 @@ Entity VillagerManagement::CreateVillager(HeadlessScene& scene, Node* homeNode)
 	comp::Velocity* velocity = entity.AddComponent<comp::Velocity>();
 	comp::BehaviorTree* behaviorTree = entity.AddComponent<comp::BehaviorTree>();
 	comp::Villager* villager = entity.AddComponent<comp::Villager>();
-	transform->position = homeNode->position;
+	comp::House* house = homeHouse.GetComponent<comp::House>();
+	transform->position = house->attackNode->position;
 	transform->position.y = 0.75f;
-	villager->homeNode = homeNode;
+	villager->homeHouse = homeHouse;
 	meshName->name = NameType::MESH_VILLAGER;
 	animatorName->name = AnimName::ANIM_KNIGHT;
 
