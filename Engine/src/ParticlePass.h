@@ -12,6 +12,11 @@ struct ParticleUpdate
 	float particleSizeMulitplier;
 	float speed;
 };
+ALIGN16
+struct ParticleModePUpdate 
+{
+	PARTICLEMODE type;
+};
 
 class ParticlePass :public IRenderPass
 {
@@ -25,7 +30,9 @@ private:
 	std::vector<float>					m_randomNumbers;
 
 	dx::ConstantBuffer<ParticleUpdate>	m_constantBufferParticleUpdate;
+	dx::ConstantBuffer<ParticleModePUpdate>	m_constantBufferParticleMode;
 	ParticleUpdate						m_particleUpdate;
+	ParticleModePUpdate					m_particleModeUpdate;
 
 	ComPtr<ID3D11ShaderResourceView>	m_randomNumbersSRV;
 	ComPtr<ID3D11Buffer>				m_randomNumbersBuffer;
