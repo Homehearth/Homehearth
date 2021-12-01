@@ -95,53 +95,23 @@ bool Game::OnStartup()
 void Game::OnUserUpdate(float deltaTime)
 {
 	this->UpdateInput();
-	Scene& scene = GetScene("Game");
-	if (m_players.find(m_localPID) != m_players.end())
+
+	if (m_elapsedCycleTime <= m_waveTimer && (m_serverCycle == Cycle::DAY || m_serverCycle == Cycle::MORNING))
 	{
-		sm::Vector3 playerPos = m_players.at(m_localPID).GetComponent<comp::Transform>()->position;
-
-		GameSystems::DeathParticleTimer(scene);
-
-		if (m_elapsedCycleTime <= m_waveTimer)
-		{
-			if (m_serverCycle == Cycle::DAY || m_serverCycle == Cycle::MORNING)
-			{
-				m_elapsedCycleTime += deltaTime;
-			}
-			scene.ForEachComponent<comp::Light>([&](Entity e, comp::Light& l)
-				{
-					switch (l.lightData.type)
-					{
-					case TypeLight::DIRECTIONAL:
-					{
-						l.lightData.direction = { -1.0f, 0.0f, -1.f, 0.f };
-						sm::Vector3 dir = sm::Vector3::TransformNormal(sm::Vector3(l.lightData.direction), sm::Matrix::CreateRotationZ(dx::XMConvertToRadians(ROTATION) * (m_elapsedCycleTime)));
-
-						l.lightData.direction = sm::Vector4(dir.x, dir.y, dir.z, 0.0f);
-						sm::Vector3 pos = l.lightData.position;
-						pos = playerPos - dir * 400;
-
-						pos = util::Lerp(sm::Vector3(l.lightData.position), pos, deltaTime * 10);
-						l.lightData.position = sm::Vector4(pos);
-
-						l.lightData.position.w = 1.f;
-						break;
-					}
-					case TypeLight::POINT:
-					{
-						if (m_serverCycle == Cycle::DAY || m_serverCycle == Cycle::MORNING)
-						{
-							l.lightData.enabled = false;
-						}
-						break;
-					}
-					default:
-						break;
-					}
-					e.GetComponent<comp::SphereCollider>()->Center = sm::Vector3(l.lightData.position);
-				});
-		}
+		m_elapsedCycleTime += deltaTime;
 	}
+	else
+	{
+		m_elapsedNightTime += deltaTime;
+	}
+
+	//DEBUG
+	Scene& scene = GetScene("Game");
+	scene.ForEachComponent<comp::Light>([&](Entity e, comp::Light& l)
+		{
+			e.GetComponent<comp::SphereCollider>()->Center = sm::Vector3(l.lightData.position);
+		});
+	
 }
 
 void Game::OnShutdown()
@@ -276,7 +246,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 				}
 
 				// Spawn blood splat when enemy dies.
-				if (m_gameEntities.at(id).GetComponent<comp::Transform>() && m_gameEntities.at(id).GetComponent<comp::Health>())
+				if (m_gameEntities.at(id).GetComponent<comp::Tag<TagType::BAD>>())
 				{
 					Entity bloodDecal = GetCurrentScene()->CreateEntity();
 					bloodDecal.AddComponent<comp::Decal>(*m_gameEntities.at(id).GetComponent<comp::Transform>());
@@ -308,8 +278,124 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		SetScene("Lobby");
 		break;
 	}
+	case GameMsg::Game_PlaySound:
+	{
+		uint32_t nrOfSounds = 0u;
+		msg >> nrOfSounds;
+
+		audio_t data = {};
+
+		const auto SH = &SoundHandler::Get();
+
+		for (uint32_t i = 0; i < nrOfSounds; i++)
+		{
+			// Extract Sound Information.
+			msg >> data.playLooped;
+			msg >> data.shouldBroadcast;
+			msg >> data.isUnique;
+			msg >> data.is3D;
+			msg >> data.minDistance;
+			msg >> data.volume;
+			msg >> data.position;
+			msg >> data.type;
+
+			switch (data.type)
+			{
+			//--------------------	PLAYER	--------------------------------------
+			case ESoundEvent::Player_OnMeleeAttack:
+				SH->PlaySound("Player_OnMeleeAttack", data);
+			break;
+			case ESoundEvent::Player_OnMeleeAttackHit:
+				{
+					int version = rand() % 3 + 1;
+					std::string onAttackName = "Player_OnMeleeAttackHit" + std::to_string(version);
+					SH->PlaySound(onAttackName, data);
+				}
+				break;
+			case ESoundEvent::Player_OnMovement:
+				SH->PlaySound("Player_OnMovement", data);
+				break;
+			case ESoundEvent::Player_OnRangeAttack:
+				SH->PlaySound("Player_OnRangeAttack", data);
+				break;
+			case ESoundEvent::Player_OnRangeAttackHit:
+				SH->PlaySound("Player_OnRangeAttackHit", data);
+				break;
+			case ESoundEvent::Player_OnDmgDealt:
+				SH->PlaySound("Player_OnDmgDealt", data);
+				break;
+			case ESoundEvent::Player_OnDmgRecieved:
+				SH->PlaySound("Player_OnDmgRecieved", data);
+				break;
+			case ESoundEvent::Player_OnCastHealing:
+				SH->PlaySound("Player_OnCastHealing", data);
+				break;
+			case ESoundEvent::Player_OnHealingRecieved:
+				SH->PlaySound("Player_OnHealingRecieved", data);
+				break;
+			case ESoundEvent::Player_OnCastDash:
+				SH->PlaySound("Player_OnCastDash", data);
+				break;
+			case ESoundEvent::Player_OnDeath:
+				SH->PlaySound("Player_OnDeath", data);
+				break;
+			case ESoundEvent::Player_OnRespawn:
+				SH->PlaySound("Player_OnRespawn", data);
+				break;
+			//--------------------	ENEMY	--------------------------------------
+			case ESoundEvent::Enemy_OnMovement:
+				SH->PlaySound("Enemy_OnMovement", data);
+				break;
+			case ESoundEvent::Enemy_OnMeleeAttack:
+				{
+					int version = rand() % 6 + 1;
+					std::string onAttackName = "Enemy_OnMeleeAttack" + std::to_string(version);
+					SH->PlaySound(onAttackName, data);
+				}
+				break;
+			case ESoundEvent::Enemy_OnRangeAttack:
+				SH->PlaySound("Enemy_RangeAttack", data);
+				break;
+			case ESoundEvent::Enemy_OnDmgDealt:
+				SH->PlaySound("Enemy_OnDmgDealt", data);
+				break;
+			case ESoundEvent::Enemy_OnDmgRecieved:
+				SH->PlaySound("Enemy_OnDmgRecieved", data);
+				break;
+			case ESoundEvent::Enemy_OnDeath:
+				SH->PlaySound("Enemy_OnDeath", data);
+				break;
+			//--------------------	GAME	--------------------------------------
+			case ESoundEvent::Game_OnDefencePlaced:
+				SH->PlaySound("Game_OnDefencePlaced", data);
+				break;
+			case ESoundEvent::Game_OnDefenceDestroyed:
+				SH->PlaySound("Game_OnDefenceDestroyed", data);
+				break;
+			case ESoundEvent::Game_OnHouseDestroyed:
+				SH->PlaySound("Game_OnHouseDestroyed", data);
+				break;
+			case ESoundEvent::Game_OnJoinLobby:
+				SH->PlaySound("Game_OnJoinLobby", data);
+				break;
+			default:
+				break;
+			}
+		}
+
+		break;
+	}
 	case GameMsg::Game_Over:
 	{
+		SoundHandler::Get().GetCurrentMusic()->stop();
+
+		audio_t audio = {};
+		audio.isUnique = true;
+		audio.playLooped = false;
+		SoundHandler::Get().PlaySound("Player_OnDeath", audio);
+		audio.volume = 0.5f;
+		SoundHandler::Get().PlaySound("OnGameOver", audio);
+
 		uint32_t gatheredMoney, wavesSurvived;
 		msg >> wavesSurvived >> gatheredMoney;
 		SetScene("GameOver");
@@ -368,6 +454,8 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			});
 
 		SetScene("Game");
+		thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::ADAPTIVE);
+
 		break;
 	}
 	case GameMsg::Game_Spree:
@@ -388,13 +476,21 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		{
 		case Cycle::DAY:
 		{
+			m_elapsedNightTime = 0.0f;
 			Scene& scene = GetScene("Game");
+
+			SoundHandler::Get().SetCurrentMusic("DayTheme");
+
 			// Change light when day.
-			scene.ForEachComponent<comp::Light>([&](Entity e, comp::Light& l)
+			scene.ForEachComponent<comp::Light>([&](comp::Light& l)
 				{
-					if (l.lightData.type == TypeLight::DIRECTIONAL)
+					switch (l.lightData.type)
 					{
-						l.lightData.enabled = true;
+					case TypeLight::POINT:
+					{
+						l.lightData.enabled = false;
+						break;
+					}
 					}
 				});
 			break;
@@ -402,17 +498,15 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		case Cycle::NIGHT:
 		{
 			Scene& scene = GetScene("Game");
+
+			SoundHandler::Get().SetCurrentMusic("NightTheme");
+
 			// Change light on Night.
 			m_elapsedCycleTime = 0.0f;
-			scene.ForEachComponent<comp::Light>([&](Entity e, comp::Light& l)
+			scene.ForEachComponent<comp::Light>([&](comp::Light& l)
 				{
 					switch (l.lightData.type)
 					{
-					case TypeLight::DIRECTIONAL:
-					{
-						l.lightData.enabled = false;
-						break;
-					}
 					case TypeLight::POINT:
 					{
 						l.lightData.enabled = true;
@@ -424,13 +518,19 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		}
 		case Cycle::MORNING:
 		{
+			m_elapsedNightTime = 0.0f;
+
 			Scene& scene = GetScene("Game");
 			// Change light on Morning.
-			scene.ForEachComponent<comp::Light>([&](Entity e, comp::Light& l)
+			scene.ForEachComponent<comp::Light>([&](comp::Light& l)
 				{
-					if (l.lightData.type == TypeLight::DIRECTIONAL)
+					switch (l.lightData.type)
 					{
-						l.lightData.enabled = true;
+					case TypeLight::POINT:
+					{
+						l.lightData.enabled = false;
+						break;
+					}
 					}
 				});
 			break;

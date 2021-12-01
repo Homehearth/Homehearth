@@ -175,6 +175,7 @@ CollisionInfo_t CollisionSystem::Intersection(Entity entity1, Entity entity2)
 	{
 		comp::SphereCollider* p1BoS = entity1.GetComponent<comp::SphereCollider>();
 		comp::SphereCollider* p2BoS = entity2.GetComponent<comp::SphereCollider>();
+		
 		sm::Vector3 vec = sm::Vector3(p2BoS->Center) - sm::Vector3(p1BoS->Center);
 		float distance = vec.Length();
 		vec.Normalize();
@@ -195,6 +196,11 @@ CollisionInfo_t CollisionSystem::Intersection(Entity entity1, Entity entity2)
 		}
 		comp::SphereCollider* p1BoS = entity1.GetComponent<comp::SphereCollider>();
 		comp::OrientedBoxCollider* p2OBB = entity2.GetComponent<comp::OrientedBoxCollider>();
+
+		if (!p1BoS || !p2OBB)
+		{
+			return { false, 0.f, sm::Vector3::Zero };
+		}
 
 		sm::Matrix Translation = sm::Matrix::CreateTranslation(p2OBB->Center).Invert();
 		sm::Matrix Rotation = sm::Matrix::CreateFromQuaternion(p2OBB->Orientation).Transpose();

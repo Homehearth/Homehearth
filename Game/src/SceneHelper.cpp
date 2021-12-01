@@ -54,6 +54,26 @@ namespace sceneHelp
 		Scene& mainMenuScene = game->GetScene("MainMenu");
 		SetupMainMenuScreen(game);
 
+		SoundHandler::Get().SetCurrentMusic("MenuTheme");
+
+		Entity backgroundScene = mainMenuScene.CreateEntity();
+		backgroundScene.AddComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>("GameSceneAll.fbx");
+		backgroundScene.AddComponent<comp::Transform>();
+		mainMenuScene.GetRegistry()->on_construct<comp::Light>().connect<&Lights::Add>(mainMenuScene.GetLights());
+/*
+		CreateLightEntity(mainMenuScene, { 330.0f, 20.0f, -333.3f , 1.0f }, { -1.0f, -0.5f, 0.f, 0.f }, { 15.f, 15.f, 15.f, 0.f }, 1000.0f, 0.09f, TypeLight::DIRECTIONAL, 1);
+		CreateLightEntity(mainMenuScene, { 330.0f, 20.0f, -333.3f , 1.0f }, { -1.0f, -0.5f, 0.f, 0.f }, { 15.f, 15.f, 15.f, 0.f }, 1000.0f, 0.09f, TypeLight::DIRECTIONAL, 1);
+		CreateLightEntity(mainMenuScene, { 330.0f, 20.0f, -333.3f , 1.0f }, { -1.0f, -0.5f, 0.f, 0.f }, { 15.f, 15.f, 15.f, 0.f }, 1000.0f, 0.09f, TypeLight::DIRECTIONAL, 1);
+*/
+		comp::Transform test;
+		test.position = { 330.0f, 1.0f, -333.3f };
+		Entity blood = mainMenuScene.CreateEntity();
+		blood.AddComponent<comp::Decal>(test);
+
+		mainMenuScene.GetCurrentCamera()->Initialize(sm::Vector3(0, 0, 0), sm::Vector3(0, 0, 1), sm::Vector3(0, 1, 0),
+			sm::Vector2((float)game->GetWindow()->GetWidth(), (float)game->GetWindow()->GetHeight()), CAMERATYPE::DEFAULT);
+		mainMenuScene.GetCurrentCamera()->m_position = sm::Vector3(350.f, 30.f, -250.f);
+
 		mainMenuScene.on<ESceneUpdate>([](const ESceneUpdate& e, Scene& scene)
 			{
 				IMGUI(
@@ -68,6 +88,7 @@ namespace sceneHelp
 	{
 		Scene& lobbyScene = game->GetScene("Lobby");
 		SetupInLobbyScreen(game);
+
 		lobbyScene.on<ESceneUpdate>([](const ESceneUpdate& e, Scene& scene)
 			{
 				IMGUI(
@@ -135,7 +156,10 @@ namespace sceneHelp
 		float pointRange = 9.f;
 
 		// The sun
-		CreateLightEntity(gameScene, { 0.f, 0.f, 0.f, 0.f }, { -1.0f, 0.0f, -1.f, 0.f }, { 255.f, 185, 150, 0.f }, 1000.f, 0.09f, TypeLight::DIRECTIONAL, 1);
+		Entity sun = CreateLightEntity(gameScene, { 0.f, 0.f, 0.f, 0.f }, { -1.0f, 0.0f, -1.f, 0.f }, { 255.f, 185, 150, 0.f }, 1000.f, 0.09f, TypeLight::DIRECTIONAL, 1);
+		// The moon
+		Entity moon = CreateLightEntity(gameScene, { 0.f, 0.f, 0.f, 0.f }, { -1.0f, 0.0f, -1.f, 0.f }, { 50.f, 50, 150, 0.f }, 1000.f, 0.04f, TypeLight::DIRECTIONAL, 1);
+
 		// LEFT OF WELL
 		CreateLightEntity(gameScene, { 268.2f, 28.f, -320.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 185.f, 100.f, 0.f }, pointRange, 0.4f,TypeLight::POINT, 0);
 		// FURTHEST LEFT AND FURTHEST SOUTH
@@ -153,13 +177,56 @@ namespace sceneHelp
 
 		InputSystem::Get().SetCamera(gameScene.GetCurrentCamera());
 
-		gameScene.on<ESceneUpdate>([cameraEntity, debugCameraEntity, game](const ESceneUpdate& e, Scene& scene)
+		gameScene.on<ESceneUpdate>([=](const ESceneUpdate& e, Scene& scene)
 			{
-				IMGUI(
-					ImGui::Begin("Scene");
-				ImGui::Text("Game");
-				ImGui::End();
-				);
+				if (game->m_players.find(game->m_localPID) != game->m_players.end())
+				{
+					sm::Vector3 playerPos = game->m_players.at(game->m_localPID).GetComponent<comp::Transform>()->position;
+
+					comp::Light* l = sun.GetComponent<comp::Light>();
+					if (game->m_elapsedCycleTime > 0.0f)
+					{
+						l->lightData.direction = { -1.0f, 0.0f, -1.f, 0.f };
+						sm::Vector3 dir = sm::Vector3(l->lightData.direction);
+						dir.Normalize();
+						dir = sm::Vector3::TransformNormal(dir, sm::Matrix::CreateRotationZ(dx::XMConvertToRadians(ROTATION) * (game->m_elapsedCycleTime)));
+						l->lightData.direction = sm::Vector4(dir.x, dir.y, dir.z, 0.0f);
+						sm::Vector3 pos = l->lightData.position;
+						pos = playerPos - dir * 300;
+				
+						pos = util::Lerp(sm::Vector3(l->lightData.position), pos, e.dt * 10);
+						l->lightData.position = sm::Vector4(pos);
+
+						l->lightData.position.w = 1.f;
+						l->lightData.enabled = 1;
+					}
+					else
+					{
+						l->lightData.enabled = 0;
+					}
+
+					l = moon.GetComponent<comp::Light>();
+					if (game->m_elapsedNightTime > 0.0f)
+					{
+						l->lightData.direction = { -1.0f, 0.0f, -1.f, 0.f };
+						sm::Vector3 dir = sm::Vector3(l->lightData.direction);
+						dir.Normalize();
+						dir = sm::Vector3::TransformNormal(dir, sm::Matrix::CreateRotationZ(dx::XMConvertToRadians(ROTATION) * (game->m_elapsedNightTime)));
+						l->lightData.direction = sm::Vector4(dir.x, dir.y, dir.z, 0.0f);
+						sm::Vector3 pos = l->lightData.position;
+						pos = playerPos - dir * 300;
+
+						pos = util::Lerp(sm::Vector3(l->lightData.position), pos, e.dt * 10);
+						l->lightData.position = sm::Vector4(pos);
+
+						l->lightData.position.w = 1.f;
+						l->lightData.enabled = 1;
+					}
+					else
+					{
+						l->lightData.enabled = 0;
+					}
+				}
 
 				Collection2D* bullColl = game->GetCurrentScene()->GetCollection("bullDoze");
 				if (bullColl)
@@ -198,11 +265,21 @@ namespace sceneHelp
 					}
 				}
 
+				GameSystems::DeathParticleTimer(scene);
 
 				GameSystems::DisplayUpgradeDefences(game);
 				//GameSystems::RenderIsCollidingSystem(scene);
 				GameSystems::UpdatePlayerVisuals(game);
 				Systems::LightSystem(scene, e.dt);
+
+
+				// Need to update Listener to make 3D sound work properly.
+				const auto thePlayer = game->GetLocalPlayer();
+				const auto lookDir = DirectX::XMVector3Rotate({ 0.f, 0.f, -1.f },
+					scene.GetCurrentCamera()->GetRotation());
+				SoundHandler::Get().SetListenerPosition(thePlayer.GetComponent<comp::Transform>()->position, lookDir);
+				SoundHandler::Get().Update();
+
 				game->GetCurrentScene()->UpdateSkybox(game->m_elapsedCycleTime);
 #ifdef _DEBUG
 				if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Space, KeyState::RELEASED))
@@ -210,7 +287,7 @@ namespace sceneHelp
 					if (scene.GetCurrentCamera()->GetCameraType() == CAMERATYPE::DEBUG)
 					{
 						scene.SetCurrentCameraEntity(cameraEntity);
-						scene.GetCurrentCamera()->SetNearFarPlane(40.f, 200.f);
+						scene.GetCurrentCamera()->SetNearFarPlane(40.f, 220.f);
 						InputSystem::Get().SwitchMouseMode();
 						LOG_INFO("Game Camera selected");
 					}
@@ -1014,6 +1091,7 @@ namespace sceneHelp
 				if (nameInputField->RawGetBuffer()->length() > 0)
 				{
 					game->m_playerName = *nameInputField->RawGetBuffer();
+
 					game->CreateLobby();
 
 					// Update own name.
@@ -1189,6 +1267,8 @@ namespace sceneHelp
 			}
 		}
 
+		file.close();
+
 		return true;
 	}
 
@@ -1210,6 +1290,25 @@ namespace sceneHelp
 
 			ResourceManager::Get().GetResource<RModel>(filename);
 		}
+
+		file.close();
+
+		file.open(TEXTUREPATH + "Loader.txt");
+		if (!file.is_open())
+		{
+			LOG_ERROR("Failed to load textures!");
+			return;
+		}
+
+		while (!file.eof())
+		{
+			std::string filename;
+
+			file >> filename;
+
+			ResourceManager::Get().GetResource<RModel>(filename);
+		}
+		file.close();
 	}
 
 	void LoadGameScene(Game* game)
@@ -1285,5 +1384,8 @@ namespace sceneHelp
 				game->m_models[ModelID::TREE8].push_back(e);
 			}
 		}
+
+		file.close();
 	}
+
 }

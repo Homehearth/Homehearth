@@ -196,6 +196,11 @@ namespace ecs
 			EAnimationType toSend;		//Going to be send this update
 		};
 
+		struct AudioState
+		{
+			std::queue<audio_t> data;
+		};
+
 		// Used on server side
 		struct AnimatorName
 		{

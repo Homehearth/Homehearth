@@ -166,5 +166,12 @@ bool rtd::Button::CheckHover()
 void Button::OnClick()
 {
 	if(m_function)
+	{
+		audio_t audio = {};
+		audio.isUnique = false;
+		audio.volume = 0.3f;
+		SoundHandler::Get().PlaySound("ButtonClick", audio);
+
 		m_function();
+	}
 }
