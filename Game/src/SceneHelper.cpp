@@ -60,11 +60,11 @@ namespace sceneHelp
 		backgroundScene.AddComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>("GameSceneAll.fbx");
 		backgroundScene.AddComponent<comp::Transform>();
 		mainMenuScene.GetRegistry()->on_construct<comp::Light>().connect<&Lights::Add>(mainMenuScene.GetLights());
-/*
-		CreateLightEntity(mainMenuScene, { 330.0f, 20.0f, -333.3f , 1.0f }, { -1.0f, -0.5f, 0.f, 0.f }, { 15.f, 15.f, 15.f, 0.f }, 1000.0f, 0.09f, TypeLight::DIRECTIONAL, 1);
-		CreateLightEntity(mainMenuScene, { 330.0f, 20.0f, -333.3f , 1.0f }, { -1.0f, -0.5f, 0.f, 0.f }, { 15.f, 15.f, 15.f, 0.f }, 1000.0f, 0.09f, TypeLight::DIRECTIONAL, 1);
-		CreateLightEntity(mainMenuScene, { 330.0f, 20.0f, -333.3f , 1.0f }, { -1.0f, -0.5f, 0.f, 0.f }, { 15.f, 15.f, 15.f, 0.f }, 1000.0f, 0.09f, TypeLight::DIRECTIONAL, 1);
-*/
+		/*
+				CreateLightEntity(mainMenuScene, { 330.0f, 20.0f, -333.3f , 1.0f }, { -1.0f, -0.5f, 0.f, 0.f }, { 15.f, 15.f, 15.f, 0.f }, 1000.0f, 0.09f, TypeLight::DIRECTIONAL, 1);
+				CreateLightEntity(mainMenuScene, { 330.0f, 20.0f, -333.3f , 1.0f }, { -1.0f, -0.5f, 0.f, 0.f }, { 15.f, 15.f, 15.f, 0.f }, 1000.0f, 0.09f, TypeLight::DIRECTIONAL, 1);
+				CreateLightEntity(mainMenuScene, { 330.0f, 20.0f, -333.3f , 1.0f }, { -1.0f, -0.5f, 0.f, 0.f }, { 15.f, 15.f, 15.f, 0.f }, 1000.0f, 0.09f, TypeLight::DIRECTIONAL, 1);
+		*/
 		comp::Transform test;
 		test.position = { 330.0f, 1.0f, -333.3f };
 		Entity blood = mainMenuScene.CreateEntity();
@@ -161,19 +161,19 @@ namespace sceneHelp
 		Entity moon = CreateLightEntity(gameScene, { 0.f, 0.f, 0.f, 0.f }, { -1.0f, 0.0f, -1.f, 0.f }, { 50.f, 50, 150, 0.f }, 1000.f, 0.04f, TypeLight::DIRECTIONAL, 1);
 
 		// LEFT OF WELL
-		CreateLightEntity(gameScene, { 268.2f, 28.f, -320.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 185.f, 100.f, 0.f }, pointRange, 0.4f,TypeLight::POINT, 0);
+		CreateLightEntity(gameScene, { 268.2f, 28.f, -320.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 185.f, 100.f, 0.f }, pointRange, 0.4f, TypeLight::POINT, 0);
 		// FURTHEST LEFT AND FURTHEST SOUTH
-		CreateLightEntity(gameScene, { 347.5f, 28.f, -323.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 185.f, 100.f, 0.f }, pointRange, 0.4f,TypeLight::POINT, 0);
+		CreateLightEntity(gameScene, { 347.5f, 28.f, -323.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 185.f, 100.f, 0.f }, pointRange, 0.4f, TypeLight::POINT, 0);
 		// NEXT TO THE BRIDGE GOING SOUTH
-		CreateLightEntity(gameScene, { 310.f, 28.f, -305.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 185.f, 100.f, 0.f }, pointRange, 0.4f,TypeLight::POINT, 0);
+		CreateLightEntity(gameScene, { 310.f, 28.f, -305.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 185.f, 100.f, 0.f }, pointRange, 0.4f, TypeLight::POINT, 0);
 		// NEXT TO THE LEFT BRIDGE ON THE LEFT SIDE OF IT
-		CreateLightEntity(gameScene, { 307.f, 28.f, -350.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 185.f, 100.f, 0.f }, pointRange, 0.4f,TypeLight::POINT, 0);
+		CreateLightEntity(gameScene, { 307.f, 28.f, -350.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 185.f, 100.f, 0.f }, pointRange, 0.4f, TypeLight::POINT, 0);
 		// RIGHT OF THE WELL BETWEEN THE 2 HOUSES
-		CreateLightEntity(gameScene, { 177.f, 28.f, -313.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 185.f, 100.f, 0.f }, pointRange, 0.4f,TypeLight::POINT, 0);
+		CreateLightEntity(gameScene, { 177.f, 28.f, -313.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 185.f, 100.f, 0.f }, pointRange, 0.4f, TypeLight::POINT, 0);
 		// FURTHEST RIGHT AND FURTHEST SOUTH
-		CreateLightEntity(gameScene, { 193.5f, 28.f, -261.5f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 185.f, 100.f, 0.f }, pointRange, 0.4f,TypeLight::POINT, 0);
+		CreateLightEntity(gameScene, { 193.5f, 28.f, -261.5f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 185.f, 100.f, 0.f }, pointRange, 0.4f, TypeLight::POINT, 0);
 		// LEFT OF WATERMILL
-		CreateLightEntity(gameScene, { 338.5f, 28.f, -397.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 185.f, 100.f, 0.f }, pointRange, 0.4f,TypeLight::POINT, 0);
+		CreateLightEntity(gameScene, { 338.5f, 28.f, -397.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 185.f, 100.f, 0.f }, pointRange, 0.4f, TypeLight::POINT, 0);
 
 		InputSystem::Get().SetCamera(gameScene.GetCurrentCamera());
 
@@ -193,7 +193,7 @@ namespace sceneHelp
 						l->lightData.direction = sm::Vector4(dir.x, dir.y, dir.z, 0.0f);
 						sm::Vector3 pos = l->lightData.position;
 						pos = playerPos - dir * 300;
-				
+
 						pos = util::Lerp(sm::Vector3(l->lightData.position), pos, e.dt * 10);
 						l->lightData.position = sm::Vector4(pos);
 
@@ -347,7 +347,7 @@ namespace sceneHelp
 		externalLinkBtn->SetOnPressedEvent([] {
 			ShellExecuteA(NULL, "open", "https://docs.google.com/forms/d/e/1FAIpQLSfvyYTRNYaVHbg9Fa8H7xNXQGr2SWoaC9_GKZ7rSkuoNDjOMA/viewform?usp=sf_link", NULL, NULL, SW_SHOWNORMAL);
 			});
-		rtd::Text* deadServerText = connectFields->AddElement<rtd::Text>("Error connecting to server", draw_text_t((width / 8.0f) , (height / 8.0f) * 5.0f, width / 4.0f, height / 8.0f));
+		rtd::Text* deadServerText = connectFields->AddElement<rtd::Text>("Error connecting to server", draw_text_t((width / 8.0f), (height / 8.0f) * 5.0f, width / 4.0f, height / 8.0f));
 		deadServerText->SetVisiblity(false);
 
 #ifdef _DEBUG
@@ -477,7 +477,7 @@ namespace sceneHelp
 			{
 				pauseMenu->Hide();
 			});
-		inGameMenu->SetOnPressedEvent(2, [=] 
+		inGameMenu->SetOnPressedEvent(2, [=]
 			{
 				pauseMenu->Hide();
 			});
@@ -490,8 +490,8 @@ namespace sceneHelp
 		sc->AddButton("No.png", draw_t(0.0f, -(height / 14), width / 24, height / 14))->SetOnPressedEvent([=] {
 			pauseMenu->Show();
 			});
-		
-		
+
+
 		sc->AddButton("ShopIcon.png", draw_t(0.0f, -(height / 14) * 2.0f, width / 24, height / 14))->SetOnPressedEvent([=] {
 			if (game->GetCurrentCycle() == Cycle::DAY)
 			{
@@ -642,8 +642,8 @@ namespace sceneHelp
 				dynamic_cast<rtd::AbilityUI*>(game->GetScene("Game").GetCollection("AbilityUI")->elements[1].get())->SetTexture("Attack.png");
 				dynamic_cast<rtd::AbilityUI*>(game->GetScene("Game").GetCollection("AbilityUI")->elements[2].get())->SetTexture("Heal.png");
 			});
-		
-		
+
+
 		warriorButton->SetOnPressedEvent([=]()
 			{
 				//mageBorder->SetVisiblity(false);
@@ -748,7 +748,7 @@ namespace sceneHelp
 		type = static_cast<DoFType>(std::stod(savedBlur));
 		rtd::Button* blurButton = miscMenu->AddElement<rtd::Button>("Button.png", draw_t(width / 8.0f, height / 8.0f, width / 4.0f, height / 8.0f));
 		rtd::Text* blurType = miscMenu->AddElement<rtd::Text>("Blur Type: Adaptive", draw_t(width / 8.0f, height / 8.0f, width / 4.0f, height / 8.0f));
-		
+
 		// Toggle when the game starts.
 		switch (type)
 		{
@@ -773,7 +773,7 @@ namespace sceneHelp
 			break;
 		}
 		}
-		
+
 		blurButton->SetOnPressedEvent([=] {
 			// Toggle between types.
 			switch (type)
@@ -805,7 +805,7 @@ namespace sceneHelp
 			default:
 				break;
 			}
-			
+
 			});
 
 		// Shadows toggle.
@@ -837,7 +837,7 @@ namespace sceneHelp
 
 		game->GetScene("Game").GetLights()->SetLightVolumeQuality(lightQuality);
 		OptionSystem::Get().SetOption("VolumetricLightQuality", std::to_string(lightQuality));
-		
+
 		lightQualityButton->SetOnPressedEvent([=] {
 
 			switch (lightQuality)
@@ -1124,8 +1124,10 @@ namespace sceneHelp
 		nameInputField->SetDescriptionText("Input Name");
 		rtd::Text* nameErrorText = nameCollection->AddElement<rtd::Text>("Invalid Name", draw_text_t((width / 2.0f) - (width / 8), (height / 8.0f) * 1.5f, width / 4.0f, height / 8.0f));
 		nameErrorText->SetVisiblity(false);
-
+#ifdef _DEBUG
 		nameInputField->SetPresetText("Player");
+#endif // DEBUG
+
 		scene.Add2DCollection(nameCollection, "nameInput");
 
 		Collection2D* lobbyCollection = new Collection2D;
