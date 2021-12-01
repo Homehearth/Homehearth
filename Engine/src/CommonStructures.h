@@ -16,14 +16,18 @@ constexpr float ROTATION = 180.0f / (float)(TIME_LIMIT_DAY + TIME_LIMIT_MORNING)
 const float DAY_DURATION	= 150.0f;
 const float MORNING			= 0.0f;
 const float DAY				= 0.1f;
+const float MID_DAY			= 0.25f;
+const float EVENING			= 0.4f;
 const float NIGHT			= 0.5f;
+const float EARLY_MORNING	= 0.9f;
 
 
 enum class CyclePeriod : UINT
 {
-	DAY,
-	NIGHT,
-	MORNING,
+	DAY,		// 0
+	NIGHT,		// 1
+	MORNING,	// 2
+	EVENING,	// 3
 };
 
 struct Currency
