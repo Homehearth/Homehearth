@@ -47,7 +47,8 @@ public:
 	std::unordered_map<uint32_t, Entity> m_players;
 
 
-	float m_elapsedCycleTime = 0;
+	float m_elapsedCycleTime = 0.0f;
+	float m_elapsedNightTime = 0.0f;
 
 	Game();
 	virtual ~Game();

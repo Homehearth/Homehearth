@@ -400,11 +400,12 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 			defenceEntity.AddComponent<comp::AudioState>();
 			coordinates.shrink_to_fit();
 			defenceEntity.AddComponent<comp::TileSet>()->coordinates = coordinates;
+			defenceEntity.AddComponent<comp::Cost>()->cost = 5;
 			aiHandler->AddDefenseEntity(defenceEntity);
-
-			comp::Transform* transform = defenceEntity.AddComponent<comp::Transform>();
-			comp::OrientedBoxCollider* collider = defenceEntity.AddComponent<comp::OrientedBoxCollider>();
-			comp::Health* health = defenceEntity.AddComponent<comp::Health>();
+			
+			comp::Transform*			transform	= defenceEntity.AddComponent<comp::Transform>();
+			comp::OrientedBoxCollider*	collider	= defenceEntity.AddComponent<comp::OrientedBoxCollider>();
+			comp::Health*				health		= defenceEntity.AddComponent<comp::Health>();
 			transform->position = { centerTile.position.x, 5.f, centerTile.position.z };
 			collider->Center = transform->position;
 
