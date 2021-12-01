@@ -23,7 +23,7 @@ enum class Cycle : UINT
 struct Currency
 {
 private:
-	uint32_t m_amount = 0;
+	uint32_t m_amount = 35;
 	uint32_t m_totalGathered = 0;
 public:
 	bool m_hasUpdated = false;

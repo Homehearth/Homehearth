@@ -5,9 +5,9 @@ float4 main(PixelIn input) : SV_TARGET
     //return t_shadowMaps.Sample(s_linear, float3(input.uv, 0.0f));
 
     static unsigned int rolls = infoData.x;
-    const float LIGHT_RANGE = 215.0f;
+    static float LIGHT_RANGE = 215.0f;
     const float LIGHT_VOLUME_RANGE = 250.0f;
-    const unsigned int STEPS = 50;
+    static unsigned int STEPS = c_info.y;
     const float SCATTERING = 1.0f;
     
     float3 lightVolume = float3(0.0f, 0.0f, 0.0f);
@@ -89,7 +89,7 @@ float4 main(PixelIn input) : SV_TARGET
                             float3 rayDir = rayVector / length(rayVector);
                             float3 stepLength = length(rayVector) / STEPS;
                             float3 step = rayDir * stepLength;
-                            [unroll]
+                            [loop]
                             for (int j = 0; j < STEPS; j++)
                             {
                         // Camera position in shadow space.
