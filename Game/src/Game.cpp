@@ -831,6 +831,7 @@ void Game::OnClientDisconnect()
 	m_client.m_qMessagesIn.clear();
 	m_players.clear();
 	m_gameEntities.clear();
+	SoundHandler::Get().SetCurrentMusic("MenuTheme");
 	LOG_INFO("Disconnected from server!");
 }
 
