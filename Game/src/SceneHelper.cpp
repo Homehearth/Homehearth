@@ -336,7 +336,7 @@ namespace sceneHelp
 		scene.Add2DCollection(mainMenu, "AMainMenu");
 
 		Collection2D* connectFields = new Collection2D;
-		rtd::TextField* ipField = connectFields->AddElement<rtd::TextField>(draw_text_t((width / 4), height * 0.55f, width * 0.25f, D2D1Core::GetDefaultFontSize()), 15, true);
+		rtd::TextField* ipField = connectFields->AddElement<rtd::TextField>(draw_text_t((width / 4), height * 0.55f, width * 0.25f, D2D1Core::GetDefaultFontSize()), 30, true);
 		ipField->SetDescriptionText("IP Address:");
 		rtd::TextField* portField = connectFields->AddElement<rtd::TextField>(draw_text_t(width / 4 + (width / 3.33f), height * 0.55f, width * 0.15f, D2D1Core::GetDefaultFontSize()), 6);
 		portField->SetDescriptionText("Port:");
@@ -356,9 +356,13 @@ namespace sceneHelp
 		externalLinkBtn->SetOnPressedEvent([] {
 			ShellExecuteA(NULL, "open", "https://docs.google.com/forms/d/e/1FAIpQLSfvyYTRNYaVHbg9Fa8H7xNXQGr2SWoaC9_GKZ7rSkuoNDjOMA/viewform?usp=sf_link", NULL, NULL, SW_SHOWNORMAL);
 			});
+		rtd::Text* deadServerText = connectFields->AddElement<rtd::Text>("Error connecting to server", draw_text_t((width / 8.0f), (height / 8.0f) * 5.0f, width / 4.0f, height / 8.0f));
+		deadServerText->SetVisiblity(false);
 
 #ifdef _DEBUG
 		ipField->SetPresetText("localhost");
+#else
+		ipField->SetPresetText("homehearth.ddns.net");
 #endif
 		portField->SetPresetText("4950");
 
@@ -374,6 +378,12 @@ namespace sceneHelp
 						rtd::TextField* nameInput = dynamic_cast<rtd::TextField*>(game->GetScene("JoinLobby").GetCollection("nameInput")->elements[0].get());
 						nameInput->SetActive();
 						game->SetScene("JoinLobby");
+						deadServerText->SetVisiblity(false);
+
+					}
+					else
+					{
+						deadServerText->SetVisiblity(true);
 					}
 				}
 				else
@@ -478,7 +488,7 @@ namespace sceneHelp
 			{
 				pauseMenu->Hide();
 			});
-		inGameMenu->SetOnPressedEvent(2, [=] 
+		inGameMenu->SetOnPressedEvent(2, [=]
 			{
 				pauseMenu->Hide();
 			});
@@ -491,8 +501,8 @@ namespace sceneHelp
 		sc->AddButton("No.png", draw_t(0.0f, -(height / 14), width / 24, height / 14))->SetOnPressedEvent([=] {
 			pauseMenu->Show();
 			});
-		
-		
+
+
 		sc->AddButton("ShopIcon.png", draw_t(0.0f, -(height / 14) * 2.0f, width / 24, height / 14))->SetOnPressedEvent([=] {
 			if (game->GetCycler().GetTimePeriod() == CyclePeriod::DAY)
 			{
@@ -643,8 +653,8 @@ namespace sceneHelp
 				mageButton->GetBorder()->SetVisiblity(true);
 				warriorButton->GetBorder()->SetVisiblity(false);
 			});
-		
-		
+
+
 		warriorButton->SetOnPressedEvent([=]()
 			{
 				//mageBorder->SetVisiblity(false);
@@ -748,7 +758,7 @@ namespace sceneHelp
 		type = static_cast<DoFType>(std::stod(savedBlur));
 		rtd::Button* blurButton = miscMenu->AddElement<rtd::Button>("Button.png", draw_t(width / 8.0f, height / 8.0f, width / 4.0f, height / 8.0f));
 		rtd::Text* blurType = miscMenu->AddElement<rtd::Text>("Blur Type: Adaptive", draw_t(width / 8.0f, height / 8.0f, width / 4.0f, height / 8.0f));
-		
+
 		// Toggle when the game starts.
 		switch (type)
 		{
@@ -806,7 +816,7 @@ namespace sceneHelp
 			default:
 				break;
 			}
-			
+
 			});
 
 		// Shadows toggle.
@@ -838,7 +848,7 @@ namespace sceneHelp
 
 		game->GetScene("Game").GetLights()->SetLightVolumeQuality(lightQuality);
 		OptionSystem::Get().SetOption("VolumetricLightQuality", std::to_string(lightQuality));
-		
+
 		lightQualityButton->SetOnPressedEvent([=] {
 
 			switch (lightQuality)
@@ -1128,7 +1138,12 @@ namespace sceneHelp
 		Collection2D* nameCollection = new Collection2D;
 		rtd::TextField* nameInputField = nameCollection->AddElement<rtd::TextField>(draw_text_t((width / 2) - (width / 8), height / 8, width / 4, D2D1Core::GetDefaultFontSize()), 12, true);
 		nameInputField->SetDescriptionText("Input Name");
-		//nameInputField->SetPresetText("Noobie");
+		rtd::Text* nameErrorText = nameCollection->AddElement<rtd::Text>("Invalid Name", draw_text_t((width / 2.0f) - (width / 8), (height / 8.0f) * 1.5f, width / 4.0f, height / 8.0f));
+		nameErrorText->SetVisiblity(false);
+#ifdef _DEBUG
+		nameInputField->SetPresetText("Player");
+#endif // DEBUG
+
 		scene.Add2DCollection(nameCollection, "nameInput");
 
 		Collection2D* lobbyCollection = new Collection2D;
@@ -1141,7 +1156,8 @@ namespace sceneHelp
 		rtd::Button* lobbyButton = lobbyCollection->AddElement<rtd::Button>("joinLobby.png", draw_t(width / 8, height - (height / 6.f), width / 4.f, height * 0.15f));
 		//lobbyCollection->AddElement<rtd::Text>("Join Lobby", draw_text_t(width / 8, height - (height / 6.f), width / 4, height / 8));
 		rtd::Button* exitButton = lobbyCollection->AddElement<rtd::Button>("No.png", draw_t(0.0f, 0.0f, width / 24, height / 14));
-
+		rtd::Text* lobbyErrorText = lobbyCollection->AddElement<rtd::Text>("Invalid Lobby ID", draw_text_t(width / 8, height - (height / 3.33f), width / 4.0f, height / 8.0f));
+		lobbyErrorText->SetVisiblity(false);
 		exitButton->SetOnPressedEvent([=]
 			{
 				game->m_client.Disconnect();
@@ -1160,6 +1176,7 @@ namespace sceneHelp
 				}
 				else
 				{
+					nameErrorText->SetVisiblity(true);
 					LOG_WARNING("Enter a valid nickname");
 				}
 			});
@@ -1177,6 +1194,7 @@ namespace sceneHelp
 					}
 					catch (std::exception e)
 					{
+						lobbyErrorText->SetVisiblity(true);
 						LOG_WARNING("Request denied: Invalid lobby ID: Was not numerical");
 					}
 
@@ -1190,6 +1208,7 @@ namespace sceneHelp
 						}
 						else
 						{
+							nameErrorText->SetVisiblity(true);
 							LOG_WARNING("Request denied: Enter a valid nickname");
 						}
 					}

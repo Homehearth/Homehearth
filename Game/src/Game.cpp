@@ -122,6 +122,12 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	{
 	case GameMsg::Client_Accepted:
 	{
+		rtd::Text* lobbyErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("LobbyFields")->elements[5].get());
+		lobbyErrorText->SetVisiblity(false);
+		rtd::Text* nameErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("nameInput")->elements[1].get());
+		nameErrorText->SetVisiblity(false);
+		rtd::Text* mainMenuErrorText = dynamic_cast<rtd::Text*>(GetScene("MainMenu").GetCollection("ConnectFields")->elements[6].get());
+		mainMenuErrorText->SetVisiblity(false);
 		LOG_INFO("You are validated!");
 		break;
 	}
@@ -395,6 +401,8 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		SoundHandler::Get().PlaySound("Player_OnDeath", audio);
 		audio.volume = 0.5f;
 		SoundHandler::Get().PlaySound("OnGameOver", audio);
+		rtd::Text* mainMenuErrorText = dynamic_cast<rtd::Text*>(GetScene("mainMenu").GetCollection("ConnectFields")->elements[6].get());
+		mainMenuErrorText->SetVisiblity(false);
 
 		uint32_t gatheredMoney, wavesSurvived;
 		msg >> wavesSurvived >> gatheredMoney;
@@ -423,7 +431,10 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		LOG_INFO("Successfully loaded all Assets!");
 #endif
 		SetScene("Lobby");
-
+		rtd::Text* lobbyErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("LobbyFields")->elements[5].get());
+		lobbyErrorText->SetVisiblity(false);
+		rtd::Text* nameErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("nameInput")->elements[1].get());
+		nameErrorText->SetVisiblity(false);
 		LOG_INFO("You are now in lobby: %lu", m_gameID);
 		break;
 	}
@@ -433,6 +444,8 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		msg >> err;
 		SetScene("JoinLobby");
 		LOG_WARNING("%s", err.c_str());
+		rtd::Text* lobbyErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("LobbyFields")->elements[5].get());
+		lobbyErrorText->SetVisiblity(true);
 		break;
 	}
 	case GameMsg::Lobby_AcceptedLeave:
@@ -445,6 +458,10 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		{
 			textField->SetPresetText("");
 		}
+		rtd::Text* lobbyErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("LobbyFields")->elements[5].get());
+		lobbyErrorText->SetVisiblity(false);
+		rtd::Text* nameErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("nameInput")->elements[1].get());
+		nameErrorText->SetVisiblity(false);
 		break;
 	}
 	case GameMsg::Game_Start:
@@ -469,7 +486,10 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 
 
 		SoundHandler::Get().SetCurrentMusic("MenuTheme");
-
+		rtd::Text* lobbyErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("LobbyFields")->elements[5].get());
+		lobbyErrorText->SetVisiblity(false);
+		rtd::Text* nameErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("nameInput")->elements[1].get());
+		nameErrorText->SetVisiblity(false);
 		SetScene("Game");
 		thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::ADAPTIVE);
 		comp::Player* p = GetLocalPlayer().GetComponent<comp::Player>();
