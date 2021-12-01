@@ -253,6 +253,23 @@ namespace ecs
 			std::shared_ptr<BT::ParentNode> root;
 		};
 
+		struct Villager
+		{
+			std::vector<Node*> path;
+			//Stress implementation - fix later -
+			std::vector<sm::Vector3> idlePos = {sm::Vector3(250.f, 0.f, -320.f),
+												sm::Vector3(212.f, 0.f, -297.f),
+												sm::Vector3(237.f, 0.f, -297.f),
+												sm::Vector3(325.f, 0.f, -370.f),
+												sm::Vector3(330.f, 0.f, -285.f),
+												sm::Vector3(135.f, 0.f, -374.f)}; //Positions villager can go and idle at
+			Node* currentNode;
+			Entity homeHouse;
+			float movementSpeed = 15.f;
+			bool isHiding = false;
+			bool isFleeing = false;
+		};
+
 		struct House
 		{
 			NameType houseType = NameType::EMPTY;
@@ -373,6 +390,7 @@ namespace ecs
 			float flickerTimer = 1.f;
 			float maxFlickerTime = 1.f;
 			bool increase;
+			float enabledTimer = 1.f;
 		};
 
 		struct Health

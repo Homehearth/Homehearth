@@ -140,75 +140,102 @@ namespace sceneHelp
 		// The sun
 		Entity sun = CreateLightEntity(gameScene, { 0.f, 0.f, 0.f, 0.f }, { -1.0f, 0.0f, -1.f, 0.f }, { 255.f, 185, 150, 0.f }, 1000.f, 0.09f, TypeLight::DIRECTIONAL, 1);
 		// The moon
-		Entity moon = CreateLightEntity(gameScene, { 0.f, 0.f, 0.f, 0.f }, { -1.0f, 0.0f, -1.f, 0.f }, { 50.f, 50, 150, 0.f }, 1000.f, 0.04f, TypeLight::DIRECTIONAL, 1);
+		Entity moon = CreateLightEntity(gameScene, { 0.f, 0.f, 0.f, 0.f }, { -1.0f, 0.0f, -1.f, 0.f }, { 50.f, 50, 200, 0.f }, 1000.f, 0.008f, TypeLight::DIRECTIONAL, 0);
+
+		sm::Vector4 pointLightColor = { 237.f, 147.f, 18.f, 0.f };
 
 		// LEFT OF WELL
-		CreateLightEntity(gameScene, { 268.2f, 28.f, -320.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 185.f, 100.f, 0.f }, pointRange, 0.4f,TypeLight::POINT, 0);
+		CreateLightEntity(gameScene, { 268.2f, 28.f, -320.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, pointLightColor, pointRange, 0.4f,TypeLight::POINT, 0);
 		// FURTHEST LEFT AND FURTHEST SOUTH
-		CreateLightEntity(gameScene, { 347.5f, 28.f, -323.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 185.f, 100.f, 0.f }, pointRange, 0.4f,TypeLight::POINT, 0);
+		CreateLightEntity(gameScene, { 347.5f, 28.f, -323.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, pointLightColor, pointRange, 0.4f,TypeLight::POINT, 0);
 		// NEXT TO THE BRIDGE GOING SOUTH
-		CreateLightEntity(gameScene, { 310.f, 28.f, -305.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 185.f, 100.f, 0.f }, pointRange, 0.4f,TypeLight::POINT, 0);
+		CreateLightEntity(gameScene, { 310.f, 28.f, -305.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, pointLightColor, pointRange, 0.4f, TypeLight::POINT, 0);
 		// NEXT TO THE LEFT BRIDGE ON THE LEFT SIDE OF IT
-		CreateLightEntity(gameScene, { 307.f, 28.f, -350.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 185.f, 100.f, 0.f }, pointRange, 0.4f,TypeLight::POINT, 0);
+		CreateLightEntity(gameScene, { 307.f, 28.f, -350.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, pointLightColor, pointRange, 0.4f, TypeLight::POINT, 0);
 		// RIGHT OF THE WELL BETWEEN THE 2 HOUSES
-		CreateLightEntity(gameScene, { 177.f, 28.f, -313.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 185.f, 100.f, 0.f }, pointRange, 0.4f,TypeLight::POINT, 0);
+		CreateLightEntity(gameScene, { 177.f, 28.f, -313.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, pointLightColor, pointRange, 0.4f, TypeLight::POINT, 0);
 		// FURTHEST RIGHT AND FURTHEST SOUTH
-		CreateLightEntity(gameScene, { 193.5f, 28.f, -261.5f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 185.f, 100.f, 0.f }, pointRange, 0.4f,TypeLight::POINT, 0);
+		CreateLightEntity(gameScene, { 193.5f, 28.f, -261.5f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, pointLightColor, pointRange, 0.4f, TypeLight::POINT, 0);
 		// LEFT OF WATERMILL
-		CreateLightEntity(gameScene, { 338.5f, 28.f, -397.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 185.f, 100.f, 0.f }, pointRange, 0.4f,TypeLight::POINT, 0);
+		CreateLightEntity(gameScene, { 338.5f, 28.f, -397.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, pointLightColor, pointRange, 0.4f,TypeLight::POINT, 0);
 
 		InputSystem::Get().SetCamera(gameScene.GetCurrentCamera());
 
 		gameScene.on<ESceneUpdate>([=](const ESceneUpdate& e, Scene& scene)
 			{
+				game->GetCycler().Update(e.dt);
+
 				if (game->m_players.find(game->m_localPID) != game->m_players.end())
 				{
 					sm::Vector3 playerPos = game->m_players.at(game->m_localPID).GetComponent<comp::Transform>()->position;
 
+
 					comp::Light* l = sun.GetComponent<comp::Light>();
-					if (game->m_elapsedCycleTime > 0.0f)
+
+					float angle = 360.f * game->GetCycler().GetTime();
+					for (int i = 0; i < 2; i++)
 					{
-						l->lightData.direction = { -1.0f, 0.0f, -1.f, 0.f };
-						sm::Vector3 dir = sm::Vector3(l->lightData.direction);
-						dir.Normalize();
-						dir = sm::Vector3::TransformNormal(dir, sm::Matrix::CreateRotationZ(dx::XMConvertToRadians(ROTATION) * (game->m_elapsedCycleTime)));
-						l->lightData.direction = sm::Vector4(dir.x, dir.y, dir.z, 0.0f);
-						sm::Vector3 pos = l->lightData.position;
-						pos = playerPos - dir * 300;
+						
+						sm::Vector3 dir = sm::Vector3::TransformNormal(sm::Vector3(-1, 0, -1), sm::Matrix::CreateRotationZ(dx::XMConvertToRadians(angle)));
+						l->lightData.direction = sm::Vector4(dir);
+						l->lightData.direction.w = 0.0f;
+						
+						l->lightData.enabled = l->lightData.direction.y < 0.0f;
+						
+						sm::Vector3 newPos = playerPos - dir * 300;
+						if(l->lightData.enabled)
+							newPos = util::Lerp(sm::Vector3(l->lightData.position), newPos, e.dt * 10);
 				
-						pos = util::Lerp(sm::Vector3(l->lightData.position), pos, e.dt * 10);
-						l->lightData.position = sm::Vector4(pos);
+						l->lightData.position = sm::Vector4(newPos);
+						l->lightData.position.w = 1.0f;
 
-						l->lightData.position.w = 1.f;
-						l->lightData.enabled = 1;
-					}
-					else
-					{
-						l->lightData.enabled = 0;
-					}
-
-					l = moon.GetComponent<comp::Light>();
-					if (game->m_elapsedNightTime > 0.0f)
-					{
-						l->lightData.direction = { -1.0f, 0.0f, -1.f, 0.f };
-						sm::Vector3 dir = sm::Vector3(l->lightData.direction);
-						dir.Normalize();
-						dir = sm::Vector3::TransformNormal(dir, sm::Matrix::CreateRotationZ(dx::XMConvertToRadians(ROTATION) * (game->m_elapsedNightTime)));
-						l->lightData.direction = sm::Vector4(dir.x, dir.y, dir.z, 0.0f);
-						sm::Vector3 pos = l->lightData.position;
-						pos = playerPos - dir * 300;
-
-						pos = util::Lerp(sm::Vector3(l->lightData.position), pos, e.dt * 10);
-						l->lightData.position = sm::Vector4(pos);
-
-						l->lightData.position.w = 1.f;
-						l->lightData.enabled = 1;
-					}
-					else
-					{
-						l->lightData.enabled = 0;
+						
+						l = moon.GetComponent<comp::Light>();
+						angle -= 180.f;
 					}
 				}
+
+				if (game->GetCycler().HasChangedPeriod())
+				{
+					switch (game->GetCycler().GetTimePeriod())
+					{
+					case CyclePeriod::NIGHT:
+					{
+						
+						SoundHandler::Get().SetCurrentMusic("NightTheme");
+						scene.ForEachComponent<comp::Light>([](comp::Light& l)
+							{
+								if (l.lightData.type == TypeLight::POINT)
+								{
+									l.lightData.enabled = 1;
+								}
+							});
+						break;
+					}
+					case CyclePeriod::MORNING:
+					{
+						SoundHandler::Get().SetCurrentMusic("MenuTheme");
+
+						scene.ForEachComponent<comp::Light>([](comp::Light& l)
+							{
+								if (l.lightData.type == TypeLight::POINT)
+								{
+									l.lightData.enabled = 0;
+								}
+							});
+						break;
+					}
+					case CyclePeriod::EVENING:
+					{
+						
+						break;
+					}
+					default:
+						break;
+					}
+				}
+
+
 
 				Collection2D* bullColl = game->GetCurrentScene()->GetCollection("bullDoze");
 				if (bullColl)
@@ -254,6 +281,7 @@ namespace sceneHelp
 				//GameSystems::RenderIsCollidingSystem(scene);
 				GameSystems::UpdatePlayerVisuals(game);
 				Systems::LightSystem(scene, e.dt);
+				game->GetCurrentScene()->UpdateSkybox(game->GetCycler().GetTime());
 
 
 				// Need to update Listener to make 3D sound work properly.
@@ -263,7 +291,6 @@ namespace sceneHelp
 				SoundHandler::Get().SetListenerPosition(thePlayer.GetComponent<comp::Transform>()->position, lookDir);
 				SoundHandler::Get().Update();
 
-				game->GetCurrentScene()->UpdateSkybox(game->m_elapsedCycleTime);
 #ifdef _DEBUG
 				if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Space, KeyState::RELEASED))
 				{
@@ -309,7 +336,7 @@ namespace sceneHelp
 		scene.Add2DCollection(mainMenu, "AMainMenu");
 
 		Collection2D* connectFields = new Collection2D;
-		rtd::TextField* ipField = connectFields->AddElement<rtd::TextField>(draw_text_t((width / 4), height * 0.55f, width * 0.25f, D2D1Core::GetDefaultFontSize()), 15, true);
+		rtd::TextField* ipField = connectFields->AddElement<rtd::TextField>(draw_text_t((width / 4), height * 0.55f, width * 0.25f, D2D1Core::GetDefaultFontSize()), 30, true);
 		ipField->SetDescriptionText("IP Address:");
 		rtd::TextField* portField = connectFields->AddElement<rtd::TextField>(draw_text_t(width / 4 + (width / 3.33f), height * 0.55f, width * 0.15f, D2D1Core::GetDefaultFontSize()), 6);
 		portField->SetDescriptionText("Port:");
@@ -327,11 +354,15 @@ namespace sceneHelp
 		externalLinkBtn->GetText()->SetScale(0.5f);
 		externalLinkBtn->GetText()->SetText("Give Feedback!");
 		externalLinkBtn->SetOnPressedEvent([] {
-			ShellExecuteA(NULL, "open", "https://docs.google.com/forms/d/e/1FAIpQLSfvyYTRNYaVHbg9Fa8H7xNXQGr2SWoaC9_GKZ7rSkuoNDjOMA/viewform?usp=sf_link", NULL, NULL, SW_SHOWNORMAL);
+			ShellExecuteA(NULL, "open", "https://forms.gle/1E4f4a9jqKoNpCgZ7", NULL, NULL, SW_SHOWNORMAL);
 			});
+		rtd::Text* deadServerText = connectFields->AddElement<rtd::Text>("Error connecting to server", draw_text_t((width / 8.0f), (height / 8.0f) * 5.0f, width / 4.0f, height / 8.0f));
+		deadServerText->SetVisiblity(false);
 
 #ifdef _DEBUG
 		ipField->SetPresetText("localhost");
+#else
+		ipField->SetPresetText("homehearth.ddns.net");
 #endif
 		portField->SetPresetText("4950");
 
@@ -347,6 +378,12 @@ namespace sceneHelp
 						rtd::TextField* nameInput = dynamic_cast<rtd::TextField*>(game->GetScene("JoinLobby").GetCollection("nameInput")->elements[0].get());
 						nameInput->SetActive();
 						game->SetScene("JoinLobby");
+						deadServerText->SetVisiblity(false);
+
+					}
+					else
+					{
+						deadServerText->SetVisiblity(true);
 					}
 				}
 				else
@@ -426,19 +463,19 @@ namespace sceneHelp
 		//rtd::AbilityUI* secondary = abilities->AddElement<rtd::AbilityUI>(draw_t(width - width / 8.0f, height - height / 9.0f, width / 16.0f, height / 9.0f), D2D1::ColorF(0, 1.0f), "UI_sword.png");
 		//secondary->SetActivateButton("RMB");
 		//secondary->SetReference(&game->m_secondaryCooldown);
-		rtd::Picture* abilityBar = abilities->AddElement<rtd::Picture>("AbilityBar.png", draw_t((width / 2.f) - ((width / 16.0f) * 2.0f) - (width / 256.0f), height - height / 9.0f, (width / 16.0f) * 5.0f, height / 9.0f));
+		rtd::Picture* abilityBar = abilities->AddElement<rtd::Picture>("AbilityBar.png", draw_t(((width / 2.f)) - ((width / 16.0f) * 2.5f), height - height / 9.0f, (width / 16.0f) * 5.0f, height / 9.0f));
 
-		rtd::AbilityUI* third = abilities->AddElement<rtd::AbilityUI>(draw_t((width / 2.f) - ((width / 16.0f) * 2.0f), height - height / 10.0f, width / 18.0f, height / 11.0f), D2D1::ColorF(0, 1.0f), "Attack2.png");
+		rtd::AbilityUI* third = abilities->AddElement<rtd::AbilityUI>(draw_t((width / 2.f) - (width / 18.0f) * 2.75f, height - height / 10.0f, width / 18.0f, height / 11.0f), D2D1::ColorF(0, 1.0f), "Attack2.png");
 		third->SetActivateButton("LMB");
 		third->SetReference(&game->m_primaryCooldown);
-		rtd::AbilityUI* fourth = abilities->AddElement<rtd::AbilityUI>(draw_t((width / 2.f) - ((width / 16.0f)), height - height / 10.0f, width / 18.0f, height / 11.0f), D2D1::ColorF(0, 1.0f), "Block.png");
+		rtd::AbilityUI* fourth = abilities->AddElement<rtd::AbilityUI>(draw_t((width / 2.f) - (width / 18.0f) * 0.5f - (width / 16.0f), height - height / 10.0f, width / 18.0f, height / 11.0f), D2D1::ColorF(0, 1.0f), "Block.png");
 		fourth->SetActivateButton("RMB");
 		fourth->SetReference(&game->m_secondaryCooldown);
-		rtd::AbilityUI* fifth = abilities->AddElement<rtd::AbilityUI>(draw_t((width / 2.f), height - height / 10.0f, width / 18.0f, height / 11.0f), D2D1::ColorF(0, 1.0f), "Dodge.png");
+		rtd::AbilityUI* fifth = abilities->AddElement<rtd::AbilityUI>(draw_t((width / 2.f) - (width / 18.0f) * 0.5f, height - height / 10.0f, width / 18.0f, height / 11.0f), D2D1::ColorF(0, 1.0f), "Dodge.png");
 		fifth->SetActivateButton("Shift");
 		fifth->SetReference(&game->m_dodgeCooldown);
-		rtd::AbilityUI* sixth = abilities->AddElement<rtd::AbilityUI>(draw_t((width / 2.f) + ((width / 16.0f)), height - height / 10.0f, width / 18.0f, height / 11.0f), D2D1::ColorF(0, 1.0f), "LockedIcon.png");
-		rtd::AbilityUI* seventh = abilities->AddElement<rtd::AbilityUI>(draw_t((width / 2.f) + ((width / 8.0f)), height - height / 10.0f, width / 18.0f, height / 11.0f), D2D1::ColorF(0, 1.0f), "LockedIcon.png");
+		rtd::AbilityUI* sixth = abilities->AddElement<rtd::AbilityUI>(draw_t((width / 2.f) - (width / 18.0f) * 0.5f + (width / 16.0f), height - height / 10.0f, width / 18.0f, height / 11.0f), D2D1::ColorF(0, 1.0f), "LockedIcon.png");
+		rtd::AbilityUI* seventh = abilities->AddElement<rtd::AbilityUI>(draw_t((width / 2.f) - (width / 18.0f) * 0.5f + (width / 16.0f) + (width / 16.0f), height - height / 10.0f, width / 18.0f, height / 11.0f), D2D1::ColorF(0, 1.0f), "LockedIcon.png");
 		scene.Add2DCollection(abilities, "AbilityUI");
 
 		Collection2D* pauseMenu = new Collection2D;
@@ -451,7 +488,7 @@ namespace sceneHelp
 			{
 				pauseMenu->Hide();
 			});
-		inGameMenu->SetOnPressedEvent(2, [=] 
+		inGameMenu->SetOnPressedEvent(2, [=]
 			{
 				pauseMenu->Hide();
 			});
@@ -464,10 +501,10 @@ namespace sceneHelp
 		sc->AddButton("No.png", draw_t(0.0f, -(height / 14), width / 24, height / 14))->SetOnPressedEvent([=] {
 			pauseMenu->Show();
 			});
-		
-		
+
+
 		sc->AddButton("ShopIcon.png", draw_t(0.0f, -(height / 14) * 2.0f, width / 24, height / 14))->SetOnPressedEvent([=] {
-			if (game->GetCurrentCycle() == Cycle::DAY)
+			if (game->GetCycler().GetTimePeriod() == CyclePeriod::DAY)
 			{
 				shopMenu->Show();
 				bullDoze->Hide();
@@ -597,8 +634,11 @@ namespace sceneHelp
 		rtd::Button* mageButton = classButtons->AddElement<rtd::Button>("WizardIcon.png", draw_t((width / 3.33f) + (float)(width / 20), height - (height / 6), width / 16, height / 9));
 		rtd::Button* warriorButton = classButtons->AddElement<rtd::Button>("WarriorIcon.png", draw_t((width / 3.33f) + (width / 15.0f) + (float)(width / 16), height - (height / 6), width / 16, height / 9));
 		warriorButton->GetBorder()->SetColor(D2D1::ColorF(0.0f, 1.0f, 0.2f));
+		warriorButton->GetBorder()->SetLineWidth(LineWidth::THICC);
 		warriorButton->GetBorder()->SetVisiblity(true);
 
+		mageButton->GetBorder()->SetLineWidth(LineWidth::THICC);
+		mageButton->GetBorder()->SetVisiblity(false);
 		//mageBorder->SetVisiblity(false);
 		// FIX WHAT CLASS SYMBOL PLAYER HAS LATER
 		mageButton->SetOnPressedEvent([=]()
@@ -613,8 +653,8 @@ namespace sceneHelp
 				mageButton->GetBorder()->SetVisiblity(true);
 				warriorButton->GetBorder()->SetVisiblity(false);
 			});
-		
-		
+
+
 		warriorButton->SetOnPressedEvent([=]()
 			{
 				//mageBorder->SetVisiblity(false);
@@ -675,6 +715,7 @@ namespace sceneHelp
 		returnTo->SetOnPressedEvent([=] {
 
 			game->SetScene("MainMenu");
+			SoundHandler::Get().SetCurrentMusic("MenuTheme");
 
 			});
 
@@ -717,7 +758,7 @@ namespace sceneHelp
 		type = static_cast<DoFType>(std::stod(savedBlur));
 		rtd::Button* blurButton = miscMenu->AddElement<rtd::Button>("Button.png", draw_t(width / 8.0f, height / 8.0f, width / 4.0f, height / 8.0f));
 		rtd::Text* blurType = miscMenu->AddElement<rtd::Text>("Blur Type: Adaptive", draw_t(width / 8.0f, height / 8.0f, width / 4.0f, height / 8.0f));
-		
+
 		// Toggle when the game starts.
 		switch (type)
 		{
@@ -775,7 +816,7 @@ namespace sceneHelp
 			default:
 				break;
 			}
-			
+
 			});
 
 		// Shadows toggle.
@@ -807,7 +848,7 @@ namespace sceneHelp
 
 		game->GetScene("Game").GetLights()->SetLightVolumeQuality(lightQuality);
 		OptionSystem::Get().SetOption("VolumetricLightQuality", std::to_string(lightQuality));
-		
+
 		lightQualityButton->SetOnPressedEvent([=] {
 
 			switch (lightQuality)
@@ -1097,7 +1138,12 @@ namespace sceneHelp
 		Collection2D* nameCollection = new Collection2D;
 		rtd::TextField* nameInputField = nameCollection->AddElement<rtd::TextField>(draw_text_t((width / 2) - (width / 8), height / 8, width / 4, D2D1Core::GetDefaultFontSize()), 12, true);
 		nameInputField->SetDescriptionText("Input Name");
-		//nameInputField->SetPresetText("Noobie");
+		rtd::Text* nameErrorText = nameCollection->AddElement<rtd::Text>("Invalid Name", draw_text_t((width / 2.0f) - (width / 8), (height / 8.0f) * 1.5f, width / 4.0f, height / 8.0f));
+		nameErrorText->SetVisiblity(false);
+#ifdef _DEBUG
+		nameInputField->SetPresetText("Player");
+#endif // DEBUG
+
 		scene.Add2DCollection(nameCollection, "nameInput");
 
 		Collection2D* lobbyCollection = new Collection2D;
@@ -1110,7 +1156,8 @@ namespace sceneHelp
 		rtd::Button* lobbyButton = lobbyCollection->AddElement<rtd::Button>("joinLobby.png", draw_t(width / 8, height - (height / 6.f), width / 4.f, height * 0.15f));
 		//lobbyCollection->AddElement<rtd::Text>("Join Lobby", draw_text_t(width / 8, height - (height / 6.f), width / 4, height / 8));
 		rtd::Button* exitButton = lobbyCollection->AddElement<rtd::Button>("No.png", draw_t(0.0f, 0.0f, width / 24, height / 14));
-
+		rtd::Text* lobbyErrorText = lobbyCollection->AddElement<rtd::Text>("Invalid Lobby ID", draw_text_t(width / 8, height - (height / 3.33f), width / 4.0f, height / 8.0f));
+		lobbyErrorText->SetVisiblity(false);
 		exitButton->SetOnPressedEvent([=]
 			{
 				game->m_client.Disconnect();
@@ -1129,6 +1176,7 @@ namespace sceneHelp
 				}
 				else
 				{
+					nameErrorText->SetVisiblity(true);
 					LOG_WARNING("Enter a valid nickname");
 				}
 			});
@@ -1146,6 +1194,7 @@ namespace sceneHelp
 					}
 					catch (std::exception e)
 					{
+						lobbyErrorText->SetVisiblity(true);
 						LOG_WARNING("Request denied: Invalid lobby ID: Was not numerical");
 					}
 
@@ -1159,6 +1208,7 @@ namespace sceneHelp
 						}
 						else
 						{
+							nameErrorText->SetVisiblity(true);
 							LOG_WARNING("Request denied: Enter a valid nickname");
 						}
 					}
@@ -1404,6 +1454,19 @@ namespace sceneHelp
 			else if (Tree8 == filename)
 			{
 				game->m_models[ModelID::TREE8].push_back(e);
+			}
+			//else if (Water == filename)
+			//{
+			//	e.AddComponent<comp::Tag<TagType::TEXTUREEFFECT>>();
+			//	game->m_models[ModelID::WATER].push_back(e);
+			//}
+			else if (WaterEdge == filename)
+			{
+				e.AddComponent<comp::Tag<TagType::TEXTUREEFFECT>>();
+			}
+			else if (WaterFloor == filename)
+			{
+				e.AddComponent<comp::Tag<TagType::TEXTUREEFFECT>>();
 			}
 		}
 

@@ -116,8 +116,7 @@ float4 main(PixelIn input) : SV_TARGET
                 }
                 case 1:
 				{
-                    if (length(camPos - sb_lights[i].position.xyz) < LIGHT_RANGE)
-                    {
+
                         float len = length(pixelposLightSpace.xyz);
                         pixelposLightSpace.xyz /= len;
                         float closestDepth = 1.0f;
@@ -150,7 +149,6 @@ float4 main(PixelIn input) : SV_TARGET
 
                         }
                         lightCol += DoPointlight(sb_lights[i], input, N) * (1.0f - shadowCoef);
-                    }
                     break;
                 }
                 default:

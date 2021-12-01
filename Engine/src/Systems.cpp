@@ -108,11 +108,16 @@ void Systems::HealingSystem(HeadlessScene& scene, float dt)
 						if (entity.IsNull())
 							return;
 
-						comp::Health* h = other.GetComponent<comp::Health>();
-						if (h)
+						comp::Player* p = other.GetComponent<comp::Player>();
+						if (p)
 						{
-							h->currentHealth += ability.healAmount;
-							scene.publish<EComponentUpdated>(other, ecs::Component::HEALTH);
+							comp::Health* h = other.GetComponent<comp::Health>();
+
+							if (h)
+							{
+								h->currentHealth += ability.healAmount;
+								scene.publish<EComponentUpdated>(other, ecs::Component::HEALTH);
+							}
 						}
 					});
 			}
@@ -230,9 +235,15 @@ void Systems::MovementSystem(HeadlessScene& scene, float dt)
 	PROFILE_FUNCTION();
 
 	//Transform
-
 	scene.ForEachComponent<comp::Transform, comp::Velocity, comp::TemporaryPhysics >([&](Entity e, comp::Transform& t, comp::Velocity& v, comp::TemporaryPhysics& p)
 		{
+			//Don't update villager that is in hiding
+			comp::Villager* villager = e.GetComponent<comp::Villager>();
+			if (villager != nullptr && villager->isHiding)
+			{
+				return;
+			}
+
 			v.vel = v.oldVel; // ignore any changes made to velocity made this frame
 			auto& it = p.forces.begin();
 			while (it != p.forces.end())
@@ -293,6 +304,14 @@ void Systems::MovementSystem(HeadlessScene& scene, float dt)
 		scene.ForEachComponent<comp::Transform, comp::Velocity>([&, dt]
 		(Entity e, comp::Transform& transform, comp::Velocity& velocity)
 			{
+
+				//Don't update villager that is in hiding
+				comp::Villager* villager = e.GetComponent<comp::Villager>();
+				if (villager != nullptr && villager->isHiding)
+				{
+					return;
+				}
+
 				if (velocity.vel.Length() > 0.01f)
 				{
 					e.UpdateNetwork();
@@ -353,22 +372,31 @@ void Systems::LightSystem(Scene& scene, float dt)
 				light.lightData.position = sm::Vector4(t->position.x, t->position.y, t->position.z, 1.f);
 			}
 
-			if (light.lightData.type == TypeLight::POINT)
+			if (light.lightData.type == TypeLight::POINT && light.lightData.enabled)
 			{
-				if (light.flickerTimer >= light.maxFlickerTime)
-					light.increase = false;
-				else if (light.flickerTimer <= 0.f)
+				if (light.enabledTimer > 0.f)
 				{
-					light.increase = true;
-					light.maxFlickerTime = (float)(rand() % 10 + 1) / 10.f;
+					light.enabledTimer -= dt;
+					light.lightData.intensity = util::Lerp(light.lightData.intensity, 0.3f, dt);
 				}
-
-				if (light.increase)
-					light.flickerTimer += dt * (rand() % 2 + 1);
 				else
-					light.flickerTimer -= dt * (rand() % 2 + 1);
+				{
+					if (light.flickerTimer >= light.maxFlickerTime)
+						light.increase = false;
+					else if (light.flickerTimer <= 0.f)
+					{
+						light.increase = true;
+						light.maxFlickerTime = (float)(rand() % 10 + 1) / 10.f;
+					}
 
-				light.lightData.intensity = util::Lerp(0.5f, 0.7f, light.flickerTimer);
+					if (light.increase)
+						light.flickerTimer += dt * (rand() % 2 + 1);
+					else
+						light.flickerTimer -= dt * (rand() % 2 + 1);
+
+					light.lightData.intensity = util::Lerp(0.5f, 0.7f, light.flickerTimer);
+				}				
+							
 			}
 
 			scene.GetLights()->EditLight(light.lightData, light.index);
