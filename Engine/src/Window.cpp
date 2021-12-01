@@ -140,9 +140,18 @@ bool Window::Initialize(const Desc& desc)
 	rect.top = posY;
 	rect.bottom = posY + desc.height;
 
+	m_clientRect = rect;
+
+
+#ifdef _DEBUG
 	AdjustWindowRect(&rect, WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE, FALSE);
 	const int width = rect.right - rect.left;
 	const int height = rect.bottom - rect.top;
+#else
+	const int width = rect.right - rect.left;
+	const int height = rect.bottom - rect.top;
+	AdjustWindowRect(&rect, WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE, FALSE);
+#endif	
 
 	// Create the window.
 	this->m_hWnd = CreateWindowEx(0, WINDOW_CLASS, desc.title,

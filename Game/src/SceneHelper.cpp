@@ -345,7 +345,7 @@ namespace sceneHelp
 		externalLinkBtn->GetText()->SetScale(0.5f);
 		externalLinkBtn->GetText()->SetText("Give Feedback!");
 		externalLinkBtn->SetOnPressedEvent([] {
-			ShellExecuteA(NULL, "open", "https://docs.google.com/forms/d/e/1FAIpQLSfvyYTRNYaVHbg9Fa8H7xNXQGr2SWoaC9_GKZ7rSkuoNDjOMA/viewform?usp=sf_link", NULL, NULL, SW_SHOWNORMAL);
+			ShellExecuteA(NULL, "open", "https://forms.gle/1E4f4a9jqKoNpCgZ7", NULL, NULL, SW_SHOWNORMAL);
 			});
 		rtd::Text* deadServerText = connectFields->AddElement<rtd::Text>("Error connecting to server", draw_text_t((width / 8.0f) , (height / 8.0f) * 5.0f, width / 4.0f, height / 8.0f));
 		deadServerText->SetVisiblity(false);
