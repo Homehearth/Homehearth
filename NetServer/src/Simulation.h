@@ -55,7 +55,6 @@ private:
 	uint32_t GetTick()const;
 
 	//Game play related
-	Timer waveTimer;
 	std::queue<Wave> waveQueue;
 	std::queue<sm::Vector3> m_spawnPoints;
 	HouseManager houseManager;

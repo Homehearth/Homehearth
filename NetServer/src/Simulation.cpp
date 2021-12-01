@@ -385,15 +385,16 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 					Systems::ClearCollidingList(scene, qtDynamic.get());
 				}
 
+				m_timeCycler.Update(e.dt);
+
 				{
 					PROFILE_SCOPE("Create waves");
 					if (!waveQueue.empty())
-						ServerSystems::NextWaveConditions(this, waveTimer, waveQueue.front().GetTimeLimit());
+						ServerSystems::NextWaveConditions(this);
 					else
 						EnemyManagement::CreateWaves(waveQueue, currentRound++);
 				}
 
-				m_timeCycler.Update(e.dt);
 				m_spreeHandler.Update();
 			}
 		});
@@ -401,7 +402,6 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 	//On all enemies wiped, activate the next wave.
 	m_pGameScene->on<ESceneCallWaveSystem>([&](const ESceneCallWaveSystem& dt, HeadlessScene& scene)
 		{
-			waveTimer.Start();
 			ServerSystems::WaveSystem(this, waveQueue);
 		});
 
@@ -568,6 +568,7 @@ void Simulation::SendSnapshot()
 			network::message<GameMsg> timeMsg;
 			timeMsg.header.id = GameMsg::Game_Time;
 			timeMsg << m_timeCycler.GetTime();
+			timeMsg << m_timeCycler.GetCycleSpeed();
 			this->Broadcast(timeMsg);
 		}
 		

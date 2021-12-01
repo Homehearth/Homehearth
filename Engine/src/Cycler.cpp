@@ -19,24 +19,37 @@ Cycler::Cycler()
 	: m_timer(0.0f)
 	, m_relativeTime(0.0f)
 	, m_timePeriod(CyclePeriod::DAY)
+	, m_changedPeriod(false)
+	, m_cycleSpeed(1.0f)
 {
 }
 
 void Cycler::Update(float dt)
 {
-	m_timer += dt;
+	m_timer += dt * m_cycleSpeed;
 	if (m_timer > DAY_DURATION)
 	{
 		m_timer = 0.0f;
 	}
 	m_relativeTime = m_timer / DAY_DURATION;
 
-	m_timePeriod = this->CalculatePeriod();
+	CyclePeriod newPeriod = this->CalculatePeriod();
+	m_changedPeriod = false;
+	if (newPeriod != m_timePeriod)
+	{
+		m_changedPeriod = true;
+	}
+	m_timePeriod = newPeriod;
 }
 
 CyclePeriod Cycler::GetTimePeriod() const
 {
 	return m_timePeriod;
+}
+
+bool Cycler::HasChangedPeriod() const
+{
+	return m_changedPeriod;
 }
 
 float Cycler::GetTime() const
@@ -49,4 +62,14 @@ void Cycler::SetTime(float time)
 	m_timer = time * DAY_DURATION;
 	m_relativeTime = time;
 	m_timePeriod = this->CalculatePeriod();
+}
+
+float Cycler::GetCycleSpeed() const
+{
+	return m_cycleSpeed;
+}
+
+void Cycler::SetCycleSpeed(float speed)
+{
+	m_cycleSpeed = speed;
 }

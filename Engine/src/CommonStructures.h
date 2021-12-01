@@ -13,7 +13,7 @@ constexpr uint32_t TIME_LIMIT_NIGHT = 50;
 constexpr uint32_t TIME_LIMIT_MORNING = 10;
 constexpr float ROTATION = 180.0f / (float)(TIME_LIMIT_DAY + TIME_LIMIT_MORNING);
 
-const float DAY_DURATION	= 60.0f;
+const float DAY_DURATION	= 150.0f;
 const float MORNING			= 0.0f;
 const float DAY				= 0.1f;
 const float NIGHT			= 0.5f;

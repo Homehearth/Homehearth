@@ -160,7 +160,6 @@ namespace sceneHelp
 			{
 				game->GetCycler().Update(e.dt);
 
-				LOG_INFO("%f", game->GetCycler().GetTime());
 				if (game->m_players.find(game->m_localPID) != game->m_players.end())
 				{
 					sm::Vector3 playerPos = game->m_players.at(game->m_localPID).GetComponent<comp::Transform>()->position;
@@ -187,28 +186,46 @@ namespace sceneHelp
 						l = moon.GetComponent<comp::Light>();
 						angle -= 180.f;
 					}
-					
-					/*
-					l = moon.GetComponent<comp::Light>();
-					
-					dir = sm::Vector3(l->lightData.direction);
-					dir.Normalize();
-					targetDir = sm::Vector3::TransformNormal(sm::Vector3(-1, 0, -1), sm::Matrix::CreateRotationZ(dx::XMConvertToRadians(360.f * (game->GetCycler().GetTime() - 0.5f))));
-					dir = util::Lerp(dir, targetDir, e.dt * 10);
-
-					l->lightData.direction = sm::Vector4(dir.x, dir.y, dir.z, 0.0f);
-					
-					pos = playerPos - dir * 300;
-
-					pos = util::Lerp(sm::Vector3(l->lightData.position), pos, e.dt * 10);
-					l->lightData.position = sm::Vector4(pos);
-
-					l->lightData.position.w = 1.f;
-					l->lightData.enabled = l->lightData.direction.y < 0.0f;
-					*/
-
-					
 				}
+
+				if (game->GetCycler().HasChangedPeriod())
+				{
+					switch (game->GetCycler().GetTimePeriod())
+					{
+					case CyclePeriod::DAY:
+					{
+						
+
+						break;
+					}
+					case CyclePeriod::MORNING:
+					{
+						scene.ForEachComponent<comp::Light>([](comp::Light& l)
+							{
+								if (l.lightData.type == TypeLight::POINT)
+								{
+									l.lightData.enabled = 0;
+								}
+							});
+						break;
+					}
+					case CyclePeriod::NIGHT:
+					{
+						scene.ForEachComponent<comp::Light>([](comp::Light& l)
+							{
+								if (l.lightData.type == TypeLight::POINT)
+								{
+									l.lightData.enabled = 1;
+								}
+							});
+						break;
+					}
+					default:
+						break;
+					}
+				}
+
+
 
 				Collection2D* bullColl = game->GetCurrentScene()->GetCollection("bullDoze");
 				if (bullColl)

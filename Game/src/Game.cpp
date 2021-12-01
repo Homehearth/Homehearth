@@ -346,8 +346,11 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	}
 	case GameMsg::Game_Time:
 	{
+		float speed;
+		msg >> speed;
 		float time;
 		msg >> time;
+		m_cycler.SetCycleSpeed(speed);
 		m_cycler.SetTime(time);
 		break;
 	}
