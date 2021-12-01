@@ -85,3 +85,8 @@ std::shared_ptr<BT::FallbackNode> AIBehaviors::GetFocusBuildingAIBehavior(Entity
 	return root;
 
 }
+
+std::shared_ptr<BT::FallbackNode> AIBehaviors::GetVillagerAIBehavior(Entity entity)
+{
+	return std::shared_ptr<BT::FallbackNode>();
+}

@@ -20,6 +20,7 @@ void Cycler::OnStart()
 {
 	m_time.Start();
 	m_timePeriod = Cycle::DAY;
+	Blackboard::Get().AddValue<Cycle>("cycle", m_timePeriod);
 }
 
 void Cycler::Update(Simulation* sim)
@@ -29,7 +30,7 @@ void Cycler::Update(Simulation* sim)
 	case Cycle::DAY:
 	{
 		this->OnDay(sim);
-		uint32_t elapsed = (uint32_t)m_time.GetElapsedTime()*10;
+		uint32_t elapsed = (uint32_t)m_time.GetElapsedTime() * 10;
 
 		// The day has reached its limit and switches to night.
 		if (elapsed >= TIME_LIMIT_DAY)
@@ -37,6 +38,7 @@ void Cycler::Update(Simulation* sim)
 			m_timePeriod = Cycle::NIGHT;
 			m_time.Start();
 			m_shouldSwitch = true;
+			Blackboard::Get().AddValue<Cycle>("cycle", m_timePeriod);
 		}
 		break;
 	}
@@ -47,6 +49,7 @@ void Cycler::Update(Simulation* sim)
 		{
 			m_timePeriod = Cycle::DAY;
 			m_time.Start();
+			Blackboard::Get().AddValue<Cycle>("cycle", m_timePeriod);
 		}
 
 		uint32_t elapsed = (uint32_t)m_time.GetElapsedTime();
@@ -56,6 +59,7 @@ void Cycler::Update(Simulation* sim)
 		{
 			m_timePeriod = Cycle::MORNING;
 			m_time.Start();
+			Blackboard::Get().AddValue<Cycle>("cycle", m_timePeriod);
 		}
 		break;
 	}
@@ -66,6 +70,7 @@ void Cycler::Update(Simulation* sim)
 		{
 			m_timePeriod = Cycle::DAY;
 			m_time.Start();
+			Blackboard::Get().AddValue<Cycle>("cycle", m_timePeriod);
 		}
 		break;
 	}

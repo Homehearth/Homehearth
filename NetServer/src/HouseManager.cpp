@@ -116,6 +116,7 @@ void HouseManager::AddCollider(NameType houseType, Entity house) const
 		obb->Center.y = 0.0f;
 		if (houseType == NameType::MESH_RUINED_HOUSE9)
 		{
+
 			houseComp->attackNode = nullptr;
 			houseComp->isDead = true;
 		}
