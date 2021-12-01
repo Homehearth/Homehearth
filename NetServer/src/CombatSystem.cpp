@@ -278,11 +278,10 @@ void CombatSystem::AddCollisionMeleeBehavior(Entity entity, Entity attackEntity,
 				return;
 
 			tag_bits goodOrBad = TagType::GOOD | TagType::BAD;
-			if ((entity.GetTags() & goodOrBad) ==
-				(other.GetTags() & goodOrBad))
-			{
-				return; //these guys are on the same team
-			}
+			//if ((entity.GetTags() & goodOrBad) == (other.GetTags() & goodOrBad))
+			//{
+			//	return; //these guys are on the same team
+			//}
 
 			if ((entity.GetTags() & TagType::GOOD) && (other.GetTags() & TagType::DEFENCE)
 				|| (entity.GetTags() & TagType::DEFENCE) && (other.GetTags() & TagType::GOOD))
@@ -306,15 +305,12 @@ void CombatSystem::AddCollisionMeleeBehavior(Entity entity, Entity attackEntity,
 
 			if (attackAbility)
 			{
-				if (entity.GetComponent<comp::Player>() && other.GetComponent<comp::Tag<BAD>>())
+				comp::Health* otherHealth = other.GetComponent<comp::Health>();
+				if (otherHealth && (entity.GetTags() & goodOrBad) != (other.GetTags() & goodOrBad))
 				{
-					comp::Health* otherHealth = other.GetComponent<comp::Health>();
-					if (otherHealth)
-					{
-						otherHealth->currentHealth -= attackAbility->attackDamage;
-						// update Health on network
-						scene.publish<EComponentUpdated>(other, ecs::Component::HEALTH);
-					}
+					otherHealth->currentHealth -= attackAbility->attackDamage;
+					// update Health on network
+					scene.publish<EComponentUpdated>(other, ecs::Component::HEALTH);
 
 					// Blood particle
 					if (other.GetComponent<comp::PARTICLEEMITTER>())
@@ -325,21 +321,10 @@ void CombatSystem::AddCollisionMeleeBehavior(Entity entity, Entity attackEntity,
 
 					scene.publish<EComponentUpdated>(other, ecs::Component::PARTICLEMITTER);
 				}
-				else if (entity.GetComponent<comp::Tag<BAD>>() && other.GetComponent<comp::Tag<STATIC>>())
-				{
-					comp::Health* otherHealth = other.GetComponent<comp::Health>();
-					if (otherHealth)
-					{
-						otherHealth->currentHealth -= attackAbility->attackDamage;
-						// update Health on network
-						scene.publish<EComponentUpdated>(other, ecs::Component::HEALTH);
-					}
-				}
 
 				if (other.GetComponent<comp::Tag<TagType::DEFENCE>>())
 				{
 					//TODO: add building particles
-					// Blood particle
 					if (other.GetComponent<comp::PARTICLEEMITTER>())
 					{
 						other.RemoveComponent<comp::PARTICLEEMITTER>();
@@ -379,7 +364,7 @@ void CombatSystem::AddCollisionMeleeBehavior(Entity entity, Entity attackEntity,
 					force.force = attackVel->vel;
 					p->forces.push_back(force);
 				}
-				else if(otherHealth)
+				else if (otherHealth)
 				{
 					sm::Vector3 toOther = other.GetComponent<comp::Transform>()->position - entity.GetComponent<comp::Transform>()->position;
 					toOther.Normalize();
@@ -408,36 +393,35 @@ void CombatSystem::AddCollisionRangeBehavior(Entity entity, Entity attackEntity,
 {
 	CollisionSystem::Get().AddOnCollisionEnter(attackEntity, [entity, &scene](Entity thisEntity, Entity other)
 		{
+			TagType returnValue = TagType::NO_RESPONSE;
+
 			// is caster already dead
 			if (entity.IsNull())
 			{
 				thisEntity.GetComponent<comp::SelfDestruct>()->lifeTime = 0.f;
-				return NO_RESPONSE;
+				return returnValue;
 			}
 
 			if (other == entity)
-				return NO_RESPONSE;
+				return returnValue;
 
 			tag_bits goodOrBad = TagType::GOOD | TagType::BAD;
-			if ((entity.GetTags() & goodOrBad) ==
-				(other.GetTags() & goodOrBad))
-			{
-				return NO_RESPONSE; //these guys are on the same team
-			}
+			//if ((entity.GetTags() & goodOrBad) ==
+			//	(other.GetTags() & goodOrBad))
+			//{
+			//	return NO_RESPONSE; //these guys are on the same team
+			//}
 
 			comp::RangeAttackAbility* attackAbility = entity.GetComponent<comp::RangeAttackAbility>();
 
 			if (attackAbility)
 			{
-				if (other.GetComponent<comp::Tag<BAD>>())
+				comp::Health* otherHealth = other.GetComponent<comp::Health>();
+				if (otherHealth && (entity.GetTags() & goodOrBad) != (other.GetTags() & goodOrBad))
 				{
-					comp::Health* otherHealth = other.GetComponent<comp::Health>();
-					if (otherHealth)
-					{
-						otherHealth->currentHealth -= attackAbility->attackDamage;
-						// update Health on network
-						scene.publish<EComponentUpdated>(other, ecs::Component::HEALTH);
-					}
+					otherHealth->currentHealth -= attackAbility->attackDamage;
+					// update Health on network
+					scene.publish<EComponentUpdated>(other, ecs::Component::HEALTH);
 
 					// Blood particle
 					if (other.GetComponent<comp::PARTICLEEMITTER>())
@@ -449,6 +433,15 @@ void CombatSystem::AddCollisionRangeBehavior(Entity entity, Entity attackEntity,
 					scene.publish<EComponentUpdated>(other, ecs::Component::PARTICLEMITTER);
 				}
 
+				if (other.GetComponent<comp::Tag<TagType::DEFENCE>>())
+				{
+					//TODO: add building particles
+					if (other.GetComponent<comp::PARTICLEEMITTER>())
+					{
+						other.RemoveComponent<comp::PARTICLEEMITTER>();
+					}
+					other.AddComponent<comp::PARTICLEEMITTER>(sm::Vector3{ 0,10,0 }, 50, 10.f, PARTICLEMODE::SMOKEAREA, 3.5f, 1.f, true);
+				}
 
 				//if (other.GetComponent<comp::Tag<TagType::DEFENCE>>())
 				//{
@@ -456,7 +449,6 @@ void CombatSystem::AddCollisionRangeBehavior(Entity entity, Entity attackEntity,
 				//}
 
 				// Add some sound effects
-
 				audio_t audio = {
 					ESoundEvent::NONE,
 					entity.GetComponent<comp::Transform>()->position,
@@ -475,7 +467,9 @@ void CombatSystem::AddCollisionRangeBehavior(Entity entity, Entity attackEntity,
 				}
 				else if (other.GetComponent<comp::NPC>())
 				{
-					audio.type = ESoundEvent::Enemy_OnDmgRecieved;
+					audio.shouldBroadcast = true;
+					audio.is3D = true;
+					audio.type = ESoundEvent::Player_OnRangeAttackHit;
 				}
 				else if (other.GetComponent<comp::Tag<STATIC>>() && entity.GetComponent<comp::Player>())
 				{

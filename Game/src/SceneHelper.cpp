@@ -1382,7 +1382,7 @@ namespace sceneHelp
 
 			file >> filename;
 
-			ResourceManager::Get().GetResource<RModel>(filename);
+			ResourceManager::Get().GetResource<RTexture>(filename);
 		}
 		file.close();
 	}
