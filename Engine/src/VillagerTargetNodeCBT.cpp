@@ -20,7 +20,7 @@ BT::VillagerTargetNodeCBT::~VillagerTargetNodeCBT()
 
 BT::NodeStatus BT::VillagerTargetNodeCBT::Tick()
 {
-	Cycle* cycle = Blackboard::Get().GetValue<Cycle>("cycle");
+	CyclePeriod* cycle = Blackboard::Get().GetValue<CyclePeriod>("cycle");
 	sm::Vector3 targetPosition;
 
 
@@ -36,7 +36,7 @@ BT::NodeStatus BT::VillagerTargetNodeCBT::Tick()
 		refreshRate = 2.0f;
 
 	//focus to get to home node;
-	if(*cycle == Cycle::NIGHT && villager && !villager->homeHouse.IsNull())
+	if(*cycle == CyclePeriod::NIGHT && villager && !villager->homeHouse.IsNull())
 	{
 		villager->movementSpeed = 30.f;
 		if(villager && !villager->homeHouse.IsNull())
@@ -59,9 +59,9 @@ BT::NodeStatus BT::VillagerTargetNodeCBT::Tick()
 	//focus to idle around the village
 	else
 	{
-		if(*cycle == Cycle::DAY)
+		if(*cycle == CyclePeriod::DAY)
 			villager->movementSpeed = 15.f;
-		else if (*cycle == Cycle::DAY)
+		else if (*cycle == CyclePeriod::DAY)
 			villager->movementSpeed = 30.f;
 
 		comp::Velocity* velocity = entity.GetComponent<comp::Velocity>();

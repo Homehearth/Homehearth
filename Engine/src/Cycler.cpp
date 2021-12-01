@@ -23,6 +23,7 @@ Cycler::Cycler()
 	, m_changedPeriod(false)
 	, m_cycleSpeed(1.0f)
 {
+	Blackboard::Get().AddValue<CyclePeriod>("cycle", m_timePeriod);
 }
 
 void Cycler::Update(float dt)
@@ -39,6 +40,8 @@ void Cycler::Update(float dt)
 	if (newPeriod != m_timePeriod)
 	{
 		m_changedPeriod = true;
+
+		Blackboard::Get().AddValue<CyclePeriod>("cycle", newPeriod);
 	}
 	m_timePeriod = newPeriod;
 }
