@@ -130,6 +130,11 @@ namespace ecs
 				{
 					textureName = "MageHeal.png";
 				}
+				else if (type == PARTICLEMODE::MAGERANGE)
+				{
+					textureName = "fire.png";
+					opacityTextureName = "fire_opacity.png";
+				}
 
 				texture = ResourceManager::Get().GetResource<RTexture>(textureName);
 				opacityTexture = ResourceManager::Get().GetResource<RTexture>(opacityTextureName);
