@@ -65,6 +65,14 @@ void Cycler::Update(Simulation* sim)
 		if (elapsed >= TIME_LIMIT_MORNING)
 		{
 			m_timePeriod = Cycle::DAY;
+			sim->GetGameScene()->ForEachComponent<comp::Health, comp::Player>([&](Entity e, comp::Health& h, comp::Player& p){
+
+				if (!h.isAlive)
+				{
+					sim->ResetPlayer(e);
+				}
+
+				});
 			m_time.Start();
 		}
 		break;

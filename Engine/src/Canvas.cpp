@@ -58,6 +58,16 @@ const draw_t rtd::Canvas::GetOpts() const
 	return m_drawOpts;
 }
 
+void rtd::Canvas::SetBorderThickness(const LineWidth& thicc)
+{
+	m_border->SetLineWidth(thicc);
+}
+
+void rtd::Canvas::SetBorderShape(const Shapes& shape)
+{
+	m_border->SetShape(shape);
+}
+
 void rtd::Canvas::SetBorderColor(const D2D1_COLOR_F& new_color)
 {
 	if (!m_border)
