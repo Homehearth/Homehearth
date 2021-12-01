@@ -88,40 +88,34 @@ void CombatSystem::UpdateTeleport(HeadlessScene& scene)
 	scene.ForEachComponent<comp::BlinkAbility, comp::Transform>([&](Entity entity, comp::BlinkAbility& teleportAbility, comp::Transform& transform)
 		{
 			PathFinderManager* pathFinderManager = Blackboard::Get().GetPathFindManager();
-			sm::Vector3* targetPoint = nullptr;
 
-			comp::Player* player = entity.GetComponent<comp::Player>();
-			if (player)
-			{
-				targetPoint = &player->mousePoint; // only update targetPoint if this is a player
-			}
+			comp::Player* p = entity.GetComponent<comp::Player>();
 
 			if (ecs::ReadyToUse(&teleportAbility, nullptr))
 			{
 				const float decreaseValue = 0.90f;
-				if (targetPoint)
+				if (p)
 				{
-					sm::Vector3 direction = *targetPoint - transform.position;
-					direction.Normalize();
-					direction *= teleportAbility.distance;
+					sm::Vector3 dir = p->fowardDir * teleportAbility.distance;
 
 					bool hasSetTarget = false;
-					while (!hasSetTarget && direction.Length() > pathFinderManager->GetNodeSize())
+					while (!hasSetTarget && dir.Length() > pathFinderManager->GetNodeSize())
 					{
-						sm::Vector3 newPos = transform.position + direction;
+						sm::Vector3 newPos = transform.position + dir;
 						if (pathFinderManager->FindClosestNode(newPos)->reachable)
 						{
-							entity.GetComponent<comp::Transform>()->position = transform.position + direction;
+							entity.GetComponent<comp::Transform>()->position = transform.position + dir;
 							hasSetTarget = true;
+							entity.UpdateNetwork();
 							if (pathFinderManager->PlayerAStar(entity.GetComponent<comp::Transform>()->position))
 							{
-								player->reachable = true;
+								p->reachable = true;
 							}
 						}
 						else
 						{
 							//Lower length of vector by 10% every failed try
-							direction *= decreaseValue;
+							dir *= decreaseValue;
 						}
 					}
 				}
@@ -134,13 +128,7 @@ void CombatSystem::UpdateDash(HeadlessScene& scene)
 	scene.ForEachComponent<comp::DashAbility, comp::Transform>([&](Entity entity, comp::DashAbility& dashAbility, comp::Transform& transform)
 		{
 			PathFinderManager* pathFinderManager = Blackboard::Get().GetPathFindManager();
-			sm::Vector3* targetPoint = nullptr;
-
-			comp::Player* player = entity.GetComponent<comp::Player>();
-			if (player)
-			{
-				targetPoint = &player->mousePoint; // only update targetPoint if this is a player
-			}
+			// Has to run to reset the ability
 
 			if (ecs::ReadyToUse(&dashAbility, nullptr))
 			{
@@ -157,14 +145,17 @@ void CombatSystem::UpdateDash(HeadlessScene& scene)
 				};
 
 				entity.GetComponent<comp::AudioState>()->data.emplace(audio);
+				comp::Player* p = entity.GetComponent<comp::Player>();
+				if (p)
+				{
+					dashAbility.velocityBeforeDash = p->fowardDir * p->runSpeed;
+				}
 			}
+
 			if (ecs::IsUsing(&dashAbility))
 			{
 				entity.GetComponent<comp::Velocity>()->vel = dashAbility.velocityBeforeDash * dashAbility.force;
-			}
-			else
-			{
-				dashAbility.velocityBeforeDash = entity.GetComponent<comp::Velocity>()->vel;
+
 			}
 
 

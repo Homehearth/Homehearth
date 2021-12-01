@@ -938,11 +938,12 @@ bool Simulation::IsEmpty() const
 
 void Simulation::ReadyCheck(uint32_t playerID)
 {
-	bool allReady = m_lobby.ReadyCheck(playerID);
+	bool isAllReady = m_lobby.ReadyCheck(playerID);
 	m_lobby.Update();
 
-	if (allReady)
+	if (isAllReady)
 	{
+		// Set all players spawn positions once when everyone is ready.
 		m_pGameScene->ForEachComponent<comp::Player>([&](Entity& e, comp::Player& p)
 			{
 				p.spawnPoint = m_spawnPoints.front();
