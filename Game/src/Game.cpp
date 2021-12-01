@@ -80,6 +80,7 @@ bool Game::OnStartup()
 	SetScene("MainMenu");
 
 	//Particles
+	ResourceManager::Get().GetResource<RTexture>("BloodParticle.png");
 	Entity emitter4 = GetScene("Game").CreateEntity();
 	emitter4.AddComponent<comp::Transform>()->position = { 250, 5, -340 };
 	emitter4.AddComponent<comp::EmitterParticle>(sm::Vector3{ 0,0,0 }, 800, 2.f, PARTICLEMODE::SMOKEAREA, 3.5f, 1.f, false);
@@ -101,28 +102,37 @@ void Game::OnUserUpdate(float deltaTime)
 
 		GameSystems::DeathParticleTimer(scene);
 
-		if (m_elapsedCycleTime <= m_waveTimer && (m_serverCycle == Cycle::DAY || m_serverCycle == Cycle::MORNING))
+		if (m_elapsedCycleTime <= m_waveTimer)
 		{
-			m_elapsedCycleTime += deltaTime;
+			if (m_serverCycle == Cycle::DAY || m_serverCycle == Cycle::MORNING)
+			{
+				m_elapsedCycleTime += deltaTime;
+			}
 			scene.ForEachComponent<comp::Light>([&](Entity e, comp::Light& l)
 				{
 					switch (l.lightData.type)
 					{
 					case TypeLight::DIRECTIONAL:
 					{
-						l.lightData.direction = { -1.0f, 0.0f, 0.f, 0.f };
+						l.lightData.direction = { -1.0f, 0.0f, -1.f, 0.f };
 						sm::Vector3 dir = sm::Vector3::TransformNormal(sm::Vector3(l.lightData.direction), sm::Matrix::CreateRotationZ(dx::XMConvertToRadians(ROTATION) * (m_elapsedCycleTime)));
 
 						l.lightData.direction = sm::Vector4(dir.x, dir.y, dir.z, 0.0f);
 						sm::Vector3 pos = l.lightData.position;
-						pos = playerPos - dir * 200;
+						pos = playerPos - dir * 400;
+
+						pos = util::Lerp(sm::Vector3(l.lightData.position), pos, deltaTime * 10);
 						l.lightData.position = sm::Vector4(pos);
+
 						l.lightData.position.w = 1.f;
 						break;
 					}
 					case TypeLight::POINT:
 					{
-						l.lightData.enabled = false;
+						if (m_serverCycle == Cycle::DAY || m_serverCycle == Cycle::MORNING)
+						{
+							l.lightData.enabled = false;
+						}
 						break;
 					}
 					default:
@@ -166,7 +176,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	}
 	case GameMsg::Game_Snapshot:
 	{
-		m_savedInputs.clear();
 		uint32_t count;
 		msg >> count;
 
@@ -176,15 +185,18 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			msg >> entityID;
 
 			Entity entity;
+			bool skip = false;
 			if (m_gameEntities.find(entityID) != m_gameEntities.end())
 			{
 				entity = m_gameEntities.at(entityID);
-				UpdateEntityFromMessage(entity, msg);
 			}
 			else
 			{
-				LOG_WARNING("Updating: Entity %u not in m_gameEntities, should not happen...", entityID);
+				LOG_WARNING("Updating: Entity %u not in m_gameEntities, skipping over this entity!", entityID);
+				skip = true;
 			}
+
+			UpdateEntityFromMessage(entity, msg, skip);
 		}
 
 		break;
@@ -200,15 +212,17 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			msg >> entityID;
 
 			Entity entity;
+			bool skip = false;
 			if (m_gameEntities.find(entityID) != m_gameEntities.end())
 			{
 				entity = m_gameEntities.at(entityID);
-				UpdateEntityFromMessage(entity, msg);
 			}
 			else
 			{
-				LOG_WARNING("Updating component: Entity %u not in m_gameEntities, should not happen...", entityID);
+				skip = true;
+				LOG_WARNING("Updating component: Entity %u not in m_gameEntities, skipping over this comp!", entityID);
 			}
+			UpdateEntityFromMessage(entity, msg, skip);
 		}
 
 		break;
@@ -236,11 +250,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 				LOG_INFO("You added yourself, congratulations!");
 #endif
 				m_players[m_localPID] = e;
-
-				//if (e.GetComponent<comp::Transform>())
-				//{
-				//	e.AddComponent <comp::EmitterParticle>("thisisfine.png", "thisisfine_Opacity.png", 100, PARTICLEMODE::SMOKE);
-				//}
 			}
 			else if (e.GetComponent<comp::Player>())
 			{
@@ -261,6 +270,11 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			msg >> id;
 			if (m_gameEntities.find(id) != m_gameEntities.end())
 			{
+				if (m_players.find(id) != m_players.end())
+				{
+					m_players.erase(id);
+				}
+
 				// Spawn blood splat when enemy dies.
 				if (m_gameEntities.at(id).GetComponent<comp::Transform>() && m_gameEntities.at(id).GetComponent<comp::Health>())
 				{
@@ -268,14 +282,14 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 					bloodDecal.AddComponent<comp::Decal>(*m_gameEntities.at(id).GetComponent<comp::Transform>());
 				}
 
+				comp::Player* p = m_gameEntities.at(id).GetComponent<comp::Player>();
+				if (p)
+				{
+					GetScene("Game").GetCollection("player" + std::to_string(static_cast<uint16_t>(p->playerType)) + "Info")->Hide();
+					GetScene("Game").GetCollection("dynamicPlayer" + std::to_string(static_cast<uint16_t>(p->playerType)) + "namePlate")->Hide();
+				}
 				m_gameEntities.at(id).Destroy();
 				m_gameEntities.erase(id);
-			}
-			// Was the entity a player?
-			if (m_players.find(id) != m_players.end())
-			{
-				m_players.at(id).Destroy();
-				m_players.erase(id);
 			}
 		}
 #ifdef _DEBUG
@@ -348,7 +362,16 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			});
 
 		SetScene("Game");
-		thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::ADAPTIVE);
+		break;
+	}
+	case GameMsg::Game_Spree:
+	{
+		msg >> m_currentSpree;
+		rtd::Text* txt = dynamic_cast<rtd::Text*>(GetScene("Game").GetCollection("SpreeText")->elements[0].get());
+		if (txt)
+		{
+			txt->SetText("X" + std::to_string(m_currentSpree));
+		}
 		break;
 	}
 	case GameMsg::Game_WaveTimer:
@@ -416,11 +439,13 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		uint8_t count;
 		msg >> count;
 
-		for (uint8_t i = count; i > 0; i--)
+		for (uint8_t i = 0; i < count; i++)
 		{
 			char nameTemp[12] = {};
 			uint32_t playerID;
 			comp::Player::Class classType;
+			bool isReady = false;
+			msg >> isReady;
 			msg >> classType;
 			msg >> nameTemp;
 			msg >> playerID;
@@ -428,9 +453,10 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 
 			if (m_players.find(playerID) != m_players.end())
 			{
-				dynamic_cast<rtd::Text*>(GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i))->elements[1].get())->SetText(name);
-				rtd::Text* plT = dynamic_cast<rtd::Text*>(GetScene("Game").GetCollection("dynamicPlayer" + std::to_string(i) + "namePlate")->elements[0].get());
-				rtd::Picture* plP = dynamic_cast<rtd::Picture*>(GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i))->elements[2].get());
+				comp::Player* p = m_players.at(playerID).GetComponent<comp::Player>();
+				dynamic_cast<rtd::Text*>(GetScene("Lobby").GetCollection("playerIcon" + std::to_string(static_cast<uint16_t>(p->playerType)))->elements[1].get())->SetText(name);
+				rtd::Text* plT = dynamic_cast<rtd::Text*>(GetScene("Game").GetCollection("dynamicPlayer" + std::to_string(static_cast<uint16_t>(p->playerType)) + "namePlate")->elements[0].get());
+				rtd::Picture* plP = dynamic_cast<rtd::Picture*>(GetScene("Lobby").GetCollection("playerIcon" + std::to_string(static_cast<uint16_t>(p->playerType)))->elements[2].get());
 				if (plT)
 				{
 					plT->SetText(name);
@@ -453,6 +479,13 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 					}
 					}
 				}
+
+				if (isReady)
+				{
+					dynamic_cast<rtd::Picture*>(GetScene("Lobby").GetCollection("playerIcon" + std::to_string(static_cast<uint16_t>(p->playerType)))->elements[3].get())->SetVisiblity(true);
+				}
+				else
+					dynamic_cast<rtd::Picture*>(GetScene("Lobby").GetCollection("playerIcon" + std::to_string(static_cast<uint16_t>(p->playerType)))->elements[3].get())->SetVisiblity(false);
 			}
 		}
 
@@ -477,7 +510,10 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 
 		for (uint32_t i = 0; i < count; i++)
 		{
-			GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i + 1))->Show();
+			Collection2D* coll = GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i + 1));
+			coll->elements[0].get()->SetVisiblity(true);
+			coll->elements[1].get()->SetVisiblity(true);
+			coll->elements[2].get()->SetVisiblity(true);
 		}
 		for (uint32_t i = count; i < MAX_PLAYERS_PER_LOBBY; i++)
 		{
@@ -738,7 +774,7 @@ void Game::UpgradeDefence(const uint32_t& id)
 	m_client.Send(msg);
 }
 
-void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
+void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 {
 	uint32_t bits;
 	msg >> bits;
@@ -754,61 +790,188 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 			{
 				comp::Transform t;
 				msg >> t;
-				t.rotation.Normalize();
-				e.AddComponent<comp::Transform>(t);
+				if (!skip)
+				{
+					t.rotation.Normalize();
+					e.AddComponent<comp::Transform>(t);
+				}
 				break;
 			}
 			case ecs::Component::VELOCITY:
 			{
 				comp::Velocity v;
 				msg >> v;
-				e.AddComponent<comp::Velocity>(v);
+				if (!skip)
+				{
+					e.AddComponent<comp::Velocity>(v);
+				}
 				break;
 			}
 			case ecs::Component::MESH_NAME:
 			{
+				std::string nameString;
 				NameType name;
 				msg >> name;
-				std::string nameString;
-				switch (name)
+				if (!skip)
 				{
-				case NameType::MESH_DEFENCE:
-				{
-					nameString = "Defence.obj";
-					break;
-				}
-				case NameType::MESH_KNIGHT:
-				{
-					nameString = "Knight.fbx";
-					break;
-				}
-				case NameType::MESH_MONSTER:
-				{
-					nameString = "Monster.fbx";
-					break;
-				}
-				case NameType::MESH_MAGE:
-				{
-					nameString = "Mage.fbx";
-					break;
-				}
-
-				case NameType::MESH_SPHERE:
-				{
-					nameString = "Sphere.obj";
-					break;
-				}
-				default:
-				{
-					nameString = "Cube.obj";
-					break;
-				}
-				}
-
-				std::shared_ptr<RModel> model = ResourceManager::Get().CopyResource<RModel>(nameString, true);
-				if (model)
-				{
-					e.AddComponent<comp::Renderable>()->model = model;
+					switch (name)
+					{
+					case NameType::MESH_WATERMILL:
+					{
+						nameString = "WaterMill.fbx";
+						break;
+					}
+					case NameType::MESH_WATERMILLHOUSE:
+					{
+						nameString = "WaterMillHouse.fbx";
+						break;
+					}
+					case NameType::MESH_RUINED_WATERMILLHOUSE:
+					{
+						nameString = "WaterMillHousePile.fbx";
+						break;
+					}
+					case NameType::MESH_HOUSE5:
+					{
+						nameString = "House5.fbx";
+						break;
+					}
+					case NameType::MESH_RUINED_HOUSE5:
+					{
+						nameString = "House5Pile.fbx";
+						break;
+					}
+					case NameType::MESH_HOUSE6:
+					{
+						nameString = "House6.fbx";
+						break;
+					}
+					case NameType::MESH_RUINED_HOUSE6:
+					{
+						nameString = "House6Pile.fbx";
+						break;
+					}
+					case NameType::MESH_HOUSE7:
+					{
+						nameString = "House7.fbx";
+						break;
+					}
+					case NameType::MESH_RUINED_HOUSE7:
+					{
+						nameString = "House7Pile.fbx";
+						break;
+					}
+					case NameType::MESH_HOUSE8:
+					{
+						nameString = "House8.fbx";
+						break;
+					}
+					case NameType::MESH_RUINED_HOUSE8:
+					{
+						nameString = "House8Pile.fbx";
+						break;
+					}
+					case NameType::MESH_HOUSE9:
+					{
+						nameString = "House9.fbx";
+						break;
+					}
+					case NameType::MESH_RUINED_HOUSE9:
+					{
+						nameString = "House9Pile.fbx";
+						break;
+					}
+					case NameType::MESH_HOUSE10:
+					{
+						nameString = "House10.fbx";
+						break;
+					}
+					case NameType::MESH_RUINED_HOUSE10:
+					{
+						nameString = "House10Pile.fbx";
+						break;
+					}
+					case NameType::MESH_DOOR1:
+					{
+						nameString = "Door1.fbx";
+						break;
+					}
+					case NameType::MESH_DOOR5:
+					{
+						nameString = "Door5.fbx";
+						break;
+					}
+					case NameType::MESH_DOOR6:
+					{
+						nameString = "Door6.fbx";
+						break;
+					}
+					case NameType::MESH_DOOR7:
+					{
+						nameString = "Door7.fbx";
+						break;
+					}
+					case NameType::MESH_DOOR8:
+					{
+						nameString = "Door8.fbx";
+						break;
+					}
+					case NameType::MESH_DOOR9:
+					{
+						nameString = "Door9.fbx";
+						break;
+					}
+					case NameType::MESH_DOOR10:
+					{
+						nameString = "Door10.fbx";
+						break;
+					}
+					case NameType::MESH_HOUSEROOF:
+					{
+						nameString = "HouseRoof.fbx";
+						break;
+					}
+					case NameType::MESH_DEFENCE1X1:
+					{
+						nameString = "Defence1x1.obj";
+						break;
+					}
+					case NameType::MESH_DEFENCE1X3:
+					{
+						nameString = "Defence1x3.obj";
+						break;
+					}
+					case NameType::MESH_KNIGHT:
+					{
+						nameString = "Knight.fbx";
+						break;
+					}
+					case NameType::MESH_MAGE:
+					{
+						nameString = "Mage.fbx";
+						break;
+					}
+					case NameType::MESH_MONSTER:
+					{
+						nameString = "Monster.fbx";
+						break;
+					}
+					case NameType::MESH_SPHERE:
+					{
+						nameString = "Sphere.obj";
+						break;
+					}
+					default:
+					{
+						nameString = "Cube.obj";
+						break;
+					}
+					}
+					std::shared_ptr<RModel> model = ResourceManager::Get().CopyResource<RModel>(nameString, true);
+					if (model)
+					{
+						e.AddComponent<comp::Renderable>()->model = model;
+					}
 				}
 				break;
 			}
@@ -816,27 +979,35 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 			{
 				AnimName name;
 				msg >> name;
-				std::string nameString;
-				switch (name)
+				if (!skip)
 				{
-				case AnimName::ANIM_KNIGHT:
-				{
-					nameString = "Knight.anim";
-					break;
-				}
-				case AnimName::ANIM_MONSTER:
-				{
-					nameString = "Monster.anim";
-					break;
-				}
-				}
-				if (nameString.length() > 0)
-				{
-					std::shared_ptr<RAnimator> animator = ResourceManager::Get().CopyResource<RAnimator>(nameString, true);
-					if (animator)
+					std::string nameString;
+					switch (name)
 					{
-						animator->RandomizeTime();
-						e.AddComponent<comp::Animator>()->animator = animator;
+					case AnimName::ANIM_KNIGHT:
+					{
+						nameString = "Knight.anim";
+						break;
+					}
+					case AnimName::ANIM_MONSTER:
+					{
+						nameString = "Monster.anim";
+						break;
+					}
+					case AnimName::ANIM_MAGE:
+					{
+						nameString = "Mage.anim";
+						break;
+					}
+					}
+					if (nameString.length() > 0)
+					{
+						std::shared_ptr<RAnimator> animator = ResourceManager::Get().CopyResource<RAnimator>(nameString, true);
+						if (animator)
+						{
+							animator->RandomizeTime();
+							e.AddComponent<comp::Animator>()->animator = animator;
+						}
 					}
 				}
 				break;
@@ -845,40 +1016,55 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 			{
 				comp::Health heal;
 				msg >> heal;
-				e.AddComponent<comp::Health>(heal);
+				if (!skip)
+				{
+					e.AddComponent<comp::Health>(heal);
+				}
 				break;
 			}
 			case ecs::Component::BOUNDING_ORIENTED_BOX:
 			{
 				dx::BoundingOrientedBox box;
 				msg >> box;
-				comp::OrientedBoxCollider* collider = e.AddComponent<comp::OrientedBoxCollider>();
-				collider->Center = box.Center;
-				collider->Extents = box.Extents;
-				collider->Orientation = box.Orientation;
+				if (!skip)
+				{
+					comp::OrientedBoxCollider* collider = e.AddComponent<comp::OrientedBoxCollider>();
+					collider->Center = box.Center;
+					collider->Extents = box.Extents;
+					collider->Orientation = box.Orientation;
+				}
 				break;
 			}
 			case ecs::Component::BOUNDING_SPHERE:
 			{
 				dx::BoundingSphere s;
 				msg >> s;
-				comp::SphereCollider* collider = e.AddComponent<comp::SphereCollider>();
-				collider->Center = s.Center;
-				collider->Radius = s.Radius;
+				if (!skip)
+				{
+					comp::SphereCollider* collider = e.AddComponent<comp::SphereCollider>();
+					collider->Center = s.Center;
+					collider->Radius = s.Radius;
+				}
 				break;
 			}
 			case ecs::Component::PARTICLEMITTER:
 			{
 				comp::PARTICLEEMITTER p;
 				msg >> p;
-				e.AddComponent<comp::EmitterParticle>(p.positionOffset, (int)p.nrOfParticles, p.sizeMulitplier, p.type, p.lifeTime, p.speed, p.hasDeathTimer);
+				if (!skip)
+				{
+					e.AddComponent<comp::EmitterParticle>(p.positionOffset, (int)p.nrOfParticles, p.sizeMulitplier, p.type, p.lifeTime, p.speed, p.hasDeathTimer);
+				}
 				break;
 			}
 			case ecs::Component::PLAYER:
 			{
 				comp::Player p;
 				msg >> p;
-				e.AddComponent<comp::Player>(p);
+				if (!skip)
+				{
+					e.AddComponent<comp::Player>(p);
+				}
 
 				break;
 			}
@@ -886,7 +1072,10 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 			{
 				comp::Cost c;
 				msg >> c;
-				e.AddComponent<comp::Cost>(c);
+				if (!skip)
+				{
+					e.AddComponent<comp::Cost>(c);
+				}
 				break;
 			}
 			default:
@@ -901,6 +1090,8 @@ void Game::UpdateInput()
 {
 	m_inputState.axisHorizontal = InputSystem::Get().GetAxis(Axis::HORIZONTAL);
 	m_inputState.axisVertical = InputSystem::Get().GetAxis(Axis::VERTICAL);
+	m_inputState.mousewheelDir = InputSystem::Get().GetMouseWheelDirection();
+
 	if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::HELD))
 	{
 		m_inputState.leftMouse = true;
@@ -953,17 +1144,17 @@ void Game::UpdateInput()
 		m_inputState.key_shift = true;
 	}
 
-	m_savedInputs.push_back(m_inputState);
+	//m_savedInputs.push_back(m_inputState);
 
 
-	//TEMP PLZ REMOVE AFTER WE COME TO AN AGREEMENT ON WHICH DOF EFFECT TO USE
-	if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::D1, KeyState::PRESSED))
-	{
-		thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::ADAPTIVE);
-	}
+	////TEMP PLZ REMOVE AFTER WE COME TO AN AGREEMENT ON WHICH DOF EFFECT TO USE
+	//if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::D1, KeyState::PRESSED))
+	//{
+	//	thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::ADAPTIVE);
+	//}
 
-	if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::D2, KeyState::PRESSED))
-	{
-		thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::VIGNETTE);
-	}
+	//if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::D2, KeyState::PRESSED))
+	//{
+	//	thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::VIGNETTE);
+	//}
 }

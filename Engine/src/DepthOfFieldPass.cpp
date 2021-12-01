@@ -33,60 +33,80 @@ void DOFPass::SetDoFType(const DoFType& pType)
 
 void DOFPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 {
-	ID3D11Texture2D* backBuffInFocus = nullptr;
-	if (FAILED(D3D11Core::Get().SwapChain()->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&backBuffInFocus))))
-		return;
-	DC->CopyResource(m_inFocusTexture.Get(), backBuffInFocus);
-	DC->CopyResource(m_outputTexture.Get(), backBuffInFocus);
-	backBuffInFocus->Release();
+	if (m_currentType != DoFType::DEFAULT)
+	{
+		ID3D11Texture2D* backBuffInFocus = nullptr;
+		if (FAILED(D3D11Core::Get().SwapChain()->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&backBuffInFocus))))
+			return;
+		DC->CopyResource(m_inFocusTexture.Get(), backBuffInFocus);
+		DC->CopyResource(m_outputTexture.Get(), backBuffInFocus);
+		backBuffInFocus->Release();
 
-	m_blurPass.PreRender(pCam, DC);
+		m_blurPass.PreRender(pCam, DC);
+		m_blurPass.Render(nullptr);
 
-	ID3D11Texture2D* backBuffOutOfFocus = nullptr;
-	if (FAILED(D3D11Core::Get().SwapChain()->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&backBuffOutOfFocus))))
-		return;
-	DC->CopyResource(m_outOfFocusTexture.Get(), backBuffOutOfFocus);
-	backBuffOutOfFocus->Release();
+		ID3D11Texture2D* backBuffOutOfFocus = nullptr;
+		if (FAILED(D3D11Core::Get().SwapChain()->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&backBuffOutOfFocus))))
+			return;
+		DC->CopyResource(m_outOfFocusTexture.Get(), backBuffOutOfFocus);
+		backBuffOutOfFocus->Release();
 
-	ID3D11RenderTargetView* nullRTV = nullptr;
-	DC->OMSetRenderTargets(1, &nullRTV, nullptr);
-	DC->CSSetShader(PM->m_dofComputeShader.Get(), nullptr, 0);
+		ID3D11RenderTargetView* nullRTV = nullptr;
+		DC->OMSetRenderTargets(1, &nullRTV, nullptr);
+		DC->CSSetShader(PM->m_dofComputeShader.Get(), nullptr, 0);
 
-	m_dofHelp.inverseView = pCam->GetView().Invert();
-	m_dofHelp.inverseProjection = pCam->GetProjection().Invert();
-	m_dofHelp.dofType = UINT(m_currentType);
-	DC->UpdateSubresource(m_constBuff.Get(), 0, nullptr, &m_dofHelp, 0, 0);
+		m_dofHelp.inverseView = pCam->GetView().Invert();
+		m_dofHelp.inverseProjection = pCam->GetProjection().Invert();
+		m_dofHelp.dofType = UINT(m_currentType);
 
-	DC->CSSetUnorderedAccessViews(2, 1, m_inFocusView.GetAddressOf(), nullptr);
-	DC->CSSetUnorderedAccessViews(3, 1, m_outOfFocusView.GetAddressOf(), nullptr);
-	DC->CSSetShaderResources(0, 1, PM->m_depthBufferSRV.GetAddressOf());
-	DC->CSSetUnorderedAccessViews(4, 1, m_outputView.GetAddressOf(), nullptr);
-	DC->CSSetConstantBuffers(12, 1, m_constBuff.GetAddressOf());
+
+		DC->CSSetUnorderedAccessViews(2, 1, m_inFocusView.GetAddressOf(), nullptr);
+		DC->CSSetUnorderedAccessViews(3, 1, m_outOfFocusView.GetAddressOf(), nullptr);
+		DC->CSSetShaderResources(0, 1, PM->m_depthBufferSRV.GetAddressOf());
+		DC->CSSetUnorderedAccessViews(4, 1, m_outputView.GetAddressOf(), nullptr);
+		DC->CSSetConstantBuffers(12, 1, m_constBuff.GetAddressOf());
+	}
 }
 
 void DOFPass::Render(Scene* pScene)
 {
-	D3D11Core::Get().DeviceContext()->Dispatch(PM->m_windowWidth / 8, PM->m_windowHeight / 8, 1);
-	ID3D11Texture2D* outText = nullptr;
-	if (FAILED(D3D11Core::Get().SwapChain()->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&outText))))
-		return;
-	D3D11Core::Get().DeviceContext()->CopyResource(outText, m_outputTexture.Get());
+	if (m_currentType != DoFType::DEFAULT)
+	{
+		pScene->ForEachComponent<comp::Player, comp::Network>([&](Entity& playerEntity, comp::Player& player, comp::Network& network)
+			{
+				if (*pScene->m_localPIDRef == network.id && network.id != UINT32_MAX)
+				{
+					m_dofHelp.playerPosView = sm::Vector4::Transform(sm::Vector4(playerEntity.GetComponent<comp::Transform>()->position),
+						m_dofHelp.inverseView.Invert());
+				}
+			});
 
-	outText->Release();
+		D3D11Core::Get().DeviceContext()->UpdateSubresource(m_constBuff.Get(), 0, nullptr, &m_dofHelp, 0, 0);
+		D3D11Core::Get().DeviceContext()->Dispatch(PM->m_windowWidth / 8, PM->m_windowHeight / 8, 1);
+		ID3D11Texture2D* outText = nullptr;
+		if (FAILED(D3D11Core::Get().SwapChain()->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&outText))))
+			return;
+		D3D11Core::Get().DeviceContext()->CopyResource(outText, m_outputTexture.Get());
+
+		outText->Release();
+	}
 }
 
 void DOFPass::PostRender(ID3D11DeviceContext* pDeviceContext)
 {
-	m_blurPass.PostRender(DC);
-	ID3D11UnorderedAccessView* nullUAV = nullptr;
-	ID3D11ShaderResourceView* nullSRV = nullptr;
-	DC->CSSetUnorderedAccessViews(2, 1, &nullUAV, nullptr);
-	DC->CSSetUnorderedAccessViews(3, 1, &nullUAV, nullptr);
-	DC->CSSetShaderResources(0, 1, &nullSRV);
-	DC->CSSetUnorderedAccessViews(4, 1, &nullUAV, nullptr);
+	if (m_currentType != DoFType::DEFAULT)
+	{
+		m_blurPass.PostRender(DC);
+		ID3D11UnorderedAccessView* nullUAV = nullptr;
+		ID3D11ShaderResourceView* nullSRV = nullptr;
+		DC->CSSetUnorderedAccessViews(2, 1, &nullUAV, nullptr);
+		DC->CSSetUnorderedAccessViews(3, 1, &nullUAV, nullptr);
+		DC->CSSetShaderResources(0, 1, &nullSRV);
+		DC->CSSetUnorderedAccessViews(4, 1, &nullUAV, nullptr);
 
-	ID3D11ComputeShader* nullCS = nullptr;
-	DC->CSSetShader(nullCS, nullptr, 0);
+		ID3D11ComputeShader* nullCS = nullptr;
+		DC->CSSetShader(nullCS, nullptr, 0);
+	}
 }
 
 bool DOFPass::CreateUnorderedAccessView()
@@ -136,5 +156,5 @@ bool DOFPass::CreateBuffer()
 
 	HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&desc, nullptr, m_constBuff.GetAddressOf());
 
-	return true;
+	return !FAILED(hr);
 }

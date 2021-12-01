@@ -9,11 +9,13 @@
 RTexture::RTexture()
 {
 	m_format = ETextureChannelType::fourChannels;
+	m_useMipmaps = true;
 }
 
-RTexture::RTexture(ETextureChannelType format)
+RTexture::RTexture(ETextureChannelType format, bool useMipmaps)
 {
 	m_format = format;
+	m_useMipmaps = useMipmaps;
 }
 
 RTexture::~RTexture()
@@ -131,6 +133,7 @@ bool RTexture::GenerateMipMaps(unsigned char* image, const UINT& width, const UI
 
 bool RTexture::Create(const std::string& filename)
 {
+	m_filename = filename;
 	std::string filepath = TEXTUREPATH + filename;
 	int width = 0;
 	int height = 0;
@@ -151,7 +154,7 @@ bool RTexture::Create(const std::string& filename)
 		return false;
 	}
 
-	if (USE_MIPMAPS)
+	if (m_useMipmaps)
 	{
 		if(width % 2 == 0 && height % 2 == 0)
 		{
@@ -191,6 +194,24 @@ ID3D11ShaderResourceView*& RTexture::GetShaderView()
 ID3D11Texture2D*& RTexture::GetTexture2D()
 {
 	return *m_texture2D.GetAddressOf();
+}
+
+const std::string& RTexture::GetFilename() const
+{
+	return m_filename;
+}
+
+bool RTexture::DisableMipmaps()
+{
+	bool success = true;
+
+	if (m_useMipmaps)
+	{
+		m_useMipmaps = false;
+		if (!Create(m_filename))
+			success = false;
+	}
+	return success;
 }
 
 bool RBitMap::Create(const std::string& filename)

@@ -83,22 +83,21 @@ float3 DoPointlight(Light L, PixelIn input, float3 normal)
     
     float3 N = normalize(normal);
     
-    float3 diff = L.color.xyz * L.intensity;
+    float3 diff = L.color.xyz;
     
     float diffuseFactor = max(dot(VL, N), 0.0f);
     diff *= diffuseFactor;
     float3 radiance = 0;
-    if(diffuseFactor <= 0.)
+    if (diffuseFactor <= 0.)
     {
         radiance = diff; //multiply here with shadowCoeff if shadows
     }
     else
     {
         float D = max(distance - L.range, 0.f);
-        
         float denom = D / L.range + 0.75f;
         float attenuation = 1.f / (denom * denom);
-        float cutoff = 0.1f;
+        float cutoff = 0.01f;
         
         attenuation = (attenuation - cutoff) / (1 - cutoff);
         attenuation = max(attenuation, 0.f);
@@ -106,8 +105,9 @@ float3 DoPointlight(Light L, PixelIn input, float3 normal)
         diff *= attenuation;
         
         radiance = diff; //multiply here with shadowCoeff if shadows
-    }   
+    }
     
+    radiance *= L.intensity;
     return radiance;
 }
 
@@ -129,9 +129,7 @@ float3 DoDirectionlight(Light L, float3 normal)
 
 //Calculates the outgoing radiance level of each light
 void CalcRadiance(PixelIn input, float3 V, float3 N, float roughness, float metallic, float3 albedo, float3 lightPos, float3 radiance, float3 F0, out float3 rad)
-{
-    static const float PI = 3.14159265359;
-    
+{   
     //Calculate Light Radiance
     float3 lightDir = normalize(lightPos - input.worldPos.xyz);
     float3 H = normalize(V + lightDir);
@@ -156,7 +154,7 @@ void CalcRadiance(PixelIn input, float3 V, float3 N, float roughness, float meta
 
 float3 ambientIBL(float3 albedo, float3 N, float3 V, float3 F0, float metallic, float roughness, float ao)
 {
-     //Reflection Vector
+    //Reflection Vector
     float3 R = reflect(-V, N);
     
     float3 F = FresnelSchlickRoughness(max(dot(N, V), 0.0f), F0, roughness);
@@ -164,11 +162,11 @@ float3 ambientIBL(float3 albedo, float3 N, float3 V, float3 F0, float metallic, 
     float3 kD = 1.0f - kS;
     kD *= (1.0f - metallic);
     
-    float3 irradiance = pow(max(t_irradiance.Sample(s_linear, N).rgb, 0.0f), 2.2f);
+    float3 irradiance = t_irradiance.Sample(s_linear, N).rgb * c_tint;
     float3 diffuse = albedo * irradiance;
     
     const float MAX_REF_LOD = 4.0f;
-    float3 prefilteredColor = pow(max(t_radiance.SampleLevel(s_linear, R, roughness * MAX_REF_LOD).rgb, 0.0f), 2.2f);
+    float3 prefilteredColor = t_radiance.SampleLevel(s_linear, R, roughness * MAX_REF_LOD).rgb * c_tint;
     float2 brdf = t_BRDFLUT.Sample(s_linear, float2(max(dot(N, V), 0.0f), roughness)).rg;
     float3 specular = prefilteredColor * (F * brdf.x + brdf.y);
 

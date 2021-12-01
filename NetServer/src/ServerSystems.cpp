@@ -2,6 +2,7 @@
 #include "Wave.h"
 #include "ServerSystems.h"
 #include "Simulation.h"
+#include "HouseManager.h"
 
 
 /**Creates an enemy entity at specified point.
@@ -151,9 +152,9 @@ void EnemyManagement::CreateWaves(std::queue<Wave>& waveQueue, int currentRound)
 	Wave wave1, wave2, wave3, wave4, wave5; // Default: WaveType::Zone
 	{
 		Wave::Group group1;
-		group1.AddEnemy(EnemyType::Default, 2 + 2 * currentRound);
+		group1.AddEnemy(EnemyType::Default, 3 + 2 * currentRound);
 		group1.SetSpawnPoint({ 490.f, -150.0f });
-		wave1.SetTimeLimit(5 * currentRound);
+		wave1.SetTimeLimit(5);
 		wave1.AddGroup(group1);
 	}
 
@@ -471,14 +472,89 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 				if (simulation->GetGrid().PlaceDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, Blackboard::Get().GetPathFindManager(), dynamicQT))
 				{
 					simulation->GetCurrency() -= 10;
-					simulation->GetCurrency().hasUpdated = true;
 					anim.toSend = EAnimationType::PLACE_DEFENCE;
 				}
+			}
+
+			//Rotate defences 90 or not
+			if (p.lastInputState.mousewheelDir != 0)
+			{
+				if (p.lastInputState.mousewheelDir > 0)
+					p.rotateDefence = true;
+				else if (p.lastInputState.mousewheelDir < 0)
+					p.rotateDefence = false;
 			}
 		});
 
 
 }
+
+void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money_ref, HouseManager houseManager, QuadTree* qt, GridSystem& grid, SpreeHandler& spree)
+{
+	//Entity destoys self if health <= 0
+	scene.ForEachComponent<comp::Health>([&](Entity& entity, comp::Health& health)
+		{
+			//Check if something should be dead, and if so set isAlive to false
+			if (health.currentHealth <= 0 && health.isAlive)
+			{
+				comp::Network* net = entity.GetComponent<comp::Network>();
+				health.isAlive = false;
+				// increase money
+				if (entity.GetComponent<comp::Tag<TagType::BAD>>())
+				{
+					money_ref += 5 * spree.GetSpree();
+					spree.AddSpree();
+				}
+
+				// if player
+				comp::House* house = entity.GetComponent<comp::House>();
+				comp::Player* p = entity.GetComponent<comp::Player>();
+				if (p)
+				{
+					p->respawnTimer = 10.f;
+					p->state = comp::Player::State::SPECTATING;
+					entity.RemoveComponent<comp::Tag<TagType::DYNAMIC>>();
+				}
+				else if (entity.GetComponent<comp::Tag<TagType::DEFENCE>>())
+				{
+					comp::Transform* buildTransform = entity.GetComponent<comp::Transform>();
+
+					Node* node = Blackboard::Get().GetPathFindManager()->FindClosestNode(buildTransform->position);
+					//Remove from the container map so ai wont consider this defense
+					Blackboard::Get().GetPathFindManager()->RemoveDefenseEntity(entity);
+					node->reachable = true;
+					node->defencePlaced = false;
+
+					//Removing the defence and its neighbours if needed
+					grid.RemoveDefence(entity);
+					entity.Destroy();
+				}
+				else if (house)
+				{
+					//Create a new entity with the ruined mesh
+					Entity newHouse = houseManager.CreateHouse(scene, houseManager.GetRuinedHouseType(house->houseType), NameType::EMPTY, NameType::EMPTY);
+					qt->Insert(newHouse);
+
+					//Remove house from blackboard
+					Blackboard::Get().GetValue<Houses_t>("houses")->houses.erase(entity);
+
+					//Destroy House entities with roof and door
+					house->houseRoof.Destroy();
+					house->door.Destroy();
+					entity.Destroy();
+				}
+				else
+				{
+					entity.Destroy();
+				}
+			}
+			else if (health.currentHealth > health.maxHealth)
+			{
+				health.currentHealth = health.maxHealth;
+			}
+		});
+}
+
 
 void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& scene, float dt)
 {
@@ -492,11 +568,11 @@ void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& sce
 
 		});
 
-	scene.ForEachComponent<comp::Player, comp::Health, comp::Network>([&](Entity e, comp::Player& p, comp::Health& health, comp::Network n)
+	scene.ForEachComponent<comp::Player, comp::Health, comp::Network, comp::AnimationState>([&](Entity e, comp::Player& p, comp::Health& health, comp::Network n, comp::AnimationState anim)
 		{
 			if (!health.isAlive)
 			{
-				//CHANGE TO DEAD ANIMATION?
+				anim.toSend = EAnimationType::DEAD;
 
 				comp::Velocity* vel = e.GetComponent<comp::Velocity>();
 				if (vel)
@@ -577,7 +653,7 @@ void ServerSystems::CheckGameOver(Simulation* simulation, HeadlessScene& scene)
 	PROFILE_FUNCTION();
 
 	bool gameOver = true;
-
+	bool isHousesDestroyed = true;
 	//Check if all players is dead
 	scene.ForEachComponent<comp::Player, comp::Health>([&](comp::Player& p, comp::Health& h)
 		{
@@ -587,7 +663,16 @@ void ServerSystems::CheckGameOver(Simulation* simulation, HeadlessScene& scene)
 			}
 		});
 
-	if (gameOver)
+	scene.ForEachComponent<comp::House>([&](comp::House& house)
+		{
+			if (!house.isDead)
+			{
+				isHousesDestroyed = false;
+			}
+		});
+
+
+	if (gameOver || isHousesDestroyed)
 	{
 		simulation->SetGameOver();
 	}

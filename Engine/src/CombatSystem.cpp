@@ -6,17 +6,17 @@
 void CombatSystem::UpdateMelee(HeadlessScene& scene)
 {
 	scene.ForEachComponent<comp::MeleeAttackAbility, comp::Transform>([&](Entity entity, comp::MeleeAttackAbility& stats, comp::Transform& transform)
-	{
-		sm::Vector3* updateTargetPoint = nullptr;
-
-		UpdateTargetPoint(entity, updateTargetPoint);
-
-		if (ecs::ReadyToUse(&stats, updateTargetPoint))
 		{
-			Entity attackEntity = CreateAttackEntity(entity, scene, &transform, &stats);
-			AddCollisionMeleeBehavior(entity, attackEntity, scene);
-		}
-	});
+			sm::Vector3* updateTargetPoint = nullptr;
+
+			UpdateTargetPoint(entity, updateTargetPoint);
+
+			if (ecs::ReadyToUse(&stats, updateTargetPoint))
+			{
+				Entity attackEntity = CreateAttackEntity(entity, scene, &transform, &stats);
+				AddCollisionMeleeBehavior(entity, attackEntity, scene);
+			}
+		});
 }
 
 
@@ -24,17 +24,17 @@ void CombatSystem::UpdateMelee(HeadlessScene& scene)
 void CombatSystem::UpdateRange(HeadlessScene& scene)
 {
 	scene.ForEachComponent<comp::RangeAttackAbility, comp::Transform>([&](Entity entity, comp::RangeAttackAbility& stats, comp::Transform& transform)
-	{
-		sm::Vector3* updateTargetPoint = nullptr;
-
-		UpdateTargetPoint(entity, updateTargetPoint);
-
-		if (ecs::ReadyToUse(&stats, updateTargetPoint))
 		{
-			Entity attackEntity = CreateAttackEntity(entity, scene, &transform, &stats);
-			AddCollisionRangeBehavior(entity, attackEntity, scene);
-		}
-	});
+			sm::Vector3* updateTargetPoint = nullptr;
+
+			UpdateTargetPoint(entity, updateTargetPoint);
+
+			if (ecs::ReadyToUse(&stats, updateTargetPoint))
+			{
+				Entity attackEntity = CreateAttackEntity(entity, scene, &transform, &stats);
+				AddCollisionRangeBehavior(entity, attackEntity, scene);
+			}
+		});
 }
 
 void CombatSystem::UpdateTeleport(HeadlessScene& scene)
@@ -67,6 +67,10 @@ void CombatSystem::UpdateTeleport(HeadlessScene& scene)
 						{
 							entity.GetComponent<comp::Transform>()->position = transform.position + direction;
 							hasSetTarget = true;
+							if (pathFinderManager->PlayerAStar(entity.GetComponent<comp::Transform>()->position))
+							{
+								player->reachable = true;
+							}
 						}
 						else
 						{
@@ -96,7 +100,7 @@ void CombatSystem::UpdateDash(HeadlessScene& scene)
 			{
 				//dashAbility.velocityBeforeDash = entity.GetComponent<comp::Velocity>()->vel;
 			}
-			if(ecs::IsUsing(&dashAbility))
+			if (ecs::IsUsing(&dashAbility))
 			{
 				entity.GetComponent<comp::Velocity>()->vel = dashAbility.velocityBeforeDash * dashAbility.force;
 			}
@@ -260,7 +264,7 @@ void CombatSystem::AddCollisionMeleeBehavior(Entity entity, Entity attackEntity,
 					other.AddComponent<comp::PARTICLEEMITTER>(sm::Vector3{ 0,6,0 }, 50, 5.f, PARTICLEMODE::BLOOD, 1.5f, 1.f, true);
 
 				}
-				
+
 				// update Health on network
 				scene.publish<EComponentUpdated>(other, ecs::Component::HEALTH);
 				scene.publish<EComponentUpdated>(other, ecs::Component::PARTICLEMITTER);
@@ -330,13 +334,13 @@ void CombatSystem::AddCollisionRangeBehavior(Entity entity, Entity attackEntity,
 			if (otherHealth && attackAbility)
 			{
 				otherHealth->currentHealth -= attackAbility->attackDamage;
-				
+
 
 				if (other.GetComponent<comp::Tag<TagType::DEFENCE>>())
 				{
 					//TODO: add building particles
 				}
-				else 
+				else
 				{
 					// Blood particle
 					if (other.GetComponent<comp::PARTICLEEMITTER>())
@@ -347,7 +351,7 @@ void CombatSystem::AddCollisionRangeBehavior(Entity entity, Entity attackEntity,
 
 					scene.publish<EComponentUpdated>(other, ecs::Component::PARTICLEMITTER);
 				}
-				
+
 
 				// update Health on network
 				scene.publish<EComponentUpdated>(other, ecs::Component::HEALTH);

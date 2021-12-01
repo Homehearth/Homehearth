@@ -16,15 +16,18 @@ void Renderer::Initialize(Window* pWindow)
 		Had to disable the depth pass to get alpha testing to work correctly... -Filip
 	*/
 	//AddPass(&m_depthPass);  // 1
+	AddPass(&m_shadowPass);
+	m_shadowPass.StartUp();
+
 	AddPass(&m_decalPass);
 	m_decalPass.Create();
-	AddPass(&m_shadowPass);
+
 	AddPass(&m_basePass);   // 2
 	AddPass(&m_animPass);	// 3
-	AddPass(&m_particlePass);	// 4
 	AddPass(&m_skyPass);
 
 	AddPass(&m_dofPass);
+	AddPass(&m_particlePass);	// 4
 
 	m_basePass.m_pShadowPass = &m_shadowPass;
 	
@@ -108,6 +111,11 @@ void Renderer::Render(Scene* pScene)
 				pScene->GetCurrentCamera()->ReadySwap();
 				pScene->ReadyForSwap();
 			}
+			else
+			{
+				pScene->GetCurrentCamera()->ReadySwap();
+				pScene->ReadyForSwap();
+			}
 		}
 	}
 }
@@ -120,6 +128,26 @@ IRenderPass* Renderer::GetCurrentPass() const
 DOFPass* Renderer::GetDoFPass()
 {
 	return &m_dofPass;
+}
+
+ShadowPass* Renderer::GetShadowPass()
+{
+	return &m_shadowPass;
+}
+
+void Renderer::SetShadowMapSize(uint32_t size)
+{
+	m_shadowPass.SetShadowMapSize(size);
+}
+
+uint32_t Renderer::GetShadowMapSize() const
+{
+	return m_shadowPass.GetShadowMapSize();
+}
+
+void Renderer::ImGuiShowTextures()
+{
+	m_shadowPass.ImGuiShowTextures();
 }
 
 void Renderer::AddPass(IRenderPass* pass)
