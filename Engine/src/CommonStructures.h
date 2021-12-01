@@ -13,7 +13,13 @@ constexpr uint32_t TIME_LIMIT_NIGHT = 50;
 constexpr uint32_t TIME_LIMIT_MORNING = 10;
 constexpr float ROTATION = 180.0f / (float)(TIME_LIMIT_DAY + TIME_LIMIT_MORNING);
 
-enum class Cycle : UINT
+const float DAY_DURATION	= 60.0f;
+const float MORNING			= 0.0f;
+const float DAY				= 0.1f;
+const float NIGHT			= 0.5f;
+
+
+enum class CyclePeriod : UINT
 {
 	DAY,
 	NIGHT,
@@ -290,7 +296,7 @@ enum class GameMsg : uint8_t
 	Lobby_Update,
 	Lobby_PlayerLeft,
 	Lobby_PlayerJoin,
-	
+
 	Server_AssignID,
 	Server_GetPing,
 
@@ -302,6 +308,7 @@ enum class GameMsg : uint8_t
 	Game_RemoveEntity,
 	Game_BackToLobby,
 	Game_WaveTimer,
+	Game_Time,
 
 	Game_ClassSelected,
 	Game_PlayerAttack,

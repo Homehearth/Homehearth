@@ -96,17 +96,9 @@ void Game::OnUserUpdate(float deltaTime)
 {
 	this->UpdateInput();
 
-	if (m_elapsedCycleTime <= m_waveTimer && (m_serverCycle == Cycle::DAY || m_serverCycle == Cycle::MORNING))
-	{
-		m_elapsedCycleTime += deltaTime;
-	}
-	else
-	{
-		m_elapsedNightTime += deltaTime;
-	}
-
 	//DEBUG
 	Scene& scene = GetScene("Game");
+
 	scene.ForEachComponent<comp::Light>([&](Entity e, comp::Light& l)
 		{
 			e.GetComponent<comp::SphereCollider>()->Center = sm::Vector3(l.lightData.position);
@@ -346,68 +338,17 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	}
 	case GameMsg::Game_WaveTimer:
 	{
-		msg >> m_serverCycle;
+		CyclePeriod cycle;
+		msg >> cycle;
 		msg >> m_waveTimer;
-		switch (m_serverCycle)
-		{
-		case Cycle::DAY:
-		{
-			m_elapsedNightTime = 0.0f;
-			Scene& scene = GetScene("Game");
-
-			scene.ForEachComponent<comp::Light>([&](comp::Light& l)
-				{
-					switch (l.lightData.type)
-					{
-					case TypeLight::POINT:
-					{
-						l.lightData.enabled = false;
-						break;
-					}
-					}
-				});
-			break;
-		}
-		case Cycle::NIGHT:
-		{
-			Scene& scene = GetScene("Game");
-			// Change light on Night.
-			m_elapsedCycleTime = 0.0f;
-			scene.ForEachComponent<comp::Light>([&](comp::Light& l)
-				{
-					switch (l.lightData.type)
-					{
-					case TypeLight::POINT:
-					{
-						l.lightData.enabled = true;
-						break;
-					}
-					}
-				});
-			break;
-		}
-		case Cycle::MORNING:
-		{
-			m_elapsedNightTime = 0.0f;
-
-			Scene& scene = GetScene("Game");
-			// Change light on Morning.
-			scene.ForEachComponent<comp::Light>([&](comp::Light& l)
-				{
-					switch (l.lightData.type)
-					{
-					case TypeLight::POINT:
-					{
-						l.lightData.enabled = false;
-						break;
-					}
-					}
-				});
-			break;
-		}
-		default:
-			break;
-		}
+		
+		break;
+	}
+	case GameMsg::Game_Time:
+	{
+		float time;
+		msg >> time;
+		m_cycler.SetTime(time);
 		break;
 	}
 	case GameMsg::Lobby_Update:
@@ -654,9 +595,9 @@ const Mode& Game::GetCurrentMode() const
 	return m_mode;
 }
 
-const Cycle& Game::GetCurrentCycle() const
+Cycler& Game::GetCycler()
 {
-	return m_serverCycle;
+	return m_cycler;
 }
 
 void Game::SetMode(const Mode& mode)

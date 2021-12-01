@@ -3,6 +3,7 @@
 #include <Engine.h>
 #include "ModelIdentifier.h"
 #include "ParticleSystem.h"
+#include "Cycler.h"
 
 class Game : public Engine
 {
@@ -15,7 +16,8 @@ private:
 	uint32_t m_money;
 	ParticleSystem m_particles;
 	Mode m_mode = Mode::PLAY_MODE;
-	Cycle m_serverCycle = Cycle::DAY;
+	
+	Cycler m_cycler;
 
 	Entity m_mapEntity;
 
@@ -46,16 +48,13 @@ public:
 	std::vector<std::pair<ModelID, dx::BoundingSphere>> m_LOSColliders;
 	std::unordered_map<uint32_t, Entity> m_players;
 
-
-	float m_elapsedCycleTime = 0.0f;
-	float m_elapsedNightTime = 0.0f;
-
 	Game();
 	virtual ~Game();
 	void JoinLobby(uint32_t lobbyID);
 	void CreateLobby();
 	const Mode& GetCurrentMode() const;
-	const Cycle& GetCurrentCycle() const;
+	Cycler& GetCycler();
+
 	void SetMode(const Mode& mode);
 	const uint32_t& GetMoney() const;
 	

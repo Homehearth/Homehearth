@@ -137,7 +137,7 @@ namespace sceneHelp
 		// The sun
 		Entity sun = CreateLightEntity(gameScene, { 0.f, 0.f, 0.f, 0.f }, { -1.0f, 0.0f, -1.f, 0.f }, { 255.f, 185, 150, 0.f }, 1000.f, 0.09f, TypeLight::DIRECTIONAL, 1);
 		// The moon
-		Entity moon = CreateLightEntity(gameScene, { 0.f, 0.f, 0.f, 0.f }, { -1.0f, 0.0f, -1.f, 0.f }, { 50.f, 50, 150, 0.f }, 1000.f, 0.04f, TypeLight::DIRECTIONAL, 1);
+		Entity moon = CreateLightEntity(gameScene, { 0.f, 0.f, 0.f, 0.f }, { -1.0f, 0.0f, -1.f, 0.f }, { 50.f, 50, 200, 0.f }, 1000.f, 0.02f, TypeLight::DIRECTIONAL, 0);
 
 		// LEFT OF WELL
 		CreateLightEntity(gameScene, { 268.2f, 28.f, -320.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 185.f, 100.f, 0.f }, pointRange, 0.4f,TypeLight::POINT, 0);
@@ -158,53 +158,56 @@ namespace sceneHelp
 
 		gameScene.on<ESceneUpdate>([=](const ESceneUpdate& e, Scene& scene)
 			{
+				game->GetCycler().Update(e.dt);
+
+				LOG_INFO("%f", game->GetCycler().GetTime());
 				if (game->m_players.find(game->m_localPID) != game->m_players.end())
 				{
 					sm::Vector3 playerPos = game->m_players.at(game->m_localPID).GetComponent<comp::Transform>()->position;
 
+
 					comp::Light* l = sun.GetComponent<comp::Light>();
-					if (game->m_elapsedCycleTime > 0.0f)
+
+					float angle = 360.f * game->GetCycler().GetTime();
+					for (int i = 0; i < 2; i++)
 					{
-						l->lightData.direction = { -1.0f, 0.0f, -1.f, 0.f };
-						sm::Vector3 dir = sm::Vector3(l->lightData.direction);
-						dir.Normalize();
-						dir = sm::Vector3::TransformNormal(dir, sm::Matrix::CreateRotationZ(dx::XMConvertToRadians(ROTATION) * (game->m_elapsedCycleTime)));
-						l->lightData.direction = sm::Vector4(dir.x, dir.y, dir.z, 0.0f);
-						sm::Vector3 pos = l->lightData.position;
-						pos = playerPos - dir * 300;
+						
+						sm::Vector3 dir = sm::Vector3::TransformNormal(sm::Vector3(-1, 0, -1), sm::Matrix::CreateRotationZ(dx::XMConvertToRadians(angle)));
+						
+						sm::Vector3 newPos = playerPos - dir * 300;
+						newPos = util::Lerp(sm::Vector3(l->lightData.position), newPos, e.dt * 10);
 				
-						pos = util::Lerp(sm::Vector3(l->lightData.position), pos, e.dt * 10);
-						l->lightData.position = sm::Vector4(pos);
+						l->lightData.direction = sm::Vector4(dir);
+						l->lightData.direction.w = 0.0f;
+						l->lightData.position = sm::Vector4(newPos);
+						l->lightData.position.w = 1.0f;
 
-						l->lightData.position.w = 1.f;
-						l->lightData.enabled = 1;
+						l->lightData.enabled = l->lightData.direction.y < 0.0f;
+						
+						l = moon.GetComponent<comp::Light>();
+						angle -= 180.f;
 					}
-					else
-					{
-						l->lightData.enabled = 0;
-					}
-
+					
+					/*
 					l = moon.GetComponent<comp::Light>();
-					if (game->m_elapsedNightTime > 0.0f)
-					{
-						l->lightData.direction = { -1.0f, 0.0f, -1.f, 0.f };
-						sm::Vector3 dir = sm::Vector3(l->lightData.direction);
-						dir.Normalize();
-						dir = sm::Vector3::TransformNormal(dir, sm::Matrix::CreateRotationZ(dx::XMConvertToRadians(ROTATION) * (game->m_elapsedNightTime)));
-						l->lightData.direction = sm::Vector4(dir.x, dir.y, dir.z, 0.0f);
-						sm::Vector3 pos = l->lightData.position;
-						pos = playerPos - dir * 300;
+					
+					dir = sm::Vector3(l->lightData.direction);
+					dir.Normalize();
+					targetDir = sm::Vector3::TransformNormal(sm::Vector3(-1, 0, -1), sm::Matrix::CreateRotationZ(dx::XMConvertToRadians(360.f * (game->GetCycler().GetTime() - 0.5f))));
+					dir = util::Lerp(dir, targetDir, e.dt * 10);
 
-						pos = util::Lerp(sm::Vector3(l->lightData.position), pos, e.dt * 10);
-						l->lightData.position = sm::Vector4(pos);
+					l->lightData.direction = sm::Vector4(dir.x, dir.y, dir.z, 0.0f);
+					
+					pos = playerPos - dir * 300;
 
-						l->lightData.position.w = 1.f;
-						l->lightData.enabled = 1;
-					}
-					else
-					{
-						l->lightData.enabled = 0;
-					}
+					pos = util::Lerp(sm::Vector3(l->lightData.position), pos, e.dt * 10);
+					l->lightData.position = sm::Vector4(pos);
+
+					l->lightData.position.w = 1.f;
+					l->lightData.enabled = l->lightData.direction.y < 0.0f;
+					*/
+
+					
 				}
 
 				Collection2D* bullColl = game->GetCurrentScene()->GetCollection("bullDoze");
@@ -250,7 +253,7 @@ namespace sceneHelp
 				//GameSystems::RenderIsCollidingSystem(scene);
 				GameSystems::UpdatePlayerVisuals(game);
 				Systems::LightSystem(scene, e.dt);
-				game->GetCurrentScene()->UpdateSkybox(game->m_elapsedCycleTime);
+				game->GetCurrentScene()->UpdateSkybox(game->GetCycler().GetTime());
 #ifdef _DEBUG
 				if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Space, KeyState::RELEASED))
 				{
@@ -450,7 +453,7 @@ namespace sceneHelp
 		
 		
 		sc->AddButton("ShopIcon.png", draw_t(0.0f, -(height / 14) * 2.0f, width / 24, height / 14))->SetOnPressedEvent([=] {
-			if (game->GetCurrentCycle() == Cycle::DAY)
+			if (game->GetCycler().GetTimePeriod() == CyclePeriod::DAY)
 			{
 				shopMenu->Show();
 				bullDoze->Hide();

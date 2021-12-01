@@ -393,7 +393,7 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 						EnemyManagement::CreateWaves(waveQueue, currentRound++);
 				}
 
-				m_timeCycler.Update(this);
+				m_timeCycler.Update(e.dt);
 				m_spreeHandler.Update();
 			}
 		});
@@ -493,14 +493,14 @@ void Simulation::SendSnapshot()
 		if (!waveQueue.empty())
 		{
 			// Update wave timer to clients.
+			// TODO wave timer
+			/*
 			network::message<GameMsg> msg2;
 			msg2.header.id = GameMsg::Game_WaveTimer;
 			msg2 << m_timeCycler.GetElapsedTime();
 			msg2 << m_timeCycler.GetTimePeriod();
-			this->BroadcastUDP(msg2);	for (auto& player : m_lobby.m_players)
-			{
-				player.second.RemoveComponent<comp::Tag<TagType::GOOD>>();
-			}
+			this->BroadcastUDP(msg2);
+			*/
 		}
 
 		if (m_currency.m_hasUpdated)
@@ -562,6 +562,15 @@ void Simulation::SendSnapshot()
 		msg5.header.id = GameMsg::Game_Spree;
 		msg5 << (uint32_t)m_spreeHandler.GetSpree();
 		this->Broadcast(msg5);
+		
+		if (this->m_tick % 40 == 0)
+		{
+			network::message<GameMsg> timeMsg;
+			timeMsg.header.id = GameMsg::Game_Time;
+			timeMsg << m_timeCycler.GetTime();
+			this->Broadcast(timeMsg);
+		}
+		
 	}
 	else
 	{
@@ -953,7 +962,6 @@ void Simulation::ReadyCheck(uint32_t playerID)
 		msg.header.id = GameMsg::Game_Start;
 
 		this->Broadcast(msg);
-		m_timeCycler.OnStart();
 	}
 }
 

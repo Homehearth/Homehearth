@@ -70,6 +70,7 @@ private:
 
 public:
 	Cycler m_timeCycler;
+
 	Simulation(Server* pServer, HeadlessEngine* pEngine);
 	virtual ~Simulation() = default;
 	
