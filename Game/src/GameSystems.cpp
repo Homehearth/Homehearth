@@ -8,7 +8,7 @@ void GameSystems::DisplayUpgradeDefences(Game* game)
 {
 	Collection2D* coll = game->GetCurrentScene()->GetCollection("priceTag");
 	// Display only if in Build mode..
-	if (game->GetCurrentMode() == Mode::BUILD_MODE && game->GetCurrentCycle() == Cycle::DAY)
+	if (game->GetCurrentMode() == Mode::BUILD_MODE && game->GetCycler().GetTimePeriod() == CyclePeriod::DAY)
 	{
 		Scene& scene = *game->GetCurrentScene();
 		bool shouldNotShow = true;

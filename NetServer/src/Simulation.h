@@ -55,8 +55,8 @@ private:
 	uint32_t GetTick()const;
 
 	//Game play related
-	Timer waveTimer;
 	uint32_t m_wavesSurvived;
+
 	std::queue<Wave> waveQueue;
 	std::queue<sm::Vector3> m_spawnPoints;
 	HouseManager houseManager;
@@ -71,6 +71,7 @@ private:
 
 public:
 	Cycler m_timeCycler;
+
 	Simulation(Server* pServer, HeadlessEngine* pEngine);
 	virtual ~Simulation() = default;
 	
