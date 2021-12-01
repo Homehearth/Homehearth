@@ -17,15 +17,31 @@ BT::NodeStatus BT::GenPathCBT::Tick()
 	if(aiHandler != nullptr)
 	{
 		comp::NPC* npc = entity.GetComponent<comp::NPC>();
-		npc->currentNode = aiHandler->FindClosestNode(entity.GetComponent<comp::Transform>()->position);
-		if( (npc->path.empty() || generatePathTimer.GetElapsedTime<std::chrono::seconds>() > refreshRate))
+		comp::Villager* villager = entity.GetComponent<comp::Villager>();
+		if(npc)
 		{
-			generatePathTimer.Start();
-			
-			aiHandler->AStarSearch(entity);
-		}
+			npc->currentNode = aiHandler->FindClosestNode(entity.GetComponent<comp::Transform>()->position);
 
-		return BT::NodeStatus::SUCCESS;
+			if( (npc->path.empty() || generatePathTimer.GetElapsedTime<std::chrono::seconds>() > refreshRate))
+			{
+				generatePathTimer.Start();
+				
+				aiHandler->AStarSearch(entity);
+			}
+			return BT::NodeStatus::SUCCESS;
+		}
+		else if(villager)
+		{
+			villager->currentNode = aiHandler->FindClosestNode(entity.GetComponent<comp::Transform>()->position);
+
+			if ((villager->path.empty() || generatePathTimer.GetElapsedTime<std::chrono::seconds>() > refreshRate))
+			{
+				generatePathTimer.Start();
+
+				aiHandler->AStarSearch(entity);
+			}
+			return BT::NodeStatus::SUCCESS;
+		}
 	}
 	else
 	{

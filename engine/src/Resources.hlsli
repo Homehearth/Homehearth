@@ -1,7 +1,6 @@
 #ifndef _COMMON_HLSLI_
 	#error You may not include this header directly.
 #endif
-
 static const float PI = 3.14159265359;
 
 // sRGB => XYZ => D65_2_D60 => AP1 => RRT_SAT
@@ -78,12 +77,19 @@ cbuffer ParticleUpdate : register(b8)
     uint counter;
     float lifeTime;
     float particleSizeMulitplier;
+    float c_particleSpeed;
+    
+    float3 c_pPadding;
 }
 
 cbuffer DecalInfoCB : register(b10)
 {
     float4 infoData = float4(0.0f, 0.0f, 0.0f, 0.0f);
-	float4x4 decal_projection;
+    float4x4 decal_projection;
+}
+cbuffer DeltaCB : register(b6)
+{
+    float c_deltaTime;
 }
 
 cbuffer BlurSettings : register(b11)
@@ -94,6 +100,13 @@ cbuffer BlurSettings : register(b11)
     float padding;
     float4 c_weights[MAXWEIGHTS / 4];
 }
+cbuffer TextureEffectCB : register(b7)
+{
+    uint c_frequency;
+    uint c_amplitude;
+    float c_counter;
+    float c_padding;
+};
 
 cbuffer DoFSettings : register(b12)
 {
@@ -118,7 +131,7 @@ cbuffer SkyboxTint : register(b13)
 SamplerState s_point		: register(s0);
 SamplerState s_linear		: register(s1);
 SamplerState s_anisotropic	: register(s2);
-SamplerState s_cubeSamp     : register(s3);
+SamplerState s_cubeSamp : register(s3);
 
 
 //---------------------------------------------------------------------------
@@ -148,17 +161,30 @@ StructuredBuffer<float> randomNumbers               : register(t18);
 RWStructuredBuffer<VertexParticleIn> particlesUAV   : register(u7);
 
 
+//Nikkis stuff:
+
+Texture2D t_underWaterEdge     : register(t18);
+Texture2D t_waterFloorTexture  : register(t19);
+Texture2D t_waterTexture       : register(t20);
+Texture2D t_waterTextureN      : register(t21);
+Texture2D t_waterBlend         : register(t22);
+
+RWTexture2D<unorm float4> u_waterFloorTexture : register(u5);
+RWTexture2D<float4> u_waterTexture      : register(u6);
+RWTexture2D<float4> u_waterTextureN     : register(u7);
+//RWTexture2D<float4> u_waterBlend        : register(u5);
+RWTexture2D<float4> u_underWaterEdge    : register(u9);
+
 // Forward+
 //StructuredBuffer<PointLight> sb_pointLights : register();
 //StructuredBuffer<DirectionalLight> sb_directionalLights : register();
 //StructuredBuffer<uint> sb_pointLightIndexList : register();
 //StructuredBuffer<Frustum> sb_frustums : register();
 
-TextureCube t_radiance              : register(t96);
-TextureCube t_irradiance            : register(t97);
-TextureCube t_sky                   : register(t98);
-Texture2D t_BRDFLUT                 : register(t99);
-
+TextureCube t_radiance : register(t96);
+TextureCube t_irradiance : register(t97);
+TextureCube t_sky : register(t98);
+Texture2D t_BRDFLUT : register(t99);
 
 //---------------------------------------------------------------------------
 //	UAV's.

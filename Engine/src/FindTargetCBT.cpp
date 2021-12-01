@@ -30,11 +30,14 @@ BT::NodeStatus BT::FindTargetCBT::Tick()
 
 	PathFinderManager* pathFinderManager = Blackboard::Get().GetPathFindManager();
 
-	//Find the nearest player and set that position as target
+	//Find the nearest player / villager and set that position as target
 	Entity nearestPlayer;
 	for (auto player : playersEntity->players)
 	{
-		if (player.GetComponent<comp::Player>()->reachable)
+		comp::Player* playerComp = player.GetComponent<comp::Player>();
+		comp::Villager* villagerComp = player.GetComponent<comp::Villager>();
+
+		if (playerComp && player.GetComponent<comp::Player>()->reachable || villagerComp && !villagerComp->isHiding)
 		{
 			comp::Transform* currentNearest = nullptr;
 			comp::Transform* playerTransform = player.GetComponent<comp::Transform>();
@@ -66,10 +69,6 @@ BT::NodeStatus BT::FindTargetCBT::Tick()
 			{
 				nearestPlayer = player;
 			}
-		}
-		else
-		{
-			LOG_INFO("Player Not Reachable");
 		}
 	}
 

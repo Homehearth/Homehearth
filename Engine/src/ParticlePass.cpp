@@ -97,6 +97,7 @@ void ParticlePass::Render(Scene* pScene)
 			m_particleUpdate.counter = m_counter;
 			m_particleUpdate.lifeTime = emitter->lifeTime;
 			m_particleUpdate.particleSizeMulitplier = emitter->sizeMulitplier;
+			m_particleUpdate.speed = emitter->speed;
 
 			m_constantBufferParticleUpdate.SetData(D3D11Core::Get().DeviceContext(), m_particleUpdate);
 			ID3D11Buffer* cb = { m_constantBufferParticleUpdate.GetBuffer() };
