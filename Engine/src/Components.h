@@ -361,6 +361,7 @@ namespace ecs
 			float flickerTimer = 1.f;
 			float maxFlickerTime = 1.f;
 			bool increase;
+			float enabledTimer = 1.f;
 		};
 
 		struct Health
