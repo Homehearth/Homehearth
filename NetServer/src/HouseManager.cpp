@@ -55,6 +55,7 @@ void HouseManager::AddCollider(NameType houseType, Entity house) const
 		}
 		else
 		{
+			house.AddComponent<comp::Health>();
 			houseComp->attackNode = Blackboard::Get().GetPathFindManager()->GetNodes()[39][18].get();
 			houseComp->isDead = false;
 		}
@@ -75,6 +76,7 @@ void HouseManager::AddCollider(NameType houseType, Entity house) const
 		{
 			houseComp->attackNode = Blackboard::Get().GetPathFindManager()->GetNodes()[42][27].get();
 			houseComp->isDead = false;
+			house.AddComponent<comp::Health>();
 		}
 	}
 	else if (houseType == NameType::MESH_HOUSE7 || houseType == NameType::MESH_RUINED_HOUSE7)
@@ -93,6 +95,7 @@ void HouseManager::AddCollider(NameType houseType, Entity house) const
 		{
 			houseComp->attackNode = Blackboard::Get().GetPathFindManager()->GetNodes()[42][22].get();
 			houseComp->isDead = false;
+			house.AddComponent<comp::Health>();
 		}
 	}
 	else if (houseType == NameType::MESH_HOUSE8 || houseType == NameType::MESH_RUINED_HOUSE8)
@@ -111,6 +114,7 @@ void HouseManager::AddCollider(NameType houseType, Entity house) const
 		{
 			houseComp->attackNode = Blackboard::Get().GetPathFindManager()->GetNodes()[44][42].get();
 			houseComp->isDead = false;
+			house.AddComponent<comp::Health>();
 		}
 	}
 	else if (houseType == NameType::MESH_HOUSE9 || houseType == NameType::MESH_RUINED_HOUSE9)
@@ -130,6 +134,7 @@ void HouseManager::AddCollider(NameType houseType, Entity house) const
 		{
 			houseComp->attackNode = Blackboard::Get().GetPathFindManager()->GetNodes()[33][22].get();
 			houseComp->isDead = false;
+			house.AddComponent<comp::Health>();
 		}
 	}
 	else if (houseType == NameType::MESH_HOUSE10 || houseType == NameType::MESH_RUINED_HOUSE10)
@@ -148,6 +153,7 @@ void HouseManager::AddCollider(NameType houseType, Entity house) const
 		{
 			houseComp->attackNode = Blackboard::Get().GetPathFindManager()->GetNodes()[28][34].get();
 			houseComp->isDead = false;
+			house.AddComponent<comp::Health>();
 		}
 
 	}
@@ -167,6 +173,7 @@ void HouseManager::AddCollider(NameType houseType, Entity house) const
 		{
 			houseComp->attackNode = Blackboard::Get().GetPathFindManager()->GetNodes()[43][34].get();
 			houseComp->isDead = false;
+			house.AddComponent<comp::Health>();
 		}
 	}
 }
@@ -179,7 +186,6 @@ Entity HouseManager::CreateHouse(HeadlessScene& scene, NameType houseType, NameT
 	houseEntity.AddComponent<comp::Transform>();
 	houseEntity.AddComponent<comp::Tag<TagType::STATIC>>();
 	houseEntity.AddComponent<comp::Network>();
-	houseEntity.AddComponent<comp::Health>();
 	comp::House* house = houseEntity.AddComponent<comp::House>();
 	house->houseType = houseType;
 
