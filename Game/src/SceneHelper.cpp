@@ -153,6 +153,7 @@ namespace sceneHelp
 
 		InputSystem::Get().SetCamera(gameScene.GetCurrentCamera());
 
+		
 		gameScene.on<ESceneUpdate>([cameraEntity, debugCameraEntity, game](const ESceneUpdate& e, Scene& scene)
 			{
 				IMGUI(
@@ -181,6 +182,7 @@ namespace sceneHelp
 
 				if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED))
 				{
+
 					if (game->GetCurrentScene()->GetCollection("shopMenu")->GetState() == ElementState::OUTSIDE &&
 						game->GetCurrentScene()->GetCollection("ScrolldownMenu")->GetState() == ElementState::OUTSIDE)
 					{
@@ -410,6 +412,11 @@ namespace sceneHelp
 			}
 			});
 		sc->SetPrimeButtonMeasurements(draw_t(0.0f, 0.0f, width / 24, height / 14));
+		sc->SetOnPrimeButtonPress([=] {
+
+			shopMenu->Hide();
+
+			});
 		scene.Add2DCollection(scrolldownMenu, "ScrolldownMenu");
 
 		rtd::ShopUI* shop = shopMenu->AddElement<rtd::ShopUI>("Shop.png", draw_t(width / 24.0f, (height / 16), width * 0.25f, height * 0.5f));
