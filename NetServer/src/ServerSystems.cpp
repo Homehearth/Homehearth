@@ -623,16 +623,16 @@ void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& sce
 					
 					simulation->SendMsg(n.id, msg);
 				}
-				p.respawnTimer -= dt;
+				//p.respawnTimer -= dt;
 
-				if (p.respawnTimer < 0.01f)
-				{
-					simulation->ResetPlayer(e);
-					message<GameMsg> msg;
-					msg.header.id = GameMsg::Game_StopSpectate;
-					simulation->SendMsg(n.id, msg);
-					LOG_INFO("Player %u respawned...", e.GetComponent<comp::Network>()->id);
-				}
+				//if (p.respawnTimer < 0.01f)
+				//{
+				//	simulation->ResetPlayer(e);
+				//	message<GameMsg> msg;
+				//	msg.header.id = GameMsg::Game_StopSpectate;
+				//	simulation->SendMsg(n.id, msg);
+				//	LOG_INFO("Player %u respawned...", e.GetComponent<comp::Network>()->id);
+				//}
 			}
 		});
 
