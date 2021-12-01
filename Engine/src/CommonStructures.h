@@ -8,7 +8,7 @@ constexpr int MAX_HEALTH = 100;
 /*
 	Change these to tweak the day and night cycle timers.
 */
-constexpr uint32_t TIME_LIMIT_DAY = 60;
+constexpr uint32_t TIME_LIMIT_DAY = 200;
 constexpr uint32_t TIME_LIMIT_NIGHT = 50;
 constexpr uint32_t TIME_LIMIT_MORNING = 10;
 constexpr float ROTATION = 180.0f / (float)(TIME_LIMIT_DAY + TIME_LIMIT_MORNING);
@@ -95,7 +95,8 @@ enum class PARTICLEMODE : UINT
 	BLOOD,
 	LEAF,
 	WATERSPLASH,
-	SMOKE,
+	SMOKEPOINT,
+	SMOKEAREA,
 	SPARKLES,
 	RAIN,
 	DUST

@@ -5,7 +5,8 @@
 void BloodSimmulation(inout VertexParticleIn particle, in uint id);
 void LeafSimmulation(inout VertexParticleIn particle, in uint id);
 void WaterSplashSimmulation(inout VertexParticleIn particle, in uint id);
-void SmokeSimmulation(inout VertexParticleIn particle, in uint id);
+void SmokePointSimmulation(inout VertexParticleIn particle, in uint id);
+void SmokeAreaSimmulation(inout VertexParticleIn particle, in uint id);
 void SparklesSimmulation(inout VertexParticleIn particle, in uint id);
 void RainSimmulation(inout VertexParticleIn particle, in uint id);
 
@@ -25,10 +26,12 @@ void main(uint3 particleID : SV_DispatchThreadID)
     else if (vertex.type == 2)
         WaterSplashSimmulation(vertex, id);
     else if (vertex.type == 3)
-        SmokeSimmulation(vertex, id);
+        SmokePointSimmulation(vertex, id);
     else if (vertex.type == 4)
-        SparklesSimmulation(vertex, id);
+        SmokeAreaSimmulation(vertex, id);
     else if (vertex.type == 5)
+        SparklesSimmulation(vertex, id);
+    else if (vertex.type == 6)
         RainSimmulation(vertex, id);
 
     vertex.life += deltaTime;
@@ -116,15 +119,15 @@ void WaterSplashSimmulation(inout VertexParticleIn particle, in uint id)
     else
     {
         particle.size = float2(1.5, 1.5);
-        //particle.pos = (emitterPosition.x + (randomNumbers[id + counter] / 10.f) , emitterPosition.y + (randomNumbers[id]/10.f), emitterPosition.z, emitterPosition.w);
-        particle.pos = emitterPosition; //+ randomNumbers[counter];
+        particle.pos = float4(emitterPosition.x + (randomNumbers[id + counter]), emitterPosition.y + (randomNumbers[id]), emitterPosition.z, emitterPosition.w);
+       //particle.pos = emitterPosition; //+ randomNumbers[counter];
         particle.velocity = float4(0, 0, 0, 0);
         particle.life = 0;
         particle.color = float4(0, 0, 0.5, 0.5);
     }
 }
 
-void SmokeSimmulation(inout VertexParticleIn particle, in uint id)
+void SmokePointSimmulation(inout VertexParticleIn particle, in uint id)
 {
     float particleLifeTime = (lifeTime - (randomNumbers[id + counter]));
     
@@ -144,7 +147,7 @@ void SmokeSimmulation(inout VertexParticleIn particle, in uint id)
         
         if (particle.color.a >= 0 && particle.life >= particleLifeTime - 1.5)
         {
-            particle.color.a -= 2.5 * deltaTime;
+            particle.color.a -= deltaTime;
             //particle.color.rgb -= deltaTime;
         }
     }
@@ -156,6 +159,43 @@ void SmokeSimmulation(inout VertexParticleIn particle, in uint id)
         //particle.pos.z = emitterPosition.z + (randomNumbers[id + 1] *4);
         //particle.pos.y = emitterPosition.y + (randomNumbers[id] * lifeTime);
         particle.life = 0;
+        particle.color.a = 1;
+        particle.velocity = float4(0, 0, 0, 0);
+    }
+}
+
+void SmokeAreaSimmulation(inout VertexParticleIn particle, in uint id)
+{
+    float particleLifeTime = (lifeTime - (randomNumbers[id + counter]));
+    
+    if (particle.life < particleLifeTime)
+    {
+        
+        particle.velocity.x += (randomNumbers[id]) * deltaTime;
+        particle.velocity.y += abs(randomNumbers[id + 1]) * deltaTime;
+        particle.velocity.z += (randomNumbers[id + counter]) * deltaTime;
+
+        particle.pos += particle.velocity * deltaTime;
+        
+        particle.velocity.y += 9.82 * deltaTime;
+        
+        float sizeChange = abs(randomNumbers[id + counter]) * deltaTime;
+        particle.size += sizeChange * particleSizeMulitplier;
+        
+        if (particle.color.a >= 0 && particle.life >= particleLifeTime - 1.5)
+        {
+            particle.color.a -= deltaTime;
+            //particle.color.rgb -= deltaTime;
+        }
+    }
+    else
+    {
+        particle.size = float2(1, 1);
+        particle.pos = emitterPosition;
+        particle.pos.x = emitterPosition.x + ((randomNumbers[id] * 4) / 2);
+        particle.pos.y = emitterPosition.y + ((randomNumbers[id] * lifeTime) / 2);
+        particle.pos.z = emitterPosition.z + ((randomNumbers[id + 1] * 4) / 2);
+        particle.life = 0;                   
         particle.color.a = 1;
         particle.velocity = float4(0, 0, 0, 0);
     }
