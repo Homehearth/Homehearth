@@ -284,7 +284,7 @@ void CombatSystem::AddCollisionMeleeBehavior(Entity entity, Entity attackEntity,
 					comp::TemporaryPhysics* p = other.AddComponent<comp::TemporaryPhysics>();
 					comp::TemporaryPhysics::Force force = {};
 
-					force.force = toOther + sm::Vector3(0, 1, 0);
+					force.force = toOther;
 					force.force *= attackAbility->attackDamage * 1.5f;
 
 					force.isImpulse = true;
