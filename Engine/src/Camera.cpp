@@ -248,6 +248,11 @@ sm::Vector3 Camera::GetRollPitchYaw() const
 	return m_rollPitchYaw;
 }
 
+sm::Quaternion Camera::GetRotation() const
+{
+	return m_rotation;
+}
+
 void Camera::SetPosition(sm::Vector3 newPosition)
 {
 	m_position = { newPosition.x, newPosition.y, newPosition.z };

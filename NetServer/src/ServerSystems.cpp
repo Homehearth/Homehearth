@@ -1,6 +1,8 @@
 #include "NetServerPCH.h"
 #include "Wave.h"
 #include "ServerSystems.h"
+
+#include "CombatSystem.h"
 #include "Simulation.h"
 #include "HouseManager.h"
 
@@ -28,6 +30,8 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 	comp::SphereCollider* bos = entity.AddComponent<comp::SphereCollider>();
 	comp::Velocity* velocity = entity.AddComponent<comp::Velocity>();
 	comp::BehaviorTree* behaviorTree = entity.AddComponent<comp::BehaviorTree>();
+	entity.AddComponent<comp::AudioState>();
+
 	switch (type)
 	{
 	case EnemyType::Default:
@@ -48,7 +52,7 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		attackAbility->cooldown = 1.0f;
 		attackAbility->attackDamage = 20.f;
 		attackAbility->lifetime = 5.0f;
-		attackAbility->attackRange = 10.f;
+		attackAbility->attackRange = 6.f;
 		attackAbility->useTime = 0.3f;
 		attackAbility->delay = 0.2f;
 		attackAbility->movementSpeedAlt = 0.0f;
@@ -509,8 +513,23 @@ void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money
 				// if player
 				comp::House* house = entity.GetComponent<comp::House>();
 				comp::Player* p = entity.GetComponent<comp::Player>();
+				comp::NPC* npc = entity.GetComponent<comp::NPC>();
+
+				audio_t audio = {
+					ESoundEvent::NONE,
+					entity.GetComponent<comp::Transform>()->position,
+					1.0f,
+					250.f,
+					true,
+					false,
+					false,
+					false,
+				};
+				
 				if (p)
 				{
+					audio.type = ESoundEvent::Player_OnDeath;
+
 					p->respawnTimer = 10.f;
 					p->state = comp::Player::State::SPECTATING;
 					entity.RemoveComponent<comp::Tag<TagType::DYNAMIC>>();
@@ -525,6 +544,8 @@ void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money
 					node->reachable = true;
 					node->defencePlaced = false;
 
+					audio.type = ESoundEvent::Game_OnDefenceDestroyed;
+
 					//Removing the defence and its neighbours if needed
 					grid.RemoveDefence(entity);
 					entity.Destroy();
@@ -538,15 +559,29 @@ void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money
 					//Remove house from blackboard
 					Blackboard::Get().GetValue<Houses_t>("houses")->houses.erase(entity);
 
+					audio.position = entity.GetComponent<comp::OrientedBoxCollider>()->Center;
+					audio.type = ESoundEvent::Game_OnHouseDestroyed;
+
 					//Destroy House entities with roof and door
 					house->houseRoof.Destroy();
 					house->door.Destroy();
+					entity.Destroy();
+				}
+				else if(npc)
+				{
+					audio.type = ESoundEvent::Enemy_OnDeath;
 					entity.Destroy();
 				}
 				else
 				{
 					entity.Destroy();
 				}
+
+				scene.ForEachComponent<comp::Player>([&](Entity& playerEntity, comp::Player& player)
+				{
+					playerEntity.GetComponent<comp::AudioState>()->data.emplace(audio);
+				});
+
 			}
 			else if (health.currentHealth > health.maxHealth)
 			{
@@ -588,16 +623,16 @@ void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& sce
 					
 					simulation->SendMsg(n.id, msg);
 				}
-				p.respawnTimer -= dt;
+				//p.respawnTimer -= dt;
 
-				if (p.respawnTimer < 0.01f)
-				{
-					simulation->ResetPlayer(e);
-					message<GameMsg> msg;
-					msg.header.id = GameMsg::Game_StopSpectate;
-					simulation->SendMsg(n.id, msg);
-					LOG_INFO("Player %u respawned...", e.GetComponent<comp::Network>()->id);
-				}
+				//if (p.respawnTimer < 0.01f)
+				//{
+				//	simulation->ResetPlayer(e);
+				//	message<GameMsg> msg;
+				//	msg.header.id = GameMsg::Game_StopSpectate;
+				//	simulation->SendMsg(n.id, msg);
+				//	LOG_INFO("Player %u respawned...", e.GetComponent<comp::Network>()->id);
+				//}
 			}
 		});
 
@@ -623,7 +658,7 @@ void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& sce
 		{
 			if (p.state == comp::Player::State::WALK || p.state == comp::Player::State::LOOK_TO_MOUSE)
 			{
-				float time = dt * p.runSpeed * 0.5f;
+				float time = dt * p.runSpeed * 0.4f;
 
 				if (ecs::StepRotateTo(t.rotation, p.fowardDir, time))
 				{
@@ -704,6 +739,75 @@ void ServerSystems::AnimatonSystem(Simulation* simulation, HeadlessScene& scene)
 		});
 }
 
+void ServerSystems::SoundSystem(Simulation* simulation, HeadlessScene& scene)
+{
+	scene.ForEachComponent<comp::Network, comp::AudioState>([&](comp::Network& net, comp::AudioState& audioState)
+		{
+			if(!audioState.data.empty())
+			{
+				const int COUNT = audioState.data.size();
+				audio_t audio = {};
+
+				message<GameMsg> singleMsg;
+				message<GameMsg> broadcastMsg;
+				int nrOfBroadcasts = 0;
+				singleMsg.header.id = GameMsg::Game_PlaySound;
+				broadcastMsg.header.id = GameMsg::Game_PlaySound;
+				
+				// Loop trough all sounds.
+				for(int i = 0; i < COUNT; i++)
+				{
+					audio = audioState.data.front();
+
+					if(audio.shouldBroadcast)
+					{
+						broadcastMsg << audio.type;
+						broadcastMsg << audio.position;
+						broadcastMsg << audio.volume;
+						broadcastMsg << audio.minDistance;
+						broadcastMsg << audio.is3D;
+						broadcastMsg << audio.isUnique;
+						broadcastMsg << audio.shouldBroadcast;
+						broadcastMsg << audio.playLooped;
+						nrOfBroadcasts++;
+					}
+					else
+					{
+						singleMsg << audio.type;
+						singleMsg << audio.position;
+						singleMsg << audio.volume;
+						singleMsg << audio.minDistance;
+						singleMsg << audio.is3D;
+						singleMsg << audio.isUnique;
+						singleMsg << audio.shouldBroadcast;
+						singleMsg << audio.playLooped;
+					}
+
+					audioState.data.pop();
+				}
+
+				//
+				// Send all msgs.
+				//
+				if(nrOfBroadcasts > 0)
+				{
+					broadcastMsg << nrOfBroadcasts;
+					simulation->Broadcast(broadcastMsg);
+				}
+
+				if (COUNT - nrOfBroadcasts > 0)
+				{
+					singleMsg << COUNT - nrOfBroadcasts;
+					simulation->SendMsg(net.id, singleMsg);
+				}
+			}
+		});
+}
+
+void ServerSystems::CombatSystem(HeadlessScene& scene, float dt)
+{
+	CombatSystem::UpdateCombatSystem(scene, dt);
+}
 void ServerSystems::DeathParticleTimer(HeadlessScene& scene)
 {
 	scene.ForEachComponent<comp::PARTICLEEMITTER>([&](Entity& e, comp::PARTICLEEMITTER& emitter)

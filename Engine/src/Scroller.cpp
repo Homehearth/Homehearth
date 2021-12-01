@@ -3,6 +3,11 @@
 
 using namespace rtd;
 
+void rtd::Scroller::SetOnPrimeButtonPress(std::function<void()> func)
+{
+    m_function = func;
+}
+
 void rtd::Scroller::Update()
 {
     // Transition to the endPos position.
@@ -105,6 +110,9 @@ ElementState Scroller::CheckClick()
     if (state == ElementState::INSIDE)
     {
         m_isPressed = !m_isPressed;
+
+        if (m_function)
+            m_function();
     }
 
     for (size_t i = 0; i < m_buttons.size(); i++)

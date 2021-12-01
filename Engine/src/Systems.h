@@ -2,7 +2,6 @@
 #include "Scene.h"
 #include "CollisionSystem.h"
 #include "PathFinderManager.h"
-#include "CombatSystem.h"
 #include "QuadTree.h"
 #include "SpreeHandler.h"
 
@@ -10,7 +9,6 @@ namespace Systems
 {
 	// abilities
 	void UpdateAbilities(HeadlessScene& scene, float dt);
-	void CombatSystem(HeadlessScene& scene, float dt);
 	void HealingSystem(HeadlessScene& scene, float dt);
 	void HeroLeapSystem(HeadlessScene& scene, float dt);
 
@@ -29,4 +27,5 @@ namespace Systems
 	void CheckCollisions(HeadlessScene& scene, float dt);
 
 	void AISystem(HeadlessScene& scene, PathFinderManager* aiHandler);
+
 }

@@ -14,8 +14,7 @@ private:
 
 	Window m_window;
 	Renderer m_renderer;
-	std::unique_ptr<DirectX::AudioEngine> m_audio_engine;
-	
+
 	// Startup the Engine and its instances in a specific order.
 	void Startup() override;
 

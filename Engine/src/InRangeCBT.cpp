@@ -46,7 +46,7 @@ BT::NodeStatus BT::InRangeCBT::Tick()
 
 	if (attackMAbility)
 	{
-		if (sm::Vector3::Distance(transform->position, position) <= attackMAbility->attackRange)
+		if (sm::Vector3::Distance(transform->position, position) <= (attackMAbility->attackRange * 1.5f))
 		{
 			return BT::NodeStatus::SUCCESS;
 		}
