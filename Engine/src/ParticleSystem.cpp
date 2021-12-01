@@ -17,8 +17,15 @@ void ParticleSystem::Initialize(ID3D11Device* pDevice)
 
 void ParticleSystem::InitializeParticles(entt::registry& reg, entt::entity ent)
 {
-	comp::EmitterParticle* emitter = &reg.get<comp::EmitterParticle>(ent);
-	sm::Vector3 entityPosition = reg.get<comp::Transform>(ent).position;
+	comp::EmitterParticle* emitter = reg.try_get<comp::EmitterParticle>(ent);
+	comp::Transform* t = reg.try_get<comp::Transform>(ent);
+
+	if (!t || !emitter)
+	{
+		return;
+	}
+
+	sm::Vector3 entityPosition = t->position;
 	entityPosition = sm::Vector3{ entityPosition.x + emitter->positionOffset.x, entityPosition.y + emitter->positionOffset.y, entityPosition.z + emitter->positionOffset.z };
 
 	std::vector<Particle_t> particles(emitter->nrOfParticles);
@@ -38,9 +45,15 @@ void ParticleSystem::InitializeParticles(entt::registry& reg, entt::entity ent)
 			tempParticle.velocity.y = (float)rand() / (RAND_MAX + 1.f) * (2.0f - (-2.0f)) + (-2.0f);
 			tempParticle.velocity.z = (float)rand() / (RAND_MAX + 1.f) * (2.0f - (-2.0f)) + (-2.0f);
 		}
-		if (tempParticle.type == PARTICLEMODE::WATERSPLASH)
+		else if (tempParticle.type == PARTICLEMODE::WATERSPLASH)
 		{
 			tempParticle.color = { 0.f, 0.f, 0.5f, 0.5f };
+		}
+		else if (tempParticle.type == PARTICLEMODE::SMOKEAREA) 
+		{
+			tempParticle.position.x += (float)rand() / (RAND_MAX + 1.f) * (1.0f - (-1.0f)) + (-1.0f);
+			tempParticle.position.y += (float)rand() / (RAND_MAX + 1.f) * (1.0f - (-1.0f)) + (-1.0f);
+			tempParticle.position.z += (float)rand() / (RAND_MAX + 1.f) * (1.0f - (-1.0f)) + (-1.0f);
 		}
 
 		particles[i] =  tempParticle;

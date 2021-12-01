@@ -20,6 +20,7 @@ namespace rtd
 		sm::Vector2 m_currentPos;
 		sm::Vector2 m_endPos;
 		bool m_isPressed;
+		std::function<void()> m_function;
 
 		void Update();
 
@@ -32,6 +33,8 @@ namespace rtd
 		Scroller(const draw_t& startPos, const sm::Vector2& endPos);
 		~Scroller();
 		void SetPrimeButtonMeasurements(const draw_t& opts);
+
+		void SetOnPrimeButtonPress(std::function<void()> func);
 
 		/*
 			Add an element to the scroller. Any element added will be

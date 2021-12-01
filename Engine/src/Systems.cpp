@@ -71,11 +71,6 @@ void Systems::UpdateAbilities(HeadlessScene& scene, float dt)
 
 }
 
-void Systems::CombatSystem(HeadlessScene& scene, float dt)
-{
-	CombatSystem::UpdateCombatSystem(scene, dt);
-}
-
 void Systems::HealingSystem(HeadlessScene& scene, float dt)
 {
 	// HealAbility system
@@ -96,6 +91,7 @@ void Systems::HealingSystem(HeadlessScene& scene, float dt)
 				collider.AddComponent<comp::Tag<TagType::DYNAMIC>>();
 
 				comp::BezierAnimation* a = collider.AddComponent<comp::BezierAnimation>();
+				a->speed = 0.5f;
 				a->scalePoints.push_back(transform->scale);
 				a->scalePoints.push_back(transform->scale + sm::Vector3(ability.range));
 
@@ -206,7 +202,6 @@ void Systems::HeroLeapSystem(HeadlessScene& scene, float dt)
 
 								auto gravity = ecs::GetGravityForce();
 								p->forces.push_back(gravity);
-
 							}
 						});
 				};

@@ -69,6 +69,14 @@ void Cycler::Update(Simulation* sim)
 		if (elapsed >= TIME_LIMIT_MORNING)
 		{
 			m_timePeriod = Cycle::DAY;
+			sim->GetGameScene()->ForEachComponent<comp::Health, comp::Player>([&](Entity e, comp::Health& h, comp::Player& p){
+
+				if (!h.isAlive)
+				{
+					sim->ResetPlayer(e);
+				}
+
+				});
 			m_time.Start();
 			Blackboard::Get().AddValue<Cycle>("cycle", m_timePeriod);
 		}
@@ -100,12 +108,12 @@ int Cycler::OnNight(Simulation* sim)
 	return count;
 }
 
-const Cycle& Cycler::GetTimePeriod() const
+Cycle Cycler::GetTimePeriod() const
 {
 	return m_timePeriod;
 }
 
-const bool& Cycler::GetSwitch() const
+bool Cycler::GetSwitch() const
 {
 	return m_shouldSwitch;
 }

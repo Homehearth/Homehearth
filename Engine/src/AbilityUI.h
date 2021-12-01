@@ -41,6 +41,11 @@ namespace rtd
 		void SetRoundBorder(const float& radius);
 
 		/*
+			Set the texture for ability.
+		*/
+		void SetTexture(const std::string& texturePath);
+
+		/*
 			Set the reference to the cooldown object.
 		*/
 		void SetReference(float* ref);

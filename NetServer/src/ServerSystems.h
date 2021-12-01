@@ -52,6 +52,9 @@ namespace ServerSystems
 	void TickBTSystem(Simulation* simulation, HeadlessScene& scene);
 
 	void AnimatonSystem(Simulation* simulation, HeadlessScene& scene);
+	void SoundSystem(Simulation* simulation, HeadlessScene& scene);
+
+	void CombatSystem(HeadlessScene& scene, float dt);
 
 	void DeathParticleTimer(HeadlessScene& scene);
 }
