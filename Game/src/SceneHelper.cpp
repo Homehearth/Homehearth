@@ -453,19 +453,19 @@ namespace sceneHelp
 		//rtd::AbilityUI* secondary = abilities->AddElement<rtd::AbilityUI>(draw_t(width - width / 8.0f, height - height / 9.0f, width / 16.0f, height / 9.0f), D2D1::ColorF(0, 1.0f), "UI_sword.png");
 		//secondary->SetActivateButton("RMB");
 		//secondary->SetReference(&game->m_secondaryCooldown);
-		rtd::Picture* abilityBar = abilities->AddElement<rtd::Picture>("AbilityBar.png", draw_t((width / 2.f) - ((width / 16.0f) * 2.0f) - (width / 256.0f), height - height / 9.0f, (width / 16.0f) * 5.0f, height / 9.0f));
+		rtd::Picture* abilityBar = abilities->AddElement<rtd::Picture>("AbilityBar.png", draw_t(((width / 2.f)) - ((width / 16.0f) * 2.5f), height - height / 9.0f, (width / 16.0f) * 5.0f, height / 9.0f));
 
-		rtd::AbilityUI* third = abilities->AddElement<rtd::AbilityUI>(draw_t((width / 2.f) - ((width / 16.0f) * 2.0f), height - height / 10.0f, width / 18.0f, height / 11.0f), D2D1::ColorF(0, 1.0f), "Attack2.png");
+		rtd::AbilityUI* third = abilities->AddElement<rtd::AbilityUI>(draw_t((width / 2.f) - (width / 18.0f) * 2.75f, height - height / 10.0f, width / 18.0f, height / 11.0f), D2D1::ColorF(0, 1.0f), "Attack2.png");
 		third->SetActivateButton("LMB");
 		third->SetReference(&game->m_primaryCooldown);
-		rtd::AbilityUI* fourth = abilities->AddElement<rtd::AbilityUI>(draw_t((width / 2.f) - ((width / 16.0f)), height - height / 10.0f, width / 18.0f, height / 11.0f), D2D1::ColorF(0, 1.0f), "Block.png");
+		rtd::AbilityUI* fourth = abilities->AddElement<rtd::AbilityUI>(draw_t((width / 2.f) - (width / 18.0f) * 0.5f - (width / 16.0f), height - height / 10.0f, width / 18.0f, height / 11.0f), D2D1::ColorF(0, 1.0f), "Block.png");
 		fourth->SetActivateButton("RMB");
 		fourth->SetReference(&game->m_secondaryCooldown);
-		rtd::AbilityUI* fifth = abilities->AddElement<rtd::AbilityUI>(draw_t((width / 2.f), height - height / 10.0f, width / 18.0f, height / 11.0f), D2D1::ColorF(0, 1.0f), "Dodge.png");
+		rtd::AbilityUI* fifth = abilities->AddElement<rtd::AbilityUI>(draw_t((width / 2.f) - (width / 18.0f) * 0.5f, height - height / 10.0f, width / 18.0f, height / 11.0f), D2D1::ColorF(0, 1.0f), "Dodge.png");
 		fifth->SetActivateButton("Shift");
 		fifth->SetReference(&game->m_dodgeCooldown);
-		rtd::AbilityUI* sixth = abilities->AddElement<rtd::AbilityUI>(draw_t((width / 2.f) + ((width / 16.0f)), height - height / 10.0f, width / 18.0f, height / 11.0f), D2D1::ColorF(0, 1.0f), "LockedIcon.png");
-		rtd::AbilityUI* seventh = abilities->AddElement<rtd::AbilityUI>(draw_t((width / 2.f) + ((width / 8.0f)), height - height / 10.0f, width / 18.0f, height / 11.0f), D2D1::ColorF(0, 1.0f), "LockedIcon.png");
+		rtd::AbilityUI* sixth = abilities->AddElement<rtd::AbilityUI>(draw_t((width / 2.f) - (width / 18.0f) * 0.5f + (width / 16.0f), height - height / 10.0f, width / 18.0f, height / 11.0f), D2D1::ColorF(0, 1.0f), "LockedIcon.png");
+		rtd::AbilityUI* seventh = abilities->AddElement<rtd::AbilityUI>(draw_t((width / 2.f) - (width / 18.0f) * 0.5f + (width / 16.0f) + (width / 16.0f), height - height / 10.0f, width / 18.0f, height / 11.0f), D2D1::ColorF(0, 1.0f), "LockedIcon.png");
 		scene.Add2DCollection(abilities, "AbilityUI");
 
 		Collection2D* pauseMenu = new Collection2D;
@@ -624,8 +624,11 @@ namespace sceneHelp
 		rtd::Button* mageButton = classButtons->AddElement<rtd::Button>("WizardIcon.png", draw_t((width / 3.33f) + (float)(width / 20), height - (height / 6), width / 16, height / 9));
 		rtd::Button* warriorButton = classButtons->AddElement<rtd::Button>("WarriorIcon.png", draw_t((width / 3.33f) + (width / 15.0f) + (float)(width / 16), height - (height / 6), width / 16, height / 9));
 		warriorButton->GetBorder()->SetColor(D2D1::ColorF(0.0f, 1.0f, 0.2f));
+		warriorButton->GetBorder()->SetLineWidth(LineWidth::THICC);
 		warriorButton->GetBorder()->SetVisiblity(true);
 
+		mageButton->GetBorder()->SetLineWidth(LineWidth::THICC);
+		mageButton->GetBorder()->SetVisiblity(false);
 		//mageBorder->SetVisiblity(false);
 		// FIX WHAT CLASS SYMBOL PLAYER HAS LATER
 		mageButton->SetOnPressedEvent([=]()
