@@ -79,17 +79,18 @@ bool Game::OnStartup()
 	// Set Current Scene
 	SetScene("MainMenu");
 
-	//Particles
+	//Particles todo: remove 
 	ResourceManager::Get().GetResource<RTexture>("BloodParticle.png");
 	ResourceManager::Get().GetResource<RTexture>("Smoke.png");
+	ResourceManager::Get().GetResource<RTexture>("MageHeal.png");
 
-	Entity emitter4 = GetScene("Game").CreateEntity();
+	/*Entity emitter4 = GetScene("Game").CreateEntity();
 	emitter4.AddComponent<comp::Transform>()->position = { 250, 5, -340 };
-	emitter4.AddComponent<comp::EmitterParticle>(sm::Vector3{ 0,0,0 }, 800, 2.f, PARTICLEMODE::SMOKEPOINT, 3.5f, 1.f, false);
+	emitter4.AddComponent<comp::EmitterParticle>(sm::Vector3{ 0,0,0 }, 102, 2.f, PARTICLEMODE::MAGEHEAL, 3.5f, 1.f, false);*/
 
 	Entity waterSplash = GetScene("Game").CreateEntity();
 	waterSplash.AddComponent<comp::Transform>()->position = { 270, 13, -370 };
-	waterSplash.AddComponent <comp::EmitterParticle>(sm::Vector3{ 0,0,0 }, 100, 1.f , PARTICLEMODE::WATERSPLASH, 2.0f, 1.f, false);
+	waterSplash.AddComponent <comp::EmitterParticle>(sm::Vector3{ 0,0,0 }, 150, 1.f , PARTICLEMODE::WATERSPLASH, 2.0f, 1.f, false);
 
 	return true;
 }

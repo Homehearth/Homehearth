@@ -9,6 +9,7 @@ void SmokePointSimmulation(inout VertexParticleIn particle, in uint id);
 void SmokeAreaSimmulation(inout VertexParticleIn particle, in uint id);
 void SparklesSimmulation(inout VertexParticleIn particle, in uint id);
 void RainSimmulation(inout VertexParticleIn particle, in uint id);
+void MageHealSimulation(inout VertexParticleIn particle, in uint id);
 
 [numthreads(1, 1, 1)]
 void main(uint3 particleID : SV_DispatchThreadID)
@@ -33,6 +34,8 @@ void main(uint3 particleID : SV_DispatchThreadID)
         SparklesSimmulation(vertex, id);
     else if (vertex.type == 6)
         RainSimmulation(vertex, id);
+    else if (vertex.type == 8)
+        MageHealSimulation(vertex, id);
 
     vertex.life += deltaTime;
     //vertex.size += particleSizeMulitplier * deltaTime;
@@ -234,6 +237,24 @@ void RainSimmulation(inout VertexParticleIn particle, in uint id)
     if (particle.pos.y <= emitterPosition.y -20) //Reset
     {
         particle.pos = emitterPosition;
+    }
+}
+
+void MageHealSimulation(inout VertexParticleIn particle, in uint id)
+{   
+    float4 emitterToParticle = particle.pos - emitterPosition;
+    
+    if (length(emitterToParticle) < 30)
+    {
+        particle.pos += particle.velocity * c_particleSpeed * deltaTime;
+    }
+    else
+    {
+        if (particle.size.x > 0)
+            particle.size -= deltaTime * particleSizeMulitplier * 2;
+        
+        if (particle.color.a > 0)
+            particle.color.a -= deltaTime * particleSizeMulitplier * 2;
     }
 }
 

@@ -99,7 +99,9 @@ enum class PARTICLEMODE : UINT
 	SMOKEAREA,
 	SPARKLES,
 	RAIN,
-	DUST
+	DUST,
+	MAGEHEAL,
+	MAGERANGE
 };
 
 enum class EDefenceType : UINT

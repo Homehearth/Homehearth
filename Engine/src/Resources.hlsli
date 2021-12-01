@@ -78,6 +78,9 @@ cbuffer ParticleUpdate : register(b8)
     uint counter;
     float lifeTime;
     float particleSizeMulitplier;
+    float c_particleSpeed;
+    
+    float3 c_pPadding;
 }
 
 cbuffer DecalInfoCB : register(b10)

@@ -10,6 +10,7 @@ struct ParticleUpdate
 	UINT counter;
 	float lifeTime;
 	float particleSizeMulitplier;
+	float speed;
 };
 
 class ParticlePass :public IRenderPass

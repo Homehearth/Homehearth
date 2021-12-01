@@ -125,11 +125,24 @@ namespace ecs
 				}
 				else if (type == PARTICLEMODE::DUST)
 				{
+				}				
+				else if (type == PARTICLEMODE::MAGEHEAL)
+				{
+					textureName = "MageHeal.png";
 				}
 
 				texture = ResourceManager::Get().GetResource<RTexture>(textureName);
 				opacityTexture = ResourceManager::Get().GetResource<RTexture>(opacityTextureName);
 
+				if (!texture)
+				{
+					LOG_ERROR("Couldnt load particle texture %s", textureName);
+				}
+				if (!opacityTexture)
+				{
+					LOG_ERROR("Couldnt load particle opacity texture %s", opacityTextureName);
+				}
+				
 				this->nrOfParticles		= (UINT)nrOfParticles;
 				this->type				= type;
 				this->lifeTime			= lifeTime;
