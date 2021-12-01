@@ -63,6 +63,7 @@ void SoundHandler::LoadAllSounds()
     AddSoundSource("../Assets/Sounds/Player_OnDmgRecieved.wav");
     AddSoundSource("../Assets/Sounds/Player_OnHealing.wav");
     AddSoundSource("../Assets/Sounds/Player_OnCastDash.wav");
+    AddSoundSource("../Assets/Sounds/Player_OnCastDash1.wav");
     AddSoundSource("../Assets/Sounds/Player_OnCastBlink.wav");
     AddSoundSource("../Assets/Sounds/Player_OnDeath.wav");
     AddSoundSource("../Assets/Sounds/Player_OnRespawn.wav");    // do not exist

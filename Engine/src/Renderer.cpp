@@ -12,33 +12,21 @@ void Renderer::Initialize(Window* pWindow)
 	m_pipelineManager.Initialize(pWindow);
 	m_d3d11 = &D3D11Core::Get();
 
-	/*
-		Had to disable the depth pass to get alpha testing to work correctly... -Filip
-	*/
-	//AddPass(&m_depthPass);  // 1
+	//AddPass(&m_depthPass);  
 	AddPass(&m_shadowPass);
 	m_shadowPass.StartUp();
 
 	AddPass(&m_decalPass);
 	m_decalPass.Create();
 
-	AddPass(&m_basePass);   // 2
-	AddPass(&m_animPass);	// 3
+	AddPass(&m_basePass);   
+	AddPass(&m_animPass);	
 	AddPass(&m_skyPass);
-
-	AddPass(&m_decalPass); // 3
-	m_decalPass.Create();
-	
-	AddPass(&m_basePass);   // 4
-	AddPass(&m_animPass);	// 5
-	AddPass(&m_skyPass);	// 6
-
-	AddPass(&m_dofPass);	// 7
-	AddPass(&m_particlePass);	// 8
+	AddPass(&m_dofPass);	
+	AddPass(&m_particlePass);
 
 	m_basePass.m_pShadowPass = &m_shadowPass;
 	m_animPass.m_pShadowPass = &m_shadowPass;
-	
 
 	//m_depthPass.SetEnable(true);
 	m_basePass.SetEnable(true);
@@ -50,7 +38,7 @@ void Renderer::Initialize(Window* pWindow)
 	m_shadowPass.SetEnable(true);
 
 #ifdef _DEBUG
-	AddPass(&m_debugPass);  // 5
+	AddPass(&m_debugPass);  
     m_debugPass.SetEnable(true);
 #endif
 
@@ -99,10 +87,7 @@ void Renderer::Render(Scene* pScene)
 			{
 				this->UpdatePerFrame(pScene->GetCurrentCamera());
 				thread::RenderThreadHandler::SetCamera(pScene->GetCurrentCamera());
-			/*
-				Optimize idead: Render/Update lights once instead of per pass?
-				Set lights once.
-			*/
+
 				for (int i = 0; i < m_passes.size(); i++)
 				{
 					m_currentPass = i;

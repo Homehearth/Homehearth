@@ -528,9 +528,7 @@ void Engine::Render()
 		m_imguiMutex.unlock();
 		);
 	}
-
 	
-
 	{
 		PROFILE_SCOPE("Present");
 		D3D11Core::Get().SwapChain()->Present(0, 0);

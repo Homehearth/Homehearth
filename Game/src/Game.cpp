@@ -334,7 +334,13 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 				SH->PlaySound("Player_OnHealing", data);
 				break;
 			case ESoundEvent::Player_OnCastDash:
-				SH->PlaySound("Player_OnCastDash", data);
+				{
+					int version = rand() % 5;
+					if(version == 0)
+						SH->PlaySound("Player_OnCastDash1", data);
+					else
+						SH->PlaySound("Player_OnCastDash", data);
+				}
 				break;
 			case ESoundEvent::Player_OnCastBlink:
 				SH->PlaySound("Player_OnCastBlink", data);
