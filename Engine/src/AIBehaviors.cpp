@@ -93,11 +93,14 @@ std::shared_ptr<BT::FallbackNode> AIBehaviors::GetVillagerAIBehavior(Entity enti
 	auto fallback1 = std::make_shared<BT::FallbackNode>(BT::FallbackNode("fallback1"));
 	auto seq1 = std::make_shared<BT::SequenceNode>(BT::SequenceNode("seq1"));
 
+
 	auto villagerTarget = std::make_shared<BT::VillagerTargetNodeCBT>(BT::VillagerTargetNodeCBT("VillagerTarget", entity));
 	auto moveToTarget = std::make_shared<BT::MoveCBT>(BT::MoveCBT("MoveToTarget", entity));
 	auto genPath = std::make_shared<BT::GenPathCBT>(BT::GenPathCBT("GenPath", entity));
+	auto hideVillager = std::make_shared<BT::HideVillagerCBT>(BT::HideVillagerCBT("HideVillager", entity));
 
 	root->AddChild(fallback1);
+	fallback1->AddChild(hideVillager);
 	fallback1->AddChild(seq1);
 	seq1->AddChild(villagerTarget);
 	seq1->AddChild(genPath);

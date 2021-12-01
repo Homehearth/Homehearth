@@ -30,7 +30,7 @@ void Cycler::Update(Simulation* sim)
 	case Cycle::DAY:
 	{
 		this->OnDay(sim);
-		uint32_t elapsed = (uint32_t)m_time.GetElapsedTime();
+		uint32_t elapsed = (uint32_t)m_time.GetElapsedTime() * 10;
 
 		// The day has reached its limit and switches to night.
 		if (elapsed >= TIME_LIMIT_DAY)

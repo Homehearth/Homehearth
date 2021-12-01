@@ -248,6 +248,7 @@ namespace ecs
 												sm::Vector3(135.f, 0.f, -374.f)}; //Positions villager can go and idle at
 			Node* currentNode;
 			float movementSpeed = 15.f;
+			bool isHiding = false;
 		};
 
 		struct House

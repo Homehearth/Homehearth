@@ -847,6 +847,7 @@ Entity VillagerManagement::CreateVillager(HeadlessScene& scene, Node* homeNode)
 	comp::BehaviorTree* behaviorTree = entity.AddComponent<comp::BehaviorTree>();
 	comp::Villager* villager = entity.AddComponent<comp::Villager>();
 	transform->position = homeNode->position;
+	transform->position.y = 0.75f;
 	villager->homeNode = homeNode;
 	meshName->name = NameType::MESH_VILLAGER;
 	animatorName->name = AnimName::ANIM_KNIGHT;
