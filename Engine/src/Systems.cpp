@@ -108,11 +108,16 @@ void Systems::HealingSystem(HeadlessScene& scene, float dt)
 						if (entity.IsNull())
 							return;
 
-						comp::Health* h = other.GetComponent<comp::Health>();
-						if (h)
+						comp::Player* p = other.GetComponent<comp::Player>();
+						if (p)
 						{
-							h->currentHealth += ability.healAmount;
-							scene.publish<EComponentUpdated>(other, ecs::Component::HEALTH);
+							comp::Health* h = other.GetComponent<comp::Health>();
+
+							if (h)
+							{
+								h->currentHealth += ability.healAmount;
+								scene.publish<EComponentUpdated>(other, ecs::Component::HEALTH);
+							}
 						}
 					});
 			}

@@ -30,7 +30,6 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 	comp::SphereCollider* bos = entity.AddComponent<comp::SphereCollider>();
 	comp::Velocity* velocity = entity.AddComponent<comp::Velocity>();
 	comp::BehaviorTree* behaviorTree = entity.AddComponent<comp::BehaviorTree>();
-	entity.AddComponent<comp::AudioState>();
 
 	switch (type)
 	{
@@ -556,6 +555,7 @@ void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money
 				{
 					//Create a new entity with the ruined mesh
 					Entity newHouse = houseManager.CreateHouse(scene, houseManager.GetRuinedHouseType(house->houseType), NameType::EMPTY, NameType::EMPTY);
+					newHouse.RemoveComponent<comp::Health>();
 					qt->Insert(newHouse);
 
 					sm::Vector3 emitterOffset = newHouse.GetComponent<comp::OrientedBoxCollider>()->Center;
