@@ -1113,7 +1113,8 @@ namespace sceneHelp
 		backButton->Hide();
 		scene.Add2DCollection(backButton, "returnButton");
 
-		helpText->AddElement<rtd::Text>("Insert super helpful text here for all the noobs.", draw_text_t(0.0f, 0.0f, width, height - (height / 8.0f)));
+		const std::string helpTextOption = "Homehearth\n\n\nDuring the day its recommended to build defences around the village, To do this you need to open the shop at upper right corner and press shop icon.\nTo place a defence press on one of the defence choices and click on any valid ground area.\nOther shop options are as presented.\nDuring the night you will need to work with your friends to defend the village from horrifying hordes of monsters.\nControls:\nWASD - Movement\nLeft Click - Primary Attack\nRight Click - Secondary Ability\nShift - Dodge\n";
+		helpText->AddElement<rtd::Text>(helpTextOption, draw_text_t(0.0f, 0.0f, width, height - (height / 8.0f)));
 		helpText->Hide();
 		scene.Add2DCollection(helpText, "HelpText");
 
