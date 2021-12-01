@@ -369,6 +369,8 @@ namespace sceneHelp
 						rtd::TextField* nameInput = dynamic_cast<rtd::TextField*>(game->GetScene("JoinLobby").GetCollection("nameInput")->elements[0].get());
 						nameInput->SetActive();
 						game->SetScene("JoinLobby");
+						deadServerText->SetVisiblity(false);
+
 					}
 					else
 					{
