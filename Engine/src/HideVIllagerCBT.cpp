@@ -12,20 +12,20 @@ BT::NodeStatus BT::HideVillagerCBT::Tick()
 	comp::Villager* villager = entity.GetComponent<comp::Villager>();
 	comp::Transform* transform = entity.GetComponent<comp::Transform>();
 	comp::Velocity* vel = entity.GetComponent<comp::Velocity>();
-	Cycle* cycle = Blackboard::Get().GetValue<Cycle>("cycle");
+	CyclePeriod* cycle = Blackboard::Get().GetValue<CyclePeriod>("cycle");
 
 	if(cycle == nullptr || villager == nullptr || transform == nullptr || vel == nullptr)
 	{
 		LOG_WARNING("Failed to get components/values...");
 		return BT::NodeStatus::FAILURE;
 	}
-	if (*cycle == Cycle::NIGHT && villager->isHiding && !villager->homeHouse.IsNull())
+	if (*cycle == CyclePeriod::NIGHT && villager->isHiding && !villager->homeHouse.IsNull())
 	{
 		//Keep villager hidden by posting this as success
 		return BT::NodeStatus::SUCCESS;
 	}
 
-	if(*cycle == Cycle::NIGHT && !villager->isHiding && !villager->homeHouse.IsNull())
+	if(*cycle == CyclePeriod::NIGHT && !villager->isHiding && !villager->homeHouse.IsNull())
 	{
 		if(sm::Vector3::Distance(transform->position, villager->homeHouse.GetComponent<comp::House>()->attackNode->position) < 7.f)
 		{
@@ -37,7 +37,7 @@ BT::NodeStatus BT::HideVillagerCBT::Tick()
 			return BT::NodeStatus::SUCCESS;
 		}
 	}
-	if(*cycle == Cycle::MORNING || *cycle == Cycle::DAY && villager->isHiding)
+	if(*cycle == CyclePeriod::MORNING || *cycle == CyclePeriod::DAY && villager->isHiding)
 	{
 		//Pop villager out again.
 		transform->position.y = 0.0f;
