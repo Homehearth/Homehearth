@@ -16,6 +16,7 @@ private:
 	ParticleSystem m_particles;
 	Mode m_mode = Mode::PLAY_MODE;
 	Cycle m_serverCycle = Cycle::DAY;
+	bool hasLoaded = false;
 
 	Entity m_mapEntity;
 
