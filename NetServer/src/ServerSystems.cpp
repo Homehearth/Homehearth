@@ -466,8 +466,7 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 			{
 				if (ecs::UseAbility(e, p.moveAbilty, &p.mousePoint))
 				{
-					LOG_INFO("Used moveAbility");
-					//anim.toSend = EAnimationType::MOVE_ABILITY;
+					anim.toSend = EAnimationType::ABILITY1;
 				}
 			}
 
