@@ -3,3 +3,4 @@ smoke.png
 smoke_opacity.png
 waterSplash.png
 round_Opacity.png
+MageHeal.png
