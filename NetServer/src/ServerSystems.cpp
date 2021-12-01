@@ -772,7 +772,7 @@ void ServerSystems::SoundSystem(Simulation* simulation, HeadlessScene& scene)
 		{
 			if(!audioState.data.empty())
 			{
-				const int COUNT = audioState.data.size();
+				const int COUNT = static_cast<int>(audioState.data.size());
 				audio_t audio = {};
 
 				message<GameMsg> singleMsg;

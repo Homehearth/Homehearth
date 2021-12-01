@@ -136,11 +136,11 @@ namespace ecs
 
 				if (!texture)
 				{
-					LOG_ERROR("Couldnt load particle texture %s", textureName);
+					LOG_ERROR("Couldnt load particle texture %s", textureName.c_str());
 				}
 				if (!opacityTexture)
 				{
-					LOG_ERROR("Couldnt load particle opacity texture %s", opacityTextureName);
+					LOG_ERROR("Couldnt load particle opacity texture %s", opacityTextureName.c_str());
 				}
 				
 				this->nrOfParticles		= (UINT)nrOfParticles;
