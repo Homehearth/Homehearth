@@ -11,6 +11,7 @@ namespace ecs
 {
 	enum Component : uint32_t
 	{
+		PARTICLEMITTER,
 		TRANSFORM,
 		VELOCITY,
 		MESH_NAME,
@@ -18,7 +19,6 @@ namespace ecs
 		HEALTH,
 		BOUNDING_ORIENTED_BOX,
 		BOUNDING_SPHERE,
-		PARTICLEMITTER,
 		PLAYER,
 		COST,
 		COMPONENT_COUNT,
@@ -98,45 +98,51 @@ namespace ecs
 
 			EmitterParticle(sm::Vector3 positionOffset = {0,0,0}, int nrOfParticles = 10, float sizeMulitplier = 1.f, PARTICLEMODE type = PARTICLEMODE::BLOOD, float lifeTime = 2.f, float speed = 1, bool hasDeathTimer = false)
 			{
+				textureName = "thisisfine.png";
+				opacityTextureName = "round_Opacity.png";
+
 				if (type == PARTICLEMODE::BLOOD)
 				{
 					textureName = "BloodParticle.png";
-					opacityTextureName = "round_Opacity.png";
 				}
 				else if (type == PARTICLEMODE::LEAF)
 				{
-					textureName = "thisisfine.png";
-					opacityTextureName = "round_Opacity.png";
 				}
 				else if (type == PARTICLEMODE::WATERSPLASH)
 				{
 					textureName = "waterSplash.png";
-					opacityTextureName = "round_Opacity.png";
 				}
-				else if (type == PARTICLEMODE::SMOKE)
+				else if (type == PARTICLEMODE::SMOKEPOINT || type == PARTICLEMODE::SMOKEAREA)
 				{
 					textureName = "smoke.png";
 					opacityTextureName = "smoke_opacity.png";
 				}
 				else if (type == PARTICLEMODE::SPARKLES)
 				{
-					textureName = "thisisfine.png";
-					opacityTextureName = "round_Opacity.png";
 				}
 				else if (type == PARTICLEMODE::RAIN)
 				{
-					textureName = "thisisfine.png";
-					opacityTextureName = "round_Opacity.png";
 				}
 				else if (type == PARTICLEMODE::DUST)
 				{
-					textureName = "thisisfine.png";
-					opacityTextureName = "round_Opacity.png";
+				}				
+				else if (type == PARTICLEMODE::MAGEHEAL)
+				{
+					textureName = "MageHeal.png";
 				}
 
 				texture = ResourceManager::Get().GetResource<RTexture>(textureName);
 				opacityTexture = ResourceManager::Get().GetResource<RTexture>(opacityTextureName);
 
+				if (!texture)
+				{
+					LOG_ERROR("Couldnt load particle texture %s", textureName);
+				}
+				if (!opacityTexture)
+				{
+					LOG_ERROR("Couldnt load particle opacity texture %s", opacityTextureName);
+				}
+				
 				this->nrOfParticles		= (UINT)nrOfParticles;
 				this->type				= type;
 				this->lifeTime			= lifeTime;

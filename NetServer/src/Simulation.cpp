@@ -192,11 +192,11 @@ void Simulation::ResetPlayer(Entity player)
 	else if (playerComp->classType == comp::Player::Class::MAGE)
 	{
 		comp::RangeAttackAbility* attackAbility = player.AddComponent<comp::RangeAttackAbility>();
-		attackAbility->cooldown = 0.5f;
+		attackAbility->cooldown = 0.8f;
 		attackAbility->attackDamage = 20.f;
 		attackAbility->lifetime = 2.0f;
-		attackAbility->projectileSpeed = 60.f;
-		attackAbility->attackRange = 2.0f;
+		attackAbility->projectileSpeed = 80.f;
+		attackAbility->attackRange = 4.0f;
 		attackAbility->useTime = 0.3f;
 		attackAbility->delay = 0.1f;
 		playerComp->primaryAbilty = entt::resolve<comp::RangeAttackAbility>();

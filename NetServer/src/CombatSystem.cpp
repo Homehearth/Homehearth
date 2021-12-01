@@ -96,7 +96,7 @@ void CombatSystem::UpdateTeleport(HeadlessScene& scene)
 				const float decreaseValue = 0.90f;
 				if (p)
 				{
-					sm::Vector3 dir = p->fowardDir * teleportAbility.distance;
+					sm::Vector3 dir = ecs::GetForward(transform) * teleportAbility.distance;
 
 					bool hasSetTarget = false;
 					while (!hasSetTarget && dir.Length() > pathFinderManager->GetNodeSize())
@@ -132,7 +132,6 @@ void CombatSystem::UpdateDash(HeadlessScene& scene)
 
 			if (ecs::ReadyToUse(&dashAbility, nullptr))
 			{
-				//dashAbility.velocityBeforeDash = entity.GetComponent<comp::Velocity>()->vel;
 				audio_t audio = {
 					ESoundEvent::Player_OnCastDash,
 					entity.GetComponent<comp::Transform>()->position,
@@ -148,7 +147,9 @@ void CombatSystem::UpdateDash(HeadlessScene& scene)
 				comp::Player* p = entity.GetComponent<comp::Player>();
 				if (p)
 				{
-					dashAbility.velocityBeforeDash = p->fowardDir * p->runSpeed;
+					sm::Vector3 dir = ecs::GetForward(transform);
+
+					dashAbility.velocityBeforeDash = dir * p->runSpeed;
 				}
 			}
 
@@ -310,6 +311,12 @@ void CombatSystem::AddCollisionMeleeBehavior(Entity entity, Entity attackEntity,
 				if (other.GetComponent<comp::Tag<TagType::DEFENCE>>())
 				{
 					//TODO: add building particles
+					// Blood particle
+					if (other.GetComponent<comp::PARTICLEEMITTER>())
+					{
+						other.RemoveComponent<comp::PARTICLEEMITTER>();
+					}
+					other.AddComponent<comp::PARTICLEEMITTER>(sm::Vector3{ 0,10,0 }, 50, 10.f, PARTICLEMODE::SMOKEAREA, 3.5f, 1.f, true);
 				}
 				else
 				{
@@ -318,9 +325,8 @@ void CombatSystem::AddCollisionMeleeBehavior(Entity entity, Entity attackEntity,
 					{
 						other.RemoveComponent<comp::PARTICLEEMITTER>();
 					}
-					other.AddComponent<comp::PARTICLEEMITTER>(sm::Vector3{ 0,6,0 }, 50, 5.f, PARTICLEMODE::BLOOD, 1.5f, 1.f, true);
+					//other.AddComponent<comp::PARTICLEEMITTER>(sm::Vector3{ 0,6,0 }, 50, 5.f, PARTICLEMODE::BLOOD, 1.5f, 1.f, true);
 
-					scene.publish<EComponentUpdated>(other, ecs::Component::PARTICLEMITTER);
 				}
 				
 				// update Health on network

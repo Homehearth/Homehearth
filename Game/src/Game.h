@@ -17,6 +17,8 @@ private:
 	Mode m_mode = Mode::PLAY_MODE;
 	
 	Cycler m_cycler;
+	//Cycle m_serverCycle = Cycle::DAY;
+	bool hasLoaded = false;
 
 	Entity m_mapEntity;
 

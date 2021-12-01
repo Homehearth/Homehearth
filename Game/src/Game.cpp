@@ -6,6 +6,7 @@
 #include "Healthbar.h"
 #include "MoneyUI.h"
 #include "OptionSystem.h"
+#include "AbilityUI.h"
 
 using namespace std::placeholders;
 
@@ -17,6 +18,8 @@ Game::Game()
 	this->m_spectatingID = -1;
 	this->m_money = 0;
 	this->m_gameID = -1;
+	this->m_waveTimer = 0;
+	this->m_inputState = {};
 }
 
 Game::~Game()
@@ -25,6 +28,9 @@ Game::~Game()
 	{
 		m_client.Disconnect();
 	}
+
+	OptionSystem::Get().SetOption("MasterVolume", std::to_string(m_masterVolume));
+	OptionSystem::Get().OnShutdown();
 }
 
 void Game::UpdateNetwork(float deltaTime)
@@ -78,15 +84,13 @@ bool Game::OnStartup()
 	// Set Current Scene
 	SetScene("MainMenu");
 
-	//Particles
-	ResourceManager::Get().GetResource<RTexture>("BloodParticle.png");
-	Entity emitter4 = GetScene("Game").CreateEntity();
+	/*Entity emitter4 = GetScene("Game").CreateEntity();
 	emitter4.AddComponent<comp::Transform>()->position = { 250, 5, -340 };
-	emitter4.AddComponent <comp::EmitterParticle>(sm::Vector3{ 0,0,0 }, 800, 2.f, PARTICLEMODE::SMOKE, 4.0f, 1.f, false);
+	emitter4.AddComponent<comp::EmitterParticle>(sm::Vector3{ 0,0,0 }, 102, 2.f, PARTICLEMODE::MAGEHEAL, 3.5f, 1.f, false);*/
 
 	Entity waterSplash = GetScene("Game").CreateEntity();
 	waterSplash.AddComponent<comp::Transform>()->position = { 270, 13, -370 };
-	waterSplash.AddComponent <comp::EmitterParticle>(sm::Vector3{ 0,0,0 }, 100, 1.f, PARTICLEMODE::WATERSPLASH, 4.0f, 1.f, false);
+	waterSplash.AddComponent <comp::EmitterParticle>(sm::Vector3{ 0,0,0 }, 150, 1.f, PARTICLEMODE::WATERSPLASH, 2.0f, 1.f, false);
 
 	return true;
 }
@@ -401,9 +405,14 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		msg >> m_gameID;
 
 		this->SetScene("Loading");
-		sceneHelp::LoadGameScene(this);
-		sceneHelp::LoadResources(this);
-		sceneHelp::LoadMapColliders(this);
+		if (!hasLoaded)
+		{
+			sceneHelp::LoadGameScene(this);
+			sceneHelp::LoadResources(this);
+			sceneHelp::LoadMapColliders(this);
+
+			hasLoaded = true;
+		}
 
 #ifdef _DEBUG
 		LOG_INFO("Successfully loaded all Assets!");
@@ -458,7 +467,23 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 
 		SetScene("Game");
 		thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::ADAPTIVE);
+		comp::Player* p = GetLocalPlayer().GetComponent<comp::Player>();
+		if (p)
+		{
+			if (p->classType == comp::Player::Class::WARRIOR)
+			{
+				dynamic_cast<rtd::AbilityUI*>(GetScene("Game").GetCollection("AbilityUI")->elements[1].get())->SetTexture("Attack2.png");
+				dynamic_cast<rtd::AbilityUI*>(GetScene("Game").GetCollection("AbilityUI")->elements[2].get())->SetTexture("Block.png");
+			}
+			else
+			{
+				dynamic_cast<rtd::AbilityUI*>(GetScene("Game").GetCollection("AbilityUI")->elements[1].get())->SetTexture("Attack.png");
+				dynamic_cast<rtd::AbilityUI*>(GetScene("Game").GetCollection("AbilityUI")->elements[2].get())->SetTexture("Heal.png");
+			}
+		}
 
+		this->m_inputState = { };
+		SetScene("Game");
 		break;
 	}
 	case GameMsg::Game_Spree:
@@ -786,6 +811,7 @@ void Game::OnClientDisconnect()
 	m_client.m_qMessagesIn.clear();
 	m_players.clear();
 	m_gameEntities.clear();
+	SoundHandler::Get().SetCurrentMusic("MenuTheme");
 	LOG_INFO("Disconnected from server!");
 }
 
