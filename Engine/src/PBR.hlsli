@@ -117,14 +117,14 @@ float3 DoDirectionlight(Light L, float3 normal)
     float3 N = normalize(normal);
     float3 VL = -normalize(L.direction.xyz);
     
-    float3 diff = L.color.xyz * L.intensity;
+    float3 diff = L.color.xyz;
     
     float diffuseFactor = max(dot(VL, N), 0.0f);
     
     diff *= diffuseFactor;
     
     float3 radiance = diff; //multiply here with shadowCoeff if shadows
-    return radiance;
+    return radiance * L.intensity;
 }
 
 //Calculates the outgoing radiance level of each light

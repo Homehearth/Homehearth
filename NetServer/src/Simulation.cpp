@@ -192,11 +192,11 @@ void Simulation::ResetPlayer(Entity player)
 	else if (playerComp->classType == comp::Player::Class::MAGE)
 	{
 		comp::RangeAttackAbility* attackAbility = player.AddComponent<comp::RangeAttackAbility>();
-		attackAbility->cooldown = 0.5f;
+		attackAbility->cooldown = 0.8f;
 		attackAbility->attackDamage = 20.f;
 		attackAbility->lifetime = 2.0f;
-		attackAbility->projectileSpeed = 60.f;
-		attackAbility->attackRange = 2.0f;
+		attackAbility->projectileSpeed = 80.f;
+		attackAbility->attackRange = 4.0f;
 		attackAbility->useTime = 0.3f;
 		attackAbility->delay = 0.1f;
 		playerComp->primaryAbilty = entt::resolve<comp::RangeAttackAbility>();
@@ -260,6 +260,7 @@ Simulation::Simulation(Server* pServer, HeadlessEngine* pEngine)
 {
 	this->m_gameID = 0;
 	this->m_tick = 0;
+	this->m_wavesSurvived = 0;
 
 	dx::BoundingBox bounds = { dx::XMFLOAT3(250, 0, -320), dx::XMFLOAT3(230, 50, 220) };
 	qt = std::make_unique<QuadTree>(bounds);
@@ -387,22 +388,23 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 				ServerSystems::SoundSystem(this, scene);
 			}
 
+			m_timeCycler.Update(e.dt);
+
 			{
 				PROFILE_SCOPE("Create waves");
 				if (!waveQueue.empty())
-					ServerSystems::NextWaveConditions(this, waveTimer, waveQueue.front().GetTimeLimit());
+					ServerSystems::NextWaveConditions(this);
 				else
 					EnemyManagement::CreateWaves(waveQueue, currentRound++);
 			}
 
-			m_timeCycler.Update(this);
 			m_spreeHandler.Update();
+		
 		});
 	
 	//On all enemies wiped, activate the next wave.
 	m_pGameScene->on<ESceneCallWaveSystem>([&](const ESceneCallWaveSystem& dt, HeadlessScene& scene)
 		{
-			waveTimer.Start();
 			ServerSystems::WaveSystem(this, waveQueue);
 		});
 
@@ -490,21 +492,6 @@ void Simulation::SendSnapshot()
 		this->SendEntities(m_updatedEntities, GameMsg::Game_Snapshot, compMask);
 		m_updatedEntities.clear();
 
-		// Update until next wave timer if next wave is present.
-		if (!waveQueue.empty())
-		{
-			// Update wave timer to clients.
-			network::message<GameMsg> msg2;
-			msg2.header.id = GameMsg::Game_WaveTimer;
-			msg2 << m_timeCycler.GetElapsedTime();
-			msg2 << m_timeCycler.GetTimePeriod();
-			this->BroadcastUDP(msg2);	
-			//for (auto& player : m_lobby.m_players)
-			//{
-			//	player.second.RemoveComponent<comp::Tag<TagType::GOOD>>();
-			//}
-		}
-
 		if (m_currency.m_hasUpdated)
 		{
 			network::message<GameMsg> msg3;
@@ -564,6 +551,16 @@ void Simulation::SendSnapshot()
 		msg5.header.id = GameMsg::Game_Spree;
 		msg5 << (uint32_t)m_spreeHandler.GetSpree();
 		this->Broadcast(msg5);
+		
+		if (this->m_tick % 40 == 0)
+		{
+			network::message<GameMsg> timeMsg;
+			timeMsg.header.id = GameMsg::Game_Time;
+			timeMsg << m_timeCycler.GetTime();
+			timeMsg << m_timeCycler.GetCycleSpeed();
+			this->Broadcast(timeMsg);
+		}
+		
 	}
 	else
 	{
@@ -701,6 +698,11 @@ Currency& Simulation::GetCurrency()
 	return m_currency;
 }
 
+void Simulation::IncreaseWavesSurvived()
+{
+	this->m_wavesSurvived++;
+}
+
 void Simulation::UseShop(const ShopItem& item, const uint32_t& player)
 {
 	m_shop.UseShop(item, player);
@@ -748,7 +750,7 @@ void Simulation::SetGameOver()
 	m_pCurrentScene = m_pGameOverScene;
 	message<GameMsg> msg;
 	msg.header.id = GameMsg::Game_Over;
-
+	msg << m_currency.GetTotalGathered() << m_wavesSurvived - 1;
 	this->Broadcast(msg);
 }
 
@@ -818,6 +820,10 @@ void Simulation::ResetGameScene()
 
 	houseManager.InitializeHouses(*this->GetGameScene(),qt.get());
 	EnemyManagement::CreateWaves(waveQueue, currentRound++);
+
+	m_timeCycler.SetTime(MID_DAY);
+	m_timeCycler.SetCycleSpeed(1.0f);
+	
 }
 
 void Simulation::SendEntities(const std::vector<Entity>& entities, GameMsg msgID, const std::bitset<ecs::Component::COMPONENT_MAX>& componentMask)
@@ -956,7 +962,6 @@ void Simulation::ReadyCheck(uint32_t playerID)
 		msg.header.id = GameMsg::Game_Start;
 
 		this->Broadcast(msg);
-		m_timeCycler.OnStart();
 	}
 }
 

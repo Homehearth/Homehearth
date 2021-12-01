@@ -1,4 +1,5 @@
 Knight.fbx
+Villager.fbx
 Monster.fbx
 mage.fbx
 Barrel.obj

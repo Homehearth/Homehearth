@@ -1,4 +1,5 @@
 #pragma once
+#include <functional>
 
 class Simulation;
 
@@ -11,10 +12,11 @@ private:
 	std::unordered_map<uint32_t, Entity>::iterator RemovePlayer(std::unordered_map<uint32_t, Entity>::iterator playerIterator);
 	void CreatePlayerEntity(uint32_t playerID, const std::string& name);
 
+	std::priority_queue<comp::Player::PlayerType, std::vector<comp::Player::PlayerType>, std::greater<comp::Player::PlayerType>> m_playerTypes;
+
 public:
 	Lobby();
 	~Lobby();
-
 
 	std::unordered_map<uint32_t, Entity> m_players;
 	void Init(Simulation* sim);

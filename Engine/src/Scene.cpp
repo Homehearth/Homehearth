@@ -4,7 +4,7 @@
 #include "Systems.h"
 
 Scene::Scene()
-	: m_IsRenderingColliders(true)
+	: m_IsRenderingColliders(false)
 {
 	m_publicBuffer.Create(D3D11Core::Get().Device());
 	m_publicDecalBuffer.Create(D3D11Core::Get().Device());

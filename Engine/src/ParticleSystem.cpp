@@ -28,6 +28,8 @@ void ParticleSystem::InitializeParticles(entt::registry& reg, entt::entity ent)
 	sm::Vector3 entityPosition = t->position;
 	entityPosition = sm::Vector3{ entityPosition.x + emitter->positionOffset.x, entityPosition.y + emitter->positionOffset.y, entityPosition.z + emitter->positionOffset.z };
 
+
+
 	std::vector<Particle_t> particles(emitter->nrOfParticles);
 	for (UINT i = 0; i < emitter->nrOfParticles; i++)
 	{
@@ -39,16 +41,35 @@ void ParticleSystem::InitializeParticles(entt::registry& reg, entt::entity ent)
 		tempParticle.life = 0;
 		tempParticle.velocity = {0,0,0,0};
 
-		if (tempParticle.type == PARTICLEMODE::BLOOD)
+		if (tempParticle.type == PARTICLEMODE::BLOOD || tempParticle.type == PARTICLEMODE::MAGERANGE || tempParticle.type == PARTICLEMODE::WATERSPLASH)
 		{
 			tempParticle.velocity.x = (float)rand() / (RAND_MAX + 1.f) * (2.0f - (-2.0f)) + (-2.0f);
 			tempParticle.velocity.y = (float)rand() / (RAND_MAX + 1.f) * (2.0f - (-2.0f)) + (-2.0f);
 			tempParticle.velocity.z = (float)rand() / (RAND_MAX + 1.f) * (2.0f - (-2.0f)) + (-2.0f);
 		}
-		if (tempParticle.type == PARTICLEMODE::WATERSPLASH)
+		else if (tempParticle.type == PARTICLEMODE::WATERSPLASH)
 		{
 			tempParticle.color = { 0.f, 0.f, 0.5f, 0.5f };
 		}
+		else if (tempParticle.type == PARTICLEMODE::SMOKEAREA || tempParticle.type == PARTICLEMODE::MAGERANGE || tempParticle.type == PARTICLEMODE::WATERSPLASH)
+		{
+			tempParticle.position.x += (float)rand() / (RAND_MAX + 1.f) * (1.0f - (-1.0f)) + (-1.0f);
+			tempParticle.position.y += (float)rand() / (RAND_MAX + 1.f) * (1.0f - (-1.0f)) + (-1.0f);
+			tempParticle.position.z += (float)rand() / (RAND_MAX + 1.f) * (1.0f - (-1.0f)) + (-1.0f);
+		}
+		else if (tempParticle.type == PARTICLEMODE::MAGEHEAL)
+		{
+			float xRandSame = (float)rand() / (RAND_MAX + 1.f) * (1.0f - (-1.0f)) + (-1.0f);
+			float yRandSame = (float)rand() / (RAND_MAX + 1.f) * (1.0f - (-1.0f)) + (-1.0f);
+			float zRandSame = (float)rand() / (RAND_MAX + 1.f) * (1.0f - (-1.0f)) + (-1.0f);
+			sm::Vector3 vel = sm::Vector3(xRandSame, 0.0f, yRandSame);
+			vel.Normalize();
+			tempParticle.velocity = { vel };
+
+			tempParticle.size = {emitter->sizeMulitplier, emitter->sizeMulitplier};
+			tempParticle.position.y = (float)rand() / (RAND_MAX + 1.f) * (10.0f - (1.0f)) + (1.0f);
+		}
+		
 
 		particles[i] =  tempParticle;
 	}

@@ -103,6 +103,7 @@ void ParticlePass::Render(Scene* pScene)
 			m_particleUpdate.counter = m_counter;
 			m_particleUpdate.lifeTime = emitter->lifeTime;
 			m_particleUpdate.particleSizeMulitplier = emitter->sizeMulitplier;
+			m_particleUpdate.speed = emitter->speed;
 
 			m_constantBufferParticleUpdate.SetData(D3D11Core::Get().DeviceContext(), m_particleUpdate);
 			ID3D11Buffer* cb = { m_constantBufferParticleUpdate.GetBuffer() };
@@ -111,7 +112,8 @@ void ParticlePass::Render(Scene* pScene)
 			D3D11Core::Get().DeviceContext()->CSSetConstantBuffers(8, 1, &cb);
 			D3D11Core::Get().DeviceContext()->CSSetUnorderedAccessViews(7, 1, emitter->particleUAV.GetAddressOf(), nullptr);
 
-			D3D11Core::Get().DeviceContext()->Dispatch(emitter->nrOfParticles, 1, 1);
+			const int groupCount = static_cast<int>(ceil(emitter->nrOfParticles / 50)); //Hur många grupper som körs
+			D3D11Core::Get().DeviceContext()->Dispatch(groupCount, 1, 1);
 			D3D11Core::Get().DeviceContext()->CSSetUnorderedAccessViews(7, 1, &m_nullUAV, nullptr);
 
 			D3D11Core::Get().DeviceContext()->PSSetShaderResources(1, 1, &emitter->texture->GetShaderView());

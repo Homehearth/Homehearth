@@ -8,23 +8,33 @@ constexpr int MAX_HEALTH = 100;
 /*
 	Change these to tweak the day and night cycle timers.
 */
-constexpr uint32_t TIME_LIMIT_DAY = 60;
+constexpr uint32_t TIME_LIMIT_DAY = 200;
 constexpr uint32_t TIME_LIMIT_NIGHT = 50;
 constexpr uint32_t TIME_LIMIT_MORNING = 10;
 constexpr float ROTATION = 180.0f / (float)(TIME_LIMIT_DAY + TIME_LIMIT_MORNING);
 
-enum class Cycle : UINT
+const float DAY_DURATION	= 150.0f;
+const float MORNING			= 0.0f;
+const float DAY				= 0.1f;
+const float MID_DAY			= 0.3f;
+const float EVENING			= 0.45f;
+const float NIGHT			= 0.5f;
+const float EARLY_MORNING	= 0.9f;
+
+
+enum class CyclePeriod : UINT
 {
-	DAY,
-	NIGHT,
-	MORNING,
+	DAY,		// 0
+	NIGHT,		// 1
+	MORNING,	// 2
+	EVENING,	// 3
 };
 
 struct Currency
 {
 private:
 	uint32_t m_amount = 35;
-
+	uint32_t m_totalGathered = 0;
 public:
 	bool m_hasUpdated = false;
 
@@ -32,8 +42,21 @@ public:
 	{
 		return m_amount;
 	}
+	uint32_t GetTotalGathered() const
+	{
+		return m_totalGathered;
+	}
+	void IncreaseTotal(uint32_t amount)
+	{
+		m_totalGathered += amount;
+	}
+	void DecreaseTotal(uint32_t amount)
+	{
+		m_totalGathered -= amount;
+	}
 	void Zero()
 	{
+		m_totalGathered = 0;
 		m_amount = 0;
 		m_hasUpdated = true;
 	}
@@ -82,10 +105,13 @@ enum class PARTICLEMODE : UINT
 	BLOOD,
 	LEAF,
 	WATERSPLASH,
-	SMOKE,
+	SMOKEPOINT,
+	SMOKEAREA,
 	SPARKLES,
 	RAIN,
-	DUST
+	DUST,
+	MAGEHEAL,
+	MAGERANGE
 };
 
 enum class EDefenceType : UINT
@@ -290,7 +316,7 @@ enum class GameMsg : uint8_t
 	Lobby_Update,
 	Lobby_PlayerLeft,
 	Lobby_PlayerJoin,
-	
+
 	Server_AssignID,
 	Server_GetPing,
 
@@ -302,6 +328,8 @@ enum class GameMsg : uint8_t
 	Game_RemoveEntity,
 	Game_BackToLobby,
 	Game_WaveTimer,
+	Game_Time,
+
 	Game_PlaySound,
 	Game_ClassSelected,
 	Game_PlayerAttack,
@@ -428,6 +456,20 @@ ALIGN16
 struct basic_model_matrix_t
 {
 	sm::Matrix worldMatrix;
+};
+
+ALIGN16
+struct texture_effect_t
+{
+	unsigned int frequency = 0;
+	unsigned int amplitude = 0;
+	float counter   = 0.f;
+};
+
+ALIGN16
+struct delta_time_t
+{
+	float delta;
 };
 
 ALIGN16

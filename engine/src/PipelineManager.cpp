@@ -1,6 +1,5 @@
 #include "EnginePCH.h"
 #include "PipelineManager.h"
-
 #include "CommonStructures.h"
 
 PipelineManager::PipelineManager()
@@ -77,6 +76,17 @@ void PipelineManager::Initialize(Window* pWindow, ID3D11DeviceContext* context)
         LOG_ERROR("failed creating InputLayouts.");
     }
 
+    // Initialize ConstantBuffers (temp?).
+    if (!this->CreateTextureEffectConstantBuffer())
+    {
+        LOG_ERROR("failed creating texture effect constant buffer.");
+    }
+
+    if (!this->CreateTextureEffectResources())
+    {
+        LOG_ERROR("failed creating texture effect resources.");
+    }
+
     // Set Viewport.
     this->SetViewport();
     m_windowWidth = m_window->GetWidth();
@@ -118,11 +128,11 @@ bool PipelineManager::CreateDepthBuffer()
     HRESULT hr = m_d3d11->Device()->CreateTexture2D(&depthBufferDesc, nullptr, m_depthStencilTexture.GetAddressOf());
     if (FAILED(hr))
         return false;
-	
+
     hr = m_d3d11->Device()->CreateTexture2D(&depthBufferDesc, nullptr, m_debugDepthStencilTexture.GetAddressOf());
     if (FAILED(hr))
         return false;
-	
+
     D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc;
     ZeroMemory(&depthStencilViewDesc, sizeof(D3D11_DEPTH_STENCIL_VIEW_DESC));
     depthStencilViewDesc.Format = DXGI_FORMAT_D32_FLOAT;
@@ -132,23 +142,23 @@ bool PipelineManager::CreateDepthBuffer()
     if (FAILED(hr))
         return false;
 
-	//Depth for debug render
+    //Depth for debug render
     hr = m_d3d11->Device()->CreateDepthStencilView(m_debugDepthStencilTexture.Get(), &depthStencilViewDesc, m_debugDepthStencilView.GetAddressOf());
     if (FAILED(hr))
         return false;
-	
+
     D3D11_SHADER_RESOURCE_VIEW_DESC shaderResourceViewDesc;
     shaderResourceViewDesc.Format = DXGI_FORMAT_R32_FLOAT;
     shaderResourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
     shaderResourceViewDesc.Texture2D.MostDetailedMip = 0;
     shaderResourceViewDesc.Texture2D.MipLevels = 1;
-	
+
     hr = m_d3d11->Device()->CreateShaderResourceView(m_depthStencilTexture.Get(), &shaderResourceViewDesc, m_depthBufferSRV.GetAddressOf());
     if (FAILED(hr))
         return false;
-	
+
     hr = m_d3d11->Device()->CreateShaderResourceView(m_debugDepthStencilTexture.Get(), &shaderResourceViewDesc, m_debugDepthBufferSRV.GetAddressOf());
-	
+
     return !FAILED(hr);
 }
 
@@ -165,7 +175,7 @@ bool PipelineManager::CreateDepthStencilStates()
     depthStencilDesc.StencilEnable = true;
     depthStencilDesc.StencilReadMask = D3D11_DEFAULT_STENCIL_READ_MASK;
     depthStencilDesc.StencilWriteMask = D3D11_DEFAULT_STENCIL_WRITE_MASK;
-	
+
     // Stencil operations if pixel is front-facing.
     depthStencilDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
     depthStencilDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
@@ -189,20 +199,20 @@ bool PipelineManager::CreateDepthStencilStates()
     if (FAILED(hr))
         return false;
 
-	// Create m_depthStencilStateGreater
+    // Create m_depthStencilStateGreater
     depthStencilDesc.DepthFunc = D3D11_COMPARISON_GREATER;
     hr = m_d3d11->Device()->CreateDepthStencilState(&depthStencilDesc, m_depthStencilStateGreater.GetAddressOf());
     if (FAILED(hr))
         return false;
-	
-	// Create m_depthStencilStateEqualAndDisableDepthWrite.
+
+    // Create m_depthStencilStateEqualAndDisableDepthWrite.
     depthStencilDesc.StencilEnable = FALSE;
     depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
     depthStencilDesc.DepthFunc = D3D11_COMPARISON_EQUAL;
     hr = m_d3d11->Device()->CreateDepthStencilState(&depthStencilDesc, m_depthStencilStateEqualAndDisableDepthWrite.GetAddressOf());
     if (FAILED(hr))
         return false;
-	
+
     return !FAILED(hr);
 }
 
@@ -373,7 +383,7 @@ bool PipelineManager::CreateBlendStates()
         return false;
 
     // Create m_blendStateDepthOnlyAlphaToCoverage.
-	// "...the quality is significantly improved when used in conjunction with MSAA".
+    // "...the quality is significantly improved when used in conjunction with MSAA".
     blendStateDesc.AlphaToCoverageEnable = 1;
     hr = m_d3d11->Device()->CreateBlendState(&blendStateDesc, m_blendStateDepthOnlyAlphaToCoverage.GetAddressOf());
 
@@ -433,8 +443,8 @@ bool PipelineManager::CreateInputLayouts()
 {
     HRESULT hr = S_FALSE;
 
-	// Create m_defaultInputLayout.
-	std::string shaderByteCode = m_defaultVertexShader.GetShaderByteCode();
+    // Create m_defaultInputLayout.
+    std::string shaderByteCode = m_defaultVertexShader.GetShaderByteCode();
     D3D11_INPUT_ELEMENT_DESC defaultVertexShaderDesc[] =
     {
         {"POSITION",    0, DXGI_FORMAT_R32G32B32_FLOAT,    0,                0,                   D3D11_INPUT_PER_VERTEX_DATA, 0},
@@ -443,8 +453,8 @@ bool PipelineManager::CreateInputLayouts()
         {"TANGENT",     0, DXGI_FORMAT_R32G32B32_FLOAT,    0,    D3D11_APPEND_ALIGNED_ELEMENT,    D3D11_INPUT_PER_VERTEX_DATA, 0},
         {"BINORMAL",    0, DXGI_FORMAT_R32G32B32_FLOAT,    0,    D3D11_APPEND_ALIGNED_ELEMENT,    D3D11_INPUT_PER_VERTEX_DATA, 0}
     };
-	
-	if(FAILED(hr = D3D11Core::Get().Device()->CreateInputLayout(defaultVertexShaderDesc, ARRAYSIZE(defaultVertexShaderDesc), shaderByteCode.c_str(), shaderByteCode.length(), &m_defaultInputLayout)))
+
+    if (FAILED(hr = D3D11Core::Get().Device()->CreateInputLayout(defaultVertexShaderDesc, ARRAYSIZE(defaultVertexShaderDesc), shaderByteCode.c_str(), shaderByteCode.length(), &m_defaultInputLayout)))
     {
         LOG_WARNING("failed creating m_defaultInputLayout.");
         return false;
@@ -465,6 +475,34 @@ bool PipelineManager::CreateInputLayouts()
     if (FAILED(hr = D3D11Core::Get().Device()->CreateInputLayout(animationVertexShaderDesc, ARRAYSIZE(animationVertexShaderDesc), shaderByteCodeAnim.c_str(), shaderByteCodeAnim.length(), &m_animationInputLayout)))
     {
         LOG_WARNING("failed creating m_animationInputLayout.");
+        return false;
+    }
+
+    return true;
+}
+
+bool PipelineManager::CreateTextureEffectConstantBuffer()
+{
+    D3D11_BUFFER_DESC bDesc = {};
+    bDesc.ByteWidth = sizeof(texture_effect_t);
+    bDesc.Usage = D3D11_USAGE_DEFAULT;
+    bDesc.CPUAccessFlags = 0;
+    bDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+    bDesc.MiscFlags = 0;
+
+    texture_effect_t b;
+    //b.deltaTime = 0;
+
+    D3D11_SUBRESOURCE_DATA data = {};
+    data.pSysMem = &b;
+    data.SysMemPitch = 0;
+    data.SysMemSlicePitch = 0;
+
+    HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&bDesc, &data, m_textureEffectConstantBuffer.GetAddressOf());
+
+    if (FAILED(hr))
+    {
+        LOG_WARNING("failed to create textureEffectConstantBuffer");
         return false;
     }
 
@@ -500,8 +538,158 @@ bool PipelineManager::CreateInputLayouts()
     return !FAILED(hr);
 }
 
+bool PipelineManager::CreateTextureEffectResources()
+{
+    /*
+    * Get all the textures needed. 
+    * Create original resource textures (to reference from and not modify, the modifications happenes on the material that is already on the model)
+    * Create URV for the texture that will be modefied.
+    * Create SRV for the texture that wont. 
+    */
+
+    // Create render textures, target views and shader resource views here
+    m_ModdedWaterBlendAlbedoMap = ResourceManager::Get().GetResource<RTexture>("WaterBlendMap.jpg");
+
+    //Get all models needed
+    m_WaterModel      = ResourceManager::Get().GetResource<RModel>("WaterMesh.fbx");
+    m_WaterEdgeModel  = ResourceManager::Get().GetResource<RModel>("WaterEdgeMesh.fbx");
+    m_WaterFloorModel = ResourceManager::Get().GetResource<RModel>("WaterFloorMesh.fbx");
+
+
+    //Get the textures from the models
+    m_ModdedWaterAlbedoMap       = m_WaterModel.get()->GetTextures(ETextureType::albedo)[0];
+    m_ModdedWaterNormalMap       = m_WaterModel.get()->GetTextures(ETextureType::normal)[0];
+    m_ModdedWaterEdgeAlbedoMap   = m_WaterEdgeModel.get()->GetTextures(ETextureType::albedo)[0];
+    m_ModdedWaterFloorAlbedoMap  = m_WaterFloorModel.get()->GetTextures(ETextureType::albedo)[0];
+
+    //Disable bitmaps
+    m_ModdedWaterAlbedoMap->DisableMipmaps();
+    m_ModdedWaterNormalMap->DisableMipmaps();
+    m_ModdedWaterEdgeAlbedoMap->DisableMipmaps();
+    m_ModdedWaterFloorAlbedoMap->DisableMipmaps();
+    m_ModdedWaterBlendAlbedoMap->DisableMipmaps();
+
+    HRESULT hr = {};
+
+    //  CREATE WATER REFRACTION EFFECT RESOURCES  //
+    
+        // CREATE TEXTURE 2D //
+    // Create texture to keep original resource of water floor //
+    const unsigned int textureWidth = 256;
+    const unsigned int textureHeight = 256;
+
+    D3D11_TEXTURE2D_DESC desc;
+    desc.Width = textureWidth;
+    desc.Height = textureHeight;
+    desc.MiscFlags = 0;
+    desc.MipLevels = 1;
+    desc.ArraySize = 1;
+    desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    desc.SampleDesc.Count = 1;
+    desc.SampleDesc.Quality = 0;
+    desc.Usage = D3D11_USAGE_DEFAULT;
+    desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+    desc.CPUAccessFlags = 0;
+    desc.MiscFlags = 0;
+
+    //Create original resource reference texture
+    hr = m_d3d11->Device()->CreateTexture2D(&desc, nullptr, m_WaterFloorAlbedoMap.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+    
+    // Copy Original resource to original resource reference texture. 
+    m_d3d11->DeviceContext()->CopyResource(m_WaterFloorAlbedoMap.Get(), m_ModdedWaterFloorAlbedoMap.get()->GetTexture2D());
+
+    // UNORDERED ACCES VIEW //
+    hr = m_d3d11->Device()->CreateUnorderedAccessView(m_ModdedWaterFloorAlbedoMap.get()->GetTexture2D(), nullptr, m_UAV_TextureEffectWaterFloorMap.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+
+    // SHADER RESOURCE VIEW //
+    hr = m_d3d11->Device()->CreateShaderResourceView(m_WaterFloorAlbedoMap.Get(), nullptr, m_SRV_TextureEffectWaterFloorMap.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+
+
+    //  CREATE WATER EFFECT RESOURCES  //
+    /*
+    Create texture to keep original resource of water
+    It has the same size at the eater floor so use the same desc.
+    */
+
+        // ALBEDO MAP //
+
+    //Create original resource reference texture
+    hr = m_d3d11->Device()->CreateTexture2D(&desc, nullptr, m_WaterAlbedoMap.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+
+    // Copy Original resource to original resource reference texture. 
+    m_d3d11->DeviceContext()->CopyResource(m_WaterAlbedoMap.Get(), m_ModdedWaterAlbedoMap.get()->GetTexture2D());
+
+    // UNORDERED ACCES VIEW //
+    hr = m_d3d11->Device()->CreateUnorderedAccessView(m_ModdedWaterAlbedoMap.get()->GetTexture2D(), nullptr, m_UAV_TextureEffectWaterMap.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+
+    // SHADER RESOURCE VIEW //
+    hr = m_d3d11->Device()->CreateShaderResourceView(m_WaterAlbedoMap.Get(), nullptr, m_SRV_TextureEffectWaterMap.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+
+
+        // NORMAL MAP //
+
+    //Create original resource reference texture
+    hr = m_d3d11->Device()->CreateTexture2D(&desc, nullptr, &m_WaterNormalMap);
+    if (FAILED(hr))
+        return false;
+
+    // Copy Original resource to original resource reference texture. 
+    m_d3d11->DeviceContext()->CopyResource(m_WaterNormalMap.Get(), m_ModdedWaterNormalMap.get()->GetTexture2D());
+
+    // UNORDERED ACCES VIEW //
+    hr = m_d3d11->Device()->CreateUnorderedAccessView(m_ModdedWaterNormalMap.get()->GetTexture2D(), nullptr, m_UAV_TextureEffectWaterNormalMap.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+
+    // SHADER RESOURCE VIEW //
+    hr = m_d3d11->Device()->CreateShaderResourceView(m_WaterNormalMap.Get(), nullptr, m_SRV_TextureEffectWaterNormalMap.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+
+        // BLEND MAP //
+    /*
+    * The blendmap need only be read as i'll put the color right on top of the modefied water texture. 
+    * A SRV already exists fpr the blendmap provided by the RTexture class. 
+    * NVM i need it. 
+    */
+
+
+    //Create original resource reference texture
+    hr = m_d3d11->Device()->CreateTexture2D(&desc, nullptr, &m_WaterBlendAlbedoMap);
+    if (FAILED(hr))
+        return false;
+
+    // Copy Original resource to original resource reference texture. 
+    m_d3d11->DeviceContext()->CopyResource(m_WaterBlendAlbedoMap.Get(), m_ModdedWaterBlendAlbedoMap.get()->GetTexture2D());
+
+
+    // UNORDERED ACCES VIEW //
+    hr = m_d3d11->Device()->CreateUnorderedAccessView(m_ModdedWaterBlendAlbedoMap.get()->GetTexture2D(), nullptr, m_UAV_TextureEffectBlendMap.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+
+    // SHADER RESOURCE VIEW //
+    hr = m_d3d11->Device()->CreateShaderResourceView(m_WaterBlendAlbedoMap.Get(), nullptr, m_SRV_TextureEffectBlendMap.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+
+    return true;
+}
+
 bool PipelineManager::CreateShaders()
-{	
+{
     if (!m_defaultVertexShader.Create("Model_vs"))
     {
         LOG_WARNING("failed creating Model_vs.");
@@ -538,6 +726,42 @@ bool PipelineManager::CreateShaders()
         return false;
     }
 
+    if (!m_textureEffectComputeShader.Create("textureEffect_cs"))
+    {
+        LOG_WARNING("failed to create textureEffect_cs");
+        return false;
+    }
+
+    if (!m_textureEffectPixelShader.Create("textureEffect_ps"))
+    {
+        LOG_WARNING("failed to create textureEffect_ps");
+        return false;
+    }
+
+    if (!m_textureEffectVertexShader.Create("textureEffect_vs"))
+    {
+        LOG_WARNING("failed to create textureEffect_vs");
+        return false;
+    }
+    
+    if (!m_WaterEffectComputeShader.Create("waterEffect_cs"))
+    {
+        LOG_WARNING("failed to create waterEffect_cs");
+        return false;
+    }
+
+    if (!m_WaterEffectPixelShader.Create("waterEffect_ps"))
+    {
+        LOG_WARNING("failed to create waterEffect_ps");
+        return false;
+    }
+
+    if (!m_WaterEffectVertexShader.Create("waterEffect_vs"))
+    {
+        LOG_WARNING("failed to create waterEffect_vs");
+        return false;
+    }
+    
     if (!m_debugPixelShader.Create("Debug_ps"))
     {
         LOG_WARNING("failed creating Debug_ps.");
@@ -599,4 +823,4 @@ bool PipelineManager::CreateShaders()
     }
 
     return true;
-}                         
+}

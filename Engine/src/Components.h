@@ -11,6 +11,7 @@ namespace ecs
 {
 	enum Component : uint32_t
 	{
+		PARTICLEMITTER,
 		TRANSFORM,
 		VELOCITY,
 		MESH_NAME,
@@ -18,7 +19,6 @@ namespace ecs
 		HEALTH,
 		BOUNDING_ORIENTED_BOX,
 		BOUNDING_SPHERE,
-		PARTICLEMITTER,
 		PLAYER,
 		COST,
 		COMPONENT_COUNT,
@@ -98,45 +98,56 @@ namespace ecs
 
 			EmitterParticle(sm::Vector3 positionOffset = {0,0,0}, int nrOfParticles = 10, float sizeMulitplier = 1.f, PARTICLEMODE type = PARTICLEMODE::BLOOD, float lifeTime = 2.f, float speed = 1, bool hasDeathTimer = false)
 			{
+				textureName = "thisisfine.png";
+				opacityTextureName = "round_Opacity.png";
+
 				if (type == PARTICLEMODE::BLOOD)
 				{
 					textureName = "BloodParticle.png";
-					opacityTextureName = "round_Opacity.png";
 				}
 				else if (type == PARTICLEMODE::LEAF)
 				{
-					textureName = "thisisfine.png";
-					opacityTextureName = "round_Opacity.png";
 				}
 				else if (type == PARTICLEMODE::WATERSPLASH)
 				{
 					textureName = "waterSplash.png";
-					opacityTextureName = "round_Opacity.png";
 				}
-				else if (type == PARTICLEMODE::SMOKE)
+				else if (type == PARTICLEMODE::SMOKEPOINT || type == PARTICLEMODE::SMOKEAREA)
 				{
 					textureName = "smoke.png";
 					opacityTextureName = "smoke_opacity.png";
 				}
 				else if (type == PARTICLEMODE::SPARKLES)
 				{
-					textureName = "thisisfine.png";
-					opacityTextureName = "round_Opacity.png";
 				}
 				else if (type == PARTICLEMODE::RAIN)
 				{
-					textureName = "thisisfine.png";
-					opacityTextureName = "round_Opacity.png";
 				}
 				else if (type == PARTICLEMODE::DUST)
 				{
-					textureName = "thisisfine.png";
-					opacityTextureName = "round_Opacity.png";
+				}				
+				else if (type == PARTICLEMODE::MAGEHEAL)
+				{
+					textureName = "MageHeal.png";
+				}
+				else if (type == PARTICLEMODE::MAGERANGE)
+				{
+					textureName = "fire.png";
+					opacityTextureName = "fire_opacity.png";
 				}
 
 				texture = ResourceManager::Get().GetResource<RTexture>(textureName);
 				opacityTexture = ResourceManager::Get().GetResource<RTexture>(opacityTextureName);
 
+				if (!texture)
+				{
+					LOG_ERROR("Couldnt load particle texture %s", textureName);
+				}
+				if (!opacityTexture)
+				{
+					LOG_ERROR("Couldnt load particle opacity texture %s", opacityTextureName);
+				}
+				
 				this->nrOfParticles		= (UINT)nrOfParticles;
 				this->type				= type;
 				this->lifeTime			= lifeTime;
@@ -242,6 +253,23 @@ namespace ecs
 			std::shared_ptr<BT::ParentNode> root;
 		};
 
+		struct Villager
+		{
+			std::vector<Node*> path;
+			//Stress implementation - fix later -
+			std::vector<sm::Vector3> idlePos = {sm::Vector3(250.f, 0.f, -320.f),
+												sm::Vector3(212.f, 0.f, -297.f),
+												sm::Vector3(237.f, 0.f, -297.f),
+												sm::Vector3(325.f, 0.f, -370.f),
+												sm::Vector3(330.f, 0.f, -285.f),
+												sm::Vector3(135.f, 0.f, -374.f)}; //Positions villager can go and idle at
+			Node* currentNode;
+			Entity homeHouse;
+			float movementSpeed = 15.f;
+			bool isHiding = false;
+			bool isFleeing = false;
+		};
+
 		struct House
 		{
 			NameType houseType = NameType::EMPTY;
@@ -290,11 +318,12 @@ namespace ecs
 		{
 			enum class PlayerType : uint16_t
 			{
-				PLAYER_ONE = 1,
-				PLAYER_TWO = 2,
-				PLAYER_THREE = 3,
-				PLAYER_FOUR = 4
-			} playerType = PlayerType::PLAYER_ONE;
+				NONE,
+				PLAYER_ONE,
+				PLAYER_TWO,
+				PLAYER_THREE,
+				PLAYER_FOUR
+			} playerType = PlayerType::NONE;
 			enum class State
 			{
 				IDLE,
@@ -361,6 +390,7 @@ namespace ecs
 			float flickerTimer = 1.f;
 			float maxFlickerTime = 1.f;
 			bool increase;
+			float enabledTimer = 1.f;
 		};
 
 		struct Health
