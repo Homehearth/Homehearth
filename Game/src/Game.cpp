@@ -567,7 +567,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 				rtd::Text* plT = dynamic_cast<rtd::Text*>(GetScene("Game").GetCollection("dynamicPlayer" + std::to_string(static_cast<uint16_t>(p->playerType)) + "namePlate")->elements[0].get());
 				rtd::Picture* plP = dynamic_cast<rtd::Picture*>(GetScene("Lobby").GetCollection("playerIcon" + std::to_string(static_cast<uint16_t>(p->playerType)))->elements[2].get());
 
-				LOG_INFO("Type: %d", static_cast<uint16_t>(p->playerType));
 				if (plT)
 				{
 					plT->SetText(name);
