@@ -1,4 +1,5 @@
 #pragma once
+class HouseManager;
 class Wave;
 class Simulation;
 
@@ -33,11 +34,6 @@ namespace EnemyManagement
 	void CreateWaves(std::queue<Wave>& waveQueue, int currentRound);
 }
 
-namespace PlayerManagement
-{
-	
-}
-
 /*! Namespace to manage the server's various ECS systems. */
 namespace ServerSystems
 {
@@ -46,11 +42,15 @@ namespace ServerSystems
 
 	void UpdatePlayerWithInput(Simulation* simulation, HeadlessScene& scene, float dt, QuadTree* dynamicQT);
 	void PlayerStateSystem(Simulation* simulation, HeadlessScene& scene, float dt);
-	
+	void HealthSystem(HeadlessScene& scene, float dt, Currency& money_ref, HouseManager houseManager, QuadTree* qt, GridSystem& grid, SpreeHandler& spree);
+
 	void CheckGameOver(Simulation* simulation, HeadlessScene& scene);
 	void TickBTSystem(Simulation* simulation, HeadlessScene& scene);
 
 	void AnimatonSystem(Simulation* simulation, HeadlessScene& scene);
+	void SoundSystem(Simulation* simulation, HeadlessScene& scene);
+
+	void CombatSystem(HeadlessScene& scene, float dt);
 
 	void DeathParticleTimer(HeadlessScene& scene);
 }

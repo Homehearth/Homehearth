@@ -61,6 +61,9 @@ LRESULT CALLBACK Window::WinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 	case WM_MOUSEHOVER:
 		InputSystem::Get().GetMouse()->ProcessMessage(uMsg, wParam, lParam);
 		break;
+	case WM_MOUSEWHEEL:
+		InputSystem::Get().GetMouse()->ProcessMessage(uMsg, wParam, lParam);
+		break;
 	case WM_SYSKEYDOWN:
 		InputSystem::Get().GetKeyboard()->ProcessMessage(uMsg, wParam, lParam);
 		break;

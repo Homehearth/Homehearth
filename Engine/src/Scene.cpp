@@ -15,7 +15,7 @@ Scene::Scene()
 	m_defaultCamera.AddComponent<comp::Camera3D>()->camera.Initialize(sm::Vector3(0, 0, 0), sm::Vector3(0, 0, 1), sm::Vector3(0, 1, 0), sm::Vector2(1000, 1000), CAMERATYPE::DEFAULT);
 	SetCurrentCameraEntity(m_defaultCamera);
 
-	m_sky.Initialize("kiara1dawn.dds");
+	m_sky.Initialize("storm.dds");
 }
 
 void Scene::Update(float dt)
@@ -307,6 +307,11 @@ bool* Scene::GetIsRenderingColliders()
 Lights* Scene::GetLights()
 {
 	return &m_lights;
+}
+
+void Scene::UpdateSkybox(float pTime)
+{
+	m_sky.UpdateTime(pTime);
 }
 
 DoubleBuffer<std::vector<comp::Renderable>>* Scene::GetBuffers()

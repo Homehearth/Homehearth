@@ -24,8 +24,8 @@ public:
 	void OnDay(Simulation* sim);
 	int OnNight(Simulation* sim);
 
-	const Cycle& GetTimePeriod() const;
-	const bool& GetSwitch() const;
+	Cycle GetTimePeriod() const;
+	bool GetSwitch() const;
 	uint32_t GetElapsedTime() const;
 	void Switch();
 };

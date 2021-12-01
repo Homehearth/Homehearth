@@ -9,7 +9,6 @@ enum class ModelID : uint16_t
 	HOUSE9,
 	HOUSE10,
 	HOUSEROOF,
-	TREE2,
 	TREE3,
 	TREE5,
 	TREE6,
@@ -24,7 +23,6 @@ const std::string House8		= "House8";
 const std::string House9		= "House9";
 const std::string House10		= "House10";
 const std::string HouseRoof		= "HouseRoof";
-const std::string Tree2			= "Tree2";
 const std::string Tree3			= "Tree3";
 const std::string Tree5			= "Tree5";
 const std::string Tree6			= "Tree6";
@@ -45,13 +43,41 @@ enum class AnimName : uint16_t
 {
 	ANIM_NONE,
 	ANIM_KNIGHT,
+	ANIM_MAGE,
 	ANIM_MONSTER
 };
 
 enum class NameType : uint32_t
 {
+	EMPTY,
 	MESH_DEFENCE,
 	MESH_KNIGHT,
+	MESH_MAGE,
 	MESH_MONSTER,
 	MESH_SPHERE,
+	MESH_HOUSE5,
+	MESH_RUINED_HOUSE5,
+	MESH_HOUSE6,
+	MESH_RUINED_HOUSE6,
+	MESH_HOUSE7,
+	MESH_RUINED_HOUSE7,
+	MESH_HOUSE8,
+	MESH_RUINED_HOUSE8,
+	MESH_HOUSE9,
+	MESH_RUINED_HOUSE9,
+	MESH_HOUSE10,
+	MESH_RUINED_HOUSE10,
+	MESH_HOUSEROOF,
+	MESH_WATERMILL,
+	MESH_WATERMILLHOUSE,
+	MESH_RUINED_WATERMILLHOUSE,
+	MESH_DOOR1,
+	MESH_DOOR5,
+	MESH_DOOR6,
+	MESH_DOOR7,
+	MESH_DOOR8,
+	MESH_DOOR9,
+	MESH_DOOR10,
+	MESH_DEFENCE1X1,
+	MESH_DEFENCE1X3,
 };

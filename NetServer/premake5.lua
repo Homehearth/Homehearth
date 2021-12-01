@@ -33,6 +33,7 @@ project "NetServer"
         "../ThirdParty/stb_image/",
         "../ThirdParty/networking/",
         "../ThirdParty/entt/",
+        "../ThirdParty/irrKlang/include/",
 		"../ThirdParty/assimp/include/"
     }
 
@@ -54,9 +55,13 @@ project "NetServer"
         "dxgi",
         "DirectXTK",
 		"assimp-vc142-mt.lib",
+        "irrKlang.lib"
     }
 
-    libdirs{"../ThirdParty/imGUI/"}
+    libdirs{
+        "../ThirdParty/imGUI/",
+        "..ThirdParty/irrKlang/lib/Winx64-visualStudio/"
+    }
 
     -- Define a macro/symbol which applies for the Windows system.
     filter {"system:windows"}
@@ -75,6 +80,7 @@ project "NetServer"
         libdirs{
             "../ThirdParty/DirectXTK/lib/Debug_lib/",
             "../Engine/build/bin/Debug-windows-x86_64/Engine",
+            "../ThirdParty/irrKlang/lib/Winx64-visualStudio/",
 			"../ThirdParty/assimp/lib/"
         }
 
@@ -89,5 +95,6 @@ project "NetServer"
         libdirs{
             "../ThirdParty/DirectXTK/lib/Release_lib/",
             "../Engine/build/bin/Release-windows-x86_64/Engine",
+            "../ThirdParty/irrKlang/lib/Winx64-visualStudio/",
 			"../ThirdParty/assimp/lib/"
         }

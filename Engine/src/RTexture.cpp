@@ -201,7 +201,7 @@ const std::string& RTexture::GetFilename() const
 	return m_filename;
 }
 
-const bool& RTexture::DisableMipmaps()
+bool RTexture::DisableMipmaps()
 {
 	bool success = true;
 

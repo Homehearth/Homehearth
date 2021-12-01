@@ -2,6 +2,23 @@
 	#error You may not include this header directly.
 #endif
 static const float PI = 3.14159265359;
+
+// sRGB => XYZ => D65_2_D60 => AP1 => RRT_SAT
+static const float3x3 ACESInputMat =
+{
+    { 0.59719, 0.35458, 0.04823 },
+    { 0.07600, 0.90834, 0.01566 },
+    { 0.02840, 0.13383, 0.83777 }
+};
+
+// ODT_SAT => XYZ => D60_2_D65 => sRGB
+static const float3x3 ACESOutputMat =
+{
+    { 1.60475, -0.53108, -0.07367 },
+    { -0.10208, 1.10813, -0.00605 },
+    { -0.00327, -0.07276, 1.07602 }
+};
+
 #define MAXWEIGHTS 8
 
 #include "Structures.hlsli"
@@ -60,6 +77,9 @@ cbuffer ParticleUpdate : register(b8)
     uint counter;
     float lifeTime;
     float particleSizeMulitplier;
+    float c_particleSpeed;
+    
+    float3 c_pPadding;
 }
 
 cbuffer DecalInfoCB : register(b10)
@@ -88,12 +108,18 @@ cbuffer TextureEffectCB : register(b7)
     float c_padding;
 };
 
-cbuffer InverseMatrices : register(b12)
+cbuffer DoFSettings : register(b12)
 {
     float4x4    c_inverseView;
     float4x4    c_inverseProjection;
     uint        c_dofType;
     float3      dofPadding;
+    float4      c_playerPosView;
+}
+cbuffer SkyboxTint : register(b13)
+{
+    float3      c_tint = 1.f;
+    float       pad;
 }
 
 

@@ -33,7 +33,7 @@ public:
 	ID3D11ShaderResourceView*& GetShaderView();
 	ID3D11Texture2D*& GetTexture2D();
 	const std::string& GetFilename() const;
-	const bool& DisableMipmaps();
+	bool DisableMipmaps();
 };
 
 class RBitMap : public resource::GResource

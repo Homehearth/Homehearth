@@ -66,7 +66,7 @@ inline bool FileHandler::Dump(std::vector<T>& output)
 		m_stream.close();
 	}
 
-	m_stream.open(m_filePath, std::ios_base::out);
+	m_stream.open(m_filePath, std::fstream::out);
 	if (!m_stream.is_open())
 	{
 		LOG_INFO("Couldn't switch to output on file.");
@@ -91,7 +91,7 @@ inline bool FileHandler::Dump(std::vector<T>& output, const FileFormat& format)
 		m_stream.close();
 	}
 
-	m_stream.open(m_filePath, std::ios_base::out);
+	m_stream.open(m_filePath, std::fstream::out);
 	if (!m_stream.is_open())
 	{
 		LOG_WARNING("Couldn't switch to output on file.");

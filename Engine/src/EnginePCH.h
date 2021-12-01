@@ -1,16 +1,17 @@
 #pragma once
 
 //Options
-#define RENDER_IMGUI 1
-#define PROFILER 0
+#define RENDER_IMGUI 0
+#define PROFILER 1
 
 // Feel free to add more things to this, currently only gives more money :)
-#define GOD_MODE 1
+#define GOD_MODE 0
+#define NO_CLIP 0
 #define SPAWN_MONSTERS 1
 
 // Turn this to 1 if you want to see the very beautiful demo menu
 #define DRAW_TEMP_2D 0
-#define DEBUG_SNAPSHOT 0
+#define DEBUG_SNAPSHOT 1
 
 #define RENDER_GRID 0
 
@@ -49,6 +50,7 @@
 #include <fstream>
 #include <fcntl.h>
 #include <io.h>
+#include <conio.h>
 #include <memory>
 #include <cassert> 
 #include <unordered_map>
@@ -85,7 +87,6 @@ namespace dx = DirectX;
 // DirectXTK
 #include <SimpleMath.h>
 #include <BufferHelpers.h>
-#include <Audio.h>
 #include <Keyboard.h>
 #include <Mouse.h>
 namespace sm = dx::SimpleMath;
@@ -97,6 +98,9 @@ namespace sm = dx::SimpleMath;
 #include "Systems.h"
 #include "CollisionSystem.h"
 
+// Audio
+#include <irrKlang.h>
+#include "SoundHandler.h"
 
 // imGUI
 #include <imgui.h>
@@ -140,6 +144,7 @@ EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 const std::string MODELPATH		= "../Assets/Models/";		//"../../../../../Assets/Models/"
 const std::string MATERIALPATH	= "../Assets/Materials/";
 const std::string TEXTUREPATH	= "../Assets/Textures/";
+const std::string UIPATH = "../Assets/UI/";
 const std::string ANIMATIONPATH = "../Assets/Animations/";
 const std::string ANIMATORPATH	= "../Assets/Animators/";
 const std::string FONTPATH		= "../Assets/Fonts/";
@@ -147,7 +152,7 @@ const std::string BOUNDSPATH	= "../Assets/Bounds/";
 const std::string ASSETLOADER	= "../Assets/Models/Loader.txt";
 const std::string RESOURCELOADER = "../Assets/Models/ResourceLoader.txt";
 const std::string BOUNDSLOADER	= "../Assets/Bounds/Loader.txt";
-const std::string OPTIONPATH = "../Assets/Options/Options.txt";
+const std::string OPTIONPATH = "../Assets/Other/Options.opt";
 
 
 template<typename Type>

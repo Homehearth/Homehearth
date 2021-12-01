@@ -1,6 +1,11 @@
 #include "EnginePCH.h"
 #include "AbilityUI.h"
 
+void rtd::AbilityUI::SetTexture(const std::string& texturePath)
+{
+    m_picture->SetTexture(texturePath);
+}
+
 void rtd::AbilityUI::Update()
 {
     if (m_ref)
@@ -24,8 +29,8 @@ rtd::AbilityUI::AbilityUI(const draw_t& opts, const D2D1_COLOR_F& color, const s
 {
     m_border = std::make_unique<Border>(opts);
     m_picture = std::make_unique<Picture>(picturePath, draw_t(opts.x_pos, opts.y_pos, opts.width, opts.height));
-    m_cooldownText = std::make_unique<Text>("Unk", opts);
-    m_buttonPress = "Unk";
+    m_cooldownText = std::make_unique<Text>(" ", draw_t(opts.x_pos, opts.y_pos - opts.height * 0.85f, opts.width, opts.height));
+    m_buttonPress = " ";
 }
 
 void rtd::AbilityUI::SetPicture(const std::string& filePath)

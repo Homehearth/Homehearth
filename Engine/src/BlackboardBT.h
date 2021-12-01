@@ -23,6 +23,12 @@ struct PlayersPosition_t
 	std::vector<Entity> players{};
 };
 
+struct Houses_t
+{
+	std::unordered_map<Entity, Entity> houses{};
+};
+
+
 
 class Blackboard final
 {

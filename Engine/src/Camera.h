@@ -65,6 +65,7 @@ public:
 	bool IsSwapped() const;
 	CAMERATYPE GetCameraType()const;
 	sm::Vector3 GetRollPitchYaw() const;
+	sm::Quaternion GetRotation() const;
 
 	//Set Functions
 	void SetPosition(sm::Vector3 newPosition);

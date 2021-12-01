@@ -103,3 +103,25 @@ float SampleShadowMap(float2 texCoords, int shadowIndex, float currentDepth, int
     shadowCoef /= kernalSize * kernalSize;
     return shadowCoef;
 }
+
+float3 RRTAndODTFit(float3 v)
+{
+    float3 a = v * (v + 0.0245786f) - 0.000090537f;
+    float3 b = v * (0.983729f * v + 0.4329510f) + 0.238081f;
+    return a / b;
+}
+
+float3 ACESFitted(float3 color)
+{
+    color = mul(ACESInputMat, color);
+
+    // Apply RRT and ODT
+    color = RRTAndODTFit(color);
+
+    color = mul(ACESOutputMat, color);
+
+    // Clamp to [0, 1]
+    color = saturate(color);
+
+    return color;
+}

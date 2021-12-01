@@ -54,8 +54,10 @@ public:
 	void Render(Scene* pScene);
 
 	IRenderPass* GetCurrentPass() const;
-	//TEMP PLZ REMOVE AFTER WE COME TO AN AGREEMENT ON WHICH DOF EFFECT TO USE
+
 	DOFPass* GetDoFPass();
+
+	ShadowPass* GetShadowPass();
 
 	void SetShadowMapSize(uint32_t size);
 	uint32_t GetShadowMapSize() const;

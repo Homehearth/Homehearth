@@ -8,7 +8,7 @@ constexpr int MAX_HEALTH = 100;
 /*
 	Change these to tweak the day and night cycle timers.
 */
-constexpr uint32_t TIME_LIMIT_DAY = 60;
+constexpr uint32_t TIME_LIMIT_DAY = 200;
 constexpr uint32_t TIME_LIMIT_NIGHT = 50;
 constexpr uint32_t TIME_LIMIT_MORNING = 10;
 constexpr float ROTATION = 180.0f / (float)(TIME_LIMIT_DAY + TIME_LIMIT_MORNING);
@@ -23,28 +23,47 @@ enum class Cycle : UINT
 struct Currency
 {
 private:
-	uint32_t m_amount = 0;
-
+	uint32_t m_amount = 35;
+	uint32_t m_totalGathered = 0;
 public:
+	bool m_hasUpdated = false;
+
 	uint32_t GetAmount()const
 	{
 		return m_amount;
 	}
+	uint32_t GetTotalGathered() const
+	{
+		return m_totalGathered;
+	}
+	void IncreaseTotal(uint32_t amount)
+	{
+		m_totalGathered += amount;
+	}
+	void DecreaseTotal(uint32_t amount)
+	{
+		m_totalGathered -= amount;
+	}
 	void Zero()
 	{
+		m_totalGathered = 0;
 		m_amount = 0;
+		m_hasUpdated = true;
 	}
 	void operator +=(uint32_t money)
 	{
 		m_amount += money;
+		m_hasUpdated = true;
 	}
 	void operator -=(uint32_t money)
 	{
 		m_amount -= money;
+		m_hasUpdated = true;
 	}
 	void operator = (uint32_t money)
 	{
 		m_amount = money;
+		m_hasUpdated = true;
 	}
 	bool operator >= (uint32_t money)
 	{
@@ -54,7 +73,7 @@ public:
 	{
 		return m_amount < money;
 	}
-	bool hasUpdated = false;
+
 };
 
 struct MinMaxProj_t
@@ -76,16 +95,19 @@ enum class PARTICLEMODE : UINT
 	BLOOD,
 	LEAF,
 	WATERSPLASH,
-	SMOKE,
+	SMOKEPOINT,
+	SMOKEAREA,
 	SPARKLES,
 	RAIN,
-	DUST
+	DUST,
+	MAGEHEAL,
+	MAGERANGE
 };
 
-enum class TowerTypes : UINT
+enum class EDefenceType : UINT
 {
-	LONG,
-	SHORT
+	SMALL,	//1x1
+	LARGE	//1x3
 };
 
 struct Vector2I
@@ -257,13 +279,14 @@ struct Ray_t
 
 struct InputState
 {
-	int axisHorizontal : 2;
-	int axisVertical : 2;
-	bool leftMouse : 1;
-	bool rightMouse : 1;
-	bool key_b : 1;
-	bool key_shift : 1;
-	bool key_r : 1;
+	int		axisHorizontal	: 2;
+	int		axisVertical	: 2;
+	bool	leftMouse		: 1;
+	bool	rightMouse		: 1;
+	bool	key_b			: 1;
+	bool	key_shift		: 1;
+	bool	key_r			: 1;
+	int		mousewheelDir	: 2;
 
 	Ray_t mouseRay;
 
@@ -295,9 +318,10 @@ enum class GameMsg : uint8_t
 	Game_RemoveEntity,
 	Game_BackToLobby,
 	Game_WaveTimer,
-
+	Game_PlaySound,
 	Game_ClassSelected,
 	Game_PlayerAttack,
+	Game_Spree,
 	Game_AddNPC,
 	Game_RemoveNPC,
 	Game_PlayerInput,
@@ -310,6 +334,38 @@ enum class GameMsg : uint8_t
 	Game_StopSpectate,
 	Game_Over
 };
+
+enum class ESoundEvent : uint32_t
+{
+	NONE,
+	Player_OnMovement,
+	Player_OnMeleeAttack,
+	Player_OnMeleeAttackHit,
+	Player_OnRangeAttack,
+	Player_OnRangeAttackHit,
+	Player_OnDmgDealt,
+	Player_OnDmgRecieved,
+	Player_OnCastHealing,
+	Player_OnCastDash,
+	Player_OnHealingRecieved,
+	Player_OnDeath,
+	Player_OnRespawn,
+
+	Enemy_OnMovement,
+	Enemy_OnMeleeAttack,
+	Enemy_OnRangeAttack,
+	Enemy_OnDmgDealt,
+	Enemy_OnDmgRecieved,
+	Enemy_OnDeath,
+
+	Game_OnJoinLobby,
+	Game_OnHouseDestroyed,
+	Game_OnDefencePlaced,
+	Game_OnDefenceDestroyed,
+
+	ENUM_SIZE
+};
+
 
 enum class AbilityIndex : uint8_t
 {
@@ -531,4 +587,16 @@ struct Particle_t
 	sm::Vector2		size = { 1, 1, };
 	PARTICLEMODE	type = PARTICLEMODE::BLOOD;
 	UINT			life = 0;
+};
+
+struct audio_t
+{
+	ESoundEvent type;
+	sm::Vector3 position;
+	float volume;
+	float minDistance;
+	bool is3D;
+	bool isUnique;
+	bool shouldBroadcast;
+	bool playLooped;
 };
