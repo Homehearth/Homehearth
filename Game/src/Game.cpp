@@ -27,6 +27,9 @@ Game::~Game()
 	{
 		m_client.Disconnect();
 	}
+
+	OptionSystem::Get().SetOption("MasterVolume", std::to_string(m_masterVolume));
+	OptionSystem::Get().OnShutdown();
 }
 
 void Game::UpdateNetwork(float deltaTime)
