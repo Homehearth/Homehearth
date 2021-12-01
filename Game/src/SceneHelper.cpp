@@ -56,24 +56,6 @@ namespace sceneHelp
 
 		SoundHandler::Get().SetCurrentMusic("MenuTheme");
 
-		Entity backgroundScene = mainMenuScene.CreateEntity();
-		backgroundScene.AddComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>("GameSceneAll.fbx");
-		backgroundScene.AddComponent<comp::Transform>();
-		mainMenuScene.GetRegistry()->on_construct<comp::Light>().connect<&Lights::Add>(mainMenuScene.GetLights());
-/*
-		CreateLightEntity(mainMenuScene, { 330.0f, 20.0f, -333.3f , 1.0f }, { -1.0f, -0.5f, 0.f, 0.f }, { 15.f, 15.f, 15.f, 0.f }, 1000.0f, 0.09f, TypeLight::DIRECTIONAL, 1);
-		CreateLightEntity(mainMenuScene, { 330.0f, 20.0f, -333.3f , 1.0f }, { -1.0f, -0.5f, 0.f, 0.f }, { 15.f, 15.f, 15.f, 0.f }, 1000.0f, 0.09f, TypeLight::DIRECTIONAL, 1);
-		CreateLightEntity(mainMenuScene, { 330.0f, 20.0f, -333.3f , 1.0f }, { -1.0f, -0.5f, 0.f, 0.f }, { 15.f, 15.f, 15.f, 0.f }, 1000.0f, 0.09f, TypeLight::DIRECTIONAL, 1);
-*/
-		comp::Transform test;
-		test.position = { 330.0f, 1.0f, -333.3f };
-		Entity blood = mainMenuScene.CreateEntity();
-		blood.AddComponent<comp::Decal>(test);
-
-		mainMenuScene.GetCurrentCamera()->Initialize(sm::Vector3(0, 0, 0), sm::Vector3(0, 0, 1), sm::Vector3(0, 1, 0),
-			sm::Vector2((float)game->GetWindow()->GetWidth(), (float)game->GetWindow()->GetHeight()), CAMERATYPE::DEFAULT);
-		mainMenuScene.GetCurrentCamera()->m_position = sm::Vector3(350.f, 30.f, -250.f);
-
 		mainMenuScene.on<ESceneUpdate>([](const ESceneUpdate& e, Scene& scene)
 			{
 				IMGUI(
@@ -630,9 +612,6 @@ namespace sceneHelp
 				mageButton->GetBorder()->SetColor(D2D1::ColorF(0.0f, 1.0f, 0.2f));
 				mageButton->GetBorder()->SetVisiblity(true);
 				warriorButton->GetBorder()->SetVisiblity(false);
-
-				dynamic_cast<rtd::AbilityUI*>(game->GetScene("Game").GetCollection("AbilityUI")->elements[1].get())->SetTexture("Attack.png");
-				dynamic_cast<rtd::AbilityUI*>(game->GetScene("Game").GetCollection("AbilityUI")->elements[2].get())->SetTexture("Heal.png");
 			});
 		
 		
@@ -647,8 +626,6 @@ namespace sceneHelp
 				warriorButton->GetBorder()->SetColor(D2D1::ColorF(0.0f, 1.0f, 0.2f));
 				warriorButton->GetBorder()->SetVisiblity(true);
 				mageButton->GetBorder()->SetVisiblity(false);
-				dynamic_cast<rtd::AbilityUI*>(game->GetScene("Game").GetCollection("AbilityUI")->elements[1].get())->SetTexture("Attack2.png");
-				dynamic_cast<rtd::AbilityUI*>(game->GetScene("Game").GetCollection("AbilityUI")->elements[2].get())->SetTexture("Block.png");
 			});
 
 		scene.Add2DCollection(classButtons, "ClassButtons");
@@ -765,6 +742,7 @@ namespace sceneHelp
 			break;
 		}
 		}
+		OptionSystem::Get().SetOption("BlurType", std::to_string(static_cast<int>(type)));
 		
 		blurButton->SetOnPressedEvent([=] {
 			// Toggle between types.
@@ -1242,10 +1220,6 @@ namespace sceneHelp
 			{
 				modelID = ModelID::HOUSEROOF;
 			}
-			else if (Tree2 == filename)
-			{
-				modelID = ModelID::TREE2;
-			}
 			else if (Tree3 == filename)
 			{
 				modelID = ModelID::TREE3;
@@ -1414,10 +1388,6 @@ namespace sceneHelp
 			else if (HouseRoof == filename)
 			{
 				game->m_models[ModelID::HOUSEROOF].push_back(e);
-			}
-			else if (Tree2 == filename)
-			{
-				game->m_models[ModelID::TREE2].push_back(e);
 			}
 			else if (Tree3 == filename)
 			{
