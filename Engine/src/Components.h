@@ -125,11 +125,24 @@ namespace ecs
 				}
 				else if (type == PARTICLEMODE::DUST)
 				{
+				}				
+				else if (type == PARTICLEMODE::MAGEHEAL)
+				{
+					textureName = "MageHeal.png";
 				}
 
 				texture = ResourceManager::Get().GetResource<RTexture>(textureName);
 				opacityTexture = ResourceManager::Get().GetResource<RTexture>(opacityTextureName);
 
+				if (!texture)
+				{
+					LOG_ERROR("Couldnt load particle texture %s", textureName);
+				}
+				if (!opacityTexture)
+				{
+					LOG_ERROR("Couldnt load particle opacity texture %s", opacityTextureName);
+				}
+				
 				this->nrOfParticles		= (UINT)nrOfParticles;
 				this->type				= type;
 				this->lifeTime			= lifeTime;
@@ -300,11 +313,12 @@ namespace ecs
 		{
 			enum class PlayerType : uint16_t
 			{
-				PLAYER_ONE = 1,
-				PLAYER_TWO = 2,
-				PLAYER_THREE = 3,
-				PLAYER_FOUR = 4
-			} playerType = PlayerType::PLAYER_ONE;
+				NONE,
+				PLAYER_ONE,
+				PLAYER_TWO,
+				PLAYER_THREE,
+				PLAYER_FOUR
+			} playerType = PlayerType::NONE;
 			enum class State
 			{
 				IDLE,

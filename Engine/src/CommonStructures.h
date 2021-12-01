@@ -99,7 +99,9 @@ enum class PARTICLEMODE : UINT
 	SMOKEAREA,
 	SPARKLES,
 	RAIN,
-	DUST
+	DUST,
+	MAGEHEAL,
+	MAGERANGE
 };
 
 enum class EDefenceType : UINT
@@ -442,6 +444,20 @@ ALIGN16
 struct basic_model_matrix_t
 {
 	sm::Matrix worldMatrix;
+};
+
+ALIGN16
+struct texture_effect_t
+{
+	unsigned int frequency = 0;
+	unsigned int amplitude = 0;
+	float counter   = 0.f;
+};
+
+ALIGN16
+struct delta_time_t
+{
+	float delta;
 };
 
 ALIGN16
