@@ -18,7 +18,8 @@ project "Engine"
         "src/**.h",
         "src/**.cpp",
         "**.hlsl", 
-        "**.hlsli"
+        "**.hlsli",
+        "*.mp3"
     }
 
 
@@ -32,7 +33,9 @@ project "Engine"
         "../ThirdParty/stb_image/",
 		"../ThirdParty/networking/",
         "../ThirdParty/entt/",
-        "../ThirdParty/assimp/include/"
+        "../ThirdParty/irrKlang/include/",
+        "../ThirdParty/assimp/include/",
+        "../Assets/Sounds/"
     }
 
 
@@ -44,7 +47,7 @@ project "Engine"
             ["src/Engine/AI"] = { "**AISystem*", "**PathFinderManager.*", "**AIBehaviors.*" },  
                 ["src/Engine/AI/BehaviorTree"] = {"**BT.*"},
                 ["src/Engine/AI/BehaviorTree/CustomNodes"] = {"**CBT.*"},
-
+            ["src/Engine/Sound"] = { "**SoundHandler.*" },
             ["src/Engine/Core"] = { "**Engine.*", "**EventTypes.*", "**Window.*" },
             ["src/Engine/ECS"] = { "**Components.*",  "**Entity.*", "**Tags*" }, 
             ["src/Engine/GamePlay"] = { "**GridSystem.*", "**CollisionSystem.*", "**CombatSystem.*", "**Systems.*", "**SpreeHandler.*" },
@@ -80,10 +83,14 @@ project "Engine"
     links{
         "dxgi", -- links d3d11 d2d1 dwrite
         "DirectXTK",
-        "ImGui"
+        "ImGui",
+        "irrKlang.lib"
     }
 
-    libdirs{"../ThirdParty/imGUI/"}
+    libdirs{
+        "../ThirdParty/imGUI/",
+        "../ThirdParty/irrKlang/lib/Winx64-visualStudio/"
+    }
 
     -- Define a macro/symbol which applies for the Windows system.
     filter {"system:windows"}
@@ -138,5 +145,13 @@ project "Engine"
 	postbuildcommands
 	{
 		--Does not work... "../Game/build/bin/" .. outputdir .. "/Game/assimp-vc142-mt
-		os.copyfile("../ThirdParty/assimp/lib/assimp-vc142-mt.dll" , "../Game/build/bin/Debug-windows-x86_64/Game/assimp-vc142-mt.dll")
+		os.copyfile("../ThirdParty/assimp/lib/assimp-vc142-mt.dll" , "../Game/build/bin/Debug-windows-x86_64/Game/assimp-vc142-mt.dll"),
+        os.copyfile("../ThirdParty/irrKlang/dlls/ikpFlac.dll" , "../Game/build/bin/Debug-windows-x86_64/Game/ikpFlac.dll"),
+        os.copyfile("../ThirdParty/irrKlang/dlls/irrKlang.dll" , "../Game/build/bin/Debug-windows-x86_64/Game/irrKlang.dll"),
+        os.copyfile("../ThirdParty/irrKlang/dlls/ikpMP3.dll" , "../Game/build/bin/Debug-windows-x86_64/Game/ikpMP3.dll"),
+
+        os.copyfile("../ThirdParty/assimp/lib/assimp-vc142-mt.dll" , "../Game/build/bin/Release-windows-x86_64/Game/assimp-vc142-mt.dll"),
+        os.copyfile("../ThirdParty/irrKlang/dlls/ikpFlac.dll" , "../Game/build/bin/Debug-windows-x86_64/Game/ikpFlac.dll"),
+        os.copyfile("../ThirdParty/irrKlang/dlls/irrKlang.dll" , "../Game/build/bin/Release-windows-x86_64/Game/irrKlang.dll"),
+        os.copyfile("../ThirdParty/irrKlang/dlls/ikpMP3.dll" , "../Game/build/bin/Release-windows-x86_64/Game/ikpMP3.dll")
 	}

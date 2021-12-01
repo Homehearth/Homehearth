@@ -16,6 +16,7 @@ Engine::Engine()
 	: BasicEngine()
 {
 	LOG_INFO("Engine(): " __TIMESTAMP__);
+	SoundHandler::Get();
 	OptionSystem::Get().OnStartUp();
 }
 
@@ -59,19 +60,6 @@ void Engine::Startup()
 	m_renderer.Setup(*this);
 
 	// Thread should be launched after s_engineRunning is set to true and D3D11 is initialized.
-	//
-	// AUDIO - we supposed to use other audio engine
-	//
-	HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
-	if (FAILED(hr))
-	{
-		LOG_ERROR("Failed to initialize AudioEngine.");
-	}
-	DirectX::AUDIO_ENGINE_FLAGS eflags = DirectX::AudioEngine_Default;
-#ifdef _DEBUG
-	eflags |= DirectX::AudioEngine_Debug;
-#endif
-	this->m_audio_engine = std::make_unique<DirectX::AudioEngine>(eflags);
 
 	IMGUI(
 		// Setup ImGUI
@@ -117,10 +105,6 @@ void Engine::Run()
     T_DESTROY();
     D2D1Core::Destroy();
 	ResourceManager::Get().Destroy();
-
-
-	OptionSystem::Get().SetOption("MasterVolume", std::to_string(m_masterVolume));
-	OptionSystem::Get().OnShutdown();
 }
 
 

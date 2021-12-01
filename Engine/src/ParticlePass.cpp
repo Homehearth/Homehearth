@@ -89,7 +89,7 @@ void ParticlePass::Render(Scene* pScene)
 
 		comp::EmitterParticle* emitter = entity.GetComponent<comp::EmitterParticle>();
 		comp::Transform* transform = entity.GetComponent<comp::Transform>();
-		if (emitter)
+		if (emitter && transform)
 		{
 			//Constant buffer
 			m_particleUpdate.emitterPosition = sm::Vector4(transform->position.x + emitter->positionOffset.x, transform->position.y + emitter->positionOffset.y, transform->position.z + emitter->positionOffset.z, 1.f);
@@ -97,6 +97,7 @@ void ParticlePass::Render(Scene* pScene)
 			m_particleUpdate.counter = m_counter;
 			m_particleUpdate.lifeTime = emitter->lifeTime;
 			m_particleUpdate.particleSizeMulitplier = emitter->sizeMulitplier;
+			m_particleUpdate.speed = emitter->speed;
 
 			m_constantBufferParticleUpdate.SetData(D3D11Core::Get().DeviceContext(), m_particleUpdate);
 			ID3D11Buffer* cb = { m_constantBufferParticleUpdate.GetBuffer() };

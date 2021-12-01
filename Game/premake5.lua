@@ -26,6 +26,7 @@ project "Game"
         "../ThirdParty/stb_image/",
         "../ThirdParty/networking/",
         "../ThirdParty/entt/",
+        "../ThirdParty/irrKlang/include/",
 		"../ThirdParty/assimp/include/"
     }
 
@@ -41,7 +42,8 @@ project "Game"
 		"dwrite",
         "dxgi",
         "DirectXTK",
-		"assimp-vc142-mt.lib"
+		"assimp-vc142-mt.lib",
+        "irrKlang.lib"
     }
 
     filter {"system:windows"}
@@ -62,8 +64,9 @@ project "Game"
         libdirs{
             "../ThirdParty/DirectXTK/lib/Debug_lib/",
             "../Engine/build/bin/Debug-windows-x86_64/Engine",
-			"../ThirdParty/assimp/lib/"
-				}
+			"../ThirdParty/assimp/lib/",
+            "../ThirdParty/irrKlang/lib/Winx64-visualStudio/"
+		}
 
     filter {"configurations:Release"}
         staticruntime "on"
@@ -73,5 +76,6 @@ project "Game"
         libdirs{
             "../ThirdParty/DirectXTK/lib/Release_lib/",
             "../Engine/build/bin/Release-windows-x86_64/Engine",
-			"../ThirdParty/assimp/lib/"
-				}
+			"../ThirdParty/assimp/lib/",
+            "../ThirdParty/irrKlang/lib/Winx64-visualStudio/"
+		}

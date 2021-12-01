@@ -71,11 +71,6 @@ void Systems::UpdateAbilities(HeadlessScene& scene, float dt)
 
 }
 
-void Systems::CombatSystem(HeadlessScene& scene, float dt)
-{
-	CombatSystem::UpdateCombatSystem(scene, dt);
-}
-
 void Systems::HealingSystem(HeadlessScene& scene, float dt)
 {
 	// HealAbility system
@@ -93,9 +88,12 @@ void Systems::HealingSystem(HeadlessScene& scene, float dt)
 				comp::SphereCollider* sphere = collider.AddComponent<comp::SphereCollider>();
 				sphere->Center = transform->position;
 
+				collider.AddComponent<comp::PARTICLEEMITTER>(sm::Vector3{ 0,0,0 }, 200, 2.f, PARTICLEMODE::MAGEHEAL, 10.f, 70.f, false);
+
 				collider.AddComponent<comp::Tag<TagType::DYNAMIC>>();
 
 				comp::BezierAnimation* a = collider.AddComponent<comp::BezierAnimation>();
+				a->speed = 0.5f;
 				a->scalePoints.push_back(transform->scale);
 				a->scalePoints.push_back(transform->scale + sm::Vector3(ability.range));
 
@@ -206,7 +204,6 @@ void Systems::HeroLeapSystem(HeadlessScene& scene, float dt)
 
 								auto gravity = ecs::GetGravityForce();
 								p->forces.push_back(gravity);
-
 							}
 						});
 				};
@@ -214,57 +211,6 @@ void Systems::HeroLeapSystem(HeadlessScene& scene, float dt)
 		});
 }
 
-void Systems::HealthSystem(HeadlessScene& scene, float dt, Currency& money_ref, SpreeHandler& spree, GridSystem& grid)
-{
-	//Entity destoys self if health <= 0
-	scene.ForEachComponent<comp::Health>([&](Entity& entity, comp::Health& health)
-		{
-			//Check if something should be dead, and if so set isAlive to false
-			if (health.currentHealth <= 0 && health.isAlive)
-			{
-				comp::Network* net = entity.GetComponent<comp::Network>();
-				health.isAlive = false;
-				// increase money
-				if (entity.GetComponent<comp::Tag<TagType::BAD>>())
-				{
-					money_ref += 5 * spree.GetSpree();
-					spree.AddSpree();
-				}
-
-				// if player
-				comp::Player* p = entity.GetComponent<comp::Player>();
-				if (p)
-				{
-					p->respawnTimer = 10.f;
-					p->state = comp::Player::State::SPECTATING;
-					entity.RemoveComponent<comp::Tag<TagType::DYNAMIC>>();
-				}
-				else if (entity.GetComponent<comp::Tag<TagType::DEFENCE>>())
-				{
-					comp::Transform* buildTransform = entity.GetComponent<comp::Transform>();
-					
-					Node* node = Blackboard::Get().GetPathFindManager()->FindClosestNode(buildTransform->position);
-					//Remove from the container map so ai wont consider this defense
-					Blackboard::Get().GetPathFindManager()->RemoveDefenseEntity(entity);
-					node->reachable = true;
-					node->defencePlaced = false;
-
-					//Removing the defence and its neighbours if needed
-					grid.RemoveDefence(entity);
-
-					entity.Destroy();
-				}
-				else
-				{
-					entity.Destroy();
-				}
-			}
-			else if (health.currentHealth > health.maxHealth)
-			{
-				health.currentHealth = health.maxHealth;
-			}
-		});
-}
 
 void Systems::SelfDestructSystem(HeadlessScene& scene, float dt)
 {
@@ -370,12 +316,18 @@ void Systems::MovementColliderSystem(HeadlessScene& scene, float dt)
 
 	//BoundingOrientedBox
 	scene.ForEachComponent<comp::Transform, comp::OrientedBoxCollider>([&, dt]
-	(comp::Transform& transform, comp::OrientedBoxCollider& obb)
+	(Entity entity, comp::Transform& transform, comp::OrientedBoxCollider& obb)
 		{
-			obb.Center = transform.position;
-			/*obb.Orientation = transform.rotation;*/
-			if (transform.syncColliderScale)
-				obb.Extents = transform.scale;
+			//If its not a house update obb!
+			if (!entity.GetComponent<comp::House>())
+			{
+
+
+				obb.Center = transform.position;
+				/*obb.Orientation = transform.rotation;*/
+				if (transform.syncColliderScale)
+					obb.Extents = transform.scale;
+			}
 		});
 
 	//BoundingSphere

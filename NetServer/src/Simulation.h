@@ -10,6 +10,7 @@
 #include "IShop.h"
 #include "QuadTree.h"
 #include "Cycler.h"
+#include "HouseManager.h"
 #include "SpreeHandler.h"
 /*
 		Simulation defines each ongoing simulation from the perspective of the server
@@ -48,16 +49,18 @@ private:
 	std::unordered_map<ecs::Component, std::vector<Entity>> m_updatedComponents;
 
 	int currentRound;
-
+	
 	void InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg, const std::bitset<ecs::Component::COMPONENT_MAX>& componentMask = UINT32_MAX) const;
 
 	uint32_t GetTick()const;
 
 	//Game play related
 	Timer waveTimer;
+	uint32_t m_wavesSurvived;
 	std::queue<Wave> waveQueue;
 	std::queue<sm::Vector3> m_spawnPoints;
-	
+	HouseManager houseManager;
+
 	void OnNetworkEntityCreate(entt::registry& reg, entt::entity entity);
 	void OnNetworkEntityDestroy(entt::registry& reg, entt::entity entity);
 
@@ -75,7 +78,7 @@ public:
 	void JoinLobby(uint32_t gameID, uint32_t playerID, const std::string& name = "Noobie");
 	void LeaveLobby(uint32_t playerID);
 
-	bool Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* mapColliders);
+	bool Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* mapColliders, std::unordered_map<std::string, comp::OrientedBoxCollider>* houseColliders);
 	void Destroy();
 
 	void NextTick();
@@ -89,6 +92,8 @@ public:
 
 	GridSystem& GetGrid();
 	Currency& GetCurrency();
+
+	void IncreaseWavesSurvived();
 
 	void SetLobbyScene();
 	void SetGameOver();
