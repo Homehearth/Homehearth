@@ -372,6 +372,7 @@ void ServerSystems::WaveSystem(Simulation* simulation,
 		}
 
 		//Add count and pop from queue
+		simulation->IncreaseWavesSurvived();
 		waves.pop();
 	}
 }
@@ -507,6 +508,7 @@ void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money
 				if (entity.GetComponent<comp::Tag<TagType::BAD>>())
 				{
 					money_ref += 5 * spree.GetSpree();
+					money_ref.IncreaseTotal(5 * spree.GetSpree());
 					spree.AddSpree();
 				}
 
