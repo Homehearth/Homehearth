@@ -33,6 +33,10 @@ namespace EnemyManagement
 	//Creates the waves containing all the enemies. resets all waves when this function is called on.
 	void CreateWaves(std::queue<Wave>& waveQueue, int currentRound);
 }
+namespace VillagerManagement
+{
+	Entity CreateVillager(Simulation* simulation, Node* homeNode);
+}
 
 /*! Namespace to manage the server's various ECS systems. */
 namespace ServerSystems

@@ -718,3 +718,29 @@ void ServerSystems::DeathParticleTimer(HeadlessScene& scene)
 			}
 		});
 }
+
+Entity VillagerManagement::CreateVillager(Simulation* simulation, Node* homeNode)
+{
+	Entity entity = simulation->GetGameScene()->CreateEntity();
+	entity.AddComponent<comp::Network>();
+	entity.AddComponent<comp::Tag<DYNAMIC>>();
+	entity.AddComponent<comp::Tag<GOOD>>(); // this entity is BAD
+
+	comp::Transform* transform = entity.AddComponent<comp::Transform>();
+	comp::Health* health = entity.AddComponent<comp::Health>();
+	comp::MeshName* meshName = entity.AddComponent<comp::MeshName>();
+	comp::AnimatorName* animatorName = entity.AddComponent<comp::AnimatorName>();
+	comp::AnimationState* animationState = entity.AddComponent<comp::AnimationState>();
+	comp::SphereCollider* bos = entity.AddComponent<comp::SphereCollider>();
+	comp::Velocity* velocity = entity.AddComponent<comp::Velocity>();
+	comp::BehaviorTree* behaviorTree = entity.AddComponent<comp::BehaviorTree>();
+	comp::Villager* villager = entity.AddComponent<comp::Villager>();
+	transform->position = homeNode->position;
+	meshName->name = NameType::MESH_VILLAGER;
+	animatorName->name = AnimName::ANIM_NONE;
+
+	bos->Radius = 3.f;
+	villager->movementSpeed = 15.f;
+
+	behaviorTree->root = AIBehaviors::GetFocusPlayerAIBehavior(entity);
+}

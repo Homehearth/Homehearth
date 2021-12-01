@@ -237,6 +237,12 @@ namespace ecs
 			std::shared_ptr<BT::ParentNode> root;
 		};
 
+		struct Villager
+		{
+			Node* homeNode;
+			float movementSpeed = 15.f;
+		};
+
 		struct House
 		{
 			NameType houseType = NameType::EMPTY;
