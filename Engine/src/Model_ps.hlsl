@@ -5,9 +5,9 @@ float4 main(PixelIn input) : SV_TARGET
     //return t_shadowMaps.Sample(s_linear, float3(input.uv, 0.0f));
 
     static unsigned int rolls = infoData.x;
-    const float LIGHT_RANGE = 215.0f;
+    static float LIGHT_RANGE = 215.0f;
     const float LIGHT_VOLUME_RANGE = 250.0f;
-    const unsigned int STEPS = 50;
+    static unsigned int STEPS = c_info.y;
     const float SCATTERING = 1.0f;
     
     float3 lightVolume = float3(0.0f, 0.0f, 0.0f);
@@ -25,6 +25,9 @@ float4 main(PixelIn input) : SV_TARGET
     
     //If an object has a texture, sample from it else use default values.
     SampleTextures(input, albedo, N, roughness, metallic, ao);
+    //albedo = ACESFitted(albedo);
+    
+    //If normal texture exists, sample from it
 
     //---------------------------------PBR-Shading Calculations---------------------------------
     
@@ -86,7 +89,7 @@ float4 main(PixelIn input) : SV_TARGET
                             float3 rayDir = rayVector / length(rayVector);
                             float3 stepLength = length(rayVector) / STEPS;
                             float3 step = rayDir * stepLength;
-                            [unroll]
+                            [loop]
                             for (int j = 0; j < STEPS; j++)
                             {
                         // Camera position in shadow space.
@@ -202,7 +205,8 @@ float4 main(PixelIn input) : SV_TARGET
                     float3 colorDecal = (ambientIBL(albedoDecal, float3(0, 1, 0), V, F0, 0.f, 0.2f, 1.f) + Lo) * pow(lightVolumeFactor, 4.0f);
                     
                     //HDR tonemapping
-                    colorDecal = colorDecal / (colorDecal + float3(1.0, 1.0, 1.0));
+                    //colorDecal = colorDecal / (colorDecal + float3(1.0, 1.0, 1.0));
+                    colorDecal = ACESFitted(colorDecal);
                     //Gamma correct
                     colorDecal = pow(max(colorDecal, 0.0f), float3(1.0 / 2.2, 1.0 / 2.2, 1.0 / 2.2));
                     colorDecal = lerp(colorDecal, fogColor.xyz, fogFactor);
@@ -218,7 +222,8 @@ float4 main(PixelIn input) : SV_TARGET
     float3 color = (ambient + Lo) * pow(lightVolumeFactor, 2.5f);
     
     //HDR tonemapping
-	color = color / (color + float3(1.0, 1.0, 1.0));
+	//color = color / (color + float3(1.0, 1.0, 1.0));
+    color = ACESFitted(color);
     //Gamma correct
     color = pow(max(color, 0.0f), float3(gamma, gamma, gamma));
     

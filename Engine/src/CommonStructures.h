@@ -23,7 +23,7 @@ enum class Cycle : UINT
 struct Currency
 {
 private:
-	uint32_t m_amount = 0;
+	uint32_t m_amount = 35;
 
 public:
 	bool m_hasUpdated = false;
@@ -303,7 +303,7 @@ enum class GameMsg : uint8_t
 	Game_RemoveEntity,
 	Game_BackToLobby,
 	Game_WaveTimer,
-
+	Game_PlaySound,
 	Game_ClassSelected,
 	Game_PlayerAttack,
 	Game_Spree,
@@ -319,6 +319,38 @@ enum class GameMsg : uint8_t
 	Game_StopSpectate,
 	Game_Over
 };
+
+enum class ESoundEvent : uint32_t
+{
+	NONE,
+	Player_OnMovement,
+	Player_OnMeleeAttack,
+	Player_OnMeleeAttackHit,
+	Player_OnRangeAttack,
+	Player_OnRangeAttackHit,
+	Player_OnDmgDealt,
+	Player_OnDmgRecieved,
+	Player_OnCastHealing,
+	Player_OnCastDash,
+	Player_OnHealingRecieved,
+	Player_OnDeath,
+	Player_OnRespawn,
+
+	Enemy_OnMovement,
+	Enemy_OnMeleeAttack,
+	Enemy_OnRangeAttack,
+	Enemy_OnDmgDealt,
+	Enemy_OnDmgRecieved,
+	Enemy_OnDeath,
+
+	Game_OnJoinLobby,
+	Game_OnHouseDestroyed,
+	Game_OnDefencePlaced,
+	Game_OnDefenceDestroyed,
+
+	ENUM_SIZE
+};
+
 
 enum class AbilityIndex : uint8_t
 {
@@ -526,4 +558,16 @@ struct Particle_t
 	sm::Vector2		size = { 1, 1, };
 	PARTICLEMODE	type = PARTICLEMODE::BLOOD;
 	UINT			life = 0;
+};
+
+struct audio_t
+{
+	ESoundEvent type;
+	sm::Vector3 position;
+	float volume;
+	float minDistance;
+	bool is3D;
+	bool isUnique;
+	bool shouldBroadcast;
+	bool playLooped;
 };
