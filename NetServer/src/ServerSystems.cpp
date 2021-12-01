@@ -286,14 +286,14 @@ void SpawnZoneWave(Simulation* simulation, Wave& currentWave)
 			nrOfEnemies = group.GetEnemyTypeCount(static_cast<EnemyType>(it));
 			const float degree = (360.f / static_cast<float>(nrOfEnemies)) * deg2rad;
 
-			//Spawn enemies of this type
-			for (int i = 0; i < nrOfEnemies; i++)
-			{
-				distance = static_cast<float>(rand() % (max - min) + min);
-				posX = distance * cos(i * degree) + group.GetSpawnPoint().x;
-				posZ = distance * sin(i * degree) + group.GetSpawnPoint().y;
-				EnemyManagement::CreateEnemy(simulation, { posX, 0.0f, posZ }, static_cast<EnemyType>(it));
-			}
+//Spawn enemies of this type
+for (int i = 0; i < nrOfEnemies; i++)
+{
+	distance = static_cast<float>(rand() % (max - min) + min);
+	posX = distance * cos(i * degree) + group.GetSpawnPoint().x;
+	posZ = distance * sin(i * degree) + group.GetSpawnPoint().y;
+	EnemyManagement::CreateEnemy(simulation, { posX, 0.0f, posZ }, static_cast<EnemyType>(it));
+}
 		}
 	}
 }
@@ -380,13 +380,40 @@ void ServerSystems::WaveSystem(Simulation* simulation,
 /**Removes all enemies that has been destroyed and broadcasts the removal to the clients.
  *@param simulation	   Manages sending and removal of entities on the server.
  */
-void ServerSystems::NextWaveConditions(Simulation* simulation, Timer& timer, int timeToFinish)
+void ServerSystems::NextWaveConditions(Simulation* simulation)
 {
 	//Publish event when timeToFinish been exceeded.
-	if (simulation->m_timeCycler.GetSwitch())
+	if (simulation->m_timeCycler.HasChangedPeriod())
 	{
-		simulation->GetGameScene()->publish<ESceneCallWaveSystem>(0.0f);
-		simulation->m_timeCycler.Switch();
+		if (simulation->m_timeCycler.GetTimePeriod() == CyclePeriod::NIGHT)
+		{
+			// start new wave
+			simulation->GetGameScene()->publish<ESceneCallWaveSystem>(0.0f);
+		}
+
+		if (simulation->m_timeCycler.GetTimePeriod() == CyclePeriod::MORNING)
+		{
+			simulation->m_timeCycler.SetCycleSpeed(1.0f);
+			// remove all bad guys
+			simulation->GetGameScene()->ForEachComponent<comp::Tag<TagType::BAD>>([](Entity e, comp::Tag<TagType::BAD>& ) 
+				{
+					e.Destroy();
+				});
+		}
+	}
+
+	if (simulation->m_timeCycler.GetTimePeriod() == CyclePeriod::NIGHT)
+	{
+		int count = 0;
+		simulation->GetGameScene()->ForEachComponent<comp::Tag<TagType::BAD>>([&](Entity e, comp::Tag<TagType::BAD>&)
+			{
+				count++;
+			});
+
+		if (count == 0)
+		{
+			simulation->m_timeCycler.SetCycleSpeed(10.0f);
+		}
 	}
 }
 
@@ -455,7 +482,7 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 				}
 			}
 
-			if (p.lastInputState.key_r && simulation->m_timeCycler.GetTimePeriod() == Cycle::DAY) // was pressed
+			if (p.lastInputState.key_r && simulation->m_timeCycler.GetTimePeriod() == CyclePeriod::DAY) // was pressed
 			{
 				LOG_INFO("Pressed right");
 				simulation->GetGrid().RemoveDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, Blackboard::Get().GetPathFindManager());
@@ -471,7 +498,7 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 			}
 
 			//Place defence on grid
-			if (p.lastInputState.key_b && simulation->GetCurrency().GetAmount() >= 5 && simulation->m_timeCycler.GetTimePeriod() == Cycle::DAY)
+			if (p.lastInputState.key_b && simulation->GetCurrency().GetAmount() >= 5 && simulation->m_timeCycler.GetTimePeriod() == CyclePeriod::DAY)
 			{
 				if (simulation->GetGrid().PlaceDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, Blackboard::Get().GetPathFindManager(), dynamicQT))
 				{

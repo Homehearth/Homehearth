@@ -140,75 +140,102 @@ namespace sceneHelp
 		// The sun
 		Entity sun = CreateLightEntity(gameScene, { 0.f, 0.f, 0.f, 0.f }, { -1.0f, 0.0f, -1.f, 0.f }, { 255.f, 185, 150, 0.f }, 1000.f, 0.09f, TypeLight::DIRECTIONAL, 1);
 		// The moon
-		Entity moon = CreateLightEntity(gameScene, { 0.f, 0.f, 0.f, 0.f }, { -1.0f, 0.0f, -1.f, 0.f }, { 50.f, 50, 150, 0.f }, 1000.f, 0.04f, TypeLight::DIRECTIONAL, 1);
+		Entity moon = CreateLightEntity(gameScene, { 0.f, 0.f, 0.f, 0.f }, { -1.0f, 0.0f, -1.f, 0.f }, { 50.f, 50, 200, 0.f }, 1000.f, 0.008f, TypeLight::DIRECTIONAL, 0);
+
+		sm::Vector4 pointLightColor = { 237.f, 147.f, 18.f, 0.f };
 
 		// LEFT OF WELL
-		CreateLightEntity(gameScene, { 268.2f, 28.f, -320.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 185.f, 100.f, 0.f }, pointRange, 0.4f,TypeLight::POINT, 0);
+		CreateLightEntity(gameScene, { 268.2f, 28.f, -320.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, pointLightColor, pointRange, 0.4f,TypeLight::POINT, 0);
 		// FURTHEST LEFT AND FURTHEST SOUTH
-		CreateLightEntity(gameScene, { 347.5f, 28.f, -323.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 185.f, 100.f, 0.f }, pointRange, 0.4f,TypeLight::POINT, 0);
+		CreateLightEntity(gameScene, { 347.5f, 28.f, -323.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, pointLightColor, pointRange, 0.4f,TypeLight::POINT, 0);
 		// NEXT TO THE BRIDGE GOING SOUTH
-		CreateLightEntity(gameScene, { 310.f, 28.f, -305.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 185.f, 100.f, 0.f }, pointRange, 0.4f,TypeLight::POINT, 0);
+		CreateLightEntity(gameScene, { 310.f, 28.f, -305.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, pointLightColor, pointRange, 0.4f, TypeLight::POINT, 0);
 		// NEXT TO THE LEFT BRIDGE ON THE LEFT SIDE OF IT
-		CreateLightEntity(gameScene, { 307.f, 28.f, -350.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 185.f, 100.f, 0.f }, pointRange, 0.4f,TypeLight::POINT, 0);
+		CreateLightEntity(gameScene, { 307.f, 28.f, -350.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, pointLightColor, pointRange, 0.4f, TypeLight::POINT, 0);
 		// RIGHT OF THE WELL BETWEEN THE 2 HOUSES
-		CreateLightEntity(gameScene, { 177.f, 28.f, -313.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 185.f, 100.f, 0.f }, pointRange, 0.4f,TypeLight::POINT, 0);
+		CreateLightEntity(gameScene, { 177.f, 28.f, -313.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, pointLightColor, pointRange, 0.4f, TypeLight::POINT, 0);
 		// FURTHEST RIGHT AND FURTHEST SOUTH
-		CreateLightEntity(gameScene, { 193.5f, 28.f, -261.5f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 185.f, 100.f, 0.f }, pointRange, 0.4f,TypeLight::POINT, 0);
+		CreateLightEntity(gameScene, { 193.5f, 28.f, -261.5f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, pointLightColor, pointRange, 0.4f, TypeLight::POINT, 0);
 		// LEFT OF WATERMILL
-		CreateLightEntity(gameScene, { 338.5f, 28.f, -397.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 185.f, 100.f, 0.f }, pointRange, 0.4f,TypeLight::POINT, 0);
+		CreateLightEntity(gameScene, { 338.5f, 28.f, -397.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, pointLightColor, pointRange, 0.4f,TypeLight::POINT, 0);
 
 		InputSystem::Get().SetCamera(gameScene.GetCurrentCamera());
 
 		gameScene.on<ESceneUpdate>([=](const ESceneUpdate& e, Scene& scene)
 			{
+				game->GetCycler().Update(e.dt);
+
 				if (game->m_players.find(game->m_localPID) != game->m_players.end())
 				{
 					sm::Vector3 playerPos = game->m_players.at(game->m_localPID).GetComponent<comp::Transform>()->position;
 
+
 					comp::Light* l = sun.GetComponent<comp::Light>();
-					if (game->m_elapsedCycleTime > 0.0f)
+
+					float angle = 360.f * game->GetCycler().GetTime();
+					for (int i = 0; i < 2; i++)
 					{
-						l->lightData.direction = { -1.0f, 0.0f, -1.f, 0.f };
-						sm::Vector3 dir = sm::Vector3(l->lightData.direction);
-						dir.Normalize();
-						dir = sm::Vector3::TransformNormal(dir, sm::Matrix::CreateRotationZ(dx::XMConvertToRadians(ROTATION) * (game->m_elapsedCycleTime)));
-						l->lightData.direction = sm::Vector4(dir.x, dir.y, dir.z, 0.0f);
-						sm::Vector3 pos = l->lightData.position;
-						pos = playerPos - dir * 300;
+						
+						sm::Vector3 dir = sm::Vector3::TransformNormal(sm::Vector3(-1, 0, -1), sm::Matrix::CreateRotationZ(dx::XMConvertToRadians(angle)));
+						l->lightData.direction = sm::Vector4(dir);
+						l->lightData.direction.w = 0.0f;
+						
+						l->lightData.enabled = l->lightData.direction.y < 0.0f;
+						
+						sm::Vector3 newPos = playerPos - dir * 300;
+						if(l->lightData.enabled)
+							newPos = util::Lerp(sm::Vector3(l->lightData.position), newPos, e.dt * 10);
 				
-						pos = util::Lerp(sm::Vector3(l->lightData.position), pos, e.dt * 10);
-						l->lightData.position = sm::Vector4(pos);
+						l->lightData.position = sm::Vector4(newPos);
+						l->lightData.position.w = 1.0f;
 
-						l->lightData.position.w = 1.f;
-						l->lightData.enabled = 1;
-					}
-					else
-					{
-						l->lightData.enabled = 0;
-					}
-
-					l = moon.GetComponent<comp::Light>();
-					if (game->m_elapsedNightTime > 0.0f)
-					{
-						l->lightData.direction = { -1.0f, 0.0f, -1.f, 0.f };
-						sm::Vector3 dir = sm::Vector3(l->lightData.direction);
-						dir.Normalize();
-						dir = sm::Vector3::TransformNormal(dir, sm::Matrix::CreateRotationZ(dx::XMConvertToRadians(ROTATION) * (game->m_elapsedNightTime)));
-						l->lightData.direction = sm::Vector4(dir.x, dir.y, dir.z, 0.0f);
-						sm::Vector3 pos = l->lightData.position;
-						pos = playerPos - dir * 300;
-
-						pos = util::Lerp(sm::Vector3(l->lightData.position), pos, e.dt * 10);
-						l->lightData.position = sm::Vector4(pos);
-
-						l->lightData.position.w = 1.f;
-						l->lightData.enabled = 1;
-					}
-					else
-					{
-						l->lightData.enabled = 0;
+						
+						l = moon.GetComponent<comp::Light>();
+						angle -= 180.f;
 					}
 				}
+
+				if (game->GetCycler().HasChangedPeriod())
+				{
+					switch (game->GetCycler().GetTimePeriod())
+					{
+					case CyclePeriod::NIGHT:
+					{
+						
+						SoundHandler::Get().SetCurrentMusic("NightTheme");
+						scene.ForEachComponent<comp::Light>([](comp::Light& l)
+							{
+								if (l.lightData.type == TypeLight::POINT)
+								{
+									l.lightData.enabled = 1;
+								}
+							});
+						break;
+					}
+					case CyclePeriod::MORNING:
+					{
+						SoundHandler::Get().SetCurrentMusic("MenuTheme");
+
+						scene.ForEachComponent<comp::Light>([](comp::Light& l)
+							{
+								if (l.lightData.type == TypeLight::POINT)
+								{
+									l.lightData.enabled = 0;
+								}
+							});
+						break;
+					}
+					case CyclePeriod::EVENING:
+					{
+						
+						break;
+					}
+					default:
+						break;
+					}
+				}
+
+
 
 				Collection2D* bullColl = game->GetCurrentScene()->GetCollection("bullDoze");
 				if (bullColl)
@@ -254,6 +281,7 @@ namespace sceneHelp
 				//GameSystems::RenderIsCollidingSystem(scene);
 				GameSystems::UpdatePlayerVisuals(game);
 				Systems::LightSystem(scene, e.dt);
+				game->GetCurrentScene()->UpdateSkybox(game->GetCycler().GetTime());
 
 
 				// Need to update Listener to make 3D sound work properly.
@@ -263,7 +291,6 @@ namespace sceneHelp
 				SoundHandler::Get().SetListenerPosition(thePlayer.GetComponent<comp::Transform>()->position, lookDir);
 				SoundHandler::Get().Update();
 
-				game->GetCurrentScene()->UpdateSkybox(game->m_elapsedCycleTime);
 #ifdef _DEBUG
 				if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Space, KeyState::RELEASED))
 				{
@@ -467,7 +494,7 @@ namespace sceneHelp
 		
 		
 		sc->AddButton("ShopIcon.png", draw_t(0.0f, -(height / 14) * 2.0f, width / 24, height / 14))->SetOnPressedEvent([=] {
-			if (game->GetCurrentCycle() == Cycle::DAY)
+			if (game->GetCycler().GetTimePeriod() == CyclePeriod::DAY)
 			{
 				shopMenu->Show();
 				bullDoze->Hide();
@@ -675,6 +702,7 @@ namespace sceneHelp
 		returnTo->SetOnPressedEvent([=] {
 
 			game->SetScene("MainMenu");
+			SoundHandler::Get().SetCurrentMusic("MenuTheme");
 
 			});
 
