@@ -2,4 +2,6 @@ WindowHeight 720
 WindowWidth 1280
 ShadowQuality Medium
 Shadows 2
-MasterVolume 0.000000
+MasterVolume 0.524496
+VolumetricLightQuality 50
+BlurType 2

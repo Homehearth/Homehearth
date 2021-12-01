@@ -111,6 +111,19 @@ void CombatSystem::UpdateTeleport(HeadlessScene& scene)
 							{
 								p->reachable = true;
 							}
+
+							audio_t audio = {
+								ESoundEvent::Player_OnCastBlink,
+								entity.GetComponent<comp::Transform>()->position,
+								1.0f,
+								250.f,
+								true,
+								false,
+								true,
+								false,
+							};
+							entity.GetComponent<comp::AudioState>()->data.emplace(audio);
+
 						}
 						else
 						{
@@ -334,6 +347,8 @@ void CombatSystem::AddCollisionMeleeBehavior(Entity entity, Entity attackEntity,
 				}
 				else if (other.GetComponent<comp::NPC>())
 				{
+					audio.is3D = true;
+					audio.shouldBroadcast = true;
 					audio.type = ESoundEvent::Enemy_OnDmgRecieved;
 				}
 				else if (other.GetComponent<comp::Tag<STATIC>>() && entity.GetComponent<comp::Player>())
@@ -407,6 +422,7 @@ void CombatSystem::AddCollisionRangeBehavior(Entity entity, Entity attackEntity,
 			comp::Health* otherHealth = other.GetComponent<comp::Health>();
 			comp::RangeAttackAbility* attackAbility = entity.GetComponent<comp::RangeAttackAbility>();
 
+
 			if (otherHealth && attackAbility)
 			{
 				otherHealth->currentHealth -= attackAbility->attackDamage;
@@ -427,7 +443,7 @@ void CombatSystem::AddCollisionRangeBehavior(Entity entity, Entity attackEntity,
 
 					scene.publish<EComponentUpdated>(other, ecs::Component::PARTICLEMITTER);
 				}
-
+				
 
 				// update Health on network
 				scene.publish<EComponentUpdated>(other, ecs::Component::HEALTH);
@@ -452,12 +468,14 @@ void CombatSystem::AddCollisionRangeBehavior(Entity entity, Entity attackEntity,
 				}
 				else if (other.GetComponent<comp::NPC>())
 				{
+					audio.is3D = true;
+					audio.shouldBroadcast = true;
 					audio.type = ESoundEvent::Enemy_OnDmgRecieved;
 				}
 				else if (other.GetComponent<comp::Tag<STATIC>>() && entity.GetComponent<comp::Player>())
 				{
-					audio.shouldBroadcast = true;
 					audio.is3D = true;
+					audio.shouldBroadcast = true;
 					audio.type = ESoundEvent::Player_OnRangeAttackHit;
 				}
 

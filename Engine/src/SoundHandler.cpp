@@ -33,7 +33,7 @@ void SoundHandler::UpdateCurrentMusic(irrklang::ISoundSource* musicSrc, bool loo
     }
 
     m_currentMusic = m_soundEngine->play2D(musicSrc, loopMusic, true, false, false);
-    m_currentMusic->setVolume(0.5f);
+    m_currentMusic->setVolume(0.3f);
     m_currentMusic->setIsPaused(false);
 }
 
@@ -42,13 +42,15 @@ void SoundHandler::LoadAllSounds()
     AddSoundSource("../Assets/Sounds/DayTheme.wav");
     AddSoundSource("../Assets/Sounds/NightTheme.wav");
     AddSoundSource("../Assets/Sounds/MenuTheme.wav");
-    AddSoundSource("../Assets/Sounds/ButtonClick.wav"); // this sounds is for all buttons and is placed in Button.cpp.
+    AddSoundSource("../Assets/Sounds/BossTheme.wav");
+    AddSoundSource("../Assets/Sounds/ButtonClick.wav"); // is placed in Button.cpp.
     AddSoundSource("../Assets/Sounds/OnGameOver.wav");
 
     AddSoundSource("../Assets/Sounds/Game_OnDefencePlaced.mp3");
     AddSoundSource("../Assets/Sounds/Game_OnDefenceDestroyed.wav");
     AddSoundSource("../Assets/Sounds/Game_OnHouseDestroyed.wav");
-    AddSoundSource("../Assets/Sounds/Game_OnJoinLobby.wav");
+    AddSoundSource("../Assets/Sounds/Game_OnBossSpawn.wav");
+    AddSoundSource("../Assets/Sounds/Game_OnPurchase.mp3");
 
     AddSoundSource("../Assets/Sounds/Player_OnMovement.wav");
     AddSoundSource("../Assets/Sounds/Player_OnMeleeAttack.wav");
@@ -59,9 +61,9 @@ void SoundHandler::LoadAllSounds()
     AddSoundSource("../Assets/Sounds/Player_OnRangeAttackHit.wav");
     AddSoundSource("../Assets/Sounds/Player_OnDmgDealt.wav");
     AddSoundSource("../Assets/Sounds/Player_OnDmgRecieved.wav");
-    AddSoundSource("../Assets/Sounds/Player_OnCastHealing.wav");
+    AddSoundSource("../Assets/Sounds/Player_OnHealing.wav");
     AddSoundSource("../Assets/Sounds/Player_OnCastDash.wav");
-    AddSoundSource("../Assets/Sounds/Player_OnHealingRecieved.wav");    // do not exist
+    AddSoundSource("../Assets/Sounds/Player_OnCastBlink.wav");
     AddSoundSource("../Assets/Sounds/Player_OnDeath.wav");
     AddSoundSource("../Assets/Sounds/Player_OnRespawn.wav");    // do not exist
 
@@ -71,6 +73,7 @@ void SoundHandler::LoadAllSounds()
     AddSoundSource("../Assets/Sounds/Enemy_OnMeleeAttack4.mp3");
     AddSoundSource("../Assets/Sounds/Enemy_OnMeleeAttack5.mp3");
     AddSoundSource("../Assets/Sounds/Enemy_OnMeleeAttack6.mp3");
+    AddSoundSource("../Assets/Sounds/Enemy_OnMeleeAttack7.wav");
     AddSoundSource("../Assets/Sounds/Enemy_OnDmgRecieved.ogg");
     AddSoundSource("../Assets/Sounds/Enemy_OnDeath.wav");   
 }

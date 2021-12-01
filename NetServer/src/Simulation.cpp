@@ -236,7 +236,7 @@ void Simulation::ResetPlayer(Entity player)
 	//
 	// AudioState
 	//
-	player.AddComponent<comp::AudioState>();
+	player.AddComponent<ecs::component::AudioState>();
 
 	//Collision will handle this entity as a dynamic one
 	player.AddComponent<comp::Tag<TagType::DYNAMIC>>();
