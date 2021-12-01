@@ -237,6 +237,17 @@ namespace ecs
 			std::shared_ptr<BT::ParentNode> root;
 		};
 
+		struct House
+		{
+			NameType houseType = NameType::EMPTY;
+			NameType doorType = NameType::EMPTY;
+			NameType roofType = NameType::EMPTY;
+			Entity door;
+			Entity houseRoof;
+			Node* attackNode = nullptr; //AI can walk to this node to attack this house
+			bool isDead;
+		};
+		
 
 		struct TemporaryPhysics
 		{
