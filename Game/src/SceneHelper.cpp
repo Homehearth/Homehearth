@@ -630,9 +630,6 @@ namespace sceneHelp
 				mageButton->GetBorder()->SetColor(D2D1::ColorF(0.0f, 1.0f, 0.2f));
 				mageButton->GetBorder()->SetVisiblity(true);
 				warriorButton->GetBorder()->SetVisiblity(false);
-
-				dynamic_cast<rtd::AbilityUI*>(game->GetScene("Game").GetCollection("AbilityUI")->elements[1].get())->SetTexture("Attack.png");
-				dynamic_cast<rtd::AbilityUI*>(game->GetScene("Game").GetCollection("AbilityUI")->elements[2].get())->SetTexture("Heal.png");
 			});
 		
 		
@@ -647,8 +644,6 @@ namespace sceneHelp
 				warriorButton->GetBorder()->SetColor(D2D1::ColorF(0.0f, 1.0f, 0.2f));
 				warriorButton->GetBorder()->SetVisiblity(true);
 				mageButton->GetBorder()->SetVisiblity(false);
-				dynamic_cast<rtd::AbilityUI*>(game->GetScene("Game").GetCollection("AbilityUI")->elements[1].get())->SetTexture("Attack2.png");
-				dynamic_cast<rtd::AbilityUI*>(game->GetScene("Game").GetCollection("AbilityUI")->elements[2].get())->SetTexture("Block.png");
 			});
 
 		scene.Add2DCollection(classButtons, "ClassButtons");
@@ -765,6 +760,7 @@ namespace sceneHelp
 			break;
 		}
 		}
+		OptionSystem::Get().SetOption("BlurType", std::to_string(static_cast<int>(type)));
 		
 		blurButton->SetOnPressedEvent([=] {
 			// Toggle between types.

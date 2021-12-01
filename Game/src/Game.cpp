@@ -6,6 +6,7 @@
 #include "Healthbar.h"
 #include "MoneyUI.h"
 #include "OptionSystem.h"
+#include "AbilityUI.h"
 
 using namespace std::placeholders;
 
@@ -447,9 +448,22 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 				}
 			});
 
-		SetScene("Game");
-		thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::ADAPTIVE);
+		comp::Player* p = GetLocalPlayer().GetComponent<comp::Player>();
+		if (p)
+		{
+			if (p->classType == comp::Player::Class::WARRIOR)
+			{
+				dynamic_cast<rtd::AbilityUI*>(GetScene("Game").GetCollection("AbilityUI")->elements[1].get())->SetTexture("Attack2.png");
+				dynamic_cast<rtd::AbilityUI*>(GetScene("Game").GetCollection("AbilityUI")->elements[2].get())->SetTexture("Block.png");
+			}
+			else
+			{
+				dynamic_cast<rtd::AbilityUI*>(GetScene("Game").GetCollection("AbilityUI")->elements[1].get())->SetTexture("Attack.png");
+				dynamic_cast<rtd::AbilityUI*>(GetScene("Game").GetCollection("AbilityUI")->elements[2].get())->SetTexture("Heal.png");
+			}
+		}
 
+		SetScene("Game");
 		break;
 	}
 	case GameMsg::Game_Spree:
