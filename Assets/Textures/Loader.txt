@@ -3,3 +3,5 @@ smoke.png
 smoke_opacity.png
 waterSplash.png
 NotReady.png
+round_Opacity.png
+thisisfine.png
