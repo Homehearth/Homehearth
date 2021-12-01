@@ -10,17 +10,25 @@ private:
 	std::vector<Node*> GetNeighbors(GridSystem* grid, Tile* baseNode);
 	Node* GetDistantNode(sm::Vector3 position);
 	bool IsInVector(std::vector<Node*> vector, Node* node);
+	//Stores all defense buildings player has placed
+	std::unordered_map<Entity, Entity> defenseEntities;
 public:
 	PathFinderManager();
 	virtual ~PathFinderManager();
+
+	//Getters
 	Node* GetNodeByID(Vector2I id) const;
+	std::vector<std::vector<std::shared_ptr<Node>>>& GetNodes();
+	[[nodiscard]] std::unordered_map<Entity, Entity> GetDefenseEntities();
+
+	void AddDefenseEntity(Entity entity);
+	void RemoveDefenseEntity(Entity entity);
 	Node* AddNode(Vector2I id);
 	void CreateNodes(GridSystem* grid);
-	void AStarSearch(Entity npc);
+	void AStarSearch(Entity npcEntity);
 	bool PlayerAStar(sm::Vector3 playerPos);
-	bool ReachedNode(const Entity npc);
+	bool ReachedNode(const Entity npcEntity);
 	Node* FindClosestNode(sm::Vector3 position);
-	std::vector<std::vector<std::shared_ptr<Node>>>& GetNodes();
-
+	float GetNodeSize()const;
 };
 

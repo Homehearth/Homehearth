@@ -36,6 +36,7 @@ public:
 	
 	ComPtr<ID3D11RasterizerState>	m_rasterState;
 	ComPtr<ID3D11RasterizerState>	m_rasterStateNoCulling;
+	ComPtr<ID3D11RasterizerState>	m_rasterStateFrontCulling;
 	ComPtr<ID3D11RasterizerState>	m_rasterStateWireframe;
 
 	ComPtr<ID3D11BlendState>		m_blendStatepOpaque;
@@ -64,6 +65,11 @@ public:
 	Shaders::PixelShader			m_debugPixelShader;
 	Shaders::PixelShader			m_skyboxPixelShader;
 	Shaders::PixelShader			m_ParticlePixelShader;
+
+	//Shadows
+	Shaders::VertexShader			m_paraboloidVertexShader;
+	Shaders::VertexShader			m_paraboloidAnimationVertexShader;
+	Shaders::PixelShader			m_shadowPixelShader;
 
 	Shaders::ComputeShader			m_ParticleComputeShader;
 	Shaders::GeometryShader			m_ParticleGeometryShader;

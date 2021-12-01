@@ -4,12 +4,14 @@
 #include "CommonStructures.h"
 
 PipelineManager::PipelineManager()
-	: m_window(nullptr)
-	, m_d3d11(&D3D11Core::Get())
-	, m_viewport()
+    : m_window(nullptr)
+    , m_d3d11(&D3D11Core::Get())
+    , m_viewport()
 {
     m_windowWidth = 0;
     m_windowHeight = 0;
+
+    m_context = nullptr;
 }
 
 void PipelineManager::Initialize(Window* pWindow, ID3D11DeviceContext* context)
@@ -227,6 +229,12 @@ bool PipelineManager::CreateRasterizerStates()
     // Create the rasterizer state from the description we just filled out.
     HRESULT hr = m_d3d11->Device()->CreateRasterizerState(&rasterizerDesc, m_rasterState.GetAddressOf());
 
+
+    rasterizerDesc.CullMode = D3D11_CULL_MODE::D3D11_CULL_FRONT;
+    // Create front face culling rasterizer state.
+    hr = m_d3d11->Device()->CreateRasterizerState(&rasterizerDesc, m_rasterStateFrontCulling.GetAddressOf());
+
+
     // Setup a raster description with no back face culling.
     rasterizerDesc.CullMode = D3D11_CULL_NONE;
 
@@ -347,6 +355,8 @@ bool PipelineManager::CreateBlendStates()
     blendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
     blendDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ZERO;
 
+
+
     HRESULT hr = m_d3d11->Device()->CreateBlendState(&blendDesc, m_blendStateAlphaBlending.GetAddressOf());
     if (FAILED(hr))
         return false;
@@ -368,16 +378,17 @@ bool PipelineManager::CreateBlendStates()
     hr = m_d3d11->Device()->CreateBlendState(&blendStateDesc, m_blendStateDepthOnlyAlphaToCoverage.GetAddressOf());
 
     D3D11_BLEND_DESC blendStateParticleDesc = {};
-    blendStateParticleDesc.AlphaToCoverageEnable = true;
-    blendStateParticleDesc.IndependentBlendEnable = true;
+    //blendStateParticleDesc.AlphaToCoverageEnable = true;
+    //blendStateParticleDesc.IndependentBlendEnable = true;     // can be true 
     blendStateParticleDesc.RenderTarget[0].BlendEnable = true;
-    blendStateParticleDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD; //Blend opacity: add 1 and 2
-    blendStateParticleDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD; //Blend alpha: add 1 and 2
-    blendStateParticleDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
-    blendStateParticleDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO; //No blend
-    blendStateParticleDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
     blendStateParticleDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+    blendStateParticleDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+    blendStateParticleDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
     blendStateParticleDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ZERO;
+    blendStateParticleDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+    blendStateParticleDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+    blendStateParticleDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+
 
     hr = m_d3d11->Device()->CreateBlendState(&blendStateParticleDesc, m_blendStateParticle.GetAddressOf());
 
@@ -473,9 +484,11 @@ bool PipelineManager::CreateInputLayouts()
     D3D11_INPUT_ELEMENT_DESC particleVertexShaderDesc[] =
     {
         {"POSITION",    0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,                0,                   D3D11_INPUT_PER_VERTEX_DATA, 0},
+        {"VELOCITY",    0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,    D3D11_APPEND_ALIGNED_ELEMENT,    D3D11_INPUT_PER_VERTEX_DATA, 0},
         {"COLOR",       0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,    D3D11_APPEND_ALIGNED_ELEMENT,    D3D11_INPUT_PER_VERTEX_DATA, 0},
         {"SIZE",        0, DXGI_FORMAT_R32G32B32_FLOAT,    0,    D3D11_APPEND_ALIGNED_ELEMENT,    D3D11_INPUT_PER_VERTEX_DATA, 0},
-        {"TYPE",        0, DXGI_FORMAT_R32_UINT,           0,    D3D11_APPEND_ALIGNED_ELEMENT,    D3D11_INPUT_PER_VERTEX_DATA, 0}
+        {"TYPE",        0, DXGI_FORMAT_R32_UINT,           0,    D3D11_APPEND_ALIGNED_ELEMENT,    D3D11_INPUT_PER_VERTEX_DATA, 0},
+        {"LIFE",        0, DXGI_FORMAT_R32_FLOAT,          0,    D3D11_APPEND_ALIGNED_ELEMENT,    D3D11_INPUT_PER_VERTEX_DATA, 0}
     };
 
     if (FAILED(hr = D3D11Core::Get().Device()->CreateInputLayout(particleVertexShaderDesc, ARRAYSIZE(particleVertexShaderDesc), shaderByteCodeParticle.c_str(), shaderByteCodeParticle.length(), &m_ParticleInputLayout)))
@@ -528,6 +541,24 @@ bool PipelineManager::CreateShaders()
     if (!m_debugPixelShader.Create("Debug_ps"))
     {
         LOG_WARNING("failed creating Debug_ps.");
+        return false;
+    }
+
+    if (!m_paraboloidVertexShader.Create("Paraboloid_vs"))
+    {
+        LOG_WARNING("failed creating Paraboloid_vs.");
+        return false;
+    }
+    
+    if (!m_paraboloidAnimationVertexShader.Create("ParaboloidAnim_vs"))
+    {
+        LOG_WARNING("failed creating ParaboloidAnim_vs.");
+        return false;
+    }
+    
+    if (!m_shadowPixelShader.Create("Shadow_ps"))
+    {
+        LOG_WARNING("failed creating Shadow_ps.");
         return false;
     }
 

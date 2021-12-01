@@ -8,7 +8,7 @@ class Scene : public BasicScene<Scene>
 {
 private:
 	bool m_IsRenderingColliders;
-	DoubleBuffer<std::vector<comp::Renderable>> m_renderableCopies;
+	bool m_updateAnimation;
 	DoubleBuffer<std::vector<comp::RenderableDebug>> m_debugRenderableCopies;
 	DoubleBuffer<std::vector<std::pair<comp::Renderable,comp::Animator>>> m_renderableAnimCopies;
 
@@ -22,11 +22,14 @@ private:
 	Lights m_lights;
 	Skybox m_sky;
 
+
 	bool IsRender3DReady() const;
 	bool IsRenderDebugReady() const;
 	bool IsRender2DReady() const;
 
 public:
+	uint32_t* m_localPIDRef;
+	DoubleBuffer<std::vector<comp::Renderable>> m_renderableCopies;
 	Scene();
 
 	// Emit update event and update constant buffers
@@ -47,6 +50,10 @@ public:
 	void RenderAnimation();
 	void Render2D();
 	void RenderSkybox();
+
+	void RenderShadow();
+	void RenderShadowAnimation();
+
 	Skybox* GetSkybox();
 
 	bool IsRenderReady() const;
@@ -61,6 +68,7 @@ public:
 	//ImGui data for disable/enable 
 	bool* GetIsRenderingColliders();
 	Lights* GetLights();
+	void UpdateSkybox(float pTime);
 	
 	DoubleBuffer<std::vector<comp::Renderable>>*		GetBuffers();
 	DoubleBuffer<std::vector<comp::Renderable>>*		GetTransparentBuffers();

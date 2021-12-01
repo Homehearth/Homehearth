@@ -3,6 +3,7 @@
 #endif
 
 static const float PI = 3.14159265359;
+static const float3 tint = float3(0.93f, 0.05f, 0.58f);
 #define MAXWEIGHTS 8
 
 #include "Structures.hlsli"
@@ -59,6 +60,8 @@ cbuffer ParticleUpdate : register(b8)
     float4 emitterPosition;
     float deltaTime;
     uint counter;
+    float lifeTime;
+    float particleSizeMulitplier;
 }
 
 cbuffer DecalInfoCB : register(b10)
@@ -76,12 +79,18 @@ cbuffer BlurSettings : register(b11)
     float4 c_weights[MAXWEIGHTS / 4];
 }
 
-cbuffer InverseMatrices : register(b12)
+cbuffer DoFSettings : register(b12)
 {
     float4x4    c_inverseView;
     float4x4    c_inverseProjection;
     uint        c_dofType;
     float3      dofPadding;
+    float4      c_playerPosView;
+}
+cbuffer SkyboxTint : register(b13)
+{
+    float3      c_tint = 1.f;
+    float       pad;
 }
 
 
@@ -111,6 +120,7 @@ Texture2D t_displace				: register(t6);
 Texture2D t_opacitymask				: register(t7);
 Texture2D<uint2> t_pointLightGrid	: register(t8);
 Texture2D t_decal                   : register(t12);
+Texture2DArray t_shadowMaps         : register(t13);
 
 // StructuredBuffers.
 StructuredBuffer<float4x4> sb_boneTransforms        : register(t9); // read as column major, actually is row major.

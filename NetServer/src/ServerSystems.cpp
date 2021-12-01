@@ -2,6 +2,7 @@
 #include "Wave.h"
 #include "ServerSystems.h"
 #include "Simulation.h"
+#include "HouseManager.h"
 
 
 /**Creates an enemy entity at specified point.
@@ -24,47 +25,57 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 	comp::MeshName* meshName = entity.AddComponent<comp::MeshName>();
 	comp::AnimatorName* animatorName = entity.AddComponent<comp::AnimatorName>();
 	comp::AnimationState* animationState = entity.AddComponent<comp::AnimationState>();
-	comp::BoundingSphere* bos = entity.AddComponent<comp::BoundingSphere>();
+	comp::SphereCollider* bos = entity.AddComponent<comp::SphereCollider>();
 	comp::Velocity* velocity = entity.AddComponent<comp::Velocity>();
 	comp::BehaviorTree* behaviorTree = entity.AddComponent<comp::BehaviorTree>();
 	switch (type)
 	{
 	case EnemyType::Default:
+	{
+		comp::MeleeAttackAbility* attackAbility = entity.AddComponent<comp::MeleeAttackAbility>();
+		// ---DEFAULT ENEMY---
+		transform->position = spawnP;
+		//Generate float between 0.0 and 0.5 (give monster a slightly different height?)
+		float randomNum = static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (0.5)));
+
+		transform->scale = { 1.8f, 1.8f + randomNum, 1.8f };
+		meshName->name = NameType::MESH_MONSTER;
+		animatorName->name = AnimName::ANIM_MONSTER;
+
+		bos->Radius = 3.f;
+
+		npc->movementSpeed = 15.f;
+		attackAbility->cooldown = 1.0f;
+		attackAbility->attackDamage = 20.f;
+		attackAbility->lifetime = 5.0f;
+		attackAbility->attackRange = 10.f;
+		attackAbility->useTime = 0.3f;
+		attackAbility->delay = 0.2f;
+		attackAbility->movementSpeedAlt = 0.0f;
+
+		if (randomNum > 0.25f)
 		{
-			comp::MeleeAttackAbility* attackAbility = entity.AddComponent<comp::MeleeAttackAbility>();
-			// ---DEFAULT ENEMY---
-			transform->position = spawnP;
-			//Generate float between 0.0 and 0.5 (give monster a slightly different height?)
-			float randomNum = static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (0.5)));
-
-			transform->scale = { 1.8f, 1.8f+randomNum, 1.8f };
-			meshName->name = "Monster.fbx";
-			animatorName->name = "Monster.anim";
-
-			bos->Radius = 3.f;
-
-			npc->movementSpeed = 15.f;
-			attackAbility->cooldown = 1.0f;
-			attackAbility->attackDamage = 20.f;
-			attackAbility->lifetime = 5.0f;
-			attackAbility->attackRange = 7.f;
-			attackAbility->useTime = 0.3f;
-			attackAbility->delay = 0.2f;
-			attackAbility->movementSpeedAlt = 0.0f;
-			behaviorTree->root = AIBehaviors::GetSimpleAIBehavior(entity);
+			behaviorTree->root = AIBehaviors::GetFocusBuildingAIBehavior(entity);
 		}
-		break;
+		else
+		{
+			behaviorTree->root = AIBehaviors::GetFocusPlayerAIBehavior(entity);
+		}
+
+	}
+	break;
 	case EnemyType::Mage:
 	{
 		comp::RangeAttackAbility* attackAbility = entity.AddComponent<comp::RangeAttackAbility>();
+		comp::BlinkAbility* teleportAbility = entity.AddComponent<comp::BlinkAbility>();
 		// ---DEFAULT ENEMY---
 		transform->position = spawnP;
 		//Generate float between 0.0 and 0.5 (give monster a slightly different height?)
 		float randomNum = static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (0.5)));
 
 		transform->scale = { 1.8f, 0.5f + randomNum, 1.8f };
-		meshName->name = "Monster.fbx";
-		animatorName->name = "Monster.anim";
+		meshName->name = NameType::MESH_MONSTER;
+		animatorName->name = AnimName::ANIM_MONSTER;
 		bos->Radius = 3.f;
 
 		npc->movementSpeed = 15.f;
@@ -76,17 +87,17 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		attackAbility->delay = 0.2f;
 		attackAbility->projectileSpeed = 50.f;
 		attackAbility->movementSpeedAlt = 0.0f;
-		behaviorTree->root = AIBehaviors::GetSimpleAIBehavior(entity);
+		behaviorTree->root = AIBehaviors::GetFocusPlayerAIBehavior(entity);
 	}
-		break;
+	break;
 	case EnemyType::Runner:
-		{
+	{
 		comp::MeleeAttackAbility* attackAbility = entity.AddComponent<comp::MeleeAttackAbility>();
 		// ---Fast Zombie ENEMY---
 		transform->position = spawnP;
 		transform->scale = { 1.8f, 3.f, 1.8f };
-		meshName->name = "Monster.fbx";
-		animatorName->name = "Monster.anim";
+		meshName->name = NameType::MESH_MONSTER;
+		animatorName->name = AnimName::ANIM_MONSTER;
 		bos->Radius = 3.f;
 		attackAbility->cooldown = 1.0f;
 		attackAbility->attackDamage = 20.f;
@@ -96,17 +107,17 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		attackAbility->delay = 0.2f;
 		attackAbility->movementSpeedAlt = 0.0f;
 		npc->movementSpeed = 30.f;
-		behaviorTree->root = AIBehaviors::GetSimpleAIBehavior(entity);
-		}
-		break;
+		behaviorTree->root = AIBehaviors::GetFocusPlayerAIBehavior(entity);
+	}
+	break;
 	case EnemyType::BIGMOMMA:
 	{
 		comp::MeleeAttackAbility* attackAbility = entity.AddComponent<comp::MeleeAttackAbility>();
 		// ---BOSS ENEMY---
 		transform->position = spawnP;
 		transform->scale = { 3.8f, 6.f, 3.8f };
-		meshName->name = "Monster.fbx";
-		animatorName->name = "Monster.anim";
+		meshName->name = NameType::MESH_MONSTER;
+		animatorName->name = AnimName::ANIM_MONSTER;
 		bos->Radius = 3.f;
 		attackAbility->cooldown = 1.0f;
 		attackAbility->attackDamage = 20.f;
@@ -117,17 +128,129 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		attackAbility->movementSpeedAlt = 0.0f;
 		npc->movementSpeed = 10.f;
 		health->currentHealth = 1500.f;
-		behaviorTree->root = AIBehaviors::GetSimpleAIBehavior(entity);
+		behaviorTree->root = AIBehaviors::GetFocusPlayerAIBehavior(entity);
 	}
 	break;
 	default:
-			LOG_WARNING("Attempted to create unknown EnemyType.")
-		break;
+		LOG_WARNING("Attempted to create unknown EnemyType.")
+			break;
 	}
 
 	return entity;
 }
 
+void EnemyManagement::CreateWaves(std::queue<Wave>& waveQueue, int currentRound)
+{
+	//Reeset wavequeu
+	while (!waveQueue.empty())
+	{
+		waveQueue.pop();
+	}
+
+	//left bottom corner { 490.f, -150.0f });   right bottom corner { 170, -80.0f }
+	//left top corner { 520.f, -540.0f }        right top corner { 80.0f, -500.0f }
+	Wave wave1, wave2, wave3, wave4, wave5; // Default: WaveType::Zone
+	{
+		Wave::Group group1;
+		group1.AddEnemy(EnemyType::Default, 3 + 2 * currentRound);
+		group1.SetSpawnPoint({ 490.f, -150.0f });
+		wave1.SetTimeLimit(5);
+		wave1.AddGroup(group1);
+	}
+
+	{ // Wave_2
+		Wave::Group group1, group2;
+
+		group1.AddEnemy(EnemyType::Default, 1 + currentRound);
+		group2.AddEnemy(EnemyType::Default, 2 + currentRound);
+		group2.AddEnemy(EnemyType::Runner, 1 + 2 * currentRound);
+		group1.SetSpawnPoint({ 490.f, -150.0f });
+		group2.SetSpawnPoint({ 170, -80.0f });
+		wave2.AddGroup(group1);
+		wave2.AddGroup(group2);
+		wave2.SetTimeLimit(30);	
+	}
+
+
+	{ // Wave_3
+		Wave::Group group1, group2, group3, group4;
+
+		group1.AddEnemy(EnemyType::Default, 3 + currentRound);
+		group1.AddEnemy(EnemyType::Runner, 1 + 1 * currentRound);
+		group1.SetSpawnPoint({ 490.f, -150.0f });
+
+		group2.AddEnemy(EnemyType::Default, 3 + currentRound);
+		group2.AddEnemy(EnemyType::Runner, 1 + currentRound);
+		group2.SetSpawnPoint({ 170, -80.0f });
+
+		group3.AddEnemy(EnemyType::Default, 3 + currentRound);
+		group3.SetSpawnPoint({ 80.0f, -500.0f });
+
+		group4.AddEnemy(EnemyType::Default, 2 + currentRound);
+		group4.SetSpawnPoint({ 520.f, -540.0f });
+
+		wave3.AddGroup(group1);
+		wave3.AddGroup(group2);
+		wave3.AddGroup(group3);
+		wave3.AddGroup(group4);
+		wave3.SetTimeLimit(45);
+	}
+
+	{ // Wave_4
+		Wave::Group group1, group2, group3, group4;
+
+		group1.AddEnemy(EnemyType::Default, 4 + currentRound);
+		group1.AddEnemy(EnemyType::Runner, 1 + currentRound);
+		group1.SetSpawnPoint({ 490.f, -150.0f });
+
+		group2.AddEnemy(EnemyType::Default, 4 + currentRound);
+		group2.AddEnemy(EnemyType::Runner, 1 + currentRound);
+		group2.SetSpawnPoint({ 170, -80.0f });
+
+		group3.AddEnemy(EnemyType::Default, 2 + currentRound);
+		group3.AddEnemy(EnemyType::Runner, 2 + currentRound);
+		group3.SetSpawnPoint({ 80.0f, -500.0f });
+
+		group4.AddEnemy(EnemyType::Default, 4 + currentRound);
+		group4.AddEnemy(EnemyType::Runner, 1 + currentRound);
+		group4.SetSpawnPoint({ 520.f, -540.0f });
+
+		wave4.AddGroup(group1);
+		wave4.AddGroup(group2);
+		wave4.AddGroup(group3);
+		wave4.AddGroup(group4);
+		wave4.SetTimeLimit(45);
+	}
+
+	{ // Wave_5 BOSS
+		Wave::Group group1, group2, group3, group4;
+
+		group1.AddEnemy(EnemyType::Mage, 2 + currentRound);
+		group1.AddEnemy(EnemyType::BIGMOMMA, 1);
+		group1.SetSpawnPoint({ 490.f, -150.0f });
+
+		group2.AddEnemy(EnemyType::Default, 1 + currentRound);
+		group2.SetSpawnPoint({ 170, -80.0f });
+
+		group3.AddEnemy(EnemyType::Default, 2 + currentRound);
+		group3.SetSpawnPoint({ 80.0f, -500.0f });
+
+		group4.AddEnemy(EnemyType::Default, 1 + currentRound);
+		group4.SetSpawnPoint({ 520.f, -540.0f });
+
+		wave5.AddGroup(group1);
+		wave5.AddGroup(group2);
+		wave5.AddGroup(group3);
+		wave5.AddGroup(group4);
+		wave5.SetTimeLimit(45);
+	}
+
+	waveQueue.emplace(wave1);
+	waveQueue.emplace(wave2);
+	waveQueue.emplace(wave3);
+	waveQueue.emplace(wave4);
+	waveQueue.emplace(wave5);
+}
 
 
 /**Spawn the enemies randomly within a circular zone based on the specified point
@@ -139,7 +262,7 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 void SpawnZoneWave(Simulation* simulation, Wave& currentWave)
 {
 	LOG_INFO("[WaveSystem] spawns a zone wave...");
-	
+
 	const int min = 30;
 	const int max = 70;
 	const float deg2rad = 3.14f / 180.f;
@@ -181,7 +304,7 @@ void SpawnZoneWave(Simulation* simulation, Wave& currentWave)
 void SpawnSwarmWave(Simulation* simulation, Wave& currentWave)
 {
 	LOG_INFO("[WaveSystem] spawns a swarm wave...");
-	
+
 	const float distance = currentWave.GetDistance();
 	const float deg2rad = 3.14f / 180.f;
 	int nrOfEnemies = 0;
@@ -216,7 +339,7 @@ void SpawnSwarmWave(Simulation* simulation, Wave& currentWave)
  *@param waveInfo      Contains configurations for the wave system.
  */
 void ServerSystems::WaveSystem(Simulation* simulation,
-                               std::queue<Wave>& waves)
+	std::queue<Wave>& waves)
 {
 	//initialize a new wave
 	if (!waves.empty())
@@ -226,22 +349,22 @@ void ServerSystems::WaveSystem(Simulation* simulation,
 		switch (waveType)
 		{
 		case EnemyManagement::WaveType::Zone:
-			{
-				SpawnZoneWave(simulation, waves.front());
-			}
-			break;
+		{
+			SpawnZoneWave(simulation, waves.front());
+		}
+		break;
 
 		case EnemyManagement::WaveType::Swarm:
-			{
-				SpawnSwarmWave(simulation, waves.front());
-			}
-			break;
+		{
+			SpawnSwarmWave(simulation, waves.front());
+		}
+		break;
 
 		default:
-			{
-				LOG_WARNING("[ServerSystems]::WaveSystem failed to initialize a wave spawn, [Controll the wave type]");
-			}
-			break;
+		{
+			LOG_WARNING("[ServerSystems]::WaveSystem failed to initialize a wave spawn, [Controll the wave type]");
+		}
+		break;
 		}
 
 		//Add count and pop from queue
@@ -256,13 +379,14 @@ void ServerSystems::WaveSystem(Simulation* simulation,
 void ServerSystems::NextWaveConditions(Simulation* simulation, Timer& timer, int timeToFinish)
 {
 	//Publish event when timeToFinish been exceeded.
-	if (timer.GetElapsedTime() > timeToFinish)
+	if (simulation->m_timeCycler.GetSwitch())
 	{
 		simulation->GetGameScene()->publish<ESceneCallWaveSystem>(0.0f);
+		simulation->m_timeCycler.Switch();
 	}
 }
 
-void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene& scene, float dt)
+void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene& scene, float dt, QuadTree* dynamicQT)
 {
 	scene.ForEachComponent<comp::Player, comp::Transform, comp::Velocity>([&](comp::Player& p, comp::Transform& t, comp::Velocity& v)
 		{
@@ -313,15 +437,13 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 				}
 
 				// make sure movement alteration is not applied when using, because then its applied atomatically
-				if (!ecs::IsUsing(e, p.primaryAbilty)) 
+				if (!ecs::IsUsing(e, p.primaryAbilty))
 				{
 					e.GetComponent<comp::Velocity>()->vel *= ecs::GetAbility(e, p.primaryAbilty)->movementSpeedAlt;
 				}
 			}
-			else if (p.lastInputState.rightMouse) // was pressed
+			else if (p.lastInputState.rightMouse)
 			{
-				LOG_INFO("Pressed right");
-				simulation->GetGrid().RemoveDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, Blackboard::Get().GetAIHandler());
 				if (ecs::UseAbility(e, p.secondaryAbilty, &p.mousePoint))
 				{
 					LOG_INFO("Used secondary");
@@ -329,19 +451,110 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 				}
 			}
 
-			//Place defence on grid
-			if (p.lastInputState.key_b && simulation->GetCurrency().GetAmount() >= 5)
+			if (p.lastInputState.key_r && simulation->m_timeCycler.GetTimePeriod() == Cycle::DAY) // was pressed
 			{
-				if (simulation->GetGrid().PlaceDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, Blackboard::Get().GetAIHandler()))
+				LOG_INFO("Pressed right");
+				simulation->GetGrid().RemoveDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, Blackboard::Get().GetPathFindManager());
+			}
+
+			if(p.lastInputState.key_shift)
+			{
+				if (ecs::UseAbility(e, p.moveAbilty, &p.mousePoint))
 				{
-					simulation->GetCurrency().GetAmountRef() -= 5;
+					LOG_INFO("Used moveAbility");
+					//anim.toSend = EAnimationType::MOVE_ABILITY;
+				}
+			}
+
+			//Place defence on grid
+			if (p.lastInputState.key_b && simulation->GetCurrency().GetAmount() >= 5 && simulation->m_timeCycler.GetTimePeriod() == Cycle::DAY)
+			{
+				if (simulation->GetGrid().PlaceDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, Blackboard::Get().GetPathFindManager(), dynamicQT))
+				{
+					simulation->GetCurrency() -= 10;
 					anim.toSend = EAnimationType::PLACE_DEFENCE;
 				}
+			}
+
+			//Rotate defences 90 or not
+			if (p.lastInputState.mousewheelDir != 0)
+			{
+				if (p.lastInputState.mousewheelDir > 0)
+					p.rotateDefence = true;
+				else if (p.lastInputState.mousewheelDir < 0)
+					p.rotateDefence = false;
 			}
 		});
 
 
 }
+
+void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money_ref, HouseManager houseManager, QuadTree* qt, GridSystem& grid, SpreeHandler& spree)
+{
+	//Entity destoys self if health <= 0
+	scene.ForEachComponent<comp::Health>([&](Entity& entity, comp::Health& health)
+		{
+			//Check if something should be dead, and if so set isAlive to false
+			if (health.currentHealth <= 0 && health.isAlive)
+			{
+				comp::Network* net = entity.GetComponent<comp::Network>();
+				health.isAlive = false;
+				// increase money
+				if (entity.GetComponent<comp::Tag<TagType::BAD>>())
+				{
+					money_ref += 5 * spree.GetSpree();
+					spree.AddSpree();
+				}
+
+				// if player
+				comp::House* house = entity.GetComponent<comp::House>();
+				comp::Player* p = entity.GetComponent<comp::Player>();
+				if (p)
+				{
+					p->respawnTimer = 10.f;
+					p->state = comp::Player::State::SPECTATING;
+					entity.RemoveComponent<comp::Tag<TagType::DYNAMIC>>();
+				}
+				else if (entity.GetComponent<comp::Tag<TagType::DEFENCE>>())
+				{
+					comp::Transform* buildTransform = entity.GetComponent<comp::Transform>();
+
+					Node* node = Blackboard::Get().GetPathFindManager()->FindClosestNode(buildTransform->position);
+					//Remove from the container map so ai wont consider this defense
+					Blackboard::Get().GetPathFindManager()->RemoveDefenseEntity(entity);
+					node->reachable = true;
+					node->defencePlaced = false;
+
+					//Removing the defence and its neighbours if needed
+					grid.RemoveDefence(entity);
+					entity.Destroy();
+				}
+				else if (house)
+				{
+					//Create a new entity with the ruined mesh
+					Entity newHouse = houseManager.CreateHouse(scene, houseManager.GetRuinedHouseType(house->houseType), NameType::EMPTY, NameType::EMPTY);
+					qt->Insert(newHouse);
+
+					//Remove house from blackboard
+					Blackboard::Get().GetValue<Houses_t>("houses")->houses.erase(entity);
+
+					//Destroy House entities with roof and door
+					house->houseRoof.Destroy();
+					house->door.Destroy();
+					entity.Destroy();
+				}
+				else
+				{
+					entity.Destroy();
+				}
+			}
+			else if (health.currentHealth > health.maxHealth)
+			{
+				health.currentHealth = health.maxHealth;
+			}
+		});
+}
+
 
 void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& scene, float dt)
 {
@@ -355,11 +568,11 @@ void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& sce
 
 		});
 
-	scene.ForEachComponent<comp::Player, comp::Health>([&](Entity e, comp::Player& p, comp::Health& health)
+	scene.ForEachComponent<comp::Player, comp::Health, comp::Network, comp::AnimationState>([&](Entity e, comp::Player& p, comp::Health& health, comp::Network n, comp::AnimationState anim)
 		{
-			if(!health.isAlive)
+			if (!health.isAlive)
 			{
-				//CHANGE TO DEAD ANIMATION?
+				anim.toSend = EAnimationType::DEAD;
 
 				comp::Velocity* vel = e.GetComponent<comp::Velocity>();
 				if (vel)
@@ -367,14 +580,23 @@ void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& sce
 					// dont move if dead
 					vel->vel = sm::Vector3::Zero;
 				}
-
+				if (p.state != comp::Player::State::SPECTATING)
+				{
+					p.state = comp::Player::State::SPECTATING;
+					message<GameMsg> msg;
+					msg.header.id = GameMsg::Game_StartSpectate;
+					
+					simulation->SendMsg(n.id, msg);
+				}
 				p.respawnTimer -= dt;
 
-				if(p.respawnTimer < 0.01f)
+				if (p.respawnTimer < 0.01f)
 				{
 					simulation->ResetPlayer(e);
-
-					LOG_INFO("Player id %u Respawnd...", e.GetComponent<comp::Network>()->id);
+					message<GameMsg> msg;
+					msg.header.id = GameMsg::Game_StopSpectate;
+					simulation->SendMsg(n.id, msg);
+					LOG_INFO("Player %u respawned...", e.GetComponent<comp::Network>()->id);
 				}
 			}
 		});
@@ -395,14 +617,14 @@ void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& sce
 				p.fowardDir = dir;
 			}
 		});
-	
+
 	// if player is turning, turns until forward is reached
 	scene.ForEachComponent<comp::Player, comp::Transform>([&](Entity e, comp::Player& p, comp::Transform& t)
 		{
 			if (p.state == comp::Player::State::WALK || p.state == comp::Player::State::LOOK_TO_MOUSE)
 			{
 				float time = dt * p.runSpeed * 0.5f;
-				
+
 				if (ecs::StepRotateTo(t.rotation, p.fowardDir, time))
 				{
 					p.state = comp::Player::State::IDLE;
@@ -431,7 +653,7 @@ void ServerSystems::CheckGameOver(Simulation* simulation, HeadlessScene& scene)
 	PROFILE_FUNCTION();
 
 	bool gameOver = true;
-	
+	bool isHousesDestroyed = true;
 	//Check if all players is dead
 	scene.ForEachComponent<comp::Player, comp::Health>([&](comp::Player& p, comp::Health& h)
 		{
@@ -441,7 +663,16 @@ void ServerSystems::CheckGameOver(Simulation* simulation, HeadlessScene& scene)
 			}
 		});
 
-	if (gameOver)
+	scene.ForEachComponent<comp::House>([&](comp::House& house)
+		{
+			if (!house.isDead)
+			{
+				isHousesDestroyed = false;
+			}
+		});
+
+
+	if (gameOver || isHousesDestroyed)
 	{
 		simulation->SetGameOver();
 	}
@@ -449,7 +680,7 @@ void ServerSystems::CheckGameOver(Simulation* simulation, HeadlessScene& scene)
 
 void ServerSystems::TickBTSystem(Simulation* simulation, HeadlessScene& scene)
 {
-	scene.ForEachComponent<comp::BehaviorTree>([&](Entity entity,comp::BehaviorTree& bt)
+	scene.ForEachComponent<comp::BehaviorTree>([&](Entity entity, comp::BehaviorTree& bt)
 		{
 			bt.root->Tick();
 		});
@@ -469,6 +700,21 @@ void ServerSystems::AnimatonSystem(Simulation* simulation, HeadlessScene& scene)
 
 				anim.lastSend = anim.toSend;
 				anim.toSend = EAnimationType::NONE;
+			}
+		});
+}
+
+void ServerSystems::DeathParticleTimer(HeadlessScene& scene)
+{
+	scene.ForEachComponent<comp::PARTICLEEMITTER>([&](Entity& e, comp::PARTICLEEMITTER& emitter)
+		{
+			if (emitter.hasDeathTimer == true && emitter.lifeLived <= emitter.lifeTime)
+			{
+				emitter.lifeLived += Stats::Get().GetFrameTime();
+			}
+			else if (emitter.hasDeathTimer == true && emitter.lifeLived >= emitter.lifeTime)
+			{
+				e.RemoveComponent<comp::PARTICLEEMITTER>();
 			}
 		});
 }

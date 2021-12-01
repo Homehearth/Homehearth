@@ -16,7 +16,7 @@ bool BT::MoveCBT::EscapeCurrentNode(const Entity entity)
 	comp::Velocity* velocity = entity.GetComponent<comp::Velocity>();
 	comp::Transform* transform = entity.GetComponent<comp::Transform>();
 
-	const std::vector<std::vector<std::shared_ptr<Node>>> nodes = Blackboard::Get().GetAIHandler()->GetNodes();
+	const std::vector<std::vector<std::shared_ptr<Node>>> nodes = Blackboard::Get().GetPathFindManager()->GetNodes();
 	const int currentX = npc->currentNode->id.x;
 	const int currentY = npc->currentNode->id.y;
 	Node* currentClosest = nullptr;
@@ -68,13 +68,22 @@ BT::NodeStatus BT::MoveCBT::Tick()
 		return BT::NodeStatus::FAILURE;
 	}
 
-	
 
 	if (npc->path.empty())
 	{
-		
+		Entity* target = Blackboard::Get().GetValue<Entity>("target" + std::to_string(entity));
+		comp::House* house = target->GetComponent<comp::House>();
+		comp::Transform* targetTransform = nullptr;
+
+		if(target)
+			targetTransform = target->GetComponent<comp::Transform>();
+
+		if (!targetTransform)
+			return BT::NodeStatus::FAILURE;
+
+		PathFinderManager* pathFindManager = Blackboard::Get().GetPathFindManager();
 		//Check if AI stands on a dead node (no connections to grid)
-		if (!npc->currentNode->reachable && timerEscape.GetElapsedTime<std::chrono::seconds>() > refreshRateOnEscape)
+		if (!npc->currentNode->reachable && !pathFindManager->FindClosestNode(targetTransform->position)->defencePlaced && timerEscape.GetElapsedTime<std::chrono::seconds>() > refreshRateOnEscape)
 		{
 			timerEscape.Start();
 			if (EscapeCurrentNode(entity))
@@ -84,6 +93,24 @@ BT::NodeStatus BT::MoveCBT::Tick()
 
 			LOG_WARNING("Standing on non rechable node and failed to generate escape path");
 			return BT::NodeStatus::FAILURE;
+		}
+		//If target is defense move the last distance to it (node is not reachable by A*)
+		else if(pathFindManager->FindClosestNode(target->GetComponent<comp::Transform>()->position)->defencePlaced && targetTransform)
+		{
+			velocity->vel = targetTransform->position - transform->position;
+			velocity->vel.Normalize();
+			velocity->vel *= npc->movementSpeed;
+		}
+		else if(house)
+		{
+			comp::OrientedBoxCollider* obb = entity.GetComponent<comp::OrientedBoxCollider>();
+			if (obb == nullptr)
+				return BT::NodeStatus::FAILURE;
+
+			sm::Vector3 position = obb->Center;
+			velocity->vel = position - transform->position;
+			velocity->vel.Normalize();
+			velocity->vel *= npc->movementSpeed;
 		}
 		else if (npc->currentNode->reachable)
 		{
@@ -114,7 +141,7 @@ BT::NodeStatus BT::MoveCBT::Tick()
 		}
 
 		//If AI close enough to next node, pop it from the path
-		if (sm::Vector3::Distance(npc->currentNode->position, transform->position) < 4.0f)
+		if (sm::Vector3::Distance(npc->currentNode->position, transform->position) < 1.0f)
 		{
 			npc->path.pop_back();
 		}

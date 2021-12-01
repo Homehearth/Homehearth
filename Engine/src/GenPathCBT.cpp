@@ -12,16 +12,16 @@ BT::GenPathCBT::GenPathCBT(const std::string& name, Entity entity)
 
 BT::NodeStatus BT::GenPathCBT::Tick()
 {
-	PathFinderManager* aiHandler = Blackboard::Get().GetAIHandler();
+	PathFinderManager* aiHandler = Blackboard::Get().GetPathFindManager();
 
 	if(aiHandler != nullptr)
 	{
 		comp::NPC* npc = entity.GetComponent<comp::NPC>();
 		npc->currentNode = aiHandler->FindClosestNode(entity.GetComponent<comp::Transform>()->position);
-
-		if(npc->path.empty() || generatePathTimer.GetElapsedTime<std::chrono::seconds>() > refreshRate)
+		if( (npc->path.empty() || generatePathTimer.GetElapsedTime<std::chrono::seconds>() > refreshRate))
 		{
 			generatePathTimer.Start();
+			
 			aiHandler->AStarSearch(entity);
 		}
 

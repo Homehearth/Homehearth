@@ -47,7 +47,7 @@ project "Engine"
 
             ["src/Engine/Core"] = { "**Engine.*", "**EventTypes.*", "**Window.*" },
             ["src/Engine/ECS"] = { "**Components.*",  "**Entity.*", "**Tags*" }, 
-            ["src/Engine/GamePlay"] = { "**GridSystem.*", "**CollisionSystem.*", "**CombatSystem.*", "**Systems.*" },
+            ["src/Engine/GamePlay"] = { "**GridSystem.*", "**CollisionSystem.*", "**CombatSystem.*", "**Systems.*", "**SpreeHandler.*" },
 
              ["src/Engine/Graphics/Renderer"] = {"**Renderer.*", "**PipelineManager.*", "**DoubleBuffer.*"},
                 ["src/Engine/Graphics/Renderer/RenderPass"] = {"**Pass.*"},
@@ -56,7 +56,9 @@ project "Engine"
 			["src/Engine/Graphics/D2D1"] = { "**D2D1Core.*" },
 
             ["src/Engine/Input"] = { "**InputSystem.*" },
-
+			
+			["src/Engine/Options"] = { "**OptionSystem.*", "**FileHandler.*" },
+			
             ["src/Engine/Resources"] = { "**ResourceManager.*", "**GResource.*", "**RModel.*", "**RTexture.*", "**RMaterial.*"},
                 ["src/Engine/Resources/Shaders"] = { "**.hlsl", "**.hlsli", "**Shader.*" },
 		        ["src/Engine/Resources/Animation"] = {"**RAnimation.*", "**RAnimator.*", "**AnimStructures.*"},
@@ -64,8 +66,8 @@ project "Engine"
             ["src/Engine/Scene"] = {"**Scene.*", "**Camera.*", "**Lights.*", "**ModelIdentifier.*", "**ParticleSystem.*" , "**Skybox.*" },
             ["src/Engine/Thread"] = { "**multi_thread_manager.*", "**ThreadSyncer.*", "**RenderThreadHandler.*"},
             
-		    ["src/Engine/UI Elements"] = {"**Canvas.*", "**Picture.*", "**Border.*", "**Button.*", "**Text.*", "**TextField.*", "**Slider.*", "**Healthbar.*", "**Scroller.*", "**MoneyUI.*"},
-            ["src/Engine/Utility"] = { "**Timer.*", "**Profiler.*", "**Logger.*", "**Stats.*" },
+		    ["src/Engine/UI Elements"] = {"**Canvas.*", "**Picture.*", "**Border.*", "**Button.*", "**Text.*", "**TextField.*", "**Slider.*", "**Healthbar.*", "**Scroller.*", "**MoneyUI.*", "**AbilityUI.*", "**ShopUI.*", "**MenuUI.*"},
+            ["src/Engine/Utility"] = { "**Timer.*", "**Profiler.*", "**Logger.*", "**Stats.*", "**QuadTree.*" },
         
             ["src/Engine/Audio"] = {  },
             ["src/Engine/Physics"] = {  },
