@@ -435,7 +435,6 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 					p.state = comp::Player::State::LOOK_TO_MOUSE; // set state even if ability is not ready for use yet
 					if (ecs::UseAbility(e, p.primaryAbilty, &p.mousePoint))
 					{
-						LOG_INFO("Used primary");
 						anim.toSend = EAnimationType::PRIMARY_ATTACK;
 					}
 
@@ -448,16 +447,28 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 				}
 				case ShopMode::BUILD:
 				{
-					//Check if we can build
-					if (simulation->GetGrid().PlaceDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, Blackboard::Get().GetPathFindManager(), dynamicQT))
+					if (simulation->m_timeCycler.GetTimePeriod() == Cycle::DAY)
 					{
-						LOG_INFO("Placed defence");
+						uint32_t cost = 0;
+						if (p.towerSelected == EDefenceType::SMALL)
+							cost = 10;
+						else if (p.towerSelected == EDefenceType::LARGE)
+							cost = 30;
+
+						if (simulation->GetCurrency().GetAmount() >= cost)
+						{
+							if (simulation->GetGrid().PlaceDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, Blackboard::Get().GetPathFindManager(), dynamicQT))
+							{
+								simulation->GetCurrency() -= cost;
+								anim.toSend = EAnimationType::PLACE_DEFENCE;
+							}
+						}
 					}
 					break;
 				}
 				case ShopMode::DESTROY:
 				{
-					//Destroy at this location
+					simulation->GetGrid().RemoveDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, Blackboard::Get().GetPathFindManager());
 					break;
 				}
 				default:
@@ -473,12 +484,6 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 				}
 			}
 
-			if (p.lastInputState.key_r && simulation->m_timeCycler.GetTimePeriod() == Cycle::DAY) // was pressed
-			{
-				LOG_INFO("Pressed right");
-				simulation->GetGrid().RemoveDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, Blackboard::Get().GetPathFindManager());
-			}
-
 			if(p.lastInputState.key_shift)
 			{
 				if (ecs::UseAbility(e, p.moveAbilty, &p.mousePoint))
@@ -488,22 +493,13 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 				}
 			}
 
-			//Place defence on grid
-			/*if (p.lastInputState.key_b && 
-				simulation->GetCurrency().GetAmount() >= 5 && 
-				simulation->m_timeCycler.GetTimePeriod() == Cycle::DAY)
-			{
-				if (simulation->GetGrid().PlaceDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, Blackboard::Get().GetPathFindManager(), dynamicQT))
-				{
-					simulation->GetCurrency() -= 10;
-					anim.toSend = EAnimationType::PLACE_DEFENCE;
-				}
-			}*/
+
+			//std::cout << "Server, wheel: " << p.lastInputState.mousewheelDir << std::endl;
 
 			//Rotate defences 90 or not
 			if (p.lastInputState.mousewheelDir != 0)
 			{
-				std::cout << "Server, wheel: " << p.lastInputState.mousewheelDir << std::endl;
+				//std::cout << "Server, wheel: " << p.lastInputState.mousewheelDir << std::endl;
 
 				if (p.lastInputState.mousewheelDir > 0)
 					p.rotateDefence = true;

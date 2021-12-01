@@ -1008,57 +1008,43 @@ void Game::UpdateInput()
 	}
 	if (InputSystem::Get().CheckMouseKey(MouseKey::RIGHT, KeyState::PRESSED))
 	{
-		m_inputState.rightMouse = true;
-		if (m_localPID != -1 && m_players.size() > 0 && m_players.at(m_localPID).GetComponent<comp::Player>()->state == comp::Player::State::SPECTATING)
+		switch (GetCurrentMode())
 		{
-
-			auto it = m_players.begin();
-			while (it != m_players.end())
+		case ShopMode::BUILD:
+		case ShopMode::DESTROY:
+		{
+			SetMode(ShopMode::PLAY);
+			break;
+		}
+		case ShopMode::PLAY:
+		{
+			m_inputState.rightMouse = true;
+			if (m_localPID != -1 && m_players.size() > 0 && m_players.at(m_localPID).GetComponent<comp::Player>()->state == comp::Player::State::SPECTATING)
 			{
-				if (it->first != m_localPID && it->first != m_spectatingID && it->second.GetComponent<comp::Health>()->isAlive)
+				auto it = m_players.begin();
+				while (it != m_players.end())
 				{
-					GetScene("Game").ForEachComponent<comp::Tag<TagType::CAMERA>>([&](Entity entt, comp::Tag<TagType::CAMERA>& t)
-						{
-							comp::Camera3D* c = entt.GetComponent<comp::Camera3D>();
-							if (c)
+					if (it->first != m_localPID && it->first != m_spectatingID && it->second.GetComponent<comp::Health>()->isAlive)
+					{
+						GetScene("Game").ForEachComponent<comp::Tag<TagType::CAMERA>>([&](Entity entt, comp::Tag<TagType::CAMERA>& t)
 							{
-								c->camera.SetFollowEntity(m_players.at(it->first));
-							}
-						});
-					m_spectatingID = it->first;
-					break;
+								comp::Camera3D* c = entt.GetComponent<comp::Camera3D>();
+								if (c)
+								{
+									c->camera.SetFollowEntity(m_players.at(it->first));
+								}
+							});
+						m_spectatingID = it->first;
+						break;
+					}
+					it++;
 				}
-				it++;
 			}
-
+			break;
+		}
 		}
 	}
 	m_inputState.mouseRay = InputSystem::Get().GetMouseRay();
-
-	/*if (m_mode == Mode::DESTROY_MODE)
-	{
-		if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::R, KeyState::PRESSED))
-		{
-			m_inputState.key_r = true;
-		}
-	}
-	else if (m_mode == Mode::BUILD_MODE)
-	{
-		if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::B, KeyState::PRESSED))
-		{
-			m_inputState.key_b = true;
-		}
-	}*/
-	//TEMP
-	if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::R, KeyState::PRESSED))
-	{
-		m_inputState.key_r = true;
-	}
-	if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::B, KeyState::PRESSED))
-	{
-		m_inputState.key_b = true;
-	}
-
 
 	if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::LeftShift, KeyState::PRESSED))
 	{

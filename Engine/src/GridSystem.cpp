@@ -176,11 +176,13 @@ void GridSystem::Initialize(Vector2I mapSize, sm::Vector3 position, std::string 
 bool GridSystem::RemoveDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, PathFinderManager* aiHandler)
 {
 	sm::Vector3 localPlayer;
+	comp::Player player;
 	m_scene->ForEachComponent<comp::Player, comp::Transform, comp::Network>([&](comp::Player& p, comp::Transform& t, comp::Network& net)
 		{
 			if (net.id == playerWhoPressedMouse)
 			{
 				localPlayer = t.position;
+				player = p;
 			}
 		});
 
@@ -221,22 +223,14 @@ bool GridSystem::RemoveDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, 
 						Vector2I difference = node->id - diagNeighbor->id;
 						Node* node1 = aiHandler->GetNodeByID(Vector2I(diagNeighbor->id.x + difference.x, diagNeighbor->id.y));
 						Node* node2 = aiHandler->GetNodeByID(Vector2I(diagNeighbor->id.x, diagNeighbor->id.y + difference.y));
-
 						node1->connections.push_back(node2);
 						node2->connections.push_back(node1);
 					}
 				}
-				if (aiHandler->PlayerAStar(localPlayer))
-				{
-					m_scene->ForEachComponent<comp::Player, comp::Network>([&](comp::Player& p, comp::Network& net)
-						{
-							if (net.id == playerWhoPressedMouse)
-							{
-								p.reachable = true;
-							}
-						});
-				}
 			}
+
+			if (aiHandler->PlayerAStar(localPlayer))
+				player.reachable = true;
 		}
 
 		Blackboard::Get().GetPathFindManager()->RemoveDefenseEntity(closestEntity);
@@ -412,10 +406,8 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 					Vector2I difference = node->id - diagNeighbor->id;
 					Node* connectionRemovalNode1 = aiHandler->GetNodeByID(Vector2I(diagNeighbor->id.x + difference.x, diagNeighbor->id.y));
 					Node* connectionRemovalNode2 = aiHandler->GetNodeByID(Vector2I(diagNeighbor->id.x, diagNeighbor->id.y + difference.y));
-					if (!connectionRemovalNode1->RemoveConnection(connectionRemovalNode2))
-						LOG_INFO("Failed to remove connection1");
-					if (!connectionRemovalNode2->RemoveConnection(connectionRemovalNode1))
-						LOG_INFO("Failed to remove connection2");
+					connectionRemovalNode1->RemoveConnection(connectionRemovalNode2);
+					connectionRemovalNode2->RemoveConnection(connectionRemovalNode1);
 				}
 			}
 		}
