@@ -140,22 +140,24 @@ namespace sceneHelp
 		// The sun
 		Entity sun = CreateLightEntity(gameScene, { 0.f, 0.f, 0.f, 0.f }, { -1.0f, 0.0f, -1.f, 0.f }, { 255.f, 185, 150, 0.f }, 1000.f, 0.09f, TypeLight::DIRECTIONAL, 1);
 		// The moon
-		Entity moon = CreateLightEntity(gameScene, { 0.f, 0.f, 0.f, 0.f }, { -1.0f, 0.0f, -1.f, 0.f }, { 50.f, 50, 200, 0.f }, 1000.f, 0.02f, TypeLight::DIRECTIONAL, 0);
+		Entity moon = CreateLightEntity(gameScene, { 0.f, 0.f, 0.f, 0.f }, { -1.0f, 0.0f, -1.f, 0.f }, { 50.f, 50, 200, 0.f }, 1000.f, 0.008f, TypeLight::DIRECTIONAL, 0);
+
+		sm::Vector4 pointLightColor = { 237.f, 147.f, 18.f, 0.f };
 
 		// LEFT OF WELL
-		CreateLightEntity(gameScene, { 268.2f, 28.f, -320.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 185.f, 100.f, 0.f }, pointRange, 0.4f,TypeLight::POINT, 0);
+		CreateLightEntity(gameScene, { 268.2f, 28.f, -320.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, pointLightColor, pointRange, 0.4f,TypeLight::POINT, 0);
 		// FURTHEST LEFT AND FURTHEST SOUTH
-		CreateLightEntity(gameScene, { 347.5f, 28.f, -323.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 185.f, 100.f, 0.f }, pointRange, 0.4f,TypeLight::POINT, 0);
+		CreateLightEntity(gameScene, { 347.5f, 28.f, -323.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, pointLightColor, pointRange, 0.4f,TypeLight::POINT, 0);
 		// NEXT TO THE BRIDGE GOING SOUTH
-		CreateLightEntity(gameScene, { 310.f, 28.f, -305.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 185.f, 100.f, 0.f }, pointRange, 0.4f,TypeLight::POINT, 0);
+		CreateLightEntity(gameScene, { 310.f, 28.f, -305.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, pointLightColor, pointRange, 0.4f, TypeLight::POINT, 0);
 		// NEXT TO THE LEFT BRIDGE ON THE LEFT SIDE OF IT
-		CreateLightEntity(gameScene, { 307.f, 28.f, -350.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 185.f, 100.f, 0.f }, pointRange, 0.4f,TypeLight::POINT, 0);
+		CreateLightEntity(gameScene, { 307.f, 28.f, -350.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, pointLightColor, pointRange, 0.4f, TypeLight::POINT, 0);
 		// RIGHT OF THE WELL BETWEEN THE 2 HOUSES
-		CreateLightEntity(gameScene, { 177.f, 28.f, -313.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 185.f, 100.f, 0.f }, pointRange, 0.4f,TypeLight::POINT, 0);
+		CreateLightEntity(gameScene, { 177.f, 28.f, -313.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, pointLightColor, pointRange, 0.4f, TypeLight::POINT, 0);
 		// FURTHEST RIGHT AND FURTHEST SOUTH
-		CreateLightEntity(gameScene, { 193.5f, 28.f, -261.5f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 185.f, 100.f, 0.f }, pointRange, 0.4f,TypeLight::POINT, 0);
+		CreateLightEntity(gameScene, { 193.5f, 28.f, -261.5f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, pointLightColor, pointRange, 0.4f, TypeLight::POINT, 0);
 		// LEFT OF WATERMILL
-		CreateLightEntity(gameScene, { 338.5f, 28.f, -397.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 255.f, 185.f, 100.f, 0.f }, pointRange, 0.4f,TypeLight::POINT, 0);
+		CreateLightEntity(gameScene, { 338.5f, 28.f, -397.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, pointLightColor, pointRange, 0.4f,TypeLight::POINT, 0);
 
 		InputSystem::Get().SetCamera(gameScene.GetCurrentCamera());
 
@@ -175,16 +177,18 @@ namespace sceneHelp
 					{
 						
 						sm::Vector3 dir = sm::Vector3::TransformNormal(sm::Vector3(-1, 0, -1), sm::Matrix::CreateRotationZ(dx::XMConvertToRadians(angle)));
-						
-						sm::Vector3 newPos = playerPos - dir * 300;
-						newPos = util::Lerp(sm::Vector3(l->lightData.position), newPos, e.dt * 10);
-				
 						l->lightData.direction = sm::Vector4(dir);
 						l->lightData.direction.w = 0.0f;
+						
+						l->lightData.enabled = l->lightData.direction.y < 0.0f;
+						
+						sm::Vector3 newPos = playerPos - dir * 300;
+						if(l->lightData.enabled)
+							newPos = util::Lerp(sm::Vector3(l->lightData.position), newPos, e.dt * 10);
+				
 						l->lightData.position = sm::Vector4(newPos);
 						l->lightData.position.w = 1.0f;
 
-						l->lightData.enabled = l->lightData.direction.y < 0.0f;
 						
 						l = moon.GetComponent<comp::Light>();
 						angle -= 180.f;
@@ -199,6 +203,13 @@ namespace sceneHelp
 					{
 						
 						SoundHandler::Get().SetCurrentMusic("NightTheme");
+						scene.ForEachComponent<comp::Light>([](comp::Light& l)
+							{
+								if (l.lightData.type == TypeLight::POINT)
+								{
+									l.lightData.enabled = 1;
+								}
+							});
 						break;
 					}
 					case CyclePeriod::MORNING:
@@ -216,13 +227,7 @@ namespace sceneHelp
 					}
 					case CyclePeriod::EVENING:
 					{
-						scene.ForEachComponent<comp::Light>([](comp::Light& l)
-							{
-								if (l.lightData.type == TypeLight::POINT)
-								{
-									l.lightData.enabled = 1;
-								}
-							});
+						
 						break;
 					}
 					default:
