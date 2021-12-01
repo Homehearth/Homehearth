@@ -210,7 +210,7 @@ namespace sceneHelp
 					if (scene.GetCurrentCamera()->GetCameraType() == CAMERATYPE::DEBUG)
 					{
 						scene.SetCurrentCameraEntity(cameraEntity);
-						scene.GetCurrentCamera()->SetNearFarPlane(40.f, 200.f);
+						scene.GetCurrentCamera()->SetNearFarPlane(40.f, 220.f);
 						InputSystem::Get().SwitchMouseMode();
 						LOG_INFO("Game Camera selected");
 					}
