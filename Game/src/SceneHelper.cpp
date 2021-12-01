@@ -213,14 +213,16 @@ namespace sceneHelp
 				{
 					switch (game->GetCycler().GetTimePeriod())
 					{
-					case CyclePeriod::DAY:
+					case CyclePeriod::NIGHT:
 					{
 						
-
+						SoundHandler::Get().SetCurrentMusic("NightTheme");
 						break;
 					}
 					case CyclePeriod::MORNING:
 					{
+						SoundHandler::Get().SetCurrentMusic("MenuTheme");
+
 						scene.ForEachComponent<comp::Light>([](comp::Light& l)
 							{
 								if (l.lightData.type == TypeLight::POINT)
@@ -230,7 +232,7 @@ namespace sceneHelp
 							});
 						break;
 					}
-					case CyclePeriod::NIGHT:
+					case CyclePeriod::EVENING:
 					{
 						scene.ForEachComponent<comp::Light>([](comp::Light& l)
 							{
@@ -718,6 +720,7 @@ namespace sceneHelp
 		returnTo->SetOnPressedEvent([=] {
 
 			game->SetScene("MainMenu");
+			SoundHandler::Get().SetCurrentMusic("MenuTheme");
 
 			});
 

@@ -4,13 +4,14 @@
 CyclePeriod Cycler::CalculatePeriod()
 {
 	if (m_relativeTime > NIGHT)
-	{
 		return CyclePeriod::NIGHT;
-	}
+	
+	else if (m_relativeTime > EVENING)
+		return CyclePeriod::EVENING;
+
 	else if (m_relativeTime > DAY)
-	{
 		return CyclePeriod::DAY;
-	}
+	
 
 	return CyclePeriod::MORNING;
 }

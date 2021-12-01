@@ -12,7 +12,6 @@ private:
 	std::unordered_map<uint32_t, Entity> m_gameEntities;
 
 	GridSystem m_grid;
-	uint32_t m_waveTimer = 0;
 	uint32_t m_money;	
 	ParticleSystem m_particles;
 	Mode m_mode = Mode::PLAY_MODE;

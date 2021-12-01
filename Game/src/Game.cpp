@@ -17,7 +17,6 @@ Game::Game()
 	this->m_spectatingID = -1;
 	this->m_money = 0;
 	this->m_gameID = -1;
-	this->m_waveTimer = 0;
 }
 
 Game::~Game()
@@ -445,6 +444,18 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 				}
 			});
 
+
+		GetScene("Game").ForEachComponent<comp::Light>([](comp::Light& l)
+			{
+				if (l.lightData.type == TypeLight::POINT)
+				{
+					l.lightData.enabled = 0;
+				}
+			});
+
+
+		SoundHandler::Get().SetCurrentMusic("MenuTheme");
+
 		SetScene("Game");
 		thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::ADAPTIVE);
 
@@ -458,14 +469,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		{
 			txt->SetText("X" + std::to_string(m_currentSpree));
 		}
-		break;
-	}
-	case GameMsg::Game_WaveTimer:
-	{
-		CyclePeriod cycle;
-		msg >> cycle;
-		msg >> m_waveTimer;
-		
 		break;
 	}
 	case GameMsg::Game_Time:

@@ -492,20 +492,6 @@ void Simulation::SendSnapshot()
 		this->SendEntities(m_updatedEntities, GameMsg::Game_Snapshot, compMask);
 		m_updatedEntities.clear();
 
-		// Update until next wave timer if next wave is present.
-		if (!waveQueue.empty())
-		{
-			// Update wave timer to clients.
-			// TODO wave timer
-			/*
-			network::message<GameMsg> msg2;
-			msg2.header.id = GameMsg::Game_WaveTimer;
-			msg2 << m_timeCycler.GetElapsedTime();
-			msg2 << m_timeCycler.GetTimePeriod();
-			this->BroadcastUDP(msg2);
-			*/
-		}
-
 		if (m_currency.m_hasUpdated)
 		{
 			network::message<GameMsg> msg3;
@@ -834,6 +820,10 @@ void Simulation::ResetGameScene()
 
 	houseManager.InitializeHouses(*this->GetGameScene(),qt.get());
 	EnemyManagement::CreateWaves(waveQueue, currentRound++);
+
+	m_timeCycler.SetTime(MID_DAY);
+	m_timeCycler.SetCycleSpeed(1.0f);
+	
 }
 
 void Simulation::SendEntities(const std::vector<Entity>& entities, GameMsg msgID, const std::bitset<ecs::Component::COMPONENT_MAX>& componentMask)
