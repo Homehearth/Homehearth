@@ -18,6 +18,7 @@ Game::Game()
 	this->m_money = 0;
 	this->m_gameID = -1;
 	this->m_waveTimer = 0;
+	this->m_inputState = {};
 }
 
 Game::~Game()
@@ -453,6 +454,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 				}
 			});
 
+		this->m_inputState = { };
 		SetScene("Game");
 		thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::ADAPTIVE);
 

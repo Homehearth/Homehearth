@@ -96,7 +96,7 @@ void CombatSystem::UpdateTeleport(HeadlessScene& scene)
 				const float decreaseValue = 0.90f;
 				if (p)
 				{
-					sm::Vector3 dir = p->fowardDir * teleportAbility.distance;
+					sm::Vector3 dir = ecs::GetForward(transform) * teleportAbility.distance;
 
 					bool hasSetTarget = false;
 					while (!hasSetTarget && dir.Length() > pathFinderManager->GetNodeSize())
@@ -132,7 +132,6 @@ void CombatSystem::UpdateDash(HeadlessScene& scene)
 
 			if (ecs::ReadyToUse(&dashAbility, nullptr))
 			{
-				//dashAbility.velocityBeforeDash = entity.GetComponent<comp::Velocity>()->vel;
 				audio_t audio = {
 					ESoundEvent::Player_OnCastDash,
 					entity.GetComponent<comp::Transform>()->position,
@@ -148,7 +147,9 @@ void CombatSystem::UpdateDash(HeadlessScene& scene)
 				comp::Player* p = entity.GetComponent<comp::Player>();
 				if (p)
 				{
-					dashAbility.velocityBeforeDash = p->fowardDir * p->runSpeed;
+					sm::Vector3 dir = ecs::GetForward(transform);
+
+					dashAbility.velocityBeforeDash = dir * p->runSpeed;
 				}
 			}
 
