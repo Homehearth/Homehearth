@@ -877,7 +877,7 @@ Entity VillagerManagement::CreateVillager(HeadlessScene& scene, Entity homeHouse
 	transform->position.y = 0.75f;
 	villager->homeHouse = homeHouse;
 	meshName->name = NameType::MESH_VILLAGER;
-	animatorName->name = AnimName::ANIM_KNIGHT;
+	animatorName->name = AnimName::ANIM_VILLAGER;
 
 	bos->Radius = 3.f;
 	villager->movementSpeed = 15.f;

@@ -1111,6 +1111,11 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 						nameString = "Mage.anim";
 						break;
 					}
+					case AnimName::ANIM_VILLAGER:
+					{
+						nameString = "Villager.anim";
+						break;
+					}
 					}
 					if (nameString.length() > 0)
 					{
