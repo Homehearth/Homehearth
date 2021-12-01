@@ -317,6 +317,7 @@ enum class GameMsg : uint8_t
 	Game_StartSpectate,
 	Game_StopSpectate,
 	Game_Over,
+	Game_SetVisible
 };
 
 enum class AbilityIndex : uint8_t

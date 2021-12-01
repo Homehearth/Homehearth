@@ -31,6 +31,8 @@ private:
 	HeadlessScene*					m_scene;
 	std::vector<std::vector<Tile>>	m_tiles;
 
+	std::unordered_map<uint32_t, Entity> m_hoveredDefences;
+
 private:
 	bool							InsideGrid(const int& xpos, const int& zpos) const;
 	//Get a tile offset of: 0, +1, -1, +2, -2, +3, -3... from the center
@@ -46,6 +48,8 @@ public:
 	//GridSize is decided by the texture size, how many tiles in x and why, MapSize is how big the world is
 	void							Initialize(Vector2I mapSize, sm::Vector3 position, std::string fileName, HeadlessScene* scene);
 	
+	std::vector<Entity>				UpdateHoverDefence();
+
 	//Delete a defence where the mouse is
 	bool							RemoveDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, PathFinderManager* aiHandler);
 	

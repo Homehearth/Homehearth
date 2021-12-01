@@ -383,6 +383,15 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 				}
 
 				{
+					PROFILE_SCOPE("Hover defences");
+					std::vector<Entity> entities = m_grid.UpdateHoverDefence();
+					for (size_t i = 0; i < entities.size(); i++)
+					{
+						m_updatedEntities.push_back(entities.at(i));
+					}
+				}
+
+				{
 					PROFILE_SCOPE("Create waves");
 					if (!waveQueue.empty())
 						ServerSystems::NextWaveConditions(this, waveTimer, waveQueue.front().GetTimeLimit());

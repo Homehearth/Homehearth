@@ -173,6 +173,64 @@ void GridSystem::Initialize(Vector2I mapSize, sm::Vector3 position, std::string 
 	stbi_image_free(pixelsData);
 }
 
+std::vector<Entity> GridSystem::UpdateHoverDefence()
+{
+	std::vector<Entity> entities;
+
+	//Go through the players
+	m_scene->ForEachComponent<comp::Player, comp::Network>([&](comp::Player& player, comp::Network& net)
+		{
+			//Did not find the hover defence for this player
+			if (m_hoveredDefences.find(net.id) == m_hoveredDefences.end())
+			{
+				Entity newEntity = m_scene->CreateEntity();
+				newEntity.AddComponent<comp::Transform>();
+				newEntity.AddComponent<comp::Network>();
+				newEntity.AddComponent<comp::MeshName>()->name = NameType::MESH_DEFENCE1X3;
+				m_hoveredDefences[net.id] = newEntity;
+			}
+			else
+			{
+				if (player.shopItem == ShopItem::Defence1x1 ||
+					player.shopItem == ShopItem::Defence1x3)
+				{
+					Plane_t plane;
+					plane.normal = { 0.0f, 1.0f, 0.0f };
+					sm::Vector3 pos;
+					if (player.lastInputState.mouseRay.Intersects(plane, &pos))
+					{
+						//Snap the position to the grid
+						int centerTileX = static_cast<int>(std::abs(pos.x) / m_tileSize.x);
+						int centerTileZ = static_cast<int>(std::abs(pos.z) / m_tileSize.y);
+						if (InsideGrid(centerTileX, centerTileZ))
+							pos = m_tiles[centerTileZ][centerTileX].position;
+						pos.y = 5.f;
+
+						comp::Transform* transform = m_hoveredDefences.at(net.id).GetComponent<comp::Transform>();
+						transform->position = pos;
+						if (player.rotateDefence)
+							transform->rotation = sm::Quaternion::CreateFromYawPitchRoll(static_cast<float>(PI / 2.f), 0.f, 0.f);
+						else
+							transform->rotation = sm::Quaternion(0, 0, 0, 0);
+					}
+
+					if (player.shopItem == ShopItem::Defence1x1)
+						m_hoveredDefences.at(net.id).GetComponent<comp::MeshName>()->name = NameType::MESH_DEFENCE1X1;
+					else if (player.shopItem == ShopItem::Defence1x3)
+						m_hoveredDefences.at(net.id).GetComponent<comp::MeshName>()->name = NameType::MESH_DEFENCE1X3;
+				}
+				else
+				{
+					m_hoveredDefences.at(net.id).GetComponent<comp::Transform>()->position = { 0,0,0 };
+				}
+			}
+
+			entities.push_back(m_hoveredDefences.at(net.id));
+		});
+
+	return entities;
+}
+
 bool GridSystem::RemoveDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, PathFinderManager* aiHandler)
 {
 	sm::Vector3 localPlayer;

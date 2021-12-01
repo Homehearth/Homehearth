@@ -27,10 +27,8 @@ private:
 	// User defined function to check messages which must comply with the function pointer arguments from Client
 	void CheckIncoming(message<GameMsg>& msg);
 	void PingServer();
-	void OnClientDisconnect();
-	
+	void OnClientDisconnect();	
 	void UpdateEntityFromMessage(Entity entity, message<GameMsg>& msg, bool skip = false);
-
 	void UpdateInput();
 
 public:
@@ -43,6 +41,10 @@ public:
 	std::vector<std::pair<ModelID, dx::BoundingSphere>> m_LOSColliders;
 	std::unordered_map<uint32_t, Entity> m_players;
 	float m_elapsedCycleTime = 0;
+	float m_primaryCooldown = 0.0f;
+	float m_secondaryCooldown = 0.0f;
+	float m_dodgeCooldown = 0.0f;
+	uint32_t m_currentSpree = 1;
 
 	Game();
 	virtual ~Game();
@@ -55,16 +57,10 @@ public:
 	void SendSelectedClass(comp::Player::Class classType);
 
 	Entity& GetLocalPlayer();
-
 	ParticleSystem* GetParticleSystem();
 	
 	//Using the shop
 	void SetShopItem(const ShopItem& whatToBuy);
 	const ShopItem GetShopItem() const;
 	void UpgradeDefence(const uint32_t& id);
-
-	float m_primaryCooldown = 0.0f;
-	float m_secondaryCooldown = 0.0f;
-	float m_dodgeCooldown = 0.0f;
-	uint32_t m_currentSpree = 1;
 };

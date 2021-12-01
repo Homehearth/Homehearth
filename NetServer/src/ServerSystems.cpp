@@ -495,18 +495,15 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 				}
 			}
 
-
-			//std::cout << "Server, wheel: " << p.lastInputState.mousewheelDir << std::endl;
-
 			//Rotate defences 90 or not
 			if (p.lastInputState.mousewheelDir != 0)
 			{
-				//std::cout << "Server, wheel: " << p.lastInputState.mousewheelDir << std::endl;
 				if (p.lastInputState.mousewheelDir > 0)
 					p.rotateDefence = true;
 				else if (p.lastInputState.mousewheelDir < 0)
 					p.rotateDefence = false;
 			}
+
 		});
 
 
@@ -664,33 +661,4 @@ void ServerSystems::DeathParticleTimer(HeadlessScene& scene)
 				e.RemoveComponent<comp::PARTICLEEMITTER>();
 			}
 		});
-}
-
-void ServerSystems::UpdateHoverDefences(HeadlessScene& scene)
-{
-	scene.ForEachComponent<comp::Player>([&](Entity& e, comp::Player& player)
-		{
-			if (player.shopItem == ShopItem::Defence1x1 ||
-				player.shopItem == ShopItem::Defence1x3)
-			{
-				//We dont have a hovering defence - create it
-				if (player.hoverDefNetID != UINT32_MAX)
-				{
-					Entity hoverdef = scene.CreateEntity();
-
-					/*hoverdef.AddComponent<comp::Transform>();
-					hoverdef.AddComponent<comp::Network>();*/
-					
-				}
-				else
-				{
-					
-
-
-				}
-			}
-		});
-
-	//Renderable, netid, defense?
-	//scene.ForEachComponent<comp::Player>([&](Entity& e, comp::Player& player)
 }

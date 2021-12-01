@@ -24,6 +24,7 @@ private:
 	Ray_t m_mouseRay;
 	int m_windowWidth, m_windowHeight;
 	int m_lastScrollValue;
+	int m_lastScrollDirection;
 
 public:
 	virtual ~InputSystem() = default;
@@ -50,6 +51,9 @@ public:
 	bool CheckMouseKey(const MouseKey mouseButton, const KeyState state) const;
 
 	//Positive direction is forward towards the cabel
+	const int GetMouseWheelRotation();
+
+	//Get the rotation direction of the mouse
 	const int GetMouseWheelDirection();
 
 	//Checks if the user is holding down an axis key (WASD and Arrow keys) returns 1 on right or up, -1 on left or down (0 if nothing). Use Axis enums: V�RTICAL, HORIZONTAL

@@ -101,7 +101,7 @@ void Game::OnUserUpdate(float deltaTime)
 		sm::Vector3 playerPos = m_players.at(m_localPID).GetComponent<comp::Transform>()->position;
 
 		GameSystems::DeathParticleTimer(scene);
-
+		
 		if (m_elapsedCycleTime <= m_waveTimer)
 		{
 			if (m_serverCycle == Cycle::DAY || m_serverCycle == Cycle::MORNING)
@@ -982,11 +982,7 @@ void Game::UpdateInput()
 	m_inputState.axisVertical = InputSystem::Get().GetAxis(Axis::VERTICAL);
 	m_inputState.mousewheelDir = InputSystem::Get().GetMouseWheelDirection();
 	
-	//WORK IN PROGRESS...
-	if (m_inputState.mousewheelDir != 0)
-		std::cout << "Inputstate: " << m_inputState.mousewheelDir << std::endl;
-
-	if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED))
+	if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::HELD))
 	{
 		m_inputState.leftMouse = true;
 	}

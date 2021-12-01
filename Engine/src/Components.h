@@ -313,9 +313,8 @@ namespace ecs
 			ShopItem		shopItem = ShopItem::None;
 
 			//Place defence option 
-			float			buildDistance = 24.0f;		//A tiles width is ~8
+			float			buildDistance = 32.0f;		//A tiles width is ~8
 			bool			rotateDefence = false;
-			uint32_t		hoverDefNetID = UINT32_MAX;
 		};
 
 		
@@ -323,7 +322,6 @@ namespace ecs
 		{
 			std::vector<std::pair<UINT, UINT>> coordinates;
 		};
-	
 
 		struct NPC
 		{
