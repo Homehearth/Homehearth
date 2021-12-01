@@ -88,5 +88,21 @@ std::shared_ptr<BT::FallbackNode> AIBehaviors::GetFocusBuildingAIBehavior(Entity
 
 std::shared_ptr<BT::FallbackNode> AIBehaviors::GetVillagerAIBehavior(Entity entity)
 {
-	return std::shared_ptr<BT::FallbackNode>();
+	std::shared_ptr<BT::FallbackNode> root = std::make_shared<BT::FallbackNode>(BT::FallbackNode("root"));
+
+	auto fallback1 = std::make_shared<BT::FallbackNode>(BT::FallbackNode("fallback1"));
+	auto seq1 = std::make_shared<BT::SequenceNode>(BT::SequenceNode("seq1"));
+
+	auto villagerTarget = std::make_shared<BT::VillagerTargetNodeCBT>(BT::VillagerTargetNodeCBT("VillagerTarget", entity));
+	auto moveToTarget = std::make_shared<BT::MoveCBT>(BT::MoveCBT("MoveToTarget", entity));
+	auto genPath = std::make_shared<BT::GenPathCBT>(BT::GenPathCBT("GenPath", entity));
+
+	root->AddChild(fallback1);
+	fallback1->AddChild(seq1);
+	seq1->AddChild(villagerTarget);
+	seq1->AddChild(genPath);
+	seq1->AddChild(moveToTarget);
+
+
+	return root;
 }

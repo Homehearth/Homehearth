@@ -961,6 +961,11 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 						nameString = "Sphere.obj";
 						break;
 					}
+					case NameType::MESH_VILLAGER:
+					{
+						nameString = "Villager.fbx";
+						break;
+					}
 					default:
 					{
 						nameString = "Cube.obj";
