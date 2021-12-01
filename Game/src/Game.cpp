@@ -85,13 +85,15 @@ bool Game::OnStartup()
 
 	//Particles
 	ResourceManager::Get().GetResource<RTexture>("BloodParticle.png");
+	ResourceManager::Get().GetResource<RTexture>("Smoke.png");
+
 	Entity emitter4 = GetScene("Game").CreateEntity();
 	emitter4.AddComponent<comp::Transform>()->position = { 250, 5, -340 };
-	emitter4.AddComponent <comp::EmitterParticle>(sm::Vector3{ 0,0,0 }, 800, 2.f, PARTICLEMODE::SMOKE, 4.0f, 1.f, false);
+	emitter4.AddComponent<comp::EmitterParticle>(sm::Vector3{ 0,0,0 }, 800, 2.f, PARTICLEMODE::SMOKEPOINT, 3.5f, 1.f, false);
 
 	Entity waterSplash = GetScene("Game").CreateEntity();
 	waterSplash.AddComponent<comp::Transform>()->position = { 270, 13, -370 };
-	waterSplash.AddComponent <comp::EmitterParticle>(sm::Vector3{ 0,0,0 }, 100, 1.f, PARTICLEMODE::WATERSPLASH, 4.0f, 1.f, false);
+	waterSplash.AddComponent <comp::EmitterParticle>(sm::Vector3{ 0,0,0 }, 100, 1.f , PARTICLEMODE::WATERSPLASH, 2.0f, 1.f, false);
 
 	return true;
 }
@@ -848,6 +850,7 @@ void Game::OnClientDisconnect()
 	m_client.m_qMessagesIn.clear();
 	m_players.clear();
 	m_gameEntities.clear();
+	SoundHandler::Get().SetCurrentMusic("MenuTheme");
 	LOG_INFO("Disconnected from server!");
 }
 
