@@ -22,7 +22,6 @@ BT::NodeStatus BT::FindBuildingTargetCBT::Tick()
 	comp::Transform* transform = this->entity.GetComponent<comp::Transform>();
 
 	Entity* targetEntity = Blackboard::Get().GetValue<Entity>("target" + std::to_string(entity));
-
 	Entity currentTarget;
 	if (playersEntity)
 	{

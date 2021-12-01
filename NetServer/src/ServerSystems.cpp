@@ -53,13 +53,13 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		attackAbility->delay = 0.2f;
 		attackAbility->movementSpeedAlt = 0.0f;
 
-		//if (randomNum > 0.25f)
+		if (randomNum > 0.25f)
 		{
 			behaviorTree->root = AIBehaviors::GetFocusBuildingAIBehavior(entity);
 		}
-		//else
+		else
 		{
-			//behaviorTree->root = AIBehaviors::GetFocusPlayerAIBehavior(entity);
+			behaviorTree->root = AIBehaviors::GetFocusPlayerAIBehavior(entity);
 		}
 
 	}
