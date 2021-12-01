@@ -55,6 +55,8 @@ private:
 	uint32_t GetTick()const;
 
 	//Game play related
+	//Timer waveTimer;
+	uint32_t m_wavesSurvived;
 	std::queue<Wave> waveQueue;
 	std::queue<sm::Vector3> m_spawnPoints;
 	HouseManager houseManager;
@@ -91,6 +93,8 @@ public:
 
 	GridSystem& GetGrid();
 	Currency& GetCurrency();
+
+	void IncreaseWavesSurvived();
 
 	void SetLobbyScene();
 	void SetGameOver();

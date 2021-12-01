@@ -175,16 +175,9 @@ void Simulation::ResetPlayer(Entity player)
 
 		playerComp->primaryAbilty = entt::resolve<comp::MeleeAttackAbility>();
 
-		/*comp::HeroLeapAbility* leap = player.AddComponent<comp::HeroLeapAbility>();
-		leap->cooldown = 5.0f;
-		leap->delay = 0.0f;
-		leap->lifetime = 0.5f;
-		leap->movementSpeedAlt = 0.0f;
-		leap->useTime = 0.5f;
-		leap->damageRadius = 20.f;
-
-		playerComp->secondaryAbilty = entt::resolve<comp::HeroLeapAbility>();*/
+		// TEMP
 		playerComp->secondaryAbilty = entt::resolve<comp::MeleeAttackAbility>();
+		// END TEMP
 
 		comp::DashAbility* dashAbility = player.AddComponent<comp::DashAbility>();
 		dashAbility->cooldown = 6.0f;
@@ -202,7 +195,7 @@ void Simulation::ResetPlayer(Entity player)
 		attackAbility->cooldown = 0.5f;
 		attackAbility->attackDamage = 20.f;
 		attackAbility->lifetime = 2.0f;
-		attackAbility->projectileSpeed = 40.f;
+		attackAbility->projectileSpeed = 60.f;
 		attackAbility->attackRange = 2.0f;
 		attackAbility->useTime = 0.3f;
 		attackAbility->delay = 0.1f;
@@ -212,9 +205,10 @@ void Simulation::ResetPlayer(Entity player)
 		healAbility->cooldown = 5.0f;
 		healAbility->delay = 0.0f;
 		healAbility->healAmount = 30.f;
-		healAbility->lifetime = 1.5f;
-		healAbility->range = 50.f;
+		healAbility->lifetime = 1.0f;
+		healAbility->range = 30.f;
 		healAbility->useTime = 1.0f;
+		healAbility->movementSpeedAlt = 1.0f;
 
 		playerComp->secondaryAbilty = entt::resolve<comp::HealAbility>();
 
@@ -239,6 +233,11 @@ void Simulation::ResetPlayer(Entity player)
 
 	player.AddComponent<comp::SphereCollider>()->Radius = 3.f;
 
+	//
+	// AudioState
+	//
+	player.AddComponent<comp::AudioState>();
+
 	//Collision will handle this entity as a dynamic one
 	player.AddComponent<comp::Tag<TagType::DYNAMIC>>();
 	player.AddComponent<comp::Tag<TagType::GOOD>>(); // this is a good guy, he will call you back
@@ -261,6 +260,7 @@ Simulation::Simulation(Server* pServer, HeadlessEngine* pEngine)
 {
 	this->m_gameID = 0;
 	this->m_tick = 0;
+	this->m_wavesSurvived = 0;
 
 	dx::BoundingBox bounds = { dx::XMFLOAT3(250, 0, -320), dx::XMFLOAT3(230, 50, 220) };
 	qt = std::make_unique<QuadTree>(bounds);
@@ -350,16 +350,16 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 				{
 					PROFILE_SCOPE("Abilities and Combat");
 					Systems::UpdateAbilities(scene, e.dt);
-					Systems::CombatSystem(scene, e.dt);
+					ServerSystems::CombatSystem(scene, e.dt);
 					Systems::HealingSystem(scene, e.dt);
 					ServerSystems::HealthSystem(scene, e.dt, m_currency, houseManager, qt.get(), m_grid, m_spreeHandler);
 					Systems::SelfDestructSystem(scene, e.dt);
 				}
 
-				//{
-				//	PROFILE_SCOPE("Animation Transform");
-				//	Systems::TransformAnimationSystem(scene, e.dt);
-				//}
+				{
+					PROFILE_SCOPE("Animation Transform");
+					Systems::TransformAnimationSystem(scene, e.dt);
+				}
 
 				{
 					PROFILE_SCOPE("Movement collider system");
@@ -384,21 +384,24 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 					PROFILE_SCOPE("Clear quad tree");
 					Systems::ClearCollidingList(scene, qtDynamic.get());
 				}
-
-				m_timeCycler.Update(e.dt);
-
-				{
-					PROFILE_SCOPE("Create waves");
-					if (!waveQueue.empty())
-						ServerSystems::NextWaveConditions(this);
-					else
-						EnemyManagement::CreateWaves(waveQueue, currentRound++);
-				}
-
-				m_spreeHandler.Update();
+				ServerSystems::AnimatonSystem(this, scene);
+				ServerSystems::SoundSystem(this, scene);
 			}
-		});
 
+			m_timeCycler.Update(e.dt);
+
+			{
+				PROFILE_SCOPE("Create waves");
+				if (!waveQueue.empty())
+					ServerSystems::NextWaveConditions(this);
+				else
+					EnemyManagement::CreateWaves(waveQueue, currentRound++);
+			}
+
+			m_spreeHandler.Update();
+		
+		});
+	
 	//On all enemies wiped, activate the next wave.
 	m_pGameScene->on<ESceneCallWaveSystem>([&](const ESceneCallWaveSystem& dt, HeadlessScene& scene)
 		{
@@ -544,7 +547,7 @@ void Simulation::SendSnapshot()
 				{
 					count++;
 					msg4 << AbilityIndex::Dodge << dash->cooldownTimer;
-				}
+				} 
 
 				if (heal)
 				{
@@ -709,6 +712,11 @@ Currency& Simulation::GetCurrency()
 	return m_currency;
 }
 
+void Simulation::IncreaseWavesSurvived()
+{
+	this->m_wavesSurvived++;
+}
+
 void Simulation::UseShop(const ShopItem& item, const uint32_t& player)
 {
 	m_shop.UseShop(item, player);
@@ -756,7 +764,7 @@ void Simulation::SetGameOver()
 	m_pCurrentScene = m_pGameOverScene;
 	message<GameMsg> msg;
 	msg.header.id = GameMsg::Game_Over;
-
+	msg << m_currency.GetTotalGathered() << m_wavesSurvived - 1;
 	this->Broadcast(msg);
 }
 
@@ -946,11 +954,12 @@ bool Simulation::IsEmpty() const
 
 void Simulation::ReadyCheck(uint32_t playerID)
 {
-	bool allReady = m_lobby.ReadyCheck(playerID);
+	bool isAllReady = m_lobby.ReadyCheck(playerID);
 	m_lobby.Update();
 
-	if (allReady)
+	if (isAllReady)
 	{
+		// Set all players spawn positions once when everyone is ready.
 		m_pGameScene->ForEachComponent<comp::Player>([&](Entity& e, comp::Player& p)
 			{
 				p.spawnPoint = m_spawnPoints.front();
@@ -984,11 +993,12 @@ void Simulation::BroadcastUDP(message<GameMsg>& msg, uint32_t exclude) const
 {
 	auto it = m_lobby.m_players.begin();
 
+	msg << msg.header.id;
+
 	while (it != m_lobby.m_players.end())
 	{
 		if (exclude != it->first)
 		{
-			msg << msg.header.id;
 			m_pServer->SendToClientUDP(it->first, msg);
 		}
 		it++;

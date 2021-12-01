@@ -54,6 +54,26 @@ namespace sceneHelp
 		Scene& mainMenuScene = game->GetScene("MainMenu");
 		SetupMainMenuScreen(game);
 
+		SoundHandler::Get().SetCurrentMusic("MenuTheme");
+
+		Entity backgroundScene = mainMenuScene.CreateEntity();
+		backgroundScene.AddComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>("GameSceneAll.fbx");
+		backgroundScene.AddComponent<comp::Transform>();
+		mainMenuScene.GetRegistry()->on_construct<comp::Light>().connect<&Lights::Add>(mainMenuScene.GetLights());
+/*
+		CreateLightEntity(mainMenuScene, { 330.0f, 20.0f, -333.3f , 1.0f }, { -1.0f, -0.5f, 0.f, 0.f }, { 15.f, 15.f, 15.f, 0.f }, 1000.0f, 0.09f, TypeLight::DIRECTIONAL, 1);
+		CreateLightEntity(mainMenuScene, { 330.0f, 20.0f, -333.3f , 1.0f }, { -1.0f, -0.5f, 0.f, 0.f }, { 15.f, 15.f, 15.f, 0.f }, 1000.0f, 0.09f, TypeLight::DIRECTIONAL, 1);
+		CreateLightEntity(mainMenuScene, { 330.0f, 20.0f, -333.3f , 1.0f }, { -1.0f, -0.5f, 0.f, 0.f }, { 15.f, 15.f, 15.f, 0.f }, 1000.0f, 0.09f, TypeLight::DIRECTIONAL, 1);
+*/
+		comp::Transform test;
+		test.position = { 330.0f, 1.0f, -333.3f };
+		Entity blood = mainMenuScene.CreateEntity();
+		blood.AddComponent<comp::Decal>(test);
+
+		mainMenuScene.GetCurrentCamera()->Initialize(sm::Vector3(0, 0, 0), sm::Vector3(0, 0, 1), sm::Vector3(0, 1, 0),
+			sm::Vector2((float)game->GetWindow()->GetWidth(), (float)game->GetWindow()->GetHeight()), CAMERATYPE::DEFAULT);
+		mainMenuScene.GetCurrentCamera()->m_position = sm::Vector3(350.f, 30.f, -250.f);
+
 		mainMenuScene.on<ESceneUpdate>([](const ESceneUpdate& e, Scene& scene)
 			{
 				IMGUI(
@@ -68,6 +88,7 @@ namespace sceneHelp
 	{
 		Scene& lobbyScene = game->GetScene("Lobby");
 		SetupInLobbyScreen(game);
+
 		lobbyScene.on<ESceneUpdate>([](const ESceneUpdate& e, Scene& scene)
 			{
 				IMGUI(
@@ -247,6 +268,7 @@ namespace sceneHelp
 
 				if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED))
 				{
+
 					if (game->GetCurrentScene()->GetCollection("shopMenu")->GetState() == ElementState::OUTSIDE &&
 						game->GetCurrentScene()->GetCollection("ScrolldownMenu")->GetState() == ElementState::OUTSIDE)
 					{
@@ -271,13 +293,22 @@ namespace sceneHelp
 				GameSystems::UpdatePlayerVisuals(game);
 				Systems::LightSystem(scene, e.dt);
 				game->GetCurrentScene()->UpdateSkybox(game->GetCycler().GetTime());
+
+
+				// Need to update Listener to make 3D sound work properly.
+				const auto thePlayer = game->GetLocalPlayer();
+				const auto lookDir = DirectX::XMVector3Rotate({ 0.f, 0.f, -1.f },
+					scene.GetCurrentCamera()->GetRotation());
+				SoundHandler::Get().SetListenerPosition(thePlayer.GetComponent<comp::Transform>()->position, lookDir);
+				SoundHandler::Get().Update();
+
 #ifdef _DEBUG
 				if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Space, KeyState::RELEASED))
 				{
 					if (scene.GetCurrentCamera()->GetCameraType() == CAMERATYPE::DEBUG)
 					{
 						scene.SetCurrentCameraEntity(cameraEntity);
-						scene.GetCurrentCamera()->SetNearFarPlane(40.f, 200.f);
+						scene.GetCurrentCamera()->SetNearFarPlane(40.f, 220.f);
 						InputSystem::Get().SwitchMouseMode();
 						LOG_INFO("Game Camera selected");
 					}
@@ -423,25 +454,29 @@ namespace sceneHelp
 		}
 
 		Collection2D* money = new Collection2D;
-		rtd::MoneyUI* mMoney = money->AddElement<rtd::MoneyUI>(draw_text_t(width - (width / 8.0f), D2D1Core::GetDefaultFontSize(), width / 8.0f, D2D1Core::GetDefaultFontSize()));
+		rtd::MoneyUI* mMoney = money->AddElement<rtd::MoneyUI>(draw_text_t(width - (width / 8.0f), 0.0f, width / 8.0f, height / 11.0f));
 		scene.Add2DCollection(money, "MoneyUI");
 
 		Collection2D* abilities = new Collection2D;
-		rtd::AbilityUI* primary = abilities->AddElement<rtd::AbilityUI>(draw_t(width - width / 16.0f, height - height / 4.0f, width / 16.0f, height / 9.0f), D2D1::ColorF(0, 1.0f), "UI_sword.png");
-		primary->SetActivateButton("LMB");
-		primary->SetReference(&game->m_primaryCooldown);
-		rtd::AbilityUI* secondary = abilities->AddElement<rtd::AbilityUI>(draw_t(width - width / 8.0f, height - height / 9.0f, width / 16.0f, height / 9.0f), D2D1::ColorF(0, 1.0f), "UI_sword.png");
-		secondary->SetActivateButton("RMB");
-		secondary->SetReference(&game->m_secondaryCooldown);
-		rtd::AbilityUI* third = abilities->AddElement<rtd::AbilityUI>(draw_t((width / 2.f) - ((width / 16.0f) * 2.0f), height - height / 12.0f, width / 16.0f, height / 12.0f), D2D1::ColorF(0, 1.0f), "slashAbilityDemo.png");
-		third->SetActivateButton("Shift");
-		third->SetReference(&game->m_dodgeCooldown);
-		rtd::AbilityUI* fourth = abilities->AddElement<rtd::AbilityUI>(draw_t((width / 2.f) - ((width / 16.0f)), height - height / 12.0f, width / 16.0f, height / 12.0f), D2D1::ColorF(0, 1.0f), "someRandomAbilityIdkDemo.png");
-		fourth->SetActivateButton("E");
-		rtd::AbilityUI* fifth = abilities->AddElement<rtd::AbilityUI>(draw_t((width / 2.f), height - height / 12.0f, width / 16.0f, height / 12.0f), D2D1::ColorF(0, 1.0f), "healAbilityDemo.png");
-		fifth->SetActivateButton("R");
-		rtd::AbilityUI* sixth = abilities->AddElement<rtd::AbilityUI>(draw_t((width / 2.f) + ((width / 16.0f)), height - height / 12.0f, width / 16.0f, height / 12.0f), D2D1::ColorF(0, 1.0f), "slashAbilityDemo.png");
-		sixth->SetActivateButton("C");
+		//rtd::AbilityUI* primary = abilities->AddElement<rtd::AbilityUI>(draw_t(width - width / 16.0f, height - height / 4.0f, width / 16.0f, height / 9.0f), D2D1::ColorF(0, 1.0f), "UI_sword.png");
+		//primary->SetActivateButton("LMB");
+		//primary->SetReference(&game->m_primaryCooldown);
+		//rtd::AbilityUI* secondary = abilities->AddElement<rtd::AbilityUI>(draw_t(width - width / 8.0f, height - height / 9.0f, width / 16.0f, height / 9.0f), D2D1::ColorF(0, 1.0f), "UI_sword.png");
+		//secondary->SetActivateButton("RMB");
+		//secondary->SetReference(&game->m_secondaryCooldown);
+		rtd::Picture* abilityBar = abilities->AddElement<rtd::Picture>("AbilityBar.png", draw_t((width / 2.f) - ((width / 16.0f) * 2.0f) - (width / 256.0f), height - height / 9.0f, (width / 16.0f) * 5.0f, height / 9.0f));
+
+		rtd::AbilityUI* third = abilities->AddElement<rtd::AbilityUI>(draw_t((width / 2.f) - ((width / 16.0f) * 2.0f), height - height / 10.0f, width / 18.0f, height / 11.0f), D2D1::ColorF(0, 1.0f), "Attack2.png");
+		third->SetActivateButton("LMB");
+		third->SetReference(&game->m_primaryCooldown);
+		rtd::AbilityUI* fourth = abilities->AddElement<rtd::AbilityUI>(draw_t((width / 2.f) - ((width / 16.0f)), height - height / 10.0f, width / 18.0f, height / 11.0f), D2D1::ColorF(0, 1.0f), "Block.png");
+		fourth->SetActivateButton("RMB");
+		fourth->SetReference(&game->m_secondaryCooldown);
+		rtd::AbilityUI* fifth = abilities->AddElement<rtd::AbilityUI>(draw_t((width / 2.f), height - height / 10.0f, width / 18.0f, height / 11.0f), D2D1::ColorF(0, 1.0f), "Dodge.png");
+		fifth->SetActivateButton("Shift");
+		fifth->SetReference(&game->m_dodgeCooldown);
+		rtd::AbilityUI* sixth = abilities->AddElement<rtd::AbilityUI>(draw_t((width / 2.f) + ((width / 16.0f)), height - height / 10.0f, width / 18.0f, height / 11.0f), D2D1::ColorF(0, 1.0f), "LockedIcon.png");
+		rtd::AbilityUI* seventh = abilities->AddElement<rtd::AbilityUI>(draw_t((width / 2.f) + ((width / 8.0f)), height - height / 10.0f, width / 18.0f, height / 11.0f), D2D1::ColorF(0, 1.0f), "LockedIcon.png");
 		scene.Add2DCollection(abilities, "AbilityUI");
 
 		Collection2D* pauseMenu = new Collection2D;
@@ -477,6 +512,11 @@ namespace sceneHelp
 			}
 			});
 		sc->SetPrimeButtonMeasurements(draw_t(0.0f, 0.0f, width / 24, height / 14));
+		sc->SetOnPrimeButtonPress([=] {
+
+			shopMenu->Hide();
+
+			});
 		scene.Add2DCollection(scrolldownMenu, "ScrolldownMenu");
 
 		rtd::ShopUI* shop = shopMenu->AddElement<rtd::ShopUI>("Shop.png", draw_t(width / 24.0f, (height / 16), width * 0.25f, height * 0.5f));
@@ -528,7 +568,7 @@ namespace sceneHelp
 		scene.Add2DCollection(priceTag, "priceTag");
 
 		Collection2D* spreeText = new Collection2D;
-		spreeText->AddElement<rtd::Text>("X1", draw_t(width - (width / 12.f), height / 2.f, width / 12.f, height / 4.0f));
+		spreeText->AddElement<rtd::Text>("X1", draw_t(width - (width / 12.f), height - (height / 8.0f), width / 12.f, height / 8.0f));
 		scene.Add2DCollection(spreeText, "SpreeText");
 	}
 
@@ -546,7 +586,7 @@ namespace sceneHelp
 			playerIcon->AddElement<rtd::Picture>("Button.png", draw_t(width / 16, (height / 12) * (i + 1) + (height / 12) * i, width / 4, height / 9));
 			playerIcon->AddElement<rtd::Text>("Player " + std::to_string(i + 1), draw_text_t(width / 16, (height / 12) * (i + 1) + (height / 12) * i, width / 4, height / 9));
 			playerIcon->AddElement<rtd::Picture>("WarriorIcon.png", draw_t((width / 8) + (width / 4), (height / 12) * (i + 1) + (height / 12) * i, width / 16, height / 9));
-			playerIcon->AddElement<rtd::Picture>("No.png", draw_t(((width / 8) * 2) + (width / 4), (height / 12) * (i + 1) + (height / 12) * i, width / 16, height / 9))->SetVisiblity(false);
+			playerIcon->AddElement<rtd::Picture>("Yes.png", draw_t(((width / 8) * 2) + (width / 4), (height / 12) * (i + 1) + (height / 12) * i, width / 16, height / 9))->SetVisiblity(false);
 			scene.Add2DCollection(playerIcon, "playerIcon" + std::to_string(i + 1));
 		}
 
@@ -610,6 +650,9 @@ namespace sceneHelp
 				mageButton->GetBorder()->SetColor(D2D1::ColorF(0.0f, 1.0f, 0.2f));
 				mageButton->GetBorder()->SetVisiblity(true);
 				warriorButton->GetBorder()->SetVisiblity(false);
+
+				dynamic_cast<rtd::AbilityUI*>(game->GetScene("Game").GetCollection("AbilityUI")->elements[1].get())->SetTexture("Attack.png");
+				dynamic_cast<rtd::AbilityUI*>(game->GetScene("Game").GetCollection("AbilityUI")->elements[2].get())->SetTexture("Heal.png");
 			});
 		
 		
@@ -624,6 +667,8 @@ namespace sceneHelp
 				warriorButton->GetBorder()->SetColor(D2D1::ColorF(0.0f, 1.0f, 0.2f));
 				warriorButton->GetBorder()->SetVisiblity(true);
 				mageButton->GetBorder()->SetVisiblity(false);
+				dynamic_cast<rtd::AbilityUI*>(game->GetScene("Game").GetCollection("AbilityUI")->elements[1].get())->SetTexture("Attack2.png");
+				dynamic_cast<rtd::AbilityUI*>(game->GetScene("Game").GetCollection("AbilityUI")->elements[2].get())->SetTexture("Block.png");
 			});
 
 		scene.Add2DCollection(classButtons, "ClassButtons");
@@ -776,56 +821,73 @@ namespace sceneHelp
 			});
 
 		// Shadows toggle.
-		static int ShadowType = std::stoi(OptionSystem::Get().GetOption("Shadows"));
-		rtd::Button* shadowButton = miscMenu->AddElement<rtd::Button>("Button.png", draw_t((width / 8.0f) * 5.0f, height / 8.0f, width / 4.0f, height / 8.0f));
-		rtd::Text* shadowType = miscMenu->AddElement<rtd::Text>("Shadows: ON", draw_t((width / 8.0f) * 5.0f, height / 8.0f, width / 4.0f, height / 8.0f));
-		
-		switch (ShadowType)
+		static int lightQuality = std::stoi(OptionSystem::Get().GetOption("VolumetricLightQuality"));
+		rtd::Button* lightQualityButton = miscMenu->AddElement<rtd::Button>("Button.png", draw_t((width / 8.0f) * 5.0f, height / 8.0f, width / 4.0f, height / 8.0f));
+		rtd::Text* lightQualityType = miscMenu->AddElement<rtd::Text>("Volumetric Light Quality: LOW", draw_t((width / 8.0f) * 5.0f, height / 8.0f, width / 4.0f, height / 8.0f));
+
+		if (lightQuality <= 15 && lightQuality > 0)
 		{
-		case 1: // OFF
-		{
-			shadowType->SetText("Shadows: OFF");
-			thread::RenderThreadHandler::Get().GetRenderer()->GetShadowPass()->SetEnable(false);
-			break;
+			lightQualityType->SetText("Volumetric Light Quality: LOW");
 		}
-		case 2: // ON
+		else if (lightQuality > 15 && lightQuality <= 50)
 		{
-			shadowType->SetText("Shadows: ON");
-			thread::RenderThreadHandler::Get().GetRenderer()->GetShadowPass()->SetEnable(true);
-			break;
+			lightQualityType->SetText("Volumetric Light Quality: MEDIUM");
 		}
-		default:
+		else if (lightQuality > 50 && lightQuality <= 100)
 		{
-			ShadowType = 2;
-			break;
+			lightQualityType->SetText("Volumetric Light Quality: HIGH");
 		}
+		else if (lightQuality > 100 && lightQuality <= 200)
+		{
+			lightQualityType->SetText("Volumetric Light Quality: INSANE");
+		}
+		else
+		{
+			lightQualityType->SetText("Volumetric Light Quality: MEDIUM");
+			lightQuality = 50;
 		}
 
-		OptionSystem::Get().SetOption("Shadows", std::to_string(ShadowType));
+		game->GetScene("Game").GetLights()->SetLightVolumeQuality(lightQuality);
+		OptionSystem::Get().SetOption("VolumetricLightQuality", std::to_string(lightQuality));
 		
-		shadowButton->SetOnPressedEvent([=] {
+		lightQualityButton->SetOnPressedEvent([=] {
 
-			switch (ShadowType)
+			switch (lightQuality)
 			{
-			case 1: // OFF
+			case 15:
 			{
-				ShadowType = 2;
-				shadowType->SetText("Shadows: ON");
-				OptionSystem::Get().SetOption("Shadows", std::string("2"));
-				thread::RenderThreadHandler::Get().GetRenderer()->GetShadowPass()->SetEnable(true);
+				lightQuality = 50;
+				lightQualityType->SetText("Volumetric Light Quality: MEDIUM");
 				break;
 			}
-			case 2: // ON
+			case 50:
 			{
-				ShadowType = 1;
-				shadowType->SetText("Shadows: OFF");
-				OptionSystem::Get().SetOption("Shadows", std::string("1"));
-				thread::RenderThreadHandler::Get().GetRenderer()->GetShadowPass()->SetEnable(false);
+				lightQuality = 100;
+				lightQualityType->SetText("Volumetric Light Quality: HIGH");
+				break;
+			}
+			case 100:
+			{
+				lightQuality = 200;
+				lightQualityType->SetText("Volumetric Light Quality: INSANE");
+				break;
+			}
+			case 200:
+			{
+				lightQuality = 15;
+				lightQualityType->SetText("Volumetric Light Quality: LOW");
 				break;
 			}
 			default:
+			{
+				lightQuality = 15;
+				lightQualityType->SetText("Volumetric Light Quality: LOW");
 				break;
 			}
+			};
+
+			OptionSystem::Get().SetOption("VolumetricLightQuality", std::to_string(lightQuality));
+			game->GetScene("Game").GetLights()->SetLightVolumeQuality(lightQuality);
 
 			});
 
@@ -833,9 +895,13 @@ namespace sceneHelp
 
 		static std::string shadowQuality = OptionSystem::Get().GetOption("ShadowQuality");
 		rtd::Button* shadowSizeButton = miscMenu->AddElement<rtd::Button>("Button.png", draw_t((width / 8.0f) * 5.0f, (height / 8.0f) * 4.0f, width / 4.0f, height / 8.0f));
-		rtd::Text* shadowSize = miscMenu->AddElement<rtd::Text>("Shadows Quality: LOW", draw_t((width / 8.0f) * 5.0f, (height / 8.0f) * 4.0f, width / 4.0f, height / 8.0f));
+		rtd::Text* shadowSize = miscMenu->AddElement<rtd::Text>("Shadows Quality: MEDIUM", draw_t((width / 8.0f) * 5.0f, (height / 8.0f) * 4.0f, width / 4.0f, height / 8.0f));
 
-		if (shadowQuality == "Low")
+		if (shadowQuality == "Potato")
+		{
+			shadowSize->SetText("Shadows Quality: POTATO");
+		}
+		else if (shadowQuality == "Low")
 		{
 			shadowSize->SetText("Shadows Quality: LOW");
 		}
@@ -847,6 +913,10 @@ namespace sceneHelp
 		{
 			shadowSize->SetText("Shadows Quality: HIGH");
 		}
+		else if (shadowQuality == "Insane")
+		{
+			shadowSize->SetText("Shadows Quality: INSANE");
+		}
 		else
 		{
 			shadowSize->SetText("Shadows Quality: MEDIUM");
@@ -856,23 +926,35 @@ namespace sceneHelp
 
 		shadowSizeButton->SetOnPressedEvent([=] {
 
-			if (shadowQuality == "Low")
+			if (shadowQuality == "Potato")
+			{
+				shadowSize->SetText("Shadows Quality: LOW");
+				shadowQuality = "Low";
+				thread::RenderThreadHandler::Get().GetRenderer()->GetShadowPass()->SetShadowMapSize(256);
+			}
+			else if (shadowQuality == "Low")
 			{
 				shadowSize->SetText("Shadows Quality: MEDIUM");
 				shadowQuality = "Medium";
-				thread::RenderThreadHandler::Get().GetRenderer()->GetShadowPass()->SetShadowMapSize(2048);
+				thread::RenderThreadHandler::Get().GetRenderer()->GetShadowPass()->SetShadowMapSize(1024);
 			}
 			else if (shadowQuality == "Medium")
 			{
 				shadowSize->SetText("Shadows Quality: HIGH");
 				shadowQuality = "High";
-				thread::RenderThreadHandler::Get().GetRenderer()->GetShadowPass()->SetShadowMapSize(4096);
+				thread::RenderThreadHandler::Get().GetRenderer()->GetShadowPass()->SetShadowMapSize(2048);
 			}
 			else if (shadowQuality == "High")
 			{
-				shadowSize->SetText("Shadows Quality: LOW");
-				shadowQuality = "Low";
-				thread::RenderThreadHandler::Get().GetRenderer()->GetShadowPass()->SetShadowMapSize(1024);
+				shadowSize->SetText("Shadows Quality: INSANE");
+				shadowQuality = "Insane";
+				thread::RenderThreadHandler::Get().GetRenderer()->GetShadowPass()->SetShadowMapSize(4096);
+			}
+			else if (shadowQuality == "Insane")
+			{
+				shadowSize->SetText("Shadows Quality: POTATO");
+				shadowQuality = "Potato";
+				thread::RenderThreadHandler::Get().GetRenderer()->GetShadowPass()->SetShadowMapSize(512);
 			}
 			OptionSystem::Get().SetOption("ShadowQuality", shadowQuality);
 
@@ -1031,6 +1113,11 @@ namespace sceneHelp
 		Collection2D* gameOverCollection = new Collection2D;
 		rtd::Text* gameOverField = gameOverCollection->AddElement<rtd::Text>("Game Over", draw_text_t((width / 2.f) - (strlen("Game Over") * D2D1Core::GetDefaultFontSize() * 0.5f), (height / 5.f) - D2D1Core::GetDefaultFontSize(), strlen("Game Over") * D2D1Core::GetDefaultFontSize(), D2D1Core::GetDefaultFontSize()));
 		gameOverField->SetText("Game Over");
+
+		rtd::Text* scoreField = gameOverCollection->AddElement<rtd::Text>("Score: 0" , draw_text_t((width / 4.f) - (strlen("Score: ") * D2D1Core::GetDefaultFontSize() * 0.5f), (height / 2.f) - D2D1Core::GetDefaultFontSize(), strlen("Score: ") * D2D1Core::GetDefaultFontSize(), D2D1Core::GetDefaultFontSize()));	
+
+		rtd::Text* waveField = gameOverCollection->AddElement<rtd::Text>("Waves: 0", draw_text_t((width / 1.5f) - (strlen("Waves: ")  * D2D1Core::GetDefaultFontSize() * 0.5f), (height / 2.f) - D2D1Core::GetDefaultFontSize(), strlen("Waves: ") * D2D1Core::GetDefaultFontSize(), D2D1Core::GetDefaultFontSize()));
+
 		rtd::Button* mainMenuButton = gameOverCollection->AddElement<rtd::Button>("Button.png", draw_t((width / 2) - (width / 8), height - (height / 6.f), width / 4, height / 8));
 		gameOverCollection->AddElement<rtd::Text>("Main Menu", draw_text_t((width / 2) - (width / 8), height - (height / 6.f), width / 4, height / 8));
 		mainMenuButton->SetOnPressedEvent([=]
@@ -1076,6 +1163,7 @@ namespace sceneHelp
 				if (nameInputField->RawGetBuffer()->length() > 0)
 				{
 					game->m_playerName = *nameInputField->RawGetBuffer();
+
 					game->CreateLobby();
 
 					// Update own name.
@@ -1371,4 +1459,5 @@ namespace sceneHelp
 
 		file.close();
 	}
+
 }

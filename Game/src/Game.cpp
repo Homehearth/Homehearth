@@ -103,7 +103,7 @@ void Game::OnUserUpdate(float deltaTime)
 		{
 			e.GetComponent<comp::SphereCollider>()->Center = sm::Vector3(l.lightData.position);
 		});
-	
+
 }
 
 void Game::OnShutdown()
@@ -270,9 +270,131 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		SetScene("Lobby");
 		break;
 	}
+	case GameMsg::Game_PlaySound:
+	{
+		uint32_t nrOfSounds = 0u;
+		msg >> nrOfSounds;
+
+		audio_t data = {};
+
+		const auto SH = &SoundHandler::Get();
+
+		for (uint32_t i = 0; i < nrOfSounds; i++)
+		{
+			// Extract Sound Information.
+			msg >> data.playLooped;
+			msg >> data.shouldBroadcast;
+			msg >> data.isUnique;
+			msg >> data.is3D;
+			msg >> data.minDistance;
+			msg >> data.volume;
+			msg >> data.position;
+			msg >> data.type;
+
+			switch (data.type)
+			{
+				//--------------------	PLAYER	--------------------------------------
+			case ESoundEvent::Player_OnMeleeAttack:
+				SH->PlaySound("Player_OnMeleeAttack", data);
+				break;
+			case ESoundEvent::Player_OnMeleeAttackHit:
+			{
+				int version = rand() % 3 + 1;
+				std::string onAttackName = "Player_OnMeleeAttackHit" + std::to_string(version);
+				SH->PlaySound(onAttackName, data);
+			}
+			break;
+			case ESoundEvent::Player_OnMovement:
+				SH->PlaySound("Player_OnMovement", data);
+				break;
+			case ESoundEvent::Player_OnRangeAttack:
+				SH->PlaySound("Player_OnRangeAttack", data);
+				break;
+			case ESoundEvent::Player_OnRangeAttackHit:
+				SH->PlaySound("Player_OnRangeAttackHit", data);
+				break;
+			case ESoundEvent::Player_OnDmgDealt:
+				SH->PlaySound("Player_OnDmgDealt", data);
+				break;
+			case ESoundEvent::Player_OnDmgRecieved:
+				SH->PlaySound("Player_OnDmgRecieved", data);
+				break;
+			case ESoundEvent::Player_OnCastHealing:
+				SH->PlaySound("Player_OnCastHealing", data);
+				break;
+			case ESoundEvent::Player_OnHealingRecieved:
+				SH->PlaySound("Player_OnHealingRecieved", data);
+				break;
+			case ESoundEvent::Player_OnCastDash:
+				SH->PlaySound("Player_OnCastDash", data);
+				break;
+			case ESoundEvent::Player_OnDeath:
+				SH->PlaySound("Player_OnDeath", data);
+				break;
+			case ESoundEvent::Player_OnRespawn:
+				SH->PlaySound("Player_OnRespawn", data);
+				break;
+				//--------------------	ENEMY	--------------------------------------
+			case ESoundEvent::Enemy_OnMovement:
+				SH->PlaySound("Enemy_OnMovement", data);
+				break;
+			case ESoundEvent::Enemy_OnMeleeAttack:
+			{
+				int version = rand() % 6 + 1;
+				std::string onAttackName = "Enemy_OnMeleeAttack" + std::to_string(version);
+				SH->PlaySound(onAttackName, data);
+			}
+			break;
+			case ESoundEvent::Enemy_OnRangeAttack:
+				SH->PlaySound("Enemy_RangeAttack", data);
+				break;
+			case ESoundEvent::Enemy_OnDmgDealt:
+				SH->PlaySound("Enemy_OnDmgDealt", data);
+				break;
+			case ESoundEvent::Enemy_OnDmgRecieved:
+				SH->PlaySound("Enemy_OnDmgRecieved", data);
+				break;
+			case ESoundEvent::Enemy_OnDeath:
+				SH->PlaySound("Enemy_OnDeath", data);
+				break;
+				//--------------------	GAME	--------------------------------------
+			case ESoundEvent::Game_OnDefencePlaced:
+				SH->PlaySound("Game_OnDefencePlaced", data);
+				break;
+			case ESoundEvent::Game_OnDefenceDestroyed:
+				SH->PlaySound("Game_OnDefenceDestroyed", data);
+				break;
+			case ESoundEvent::Game_OnHouseDestroyed:
+				SH->PlaySound("Game_OnHouseDestroyed", data);
+				break;
+			case ESoundEvent::Game_OnJoinLobby:
+				SH->PlaySound("Game_OnJoinLobby", data);
+				break;
+			default:
+				break;
+			}
+		}
+
+		break;
+	}
 	case GameMsg::Game_Over:
 	{
+		SoundHandler::Get().GetCurrentMusic()->stop();
+
+		audio_t audio = {};
+		audio.isUnique = true;
+		audio.playLooped = false;
+		SoundHandler::Get().PlaySound("Player_OnDeath", audio);
+		audio.volume = 0.5f;
+		SoundHandler::Get().PlaySound("OnGameOver", audio);
+
+		uint32_t gatheredMoney, wavesSurvived;
+		msg >> wavesSurvived >> gatheredMoney;
 		SetScene("GameOver");
+		rtd::Text* scoreText = dynamic_cast<rtd::Text*>(GetScene("GameOver").GetCollection("GameOver")->elements[1].get());
+		scoreText->SetText("Score: " + std::to_string(gatheredMoney));
+		rtd::Text* wavesText = dynamic_cast<rtd::Text*>(GetScene("GameOver").GetCollection("GameOver")->elements[2].get());
+		wavesText->SetText("Waves: " + std::to_string(wavesSurvived));
 		break;
 	}
 	case GameMsg::Lobby_Accepted:
@@ -324,6 +446,8 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			});
 
 		SetScene("Game");
+		thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::ADAPTIVE);
+
 		break;
 	}
 	case GameMsg::Game_Spree:
@@ -359,6 +483,8 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		uint8_t count;
 		msg >> count;
 
+		comp::Player::PlayerType playerTypes[MAX_PLAYERS_PER_LOBBY] = { comp::Player::PlayerType::NONE };
+
 		for (uint8_t i = 0; i < count; i++)
 		{
 			char nameTemp[12] = {};
@@ -374,9 +500,11 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			if (m_players.find(playerID) != m_players.end())
 			{
 				comp::Player* p = m_players.at(playerID).GetComponent<comp::Player>();
+				playerTypes[static_cast<int>(p->playerType) - 1] = p->playerType;
 				dynamic_cast<rtd::Text*>(GetScene("Lobby").GetCollection("playerIcon" + std::to_string(static_cast<uint16_t>(p->playerType)))->elements[1].get())->SetText(name);
 				rtd::Text* plT = dynamic_cast<rtd::Text*>(GetScene("Game").GetCollection("dynamicPlayer" + std::to_string(static_cast<uint16_t>(p->playerType)) + "namePlate")->elements[0].get());
 				rtd::Picture* plP = dynamic_cast<rtd::Picture*>(GetScene("Lobby").GetCollection("playerIcon" + std::to_string(static_cast<uint16_t>(p->playerType)))->elements[2].get());
+
 				if (plT)
 				{
 					plT->SetText(name);
@@ -428,16 +556,26 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 
 		dynamic_cast<rtd::Text*>(GetScene("Lobby").GetCollection("LobbyDesc")->elements[1].get())->SetText("Lobby ID: " + std::to_string(m_gameID));
 
-		for (uint32_t i = 0; i < count; i++)
+		for (uint32_t i = 0; i < MAX_PLAYERS_PER_LOBBY; i++)
 		{
-			Collection2D* coll = GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i + 1));
-			coll->elements[0].get()->SetVisiblity(true);
-			coll->elements[1].get()->SetVisiblity(true);
-			coll->elements[2].get()->SetVisiblity(true);
-		}
-		for (uint32_t i = count; i < MAX_PLAYERS_PER_LOBBY; i++)
-		{
-			GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i + 1))->Hide();
+			switch (playerTypes[i])
+			{
+			case comp::Player::PlayerType::NONE:
+			{
+				GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i + 1))->Hide();
+
+				break;
+			}
+			default:
+			{
+				Collection2D* coll = GetScene("Lobby").GetCollection("playerIcon" + std::to_string(static_cast<int>(playerTypes[i])));
+				coll->elements[0].get()->SetVisiblity(true);
+				coll->elements[1].get()->SetVisiblity(true);
+				coll->elements[2].get()->SetVisiblity(true);
+
+				break;
+			}
+			}
 		}
 
 		GameSystems::UpdateHealthbar(this);
@@ -647,6 +785,7 @@ void Game::OnClientDisconnect()
 	m_gameEntities.clear();
 	LOG_INFO("Disconnected from server!");
 }
+
 
 void Game::SendStartGame()
 {
