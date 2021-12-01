@@ -8,29 +8,8 @@ void Lobby::CreatePlayerEntity(uint32_t playerID, const std::string& name)
 	Entity player = m_simRef->GetGameScene()->CreateEntity();
 
 	comp::Player* playerComp = player.AddComponent<comp::Player>();
-	switch (m_players.size())
-	{
-	case 0:
-	{
-		playerComp->playerType = comp::Player::PlayerType::PLAYER_ONE;
-		break;
-	}
-	case 1:
-	{
-		playerComp->playerType = comp::Player::PlayerType::PLAYER_TWO;
-		break;
-	}
-	case 2:
-	{
-		playerComp->playerType = comp::Player::PlayerType::PLAYER_THREE;
-		break;
-	}
-	case 3:
-	{
-		playerComp->playerType = comp::Player::PlayerType::PLAYER_FOUR;
-		break;
-	}
-	}
+	playerComp->playerType = m_playerTypes.top();
+	m_playerTypes.pop();
 	memcpy(playerComp->name, name.c_str(), name.length());
 	player.AddComponent<comp::Network>(playerID);
 
@@ -41,6 +20,14 @@ void Lobby::CreatePlayerEntity(uint32_t playerID, const std::string& name)
 std::unordered_map<uint32_t, Entity>::iterator Lobby::RemovePlayer(std::unordered_map<uint32_t, Entity>::iterator playerIterator)
 {
 	Entity player = playerIterator->second;
+
+	comp::Player* p = player.GetComponent<comp::Player>();
+
+	if (p)
+	{
+		m_playerTypes.push(p->playerType);
+	}
+
 	uint32_t playerID = playerIterator->first;
 	auto it = m_players.erase(playerIterator);
 
@@ -70,6 +57,11 @@ void Lobby::Init(Simulation* sim)
 {
 	this->m_simRef = sim;
 	this->m_isActive = true;
+
+	m_playerTypes.push(comp::Player::PlayerType::PLAYER_ONE);
+	m_playerTypes.push(comp::Player::PlayerType::PLAYER_TWO);
+	m_playerTypes.push(comp::Player::PlayerType::PLAYER_THREE);
+	m_playerTypes.push(comp::Player::PlayerType::PLAYER_FOUR);
 }
 
 void Lobby::AddPlayer(uint32_t gameID, uint32_t playerID, const std::string& name)
@@ -194,6 +186,13 @@ bool Lobby::IsEmpty() const
 
 void Lobby::RemovePlayer(uint32_t playerID)
 {
+	comp::Player* p = m_players.at(playerID).GetComponent<comp::Player>();
+
+	if (p)
+	{
+		m_playerTypes.push(p->playerType);
+	}
+
 	m_players.at(playerID).Destroy();
 	m_players.erase(playerID);
 

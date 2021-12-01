@@ -68,7 +68,7 @@ const bool Lights::UpdateLightBuffer()
 const bool Lights::UpdateInfoBuffer()
 {
     light_info_t newInfo = {};
-    newInfo.nrOfLights = dx::XMFLOAT4((float)m_lights.size(), 0.f, 0.f, 0.f);
+    newInfo.nrOfLights = dx::XMFLOAT4((float)m_lights.size(), m_volumeQuality, 0.f, 0.f);
 
     HRESULT hr;
     D3D11_MAPPED_SUBRESOURCE submap;
@@ -161,6 +161,11 @@ void Lights::Add(entt::registry& reg, entt::entity ent)
 {
     reg.get<comp::Light>(ent).index = (int)m_lights.size();
     m_lights.push_back(reg.get<comp::Light>(ent).lightData);
+}
+
+void Lights::SetLightVolumeQuality(const unsigned int& quality)
+{
+    m_volumeQuality = quality;
 }
 
 std::vector<light_t>& Lights::GetLights()

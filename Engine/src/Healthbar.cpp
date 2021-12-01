@@ -48,6 +48,7 @@ rtd::Healthbar::Healthbar(const draw_t& drawOpts)
     m_backGround.get()->SetBorderColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
     m_backGround.get()->ShowBorder();
     m_backGround.get()->SetBorderWidth(LineWidth::SMALL);
+    m_backGround->SetBorderShape(Shapes::RECTANGLE_OUTLINED);
 }
 
 rtd::Healthbar::~Healthbar()

@@ -8,7 +8,7 @@ constexpr int MAX_HEALTH = 100;
 /*
 	Change these to tweak the day and night cycle timers.
 */
-constexpr uint32_t TIME_LIMIT_DAY = 60;
+constexpr uint32_t TIME_LIMIT_DAY = 200;
 constexpr uint32_t TIME_LIMIT_NIGHT = 50;
 constexpr uint32_t TIME_LIMIT_MORNING = 10;
 constexpr float ROTATION = 180.0f / (float)(TIME_LIMIT_DAY + TIME_LIMIT_MORNING);
@@ -23,8 +23,8 @@ enum class Cycle : UINT
 struct Currency
 {
 private:
-	uint32_t m_amount = 0;
-
+	uint32_t m_amount = 35;
+	uint32_t m_totalGathered = 0;
 public:
 	bool m_hasUpdated = false;
 
@@ -32,8 +32,21 @@ public:
 	{
 		return m_amount;
 	}
+	uint32_t GetTotalGathered() const
+	{
+		return m_totalGathered;
+	}
+	void IncreaseTotal(uint32_t amount)
+	{
+		m_totalGathered += amount;
+	}
+	void DecreaseTotal(uint32_t amount)
+	{
+		m_totalGathered -= amount;
+	}
 	void Zero()
 	{
+		m_totalGathered = 0;
 		m_amount = 0;
 		m_hasUpdated = true;
 	}
@@ -82,10 +95,13 @@ enum class PARTICLEMODE : UINT
 	BLOOD,
 	LEAF,
 	WATERSPLASH,
-	SMOKE,
+	SMOKEPOINT,
+	SMOKEAREA,
 	SPARKLES,
 	RAIN,
-	DUST
+	DUST,
+	MAGEHEAL,
+	MAGERANGE
 };
 
 enum class EDefenceType : UINT

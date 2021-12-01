@@ -9,7 +9,6 @@ enum class ModelID : uint16_t
 	HOUSE9,
 	HOUSE10,
 	HOUSEROOF,
-	TREE2,
 	TREE3,
 	TREE5,
 	TREE6,
@@ -23,7 +22,6 @@ const std::string House8		= "House8";
 const std::string House9		= "House9";
 const std::string House10		= "House10";
 const std::string HouseRoof		= "HouseRoof";
-const std::string Tree2			= "Tree2";
 const std::string Tree3			= "Tree3";
 const std::string Tree5			= "Tree5";
 const std::string Tree6			= "Tree6";

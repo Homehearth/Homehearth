@@ -372,6 +372,7 @@ void ServerSystems::WaveSystem(Simulation* simulation,
 		}
 
 		//Add count and pop from queue
+		simulation->IncreaseWavesSurvived();
 		waves.pop();
 	}
 }
@@ -519,6 +520,7 @@ void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money
 				if (entity.GetComponent<comp::Tag<TagType::BAD>>())
 				{
 					money_ref += 5 * spree.GetSpree();
+					money_ref.IncreaseTotal(5 * spree.GetSpree());
 					spree.AddSpree();
 				}
 
@@ -567,6 +569,10 @@ void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money
 					//Create a new entity with the ruined mesh
 					Entity newHouse = houseManager.CreateHouse(scene, houseManager.GetRuinedHouseType(house->houseType), NameType::EMPTY, NameType::EMPTY);
 					qt->Insert(newHouse);
+
+					sm::Vector3 emitterOffset = newHouse.GetComponent<comp::OrientedBoxCollider>()->Center;
+					newHouse.AddComponent<comp::PARTICLEEMITTER>(emitterOffset, 100, 2.5f, PARTICLEMODE::SMOKEAREA, 4.0f, 1.f, false);
+
 
 					//Remove house from blackboard
 					Blackboard::Get().GetValue<Houses_t>("houses")->houses.erase(entity);
@@ -635,16 +641,16 @@ void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& sce
 					
 					simulation->SendMsg(n.id, msg);
 				}
-				p.respawnTimer -= dt;
+				//p.respawnTimer -= dt;
 
-				if (p.respawnTimer < 0.01f)
-				{
-					simulation->ResetPlayer(e);
-					message<GameMsg> msg;
-					msg.header.id = GameMsg::Game_StopSpectate;
-					simulation->SendMsg(n.id, msg);
-					LOG_INFO("Player %u respawned...", e.GetComponent<comp::Network>()->id);
-				}
+				//if (p.respawnTimer < 0.01f)
+				//{
+				//	simulation->ResetPlayer(e);
+				//	message<GameMsg> msg;
+				//	msg.header.id = GameMsg::Game_StopSpectate;
+				//	simulation->SendMsg(n.id, msg);
+				//	LOG_INFO("Player %u respawned...", e.GetComponent<comp::Network>()->id);
+				//}
 			}
 		});
 

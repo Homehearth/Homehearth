@@ -105,10 +105,6 @@ void Engine::Run()
     T_DESTROY();
     D2D1Core::Destroy();
 	ResourceManager::Get().Destroy();
-
-
-	OptionSystem::Get().SetOption("MasterVolume", std::to_string(m_masterVolume));
-	OptionSystem::Get().OnShutdown();
 }
 
 
