@@ -1,6 +1,6 @@
 #include "NetServerPCH.h"
 #include "HouseManager.h"
-
+#include "ServerSystems.h"
 HouseManager::HouseManager()
 	:houseColliders(nullptr)
 {
@@ -10,13 +10,34 @@ void HouseManager::InitializeHouses(HeadlessScene& scene, QuadTree* qt)
 {
 	//Init all the houses for the scene
 	Entity house5 = CreateHouse(scene, NameType::MESH_HOUSE5, NameType::MESH_DOOR5, NameType::EMPTY);
+	Entity villager1 = VillagerManagement::CreateVillager(scene, house5);
 	Entity house6 = CreateHouse(scene, NameType::MESH_HOUSE6, NameType::MESH_DOOR6, NameType::MESH_HOUSEROOF);
+	Entity villager2 = VillagerManagement::CreateVillager(scene, house6);
 	Entity house7 = CreateHouse(scene, NameType::MESH_HOUSE7, NameType::MESH_DOOR7, NameType::EMPTY);
+	Entity villager3 = VillagerManagement::CreateVillager(scene, house7);
 	Entity house8 = CreateHouse(scene, NameType::MESH_HOUSE8, NameType::MESH_DOOR8, NameType::EMPTY);
+	Entity villager4 = VillagerManagement::CreateVillager(scene, house8);
 	Entity house9 = CreateHouse(scene, NameType::MESH_HOUSE9, NameType::MESH_DOOR9, NameType::EMPTY);
+	Entity villager5 = VillagerManagement::CreateVillager(scene, house9);
 	Entity house10 = CreateHouse(scene, NameType::MESH_HOUSE10, NameType::MESH_DOOR10, NameType::EMPTY);
+	Entity villager6 = VillagerManagement::CreateVillager(scene, house10);
 	Entity waterMillHouse = CreateHouse(scene, NameType::MESH_WATERMILLHOUSE, NameType::MESH_DOOR1, NameType::EMPTY);
 	Entity waterMill = CreateHouse(scene, NameType::MESH_WATERMILL, NameType::EMPTY, NameType::EMPTY);
+
+	PlayersPosition_t allPlayers;
+
+	allPlayers.players.emplace_back(villager1);
+	allPlayers.players.emplace_back(villager2);
+	allPlayers.players.emplace_back(villager3);
+	allPlayers.players.emplace_back(villager4);
+	allPlayers.players.emplace_back(villager5);
+	allPlayers.players.emplace_back(villager6);
+
+	Blackboard::Get().AddValue<PlayersPosition_t>("players", allPlayers);
+
+
+
+
 
 	waterMill.GetComponent<comp::House>()->isDead = true;
 
@@ -49,7 +70,8 @@ void HouseManager::AddCollider(NameType houseType, Entity house) const
 		}
 		else
 		{
-			houseComp->attackNode = Blackboard::Get().GetPathFindManager()->GetNodes()[39][18].get();
+			house.AddComponent<comp::Health>();
+			houseComp->attackNode = Blackboard::Get().GetPathFindManager()->GetNodes()[39][22].get();
 			houseComp->isDead = false;
 		}
 	}
@@ -69,6 +91,7 @@ void HouseManager::AddCollider(NameType houseType, Entity house) const
 		{
 			houseComp->attackNode = Blackboard::Get().GetPathFindManager()->GetNodes()[42][27].get();
 			houseComp->isDead = false;
+			house.AddComponent<comp::Health>();
 		}
 	}
 	else if (houseType == NameType::MESH_HOUSE7 || houseType == NameType::MESH_RUINED_HOUSE7)
@@ -87,6 +110,7 @@ void HouseManager::AddCollider(NameType houseType, Entity house) const
 		{
 			houseComp->attackNode = Blackboard::Get().GetPathFindManager()->GetNodes()[42][22].get();
 			houseComp->isDead = false;
+			house.AddComponent<comp::Health>();
 		}
 	}
 	else if (houseType == NameType::MESH_HOUSE8 || houseType == NameType::MESH_RUINED_HOUSE8)
@@ -105,6 +129,7 @@ void HouseManager::AddCollider(NameType houseType, Entity house) const
 		{
 			houseComp->attackNode = Blackboard::Get().GetPathFindManager()->GetNodes()[44][42].get();
 			houseComp->isDead = false;
+			house.AddComponent<comp::Health>();
 		}
 	}
 	else if (houseType == NameType::MESH_HOUSE9 || houseType == NameType::MESH_RUINED_HOUSE9)
@@ -116,6 +141,7 @@ void HouseManager::AddCollider(NameType houseType, Entity house) const
 		obb->Center.y = 0.0f;
 		if (houseType == NameType::MESH_RUINED_HOUSE9)
 		{
+
 			houseComp->attackNode = nullptr;
 			houseComp->isDead = true;
 		}
@@ -123,6 +149,7 @@ void HouseManager::AddCollider(NameType houseType, Entity house) const
 		{
 			houseComp->attackNode = Blackboard::Get().GetPathFindManager()->GetNodes()[33][22].get();
 			houseComp->isDead = false;
+			house.AddComponent<comp::Health>();
 		}
 	}
 	else if (houseType == NameType::MESH_HOUSE10 || houseType == NameType::MESH_RUINED_HOUSE10)
@@ -141,6 +168,7 @@ void HouseManager::AddCollider(NameType houseType, Entity house) const
 		{
 			houseComp->attackNode = Blackboard::Get().GetPathFindManager()->GetNodes()[28][34].get();
 			houseComp->isDead = false;
+			house.AddComponent<comp::Health>();
 		}
 
 	}
@@ -160,6 +188,7 @@ void HouseManager::AddCollider(NameType houseType, Entity house) const
 		{
 			houseComp->attackNode = Blackboard::Get().GetPathFindManager()->GetNodes()[43][34].get();
 			houseComp->isDead = false;
+			house.AddComponent<comp::Health>();
 		}
 	}
 }
@@ -173,7 +202,6 @@ Entity HouseManager::CreateHouse(HeadlessScene& scene, NameType houseType, NameT
 	houseEntity.AddComponent<comp::Tag<TagType::STATIC>>();
 	houseEntity.AddComponent<comp::Network>();
 	houseEntity.AddComponent<comp::Health>();
-	houseEntity.AddComponent<comp::AudioState>();
 	comp::House* house = houseEntity.AddComponent<comp::House>();
 	house->houseType = houseType;
 

@@ -34,14 +34,12 @@ illum 4
 Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
 Tf 1.00 1.00 1.00
-map_Kd MonsterClothes.png
 Ni 1.00
 newmtl GameMonster_lambert11SG
 illum 4
 Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
 Tf 1.00 1.00 1.00
-map_Kd MonsterBody.png
 Ni 1.00
 newmtl HelmetSG
 illum 4
@@ -138,6 +136,7 @@ Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
 Tf 1.00 1.00 1.00
 map_Kd LeafsDarkG.png
+bump  -bm 1 ThinnLeafN.png
 Ni 1.00
 newmtl lambert10SG
 illum 4
@@ -342,7 +341,6 @@ illum 4
 Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
 Tf 0.36 0.36 0.36
-map_Kd Grid.png
 Ni 1.00
 newmtl lambert42SG
 illum 4

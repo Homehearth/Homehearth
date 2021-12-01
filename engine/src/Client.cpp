@@ -39,7 +39,7 @@ void Client::Update(size_t nMaxMessage)
 		msg >> msg.header.id;
 
 		this->OnMessageReceived(msg);
-		
+
 		nMessageCount++;
 	}
 }

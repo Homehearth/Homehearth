@@ -1,5 +1,4 @@
 GameScene.fbx
-Tree2.fbx
 Tree3.fbx
 Tree4.fbx
 Tree5.fbx
