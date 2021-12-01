@@ -235,9 +235,15 @@ void Systems::MovementSystem(HeadlessScene& scene, float dt)
 	PROFILE_FUNCTION();
 
 	//Transform
-
 	scene.ForEachComponent<comp::Transform, comp::Velocity, comp::TemporaryPhysics >([&](Entity e, comp::Transform& t, comp::Velocity& v, comp::TemporaryPhysics& p)
 		{
+			//Don't update villager that is in hiding
+			comp::Villager* villager = e.GetComponent<comp::Villager>();
+			if (villager != nullptr && villager->isHiding)
+			{
+				return;
+			}
+
 			v.vel = v.oldVel; // ignore any changes made to velocity made this frame
 			auto& it = p.forces.begin();
 			while (it != p.forces.end())
@@ -298,6 +304,14 @@ void Systems::MovementSystem(HeadlessScene& scene, float dt)
 		scene.ForEachComponent<comp::Transform, comp::Velocity>([&, dt]
 		(Entity e, comp::Transform& transform, comp::Velocity& velocity)
 			{
+
+				//Don't update villager that is in hiding
+				comp::Villager* villager = e.GetComponent<comp::Villager>();
+				if (villager != nullptr && villager->isHiding)
+				{
+					return;
+				}
+
 				if (velocity.vel.Length() > 0.01f)
 				{
 					e.UpdateNetwork();

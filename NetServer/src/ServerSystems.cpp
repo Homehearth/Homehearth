@@ -492,8 +492,7 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 			{
 				if (ecs::UseAbility(e, p.moveAbilty, &p.mousePoint))
 				{
-					LOG_INFO("Used moveAbility");
-					//anim.toSend = EAnimationType::MOVE_ABILITY;
+					anim.toSend = EAnimationType::ABILITY1;
 				}
 			}
 
@@ -854,4 +853,36 @@ void ServerSystems::DeathParticleTimer(HeadlessScene& scene)
 				e.RemoveComponent<comp::PARTICLEEMITTER>();
 			}
 		});
+}
+
+Entity VillagerManagement::CreateVillager(HeadlessScene& scene, Entity homeHouse)
+{
+	Entity entity = scene.CreateEntity();
+	entity.AddComponent<comp::Network>();
+	entity.AddComponent<comp::Tag<DYNAMIC>>();
+	entity.AddComponent<comp::Tag<GOOD>>(); // this entity is BAD
+
+	comp::Transform* transform = entity.AddComponent<comp::Transform>();
+	transform->scale = sm::Vector3(1.7f, 1.7f, 1.7f);
+	comp::Health* health = entity.AddComponent<comp::Health>();
+	comp::MeshName* meshName = entity.AddComponent<comp::MeshName>();
+	comp::AnimatorName* animatorName = entity.AddComponent<comp::AnimatorName>();
+	comp::AnimationState* animationState = entity.AddComponent<comp::AnimationState>();
+	comp::SphereCollider* bos = entity.AddComponent<comp::SphereCollider>();
+	comp::Velocity* velocity = entity.AddComponent<comp::Velocity>();
+	comp::BehaviorTree* behaviorTree = entity.AddComponent<comp::BehaviorTree>();
+	comp::Villager* villager = entity.AddComponent<comp::Villager>();
+	comp::House* house = homeHouse.GetComponent<comp::House>();
+	transform->position = house->attackNode->position;
+	transform->position.y = 0.75f;
+	villager->homeHouse = homeHouse;
+	meshName->name = NameType::MESH_VILLAGER;
+	animatorName->name = AnimName::ANIM_KNIGHT;
+
+	bos->Radius = 3.f;
+	villager->movementSpeed = 15.f;
+
+	behaviorTree->root = AIBehaviors::GetVillagerAIBehavior(entity);
+
+	return entity;
 }
