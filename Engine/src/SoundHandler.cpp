@@ -42,9 +42,12 @@ void SoundHandler::LoadAllSounds()
     AddSoundSource("../Assets/Sounds/DayTheme.wav");
     AddSoundSource("../Assets/Sounds/NightTheme.wav");
     AddSoundSource("../Assets/Sounds/MenuTheme.mp3");
-    AddSoundSource("../Assets/Sounds/ButtonClick.mp3");
+    AddSoundSource("../Assets/Sounds/ButtonClick.wav");
     AddSoundSource("../Assets/Sounds/OnGameOver.wav");
     AddSoundSource("../Assets/Sounds/OnJoinLobby.wav");
+    AddSoundSource("../Assets/Sounds/BreakSound1.wav");
+    AddSoundSource("../Assets/Sounds/BreakSound2.wav");
+    AddSoundSource("../Assets/Sounds/BreakSound3.wav");
 
     AddSoundSource("../Assets/Sounds/Player_OnMovement.wav");
     AddSoundSource("../Assets/Sounds/Player_OnMeleeAttack.wav");
@@ -59,6 +62,13 @@ void SoundHandler::LoadAllSounds()
     AddSoundSource("../Assets/Sounds/Player_OnHealingRecieved.wav");
     AddSoundSource("../Assets/Sounds/Player_OnDeath.wav");
     AddSoundSource("../Assets/Sounds/Player_OnRespawn.wav");
+
+    AddSoundSource("../Assets/Sounds/Player_OnMeleeAttack1.mp3");
+    AddSoundSource("../Assets/Sounds/Player_OnMeleeAttack2.mp3");
+    AddSoundSource("../Assets/Sounds/Player_OnMeleeAttack3.mp3");
+    AddSoundSource("../Assets/Sounds/Player_OnMeleeAttack4.mp3");
+    AddSoundSource("../Assets/Sounds/Player_OnMeleeAttack5.mp3");
+    AddSoundSource("../Assets/Sounds/Player_OnMeleeAttack6.mp3");
     AddSoundSource("../Assets/Sounds/Enemy_OnDeath.wav");
 }
 

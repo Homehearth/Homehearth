@@ -373,7 +373,11 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 				SH->PlaySound("Enemy_OnMovement", data);
 				break;
 			case ESoundEvent::Enemy_MeleeAttack:
-				SH->PlaySound("Enemy_MeleeAttack", data);
+				{
+				int version = rand() % 6 + 1;
+				std::string onAttackName = "Enemy_MeleeAttack" + std::to_string(version);
+				SH->PlaySound(onAttackName, data);
+				}
 				break;
 			case ESoundEvent::Enemy_RangeAttack:
 				SH->PlaySound("Enemy_RangeAttack", data);

@@ -169,7 +169,8 @@ void Button::OnClick()
 	{
 		audio_t audio = {};
 		audio.playLooped = false;
-		audio.isUnique = true;
+		audio.isUnique = false;
+		audio.volume = 0.5f;
 		SoundHandler::Get().PlaySound("ButtonClick", audio);
 
 		m_function();

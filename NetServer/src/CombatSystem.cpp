@@ -14,17 +14,20 @@ void CombatSystem::UpdateMelee(HeadlessScene& scene)
 			Entity attackEntity = CreateAttackEntity(entity, scene, &transform, &stats);
 			AddCollisionMeleeBehavior(entity, attackEntity, scene);
 
+
 			if(entity.GetComponent<comp::Player>())
 			{
-				audio_t audio = {};
-				audio.type = ESoundEvent::Player_OnMeleeAttack;
-				audio.position = entity.GetComponent<comp::Transform>()->position;
-				audio.shouldBroadcast = true;
-				audio.isUnique = false;
-				audio.playLooped = false;
-				audio.is3D = true;
-				audio.minDistance = 100.f;
-				audio.volume = 10.f;
+				audio_t audio = {
+					ESoundEvent::Player_OnMeleeAttack,
+					entity.GetComponent<comp::Transform>()->position,
+					10.f,
+					50.f,
+					true,
+					false,
+					true,
+					false,
+				};
+
 				entity.GetComponent<comp::AudioState>()->data.emplace(audio);
 			}
 		}
@@ -46,15 +49,17 @@ void CombatSystem::UpdateRange(HeadlessScene& scene)
 			Entity attackEntity = CreateAttackEntity(entity, scene, &transform, &stats);
 			AddCollisionRangeBehavior(entity, attackEntity, scene);
 
-			audio_t audio = {};
-			audio.type = ESoundEvent::Player_OnRangeAttack;
-			audio.position = entity.GetComponent<comp::Transform>()->position;
-			audio.shouldBroadcast = true;
-			audio.isUnique = false;
-			audio.playLooped = false;
-			audio.is3D = true;
-			audio.minDistance = 100.f;
-			audio.volume = 10.f;
+			audio_t audio = {
+				ESoundEvent::Player_OnRangeAttack,
+				entity.GetComponent<comp::Transform>()->position,
+				10.f,
+				100.f,
+				true,
+				false,
+				true,
+				false,
+			};
+
 			entity.GetComponent<comp::AudioState>()->data.emplace(audio);
 		}
 	});
