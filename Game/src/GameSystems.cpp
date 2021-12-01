@@ -164,7 +164,7 @@ void GameSystems::UpdatePlayerVisuals(Game* game)
 							health->SetStretch(width / 4.0f, height / 24.f);
 							STRECH_ONCE = false;
 						}
-						health->SetPosition(width / 32.0f, height - (height / 16.0f));
+						health->SetPosition(width / 32.0f, height - (height / 13.0f));
 						health->SetVisiblity(true);
 					}
 				}
