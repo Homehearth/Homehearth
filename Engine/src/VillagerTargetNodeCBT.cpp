@@ -6,8 +6,12 @@ BT::VillagerTargetNodeCBT::VillagerTargetNodeCBT(const std::string& name, Entity
 	entity(entity)
 {
 	this->NewIdlePosTimer.Start();
-	srand(time(NULL));
 	refreshRate = (5.0f + static_cast<float>(rand() % 3));
+	comp::Villager* villager = entity.GetComponent<comp::Villager>();
+
+	sm::Vector3 targetPosition;
+	targetPosition = villager->idlePos.at(rand() % villager->idlePos.size());
+	Blackboard::Get().AddValue<sm::Vector3>("villagerTarget" + std::to_string(entity), targetPosition);
 }
 
 BT::VillagerTargetNodeCBT::~VillagerTargetNodeCBT()
