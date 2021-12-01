@@ -447,6 +447,20 @@ struct basic_model_matrix_t
 };
 
 ALIGN16
+struct texture_effect_t
+{
+	unsigned int frequency = 0;
+	unsigned int amplitude = 0;
+	float counter   = 0.f;
+};
+
+ALIGN16
+struct delta_time_t
+{
+	float delta;
+};
+
+ALIGN16
 struct collider_hit_t
 {
 	int hit;
