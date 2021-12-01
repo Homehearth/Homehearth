@@ -157,7 +157,9 @@ bool Window::Initialize(const Desc& desc)
 #ifdef _DEBUG
 	ShowWindow(this->m_hWnd, desc.nShowCmd);
 #else
-	ShowWindow(this->m_hWnd, SW_NORMAL);
+	ShowWindow(this->m_hWnd, SW_MAXIMIZE);
+	SetWindowLongPtr(m_hWnd, GWL_STYLE, WS_VISIBLE | WS_POPUP);
+	SetWindowPos(m_hWnd, HWND_TOP, 0, 0, width, height, SWP_FRAMECHANGED);
 #endif
 	//ConfineCursor(this->m_hWnd);
 
