@@ -28,10 +28,8 @@ void TextureEffectPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceCont
         DC->CSSetConstantBuffers(7, 1, PM->m_textureEffectConstantBuffer.GetAddressOf());
     }
 
-    
     // SHADER RESOURCES.
     {
-        //DC->CSSetShaderResources(18, 1, PM->m_SRV_TextureEffectWaterEdgeMap.GetAddressOf());
         DC->CSSetShaderResources(19, 1, PM->m_SRV_TextureEffectWaterFloorMap.GetAddressOf());
         DC->CSSetSamplers(0, 1, PM->m_pointSamplerState.GetAddressOf());
     }
@@ -43,7 +41,6 @@ void TextureEffectPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceCont
 
     // DISPATCH
     {
-        //const int groupCount = static_cast<int>(ceil(m_MAX_PIXELS));
         DC->Dispatch(8, 8, 1);
     }
 }
@@ -51,14 +48,14 @@ void TextureEffectPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceCont
 void TextureEffectPass::Render(Scene* pScene)
 {
     //Reset timer at some point
-    if (m_CBuffer.counter > 1000)
+    if (m_CBuffer.counter > 100)
     {
         m_CBuffer.counter = 0;
     }
 
     // Update constantbuffer here!
-    m_CBuffer.amplitude = 10.f;
-    m_CBuffer.frequency = 25.f;
+    m_CBuffer.amplitude = 10;
+    m_CBuffer.frequency = 25;
     m_CBuffer.counter += Stats::Get().GetFrameTime();
     D3D11Core::Get().DeviceContext()->UpdateSubresource(PM->m_textureEffectConstantBuffer.Get(), 0, nullptr, &m_CBuffer, 0, 0);
 }

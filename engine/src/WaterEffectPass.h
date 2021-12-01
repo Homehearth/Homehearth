@@ -10,8 +10,6 @@ class WaterEffectPass : public IRenderPass
 {
 private:
 
-	const int m_MAX_PIXELS = 256 * 256;
-	float m_clearColor[4] = { 0.f,0.f,0.f,0.f };
 	texture_effect_t m_CBuffer;
 
 public:

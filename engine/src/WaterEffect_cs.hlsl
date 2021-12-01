@@ -5,8 +5,8 @@ void main(uint3 id : SV_DispatchThreadID)
 {
 
     //Color compare
-    float4 upperClamp = { 0.65, 0.65, 0.65, 1 };
-    float4 lowerClamp = { 0.7, 0.7, 0.7, 1 };
+    float4 upperClamp = float4(0.65, 0.65, 0.65, 1);
+    float4 lowerClamp = float4(0.7, 0.7, 0.7, 1);
     
     //Dimention
     float2 dimensions = { 0, 0 };
@@ -34,10 +34,6 @@ void main(uint3 id : SV_DispatchThreadID)
     uv2.x += uv2.x + (c_counter * 20);
     
     uv3.y += uv3.y + (c_counter * 60);
-    //uv3.y += uv3.y + (c_counter * 30);
-
-    //uv3.y = uv3.y * 2;
-    //uv3.x = uv3.x * 2;
     
     //Make sure it tiles. 
     uv.x = uv.x % dimensions.x;
@@ -76,5 +72,4 @@ void main(uint3 id : SV_DispatchThreadID)
     
     u_waterTexture[id.xy] = color;
     u_waterTextureN[id.xy] = colorN;
-    
 }
