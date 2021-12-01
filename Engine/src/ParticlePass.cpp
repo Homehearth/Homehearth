@@ -3,6 +3,11 @@
 
 void ParticlePass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 {
+	if (m_skyboxRef)
+	{
+		m_skyboxRef->Bind(pDeviceContext);
+	}
+
 	//Binding genereal data
 	DC->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
 	DC->IASetInputLayout(PM->m_ParticleInputLayout.Get());
@@ -18,6 +23,7 @@ void ParticlePass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 
 	DC->IASetVertexBuffers(0,1, &m_nullBuffer, &m_stride, &m_offset);
 	DC->GSSetConstantBuffers(1, 1, pCam->m_viewConstantBuffer.GetAddressOf());
+	DC->PSSetConstantBuffers(1, 1, pCam->m_viewConstantBuffer.GetAddressOf());
 	DC->CSSetShaderResources(18, 1, m_randomNumbersSRV.GetAddressOf());
 }
 

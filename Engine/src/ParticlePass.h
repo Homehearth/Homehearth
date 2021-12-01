@@ -39,6 +39,8 @@ private:
 	void CreateRandomNumbers();
 
 public:
+	Skybox* m_skyboxRef = nullptr;
+
 	ParticlePass() = default;
 	virtual ~ParticlePass() = default;
 
