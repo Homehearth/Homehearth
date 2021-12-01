@@ -326,7 +326,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 				break;
 			case ESoundEvent::Player_OnCastDash:
 				{
-					int version = rand() % 5;
+					int version = rand() % 10;
 					if(version == 0)
 						SH->PlaySound("Player_OnCastDash1", data);
 					else
