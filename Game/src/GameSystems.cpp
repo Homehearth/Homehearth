@@ -15,15 +15,15 @@ void GameSystems::DisplayUpgradeDefences(Game* game)
 		if (shopitem == ShopItem::Defence1x1 || shopitem == ShopItem::Defence1x3)
 		{
 			Scene& scene = *game->GetCurrentScene();
-				bool shouldNotShow = true;
-				const unsigned int width = D2D1Core::GetWindow()->GetWidth();
-				const unsigned int height = D2D1Core::GetWindow()->GetHeight();
+			bool shouldNotShow = true;
+			const unsigned int width = D2D1Core::GetWindow()->GetWidth();
+			const unsigned int height = D2D1Core::GetWindow()->GetHeight();
 
-				bool pressed = false;
-				if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::R, KeyState::PRESSED))
-				{
-					pressed = true;
-				}
+			bool pressed = false;
+			if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::R, KeyState::PRESSED))
+			{
+				pressed = true;
+			}
 
 
 			float t = 9999;

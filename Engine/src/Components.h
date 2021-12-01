@@ -307,13 +307,15 @@ namespace ecs
 			float respawnTimer;
 			bool isReady = false;
 			bool reachable = true;
-
+			
 			char name[12] = {};
 
-			//Place defence option
+			ShopItem		shopItem = ShopItem::None;
+
+			//Place defence option 
 			float			buildDistance = 24.0f;		//A tiles width is ~8
 			bool			rotateDefence = false;
-			ShopItem		shopItem	  = ShopItem::None;
+			uint32_t		hoverDefNetID = UINT32_MAX;
 		};
 
 		

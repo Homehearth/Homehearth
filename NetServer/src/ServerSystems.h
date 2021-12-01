@@ -53,4 +53,6 @@ namespace ServerSystems
 	void AnimatonSystem(Simulation* simulation, HeadlessScene& scene);
 
 	void DeathParticleTimer(HeadlessScene& scene);
+
+	void UpdateHoverDefences(HeadlessScene& scene);
 }

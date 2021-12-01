@@ -426,7 +426,7 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 				anim.toSend = EAnimationType::IDLE;
 
 			// check if using abilities
-			if (p.lastInputState.leftMouse) // is held
+			if (p.lastInputState.leftMouse) // is pressed
 			{
 				switch (p.shopItem)
 				{
@@ -502,7 +502,6 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 			if (p.lastInputState.mousewheelDir != 0)
 			{
 				//std::cout << "Server, wheel: " << p.lastInputState.mousewheelDir << std::endl;
-
 				if (p.lastInputState.mousewheelDir > 0)
 					p.rotateDefence = true;
 				else if (p.lastInputState.mousewheelDir < 0)
@@ -645,7 +644,7 @@ void ServerSystems::AnimatonSystem(Simulation* simulation, HeadlessScene& scene)
 				msg.header.id = GameMsg::Game_ChangeAnimation;
 				msg << anim.toSend << net.id;
 				simulation->Broadcast(msg);
-
+				
 				anim.lastSend = anim.toSend;
 				anim.toSend = EAnimationType::NONE;
 			}
@@ -665,4 +664,33 @@ void ServerSystems::DeathParticleTimer(HeadlessScene& scene)
 				e.RemoveComponent<comp::PARTICLEEMITTER>();
 			}
 		});
+}
+
+void ServerSystems::UpdateHoverDefences(HeadlessScene& scene)
+{
+	scene.ForEachComponent<comp::Player>([&](Entity& e, comp::Player& player)
+		{
+			if (player.shopItem == ShopItem::Defence1x1 ||
+				player.shopItem == ShopItem::Defence1x3)
+			{
+				//We dont have a hovering defence - create it
+				if (player.hoverDefNetID != UINT32_MAX)
+				{
+					Entity hoverdef = scene.CreateEntity();
+
+					/*hoverdef.AddComponent<comp::Transform>();
+					hoverdef.AddComponent<comp::Network>();*/
+					
+				}
+				else
+				{
+					
+
+
+				}
+			}
+		});
+
+	//Renderable, netid, defense?
+	//scene.ForEachComponent<comp::Player>([&](Entity& e, comp::Player& player)
 }

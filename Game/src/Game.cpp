@@ -673,41 +673,10 @@ void Game::CreateLobby()
 	}
 }
 
-//const ShopMode& Game::GetCurrentMode() const
-//{
-//	if (m_players.find(m_localPID) != m_players.end())
-//	{
-//		comp::Player* playerComp = m_players.at(m_localPID).GetComponent<comp::Player>();
-//		if (playerComp)
-//		{
-//			return playerComp->shopmode;
-//		}
-//	}
-//	return ShopMode::NONE;
-//}
-
 const Cycle& Game::GetCurrentCycle() const
 {
 	return m_serverCycle;
 }
-
-//void Game::SetMode(const ShopMode& mode)
-//{
-//	if (m_players.find(m_localPID) != m_players.end()) 
-//	{
-//		comp::Player* playerComp = m_players.at(m_localPID).GetComponent<comp::Player>();
-//		if (playerComp)
-//		{
-//			playerComp->shopmode = mode;
-//
-//			//Update the server
-//			network::message<GameMsg> msg;
-//			msg.header.id = GameMsg::Game_UpdateShopMode;
-//			msg << mode << m_localPID << m_gameID;
-//			m_client.Send(msg);
-//		}
-//	}
-//}
 
 const uint32_t& Game::GetMoney() const
 {
@@ -1013,6 +982,7 @@ void Game::UpdateInput()
 	m_inputState.axisVertical = InputSystem::Get().GetAxis(Axis::VERTICAL);
 	m_inputState.mousewheelDir = InputSystem::Get().GetMouseWheelDirection();
 	
+	//WORK IN PROGRESS...
 	if (m_inputState.mousewheelDir != 0)
 		std::cout << "Inputstate: " << m_inputState.mousewheelDir << std::endl;
 
