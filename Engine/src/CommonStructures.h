@@ -331,17 +331,21 @@ enum class ESoundEvent : uint32_t
 	Player_OnCastHealing,
 	Player_OnCastDash,
 	Player_OnHealingRecieved,
-	Player_OnLeap,
-	Player_OnDash,
 	Player_OnDeath,
 	Player_OnRespawn,
 
 	Enemy_OnMovement,
-	Enemy_MeleeAttack,
-	Enemy_RangeAttack,
+	Enemy_OnMeleeAttack,
+	Enemy_OnRangeAttack,
 	Enemy_OnDmgDealt,
 	Enemy_OnDmgRecieved,
 	Enemy_OnDeath,
+
+	Game_OnJoinLobby,
+	Game_OnHouseDestroyed,
+	Game_OnDefencePlaced,
+	Game_OnDefenceDestroyed,
+
 	ENUM_SIZE
 };
 

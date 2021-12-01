@@ -397,6 +397,7 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 			defenceEntity.AddComponent<comp::Tag<TagType::STATIC>>();
 			defenceEntity.AddComponent<comp::Tag<TagType::DEFENCE>>();
 			defenceEntity.AddComponent<comp::Network>();
+			defenceEntity.AddComponent<comp::AudioState>();
 			coordinates.shrink_to_fit();
 			defenceEntity.AddComponent<comp::TileSet>()->coordinates = coordinates;
 			aiHandler->AddDefenseEntity(defenceEntity);

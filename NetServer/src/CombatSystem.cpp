@@ -14,22 +14,31 @@ void CombatSystem::UpdateMelee(HeadlessScene& scene)
 			Entity attackEntity = CreateAttackEntity(entity, scene, &transform, &stats);
 			AddCollisionMeleeBehavior(entity, attackEntity, scene);
 
+			audio_t audio = {
+				ESoundEvent::NONE,
+				entity.GetComponent<comp::Transform>()->position,
+				10.f,
+				50.f,
+				true,
+				false,
+				true,
+				false,
+			};
 
 			if(entity.GetComponent<comp::Player>())
 			{
-				audio_t audio = {
-					ESoundEvent::Player_OnMeleeAttack,
-					entity.GetComponent<comp::Transform>()->position,
-					10.f,
-					50.f,
-					true,
-					false,
-					true,
-					false,
-				};
-
-				entity.GetComponent<comp::AudioState>()->data.emplace(audio);
+				audio.type = ESoundEvent::Player_OnMeleeAttack;
 			}
+			else if(entity.GetComponent<comp::NPC>())
+			{
+				audio.type = ESoundEvent::Enemy_OnMeleeAttack;
+			}
+
+			scene.ForEachComponent<comp::Player>([&](Entity& playerEntity, comp::Player& player)
+				{
+					playerEntity.GetComponent<comp::AudioState>()->data.emplace(audio);
+				});
+
 		}
 	});
 }
@@ -50,7 +59,7 @@ void CombatSystem::UpdateRange(HeadlessScene& scene)
 			AddCollisionRangeBehavior(entity, attackEntity, scene);
 
 			audio_t audio = {
-				ESoundEvent::Player_OnRangeAttack,
+				ESoundEvent::NONE,
 				entity.GetComponent<comp::Transform>()->position,
 				10.f,
 				100.f,
@@ -60,7 +69,16 @@ void CombatSystem::UpdateRange(HeadlessScene& scene)
 				false,
 			};
 
-			entity.GetComponent<comp::AudioState>()->data.emplace(audio);
+			if (entity.GetComponent<comp::Player>())
+			{
+				audio.type = ESoundEvent::Player_OnRangeAttack;
+				entity.GetComponent<comp::AudioState>()->data.emplace(audio);
+			}
+			else if (entity.GetComponent<comp::NPC>())
+			{
+				audio.type = ESoundEvent::Enemy_OnRangeAttack;
+				entity.GetComponent<comp::AudioState>()->data.emplace(audio);
+			}
 		}
 	});
 }
@@ -127,15 +145,17 @@ void CombatSystem::UpdateDash(HeadlessScene& scene)
 			if (ecs::ReadyToUse(&dashAbility, nullptr))
 			{
 				//dashAbility.velocityBeforeDash = entity.GetComponent<comp::Velocity>()->vel;
-				audio_t audio = {};
-				audio.type = ESoundEvent::Player_OnCastDash;
-				audio.position = entity.GetComponent<comp::Transform>()->position;
-				audio.shouldBroadcast = true;
-				audio.isUnique = false;
-				audio.playLooped = false;
-				audio.is3D = true;
-				audio.minDistance = 100.f;
-				audio.volume = 10.f;
+				audio_t audio = {
+					ESoundEvent::Player_OnCastDash,
+					entity.GetComponent<comp::Transform>()->position,
+					10.f,
+					100.f,
+					true,
+					false,
+					true,
+					false,
+				};
+
 				entity.GetComponent<comp::AudioState>()->data.emplace(audio);
 			}
 			if (ecs::IsUsing(&dashAbility))
@@ -281,6 +301,17 @@ void CombatSystem::AddCollisionMeleeBehavior(Entity entity, Entity attackEntity,
 			comp::Health* otherHealth = other.GetComponent<comp::Health>();
 			comp::MeleeAttackAbility* attackAbility = entity.GetComponent<comp::MeleeAttackAbility>();
 
+			audio_t audio = {
+				ESoundEvent::NONE,
+				entity.GetComponent<comp::Transform>()->position,
+				1.f,
+				100.f,
+				false,
+				false,
+				false,
+				false,
+			};
+
 			if (otherHealth && attackAbility)
 			{
 				otherHealth->currentHealth -= attackAbility->attackDamage;
@@ -300,22 +331,28 @@ void CombatSystem::AddCollisionMeleeBehavior(Entity entity, Entity attackEntity,
 
 					scene.publish<EComponentUpdated>(other, ecs::Component::PARTICLEMITTER);
 				}
-
+				
 				// update Health on network
 				scene.publish<EComponentUpdated>(other, ecs::Component::HEALTH);
 
 				// Add some sound effects
+				comp::AudioState* audioState = other.GetComponent<comp::AudioState>();
 				if(other.GetComponent<comp::Player>())
 				{
-					audio_t audio;
 					audio.type = ESoundEvent::Player_OnDmgRecieved;
-					audio.position = other.GetComponent<comp::Transform>()->position;
-					audio.isUnique = false;
-					audio.shouldBroadcast = false;
-					audio.playLooped = false;
-					audio.is3D = false;
-					audio.volume = 10.f;
-					other.GetComponent<comp::AudioState>()->data.emplace(audio);
+				}
+				else if (other.GetComponent<comp::NPC>())
+				{
+					audio.type = ESoundEvent::Enemy_OnDmgRecieved;
+				}
+				else if (other.GetComponent<comp::Tag<STATIC>>() && entity.GetComponent<comp::Player>())
+				{
+					audio.type = ESoundEvent::Player_OnMeleeAttackHit;
+				}
+
+				if (audioState)
+				{
+					audioState->data.emplace(audio);
 				}
 
 				thisEntity.GetComponent<comp::SelfDestruct>()->lifeTime = 0.f;
@@ -348,7 +385,6 @@ void CombatSystem::AddCollisionMeleeBehavior(Entity entity, Entity attackEntity,
 					auto gravity = ecs::GetGravityForce();
 					p->forces.push_back(gravity);
 				}
-
 			}
 			return;
 		});

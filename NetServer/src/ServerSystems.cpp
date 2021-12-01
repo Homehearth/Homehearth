@@ -30,6 +30,8 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 	comp::SphereCollider* bos = entity.AddComponent<comp::SphereCollider>();
 	comp::Velocity* velocity = entity.AddComponent<comp::Velocity>();
 	comp::BehaviorTree* behaviorTree = entity.AddComponent<comp::BehaviorTree>();
+	entity.AddComponent<comp::AudioState>();
+
 	switch (type)
 	{
 	case EnemyType::Default:
@@ -511,8 +513,23 @@ void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money
 				// if player
 				comp::House* house = entity.GetComponent<comp::House>();
 				comp::Player* p = entity.GetComponent<comp::Player>();
+				comp::NPC* npc = entity.GetComponent<comp::NPC>();
+
+				audio_t audio = {
+					ESoundEvent::NONE,
+					entity.GetComponent<comp::Transform>()->position,
+					1.0f,
+					250.f,
+					true,
+					false,
+					false,
+					false,
+				};
+				
 				if (p)
 				{
+					audio.type = ESoundEvent::Player_OnDeath;
+
 					p->respawnTimer = 10.f;
 					p->state = comp::Player::State::SPECTATING;
 					entity.RemoveComponent<comp::Tag<TagType::DYNAMIC>>();
@@ -527,6 +544,8 @@ void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money
 					node->reachable = true;
 					node->defencePlaced = false;
 
+					audio.type = ESoundEvent::Game_OnDefenceDestroyed;
+
 					//Removing the defence and its neighbours if needed
 					grid.RemoveDefence(entity);
 					entity.Destroy();
@@ -540,15 +559,29 @@ void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money
 					//Remove house from blackboard
 					Blackboard::Get().GetValue<Houses_t>("houses")->houses.erase(entity);
 
+					//audio.position = entity.GetComponent<comp::OrientedBoxCollider>()->Center;
+					audio.type = ESoundEvent::Game_OnHouseDestroyed;
+
 					//Destroy House entities with roof and door
 					house->houseRoof.Destroy();
 					house->door.Destroy();
+					entity.Destroy();
+				}
+				else if(npc)
+				{
+					audio.type = ESoundEvent::Enemy_OnDeath;
 					entity.Destroy();
 				}
 				else
 				{
 					entity.Destroy();
 				}
+
+				scene.ForEachComponent<comp::Player>([&](Entity& playerEntity, comp::Player& player)
+				{
+					playerEntity.GetComponent<comp::AudioState>()->data.emplace(audio);
+				});
+
 			}
 			else if (health.currentHealth > health.maxHealth)
 			{
