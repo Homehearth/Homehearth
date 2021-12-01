@@ -716,56 +716,73 @@ namespace sceneHelp
 			});
 
 		// Shadows toggle.
-		static int ShadowType = std::stoi(OptionSystem::Get().GetOption("Shadows"));
-		rtd::Button* shadowButton = miscMenu->AddElement<rtd::Button>("Button.png", draw_t((width / 8.0f) * 5.0f, height / 8.0f, width / 4.0f, height / 8.0f));
-		rtd::Text* shadowType = miscMenu->AddElement<rtd::Text>("Shadows: ON", draw_t((width / 8.0f) * 5.0f, height / 8.0f, width / 4.0f, height / 8.0f));
-		
-		switch (ShadowType)
+		static int lightQuality = std::stoi(OptionSystem::Get().GetOption("VolumetricLightQuality"));
+		rtd::Button* lightQualityButton = miscMenu->AddElement<rtd::Button>("Button.png", draw_t((width / 8.0f) * 5.0f, height / 8.0f, width / 4.0f, height / 8.0f));
+		rtd::Text* lightQualityType = miscMenu->AddElement<rtd::Text>("Volumetric Light Quality: LOW", draw_t((width / 8.0f) * 5.0f, height / 8.0f, width / 4.0f, height / 8.0f));
+
+		if (lightQuality <= 15 && lightQuality > 0)
 		{
-		case 1: // OFF
-		{
-			shadowType->SetText("Shadows: OFF");
-			thread::RenderThreadHandler::Get().GetRenderer()->GetShadowPass()->SetEnable(false);
-			break;
+			lightQualityType->SetText("Volumetric Light Quality: LOW");
 		}
-		case 2: // ON
+		else if (lightQuality > 15 && lightQuality <= 50)
 		{
-			shadowType->SetText("Shadows: ON");
-			thread::RenderThreadHandler::Get().GetRenderer()->GetShadowPass()->SetEnable(true);
-			break;
+			lightQualityType->SetText("Volumetric Light Quality: MEDIUM");
 		}
-		default:
+		else if (lightQuality > 50 && lightQuality <= 100)
 		{
-			ShadowType = 2;
-			break;
+			lightQualityType->SetText("Volumetric Light Quality: HIGH");
 		}
+		else if (lightQuality > 100 && lightQuality <= 200)
+		{
+			lightQualityType->SetText("Volumetric Light Quality: INSANE");
+		}
+		else
+		{
+			lightQualityType->SetText("Volumetric Light Quality: MEDIUM");
+			lightQuality = 50;
 		}
 
-		OptionSystem::Get().SetOption("Shadows", std::to_string(ShadowType));
+		game->GetScene("Game").GetLights()->SetLightVolumeQuality(lightQuality);
+		OptionSystem::Get().SetOption("VolumetricLightQuality", std::to_string(lightQuality));
 		
-		shadowButton->SetOnPressedEvent([=] {
+		lightQualityButton->SetOnPressedEvent([=] {
 
-			switch (ShadowType)
+			switch (lightQuality)
 			{
-			case 1: // OFF
+			case 15:
 			{
-				ShadowType = 2;
-				shadowType->SetText("Shadows: ON");
-				OptionSystem::Get().SetOption("Shadows", std::string("2"));
-				thread::RenderThreadHandler::Get().GetRenderer()->GetShadowPass()->SetEnable(true);
+				lightQuality = 50;
+				lightQualityType->SetText("Volumetric Light Quality: MEDIUM");
 				break;
 			}
-			case 2: // ON
+			case 50:
 			{
-				ShadowType = 1;
-				shadowType->SetText("Shadows: OFF");
-				OptionSystem::Get().SetOption("Shadows", std::string("1"));
-				thread::RenderThreadHandler::Get().GetRenderer()->GetShadowPass()->SetEnable(false);
+				lightQuality = 100;
+				lightQualityType->SetText("Volumetric Light Quality: HIGH");
+				break;
+			}
+			case 100:
+			{
+				lightQuality = 200;
+				lightQualityType->SetText("Volumetric Light Quality: INSANE");
+				break;
+			}
+			case 200:
+			{
+				lightQuality = 15;
+				lightQualityType->SetText("Volumetric Light Quality: LOW");
 				break;
 			}
 			default:
+			{
+				lightQuality = 15;
+				lightQualityType->SetText("Volumetric Light Quality: LOW");
 				break;
 			}
+			};
+
+			OptionSystem::Get().SetOption("VolumetricLightQuality", std::to_string(lightQuality));
+			game->GetScene("Game").GetLights()->SetLightVolumeQuality(lightQuality);
 
 			});
 
@@ -773,9 +790,13 @@ namespace sceneHelp
 
 		static std::string shadowQuality = OptionSystem::Get().GetOption("ShadowQuality");
 		rtd::Button* shadowSizeButton = miscMenu->AddElement<rtd::Button>("Button.png", draw_t((width / 8.0f) * 5.0f, (height / 8.0f) * 4.0f, width / 4.0f, height / 8.0f));
-		rtd::Text* shadowSize = miscMenu->AddElement<rtd::Text>("Shadows Quality: LOW", draw_t((width / 8.0f) * 5.0f, (height / 8.0f) * 4.0f, width / 4.0f, height / 8.0f));
+		rtd::Text* shadowSize = miscMenu->AddElement<rtd::Text>("Shadows Quality: MEDIUM", draw_t((width / 8.0f) * 5.0f, (height / 8.0f) * 4.0f, width / 4.0f, height / 8.0f));
 
-		if (shadowQuality == "Low")
+		if (shadowQuality == "Potato")
+		{
+			shadowSize->SetText("Shadows Quality: POTATO");
+		}
+		else if (shadowQuality == "Low")
 		{
 			shadowSize->SetText("Shadows Quality: LOW");
 		}
@@ -787,6 +808,10 @@ namespace sceneHelp
 		{
 			shadowSize->SetText("Shadows Quality: HIGH");
 		}
+		else if (shadowQuality == "Insane")
+		{
+			shadowSize->SetText("Shadows Quality: INSANE");
+		}
 		else
 		{
 			shadowSize->SetText("Shadows Quality: MEDIUM");
@@ -796,23 +821,35 @@ namespace sceneHelp
 
 		shadowSizeButton->SetOnPressedEvent([=] {
 
-			if (shadowQuality == "Low")
+			if (shadowQuality == "Potato")
+			{
+				shadowSize->SetText("Shadows Quality: LOW");
+				shadowQuality = "Low";
+				thread::RenderThreadHandler::Get().GetRenderer()->GetShadowPass()->SetShadowMapSize(256);
+			}
+			else if (shadowQuality == "Low")
 			{
 				shadowSize->SetText("Shadows Quality: MEDIUM");
 				shadowQuality = "Medium";
-				thread::RenderThreadHandler::Get().GetRenderer()->GetShadowPass()->SetShadowMapSize(2048);
+				thread::RenderThreadHandler::Get().GetRenderer()->GetShadowPass()->SetShadowMapSize(1024);
 			}
 			else if (shadowQuality == "Medium")
 			{
 				shadowSize->SetText("Shadows Quality: HIGH");
 				shadowQuality = "High";
-				thread::RenderThreadHandler::Get().GetRenderer()->GetShadowPass()->SetShadowMapSize(4096);
+				thread::RenderThreadHandler::Get().GetRenderer()->GetShadowPass()->SetShadowMapSize(2048);
 			}
 			else if (shadowQuality == "High")
 			{
-				shadowSize->SetText("Shadows Quality: LOW");
-				shadowQuality = "Low";
-				thread::RenderThreadHandler::Get().GetRenderer()->GetShadowPass()->SetShadowMapSize(1024);
+				shadowSize->SetText("Shadows Quality: INSANE");
+				shadowQuality = "Insane";
+				thread::RenderThreadHandler::Get().GetRenderer()->GetShadowPass()->SetShadowMapSize(4096);
+			}
+			else if (shadowQuality == "Insane")
+			{
+				shadowSize->SetText("Shadows Quality: POTATO");
+				shadowQuality = "Potato";
+				thread::RenderThreadHandler::Get().GetRenderer()->GetShadowPass()->SetShadowMapSize(512);
 			}
 			OptionSystem::Get().SetOption("ShadowQuality", shadowQuality);
 

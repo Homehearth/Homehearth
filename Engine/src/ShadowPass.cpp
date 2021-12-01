@@ -318,17 +318,25 @@ void ShadowPass::Render(Scene* pScene)
 void ShadowPass::StartUp()
 {
 	std::string o = OptionSystem::Get().GetOption("ShadowQuality");
-	m_shadowSize = 2048;
+	m_shadowSize = 1024;
 
-	if (o == "Low")
+	if (o == "Potato")
 	{
-		m_shadowSize = 1024;
+		m_shadowSize = 256;
+	}
+	else if (o == "Low")
+	{
+		m_shadowSize = 512;
 	}
 	else if (o == "Medium")
 	{
-		m_shadowSize = 2048;
+		m_shadowSize = 1024;
 	}
 	else if (o == "High")
+	{
+		m_shadowSize = 2048;
+	}
+	else if (o == "Insane")
 	{
 		m_shadowSize = 4096;
 	}
