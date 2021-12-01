@@ -368,6 +368,7 @@ void ServerSystems::WaveSystem(Simulation* simulation,
 		}
 
 		//Add count and pop from queue
+		simulation->IncreaseWavesSurvived();
 		waves.pop();
 	}
 }

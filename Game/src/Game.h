@@ -13,7 +13,6 @@ private:
 	GridSystem m_grid;
 	uint32_t m_waveTimer = 0;
 	uint32_t m_money;	
-	uint32_t m_gatheredMoney;
 	ParticleSystem m_particles;
 	Mode m_mode = Mode::PLAY_MODE;
 	Cycle m_serverCycle = Cycle::DAY;
@@ -59,7 +58,6 @@ public:
 	void SetMode(const Mode& mode);
 	const uint32_t& GetMoney() const;
 
-	const uint32_t& GetGatheredMoney() const;
 	void SendStartGame();
 	void SendSelectedClass(comp::Player::Class classType);
 
