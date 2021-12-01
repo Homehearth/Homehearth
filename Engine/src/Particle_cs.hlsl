@@ -119,8 +119,8 @@ void WaterSplashSimmulation(inout VertexParticleIn particle, in uint id)
     else
     {
         particle.size = float2(1.5, 1.5);
-        //particle.pos = (emitterPosition.x + (randomNumbers[id + counter] / 10.f) , emitterPosition.y + (randomNumbers[id]/10.f), emitterPosition.z, emitterPosition.w);
-        particle.pos = emitterPosition; //+ randomNumbers[counter];
+        particle.pos = float4(emitterPosition.x + (randomNumbers[id + counter]), emitterPosition.y + (randomNumbers[id]), emitterPosition.z, emitterPosition.w);
+       //particle.pos = emitterPosition; //+ randomNumbers[counter];
         particle.velocity = float4(0, 0, 0, 0);
         particle.life = 0;
         particle.color = float4(0, 0, 0.5, 0.5);

@@ -11,6 +11,7 @@ namespace ecs
 {
 	enum Component : uint32_t
 	{
+		PARTICLEMITTER,
 		TRANSFORM,
 		VELOCITY,
 		MESH_NAME,
@@ -18,7 +19,6 @@ namespace ecs
 		HEALTH,
 		BOUNDING_ORIENTED_BOX,
 		BOUNDING_SPHERE,
-		PARTICLEMITTER,
 		PLAYER,
 		COST,
 		COMPONENT_COUNT,

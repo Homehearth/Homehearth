@@ -17,6 +17,11 @@ void ParticleSystem::Initialize(ID3D11Device* pDevice)
 
 void ParticleSystem::InitializeParticles(entt::registry& reg, entt::entity ent)
 {
+	if (!reg.try_get<comp::EmitterParticle>(ent)|| !reg.try_get<comp::Transform>(ent))
+	{
+		return;
+	}
+
 	comp::EmitterParticle* emitter = &reg.get<comp::EmitterParticle>(ent);
 	sm::Vector3 entityPosition = reg.get<comp::Transform>(ent).position;
 	entityPosition = sm::Vector3{ entityPosition.x + emitter->positionOffset.x, entityPosition.y + emitter->positionOffset.y, entityPosition.z + emitter->positionOffset.z };

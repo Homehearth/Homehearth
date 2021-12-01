@@ -535,6 +535,10 @@ void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money
 					Entity newHouse = houseManager.CreateHouse(scene, houseManager.GetRuinedHouseType(house->houseType), NameType::EMPTY, NameType::EMPTY);
 					qt->Insert(newHouse);
 
+					sm::Vector3 emitterOffset = newHouse.GetComponent<comp::OrientedBoxCollider>()->Center;
+					newHouse.AddComponent<comp::PARTICLEEMITTER>(emitterOffset, 100, 2.5f, PARTICLEMODE::SMOKEAREA, 4.0f, 1.f, false);
+
+
 					//Remove house from blackboard
 					Blackboard::Get().GetValue<Houses_t>("houses")->houses.erase(entity);
 

@@ -81,9 +81,11 @@ bool Game::OnStartup()
 
 	//Particles
 	ResourceManager::Get().GetResource<RTexture>("BloodParticle.png");
+	ResourceManager::Get().GetResource<RTexture>("Smoke.png");
+
 	Entity emitter4 = GetScene("Game").CreateEntity();
 	emitter4.AddComponent<comp::Transform>()->position = { 250, 5, -340 };
-	emitter4.AddComponent<comp::EmitterParticle>(sm::Vector3{ 0,0,0 }, 800, 2.f, PARTICLEMODE::SMOKEAREA, 3.5f, 1.f, false);
+	emitter4.AddComponent<comp::EmitterParticle>(sm::Vector3{ 0,0,0 }, 800, 2.f, PARTICLEMODE::SMOKEPOINT, 3.5f, 1.f, false);
 
 	Entity waterSplash = GetScene("Game").CreateEntity();
 	waterSplash.AddComponent<comp::Transform>()->position = { 270, 13, -370 };
