@@ -111,6 +111,19 @@ void CombatSystem::UpdateTeleport(HeadlessScene& scene)
 							{
 								p->reachable = true;
 							}
+
+							audio_t audio = {
+								ESoundEvent::Player_OnCastBlink,
+								entity.GetComponent<comp::Transform>()->position,
+								1.0f,
+								250.f,
+								true,
+								false,
+								true,
+								false,
+							};
+							entity.GetComponent<comp::AudioState>()->data.emplace(audio);
+
 						}
 						else
 						{

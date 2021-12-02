@@ -327,14 +327,20 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			case ESoundEvent::Player_OnDmgRecieved:
 				SH->PlaySound("Player_OnDmgRecieved", data);
 				break;
-			case ESoundEvent::Player_OnCastHealing:
-				SH->PlaySound("Player_OnCastHealing", data);
-				break;
-			case ESoundEvent::Player_OnHealingRecieved:
-				SH->PlaySound("Player_OnHealingRecieved", data);
+			case ESoundEvent::Player_OnHealing:
+				SH->PlaySound("Player_OnHealing", data);
 				break;
 			case ESoundEvent::Player_OnCastDash:
-				SH->PlaySound("Player_OnCastDash", data);
+				{
+					int version = rand() % 10;
+					if(version == 0)
+						SH->PlaySound("Player_OnCastDash1", data);
+					else
+						SH->PlaySound("Player_OnCastDash", data);
+				}
+				break;
+			case ESoundEvent::Player_OnCastBlink:
+				SH->PlaySound("Player_OnCastBlink", data);
 				break;
 			case ESoundEvent::Player_OnDeath:
 				SH->PlaySound("Player_OnDeath", data);
@@ -348,7 +354,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 				break;
 			case ESoundEvent::Enemy_OnMeleeAttack:
 			{
-				int version = rand() % 6 + 1;
+				int version = rand() % 7 + 1;
 				std::string onAttackName = "Enemy_OnMeleeAttack" + std::to_string(version);
 				SH->PlaySound(onAttackName, data);
 			}
@@ -375,8 +381,8 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			case ESoundEvent::Game_OnHouseDestroyed:
 				SH->PlaySound("Game_OnHouseDestroyed", data);
 				break;
-			case ESoundEvent::Game_OnJoinLobby:
-				SH->PlaySound("Game_OnJoinLobby", data);
+			case ESoundEvent::Game_OnPurchase:
+				SH->PlaySound("Game_OnPurchase", data);
 				break;
 			default:
 				break;

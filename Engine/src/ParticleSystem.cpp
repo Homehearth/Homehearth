@@ -64,9 +64,8 @@ void ParticleSystem::InitializeParticles(entt::registry& reg, entt::entity ent)
 			float zRandSame = (float)rand() / (RAND_MAX + 1.f) * (1.0f - (-1.0f)) + (-1.0f);
 			sm::Vector3 vel = sm::Vector3(xRandSame, 0.0f, yRandSame);
 			vel.Normalize();
-			tempParticle.velocity = sm::Vector4(vel);
-
-			tempParticle.size = {emitter->sizeMulitplier, emitter->sizeMulitplier};
+			tempParticle.velocity = sm::Vector4( vel.x, vel.y, vel.z, 0.0f );
+			tempParticle.size = sm::Vector2(emitter->sizeMulitplier, emitter->sizeMulitplier);
 			tempParticle.position.y = (float)rand() / (RAND_MAX + 1.f) * (10.0f - (1.0f)) + (1.0f);
 		}
 		
@@ -82,7 +81,7 @@ bool ParticleSystem::CreateBufferSRVUAV(std::vector<Particle_t> particles, comp:
 	D3D11_BUFFER_DESC descVert;
 	ZeroMemory(&descVert, sizeof(descVert));
 	descVert.Usage = D3D11_USAGE_DEFAULT;
-	//assert(sizeof(Particle) % 16 == 0);				//Ser till att det är 16 bitar
+	//assert(sizeof(Particle) % 16 == 0);				//Ser till att det ï¿½r 16 bitar
 	descVert.ByteWidth = sizeof(Particle_t) * emitter->nrOfParticles;
 	descVert.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS;
 	descVert.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;

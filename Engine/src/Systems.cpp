@@ -92,6 +92,20 @@ void Systems::HealingSystem(HeadlessScene& scene, float dt)
 
 				collider.AddComponent<comp::Tag<TagType::DYNAMIC>>();
 
+				audio_t audio = {
+					ESoundEvent::Player_OnHealing,
+					entity.GetComponent<comp::Transform>()->position,
+					1.0f,
+					100.f,
+					false,
+					false,
+					false,
+					false,
+				};
+
+				// Send audio to healer.
+				entity.GetComponent<comp::AudioState>()->data.emplace(audio);
+
 				comp::BezierAnimation* a = collider.AddComponent<comp::BezierAnimation>();
 				a->speed = 0.5f;
 				a->scalePoints.push_back(transform->scale);
@@ -111,6 +125,9 @@ void Systems::HealingSystem(HeadlessScene& scene, float dt)
 						comp::Player* p = other.GetComponent<comp::Player>();
 						if (p)
 						{
+							scene.publish<EComponentUpdated>(other, ecs::Component::HEALTH);
+							// Send audio to everyone effected by heal.
+							other.GetComponent<comp::AudioState>()->data.emplace(audio);
 							comp::Health* h = other.GetComponent<comp::Health>();
 
 							if (h)

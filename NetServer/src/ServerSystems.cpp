@@ -526,6 +526,28 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 				}
 			}
 
+			//Place defence on grid
+			if (simulation->GetCurrency().GetAmount() >= 5 && simulation->m_timeCycler.GetTimePeriod() == CyclePeriod::DAY)
+			{
+				if (simulation->GetGrid().PlaceDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, Blackboard::Get().GetPathFindManager(), dynamicQT))
+				{
+					audio_t audio = {
+						ESoundEvent::Game_OnDefencePlaced,
+						e.GetComponent<comp::Transform>()->position,
+						1.0f,
+						250.f,
+						true,
+						false,
+						true,
+						false,
+					};
+					e.GetComponent<comp::AudioState>()->data.emplace(audio);
+
+					simulation->GetCurrency() -= 10;
+					anim.toSend = EAnimationType::PLACE_DEFENCE;
+				}
+			}
+
 			//Rotate defences 90 or not
 			if (p.lastInputState.mousewheelDir != 0)
 			{
