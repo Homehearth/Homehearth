@@ -42,7 +42,6 @@ void InputSystem::UpdateEvents()
 	m_mouseTracker->Update(m_mouseState);
 	m_mousePos.x = m_mouseState.x;
 	m_mousePos.y = m_mouseState.y;
-	LOG_INFO("%d, %d,",m_mousePos.x, m_mousePos.y);
 }
 
 bool InputSystem::CheckKeyboardKey(const dx::Keyboard::Keys& key, const KeyState state) const

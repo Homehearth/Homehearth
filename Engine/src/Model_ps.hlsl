@@ -172,7 +172,7 @@ float4 main(PixelIn input) : SV_TARGET
     float4 fogColor = float4(0.04f, 0.06f, 0.2f, 1);
     //float4 fogColor = float4(0.5f, 0.5f, 0.5f, 1);
 
-    float fogFactor = saturate((distanceToCenter - 110.f) / 100.f);
+    float fogFactor = saturate((distanceToCenter - 150.f) / 100.f);
     float lightVolumeFactor = lightVolume > 0.0f ? lightVolume : 1.0f;
   
     /*

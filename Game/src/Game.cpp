@@ -395,7 +395,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		SoundHandler::Get().PlaySound("Player_OnDeath", audio);
 		audio.volume = 0.5f;
 		SoundHandler::Get().PlaySound("OnGameOver", audio);
-		rtd::Text* mainMenuErrorText = dynamic_cast<rtd::Text*>(GetScene("mainMenu").GetCollection("ConnectFields")->elements[6].get());
+		rtd::Text* mainMenuErrorText = dynamic_cast<rtd::Text*>(GetScene("MainMenu").GetCollection("ConnectFields")->elements[6].get());
 		mainMenuErrorText->SetVisiblity(false);
 
 		uint32_t gatheredMoney, wavesSurvived;
