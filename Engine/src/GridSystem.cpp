@@ -183,6 +183,8 @@ std::vector<Entity> GridSystem::UpdateHoverDefence()
 	//Go through the players
 	m_scene->ForEachComponent<comp::Player, comp::Network>([&](comp::Player& player, comp::Network& net)
 		{
+			bool okayToPlace = false;
+
 			//Did not find the hover defence for this player
 			if (m_hoveredDefences.find(net.id) == m_hoveredDefences.end())
 			{
@@ -202,6 +204,12 @@ std::vector<Entity> GridSystem::UpdateHoverDefence()
 				if (player.shopItem == ShopItem::Defence1x1 ||
 					player.shopItem == ShopItem::Defence1x3)
 				{
+					if (!CheckDefenceLocation(player.lastInputState.mouseRay, net.id).empty())
+						okayToPlace = true;
+				}
+
+				if (okayToPlace)
+				{
 					Plane_t plane;
 					plane.normal = { 0.0f, 1.0f, 0.0f };
 					sm::Vector3 pos;
@@ -215,7 +223,7 @@ std::vector<Entity> GridSystem::UpdateHoverDefence()
 						pos.y = 5.f;
 
 						comp::Transform* transform;
-						
+
 						if (player.shopItem == ShopItem::Defence1x1)
 						{
 							transform = m_hoveredDefences.at(net.id).def1x1.GetComponent<comp::Transform>();
@@ -249,7 +257,7 @@ std::vector<Entity> GridSystem::UpdateHoverDefence()
 					comp::Transform* trans1 = m_hoveredDefences.at(net.id).def1x1.GetComponent<comp::Transform>();
 					if (trans1->position != sm::Vector3(0, 0, 0))
 					{
-						trans1->position = sm::Vector3(0,0,0);
+						trans1->position = sm::Vector3(0, 0, 0);
 						entities.push_back(m_hoveredDefences.at(net.id).def1x1);
 					}
 					comp::Transform* trans2 = m_hoveredDefences.at(net.id).def1x3.GetComponent<comp::Transform>();
@@ -261,6 +269,29 @@ std::vector<Entity> GridSystem::UpdateHoverDefence()
 				}
 			}
 		});
+
+	return entities;
+}
+
+std::vector<Entity> GridSystem::HideHoverDefence()
+{
+	std::vector<Entity> entities;
+
+	for (auto& def : m_hoveredDefences)
+	{
+		comp::Transform* trans1 = def.second.def1x1.GetComponent<comp::Transform>();
+		if (trans1->position != sm::Vector3(0, 0, 0))
+		{
+			trans1->position = sm::Vector3(0, 0, 0);
+			entities.push_back(def.second.def1x1);
+		}
+		comp::Transform* trans2 = def.second.def1x3.GetComponent<comp::Transform>();
+		if (trans2->position != sm::Vector3(0, 0, 0))
+		{
+			trans2->position = sm::Vector3(0, 0, 0);
+			entities.push_back(def.second.def1x3);
+		}
+	}
 
 	return entities;
 }
