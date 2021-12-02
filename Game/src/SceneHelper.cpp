@@ -585,11 +585,11 @@ namespace sceneHelp
 		scene.Add2DCollection(classTextCanvas, "ClassTextCanvas");
 
 		Collection2D* lobbyDesc = new Collection2D;
-		lobbyDesc->AddElement<rtd::Canvas>(D2D1::ColorF(1.0f, 1.0f, 1.0f), draw_t((width / 16), height - (height / 6), (width / 4), height / 12));
+		lobbyDesc->AddElement<rtd::Picture>("Button.png", draw_t((width / 16), height - (height / 6), (width / 4), height / 9));
 
 		// THIS ONE NEEDS A FUNCTION TO UPDATE LOBBY ID
 		const std::string& lobbyString = "Lobby ID: XYZW";
-		lobbyDesc->AddElement<rtd::Text>(lobbyString, draw_text_t((width / 16), height - (height / 6), (width / 4), height / 12));
+		lobbyDesc->AddElement<rtd::Text>(lobbyString, draw_text_t((width / 16), height - (height / 6), (width / 4), height / 9));
 		scene.Add2DCollection(lobbyDesc, "LobbyDesc");
 
 		Collection2D* startGame = new Collection2D;
