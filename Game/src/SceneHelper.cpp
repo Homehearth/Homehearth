@@ -360,7 +360,7 @@ namespace sceneHelp
 #ifdef _DEBUG
 		ipField->SetPresetText("127.0.0.1");
 #else
-		ipField->SetPresetText("188.148.27.231");
+		ipField->SetPresetText("homehearth.ddns.net");
 #endif
 		portField->SetPresetText("4950");
 
