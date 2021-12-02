@@ -62,4 +62,9 @@ public:
 	void SetShopItem(const ShopItem& whatToBuy);
 	const ShopItem GetShopItem() const;
 	void UpgradeDefence(const uint32_t& id);
+
+	float m_primaryCooldown = 0.0f;
+	float m_secondaryCooldown = 0.0f;
+	float m_dodgeCooldown = 0.0f;
+	uint32_t m_currentSpree = 1;
 };

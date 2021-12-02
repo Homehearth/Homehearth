@@ -778,7 +778,7 @@ void Game::CreateLobby()
 	}
 }
 
-const Cycle& Game::GetCurrentCycle() const
+Cycler& Game::GetCycler()
 {
 	return m_cycler;
 }

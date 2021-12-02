@@ -401,7 +401,7 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 				{
 					PROFILE_SCOPE("Create waves");
 					if (!waveQueue.empty())
-						ServerSystems::NextWaveConditions(this, waveTimer, waveQueue.front().GetTimeLimit());
+						ServerSystems::NextWaveConditions(this);
 					else
 						EnemyManagement::CreateWaves(waveQueue, currentRound++);
 				}

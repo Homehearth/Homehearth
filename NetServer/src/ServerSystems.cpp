@@ -481,7 +481,7 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 				case ShopItem::Defence1x1:
 				case ShopItem::Defence1x3:
 				{
-					if (simulation->m_timeCycler.GetTimePeriod() == Cycle::DAY)
+					if (simulation->m_timeCycler.GetTimePeriod() == CyclePeriod::DAY)
 					{
 						uint32_t cost = 0;
 						if (p.shopItem == ShopItem::Defence1x1)
