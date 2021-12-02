@@ -277,18 +277,6 @@ void CombatSystem::AddCollisionMeleeBehavior(Entity entity, Entity attackEntity,
 			if (other == entity)
 				return;
 
-			tag_bits goodOrBad = TagType::GOOD | TagType::BAD;
-			//if ((entity.GetTags() & goodOrBad) == (other.GetTags() & goodOrBad))
-			//{
-			//	return; //these guys are on the same team
-			//}
-
-			if ((entity.GetTags() & TagType::GOOD) && (other.GetTags() & TagType::DEFENCE)
-				|| (entity.GetTags() & TagType::DEFENCE) && (other.GetTags() & TagType::GOOD))
-			{
-				return; //good vs defense are on the same team aswell
-			}
-
 			comp::Health* otherHealth = other.GetComponent<comp::Health>();
 			comp::MeleeAttackAbility* attackAbility = entity.GetComponent<comp::MeleeAttackAbility>();
 
@@ -302,6 +290,40 @@ void CombatSystem::AddCollisionMeleeBehavior(Entity entity, Entity attackEntity,
 				false,
 				false,
 			};
+
+			// Add some sound effects
+			comp::AudioState* audioState = entity.GetComponent<comp::AudioState>();
+			if (other.GetComponent<comp::Player>())
+			{
+				audio.type = ESoundEvent::Player_OnDmgRecieved;
+			}
+			else if (other.GetComponent<comp::NPC>())
+			{
+				audio.type = ESoundEvent::Enemy_OnDmgRecieved;
+			}
+			else if (other.GetComponent<comp::Tag<STATIC>>() && entity.GetComponent<comp::Player>())
+			{
+				audio.type = ESoundEvent::Player_OnMeleeAttackHit;
+				audio.shouldBroadcast = true;
+				audio.is3D = true;
+			}
+
+			if (audioState)
+			{
+				audioState->data.emplace(audio);
+			}
+
+			tag_bits goodOrBad = TagType::GOOD | TagType::BAD;
+			if ((entity.GetTags() & goodOrBad) == (other.GetTags() & goodOrBad))
+			{
+				return; //these guys are on the same team
+			}
+
+			if ((entity.GetTags() & TagType::GOOD) && (other.GetTags() & TagType::DEFENCE)
+				|| (entity.GetTags() & TagType::DEFENCE) && (other.GetTags() & TagType::GOOD))
+			{
+				return; //good vs defense are on the same team aswell
+			}
 
 			if (attackAbility)
 			{
@@ -330,28 +352,6 @@ void CombatSystem::AddCollisionMeleeBehavior(Entity entity, Entity attackEntity,
 						other.RemoveComponent<comp::PARTICLEEMITTER>();
 					}
 					other.AddComponent<comp::PARTICLEEMITTER>(sm::Vector3{ 0,10,0 }, 50, 10.f, PARTICLEMODE::SMOKEAREA, 3.5f, 1.f, true);
-				}
-
-				// Add some sound effects
-				comp::AudioState* audioState = entity.GetComponent<comp::AudioState>();
-				if (other.GetComponent<comp::Player>())
-				{
-					audio.type = ESoundEvent::Player_OnDmgRecieved;
-				}
-				else if (other.GetComponent<comp::NPC>())
-				{
-					audio.type = ESoundEvent::Enemy_OnDmgRecieved;
-				}
-				else if (other.GetComponent<comp::Tag<STATIC>>() && entity.GetComponent<comp::Player>())
-				{
-					audio.shouldBroadcast = true;
-					audio.is3D = true;
-					audio.type = ESoundEvent::Player_OnMeleeAttackHit;
-				}
-
-				if (audioState)
-				{
-					audioState->data.emplace(audio);
 				}
 
 				thisEntity.GetComponent<comp::SelfDestruct>()->lifeTime = 0.f;
@@ -393,24 +393,56 @@ void CombatSystem::AddCollisionRangeBehavior(Entity entity, Entity attackEntity,
 {
 	CollisionSystem::Get().AddOnCollisionEnter(attackEntity, [entity, &scene](Entity thisEntity, Entity other)
 		{
-			TagType returnValue = TagType::NO_RESPONSE;
-
 			// is caster already dead
 			if (entity.IsNull())
 			{
 				thisEntity.GetComponent<comp::SelfDestruct>()->lifeTime = 0.f;
-				return returnValue;
+				return;
 			}
 
 			if (other == entity)
-				return returnValue;
+				return;
+
+			// Add some sound effects
+			audio_t audio = {
+				ESoundEvent::NONE,
+				entity.GetComponent<comp::Transform>()->position,
+				1.f,
+				100.f,
+				false,
+				false,
+				false,
+				false,
+			};
+
+			comp::AudioState* audioState = entity.GetComponent<comp::AudioState>();
+			if (other.GetComponent<comp::Player>())
+			{
+				audio.type = ESoundEvent::Player_OnDmgRecieved;
+			}
+			else
+			{
+				audio.shouldBroadcast = true;
+				audio.is3D = true;
+				audio.type = ESoundEvent::Player_OnRangeAttackHit;
+			}
+
+			if (audioState)
+			{
+				audioState->data.emplace(audio);
+			}
 
 			tag_bits goodOrBad = TagType::GOOD | TagType::BAD;
-			//if ((entity.GetTags() & goodOrBad) ==
-			//	(other.GetTags() & goodOrBad))
-			//{
-			//	return NO_RESPONSE; //these guys are on the same team
-			//}
+			// SAME TEAM
+			if ((entity.GetTags() & goodOrBad) == (other.GetTags() & goodOrBad))
+			{
+				// IS A HOUSE REMOVE PROJECTILE
+				if (other.GetComponent<comp::Tag<STATIC>>())
+				{
+					thisEntity.GetComponent<comp::SelfDestruct>()->lifeTime = 0.f;
+				}
+				return;
+			}
 
 			comp::RangeAttackAbility* attackAbility = entity.GetComponent<comp::RangeAttackAbility>();
 
@@ -447,41 +479,6 @@ void CombatSystem::AddCollisionRangeBehavior(Entity entity, Entity attackEntity,
 				//{
 				//	//TODO: add building particles
 				//}
-
-				// Add some sound effects
-				audio_t audio = {
-					ESoundEvent::NONE,
-					entity.GetComponent<comp::Transform>()->position,
-					1.f,
-					100.f,
-					false,
-					false,
-					false,
-					false,
-				};
-
-				comp::AudioState* audioState = entity.GetComponent<comp::AudioState>();
-				if (other.GetComponent<comp::Player>())
-				{
-					audio.type = ESoundEvent::Player_OnDmgRecieved;
-				}
-				else if (other.GetComponent<comp::NPC>())
-				{
-					audio.shouldBroadcast = true;
-					audio.is3D = true;
-					audio.type = ESoundEvent::Player_OnRangeAttackHit;
-				}
-				else if (other.GetComponent<comp::Tag<STATIC>>() && entity.GetComponent<comp::Player>())
-				{
-					audio.shouldBroadcast = true;
-					audio.is3D = true;
-					audio.type = ESoundEvent::Player_OnRangeAttackHit;
-				}
-
-				if (audioState)
-				{
-					audioState->data.emplace(audio);
-				}
 
 				thisEntity.GetComponent<comp::SelfDestruct>()->lifeTime = 0.f;
 
@@ -525,6 +522,6 @@ void CombatSystem::AddCollisionRangeBehavior(Entity entity, Entity attackEntity,
 				}
 
 			}
-			return NO_RESPONSE;
+			return;
 		});
 }
