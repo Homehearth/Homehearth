@@ -440,10 +440,10 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	}
 	case GameMsg::Lobby_Invalid:
 	{
-		std::string err;
-		msg >> err;
+		//std::string err;
+		//msg >> err;
 		SetScene("JoinLobby");
-		LOG_WARNING("%s", err.c_str());
+		//LOG_WARNING("%s", err.c_str());
 		rtd::Text* lobbyErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("LobbyFields")->elements[5].get());
 		lobbyErrorText->SetVisiblity(true);
 		break;
