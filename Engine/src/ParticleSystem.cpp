@@ -64,7 +64,7 @@ void ParticleSystem::InitializeParticles(entt::registry& reg, entt::entity ent)
 			float zRandSame = (float)rand() / (RAND_MAX + 1.f) * (1.0f - (-1.0f)) + (-1.0f);
 			sm::Vector3 vel = sm::Vector3(xRandSame, 0.0f, yRandSame);
 			vel.Normalize();
-			tempParticle.velocity = { vel };
+			tempParticle.velocity = sm::Vector4(vel);
 
 			tempParticle.size = {emitter->sizeMulitplier, emitter->sizeMulitplier};
 			tempParticle.position.y = (float)rand() / (RAND_MAX + 1.f) * (10.0f - (1.0f)) + (1.0f);

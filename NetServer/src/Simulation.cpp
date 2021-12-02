@@ -387,16 +387,24 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 				ServerSystems::AnimatonSystem(this, scene);
 				ServerSystems::SoundSystem(this, scene);
 			}
-
 			m_timeCycler.Update(e.dt);
 
-			{
-				PROFILE_SCOPE("Create waves");
-				if (!waveQueue.empty())
-					ServerSystems::NextWaveConditions(this);
-				else
-					EnemyManagement::CreateWaves(waveQueue, currentRound++);
-			}
+				{
+					PROFILE_SCOPE("Hover defences");
+					std::vector<Entity> entities = m_grid.UpdateHoverDefence();
+					for (size_t i = 0; i < entities.size(); i++)
+					{
+						m_updatedEntities.push_back(entities.at(i));
+					}
+				}
+
+				{
+					PROFILE_SCOPE("Create waves");
+					if (!waveQueue.empty())
+						ServerSystems::NextWaveConditions(this);
+					else
+						EnemyManagement::CreateWaves(waveQueue, currentRound++);
+				}
 
 			m_spreeHandler.Update();
 		
@@ -831,7 +839,7 @@ void Simulation::SendEntities(const std::vector<Entity>& entities, GameMsg msgID
 	if (entities.size() == 0)
 		return;
 
-	const size_t PACKET_CHUNK_SIZE = 20;
+	const size_t PACKET_CHUNK_SIZE = 8;
 
 	uint32_t count = 0;
 	message<GameMsg> msg;
@@ -902,7 +910,7 @@ void Simulation::SendRemoveEntities(const std::vector<uint32_t> entitiesNetIDs)
 	if (entitiesNetIDs.size() == 0)
 		return;
 
-	const size_t PACKET_CHUNK_SIZE = 10;
+	const size_t PACKET_CHUNK_SIZE = 8;
 
 	uint32_t count = 0;
 	message<GameMsg> msg;

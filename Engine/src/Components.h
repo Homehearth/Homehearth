@@ -141,11 +141,11 @@ namespace ecs
 
 				if (!texture)
 				{
-					LOG_ERROR("Couldnt load particle texture %s", textureName);
+					LOG_ERROR("Couldnt load particle texture %s", textureName.c_str());
 				}
 				if (!opacityTexture)
 				{
-					LOG_ERROR("Couldnt load particle opacity texture %s", opacityTextureName);
+					LOG_ERROR("Couldnt load particle opacity texture %s", opacityTextureName.c_str());
 				}
 				
 				this->nrOfParticles		= (UINT)nrOfParticles;
@@ -352,13 +352,14 @@ namespace ecs
 			float respawnTimer;
 			bool isReady = false;
 			bool reachable = true;
-
+			
 			char name[12] = {};
 
-			//Place defence option
-			EDefenceType towerSelected = EDefenceType::SMALL;
-			float		 buildDistance = 24.0f;		//A tiles width is ~8
-			bool		 rotateDefence = false;
+			ShopItem		shopItem = ShopItem::None;
+
+			//Place defence option 
+			float			buildDistance = 32.0f;		//A tiles width is ~8
+			bool			rotateDefence = false;
 		};
 
 		
@@ -366,7 +367,6 @@ namespace ecs
 		{
 			std::vector<std::pair<UINT, UINT>> coordinates;
 		};
-	
 
 		struct NPC
 		{

@@ -778,19 +778,9 @@ void Game::CreateLobby()
 	}
 }
 
-const Mode& Game::GetCurrentMode() const
-{
-	return m_mode;
-}
-
 Cycler& Game::GetCycler()
 {
 	return m_cycler;
-}
-
-void Game::SetMode(const Mode& mode)
-{
-	m_mode = mode;
 }
 
 const uint32_t& Game::GetMoney() const
@@ -863,13 +853,27 @@ Entity& Game::GetLocalPlayer()
 	return this->m_players.at(m_localPID);
 }
 
-void Game::UseShop(const ShopItem& whatToBuy)
+void Game::SetShopItem(const ShopItem& whatToBuy)
 {
-	network::message<GameMsg> msg;
-	msg.header.id = GameMsg::Game_UseShop;
-	msg << whatToBuy << m_localPID << m_gameID;
+	if (m_players.find(m_localPID) != m_players.end())
+	{
+		m_players.at(m_localPID).GetComponent<comp::Player>()->shopItem = whatToBuy;
+	}
 
+	network::message<GameMsg> msg;
+	msg.header.id = GameMsg::Game_UpdateShopItem;
+	msg << whatToBuy << m_localPID << m_gameID;
 	m_client.Send(msg);
+}
+
+const ShopItem Game::GetShopItem() const
+{
+	ShopItem item = ShopItem::None;
+	if (m_players.find(m_localPID) != m_players.end())
+	{
+		item = m_players.at(m_localPID).GetComponent<comp::Player>()->shopItem;
+	}
+	return item;
 }
 
 void Game::UpgradeDefence(const uint32_t& id)
@@ -1116,6 +1120,11 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 						nameString = "Villager.anim";
 						break;
 					}
+					default:
+					{
+						nameString = "Knight.anim";
+						break;
+					}
 					}
 					if (nameString.length() > 0)
 					{
@@ -1208,70 +1217,53 @@ void Game::UpdateInput()
 	m_inputState.axisHorizontal = InputSystem::Get().GetAxis(Axis::HORIZONTAL);
 	m_inputState.axisVertical = InputSystem::Get().GetAxis(Axis::VERTICAL);
 	m_inputState.mousewheelDir = InputSystem::Get().GetMouseWheelDirection();
-
+	
 	if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::HELD))
 	{
 		m_inputState.leftMouse = true;
 	}
 	if (InputSystem::Get().CheckMouseKey(MouseKey::RIGHT, KeyState::PRESSED))
 	{
-		m_inputState.rightMouse = true;
-		if (m_localPID != -1 && m_players.size() > 0 && m_players.at(m_localPID).GetComponent<comp::Player>()->state == comp::Player::State::SPECTATING)
+		switch (GetShopItem())
 		{
-
-			auto it = m_players.begin();
-			while (it != m_players.end())
+		case ShopItem::Defence1x1:
+		case ShopItem::Defence1x3:
+		{
+			SetShopItem(ShopItem::None);
+			break;
+		}
+		case ShopItem::None:
+		{
+			m_inputState.rightMouse = true;
+			if (m_localPID != -1 && m_players.size() > 0 && m_players.at(m_localPID).GetComponent<comp::Player>()->state == comp::Player::State::SPECTATING)
 			{
-				if (it->first != m_localPID && it->first != m_spectatingID && it->second.GetComponent<comp::Health>()->isAlive)
+				auto it = m_players.begin();
+				while (it != m_players.end())
 				{
-					GetScene("Game").ForEachComponent<comp::Tag<TagType::CAMERA>>([&](Entity entt, comp::Tag<TagType::CAMERA>& t)
-						{
-							comp::Camera3D* c = entt.GetComponent<comp::Camera3D>();
-							if (c)
+					if (it->first != m_localPID && it->first != m_spectatingID && it->second.GetComponent<comp::Health>()->isAlive)
+					{
+						GetScene("Game").ForEachComponent<comp::Tag<TagType::CAMERA>>([&](Entity entt, comp::Tag<TagType::CAMERA>& t)
 							{
-								c->camera.SetFollowEntity(m_players.at(it->first));
-							}
-						});
-					m_spectatingID = it->first;
-					break;
+								comp::Camera3D* c = entt.GetComponent<comp::Camera3D>();
+								if (c)
+								{
+									c->camera.SetFollowEntity(m_players.at(it->first));
+								}
+							});
+						m_spectatingID = it->first;
+						break;
+					}
+					it++;
 				}
-				it++;
 			}
-
+			break;
+		}
 		}
 	}
 	m_inputState.mouseRay = InputSystem::Get().GetMouseRay();
 
-	if (m_mode == Mode::DESTROY_MODE)
-	{
-		if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::R, KeyState::PRESSED))
-		{
-			m_inputState.key_r = true;
-		}
-	}
-	else if (m_mode == Mode::BUILD_MODE)
-	{
-		if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::B, KeyState::PRESSED))
-		{
-			m_inputState.key_b = true;
-		}
-	}
 	if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::LeftShift, KeyState::PRESSED))
 	{
 		m_inputState.key_shift = true;
 	}
-
-	//m_savedInputs.push_back(m_inputState);
-
-
-	////TEMP PLZ REMOVE AFTER WE COME TO AN AGREEMENT ON WHICH DOF EFFECT TO USE
-	//if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::D1, KeyState::PRESSED))
-	//{
-	//	thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::ADAPTIVE);
-	//}
-
-	//if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::D2, KeyState::PRESSED))
-	//{
-	//	thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::VIGNETTE);
-	//}
 }

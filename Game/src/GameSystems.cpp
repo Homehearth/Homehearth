@@ -7,64 +7,69 @@
 void GameSystems::DisplayUpgradeDefences(Game* game)
 {
 	Collection2D* coll = game->GetCurrentScene()->GetCollection("priceTag");
-	// Display only if in Build mode..
-	if (game->GetCurrentMode() == Mode::BUILD_MODE && game->GetCycler().GetTimePeriod() == CyclePeriod::DAY)
+	
+	if (game->GetCycler().GetTimePeriod() == CyclePeriod::DAY)
 	{
-		Scene& scene = *game->GetCurrentScene();
-		bool shouldNotShow = true;
-		const unsigned int width = D2D1Core::GetWindow()->GetWidth();
-		const unsigned int height = D2D1Core::GetWindow()->GetHeight();
-
-		bool pressed = false;
-		if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::R, KeyState::PRESSED))
+		// Display only if in Build mode..
+		ShopItem shopitem = game->GetShopItem();
+		if (shopitem == ShopItem::Defence1x1 || shopitem == ShopItem::Defence1x3)
 		{
-			pressed = true;
-		}
+			Scene& scene = *game->GetCurrentScene();
+			bool shouldNotShow = true;
+			const unsigned int width = D2D1Core::GetWindow()->GetWidth();
+			const unsigned int height = D2D1Core::GetWindow()->GetHeight();
 
-
-		float t = 9999;
-		rtd::Picture* pc = dynamic_cast<rtd::Picture*>(coll->elements[0].get());
-		rtd::Text* tc = dynamic_cast<rtd::Text*>(coll->elements[1].get());
-		uint32_t id;
-		uint32_t cost;
-
-		Ray_t mouseRay = InputSystem::Get().GetMouseRay();
-		scene.ForEachComponent<comp::OrientedBoxCollider, comp::Cost, comp::Network>([&](comp::OrientedBoxCollider& box, comp::Cost& c, comp::Network& n) {
-
-			float nt;
-			if (mouseRay.Intersects(box, &nt))
+			bool pressed = false;
+			if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::R, KeyState::PRESSED))
 			{
-				if (nt < t)
+				pressed = true;
+			}
+
+
+			float t = 9999;
+			rtd::Picture* pc = dynamic_cast<rtd::Picture*>(coll->elements[0].get());
+			rtd::Text* tc = dynamic_cast<rtd::Text*>(coll->elements[1].get());
+			uint32_t id;
+			uint32_t cost;
+
+			Ray_t mouseRay = InputSystem::Get().GetMouseRay();
+			scene.ForEachComponent<comp::OrientedBoxCollider, comp::Cost, comp::Network>([&](comp::OrientedBoxCollider& box, comp::Cost& c, comp::Network& n) {
+
+				float nt;
+				if (mouseRay.Intersects(box, &nt))
 				{
-					t = nt;
-					id = n.id;
-					cost = c.cost;
+					if (nt < t)
+					{
+						t = nt;
+						id = n.id;
+						cost = c.cost;
+					}
+
+					shouldNotShow = false;
 				}
 
-				shouldNotShow = false;
-			}
+				});
 
-			});
-
-		// Update the UI to reflect on the closest defence to the mouse pointer.
-		if (pc && tc)
-		{
-			pc->SetPosition((FLOAT)InputSystem::Get().GetMousePos().x, (FLOAT)InputSystem::Get().GetMousePos().y);
-			tc->SetPosition((FLOAT)InputSystem::Get().GetMousePos().x + width * 0.019f, (FLOAT)InputSystem::Get().GetMousePos().y);
-			tc->SetText("Cost: " + std::to_string(cost));
-			if (game->GetMoney() < cost)
-				pc->SetTexture("NotEnoughMoneySign.png");
-			else
-				pc->SetTexture("EnoughMoneySign.png");
-			coll->Show();
-			if (pressed)
+			// Update the UI to reflect on the closest defence to the mouse pointer.
+			if (pc && tc)
 			{
-				game->UpgradeDefence(id);
+				pc->SetPosition((FLOAT)InputSystem::Get().GetMousePos().x, (FLOAT)InputSystem::Get().GetMousePos().y);
+				tc->SetPosition((FLOAT)InputSystem::Get().GetMousePos().x + width * 0.019f, (FLOAT)InputSystem::Get().GetMousePos().y);
+				tc->SetText("Cost: " + std::to_string(cost));
+				if (game->GetMoney() < cost)
+					pc->SetTexture("NotEnoughMoneySign.png");
+				else
+					pc->SetTexture("EnoughMoneySign.png");
+				coll->Show();
+				if (pressed)
+				{
+					game->UpgradeDefence(id);
+				}
 			}
-		}
 
-		if (shouldNotShow)
-			coll->Hide();
+			if (shouldNotShow)
+				coll->Hide();
+		}
 	}
 	else
 		coll->Hide();

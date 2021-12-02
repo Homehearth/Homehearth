@@ -55,7 +55,8 @@ void Scene::Update(float dt)
 				}
 				else
 				{
-					m_renderableCopies[0].push_back(r);
+					if (r.visible)
+						m_renderableCopies[0].push_back(r);
 				}
 			});
 		m_renderableCopies.Swap();
