@@ -12,5 +12,7 @@ public:
 private:
 	std::unordered_map<std::string, comp::OrientedBoxCollider>* houseColliders{};
 	void AddCollider(NameType houseType, Entity entity) const;
+
+	float m_houseHealth = 250;
 };
 
