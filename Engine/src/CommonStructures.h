@@ -114,11 +114,11 @@ enum class PARTICLEMODE : UINT
 	MAGERANGE
 };
 
-enum class EDefenceType : UINT
-{
-	SMALL,	//1x1
-	LARGE	//1x3
-};
+//enum class EDefenceType : UINT
+//{
+//	SMALL,	//1x1
+//	LARGE	//1x3
+//};
 
 struct Vector2I
 {
@@ -293,10 +293,8 @@ struct InputState
 	int		axisVertical	: 2;
 	bool	leftMouse		: 1;
 	bool	rightMouse		: 1;
-	bool	key_b			: 1;
 	bool	key_shift		: 1;
-	bool	key_r			: 1;
-	int		mousewheelDir	: 2;
+	int		mousewheelDir	: 8;
 
 	Ray_t mouseRay;
 
@@ -338,7 +336,7 @@ enum class GameMsg : uint8_t
 	Game_RemoveNPC,
 	Game_PlayerInput,
 	Game_Money,
-	Game_UseShop,
+	Game_UpdateShopItem,
 	Game_UpgradeDefence,
 	Game_ChangeAnimation,
 	Game_Cooldown,
@@ -391,36 +389,16 @@ enum class AbilityIndex : uint8_t
 
 enum class ShopItem : uint8_t
 {
-	/*
-		Temporary proof of concept upgrades.
-	*/
+	None,
 	Primary_Upgrade,
 	Secondary_Upgrade,
 	Tower_Upgrade,
 	Speed_Upgrade,
 	Heal,
-
-	/*
-		Lets the player build a 3x1 tower when pressing build key.
-	*/
-	LONG_TOWER,
-
-	/*
-		Lets the player build a 1x1 tower when pressing build key.
-	*/
-	SHORT_TOWER,
-
+	Defence1x1,		//Lets the player build a 1x3 tower when pressing build key.
+	Defence1x3,		//Lets the player build a 1x1 tower when pressing build key.
+	Destroy_Tool,
 	NR_OF
-};
-
-enum class Mode : uint8_t
-{
-	// Normal play mode fighting against monsters.
-	PLAY_MODE,
-	// Build mode allows players to build defences.
-	BUILD_MODE,
-	// Destroy mode allows players to remove their defences.
-	DESTROY_MODE
 };
 
 /*

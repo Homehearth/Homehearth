@@ -460,17 +460,53 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 			// check if using abilities
 			if (p.lastInputState.leftMouse) // is held
 			{
-				p.state = comp::Player::State::LOOK_TO_MOUSE; // set state even if ability is not ready for use yet
-				if (ecs::UseAbility(e, p.primaryAbilty, &p.mousePoint))
+				switch (p.shopItem)
 				{
-					LOG_INFO("Used primary");
-					anim.toSend = EAnimationType::PRIMARY_ATTACK;
-				}
+				//In playmode
+				case ShopItem::None:
+				{
+					p.state = comp::Player::State::LOOK_TO_MOUSE; // set state even if ability is not ready for use yet
+					if (ecs::UseAbility(e, p.primaryAbilty, &p.mousePoint))
+					{
+						anim.toSend = EAnimationType::PRIMARY_ATTACK;
+					}
 
-				// make sure movement alteration is not applied when using, because then its applied atomatically
-				if (!ecs::IsUsing(e, p.primaryAbilty))
+					// make sure movement alteration is not applied when using, because then its applied atomatically
+					if (!ecs::IsUsing(e, p.primaryAbilty))
+					{
+						e.GetComponent<comp::Velocity>()->vel *= ecs::GetAbility(e, p.primaryAbilty)->movementSpeedAlt;
+					}
+					break;
+				}
+				case ShopItem::Defence1x1:
+				case ShopItem::Defence1x3:
 				{
-					e.GetComponent<comp::Velocity>()->vel *= ecs::GetAbility(e, p.primaryAbilty)->movementSpeedAlt;
+					if (simulation->m_timeCycler.GetTimePeriod() == CyclePeriod::DAY)
+					{
+						uint32_t cost = 0;
+						if (p.shopItem == ShopItem::Defence1x1)
+							cost = 10;
+						else if (p.shopItem == ShopItem::Defence1x3)
+							cost = 30;
+
+						if (simulation->GetCurrency().GetAmount() >= cost)
+						{
+							if (simulation->GetGrid().PlaceDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, Blackboard::Get().GetPathFindManager(), dynamicQT))
+							{
+								simulation->GetCurrency() -= cost;
+								anim.toSend = EAnimationType::PLACE_DEFENCE;
+							}
+						}
+					}
+					break;
+				}
+				case ShopItem::Destroy_Tool:
+				{
+					simulation->GetGrid().RemoveDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, Blackboard::Get().GetPathFindManager());
+					break;
+				}
+				default:
+					break;
 				}
 			}
 			else if (p.lastInputState.rightMouse)
@@ -480,12 +516,6 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 					LOG_INFO("Used secondary");
 					anim.toSend = EAnimationType::SECONDARY_ATTACK;
 				}
-			}
-
-			if (p.lastInputState.key_r && simulation->m_timeCycler.GetTimePeriod() == CyclePeriod::DAY) // was pressed
-			{
-				LOG_INFO("Pressed right");
-				simulation->GetGrid().RemoveDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, Blackboard::Get().GetPathFindManager());
 			}
 
 			if(p.lastInputState.key_shift)
@@ -526,6 +556,7 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 				else if (p.lastInputState.mousewheelDir < 0)
 					p.rotateDefence = false;
 			}
+
 		});
 
 
@@ -790,7 +821,7 @@ void ServerSystems::AnimatonSystem(Simulation* simulation, HeadlessScene& scene)
 				msg.header.id = GameMsg::Game_ChangeAnimation;
 				msg << anim.toSend << net.id;
 				simulation->Broadcast(msg);
-
+				
 				anim.lastSend = anim.toSend;
 				anim.toSend = EAnimationType::NONE;
 			}

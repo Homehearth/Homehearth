@@ -387,16 +387,24 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 				ServerSystems::AnimatonSystem(this, scene);
 				ServerSystems::SoundSystem(this, scene);
 			}
-
 			m_timeCycler.Update(e.dt);
 
-			{
-				PROFILE_SCOPE("Create waves");
-				if (!waveQueue.empty())
-					ServerSystems::NextWaveConditions(this);
-				else
-					EnemyManagement::CreateWaves(waveQueue, currentRound++);
-			}
+				{
+					PROFILE_SCOPE("Hover defences");
+					std::vector<Entity> entities = m_grid.UpdateHoverDefence();
+					for (size_t i = 0; i < entities.size(); i++)
+					{
+						m_updatedEntities.push_back(entities.at(i));
+					}
+				}
+
+				{
+					PROFILE_SCOPE("Create waves");
+					if (!waveQueue.empty())
+						ServerSystems::NextWaveConditions(this);
+					else
+						EnemyManagement::CreateWaves(waveQueue, currentRound++);
+				}
 
 			m_spreeHandler.Update();
 		

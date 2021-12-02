@@ -14,13 +14,11 @@ private:
 	GridSystem m_grid;
 	uint32_t m_money;	
 	ParticleSystem m_particles;
-	Mode m_mode = Mode::PLAY_MODE;
 	
 	Cycler m_cycler;
 	bool hasLoaded = false;
 
 	Entity m_mapEntity;
-
 	InputState m_inputState;
 
 	// Inherited via Engine
@@ -32,10 +30,8 @@ private:
 	// User defined function to check messages which must comply with the function pointer arguments from Client
 	void CheckIncoming(message<GameMsg>& msg);
 	void PingServer();
-	void OnClientDisconnect();
-	
+	void OnClientDisconnect();	
 	void UpdateEntityFromMessage(Entity entity, message<GameMsg>& msg, bool skip = false);
-
 	void UpdateInput();
 
 public:
@@ -52,19 +48,19 @@ public:
 	virtual ~Game();
 	void JoinLobby(uint32_t lobbyID);
 	void CreateLobby();
-	const Mode& GetCurrentMode() const;
 	Cycler& GetCycler();
 
-	void SetMode(const Mode& mode);
 	const uint32_t& GetMoney() const;
 
 	void SendStartGame();
 	void SendSelectedClass(comp::Player::Class classType);
 
 	Entity& GetLocalPlayer();
-
 	ParticleSystem* GetParticleSystem();
-	void UseShop(const ShopItem& whatToBuy);
+	
+	//Using the shop
+	void SetShopItem(const ShopItem& whatToBuy);
+	const ShopItem GetShopItem() const;
 	void UpgradeDefence(const uint32_t& id);
 
 	float m_primaryCooldown = 0.0f;

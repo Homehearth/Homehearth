@@ -238,40 +238,35 @@ namespace sceneHelp
 
 
 				Collection2D* bullColl = game->GetCurrentScene()->GetCollection("bullDoze");
-				if (bullColl)
+				rtd::Picture* bullIcon = dynamic_cast<rtd::Picture*>(bullColl->elements[0].get());
+				ShopItem shopitem = game->GetShopItem();
+				
+				if (bullIcon)
 				{
-					rtd::Picture* bullIcon = dynamic_cast<rtd::Picture*>(bullColl->elements[0].get());
-					if (bullIcon)
+					if (shopitem == ShopItem::Destroy_Tool)
 					{
-						if (game->GetCurrentMode() == Mode::DESTROY_MODE)
-						{
-							bullColl->Show();
-							bullIcon->SetPosition((FLOAT)InputSystem::Get().GetMousePos().x, (FLOAT)InputSystem::Get().GetMousePos().y);
-						}
-						else
-						{
-							bullColl->Hide();
-						}
+						bullColl->Show();
+						bullIcon->SetPosition((FLOAT)InputSystem::Get().GetMousePos().x, (FLOAT)InputSystem::Get().GetMousePos().y);
+					}
+					else
+					{
+						bullColl->Hide();
 					}
 				}
 
-				if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED))
+				//Not in buildmode
+				if (!(shopitem == ShopItem::Defence1x1 || shopitem == ShopItem::Defence1x3))
 				{
 
 					if (game->GetCurrentScene()->GetCollection("shopMenu")->GetState() == ElementState::OUTSIDE &&
 						game->GetCurrentScene()->GetCollection("ScrolldownMenu")->GetState() == ElementState::OUTSIDE)
 					{
-						game->GetCurrentScene()->GetCollection("shopMenu")->Hide();
-						game->SetMode(Mode::PLAY_MODE);
-						bullColl->Hide();
-					}
-
-					if (game->GetCurrentScene()->GetCollection("inGameMenu")->GetState() == ElementState::OUTSIDE &&
-						game->GetCurrentScene()->GetCollection("ScrolldownMenu")->GetState() == ElementState::OUTSIDE)
-					{
-						game->GetCurrentScene()->GetCollection("inGameMenu")->Hide();
-						game->SetMode(Mode::PLAY_MODE);
-						bullColl->Hide();
+						if (InputSystem::Get().CheckMouseKey(MouseKey::RIGHT, KeyState::PRESSED))
+						{
+							game->GetCurrentScene()->GetCollection("shopMenu")->Hide();
+							game->SetShopItem(ShopItem::None);
+							bullColl->Hide();
+						}
 					}
 				}
 
@@ -521,39 +516,32 @@ namespace sceneHelp
 		rtd::ShopUI* shop = shopMenu->AddElement<rtd::ShopUI>("Shop.png", draw_t(width / 24.0f, (height / 16), width * 0.25f, height * 0.5f));
 		// 1x1 tower button.
 		shop->SetOnPressedEvent(0, [=] {
-			game->UseShop(ShopItem::SHORT_TOWER);
-			//shopMenu->Hide();
-			game->SetMode(Mode::BUILD_MODE);
+			game->SetShopItem(ShopItem::Defence1x1);
 			bullDoze->Hide();
 			});
 		// 1x3 tower button.
 		shop->SetOnPressedEvent(1, [=] {
-			game->UseShop(ShopItem::LONG_TOWER);
-			//shopMenu->Hide();
-			game->SetMode(Mode::BUILD_MODE);
+			game->SetShopItem(ShopItem::Defence1x3);
 			bullDoze->Hide();
 			});
 		// Primary upgrade button.
 		shop->SetOnPressedEvent(2, [=] {
-			game->UseShop(ShopItem::Primary_Upgrade);
-			game->SetMode(Mode::PLAY_MODE);
+			game->SetShopItem(ShopItem::Primary_Upgrade);
 			bullDoze->Hide();
 			});
 		// Armor upgrade button.
 		shop->SetOnPressedEvent(3, [=] {
-			game->UseShop(ShopItem::Primary_Upgrade);
-			game->SetMode(Mode::PLAY_MODE);
+			game->SetShopItem(ShopItem::Primary_Upgrade);
 			bullDoze->Hide();
 			});
 		// Heal button.
 		shop->SetOnPressedEvent(4, [=] {
-			game->UseShop(ShopItem::Heal);
-			game->SetMode(Mode::PLAY_MODE);
+			game->SetShopItem(ShopItem::Heal);
 			bullDoze->Hide();
 			});
 		// Remove defences button.
 		shop->SetOnPressedEvent(5, [=] {
-			game->SetMode(Mode::DESTROY_MODE);
+			game->SetShopItem(ShopItem::Destroy_Tool);
 			bullDoze->Show();
 			});
 		shop->SetMoneyRef(mMoney);

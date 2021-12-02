@@ -352,13 +352,14 @@ namespace ecs
 			float respawnTimer;
 			bool isReady = false;
 			bool reachable = true;
-
+			
 			char name[12] = {};
 
-			//Place defence option
-			EDefenceType towerSelected = EDefenceType::SMALL;
-			float		 buildDistance = 24.0f;		//A tiles width is ~8
-			bool		 rotateDefence = false;
+			ShopItem		shopItem = ShopItem::None;
+
+			//Place defence option 
+			float			buildDistance = 32.0f;		//A tiles width is ~8
+			bool			rotateDefence = false;
 		};
 
 		
@@ -366,7 +367,6 @@ namespace ecs
 		{
 			std::vector<std::pair<UINT, UINT>> coordinates;
 		};
-	
 
 		struct NPC
 		{
