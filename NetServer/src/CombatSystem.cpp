@@ -359,14 +359,16 @@ void CombatSystem::AddCollisionMeleeBehavior(Entity entity, Entity attackEntity,
 					scene.publish<EComponentUpdated>(other, ecs::Component::PARTICLEMITTER);
 				}
 
+				//Smoke particles
 				if (other.GetComponent<comp::Tag<TagType::DEFENCE>>())
 				{
-					//TODO: add building particles
 					if (other.GetComponent<comp::PARTICLEEMITTER>())
 					{
 						other.RemoveComponent<comp::PARTICLEEMITTER>();
 					}
 					other.AddComponent<comp::PARTICLEEMITTER>(sm::Vector3{ 0,10,0 }, 50, 10.f, PARTICLEMODE::SMOKEAREA, 3.5f, 1.f, true);
+
+					scene.publish<EComponentUpdated>(other, ecs::Component::PARTICLEMITTER);
 				}
 
 				thisEntity.GetComponent<comp::SelfDestruct>()->lifeTime = 0.f;
@@ -448,15 +450,16 @@ void CombatSystem::AddCollisionRangeBehavior(Entity entity, Entity attackEntity,
 			}
 
 			tag_bits goodOrBad = TagType::GOOD | TagType::BAD;
-			// SAME TEAM
 			if ((entity.GetTags() & goodOrBad) == (other.GetTags() & goodOrBad))
 			{
-				// IS A HOUSE REMOVE PROJECTILE
-				if (other.GetComponent<comp::Tag<STATIC>>())
-				{
-					thisEntity.GetComponent<comp::SelfDestruct>()->lifeTime = 0.f;
-				}
-				return;
+				return; //these guys are on the same team
+			}
+
+			if ((entity.GetTags() & TagType::GOOD) && (other.GetTags() & TagType::DEFENCE)
+				|| (entity.GetTags() & TagType::DEFENCE) && (other.GetTags() & TagType::GOOD))
+			{
+				thisEntity.GetComponent<comp::SelfDestruct>()->lifeTime = 0.f;
+				return; //good vs defense are on the same team aswell
 			}
 
 			comp::RangeAttackAbility* attackAbility = entity.GetComponent<comp::RangeAttackAbility>();
@@ -488,12 +491,10 @@ void CombatSystem::AddCollisionRangeBehavior(Entity entity, Entity attackEntity,
 						other.RemoveComponent<comp::PARTICLEEMITTER>();
 					}
 					other.AddComponent<comp::PARTICLEEMITTER>(sm::Vector3{ 0,10,0 }, 50, 10.f, PARTICLEMODE::SMOKEAREA, 3.5f, 1.f, true);
+
+					scene.publish<EComponentUpdated>(other, ecs::Component::PARTICLEMITTER);
 				}
 
-				//if (other.GetComponent<comp::Tag<TagType::DEFENCE>>())
-				//{
-				//	//TODO: add building particles
-				//}
 
 				thisEntity.GetComponent<comp::SelfDestruct>()->lifeTime = 0.f;
 
