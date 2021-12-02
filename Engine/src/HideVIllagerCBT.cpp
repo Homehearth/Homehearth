@@ -23,7 +23,7 @@ BT::NodeStatus BT::HideVillagerCBT::Tick()
 	if (*cycle == CyclePeriod::MORNING && villager->isFleeing)
 	{
 		entity.GetComponent<comp::Velocity>()->vel = sm::Vector3::Zero;
-		return BT::NodeStatus::FAILURE;
+		return BT::NodeStatus::SUCCESS;
 	}
 
 	if (*cycle == CyclePeriod::NIGHT && villager->isHiding && !villager->homeHouse.IsNull())
