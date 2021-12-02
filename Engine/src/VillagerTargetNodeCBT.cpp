@@ -33,7 +33,14 @@ BT::NodeStatus BT::VillagerTargetNodeCBT::Tick()
 	comp::Villager* villager = entity.GetComponent<comp::Villager>();
 
 	if (villager->isFleeing)
+	{
 		refreshRate = 2.0f;
+
+		if(*cycle == CyclePeriod::MORNING)
+		{
+			entity.GetComponent<comp::Velocity>()->vel = sm::Vector3::Zero;
+		}
+	}
 
 	//focus to get to home node;
 	if(*cycle == CyclePeriod::NIGHT && villager && !villager->homeHouse.IsNull())
@@ -84,6 +91,5 @@ BT::NodeStatus BT::VillagerTargetNodeCBT::Tick()
 		return BT::NodeStatus::SUCCESS;
 	}
 
-	return BT::NodeStatus::SUCCESS;
-
+	return BT::NodeStatus::FAILURE;
 }

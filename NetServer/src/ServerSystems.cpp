@@ -584,6 +584,7 @@ void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money
 				comp::House* house = entity.GetComponent<comp::House>();
 				comp::Player* p = entity.GetComponent<comp::Player>();
 				comp::NPC* npc = entity.GetComponent<comp::NPC>();
+				comp::Villager* villager = entity.GetComponent<comp::Villager>();
 
 				audio_t audio = {
 					ESoundEvent::NONE,
