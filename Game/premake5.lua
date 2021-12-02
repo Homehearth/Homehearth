@@ -1,5 +1,4 @@
 project "Game"
-    kind "ConsoleApp"
     language "C++"
     cppdialect "C++17"
     staticruntime "on"
@@ -65,6 +64,7 @@ project "Game"
         }
 
     filter {"configurations:Debug"}
+        kind "ConsoleApp"
         staticruntime "on"
         runtime "Debug"
         defines{"_DEBUG", "_UNICODE", "UNICODE"}
@@ -77,6 +77,7 @@ project "Game"
 		}
 
     filter {"configurations:Release"}
+        kind "WindowedApp"
         staticruntime "on"
         runtime "Release"
         defines{"NDEBUG", "_UNICODE", "UNICODE"}
