@@ -839,7 +839,7 @@ void Simulation::SendEntities(const std::vector<Entity>& entities, GameMsg msgID
 	if (entities.size() == 0)
 		return;
 
-	const size_t PACKET_CHUNK_SIZE = 20;
+	const size_t PACKET_CHUNK_SIZE = 8;
 
 	uint32_t count = 0;
 	message<GameMsg> msg;
@@ -910,7 +910,7 @@ void Simulation::SendRemoveEntities(const std::vector<uint32_t> entitiesNetIDs)
 	if (entitiesNetIDs.size() == 0)
 		return;
 
-	const size_t PACKET_CHUNK_SIZE = 10;
+	const size_t PACKET_CHUNK_SIZE = 8;
 
 	uint32_t count = 0;
 	message<GameMsg> msg;

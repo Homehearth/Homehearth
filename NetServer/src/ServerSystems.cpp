@@ -171,7 +171,7 @@ void EnemyManagement::CreateWaves(std::queue<Wave>& waveQueue, int currentRound)
 		group2.SetSpawnPoint({ 170, -80.0f });
 		wave2.AddGroup(group1);
 		wave2.AddGroup(group2);
-		wave2.SetTimeLimit(30);	
+		wave2.SetTimeLimit(30);
 	}
 
 
@@ -286,14 +286,14 @@ void SpawnZoneWave(Simulation* simulation, Wave& currentWave)
 			nrOfEnemies = group.GetEnemyTypeCount(static_cast<EnemyType>(it));
 			const float degree = (360.f / static_cast<float>(nrOfEnemies)) * deg2rad;
 
-//Spawn enemies of this type
-for (int i = 0; i < nrOfEnemies; i++)
-{
-	distance = static_cast<float>(rand() % (max - min) + min);
-	posX = distance * cos(i * degree) + group.GetSpawnPoint().x;
-	posZ = distance * sin(i * degree) + group.GetSpawnPoint().y;
-	EnemyManagement::CreateEnemy(simulation, { posX, 0.0f, posZ }, static_cast<EnemyType>(it));
-}
+			//Spawn enemies of this type
+			for (int i = 0; i < nrOfEnemies; i++)
+			{
+				distance = static_cast<float>(rand() % (max - min) + min);
+				posX = distance * cos(i * degree) + group.GetSpawnPoint().x;
+				posZ = distance * sin(i * degree) + group.GetSpawnPoint().y;
+				EnemyManagement::CreateEnemy(simulation, { posX, 0.0f, posZ }, static_cast<EnemyType>(it));
+			}
 		}
 	}
 }
@@ -395,7 +395,7 @@ void ServerSystems::NextWaveConditions(Simulation* simulation)
 		{
 			simulation->m_timeCycler.SetCycleSpeed(1.0f);
 			// remove all bad guys
-			simulation->GetGameScene()->ForEachComponent<comp::Tag<TagType::BAD>>([](Entity e, comp::Tag<TagType::BAD>& ) 
+			simulation->GetGameScene()->ForEachComponent<comp::Tag<TagType::BAD>>([](Entity e, comp::Tag<TagType::BAD>&)
 				{
 					e.Destroy();
 				});
@@ -462,7 +462,7 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 			{
 				switch (p.shopItem)
 				{
-				//In playmode
+					//In playmode
 				case ShopItem::None:
 				{
 					p.state = comp::Player::State::LOOK_TO_MOUSE; // set state even if ability is not ready for use yet
@@ -518,7 +518,7 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 				}
 			}
 
-			if(p.lastInputState.key_shift)
+			if (p.lastInputState.key_shift)
 			{
 				if (ecs::UseAbility(e, p.moveAbilty, &p.mousePoint))
 				{
@@ -595,7 +595,7 @@ void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money
 					false,
 					false,
 				};
-				
+
 				if (p)
 				{
 					audio.type = ESoundEvent::Player_OnDeath;
@@ -642,7 +642,7 @@ void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money
 					house->door.Destroy();
 					entity.Destroy();
 				}
-				else if(npc)
+				else if (npc)
 				{
 					audio.type = ESoundEvent::Enemy_OnDeath;
 					entity.Destroy();
@@ -653,9 +653,9 @@ void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money
 				}
 
 				scene.ForEachComponent<comp::Player>([&](Entity& playerEntity, comp::Player& player)
-				{
-					playerEntity.GetComponent<comp::AudioState>()->data.emplace(audio);
-				});
+					{
+						playerEntity.GetComponent<comp::AudioState>()->data.emplace(audio);
+					});
 
 			}
 			else if (health.currentHealth > health.maxHealth)
@@ -695,7 +695,7 @@ void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& sce
 					p.state = comp::Player::State::SPECTATING;
 					message<GameMsg> msg;
 					msg.header.id = GameMsg::Game_StartSpectate;
-					
+
 					simulation->SendMsg(n.id, msg);
 				}
 				//p.respawnTimer -= dt;
@@ -821,7 +821,7 @@ void ServerSystems::AnimatonSystem(Simulation* simulation, HeadlessScene& scene)
 				msg.header.id = GameMsg::Game_ChangeAnimation;
 				msg << anim.toSend << net.id;
 				simulation->Broadcast(msg);
-				
+
 				anim.lastSend = anim.toSend;
 				anim.toSend = EAnimationType::NONE;
 			}
@@ -832,7 +832,7 @@ void ServerSystems::SoundSystem(Simulation* simulation, HeadlessScene& scene)
 {
 	scene.ForEachComponent<comp::Network, comp::AudioState>([&](comp::Network& net, comp::AudioState& audioState)
 		{
-			if(!audioState.data.empty())
+			if (!audioState.data.empty())
 			{
 				const int COUNT = static_cast<int>(audioState.data.size());
 				audio_t audio = {};
@@ -842,13 +842,13 @@ void ServerSystems::SoundSystem(Simulation* simulation, HeadlessScene& scene)
 				int nrOfBroadcasts = 0;
 				singleMsg.header.id = GameMsg::Game_PlaySound;
 				broadcastMsg.header.id = GameMsg::Game_PlaySound;
-				
+
 				// Loop trough all sounds.
-				for(int i = 0; i < COUNT; i++)
+				for (int i = 0; i < COUNT; i++)
 				{
 					audio = audioState.data.front();
 
-					if(audio.shouldBroadcast)
+					if (audio.shouldBroadcast)
 					{
 						broadcastMsg << audio.type;
 						broadcastMsg << audio.position;
@@ -878,7 +878,7 @@ void ServerSystems::SoundSystem(Simulation* simulation, HeadlessScene& scene)
 				//
 				// Send all msgs.
 				//
-				if(nrOfBroadcasts > 0)
+				if (nrOfBroadcasts > 0)
 				{
 					broadcastMsg << nrOfBroadcasts;
 					simulation->Broadcast(broadcastMsg);

@@ -1126,6 +1126,11 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 						nameString = "Villager.anim";
 						break;
 					}
+					default:
+					{
+						nameString = "Knight.anim";
+						break;
+					}
 					}
 					if (nameString.length() > 0)
 					{
