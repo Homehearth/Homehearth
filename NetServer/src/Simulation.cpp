@@ -387,6 +387,7 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 				ServerSystems::AnimatonSystem(this, scene);
 				ServerSystems::SoundSystem(this, scene);
 			}
+			m_timeCycler.Update(e.dt);
 
 				{
 					PROFILE_SCOPE("Hover defences");
@@ -405,14 +406,13 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 						EnemyManagement::CreateWaves(waveQueue, currentRound++);
 				}
 
-			m_timeCycler.Update(this);
 			m_spreeHandler.Update();
+		
 		});
 	
 	//On all enemies wiped, activate the next wave.
 	m_pGameScene->on<ESceneCallWaveSystem>([&](const ESceneCallWaveSystem& dt, HeadlessScene& scene)
 		{
-			waveTimer.Start();
 			ServerSystems::WaveSystem(this, waveQueue);
 		});
 
@@ -500,21 +500,6 @@ void Simulation::SendSnapshot()
 		this->SendEntities(m_updatedEntities, GameMsg::Game_Snapshot, compMask);
 		m_updatedEntities.clear();
 
-		// Update until next wave timer if next wave is present.
-		if (!waveQueue.empty())
-		{
-			// Update wave timer to clients.
-			network::message<GameMsg> msg2;
-			msg2.header.id = GameMsg::Game_WaveTimer;
-			msg2 << m_timeCycler.GetElapsedTime();
-			msg2 << m_timeCycler.GetTimePeriod();
-			this->BroadcastUDP(msg2);	
-			//for (auto& player : m_lobby.m_players)
-			//{
-			//	player.second.RemoveComponent<comp::Tag<TagType::GOOD>>();
-			//}
-		}
-
 		if (m_currency.m_hasUpdated)
 		{
 			network::message<GameMsg> msg3;
@@ -574,6 +559,16 @@ void Simulation::SendSnapshot()
 		msg5.header.id = GameMsg::Game_Spree;
 		msg5 << (uint32_t)m_spreeHandler.GetSpree();
 		this->Broadcast(msg5);
+		
+		if (this->m_tick % 40 == 0)
+		{
+			network::message<GameMsg> timeMsg;
+			timeMsg.header.id = GameMsg::Game_Time;
+			timeMsg << m_timeCycler.GetTime();
+			timeMsg << m_timeCycler.GetCycleSpeed();
+			this->Broadcast(timeMsg);
+		}
+		
 	}
 	else
 	{
@@ -833,6 +828,10 @@ void Simulation::ResetGameScene()
 
 	houseManager.InitializeHouses(*this->GetGameScene(),qt.get());
 	EnemyManagement::CreateWaves(waveQueue, currentRound++);
+
+	m_timeCycler.SetTime(MID_DAY);
+	m_timeCycler.SetCycleSpeed(1.0f);
+	
 }
 
 void Simulation::SendEntities(const std::vector<Entity>& entities, GameMsg msgID, const std::bitset<ecs::Component::COMPONENT_MAX>& componentMask)
@@ -971,7 +970,6 @@ void Simulation::ReadyCheck(uint32_t playerID)
 		msg.header.id = GameMsg::Game_Start;
 
 		this->Broadcast(msg);
-		m_timeCycler.OnStart();
 	}
 }
 

@@ -30,7 +30,6 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 	comp::SphereCollider* bos = entity.AddComponent<comp::SphereCollider>();
 	comp::Velocity* velocity = entity.AddComponent<comp::Velocity>();
 	comp::BehaviorTree* behaviorTree = entity.AddComponent<comp::BehaviorTree>();
-	entity.AddComponent<comp::AudioState>();
 
 	switch (type)
 	{
@@ -287,14 +286,14 @@ void SpawnZoneWave(Simulation* simulation, Wave& currentWave)
 			nrOfEnemies = group.GetEnemyTypeCount(static_cast<EnemyType>(it));
 			const float degree = (360.f / static_cast<float>(nrOfEnemies)) * deg2rad;
 
-			//Spawn enemies of this type
-			for (int i = 0; i < nrOfEnemies; i++)
-			{
-				distance = static_cast<float>(rand() % (max - min) + min);
-				posX = distance * cos(i * degree) + group.GetSpawnPoint().x;
-				posZ = distance * sin(i * degree) + group.GetSpawnPoint().y;
-				EnemyManagement::CreateEnemy(simulation, { posX, 0.0f, posZ }, static_cast<EnemyType>(it));
-			}
+//Spawn enemies of this type
+for (int i = 0; i < nrOfEnemies; i++)
+{
+	distance = static_cast<float>(rand() % (max - min) + min);
+	posX = distance * cos(i * degree) + group.GetSpawnPoint().x;
+	posZ = distance * sin(i * degree) + group.GetSpawnPoint().y;
+	EnemyManagement::CreateEnemy(simulation, { posX, 0.0f, posZ }, static_cast<EnemyType>(it));
+}
 		}
 	}
 }
@@ -381,13 +380,40 @@ void ServerSystems::WaveSystem(Simulation* simulation,
 /**Removes all enemies that has been destroyed and broadcasts the removal to the clients.
  *@param simulation	   Manages sending and removal of entities on the server.
  */
-void ServerSystems::NextWaveConditions(Simulation* simulation, Timer& timer, int timeToFinish)
+void ServerSystems::NextWaveConditions(Simulation* simulation)
 {
 	//Publish event when timeToFinish been exceeded.
-	if (simulation->m_timeCycler.GetSwitch())
+	if (simulation->m_timeCycler.HasChangedPeriod())
 	{
-		simulation->GetGameScene()->publish<ESceneCallWaveSystem>(0.0f);
-		simulation->m_timeCycler.Switch();
+		if (simulation->m_timeCycler.GetTimePeriod() == CyclePeriod::NIGHT)
+		{
+			// start new wave
+			simulation->GetGameScene()->publish<ESceneCallWaveSystem>(0.0f);
+		}
+
+		if (simulation->m_timeCycler.GetTimePeriod() == CyclePeriod::MORNING)
+		{
+			simulation->m_timeCycler.SetCycleSpeed(1.0f);
+			// remove all bad guys
+			simulation->GetGameScene()->ForEachComponent<comp::Tag<TagType::BAD>>([](Entity e, comp::Tag<TagType::BAD>& ) 
+				{
+					e.Destroy();
+				});
+		}
+	}
+
+	if (simulation->m_timeCycler.GetTimePeriod() == CyclePeriod::NIGHT)
+	{
+		int count = 0;
+		simulation->GetGameScene()->ForEachComponent<comp::Tag<TagType::BAD>>([&](Entity e, comp::Tag<TagType::BAD>&)
+			{
+				count++;
+			});
+
+		if (count == 0)
+		{
+			simulation->m_timeCycler.SetCycleSpeed(10.0f);
+		}
 	}
 }
 
@@ -432,7 +458,7 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 				anim.toSend = EAnimationType::IDLE;
 
 			// check if using abilities
-			if (p.lastInputState.leftMouse) // is pressed
+			if (p.lastInputState.leftMouse) // is held
 			{
 				switch (p.shopItem)
 				{
@@ -576,6 +602,7 @@ void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money
 				{
 					//Create a new entity with the ruined mesh
 					Entity newHouse = houseManager.CreateHouse(scene, houseManager.GetRuinedHouseType(house->houseType), NameType::EMPTY, NameType::EMPTY);
+					newHouse.RemoveComponent<comp::Health>();
 					qt->Insert(newHouse);
 
 					sm::Vector3 emitterOffset = newHouse.GetComponent<comp::OrientedBoxCollider>()->Center;
@@ -847,4 +874,36 @@ void ServerSystems::DeathParticleTimer(HeadlessScene& scene)
 				e.RemoveComponent<comp::PARTICLEEMITTER>();
 			}
 		});
+}
+
+Entity VillagerManagement::CreateVillager(HeadlessScene& scene, Entity homeHouse)
+{
+	Entity entity = scene.CreateEntity();
+	entity.AddComponent<comp::Network>();
+	entity.AddComponent<comp::Tag<DYNAMIC>>();
+	entity.AddComponent<comp::Tag<GOOD>>(); // this entity is BAD
+
+	comp::Transform* transform = entity.AddComponent<comp::Transform>();
+	transform->scale = sm::Vector3(1.7f, 1.7f, 1.7f);
+	comp::Health* health = entity.AddComponent<comp::Health>();
+	comp::MeshName* meshName = entity.AddComponent<comp::MeshName>();
+	comp::AnimatorName* animatorName = entity.AddComponent<comp::AnimatorName>();
+	comp::AnimationState* animationState = entity.AddComponent<comp::AnimationState>();
+	comp::SphereCollider* bos = entity.AddComponent<comp::SphereCollider>();
+	comp::Velocity* velocity = entity.AddComponent<comp::Velocity>();
+	comp::BehaviorTree* behaviorTree = entity.AddComponent<comp::BehaviorTree>();
+	comp::Villager* villager = entity.AddComponent<comp::Villager>();
+	comp::House* house = homeHouse.GetComponent<comp::House>();
+	transform->position = house->attackNode->position;
+	transform->position.y = 0.75f;
+	villager->homeHouse = homeHouse;
+	meshName->name = NameType::MESH_VILLAGER;
+	animatorName->name = AnimName::ANIM_VILLAGER;
+
+	bos->Radius = 3.f;
+	villager->movementSpeed = 15.f;
+
+	behaviorTree->root = AIBehaviors::GetVillagerAIBehavior(entity);
+
+	return entity;
 }

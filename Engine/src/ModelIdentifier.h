@@ -44,7 +44,8 @@ enum class AnimName : uint16_t
 	ANIM_NONE,
 	ANIM_KNIGHT,
 	ANIM_MAGE,
-	ANIM_MONSTER
+	ANIM_MONSTER,
+	ANIM_VILLAGER
 };
 
 enum class NameType : uint32_t
@@ -52,6 +53,7 @@ enum class NameType : uint32_t
 	EMPTY,
 	MESH_DEFENCE,
 	MESH_KNIGHT,
+	MESH_VILLAGER,
 	MESH_MAGE,
 	MESH_MONSTER,
 	MESH_SPHERE,

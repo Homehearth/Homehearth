@@ -18,7 +18,6 @@ Game::Game()
 	this->m_spectatingID = -1;
 	this->m_money = 0;
 	this->m_gameID = -1;
-	this->m_waveTimer = 0;
 	this->m_inputState = {};
 }
 
@@ -88,9 +87,9 @@ bool Game::OnStartup()
 	emitter4.AddComponent<comp::Transform>()->position = { 250, 5, -340 };
 	emitter4.AddComponent<comp::EmitterParticle>(sm::Vector3{ 0,0,0 }, 102, 2.f, PARTICLEMODE::MAGEHEAL, 3.5f, 1.f, false);*/
 
-	Entity waterSplash = GetScene("Game").CreateEntity();
+	/*Entity waterSplash = GetScene("Game").CreateEntity();
 	waterSplash.AddComponent<comp::Transform>()->position = { 270, 13, -370 };
-	waterSplash.AddComponent <comp::EmitterParticle>(sm::Vector3{ 0,0,0 }, 150, 1.f , PARTICLEMODE::WATERSPLASH, 2.0f, 1.f, false);
+	waterSplash.AddComponent <comp::EmitterParticle>(sm::Vector3{ 0,0,0 }, 150, 1.f, PARTICLEMODE::WATERSPLASH, 2.0f, 1.f, false);*/
 
 	return true;
 }
@@ -99,17 +98,9 @@ void Game::OnUserUpdate(float deltaTime)
 {
 	this->UpdateInput();
 
-	if (m_elapsedCycleTime <= m_waveTimer && (m_serverCycle == Cycle::DAY || m_serverCycle == Cycle::MORNING))
-	{
-		m_elapsedCycleTime += deltaTime;
-	}
-	else
-	{
-		m_elapsedNightTime += deltaTime;
-	}
-
 	//DEBUG
 	Scene& scene = GetScene("Game");
+
 	scene.ForEachComponent<comp::Light>([&](Entity e, comp::Light& l)
 		{
 			e.GetComponent<comp::SphereCollider>()->Center = sm::Vector3(l.lightData.position);
@@ -131,6 +122,12 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	{
 	case GameMsg::Client_Accepted:
 	{
+		rtd::Text* lobbyErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("LobbyFields")->elements[5].get());
+		lobbyErrorText->SetVisiblity(false);
+		rtd::Text* nameErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("nameInput")->elements[1].get());
+		nameErrorText->SetVisiblity(false);
+		rtd::Text* mainMenuErrorText = dynamic_cast<rtd::Text*>(GetScene("MainMenu").GetCollection("ConnectFields")->elements[6].get());
+		mainMenuErrorText->SetVisiblity(false);
 		LOG_INFO("You are validated!");
 		break;
 	}
@@ -398,6 +395,8 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		SoundHandler::Get().PlaySound("Player_OnDeath", audio);
 		audio.volume = 0.5f;
 		SoundHandler::Get().PlaySound("OnGameOver", audio);
+		rtd::Text* mainMenuErrorText = dynamic_cast<rtd::Text*>(GetScene("mainMenu").GetCollection("ConnectFields")->elements[6].get());
+		mainMenuErrorText->SetVisiblity(false);
 
 		uint32_t gatheredMoney, wavesSurvived;
 		msg >> wavesSurvived >> gatheredMoney;
@@ -413,15 +412,23 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		msg >> m_gameID;
 
 		this->SetScene("Loading");
-		sceneHelp::LoadGameScene(this);
-		sceneHelp::LoadResources(this);
-		sceneHelp::LoadMapColliders(this);
+		if (!hasLoaded)
+		{
+			sceneHelp::LoadGameScene(this);
+			sceneHelp::LoadResources(this);
+			sceneHelp::LoadMapColliders(this);
+
+			hasLoaded = true;
+		}
 
 #ifdef _DEBUG
 		LOG_INFO("Successfully loaded all Assets!");
 #endif
 		SetScene("Lobby");
-
+		rtd::Text* lobbyErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("LobbyFields")->elements[5].get());
+		lobbyErrorText->SetVisiblity(false);
+		rtd::Text* nameErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("nameInput")->elements[1].get());
+		nameErrorText->SetVisiblity(false);
 		LOG_INFO("You are now in lobby: %lu", m_gameID);
 		break;
 	}
@@ -431,6 +438,8 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		msg >> err;
 		SetScene("JoinLobby");
 		LOG_WARNING("%s", err.c_str());
+		rtd::Text* lobbyErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("LobbyFields")->elements[5].get());
+		lobbyErrorText->SetVisiblity(true);
 		break;
 	}
 	case GameMsg::Lobby_AcceptedLeave:
@@ -443,6 +452,10 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		{
 			textField->SetPresetText("");
 		}
+		rtd::Text* lobbyErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("LobbyFields")->elements[5].get());
+		lobbyErrorText->SetVisiblity(false);
+		rtd::Text* nameErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("nameInput")->elements[1].get());
+		nameErrorText->SetVisiblity(false);
 		break;
 	}
 	case GameMsg::Game_Start:
@@ -456,6 +469,23 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 				}
 			});
 
+
+		GetScene("Game").ForEachComponent<comp::Light>([](comp::Light& l)
+			{
+				if (l.lightData.type == TypeLight::POINT)
+				{
+					l.lightData.enabled = 0;
+				}
+			});
+
+
+		SoundHandler::Get().SetCurrentMusic("MenuTheme");
+		rtd::Text* lobbyErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("LobbyFields")->elements[5].get());
+		lobbyErrorText->SetVisiblity(false);
+		rtd::Text* nameErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("nameInput")->elements[1].get());
+		nameErrorText->SetVisiblity(false);
+		SetScene("Game");
+		thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::ADAPTIVE);
 		comp::Player* p = GetLocalPlayer().GetComponent<comp::Player>();
 		if (p)
 		{
@@ -485,76 +515,14 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		}
 		break;
 	}
-	case GameMsg::Game_WaveTimer:
+	case GameMsg::Game_Time:
 	{
-		msg >> m_serverCycle;
-		msg >> m_waveTimer;
-		switch (m_serverCycle)
-		{
-		case Cycle::DAY:
-		{
-			m_elapsedNightTime = 0.0f;
-			Scene& scene = GetScene("Game");
-
-			SoundHandler::Get().SetCurrentMusic("DayTheme");
-
-			// Change light when day.
-			scene.ForEachComponent<comp::Light>([&](comp::Light& l)
-				{
-					switch (l.lightData.type)
-					{
-					case TypeLight::POINT:
-					{
-						l.lightData.enabled = false;
-						break;
-					}
-					}
-				});
-			break;
-		}
-		case Cycle::NIGHT:
-		{
-			Scene& scene = GetScene("Game");
-
-			SoundHandler::Get().SetCurrentMusic("NightTheme");
-
-			// Change light on Night.
-			m_elapsedCycleTime = 0.0f;
-			scene.ForEachComponent<comp::Light>([&](comp::Light& l)
-				{
-					switch (l.lightData.type)
-					{
-					case TypeLight::POINT:
-					{
-						l.lightData.enabled = true;
-						break;
-					}
-					}
-				});
-			break;
-		}
-		case Cycle::MORNING:
-		{
-			m_elapsedNightTime = 0.0f;
-
-			Scene& scene = GetScene("Game");
-			// Change light on Morning.
-			scene.ForEachComponent<comp::Light>([&](comp::Light& l)
-				{
-					switch (l.lightData.type)
-					{
-					case TypeLight::POINT:
-					{
-						l.lightData.enabled = false;
-						break;
-					}
-					}
-				});
-			break;
-		}
-		default:
-			break;
-		}
+		float speed;
+		msg >> speed;
+		float time;
+		msg >> time;
+		m_cycler.SetCycleSpeed(speed);
+		m_cycler.SetTime(time);
 		break;
 	}
 	case GameMsg::Lobby_Update:
@@ -812,7 +780,7 @@ void Game::CreateLobby()
 
 const Cycle& Game::GetCurrentCycle() const
 {
-	return m_serverCycle;
+	return m_cycler;
 }
 
 const uint32_t& Game::GetMoney() const
@@ -1104,6 +1072,11 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 						nameString = "Sphere.obj";
 						break;
 					}
+					case NameType::MESH_VILLAGER:
+					{
+						nameString = "Villager.fbx";
+						break;
+					}
 					default:
 					{
 						nameString = "Cube.obj";
@@ -1140,6 +1113,11 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 					case AnimName::ANIM_MAGE:
 					{
 						nameString = "Mage.anim";
+						break;
+					}
+					case AnimName::ANIM_VILLAGER:
+					{
+						nameString = "Villager.anim";
 						break;
 					}
 					}

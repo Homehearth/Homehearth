@@ -7,11 +7,11 @@
 void GameSystems::DisplayUpgradeDefences(Game* game)
 {
 	Collection2D* coll = game->GetCurrentScene()->GetCollection("priceTag");
-	// Display only if in Build mode..
-	ShopItem shopitem = game->GetShopItem();
-
-	if (game->GetCurrentCycle() == Cycle::DAY)
+	
+	if (game->GetCycler().GetTimePeriod() == CyclePeriod::DAY)
 	{
+		// Display only if in Build mode..
+		ShopItem shopitem = game->GetShopItem();
 		if (shopitem == ShopItem::Defence1x1 || shopitem == ShopItem::Defence1x3)
 		{
 			Scene& scene = *game->GetCurrentScene();
@@ -166,10 +166,10 @@ void GameSystems::UpdatePlayerVisuals(Game* game)
 						// Update healthbars position.
 						if (STRECH_ONCE)
 						{
-							health->SetStretch(width / 3.33f, height / 16.f);
+							health->SetStretch(width / 4.0f, height / 24.f);
 							STRECH_ONCE = false;
 						}
-						health->SetPosition(width / 32.0f, height - (height / 16.0f) - (height / 32.0f));
+						health->SetPosition(width / 32.0f, height - (height / 13.0f));
 						health->SetVisiblity(true);
 					}
 				}
