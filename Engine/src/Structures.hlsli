@@ -85,6 +85,7 @@ struct PixelParticleIn
     float4 color            : COLOR;
     float3 normal           : NORMAL;
     float2 uv               : TEXCOORD;
+    float4 worldPos         : WORLDPOS;
 };
 
 struct Light

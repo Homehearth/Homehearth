@@ -713,6 +713,20 @@ void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& sce
 				e.UpdateNetwork();
 			}
 		});
+
+	// turns Villagers with velocity
+	scene.ForEachComponent<comp::Villager, comp::Transform, comp::Velocity>([&](Entity e, comp::Villager& p, comp::Transform& t, comp::Velocity& v)
+		{
+			if (v.vel.Length() > 0.001f)
+			{
+				float time = dt * p.movementSpeed * 0.5f;
+				if (ecs::StepRotateTo(t.rotation, v.vel, time))
+				{
+
+				}
+				e.UpdateNetwork();
+			}
+		});
 }
 
 void ServerSystems::CheckGameOver(Simulation* simulation, HeadlessScene& scene)
@@ -877,7 +891,7 @@ Entity VillagerManagement::CreateVillager(HeadlessScene& scene, Entity homeHouse
 	transform->position.y = 0.75f;
 	villager->homeHouse = homeHouse;
 	meshName->name = NameType::MESH_VILLAGER;
-	animatorName->name = AnimName::ANIM_KNIGHT;
+	animatorName->name = AnimName::ANIM_VILLAGER;
 
 	bos->Radius = 3.f;
 	villager->movementSpeed = 15.f;

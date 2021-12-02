@@ -44,7 +44,8 @@ enum class AnimName : uint16_t
 	ANIM_NONE,
 	ANIM_KNIGHT,
 	ANIM_MAGE,
-	ANIM_MONSTER
+	ANIM_MONSTER,
+	ANIM_VILLAGER
 };
 
 enum class NameType : uint32_t

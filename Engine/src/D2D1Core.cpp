@@ -80,8 +80,10 @@ const bool D2D1Core::Setup(Window* window)
 		[] {LOG_WARNING("Creating default solid color brush failed."); };
 
 	// Somehow scales the text to window size
-	float res = ((window->GetWidth()) / ((float)window->GetHeight()));
-	const float font = ((window->GetWidth() * res) - (window->GetHeight() * res)) * 0.03f > 0.0f ? ((window->GetWidth() * res) - (window->GetHeight() * res)) * 0.03f : ((window->GetWidth() * res) - (window->GetHeight() * res)) * 0.03f * -1.0f;
+	//float res = ((window->GetWidth()) / ((float)window->GetHeight()));
+	float res = 16.f / 9.f;
+	//const float font = ((window->GetWidth() * res) - (window->GetHeight() * res)) * 0.03f > 0.0f ? ((window->GetWidth() * res) - (window->GetHeight() * res)) * 0.03f : ((window->GetWidth() * res) - (window->GetHeight() * res)) * 0.03f * -1.0f;
+	const float font = ((window->GetHeight() * res) - window->GetHeight()) * 0.04f > 0.0f ? ((window->GetHeight() * res) - window->GetHeight()) * 0.04f : ((window->GetHeight() * res) - window->GetHeight()) * 0.04f * -1.0f;
 
 	/*
 		Load in custom FONT

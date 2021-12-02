@@ -41,7 +41,7 @@ void ParticleSystem::InitializeParticles(entt::registry& reg, entt::entity ent)
 		tempParticle.life = 0;
 		tempParticle.velocity = {0,0,0,0};
 
-		if (tempParticle.type == PARTICLEMODE::BLOOD )
+		if (tempParticle.type == PARTICLEMODE::BLOOD || tempParticle.type == PARTICLEMODE::MAGERANGE || tempParticle.type == PARTICLEMODE::WATERSPLASH)
 		{
 			tempParticle.velocity.x = (float)rand() / (RAND_MAX + 1.f) * (2.0f - (-2.0f)) + (-2.0f);
 			tempParticle.velocity.y = (float)rand() / (RAND_MAX + 1.f) * (2.0f - (-2.0f)) + (-2.0f);
@@ -51,7 +51,7 @@ void ParticleSystem::InitializeParticles(entt::registry& reg, entt::entity ent)
 		{
 			tempParticle.color = { 0.f, 0.f, 0.5f, 0.5f };
 		}
-		else if (tempParticle.type == PARTICLEMODE::SMOKEAREA) 
+		else if (tempParticle.type == PARTICLEMODE::SMOKEAREA || tempParticle.type == PARTICLEMODE::MAGERANGE || tempParticle.type == PARTICLEMODE::WATERSPLASH)
 		{
 			tempParticle.position.x += (float)rand() / (RAND_MAX + 1.f) * (1.0f - (-1.0f)) + (-1.0f);
 			tempParticle.position.y += (float)rand() / (RAND_MAX + 1.f) * (1.0f - (-1.0f)) + (-1.0f);
