@@ -121,7 +121,8 @@ void ParticlePass::Render(Scene* pScene)
 			D3D11Core::Get().DeviceContext()->Dispatch(groupCount, 1, 1);
 			D3D11Core::Get().DeviceContext()->CSSetUnorderedAccessViews(7, 1, &m_nullUAV, nullptr);
 
-			if (emitter->texture->GetShaderView() && emitter->opacityTexture->GetShaderView() && emitter->particleSRV)
+			if (emitter->texture->GetShaderView() && emitter->opacityTexture->GetShaderView() && emitter->particleSRV
+				&& cbP)
 			{
 				D3D11Core::Get().DeviceContext()->PSSetShaderResources(1, 1, &emitter->texture->GetShaderView());
 				D3D11Core::Get().DeviceContext()->PSSetShaderResources(7, 1, &emitter->opacityTexture->GetShaderView());
