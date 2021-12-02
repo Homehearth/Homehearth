@@ -20,7 +20,7 @@ void GameSystems::DisplayUpgradeDefences(Game* game)
 			const unsigned int height = D2D1Core::GetWindow()->GetHeight();
 
 			bool pressed = false;
-			if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::R, KeyState::PRESSED))
+			if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED))
 			{
 				pressed = true;
 			}
@@ -30,8 +30,9 @@ void GameSystems::DisplayUpgradeDefences(Game* game)
 			rtd::Picture* pc = dynamic_cast<rtd::Picture*>(coll->elements[0].get());
 			rtd::Text* tc = dynamic_cast<rtd::Text*>(coll->elements[1].get());
 			uint32_t id;
-			uint32_t cost;
+			uint32_t cost = 0;
 
+			int test = 0;
 			Ray_t mouseRay = InputSystem::Get().GetMouseRay();
 			scene.ForEachComponent<comp::OrientedBoxCollider, comp::Cost, comp::Network>([&](comp::OrientedBoxCollider& box, comp::Cost& c, comp::Network& n) {
 
@@ -48,8 +49,12 @@ void GameSystems::DisplayUpgradeDefences(Game* game)
 					shouldNotShow = false;
 				}
 
+				test++;
+
 				});
 
+
+			std::cout << "Defences: " << test << "\n";
 			// Update the UI to reflect on the closest defence to the mouse pointer.
 			if (pc && tc)
 			{
@@ -145,6 +150,8 @@ static bool STRECH_ONCE = true;
 void GameSystems::UpdatePlayerVisuals(Game* game)
 {
 	Scene* scene = game->GetCurrentScene();
+	const float width = (float)game->GetWindow()->GetWidth();
+	const float height = (float)game->GetWindow()->GetHeight();
 
 	scene->ForEachComponent<comp::Player, comp::Transform, comp::Network>([&](comp::Player& player, comp::Transform& t, comp::Network& n)
 		{
@@ -153,8 +160,6 @@ void GameSystems::UpdatePlayerVisuals(Game* game)
 			*/
 			if (n.id == game->m_localPID)
 			{
-				const float width = (float)game->GetWindow()->GetWidth();
-				const float height = (float)game->GetWindow()->GetHeight();
 				Scene* scene = &game->GetScene("Game");
 				// Update healthbars position.
 				Collection2D* collHealth = scene->GetCollection("player" + std::to_string(static_cast<uint16_t>(player.playerType)) + "Info");
@@ -163,15 +168,15 @@ void GameSystems::UpdatePlayerVisuals(Game* game)
 					rtd::Healthbar* health = dynamic_cast<rtd::Healthbar*>(collHealth->elements[0].get());
 					if (health)
 					{
-						// Update healthbars position.
-						if (STRECH_ONCE)
-						{
-							health->SetStretch(width / 4.0f, height / 24.f);
-							STRECH_ONCE = false;
-						}
+						health->SetStretch(width / 4.0f, height / 24.f);
 						health->SetPosition(width / 32.0f, height - (height / 13.0f));
 						health->SetVisiblity(true);
 					}
+				}
+				Collection2D* collection = scene->GetCollection("dynamicPlayer" + std::to_string(static_cast<uint16_t>(player.playerType)) + "namePlate");
+				if (collection)
+				{
+					collection->Hide();
 				}
 			}
 			else
@@ -225,6 +230,7 @@ void GameSystems::UpdatePlayerVisuals(Game* game)
 									new_x = (((newPp.x + 1) * (D2D1Core::GetWindow()->GetWidth())) / (2));
 									new_y = D2D1Core::GetWindow()->GetHeight() - (((newPp.y + 1) * (D2D1Core::GetWindow()->GetHeight())) / (2));
 
+									health->SetStretch((width / 24), (height / 100));
 									health->SetPosition(new_x - (health->GetOpts().width * 0.5f), new_y);
 
 									// Only visible if camera is turned to it.

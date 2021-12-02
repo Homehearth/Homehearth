@@ -549,6 +549,7 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 		tileEntity.AddComponent<comp::Tag<TagType::STATIC>>();
 		tileEntity.AddComponent<comp::Tag<TagType::DEFENCE>>();
 		tileEntity.AddComponent<comp::Network>();
+		tileEntity.AddComponent<comp::Cost>()->cost = 5;
 		tileEntity.AddComponent<comp::TileSet>()->coordinates = coordinates;
 
 		comp::Transform* transform = tileEntity.AddComponent<comp::Transform>();
