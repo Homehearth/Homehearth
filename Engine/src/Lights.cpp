@@ -68,7 +68,7 @@ const bool Lights::UpdateLightBuffer()
 const bool Lights::UpdateInfoBuffer()
 {
     light_info_t newInfo = {};
-    newInfo.nrOfLights = dx::XMFLOAT4((float)m_lights.size(), m_volumeQuality, 0.f, 0.f);
+    newInfo.nrOfLights = dx::XMFLOAT4((float)m_lights.size(), (float)m_volumeQuality, 0.f, 0.f);
 
     HRESULT hr;
     D3D11_MAPPED_SUBRESOURCE submap;

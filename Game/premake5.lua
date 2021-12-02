@@ -52,15 +52,15 @@ project "Game"
         }
 		
         postbuildcommands {
-            "{COPYFILE} %{wks.location}ThirdParty/assimp/lib/assimp-vc142-mt.dll %{wks.location}Game/build/bin/" .. outputdir .. "/Game/assimp-vc142-mt.dll",
-            "{COPYFILE} %{wks.location}ThirdParty/irrKlang/dlls/ikpFlac.dll %{wks.location}Game/build/bin/" .. outputdir .. "/Game/ikpFlac.dll",
-            "{COPYFILE} %{wks.location}ThirdParty/irrKlang/dlls/irrKlang.dll %{wks.location}Game/build/bin/" .. outputdir .. "/Game/irrKlang.dll",
-            "{COPYFILE} %{wks.location}ThirdParty/irrKlang/dlls/ikpMP3.dll %{wks.location}Game/build/bin/" .. outputdir .. "/Game/ikpMP3.dll",
+            "{COPYFILE} %{wks.location}Assets/Dlls/assimp-vc142-mt.dll %{wks.location}Game/build/bin/" .. outputdir .. "/Game/assimp-vc142-mt.dll",
+            "{COPYFILE} %{wks.location}Assets/Dlls/ikpFlac.dll %{wks.location}Game/build/bin/" .. outputdir .. "/Game/ikpFlac.dll",
+            "{COPYFILE} %{wks.location}Assets/Dlls/irrKlang.dll %{wks.location}Game/build/bin/" .. outputdir .. "/Game/irrKlang.dll",
+            "{COPYFILE} %{wks.location}Assets/Dlls/ikpMP3.dll %{wks.location}Game/build/bin/" .. outputdir .. "/Game/ikpMP3.dll",
         
-            "{COPYFILE} %{wks.location}ThirdParty/assimp/lib/assimp-vc142-mt.dll %{wks.location}Game/build/bin/" .. outputdir .. "/Game/assimp-vc142-mt.dll",
-            "{COPYFILE} %{wks.location}ThirdParty/irrKlang/dlls/ikpFlac.dll %{wks.location}Game/build/bin/" .. outputdir .. "/Game/ikpFlac.dll",
-            "{COPYFILE} %{wks.location}ThirdParty/irrKlang/dlls/irrKlang.dll %{wks.location}Game/build/bin/" .. outputdir .. "/Game/irrKlang.dll",
-            "{COPYFILE} %{wks.location}ThirdParty/irrKlang/dlls/ikpMP3.dll %{wks.location}Game/build/bin/" .. outputdir .. "/Game/ikpMP3.dll"
+            "{COPYFILE} %{wks.location}Assets/Dlls/assimp-vc142-mt.dll %{wks.location}Game/build/bin/" .. outputdir .. "/Game/assimp-vc142-mt.dll",
+            "{COPYFILE} %{wks.location}Assets/Dlls/ikpFlac.dll %{wks.location}Game/build/bin/" .. outputdir .. "/Game/ikpFlac.dll",
+            "{COPYFILE} %{wks.location}Assets/Dlls/irrKlang.dll %{wks.location}Game/build/bin/" .. outputdir .. "/Game/irrKlang.dll",
+            "{COPYFILE} %{wks.location}Assets/Dlls/ikpMP3.dll %{wks.location}Game/build/bin/" .. outputdir .. "/Game/ikpMP3.dll"
         }
 
     filter {"configurations:Debug"}
