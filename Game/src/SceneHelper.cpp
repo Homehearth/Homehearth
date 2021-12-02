@@ -145,9 +145,9 @@ namespace sceneHelp
 		sm::Vector4 pointLightColor = { 237.f, 147.f, 18.f, 0.f };
 
 		// LEFT OF WELL
-		CreateLightEntity(gameScene, { 268.2f, 28.f, -320.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, pointLightColor, pointRange, 0.4f,TypeLight::POINT, 0);
+		CreateLightEntity(gameScene, { 268.2f, 28.f, -320.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, pointLightColor, pointRange, 0.4f, TypeLight::POINT, 0);
 		// FURTHEST LEFT AND FURTHEST SOUTH
-		CreateLightEntity(gameScene, { 347.5f, 28.f, -323.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, pointLightColor, pointRange, 0.4f,TypeLight::POINT, 0);
+		CreateLightEntity(gameScene, { 347.5f, 28.f, -323.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, pointLightColor, pointRange, 0.4f, TypeLight::POINT, 0);
 		// NEXT TO THE BRIDGE GOING SOUTH
 		CreateLightEntity(gameScene, { 310.f, 28.f, -305.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, pointLightColor, pointRange, 0.4f, TypeLight::POINT, 0);
 		// NEXT TO THE LEFT BRIDGE ON THE LEFT SIDE OF IT
@@ -157,7 +157,7 @@ namespace sceneHelp
 		// FURTHEST RIGHT AND FURTHEST SOUTH
 		CreateLightEntity(gameScene, { 193.5f, 28.f, -261.5f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, pointLightColor, pointRange, 0.4f, TypeLight::POINT, 0);
 		// LEFT OF WATERMILL
-		CreateLightEntity(gameScene, { 338.5f, 28.f, -397.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, pointLightColor, pointRange, 0.4f,TypeLight::POINT, 0);
+		CreateLightEntity(gameScene, { 338.5f, 28.f, -397.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, pointLightColor, pointRange, 0.4f, TypeLight::POINT, 0);
 
 		InputSystem::Get().SetCamera(gameScene.GetCurrentCamera());
 
@@ -175,21 +175,21 @@ namespace sceneHelp
 					float angle = 360.f * game->GetCycler().GetTime();
 					for (int i = 0; i < 2; i++)
 					{
-						
+
 						sm::Vector3 dir = sm::Vector3::TransformNormal(sm::Vector3(-1, 0, -1), sm::Matrix::CreateRotationZ(dx::XMConvertToRadians(angle)));
 						l->lightData.direction = sm::Vector4(dir);
 						l->lightData.direction.w = 0.0f;
-						
+
 						l->lightData.enabled = l->lightData.direction.y < 0.0f;
-						
+
 						sm::Vector3 newPos = playerPos - dir * 300;
-						if(l->lightData.enabled)
+						if (l->lightData.enabled)
 							newPos = util::Lerp(sm::Vector3(l->lightData.position), newPos, e.dt * 10);
-				
+
 						l->lightData.position = sm::Vector4(newPos);
 						l->lightData.position.w = 1.0f;
 
-						
+
 						l = moon.GetComponent<comp::Light>();
 						angle -= 180.f;
 					}
@@ -201,7 +201,7 @@ namespace sceneHelp
 					{
 					case CyclePeriod::NIGHT:
 					{
-						
+
 						SoundHandler::Get().SetCurrentMusic("NightTheme");
 						scene.ForEachComponent<comp::Light>([](comp::Light& l)
 							{
@@ -227,7 +227,7 @@ namespace sceneHelp
 					}
 					case CyclePeriod::EVENING:
 					{
-						
+
 						break;
 					}
 					default:
@@ -240,7 +240,7 @@ namespace sceneHelp
 				Collection2D* bullColl = game->GetCurrentScene()->GetCollection("bullDoze");
 				rtd::Picture* bullIcon = dynamic_cast<rtd::Picture*>(bullColl->elements[0].get());
 				ShopItem shopitem = game->GetShopItem();
-				
+
 				if (bullIcon)
 				{
 					if (shopitem == ShopItem::Destroy_Tool)
@@ -280,11 +280,14 @@ namespace sceneHelp
 
 
 				// Need to update Listener to make 3D sound work properly.
-				const auto thePlayer = game->GetLocalPlayer();
-				const auto lookDir = DirectX::XMVector3Rotate({ 0.f, 0.f, -1.f },
-					scene.GetCurrentCamera()->GetRotation());
-				SoundHandler::Get().SetListenerPosition(thePlayer.GetComponent<comp::Transform>()->position, lookDir);
-				SoundHandler::Get().Update();
+				Entity player;
+				if (game->GetLocalPlayer(player))
+				{
+					const auto lookDir = DirectX::XMVector3Rotate({ 0.f, 0.f, -1.f },
+						scene.GetCurrentCamera()->GetRotation());
+					SoundHandler::Get().SetListenerPosition(player.GetComponent<comp::Transform>()->position, lookDir);
+					SoundHandler::Get().Update();
+				}
 
 #ifdef _DEBUG
 				if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Space, KeyState::RELEASED))
@@ -594,9 +597,13 @@ namespace sceneHelp
 		//rtd::Text* readyText = startGame->AddElement<rtd::Text>("Not ready", draw_text_t((width / 2) + (width / 10.f), height - (height / 5.0f), (width / 3.33f), (height / 6.f)));
 		startGameButton->SetOnPressedEvent([=]()
 			{
-				comp::Player* player = game->GetLocalPlayer().GetComponent<comp::Player>();
-				player->isReady = !player->isReady;
-				game->SendStartGame();
+				Entity e;
+				if (game->GetLocalPlayer(e))
+				{
+					comp::Player* p = e.GetComponent<comp::Player>();
+					p->isReady = !p->isReady;
+					game->SendStartGame();
+				}
 			});
 		scene.Add2DCollection(startGame, "StartGame");
 
@@ -605,14 +612,18 @@ namespace sceneHelp
 		rtd::Button* exitButton = general->AddElement<rtd::Button>("No.png", draw_t(0.0f, 0.0f, width / 24, height / 14), false);
 		exitButton->SetOnPressedEvent([=]()
 			{
-				comp::Player* player = game->GetLocalPlayer().GetComponent<comp::Player>();
-				player->isReady = false;
-				network::message<GameMsg> msg;
-				msg.header.id = GameMsg::Lobby_Leave;
-				msg << game->m_localPID << game->m_gameID;
-				game->m_client.Send(msg);
-				rtd::TextField* nameInput = dynamic_cast<rtd::TextField*>(game->GetScene("JoinLobby").GetCollection("nameInput")->elements[0].get());
-				nameInput->SetActive();
+				Entity e;
+				if (game->GetLocalPlayer(e))
+				{
+					comp::Player* p = e.GetComponent<comp::Player>();
+					p->isReady = false;
+					network::message<GameMsg> msg;
+					msg.header.id = GameMsg::Lobby_Leave;
+					msg << game->m_localPID << game->m_gameID;
+					game->m_client.Send(msg);
+					rtd::TextField* nameInput = dynamic_cast<rtd::TextField*>(game->GetScene("JoinLobby").GetCollection("nameInput")->elements[0].get());
+					nameInput->SetActive();
+				}
 			});
 		scene.Add2DCollection(general, "AGeneral");
 
@@ -634,12 +645,16 @@ namespace sceneHelp
 				//mageBorder->SetVisiblity(true);
 				//warriorBorder->SetVisiblity(false);
 				desc->SetTexture("WizardDesc.png");
-				comp::Player* player = game->GetLocalPlayer().GetComponent<comp::Player>();
-				player->classType = comp::Player::Class::MAGE;
-				game->SendSelectedClass(player->classType);
-				mageButton->GetBorder()->SetColor(D2D1::ColorF(0.0f, 1.0f, 0.2f));
-				mageButton->GetBorder()->SetVisiblity(true);
-				warriorButton->GetBorder()->SetVisiblity(false);
+				Entity e;
+				if (game->GetLocalPlayer(e))
+				{
+					comp::Player* p = e.GetComponent<comp::Player>();
+					p->classType = comp::Player::Class::MAGE;
+					game->SendSelectedClass(p->classType);
+					mageButton->GetBorder()->SetColor(D2D1::ColorF(0.0f, 1.0f, 0.2f));
+					mageButton->GetBorder()->SetVisiblity(true);
+					warriorButton->GetBorder()->SetVisiblity(false);
+				}
 			});
 
 
@@ -648,12 +663,16 @@ namespace sceneHelp
 				//mageBorder->SetVisiblity(false);
 				//warriorBorder->SetVisiblity(true);
 				desc->SetTexture("WarriorDesc.png");
-				comp::Player* player = game->GetLocalPlayer().GetComponent<comp::Player>();
-				player->classType = comp::Player::Class::WARRIOR;
-				game->SendSelectedClass(player->classType);
-				warriorButton->GetBorder()->SetColor(D2D1::ColorF(0.0f, 1.0f, 0.2f));
-				warriorButton->GetBorder()->SetVisiblity(true);
-				mageButton->GetBorder()->SetVisiblity(false);
+				Entity e;
+				if (game->GetLocalPlayer(e))
+				{
+					comp::Player* p = e.GetComponent<comp::Player>();
+					p->classType = comp::Player::Class::WARRIOR;
+					game->SendSelectedClass(p->classType);
+					warriorButton->GetBorder()->SetColor(D2D1::ColorF(0.0f, 1.0f, 0.2f));
+					warriorButton->GetBorder()->SetVisiblity(true);
+					mageButton->GetBorder()->SetVisiblity(false);
+				}
 			});
 
 		scene.Add2DCollection(classButtons, "ClassButtons");
@@ -772,7 +791,7 @@ namespace sceneHelp
 		}
 		}
 		OptionSystem::Get().SetOption("BlurType", std::to_string(static_cast<int>(type)));
-		
+
 		blurButton->SetOnPressedEvent([=] {
 			// Toggle between types.
 			switch (type)
@@ -1059,7 +1078,7 @@ namespace sceneHelp
 		{
 			windowToggle->SetText("Fullscreen");
 		}
-		
+
 		windowToggleButton->SetOnPressedEvent([=] {
 
 			if (fullscreen == 0)
@@ -1131,9 +1150,9 @@ namespace sceneHelp
 		rtd::Text* gameOverField = gameOverCollection->AddElement<rtd::Text>("Game Over", draw_text_t((width / 2.f) - (strlen("Game Over") * D2D1Core::GetDefaultFontSize() * 0.5f), (height / 5.f) - D2D1Core::GetDefaultFontSize(), strlen("Game Over") * D2D1Core::GetDefaultFontSize(), D2D1Core::GetDefaultFontSize()));
 		gameOverField->SetText("Game Over");
 
-		rtd::Text* scoreField = gameOverCollection->AddElement<rtd::Text>("Score: 0" , draw_text_t((width / 4.f) - (strlen("Score: ") * D2D1Core::GetDefaultFontSize() * 0.5f), (height / 2.f) - D2D1Core::GetDefaultFontSize(), strlen("Score: ") * D2D1Core::GetDefaultFontSize(), D2D1Core::GetDefaultFontSize()));	
+		rtd::Text* scoreField = gameOverCollection->AddElement<rtd::Text>("Score: 0", draw_text_t((width / 4.f) - (strlen("Score: ") * D2D1Core::GetDefaultFontSize() * 0.5f), (height / 2.f) - D2D1Core::GetDefaultFontSize(), strlen("Score: ") * D2D1Core::GetDefaultFontSize(), D2D1Core::GetDefaultFontSize()));
 
-		rtd::Text* waveField = gameOverCollection->AddElement<rtd::Text>("Waves: 0", draw_text_t((width / 1.5f) - (strlen("Waves: ")  * D2D1Core::GetDefaultFontSize() * 0.5f), (height / 2.f) - D2D1Core::GetDefaultFontSize(), strlen("Waves: ") * D2D1Core::GetDefaultFontSize(), D2D1Core::GetDefaultFontSize()));
+		rtd::Text* waveField = gameOverCollection->AddElement<rtd::Text>("Waves: 0", draw_text_t((width / 1.5f) - (strlen("Waves: ") * D2D1Core::GetDefaultFontSize() * 0.5f), (height / 2.f) - D2D1Core::GetDefaultFontSize(), strlen("Waves: ") * D2D1Core::GetDefaultFontSize(), D2D1Core::GetDefaultFontSize()));
 
 		rtd::Button* mainMenuButton = gameOverCollection->AddElement<rtd::Button>("Button.png", draw_t((width / 2) - (width / 8), height - (height / 6.f), width / 4, height / 8));
 		gameOverCollection->AddElement<rtd::Text>("Main Menu", draw_text_t((width / 2) - (width / 8), height - (height / 6.f), width / 4, height / 8));

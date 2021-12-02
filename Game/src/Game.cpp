@@ -331,14 +331,14 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 				SH->PlaySound("Player_OnHealing", data);
 				break;
 			case ESoundEvent::Player_OnCastDash:
-				{
-					int version = rand() % 10;
-					if(version == 0)
-						SH->PlaySound("Player_OnCastDash1", data);
-					else
-						SH->PlaySound("Player_OnCastDash", data);
-				}
-				break;
+			{
+				int version = rand() % 10;
+				if (version == 0)
+					SH->PlaySound("Player_OnCastDash1", data);
+				else
+					SH->PlaySound("Player_OnCastDash", data);
+			}
+			break;
 			case ESoundEvent::Player_OnCastBlink:
 				SH->PlaySound("Player_OnCastBlink", data);
 				break;
@@ -492,18 +492,23 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		nameErrorText->SetVisiblity(false);
 		SetScene("Game");
 		thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::ADAPTIVE);
-		comp::Player* p = GetLocalPlayer().GetComponent<comp::Player>();
-		if (p)
+		Entity e;
+		if (GetLocalPlayer(e))
 		{
-			if (p->classType == comp::Player::Class::WARRIOR)
+			comp::Player* p = e.GetComponent<comp::Player>();
+
+			if (p)
 			{
-				dynamic_cast<rtd::AbilityUI*>(GetScene("Game").GetCollection("AbilityUI")->elements[1].get())->SetTexture("Attack2.png");
-				dynamic_cast<rtd::AbilityUI*>(GetScene("Game").GetCollection("AbilityUI")->elements[2].get())->SetTexture("Block.png");
-			}
-			else
-			{
-				dynamic_cast<rtd::AbilityUI*>(GetScene("Game").GetCollection("AbilityUI")->elements[1].get())->SetTexture("Attack.png");
-				dynamic_cast<rtd::AbilityUI*>(GetScene("Game").GetCollection("AbilityUI")->elements[2].get())->SetTexture("Heal.png");
+				if (p->classType == comp::Player::Class::WARRIOR)
+				{
+					dynamic_cast<rtd::AbilityUI*>(GetScene("Game").GetCollection("AbilityUI")->elements[1].get())->SetTexture("Attack2.png");
+					dynamic_cast<rtd::AbilityUI*>(GetScene("Game").GetCollection("AbilityUI")->elements[2].get())->SetTexture("Block.png");
+				}
+				else
+				{
+					dynamic_cast<rtd::AbilityUI*>(GetScene("Game").GetCollection("AbilityUI")->elements[1].get())->SetTexture("Attack.png");
+					dynamic_cast<rtd::AbilityUI*>(GetScene("Game").GetCollection("AbilityUI")->elements[2].get())->SetTexture("Heal.png");
+				}
 			}
 		}
 
@@ -854,9 +859,15 @@ ParticleSystem* Game::GetParticleSystem()
 	return &m_particles;
 }
 
-Entity& Game::GetLocalPlayer()
+bool Game::GetLocalPlayer(Entity& player)
 {
-	return this->m_players.at(m_localPID);
+	if (m_players.find(m_localPID) == m_players.end())
+	{
+		return false;
+	}
+
+	player = m_players.at(m_localPID);
+	return true;
 }
 
 void Game::SetShopItem(const ShopItem& whatToBuy)
@@ -1223,7 +1234,7 @@ void Game::UpdateInput()
 	m_inputState.axisHorizontal = InputSystem::Get().GetAxis(Axis::HORIZONTAL);
 	m_inputState.axisVertical = InputSystem::Get().GetAxis(Axis::VERTICAL);
 	m_inputState.mousewheelDir = InputSystem::Get().GetMouseWheelDirection();
-	
+
 	if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::HELD))
 	{
 		m_inputState.leftMouse = true;

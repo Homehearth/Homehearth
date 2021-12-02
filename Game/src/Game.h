@@ -55,7 +55,7 @@ public:
 	void SendStartGame();
 	void SendSelectedClass(comp::Player::Class classType);
 
-	Entity& GetLocalPlayer();
+	bool GetLocalPlayer(Entity& player);
 	ParticleSystem* GetParticleSystem();
 	
 	//Using the shop
