@@ -267,7 +267,9 @@ Entity CombatSystem::CreateAttackEntity(Entity entity, HeadlessScene& scene, com
 
 	sm::Vector3 vel = targetDir * stats->projectileSpeed;
 	attackEntity.AddComponent<comp::Velocity>()->vel = vel;
-	attackEntity.AddComponent<comp::MeshName>()->name = NameType::MESH_SPHERE;
+
+	attackEntity.AddComponent<comp::PARTICLEEMITTER>(sm::Vector3{ 0,0,0 }, 200, 1.f, PARTICLEMODE::MAGERANGE, 1.7f, 1.f, false);
+
 
 	attackEntity.AddComponent<comp::Network>();
 
@@ -290,19 +292,6 @@ void CombatSystem::AddCollisionMeleeBehavior(Entity entity, Entity attackEntity,
 			if (other == entity)
 				return;
 
-			tag_bits goodOrBad = TagType::GOOD | TagType::BAD;
-			if ((entity.GetTags() & goodOrBad) ==
-				(other.GetTags() & goodOrBad))
-			{
-				return; //these guys are on the same team
-			}
-
-			if ((entity.GetTags() & TagType::GOOD) && (other.GetTags() & TagType::DEFENCE)
-				|| (entity.GetTags() & TagType::DEFENCE) && (other.GetTags() & TagType::GOOD))
-			{
-				return; //good vs defense are on the same team aswell
-			}
-
 			comp::Health* otherHealth = other.GetComponent<comp::Health>();
 			comp::MeleeAttackAbility* attackAbility = entity.GetComponent<comp::MeleeAttackAbility>();
 
@@ -317,17 +306,48 @@ void CombatSystem::AddCollisionMeleeBehavior(Entity entity, Entity attackEntity,
 				false,
 			};
 
+			// Add some sound effects
+			comp::AudioState* audioState = entity.GetComponent<comp::AudioState>();
+			if (other.GetComponent<comp::Player>())
+			{
+				audio.type = ESoundEvent::Player_OnDmgRecieved;
+			}
+			else if (other.GetComponent<comp::NPC>())
+			{
+				audio.type = ESoundEvent::Enemy_OnDmgRecieved;
+			}
+			else if (other.GetComponent<comp::Tag<STATIC>>() && entity.GetComponent<comp::Player>())
+			{
+				audio.type = ESoundEvent::Player_OnMeleeAttackHit;
+				audio.shouldBroadcast = true;
+				audio.is3D = true;
+			}
+
+			if (audioState)
+			{
+				audioState->data.emplace(audio);
+			}
+
+			tag_bits goodOrBad = TagType::GOOD | TagType::BAD;
+			if ((entity.GetTags() & goodOrBad) == (other.GetTags() & goodOrBad))
+			{
+				return; //these guys are on the same team
+			}
+
+			if ((entity.GetTags() & TagType::GOOD) && (other.GetTags() & TagType::DEFENCE)
+				|| (entity.GetTags() & TagType::DEFENCE) && (other.GetTags() & TagType::GOOD))
+			{
+				return; //good vs defense are on the same team aswell
+			}
+
 			if (attackAbility)
 			{
-				if (entity.GetComponent<comp::Player>() && other.GetComponent<comp::Tag<BAD>>())
+				comp::Health* otherHealth = other.GetComponent<comp::Health>();
+				if (otherHealth && (entity.GetTags() & goodOrBad) != (other.GetTags() & goodOrBad))
 				{
-					comp::Health* otherHealth = other.GetComponent<comp::Health>();
-					if (otherHealth)
-					{
-						otherHealth->currentHealth -= attackAbility->attackDamage;
-						// update Health on network
-						scene.publish<EComponentUpdated>(other, ecs::Component::HEALTH);
-					}
+					otherHealth->currentHealth -= attackAbility->attackDamage;
+					// update Health on network
+					scene.publish<EComponentUpdated>(other, ecs::Component::HEALTH);
 
 					// Blood particle
 					if (other.GetComponent<comp::PARTICLEEMITTER>())
@@ -338,50 +358,15 @@ void CombatSystem::AddCollisionMeleeBehavior(Entity entity, Entity attackEntity,
 
 					scene.publish<EComponentUpdated>(other, ecs::Component::PARTICLEMITTER);
 				}
-				else if (entity.GetComponent<comp::Tag<BAD>>() && other.GetComponent<comp::Tag<STATIC>>())
-				{
-					comp::Health* otherHealth = other.GetComponent<comp::Health>();
-					if (otherHealth)
-					{
-						otherHealth->currentHealth -= attackAbility->attackDamage;
-						// update Health on network
-						scene.publish<EComponentUpdated>(other, ecs::Component::HEALTH);
-					}
-				}
 
 				if (other.GetComponent<comp::Tag<TagType::DEFENCE>>())
 				{
 					//TODO: add building particles
-					// Blood particle
 					if (other.GetComponent<comp::PARTICLEEMITTER>())
 					{
 						other.RemoveComponent<comp::PARTICLEEMITTER>();
 					}
 					other.AddComponent<comp::PARTICLEEMITTER>(sm::Vector3{ 0,10,0 }, 50, 10.f, PARTICLEMODE::SMOKEAREA, 3.5f, 1.f, true);
-				}
-
-				// Add some sound effects
-				comp::AudioState* audioState = entity.GetComponent<comp::AudioState>();
-				if (other.GetComponent<comp::Player>())
-				{
-					audio.type = ESoundEvent::Player_OnDmgRecieved;
-				}
-				else if (other.GetComponent<comp::NPC>())
-				{
-					audio.is3D = true;
-					audio.shouldBroadcast = true;
-					audio.type = ESoundEvent::Enemy_OnDmgRecieved;
-				}
-				else if (other.GetComponent<comp::Tag<STATIC>>() && entity.GetComponent<comp::Player>())
-				{
-					audio.shouldBroadcast = true;
-					audio.is3D = true;
-					audio.type = ESoundEvent::Player_OnMeleeAttackHit;
-				}
-
-				if (audioState)
-				{
-					audioState->data.emplace(audio);
 				}
 
 				thisEntity.GetComponent<comp::SelfDestruct>()->lifeTime = 0.f;
@@ -394,7 +379,7 @@ void CombatSystem::AddCollisionMeleeBehavior(Entity entity, Entity attackEntity,
 					force.force = attackVel->vel;
 					p->forces.push_back(force);
 				}
-				else if(otherHealth)
+				else if (otherHealth)
 				{
 					sm::Vector3 toOther = other.GetComponent<comp::Transform>()->position - entity.GetComponent<comp::Transform>()->position;
 					toOther.Normalize();
@@ -427,32 +412,63 @@ void CombatSystem::AddCollisionRangeBehavior(Entity entity, Entity attackEntity,
 			if (entity.IsNull())
 			{
 				thisEntity.GetComponent<comp::SelfDestruct>()->lifeTime = 0.f;
-				return NO_RESPONSE;
+				return;
 			}
 
 			if (other == entity)
-				return NO_RESPONSE;
+				return;
+
+			// Add some sound effects
+			audio_t audio = {
+				ESoundEvent::NONE,
+				entity.GetComponent<comp::Transform>()->position,
+				1.f,
+				100.f,
+				false,
+				false,
+				false,
+				false,
+			};
+
+			comp::AudioState* audioState = entity.GetComponent<comp::AudioState>();
+			if (other.GetComponent<comp::Player>())
+			{
+				audio.type = ESoundEvent::Player_OnDmgRecieved;
+			}
+			else
+			{
+				audio.shouldBroadcast = true;
+				audio.is3D = true;
+				audio.type = ESoundEvent::Player_OnRangeAttackHit;
+			}
+
+			if (audioState)
+			{
+				audioState->data.emplace(audio);
+			}
 
 			tag_bits goodOrBad = TagType::GOOD | TagType::BAD;
-			if ((entity.GetTags() & goodOrBad) ==
-				(other.GetTags() & goodOrBad))
+			// SAME TEAM
+			if ((entity.GetTags() & goodOrBad) == (other.GetTags() & goodOrBad))
 			{
-				return NO_RESPONSE; //these guys are on the same team
+				// IS A HOUSE REMOVE PROJECTILE
+				if (other.GetComponent<comp::Tag<STATIC>>())
+				{
+					thisEntity.GetComponent<comp::SelfDestruct>()->lifeTime = 0.f;
+				}
+				return;
 			}
 
 			comp::RangeAttackAbility* attackAbility = entity.GetComponent<comp::RangeAttackAbility>();
 
 			if (attackAbility)
 			{
-				if (other.GetComponent<comp::Tag<BAD>>())
+				comp::Health* otherHealth = other.GetComponent<comp::Health>();
+				if (otherHealth && (entity.GetTags() & goodOrBad) != (other.GetTags() & goodOrBad))
 				{
-					comp::Health* otherHealth = other.GetComponent<comp::Health>();
-					if (otherHealth)
-					{
-						otherHealth->currentHealth -= attackAbility->attackDamage;
-						// update Health on network
-						scene.publish<EComponentUpdated>(other, ecs::Component::HEALTH);
-					}
+					otherHealth->currentHealth -= attackAbility->attackDamage;
+					// update Health on network
+					scene.publish<EComponentUpdated>(other, ecs::Component::HEALTH);
 
 					// Blood particle
 					if (other.GetComponent<comp::PARTICLEEMITTER>())
@@ -463,48 +479,21 @@ void CombatSystem::AddCollisionRangeBehavior(Entity entity, Entity attackEntity,
 
 					scene.publish<EComponentUpdated>(other, ecs::Component::PARTICLEMITTER);
 				}
-				
+
+				if (other.GetComponent<comp::Tag<TagType::DEFENCE>>())
+				{
+					//TODO: add building particles
+					if (other.GetComponent<comp::PARTICLEEMITTER>())
+					{
+						other.RemoveComponent<comp::PARTICLEEMITTER>();
+					}
+					other.AddComponent<comp::PARTICLEEMITTER>(sm::Vector3{ 0,10,0 }, 50, 10.f, PARTICLEMODE::SMOKEAREA, 3.5f, 1.f, true);
+				}
 
 				//if (other.GetComponent<comp::Tag<TagType::DEFENCE>>())
 				//{
 				//	//TODO: add building particles
 				//}
-
-				// Add some sound effects
-
-				audio_t audio = {
-					ESoundEvent::NONE,
-					entity.GetComponent<comp::Transform>()->position,
-					1.f,
-					100.f,
-					false,
-					false,
-					false,
-					false,
-				};
-
-				comp::AudioState* audioState = entity.GetComponent<comp::AudioState>();
-				if (other.GetComponent<comp::Player>())
-				{
-					audio.type = ESoundEvent::Player_OnDmgRecieved;
-				}
-				else if (other.GetComponent<comp::NPC>())
-				{
-					audio.is3D = true;
-					audio.shouldBroadcast = true;
-					audio.type = ESoundEvent::Enemy_OnDmgRecieved;
-				}
-				else if (other.GetComponent<comp::Tag<STATIC>>() && entity.GetComponent<comp::Player>())
-				{
-					audio.is3D = true;
-					audio.shouldBroadcast = true;
-					audio.type = ESoundEvent::Player_OnRangeAttackHit;
-				}
-
-				if (audioState)
-				{
-					audioState->data.emplace(audio);
-				}
 
 				thisEntity.GetComponent<comp::SelfDestruct>()->lifeTime = 0.f;
 
@@ -548,6 +537,6 @@ void CombatSystem::AddCollisionRangeBehavior(Entity entity, Entity attackEntity,
 				}
 
 			}
-			return NO_RESPONSE;
+			return;
 		});
 }

@@ -354,15 +354,15 @@ namespace sceneHelp
 		externalLinkBtn->GetText()->SetScale(0.5f);
 		externalLinkBtn->GetText()->SetText("Give Feedback!");
 		externalLinkBtn->SetOnPressedEvent([] {
-			ShellExecuteA(NULL, "open", "https://docs.google.com/forms/d/e/1FAIpQLSfvyYTRNYaVHbg9Fa8H7xNXQGr2SWoaC9_GKZ7rSkuoNDjOMA/viewform?usp=sf_link", NULL, NULL, SW_SHOWNORMAL);
+			ShellExecuteA(NULL, "open", "https://forms.gle/1E4f4a9jqKoNpCgZ7", NULL, NULL, SW_SHOWNORMAL);
 			});
 		rtd::Text* deadServerText = connectFields->AddElement<rtd::Text>("Error connecting to server", draw_text_t((width / 8.0f), (height / 8.0f) * 5.0f, width / 4.0f, height / 8.0f));
 		deadServerText->SetVisiblity(false);
 
 #ifdef _DEBUG
-		ipField->SetPresetText("localhost");
+		ipField->SetPresetText("127.0.0.1");
 #else
-		ipField->SetPresetText("homehearth.ddns.net");
+		ipField->SetPresetText("188.148.27.231");
 #endif
 		portField->SetPresetText("4950");
 
@@ -1059,6 +1059,35 @@ namespace sceneHelp
 
 			});
 
+		rtd::Button* windowToggleButton = resolutionMenu->AddElement<rtd::Button>("Button.png", draw_t((width / 8.0f), (height / 8.0f), width / 4.0f, height / 8.0f));
+		rtd::Text* windowToggle = resolutionMenu->AddElement<rtd::Text>("Fullscreen", draw_t((width / 8.0f), (height / 8.0f), width / 4.0f, height / 8.0f));
+		static int fullscreen = std::stoi(OptionSystem::Get().GetOption("Fullscreen"));
+
+		if (fullscreen == 0)
+		{
+			windowToggle->SetText("Windowed");
+		}
+		else
+		{
+			windowToggle->SetText("Fullscreen");
+		}
+		
+		windowToggleButton->SetOnPressedEvent([=] {
+
+			if (fullscreen == 0)
+			{
+				windowToggle->SetText("Fullscreen");
+				fullscreen = 1;
+			}
+			else
+			{
+				windowToggle->SetText("Windowed");
+				fullscreen = 0;
+			}
+
+			OptionSystem::Get().SetOption("Fullscreen", std::to_string(fullscreen));
+
+			});
 
 		miscMenu->Hide();
 		resolutionMenu->Hide();
@@ -1084,7 +1113,8 @@ namespace sceneHelp
 		backButton->Hide();
 		scene.Add2DCollection(backButton, "returnButton");
 
-		helpText->AddElement<rtd::Text>("Insert super helpful text here for all the noobs.", draw_text_t(0.0f, 0.0f, width, height - (height / 8.0f)));
+		const std::string helpTextOption = "Homehearth\n\n\nDuring the day its recommended to build defences around the village, To do this you need to open the shop at upper right corner and press shop icon.\nTo place a defence press on one of the defence choices and click on any valid ground area.\nOther shop options are as presented.\nDuring the night you will need to work with your friends to defend the village from horrifying hordes of monsters.\nControls:\nWASD - Movement\nLeft Click - Primary Attack\nRight Click - Secondary Ability\nShift - Dodge\n";
+		helpText->AddElement<rtd::Text>(helpTextOption, draw_text_t(0.0f, 0.0f, width, height - (height / 8.0f)));
 		helpText->Hide();
 		scene.Add2DCollection(helpText, "HelpText");
 
@@ -1382,7 +1412,7 @@ namespace sceneHelp
 
 			file >> filename;
 
-			ResourceManager::Get().GetResource<RModel>(filename);
+			ResourceManager::Get().GetResource<RTexture>(filename);
 		}
 		file.close();
 	}

@@ -3,6 +3,11 @@
 
 void ParticlePass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 {
+	if (m_skyboxRef)
+	{
+		m_skyboxRef->Bind(pDeviceContext);
+	}
+
 	//Binding genereal data
 	DC->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
 	DC->IASetInputLayout(PM->m_ParticleInputLayout.Get());
@@ -18,6 +23,7 @@ void ParticlePass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 
 	DC->IASetVertexBuffers(0,1, &m_nullBuffer, &m_stride, &m_offset);
 	DC->GSSetConstantBuffers(1, 1, pCam->m_viewConstantBuffer.GetAddressOf());
+	DC->PSSetConstantBuffers(1, 1, pCam->m_viewConstantBuffer.GetAddressOf());
 	DC->CSSetShaderResources(18, 1, m_randomNumbersSRV.GetAddressOf());
 }
 
@@ -65,6 +71,7 @@ void ParticlePass::Initialize(ID3D11DeviceContext* pContextDevice, PipelineManag
 	m_pipelineManager = pPipelineManager;
 
 	m_constantBufferParticleUpdate.Create(D3D11Core::Get().Device());
+	m_constantBufferParticleMode.Create(D3D11Core::Get().Device());
 
 	m_nrOfRandomNumbers = 100;
 	CreateRandomNumbers();
@@ -99,18 +106,25 @@ void ParticlePass::Render(Scene* pScene)
 			m_particleUpdate.particleSizeMulitplier = emitter->sizeMulitplier;
 			m_particleUpdate.speed = emitter->speed;
 
+			m_particleModeUpdate.type = emitter->type;
+
 			m_constantBufferParticleUpdate.SetData(D3D11Core::Get().DeviceContext(), m_particleUpdate);
-			ID3D11Buffer* cb = { m_constantBufferParticleUpdate.GetBuffer() };
+			ID3D11Buffer* cb = { m_constantBufferParticleUpdate.GetBuffer() };			
+			
+			m_constantBufferParticleMode.SetData(D3D11Core::Get().DeviceContext(), m_particleModeUpdate);
+			ID3D11Buffer* cbP = { m_constantBufferParticleMode.GetBuffer() };
 
 			//Binding emitter speceific data
 			D3D11Core::Get().DeviceContext()->CSSetConstantBuffers(8, 1, &cb);
 			D3D11Core::Get().DeviceContext()->CSSetUnorderedAccessViews(7, 1, emitter->particleUAV.GetAddressOf(), nullptr);
 
-			D3D11Core::Get().DeviceContext()->Dispatch(emitter->nrOfParticles, 1, 1);
+			const int groupCount = static_cast<int>(ceil(emitter->nrOfParticles / 50)); //Hur många grupper som körs
+			D3D11Core::Get().DeviceContext()->Dispatch(groupCount, 1, 1);
 			D3D11Core::Get().DeviceContext()->CSSetUnorderedAccessViews(7, 1, &m_nullUAV, nullptr);
 
 			D3D11Core::Get().DeviceContext()->PSSetShaderResources(1, 1, &emitter->texture->GetShaderView());
 			D3D11Core::Get().DeviceContext()->PSSetShaderResources(7, 1, &emitter->opacityTexture->GetShaderView());
+			D3D11Core::Get().DeviceContext()->PSSetConstantBuffers(9, 1, &cbP);
 			D3D11Core::Get().DeviceContext()->VSSetShaderResources(17, 1, emitter->particleSRV.GetAddressOf());
 
 			D3D11Core::Get().DeviceContext()->DrawInstanced(1, emitter->nrOfParticles, 0, 0);
@@ -124,6 +138,7 @@ void ParticlePass::PostRender(ID3D11DeviceContext* pDeviceContext)
 	//Unbinding data
 	DC->VSSetShaderResources(17, 1, &m_nullSRV);
 	DC->GSSetConstantBuffers(1, 1, &m_nullBuffer);
+	DC->PSSetConstantBuffers(9, 1, &m_nullBuffer);
 	DC->CSSetUnorderedAccessViews(7, 1, &m_nullUAV, nullptr);
 	DC->CSSetShaderResources(7, 1, &m_nullSRV);
 
