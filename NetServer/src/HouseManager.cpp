@@ -202,6 +202,7 @@ Entity HouseManager::CreateHouse(HeadlessScene& scene, NameType houseType, NameT
 	houseEntity.AddComponent<comp::Tag<TagType::STATIC>>();
 	houseEntity.AddComponent<comp::Network>();
 	houseEntity.AddComponent<comp::Health>();
+	houseEntity.AddComponent<comp::Tag<GOOD>>();
 	comp::House* house = houseEntity.AddComponent<comp::House>();
 	house->houseType = houseType;
 

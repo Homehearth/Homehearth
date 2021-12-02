@@ -82,6 +82,12 @@ cbuffer ParticleUpdate : register(b8)
     float3 c_pPadding;
 }
 
+cbuffer ParticleMode : register(b9)
+{
+    uint c_pParticleType;
+    float3 c_pPadding2;
+}
+
 cbuffer DecalInfoCB : register(b10)
 {
     float4 infoData = float4(0.0f, 0.0f, 0.0f, 0.0f);

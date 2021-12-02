@@ -360,9 +360,9 @@ namespace sceneHelp
 		deadServerText->SetVisiblity(false);
 
 #ifdef _DEBUG
-		ipField->SetPresetText("localhost");
+		ipField->SetPresetText("127.0.0.1");
 #else
-		ipField->SetPresetText("homehearth.ddns.net");
+		ipField->SetPresetText("188.148.27.231");
 #endif
 		portField->SetPresetText("4950");
 
@@ -1412,7 +1412,7 @@ namespace sceneHelp
 
 			file >> filename;
 
-			ResourceManager::Get().GetResource<RModel>(filename);
+			ResourceManager::Get().GetResource<RTexture>(filename);
 		}
 		file.close();
 	}

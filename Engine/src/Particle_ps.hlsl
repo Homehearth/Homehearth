@@ -10,10 +10,18 @@ float4 main(PixelParticleIn input) : SV_TARGET
     albedo *= input.color.rgb;
     
     float opacity = t_opacitymask.Sample(s_linear, input.uv).r;
-    
-    float3 finalColor = albedo * c_tint;
-    
     opacity *= input.color.a;
+    
+    float3 finalColor;
+    if (c_pParticleType != 9)
+    {
+        finalColor = albedo * c_tint;
+    }
+    else
+    {
+        finalColor = albedo;
+    }
+    
     //finalColor *= input.color.rgb;      
     
     finalColor = ACESFitted(finalColor);
