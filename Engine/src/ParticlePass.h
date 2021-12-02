@@ -20,7 +20,7 @@ struct ParticleModePUpdate
 
 class ParticlePass :public IRenderPass
 {
-private:
+public:
 
 	UINT m_offset = sizeof(Particle_t);
 	UINT m_stride = 0;
@@ -31,6 +31,7 @@ private:
 
 	dx::ConstantBuffer<ParticleUpdate>	m_constantBufferParticleUpdate;
 	dx::ConstantBuffer<ParticleModePUpdate>	m_constantBufferParticleMode;
+
 	ParticleUpdate						m_particleUpdate;
 	ParticleModePUpdate					m_particleModeUpdate;
 
