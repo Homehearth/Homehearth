@@ -39,7 +39,7 @@ namespace network
 	private:
 		// Initialize winsock
 		void InitWinsock();
-		//std::string PrintSocketData();
+		std::string PrintSocketData(struct addrinfo* p);
 		SOCKET CreateSocket(const char* ip, uint16_t& port, SockType&& type);
 		DWORD WINAPI ProcessIO();
 		DWORD WINAPI ProcessUDPIO();
@@ -402,35 +402,53 @@ namespace network
 	{
 		SOCKET sock = INVALID_SOCKET;
 		// Get a linked network structure based on provided hints
-		m_endpoint = {};
-		m_endpoint.sin_family = AF_INET;
-		m_endpoint.sin_port = htons(port);
-		int rv = inet_pton(AF_INET, ip, &m_endpoint.sin_addr.S_un.S_addr);
+		struct addrinfo hints, * servinfo, * p;
 
-		if (rv != 1)
-		{
-			return INVALID_SOCKET;
-		}
-		const char enable = 1;
-
+		ZeroMemory(&hints, sizeof(hints));
+		hints.ai_family = AF_INET;
 		if (type == SockType::TCP)
 		{
-			sock = WSASocket(m_endpoint.sin_family, SOCK_STREAM, IPPROTO_TCP, NULL, 0, WSA_FLAG_OVERLAPPED);
-
+			hints.ai_socktype = SOCK_STREAM;
+			hints.ai_protocol = IPPROTO_TCP;
 		}
 		else if (type == SockType::UDP)
 		{
-			sock = WSASocket(m_endpoint.sin_family, SOCK_DGRAM, IPPROTO_UDP, NULL, 0, WSA_FLAG_OVERLAPPED);
+			hints.ai_socktype = SOCK_DGRAM;
+			hints.ai_protocol = IPPROTO_UDP;
 		}
 
-		if (sock == INVALID_SOCKET)
+		int8_t rv = getaddrinfo(ip, std::to_string(port).c_str(), &hints, &servinfo);
+
+		if (rv != 0)
 		{
+			LOG_ERROR("Addrinfo: %ld", WSAGetLastError());
 			return INVALID_SOCKET;
 		}
 
-		if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char*)&enable, sizeof(int)) != 0)
+		const char enable = 1;
+		// Loop through linked list of possible network structures
+		for (p = servinfo; p != nullptr; p = p->ai_next)
 		{
-			LOG_ERROR("setsockopt: %d", WSAGetLastError());
+			EnterCriticalSection(&lock);
+			LOG_NETWORK("%s", PrintSocketData(p).c_str());
+			LeaveCriticalSection(&lock);
+			sock = WSASocket(p->ai_family, p->ai_socktype, p->ai_protocol, NULL, 0, WSA_FLAG_OVERLAPPED);
+
+			if (sock == INVALID_SOCKET)
+			{
+				continue;
+			}
+
+			if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char*)&enable, sizeof(int)) != 0)
+			{
+				LOG_ERROR("setsockopt: %d", WSAGetLastError());
+				return false;
+			}
+			break;
+		}
+
+		if (p == nullptr)
+		{
 			return INVALID_SOCKET;
 		}
 
@@ -439,6 +457,10 @@ namespace network
 		{
 			setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, &enable, sizeof(enable));
 		}
+
+		m_endpoint = *((struct sockaddr_in*)p->ai_addr);
+
+		freeaddrinfo(servinfo);
 
 		return sock;
 	}
@@ -466,46 +488,44 @@ namespace network
 #ifdef _DEBUG
 			std::cout << "Could not find a usable version of Winsock.dll" << std::endl;
 #endif
-	}
+		}
 
 		InitializeCriticalSection(&lock);
 	}
 
-	//template<typename T>
-	//std::string client_interface<T>::PrintSocketData()
-	//{
-	//	getsockopt(m_socket, SOL_SOCKET, )
+	template<typename T>
+	inline std::string client_interface<T>::PrintSocketData(addrinfo* p)
+	{
+		std::string data = "Full socket information:\n";
 
-	//	std::string data = "Full socket information:\n";
+		if (p->ai_family == AF_INET)
+		{
+			data += "Address family: AF_INET\n";
+		}
+		else if (p->ai_family == AF_INET6)
+		{
+			data += "Address family: AF_INET6\n";
+		}
 
-	//	if (p->sin_family == AF_INET)
-	//	{
-	//		data += "Address family: AF_INET\n";
-	//	}
-	//	else if (p->sin_family == AF_INET6)
-	//	{
-	//		data += "Address family: AF_INET6\n";
-	//	}
+		if (p->ai_socktype == SOCK_STREAM)
+		{
+			data += "Socktype: SOCK_STREAM\n";
+		}
+		else if (p->ai_socktype == SOCK_DGRAM)
+		{
+			data += "Socktype: SOCK_DGRAM\n";
+		}
+		if (p->ai_protocol == IPPROTO_TCP)
+		{
+			data += "Protocol: TCP\n";
+		}
+		else if (p->ai_protocol == IPPROTO_UDP)
+		{
+			data += "Protocol: UDP\n";
+		}
 
-	//	if (p->ai_socktype == SOCK_STREAM)
-	//	{
-	//		data += "Socktype: SOCK_STREAM\n";
-	//	}
-	//	else if (p->ai_socktype == SOCK_DGRAM)
-	//	{
-	//		data += "Socktype: SOCK_DGRAM\n";
-	//	}
-	//	if (p->ai_protocol == IPPROTO_TCP)
-	//	{
-	//		data += "Protocol: TCP\n";
-	//	}
-	//	else if (p->ai_protocol == IPPROTO_UDP)
-	//	{
-	//		data += "Protocol: UDP\n";
-	//	}
-
-	//	return data;
-	//}
+		return data;
+	}
 
 
 	template<typename T>
@@ -555,9 +575,13 @@ namespace network
 		m_socket = CreateSocket(ip, port, SockType::TCP);
 		m_udpSocket = CreateSocket(ip, port, SockType::UDP);
 
+		char ipAsString[IPV6_ADDRSTRLEN] = {};
+
+		inet_ntop(AF_INET, get_in_addr((sockaddr*)&m_endpoint), ipAsString, sizeof(ipAsString));
+
 		std::string data;
 		data += "Connecting to: ";
-		data += ip;
+		data += ipAsString;
 		data += ":";
 		data += std::to_string(GetPort((sockaddr*)&m_endpoint));
 
