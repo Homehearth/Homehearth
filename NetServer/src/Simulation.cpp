@@ -141,7 +141,7 @@ void Simulation::ResetPlayer(Entity player)
 		return;
 	}
 
-	playerComp->runSpeed = 25.f;
+	playerComp->runSpeed = 30.f;
 	playerComp->state = comp::Player::State::IDLE;
 	playerComp->isReady = false;
 
@@ -196,15 +196,16 @@ void Simulation::ResetPlayer(Entity player)
 		attackAbility->attackDamage = 20.f;
 		attackAbility->lifetime = 2.0f;
 		attackAbility->projectileSpeed = 80.f;
-		attackAbility->attackRange = 4.0f;
+		attackAbility->projectileSize = 2.f;
+		attackAbility->attackRange = 6.0f;
 		attackAbility->useTime = 0.3f;
 		attackAbility->delay = 0.1f;
 		playerComp->primaryAbilty = entt::resolve<comp::RangeAttackAbility>();
 
 		comp::HealAbility* healAbility = player.AddComponent<comp::HealAbility>();
-		healAbility->cooldown = 5.0f;
+		healAbility->cooldown = 15.0f;
 		healAbility->delay = 0.0f;
-		healAbility->healAmount = 30.f;
+		healAbility->healAmount = 25.f;
 		healAbility->lifetime = 1.0f;
 		healAbility->range = 30.f;
 		healAbility->useTime = 1.0f;

@@ -585,11 +585,11 @@ namespace sceneHelp
 		scene.Add2DCollection(classTextCanvas, "ClassTextCanvas");
 
 		Collection2D* lobbyDesc = new Collection2D;
-		lobbyDesc->AddElement<rtd::Canvas>(D2D1::ColorF(1.0f, 1.0f, 1.0f), draw_t((width / 16), height - (height / 6), (width / 4), height / 12));
+		lobbyDesc->AddElement<rtd::Picture>("Button.png", draw_t((width / 16), height - (height / 6), (width / 4), height / 9));
 
 		// THIS ONE NEEDS A FUNCTION TO UPDATE LOBBY ID
 		const std::string& lobbyString = "Lobby ID: XYZW";
-		lobbyDesc->AddElement<rtd::Text>(lobbyString, draw_text_t((width / 16), height - (height / 6), (width / 4), height / 12));
+		lobbyDesc->AddElement<rtd::Text>(lobbyString, draw_text_t((width / 16), height - (height / 6), (width / 4), height / 9));
 		scene.Add2DCollection(lobbyDesc, "LobbyDesc");
 
 		Collection2D* startGame = new Collection2D;
@@ -1120,7 +1120,7 @@ namespace sceneHelp
 		backButton->Hide();
 		scene.Add2DCollection(backButton, "returnButton");
 
-		const std::string helpTextOption = "Homehearth\n\n\nDuring the day its recommended to build defences around the village, To do this you need to open the shop at upper right corner and press shop icon.\nTo place a defence press on one of the defence choices and click on any valid ground area.\nOther shop options are as presented.\nDuring the night you will need to work with your friends to defend the village from horrifying hordes of monsters.\nControls:\nWASD - Movement\nLeft Click - Primary Attack\nRight Click - Secondary Ability\nShift - Dodge\n";
+		const std::string helpTextOption = "Homehearth\n\n\nDuring the day its recommended to build defences around the village.\nTo do this you need to open the shop at upper right corner and press shop icon.\nTo place a defence press on one of the defence choices and click on any valid ground area. Other shop options are as presented.\nDuring the night you will need to work with your friends to defend the village from horrifying hordes of monsters.\nControls:\nWASD - Movement\nLeft Click - Primary Attack\nRight Click - Secondary Ability\nShift - Dodge\nTo place defences choose one in the shop and press Left click on any available slot. Right click to stop placing defences.";
 		helpText->AddElement<rtd::Text>(helpTextOption, draw_text_t(0.0f, 0.0f, width, height - (height / 8.0f)));
 		helpText->Hide();
 		scene.Add2DCollection(helpText, "HelpText");
