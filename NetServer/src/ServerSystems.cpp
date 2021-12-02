@@ -493,7 +493,7 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 						{
 							if (simulation->GetGrid().PlaceDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, Blackboard::Get().GetPathFindManager(), dynamicQT))
 							{
-								audio_t audio = 
+								audio_t audio =
 								{
 									ESoundEvent::Game_OnDefencePlaced,
 									e.GetComponent<comp::Transform>()->position,
@@ -524,10 +524,13 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 			}
 			else if (p.lastInputState.rightMouse)
 			{
-				if (ecs::UseAbility(e, p.secondaryAbilty, &p.mousePoint))
+				if (p.classType != comp::Player::Class::WARRIOR)
 				{
-					LOG_INFO("Used secondary");
-					anim.toSend = EAnimationType::SECONDARY_ATTACK;
+					if (ecs::UseAbility(e, p.secondaryAbilty, &p.mousePoint))
+					{
+						LOG_INFO("Used secondary");
+						anim.toSend = EAnimationType::SECONDARY_ATTACK;
+					}
 				}
 			}
 

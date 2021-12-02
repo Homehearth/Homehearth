@@ -54,6 +54,7 @@ public:
 	void							Initialize(Vector2I mapSize, sm::Vector3 position, std::string fileName, HeadlessScene* scene);
 	
 	std::vector<Entity>				UpdateHoverDefence();
+	std::vector<Entity>				HideHoverDefence();
 
 	//Delete a defence where the mouse is
 	bool							RemoveDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, PathFinderManager* aiHandler);
