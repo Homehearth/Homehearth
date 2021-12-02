@@ -35,11 +35,6 @@ BT::NodeStatus BT::VillagerTargetNodeCBT::Tick()
 	if (villager->isFleeing)
 	{
 		refreshRate = 2.0f;
-
-		if(*cycle == CyclePeriod::MORNING)
-		{
-			entity.GetComponent<comp::Velocity>()->vel = sm::Vector3::Zero;
-		}
 	}
 
 	//focus to get to home node;

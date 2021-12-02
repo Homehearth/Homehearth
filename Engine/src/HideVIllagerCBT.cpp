@@ -19,6 +19,13 @@ BT::NodeStatus BT::HideVillagerCBT::Tick()
 		LOG_WARNING("Failed to get components/values...");
 		return BT::NodeStatus::FAILURE;
 	}
+
+	if (*cycle == CyclePeriod::MORNING && villager->isFleeing)
+	{
+		entity.GetComponent<comp::Velocity>()->vel = sm::Vector3::Zero;
+		return BT::NodeStatus::FAILURE;
+	}
+
 	if (*cycle == CyclePeriod::NIGHT && villager->isHiding && !villager->homeHouse.IsNull())
 	{
 		//Keep villager hidden by posting this as success
