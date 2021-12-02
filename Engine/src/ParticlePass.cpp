@@ -85,58 +85,7 @@ void ParticlePass::Render(Scene* pScene)
 		m_counter = 0;
 	}
 
-	std::vector<Entity> enities;
-	pScene->ForEachComponent<comp::EmitterParticle>([&](Entity& entity, comp::EmitterParticle& particleEmitter)
-		{
-			enities.push_back(entity);
-		});
-
-	for (auto entity : enities)
-	{
-		comp::EmitterParticle* emitter = entity.GetComponent<comp::EmitterParticle>();
-		comp::Transform* transform = entity.GetComponent<comp::Transform>();
-		if (emitter && transform)
-		{
-			if (emitter->particleBuffer.Get())
-			{
-				//Constant buffer
-				m_particleUpdate.emitterPosition = sm::Vector4(transform->position.x + emitter->positionOffset.x, transform->position.y + emitter->positionOffset.y, transform->position.z + emitter->positionOffset.z, 1.f);
-				m_particleUpdate.deltaTime = Stats::Get().GetFrameTime();
-				m_particleUpdate.counter = m_counter;
-				m_particleUpdate.lifeTime = emitter->lifeTime;
-				m_particleUpdate.particleSizeMulitplier = emitter->sizeMulitplier;
-				m_particleUpdate.speed = emitter->speed;
-
-				m_particleModeUpdate.type = emitter->type;
-
-				m_constantBufferParticleUpdate.SetData(D3D11Core::Get().DeviceContext(), m_particleUpdate);
-				ID3D11Buffer* cb = { m_constantBufferParticleUpdate.GetBuffer() };
-
-				m_constantBufferParticleMode.SetData(D3D11Core::Get().DeviceContext(), m_particleModeUpdate);
-				ID3D11Buffer* cbP = { m_constantBufferParticleMode.GetBuffer() };
-
-
-				//Binding emitter speceific data
-				D3D11Core::Get().DeviceContext()->CSSetConstantBuffers(8, 1, &cb);
-				D3D11Core::Get().DeviceContext()->CSSetUnorderedAccessViews(7, 1, emitter->particleUAV.GetAddressOf(), nullptr);
-
-				const int groupCount = static_cast<int>(ceil(emitter->nrOfParticles / 50)); //Hur många grupper som körs
-				D3D11Core::Get().DeviceContext()->Dispatch(groupCount, 1, 1);
-				D3D11Core::Get().DeviceContext()->CSSetUnorderedAccessViews(7, 1, &m_nullUAV, nullptr);
-
-				if (emitter->texture->GetShaderView())
-				{
-					D3D11Core::Get().DeviceContext()->PSSetShaderResources(1, 1, &emitter->texture->GetShaderView());
-					D3D11Core::Get().DeviceContext()->PSSetShaderResources(7, 1, &emitter->opacityTexture->GetShaderView());
-					D3D11Core::Get().DeviceContext()->PSSetConstantBuffers(9, 1, &cbP);
-					D3D11Core::Get().DeviceContext()->VSSetShaderResources(17, 1, emitter->particleSRV.GetAddressOf());
-
-					D3D11Core::Get().DeviceContext()->DrawInstanced(1, emitter->nrOfParticles, 0, 0);
-					D3D11Core::Get().DeviceContext()->VSSetShaderResources(17, 1, &m_nullSRV);
-				}
-			}
-		}
-	}
+	pScene->RenderParticles(this);
 }
 
 void ParticlePass::PostRender(ID3D11DeviceContext* pDeviceContext)

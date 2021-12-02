@@ -96,6 +96,8 @@ namespace ecs
 			ComPtr<ID3D11ShaderResourceView>	particleSRV		= nullptr;
 			ComPtr<ID3D11UnorderedAccessView>	particleUAV		= nullptr;
 
+			component::Transform				transformCopy;
+
 			EmitterParticle(sm::Vector3 positionOffset = {0,0,0}, int nrOfParticles = 10, float sizeMulitplier = 1.f, PARTICLEMODE type = PARTICLEMODE::BLOOD, float lifeTime = 2.f, float speed = 1, bool hasDeathTimer = false)
 			{
 				textureName = "thisisfine.png";
