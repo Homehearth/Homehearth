@@ -512,6 +512,10 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			}
 		}
 
+		m_primaryCooldown = 0.0f;
+		m_secondaryCooldown = 0.0f;
+		m_dodgeCooldown = 0.0f;
+
 		this->m_inputState = { };
 		SetScene("Game");
 		break;
