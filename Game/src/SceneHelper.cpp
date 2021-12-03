@@ -329,18 +329,30 @@ namespace sceneHelp
 		float width = (float)game->GetWindow()->GetWidth();
 		float height = (float)game->GetWindow()->GetHeight();
 
+		float widthScale = height * (16.f / 9.f);
+		float padding;
+
+
+		/*---------Background---------*/
 		Collection2D* mainMenu = new Collection2D;
 		mainMenu->AddElement<rtd::Picture>("MainMenu.png", draw_t(0, 0, width, height));
 		scene.Add2DCollection(mainMenu, "AMainMenu");
+		/*---------Background---------*/
 
+
+		/*---------Textfields---------*/
 		Collection2D* connectFields = new Collection2D;
-		rtd::TextField* ipField = connectFields->AddElement<rtd::TextField>(draw_text_t((width / 4), height * 0.55f, width * 0.25f, D2D1Core::GetDefaultFontSize()), 30, true);
+		rtd::TextField* ipField = connectFields->AddElement<rtd::TextField>(draw_text_t((width / 2) - (widthScale * 0.25), height * 0.55f, widthScale * 0.25f, D2D1Core::GetDefaultFontSize()), 30, true);
 		ipField->SetDescriptionText("IP Address:");
-		rtd::TextField* portField = connectFields->AddElement<rtd::TextField>(draw_text_t(width / 4 + (width / 3.33f), height * 0.55f, width * 0.15f, D2D1Core::GetDefaultFontSize()), 6);
+		padding = (widthScale / 3.33f) + ((widthScale * 0.15f) / 2);
+		rtd::TextField* portField = connectFields->AddElement<rtd::TextField>(draw_text_t((width / 4) + padding, height * 0.55f, widthScale * 0.15f, D2D1Core::GetDefaultFontSize()), 6);
 		portField->SetDescriptionText("Port:");
-		sm::Vector2 buttonSize = { width / 6.f, height / 10.f };
+		/*---------Textfields---------*/
+
+		/*---------Buttons---------*/
+		sm::Vector2 buttonSize = { widthScale / 6.f, height / 10.f };
 		sm::Vector2 buttonPos = { (width / 2) - (buttonSize.x / 2),  height - (height * 0.37f) };
-		float padding = buttonSize.y + height * 0.02f;
+		padding = buttonSize.y + height * 0.02f;
 		rtd::Button* connectButton = connectFields->AddElement<rtd::Button>("Start.png", draw_t(buttonPos.x, buttonPos.y, buttonSize.x, buttonSize.y));
 		buttonPos.y += padding;
 		rtd::Button* settingsButton = connectFields->AddElement<rtd::Button>("Settings.png", draw_t(buttonPos.x, buttonPos.y, buttonSize.x, buttonSize.y));
@@ -354,6 +366,7 @@ namespace sceneHelp
 		externalLinkBtn->SetOnPressedEvent([] {
 			ShellExecuteA(NULL, "open", "https://forms.gle/1E4f4a9jqKoNpCgZ7", NULL, NULL, SW_SHOWNORMAL);
 			});
+
 		rtd::Text* deadServerText = connectFields->AddElement<rtd::Text>("Error connecting to server", draw_text_t((width / 8.0f), (height / 8.0f) * 5.0f, width / 4.0f, height / 8.0f));
 		deadServerText->SetVisiblity(false);
 
@@ -398,6 +411,8 @@ namespace sceneHelp
 			{
 				game->Shutdown();
 			});
+
+		/*---------Buttons---------*/
 	}
 
 	/*
@@ -567,33 +582,41 @@ namespace sceneHelp
 		const float width = (float)game->GetWindow()->GetWidth();
 		const float height = (float)game->GetWindow()->GetHeight();
 
+		const float widthScale = height * (16.f / 9.f);
+		const float paddingWidth = (widthScale / 64.f);
+		const float paddingHeight = paddingWidth / (16.f / 9.f);
+
 		Scene& scene = game->GetScene("Lobby");
 
 		for (int i = 0; i < MAX_PLAYERS_PER_LOBBY; i++)
 		{
-			Collection2D* playerIcon = new Collection2D;
+			float lobbyHeightPos = ((height / 12) + paddingHeight) * (i + 1) + paddingHeight * i;
+			float lobbyWidthPos = width / 16;
+			sm::Vector2 scale = { widthScale / 4, height / 9 };
+			sm::Vector2 classIconPos = { lobbyWidthPos + scale.x + paddingWidth, lobbyHeightPos };
 
-			playerIcon->AddElement<rtd::Picture>("Button.png", draw_t(width / 16, (height / 12) * (i + 1) + (height / 12) * i, width / 4, height / 9));
-			playerIcon->AddElement<rtd::Text>("Player " + std::to_string(i + 1), draw_text_t(width / 16, (height / 12) * (i + 1) + (height / 12) * i, width / 4, height / 9));
-			playerIcon->AddElement<rtd::Picture>("WarriorIcon.png", draw_t((width / 8) + (width / 4), (height / 12) * (i + 1) + (height / 12) * i, width / 16, height / 9));
-			playerIcon->AddElement<rtd::Picture>("Yes.png", draw_t(((width / 8) * 2) + (width / 4), (height / 12) * (i + 1) + (height / 12) * i, width / 16, height / 9))->SetVisiblity(false);
+			Collection2D* playerIcon = new Collection2D;
+			playerIcon->AddElement<rtd::Picture>("Button.png", draw_t(lobbyWidthPos, lobbyHeightPos, scale.x, scale.y));
+			playerIcon->AddElement<rtd::Text>("Player " + std::to_string(i + 1), draw_text_t(lobbyWidthPos, lobbyHeightPos, scale.x, scale.y));
+			playerIcon->AddElement<rtd::Picture>("WarriorIcon.png", draw_t(classIconPos.x, classIconPos.y, scale.x / 4, scale.y));
+			playerIcon->AddElement<rtd::Picture>("Yes.png", draw_t(classIconPos.x + paddingWidth + (scale.x / 4), lobbyHeightPos, scale.x / 4, scale.y))->SetVisiblity(false);
 			scene.Add2DCollection(playerIcon, "playerIcon" + std::to_string(i + 1));
 		}
 
 		Collection2D* classTextCanvas = new Collection2D;
-		rtd::Picture* desc = classTextCanvas->AddElement<rtd::Picture>("WarriorDesc.png", draw_t((width / 2) + (width / 10.f), 10.0f, (width / 3.33f), height - (height / 6.0f)));
+		rtd::Picture* desc = classTextCanvas->AddElement<rtd::Picture>("WarriorDesc.png", draw_t(width - ((widthScale / 3.33f) + paddingWidth), 10.0f, (widthScale / 3.33f), height - (height / 6.0f)));
 		scene.Add2DCollection(classTextCanvas, "ClassTextCanvas");
 
 		Collection2D* lobbyDesc = new Collection2D;
-		lobbyDesc->AddElement<rtd::Picture>("Button.png", draw_t((width / 16), height - (height / 6), (width / 4), height / 9));
+		lobbyDesc->AddElement<rtd::Picture>("Button.png", draw_t((width / 16), height - (height / 6), (widthScale / 4), height / 9));
 
 		// THIS ONE NEEDS A FUNCTION TO UPDATE LOBBY ID
 		const std::string& lobbyString = "Lobby ID: XYZW";
-		lobbyDesc->AddElement<rtd::Text>(lobbyString, draw_text_t((width / 16), height - (height / 6), (width / 4), height / 9));
+		lobbyDesc->AddElement<rtd::Text>(lobbyString, draw_text_t((width / 16), height - (height / 6), (widthScale / 4), height / 9));
 		scene.Add2DCollection(lobbyDesc, "LobbyDesc");
 
 		Collection2D* startGame = new Collection2D;
-		rtd::Button* startGameButton = startGame->AddElement<rtd::Button>("Ready.png", draw_t((width / 2) + (width / 10.f), height - (height / 5.0f), (width / 3.33f), (height / 6.f)), false);
+		rtd::Button* startGameButton = startGame->AddElement<rtd::Button>("Ready.png", draw_t(width - ((widthScale / 3.33f) + paddingWidth), height - (height / 5.0f), (widthScale / 3.33f), (height / 6.f)), false);
 		//rtd::Text* readyText = startGame->AddElement<rtd::Text>("Not ready", draw_text_t((width / 2) + (width / 10.f), height - (height / 5.0f), (width / 3.33f), (height / 6.f)));
 		startGameButton->SetOnPressedEvent([=]()
 			{
@@ -609,7 +632,7 @@ namespace sceneHelp
 
 		Collection2D* general = new Collection2D;
 		general->AddElement<rtd::Picture>("MenuBG.png", draw_t(0, 0, width, height));
-		rtd::Button* exitButton = general->AddElement<rtd::Button>("No.png", draw_t(0.0f, 0.0f, width / 24, height / 14), false);
+		rtd::Button* exitButton = general->AddElement<rtd::Button>("No.png", draw_t(paddingWidth, paddingHeight, widthScale / 24, height / 14), false);
 		exitButton->SetOnPressedEvent([=]()
 			{
 				Entity e;
@@ -630,8 +653,10 @@ namespace sceneHelp
 		Collection2D* classButtons = new Collection2D;
 		//rtd::Picture* warriorBorder = classButtons->AddElement<rtd::Picture>("Selected.png", draw_t((width / 3.33f) + (width / 15.0f) + (float)(width / 16) - 7.5f, height - (height / 6) - 7.5f, (width / 16.f) * 1.15f, (height / 9.f) * 1.15f));
 		//rtd::Picture* mageBorder = classButtons->AddElement<rtd::Picture>("Selected.png", draw_t((width / 3.33f) + (float)(width / 20) - 7.5f, height - (height / 6) - 7.5f, (width / 16.f) * 1.15f, (height / 9.f) * 1.15f));
-		rtd::Button* mageButton = classButtons->AddElement<rtd::Button>("WizardIcon.png", draw_t((width / 3.33f) + (float)(width / 20), height - (height / 6), width / 16, height / 9));
-		rtd::Button* warriorButton = classButtons->AddElement<rtd::Button>("WarriorIcon.png", draw_t((width / 3.33f) + (width / 15.0f) + (float)(width / 16), height - (height / 6), width / 16, height / 9));
+		sm::Vector2 classButtonSize = { widthScale / 16, height / 9 };
+		float classButtonPosY = height - (classButtonSize.y + paddingHeight);
+		rtd::Button* mageButton = classButtons->AddElement<rtd::Button>("WizardIcon.png", draw_t((width / 2) - ((classButtonSize.x + paddingWidth) / 2), classButtonPosY, classButtonSize.x, classButtonSize.y));
+		rtd::Button* warriorButton = classButtons->AddElement<rtd::Button>("WarriorIcon.png", draw_t((width / 2) + ((classButtonSize.x + paddingWidth) / 2), classButtonPosY, classButtonSize.x, classButtonSize.y));
 		warriorButton->GetBorder()->SetColor(D2D1::ColorF(0.0f, 1.0f, 0.2f));
 		warriorButton->GetBorder()->SetLineWidth(LineWidth::THICC);
 		warriorButton->GetBorder()->SetVisiblity(true);
@@ -1144,9 +1169,13 @@ namespace sceneHelp
 	{
 		const float width = (float)game->GetWindow()->GetWidth();
 		const float height = (float)game->GetWindow()->GetHeight();
+
+		float widthScale = height * (16.f / 9.f);
 		Scene& scene = game->GetScene("GameOver");
 
 		Collection2D* gameOverCollection = new Collection2D;
+
+		rtd::Picture* bg = gameOverCollection->AddElement<rtd::Picture>("MenuBG.png", draw_t(0,0,width, height));
 		rtd::Text* gameOverField = gameOverCollection->AddElement<rtd::Text>("Game Over", draw_text_t((width / 2.f) - (strlen("Game Over") * D2D1Core::GetDefaultFontSize() * 0.5f), (height / 5.f) - D2D1Core::GetDefaultFontSize(), strlen("Game Over") * D2D1Core::GetDefaultFontSize(), D2D1Core::GetDefaultFontSize()));
 		gameOverField->SetText("Game Over");
 
@@ -1154,7 +1183,7 @@ namespace sceneHelp
 
 		rtd::Text* waveField = gameOverCollection->AddElement<rtd::Text>("Waves: 0", draw_text_t((width / 1.5f) - (strlen("Waves: ") * D2D1Core::GetDefaultFontSize() * 0.5f), (height / 2.f) - D2D1Core::GetDefaultFontSize(), strlen("Waves: ") * D2D1Core::GetDefaultFontSize(), D2D1Core::GetDefaultFontSize()));
 
-		rtd::Button* mainMenuButton = gameOverCollection->AddElement<rtd::Button>("Button.png", draw_t((width / 2) - (width / 8), height - (height / 6.f), width / 4, height / 8));
+		rtd::Button* mainMenuButton = gameOverCollection->AddElement<rtd::Button>("Button.png", draw_t((width / 2) - (widthScale / 8), height - (height / 6.f), widthScale / 4, height / 8));
 		gameOverCollection->AddElement<rtd::Text>("Main Menu", draw_text_t((width / 2) - (width / 8), height - (height / 6.f), width / 4, height / 8));
 		mainMenuButton->SetOnPressedEvent([=]
 			{
@@ -1169,13 +1198,18 @@ namespace sceneHelp
 	{
 		const float width = (float)game->GetWindow()->GetWidth();
 		const float height = (float)game->GetWindow()->GetHeight();
+
+		float widthScale = height * (16.f / 9.f);
+		const float paddingWidth = (widthScale / 64.f);
+		const float paddingHeight = paddingWidth / (16.f / 9.f);
+
 		Scene& scene = game->GetScene("JoinLobby");
 
 
 		Collection2D* nameCollection = new Collection2D;
-		rtd::TextField* nameInputField = nameCollection->AddElement<rtd::TextField>(draw_text_t((width / 2) - (width / 8), height / 8, width / 4, D2D1Core::GetDefaultFontSize()), 12, true);
+		rtd::TextField* nameInputField = nameCollection->AddElement<rtd::TextField>(draw_text_t((width / 2) - (widthScale / 8), height / 8, widthScale / 4, D2D1Core::GetDefaultFontSize()), 12, true);
 		nameInputField->SetDescriptionText("Input Name");
-		rtd::Text* nameErrorText = nameCollection->AddElement<rtd::Text>("Invalid Name", draw_text_t((width / 2.0f) - (width / 8), (height / 8.0f) * 1.5f, width / 4.0f, height / 8.0f));
+		rtd::Text* nameErrorText = nameCollection->AddElement<rtd::Text>("Invalid Name", draw_text_t((width / 2.0f) - (width / 8), (height / 8.0f) * 1.5f, widthScale / 4.0f, height / 8.0f));
 		nameErrorText->SetVisiblity(false);
 #ifdef _DEBUG
 		nameInputField->SetPresetText("Player");
@@ -1186,13 +1220,13 @@ namespace sceneHelp
 		Collection2D* lobbyCollection = new Collection2D;
 		lobbyCollection->AddElement<rtd::Picture>("MenuBG.png", draw_t(0, 0, width, height));
 
-		rtd::TextField* lobbyField = lobbyCollection->AddElement<rtd::TextField>(draw_text_t(width / 8, height - (height / 3.33f), width / 4, D2D1Core::GetDefaultFontSize()));
+		rtd::TextField* lobbyField = lobbyCollection->AddElement<rtd::TextField>(draw_text_t(width / 8, height - (height / 3.33f), widthScale / 4, D2D1Core::GetDefaultFontSize()));
 		lobbyField->SetDescriptionText("Input Lobby ID");
-		rtd::Button* startLobbyButton = lobbyCollection->AddElement<rtd::Button>("CreateLobby.png", draw_t((width / 2.0f) + (width / 8.0f), height - (height / 6.f), width / 4.f, height * 0.15f));
-		//lobbyCollection->AddElement<rtd::Text>("Create Lobby", draw_text_t(width / 2, height - (height / 6.f), width / 4, height / 8));
-		rtd::Button* lobbyButton = lobbyCollection->AddElement<rtd::Button>("joinLobby.png", draw_t(width / 8, height - (height / 6.f), width / 4.f, height * 0.15f));
-		//lobbyCollection->AddElement<rtd::Text>("Join Lobby", draw_text_t(width / 8, height - (height / 6.f), width / 4, height / 8));
-		rtd::Button* exitButton = lobbyCollection->AddElement<rtd::Button>("No.png", draw_t(0.0f, 0.0f, width / 24, height / 14));
+		rtd::Button* startLobbyButton = lobbyCollection->AddElement<rtd::Button>("CreateLobby.png", draw_t((width / 2.0f) + (width / 8.0f), height - (height / 6.f), widthScale / 4.f, height * 0.15f));
+
+		rtd::Button* lobbyButton = lobbyCollection->AddElement<rtd::Button>("joinLobby.png", draw_t(width / 8, height - (height / 6.f), widthScale / 4.f, height * 0.15f));
+
+		rtd::Button* exitButton = lobbyCollection->AddElement<rtd::Button>("No.png", draw_t(paddingWidth, paddingHeight, widthScale / 24, height / 14));
 		rtd::Text* lobbyErrorText = lobbyCollection->AddElement<rtd::Text>("Invalid Lobby ID", draw_text_t(width / 8, height - (height / 3.33f), width / 4.0f, height / 8.0f));
 		lobbyErrorText->SetVisiblity(false);
 		exitButton->SetOnPressedEvent([=]
