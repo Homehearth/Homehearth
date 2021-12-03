@@ -4,7 +4,8 @@
 SoundHandler::SoundHandler()
 	: m_currentMusic(nullptr)
 {
-
+    m_soundEngine = nullptr;
+    m_masterVolume = 0.3f;
 }
 
 void SoundHandler::UpdateCurrentMusic(irrklang::ISoundSource* musicSrc, bool loopMusic)
@@ -17,7 +18,7 @@ void SoundHandler::UpdateCurrentMusic(irrklang::ISoundSource* musicSrc, bool loo
     }
 
     m_currentMusic = m_soundEngine->play2D(musicSrc, loopMusic, true, false, false);
-    m_currentMusic->setVolume(0.3f * m_masterVolume);
+    m_currentMusic->setVolume(m_masterVolume);
     m_currentMusic->setIsPaused(false);
 }
 
