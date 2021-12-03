@@ -25,6 +25,9 @@ void Engine::Startup()
 	T_INIT(1, thread::ThreadType::POOL_FIFO);
 	srand(static_cast<unsigned>(time(NULL)));
 
+	SoundHandler::Get().SetMasterVolume(std::stof(OptionSystem::Get().GetOption("MasterVolume")));
+	SoundHandler::Get().Setup();
+
 	// Window Startup:
 	Window::Desc config;
 

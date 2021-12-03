@@ -28,7 +28,7 @@ Game::~Game()
 		m_client.Disconnect();
 	}
 
-	OptionSystem::Get().SetOption("MasterVolume", std::to_string(m_masterVolume));
+	OptionSystem::Get().SetOption("MasterVolume", std::to_string(SoundHandler::Get().GetMasterVolume()));
 	OptionSystem::Get().OnShutdown();
 }
 
@@ -68,7 +68,6 @@ void Game::UpdateNetwork(float deltaTime)
 
 bool Game::OnStartup()
 {
-	m_masterVolume = std::stof(OptionSystem::Get().GetOption("MasterVolume"));
 	sceneHelp::CreateLoadingScene(this);
 	SetScene("Loading");
 

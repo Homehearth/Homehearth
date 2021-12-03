@@ -691,7 +691,7 @@ namespace sceneHelp
 		scene.Add2DCollection(menuBG, "AMenuBG");
 
 		Collection2D* soundCollection = new Collection2D;
-		rtd::Slider* sl = soundCollection->AddElement<rtd::Slider>(D2D1::ColorF(0.0f, 0.0f, 0.0f), draw_t((width / 2) - (width / 9), height / 5, width / 9, height / 16), &game->m_masterVolume, 1.0f, 0.0f);
+		rtd::Slider* sl = soundCollection->AddElement<rtd::Slider>(D2D1::ColorF(0.0f, 0.0f, 0.0f), draw_t((width / 2) - (width / 9), height / 5, width / 9, height / 16), &SoundHandler::Get().AdjustMasterVolume(), 1.0f, 0.0f);
 		sl->SetMinPos(sm::Vector2((width / 8) - (width / 9)));
 		sl->SetMaxPos(sm::Vector2(width - (width / 8)));
 		sl->SetExplanationText("Master Volume: ");

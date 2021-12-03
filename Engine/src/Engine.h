@@ -37,7 +37,6 @@ private:
 
 public:
 
-	float m_masterVolume = 5.0f;
 	Engine();
 	Engine(const Engine& other) = delete;
 	Engine(Engine&& other) = delete;
