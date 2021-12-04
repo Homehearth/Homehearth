@@ -106,10 +106,10 @@ void Systems::HealingSystem(HeadlessScene& scene, float dt)
 				// Send audio to healer.
 				entity.GetComponent<comp::AudioState>()->data.emplace(audio);
 
-				comp::BezierAnimation* a = collider.AddComponent<comp::BezierAnimation>();
+			/*	comp::BezierAnimation* a = collider.AddComponent<comp::BezierAnimation>();
 				a->speed = 0.5f;
 				a->scalePoints.push_back(transform->scale);
-				a->scalePoints.push_back(transform->scale + sm::Vector3(ability.range));
+				a->scalePoints.push_back(transform->scale + sm::Vector3(ability.range));*/
 
 				collider.AddComponent<comp::SelfDestruct>()->lifeTime = ability.lifetime;
 

@@ -203,9 +203,9 @@ void Simulation::ResetPlayer(Entity player)
 		playerComp->primaryAbilty = entt::resolve<comp::RangeAttackAbility>();
 
 		comp::HealAbility* healAbility = player.AddComponent<comp::HealAbility>();
-		healAbility->cooldown = 15.0f;
+		healAbility->cooldown = 8.0f;
 		healAbility->delay = 0.0f;
-		healAbility->healAmount = 25.f;
+		healAbility->healAmount = 20.f;
 		healAbility->lifetime = 1.0f;
 		healAbility->range = 30.f;
 		healAbility->useTime = 1.0f;
@@ -674,12 +674,12 @@ void Simulation::BuildMapColliders(std::vector<dx::BoundingOrientedBox>* mapColl
 		obb->Extents = mapColliders->at(i).Extents;
 		obb->Orientation = mapColliders->at(i).Orientation;
 		collider.AddComponent<comp::Tag<TagType::STATIC>>();
-		// Map bounds is loaded in last, 4 obbs surrounding village put the correct tag for collision system
+		// Map bounds is loaded in last, 6 obbs surrounding village put the correct tag for collision system
 		if (i >= mapColliders->size() - 6)
 		{
 			collider.AddComponent<comp::Tag<TagType::MAP_BOUNDS>>();
 		}
-		collider.AddComponent<comp::Network>();
+		//collider.AddComponent<comp::Network>();
 		qt->Insert(collider);
 	}
 }

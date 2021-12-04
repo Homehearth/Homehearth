@@ -426,7 +426,7 @@ void CombatSystem::AddCollisionRangeBehavior(Entity entity, Entity attackEntity,
 				ESoundEvent::NONE,
 				entity.GetComponent<comp::Transform>()->position,
 				1.f,
-				100.f,
+				60.f,
 				false,
 				false,
 				false,
@@ -464,6 +464,12 @@ void CombatSystem::AddCollisionRangeBehavior(Entity entity, Entity attackEntity,
 				|| (entity.GetTags() & TagType::DEFENCE) && (other.GetTags() & TagType::GOOD))
 			{
 				return; //good vs defense are on the same team aswell
+			}
+
+			// 2 attack colliders hitting eachother move on
+			if (entity.GetTags() & NO_RESPONSE && other.GetTags() & NO_RESPONSE)
+			{
+				return;
 			}
 
 			comp::RangeAttackAbility* attackAbility = entity.GetComponent<comp::RangeAttackAbility>();
@@ -506,7 +512,7 @@ void CombatSystem::AddCollisionRangeBehavior(Entity entity, Entity attackEntity,
 					anim->toSend = EAnimationType::TAKE_DAMAGE;
 				}
 
-				if (!other.GetComponent<comp::Tag<STATIC>>() && !other.GetComponent<comp::Tag<NO_RESPONSE>>())
+				if (!other.GetComponent<comp::Tag<STATIC>>())
 				{
 					thisEntity.GetComponent<comp::SelfDestruct>()->lifeTime = 0.f;
 				}
@@ -522,7 +528,6 @@ void CombatSystem::AddCollisionRangeBehavior(Entity entity, Entity attackEntity,
 				}
 				else
 				{
-
 					sm::Vector3 toOther = other.GetComponent<comp::Transform>()->position - entity.GetComponent<comp::Transform>()->position;
 					toOther.Normalize();
 
