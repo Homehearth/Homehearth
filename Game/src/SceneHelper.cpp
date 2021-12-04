@@ -357,11 +357,7 @@ namespace sceneHelp
 		rtd::Text* deadServerText = connectFields->AddElement<rtd::Text>("Error connecting to server", draw_text_t((width / 8.0f), (height / 8.0f) * 5.0f, width / 4.0f, height / 8.0f));
 		deadServerText->SetVisiblity(false);
 
-#ifdef _DEBUG
 		ipField->SetPresetText("127.0.0.1");
-#else
-		ipField->SetPresetText("homehearth.ddns.net");
-#endif
 		portField->SetPresetText("4950");
 
 
