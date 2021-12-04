@@ -28,9 +28,9 @@ std::vector<std::vector<std::shared_ptr<Node>>>& PathFinderManager::GetNodes()
 	return m_nodes;
 }
 
-std::unordered_map<Entity, Entity> PathFinderManager::GetDefenseEntities()
+std::unordered_map<Entity, Entity>* PathFinderManager::GetDefenseEntities()
 {
-	return defenseEntities;
+	return &defenseEntities;
 }
 
 void PathFinderManager::AddDefenseEntity(Entity entity)

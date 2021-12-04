@@ -17,7 +17,7 @@ BT::NodeStatus BT::FindBuildingTargetCBT::Tick()
 	//Get all houses in current game
 	const Houses_t* housesEntities = Blackboard::Get().GetValue<Houses_t>("houses");
 	//Get all defense entities in current game
-	std::unordered_map<Entity, Entity> defenseEntities = Blackboard::Get().GetPathFindManager()->GetDefenseEntities();
+	std::unordered_map<Entity, Entity>* defenseEntities = Blackboard::Get().GetPathFindManager()->GetDefenseEntities();
 	//Get AI's transform component
 	comp::Transform* transform = this->entity.GetComponent<comp::Transform>();
 
@@ -97,7 +97,7 @@ BT::NodeStatus BT::FindBuildingTargetCBT::Tick()
 
 
 	//Check all defenses and take the closest one
-	for (auto defenseEntity : defenseEntities)
+	for (auto defenseEntity : *defenseEntities)
 	{
 		//If no target init it
 		if (currentTarget.IsNull())

@@ -355,7 +355,7 @@ namespace ecs
 			bool isReady = false;
 			bool reachable = true;
 			
-			char name[12] = {};
+			char name[13] = {};
 
 			ShopItem		shopItem = ShopItem::None;
 

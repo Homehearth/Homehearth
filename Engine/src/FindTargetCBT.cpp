@@ -81,10 +81,10 @@ BT::NodeStatus BT::FindTargetCBT::Tick()
 	}
 
 	//If not try to find closest defense building to attack.
-	std::unordered_map<Entity, Entity> defenseEntities = Blackboard::Get().GetPathFindManager()->GetDefenseEntities();
+	std::unordered_map<Entity, Entity>* defenseEntities = Blackboard::Get().GetPathFindManager()->GetDefenseEntities();
 	Entity currentTarget;
 	//Check all defenses and take the closest one
-	for (auto defenseEntity : defenseEntities)
+	for (auto defenseEntity : *defenseEntities)
 	{
 		//If no target set the first one.
 		if (currentTarget.IsNull())

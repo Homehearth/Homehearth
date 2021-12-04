@@ -297,11 +297,9 @@ struct InputState
 	int		mousewheelDir	: 8;
 
 	Ray_t mouseRay;
-
-	uint32_t tick;
 };
 
-enum class GameMsg : uint8_t
+enum class GameMsg : uint16_t
 {
 	Client_Accepted,
 

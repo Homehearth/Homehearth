@@ -44,7 +44,7 @@ void Game::UpdateNetwork(float deltaTime)
 
 		if (pingCheck > TARGET_PING_TIME)
 		{
-			this->PingServer();
+			//this->PingServer();
 			pingCheck -= TARGET_PING_TIME;
 		}
 
@@ -101,10 +101,10 @@ void Game::OnUserUpdate(float deltaTime)
 	//DEBUG
 	Scene& scene = GetScene("Game");
 
-	scene.ForEachComponent<comp::Light>([&](Entity e, comp::Light& l)
-		{
-			e.GetComponent<comp::SphereCollider>()->Center = sm::Vector3(l.lightData.position);
-		});
+	//scene.ForEachComponent<comp::Light>([&](Entity e, comp::Light& l)
+	//	{
+	//		e.GetComponent<comp::SphereCollider>()->Center = sm::Vector3(l.lightData.position);
+	//	});
 
 }
 
@@ -162,7 +162,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			}
 			else
 			{
-				LOG_WARNING("Updating: Entity %u not in m_gameEntities, skipping over this entity!", entityID);
+				//LOG_WARNING("Updating: Entity %u not in m_gameEntities, skipping over this entity!", entityID);
 				skip = true;
 			}
 
@@ -175,7 +175,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	{
 		uint32_t count; // Could be more than one Entity
 		msg >> count;
-
 		for (uint32_t i = 0; i < count; i++)
 		{
 			uint32_t entityID;
@@ -190,7 +189,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			else
 			{
 				skip = true;
-				LOG_WARNING("Updating component: Entity %u not in m_gameEntities, skipping over this comp!", entityID);
+				//LOG_WARNING("Updating component: Entity %u not in m_gameEntities, skipping over this comp!", entityID);
 			}
 			UpdateEntityFromMessage(entity, msg, skip);
 		}
@@ -549,7 +548,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 
 		for (uint8_t i = 0; i < count; i++)
 		{
-			char nameTemp[12] = {};
+			char nameTemp[13] = {};
 			uint32_t playerID;
 			comp::Player::Class classType;
 			bool isReady = false;
@@ -605,7 +604,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			rtd::Button* readyText = dynamic_cast<rtd::Button*>(GetScene("Lobby").GetCollection("StartGame")->elements[0].get());
 			if (readyText)
 			{
-				if (player->isReady)
+				if (player->isReady && m_players.size() > 1)
 				{
 					readyText->GetPicture()->SetTexture("NotReady.png");
 				}
@@ -657,21 +656,28 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	case GameMsg::Game_ChangeAnimation:
 	{
 		uint32_t id;
-		EAnimationType animtype = EAnimationType::NONE;
-		msg >> id >> animtype;
+		EAnimationType animType = EAnimationType::NONE;
+		uint16_t count;
+		msg >> count;
 
-		if (m_gameEntities.find(id) != m_gameEntities.end())
+		for (uint16_t i = 0; i < count; i++)
 		{
-			comp::Animator* animComp = m_gameEntities.at(id).GetComponent<comp::Animator>();
-			if (animComp)
+			msg >> id >> animType;
+
+			if (m_gameEntities.find(id) != m_gameEntities.end())
 			{
-				std::shared_ptr<RAnimator> anim = animComp->animator;
-				if (anim)
+				comp::Animator* animComp = m_gameEntities.at(id).GetComponent<comp::Animator>();
+				if (animComp)
 				{
-					anim->ChangeAnimation(animtype);
+					std::shared_ptr<RAnimator> anim = animComp->animator;
+					if (anim)
+					{
+						anim->ChangeAnimation(animType);
+					}
 				}
 			}
 		}
+
 		break;
 	}
 	case GameMsg::Game_Cooldown:
@@ -744,6 +750,11 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 				}
 			});
 		m_spectatingID = -1;
+		break;
+	}
+	default:
+	{
+		LOG_ERROR("This message has an unknown header, should not happen..");
 		break;
 	}
 	}

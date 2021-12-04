@@ -37,7 +37,7 @@ void HouseManager::InitializeHouses(HeadlessScene& scene, QuadTree* qt)
 
 
 
-
+	
 
 	waterMill.GetComponent<comp::House>()->isDead = true;
 

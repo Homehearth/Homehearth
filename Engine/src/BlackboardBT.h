@@ -41,10 +41,10 @@ public:
 	}
 
 	template<typename T>
-	T* GetValue(std::string key);
+	T* GetValue(const std::string& key);
 
 	template<typename T>
-	bool AddValue(std::string key, T value);
+	bool AddValue(const std::string& key, T value);
 	PathFinderManager* GetPathFindManager();
 private:
 	Blackboard() = default;
@@ -58,7 +58,7 @@ inline PathFinderManager* Blackboard::GetPathFindManager()
 }
 
 template <typename T>
-T* Blackboard::GetValue(std::string key)
+T* Blackboard::GetValue(const std::string& key)
 {
 	const auto iterator = storage.find(key);
 
@@ -82,7 +82,7 @@ T* Blackboard::GetValue(std::string key)
 }
 
 template <typename T>
-bool Blackboard::AddValue(std::string key, T value)
+bool Blackboard::AddValue(const std::string& key, T value)
 {
 	const auto& iterator = storage.find(key);
 	if(iterator == storage.end())

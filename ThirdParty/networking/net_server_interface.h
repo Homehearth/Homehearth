@@ -54,18 +54,14 @@ namespace network
 		SOCKET WaitForConnection();
 		bool IsConnected(const Socket_t& socket)const;
 
-		// FUNCTIONS TO EASIER HANDLE DATA IN AND OUT FROM SERVER
 		void WriteValidation(const SOCKET& socketId, uint64_t handshakeOut);
 		void ReadValidation(SOCKET_INFORMATION<T>*& SI, PER_IO_DATA* context);
-		void ReadHeader(SOCKET_INFORMATION<T>*& SI, PER_IO_DATA* context);
-		void ReadPayload(SOCKET_INFORMATION<T>*& SI, PER_IO_DATA* context);
-		void WriteHeader();
+		void ReadMessage(SOCKET_INFORMATION<T>*& SI, PER_IO_DATA* context);
+		void WriteMessage();
 		void WritePacket();
-		void WritePayload();
-		void PrimeReadHeader(SOCKET_INFORMATION<T>* SI);
-		void PrimeReadPayload(SOCKET_INFORMATION<T>* SI);
 		void PrimeReadValidation(SOCKET_INFORMATION<T>* SI);
 		void PrimeReadPacket(SOCKET_INFORMATION<T>* SI);
+		void PrimeReadMessage(SOCKET_INFORMATION<T>* SI);
 
 		static void AlertThread();
 
@@ -161,13 +157,14 @@ namespace network
 	}
 
 	template <typename T>
-	void server_interface<T>::PrimeReadHeader(SOCKET_INFORMATION<T>* SI)
+	void server_interface<T>::PrimeReadMessage(SOCKET_INFORMATION<T>* SI)
 	{
 		PER_IO_DATA* context = new PER_IO_DATA;
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
-		context->DataBuf.buf = (CHAR*)&SI->msgTempIn.header;
-		context->DataBuf.len = sizeof(msg_header<T>);
-		context->state = NetState::READ_HEADER;
+		char buffer[BUFFER_SIZE] = {};
+		context->DataBuf.buf = buffer;
+		context->DataBuf.len = BUFFER_SIZE;
+		context->state = NetState::READ_MESSAGE;
 		DWORD BytesReceived = 0;
 		DWORD flags = 0;
 
@@ -213,105 +210,21 @@ namespace network
 	}
 
 	template <typename T>
-	void server_interface<T>::PrimeReadPayload(SOCKET_INFORMATION<T>* SI)
-	{
-		PER_IO_DATA* context = new PER_IO_DATA;
-		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
-		size_t size = SI->msgTempIn.header.size - sizeof(msg_header<T>);
-		SI->msgTempIn.payload.resize(size);
-		context->DataBuf.buf = (CHAR*)SI->msgTempIn.payload.data();
-		context->DataBuf.len = (ULONG)size;
-		context->state = NetState::READ_PAYLOAD;
-		DWORD BytesReceived = 0;
-		DWORD flags = 0;
-
-		if (WSARecv(SI->socket.tcp, &context->DataBuf, 1, &BytesReceived, &flags, &context->Overlapped, NULL) == SOCKET_ERROR)
-		{
-			DWORD error = GetLastError();
-			if (error != WSA_IO_PENDING)
-			{
-				if (error == WSAECONNRESET)
-				{
-					if (IsConnected(SI->socket))
-					{
-						DisconnectClient(SI);
-					}
-				}
-				delete context;
-				LOG_ERROR("WSARecv payload with error: %ld", error);
-			}
-		}
-	}
-
-	template <typename T>
-	void server_interface<T>::ReadPayload(SOCKET_INFORMATION<T>*& SI, PER_IO_DATA* context)
+	void server_interface<T>::ReadMessage(SOCKET_INFORMATION<T>*& SI, PER_IO_DATA* context)
 	{
 		this->m_qMessagesIn.push_back(SI->msgTempIn);
 		SI->msgTempIn.payload.clear();
-		this->PrimeReadHeader(SI);
+		this->PrimeReadMessage(SI);
 	}
 
 	template <typename T>
-	void server_interface<T>::ReadHeader(SOCKET_INFORMATION<T>*& SI, PER_IO_DATA* context)
-	{
-		if (SI->msgTempIn.header.size > 0)
-		{
-			if (SI->msgTempIn.header.size > 9999999)
-			{
-				LOG_ERROR("Message corrupted, skipping over!");
-				ZeroMemory(&SI->msgTempIn.header, sizeof(msg_header<T>));
-				this->PrimeReadHeader(SI);
-			}
-			else
-			{
-				this->PrimeReadPayload(SI);
-			}
-		}
-		else
-		{
-			this->m_qMessagesIn.push_back(SI->msgTempIn);
-			ZeroMemory(&SI->msgTempIn.header, sizeof(msg_header<T>));
-			this->PrimeReadHeader(SI);
-		}
-	}
-
-	template <typename T>
-	void server_interface<T>::WritePayload()
+	void server_interface<T>::WriteMessage()
 	{
 		PER_IO_DATA* context = new PER_IO_DATA;
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
 		context->DataBuf.buf = (CHAR*)m_qMessagesOut.front().msg.payload.data();
 		context->DataBuf.len = ULONG(m_qMessagesOut.front().msg.payload.size());
-		context->state = NetState::WRITE_PAYLOAD;
-		DWORD BytesSent = 0;
-		DWORD flags = 0;
-
-		if (WSASend(m_qMessagesOut.front().remote, &context->DataBuf, 1, &BytesSent, flags, &context->Overlapped, NULL) == SOCKET_ERROR)
-		{
-			DWORD error = GetLastError();
-			if (error != WSA_IO_PENDING)
-			{
-				if (error == WSAECONNRESET)
-				{
-					closesocket(m_qMessagesOut.front().remote);
-				}
-				delete context;
-				if (error != WSAENOTSOCK && error != WSAECONNRESET)
-				{
-					LOG_ERROR("WSASend on socket: %lld message with error: %ld", m_qMessagesOut.front().remote, error);
-				}
-			}
-		}
-	}
-
-	template <typename T>
-	void server_interface<T>::WriteHeader()
-	{
-		PER_IO_DATA* context = new PER_IO_DATA;
-		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
-		context->DataBuf.buf = (CHAR*)&m_qMessagesOut.front().msg.header;
-		context->DataBuf.len = ULONG(sizeof(msg_header<T>));
-		context->state = NetState::WRITE_HEADER;
+		context->state = NetState::WRITE_MESSAGE;
 		DWORD BytesSent = 0;
 		DWORD flags = 0;
 
@@ -361,7 +274,6 @@ namespace network
 				delete context;
 			}
 		}
-
 	}
 
 	template <typename T>
@@ -374,7 +286,7 @@ namespace network
 			EnterCriticalSection(&lock);
 			this->OnClientValidated(SI->socket.tcp);
 			LeaveCriticalSection(&lock);
-			this->PrimeReadHeader(SI);
+			this->PrimeReadMessage(SI);
 		}
 		else
 		{
@@ -542,6 +454,7 @@ namespace network
 		{
 			owned_message<T>* remoteMsg = new owned_message<T>;
 			remoteMsg->msg = msg;
+			remoteMsg->msg << msg.header.id;
 			remoteMsg->remote = m_connections.at(id);
 			if (!PostQueuedCompletionStatus(m_CompletionPort, 1, (ULONG_PTR)remoteMsg, NULL))
 			{
@@ -965,12 +878,12 @@ namespace network
 				{
 					EnterCriticalSection(&lock);
 					owned_message<T>* s = (owned_message<T>*)Entries[i].lpCompletionKey;
-					bool write_in_progress = !m_qMessagesOut.empty();
-					m_qMessagesOut.push_back(std::move(*s));
+					bool writingMessage = !m_qMessagesOut.empty();
+					m_qMessagesOut.push_back(std::move(*s)); 
 
-					if (!write_in_progress)
+					if (!writingMessage)
 					{
-						this->WriteHeader();
+						this->WriteMessage();
 					}
 					delete s;
 					LeaveCriticalSection(&lock);
@@ -1001,14 +914,11 @@ namespace network
 						// I/O has completed, process it
 						switch (context->state)
 						{
-						case NetState::READ_HEADER:
+						case NetState::READ_MESSAGE:
 						{
-							this->ReadHeader(SI, context);
-							break;
-						}
-						case NetState::READ_PAYLOAD:
-						{
-							this->ReadPayload(SI, context);
+							SI->msgTempIn.payload.resize(Entries[i].dwNumberOfBytesTransferred);
+							memcpy(SI->msgTempIn.payload.data(), context->DataBuf.buf, Entries[i].dwNumberOfBytesTransferred);
+							this->ReadMessage(SI, context);
 							break;
 						}
 						case NetState::READ_VALIDATION:
@@ -1016,34 +926,16 @@ namespace network
 							this->ReadValidation(SI, context);
 							break;
 						}
-						case NetState::WRITE_HEADER:
-						{
-							EnterCriticalSection(&lock);
-							if (m_qMessagesOut.front().msg.payload.size() > 0)
-							{
-								this->WritePayload();
-							}
-							else
-							{
-								m_qMessagesOut.pop_front();
-
-								if (!m_qMessagesOut.empty())
-								{
-									this->WriteHeader();
-								}
-							}
-							LeaveCriticalSection(&lock);
-							break;
-						}
-						case NetState::WRITE_PAYLOAD:
+						case NetState::WRITE_MESSAGE:
 						{
 							EnterCriticalSection(&lock);
 							m_qMessagesOut.pop_front();
 
 							if (!m_qMessagesOut.empty())
 							{
-								this->WriteHeader();
+								this->WriteMessage();
 							}
+
 							LeaveCriticalSection(&lock);
 							break;
 						}

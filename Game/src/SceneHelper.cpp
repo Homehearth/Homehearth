@@ -1422,6 +1422,42 @@ namespace sceneHelp
 			ResourceManager::Get().GetResource<RTexture>(filename);
 		}
 		file.close();
+
+		file.open(ANIMATIONPATH + "Loader.txt");
+
+		if (!file.is_open())
+		{
+			LOG_ERROR("Failed to load Animations!");
+			return;
+		}
+
+		while (!file.eof())
+		{
+			std::string filename;
+
+			file >> filename;
+
+			ResourceManager::Get().GetResource<RAnimation>(filename);
+		}
+		file.close();
+
+		file.open(ANIMATORPATH + "Loader.txt");
+
+		if (!file.is_open())
+		{
+			LOG_ERROR("Failed to load Animations!");
+			return;
+		}
+
+		while (!file.eof())
+		{
+			std::string filename;
+
+			file >> filename;
+
+			ResourceManager::Get().GetResource<RAnimator>(filename);
+		}
+		file.close();
 	}
 
 	void LoadGameScene(Game* game)
