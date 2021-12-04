@@ -167,15 +167,22 @@ namespace sceneHelp
 
 				if (game->m_players.find(game->m_localPID) != game->m_players.end())
 				{
-					sm::Vector3 playerPos = game->m_players.at(game->m_localPID).GetComponent<comp::Transform>()->position;
-
+					Camera* cam = scene.GetCurrentCamera();
+					sm::Vector3 playerPos;
+					if (cam->GetCameraType() == CAMERATYPE::PLAY)
+					{
+						playerPos = cam->GetTargetEntity().GetComponent<comp::Transform>()->position;
+					}
+					else
+					{
+						playerPos = game->m_players.at(game->m_localPID).GetComponent<comp::Transform>()->position;
+					}
 
 					comp::Light* l = sun.GetComponent<comp::Light>();
 
 					float angle = 360.f * game->GetCycler().GetTime();
 					for (int i = 0; i < 2; i++)
 					{
-
 						sm::Vector3 dir = sm::Vector3::TransformNormal(sm::Vector3(-1, 0, -1), sm::Matrix::CreateRotationZ(dx::XMConvertToRadians(angle)));
 						l->lightData.direction = sm::Vector4(dir);
 						l->lightData.direction.w = 0.0f;
@@ -1158,11 +1165,11 @@ namespace sceneHelp
 		gameOverCollection->AddElement<rtd::Text>("Main Menu", draw_text_t((width / 2) - (width / 8), height - (height / 6.f), width / 4, height / 8));
 		mainMenuButton->SetOnPressedEvent([=]
 			{
-				game->m_client.Disconnect();
+				game->SetScene("JoinLobby");
+				game->m_gameID = -1;
 			});
 
 		scene.Add2DCollection(gameOverCollection, "GameOver");
-
 	}
 
 	void SetupLobbyJoinScreen(Game* game)

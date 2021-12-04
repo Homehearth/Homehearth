@@ -24,21 +24,6 @@ void HouseManager::InitializeHouses(HeadlessScene& scene, QuadTree* qt)
 	Entity waterMillHouse = CreateHouse(scene, NameType::MESH_WATERMILLHOUSE, NameType::MESH_DOOR1, NameType::EMPTY);
 	Entity waterMill = CreateHouse(scene, NameType::MESH_WATERMILL, NameType::EMPTY, NameType::EMPTY);
 
-	PlayersPosition_t allPlayers;
-
-	allPlayers.players.emplace_back(villager1);
-	allPlayers.players.emplace_back(villager2);
-	allPlayers.players.emplace_back(villager3);
-	allPlayers.players.emplace_back(villager4);
-	allPlayers.players.emplace_back(villager5);
-	allPlayers.players.emplace_back(villager6);
-
-	Blackboard::Get().AddValue<PlayersPosition_t>("players", allPlayers);
-
-
-
-	
-
 	waterMill.GetComponent<comp::House>()->isDead = true;
 
 	//Insert houses to quad tree

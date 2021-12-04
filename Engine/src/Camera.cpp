@@ -253,6 +253,11 @@ sm::Quaternion Camera::GetRotation() const
 	return m_rotation;
 }
 
+Entity Camera::GetTargetEntity() const
+{
+	return m_targetEntity;
+}
+
 void Camera::SetPosition(sm::Vector3 newPosition)
 {
 	m_position = { newPosition.x, newPosition.y, newPosition.z };

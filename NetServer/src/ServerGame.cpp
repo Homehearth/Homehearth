@@ -402,10 +402,6 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 
 uint32_t ServerGame::CreateSimulation()
 {
-	if (m_simulations.size() >= 1)
-	{
-		return static_cast<uint32_t>(-1);
-	}
 	m_simulations[m_nGameID] = std::make_unique<Simulation>(&m_server, this);
 	if (!m_simulations[m_nGameID]->Create(m_nGameID, &m_mapColliders, &m_houseColliders))
 	{

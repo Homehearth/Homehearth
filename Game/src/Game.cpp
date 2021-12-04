@@ -162,7 +162,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			}
 			else
 			{
-				//LOG_WARNING("Updating: Entity %u not in m_gameEntities, skipping over this entity!", entityID);
+				LOG_WARNING("Updating: Entity %u not in m_gameEntities, skipping over this entity!", entityID);
 				skip = true;
 			}
 
@@ -189,7 +189,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			else
 			{
 				skip = true;
-				//LOG_WARNING("Updating component: Entity %u not in m_gameEntities, skipping over this comp!", entityID);
+				LOG_WARNING("Updating component: Entity %u not in m_gameEntities, skipping over this comp!", entityID);
 			}
 			UpdateEntityFromMessage(entity, msg, skip);
 		}
@@ -410,6 +410,33 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		scoreText->SetText("Score: " + std::to_string(gatheredMoney));
 		rtd::Text* wavesText = dynamic_cast<rtd::Text*>(GetScene("GameOver").GetCollection("GameOver")->elements[2].get());
 		wavesText->SetText("Waves: " + std::to_string(wavesSurvived));
+
+		auto it = m_gameEntities.begin();
+
+		while (it != m_gameEntities.end())
+		{
+			it->second.Destroy();
+			it = m_gameEntities.erase(it);
+		}
+
+		rtd::Button* readyText = dynamic_cast<rtd::Button*>(GetScene("Lobby").GetCollection("StartGame")->elements[0].get());
+		readyText->GetPicture()->SetTexture("Ready.png");
+
+		rtd::Button* wizardButton = dynamic_cast<rtd::Button*>(GetScene("Lobby").GetCollection("ClassButtons")->elements[0].get());
+		rtd::Button* warriorButton = dynamic_cast<rtd::Button*>(GetScene("Lobby").GetCollection("ClassButtons")->elements[1].get());
+		wizardButton->GetBorder()->SetVisiblity(false);
+		warriorButton->GetBorder()->SetVisiblity(true);
+		rtd::Picture* desc = dynamic_cast<rtd::Picture*>(GetScene("Lobby").GetCollection("ClassTextCanvas")->elements[0].get());
+		desc->SetTexture("WarriorDesc.png");
+		rtd::Picture* checkMark = dynamic_cast<rtd::Picture*>(GetScene("Lobby").GetCollection("playerIcon1")->elements[3].get());
+		checkMark->SetVisiblity(false);
+		checkMark = dynamic_cast<rtd::Picture*>(GetScene("Lobby").GetCollection("playerIcon2")->elements[3].get());
+		checkMark->SetVisiblity(false);
+		checkMark = dynamic_cast<rtd::Picture*>(GetScene("Lobby").GetCollection("playerIcon3")->elements[3].get());
+		checkMark->SetVisiblity(false);
+		checkMark = dynamic_cast<rtd::Picture*>(GetScene("Lobby").GetCollection("playerIcon4")->elements[3].get());
+		checkMark->SetVisiblity(false);
+
 		break;
 	}
 	case GameMsg::Lobby_Accepted:

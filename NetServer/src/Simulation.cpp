@@ -196,7 +196,7 @@ void Simulation::ResetPlayer(Entity player)
 		attackAbility->attackDamage = 20.f;
 		attackAbility->lifetime = 2.0f;
 		attackAbility->projectileSpeed = 80.f;
-		attackAbility->projectileSize = 2.f;
+		attackAbility->projectileSize = 3.f;
 		attackAbility->attackRange = 6.0f;
 		attackAbility->useTime = 0.3f;
 		attackAbility->delay = 0.1f;
@@ -328,13 +328,8 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 					PROFILE_SCOPE("Update QuadTree");
 					Systems::UpdateDynamicQT(scene, qtDynamic.get());
 				}
-
 				{
-					PROFILE_SCOPE("Update blackboard");
-					AIBehaviors::UpdateBlackBoard(scene);
-				}
-				{
-					//PROFILE_SCOPE("BT Tick");
+					PROFILE_SCOPE("BT Tick");
 					ServerSystems::TickBTSystem(this, scene);
 				}
 				{
@@ -768,6 +763,8 @@ void Simulation::SetGameOver()
 	msg.header.id = GameMsg::Game_Over;
 	msg << m_currency.GetTotalGathered() << m_wavesSurvived - 1;
 	this->Broadcast(msg);
+
+	m_lobby.Clear();
 }
 
 void Simulation::SetGameScene()
@@ -835,10 +832,11 @@ void Simulation::ResetGameScene()
 	EnemyManagement::CreateWaves(waveQueue, currentRound);
 
 	houseManager.InitializeHouses(*this->GetGameScene(), qt.get());
+	AIBehaviors::ClearBlackBoard(*m_pGameScene);
+	AIBehaviors::UpdateBlackBoard(*m_pGameScene);
 
 	m_timeCycler.SetTime(MID_DAY);
 	m_timeCycler.SetCycleSpeed(3.0f);
-
 }
 
 void Simulation::SendEntities(const std::vector<Entity>& entities, GameMsg msgID, const std::bitset<ecs::Component::COMPONENT_MAX>& componentMask)

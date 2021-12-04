@@ -306,6 +306,7 @@ void CombatSystem::AddCollisionMeleeBehavior(Entity entity, Entity attackEntity,
 				false,
 			};
 
+			tag_bits goodOrBad = TagType::GOOD | TagType::BAD;
 			// Add some sound effects
 			comp::AudioState* audioState = entity.GetComponent<comp::AudioState>();
 			if (other.GetComponent<comp::Player>())
@@ -316,7 +317,7 @@ void CombatSystem::AddCollisionMeleeBehavior(Entity entity, Entity attackEntity,
 			{
 				audio.type = ESoundEvent::Enemy_OnDmgRecieved;
 			}
-			else if (other.GetComponent<comp::Tag<STATIC>>() && entity.GetComponent<comp::Player>())
+			else if ((!other.GetComponent<comp::Tag<STATIC>>() && (entity.GetTags() & goodOrBad) != (other.GetTags() & goodOrBad)) || other.GetComponent<comp::House>())
 			{
 				audio.type = ESoundEvent::Player_OnMeleeAttackHit;
 				audio.shouldBroadcast = true;
@@ -328,7 +329,6 @@ void CombatSystem::AddCollisionMeleeBehavior(Entity entity, Entity attackEntity,
 				audioState->data.emplace(audio);
 			}
 
-			tag_bits goodOrBad = TagType::GOOD | TagType::BAD;
 			if ((entity.GetTags() & goodOrBad) == (other.GetTags() & goodOrBad))
 			{
 				return; //these guys are on the same team
@@ -431,13 +431,14 @@ void CombatSystem::AddCollisionRangeBehavior(Entity entity, Entity attackEntity,
 				false,
 				false,
 			};
+			tag_bits goodOrBad = TagType::GOOD | TagType::BAD;
 
 			comp::AudioState* audioState = entity.GetComponent<comp::AudioState>();
 			if (other.GetComponent<comp::Player>())
 			{
 				audio.type = ESoundEvent::Player_OnDmgRecieved;
 			}
-			else
+			else if((!other.GetComponent<comp::Tag<STATIC>>() && (entity.GetTags() & goodOrBad) != (other.GetTags() & goodOrBad)) || other.GetComponent<comp::House>())
 			{
 				audio.shouldBroadcast = true;
 				audio.is3D = true;
@@ -449,16 +450,18 @@ void CombatSystem::AddCollisionRangeBehavior(Entity entity, Entity attackEntity,
 				audioState->data.emplace(audio);
 			}
 
-			tag_bits goodOrBad = TagType::GOOD | TagType::BAD;
 			if ((entity.GetTags() & goodOrBad) == (other.GetTags() & goodOrBad))
 			{
+				if (other.GetComponent<comp::House>())
+				{
+					thisEntity.GetComponent<comp::SelfDestruct>()->lifeTime = 0.f;
+				}
 				return; //these guys are on the same team
 			}
 
 			if ((entity.GetTags() & TagType::GOOD) && (other.GetTags() & TagType::DEFENCE)
 				|| (entity.GetTags() & TagType::DEFENCE) && (other.GetTags() & TagType::GOOD))
 			{
-				thisEntity.GetComponent<comp::SelfDestruct>()->lifeTime = 0.f;
 				return; //good vs defense are on the same team aswell
 			}
 
@@ -495,9 +498,6 @@ void CombatSystem::AddCollisionRangeBehavior(Entity entity, Entity attackEntity,
 					scene.publish<EComponentUpdated>(other, ecs::Component::PARTICLEMITTER);
 				}
 
-
-				thisEntity.GetComponent<comp::SelfDestruct>()->lifeTime = 0.f;
-
 				//Change animation when taken damage
 				comp::AnimationState* anim = other.GetComponent<comp::AnimationState>();
 				if (anim)
@@ -505,6 +505,10 @@ void CombatSystem::AddCollisionRangeBehavior(Entity entity, Entity attackEntity,
 					anim->toSend = EAnimationType::TAKE_DAMAGE;
 				}
 
+				if (!other.GetComponent<comp::Tag<STATIC>>())
+				{
+					thisEntity.GetComponent<comp::SelfDestruct>()->lifeTime = 0.f;
+				}
 
 				comp::Velocity* attackVel = thisEntity.GetComponent<comp::Velocity>();
 				if (attackVel)
@@ -536,7 +540,6 @@ void CombatSystem::AddCollisionRangeBehavior(Entity entity, Entity attackEntity,
 					auto gravity = ecs::GetGravityForce();
 					p->forces.push_back(gravity);
 				}
-
 			}
 			return;
 		});

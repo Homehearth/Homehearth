@@ -66,6 +66,7 @@ public:
 	CAMERATYPE GetCameraType()const;
 	sm::Vector3 GetRollPitchYaw() const;
 	sm::Quaternion GetRotation() const;
+	Entity GetTargetEntity()const;
 
 	//Set Functions
 	void SetPosition(sm::Vector3 newPosition);

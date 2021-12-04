@@ -25,7 +25,6 @@ void Client::Update(size_t nMaxMessage)
 	while (nMessageCount < nMaxMessage && !m_qMessagesIn.empty())
 	{
 		auto msg = m_qMessagesIn.pop_front();
-		msg >> msg.header.id;
 
 		this->OnMessageReceived(msg);
 

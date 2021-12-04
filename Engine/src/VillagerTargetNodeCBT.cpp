@@ -20,8 +20,6 @@ BT::VillagerTargetNodeCBT::~VillagerTargetNodeCBT()
 
 BT::NodeStatus BT::VillagerTargetNodeCBT::Tick()
 {
-	{
-		PROFILE_SCOPE("VillagerTargetNodeCBT");
 		CyclePeriod* cycle = Blackboard::Get().GetValue<CyclePeriod>("cycle");
 		sm::Vector3 targetPosition;
 
@@ -89,5 +87,4 @@ BT::NodeStatus BT::VillagerTargetNodeCBT::Tick()
 		}
 
 		return BT::NodeStatus::FAILURE;
-	}
 }
