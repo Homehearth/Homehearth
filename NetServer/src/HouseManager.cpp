@@ -200,6 +200,12 @@ Entity HouseManager::CreateHouse(HeadlessScene& scene, NameType houseType, NameT
 	comp::House* house = houseEntity.AddComponent<comp::House>();
 	house->houseType = houseType;
 
+	if (houseType == NameType::MESH_WATERMILL)
+	{
+		houseEntity.GetComponent<comp::Transform>()->position = { 270.f, 12.f, -389.f };
+		houseEntity.AddComponent<comp::Watermill>();
+	}
+
 	//Add door if door type was specified
 	if (doorType != NameType::EMPTY)
 	{
