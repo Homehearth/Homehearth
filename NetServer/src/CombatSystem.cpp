@@ -281,7 +281,7 @@ Entity CombatSystem::CreateAttackEntity(Entity entity, HeadlessScene& scene, com
 
 void CombatSystem::AddCollisionMeleeBehavior(Entity entity, Entity attackEntity, HeadlessScene& scene)
 {
-	CollisionSystem::Get().AddOnCollisionEnter(attackEntity, [entity, &scene](Entity thisEntity, Entity other)
+	CollisionSystem::Get().AddOnCollisionEnter(attackEntity, [attackEntity, entity, &scene](Entity thisEntity, Entity other)
 		{
 			// is caster already dead
 			if (entity.IsNull())
@@ -318,7 +318,7 @@ void CombatSystem::AddCollisionMeleeBehavior(Entity entity, Entity attackEntity,
 			{
 				audio.type = ESoundEvent::Enemy_OnDmgRecieved;
 			}
-			else if ((!other.GetComponent<comp::Tag<STATIC>>() && (entity.GetTags() & goodOrBad) != (other.GetTags() & goodOrBad)) || other.GetComponent<comp::House>())
+			else if ((!other.GetComponent<comp::Tag<STATIC>>() && (entity.GetTags() & goodOrBad) != (other.GetTags() & goodOrBad) && (attackEntity.GetTags() & NO_RESPONSE) != (other.GetTags() & NO_RESPONSE)) || other.GetComponent<comp::House>())
 			{
 				audio.type = ESoundEvent::Player_OnMeleeAttackHit;
 				audio.shouldBroadcast = true;
@@ -409,7 +409,7 @@ void CombatSystem::AddCollisionMeleeBehavior(Entity entity, Entity attackEntity,
 
 void CombatSystem::AddCollisionRangeBehavior(Entity entity, Entity attackEntity, HeadlessScene& scene)
 {
-	CollisionSystem::Get().AddOnCollisionEnter(attackEntity, [entity, &scene](Entity thisEntity, Entity other)
+	CollisionSystem::Get().AddOnCollisionEnter(attackEntity, [attackEntity, entity, &scene](Entity thisEntity, Entity other)
 		{
 			// is caster already dead
 			if (entity.IsNull())
@@ -426,20 +426,20 @@ void CombatSystem::AddCollisionRangeBehavior(Entity entity, Entity attackEntity,
 				ESoundEvent::NONE,
 				entity.GetComponent<comp::Transform>()->position,
 				1.f,
-				60.f,
+				100.f,
 				false,
 				false,
 				false,
 				false,
 			};
-			tag_bits goodOrBad = TagType::GOOD | TagType::BAD;
+			tag_bits goodOrBad = GOOD | BAD;
 
 			comp::AudioState* audioState = entity.GetComponent<comp::AudioState>();
 			if (other.GetComponent<comp::Player>())
 			{
 				audio.type = ESoundEvent::Player_OnDmgRecieved;
 			}
-			else if((!other.GetComponent<comp::Tag<STATIC>>() && (entity.GetTags() & goodOrBad) != (other.GetTags() & goodOrBad)) || other.GetComponent<comp::House>())
+			else if((!other.GetComponent<comp::Tag<STATIC>>() && (entity.GetTags() & goodOrBad) != (other.GetTags() & goodOrBad) && (attackEntity.GetTags() & NO_RESPONSE) != (other.GetTags() & NO_RESPONSE)) || other.GetComponent<comp::House>())
 			{
 				audio.shouldBroadcast = true;
 				audio.is3D = true;
@@ -460,14 +460,13 @@ void CombatSystem::AddCollisionRangeBehavior(Entity entity, Entity attackEntity,
 				return; //these guys are on the same team
 			}
 
-			if ((entity.GetTags() & TagType::GOOD) && (other.GetTags() & TagType::DEFENCE)
-				|| (entity.GetTags() & TagType::DEFENCE) && (other.GetTags() & TagType::GOOD))
+			if ((entity.GetTags() & GOOD) && (other.GetTags() & DEFENCE)
+				|| (entity.GetTags() & DEFENCE) && (other.GetTags() & GOOD))
 			{
 				return; //good vs defense are on the same team aswell
 			}
 
-			// 2 attack colliders hitting eachother move on
-			if (entity.GetTags() & NO_RESPONSE && other.GetTags() & NO_RESPONSE)
+			if (attackEntity.GetTags() & NO_RESPONSE && other.GetTags() & NO_RESPONSE)
 			{
 				return;
 			}
