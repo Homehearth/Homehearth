@@ -54,7 +54,7 @@ void GameSystems::DisplayUpgradeDefences(Game* game)
 				});
 
 
-			std::cout << "Defences: " << test << "\n";
+			//std::cout << "Defences: " << test << "\n";
 			// Update the UI to reflect on the closest defence to the mouse pointer.
 			if (pc && tc)
 			{
