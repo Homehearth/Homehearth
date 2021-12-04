@@ -101,8 +101,6 @@ void GameSystems::RenderIsCollidingSystem(Scene& scene)
 // Set all the healthbars to players.
 void GameSystems::UpdateHealthbar(Game* game)
 {
-	size_t i = game->m_players.size();
-
 	Scene* scene = &game->GetScene("Game");
 
 	scene->ForEachComponent<comp::Health, comp::Player>([&](Entity e, comp::Health& health, const comp::Player& player)
@@ -112,7 +110,6 @@ void GameSystems::UpdateHealthbar(Game* game)
 			{
 				healthbar->SetHealthVariable(e);
 			}
-			i--;
 		});
 }
 

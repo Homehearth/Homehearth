@@ -175,7 +175,7 @@ namespace sceneHelp
 					}
 					else
 					{
-						playerPos = game->m_players.at(game->m_localPID).GetComponent<comp::Transform>()->position;
+						playerPos = cam->GetPosition();
 					}
 
 					comp::Light* l = sun.GetComponent<comp::Light>();
@@ -309,7 +309,7 @@ namespace sceneHelp
 					else if (scene.GetCurrentCamera()->GetCameraType() == CAMERATYPE::PLAY)
 					{
 						scene.SetCurrentCameraEntity(debugCameraEntity);
-						scene.GetCurrentCamera()->SetNearFarPlane(0.1f, 400.f);
+						scene.GetCurrentCamera()->SetNearFarPlane(0.1f, 800.f);
 						if (InputSystem::Get().IsMouseRelative())
 						{
 							InputSystem::Get().SwitchMouseMode();

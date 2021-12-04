@@ -43,8 +43,6 @@ void CombatSystem::UpdateMelee(HeadlessScene& scene)
 		});
 }
 
-
-
 void CombatSystem::UpdateRange(HeadlessScene& scene)
 {
 	scene.ForEachComponent<comp::RangeAttackAbility, comp::Transform>([&](Entity entity, comp::RangeAttackAbility& stats, comp::Transform& transform)
@@ -72,13 +70,16 @@ void CombatSystem::UpdateRange(HeadlessScene& scene)
 				if (entity.GetComponent<comp::Player>())
 				{
 					audio.type = ESoundEvent::Player_OnRangeAttack;
-					entity.GetComponent<comp::AudioState>()->data.emplace(audio);
 				}
 				else if (entity.GetComponent<comp::NPC>())
 				{
 					audio.type = ESoundEvent::Enemy_OnRangeAttack;
-					entity.GetComponent<comp::AudioState>()->data.emplace(audio);
 				}
+
+				scene.ForEachComponent<comp::Player>([&](Entity& playerEntity, comp::Player& player)
+					{
+						playerEntity.GetComponent<comp::AudioState>()->data.emplace(audio);
+					});
 			}
 		});
 }
@@ -505,7 +506,7 @@ void CombatSystem::AddCollisionRangeBehavior(Entity entity, Entity attackEntity,
 					anim->toSend = EAnimationType::TAKE_DAMAGE;
 				}
 
-				if (!other.GetComponent<comp::Tag<STATIC>>())
+				if (!other.GetComponent<comp::Tag<STATIC>>() && !other.GetComponent<comp::Tag<NO_RESPONSE>>())
 				{
 					thisEntity.GetComponent<comp::SelfDestruct>()->lifeTime = 0.f;
 				}

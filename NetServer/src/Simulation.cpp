@@ -433,8 +433,9 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 	Blackboard::Get().GetPathFindManager()->CreateNodes(&m_grid);
 
 
+	m_addedEntities.clear();
 #if RENDER_AINODES
-	std::vector<std::vector<std::shared_ptr<Node>>> nodes = m_aiHandler.GetNodes();
+	std::vector<std::vector<std::shared_ptr<Node>>> nodes = Blackboard::Get().GetPathFindManager()->GetNodes();
 	for (int y = 0; y < nodes[0].size(); y++)
 	{
 		for (int x = 0; x < nodes[0].size(); x++)
@@ -443,14 +444,13 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 			{
 				Entity cube = m_pGameScene->CreateEntity();
 				cube.AddComponent<comp::Transform>()->position = nodes[y][x].get()->position;
-				cube.AddComponent<comp::MeshName>()->name = "Cube.obj";
+				cube.AddComponent<comp::MeshName>()->name = NameType::MESH_CUBE;
 				cube.AddComponent<comp::Network>();
 			}
 
 		}
 	}
 #endif RENDER_AINODES
-	m_addedEntities.clear();
 	m_removedEntities.clear();
 
 	this->BuildMapColliders(mapColliders);
@@ -679,7 +679,7 @@ void Simulation::BuildMapColliders(std::vector<dx::BoundingOrientedBox>* mapColl
 		{
 			collider.AddComponent<comp::Tag<TagType::MAP_BOUNDS>>();
 		}
-		//collider.AddComponent<comp::Network>();
+		collider.AddComponent<comp::Network>();
 		qt->Insert(collider);
 	}
 }
@@ -832,7 +832,6 @@ void Simulation::ResetGameScene()
 	EnemyManagement::CreateWaves(waveQueue, currentRound);
 
 	houseManager.InitializeHouses(*this->GetGameScene(), qt.get());
-	AIBehaviors::ClearBlackBoard(*m_pGameScene);
 	AIBehaviors::UpdateBlackBoard(*m_pGameScene);
 
 	m_timeCycler.SetTime(MID_DAY);

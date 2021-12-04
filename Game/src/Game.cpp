@@ -169,6 +169,11 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			UpdateEntityFromMessage(entity, msg, skip);
 		}
 
+		if (msg.payload.size() > 0)
+		{
+			LOG_ERROR("TCP FUCKED UP");
+		}
+
 		break;
 	}
 	case GameMsg::Game_UpdateComponent:
@@ -192,6 +197,11 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 				LOG_WARNING("Updating component: Entity %u not in m_gameEntities, skipping over this comp!", entityID);
 			}
 			UpdateEntityFromMessage(entity, msg, skip);
+		}
+
+		if (msg.payload.size() > 0)
+		{
+			LOG_ERROR("TCP FUCKED UP");
 		}
 
 		break;
@@ -225,6 +235,11 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 				LOG_INFO("A remote player added!");
 				m_players[e.GetComponent<comp::Network>()->id] = e;
 			}
+		}
+
+		if (msg.payload.size() > 0)
+		{
+			LOG_ERROR("TCP FUCKED UP");
 		}
 
 		break;
@@ -264,6 +279,12 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 #ifdef _DEBUG
 		LOG_INFO("Removed %u entities", count);
 #endif
+
+		if (msg.payload.size() > 0)
+		{
+			LOG_ERROR("TCP FUCKED UP");
+		}
+
 		break;
 	}
 	case GameMsg::Game_BackToLobby:
@@ -916,7 +937,11 @@ void Game::SetShopItem(const ShopItem& whatToBuy)
 {
 	if (m_players.find(m_localPID) != m_players.end())
 	{
-		m_players.at(m_localPID).GetComponent<comp::Player>()->shopItem = whatToBuy;
+		comp::Player* p = m_players.at(m_localPID).GetComponent<comp::Player>();
+		if (p)
+		{
+			p->shopItem = whatToBuy;
+		}
 	}
 
 	network::message<GameMsg> msg;
@@ -930,7 +955,11 @@ const ShopItem Game::GetShopItem() const
 	ShopItem item = ShopItem::None;
 	if (m_players.find(m_localPID) != m_players.end())
 	{
-		item = m_players.at(m_localPID).GetComponent<comp::Player>()->shopItem;
+		comp::Player* p = m_players.at(m_localPID).GetComponent<comp::Player>();
+		if (p)
+		{
+			item = p->shopItem;
+		}
 	}
 	return item;
 }
@@ -986,6 +1015,11 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 				{
 					switch (name)
 					{
+					case NameType::MESH_CUBE:
+					{
+						nameString = "Cube.obj";
+						break;
+					}
 					case NameType::MESH_WATERMILL:
 					{
 						nameString = "WaterMill.fbx";

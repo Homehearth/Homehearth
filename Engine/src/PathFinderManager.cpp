@@ -274,9 +274,6 @@ void PathFinderManager::AStarSearch(Entity npcEntity)
 		Node* currentNode = openList.at(0);
 		int ind = 0;
 
-		if (openList.size() > 100)
-			return;
-
 		for (int i = 1; i < openList.size(); i++)
 		{
 			if (openList[i]->f < currentNode->f)
@@ -358,8 +355,6 @@ bool PathFinderManager::PlayerAStar(sm::Vector3 playerPos)
 
 		Node* currentNode = openList.at(0);
 		int ind = 0;
-		if (openList.size() > 100)
-			return false;
 
 		for (int i = 1; i < openList.size(); i++)
 		{
