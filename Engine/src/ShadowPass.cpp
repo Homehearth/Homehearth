@@ -1,21 +1,10 @@
 #include "EnginePCH.h"
 #include "ShadowPass.h"
 #include "RenderThreadHandler.h"
+#include "OptionSystem.h"
 
 ShadowPass::ShadowPass()
 {
-	m_shadowSize = 2048;
-
-
-	m_viewport.Height = m_shadowSize;
-	m_viewport.Width = m_shadowSize;
-	m_viewport.TopLeftX = 0.0f;
-	m_viewport.TopLeftY = 0.0f;
-
-	// Direct3D uses a depth buffer range of 0 to 1, hence:
-	m_viewport.MinDepth = 0.0f;
-	m_viewport.MaxDepth = 1.0f;
-
 }
 
 ComPtr<ID3D11DepthStencilView> ShadowPass::CreateDepthView(uint32_t index)
@@ -141,8 +130,8 @@ void ShadowPass::UpdateLightBuffer(ID3D11DeviceContext* context, ID3D11Buffer* b
 void ShadowPass::SetShadowMapSize(uint32_t size)
 {
 	m_shadowSize = size;
-	m_viewport.Height = m_shadowSize;
-	m_viewport.Width = m_shadowSize;
+	m_viewport.Height = static_cast<FLOAT>(m_shadowSize);
+	m_viewport.Width =	static_cast<FLOAT>(m_shadowSize);
 
 	SetupMap();
 }
@@ -324,6 +313,48 @@ void ShadowPass::Render(Scene* pScene)
 	D3D11Core::Get().DeviceContext()->OMSetRenderTargets(8, nullTargets, nullptr);
 
 
+}
+
+void ShadowPass::StartUp()
+{
+	std::string o = OptionSystem::Get().GetOption("ShadowQuality");
+	m_shadowSize = 1024;
+
+	if (o == "Potato")
+	{
+		m_shadowSize = 256;
+	}
+	else if (o == "Low")
+	{
+		m_shadowSize = 512;
+	}
+	else if (o == "Medium")
+	{
+		m_shadowSize = 1024;
+	}
+	else if (o == "High")
+	{
+		m_shadowSize = 2048;
+	}
+	else if (o == "Insane")
+	{
+		m_shadowSize = 4096;
+	}
+	else
+	{
+		OptionSystem::Get().SetOption("ShadowQuality", std::string("Medium"));
+	}
+
+
+
+	m_viewport.Height = static_cast<FLOAT>(m_shadowSize);
+	m_viewport.Width  =	static_cast<FLOAT>(m_shadowSize);
+	m_viewport.TopLeftX = 0.0f;
+	m_viewport.TopLeftY = 0.0f;
+
+	// Direct3D uses a depth buffer range of 0 to 1, hence:
+	m_viewport.MinDepth = 0.0f;
+	m_viewport.MaxDepth = 1.0f;
 }
 
 void ShadowPass::PostRender(ID3D11DeviceContext* pDeviceContext)

@@ -141,7 +141,7 @@ void Simulation::ResetPlayer(Entity player)
 		return;
 	}
 
-	playerComp->runSpeed = 25.f;
+	playerComp->runSpeed = 30.f;
 	playerComp->state = comp::Player::State::IDLE;
 	playerComp->isReady = false;
 
@@ -158,7 +158,7 @@ void Simulation::ResetPlayer(Entity player)
 		firstTimeAdded = true;
 	}
 
-	player.AddComponent<comp::MeshName>()->name = NameType::MESH_KNIGHT;
+	player.AddComponent<comp::MeshName>()->name		= NameType::MESH_KNIGHT;
 	player.AddComponent<comp::AnimatorName>()->name = AnimName::ANIM_KNIGHT;
 	player.AddComponent<comp::AnimationState>();
 
@@ -175,16 +175,9 @@ void Simulation::ResetPlayer(Entity player)
 
 		playerComp->primaryAbilty = entt::resolve<comp::MeleeAttackAbility>();
 
-		/*comp::HeroLeapAbility* leap = player.AddComponent<comp::HeroLeapAbility>();
-		leap->cooldown = 5.0f;
-		leap->delay = 0.0f;
-		leap->lifetime = 0.5f;
-		leap->movementSpeedAlt = 0.0f;
-		leap->useTime = 0.5f;
-		leap->damageRadius = 20.f;
-
-		playerComp->secondaryAbilty = entt::resolve<comp::HeroLeapAbility>();*/
+		// TEMP
 		playerComp->secondaryAbilty = entt::resolve<comp::MeleeAttackAbility>();
+		// END TEMP
 
 		comp::DashAbility* dashAbility = player.AddComponent<comp::DashAbility>();
 		dashAbility->cooldown = 6.0f;
@@ -199,22 +192,24 @@ void Simulation::ResetPlayer(Entity player)
 	else if (playerComp->classType == comp::Player::Class::MAGE)
 	{
 		comp::RangeAttackAbility* attackAbility = player.AddComponent<comp::RangeAttackAbility>();
-		attackAbility->cooldown = 0.5f;
+		attackAbility->cooldown = 0.8f;
 		attackAbility->attackDamage = 20.f;
 		attackAbility->lifetime = 2.0f;
-		attackAbility->projectileSpeed = 40.f;
-		attackAbility->attackRange = 2.0f;
+		attackAbility->projectileSpeed = 80.f;
+		attackAbility->projectileSize = 2.f;
+		attackAbility->attackRange = 6.0f;
 		attackAbility->useTime = 0.3f;
 		attackAbility->delay = 0.1f;
 		playerComp->primaryAbilty = entt::resolve<comp::RangeAttackAbility>();
 
 		comp::HealAbility* healAbility = player.AddComponent<comp::HealAbility>();
-		healAbility->cooldown = 5.0f;
+		healAbility->cooldown = 15.0f;
 		healAbility->delay = 0.0f;
-		healAbility->healAmount = 30.f;
-		healAbility->lifetime = 1.5f;
-		healAbility->range = 50.f;
+		healAbility->healAmount = 25.f;
+		healAbility->lifetime = 1.0f;
+		healAbility->range = 30.f;
 		healAbility->useTime = 1.0f;
+		healAbility->movementSpeedAlt = 1.0f;
 
 		playerComp->secondaryAbilty = entt::resolve<comp::HealAbility>();
 
@@ -227,8 +222,8 @@ void Simulation::ResetPlayer(Entity player)
 
 		playerComp->moveAbilty = entt::resolve<comp::BlinkAbility>();
 
-		player.AddComponent<comp::MeshName>()->name = NameType::MESH_MONSTER;
-		player.AddComponent<comp::AnimatorName>()->name = AnimName::ANIM_MONSTER;
+		player.AddComponent<comp::MeshName>()->name		= NameType::MESH_MAGE;
+		player.AddComponent<comp::AnimatorName>()->name = AnimName::ANIM_MAGE;
 		player.AddComponent<comp::AnimationState>();
 
 	}
@@ -238,6 +233,11 @@ void Simulation::ResetPlayer(Entity player)
 	health->isAlive = true;
 
 	player.AddComponent<comp::SphereCollider>()->Radius = 3.f;
+
+	//
+	// AudioState
+	//
+	player.AddComponent<ecs::component::AudioState>();
 
 	//Collision will handle this entity as a dynamic one
 	player.AddComponent<comp::Tag<TagType::DYNAMIC>>();
@@ -257,10 +257,11 @@ void Simulation::ResetPlayer(Entity player)
 
 Simulation::Simulation(Server* pServer, HeadlessEngine* pEngine)
 	: m_pServer(pServer)
-	, m_pEngine(pEngine), m_pLobbyScene(nullptr), m_pGameScene(nullptr), m_pGameOverScene(nullptr), m_pCurrentScene(nullptr), currentRound(0)
+	, m_pEngine(pEngine), m_pLobbyScene(nullptr), m_pGameScene(nullptr), m_pGameOverScene(nullptr),m_pCurrentScene(nullptr), currentRound(0)
 {
 	this->m_gameID = 0;
 	this->m_tick = 0;
+	this->m_wavesSurvived = 0;
 
 	dx::BoundingBox bounds = { dx::XMFLOAT3(250, 0, -320), dx::XMFLOAT3(230, 50, 220) };
 	qt = std::make_unique<QuadTree>(bounds);
@@ -292,7 +293,7 @@ void Simulation::LeaveLobby(uint32_t playerID)
 	m_pServer->SendToClient(playerID, accMsg);
 }
 
-bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* mapColliders)
+bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* mapColliders, std::unordered_map<std::string, comp::OrientedBoxCollider>* houseColliders)
 {
 	this->m_gameID = gameID;
 	this->m_lobby.Init(this);
@@ -303,6 +304,9 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 	m_pLobbyScene = &m_pEngine->GetScene("Lobby_" + std::to_string(gameID));
 
 	m_pGameScene = &m_pEngine->GetScene("Game_" + std::to_string(gameID));
+
+	houseManager.SetHouseColliders(houseColliders);
+
 	m_pGameScene->on<ESceneUpdate>([&](const ESceneUpdate& e, HeadlessScene& scene)
 		{
 #if GOD_MODE
@@ -326,7 +330,6 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 					PROFILE_SCOPE("Update QuadTree");
 					Systems::UpdateDynamicQT(scene, qtDynamic.get());
 				}
-				m_timeCycler.Update(this);
 
 				{
 					PROFILE_SCOPE("Update blackboard");
@@ -348,16 +351,16 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 				{
 					PROFILE_SCOPE("Abilities and Combat");
 					Systems::UpdateAbilities(scene, e.dt);
-					Systems::CombatSystem(scene, e.dt);
+					ServerSystems::CombatSystem(scene, e.dt);
 					Systems::HealingSystem(scene, e.dt);
-					Systems::HealthSystem(scene, e.dt, m_currency, m_grid);
+					ServerSystems::HealthSystem(scene, e.dt, m_currency, houseManager, qt.get(), m_grid, m_spreeHandler);
 					Systems::SelfDestructSystem(scene, e.dt);
 				}
 
-				//{
-				//	PROFILE_SCOPE("Animation Transform");
-				//	Systems::TransformAnimationSystem(scene, e.dt);
-				//}
+				{
+					PROFILE_SCOPE("Animation Transform");
+					Systems::TransformAnimationSystem(scene, e.dt);
+				}
 
 				{
 					PROFILE_SCOPE("Movement collider system");
@@ -382,21 +385,43 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 					PROFILE_SCOPE("Clear quad tree");
 					Systems::ClearCollidingList(scene, qtDynamic.get());
 				}
+				ServerSystems::AnimatonSystem(this, scene);
+				ServerSystems::SoundSystem(this, scene);
+			}
+			m_timeCycler.Update(e.dt);
+
+				{
+					PROFILE_SCOPE("Hover defences");
+					std::vector<Entity> updateEntities;
+					if (m_timeCycler.GetTimePeriod() == CyclePeriod::DAY)
+					{
+						updateEntities = m_grid.UpdateHoverDefence();
+					}
+					else
+					{
+						updateEntities = m_grid.HideHoverDefence();
+					}
+					for (size_t i = 0; i < updateEntities.size(); i++)
+					{
+						m_updatedEntities.push_back(updateEntities.at(i));
+					}
+				}
 
 				{
 					PROFILE_SCOPE("Create waves");
 					if (!waveQueue.empty())
-						ServerSystems::NextWaveConditions(this, waveTimer, waveQueue.front().GetTimeLimit());
+						ServerSystems::NextWaveConditions(this);
 					else
 						EnemyManagement::CreateWaves(waveQueue, currentRound++);
 				}
-			}
-		});
 
+			m_spreeHandler.Update();
+		
+		});
+	
 	//On all enemies wiped, activate the next wave.
 	m_pGameScene->on<ESceneCallWaveSystem>([&](const ESceneCallWaveSystem& dt, HeadlessScene& scene)
 		{
-			waveTimer.Start();
 			ServerSystems::WaveSystem(this, waveQueue);
 		});
 
@@ -407,6 +432,8 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 		{
 			OnComponentUpdated(e.entity, e.component);
 		});
+
+
 
 	//Gridsystem
 	m_grid.Initialize(gridOptions.mapSize, gridOptions.position, gridOptions.fileName, m_pGameScene);
@@ -482,24 +509,13 @@ void Simulation::SendSnapshot()
 		this->SendEntities(m_updatedEntities, GameMsg::Game_Snapshot, compMask);
 		m_updatedEntities.clear();
 
-		// Update until next wave timer if next wave is present.
-		if (!waveQueue.empty())
-		{
-			// Update wave timer to clients.
-			network::message<GameMsg> msg2;
-			msg2.header.id = GameMsg::Game_WaveTimer;
-			msg2 << m_timeCycler.GetElapsedTime();
-			msg2 << m_timeCycler.GetTimePeriod();
-			this->BroadcastUDP(msg2);
-		}
-
-		if (m_currency.hasUpdated)
+		if (m_currency.m_hasUpdated)
 		{
 			network::message<GameMsg> msg3;
 			msg3.header.id = GameMsg::Game_Money;
 			msg3 << m_currency.GetAmount();
 			this->Broadcast(msg3);
-			m_currency.hasUpdated = false;
+			m_currency.m_hasUpdated = false;
 		}
 		// Send Abilities
 		{
@@ -534,7 +550,7 @@ void Simulation::SendSnapshot()
 				{
 					count++;
 					msg4 << AbilityIndex::Dodge << dash->cooldownTimer;
-				}
+				} 
 
 				if (heal)
 				{
@@ -547,6 +563,21 @@ void Simulation::SendSnapshot()
 				m_pServer->SendToClientUDP(i->first, msg4);
 			}
 		}
+
+		network::message<GameMsg> msg5;
+		msg5.header.id = GameMsg::Game_Spree;
+		msg5 << (uint32_t)m_spreeHandler.GetSpree();
+		this->Broadcast(msg5);
+		
+		if (this->m_tick % 40 == 0)
+		{
+			network::message<GameMsg> timeMsg;
+			timeMsg.header.id = GameMsg::Game_Time;
+			timeMsg << m_timeCycler.GetTime();
+			timeMsg << m_timeCycler.GetCycleSpeed();
+			this->Broadcast(timeMsg);
+		}
+		
 	}
 	else
 	{
@@ -641,6 +672,7 @@ void Simulation::BuildMapColliders(std::vector<dx::BoundingOrientedBox>* mapColl
 {
 	// --- END OF THE WORLD ---
 	Entity collider;
+	int j = 0;
 	for (size_t i = 0; i < mapColliders->size(); i++)
 	{
 		collider = m_pGameScene->CreateEntity();
@@ -650,7 +682,7 @@ void Simulation::BuildMapColliders(std::vector<dx::BoundingOrientedBox>* mapColl
 		obb->Orientation = mapColliders->at(i).Orientation;
 		collider.AddComponent<comp::Tag<TagType::STATIC>>();
 		// Map bounds is loaded in last, 4 obbs surrounding village put the correct tag for collision system
-		if (i > mapColliders->size() - 6)
+		if (i >= mapColliders->size() - 6)
 		{
 			collider.AddComponent<comp::Tag<TagType::MAP_BOUNDS>>();
 		}
@@ -684,6 +716,11 @@ Currency& Simulation::GetCurrency()
 	return m_currency;
 }
 
+void Simulation::IncreaseWavesSurvived()
+{
+	this->m_wavesSurvived++;
+}
+
 void Simulation::UseShop(const ShopItem& item, const uint32_t& player)
 {
 	m_shop.UseShop(item, player);
@@ -691,29 +728,28 @@ void Simulation::UseShop(const ShopItem& item, const uint32_t& player)
 
 void Simulation::UpgradeDefence(const uint32_t& id)
 {
-	m_pCurrentScene->ForEachComponent<comp::Network>([&](Entity e, comp::Network& n) {
-
-		if (n.id == id)
+	m_pCurrentScene->ForEachComponent<comp::Network>([&](Entity e, comp::Network& n)
 		{
-			comp::Cost* c = e.GetComponent<comp::Cost>();
-			comp::Health* h = e.GetComponent<comp::Health>();
-
-			if (c && h)
+			if (n.id == id)
 			{
-				if (m_currency >= c->cost)
-				{
-					c->cost += 5;
-					// Add upgrades here.
-					h->maxHealth += 35;
-					h->currentHealth += 35;
+				comp::Cost* c = e.GetComponent<comp::Cost>();
+				comp::Health* h = e.GetComponent<comp::Health>();
 
-					// Cost is here.
-					m_currency -= c->cost;
-					e.UpdateNetwork();
+				if (c && h)
+				{
+					if (m_currency >= c->cost)
+					{
+						c->cost += 5;
+						// Add upgrades here.
+						h->maxHealth += 35;
+						h->currentHealth += 35;
+
+						// Cost is here.
+						m_currency -= c->cost;
+						e.UpdateNetwork();
+					}
 				}
 			}
-		}
-
 		});
 }
 
@@ -732,7 +768,7 @@ void Simulation::SetGameOver()
 	m_pCurrentScene = m_pGameOverScene;
 	message<GameMsg> msg;
 	msg.header.id = GameMsg::Game_Over;
-
+	msg << m_currency.GetTotalGathered() << m_wavesSurvived - 1;
 	this->Broadcast(msg);
 }
 
@@ -745,10 +781,15 @@ void Simulation::SetGameScene()
 #if GOD_MODE
 	// During debug give players 1000 gold/monies.
 	m_currency = 1000;
-	m_currency.hasUpdated = true;
 	for (auto& player : m_lobby.m_players)
 	{
-		//player.second.AddComponent<comp::Tag<TagType::NO_RESPONSE>>();
+		player.second.RemoveComponent<comp::Tag<TagType::GOOD>>();
+	}
+#endif
+
+#if NO_CLIP
+	for (auto& player : m_lobby.m_players)
+	{
 		player.second.RemoveComponent<comp::Tag<TagType::GOOD>>();
 	}
 #endif
@@ -790,11 +831,17 @@ void Simulation::ResetGameScene()
 		msg << count;
 		this->Broadcast(msg);
 	}
-	
+
 	m_currency.Zero();
 
 	LOG_INFO("%lld", m_pGameScene->GetRegistry()->size());
+
+	houseManager.InitializeHouses(*this->GetGameScene(),qt.get());
 	EnemyManagement::CreateWaves(waveQueue, currentRound++);
+
+	m_timeCycler.SetTime(MID_DAY);
+	m_timeCycler.SetCycleSpeed(1.0f);
+	
 }
 
 void Simulation::SendEntities(const std::vector<Entity>& entities, GameMsg msgID, const std::bitset<ecs::Component::COMPONENT_MAX>& componentMask)
@@ -802,7 +849,7 @@ void Simulation::SendEntities(const std::vector<Entity>& entities, GameMsg msgID
 	if (entities.size() == 0)
 		return;
 
-	const size_t PACKET_CHUNK_SIZE = 10;
+	const size_t PACKET_CHUNK_SIZE = 8;
 
 	uint32_t count = 0;
 	message<GameMsg> msg;
@@ -873,7 +920,7 @@ void Simulation::SendRemoveEntities(const std::vector<uint32_t> entitiesNetIDs)
 	if (entitiesNetIDs.size() == 0)
 		return;
 
-	const size_t PACKET_CHUNK_SIZE = 10;
+	const size_t PACKET_CHUNK_SIZE = 8;
 
 	uint32_t count = 0;
 	message<GameMsg> msg;
@@ -915,11 +962,12 @@ bool Simulation::IsEmpty() const
 
 void Simulation::ReadyCheck(uint32_t playerID)
 {
-	bool allReady = m_lobby.ReadyCheck(playerID);
+	bool isAllReady = m_lobby.ReadyCheck(playerID);
 	m_lobby.Update();
 
-	if (allReady)
+	if (isAllReady)
 	{
+		// Set all players spawn positions once when everyone is ready.
 		m_pGameScene->ForEachComponent<comp::Player>([&](Entity& e, comp::Player& p)
 			{
 				p.spawnPoint = m_spawnPoints.front();
@@ -932,7 +980,6 @@ void Simulation::ReadyCheck(uint32_t playerID)
 		msg.header.id = GameMsg::Game_Start;
 
 		this->Broadcast(msg);
-		m_timeCycler.OnStart();
 	}
 }
 
@@ -954,11 +1001,12 @@ void Simulation::BroadcastUDP(message<GameMsg>& msg, uint32_t exclude) const
 {
 	auto it = m_lobby.m_players.begin();
 
+	msg << msg.header.id;
+
 	while (it != m_lobby.m_players.end())
 	{
 		if (exclude != it->first)
 		{
-			msg << msg.header.id;
 			m_pServer->SendToClientUDP(it->first, msg);
 		}
 		it++;
@@ -969,3 +1017,5 @@ Entity Simulation::GetPlayer(uint32_t playerID) const
 {
 	return m_lobby.GetPlayer(playerID);
 }
+
+

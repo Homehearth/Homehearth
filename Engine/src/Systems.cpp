@@ -71,11 +71,6 @@ void Systems::UpdateAbilities(HeadlessScene& scene, float dt)
 
 }
 
-void Systems::CombatSystem(HeadlessScene& scene, float dt)
-{
-	CombatSystem::UpdateCombatSystem(scene, dt);
-}
-
 void Systems::HealingSystem(HeadlessScene& scene, float dt)
 {
 	// HealAbility system
@@ -93,9 +88,26 @@ void Systems::HealingSystem(HeadlessScene& scene, float dt)
 				comp::SphereCollider* sphere = collider.AddComponent<comp::SphereCollider>();
 				sphere->Center = transform->position;
 
+				collider.AddComponent<comp::PARTICLEEMITTER>(sm::Vector3{ 0,0,0 }, 200, 2.f, PARTICLEMODE::MAGEHEAL, 10.f, 70.f, false);
+
 				collider.AddComponent<comp::Tag<TagType::DYNAMIC>>();
 
+				audio_t audio = {
+					ESoundEvent::Player_OnHealing,
+					entity.GetComponent<comp::Transform>()->position,
+					1.0f,
+					100.f,
+					false,
+					false,
+					false,
+					false,
+				};
+
+				// Send audio to healer.
+				entity.GetComponent<comp::AudioState>()->data.emplace(audio);
+
 				comp::BezierAnimation* a = collider.AddComponent<comp::BezierAnimation>();
+				a->speed = 0.5f;
 				a->scalePoints.push_back(transform->scale);
 				a->scalePoints.push_back(transform->scale + sm::Vector3(ability.range));
 
@@ -110,11 +122,19 @@ void Systems::HealingSystem(HeadlessScene& scene, float dt)
 						if (entity.IsNull())
 							return;
 
-						comp::Health* h = other.GetComponent<comp::Health>();
-						if (h)
+						comp::Player* p = other.GetComponent<comp::Player>();
+						if (p)
 						{
-							h->currentHealth += ability.healAmount;
 							scene.publish<EComponentUpdated>(other, ecs::Component::HEALTH);
+							// Send audio to everyone effected by heal.
+							other.GetComponent<comp::AudioState>()->data.emplace(audio);
+							comp::Health* h = other.GetComponent<comp::Health>();
+
+							if (h)
+							{
+								h->currentHealth += ability.healAmount;
+								scene.publish<EComponentUpdated>(other, ecs::Component::HEALTH);
+							}
 						}
 					});
 			}
@@ -206,7 +226,6 @@ void Systems::HeroLeapSystem(HeadlessScene& scene, float dt)
 
 								auto gravity = ecs::GetGravityForce();
 								p->forces.push_back(gravity);
-
 							}
 						});
 				};
@@ -214,56 +233,6 @@ void Systems::HeroLeapSystem(HeadlessScene& scene, float dt)
 		});
 }
 
-void Systems::HealthSystem(HeadlessScene& scene, float dt, Currency& money_ref, GridSystem& grid)
-{
-	//Entity destoys self if health <= 0
-	scene.ForEachComponent<comp::Health>([&](Entity& entity, comp::Health& health)
-		{
-			//Check if something should be dead, and if so set isAlive to false
-			if (health.currentHealth <= 0 && health.isAlive)
-			{
-				comp::Network* net = entity.GetComponent<comp::Network>();
-				health.isAlive = false;
-				// increase money
-				if (entity.GetComponent<comp::Tag<TagType::BAD>>())
-				{
-					money_ref += 5;
-					money_ref.hasUpdated = true;
-				}
-
-				// if player
-				comp::Player* p = entity.GetComponent<comp::Player>();
-				if (p)
-				{
-					p->respawnTimer = 10.f;
-					p->state = comp::Player::State::SPECTATING;
-					entity.RemoveComponent<comp::Tag<TagType::DYNAMIC>>();
-				}
-				else if (entity.GetComponent<comp::Tag<TagType::DEFENCE>>())
-				{
-					comp::Transform* buildTransform = entity.GetComponent<comp::Transform>();
-					
-					Node* node = Blackboard::Get().GetPathFindManager()->FindClosestNode(buildTransform->position);
-					//Remove from the container map so ai wont consider this defense
-					Blackboard::Get().GetPathFindManager()->RemoveDefenseEntity(entity);
-					node->reachable = true;
-					node->defencePlaced = false;
-
-					//Removing the defence and its neighbours if needed
-					grid.RemoveDefence(entity);
-					entity.Destroy();
-				}
-				else
-				{
-					entity.Destroy();
-				}
-			}
-			else if (health.currentHealth > health.maxHealth)
-			{
-				health.currentHealth = health.maxHealth;
-			}
-		});
-}
 
 void Systems::SelfDestructSystem(HeadlessScene& scene, float dt)
 {
@@ -283,9 +252,15 @@ void Systems::MovementSystem(HeadlessScene& scene, float dt)
 	PROFILE_FUNCTION();
 
 	//Transform
-
 	scene.ForEachComponent<comp::Transform, comp::Velocity, comp::TemporaryPhysics >([&](Entity e, comp::Transform& t, comp::Velocity& v, comp::TemporaryPhysics& p)
 		{
+			//Don't update villager that is in hiding
+			comp::Villager* villager = e.GetComponent<comp::Villager>();
+			if (villager != nullptr && villager->isHiding)
+			{
+				return;
+			}
+
 			v.vel = v.oldVel; // ignore any changes made to velocity made this frame
 			auto& it = p.forces.begin();
 			while (it != p.forces.end())
@@ -346,6 +321,14 @@ void Systems::MovementSystem(HeadlessScene& scene, float dt)
 		scene.ForEachComponent<comp::Transform, comp::Velocity>([&, dt]
 		(Entity e, comp::Transform& transform, comp::Velocity& velocity)
 			{
+
+				//Don't update villager that is in hiding
+				comp::Villager* villager = e.GetComponent<comp::Villager>();
+				if (villager != nullptr && villager->isHiding)
+				{
+					return;
+				}
+
 				if (velocity.vel.Length() > 0.01f)
 				{
 					e.UpdateNetwork();
@@ -369,12 +352,18 @@ void Systems::MovementColliderSystem(HeadlessScene& scene, float dt)
 
 	//BoundingOrientedBox
 	scene.ForEachComponent<comp::Transform, comp::OrientedBoxCollider>([&, dt]
-	(comp::Transform& transform, comp::OrientedBoxCollider& obb)
+	(Entity entity, comp::Transform& transform, comp::OrientedBoxCollider& obb)
 		{
-			obb.Center = transform.position;
-			/*obb.Orientation = transform.rotation;*/
-			if (transform.syncColliderScale)
-				obb.Extents = transform.scale;
+			//If its not a house update obb!
+			if (!entity.GetComponent<comp::House>())
+			{
+
+
+				obb.Center = transform.position;
+				/*obb.Orientation = transform.rotation;*/
+				if (transform.syncColliderScale)
+					obb.Extents = transform.scale;
+			}
 		});
 
 	//BoundingSphere
@@ -400,22 +389,31 @@ void Systems::LightSystem(Scene& scene, float dt)
 				light.lightData.position = sm::Vector4(t->position.x, t->position.y, t->position.z, 1.f);
 			}
 
-			if (light.lightData.type == TypeLight::POINT)
+			if (light.lightData.type == TypeLight::POINT && light.lightData.enabled)
 			{
-				if (light.flickerTimer >= light.maxFlickerTime)
-					light.increase = false;
-				else if (light.flickerTimer <= 0.f)
+				if (light.enabledTimer > 0.f)
 				{
-					light.increase = true;
-					light.maxFlickerTime = (float)(rand() % 10 + 1) / 10.f;
+					light.enabledTimer -= dt;
+					light.lightData.intensity = util::Lerp(light.lightData.intensity, 0.3f, dt);
 				}
-
-				if (light.increase)
-					light.flickerTimer += dt * (rand() % 2 + 1);
 				else
-					light.flickerTimer -= dt * (rand() % 2 + 1);
+				{
+					if (light.flickerTimer >= light.maxFlickerTime)
+						light.increase = false;
+					else if (light.flickerTimer <= 0.f)
+					{
+						light.increase = true;
+						light.maxFlickerTime = (float)(rand() % 10 + 1) / 10.f;
+					}
 
-				light.lightData.intensity = util::Lerp(0.5f, 0.7f, light.flickerTimer);
+					if (light.increase)
+						light.flickerTimer += dt * (rand() % 2 + 1);
+					else
+						light.flickerTimer -= dt * (rand() % 2 + 1);
+
+					light.lightData.intensity = util::Lerp(0.5f, 0.7f, light.flickerTimer);
+				}				
+							
 			}
 
 			scene.GetLights()->EditLight(light.lightData, light.index);

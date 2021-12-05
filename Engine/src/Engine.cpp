@@ -16,11 +16,12 @@ Engine::Engine()
 	: BasicEngine()
 {
 	LOG_INFO("Engine(): " __TIMESTAMP__);
+	SoundHandler::Get();
+	OptionSystem::Get().OnStartUp();
 }
 
 void Engine::Startup()
 {
-	OptionSystem::Get().OnStartUp();
 	T_INIT(1, thread::ThreadType::POOL_FIFO);
 	srand(static_cast<unsigned>(time(NULL)));
 
@@ -29,9 +30,25 @@ void Engine::Startup()
 
 	//Get heighest possible 16:9 resolution
 	//90% of the height
-	config.height = static_cast<UINT>(GetSystemMetrics(SM_CYSCREEN) * 0.85f);
+	/*config.height = static_cast<UINT>(GetSystemMetrics(SM_CYSCREEN) * 0.80f);
 	float aspectRatio = 16.0f / 9.0f;
-	config.width = static_cast<UINT>(aspectRatio * config.height);
+	config.width = static_cast<UINT>(aspectRatio * config.height);*/
+
+
+	int fullscreen = std::stoi(OptionSystem::Get().GetOption("Fullscreen"));
+	if (fullscreen == 0)
+	{
+		config.height = std::stoi(OptionSystem::Get().GetOption("WindowHeight"));
+		config.width = std::stoi(OptionSystem::Get().GetOption("WindowWidth"));
+		if ((config.width | config.height) == 0)
+		{
+			config.height = 720;
+			config.width = 1280;
+
+			OptionSystem::Get().SetOption("WindowHeight", std::string("720"));
+			OptionSystem::Get().SetOption("WindowWidth", std::string("1280"));
+		}
+	}
 
 	config.title = L"Homehearth";
 	if (!m_window.Initialize(config))
@@ -47,19 +64,6 @@ void Engine::Startup()
 	m_renderer.Setup(*this);
 
 	// Thread should be launched after s_engineRunning is set to true and D3D11 is initialized.
-	//
-	// AUDIO - we supposed to use other audio engine
-	//
-	HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
-	if (FAILED(hr))
-	{
-		LOG_ERROR("Failed to initialize AudioEngine.");
-	}
-	DirectX::AUDIO_ENGINE_FLAGS eflags = DirectX::AudioEngine_Default;
-#ifdef _DEBUG
-	eflags |= DirectX::AudioEngine_Debug;
-#endif
-	this->m_audio_engine = std::make_unique<DirectX::AudioEngine>(eflags);
 
 	IMGUI(
 		// Setup ImGUI
@@ -105,10 +109,6 @@ void Engine::Run()
     T_DESTROY();
     D2D1Core::Destroy();
 	ResourceManager::Get().Destroy();
-
-
-	OptionSystem::Get().SetOption("MasterVolume", std::to_string(m_masterVolume));
-	OptionSystem::Get().OnShutdown();
 }
 
 
@@ -532,9 +532,7 @@ void Engine::Render()
 		m_imguiMutex.unlock();
 		);
 	}
-
 	
-
 	{
 		PROFILE_SCOPE("Present");
 		D3D11Core::Get().SwapChain()->Present(0, 0);

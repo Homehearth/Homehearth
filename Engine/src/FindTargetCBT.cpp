@@ -16,13 +16,13 @@ BT::NodeStatus BT::FindTargetCBT::Tick()
 	//Get AI's transform component
 	const comp::Transform* transform = entity.GetComponent<comp::Transform>();
 
-	if(playersEntity == nullptr)
+	if (playersEntity == nullptr)
 	{
 		LOG_ERROR("Failed to get players entity");
 		return BT::NodeStatus::FAILURE;
 	}
 
-	if(transform == nullptr)
+	if (transform == nullptr)
 	{
 		LOG_ERROR("The enemy have no transform");
 		return BT::NodeStatus::FAILURE;
@@ -30,39 +30,45 @@ BT::NodeStatus BT::FindTargetCBT::Tick()
 
 	PathFinderManager* pathFinderManager = Blackboard::Get().GetPathFindManager();
 
-	//Find the nearest player and set that position as target
+	//Find the nearest player / villager and set that position as target
 	Entity nearestPlayer;
 	for (auto player : playersEntity->players)
 	{
-		comp::Transform* currentNearest = nullptr;
-		comp::Transform* playerTransform = player.GetComponent<comp::Transform>();
-		comp::Health* playerHealth = player.GetComponent<comp::Health>();
+		comp::Player* playerComp = player.GetComponent<comp::Player>();
+		comp::Villager* villagerComp = player.GetComponent<comp::Villager>();
 
-
-		//If no nearest is assigned, assign someone who is alive
-		if (nearestPlayer.IsNull() && playerHealth->isAlive)
+		if (playerComp && player.GetComponent<comp::Player>()->reachable || villagerComp && !villagerComp->isHiding)
 		{
-			nearestPlayer = player;
-			continue;
-		}
+			comp::Transform* currentNearest = nullptr;
+			comp::Transform* playerTransform = player.GetComponent<comp::Transform>();
+			comp::Health* playerHealth = player.GetComponent<comp::Health>();
 
-		//If we have a target assign transform component
-		if(!nearestPlayer.IsNull())
-		{
-			currentNearest = nearestPlayer.GetComponent<comp::Transform>();
-		}
 
-		//Missing components
-		if (!playerTransform || !playerHealth || !currentNearest)
-			continue;
+			//If no nearest is assigned, assign someone who is alive
+			if (nearestPlayer.IsNull() && playerHealth->isAlive)
+			{
+				nearestPlayer = player;
+				continue;
+			}
 
-		Node* closestNode = pathFinderManager->FindClosestNode(playerTransform->position);
+			//If we have a target assign transform component
+			if (!nearestPlayer.IsNull())
+			{
+				currentNearest = nearestPlayer.GetComponent<comp::Transform>();
+			}
 
-		//If can find a closer target that is alive, update to the closer target
-		if(sm::Vector3::Distance(transform->position, playerTransform->position) < sm::Vector3::Distance(transform->position, currentNearest->position)
-			&& closestNode->reachable && playerHealth->isAlive)
-		{
-			nearestPlayer = player;
+			//Missing components
+			if (!playerTransform || !playerHealth || !currentNearest)
+				continue;
+
+			Node* closestNode = pathFinderManager->FindClosestNode(playerTransform->position);
+
+			//If can find a closer target that is alive, update to the closer target
+			if (sm::Vector3::Distance(transform->position, playerTransform->position) < sm::Vector3::Distance(transform->position, currentNearest->position)
+				&& closestNode->reachable && playerHealth->isAlive)
+			{
+				nearestPlayer = player;
+			}
 		}
 	}
 
@@ -102,7 +108,7 @@ BT::NodeStatus BT::FindTargetCBT::Tick()
 		}
 	}
 	//If target building was found return success
-	if(!currentTarget.IsNull())
+	if (!currentTarget.IsNull())
 	{
 		Blackboard::Get().AddValue(("target" + std::to_string(entity)), currentTarget);
 		return BT::NodeStatus::SUCCESS;

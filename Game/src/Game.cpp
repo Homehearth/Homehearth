@@ -6,6 +6,7 @@
 #include "Healthbar.h"
 #include "MoneyUI.h"
 #include "OptionSystem.h"
+#include "AbilityUI.h"
 
 using namespace std::placeholders;
 
@@ -17,7 +18,7 @@ Game::Game()
 	this->m_spectatingID = -1;
 	this->m_money = 0;
 	this->m_gameID = -1;
-	this->m_waveTimer = 0;
+	this->m_inputState = {};
 }
 
 Game::~Game()
@@ -26,6 +27,9 @@ Game::~Game()
 	{
 		m_client.Disconnect();
 	}
+
+	OptionSystem::Get().SetOption("MasterVolume", std::to_string(m_masterVolume));
+	OptionSystem::Get().OnShutdown();
 }
 
 void Game::UpdateNetwork(float deltaTime)
@@ -79,15 +83,13 @@ bool Game::OnStartup()
 	// Set Current Scene
 	SetScene("MainMenu");
 
-	//Particles
-	ResourceManager::Get().GetResource<RTexture>("BloodParticle.png");
-	Entity emitter4 = GetScene("Game").CreateEntity();
+	/*Entity emitter4 = GetScene("Game").CreateEntity();
 	emitter4.AddComponent<comp::Transform>()->position = { 250, 5, -340 };
-	emitter4.AddComponent <comp::EmitterParticle>(sm::Vector3{ 0,0,0 }, 800, 2.f, PARTICLEMODE::SMOKE, 4.0f, 1.f, false);
+	emitter4.AddComponent<comp::EmitterParticle>(sm::Vector3{ 0,0,0 }, 102, 2.f, PARTICLEMODE::MAGEHEAL, 3.5f, 1.f, false);*/
 
-	Entity waterSplash = GetScene("Game").CreateEntity();
+	/*Entity waterSplash = GetScene("Game").CreateEntity();
 	waterSplash.AddComponent<comp::Transform>()->position = { 270, 13, -370 };
-	waterSplash.AddComponent <comp::EmitterParticle>(sm::Vector3{ 0,0,0 }, 100, 1.f, PARTICLEMODE::WATERSPLASH, 4.0f, 1.f, false);
+	waterSplash.AddComponent <comp::EmitterParticle>(sm::Vector3{ 0,0,0 }, 150, 1.f, PARTICLEMODE::WATERSPLASH, 2.0f, 1.f, false);*/
 
 	return true;
 }
@@ -95,53 +97,15 @@ bool Game::OnStartup()
 void Game::OnUserUpdate(float deltaTime)
 {
 	this->UpdateInput();
+
+	//DEBUG
 	Scene& scene = GetScene("Game");
-	if (m_players.find(m_localPID) != m_players.end())
-	{
-		sm::Vector3 playerPos = m_players.at(m_localPID).GetComponent<comp::Transform>()->position;
 
-		GameSystems::DeathParticleTimer(scene);
-
-		if (m_elapsedCycleTime <= m_waveTimer)
+	scene.ForEachComponent<comp::Light>([&](Entity e, comp::Light& l)
 		{
-			if (m_serverCycle == Cycle::DAY || m_serverCycle == Cycle::MORNING)
-			{
-				m_elapsedCycleTime += deltaTime;
-			}
-			scene.ForEachComponent<comp::Light>([&](Entity e, comp::Light& l)
-				{
-					switch (l.lightData.type)
-					{
-					case TypeLight::DIRECTIONAL:
-					{
-						l.lightData.direction = { -1.0f, 0.0f, -1.f, 0.f };
-						sm::Vector3 dir = sm::Vector3::TransformNormal(sm::Vector3(l.lightData.direction), sm::Matrix::CreateRotationZ(dx::XMConvertToRadians(ROTATION) * (m_elapsedCycleTime)));
+			e.GetComponent<comp::SphereCollider>()->Center = sm::Vector3(l.lightData.position);
+		});
 
-						l.lightData.direction = sm::Vector4(dir.x, dir.y, dir.z, 0.0f);
-						sm::Vector3 pos = l.lightData.position;
-						pos = playerPos - dir * 400;
-
-						pos = util::Lerp(sm::Vector3(l.lightData.position), pos, deltaTime * 10);
-						l.lightData.position = sm::Vector4(pos);
-
-						l.lightData.position.w = 1.f;
-						break;
-					}
-					case TypeLight::POINT:
-					{
-						if (m_serverCycle == Cycle::DAY || m_serverCycle == Cycle::MORNING)
-						{
-							l.lightData.enabled = false;
-						}
-						break;
-					}
-					default:
-						break;
-					}
-					e.GetComponent<comp::SphereCollider>()->Center = sm::Vector3(l.lightData.position);
-				});
-		}
-	}
 }
 
 void Game::OnShutdown()
@@ -158,6 +122,12 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	{
 	case GameMsg::Client_Accepted:
 	{
+		rtd::Text* lobbyErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("LobbyFields")->elements[5].get());
+		lobbyErrorText->SetVisiblity(false);
+		rtd::Text* nameErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("nameInput")->elements[1].get());
+		nameErrorText->SetVisiblity(false);
+		rtd::Text* mainMenuErrorText = dynamic_cast<rtd::Text*>(GetScene("MainMenu").GetCollection("ConnectFields")->elements[6].get());
+		mainMenuErrorText->SetVisiblity(false);
 		LOG_INFO("You are validated!");
 		break;
 	}
@@ -276,7 +246,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 				}
 
 				// Spawn blood splat when enemy dies.
-				if (m_gameEntities.at(id).GetComponent<comp::Transform>() && m_gameEntities.at(id).GetComponent<comp::Health>())
+				if (m_gameEntities.at(id).GetComponent<comp::Tag<TagType::BAD>>())
 				{
 					Entity bloodDecal = GetCurrentScene()->CreateEntity();
 					bloodDecal.AddComponent<comp::Decal>(*m_gameEntities.at(id).GetComponent<comp::Transform>());
@@ -308,9 +278,139 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		SetScene("Lobby");
 		break;
 	}
+	case GameMsg::Game_PlaySound:
+	{
+		uint32_t nrOfSounds = 0u;
+		msg >> nrOfSounds;
+
+		audio_t data = {};
+
+		const auto SH = &SoundHandler::Get();
+
+		for (uint32_t i = 0; i < nrOfSounds; i++)
+		{
+			// Extract Sound Information.
+			msg >> data.playLooped;
+			msg >> data.shouldBroadcast;
+			msg >> data.isUnique;
+			msg >> data.is3D;
+			msg >> data.minDistance;
+			msg >> data.volume;
+			msg >> data.position;
+			msg >> data.type;
+
+			switch (data.type)
+			{
+				//--------------------	PLAYER	--------------------------------------
+			case ESoundEvent::Player_OnMeleeAttack:
+				SH->PlaySound("Player_OnMeleeAttack", data);
+				break;
+			case ESoundEvent::Player_OnMeleeAttackHit:
+			{
+				int version = rand() % 3 + 1;
+				std::string onAttackName = "Player_OnMeleeAttackHit" + std::to_string(version);
+				SH->PlaySound(onAttackName, data);
+			}
+			break;
+			case ESoundEvent::Player_OnMovement:
+				SH->PlaySound("Player_OnMovement", data);
+				break;
+			case ESoundEvent::Player_OnRangeAttack:
+				SH->PlaySound("Player_OnRangeAttack", data);
+				break;
+			case ESoundEvent::Player_OnRangeAttackHit:
+				SH->PlaySound("Player_OnRangeAttackHit", data);
+				break;
+			case ESoundEvent::Player_OnDmgDealt:
+				SH->PlaySound("Player_OnDmgDealt", data);
+				break;
+			case ESoundEvent::Player_OnDmgRecieved:
+				SH->PlaySound("Player_OnDmgRecieved", data);
+				break;
+			case ESoundEvent::Player_OnHealing:
+				SH->PlaySound("Player_OnHealing", data);
+				break;
+			case ESoundEvent::Player_OnCastDash:
+			{
+				int version = rand() % 10;
+				if (version == 0)
+					SH->PlaySound("Player_OnCastDash1", data);
+				else
+					SH->PlaySound("Player_OnCastDash", data);
+			}
+			break;
+			case ESoundEvent::Player_OnCastBlink:
+				SH->PlaySound("Player_OnCastBlink", data);
+				break;
+			case ESoundEvent::Player_OnDeath:
+				SH->PlaySound("Player_OnDeath", data);
+				break;
+			case ESoundEvent::Player_OnRespawn:
+				SH->PlaySound("Player_OnRespawn", data);
+				break;
+				//--------------------	ENEMY	--------------------------------------
+			case ESoundEvent::Enemy_OnMovement:
+				SH->PlaySound("Enemy_OnMovement", data);
+				break;
+			case ESoundEvent::Enemy_OnMeleeAttack:
+			{
+				int version = rand() % 7 + 1;
+				std::string onAttackName = "Enemy_OnMeleeAttack" + std::to_string(version);
+				SH->PlaySound(onAttackName, data);
+			}
+			break;
+			case ESoundEvent::Enemy_OnRangeAttack:
+				SH->PlaySound("Enemy_RangeAttack", data);
+				break;
+			case ESoundEvent::Enemy_OnDmgDealt:
+				SH->PlaySound("Enemy_OnDmgDealt", data);
+				break;
+			case ESoundEvent::Enemy_OnDmgRecieved:
+				SH->PlaySound("Enemy_OnDmgRecieved", data);
+				break;
+			case ESoundEvent::Enemy_OnDeath:
+				SH->PlaySound("Enemy_OnDeath", data);
+				break;
+				//--------------------	GAME	--------------------------------------
+			case ESoundEvent::Game_OnDefencePlaced:
+				SH->PlaySound("Game_OnDefencePlaced", data);
+				break;
+			case ESoundEvent::Game_OnDefenceDestroyed:
+				SH->PlaySound("Game_OnDefenceDestroyed", data);
+				break;
+			case ESoundEvent::Game_OnHouseDestroyed:
+				SH->PlaySound("Game_OnHouseDestroyed", data);
+				break;
+			case ESoundEvent::Game_OnPurchase:
+				SH->PlaySound("Game_OnPurchase", data);
+				break;
+			default:
+				break;
+			}
+		}
+
+		break;
+	}
 	case GameMsg::Game_Over:
 	{
+		SoundHandler::Get().GetCurrentMusic()->stop();
+
+		audio_t audio = {};
+		audio.isUnique = true;
+		audio.playLooped = false;
+		SoundHandler::Get().PlaySound("Player_OnDeath", audio);
+		audio.volume = 0.5f;
+		SoundHandler::Get().PlaySound("OnGameOver", audio);
+		rtd::Text* mainMenuErrorText = dynamic_cast<rtd::Text*>(GetScene("MainMenu").GetCollection("ConnectFields")->elements[6].get());
+		mainMenuErrorText->SetVisiblity(false);
+
+		uint32_t gatheredMoney, wavesSurvived;
+		msg >> wavesSurvived >> gatheredMoney;
 		SetScene("GameOver");
+		rtd::Text* scoreText = dynamic_cast<rtd::Text*>(GetScene("GameOver").GetCollection("GameOver")->elements[1].get());
+		scoreText->SetText("Score: " + std::to_string(gatheredMoney));
+		rtd::Text* wavesText = dynamic_cast<rtd::Text*>(GetScene("GameOver").GetCollection("GameOver")->elements[2].get());
+		wavesText->SetText("Waves: " + std::to_string(wavesSurvived));
 		break;
 	}
 	case GameMsg::Lobby_Accepted:
@@ -318,24 +418,34 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		msg >> m_gameID;
 
 		this->SetScene("Loading");
-		sceneHelp::LoadGameScene(this);
-		sceneHelp::LoadResources(this);
-		sceneHelp::LoadMapColliders(this);
+		if (!hasLoaded)
+		{
+			sceneHelp::LoadGameScene(this);
+			sceneHelp::LoadResources(this);
+			sceneHelp::LoadMapColliders(this);
+
+			hasLoaded = true;
+		}
 
 #ifdef _DEBUG
 		LOG_INFO("Successfully loaded all Assets!");
 #endif
 		SetScene("Lobby");
-
+		rtd::Text* lobbyErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("LobbyFields")->elements[5].get());
+		lobbyErrorText->SetVisiblity(false);
+		rtd::Text* nameErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("nameInput")->elements[1].get());
+		nameErrorText->SetVisiblity(false);
 		LOG_INFO("You are now in lobby: %lu", m_gameID);
 		break;
 	}
 	case GameMsg::Lobby_Invalid:
 	{
-		std::string err;
-		msg >> err;
+		//std::string err;
+		//msg >> err;
 		SetScene("JoinLobby");
-		LOG_WARNING("%s", err.c_str());
+		//LOG_WARNING("%s", err.c_str());
+		rtd::Text* lobbyErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("LobbyFields")->elements[5].get());
+		lobbyErrorText->SetVisiblity(true);
 		break;
 	}
 	case GameMsg::Lobby_AcceptedLeave:
@@ -348,6 +458,10 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		{
 			textField->SetPresetText("");
 		}
+		rtd::Text* lobbyErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("LobbyFields")->elements[5].get());
+		lobbyErrorText->SetVisiblity(false);
+		rtd::Text* nameErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("nameInput")->elements[1].get());
+		nameErrorText->SetVisiblity(false);
 		break;
 	}
 	case GameMsg::Game_Start:
@@ -361,68 +475,69 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 				}
 			});
 
+
+		GetScene("Game").ForEachComponent<comp::Light>([](comp::Light& l)
+			{
+				if (l.lightData.type == TypeLight::POINT)
+				{
+					l.lightData.enabled = 0;
+				}
+			});
+
+
+		SoundHandler::Get().SetCurrentMusic("MenuTheme");
+		rtd::Text* lobbyErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("LobbyFields")->elements[5].get());
+		lobbyErrorText->SetVisiblity(false);
+		rtd::Text* nameErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("nameInput")->elements[1].get());
+		nameErrorText->SetVisiblity(false);
 		SetScene("Game");
 		thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::ADAPTIVE);
+		Entity e;
+		if (GetLocalPlayer(e))
+		{
+			comp::Player* p = e.GetComponent<comp::Player>();
+
+			if (p)
+			{
+				if (p->classType == comp::Player::Class::WARRIOR)
+				{
+					dynamic_cast<rtd::AbilityUI*>(GetScene("Game").GetCollection("AbilityUI")->elements[1].get())->SetTexture("Attack2.png");
+					dynamic_cast<rtd::AbilityUI*>(GetScene("Game").GetCollection("AbilityUI")->elements[2].get())->SetTexture("Block.png");
+				}
+				else
+				{
+					dynamic_cast<rtd::AbilityUI*>(GetScene("Game").GetCollection("AbilityUI")->elements[1].get())->SetTexture("Attack.png");
+					dynamic_cast<rtd::AbilityUI*>(GetScene("Game").GetCollection("AbilityUI")->elements[2].get())->SetTexture("Heal.png");
+				}
+			}
+		}
+
+		m_primaryCooldown = 0.0f;
+		m_secondaryCooldown = 0.0f;
+		m_dodgeCooldown = 0.0f;
+
+		this->m_inputState = { };
+		SetScene("Game");
 		break;
 	}
-	case GameMsg::Game_WaveTimer:
+	case GameMsg::Game_Spree:
 	{
-		msg >> m_serverCycle;
-		msg >> m_waveTimer;
-		switch (m_serverCycle)
+		msg >> m_currentSpree;
+		rtd::Text* txt = dynamic_cast<rtd::Text*>(GetScene("Game").GetCollection("SpreeText")->elements[0].get());
+		if (txt)
 		{
-		case Cycle::DAY:
-		{
-			Scene& scene = GetScene("Game");
-			// Change light when day.
-			scene.ForEachComponent<comp::Light>([&](Entity e, comp::Light& l)
-				{
-					if (l.lightData.type == TypeLight::DIRECTIONAL)
-					{
-						l.lightData.enabled = true;
-					}
-				});
-			break;
+			txt->SetText("X" + std::to_string(m_currentSpree));
 		}
-		case Cycle::NIGHT:
-		{
-			Scene& scene = GetScene("Game");
-			// Change light on Night.
-			m_elapsedCycleTime = 0.0f;
-			scene.ForEachComponent<comp::Light>([&](Entity e, comp::Light& l)
-				{
-					switch (l.lightData.type)
-					{
-					case TypeLight::DIRECTIONAL:
-					{
-						l.lightData.enabled = false;
-						break;
-					}
-					case TypeLight::POINT:
-					{
-						l.lightData.enabled = true;
-						break;
-					}
-					}
-				});
-			break;
-		}
-		case Cycle::MORNING:
-		{
-			Scene& scene = GetScene("Game");
-			// Change light on Morning.
-			scene.ForEachComponent<comp::Light>([&](Entity e, comp::Light& l)
-				{
-					if (l.lightData.type == TypeLight::DIRECTIONAL)
-					{
-						l.lightData.enabled = true;
-					}
-				});
-			break;
-		}
-		default:
-			break;
-		}
+		break;
+	}
+	case GameMsg::Game_Time:
+	{
+		float speed;
+		msg >> speed;
+		float time;
+		msg >> time;
+		m_cycler.SetCycleSpeed(speed);
+		m_cycler.SetTime(time);
 		break;
 	}
 	case GameMsg::Lobby_Update:
@@ -430,11 +545,15 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		uint8_t count;
 		msg >> count;
 
+		comp::Player::PlayerType playerTypes[MAX_PLAYERS_PER_LOBBY] = { comp::Player::PlayerType::NONE };
+
 		for (uint8_t i = 0; i < count; i++)
 		{
 			char nameTemp[12] = {};
 			uint32_t playerID;
 			comp::Player::Class classType;
+			bool isReady = false;
+			msg >> isReady;
 			msg >> classType;
 			msg >> nameTemp;
 			msg >> playerID;
@@ -443,9 +562,11 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			if (m_players.find(playerID) != m_players.end())
 			{
 				comp::Player* p = m_players.at(playerID).GetComponent<comp::Player>();
+				playerTypes[static_cast<int>(p->playerType) - 1] = p->playerType;
 				dynamic_cast<rtd::Text*>(GetScene("Lobby").GetCollection("playerIcon" + std::to_string(static_cast<uint16_t>(p->playerType)))->elements[1].get())->SetText(name);
 				rtd::Text* plT = dynamic_cast<rtd::Text*>(GetScene("Game").GetCollection("dynamicPlayer" + std::to_string(static_cast<uint16_t>(p->playerType)) + "namePlate")->elements[0].get());
 				rtd::Picture* plP = dynamic_cast<rtd::Picture*>(GetScene("Lobby").GetCollection("playerIcon" + std::to_string(static_cast<uint16_t>(p->playerType)))->elements[2].get());
+
 				if (plT)
 				{
 					plT->SetText(name);
@@ -468,6 +589,13 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 					}
 					}
 				}
+
+				if (isReady)
+				{
+					dynamic_cast<rtd::Picture*>(GetScene("Lobby").GetCollection("playerIcon" + std::to_string(static_cast<uint16_t>(p->playerType)))->elements[3].get())->SetVisiblity(true);
+				}
+				else
+					dynamic_cast<rtd::Picture*>(GetScene("Lobby").GetCollection("playerIcon" + std::to_string(static_cast<uint16_t>(p->playerType)))->elements[3].get())->SetVisiblity(false);
 			}
 		}
 
@@ -490,13 +618,26 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 
 		dynamic_cast<rtd::Text*>(GetScene("Lobby").GetCollection("LobbyDesc")->elements[1].get())->SetText("Lobby ID: " + std::to_string(m_gameID));
 
-		for (uint32_t i = 0; i < count; i++)
+		for (uint32_t i = 0; i < MAX_PLAYERS_PER_LOBBY; i++)
 		{
-			GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i + 1))->Show();
-		}
-		for (uint32_t i = count; i < MAX_PLAYERS_PER_LOBBY; i++)
-		{
-			GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i + 1))->Hide();
+			switch (playerTypes[i])
+			{
+			case comp::Player::PlayerType::NONE:
+			{
+				GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i + 1))->Hide();
+
+				break;
+			}
+			default:
+			{
+				Collection2D* coll = GetScene("Lobby").GetCollection("playerIcon" + std::to_string(static_cast<int>(playerTypes[i])));
+				coll->elements[0].get()->SetVisiblity(true);
+				coll->elements[1].get()->SetVisiblity(true);
+				coll->elements[2].get()->SetVisiblity(true);
+
+				break;
+			}
+			}
 		}
 
 		GameSystems::UpdateHealthbar(this);
@@ -652,19 +793,9 @@ void Game::CreateLobby()
 	}
 }
 
-const Mode& Game::GetCurrentMode() const
+Cycler& Game::GetCycler()
 {
-	return m_mode;
-}
-
-const Cycle& Game::GetCurrentCycle() const
-{
-	return m_serverCycle;
-}
-
-void Game::SetMode(const Mode& mode)
-{
-	m_mode = mode;
+	return m_cycler;
 }
 
 const uint32_t& Game::GetMoney() const
@@ -704,8 +835,10 @@ void Game::OnClientDisconnect()
 	m_client.m_qMessagesIn.clear();
 	m_players.clear();
 	m_gameEntities.clear();
+	SoundHandler::Get().SetCurrentMusic("MenuTheme");
 	LOG_INFO("Disconnected from server!");
 }
+
 
 void Game::SendStartGame()
 {
@@ -730,18 +863,38 @@ ParticleSystem* Game::GetParticleSystem()
 	return &m_particles;
 }
 
-Entity& Game::GetLocalPlayer()
+bool Game::GetLocalPlayer(Entity& player)
 {
-	return this->m_players.at(m_localPID);
+	if (m_players.find(m_localPID) == m_players.end())
+	{
+		return false;
+	}
+
+	player = m_players.at(m_localPID);
+	return true;
 }
 
-void Game::UseShop(const ShopItem& whatToBuy)
+void Game::SetShopItem(const ShopItem& whatToBuy)
 {
-	network::message<GameMsg> msg;
-	msg.header.id = GameMsg::Game_UseShop;
-	msg << whatToBuy << m_localPID << m_gameID;
+	if (m_players.find(m_localPID) != m_players.end())
+	{
+		m_players.at(m_localPID).GetComponent<comp::Player>()->shopItem = whatToBuy;
+	}
 
+	network::message<GameMsg> msg;
+	msg.header.id = GameMsg::Game_UpdateShopItem;
+	msg << whatToBuy << m_localPID << m_gameID;
 	m_client.Send(msg);
+}
+
+const ShopItem Game::GetShopItem() const
+{
+	ShopItem item = ShopItem::None;
+	if (m_players.find(m_localPID) != m_players.end())
+	{
+		item = m_players.at(m_localPID).GetComponent<comp::Player>()->shopItem;
+	}
+	return item;
 }
 
 void Game::UpgradeDefence(const uint32_t& id)
@@ -788,13 +941,128 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 			}
 			case ecs::Component::MESH_NAME:
 			{
+				std::string nameString;
 				NameType name;
 				msg >> name;
 				if (!skip)
 				{
-					std::string nameString;
 					switch (name)
 					{
+					case NameType::MESH_WATERMILL:
+					{
+						nameString = "WaterMill.fbx";
+						break;
+					}
+					case NameType::MESH_WATERMILLHOUSE:
+					{
+						nameString = "WaterMillHouse.fbx";
+						break;
+					}
+					case NameType::MESH_RUINED_WATERMILLHOUSE:
+					{
+						nameString = "WaterMillHousePile.fbx";
+						break;
+					}
+					case NameType::MESH_HOUSE5:
+					{
+						nameString = "House5.fbx";
+						break;
+					}
+					case NameType::MESH_RUINED_HOUSE5:
+					{
+						nameString = "House5Pile.fbx";
+						break;
+					}
+					case NameType::MESH_HOUSE6:
+					{
+						nameString = "House6.fbx";
+						break;
+					}
+					case NameType::MESH_RUINED_HOUSE6:
+					{
+						nameString = "House6Pile.fbx";
+						break;
+					}
+					case NameType::MESH_HOUSE7:
+					{
+						nameString = "House7.fbx";
+						break;
+					}
+					case NameType::MESH_RUINED_HOUSE7:
+					{
+						nameString = "House7Pile.fbx";
+						break;
+					}
+					case NameType::MESH_HOUSE8:
+					{
+						nameString = "House8.fbx";
+						break;
+					}
+					case NameType::MESH_RUINED_HOUSE8:
+					{
+						nameString = "House8Pile.fbx";
+						break;
+					}
+					case NameType::MESH_HOUSE9:
+					{
+						nameString = "House9.fbx";
+						break;
+					}
+					case NameType::MESH_RUINED_HOUSE9:
+					{
+						nameString = "House9Pile.fbx";
+						break;
+					}
+					case NameType::MESH_HOUSE10:
+					{
+						nameString = "House10.fbx";
+						break;
+					}
+					case NameType::MESH_RUINED_HOUSE10:
+					{
+						nameString = "House10Pile.fbx";
+						break;
+					}
+					case NameType::MESH_DOOR1:
+					{
+						nameString = "Door1.fbx";
+						break;
+					}
+					case NameType::MESH_DOOR5:
+					{
+						nameString = "Door5.fbx";
+						break;
+					}
+					case NameType::MESH_DOOR6:
+					{
+						nameString = "Door6.fbx";
+						break;
+					}
+					case NameType::MESH_DOOR7:
+					{
+						nameString = "Door7.fbx";
+						break;
+					}
+					case NameType::MESH_DOOR8:
+					{
+						nameString = "Door8.fbx";
+						break;
+					}
+					case NameType::MESH_DOOR9:
+					{
+						nameString = "Door9.fbx";
+						break;
+					}
+					case NameType::MESH_DOOR10:
+					{
+						nameString = "Door10.fbx";
+						break;
+					}
+					case NameType::MESH_HOUSEROOF:
+					{
+						nameString = "HouseRoof.fbx";
+						break;
+					}
 					case NameType::MESH_DEFENCE1X1:
 					{
 						nameString = "Defence1x1.obj";
@@ -810,6 +1078,11 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 						nameString = "Knight.fbx";
 						break;
 					}
+					case NameType::MESH_MAGE:
+					{
+						nameString = "Mage.fbx";
+						break;
+					}
 					case NameType::MESH_MONSTER:
 					{
 						nameString = "Monster.fbx";
@@ -820,13 +1093,17 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 						nameString = "Sphere.obj";
 						break;
 					}
+					case NameType::MESH_VILLAGER:
+					{
+						nameString = "Villager.fbx";
+						break;
+					}
 					default:
 					{
 						nameString = "Cube.obj";
 						break;
 					}
 					}
-
 					std::shared_ptr<RModel> model = ResourceManager::Get().CopyResource<RModel>(nameString, true);
 					if (model)
 					{
@@ -852,6 +1129,21 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 					case AnimName::ANIM_MONSTER:
 					{
 						nameString = "Monster.anim";
+						break;
+					}
+					case AnimName::ANIM_MAGE:
+					{
+						nameString = "Mage.anim";
+						break;
+					}
+					case AnimName::ANIM_VILLAGER:
+					{
+						nameString = "Villager.anim";
+						break;
+					}
+					default:
+					{
+						nameString = "Knight.anim";
 						break;
 					}
 					}
@@ -953,60 +1245,46 @@ void Game::UpdateInput()
 	}
 	if (InputSystem::Get().CheckMouseKey(MouseKey::RIGHT, KeyState::PRESSED))
 	{
-		m_inputState.rightMouse = true;
-		if (m_localPID != -1 && m_players.size() > 0 && m_players.at(m_localPID).GetComponent<comp::Player>()->state == comp::Player::State::SPECTATING)
+		switch (GetShopItem())
 		{
-
-			auto it = m_players.begin();
-			while (it != m_players.end())
+		case ShopItem::Defence1x1:
+		case ShopItem::Defence1x3:
+		{
+			SetShopItem(ShopItem::None);
+			break;
+		}
+		case ShopItem::None:
+		{
+			m_inputState.rightMouse = true;
+			if (m_localPID != -1 && m_players.size() > 0 && m_players.at(m_localPID).GetComponent<comp::Player>()->state == comp::Player::State::SPECTATING)
 			{
-				if (it->first != m_localPID && it->first != m_spectatingID && it->second.GetComponent<comp::Health>()->isAlive)
+				auto it = m_players.begin();
+				while (it != m_players.end())
 				{
-					GetScene("Game").ForEachComponent<comp::Tag<TagType::CAMERA>>([&](Entity entt, comp::Tag<TagType::CAMERA>& t)
-						{
-							comp::Camera3D* c = entt.GetComponent<comp::Camera3D>();
-							if (c)
+					if (it->first != m_localPID && it->first != m_spectatingID && it->second.GetComponent<comp::Health>()->isAlive)
+					{
+						GetScene("Game").ForEachComponent<comp::Tag<TagType::CAMERA>>([&](Entity entt, comp::Tag<TagType::CAMERA>& t)
 							{
-								c->camera.SetFollowEntity(m_players.at(it->first));
-							}
-						});
-					m_spectatingID = it->first;
-					break;
+								comp::Camera3D* c = entt.GetComponent<comp::Camera3D>();
+								if (c)
+								{
+									c->camera.SetFollowEntity(m_players.at(it->first));
+								}
+							});
+						m_spectatingID = it->first;
+						break;
+					}
+					it++;
 				}
-				it++;
 			}
-
+			break;
+		}
 		}
 	}
 	m_inputState.mouseRay = InputSystem::Get().GetMouseRay();
 
-	if (m_mode == Mode::DESTROY_MODE)
-	{
-		if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::R, KeyState::PRESSED))
-		{
-			m_inputState.key_r = true;
-		}
-	}
-	else if (m_mode == Mode::BUILD_MODE)
-	{
-		if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::B, KeyState::PRESSED))
-		{
-			m_inputState.key_b = true;
-		}
-	}
 	if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::LeftShift, KeyState::PRESSED))
 	{
 		m_inputState.key_shift = true;
-	}
-
-	//TEMP PLZ REMOVE AFTER WE COME TO AN AGREEMENT ON WHICH DOF EFFECT TO USE
-	if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::D1, KeyState::PRESSED))
-	{
-		thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::ADAPTIVE);
-	}
-
-	if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::D2, KeyState::PRESSED))
-	{
-		thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::VIGNETTE);
 	}
 }

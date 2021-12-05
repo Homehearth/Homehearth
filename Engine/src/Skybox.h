@@ -27,6 +27,8 @@ private:
 
 	void Update(ID3D11DeviceContext* dc);
 
+	void Tint(float currentTime, float startTime, float endTime, sm::Vector3 startColor, sm::Vector3 endColor);
+
 public:
 	Skybox();
 	virtual ~Skybox();

@@ -1,5 +1,4 @@
 project "Game"
-    kind "ConsoleApp"
     language "C++"
     cppdialect "C++17"
     staticruntime "on"
@@ -26,6 +25,7 @@ project "Game"
         "../ThirdParty/stb_image/",
         "../ThirdParty/networking/",
         "../ThirdParty/entt/",
+        "../ThirdParty/irrKlang/include/",
 		"../ThirdParty/assimp/include/"
     }
 
@@ -41,7 +41,8 @@ project "Game"
 		"dwrite",
         "dxgi",
         "DirectXTK",
-		"assimp-vc142-mt.lib"
+		"assimp-vc142-mt.lib",
+        "irrKlang.lib"
     }
 
     filter {"system:windows"}
@@ -50,11 +51,20 @@ project "Game"
             "_CRT_SECURE_NO_WARNINGS"
         }
 		
-	--postbuildcommands {
-        --"{COPY} assimp-vc142-mt.dll %{wks.location}/Game/build/bin/" .. outputdir .. "/Game/"
-		--}
+        postbuildcommands {
+            --"{COPYFILE} %{wks.location}Assets/Dlls/assimp-vc142-mt.dll %{wks.location}Game/build/bin/" .. outputdir .. "/Game/assimp-vc142-mt.dll",
+            --"{COPYFILE} %{wks.location}Assets/Dlls/ikpFlac.dll %{wks.location}Game/build/bin/" .. outputdir .. "/Game/ikpFlac.dll",
+            --"{COPYFILE} %{wks.location}Assets/Dlls/irrKlang.dll %{wks.location}Game/build/bin/" .. outputdir .. "/Game/irrKlang.dll",
+            --"{COPYFILE} %{wks.location}Assets/Dlls/ikpMP3.dll %{wks.location}Game/build/bin/" .. outputdir .. "/Game/ikpMP3.dll",
+        
+            --"{COPYFILE} %{wks.location}Assets/Dlls/assimp-vc142-mt.dll %{wks.location}Game/build/bin/" .. outputdir .. "/Game/assimp-vc142-mt.dll",
+            --"{COPYFILE} %{wks.location}Assets/Dlls/ikpFlac.dll %{wks.location}Game/build/bin/" .. outputdir .. "/Game/ikpFlac.dll",
+            --"{COPYFILE} %{wks.location}Assets/Dlls/irrKlang.dll %{wks.location}Game/build/bin/" .. outputdir .. "/Game/irrKlang.dll",
+            --"{COPYFILE} %{wks.location}Assets/Dlls/ikpMP3.dll %{wks.location}Game/build/bin/" .. outputdir .. "/Game/ikpMP3.dll"
+        }
 
     filter {"configurations:Debug"}
+        kind "ConsoleApp"
         staticruntime "on"
         runtime "Debug"
         defines{"_DEBUG", "_UNICODE", "UNICODE"}
@@ -62,10 +72,12 @@ project "Game"
         libdirs{
             "../ThirdParty/DirectXTK/lib/Debug_lib/",
             "../Engine/build/bin/Debug-windows-x86_64/Engine",
-			"../ThirdParty/assimp/lib/"
-				}
+			"../ThirdParty/assimp/lib/",
+            "../ThirdParty/irrKlang/lib/Winx64-visualStudio/"
+		}
 
     filter {"configurations:Release"}
+        kind "WindowedApp"
         staticruntime "on"
         runtime "Release"
         defines{"NDEBUG", "_UNICODE", "UNICODE"}
@@ -73,5 +85,6 @@ project "Game"
         libdirs{
             "../ThirdParty/DirectXTK/lib/Release_lib/",
             "../Engine/build/bin/Release-windows-x86_64/Engine",
-			"../ThirdParty/assimp/lib/"
-				}
+			"../ThirdParty/assimp/lib/",
+            "../ThirdParty/irrKlang/lib/Winx64-visualStudio/"
+		}

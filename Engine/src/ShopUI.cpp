@@ -267,11 +267,7 @@ ElementState ShopUI::CheckClick()
 	}
 	else
 	{
-		// CheckCollisions if mouse key is pressed.
-		if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED))
-		{
-			return ElementState::OUTSIDE;
-		}
+		return ElementState::OUTSIDE;
 	}
 
 	return ElementState::NONE;

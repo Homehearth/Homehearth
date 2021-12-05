@@ -38,6 +38,9 @@ private:
 	sm::Quaternion quaterion;
 	CAMERATYPE m_type;
 
+	//Nikkis stuff
+	float m_deltaTime;
+
 	/*Run in all the set functions*/
 	void UpdateProjection();
 
@@ -62,6 +65,7 @@ public:
 	bool IsSwapped() const;
 	CAMERATYPE GetCameraType()const;
 	sm::Vector3 GetRollPitchYaw() const;
+	sm::Quaternion GetRotation() const;
 
 	//Set Functions
 	void SetPosition(sm::Vector3 newPosition);

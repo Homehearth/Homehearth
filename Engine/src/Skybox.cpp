@@ -126,34 +126,35 @@ bool Skybox::CreateConstBuffer()
 
 void Skybox::Update(ID3D11DeviceContext* dc = DCSB)
 {
-	if (m_currentTime == 0.f)
-		m_tintCol = m_tintColNight;
 
-	else if (m_currentTime > 0 && m_currentTime < 10.f)
-		m_tintCol = util::Lerp(m_tintCol, m_tintColMorning, Stats::Get().GetUpdateTime());
+	if (m_currentTime > MORNING && m_currentTime < DAY)
+		this->Tint(m_currentTime, MORNING, DAY, m_tintColMorning, m_tintColDay);
 
-	else if (m_currentTime == 10.f)
-		m_tintCol = m_tintColMorning;
+	else if (m_currentTime > MID_DAY && m_currentTime < EVENING)
+		this->Tint(m_currentTime, MID_DAY, EVENING, m_tintColDay, m_tintColEvening);
 
-	else if (m_currentTime > 10 && m_currentTime < 20.f)
-		m_tintCol = util::Lerp(m_tintCol, m_tintColDay, Stats::Get().GetUpdateTime());
+	else if (m_currentTime > EVENING && m_currentTime < NIGHT)
+		this->Tint(m_currentTime, EVENING, NIGHT, m_tintColEvening, m_tintColNight);
 
-	else if (m_currentTime == 20.f)
-		m_tintCol = m_tintColDay;
+	else if (m_currentTime > EARLY_MORNING)
+		this->Tint(m_currentTime, EARLY_MORNING, 1.0f, m_tintColNight, m_tintColMorning);
 
-	else if (m_currentTime > 40.f && m_currentTime < 50.f)
-		m_tintCol = util::Lerp(m_tintCol, m_tintColEvening, Stats::Get().GetUpdateTime());
-
-	else if(m_currentTime > 50.f && m_currentTime <= TIME_LIMIT_DAY)
-		m_tintCol = util::Lerp(m_tintCol, m_tintColNight, Stats::Get().GetUpdateTime());
 
 	dc->UpdateSubresource(m_constBuffer.Get(), 0, nullptr, &m_tintCol, 0, 0);
+}
+
+void Skybox::Tint(float currentTime, float startTime, float endTime, sm::Vector3 startColor, sm::Vector3 endColor)
+{
+	float diff = endTime - startTime;
+	float progress = (currentTime - startTime) / diff;
+	m_tintCol = util::Lerp(startColor, endColor, progress);
 }
 
 Skybox::Skybox()
 {
 	nrOfIndices = 0;
 	m_currentTime = 0.f;
+	m_tintCol = m_tintColMorning;
 }
 
 Skybox::~Skybox()

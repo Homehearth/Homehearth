@@ -14,6 +14,7 @@ class Lights
 private:
 
 	bool m_isInit = false;
+	unsigned int m_volumeQuality = 1;
 
 	std::vector<light_t> m_lights;
 	ComPtr<ID3D11Buffer> m_lightBuffer;
@@ -49,6 +50,8 @@ public:
 
 	//Everytime a new Entity gets the Light Component add it to m_lights
 	void Add(entt::registry& reg, entt::entity ent);
+
+	void SetLightVolumeQuality(const unsigned int& quality);
 
 	std::vector<light_t>& GetLights();
 };
