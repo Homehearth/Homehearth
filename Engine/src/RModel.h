@@ -44,6 +44,7 @@ private:
 	std::vector<submesh_t>			m_meshes;
 	std::vector<light_t>			m_lights;
 	std::vector<bone_t>				m_allBones;
+	std::vector<sm::Vector3>		m_vertexColors;
 
 private:	
 	/*
@@ -85,7 +86,7 @@ public:
 	const std::vector<sm::Vector2> GetTextureCoords() const;
 	
 	//Get all the vertex colors for the model
-	const std::vector<sm::Vector3> GetVertexColors() const;
+	const std::vector<sm::Vector3>& GetVertexColors() const;
 
 	//Get all the textures of the type from all materials
 	const std::vector<std::shared_ptr<RTexture>> GetTextures(const ETextureType& type) const;

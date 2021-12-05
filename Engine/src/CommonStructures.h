@@ -366,7 +366,6 @@ struct simple_vertex_t
 	sm::Vector3 normal		= {};
 	sm::Vector3 tangent		= {};
 	sm::Vector3 bitanget	= {};
-	sm::Vector3 color		= {};
 };
 
 /*
@@ -382,7 +381,6 @@ struct anim_vertex_t
 	sm::Vector3	normal		= {};
 	sm::Vector3	tangent		= {};
 	sm::Vector3	bitanget	= {};
-	sm::Vector3 color		= {};
 	dx::XMUINT4	boneIDs		= {};
 	sm::Vector4	boneWeights = {};
 };

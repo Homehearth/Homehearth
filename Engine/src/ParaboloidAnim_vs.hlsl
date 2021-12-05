@@ -28,7 +28,6 @@ VertexOut main(VertexBoneIn input)
     output.uv = input.uv;
     output.tangent = input.tangent;
     output.biTangent = input.biTangent;
-    output.color = input.color;
     
     return output;
 }
