@@ -287,11 +287,6 @@ namespace ecs
 			Node* attackNode = nullptr; //AI can walk to this node to attack this house
 			bool isDead;
 		};
-		
-		struct Watermill
-		{
-			float angle = 0.f;
-		};
 
 		struct TemporaryPhysics
 		{
