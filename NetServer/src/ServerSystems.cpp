@@ -688,14 +688,6 @@ void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& sce
 					// dont move if dead
 					vel->vel = sm::Vector3::Zero;
 				}
-				if (p.state != comp::Player::State::SPECTATING)
-				{
-					p.state = comp::Player::State::SPECTATING;
-					message<GameMsg> msg;
-					msg.header.id = GameMsg::Game_StartSpectate;
-
-					simulation->SendMsg(n.id, msg);
-				}
 			}
 		});
 

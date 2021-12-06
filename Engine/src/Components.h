@@ -76,6 +76,11 @@ namespace ecs
 			}
 		};
 
+		struct Watermill
+		{
+			float theta = 0;
+		};
+
 		struct EmitterParticle
 		{
 			sm::Vector3							positionOffset	= { 0,0,0 };

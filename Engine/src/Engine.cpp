@@ -30,25 +30,25 @@ void Engine::Startup()
 
 	//Get heighest possible 16:9 resolution
 	//90% of the height
-	/*config.height = static_cast<UINT>(GetSystemMetrics(SM_CYSCREEN) * 0.80f);
+	config.height = static_cast<UINT>(GetSystemMetrics(SM_CYSCREEN) * 0.50f);
 	float aspectRatio = 16.0f / 9.0f;
-	config.width = static_cast<UINT>(aspectRatio * config.height);*/
+	config.width = static_cast<UINT>(aspectRatio * config.height);
 
 
-	int fullscreen = std::stoi(OptionSystem::Get().GetOption("Fullscreen"));
-	if (fullscreen == 0)
-	{
-		config.height = std::stoi(OptionSystem::Get().GetOption("WindowHeight"));
-		config.width = std::stoi(OptionSystem::Get().GetOption("WindowWidth"));
-		if ((config.width | config.height) == 0)
-		{
-			config.height = 720;
-			config.width = 1280;
+	//int fullscreen = std::stoi(OptionSystem::Get().GetOption("Fullscreen"));
+	//if (fullscreen == 0)
+	//{
+	//	config.height = std::stoi(OptionSystem::Get().GetOption("WindowHeight"));
+	//	config.width = std::stoi(OptionSystem::Get().GetOption("WindowWidth"));
+	//	if ((config.width | config.height) == 0)
+	//	{
+	//		config.height = 720;
+	//		config.width = 1280;
 
-			OptionSystem::Get().SetOption("WindowHeight", std::string("720"));
-			OptionSystem::Get().SetOption("WindowWidth", std::string("1280"));
-		}
-	}
+	//		OptionSystem::Get().SetOption("WindowHeight", std::string("720"));
+	//		OptionSystem::Get().SetOption("WindowWidth", std::string("1280"));
+	//	}
+	//}
 
 	config.title = L"Homehearth";
 	if (!m_window.Initialize(config))

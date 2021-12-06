@@ -14,11 +14,12 @@ Game::Game()
 	: m_client(std::bind(&Game::CheckIncoming, this, _1), std::bind(&Game::OnClientDisconnect, this))
 	, Engine()
 {
-	this->m_localPID = -1;
-	this->m_spectatingID = -1;
-	this->m_money = 0;
-	this->m_gameID = -1;
-	this->m_inputState = {};
+	m_localPID = -1;
+	m_spectatingID = -1;
+	m_money = 0;
+	m_gameID = -1;
+	m_inputState = {};
+	m_isSpectating = false;
 }
 
 Game::~Game()
@@ -440,6 +441,8 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			it = m_gameEntities.erase(it);
 		}
 
+		m_isSpectating = false;
+
 		rtd::Button* readyText = dynamic_cast<rtd::Button*>(GetScene("Lobby").GetCollection("StartGame")->elements[0].get());
 		readyText->GetPicture()->SetTexture("Ready.png");
 
@@ -763,43 +766,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		}
 		break;
 	}
-	case GameMsg::Game_StartSpectate:
-	{
-		m_players.at(m_localPID).GetComponent<comp::Player>()->state = comp::Player::State::SPECTATING;
-		auto it = m_players.begin();
-		while (it != m_players.end())
-		{
-			if (it->first != m_localPID && it->second.GetComponent<comp::Health>()->isAlive)
-			{
-				GetScene("Game").ForEachComponent<comp::Tag<TagType::CAMERA>>([&](Entity entt, comp::Tag<TagType::CAMERA>& t)
-					{
-						comp::Camera3D* c = entt.GetComponent<comp::Camera3D>();
-						if (c)
-						{
-							c->camera.SetFollowEntity(m_players.at(it->first));
-						}
-					});
-				m_spectatingID = it->first;
-				break;
-			}
-			it++;
-		}
-		break;
-	}
-	case GameMsg::Game_StopSpectate:
-	{
-		m_players.at(m_localPID).GetComponent<comp::Player>()->state = comp::Player::State::IDLE;
-		GetScene("Game").ForEachComponent<comp::Tag<TagType::CAMERA>>([&](Entity entt, comp::Tag<TagType::CAMERA>& t)
-			{
-				comp::Camera3D* c = entt.GetComponent<comp::Camera3D>();
-				if (c)
-				{
-					c->camera.SetFollowEntity(m_players.at(m_localPID));
-				}
-			});
-		m_spectatingID = -1;
-		break;
-	}
 	default:
 	{
 		LOG_ERROR("This message has an unknown header, should not happen..");
@@ -1023,7 +989,7 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 					case NameType::MESH_WATERMILL:
 					{
 						nameString = "WaterMill.fbx";
-						e.AddComponent<comp::Tag<WATERMILL>>();
+						e.AddComponent<comp::Watermill>();
 						break;
 					}
 					case NameType::MESH_WATERMILLHOUSE:
@@ -1234,11 +1200,28 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 			}
 			case ecs::Component::HEALTH:
 			{
-				comp::Health heal;
-				msg >> heal;
+				comp::Health hp;
+				msg >> hp;
 				if (!skip)
 				{
-					e.AddComponent<comp::Health>(heal);
+					if (GetCurrentScene() == &GetScene("Game"))
+					{
+						if (e == m_players.at(m_localPID))
+						{
+							if (!hp.isAlive)
+							{
+								m_isSpectating = true;
+							}
+							else
+							{
+								if (m_isSpectating)
+								{
+									m_isSpectating = false;
+								}
+							}
+						}
+					}
+					e.AddComponent<comp::Health>(hp);
 				}
 				break;
 			}
@@ -1329,23 +1312,25 @@ void Game::UpdateInput()
 		case ShopItem::None:
 		{
 			m_inputState.rightMouse = true;
-			if (m_localPID != -1 && m_players.size() > 0 && m_players.at(m_localPID).GetComponent<comp::Player>()->state == comp::Player::State::SPECTATING)
+			if (m_isSpectating)
 			{
 				auto it = m_players.begin();
 				while (it != m_players.end())
 				{
-					if (it->first != m_localPID && it->first != m_spectatingID && it->second.GetComponent<comp::Health>()->isAlive)
+					// Don't spectate yourself you are dead & check if other player is alive
+					if (it->first != m_localPID && it->second.GetComponent<comp::Health>()->isAlive)
 					{
-						GetScene("Game").ForEachComponent<comp::Tag<TagType::CAMERA>>([&](Entity entt, comp::Tag<TagType::CAMERA>& t)
+						Camera* cam = GetScene("Game").GetCurrentCamera();
+
+						if (cam->GetCameraType() == CAMERATYPE::PLAY)
+						{
+							// Check so we are not already following this entity
+							if (cam->GetTargetEntity() != it->second)
 							{
-								comp::Camera3D* c = entt.GetComponent<comp::Camera3D>();
-								if (c)
-								{
-									c->camera.SetFollowEntity(m_players.at(it->first));
-								}
-							});
-						m_spectatingID = it->first;
-						break;
+								cam->SetFollowEntity(it->second);
+								break;
+							}
+						}
 					}
 					it++;
 				}

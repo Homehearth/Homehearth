@@ -163,9 +163,21 @@ namespace sceneHelp
 
 		gameScene.on<ESceneUpdate>([=](const ESceneUpdate& e, Scene& scene)
 			{
-				scene.ForEachComponent<comp::Tag<WATERMILL>>([](Entity& e, comp::Tag<WATERMILL>& mill)
+				scene.ForEachComponent<comp::Watermill>([=](Entity& entity, comp::Watermill& mill)
 					{
+						mill.theta += 45.f * e.dt;
 
+						if (mill.theta >= 360.f)
+						{
+							mill.theta -= 360.f;
+						}
+
+						comp::Transform* t = entity.GetComponent<comp::Transform>();
+
+						if (t)
+						{
+							t->rotation = sm::Quaternion::CreateFromAxisAngle({ 1,0,0 }, dx::XMConvertToRadians(-mill.theta));
+						}
 					});
 
 				game->GetCycler().Update(e.dt);

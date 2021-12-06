@@ -177,13 +177,18 @@ Entity HouseManager::CreateHouse(HeadlessScene& scene, NameType houseType, NameT
 	Entity houseEntity = scene.CreateEntity();
 	houseEntity.AddComponent<comp::MeshName>()->name = houseType;
 	houseEntity.AddComponent<comp::Transform>();
-	houseEntity.AddComponent<comp::Tag<TagType::STATIC>>();
+	houseEntity.AddComponent<comp::Tag<STATIC>>();
 	houseEntity.AddComponent<comp::Network>();
 	houseEntity.AddComponent<comp::Health>()->maxHealth = m_houseHealth;
 	houseEntity.GetComponent<comp::Health>()->currentHealth = m_houseHealth;
 	houseEntity.AddComponent<comp::Tag<GOOD>>();
 	comp::House* house = houseEntity.AddComponent<comp::House>();
 	house->houseType = houseType;
+
+	if (houseType == NameType::MESH_WATERMILL)
+	{
+		houseEntity.GetComponent<comp::Transform>()->position = { 270.f, 12.f, -389.f };
+	}
 
 	//Add door if door type was specified
 	if (doorType != NameType::EMPTY)

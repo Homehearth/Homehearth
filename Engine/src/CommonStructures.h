@@ -338,8 +338,6 @@ enum class GameMsg : uint16_t
 	Game_UpgradeDefence,
 	Game_ChangeAnimation,
 	Game_Cooldown,
-	Game_StartSpectate,
-	Game_StopSpectate,
 	Game_Over
 };
 
