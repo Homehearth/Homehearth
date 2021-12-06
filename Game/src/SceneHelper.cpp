@@ -336,24 +336,27 @@ namespace sceneHelp
 
 		/*---------Background---------*/
 		Collection2D* mainMenu = new Collection2D;
-		mainMenu->AddElement<rtd::Picture>("MainMenu.png", draw_t(0, 0, width, height));
+		mainMenu->AddElement<rtd::Picture>("MenuBG.png", draw_t(0, 0, width, height));
+		sm::Vector2 textSize = { (widthScale * 0.35f) * 1.5f, (height * 0.2f) * 1.5f };
+		sm::Vector2 textPos = { (width / 2) - textSize.x / 2, (height / 2) - textSize.y / 2 };
+		mainMenu->AddElement<rtd::Picture>("MainMenuText.png", draw_t(textPos.x, textPos.y - height / 8.f, textSize.x, textSize.y));
 		scene.Add2DCollection(mainMenu, "AMainMenu");
 		/*---------Background---------*/
 
 
 		/*---------Textfields---------*/
 		Collection2D* connectFields = new Collection2D;
-		rtd::TextField* ipField = connectFields->AddElement<rtd::TextField>(draw_text_t((width / 2) - (widthScale * 0.25), height * 0.55f, widthScale * 0.25f, D2D1Core::GetDefaultFontSize()), 30, true);
+		rtd::TextField* ipField = connectFields->AddElement<rtd::TextField>(draw_text_t((width / 2.f) - (widthScale * 0.25f), height * 0.55f, widthScale * 0.25f, D2D1Core::GetDefaultFontSize()), 30, true);
 		ipField->SetDescriptionText("IP Address:");
 		padding = (widthScale / 64.f);
-		rtd::TextField* portField = connectFields->AddElement<rtd::TextField>(draw_text_t((width / 2) + padding, height * 0.55f, widthScale * 0.25f, D2D1Core::GetDefaultFontSize()), 6);
+		rtd::TextField* portField = connectFields->AddElement<rtd::TextField>(draw_text_t((width / 2.f) + padding, height * 0.55f, widthScale * 0.25f, D2D1Core::GetDefaultFontSize()), 6);
 		portField->SetDescriptionText("Port:");
 		/*---------Textfields---------*/
 
 
 		/*---------Buttons---------*/
 		sm::Vector2 buttonSize = { widthScale / 6.f, height / 10.f };
-		sm::Vector2 buttonPos = { (width / 2) - (buttonSize.x / 2),  height - (height * 0.37f) };
+		sm::Vector2 buttonPos = { (width / 2.f) - (buttonSize.x / 2.f),  height - (height * 0.37f) };
 		padding = buttonSize.y + height * 0.02f;
 		rtd::Button* connectButton = connectFields->AddElement<rtd::Button>("Start.png", draw_t(buttonPos.x, buttonPos.y, buttonSize.x, buttonSize.y));
 		buttonPos.y += padding;
@@ -362,7 +365,7 @@ namespace sceneHelp
 		rtd::Button* quitButton = connectFields->AddElement<rtd::Button>("Quit.png", draw_t(buttonPos.x, buttonPos.y, buttonSize.x, buttonSize.y)); //width / 4.f, height * 0.15f
 		scene.Add2DCollection(connectFields, "ConnectFields");
 
-		rtd::Button* externalLinkBtn = connectFields->AddElement<rtd::Button>("Button.png", draw_t(width - width / 4.f, height - (height / 5), width / 8.f, height / 16));
+		rtd::Button* externalLinkBtn = connectFields->AddElement<rtd::Button>("Button.png", draw_t(width - width / 4.f, height - (height / 5.f), width / 8.f, height / 16.f));
 		externalLinkBtn->GetText()->SetScale(0.5f);
 		externalLinkBtn->GetText()->SetText("Give Feedback!");
 		externalLinkBtn->SetOnPressedEvent([] {
@@ -714,14 +717,234 @@ namespace sceneHelp
 	{
 		const float width = (float)game->GetWindow()->GetWidth();
 		const float height = (float)game->GetWindow()->GetHeight();
+		float widthScale = height * (16.f / 9.f);
+		sm::Vector2 padding = { widthScale / 64.f, height / 64.f };
+		sm::Vector2 canvasSize = {width * 0.75f, height - padding.y * 2};
+		sm::Vector2 canvasPos = { width - (canvasSize.x + padding.x), height - (canvasSize.y + padding.y) };
+
+		sm::Vector2 scaleCat = { widthScale / 6.f, height / 9.f };
+		sm::Vector2 scale = { scaleCat.x * 0.57f, scaleCat.y * 0.57f };
 		Scene& scene = game->GetScene("Options");
 
-		Collection2D* helpText = new Collection2D;
-		Collection2D* menuBG = new Collection2D;
+		/*---------General---------*/
+		Collection2D* general = new Collection2D;
 
-		menuBG->AddElement<rtd::Picture>("MenuBG.png", draw_t(0, 0, width, height));
-		scene.Add2DCollection(menuBG, "AMenuBG");
+		general->AddElement<rtd::Picture>("MenuBG.png", draw_t(0, 0, width, height));
+		rtd::Button* exitButton = general->AddElement<rtd::Button>("No.png", draw_t(padding.x, padding.y, widthScale / 24, height / 14), false);
+		exitButton->SetOnPressedEvent([=]()
+			{
+				game->SetScene("MainMenu");
+			});
+		scene.Add2DCollection(general, "AMenuBG");
+		/*---------General---------*/
 
+		/*---------Categories---------*/
+		Collection2D* category = new Collection2D;
+		sm::Vector2 posCat = {padding.x, ((height / 2.f) - scaleCat.y / 2.f) - (padding.y + scaleCat.y) };
+
+		rtd::Button* videoCat = category->AddElement<rtd::Button>("Button.png", draw_t(posCat.x, posCat.y, scaleCat.x, scaleCat.y));
+		category->AddElement<rtd::Text>("Video", draw_t(posCat.x, posCat.y, scaleCat.x, scaleCat.y));
+		posCat.y += padding.y + scaleCat.y;
+		rtd::Button* audioCat			= category->AddElement<rtd::Button>("Button.png", draw_t(posCat.x, posCat.y, scaleCat.x, scaleCat.y));
+		category->AddElement<rtd::Text>("Audio", draw_t(posCat.x, posCat.y, scaleCat.x, scaleCat.y));
+		posCat.y += padding.y + scaleCat.y;
+		rtd::Button* graphicsCat		= category->AddElement<rtd::Button>("Button.png", draw_t(posCat.x, posCat.y, scaleCat.x, scaleCat.y));
+		category->AddElement<rtd::Text>("Graphics", draw_t(posCat.x, posCat.y, scaleCat.x, scaleCat.y));
+
+		category->AddElement<rtd::Canvas>(D2D1::ColorF(178.f / 255.f, 44.f / 255.f, 65.f / 255.f), draw_t(canvasPos.x, canvasPos.y, canvasSize.x, canvasSize.y));
+		scene.Add2DCollection(category, "Category");
+		/*---------Categories---------*/
+
+
+		/*---------Video---------*/
+		Collection2D* videoCategory = new Collection2D;
+		sm::Vector2 posVideo = {width - (scale.x + padding.x * 2), canvasPos.y + padding.y};
+
+		videoCategory->AddElement<rtd::Text>("Fullscreen", draw_t(canvasPos.x + padding.x, posVideo.y, scale.x, scale.y));
+		rtd::Border* fullscreenBorder		= videoCategory->AddElement<rtd::Border>(draw_t(canvasPos.x + padding.x, posVideo.y, canvasSize.x - padding.x * 2, scale.y));
+		fullscreenBorder->SetColor(D2D1::ColorF(53.f / 255.f, 22.f / 255.f, 26.f / 255.f));
+		fullscreenBorder->SetLineWidth(LineWidth::LARGE);
+		rtd::Button* fullscreenOpt			= videoCategory->AddElement<rtd::Button>("Button.png", draw_t(posVideo.x, posVideo.y, scale.x, scale.y));
+		rtd::Text* fullscreenButtonText		= videoCategory->AddElement<rtd::Text>("Yes", draw_t(posVideo.x, posVideo.y, scale.x, scale.y));
+
+		posVideo.y += scale.y + padding.y * 1.5f;
+		videoCategory->AddElement<rtd::Text>("Resolution", draw_t(canvasPos.x + padding.x, posVideo.y, scale.x, scale.y));
+		rtd::Border* resolutionBorder = videoCategory->AddElement<rtd::Border>(draw_t(canvasPos.x + padding.x, posVideo.y, canvasSize.x - padding.x * 2, scale.y));
+		resolutionBorder->SetColor(D2D1::ColorF(53.f / 255.f, 22.f / 255.f, 26.f / 255.f));
+		resolutionBorder->SetLineWidth(LineWidth::LARGE);
+		rtd::Button* resolutionOpt			= videoCategory->AddElement<rtd::Button>("Button.png", draw_t(posVideo.x, posVideo.y, scale.x, scale.y));
+		rtd::Text* resButtonText			= videoCategory->AddElement<rtd::Text>("1920x1080", draw_t(posVideo.x, posVideo.y, scale.x, scale.y));
+		
+		//Resolution Button
+		{
+			static int winWidth = std::stoi(OptionSystem::Get().GetOption("WindowWidth"));
+			static int winHeight = std::stoi(OptionSystem::Get().GetOption("WindowHeight"));
+
+			switch (winWidth)
+			{
+			case 1920:
+			{
+				resButtonText->SetText("1920x1080");
+				break;
+			}
+			case 2560:
+			{
+				resButtonText->SetText("2560x1440");
+				break;
+			}
+			case 1408:
+			{
+				resButtonText->SetText("1408x792");
+				break;
+			}
+			case 1536:
+			{
+				resButtonText->SetText("1536x864");
+				break;
+			}
+			case 1632:
+			{
+				resButtonText->SetText("1632x918");
+				break;
+			}
+			default:
+			{
+				winWidth = 1920;
+				winHeight = 1080;
+				break;
+			}
+			};
+			resolutionOpt->SetOnPressedEvent([=] {
+
+				switch (winWidth)
+				{
+				case 1920:
+				{
+					resButtonText->SetText("2560x1440");
+					winWidth = 2560;
+					winHeight = 1440;
+					break;
+				}
+				case 2560:
+				{
+					resButtonText->SetText("1408x792");
+					winWidth = 1408;
+					winHeight = 792;
+					break;
+				}
+				case 1408:
+				{
+					resButtonText->SetText("1536x864");
+					winWidth = 1536;
+					winHeight = 864;
+					break;
+				}
+				case 1536:
+				{
+					resButtonText->SetText("1632x918");
+					winWidth = 1632;
+					winHeight = 918;
+					break;
+				}
+				case 1632:
+				{
+					resButtonText->SetText("1920x1080");
+					winWidth = 1920;
+					winHeight = 1080;
+					break;
+				}
+				default:
+				{
+					winWidth = 1920;
+					winHeight = 1080;
+					break;
+				}
+				};
+
+				OptionSystem::Get().SetOption("WindowWidth", std::to_string(winWidth));
+				OptionSystem::Get().SetOption("WindowHeight", std::to_string(winHeight));
+
+				}); 
+		}
+		
+		//Fullscreen button
+		{
+			static int fullscreen = std::stoi(OptionSystem::Get().GetOption("Fullscreen"));
+			if (fullscreen == 0)
+			{
+				fullscreenButtonText->SetText("No");
+			}
+			else
+			{
+				fullscreenButtonText->SetText("Yes");
+			}
+
+			fullscreenOpt->SetOnPressedEvent([=]
+				{
+					if (fullscreen == 0)
+					{
+						fullscreenButtonText->SetText("Yes");
+						fullscreen = 1;
+					}
+					else
+					{
+						fullscreenButtonText->SetText("No");
+						fullscreen = 0;
+					}
+
+					OptionSystem::Get().SetOption("Fullscreen", std::to_string(fullscreen));
+				});
+		}
+		
+
+		scene.Add2DCollection(videoCategory, "WVideo");
+		/*---------Video---------*/
+
+		/*---------Audio---------*/
+		Collection2D* audioCategory = new Collection2D;
+		sm::Vector2 posAudio = { width - (scale.x + padding.x * 2), canvasPos.y + padding.y };
+		float masterVol = std::stoi(OptionSystem::Get().GetOption("MasterVolume"));
+
+		rtd::Slider* masterVolumeSL = audioCategory->AddElement<rtd::Slider>(D2D1::ColorF(53.f / 255.f, 22.f / 255.f, 26.f / 255.f), draw_t(canvasPos.x + padding.x, posAudio.y, scale.x, scale.y), &game->m_masterVolume, 1.0f, 0.0f);
+		masterVolumeSL->SetMinPos(sm::Vector2(canvasPos.x + padding.x));
+		masterVolumeSL->SetMaxPos(sm::Vector2(width - (scale.x + padding.x * 2.f)));
+		masterVolumeSL->SetExplanationText("Master Volume: ");
+		rtd::Border* masterVolBorder = audioCategory->AddElement<rtd::Border>(draw_t(canvasPos.x + padding.x, posAudio.y, canvasSize.x - padding.x * 2, scale.y));
+		masterVolBorder->SetColor(D2D1::ColorF(53.f / 255.f, 22.f / 255.f, 26.f / 255.f));
+		masterVolBorder->SetLineWidth(LineWidth::LARGE);
+
+		scene.Add2DCollection(audioCategory, "WAudio");
+		/*---------Audio---------*/
+
+		/*---------Graphics---------*/
+		Collection2D* graphicsCategory = new Collection2D;
+		scene.Add2DCollection(graphicsCategory, "WGraphics");
+		/*---------Graphics---------*/
+
+		videoCategory->Show();
+		audioCategory->Hide();
+		graphicsCategory->Hide();
+
+		videoCat->SetOnPressedEvent([=]
+			{
+				videoCategory->Show();
+				audioCategory->Hide();
+				graphicsCategory->Hide();
+			});
+		audioCat->SetOnPressedEvent([=]
+			{
+				videoCategory->Hide();
+				audioCategory->Show();
+				graphicsCategory->Hide();
+			});
+		graphicsCat->SetOnPressedEvent([=]
+			{
+				videoCategory->Hide();
+				audioCategory->Hide();
+				graphicsCategory->Show();
+			});
+
+		/*
 		Collection2D* soundCollection = new Collection2D;
 		rtd::Slider* sl = soundCollection->AddElement<rtd::Slider>(D2D1::ColorF(0.0f, 0.0f, 0.0f), draw_t((width / 2) - (width / 9), height / 5, width / 9, height / 16), &game->m_masterVolume, 1.0f, 0.0f);
 		sl->SetMinPos(sm::Vector2((width / 8) - (width / 9)));
@@ -998,11 +1221,11 @@ namespace sceneHelp
 
 			});
 
-
+			*/
 		/*
 			Window Size Options
 		*/
-
+/*
 		static int winWidth = std::stoi(OptionSystem::Get().GetOption("WindowWidth"));
 		static int winHeight = std::stoi(OptionSystem::Get().GetOption("WindowHeight"));
 		rtd::Button* windowSizeButton = resolutionMenu->AddElement<rtd::Button>("Button.png", draw_t((width / 8.0f) * 5.0f, (height / 8.0f) * 4.0f, width / 4.0f, height / 8.0f));
@@ -1156,7 +1379,7 @@ namespace sceneHelp
 		helpText->AddElement<rtd::Text>(helpTextOption, draw_text_t(0.0f, 0.0f, width, height - (height / 8.0f)));
 		helpText->Hide();
 		scene.Add2DCollection(helpText, "HelpText");
-
+		*/
 	}
 
 	void SetupLoadingScene(Game* game)
