@@ -543,13 +543,11 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 			}
 
 			//Rotate defences 90 or not
-			if (p.lastInputState.mousewheelDir != 0)
-			{
-				if (p.lastInputState.mousewheelDir > 0)
-					p.rotateDefence = true;
-				else if (p.lastInputState.mousewheelDir < 0)
-					p.rotateDefence = false;
-			}
+			if (p.lastInputState.mousewheelDir > 0)
+				p.rotateDefence = true;
+			else if (p.lastInputState.mousewheelDir < 0)
+				p.rotateDefence = false;
+
 
 		});
 
@@ -558,7 +556,7 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 
 void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money_ref, HouseManager houseManager, QuadTree* qt, GridSystem& grid, SpreeHandler& spree)
 {
-	//Entity destoys self if health <= 0
+	//Entity destroys itself if health <= 0
 	scene.ForEachComponent<comp::Health>([&](Entity& entity, comp::Health& health)
 		{
 			//Check if something should be dead, and if so set isAlive to false
@@ -594,8 +592,6 @@ void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money
 				if (p)
 				{
 					audio.type = ESoundEvent::Player_OnDeath;
-
-					p->respawnTimer = 10.f;
 					p->state = comp::Player::State::SPECTATING;
 					entity.RemoveComponent<comp::Tag<TagType::DYNAMIC>>();
 				}

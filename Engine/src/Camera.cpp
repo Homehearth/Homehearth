@@ -50,6 +50,8 @@ void Camera::Initialize(sm::Vector3 pos, sm::Vector3 target, sm::Vector3 up, sm:
 	m_cameraMat.projection = m_projection;
 	m_cameraMat.view = m_view;
 
+	dx::BoundingFrustum::CreateFromMatrix(m_frustum, m_projection);
+
 	//Constant buffer already created
 	if (m_viewConstantBuffer != nullptr)
 	{
@@ -183,6 +185,7 @@ void Camera::Update(const float& deltaTime)
 	m_cameraMat.position = { m_position.x, m_position.y, m_position.z, 0.0f };
 	m_cameraMat.target = { m_target.x, m_target.y, m_target.z, 0 };
 	m_cameraMat.projection = m_projection;
+	//dx::BoundingFrustum::CreateFromMatrix(m_frustum, m_projection);
 	m_cameraMat.view = m_view;
 	s_cameraBuffers[0] = m_cameraMat;
 }

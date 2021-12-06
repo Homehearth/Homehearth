@@ -37,6 +37,7 @@ private:
 	camera_Matrix_t m_cameraMat;
 	sm::Quaternion quaterion;
 	CAMERATYPE m_type;
+	dx::BoundingFrustum m_frustum;
 
 	//Nikkis stuff
 	float m_deltaTime;

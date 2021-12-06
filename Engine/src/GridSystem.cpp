@@ -404,6 +404,11 @@ std::vector<std::pair<UINT, UINT>> GridSystem::CheckDefenceLocation(Ray_t& mouse
 			ePos.push_back(bs);
 		});
 
+	m_scene->ForEachComponent<comp::Villager, comp::SphereCollider>([&](comp::Villager& v, comp::SphereCollider& bs)
+		{
+			ePos.push_back(bs);
+		});
+
 	if (playerIndex != -1)
 	{
 		Plane_t plane;

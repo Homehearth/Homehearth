@@ -120,7 +120,7 @@ cbuffer DoFSettings : register(b12)
     float4x4    c_inverseProjection;
     uint        c_dofType;
     float3      dofPadding;
-    float4      c_playerPosView;
+    //float4      c_playerPos;
 }
 cbuffer SkyboxTint : register(b13)
 {

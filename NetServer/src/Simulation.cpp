@@ -597,7 +597,7 @@ void Simulation::UpdateInput(InputState state, uint32_t playerID)
 		return;
 
 	Entity e = m_lobby.GetPlayer(playerID);
-	if (!e.IsNull())
+	if (!e.IsNull() && e.GetComponent<comp::Health>()->isAlive)
 	{
 		e.GetComponent<comp::Player>()->lastInputState = state;
 	}
@@ -834,8 +834,8 @@ void Simulation::ResetGameScene()
 	houseManager.InitializeHouses(*this->GetGameScene(), qt.get());
 	AIBehaviors::UpdateBlackBoard(*m_pGameScene);
 
-	m_timeCycler.SetTime(MID_DAY);
-	m_timeCycler.SetCycleSpeed(3.0f);
+	m_timeCycler.SetTime(DAY);
+	m_timeCycler.SetCycleSpeed(1.0f);
 }
 
 void Simulation::SendEntities(const std::vector<Entity>& entities, GameMsg msgID, const std::bitset<ecs::Component::COMPONENT_MAX>& componentMask)
