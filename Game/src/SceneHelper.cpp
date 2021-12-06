@@ -164,19 +164,43 @@ namespace sceneHelp
 
 		gameScene.on<ESceneUpdate>([=](const ESceneUpdate& e, Scene& scene)
 			{
+				scene.ForEachComponent<comp::Watermill>([=](Entity& entity, comp::Watermill& mill)
+					{
+						mill.theta += 45.f * e.dt;
+
+						if (mill.theta >= 360.f)
+						{
+							mill.theta -= 360.f;
+						}
+
+						comp::Transform* t = entity.GetComponent<comp::Transform>();
+
+						if (t)
+						{
+							t->rotation = sm::Quaternion::CreateFromAxisAngle({ 1,0,0 }, dx::XMConvertToRadians(-mill.theta));
+						}
+					});
+
 				game->GetCycler().Update(e.dt);
 
 				if (game->m_players.find(game->m_localPID) != game->m_players.end())
 				{
-					sm::Vector3 playerPos = game->m_players.at(game->m_localPID).GetComponent<comp::Transform>()->position;
-
+					Camera* cam = scene.GetCurrentCamera();
+					sm::Vector3 playerPos;
+					if (cam->GetCameraType() == CAMERATYPE::PLAY)
+					{
+						playerPos = cam->GetTargetEntity().GetComponent<comp::Transform>()->position;
+					}
+					else
+					{
+						playerPos = cam->GetPosition();
+					}
 
 					comp::Light* l = sun.GetComponent<comp::Light>();
 
 					float angle = 360.f * game->GetCycler().GetTime();
 					for (int i = 0; i < 2; i++)
 					{
-
 						sm::Vector3 dir = sm::Vector3::TransformNormal(sm::Vector3(-1, 0, -1), sm::Matrix::CreateRotationZ(dx::XMConvertToRadians(angle)));
 						l->lightData.direction = sm::Vector4(dir);
 						l->lightData.direction.w = 0.0f;
@@ -303,7 +327,7 @@ namespace sceneHelp
 					else if (scene.GetCurrentCamera()->GetCameraType() == CAMERATYPE::PLAY)
 					{
 						scene.SetCurrentCameraEntity(debugCameraEntity);
-						scene.GetCurrentCamera()->SetNearFarPlane(0.1f, 400.f);
+						scene.GetCurrentCamera()->SetNearFarPlane(0.1f, 800.f);
 						if (InputSystem::Get().IsMouseRelative())
 						{
 							InputSystem::Get().SwitchMouseMode();
@@ -1417,11 +1441,11 @@ namespace sceneHelp
 		gameOverCollection->AddElement<rtd::Text>("Main Menu", draw_text_t((width / 2) - (width / 8), height - (height / 6.f), width / 4, height / 8));
 		mainMenuButton->SetOnPressedEvent([=]
 			{
-				game->m_client.Disconnect();
+				game->SetScene("JoinLobby");
+				game->m_gameID = -1;
 			});
 
 		scene.Add2DCollection(gameOverCollection, "GameOver");
-
 	}
 
 	void SetupLobbyJoinScreen(Game* game)
@@ -1688,6 +1712,42 @@ namespace sceneHelp
 			ResourceManager::Get().GetResource<RTexture>(filename);
 		}
 		file.close();
+
+		file.open(ANIMATIONPATH + "Loader.txt");
+
+		if (!file.is_open())
+		{
+			LOG_ERROR("Failed to load Animations!");
+			return;
+		}
+
+		while (!file.eof())
+		{
+			std::string filename;
+
+			file >> filename;
+
+			ResourceManager::Get().GetResource<RAnimation>(filename);
+		}
+		file.close();
+
+		file.open(ANIMATORPATH + "Loader.txt");
+
+		if (!file.is_open())
+		{
+			LOG_ERROR("Failed to load Animations!");
+			return;
+		}
+
+		while (!file.eof())
+		{
+			std::string filename;
+
+			file >> filename;
+
+			ResourceManager::Get().GetResource<RAnimator>(filename);
+		}
+		file.close();
 	}
 
 	void LoadGameScene(Game* game)
@@ -1757,19 +1817,6 @@ namespace sceneHelp
 			else if (Tree8 == filename)
 			{
 				game->m_models[ModelID::TREE8].push_back(e);
-			}
-			//else if (Water == filename)
-			//{
-			//	e.AddComponent<comp::Tag<TagType::TEXTUREEFFECT>>();
-			//	game->m_models[ModelID::WATER].push_back(e);
-			//}
-			else if (WaterEdge == filename)
-			{
-				e.AddComponent<comp::Tag<TagType::TEXTUREEFFECT>>();
-			}
-			else if (WaterFloor == filename)
-			{
-				e.AddComponent<comp::Tag<TagType::TEXTUREEFFECT>>();
 			}
 		}
 

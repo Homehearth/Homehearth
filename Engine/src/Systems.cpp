@@ -97,9 +97,9 @@ void Systems::HealingSystem(HeadlessScene& scene, float dt)
 					entity.GetComponent<comp::Transform>()->position,
 					1.0f,
 					100.f,
+					true,
 					false,
-					false,
-					false,
+					true,
 					false,
 				};
 
@@ -342,17 +342,6 @@ void Systems::MovementSystem(HeadlessScene& scene, float dt)
 					velocity.vel.y = 0;
 				}
 				velocity.oldVel = velocity.vel; // updated old vel position
-			});
-
-		scene.ForEachComponent<comp::Transform, comp::Watermill>([&, dt]
-		(Entity e, comp::Transform& transform, comp::Watermill& wm)
-			{
-				wm.angle += 45.f * dt;
-				if (wm.angle >= 360.f)
-					wm.angle -= 360.f;
-				sm::Quaternion q = sm::Quaternion::CreateFromAxisAngle({ 1,0,0 }, dx::XMConvertToRadians(-wm.angle));
-				transform.rotation = q;
-				e.UpdateNetwork();
 			});
 	}
 }

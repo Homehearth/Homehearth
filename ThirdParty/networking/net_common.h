@@ -15,7 +15,7 @@
 namespace network
 {
 #define IPV6_ADDRSTRLEN 46
-#define BUFFER_SIZE 32768
+#define BUFFER_SIZE 4096
 	
 	struct Socket_t
 	{
@@ -56,7 +56,9 @@ namespace network
 		WRITE_PACKET,
 		READ_PACKET,
 		WRITE_HEADER,
-		WRITE_PAYLOAD
+		WRITE_PAYLOAD,
+		WRITE_MESSAGE,
+		READ_MESSAGE
 	};
 
 	// Information regarding every input or output
