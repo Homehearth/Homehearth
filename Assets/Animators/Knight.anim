@@ -4,7 +4,6 @@ anim 			MOVE 				Knight_Run.fbx
 anim 			PRIMARY_ATTACK 		Knight_Slash.fbx
 anim 			TAKE_DAMAGE 		Knight_TakeDamage.fbx
 anim			PLACE_DEFENCE		Knight_PlaceDefence.fbx
-defaultAnim		IDLE
 
 
 loopable		PRIMARY_ATTACK		0
@@ -18,7 +17,6 @@ upperbody		TAKE_DAMAGE			QuickRigCharacter_Spine
 upperbody		PLACE_DEFENCE		QuickRigCharacter_Spine
 
 
-//Blendstates
 blendstate 		IDLE				MOVE				0.2
 blendstate 		MOVE				IDLE				0.2
 

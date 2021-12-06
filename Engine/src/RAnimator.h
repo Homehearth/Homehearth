@@ -19,15 +19,8 @@ private:
 	std::vector<bone_t>						m_bones;
 	std::unordered_map<std::string, UINT>	m_nameToBone;
 
-	//States
-	/*EAnimationType m_currentType;
-	EAnimationType m_nextType;
-	EAnimationType m_defaultType;
-
-	EAnimationType m_lowerbody;
-	EAnimationType m_upperbody;*/
-	//REMOVE LATER ^^^^
-
+	std::queue<EAnimationType> m_queue;
+	//std::vector<EAnimationType> m_queue;
 
 	EAnimationType m_currentState;
 	EAnimationType m_nextState;
@@ -52,9 +45,7 @@ private:
 	};
 
 	//All the animations
-	std::unordered_map<EAnimationType, animation_t> m_animations;
-
-	//Blendstates
+	std::unordered_map<EAnimationType, animation_t>			m_animations;
 	std::unordered_map<blendstate_t, double, blend_hash_fn> m_blendStates;
 
 	//Matrices that is going up to the GPU - structure buffer - in modelspace

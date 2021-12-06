@@ -3,7 +3,6 @@ anim 			IDLE 				Monster_Idle.fbx
 anim 			MOVE 				Monster_Walk.fbx
 anim 			PRIMARY_ATTACK 		Monster_Attack.fbx
 anim 			TAKE_DAMAGE 		Monster_TakeDamage.fbx
-defaultAnim 	IDLE
 
 
 loopable		PRIMARY_ATTACK		0

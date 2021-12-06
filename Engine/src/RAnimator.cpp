@@ -4,9 +4,10 @@
 RAnimator::RAnimator()
 {
 	m_useInterpolation	= true;
-	m_currentState	= EAnimationType::NONE;
+	m_currentState	= EAnimationType::IDLE;
 	m_nextState		= EAnimationType::NONE;
 	m_upperState	= EAnimationType::NONE;
+
 }
 
 RAnimator::~RAnimator()
@@ -408,18 +409,6 @@ bool RAnimator::Create(const std::string& filename)
 					}
 				}
 			}
-			else if (keyword == "defaultAnim")
-			{
-				std::string key;
-				if (ss >> key)
-				{
-					EAnimationType animType = StringToAnimationType(key);
-					if (m_animations.find(animType) != m_animations.end())
-					{
-						m_currentState = animType;
-					}
-				}
-			}
 			else if (keyword == "loopable")
 			{
 				std::string key;
@@ -490,25 +479,31 @@ bool RAnimator::ChangeAnimation(const EAnimationType& type)
 	//Check if animation exist
 	if (m_animations.find(type) != m_animations.end())
 	{
-		//We shall not queue up an animation that is already playing
-		if (m_currentState != type)
+		//No current
+		if (m_currentState == EAnimationType::NONE)
 		{
-			if (m_animations.at(type).isUpperBody)
+			m_currentState = type;
+		}
+		//Check if we are going to place in the queue
+		else
+		{
+			if (m_currentState != type)
 			{
-				if (m_upperState == EAnimationType::NONE)
+				if (m_animations.at(type).isUpperBody)
 				{
 					m_upperState = type;
 					queueSuccess = true;
 				}
-			}
-			else
-			{
-				if (m_nextState == EAnimationType::NONE)
+				else
 				{
-					m_nextState = type;
-					queueSuccess = true;
+					if (m_nextState == EAnimationType::NONE)
+					{
+						m_nextState = type;
+						queueSuccess = true;
+					}
 				}
 			}
+			//Else: Already in this state
 		}
 	}
 	return queueSuccess;

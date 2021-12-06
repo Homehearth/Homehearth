@@ -6,11 +6,6 @@ skel 			Model.fbx
 anim 			IDLE 			Model_Idle.fbx
 
 
-// Have to set default animation that it will return 
-// to after an animation that can't be looped
-defaultAnim 	IDLE
-
-
 // Possible to set options for animation. 
 // Set by default if nothing was set.
 loopable		1
@@ -24,3 +19,18 @@ blendstate		IDLE 	 		RUN		1.0
 
 blendstate		IDLE				PRIMARY_ATTACK		0.3
 blendstate		PRIMARY_ATTACK		IDLE				0.2
+
+
+New feature: Upper lower animation
+anim 			IDLE 			Model_Idle.fbx
+anim 			PRIMARY_ATTACK 	Model_Attack.fbx
+loopable		0
+
+
+//				lowerbody		upperbody			devidebone
+lowerUpper		IDLE			PRIMARY_ATTACK		QuickRigCharacter_Spine
+lowerUpper		IDLE			TAKE_DAMAGE			QuickRigCharacter_Spine
+
+
+
+upperbody 		PRIMARY_ATTACK		QuickRigCharacter_Spine
