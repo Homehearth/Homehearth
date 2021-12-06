@@ -1,17 +1,17 @@
 #pragma once
 
 //Options
-#define RENDER_IMGUI 0
-#define PROFILER 0
+#define RENDER_IMGUI 1
+#define PROFILER 1
 
 // Feel free to add more things to this, currently only gives more money :)
-#define GOD_MODE 1
+#define GOD_MODE 0
 #define NO_CLIP 0
-#define SPAWN_MONSTERS 1
+#define SPAWN_MONSTERS 0
 
 // Turn this to 1 if you want to see the very beautiful demo menu
 #define DRAW_TEMP_2D 0
-#define DEBUG_SNAPSHOT 0
+#define DEBUG_SNAPSHOT 1
 
 #define RENDER_GRID 0
 

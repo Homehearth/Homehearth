@@ -29,4 +29,5 @@ public:
 	bool ReadyCheck(uint32_t playerID);
 	bool IsEmpty()const;
 	void RemovePlayer(uint32_t playerID);
+	void Clear();
 };

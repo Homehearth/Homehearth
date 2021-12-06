@@ -22,6 +22,7 @@ public:
 
 	bool Insert(const Entity& e);
 	void Query(std::set<Entity>& returnVec, const comp::SphereCollider& range);
+	void Query(std::set<Entity>& returnVec, const dx::BoundingFrustum& range);
 	void GetSize(size_t& size);
 	void Clear();
 };

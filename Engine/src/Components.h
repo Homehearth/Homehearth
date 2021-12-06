@@ -76,6 +76,11 @@ namespace ecs
 			}
 		};
 
+		struct Watermill
+		{
+			float theta = 0;
+		};
+
 		struct EmitterParticle
 		{
 			sm::Vector3							positionOffset	= { 0,0,0 };
@@ -282,7 +287,6 @@ namespace ecs
 			Node* attackNode = nullptr; //AI can walk to this node to attack this house
 			bool isDead;
 		};
-		
 
 		struct TemporaryPhysics
 		{
@@ -355,7 +359,7 @@ namespace ecs
 			bool isReady = false;
 			bool reachable = true;
 			
-			char name[12] = {};
+			char name[13] = {};
 
 			ShopItem		shopItem = ShopItem::None;
 
