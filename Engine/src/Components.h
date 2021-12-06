@@ -288,6 +288,10 @@ namespace ecs
 			bool isDead;
 		};
 		
+		struct Watermill
+		{
+			float angle = 0.f;
+		};
 
 		struct TemporaryPhysics
 		{

@@ -16,7 +16,7 @@ void main( uint3 DTid : SV_DispatchThreadID )
         float maxDistance = 60.f;
     
         float4 position = ViewPosFromDepth(saturate(t_depth[DTid.xy].x), DTid.xy);
-    
+
         //width /= 2;
         //height /= 2;
         //height -= 50;
@@ -25,11 +25,11 @@ void main( uint3 DTid : SV_DispatchThreadID )
         //float4 focusPoint = ViewPosFromDepth(t_depth[focus].x, focus);
         //float4 focusPoint = c_playerPos;
         float4 focusPoint = float4(0, 5, 90, 1);
+
     
         float blur = smoothstep(minDistance, maxDistance, abs(position.z - focusPoint.z));
     
         finalColor = lerp(focusColor, outOfFocusColor, blur);
-        //finalColor = focusPoint;
     }
     
     

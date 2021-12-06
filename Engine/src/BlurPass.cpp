@@ -223,10 +223,6 @@ void BlurPass::UpdateBlurSettings()
 
 void BlurPass::SwapBlurDirection()
 {
-	if (m_blurSettings.useVerticalBlur)
-		m_blurSettings.useVerticalBlur = false;
-	else
-		m_blurSettings.useVerticalBlur = true;
-
+	m_blurSettings.useVerticalBlur = !m_blurSettings.useVerticalBlur;
 	UpdateBlurSettings();
 }
