@@ -175,6 +175,7 @@ CollisionInfo_t CollisionSystem::Intersection(Entity entity1, Entity entity2)
 	{
 		comp::SphereCollider* p1BoS = entity1.GetComponent<comp::SphereCollider>();
 		comp::SphereCollider* p2BoS = entity2.GetComponent<comp::SphereCollider>();
+		
 		sm::Vector3 vec = sm::Vector3(p2BoS->Center) - sm::Vector3(p1BoS->Center);
 		float distance = vec.Length();
 		vec.Normalize();
@@ -189,8 +190,17 @@ CollisionInfo_t CollisionSystem::Intersection(Entity entity1, Entity entity2)
 	//Sphere - OBB
 	else if (p1Tags & TagType::DYNAMIC && p2Tags & TagType::STATIC)
 	{
+		if (p2Tags & TagType::MAP_BOUNDS && !entity1.GetComponent<comp::Player>())
+		{
+			return { false, 0.0f, sm::Vector3::Zero };
+		}
 		comp::SphereCollider* p1BoS = entity1.GetComponent<comp::SphereCollider>();
 		comp::OrientedBoxCollider* p2OBB = entity2.GetComponent<comp::OrientedBoxCollider>();
+
+		if (!p1BoS || !p2OBB)
+		{
+			return { false, 0.f, sm::Vector3::Zero };
+		}
 
 		sm::Matrix Translation = sm::Matrix::CreateTranslation(p2OBB->Center).Invert();
 		sm::Matrix Rotation = sm::Matrix::CreateFromQuaternion(p2OBB->Orientation).Transpose();
@@ -358,7 +368,7 @@ void CollisionSystem::CollisionResponse(CollisionInfo_t collisionInfo, Entity en
 		if (transform)
 		{
 			transform->position = transform->position + sm::Vector3(collisionInfo.smallestVec * collisionInfo.overlap);
-			transform->position.y = 0.f;
+			transform->position.y = 0.75f;
 
 			if (BoS)
 			{
@@ -379,7 +389,7 @@ void CollisionSystem::CollisionResponse(CollisionInfo_t collisionInfo, Entity en
 		if (transform1)
 		{
 			transform1->position = transform1->position + (sm::Vector3(collisionInfo.smallestVec * collisionInfo.overlap * -1.0f));
-			transform1->position.y = 0.f;
+			transform1->position.y = 0.75f;
 
 			if (BoS1)
 			{
@@ -391,7 +401,7 @@ void CollisionSystem::CollisionResponse(CollisionInfo_t collisionInfo, Entity en
 		if (transform2)
 		{
 			transform2->position = transform2->position + (sm::Vector3(collisionInfo.smallestVec * collisionInfo.overlap));
-			transform2->position.y = 0.f;
+			transform2->position.y = 0.75f;
 
 			if (BoS2)
 			{

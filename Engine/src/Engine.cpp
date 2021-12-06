@@ -3,6 +3,7 @@
 #include <omp.h>
 #include "Camera.h"
 #include "GridSystem.h"
+#include "OptionSystem.h"
 
 /*
 	We only need the loading screen rendered once. 
@@ -15,11 +16,12 @@ Engine::Engine()
 	: BasicEngine()
 {
 	LOG_INFO("Engine(): " __TIMESTAMP__);
+	SoundHandler::Get();
+	OptionSystem::Get().OnStartUp();
 }
 
 void Engine::Startup()
 {
-	
 	T_INIT(1, thread::ThreadType::POOL_FIFO);
 	srand(static_cast<unsigned>(time(NULL)));
 
@@ -28,9 +30,25 @@ void Engine::Startup()
 
 	//Get heighest possible 16:9 resolution
 	//90% of the height
-	config.height = static_cast<UINT>(GetSystemMetrics(SM_CYSCREEN) * 0.80f);
+	/*config.height = static_cast<UINT>(GetSystemMetrics(SM_CYSCREEN) * 0.80f);
 	float aspectRatio = 16.0f / 9.0f;
-	config.width = static_cast<UINT>(aspectRatio * config.height);
+	config.width = static_cast<UINT>(aspectRatio * config.height);*/
+
+
+	int fullscreen = std::stoi(OptionSystem::Get().GetOption("Fullscreen"));
+	if (fullscreen == 0)
+	{
+		config.height = std::stoi(OptionSystem::Get().GetOption("WindowHeight"));
+		config.width = std::stoi(OptionSystem::Get().GetOption("WindowWidth"));
+		if ((config.width | config.height) == 0)
+		{
+			config.height = 720;
+			config.width = 1280;
+
+			OptionSystem::Get().SetOption("WindowHeight", std::string("720"));
+			OptionSystem::Get().SetOption("WindowWidth", std::string("1280"));
+		}
+	}
 
 	config.title = L"Homehearth";
 	if (!m_window.Initialize(config))
@@ -46,19 +64,6 @@ void Engine::Startup()
 	m_renderer.Setup(*this);
 
 	// Thread should be launched after s_engineRunning is set to true and D3D11 is initialized.
-	//
-	// AUDIO - we supposed to use other audio engine
-	//
-	HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
-	if (FAILED(hr))
-	{
-		LOG_ERROR("Failed to initialize AudioEngine.");
-	}
-	DirectX::AUDIO_ENGINE_FLAGS eflags = DirectX::AudioEngine_Default;
-#ifdef _DEBUG
-	eflags |= DirectX::AudioEngine_Debug;
-#endif
-	this->m_audio_engine = std::make_unique<DirectX::AudioEngine>(eflags);
 
 	IMGUI(
 		// Setup ImGUI
@@ -112,7 +117,7 @@ Window* Engine::GetWindow()
 	return &m_window;
 }
 
-void Engine::drawImGUI() const
+void Engine::drawImGUI()
 {
 	//Containers for plotting
 	static std::vector<float> fpsContainer;
@@ -220,8 +225,6 @@ void Engine::drawImGUI() const
 				}
 				ImGui::Spacing();
 			});
-
-		
 	}
 	
 	if (ImGui::CollapsingHeader("Renderable"))
@@ -267,7 +270,6 @@ void Engine::drawImGUI() const
 
 	if (ImGui::CollapsingHeader("Light"))
 	{
-
 		GetCurrentScene()->ForEachComponent<comp::Light>([&](Entity& e, comp::Light& light)
 			{
 				std::string entityname = "Entity: " + std::to_string(static_cast<int>((entt::entity)e));
@@ -304,6 +306,7 @@ void Engine::drawImGUI() const
 				}
 
 				ImGui::Spacing();
+
 			});
 
 	}
@@ -388,6 +391,19 @@ void Engine::drawImGUI() const
 	{
 		ImGui::Checkbox("Render Colliders", GetCurrentScene()->GetIsRenderingColliders());
 	};
+
+	int size = m_renderer.GetShadowMapSize();
+	if (ImGui::InputInt("ShadowMapResolution", &size, 1024))
+	{
+		size = max(size, 64);
+		m_renderer.SetShadowMapSize(size);
+	}
+
+	if (ImGui::CollapsingHeader("Preview ShadowMap"))
+	{
+		m_renderer.ImGuiShowTextures();
+	}
+
 	ImGui::End();
 	
 }
@@ -479,6 +495,7 @@ void Engine::Update(float dt)
 
 		IMGUI(
 			drawImGUI();
+
 			ImGui::EndFrame();
 			m_imguiMutex.unlock();
 		);
@@ -515,9 +532,7 @@ void Engine::Render()
 		m_imguiMutex.unlock();
 		);
 	}
-
 	
-
 	{
 		PROFILE_SCOPE("Present");
 		D3D11Core::Get().SwapChain()->Present(0, 0);

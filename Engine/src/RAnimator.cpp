@@ -128,7 +128,8 @@ EAnimationType RAnimator::StringToAnimationType(const std::string& name) const
 		{"ABILITY3",			EAnimationType::ABILITY3},
 		{"ABILITY4",			EAnimationType::ABILITY4},
 		{"TAKE_DAMAGE",			EAnimationType::TAKE_DAMAGE},
-		{"PLACE_DEFENCE",		EAnimationType::PLACE_DEFENCE}
+		{"PLACE_DEFENCE",		EAnimationType::PLACE_DEFENCE},
+		{"DEAD",				EAnimationType::DEAD}
 	};
 
 	//Search for the keyword
@@ -165,7 +166,7 @@ bool RAnimator::UpdateTime(const EAnimationType& type)
 		//We don't add to the timer if we reached the end
 		if (!anim->reachedEnd)
 		{
-			double tick = anim->animation->GetTicksPerFrame() * Stats::Get().GetUpdateTime();
+			double tick = anim->animation->GetTicksPerFrame() * Stats::Get().GetFrameTime();
 
 			if (anim->currentTick != tick)
 			{
@@ -397,7 +398,7 @@ bool RAnimator::Create(const std::string& filename)
 					EAnimationType animType = StringToAnimationType(key);
 					if (animType != EAnimationType::NONE)
 					{
-						std::shared_ptr<RAnimation> animation = ResourceManager::Get().GetResource<RAnimation>(animName);
+						std::shared_ptr<RAnimation> animation = ResourceManager::Get().CopyResource<RAnimation>(animName, true);
 						if (animation)
 						{
 							animation_t animStruct;

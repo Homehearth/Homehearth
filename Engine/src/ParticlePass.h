@@ -8,13 +8,19 @@ struct ParticleUpdate
 	sm::Vector4 emitterPosition;;
 	float deltaTime;
 	UINT counter;
-	UINT lifeTime;
+	float lifeTime;
 	float particleSizeMulitplier;
+	float speed;
+};
+ALIGN16
+struct ParticleModePUpdate 
+{
+	PARTICLEMODE type;
 };
 
 class ParticlePass :public IRenderPass
 {
-private:
+public:
 
 	UINT m_offset = sizeof(Particle_t);
 	UINT m_stride = 0;
@@ -24,7 +30,10 @@ private:
 	std::vector<float>					m_randomNumbers;
 
 	dx::ConstantBuffer<ParticleUpdate>	m_constantBufferParticleUpdate;
+	dx::ConstantBuffer<ParticleModePUpdate>	m_constantBufferParticleMode;
+
 	ParticleUpdate						m_particleUpdate;
+	ParticleModePUpdate					m_particleModeUpdate;
 
 	ComPtr<ID3D11ShaderResourceView>	m_randomNumbersSRV;
 	ComPtr<ID3D11Buffer>				m_randomNumbersBuffer;
@@ -38,6 +47,8 @@ private:
 	void CreateRandomNumbers();
 
 public:
+	Skybox* m_skyboxRef = nullptr;
+
 	ParticlePass() = default;
 	virtual ~ParticlePass() = default;
 

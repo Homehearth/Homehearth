@@ -10,6 +10,8 @@
 #include "IShop.h"
 #include "QuadTree.h"
 #include "Cycler.h"
+#include "HouseManager.h"
+#include "SpreeHandler.h"
 /*
 		Simulation defines each ongoing simulation from the perspective of the server
 		gameID identifies the simulation which each player has to give the server to keep track
@@ -27,8 +29,13 @@ private:
 	Currency m_currency;
 	Lobby m_lobby;
 	IShop m_shop;
+	SpreeHandler m_spreeHandler;
 	std::unique_ptr<QuadTree> qt;
 	std::unique_ptr<QuadTree> qtDynamic;
+	sm::Vector3 TL = { 220.f, 0.75f, -353.f };
+	sm::Vector3 TR = { 197.f, 0.75f, -325.f };
+	sm::Vector3 BR = { 222.f, 0.75f, -300.f };
+	sm::Vector3 BL = { 247.f, 0.75f, -325.f };
 
 	HeadlessScene* m_pLobbyScene;
 	HeadlessScene* m_pGameScene;
@@ -42,17 +49,18 @@ private:
 	std::unordered_map<ecs::Component, std::vector<Entity>> m_updatedComponents;
 
 	int currentRound;
-
+	
 	void InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg, const std::bitset<ecs::Component::COMPONENT_MAX>& componentMask = UINT32_MAX) const;
-	message<GameMsg> AllEntitiesMessage()const;
 
 	uint32_t GetTick()const;
 
 	//Game play related
-	Timer waveTimer;
+	uint32_t m_wavesSurvived;
+
 	std::queue<Wave> waveQueue;
 	std::queue<sm::Vector3> m_spawnPoints;
-	
+	HouseManager houseManager;
+
 	void OnNetworkEntityCreate(entt::registry& reg, entt::entity entity);
 	void OnNetworkEntityDestroy(entt::registry& reg, entt::entity entity);
 
@@ -63,6 +71,7 @@ private:
 
 public:
 	Cycler m_timeCycler;
+
 	Simulation(Server* pServer, HeadlessEngine* pEngine);
 	virtual ~Simulation() = default;
 	
@@ -70,7 +79,7 @@ public:
 	void JoinLobby(uint32_t gameID, uint32_t playerID, const std::string& name = "Noobie");
 	void LeaveLobby(uint32_t playerID);
 
-	bool Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* mapColliders);
+	bool Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* mapColliders, std::unordered_map<std::string, comp::OrientedBoxCollider>* houseColliders);
 	void Destroy();
 
 	void NextTick();
@@ -84,6 +93,8 @@ public:
 
 	GridSystem& GetGrid();
 	Currency& GetCurrency();
+
+	void IncreaseWavesSurvived();
 
 	void SetLobbyScene();
 	void SetGameOver();
@@ -110,4 +121,5 @@ public:
 	Entity GetPlayer(uint32_t playerID)const;
 
 	void UseShop(const ShopItem& item, const uint32_t& player);
+	void UpgradeDefence(const uint32_t& id);
 };

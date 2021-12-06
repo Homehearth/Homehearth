@@ -15,8 +15,8 @@ namespace rtd
 		draw_t m_drawOpts;
 		MoneyUI* m_moneyRef = nullptr;
 
-		bool m_buttonHovering[5] = { false };
-		std::function<void()> m_functions[5] = {nullptr};
+		bool m_buttonHovering[6] = { false };
+		std::function<void()> m_functions[6] = {nullptr};
 
 	public:
 

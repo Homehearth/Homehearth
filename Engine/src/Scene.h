@@ -12,6 +12,8 @@ private:
 	DoubleBuffer<std::vector<comp::RenderableDebug>> m_debugRenderableCopies;
 	DoubleBuffer<std::vector<std::pair<comp::Renderable,comp::Animator>>> m_renderableAnimCopies;
 
+	DoubleBuffer<std::vector<comp::EmitterParticle>> m_emitterParticlesCopies;
+
 	dx::ConstantBuffer<basic_model_matrix_t> m_publicBuffer;
 	dx::ConstantBuffer<collider_hit_t> m_ColliderHitBuffer;
 	dx::ConstantBuffer<camera_Matrix_t> m_publicDecalBuffer;
@@ -22,11 +24,13 @@ private:
 	Lights m_lights;
 	Skybox m_sky;
 
+
 	bool IsRender3DReady() const;
 	bool IsRenderDebugReady() const;
 	bool IsRender2DReady() const;
 
 public:
+	uint32_t* m_localPIDRef;
 	DoubleBuffer<std::vector<comp::Renderable>> m_renderableCopies;
 	Scene();
 
@@ -48,7 +52,12 @@ public:
 	void RenderAnimation();
 	void Render2D();
 	void RenderSkybox();
-	void RenderShadow(const light_t& light);
+
+	void RenderShadow();
+	void RenderShadowAnimation();
+
+	void RenderParticles(void* pass);
+
 	Skybox* GetSkybox();
 
 	bool IsRenderReady() const;
@@ -63,6 +72,7 @@ public:
 	//ImGui data for disable/enable 
 	bool* GetIsRenderingColliders();
 	Lights* GetLights();
+	void UpdateSkybox(float pTime);
 	
 	DoubleBuffer<std::vector<comp::Renderable>>*		GetBuffers();
 	DoubleBuffer<std::vector<comp::Renderable>>*		GetTransparentBuffers();

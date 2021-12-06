@@ -10,7 +10,7 @@ loopable		PRIMARY_ATTACK		0
 loopable		TAKE_DAMAGE			0
 
 
-blendstate		IDLE				MOVE				1.4
+blendstate		IDLE				MOVE				1.0
 blendstate 		MOVE				IDLE				0.5
 
 	

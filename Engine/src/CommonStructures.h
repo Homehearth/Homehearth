@@ -8,35 +8,82 @@ constexpr int MAX_HEALTH = 100;
 /*
 	Change these to tweak the day and night cycle timers.
 */
-constexpr uint32_t TIME_LIMIT_DAY = 60;
+constexpr uint32_t TIME_LIMIT_DAY = 200;
 constexpr uint32_t TIME_LIMIT_NIGHT = 50;
 constexpr uint32_t TIME_LIMIT_MORNING = 10;
+constexpr float ROTATION = 180.0f / (float)(TIME_LIMIT_DAY + TIME_LIMIT_MORNING);
 
-enum class Cycle : UINT
+const float DAY_DURATION	= 150.0f;
+const float MORNING			= 0.0f;
+const float DAY				= 0.1f;
+const float MID_DAY			= 0.3f;
+const float EVENING			= 0.45f;
+const float NIGHT			= 0.5f;
+const float EARLY_MORNING	= 0.9f;
+
+
+enum class CyclePeriod : UINT
 {
-	DAY,
-	NIGHT,
-	MORNING,
+	DAY,		// 0
+	NIGHT,		// 1
+	MORNING,	// 2
+	EVENING,	// 3
 };
 
 struct Currency
 {
 private:
-	uint32_t m_amount = 0;
-
+	uint32_t m_amount = 35;
+	uint32_t m_totalGathered = 0;
 public:
+	bool m_hasUpdated = false;
+
 	uint32_t GetAmount()const
 	{
 		return m_amount;
 	}
-	uint32_t& GetAmountRef()
+	uint32_t GetTotalGathered() const
 	{
-		return m_amount;
+		return m_totalGathered;
+	}
+	void IncreaseTotal(uint32_t amount)
+	{
+		m_totalGathered += amount;
+	}
+	void DecreaseTotal(uint32_t amount)
+	{
+		m_totalGathered -= amount;
 	}
 	void Zero()
 	{
+		m_totalGathered = 0;
 		m_amount = 0;
+		m_hasUpdated = true;
 	}
+	void operator +=(uint32_t money)
+	{
+		m_amount += money;
+		m_hasUpdated = true;
+	}
+	void operator -=(uint32_t money)
+	{
+		m_amount -= money;
+		m_hasUpdated = true;
+	}
+	void operator = (uint32_t money)
+	{
+		m_amount = money;
+		m_hasUpdated = true;
+	}
+	bool operator >= (uint32_t money)
+	{
+		return m_amount >= money;
+	}
+	bool operator < (uint32_t money)
+	{
+		return m_amount < money;
+	}
+
 };
 
 struct MinMaxProj_t
@@ -58,17 +105,20 @@ enum class PARTICLEMODE : UINT
 	BLOOD,
 	LEAF,
 	WATERSPLASH,
-	SMOKE,
+	SMOKEPOINT,
+	SMOKEAREA,
 	SPARKLES,
 	RAIN,
-	DUST
+	DUST,
+	MAGEHEAL,
+	MAGERANGE
 };
 
-enum class TowerTypes : UINT
-{
-	LONG,
-	SHORT
-};
+//enum class EDefenceType : UINT
+//{
+//	SMALL,	//1x1
+//	LARGE	//1x3
+//};
 
 struct Vector2I
 {
@@ -239,12 +289,12 @@ struct Ray_t
 
 struct InputState
 {
-	int axisHorizontal : 2;
-	int axisVertical : 2;
-	bool leftMouse : 1;
-	bool rightMouse : 1;
-	bool key_b : 1;
-	bool key_shift : 1;
+	int		axisHorizontal	: 2;
+	int		axisVertical	: 2;
+	bool	leftMouse		: 1;
+	bool	rightMouse		: 1;
+	bool	key_shift		: 1;
+	int		mousewheelDir	: 8;
 
 	Ray_t mouseRay;
 
@@ -264,7 +314,7 @@ enum class GameMsg : uint8_t
 	Lobby_Update,
 	Lobby_PlayerLeft,
 	Lobby_PlayerJoin,
-	
+
 	Server_AssignID,
 	Server_GetPing,
 
@@ -276,41 +326,78 @@ enum class GameMsg : uint8_t
 	Game_RemoveEntity,
 	Game_BackToLobby,
 	Game_WaveTimer,
+	Game_Time,
 
+	Game_PlaySound,
 	Game_ClassSelected,
 	Game_PlayerAttack,
+	Game_Spree,
 	Game_AddNPC,
 	Game_RemoveNPC,
 	Game_PlayerInput,
 	Game_Money,
-	Game_UseShop,
+	Game_UpdateShopItem,
+	Game_UpgradeDefence,
 	Game_ChangeAnimation,
+	Game_Cooldown,
 	Game_StartSpectate,
 	Game_StopSpectate,
 	Game_Over
 };
 
+enum class ESoundEvent : uint32_t
+{
+	NONE,
+	Player_OnMovement,
+	Player_OnMeleeAttack,
+	Player_OnMeleeAttackHit,
+	Player_OnRangeAttack,
+	Player_OnRangeAttackHit,
+	Player_OnDmgDealt,
+	Player_OnDmgRecieved,
+	Player_OnHealing,
+	Player_OnCastDash,
+	Player_OnCastBlink,
+	Player_OnHealingRecieved,
+	Player_OnDeath,
+	Player_OnRespawn,
+
+	Enemy_OnMovement,
+	Enemy_OnMeleeAttack,
+	Enemy_OnRangeAttack,
+	Enemy_OnDmgDealt,
+	Enemy_OnDmgRecieved,
+	Enemy_OnDeath,
+
+	Game_OnPurchase,
+	Game_OnHouseDestroyed,
+	Game_OnDefencePlaced,
+	Game_OnDefenceDestroyed,
+
+	ENUM_SIZE
+};
+
+
+enum class AbilityIndex : uint8_t
+{
+	Primary,
+	Secondary,
+	Dodge,
+
+	DEFAULT
+};
+
 enum class ShopItem : uint8_t
 {
-	/*
-		Temporary proof of concept upgrades.
-	*/
+	None,
 	Primary_Upgrade,
 	Secondary_Upgrade,
 	Tower_Upgrade,
 	Speed_Upgrade,
 	Heal,
-
-	/*
-		Lets the player build a 3x1 tower when pressing build key.
-	*/
-	LONG_TOWER,
-
-	/*
-		Lets the player build a 1x1 tower when pressing build key.
-	*/
-	SHORT_TOWER,
-
+	Defence1x1,		//Lets the player build a 1x3 tower when pressing build key.
+	Defence1x3,		//Lets the player build a 1x1 tower when pressing build key.
+	Destroy_Tool,
 	NR_OF
 };
 
@@ -351,6 +438,20 @@ struct basic_model_matrix_t
 };
 
 ALIGN16
+struct texture_effect_t
+{
+	unsigned int frequency = 0;
+	unsigned int amplitude = 0;
+	float counter   = 0.f;
+};
+
+ALIGN16
+struct delta_time_t
+{
+	float delta;
+};
+
+ALIGN16
 struct collider_hit_t
 {
 	int hit;
@@ -369,14 +470,15 @@ struct camera_Matrix_t
 ALIGN16
 struct light_t
 {
-	sm::Vector4 position = {};	//Only in use on Point Lights
-	sm::Vector4 direction = {};	//Only in use on Directional Lights
-	sm::Vector4 color = {};	//Color of the Lamp
-	float		range = 0;	//Only in use on Point Lights
-	TypeLight	type = TypeLight::DIRECTIONAL;	// 0 = Directional, 1 = Point
+	sm::Vector4 position = {};	//Only in use on Point Lights						
+	sm::Vector4 direction = {};	//Only in use on Directional Lights					
+	sm::Vector4 color = {};	//Color of the Lamp										
+	float		range = 0;	//Only in use on Point Lights							
+	TypeLight	type = TypeLight::DIRECTIONAL;	// 0 = Directional, 1 = Point		
 	UINT		enabled = 0;	// 0 = Off, 1 = On
+	float intensity = 0;	//Intensity of the Lamp
 	sm::Matrix lightMatrix = sm::Matrix::Identity;
-	float		intensity = 0;	//Intensity of the Lamp
+	int	shadowIndex = 0;
 };
 
 static struct GridProperties_t
@@ -476,4 +578,16 @@ struct Particle_t
 	sm::Vector2		size = { 1, 1, };
 	PARTICLEMODE	type = PARTICLEMODE::BLOOD;
 	UINT			life = 0;
+};
+
+struct audio_t
+{
+	ESoundEvent type;
+	sm::Vector3 position;
+	float volume;
+	float minDistance;
+	bool is3D;
+	bool isUnique;
+	bool shouldBroadcast;
+	bool playLooped;
 };

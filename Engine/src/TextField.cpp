@@ -64,7 +64,7 @@ rtd::TextField::TextField(const draw_text_t& opts, size_t textLimit, bool isUsed
 {
 	m_opts = opts;
 	m_text = std::make_unique<Text>("", m_opts);
-	m_canvas = std::make_unique<Canvas>(D2D1_COLOR_F({ 1.0f, 1.0f, 1.0f, 1.0f }), draw_t(m_opts.x_pos, m_opts.y_pos, m_opts.x_stretch, m_opts.y_stretch));
+	m_canvas = std::make_unique<Canvas>(D2D1_COLOR_F({ 0.8f, 0.2f, 0.3f, 1.0f }), draw_t(m_opts.x_pos, m_opts.y_pos, m_opts.x_stretch, m_opts.y_stretch));
 	if (m_isUsed)
 	{
 		m_canvas->SetBorderColor(borderColor);
@@ -73,6 +73,9 @@ rtd::TextField::TextField(const draw_text_t& opts, size_t textLimit, bool isUsed
 	{
 		m_canvas->SetBorderColor({ borderColor.r, borderColor.g, borderColor.b, 0.f });
 	}
+
+	m_canvas->SetBorderThickness(LineWidth::THICC);
+	m_canvas->SetBorderShape(Shapes::RECTANGLE_OUTLINED);
 
 	m_finalInput = false;
 	m_stringText = "";

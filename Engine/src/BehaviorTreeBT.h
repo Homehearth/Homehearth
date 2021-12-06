@@ -15,3 +15,5 @@
 #include "InRangeCBT.h"
 #include "GenPathCBT.h"
 #include "FindBuildingTargetCBT.h"
+#include "VillagerTargetNodeCBT.h"
+#include "HideVillagerCBT.h"

@@ -11,6 +11,7 @@ namespace ecs
 {
 	enum Component : uint32_t
 	{
+		PARTICLEMITTER,
 		TRANSFORM,
 		VELOCITY,
 		MESH_NAME,
@@ -18,8 +19,8 @@ namespace ecs
 		HEALTH,
 		BOUNDING_ORIENTED_BOX,
 		BOUNDING_SPHERE,
-		LIGHT,
 		PLAYER,
+		COST,
 		COMPONENT_COUNT,
 		COMPONENT_MAX = 32
 	};
@@ -50,6 +51,11 @@ namespace ecs
 			bool syncColliderScale = false;
 		};
 
+		struct Cost
+		{
+			uint32_t cost;
+		};
+
 		struct Decal
 		{
 			sm::Matrix viewPoint;
@@ -72,37 +78,108 @@ namespace ecs
 
 		struct EmitterParticle
 		{
-			UINT								nrOfParticles = 0;
-			PARTICLEMODE						type = PARTICLEMODE::BLOOD;
-			float								lifeTime = 0.f;
-			float								sizeMulitplier = 0.f;
-			float								speed = 0.f;
+			sm::Vector3							positionOffset	= { 0,0,0 };
+			UINT								nrOfParticles	= 0;
+			PARTICLEMODE						type			= PARTICLEMODE::BLOOD;
+			float								lifeTime		= 0.f;
+			float								sizeMulitplier	= 0.f;
+			float								speed			= 0.f;
+			bool								hasDeathTimer	= false;
+			float								lifeLived		= 0.f;
 
-			std::shared_ptr<RTexture>			texture = nullptr;
-			std::shared_ptr<RTexture>			opacityTexture = nullptr;
-			ComPtr<ID3D11Buffer>				particleBuffer = nullptr;
-			ComPtr<ID3D11ShaderResourceView>	particleSRV = nullptr;
-			ComPtr<ID3D11UnorderedAccessView>	particleUAV = nullptr;
+			std::string textureName								= "";
+			std::string opacityTextureName						= "";
 
-			EmitterParticle(std::string textureName = "thisisfine.png ", std::string opacityTextureName = "thisisfine_Opacity.png", int nrOfParticles = 10, float sizeMulitplier = 1.f, PARTICLEMODE type = PARTICLEMODE::BLOOD, float lifeTime = 2.f, float speed = 1)
+			std::shared_ptr<RTexture>			texture			= nullptr;
+			std::shared_ptr<RTexture>			opacityTexture	= nullptr;
+			ComPtr<ID3D11Buffer>				particleBuffer	= nullptr;
+			ComPtr<ID3D11ShaderResourceView>	particleSRV		= nullptr;
+			ComPtr<ID3D11UnorderedAccessView>	particleUAV		= nullptr;
+
+			component::Transform				transformCopy;
+
+			EmitterParticle(sm::Vector3 positionOffset = {0,0,0}, int nrOfParticles = 10, float sizeMulitplier = 1.f, PARTICLEMODE type = PARTICLEMODE::BLOOD, float lifeTime = 2.f, float speed = 1, bool hasDeathTimer = false)
 			{
-				//If no texture name take default texture else use the given name
-				if (textureName == "")
-					texture = ResourceManager::Get().GetResource<RTexture>("thisisfine.png ");
-				else
-					texture = ResourceManager::Get().GetResource<RTexture>(textureName);
+				textureName = "thisisfine.png";
+				opacityTextureName = "round_Opacity.png";
 
-				//If no opacity texture name take default opacity texture else use given name
-				if (opacityTextureName == "")
-					opacityTexture = ResourceManager::Get().GetResource<RTexture>("thisisfine_Opacity.png");
-				else
-					opacityTexture = ResourceManager::Get().GetResource<RTexture>(opacityTextureName);
+				if (type == PARTICLEMODE::BLOOD)
+				{
+					textureName = "BloodParticle.png";
+				}
+				else if (type == PARTICLEMODE::LEAF)
+				{
+				}
+				else if (type == PARTICLEMODE::WATERSPLASH)
+				{
+					textureName = "waterSplash.png";
+				}
+				else if (type == PARTICLEMODE::SMOKEPOINT || type == PARTICLEMODE::SMOKEAREA)
+				{
+					textureName = "smoke.png";
+					opacityTextureName = "smoke_opacity.png";
+				}
+				else if (type == PARTICLEMODE::SPARKLES)
+				{
+				}
+				else if (type == PARTICLEMODE::RAIN)
+				{
+				}
+				else if (type == PARTICLEMODE::DUST)
+				{
+				}				
+				else if (type == PARTICLEMODE::MAGEHEAL)
+				{
+					textureName = "MageHeal.png";
+				}
+				else if (type == PARTICLEMODE::MAGERANGE)
+				{
+					textureName = "fire.png";
+					opacityTextureName = "fire_opacity.png";
+				}
 
-				this->nrOfParticles = (UINT)nrOfParticles;
-				this->type = type;
-				this->lifeTime = lifeTime;
-				this->sizeMulitplier = sizeMulitplier;
-				this->speed = speed;
+				texture = ResourceManager::Get().GetResource<RTexture>(textureName);
+				opacityTexture = ResourceManager::Get().GetResource<RTexture>(opacityTextureName);
+
+				if (!texture)
+				{
+					LOG_ERROR("Couldnt load particle texture %s", textureName.c_str());
+				}
+				if (!opacityTexture)
+				{
+					LOG_ERROR("Couldnt load particle opacity texture %s", opacityTextureName.c_str());
+				}
+				
+				this->nrOfParticles		= (UINT)nrOfParticles;
+				this->type				= type;
+				this->lifeTime			= lifeTime;
+				this->sizeMulitplier	= sizeMulitplier;
+				this->speed				= speed;
+				this->positionOffset	= positionOffset;
+				this->hasDeathTimer		= hasDeathTimer;
+			}
+		};
+
+		struct PARTICLEEMITTER 
+		{
+			sm::Vector3		positionOffset	= { 0,0,0 };
+			UINT			nrOfParticles	= 0;
+			PARTICLEMODE	type			= PARTICLEMODE::BLOOD;
+			float			lifeTime		= 0.f;
+			float			sizeMulitplier	= 0.f;
+			float			speed			= 0.f;
+			bool			hasDeathTimer	= false;
+			float			lifeLived		= 0.f;
+
+			PARTICLEEMITTER(sm::Vector3 positionOffset = { 0,0,0 }, int nrOfParticles = 10, float sizeMulitplier = 1.f, PARTICLEMODE type = PARTICLEMODE::BLOOD, float lifeTime = 2.f, float speed = 1, bool hasDeathTimer = false)
+			{
+				this->nrOfParticles		= (UINT)nrOfParticles;
+				this->type				= type;
+				this->lifeTime			= lifeTime;
+				this->sizeMulitplier	= sizeMulitplier;
+				this->speed				= speed;
+				this->positionOffset	= positionOffset;
+				this->hasDeathTimer		= hasDeathTimer;
 			}
 		};
 
@@ -117,6 +194,7 @@ namespace ecs
 			basic_model_matrix_t		data;
 			bool						visible = true;
 			bool						isSolid = true;
+			bool						castShadow = true;
 		};
 
 		struct Animator
@@ -129,6 +207,11 @@ namespace ecs
 		{
 			EAnimationType lastSend;	//Send to user last time
 			EAnimationType toSend;		//Going to be send this update
+		};
+
+		struct AudioState
+		{
+			std::queue<audio_t> data;
 		};
 
 		// Used on server side
@@ -172,6 +255,34 @@ namespace ecs
 			std::shared_ptr<BT::ParentNode> root;
 		};
 
+		struct Villager
+		{
+			std::vector<Node*> path;
+			//Stress implementation - fix later -
+			std::vector<sm::Vector3> idlePos = {sm::Vector3(250.f, 0.f, -320.f),
+												sm::Vector3(212.f, 0.f, -297.f),
+												sm::Vector3(237.f, 0.f, -297.f),
+												sm::Vector3(325.f, 0.f, -370.f),
+												sm::Vector3(330.f, 0.f, -285.f),
+												sm::Vector3(135.f, 0.f, -374.f)}; //Positions villager can go and idle at
+			Node* currentNode;
+			Entity homeHouse;
+			float movementSpeed = 15.f;
+			bool isHiding = false;
+			bool isFleeing = false;
+		};
+
+		struct House
+		{
+			NameType houseType = NameType::EMPTY;
+			NameType doorType = NameType::EMPTY;
+			NameType roofType = NameType::EMPTY;
+			Entity door;
+			Entity houseRoof;
+			Node* attackNode = nullptr; //AI can walk to this node to attack this house
+			bool isDead;
+		};
+		
 
 		struct TemporaryPhysics
 		{
@@ -207,6 +318,14 @@ namespace ecs
 
 		struct Player
 		{
+			enum class PlayerType : uint16_t
+			{
+				NONE,
+				PLAYER_ONE,
+				PLAYER_TWO,
+				PLAYER_THREE,
+				PLAYER_FOUR
+			} playerType = PlayerType::NONE;
 			enum class State
 			{
 				IDLE,
@@ -235,9 +354,20 @@ namespace ecs
 			float respawnTimer;
 			bool isReady = false;
 			bool reachable = true;
-
+			
 			char name[12] = {};
-			TowerTypes towerSelected = TowerTypes::SHORT;
+
+			ShopItem		shopItem = ShopItem::None;
+
+			//Place defence option 
+			float			buildDistance = 32.0f;		//A tiles width is ~8
+			bool			rotateDefence = false;
+		};
+
+		
+		struct TileSet
+		{
+			std::vector<std::pair<UINT, UINT>> coordinates;
 		};
 
 		struct NPC
@@ -262,6 +392,7 @@ namespace ecs
 			float flickerTimer = 1.f;
 			float maxFlickerTime = 1.f;
 			bool increase;
+			float enabledTimer = 1.f;
 		};
 
 		struct Health

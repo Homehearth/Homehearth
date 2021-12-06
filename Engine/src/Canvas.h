@@ -35,6 +35,8 @@ namespace rtd
 		void SetColor(const D2D1_COLOR_F& new_color);
 		D2D1_COLOR_F& GetColor();
 		const draw_t GetOpts() const;
+		void SetBorderThickness(const LineWidth& thicc);
+		void SetBorderShape(const Shapes& shape);
 
 		void SetBorderColor(const D2D1_COLOR_F& new_color);
 		void HideBorder();

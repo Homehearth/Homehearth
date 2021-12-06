@@ -11,6 +11,8 @@ InputSystem::InputSystem(): m_kBState(), m_mouseState()
 	m_windowWidth = 0;
 	m_windowHeight = 0;
 	m_currentCamera = nullptr;
+	m_lastScrollValue = 0;
+	m_lastScrollDirection = 0;
 }
 
 void InputSystem::SetMouseWindow(const HWND& windowHandle, const int width, const int height)
@@ -104,6 +106,28 @@ bool InputSystem::CheckMouseKey(const MouseKey mouseButton, const KeyState state
 		return false;
 		break;
 	}
+}
+
+const int InputSystem::GetMouseWheelRotation()
+{
+	int currentValue = m_mouseState.scrollWheelValue;
+	int difference = currentValue - m_lastScrollValue;
+	m_lastScrollValue = currentValue; 
+	return difference;
+}
+
+const int InputSystem::GetMouseWheelDirection()
+{
+	int currentValue = m_mouseState.scrollWheelValue;
+	int difference = currentValue - m_lastScrollValue;
+	m_lastScrollValue = currentValue;
+
+	if (difference < 0)
+		m_lastScrollDirection = 1;
+	else if (difference > 0)
+		m_lastScrollDirection = -1;
+
+	return m_lastScrollDirection;
 }
 
 int InputSystem::GetAxis(Axis axis) const

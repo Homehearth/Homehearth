@@ -107,7 +107,10 @@ void Button::Draw()
 {
 	// Draw Order
 	if (m_border)
-		m_border->Draw();
+	{
+		if(m_border->IsVisible())
+			m_border->Draw();
+	}
 	if (m_picture)
 		m_picture->Draw();
 	if (m_canvas)
@@ -163,5 +166,12 @@ bool rtd::Button::CheckHover()
 void Button::OnClick()
 {
 	if(m_function)
+	{
+		audio_t audio = {};
+		audio.isUnique = false;
+		audio.volume = 0.3f;
+		SoundHandler::Get().PlaySound("ButtonClick", audio);
+
 		m_function();
+	}
 }

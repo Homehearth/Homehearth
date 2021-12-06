@@ -1,11 +1,15 @@
 #include "EnginePCH.h"
 #include "ShopUI.h"
 
-constexpr unsigned int TOWER_1X1_COST = 20;
-constexpr unsigned int TOWER_1X3_COST = 20;
+/*
+	DIFFERENT COSTS FOR THE SHOP. PURELY VISUAL NOTHING GAMEPLAY CHANGING.
+*/
+constexpr unsigned int TOWER_1X1_COST = 10;
+constexpr unsigned int TOWER_1X3_COST = 30;
 constexpr unsigned int PRIMARY_ABILITITY_COST = 10;
 constexpr unsigned int HEAL_COST = 5;
 constexpr unsigned int ARMOR_COST = 20;
+constexpr unsigned int REMOVE_DEFENCE_COST = 0;
 
 using namespace rtd;
 
@@ -62,6 +66,7 @@ bool ShopUI::CheckHover()
 	m_buttonHovering[2] = false;
 	m_buttonHovering[3] = false;
 	m_buttonHovering[4] = false;
+	m_buttonHovering[5] = false;
 
 	ElementState hoveringState = ElementState::NONE;
 
@@ -180,6 +185,29 @@ bool ShopUI::CheckHover()
 		hoveringState = ElementState::INSIDE;
 	}
 
+	// Remove defence button.
+	if (InputSystem::Get().GetMousePos().x > m_drawOpts.x_pos + m_drawOpts.width * 0.18f &&
+		InputSystem::Get().GetMousePos().x < m_drawOpts.x_pos + m_drawOpts.width * 0.77f &&
+		InputSystem::Get().GetMousePos().y > m_drawOpts.y_pos + m_drawOpts.height * 0.80f &&
+		InputSystem::Get().GetMousePos().y < m_drawOpts.y_pos + m_drawOpts.height)
+	{
+		m_buttonHovering[5] = true;
+
+		m_signTexture->SetVisiblity(true);
+		m_signTexture->SetPosition((FLOAT)InputSystem::Get().GetMousePos().x, (FLOAT)InputSystem::Get().GetMousePos().y);
+		m_signText->SetPosition((FLOAT)InputSystem::Get().GetMousePos().x + width * 0.019f, (FLOAT)InputSystem::Get().GetMousePos().y);
+		m_signText->SetText("Cost: " + std::to_string(REMOVE_DEFENCE_COST));
+
+		if (m_moneyRef->GetNetworkMoney() >= REMOVE_DEFENCE_COST)
+		{
+			m_signTexture->SetTexture("EnoughMoneySign.png");
+		}
+		else
+			m_signTexture->SetTexture("NotEnoughMoneySign.png");
+
+		hoveringState = ElementState::INSIDE;
+	}
+
 	if (hoveringState == ElementState::NONE)
 		m_signTexture->SetVisiblity(false);
 
@@ -229,16 +257,17 @@ ElementState ShopUI::CheckClick()
 				if (m_functions[4])
 					m_functions[4]();
 			}
+			if (m_buttonHovering[5])
+			{
+				if (m_functions[5])
+					m_functions[5]();
+			}
 			return ElementState::INSIDE;
 		}
 	}
 	else
 	{
-		// CheckCollisions if mouse key is pressed.
-		if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED))
-		{
-			return ElementState::OUTSIDE;
-		}
+		return ElementState::OUTSIDE;
 	}
 
 	return ElementState::NONE;

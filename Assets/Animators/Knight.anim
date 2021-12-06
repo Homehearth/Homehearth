@@ -11,6 +11,7 @@ loopable		PRIMARY_ATTACK		0
 loopable		TAKE_DAMAGE			0
 loopable		PLACE_DEFENCE		0
 
+tickSpeed		PRIMARY_ATTACK		38
 
 upperbody		PRIMARY_ATTACK		QuickRigCharacter_Spine
 upperbody		TAKE_DAMAGE			QuickRigCharacter_Spine
@@ -45,3 +46,18 @@ blendstate		PRIMARY_ATTACK		MOVE				0.2
 blendstate		MOVE				PLACE_DEFENCE		0
 blendstate		PLACE_DEFENCE		MOVE				0.2
 
+
+blendstate		IDLE				DEAD				0.1
+blendstate		DEAD				IDLE				0.2
+
+
+blendstate		MOVE				DEAD				0.1
+blendstate		DEAD				MOVE				0.2
+
+
+blendstate		IDLE				ABILITY1			0
+blendstate		ABILITY1			IDLE				0.1
+
+
+blendstate		MOVE				ABILITY1			0
+blendstate		ABILITY1			MOVE				0.1

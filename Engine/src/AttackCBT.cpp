@@ -33,7 +33,15 @@ BT::NodeStatus BT::AttackCBT::Tick()
 		return BT::NodeStatus::FAILURE;
 	}
 
-	attackAbility->targetPoint = target->GetComponent<comp::Transform>()->position;
+	if(target->GetComponent<comp::House>())
+	{
+		attackAbility->targetPoint = target->GetComponent<comp::OrientedBoxCollider>()->Center;
+	}
+	else
+	{
+		attackAbility->targetPoint = target->GetComponent<comp::Transform>()->position;
+	}
+
 
 	if (ecs::UseAbility(attackAbility))
 	{
