@@ -20,6 +20,7 @@ Game::Game()
 	this->m_waveCounter = 0;
 	this->m_gameID = -1;
 	this->m_inputState = {};
+	this->m_isSpectating = false;
 }
 
 uint32_t& Game::GetWaveCounter()
@@ -103,13 +104,29 @@ void Game::OnUserUpdate(float deltaTime)
 {
 	this->UpdateInput();
 
-	//DEBUG
-	Scene& scene = GetScene("Game");
-
 	//scene.ForEachComponent<comp::Light>([&](Entity e, comp::Light& l)
 	//	{
 	//		e.GetComponent<comp::SphereCollider>()->Center = sm::Vector3(l.lightData.position);
 	//	});
+
+	Scene& scene = GetScene("Game");
+	Entity e;
+	if (GetLocalPlayer(e))
+	{
+		comp::KillDeaths* p = e.GetComponent<comp::KillDeaths>();
+
+		// Update the death and kill counter.
+		if (p)
+		{
+			Collection2D* killColl = scene.GetCollection("KillCounter");
+			Collection2D* deathColl = scene.GetCollection("DeathCounter");
+			if (killColl && deathColl)
+			{
+				dynamic_cast<rtd::Text*>(killColl->elements[1].get())->SetText(std::to_string(p->kills));
+				dynamic_cast<rtd::Text*>(deathColl->elements[1].get())->SetText(std::to_string(p->deaths));
+			}
+		}
+	}
 
 }
 
@@ -1284,6 +1301,13 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 				{
 					e.AddComponent<comp::Cost>(c);
 				}
+				break;
+			}
+			case ecs::Component::KD:
+			{
+				comp::KillDeaths kd;
+				msg >> kd;
+				e.AddComponent<comp::KillDeaths>(kd);
 				break;
 			}
 			default:

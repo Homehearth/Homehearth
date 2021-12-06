@@ -8,7 +8,7 @@ float4 main(PixelIn input) : SV_TARGET
     static float LIGHT_RANGE = 215.0f;
     const float LIGHT_VOLUME_RANGE = 250.0f;
     static unsigned int STEPS = c_info.y;
-    const float SCATTERING = 1.0f;
+    const float SCATTERING = .85f;
     
     float3 lightVolume = float3(0.0f, 0.0f, 0.0f);
 	float3 camPos = c_cameraPosition.xyz;
@@ -17,6 +17,7 @@ float4 main(PixelIn input) : SV_TARGET
     float metallic = 0.0f;
     float roughness = 0.0f;
     const float gamma = 1.f / 2.2f;
+    const float3 scatter = float3(SCATTERING, SCATTERING, SCATTERING);
     
     //Normal Vector
     float3 N = normalize(input.normal);
@@ -102,7 +103,7 @@ float4 main(PixelIn input) : SV_TARGET
                                 float depth = t_shadowMaps.Sample(s_linear, float3(shadowCoords, shadowIndex));
                                 if (depth > cameraShadowSpace.z & ((saturate(shadowCoords.x) == shadowCoords.x) & (saturate(shadowCoords.y) == shadowCoords.y)))
                                 {
-                                    lightVolume += float3(SCATTERING, SCATTERING, SCATTERING);
+                                    lightVolume += scatter;
                                 }
                         
                                 currentPos += step;

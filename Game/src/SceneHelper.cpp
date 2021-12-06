@@ -465,7 +465,7 @@ namespace sceneHelp
 		float height = (float)game->GetWindow()->GetHeight();
 
 		float widthScale = height * (16.f / 9.f);
-		sm::Vector2 padding = { (widthScale / 64.f) , (widthScale / 64.f) / (16.f / 9.f) };
+		sm::Vector2 padding = { (widthScale / 128.f) , (widthScale / 64.f) / (16.f / 9.f) };
 
 		// Picture that will be drawn when player is in destroy mode.
 		Collection2D* bullDoze = new Collection2D;
@@ -503,9 +503,26 @@ namespace sceneHelp
 			nameCollection->Hide();
 		}
 
+		sm::Vector2 moneyScale = { widthScale / 8.0f, height / 11.0f };
+		sm::Vector2 moneyPos = { width - (moneyScale.x + padding.x), padding.y };
 		Collection2D* money = new Collection2D;
-		rtd::MoneyUI* mMoney = money->AddElement<rtd::MoneyUI>(draw_text_t(width - (widthScale / 8.0f + padding.x), padding.y, widthScale / 8.0f, height / 11.0f));
+		rtd::MoneyUI* mMoney = money->AddElement<rtd::MoneyUI>(draw_text_t(moneyPos.x, moneyPos.y, moneyScale.x, moneyScale.y));
 		scene.Add2DCollection(money, "MoneyUI");
+
+		Collection2D* waveAmount = new Collection2D;
+		waveAmount->AddElement<rtd::Picture>("Wave.png", draw_t(moneyPos.x - (moneyScale.x) * 0.50f - padding.x, padding.y, widthScale / 16.0f, height / 22.0f));
+		waveAmount->AddElement<rtd::Text>("0", draw_t(moneyPos.x - (moneyScale.x) * 0.50f - padding.x, padding.y, widthScale / 16.0f, height / 22.0f));
+		scene.Add2DCollection(waveAmount, "WaveCounter");
+
+		Collection2D* killAmount = new Collection2D;
+		killAmount->AddElement<rtd::Picture>("Kills.png", draw_t(moneyPos.x - (moneyScale.x) * 1.50f - padding.x * 3.0f, padding.y, widthScale / 16.0f, height / 22.0f));
+		killAmount->AddElement<rtd::Text>("0", draw_t(moneyPos.x - (moneyScale.x) * 1.50f - padding.x * 3.0f, padding.y, widthScale / 16.0f, height / 22.0f));
+		scene.Add2DCollection(killAmount, "KillCounter");
+
+		Collection2D* deathAmount = new Collection2D;
+		deathAmount->AddElement<rtd::Picture>("Deaths.png", draw_t(moneyPos.x - (moneyScale.x) * 1.00f - padding.x * 2.0f, padding.y, widthScale / 16.0f, height / 22.0f));
+		deathAmount->AddElement<rtd::Text>("0", draw_t(moneyPos.x - (moneyScale.x) * 1.00f - padding.x * 2.0f, padding.y, widthScale / 16.0f, height / 22.0f));
+		scene.Add2DCollection(deathAmount, "DeathCounter");
 
 		
 		Collection2D* abilities = new Collection2D;
@@ -612,16 +629,6 @@ namespace sceneHelp
 		Collection2D* spreeText = new Collection2D;
 		spreeText->AddElement<rtd::Text>("X1", draw_t(width - (width / 12.f), height - (height / 8.0f), widthScale / 12.f, height / 8.0f));
 		scene.Add2DCollection(spreeText, "SpreeText");
-
-		Collection2D* waveAmount = new Collection2D;
-		waveAmount->AddElement<rtd::Picture>("Wave.png", draw_t(width - (width / 8.0f), (height / 11.0f) + (height / 128.0f), width / 8.0f, height / 11.0f));
-		waveAmount->AddElement<rtd::Text>("0", draw_t(width - (width / 12.0f), (height / 11.0f) + (height / 128.0f), width / 12.0f, height / 11.0f));
-		scene.Add2DCollection(waveAmount, "WaveCounter");
-
-		Collection2D* killAmount = new Collection2D;
-		killAmount->AddElement<rtd::Picture>("Kills.png", draw_t(width - (width / 8.0f), ((height / 11.0f) * 2.0f) + ((height / 128.0f) * 2.0f), width / 8.0f, height / 11.0f));
-		killAmount->AddElement<rtd::Text>("0", draw_t(width - (width / 12.0f), ((height / 11.0f) * 2.0f) + ((height / 128.0f) * 2.0f), width / 12.0f, height / 11.0f));
-		scene.Add2DCollection(killAmount, "KillCounter");
 	}
 
 	void SetupInLobbyScreen(Game* game)

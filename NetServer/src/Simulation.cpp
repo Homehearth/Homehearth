@@ -122,6 +122,16 @@ void Simulation::InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg, c
 			}
 			break;
 		}
+		case ecs::Component::KD:
+		{
+			comp::KillDeaths* kd = entity.GetComponent<comp::KillDeaths>();
+			if (kd)
+			{
+				compSet.set(ecs::Component::KD);
+				msg << *kd;
+			}
+			break;
+		}
 		default:
 			LOG_WARNING("Trying to send unimplemented component %u", i);
 			break;
@@ -135,6 +145,7 @@ void Simulation::InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg, c
 void Simulation::ResetPlayer(Entity player)
 {
 	comp::Player* playerComp = player.GetComponent<comp::Player>();
+	comp::KillDeaths* kd = player.AddComponent<comp::KillDeaths>();
 	if (!playerComp)
 	{
 		LOG_WARNING("ResetPlayer: Entity is not a Player");
@@ -144,6 +155,8 @@ void Simulation::ResetPlayer(Entity player)
 	playerComp->runSpeed = 30.f;
 	playerComp->state = comp::Player::State::IDLE;
 	playerComp->isReady = false;
+	kd->kills = 0;
+	kd->deaths = 0;
 
 	comp::Transform* transform = player.AddComponent<comp::Transform>();
 	transform->position = playerComp->spawnPoint;
@@ -496,6 +509,7 @@ void Simulation::SendSnapshot()
 		compMask.set(ecs::Component::TRANSFORM);
 		compMask.set(ecs::Component::BOUNDING_ORIENTED_BOX);
 		compMask.set(ecs::Component::COST);
+		compMask.set(ecs::Component::KD);
 #if DEBUG_SNAPSHOT
 		compMask.set(ecs::Component::BOUNDING_SPHERE);
 #endif

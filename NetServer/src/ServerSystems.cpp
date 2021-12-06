@@ -598,11 +598,18 @@ void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money
 					false,
 				};
 
+				comp::KillDeaths* kd = entity.GetComponent<comp::KillDeaths>();
+				if (kd)
+				{
+					kd->deaths++;
+				}
+
 				if (p)
 				{
 					audio.type = ESoundEvent::Player_OnDeath;
 					p->state = comp::Player::State::SPECTATING;
 					entity.RemoveComponent<comp::Tag<TagType::DYNAMIC>>();
+
 				}
 				else if (entity.GetComponent<comp::Tag<TagType::DEFENCE>>())
 				{

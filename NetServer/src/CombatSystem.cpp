@@ -226,6 +226,8 @@ Entity CombatSystem::CreateAttackEntity(Entity entity, HeadlessScene& scene, com
 		attackRangeMultiplier = 1.3f;
 	}
 
+	attackEntity.AddComponent<comp::PlayerReference>()->player = entity;
+
 	sm::Vector3 targetDir = stats->targetPoint - transform->position;
 	targetDir.Normalize();
 	t->position = transform->position + targetDir * stats->attackRange * attackRangeMultiplier;
@@ -369,6 +371,20 @@ void CombatSystem::AddCollisionMeleeBehavior(Entity entity, Entity attackEntity,
 					other.AddComponent<comp::PARTICLEEMITTER>(sm::Vector3{ 0,6,0 }, 50, 5.f, PARTICLEMODE::BLOOD, 1.5f, 1.f, true);
 
 					scene.publish<EComponentUpdated>(other, ecs::Component::PARTICLEMITTER);
+
+					if (otherHealth->currentHealth <= 0)
+					{
+						scene.ForEachComponent<comp::KillDeaths>([&](Entity e, comp::KillDeaths& p) {
+
+							if (e == attackEntity.GetComponent<comp::PlayerReference>()->player)
+							{
+								p.kills++;
+								e.UpdateNetwork();
+							}
+
+							});
+					}
+						
 				}
 
 				//Smoke particles
