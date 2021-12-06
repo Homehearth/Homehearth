@@ -5,6 +5,7 @@
 namespace AIBehaviors
 {
 	void UpdateBlackBoard(HeadlessScene& scene);
+	void ClearBlackBoard(HeadlessScene& scene);
 
 	//This functions can define different behaviors trees.
 	

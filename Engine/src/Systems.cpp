@@ -97,9 +97,9 @@ void Systems::HealingSystem(HeadlessScene& scene, float dt)
 					entity.GetComponent<comp::Transform>()->position,
 					1.0f,
 					100.f,
+					true,
 					false,
-					false,
-					false,
+					true,
 					false,
 				};
 

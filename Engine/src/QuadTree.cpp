@@ -31,6 +31,35 @@ void QuadTree::GetSize(size_t& size)
 	}
 }
 
+void QuadTree::Query(std::set<Entity>& returnVec, const dx::BoundingFrustum& range)
+{
+	if (!m_boundary.Intersects(range))
+	{
+		return;
+	}
+
+	for (auto it = m_entities.begin(); it != m_entities.end();)
+	{
+		if (it->IsNull())
+		{
+			it = m_entities.erase(it);
+		}
+		else
+		{
+			returnVec.insert(*it);
+			it++;
+		}
+	}
+
+	if (m_divided)
+	{
+		this->NorthWest->Query(returnVec, range);
+		this->NorthEast->Query(returnVec, range);
+		this->SouthWest->Query(returnVec, range);
+		this->SouthEast->Query(returnVec, range);
+	}
+}
+
 bool QuadTree::Insert(const Entity& e)
 {
 	comp::OrientedBoxCollider* colliderBox = e.GetComponent<comp::OrientedBoxCollider>();

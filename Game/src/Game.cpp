@@ -50,7 +50,7 @@ void Game::UpdateNetwork(float deltaTime)
 
 		if (pingCheck > TARGET_PING_TIME)
 		{
-			this->PingServer();
+			//this->PingServer();
 			pingCheck -= TARGET_PING_TIME;
 		}
 
@@ -106,10 +106,10 @@ void Game::OnUserUpdate(float deltaTime)
 	//DEBUG
 	Scene& scene = GetScene("Game");
 
-	scene.ForEachComponent<comp::Light>([&](Entity e, comp::Light& l)
-		{
-			e.GetComponent<comp::SphereCollider>()->Center = sm::Vector3(l.lightData.position);
-		});
+	//scene.ForEachComponent<comp::Light>([&](Entity e, comp::Light& l)
+	//	{
+	//		e.GetComponent<comp::SphereCollider>()->Center = sm::Vector3(l.lightData.position);
+	//	});
 
 }
 
@@ -174,13 +174,17 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			UpdateEntityFromMessage(entity, msg, skip);
 		}
 
+		if (msg.payload.size() > 0)
+		{
+			LOG_ERROR("TCP FUCKED UP");
+		}
+
 		break;
 	}
 	case GameMsg::Game_UpdateComponent:
 	{
 		uint32_t count; // Could be more than one Entity
 		msg >> count;
-
 		for (uint32_t i = 0; i < count; i++)
 		{
 			uint32_t entityID;
@@ -198,6 +202,11 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 				LOG_WARNING("Updating component: Entity %u not in m_gameEntities, skipping over this comp!", entityID);
 			}
 			UpdateEntityFromMessage(entity, msg, skip);
+		}
+
+		if (msg.payload.size() > 0)
+		{
+			LOG_ERROR("TCP FUCKED UP");
 		}
 
 		break;
@@ -231,6 +240,11 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 				LOG_INFO("A remote player added!");
 				m_players[e.GetComponent<comp::Network>()->id] = e;
 			}
+		}
+
+		if (msg.payload.size() > 0)
+		{
+			LOG_ERROR("TCP FUCKED UP");
 		}
 
 		break;
@@ -270,6 +284,12 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 #ifdef _DEBUG
 		LOG_INFO("Removed %u entities", count);
 #endif
+
+		if (msg.payload.size() > 0)
+		{
+			LOG_ERROR("TCP FUCKED UP");
+		}
+
 		break;
 	}
 	case GameMsg::Game_BackToLobby:
@@ -416,6 +436,35 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		scoreText->SetText("Score: " + std::to_string(gatheredMoney));
 		rtd::Text* wavesText = dynamic_cast<rtd::Text*>(GetScene("GameOver").GetCollection("GameOver")->elements[2].get());
 		wavesText->SetText("Waves: " + std::to_string(wavesSurvived));
+
+		auto it = m_gameEntities.begin();
+
+		while (it != m_gameEntities.end())
+		{
+			it->second.Destroy();
+			it = m_gameEntities.erase(it);
+		}
+
+		m_isSpectating = false;
+
+		rtd::Button* readyText = dynamic_cast<rtd::Button*>(GetScene("Lobby").GetCollection("StartGame")->elements[0].get());
+		readyText->GetPicture()->SetTexture("Ready.png");
+
+		rtd::Button* wizardButton = dynamic_cast<rtd::Button*>(GetScene("Lobby").GetCollection("ClassButtons")->elements[0].get());
+		rtd::Button* warriorButton = dynamic_cast<rtd::Button*>(GetScene("Lobby").GetCollection("ClassButtons")->elements[1].get());
+		wizardButton->GetBorder()->SetVisiblity(false);
+		warriorButton->GetBorder()->SetVisiblity(true);
+		rtd::Picture* desc = dynamic_cast<rtd::Picture*>(GetScene("Lobby").GetCollection("ClassTextCanvas")->elements[0].get());
+		desc->SetTexture("WarriorDesc.png");
+		rtd::Picture* checkMark = dynamic_cast<rtd::Picture*>(GetScene("Lobby").GetCollection("playerIcon1")->elements[3].get());
+		checkMark->SetVisiblity(false);
+		checkMark = dynamic_cast<rtd::Picture*>(GetScene("Lobby").GetCollection("playerIcon2")->elements[3].get());
+		checkMark->SetVisiblity(false);
+		checkMark = dynamic_cast<rtd::Picture*>(GetScene("Lobby").GetCollection("playerIcon3")->elements[3].get());
+		checkMark->SetVisiblity(false);
+		checkMark = dynamic_cast<rtd::Picture*>(GetScene("Lobby").GetCollection("playerIcon4")->elements[3].get());
+		checkMark->SetVisiblity(false);
+
 		break;
 	}
 	case GameMsg::Lobby_Accepted:
@@ -555,7 +604,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 
 		for (uint8_t i = 0; i < count; i++)
 		{
-			char nameTemp[12] = {};
+			char nameTemp[13] = {};
 			uint32_t playerID;
 			comp::Player::Class classType;
 			bool isReady = false;
@@ -611,7 +660,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			rtd::Button* readyText = dynamic_cast<rtd::Button*>(GetScene("Lobby").GetCollection("StartGame")->elements[0].get());
 			if (readyText)
 			{
-				if (player->isReady)
+				if (player->isReady && m_players.size() > 1)
 				{
 					readyText->GetPicture()->SetTexture("NotReady.png");
 				}
@@ -663,21 +712,28 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	case GameMsg::Game_ChangeAnimation:
 	{
 		uint32_t id;
-		EAnimationType animtype = EAnimationType::NONE;
-		msg >> id >> animtype;
+		EAnimationType animType = EAnimationType::NONE;
+		uint16_t count;
+		msg >> count;
 
-		if (m_gameEntities.find(id) != m_gameEntities.end())
+		for (uint16_t i = 0; i < count; i++)
 		{
-			comp::Animator* animComp = m_gameEntities.at(id).GetComponent<comp::Animator>();
-			if (animComp)
+			msg >> id >> animType;
+
+			if (m_gameEntities.find(id) != m_gameEntities.end())
 			{
-				std::shared_ptr<RAnimator> anim = animComp->animator;
-				if (anim)
+				comp::Animator* animComp = m_gameEntities.at(id).GetComponent<comp::Animator>();
+				if (animComp)
 				{
-					anim->ChangeAnimation(animtype);
+					std::shared_ptr<RAnimator> anim = animComp->animator;
+					if (anim)
+					{
+						anim->ChangeAnimation(animType);
+					}
 				}
 			}
 		}
+
 		break;
 	}
 	case GameMsg::Game_Cooldown:
@@ -715,41 +771,9 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		}
 		break;
 	}
-	case GameMsg::Game_StartSpectate:
+	default:
 	{
-		m_players.at(m_localPID).GetComponent<comp::Player>()->state = comp::Player::State::SPECTATING;
-		auto it = m_players.begin();
-		while (it != m_players.end())
-		{
-			if (it->first != m_localPID && it->second.GetComponent<comp::Health>()->isAlive)
-			{
-				GetScene("Game").ForEachComponent<comp::Tag<TagType::CAMERA>>([&](Entity entt, comp::Tag<TagType::CAMERA>& t)
-					{
-						comp::Camera3D* c = entt.GetComponent<comp::Camera3D>();
-						if (c)
-						{
-							c->camera.SetFollowEntity(m_players.at(it->first));
-						}
-					});
-				m_spectatingID = it->first;
-				break;
-			}
-			it++;
-		}
-		break;
-	}
-	case GameMsg::Game_StopSpectate:
-	{
-		m_players.at(m_localPID).GetComponent<comp::Player>()->state = comp::Player::State::IDLE;
-		GetScene("Game").ForEachComponent<comp::Tag<TagType::CAMERA>>([&](Entity entt, comp::Tag<TagType::CAMERA>& t)
-			{
-				comp::Camera3D* c = entt.GetComponent<comp::Camera3D>();
-				if (c)
-				{
-					c->camera.SetFollowEntity(m_players.at(m_localPID));
-				}
-			});
-		m_spectatingID = -1;
+		LOG_ERROR("This message has an unknown header, should not happen..");
 		break;
 	}
 	}
@@ -884,7 +908,11 @@ void Game::SetShopItem(const ShopItem& whatToBuy)
 {
 	if (m_players.find(m_localPID) != m_players.end())
 	{
-		m_players.at(m_localPID).GetComponent<comp::Player>()->shopItem = whatToBuy;
+		comp::Player* p = m_players.at(m_localPID).GetComponent<comp::Player>();
+		if (p)
+		{
+			p->shopItem = whatToBuy;
+		}
 	}
 
 	network::message<GameMsg> msg;
@@ -898,7 +926,11 @@ const ShopItem Game::GetShopItem() const
 	ShopItem item = ShopItem::None;
 	if (m_players.find(m_localPID) != m_players.end())
 	{
-		item = m_players.at(m_localPID).GetComponent<comp::Player>()->shopItem;
+		comp::Player* p = m_players.at(m_localPID).GetComponent<comp::Player>();
+		if (p)
+		{
+			item = p->shopItem;
+		}
 	}
 	return item;
 }
@@ -954,9 +986,15 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 				{
 					switch (name)
 					{
+					case NameType::MESH_CUBE:
+					{
+						nameString = "Cube.obj";
+						break;
+					}
 					case NameType::MESH_WATERMILL:
 					{
 						nameString = "WaterMill.fbx";
+						e.AddComponent<comp::Watermill>();
 						break;
 					}
 					case NameType::MESH_WATERMILLHOUSE:
@@ -1167,11 +1205,28 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 			}
 			case ecs::Component::HEALTH:
 			{
-				comp::Health heal;
-				msg >> heal;
+				comp::Health hp;
+				msg >> hp;
 				if (!skip)
 				{
-					e.AddComponent<comp::Health>(heal);
+					if (GetCurrentScene() == &GetScene("Game"))
+					{
+						if (e == m_players.at(m_localPID))
+						{
+							if (!hp.isAlive)
+							{
+								m_isSpectating = true;
+							}
+							else
+							{
+								if (m_isSpectating)
+								{
+									m_isSpectating = false;
+								}
+							}
+						}
+					}
+					e.AddComponent<comp::Health>(hp);
 				}
 				break;
 			}
@@ -1262,23 +1317,25 @@ void Game::UpdateInput()
 		case ShopItem::None:
 		{
 			m_inputState.rightMouse = true;
-			if (m_localPID != -1 && m_players.size() > 0 && m_players.at(m_localPID).GetComponent<comp::Player>()->state == comp::Player::State::SPECTATING)
+			if (m_isSpectating)
 			{
 				auto it = m_players.begin();
 				while (it != m_players.end())
 				{
-					if (it->first != m_localPID && it->first != m_spectatingID && it->second.GetComponent<comp::Health>()->isAlive)
+					// Don't spectate yourself you are dead & check if other player is alive
+					if (it->first != m_localPID && it->second.GetComponent<comp::Health>()->isAlive)
 					{
-						GetScene("Game").ForEachComponent<comp::Tag<TagType::CAMERA>>([&](Entity entt, comp::Tag<TagType::CAMERA>& t)
+						Camera* cam = GetScene("Game").GetCurrentCamera();
+
+						if (cam->GetCameraType() == CAMERATYPE::PLAY)
+						{
+							// Check so we are not already following this entity
+							if (cam->GetTargetEntity() != it->second)
 							{
-								comp::Camera3D* c = entt.GetComponent<comp::Camera3D>();
-								if (c)
-								{
-									c->camera.SetFollowEntity(m_players.at(it->first));
-								}
-							});
-						m_spectatingID = it->first;
-						break;
+								cam->SetFollowEntity(it->second);
+								break;
+							}
+						}
 					}
 					it++;
 				}

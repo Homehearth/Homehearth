@@ -198,3 +198,8 @@ void Lobby::RemovePlayer(uint32_t playerID)
 
 	LOG_INFO("Removed player %u from scene", playerID);
 }
+
+void Lobby::Clear()
+{
+	m_players.clear();
+}

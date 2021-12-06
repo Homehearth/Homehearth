@@ -18,7 +18,7 @@ void Renderer::Initialize(Window* pWindow)
 	m_waterEffectPass.SetEnable(true);
 
     //AddPass(&m_depthPass);
-    AddPass(&m_basePass);
+    //AddPass(&m_basePass);
     AddPass(&m_textureEffectPass);
 	AddPass(&m_waterEffectPass);
 	m_d3d11 = &D3D11Core::Get();

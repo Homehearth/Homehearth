@@ -17,6 +17,11 @@ bool BT::MoveCBT::EscapeCurrentNode(const Entity entity)
 	comp::Velocity* velocity = entity.GetComponent<comp::Velocity>();
 	comp::Transform* transform = entity.GetComponent<comp::Transform>();
 
+	if (!npc)
+	{
+		return false;
+	}
+
 	const std::vector<std::vector<std::shared_ptr<Node>>> nodes = Blackboard::Get().GetPathFindManager()->GetNodes();
 	const int currentX = npc->currentNode->id.x;
 	const int currentY = npc->currentNode->id.y;

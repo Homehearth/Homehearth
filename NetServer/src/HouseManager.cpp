@@ -24,21 +24,6 @@ void HouseManager::InitializeHouses(HeadlessScene& scene, QuadTree* qt)
 	Entity waterMillHouse = CreateHouse(scene, NameType::MESH_WATERMILLHOUSE, NameType::MESH_DOOR1, NameType::EMPTY);
 	Entity waterMill = CreateHouse(scene, NameType::MESH_WATERMILL, NameType::EMPTY, NameType::EMPTY);
 
-	PlayersPosition_t allPlayers;
-
-	allPlayers.players.emplace_back(villager1);
-	allPlayers.players.emplace_back(villager2);
-	allPlayers.players.emplace_back(villager3);
-	allPlayers.players.emplace_back(villager4);
-	allPlayers.players.emplace_back(villager5);
-	allPlayers.players.emplace_back(villager6);
-
-	Blackboard::Get().AddValue<PlayersPosition_t>("players", allPlayers);
-
-
-
-
-
 	waterMill.GetComponent<comp::House>()->isDead = true;
 
 	//Insert houses to quad tree
@@ -192,13 +177,18 @@ Entity HouseManager::CreateHouse(HeadlessScene& scene, NameType houseType, NameT
 	Entity houseEntity = scene.CreateEntity();
 	houseEntity.AddComponent<comp::MeshName>()->name = houseType;
 	houseEntity.AddComponent<comp::Transform>();
-	houseEntity.AddComponent<comp::Tag<TagType::STATIC>>();
+	houseEntity.AddComponent<comp::Tag<STATIC>>();
 	houseEntity.AddComponent<comp::Network>();
 	houseEntity.AddComponent<comp::Health>()->maxHealth = m_houseHealth;
 	houseEntity.GetComponent<comp::Health>()->currentHealth = m_houseHealth;
 	houseEntity.AddComponent<comp::Tag<GOOD>>();
 	comp::House* house = houseEntity.AddComponent<comp::House>();
 	house->houseType = houseType;
+
+	if (houseType == NameType::MESH_WATERMILL)
+	{
+		houseEntity.GetComponent<comp::Transform>()->position = { 270.f, 12.f, -389.f };
+	}
 
 	//Add door if door type was specified
 	if (doorType != NameType::EMPTY)
