@@ -344,10 +344,11 @@ namespace sceneHelp
 		Collection2D* connectFields = new Collection2D;
 		rtd::TextField* ipField = connectFields->AddElement<rtd::TextField>(draw_text_t((width / 2) - (widthScale * 0.25), height * 0.55f, widthScale * 0.25f, D2D1Core::GetDefaultFontSize()), 30, true);
 		ipField->SetDescriptionText("IP Address:");
-		padding = (widthScale / 3.33f) + ((widthScale * 0.15f) / 2);
-		rtd::TextField* portField = connectFields->AddElement<rtd::TextField>(draw_text_t((width / 4) + padding, height * 0.55f, widthScale * 0.15f, D2D1Core::GetDefaultFontSize()), 6);
+		padding = (widthScale / 64.f);
+		rtd::TextField* portField = connectFields->AddElement<rtd::TextField>(draw_text_t((width / 2) + padding, height * 0.55f, widthScale * 0.25f, D2D1Core::GetDefaultFontSize()), 6);
 		portField->SetDescriptionText("Port:");
 		/*---------Textfields---------*/
+
 
 		/*---------Buttons---------*/
 		sm::Vector2 buttonSize = { widthScale / 6.f, height / 10.f };
@@ -380,11 +381,13 @@ namespace sceneHelp
 
 		connectButton->SetOnPressedEvent([=]()
 			{
-				std::string* ip = ipField->RawGetBuffer();
-				std::string* port = portField->RawGetBuffer();
-				if (ip->length() > 0 && port->length() > 0)
+								
+				std::string* ipConnect = ipField->RawGetBuffer();
+				std::string* portConnect = portField->RawGetBuffer();
+
+				if (ipConnect->length() > 0 && portConnect->length() > 0)
 				{
-					if (game->m_client.Connect(ip->c_str(), std::stoi(port->c_str())))
+					if (game->m_client.Connect(ipConnect->c_str(), std::stoi(portConnect->c_str())))
 					{
 						rtd::TextField* nameInput = dynamic_cast<rtd::TextField*>(game->GetScene("JoinLobby").GetCollection("nameInput")->elements[0].get());
 						nameInput->SetActive();
@@ -413,6 +416,7 @@ namespace sceneHelp
 			});
 
 		/*---------Buttons---------*/
+
 	}
 
 	/*
@@ -429,9 +433,12 @@ namespace sceneHelp
 		float width = (float)game->GetWindow()->GetWidth();
 		float height = (float)game->GetWindow()->GetHeight();
 
+		float widthScale = height * (16.f / 9.f);
+		sm::Vector2 padding = { (widthScale / 64.f) , (widthScale / 64.f) / (16.f / 9.f) };
+
 		// Picture that will be drawn when player is in destroy mode.
 		Collection2D* bullDoze = new Collection2D;
-		bullDoze->AddElement<rtd::Picture>("No.png", draw_t(0.0f, 0.0f, width / 24, height / 14));
+		bullDoze->AddElement<rtd::Picture>("No.png", draw_t(0.0f, 0.0f, widthScale / 24, height / 14));
 		bullDoze->Hide();
 		scene.Add2DCollection(bullDoze, "bullDoze");
 
@@ -440,7 +447,7 @@ namespace sceneHelp
 			Collection2D* playerHp = new Collection2D;
 
 			// Initiate 3 healthbars. for each player.
-			playerHp->AddElement<rtd::Healthbar>(draw_t(width / 8, (i * ((height / 12)) + (height / 32)), (width / 24), (height / 100)));
+			playerHp->AddElement<rtd::Healthbar>(draw_t(width / 8, (i * ((height / 12)) + (height / 32)), (widthScale / 24), (height / 100)));
 
 			// You and Friend text
 			if (i == 0)
@@ -460,39 +467,38 @@ namespace sceneHelp
 		for (int i = 0; i < MAX_PLAYERS_PER_LOBBY; i++)
 		{
 			Collection2D* nameCollection = new Collection2D;
-			nameCollection->AddElement<rtd::Text>("Player", draw_text_t(0, 0, width / 14, height / 6));
+			nameCollection->AddElement<rtd::Text>("Player", draw_text_t(0, 0, widthScale / 14, height / 6));
 			scene.Add2DCollection(nameCollection, "dynamicPlayer" + std::to_string(i + 1) + "namePlate");
 			nameCollection->Hide();
 		}
 
 		Collection2D* money = new Collection2D;
-		rtd::MoneyUI* mMoney = money->AddElement<rtd::MoneyUI>(draw_text_t(width - (width / 8.0f), 0.0f, width / 8.0f, height / 11.0f));
+		rtd::MoneyUI* mMoney = money->AddElement<rtd::MoneyUI>(draw_text_t(width - (widthScale / 8.0f + padding.x), padding.y, widthScale / 8.0f, height / 11.0f));
 		scene.Add2DCollection(money, "MoneyUI");
 
+		
 		Collection2D* abilities = new Collection2D;
-		//rtd::AbilityUI* primary = abilities->AddElement<rtd::AbilityUI>(draw_t(width - width / 16.0f, height - height / 4.0f, width / 16.0f, height / 9.0f), D2D1::ColorF(0, 1.0f), "UI_sword.png");
-		//primary->SetActivateButton("LMB");
-		//primary->SetReference(&game->m_primaryCooldown);
-		//rtd::AbilityUI* secondary = abilities->AddElement<rtd::AbilityUI>(draw_t(width - width / 8.0f, height - height / 9.0f, width / 16.0f, height / 9.0f), D2D1::ColorF(0, 1.0f), "UI_sword.png");
-		//secondary->SetActivateButton("RMB");
-		//secondary->SetReference(&game->m_secondaryCooldown);
-		rtd::Picture* abilityBar = abilities->AddElement<rtd::Picture>("AbilityBar.png", draw_t(((width / 2.f)) - ((width / 16.0f) * 2.5f), height - height / 9.0f, (width / 16.0f) * 5.0f, height / 9.0f));
+		sm::Vector2 barPos = {((width / 2.f)) - ((widthScale / 16.0f) * 2.5f), height - (height / 9.0f + padding.y)};
+		rtd::Picture* abilityBar = abilities->AddElement<rtd::Picture>("AbilityBar.png", draw_t(barPos.x, barPos.y, (widthScale / 16.0f) * 5.0f, height / 9.0f));
+		
+		sm::Vector2 abillitySize = { widthScale / 18.0f, height / 11.0f };
+		sm::Vector2 abillityPos = { (width / 2.f) - (abillitySize.x / 2), barPos.y + (padding.y * 0.5f)};
 
-		rtd::AbilityUI* third = abilities->AddElement<rtd::AbilityUI>(draw_t((width / 2.f) - (width / 18.0f) * 2.75f, height - height / 10.0f, width / 18.0f, height / 11.0f), D2D1::ColorF(0, 1.0f), "Attack2.png");
-		third->SetActivateButton("LMB");
-		third->SetReference(&game->m_primaryCooldown);
-		rtd::AbilityUI* fourth = abilities->AddElement<rtd::AbilityUI>(draw_t((width / 2.f) - (width / 18.0f) * 0.5f - (width / 16.0f), height - height / 10.0f, width / 18.0f, height / 11.0f), D2D1::ColorF(0, 1.0f), "Block.png");
-		fourth->SetActivateButton("RMB");
-		fourth->SetReference(&game->m_secondaryCooldown);
-		rtd::AbilityUI* fifth = abilities->AddElement<rtd::AbilityUI>(draw_t((width / 2.f) - (width / 18.0f) * 0.5f, height - height / 10.0f, width / 18.0f, height / 11.0f), D2D1::ColorF(0, 1.0f), "Dodge.png");
-		fifth->SetActivateButton("Shift");
-		fifth->SetReference(&game->m_dodgeCooldown);
-		rtd::AbilityUI* sixth = abilities->AddElement<rtd::AbilityUI>(draw_t((width / 2.f) - (width / 18.0f) * 0.5f + (width / 16.0f), height - height / 10.0f, width / 18.0f, height / 11.0f), D2D1::ColorF(0, 1.0f), "LockedIcon.png");
-		rtd::AbilityUI* seventh = abilities->AddElement<rtd::AbilityUI>(draw_t((width / 2.f) - (width / 18.0f) * 0.5f + (width / 16.0f) + (width / 16.0f), height - height / 10.0f, width / 18.0f, height / 11.0f), D2D1::ColorF(0, 1.0f), "LockedIcon.png");
+		rtd::AbilityUI* primary = abilities->AddElement<rtd::AbilityUI>(draw_t(abillityPos.x - (abillitySize.x * 2 + padding.x), abillityPos.y, abillitySize.x, abillitySize.y), D2D1::ColorF(0, 1.0f), "Attack2.png");
+		primary->SetActivateButton("LMB");
+		primary->SetReference(&game->m_primaryCooldown);
+		rtd::AbilityUI* secondary = abilities->AddElement<rtd::AbilityUI>(draw_t(abillityPos.x - (abillitySize.x + padding.x / 2), abillityPos.y, abillitySize.x, abillitySize.y), D2D1::ColorF(0, 1.0f), "Block.png");
+		secondary->SetActivateButton("RMB");
+		secondary->SetReference(&game->m_secondaryCooldown);
+		rtd::AbilityUI* third = abilities->AddElement<rtd::AbilityUI>(draw_t(abillityPos.x, abillityPos.y, abillitySize.x, abillitySize.y), D2D1::ColorF(0, 1.0f), "Dodge.png");
+		third->SetActivateButton("Shift");
+		third->SetReference(&game->m_dodgeCooldown);
+		rtd::AbilityUI* fourth = abilities->AddElement<rtd::AbilityUI>(draw_t(abillityPos.x + (abillitySize.x + padding.x / 2), abillityPos.y, abillitySize.x, abillitySize.y), D2D1::ColorF(0, 1.0f), "LockedIcon.png");
+		rtd::AbilityUI* fith = abilities->AddElement<rtd::AbilityUI>(draw_t(abillityPos.x + (abillitySize.x * 2 + padding.x), abillityPos.y, abillitySize.x, abillitySize.y), D2D1::ColorF(0, 1.0f), "LockedIcon.png");
 		scene.Add2DCollection(abilities, "AbilityUI");
 
 		Collection2D* pauseMenu = new Collection2D;
-		rtd::MenuUI* inGameMenu = pauseMenu->AddElement<rtd::MenuUI>("Menu.png", draw_t(width * 0.5f - width * 0.125f, height * 0.25f, width * 0.25f, height * 0.5f));
+		rtd::MenuUI* inGameMenu = pauseMenu->AddElement<rtd::MenuUI>("Menu.png", draw_t(width * 0.5f - (widthScale * 0.125f), (height / 2)  - (height * 0.25f), widthScale * 0.25f, height * 0.5f));
 		inGameMenu->SetOnPressedEvent(0, [=]
 			{
 				game->Shutdown();
@@ -510,20 +516,20 @@ namespace sceneHelp
 
 		Collection2D* shopMenu = new Collection2D;
 		Collection2D* scrolldownMenu = new Collection2D;
-		rtd::Scroller* sc = scrolldownMenu->AddElement<rtd::Scroller>(draw_t(0.0f, -(height / 14) * 3.0f, width / 24.0f, (height / 16) * 3.0f), sm::Vector2(0, 0));
-		sc->AddButton("No.png", draw_t(0.0f, -(height / 14), width / 24, height / 14))->SetOnPressedEvent([=] {
+		rtd::Scroller* sc = scrolldownMenu->AddElement<rtd::Scroller>(draw_t(0.0f, -(height / 14) * 3.0f, widthScale / 24.0f, (height / 16) * 3.0f), sm::Vector2(0, 0));
+		sc->AddButton("No.png", draw_t(0.0f, -(height / 14), widthScale / 24, height / 14))->SetOnPressedEvent([=] {
 			pauseMenu->Show();
 			});
 
 
-		sc->AddButton("ShopIcon.png", draw_t(0.0f, -(height / 14) * 2.0f, width / 24, height / 14))->SetOnPressedEvent([=] {
+		sc->AddButton("ShopIcon.png", draw_t(0.0f, -(height / 14) * 2.0f, widthScale / 24, height / 14))->SetOnPressedEvent([=] {
 			if (game->GetCycler().GetTimePeriod() == CyclePeriod::DAY)
 			{
 				shopMenu->Show();
 				bullDoze->Hide();
 			}
 			});
-		sc->SetPrimeButtonMeasurements(draw_t(0.0f, 0.0f, width / 24, height / 14));
+		sc->SetPrimeButtonMeasurements(draw_t(0.0f, 0.0f, widthScale / 24, height / 14));
 		sc->SetOnPrimeButtonPress([=] {
 
 			shopMenu->Hide();
@@ -531,7 +537,7 @@ namespace sceneHelp
 			});
 		scene.Add2DCollection(scrolldownMenu, "ScrolldownMenu");
 
-		rtd::ShopUI* shop = shopMenu->AddElement<rtd::ShopUI>("Shop.png", draw_t(width / 24.0f, (height / 16), width * 0.25f, height * 0.5f));
+		rtd::ShopUI* shop = shopMenu->AddElement<rtd::ShopUI>("Shop.png", draw_t(width / 24.0f, (height / 16), widthScale * 0.25f, height * 0.5f));
 		// 1x1 tower button.
 		shop->SetOnPressedEvent(0, [=] {
 			game->SetShopItem(ShopItem::Defence1x1);
@@ -567,13 +573,13 @@ namespace sceneHelp
 		scene.Add2DCollection(shopMenu, "shopMenu");
 
 		Collection2D* priceTag = new Collection2D;
-		priceTag->AddElement<rtd::Picture>("EnoughMoneySign.png", draw_t(0.0f, 0.0f, width * 0.15f, height * 0.075f));
-		priceTag->AddElement<rtd::Text>("Cost: UNK", draw_t(0.0f, 0.0f, width * 0.15f, height * 0.075f));
+		priceTag->AddElement<rtd::Picture>("EnoughMoneySign.png", draw_t(0.0f, 0.0f, widthScale * 0.15f, height * 0.075f));
+		priceTag->AddElement<rtd::Text>("Cost: UNK", draw_t(0.0f, 0.0f, widthScale * 0.15f, height * 0.075f));
 		priceTag->Hide();
 		scene.Add2DCollection(priceTag, "priceTag");
 
 		Collection2D* spreeText = new Collection2D;
-		spreeText->AddElement<rtd::Text>("X1", draw_t(width - (width / 12.f), height - (height / 8.0f), width / 12.f, height / 8.0f));
+		spreeText->AddElement<rtd::Text>("X1", draw_t(width - (width / 12.f), height - (height / 8.0f), widthScale / 12.f, height / 8.0f));
 		scene.Add2DCollection(spreeText, "SpreeText");
 	}
 
@@ -1220,11 +1226,13 @@ namespace sceneHelp
 		Collection2D* lobbyCollection = new Collection2D;
 		lobbyCollection->AddElement<rtd::Picture>("MenuBG.png", draw_t(0, 0, width, height));
 
-		rtd::TextField* lobbyField = lobbyCollection->AddElement<rtd::TextField>(draw_text_t(width / 8, height - (height / 3.33f), widthScale / 4, D2D1Core::GetDefaultFontSize()));
-		lobbyField->SetDescriptionText("Input Lobby ID");
-		rtd::Button* startLobbyButton = lobbyCollection->AddElement<rtd::Button>("CreateLobby.png", draw_t((width / 2.0f) + (width / 8.0f), height - (height / 6.f), widthScale / 4.f, height * 0.15f));
+		sm::Vector2 buttonSize = { widthScale / 4.f, height * 0.15f };
+		float buttonPosY = height - (buttonSize.y + paddingHeight * 2.f);
 
-		rtd::Button* lobbyButton = lobbyCollection->AddElement<rtd::Button>("joinLobby.png", draw_t(width / 8, height - (height / 6.f), widthScale / 4.f, height * 0.15f));
+		rtd::Button* startLobbyButton = lobbyCollection->AddElement<rtd::Button>("CreateLobby.png", draw_t((width / 2.0f) + (width / 8.0f), buttonPosY, buttonSize.x, buttonSize.y));
+		rtd::Button* lobbyButton = lobbyCollection->AddElement<rtd::Button>("joinLobby.png", draw_t(width / 8, buttonPosY, buttonSize.x, buttonSize.y));
+		rtd::TextField* lobbyField = lobbyCollection->AddElement<rtd::TextField>(draw_text_t(width / 8, buttonPosY - paddingHeight * 4.f, widthScale / 4, D2D1Core::GetDefaultFontSize()));
+		lobbyField->SetDescriptionText("Input Lobby ID");
 
 		rtd::Button* exitButton = lobbyCollection->AddElement<rtd::Button>("No.png", draw_t(paddingWidth, paddingHeight, widthScale / 24, height / 14));
 		rtd::Text* lobbyErrorText = lobbyCollection->AddElement<rtd::Text>("Invalid Lobby ID", draw_text_t(width / 8, height - (height / 3.33f), width / 4.0f, height / 8.0f));

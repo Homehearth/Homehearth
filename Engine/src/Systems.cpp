@@ -344,19 +344,15 @@ void Systems::MovementSystem(HeadlessScene& scene, float dt)
 				velocity.oldVel = velocity.vel; // updated old vel position
 			});
 
-		scene.ForEachComponent<comp::Transform, comp::House>([&, dt]
-		(Entity e, comp::Transform& transform, comp::House& house)
+		scene.ForEachComponent<comp::Transform, comp::Watermill>([&, dt]
+		(Entity e, comp::Transform& transform, comp::Watermill& wm)
 			{
-				if (house.houseType == NameType::MESH_WATERMILL)
-				{
-					comp::Watermill* wm = e.GetComponent<comp::Watermill>();
-					wm->angle += 45.f * dt;
-					if (wm->angle >= 360.f)
-						wm->angle -= 360.f;
-					sm::Quaternion q = sm::Quaternion::CreateFromAxisAngle({ 1,0,0 }, dx::XMConvertToRadians(-wm->angle));
-					transform.rotation = q;
-					e.UpdateNetwork();
-				}
+				wm.angle += 45.f * dt;
+				if (wm.angle >= 360.f)
+					wm.angle -= 360.f;
+				sm::Quaternion q = sm::Quaternion::CreateFromAxisAngle({ 1,0,0 }, dx::XMConvertToRadians(-wm.angle));
+				transform.rotation = q;
+				e.UpdateNetwork();
 			});
 	}
 }
