@@ -571,6 +571,11 @@ namespace sceneHelp
 		waveAmount->AddElement<rtd::Picture>("Wave.png", draw_t(width - (width / 8.0f), (height / 11.0f) + (height / 128.0f), width / 8.0f, height / 11.0f));
 		waveAmount->AddElement<rtd::Text>("0", draw_t(width - (width / 12.0f), (height / 11.0f) + (height / 128.0f), width / 12.0f, height / 11.0f));
 		scene.Add2DCollection(waveAmount, "WaveCounter");
+
+		Collection2D* killAmount = new Collection2D;
+		killAmount->AddElement<rtd::Picture>("Kills.png", draw_t(width - (width / 8.0f), ((height / 11.0f) * 2.0f) + ((height / 128.0f) * 2.0f), width / 8.0f, height / 11.0f));
+		killAmount->AddElement<rtd::Text>("0", draw_t(width - (width / 12.0f), ((height / 11.0f) * 2.0f) + ((height / 128.0f) * 2.0f), width / 12.0f, height / 11.0f));
+		scene.Add2DCollection(killAmount, "KillCounter");
 	}
 
 	void SetupInLobbyScreen(Game* game)

@@ -17,6 +17,7 @@ Game::Game()
 	this->m_localPID = -1;
 	this->m_spectatingID = -1;
 	this->m_money = 0;
+	this->m_waveCounter = 0;
 	this->m_gameID = -1;
 	this->m_inputState = {};
 }
