@@ -21,6 +21,11 @@ Game::Game()
 	this->m_inputState = {};
 }
 
+uint32_t& Game::GetWaveCounter()
+{
+	return m_waveCounter;
+}
+
 Game::~Game()
 {
 	if (m_client.IsConnected())
@@ -514,6 +519,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		m_primaryCooldown = 0.0f;
 		m_secondaryCooldown = 0.0f;
 		m_dodgeCooldown = 0.0f;
+		m_waveCounter = 0;
 
 		this->m_inputState = { };
 		SetScene("Game");

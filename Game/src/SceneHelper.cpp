@@ -210,6 +210,16 @@ namespace sceneHelp
 									l.lightData.enabled = 1;
 								}
 							});
+
+						Collection2D* waveColl = game->GetCurrentScene()->GetCollection("WaveCounter");
+						if (waveColl)
+						{
+							rtd::Text* waveText = dynamic_cast<rtd::Text*>(waveColl->elements[1].get());
+							if (waveText)
+							{
+								waveText->SetText(std::to_string(++game->GetWaveCounter()));
+							}
+						}
 						break;
 					}
 					case CyclePeriod::MORNING:
@@ -556,6 +566,11 @@ namespace sceneHelp
 		Collection2D* spreeText = new Collection2D;
 		spreeText->AddElement<rtd::Text>("X1", draw_t(width - (width / 12.f), height - (height / 8.0f), width / 12.f, height / 8.0f));
 		scene.Add2DCollection(spreeText, "SpreeText");
+
+		Collection2D* waveAmount = new Collection2D;
+		waveAmount->AddElement<rtd::Picture>("Wave.png", draw_t(width - (width / 8.0f), (height / 11.0f) + (height / 128.0f), width / 8.0f, height / 11.0f));
+		waveAmount->AddElement<rtd::Text>("0", draw_t(width - (width / 12.0f), (height / 11.0f) + (height / 128.0f), width / 12.0f, height / 11.0f));
+		scene.Add2DCollection(waveAmount, "WaveCounter");
 	}
 
 	void SetupInLobbyScreen(Game* game)
