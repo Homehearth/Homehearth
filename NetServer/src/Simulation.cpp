@@ -673,13 +673,13 @@ void Simulation::BuildMapColliders(std::vector<dx::BoundingOrientedBox>* mapColl
 		obb->Center = mapColliders->at(i).Center;
 		obb->Extents = mapColliders->at(i).Extents;
 		obb->Orientation = mapColliders->at(i).Orientation;
-		collider.AddComponent<comp::Tag<TagType::STATIC>>();
+		collider.AddComponent<comp::Tag<STATIC>>();
 		// Map bounds is loaded in last, 6 obbs surrounding village put the correct tag for collision system
 		if (i >= mapColliders->size() - 6)
 		{
-			collider.AddComponent<comp::Tag<TagType::MAP_BOUNDS>>();
+			collider.AddComponent<comp::Tag<MAP_BOUNDS>>();
 		}
-		collider.AddComponent<comp::Network>();
+		//collider.AddComponent<comp::Network>();
 		qt->Insert(collider);
 	}
 }

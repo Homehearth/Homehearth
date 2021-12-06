@@ -1217,6 +1217,9 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 								if (m_isSpectating)
 								{
 									m_isSpectating = false;
+									Camera* cam = GetCurrentScene()->GetCurrentCamera();
+
+									cam->SetFollowEntity(m_players.at(m_localPID));
 								}
 							}
 						}
@@ -1314,25 +1317,36 @@ void Game::UpdateInput()
 			m_inputState.rightMouse = true;
 			if (m_isSpectating)
 			{
-				auto it = m_players.begin();
-				while (it != m_players.end())
+				Camera* cam = GetScene("Game").GetCurrentCamera();
+				if (cam->GetCameraType() == CAMERATYPE::PLAY)
 				{
-					// Don't spectate yourself you are dead & check if other player is alive
-					if (it->first != m_localPID && it->second.GetComponent<comp::Health>()->isAlive)
-					{
-						Camera* cam = GetScene("Game").GetCurrentCamera();
+					Entity current = cam->GetTargetEntity();
 
-						if (cam->GetCameraType() == CAMERATYPE::PLAY)
+					uint32_t key = current.GetComponent<comp::Network>()->id;
+					// START ON CURRENT SPECTATED TARGET
+					auto it = m_players.find(key);
+					it++;
+
+					// Iterate to next the next player
+					for (int i = 0; i < MAX_PLAYERS_PER_LOBBY - 1; i++)
+					{
+						// Sanity check if we reach end of the list
+						if (it == m_players.end())
+						{
+							it = m_players.begin();
+						}
+						// Don't spectate yourself you are dead & check if other player is alive
+						if (it->first != m_localPID && it->second.GetComponent<comp::Health>()->isAlive)
 						{
 							// Check so we are not already following this entity
-							if (cam->GetTargetEntity() != it->second)
+							if (current != it->second)
 							{
 								cam->SetFollowEntity(it->second);
 								break;
 							}
 						}
+						it++;
 					}
-					it++;
 				}
 			}
 			break;
