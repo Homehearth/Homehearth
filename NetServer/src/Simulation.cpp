@@ -832,7 +832,7 @@ void Simulation::ResetGameScene()
 		this->Broadcast(msg);
 	}
 
-	m_currency.Zero();
+	m_currency = 50;
 
 	LOG_INFO("%lld", m_pGameScene->GetRegistry()->size());
 
