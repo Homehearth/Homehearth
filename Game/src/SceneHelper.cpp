@@ -137,10 +137,12 @@ namespace sceneHelp
 
 		float pointRange = 9.f;
 
+		float sunIntensity = 0.09f;
+		float moonIntensity = 0.008f;
 		// The sun
-		Entity sun = CreateLightEntity(gameScene, { 0.f, 0.f, 0.f, 0.f }, { -1.0f, 0.0f, -1.f, 0.f }, { 255.f, 185, 150, 0.f }, 1000.f, 0.09f, TypeLight::DIRECTIONAL, 1);
+		Entity sun = CreateLightEntity(gameScene, { 0.f, 0.f, 0.f, 0.f }, { -1.0f, 0.0f, -1.f, 0.f }, { 255.f, 185, 150, 0.f }, 1000.f, sunIntensity, TypeLight::DIRECTIONAL, 1);
 		// The moon
-		Entity moon = CreateLightEntity(gameScene, { 0.f, 0.f, 0.f, 0.f }, { -1.0f, 0.0f, -1.f, 0.f }, { 50.f, 50, 200, 0.f }, 1000.f, 0.008f, TypeLight::DIRECTIONAL, 0);
+		Entity moon = CreateLightEntity(gameScene, { 0.f, 0.f, 0.f, 0.f }, { -1.0f, 0.0f, -1.f, 0.f }, { 50.f, 50, 200, 0.f }, 1000.f, moonIntensity, TypeLight::DIRECTIONAL, 0);
 
 		sm::Vector4 pointLightColor = { 237.f, 147.f, 18.f, 0.f };
 
@@ -173,6 +175,7 @@ namespace sceneHelp
 					comp::Light* l = sun.GetComponent<comp::Light>();
 
 					float angle = 360.f * game->GetCycler().GetTime();
+					float intensity = sunIntensity;
 					for (int i = 0; i < 2; i++)
 					{
 
@@ -189,9 +192,12 @@ namespace sceneHelp
 						l->lightData.position = sm::Vector4(newPos);
 						l->lightData.position.w = 1.0f;
 
+						float d = std::abs(dir.Dot(sm::Vector3::Up));
+						l->lightData.intensity = intensity * d;
 
 						l = moon.GetComponent<comp::Light>();
 						angle -= 180.f;
+						intensity = moonIntensity;
 					}
 				}
 
@@ -203,13 +209,7 @@ namespace sceneHelp
 					{
 
 						SoundHandler::Get().SetCurrentMusic("NightTheme");
-						scene.ForEachComponent<comp::Light>([](comp::Light& l)
-							{
-								if (l.lightData.type == TypeLight::POINT)
-								{
-									l.lightData.enabled = 1;
-								}
-							});
+						
 						break;
 					}
 					case CyclePeriod::MORNING:
@@ -227,7 +227,13 @@ namespace sceneHelp
 					}
 					case CyclePeriod::EVENING:
 					{
-
+						scene.ForEachComponent<comp::Light>([](comp::Light& l)
+							{
+								if (l.lightData.type == TypeLight::POINT)
+								{
+									l.lightData.enabled = 1;
+								}
+							});
 						break;
 					}
 					default:
