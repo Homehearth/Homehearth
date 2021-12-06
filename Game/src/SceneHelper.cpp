@@ -163,6 +163,11 @@ namespace sceneHelp
 
 		gameScene.on<ESceneUpdate>([=](const ESceneUpdate& e, Scene& scene)
 			{
+				scene.ForEachComponent<comp::Tag<WATERMILL>>([](Entity& e, comp::Tag<WATERMILL>& mill)
+					{
+
+					});
+
 				game->GetCycler().Update(e.dt);
 
 				if (game->m_players.find(game->m_localPID) != game->m_players.end())
@@ -1534,19 +1539,6 @@ namespace sceneHelp
 			else if (Tree8 == filename)
 			{
 				game->m_models[ModelID::TREE8].push_back(e);
-			}
-			//else if (Water == filename)
-			//{
-			//	e.AddComponent<comp::Tag<TagType::TEXTUREEFFECT>>();
-			//	game->m_models[ModelID::WATER].push_back(e);
-			//}
-			else if (WaterEdge == filename)
-			{
-				e.AddComponent<comp::Tag<TagType::TEXTUREEFFECT>>();
-			}
-			else if (WaterFloor == filename)
-			{
-				e.AddComponent<comp::Tag<TagType::TEXTUREEFFECT>>();
 			}
 		}
 

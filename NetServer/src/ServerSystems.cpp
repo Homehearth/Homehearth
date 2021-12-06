@@ -562,8 +562,17 @@ void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money
 			//Check if something should be dead, and if so set isAlive to false
 			if (health.currentHealth <= 0 && health.isAlive)
 			{
+				comp::AnimationState* anim = entity.GetComponent<comp::AnimationState>();
+
+
+				if (anim)
+				{
+					anim->toSend = EAnimationType::DEAD;
+				}
+
 				comp::Network* net = entity.GetComponent<comp::Network>();
 				health.isAlive = false;
+				scene.publish<EComponentUpdated>(entity, ecs::Component::HEALTH);
 				// increase money
 				if (entity.GetComponent<comp::Tag<TagType::BAD>>())
 				{
@@ -673,8 +682,6 @@ void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& sce
 		{
 			if (!health.isAlive)
 			{
-				anim.toSend = EAnimationType::DEAD;
-
 				comp::Velocity* vel = e.GetComponent<comp::Velocity>();
 				if (vel)
 				{
@@ -689,16 +696,6 @@ void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& sce
 
 					simulation->SendMsg(n.id, msg);
 				}
-				//p.respawnTimer -= dt;
-
-				//if (p.respawnTimer < 0.01f)
-				//{
-				//	simulation->ResetPlayer(e);
-				//	message<GameMsg> msg;
-				//	msg.header.id = GameMsg::Game_StopSpectate;
-				//	simulation->SendMsg(n.id, msg);
-				//	LOG_INFO("Player %u respawned...", e.GetComponent<comp::Network>()->id);
-				//}
 			}
 		});
 

@@ -679,7 +679,7 @@ void Simulation::BuildMapColliders(std::vector<dx::BoundingOrientedBox>* mapColl
 		{
 			collider.AddComponent<comp::Tag<TagType::MAP_BOUNDS>>();
 		}
-		//collider.AddComponent<comp::Network>();
+		collider.AddComponent<comp::Network>();
 		qt->Insert(collider);
 	}
 }

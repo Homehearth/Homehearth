@@ -1023,6 +1023,7 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 					case NameType::MESH_WATERMILL:
 					{
 						nameString = "WaterMill.fbx";
+						e.AddComponent<comp::Tag<WATERMILL>>();
 						break;
 					}
 					case NameType::MESH_WATERMILLHOUSE:
