@@ -42,7 +42,7 @@ namespace VillagerManagement
 namespace ServerSystems
 {
 	void WaveSystem(Simulation* simulation, std::queue<Wave>& waves);
-	void NextWaveConditions(Simulation* simulation);
+	void OnCycleChange(Simulation* simulation);
 
 	void UpdatePlayerWithInput(Simulation* simulation, HeadlessScene& scene, float dt, QuadTree* dynamicQT);
 	void PlayerStateSystem(Simulation* simulation, HeadlessScene& scene, float dt);

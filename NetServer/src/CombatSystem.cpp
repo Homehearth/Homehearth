@@ -235,7 +235,9 @@ Entity CombatSystem::CreateAttackEntity(Entity entity, HeadlessScene& scene, com
 	comp::SelfDestruct* selfDestruct = attackEntity.AddComponent<comp::SelfDestruct>();
 	selfDestruct->lifeTime = stats->lifetime;
 
+#if RENDER_COLLIDERS
 	attackEntity.AddComponent<comp::Network>();
+#endif
 
 	return attackEntity;
 }
@@ -269,7 +271,6 @@ Entity CombatSystem::CreateAttackEntity(Entity entity, HeadlessScene& scene, com
 	attackEntity.AddComponent<comp::Velocity>()->vel = vel;
 
 	attackEntity.AddComponent<comp::PARTICLEEMITTER>(sm::Vector3{ 0,0,0 }, 200, 1.f, PARTICLEMODE::MAGERANGE, 1.7f, 1.f, false);
-
 
 	attackEntity.AddComponent<comp::Network>();
 

@@ -50,7 +50,6 @@ private:
 
 	std::unordered_map<ecs::Component, std::vector<Entity>> m_updatedComponents;
 
-	int currentRound;
 
 	void InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg, const std::bitset<ecs::Component::COMPONENT_MAX>& componentMask = UINT32_MAX) const;
 
@@ -59,7 +58,6 @@ private:
 	//Game play related
 	uint32_t m_wavesSurvived;
 
-	std::queue<Wave> waveQueue;
 	std::queue<sm::Vector3> m_spawnPoints;
 	HouseManager houseManager;
 
@@ -73,6 +71,8 @@ private:
 
 public:
 	Cycler m_timeCycler;
+	std::queue<Wave> waveQueue;
+	uint32_t currentRound;
 
 	Simulation(Server* pServer, HeadlessEngine* pEngine);
 	virtual ~Simulation() = default;
