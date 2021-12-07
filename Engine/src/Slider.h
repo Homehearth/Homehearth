@@ -39,6 +39,7 @@ namespace rtd
 		Slider(D2D1_COLOR_F color, const draw_t& draw_opts, float* value, float max = 1.0f, float min = 0.0f, bool horizontal = true);
 
 		Border* GetBorder();
+		Text* GetValueText();
 
 		// Set the value to manipulate with the slider.
 		void SetValue(float* value);
