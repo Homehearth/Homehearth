@@ -6,6 +6,9 @@
 	Takes 1/3 extra memory per texture.
 */
 
+//Is transparent when 0. Can be value between 0-255
+const UINT ALPHA_THRESHOLD = 0;
+
 enum class ETextureChannelType
 {
 	oneChannel,
@@ -19,7 +22,10 @@ private:
 	ComPtr<ID3D11ShaderResourceView>	m_shaderView;
 	ComPtr<ID3D11Texture2D>				m_texture2D;
 	bool								m_useMipmaps;
+	bool								m_hasTransparency;
 	std::string							m_filename;
+
+private:
 	bool StandardSetup(unsigned char* image, const UINT& width, const UINT& height);
 	bool GenerateMipMaps(unsigned char* image, const UINT& width, const UINT& height);
 
@@ -33,6 +39,7 @@ public:
 	ID3D11ShaderResourceView*& GetShaderView();
 	ID3D11Texture2D*& GetTexture2D();
 	const std::string& GetFilename() const;
+	bool IsTransparent() const;
 	bool DisableMipmaps();
 };
 

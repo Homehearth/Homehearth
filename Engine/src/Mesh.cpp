@@ -431,14 +431,17 @@ const std::vector<sm::Vector2> Mesh::GetTextureCoords() const
     return texturecoords;
 }
 
-std::shared_ptr<RTexture> Mesh::GetTexture(const ETextureType& type) const
+const std::shared_ptr<RTexture> Mesh::GetTexture(const ETextureType& type) const
 {
-    std::shared_ptr<RTexture> texture;
     if (m_material)
-    {
-        texture = m_material->GetTexture(type);
-    }
-    return texture;
+        return m_material->GetTexture(type);
+    else
+        return std::shared_ptr<RTexture>(nullptr);
+}
+
+const std::shared_ptr<RMaterial> Mesh::GetMaterial() const
+{
+    return m_material;
 }
 
 bool Mesh::SetMaterial(aiMaterial* aimat)

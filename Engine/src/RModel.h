@@ -33,6 +33,7 @@ struct aiNode;
 class RModel : public resource::GResource
 {
 private:
+	std::string						m_resourcename;
 	std::vector<Mesh>				m_meshes;
 	std::vector<light_t>			m_lights;
 	std::vector<bone_t>				m_allBones;

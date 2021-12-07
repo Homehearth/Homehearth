@@ -29,7 +29,8 @@ public:
 
 	bool HasBones() const;
 	const std::vector<sm::Vector2> GetTextureCoords() const;
-	std::shared_ptr<RTexture> GetTexture(const ETextureType& type) const;
+	const std::shared_ptr<RTexture> GetTexture(const ETextureType& type) const;
+	const std::shared_ptr<RMaterial> GetMaterial() const;
 
 	//Set from a assimp-material
 	bool SetMaterial(aiMaterial* aimat);

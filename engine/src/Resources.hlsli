@@ -39,25 +39,17 @@ cbuffer CameraCB : register(b1)
     float4x4 c_view;        //row major
 }
 
-cbuffer MatConstantsCB : register(b2)
-{
-    float3  c_ambient;
-    float   c_shiniess;
-    float3  c_diffuse;
-    float   c_opacity;
-    float3  c_specular;
-}
-
 cbuffer MatPropertiesCB : register(b3)
 {
     //If a texture is set this will be 1
-    int c_hasAlbedo;
-    int c_hasNormal;
-    int c_hasMetalness;
-    int c_hasRoughness;
-    int c_hasAoMap;
-    int c_hasDisplace;
-    int c_hasOpacity;
+    int     c_hasAlbedo;
+    int     c_hasNormal;
+    int     c_hasMetalness;
+    int     c_hasRoughness;
+    int     c_hasAoMap;
+    int     c_hasDisplace;
+    int     c_hasOpacity;
+    float   c_transparency; //1.0f is not transparent
 }
 
 cbuffer LightsInfoCB : register(b4)

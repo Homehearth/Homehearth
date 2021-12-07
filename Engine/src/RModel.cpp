@@ -191,6 +191,7 @@ bool RModel::Create(const std::string& filename)
 {
     std::string filepath = MODELPATH + filename;
     Assimp::Importer importer;
+    m_resourcename = filename;
 
     //Will remove extra text on bones like: "_$AssimpFbx$_"...
     importer.SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, false);
