@@ -925,17 +925,20 @@ namespace sceneHelp
 		Collection2D* audioCategory = new Collection2D;
 		sm::Vector2 posAudio = { width - (scale.x + padding.x * 2), canvasPos.y + padding.y };
 
-		sm::Vector2 minPos = { canvasPos.x + padding.x, posAudio.y };
+		sm::Vector2 minPos = { canvasPos.x + padding.x + canvasSize.x / 2.f, posAudio.y };
 		sm::Vector2 maxPos = { width - (scale.x + padding.x * 2.f), posAudio.y };
-		rtd::Slider* masterVolumeSL = audioCategory->AddElement<rtd::Slider>(D2D1::ColorF(53.f / 255.f, 22.f / 255.f, 26.f / 255.f), draw_t(minPos.x, posAudio.y, scale.x, scale.y), &game->m_masterVolume, 1.0f, 0.0f);
+		rtd::Canvas* masterVolCanvas = audioCategory->AddElement<rtd::Canvas>(D2D1::ColorF(53.f / 255.f, 22.f / 255.f, 26.f / 255.f), draw_t(minPos.x - 6.f, posAudio.y, ((canvasSize.x / 2.f) + 6.f) - padding.x * 2.f, scale.y));
+		rtd::Slider* masterVolumeSL = audioCategory->AddElement<rtd::Slider>(D2D1::ColorF(0,0,0), draw_t(minPos.x, posAudio.y, scale.x, scale.y), &game->m_masterVolume, 1.0f, 0.0f);
 		masterVolumeSL->SetMinPos(minPos);
 		masterVolumeSL->SetMaxPos(maxPos);
 		rtd::Text* valueText = masterVolumeSL->GetValueText();
-		sm::Vector2 valueTextPos = { minPos.x + (canvasSize.x / 2.f) - (valueText->GetText().length() * D2D1Core::GetDefaultFontSize()) / 2.f, posAudio.y };
+		sm::Vector2 valueTextPos = {minPos.x + (maxPos.x - minPos.x) / 2 + (valueText->GetText().length() * D2D1Core::GetDefaultFontSize()) / 2.f, posAudio.y };
 		valueText->SetPosition(valueTextPos.x, valueTextPos.y);
-		rtd::Border* masterVolBorder = audioCategory->AddElement<rtd::Border>(draw_t(canvasPos.x + padding.x, posAudio.y, canvasSize.x - padding.x * 2, scale.y));
-		masterVolBorder->SetColor(D2D1::ColorF(53.f / 255.f, 22.f / 255.f, 26.f / 255.f));
-		masterVolBorder->SetLineWidth(LineWidth::LARGE);
+		
+		audioCategory->AddElement<rtd::Text>("Master", draw_t(canvasPos.x + padding.x, posAudio.y, scale.x, scale.y));
+		rtd::Border* lineBorder = audioCategory->AddElement<rtd::Border>(draw_t(canvasPos.x + padding.x, posAudio.y, canvasSize.x - padding.x * 2.f, scale.y));
+		lineBorder->SetColor(D2D1::ColorF(53.f / 255.f, 22.f / 255.f, 26.f / 255.f));
+		lineBorder->SetLineWidth(LineWidth::LARGE);
 
 		scene.Add2DCollection(audioCategory, "WAudio");
 		/*---------Audio---------*/
