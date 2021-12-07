@@ -140,7 +140,7 @@ enum class Shapes
 	NR_OF_SHAPES
 };
 
-enum class LineWidth
+enum class LineWidth : UINT
 {
 	NONE,
 	SMALL,
