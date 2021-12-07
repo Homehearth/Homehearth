@@ -75,9 +75,6 @@ void Game::UpdateNetwork(float deltaTime)
 
 bool Game::OnStartup()
 {
-	sceneHelp::CreateLoadingScene(this);
-	SetScene("Loading");
-
 	// Scene logic
 	sceneHelp::CreateLobbyScene(this);
 	sceneHelp::CreateGameScene(this);
@@ -86,6 +83,7 @@ bool Game::OnStartup()
 	sceneHelp::CreateGameOverScene(this);
 
 	sceneHelp::CreateOptionsScene(this);
+
 	// Set Current Scene
 	SetScene("MainMenu");
 
@@ -291,8 +289,8 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 				comp::Player* p = m_gameEntities.at(id).GetComponent<comp::Player>();
 				if (p)
 				{
-					GetScene("Game").GetCollection("player" + std::to_string(static_cast<uint16_t>(p->playerType)) + "Info")->Hide();
-					GetScene("Game").GetCollection("dynamicPlayer" + std::to_string(static_cast<uint16_t>(p->playerType)) + "namePlate")->Hide();
+					GetScene("Game").GetCollection("Aplayer" + std::to_string(static_cast<uint16_t>(p->playerType)) + "Info")->Hide();
+					GetScene("Game").GetCollection("AdynamicPlayer" + std::to_string(static_cast<uint16_t>(p->playerType)) + "namePlate")->Hide();
 				}
 				m_gameEntities.at(id).Destroy();
 				m_gameEntities.erase(id);

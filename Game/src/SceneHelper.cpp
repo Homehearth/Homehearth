@@ -273,34 +273,37 @@ namespace sceneHelp
 
 
 				Collection2D* bullColl = game->GetCurrentScene()->GetCollection("bullDoze");
-				rtd::Picture* bullIcon = dynamic_cast<rtd::Picture*>(bullColl->elements[0].get());
-				ShopItem shopitem = game->GetShopItem();
-
-				if (bullIcon)
+				if (bullColl)
 				{
-					if (shopitem == ShopItem::Destroy_Tool)
-					{
-						bullColl->Show();
-						bullIcon->SetPosition((FLOAT)InputSystem::Get().GetMousePos().x, (FLOAT)InputSystem::Get().GetMousePos().y);
-					}
-					else
-					{
-						bullColl->Hide();
-					}
-				}
+					rtd::Picture* bullIcon = dynamic_cast<rtd::Picture*>(bullColl->elements[0].get());
+					ShopItem shopitem = game->GetShopItem();
 
-				//Not in buildmode
-				if (!(shopitem == ShopItem::Defence1x1 || shopitem == ShopItem::Defence1x3))
-				{
-
-					if (game->GetCurrentScene()->GetCollection("shopMenu")->GetState() == ElementState::OUTSIDE &&
-						game->GetCurrentScene()->GetCollection("ScrolldownMenu")->GetState() == ElementState::OUTSIDE)
+					if (bullIcon)
 					{
-						if (InputSystem::Get().CheckMouseKey(MouseKey::RIGHT, KeyState::PRESSED))
+						if (shopitem == ShopItem::Destroy_Tool)
 						{
-							game->GetCurrentScene()->GetCollection("shopMenu")->Hide();
-							game->SetShopItem(ShopItem::None);
+							bullColl->Show();
+							bullIcon->SetPosition((FLOAT)InputSystem::Get().GetMousePos().x, (FLOAT)InputSystem::Get().GetMousePos().y);
+						}
+						else
+						{
 							bullColl->Hide();
+						}
+					}
+
+					//Not in buildmode
+					if (!(shopitem == ShopItem::Defence1x1 || shopitem == ShopItem::Defence1x3))
+					{
+
+						if (game->GetCurrentScene()->GetCollection("shopMenu")->GetState() == ElementState::OUTSIDE &&
+							game->GetCurrentScene()->GetCollection("ScrolldownMenu")->GetState() == ElementState::OUTSIDE)
+						{
+							if (InputSystem::Get().CheckMouseKey(MouseKey::RIGHT, KeyState::PRESSED))
+							{
+								game->GetCurrentScene()->GetCollection("shopMenu")->Hide();
+								game->SetShopItem(ShopItem::None);
+								bullColl->Hide();
+							}
 						}
 					}
 				}
@@ -412,7 +415,7 @@ namespace sceneHelp
 
 		connectButton->SetOnPressedEvent([=]()
 			{
-								
+
 				std::string* ipConnect = ipField->RawGetBuffer();
 				std::string* portConnect = portField->RawGetBuffer();
 
@@ -510,7 +513,7 @@ namespace sceneHelp
 		deathAmount->AddElement<rtd::Text>("0", draw_t(moneyPos.x - (moneyScale.x) * 1.00f - padding.x * 2.0f, padding.y, widthScale / 16.0f, height / 22.0f));
 		scene.Add2DCollection(deathAmount, "ZDeathCounter");
 
-		
+
 
 		// Picture that will be drawn when player is in destroy mode.
 		Collection2D* bullDoze = new Collection2D;
@@ -525,13 +528,13 @@ namespace sceneHelp
 		//scene.Add2DCollection(timerCollection, "timer");
 
 
-		
+
 		Collection2D* abilities = new Collection2D;
-		sm::Vector2 barPos = {((width / 2.f)) - ((widthScale / 16.0f) * 2.5f), height - (height / 9.0f + padding.y)};
+		sm::Vector2 barPos = { ((width / 2.f)) - ((widthScale / 16.0f) * 2.5f), height - (height / 9.0f + padding.y) };
 		rtd::Picture* abilityBar = abilities->AddElement<rtd::Picture>("AbilityBar.png", draw_t(barPos.x, barPos.y, (widthScale / 16.0f) * 5.0f, height / 9.0f));
-		
+
 		sm::Vector2 abillitySize = { widthScale / 18.0f, height / 11.0f };
-		sm::Vector2 abillityPos = { (width / 2.f) - (abillitySize.x / 2), barPos.y + (padding.y * 0.5f)};
+		sm::Vector2 abillityPos = { (width / 2.f) - (abillitySize.x / 2), barPos.y + (padding.y * 0.5f) };
 
 		rtd::AbilityUI* primary = abilities->AddElement<rtd::AbilityUI>(draw_t(abillityPos.x - (abillitySize.x * 2 + padding.x), abillityPos.y, abillitySize.x, abillitySize.y), D2D1::ColorF(0, 1.0f), "Attack2.png");
 		primary->SetActivateButton("LMB");
@@ -547,7 +550,7 @@ namespace sceneHelp
 		scene.Add2DCollection(abilities, "ZAbilityUI");
 
 		Collection2D* pauseMenu = new Collection2D;
-		rtd::MenuUI* inGameMenu = pauseMenu->AddElement<rtd::MenuUI>("Menu.png", draw_t(width * 0.5f - (widthScale * 0.125f), (height / 2)  - (height * 0.25f), widthScale * 0.25f, height * 0.5f));
+		rtd::MenuUI* inGameMenu = pauseMenu->AddElement<rtd::MenuUI>("Menu.png", draw_t(width * 0.5f - (widthScale * 0.125f), (height / 2) - (height * 0.25f), widthScale * 0.25f, height * 0.5f));
 		inGameMenu->SetOnPressedEvent(0, [=]
 			{
 				game->Shutdown();
@@ -1230,7 +1233,7 @@ namespace sceneHelp
 
 		Collection2D* gameOverCollection = new Collection2D;
 
-		rtd::Picture* bg = gameOverCollection->AddElement<rtd::Picture>("MenuBG.png", draw_t(0,0,width, height));
+		rtd::Picture* bg = gameOverCollection->AddElement<rtd::Picture>("MenuBG.png", draw_t(0, 0, width, height));
 		rtd::Text* gameOverField = gameOverCollection->AddElement<rtd::Text>("Game Over", draw_text_t((width / 2.f) - (strlen("Game Over") * D2D1Core::GetDefaultFontSize() * 0.5f), (height / 5.f) - D2D1Core::GetDefaultFontSize(), strlen("Game Over") * D2D1Core::GetDefaultFontSize(), D2D1Core::GetDefaultFontSize()));
 		gameOverField->SetText("Game Over");
 

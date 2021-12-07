@@ -35,6 +35,8 @@ private:
 
 	virtual void OnUserUpdate(float deltaTime) = 0;
 
+	void SetupLoadingScreen();
+
 public:
 
 	Engine();
