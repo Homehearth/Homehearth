@@ -572,13 +572,13 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			{
 				if (p->classType == comp::Player::Class::WARRIOR)
 				{
-					dynamic_cast<rtd::AbilityUI*>(GetScene("Game").GetCollection("AbilityUI")->elements[1].get())->SetTexture("Attack2.png");
-					dynamic_cast<rtd::AbilityUI*>(GetScene("Game").GetCollection("AbilityUI")->elements[2].get())->SetTexture("Block.png");
+					dynamic_cast<rtd::AbilityUI*>(GetScene("Game").GetCollection("ZAbilityUI")->elements[1].get())->SetTexture("Attack2.png");
+					dynamic_cast<rtd::AbilityUI*>(GetScene("Game").GetCollection("ZAbilityUI")->elements[2].get())->SetTexture("Block.png");
 				}
 				else
 				{
-					dynamic_cast<rtd::AbilityUI*>(GetScene("Game").GetCollection("AbilityUI")->elements[1].get())->SetTexture("Attack.png");
-					dynamic_cast<rtd::AbilityUI*>(GetScene("Game").GetCollection("AbilityUI")->elements[2].get())->SetTexture("Heal.png");
+					dynamic_cast<rtd::AbilityUI*>(GetScene("Game").GetCollection("ZAbilityUI")->elements[1].get())->SetTexture("Attack.png");
+					dynamic_cast<rtd::AbilityUI*>(GetScene("Game").GetCollection("ZAbilityUI")->elements[2].get())->SetTexture("Heal.png");
 				}
 			}
 		}
@@ -636,7 +636,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 				comp::Player* p = m_players.at(playerID).GetComponent<comp::Player>();
 				playerTypes[static_cast<int>(p->playerType) - 1] = p->playerType;
 				dynamic_cast<rtd::Text*>(GetScene("Lobby").GetCollection("playerIcon" + std::to_string(static_cast<uint16_t>(p->playerType)))->elements[1].get())->SetText(name);
-				rtd::Text* plT = dynamic_cast<rtd::Text*>(GetScene("Game").GetCollection("dynamicPlayer" + std::to_string(static_cast<uint16_t>(p->playerType)) + "namePlate")->elements[0].get());
+				rtd::Text* plT = dynamic_cast<rtd::Text*>(GetScene("Game").GetCollection("AdynamicPlayer" + std::to_string(static_cast<uint16_t>(p->playerType)) + "namePlate")->elements[0].get());
 				rtd::Picture* plP = dynamic_cast<rtd::Picture*>(GetScene("Lobby").GetCollection("playerIcon" + std::to_string(static_cast<uint16_t>(p->playerType)))->elements[2].get());
 
 				if (plT)
@@ -719,7 +719,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	case GameMsg::Game_Money:
 	{
 		msg >> m_money;
-		rtd::MoneyUI* elem = dynamic_cast<rtd::MoneyUI*>(GetScene("Game").GetCollection("MoneyUI")->elements[0].get());
+		rtd::MoneyUI* elem = dynamic_cast<rtd::MoneyUI*>(GetScene("Game").GetCollection("ZMoneyUI")->elements[0].get());
 		if (elem)
 		{
 			elem->SetNewMoney(m_money);

@@ -457,21 +457,11 @@ namespace sceneHelp
 
 	void SetupInGameScreen(Game* game)
 	{
-		//// Temp textures
 		Scene& scene = game->GetScene("Game");
-		const std::string& texture1 = "like.png";
-		const std::string& texture2 = "swordUI.png";
 		float width = (float)game->GetWindow()->GetWidth();
 		float height = (float)game->GetWindow()->GetHeight();
-
 		float widthScale = height * (16.f / 9.f);
 		sm::Vector2 padding = { (widthScale / 128.f) , (widthScale / 64.f) / (16.f / 9.f) };
-
-		// Picture that will be drawn when player is in destroy mode.
-		Collection2D* bullDoze = new Collection2D;
-		bullDoze->AddElement<rtd::Picture>("No.png", draw_t(0.0f, 0.0f, widthScale / 24, height / 14));
-		bullDoze->Hide();
-		scene.Add2DCollection(bullDoze, "bullDoze");
 
 		for (int i = 0; i < MAX_PLAYERS_PER_LOBBY; i++)
 		{
@@ -488,18 +478,14 @@ namespace sceneHelp
 			{
 				playerHp->Hide();
 			}
-			scene.Add2DCollection(playerHp, "player" + std::to_string(i + 1) + "Info");
+			scene.Add2DCollection(playerHp, "Aplayer" + std::to_string(i + 1) + "Info");
 		}
-
-		//Collection2D* timerCollection = new Collection2D;
-		//timerCollection->AddElement<rtd::Text>("0", draw_text_t(0, 0, width, height / 16.f));
-		//scene.Add2DCollection(timerCollection, "timer");
 
 		for (int i = 0; i < MAX_PLAYERS_PER_LOBBY; i++)
 		{
 			Collection2D* nameCollection = new Collection2D;
 			nameCollection->AddElement<rtd::Text>("Player", draw_text_t(0, 0, widthScale / 14, height / 6));
-			scene.Add2DCollection(nameCollection, "dynamicPlayer" + std::to_string(i + 1) + "namePlate");
+			scene.Add2DCollection(nameCollection, "AdynamicPlayer" + std::to_string(i + 1) + "namePlate");
 			nameCollection->Hide();
 		}
 
@@ -507,22 +493,37 @@ namespace sceneHelp
 		sm::Vector2 moneyPos = { width - (moneyScale.x + padding.x), padding.y };
 		Collection2D* money = new Collection2D;
 		rtd::MoneyUI* mMoney = money->AddElement<rtd::MoneyUI>(draw_text_t(moneyPos.x, moneyPos.y, moneyScale.x, moneyScale.y));
-		scene.Add2DCollection(money, "MoneyUI");
+		scene.Add2DCollection(money, "ZMoneyUI");
 
 		Collection2D* waveAmount = new Collection2D;
 		waveAmount->AddElement<rtd::Picture>("Wave.png", draw_t(moneyPos.x - (moneyScale.x) * 0.50f - padding.x, padding.y, widthScale / 16.0f, height / 22.0f));
 		waveAmount->AddElement<rtd::Text>("0", draw_t(moneyPos.x - (moneyScale.x) * 0.50f - padding.x, padding.y, widthScale / 16.0f, height / 22.0f));
-		scene.Add2DCollection(waveAmount, "WaveCounter");
+		scene.Add2DCollection(waveAmount, "ZWaveCounter");
 
 		Collection2D* killAmount = new Collection2D;
 		killAmount->AddElement<rtd::Picture>("Kills.png", draw_t(moneyPos.x - (moneyScale.x) * 1.50f - padding.x * 3.0f, padding.y, widthScale / 16.0f, height / 22.0f));
 		killAmount->AddElement<rtd::Text>("0", draw_t(moneyPos.x - (moneyScale.x) * 1.50f - padding.x * 3.0f, padding.y, widthScale / 16.0f, height / 22.0f));
-		scene.Add2DCollection(killAmount, "KillCounter");
+		scene.Add2DCollection(killAmount, "ZKillCounter");
 
 		Collection2D* deathAmount = new Collection2D;
 		deathAmount->AddElement<rtd::Picture>("Deaths.png", draw_t(moneyPos.x - (moneyScale.x) * 1.00f - padding.x * 2.0f, padding.y, widthScale / 16.0f, height / 22.0f));
 		deathAmount->AddElement<rtd::Text>("0", draw_t(moneyPos.x - (moneyScale.x) * 1.00f - padding.x * 2.0f, padding.y, widthScale / 16.0f, height / 22.0f));
-		scene.Add2DCollection(deathAmount, "DeathCounter");
+		scene.Add2DCollection(deathAmount, "ZDeathCounter");
+
+		
+
+		// Picture that will be drawn when player is in destroy mode.
+		Collection2D* bullDoze = new Collection2D;
+		bullDoze->AddElement<rtd::Picture>("No.png", draw_t(0.0f, 0.0f, widthScale / 24, height / 14));
+		bullDoze->Hide();
+		scene.Add2DCollection(bullDoze, "bullDoze");
+
+
+
+		//Collection2D* timerCollection = new Collection2D;
+		//timerCollection->AddElement<rtd::Text>("0", draw_text_t(0, 0, width, height / 16.f));
+		//scene.Add2DCollection(timerCollection, "timer");
+
 
 		
 		Collection2D* abilities = new Collection2D;
@@ -543,7 +544,7 @@ namespace sceneHelp
 		third->SetReference(&game->m_dodgeCooldown);
 		rtd::AbilityUI* fourth = abilities->AddElement<rtd::AbilityUI>(draw_t(abillityPos.x + (abillitySize.x + padding.x / 2), abillityPos.y, abillitySize.x, abillitySize.y), D2D1::ColorF(0, 1.0f), "LockedIcon.png");
 		rtd::AbilityUI* fith = abilities->AddElement<rtd::AbilityUI>(draw_t(abillityPos.x + (abillitySize.x * 2 + padding.x), abillityPos.y, abillitySize.x, abillitySize.y), D2D1::ColorF(0, 1.0f), "LockedIcon.png");
-		scene.Add2DCollection(abilities, "AbilityUI");
+		scene.Add2DCollection(abilities, "ZAbilityUI");
 
 		Collection2D* pauseMenu = new Collection2D;
 		rtd::MenuUI* inGameMenu = pauseMenu->AddElement<rtd::MenuUI>("Menu.png", draw_t(width * 0.5f - (widthScale * 0.125f), (height / 2)  - (height * 0.25f), widthScale * 0.25f, height * 0.5f));
