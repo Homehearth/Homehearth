@@ -262,7 +262,8 @@ namespace sceneHelp
 
 
 
-				Collection2D* bullColl = game->GetCurrentScene()->GetCollection("bullDoze");
+				Collection2D* bullColl = game->GetScene("Game").GetCollection("bullDoze");
+
 				rtd::Picture* bullIcon = dynamic_cast<rtd::Picture*>(bullColl->elements[0].get());
 				ShopItem shopitem = game->GetShopItem();
 
