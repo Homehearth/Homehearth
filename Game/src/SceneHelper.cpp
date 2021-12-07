@@ -275,15 +275,28 @@ namespace sceneHelp
 				}
 
 				ElementState shopMenuState = game->GetScene("Game").GetCollection("shopMenu")->GetState();
-				if ((shopMenuState == ElementState::OUTSIDE || shopMenuState == ElementState::NONE) &&
-					game->GetScene("Game").GetCollection("ScrolldownMenu")->GetState() == ElementState::OUTSIDE)
+				Collection2D* menu = game->GetScene("Game").GetCollection("inGameMenu");
+				ElementState shopIconState = game->GetScene("Game").GetCollection("shopIcon")->GetState();
+
+				if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Keys::Escape, KeyState::PRESSED))
+				{
+					if (shopMenuState == ElementState::NONE && menu->GetState() == ElementState::NONE)
+					{
+						menu->Show();
+					}
+					else
+					{
+						menu->Hide();
+					}
+				}
+
+				if (shopMenuState == ElementState::OUTSIDE && shopIconState == ElementState::OUTSIDE)
 				{
 					if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Keys::Escape, KeyState::PRESSED) ||
 						InputSystem::Get().CheckMouseKey(MouseKey::RIGHT, KeyState::PRESSED) ||
 						(InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED) && game->GetShopItem() == ShopItem::None))
 					{
 						game->GetScene("Game").GetCollection("shopMenu")->Hide();
-						dynamic_cast<rtd::Scroller*>(game->GetScene("Game").GetCollection("ScrolldownMenu")->elements[0].get())->ScrollUp();
 						game->SetShopItem(ShopItem::None);
 						bullColl->Hide();
 					}
@@ -532,21 +545,11 @@ namespace sceneHelp
 		scene.Add2DCollection(pauseMenu, "inGameMenu");
 		pauseMenu->Hide();
 
+		Collection2D* shopIcon = new Collection2D;
 		Collection2D* shopMenu = new Collection2D;
-		Collection2D* scrolldownMenu = new Collection2D;
-		rtd::Scroller* sc = scrolldownMenu->AddElement<rtd::Scroller>(draw_t(0.0f, -(height / 14) * 3.0f, widthScale / 24.0f, (height / 16) * 3.0f), sm::Vector2(0, 0));
 		rtd::Button* button;
-		button = sc->AddButton("No.png", draw_t(0.0f, -(height / 14), widthScale / 24, height / 14));
-		button->SetOnPressedEvent([=]()
-			{
-				pauseMenu->Show();
-			});
-		button->SetOnHoverEvent([=]()
-			{
-				game->m_inputState.leftMouse = false;
-			});
 
-		button = sc->AddButton("ShopIcon.png", draw_t(0.0f, -(height / 14) * 2.0f, widthScale / 24, height / 14));
+		button = shopIcon->AddElement<rtd::Button>("ShopIcon.png", draw_t(0.0f, 0.0f, widthScale / 24, height / 14));
 		button->SetOnPressedEvent([=]()
 			{
 				if (game->GetCycler().GetTimePeriod() == CyclePeriod::DAY)
@@ -559,16 +562,8 @@ namespace sceneHelp
 			{
 				game->m_inputState.leftMouse = false;
 			});
-		sc->SetPrimeButtonMeasurements(draw_t(0.0f, 0.0f, widthScale / 24, height / 14));
-		sc->SetOnPrimeButtonPress([=]()
-			{
-				shopMenu->Hide();
-			});
-		sc->SetOnPrimeButtonHover([=]()
-			{
-				game->m_inputState.leftMouse = false;
-			});
-		scene.Add2DCollection(scrolldownMenu, "ScrolldownMenu");
+
+		scene.Add2DCollection(shopIcon, "shopIcon");
 
 		rtd::ShopUI* shop = shopMenu->AddElement<rtd::ShopUI>("Shop.png", draw_t(width / 24.0f, (height / 16), widthScale * 0.25f, height * 0.5f));
 		shop->SetOnHoverEvent([=]()
@@ -760,7 +755,7 @@ namespace sceneHelp
 		const float height = (float)game->GetWindow()->GetHeight();
 		float widthScale = height * (16.f / 9.f);
 		sm::Vector2 padding = { widthScale / 64.f, widthScale / 64.f };
-		
+
 		sm::Vector2 scaleCat = { widthScale / 6.f, height / 9.f };
 		sm::Vector2 scale = { scaleCat.x * 0.57f, scaleCat.y * 0.57f };
 		Scene& scene = game->GetScene("Options");
@@ -779,17 +774,17 @@ namespace sceneHelp
 
 		/*---------Categories---------*/
 		Collection2D* category = new Collection2D;
-		sm::Vector2 posCat = {padding.x, ((height / 2.f) - scaleCat.y / 2.f) - (padding.y + scaleCat.y) };
+		sm::Vector2 posCat = { padding.x, ((height / 2.f) - scaleCat.y / 2.f) - (padding.y + scaleCat.y) };
 		sm::Vector2 canvasSize = { width - posCat.x - scaleCat.x - padding.x * 2.f, height - padding.y * 2 };
 		sm::Vector2 canvasPos = { posCat.x + scaleCat.x + padding.x, height - (canvasSize.y + padding.y) };
 
 		rtd::Button* videoCat = category->AddElement<rtd::Button>("Button.png", draw_t(posCat.x, posCat.y, scaleCat.x, scaleCat.y));
 		category->AddElement<rtd::Text>("Video", draw_t(posCat.x, posCat.y, scaleCat.x, scaleCat.y));
 		posCat.y += padding.y + scaleCat.y;
-		rtd::Button* audioCat			= category->AddElement<rtd::Button>("Button.png", draw_t(posCat.x, posCat.y, scaleCat.x, scaleCat.y));
+		rtd::Button* audioCat = category->AddElement<rtd::Button>("Button.png", draw_t(posCat.x, posCat.y, scaleCat.x, scaleCat.y));
 		category->AddElement<rtd::Text>("Audio", draw_t(posCat.x, posCat.y, scaleCat.x, scaleCat.y));
 		posCat.y += padding.y + scaleCat.y;
-		rtd::Button* graphicsCat		= category->AddElement<rtd::Button>("Button.png", draw_t(posCat.x, posCat.y, scaleCat.x, scaleCat.y));
+		rtd::Button* graphicsCat = category->AddElement<rtd::Button>("Button.png", draw_t(posCat.x, posCat.y, scaleCat.x, scaleCat.y));
 		category->AddElement<rtd::Text>("Graphics", draw_t(posCat.x, posCat.y, scaleCat.x, scaleCat.y));
 
 		category->AddElement<rtd::Canvas>(D2D1::ColorF(178.f / 255.f, 44.f / 255.f, 65.f / 255.f), draw_t(canvasPos.x, canvasPos.y, canvasSize.x, canvasSize.y));
@@ -799,23 +794,23 @@ namespace sceneHelp
 
 		/*---------Video---------*/
 		Collection2D* videoCategory = new Collection2D;
-		sm::Vector2 posVideo = {width - (scale.x + padding.x * 2), canvasPos.y + padding.y};
+		sm::Vector2 posVideo = { width - (scale.x + padding.x * 2), canvasPos.y + padding.y };
 
 		videoCategory->AddElement<rtd::Text>("Fullscreen", draw_t(canvasPos.x + padding.x, posVideo.y, scale.x, scale.y));
-		rtd::Border* fullscreenBorder		= videoCategory->AddElement<rtd::Border>(draw_t(canvasPos.x + padding.x, posVideo.y, canvasSize.x - padding.x * 2, scale.y));
+		rtd::Border* fullscreenBorder = videoCategory->AddElement<rtd::Border>(draw_t(canvasPos.x + padding.x, posVideo.y, canvasSize.x - padding.x * 2, scale.y));
 		fullscreenBorder->SetColor(D2D1::ColorF(53.f / 255.f, 22.f / 255.f, 26.f / 255.f));
 		fullscreenBorder->SetLineWidth(LineWidth::LARGE);
-		rtd::Button* fullscreenOpt			= videoCategory->AddElement<rtd::Button>("Button.png", draw_t(posVideo.x, posVideo.y, scale.x, scale.y));
-		rtd::Text* fullscreenButtonText		= videoCategory->AddElement<rtd::Text>("Yes", draw_t(posVideo.x, posVideo.y, scale.x, scale.y));
+		rtd::Button* fullscreenOpt = videoCategory->AddElement<rtd::Button>("Button.png", draw_t(posVideo.x, posVideo.y, scale.x, scale.y));
+		rtd::Text* fullscreenButtonText = videoCategory->AddElement<rtd::Text>("Yes", draw_t(posVideo.x, posVideo.y, scale.x, scale.y));
 
 		posVideo.y += scale.y + padding.y * 1.5f;
 		videoCategory->AddElement<rtd::Text>("Resolution if not fullscreen", draw_t(canvasPos.x - padding.x, posVideo.y, scale.x * 3.f, scale.y));
 		rtd::Border* resolutionBorder = videoCategory->AddElement<rtd::Border>(draw_t(canvasPos.x + padding.x, posVideo.y, canvasSize.x - padding.x * 2, scale.y));
 		resolutionBorder->SetColor(D2D1::ColorF(53.f / 255.f, 22.f / 255.f, 26.f / 255.f));
 		resolutionBorder->SetLineWidth(LineWidth::LARGE);
-		rtd::Button* resolutionOpt			= videoCategory->AddElement<rtd::Button>("Button.png", draw_t(posVideo.x, posVideo.y, scale.x, scale.y));
-		rtd::Text* resButtonText			= videoCategory->AddElement<rtd::Text>("1920x1080", draw_t(posVideo.x, posVideo.y, scale.x, scale.y));
-		
+		rtd::Button* resolutionOpt = videoCategory->AddElement<rtd::Button>("Button.png", draw_t(posVideo.x, posVideo.y, scale.x, scale.y));
+		rtd::Text* resButtonText = videoCategory->AddElement<rtd::Text>("1920x1080", draw_t(posVideo.x, posVideo.y, scale.x, scale.y));
+
 		//Resolution Button
 		{
 			static int winWidth = std::stoi(OptionSystem::Get().GetOption("WindowWidth"));
@@ -907,7 +902,7 @@ namespace sceneHelp
 
 				});
 		}
-		 
+
 		//Fullscreen button
 		{
 			static int fullscreen = std::stoi(OptionSystem::Get().GetOption("Fullscreen"));
@@ -947,13 +942,13 @@ namespace sceneHelp
 		sm::Vector2 minPos = { canvasPos.x + padding.x + canvasSize.x / 2.f, posAudio.y };
 		sm::Vector2 maxPos = { width - (scale.x + padding.x * 2.f), posAudio.y };
 		rtd::Canvas* masterVolCanvas = audioCategory->AddElement<rtd::Canvas>(D2D1::ColorF(53.f / 255.f, 22.f / 255.f, 26.f / 255.f), draw_t(minPos.x - 6.f, posAudio.y, ((canvasSize.x / 2.f) + 6.f) - padding.x * 2.f, scale.y));
-		rtd::Slider* masterVolumeSL = audioCategory->AddElement<rtd::Slider>(D2D1::ColorF(0,0,0), draw_t(minPos.x, posAudio.y, scale.x, scale.y), &game->m_masterVolume, 1.0f, 0.0f);
+		rtd::Slider* masterVolumeSL = audioCategory->AddElement<rtd::Slider>(D2D1::ColorF(0, 0, 0), draw_t(minPos.x, posAudio.y, scale.x, scale.y), &game->m_masterVolume, 1.0f, 0.0f);
 		masterVolumeSL->SetMinPos(minPos);
 		masterVolumeSL->SetMaxPos(maxPos);
 		rtd::Text* valueText = masterVolumeSL->GetValueText();
-		sm::Vector2 valueTextPos = {minPos.x + (maxPos.x - minPos.x) / 2 + (valueText->GetText().length() * D2D1Core::GetDefaultFontSize()) / 2.f, posAudio.y };
+		sm::Vector2 valueTextPos = { minPos.x + (maxPos.x - minPos.x) / 2 + (valueText->GetText().length() * D2D1Core::GetDefaultFontSize()) / 2.f, posAudio.y };
 		valueText->SetPosition(valueTextPos.x, valueTextPos.y);
-		
+
 		audioCategory->AddElement<rtd::Text>("Master", draw_t(canvasPos.x + padding.x, posAudio.y, scale.x, scale.y));
 		rtd::Border* lineBorder = audioCategory->AddElement<rtd::Border>(draw_t(canvasPos.x + padding.x, posAudio.y, canvasSize.x - padding.x * 2.f, scale.y));
 		lineBorder->SetColor(D2D1::ColorF(53.f / 255.f, 22.f / 255.f, 26.f / 255.f));
@@ -1220,7 +1215,7 @@ namespace sceneHelp
 				audioCategory->Hide();
 				graphicsCategory->Show();
 			});
-		
+
 	}
 
 	void SetupLoadingScene(Game* game)
