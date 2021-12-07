@@ -380,7 +380,7 @@ void CombatSystem::AddCollisionMeleeBehavior(Entity entity, Entity attackEntity,
 							if (e == attackEntity.GetComponent<comp::PlayerReference>()->player)
 							{
 								p.kills++;
-								e.UpdateNetwork();
+								scene.publish<EComponentUpdated>(e, ecs::Component::KD);
 							}
 
 							});

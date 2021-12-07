@@ -505,8 +505,7 @@ void Simulation::SendSnapshot()
 		std::bitset<ecs::Component::COMPONENT_MAX> compMask;
 		compMask.set(ecs::Component::TRANSFORM);
 		compMask.set(ecs::Component::BOUNDING_ORIENTED_BOX);
-		compMask.set(ecs::Component::COST);
-		compMask.set(ecs::Component::KD);
+		//compMask.set(ecs::Component::COST);
 #if DEBUG_SNAPSHOT
 		compMask.set(ecs::Component::BOUNDING_SPHERE);
 #endif
@@ -742,14 +741,14 @@ void Simulation::UpgradeDefence(const uint32_t& id)
 				{
 					if (m_currency >= c->cost)
 					{
-						c->cost += 5;
 						// Add upgrades here.
 						h->maxHealth += 35;
 						h->currentHealth += 35;
 
 						// Cost is here.
 						m_currency -= c->cost;
-						e.UpdateNetwork();
+						c->cost += 5;
+						m_pGameScene->publish<EComponentUpdated>(e, ecs::Component::COST);
 					}
 				}
 			}

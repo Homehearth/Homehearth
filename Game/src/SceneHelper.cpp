@@ -463,8 +463,6 @@ namespace sceneHelp
 		Scene& scene = game->GetScene("Game");
 		float width = (float)game->GetWindow()->GetWidth();
 		float height = (float)game->GetWindow()->GetHeight();
-		float widthScale = height * (16.f / 9.f);
-		sm::Vector2 padding = { (widthScale / 128.f) , (widthScale / 64.f) / (16.f / 9.f) };
 
 		float widthScale = height * (16.f / 9.f);
 		sm::Vector2 padding = { (widthScale / 64.f) , (widthScale / 64.f) / (16.f / 9.f) };
@@ -521,20 +519,6 @@ namespace sceneHelp
 		deathAmount->AddElement<rtd::Picture>("Deaths.png", draw_t(moneyPos.x - (moneyScale.x) * 1.00f - padding.x * 2.0f, padding.y, widthScale / 16.0f, height / 22.0f));
 		deathAmount->AddElement<rtd::Text>("0", draw_t(moneyPos.x - (moneyScale.x) * 1.00f - padding.x * 2.0f, padding.y, widthScale / 16.0f, height / 22.0f));
 		scene.Add2DCollection(deathAmount, "ZDeathCounter");
-
-
-
-		// Picture that will be drawn when player is in destroy mode.
-		Collection2D* bullDoze = new Collection2D;
-		bullDoze->AddElement<rtd::Picture>("No.png", draw_t(0.0f, 0.0f, widthScale / 24, height / 14));
-		bullDoze->Hide();
-		scene.Add2DCollection(bullDoze, "bullDoze");
-
-
-
-		//Collection2D* timerCollection = new Collection2D;
-		//timerCollection->AddElement<rtd::Text>("0", draw_text_t(0, 0, width, height / 16.f));
-		//scene.Add2DCollection(timerCollection, "timer");
 
 
 

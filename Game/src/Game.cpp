@@ -116,8 +116,8 @@ void Game::OnUserUpdate(float deltaTime)
 		// Update the death and kill counter.
 		if (p)
 		{
-			Collection2D* killColl = scene.GetCollection("KillCounter");
-			Collection2D* deathColl = scene.GetCollection("DeathCounter");
+			Collection2D* killColl = scene.GetCollection("ZKillCounter");
+			Collection2D* deathColl = scene.GetCollection("ZDeathCounter");
 			if (killColl && deathColl)
 			{
 				dynamic_cast<rtd::Text*>(killColl->elements[1].get())->SetText(std::to_string(p->kills));
