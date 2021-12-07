@@ -72,14 +72,11 @@ cbuffer IsCollidingCB : register(b5)
 
 cbuffer ParticleUpdate : register(b8)
 {
-    float4 emitterPosition;
-    float deltaTime;
-    uint counter;
-    float lifeTime;
-    float particleSizeMulitplier;
-    float c_particleSpeed;
-    
-    float3 c_pPadding;
+    float4  c_pEmitterPosition;
+    uint    c_pCounter;
+    float   c_pLifeTime;
+    float   c_pSizeMulitplier;
+    float   c_pSpeed;    
 }
 
 cbuffer ParticleMode : register(b9)
@@ -96,6 +93,7 @@ cbuffer DecalInfoCB : register(b10)
 cbuffer DeltaCB : register(b6)
 {
     float c_deltaTime;
+    float3 c_dPadding;
 }
 
 cbuffer BlurSettings : register(b11)

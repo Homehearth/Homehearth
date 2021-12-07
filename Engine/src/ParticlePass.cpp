@@ -81,9 +81,9 @@ void ParticlePass::Render(Scene* pScene)
 {
 	m_counter++;
 	if (m_counter >= 10)
-	{
 		m_counter = 0;
-	}
+
+	m_deltaTimeUpdate.delta = Stats::Get().GetFrameTime();
 
 	pScene->RenderParticles(this);
 }

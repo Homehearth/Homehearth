@@ -6,7 +6,6 @@ ALIGN16
 struct ParticleUpdate 
 {
 	sm::Vector4 emitterPosition;;
-	float deltaTime;
 	UINT counter;
 	float lifeTime;
 	float particleSizeMulitplier;
@@ -32,8 +31,10 @@ public:
 	dx::ConstantBuffer<ParticleUpdate>	m_constantBufferParticleUpdate;
 	dx::ConstantBuffer<ParticleModePUpdate>	m_constantBufferParticleMode;
 
+
 	ParticleUpdate						m_particleUpdate;
 	ParticleModePUpdate					m_particleModeUpdate;
+	delta_time_t						m_deltaTimeUpdate;
 
 	ComPtr<ID3D11ShaderResourceView>	m_randomNumbersSRV;
 	ComPtr<ID3D11Buffer>				m_randomNumbersBuffer;
