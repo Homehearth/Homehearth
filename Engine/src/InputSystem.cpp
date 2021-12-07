@@ -1,6 +1,6 @@
 #include "EnginePCH.h"
 #include "InputSystem.h"
-InputSystem::InputSystem(): m_kBState(), m_mouseState()
+InputSystem::InputSystem() : m_kBState(), m_mouseState()
 {
 	m_mousePos.x = 0;
 	m_mousePos.y = 0;
@@ -13,6 +13,17 @@ InputSystem::InputSystem(): m_kBState(), m_mouseState()
 	m_currentCamera = nullptr;
 	m_lastScrollValue = 0;
 	m_lastScrollDirection = 0;
+	m_inputState = SystemState::TEXTFIELD;
+	m_ctrlMode = false;
+	m_shiftMode = false;
+	if ((GetKeyState(VK_CAPITAL) & 0x0001) != 0)
+	{
+		m_capsLockMode = true;
+	}
+	else
+	{
+		m_capsLockMode = false;
+	}
 }
 
 void InputSystem::SetMouseWindow(const HWND& windowHandle, const int width, const int height)
@@ -27,7 +38,9 @@ void InputSystem::SetMouseWindow(const HWND& windowHandle, const int width, cons
 void InputSystem::SetCamera(Camera* camera)
 {
 	if (camera != nullptr)
+	{
 		this->m_currentCamera = camera;
+	}
 	else
 	{
 		LOG_WARNING("Tried to set camera with nullptr...");
@@ -62,6 +75,113 @@ bool InputSystem::CheckKeyboardKey(const dx::Keyboard::Keys& key, const KeyState
 		break;
 	}
 }
+void InputSystem::AddToUpQueue(WPARAM wParam)
+{
+	this->m_keyUpQueue.push(wParam);
+}
+
+WPARAM* InputSystem::GetKeyFromUPQueue()
+{
+	if (!m_keyUpQueue.empty())
+	{
+		WPARAM* queueKey = &m_keyUpQueue.front();
+		m_keyUpQueue.pop();
+		switch (*queueKey)
+		{
+		case VK_SHIFT:
+			m_shiftMode = false;
+			break;
+		case VK_CONTROL:
+			m_ctrlMode = false;
+			break;
+		case VK_CAPITAL:
+			m_capsLockMode = !m_capsLockMode;
+			break;
+		default:
+			break;
+		}
+		return queueKey;
+	}
+	else
+	{
+		return nullptr;
+	}
+}
+
+void InputSystem::AddToDownQueue(WPARAM wParam)
+{
+	this->m_keyDownQueue.push(wParam);
+}
+
+void InputSystem::SetInputState(SystemState state)
+{
+	m_inputState = state;
+	while (!m_keyDownQueue.empty())
+	{
+		m_keyDownQueue.pop();
+	}
+	while (!m_keyUpQueue.empty())
+	{
+		m_keyUpQueue.pop();
+	}
+	if (state == SystemState::TEXTFIELD)
+	{
+		if ((GetKeyState(VK_CAPITAL) & 0x0001) != 0)
+		{
+			m_capsLockMode = true;
+		}
+		else
+		{
+			m_capsLockMode = false;
+		}
+	}
+
+}
+
+WPARAM* InputSystem::GetKeyFromDownQueue()
+{
+	if (!m_keyDownQueue.empty())
+	{
+		WPARAM* queueKey = &m_keyDownQueue.front();
+		m_keyDownQueue.pop();
+		switch (*queueKey)
+		{
+		case VK_SHIFT:
+			m_shiftMode = true;
+			break;
+		case VK_CONTROL:
+			m_ctrlMode = true;
+			break;
+		default:
+			break;
+		}
+		return queueKey;
+	}
+	else
+	{
+		return nullptr;
+	}
+}
+
+
+const bool& InputSystem::IsInShiftMode() const
+{
+	return m_shiftMode;
+}
+const bool& InputSystem::IsInCapsLock() const
+{
+	return m_capsLockMode;
+}
+
+const bool& InputSystem::IsInCTRLMode() const
+{
+	return m_ctrlMode;
+}
+
+SystemState InputSystem::GetInputState() const
+{
+	return m_inputState;
+}
 
 const std::unique_ptr<dx::Keyboard>& InputSystem::GetKeyboard() const
 {
@@ -71,6 +191,11 @@ const std::unique_ptr<dx::Keyboard>& InputSystem::GetKeyboard() const
 const std::unique_ptr<dx::Mouse>& InputSystem::GetMouse() const
 {
 	return m_mouse;
+}
+
+size_t InputSystem::GetDownQueueSize() const
+{
+	return m_keyDownQueue.size();
 }
 
 bool InputSystem::CheckMouseKey(const MouseKey mouseButton, const KeyState state) const
@@ -112,7 +237,7 @@ const int InputSystem::GetMouseWheelRotation()
 {
 	int currentValue = m_mouseState.scrollWheelValue;
 	int difference = currentValue - m_lastScrollValue;
-	m_lastScrollValue = currentValue; 
+	m_lastScrollValue = currentValue;
 	return difference;
 }
 
@@ -186,7 +311,7 @@ std::string InputSystem::GetClipboard()
 		LOG_WARNING("Failed to get clipboard string");
 		return "";
 	}
-	
+
 	GlobalUnlock(handle);
 	CloseClipboard();
 
