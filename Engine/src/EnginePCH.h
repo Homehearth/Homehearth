@@ -25,6 +25,8 @@
 #define IMGUI(a) do {} while(0)
 #endif
 
+//Combines meshes with the same material to one
+#define OPTIMIZE_MODELS 1
 
 
 // Windows

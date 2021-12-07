@@ -288,26 +288,23 @@ bool RModel::Create(const std::string& filename)
     */
     for (auto& mat : matSet)
     {
-        if (OPTIMIZE_MODEL)
+#if OPTIMIZE_MODELS
+		if (!CombineMeshes(scene->mMaterials[mat.first], mat.second, boneMap))
+		{
+			importer.FreeScene();
+			return false;
+		}
+#else
+        //Load in each aimesh as one mesh
+        for (int i = 0; i < mat.second.size(); i++)
         {
-            if (!CombineMeshes(scene->mMaterials[mat.first], mat.second, boneMap))
+            if (!CreateOneMesh(scene->mMaterials[mat.first], mat.second[i], boneMap))
             {
                 importer.FreeScene();
                 return false;
             }
         }
-        //Load in each aimesh as one mesh
-        else
-        {
-            for (int i = 0; i < mat.second.size(); i++)
-            {
-                if (!CreateOneMesh(scene->mMaterials[mat.first], mat.second[i], boneMap))
-                {
-                    importer.FreeScene();
-                    return false;
-                }
-            }
-        }
+#endif
     }
     m_meshes.shrink_to_fit();
 

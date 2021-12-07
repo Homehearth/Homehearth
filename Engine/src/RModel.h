@@ -4,9 +4,6 @@
 #include "RMaterial.h"
 #include "Mesh.h"
 
-//Combines meshes with the same material to one
-const bool OPTIMIZE_MODEL = true;
-
 //Define structs to avoid 
 struct aiMesh;
 struct aiScene;
