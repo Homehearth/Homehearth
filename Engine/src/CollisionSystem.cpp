@@ -131,29 +131,29 @@ uint32_t CollisionSystem::GetCollisionCount(Entity entity) const
 	return count;
 }
 
-CollisionSystem::Projection_t CollisionSystem::GetProjection(sm::Vector3 axis, sm::Vector3* corners)
-{
-	float min = axis.Dot(corners[0]);
-	float max = min;
-
-	for (int i = 1; i < 8; i++)
-	{
-		float p = axis.Dot(corners[i]);
-
-		if (p < min)
-		{
-			min = p;
-		}
-		else if (p > max)
-		{
-			max = p;
-		}
-
-	}
-
-	//Projection_t projection = {min, max};
-	return { min, max };
-}
+//CollisionSystem::Projection_t CollisionSystem::GetProjection(sm::Vector3 axis, sm::Vector3* corners)
+//{
+//	float min = axis.Dot(corners[0]);
+//	float max = min;
+//
+//	for (int i = 1; i < 8; i++)
+//	{
+//		float p = axis.Dot(corners[i]);
+//
+//		if (p < min)
+//		{
+//			min = p;
+//		}
+//		else if (p > max)
+//		{
+//			max = p;
+//		}
+//
+//	}
+//
+//	//Projection_t projection = {min, max};
+//	return { min, max };
+//}
 
 std::pair<Entity, Entity> CollisionSystem::MakeEntityPair(Entity entity1, Entity entity2)
 {

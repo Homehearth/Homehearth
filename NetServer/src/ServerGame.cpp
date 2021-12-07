@@ -214,6 +214,7 @@ bool ServerGame::LoadMapColliders(const std::string& filename)
 		return false;
 	}
 	// Go through all the meshes and create boundingboxes for them
+
 	for (UINT i = 0; i < scene->mNumMeshes; i++)
 	{
 		const aiMesh* mesh = scene->mMeshes[i];

@@ -360,24 +360,27 @@ namespace sceneHelp
 
 		/*---------Background---------*/
 		Collection2D* mainMenu = new Collection2D;
-		mainMenu->AddElement<rtd::Picture>("MainMenu.png", draw_t(0, 0, width, height));
+		mainMenu->AddElement<rtd::Picture>("MenuBG.png", draw_t(0, 0, width, height));
+		sm::Vector2 textSize = { (widthScale * 0.35f) * 1.5f, (height * 0.2f) * 1.5f };
+		sm::Vector2 textPos = { (width / 2) - textSize.x / 2, (height / 2) - textSize.y / 2 };
+		mainMenu->AddElement<rtd::Picture>("MainMenuText.png", draw_t(textPos.x, textPos.y - height / 8.f, textSize.x, textSize.y));
 		scene.Add2DCollection(mainMenu, "AMainMenu");
 		/*---------Background---------*/
 
 
 		/*---------Textfields---------*/
 		Collection2D* connectFields = new Collection2D;
-		rtd::TextField* ipField = connectFields->AddElement<rtd::TextField>(draw_text_t((width / 2) - (widthScale * 0.25), height * 0.55f, widthScale * 0.25f, D2D1Core::GetDefaultFontSize()), 30, true);
+		rtd::TextField* ipField = connectFields->AddElement<rtd::TextField>(draw_text_t((width / 2.f) - (widthScale * 0.25f), height * 0.55f, widthScale * 0.25f, D2D1Core::GetDefaultFontSize()), 30, true);
 		ipField->SetDescriptionText("IP Address:");
 		padding = (widthScale / 64.f);
-		rtd::TextField* portField = connectFields->AddElement<rtd::TextField>(draw_text_t((width / 2) + padding, height * 0.55f, widthScale * 0.25f, D2D1Core::GetDefaultFontSize()), 6);
+		rtd::TextField* portField = connectFields->AddElement<rtd::TextField>(draw_text_t((width / 2.f) + padding, height * 0.55f, widthScale * 0.25f, D2D1Core::GetDefaultFontSize()), 6);
 		portField->SetDescriptionText("Port:");
 		/*---------Textfields---------*/
 
 
 		/*---------Buttons---------*/
 		sm::Vector2 buttonSize = { widthScale / 6.f, height / 10.f };
-		sm::Vector2 buttonPos = { (width / 2) - (buttonSize.x / 2),  height - (height * 0.37f) };
+		sm::Vector2 buttonPos = { (width / 2.f) - (buttonSize.x / 2.f),  height - (height * 0.37f) };
 		padding = buttonSize.y + height * 0.02f;
 		rtd::Button* connectButton = connectFields->AddElement<rtd::Button>("Start.png", draw_t(buttonPos.x, buttonPos.y, buttonSize.x, buttonSize.y));
 		buttonPos.y += padding;
@@ -386,7 +389,7 @@ namespace sceneHelp
 		rtd::Button* quitButton = connectFields->AddElement<rtd::Button>("Quit.png", draw_t(buttonPos.x, buttonPos.y, buttonSize.x, buttonSize.y)); //width / 4.f, height * 0.15f
 		scene.Add2DCollection(connectFields, "ConnectFields");
 
-		rtd::Button* externalLinkBtn = connectFields->AddElement<rtd::Button>("Button.png", draw_t(width - width / 4.f, height - (height / 5), width / 8.f, height / 16));
+		rtd::Button* externalLinkBtn = connectFields->AddElement<rtd::Button>("Button.png", draw_t(width - width / 4.f, height - (height / 5.f), width / 8.f, height / 16.f));
 		externalLinkBtn->GetText()->SetScale(0.5f);
 		externalLinkBtn->GetText()->SetText("Give Feedback!");
 		externalLinkBtn->SetOnPressedEvent([] {
@@ -459,7 +462,7 @@ namespace sceneHelp
 		float height = (float)game->GetWindow()->GetHeight();
 
 		float widthScale = height * (16.f / 9.f);
-		sm::Vector2 padding = { (widthScale / 64.f) , (widthScale / 64.f) / (16.f / 9.f) };
+		sm::Vector2 padding = { widthScale / 64.f , widthScale / 64.f };
 
 		// Picture that will be drawn when player is in destroy mode.
 		Collection2D* bullDoze = new Collection2D;
@@ -484,10 +487,6 @@ namespace sceneHelp
 			}
 			scene.Add2DCollection(playerHp, "player" + std::to_string(i + 1) + "Info");
 		}
-
-		//Collection2D* timerCollection = new Collection2D;
-		//timerCollection->AddElement<rtd::Text>("0", draw_text_t(0, 0, width, height / 16.f));
-		//scene.Add2DCollection(timerCollection, "timer");
 
 		for (int i = 0; i < MAX_PLAYERS_PER_LOBBY; i++)
 		{
@@ -615,23 +614,25 @@ namespace sceneHelp
 
 		const float widthScale = height * (16.f / 9.f);
 		const float paddingWidth = (widthScale / 64.f);
-		const float paddingHeight = paddingWidth / (16.f / 9.f);
+		const float paddingHeight = paddingWidth;
 
 		Scene& scene = game->GetScene("Lobby");
 
+		sm::Vector2 scale = { widthScale / 4, height / 9 };
+		sm::Vector2 lobbyPos = { width / 16.f, scale.y + paddingHeight };
+		sm::Vector2 classIconPos = { lobbyPos.x + scale.x + paddingWidth, lobbyPos.y };
+
 		for (int i = 0; i < MAX_PLAYERS_PER_LOBBY; i++)
 		{
-			float lobbyHeightPos = ((height / 12) + paddingHeight) * (i + 1) + paddingHeight * i;
-			float lobbyWidthPos = width / 16;
-			sm::Vector2 scale = { widthScale / 4, height / 9 };
-			sm::Vector2 classIconPos = { lobbyWidthPos + scale.x + paddingWidth, lobbyHeightPos };
-
 			Collection2D* playerIcon = new Collection2D;
-			playerIcon->AddElement<rtd::Picture>("Button.png", draw_t(lobbyWidthPos, lobbyHeightPos, scale.x, scale.y));
-			playerIcon->AddElement<rtd::Text>("Player " + std::to_string(i + 1), draw_text_t(lobbyWidthPos, lobbyHeightPos, scale.x, scale.y));
+			playerIcon->AddElement<rtd::Picture>("Button.png", draw_t(lobbyPos.x, lobbyPos.y, scale.x, scale.y));
+			playerIcon->AddElement<rtd::Text>("Player " + std::to_string(i + 1), draw_text_t(lobbyPos.x, lobbyPos.y, scale.x, scale.y));
 			playerIcon->AddElement<rtd::Picture>("WarriorIcon.png", draw_t(classIconPos.x, classIconPos.y, scale.x / 4, scale.y));
-			playerIcon->AddElement<rtd::Picture>("Yes.png", draw_t(classIconPos.x + paddingWidth + (scale.x / 4), lobbyHeightPos, scale.x / 4, scale.y))->SetVisiblity(false);
+			playerIcon->AddElement<rtd::Picture>("Yes.png", draw_t(classIconPos.x + paddingWidth + (scale.x / 4), lobbyPos.y, scale.x / 4, scale.y))->SetVisiblity(false);
 			scene.Add2DCollection(playerIcon, "playerIcon" + std::to_string(i + 1));
+
+			lobbyPos.y += scale.y + paddingHeight;
+			classIconPos.y = lobbyPos.y;
 		}
 
 		Collection2D* classTextCanvas = new Collection2D;
@@ -738,375 +739,94 @@ namespace sceneHelp
 	{
 		const float width = (float)game->GetWindow()->GetWidth();
 		const float height = (float)game->GetWindow()->GetHeight();
+		float widthScale = height * (16.f / 9.f);
+		sm::Vector2 padding = { widthScale / 64.f, widthScale / 64.f };
+		
+		sm::Vector2 scaleCat = { widthScale / 6.f, height / 9.f };
+		sm::Vector2 scale = { scaleCat.x * 0.57f, scaleCat.y * 0.57f };
 		Scene& scene = game->GetScene("Options");
 
-		Collection2D* helpText = new Collection2D;
-		Collection2D* menuBG = new Collection2D;
+		/*---------General---------*/
+		Collection2D* general = new Collection2D;
 
-		menuBG->AddElement<rtd::Picture>("MenuBG.png", draw_t(0, 0, width, height));
-		scene.Add2DCollection(menuBG, "AMenuBG");
-
-		Collection2D* soundCollection = new Collection2D;
-		rtd::Slider* sl = soundCollection->AddElement<rtd::Slider>(D2D1::ColorF(0.0f, 0.0f, 0.0f), draw_t((width / 2) - (width / 9), height / 5, width / 9, height / 16), &game->m_masterVolume, 1.0f, 0.0f);
-		sl->SetMinPos(sm::Vector2((width / 8) - (width / 9)));
-		sl->SetMaxPos(sm::Vector2(width - (width / 8)));
-		sl->SetExplanationText("Master Volume: ");
-		soundCollection->Hide();
-		scene.Add2DCollection(soundCollection, "Sounds");
-
-		// Declaration
-		Collection2D* backButton = new Collection2D;
-		Collection2D* visualMenu = new Collection2D;
-		Collection2D* resolutionMenu = new Collection2D;
-		Collection2D* miscMenu = new Collection2D;
-
-		Collection2D* menu = new Collection2D;
-		rtd::Button* soundsButton = menu->AddElement<rtd::Button>("Button.png", draw_t(width / 8.0f, height / 8.0f, width / 4.0f, height / 8.0f));
-		rtd::Button* visualButton = menu->AddElement<rtd::Button>("Button.png", draw_t((width / 8.0f) * 5.0f, (height / 8.0f), width / 4.0f, height / 8.0f));
-		rtd::Button* helpButton = menu->AddElement<rtd::Button>("Button.png", draw_t((width / 8.0f) * 5.0f, (height / 8.0f) * 4.0f, width / 4.0f, height / 8.0f));
-		helpButton->SetOnPressedEvent([=] {
-
-			helpText->Show();
-			backButton->Show();
-			menu->Hide();
-
+		general->AddElement<rtd::Picture>("MenuBG.png", draw_t(0, 0, width, height));
+		rtd::Button* exitButton = general->AddElement<rtd::Button>("No.png", draw_t(padding.x, padding.y, widthScale / 24, height / 14), false);
+		exitButton->SetOnPressedEvent([=]()
+			{
+				game->SetScene("MainMenu");
 			});
-		menu->AddElement<rtd::Text>("Help", draw_text_t((width / 8.0f) * 5.0f, (height / 8.0f) * 4.0f, width / 4.0f, height / 8.0f));
+		scene.Add2DCollection(general, "AMenuBG");
+		/*---------General---------*/
 
-		rtd::Button* returnTo = menu->AddElement<rtd::Button>("Button.png", draw_t((width / 2.0f) - (width / 8.0f), height - (height / 4.0f), width / 4.0f, height / 8.0f));
-		menu->AddElement<rtd::Text>("Go Back", draw_text_t((width / 2.0f) - (width / 8.0f), height - (height / 4.0f), width / 4.0f, height / 8.0f));
-		returnTo->SetOnPressedEvent([=] {
+		/*---------Categories---------*/
+		Collection2D* category = new Collection2D;
+		sm::Vector2 posCat = {padding.x, ((height / 2.f) - scaleCat.y / 2.f) - (padding.y + scaleCat.y) };
+		sm::Vector2 canvasSize = { width - posCat.x - scaleCat.x - padding.x * 2.f, height - padding.y * 2 };
+		sm::Vector2 canvasPos = { posCat.x + scaleCat.x + padding.x, height - (canvasSize.y + padding.y) };
 
-			game->SetScene("MainMenu");
-			SoundHandler::Get().SetCurrentMusic("MenuTheme");
+		rtd::Button* videoCat = category->AddElement<rtd::Button>("Button.png", draw_t(posCat.x, posCat.y, scaleCat.x, scaleCat.y));
+		category->AddElement<rtd::Text>("Video", draw_t(posCat.x, posCat.y, scaleCat.x, scaleCat.y));
+		posCat.y += padding.y + scaleCat.y;
+		rtd::Button* audioCat			= category->AddElement<rtd::Button>("Button.png", draw_t(posCat.x, posCat.y, scaleCat.x, scaleCat.y));
+		category->AddElement<rtd::Text>("Audio", draw_t(posCat.x, posCat.y, scaleCat.x, scaleCat.y));
+		posCat.y += padding.y + scaleCat.y;
+		rtd::Button* graphicsCat		= category->AddElement<rtd::Button>("Button.png", draw_t(posCat.x, posCat.y, scaleCat.x, scaleCat.y));
+		category->AddElement<rtd::Text>("Graphics", draw_t(posCat.x, posCat.y, scaleCat.x, scaleCat.y));
 
-			});
+		category->AddElement<rtd::Canvas>(D2D1::ColorF(178.f / 255.f, 44.f / 255.f, 65.f / 255.f), draw_t(canvasPos.x, canvasPos.y, canvasSize.x, canvasSize.y));
+		scene.Add2DCollection(category, "Category");
+		/*---------Categories---------*/
 
-		menu->AddElement<rtd::Text>("Sounds", draw_text_t(width / 8.0f, height / 8.0f, width / 4.0f, height / 8.0f));
 
-		visualButton->SetOnPressedEvent([=] {
+		/*---------Video---------*/
+		Collection2D* videoCategory = new Collection2D;
+		sm::Vector2 posVideo = {width - (scale.x + padding.x * 2), canvasPos.y + padding.y};
 
-			menu->Hide();
-			backButton->Show();
-			visualMenu->Show();
+		videoCategory->AddElement<rtd::Text>("Fullscreen", draw_t(canvasPos.x + padding.x, posVideo.y, scale.x, scale.y));
+		rtd::Border* fullscreenBorder		= videoCategory->AddElement<rtd::Border>(draw_t(canvasPos.x + padding.x, posVideo.y, canvasSize.x - padding.x * 2, scale.y));
+		fullscreenBorder->SetColor(D2D1::ColorF(53.f / 255.f, 22.f / 255.f, 26.f / 255.f));
+		fullscreenBorder->SetLineWidth(LineWidth::LARGE);
+		rtd::Button* fullscreenOpt			= videoCategory->AddElement<rtd::Button>("Button.png", draw_t(posVideo.x, posVideo.y, scale.x, scale.y));
+		rtd::Text* fullscreenButtonText		= videoCategory->AddElement<rtd::Text>("Yes", draw_t(posVideo.x, posVideo.y, scale.x, scale.y));
 
-			});
-		menu->AddElement<rtd::Text>("Visuals", draw_text_t((width / 8.0f) * 5.0f, (height / 8.0f), width / 4.0f, height / 8.0f));
-		soundsButton->SetOnPressedEvent([=]() {
-
-			soundCollection->Show();
-			menu->Hide();
-			backButton->Show();
-
-			});
-
-		visualMenu->AddElement<rtd::Button>("Button.png", draw_t(width / 8.0f, height / 8.0f, width / 4.0f, height / 8.0f))->SetOnPressedEvent([=] {
-
-			resolutionMenu->Show();
-			visualMenu->Hide();
-
-			});
-		visualMenu->AddElement<rtd::Text>("Resolution", draw_t(width / 8.0f, height / 8.0f, width / 4.0f, height / 8.0f));
-		visualMenu->AddElement<rtd::Button>("Button.png", draw_t((width / 8.0f), (height / 8.0f) * 4.0f, width / 4.0f, height / 8.0f))->SetOnPressedEvent([=] {
-			visualMenu->Hide();
-			miscMenu->Show();
-			});
-		visualMenu->AddElement<rtd::Text>("Misc.", draw_t((width / 8.0f), (height / 8.0f * 4.0f), width / 4.0f, height / 8.0f));
-
-		// Misc Menu options.
-
-		// Blur option.
-		static DoFType type = DoFType::DEFAULT;
-		std::string savedBlur = OptionSystem::Get().GetOption("BlurType");
-		type = static_cast<DoFType>(std::stod(savedBlur));
-		rtd::Button* blurButton = miscMenu->AddElement<rtd::Button>("Button.png", draw_t(width / 8.0f, height / 8.0f, width / 4.0f, height / 8.0f));
-		rtd::Text* blurType = miscMenu->AddElement<rtd::Text>("Blur Type: Adaptive", draw_t(width / 8.0f, height / 8.0f, width / 4.0f, height / 8.0f));
-
-		// Toggle when the game starts.
-		switch (type)
+		posVideo.y += scale.y + padding.y * 1.5f;
+		videoCategory->AddElement<rtd::Text>("Resolution if not fullscreen", draw_t(canvasPos.x - padding.x, posVideo.y, scale.x * 3.f, scale.y));
+		rtd::Border* resolutionBorder = videoCategory->AddElement<rtd::Border>(draw_t(canvasPos.x + padding.x, posVideo.y, canvasSize.x - padding.x * 2, scale.y));
+		resolutionBorder->SetColor(D2D1::ColorF(53.f / 255.f, 22.f / 255.f, 26.f / 255.f));
+		resolutionBorder->SetLineWidth(LineWidth::LARGE);
+		rtd::Button* resolutionOpt			= videoCategory->AddElement<rtd::Button>("Button.png", draw_t(posVideo.x, posVideo.y, scale.x, scale.y));
+		rtd::Text* resButtonText			= videoCategory->AddElement<rtd::Text>("1920x1080", draw_t(posVideo.x, posVideo.y, scale.x, scale.y));
+		
+		//Resolution Button
 		{
-		case DoFType::VIGNETTE:
-		{
-			blurType->SetText("Blur Type: Static");
-			break;
-		}
-		case DoFType::DEFAULT:
-		{
-			blurType->SetText("Blur Type: NONE");
-			break;
-		}
-		case DoFType::ADAPTIVE:
-		{
-			blurType->SetText("Blur Type: Adaptive");
-			break;
-		}
-		default:
-		{
-			type = DoFType::DEFAULT;
-			break;
-		}
-		}
-		OptionSystem::Get().SetOption("BlurType", std::to_string(static_cast<int>(type)));
-
-		blurButton->SetOnPressedEvent([=] {
-			// Toggle between types.
-			switch (type)
-			{
-			case DoFType::ADAPTIVE:
-			{
-				type = DoFType::VIGNETTE;
-				blurType->SetText("Blur Type: Static");
-				thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::VIGNETTE);
-				OptionSystem::Get().SetOption("BlurType", std::string("2"));
-				break;
-			}
-			case DoFType::VIGNETTE:
-			{
-				type = DoFType::DEFAULT;
-				blurType->SetText("Blur Type: NONE");
-				thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::DEFAULT);
-				OptionSystem::Get().SetOption("BlurType", std::string("0"));
-				break;
-			}
-			case DoFType::DEFAULT:
-			{
-				type = DoFType::ADAPTIVE;
-				blurType->SetText("Blur Type: Adaptive");
-				thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::ADAPTIVE);
-				OptionSystem::Get().SetOption("BlurType", std::string("1"));
-				break;
-			}
-			default:
-				break;
-			}
-
-			});
-
-		// Shadows toggle.
-		static int lightQuality = std::stoi(OptionSystem::Get().GetOption("VolumetricLightQuality"));
-		rtd::Button* lightQualityButton = miscMenu->AddElement<rtd::Button>("Button.png", draw_t((width / 8.0f) * 5.0f, height / 8.0f, width / 4.0f, height / 8.0f));
-		rtd::Text* lightQualityType = miscMenu->AddElement<rtd::Text>("Volumetric Light Quality: LOW", draw_t((width / 8.0f) * 5.0f, height / 8.0f, width / 4.0f, height / 8.0f));
-
-		if (lightQuality <= 15 && lightQuality > 0)
-		{
-			lightQualityType->SetText("Volumetric Light Quality: LOW");
-		}
-		else if (lightQuality > 15 && lightQuality <= 50)
-		{
-			lightQualityType->SetText("Volumetric Light Quality: MEDIUM");
-		}
-		else if (lightQuality > 50 && lightQuality <= 100)
-		{
-			lightQualityType->SetText("Volumetric Light Quality: HIGH");
-		}
-		else if (lightQuality > 100 && lightQuality <= 200)
-		{
-			lightQualityType->SetText("Volumetric Light Quality: INSANE");
-		}
-		else
-		{
-			lightQualityType->SetText("Volumetric Light Quality: MEDIUM");
-			lightQuality = 50;
-		}
-
-		game->GetScene("Game").GetLights()->SetLightVolumeQuality(lightQuality);
-		OptionSystem::Get().SetOption("VolumetricLightQuality", std::to_string(lightQuality));
-
-		lightQualityButton->SetOnPressedEvent([=] {
-
-			switch (lightQuality)
-			{
-			case 15:
-			{
-				lightQuality = 50;
-				lightQualityType->SetText("Volumetric Light Quality: MEDIUM");
-				break;
-			}
-			case 50:
-			{
-				lightQuality = 100;
-				lightQualityType->SetText("Volumetric Light Quality: HIGH");
-				break;
-			}
-			case 100:
-			{
-				lightQuality = 200;
-				lightQualityType->SetText("Volumetric Light Quality: INSANE");
-				break;
-			}
-			case 200:
-			{
-				lightQuality = 15;
-				lightQualityType->SetText("Volumetric Light Quality: LOW");
-				break;
-			}
-			default:
-			{
-				lightQuality = 15;
-				lightQualityType->SetText("Volumetric Light Quality: LOW");
-				break;
-			}
-			};
-
-			OptionSystem::Get().SetOption("VolumetricLightQuality", std::to_string(lightQuality));
-			game->GetScene("Game").GetLights()->SetLightVolumeQuality(lightQuality);
-
-			});
-
-		// Shadow Quality Settings
-
-		static std::string shadowQuality = OptionSystem::Get().GetOption("ShadowQuality");
-		rtd::Button* shadowSizeButton = miscMenu->AddElement<rtd::Button>("Button.png", draw_t((width / 8.0f) * 5.0f, (height / 8.0f) * 4.0f, width / 4.0f, height / 8.0f));
-		rtd::Text* shadowSize = miscMenu->AddElement<rtd::Text>("Shadows Quality: MEDIUM", draw_t((width / 8.0f) * 5.0f, (height / 8.0f) * 4.0f, width / 4.0f, height / 8.0f));
-
-		if (shadowQuality == "Potato")
-		{
-			shadowSize->SetText("Shadows Quality: POTATO");
-		}
-		else if (shadowQuality == "Low")
-		{
-			shadowSize->SetText("Shadows Quality: LOW");
-		}
-		else if (shadowQuality == "Medium")
-		{
-			shadowSize->SetText("Shadows Quality: MEDIUM");
-		}
-		else if (shadowQuality == "High")
-		{
-			shadowSize->SetText("Shadows Quality: HIGH");
-		}
-		else if (shadowQuality == "Insane")
-		{
-			shadowSize->SetText("Shadows Quality: INSANE");
-		}
-		else
-		{
-			shadowSize->SetText("Shadows Quality: MEDIUM");
-			shadowQuality = "Medium";
-			OptionSystem::Get().SetOption("ShadowQuality", std::string("Medium"));
-		}
-
-		shadowSizeButton->SetOnPressedEvent([=] {
-
-			if (shadowQuality == "Potato")
-			{
-				shadowSize->SetText("Shadows Quality: LOW");
-				shadowQuality = "Low";
-				thread::RenderThreadHandler::Get().GetRenderer()->GetShadowPass()->SetShadowMapSize(256);
-			}
-			else if (shadowQuality == "Low")
-			{
-				shadowSize->SetText("Shadows Quality: MEDIUM");
-				shadowQuality = "Medium";
-				thread::RenderThreadHandler::Get().GetRenderer()->GetShadowPass()->SetShadowMapSize(1024);
-			}
-			else if (shadowQuality == "Medium")
-			{
-				shadowSize->SetText("Shadows Quality: HIGH");
-				shadowQuality = "High";
-				thread::RenderThreadHandler::Get().GetRenderer()->GetShadowPass()->SetShadowMapSize(2048);
-			}
-			else if (shadowQuality == "High")
-			{
-				shadowSize->SetText("Shadows Quality: INSANE");
-				shadowQuality = "Insane";
-				thread::RenderThreadHandler::Get().GetRenderer()->GetShadowPass()->SetShadowMapSize(4096);
-			}
-			else if (shadowQuality == "Insane")
-			{
-				shadowSize->SetText("Shadows Quality: POTATO");
-				shadowQuality = "Potato";
-				thread::RenderThreadHandler::Get().GetRenderer()->GetShadowPass()->SetShadowMapSize(512);
-			}
-			OptionSystem::Get().SetOption("ShadowQuality", shadowQuality);
-
-			});
-
-
-		/*
-			Window Size Options
-		*/
-
-		static int winWidth = std::stoi(OptionSystem::Get().GetOption("WindowWidth"));
-		static int winHeight = std::stoi(OptionSystem::Get().GetOption("WindowHeight"));
-		rtd::Button* windowSizeButton = resolutionMenu->AddElement<rtd::Button>("Button.png", draw_t((width / 8.0f) * 5.0f, (height / 8.0f) * 4.0f, width / 4.0f, height / 8.0f));
-		rtd::Text* windowSize = resolutionMenu->AddElement<rtd::Text>("Window Size: 1920x1080", draw_t((width / 8.0f) * 5.0f, (height / 8.0f) * 4.0f, width / 4.0f, height / 8.0f));
-
-		rtd::Button* tipSizeButton = resolutionMenu->AddElement<rtd::Button>("Button.png", draw_t((width / 8.0f) * 5.0f, (height / 8.0f), width / 4.0f, height / 8.0f));
-		rtd::Text* tipSizeText = resolutionMenu->AddElement<rtd::Text>("A restart is required for effects to change.", draw_t((width / 8.0f) * 5.0f, (height / 8.0f), width / 4.0f, height / 8.0f));
-
-		switch (winWidth)
-		{
-		case 1920:
-		{
-			windowSize->SetText("Window Size: 1920x1080");
-			break;
-		}
-		case 2560:
-		{
-			windowSize->SetText("Window Size: 2560x1440");
-			break;
-		}
-		case 1408:
-		{
-			windowSize->SetText("Window Size: 1408x792");
-			break;
-		}
-		case 1536:
-		{
-			windowSize->SetText("Window Size: 1536x864");
-			break;
-		}
-		case 1632:
-		{
-			windowSize->SetText("Window Size: 1632x918");
-			break;
-		}
-		default:
-		{
-			winWidth = 1920;
-			winHeight = 1080;
-			break;
-		}
-		};
-
-		windowSizeButton->SetOnPressedEvent([=] {
+			static int winWidth = std::stoi(OptionSystem::Get().GetOption("WindowWidth"));
+			static int winHeight = std::stoi(OptionSystem::Get().GetOption("WindowHeight"));
 
 			switch (winWidth)
 			{
 			case 1920:
 			{
-				windowSize->SetText("Window Size: 2560x1440");
-				winWidth = 2560;
-				winHeight = 1440;
+				resButtonText->SetText("1920x1080");
 				break;
 			}
 			case 2560:
 			{
-				windowSize->SetText("Window Size: 1408x792");
-				winWidth = 1408;
-				winHeight = 792;
+				resButtonText->SetText("2560x1440");
 				break;
 			}
 			case 1408:
 			{
-				windowSize->SetText("Window Size: 1536x864");
-				winWidth = 1536;
-				winHeight = 864;
+				resButtonText->SetText("1408x792");
 				break;
 			}
 			case 1536:
 			{
-				windowSize->SetText("Window Size: 1632x918");
-				winWidth = 1632;
-				winHeight = 918;
+				resButtonText->SetText("1536x864");
 				break;
 			}
 			case 1632:
 			{
-				windowSize->SetText("Window Size: 1920x1080");
-				winWidth = 1920;
-				winHeight = 1080;
+				resButtonText->SetText("1632x918");
 				break;
 			}
 			default:
@@ -1116,71 +836,372 @@ namespace sceneHelp
 				break;
 			}
 			};
+			resolutionOpt->SetOnPressedEvent([=] {
 
-			OptionSystem::Get().SetOption("WindowWidth", std::to_string(winWidth));
-			OptionSystem::Get().SetOption("WindowHeight", std::to_string(winHeight));
+				switch (winWidth)
+				{
+				case 1920:
+				{
+					resButtonText->SetText("2560x1440");
+					winWidth = 2560;
+					winHeight = 1440;
+					break;
+				}
+				case 2560:
+				{
+					resButtonText->SetText("1408x792");
+					winWidth = 1408;
+					winHeight = 792;
+					break;
+				}
+				case 1408:
+				{
+					resButtonText->SetText("1536x864");
+					winWidth = 1536;
+					winHeight = 864;
+					break;
+				}
+				case 1536:
+				{
+					resButtonText->SetText("1632x918");
+					winWidth = 1632;
+					winHeight = 918;
+					break;
+				}
+				case 1632:
+				{
+					resButtonText->SetText("1920x1080");
+					winWidth = 1920;
+					winHeight = 1080;
+					break;
+				}
+				default:
+				{
+					winWidth = 1920;
+					winHeight = 1080;
+					break;
+				}
+				};
 
-			});
+				OptionSystem::Get().SetOption("WindowWidth", std::to_string(winWidth));
+				OptionSystem::Get().SetOption("WindowHeight", std::to_string(winHeight));
 
-		rtd::Button* windowToggleButton = resolutionMenu->AddElement<rtd::Button>("Button.png", draw_t((width / 8.0f), (height / 8.0f), width / 4.0f, height / 8.0f));
-		rtd::Text* windowToggle = resolutionMenu->AddElement<rtd::Text>("Fullscreen", draw_t((width / 8.0f), (height / 8.0f), width / 4.0f, height / 8.0f));
-		static int fullscreen = std::stoi(OptionSystem::Get().GetOption("Fullscreen"));
-
-		if (fullscreen == 0)
-		{
-			windowToggle->SetText("Windowed");
+				});
 		}
-		else
+		 
+		//Fullscreen button
 		{
-			windowToggle->SetText("Fullscreen");
-		}
-
-		windowToggleButton->SetOnPressedEvent([=] {
-
+			static int fullscreen = std::stoi(OptionSystem::Get().GetOption("Fullscreen"));
 			if (fullscreen == 0)
 			{
-				windowToggle->SetText("Fullscreen");
-				fullscreen = 1;
+				fullscreenButtonText->SetText("No");
 			}
 			else
 			{
-				windowToggle->SetText("Windowed");
-				fullscreen = 0;
+				fullscreenButtonText->SetText("Yes");
 			}
 
-			OptionSystem::Get().SetOption("Fullscreen", std::to_string(fullscreen));
+			fullscreenOpt->SetOnPressedEvent([=]
+				{
+					if (fullscreen == 0)
+					{
+						fullscreenButtonText->SetText("Yes");
+						fullscreen = 1;
+					}
+					else
+					{
+						fullscreenButtonText->SetText("No");
+						fullscreen = 0;
+					}
 
+					OptionSystem::Get().SetOption("Fullscreen", std::to_string(fullscreen));
+				});
+		}
+
+		scene.Add2DCollection(videoCategory, "WVideo");
+		/*---------Video---------*/
+
+		/*---------Audio---------*/
+		Collection2D* audioCategory = new Collection2D;
+		sm::Vector2 posAudio = { width - (scale.x + padding.x * 2), canvasPos.y + padding.y };
+
+		sm::Vector2 minPos = { canvasPos.x + padding.x + canvasSize.x / 2.f, posAudio.y };
+		sm::Vector2 maxPos = { width - (scale.x + padding.x * 2.f), posAudio.y };
+		rtd::Canvas* masterVolCanvas = audioCategory->AddElement<rtd::Canvas>(D2D1::ColorF(53.f / 255.f, 22.f / 255.f, 26.f / 255.f), draw_t(minPos.x - 6.f, posAudio.y, ((canvasSize.x / 2.f) + 6.f) - padding.x * 2.f, scale.y));
+		rtd::Slider* masterVolumeSL = audioCategory->AddElement<rtd::Slider>(D2D1::ColorF(0,0,0), draw_t(minPos.x, posAudio.y, scale.x, scale.y), &game->m_masterVolume, 1.0f, 0.0f);
+		masterVolumeSL->SetMinPos(minPos);
+		masterVolumeSL->SetMaxPos(maxPos);
+		rtd::Text* valueText = masterVolumeSL->GetValueText();
+		sm::Vector2 valueTextPos = {minPos.x + (maxPos.x - minPos.x) / 2 + (valueText->GetText().length() * D2D1Core::GetDefaultFontSize()) / 2.f, posAudio.y };
+		valueText->SetPosition(valueTextPos.x, valueTextPos.y);
+		
+		audioCategory->AddElement<rtd::Text>("Master", draw_t(canvasPos.x + padding.x, posAudio.y, scale.x, scale.y));
+		rtd::Border* lineBorder = audioCategory->AddElement<rtd::Border>(draw_t(canvasPos.x + padding.x, posAudio.y, canvasSize.x - padding.x * 2.f, scale.y));
+		lineBorder->SetColor(D2D1::ColorF(53.f / 255.f, 22.f / 255.f, 26.f / 255.f));
+		lineBorder->SetLineWidth(LineWidth::LARGE);
+
+		scene.Add2DCollection(audioCategory, "WAudio");
+		/*---------Audio---------*/
+
+		/*---------Graphics---------*/
+		Collection2D* graphicsCategory = new Collection2D;
+		sm::Vector2 graphicsPos = { width - (scale.x + padding.x * 2), canvasPos.y + padding.y };
+
+		//Depth of Field
+		rtd::Border* dofBorder = graphicsCategory->AddElement<rtd::Border>(draw_t(canvasPos.x + padding.x, graphicsPos.y, canvasSize.x - padding.x * 2, scale.y));
+		dofBorder->SetColor(D2D1::ColorF(53.f / 255.f, 22.f / 255.f, 26.f / 255.f));
+		dofBorder->SetLineWidth(LineWidth::LARGE);
+		graphicsCategory->AddElement<rtd::Text>("Depth of Field", draw_t(canvasPos.x + padding.x, graphicsPos.y, scale.x + padding.x, scale.y));
+		rtd::Button* dofOpt = graphicsCategory->AddElement<rtd::Button>("Button.png", draw_t(graphicsPos.x, graphicsPos.y, scale.x, scale.y));
+		rtd::Text* dofText = graphicsCategory->AddElement<rtd::Text>("None", draw_t(graphicsPos.x, graphicsPos.y, scale.x, scale.y));
+
+		//DoF Button Events
+		{
+			static DoFType type = DoFType::DEFAULT;
+			std::string savedBlur = OptionSystem::Get().GetOption("BlurType");
+			type = static_cast<DoFType>(std::stod(savedBlur));
+			// Toggle when the game starts.
+			switch (type)
+			{
+			case DoFType::VIGNETTE:
+			{
+				dofText->SetText("Static");
+				break;
+			}
+			case DoFType::DEFAULT:
+			{
+				dofText->SetText("None");
+				break;
+			}
+			case DoFType::ADAPTIVE:
+			{
+				dofText->SetText("Adaptive");
+				break;
+			}
+			default:
+			{
+				type = DoFType::DEFAULT;
+				break;
+			}
+			}
+			OptionSystem::Get().SetOption("BlurType", std::to_string(static_cast<int>(type)));
+
+			dofOpt->SetOnPressedEvent([=] {
+				// Toggle between types.
+				switch (type)
+				{
+				case DoFType::ADAPTIVE:
+				{
+					type = DoFType::VIGNETTE;
+					dofText->SetText("Static");
+					thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::VIGNETTE);
+					OptionSystem::Get().SetOption("BlurType", std::string("2"));
+					break;
+				}
+				case DoFType::VIGNETTE:
+				{
+					type = DoFType::DEFAULT;
+					dofText->SetText("None");
+					thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::DEFAULT);
+					OptionSystem::Get().SetOption("BlurType", std::string("0"));
+					break;
+				}
+				case DoFType::DEFAULT:
+				{
+					type = DoFType::ADAPTIVE;
+					dofText->SetText("Adaptive");
+					thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::ADAPTIVE);
+					OptionSystem::Get().SetOption("BlurType", std::string("1"));
+					break;
+				}
+				default:
+					break;
+				}
+
+				});
+		}
+
+		//Volumetric Lighting
+		graphicsPos.y += scale.y + padding.y;
+		rtd::Border* volumetricBorder = graphicsCategory->AddElement<rtd::Border>(draw_t(canvasPos.x + padding.x, graphicsPos.y, canvasSize.x - padding.x * 2, scale.y));
+		volumetricBorder->SetColor(D2D1::ColorF(53.f / 255.f, 22.f / 255.f, 26.f / 255.f));
+		volumetricBorder->SetLineWidth(LineWidth::LARGE);
+		graphicsCategory->AddElement<rtd::Text>("Volumetric Lighting", draw_t(canvasPos.x, graphicsPos.y, scale.x * 2.f, scale.y));
+		rtd::Button* volumetricOpt = graphicsCategory->AddElement<rtd::Button>("Button.png", draw_t(graphicsPos.x, graphicsPos.y, scale.x, scale.y));
+		rtd::Text* volumetricText = graphicsCategory->AddElement<rtd::Text>("Medium", draw_t(graphicsPos.x, graphicsPos.y, scale.x, scale.y));
+
+		//Volumetric Button Events
+		{
+			static int lightQuality = std::stoi(OptionSystem::Get().GetOption("VolumetricLightQuality"));
+			if (lightQuality <= 15 && lightQuality > 0)
+			{
+				volumetricText->SetText("LOW");
+			}
+			else if (lightQuality > 15 && lightQuality <= 50)
+			{
+				volumetricText->SetText("MEDIUM");
+			}
+			else if (lightQuality > 50 && lightQuality <= 100)
+			{
+				volumetricText->SetText("HIGH");
+			}
+			else if (lightQuality > 100 && lightQuality <= 200)
+			{
+				volumetricText->SetText("INSANE");
+			}
+			else
+			{
+				volumetricText->SetText("MEDIUM");
+				lightQuality = 50;
+			}
+
+			game->GetScene("Game").GetLights()->SetLightVolumeQuality(lightQuality);
+			OptionSystem::Get().SetOption("VolumetricLightQuality", std::to_string(lightQuality));
+
+			volumetricOpt->SetOnPressedEvent([=] {
+
+				switch (lightQuality)
+				{
+				case 15:
+				{
+					lightQuality = 50;
+					volumetricText->SetText("MEDIUM");
+					break;
+				}
+				case 50:
+				{
+					lightQuality = 100;
+					volumetricText->SetText("HIGH");
+					break;
+				}
+				case 100:
+				{
+					lightQuality = 200;
+					volumetricText->SetText("INSANE");
+					break;
+				}
+				case 200:
+				{
+					lightQuality = 15;
+					volumetricText->SetText("LOW");
+					break;
+				}
+				default:
+				{
+					lightQuality = 15;
+					volumetricText->SetText("LOW");
+					break;
+				}
+				};
+
+				OptionSystem::Get().SetOption("VolumetricLightQuality", std::to_string(lightQuality));
+				game->GetScene("Game").GetLights()->SetLightVolumeQuality(lightQuality);
+
+				});
+		}
+
+		//Shadows
+		graphicsPos.y += scale.y + padding.y;
+		rtd::Border* shadowsBorder = graphicsCategory->AddElement<rtd::Border>(draw_t(canvasPos.x + padding.x, graphicsPos.y, canvasSize.x - padding.x * 2, scale.y));
+		shadowsBorder->SetColor(D2D1::ColorF(53.f / 255.f, 22.f / 255.f, 26.f / 255.f));
+		shadowsBorder->SetLineWidth(LineWidth::LARGE);
+		graphicsCategory->AddElement<rtd::Text>("Shadow Quality", draw_t(canvasPos.x - padding.x, graphicsPos.y, scale.x * 2.f, scale.y));
+		rtd::Button* shadowOpt = graphicsCategory->AddElement<rtd::Button>("Button.png", draw_t(graphicsPos.x, graphicsPos.y, scale.x, scale.y));
+		rtd::Text* shadowText = graphicsCategory->AddElement<rtd::Text>("Medium", draw_t(graphicsPos.x, graphicsPos.y, scale.x, scale.y));
+
+		//Shadow Button Events
+		{
+			static std::string shadowQuality = OptionSystem::Get().GetOption("ShadowQuality");
+			if (shadowQuality == "Potato")
+			{
+				shadowText->SetText("Potato");
+			}
+			else if (shadowQuality == "Low")
+			{
+				shadowText->SetText("Low");
+			}
+			else if (shadowQuality == "Medium")
+			{
+				shadowText->SetText("Medium");
+			}
+			else if (shadowQuality == "High")
+			{
+				shadowText->SetText("High");
+			}
+			else if (shadowQuality == "Insane")
+			{
+				shadowText->SetText("Insane");
+			}
+			else
+			{
+				shadowText->SetText("Shadows Quality: Medium");
+				shadowQuality = "Medium";
+				OptionSystem::Get().SetOption("ShadowQuality", std::string("Medium"));
+			}
+
+			shadowOpt->SetOnPressedEvent([=] {
+
+				if (shadowQuality == "Potato")
+				{
+					shadowText->SetText("Low");
+					shadowQuality = "Low";
+					thread::RenderThreadHandler::Get().GetRenderer()->GetShadowPass()->SetShadowMapSize(256);
+				}
+				else if (shadowQuality == "Low")
+				{
+					shadowText->SetText("Medium");
+					shadowQuality = "Medium";
+					thread::RenderThreadHandler::Get().GetRenderer()->GetShadowPass()->SetShadowMapSize(1024);
+				}
+				else if (shadowQuality == "Medium")
+				{
+					shadowText->SetText("High");
+					shadowQuality = "High";
+					thread::RenderThreadHandler::Get().GetRenderer()->GetShadowPass()->SetShadowMapSize(2048);
+				}
+				else if (shadowQuality == "High")
+				{
+					shadowText->SetText("Insane");
+					shadowQuality = "Insane";
+					thread::RenderThreadHandler::Get().GetRenderer()->GetShadowPass()->SetShadowMapSize(4096);
+				}
+				else if (shadowQuality == "Insane")
+				{
+					shadowText->SetText("Potato");
+					shadowQuality = "Potato";
+					thread::RenderThreadHandler::Get().GetRenderer()->GetShadowPass()->SetShadowMapSize(512);
+				}
+				OptionSystem::Get().SetOption("ShadowQuality", shadowQuality);
+
+				});
+		}
+
+		scene.Add2DCollection(graphicsCategory, "WGraphics");
+		/*---------Graphics---------*/
+
+		videoCategory->Show();
+		audioCategory->Hide();
+		graphicsCategory->Hide();
+
+		videoCat->SetOnPressedEvent([=]
+			{
+				videoCategory->Show();
+				audioCategory->Hide();
+				graphicsCategory->Hide();
 			});
-
-		miscMenu->Hide();
-		resolutionMenu->Hide();
-		visualMenu->Hide();
-		scene.Add2DCollection(miscMenu, "miscMenu");
-		scene.Add2DCollection(resolutionMenu, "resolutionMenu");
-		scene.Add2DCollection(visualMenu, "visualMenu");
-		scene.Add2DCollection(menu, "MenuButtons");
-
-		rtd::Button* gb = backButton->AddElement<rtd::Button>("Button.png", draw_t((width / 2.0f) - (width / 8.0f), height - (height / 4.0f), width / 4.0f, height / 8.0f));
-		backButton->AddElement<rtd::Text>("Go Back", draw_text_t((width / 2.0f) - (width / 8.0f), height - (height / 4.0f), width / 4.0f, height / 8.0f));
-		gb->SetOnPressedEvent([=] {
-
-			helpText->Hide();
-			soundCollection->Hide();
-			menu->Show();
-			backButton->Hide();
-			visualMenu->Hide();
-			miscMenu->Hide();
-			resolutionMenu->Hide();
-
+		audioCat->SetOnPressedEvent([=]
+			{
+				videoCategory->Hide();
+				audioCategory->Show();
+				graphicsCategory->Hide();
 			});
-		backButton->Hide();
-		scene.Add2DCollection(backButton, "returnButton");
-
-		const std::string helpTextOption = "Homehearth\n\n\nDuring the day its recommended to build defences around the village.\nTo do this you need to open the shop at upper right corner and press shop icon.\nTo place a defence press on one of the defence choices and click on any valid ground area. Other shop options are as presented.\nDuring the night you will need to work with your friends to defend the village from horrifying hordes of monsters.\nControls:\nWASD - Movement\nLeft Click - Primary Attack\nRight Click - Secondary Ability\nShift - Dodge\nTo place defences choose one in the shop and press Left click on any available slot. Right click to stop placing defences.";
-		helpText->AddElement<rtd::Text>(helpTextOption, draw_text_t(0.0f, 0.0f, width, height - (height / 8.0f)));
-		helpText->Hide();
-		scene.Add2DCollection(helpText, "HelpText");
-
+		graphicsCat->SetOnPressedEvent([=]
+			{
+				videoCategory->Hide();
+				audioCategory->Hide();
+				graphicsCategory->Show();
+			});
+		
 	}
 
 	void SetupLoadingScene(Game* game)
@@ -1232,7 +1253,7 @@ namespace sceneHelp
 
 		float widthScale = height * (16.f / 9.f);
 		const float paddingWidth = (widthScale / 64.f);
-		const float paddingHeight = paddingWidth / (16.f / 9.f);
+		const float paddingHeight = paddingWidth;
 
 		Scene& scene = game->GetScene("JoinLobby");
 
@@ -1256,11 +1277,11 @@ namespace sceneHelp
 
 		rtd::Button* startLobbyButton = lobbyCollection->AddElement<rtd::Button>("CreateLobby.png", draw_t((width / 2.0f) + (width / 8.0f), buttonPosY, buttonSize.x, buttonSize.y));
 		rtd::Button* lobbyButton = lobbyCollection->AddElement<rtd::Button>("joinLobby.png", draw_t(width / 8, buttonPosY, buttonSize.x, buttonSize.y));
-		rtd::TextField* lobbyField = lobbyCollection->AddElement<rtd::TextField>(draw_text_t(width / 8, buttonPosY - paddingHeight * 4.f, widthScale / 4, D2D1Core::GetDefaultFontSize()));
+		rtd::TextField* lobbyField = lobbyCollection->AddElement<rtd::TextField>(draw_text_t(width / 8, buttonPosY - paddingHeight * 2.f, widthScale / 4, D2D1Core::GetDefaultFontSize()));
 		lobbyField->SetDescriptionText("Input Lobby ID");
 
 		rtd::Button* exitButton = lobbyCollection->AddElement<rtd::Button>("No.png", draw_t(paddingWidth, paddingHeight, widthScale / 24, height / 14));
-		rtd::Text* lobbyErrorText = lobbyCollection->AddElement<rtd::Text>("Invalid Lobby ID", draw_text_t(width / 8, height - (height / 3.33f), width / 4.0f, height / 8.0f));
+		rtd::Text* lobbyErrorText = lobbyCollection->AddElement<rtd::Text>("Invalid Lobby ID", draw_text_t((width / 2.f) - (widthScale / 8.f), (height / 2) - (D2D1Core::GetDefaultFontSize() / 2), widthScale / 4.0f, D2D1Core::GetDefaultFontSize()));
 		lobbyErrorText->SetVisiblity(false);
 		exitButton->SetOnPressedEvent([=]
 			{

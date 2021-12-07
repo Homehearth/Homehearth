@@ -33,6 +33,7 @@ private:
 	void OnClientDisconnect();	
 	void UpdateEntityFromMessage(Entity entity, message<GameMsg>& msg, bool skip = false);
 	void UpdateInput();
+	void ChangeSpectatedPlayer();
 
 public:
 	Client m_client;
