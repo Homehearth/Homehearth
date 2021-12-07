@@ -772,10 +772,6 @@ void Simulation::SetGameScene()
 #if GOD_MODE
 	// During debug give players 1000 gold/monies.
 	m_currency = 1000;
-	for (auto& player : m_lobby.m_players)
-	{
-		player.second.RemoveComponent<comp::Tag<TagType::GOOD>>();
-	}
 #endif
 
 #if NO_CLIP
