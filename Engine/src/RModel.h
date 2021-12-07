@@ -2,6 +2,10 @@
 #include "CommonStructures.h"
 #include "AnimStructures.h"
 #include "RMaterial.h"
+#include "Mesh.h"
+
+//Combines meshes with the same material to one
+const bool OPTIMIZE_MODEL = true;
 
 //Define structs to avoid 
 struct aiMesh;
@@ -29,44 +33,28 @@ struct aiNode;
 class RModel : public resource::GResource
 {
 private:
-	/*
-		Default data for model 
-	*/
-	struct submesh_t
-	{
-		ComPtr<ID3D11Buffer>		vertexBuffer;
-		UINT						vertexCount = 0;
-		ComPtr<ID3D11Buffer>		indexBuffer;
-		UINT						indexCount = 0;
-		std::shared_ptr<RMaterial>	material;
-		bool						hasBones = false;
-	};
-	std::vector<submesh_t>			m_meshes;
+	std::vector<Mesh>				m_meshes;
 	std::vector<light_t>			m_lights;
 	std::vector<bone_t>				m_allBones;
 
 private:	
 	/*
+		Creates one mesh with one material.
+		Will cause many drawcalls per RModel.
+	*/
+	bool CreateOneMesh(aiMaterial* aimat, aiMesh* aimesh, const std::unordered_map<std::string, UINT>& boneMap);
+	
+	/*
 		Combines multiple submeshes that uses the same material to one.
 		This is to avoid to many drawcalls per RModel.
 	*/
-	bool CombineMeshes(std::vector<aiMesh*>& submeshes, submesh_t& submesh,
-						const std::unordered_map<std::string, UINT>& boneMap);
-
-	//Creating buffers
-	bool CreateVertexBuffer(const std::vector<anim_vertex_t>&	vertices, submesh_t& mesh);
-	bool CreateVertexBuffer(const std::vector<simple_vertex_t>& vertices, submesh_t& mesh);
-	bool CreateIndexBuffer(const std::vector<UINT>& indices, submesh_t& mesh);
+	bool CombineMeshes(aiMaterial* aimat, std::vector<aiMesh*>& aimeshes, const std::unordered_map<std::string, UINT>& boneMap);
 
 	//Loading data from assimp
 	void LoadLights(const aiScene* scene);
-	void LoadMaterial(const aiScene* scene, const UINT& matIndex, submesh_t& inoutMesh) const;
 
 	//Bone structure
 	void BoneHierchy(aiNode* node, std::unordered_map<std::string, bone_t>& nameToBone);
-	bool LoadVertexSkinning(const aiMesh* aimesh, 
-							std::vector<anim_vertex_t>& vertices, 
-							const std::unordered_map<std::string, UINT>& boneMap);
 
 public:
 	RModel();
@@ -81,11 +69,8 @@ public:
 	//Get the vector of lights
 	const std::vector<light_t>& GetLights() const;
 
-	//Get all of the texture coordinates for a model
-	const std::vector<sm::Vector2> GetTextureCoords() const;
-
-	//Get all the textures of the type from all materials
-	const std::vector<std::shared_ptr<RTexture>> GetTextures(const ETextureType& type) const;
+	//Get all the meshes that the model is holding
+	const std::vector<Mesh>& GetMeshes() const;
 
 	/*
 		Change the material to other. Uses a mtlfile.

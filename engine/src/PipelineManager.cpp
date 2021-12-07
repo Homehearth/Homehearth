@@ -557,12 +557,12 @@ bool PipelineManager::CreateTextureEffectResources()
 
 
     //Get the textures from the models
-    m_ModdedWaterAlbedoMap       = m_WaterModel.get()->GetTextures(ETextureType::albedo)[0];
-    m_ModdedWaterNormalMap       = m_WaterModel.get()->GetTextures(ETextureType::normal)[0];
-    m_ModdedWaterEdgeAlbedoMap   = m_WaterEdgeModel.get()->GetTextures(ETextureType::albedo)[0];
-    m_ModdedWaterFloorAlbedoMap  = m_WaterFloorModel.get()->GetTextures(ETextureType::albedo)[0];
+    m_ModdedWaterAlbedoMap      = m_WaterModel.get()->GetMeshes()[0].GetTexture(ETextureType::albedo);
+    m_ModdedWaterNormalMap      = m_WaterModel.get()->GetMeshes()[0].GetTexture(ETextureType::normal);
+    m_ModdedWaterEdgeAlbedoMap  = m_WaterEdgeModel.get()->GetMeshes()[0].GetTexture(ETextureType::albedo);
+    m_ModdedWaterFloorAlbedoMap = m_WaterFloorModel.get()->GetMeshes()[0].GetTexture(ETextureType::albedo);
 
-    //Disable bitmaps
+    //Disable mipmaps
     m_ModdedWaterAlbedoMap->DisableMipmaps();
     m_ModdedWaterNormalMap->DisableMipmaps();
     m_ModdedWaterEdgeAlbedoMap->DisableMipmaps();
