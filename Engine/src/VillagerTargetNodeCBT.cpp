@@ -20,71 +20,71 @@ BT::VillagerTargetNodeCBT::~VillagerTargetNodeCBT()
 
 BT::NodeStatus BT::VillagerTargetNodeCBT::Tick()
 {
-	CyclePeriod* cycle = Blackboard::Get().GetValue<CyclePeriod>("cycle");
-	sm::Vector3 targetPosition;
+		CyclePeriod* cycle = Blackboard::Get().GetValue<CyclePeriod>("cycle");
+		sm::Vector3 targetPosition;
 
 
-	if(cycle == nullptr)
-	{
-		LOG_WARNING("Failed to get cycle...");
-		return BT::NodeStatus::FAILURE;
-	}
-
-	comp::Villager* villager = entity.GetComponent<comp::Villager>();
-
-	if (villager->isFleeing)
-	{
-		refreshRate = 2.0f;
-	}
-
-	//focus to get to home node;
-	if(*cycle == CyclePeriod::NIGHT && villager && !villager->homeHouse.IsNull())
-	{
-		villager->movementSpeed = 30.f;
-		if(villager && !villager->homeHouse.IsNull())
+		if (cycle == nullptr)
 		{
-			comp::House* house = villager->homeHouse.GetComponent<comp::House>();
-			if(house->attackNode->reachable)
-			{
-				targetPosition = house->attackNode->position;
-				Blackboard::Get().AddValue<sm::Vector3>("villagerTarget" + std::to_string(entity), targetPosition);
-				return BT::NodeStatus::SUCCESS;
-			}
-			else
-				return BT::NodeStatus::FAILURE;
+			LOG_WARNING("Failed to get cycle...");
+			return BT::NodeStatus::FAILURE;
 		}
-		else if(villager == nullptr || villager->homeHouse.IsNull())
+
+		comp::Villager* villager = entity.GetComponent<comp::Villager>();
+
+		if (villager->isFleeing)
 		{
-			return BT::NodeStatus::FAILURE; //House may be destroyed
+			refreshRate = 2.0f;
 		}
-	}
-	//focus to idle around the village
-	else
-	{
-		if(*cycle == CyclePeriod::DAY)
-			villager->movementSpeed = 15.f;
-		else if (*cycle == CyclePeriod::DAY)
+
+		//focus to get to home node;
+		if (*cycle == CyclePeriod::NIGHT && villager && !villager->homeHouse.IsNull())
+		{
 			villager->movementSpeed = 30.f;
-
-		comp::Velocity* velocity = entity.GetComponent<comp::Velocity>();
-		if(NewIdlePosTimer.GetElapsedTime<std::chrono::seconds>() > refreshRate)
-		{
-			NewIdlePosTimer.Start();
-			targetPosition =  villager->idlePos.at(rand() % villager->idlePos.size());
-			Blackboard::Get().AddValue<sm::Vector3>("villagerTarget" + std::to_string(entity), targetPosition);
-		}
-		else if(velocity)
-		{
-			comp::AnimationState* animState = entity.GetComponent<comp::AnimationState>();
-			if (animState)
+			if (villager && !villager->homeHouse.IsNull())
 			{
-				if (velocity->vel.Length() < 0.01f)
-					animState->toSend = EAnimationType::IDLE;
+				comp::House* house = villager->homeHouse.GetComponent<comp::House>();
+				if (house->homeNode->reachable)
+				{
+					targetPosition = house->homeNode->position;
+					Blackboard::Get().AddValue<sm::Vector3>("villagerTarget" + std::to_string(entity), targetPosition);
+					return BT::NodeStatus::SUCCESS;
+				}
+				else
+					return BT::NodeStatus::FAILURE;
+			}
+			else if (villager == nullptr || villager->homeHouse.IsNull())
+			{
+				return BT::NodeStatus::FAILURE; //House may be destroyed
 			}
 		}
+		//focus to idle around the village
+		else
+		{
+			if (*cycle == CyclePeriod::DAY || *cycle == CyclePeriod::MORNING)
+				villager->movementSpeed = 15.f;
+			else if (*cycle == CyclePeriod::NIGHT)
+				villager->movementSpeed = 30.f;
 
-		return BT::NodeStatus::SUCCESS;
-	}
+			comp::Velocity* velocity = entity.GetComponent<comp::Velocity>();
+			if (NewIdlePosTimer.GetElapsedTime<std::chrono::seconds>() > refreshRate)
+			{
+				NewIdlePosTimer.Start();
+				targetPosition = villager->idlePos.at(rand() % villager->idlePos.size());
+				Blackboard::Get().AddValue<sm::Vector3>("villagerTarget" + std::to_string(entity), targetPosition);
+			}
+			else if (velocity)
+			{
+				comp::AnimationState* animState = entity.GetComponent<comp::AnimationState>();
+				if (animState)
+				{
+					if (velocity->vel.Length() < 0.01f)
+						animState->toSend = EAnimationType::IDLE;
+				}
+			}
 
-	return BT::NodeStatus::FAILURE;
+			return BT::NodeStatus::SUCCESS;
+		}
+
+		return BT::NodeStatus::FAILURE;
 }

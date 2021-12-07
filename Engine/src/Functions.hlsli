@@ -125,3 +125,47 @@ float3 ACESFitted(float3 color)
 
     return color;
 }
+
+//void DilateBlur(RWTexture2D<unorm float4> t_bokehBufferRead, out RWTexture2D<unorm float4> t_bokehBufferOut, uint3 DTid)
+//{
+//    int size = 1;
+//    float separation = 1.f;
+//    float minThreshold = 0.1f;
+//    float maxThreshold = 0.3f;
+    
+//    int width, height;
+//    t_bokehBufferRead.GetDimensions(width, height);
+//    float2 texSize = float2(width, height);
+    
+//    float2 texCoord = DTid.xy;
+    
+//    float4 color = t_bokehBufferRead[texCoord / texSize];
+    
+//    float mx = 0.f;
+//    float4 cmx = color;
+    
+//    for (int i = -size; i <= size; i++)
+//    {
+//        for (int j = -size; j <= size; j++)
+//        {
+//            if (!(distance(float2(i, j), float2(0, 0)) <= size))
+//            {
+//                continue;
+//            }
+            
+//            float4 c = t_bokehBufferRead[(texCoord.xy + (float2(i, j) * separation)) / texSize];
+            
+//            float mxt = dot(c.rgb, float3(0.3, 0.59, 0.11));
+            
+//            if (mxt > mx)
+//            {
+//                mx = mxt;
+//                cmx = c;
+//            }
+//        }
+
+//    }
+
+    
+//    t_bokehBufferOut[DTid.xy] = lerp(color, cmx, smoothstep(minThreshold, maxThreshold, mx));
+//}

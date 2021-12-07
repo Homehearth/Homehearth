@@ -28,9 +28,9 @@ std::vector<std::vector<std::shared_ptr<Node>>>& PathFinderManager::GetNodes()
 	return m_nodes;
 }
 
-std::unordered_map<Entity, Entity> PathFinderManager::GetDefenseEntities()
+std::unordered_map<Entity, Entity>* PathFinderManager::GetDefenseEntities()
 {
-	return defenseEntities;
+	return &defenseEntities;
 }
 
 void PathFinderManager::AddDefenseEntity(Entity entity)
@@ -227,9 +227,9 @@ void PathFinderManager::AStarSearch(Entity npcEntity)
 		goalNode = FindClosestNode(*villagerTarget);
 
 	//Need to take OBB center to get correct world position for houses
-	if (house && house->attackNode)
+	if (house && house->homeNode)
 	{
-		goalNode = house->attackNode;
+		goalNode = house->homeNode;
 	}
 
 	if (goalNode == nullptr)
@@ -273,9 +273,6 @@ void PathFinderManager::AStarSearch(Entity npcEntity)
 	{
 		Node* currentNode = openList.at(0);
 		int ind = 0;
-
-		if (openList.size() > 100)
-			return;
 
 		for (int i = 1; i < openList.size(); i++)
 		{
@@ -358,8 +355,6 @@ bool PathFinderManager::PlayerAStar(sm::Vector3 playerPos)
 
 		Node* currentNode = openList.at(0);
 		int ind = 0;
-		if (openList.size() > 100)
-			return false;
 
 		for (int i = 1; i < openList.size(); i++)
 		{

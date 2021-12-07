@@ -18,9 +18,11 @@
 		players are identified through and unique key which is sent by the server at validation
 */
 
+
 class Simulation
 {
 private:
+	static const uint8_t PACKET_CHUNK_SIZE = 8;
 	Server* m_pServer;
 	HeadlessEngine* m_pEngine;
 	uint32_t m_gameID;
@@ -48,8 +50,7 @@ private:
 
 	std::unordered_map<ecs::Component, std::vector<Entity>> m_updatedComponents;
 
-	int currentRound;
-	
+
 	void InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg, const std::bitset<ecs::Component::COMPONENT_MAX>& componentMask = UINT32_MAX) const;
 
 	uint32_t GetTick()const;
@@ -57,7 +58,6 @@ private:
 	//Game play related
 	uint32_t m_wavesSurvived;
 
-	std::queue<Wave> waveQueue;
 	std::queue<sm::Vector3> m_spawnPoints;
 	HouseManager houseManager;
 
@@ -71,10 +71,12 @@ private:
 
 public:
 	Cycler m_timeCycler;
+	std::queue<Wave> waveQueue;
+	uint32_t currentRound;
 
 	Simulation(Server* pServer, HeadlessEngine* pEngine);
 	virtual ~Simulation() = default;
-	
+
 	void SendSnapshot();
 	void JoinLobby(uint32_t gameID, uint32_t playerID, const std::string& name = "Noobie");
 	void LeaveLobby(uint32_t playerID);
@@ -100,7 +102,7 @@ public:
 	void SetGameOver();
 	void SetGameScene();
 	void ResetGameScene();
-	
+
 	void ResetPlayer(Entity player);
 
 	void SendEntities(const std::vector<Entity>& entities, GameMsg msgID, const std::bitset<ecs::Component::COMPONENT_MAX>& componentMask = UINT32_MAX);
@@ -109,7 +111,7 @@ public:
 	void SendRemoveAllEntitiesToPlayer(uint32_t playerID) const;
 	void SendRemoveEntities(const std::vector<uint32_t> entitiesNetIDs);
 
-	void SendMsg(uint32_t playerID, message<GameMsg>&msg)const;
+	void SendMsg(uint32_t playerID, message<GameMsg>& msg)const;
 	void SendMsgUDP(uint32_t playerID, message<GameMsg>& msg)const;
 
 	bool IsPlayerConnected(uint32_t playerID);

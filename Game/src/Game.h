@@ -33,6 +33,7 @@ private:
 	void OnClientDisconnect();	
 	void UpdateEntityFromMessage(Entity entity, message<GameMsg>& msg, bool skip = false);
 	void UpdateInput();
+	void ChangeSpectatedPlayer();
 
 public:
 	Client m_client;
@@ -67,4 +68,5 @@ public:
 	float m_secondaryCooldown = 0.0f;
 	float m_dodgeCooldown = 0.0f;
 	uint32_t m_currentSpree = 1;
+	bool m_isSpectating;
 };

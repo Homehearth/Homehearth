@@ -26,11 +26,11 @@ private:
 
 	struct DoFHelpStruct
 	{
-		sm::Matrix		inverseView;
+		sm::Matrix		view;
 		sm::Matrix		inverseProjection;
 		UINT			dofType;
 		sm::Vector3		padding;
-		sm::Vector4		playerPosView;
+		//sm::Vector4		playerPosView;
 	}m_dofHelp;
 
 public:

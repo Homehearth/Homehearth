@@ -380,26 +380,43 @@ void ServerSystems::WaveSystem(Simulation* simulation,
 /**Removes all enemies that has been destroyed and broadcasts the removal to the clients.
  *@param simulation	   Manages sending and removal of entities on the server.
  */
-void ServerSystems::NextWaveConditions(Simulation* simulation)
+void ServerSystems::OnCycleChange(Simulation* simulation)
 {
 	//Publish event when timeToFinish been exceeded.
 	if (simulation->m_timeCycler.HasChangedPeriod())
 	{
-		if (simulation->m_timeCycler.GetTimePeriod() == CyclePeriod::NIGHT)
-		{
-			// start new wave
-			simulation->GetGameScene()->publish<ESceneCallWaveSystem>(0.0f);
-		}
-
 		if (simulation->m_timeCycler.GetTimePeriod() == CyclePeriod::MORNING)
 		{
 			simulation->m_timeCycler.SetCycleSpeed(1.0f);
 			// remove all bad guys
-			simulation->GetGameScene()->ForEachComponent<comp::Tag<TagType::BAD>>([](Entity e, comp::Tag<TagType::BAD>&)
+			simulation->GetGameScene()->ForEachComponent<comp::Tag<BAD>>([](Entity e, comp::Tag<BAD>&)
 				{
 					e.Destroy();
 				});
+
+			simulation->GetGameScene()->ForEachComponent<comp::Player, comp::Health>([=](Entity e, comp::Player& p, comp::Health& hp)
+				{
+					if (!hp.isAlive)
+					{
+						simulation->ResetPlayer(e);
+						hp.currentHealth = 0.25f * hp.maxHealth;
+					}
+				});
 		}
+
+		if (simulation->m_timeCycler.GetTimePeriod() == CyclePeriod::NIGHT)
+		{
+			if (simulation->waveQueue.size() > 0)
+			{
+				// start new wave
+				simulation->GetGameScene()->publish<ESceneCallWaveSystem>(0.0f);
+			}
+			else
+			{
+				EnemyManagement::CreateWaves(simulation->waveQueue, simulation->currentRound++);
+			}
+		}
+
 	}
 
 	if (simulation->m_timeCycler.GetTimePeriod() == CyclePeriod::NIGHT)
@@ -543,13 +560,11 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 			}
 
 			//Rotate defences 90 or not
-			if (p.lastInputState.mousewheelDir != 0)
-			{
-				if (p.lastInputState.mousewheelDir > 0)
-					p.rotateDefence = true;
-				else if (p.lastInputState.mousewheelDir < 0)
-					p.rotateDefence = false;
-			}
+			if (p.lastInputState.mousewheelDir > 0)
+				p.rotateDefence = true;
+			else if (p.lastInputState.mousewheelDir < 0)
+				p.rotateDefence = false;
+
 
 		});
 
@@ -558,14 +573,23 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 
 void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money_ref, HouseManager houseManager, QuadTree* qt, GridSystem& grid, SpreeHandler& spree)
 {
-	//Entity destoys self if health <= 0
+	//Entity destroys itself if health <= 0
 	scene.ForEachComponent<comp::Health>([&](Entity& entity, comp::Health& health)
 		{
 			//Check if something should be dead, and if so set isAlive to false
 			if (health.currentHealth <= 0 && health.isAlive)
 			{
+				comp::AnimationState* anim = entity.GetComponent<comp::AnimationState>();
+
+
+				if (anim)
+				{
+					anim->toSend = EAnimationType::DEAD;
+				}
+
 				comp::Network* net = entity.GetComponent<comp::Network>();
 				health.isAlive = false;
+				scene.publish<EComponentUpdated>(entity, ecs::Component::HEALTH);
 				// increase money
 				if (entity.GetComponent<comp::Tag<TagType::BAD>>())
 				{
@@ -594,8 +618,6 @@ void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money
 				if (p)
 				{
 					audio.type = ESoundEvent::Player_OnDeath;
-
-					p->respawnTimer = 10.f;
 					p->state = comp::Player::State::SPECTATING;
 					entity.RemoveComponent<comp::Tag<TagType::DYNAMIC>>();
 				}
@@ -677,32 +699,12 @@ void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& sce
 		{
 			if (!health.isAlive)
 			{
-				anim.toSend = EAnimationType::DEAD;
-
 				comp::Velocity* vel = e.GetComponent<comp::Velocity>();
 				if (vel)
 				{
 					// dont move if dead
 					vel->vel = sm::Vector3::Zero;
 				}
-				if (p.state != comp::Player::State::SPECTATING)
-				{
-					p.state = comp::Player::State::SPECTATING;
-					message<GameMsg> msg;
-					msg.header.id = GameMsg::Game_StartSpectate;
-
-					simulation->SendMsg(n.id, msg);
-				}
-				//p.respawnTimer -= dt;
-
-				//if (p.respawnTimer < 0.01f)
-				//{
-				//	simulation->ResetPlayer(e);
-				//	message<GameMsg> msg;
-				//	msg.header.id = GameMsg::Game_StopSpectate;
-				//	simulation->SendMsg(n.id, msg);
-				//	LOG_INFO("Player %u respawned...", e.GetComponent<comp::Network>()->id);
-				//}
 			}
 		});
 
@@ -749,6 +751,7 @@ void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& sce
 
 				}
 				e.UpdateNetwork();
+				sm::Matrix rot = sm::Matrix::CreateFromQuaternion(sm::Quaternion::Identity);
 			}
 		});
 
@@ -805,22 +808,28 @@ void ServerSystems::TickBTSystem(Simulation* simulation, HeadlessScene& scene)
 		});
 }
 
-void ServerSystems::AnimatonSystem(Simulation* simulation, HeadlessScene& scene)
+void ServerSystems::AnimationSystem(Simulation* simulation, HeadlessScene& scene)
 {
+	uint16_t count = 0;
+	message<GameMsg>msg;
+	msg.header.id = GameMsg::Game_ChangeAnimation;
 	scene.ForEachComponent<comp::Network, comp::AnimationState>([&](comp::Network& net, comp::AnimationState& anim)
 		{
 			//Have to send every time - otherwise animations can be locked to one
 			if (anim.toSend != EAnimationType::NONE)
 			{
-				message<GameMsg>msg;
-				msg.header.id = GameMsg::Game_ChangeAnimation;
+				count++;
 				msg << anim.toSend << net.id;
-				simulation->Broadcast(msg);
 
 				anim.lastSend = anim.toSend;
 				anim.toSend = EAnimationType::NONE;
 			}
 		});
+	if (count > 0)
+	{
+		msg << count;
+		simulation->Broadcast(msg);
+	}
 }
 
 void ServerSystems::SoundSystem(Simulation* simulation, HeadlessScene& scene)
@@ -912,7 +921,7 @@ Entity VillagerManagement::CreateVillager(HeadlessScene& scene, Entity homeHouse
 	Entity entity = scene.CreateEntity();
 	entity.AddComponent<comp::Network>();
 	entity.AddComponent<comp::Tag<DYNAMIC>>();
-	entity.AddComponent<comp::Tag<GOOD>>(); // this entity is BAD
+	entity.AddComponent<comp::Tag<GOOD>>();
 
 	comp::Transform* transform = entity.AddComponent<comp::Transform>();
 	transform->scale = sm::Vector3(1.7f, 1.7f, 1.7f);
@@ -925,7 +934,7 @@ Entity VillagerManagement::CreateVillager(HeadlessScene& scene, Entity homeHouse
 	comp::BehaviorTree* behaviorTree = entity.AddComponent<comp::BehaviorTree>();
 	comp::Villager* villager = entity.AddComponent<comp::Villager>();
 	comp::House* house = homeHouse.GetComponent<comp::House>();
-	transform->position = house->attackNode->position;
+	transform->position = house->homeNode->position;
 	transform->position.y = 0.75f;
 	villager->homeHouse = homeHouse;
 	meshName->name = NameType::MESH_VILLAGER;

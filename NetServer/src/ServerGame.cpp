@@ -92,13 +92,13 @@ void ServerGame::OnShutdown()
 void ServerGame::UpdateNetwork(float deltaTime)
 {
 	PROFILE_FUNCTION();
-	static float timer = 0.0f;
-	timer += deltaTime;
-	if (timer >= 1.0f)
-	{
-		LOG_INFO("Update: %f", 1.f / deltaTime);
-		timer = 0.0f;
-	}
+	//static float timer = 0.0f;
+	//timer += deltaTime;
+	//if (timer >= 1.0f)
+	//{
+	//	LOG_INFO("Update: %f", 1.f / deltaTime);
+	//	timer = 0.0f;
+	//}
 
 	{
 		PROFILE_SCOPE("Server UPDATE");
@@ -214,6 +214,7 @@ bool ServerGame::LoadMapColliders(const std::string& filename)
 		return false;
 	}
 	// Go through all the meshes and create boundingboxes for them
+
 	for (UINT i = 0; i < scene->mNumMeshes; i++)
 	{
 		const aiMesh* mesh = scene->mMeshes[i];
@@ -249,7 +250,7 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 		uint32_t playerID;
 		msg >> playerID;
 		this->m_server.SendToClient(playerID, msg);
-		//LOG_INFO("Client on with ID: %ld is pinging server", playerID);
+		LOG_INFO("Client on with ID: %ld is pinging server", playerID);
 		break;
 	}
 	case GameMsg::Lobby_Create:
@@ -402,10 +403,6 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 
 uint32_t ServerGame::CreateSimulation()
 {
-	if (m_simulations.size() >= 1)
-	{
-		return static_cast<uint32_t>(-1);
-	}
 	m_simulations[m_nGameID] = std::make_unique<Simulation>(&m_server, this);
 	if (!m_simulations[m_nGameID]->Create(m_nGameID, &m_mapColliders, &m_houseColliders))
 	{
