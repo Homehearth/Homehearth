@@ -399,7 +399,6 @@ void ServerSystems::OnCycleChange(Simulation* simulation)
 					if (!hp.isAlive)
 					{
 						simulation->ResetPlayer(e);
-						simulation->GetGameScene()->publish<EComponentUpdated>(e, ecs::Component::HEALTH);
 					}
 				});
 		}
