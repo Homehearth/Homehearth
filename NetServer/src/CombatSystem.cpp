@@ -268,7 +268,7 @@ Entity CombatSystem::CreateAttackEntity(Entity entity, HeadlessScene& scene, com
 	sm::Vector3 vel = targetDir * stats->projectileSpeed;
 	attackEntity.AddComponent<comp::Velocity>()->vel = vel;
 
-	attackEntity.AddComponent<comp::PARTICLEEMITTER>(sm::Vector3{ 0,0,0 }, 200, 1.f, PARTICLEMODE::MAGERANGE, 1.7f, 1.f, false);
+	attackEntity.AddComponent<comp::ParticleEmitter>(sm::Vector3{ 0,0,0 }, 200, 1.f, PARTICLEMODE::MAGERANGE, 1.7f, 1.f, false);
 
 
 	attackEntity.AddComponent<comp::Network>();
@@ -362,11 +362,11 @@ void CombatSystem::AddCollisionMeleeBehavior(Entity entity, Entity attackEntity,
 					scene.publish<EComponentUpdated>(other, ecs::Component::HEALTH);
 
 					// Blood particle
-					if (other.GetComponent<comp::PARTICLEEMITTER>())
+					if (other.GetComponent<comp::ParticleEmitter>())
 					{
-						other.RemoveComponent<comp::PARTICLEEMITTER>();
+						other.RemoveComponent<comp::ParticleEmitter>();
 					}
-					other.AddComponent<comp::PARTICLEEMITTER>(sm::Vector3{ 0,6,0 }, 50, 5.f, PARTICLEMODE::BLOOD, 1.5f, 1.f, true);
+					other.AddComponent<comp::ParticleEmitter>(sm::Vector3{ 0,6,0 }, 50, 1.5f, PARTICLEMODE::BLOOD, 3.5f, 1.f, true);
 
 					scene.publish<EComponentUpdated>(other, ecs::Component::PARTICLEMITTER);
 				}
@@ -374,11 +374,11 @@ void CombatSystem::AddCollisionMeleeBehavior(Entity entity, Entity attackEntity,
 				//Smoke particles
 				if (other.GetComponent<comp::Tag<TagType::DEFENCE>>())
 				{
-					if (other.GetComponent<comp::PARTICLEEMITTER>())
+					if (other.GetComponent<comp::ParticleEmitter>())
 					{
-						other.RemoveComponent<comp::PARTICLEEMITTER>();
+						other.RemoveComponent<comp::ParticleEmitter>();
 					}
-					other.AddComponent<comp::PARTICLEEMITTER>(sm::Vector3{ 0,10,0 }, 50, 10.f, PARTICLEMODE::SMOKEAREA, 3.5f, 1.f, true);
+					other.AddComponent<comp::ParticleEmitter>(sm::Vector3{ 0,10,0 }, 50, 10.f, PARTICLEMODE::SMOKEAREA, 3.5f, 1.f, true);
 
 					scene.publish<EComponentUpdated>(other, ecs::Component::PARTICLEMITTER);
 				}
@@ -496,11 +496,11 @@ void CombatSystem::AddCollisionRangeBehavior(Entity entity, Entity attackEntity,
 					scene.publish<EComponentUpdated>(other, ecs::Component::HEALTH);
 
 					// Blood particle
-					if (other.GetComponent<comp::PARTICLEEMITTER>())
+					if (other.GetComponent<comp::ParticleEmitter>())
 					{
-						other.RemoveComponent<comp::PARTICLEEMITTER>();
+						other.RemoveComponent<comp::ParticleEmitter>();
 					}
-					other.AddComponent<comp::PARTICLEEMITTER>(sm::Vector3{ 0,6,0 }, 50, 5.f, PARTICLEMODE::BLOOD, 1.5f, 1.f, true);
+					other.AddComponent<comp::ParticleEmitter>(sm::Vector3{ 0,6,0 }, 50, 1.5f, PARTICLEMODE::BLOOD, 3.5f, 1.f, true);
 
 					scene.publish<EComponentUpdated>(other, ecs::Component::PARTICLEMITTER);
 				}

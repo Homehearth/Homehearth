@@ -46,6 +46,8 @@ void ParticleSystem::InitializeParticles(entt::registry& reg, entt::entity ent)
 			tempParticle.velocity.x = (float)rand() / (RAND_MAX + 1.f) * (2.0f - (-2.0f)) + (-2.0f);
 			tempParticle.velocity.y = (float)rand() / (RAND_MAX + 1.f) * (2.0f - (-2.0f)) + (-2.0f);
 			tempParticle.velocity.z = (float)rand() / (RAND_MAX + 1.f) * (2.0f - (-2.0f)) + (-2.0f);
+			tempParticle.size = { emitter->sizeMulitplier , emitter->sizeMulitplier };
+
 		}
 		else if (tempParticle.type == PARTICLEMODE::WATERSPLASH)
 		{

@@ -165,7 +165,7 @@ namespace ecs
 			}
 		};
 
-		struct PARTICLEEMITTER 
+		struct ParticleEmitter 
 		{
 			sm::Vector3		positionOffset	= { 0,0,0 };
 			UINT			nrOfParticles	= 0;
@@ -176,7 +176,7 @@ namespace ecs
 			bool			hasDeathTimer	= false;
 			float			lifeLived		= 0.f;
 
-			PARTICLEEMITTER(sm::Vector3 positionOffset = { 0,0,0 }, int nrOfParticles = 10, float sizeMulitplier = 1.f, PARTICLEMODE type = PARTICLEMODE::BLOOD, float lifeTime = 2.f, float speed = 1, bool hasDeathTimer = false)
+			ParticleEmitter(sm::Vector3 positionOffset = { 0,0,0 }, int nrOfParticles = 10, float sizeMulitplier = 1.f, PARTICLEMODE type = PARTICLEMODE::BLOOD, float lifeTime = 2.f, float speed = 1, bool hasDeathTimer = false)
 			{
 				this->nrOfParticles		= (UINT)nrOfParticles;
 				this->type				= type;

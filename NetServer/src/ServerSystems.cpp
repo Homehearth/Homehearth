@@ -628,7 +628,7 @@ void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money
 					qt->Insert(newHouse);
 
 					sm::Vector3 emitterOffset = newHouse.GetComponent<comp::OrientedBoxCollider>()->Center;
-					newHouse.AddComponent<comp::PARTICLEEMITTER>(emitterOffset, 100, 2.5f, PARTICLEMODE::SMOKEAREA, 4.0f, 1.f, false);
+					newHouse.AddComponent<comp::ParticleEmitter>(emitterOffset, 100, 2.5f, PARTICLEMODE::SMOKEAREA, 4.0f, 1.f, false);
 
 
 					//Remove house from blackboard
@@ -886,7 +886,7 @@ void ServerSystems::CombatSystem(HeadlessScene& scene, float dt)
 }
 void ServerSystems::DeathParticleTimer(HeadlessScene& scene)
 {
-	scene.ForEachComponent<comp::PARTICLEEMITTER>([&](Entity& e, comp::PARTICLEEMITTER& emitter)
+	scene.ForEachComponent<comp::ParticleEmitter>([&](Entity& e, comp::ParticleEmitter& emitter)
 		{
 			if (emitter.hasDeathTimer == true && emitter.lifeLived <= emitter.lifeTime)
 			{
@@ -894,7 +894,7 @@ void ServerSystems::DeathParticleTimer(HeadlessScene& scene)
 			}
 			else if (emitter.hasDeathTimer == true && emitter.lifeLived >= emitter.lifeTime)
 			{
-				e.RemoveComponent<comp::PARTICLEEMITTER>();
+				e.RemoveComponent<comp::ParticleEmitter>();
 			}
 		});
 }

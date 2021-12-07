@@ -53,14 +53,16 @@ void BloodSimmulation(inout VertexParticleIn particle, in uint id)
     {
         particle.pos += (particle.velocity * 10.f) * deltaTime;
         
-        particle.velocity.y -= 4.82f * deltaTime;
+        particle.velocity.y -= 9.82f * deltaTime;
         
         if (particle.size.x >= 0 && particle.life <= particleLifeTime / 3)
         {
             float sizeChange = abs((randomNumbers[id + counter]) * deltaTime);
-            particle.size -= sizeChange * ((lifeTime + particleSizeMulitplier)*0.7f);
+            //particle.size -= sizeChange * ((lifeTime + particleSizeMulitplier)*0.7f);
+            particle.size -= ((particle.life / 3) / (particleLifeTime / 3)) * particleSizeMulitplier;
             particle.color.rgb += 1.0f * deltaTime;
         }
+        
         //if (particle.size.x >= 0) 
         //    particle.size -= abs(randomNumbers[id + counter]) / 10.f;
 
