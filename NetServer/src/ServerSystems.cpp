@@ -380,26 +380,43 @@ void ServerSystems::WaveSystem(Simulation* simulation,
 /**Removes all enemies that has been destroyed and broadcasts the removal to the clients.
  *@param simulation	   Manages sending and removal of entities on the server.
  */
-void ServerSystems::NextWaveConditions(Simulation* simulation)
+void ServerSystems::OnCycleChange(Simulation* simulation)
 {
 	//Publish event when timeToFinish been exceeded.
 	if (simulation->m_timeCycler.HasChangedPeriod())
 	{
-		if (simulation->m_timeCycler.GetTimePeriod() == CyclePeriod::NIGHT)
-		{
-			// start new wave
-			simulation->GetGameScene()->publish<ESceneCallWaveSystem>(0.0f);
-		}
-
 		if (simulation->m_timeCycler.GetTimePeriod() == CyclePeriod::MORNING)
 		{
 			simulation->m_timeCycler.SetCycleSpeed(1.0f);
 			// remove all bad guys
-			simulation->GetGameScene()->ForEachComponent<comp::Tag<TagType::BAD>>([](Entity e, comp::Tag<TagType::BAD>&)
+			simulation->GetGameScene()->ForEachComponent<comp::Tag<BAD>>([](Entity e, comp::Tag<BAD>&)
 				{
 					e.Destroy();
 				});
+
+			simulation->GetGameScene()->ForEachComponent<comp::Player, comp::Health>([=](Entity e, comp::Player& p, comp::Health& hp)
+				{
+					if (!hp.isAlive)
+					{
+						simulation->ResetPlayer(e);
+						hp.currentHealth = 0.25f * hp.maxHealth;
+					}
+				});
 		}
+
+		if (simulation->m_timeCycler.GetTimePeriod() == CyclePeriod::NIGHT)
+		{
+			if (simulation->waveQueue.size() > 0)
+			{
+				// start new wave
+				simulation->GetGameScene()->publish<ESceneCallWaveSystem>(0.0f);
+			}
+			else
+			{
+				EnemyManagement::CreateWaves(simulation->waveQueue, simulation->currentRound++);
+			}
+		}
+
 	}
 
 	if (simulation->m_timeCycler.GetTimePeriod() == CyclePeriod::NIGHT)
