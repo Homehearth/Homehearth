@@ -561,6 +561,7 @@ namespace sceneHelp
 		button->SetOnHoverEvent([=]()
 			{
 				game->m_inputState.leftMouse = false;
+				game->m_inputState.rightMouse = false;
 			});
 
 		scene.Add2DCollection(shopIcon, "shopIcon");
@@ -569,6 +570,7 @@ namespace sceneHelp
 		shop->SetOnHoverEvent([=]()
 			{
 				game->m_inputState.leftMouse = false;
+				game->m_inputState.rightMouse = false;
 			});
 		// 1x1 tower button.
 		shop->SetOnPressedEvent(0, [=]()
