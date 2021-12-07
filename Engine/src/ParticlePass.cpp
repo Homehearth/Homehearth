@@ -79,6 +79,8 @@ void ParticlePass::Initialize(ID3D11DeviceContext* pContextDevice, PipelineManag
 
 void ParticlePass::Render(Scene* pScene)
 {
+	PROFILE_FUNCTION();
+
 	m_counter++;
 	if (m_counter >= 10)
 	{

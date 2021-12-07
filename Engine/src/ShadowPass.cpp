@@ -242,6 +242,7 @@ void ShadowPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 void ShadowPass::Render(Scene* pScene)
 {
 	PROFILE_FUNCTION();
+
 	thread::RenderThreadHandler::Get().SetObjectsBuffer(&pScene->m_renderableCopies);
 	thread::RenderThreadHandler::Get().SetShadows(&m_shadows);
 	const render_instructions_t inst = thread::RenderThreadHandler::Get().DoShadows(m_shadowMap.amount);

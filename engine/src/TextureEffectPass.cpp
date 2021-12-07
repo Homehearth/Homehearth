@@ -47,6 +47,8 @@ void TextureEffectPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceCont
 
 void TextureEffectPass::Render(Scene* pScene)
 {
+    PROFILE_FUNCTION();
+
     //Reset timer at some point
     if (m_CBuffer.counter > 100)
     {

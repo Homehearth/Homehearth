@@ -38,6 +38,8 @@ void BasePass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 
 void BasePass::Render(Scene* pScene)
 {
+    PROFILE_FUNCTION();
+
     pScene->Render();
 }
 

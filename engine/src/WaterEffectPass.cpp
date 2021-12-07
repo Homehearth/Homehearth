@@ -63,6 +63,8 @@ void WaterEffectPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContex
 
 void WaterEffectPass::Render(Scene* pScene)
 {
+    PROFILE_FUNCTION();
+
     //Reset timer at some point
     if (m_CBuffer.counter > 100)
     {

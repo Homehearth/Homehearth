@@ -72,6 +72,8 @@ void DecalPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 
 void DecalPass::Render(Scene* pScene)
 {
+	PROFILE_FUNCTION();
+
 	m_matrices.clear();
 	pScene->ForEachComponent<comp::Decal>([&](Entity e, comp::Decal& d) {
 

@@ -23,6 +23,8 @@ void DepthPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 
 void DepthPass::Render(Scene* pScene)
 {
+    PROFILE_FUNCTION();
+
     pScene->Render();
 }
 

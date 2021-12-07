@@ -39,6 +39,8 @@ void AnimationPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 
 void AnimationPass::Render(Scene* pScene)
 {
+    PROFILE_FUNCTION();
+
     pScene->RenderAnimation();
 }
 

@@ -70,6 +70,8 @@ void DOFPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 
 void DOFPass::Render(Scene* pScene)
 {
+	PROFILE_FUNCTION();
+
 	if (m_currentType != DoFType::DEFAULT)
 	{
 		//pScene->ForEachComponent<comp::Player, comp::Network>([&](Entity& playerEntity, comp::Player& player, comp::Network& network)

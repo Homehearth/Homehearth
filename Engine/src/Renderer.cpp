@@ -10,12 +10,7 @@ Renderer::Renderer()
 void Renderer::Initialize(Window* pWindow)
 {
 	m_pipelineManager.Initialize(pWindow);
-
     m_d3d11 = &D3D11Core::Get();
-    m_basePass.SetEnable(true);
-    m_depthPass.SetEnable(true);
-    m_textureEffectPass.SetEnable(true);
-	m_waterEffectPass.SetEnable(true);
 
     //AddPass(&m_depthPass);
     AddPass(&m_textureEffectPass);
@@ -38,7 +33,7 @@ void Renderer::Initialize(Window* pWindow)
 	m_basePass.m_pShadowPass = &m_shadowPass;
 	m_animPass.m_pShadowPass = &m_shadowPass;
 
-	//m_depthPass.SetEnable(true);
+	m_depthPass.SetEnable(true);
 	m_basePass.SetEnable(true);
 	m_animPass.SetEnable(true);
 	m_decalPass.SetEnable(true);
@@ -46,6 +41,8 @@ void Renderer::Initialize(Window* pWindow)
 	m_skyPass.SetEnable(true);
 	m_dofPass.SetEnable(true);
 	m_shadowPass.SetEnable(true);
+	m_textureEffectPass.SetEnable(true);
+	m_waterEffectPass.SetEnable(true);
 
 #ifdef _DEBUG
 	AddPass(&m_debugPass);  

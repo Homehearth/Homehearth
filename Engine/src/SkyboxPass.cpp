@@ -22,6 +22,8 @@ void SkyboxPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 
 void SkyboxPass::Render(Scene* pScene)
 {
+    PROFILE_FUNCTION();
+
     pScene->RenderSkybox();
 }
 

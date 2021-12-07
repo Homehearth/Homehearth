@@ -69,6 +69,8 @@ void BlurPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 
 void BlurPass::Render(Scene* pScene)
 {
+	PROFILE_FUNCTION();
+
 	if (m_blurType == BlurType::BOX)
 	{
 		D3D11Core::Get().DeviceContext()->Dispatch(PM->m_windowWidth / 8, PM->m_windowHeight / 8, 1);
