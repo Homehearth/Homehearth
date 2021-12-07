@@ -415,21 +415,17 @@ void ServerSystems::OnCycleChange(Simulation* simulation)
 			{
 				EnemyManagement::CreateWaves(simulation->waveQueue, simulation->currentRound++);
 			}
-		}
 
-	}
+			int count = 0;
+			simulation->GetGameScene()->ForEachComponent<comp::Tag<TagType::BAD>>([&](Entity e, comp::Tag<TagType::BAD>&)
+				{
+					count++;
+				});
 
-	if (simulation->m_timeCycler.GetTimePeriod() == CyclePeriod::NIGHT)
-	{
-		int count = 0;
-		simulation->GetGameScene()->ForEachComponent<comp::Tag<TagType::BAD>>([&](Entity e, comp::Tag<TagType::BAD>&)
+			if (count == 0)
 			{
-				count++;
-			});
-
-		if (count == 0)
-		{
-			simulation->m_timeCycler.SetCycleSpeed(10.0f);
+				simulation->m_timeCycler.SetCycleSpeed(10.0f);
+			}
 		}
 	}
 }
@@ -567,8 +563,6 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 
 
 		});
-
-
 }
 
 void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money_ref, HouseManager houseManager, QuadTree* qt, GridSystem& grid, SpreeHandler& spree)

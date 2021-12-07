@@ -8,6 +8,16 @@ void rtd::Scroller::SetOnPrimeButtonPress(std::function<void()> func)
     m_function = func;
 }
 
+void rtd::Scroller::SetOnPrimeButtonHover(std::function<void()> func)
+{
+    m_button->SetOnHoverEvent(func);
+}
+
+void rtd::Scroller::ScrollUp()
+{
+    m_isPressed = false;
+}
+
 void rtd::Scroller::Update()
 {
     // Transition to the endPos position.
@@ -43,6 +53,10 @@ void rtd::Scroller::Update()
             if (m_buttons[i]->CheckHover())
                 m_buttons[i]->OnHover();
         }
+    }
+    if (m_button->CheckHover())
+    {
+        m_button->OnHover();
     }
 }
 

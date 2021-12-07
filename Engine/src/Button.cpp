@@ -53,11 +53,11 @@ Text* rtd::Button::GetText()
 {
 	if (!m_text)
 	{
-		m_text = std::make_unique<Text>("", 
+		m_text = std::make_unique<Text>("",
 			draw_text_t(
 				m_drawOpts.x_pos,
 				m_drawOpts.y_pos,
-				m_drawOpts.width, 
+				m_drawOpts.width,
 				m_drawOpts.height));
 
 	}
@@ -98,9 +98,14 @@ void rtd::Button::SetOnPressedEvent(const std::function<void()>& func)
 	m_function = func;
 }
 
+void rtd::Button::SetOnHoverEvent(const std::function<void()>& func)
+{
+	m_hoverFunction = func;
+}
+
 bool Button::CheckClicked() const
 {
-    return m_isClicked;
+	return m_isClicked;
 }
 
 void Button::Draw()
@@ -108,7 +113,7 @@ void Button::Draw()
 	// Draw Order
 	if (m_border)
 	{
-		if(m_border->IsVisible())
+		if (m_border->IsVisible())
 			m_border->Draw();
 	}
 	if (m_picture)
@@ -122,7 +127,10 @@ void Button::Draw()
 
 void rtd::Button::OnHover()
 {
-
+	if (m_hoverFunction)
+	{
+		m_hoverFunction();
+	}
 }
 
 ElementState rtd::Button::CheckClick()
@@ -165,7 +173,7 @@ bool rtd::Button::CheckHover()
 
 void Button::OnClick()
 {
-	if(m_function)
+	if (m_function)
 	{
 		audio_t audio = {};
 		audio.isUnique = false;

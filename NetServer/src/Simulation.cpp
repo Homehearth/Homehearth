@@ -385,13 +385,13 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 			{
 				PROFILE_SCOPE("Hover defences");
 				std::vector<Entity> updateEntities;
-				if (m_timeCycler.GetTimePeriod() == CyclePeriod::DAY)
+				if (m_timeCycler.GetTimePeriod() == CyclePeriod::NIGHT)
 				{
-					updateEntities = m_grid.UpdateHoverDefence();
+					updateEntities = m_grid.HideHoverDefence();
 				}
 				else
 				{
-					updateEntities = m_grid.HideHoverDefence();
+					updateEntities = m_grid.UpdateHoverDefence();
 				}
 				for (size_t i = 0; i < updateEntities.size(); i++)
 				{

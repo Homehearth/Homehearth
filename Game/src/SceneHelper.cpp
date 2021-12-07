@@ -220,12 +220,18 @@ namespace sceneHelp
 					}
 				}
 
+				Collection2D* bullColl = game->GetScene("Game").GetCollection("bullDoze");
+				rtd::Picture* bullIcon = dynamic_cast<rtd::Picture*>(bullColl->elements[0].get());
+
 				if (game->GetCycler().HasChangedPeriod())
 				{
 					switch (game->GetCycler().GetTimePeriod())
 					{
 					case CyclePeriod::NIGHT:
 					{
+						game->GetScene("Game").GetCollection("shopMenu")->Hide();
+						game->SetShopItem(ShopItem::None);
+						bullColl->Hide();
 
 						SoundHandler::Get().SetCurrentMusic("NightTheme");
 						scene.ForEachComponent<comp::Light>([](comp::Light& l)
@@ -260,38 +266,26 @@ namespace sceneHelp
 					}
 				}
 
-
-
-				Collection2D* bullColl = game->GetCurrentScene()->GetCollection("bullDoze");
-				rtd::Picture* bullIcon = dynamic_cast<rtd::Picture*>(bullColl->elements[0].get());
 				ShopItem shopitem = game->GetShopItem();
 
-				if (bullIcon)
+				if (shopitem == ShopItem::Destroy_Tool)
 				{
-					if (shopitem == ShopItem::Destroy_Tool)
-					{
-						bullColl->Show();
-						bullIcon->SetPosition((FLOAT)InputSystem::Get().GetMousePos().x, (FLOAT)InputSystem::Get().GetMousePos().y);
-					}
-					else
-					{
-						bullColl->Hide();
-					}
+					bullColl->Show();
+					bullIcon->SetPosition((FLOAT)InputSystem::Get().GetMousePos().x, (FLOAT)InputSystem::Get().GetMousePos().y);
 				}
 
-				//Not in buildmode
-				if (!(shopitem == ShopItem::Defence1x1 || shopitem == ShopItem::Defence1x3))
+				ElementState shopMenuState = game->GetScene("Game").GetCollection("shopMenu")->GetState();
+				if ((shopMenuState == ElementState::OUTSIDE || shopMenuState == ElementState::NONE) &&
+					game->GetScene("Game").GetCollection("ScrolldownMenu")->GetState() == ElementState::OUTSIDE)
 				{
-
-					if (game->GetCurrentScene()->GetCollection("shopMenu")->GetState() == ElementState::OUTSIDE &&
-						game->GetCurrentScene()->GetCollection("ScrolldownMenu")->GetState() == ElementState::OUTSIDE)
+					if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Keys::Escape, KeyState::PRESSED) ||
+						InputSystem::Get().CheckMouseKey(MouseKey::RIGHT, KeyState::PRESSED) ||
+						(InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED) && game->GetShopItem() == ShopItem::None))
 					{
-						if (InputSystem::Get().CheckMouseKey(MouseKey::RIGHT, KeyState::PRESSED))
-						{
-							game->GetCurrentScene()->GetCollection("shopMenu")->Hide();
-							game->SetShopItem(ShopItem::None);
-							bullColl->Hide();
-						}
+						game->GetScene("Game").GetCollection("shopMenu")->Hide();
+						dynamic_cast<rtd::Scroller*>(game->GetScene("Game").GetCollection("ScrolldownMenu")->elements[0].get())->ScrollUp();
+						game->SetShopItem(ShopItem::None);
+						bullColl->Hide();
 					}
 				}
 
@@ -406,7 +400,7 @@ namespace sceneHelp
 
 		connectButton->SetOnPressedEvent([=]()
 			{
-								
+
 				std::string* ipConnect = ipField->RawGetBuffer();
 				std::string* portConnect = portField->RawGetBuffer();
 
@@ -501,13 +495,13 @@ namespace sceneHelp
 		rtd::MoneyUI* mMoney = money->AddElement<rtd::MoneyUI>(draw_text_t(width - (widthScale / 8.0f + padding.x), padding.y, widthScale / 8.0f, height / 11.0f));
 		scene.Add2DCollection(money, "MoneyUI");
 
-		
+
 		Collection2D* abilities = new Collection2D;
-		sm::Vector2 barPos = {((width / 2.f)) - ((widthScale / 16.0f) * 2.5f), height - (height / 9.0f + padding.y)};
+		sm::Vector2 barPos = { ((width / 2.f)) - ((widthScale / 16.0f) * 2.5f), height - (height / 9.0f + padding.y) };
 		rtd::Picture* abilityBar = abilities->AddElement<rtd::Picture>("AbilityBar.png", draw_t(barPos.x, barPos.y, (widthScale / 16.0f) * 5.0f, height / 9.0f));
-		
+
 		sm::Vector2 abillitySize = { widthScale / 18.0f, height / 11.0f };
-		sm::Vector2 abillityPos = { (width / 2.f) - (abillitySize.x / 2), barPos.y + (padding.y * 0.5f)};
+		sm::Vector2 abillityPos = { (width / 2.f) - (abillitySize.x / 2), barPos.y + (padding.y * 0.5f) };
 
 		rtd::AbilityUI* primary = abilities->AddElement<rtd::AbilityUI>(draw_t(abillityPos.x - (abillitySize.x * 2 + padding.x), abillityPos.y, abillitySize.x, abillitySize.y), D2D1::ColorF(0, 1.0f), "Attack2.png");
 		primary->SetActivateButton("LMB");
@@ -523,16 +517,16 @@ namespace sceneHelp
 		scene.Add2DCollection(abilities, "AbilityUI");
 
 		Collection2D* pauseMenu = new Collection2D;
-		rtd::MenuUI* inGameMenu = pauseMenu->AddElement<rtd::MenuUI>("Menu.png", draw_t(width * 0.5f - (widthScale * 0.125f), (height / 2)  - (height * 0.25f), widthScale * 0.25f, height * 0.5f));
-		inGameMenu->SetOnPressedEvent(0, [=]
+		rtd::MenuUI* inGameMenu = pauseMenu->AddElement<rtd::MenuUI>("Menu.png", draw_t(width * 0.5f - (widthScale * 0.125f), (height / 2) - (height * 0.25f), widthScale * 0.25f, height * 0.5f));
+		inGameMenu->SetOnPressedEvent(0, [=]()
 			{
 				game->Shutdown();
 			});
-		inGameMenu->SetOnPressedEvent(1, [=]
+		inGameMenu->SetOnPressedEvent(1, [=]()
 			{
 				pauseMenu->Hide();
 			});
-		inGameMenu->SetOnPressedEvent(2, [=]
+		inGameMenu->SetOnPressedEvent(2, [=]()
 			{
 				pauseMenu->Hide();
 			});
@@ -542,56 +536,81 @@ namespace sceneHelp
 		Collection2D* shopMenu = new Collection2D;
 		Collection2D* scrolldownMenu = new Collection2D;
 		rtd::Scroller* sc = scrolldownMenu->AddElement<rtd::Scroller>(draw_t(0.0f, -(height / 14) * 3.0f, widthScale / 24.0f, (height / 16) * 3.0f), sm::Vector2(0, 0));
-		sc->AddButton("No.png", draw_t(0.0f, -(height / 14), widthScale / 24, height / 14))->SetOnPressedEvent([=] {
-			pauseMenu->Show();
+		rtd::Button* button;
+		button = sc->AddButton("No.png", draw_t(0.0f, -(height / 14), widthScale / 24, height / 14));
+		button->SetOnPressedEvent([=]()
+			{
+				pauseMenu->Show();
+			});
+		button->SetOnHoverEvent([=]()
+			{
+				game->m_inputState.leftMouse = false;
 			});
 
-
-		sc->AddButton("ShopIcon.png", draw_t(0.0f, -(height / 14) * 2.0f, widthScale / 24, height / 14))->SetOnPressedEvent([=] {
-			if (game->GetCycler().GetTimePeriod() == CyclePeriod::DAY)
+		button = sc->AddButton("ShopIcon.png", draw_t(0.0f, -(height / 14) * 2.0f, widthScale / 24, height / 14));
+		button->SetOnPressedEvent([=]()
 			{
-				shopMenu->Show();
-				bullDoze->Hide();
-			}
+				if (game->GetCycler().GetTimePeriod() == CyclePeriod::DAY)
+				{
+					shopMenu->Show();
+					bullDoze->Hide();
+				}
+			});
+		button->SetOnHoverEvent([=]()
+			{
+				game->m_inputState.leftMouse = false;
 			});
 		sc->SetPrimeButtonMeasurements(draw_t(0.0f, 0.0f, widthScale / 24, height / 14));
-		sc->SetOnPrimeButtonPress([=] {
-
-			shopMenu->Hide();
-
+		sc->SetOnPrimeButtonPress([=]()
+			{
+				shopMenu->Hide();
+			});
+		sc->SetOnPrimeButtonHover([=]()
+			{
+				game->m_inputState.leftMouse = false;
 			});
 		scene.Add2DCollection(scrolldownMenu, "ScrolldownMenu");
 
 		rtd::ShopUI* shop = shopMenu->AddElement<rtd::ShopUI>("Shop.png", draw_t(width / 24.0f, (height / 16), widthScale * 0.25f, height * 0.5f));
+		shop->SetOnHoverEvent([=]()
+			{
+				game->m_inputState.leftMouse = false;
+			});
 		// 1x1 tower button.
-		shop->SetOnPressedEvent(0, [=] {
-			game->SetShopItem(ShopItem::Defence1x1);
-			bullDoze->Hide();
+		shop->SetOnPressedEvent(0, [=]()
+			{
+				game->SetShopItem(ShopItem::Defence1x1);
+				bullDoze->Hide();
 			});
 		// 1x3 tower button.
-		shop->SetOnPressedEvent(1, [=] {
-			game->SetShopItem(ShopItem::Defence1x3);
-			bullDoze->Hide();
+		shop->SetOnPressedEvent(1, [=]()
+			{
+				game->SetShopItem(ShopItem::Defence1x3);
+				bullDoze->Hide();
 			});
 		// Primary upgrade button.
-		shop->SetOnPressedEvent(2, [=] {
-			game->SetShopItem(ShopItem::Primary_Upgrade);
-			bullDoze->Hide();
+		shop->SetOnPressedEvent(2, [=]()
+			{
+				game->SetShopItem(ShopItem::Primary_Upgrade);
+				bullDoze->Hide();
 			});
 		// Armor upgrade button.
-		shop->SetOnPressedEvent(3, [=] {
-			game->SetShopItem(ShopItem::Primary_Upgrade);
-			bullDoze->Hide();
+		shop->SetOnPressedEvent(3, [=]()
+			{
+				game->SetShopItem(ShopItem::Primary_Upgrade);
+				bullDoze->Hide();
 			});
 		// Heal button.
-		shop->SetOnPressedEvent(4, [=] {
-			game->SetShopItem(ShopItem::Heal);
-			bullDoze->Hide();
+		shop->SetOnPressedEvent(4, [=]()
+			{
+				game->SetShopItem(ShopItem::Heal);
+				bullDoze->Hide();
 			});
 		// Remove defences button.
-		shop->SetOnPressedEvent(5, [=] {
-			game->SetShopItem(ShopItem::Destroy_Tool);
-			bullDoze->Show();
+		shop->SetOnPressedEvent(5, [=]()
+			{
+				game->SetShopItem(ShopItem::Destroy_Tool);
+				bullDoze->Show();
 			});
 		shop->SetMoneyRef(mMoney);
 		shopMenu->Hide();
@@ -1206,7 +1225,7 @@ namespace sceneHelp
 
 		Collection2D* gameOverCollection = new Collection2D;
 
-		rtd::Picture* bg = gameOverCollection->AddElement<rtd::Picture>("MenuBG.png", draw_t(0,0,width, height));
+		rtd::Picture* bg = gameOverCollection->AddElement<rtd::Picture>("MenuBG.png", draw_t(0, 0, width, height));
 		rtd::Text* gameOverField = gameOverCollection->AddElement<rtd::Text>("Game Over", draw_text_t((width / 2.f) - (strlen("Game Over") * D2D1Core::GetDefaultFontSize() * 0.5f), (height / 5.f) - D2D1Core::GetDefaultFontSize(), strlen("Game Over") * D2D1Core::GetDefaultFontSize(), D2D1Core::GetDefaultFontSize()));
 		gameOverField->SetText("Game Over");
 
