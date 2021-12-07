@@ -72,8 +72,7 @@ void ParticleSystem::InitializeParticles(entt::registry& reg, entt::entity ent)
 		}
 		case PARTICLEMODE::RAIN:
 		{
-			RandomAddPosition(-200, 200.f);
-			m_tempParticle.position.y = abs(m_tempParticle.position.y);
+			RandomAddPositionXYZ(sm::Vector2(-100.f, 100.f), sm::Vector2(1 , 20.f), sm::Vector2(-100.f, 100.f ));
 			m_tempParticle.size = { emitter->sizeMulitplier , emitter->sizeMulitplier };
 			break;
 		}
@@ -166,6 +165,13 @@ void ParticleSystem::RandomAddPosition(float min, float max)
 	m_tempParticle.position.x += (float)rand() / (RAND_MAX + 1.f) * (max - (min)) + (min);
 	m_tempParticle.position.y += (float)rand() / (RAND_MAX + 1.f) * (max - (min)) + (min);
 	m_tempParticle.position.z += (float)rand() / (RAND_MAX + 1.f) * (max - (min)) + (min);
+}
+
+void ParticleSystem::RandomAddPositionXYZ(sm::Vector2 minMaxX, sm::Vector2 minMaxY, sm::Vector2 minMaxZ)
+{
+	m_tempParticle.position.x += (float)rand() / (RAND_MAX + 1.f) * (minMaxX.y - (minMaxX.x)) + (minMaxX.x);
+	m_tempParticle.position.y += (float)rand() / (RAND_MAX + 1.f) * (minMaxY.y - (minMaxY.x)) + (minMaxY.x);
+	m_tempParticle.position.z += (float)rand() / (RAND_MAX + 1.f) * (minMaxZ.y - (minMaxZ.x)) + (minMaxZ.x);
 }
 
 void ParticleSystem::RandomSetVelocity(float min, float max)

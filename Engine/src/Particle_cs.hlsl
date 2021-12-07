@@ -238,7 +238,7 @@ void RainSimmulation(inout VertexParticleIn particle, in uint id) // OLD
     }
     else
     {
-        particle.pos.y -= emitterPos.y;
+        particle.pos.y = emitterPos.y + ((randomNumbers[id] * id ) + counter + particleLifeTime);
         particle.velocity.y = 0.0f;
         particle.life = 0;
     }
