@@ -614,23 +614,25 @@ namespace sceneHelp
 
 		const float widthScale = height * (16.f / 9.f);
 		const float paddingWidth = (widthScale / 64.f);
-		const float paddingHeight = paddingWidth / (16.f / 9.f);
+		const float paddingHeight = paddingWidth;
 
 		Scene& scene = game->GetScene("Lobby");
 
+		sm::Vector2 scale = { widthScale / 4, height / 9 };
+		sm::Vector2 lobbyPos = { width / 16.f, scale.y + paddingHeight };
+		sm::Vector2 classIconPos = { lobbyPos.x + scale.x + paddingWidth, lobbyPos.y };
+
 		for (int i = 0; i < MAX_PLAYERS_PER_LOBBY; i++)
 		{
-			float lobbyHeightPos = ((height / 12) + paddingHeight) * (i + 1) + paddingHeight * i;
-			float lobbyWidthPos = width / 16;
-			sm::Vector2 scale = { widthScale / 4, height / 9 };
-			sm::Vector2 classIconPos = { lobbyWidthPos + scale.x + paddingWidth, lobbyHeightPos };
-
 			Collection2D* playerIcon = new Collection2D;
-			playerIcon->AddElement<rtd::Picture>("Button.png", draw_t(lobbyWidthPos, lobbyHeightPos, scale.x, scale.y));
-			playerIcon->AddElement<rtd::Text>("Player " + std::to_string(i + 1), draw_text_t(lobbyWidthPos, lobbyHeightPos, scale.x, scale.y));
+			playerIcon->AddElement<rtd::Picture>("Button.png", draw_t(lobbyPos.x, lobbyPos.y, scale.x, scale.y));
+			playerIcon->AddElement<rtd::Text>("Player " + std::to_string(i + 1), draw_text_t(lobbyPos.x, lobbyPos.y, scale.x, scale.y));
 			playerIcon->AddElement<rtd::Picture>("WarriorIcon.png", draw_t(classIconPos.x, classIconPos.y, scale.x / 4, scale.y));
-			playerIcon->AddElement<rtd::Picture>("Yes.png", draw_t(classIconPos.x + paddingWidth + (scale.x / 4), lobbyHeightPos, scale.x / 4, scale.y))->SetVisiblity(false);
+			playerIcon->AddElement<rtd::Picture>("Yes.png", draw_t(classIconPos.x + paddingWidth + (scale.x / 4), lobbyPos.y, scale.x / 4, scale.y))->SetVisiblity(false);
 			scene.Add2DCollection(playerIcon, "playerIcon" + std::to_string(i + 1));
+
+			lobbyPos.y += scale.y + paddingHeight;
+			classIconPos.y = lobbyPos.y;
 		}
 
 		Collection2D* classTextCanvas = new Collection2D;
@@ -1258,7 +1260,7 @@ namespace sceneHelp
 
 		float widthScale = height * (16.f / 9.f);
 		const float paddingWidth = (widthScale / 64.f);
-		const float paddingHeight = paddingWidth / (16.f / 9.f);
+		const float paddingHeight = paddingWidth;
 
 		Scene& scene = game->GetScene("JoinLobby");
 
@@ -1282,11 +1284,11 @@ namespace sceneHelp
 
 		rtd::Button* startLobbyButton = lobbyCollection->AddElement<rtd::Button>("CreateLobby.png", draw_t((width / 2.0f) + (width / 8.0f), buttonPosY, buttonSize.x, buttonSize.y));
 		rtd::Button* lobbyButton = lobbyCollection->AddElement<rtd::Button>("joinLobby.png", draw_t(width / 8, buttonPosY, buttonSize.x, buttonSize.y));
-		rtd::TextField* lobbyField = lobbyCollection->AddElement<rtd::TextField>(draw_text_t(width / 8, buttonPosY - paddingHeight * 4.f, widthScale / 4, D2D1Core::GetDefaultFontSize()));
+		rtd::TextField* lobbyField = lobbyCollection->AddElement<rtd::TextField>(draw_text_t(width / 8, buttonPosY - paddingHeight * 2.f, widthScale / 4, D2D1Core::GetDefaultFontSize()));
 		lobbyField->SetDescriptionText("Input Lobby ID");
 
 		rtd::Button* exitButton = lobbyCollection->AddElement<rtd::Button>("No.png", draw_t(paddingWidth, paddingHeight, widthScale / 24, height / 14));
-		rtd::Text* lobbyErrorText = lobbyCollection->AddElement<rtd::Text>("Invalid Lobby ID", draw_text_t(width / 8, height - (height / 3.33f), width / 4.0f, height / 8.0f));
+		rtd::Text* lobbyErrorText = lobbyCollection->AddElement<rtd::Text>("Invalid Lobby ID", draw_text_t((width / 2.f) - (widthScale / 8.f), (height / 2) - (D2D1Core::GetDefaultFontSize() / 2), widthScale / 4.0f, D2D1Core::GetDefaultFontSize()));
 		lobbyErrorText->SetVisiblity(false);
 		exitButton->SetOnPressedEvent([=]
 			{
