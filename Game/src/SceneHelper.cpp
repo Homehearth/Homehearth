@@ -790,7 +790,7 @@ namespace sceneHelp
 		rtd::Text* fullscreenButtonText		= videoCategory->AddElement<rtd::Text>("Yes", draw_t(posVideo.x, posVideo.y, scale.x, scale.y));
 
 		posVideo.y += scale.y + padding.y * 1.5f;
-		videoCategory->AddElement<rtd::Text>("Resolution", draw_t(canvasPos.x + padding.x, posVideo.y, scale.x, scale.y));
+		videoCategory->AddElement<rtd::Text>("Resolution if not fullscreen", draw_t(canvasPos.x - padding.x, posVideo.y, scale.x * 3.f, scale.y));
 		rtd::Border* resolutionBorder = videoCategory->AddElement<rtd::Border>(draw_t(canvasPos.x + padding.x, posVideo.y, canvasSize.x - padding.x * 2, scale.y));
 		resolutionBorder->SetColor(D2D1::ColorF(53.f / 255.f, 22.f / 255.f, 26.f / 255.f));
 		resolutionBorder->SetLineWidth(LineWidth::LARGE);
@@ -1201,16 +1201,6 @@ namespace sceneHelp
 				audioCategory->Hide();
 				graphicsCategory->Show();
 			});
-
-		/*
-		Collection2D* soundCollection = new Collection2D;
-		rtd::Slider* sl = soundCollection->AddElement<rtd::Slider>(D2D1::ColorF(0.0f, 0.0f, 0.0f), draw_t((width / 2) - (width / 9), height / 5, width / 9, height / 16), &game->m_masterVolume, 1.0f, 0.0f);
-		sl->SetMinPos(sm::Vector2((width / 8) - (width / 9)));
-		sl->SetMaxPos(sm::Vector2(width - (width / 8)));
-		sl->SetExplanationText("Master Volume: ");
-		soundCollection->Hide();
-		scene.Add2DCollection(soundCollection, "Sounds");
-		*/		
 		
 	}
 
