@@ -110,15 +110,10 @@ void Renderer::Render(Scene* pScene)
 						pass->PostRender();
 					}
 				}
+			}
 
-				pScene->GetCurrentCamera()->ReadySwap();
-				pScene->ReadyForSwap();
-			}
-			else
-			{
-				pScene->GetCurrentCamera()->ReadySwap();
-				pScene->ReadyForSwap();
-			}
+			pScene->GetCurrentCamera()->ReadySwap();
+			pScene->ReadyForSwap();
 		}
 	}
 }
