@@ -47,6 +47,15 @@ Border* rtd::Slider::GetBorder()
     return m_border.get();
 }
 
+Text* rtd::Slider::GetValueText()
+{
+	if (!m_valueText)
+	{
+		m_valueText = std::make_unique<Text>(m_valueString);
+	}
+	return m_valueText.get();
+}
+
 void rtd::Slider::SetValue(float* value)
 {
 	m_value = value;
