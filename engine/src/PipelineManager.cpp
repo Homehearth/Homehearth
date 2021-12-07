@@ -822,9 +822,15 @@ bool PipelineManager::CreateShaders()
         return false;
     }
 
-    if (m_bloomShader.Create("Bloom_cs"))
+    if (!m_bloomVertexShader.Create("Bloom_vs"))
     {
-        LOG_WARNING("failed creating Bloom_cs");
+        LOG_WARNING("failed creating Bloom_vs");
+        return false;
+    }
+
+    if (!m_bloomPixelShader.Create("Bloom_ps"))
+    {
+        LOG_WARNING("failed creating Bloom_ps");
         return false;
     }
 

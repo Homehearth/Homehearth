@@ -67,4 +67,6 @@ private:
 	void GenerateBoxFilter(BlurLevel pLevel);
 	void UpdateBlurSettings();
 	void SwapBlurDirection();
+
+	ID3D11Texture2D* GetBackBuffer();
 };

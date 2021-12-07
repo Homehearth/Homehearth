@@ -34,6 +34,7 @@ void Renderer::Initialize(Window* pWindow)
 	AddPass(&m_skyPass);
 	AddPass(&m_dofPass);	
 	AddPass(&m_particlePass);
+	AddPass(&m_bloomPass);
 
 	m_basePass.m_pShadowPass = &m_shadowPass;
 	m_animPass.m_pShadowPass = &m_shadowPass;
@@ -46,6 +47,7 @@ void Renderer::Initialize(Window* pWindow)
 	m_skyPass.SetEnable(true);
 	m_dofPass.SetEnable(true);
 	m_shadowPass.SetEnable(true);
+	m_bloomPass.SetEnable(true);
 
 #ifdef _DEBUG
 	AddPass(&m_debugPass);  
@@ -60,6 +62,7 @@ void Renderer::Initialize(Window* pWindow)
 	}
 
 	m_dofPass.Create(DoFType::VIGNETTE);
+	m_bloomPass.Setup();
 }
 
 void Renderer::Setup(BasicEngine<Scene>& engine)

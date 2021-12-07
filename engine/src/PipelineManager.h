@@ -61,11 +61,13 @@ public:
 	Shaders::VertexShader			m_animationVertexShader;
 	Shaders::VertexShader			m_skyboxVertexShader;
 	Shaders::VertexShader			m_ParticleVertexShader;
+	Shaders::VertexShader			m_bloomVertexShader;
 
 	Shaders::PixelShader			m_defaultPixelShader;
 	Shaders::PixelShader			m_debugPixelShader;
 	Shaders::PixelShader			m_skyboxPixelShader;
 	Shaders::PixelShader			m_ParticlePixelShader;
+	Shaders::PixelShader			m_bloomPixelShader;
 
 	//Shadows
 	Shaders::VertexShader			m_paraboloidVertexShader;
@@ -77,7 +79,7 @@ public:
 	
 	Shaders::ComputeShader			m_blurComputeShader;
 	Shaders::ComputeShader			m_dofComputeShader;
-	Shaders::ComputeShader			m_bloomShader;
+	
 	
 	D3D11_VIEWPORT					m_viewport;
 

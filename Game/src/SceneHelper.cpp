@@ -952,6 +952,7 @@ namespace sceneHelp
 		sm::Vector2 minPos = { canvasPos.x + padding.x + canvasSize.x / 2.f, posAudio.y };
 		sm::Vector2 maxPos = { width - (scale.x + padding.x * 2.f), posAudio.y };
 		rtd::Canvas* masterVolCanvas = audioCategory->AddElement<rtd::Canvas>(D2D1::ColorF(53.f / 255.f, 22.f / 255.f, 26.f / 255.f), draw_t(minPos.x - 6.f, posAudio.y, ((canvasSize.x / 2.f) + 6.f) - padding.x * 2.f, scale.y));
+		masterVolCanvas->SetShape(Shapes::RECTANGLE_ROUNDED);
 		rtd::Slider* masterVolumeSL = audioCategory->AddElement<rtd::Slider>(D2D1::ColorF(0,0,0), draw_t(minPos.x, posAudio.y, scale.x, scale.y), &SoundHandler::Get().AdjustMasterVolume(), 1.0f, 0.0f);
 		masterVolumeSL->SetMinPos(minPos);
 		masterVolumeSL->SetMaxPos(maxPos);

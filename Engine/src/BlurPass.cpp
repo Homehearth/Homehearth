@@ -226,3 +226,8 @@ void BlurPass::SwapBlurDirection()
 	m_blurSettings.useVerticalBlur = !m_blurSettings.useVerticalBlur;
 	UpdateBlurSettings();
 }
+
+ID3D11Texture2D* BlurPass::GetBackBuffer()
+{
+	return m_backBufferRead.Get();
+}

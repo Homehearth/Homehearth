@@ -21,6 +21,8 @@ rtd::Slider::Slider(D2D1_COLOR_F color, const draw_t& draw_opts, float* value, f
 	m_maxVal = max;
 	m_minVal = min;
 
+	m_slider->SetShape(Shapes::RECTANGLE_ROUNDED);
+
 	std::string tmp = std::to_string(*m_value);
 	auto length = std::snprintf(&m_valueString[0], m_valueString.size(), "%.2f", *m_value);
 	tmp.resize(length);
