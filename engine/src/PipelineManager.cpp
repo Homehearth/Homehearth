@@ -822,5 +822,11 @@ bool PipelineManager::CreateShaders()
         return false;
     }
 
+    if (m_bloomShader.Create("Bloom_cs"))
+    {
+        LOG_WARNING("failed creating Bloom_cs");
+        return false;
+    }
+
     return true;
 }
