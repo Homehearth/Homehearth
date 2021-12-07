@@ -399,6 +399,7 @@ void ServerSystems::OnCycleChange(Simulation* simulation)
 					if (!hp.isAlive)
 					{
 						simulation->ResetPlayer(e);
+						hp.currentHealth = 0.25f * hp.maxHealth;
 					}
 				});
 		}
