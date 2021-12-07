@@ -31,7 +31,16 @@ namespace util {
 
 		return util::BezierCurve<T>(begin, end - 1, t);
 	}
-;
 
-	
+	/*
+		Rebases the old_value onto a new range between the new_max and new_min.
+		Make sure that old_max and old_min are the max and min of old_value.
+	*/
+	template<typename T>
+	T Rebase(const T& old_value, const T& old_max, const T& old_min, const T& new_max, const T& new_min)
+	{
+		T oldRange = old_max - old_min;
+		T newRange = new_max - new_min;
+		return (((old_value - old_min) * newRange) / oldRange) + new_min;
+	}
 }
