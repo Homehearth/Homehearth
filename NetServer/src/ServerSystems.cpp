@@ -934,7 +934,7 @@ Entity VillagerManagement::CreateVillager(HeadlessScene& scene, Entity homeHouse
 	comp::BehaviorTree* behaviorTree = entity.AddComponent<comp::BehaviorTree>();
 	comp::Villager* villager = entity.AddComponent<comp::Villager>();
 	comp::House* house = homeHouse.GetComponent<comp::House>();
-	transform->position = house->attackNode->position;
+	transform->position = house->homeNode->position;
 	transform->position.y = 0.75f;
 	villager->homeHouse = homeHouse;
 	meshName->name = NameType::MESH_VILLAGER;

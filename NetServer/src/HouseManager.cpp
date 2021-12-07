@@ -50,12 +50,12 @@ void HouseManager::AddCollider(NameType houseType, Entity house) const
 
 		if(houseType == NameType::MESH_RUINED_HOUSE5)
 		{
-			houseComp->attackNode = nullptr;
+			houseComp->homeNode = nullptr;
 			houseComp->isDead = true;
 		}
 		else
 		{
-			houseComp->attackNode = Blackboard::Get().GetPathFindManager()->GetNodes()[39][22].get();
+			houseComp->homeNode = Blackboard::Get().GetPathFindManager()->GetNodes()[39][22].get();
 			houseComp->isDead = false;
 		}
 	}
@@ -68,12 +68,12 @@ void HouseManager::AddCollider(NameType houseType, Entity house) const
 		obb->Center.y = 0.0f;
 		if (houseType == NameType::MESH_RUINED_HOUSE6)
 		{
-			houseComp->attackNode = nullptr;
+			houseComp->homeNode = nullptr;
 			houseComp->isDead = true;
 		}
 		else
 		{
-			houseComp->attackNode = Blackboard::Get().GetPathFindManager()->GetNodes()[42][27].get();
+			houseComp->homeNode = Blackboard::Get().GetPathFindManager()->GetNodes()[42][27].get();
 			houseComp->isDead = false;
 		}
 	}
@@ -86,12 +86,12 @@ void HouseManager::AddCollider(NameType houseType, Entity house) const
 		obb->Center.y = 0.0f;
 		if (houseType == NameType::MESH_RUINED_HOUSE7)
 		{
-			houseComp->attackNode = nullptr;
+			houseComp->homeNode = nullptr;
 			houseComp->isDead = true;
 		}
 		else
 		{
-			houseComp->attackNode = Blackboard::Get().GetPathFindManager()->GetNodes()[42][22].get();
+			houseComp->homeNode = Blackboard::Get().GetPathFindManager()->GetNodes()[42][22].get();
 			houseComp->isDead = false;
 		}
 	}
@@ -104,12 +104,12 @@ void HouseManager::AddCollider(NameType houseType, Entity house) const
 		obb->Center.y = 0.0f;
 		if (houseType == NameType::MESH_RUINED_HOUSE8)
 		{
-			houseComp->attackNode = nullptr;
+			houseComp->homeNode = nullptr;
 			houseComp->isDead = true;
 		}
 		else
 		{
-			houseComp->attackNode = Blackboard::Get().GetPathFindManager()->GetNodes()[44][42].get();
+			houseComp->homeNode = Blackboard::Get().GetPathFindManager()->GetNodes()[44][42].get();
 			houseComp->isDead = false;
 		}
 	}
@@ -123,12 +123,12 @@ void HouseManager::AddCollider(NameType houseType, Entity house) const
 		if (houseType == NameType::MESH_RUINED_HOUSE9)
 		{
 
-			houseComp->attackNode = nullptr;
+			houseComp->homeNode = nullptr;
 			houseComp->isDead = true;
 		}
 		else
 		{
-			houseComp->attackNode = Blackboard::Get().GetPathFindManager()->GetNodes()[33][22].get();
+			houseComp->homeNode = Blackboard::Get().GetPathFindManager()->GetNodes()[33][22].get();
 			houseComp->isDead = false;
 		}
 	}
@@ -141,12 +141,12 @@ void HouseManager::AddCollider(NameType houseType, Entity house) const
 		obb->Center.y = 0.0f;
 		if (houseType == NameType::MESH_RUINED_HOUSE10)
 		{
-			houseComp->attackNode = nullptr;
+			houseComp->homeNode = nullptr;
 			houseComp->isDead = true;
 		}
 		else
 		{
-			houseComp->attackNode = Blackboard::Get().GetPathFindManager()->GetNodes()[28][34].get();
+			houseComp->homeNode = Blackboard::Get().GetPathFindManager()->GetNodes()[28][34].get();
 			houseComp->isDead = false;
 		}
 
@@ -160,12 +160,12 @@ void HouseManager::AddCollider(NameType houseType, Entity house) const
 		obb->Center.y = 0.0f;
 		if (houseType == NameType::MESH_RUINED_WATERMILLHOUSE)
 		{
-			houseComp->attackNode = nullptr;
+			houseComp->homeNode = nullptr;
 			houseComp->isDead = true;
 		}
 		else
 		{
-			houseComp->attackNode = Blackboard::Get().GetPathFindManager()->GetNodes()[43][34].get();
+			houseComp->homeNode = Blackboard::Get().GetPathFindManager()->GetNodes()[43][34].get();
 			houseComp->isDead = false;
 		}
 	}
