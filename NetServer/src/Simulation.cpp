@@ -370,8 +370,8 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 
 				{
 					PROFILE_SCOPE("Movement collider system");
-					Systems::MovementColliderSystem(scene, e.dt);
 					Systems::MovementSystem(scene, e.dt);
+					Systems::MovementColliderSystem(scene, e.dt);
 				}
 
 				{
@@ -413,11 +413,8 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 			}
 
 			{
-				PROFILE_SCOPE("Create waves");
-				if (!waveQueue.empty())
-					ServerSystems::NextWaveConditions(this);
-				else
-					EnemyManagement::CreateWaves(waveQueue, currentRound++);
+				PROFILE_SCOPE("Cycle changed conditions");
+				ServerSystems::OnCycleChange(this);
 			}
 
 			m_spreeHandler.Update();
@@ -677,23 +674,22 @@ void Simulation::OnComponentUpdated(Entity entity, ecs::Component component)
 
 void Simulation::BuildMapColliders(std::vector<dx::BoundingOrientedBox>* mapColliders)
 {
-	// --- END OF THE WORLD ---
-	Entity collider;
-	int j = 0;
 	for (size_t i = 0; i < mapColliders->size(); i++)
 	{
-		collider = m_pGameScene->CreateEntity();
+		Entity collider = m_pGameScene->CreateEntity();
 		comp::OrientedBoxCollider* obb = collider.AddComponent<comp::OrientedBoxCollider>();
 		obb->Center = mapColliders->at(i).Center;
 		obb->Extents = mapColliders->at(i).Extents;
 		obb->Orientation = mapColliders->at(i).Orientation;
-		collider.AddComponent<comp::Tag<TagType::STATIC>>();
+		collider.AddComponent<comp::Tag<STATIC>>();
 		// Map bounds is loaded in last, 6 obbs surrounding village put the correct tag for collision system
 		if (i >= mapColliders->size() - 6)
 		{
-			collider.AddComponent<comp::Tag<TagType::MAP_BOUNDS>>();
+			collider.AddComponent<comp::Tag<MAP_BOUNDS>>();
 		}
+#if RENDER_COLLIDERS
 		collider.AddComponent<comp::Network>();
+#endif
 		qt->Insert(collider);
 	}
 }

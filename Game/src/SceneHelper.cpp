@@ -466,6 +466,15 @@ namespace sceneHelp
 		float widthScale = height * (16.f / 9.f);
 		sm::Vector2 padding = { (widthScale / 128.f) , (widthScale / 64.f) / (16.f / 9.f) };
 
+		float widthScale = height * (16.f / 9.f);
+		sm::Vector2 padding = { (widthScale / 64.f) , (widthScale / 64.f) / (16.f / 9.f) };
+
+		// Picture that will be drawn when player is in destroy mode.
+		Collection2D* bullDoze = new Collection2D;
+		bullDoze->AddElement<rtd::Picture>("No.png", draw_t(0.0f, 0.0f, widthScale / 24, height / 14));
+		bullDoze->Hide();
+		scene.Add2DCollection(bullDoze, "bullDoze");
+
 		for (int i = 0; i < MAX_PLAYERS_PER_LOBBY; i++)
 		{
 			Collection2D* playerHp = new Collection2D;

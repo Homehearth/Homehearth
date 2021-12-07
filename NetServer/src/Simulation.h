@@ -59,7 +59,6 @@ private:
 	//Game play related
 	uint32_t m_wavesSurvived;
 
-	std::queue<Wave> waveQueue;
 	std::queue<sm::Vector3> m_spawnPoints;
 	HouseManager houseManager;
 
@@ -73,6 +72,8 @@ private:
 
 public:
 	Cycler m_timeCycler;
+	std::queue<Wave> waveQueue;
+	uint32_t currentRound;
 
 	Simulation(Server* pServer, HeadlessEngine* pEngine);
 	virtual ~Simulation() = default;
