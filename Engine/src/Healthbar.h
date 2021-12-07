@@ -15,6 +15,7 @@ namespace rtd
 		float* m_points;
 		Entity m_entity;
 		float m_maxHealth;
+		float m_currentScale = 1.0f;
 
 		// Double buffered draw opts XDD
 		DoubleBuffer<draw_t> m_drawOpts;

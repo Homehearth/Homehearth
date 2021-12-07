@@ -51,7 +51,7 @@ namespace ServerSystems
 	void CheckGameOver(Simulation* simulation, HeadlessScene& scene);
 	void TickBTSystem(Simulation* simulation, HeadlessScene& scene);
 
-	void AnimatonSystem(Simulation* simulation, HeadlessScene& scene);
+	void AnimationSystem(Simulation* simulation, HeadlessScene& scene);
 	void SoundSystem(Simulation* simulation, HeadlessScene& scene);
 
 	void CombatSystem(HeadlessScene& scene, float dt);

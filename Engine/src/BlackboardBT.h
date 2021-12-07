@@ -41,11 +41,14 @@ public:
 	}
 
 	template<typename T>
-	T* GetValue(std::string key);
+	T* GetValue(const std::string& key);
 
 	template<typename T>
-	bool AddValue(std::string key, T value);
+	bool AddValue(const std::string& key, T value);
 	PathFinderManager* GetPathFindManager();
+
+	template <typename T>
+	void ClearValue(const std::string& key);
 private:
 	Blackboard() = default;
 	std::unordered_map<std::string, std::unique_ptr<Base>> storage{};
@@ -58,7 +61,18 @@ inline PathFinderManager* Blackboard::GetPathFindManager()
 }
 
 template <typename T>
-T* Blackboard::GetValue(std::string key)
+void Blackboard::ClearValue(const std::string& key)
+{
+	const auto iterator = storage.find(key);
+
+	if (iterator != storage.end())
+	{
+		storage.erase(iterator);
+	}
+}
+
+template <typename T>
+T* Blackboard::GetValue(const std::string& key)
 {
 	const auto iterator = storage.find(key);
 
@@ -82,7 +96,7 @@ T* Blackboard::GetValue(std::string key)
 }
 
 template <typename T>
-bool Blackboard::AddValue(std::string key, T value)
+bool Blackboard::AddValue(const std::string& key, T value)
 {
 	const auto& iterator = storage.find(key);
 	if(iterator == storage.end())

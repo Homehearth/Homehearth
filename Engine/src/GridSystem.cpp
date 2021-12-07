@@ -144,7 +144,7 @@ void GridSystem::Initialize(Vector2I mapSize, sm::Vector3 position, std::string 
 
 				transform->position = tileTemp.position;
 
-				tileEntity.AddComponent<comp::MeshName>()->name = "Cube.obj";
+				tileEntity.AddComponent<comp::MeshName>()->name = NameType::MESH_CUBE;
 			}
 
 			//transform->scale = { 4.2f, 0.5f, 4.2f };
@@ -400,6 +400,11 @@ std::vector<std::pair<UINT, UINT>> GridSystem::CheckDefenceLocation(Ray_t& mouse
 			ePos.push_back(bs);
 		});
 	m_scene->ForEachComponent<comp::NPC, comp::SphereCollider>([&](comp::NPC& p, comp::SphereCollider& bs)
+		{
+			ePos.push_back(bs);
+		});
+
+	m_scene->ForEachComponent<comp::Villager, comp::SphereCollider>([&](comp::Villager& v, comp::SphereCollider& bs)
 		{
 			ePos.push_back(bs);
 		});
