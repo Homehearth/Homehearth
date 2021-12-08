@@ -416,16 +416,19 @@ void ServerSystems::OnCycleChange(Simulation* simulation)
 				EnemyManagement::CreateWaves(simulation->waveQueue, simulation->currentRound++);
 			}
 
-			int count = 0;
-			simulation->GetGameScene()->ForEachComponent<comp::Tag<TagType::BAD>>([&](Entity e, comp::Tag<TagType::BAD>&)
-				{
-					count++;
-				});
-
-			if (count == 0)
+		}
+	}
+	if (simulation->m_timeCycler.GetTimePeriod() == CyclePeriod::NIGHT)
+	{
+		int count = 0;
+		simulation->GetGameScene()->ForEachComponent<comp::Tag<BAD>>([&](Entity e, comp::Tag<BAD>&)
 			{
-				simulation->m_timeCycler.SetCycleSpeed(10.0f);
-			}
+				count++;
+			});
+
+		if (count == 0)
+		{
+			simulation->m_timeCycler.SetCycleSpeed(10.0f);
 		}
 	}
 }
