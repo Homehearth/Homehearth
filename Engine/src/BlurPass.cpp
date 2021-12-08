@@ -71,6 +71,13 @@ void BlurPass::BlurTexture(ID3D11UnorderedAccessView* viewIn, ID3D11UnorderedAcc
 			DC->Dispatch(PM->m_windowWidth / 8, PM->m_windowHeight / 8, 1);
 			SwapBlurDirection();
 		}
+
+		ID3D11UnorderedAccessView* nullUAV = nullptr;
+		DC->CSSetUnorderedAccessViews(0, 1, &nullUAV, nullptr);
+		DC->CSSetUnorderedAccessViews(1, 1, &nullUAV, nullptr);
+
+		ID3D11ComputeShader* nullCS = nullptr;
+		DC->CSSetShader(nullCS, nullptr, 0);
 	}
 }
 
