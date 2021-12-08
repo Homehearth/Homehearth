@@ -141,6 +141,7 @@ void Simulation::ResetPlayer(Entity player)
 		return;
 	}
 
+	playerComp->wantsToSkipDay = false;
 	playerComp->runSpeed = 30.f;
 	playerComp->state = comp::Player::State::IDLE;
 	playerComp->isReady = false;
@@ -267,29 +268,6 @@ void Simulation::ResetPlayer(Entity player)
 	m_pGameScene->publish<EComponentUpdated>(player, ecs::Component::HEALTH);
 
 	player.UpdateNetwork();
-}
-
-void Simulation::SetPlayerSkipDay(uint32_t playerID)
-{
-	GetPlayer(playerID).GetComponent<comp::Player>()->wantsToSkipDay = true;
-	std::unordered_map<uint32_t, Entity>* players = &m_lobby.m_players;
-	bool allPlayersSkip = true;
-	for (auto& player : *players)
-	{
-		if (!player.second.GetComponent<comp::Player>()->wantsToSkipDay)
-		{
-			allPlayersSkip = false;
-			break;
-		}
-	}
-	if (allPlayersSkip)
-	{
-		m_timeCycler.SetCycleSpeed(15.f);
-		message<GameMsg> msg;
-		msg.header.id = GameMsg::Game_Time;
-		msg << 5.f << m_timeCycler.GetTime();
-		Broadcast(msg);
-	}
 }
 
 Simulation::Simulation(Server* pServer, HeadlessEngine* pEngine)

@@ -344,7 +344,12 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 		msg >> gameID >> playerID;
 		if (m_simulations.find(gameID) != m_simulations.end())
 		{
-			m_simulations.at(gameID)->SetPlayerSkipDay(playerID);
+			comp::Player* p = m_simulations.at(gameID)->GetPlayer(playerID).GetComponent<comp::Player>();
+			if (p)
+			{
+				p->wantsToSkipDay = true;
+				ServerSystems::CheckSkipDay(m_simulations.at(gameID).get());
+			}
 		}
 		break;
 	case GameMsg::Game_PlayerReady:

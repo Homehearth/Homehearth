@@ -245,6 +245,11 @@ namespace sceneHelp
 					case CyclePeriod::MORNING:
 					{
 						SoundHandler::Get().SetCurrentMusic("MenuTheme");
+						Collection2D* skipButtonUI = scene.GetCollection("SkipUI");
+						rtd::Button* skipButton = dynamic_cast<rtd::Button*>(skipButtonUI->elements[0].get());
+						rtd::Text* skipText = dynamic_cast<rtd::Text*>(skipButtonUI->elements[1].get());
+						skipText->SetVisiblity(true);
+						skipButton->SetVisiblity(true);
 
 						break;
 					}
@@ -273,11 +278,6 @@ namespace sceneHelp
 									l.lightData.enabled = 0;
 								}
 							});
-						Collection2D* skipButtonUI = scene.GetCollection("SkipUI");
-						rtd::Button* skipButton = dynamic_cast<rtd::Button*>(skipButtonUI->elements[0].get());
-						rtd::Text* skipText = dynamic_cast<rtd::Text*>(skipButtonUI->elements[1].get());
-						skipText->SetVisiblity(true);
-						skipButton->SetVisiblity(true);
 						break;
 					}
 					default:

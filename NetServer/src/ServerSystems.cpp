@@ -387,6 +387,7 @@ void ServerSystems::OnCycleChange(Simulation* simulation)
 	{
 		if (simulation->m_timeCycler.GetTimePeriod() == CyclePeriod::MORNING)
 		{
+			simulation->m_timeCycler.ResetCycleSpeed();
 			// remove all bad guys
 			simulation->GetGameScene()->ForEachComponent<comp::Tag<BAD>>([](Entity e, comp::Tag<BAD>&)
 				{
@@ -406,10 +407,8 @@ void ServerSystems::OnCycleChange(Simulation* simulation)
 
 		if (simulation->m_timeCycler.GetTimePeriod() == CyclePeriod::NIGHT)
 		{
-			message<GameMsg> msg;
-			msg.header.id = GameMsg::Game_Time;
-			msg << simulation->m_timeCycler.GetCycleSpeed() << simulation->m_timeCycler.GetTime();
-			simulation->Broadcast(msg);
+			simulation->m_timeCycler.ResetCycleSpeed();
+
 			if (simulation->waveQueue.size() > 0)
 			{
 				// start new wave
@@ -432,7 +431,7 @@ void ServerSystems::OnCycleChange(Simulation* simulation)
 
 		if (count == 0)
 		{
-			simulation->m_timeCycler.SetCycleSpeed(10.0f);
+			simulation->m_timeCycler.SetCycleSpeed(15.0f);
 		}
 	}
 }
@@ -914,6 +913,24 @@ void ServerSystems::DeathParticleTimer(HeadlessScene& scene)
 				e.RemoveComponent<comp::PARTICLEEMITTER>();
 			}
 		});
+}
+
+void ServerSystems::CheckSkipDay(Simulation* simulation)
+{
+	bool allPlayersSkip = true;
+
+	simulation->GetGameScene()->ForEachComponent<comp::Player>([=, &allPlayersSkip](Entity& e, comp::Player& p)
+		{
+			if (!p.wantsToSkipDay)
+			{
+				allPlayersSkip = false;
+			}
+		});
+
+	if (allPlayersSkip)
+	{
+		simulation->m_timeCycler.SetCycleSpeed(15.f);
+	}
 }
 
 Entity VillagerManagement::CreateVillager(HeadlessScene& scene, Entity homeHouse, Blackboard* blackboard)
