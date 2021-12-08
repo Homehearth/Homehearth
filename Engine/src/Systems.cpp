@@ -269,7 +269,6 @@ void Systems::MovementSystem(HeadlessScene& scene, float dt)
 			while (it != p.forces.end())
 			{
 				comp::TemporaryPhysics::Force& f = *it;
-				std::cout << util::VecToStr(f.force) << std::endl;
 				if (f.isImpulse)
 				{
 					if (f.wasApplied)
