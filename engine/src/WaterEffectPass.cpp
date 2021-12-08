@@ -27,7 +27,7 @@ void WaterEffectPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContex
     {
         DC->PSSetConstantBuffers(0, 0, nullptr);
         DC->VSSetConstantBuffers(0, 0, nullptr);
-        DC->CSSetConstantBuffers(7, 1, PM->m_textureEffectConstantBuffer.GetAddressOf());
+        DC->CSSetConstantBuffers(8, 1, PM->m_textureEffectConstantBuffer.GetAddressOf());
     }
 
 

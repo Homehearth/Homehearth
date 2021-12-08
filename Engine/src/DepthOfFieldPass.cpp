@@ -55,7 +55,6 @@ void DOFPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 		DC->OMSetRenderTargets(1, &nullRTV, nullptr);
 		DC->CSSetShader(PM->m_dofComputeShader.Get(), nullptr, 0);
 
-		m_dofHelp.view = pCam->GetView();
 		m_dofHelp.inverseProjection = pCam->GetProjection().Invert();
 		m_dofHelp.dofType = UINT(m_currentType);
 
@@ -64,7 +63,7 @@ void DOFPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 		DC->CSSetUnorderedAccessViews(3, 1, m_outOfFocusView.GetAddressOf(), nullptr);
 		DC->CSSetShaderResources(0, 1, PM->m_depthBufferSRV.GetAddressOf());
 		DC->CSSetUnorderedAccessViews(4, 1, m_outputView.GetAddressOf(), nullptr);
-		DC->CSSetConstantBuffers(12, 1, m_constBuff.GetAddressOf());
+		DC->CSSetConstantBuffers(9, 1, m_constBuff.GetAddressOf());
 	}
 }
 

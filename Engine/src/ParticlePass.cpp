@@ -24,7 +24,7 @@ void ParticlePass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 	DC->IASetVertexBuffers(0, 1, &m_nullBuffer, &m_stride, &m_offset);
 	DC->GSSetConstantBuffers(1, 1, pCam->m_viewConstantBuffer.GetAddressOf());
 	DC->PSSetConstantBuffers(1, 1, pCam->m_viewConstantBuffer.GetAddressOf());
-	DC->CSSetShaderResources(18, 1, m_randomNumbersSRV.GetAddressOf());
+	DC->CSSetShaderResources(11, 1, m_randomNumbersSRV.GetAddressOf());
 }
 
 void ParticlePass::CreateRandomNumbers()
@@ -95,9 +95,9 @@ void ParticlePass::PostRender(ID3D11DeviceContext* pDeviceContext)
 	//Unbinding data
 	DC->VSSetShaderResources(17, 1, &m_nullSRV);
 	DC->GSSetConstantBuffers(1, 1, &m_nullBuffer);
-	DC->PSSetConstantBuffers(9, 1, &m_nullBuffer);
+	DC->PSSetConstantBuffers(5, 1, &m_nullBuffer);
 	DC->CSSetUnorderedAccessViews(7, 1, &m_nullUAV, nullptr);
-	DC->CSSetShaderResources(7, 1, &m_nullSRV);
+	DC->CSSetShaderResources(8, 1, &m_nullSRV);
 
 	DC->GSSetShader(m_nullGS, nullptr, 0);
 	DC->CSSetShader(m_nullCS, nullptr, 0);

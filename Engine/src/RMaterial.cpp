@@ -92,7 +92,7 @@ void RMaterial::BindMaterial(ID3D11DeviceContext* context)
     /*
         Bind the constant buffers
     */
-    context->PSSetConstantBuffers(CB_MAT_SLOT,         1, m_matConstCB.GetAddressOf());
+    //context->PSSetConstantBuffers(CB_MAT_SLOT,         1, m_matConstCB.GetAddressOf());
     context->PSSetConstantBuffers(CB_PROPERTIES_SLOT,  1, m_hasTextureCB.GetAddressOf());
 
     /*
@@ -115,7 +115,7 @@ void RMaterial::UnBindMaterial(ID3D11DeviceContext* context)
 {
     //Unbind the constantbuffers
     ID3D11Buffer* nullBuffer = nullptr;
-    context->PSSetConstantBuffers(CB_MAT_SLOT,         1, &nullBuffer);
+    //context->PSSetConstantBuffers(CB_MAT_SLOT,         1, &nullBuffer);
     context->PSSetConstantBuffers(CB_PROPERTIES_SLOT,  1, &nullBuffer);
 
     //Unbind all the textures
@@ -152,7 +152,7 @@ bool RMaterial::Create(aiMaterial* aiMat)
 {
     /*
         Load in material constants
-    */
+    
     matConstants_t matConst;
     aiColor3D ambient = { 0.f, 0.f, 0.f };
     if (AI_SUCCESS == aiMat->Get(AI_MATKEY_COLOR_AMBIENT, ambient))
@@ -178,6 +178,7 @@ bool RMaterial::Create(aiMaterial* aiMat)
 #endif 
         return false;
     }
+    */
 
     /*
         Load in textures
@@ -259,6 +260,7 @@ bool RMaterial::CreateFromMTL(std::string& text)
         std::string prefix;
         ss >> prefix;
 
+        /*
         //Ambient
         if (prefix == "Ka")
         {
@@ -284,8 +286,10 @@ bool RMaterial::CreateFromMTL(std::string& text)
         {
             ss >> matConst.opacity;
         }
+        */
+
         //Albedo map
-        else if (prefix == "map_Kd")
+        if (prefix == "map_Kd")
         {
             std::string filepath;
             if (ss >> filepath)
@@ -364,13 +368,13 @@ bool RMaterial::CreateFromMTL(std::string& text)
 
     }
 
-    if (!CreateConstBuf(matConst))
-    {
-#ifdef _DEBUG
-        LOG_WARNING("Failed to create constantbuffer for material constants");
-#endif 
-        return false;
-    }
+//    if (!CreateConstBuf(matConst))
+//    {
+//#ifdef _DEBUG
+//        LOG_WARNING("Failed to create constantbuffer for material constants");
+//#endif 
+//        return false;
+//    }
 
     if (!CreateConstBuf(m_properties))
     {

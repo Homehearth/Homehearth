@@ -87,10 +87,107 @@ void PipelineManager::Initialize(Window* pWindow, ID3D11DeviceContext* context)
         LOG_ERROR("failed creating texture effect resources.");
     }
 
+    // Initialize Forward+ related resources.
+    {
+        m_dispatchParamsCB.Create(m_d3d11->Device());
+        m_screenToViewParamsCB.Create(m_d3d11->Device());
+    }
+
     // Set Viewport.
     this->SetViewport();
     m_windowWidth = m_window->GetWidth();
     m_windowHeight = m_window->GetHeight();
+}
+
+
+bool PipelineManager::CreateStructuredBuffer(ComPtr<ID3D11Buffer>& buffer, void* data, unsigned int byteStride,
+    unsigned int arraySize, ComPtr<ID3D11UnorderedAccessView>& uav)
+{
+    buffer.Reset();
+    uav.Reset();
+
+    D3D11_BUFFER_DESC sBufferDesc = {};
+    D3D11_SUBRESOURCE_DATA sBufferSub = {};
+
+    sBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+    sBufferDesc.ByteWidth = byteStride * arraySize;
+    sBufferDesc.BindFlags = D3D11_BIND_UNORDERED_ACCESS;
+    sBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ | D3D11_CPU_ACCESS_WRITE;
+    sBufferDesc.StructureByteStride = byteStride;
+    sBufferDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
+    sBufferSub.pSysMem = data;
+
+    HRESULT hr = m_d3d11->Device()->CreateBuffer(&sBufferDesc, &sBufferSub, buffer.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+
+    D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
+    uavDesc.Format = DXGI_FORMAT_UNKNOWN;
+    uavDesc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;
+    uavDesc.Buffer.FirstElement = 0;
+    uavDesc.Buffer.Flags = 0;
+    uavDesc.Buffer.NumElements = arraySize;
+    hr = m_d3d11->Device()->CreateUnorderedAccessView(buffer.Get(), &uavDesc, uav.GetAddressOf());
+
+    return !FAILED(hr);
+}
+
+bool PipelineManager::CreateStructuredBuffer(void* data, unsigned byteStride, unsigned arraySize, ResourceAccessView& rav)
+{
+    rav.buffer.Reset();
+    rav.uav.Reset();
+    rav.srv.Reset();
+
+    D3D11_BUFFER_DESC sBufferDesc = {};
+    D3D11_SUBRESOURCE_DATA sBufferSub = {};
+
+    sBufferDesc.ByteWidth = byteStride * arraySize;
+    sBufferDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
+    sBufferDesc.BindFlags = D3D11_BIND_UNORDERED_ACCESS | D3D11_BIND_SHADER_RESOURCE;
+    sBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ | D3D11_CPU_ACCESS_WRITE;
+    sBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+    sBufferDesc.StructureByteStride = byteStride;
+    sBufferSub.pSysMem = data;
+
+    HRESULT hr = m_d3d11->Device()->CreateBuffer(&sBufferDesc, &sBufferSub, rav.buffer.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+
+    D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
+    uavDesc.Format = DXGI_FORMAT_UNKNOWN;
+    uavDesc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;
+    uavDesc.Buffer.FirstElement = 0;
+    uavDesc.Buffer.Flags = 0;
+    uavDesc.Buffer.NumElements = arraySize;
+
+    hr = m_d3d11->Device()->CreateUnorderedAccessView(rav.buffer.Get(), &uavDesc, rav.uav.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+
+    D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+    srvDesc.Format = DXGI_FORMAT_UNKNOWN;
+    srvDesc.ViewDimension = D3D11_SRV_DIMENSION_BUFFEREX;
+    srvDesc.BufferEx.FirstElement = 0;
+    srvDesc.BufferEx.Flags = 0;
+    srvDesc.BufferEx.NumElements = arraySize;
+    hr = m_d3d11->Device()->CreateShaderResourceView(rav.buffer.Get(), &srvDesc, rav.srv.GetAddressOf());
+
+    return !FAILED(hr);
+}
+
+void PipelineManager::SetCullBack(bool cullNone)
+{
+    if (cullNone)
+    {
+        m_d3d11->DeviceContext()->RSSetState(m_rasterState.Get());
+        m_d3d11->DeviceContext()->OMSetBlendState(m_blendOff.Get(), nullptr, 0xffffffff);
+    }
+    else
+    {
+        constexpr float blendFactor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
+        m_d3d11->DeviceContext()->RSSetState(m_rasterStateNoCulling.Get());
+        m_d3d11->DeviceContext()->OMSetBlendState(m_blendOn.Get(), blendFactor, 0xffffffff);
+    }
 }
 
 bool PipelineManager::CreateRenderTargetView()
@@ -282,6 +379,14 @@ bool PipelineManager::CreateSamplerStates()
     if (FAILED(hr))
         return false;
 
+    samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_MODE::D3D11_TEXTURE_ADDRESS_CLAMP;
+    samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_MODE::D3D11_TEXTURE_ADDRESS_CLAMP;
+    samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_MODE::D3D11_TEXTURE_ADDRESS_CLAMP;
+
+    hr = D3D11Core::Get().Device()->CreateSamplerState(&samplerDesc, m_linearClampSamplerState.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+
     // Setup for Anisotropic SamplerState
     samplerDesc.Filter = D3D11_FILTER::D3D11_FILTER_ANISOTROPIC;
     samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_MODE::D3D11_TEXTURE_ADDRESS_WRAP;
@@ -365,8 +470,6 @@ bool PipelineManager::CreateBlendStates()
     blendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
     blendDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ZERO;
 
-
-
     HRESULT hr = m_d3d11->Device()->CreateBlendState(&blendDesc, m_blendStateAlphaBlending.GetAddressOf());
     if (FAILED(hr))
         return false;
@@ -386,19 +489,40 @@ bool PipelineManager::CreateBlendStates()
     // "...the quality is significantly improved when used in conjunction with MSAA".
     blendStateDesc.AlphaToCoverageEnable = 1;
     hr = m_d3d11->Device()->CreateBlendState(&blendStateDesc, m_blendStateDepthOnlyAlphaToCoverage.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+
+    ZeroMemory(&blendDesc, sizeof(D3D11_BLEND_DESC));
+    blendDesc.AlphaToCoverageEnable = true;
+    blendDesc.IndependentBlendEnable = true;
+    blendDesc.RenderTarget[0].BlendEnable = true;
+    blendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+    blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_ONE;
+    blendDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+    blendDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ZERO;
+    blendDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+    blendDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+    blendDesc.RenderTarget[0].RenderTargetWriteMask = 0x0f;
+
+    hr = m_d3d11->Device()->CreateBlendState(&blendDesc, m_blendOn.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+
+    blendStateDesc.RenderTarget[0].BlendEnable = false;
+    blendStateDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+    hr = m_d3d11->Device()->CreateBlendState(&blendDesc, m_blendOff.GetAddressOf());
 
     D3D11_BLEND_DESC blendStateParticleDesc = {};
-    //blendStateParticleDesc.AlphaToCoverageEnable = true;
-    //blendStateParticleDesc.IndependentBlendEnable = true;     // can be true 
+    blendStateParticleDesc.AlphaToCoverageEnable = true;
+    blendStateParticleDesc.IndependentBlendEnable = true;
     blendStateParticleDesc.RenderTarget[0].BlendEnable = true;
-    blendStateParticleDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+    blendStateParticleDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD; //Blend opacity: add 1 and 2
+    blendStateParticleDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD; //Blend alpha: add 1 and 2
     blendStateParticleDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
-    blendStateParticleDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
-    blendStateParticleDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ZERO;
-    blendStateParticleDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
-    blendStateParticleDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+    blendStateParticleDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO; //No blend
     blendStateParticleDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
-
+    blendStateParticleDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+    blendStateParticleDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ZERO;
 
     hr = m_d3d11->Device()->CreateBlendState(&blendStateParticleDesc, m_blendStateParticle.GetAddressOf());
 
@@ -409,7 +533,7 @@ bool PipelineManager::CreateBlendStates()
         return false;
     }
 
-	return !FAILED(hr);
+    return !FAILED(hr);
 }
 
 void PipelineManager::SetViewport()
@@ -696,6 +820,12 @@ bool PipelineManager::CreateShaders()
         return false;
     }
 
+    if (!m_computeFrustumsShader.Create("ComputeFrustums_cs"))
+    {
+        LOG_WARNING("failed creating ComputeFrustums_cs.");
+        return false;
+    }
+    
     if (!m_depthPassVertexShader.Create("Depth_vs"))
     {
         LOG_WARNING("failed creating Depth_vs.");

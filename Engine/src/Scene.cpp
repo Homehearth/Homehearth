@@ -262,7 +262,7 @@ void Scene::RenderParticles(void* voidPass)
 
 
 			//Binding emitter speceific data
-			D3D11Core::Get().DeviceContext()->CSSetConstantBuffers(8, 1, &cb);
+			D3D11Core::Get().DeviceContext()->CSSetConstantBuffers(4, 1, &cb);
 			D3D11Core::Get().DeviceContext()->CSSetUnorderedAccessViews(7, 1, emitter.particleUAV.GetAddressOf(), nullptr);
 
 			const int groupCount = static_cast<int>(ceil(emitter.nrOfParticles / 50)); //Hur många grupper som körs
@@ -273,7 +273,7 @@ void Scene::RenderParticles(void* voidPass)
 			{
 				D3D11Core::Get().DeviceContext()->PSSetShaderResources(1, 1, &emitter.texture->GetShaderView());
 				D3D11Core::Get().DeviceContext()->PSSetShaderResources(7, 1, &emitter.opacityTexture->GetShaderView());
-				D3D11Core::Get().DeviceContext()->PSSetConstantBuffers(9, 1, &cbP);
+				D3D11Core::Get().DeviceContext()->PSSetConstantBuffers(5, 1, &cbP);
 				D3D11Core::Get().DeviceContext()->VSSetShaderResources(17, 1, emitter.particleSRV.GetAddressOf());
 
 				D3D11Core::Get().DeviceContext()->DrawInstanced(1, emitter.nrOfParticles, 0, 0);

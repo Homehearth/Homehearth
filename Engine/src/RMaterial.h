@@ -3,8 +3,8 @@
 struct aiMaterial;
 
 //Slots to bind to on shader-side
-const UINT CB_MAT_SLOT			= 2;
-const UINT CB_PROPERTIES_SLOT	= 3;
+//const UINT CB_MAT_SLOT			= 2;
+const UINT CB_PROPERTIES_SLOT	= 2;
 const UINT T2D_STARTSLOT		= 1;
 
 /*

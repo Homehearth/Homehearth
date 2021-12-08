@@ -12,6 +12,7 @@
 #include "SkyboxPass.h"
 #include "BlurPass.h"
 #include "DepthOfFieldPass.h"
+#include "FrustumPass.h"
 #include "HeadlessEngine.h"
 #include "WaterEffectPass.h"
 
@@ -22,25 +23,33 @@ private:
 	PipelineManager m_pipelineManager;
 	std::vector<IRenderPass*> m_passes;
 	
-	BasePass          m_basePass;	// Forward Rendering.
-	DepthPass         m_depthPass;	// Forward Plus (1st pass).
-	TextureEffectPass m_textureEffectPass; // Water refraction effect pass.
-	WaterEffectPass   m_waterEffectPass; // Water effect pass.  
-
-	DebugPass		m_debugPass;
-	AnimationPass	m_animPass;
-	DecalPass		m_decalPass;
-	ParticlePass	m_particlePass;
-	SkyboxPass		m_skyPass;
-	ShadowPass		m_shadowPass;
-	DOFPass			m_dofPass;
+	BasePass			m_basePass;	
+	DepthPass			m_depthPass;	
+	TextureEffectPass	m_textureEffectPass; 
+	WaterEffectPass		m_waterEffectPass; 
+	FrustumPass			m_frustumPass;
+	DebugPass			m_debugPass;
+	AnimationPass		m_animPass;
+	DecalPass			m_decalPass;
+	ParticlePass		m_particlePass;
+	SkyboxPass			m_skyPass;
+	ShadowPass			m_shadowPass;
+	DOFPass				m_dofPass;
 	unsigned int m_currentPass = 0;
+	bool m_isForwardPlusInitialized;
 
 	// Update per frame related resources.
 	void UpdatePerFrame(Camera* pCam);
 	
 	// Add a pass to the list.
 	void AddPass(IRenderPass* pass);
+
+	// Initialize ForwardPlus. Called on create and on window resize.
+	void InitilializeForwardPlus(Camera* camera);
+	bool CreateLightGridRWB();
+	bool CreateLightIndexListRWB(const uint32_t& COUNT);
+	bool CreateLightIndexCounterRWB();
+	bool CreateHeatMapRWB();
 
 public:
 	Renderer();

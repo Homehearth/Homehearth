@@ -191,7 +191,7 @@ void Skybox::Bind(ID3D11DeviceContext* dc = DCSB)
 	dc->PSSetShaderResources(97, 1, m_irradianceSrv.GetAddressOf());
 	dc->PSSetShaderResources(98, 1, m_skySrv.GetAddressOf());
 	dc->PSSetShaderResources(99, 1, &m_brdfLUT.get()->GetShaderView());
-	dc->PSSetConstantBuffers(13, 1, m_constBuffer.GetAddressOf());
+	dc->PSSetConstantBuffers(10, 1, m_constBuffer.GetAddressOf());
 
 	Update(dc);
 }

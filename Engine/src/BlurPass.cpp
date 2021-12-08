@@ -40,7 +40,7 @@ void BlurPass::PreRenderTexture(Camera* pCam, ID3D11DeviceContext* pDeviceContex
 		ID3D11RenderTargetView* nullRTV = nullptr;
 		DC->OMSetRenderTargets(1, &nullRTV, nullptr);
 		DC->CSSetShader(PM->m_blurComputeShader.Get(), nullptr, 0);
-		DC->CSSetConstantBuffers(11, 1, m_settingsBuffer.GetAddressOf());
+		DC->CSSetConstantBuffers(7, 1, m_settingsBuffer.GetAddressOf());
 		DC->CopyResource(m_backBufferRead.Get(), pTexture);				
 		DC->CSSetUnorderedAccessViews(0, 1, m_backBufferReadView.GetAddressOf(), nullptr);
 		DC->CSSetUnorderedAccessViews(1, 1, m_backBufferView.GetAddressOf(), nullptr);
@@ -54,7 +54,7 @@ void BlurPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 		ID3D11RenderTargetView* nullRTV = nullptr;
 		DC->OMSetRenderTargets(1, &nullRTV, nullptr);
 		DC->CSSetShader(PM->m_blurComputeShader.Get(), nullptr, 0);
-		DC->CSSetConstantBuffers(11, 1, m_settingsBuffer.GetAddressOf());
+		DC->CSSetConstantBuffers(7, 1, m_settingsBuffer.GetAddressOf());
 		
 		ID3D11Texture2D* backBuff = nullptr;
 		if (FAILED(D3D11Core::Get().SwapChain()->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&backBuff))))

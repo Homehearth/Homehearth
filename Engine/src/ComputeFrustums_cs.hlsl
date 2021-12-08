@@ -15,6 +15,7 @@
 #define BOTTOM_LEFT     2
 #define BOTTOM_RIGHT    3
 
+
 [numthreads(TILE_SIZE, TILE_SIZE, 1)]
 void main(ComputeShaderIn input)
 {
@@ -45,6 +46,6 @@ void main(ComputeShaderIn input)
     if (input.dispatchThreadID.x < numThreads.x && input.dispatchThreadID.y < numThreads.y)
     {
         const uint index = input.dispatchThreadID.x + (input.dispatchThreadID.y * numThreads.x);
-        rw_Frustums_out[index] = frustum;
+        rw_frustums_out[index] = frustum;
     }
 }
