@@ -31,7 +31,8 @@ namespace util {
 
 		return util::BezierCurve<T>(begin, end - 1, t);
 	}
-;
 
+
+	std::string VecToStr(const sm::Vector3& v);
 	
 }

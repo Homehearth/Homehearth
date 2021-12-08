@@ -1,17 +1,18 @@
 #include "EnginePCH.h"
 #include "TargetHouseCBT.h"
 
-BT::TargetHouseCBT::TargetHouseCBT(const std::string& name, Entity entity, float aggroRange)
+BT::TargetHouseCBT::TargetHouseCBT(const std::string& name, Entity entity, Blackboard* blackboard, float aggroRange)
 	:ActionNode(name),
 	entity(entity),
-	aggroRange(aggroRange)
+	aggroRange(aggroRange),
+	blackboard(blackboard)
 {
 }
 
 BT::NodeStatus BT::TargetHouseCBT::Tick()
 {
 	//Get all houses in current game
-	const Houses_t* housesEntities = Blackboard::Get().GetValue<Houses_t>("houses");
+	const Houses_t* housesEntities = blackboard->GetValue<Houses_t>("houses");
 	//Get AI's transform component
 	comp::Transform* transform = this->entity.GetComponent<comp::Transform>();
 
@@ -56,7 +57,7 @@ BT::NodeStatus BT::TargetHouseCBT::Tick()
 		//If target was found return success
 		if (!currentTarget.IsNull())
 		{
-			Blackboard::Get().AddValue("target" + std::to_string(entity), currentTarget);
+			blackboard->AddValue("target" + std::to_string(entity), currentTarget);
 			return BT::NodeStatus::SUCCESS;
 		}
 	}

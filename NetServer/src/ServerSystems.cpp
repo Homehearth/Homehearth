@@ -58,11 +58,11 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 
 		if (randomNum > 0.25f)
 		{
-			behaviorTree->root = AIBehaviors::GetFocusBuildingAIBehavior(entity);
+			behaviorTree->root = AIBehaviors::GetFocusBuildingAIBehavior(entity, simulation->GetBlackboard());
 		}
 		else
 		{
-			behaviorTree->root = AIBehaviors::GetFocusPlayerAIBehavior(entity);
+			behaviorTree->root = AIBehaviors::GetFocusPlayerAIBehavior(entity, simulation->GetBlackboard());
 		}
 
 	}
@@ -90,7 +90,7 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		attackAbility->delay = 0.2f;
 		attackAbility->projectileSpeed = 50.f;
 		attackAbility->movementSpeedAlt = 0.0f;
-		behaviorTree->root = AIBehaviors::GetFocusPlayerAIBehavior(entity);
+		behaviorTree->root = AIBehaviors::GetFocusPlayerAIBehavior(entity, simulation->GetBlackboard());
 	}
 	break;
 	case EnemyType::Runner:
@@ -110,7 +110,7 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		attackAbility->delay = 0.2f;
 		attackAbility->movementSpeedAlt = 0.0f;
 		npc->movementSpeed = 30.f;
-		behaviorTree->root = AIBehaviors::GetFocusPlayerAIBehavior(entity);
+		behaviorTree->root = AIBehaviors::GetFocusPlayerAIBehavior(entity, simulation->GetBlackboard());
 	}
 	break;
 	case EnemyType::BIGMOMMA:
@@ -131,7 +131,7 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		attackAbility->movementSpeedAlt = 0.0f;
 		npc->movementSpeed = 10.f;
 		health->currentHealth = 1500.f;
-		behaviorTree->root = AIBehaviors::GetFocusPlayerAIBehavior(entity);
+		behaviorTree->root = AIBehaviors::GetFocusPlayerAIBehavior(entity, simulation->GetBlackboard());
 	}
 	break;
 	default:
@@ -433,7 +433,7 @@ void ServerSystems::OnCycleChange(Simulation* simulation)
 	}
 }
 
-void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene& scene, float dt, QuadTree* dynamicQT)
+void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene& scene, float dt, QuadTree* dynamicQT, Blackboard* blackboard)
 {
 	scene.ForEachComponent<comp::Player, comp::Transform, comp::Velocity>([&](comp::Player& p, comp::Transform& t, comp::Velocity& v)
 		{
@@ -507,7 +507,7 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 
 						if (simulation->GetCurrency().GetAmount() >= cost)
 						{
-							if (simulation->GetGrid().PlaceDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, Blackboard::Get().GetPathFindManager(), dynamicQT))
+							if (simulation->GetGrid().PlaceDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, blackboard->GetPathFindManager(), dynamicQT))
 							{
 								audio_t audio =
 								{
@@ -531,7 +531,7 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 				}
 				case ShopItem::Destroy_Tool:
 				{
-					simulation->GetGrid().RemoveDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, Blackboard::Get().GetPathFindManager());
+					simulation->GetGrid().RemoveDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, blackboard);
 					break;
 				}
 				default:
@@ -568,7 +568,7 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 		});
 }
 
-void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money_ref, HouseManager houseManager, QuadTree* qt, GridSystem& grid, SpreeHandler& spree)
+void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money_ref, HouseManager houseManager, QuadTree* qt, GridSystem& grid, SpreeHandler& spree, Blackboard* blackboard)
 {
 	//Entity destroys itself if health <= 0
 	scene.ForEachComponent<comp::Health>([&](Entity& entity, comp::Health& health)
@@ -588,7 +588,7 @@ void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money
 				health.isAlive = false;
 				scene.publish<EComponentUpdated>(entity, ecs::Component::HEALTH);
 				// increase money
-				if (entity.GetComponent<comp::Tag<TagType::BAD>>())
+				if (entity.GetComponent<comp::Tag<BAD>>())
 				{
 					money_ref += 5 * spree.GetSpree();
 					money_ref.IncreaseTotal(5 * spree.GetSpree());
@@ -615,16 +615,15 @@ void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money
 				if (p)
 				{
 					audio.type = ESoundEvent::Player_OnDeath;
-					p->state = comp::Player::State::SPECTATING;
-					entity.RemoveComponent<comp::Tag<TagType::DYNAMIC>>();
+					entity.RemoveComponent<comp::Tag<DYNAMIC>>();
 				}
-				else if (entity.GetComponent<comp::Tag<TagType::DEFENCE>>())
+				else if (entity.GetComponent<comp::Tag<DEFENCE>>())
 				{
 					comp::Transform* buildTransform = entity.GetComponent<comp::Transform>();
 
-					Node* node = Blackboard::Get().GetPathFindManager()->FindClosestNode(buildTransform->position);
+					Node* node = blackboard->GetPathFindManager()->FindClosestNode(buildTransform->position);
 					//Remove from the container map so ai wont consider this defense
-					Blackboard::Get().GetPathFindManager()->RemoveDefenseEntity(entity);
+					blackboard->GetPathFindManager()->RemoveDefenseEntity(entity);
 					node->reachable = true;
 					node->defencePlaced = false;
 
@@ -646,7 +645,7 @@ void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money
 
 
 					//Remove house from blackboard
-					Blackboard::Get().GetValue<Houses_t>("houses")->houses.erase(entity);
+					blackboard->GetValue<Houses_t>("houses")->houses.erase(entity);
 
 					audio.position = entity.GetComponent<comp::OrientedBoxCollider>()->Center;
 					audio.type = ESoundEvent::Game_OnHouseDestroyed;
@@ -894,9 +893,9 @@ void ServerSystems::SoundSystem(Simulation* simulation, HeadlessScene& scene)
 		});
 }
 
-void ServerSystems::CombatSystem(HeadlessScene& scene, float dt)
+void ServerSystems::CombatSystem(HeadlessScene& scene, float dt, Blackboard* blackboard)
 {
-	CombatSystem::UpdateCombatSystem(scene, dt);
+	CombatSystem::UpdateCombatSystem(scene, dt, blackboard);
 }
 void ServerSystems::DeathParticleTimer(HeadlessScene& scene)
 {
@@ -913,7 +912,7 @@ void ServerSystems::DeathParticleTimer(HeadlessScene& scene)
 		});
 }
 
-Entity VillagerManagement::CreateVillager(HeadlessScene& scene, Entity homeHouse)
+Entity VillagerManagement::CreateVillager(HeadlessScene& scene, Entity homeHouse, Blackboard* blackboard)
 {
 	Entity entity = scene.CreateEntity();
 	entity.AddComponent<comp::Network>();
@@ -940,7 +939,7 @@ Entity VillagerManagement::CreateVillager(HeadlessScene& scene, Entity homeHouse
 	bos->Radius = 3.f;
 	villager->movementSpeed = 15.f;
 
-	behaviorTree->root = AIBehaviors::GetVillagerAIBehavior(entity);
+	behaviorTree->root = AIBehaviors::GetVillagerAIBehavior(entity, blackboard);
 
 	return entity;
 }

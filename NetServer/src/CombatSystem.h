@@ -3,8 +3,14 @@
 class CombatSystem
 {
 public:
+	enum class AttackType
+	{
+		MELEE,
+		RANGE
+	};
+
 	//Updates all systems related to combat
-	static void UpdateCombatSystem(HeadlessScene& scene, float dt);
+	static void UpdateCombatSystem(HeadlessScene& scene, float dt, Blackboard* blackboard);
 
 private:
 	//Disallow creating an instance of this object...
@@ -15,7 +21,7 @@ private:
 	//Update all entity with range abilities
 	static void UpdateRange(HeadlessScene& scene);
 	//Update all entity with range abilities
-	static void UpdateTeleport(HeadlessScene& scene);
+	static void UpdateTeleport(HeadlessScene& scene, Blackboard* blackboard);
 	//Update all entity with dash abilities
 	static void UpdateDash(HeadlessScene& scene);
 	//Update target point if entity is player
@@ -24,9 +30,10 @@ private:
 	static Entity CreateAttackEntity(Entity entity, HeadlessScene& scene, comp::Transform* transform, comp::MeleeAttackAbility* stats);
 	//Creates an ranged attack entity that holds multiple components
 	static Entity CreateAttackEntity(Entity entity, HeadlessScene& scene, comp::Transform* transform, comp::RangeAttackAbility* stats);
-	//Creates behavior for collision with an melee attack entity
-	static void AddCollisionMeleeBehavior(Entity entity, Entity attackEntity, HeadlessScene& scene);
-	//Creates behavior for collision with an range attack entity
-	static void AddCollisionRangeBehavior(Entity entity, Entity attackEntity, HeadlessScene& scene);
+
+	static Entity CreateAreaAttackCollider(HeadlessScene& scene, sm::Vector3 position, float size, float lifetime);
+	static void DoDamage(HeadlessScene& scene, Entity attacker, Entity attackCollider,  Entity target, float damage, float knockback, AttackType type);
+
+	static void AddKnockback(Entity target, sm::Vector3 dir, float power);
 };
 

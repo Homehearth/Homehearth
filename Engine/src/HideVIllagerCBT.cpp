@@ -1,9 +1,10 @@
 #include "EnginePCH.h"
 #include "HideVillagerCBT.h"
 
-BT::HideVillagerCBT::HideVillagerCBT(const std::string& name, Entity entity)
+BT::HideVillagerCBT::HideVillagerCBT(const std::string& name, Entity entity, Blackboard* blackboard)
 	:ActionNode(name),
-	entity(entity)
+	entity(entity),
+	blackboard(blackboard)
 {
 }
 
@@ -16,10 +17,15 @@ BT::NodeStatus BT::HideVillagerCBT::Tick()
 	comp::Villager* villager = entity.GetComponent<comp::Villager>();
 	comp::Transform* transform = entity.GetComponent<comp::Transform>();
 	comp::Velocity* vel = entity.GetComponent<comp::Velocity>();
-	CyclePeriod* cycle = Blackboard::Get().GetValue<CyclePeriod>("cycle");
+	CyclePeriod* cycle = blackboard->GetValue<CyclePeriod>("cycle");
 
+	if(cycle == nullptr)
+	{
+		blackboard->AddValue<CyclePeriod>("cycle", CyclePeriod::DAY);
+		cycle = blackboard->GetValue<CyclePeriod>("cycle");
+	}
 	//Nullptr check
-	if(cycle == nullptr || villager == nullptr || transform == nullptr || vel == nullptr)
+	if(villager == nullptr || transform == nullptr || vel == nullptr)
 	{
 		LOG_WARNING("Failed to get components/values...");
 		return BT::NodeStatus::FAILURE;
