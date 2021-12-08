@@ -12,3 +12,8 @@ sm::Vector3 util::Lerp(std::vector<sm::Vector3> points, float t)
 	int line = (int)t;
 	return util::Lerp(points[line], points[line + 1], t);
 }
+
+std::string util::VecToStr(const sm::Vector3& v)
+{
+	return "(" + std::to_string(v.x) + ", " + std::to_string(v.y) + ", " + std::to_string(v.z) + ")";
+}

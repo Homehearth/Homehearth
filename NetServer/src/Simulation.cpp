@@ -197,7 +197,7 @@ void Simulation::ResetPlayer(Entity player)
 		attackAbility->lifetime = 2.0f;
 		attackAbility->projectileSpeed = 80.f;
 		attackAbility->projectileSize = 3.f;
-		attackAbility->attackRange = 6.0f;
+		attackAbility->attackRange = 13.0f;
 		attackAbility->useTime = 0.3f;
 		attackAbility->delay = 0.3f;
 		playerComp->primaryAbilty = entt::resolve<comp::RangeAttackAbility>();

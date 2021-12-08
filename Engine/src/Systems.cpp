@@ -242,6 +242,9 @@ void Systems::SelfDestructSystem(HeadlessScene& scene, float dt)
 			s.lifeTime -= dt;
 			if (s.lifeTime <= 0)
 			{
+				if(s.onDestruct)
+					s.onDestruct();
+
 				ent.Destroy();
 			}
 		});
@@ -266,7 +269,7 @@ void Systems::MovementSystem(HeadlessScene& scene, float dt)
 			while (it != p.forces.end())
 			{
 				comp::TemporaryPhysics::Force& f = *it;
-
+				std::cout << util::VecToStr(f.force) << std::endl;
 				if (f.isImpulse)
 				{
 					if (f.wasApplied)
@@ -288,7 +291,7 @@ void Systems::MovementSystem(HeadlessScene& scene, float dt)
 				}
 
 				sm::Vector3 newPos = t.position + v.vel * dt;
-				if (newPos.y < 0.0f)
+				if (newPos.y < 0.75f)
 				{
 					v.vel.y = 0;
 					f.force.y = 0;
@@ -336,9 +339,9 @@ void Systems::MovementSystem(HeadlessScene& scene, float dt)
 
 				transform.position += velocity.vel * dt;
 
-				if (transform.position.y < 0.f)
+				if (transform.position.y < 0.75f)
 				{
-					transform.position.y = 0.f;
+					transform.position.y = 0.75f;
 					velocity.vel.y = 0;
 				}
 				velocity.oldVel = velocity.vel; // updated old vel position

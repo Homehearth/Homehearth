@@ -612,6 +612,8 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			if (m_players.find(playerID) != m_players.end())
 			{
 				comp::Player* p = m_players.at(playerID).GetComponent<comp::Player>();
+				if (!p)
+					break;
 				playerTypes[static_cast<int>(p->playerType) - 1] = p->playerType;
 				dynamic_cast<rtd::Text*>(GetScene("Lobby").GetCollection("playerIcon" + std::to_string(static_cast<uint16_t>(p->playerType)))->elements[1].get())->SetText(name);
 				rtd::Text* plT = dynamic_cast<rtd::Text*>(GetScene("Game").GetCollection("dynamicPlayer" + std::to_string(static_cast<uint16_t>(p->playerType)) + "namePlate")->elements[0].get());
@@ -652,16 +654,19 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		if (m_players.find(m_localPID) != m_players.end())
 		{
 			comp::Player* player = m_players.at(m_localPID).GetComponent<comp::Player>();
-			rtd::Button* readyText = dynamic_cast<rtd::Button*>(GetScene("Lobby").GetCollection("StartGame")->elements[0].get());
-			if (readyText)
+			if (player)
 			{
-				if (player->isReady && m_players.size() > 1)
+				rtd::Button* readyText = dynamic_cast<rtd::Button*>(GetScene("Lobby").GetCollection("StartGame")->elements[0].get());
+				if (readyText)
 				{
-					readyText->GetPicture()->SetTexture("NotReady.png");
-				}
-				else
-				{
-					readyText->GetPicture()->SetTexture("Ready.png");
+					if (player->isReady && m_players.size() > 1)
+					{
+						readyText->GetPicture()->SetTexture("NotReady.png");
+					}
+					else
+					{
+						readyText->GetPicture()->SetTexture("Ready.png");
+					}
 				}
 			}
 		}

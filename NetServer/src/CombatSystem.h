@@ -3,6 +3,12 @@
 class CombatSystem
 {
 public:
+	enum class AttackType
+	{
+		MELEE,
+		RANGE
+	};
+
 	//Updates all systems related to combat
 	static void UpdateCombatSystem(HeadlessScene& scene, float dt);
 
@@ -28,5 +34,8 @@ private:
 	static void AddCollisionMeleeBehavior(Entity entity, Entity attackEntity, HeadlessScene& scene);
 	//Creates behavior for collision with an range attack entity
 	static void AddCollisionRangeBehavior(Entity entity, Entity attackEntity, HeadlessScene& scene);
+
+	static Entity CreateAreaAttackCollider(HeadlessScene& scene, sm::Vector3 position, float size);
+	static void DoDamage(HeadlessScene& scene, Entity attacker, Entity attackCollider,  Entity target, float damage, float knockback, AttackType type);
 };
 
