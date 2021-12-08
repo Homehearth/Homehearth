@@ -204,6 +204,7 @@ RWTexture2D<unorm float4> t_bufferOut       : register(u1);
 RWTexture2D<unorm float4> t_inFocus         : register(u2);
 RWTexture2D<unorm float4> t_outOfFocus      : register(u3);
 RWTexture2D<float4> t_dofOut                : register(u4);
+RWTexture2D<float4> t_backBufferOut         : register(u5);
 
 // Forward+
 //RWStructuredBuffer<PointLight> rw_pointLights : register();

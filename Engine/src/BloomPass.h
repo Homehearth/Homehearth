@@ -2,8 +2,6 @@
 #include "IRenderPass.h"
 #include "BlurPass.h"
 
-
-
 class BloomPass : public IRenderPass
 {
 private:
@@ -38,6 +36,7 @@ private:
 	ComPtr<ID3D11Texture2D>				m_blurredTexture;
 	ComPtr<ID3D11UnorderedAccessView>	m_blurredAccess;
 	ComPtr<ID3D11ShaderResourceView>	m_blurredView;
+	ComPtr<ID3D11RenderTargetView>		m_blurredTarget;
 
 	ComPtr<ID3D11Texture2D>				m_halfSize; // (Window Size / 2)
 	ComPtr<ID3D11ShaderResourceView>	m_halfSizeView;
@@ -52,6 +51,7 @@ private:
 	void Setdownsample();
 	void Setupsample();
 	void Draw();
+	void AdditiveBlend();
 
 public:
 
