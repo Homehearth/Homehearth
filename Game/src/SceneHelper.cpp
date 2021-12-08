@@ -546,7 +546,13 @@ namespace sceneHelp
 		rtd::AbilityUI* fourth = abilities->AddElement<rtd::AbilityUI>(draw_t(abillityPos.x + (abillitySize.x + padding.x / 2), abillityPos.y, abillitySize.x, abillitySize.y), D2D1::ColorF(0, 1.0f), "LockedIcon.png");
 		rtd::AbilityUI* fith = abilities->AddElement<rtd::AbilityUI>(draw_t(abillityPos.x + (abillitySize.x * 2 + padding.x), abillityPos.y, abillitySize.x, abillitySize.y), D2D1::ColorF(0, 1.0f), "LockedIcon.png");
 		scene.Add2DCollection(abilities, "AbilityUI");
+		Collection2D* spectatingCollection = new Collection2D;
+		rtd::Text* deadText = spectatingCollection->AddElement<rtd::Text>("You are dead!", draw_t((width / 2)  - widthScale, (height / 2) + (height / 4), (widthScale / 10.f), (height / 8.f)));
+		rtd::Text* spectateText = spectatingCollection->AddElement<rtd::Text>("LMB to spectate another player", draw_t((width / 2) - widthScale, (height / 2) + (height / 4), (widthScale / 3.f), (height / 8.f)));
+		scene.Add2DCollection(spectatingCollection, "SpectateUI");
 
+		deadText->SetVisiblity(false);
+		spectateText->SetVisiblity(false);
 		Collection2D* skipCollection = new Collection2D;
 		rtd::Button* skipToNightButton = skipCollection->AddElement<rtd::Button>("Button.png", draw_t(width - ((widthScale / 9.f)), (height / 2) - (height / 8), (widthScale / 10.f), (height / 8.f)), false);
 		rtd::Text* skipToNightText = skipCollection->AddElement<rtd::Text>("Skip Day", draw_t(width - ((widthScale / 9.f)), (height / 2) - (height / 8), (widthScale / 10.f), (height / 8.f)));

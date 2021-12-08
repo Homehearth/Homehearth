@@ -424,7 +424,9 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		SoundHandler::Get().PlaySound("OnGameOver", audio);
 		rtd::Text* mainMenuErrorText = dynamic_cast<rtd::Text*>(GetScene("MainMenu").GetCollection("ConnectFields")->elements[6].get());
 		mainMenuErrorText->SetVisiblity(false);
-
+		Scene& scene = GetScene("Game");
+		scene.GetCollection("SpectateUI")->elements[0]->SetVisiblity(false);
+		scene.GetCollection("SpectateUI")->elements[1]->SetVisiblity(false);
 		uint32_t gatheredMoney, wavesSurvived;
 		msg >> wavesSurvived >> gatheredMoney;
 		SetScene("GameOver");
@@ -1252,11 +1254,17 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 							if (!hp.isAlive)
 							{
 								m_isSpectating = true;
+								Scene& scene = GetScene("Game");
+								scene.GetCollection("SpectateUI")->elements[0]->SetVisiblity(true);
+								scene.GetCollection("SpectateUI")->elements[1]->SetVisiblity(true);
 							}
 							else
 							{
 								if (m_isSpectating)
 								{
+									Scene& scene = GetScene("Game");
+									scene.GetCollection("SpectateUI")->elements[0]->SetVisiblity(false);
+									scene.GetCollection("SpectateUI")->elements[1]->SetVisiblity(false);
 									m_isSpectating = false;
 									Camera* cam = GetCurrentScene()->GetCurrentCamera();
 
