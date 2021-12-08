@@ -547,7 +547,12 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 					l.lightData.enabled = 0;
 				}
 			});
-
+		Scene& scene = GetScene("Game");
+		Collection2D* skipButtonUI = scene.GetCollection("SkipUI");
+		rtd::Button* skipButton = dynamic_cast<rtd::Button*>(skipButtonUI->elements[0].get());
+		rtd::Text* skipText = dynamic_cast<rtd::Text*>(skipButtonUI->elements[1].get());
+		skipText->SetVisiblity(true);
+		skipButton->SetVisiblity(true);
 
 		SoundHandler::Get().SetCurrentMusic("MenuTheme");
 		rtd::Text* lobbyErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("LobbyFields")->elements[5].get());
@@ -600,6 +605,10 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		msg >> speed;
 		float time;
 		msg >> time;
+		if (speed == m_cycler.GetDefaultSpeed())
+		{
+			m_players.at(m_localPID).GetComponent<comp::Player>()->wantsToSkipDay = false;
+		}
 		m_cycler.SetCycleSpeed(speed);
 		m_cycler.SetTime(time);
 		break;
@@ -815,6 +824,19 @@ void Game::JoinLobby(uint32_t lobbyID)
 	else
 	{
 		LOG_WARNING("Request denied: You are already in a lobby");
+	}
+}
+
+void Game::SetPlayerWantsToSkip(bool value)
+{
+	m_players.at(m_localPID).GetComponent<comp::Player>()->wantsToSkipDay = value;
+	if (value)
+	{
+		message<GameMsg> msg;
+		msg.header.id = GameMsg::Game_PlayerSkipDay;
+		msg << this->m_localPID << m_gameID;
+		m_client.Send(msg);
+		LOG_INFO("Player wants to skip to Night")
 	}
 }
 

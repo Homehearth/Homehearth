@@ -40,6 +40,7 @@ void Cycler::Update(float dt)
 	if (newPeriod != m_timePeriod)
 	{
 		m_changedPeriod = true;
+		m_cycleSpeed = m_defaultCycleSpeed;
 
 		if(blackboard != nullptr)
 			blackboard->AddValue<CyclePeriod>("cycle", newPeriod);
@@ -74,6 +75,11 @@ float Cycler::GetCycleSpeed() const
 	return m_cycleSpeed;
 }
 
+const float Cycler::GetDefaultSpeed() const
+{
+	return m_defaultCycleSpeed;
+}
+
 void Cycler::SetCycleSpeed(float speed)
 {
 	m_cycleSpeed = speed;
@@ -82,4 +88,9 @@ void Cycler::SetCycleSpeed(float speed)
 void Cycler::setBlackboard(Blackboard* blackboard)
 {
 	this->blackboard = blackboard;
+}
+
+void Cycler::ResetCycleSpeed()
+{
+	this->m_cycleSpeed = m_defaultCycleSpeed;
 }

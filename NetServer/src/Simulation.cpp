@@ -269,6 +269,29 @@ void Simulation::ResetPlayer(Entity player)
 	player.UpdateNetwork();
 }
 
+void Simulation::SetPlayerSkipDay(uint32_t playerID)
+{
+	GetPlayer(playerID).GetComponent<comp::Player>()->wantsToSkipDay = true;
+	std::unordered_map<uint32_t, Entity>* players = &m_lobby.m_players;
+	bool allPlayersSkip = true;
+	for (auto& player : *players)
+	{
+		if (!player.second.GetComponent<comp::Player>()->wantsToSkipDay)
+		{
+			allPlayersSkip = false;
+			break;
+		}
+	}
+	if (allPlayersSkip)
+	{
+		m_timeCycler.SetCycleSpeed(15.f);
+		message<GameMsg> msg;
+		msg.header.id = GameMsg::Game_Time;
+		msg << 5.f << m_timeCycler.GetTime();
+		Broadcast(msg);
+	}
+}
+
 Simulation::Simulation(Server* pServer, HeadlessEngine* pEngine)
 	: m_pServer(pServer)
 	, m_pEngine(pEngine), m_pLobbyScene(nullptr), m_pGameScene(nullptr), m_pGameOverScene(nullptr), m_pCurrentScene(nullptr), currentRound(0), houseManager(&blackboard)
