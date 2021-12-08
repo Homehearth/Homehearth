@@ -86,7 +86,7 @@ bool Game::OnStartup()
 
 	Entity emitter4 = GetScene("Game").CreateEntity();
 	emitter4.AddComponent<comp::Transform>()->position = { 250, 80, -360 };
-	emitter4.AddComponent<comp::EmitterParticle>(sm::Vector3{ 0,0,0 }, 10000, 2.f, PARTICLEMODE::RAIN, 1.5f, 30.f, false);
+	emitter4.AddComponent<comp::EmitterParticle>(sm::Vector3{ 0,0,0 }, 15000, 1.0f, ParticleMode::RAIN, 85.0f, 20.f, false);
 
 	/*Entity waterSplash = GetScene("Game").CreateEntity();
 	waterSplash.AddComponent<comp::Transform>()->position = { 270, 13, -370 };

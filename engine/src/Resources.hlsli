@@ -77,6 +77,8 @@ cbuffer ParticleUpdate : register(b8)
     float   c_pLifeTime;
     float   c_pSizeMulitplier;
     float   c_pSpeed;    
+    float   c_pDeltatime;
+    float3  c_pPadding;
 }
 
 cbuffer ParticleMode : register(b9)

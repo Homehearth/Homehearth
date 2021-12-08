@@ -839,7 +839,7 @@ void Simulation::ResetGameScene()
 
 	Entity emitter4 = m_pGameScene->CreateEntity();
 	emitter4.AddComponent<comp::Transform>()->position = { 230, 5, -360 };
-	emitter4.AddComponent<comp::ParticleEmitter>(sm::Vector3{ 0,0,0 }, 102, 2.f, PARTICLEMODE::BLOOD, 5.5f, 1.f, true);
+	emitter4.AddComponent<comp::ParticleEmitter>(sm::Vector3{ 0,0,0 }, 102, 2.f, ParticleMode::BLOOD, 5.5f, 1.f, true);
 	emitter4.AddComponent<comp::Network>();
 }
 

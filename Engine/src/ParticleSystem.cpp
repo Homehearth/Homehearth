@@ -38,18 +38,18 @@ void ParticleSystem::InitializeParticles(entt::registry& reg, entt::entity ent)
 
 		switch (m_tempParticle.type)
 		{
-		case PARTICLEMODE::BLOOD:
+		case ParticleMode::BLOOD:
 		{
 			RandomSetVelocity(-2.0f, 2.0f);
 			m_tempParticle.size = { emitter->sizeMulitplier , emitter->sizeMulitplier };
 			break;
 		}
 
-		case PARTICLEMODE::LEAF:
+		case ParticleMode::LEAF:
 		{
 			break;
 		}
-		case PARTICLEMODE::WATERSPLASH:
+		case ParticleMode::WATERSPLASH:
 		{
 			RandomAddPosition(-1.0f, 1.0f);
 			RandomSetVelocity(-2.0f, 2.0f);
@@ -57,30 +57,30 @@ void ParticleSystem::InitializeParticles(entt::registry& reg, entt::entity ent)
 			m_tempParticle.color = { 0.f, 0.f, 0.5f, 0.5f };
 			break;
 		}
-		case PARTICLEMODE::SMOKEPOINT:
+		case ParticleMode::SMOKEPOINT:
 		{
 			break;
 		}
-		case PARTICLEMODE::SMOKEAREA:
+		case ParticleMode::SMOKEAREA:
 		{
 			RandomAddPosition(-1.0f, 1.0f);
 			break;
 		}
-		case PARTICLEMODE::SPARKLES:
+		case ParticleMode::SPARKLES:
 		{
 			break;
 		}
-		case PARTICLEMODE::RAIN:
+		case ParticleMode::RAIN:
 		{
-			RandomAddPositionXYZ(sm::Vector2(-100.f, 100.f), sm::Vector2(1 , 20.f), sm::Vector2(-100.f, 100.f ));
+			RandomAddPositionXYZ(sm::Vector2(-200.f, 250.f), sm::Vector2(0 , 0), sm::Vector2(-200.f, 250.f ));
 			m_tempParticle.size = { emitter->sizeMulitplier , emitter->sizeMulitplier };
 			break;
 		}
-		case PARTICLEMODE::DUST:
+		case ParticleMode::DUST:
 		{
 			break;
 		}
-		case PARTICLEMODE::MAGEHEAL:
+		case ParticleMode::MAGEHEAL:
 		{
 			RandomSetVelocity(-1.0f, 1.0f);
 
@@ -90,7 +90,7 @@ void ParticleSystem::InitializeParticles(entt::registry& reg, entt::entity ent)
 			m_tempParticle.position.y = (float)rand() / (RAND_MAX + 1.f) * (10.0f - (1.0f)) + (1.0f);
 			break;
 		}
-		case PARTICLEMODE::MAGERANGE:
+		case ParticleMode::MAGERANGE:
 		{
 			RandomAddPosition(-1.0f, 1.0f);
 			RandomSetVelocity(-2.0f, 2.0f);

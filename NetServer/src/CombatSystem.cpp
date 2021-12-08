@@ -268,7 +268,7 @@ Entity CombatSystem::CreateAttackEntity(Entity entity, HeadlessScene& scene, com
 	sm::Vector3 vel = targetDir * stats->projectileSpeed;
 	attackEntity.AddComponent<comp::Velocity>()->vel = vel;
 
-	attackEntity.AddComponent<comp::ParticleEmitter>(sm::Vector3{ 0,0,0 }, 200, 1.f, PARTICLEMODE::MAGERANGE, 1.7f, 1.f, false);
+	attackEntity.AddComponent<comp::ParticleEmitter>(sm::Vector3{ 0,0,0 }, 200, 1.f, ParticleMode::MAGERANGE, 1.7f, 1.f, false);
 
 
 	attackEntity.AddComponent<comp::Network>();
@@ -366,7 +366,7 @@ void CombatSystem::AddCollisionMeleeBehavior(Entity entity, Entity attackEntity,
 					{
 						other.RemoveComponent<comp::ParticleEmitter>();
 					}
-					other.AddComponent<comp::ParticleEmitter>(sm::Vector3{ 0,6,0 }, 50, 1.5f, PARTICLEMODE::BLOOD, 3.5f, 1.f, true);
+					other.AddComponent<comp::ParticleEmitter>(sm::Vector3{ 0,6,0 }, 50, 1.5f, ParticleMode::BLOOD, 3.5f, 1.f, true);
 
 					scene.publish<EComponentUpdated>(other, ecs::Component::PARTICLEMITTER);
 				}
@@ -378,7 +378,7 @@ void CombatSystem::AddCollisionMeleeBehavior(Entity entity, Entity attackEntity,
 					{
 						other.RemoveComponent<comp::ParticleEmitter>();
 					}
-					other.AddComponent<comp::ParticleEmitter>(sm::Vector3{ 0,10,0 }, 50, 10.f, PARTICLEMODE::SMOKEAREA, 3.5f, 1.f, true);
+					other.AddComponent<comp::ParticleEmitter>(sm::Vector3{ 0,10,0 }, 50, 10.f, ParticleMode::SMOKEAREA, 3.5f, 1.f, true);
 
 					scene.publish<EComponentUpdated>(other, ecs::Component::PARTICLEMITTER);
 				}
@@ -500,7 +500,7 @@ void CombatSystem::AddCollisionRangeBehavior(Entity entity, Entity attackEntity,
 					{
 						other.RemoveComponent<comp::ParticleEmitter>();
 					}
-					other.AddComponent<comp::ParticleEmitter>(sm::Vector3{ 0,6,0 }, 50, 1.5f, PARTICLEMODE::BLOOD, 3.5f, 1.f, true);
+					other.AddComponent<comp::ParticleEmitter>(sm::Vector3{ 0,6,0 }, 50, 1.5f, ParticleMode::BLOOD, 3.5f, 1.f, true);
 
 					scene.publish<EComponentUpdated>(other, ecs::Component::PARTICLEMITTER);
 				}

@@ -10,11 +10,12 @@ struct ParticleUpdate
 	float lifeTime;
 	float particleSizeMulitplier;
 	float speed;
+	float deltaTime;
 };
 ALIGN16
 struct ParticleModePUpdate 
 {
-	PARTICLEMODE type;
+	ParticleMode type;
 };
 
 class ParticlePass :public IRenderPass
@@ -31,10 +32,8 @@ public:
 	dx::ConstantBuffer<ParticleUpdate>	m_constantBufferParticleUpdate;
 	dx::ConstantBuffer<ParticleModePUpdate>	m_constantBufferParticleMode;
 
-
 	ParticleUpdate						m_particleUpdate;
 	ParticleModePUpdate					m_particleModeUpdate;
-	delta_time_t						m_deltaTimeUpdate;
 
 	ComPtr<ID3D11ShaderResourceView>	m_randomNumbersSRV;
 	ComPtr<ID3D11Buffer>				m_randomNumbersBuffer;

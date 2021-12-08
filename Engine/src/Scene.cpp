@@ -11,7 +11,6 @@ Scene::Scene()
 	m_publicBuffer.Create(D3D11Core::Get().Device());
 	m_publicDecalBuffer.Create(D3D11Core::Get().Device());
 	m_ColliderHitBuffer.Create(D3D11Core::Get().Device());
-	m_deltaConstantBuffer.Create(D3D11Core::Get().Device());
 	thread::RenderThreadHandler::Get().SetObjectsBuffer(&m_renderableCopies);
 
 	m_defaultCamera = CreateEntity();
@@ -251,6 +250,7 @@ void Scene::RenderParticles(void* voidPass)
 			pass->m_particleUpdate.lifeTime = emitter.lifeTime;
 			pass->m_particleUpdate.particleSizeMulitplier = emitter.sizeMulitplier;
 			pass->m_particleUpdate.speed = emitter.speed;
+			pass->m_particleUpdate.deltaTime = Stats::Get().GetFrameTime();
 
 			pass->m_particleModeUpdate.type = emitter.type;
 
@@ -260,12 +260,8 @@ void Scene::RenderParticles(void* voidPass)
 			pass->m_constantBufferParticleMode.SetData(D3D11Core::Get().DeviceContext(), pass->m_particleModeUpdate);
 			ID3D11Buffer* cbP = { pass->m_constantBufferParticleMode.GetBuffer() };
 
-			m_deltaConstantBuffer.SetData(D3D11Core::Get().DeviceContext(), pass->m_deltaTimeUpdate);
-			ID3D11Buffer* cbDt = { m_deltaConstantBuffer.GetBuffer() };
-
 			//Binding emitter speceific data
 			D3D11Core::Get().DeviceContext()->CSSetConstantBuffers(8, 1, &cb);
-			D3D11Core::Get().DeviceContext()->CSSetConstantBuffers(6, 1, &cbDt);
 			D3D11Core::Get().DeviceContext()->CSSetUnorderedAccessViews(7, 1, emitter.particleUAV.GetAddressOf(), nullptr);
 
 			const int groupCount = static_cast<int>(ceil(emitter.nrOfParticles / 50)); //Hur många grupper som körs

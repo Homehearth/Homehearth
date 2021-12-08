@@ -628,7 +628,7 @@ void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money
 					qt->Insert(newHouse);
 
 					sm::Vector3 emitterOffset = newHouse.GetComponent<comp::OrientedBoxCollider>()->Center;
-					newHouse.AddComponent<comp::ParticleEmitter>(emitterOffset, 100, 2.5f, PARTICLEMODE::SMOKEAREA, 4.0f, 1.f, false);
+					newHouse.AddComponent<comp::ParticleEmitter>(emitterOffset, 100, 2.5f, ParticleMode::SMOKEAREA, 4.0f, 1.f, false);
 
 
 					//Remove house from blackboard
