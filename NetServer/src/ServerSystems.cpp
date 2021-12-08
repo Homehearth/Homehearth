@@ -454,117 +454,117 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 			v.vel = vel;
 		});
 
-	scene.ForEachComponent<comp::Player, comp::AnimationState>([&](Entity e, comp::Player& p, comp::AnimationState& anim)
+	scene.ForEachComponent<comp::Player, comp::AnimationState, comp::Health>([&](Entity e, comp::Player& p, comp::AnimationState& anim, comp::Health& health)
 		{
-			// Do stuff based on input
-
-			// Get point on ground where mouse hovers over
-			Plane_t plane;
-			plane.normal = sm::Vector3(0, 1, 0);
-			plane.point = sm::Vector3(0, 0, 0);
-
-			if (!p.lastInputState.mouseRay.Intersects(plane, &p.mousePoint))
+			// Do stuff based on input while not in deadstate
+			if (health.isAlive)
 			{
-				LOG_WARNING("Mouse click ray missed walking plane. Should not happen...");
-			}
+				// Get point on ground where mouse hovers over
+				Plane_t plane;
+				plane.normal = sm::Vector3(0, 1, 0);
+				plane.point = sm::Vector3(0, 0, 0);
 
-			if (p.state == comp::Player::State::WALK)
-				anim.toSend = EAnimationType::MOVE;
-			else
-				anim.toSend = EAnimationType::IDLE;
-
-			// check if using abilities
-			if (p.lastInputState.leftMouse) // is held
-			{
-				switch (p.shopItem)
+				if (!p.lastInputState.mouseRay.Intersects(plane, &p.mousePoint))
 				{
-					//In playmode
-				case ShopItem::None:
-				{
-					p.state = comp::Player::State::LOOK_TO_MOUSE; // set state even if ability is not ready for use yet
-					if (ecs::UseAbility(e, p.primaryAbilty, &p.mousePoint))
-					{
-						anim.toSend = EAnimationType::PRIMARY_ATTACK;
-					}
-
-					// make sure movement alteration is not applied when using, because then its applied atomatically
-					if (!ecs::IsUsing(e, p.primaryAbilty))
-					{
-						e.GetComponent<comp::Velocity>()->vel *= ecs::GetAbility(e, p.primaryAbilty)->movementSpeedAlt;
-					}
-					break;
+					LOG_WARNING("Mouse click ray missed walking plane. Should not happen...");
 				}
-				case ShopItem::Defence1x1:
-				case ShopItem::Defence1x3:
+
+				if (p.state == comp::Player::State::WALK)
+					anim.toSend = EAnimationType::MOVE;
+				else
+					anim.toSend = EAnimationType::IDLE;
+
+				// check if using abilities
+				if (p.lastInputState.leftMouse) // is held
 				{
-					if (simulation->m_timeCycler.GetTimePeriod() == CyclePeriod::DAY)
+					switch (p.shopItem)
 					{
-						uint32_t cost = 0;
-						if (p.shopItem == ShopItem::Defence1x1)
-							cost = 10;
-						else if (p.shopItem == ShopItem::Defence1x3)
-							cost = 30;
-
-						if (simulation->GetCurrency().GetAmount() >= cost)
+						//In playmode
+					case ShopItem::None:
+					{
+						p.state = comp::Player::State::LOOK_TO_MOUSE; // set state even if ability is not ready for use yet
+						if (ecs::UseAbility(e, p.primaryAbilty, &p.mousePoint))
 						{
-							if (simulation->GetGrid().PlaceDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, blackboard->GetPathFindManager(), dynamicQT))
-							{
-								audio_t audio =
-								{
-									ESoundEvent::Game_OnDefencePlaced,
-									e.GetComponent<comp::Transform>()->position,
-									1.0f,
-									250.f,
-									true,
-									false,
-									true,
-									false,
-								};
-								e.GetComponent<comp::AudioState>()->data.emplace(audio);
+							anim.toSend = EAnimationType::PRIMARY_ATTACK;
+						}
 
-								simulation->GetCurrency() -= cost;
-								anim.toSend = EAnimationType::PLACE_DEFENCE;
+						// make sure movement alteration is not applied when using, because then its applied atomatically
+						if (!ecs::IsUsing(e, p.primaryAbilty))
+						{
+							e.GetComponent<comp::Velocity>()->vel *= ecs::GetAbility(e, p.primaryAbilty)->movementSpeedAlt;
+						}
+						break;
+					}
+					case ShopItem::Defence1x1:
+					case ShopItem::Defence1x3:
+					{
+						if (simulation->m_timeCycler.GetTimePeriod() == CyclePeriod::DAY)
+						{
+							uint32_t cost = 0;
+							if (p.shopItem == ShopItem::Defence1x1)
+								cost = 10;
+							else if (p.shopItem == ShopItem::Defence1x3)
+								cost = 30;
+
+							if (simulation->GetCurrency().GetAmount() >= cost)
+							{
+								if (simulation->GetGrid().PlaceDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, blackboard->GetPathFindManager(), dynamicQT))
+								{
+									audio_t audio =
+									{
+										ESoundEvent::Game_OnDefencePlaced,
+										e.GetComponent<comp::Transform>()->position,
+										1.0f,
+										250.f,
+										true,
+										false,
+										true,
+										false,
+									};
+									e.GetComponent<comp::AudioState>()->data.emplace(audio);
+
+									simulation->GetCurrency() -= cost;
+									anim.toSend = EAnimationType::PLACE_DEFENCE;
+								}
 							}
 						}
+						break;
 					}
-					break;
-				}
-				case ShopItem::Destroy_Tool:
-				{
-					simulation->GetGrid().RemoveDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, blackboard);
-					break;
-				}
-				default:
-					break;
-				}
-			}
-			else if (p.lastInputState.rightMouse)
-			{
-				if (p.classType != comp::Player::Class::WARRIOR)
-				{
-					if (ecs::UseAbility(e, p.secondaryAbilty, &p.mousePoint))
+					case ShopItem::Destroy_Tool:
 					{
-						LOG_INFO("Used secondary");
-						anim.toSend = EAnimationType::SECONDARY_ATTACK;
+						simulation->GetGrid().RemoveDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, blackboard);
+						break;
+					}
+					default:
+						break;
 					}
 				}
-			}
-
-			if (p.lastInputState.key_shift)
-			{
-				if (ecs::UseAbility(e, p.moveAbilty, &p.mousePoint))
+				else if (p.lastInputState.rightMouse)
 				{
-					anim.toSend = EAnimationType::ABILITY1;
+					if (p.classType != comp::Player::Class::WARRIOR)
+					{
+						if (ecs::UseAbility(e, p.secondaryAbilty, &p.mousePoint))
+						{
+							LOG_INFO("Used secondary");
+							anim.toSend = EAnimationType::SECONDARY_ATTACK;
+						}
+					}
 				}
+
+				if (p.lastInputState.key_shift)
+				{
+					if (ecs::UseAbility(e, p.moveAbilty, &p.mousePoint))
+					{
+						anim.toSend = EAnimationType::ABILITY1;
+					}
+				}
+
+				//Rotate defences 90 or not
+				if (p.lastInputState.mousewheelDir > 0)
+					p.rotateDefence = true;
+				else if (p.lastInputState.mousewheelDir < 0)
+					p.rotateDefence = false;
 			}
-
-			//Rotate defences 90 or not
-			if (p.lastInputState.mousewheelDir > 0)
-				p.rotateDefence = true;
-			else if (p.lastInputState.mousewheelDir < 0)
-				p.rotateDefence = false;
-
-
 		});
 }
 

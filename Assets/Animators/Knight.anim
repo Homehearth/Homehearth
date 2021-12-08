@@ -12,7 +12,6 @@ anim			DEAD				Player_Dead.fbx
 loopable		0
 anim			ABILITY1			Player_Dash.fbx
 loopable		0
-defaultAnim		IDLE
 
 
 blendstate 		IDLE				MOVE				0.2
@@ -43,12 +42,12 @@ blendstate		MOVE				PLACE_DEFENCE		0
 blendstate		PLACE_DEFENCE		MOVE				0.2
 
 
-blendstate		IDLE				DEAD				0.1
-blendstate		DEAD				IDLE				0.2
+blendstate		IDLE				DEAD				0.05
+blendstate		DEAD				IDLE				0.05
 
 
-blendstate		MOVE				DEAD				0.1
-blendstate		DEAD				MOVE				0.2
+blendstate		MOVE				DEAD				0.05
+blendstate		DEAD				MOVE				0.05
 
 
 blendstate		IDLE				ABILITY1			0
