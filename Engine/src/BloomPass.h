@@ -10,7 +10,13 @@ private:
 
 	struct ScreenQuad
 	{
-		sm::Vector4 points[4];
+		sm::Vector3 points;
+		sm::Vector2 uv;
+	};
+
+	struct Quads
+	{
+		ScreenQuad quads[4];
 	};
 
 	BlurPass							m_blurPass;
@@ -19,12 +25,16 @@ private:
 	ComPtr<ID3D11Texture2D>				m_quarterSize; // (Window Size / 4)
 	ComPtr<ID3D11Texture2D>				m_smolSize; // (Window Size / 8)
 
-	ComPtr<ID3D11ShaderResourceView>	m_fullSizeView;
+	ComPtr<ID3D11UnorderedAccessView>	m_fullSizeView;
+	ComPtr<ID3D11UnorderedAccessView>	m_fullSizeViewOut;
+	ComPtr<ID3D11ShaderResourceView>	m_fullSizeShaderView;
+
+
 	ComPtr<ID3D11ShaderResourceView>	m_halfSizeView;
 	ComPtr<ID3D11ShaderResourceView>	m_quarterSizeView;
 	ComPtr<ID3D11ShaderResourceView>	m_smolSizeView;
 
-	dx::ConstantBuffer<ScreenQuad>		m_screenSpaceQuad;
+	dx::ConstantBuffer<Quads>		m_screenSpaceQuad;
 	ComPtr<ID3D11InputLayout>			m_inputLayout;
 
 	void Unlink();

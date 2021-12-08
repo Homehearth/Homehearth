@@ -79,6 +79,7 @@ public:
 	
 	Shaders::ComputeShader			m_blurComputeShader;
 	Shaders::ComputeShader			m_dofComputeShader;
+	Shaders::ComputeShader			m_bloomComputeShader;
 	
 	
 	D3D11_VIEWPORT					m_viewport;

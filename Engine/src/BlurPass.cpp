@@ -47,6 +47,33 @@ void BlurPass::PreRenderTexture(Camera* pCam, ID3D11DeviceContext* pDeviceContex
 	}
 }
 
+void BlurPass::BlurTexture(ID3D11UnorderedAccessView* viewIn, ID3D11UnorderedAccessView* viewOut, ID3D11DeviceContext* pDeviceContext)
+{
+	if (m_currentBlur != BlurLevel::NOBLUR)
+	{
+		ID3D11RenderTargetView* nullRTV = nullptr;
+		DC->OMSetRenderTargets(1, &nullRTV, nullptr);
+		DC->CSSetShader(PM->m_blurComputeShader.Get(), nullptr, 0);
+		DC->CSSetConstantBuffers(11, 1, m_settingsBuffer.GetAddressOf());
+
+		DC->CSSetUnorderedAccessViews(0, 1, &viewIn, nullptr);
+		DC->CSSetUnorderedAccessViews(1, 1, &viewOut, nullptr);
+
+		if (m_blurType == BlurType::BOX)
+		{
+			DC->Dispatch(PM->m_windowWidth / 8, PM->m_windowHeight / 8, 1);
+		}
+
+		else if (m_blurType == BlurType::GUASSIAN)
+		{
+			DC->Dispatch(PM->m_windowWidth / 8, PM->m_windowHeight / 8, 1);
+			SwapBlurDirection();
+			DC->Dispatch(PM->m_windowWidth / 8, PM->m_windowHeight / 8, 1);
+			SwapBlurDirection();
+		}
+	}
+}
+
 void BlurPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 {
 	if (m_currentBlur != BlurLevel::NOBLUR)
