@@ -104,7 +104,7 @@ void CombatSystem::UpdateTeleport(HeadlessScene& scene)
 						sm::Vector3 newPos = transform.position + dir;
 						if (pathFinderManager->FindClosestNode(newPos)->reachable)
 						{
-							entity.GetComponent<comp::Transform>()->position = transform.position + dir;
+							entity.GetComponent<comp::Transform>()->position = newPos;
 							hasSetTarget = true;
 							entity.UpdateNetwork();
 							if (pathFinderManager->PlayerAStar(entity.GetComponent<comp::Transform>()->position))
@@ -316,7 +316,7 @@ void CombatSystem::AddCollisionMeleeBehavior(Entity entity, Entity attackEntity,
 			tag_bits goodOrBad = TagType::GOOD | TagType::BAD;
 
 			bool sameTeam = false;
-			
+
 			if ((entity.GetTags() & GOOD) == (other.GetTags() & GOOD))
 			{
 				sameTeam = true;
@@ -359,6 +359,12 @@ void CombatSystem::AddCollisionMeleeBehavior(Entity entity, Entity attackEntity,
 				if (otherHealth && (entity.GetTags() & goodOrBad) != (other.GetTags() & goodOrBad))
 				{
 					otherHealth->currentHealth -= attackAbility->attackDamage;
+
+					comp::AnimationState* anim = other.GetComponent<comp::AnimationState>();
+					if (anim)
+					{
+						anim->toSend = EAnimationType::TAKE_DAMAGE;
+					}
 					// update Health on network
 					scene.publish<EComponentUpdated>(other, ecs::Component::HEALTH);
 
@@ -458,7 +464,7 @@ void CombatSystem::AddCollisionRangeBehavior(Entity entity, Entity attackEntity,
 			{
 				audio.type = ESoundEvent::Player_OnDmgRecieved;
 			}
-			else if((!other.GetComponent<comp::Tag<STATIC>>() && (entity.GetTags() & goodOrBad) != (other.GetTags() & goodOrBad) && (attackEntity.GetTags() & NO_RESPONSE) != (other.GetTags() & NO_RESPONSE)) || other.GetComponent<comp::House>())
+			else if ((!other.GetComponent<comp::Tag<STATIC>>() && (entity.GetTags() & goodOrBad) != (other.GetTags() & goodOrBad) && (attackEntity.GetTags() & NO_RESPONSE) != (other.GetTags() & NO_RESPONSE)) || other.GetComponent<comp::House>())
 			{
 				audio.shouldBroadcast = true;
 				audio.is3D = true;
@@ -480,7 +486,7 @@ void CombatSystem::AddCollisionRangeBehavior(Entity entity, Entity attackEntity,
 			}
 
 			if ((entity.GetTags() & GOOD) && (other.GetTags() & DEFENCE)
-				 || attackEntity.GetTags() & NO_RESPONSE && other.GetTags() & NO_RESPONSE)
+				|| attackEntity.GetTags() & NO_RESPONSE && other.GetTags() & NO_RESPONSE)
 			{
 				return;
 			}

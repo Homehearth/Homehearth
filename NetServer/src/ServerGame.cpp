@@ -193,6 +193,7 @@ bool ServerGame::LoadMapColliders(const std::string& filename)
 	(
 		filepath,
 		aiProcess_JoinIdenticalVertices |
+		aiProcess_Triangulate			|
 		aiProcess_ConvertToLeftHanded
 	);
 
@@ -227,6 +228,10 @@ bool ServerGame::LoadMapColliders(const std::string& filename)
 			aiVector3D scl;
 			aiQuaternion rot;
 			node->mTransformation.Decompose(scl, rot, pos);
+			
+			//LOG_INFO("POS: %f %f %f", pos.x, pos.y, pos.z);
+			//LOG_INFO("SCL: %f %f %f", scl.x, scl.y, scl.z);
+			//LOG_INFO("ROT: %f %f %f", rot.x, rot.y, rot.z);
 
 			dx::XMFLOAT3 center = { pos.x, pos.y, pos.z };
 			dx::XMFLOAT3 extents = { scl.x / 2.f, scl.y / 2.f, scl.z / 2.f };

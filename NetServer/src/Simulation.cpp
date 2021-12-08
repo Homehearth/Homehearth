@@ -161,10 +161,14 @@ void Simulation::ResetPlayer(Entity player)
 	player.AddComponent<comp::MeshName>()->name = NameType::MESH_KNIGHT;
 	player.AddComponent<comp::AnimatorName>()->name = AnimName::ANIM_KNIGHT;
 	player.AddComponent<comp::AnimationState>();
-
+	comp::Health* health = player.AddComponent<comp::Health>();
+	health->isAlive = true;
 	// only if Melee
 	if (playerComp->classType == comp::Player::Class::WARRIOR)
 	{
+		health->maxHealth = 125.f;
+		health->currentHealth = 125.f;
+
 		comp::MeleeAttackAbility* attackAbility = player.AddComponent<comp::MeleeAttackAbility>();
 		attackAbility->cooldown = 0.50f;
 		attackAbility->attackDamage = 20.f;
@@ -191,6 +195,9 @@ void Simulation::ResetPlayer(Entity player)
 	}
 	else if (playerComp->classType == comp::Player::Class::MAGE)
 	{
+		health->maxHealth = 80.f;
+		health->currentHealth = 80.f;
+
 		comp::RangeAttackAbility* attackAbility = player.AddComponent<comp::RangeAttackAbility>();
 		attackAbility->cooldown = 0.8f;
 		attackAbility->attackDamage = 20.f;
@@ -205,7 +212,7 @@ void Simulation::ResetPlayer(Entity player)
 		comp::HealAbility* healAbility = player.AddComponent<comp::HealAbility>();
 		healAbility->cooldown = 8.0f;
 		healAbility->delay = 0.0f;
-		healAbility->healAmount = 20.f;
+		healAbility->healAmount = 30.f;
 		healAbility->lifetime = 1.0f;
 		healAbility->range = 30.f;
 		healAbility->useTime = 1.0f;
@@ -227,10 +234,6 @@ void Simulation::ResetPlayer(Entity player)
 		player.AddComponent<comp::AnimationState>();
 
 	}
-
-	comp::Health* health = player.AddComponent<comp::Health>();
-	health->currentHealth = 100.f;
-	health->isAlive = true;
 
 	player.AddComponent<comp::SphereCollider>()->Radius = 3.f;
 
@@ -791,6 +794,7 @@ void Simulation::ResetGameScene()
 
 	while (!m_spawnPoints.empty())
 	{
+
 		m_spawnPoints.pop();
 	}
 

@@ -588,7 +588,7 @@ void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money
 				health.isAlive = false;
 				scene.publish<EComponentUpdated>(entity, ecs::Component::HEALTH);
 				// increase money
-				if (entity.GetComponent<comp::Tag<TagType::BAD>>())
+				if (entity.GetComponent<comp::Tag<BAD>>())
 				{
 					money_ref += 5 * spree.GetSpree();
 					money_ref.IncreaseTotal(5 * spree.GetSpree());
@@ -615,10 +615,9 @@ void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money
 				if (p)
 				{
 					audio.type = ESoundEvent::Player_OnDeath;
-					p->state = comp::Player::State::SPECTATING;
-					entity.RemoveComponent<comp::Tag<TagType::DYNAMIC>>();
+					entity.RemoveComponent<comp::Tag<DYNAMIC>>();
 				}
-				else if (entity.GetComponent<comp::Tag<TagType::DEFENCE>>())
+				else if (entity.GetComponent<comp::Tag<DEFENCE>>())
 				{
 					comp::Transform* buildTransform = entity.GetComponent<comp::Transform>();
 
