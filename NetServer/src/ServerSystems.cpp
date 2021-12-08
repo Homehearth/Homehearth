@@ -415,14 +415,13 @@ void ServerSystems::OnCycleChange(Simulation* simulation)
 			{
 				EnemyManagement::CreateWaves(simulation->waveQueue, simulation->currentRound++);
 			}
+
 		}
-
 	}
-
 	if (simulation->m_timeCycler.GetTimePeriod() == CyclePeriod::NIGHT)
 	{
 		int count = 0;
-		simulation->GetGameScene()->ForEachComponent<comp::Tag<TagType::BAD>>([&](Entity e, comp::Tag<TagType::BAD>&)
+		simulation->GetGameScene()->ForEachComponent<comp::Tag<BAD>>([&](Entity e, comp::Tag<BAD>&)
 			{
 				count++;
 			});
@@ -567,8 +566,6 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 
 
 		});
-
-
 }
 
 void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money_ref, HouseManager houseManager, QuadTree* qt, GridSystem& grid, SpreeHandler& spree)
@@ -934,7 +931,7 @@ Entity VillagerManagement::CreateVillager(HeadlessScene& scene, Entity homeHouse
 	comp::BehaviorTree* behaviorTree = entity.AddComponent<comp::BehaviorTree>();
 	comp::Villager* villager = entity.AddComponent<comp::Villager>();
 	comp::House* house = homeHouse.GetComponent<comp::House>();
-	transform->position = house->attackNode->position;
+	transform->position = house->homeNode->position;
 	transform->position.y = 0.75f;
 	villager->homeHouse = homeHouse;
 	meshName->name = NameType::MESH_VILLAGER;

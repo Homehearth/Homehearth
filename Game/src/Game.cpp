@@ -916,7 +916,7 @@ void Game::SetShopItem(const ShopItem& whatToBuy)
 	m_client.Send(msg);
 }
 
-const ShopItem Game::GetShopItem() const
+ShopItem Game::GetShopItem() const
 {
 	ShopItem item = ShopItem::None;
 	if (m_players.find(m_localPID) != m_players.end())
