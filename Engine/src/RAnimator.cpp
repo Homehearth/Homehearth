@@ -358,6 +358,46 @@ void RAnimator::SwapAnimationState()
 	m_nextState = EAnimationType::NONE;
 }
 
+EAnimationCode& RAnimator::GetAnimationCode() const
+{
+	EAnimationCode codetype = EAnimationCode::NONE;
+
+	enum bitstate
+	{
+		current = 0x01,
+		next	= 0x02,
+		upper	= 0x04
+	};
+	UINT state = 0;
+
+	if (m_currentState	!= EAnimationType::NONE)
+		state |= bitstate::current;
+	if (m_nextState		!= EAnimationType::NONE)
+		state |= bitstate::next;
+	if (m_upperState	!= EAnimationType::NONE)
+		state |= bitstate::upper;
+
+	switch (state)
+	{
+	case 1:	//Current
+		codetype = EAnimationCode::ONE_ANIM;
+		break;
+	case 3:	//Current + Next
+		codetype = EAnimationCode::TWO_ANIM_BLEND;
+		break;
+	case 5: //Current + Upper
+		codetype = EAnimationCode::TWO_ANIM_UPPER_LOWER;
+		break;
+	case 7: //Current + Next + Upper
+		codetype = EAnimationCode::THREE_ANIM_UPPER_LOWER_BLEND;
+		break;
+	default:
+		break;
+	};
+
+	return codetype;
+}
+
 bool RAnimator::Create(const std::string& filename)
 {
 	std::ifstream readfile(ANIMATORPATH + filename);
@@ -479,6 +519,12 @@ bool RAnimator::ChangeAnimation(const EAnimationType& type)
 	//Check if animation exist
 	if (m_animations.find(type) != m_animations.end())
 	{
+		if (m_currentState == EAnimationType::DEAD)
+		{
+			std::cout << "New state was: " << (UINT)type << std::endl;
+		}
+
+
 		//No current
 		if (m_currentState == EAnimationType::NONE)
 		{
@@ -506,6 +552,7 @@ bool RAnimator::ChangeAnimation(const EAnimationType& type)
 			//Else: Already in this state
 		}
 	}
+
 	return queueSuccess;
 }
 
@@ -530,124 +577,133 @@ const sm::Matrix RAnimator::GetLocalMatrix(const std::string& bonename) const
 void RAnimator::Update()
 {
 	PROFILE_FUNCTION();
-	
+
 	//Need to have a skeleton
-	if (!m_bones.empty())
-	{
-		if (m_currentState != EAnimationType::NONE)
-		{
-			UpdateTime(m_currentState);
+	//if (!m_bones.empty())
+	//{
+	//	//if current
 
-			if (m_nextState != EAnimationType::NONE)
-			{
-				UpdateTime(m_nextState);
 
-				//Update blendtimer
-				double blendDuration = 0;
-				if (m_blendStates.find({ m_currentState, m_nextState }) != m_blendStates.end())
-					blendDuration = m_blendStates.at({ m_currentState, m_nextState });
 
-				m_animations[m_currentState].blendTimer += Stats::Get().GetUpdateTime();
-
-				if (m_upperState != EAnimationType::NONE)
-				{
-					UpdateTime(m_upperState);
-
-					if (m_animations[m_currentState].blendTimer < blendDuration)
-						BlendUpperBodyAnimations(m_currentState, m_nextState, m_upperState);
-					else
-						SwapAnimationState();
-				}
-				else
-				{
-					//Regular blending between current and next
-					if (m_animations[m_currentState].blendTimer < blendDuration)
-						BlendAnimations(m_currentState, m_nextState);
-					else
-						SwapAnimationState();
-				}
-			}
-			else if (m_upperState != EAnimationType::NONE)
-			{
-				if (UpdateTime(m_upperState))
-				{
-					UpperLowerbodyAnimation(m_upperState, m_currentState);
-				}
-				else
-				{
-					ResetAnimation(m_upperState);
-					m_upperState = EAnimationType::NONE;
-				}
-			}
-			else
-			{
-				//Regular
-				RegularAnimation(m_currentState);
-			}
-		}
-
-		//Check status of the animations? Anyone reached the end? what to do with it?
-	}
+	//}
 
 
 
 
+	//UPPERLOWER WORKED OKAY
+	//Need to have a skeleton
+	//if (!m_bones.empty())
+	//{
+	//	if (m_currentState != EAnimationType::NONE)
+	//	{
+	//		UpdateTime(m_currentState);
+
+	//		if (m_nextState != EAnimationType::NONE)
+	//		{
+	//			UpdateTime(m_nextState);
+
+	//			//Update blendtimer
+	//			double blendDuration = 0;
+	//			if (m_blendStates.find({ m_currentState, m_nextState }) != m_blendStates.end())
+	//				blendDuration = m_blendStates.at({ m_currentState, m_nextState });
+
+	//			m_animations[m_currentState].blendTimer += Stats::Get().GetUpdateTime();
+
+	//			if (m_upperState != EAnimationType::NONE)
+	//			{
+	//				UpdateTime(m_upperState);
+
+	//				if (m_animations[m_currentState].blendTimer < blendDuration)
+	//					BlendUpperBodyAnimations(m_currentState, m_nextState, m_upperState);
+	//				else
+	//					SwapAnimationState();
+	//			}
+	//			else
+	//			{
+	//				//Regular blending between current and next
+	//				if (m_animations[m_currentState].blendTimer < blendDuration)
+	//					BlendAnimations(m_currentState, m_nextState);
+	//				else
+	//					SwapAnimationState();
+	//			}
+	//		}
+	//		else if (m_upperState != EAnimationType::NONE)
+	//		{
+	//			if (UpdateTime(m_upperState))
+	//			{
+	//				UpperLowerbodyAnimation(m_upperState, m_currentState);
+	//			}
+	//			else
+	//			{
+	//				ResetAnimation(m_upperState);
+	//				m_upperState = EAnimationType::NONE;
+	//			}
+	//		}
+	//		else
+	//		{
+	//			//Regular
+	//			RegularAnimation(m_currentState);
+	//		}
+	//	}
+
+	//	//Check status of the animations? Anyone reached the end? what to do with it?
+	//}
 
 
 	/*
 			OLD - WORKED FINE, BUT NOT WITH THE NEW	
 	*/
 	//Needs a skeleton and a current animation
-	//if (!m_bones.empty() && m_currentType != EAnimationType::NONE)
-	//{
-	//	UpdateTime(m_currentType);
+	if (!m_bones.empty() && m_currentState != EAnimationType::NONE)
+	{
+		UpdateTime(m_currentState);
 
-	//	/*
-	//		Only has to focus on the current animation
-	//	*/
-	//	if (m_nextType == EAnimationType::NONE)
-	//	{
-	//		RegularAnimation();
-	//	}
-	//	/*
-	//		We have two animations queued. 
-	//		Check if we are going to start blending.
-	//	*/
-	//	else
-	//	{
-	//		animation_t* anim1 = &m_animations.at(m_currentType);
-	//		if (anim1)
-	//		{
-	//			//How long we shall blend the animations in seconds
-	//			double blendDuration = 0;
-	//			if (m_blendStates.find({ m_currentType, m_nextType }) != m_blendStates.end())
-	//				blendDuration = m_blendStates.at({ m_currentType, m_nextType });
-	//			
-	//			double startTick = anim1->animation->GetDuraction() - blendDuration;
+		/*
+			Only has to focus on the current animation
+		*/
+		if (m_nextState == EAnimationType::NONE)
+		{
+			RegularAnimation(m_currentState);
+		}
+		/*
+			We have two animations queued. 
+			Check if we are going to start blending.
+		*/
+		else
+		{
+			animation_t* anim1 = &m_animations.at(m_currentState);
+			if (anim1)
+			{
+				//How long we shall blend the animations in seconds
+				double blendDuration = 0;
+				if (m_blendStates.find({ m_currentState, m_nextState }) != m_blendStates.end())
+					blendDuration = m_blendStates.at({ m_currentState, m_nextState });
+				
+				double startTick = anim1->animation->GetDuration() - blendDuration;
 
-	//			/*
-	//				Loopable animations:		Can start whenever to blend
-	//				None loopable animations:	Need to wait on the right startpoint
-	//			*/
-	//			if (!anim1->animation->IsLoopable() && anim1->frameTimer < startTick)
-	//			{
-	//				RegularAnimation();
-	//			}
-	//			//Going to do blending
-	//			else
-	//			{
-	//				UpdateTime(m_nextType);
-	//				anim1->blendTimer += Stats::Get().GetUpdateTime();
+				/*
+					Loopable animations:		Can start whenever to blend
+					None loopable animations:	Need to wait on the right startpoint
+				*/
+				if (!anim1->animation->IsLoopable() && anim1->frameTimer < startTick)
+				{
+					RegularAnimation(m_currentState);
+				}
+				//Going to do blending
+				else
+				{
+					UpdateTime(m_nextState);
+					anim1->blendTimer += Stats::Get().GetUpdateTime();
 
-	//				//Do blending while we can. When we reached the end we swap animation
-	//				if (anim1->blendTimer < blendDuration)
-	//					BlendAnimations();
-	//				else
-	//					SwapAnimationState();
-	//			}
-	//		}
-	//	}
-	//}	
+					//Do blending while we can. When we reached the end we swap animation
+					if (anim1->blendTimer < blendDuration)
+						BlendAnimations(m_currentState, m_nextState);
+					else
+						SwapAnimationState();
+				}
+			}
+		}
+	}	
 }
 
 void RAnimator::Bind()

@@ -56,3 +56,19 @@ struct blend_hash_fn
 		return h1 ^ h2;
 	}
 };
+
+enum class EAnimationCode
+{
+	NONE,
+	ONE_ANIM,
+	TWO_ANIM_BLEND,
+	TWO_ANIM_UPPER_LOWER,
+	THREE_ANIM_UPPER_LOWER_BLEND
+};
+
+enum class EAnimPlayType
+{
+	PLAY_ONCE,			//Plays one time and then switches
+	PLAY_ONCE_STOP,		//Plays one time and then waits until next animation
+	LOOPABLE			//Plays over and over and over again
+};

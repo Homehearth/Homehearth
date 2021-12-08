@@ -19,7 +19,7 @@ private:
 	std::vector<bone_t>						m_bones;
 	std::unordered_map<std::string, UINT>	m_nameToBone;
 
-	std::queue<EAnimationType> m_queue;
+	//std::queue<EAnimationType> m_queue;
 	//std::vector<EAnimationType> m_queue;
 
 	EAnimationType m_currentState;
@@ -46,7 +46,11 @@ private:
 
 	//All the animations
 	std::unordered_map<EAnimationType, animation_t>			m_animations;
-	std::unordered_map<blendstate_t, double, blend_hash_fn> m_blendStates;
+	std::unordered_map<blendstate_t, double, blend_hash_fn> m_blendStates;					//MOVE	 IDLE		0.2
+	std::unordered_map<blendstate_t, std::string, blend_hash_fn> m_upperLowerState;			//MOVE	 PRIMARY	QuickRigCharacter_Spine
+
+	//Change name on blendstate_t
+	//std::unodered_map<blendstate_t, struct, blend_hash_fn> m_states;
 
 	//Matrices that is going up to the GPU - structure buffer - in modelspace
 	std::vector<sm::Matrix>			 m_localMatrices;
@@ -70,31 +74,15 @@ private:
 
 	//Animation with only one state
 	void RegularAnimation(const EAnimationType& state);
-
 	//Blend between two animations
 	void BlendAnimations(const EAnimationType& state1, const EAnimationType& state2);
-
 	//Animate the lower body as usual and swap to upper when reached a bone
 	void UpperLowerbodyAnimation(const EAnimationType& upper, const EAnimationType& lower);
-
 	void BlendUpperBodyAnimations(const EAnimationType& state1, const EAnimationType& state2, const EAnimationType& upper);
 
 	void SwapAnimationState();
 
-	/*
-		Upperbody update
-
-		Fix a m_bonePoseAbsolute - can update from other parts later
-
-		BlendAnimations() from start until we reached the devidebone
-		BlendAnimations(upper, ???)
-
-
-		for (from devideBone -> till end)
-		{
-			blend if needed between this and other
-		}
-	*/
+	EAnimationCode& GetAnimationCode() const;
 
 public:
 	RAnimator();
@@ -122,10 +110,8 @@ public:
 	//Update the animation
 	void Update();
 
-	//Bind the bones matrices structured buffer
+	//Bind/unbind the bones matrices structured buffer
 	void Bind();
-
-	//Unbind the bones matrices structured buffer
 	void Unbind() const;
 
 };

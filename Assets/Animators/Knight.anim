@@ -16,6 +16,12 @@ loopable		DEAD				0
 
 tickSpeed		PRIMARY_ATTACK		38
 
+
+state			IDLE				MOVE				BLEND			0.2
+state			MOVE				IDLE				BLEND			0.2
+state			MOVE				PRIMARY_ATTACK		UPPERLOWER		QuickRigCharacter_Spine
+
+
 upperbody		PRIMARY_ATTACK		QuickRigCharacter_Spine
 upperbody		TAKE_DAMAGE			QuickRigCharacter_Spine
 upperbody		PLACE_DEFENCE		QuickRigCharacter_Spine
