@@ -246,7 +246,7 @@ void Simulation::ResetPlayer(Entity player)
 		player.AddComponent<comp::AnimatorName>()->name = AnimName::ANIM_MAGE;
 	}
 
-	player.AddComponent<comp::SphereCollider>()->Radius = 3.f;
+	player.AddComponent<comp::SphereCollider>()->Radius = 2.5f;
 
 	//
 	// AudioState
