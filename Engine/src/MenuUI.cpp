@@ -68,11 +68,9 @@ bool rtd::MenuUI::CheckHover()
 		InputSystem::Get().GetMousePos().y > m_drawOpts.y_pos &&
 		InputSystem::Get().GetMousePos().y < m_drawOpts.y_pos + m_drawOpts.height)
 	{
-		m_texture->SetOpacity(1.0f);
 		return true;
 	}
 
-	m_texture->SetOpacity(.55f);
 	return false;
 }
 

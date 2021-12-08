@@ -35,9 +35,9 @@ BT::NodeStatus BT::InRangeCBT::Tick()
 		return BT::NodeStatus::FAILURE;
 	}
 	//If target is a house
-	if(house && house->attackNode)
+	if(house && house->homeNode)
 	{
-		position = house->attackNode->position;
+		position = house->homeNode->position;
 	}
 	else
 	{

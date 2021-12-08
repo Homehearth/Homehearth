@@ -9,44 +9,37 @@ BT::AttackCBT::AttackCBT(const std::string& name, Entity entity)
 
 BT::NodeStatus BT::AttackCBT::Tick()
 {
+	//get the ability enemy have
 	comp::MeleeAttackAbility* attackMAbility = entity.GetComponent<comp::MeleeAttackAbility>();
 	comp::RangeAttackAbility* attackRAbility = entity.GetComponent<comp::RangeAttackAbility>();
 	comp::IAbility* attackAbility = nullptr;
 
+	//Store ability in variable
 	if (attackMAbility)
 		attackAbility = attackMAbility;
 	else if (attackRAbility)
 		attackAbility = attackRAbility;
 
-
-	comp::Transform* transform = entity.GetComponent<comp::Transform>();
 	Entity* target = Blackboard::Get().GetValue<Entity>("target" + std::to_string(entity));
 
-	if(attackAbility == nullptr || transform == nullptr)
+	//Catch nullptr
+	if(attackAbility == nullptr || target == nullptr)
 	{
-		LOG_ERROR("Failed to get components from entity");
-		return BT::NodeStatus::FAILURE;
-	}
-	if(target == nullptr)
-	{
-		LOG_ERROR("Failed to get target position");
+		LOG_ERROR("Failed to get correct data from entity");
 		return BT::NodeStatus::FAILURE;
 	}
 
+	//Check if target is a house (houses get their position from OBB)
 	if(target->GetComponent<comp::House>())
-	{
 		attackAbility->targetPoint = target->GetComponent<comp::OrientedBoxCollider>()->Center;
-	}
 	else
-	{
 		attackAbility->targetPoint = target->GetComponent<comp::Transform>()->position;
-	}
 
-
+	//Use the ability stored in attackAbility
 	if (ecs::UseAbility(attackAbility))
 	{
-		// Enemy Attacked
 		comp::AnimationState* animState = entity.GetComponent<comp::AnimationState>();
+		//Activate attack animation
 		if (animState)
 			animState->toSend = EAnimationType::PRIMARY_ATTACK;
 	};

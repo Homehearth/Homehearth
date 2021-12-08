@@ -227,9 +227,9 @@ void PathFinderManager::AStarSearch(Entity npcEntity)
 		goalNode = FindClosestNode(*villagerTarget);
 
 	//Need to take OBB center to get correct world position for houses
-	if (house && house->attackNode)
+	if (house && house->homeNode)
 	{
-		goalNode = house->attackNode;
+		goalNode = house->homeNode;
 	}
 
 	if (goalNode == nullptr)

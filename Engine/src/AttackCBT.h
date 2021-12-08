@@ -7,6 +7,7 @@ namespace BT
 	public:
 		AttackCBT(const std::string& name, Entity entity);
 		~AttackCBT() override = default;
+
 		//Executes the attack ability against the current target
 		BT::NodeStatus Tick() override;
 
