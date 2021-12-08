@@ -14,6 +14,7 @@ void Renderer::Initialize(Window* pWindow)
 
     //AddPass(&m_depthPass);
     AddPass(&m_frustumPass);
+    AddPass(&m_cullingPass);
     AddPass(&m_textureEffectPass);
 	AddPass(&m_waterEffectPass);
     
@@ -34,6 +35,7 @@ void Renderer::Initialize(Window* pWindow)
 	m_animPass.m_pShadowPass = &m_shadowPass;
 
 	m_depthPass.SetEnable(true);
+    m_cullingPass.SetEnable(true);
 	m_basePass.SetEnable(true);
 	m_animPass.SetEnable(true);
 	m_decalPass.SetEnable(true);

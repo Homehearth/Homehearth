@@ -197,6 +197,7 @@ RWTexture2D<uint2> rw_trans_LightGrid                   : register(u6);
 
 RWTexture2D<float4> rw_heatMap                          : register(u7);
 
+
 // Blur Pass (2) 
 RWTexture2D<unorm float4> t_bufferRead                  : register(u0);
 RWTexture2D<unorm float4> t_bufferOut                   : register(u1);

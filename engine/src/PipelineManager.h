@@ -85,6 +85,7 @@ public:
 	Shaders::ComputeShader				m_ParticleComputeShader;
 	Shaders::GeometryShader				m_ParticleGeometryShader;
 
+	Shaders::ComputeShader				m_lightCullingShader;
 	Shaders::ComputeShader				m_computeFrustumsShader;
 	Shaders::ComputeShader				m_blurComputeShader;
 	Shaders::ComputeShader				m_dofComputeShader;

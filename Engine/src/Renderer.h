@@ -11,6 +11,7 @@
 #include "ParticlePass.h"
 #include "SkyboxPass.h"
 #include "BlurPass.h"
+#include "CullingPass.h"
 #include "DepthOfFieldPass.h"
 #include "FrustumPass.h"
 #include "HeadlessEngine.h"
@@ -28,6 +29,7 @@ private:
 	TextureEffectPass	m_textureEffectPass; 
 	WaterEffectPass		m_waterEffectPass; 
 	FrustumPass			m_frustumPass;
+	CullingPass			m_cullingPass;
 	DebugPass			m_debugPass;
 	AnimationPass		m_animPass;
 	DecalPass			m_decalPass;
