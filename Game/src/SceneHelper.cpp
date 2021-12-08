@@ -788,6 +788,7 @@ namespace sceneHelp
 		exitButton->SetOnPressedEvent([=]()
 			{
 				game->SetScene("MainMenu");
+				OptionSystem::Get().OnShutdown();
 			});
 		scene.Add2DCollection(general, "AMenuBG");
 		/*---------General---------*/
