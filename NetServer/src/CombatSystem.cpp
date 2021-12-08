@@ -241,9 +241,6 @@ Entity CombatSystem::CreateAttackEntity(Entity entity, HeadlessScene& scene, com
 	bos->Radius = stats->attackRange;
 	float attackRangeMultiplier = 1.3f;
 
-	//attackRangeMultiplier = 1.3f;
-
-
 	sm::Vector3 targetDir = stats->targetPoint - transform->position;
 	targetDir.Normalize();
 	t->position = transform->position + targetDir * stats->attackRange * attackRangeMultiplier;
