@@ -357,8 +357,8 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 
 				{
 					PROFILE_SCOPE("Movement collider system");
-					Systems::MovementColliderSystem(scene, e.dt);
 					Systems::MovementSystem(scene, e.dt);
+					Systems::MovementColliderSystem(scene, e.dt);
 				}
 
 				{
@@ -385,13 +385,13 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 			{
 				PROFILE_SCOPE("Hover defences");
 				std::vector<Entity> updateEntities;
-				if (m_timeCycler.GetTimePeriod() == CyclePeriod::DAY)
+				if (m_timeCycler.GetTimePeriod() == CyclePeriod::NIGHT)
 				{
-					updateEntities = m_grid.UpdateHoverDefence();
+					updateEntities = m_grid.HideHoverDefence();
 				}
 				else
 				{
-					updateEntities = m_grid.HideHoverDefence();
+					updateEntities = m_grid.UpdateHoverDefence();
 				}
 				for (size_t i = 0; i < updateEntities.size(); i++)
 				{
@@ -400,11 +400,8 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 			}
 
 			{
-				PROFILE_SCOPE("Create waves");
-				if (!waveQueue.empty())
-					ServerSystems::NextWaveConditions(this);
-				else
-					EnemyManagement::CreateWaves(waveQueue, currentRound++);
+				PROFILE_SCOPE("Cycle changed conditions");
+				ServerSystems::OnCycleChange(this);
 			}
 
 			m_spreeHandler.Update();
@@ -663,23 +660,22 @@ void Simulation::OnComponentUpdated(Entity entity, ecs::Component component)
 
 void Simulation::BuildMapColliders(std::vector<dx::BoundingOrientedBox>* mapColliders)
 {
-	// --- END OF THE WORLD ---
-	Entity collider;
-	int j = 0;
 	for (size_t i = 0; i < mapColliders->size(); i++)
 	{
-		collider = m_pGameScene->CreateEntity();
+		Entity collider = m_pGameScene->CreateEntity();
 		comp::OrientedBoxCollider* obb = collider.AddComponent<comp::OrientedBoxCollider>();
 		obb->Center = mapColliders->at(i).Center;
 		obb->Extents = mapColliders->at(i).Extents;
 		obb->Orientation = mapColliders->at(i).Orientation;
-		collider.AddComponent<comp::Tag<TagType::STATIC>>();
+		collider.AddComponent<comp::Tag<STATIC>>();
 		// Map bounds is loaded in last, 6 obbs surrounding village put the correct tag for collision system
 		if (i >= mapColliders->size() - 6)
 		{
-			collider.AddComponent<comp::Tag<TagType::MAP_BOUNDS>>();
+			collider.AddComponent<comp::Tag<MAP_BOUNDS>>();
 		}
+#if RENDER_COLLIDERS
 		collider.AddComponent<comp::Network>();
+#endif
 		qt->Insert(collider);
 	}
 }
@@ -776,10 +772,6 @@ void Simulation::SetGameScene()
 #if GOD_MODE
 	// During debug give players 1000 gold/monies.
 	m_currency = 1000;
-	for (auto& player : m_lobby.m_players)
-	{
-		player.second.RemoveComponent<comp::Tag<TagType::GOOD>>();
-	}
 #endif
 
 #if NO_CLIP

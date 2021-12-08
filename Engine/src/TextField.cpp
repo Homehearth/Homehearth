@@ -6,54 +6,56 @@ using namespace rtd;
 
 void rtd::TextField::Update()
 {
-	if (m_stringText.size() < m_textLimit)
+	if (m_stringText.size() <= m_textLimit)
 	{
-		for (int i = dx::Keyboard::Keys::D0; i <= dx::Keyboard::Keys::Z; i++)
+		WPARAM* currentKey = InputSystem::Get().GetKeyFromDownQueue();
+		if (currentKey)
 		{
-			if (InputSystem::Get().CheckKeyboardKey(static_cast<dx::Keyboard::Keys>(i), KeyState::PRESSED))
+			if (m_stringText.size() < m_textLimit)
 			{
-				char c;
-				c = static_cast<char>(i);
-				if (i > 64)
+				switch (*currentKey)
 				{
-					if (!InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Keys::LeftShift, KeyState::HELD))
+				case VK_BACK:
+					if (InputSystem::Get().IsInCTRLMode())
 					{
-						c = static_cast<char>(i + 32);
+						m_stringText.clear();
+					}
+					else if (m_stringText.size() > 0)
+					{
+						m_stringText.pop_back();
+					}
+					break;
+				case VK_OEM_PERIOD:
+					m_stringText.push_back(static_cast<char>(0x2E));
+					break;
+				default:
+					if ((InputSystem::Get().IsInShiftMode() && !InputSystem::Get().IsInCapsLock()) || (InputSystem::Get().IsInCapsLock() && !InputSystem::Get().IsInShiftMode()))
+					{
+						m_stringText.push_back((wchar_t)*currentKey);
+					}
+					else
+					{
+						m_stringText.push_back(std::tolower((wchar_t)*currentKey));
+					}
+					break;
+				}
+			}
+			else
+			{
+				if (*currentKey == VK_BACK)
+				{
+					if (m_stringText.size() > 0)
+					{
+						m_stringText.pop_back();
 					}
 				}
-				m_stringText.push_back(c);
 			}
+			currentKey = nullptr;
 		}
-		for (int i = dx::Keyboard::Keys::NumPad0; i <= dx::Keyboard::Keys::NumPad9; i++)
-		{
-			if (InputSystem::Get().CheckKeyboardKey(static_cast<dx::Keyboard::Keys>(i), KeyState::PRESSED))
-			{
-				const char c = static_cast<char>(i - dx::Keyboard::Keys::D0);
-				m_stringText.push_back(c);
-			}
-		}
-		// Checks '.' press
-		if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Keys::OemPeriod, KeyState::PRESSED))
-		{
-			const char c = static_cast<char>(0x2E);
-			m_stringText.push_back(c);
-		}
-	}
-	// Remove with the backspace
-	if ((InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Keys::Back, KeyState::PRESSED) && (m_stringText.length() > 0)) == 1)
-	{
-		m_stringText.pop_back();
+		currentKey = InputSystem::Get().GetKeyFromUPQueue();
+
 	}
 
-	if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Keys::LeftControl, KeyState::HELD) &&
-		InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Keys::V, KeyState::PRESSED))
-	{
-		m_stringText = InputSystem::Get().GetClipboard();
-		if (m_stringText.length() > m_textLimit)
-		{
-			m_stringText = m_stringText.substr(0, m_textLimit);
-		}
-	}
 
 	// Update the text
 	m_text->SetText(m_stringText);
@@ -108,6 +110,7 @@ void rtd::TextField::SetActive()
 {
 	m_isUsed = true;
 	m_canvas->ShowBorder();
+
 }
 
 void rtd::TextField::Draw()
@@ -147,11 +150,13 @@ ElementState rtd::TextField::CheckClick()
 			InputSystem::Get().GetMousePos().y > m_opts.y_pos &&
 			InputSystem::Get().GetMousePos().y < m_opts.y_pos + m_opts.y_stretch)
 		{
+			InputSystem::Get().SetInputState(SystemState::TEXTFIELD);
 			return ElementState::INSIDE;
 		}
 		else
 		{
 			m_isUsed = false;
+			InputSystem::Get().SetInputState(SystemState::GAME);
 			m_canvas->HideBorder();
 		}
 	}

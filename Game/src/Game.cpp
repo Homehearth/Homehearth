@@ -51,7 +51,7 @@ void Game::UpdateNetwork(float deltaTime)
 
 		if (GetCurrentScene() == &GetScene("Game"))
 		{
-			if (GetCurrentScene()->GetCurrentCamera()->GetCameraType() == CAMERATYPE::PLAY)
+			if (GetCurrentScene()->GetCurrentCamera()->GetCameraType() == CAMERATYPE::PLAY && !m_isSpectating)
 			{
 				message<GameMsg> msg;
 				msg.header.id = GameMsg::Game_PlayerInput;
@@ -261,7 +261,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 				}
 
 				// Spawn blood splat when enemy dies.
-				if (m_gameEntities.at(id).GetComponent<comp::Tag<TagType::BAD>>())
+				if (m_gameEntities.at(id).GetComponent<comp::Tag<BAD>>())
 				{
 					Entity bloodDecal = GetCurrentScene()->CreateEntity();
 					bloodDecal.AddComponent<comp::Decal>(*m_gameEntities.at(id).GetComponent<comp::Transform>());
@@ -921,7 +921,7 @@ void Game::SetShopItem(const ShopItem& whatToBuy)
 	m_client.Send(msg);
 }
 
-const ShopItem Game::GetShopItem() const
+ShopItem Game::GetShopItem() const
 {
 	ShopItem item = ShopItem::None;
 	if (m_players.find(m_localPID) != m_players.end())
@@ -1222,6 +1222,9 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 								if (m_isSpectating)
 								{
 									m_isSpectating = false;
+									Camera* cam = GetCurrentScene()->GetCurrentCamera();
+
+									cam->SetFollowEntity(m_players.at(m_localPID));
 								}
 							}
 						}
@@ -1294,6 +1297,44 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 	}
 }
 
+void Game::ChangeSpectatedPlayer()
+{
+	if (m_isSpectating)
+	{
+		Camera* cam = GetScene("Game").GetCurrentCamera();
+		if (cam->GetCameraType() == CAMERATYPE::PLAY)
+		{
+			Entity current = cam->GetTargetEntity();
+
+			uint32_t key = current.GetComponent<comp::Network>()->id;
+			// START ON CURRENT SPECTATED TARGET
+			auto it = m_players.find(key);
+			it++;
+
+			// Iterate to next the next player
+			for (int i = 0; i < MAX_PLAYERS_PER_LOBBY - 1; i++)
+			{
+				// Sanity check if we reach end of the list
+				if (it == m_players.end())
+				{
+					it = m_players.begin();
+				}
+				// Don't spectate yourself you are dead & check if other player is alive
+				if (it->first != m_localPID && it->second.GetComponent<comp::Health>()->isAlive)
+				{
+					// Check so we are not already following this entity
+					if (current != it->second)
+					{
+						cam->SetFollowEntity(it->second);
+						break;
+					}
+				}
+				it++;
+			}
+		}
+	}
+}
+
 void Game::UpdateInput()
 {
 	m_inputState.axisHorizontal = InputSystem::Get().GetAxis(Axis::HORIZONTAL);
@@ -1304,11 +1345,20 @@ void Game::UpdateInput()
 	{
 		m_inputState.leftMouse = true;
 	}
+
+	if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED))
+	{
+		this->ChangeSpectatedPlayer();
+	}
+
 	if (InputSystem::Get().CheckMouseKey(MouseKey::RIGHT, KeyState::PRESSED))
 	{
 		switch (GetShopItem())
 		{
 		case ShopItem::Defence1x1:
+		{
+			break;
+		}
 		case ShopItem::Defence1x3:
 		{
 			SetShopItem(ShopItem::None);
@@ -1317,29 +1367,6 @@ void Game::UpdateInput()
 		case ShopItem::None:
 		{
 			m_inputState.rightMouse = true;
-			if (m_isSpectating)
-			{
-				auto it = m_players.begin();
-				while (it != m_players.end())
-				{
-					// Don't spectate yourself you are dead & check if other player is alive
-					if (it->first != m_localPID && it->second.GetComponent<comp::Health>()->isAlive)
-					{
-						Camera* cam = GetScene("Game").GetCurrentCamera();
-
-						if (cam->GetCameraType() == CAMERATYPE::PLAY)
-						{
-							// Check so we are not already following this entity
-							if (cam->GetTargetEntity() != it->second)
-							{
-								cam->SetFollowEntity(it->second);
-								break;
-							}
-						}
-					}
-					it++;
-				}
-			}
 			break;
 		}
 		}

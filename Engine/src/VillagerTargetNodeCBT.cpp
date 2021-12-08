@@ -44,9 +44,9 @@ BT::NodeStatus BT::VillagerTargetNodeCBT::Tick()
 			if (villager && !villager->homeHouse.IsNull())
 			{
 				comp::House* house = villager->homeHouse.GetComponent<comp::House>();
-				if (house->attackNode->reachable)
+				if (house->homeNode->reachable)
 				{
-					targetPosition = house->attackNode->position;
+					targetPosition = house->homeNode->position;
 					Blackboard::Get().AddValue<sm::Vector3>("villagerTarget" + std::to_string(entity), targetPosition);
 					return BT::NodeStatus::SUCCESS;
 				}
@@ -61,9 +61,9 @@ BT::NodeStatus BT::VillagerTargetNodeCBT::Tick()
 		//focus to idle around the village
 		else
 		{
-			if (*cycle == CyclePeriod::DAY)
+			if (*cycle == CyclePeriod::DAY || *cycle == CyclePeriod::MORNING)
 				villager->movementSpeed = 15.f;
-			else if (*cycle == CyclePeriod::DAY)
+			else if (*cycle == CyclePeriod::NIGHT)
 				villager->movementSpeed = 30.f;
 
 			comp::Velocity* velocity = entity.GetComponent<comp::Velocity>();

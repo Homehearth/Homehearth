@@ -237,7 +237,9 @@ Entity CombatSystem::CreateAttackEntity(Entity entity, HeadlessScene& scene, com
 	comp::SelfDestruct* selfDestruct = attackEntity.AddComponent<comp::SelfDestruct>();
 	selfDestruct->lifeTime = stats->lifetime;
 
+#if RENDER_COLLIDERS
 	attackEntity.AddComponent<comp::Network>();
+#endif
 
 	CollisionSystem::Get().AddOnCollisionEnter(attackEntity, [=, &scene](Entity thisEntity, Entity other)
 		{
