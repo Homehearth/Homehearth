@@ -31,11 +31,12 @@ void Renderer::Initialize(Window* pWindow)
 
 	AddPass(&m_basePass);  
 	AddPass(&m_animPass);
+	AddPass(&m_bloomPass);
+	AddPass(&m_particlePass);
 	AddPass(&m_skyPass);
 
-	AddPass(&m_dofPass);	
-	AddPass(&m_particlePass);
-	AddPass(&m_bloomPass);
+	AddPass(&m_dofPass);
+	
 
 	m_basePass.m_pShadowPass = &m_shadowPass;
 	m_animPass.m_pShadowPass = &m_shadowPass;
