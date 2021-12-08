@@ -35,6 +35,9 @@ namespace rtd
 		void SetPrimeButtonMeasurements(const draw_t& opts);
 
 		void SetOnPrimeButtonPress(std::function<void()> func);
+		void SetOnPrimeButtonHover(std::function<void()> func);
+
+		void ScrollUp();
 
 		/*
 			Add an element to the scroller. Any element added will be
@@ -53,7 +56,6 @@ namespace rtd
 		virtual bool CheckHover() override;
 
 		virtual ElementState CheckClick() override;
-
 	};
 
 	template<typename ...Args>

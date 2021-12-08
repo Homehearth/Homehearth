@@ -97,9 +97,9 @@ void Systems::HealingSystem(HeadlessScene& scene, float dt)
 					entity.GetComponent<comp::Transform>()->position,
 					1.0f,
 					100.f,
+					true,
 					false,
-					false,
-					false,
+					true,
 					false,
 				};
 
@@ -412,9 +412,11 @@ void Systems::LightSystem(Scene& scene, float dt)
 						light.flickerTimer -= dt * (rand() % 2 + 1);
 
 					light.lightData.intensity = util::Lerp(0.5f, 0.7f, light.flickerTimer);
-				}				
-							
+				}
+
 			}
+			else if (light.lightData.type == TypeLight::POINT && !light.lightData.enabled)
+				light.enabledTimer = 1.f;
 
 			scene.GetLights()->EditLight(light.lightData, light.index);
 		});

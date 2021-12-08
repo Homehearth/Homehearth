@@ -27,7 +27,6 @@ namespace ecs {
         float targetRotation = atan2(-targetVector.x, -targetVector.z);
         sm::Quaternion targetQuat = sm::Quaternion::CreateFromAxisAngle(sm::Vector3::Up, targetRotation);
         targetQuat.Normalize();
-
         if (t >= 1.0f)
         {
             rotation = targetQuat;

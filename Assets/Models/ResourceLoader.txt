@@ -4,7 +4,6 @@ Monster.fbx
 mage.fbx
 Barrel.obj
 Cube.obj
-Defence.obj
 Defence1x1.obj
 Defence1x3.obj
 Door1.fbx

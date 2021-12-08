@@ -55,7 +55,7 @@ void DOFPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 		DC->OMSetRenderTargets(1, &nullRTV, nullptr);
 		DC->CSSetShader(PM->m_dofComputeShader.Get(), nullptr, 0);
 
-		m_dofHelp.inverseView = pCam->GetView().Invert();
+		m_dofHelp.view = pCam->GetView();
 		m_dofHelp.inverseProjection = pCam->GetProjection().Invert();
 		m_dofHelp.dofType = UINT(m_currentType);
 
@@ -72,14 +72,15 @@ void DOFPass::Render(Scene* pScene)
 {
 	if (m_currentType != DoFType::DEFAULT)
 	{
-		pScene->ForEachComponent<comp::Player, comp::Network>([&](Entity& playerEntity, comp::Player& player, comp::Network& network)
-			{
-				if (*pScene->m_localPIDRef == network.id && network.id != UINT32_MAX)
-				{
-					m_dofHelp.playerPosView = sm::Vector4::Transform(sm::Vector4(playerEntity.GetComponent<comp::Transform>()->position),
-						m_dofHelp.inverseView.Invert());
-				}
-			});
+		//pScene->ForEachComponent<comp::Player, comp::Network>([&](Entity& playerEntity, comp::Player& player, comp::Network& network)
+		//	{
+		//		if (*pScene->m_localPIDRef == network.id && network.id != UINT32_MAX)
+		//		{
+		//			sm::Vector3 pos = playerEntity.GetComponent<comp::Transform>()->position;
+		//			m_dofHelp.playerPosView = sm::Vector4::Transform(sm::Vector4(pos.x, pos.y + 5.f, pos.z, 1.0f),
+		//				pScene->GetCurrentCamera()->GetView());
+		//		}
+		//	});
 
 		D3D11Core::Get().DeviceContext()->UpdateSubresource(m_constBuff.Get(), 0, nullptr, &m_dofHelp, 0, 0);
 		D3D11Core::Get().DeviceContext()->Dispatch(PM->m_windowWidth / 8, PM->m_windowHeight / 8, 1);

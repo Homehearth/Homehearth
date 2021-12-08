@@ -19,7 +19,6 @@ private:
 	bool hasLoaded = false;
 
 	Entity m_mapEntity;
-	InputState m_inputState;
 
 	// Inherited via Engine
 	virtual bool OnStartup() override;
@@ -33,6 +32,7 @@ private:
 	void OnClientDisconnect();	
 	void UpdateEntityFromMessage(Entity entity, message<GameMsg>& msg, bool skip = false);
 	void UpdateInput();
+	void ChangeSpectatedPlayer();
 
 public:
 	Client m_client;
@@ -43,6 +43,7 @@ public:
 	std::unordered_map<ModelID, std::vector<Entity>> m_models;
 	std::vector<std::pair<ModelID, dx::BoundingSphere>> m_LOSColliders;
 	std::unordered_map<uint32_t, Entity> m_players;
+	InputState m_inputState;
 
 	Game();
 	virtual ~Game();
@@ -60,11 +61,12 @@ public:
 	
 	//Using the shop
 	void SetShopItem(const ShopItem& whatToBuy);
-	const ShopItem GetShopItem() const;
+	ShopItem GetShopItem() const;
 	void UpgradeDefence(const uint32_t& id);
 
 	float m_primaryCooldown = 0.0f;
 	float m_secondaryCooldown = 0.0f;
 	float m_dodgeCooldown = 0.0f;
 	uint32_t m_currentSpree = 1;
+	bool m_isSpectating;
 };
