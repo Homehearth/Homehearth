@@ -158,12 +158,23 @@ void Simulation::ResetPlayer(Entity player)
 		firstTimeAdded = true;
 	}
 
-	player.AddComponent<comp::MeshName>()->name = NameType::MESH_KNIGHT;
-	player.AddComponent<comp::AnimatorName>()->name = AnimName::ANIM_KNIGHT;
 	player.AddComponent<comp::AnimationState>();
 	comp::Health* health = player.AddComponent<comp::Health>();
 	health->isAlive = true;
 	// only if Melee
+
+	if (player.GetComponent<comp::MeleeAttackAbility>())
+	{
+		player.RemoveComponent<comp::MeleeAttackAbility>();
+		player.RemoveComponent<comp::DashAbility>();
+	}
+	if (player.GetComponent<comp::RangeAttackAbility>())
+	{
+		player.RemoveComponent<comp::RangeAttackAbility>();
+		player.RemoveComponent<comp::BlinkAbility>();
+		player.RemoveComponent<comp::HealAbility>();
+	}
+
 	if (playerComp->classType == comp::Player::Class::WARRIOR)
 	{
 		health->maxHealth = 125.f;
@@ -192,6 +203,8 @@ void Simulation::ResetPlayer(Entity player)
 
 		playerComp->moveAbilty = entt::resolve<comp::DashAbility>();
 
+		player.AddComponent<comp::MeshName>()->name = NameType::MESH_KNIGHT;
+		player.AddComponent<comp::AnimatorName>()->name = AnimName::ANIM_KNIGHT;
 	}
 	else if (playerComp->classType == comp::Player::Class::MAGE)
 	{
@@ -231,8 +244,6 @@ void Simulation::ResetPlayer(Entity player)
 
 		player.AddComponent<comp::MeshName>()->name = NameType::MESH_MAGE;
 		player.AddComponent<comp::AnimatorName>()->name = AnimName::ANIM_MAGE;
-		player.AddComponent<comp::AnimationState>();
-
 	}
 
 	player.AddComponent<comp::SphereCollider>()->Radius = 3.f;
