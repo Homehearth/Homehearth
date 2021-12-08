@@ -546,16 +546,26 @@ namespace sceneHelp
 		scene.Add2DCollection(abilities, "ZAbilityUI");
 
 		Collection2D* pauseMenu = new Collection2D;
-		rtd::MenuUI* inGameMenu = pauseMenu->AddElement<rtd::MenuUI>("Menu.png", draw_t(width * 0.5f - (widthScale * 0.125f), (height / 2) - (height * 0.25f), widthScale * 0.25f, height * 0.5f));
-		inGameMenu->SetOnPressedEvent(0, [=]
+		//rtd::MenuUI* inGameMenu = pauseMenu->AddElement<rtd::MenuUI>("Menu.png", draw_t(width * 0.5f - (widthScale * 0.125f), (height / 2) - (height * 0.25f), widthScale * 0.25f, height * 0.5f));
+		sm::Vector2 pauseMenuPos = { width * 0.5f - (widthScale * 0.125f), (height / 2) - (height * 0.25f) };
+		sm::Vector2 pauseMenuScale = { widthScale * 0.25f, height * 0.5f };
+		rtd::Picture* inGameMenu = pauseMenu->AddElement<rtd::Picture>("MenuBackground.png", draw_t(pauseMenuPos.x, pauseMenuPos.y, pauseMenuScale.x, pauseMenuScale.y));
+		sm::Vector2 buttonPosPauseMenu = { pauseMenuPos.x + padding.x * 3 , pauseMenuPos.y + padding.y * 1.5f};
+		sm::Vector2 buttonScalePauseMenu = { pauseMenuScale.x - padding.x * 6.f, (pauseMenuScale.x - padding.x * 6.f) / 2.4723618090f };
+		rtd::Button* resumeButton = pauseMenu->AddElement<rtd::Button>("Resume.png", draw_t(buttonPosPauseMenu.x, buttonPosPauseMenu.y, buttonScalePauseMenu.x, buttonScalePauseMenu.y));
+		buttonPosPauseMenu.y += buttonScalePauseMenu.y + padding.y;
+		rtd::Button* settingsButton = pauseMenu->AddElement<rtd::Button>("Settings.png", draw_t(buttonPosPauseMenu.x, buttonPosPauseMenu.y, buttonScalePauseMenu.x, buttonScalePauseMenu.y));
+		buttonPosPauseMenu.y += buttonScalePauseMenu.y + padding.y ;
+		rtd::Button* quitButton = pauseMenu->AddElement<rtd::Button>("Quit.png", draw_t(buttonPosPauseMenu.x, buttonPosPauseMenu.y, buttonScalePauseMenu.x, buttonScalePauseMenu.y));
+		quitButton->SetOnPressedEvent([=]
 			{
 				game->Shutdown();
 			});
-		inGameMenu->SetOnPressedEvent(1, [=]
+		settingsButton->SetOnPressedEvent([=]
 			{
 				pauseMenu->Hide();
 			});
-		inGameMenu->SetOnPressedEvent(2, [=]
+		resumeButton->SetOnPressedEvent([=]
 			{
 				pauseMenu->Hide();
 			});
