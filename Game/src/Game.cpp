@@ -441,6 +441,20 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			it = m_gameEntities.erase(it);
 		}
 
+		it = m_players.begin();
+
+		while (it != m_players.end())
+		{
+			it->second.Destroy();
+			it = m_players.erase(it);
+		}
+
+		for (int i = 0; i < MAX_PLAYERS_PER_LOBBY; i++)
+		{
+			GetScene("Game").GetCollection("player" + std::to_string(i + 1) + +"Info")->Hide();
+			GetScene("Game").GetCollection("dynamicPlayer" + std::to_string(i + 1) + "namePlate");
+		}
+
 		m_isSpectating = false;
 
 		rtd::Button* readyText = dynamic_cast<rtd::Button*>(GetScene("Lobby").GetCollection("StartGame")->elements[0].get());
@@ -703,8 +717,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			}
 			}
 		}
-
-		GameSystems::UpdateHealthbar(this);
 		break;
 
 	}
@@ -1233,6 +1245,8 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 				{
 					if (GetCurrentScene() == &GetScene("Game"))
 					{
+						GameSystems::UpdateHealthbar(this);
+
 						if (e == m_players.at(m_localPID))
 						{
 							if (!hp.isAlive)
