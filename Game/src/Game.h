@@ -52,7 +52,7 @@ public:
 	Cycler& GetCycler();
 
 	const uint32_t& GetMoney() const;
-
+	void SetPlayerWantsToSkip(bool value);
 	void SendStartGame();
 	void SendSelectedClass(comp::Player::Class classType);
 

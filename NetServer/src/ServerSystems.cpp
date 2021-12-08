@@ -387,7 +387,6 @@ void ServerSystems::OnCycleChange(Simulation* simulation)
 	{
 		if (simulation->m_timeCycler.GetTimePeriod() == CyclePeriod::MORNING)
 		{
-			simulation->m_timeCycler.SetCycleSpeed(1.0f);
 			// remove all bad guys
 			simulation->GetGameScene()->ForEachComponent<comp::Tag<BAD>>([](Entity e, comp::Tag<BAD>&)
 				{
@@ -406,6 +405,10 @@ void ServerSystems::OnCycleChange(Simulation* simulation)
 
 		if (simulation->m_timeCycler.GetTimePeriod() == CyclePeriod::NIGHT)
 		{
+			message<GameMsg> msg;
+			msg.header.id = GameMsg::Game_Time;
+			msg << simulation->m_timeCycler.GetCycleSpeed() << simulation->m_timeCycler.GetTime();
+			simulation->Broadcast(msg);
 			if (simulation->waveQueue.size() > 0)
 			{
 				// start new wave

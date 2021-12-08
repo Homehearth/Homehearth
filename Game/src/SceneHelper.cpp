@@ -241,12 +241,15 @@ namespace sceneHelp
 									l.lightData.enabled = 1;
 								}
 							});
+
+						Collection2D* skipButtonUI = scene.GetCollection("SkipUI");
+						rtd::Button* skipButton = dynamic_cast<rtd::Button*>(skipButtonUI->elements[0].get());
+						skipButton->SetVisiblity(false);
 						break;
 					}
 					case CyclePeriod::MORNING:
 					{
 						SoundHandler::Get().SetCurrentMusic("MenuTheme");
-
 						scene.ForEachComponent<comp::Light>([](comp::Light& l)
 							{
 								if (l.lightData.type == TypeLight::POINT)
@@ -259,6 +262,13 @@ namespace sceneHelp
 					case CyclePeriod::EVENING:
 					{
 
+						break;
+					}
+					case CyclePeriod::DAY:
+					{
+						Collection2D* skipButtonUI = scene.GetCollection("SkipUI");
+						rtd::Button* skipButton = dynamic_cast<rtd::Button*>(skipButtonUI->elements[0].get());
+						skipButton->SetVisiblity(true);
 						break;
 					}
 					default:
@@ -527,6 +537,16 @@ namespace sceneHelp
 		rtd::AbilityUI* fourth = abilities->AddElement<rtd::AbilityUI>(draw_t(abillityPos.x + (abillitySize.x + padding.x / 2), abillityPos.y, abillitySize.x, abillitySize.y), D2D1::ColorF(0, 1.0f), "LockedIcon.png");
 		rtd::AbilityUI* fith = abilities->AddElement<rtd::AbilityUI>(draw_t(abillityPos.x + (abillitySize.x * 2 + padding.x), abillityPos.y, abillitySize.x, abillitySize.y), D2D1::ColorF(0, 1.0f), "LockedIcon.png");
 		scene.Add2DCollection(abilities, "AbilityUI");
+
+		Collection2D* skipCollection = new Collection2D;
+		rtd::Button* skipToNightButton = skipCollection->AddElement<rtd::Button>("Button.png", draw_t(width - ((widthScale / 3.33f)), (height / 2) - (height / 8), (widthScale / 3.33f), (height / 6.f)), false);
+		scene.Add2DCollection(skipCollection, "SkipUI");
+		skipToNightButton->SetOnPressedEvent([=]
+			{
+				Entity player;
+				game->GetLocalPlayer(player);
+				game->SetPlayerWantsToSkip(!player.GetComponent<comp::Player>()->wantsToSkipDay);
+			});
 
 		Collection2D* pauseMenu = new Collection2D;
 		rtd::MenuUI* inGameMenu = pauseMenu->AddElement<rtd::MenuUI>("Menu.png", draw_t(width * 0.5f - (widthScale * 0.125f), (height / 2) - (height * 0.25f), widthScale * 0.25f, height * 0.5f));

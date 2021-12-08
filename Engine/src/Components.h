@@ -358,7 +358,8 @@ namespace ecs
 			float respawnTimer;
 			bool isReady = false;
 			bool reachable = true;
-			
+			bool wantsToSkipDay = false;
+
 			char name[13] = {};
 
 			ShopItem		shopItem = ShopItem::None;

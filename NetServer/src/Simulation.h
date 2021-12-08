@@ -105,6 +105,8 @@ public:
 
 	void ResetPlayer(Entity player);
 
+	void SetPlayerSkipDay(uint32_t playerID);
+
 	void SendEntities(const std::vector<Entity>& entities, GameMsg msgID, const std::bitset<ecs::Component::COMPONENT_MAX>& componentMask = UINT32_MAX);
 	void SendAllEntitiesToPlayer(uint32_t playerID) const;
 

@@ -333,6 +333,7 @@ enum class GameMsg : uint16_t
 	Game_AddNPC,
 	Game_RemoveNPC,
 	Game_PlayerInput,
+	Game_PlayerSkipDay,
 	Game_Money,
 	Game_UpdateShopItem,
 	Game_UpgradeDefence,

@@ -11,6 +11,7 @@ private:
 	bool m_changedPeriod;
 
 	float m_cycleSpeed;
+	const float m_defaultCycleSpeed = 1.f;
 
 	CyclePeriod CalculatePeriod();
 
@@ -29,7 +30,8 @@ public:
 	void SetTime(float time);
 
 	float GetCycleSpeed() const;
+	const float GetDefaultSpeed() const;
 	void SetCycleSpeed(float speed);
-
+	void ResetCycleSpeed();
 
 };
