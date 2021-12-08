@@ -60,14 +60,26 @@ void ParticleSystem::InitializeParticles(entt::registry& reg, entt::entity ent)
 		else if (tempParticle.type == PARTICLEMODE::MAGEHEAL)
 		{
 			float xRandSame = (float)rand() / (RAND_MAX + 1.f) * (1.0f - (-1.0f)) + (-1.0f);
-			float yRandSame = (float)rand() / (RAND_MAX + 1.f) * (1.0f - (-1.0f)) + (-1.0f);
+			//float yRandSame = (float)rand() / (RAND_MAX + 1.f) * (1.0f - (-1.0f)) + (-1.0f);
 			float zRandSame = (float)rand() / (RAND_MAX + 1.f) * (1.0f - (-1.0f)) + (-1.0f);
-			sm::Vector3 vel = sm::Vector3(xRandSame, 0.0f, yRandSame);
+			sm::Vector3 vel = sm::Vector3(xRandSame, 0.0f, zRandSame);
 			vel.Normalize();
 			tempParticle.velocity = sm::Vector4( vel.x, vel.y, vel.z, 0.0f );
 			tempParticle.size = sm::Vector2(emitter->sizeMulitplier, emitter->sizeMulitplier);
 			tempParticle.position.y = (float)rand() / (RAND_MAX + 1.f) * (10.0f - (1.0f)) + (1.0f);
 		}
+		else if (tempParticle.type == PARTICLEMODE::EXPLOSION)
+		{
+			float xRandSame = (float)rand() / (RAND_MAX + 1.f) * (1.0f - (-1.0f)) + (-1.0f);
+			float yRandSame = (float)rand() / (RAND_MAX + 1.f) * (1.0f - (-1.0f)) + (-1.0f);
+			float zRandSame = (float)rand() / (RAND_MAX + 1.f) * (1.0f - (-1.0f)) + (-1.0f);
+			sm::Vector3 vel = sm::Vector3(xRandSame, yRandSame, zRandSame);
+			vel.Normalize();
+			tempParticle.velocity = sm::Vector4(vel.x, vel.y, vel.z, 0.0f);
+			tempParticle.size = sm::Vector2(emitter->sizeMulitplier, emitter->sizeMulitplier);
+			
+		}
+
 		
 
 		particles[i] =  tempParticle;

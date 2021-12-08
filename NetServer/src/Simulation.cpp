@@ -204,9 +204,9 @@ void Simulation::ResetPlayer(Entity player)
 		attackAbility->lifetime = 2.0f;
 		attackAbility->projectileSpeed = 80.f;
 		attackAbility->projectileSize = 3.f;
-		attackAbility->attackRange = 6.0f;
+		attackAbility->attackRange = 13.0f;
 		attackAbility->useTime = 0.3f;
-		attackAbility->delay = 0.1f;
+		attackAbility->delay = 0.3f;
 		playerComp->primaryAbilty = entt::resolve<comp::RangeAttackAbility>();
 
 		comp::HealAbility* healAbility = player.AddComponent<comp::HealAbility>();
@@ -260,7 +260,7 @@ void Simulation::ResetPlayer(Entity player)
 
 Simulation::Simulation(Server* pServer, HeadlessEngine* pEngine)
 	: m_pServer(pServer)
-	, m_pEngine(pEngine), m_pLobbyScene(nullptr), m_pGameScene(nullptr), m_pGameOverScene(nullptr), m_pCurrentScene(nullptr), currentRound(0)
+	, m_pEngine(pEngine), m_pLobbyScene(nullptr), m_pGameScene(nullptr), m_pGameOverScene(nullptr), m_pCurrentScene(nullptr), currentRound(0), houseManager(&blackboard)
 {
 	this->m_gameID = 0;
 	this->m_tick = 0;
@@ -308,6 +308,8 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 
 	houseManager.SetHouseColliders(houseColliders);
 
+	m_timeCycler.setBlackboard(&blackboard);
+
 	m_pGameScene->on<ESceneUpdate>([&](const ESceneUpdate& e, HeadlessScene& scene)
 		{
 #if GOD_MODE
@@ -337,7 +339,7 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 				}
 				{
 					PROFILE_SCOPE("Input from Player");
-					ServerSystems::UpdatePlayerWithInput(this, scene, e.dt, qt.get());
+					ServerSystems::UpdatePlayerWithInput(this, scene, e.dt, qt.get(), &blackboard);
 				}
 				{
 					PROFILE_SCOPE("Player state");
@@ -347,9 +349,9 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 				{
 					PROFILE_SCOPE("Abilities and Combat");
 					Systems::UpdateAbilities(scene, e.dt);
-					ServerSystems::CombatSystem(scene, e.dt);
+					ServerSystems::CombatSystem(scene, e.dt, &blackboard);
 					Systems::HealingSystem(scene, e.dt);
-					ServerSystems::HealthSystem(scene, e.dt, m_currency, houseManager, qt.get(), m_grid, m_spreeHandler);
+					ServerSystems::HealthSystem(scene, e.dt, m_currency, houseManager, qt.get(), m_grid, m_spreeHandler, &blackboard);
 					Systems::SelfDestructSystem(scene, e.dt);
 				}
 
@@ -430,7 +432,7 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 	//Gridsystem
 	m_grid.Initialize(gridOptions.mapSize, gridOptions.position, gridOptions.fileName, m_pGameScene);
 	//Create the nodes for AI handler on blackboard
-	Blackboard::Get().GetPathFindManager()->CreateNodes(&m_grid);
+	blackboard.GetPathFindManager()->CreateNodes(&m_grid);
 
 
 	m_addedEntities.clear();
@@ -828,7 +830,7 @@ void Simulation::ResetGameScene()
 	EnemyManagement::CreateWaves(waveQueue, currentRound);
 
 	houseManager.InitializeHouses(*this->GetGameScene(), qt.get());
-	AIBehaviors::UpdateBlackBoard(*m_pGameScene);
+	AIBehaviors::UpdateBlackBoard(*m_pGameScene, &blackboard);
 
 	m_timeCycler.SetTime(DAY);
 	m_timeCycler.SetCycleSpeed(1.0f);
@@ -1023,6 +1025,11 @@ void Simulation::BroadcastUDP(message<GameMsg>& msg, uint32_t exclude) const
 Entity Simulation::GetPlayer(uint32_t playerID) const
 {
 	return m_lobby.GetPlayer(playerID);
+}
+
+Blackboard* Simulation::GetBlackboard()
+{
+	return &blackboard;
 }
 
 

@@ -1,6 +1,7 @@
 #pragma once
 #include <stb_image.h>
 
+class Blackboard;
 class PathFinderManager;
 class HeadlessScene;
 class QuadTree;
@@ -57,7 +58,7 @@ public:
 	std::vector<Entity>				HideHoverDefence();
 
 	//Delete a defence where the mouse is
-	bool							RemoveDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, PathFinderManager* aiHandler);
+	bool							RemoveDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, Blackboard* blackboard);
 	
 	//Delete the defence from an entity
 	void							RemoveDefence(const Entity& entity);
