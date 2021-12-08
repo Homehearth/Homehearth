@@ -672,7 +672,7 @@ void Simulation::BuildMapColliders(std::vector<dx::BoundingOrientedBox>* mapColl
 		obb->Orientation = mapColliders->at(i).Orientation;
 		collider.AddComponent<comp::Tag<STATIC>>();
 		// Map bounds is loaded in last, 6 obbs surrounding village put the correct tag for collision system
-		if (i >= mapColliders->size() - 6)
+		if (i < 6)
 		{
 			collider.AddComponent<comp::Tag<MAP_BOUNDS>>();
 		}
