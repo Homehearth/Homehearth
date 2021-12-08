@@ -184,7 +184,7 @@ void Simulation::ResetPlayer(Entity player)
 		comp::MeleeAttackAbility* attackAbility = player.AddComponent<comp::MeleeAttackAbility>();
 		attackAbility->cooldown = 0.50f;
 		attackAbility->attackDamage = 20.f;
-		attackAbility->lifetime = 0.2f;
+		attackAbility->lifetime = 0.1f;
 		attackAbility->useTime = 0.2f;
 		attackAbility->delay = 0.2f;
 		attackAbility->attackRange = 8.f;

@@ -567,6 +567,11 @@ namespace sceneHelp
 				skipCollection->elements[0].get()->SetVisiblity(false);
 				skipCollection->elements[1].get()->SetVisiblity(false);
 			});
+		skipToNightButton->SetOnHoverEvent([=]()
+			{
+				game->m_inputState.leftMouse = false;
+				game->m_inputState.rightMouse = false;
+			});
 
 		Collection2D* pauseMenu = new Collection2D;
 		sm::Vector2 pauseMenuPos = { width * 0.5f - (widthScale * 0.125f), (height / 2) - (height * 0.25f) };
