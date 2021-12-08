@@ -549,7 +549,8 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 						}
 					}
 				}
-				else if (p.lastInputState.key_shift)
+				
+				if (p.lastInputState.key_shift)
 				{
 					if (ecs::UseAbility(e, p.moveAbilty, &p.mousePoint))
 					{

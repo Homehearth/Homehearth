@@ -13,7 +13,9 @@ RAnimation::~RAnimation()
 	for (auto& translation : m_keyFrames)
 	{
 		translation.second.position.clear();
+#if !OPTIMIZE_ANIMATION
 		translation.second.scale.clear();
+#endif
 		translation.second.rotation.clear();
 	}
 	m_keyFrames.clear();
@@ -43,6 +45,7 @@ void RAnimation::LoadPositions(const std::string& bonename, aiNodeAnim* channel)
 	m_keyFrames[bonename] = keyframes;
 }
 
+#if !OPTIMIZE_ANIMATION
 void RAnimation::LoadScales(const std::string& bonename, aiNodeAnim* channel)
 {
 	keyFrames_t keyframes;
@@ -63,6 +66,7 @@ void RAnimation::LoadScales(const std::string& bonename, aiNodeAnim* channel)
 
 	m_keyFrames[bonename] = keyframes;
 }
+#endif
 
 void RAnimation::LoadRotations(const std::string& bonename, aiNodeAnim* channel)
 {
@@ -104,10 +108,12 @@ void RAnimation::LoadKeyframes(const aiAnimation* animation)
 		{
 			LoadPositions(boneName, animation->mChannels[i]);
 		}
+#if !OPTIMIZE_ANIMATION
 		else if (assimpName.find("Scaling") != std::string::npos)
 		{
 			LoadScales(boneName, animation->mChannels[i]);
 		}
+#endif
 		else if (assimpName.find("Rotation") != std::string::npos)
 		{
 			LoadRotations(boneName, animation->mChannels[i]);
@@ -115,7 +121,9 @@ void RAnimation::LoadKeyframes(const aiAnimation* animation)
 		else
 		{
 			LoadPositions(boneName, animation->mChannels[i]);
+#if !OPTIMIZE_ANIMATION
 			LoadScales(boneName, animation->mChannels[i]);
+#endif
 			LoadRotations(boneName, animation->mChannels[i]);
 		}
 	}
@@ -251,6 +259,7 @@ const sm::Vector3 RAnimation::GetPosition(const std::string& bonename, const dou
 	return finalVec;
 }
 
+#if !OPTIMIZE_ANIMATION
 const sm::Vector3 RAnimation::GetScale(const std::string& bonename, const double& currentFrame, UINT& lastKey, bool interpolate) const
 {
 	sm::Vector3 finalVec;
@@ -297,6 +306,7 @@ const sm::Vector3 RAnimation::GetScale(const std::string& bonename, const double
 	lastKey = closestLeft;
 	return finalVec;
 }
+#endif
 
 const sm::Quaternion RAnimation::GetRotation(const std::string& bonename, const double& currentFrame, UINT& lastKey, bool interpolate) const
 {
@@ -354,11 +364,17 @@ const sm::Matrix RAnimation::GetMatrix(const std::string& bonename, const double
 	if (m_keyFrames.find(bonename) != m_keyFrames.end())
 	{
 		sm::Vector3 pos		= GetPosition(bonename, currentFrame, lastKeys[0], interpolate);
+#if !OPTIMIZE_ANIMATION
 		sm::Vector3 scl		= GetScale(	  bonename, currentFrame, lastKeys[1], interpolate);
+#endif
 		sm::Quaternion rot	= GetRotation(bonename, currentFrame, lastKeys[2], interpolate);
 
 		//Row major: Scale * Rotation * Translation
+#if !OPTIMIZE_ANIMATION
 		finalMatrix = sm::Matrix::CreateScale(scl) * sm::Matrix::CreateFromQuaternion(rot) * sm::Matrix::CreateTranslation(pos);
+#else
+		finalMatrix = sm::Matrix::CreateFromQuaternion(rot) * sm::Matrix::CreateTranslation(pos);
+#endif
 	}
 	return finalMatrix;
 }

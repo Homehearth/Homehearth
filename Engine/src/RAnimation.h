@@ -25,11 +25,13 @@ private:
 		double		time;
 		sm::Vector3 val;
 	};
+#if !OPTIMIZE_ANIMATION
 	struct scaleKey_t
 	{
 		double		time;
 		sm::Vector3	val;
 	};
+#endif
 	struct rotationKey_t
 	{
 		double			time;
@@ -38,7 +40,9 @@ private:
 	struct keyFrames_t
 	{
 		std::vector<positionKey_t>	position;
+#if !OPTIMIZE_ANIMATION
 		std::vector<scaleKey_t>		scale;
+#endif
 		std::vector<rotationKey_t>	rotation;
 	};
 
@@ -47,7 +51,10 @@ private:
 
 private:
 	void LoadPositions(const std::string& bonename, aiNodeAnim* channel);
+
+#if !OPTIMIZE_ANIMATION
 	void LoadScales(const std::string& bonename, aiNodeAnim* channel);
+#endif
 	void LoadRotations(const std::string& bonename, aiNodeAnim* channel);
 	void LoadKeyframes(const aiAnimation* animation);
 
@@ -72,7 +79,9 @@ public:
 		Data for doing animation
 	*/
 	const sm::Vector3 GetPosition(const std::string& bonename, const double& currentFrame, UINT& lastKey, bool interpolate) const;
+#if !OPTIMIZE_ANIMATION
 	const sm::Vector3 GetScale(const std::string& bonename, const double& currentFrame, UINT& lastKey, bool interpolate) const;
+#endif
 	const sm::Quaternion GetRotation(const std::string& bonename, const double& currentFrame, UINT& lastKey, bool interpolate) const;
 
 	/*

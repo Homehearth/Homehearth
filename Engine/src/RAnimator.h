@@ -82,7 +82,7 @@ private:
 
 	void SwapAnimationState();
 
-	EAnimationCode& GetAnimationCode() const;
+	EAnimationCode GetAnimationCode() const;
 
 public:
 	RAnimator();

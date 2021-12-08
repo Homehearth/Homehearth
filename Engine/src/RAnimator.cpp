@@ -236,20 +236,31 @@ void RAnimator::BlendAnimations(const EAnimationType& state1, const EAnimationTy
 		{
 			//From 
 			sm::Vector3 pos1	= anim1->animation->GetPosition(m_bones[i].name, anim1->frameTimer, anim1->lastKeys[m_bones[i].name].keys[0], m_useInterpolation);
+#if !OPTIMIZE_ANIMATION
 			sm::Vector3 scl1	= anim1->animation->GetScale(	m_bones[i].name, anim1->frameTimer, anim1->lastKeys[m_bones[i].name].keys[1], m_useInterpolation);
+#endif
 			sm::Quaternion rot1 = anim1->animation->GetRotation(m_bones[i].name, anim1->frameTimer, anim1->lastKeys[m_bones[i].name].keys[2], m_useInterpolation);
 			//To
 			sm::Vector3 pos2	= anim2->animation->GetPosition(m_bones[i].name, anim2->frameTimer, anim2->lastKeys[m_bones[i].name].keys[0], m_useInterpolation);
+#if !OPTIMIZE_ANIMATION
 			sm::Vector3 scl2	= anim2->animation->GetScale(	m_bones[i].name, anim2->frameTimer, anim2->lastKeys[m_bones[i].name].keys[1], m_useInterpolation);
+#endif
 			sm::Quaternion rot2 = anim2->animation->GetRotation(m_bones[i].name, anim2->frameTimer, anim2->lastKeys[m_bones[i].name].keys[2], m_useInterpolation);
 
 			float lerpTime			= float(m_animations[state1].blendTimer / m_blendStates.at({state1, state2}));
 			sm::Vector3 lerpPos		= sm::Vector3::Lerp(pos1, pos2, lerpTime);
+#if !OPTIMIZE_ANIMATION
 			sm::Vector3 lerpScl		= sm::Vector3::Lerp(scl1, scl2, lerpTime);
+#endif
 			sm::Quaternion lerpRot	= sm::Quaternion::Slerp(rot1, rot2, lerpTime);
 			lerpRot.Normalize();
 
-			sm::Matrix bonePoseRelative = sm::Matrix::CreateScale(lerpScl) * sm::Matrix::CreateFromQuaternion(lerpRot) * sm::Matrix::CreateTranslation(lerpPos);
+			sm::Matrix bonePoseRelative;
+#if !OPTIMIZE_ANIMATION
+			bonePoseRelative = sm::Matrix::CreateScale(lerpScl) * sm::Matrix::CreateFromQuaternion(lerpRot) * sm::Matrix::CreateTranslation(lerpPos);
+#else
+			bonePoseRelative = sm::Matrix::CreateFromQuaternion(lerpRot) * sm::Matrix::CreateTranslation(lerpPos);
+#endif
 
 			if (m_bones[i].parentIndex == -1)
 				bonePoseAbsolute[i] = bonePoseRelative;
@@ -318,20 +329,30 @@ void RAnimator::BlendUpperBodyAnimations(const EAnimationType& state1, const EAn
 			{
 				//From 
 				sm::Vector3 pos1 = anim1->animation->GetPosition(m_bones[i].name, anim1->frameTimer, anim1->lastKeys[m_bones[i].name].keys[0], m_useInterpolation);
+#if !OPTIMIZE_ANIMATION
 				sm::Vector3 scl1 = anim1->animation->GetScale(m_bones[i].name, anim1->frameTimer, anim1->lastKeys[m_bones[i].name].keys[1], m_useInterpolation);
+#endif
 				sm::Quaternion rot1 = anim1->animation->GetRotation(m_bones[i].name, anim1->frameTimer, anim1->lastKeys[m_bones[i].name].keys[2], m_useInterpolation);
 				//To
 				sm::Vector3 pos2 = anim2->animation->GetPosition(m_bones[i].name, anim2->frameTimer, anim2->lastKeys[m_bones[i].name].keys[0], m_useInterpolation);
+#if !OPTIMIZE_ANIMATION
 				sm::Vector3 scl2 = anim2->animation->GetScale(m_bones[i].name, anim2->frameTimer, anim2->lastKeys[m_bones[i].name].keys[1], m_useInterpolation);
+#endif
 				sm::Quaternion rot2 = anim2->animation->GetRotation(m_bones[i].name, anim2->frameTimer, anim2->lastKeys[m_bones[i].name].keys[2], m_useInterpolation);
 
 				float lerpTime = float(m_animations[state1].blendTimer / m_blendStates.at({ state1, state2 }));
 				sm::Vector3 lerpPos = sm::Vector3::Lerp(pos1, pos2, lerpTime);
+#if !OPTIMIZE_ANIMATION
 				sm::Vector3 lerpScl = sm::Vector3::Lerp(scl1, scl2, lerpTime);
+#endif
 				sm::Quaternion lerpRot = sm::Quaternion::Slerp(rot1, rot2, lerpTime);
 				lerpRot.Normalize();
 
+#if !OPTIMIZE_ANIMATION
 				bonePoseRelative = sm::Matrix::CreateScale(lerpScl) * sm::Matrix::CreateFromQuaternion(lerpRot) * sm::Matrix::CreateTranslation(lerpPos);
+#else
+				bonePoseRelative = sm::Matrix::CreateFromQuaternion(lerpRot) * sm::Matrix::CreateTranslation(lerpPos);
+#endif
 			}
 			else
 			{
@@ -358,7 +379,7 @@ void RAnimator::SwapAnimationState()
 	m_nextState = EAnimationType::NONE;
 }
 
-EAnimationCode& RAnimator::GetAnimationCode() const
+EAnimationCode RAnimator::GetAnimationCode() const
 {
 	EAnimationCode codetype = EAnimationCode::NONE;
 
@@ -519,12 +540,6 @@ bool RAnimator::ChangeAnimation(const EAnimationType& type)
 	//Check if animation exist
 	if (m_animations.find(type) != m_animations.end())
 	{
-		if (m_currentState == EAnimationType::DEAD)
-		{
-			std::cout << "New state was: " << (UINT)type << std::endl;
-		}
-
-
 		//No current
 		if (m_currentState == EAnimationType::NONE)
 		{
@@ -651,7 +666,7 @@ void RAnimator::Update()
 
 
 	/*
-			OLD - WORKED FINE, BUT NOT WITH THE NEW	
+			OLD - WORKED FINE
 	*/
 	//Needs a skeleton and a current animation
 	if (!m_bones.empty() && m_currentState != EAnimationType::NONE)

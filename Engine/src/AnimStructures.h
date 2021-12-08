@@ -65,10 +65,3 @@ enum class EAnimationCode
 	TWO_ANIM_UPPER_LOWER,
 	THREE_ANIM_UPPER_LOWER_BLEND
 };
-
-enum class EAnimPlayType
-{
-	PLAY_ONCE,			//Plays one time and then switches
-	PLAY_ONCE_STOP,		//Plays one time and then waits until next animation
-	LOOPABLE			//Plays over and over and over again
-};

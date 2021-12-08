@@ -25,7 +25,8 @@
 #define IMGUI(a) do {} while(0)
 #endif
 
-
+//Ignores bones scaling in animations if ON
+#define OPTIMIZE_ANIMATION 1
 
 // Windows
 #ifdef WIN32
