@@ -37,7 +37,7 @@ BT::NodeStatus BT::TargetPlayerCBT::Tick()
 			}
 			//If another player is closer change to it
 			else if (!currentTarget.IsNull() && sm::Vector3::Distance(transform->position, player.GetComponent<comp::Transform>()->position) <
-				sm::Vector3::Distance(transform->position, currentTarget.GetComponent<comp::Transform>()->position))
+				sm::Vector3::Distance(transform->position, currentTarget.GetComponent<comp::Transform>()->position) && playerHealth->isAlive)
 			{
 				currentTarget = player;
 			}
