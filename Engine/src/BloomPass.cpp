@@ -4,12 +4,53 @@
 void BloomPass::Unlink()
 {
 	ID3D11ShaderResourceView* nullSRV = nullptr;
-	D3D11Core::Get().DeviceContext()->PSSetShaderResources(0, 1, &nullSRV);
+	D3D11Core::Get().DeviceContext()->PSSetShaderResources(1, 1, &nullSRV);
+    ID3D11RenderTargetView* nullTarget = nullptr;
+    D3D11Core::Get().DeviceContext()->OMSetRenderTargets(1, &nullTarget, nullptr);
+}
+
+void BloomPass::Setdownsample()
+{
+    this->Unlink();
+    m_info.samplingInfo = { 4.0f, 1.0f, 1.0f, 1.0f };
+    m_samplingInfoBuffer.SetData(D3D11Core::Get().DeviceContext(), m_info.samplingInfo);
+    D3D11Core::Get().DeviceContext()->PSSetShaderResources(1, 1, m_blurredView.GetAddressOf());
+    D3D11Core::Get().DeviceContext()->OMSetRenderTargets(1, m_halfSizeRenderTarget.GetAddressOf(), nullptr);
+}
+
+void BloomPass::Setupsample()
+{
+    this->Unlink();
+    m_info.samplingInfo = { 1.0f, 1.0f, 1.0f, 1.0f };
+    m_samplingInfoBuffer.SetData(D3D11Core::Get().DeviceContext(), m_info.samplingInfo);
+    D3D11Core::Get().DeviceContext()->PSSetShaderResources(1, 1, m_halfSizeView.GetAddressOf());
+    D3D11Core::Get().DeviceContext()->OMSetRenderTargets(1, m_fullSizeTarget.GetAddressOf(), nullptr);
+}
+
+void BloomPass::Draw()
+{
+    D3D11Core::Get().DeviceContext()->VSSetShader(nullptr, nullptr, 0);
+    D3D11Core::Get().DeviceContext()->PSSetShader(nullptr, nullptr, 0);
+    D3D11Core::Get().DeviceContext()->VSSetShader(PM->m_bloomVertexShader.Get(), nullptr, 0);
+    D3D11Core::Get().DeviceContext()->PSSetShader(PM->m_bloomPixelShader.Get(), nullptr, 0);
+    D3D11Core::Get().DeviceContext()->IASetInputLayout(m_inputLayout.Get());
+    D3D11Core::Get().DeviceContext()->PSSetSamplers(1, 1, PM->m_linearSamplerState.GetAddressOf());
+
+    UINT stride = sizeof(ScreenQuad);
+    UINT offset = 0;
+
+    ID3D11Buffer* buff = { m_samplingInfoBuffer.GetBuffer() };
+
+    D3D11Core::Get().DeviceContext()->PSSetConstantBuffers(4, 1, &buff);
+    D3D11Core::Get().DeviceContext()->IASetVertexBuffers(0, 1, &m_screenSpaceQuad, &stride, &offset);
+    D3D11Core::Get().DeviceContext()->IASetIndexBuffer(m_indexBuffer, DXGI_FORMAT_R32_UINT, 0);
+    D3D11Core::Get().DeviceContext()->DrawIndexed(6, 0, 0);
 }
 
 BloomPass::BloomPass()
 {
-
+    m_screenSpaceQuad = nullptr;
+    m_indexBuffer = nullptr;
 }
 
 BloomPass::~BloomPass()
@@ -23,7 +64,8 @@ BloomPass::~BloomPass()
 void BloomPass::Setup()
 {
 	m_blurPass.Initialize(D3D11Core::Get().DeviceContext(), PM);
-	m_blurPass.Create(BlurLevel::SUPERHIGH, BlurType::GUASSIAN);
+	m_blurPass.Create(BlurLevel::HIGH, BlurType::BOX);
+    m_samplingInfoBuffer.Create(D3D11Core::Get().Device());
 
     HRESULT hr = S_FALSE;
 
@@ -105,14 +147,20 @@ void BloomPass::Setup()
     D3D11_TEXTURE2D_DESC texDesc = {};
     backBuff->GetDesc(&texDesc);
     D3D11Core::Get().Device()->CreateTexture2D(&texDesc, nullptr, m_fullSize.GetAddressOf());
-    D3D11Core::Get().Device()->CreateShaderResourceView(m_fullSize.Get(), NULL, m_fullSizeShaderView.GetAddressOf());
+    D3D11Core::Get().Device()->CreateUnorderedAccessView(m_fullSize.Get(), NULL, m_fullSizeView.GetAddressOf());
+    D3D11Core::Get().Device()->CreateRenderTargetView(m_fullSize.Get(), NULL, m_fullSizeTarget.GetAddressOf());
+
+    D3D11Core::Get().Device()->CreateTexture2D(&texDesc, nullptr, m_blurredTexture.GetAddressOf());
+    D3D11Core::Get().Device()->CreateShaderResourceView(m_blurredTexture.Get(), NULL, m_blurredView.GetAddressOf());
+    D3D11Core::Get().Device()->CreateUnorderedAccessView(m_blurredTexture.Get(), NULL, m_blurredAccess.GetAddressOf());
+
 
     texDesc.Height /= 4;
     texDesc.Width /= 4;
     D3D11Core::Get().Device()->CreateTexture2D(&texDesc, nullptr, m_halfSize.GetAddressOf());
     D3D11Core::Get().Device()->CreateShaderResourceView(m_halfSize.Get(), NULL, m_halfSizeView.GetAddressOf());
     D3D11Core::Get().Device()->CreateRenderTargetView(m_halfSize.Get(), NULL, m_halfSizeRenderTarget.GetAddressOf());
-
+    backBuff->Release();
 }
 
 void BloomPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
@@ -126,24 +174,16 @@ void BloomPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
     }
     DC->CopyResource(m_fullSize.Get(), backBuff);
     backBuff->Release();
-    m_blurPass.BlurTexture(m_fullSizeView.Get(), m_fullSizeViewOut.Get(), DC);
+   
+    m_blurPass.BlurTexture(m_fullSizeView.GetAddressOf(), m_blurredAccess.GetAddressOf(), D3D11Core::Get().DeviceContext());
 }
 
 void BloomPass::Render(Scene* pScene)
 {
-    D3D11Core::Get().DeviceContext()->VSSetShader(PM->m_bloomVertexShader.Get(), nullptr, 0);
-    D3D11Core::Get().DeviceContext()->PSSetShader(PM->m_bloomPixelShader.Get(), nullptr, 0);
-    D3D11Core::Get().DeviceContext()->PSSetShaderResources(1, 1, m_fullSizeShaderView.GetAddressOf());
-    D3D11Core::Get().DeviceContext()->IASetInputLayout(m_inputLayout.Get());
-    D3D11Core::Get().DeviceContext()->PSSetSamplers(1, 1, PM->m_linearSamplerState.GetAddressOf());
-
-    UINT stride = sizeof(ScreenQuad);
-    UINT offset = 0;
-
-    D3D11Core::Get().DeviceContext()->OMSetRenderTargets(1, m_halfSizeRenderTarget.GetAddressOf(), nullptr);
-    D3D11Core::Get().DeviceContext()->IASetVertexBuffers(0, 1, &m_screenSpaceQuad, &stride, &offset);
-    D3D11Core::Get().DeviceContext()->IASetIndexBuffer(m_indexBuffer, DXGI_FORMAT_R32_UINT, 0);
-    D3D11Core::Get().DeviceContext()->DrawIndexed(6, 0, 0);
+    this->Setdownsample();
+    this->Draw();
+    this->Setupsample();
+    this->Draw();
 }
 
 void BloomPass::PostRender(ID3D11DeviceContext* pDeviceContext)
