@@ -220,14 +220,8 @@ PixelOut main(PixelIn input)
     
     
     
-    float3 color = (ambient + Lo) * pow(lightVolumeFactor, 2.5f);
-    
-    //Bloom stuff
+    float3 color = (ambient + Lo) * pow(lightVolumeFactor, 2.5f);   
     float brightness = dot(color, float3(0.2126, 0.7152, 0.0722));
-    if(brightness > 1.0f)
-        output.brightColor = float4(color, 1.0f);
-    else
-        output.brightColor = float4(0.0f, 0.0f, 0.0f, 1.0f);
     
     //HDR tonemapping
     color = ACESFitted(color);
@@ -235,7 +229,14 @@ PixelOut main(PixelIn input)
     color = pow(max(color, 0.0f), float3(gamma, gamma, gamma));
     
     color = lerp(color, fogColor.xyz, fogFactor);
-
+    
+    
+    //Bloom stuff
+    if (brightness > 1.0f)
+        output.brightColor = float4(color, 1.0f);
+    else
+        output.brightColor = float4(0.0f, 0.0f, 0.0f, 1.0f);
+    
     output.color = float4(color, 5.0f);
     return output;
 }
