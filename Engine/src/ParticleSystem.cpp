@@ -97,6 +97,13 @@ void ParticleSystem::InitializeParticles(entt::registry& reg, entt::entity ent)
 			m_tempParticle.size = { emitter->sizeMulitplier , emitter->sizeMulitplier };
 			break;
 		}
+		case ParticleMode::EXPLOSION:
+		{
+			RandomSetVelocity(-1.0f, 1.0f);
+			m_tempParticle.velocity.Normalize();
+			m_tempParticle.size = sm::Vector2(emitter->sizeMulitplier, emitter->sizeMulitplier);
+			break;
+		}
 		}
 
 		particles[i] =  m_tempParticle;

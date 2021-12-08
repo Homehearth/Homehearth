@@ -33,12 +33,8 @@ struct Houses_t
 class Blackboard final
 {
 public:
+	Blackboard() = default;
 	virtual ~Blackboard() = default;
-	static auto& Get()
-	{
-		static Blackboard s_instance;
-		return s_instance;
-	}
 
 	template<typename T>
 	T* GetValue(const std::string& key);
@@ -50,7 +46,6 @@ public:
 	template <typename T>
 	void ClearValue(const std::string& key);
 private:
-	Blackboard() = default;
 	std::unordered_map<std::string, std::unique_ptr<Base>> storage{};
 	PathFinderManager pathFindManager;
 };

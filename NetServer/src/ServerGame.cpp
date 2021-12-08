@@ -71,6 +71,8 @@ bool ServerGame::OnStartup()
 	}
 	m_inputThread = std::thread(&ServerGame::InputThread, this);
 
+	// MAP BOUNDS FIRST DONT MOVE ORDER
+	LoadMapColliders("MapBounds.fbx");
 	LoadMapColliders("VillageColliders.fbx");
 	LoadHouseColliders("House5_Collider.fbx");
 	LoadHouseColliders("House6_Collider.fbx");
@@ -79,7 +81,6 @@ bool ServerGame::OnStartup()
 	LoadHouseColliders("House9_Collider.fbx");
 	LoadHouseColliders("House10_Collider.fbx");
 	LoadHouseColliders("WaterMillHouse_Collider.fbx");
-	LoadMapColliders("MapBounds.fbx");
 
 	return true;
 }
@@ -193,6 +194,7 @@ bool ServerGame::LoadMapColliders(const std::string& filename)
 	(
 		filepath,
 		aiProcess_JoinIdenticalVertices |
+		aiProcess_Triangulate			|
 		aiProcess_ConvertToLeftHanded
 	);
 
@@ -214,6 +216,7 @@ bool ServerGame::LoadMapColliders(const std::string& filename)
 		return false;
 	}
 	// Go through all the meshes and create boundingboxes for them
+
 	for (UINT i = 0; i < scene->mNumMeshes; i++)
 	{
 		const aiMesh* mesh = scene->mMeshes[i];

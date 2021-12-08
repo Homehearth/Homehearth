@@ -13,7 +13,7 @@ float4 main(PixelParticleIn input) : SV_TARGET
     opacity *= input.color.a;
     
     float3 finalColor;
-    if (c_pParticleType != 9 & c_pParticleType != 0 & c_pParticleType != 6)
+    if (c_pParticleType != 9 & c_pParticleType != 0 & c_pParticleType != 6 & c_pParticleType != 10)
     {
         finalColor = albedo * c_tint;
     }

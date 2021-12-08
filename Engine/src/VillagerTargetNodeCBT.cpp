@@ -1,9 +1,10 @@
 #include "EnginePCH.h"
 #include "VillagerTargetNodeCBT.h"
 
-BT::VillagerTargetNodeCBT::VillagerTargetNodeCBT(const std::string& name, Entity entity)
+BT::VillagerTargetNodeCBT::VillagerTargetNodeCBT(const std::string& name, Entity entity, Blackboard* blackboard)
 	:ActionNode(name),
-	entity(entity)
+	entity(entity),
+	blackboard(blackboard)
 {
 	this->NewIdlePosTimer.Start();
 	refreshRate = (5.0f + static_cast<float>(rand() % 3));
@@ -11,7 +12,7 @@ BT::VillagerTargetNodeCBT::VillagerTargetNodeCBT(const std::string& name, Entity
 
 	sm::Vector3 targetPosition;
 	targetPosition = villager->idlePos.at(rand() % villager->idlePos.size());
-	Blackboard::Get().AddValue<sm::Vector3>("villagerTarget" + std::to_string(entity), targetPosition);
+	blackboard->AddValue<sm::Vector3>("villagerTarget" + std::to_string(entity), targetPosition);
 }
 
 BT::VillagerTargetNodeCBT::~VillagerTargetNodeCBT()
@@ -20,7 +21,7 @@ BT::VillagerTargetNodeCBT::~VillagerTargetNodeCBT()
 
 BT::NodeStatus BT::VillagerTargetNodeCBT::Tick()
 {
-		CyclePeriod* cycle = Blackboard::Get().GetValue<CyclePeriod>("cycle");
+		CyclePeriod* cycle = blackboard->GetValue<CyclePeriod>("cycle");
 		sm::Vector3 targetPosition;
 
 
@@ -44,10 +45,10 @@ BT::NodeStatus BT::VillagerTargetNodeCBT::Tick()
 			if (villager && !villager->homeHouse.IsNull())
 			{
 				comp::House* house = villager->homeHouse.GetComponent<comp::House>();
-				if (house->attackNode->reachable)
+				if (house->homeNode->reachable)
 				{
-					targetPosition = house->attackNode->position;
-					Blackboard::Get().AddValue<sm::Vector3>("villagerTarget" + std::to_string(entity), targetPosition);
+					targetPosition = house->homeNode->position;
+					blackboard->AddValue<sm::Vector3>("villagerTarget" + std::to_string(entity), targetPosition);
 					return BT::NodeStatus::SUCCESS;
 				}
 				else
@@ -61,9 +62,9 @@ BT::NodeStatus BT::VillagerTargetNodeCBT::Tick()
 		//focus to idle around the village
 		else
 		{
-			if (*cycle == CyclePeriod::DAY)
+			if (*cycle == CyclePeriod::DAY || *cycle == CyclePeriod::MORNING)
 				villager->movementSpeed = 15.f;
-			else if (*cycle == CyclePeriod::DAY)
+			else if (*cycle == CyclePeriod::NIGHT)
 				villager->movementSpeed = 30.f;
 
 			comp::Velocity* velocity = entity.GetComponent<comp::Velocity>();
@@ -71,7 +72,7 @@ BT::NodeStatus BT::VillagerTargetNodeCBT::Tick()
 			{
 				NewIdlePosTimer.Start();
 				targetPosition = villager->idlePos.at(rand() % villager->idlePos.size());
-				Blackboard::Get().AddValue<sm::Vector3>("villagerTarget" + std::to_string(entity), targetPosition);
+				blackboard->AddValue<sm::Vector3>("villagerTarget" + std::to_string(entity), targetPosition);
 			}
 			else if (velocity)
 			{

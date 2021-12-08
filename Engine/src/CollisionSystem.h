@@ -40,11 +40,11 @@ public:
 		return s_instance;
 	}
 
-	struct Projection_t
-	{
-		float min;
-		float max;
-	};
+	//struct Projection_t
+	//{
+	//	float min;
+	//	float max;
+	//};
 
 	CollisionInfo_t Intersection(Entity entity1, Entity entity2);
 	void CollisionResponse(CollisionInfo_t collisionInfo, Entity entity1, Entity entity2);
@@ -63,8 +63,6 @@ public:
 
 	uint32_t GetCollisionCount(Entity entity) const;
 
-	Projection_t GetProjection(sm::Vector3 axis, sm::Vector3* corners);
-
-
+	//Projection_t GetProjection(sm::Vector3 axis, sm::Vector3* corners);
 };
 

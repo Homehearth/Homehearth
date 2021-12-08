@@ -18,6 +18,8 @@ void SparklesSimmulation(inout VertexParticleIn particle, in uint id);
 void RainSimmulation(inout VertexParticleIn particle, in uint id);
 void MageHealSimulation(inout VertexParticleIn particle, in uint id);
 void MageRangeSimulation(inout VertexParticleIn particle, in uint id);
+void ExplosionSimulation(inout VertexParticleIn particle, in uint id);
+
 
 [numthreads(50, 1, 1)]
 void main(uint3 particleID : SV_DispatchThreadID)
@@ -44,8 +46,12 @@ void main(uint3 particleID : SV_DispatchThreadID)
         MageHealSimulation(vertex, id);   
     else if (vertex.type == 9)
         MageRangeSimulation(vertex, id);
-
+    else if (vertex.type == 10)
+        ExplosionSimulation(vertex, id);
+    
     vertex.life += dt;
+    //vertex.size += particleSizeMulitplier * deltaTime;
+
 }
 
 void BloodSimmulation(inout VertexParticleIn particle, in uint id)
@@ -301,4 +307,18 @@ void MageRangeSimulation(inout VertexParticleIn particle, in uint id)
         particle.size = float2(3,3);
         particle.pos = float4(emitterPos.x + (randomNumbers[id + counter] / 4), emitterPos.y + (randomNumbers[id] / 4), emitterPos.z + (randomNumbers[id + counter] / 4), emitterPos.w);
     }
+}
+
+void ExplosionSimulation(inout VertexParticleIn particle, in uint id)
+{
+    float4 emitterToParticle = particle.pos - emitterPos;
+    
+    particle.pos += particle.velocity * speed * dt;
+    
+    if (particle.size.x > 0)
+        particle.size += dt * sizeMulitplier;
+        
+    if (particle.color.a > 0)
+        particle.color.a -= dt * sizeMulitplier * 0.5f;
+    
 }

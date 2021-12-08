@@ -1,9 +1,9 @@
 #include "EnginePCH.h"
 #include "AIBehaviors.h"
 
-void AIBehaviors::UpdateBlackBoard(HeadlessScene& scene)
+void AIBehaviors::UpdateBlackBoard(HeadlessScene& scene, Blackboard* blackboard)
 {
-	PlayersPosition_t* players = Blackboard::Get().GetValue<PlayersPosition_t>("players");
+	PlayersPosition_t* players = blackboard->GetValue<PlayersPosition_t>("players");
 
 	if (!players)
 	{
@@ -19,22 +19,22 @@ void AIBehaviors::UpdateBlackBoard(HeadlessScene& scene)
 				playersNew.players.emplace_back(entity);
 			});
 
-		Blackboard::Get().AddValue("players", playersNew);
+		blackboard->AddValue("players", playersNew);
 	}
 }
 
-void AIBehaviors::ClearBlackBoard(HeadlessScene& scene)
+void AIBehaviors::ClearBlackBoard(HeadlessScene& scene, Blackboard* blackboard)
 {
-	PlayersPosition_t* players = Blackboard::Get().GetValue<PlayersPosition_t>("players");
+	PlayersPosition_t* players = blackboard->GetValue<PlayersPosition_t>("players");
 
 	if (players)
 	{
 		players->players.clear();
-		Blackboard::Get().ClearValue<PlayersPosition_t>("players");
+		blackboard->ClearValue<PlayersPosition_t>("players");
 	}
 }
 
-std::shared_ptr<BT::FallbackNode> AIBehaviors::GetFocusPlayerAIBehavior(Entity entity)
+std::shared_ptr<BT::FallbackNode> AIBehaviors::GetFocusPlayerAIBehavior(Entity entity, Blackboard* blackboard)
 {
 	std::shared_ptr<BT::FallbackNode> root = std::make_shared<BT::FallbackNode>(BT::FallbackNode("root"));
 
@@ -45,21 +45,36 @@ std::shared_ptr<BT::FallbackNode> AIBehaviors::GetFocusPlayerAIBehavior(Entity e
 	auto seq2 = std::make_shared<BT::SequenceNode>(BT::SequenceNode("seq2"));
 	auto seq3 = std::make_shared<BT::SequenceNode>(BT::SequenceNode("seq3"));
 
+	const float maxAggro = 600.f;
+	const float closeRange = 30.f;
+	//Try to find target that is close to AI
+	auto findClosePlayerTarget = std::make_shared<BT::TargetPlayerCBT>(BT::TargetPlayerCBT("FindClosePlayerTarget", entity, blackboard, closeRange));
+	auto findCloseBuildingTarget = std::make_shared<BT::TargetHouseCBT>(BT::TargetHouseCBT("FindCloseBuildingTarget", entity, blackboard, closeRange));
+	auto findCloseDefenseTarget = std::make_shared<BT::TargetHouseCBT>(BT::TargetHouseCBT("FindCloseBuildingTarget", entity, blackboard, closeRange));
 
+	//If nothing nearby was found, look across the map
+	auto findPlayer = std::make_shared<BT::TargetPlayerCBT>(BT::TargetPlayerCBT("FindTarget", entity, blackboard, maxAggro));
+	auto findBuildingTarget = std::make_shared<BT::TargetHouseCBT>(BT::TargetHouseCBT("FindBuildingTarget", entity, blackboard, maxAggro));
+	auto findDefenseTarget = std::make_shared<BT::TargetHouseCBT>(BT::TargetHouseCBT("FindBuildingTarget", entity, blackboard, maxAggro));
 
-	auto findTarget = std::make_shared<BT::FindTargetCBT>(BT::FindTargetCBT("FindTarget", entity));
-	auto findBuildingTarget = std::make_shared<BT::FindBuildingTargetCBT>(BT::FindBuildingTargetCBT("FindBuildingTarget", entity));
-	auto moveToTarget = std::make_shared<BT::MoveCBT>(BT::MoveCBT("MoveToTarget", entity));
-	auto attackTarget = std::make_shared<BT::AttackCBT>(BT::AttackCBT("AttackTarget", entity));
-	auto inRange = std::make_shared<BT::InRangeCBT>(BT::InRangeCBT("InRange", entity));
-	auto genPath = std::make_shared<BT::GenPathCBT>(BT::GenPathCBT("GenPath", entity));
+	auto moveToTarget = std::make_shared<BT::MoveCBT>(BT::MoveCBT("MoveToTarget", entity, blackboard));
+	auto attackTarget = std::make_shared<BT::AttackCBT>(BT::AttackCBT("AttackTarget", entity, blackboard));
+	auto inRange = std::make_shared<BT::InRangeCBT>(BT::InRangeCBT("InRange", entity, blackboard));
+	auto genPath = std::make_shared<BT::GenPathCBT>(BT::GenPathCBT("GenPath", entity, blackboard));
 
 	root->AddChild(fallback1);
 	fallback1->AddChild(seq1);
 	seq1->AddChild(fallback3);
 	seq1->AddChild(fallback2);
-	fallback3->AddChild(findTarget);
+
+	//Find a target
+	fallback3->AddChild(findClosePlayerTarget);
+	fallback3->AddChild(findCloseBuildingTarget);
+	fallback3->AddChild(findCloseDefenseTarget);
+	fallback3->AddChild(findPlayer);
 	fallback3->AddChild(findBuildingTarget);
+	fallback3->AddChild(findDefenseTarget);
+
 	fallback2->AddChild(seq2);
 	fallback2->AddChild(seq3);
 	seq2->AddChild(inRange);
@@ -71,7 +86,7 @@ std::shared_ptr<BT::FallbackNode> AIBehaviors::GetFocusPlayerAIBehavior(Entity e
 	return root;
 }
 
-std::shared_ptr<BT::FallbackNode> AIBehaviors::GetFocusBuildingAIBehavior(Entity entity)
+std::shared_ptr<BT::FallbackNode> AIBehaviors::GetFocusBuildingAIBehavior(Entity entity, Blackboard* blackboard)
 {
 	std::shared_ptr<BT::FallbackNode> root = std::make_shared<BT::FallbackNode>(BT::FallbackNode("root"));
 
@@ -83,20 +98,37 @@ std::shared_ptr<BT::FallbackNode> AIBehaviors::GetFocusBuildingAIBehavior(Entity
 	auto seq3 = std::make_shared<BT::SequenceNode>(BT::SequenceNode("seq3"));
 
 
+	const float maxAggro = 600.f;
+	const float closeRange = 30.f;
 
-	auto findBuildingTarget = std::make_shared<BT::FindBuildingTargetCBT>(BT::FindBuildingTargetCBT("FindBuildingTarget", entity));
-	auto findTarget = std::make_shared<BT::FindTargetCBT>(BT::FindTargetCBT("FindTarget", entity));
-	auto moveToTarget = std::make_shared<BT::MoveCBT>(BT::MoveCBT("MoveToTarget", entity));
-	auto attackTarget = std::make_shared<BT::AttackCBT>(BT::AttackCBT("AttackTarget", entity));
-	auto inRange = std::make_shared<BT::InRangeCBT>(BT::InRangeCBT("InRange", entity));
-	auto genPath = std::make_shared<BT::GenPathCBT>(BT::GenPathCBT("GenPath", entity));
+	//Try to find target that is close to AI
+	auto findClosePlayerTarget = std::make_shared<BT::TargetPlayerCBT>(BT::TargetPlayerCBT("FindClosePlayerTarget", entity, blackboard, closeRange));
+	auto findCloseBuildingTarget = std::make_shared<BT::TargetHouseCBT>(BT::TargetHouseCBT("FindCloseBuildingTarget", entity, blackboard, closeRange));
+	auto findCloseDefenseTarget = std::make_shared<BT::TargetHouseCBT>(BT::TargetHouseCBT("FindCloseBuildingTarget", entity, blackboard, closeRange));
+
+	//If nothing nearby was found, look across the map
+	auto findBuildingTarget = std::make_shared<BT::TargetHouseCBT>(BT::TargetHouseCBT("FindBuildingTarget", entity, blackboard,  maxAggro));
+	auto findDefenseTarget = std::make_shared<BT::TargetHouseCBT>(BT::TargetHouseCBT("FindBuildingTarget", entity, blackboard, maxAggro));
+	auto findPlayer = std::make_shared<BT::TargetPlayerCBT>(BT::TargetPlayerCBT("FindTarget", entity, blackboard, maxAggro));
+
+	auto moveToTarget = std::make_shared<BT::MoveCBT>(BT::MoveCBT("MoveToTarget", entity, blackboard));
+	auto attackTarget = std::make_shared<BT::AttackCBT>(BT::AttackCBT("AttackTarget", entity, blackboard));
+	auto inRange = std::make_shared<BT::InRangeCBT>(BT::InRangeCBT("InRange", entity, blackboard));
+	auto genPath = std::make_shared<BT::GenPathCBT>(BT::GenPathCBT("GenPath", entity, blackboard));
 
 	root->AddChild(fallback1);
 	fallback1->AddChild(seq1);
 	seq1->AddChild(fallback3);
 	seq1->AddChild(fallback2);
+
+	//Find a target
+	fallback3->AddChild(findClosePlayerTarget);
+	fallback3->AddChild(findCloseBuildingTarget);
+	fallback3->AddChild(findCloseDefenseTarget);
+	fallback3->AddChild(findPlayer);
 	fallback3->AddChild(findBuildingTarget);
-	fallback3->AddChild(findTarget);
+	fallback3->AddChild(findDefenseTarget);
+
 	fallback2->AddChild(seq2);
 	fallback2->AddChild(seq3);
 	seq2->AddChild(inRange);
@@ -104,12 +136,10 @@ std::shared_ptr<BT::FallbackNode> AIBehaviors::GetFocusBuildingAIBehavior(Entity
 	seq3->AddChild(genPath);
 	seq3->AddChild(moveToTarget);
 
-
 	return root;
-
 }
 
-std::shared_ptr<BT::FallbackNode> AIBehaviors::GetVillagerAIBehavior(Entity entity)
+std::shared_ptr<BT::FallbackNode> AIBehaviors::GetVillagerAIBehavior(Entity entity, Blackboard* blackboard)
 {
 	std::shared_ptr<BT::FallbackNode> root = std::make_shared<BT::FallbackNode>(BT::FallbackNode("root"));
 
@@ -117,10 +147,10 @@ std::shared_ptr<BT::FallbackNode> AIBehaviors::GetVillagerAIBehavior(Entity enti
 	auto seq1 = std::make_shared<BT::SequenceNode>(BT::SequenceNode("seq1"));
 
 
-	auto villagerTarget = std::make_shared<BT::VillagerTargetNodeCBT>(BT::VillagerTargetNodeCBT("VillagerTarget", entity));
-	auto moveToTarget = std::make_shared<BT::MoveCBT>(BT::MoveCBT("MoveToTarget", entity));
-	auto genPath = std::make_shared<BT::GenPathCBT>(BT::GenPathCBT("GenPath", entity));
-	auto hideVillager = std::make_shared<BT::HideVillagerCBT>(BT::HideVillagerCBT("HideVillager", entity));
+	auto villagerTarget = std::make_shared<BT::VillagerTargetNodeCBT>(BT::VillagerTargetNodeCBT("VillagerTarget", entity, blackboard));
+	auto moveToTarget = std::make_shared<BT::MoveCBT>(BT::MoveCBT("MoveToTarget", entity, blackboard));
+	auto genPath = std::make_shared<BT::GenPathCBT>(BT::GenPathCBT("GenPath", entity, blackboard));
+	auto hideVillager = std::make_shared<BT::HideVillagerCBT>(BT::HideVillagerCBT("HideVillager", entity, blackboard));
 
 	root->AddChild(fallback1);
 	fallback1->AddChild(hideVillager);

@@ -50,7 +50,6 @@ private:
 
 	std::unordered_map<ecs::Component, std::vector<Entity>> m_updatedComponents;
 
-	int currentRound;
 
 	void InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg, const std::bitset<ecs::Component::COMPONENT_MAX>& componentMask = UINT32_MAX) const;
 
@@ -59,7 +58,6 @@ private:
 	//Game play related
 	uint32_t m_wavesSurvived;
 
-	std::queue<Wave> waveQueue;
 	std::queue<sm::Vector3> m_spawnPoints;
 	HouseManager houseManager;
 
@@ -70,9 +68,11 @@ private:
 	void OnComponentUpdated(Entity entity, ecs::Component component);
 
 	void BuildMapColliders(std::vector<dx::BoundingOrientedBox>* mapColliders);
-
+	Blackboard blackboard;
 public:
 	Cycler m_timeCycler;
+	std::queue<Wave> waveQueue;
+	uint32_t currentRound;
 
 	Simulation(Server* pServer, HeadlessEngine* pEngine);
 	virtual ~Simulation() = default;
@@ -121,6 +121,7 @@ public:
 	void BroadcastUDP(message<GameMsg>& msg, uint32_t exclude = -1)const;
 
 	Entity GetPlayer(uint32_t playerID)const;
+	Blackboard* GetBlackboard();
 
 	void UseShop(const ShopItem& item, const uint32_t& player);
 	void UpgradeDefence(const uint32_t& id);

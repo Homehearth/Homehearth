@@ -19,6 +19,7 @@ namespace rtd
 		std::unique_ptr<Text> m_text = nullptr;
 
 		std::function<void()> m_function = nullptr;
+		std::function<void()> m_hoverFunction = nullptr;
 
 	public:
 
@@ -37,6 +38,7 @@ namespace rtd
 		void AddPosition(const float& x, const float& y);
 
 		void SetOnPressedEvent(const std::function<void()>& func);
+		void SetOnHoverEvent(const std::function<void()>& func);
 
 		// CheckCollisions if the button is clicked.
 		bool CheckClicked() const;
