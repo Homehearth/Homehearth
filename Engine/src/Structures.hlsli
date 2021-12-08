@@ -104,11 +104,17 @@ struct Light
 
 struct Plane
 {
-    float3 normal;   
+    float3 normal;
     float  distanceToOrigin;
 };
 
 struct Frustum
 {
     Plane planes[4];   // left, right, top, bottom frustum planes.
+};
+
+struct Sphere
+{
+    float3 center;
+    float  radius;
 };

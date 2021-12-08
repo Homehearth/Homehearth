@@ -78,7 +78,6 @@ cbuffer ParticleUpdate : register(b8)
     float lifeTime;
     float particleSizeMulitplier;
     float c_particleSpeed;
-    
     float3 c_pPadding;
 }
 
@@ -93,6 +92,7 @@ cbuffer DecalInfoCB : register(b10)
     float4 infoData = float4(0.0f, 0.0f, 0.0f, 0.0f);
     float4x4 decal_projection;
 }
+
 cbuffer DeltaCB : register(b6)
 {
     float c_deltaTime;
@@ -106,6 +106,7 @@ cbuffer BlurSettings : register(b11)
     float padding;
     float4 c_weights[MAXWEIGHTS / 4];
 }
+
 cbuffer TextureEffectCB : register(b7)
 {
     uint c_frequency;
@@ -122,12 +123,24 @@ cbuffer DoFSettings : register(b12)
     float3      dofPadding;
     //float4      c_playerPos;
 }
+
 cbuffer SkyboxTint : register(b13)
 {
     float3      c_tint = 1.f;
     float       pad;
 }
 
+cbuffer ScreenToViewParamsCB : register(b14)
+{
+    float4x4 inverseProjection;
+    float2 screenDimensions;
+}
+
+cbuffer DispatchParamsCB : register (b15)
+{
+    uint4 numThreadGroups;
+    uint4 numThreads;
+}
 
 
 //---------------------------------------------------------------------------

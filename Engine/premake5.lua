@@ -52,7 +52,7 @@ project "Engine"
             ["src/Engine/ECS"] = { "**Components.*",  "**Entity.*", "**Tags*" }, 
             ["src/Engine/GamePlay"] = { "**GridSystem.*", "**CollisionSystem.*", "**CombatSystem.*", "**Systems.*", "**SpreeHandler.*" },
 
-             ["src/Engine/Graphics/Renderer"] = {"**Renderer.*", "**PipelineManager.*", "**DoubleBuffer.*"},
+             ["src/Engine/Graphics/Renderer"] = {"**Renderer.*", "**PipelineManager.*", "**DoubleBuffer.*", "**ShaderDefines.*"},
                 ["src/Engine/Graphics/Renderer/RenderPass"] = {"**Pass.*"},
 			["src/Engine/Graphics/Renderer2D"] = {"**Handler2D.*", "**Element2D.*", "**Collection2D.*"},
             ["src/Engine/Graphics/D3D11"] = { "**D3D11Core.*" },
