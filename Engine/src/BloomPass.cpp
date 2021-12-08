@@ -16,7 +16,7 @@ void BloomPass::Unlink()
 
 void BloomPass::Setdownsample()
 {
-    this->Unlink();
+    //this->Unlink();
     m_info.samplingInfo = { 2.0f, 1.0f, 1.0f, 1.0f };
     m_samplingInfoBuffer.SetData(D3D11Core::Get().DeviceContext(), m_info.samplingInfo);
     D3D11Core::Get().DeviceContext()->PSSetShaderResources(1, 1, m_blurredView.GetAddressOf());
@@ -34,6 +34,7 @@ void BloomPass::Setupsample()
 
 void BloomPass::Draw()
 {
+    D3D11Core::Get().DeviceContext()->RSSetViewports(1, &PM->m_viewport);
     D3D11Core::Get().DeviceContext()->VSSetShader(nullptr, nullptr, 0);
     D3D11Core::Get().DeviceContext()->PSSetShader(nullptr, nullptr, 0);
     D3D11Core::Get().DeviceContext()->VSSetShader(PM->m_bloomVertexShader.Get(), nullptr, 0);
@@ -56,7 +57,7 @@ void BloomPass::AdditiveBlend()
 {
     this->Unlink();
     D3D11Core::Get().DeviceContext()->CSSetUnorderedAccessViews(1, 1, PM->m_backBufferAccessView.GetAddressOf(), nullptr);
-    D3D11Core::Get().DeviceContext()->CSSetUnorderedAccessViews(0, 1, PM->m_bloomAccessView.GetAddressOf(), nullptr);
+    D3D11Core::Get().DeviceContext()->CSSetUnorderedAccessViews(0, 1, m_blurredAccess.GetAddressOf(), nullptr);
     D3D11Core::Get().DeviceContext()->CSSetShader(PM->m_bloomComputeShader.Get(), nullptr, 0);
     D3D11Core::Get().DeviceContext()->Dispatch(PM->m_windowWidth / 8, PM->m_windowHeight / 8, 1);
     this->Unlink();
@@ -79,7 +80,7 @@ BloomPass::~BloomPass()
 void BloomPass::Setup()
 {
 	m_blurPass.Initialize(D3D11Core::Get().DeviceContext(), PM);
-	m_blurPass.Create(BlurLevel::HIGH, BlurType::BOX);
+	m_blurPass.Create(BlurLevel::SUPERHIGH, BlurType::BOX);
     m_samplingInfoBuffer.Create(D3D11Core::Get().Device());
 
     HRESULT hr = S_FALSE;
@@ -161,22 +162,21 @@ void BloomPass::Setup()
 
     D3D11_TEXTURE2D_DESC texDesc = {};
     backBuff->GetDesc(&texDesc);
-    texDesc.Format = DXGI_FORMAT_R16G16B16A16_UNORM;
-    D3D11Core::Get().Device()->CreateTexture2D(&texDesc, nullptr, m_fullSize.GetAddressOf());
-    D3D11Core::Get().Device()->CreateUnorderedAccessView(m_fullSize.Get(), NULL, m_fullSizeView.GetAddressOf());
-    D3D11Core::Get().Device()->CreateRenderTargetView(m_fullSize.Get(), NULL, m_fullSizeTarget.GetAddressOf());
+    hr = D3D11Core::Get().Device()->CreateTexture2D(&texDesc, nullptr, m_fullSize.GetAddressOf());
+    hr = D3D11Core::Get().Device()->CreateUnorderedAccessView(m_fullSize.Get(), NULL, m_fullSizeView.GetAddressOf());
+    hr = D3D11Core::Get().Device()->CreateRenderTargetView(m_fullSize.Get(), NULL, m_fullSizeTarget.GetAddressOf());
 
-    D3D11Core::Get().Device()->CreateTexture2D(&texDesc, nullptr, m_blurredTexture.GetAddressOf());
-    D3D11Core::Get().Device()->CreateShaderResourceView(m_blurredTexture.Get(), NULL, m_blurredView.GetAddressOf());
-    D3D11Core::Get().Device()->CreateUnorderedAccessView(m_blurredTexture.Get(), NULL, m_blurredAccess.GetAddressOf());
-    D3D11Core::Get().Device()->CreateRenderTargetView(m_blurredTexture.Get(), NULL, m_blurredTarget.GetAddressOf());
+    hr = D3D11Core::Get().Device()->CreateTexture2D(&texDesc, nullptr, m_blurredTexture.GetAddressOf());
+    hr = D3D11Core::Get().Device()->CreateShaderResourceView(m_blurredTexture.Get(), NULL, m_blurredView.GetAddressOf());
+    hr = D3D11Core::Get().Device()->CreateUnorderedAccessView(m_blurredTexture.Get(), NULL, m_blurredAccess.GetAddressOf());
+    hr = D3D11Core::Get().Device()->CreateRenderTargetView(m_blurredTexture.Get(), NULL, m_blurredTarget.GetAddressOf());
 
 
     texDesc.Height /= 2;
     texDesc.Width /= 2;
-    D3D11Core::Get().Device()->CreateTexture2D(&texDesc, nullptr, m_halfSize.GetAddressOf());
-    D3D11Core::Get().Device()->CreateShaderResourceView(m_halfSize.Get(), NULL, m_halfSizeView.GetAddressOf());
-    D3D11Core::Get().Device()->CreateRenderTargetView(m_halfSize.Get(), NULL, m_halfSizeRenderTarget.GetAddressOf());
+    hr = D3D11Core::Get().Device()->CreateTexture2D(&texDesc, nullptr, m_halfSize.GetAddressOf());
+    hr = D3D11Core::Get().Device()->CreateShaderResourceView(m_halfSize.Get(), NULL, m_halfSizeView.GetAddressOf());
+    hr = D3D11Core::Get().Device()->CreateRenderTargetView(m_halfSize.Get(), NULL, m_halfSizeRenderTarget.GetAddressOf());
     backBuff->Release();
 }
 
@@ -189,20 +189,18 @@ void BloomPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
         backBuff->Release();
         return;
     }
-    //DC->CopyResource(m_blurredTexture.Get(), backBuff);
-    DC->CopyResource(m_blurredTexture.Get(), PM->m_bloomTexture.Get());
+    DC->CopyResource(m_blurredTexture.Get(), backBuff);
+    //DC->CopyResource(m_blurredTexture.Get(), PM->m_bloomTexture.Get());
     backBuff->Release();
-
-    //m_blurPass.BlurTexture(PM->m_bloomAccessView.GetAddressOf(), m_blurredAccess.GetAddressOf(), D3D11Core::Get().DeviceContext());
 }
 
 void BloomPass::Render(Scene* pScene)
 {
     this->Setdownsample();
     this->Draw();
-    this->Setupsample();
-    this->Draw();
-    this->AdditiveBlend();
+    //this->Setupsample();
+    //this->Draw();
+    //this->AdditiveBlend();
 }
 
 void BloomPass::PostRender(ID3D11DeviceContext* pDeviceContext)

@@ -1,4 +1,4 @@
-#include "Common.hlsli"
+#include "common.hlsli"
 
 struct PixelInBloom
 {
@@ -8,5 +8,7 @@ struct PixelInBloom
 
 float4 main(PixelInBloom input) : SV_TARGET
 {
-    return t_albedo.Sample(s_linear, input.uv * c_info.x);
+    float4 pixel = t_albedo.Sample(s_linear, input.uv * c_info.x);
+    pixel.a = 1.0f;
+    return pixel;
 }
