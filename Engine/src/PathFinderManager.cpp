@@ -169,7 +169,7 @@ PathFinderManager::~PathFinderManager()
 	m_nodes.clear();
 }
 
-void PathFinderManager::AStarSearch(Entity npcEntity)
+void PathFinderManager::AStarSearch(Entity npcEntity, Blackboard* blackboard)
 {
 	comp::Transform* npcTransform = npcEntity.GetComponent<comp::Transform>();
 	comp::NPC* npcComp = npcEntity.GetComponent<comp::NPC>();
@@ -198,10 +198,10 @@ void PathFinderManager::AStarSearch(Entity npcEntity)
 
 	//Get the target that findTargetNode has picked for this entity
 	if(npcComp)
-		target = Blackboard::Get().GetValue<Entity>("target" + std::to_string(npcEntity));
+		target = blackboard->GetValue<Entity>("target" + std::to_string(npcEntity));
 	//If it's a villager get the position target
 	if(villagerComp)
-		villagerTarget = Blackboard::Get().GetValue<sm::Vector3>("villagerTarget" + std::to_string(npcEntity));
+		villagerTarget = blackboard->GetValue<sm::Vector3>("villagerTarget" + std::to_string(npcEntity));
 
 
 	comp::House* house = nullptr;

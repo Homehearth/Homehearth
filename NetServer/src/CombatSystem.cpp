@@ -83,11 +83,11 @@ void CombatSystem::UpdateRange(HeadlessScene& scene)
 		});
 }
 
-void CombatSystem::UpdateTeleport(HeadlessScene& scene)
+void CombatSystem::UpdateTeleport(HeadlessScene& scene, Blackboard* blackboard)
 {
 	scene.ForEachComponent<comp::BlinkAbility, comp::Transform>([&](Entity entity, comp::BlinkAbility& teleportAbility, comp::Transform& transform)
 		{
-			PathFinderManager* pathFinderManager = Blackboard::Get().GetPathFindManager();
+			PathFinderManager* pathFinderManager = blackboard->GetPathFindManager();
 
 			comp::Player* p = entity.GetComponent<comp::Player>();
 
@@ -140,9 +140,7 @@ void CombatSystem::UpdateDash(HeadlessScene& scene)
 {
 	scene.ForEachComponent<comp::DashAbility, comp::Transform>([&](Entity entity, comp::DashAbility& dashAbility, comp::Transform& transform)
 		{
-			PathFinderManager* pathFinderManager = Blackboard::Get().GetPathFindManager();
 			// Has to run to reset the ability
-
 			if (ecs::ReadyToUse(&dashAbility, nullptr))
 			{
 				audio_t audio = {
@@ -177,7 +175,7 @@ void CombatSystem::UpdateDash(HeadlessScene& scene)
 }
 
 
-void CombatSystem::UpdateCombatSystem(HeadlessScene& scene, float dt)
+void CombatSystem::UpdateCombatSystem(HeadlessScene& scene, float dt, Blackboard* blackboard)
 {
 	PROFILE_FUNCTION();
 
@@ -188,7 +186,7 @@ void CombatSystem::UpdateCombatSystem(HeadlessScene& scene, float dt)
 	UpdateRange(scene);
 
 	//For each entity that can use teleport
-	UpdateTeleport(scene);
+	UpdateTeleport(scene, blackboard);
 
 	//For each entity that can use Dash
 	UpdateDash(scene);

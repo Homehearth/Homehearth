@@ -1,10 +1,11 @@
 #include "EnginePCH.h"
 #include "TargetPlayerCBT.h"
 
-BT::TargetPlayerCBT::TargetPlayerCBT(const std::string& name, Entity entity, float aggroRange)
+BT::TargetPlayerCBT::TargetPlayerCBT(const std::string& name, Entity entity, Blackboard* blackboard, float aggroRange)
 	:ActionNode(name),
 	entity(entity),
-	aggroRange(aggroRange)
+	aggroRange(aggroRange),
+	blackboard(blackboard)
 {
 
 }
@@ -12,12 +13,12 @@ BT::TargetPlayerCBT::TargetPlayerCBT(const std::string& name, Entity entity, flo
 BT::NodeStatus BT::TargetPlayerCBT::Tick()
 {
 	//Get all players in current game
-	const PlayersPosition_t* playersEntity = Blackboard::Get().GetValue<PlayersPosition_t>("players");
+	const PlayersPosition_t* playersEntity = blackboard->GetValue<PlayersPosition_t>("players");
 
 	//Get AI's transform component
 	const comp::Transform* transform = this->entity.GetComponent<comp::Transform>();
 
-	Entity* targetEntity = Blackboard::Get().GetValue<Entity>("target" + std::to_string(entity));
+	Entity* targetEntity = blackboard->GetValue<Entity>("target" + std::to_string(entity));
 	Entity currentTarget;
 	if (playersEntity)
 	{
@@ -45,7 +46,7 @@ BT::NodeStatus BT::TargetPlayerCBT::Tick()
 		//If target was found return success
 		if (!currentTarget.IsNull())
 		{
-			Blackboard::Get().AddValue("target" + std::to_string(entity), currentTarget);
+			blackboard->AddValue("target" + std::to_string(entity), currentTarget);
 			return BT::NodeStatus::SUCCESS;
 		}
 

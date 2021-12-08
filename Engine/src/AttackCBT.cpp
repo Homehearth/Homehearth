@@ -1,9 +1,10 @@
 #include "EnginePCH.h"
 #include "AttackCBT.h"
 
-BT::AttackCBT::AttackCBT(const std::string& name, Entity entity)
+BT::AttackCBT::AttackCBT(const std::string& name, Entity entity, Blackboard* blackboard)
 	:ActionNode(name),
-	entity(entity)
+	entity(entity),
+	blackboard(blackboard)
 {
 }
 
@@ -20,7 +21,7 @@ BT::NodeStatus BT::AttackCBT::Tick()
 	else if (attackRAbility)
 		attackAbility = attackRAbility;
 
-	Entity* target = Blackboard::Get().GetValue<Entity>("target" + std::to_string(entity));
+	Entity* target = blackboard->GetValue<Entity>("target" + std::to_string(entity));
 
 	//Catch nullptr
 	if(attackAbility == nullptr || target == nullptr)

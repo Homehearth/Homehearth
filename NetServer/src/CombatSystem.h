@@ -4,7 +4,7 @@ class CombatSystem
 {
 public:
 	//Updates all systems related to combat
-	static void UpdateCombatSystem(HeadlessScene& scene, float dt);
+	static void UpdateCombatSystem(HeadlessScene& scene, float dt, Blackboard* blackboard);
 
 private:
 	//Disallow creating an instance of this object...
@@ -15,7 +15,7 @@ private:
 	//Update all entity with range abilities
 	static void UpdateRange(HeadlessScene& scene);
 	//Update all entity with range abilities
-	static void UpdateTeleport(HeadlessScene& scene);
+	static void UpdateTeleport(HeadlessScene& scene, Blackboard* blackboard);
 	//Update all entity with dash abilities
 	static void UpdateDash(HeadlessScene& scene);
 	//Update target point if entity is player
