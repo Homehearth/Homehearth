@@ -21,6 +21,8 @@ public:
 	// PUBLIC AVAILABLE DATA.
 	ComPtr<ID3D11RenderTargetView>	  m_backBuffer;
 	ComPtr<ID3D11RenderTargetView>	  m_renderTargetView;
+	ComPtr<ID3D11RenderTargetView>	  m_bloomTargetView;
+	ComPtr<ID3D11Texture2D>			  m_bloomTexture;
 
 	ComPtr<ID3D11Texture2D>			  m_depthStencilTexture;
 	ComPtr<ID3D11DepthStencilView>	  m_depthStencilView;

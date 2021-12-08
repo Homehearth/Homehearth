@@ -1,9 +1,9 @@
 #include "Common.hlsli"
 
-float4 main(PixelIn input) : SV_TARGET
+PixelOut main(PixelIn input)
 {
     //return t_shadowMaps.Sample(s_linear, float3(input.uv, 0.0f));
-
+    PixelOut output;
     static unsigned int rolls = infoData.x;
     static float LIGHT_RANGE = 215.0f;
     const float LIGHT_VOLUME_RANGE = 250.0f;
@@ -209,7 +209,9 @@ float4 main(PixelIn input) : SV_TARGET
                     //Gamma correct
                     colorDecal = pow(max(colorDecal, 0.0f), float3(1.0 / 2.2, 1.0 / 2.2, 1.0 / 2.2));
                     colorDecal = lerp(colorDecal, fogColor.xyz, fogFactor);
-                    return float4(colorDecal, alpha);
+                    output.color =  float4(colorDecal, alpha);
+                    output.brightColor =  float4(0,0,0,0);
+                    return output;
                 }
 
             }
@@ -220,13 +222,20 @@ float4 main(PixelIn input) : SV_TARGET
     
     float3 color = (ambient + Lo) * pow(lightVolumeFactor, 2.5f);
     
+    //Bloom stuff
+    float brightness = dot(color, float3(0.2126, 0.7152, 0.0722));
+    if(brightness > 1.0f)
+        output.brightColor = float4(color, 1.0f);
+    else
+        output.brightColor = float4(0.0f, 0.0f, 0.0f, 1.0f);
+    
     //HDR tonemapping
-	//color = color / (color + float3(1.0, 1.0, 1.0));
     color = ACESFitted(color);
     //Gamma correct
     color = pow(max(color, 0.0f), float3(gamma, gamma, gamma));
     
     color = lerp(color, fogColor.xyz, fogFactor);
 
-    return float4(color, 5.0f);
+    output.color = float4(color, 5.0f);
+    return output;
 }

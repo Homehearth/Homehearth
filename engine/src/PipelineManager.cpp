@@ -103,6 +103,11 @@ bool PipelineManager::CreateRenderTargetView()
 
     // Create the renderTargetView with the back buffer pointer.
     HRESULT hr = m_d3d11->Device()->CreateRenderTargetView(pBackBuffer, nullptr, m_backBuffer.GetAddressOf());
+    D3D11_TEXTURE2D_DESC desc = {};
+    pBackBuffer->GetDesc(&desc);
+    desc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
+    hr = m_d3d11->Device()->CreateTexture2D(&desc, nullptr, m_bloomTexture.GetAddressOf());
+    hr = m_d3d11->Device()->CreateRenderTargetView(m_bloomTexture.Get(), nullptr, m_bloomTargetView.GetAddressOf());
 
     // Release pointer to the back buffer.
     pBackBuffer->Release();
