@@ -22,8 +22,8 @@ Cycler::Cycler()
 	, m_timePeriod(CyclePeriod::DAY)
 	, m_changedPeriod(false)
 	, m_cycleSpeed(1.0f)
+	, blackboard(nullptr)
 {
-	Blackboard::Get().AddValue<CyclePeriod>("cycle", m_timePeriod);
 }
 
 void Cycler::Update(float dt)
@@ -41,7 +41,9 @@ void Cycler::Update(float dt)
 	{
 		m_changedPeriod = true;
 		m_cycleSpeed = m_defaultCycleSpeed;
-		Blackboard::Get().AddValue<CyclePeriod>("cycle", newPeriod);
+
+		if(blackboard != nullptr)
+			blackboard->AddValue<CyclePeriod>("cycle", newPeriod);
 	}
 	m_timePeriod = newPeriod;
 }
@@ -81,6 +83,11 @@ const float Cycler::GetDefaultSpeed() const
 void Cycler::SetCycleSpeed(float speed)
 {
 	m_cycleSpeed = speed;
+}
+
+void Cycler::setBlackboard(Blackboard* blackboard)
+{
+	this->blackboard = blackboard;
 }
 
 void Cycler::ResetCycleSpeed()

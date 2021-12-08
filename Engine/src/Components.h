@@ -137,7 +137,7 @@ namespace ecs
 				{
 					textureName = "MageHeal.png";
 				}
-				else if (type == PARTICLEMODE::MAGERANGE)
+				else if (type == PARTICLEMODE::MAGERANGE || type == PARTICLEMODE::EXPLOSION)
 				{
 					textureName = "fire.png";
 					opacityTextureName = "fire_opacity.png";
@@ -491,6 +491,7 @@ namespace ecs
 		struct SelfDestruct
 		{
 			float lifeTime;
+			std::function<void()> onDestruct;
 		};
 
 

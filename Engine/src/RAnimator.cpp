@@ -6,7 +6,6 @@ RAnimator::RAnimator()
 	m_useInterpolation	= true;
 	m_currentType		= EAnimationType::NONE;
 	m_nextType			= EAnimationType::NONE;
-	m_defaultType		= EAnimationType::NONE;
 }
 
 RAnimator::~RAnimator()
@@ -252,18 +251,8 @@ void RAnimator::BlendAnimations()
 void RAnimator::SwapAnimationState()
 {
 	ResetAnimation(m_currentType);
-
-	//Not loopable - add the previous to the queue again
-	if (!m_animations[m_nextType].animation->IsLoopable())
-	{
-		m_currentType = m_nextType;
-		m_nextType = m_defaultType;
-	}
-	else
-	{
-		m_currentType = m_nextType;
-		m_nextType = EAnimationType::NONE;
-	}
+	m_currentType = m_nextType;
+	m_nextType = EAnimationType::NONE;
 }
 
 bool RAnimator::Create(const std::string& filename)
@@ -319,19 +308,6 @@ bool RAnimator::Create(const std::string& filename)
 					}
 				}
 			}
-			else if (keyword == "defaultAnim")
-			{
-				std::string key;
-				if (ss >> key)
-				{
-					EAnimationType animType = StringToAnimationType(key);
-					if (m_animations.find(animType) != m_animations.end())
-					{
-						m_defaultType = animType;
-						m_currentType = animType;
-					}
-				}
-			}
 			else if (keyword == "loopable")
 			{
 				bool option = false;
@@ -380,11 +356,23 @@ bool RAnimator::ChangeAnimation(const EAnimationType& type)
 	//Check if animation exist
 	if (m_animations.find(type) != m_animations.end())
 	{ 
-		//Not in one of this states
-		if (m_nextType != type && m_currentType != type)
+		//No current
+		if (m_currentType == EAnimationType::NONE)
 		{
-			m_nextType = type;
-			swapSuccess = true;
+			m_currentType = type;
+		}
+		//Check if we are going to place in the queue
+		else
+		{
+			if (m_currentType != type)
+			{
+				if (m_nextType == EAnimationType::NONE)
+				{
+					m_nextType = type;
+					swapSuccess = true;
+				}
+			}
+			//Else: Already in this state
 		}
 	}
 	return swapSuccess;

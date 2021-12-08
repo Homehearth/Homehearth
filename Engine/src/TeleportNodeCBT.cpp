@@ -1,9 +1,10 @@
 #include "EnginePCH.h"
 #include "TeleportNodeCBT.h"
 
-BT::TeleportNodeCBT::TeleportNodeCBT(const std::string& name, Entity entity)
+BT::TeleportNodeCBT::TeleportNodeCBT(const std::string& name, Entity entity, Blackboard* blackboard)
 	:ActionNode(name),
-	entity(entity)
+	entity(entity),
+	blackboard(blackboard)
 {
 }
 
@@ -13,8 +14,8 @@ BT::NodeStatus BT::TeleportNodeCBT::Tick()
 {
 	comp::BlinkAbility* teleportAbility = entity.GetComponent<comp::BlinkAbility>();
 	comp::Transform* transform = entity.GetComponent<comp::Transform>();
-	PathFinderManager * pathFinderManager = Blackboard::Get().GetPathFindManager();
-	Entity* currentTarget = Blackboard::Get().GetValue<Entity>("target" + std::to_string(entity));
+	PathFinderManager * pathFinderManager = blackboard->GetPathFindManager();
+	Entity* currentTarget = blackboard->GetValue<Entity>("target" + std::to_string(entity));
 	if(!teleportAbility)
 	{
 		LOG_WARNING("Attempt to use teleport ability without the component");

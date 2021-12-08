@@ -14,6 +14,7 @@ private:
 	const float m_defaultCycleSpeed = 1.f;
 
 	CyclePeriod CalculatePeriod();
+	Blackboard* blackboard;
 
 public:
 
@@ -32,6 +33,8 @@ public:
 	float GetCycleSpeed() const;
 	const float GetDefaultSpeed() const;
 	void SetCycleSpeed(float speed);
+	void setBlackboard(Blackboard* blackboard);
+
 	void ResetCycleSpeed();
 
 };
