@@ -1,14 +1,18 @@
 skel 								Knight.fbx
-anim 			IDLE 				Knight_Idle.fbx
-anim 			MOVE 				Knight_Run.fbx
-anim 			PRIMARY_ATTACK 		Knight_Slash.fbx
-anim 			TAKE_DAMAGE 		Knight_TakeDamage.fbx
-anim			PLACE_DEFENCE		Knight_PlaceDefence.fbx
+anim 			IDLE 				Player_Idle.fbx
+anim 			MOVE 				Player_Run.fbx
+anim 			PRIMARY_ATTACK 		Player_Slash.fbx
+anim			ABILITY1			Player_Dash.fbx
+anim 			TAKE_DAMAGE 		Player_TakeDamage.fbx
+anim			PLACE_DEFENCE		Player_PlaceDefence.fbx
+anim			DEAD				Player_Dead.fbx
 
 
 loopable		PRIMARY_ATTACK		0
+loopable		ABILITY1			0
 loopable		TAKE_DAMAGE			0
 loopable		PLACE_DEFENCE		0
+loopable		DEAD				0
 
 tickSpeed		PRIMARY_ATTACK		38
 

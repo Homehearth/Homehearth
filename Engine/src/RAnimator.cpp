@@ -4,7 +4,7 @@
 RAnimator::RAnimator()
 {
 	m_useInterpolation	= true;
-	m_currentState	= EAnimationType::IDLE;
+	m_currentState	= EAnimationType::NONE;
 	m_nextState		= EAnimationType::NONE;
 	m_upperState	= EAnimationType::NONE;
 
