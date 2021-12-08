@@ -31,11 +31,11 @@ void rtd::TextField::Update()
 				default:
 					if ((InputSystem::Get().IsInShiftMode() && !InputSystem::Get().IsInCapsLock()) || (InputSystem::Get().IsInCapsLock() && !InputSystem::Get().IsInShiftMode()))
 					{
-						m_stringText.push_back((wchar_t)*currentKey);
+						m_stringText.push_back(static_cast<char>(*currentKey));
 					}
 					else
 					{
-						m_stringText.push_back(std::tolower((wchar_t)*currentKey));
+						m_stringText.push_back(static_cast<char>(std::tolower(*currentKey)));
 					}
 					break;
 				}

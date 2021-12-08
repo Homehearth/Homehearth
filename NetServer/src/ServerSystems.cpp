@@ -50,8 +50,8 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		npc->movementSpeed = 15.f;
 		attackAbility->cooldown = 1.0f;
 		attackAbility->attackDamage = 20.f;
-		attackAbility->lifetime = 5.0f;
-		attackAbility->attackRange = 6.f;
+		attackAbility->lifetime = 0.2f;
+		attackAbility->attackRange = 4.f;
 		attackAbility->useTime = 0.3f;
 		attackAbility->delay = 0.2f;
 		attackAbility->movementSpeedAlt = 0.0f;

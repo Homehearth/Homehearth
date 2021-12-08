@@ -12,7 +12,7 @@ void CombatSystem::UpdateMelee(HeadlessScene& scene)
 			if (ecs::ReadyToUse(&stats, updateTargetPoint))
 			{
 				Entity attackEntity = CreateAttackEntity(entity, scene, &transform, &stats);
-				
+
 				audio_t audio = {
 					ESoundEvent::NONE,
 					entity.GetComponent<comp::Transform>()->position,
@@ -52,7 +52,7 @@ void CombatSystem::UpdateRange(HeadlessScene& scene)
 			if (ecs::ReadyToUse(&stats, updateTargetPoint))
 			{
 				Entity attackEntity = CreateAttackEntity(entity, scene, &transform, &stats);
-				
+
 				audio_t audio = {
 					ESoundEvent::NONE,
 					entity.GetComponent<comp::Transform>()->position,
@@ -162,7 +162,7 @@ void CombatSystem::UpdateDash(HeadlessScene& scene)
 
 					Entity collider = CreateAreaAttackCollider(scene, entity.GetComponent<comp::Transform>()->position, 10, dashAbility.useTime);
 					collider.AddComponent<comp::Velocity>()->vel = dashAbility.velocityBeforeDash * dashAbility.force;
-					
+
 					CollisionSystem::Get().AddOnCollisionEnter(collider, [=](Entity thisEntity, Entity other)
 						{
 							tag_bits goodOrBad = TagType::GOOD | TagType::BAD;
@@ -239,11 +239,7 @@ Entity CombatSystem::CreateAttackEntity(Entity entity, HeadlessScene& scene, com
 	comp::SphereCollider* bos = attackEntity.AddComponent<comp::SphereCollider>();
 
 	bos->Radius = stats->attackRange;
-	float attackRangeMultiplier = 1.f;
-	if (entity.GetComponent<comp::Player>())
-	{
-		attackRangeMultiplier = 1.3f;
-	}
+	float attackRangeMultiplier = 1.3f;
 
 	sm::Vector3 targetDir = stats->targetPoint - transform->position;
 	targetDir.Normalize();
@@ -254,16 +250,16 @@ Entity CombatSystem::CreateAttackEntity(Entity entity, HeadlessScene& scene, com
 	comp::SelfDestruct* selfDestruct = attackEntity.AddComponent<comp::SelfDestruct>();
 	selfDestruct->lifeTime = stats->lifetime;
 
-#if RENDER_COLLIDERS
+	//#if RENDER_COLLIDERS
 	attackEntity.AddComponent<comp::Network>();
-#endif
+	//#endif
 
 	CollisionSystem::Get().AddOnCollisionEnter(attackEntity, [=, &scene](Entity thisEntity, Entity other)
 		{
 			comp::MeleeAttackAbility* ability = nullptr;
 			if (!entity.IsNull())
 				ability = entity.GetComponent<comp::MeleeAttackAbility>();
-			if(ability)
+			if (ability)
 				DoDamage(scene, entity, thisEntity, other, ability->attackDamage, 40.0f, AttackType::MELEE);
 
 		});
@@ -292,7 +288,7 @@ Entity CombatSystem::CreateAttackEntity(Entity entity, HeadlessScene& scene, com
 	t->rotation = transform->rotation;
 
 	bos->Center = t->position;
-	
+
 	comp::SelfDestruct* selfDestruct = attackEntity.AddComponent<comp::SelfDestruct>();
 	selfDestruct->lifeTime = 1000.f;
 	selfDestruct->onDestruct = [&, entity, attackEntity]()
@@ -329,7 +325,7 @@ Entity CombatSystem::CreateAttackEntity(Entity entity, HeadlessScene& scene, com
 					DoDamage(scene, entity, expl, other, ability->attackDamage, 40.0f, AttackType::RANGE);
 			});
 	};
-	
+
 	attackEntity.AddComponent<comp::PARTICLEEMITTER>(sm::Vector3{ 0,0,0 }, 200, 1.f, PARTICLEMODE::MAGERANGE, 1.7f, 1.f, false);
 
 	attackEntity.AddComponent<comp::Network>();
@@ -350,7 +346,7 @@ Entity CombatSystem::CreateAttackEntity(Entity entity, HeadlessScene& scene, com
 
 	a->onFinish = [&, attackEntity, entity]() mutable
 	{
-		attackEntity.GetComponent<comp::SelfDestruct>()->lifeTime = 0.0f;	
+		attackEntity.GetComponent<comp::SelfDestruct>()->lifeTime = 0.0f;
 	};
 
 	CollisionSystem::Get().AddOnCollisionEnter(attackEntity, [=, &scene](Entity thisEntity, Entity other)
@@ -365,13 +361,13 @@ Entity CombatSystem::CreateAttackEntity(Entity entity, HeadlessScene& scene, com
 	return attackEntity;
 }
 
-Entity CombatSystem::CreateAreaAttackCollider(HeadlessScene& scene, sm::Vector3 position, float size, float lifeTime) 
+Entity CombatSystem::CreateAreaAttackCollider(HeadlessScene& scene, sm::Vector3 position, float size, float lifeTime)
 {
 	Entity e = scene.CreateEntity();
 	e.AddComponent<comp::Transform>()->position = position;
 
 	e.AddComponent<comp::SphereCollider>()->Radius = size;
-	
+
 	e.AddComponent<comp::Tag<TagType::DYNAMIC>>();
 	e.AddComponent<comp::Tag<TagType::NO_RESPONSE>>();
 
@@ -394,7 +390,7 @@ void CombatSystem::DoDamage(HeadlessScene& scene, Entity attacker, Entity attack
 		attackCollider.GetComponent<comp::SelfDestruct>()->lifeTime = 0.f;
 		return;
 	}
-	
+
 	// hit self
 	if (target == attacker)
 		return;
@@ -450,7 +446,7 @@ void CombatSystem::DoDamage(HeadlessScene& scene, Entity attacker, Entity attack
 		playHitSound = true;
 	}
 
-	
+
 
 	// SOUND
 	audio_t audio = {
@@ -478,7 +474,7 @@ void CombatSystem::DoDamage(HeadlessScene& scene, Entity attacker, Entity attack
 			}
 			else if (target.GetComponent<comp::NPC>())
 			{
-				audio.type = ESoundEvent::Enemy_OnDmgRecieved;	
+				audio.type = ESoundEvent::Enemy_OnDmgRecieved;
 				audio.is3D = true;
 			}
 			else if (target.GetComponent<comp::Villager>())
@@ -487,7 +483,7 @@ void CombatSystem::DoDamage(HeadlessScene& scene, Entity attacker, Entity attack
 				audio.is3D = true;
 				audio.shouldBroadcast = true;
 			}
-		
+
 			audioState->data.emplace(audio);
 		}
 
@@ -503,7 +499,7 @@ void CombatSystem::DoDamage(HeadlessScene& scene, Entity attacker, Entity attack
 		}
 	}
 
-	
+
 	comp::Health* otherHealth = target.GetComponent<comp::Health>();
 	if (otherHealth && doDamage)
 	{
@@ -557,7 +553,7 @@ void CombatSystem::DoDamage(HeadlessScene& scene, Entity attacker, Entity attack
 	{
 		AddKnockback(target, knockbackDir, knockback);
 	}
-	
+
 }
 
 void CombatSystem::AddKnockback(Entity target, sm::Vector3 dir, float power)

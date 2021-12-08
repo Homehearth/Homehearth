@@ -251,6 +251,14 @@ namespace sceneHelp
 						skipText->SetVisiblity(true);
 						skipButton->SetVisiblity(true);
 
+						scene.ForEachComponent<comp::Light>([](comp::Light& l)
+							{
+								if (l.lightData.type == TypeLight::POINT)
+								{
+									l.lightData.enabled = 0;
+								}
+							});
+
 						break;
 					}
 					case CyclePeriod::EVENING:
@@ -271,13 +279,6 @@ namespace sceneHelp
 					}
 					case CyclePeriod::DAY:
 					{
-						scene.ForEachComponent<comp::Light>([](comp::Light& l)
-							{
-								if (l.lightData.type == TypeLight::POINT)
-								{
-									l.lightData.enabled = 0;
-								}
-							});
 						break;
 					}
 					default:
@@ -396,7 +397,7 @@ namespace sceneHelp
 
 		/*---------Textfields---------*/
 		Collection2D* connectFields = new Collection2D;
-		rtd::TextField* ipField = connectFields->AddElement<rtd::TextField>(draw_text_t((width / 2.f) - (widthScale * 0.25f), height * 0.55f, widthScale * 0.25f, D2D1Core::GetDefaultFontSize()), 30, true);
+		rtd::TextField* ipField = connectFields->AddElement<rtd::TextField>(draw_text_t((width / 2.f) - (widthScale * 0.25f), height * 0.55f, widthScale * 0.25f, D2D1Core::GetDefaultFontSize()), 25, true);
 		ipField->SetDescriptionText("IP Address:");
 		padding = (widthScale / 64.f);
 		rtd::TextField* portField = connectFields->AddElement<rtd::TextField>(draw_text_t((width / 2.f) + padding, height * 0.55f, widthScale * 0.25f, D2D1Core::GetDefaultFontSize()), 6);
