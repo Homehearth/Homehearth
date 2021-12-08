@@ -239,25 +239,22 @@ namespace sceneHelp
 						bullColl->Hide();
 
 						SoundHandler::Get().SetCurrentMusic("NightTheme");
-						Collection2D* skipButtonUI = scene.GetCollection("SkipUI");
-						rtd::Button* skipButton = dynamic_cast<rtd::Button*>(skipButtonUI->elements[0].get());
-						skipButton->SetVisiblity(false);
+
 						break;
 					}
 					case CyclePeriod::MORNING:
 					{
 						SoundHandler::Get().SetCurrentMusic("MenuTheme");
-						scene.ForEachComponent<comp::Light>([](comp::Light& l)
-							{
-								if (l.lightData.type == TypeLight::POINT)
-								{
-									l.lightData.enabled = 0;
-								}
-							});
+
 						break;
 					}
 					case CyclePeriod::EVENING:
 					{
+						Collection2D* skipButtonUI = scene.GetCollection("SkipUI");
+						rtd::Button* skipButton = dynamic_cast<rtd::Button*>(skipButtonUI->elements[0].get());
+						rtd::Text* skipText = dynamic_cast<rtd::Text*>(skipButtonUI->elements[1].get());
+						skipText->SetVisiblity(false);
+						skipButton->SetVisiblity(false);
 						scene.ForEachComponent<comp::Light>([](comp::Light& l)
 							{
 								if (l.lightData.type == TypeLight::POINT)
@@ -269,8 +266,17 @@ namespace sceneHelp
 					}
 					case CyclePeriod::DAY:
 					{
+						scene.ForEachComponent<comp::Light>([](comp::Light& l)
+							{
+								if (l.lightData.type == TypeLight::POINT)
+								{
+									l.lightData.enabled = 0;
+								}
+							});
 						Collection2D* skipButtonUI = scene.GetCollection("SkipUI");
 						rtd::Button* skipButton = dynamic_cast<rtd::Button*>(skipButtonUI->elements[0].get());
+						rtd::Text* skipText = dynamic_cast<rtd::Text*>(skipButtonUI->elements[1].get());
+						skipText->SetVisiblity(true);
 						skipButton->SetVisiblity(true);
 						break;
 					}
@@ -542,13 +548,17 @@ namespace sceneHelp
 		scene.Add2DCollection(abilities, "AbilityUI");
 
 		Collection2D* skipCollection = new Collection2D;
-		rtd::Button* skipToNightButton = skipCollection->AddElement<rtd::Button>("Button.png", draw_t(width - ((widthScale / 3.33f)), (height / 2) - (height / 8), (widthScale / 3.33f), (height / 6.f)), false);
+		rtd::Button* skipToNightButton = skipCollection->AddElement<rtd::Button>("Button.png", draw_t(width - ((widthScale / 9.f)), (height / 2) - (height / 8), (widthScale / 10.f), (height / 8.f)), false);
+		rtd::Text* skipToNightText = skipCollection->AddElement<rtd::Text>("Skip Day", draw_t(width - ((widthScale / 9.f)), (height / 2) - (height / 8), (widthScale / 10.f), (height / 8.f)));
+
 		scene.Add2DCollection(skipCollection, "SkipUI");
 		skipToNightButton->SetOnPressedEvent([=]
 			{
 				Entity player;
 				game->GetLocalPlayer(player);
-				game->SetPlayerWantsToSkip(!player.GetComponent<comp::Player>()->wantsToSkipDay);
+				game->SetPlayerWantsToSkip(true);
+				skipCollection->elements[0].get()->SetVisiblity(false);
+				skipCollection->elements[1].get()->SetVisiblity(false);
 			});
 
 		Collection2D* pauseMenu = new Collection2D;

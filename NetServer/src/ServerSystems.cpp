@@ -395,6 +395,7 @@ void ServerSystems::OnCycleChange(Simulation* simulation)
 
 			simulation->GetGameScene()->ForEachComponent<comp::Player, comp::Health>([=](Entity e, comp::Player& p, comp::Health& hp)
 				{
+					p.wantsToSkipDay = false;
 					if (!hp.isAlive)
 					{
 						simulation->ResetPlayer(e);

@@ -536,6 +536,8 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		Scene& scene = GetScene("Game");
 		Collection2D* skipButtonUI = scene.GetCollection("SkipUI");
 		rtd::Button* skipButton = dynamic_cast<rtd::Button*>(skipButtonUI->elements[0].get());
+		rtd::Text* skipText = dynamic_cast<rtd::Text*>(skipButtonUI->elements[1].get());
+		skipText->SetVisiblity(true);
 		skipButton->SetVisiblity(true);
 
 		SoundHandler::Get().SetCurrentMusic("MenuTheme");
