@@ -448,7 +448,7 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 
 	m_addedEntities.clear();
 #if RENDER_AINODES
-	std::vector<std::vector<std::shared_ptr<Node>>> nodes = Blackboard::Get().GetPathFindManager()->GetNodes();
+	std::vector<std::vector<std::shared_ptr<Node>>> nodes = blackboard.GetPathFindManager()->GetNodes();
 	for (int y = 0; y < nodes[0].size(); y++)
 	{
 		for (int x = 0; x < nodes[0].size(); x++)
