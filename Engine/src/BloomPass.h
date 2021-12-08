@@ -42,6 +42,10 @@ private:
 	ComPtr<ID3D11ShaderResourceView>	m_halfSizeView;
 	ComPtr<ID3D11RenderTargetView>		m_halfSizeRenderTarget;
 
+	ComPtr<ID3D11Texture2D>				m_quarterSize; // (Window Size / 2)
+	ComPtr<ID3D11ShaderResourceView>	m_quarterSizeView;
+	ComPtr<ID3D11RenderTargetView>		m_quarterSizeRenderTarget;
+
 	ID3D11Buffer*						m_screenSpaceQuad;
 	ID3D11Buffer*						m_indexBuffer;
 	dx::ConstantBuffer<sm::Vector4>		m_samplingInfoBuffer;

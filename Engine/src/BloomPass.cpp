@@ -162,6 +162,7 @@ void BloomPass::Setup()
 
     D3D11_TEXTURE2D_DESC texDesc = {};
     backBuff->GetDesc(&texDesc);
+    texDesc.Format = DXGI_FORMAT_R16G16B16A16_UNORM;
     hr = D3D11Core::Get().Device()->CreateTexture2D(&texDesc, nullptr, m_fullSize.GetAddressOf());
     hr = D3D11Core::Get().Device()->CreateUnorderedAccessView(m_fullSize.Get(), NULL, m_fullSizeView.GetAddressOf());
     hr = D3D11Core::Get().Device()->CreateRenderTargetView(m_fullSize.Get(), NULL, m_fullSizeTarget.GetAddressOf());
@@ -178,29 +179,37 @@ void BloomPass::Setup()
     hr = D3D11Core::Get().Device()->CreateShaderResourceView(m_halfSize.Get(), NULL, m_halfSizeView.GetAddressOf());
     hr = D3D11Core::Get().Device()->CreateRenderTargetView(m_halfSize.Get(), NULL, m_halfSizeRenderTarget.GetAddressOf());
     backBuff->Release();
+
+    texDesc.Height /= 2;
+    texDesc.Width /= 2;
+    hr = D3D11Core::Get().Device()->CreateTexture2D(&texDesc, nullptr, m_quarterSize.GetAddressOf());
+    hr = D3D11Core::Get().Device()->CreateShaderResourceView(m_quarterSize.Get(), NULL, m_quarterSizeView.GetAddressOf());
+    hr = D3D11Core::Get().Device()->CreateRenderTargetView(m_quarterSize.Get(), NULL, m_quarterSizeRenderTarget.GetAddressOf());
 }
 
 void BloomPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 {   
-    ID3D11Texture2D* backBuff = nullptr;
-    HRESULT hr = D3D11Core::Get().SwapChain()->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&backBuff));
-    if (FAILED(hr))
-    {
-        backBuff->Release();
-        return;
-    }
-    DC->CopyResource(m_blurredTexture.Get(), backBuff);
-    //DC->CopyResource(m_blurredTexture.Get(), PM->m_bloomTexture.Get());
-    backBuff->Release();
+    //ID3D11Texture2D* backBuff = nullptr;
+    //HRESULT hr = D3D11Core::Get().SwapChain()->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&backBuff));
+    //if (FAILED(hr))
+    //{
+    //    backBuff->Release();
+    //    return;
+    //}
+    //DC->CopyResource(m_blurredTexture.Get(), backBuff);
+    //backBuff->Release();
+
+    DC->CopyResource(m_blurredTexture.Get(), PM->m_bloomTexture.Get());
+
 }
 
 void BloomPass::Render(Scene* pScene)
 {
     this->Setdownsample();
     this->Draw();
-    //this->Setupsample();
-    //this->Draw();
-    //this->AdditiveBlend();
+    this->Setupsample();
+    this->Draw();
+    this->AdditiveBlend();
 }
 
 void BloomPass::PostRender(ID3D11DeviceContext* pDeviceContext)
