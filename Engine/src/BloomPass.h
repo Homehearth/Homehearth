@@ -6,6 +6,14 @@ class BloomPass : public IRenderPass
 {
 private:
 
+	enum class RenderVersion
+	{
+		FULL_TO_HALF,
+		HALF_TO_QUARTER,
+		QUARTER_TO_HALF,
+		HALF_TO_FULL
+	};
+
 	struct ScreenQuad
 	{
 		sm::Vector3 points;
@@ -52,9 +60,7 @@ private:
 	ComPtr<ID3D11InputLayout>			m_inputLayout;
 
 	void Unlink();
-	void Setdownsample();
-	void Setupsample();
-	void Draw();
+	void Draw(const RenderVersion& drawType);
 	void AdditiveBlend();
 
 public:

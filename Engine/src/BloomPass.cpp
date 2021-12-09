@@ -14,26 +14,48 @@ void BloomPass::Unlink()
     D3D11Core::Get().DeviceContext()->OMSetRenderTargets(8, nullRTV, nullptr);
 }
 
-void BloomPass::Setdownsample()
-{
-    //this->Unlink();
-    m_info.samplingInfo = { 2.0f, 1.0f, 1.0f, 1.0f };
-    m_samplingInfoBuffer.SetData(D3D11Core::Get().DeviceContext(), m_info.samplingInfo);
-    D3D11Core::Get().DeviceContext()->PSSetShaderResources(1, 1, m_blurredView.GetAddressOf());
-    D3D11Core::Get().DeviceContext()->OMSetRenderTargets(1, m_halfSizeRenderTarget.GetAddressOf(), nullptr);
-}
-
-void BloomPass::Setupsample()
+void BloomPass::Draw(const RenderVersion& drawType)
 {
     this->Unlink();
-    m_info.samplingInfo = { 1.0f, 1.0f, 1.0f, 1.0f };
-    m_samplingInfoBuffer.SetData(D3D11Core::Get().DeviceContext(), m_info.samplingInfo);
-    D3D11Core::Get().DeviceContext()->PSSetShaderResources(1, 1, m_halfSizeView.GetAddressOf());
-    D3D11Core::Get().DeviceContext()->OMSetRenderTargets(1, m_blurredTarget.GetAddressOf(), nullptr);
-}
-
-void BloomPass::Draw()
-{
+    switch (drawType)
+    {
+    case RenderVersion::FULL_TO_HALF:
+    {
+        m_info.samplingInfo = { 2.0f, 1.0f, 1.0f, 1.0f };
+        m_samplingInfoBuffer.SetData(D3D11Core::Get().DeviceContext(), m_info.samplingInfo);
+        D3D11Core::Get().DeviceContext()->PSSetShaderResources(1, 1, m_blurredView.GetAddressOf());
+        D3D11Core::Get().DeviceContext()->OMSetRenderTargets(1, m_halfSizeRenderTarget.GetAddressOf(), nullptr);
+        break;
+    }
+    case RenderVersion::HALF_TO_QUARTER:
+    {
+        m_info.samplingInfo = { 4.0f, 1.0f, 1.0f, 1.0f };
+        m_samplingInfoBuffer.SetData(D3D11Core::Get().DeviceContext(), m_info.samplingInfo);
+        D3D11Core::Get().DeviceContext()->PSSetShaderResources(1, 1, m_halfSizeView.GetAddressOf());
+        D3D11Core::Get().DeviceContext()->OMSetRenderTargets(1, m_quarterSizeRenderTarget.GetAddressOf(), nullptr);
+        break;
+    }
+    case RenderVersion::QUARTER_TO_HALF:
+    {
+        m_info.samplingInfo = { 2.0f, 1.0f, 1.0f, 1.0f };
+        m_samplingInfoBuffer.SetData(D3D11Core::Get().DeviceContext(), m_info.samplingInfo);
+        D3D11Core::Get().DeviceContext()->PSSetShaderResources(1, 1, m_quarterSizeView.GetAddressOf());
+        D3D11Core::Get().DeviceContext()->OMSetRenderTargets(1, m_halfSizeRenderTarget.GetAddressOf(), nullptr);
+        break;
+    }
+    case RenderVersion::HALF_TO_FULL:
+    {
+        m_info.samplingInfo = { 1.0f, 1.0f, 1.0f, 1.0f };
+        m_samplingInfoBuffer.SetData(D3D11Core::Get().DeviceContext(), m_info.samplingInfo);
+        D3D11Core::Get().DeviceContext()->PSSetShaderResources(1, 1, m_halfSizeView.GetAddressOf());
+        D3D11Core::Get().DeviceContext()->OMSetRenderTargets(1, m_blurredTarget.GetAddressOf(), nullptr);
+        break;
+    }
+    default:
+    {
+        break;
+    }
+    }
     D3D11Core::Get().DeviceContext()->RSSetViewports(1, &PM->m_viewport);
     D3D11Core::Get().DeviceContext()->VSSetShader(nullptr, nullptr, 0);
     D3D11Core::Get().DeviceContext()->PSSetShader(nullptr, nullptr, 0);
@@ -205,10 +227,10 @@ void BloomPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 
 void BloomPass::Render(Scene* pScene)
 {
-    this->Setdownsample();
-    this->Draw();
-    this->Setupsample();
-    this->Draw();
+    this->Draw(RenderVersion::FULL_TO_HALF);
+    this->Draw(RenderVersion::HALF_TO_QUARTER);
+    this->Draw(RenderVersion::QUARTER_TO_HALF);
+    this->Draw(RenderVersion::HALF_TO_FULL);
     this->AdditiveBlend();
 }
 
