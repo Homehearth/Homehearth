@@ -397,7 +397,7 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 		if (m_simulations.find(gameID) != m_simulations.end())
 		{
 			m_simulations.at(gameID)->GetPlayer(playerID).GetComponent<comp::Player>()->shopItem = shopItem;
-			m_simulations.at(gameID)->UseShop(shopItem, playerID);
+			m_simulations.at(gameID)->m_shop.UseShop(shopItem, playerID);
 		}
 		break;
 	}

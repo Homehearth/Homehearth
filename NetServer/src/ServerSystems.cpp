@@ -371,7 +371,7 @@ void ServerSystems::WaveSystem(Simulation* simulation,
 		}
 
 		//Add count and pop from queue
-		simulation->IncreaseWavesSurvived();
+		simulation->m_wavesSurvived++;
 		waves.pop();
 	}
 }
@@ -418,8 +418,13 @@ void ServerSystems::OnCycleChange(Simulation* simulation)
 			{
 				EnemyManagement::CreateWaves(simulation->waveQueue, simulation->currentRound++);
 			}
-
 		}
+
+		network::message<GameMsg> msg;
+		msg.header.id = GameMsg::Game_Time;
+		msg << simulation->m_timeCycler.GetCycleSpeed();
+		msg << simulation->m_timeCycler.GetTimePeriod();
+		simulation->Broadcast(msg);
 	}
 	if (simulation->m_timeCycler.GetTimePeriod() == CyclePeriod::NIGHT)
 	{
@@ -432,6 +437,12 @@ void ServerSystems::OnCycleChange(Simulation* simulation)
 		if (count == 0)
 		{
 			simulation->m_timeCycler.SetCycleSpeed(15.0f);
+
+			network::message<GameMsg> msg;
+			msg.header.id = GameMsg::Game_Time;
+			msg << simulation->m_timeCycler.GetCycleSpeed();
+			msg << simulation->m_timeCycler.GetTimePeriod();
+			simulation->Broadcast(msg);
 		}
 	}
 }
@@ -581,7 +592,6 @@ void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money
 			{
 				comp::AnimationState* anim = entity.GetComponent<comp::AnimationState>();
 
-
 				if (anim)
 				{
 					anim->toSend = EAnimationType::DEAD;
@@ -694,7 +704,7 @@ void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& sce
 
 		});
 
-	scene.ForEachComponent<comp::Player, comp::Health, comp::Network, comp::AnimationState>([&](Entity e, comp::Player& p, comp::Health& health, comp::Network n, comp::AnimationState anim)
+	scene.ForEachComponent<comp::Player, comp::Health, comp::Network>([&](Entity e, comp::Player& p, comp::Health& health, comp::Network n)
 		{
 			if (!health.isAlive)
 			{
@@ -795,7 +805,13 @@ void ServerSystems::CheckGameOver(Simulation* simulation, HeadlessScene& scene)
 
 	if (gameOver || isHousesDestroyed)
 	{
-		simulation->SetGameOver();
+		message<GameMsg> msg;
+		msg.header.id = GameMsg::Game_Over;
+		msg << simulation->GetCurrency().GetTotalGathered() << simulation->m_wavesSurvived - 1;
+		simulation->Broadcast(msg);
+
+		simulation->SetScene(simulation->GetGameOverScene());
+		simulation->m_lobby.Clear();
 	}
 }
 
@@ -930,6 +946,12 @@ void ServerSystems::CheckSkipDay(Simulation* simulation)
 	if (allPlayersSkip)
 	{
 		simulation->m_timeCycler.SetCycleSpeed(15.f);
+
+		network::message<GameMsg> msg;
+		msg.header.id = GameMsg::Game_Time;
+		msg << simulation->m_timeCycler.GetCycleSpeed();
+		msg << simulation->m_timeCycler.GetTimePeriod();
+		simulation->Broadcast(msg);
 	}
 }
 

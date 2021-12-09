@@ -41,7 +41,9 @@ namespace sceneHelp
 
 		scene.GetLights()->EditLight(lightEntity.GetComponent<comp::Light>()->lightData, lightEntity.GetComponent<comp::Light>()->index);
 
-		lightEntity.AddComponent<comp::SphereCollider>();
+		lightEntity.AddComponent<comp::SphereCollider>()->Center = sm::Vector3(pos.x, pos.y, pos.z);
+		lightEntity.GetComponent<comp::SphereCollider>()->Radius = 3.f;
+
 
 
 		return lightEntity;
@@ -182,8 +184,6 @@ namespace sceneHelp
 						}
 					});
 
-				game->GetCycler().Update(e.dt);
-
 				if (game->m_players.find(game->m_localPID) != game->m_players.end())
 				{
 					Camera* cam = scene.GetCurrentCamera();
@@ -200,7 +200,7 @@ namespace sceneHelp
 					comp::Light* l = sun.GetComponent<comp::Light>();
 
 					float angle = 360.f * game->GetCycler().GetTime();
-					float intensity = sunIntensity;
+
 					for (int i = 0; i < 2; i++)
 					{
 						sm::Vector3 dir = sm::Vector3::TransformNormal(sm::Vector3(-1, 0, -1), sm::Matrix::CreateRotationZ(dx::XMConvertToRadians(angle)));
@@ -217,11 +217,9 @@ namespace sceneHelp
 						l->lightData.position.w = 1.0f;
 
 						float d = std::abs(dir.Dot(sm::Vector3::Up));
-						l->lightData.intensity = intensity * d;
 
 						l = moon.GetComponent<comp::Light>();
 						angle -= 180.f;
-						intensity = moonIntensity;
 					}
 				}
 
@@ -234,11 +232,20 @@ namespace sceneHelp
 					{
 					case CyclePeriod::NIGHT:
 					{
+						game->m_players.at(game->m_localPID).GetComponent<comp::Player>()->wantsToSkipDay = false;
 						game->GetScene("Game").GetCollection("shopMenu")->Hide();
 						game->SetShopItem(ShopItem::None);
 						bullColl->Hide();
 
 						SoundHandler::Get().SetCurrentMusic("NightTheme");
+
+						scene.ForEachComponent<comp::Light>([](comp::Light& l)
+							{
+								if (l.lightData.type == TypeLight::POINT)
+								{
+									l.lightData.enabled = 1;
+								}
+							});
 
 						break;
 					}
@@ -268,13 +275,6 @@ namespace sceneHelp
 						rtd::Text* skipText = dynamic_cast<rtd::Text*>(skipButtonUI->elements[1].get());
 						skipText->SetVisiblity(false);
 						skipButton->SetVisiblity(false);
-						scene.ForEachComponent<comp::Light>([](comp::Light& l)
-							{
-								if (l.lightData.type == TypeLight::POINT)
-								{
-									l.lightData.enabled = 1;
-								}
-							});
 						break;
 					}
 					case CyclePeriod::DAY:
@@ -285,6 +285,8 @@ namespace sceneHelp
 						break;
 					}
 				}
+
+				game->GetCycler().Update(e.dt);
 
 				ShopItem shopitem = game->GetShopItem();
 
@@ -1332,7 +1334,6 @@ namespace sceneHelp
 		mainMenuButton->SetOnPressedEvent([=]
 			{
 				game->SetScene("JoinLobby");
-				game->m_gameID = -1;
 			});
 
 		scene.Add2DCollection(gameOverCollection, "GameOver");

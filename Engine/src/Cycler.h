@@ -32,6 +32,7 @@ public:
 
 	float GetCycleSpeed() const;
 	float GetDefaultSpeed() const;
+	void SetTimePeriod(CyclePeriod period);
 	void SetCycleSpeed(float speed);
 	void setBlackboard(Blackboard* blackboard);
 

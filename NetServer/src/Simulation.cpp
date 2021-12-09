@@ -164,12 +164,12 @@ void Simulation::ResetPlayer(Entity player)
 	health->isAlive = true;
 	// only if Melee
 
-	if (player.GetComponent<comp::MeleeAttackAbility>())
+	if (playerComp->classType == comp::Player::Class::WARRIOR)
 	{
 		player.RemoveComponent<comp::MeleeAttackAbility>();
 		player.RemoveComponent<comp::DashAbility>();
 	}
-	if (player.GetComponent<comp::RangeAttackAbility>())
+	else if (playerComp->classType == comp::Player::Class::MAGE)
 	{
 		player.RemoveComponent<comp::RangeAttackAbility>();
 		player.RemoveComponent<comp::BlinkAbility>();
@@ -272,7 +272,8 @@ void Simulation::ResetPlayer(Entity player)
 
 Simulation::Simulation(Server* pServer, HeadlessEngine* pEngine)
 	: m_pServer(pServer)
-	, m_pEngine(pEngine), m_pLobbyScene(nullptr), m_pGameScene(nullptr), m_pGameOverScene(nullptr), m_pCurrentScene(nullptr), currentRound(0), houseManager(&blackboard)
+	, m_pEngine(pEngine), m_pLobbyScene(nullptr), m_pGameScene(nullptr), m_pGameOverScene(nullptr), 
+	m_pCurrentScene(nullptr), currentRound(0), houseManager(&blackboard), m_shop(this)
 {
 	this->m_gameID = 0;
 	this->m_tick = 0;
@@ -287,7 +288,6 @@ Simulation::Simulation(Server* pServer, HeadlessEngine* pEngine)
 	m_spawnPoints.push(TR);
 	m_spawnPoints.push(BL);
 	m_spawnPoints.push(BR);
-	m_shop.SetSimulation(this);
 }
 
 void Simulation::JoinLobby(uint32_t gameID, uint32_t playerID, const std::string& name)
@@ -363,7 +363,6 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 					Systems::UpdateAbilities(scene, e.dt);
 					ServerSystems::CombatSystem(scene, e.dt, &blackboard);
 					Systems::HealingSystem(scene, e.dt);
-					ServerSystems::HealthSystem(scene, e.dt, m_currency, houseManager, qt.get(), m_grid, m_spreeHandler, &blackboard);
 					Systems::SelfDestructSystem(scene, e.dt);
 				}
 
@@ -386,6 +385,8 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 					PROFILE_SCOPE("Collision");
 					Systems::CheckCollisions(scene, e.dt);
 				}
+
+				ServerSystems::HealthSystem(scene, e.dt, m_currency, houseManager, qt.get(), m_grid, m_spreeHandler, &blackboard);
 
 				{
 					PROFILE_SCOPE("Animation system");
@@ -577,12 +578,12 @@ void Simulation::SendSnapshot()
 		//msg5 << (uint32_t)m_spreeHandler.GetSpree();
 		//this->Broadcast(msg5);
 
-		if (this->m_tick % 40 == 0)
+		if (this->m_tick % 600 == 0)
 		{
 			network::message<GameMsg> timeMsg;
-			timeMsg.header.id = GameMsg::Game_Time;
-			timeMsg << m_timeCycler.GetTime();
+			timeMsg.header.id = GameMsg::Game_Time_Update;
 			timeMsg << m_timeCycler.GetCycleSpeed();
+			timeMsg << m_timeCycler.GetTime();
 			this->Broadcast(timeMsg);
 		}
 	}
@@ -712,6 +713,14 @@ HeadlessScene* Simulation::GetGameScene() const
 	return m_pGameScene;
 }
 
+void Simulation::SetScene(HeadlessScene* scene)
+{
+	if (!scene)
+	{
+		m_pCurrentScene = scene;
+	}
+}
+
 GridSystem& Simulation::GetGrid()
 {
 	return m_grid;
@@ -720,16 +729,6 @@ GridSystem& Simulation::GetGrid()
 Currency& Simulation::GetCurrency()
 {
 	return m_currency;
-}
-
-void Simulation::IncreaseWavesSurvived()
-{
-	this->m_wavesSurvived++;
-}
-
-void Simulation::UseShop(const ShopItem& item, const uint32_t& player)
-{
-	m_shop.UseShop(item, player);
 }
 
 void Simulation::UpgradeDefence(const uint32_t& id)
@@ -767,17 +766,6 @@ void Simulation::SetLobbyScene()
 
 	this->Broadcast(msg);
 	m_lobby.SetActive(true);
-}
-
-void Simulation::SetGameOver()
-{
-	m_pCurrentScene = m_pGameOverScene;
-	message<GameMsg> msg;
-	msg.header.id = GameMsg::Game_Over;
-	msg << m_currency.GetTotalGathered() << m_wavesSurvived - 1;
-	this->Broadcast(msg);
-
-	m_lobby.Clear();
 }
 
 void Simulation::SetGameScene()
@@ -844,7 +832,7 @@ void Simulation::ResetGameScene()
 	houseManager.InitializeHouses(*this->GetGameScene(), qt.get());
 	AIBehaviors::UpdateBlackBoard(*m_pGameScene, &blackboard);
 
-	m_timeCycler.SetTime(DAY);
+	m_timeCycler.SetTime(MORNING);
 	m_timeCycler.SetCycleSpeed(1.0f);
 }
 

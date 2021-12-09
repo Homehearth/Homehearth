@@ -414,6 +414,9 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	}
 	case GameMsg::Game_Over:
 	{
+		uint32_t gatheredMoney, wavesSurvived;
+		msg >> wavesSurvived >> gatheredMoney;
+
 		SoundHandler::Get().GetCurrentMusic()->stop();
 
 		audio_t audio = {};
@@ -424,16 +427,16 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		SoundHandler::Get().PlaySound("OnGameOver", audio);
 		rtd::Text* mainMenuErrorText = dynamic_cast<rtd::Text*>(GetScene("MainMenu").GetCollection("ConnectFields")->elements[6].get());
 		mainMenuErrorText->SetVisiblity(false);
-		Scene& scene = GetScene("Game");
-		scene.GetCollection("SpectateUI")->elements[0]->SetVisiblity(false);
-		scene.GetCollection("SpectateUI")->elements[1]->SetVisiblity(false);
-		uint32_t gatheredMoney, wavesSurvived;
-		msg >> wavesSurvived >> gatheredMoney;
-		SetScene("GameOver");
+		Scene& gameScene = GetScene("Game");
+		gameScene.GetCollection("SpectateUI")->elements[0]->SetVisiblity(false);
+		gameScene.GetCollection("SpectateUI")->elements[1]->SetVisiblity(false);
 		rtd::Text* scoreText = dynamic_cast<rtd::Text*>(GetScene("GameOver").GetCollection("GameOver")->elements[1].get());
 		scoreText->SetText("Score: " + std::to_string(gatheredMoney));
 		rtd::Text* wavesText = dynamic_cast<rtd::Text*>(GetScene("GameOver").GetCollection("GameOver")->elements[2].get());
 		wavesText->SetText("Waves: " + std::to_string(wavesSurvived));
+		SetScene("GameOver");
+
+		m_gameID = -1;
 
 		auto it = m_gameEntities.begin();
 
@@ -443,39 +446,31 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			it = m_gameEntities.erase(it);
 		}
 
-		it = m_players.begin();
 
+		it = m_players.begin();
+		int i = 1;
+		Scene& lobbyScene = GetScene("Lobby");
 		while (it != m_players.end())
 		{
 			it->second.Destroy();
 			it = m_players.erase(it);
-		}
 
-		for (int i = 0; i < MAX_PLAYERS_PER_LOBBY; i++)
-		{
-			GetScene("Game").GetCollection("player" + std::to_string(i + 1) + +"Info")->Hide();
-			GetScene("Game").GetCollection("dynamicPlayer" + std::to_string(i + 1) + "namePlate");
+			gameScene.GetCollection("player" + std::to_string(i) + +"Info")->Hide();
+			gameScene.GetCollection("dynamicPlayer" + std::to_string(i) + "namePlate")->Hide();
+			lobbyScene.GetCollection("playerIcon" + std::to_string(i))->Hide();
 		}
 
 		m_isSpectating = false;
 
-		rtd::Button* readyText = dynamic_cast<rtd::Button*>(GetScene("Lobby").GetCollection("StartGame")->elements[0].get());
+		rtd::Button* readyText = dynamic_cast<rtd::Button*>(lobbyScene.GetCollection("StartGame")->elements[0].get());
 		readyText->GetPicture()->SetTexture("Ready.png");
 
-		rtd::Button* wizardButton = dynamic_cast<rtd::Button*>(GetScene("Lobby").GetCollection("ClassButtons")->elements[0].get());
-		rtd::Button* warriorButton = dynamic_cast<rtd::Button*>(GetScene("Lobby").GetCollection("ClassButtons")->elements[1].get());
+		rtd::Button* wizardButton = dynamic_cast<rtd::Button*>(lobbyScene.GetCollection("ClassButtons")->elements[0].get());
 		wizardButton->GetBorder()->SetVisiblity(false);
+		rtd::Button* warriorButton = dynamic_cast<rtd::Button*>(lobbyScene.GetCollection("ClassButtons")->elements[1].get());
 		warriorButton->GetBorder()->SetVisiblity(true);
-		rtd::Picture* desc = dynamic_cast<rtd::Picture*>(GetScene("Lobby").GetCollection("ClassTextCanvas")->elements[0].get());
+		rtd::Picture* desc = dynamic_cast<rtd::Picture*>(lobbyScene.GetCollection("ClassTextCanvas")->elements[0].get());
 		desc->SetTexture("WarriorDesc.png");
-		rtd::Picture* checkMark = dynamic_cast<rtd::Picture*>(GetScene("Lobby").GetCollection("playerIcon1")->elements[3].get());
-		checkMark->SetVisiblity(false);
-		checkMark = dynamic_cast<rtd::Picture*>(GetScene("Lobby").GetCollection("playerIcon2")->elements[3].get());
-		checkMark->SetVisiblity(false);
-		checkMark = dynamic_cast<rtd::Picture*>(GetScene("Lobby").GetCollection("playerIcon3")->elements[3].get());
-		checkMark->SetVisiblity(false);
-		checkMark = dynamic_cast<rtd::Picture*>(GetScene("Lobby").GetCollection("playerIcon4")->elements[3].get());
-		checkMark->SetVisiblity(false);
 
 		break;
 	}
@@ -603,16 +598,22 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	}
 	case GameMsg::Game_Time:
 	{
+		CyclePeriod timePeriod;
 		float speed;
+		msg >> timePeriod;
 		msg >> speed;
+		m_cycler.SetTimePeriod(timePeriod);
+		m_cycler.SetCycleSpeed(speed);
+		break;
+	}
+	case GameMsg::Game_Time_Update:
+	{
+		float speed;
 		float time;
 		msg >> time;
-		if (speed == m_cycler.GetDefaultSpeed())
-		{
-			m_players.at(m_localPID).GetComponent<comp::Player>()->wantsToSkipDay = false;
-		}
-		m_cycler.SetCycleSpeed(speed);
+		msg >> speed;
 		m_cycler.SetTime(time);
+		m_cycler.SetCycleSpeed(speed);
 		break;
 	}
 	case GameMsg::Lobby_Update:

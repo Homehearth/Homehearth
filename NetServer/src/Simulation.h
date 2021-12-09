@@ -29,8 +29,6 @@ private:
 	uint32_t m_tick;
 	GridSystem m_grid;
 	Currency m_currency;
-	Lobby m_lobby;
-	IShop m_shop;
 	SpreeHandler m_spreeHandler;
 	std::unique_ptr<QuadTree> qt;
 	std::unique_ptr<QuadTree> qtDynamic;
@@ -50,13 +48,11 @@ private:
 
 	std::unordered_map<ecs::Component, std::vector<Entity>> m_updatedComponents;
 
+	Blackboard blackboard;
 
 	void InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg, const std::bitset<ecs::Component::COMPONENT_MAX>& componentMask = UINT32_MAX) const;
 
 	uint32_t GetTick()const;
-
-	//Game play related
-	uint32_t m_wavesSurvived;
 
 	std::queue<sm::Vector3> m_spawnPoints;
 	HouseManager houseManager;
@@ -68,11 +64,13 @@ private:
 	void OnComponentUpdated(Entity entity, ecs::Component component);
 
 	void BuildMapColliders(std::vector<dx::BoundingOrientedBox>* mapColliders);
-	Blackboard blackboard;
 public:
 	Cycler m_timeCycler;
 	std::queue<Wave> waveQueue;
 	uint32_t currentRound;
+	Lobby m_lobby;
+	uint32_t m_wavesSurvived;
+	IShop m_shop;
 
 	Simulation(Server* pServer, HeadlessEngine* pEngine);
 	virtual ~Simulation() = default;
@@ -92,20 +90,16 @@ public:
 	HeadlessScene* GetLobbyScene() const;
 	HeadlessScene* GetGameOverScene() const;
 	HeadlessScene* GetGameScene() const;
+	void SetScene(HeadlessScene* scene);
 
 	GridSystem& GetGrid();
 	Currency& GetCurrency();
 
-	void IncreaseWavesSurvived();
-
 	void SetLobbyScene();
-	void SetGameOver();
 	void SetGameScene();
 	void ResetGameScene();
 
 	void ResetPlayer(Entity player);
-
-	void SetPlayerSkipDay(uint32_t playerID);
 
 	void SendEntities(const std::vector<Entity>& entities, GameMsg msgID, const std::bitset<ecs::Component::COMPONENT_MAX>& componentMask = UINT32_MAX);
 	void SendAllEntitiesToPlayer(uint32_t playerID) const;
@@ -125,6 +119,5 @@ public:
 	Entity GetPlayer(uint32_t playerID)const;
 	Blackboard* GetBlackboard();
 
-	void UseShop(const ShopItem& item, const uint32_t& player);
 	void UpgradeDefence(const uint32_t& id);
 };

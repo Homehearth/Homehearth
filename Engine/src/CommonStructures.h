@@ -326,6 +326,7 @@ enum class GameMsg : uint16_t
 	Game_BackToLobby,
 	Game_WaveTimer,
 	Game_Time,
+	Game_Time_Update,
 
 	Game_PlaySound,
 	Game_ClassSelected,
