@@ -28,7 +28,11 @@ void BasePass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
     DC->RSSetViewports(1, &PM->m_viewport);
     DC->RSSetState(PM->m_rasterState.Get());
 
-    DC->OMSetRenderTargets(1, PM->m_backBuffer.GetAddressOf(), PM->m_depthStencilView.Get());
+    ID3D11RenderTargetView* renderTargets[2];
+    renderTargets[0] = PM->m_backBuffer.Get();
+    renderTargets[1] = PM->m_bloomTargetView.Get();
+
+    DC->OMSetRenderTargets(2, renderTargets, PM->m_depthStencilView.Get());
     DC->OMSetDepthStencilState(PM->m_depthStencilStateLessEqual.Get(), 0);
 
     if(m_pShadowPass)
@@ -46,6 +50,10 @@ void BasePass::PostRender(ID3D11DeviceContext* pDeviceContext)
 	// Cleanup.
 	//ID3D11ShaderResourceView* nullSRV[] = { nullptr };
 	//DC->PSSetShaderResources(0, 1, nullSRV);
+    ID3D11RenderTargetView* nullRender[2];
+    nullRender[0] = nullptr;
+    nullRender[1] = nullptr;
+    DC->OMSetRenderTargets(2, nullRender, nullptr);
 
     ID3D11Buffer* nullBuffer = nullptr;
     DC->PSSetConstantBuffers(1, 1, &nullBuffer);

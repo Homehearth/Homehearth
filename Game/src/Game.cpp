@@ -14,12 +14,18 @@ Game::Game()
 	: m_client(std::bind(&Game::CheckIncoming, this, _1), std::bind(&Game::OnClientDisconnect, this))
 	, Engine()
 {
-	m_localPID = -1;
-	m_spectatingID = -1;
-	m_money = 0;
-	m_gameID = -1;
-	m_inputState = {};
-	m_isSpectating = false;
+	this->m_localPID = -1;
+	this->m_spectatingID = -1;
+	this->m_money = 0;
+	this->m_waveCounter = 0;
+	this->m_gameID = -1;
+	this->m_inputState = {};
+	this->m_isSpectating = false;
+}
+
+uint32_t& Game::GetWaveCounter()
+{
+	return m_waveCounter;
 }
 
 Game::~Game()
@@ -29,7 +35,7 @@ Game::~Game()
 		m_client.Disconnect();
 	}
 
-	OptionSystem::Get().SetOption("MasterVolume", std::to_string(m_masterVolume));
+	OptionSystem::Get().SetOption("MasterVolume", std::to_string(SoundHandler::Get().GetMasterVolume()));
 	OptionSystem::Get().OnShutdown();
 }
 
@@ -69,10 +75,6 @@ void Game::UpdateNetwork(float deltaTime)
 
 bool Game::OnStartup()
 {
-	m_masterVolume = std::stof(OptionSystem::Get().GetOption("MasterVolume"));
-	sceneHelp::CreateLoadingScene(this);
-	SetScene("Loading");
-
 	// Scene logic
 	sceneHelp::CreateLobbyScene(this);
 	sceneHelp::CreateGameScene(this);
@@ -81,6 +83,7 @@ bool Game::OnStartup()
 	sceneHelp::CreateGameOverScene(this);
 
 	sceneHelp::CreateOptionsScene(this);
+
 	// Set Current Scene
 	SetScene("MainMenu");
 
@@ -99,13 +102,29 @@ void Game::OnUserUpdate(float deltaTime)
 {
 	this->UpdateInput();
 
-	//DEBUG
-	Scene& scene = GetScene("Game");
-
 	//scene.ForEachComponent<comp::Light>([&](Entity e, comp::Light& l)
 	//	{
 	//		e.GetComponent<comp::SphereCollider>()->Center = sm::Vector3(l.lightData.position);
 	//	});
+
+	Scene& scene = GetScene("Game");
+	Entity e;
+	if (GetLocalPlayer(e))
+	{
+		comp::KillDeaths* p = e.GetComponent<comp::KillDeaths>();
+
+		// Update the death and kill counter.
+		if (p)
+		{
+			Collection2D* killColl = scene.GetCollection("ZKillCounter");
+			Collection2D* deathColl = scene.GetCollection("ZDeathCounter");
+			if (killColl && deathColl)
+			{
+				dynamic_cast<rtd::Text*>(killColl->elements[1].get())->SetText(std::to_string(p->kills));
+				dynamic_cast<rtd::Text*>(deathColl->elements[1].get())->SetText(std::to_string(p->deaths));
+			}
+		}
+	}
 
 }
 
@@ -270,8 +289,8 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 				comp::Player* p = m_gameEntities.at(id).GetComponent<comp::Player>();
 				if (p)
 				{
-					GetScene("Game").GetCollection("player" + std::to_string(static_cast<uint16_t>(p->playerType)) + "Info")->Hide();
-					GetScene("Game").GetCollection("dynamicPlayer" + std::to_string(static_cast<uint16_t>(p->playerType)) + "namePlate")->Hide();
+					GetScene("Game").GetCollection("Aplayer" + std::to_string(static_cast<uint16_t>(p->playerType)) + "Info")->Hide();
+					GetScene("Game").GetCollection("AdynamicPlayer" + std::to_string(static_cast<uint16_t>(p->playerType)) + "namePlate")->Hide();
 				}
 				m_gameEntities.at(id).Destroy();
 				m_gameEntities.erase(id);
@@ -453,8 +472,8 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 
 		for (int i = 0; i < MAX_PLAYERS_PER_LOBBY; i++)
 		{
-			GetScene("Game").GetCollection("player" + std::to_string(i + 1) + +"Info")->Hide();
-			GetScene("Game").GetCollection("dynamicPlayer" + std::to_string(i + 1) + "namePlate");
+			GetScene("Game").GetCollection("Aplayer" + std::to_string(i + 1) + +"Info")->Hide();
+			GetScene("Game").GetCollection("AdynamicPlayer" + std::to_string(i + 1) + "namePlate");
 		}
 
 		m_isSpectating = false;
@@ -562,7 +581,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		rtd::Text* nameErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("nameInput")->elements[1].get());
 		nameErrorText->SetVisiblity(false);
 		SetScene("Game");
-		thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::ADAPTIVE);
+		//thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::ADAPTIVE);
 		Entity e;
 		if (GetLocalPlayer(e))
 		{
@@ -572,13 +591,13 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			{
 				if (p->classType == comp::Player::Class::WARRIOR)
 				{
-					dynamic_cast<rtd::AbilityUI*>(GetScene("Game").GetCollection("AbilityUI")->elements[1].get())->SetTexture("Attack2.png");
-					dynamic_cast<rtd::AbilityUI*>(GetScene("Game").GetCollection("AbilityUI")->elements[2].get())->SetTexture("Block.png");
+					dynamic_cast<rtd::AbilityUI*>(GetScene("Game").GetCollection("ZAbilityUI")->elements[1].get())->SetTexture("Attack2.png");
+					dynamic_cast<rtd::AbilityUI*>(GetScene("Game").GetCollection("ZAbilityUI")->elements[2].get())->SetTexture("Block.png");
 				}
 				else
 				{
-					dynamic_cast<rtd::AbilityUI*>(GetScene("Game").GetCollection("AbilityUI")->elements[1].get())->SetTexture("Attack.png");
-					dynamic_cast<rtd::AbilityUI*>(GetScene("Game").GetCollection("AbilityUI")->elements[2].get())->SetTexture("Heal.png");
+					dynamic_cast<rtd::AbilityUI*>(GetScene("Game").GetCollection("ZAbilityUI")->elements[1].get())->SetTexture("Attack.png");
+					dynamic_cast<rtd::AbilityUI*>(GetScene("Game").GetCollection("ZAbilityUI")->elements[2].get())->SetTexture("Heal.png");
 				}
 			}
 		}
@@ -586,6 +605,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		m_primaryCooldown = 0.0f;
 		m_secondaryCooldown = 0.0f;
 		m_dodgeCooldown = 0.0f;
+		m_waveCounter = 0;
 
 		this->m_inputState = { };
 		SetScene("Game");
@@ -641,7 +661,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 					break;
 				playerTypes[static_cast<int>(p->playerType) - 1] = p->playerType;
 				dynamic_cast<rtd::Text*>(GetScene("Lobby").GetCollection("playerIcon" + std::to_string(static_cast<uint16_t>(p->playerType)))->elements[1].get())->SetText(name);
-				rtd::Text* plT = dynamic_cast<rtd::Text*>(GetScene("Game").GetCollection("dynamicPlayer" + std::to_string(static_cast<uint16_t>(p->playerType)) + "namePlate")->elements[0].get());
+				rtd::Text* plT = dynamic_cast<rtd::Text*>(GetScene("Game").GetCollection("AdynamicPlayer" + std::to_string(static_cast<uint16_t>(p->playerType)) + "namePlate")->elements[0].get());
 				rtd::Picture* plP = dynamic_cast<rtd::Picture*>(GetScene("Lobby").GetCollection("playerIcon" + std::to_string(static_cast<uint16_t>(p->playerType)))->elements[2].get());
 
 				if (plT)
@@ -725,7 +745,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	case GameMsg::Game_Money:
 	{
 		msg >> m_money;
-		rtd::MoneyUI* elem = dynamic_cast<rtd::MoneyUI*>(GetScene("Game").GetCollection("MoneyUI")->elements[0].get());
+		rtd::MoneyUI* elem = dynamic_cast<rtd::MoneyUI*>(GetScene("Game").GetCollection("ZMoneyUI")->elements[0].get());
 		if (elem)
 		{
 			elem->SetNewMoney(m_money);
@@ -1336,6 +1356,13 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 				{
 					e.AddComponent<comp::Cost>(c);
 				}
+				break;
+			}
+			case ecs::Component::KD:
+			{
+				comp::KillDeaths kd;
+				msg >> kd;
+				e.AddComponent<comp::KillDeaths>(kd);
 				break;
 			}
 			default:

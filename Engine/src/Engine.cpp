@@ -4,6 +4,8 @@
 #include "Camera.h"
 #include "GridSystem.h"
 #include "OptionSystem.h"
+#include "Picture.h"
+#include "Canvas.h"
 
 /*
 	We only need the loading screen rendered once. 
@@ -30,9 +32,9 @@ void Engine::Startup()
 
 	//Get heighest possible 16:9 resolution
 	//90% of the height
-	/*config.height = static_cast<UINT>(GetSystemMetrics(SM_CYSCREEN) * 0.50f);
-	float aspectRatio = 16.0f / 9.0f;
-	config.width = static_cast<UINT>(aspectRatio * config.height);*/
+	//config.height = static_cast<UINT>(GetSystemMetrics(SM_CYSCREEN) * 0.50f);
+	//float aspectRatio = 16.0f / 9.0f;
+	//config.width = static_cast<UINT>(aspectRatio * config.height);
 
 
 	int fullscreen = std::stoi(OptionSystem::Get().GetOption("Fullscreen"));
@@ -60,11 +62,6 @@ void Engine::Startup()
 	D3D11Core::Get().Initialize(&m_window);
 	D2D1Core::Initialize(&m_window);
 
-	m_renderer.Initialize(&m_window);
-	m_renderer.Setup(*this);
-
-	// Thread should be launched after s_engineRunning is set to true and D3D11 is initialized.
-
 	IMGUI(
 		// Setup ImGUI
 		IMGUI_CHECKVERSION();
@@ -77,21 +74,29 @@ void Engine::Startup()
 		LOG_INFO("ImGui was successfully initialized");
 	);
 
+	this->SetupLoadingScreen();
+	SetScene("Loading");
+	if (thread::IsThreadActive())
+		T_CJOB(Engine, RenderThread);
+
+	m_renderer.Initialize(&m_window);
+	m_renderer.Setup(*this);
+
 	// Thread Startup.
 	thread::RenderThreadHandler::Get().SetRenderer(&m_renderer);
 	thread::RenderThreadHandler::Get().SetWindow(&m_window);
 	thread::RenderThreadHandler::Get().Setup(2);
 
 	InputSystem::Get().SetMouseWindow(m_window.GetHWnd(), m_window.GetWidth(), m_window.GetHeight());
+
+	SoundHandler::Get().SetMasterVolume(std::stof(OptionSystem::Get().GetOption("MasterVolume")));
+	SoundHandler::Get().Setup();
 	
 	BasicEngine::Startup();
 }
 
 void Engine::Run()
 {
-	if (thread::IsThreadActive())
-		T_CJOB(Engine, RenderThread);
-
 	BasicEngine::Run();
 	// Wait for the rendering thread to exit its last render cycle and shutdown
 #if _DEBUG
@@ -406,6 +411,20 @@ void Engine::drawImGUI()
 
 	ImGui::End();
 	
+}
+
+void Engine::SetupLoadingScreen()
+{
+	const float width = (float)GetWindow()->GetWidth();
+	const float height = (float)GetWindow()->GetHeight();
+	Scene& scene = GetScene("Loading");
+
+	Collection2D* loadingScreen = new Collection2D;
+
+	loadingScreen->AddElement<rtd::Picture>("LoadingScreen.png", (draw_t(0.0f, 0.0f, width, height)));
+	loadingScreen->AddElement<rtd::Canvas>(D2D1::ColorF(0.0f, 0.0f), draw_t(0.0f, 0.0f, width / 2.0f, height / 2.0f));
+
+	scene.Add2DCollection(loadingScreen, "LoadingScreen");
 }
 
 void Engine::RenderThread()
