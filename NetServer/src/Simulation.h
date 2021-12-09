@@ -46,6 +46,8 @@ private:
 	std::vector<uint32_t> m_removedEntities;
 	std::vector<Entity> m_updatedEntities;
 
+	Blackboard blackboard;
+
 	std::unordered_map<ecs::Component, std::vector<Entity>> m_updatedComponents;
 
 	void InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg, const std::bitset<ecs::Component::COMPONENT_MAX>& componentMask = UINT32_MAX) const;
