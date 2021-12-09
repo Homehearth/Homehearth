@@ -68,7 +68,7 @@ private:
 	void OnComponentUpdated(Entity entity, ecs::Component component);
 
 	void BuildMapColliders(std::vector<dx::BoundingOrientedBox>* mapColliders);
-
+	Blackboard blackboard;
 public:
 	Cycler m_timeCycler;
 	std::queue<Wave> waveQueue;
@@ -105,6 +105,8 @@ public:
 
 	void ResetPlayer(Entity player);
 
+	void SetPlayerSkipDay(uint32_t playerID);
+
 	void SendEntities(const std::vector<Entity>& entities, GameMsg msgID, const std::bitset<ecs::Component::COMPONENT_MAX>& componentMask = UINT32_MAX);
 	void SendAllEntitiesToPlayer(uint32_t playerID) const;
 
@@ -121,6 +123,7 @@ public:
 	void BroadcastUDP(message<GameMsg>& msg, uint32_t exclude = -1)const;
 
 	Entity GetPlayer(uint32_t playerID)const;
+	Blackboard* GetBlackboard();
 
 	void UseShop(const ShopItem& item, const uint32_t& player);
 	void UpgradeDefence(const uint32_t& id);

@@ -141,6 +141,7 @@ void Simulation::ResetPlayer(Entity player)
 		return;
 	}
 
+	playerComp->wantsToSkipDay = false;
 	playerComp->runSpeed = 30.f;
 	playerComp->state = comp::Player::State::IDLE;
 	playerComp->isReady = false;
@@ -158,17 +159,32 @@ void Simulation::ResetPlayer(Entity player)
 		firstTimeAdded = true;
 	}
 
-	player.AddComponent<comp::MeshName>()->name = NameType::MESH_KNIGHT;
-	player.AddComponent<comp::AnimatorName>()->name = AnimName::ANIM_KNIGHT;
 	player.AddComponent<comp::AnimationState>();
-
+	comp::Health* health = player.AddComponent<comp::Health>();
+	health->isAlive = true;
 	// only if Melee
+
+	if (player.GetComponent<comp::MeleeAttackAbility>())
+	{
+		player.RemoveComponent<comp::MeleeAttackAbility>();
+		player.RemoveComponent<comp::DashAbility>();
+	}
+	if (player.GetComponent<comp::RangeAttackAbility>())
+	{
+		player.RemoveComponent<comp::RangeAttackAbility>();
+		player.RemoveComponent<comp::BlinkAbility>();
+		player.RemoveComponent<comp::HealAbility>();
+	}
+
 	if (playerComp->classType == comp::Player::Class::WARRIOR)
 	{
+		health->maxHealth = 125.f;
+		health->currentHealth = 125.f;
+
 		comp::MeleeAttackAbility* attackAbility = player.AddComponent<comp::MeleeAttackAbility>();
 		attackAbility->cooldown = 0.50f;
 		attackAbility->attackDamage = 20.f;
-		attackAbility->lifetime = 0.2f;
+		attackAbility->lifetime = 0.1f;
 		attackAbility->useTime = 0.2f;
 		attackAbility->delay = 0.2f;
 		attackAbility->attackRange = 8.f;
@@ -188,24 +204,29 @@ void Simulation::ResetPlayer(Entity player)
 
 		playerComp->moveAbilty = entt::resolve<comp::DashAbility>();
 
+		player.AddComponent<comp::MeshName>()->name = NameType::MESH_KNIGHT;
+		player.AddComponent<comp::AnimatorName>()->name = AnimName::ANIM_KNIGHT;
 	}
 	else if (playerComp->classType == comp::Player::Class::MAGE)
 	{
+		health->maxHealth = 80.f;
+		health->currentHealth = 80.f;
+
 		comp::RangeAttackAbility* attackAbility = player.AddComponent<comp::RangeAttackAbility>();
 		attackAbility->cooldown = 0.8f;
 		attackAbility->attackDamage = 20.f;
 		attackAbility->lifetime = 2.0f;
 		attackAbility->projectileSpeed = 80.f;
 		attackAbility->projectileSize = 3.f;
-		attackAbility->attackRange = 6.0f;
+		attackAbility->attackRange = 13.0f;
 		attackAbility->useTime = 0.3f;
-		attackAbility->delay = 0.1f;
+		attackAbility->delay = 0.3f;
 		playerComp->primaryAbilty = entt::resolve<comp::RangeAttackAbility>();
 
 		comp::HealAbility* healAbility = player.AddComponent<comp::HealAbility>();
 		healAbility->cooldown = 8.0f;
 		healAbility->delay = 0.0f;
-		healAbility->healAmount = 20.f;
+		healAbility->healAmount = 30.f;
 		healAbility->lifetime = 1.0f;
 		healAbility->range = 30.f;
 		healAbility->useTime = 1.0f;
@@ -224,15 +245,9 @@ void Simulation::ResetPlayer(Entity player)
 
 		player.AddComponent<comp::MeshName>()->name = NameType::MESH_MAGE;
 		player.AddComponent<comp::AnimatorName>()->name = AnimName::ANIM_MAGE;
-		player.AddComponent<comp::AnimationState>();
-
 	}
 
-	comp::Health* health = player.AddComponent<comp::Health>();
-	health->currentHealth = 100.f;
-	health->isAlive = true;
-
-	player.AddComponent<comp::SphereCollider>()->Radius = 3.f;
+	player.AddComponent<comp::SphereCollider>()->Radius = 2.5f;
 
 	//
 	// AudioState
@@ -257,7 +272,7 @@ void Simulation::ResetPlayer(Entity player)
 
 Simulation::Simulation(Server* pServer, HeadlessEngine* pEngine)
 	: m_pServer(pServer)
-	, m_pEngine(pEngine), m_pLobbyScene(nullptr), m_pGameScene(nullptr), m_pGameOverScene(nullptr), m_pCurrentScene(nullptr), currentRound(0)
+	, m_pEngine(pEngine), m_pLobbyScene(nullptr), m_pGameScene(nullptr), m_pGameOverScene(nullptr), m_pCurrentScene(nullptr), currentRound(0), houseManager(&blackboard)
 {
 	this->m_gameID = 0;
 	this->m_tick = 0;
@@ -305,6 +320,8 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 
 	houseManager.SetHouseColliders(houseColliders);
 
+	m_timeCycler.setBlackboard(&blackboard);
+
 	m_pGameScene->on<ESceneUpdate>([&](const ESceneUpdate& e, HeadlessScene& scene)
 		{
 #if GOD_MODE
@@ -334,7 +351,7 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 				}
 				{
 					PROFILE_SCOPE("Input from Player");
-					ServerSystems::UpdatePlayerWithInput(this, scene, e.dt, qt.get());
+					ServerSystems::UpdatePlayerWithInput(this, scene, e.dt, qt.get(), &blackboard);
 				}
 				{
 					PROFILE_SCOPE("Player state");
@@ -344,9 +361,9 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 				{
 					PROFILE_SCOPE("Abilities and Combat");
 					Systems::UpdateAbilities(scene, e.dt);
-					ServerSystems::CombatSystem(scene, e.dt);
+					ServerSystems::CombatSystem(scene, e.dt, &blackboard);
 					Systems::HealingSystem(scene, e.dt);
-					ServerSystems::HealthSystem(scene, e.dt, m_currency, houseManager, qt.get(), m_grid, m_spreeHandler);
+					ServerSystems::HealthSystem(scene, e.dt, m_currency, houseManager, qt.get(), m_grid, m_spreeHandler, &blackboard);
 					Systems::SelfDestructSystem(scene, e.dt);
 				}
 
@@ -385,13 +402,13 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 			{
 				PROFILE_SCOPE("Hover defences");
 				std::vector<Entity> updateEntities;
-				if (m_timeCycler.GetTimePeriod() == CyclePeriod::DAY)
+				if (m_timeCycler.GetTimePeriod() == CyclePeriod::NIGHT)
 				{
-					updateEntities = m_grid.UpdateHoverDefence();
+					updateEntities = m_grid.HideHoverDefence();
 				}
 				else
 				{
-					updateEntities = m_grid.HideHoverDefence();
+					updateEntities = m_grid.UpdateHoverDefence();
 				}
 				for (size_t i = 0; i < updateEntities.size(); i++)
 				{
@@ -427,12 +444,12 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 	//Gridsystem
 	m_grid.Initialize(gridOptions.mapSize, gridOptions.position, gridOptions.fileName, m_pGameScene);
 	//Create the nodes for AI handler on blackboard
-	Blackboard::Get().GetPathFindManager()->CreateNodes(&m_grid);
+	blackboard.GetPathFindManager()->CreateNodes(&m_grid);
 
 
 	m_addedEntities.clear();
 #if RENDER_AINODES
-	std::vector<std::vector<std::shared_ptr<Node>>> nodes = Blackboard::Get().GetPathFindManager()->GetNodes();
+	std::vector<std::vector<std::shared_ptr<Node>>> nodes = blackboard.GetPathFindManager()->GetNodes();
 	for (int y = 0; y < nodes[0].size(); y++)
 	{
 		for (int x = 0; x < nodes[0].size(); x++)
@@ -669,7 +686,7 @@ void Simulation::BuildMapColliders(std::vector<dx::BoundingOrientedBox>* mapColl
 		obb->Orientation = mapColliders->at(i).Orientation;
 		collider.AddComponent<comp::Tag<STATIC>>();
 		// Map bounds is loaded in last, 6 obbs surrounding village put the correct tag for collision system
-		if (i >= mapColliders->size() - 6)
+		if (i < 6)
 		{
 			collider.AddComponent<comp::Tag<MAP_BOUNDS>>();
 		}
@@ -772,10 +789,6 @@ void Simulation::SetGameScene()
 #if GOD_MODE
 	// During debug give players 1000 gold/monies.
 	m_currency = 1000;
-	for (auto& player : m_lobby.m_players)
-	{
-		player.second.RemoveComponent<comp::Tag<TagType::GOOD>>();
-	}
 #endif
 
 #if NO_CLIP
@@ -795,6 +808,7 @@ void Simulation::ResetGameScene()
 
 	while (!m_spawnPoints.empty())
 	{
+
 		m_spawnPoints.pop();
 	}
 
@@ -828,7 +842,7 @@ void Simulation::ResetGameScene()
 	EnemyManagement::CreateWaves(waveQueue, currentRound);
 
 	houseManager.InitializeHouses(*this->GetGameScene(), qt.get());
-	AIBehaviors::UpdateBlackBoard(*m_pGameScene);
+	AIBehaviors::UpdateBlackBoard(*m_pGameScene, &blackboard);
 
 	m_timeCycler.SetTime(DAY);
 	m_timeCycler.SetCycleSpeed(1.0f);
@@ -1023,6 +1037,11 @@ void Simulation::BroadcastUDP(message<GameMsg>& msg, uint32_t exclude) const
 Entity Simulation::GetPlayer(uint32_t playerID) const
 {
 	return m_lobby.GetPlayer(playerID);
+}
+
+Blackboard* Simulation::GetBlackboard()
+{
+	return &blackboard;
 }
 
 

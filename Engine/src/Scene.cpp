@@ -343,7 +343,13 @@ bool Scene::IsRender2DReady() const
 
 Camera* Scene::GetCurrentCamera() const
 {
-	return &m_currentCamera.GetComponent<comp::Camera3D>()->camera;
+	comp::Camera3D* camComponent = m_currentCamera.GetComponent<comp::Camera3D>();
+	if (!camComponent)
+	{
+		return nullptr;
+	}
+
+	return &camComponent->camera;
 }
 
 void Scene::ReadyForSwap()

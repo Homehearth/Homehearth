@@ -22,7 +22,6 @@ private:
 	//States
 	EAnimationType m_currentType;
 	EAnimationType m_nextType;
-	EAnimationType m_defaultType;
 	
 	struct animation_t
 	{

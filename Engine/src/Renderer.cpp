@@ -88,7 +88,6 @@ void Renderer::ClearFrame()
 
 void Renderer::Render(Scene* pScene)
 {
-
 	if (pScene)
 	{
 		if (!m_passes.empty())
@@ -96,10 +95,16 @@ void Renderer::Render(Scene* pScene)
 			m_basePass.m_skyboxRef = pScene->GetSkybox();
 			m_animPass.m_skyboxRef = pScene->GetSkybox();
 			m_particlePass.m_skyboxRef = pScene->GetSkybox();
-			if (pScene->GetCurrentCamera()->IsSwapped())
+			Camera* cam = pScene->GetCurrentCamera();
+			if (!cam)
 			{
-				this->UpdatePerFrame(pScene->GetCurrentCamera());
-				thread::RenderThreadHandler::SetCamera(pScene->GetCurrentCamera());
+				LOG_ERROR("Camera was null bailing from Render");
+				return;
+			}
+			if (cam->IsSwapped())
+			{
+				this->UpdatePerFrame(cam);
+				thread::RenderThreadHandler::SetCamera(cam);
 
 				for (int i = 0; i < m_passes.size(); i++)
 				{
@@ -108,20 +113,14 @@ void Renderer::Render(Scene* pScene)
 					if (pass->IsEnabled())
 					{
 						pass->SetLights(pScene->GetLights());
-						pass->PreRender(pScene->GetCurrentCamera());
+						pass->PreRender(cam);
 						pass->Render(pScene);
 						pass->PostRender();
 					}
 				}
-
-				pScene->GetCurrentCamera()->ReadySwap();
-				pScene->ReadyForSwap();
 			}
-			else
-			{
-				pScene->GetCurrentCamera()->ReadySwap();
-				pScene->ReadyForSwap();
-			}
+			cam->ReadySwap();
+			pScene->ReadyForSwap();
 		}
 	}
 }
