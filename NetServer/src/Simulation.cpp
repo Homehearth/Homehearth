@@ -758,7 +758,6 @@ void Simulation::UpgradeDefence(const uint32_t& id)
 				{
 					if (m_currency >= c->cost && h->upgradeLevel <= 2)
 					{
-						
 						// Add upgrades here.
 						h->maxHealth += 35;
 						h->currentHealth += 35;
