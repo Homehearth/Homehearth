@@ -69,6 +69,12 @@ private:
 	ComPtr<ID3D11Texture2D>				m_quarterSize; // (Window Size / 4)
 	ComPtr<ID3D11ShaderResourceView>	m_quarterSizeView;
 	ComPtr<ID3D11RenderTargetView>		m_quarterSizeRenderTarget;
+	ComPtr<ID3D11UnorderedAccessView>	m_quarterSizeAccess;
+
+	ComPtr<ID3D11Texture2D>				m_quarterBlurredSize; // (Window Size / 4) Blurred
+	ComPtr<ID3D11ShaderResourceView>	m_quarterBlurredSizeView;
+	ComPtr<ID3D11RenderTargetView>		m_quarterBlurredSizeRenderTarget;
+	ComPtr<ID3D11UnorderedAccessView>	m_quarterBlurredAccess;
 
 	ComPtr<ID3D11Texture2D>				m_tinySize; // (Window Size / 8)
 	ComPtr<ID3D11ShaderResourceView>	m_tinySizeView;
