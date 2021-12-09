@@ -182,7 +182,7 @@ void Simulation::ResetPlayer(Entity player)
 		health->currentHealth = 125.f;
 
 		comp::MeleeAttackAbility* attackAbility = player.AddComponent<comp::MeleeAttackAbility>();
-		attackAbility->cooldown = 0.50f;
+		attackAbility->cooldown = 0.8f;
 		attackAbility->attackDamage = 20.f;
 		attackAbility->lifetime = 0.1f;
 		attackAbility->useTime = 0.2f;
