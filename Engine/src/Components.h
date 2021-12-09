@@ -88,7 +88,7 @@ namespace ecs
 		{
 			sm::Vector3							positionOffset	= { 0,0,0 };
 			UINT								nrOfParticles	= 0;
-			PARTICLEMODE						type			= PARTICLEMODE::BLOOD;
+			ParticleMode						type			= ParticleMode::BLOOD;
 			float								lifeTime		= 0.f;
 			float								sizeMulitplier	= 0.f;
 			float								speed			= 0.f;
@@ -106,44 +106,46 @@ namespace ecs
 
 			component::Transform				transformCopy;
 
-			EmitterParticle(sm::Vector3 positionOffset = {0,0,0}, int nrOfParticles = 10, float sizeMulitplier = 1.f, PARTICLEMODE type = PARTICLEMODE::BLOOD, float lifeTime = 2.f, float speed = 1, bool hasDeathTimer = false)
+			EmitterParticle(sm::Vector3 positionOffset = {0,0,0}, int nrOfParticles = 10, float sizeMulitplier = 1.f, ParticleMode type = ParticleMode::BLOOD, float lifeTime = 2.f, float speed = 1, bool hasDeathTimer = false)
 			{
 				textureName = "thisisfine.png";
 				opacityTextureName = "round_Opacity.png";
 
-				if (type == PARTICLEMODE::BLOOD)
+				if (type == ParticleMode::BLOOD)
 				{
-					textureName = "BloodParticle.png";
+					textureName = "Blood.png";
 				}
-				else if (type == PARTICLEMODE::LEAF)
+				else if (type == ParticleMode::LEAF)
 				{
 				}
-				else if (type == PARTICLEMODE::WATERSPLASH)
+				else if (type == ParticleMode::WATERSPLASH)
 				{
 					textureName = "waterSplash.png";
 				}
-				else if (type == PARTICLEMODE::SMOKEPOINT || type == PARTICLEMODE::SMOKEAREA)
+				else if (type == ParticleMode::SMOKEPOINT || type == ParticleMode::SMOKEAREA)
 				{
 					textureName = "smoke.png";
-					opacityTextureName = "smoke_opacity.png";
+					opacityTextureName = "smoke_Opacity.png";
 				}
-				else if (type == PARTICLEMODE::SPARKLES)
+				else if (type == ParticleMode::SPARKLES)
 				{
 				}
-				else if (type == PARTICLEMODE::RAIN)
+				else if (type == ParticleMode::RAIN)
 				{
+					textureName = "drop.png";
+					opacityTextureName = "drop_Opacity.png";
 				}
-				else if (type == PARTICLEMODE::DUST)
+				else if (type == ParticleMode::DUST)
 				{
 				}				
-				else if (type == PARTICLEMODE::MAGEHEAL)
+				else if (type == ParticleMode::MAGEHEAL)
 				{
 					textureName = "MageHeal.png";
 				}
-				else if (type == PARTICLEMODE::MAGERANGE || type == PARTICLEMODE::EXPLOSION)
+				else if (type == ParticleMode::MAGERANGE || type == ParticleMode::EXPLOSION)
 				{
 					textureName = "fire.png";
-					opacityTextureName = "fire_opacity.png";
+					opacityTextureName = "fire_Opacity.png";
 				}
 
 				texture = ResourceManager::Get().GetResource<RTexture>(textureName);
@@ -168,18 +170,18 @@ namespace ecs
 			}
 		};
 
-		struct PARTICLEEMITTER 
+		struct ParticleEmitter 
 		{
 			sm::Vector3		positionOffset	= { 0,0,0 };
 			UINT			nrOfParticles	= 0;
-			PARTICLEMODE	type			= PARTICLEMODE::BLOOD;
+			ParticleMode	type			= ParticleMode::BLOOD;
 			float			lifeTime		= 0.f;
 			float			sizeMulitplier	= 0.f;
 			float			speed			= 0.f;
 			bool			hasDeathTimer	= false;
 			float			lifeLived		= 0.f;
 
-			PARTICLEEMITTER(sm::Vector3 positionOffset = { 0,0,0 }, int nrOfParticles = 10, float sizeMulitplier = 1.f, PARTICLEMODE type = PARTICLEMODE::BLOOD, float lifeTime = 2.f, float speed = 1, bool hasDeathTimer = false)
+			ParticleEmitter(sm::Vector3 positionOffset = { 0,0,0 }, int nrOfParticles = 10, float sizeMulitplier = 1.f, ParticleMode type = ParticleMode::BLOOD, float lifeTime = 2.f, float speed = 1, bool hasDeathTimer = false)
 			{
 				this->nrOfParticles		= (UINT)nrOfParticles;
 				this->type				= type;
