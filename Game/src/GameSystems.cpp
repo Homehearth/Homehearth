@@ -7,64 +7,74 @@
 void GameSystems::DisplayUpgradeDefences(Game* game)
 {
 	Collection2D* coll = game->GetCurrentScene()->GetCollection("priceTag");
-	// Display only if in Build mode..
-	if (game->GetCurrentMode() == Mode::BUILD_MODE && game->GetCurrentCycle() == Cycle::DAY)
+	
+	if (game->GetCycler().GetTimePeriod() == CyclePeriod::DAY)
 	{
-		Scene& scene = *game->GetCurrentScene();
-		bool shouldNotShow = true;
-		const unsigned int width = D2D1Core::GetWindow()->GetWidth();
-		const unsigned int height = D2D1Core::GetWindow()->GetHeight();
-
-		bool pressed = false;
-		if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::R, KeyState::PRESSED))
+		// Display only if in Build mode..
+		ShopItem shopitem = game->GetShopItem();
+		if (shopitem == ShopItem::Defence1x1 || shopitem == ShopItem::Defence1x3)
 		{
-			pressed = true;
-		}
+			Scene& scene = *game->GetCurrentScene();
+			bool shouldNotShow = true;
+			const unsigned int width = D2D1Core::GetWindow()->GetWidth();
+			const unsigned int height = D2D1Core::GetWindow()->GetHeight();
 
-
-		float t = 9999;
-		rtd::Picture* pc = dynamic_cast<rtd::Picture*>(coll->elements[0].get());
-		rtd::Text* tc = dynamic_cast<rtd::Text*>(coll->elements[1].get());
-		uint32_t id;
-		uint32_t cost;
-
-		Ray_t mouseRay = InputSystem::Get().GetMouseRay();
-		scene.ForEachComponent<comp::OrientedBoxCollider, comp::Cost, comp::Network>([&](comp::OrientedBoxCollider& box, comp::Cost& c, comp::Network& n) {
-
-			float nt;
-			if (mouseRay.Intersects(box, &nt))
+			bool pressed = false;
+			if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED))
 			{
-				if (nt < t)
+				pressed = true;
+			}
+
+
+			float t = 9999;
+			rtd::Picture* pc = dynamic_cast<rtd::Picture*>(coll->elements[0].get());
+			rtd::Text* tc = dynamic_cast<rtd::Text*>(coll->elements[1].get());
+			uint32_t id;
+			uint32_t cost = 0;
+
+			int test = 0;
+			Ray_t mouseRay = InputSystem::Get().GetMouseRay();
+			scene.ForEachComponent<comp::OrientedBoxCollider, comp::Cost, comp::Network>([&](comp::OrientedBoxCollider& box, comp::Cost& c, comp::Network& n) {
+
+				float nt;
+				if (mouseRay.Intersects(box, &nt))
 				{
-					t = nt;
-					id = n.id;
-					cost = c.cost;
+					if (nt < t)
+					{
+						t = nt;
+						id = n.id;
+						cost = c.cost;
+					}
+
+					shouldNotShow = false;
 				}
 
-				shouldNotShow = false;
-			}
+				test++;
 
-			});
+				});
 
-		// Update the UI to reflect on the closest defence to the mouse pointer.
-		if (pc && tc)
-		{
-			pc->SetPosition((FLOAT)InputSystem::Get().GetMousePos().x, (FLOAT)InputSystem::Get().GetMousePos().y);
-			tc->SetPosition((FLOAT)InputSystem::Get().GetMousePos().x + width * 0.019f, (FLOAT)InputSystem::Get().GetMousePos().y);
-			tc->SetText("Cost: " + std::to_string(cost));
-			if (game->GetMoney() < cost)
-				pc->SetTexture("NotEnoughMoneySign.png");
-			else
-				pc->SetTexture("EnoughMoneySign.png");
-			coll->Show();
-			if (pressed)
+
+			//std::cout << "Defences: " << test << "\n";
+			// Update the UI to reflect on the closest defence to the mouse pointer.
+			if (pc && tc)
 			{
-				game->UpgradeDefence(id);
+				pc->SetPosition((FLOAT)InputSystem::Get().GetMousePos().x, (FLOAT)InputSystem::Get().GetMousePos().y);
+				tc->SetPosition((FLOAT)InputSystem::Get().GetMousePos().x + width * 0.019f, (FLOAT)InputSystem::Get().GetMousePos().y);
+				tc->SetText("Cost: " + std::to_string(cost));
+				if (game->GetMoney() < cost)
+					pc->SetTexture("NotEnoughMoneySign.png");
+				else
+					pc->SetTexture("EnoughMoneySign.png");
+				coll->Show();
+				if (pressed)
+				{
+					game->UpgradeDefence(id);
+				}
 			}
-		}
 
-		if (shouldNotShow)
-			coll->Hide();
+			if (shouldNotShow)
+				coll->Hide();
+		}
 	}
 	else
 		coll->Hide();
@@ -91,18 +101,15 @@ void GameSystems::RenderIsCollidingSystem(Scene& scene)
 // Set all the healthbars to players.
 void GameSystems::UpdateHealthbar(Game* game)
 {
-	size_t i = game->m_players.size();
-
 	Scene* scene = &game->GetScene("Game");
 
 	scene->ForEachComponent<comp::Health, comp::Player>([&](Entity e, comp::Health& health, const comp::Player& player)
 		{
-			rtd::Healthbar* healthbar = dynamic_cast<rtd::Healthbar*>(scene->GetCollection("player" + std::to_string(static_cast<uint16_t>(player.playerType)) + "Info")->elements[0].get());
+			rtd::Healthbar* healthbar = dynamic_cast<rtd::Healthbar*>(scene->GetCollection("Aplayer" + std::to_string(static_cast<uint16_t>(player.playerType)) + "Info")->elements[0].get());
 			if (healthbar)
 			{
 				healthbar->SetHealthVariable(e);
 			}
-			i--;
 		});
 }
 
@@ -139,45 +146,45 @@ static bool STRECH_ONCE = true;
 
 void GameSystems::UpdatePlayerVisuals(Game* game)
 {
-	Scene* scene = game->GetCurrentScene();
+	Scene& scene = game->GetScene("Game");
+	const float width = (float)game->GetWindow()->GetWidth();
+	const float height = (float)game->GetWindow()->GetHeight();
 
-	scene->ForEachComponent<comp::Player, comp::Transform, comp::Network>([&](comp::Player& player, comp::Transform& t, comp::Network& n)
+	scene.ForEachComponent<comp::Player, comp::Transform, comp::Network>([&](comp::Player& player, comp::Transform& t, comp::Network& n)
 		{
 			/*
 				Own players health should be displayed at the lower left corner.
 			*/
 			if (n.id == game->m_localPID)
 			{
-				const float width = (float)game->GetWindow()->GetWidth();
-				const float height = (float)game->GetWindow()->GetHeight();
 				Scene* scene = &game->GetScene("Game");
 				// Update healthbars position.
-				Collection2D* collHealth = scene->GetCollection("player" + std::to_string(static_cast<uint16_t>(player.playerType)) + "Info");
+				Collection2D* collHealth = scene->GetCollection("Aplayer" + std::to_string(static_cast<uint16_t>(player.playerType)) + "Info");
 				if (collHealth)
 				{
 					rtd::Healthbar* health = dynamic_cast<rtd::Healthbar*>(collHealth->elements[0].get());
 					if (health)
 					{
-						// Update healthbars position.
-						if (STRECH_ONCE)
-						{
-							health->SetStretch(width / 3.33f, height / 16.f);
-							STRECH_ONCE = false;
-						}
-						health->SetPosition(width / 32.0f, height - (height / 16.0f) - (height / 32.0f));
+						health->SetStretch(width / 4.0f, height / 24.f);
+						health->SetPosition(width / 32.0f, height - (height / 13.0f));
 						health->SetVisiblity(true);
 					}
+				}
+				Collection2D* collection = scene->GetCollection("AdynamicPlayer" + std::to_string(static_cast<uint16_t>(player.playerType)) + "namePlate");
+				if (collection)
+				{
+					collection->Hide();
 				}
 			}
 			else
 			{
-				Collection2D* collection = scene->GetCollection("dynamicPlayer" + std::to_string(static_cast<uint16_t>(player.playerType)) + "namePlate");
+				Collection2D* collection = scene.GetCollection("AdynamicPlayer" + std::to_string(static_cast<uint16_t>(player.playerType)) + "namePlate");
 				if (collection)
 				{
 					rtd::Text* namePlate = dynamic_cast<rtd::Text*>(collection->elements[0].get());
 					if (namePlate)
 					{
-						Camera* cam = scene->GetCurrentCamera();
+						Camera* cam = scene.GetCurrentCamera();
 
 						if (cam->GetCameraMatrixes())
 						{
@@ -202,7 +209,7 @@ void GameSystems::UpdatePlayerVisuals(Game* game)
 								namePlate->SetVisiblity(false);
 
 							// Update healthbars position.
-							Collection2D* collHealth = scene->GetCollection("player" + std::to_string(static_cast<uint16_t>(player.playerType)) + "Info");
+							Collection2D* collHealth = scene.GetCollection("Aplayer" + std::to_string(static_cast<uint16_t>(player.playerType)) + "Info");
 							if (collHealth)
 							{
 								rtd::Healthbar* health = dynamic_cast<rtd::Healthbar*>(collHealth->elements[0].get());
@@ -220,6 +227,7 @@ void GameSystems::UpdatePlayerVisuals(Game* game)
 									new_x = (((newPp.x + 1) * (D2D1Core::GetWindow()->GetWidth())) / (2));
 									new_y = D2D1Core::GetWindow()->GetHeight() - (((newPp.y + 1) * (D2D1Core::GetWindow()->GetHeight())) / (2));
 
+									health->SetStretch((width / 24), (height / 100));
 									health->SetPosition(new_x - (health->GetOpts().width * 0.5f), new_y);
 
 									// Only visible if camera is turned to it.

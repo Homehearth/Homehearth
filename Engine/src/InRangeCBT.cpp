@@ -1,9 +1,10 @@
 #include "EnginePCH.h"
 #include "InRangeCBT.h"
 
-BT::InRangeCBT::InRangeCBT(const std::string& name, Entity entity)
+BT::InRangeCBT::InRangeCBT(const std::string& name, Entity entity, Blackboard* blackboard)
 	:ConditionNode(name),
-	entity(entity)
+	entity(entity),
+	blackboard(blackboard)
 {
 }
 
@@ -15,7 +16,7 @@ BT::NodeStatus BT::InRangeCBT::Tick()
 
 	comp::MeleeAttackAbility* attackMAbility = entity.GetComponent<comp::MeleeAttackAbility>();
 	comp::RangeAttackAbility* attackRAbility = entity.GetComponent<comp::RangeAttackAbility>();
-	Entity* target = Blackboard::Get().GetValue<Entity>("target" + std::to_string(entity));
+	Entity* target = blackboard->GetValue<Entity>("target" + std::to_string(entity));
 
 	if(transform == nullptr || attackMAbility && attackRAbility)
 	{
@@ -35,9 +36,9 @@ BT::NodeStatus BT::InRangeCBT::Tick()
 		return BT::NodeStatus::FAILURE;
 	}
 	//If target is a house
-	if(house && house->attackNode)
+	if(house && house->homeNode)
 	{
-		position = house->attackNode->position;
+		position = house->homeNode->position;
 	}
 	else
 	{

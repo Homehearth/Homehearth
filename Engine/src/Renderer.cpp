@@ -18,38 +18,28 @@ void Renderer::Initialize(Window* pWindow)
 	m_waterEffectPass.SetEnable(true);
 
     //AddPass(&m_depthPass);
-    AddPass(&m_basePass);
     AddPass(&m_textureEffectPass);
 	AddPass(&m_waterEffectPass);
 	m_d3d11 = &D3D11Core::Get();
 
-	/*
-		Had to disable the depth pass to get alpha testing to work correctly... -Filip
-	*/
-	//AddPass(&m_depthPass);  // 1
+	//AddPass(&m_depthPass);  
 	AddPass(&m_shadowPass);
 	m_shadowPass.StartUp();
 
 	AddPass(&m_decalPass);
 	m_decalPass.Create();
 
-	AddPass(&m_basePass);   // 2
-	AddPass(&m_animPass);	// 3
+	AddPass(&m_basePass);  
+	AddPass(&m_animPass);
+	AddPass(&m_bloomPass);
+	AddPass(&m_particlePass);
 	AddPass(&m_skyPass);
 
-	AddPass(&m_decalPass); // 3
-	m_decalPass.Create();
+	AddPass(&m_dofPass);
 	
-	AddPass(&m_basePass);   // 4
-	AddPass(&m_animPass);	// 5
-	AddPass(&m_skyPass);	// 6
-
-	AddPass(&m_dofPass);	// 7
-	AddPass(&m_particlePass);	// 8
 
 	m_basePass.m_pShadowPass = &m_shadowPass;
 	m_animPass.m_pShadowPass = &m_shadowPass;
-	
 
 	//m_depthPass.SetEnable(true);
 	m_basePass.SetEnable(true);
@@ -59,9 +49,10 @@ void Renderer::Initialize(Window* pWindow)
 	m_skyPass.SetEnable(true);
 	m_dofPass.SetEnable(true);
 	m_shadowPass.SetEnable(true);
+	m_bloomPass.SetEnable(true);
 
 #ifdef _DEBUG
-	AddPass(&m_debugPass);  // 5
+	AddPass(&m_debugPass);  
     m_debugPass.SetEnable(true);
 #endif
 
@@ -73,6 +64,7 @@ void Renderer::Initialize(Window* pWindow)
 	}
 
 	m_dofPass.Create(DoFType::VIGNETTE);
+	m_bloomPass.Setup();
 }
 
 void Renderer::Setup(BasicEngine<Scene>& engine)
@@ -101,21 +93,24 @@ void Renderer::ClearFrame()
 
 void Renderer::Render(Scene* pScene)
 {
-
 	if (pScene)
 	{
 		if (!m_passes.empty())
 		{
 			m_basePass.m_skyboxRef = pScene->GetSkybox();
 			m_animPass.m_skyboxRef = pScene->GetSkybox();
-			if (pScene->GetCurrentCamera()->IsSwapped())
+			m_particlePass.m_skyboxRef = pScene->GetSkybox();
+			Camera* cam = pScene->GetCurrentCamera();
+			if (!cam)
 			{
-				this->UpdatePerFrame(pScene->GetCurrentCamera());
-				thread::RenderThreadHandler::SetCamera(pScene->GetCurrentCamera());
-			/*
-				Optimize idead: Render/Update lights once instead of per pass?
-				Set lights once.
-			*/
+				LOG_ERROR("Camera was null bailing from Render");
+				return;
+			}
+			if (cam->IsSwapped())
+			{
+				this->UpdatePerFrame(cam);
+				thread::RenderThreadHandler::SetCamera(cam);
+
 				for (int i = 0; i < m_passes.size(); i++)
 				{
 					m_currentPass = i;
@@ -123,20 +118,14 @@ void Renderer::Render(Scene* pScene)
 					if (pass->IsEnabled())
 					{
 						pass->SetLights(pScene->GetLights());
-						pass->PreRender(pScene->GetCurrentCamera());
+						pass->PreRender(cam);
 						pass->Render(pScene);
 						pass->PostRender();
 					}
 				}
-
-				pScene->GetCurrentCamera()->ReadySwap();
-				pScene->ReadyForSwap();
 			}
-			else
-			{
-				pScene->GetCurrentCamera()->ReadySwap();
-				pScene->ReadyForSwap();
-			}
+			cam->ReadySwap();
+			pScene->ReadyForSwap();
 		}
 	}
 }
@@ -149,6 +138,11 @@ IRenderPass* Renderer::GetCurrentPass() const
 DOFPass* Renderer::GetDoFPass()
 {
 	return &m_dofPass;
+}
+
+BloomPass* Renderer::GetBloomPass()
+{
+	return &m_bloomPass;
 }
 
 ShadowPass* Renderer::GetShadowPass()

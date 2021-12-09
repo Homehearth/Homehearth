@@ -33,24 +33,29 @@ namespace EnemyManagement
 	//Creates the waves containing all the enemies. resets all waves when this function is called on.
 	void CreateWaves(std::queue<Wave>& waveQueue, int currentRound);
 }
+namespace VillagerManagement
+{
+	Entity CreateVillager(HeadlessScene& scene, Entity homeHouse, Blackboard* blackboard);
+}
 
 /*! Namespace to manage the server's various ECS systems. */
 namespace ServerSystems
 {
 	void WaveSystem(Simulation* simulation, std::queue<Wave>& waves);
-	void NextWaveConditions(Simulation* simulation, Timer& timer, int timeToFinish);
+	void OnCycleChange(Simulation* simulation);
 
-	void UpdatePlayerWithInput(Simulation* simulation, HeadlessScene& scene, float dt, QuadTree* dynamicQT);
+	void UpdatePlayerWithInput(Simulation* simulation, HeadlessScene& scene, float dt, QuadTree* dynamicQT, Blackboard* blackboard);
 	void PlayerStateSystem(Simulation* simulation, HeadlessScene& scene, float dt);
-	void HealthSystem(HeadlessScene& scene, float dt, Currency& money_ref, HouseManager houseManager, QuadTree* qt, GridSystem& grid, SpreeHandler& spree);
+	void HealthSystem(HeadlessScene& scene, float dt, Currency& money_ref, HouseManager houseManager, QuadTree* qt, GridSystem& grid, SpreeHandler& spree, Blackboard* blackboard);
 
 	void CheckGameOver(Simulation* simulation, HeadlessScene& scene);
 	void TickBTSystem(Simulation* simulation, HeadlessScene& scene);
 
-	void AnimatonSystem(Simulation* simulation, HeadlessScene& scene);
+	void AnimationSystem(Simulation* simulation, HeadlessScene& scene);
 	void SoundSystem(Simulation* simulation, HeadlessScene& scene);
 
-	void CombatSystem(HeadlessScene& scene, float dt);
+	void CombatSystem(HeadlessScene& scene, float dt, Blackboard* blackboard);
 
 	void DeathParticleTimer(HeadlessScene& scene);
+	void CheckSkipDay(Simulation* simulation);
 }

@@ -82,6 +82,12 @@ cbuffer ParticleUpdate : register(b8)
     float3 c_pPadding;
 }
 
+cbuffer ParticleMode : register(b9)
+{
+    uint c_pParticleType;
+    float3 c_pPadding2;
+}
+
 cbuffer DecalInfoCB : register(b10)
 {
     float4 infoData = float4(0.0f, 0.0f, 0.0f, 0.0f);
@@ -114,7 +120,7 @@ cbuffer DoFSettings : register(b12)
     float4x4    c_inverseProjection;
     uint        c_dofType;
     float3      dofPadding;
-    float4      c_playerPosView;
+    //float4      c_playerPos;
 }
 cbuffer SkyboxTint : register(b13)
 {
@@ -198,6 +204,7 @@ RWTexture2D<unorm float4> t_bufferOut       : register(u1);
 RWTexture2D<unorm float4> t_inFocus         : register(u2);
 RWTexture2D<unorm float4> t_outOfFocus      : register(u3);
 RWTexture2D<float4> t_dofOut                : register(u4);
+RWTexture2D<float4> t_backBufferOut         : register(u5);
 
 // Forward+
 //RWStructuredBuffer<PointLight> rw_pointLights : register();

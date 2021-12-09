@@ -80,9 +80,7 @@ void Lobby::AddPlayer(uint32_t gameID, uint32_t playerID, const std::string& nam
 	msg << gameID;
 	m_simRef->SendMsg(playerID, msg);
 	LOG_INFO("Player %d joined lobby: %d", playerID, gameID);
-
 	m_simRef->SendAllEntitiesToPlayer(playerID);
-
 	this->CreatePlayerEntity(playerID, name);
 }
 
@@ -199,4 +197,9 @@ void Lobby::RemovePlayer(uint32_t playerID)
 	m_players.erase(playerID);
 
 	LOG_INFO("Removed player %u from scene", playerID);
+}
+
+void Lobby::Clear()
+{
+	m_players.clear();
 }

@@ -1,10 +1,11 @@
 #include "EnginePCH.h"
 #include "MoveCBT.h"
 
-BT::MoveCBT::MoveCBT(const std::string& name, Entity entity)
+BT::MoveCBT::MoveCBT(const std::string& name, Entity entity, Blackboard* blackboard)
 	:ActionNode(name),
 	entity(entity),
-	refreshRateOnEscape(1.0f)
+	refreshRateOnEscape(1.0f),
+	blackboard(blackboard)
 {
 	timerEscape.Start();
 }
@@ -13,10 +14,16 @@ BT::MoveCBT::MoveCBT(const std::string& name, Entity entity)
 bool BT::MoveCBT::EscapeCurrentNode(const Entity entity)
 {
 	comp::NPC* npc = entity.GetComponent<comp::NPC>();
+	comp::Villager* villagerComp = entity.GetComponent<comp::Villager>();
 	comp::Velocity* velocity = entity.GetComponent<comp::Velocity>();
 	comp::Transform* transform = entity.GetComponent<comp::Transform>();
 
-	const std::vector<std::vector<std::shared_ptr<Node>>> nodes = Blackboard::Get().GetPathFindManager()->GetNodes();
+	if (!npc)
+	{
+		return false;
+	}
+
+	const std::vector<std::vector<std::shared_ptr<Node>>> nodes = blackboard->GetPathFindManager()->GetNodes();
 	const int currentX = npc->currentNode->id.x;
 	const int currentY = npc->currentNode->id.y;
 	Node* currentClosest = nullptr;
@@ -33,9 +40,21 @@ bool BT::MoveCBT::EscapeCurrentNode(const Entity entity)
 			{
 				if (currentClosest)
 				{
-					if (sm::Vector3::Distance(neighborNode->position, npc->currentNode->position) < sm::Vector3::Distance(currentClosest->position, npc->currentNode->position))
+					//If it's enemy choice path from NPC component
+					if(npc)
 					{
-						currentClosest = neighborNode;
+						if (sm::Vector3::Distance(neighborNode->position, npc->currentNode->position) < sm::Vector3::Distance(currentClosest->position, npc->currentNode->position))
+						{
+							currentClosest = neighborNode;
+						}
+					}
+					//Else need to take out path from villager component
+					else if(villagerComp)
+					{
+						if (sm::Vector3::Distance(neighborNode->position, villagerComp->currentNode->position) < sm::Vector3::Distance(currentClosest->position, villagerComp->currentNode->position))
+						{
+							currentClosest = neighborNode;
+						}
 					}
 				}
 				else
@@ -50,7 +69,12 @@ bool BT::MoveCBT::EscapeCurrentNode(const Entity entity)
 	{
 		velocity->vel = currentClosest->position - transform->position;
 		velocity->vel.Normalize();
-		velocity->vel *= npc->movementSpeed;
+
+		if(npc)
+			velocity->vel *= npc->movementSpeed;
+		else if(villagerComp)
+			velocity->vel *= villagerComp->movementSpeed;
+
 		return true;
 	}
 	return false;
@@ -61,29 +85,49 @@ BT::NodeStatus BT::MoveCBT::Tick()
 	comp::Transform* transform = entity.GetComponent<comp::Transform>();
 	comp::Velocity* velocity = entity.GetComponent<comp::Velocity>();
 	comp::NPC* npc = entity.GetComponent<comp::NPC>();
+	comp::Villager* villager = entity.GetComponent<comp::Villager>();
 
-	if (transform == nullptr || velocity == nullptr || npc == nullptr)
+	if (transform == nullptr || velocity == nullptr || npc == nullptr && villager == nullptr)
 	{
 		LOG_ERROR("Components returned as nullptr...");
 		return BT::NodeStatus::FAILURE;
 	}
 
-
-	if (npc->path.empty())
+	std::vector<Node*>* path = nullptr;
+	Node* currentNode = nullptr;
+	if (npc)
 	{
-		Entity* target = Blackboard::Get().GetValue<Entity>("target" + std::to_string(entity));
-		comp::House* house = target->GetComponent<comp::House>();
-		comp::Transform* targetTransform = nullptr;
+		path = &npc->path;
+		currentNode = npc->currentNode;
+	}
+	else if (villager)
+	{
+		path = &villager->path;
+		currentNode = villager->currentNode;
+	}
+
+	if (currentNode && path->empty())
+	{
+		Entity* target = blackboard->GetValue<Entity>("target" + std::to_string(entity));
+		sm::Vector3* villagerTarget = blackboard->GetValue<sm::Vector3>("villagerTarget" + std::to_string(entity));
+		comp::House* house = nullptr;
 
 		if(target)
-			targetTransform = target->GetComponent<comp::Transform>();
+			house = target->GetComponent<comp::House>();
 
-		if (!targetTransform)
+		sm::Vector3* targetPosition = nullptr;
+
+		if (target)
+			targetPosition = &target->GetComponent<comp::Transform>()->position;
+		else if (villagerTarget)
+			targetPosition = villagerTarget;
+
+		if (!targetPosition)
 			return BT::NodeStatus::FAILURE;
 
-		PathFinderManager* pathFindManager = Blackboard::Get().GetPathFindManager();
+		PathFinderManager* pathFindManager = blackboard->GetPathFindManager();
 		//Check if AI stands on a dead node (no connections to grid)
-		if (!npc->currentNode->reachable && !pathFindManager->FindClosestNode(targetTransform->position)->defencePlaced && timerEscape.GetElapsedTime<std::chrono::seconds>() > refreshRateOnEscape)
+		if (!currentNode->reachable && !pathFindManager->FindClosestNode(*targetPosition)->defencePlaced && timerEscape.GetElapsedTime<std::chrono::seconds>() > refreshRateOnEscape)
 		{
 			timerEscape.Start();
 			if (EscapeCurrentNode(entity))
@@ -95,13 +139,16 @@ BT::NodeStatus BT::MoveCBT::Tick()
 			return BT::NodeStatus::FAILURE;
 		}
 		//If target is defense move the last distance to it (node is not reachable by A*)
-		else if(pathFindManager->FindClosestNode(target->GetComponent<comp::Transform>()->position)->defencePlaced && targetTransform)
+		else if(pathFindManager->FindClosestNode(*targetPosition)->defencePlaced && targetPosition)
 		{
-			velocity->vel = targetTransform->position - transform->position;
+			velocity->vel = *targetPosition - transform->position;
 			velocity->vel.Normalize();
-			velocity->vel *= npc->movementSpeed;
+			if(npc)
+				velocity->vel *= npc->movementSpeed;
+			else if(villager)
+				velocity->vel *= villager->movementSpeed;
 		}
-		else if(house)
+		else if(house != nullptr)
 		{
 			comp::OrientedBoxCollider* obb = entity.GetComponent<comp::OrientedBoxCollider>();
 			if (obb == nullptr)
@@ -110,9 +157,12 @@ BT::NodeStatus BT::MoveCBT::Tick()
 			sm::Vector3 position = obb->Center;
 			velocity->vel = position - transform->position;
 			velocity->vel.Normalize();
-			velocity->vel *= npc->movementSpeed;
+			if(npc)
+				velocity->vel *= npc->movementSpeed;
+			else if(villager)
+				velocity->vel *= villager->movementSpeed;
 		}
-		else if (npc->currentNode->reachable)
+		else if (currentNode->reachable)
 		{
 			velocity->vel = sm::Vector3(0.0f, 0.0f, 0.0f);
 		}
@@ -121,12 +171,15 @@ BT::NodeStatus BT::MoveCBT::Tick()
 	}
 	else
 	{
-		npc->currentNode = npc->path.back();
-		if (velocity && npc->currentNode)
+		currentNode = path->back();
+		if (velocity && currentNode)
 		{
-			velocity->vel = npc->currentNode->position - transform->position;
+			velocity->vel = currentNode->position - transform->position;
 			velocity->vel.Normalize();
-			velocity->vel *= npc->movementSpeed;
+			if(npc)
+				velocity->vel *= npc->movementSpeed;
+			else if (villager)
+				velocity->vel *= villager->movementSpeed;
 
 
 			//Update animation depending on velocity
@@ -141,9 +194,9 @@ BT::NodeStatus BT::MoveCBT::Tick()
 		}
 
 		//If AI close enough to next node, pop it from the path
-		if (sm::Vector3::Distance(npc->currentNode->position, transform->position) < 1.0f)
+		if (sm::Vector3::Distance(currentNode->position, transform->position) < 1.0f)
 		{
-			npc->path.pop_back();
+			path->pop_back();
 		}
 
 		return BT::NodeStatus::SUCCESS;

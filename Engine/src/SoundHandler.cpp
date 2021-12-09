@@ -4,23 +4,8 @@
 SoundHandler::SoundHandler()
 	: m_currentMusic(nullptr)
 {
-    // Start the sound engine with default parameters.
-    m_soundEngine = irrklang::createIrrKlangDevice();
-
-    if (m_soundEngine == nullptr)
-    {
-        LOG_ERROR("failed starting up the irrklang sound engine.")
-    }
-    else
-    {
-        m_soundEngine->setDefault3DSoundMinDistance(100.0f);
-        m_soundEngine->setRolloffFactor(70.0f);
-        m_soundEngine->setSoundVolume(1.0f);
-
-        LOG_INFO("Irrklang sound engine successfully loaded.")
-    }
-
-    LoadAllSounds();
+    m_soundEngine = nullptr;
+    m_masterVolume = 0.3f;
 }
 
 void SoundHandler::UpdateCurrentMusic(irrklang::ISoundSource* musicSrc, bool loopMusic)
@@ -33,7 +18,7 @@ void SoundHandler::UpdateCurrentMusic(irrklang::ISoundSource* musicSrc, bool loo
     }
 
     m_currentMusic = m_soundEngine->play2D(musicSrc, loopMusic, true, false, false);
-    m_currentMusic->setVolume(0.5f);
+    m_currentMusic->setVolume(m_masterVolume);
     m_currentMusic->setIsPaused(false);
 }
 
@@ -42,13 +27,15 @@ void SoundHandler::LoadAllSounds()
     AddSoundSource("../Assets/Sounds/DayTheme.wav");
     AddSoundSource("../Assets/Sounds/NightTheme.wav");
     AddSoundSource("../Assets/Sounds/MenuTheme.wav");
-    AddSoundSource("../Assets/Sounds/ButtonClick.wav"); // this sounds is for all buttons and is placed in Button.cpp.
+    AddSoundSource("../Assets/Sounds/BossTheme.wav");
+    AddSoundSource("../Assets/Sounds/ButtonClick.wav"); // is placed in Button.cpp.
     AddSoundSource("../Assets/Sounds/OnGameOver.wav");
 
     AddSoundSource("../Assets/Sounds/Game_OnDefencePlaced.mp3");
     AddSoundSource("../Assets/Sounds/Game_OnDefenceDestroyed.wav");
     AddSoundSource("../Assets/Sounds/Game_OnHouseDestroyed.wav");
-    AddSoundSource("../Assets/Sounds/Game_OnJoinLobby.wav");
+    AddSoundSource("../Assets/Sounds/Game_OnBossSpawn.wav");
+    AddSoundSource("../Assets/Sounds/Game_OnPurchase.mp3");
 
     AddSoundSource("../Assets/Sounds/Player_OnMovement.wav");
     AddSoundSource("../Assets/Sounds/Player_OnMeleeAttack.wav");
@@ -59,9 +46,10 @@ void SoundHandler::LoadAllSounds()
     AddSoundSource("../Assets/Sounds/Player_OnRangeAttackHit.wav");
     AddSoundSource("../Assets/Sounds/Player_OnDmgDealt.wav");
     AddSoundSource("../Assets/Sounds/Player_OnDmgRecieved.wav");
-    AddSoundSource("../Assets/Sounds/Player_OnCastHealing.wav");
+    AddSoundSource("../Assets/Sounds/Player_OnHealing.wav");
     AddSoundSource("../Assets/Sounds/Player_OnCastDash.wav");
-    AddSoundSource("../Assets/Sounds/Player_OnHealingRecieved.wav");    // do not exist
+    AddSoundSource("../Assets/Sounds/Player_OnCastDash1.wav");
+    AddSoundSource("../Assets/Sounds/Player_OnCastBlink.wav");
     AddSoundSource("../Assets/Sounds/Player_OnDeath.wav");
     AddSoundSource("../Assets/Sounds/Player_OnRespawn.wav");    // do not exist
 
@@ -71,6 +59,7 @@ void SoundHandler::LoadAllSounds()
     AddSoundSource("../Assets/Sounds/Enemy_OnMeleeAttack4.mp3");
     AddSoundSource("../Assets/Sounds/Enemy_OnMeleeAttack5.mp3");
     AddSoundSource("../Assets/Sounds/Enemy_OnMeleeAttack6.mp3");
+    AddSoundSource("../Assets/Sounds/Enemy_OnMeleeAttack7.wav");
     AddSoundSource("../Assets/Sounds/Enemy_OnDmgRecieved.ogg");
     AddSoundSource("../Assets/Sounds/Enemy_OnDeath.wav");   
 }
@@ -91,8 +80,30 @@ SoundHandler& SoundHandler::Get()
     return s_instance;
 }
 
+void SoundHandler::Setup()
+{
+    // Start the sound engine with default parameters.
+    m_soundEngine = irrklang::createIrrKlangDevice();
+
+    if (m_soundEngine == nullptr)
+    {
+        LOG_ERROR("failed starting up the irrklang sound engine.")
+    }
+    else
+    {
+        m_soundEngine->setDefault3DSoundMinDistance(100.0f);
+        m_soundEngine->setRolloffFactor(70.0f);
+        m_soundEngine->setSoundVolume(m_masterVolume);
+
+        LOG_INFO("Irrklang sound engine successfully loaded.")
+    }
+
+    LoadAllSounds();
+}
+
 void SoundHandler::Update()
 {
+    m_soundEngine->setSoundVolume(m_masterVolume);
     m_soundEngine->update();
 }
 
@@ -167,7 +178,8 @@ irrklang::ISound* SoundHandler::PlaySound(const std::string& name, const audio_t
                 data.playLooped, true, false, false);
 
             const float minDist = (data.minDistance <= 0) ? m_soundEngine->getDefault3DSoundMinDistance() : data.minDistance;
-            const float volume = (data.volume <= 0.1f) ? 1.0f : data.volume;
+            float volume = (data.volume <= 0.1f) ? 1.0f : data.volume;
+            volume *= m_masterVolume;
 
             sound->setMinDistance(minDist);
             sound->setVolume(data.volume);
@@ -176,13 +188,29 @@ irrklang::ISound* SoundHandler::PlaySound(const std::string& name, const audio_t
         else
         {
             sound = m_soundEngine->play2D(m_soundSources[name], data.playLooped, true, false, false);
-            const float volume = (data.volume <= 0.1f) ? 1.0f : data.volume;
+            float volume = (data.volume <= 0.1f) ? 1.0f : data.volume;
+            volume *= m_masterVolume;
         	sound->setVolume(volume);
             sound->setIsPaused(false);
         }
     }
 
     return sound;
+}
+
+void SoundHandler::SetMasterVolume(float value)
+{
+    m_masterVolume = value;
+}
+
+const float& SoundHandler::GetMasterVolume() const
+{
+    return m_masterVolume;
+}
+
+float& SoundHandler::AdjustMasterVolume()
+{
+    return m_masterVolume;
 }
 
 

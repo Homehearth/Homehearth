@@ -1,22 +1,23 @@
 #include "Common.hlsli"
 
-float4 main(PixelIn input) : SV_TARGET
+PixelOut main(PixelIn input)
 {
     //return t_shadowMaps.Sample(s_linear, float3(input.uv, 0.0f));
-
+    PixelOut output;
     static unsigned int rolls = infoData.x;
     static float LIGHT_RANGE = 215.0f;
     const float LIGHT_VOLUME_RANGE = 250.0f;
     static unsigned int STEPS = c_info.y;
-    const float SCATTERING = 1.0f;
+    const float SCATTERING = .85f;
     
-    float3 lightVolume = float3(0.0f, 0.0f, 0.0f);
+    float3 lightVolume = float3(1.0f, 1.0f, 1.0f);
 	float3 camPos = c_cameraPosition.xyz;
     float ao = 1.0f;
     float3 albedo = 1.f;
     float metallic = 0.0f;
     float roughness = 0.0f;
     const float gamma = 1.f / 2.2f;
+    const float3 scatter = float3(SCATTERING, SCATTERING, SCATTERING);
     
     //Normal Vector
     float3 N = normalize(input.normal);
@@ -102,7 +103,7 @@ float4 main(PixelIn input) : SV_TARGET
                                 float depth = t_shadowMaps.Sample(s_linear, float3(shadowCoords, shadowIndex));
                                 if (depth > cameraShadowSpace.z & ((saturate(shadowCoords.x) == shadowCoords.x) & (saturate(shadowCoords.y) == shadowCoords.y)))
                                 {
-                                    lightVolume += float3(SCATTERING, SCATTERING, SCATTERING);
+                                    lightVolume += scatter;
                                 }
                         
                                 currentPos += step;
@@ -116,8 +117,7 @@ float4 main(PixelIn input) : SV_TARGET
                 }
                 case 1:
 				{
-                    if (length(camPos - sb_lights[i].position.xyz) < LIGHT_RANGE)
-                    {
+
                         float len = length(pixelposLightSpace.xyz);
                         pixelposLightSpace.xyz /= len;
                         float closestDepth = 1.0f;
@@ -150,7 +150,6 @@ float4 main(PixelIn input) : SV_TARGET
 
                         }
                         lightCol += DoPointlight(sb_lights[i], input, N) * (1.0f - shadowCoef);
-                    }
                     break;
                 }
                 default:
@@ -174,7 +173,7 @@ float4 main(PixelIn input) : SV_TARGET
     float4 fogColor = float4(0.04f, 0.06f, 0.2f, 1);
     //float4 fogColor = float4(0.5f, 0.5f, 0.5f, 1);
 
-    float fogFactor = saturate((distanceToCenter - 110.f) / 100.f);
+    float fogFactor = saturate((distanceToCenter - 150.f) / 100.f);
     float lightVolumeFactor = lightVolume > 0.0f ? lightVolume : 1.0f;
   
     /*
@@ -210,7 +209,9 @@ float4 main(PixelIn input) : SV_TARGET
                     //Gamma correct
                     colorDecal = pow(max(colorDecal, 0.0f), float3(1.0 / 2.2, 1.0 / 2.2, 1.0 / 2.2));
                     colorDecal = lerp(colorDecal, fogColor.xyz, fogFactor);
-                    return float4(colorDecal, alpha);
+                    output.color =  float4(colorDecal, alpha);
+                    output.brightColor =  float4(0,0,0,0);
+                    return output;
                 }
 
             }
@@ -219,15 +220,23 @@ float4 main(PixelIn input) : SV_TARGET
     
     
     
-    float3 color = (ambient + Lo) * pow(lightVolumeFactor, 2.5f);
+    float3 color = (ambient + Lo) * pow(lightVolumeFactor, 2.5f);   
+    float brightness = dot(color, float3(0.2126, 0.7152, 0.0722));
     
     //HDR tonemapping
-	//color = color / (color + float3(1.0, 1.0, 1.0));
     color = ACESFitted(color);
     //Gamma correct
     color = pow(max(color, 0.0f), float3(gamma, gamma, gamma));
     
     color = lerp(color, fogColor.xyz, fogFactor);
-
-    return float4(color, 5.0f);
+    
+    
+    //Bloom stuff
+    if (brightness > 1.0f)
+        output.brightColor = float4(color, 1.0f);
+    else
+        output.brightColor = float4(0.0f, 0.0f, 0.0f, 1.0f);
+    
+    output.color = float4(color, 5.0f);
+    return output;
 }

@@ -30,7 +30,6 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 	comp::SphereCollider* bos = entity.AddComponent<comp::SphereCollider>();
 	comp::Velocity* velocity = entity.AddComponent<comp::Velocity>();
 	comp::BehaviorTree* behaviorTree = entity.AddComponent<comp::BehaviorTree>();
-	entity.AddComponent<comp::AudioState>();
 
 	switch (type)
 	{
@@ -51,19 +50,19 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		npc->movementSpeed = 15.f;
 		attackAbility->cooldown = 1.0f;
 		attackAbility->attackDamage = 20.f;
-		attackAbility->lifetime = 5.0f;
-		attackAbility->attackRange = 6.f;
+		attackAbility->lifetime = 0.1f;
+		attackAbility->attackRange = 4.f;
 		attackAbility->useTime = 0.3f;
 		attackAbility->delay = 0.2f;
 		attackAbility->movementSpeedAlt = 0.0f;
 
 		if (randomNum > 0.25f)
 		{
-			behaviorTree->root = AIBehaviors::GetFocusBuildingAIBehavior(entity);
+			behaviorTree->root = AIBehaviors::GetFocusBuildingAIBehavior(entity, simulation->GetBlackboard());
 		}
 		else
 		{
-			behaviorTree->root = AIBehaviors::GetFocusPlayerAIBehavior(entity);
+			behaviorTree->root = AIBehaviors::GetFocusPlayerAIBehavior(entity, simulation->GetBlackboard());
 		}
 
 	}
@@ -91,7 +90,7 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		attackAbility->delay = 0.2f;
 		attackAbility->projectileSpeed = 50.f;
 		attackAbility->movementSpeedAlt = 0.0f;
-		behaviorTree->root = AIBehaviors::GetFocusPlayerAIBehavior(entity);
+		behaviorTree->root = AIBehaviors::GetFocusPlayerAIBehavior(entity, simulation->GetBlackboard());
 	}
 	break;
 	case EnemyType::Runner:
@@ -111,7 +110,7 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		attackAbility->delay = 0.2f;
 		attackAbility->movementSpeedAlt = 0.0f;
 		npc->movementSpeed = 30.f;
-		behaviorTree->root = AIBehaviors::GetFocusPlayerAIBehavior(entity);
+		behaviorTree->root = AIBehaviors::GetFocusPlayerAIBehavior(entity, simulation->GetBlackboard());
 	}
 	break;
 	case EnemyType::BIGMOMMA:
@@ -132,7 +131,7 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		attackAbility->movementSpeedAlt = 0.0f;
 		npc->movementSpeed = 10.f;
 		health->currentHealth = 1500.f;
-		behaviorTree->root = AIBehaviors::GetFocusPlayerAIBehavior(entity);
+		behaviorTree->root = AIBehaviors::GetFocusPlayerAIBehavior(entity, simulation->GetBlackboard());
 	}
 	break;
 	default:
@@ -156,7 +155,7 @@ void EnemyManagement::CreateWaves(std::queue<Wave>& waveQueue, int currentRound)
 	Wave wave1, wave2, wave3, wave4, wave5; // Default: WaveType::Zone
 	{
 		Wave::Group group1;
-		group1.AddEnemy(EnemyType::Default, 3 + 2 * currentRound);
+		group1.AddEnemy(EnemyType::Default, 8 + 4 * currentRound);
 		group1.SetSpawnPoint({ 490.f, -150.0f });
 		wave1.SetTimeLimit(5);
 		wave1.AddGroup(group1);
@@ -165,32 +164,32 @@ void EnemyManagement::CreateWaves(std::queue<Wave>& waveQueue, int currentRound)
 	{ // Wave_2
 		Wave::Group group1, group2;
 
-		group1.AddEnemy(EnemyType::Default, 1 + currentRound);
-		group2.AddEnemy(EnemyType::Default, 2 + currentRound);
-		group2.AddEnemy(EnemyType::Runner, 1 + 2 * currentRound);
+		group1.AddEnemy(EnemyType::Default, 5 + 3 * currentRound);
+		group2.AddEnemy(EnemyType::Default, 5 + 3 * currentRound);
+		group2.AddEnemy(EnemyType::Runner, 1 + 1 * currentRound);
 		group1.SetSpawnPoint({ 490.f, -150.0f });
 		group2.SetSpawnPoint({ 170, -80.0f });
 		wave2.AddGroup(group1);
 		wave2.AddGroup(group2);
-		wave2.SetTimeLimit(30);	
+		wave2.SetTimeLimit(30);
 	}
 
 
 	{ // Wave_3
 		Wave::Group group1, group2, group3, group4;
 
-		group1.AddEnemy(EnemyType::Default, 3 + currentRound);
-		group1.AddEnemy(EnemyType::Runner, 1 + 1 * currentRound);
+		group1.AddEnemy(EnemyType::Default, 3 + 3 * currentRound);
+		group1.AddEnemy(EnemyType::Runner, 1 + 2 * currentRound);
 		group1.SetSpawnPoint({ 490.f, -150.0f });
 
 		group2.AddEnemy(EnemyType::Default, 3 + currentRound);
 		group2.AddEnemy(EnemyType::Runner, 1 + currentRound);
 		group2.SetSpawnPoint({ 170, -80.0f });
 
-		group3.AddEnemy(EnemyType::Default, 3 + currentRound);
+		group3.AddEnemy(EnemyType::Default, 3 + 3 * currentRound);
 		group3.SetSpawnPoint({ 80.0f, -500.0f });
 
-		group4.AddEnemy(EnemyType::Default, 2 + currentRound);
+		group4.AddEnemy(EnemyType::Default, 2 + 3 * currentRound);
 		group4.SetSpawnPoint({ 520.f, -540.0f });
 
 		wave3.AddGroup(group1);
@@ -203,19 +202,19 @@ void EnemyManagement::CreateWaves(std::queue<Wave>& waveQueue, int currentRound)
 	{ // Wave_4
 		Wave::Group group1, group2, group3, group4;
 
-		group1.AddEnemy(EnemyType::Default, 4 + currentRound);
+		group1.AddEnemy(EnemyType::Default, 4 + 3 * currentRound);
 		group1.AddEnemy(EnemyType::Runner, 1 + currentRound);
 		group1.SetSpawnPoint({ 490.f, -150.0f });
 
-		group2.AddEnemy(EnemyType::Default, 4 + currentRound);
-		group2.AddEnemy(EnemyType::Runner, 1 + currentRound);
+		group2.AddEnemy(EnemyType::Default, 4 + 3 * currentRound);
+		group2.AddEnemy(EnemyType::Runner, 1 + 3 * currentRound);
 		group2.SetSpawnPoint({ 170, -80.0f });
 
-		group3.AddEnemy(EnemyType::Default, 2 + currentRound);
+		group3.AddEnemy(EnemyType::Default, 2 + 3 * currentRound);
 		group3.AddEnemy(EnemyType::Runner, 2 + currentRound);
 		group3.SetSpawnPoint({ 80.0f, -500.0f });
 
-		group4.AddEnemy(EnemyType::Default, 4 + currentRound);
+		group4.AddEnemy(EnemyType::Default, 4 + 3 * currentRound);
 		group4.AddEnemy(EnemyType::Runner, 1 + currentRound);
 		group4.SetSpawnPoint({ 520.f, -540.0f });
 
@@ -233,13 +232,13 @@ void EnemyManagement::CreateWaves(std::queue<Wave>& waveQueue, int currentRound)
 		group1.AddEnemy(EnemyType::BIGMOMMA, 1);
 		group1.SetSpawnPoint({ 490.f, -150.0f });
 
-		group2.AddEnemy(EnemyType::Default, 1 + currentRound);
+		group2.AddEnemy(EnemyType::Default, 1 + 3 * currentRound);
 		group2.SetSpawnPoint({ 170, -80.0f });
 
-		group3.AddEnemy(EnemyType::Default, 2 + currentRound);
+		group3.AddEnemy(EnemyType::Default, 2 + 3 * currentRound);
 		group3.SetSpawnPoint({ 80.0f, -500.0f });
 
-		group4.AddEnemy(EnemyType::Default, 1 + currentRound);
+		group4.AddEnemy(EnemyType::Default, 1 + 3 * currentRound);
 		group4.SetSpawnPoint({ 520.f, -540.0f });
 
 		wave5.AddGroup(group1);
@@ -381,17 +380,63 @@ void ServerSystems::WaveSystem(Simulation* simulation,
 /**Removes all enemies that has been destroyed and broadcasts the removal to the clients.
  *@param simulation	   Manages sending and removal of entities on the server.
  */
-void ServerSystems::NextWaveConditions(Simulation* simulation, Timer& timer, int timeToFinish)
+void ServerSystems::OnCycleChange(Simulation* simulation)
 {
 	//Publish event when timeToFinish been exceeded.
-	if (simulation->m_timeCycler.GetSwitch())
+	if (simulation->m_timeCycler.HasChangedPeriod())
 	{
-		simulation->GetGameScene()->publish<ESceneCallWaveSystem>(0.0f);
-		simulation->m_timeCycler.Switch();
+		if (simulation->m_timeCycler.GetTimePeriod() == CyclePeriod::MORNING)
+		{
+			simulation->m_timeCycler.ResetCycleSpeed();
+			// remove all bad guys
+			simulation->GetGameScene()->ForEachComponent<comp::Tag<BAD>>([](Entity e, comp::Tag<BAD>&)
+				{
+					e.Destroy();
+				});
+
+			simulation->GetGameScene()->ForEachComponent<comp::Player, comp::Health>([=](Entity e, comp::Player& p, comp::Health& hp)
+				{
+					p.wantsToSkipDay = false;
+					if (!hp.isAlive)
+					{
+						simulation->ResetPlayer(e);
+						hp.currentHealth = 0.25f * hp.maxHealth;
+					}
+				});
+		}
+
+		if (simulation->m_timeCycler.GetTimePeriod() == CyclePeriod::NIGHT)
+		{
+			simulation->m_timeCycler.ResetCycleSpeed();
+
+			if (simulation->waveQueue.size() > 0)
+			{
+				// start new wave
+				simulation->GetGameScene()->publish<ESceneCallWaveSystem>(0.0f);
+			}
+			else
+			{
+				EnemyManagement::CreateWaves(simulation->waveQueue, simulation->currentRound++);
+			}
+
+		}
+	}
+	if (simulation->m_timeCycler.GetTimePeriod() == CyclePeriod::NIGHT)
+	{
+		int count = 0;
+		simulation->GetGameScene()->ForEachComponent<comp::Tag<BAD>>([&](Entity e, comp::Tag<BAD>&)
+			{
+				count++;
+			});
+
+		if (count == 0)
+		{
+			simulation->m_timeCycler.SetCycleSpeed(15.0f);
+		}
 	}
 }
 
-void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene& scene, float dt, QuadTree* dynamicQT)
+void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene& scene, float dt, QuadTree* dynamicQT, Blackboard* blackboard)
 {
 	scene.ForEachComponent<comp::Player, comp::Transform, comp::Velocity>([&](comp::Player& p, comp::Transform& t, comp::Velocity& v)
 		{
@@ -412,100 +457,141 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 			v.vel = vel;
 		});
 
-	scene.ForEachComponent<comp::Player, comp::AnimationState>([&](Entity e, comp::Player& p, comp::AnimationState& anim)
+	scene.ForEachComponent<comp::Player, comp::AnimationState, comp::Health>([&](Entity e, comp::Player& p, comp::AnimationState& anim, comp::Health& health)
 		{
-			// Do stuff based on input
-
-			// Get point on ground where mouse hovers over
-			Plane_t plane;
-			plane.normal = sm::Vector3(0, 1, 0);
-			plane.point = sm::Vector3(0, 0, 0);
-
-			if (!p.lastInputState.mouseRay.Intersects(plane, &p.mousePoint))
+			// Do stuff based on input while not in deadstate
+			if (health.isAlive)
 			{
-				LOG_WARNING("Mouse click ray missed walking plane. Should not happen...");
-			}
+				// Get point on ground where mouse hovers over
+				Plane_t plane;
+				plane.normal = sm::Vector3(0, 1, 0);
+				plane.point = sm::Vector3(0, 0, 0);
 
-			if (p.state == comp::Player::State::WALK)
-				anim.toSend = EAnimationType::MOVE;
-			else
-				anim.toSend = EAnimationType::IDLE;
-
-			// check if using abilities
-			if (p.lastInputState.leftMouse) // is held
-			{
-				p.state = comp::Player::State::LOOK_TO_MOUSE; // set state even if ability is not ready for use yet
-				if (ecs::UseAbility(e, p.primaryAbilty, &p.mousePoint))
+				if (!p.lastInputState.mouseRay.Intersects(plane, &p.mousePoint))
 				{
-					LOG_INFO("Used primary");
-					anim.toSend = EAnimationType::PRIMARY_ATTACK;
+					LOG_WARNING("Mouse click ray missed walking plane. Should not happen...");
 				}
 
-				// make sure movement alteration is not applied when using, because then its applied atomatically
-				if (!ecs::IsUsing(e, p.primaryAbilty))
-				{
-					e.GetComponent<comp::Velocity>()->vel *= ecs::GetAbility(e, p.primaryAbilty)->movementSpeedAlt;
-				}
-			}
-			else if (p.lastInputState.rightMouse)
-			{
-				if (ecs::UseAbility(e, p.secondaryAbilty, &p.mousePoint))
-				{
-					LOG_INFO("Used secondary");
-					anim.toSend = EAnimationType::SECONDARY_ATTACK;
-				}
-			}
+				if (p.state == comp::Player::State::WALK)
+					anim.toSend = EAnimationType::MOVE;
+				else
+					anim.toSend = EAnimationType::IDLE;
 
-			if (p.lastInputState.key_r && simulation->m_timeCycler.GetTimePeriod() == Cycle::DAY) // was pressed
-			{
-				LOG_INFO("Pressed right");
-				simulation->GetGrid().RemoveDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, Blackboard::Get().GetPathFindManager());
-			}
-
-			if(p.lastInputState.key_shift)
-			{
-				if (ecs::UseAbility(e, p.moveAbilty, &p.mousePoint))
+				// check if using abilities
+				if (p.lastInputState.leftMouse) // is held
 				{
-					LOG_INFO("Used moveAbility");
-					//anim.toSend = EAnimationType::MOVE_ABILITY;
-				}
-			}
+					switch (p.shopItem)
+					{
+						//In playmode
+					case ShopItem::None:
+					{
+						p.state = comp::Player::State::LOOK_TO_MOUSE; // set state even if ability is not ready for use yet
+						if (ecs::UseAbility(e, p.primaryAbilty, &p.mousePoint))
+						{
+							anim.toSend = EAnimationType::PRIMARY_ATTACK;
+						}
 
-			//Place defence on grid
-			if (p.lastInputState.key_b && simulation->GetCurrency().GetAmount() >= 5 && simulation->m_timeCycler.GetTimePeriod() == Cycle::DAY)
-			{
-				if (simulation->GetGrid().PlaceDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, Blackboard::Get().GetPathFindManager(), dynamicQT))
+						// make sure movement alteration is not applied when using, because then its applied atomatically
+						if (!ecs::IsUsing(e, p.primaryAbilty))
+						{
+							e.GetComponent<comp::Velocity>()->vel *= ecs::GetAbility(e, p.primaryAbilty)->movementSpeedAlt;
+						}
+						break;
+					}
+					case ShopItem::Defence1x1:
+					case ShopItem::Defence1x3:
+					{
+						if (simulation->m_timeCycler.GetTimePeriod() == CyclePeriod::DAY)
+						{
+							uint32_t cost = 0;
+							if (p.shopItem == ShopItem::Defence1x1)
+								cost = 10;
+							else if (p.shopItem == ShopItem::Defence1x3)
+								cost = 30;
+
+							if (simulation->GetCurrency().GetAmount() >= cost)
+							{
+								if (simulation->GetGrid().PlaceDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, blackboard->GetPathFindManager(), dynamicQT))
+								{
+									audio_t audio =
+									{
+										ESoundEvent::Game_OnDefencePlaced,
+										e.GetComponent<comp::Transform>()->position,
+										1.0f,
+										250.f,
+										true,
+										false,
+										true,
+										false,
+									};
+									e.GetComponent<comp::AudioState>()->data.emplace(audio);
+
+									simulation->GetCurrency() -= cost;
+									anim.toSend = EAnimationType::PLACE_DEFENCE;
+								}
+							}
+						}
+						break;
+					}
+					case ShopItem::Destroy_Tool:
+					{
+						simulation->GetGrid().RemoveDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, blackboard);
+						break;
+					}
+					default:
+						break;
+					}
+				}
+				else if (p.lastInputState.rightMouse)
 				{
-					simulation->GetCurrency() -= 10;
-					anim.toSend = EAnimationType::PLACE_DEFENCE;
+					if (p.classType != comp::Player::Class::WARRIOR)
+					{
+						if (ecs::UseAbility(e, p.secondaryAbilty, &p.mousePoint))
+						{
+							LOG_INFO("Used secondary");
+							anim.toSend = EAnimationType::SECONDARY_ATTACK;
+						}
+					}
 				}
-			}
 
-			//Rotate defences 90 or not
-			if (p.lastInputState.mousewheelDir != 0)
-			{
+				if (p.lastInputState.key_shift)
+				{
+					if (ecs::UseAbility(e, p.moveAbilty, &p.mousePoint))
+					{
+						anim.toSend = EAnimationType::ABILITY1;
+					}
+				}
+
+				//Rotate defences 90 or not
 				if (p.lastInputState.mousewheelDir > 0)
 					p.rotateDefence = true;
 				else if (p.lastInputState.mousewheelDir < 0)
 					p.rotateDefence = false;
 			}
 		});
-
-
 }
 
-void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money_ref, HouseManager houseManager, QuadTree* qt, GridSystem& grid, SpreeHandler& spree)
+void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money_ref, HouseManager houseManager, QuadTree* qt, GridSystem& grid, SpreeHandler& spree, Blackboard* blackboard)
 {
-	//Entity destoys self if health <= 0
+	//Entity destroys itself if health <= 0
 	scene.ForEachComponent<comp::Health>([&](Entity& entity, comp::Health& health)
 		{
 			//Check if something should be dead, and if so set isAlive to false
 			if (health.currentHealth <= 0 && health.isAlive)
 			{
+				comp::AnimationState* anim = entity.GetComponent<comp::AnimationState>();
+
+
+				if (anim)
+				{
+					anim->toSend = EAnimationType::DEAD;
+				}
+
 				comp::Network* net = entity.GetComponent<comp::Network>();
 				health.isAlive = false;
+				scene.publish<EComponentUpdated>(entity, ecs::Component::HEALTH);
 				// increase money
-				if (entity.GetComponent<comp::Tag<TagType::BAD>>())
+				if (entity.GetComponent<comp::Tag<BAD>>())
 				{
 					money_ref += 5 * spree.GetSpree();
 					money_ref.IncreaseTotal(5 * spree.GetSpree());
@@ -516,6 +602,7 @@ void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money
 				comp::House* house = entity.GetComponent<comp::House>();
 				comp::Player* p = entity.GetComponent<comp::Player>();
 				comp::NPC* npc = entity.GetComponent<comp::NPC>();
+				comp::Villager* villager = entity.GetComponent<comp::Villager>();
 
 				audio_t audio = {
 					ESoundEvent::NONE,
@@ -527,22 +614,25 @@ void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money
 					false,
 					false,
 				};
-				
+
+				comp::KillDeaths* kd = entity.GetComponent<comp::KillDeaths>();
+				if (kd)
+				{
+					kd->deaths++;
+				}
+
 				if (p)
 				{
 					audio.type = ESoundEvent::Player_OnDeath;
-
-					p->respawnTimer = 10.f;
-					p->state = comp::Player::State::SPECTATING;
-					entity.RemoveComponent<comp::Tag<TagType::DYNAMIC>>();
+					entity.RemoveComponent<comp::Tag<DYNAMIC>>();
 				}
-				else if (entity.GetComponent<comp::Tag<TagType::DEFENCE>>())
+				else if (entity.GetComponent<comp::Tag<DEFENCE>>())
 				{
 					comp::Transform* buildTransform = entity.GetComponent<comp::Transform>();
 
-					Node* node = Blackboard::Get().GetPathFindManager()->FindClosestNode(buildTransform->position);
+					Node* node = blackboard->GetPathFindManager()->FindClosestNode(buildTransform->position);
 					//Remove from the container map so ai wont consider this defense
-					Blackboard::Get().GetPathFindManager()->RemoveDefenseEntity(entity);
+					blackboard->GetPathFindManager()->RemoveDefenseEntity(entity);
 					node->reachable = true;
 					node->defencePlaced = false;
 
@@ -556,6 +646,7 @@ void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money
 				{
 					//Create a new entity with the ruined mesh
 					Entity newHouse = houseManager.CreateHouse(scene, houseManager.GetRuinedHouseType(house->houseType), NameType::EMPTY, NameType::EMPTY);
+					newHouse.RemoveComponent<comp::Health>();
 					qt->Insert(newHouse);
 
 					sm::Vector3 emitterOffset = newHouse.GetComponent<comp::OrientedBoxCollider>()->Center;
@@ -563,7 +654,7 @@ void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money
 
 
 					//Remove house from blackboard
-					Blackboard::Get().GetValue<Houses_t>("houses")->houses.erase(entity);
+					blackboard->GetValue<Houses_t>("houses")->houses.erase(entity);
 
 					audio.position = entity.GetComponent<comp::OrientedBoxCollider>()->Center;
 					audio.type = ESoundEvent::Game_OnHouseDestroyed;
@@ -573,7 +664,7 @@ void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money
 					house->door.Destroy();
 					entity.Destroy();
 				}
-				else if(npc)
+				else if (npc)
 				{
 					audio.type = ESoundEvent::Enemy_OnDeath;
 					entity.Destroy();
@@ -584,9 +675,9 @@ void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money
 				}
 
 				scene.ForEachComponent<comp::Player>([&](Entity& playerEntity, comp::Player& player)
-				{
-					playerEntity.GetComponent<comp::AudioState>()->data.emplace(audio);
-				});
+					{
+						playerEntity.GetComponent<comp::AudioState>()->data.emplace(audio);
+					});
 
 			}
 			else if (health.currentHealth > health.maxHealth)
@@ -613,32 +704,12 @@ void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& sce
 		{
 			if (!health.isAlive)
 			{
-				anim.toSend = EAnimationType::DEAD;
-
 				comp::Velocity* vel = e.GetComponent<comp::Velocity>();
 				if (vel)
 				{
 					// dont move if dead
 					vel->vel = sm::Vector3::Zero;
 				}
-				if (p.state != comp::Player::State::SPECTATING)
-				{
-					p.state = comp::Player::State::SPECTATING;
-					message<GameMsg> msg;
-					msg.header.id = GameMsg::Game_StartSpectate;
-					
-					simulation->SendMsg(n.id, msg);
-				}
-				//p.respawnTimer -= dt;
-
-				//if (p.respawnTimer < 0.01f)
-				//{
-				//	simulation->ResetPlayer(e);
-				//	message<GameMsg> msg;
-				//	msg.header.id = GameMsg::Game_StopSpectate;
-				//	simulation->SendMsg(n.id, msg);
-				//	LOG_INFO("Player %u respawned...", e.GetComponent<comp::Network>()->id);
-				//}
 			}
 		});
 
@@ -676,6 +747,21 @@ void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& sce
 
 	// turns npc with velocity
 	scene.ForEachComponent<comp::NPC, comp::Transform, comp::Velocity>([&](Entity e, comp::NPC& p, comp::Transform& t, comp::Velocity& v)
+		{
+			if (v.vel.Length() > 0.001f)
+			{
+				float time = dt * p.movementSpeed * 0.5f;
+				if (ecs::StepRotateTo(t.rotation, v.vel, time))
+				{
+
+				}
+				e.UpdateNetwork();
+				sm::Matrix rot = sm::Matrix::CreateFromQuaternion(sm::Quaternion::Identity);
+			}
+		});
+
+	// turns Villagers with velocity
+	scene.ForEachComponent<comp::Villager, comp::Transform, comp::Velocity>([&](Entity e, comp::Villager& p, comp::Transform& t, comp::Velocity& v)
 		{
 			if (v.vel.Length() > 0.001f)
 			{
@@ -727,31 +813,37 @@ void ServerSystems::TickBTSystem(Simulation* simulation, HeadlessScene& scene)
 		});
 }
 
-void ServerSystems::AnimatonSystem(Simulation* simulation, HeadlessScene& scene)
+void ServerSystems::AnimationSystem(Simulation* simulation, HeadlessScene& scene)
 {
+	uint16_t count = 0;
+	message<GameMsg>msg;
+	msg.header.id = GameMsg::Game_ChangeAnimation;
 	scene.ForEachComponent<comp::Network, comp::AnimationState>([&](comp::Network& net, comp::AnimationState& anim)
 		{
 			//Have to send every time - otherwise animations can be locked to one
 			if (anim.toSend != EAnimationType::NONE)
 			{
-				message<GameMsg>msg;
-				msg.header.id = GameMsg::Game_ChangeAnimation;
+				count++;
 				msg << anim.toSend << net.id;
-				simulation->Broadcast(msg);
 
 				anim.lastSend = anim.toSend;
 				anim.toSend = EAnimationType::NONE;
 			}
 		});
+	if (count > 0)
+	{
+		msg << count;
+		simulation->Broadcast(msg);
+	}
 }
 
 void ServerSystems::SoundSystem(Simulation* simulation, HeadlessScene& scene)
 {
 	scene.ForEachComponent<comp::Network, comp::AudioState>([&](comp::Network& net, comp::AudioState& audioState)
 		{
-			if(!audioState.data.empty())
+			if (!audioState.data.empty())
 			{
-				const int COUNT = audioState.data.size();
+				const int COUNT = static_cast<int>(audioState.data.size());
 				audio_t audio = {};
 
 				message<GameMsg> singleMsg;
@@ -759,13 +851,13 @@ void ServerSystems::SoundSystem(Simulation* simulation, HeadlessScene& scene)
 				int nrOfBroadcasts = 0;
 				singleMsg.header.id = GameMsg::Game_PlaySound;
 				broadcastMsg.header.id = GameMsg::Game_PlaySound;
-				
+
 				// Loop trough all sounds.
-				for(int i = 0; i < COUNT; i++)
+				for (int i = 0; i < COUNT; i++)
 				{
 					audio = audioState.data.front();
 
-					if(audio.shouldBroadcast)
+					if (audio.shouldBroadcast)
 					{
 						broadcastMsg << audio.type;
 						broadcastMsg << audio.position;
@@ -795,7 +887,7 @@ void ServerSystems::SoundSystem(Simulation* simulation, HeadlessScene& scene)
 				//
 				// Send all msgs.
 				//
-				if(nrOfBroadcasts > 0)
+				if (nrOfBroadcasts > 0)
 				{
 					broadcastMsg << nrOfBroadcasts;
 					simulation->Broadcast(broadcastMsg);
@@ -810,9 +902,9 @@ void ServerSystems::SoundSystem(Simulation* simulation, HeadlessScene& scene)
 		});
 }
 
-void ServerSystems::CombatSystem(HeadlessScene& scene, float dt)
+void ServerSystems::CombatSystem(HeadlessScene& scene, float dt, Blackboard* blackboard)
 {
-	CombatSystem::UpdateCombatSystem(scene, dt);
+	CombatSystem::UpdateCombatSystem(scene, dt, blackboard);
 }
 void ServerSystems::DeathParticleTimer(HeadlessScene& scene)
 {
@@ -827,4 +919,54 @@ void ServerSystems::DeathParticleTimer(HeadlessScene& scene)
 				e.RemoveComponent<comp::PARTICLEEMITTER>();
 			}
 		});
+}
+
+void ServerSystems::CheckSkipDay(Simulation* simulation)
+{
+	bool allPlayersSkip = true;
+
+	simulation->GetGameScene()->ForEachComponent<comp::Player>([=, &allPlayersSkip](Entity& e, comp::Player& p)
+		{
+			if (!p.wantsToSkipDay)
+			{
+				allPlayersSkip = false;
+			}
+		});
+
+	if (allPlayersSkip)
+	{
+		simulation->m_timeCycler.SetCycleSpeed(15.f);
+	}
+}
+
+Entity VillagerManagement::CreateVillager(HeadlessScene& scene, Entity homeHouse, Blackboard* blackboard)
+{
+	Entity entity = scene.CreateEntity();
+	entity.AddComponent<comp::Network>();
+	entity.AddComponent<comp::Tag<DYNAMIC>>();
+	entity.AddComponent<comp::Tag<GOOD>>();
+
+	comp::Transform* transform = entity.AddComponent<comp::Transform>();
+	transform->scale = sm::Vector3(1.7f, 1.7f, 1.7f);
+	comp::Health* health = entity.AddComponent<comp::Health>();
+	comp::MeshName* meshName = entity.AddComponent<comp::MeshName>();
+	comp::AnimatorName* animatorName = entity.AddComponent<comp::AnimatorName>();
+	comp::AnimationState* animationState = entity.AddComponent<comp::AnimationState>();
+	comp::SphereCollider* bos = entity.AddComponent<comp::SphereCollider>();
+	comp::Velocity* velocity = entity.AddComponent<comp::Velocity>();
+	comp::BehaviorTree* behaviorTree = entity.AddComponent<comp::BehaviorTree>();
+	comp::Villager* villager = entity.AddComponent<comp::Villager>();
+	comp::House* house = homeHouse.GetComponent<comp::House>();
+	transform->position = house->homeNode->position;
+	transform->position.y = 0.75f;
+	villager->homeHouse = homeHouse;
+	meshName->name = NameType::MESH_VILLAGER;
+	animatorName->name = AnimName::ANIM_VILLAGER;
+
+	bos->Radius = 3.f;
+	villager->movementSpeed = 15.f;
+
+	behaviorTree->root = AIBehaviors::GetVillagerAIBehavior(entity, blackboard);
+
+	return entity;
 }

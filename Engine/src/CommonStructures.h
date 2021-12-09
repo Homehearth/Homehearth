@@ -13,11 +13,21 @@ constexpr uint32_t TIME_LIMIT_NIGHT = 50;
 constexpr uint32_t TIME_LIMIT_MORNING = 10;
 constexpr float ROTATION = 180.0f / (float)(TIME_LIMIT_DAY + TIME_LIMIT_MORNING);
 
-enum class Cycle : UINT
+const float DAY_DURATION	= 150.0f;
+const float MORNING			= 0.0f;
+const float DAY				= 0.1f;
+const float MID_DAY			= 0.3f;
+const float EVENING			= 0.45f;
+const float NIGHT			= 0.5f;
+const float EARLY_MORNING	= 0.9f;
+
+
+enum class CyclePeriod : UINT
 {
-	DAY,
-	NIGHT,
-	MORNING,
+	DAY,		// 0
+	NIGHT,		// 1
+	MORNING,	// 2
+	EVENING,	// 3
 };
 
 struct Currency
@@ -101,14 +111,15 @@ enum class PARTICLEMODE : UINT
 	RAIN,
 	DUST,
 	MAGEHEAL,
-	MAGERANGE
+	MAGERANGE,
+	EXPLOSION
 };
 
-enum class EDefenceType : UINT
-{
-	SMALL,	//1x1
-	LARGE	//1x3
-};
+//enum class EDefenceType : UINT
+//{
+//	SMALL,	//1x1
+//	LARGE	//1x3
+//};
 
 struct Vector2I
 {
@@ -283,17 +294,13 @@ struct InputState
 	int		axisVertical	: 2;
 	bool	leftMouse		: 1;
 	bool	rightMouse		: 1;
-	bool	key_b			: 1;
 	bool	key_shift		: 1;
-	bool	key_r			: 1;
-	int		mousewheelDir	: 2;
+	int		mousewheelDir	: 8;
 
 	Ray_t mouseRay;
-
-	uint32_t tick;
 };
 
-enum class GameMsg : uint8_t
+enum class GameMsg : uint16_t
 {
 	Client_Accepted,
 
@@ -306,7 +313,7 @@ enum class GameMsg : uint8_t
 	Lobby_Update,
 	Lobby_PlayerLeft,
 	Lobby_PlayerJoin,
-	
+
 	Server_AssignID,
 	Server_GetPing,
 
@@ -318,6 +325,8 @@ enum class GameMsg : uint8_t
 	Game_RemoveEntity,
 	Game_BackToLobby,
 	Game_WaveTimer,
+	Game_Time,
+
 	Game_PlaySound,
 	Game_ClassSelected,
 	Game_PlayerAttack,
@@ -325,13 +334,12 @@ enum class GameMsg : uint8_t
 	Game_AddNPC,
 	Game_RemoveNPC,
 	Game_PlayerInput,
+	Game_PlayerSkipDay,
 	Game_Money,
-	Game_UseShop,
+	Game_UpdateShopItem,
 	Game_UpgradeDefence,
 	Game_ChangeAnimation,
 	Game_Cooldown,
-	Game_StartSpectate,
-	Game_StopSpectate,
 	Game_Over
 };
 
@@ -345,8 +353,9 @@ enum class ESoundEvent : uint32_t
 	Player_OnRangeAttackHit,
 	Player_OnDmgDealt,
 	Player_OnDmgRecieved,
-	Player_OnCastHealing,
+	Player_OnHealing,
 	Player_OnCastDash,
+	Player_OnCastBlink,
 	Player_OnHealingRecieved,
 	Player_OnDeath,
 	Player_OnRespawn,
@@ -358,7 +367,7 @@ enum class ESoundEvent : uint32_t
 	Enemy_OnDmgRecieved,
 	Enemy_OnDeath,
 
-	Game_OnJoinLobby,
+	Game_OnPurchase,
 	Game_OnHouseDestroyed,
 	Game_OnDefencePlaced,
 	Game_OnDefenceDestroyed,
@@ -378,36 +387,16 @@ enum class AbilityIndex : uint8_t
 
 enum class ShopItem : uint8_t
 {
-	/*
-		Temporary proof of concept upgrades.
-	*/
+	None,
 	Primary_Upgrade,
 	Secondary_Upgrade,
 	Tower_Upgrade,
 	Speed_Upgrade,
 	Heal,
-
-	/*
-		Lets the player build a 3x1 tower when pressing build key.
-	*/
-	LONG_TOWER,
-
-	/*
-		Lets the player build a 1x1 tower when pressing build key.
-	*/
-	SHORT_TOWER,
-
+	Defence1x1,		//Lets the player build a 1x3 tower when pressing build key.
+	Defence1x3,		//Lets the player build a 1x1 tower when pressing build key.
+	Destroy_Tool,
 	NR_OF
-};
-
-enum class Mode : uint8_t
-{
-	// Normal play mode fighting against monsters.
-	PLAY_MODE,
-	// Build mode allows players to build defences.
-	BUILD_MODE,
-	// Destroy mode allows players to remove their defences.
-	DESTROY_MODE
 };
 
 /*

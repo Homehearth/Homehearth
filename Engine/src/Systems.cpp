@@ -92,6 +92,20 @@ void Systems::HealingSystem(HeadlessScene& scene, float dt)
 
 				collider.AddComponent<comp::Tag<TagType::DYNAMIC>>();
 
+				audio_t audio = {
+					ESoundEvent::Player_OnHealing,
+					entity.GetComponent<comp::Transform>()->position,
+					1.0f,
+					100.f,
+					true,
+					false,
+					true,
+					false,
+				};
+
+				// Send audio to healer.
+				entity.GetComponent<comp::AudioState>()->data.emplace(audio);
+
 				comp::BezierAnimation* a = collider.AddComponent<comp::BezierAnimation>();
 				a->speed = 0.5f;
 				a->scalePoints.push_back(transform->scale);
@@ -108,11 +122,19 @@ void Systems::HealingSystem(HeadlessScene& scene, float dt)
 						if (entity.IsNull())
 							return;
 
-						comp::Health* h = other.GetComponent<comp::Health>();
-						if (h)
+						comp::Player* p = other.GetComponent<comp::Player>();
+						if (p)
 						{
-							h->currentHealth += ability.healAmount;
 							scene.publish<EComponentUpdated>(other, ecs::Component::HEALTH);
+							// Send audio to everyone effected by heal.
+							other.GetComponent<comp::AudioState>()->data.emplace(audio);
+							comp::Health* h = other.GetComponent<comp::Health>();
+
+							if (h)
+							{
+								h->currentHealth += ability.healAmount;
+								scene.publish<EComponentUpdated>(other, ecs::Component::HEALTH);
+							}
 						}
 					});
 			}
@@ -220,6 +242,9 @@ void Systems::SelfDestructSystem(HeadlessScene& scene, float dt)
 			s.lifeTime -= dt;
 			if (s.lifeTime <= 0)
 			{
+				if(s.onDestruct)
+					s.onDestruct();
+
 				ent.Destroy();
 			}
 		});
@@ -230,15 +255,20 @@ void Systems::MovementSystem(HeadlessScene& scene, float dt)
 	PROFILE_FUNCTION();
 
 	//Transform
-
 	scene.ForEachComponent<comp::Transform, comp::Velocity, comp::TemporaryPhysics >([&](Entity e, comp::Transform& t, comp::Velocity& v, comp::TemporaryPhysics& p)
 		{
+			//Don't update villager that is in hiding
+			comp::Villager* villager = e.GetComponent<comp::Villager>();
+			if (villager != nullptr && villager->isHiding)
+			{
+				return;
+			}
+
 			v.vel = v.oldVel; // ignore any changes made to velocity made this frame
 			auto& it = p.forces.begin();
 			while (it != p.forces.end())
 			{
 				comp::TemporaryPhysics::Force& f = *it;
-
 				if (f.isImpulse)
 				{
 					if (f.wasApplied)
@@ -260,7 +290,7 @@ void Systems::MovementSystem(HeadlessScene& scene, float dt)
 				}
 
 				sm::Vector3 newPos = t.position + v.vel * dt;
-				if (newPos.y < 0.0f)
+				if (newPos.y < 0.75f)
 				{
 					v.vel.y = 0;
 					f.force.y = 0;
@@ -293,6 +323,14 @@ void Systems::MovementSystem(HeadlessScene& scene, float dt)
 		scene.ForEachComponent<comp::Transform, comp::Velocity>([&, dt]
 		(Entity e, comp::Transform& transform, comp::Velocity& velocity)
 			{
+
+				//Don't update villager that is in hiding
+				comp::Villager* villager = e.GetComponent<comp::Villager>();
+				if (villager != nullptr && villager->isHiding)
+				{
+					return;
+				}
+
 				if (velocity.vel.Length() > 0.01f)
 				{
 					e.UpdateNetwork();
@@ -300,9 +338,9 @@ void Systems::MovementSystem(HeadlessScene& scene, float dt)
 
 				transform.position += velocity.vel * dt;
 
-				if (transform.position.y < 0.f)
+				if (transform.position.y < 0.75f)
 				{
-					transform.position.y = 0.f;
+					transform.position.y = 0.75f;
 					velocity.vel.y = 0;
 				}
 				velocity.oldVel = velocity.vel; // updated old vel position
@@ -353,23 +391,34 @@ void Systems::LightSystem(Scene& scene, float dt)
 				light.lightData.position = sm::Vector4(t->position.x, t->position.y, t->position.z, 1.f);
 			}
 
-			if (light.lightData.type == TypeLight::POINT)
+			if (light.lightData.type == TypeLight::POINT && light.lightData.enabled)
 			{
-				if (light.flickerTimer >= light.maxFlickerTime)
-					light.increase = false;
-				else if (light.flickerTimer <= 0.f)
+				if (light.enabledTimer > 0.f)
 				{
-					light.increase = true;
-					light.maxFlickerTime = (float)(rand() % 10 + 1) / 10.f;
+					light.enabledTimer -= dt;
+					light.lightData.intensity = util::Lerp(light.lightData.intensity, 0.3f, dt);
+				}
+				else
+				{
+					if (light.flickerTimer >= light.maxFlickerTime)
+						light.increase = false;
+					else if (light.flickerTimer <= 0.f)
+					{
+						light.increase = true;
+						light.maxFlickerTime = (float)(rand() % 10 + 1) / 10.f;
+					}
+
+					if (light.increase)
+						light.flickerTimer += dt * (rand() % 2 + 1);
+					else
+						light.flickerTimer -= dt * (rand() % 2 + 1);
+
+					light.lightData.intensity = util::Lerp(0.5f, 0.7f, light.flickerTimer);
 				}
 
-				if (light.increase)
-					light.flickerTimer += dt * (rand() % 2 + 1);
-				else
-					light.flickerTimer -= dt * (rand() % 2 + 1);
-
-				light.lightData.intensity = util::Lerp(0.5f, 0.7f, light.flickerTimer);
 			}
+			else if (light.lightData.type == TypeLight::POINT && !light.lightData.enabled)
+				light.enabledTimer = 1.f;
 
 			scene.GetLights()->EditLight(light.lightData, light.index);
 		});

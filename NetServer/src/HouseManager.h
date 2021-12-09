@@ -2,7 +2,7 @@
 class HouseManager
 {
 public:
-	HouseManager();
+	HouseManager(Blackboard* blackboard);
 	~HouseManager() = default;
 	void InitializeHouses(HeadlessScene& scene, QuadTree* qt);
 	Entity CreateHouse(HeadlessScene& scene, NameType houseType, NameType doorType, NameType roofType);
@@ -12,5 +12,7 @@ public:
 private:
 	std::unordered_map<std::string, comp::OrientedBoxCollider>* houseColliders{};
 	void AddCollider(NameType houseType, Entity entity) const;
+	Blackboard* blackboard;
+	float m_houseHealth = 250;
 };
 

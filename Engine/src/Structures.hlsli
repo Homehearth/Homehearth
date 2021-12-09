@@ -54,6 +54,12 @@ struct PixelInSB
     float4 posCS    : SV_Position;
 };
 
+struct PixelOut
+{
+    float4 color        : SV_Target0;
+    float4 brightColor  : SV_Target1;
+};
+
 struct ComputeShaderIn
 {
     uint3 GroupID           : SV_GroupID;          
@@ -85,6 +91,7 @@ struct PixelParticleIn
     float4 color            : COLOR;
     float3 normal           : NORMAL;
     float2 uv               : TEXCOORD;
+    float4 worldPos         : WORLDPOS;
 };
 
 struct Light

@@ -21,6 +21,9 @@ namespace ecs
 		BOUNDING_SPHERE,
 		PLAYER,
 		COST,
+
+		// Kills and Deaths
+		KD,
 		COMPONENT_COUNT,
 		COMPONENT_MAX = 32
 	};
@@ -76,6 +79,11 @@ namespace ecs
 			}
 		};
 
+		struct Watermill
+		{
+			float theta = 0;
+		};
+
 		struct EmitterParticle
 		{
 			sm::Vector3							positionOffset	= { 0,0,0 };
@@ -95,6 +103,8 @@ namespace ecs
 			ComPtr<ID3D11Buffer>				particleBuffer	= nullptr;
 			ComPtr<ID3D11ShaderResourceView>	particleSRV		= nullptr;
 			ComPtr<ID3D11UnorderedAccessView>	particleUAV		= nullptr;
+
+			component::Transform				transformCopy;
 
 			EmitterParticle(sm::Vector3 positionOffset = {0,0,0}, int nrOfParticles = 10, float sizeMulitplier = 1.f, PARTICLEMODE type = PARTICLEMODE::BLOOD, float lifeTime = 2.f, float speed = 1, bool hasDeathTimer = false)
 			{
@@ -130,17 +140,22 @@ namespace ecs
 				{
 					textureName = "MageHeal.png";
 				}
+				else if (type == PARTICLEMODE::MAGERANGE || type == PARTICLEMODE::EXPLOSION)
+				{
+					textureName = "fire.png";
+					opacityTextureName = "fire_opacity.png";
+				}
 
 				texture = ResourceManager::Get().GetResource<RTexture>(textureName);
 				opacityTexture = ResourceManager::Get().GetResource<RTexture>(opacityTextureName);
 
 				if (!texture)
 				{
-					LOG_ERROR("Couldnt load particle texture %s", textureName);
+					LOG_ERROR("Couldnt load particle texture %s", textureName.c_str());
 				}
 				if (!opacityTexture)
 				{
-					LOG_ERROR("Couldnt load particle opacity texture %s", opacityTextureName);
+					LOG_ERROR("Couldnt load particle opacity texture %s", opacityTextureName.c_str());
 				}
 				
 				this->nrOfParticles		= (UINT)nrOfParticles;
@@ -248,6 +263,23 @@ namespace ecs
 			std::shared_ptr<BT::ParentNode> root;
 		};
 
+		struct Villager
+		{
+			std::vector<Node*> path;
+			//Stress implementation - fix later -
+			std::vector<sm::Vector3> idlePos = {sm::Vector3(250.f, 0.f, -320.f),
+												sm::Vector3(212.f, 0.f, -297.f),
+												sm::Vector3(237.f, 0.f, -297.f),
+												sm::Vector3(325.f, 0.f, -370.f),
+												sm::Vector3(330.f, 0.f, -285.f),
+												sm::Vector3(135.f, 0.f, -374.f)}; //Positions villager can go and idle at
+			Node* currentNode;
+			Entity homeHouse;
+			float movementSpeed = 15.f;
+			bool isHiding = false;
+			bool isFleeing = false;
+		};
+
 		struct House
 		{
 			NameType houseType = NameType::EMPTY;
@@ -255,10 +287,9 @@ namespace ecs
 			NameType roofType = NameType::EMPTY;
 			Entity door;
 			Entity houseRoof;
-			Node* attackNode = nullptr; //AI can walk to this node to attack this house
+			Node* homeNode = nullptr; //AI can walk to this node to attack this house
 			bool isDead;
 		};
-		
 
 		struct TemporaryPhysics
 		{
@@ -330,13 +361,26 @@ namespace ecs
 			float respawnTimer;
 			bool isReady = false;
 			bool reachable = true;
+			bool wantsToSkipDay = false;
 
-			char name[12] = {};
+			char name[13] = {};
 
-			//Place defence option
-			EDefenceType towerSelected = EDefenceType::SMALL;
-			float		 buildDistance = 24.0f;		//A tiles width is ~8
-			bool		 rotateDefence = false;
+			ShopItem		shopItem = ShopItem::None;
+
+			//Place defence option 
+			float			buildDistance = 32.0f;		//A tiles width is ~8
+			bool			rotateDefence = false;
+		};
+
+		struct KillDeaths
+		{
+			unsigned int kills = 0;
+			unsigned int deaths = 0;
+		};
+
+		struct PlayerReference
+		{
+			Entity player;
 		};
 
 		
@@ -344,7 +388,6 @@ namespace ecs
 		{
 			std::vector<std::pair<UINT, UINT>> coordinates;
 		};
-	
 
 		struct NPC
 		{
@@ -368,6 +411,7 @@ namespace ecs
 			float flickerTimer = 1.f;
 			float maxFlickerTime = 1.f;
 			bool increase;
+			float enabledTimer = 1.f;
 		};
 
 		struct Health
@@ -461,6 +505,7 @@ namespace ecs
 		struct SelfDestruct
 		{
 			float lifeTime;
+			std::function<void()> onDestruct;
 		};
 
 

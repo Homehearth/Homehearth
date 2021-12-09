@@ -28,9 +28,9 @@ std::vector<std::vector<std::shared_ptr<Node>>>& PathFinderManager::GetNodes()
 	return m_nodes;
 }
 
-std::unordered_map<Entity, Entity> PathFinderManager::GetDefenseEntities()
+std::unordered_map<Entity, Entity>* PathFinderManager::GetDefenseEntities()
 {
-	return defenseEntities;
+	return &defenseEntities;
 }
 
 void PathFinderManager::AddDefenseEntity(Entity entity)
@@ -169,38 +169,74 @@ PathFinderManager::~PathFinderManager()
 	m_nodes.clear();
 }
 
-void PathFinderManager::AStarSearch(Entity npcEntity)
+void PathFinderManager::AStarSearch(Entity npcEntity, Blackboard* blackboard)
 {
 	comp::Transform* npcTransform = npcEntity.GetComponent<comp::Transform>();
 	comp::NPC* npcComp = npcEntity.GetComponent<comp::NPC>();
-
-
-	npcComp->currentNode->g = 0.0f;
-	npcComp->currentNode->h = 0.0f;
+	comp::Villager* villagerComp = npcEntity.GetComponent<comp::Villager>();
 	std::vector<Node*> openList, closedList;
-	Node* startingNode = npcComp->currentNode;
-	startingNode->f = 0.0f;
-	openList.push_back(startingNode);
-
-	//Gets the target that findTargetNode has picked for this entity
-	Entity* target = Blackboard::Get().GetValue<Entity>("target" + std::to_string(npcEntity));
-	comp::House* house = target->GetComponent<comp::House>();
-	if (target == nullptr)
+	Node* startingNode = nullptr;
+	if(npcComp)
 	{
-		LOG_INFO("Target was nullptr...");
+		npcComp->currentNode->g = 0.0f;
+		npcComp->currentNode->h = 0.0f;
+		startingNode = npcComp->currentNode;
+		startingNode->f = 0.0f;
+		openList.push_back(startingNode);
+	}
+	else if(villagerComp)
+	{
+		villagerComp->currentNode->g = 0.0f;
+		villagerComp->currentNode->h = 0.0f;
+		startingNode = villagerComp->currentNode;
+		startingNode->f = 0.0f;
+		openList.push_back(startingNode);
+	}
+
+	Entity* target = nullptr;
+	sm::Vector3* villagerTarget = nullptr;
+
+	//Get the target that findTargetNode has picked for this entity
+	if(npcComp)
+		target = blackboard->GetValue<Entity>("target" + std::to_string(npcEntity));
+	//If it's a villager get the position target
+	if(villagerComp)
+		villagerTarget = blackboard->GetValue<sm::Vector3>("villagerTarget" + std::to_string(npcEntity));
+
+
+	comp::House* house = nullptr;
+
+
+	if (target == nullptr && villagerTarget == nullptr)
+	{
+		//LOG_INFO("Target was nullptr...");
 		return;
 	}
+	//if enemy has picked target, try to get house component from the target
+	if (target)
+	{
+		house = target->GetComponent<comp::House>();
+	}
 
-	
-	Node* goalNode = FindClosestNode(target->GetComponent<comp::Transform>()->position);
+	Node* goalNode = nullptr;
+
+	//Take correct target data for the different AI's
+	if (target)
+		goalNode = FindClosestNode(target->GetComponent<comp::Transform>()->position);
+	else if (villagerTarget)
+		goalNode = FindClosestNode(*villagerTarget);
 
 	//Need to take OBB center to get correct world position for houses
-	if (house && house->attackNode)
+	if (house && house->homeNode)
 	{
-		goalNode = house->attackNode;
+		goalNode = house->homeNode;
 	}
+
+	if (goalNode == nullptr)
+		return;
+
 	//If goal is a defense
-	else if(goalNode->defencePlaced)
+	if(goalNode->defencePlaced)
 	{
 		Node* currentNode = nullptr;
 		//Go through all neighbours and find the one closest that is reachable
@@ -228,11 +264,16 @@ void PathFinderManager::AStarSearch(Entity npcEntity)
 		return;
 	}
 
-	npcComp->path.clear();
+	if (npcComp)
+		npcComp->path.clear();
+	else if (villagerComp)
+		villagerComp->path.clear();
+
 	while (!openList.empty())
 	{
 		Node* currentNode = openList.at(0);
 		int ind = 0;
+
 		for (int i = 1; i < openList.size(); i++)
 		{
 			if (openList[i]->f < currentNode->f)
@@ -251,7 +292,10 @@ void PathFinderManager::AStarSearch(Entity npcEntity)
 			{
 				while (currentNode != startingNode)
 				{
-					npcComp->path.push_back(currentNode);
+					if (npcComp)
+						npcComp->path.push_back(currentNode);
+					else if (villagerComp)
+						villagerComp->path.push_back(currentNode);
 					currentNode = currentNode->parent;
 				}
 			}
@@ -308,8 +352,10 @@ bool PathFinderManager::PlayerAStar(sm::Vector3 playerPos)
 	//Node* goalNode = GetDistantNode(playerPos);
 	while (!openList.empty())
 	{
+
 		Node* currentNode = openList.at(0);
 		int ind = 0;
+
 		for (int i = 1; i < openList.size(); i++)
 		{
 			if (openList[i]->f < currentNode->f)

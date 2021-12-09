@@ -131,29 +131,29 @@ uint32_t CollisionSystem::GetCollisionCount(Entity entity) const
 	return count;
 }
 
-CollisionSystem::Projection_t CollisionSystem::GetProjection(sm::Vector3 axis, sm::Vector3* corners)
-{
-	float min = axis.Dot(corners[0]);
-	float max = min;
-
-	for (int i = 1; i < 8; i++)
-	{
-		float p = axis.Dot(corners[i]);
-
-		if (p < min)
-		{
-			min = p;
-		}
-		else if (p > max)
-		{
-			max = p;
-		}
-
-	}
-
-	//Projection_t projection = {min, max};
-	return { min, max };
-}
+//CollisionSystem::Projection_t CollisionSystem::GetProjection(sm::Vector3 axis, sm::Vector3* corners)
+//{
+//	float min = axis.Dot(corners[0]);
+//	float max = min;
+//
+//	for (int i = 1; i < 8; i++)
+//	{
+//		float p = axis.Dot(corners[i]);
+//
+//		if (p < min)
+//		{
+//			min = p;
+//		}
+//		else if (p > max)
+//		{
+//			max = p;
+//		}
+//
+//	}
+//
+//	//Projection_t projection = {min, max};
+//	return { min, max };
+//}
 
 std::pair<Entity, Entity> CollisionSystem::MakeEntityPair(Entity entity1, Entity entity2)
 {
@@ -360,6 +360,7 @@ void CollisionSystem::CollisionResponse(CollisionInfo_t collisionInfo, Entity en
 {
 	tag_bits p1Tags = entity1.GetTags();
 	tag_bits p2Tags = entity2.GetTags();
+	sm::Vector3 dir = collisionInfo.smallestVec * collisionInfo.overlap;
 
 	if (p1Tags & TagType::DYNAMIC && p2Tags & TagType::STATIC)
 	{
@@ -367,8 +368,8 @@ void CollisionSystem::CollisionResponse(CollisionInfo_t collisionInfo, Entity en
 		comp::SphereCollider* BoS = entity1.GetComponent<comp::SphereCollider>();
 		if (transform)
 		{
-			transform->position = transform->position + sm::Vector3(collisionInfo.smallestVec * collisionInfo.overlap);
-			transform->position.y = 0.75f;
+			transform->position.x = transform->position.x + dir.x;
+			transform->position.z = transform->position.z + dir.z;
 
 			if (BoS)
 			{
@@ -388,8 +389,8 @@ void CollisionSystem::CollisionResponse(CollisionInfo_t collisionInfo, Entity en
 		//Dynamic
 		if (transform1)
 		{
-			transform1->position = transform1->position + (sm::Vector3(collisionInfo.smallestVec * collisionInfo.overlap * -1.0f));
-			transform1->position.y = 0.75f;
+			transform1->position.x = transform1->position.x + dir.x * -1.f;
+			transform1->position.z = transform1->position.z + dir.z * -1.f;
 
 			if (BoS1)
 			{
@@ -400,8 +401,8 @@ void CollisionSystem::CollisionResponse(CollisionInfo_t collisionInfo, Entity en
 		}
 		if (transform2)
 		{
-			transform2->position = transform2->position + (sm::Vector3(collisionInfo.smallestVec * collisionInfo.overlap));
-			transform2->position.y = 0.75f;
+			transform2->position.x = transform2->position.x + dir.x;
+			transform2->position.z = transform2->position.z + dir.z;
 
 			if (BoS2)
 			{

@@ -9,7 +9,7 @@ void IShop::SetSimulation(Simulation* sim)
 
 void IShop::UseShop(const ShopItem& whatToBuy, const uint32_t& player)
 {
-	if (m_sim->m_timeCycler.GetTimePeriod() == Cycle::DAY)
+	if (m_sim->m_timeCycler.GetTimePeriod() == CyclePeriod::DAY)
 	{
 		switch (whatToBuy)
 		{
@@ -52,22 +52,6 @@ void IShop::UseShop(const ShopItem& whatToBuy, const uint32_t& player)
 			}
 
 			m_sim->GetCurrency() -= 5;
-			break;
-		}
-		case ShopItem::LONG_TOWER:
-		{
-			if (m_sim->GetPlayer(player))
-			{
-				m_sim->GetPlayer(player).GetComponent<comp::Player>()->towerSelected = EDefenceType::LARGE;
-			}
-			break;
-		}
-		case ShopItem::SHORT_TOWER:
-		{
-			if (m_sim->GetPlayer(player))
-			{
-				m_sim->GetPlayer(player).GetComponent<comp::Player>()->towerSelected = EDefenceType::SMALL;
-			}
 			break;
 		}
 		default:

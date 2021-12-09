@@ -1,5 +1,4 @@
 project "Game"
-    kind "ConsoleApp"
     language "C++"
     cppdialect "C++17"
     staticruntime "on"
@@ -52,11 +51,20 @@ project "Game"
             "_CRT_SECURE_NO_WARNINGS"
         }
 		
-	--postbuildcommands {
-        --"{COPY} assimp-vc142-mt.dll %{wks.location}/Game/build/bin/" .. outputdir .. "/Game/"
-		--}
+        postbuildcommands {
+            --"{COPYFILE} %{wks.location}Assets/Dlls/assimp-vc142-mt.dll %{wks.location}Game/build/bin/" .. outputdir .. "/Game/assimp-vc142-mt.dll",
+            --"{COPYFILE} %{wks.location}Assets/Dlls/ikpFlac.dll %{wks.location}Game/build/bin/" .. outputdir .. "/Game/ikpFlac.dll",
+            --"{COPYFILE} %{wks.location}Assets/Dlls/irrKlang.dll %{wks.location}Game/build/bin/" .. outputdir .. "/Game/irrKlang.dll",
+            --"{COPYFILE} %{wks.location}Assets/Dlls/ikpMP3.dll %{wks.location}Game/build/bin/" .. outputdir .. "/Game/ikpMP3.dll",
+        
+            --"{COPYFILE} %{wks.location}Assets/Dlls/assimp-vc142-mt.dll %{wks.location}Game/build/bin/" .. outputdir .. "/Game/assimp-vc142-mt.dll",
+            --"{COPYFILE} %{wks.location}Assets/Dlls/ikpFlac.dll %{wks.location}Game/build/bin/" .. outputdir .. "/Game/ikpFlac.dll",
+            --"{COPYFILE} %{wks.location}Assets/Dlls/irrKlang.dll %{wks.location}Game/build/bin/" .. outputdir .. "/Game/irrKlang.dll",
+            --"{COPYFILE} %{wks.location}Assets/Dlls/ikpMP3.dll %{wks.location}Game/build/bin/" .. outputdir .. "/Game/ikpMP3.dll"
+        }
 
     filter {"configurations:Debug"}
+        kind "ConsoleApp"
         staticruntime "on"
         runtime "Debug"
         defines{"_DEBUG", "_UNICODE", "UNICODE"}
@@ -69,6 +77,7 @@ project "Game"
 		}
 
     filter {"configurations:Release"}
+        kind "WindowedApp"
         staticruntime "on"
         runtime "Release"
         defines{"NDEBUG", "_UNICODE", "UNICODE"}

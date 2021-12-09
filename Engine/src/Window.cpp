@@ -1,6 +1,7 @@
 #include "EnginePCH.h"
 #include "Window.h"
 #include "InputSystem.h"
+#include "OptionSystem.h"
 
 LRESULT CALLBACK Window::WinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -27,12 +28,27 @@ LRESULT CALLBACK Window::WinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 		InputSystem::Get().GetMouse()->ProcessMessage(uMsg, wParam, lParam);
 		break;
 	case WM_KEYDOWN:
-		InputSystem::Get().GetKeyboard()->ProcessMessage(uMsg, wParam, lParam);
-		if (wParam == VK_ESCAPE)
-			PostQuitMessage(0);
+		//if (InputSystem::Get().GetInputState() == SystemState::GAME)
+		//{
+			InputSystem::Get().GetKeyboard()->ProcessMessage(uMsg, wParam, lParam);
+		//}
+		//else
+		//{
+			InputSystem::Get().AddToDownQueue(wParam);
+		//}
+
+		//if (wParam == VK_ESCAPE)
+		//	PostQuitMessage(0);
 		break;
 	case WM_KEYUP:
-		InputSystem::Get().GetKeyboard()->ProcessMessage(uMsg, wParam, lParam);
+		//if (InputSystem::Get().GetInputState() == SystemState::GAME)
+		//{
+			InputSystem::Get().GetKeyboard()->ProcessMessage(uMsg, wParam, lParam);
+		//}
+		//else
+		//{
+			InputSystem::Get().AddToUpQueue(wParam);
+		//}
 		break;
 	case WM_MOUSEMOVE:
 		InputSystem::Get().GetMouse()->ProcessMessage(uMsg, wParam, lParam);
@@ -108,7 +124,7 @@ bool Window::Initialize(const Desc& desc)
 	ZeroMemory(&wcex, sizeof(WNDCLASSEX));
 
 	const LPCWSTR WINDOW_CLASS = L"DefaultWindowClass";
-	
+
 	wcex.cbSize = sizeof(WNDCLASSEX);
 	wcex.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
 	wcex.cbClsExtra = 0;
@@ -125,7 +141,7 @@ bool Window::Initialize(const Desc& desc)
 	// Register window class.
 	const ATOM result = RegisterClassEx(&wcex);
 	assert(result && "Failed to register window class.");
-	
+
 	// Retrieve desktop window.
 	RECT desktop;
 	const HWND hwndDesktop = GetDesktopWindow();
@@ -140,9 +156,22 @@ bool Window::Initialize(const Desc& desc)
 	rect.top = posY;
 	rect.bottom = posY + desc.height;
 
-	AdjustWindowRect(&rect, WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE, FALSE);
-	const int width = rect.right - rect.left;
-	const int height = rect.bottom - rect.top;
+	m_clientRect = rect;
+	int width;
+	int height;
+	int fullscreen = std::stoi(OptionSystem::Get().GetOption("Fullscreen"));
+	if (fullscreen == 0)
+	{
+		AdjustWindowRect(&rect, WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE, FALSE);
+		width = rect.right - rect.left;
+		height = rect.bottom - rect.top;
+	}
+	else
+	{
+		width = rect.right - rect.left;
+		height = rect.bottom - rect.top;
+		AdjustWindowRect(&rect, WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE, FALSE);
+	}
 
 	// Create the window.
 	this->m_hWnd = CreateWindowEx(0, WINDOW_CLASS, desc.title,
@@ -152,13 +181,21 @@ bool Window::Initialize(const Desc& desc)
 		nullptr, nullptr, desc.hInstance, nullptr);
 
 	assert(this->m_hWnd && "Window wasn't successfully created.");
-	
+
 	UpdateWindow(this->m_hWnd);
-#ifdef _DEBUG
-	ShowWindow(this->m_hWnd, desc.nShowCmd);
-#else
-	ShowWindow(this->m_hWnd, SW_NORMAL);
-#endif
+
+	if (fullscreen == 0)
+	{
+		ShowWindow(this->m_hWnd, desc.nShowCmd);
+	}
+	else
+	{
+		ShowWindow(this->m_hWnd, SW_MAXIMIZE);
+		SetWindowLongPtr(m_hWnd, GWL_STYLE, WS_VISIBLE | WS_POPUP);
+		SetWindowPos(m_hWnd, HWND_TOP, 0, 0, width, height, SWP_FRAMECHANGED);
+	}
+
+	OptionSystem::Get().SetOption("Fullscreen", std::to_string(fullscreen));
 	//ConfineCursor(this->m_hWnd);
 
 	this->m_windowDesc = desc;
@@ -203,7 +240,7 @@ void Window::SetWindowTitle(const LPCWSTR& title)
 
 void Window::SetWindowTextBar(const std::string& text)
 {
-	SetWindowTextA(this->m_hWnd,text.c_str());
+	SetWindowTextA(this->m_hWnd, text.c_str());
 }
 
 void Window::SetFullScreen(bool fullscreen)

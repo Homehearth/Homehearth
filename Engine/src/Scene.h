@@ -12,6 +12,8 @@ private:
 	DoubleBuffer<std::vector<comp::RenderableDebug>> m_debugRenderableCopies;
 	DoubleBuffer<std::vector<std::pair<comp::Renderable,comp::Animator>>> m_renderableAnimCopies;
 
+	DoubleBuffer<std::vector<comp::EmitterParticle>> m_emitterParticlesCopies;
+
 	dx::ConstantBuffer<basic_model_matrix_t> m_publicBuffer;
 	dx::ConstantBuffer<collider_hit_t> m_ColliderHitBuffer;
 	dx::ConstantBuffer<camera_Matrix_t> m_publicDecalBuffer;
@@ -53,6 +55,8 @@ public:
 
 	void RenderShadow();
 	void RenderShadowAnimation();
+
+	void RenderParticles(void* pass);
 
 	Skybox* GetSkybox();
 

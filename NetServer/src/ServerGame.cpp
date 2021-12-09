@@ -71,6 +71,8 @@ bool ServerGame::OnStartup()
 	}
 	m_inputThread = std::thread(&ServerGame::InputThread, this);
 
+	// MAP BOUNDS FIRST DONT MOVE ORDER
+	LoadMapColliders("MapBounds.fbx");
 	LoadMapColliders("VillageColliders.fbx");
 	LoadHouseColliders("House5_Collider.fbx");
 	LoadHouseColliders("House6_Collider.fbx");
@@ -79,7 +81,6 @@ bool ServerGame::OnStartup()
 	LoadHouseColliders("House9_Collider.fbx");
 	LoadHouseColliders("House10_Collider.fbx");
 	LoadHouseColliders("WaterMillHouse_Collider.fbx");
-	LoadMapColliders("MapBounds.fbx");
 
 	return true;
 }
@@ -193,6 +194,7 @@ bool ServerGame::LoadMapColliders(const std::string& filename)
 	(
 		filepath,
 		aiProcess_JoinIdenticalVertices |
+		aiProcess_Triangulate			|
 		aiProcess_ConvertToLeftHanded
 	);
 
@@ -214,6 +216,7 @@ bool ServerGame::LoadMapColliders(const std::string& filename)
 		return false;
 	}
 	// Go through all the meshes and create boundingboxes for them
+
 	for (UINT i = 0; i < scene->mNumMeshes; i++)
 	{
 		const aiMesh* mesh = scene->mMeshes[i];
@@ -249,7 +252,7 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 		uint32_t playerID;
 		msg >> playerID;
 		this->m_server.SendToClient(playerID, msg);
-		//LOG_INFO("Client on with ID: %ld is pinging server", playerID);
+		LOG_INFO("Client on with ID: %ld is pinging server", playerID);
 		break;
 	}
 	case GameMsg::Lobby_Create:
@@ -268,7 +271,7 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 		{
 			message<GameMsg> lobbyMsg;
 			lobbyMsg.header.id = GameMsg::Lobby_Invalid;
-			msg << std::string("Request denied: Invalid Lobby ID!");
+			//msg << std::string("Request denied: Invalid Lobby ID!");
 			m_server.SendToClient(playerID, lobbyMsg);
 		}
 
@@ -336,6 +339,19 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 
 		break;
 	}
+	case GameMsg::Game_PlayerSkipDay:
+		uint32_t gameID, playerID;
+		msg >> gameID >> playerID;
+		if (m_simulations.find(gameID) != m_simulations.end())
+		{
+			comp::Player* p = m_simulations.at(gameID)->GetPlayer(playerID).GetComponent<comp::Player>();
+			if (p)
+			{
+				p->wantsToSkipDay = true;
+				ServerSystems::CheckSkipDay(m_simulations.at(gameID).get());
+			}
+		}
+		break;
 	case GameMsg::Game_PlayerReady:
 	{
 		uint32_t playerID;
@@ -371,7 +387,7 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 
 		break;
 	}
-	case GameMsg::Game_UseShop:
+	case GameMsg::Game_UpdateShopItem:
 	{
 		uint32_t playerID;
 		uint32_t gameID;
@@ -380,6 +396,7 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 
 		if (m_simulations.find(gameID) != m_simulations.end())
 		{
+			m_simulations.at(gameID)->GetPlayer(playerID).GetComponent<comp::Player>()->shopItem = shopItem;
 			m_simulations.at(gameID)->UseShop(shopItem, playerID);
 		}
 		break;

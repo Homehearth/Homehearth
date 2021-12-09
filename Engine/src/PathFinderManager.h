@@ -19,13 +19,13 @@ public:
 	//Getters
 	Node* GetNodeByID(Vector2I id) const;
 	std::vector<std::vector<std::shared_ptr<Node>>>& GetNodes();
-	[[nodiscard]] std::unordered_map<Entity, Entity> GetDefenseEntities();
+	[[nodiscard]] std::unordered_map<Entity, Entity>* GetDefenseEntities();
 
 	void AddDefenseEntity(Entity entity);
 	void RemoveDefenseEntity(Entity entity);
 	Node* AddNode(Vector2I id);
 	void CreateNodes(GridSystem* grid);
-	void AStarSearch(Entity npcEntity);
+	void AStarSearch(Entity npcEntity, Blackboard* blackboard);
 	bool PlayerAStar(sm::Vector3 playerPos);
 	bool ReachedNode(const Entity npcEntity);
 	Node* FindClosestNode(sm::Vector3 position);

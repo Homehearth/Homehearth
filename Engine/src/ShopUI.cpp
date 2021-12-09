@@ -33,6 +33,11 @@ void rtd::ShopUI::SetOnPressedEvent(unsigned int index, std::function<void()> fu
 	m_functions[index] = func;
 }
 
+void rtd::ShopUI::SetOnHoverEvent(std::function<void()> func)
+{
+	m_onHoverFunction = func;
+}
+
 void ShopUI::Draw()
 {
     if (m_texture)
@@ -218,6 +223,11 @@ bool ShopUI::CheckHover()
 		InputSystem::Get().GetMousePos().y < m_drawOpts.y_pos + m_drawOpts.height)
 	{
 		m_texture->SetOpacity(1.0f);
+		if (m_onHoverFunction)
+		{
+			m_onHoverFunction();
+		}
+
 		return true;
 	}
 
@@ -267,11 +277,7 @@ ElementState ShopUI::CheckClick()
 	}
 	else
 	{
-		// CheckCollisions if mouse key is pressed.
-		if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED))
-		{
-			return ElementState::OUTSIDE;
-		}
+		return ElementState::OUTSIDE;
 	}
 
 	return ElementState::NONE;
