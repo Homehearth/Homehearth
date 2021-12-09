@@ -185,7 +185,7 @@ void Simulation::ResetPlayer(Entity player)
 		attackAbility->cooldown = 0.8f;
 		attackAbility->attackDamage = 20.f;
 		attackAbility->lifetime = 0.1f;
-		attackAbility->useTime = 0.2f;
+		attackAbility->useTime = 0.5f;
 		attackAbility->delay = 0.2f;
 		attackAbility->attackRange = 8.f;
 
