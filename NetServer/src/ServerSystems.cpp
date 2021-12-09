@@ -50,8 +50,8 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		npc->movementSpeed = 15.f;
 		attackAbility->cooldown = 1.0f;
 		attackAbility->attackDamage = 20.f;
-		attackAbility->lifetime = 5.0f;
-		attackAbility->attackRange = 6.f;
+		attackAbility->lifetime = 0.1f;
+		attackAbility->attackRange = 4.f;
 		attackAbility->useTime = 0.3f;
 		attackAbility->delay = 0.2f;
 		attackAbility->movementSpeedAlt = 0.0f;
@@ -387,7 +387,7 @@ void ServerSystems::OnCycleChange(Simulation* simulation)
 	{
 		if (simulation->m_timeCycler.GetTimePeriod() == CyclePeriod::MORNING)
 		{
-			simulation->m_timeCycler.SetCycleSpeed(1.0f);
+			simulation->m_timeCycler.ResetCycleSpeed();
 			// remove all bad guys
 			simulation->GetGameScene()->ForEachComponent<comp::Tag<BAD>>([](Entity e, comp::Tag<BAD>&)
 				{
@@ -396,6 +396,7 @@ void ServerSystems::OnCycleChange(Simulation* simulation)
 
 			simulation->GetGameScene()->ForEachComponent<comp::Player, comp::Health>([=](Entity e, comp::Player& p, comp::Health& hp)
 				{
+					p.wantsToSkipDay = false;
 					if (!hp.isAlive)
 					{
 						simulation->ResetPlayer(e);
@@ -406,6 +407,8 @@ void ServerSystems::OnCycleChange(Simulation* simulation)
 
 		if (simulation->m_timeCycler.GetTimePeriod() == CyclePeriod::NIGHT)
 		{
+			simulation->m_timeCycler.ResetCycleSpeed();
+
 			if (simulation->waveQueue.size() > 0)
 			{
 				// start new wave
@@ -428,7 +431,7 @@ void ServerSystems::OnCycleChange(Simulation* simulation)
 
 		if (count == 0)
 		{
-			simulation->m_timeCycler.SetCycleSpeed(10.0f);
+			simulation->m_timeCycler.SetCycleSpeed(15.0f);
 		}
 	}
 }
@@ -454,56 +457,57 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 			v.vel = vel;
 		});
 
-	scene.ForEachComponent<comp::Player, comp::AnimationState>([&](Entity e, comp::Player& p, comp::AnimationState& anim)
+	scene.ForEachComponent<comp::Player, comp::AnimationState, comp::Health>([&](Entity e, comp::Player& p, comp::AnimationState& anim, comp::Health& health)
 		{
-			// Do stuff based on input
-
-			// Get point on ground where mouse hovers over
-			Plane_t plane;
-			plane.normal = sm::Vector3(0, 1, 0);
-			plane.point = sm::Vector3(0, 0, 0);
-
-			if (!p.lastInputState.mouseRay.Intersects(plane, &p.mousePoint))
+			// Do stuff based on input while not in deadstate
+			if (health.isAlive)
 			{
-				LOG_WARNING("Mouse click ray missed walking plane. Should not happen...");
-			}
+				// Get point on ground where mouse hovers over
+				Plane_t plane;
+				plane.normal = sm::Vector3(0, 1, 0);
+				plane.point = sm::Vector3(0, 0, 0);
 
-			if (p.state == comp::Player::State::WALK)
-				anim.toSend = EAnimationType::MOVE;
-			else
-				anim.toSend = EAnimationType::IDLE;
-
-			// check if using abilities
-			if (p.lastInputState.leftMouse) // is held
-			{
-				switch (p.shopItem)
+				if (!p.lastInputState.mouseRay.Intersects(plane, &p.mousePoint))
 				{
-					//In playmode
-				case ShopItem::None:
-				{
-					p.state = comp::Player::State::LOOK_TO_MOUSE; // set state even if ability is not ready for use yet
-					if (ecs::UseAbility(e, p.primaryAbilty, &p.mousePoint))
-					{
-						anim.toSend = EAnimationType::PRIMARY_ATTACK;
-					}
-
-					// make sure movement alteration is not applied when using, because then its applied atomatically
-					if (!ecs::IsUsing(e, p.primaryAbilty))
-					{
-						e.GetComponent<comp::Velocity>()->vel *= ecs::GetAbility(e, p.primaryAbilty)->movementSpeedAlt;
-					}
-					break;
+					LOG_WARNING("Mouse click ray missed walking plane. Should not happen...");
 				}
-				case ShopItem::Defence1x1:
-				case ShopItem::Defence1x3:
+
+				if (p.state == comp::Player::State::WALK)
+					anim.toSend = EAnimationType::MOVE;
+				else
+					anim.toSend = EAnimationType::IDLE;
+
+				// check if using abilities
+				if (p.lastInputState.leftMouse) // is held
 				{
-					if (simulation->m_timeCycler.GetTimePeriod() == CyclePeriod::DAY)
+					switch (p.shopItem)
 					{
-						uint32_t cost = 0;
-						if (p.shopItem == ShopItem::Defence1x1)
-							cost = 10;
-						else if (p.shopItem == ShopItem::Defence1x3)
-							cost = 30;
+						//In playmode
+					case ShopItem::None:
+					{
+						p.state = comp::Player::State::LOOK_TO_MOUSE; // set state even if ability is not ready for use yet
+						if (ecs::UseAbility(e, p.primaryAbilty, &p.mousePoint))
+						{
+							anim.toSend = EAnimationType::PRIMARY_ATTACK;
+						}
+
+						// make sure movement alteration is not applied when using, because then its applied atomatically
+						if (!ecs::IsUsing(e, p.primaryAbilty))
+						{
+							e.GetComponent<comp::Velocity>()->vel *= ecs::GetAbility(e, p.primaryAbilty)->movementSpeedAlt;
+						}
+						break;
+					}
+					case ShopItem::Defence1x1:
+					case ShopItem::Defence1x3:
+					{
+						if (simulation->m_timeCycler.GetTimePeriod() == CyclePeriod::DAY)
+						{
+							uint32_t cost = 0;
+							if (p.shopItem == ShopItem::Defence1x1)
+								cost = 10;
+							else if (p.shopItem == ShopItem::Defence1x3)
+								cost = 30;
 
 							if (simulation->GetCurrency().GetAmount() >= cost)
 							{
@@ -579,21 +583,20 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 					}
 				}
 
-			if (p.lastInputState.key_shift)
-			{
-				if (ecs::UseAbility(e, p.moveAbilty, &p.mousePoint))
+				if (p.lastInputState.key_shift)
 				{
-					anim.toSend = EAnimationType::ABILITY1;
+					if (ecs::UseAbility(e, p.moveAbilty, &p.mousePoint))
+					{
+						anim.toSend = EAnimationType::ABILITY1;
+					}
 				}
+
+				//Rotate defences 90 or not
+				if (p.lastInputState.mousewheelDir > 0)
+					p.rotateDefence = true;
+				else if (p.lastInputState.mousewheelDir < 0)
+					p.rotateDefence = false;
 			}
-
-			//Rotate defences 90 or not
-			if (p.lastInputState.mousewheelDir > 0)
-				p.rotateDefence = true;
-			else if (p.lastInputState.mousewheelDir < 0)
-				p.rotateDefence = false;
-
-
 		});
 }
 
@@ -617,7 +620,7 @@ void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money
 				health.isAlive = false;
 				scene.publish<EComponentUpdated>(entity, ecs::Component::HEALTH);
 				// increase money
-				if (entity.GetComponent<comp::Tag<TagType::BAD>>())
+				if (entity.GetComponent<comp::Tag<BAD>>())
 				{
 					money_ref += 5 * spree.GetSpree();
 					money_ref.IncreaseTotal(5 * spree.GetSpree());
@@ -641,13 +644,18 @@ void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money
 					false,
 				};
 
+				comp::KillDeaths* kd = entity.GetComponent<comp::KillDeaths>();
+				if (kd)
+				{
+					kd->deaths++;
+				}
+
 				if (p)
 				{
 					audio.type = ESoundEvent::Player_OnDeath;
-					p->state = comp::Player::State::SPECTATING;
-					entity.RemoveComponent<comp::Tag<TagType::DYNAMIC>>();
+					entity.RemoveComponent<comp::Tag<DYNAMIC>>();
 				}
-				else if (entity.GetComponent<comp::Tag<TagType::DEFENCE>>())
+				else if (entity.GetComponent<comp::Tag<DEFENCE>>())
 				{
 					comp::Transform* buildTransform = entity.GetComponent<comp::Transform>();
 
@@ -671,7 +679,7 @@ void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money
 					qt->Insert(newHouse);
 
 					sm::Vector3 emitterOffset = newHouse.GetComponent<comp::OrientedBoxCollider>()->Center;
-					newHouse.AddComponent<comp::PARTICLEEMITTER>(emitterOffset, 100, 2.5f, PARTICLEMODE::SMOKEAREA, 4.0f, 1.f, false);
+					newHouse.AddComponent<comp::ParticleEmitter>(emitterOffset, 100, 2.5f, ParticleMode::SMOKEAREA, 4.0f, 1.f, false);
 
 
 					//Remove house from blackboard
@@ -929,7 +937,7 @@ void ServerSystems::CombatSystem(HeadlessScene& scene, float dt, Blackboard* bla
 }
 void ServerSystems::DeathParticleTimer(HeadlessScene& scene)
 {
-	scene.ForEachComponent<comp::PARTICLEEMITTER>([&](Entity& e, comp::PARTICLEEMITTER& emitter)
+	scene.ForEachComponent<comp::ParticleEmitter>([&](Entity& e, comp::ParticleEmitter& emitter)
 		{
 			if (emitter.hasDeathTimer == true && emitter.lifeLived <= emitter.lifeTime)
 			{
@@ -937,9 +945,27 @@ void ServerSystems::DeathParticleTimer(HeadlessScene& scene)
 			}
 			else if (emitter.hasDeathTimer == true && emitter.lifeLived >= emitter.lifeTime)
 			{
-				e.RemoveComponent<comp::PARTICLEEMITTER>();
+				e.RemoveComponent<comp::ParticleEmitter>();
 			}
 		});
+}
+
+void ServerSystems::CheckSkipDay(Simulation* simulation)
+{
+	bool allPlayersSkip = true;
+
+	simulation->GetGameScene()->ForEachComponent<comp::Player>([=, &allPlayersSkip](Entity& e, comp::Player& p)
+		{
+			if (!p.wantsToSkipDay)
+			{
+				allPlayersSkip = false;
+			}
+		});
+
+	if (allPlayersSkip)
+	{
+		simulation->m_timeCycler.SetCycleSpeed(15.f);
+	}
 }
 
 Entity VillagerManagement::CreateVillager(HeadlessScene& scene, Entity homeHouse, Blackboard* blackboard)

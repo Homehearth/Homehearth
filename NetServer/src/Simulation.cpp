@@ -94,7 +94,7 @@ void Simulation::InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg, c
 		}
 		case ecs::Component::PARTICLEMITTER:
 		{
-			comp::PARTICLEEMITTER* p = entity.GetComponent<comp::PARTICLEEMITTER>();
+			comp::ParticleEmitter* p = entity.GetComponent<comp::ParticleEmitter>();
 			if (p)
 			{
 				compSet.set(ecs::Component::PARTICLEMITTER);
@@ -122,6 +122,16 @@ void Simulation::InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg, c
 			}
 			break;
 		}
+		case ecs::Component::KD:
+		{
+			comp::KillDeaths* kd = entity.GetComponent<comp::KillDeaths>();
+			if (kd)
+			{
+				compSet.set(ecs::Component::KD);
+				msg << *kd;
+			}
+			break;
+		}
 		default:
 			LOG_WARNING("Trying to send unimplemented component %u", i);
 			break;
@@ -135,15 +145,19 @@ void Simulation::InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg, c
 void Simulation::ResetPlayer(Entity player)
 {
 	comp::Player* playerComp = player.GetComponent<comp::Player>();
+	comp::KillDeaths* kd = player.AddComponent<comp::KillDeaths>();
 	if (!playerComp)
 	{
 		LOG_WARNING("ResetPlayer: Entity is not a Player");
 		return;
 	}
 
+	playerComp->wantsToSkipDay = false;
 	playerComp->runSpeed = 30.f;
 	playerComp->state = comp::Player::State::IDLE;
 	playerComp->isReady = false;
+	kd->kills = 0;
+	kd->deaths = 0;
 
 	comp::Transform* transform = player.AddComponent<comp::Transform>();
 	transform->position = playerComp->spawnPoint;
@@ -158,17 +172,32 @@ void Simulation::ResetPlayer(Entity player)
 		firstTimeAdded = true;
 	}
 
-	player.AddComponent<comp::MeshName>()->name = NameType::MESH_KNIGHT;
-	player.AddComponent<comp::AnimatorName>()->name = AnimName::ANIM_KNIGHT;
 	player.AddComponent<comp::AnimationState>();
-
+	comp::Health* health = player.AddComponent<comp::Health>();
+	health->isAlive = true;
 	// only if Melee
+
+	if (player.GetComponent<comp::MeleeAttackAbility>())
+	{
+		player.RemoveComponent<comp::MeleeAttackAbility>();
+		player.RemoveComponent<comp::DashAbility>();
+	}
+	if (player.GetComponent<comp::RangeAttackAbility>())
+	{
+		player.RemoveComponent<comp::RangeAttackAbility>();
+		player.RemoveComponent<comp::BlinkAbility>();
+		player.RemoveComponent<comp::HealAbility>();
+	}
+
 	if (playerComp->classType == comp::Player::Class::WARRIOR)
 	{
+		health->maxHealth = 125.f;
+		health->currentHealth = 125.f;
+
 		comp::MeleeAttackAbility* attackAbility = player.AddComponent<comp::MeleeAttackAbility>();
 		attackAbility->cooldown = 0.50f;
 		attackAbility->attackDamage = 20.f;
-		attackAbility->lifetime = 0.2f;
+		attackAbility->lifetime = 0.1f;
 		attackAbility->useTime = 0.2f;
 		attackAbility->delay = 0.2f;
 		attackAbility->attackRange = 8.f;
@@ -188,9 +217,14 @@ void Simulation::ResetPlayer(Entity player)
 
 		playerComp->moveAbilty = entt::resolve<comp::DashAbility>();
 
+		player.AddComponent<comp::MeshName>()->name = NameType::MESH_KNIGHT;
+		player.AddComponent<comp::AnimatorName>()->name = AnimName::ANIM_KNIGHT;
 	}
 	else if (playerComp->classType == comp::Player::Class::MAGE)
 	{
+		health->maxHealth = 80.f;
+		health->currentHealth = 80.f;
+
 		comp::RangeAttackAbility* attackAbility = player.AddComponent<comp::RangeAttackAbility>();
 		attackAbility->cooldown = 0.8f;
 		attackAbility->attackDamage = 20.f;
@@ -205,7 +239,7 @@ void Simulation::ResetPlayer(Entity player)
 		comp::HealAbility* healAbility = player.AddComponent<comp::HealAbility>();
 		healAbility->cooldown = 8.0f;
 		healAbility->delay = 0.0f;
-		healAbility->healAmount = 20.f;
+		healAbility->healAmount = 30.f;
 		healAbility->lifetime = 1.0f;
 		healAbility->range = 30.f;
 		healAbility->useTime = 1.0f;
@@ -224,15 +258,9 @@ void Simulation::ResetPlayer(Entity player)
 
 		player.AddComponent<comp::MeshName>()->name = NameType::MESH_MAGE;
 		player.AddComponent<comp::AnimatorName>()->name = AnimName::ANIM_MAGE;
-		player.AddComponent<comp::AnimationState>();
-
 	}
 
-	comp::Health* health = player.AddComponent<comp::Health>();
-	health->currentHealth = 100.f;
-	health->isAlive = true;
-
-	player.AddComponent<comp::SphereCollider>()->Radius = 3.f;
+	player.AddComponent<comp::SphereCollider>()->Radius = 2.5f;
 
 	//
 	// AudioState
@@ -434,7 +462,7 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 
 	m_addedEntities.clear();
 #if RENDER_AINODES
-	std::vector<std::vector<std::shared_ptr<Node>>> nodes = Blackboard::Get().GetPathFindManager()->GetNodes();
+	std::vector<std::vector<std::shared_ptr<Node>>> nodes = blackboard.GetPathFindManager()->GetNodes();
 	for (int y = 0; y < nodes[0].size(); y++)
 	{
 		for (int x = 0; x < nodes[0].size(); x++)
@@ -494,7 +522,7 @@ void Simulation::SendSnapshot()
 		std::bitset<ecs::Component::COMPONENT_MAX> compMask;
 		compMask.set(ecs::Component::TRANSFORM);
 		compMask.set(ecs::Component::BOUNDING_ORIENTED_BOX);
-		compMask.set(ecs::Component::COST);
+		//compMask.set(ecs::Component::COST);
 #if DEBUG_SNAPSHOT
 		compMask.set(ecs::Component::BOUNDING_SPHERE);
 #endif
@@ -671,7 +699,7 @@ void Simulation::BuildMapColliders(std::vector<dx::BoundingOrientedBox>* mapColl
 		obb->Orientation = mapColliders->at(i).Orientation;
 		collider.AddComponent<comp::Tag<STATIC>>();
 		// Map bounds is loaded in last, 6 obbs surrounding village put the correct tag for collision system
-		if (i >= mapColliders->size() - 6)
+		if (i < 6)
 		{
 			collider.AddComponent<comp::Tag<MAP_BOUNDS>>();
 		}
@@ -730,14 +758,14 @@ void Simulation::UpgradeDefence(const uint32_t& id)
 				{
 					if (m_currency >= c->cost)
 					{
-						c->cost += 5;
 						// Add upgrades here.
 						h->maxHealth += 35;
 						h->currentHealth += 35;
 
 						// Cost is here.
 						m_currency -= c->cost;
-						e.UpdateNetwork();
+						c->cost += 5;
+						m_pGameScene->publish<EComponentUpdated>(e, ecs::Component::COST);
 					}
 				}
 			}
@@ -793,6 +821,7 @@ void Simulation::ResetGameScene()
 
 	while (!m_spawnPoints.empty())
 	{
+
 		m_spawnPoints.pop();
 	}
 
@@ -821,7 +850,7 @@ void Simulation::ResetGameScene()
 		this->Broadcast(msg);
 	}
 
-	m_currency.Zero();
+	m_currency = 50;
 
 	EnemyManagement::CreateWaves(waveQueue, currentRound);
 
@@ -830,6 +859,7 @@ void Simulation::ResetGameScene()
 
 	m_timeCycler.SetTime(DAY);
 	m_timeCycler.SetCycleSpeed(1.0f);
+
 }
 
 void Simulation::SendEntities(const std::vector<Entity>& entities, GameMsg msgID, const std::bitset<ecs::Component::COMPONENT_MAX>& componentMask)

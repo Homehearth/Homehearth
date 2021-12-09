@@ -12,7 +12,8 @@ private:
 	std::unordered_map<uint32_t, Entity> m_gameEntities;
 
 	GridSystem m_grid;
-	uint32_t m_money;	
+	uint32_t m_money;
+	uint32_t m_waveCounter;
 	ParticleSystem m_particles;
 	
 	Cycler m_cycler;
@@ -50,9 +51,10 @@ public:
 	void JoinLobby(uint32_t lobbyID);
 	void CreateLobby();
 	Cycler& GetCycler();
+	uint32_t& GetWaveCounter();
 
 	const uint32_t& GetMoney() const;
-
+	void SetPlayerWantsToSkip(bool value);
 	void SendStartGame();
 	void SendSelectedClass(comp::Player::Class classType);
 

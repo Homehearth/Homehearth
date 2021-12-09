@@ -50,7 +50,6 @@ private:
 
 	std::unordered_map<ecs::Component, std::vector<Entity>> m_updatedComponents;
 
-
 	void InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg, const std::bitset<ecs::Component::COMPONENT_MAX>& componentMask = UINT32_MAX) const;
 
 	uint32_t GetTick()const;
@@ -104,6 +103,8 @@ public:
 	void ResetGameScene();
 
 	void ResetPlayer(Entity player);
+
+	void SetPlayerSkipDay(uint32_t playerID);
 
 	void SendEntities(const std::vector<Entity>& entities, GameMsg msgID, const std::bitset<ecs::Component::COMPONENT_MAX>& componentMask = UINT32_MAX);
 	void SendAllEntitiesToPlayer(uint32_t playerID) const;

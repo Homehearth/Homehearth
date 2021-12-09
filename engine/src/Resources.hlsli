@@ -72,14 +72,13 @@ cbuffer IsCollidingCB : register(b5)
 
 cbuffer ParticleUpdate : register(b8)
 {
-    float4 emitterPosition;
-    float deltaTime;
-    uint counter;
-    float lifeTime;
-    float particleSizeMulitplier;
-    float c_particleSpeed;
-    
-    float3 c_pPadding;
+    float4  c_pEmitterPosition;
+    uint    c_pCounter;
+    float   c_pLifeTime;
+    float   c_pSizeMulitplier;
+    float   c_pSpeed;    
+    float   c_pDeltatime;
+    float3  c_pPadding;
 }
 
 cbuffer ParticleMode : register(b9)
@@ -96,6 +95,7 @@ cbuffer DecalInfoCB : register(b10)
 cbuffer DeltaCB : register(b6)
 {
     float c_deltaTime;
+    float3 c_dPadding;
 }
 
 cbuffer BlurSettings : register(b11)
@@ -204,6 +204,7 @@ RWTexture2D<unorm float4> t_bufferOut       : register(u1);
 RWTexture2D<unorm float4> t_inFocus         : register(u2);
 RWTexture2D<unorm float4> t_outOfFocus      : register(u3);
 RWTexture2D<float4> t_dofOut                : register(u4);
+RWTexture2D<float4> t_backBufferOut         : register(u5);
 
 // Forward+
 //RWStructuredBuffer<PointLight> rw_pointLights : register();

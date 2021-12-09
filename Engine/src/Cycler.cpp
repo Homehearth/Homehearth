@@ -34,7 +34,7 @@ void Cycler::Update(float dt)
 		m_timer += dt * m_cycleSpeed;
 	if (m_timer > DAY_DURATION)
 	{
-		m_timer = 0.0f;
+		m_timer -= DAY_DURATION;
 	}
 	m_relativeTime = m_timer / DAY_DURATION;
 
@@ -77,6 +77,11 @@ float Cycler::GetCycleSpeed() const
 	return m_cycleSpeed;
 }
 
+float Cycler::GetDefaultSpeed() const
+{
+	return m_defaultCycleSpeed;
+}
+
 void Cycler::SetCycleSpeed(float speed)
 {
 	m_cycleSpeed = speed;
@@ -85,4 +90,9 @@ void Cycler::SetCycleSpeed(float speed)
 void Cycler::setBlackboard(Blackboard* blackboard)
 {
 	this->blackboard = blackboard;
+}
+
+void Cycler::ResetCycleSpeed()
+{
+	this->m_cycleSpeed = m_defaultCycleSpeed;
 }
