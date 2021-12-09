@@ -1,6 +1,13 @@
 #include "Common.hlsli"
 
-#define vertex particlesUAV[particleID.x]
+#define vertex          particlesUAV[particleID.x]
+#define lifeTime        c_pLifeTime
+#define counter         c_pCounter
+#define speed           c_pSpeed
+#define sizeMulitplier  c_pSizeMulitplier
+#define emitterPos      c_pEmitterPosition
+#define gravity         9.82f
+#define dt              c_pDeltatime
 
 void BloodSimmulation(inout VertexParticleIn particle, in uint id);
 void LeafSimmulation(inout VertexParticleIn particle, in uint id);
@@ -20,9 +27,7 @@ void main(uint3 particleID : SV_DispatchThreadID)
     uint id = particleID.x;
     if (id >= 100)
         id -= 100;
-    
-    float speed = vertex.pos.w; //+ (randomNumbers[id] / 10.0f);
-    
+        
     if (vertex.type == 0)
         BloodSimmulation(vertex, id);
     else if (vertex.type == 1)
@@ -44,35 +49,52 @@ void main(uint3 particleID : SV_DispatchThreadID)
     else if (vertex.type == 10)
         ExplosionSimulation(vertex, id);
     
-    vertex.life += deltaTime;
+    vertex.life += dt;
     //vertex.size += particleSizeMulitplier * deltaTime;
 
 }
 
 void BloodSimmulation(inout VertexParticleIn particle, in uint id)
 {
-    float particleLifeTime = (lifeTime); //- (randomNumbers[id + counter] / 2 * deltaTime));
+    float particleLifeTime = (lifeTime) - (randomNumbers[id + counter] / 2 * dt);
     
     if (particle.life < particleLifeTime)
     {
-        particle.pos += (particle.velocity * 10.f) * deltaTime;
+        particle.pos += (particle.velocity * 10.f) * speed * dt;
         
-        particle.velocity.y -= 4.82f * deltaTime;
+        particle.velocity.y -= gravity * dt;
         
+        //Particles branch old
+        //if (particle.size.x >= 0 && particle.life <= particleLifeTime / 3)
+        //{
+        //    float sizeChange = abs((randomNumbers[id + counter]) * dt);
+        //    particle.size -= ((particle.life / 3) / (particleLifeTime / 3)) * sizeMulitplier;
+        //    particle.color.rgb += 1.0f * dt;
+        //}
+        
+        //Particles branch new
+
+        //if (particle.size.x >= 0 && particle.life <= particleLifeTime / 3)
+        //{
+        //    float sizeChange = abs((randomNumbers[id + counter]) * dt);
+        //    particle.color.rgb += 1.0f * dt;
+        //}
+        //particle.size -= ((particle.life) / (particleLifeTime));
+        
+        //Dev brnahc
         if (particle.size.x >= 0 && particle.life <= particleLifeTime / 3)
         {
-            float sizeChange = abs((randomNumbers[id + counter]) * deltaTime);
-            particle.size -= sizeChange * ((lifeTime + particleSizeMulitplier)*0.7f);
-            particle.color.rgb += 1.0f * deltaTime;
+            float sizeChange = abs((randomNumbers[id + counter]) * dt);
+            particle.size -= sizeChange * ((lifeTime + sizeMulitplier) * 0.7f);
+            particle.color.rgb += 1.0f * dt;
         }
-        //if (particle.size.x >= 0) 
-        //    particle.size -= abs(randomNumbers[id + counter]) / 10.f;
-
+        if (particle.size.x >= 0) 
+            particle.size -= abs(randomNumbers[id + counter]) / 10.f;
     }
-    else
+    else 
     {
-        particle.size = float2(particleSizeMulitplier, particleSizeMulitplier);
-        particle.pos = emitterPosition;
+        particle.size = float2(sizeMulitplier, sizeMulitplier);
+        particle.pos = emitterPos;
         particle.life = 0.f;
 
         particle.color = float4(0.8f, 0.8f, 0.8f, 1.f);
@@ -85,52 +107,54 @@ void BloodSimmulation(inout VertexParticleIn particle, in uint id)
 
 }
 
-void LeafSimmulation(inout VertexParticleIn particle, in uint id)
+void LeafSimmulation(inout VertexParticleIn particle, in uint id) //OLD
 {
-    if (particle.life < (lifeTime - (randomNumbers[id + counter])))
+    float particleLifeTime = (lifeTime - (randomNumbers[id + counter]));
+    
+    if (particle.life < particleLifeTime)
     {
-        //particle.pos.y -= 1 * deltaTime;
+        //particle.pos.y -= 1 * dt;
         //particle.pos.x += cos(counter);
         
         
-        particle.pos.x += (randomNumbers[id] / 2) * deltaTime;
-        particle.pos.y += (randomNumbers[id + 1]) * deltaTime;
-        particle.pos.z -= (randomNumbers[id + counter] ) * deltaTime;
+        particle.pos.x += (randomNumbers[id] / 2) * dt;
+        particle.pos.y += (randomNumbers[id + 1]) * dt;
+        particle.pos.z -= (randomNumbers[id + counter] ) * dt;
     }
     else
     {
         particle.size = float2(1, 1);
-        particle.pos = emitterPosition;
+        particle.pos = emitterPos;
         particle.life = counter / 2;
     }
 }
 
-void WaterSplashSimmulation(inout VertexParticleIn particle, in uint id)
+void WaterSplashSimmulation(inout VertexParticleIn particle, in uint id) //OLD
 {
-    if (particle.life < (lifeTime - (randomNumbers[id + counter])))
+    float particleLifeTime = (lifeTime - (randomNumbers[id + counter]));
+    
+    if (particle.life < particleLifeTime)
     {
-        particle.pos.x += (2.0f * randomNumbers[id]) * deltaTime;
-        //particle.pos.y += ;//(2.0f * randomNumbers[id + 1]) * deltaTime;
-        particle.pos.z += (4.0f * abs(randomNumbers[id + counter])) * deltaTime;
+        particle.pos.x += (2.0f * randomNumbers[id]) * dt;
+        //particle.pos.y += ;//(2.0f * randomNumbers[id + 1]) * dt;
+        particle.pos.z += (4.0f * abs(randomNumbers[id + counter])) * dt;
         
-        particle.pos.y -= 9.82f * deltaTime;
+        particle.pos.y -= gravity * dt;
 
-        particle.pos += particle.velocity * deltaTime;
+        particle.pos += particle.velocity * dt;
         
-        particle.velocity.y -= 9.82f * deltaTime;
-        particle.color += deltaTime;
+        particle.velocity.y -= 9.82f * dt;
+        particle.color += dt;
         
-        if (particle.size.x >= 0)
-        {
-            float sizeChange = abs((randomNumbers[id + counter]) * deltaTime);
-            particle.size -= sizeChange * particleSizeMulitplier;
-        }
+        //if (particle.size.x >= 0)
+        //    particle.size -= ((particle.life ) / (particleLifeTime )) * particleSizeMulitplier;
+
     }
     else
     {
         particle.size = float2(1.5, 1.5);
-        particle.pos = float4(emitterPosition.x + (randomNumbers[id + counter]), emitterPosition.y + (randomNumbers[id]), emitterPosition.z, emitterPosition.w);
-       //particle.pos = emitterPosition; //+ randomNumbers[counter];
+        particle.pos = float4(emitterPos.x + (randomNumbers[id + counter]), emitterPos.y + (randomNumbers[id]), emitterPos.z, emitterPos.w);
+       //particle.pos = emitterPos; //+ randomNumbers[counter];
         particle.velocity = float4(0, 0, 0, 0);
         particle.life = 0;
         particle.color = float4(0, 0, 0.5, 0.5);
@@ -144,30 +168,27 @@ void SmokePointSimmulation(inout VertexParticleIn particle, in uint id)
     if (particle.life < particleLifeTime)
     {
         
-        particle.velocity.x += (randomNumbers[id]) * deltaTime;
-        particle.velocity.y += abs(randomNumbers[id + 1]) * deltaTime;
-        particle.velocity.z += (randomNumbers[id + counter]) * deltaTime;
+        particle.velocity.x += (randomNumbers[id]) * dt;
+        particle.velocity.y += abs(randomNumbers[id + 1]) * dt;
+        particle.velocity.z += (randomNumbers[id + counter]) * dt;
 
-        particle.pos += particle.velocity * deltaTime;
+        particle.pos += particle.velocity * speed * dt;
         
-        particle.velocity.y += 9.82 * deltaTime;
+        particle.velocity.y += gravity * dt;
         
-        float sizeChange = abs(randomNumbers[id + counter]) * deltaTime;
-        particle.size += sizeChange * particleSizeMulitplier;
+        float sizeChange = abs(randomNumbers[id + counter]) * dt;
+        particle.size += sizeChange * sizeMulitplier;
         
         if (particle.color.a >= 0 && particle.life >= particleLifeTime - 1.5)
         {
-            particle.color.a -= deltaTime;
-            //particle.color.rgb -= deltaTime;
+            particle.color.a -= dt;
+            particle.color.rgb -= dt;
         }
     }
     else
     {
         particle.size = float2(1, 1);
-        particle.pos = emitterPosition;
-        //particle.pos.x = emitterPosition.x + (randomNumbers[id] * 4);
-        //particle.pos.z = emitterPosition.z + (randomNumbers[id + 1] *4);
-        //particle.pos.y = emitterPosition.y + (randomNumbers[id] * lifeTime);
+        particle.pos = emitterPos;
         particle.life = 0;
         particle.color.a = 1;
         particle.velocity = float4(0, 0, 0, 0);
@@ -177,91 +198,100 @@ void SmokePointSimmulation(inout VertexParticleIn particle, in uint id)
 void SmokeAreaSimmulation(inout VertexParticleIn particle, in uint id)
 {
     float particleLifeTime = (lifeTime - (randomNumbers[id + counter]));
-    
     if (particle.life < particleLifeTime)
     {
-        
-        particle.velocity.x += (randomNumbers[id]) * deltaTime;
-        particle.velocity.y += abs(randomNumbers[id + 1]) * deltaTime;
-        particle.velocity.z += (randomNumbers[id + counter]) * deltaTime;
+        particle.velocity.x += (randomNumbers[id]) * dt;
+        particle.velocity.y += abs(randomNumbers[id + 1]) * dt;
+        particle.velocity.z += (randomNumbers[id + counter]) * dt;
 
-        particle.pos += particle.velocity * deltaTime;
+        particle.pos += particle.velocity * speed * dt;
         
-        particle.velocity.y += 9.82 * deltaTime;
+        particle.velocity.y += gravity * dt;
         
-        float sizeChange = abs(randomNumbers[id + counter]) * deltaTime;
-        particle.size += sizeChange * particleSizeMulitplier;
+        float sizeChange = abs(randomNumbers[id + counter]) * dt;
+        particle.size += sizeChange * sizeMulitplier;
         
         if (particle.color.a >= 0 && particle.life >= particleLifeTime - 1.5)
         {
-            particle.color.a -= deltaTime;
-            //particle.color.rgb -= deltaTime;
+            particle.color.a -= dt;
+            particle.color.rgb -= dt;
         }
     }
     else
     {
         particle.size = float2(1, 1);
-        particle.pos = emitterPosition;
-        particle.pos.x = emitterPosition.x + ((randomNumbers[id] * 4) / 2);
-        particle.pos.y = emitterPosition.y + ((randomNumbers[id] * lifeTime) / 2);
-        particle.pos.z = emitterPosition.z + ((randomNumbers[id + 1] * 4) / 2);
+        particle.pos = emitterPos;
+        particle.pos.x = emitterPos.x + ((randomNumbers[id] * 4) / 2);
+        particle.pos.y = emitterPos.y + ((randomNumbers[id] * lifeTime) / 2);
+        particle.pos.z = emitterPos.z + ((randomNumbers[id + 1] * 4) / 2);
         particle.life = 0;                   
         particle.color.a = 1;
         particle.velocity = float4(0, 0, 0, 0);
     }
 }
 
-void SparklesSimmulation(inout VertexParticleIn particle, in uint id)
+void SparklesSimmulation(inout VertexParticleIn particle, in uint id) //OLD
 {
+    float particleLifeTime = (lifeTime) - (randomNumbers[id + counter] / 2 * dt);
     
-    if (particle.life < (lifeTime - (randomNumbers[id + counter])))
+    if (particle.life < particleLifeTime)
     {
-        particle.pos.x += (2.0f * randomNumbers[id]) * deltaTime;
-        particle.pos.y += (2.0f * randomNumbers[id + 1]) * deltaTime;
-        particle.pos.z += (2.0f * randomNumbers[id + counter]) * deltaTime;
+        particle.pos += (particle.velocity * 10.f) * speed * dt;
         
-        if (particle.size.x >= 0)
+        //particle.velocity.y -= gravity * dt;
+        
+        if (particle.size.x >= 0 && particle.life <= particleLifeTime / 3)
         {
-            float sizeChange = abs((randomNumbers[id + counter]) * deltaTime);
-            particle.size -= sizeChange * particleSizeMulitplier;
+            float sizeChange = abs((randomNumbers[id + counter]) * dt);
+            particle.size -= ((particle.life / 3) / (particleLifeTime / 3)) * sizeMulitplier;
+            particle.color.rgb += 1.0f * dt;
         }
     }
     else
     {
-        particle.size = float2(1.5, 1.5);
-        particle.pos = emitterPosition;
-        particle.life = 0;
-    }
+        particle.size = float2(sizeMulitplier, sizeMulitplier);
+        particle.pos = emitterPos;
+        particle.life = 0.f;
 
+        particle.color = float4(0.8f, 0.8f, 0.8f, 1.f);
+        
+        particle.velocity.x = (randomNumbers[id]);
+        particle.velocity.y = (randomNumbers[id + 1]);
+        particle.velocity.z = (randomNumbers[id + counter]);
+    }
 }
 
 void RainSimmulation(inout VertexParticleIn particle, in uint id)
 {
-    float raise = 5  * deltaTime;
-    
-    particle.pos.y -= raise;
-    
-    if (particle.pos.y <= emitterPosition.y -20) //Reset
+    float4 emitterToParticle = float4(0.0f, particle.pos.y, 0.0f, 1.f) - float4(0.0f, emitterPos.y, 0.0f, 1.f);
+    if (length(emitterToParticle.y) < lifeTime)
     {
-        particle.pos = emitterPosition;
+        particle.velocity.y += abs(randomNumbers[id + 1]) * dt;
+        particle.velocity.y -= gravity * dt;
+        particle.pos += particle.velocity * speed * dt;
+    }
+    else
+    {
+        particle.pos.y = emitterPos.y + (id/2 ) * dt;
+        particle.velocity.y = 0.0f;
+        particle.life = 0;
     }
 }
 
 void MageHealSimulation(inout VertexParticleIn particle, in uint id)
 {   
-    float4 emitterToParticle = particle.pos - emitterPosition;
-    
-    if (length(emitterToParticle) < 30)
+    float4 emitterToParticle = particle.pos - emitterPos;
+    if (length(emitterToParticle) < lifeTime) //LifeTime is here radius of heal circle
     {
-        particle.pos += particle.velocity * c_particleSpeed * deltaTime;
+        particle.pos += particle.velocity * speed * dt;
     }
     else
     {
         if (particle.size.x > 0)
-            particle.size -= deltaTime * particleSizeMulitplier * 2;
+            particle.size -= dt * sizeMulitplier * 2;
         
         if (particle.color.a > 0)
-            particle.color.a -= deltaTime * particleSizeMulitplier * 2;
+            particle.color.a -= dt * sizeMulitplier * 2;
     }
 }
 
@@ -269,22 +299,22 @@ void MageRangeSimulation(inout VertexParticleIn particle, in uint id)
 {    
     if (id > 25)
     {
-        if (particle.life < (lifeTime - (randomNumbers[id + counter])))
-        {            
-            particle.velocity.y -= 9.82f * deltaTime;
-        
-            particle.pos += particle.velocity * deltaTime;
+        float particleLifeTime = (lifeTime - (randomNumbers[id + counter]));
+        if (particle.life < particleLifeTime)
+        {
+            particle.velocity.y -= gravity * dt;
+            particle.pos += particle.velocity * speed *dt;
                 
             if (particle.size.x >= 0)
             {
-                float sizeChange = abs((randomNumbers[id + counter]) * deltaTime);
-                particle.size -= sizeChange * particleSizeMulitplier * 4.f;
+                float sizeChange = abs((randomNumbers[id + counter]) * dt);
+                particle.size -= sizeChange * sizeMulitplier * 4.f;
             }
         }
         else
         {
             particle.size = float2(1.5, 1.5);
-            particle.pos = float4(emitterPosition.x + (randomNumbers[id + counter]/3), emitterPosition.y + (randomNumbers[id]/3), emitterPosition.z + (randomNumbers[id + counter]/3), emitterPosition.w);
+            particle.pos = float4(emitterPos.x + (randomNumbers[id + counter] / 3), emitterPos.y + (randomNumbers[id] / 3), emitterPos.z + (randomNumbers[id + counter] / 3), emitterPos.w);
             particle.life = 0;
             
             particle.velocity.x = (randomNumbers[id]);
@@ -295,20 +325,20 @@ void MageRangeSimulation(inout VertexParticleIn particle, in uint id)
     else
     {
         particle.size = float2(3,3);
-        particle.pos = float4(emitterPosition.x + (randomNumbers[id + counter] / 4), emitterPosition.y + (randomNumbers[id] /4), emitterPosition.z + (randomNumbers[id + counter] /4), emitterPosition.w);
+        particle.pos = float4(emitterPos.x + (randomNumbers[id + counter] / 4), emitterPos.y + (randomNumbers[id] / 4), emitterPos.z + (randomNumbers[id + counter] / 4), emitterPos.w);
     }
 }
 
 void ExplosionSimulation(inout VertexParticleIn particle, in uint id)
 {
-    float4 emitterToParticle = particle.pos - emitterPosition;
+    float4 emitterToParticle = particle.pos - emitterPos;
     
-    particle.pos += particle.velocity * c_particleSpeed * deltaTime;
+    particle.pos += particle.velocity * speed * dt;
     
     if (particle.size.x > 0)
-        particle.size += deltaTime * particleSizeMulitplier;
+        particle.size += dt * sizeMulitplier;
         
     if (particle.color.a > 0)
-        particle.color.a -= deltaTime * particleSizeMulitplier * 0.5f;
+        particle.color.a -= dt * sizeMulitplier * 0.5f;
     
 }

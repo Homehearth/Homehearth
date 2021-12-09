@@ -23,14 +23,31 @@ void rtd::AbilityUI::Update()
         tmp.resize(length);
         m_cooldownText->SetText(tmp);
     }
+
+    float height = 0.0f;
+    if (m_maxRef && *m_maxRef > m_cooldown)
+    {
+        height = (m_cooldown / *m_maxRef);
+        height *= -m_opts.height;   
+    }
+    m_overlay->SetScale(m_opts.width, height);
+    
+
 }
 
 rtd::AbilityUI::AbilityUI(const draw_t& opts, const D2D1_COLOR_F& color, const std::string& picturePath)
 {
+    m_opts = opts;
     m_border = std::make_unique<Border>(opts);
     m_picture = std::make_unique<Picture>(picturePath, draw_t(opts.x_pos, opts.y_pos, opts.width, opts.height));
     m_cooldownText = std::make_unique<Text>(" ", draw_t(opts.x_pos, opts.y_pos - opts.height * 0.85f, opts.width, opts.height));
     m_buttonPress = " ";
+    
+    D2D1_COLOR_F overlayColor = D2D1::ColorF(D2D1::ColorF::Gray, 0.5f);
+    draw_t tempOpts = opts;
+    tempOpts.y_pos += opts.height;
+    m_overlay = std::make_unique<Canvas>(overlayColor, tempOpts);
+    
 }
 
 void rtd::AbilityUI::SetPicture(const std::string& filePath)
@@ -53,6 +70,11 @@ void rtd::AbilityUI::SetReference(float* ref)
     m_ref = ref;
 }
 
+void rtd::AbilityUI::SetMaxReference(float* ref)
+{
+    m_maxRef = ref;
+}
+
 void rtd::AbilityUI::Draw()
 {
     //if (m_border)
@@ -61,6 +83,9 @@ void rtd::AbilityUI::Draw()
         m_picture->Draw();
     if (m_cooldownText)
         m_cooldownText->Draw();
+
+    if (m_overlay)
+        m_overlay->Draw();
 }
 
 void rtd::AbilityUI::OnClick()

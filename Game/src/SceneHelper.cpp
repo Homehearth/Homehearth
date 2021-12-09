@@ -562,12 +562,18 @@ namespace sceneHelp
 		rtd::AbilityUI* primary = abilities->AddElement<rtd::AbilityUI>(draw_t(abillityPos.x - (abillitySize.x * 2 + padding.x), abillityPos.y, abillitySize.x, abillitySize.y), D2D1::ColorF(0, 1.0f), "Attack2.png");
 		primary->SetActivateButton("LMB");
 		primary->SetReference(&game->m_primaryCooldown);
+		primary->SetMaxReference(&game->m_primaryMaxCooldown);
+
 		rtd::AbilityUI* secondary = abilities->AddElement<rtd::AbilityUI>(draw_t(abillityPos.x - (abillitySize.x + padding.x / 2), abillityPos.y, abillitySize.x, abillitySize.y), D2D1::ColorF(0, 1.0f), "Block.png");
 		secondary->SetActivateButton("RMB");
 		secondary->SetReference(&game->m_secondaryCooldown);
+		secondary->SetMaxReference(&game->m_secondaryMaxCooldown);
+
 		rtd::AbilityUI* third = abilities->AddElement<rtd::AbilityUI>(draw_t(abillityPos.x, abillityPos.y, abillitySize.x, abillitySize.y), D2D1::ColorF(0, 1.0f), "Dodge.png");
 		third->SetActivateButton("Shift");
 		third->SetReference(&game->m_dodgeCooldown);
+		third->SetMaxReference(&game->m_dodgeMaxCooldown);
+
 		rtd::AbilityUI* fourth = abilities->AddElement<rtd::AbilityUI>(draw_t(abillityPos.x + (abillitySize.x + padding.x / 2), abillityPos.y, abillitySize.x, abillitySize.y), D2D1::ColorF(0, 1.0f), "LockedIcon.png");
 		rtd::AbilityUI* fith = abilities->AddElement<rtd::AbilityUI>(draw_t(abillityPos.x + (abillitySize.x * 2 + padding.x), abillityPos.y, abillitySize.x, abillitySize.y), D2D1::ColorF(0, 1.0f), "LockedIcon.png");
 		scene.Add2DCollection(abilities, "ZAbilityUI");

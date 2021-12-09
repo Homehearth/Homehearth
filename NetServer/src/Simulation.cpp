@@ -94,7 +94,7 @@ void Simulation::InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg, c
 		}
 		case ecs::Component::PARTICLEMITTER:
 		{
-			comp::PARTICLEEMITTER* p = entity.GetComponent<comp::PARTICLEEMITTER>();
+			comp::ParticleEmitter* p = entity.GetComponent<comp::ParticleEmitter>();
 			if (p)
 			{
 				compSet.set(ecs::Component::PARTICLEMITTER);
@@ -195,10 +195,10 @@ void Simulation::ResetPlayer(Entity player)
 		health->currentHealth = 125.f;
 
 		comp::MeleeAttackAbility* attackAbility = player.AddComponent<comp::MeleeAttackAbility>();
-		attackAbility->cooldown = 0.50f;
+		attackAbility->cooldown = 0.8f;
 		attackAbility->attackDamage = 20.f;
 		attackAbility->lifetime = 0.1f;
-		attackAbility->useTime = 0.2f;
+		attackAbility->useTime = 0.5f;
 		attackAbility->delay = 0.2f;
 		attackAbility->attackRange = 8.f;
 
@@ -554,29 +554,29 @@ void Simulation::SendSnapshot()
 				if (melee)
 				{
 					count++;
-					msg4 << AbilityIndex::Primary << melee->cooldownTimer;
+					msg4 << AbilityIndex::Primary << melee->cooldownTimer << melee->cooldown;
 				}
 				else if (range)
 				{
 					count++;
-					msg4 << AbilityIndex::Primary << range->cooldownTimer;
+					msg4 << AbilityIndex::Primary << range->cooldownTimer << range->cooldown;
 				}
 
 				if (blink)
 				{
 					count++;
-					msg4 << AbilityIndex::Dodge << blink->cooldownTimer;
+					msg4 << AbilityIndex::Dodge << blink->cooldownTimer << blink->cooldown;
 				}
 				else if (dash)
 				{
 					count++;
-					msg4 << AbilityIndex::Dodge << dash->cooldownTimer;
+					msg4 << AbilityIndex::Dodge << dash->cooldownTimer << dash->cooldown;
 				}
 
 				if (heal)
 				{
 					count++;
-					msg4 << AbilityIndex::Secondary << heal->cooldownTimer;
+					msg4 << AbilityIndex::Secondary << heal->cooldownTimer << heal->cooldown;
 				}
 
 				msg4 << count;
@@ -859,6 +859,7 @@ void Simulation::ResetGameScene()
 
 	m_timeCycler.SetTime(DAY);
 	m_timeCycler.SetCycleSpeed(1.0f);
+
 }
 
 void Simulation::SendEntities(const std::vector<Entity>& entities, GameMsg msgID, const std::bitset<ecs::Component::COMPONENT_MAX>& componentMask)

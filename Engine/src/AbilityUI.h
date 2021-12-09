@@ -3,6 +3,7 @@
 #include "Border.h"
 #include "Picture.h"
 #include "Text.h"
+#include "Canvas.h"
 
 namespace rtd
 {
@@ -13,11 +14,14 @@ namespace rtd
 		std::unique_ptr<Border> m_border;
 		std::unique_ptr<Picture> m_picture;
 		std::unique_ptr<Text> m_cooldownText;
+		std::unique_ptr<Canvas> m_overlay;
 
 		draw_t m_opts;
 		D2D1_COLOR_F m_borderColor;
 
 		float* m_ref = nullptr;
+		float* m_maxRef = nullptr;
+
 		float m_cooldown = 0.0f;
 		std::string m_buttonPress;
 
@@ -49,6 +53,8 @@ namespace rtd
 			Set the reference to the cooldown object.
 		*/
 		void SetReference(float* ref);
+		void SetMaxReference(float* ref);
+
 
 		// Inherited via Element2D
 		virtual void Draw() override;

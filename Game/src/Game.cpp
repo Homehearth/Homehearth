@@ -87,14 +87,6 @@ bool Game::OnStartup()
 	// Set Current Scene
 	SetScene("MainMenu");
 
-	/*Entity emitter4 = GetScene("Game").CreateEntity();
-	emitter4.AddComponent<comp::Transform>()->position = { 250, 5, -340 };
-	emitter4.AddComponent<comp::EmitterParticle>(sm::Vector3{ 0,0,0 }, 102, 2.f, PARTICLEMODE::MAGEHEAL, 3.5f, 1.f, false);*/
-
-	/*Entity waterSplash = GetScene("Game").CreateEntity();
-	waterSplash.AddComponent<comp::Transform>()->position = { 270, 13, -370 };
-	waterSplash.AddComponent <comp::EmitterParticle>(sm::Vector3{ 0,0,0 }, 150, 1.f, PARTICLEMODE::WATERSPLASH, 2.0f, 1.f, false);*/
-
 	return true;
 }
 
@@ -786,6 +778,8 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 
 		for (uint32_t i = 0; i < count; i++)
 		{
+			float maxCooldown = 0.0f;
+			msg >> maxCooldown;
 			float cooldown = 0.0f;
 			msg >> cooldown;
 
@@ -796,16 +790,19 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			case AbilityIndex::Primary:
 			{
 				m_primaryCooldown = cooldown;
+				m_primaryMaxCooldown = maxCooldown;
 				break;
 			}
 			case AbilityIndex::Secondary:
 			{
 				m_secondaryCooldown = cooldown;
+				m_secondaryMaxCooldown = maxCooldown;
 				break;
 			}
 			case AbilityIndex::Dodge:
 			{
 				m_dodgeCooldown = cooldown;
+				m_dodgeMaxCooldown = maxCooldown;
 				break;
 			}
 			default:
@@ -1323,7 +1320,7 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 			}
 			case ecs::Component::PARTICLEMITTER:
 			{
-				comp::PARTICLEEMITTER p;
+				comp::ParticleEmitter p;
 				msg >> p;
 				if (!skip)
 				{
