@@ -335,7 +335,7 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 		else
 		{
 			LOG_WARNING("Invalid GameID for player input message");
-		}
+		} 
 
 		break;
 	}

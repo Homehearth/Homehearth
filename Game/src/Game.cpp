@@ -778,6 +778,8 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 
 		for (uint32_t i = 0; i < count; i++)
 		{
+			float maxCooldown = 0.0f;
+			msg >> maxCooldown;
 			float cooldown = 0.0f;
 			msg >> cooldown;
 
@@ -788,16 +790,19 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			case AbilityIndex::Primary:
 			{
 				m_primaryCooldown = cooldown;
+				m_primaryMaxCooldown = maxCooldown;
 				break;
 			}
 			case AbilityIndex::Secondary:
 			{
 				m_secondaryCooldown = cooldown;
+				m_secondaryMaxCooldown = maxCooldown;
 				break;
 			}
 			case AbilityIndex::Dodge:
 			{
 				m_dodgeCooldown = cooldown;
+				m_dodgeMaxCooldown = maxCooldown;
 				break;
 			}
 			default:
@@ -1257,7 +1262,8 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 				msg >> hp;
 				if (!skip)
 				{
-					if (GetCurrentScene() == &GetScene("Game"))
+					Scene& scene = GetScene("Game");
+					if (GetCurrentScene() == &scene)
 					{
 						GameSystems::UpdateHealthbar(this);
 
@@ -1266,7 +1272,6 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 							if (!hp.isAlive)
 							{
 								m_isSpectating = true;
-								Scene& scene = GetScene("Game");
 								scene.GetCollection("SpectateUI")->elements[0]->SetVisiblity(true);
 								scene.GetCollection("SpectateUI")->elements[1]->SetVisiblity(true);
 							}
@@ -1274,7 +1279,6 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 							{
 								if (m_isSpectating)
 								{
-									Scene& scene = GetScene("Game");
 									scene.GetCollection("SpectateUI")->elements[0]->SetVisiblity(false);
 									scene.GetCollection("SpectateUI")->elements[1]->SetVisiblity(false);
 									m_isSpectating = false;
