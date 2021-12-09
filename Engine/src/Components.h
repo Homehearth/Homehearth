@@ -110,7 +110,7 @@ namespace ecs
 
 				if (type == ParticleMode::BLOOD)
 				{
-					textureName = "BloodParticle.png";
+					textureName = "Blood.png";
 				}
 				else if (type == ParticleMode::LEAF)
 				{
@@ -122,7 +122,7 @@ namespace ecs
 				else if (type == ParticleMode::SMOKEPOINT || type == ParticleMode::SMOKEAREA)
 				{
 					textureName = "smoke.png";
-					opacityTextureName = "smoke_opacity.png";
+					opacityTextureName = "smoke_Opacity.png";
 				}
 				else if (type == ParticleMode::SPARKLES)
 				{
