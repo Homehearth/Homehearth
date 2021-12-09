@@ -28,14 +28,27 @@ void rtd::TextField::Update()
 				case VK_OEM_PERIOD:
 					m_stringText.push_back(static_cast<char>(0x2E));
 					break;
+				case VK_RETURN:
+					break;
 				default:
-					if ((InputSystem::Get().IsInShiftMode() && !InputSystem::Get().IsInCapsLock()) || (InputSystem::Get().IsInCapsLock() && !InputSystem::Get().IsInShiftMode()))
+					if (InputSystem::Get().IsInCTRLMode() && *currentKey == 0x56)
 					{
-						m_stringText.push_back(static_cast<char>(*currentKey));
+						m_stringText = InputSystem::Get().GetClipboard();
+						if (m_stringText.length() > m_textLimit)
+						{
+							m_stringText = m_stringText.substr(0, m_textLimit);
+						}
 					}
 					else
 					{
-						m_stringText.push_back(static_cast<char>(std::tolower(*currentKey)));
+						if ((InputSystem::Get().IsInShiftMode() && !InputSystem::Get().IsInCapsLock()) || (InputSystem::Get().IsInCapsLock() && !InputSystem::Get().IsInShiftMode()))
+						{
+							m_stringText.push_back(static_cast<char>(*currentKey));
+						}
+						else
+						{
+							m_stringText.push_back(static_cast<char>(std::tolower(*currentKey)));
+						}
 					}
 					break;
 				}
