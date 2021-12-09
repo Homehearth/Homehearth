@@ -472,8 +472,8 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 
 		for (int i = 0; i < MAX_PLAYERS_PER_LOBBY; i++)
 		{
-			GetScene("Game").GetCollection("player" + std::to_string(i + 1) + +"Info")->Hide();
-			GetScene("Game").GetCollection("dynamicPlayer" + std::to_string(i + 1) + "namePlate");
+			GetScene("Game").GetCollection("Aplayer" + std::to_string(i + 1) + +"Info")->Hide();
+			GetScene("Game").GetCollection("AdynamicPlayer" + std::to_string(i + 1) + "namePlate");
 		}
 
 		m_isSpectating = false;
