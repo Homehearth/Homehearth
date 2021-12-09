@@ -178,7 +178,7 @@ void GameSystems::UpdatePlayerVisuals(Game* game)
 			}
 			else
 			{
-				Collection2D* collection = scene->GetCollection("AdynamicPlayer" + std::to_string(static_cast<uint16_t>(player.playerType)) + "namePlate");
+				Collection2D* collection = scene.GetCollection("AdynamicPlayer" + std::to_string(static_cast<uint16_t>(player.playerType)) + "namePlate");
 				if (collection)
 				{
 					rtd::Text* namePlate = dynamic_cast<rtd::Text*>(collection->elements[0].get());
@@ -209,7 +209,7 @@ void GameSystems::UpdatePlayerVisuals(Game* game)
 								namePlate->SetVisiblity(false);
 
 							// Update healthbars position.
-							Collection2D* collHealth = scene->GetCollection("Aplayer" + std::to_string(static_cast<uint16_t>(player.playerType)) + "Info");
+							Collection2D* collHealth = scene.GetCollection("Aplayer" + std::to_string(static_cast<uint16_t>(player.playerType)) + "Info");
 							if (collHealth)
 							{
 								rtd::Healthbar* health = dynamic_cast<rtd::Healthbar*>(collHealth->elements[0].get());

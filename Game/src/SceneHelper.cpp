@@ -296,44 +296,43 @@ namespace sceneHelp
 				}
 
 
-
-				Collection2D* bullColl = game->GetCurrentScene()->GetCollection("bullDoze");
 				if (bullColl)
 				{
 					rtd::Picture* bullIcon = dynamic_cast<rtd::Picture*>(bullColl->elements[0].get());
 					ShopItem shopitem = game->GetShopItem();
 
-				if (shopitem == ShopItem::Destroy_Tool)
-				{
-					bullColl->Show();
-					bullIcon->SetPosition((FLOAT)InputSystem::Get().GetMousePos().x, (FLOAT)InputSystem::Get().GetMousePos().y);
-				}
-
-				ElementState shopMenuState = game->GetScene("Game").GetCollection("shopMenu")->GetState();
-				Collection2D* menu = game->GetScene("Game").GetCollection("inGameMenu");
-				ElementState shopIconState = game->GetScene("Game").GetCollection("shopIcon")->GetState();
-
-				if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Keys::Escape, KeyState::PRESSED))
-				{
-					if (shopMenuState == ElementState::NONE && menu->GetState() == ElementState::NONE)
+					if (shopitem == ShopItem::Destroy_Tool)
 					{
-						menu->Show();
+						bullColl->Show();
+						bullIcon->SetPosition((FLOAT)InputSystem::Get().GetMousePos().x, (FLOAT)InputSystem::Get().GetMousePos().y);
 					}
-					else
-					{
-						menu->Hide();
-					}
-				}
 
-				if (shopMenuState == ElementState::OUTSIDE && shopIconState == ElementState::OUTSIDE)
-				{
-					if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Keys::Escape, KeyState::PRESSED) ||
-						InputSystem::Get().CheckMouseKey(MouseKey::RIGHT, KeyState::PRESSED) ||
-						(InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED) && game->GetShopItem() == ShopItem::None))
+					ElementState shopMenuState = game->GetScene("Game").GetCollection("shopMenu")->GetState();
+					Collection2D* menu = game->GetScene("Game").GetCollection("inGameMenu");
+					ElementState shopIconState = game->GetScene("Game").GetCollection("shopIcon")->GetState();
+
+					if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Keys::Escape, KeyState::PRESSED))
 					{
-						game->GetScene("Game").GetCollection("shopMenu")->Hide();
-						game->SetShopItem(ShopItem::None);
-						bullColl->Hide();
+						if (shopMenuState == ElementState::NONE && menu->GetState() == ElementState::NONE)
+						{
+							menu->Show();
+						}
+						else
+						{
+							menu->Hide();
+						}
+					}
+
+					if (shopMenuState == ElementState::OUTSIDE && shopIconState == ElementState::OUTSIDE)
+					{
+						if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Keys::Escape, KeyState::PRESSED) ||
+							InputSystem::Get().CheckMouseKey(MouseKey::RIGHT, KeyState::PRESSED) ||
+							(InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED) && game->GetShopItem() == ShopItem::None))
+						{
+							game->GetScene("Game").GetCollection("shopMenu")->Hide();
+							game->SetShopItem(ShopItem::None);
+							bullColl->Hide();
+						}
 					}
 				}
 
