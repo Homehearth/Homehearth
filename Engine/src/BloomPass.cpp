@@ -293,9 +293,9 @@ void BloomPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
     //DC->CopyResource(m_blurredTexture.Get(), backBuff);
     //backBuff->Release();
 
-    //DC->CopyResource(m_blurredTexture.Get(), PM->m_bloomTexture.Get());
+    DC->CopyResource(m_blurredTexture.Get(), PM->m_bloomTexture.Get());
 
-    m_blurPass.BlurTexture(PM->m_bloomAccessView.GetAddressOf(), m_blurredAccess.GetAddressOf(), DC);
+    //m_blurPass.BlurTexture(PM->m_bloomAccessView.GetAddressOf(), m_blurredAccess.GetAddressOf(), DC);
 }
 
 void BloomPass::Render(Scene* pScene)
