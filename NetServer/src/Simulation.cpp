@@ -183,7 +183,7 @@ void Simulation::ResetPlayer(Entity player)
 
 		comp::MeleeAttackAbility* attackAbility = player.AddComponent<comp::MeleeAttackAbility>();
 		attackAbility->cooldown = 0.50f;
-		attackAbility->attackDamage = 20.f;
+		attackAbility->attackDamage = 25.f;
 		attackAbility->lifetime = 0.1f;
 		attackAbility->useTime = 0.2f;
 		attackAbility->delay = 0.2f;
@@ -214,7 +214,7 @@ void Simulation::ResetPlayer(Entity player)
 
 		comp::RangeAttackAbility* attackAbility = player.AddComponent<comp::RangeAttackAbility>();
 		attackAbility->cooldown = 0.8f;
-		attackAbility->attackDamage = 20.f;
+		attackAbility->attackDamage = 25.f;
 		attackAbility->lifetime = 2.0f;
 		attackAbility->projectileSpeed = 80.f;
 		attackAbility->projectileSize = 3.f;
@@ -743,16 +743,18 @@ void Simulation::UpgradeDefence(const uint32_t& id)
 
 				if (c && h)
 				{
-					if (m_currency >= c->cost)
+					if (m_currency >= c->cost && h->upgradeLevel <= 2)
 					{
-						c->cost += 5;
+						
 						// Add upgrades here.
 						h->maxHealth += 35;
 						h->currentHealth += 35;
+						h->upgradeLevel++;
 
 						// Cost is here.
-						m_currency -= c->cost;
 						e.UpdateNetwork();
+						m_currency -= c->cost;
+						c->cost *= 1.5f;
 					}
 				}
 			}
@@ -789,6 +791,8 @@ void Simulation::SetGameScene()
 #if GOD_MODE
 	// During debug give players 1000 gold/monies.
 	m_currency = 1000;
+#else
+	m_currency = 500;
 #endif
 
 #if NO_CLIP

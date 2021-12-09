@@ -4,10 +4,10 @@
 /*
 	DIFFERENT COSTS FOR THE SHOP. PURELY VISUAL NOTHING GAMEPLAY CHANGING.
 */
-constexpr unsigned int TOWER_1X1_COST = 10;
-constexpr unsigned int TOWER_1X3_COST = 30;
-constexpr unsigned int PRIMARY_ABILITITY_COST = 10;
-constexpr unsigned int HEAL_COST = 5;
+constexpr unsigned int TOWER_1X1_COST = 100;
+constexpr unsigned int TOWER_1X3_COST = 300;
+constexpr unsigned int PRIMARY_ABILITITY_COST = 100;
+constexpr unsigned int HEAL_COST = 50;
 constexpr unsigned int ARMOR_COST = 20;
 constexpr unsigned int REMOVE_DEFENCE_COST = 0;
 
@@ -17,9 +17,10 @@ rtd::ShopUI::ShopUI(const std::string& filePath, const draw_t& opts)
 {
 	const unsigned int width = D2D1Core::GetWindow()->GetWidth();
 	const unsigned int height = D2D1Core::GetWindow()->GetHeight();
+	float widthScale = height * (16.f / 9.f);
     m_texture = std::make_unique<Picture>(filePath, opts);
-	m_signTexture = std::make_unique<Picture>("NotEnoughMoneySign.png", draw_t(0.0f, 0.0f, width * 0.15f, height * 0.075f));
-	m_signText = std::make_unique<Text>("Money", draw_t(0.0f, 0.0f, width * 0.15f, height * 0.075f));
+	m_signTexture = std::make_unique<Picture>("NotEnoughMoneySign.png", draw_t(0.0f, 0.0f, widthScale * 0.15f, height * 0.075f));
+	m_signText = std::make_unique<Text>("Money", draw_t(0.0f, 0.0f, widthScale * 0.15f, height * 0.075f));
     m_drawOpts = opts;
 }
 

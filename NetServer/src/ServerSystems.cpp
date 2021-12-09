@@ -49,7 +49,7 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 
 		npc->movementSpeed = 15.f;
 		attackAbility->cooldown = 1.0f;
-		attackAbility->attackDamage = 20.f;
+		attackAbility->attackDamage = 15.f;
 		attackAbility->lifetime = 0.1f;
 		attackAbility->attackRange = 4.f;
 		attackAbility->useTime = 0.3f;
@@ -83,7 +83,7 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 
 		npc->movementSpeed = 15.f;
 		attackAbility->cooldown = 3.0f;
-		attackAbility->attackDamage = 20.f;
+		attackAbility->attackDamage = 10.f;
 		attackAbility->lifetime = 5.0f;
 		attackAbility->attackRange = 60.f;
 		attackAbility->useTime = 0.3f;
@@ -102,8 +102,8 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		meshName->name = NameType::MESH_MONSTER;
 		animatorName->name = AnimName::ANIM_MONSTER;
 		bos->Radius = 3.f;
-		attackAbility->cooldown = 1.0f;
-		attackAbility->attackDamage = 20.f;
+		attackAbility->cooldown = 0.8f;
+		attackAbility->attackDamage = 10.f;
 		attackAbility->lifetime = 0.3f;
 		attackAbility->attackRange = 7.0f;
 		attackAbility->useTime = 0.3f;
@@ -122,7 +122,7 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		meshName->name = NameType::MESH_MONSTER;
 		animatorName->name = AnimName::ANIM_MONSTER;
 		bos->Radius = 3.f;
-		attackAbility->cooldown = 1.0f;
+		attackAbility->cooldown = 2.0f;
 		attackAbility->attackDamage = 20.f;
 		attackAbility->lifetime = 0.3f;
 		attackAbility->attackRange = 20.0f;
@@ -505,9 +505,9 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 						{
 							uint32_t cost = 0;
 							if (p.shopItem == ShopItem::Defence1x1)
-								cost = 10;
+								cost = 100;
 							else if (p.shopItem == ShopItem::Defence1x3)
-								cost = 30;
+								cost = 300;
 
 							if (simulation->GetCurrency().GetAmount() >= cost)
 							{
@@ -593,8 +593,8 @@ void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money
 				// increase money
 				if (entity.GetComponent<comp::Tag<BAD>>())
 				{
-					money_ref += 5 * spree.GetSpree();
-					money_ref.IncreaseTotal(5 * spree.GetSpree());
+					money_ref += 50 * spree.GetSpree();
+					money_ref.IncreaseTotal(50 * spree.GetSpree());
 					spree.AddSpree();
 				}
 

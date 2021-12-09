@@ -19,39 +19,42 @@ void IShop::UseShop(const ShopItem& whatToBuy, const uint32_t& player)
 			{
 				// Upgrade if melee.
 				comp::MeleeAttackAbility* m = m_sim->GetPlayer(player).GetComponent<comp::MeleeAttackAbility>();
-				if (m && m_sim->GetCurrency() >= 10)
+				if (m && m_sim->GetCurrency() >= 100 && m->upgradeLevel <= 2)
 				{
-					m->attackDamage += 2.5f;
-					m_sim->GetCurrency() -= 10;
+					m->attackDamage *= 1.5f;
+					m_sim->GetCurrency() -= 100;
+					m->upgradeLevel++;
 				}
 
 				// Upgrade if ranged.
 				comp::RangeAttackAbility* r = m_sim->GetPlayer(player).GetComponent<comp::RangeAttackAbility>();
-				if (r && m_sim->GetCurrency() >= 10)
+				if (r && m_sim->GetCurrency() >= 100 && r->upgradeLevel <= 2)
 				{
-					r->attackDamage += 2.5f;
-					m_sim->GetCurrency() -= 10;
+					r->attackDamage *= 1.5f;
+					m_sim->GetCurrency() -= 100;
+					r->upgradeLevel++;
 				}
 			}
 			break;
 		}
 		case ShopItem::Heal:
 		{
-			if (m_sim->GetCurrency() < 5)
+			if (m_sim->GetCurrency() < 50)
 				break;
 
 			if (m_sim->GetPlayer(player))
 			{
 				comp::Health* h = m_sim->GetPlayer(player).GetComponent<comp::Health>();
-				if (h)
+				if (h && h->upgradeLevel <= 2)
 				{
-					h->currentHealth += 25;
+					h->maxHealth += 25;
+					h->upgradeLevel++;
+					m_sim->GetCurrency() -= 50;
 				}
 
 				m_sim->GetPlayer(player).UpdateNetwork();
 			}
-
-			m_sim->GetCurrency() -= 5;
+			
 			break;
 		}
 		default:
