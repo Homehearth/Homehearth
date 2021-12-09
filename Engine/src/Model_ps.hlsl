@@ -10,7 +10,7 @@ PixelOut main(PixelIn input)
     static unsigned int STEPS = c_info.y;
     const float SCATTERING = .85f;
     
-    float3 lightVolume = float3(0.0f, 0.0f, 0.0f);
+    float3 lightVolume = float3(1.0f, 1.0f, 1.0f);
 	float3 camPos = c_cameraPosition.xyz;
     float ao = 1.0f;
     float3 albedo = 1.f;

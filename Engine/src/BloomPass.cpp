@@ -302,7 +302,7 @@ void BloomPass::Render(Scene* pScene)
 {
     this->Draw(RenderVersion::FULL_TO_HALF);
     this->Draw(RenderVersion::HALF_TO_QUARTER);
-    m_blurPass.BlurTexture(sm::Vector2(PM->m_windowWidth / 4, PM->m_windowHeight / 4), m_quarterBlurredAccess.GetAddressOf(), m_quarterSizeAccess.GetAddressOf());
+    m_blurPass.BlurTexture(sm::Vector2(PM->m_windowWidth / 4.0f, PM->m_windowHeight / 4.0f), m_quarterBlurredAccess.GetAddressOf(), m_quarterSizeAccess.GetAddressOf());
     this->Draw(RenderVersion::QUARTER_TO_TINY);
     this->Draw(RenderVersion::TINY_TO_SMOL);
     this->Draw(RenderVersion::SMOL_TO_SMOLLEST);

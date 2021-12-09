@@ -239,6 +239,15 @@ namespace sceneHelp
 						bullColl->Hide();
 
 						SoundHandler::Get().SetCurrentMusic("NightTheme");
+						Collection2D* waveColl = game->GetCurrentScene()->GetCollection("ZWaveCounter");
+						if (waveColl)
+						{
+							rtd::Text* waveText = dynamic_cast<rtd::Text*>(waveColl->elements[1].get());
+							if (waveText)
+							{
+								waveText->SetText(std::to_string(++game->GetWaveCounter()));
+							}
+						}
 
 						break;
 					}
@@ -258,16 +267,6 @@ namespace sceneHelp
 									l.lightData.enabled = 0;
 								}
 							});
-
-						Collection2D* waveColl = game->GetCurrentScene()->GetCollection("ZWaveCounter");
-						if (waveColl)
-						{
-							rtd::Text* waveText = dynamic_cast<rtd::Text*>(waveColl->elements[1].get());
-							if (waveText)
-							{
-								waveText->SetText(std::to_string(++game->GetWaveCounter()));
-							}
-						}
 						break;
 					}
 					case CyclePeriod::EVENING:
