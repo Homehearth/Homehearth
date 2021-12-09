@@ -81,9 +81,7 @@ void ParticlePass::Render(Scene* pScene)
 {
 	m_counter++;
 	if (m_counter >= 10)
-	{
 		m_counter = 0;
-	}
 
 	pScene->RenderParticles(this);
 }

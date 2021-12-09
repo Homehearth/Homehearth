@@ -94,7 +94,7 @@ void Simulation::InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg, c
 		}
 		case ecs::Component::PARTICLEMITTER:
 		{
-			comp::PARTICLEEMITTER* p = entity.GetComponent<comp::PARTICLEEMITTER>();
+			comp::ParticleEmitter* p = entity.GetComponent<comp::ParticleEmitter>();
 			if (p)
 			{
 				compSet.set(ecs::Component::PARTICLEMITTER);
@@ -863,6 +863,7 @@ void Simulation::ResetGameScene()
 
 	m_timeCycler.SetTime(DAY);
 	m_timeCycler.SetCycleSpeed(1.0f);
+
 }
 
 void Simulation::SendEntities(const std::vector<Entity>& entities, GameMsg msgID, const std::bitset<ecs::Component::COMPONENT_MAX>& componentMask)
