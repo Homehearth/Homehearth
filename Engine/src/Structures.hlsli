@@ -111,3 +111,8 @@ struct Frustum
 {
     Plane planes[4];   // left, right, top, bottom frustum planes.
 };
+
+//struct VaterEffectVertexColorIn
+//{
+//    float4 color;
+//};
