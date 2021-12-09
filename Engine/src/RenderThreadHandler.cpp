@@ -97,7 +97,7 @@ std::function<void(void*, void*)> thread::RenderThreadHandler::GetJob()
 	{
 		return nullptr;
 	}
-	
+
 	const int size = (int)INSTANCE.m_jobs.size() - 1;
 
 	return INSTANCE.m_jobs[size];
@@ -280,6 +280,12 @@ void* thread::RenderThreadHandler::GetObjectsBuffer()
 
 void thread::RenderThreadHandler::SetCamera(void* camera)
 {
+	if (!camera)
+	{
+		LOG_ERROR("RenderThreadHandler tried to set a camera that was nullptr");
+		return;
+	}
+
 	INSTANCE.m_camera = camera;
 }
 
@@ -328,7 +334,7 @@ void RenderMain(const unsigned int id)
 	m_privateBuffer.Create(D3D11Core::Get().Device());
 	thread::RenderThreadHandler::UpdateStatus(t_id, thread::thread_running);
 
-	
+
 	// On Update
 	while (INSTANCE.GetHandlerStatus())
 	{
@@ -387,8 +393,8 @@ void RenderJob(const unsigned int start,
 		// Make sure not to go out of range
 		if (stop > (unsigned int)(*m_objects)[1].size())
 			stop = (unsigned int)(*m_objects)[1].size();
-		
-		
+
+
 		// On Render
 		for (unsigned int i = start; i < stop; i++)
 		{
@@ -400,7 +406,7 @@ void RenderJob(const unsigned int start,
 
 			m_buffer->SetData(m_context, it->data);
 			m_context->VSSetConstantBuffers(0, 1, buffers);
-			
+
 			if (it->model)
 				it->model->Render(m_context);
 
@@ -439,7 +445,7 @@ void RenderShadow(const unsigned int start, unsigned int stop, void* buffer, voi
 		{
 			auto& shadow = (*m_shadows)[i];
 			const light_t* light = shadow.pLight;
-			
+
 			if (!light->enabled)
 				continue;
 
@@ -465,7 +471,7 @@ void RenderShadow(const unsigned int start, unsigned int stop, void* buffer, voi
 				currentPass->UpdateLightBuffer(m_context, shadow.lightBuffer.Get(), *shadow.pLight, sm::Vector3::Down);
 				m_context->VSSetShader(currentPass->GetPipelineManager()->m_paraboloidVertexShader.Get(), nullptr, 0);
 				RenderObjects(m_objects, m_buffer, m_context);
-				
+
 				m_context->OMSetRenderTargets(8, nullTargets, shadow.shadowDepth[1].Get());
 				currentPass->UpdateLightBuffer(m_context, shadow.lightBuffer.Get(), *shadow.pLight, sm::Vector3::Up);
 				RenderObjects(m_objects, m_buffer, m_context);
@@ -478,7 +484,7 @@ void RenderShadow(const unsigned int start, unsigned int stop, void* buffer, voi
 			}
 
 			// For each object in world.
-			
+
 			m_context->OMSetRenderTargets(8, nullTargets, nullptr);
 		}
 
@@ -488,7 +494,7 @@ void RenderShadow(const unsigned int start, unsigned int stop, void* buffer, voi
 
 		HRESULT hr = m_context->FinishCommandList(false, &commandList);
 		EnterCriticalSection(&pushSection);
-		if(SUCCEEDED(hr))
+		if (SUCCEEDED(hr))
 			thread::RenderThreadHandler::Get().InsertCommandList(std::move(commandList));
 		LeaveCriticalSection(&pushSection);
 	}

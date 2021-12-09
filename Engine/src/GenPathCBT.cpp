@@ -2,17 +2,18 @@
 #include "GenPathCBT.h"
 #include "PathFinderManager.h"
 
-BT::GenPathCBT::GenPathCBT(const std::string& name, Entity entity)
+BT::GenPathCBT::GenPathCBT(const std::string& name, Entity entity, Blackboard* blackboard)
 	:ActionNode(name),
 	entity(entity),
-	refreshRate(0.2f)
+	refreshRate(0.2f),
+	blackboard(blackboard)
 {
 	generatePathTimer.Start();
 }
 
 BT::NodeStatus BT::GenPathCBT::Tick()
 {
-	PathFinderManager* aiHandler = Blackboard::Get().GetPathFindManager();
+	PathFinderManager* aiHandler = blackboard->GetPathFindManager();
 
 	if(aiHandler != nullptr)
 	{
@@ -26,7 +27,7 @@ BT::NodeStatus BT::GenPathCBT::Tick()
 			{
 				generatePathTimer.Start();
 				
-				aiHandler->AStarSearch(entity);
+				aiHandler->AStarSearch(entity, blackboard);
 			}
 			return BT::NodeStatus::SUCCESS;
 		}
@@ -38,7 +39,7 @@ BT::NodeStatus BT::GenPathCBT::Tick()
 			{
 				generatePathTimer.Start();
 
-				aiHandler->AStarSearch(entity);
+				aiHandler->AStarSearch(entity, blackboard);
 			}
 			return BT::NodeStatus::SUCCESS;
 		}

@@ -1,10 +1,11 @@
 #include "EnginePCH.h"
 #include "MoveCBT.h"
 
-BT::MoveCBT::MoveCBT(const std::string& name, Entity entity)
+BT::MoveCBT::MoveCBT(const std::string& name, Entity entity, Blackboard* blackboard)
 	:ActionNode(name),
 	entity(entity),
-	refreshRateOnEscape(1.0f)
+	refreshRateOnEscape(1.0f),
+	blackboard(blackboard)
 {
 	timerEscape.Start();
 }
@@ -22,7 +23,7 @@ bool BT::MoveCBT::EscapeCurrentNode(const Entity entity)
 		return false;
 	}
 
-	const std::vector<std::vector<std::shared_ptr<Node>>> nodes = Blackboard::Get().GetPathFindManager()->GetNodes();
+	const std::vector<std::vector<std::shared_ptr<Node>>> nodes = blackboard->GetPathFindManager()->GetNodes();
 	const int currentX = npc->currentNode->id.x;
 	const int currentY = npc->currentNode->id.y;
 	Node* currentClosest = nullptr;
@@ -107,8 +108,8 @@ BT::NodeStatus BT::MoveCBT::Tick()
 
 	if (currentNode && path->empty())
 	{
-		Entity* target = Blackboard::Get().GetValue<Entity>("target" + std::to_string(entity));
-		sm::Vector3* villagerTarget = Blackboard::Get().GetValue<sm::Vector3>("villagerTarget" + std::to_string(entity));
+		Entity* target = blackboard->GetValue<Entity>("target" + std::to_string(entity));
+		sm::Vector3* villagerTarget = blackboard->GetValue<sm::Vector3>("villagerTarget" + std::to_string(entity));
 		comp::House* house = nullptr;
 
 		if(target)
@@ -124,7 +125,7 @@ BT::NodeStatus BT::MoveCBT::Tick()
 		if (!targetPosition)
 			return BT::NodeStatus::FAILURE;
 
-		PathFinderManager* pathFindManager = Blackboard::Get().GetPathFindManager();
+		PathFinderManager* pathFindManager = blackboard->GetPathFindManager();
 		//Check if AI stands on a dead node (no connections to grid)
 		if (!currentNode->reachable && !pathFindManager->FindClosestNode(*targetPosition)->defencePlaced && timerEscape.GetElapsedTime<std::chrono::seconds>() > refreshRateOnEscape)
 		{

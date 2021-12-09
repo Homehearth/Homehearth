@@ -32,6 +32,7 @@ namespace util {
 		return util::BezierCurve<T>(begin, end - 1, t);
 	}
 
+
 	/*
 		Rebases the old_value onto a new range between the new_max and new_min.
 		Make sure that old_max and old_min are the max and min of old_value.
@@ -43,4 +44,6 @@ namespace util {
 		T newRange = new_max - new_min;
 		return (((old_value - old_min) * newRange) / oldRange) + new_min;
 	}
+	std::string VecToStr(const sm::Vector3& v);
+	
 }

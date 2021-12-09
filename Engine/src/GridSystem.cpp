@@ -296,10 +296,11 @@ std::vector<Entity> GridSystem::HideHoverDefence()
 	return entities;
 }
 
-bool GridSystem::RemoveDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, PathFinderManager* aiHandler)
+bool GridSystem::RemoveDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, Blackboard* blackboard)
 {
 	sm::Vector3 localPlayer;
 	comp::Player player;
+	PathFinderManager* aiHandler = blackboard->GetPathFindManager();
 	m_scene->ForEachComponent<comp::Player, comp::Transform, comp::Network>([&](comp::Player& p, comp::Transform& t, comp::Network& net)
 		{
 			if (net.id == playerWhoPressedMouse)
@@ -356,7 +357,7 @@ bool GridSystem::RemoveDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, 
 				player.reachable = true;
 		}
 
-		Blackboard::Get().GetPathFindManager()->RemoveDefenseEntity(closestEntity);
+		aiHandler->RemoveDefenseEntity(closestEntity);
 		closestEntity.Destroy();
 		
 		return true;

@@ -5,7 +5,6 @@ anim 			PRIMARY_ATTACK 		Monster_Attack.fbx
 loopable		0
 anim 			TAKE_DAMAGE 		Monster_TakeDamage.fbx
 loopable		0
-defaultAnim 	IDLE
 
 blendstate		IDLE				MOVE				1.0
 blendstate 		MOVE				IDLE				0.5

@@ -71,6 +71,8 @@ bool ServerGame::OnStartup()
 	}
 	m_inputThread = std::thread(&ServerGame::InputThread, this);
 
+	// MAP BOUNDS FIRST DONT MOVE ORDER
+	LoadMapColliders("MapBounds.fbx");
 	LoadMapColliders("VillageColliders.fbx");
 	LoadHouseColliders("House5_Collider.fbx");
 	LoadHouseColliders("House6_Collider.fbx");
@@ -79,7 +81,6 @@ bool ServerGame::OnStartup()
 	LoadHouseColliders("House9_Collider.fbx");
 	LoadHouseColliders("House10_Collider.fbx");
 	LoadHouseColliders("WaterMillHouse_Collider.fbx");
-	LoadMapColliders("MapBounds.fbx");
 
 	return true;
 }
@@ -92,13 +93,13 @@ void ServerGame::OnShutdown()
 void ServerGame::UpdateNetwork(float deltaTime)
 {
 	PROFILE_FUNCTION();
-	//static float timer = 0.0f;
-	//timer += deltaTime;
-	//if (timer >= 1.0f)
-	//{
-	//	LOG_INFO("Update: %f", 1.f / deltaTime);
-	//	timer = 0.0f;
-	//}
+	static float timer = 0.0f;
+	timer += deltaTime;
+	if (timer >= 1.0f)
+	{
+		LOG_INFO("Update: %f", 1.f / deltaTime);
+		timer = 0.0f;
+	}
 
 	{
 		PROFILE_SCOPE("Server UPDATE");
@@ -193,6 +194,7 @@ bool ServerGame::LoadMapColliders(const std::string& filename)
 	(
 		filepath,
 		aiProcess_JoinIdenticalVertices |
+		aiProcess_Triangulate			|
 		aiProcess_ConvertToLeftHanded
 	);
 
@@ -337,6 +339,19 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 
 		break;
 	}
+	case GameMsg::Game_PlayerSkipDay:
+		uint32_t gameID, playerID;
+		msg >> gameID >> playerID;
+		if (m_simulations.find(gameID) != m_simulations.end())
+		{
+			comp::Player* p = m_simulations.at(gameID)->GetPlayer(playerID).GetComponent<comp::Player>();
+			if (p)
+			{
+				p->wantsToSkipDay = true;
+				ServerSystems::CheckSkipDay(m_simulations.at(gameID).get());
+			}
+		}
+		break;
 	case GameMsg::Game_PlayerReady:
 	{
 		uint32_t playerID;

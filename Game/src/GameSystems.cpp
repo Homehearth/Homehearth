@@ -146,11 +146,11 @@ static bool STRECH_ONCE = true;
 
 void GameSystems::UpdatePlayerVisuals(Game* game)
 {
-	Scene* scene = game->GetCurrentScene();
+	Scene& scene = game->GetScene("Game");
 	const float width = (float)game->GetWindow()->GetWidth();
 	const float height = (float)game->GetWindow()->GetHeight();
 
-	scene->ForEachComponent<comp::Player, comp::Transform, comp::Network>([&](comp::Player& player, comp::Transform& t, comp::Network& n)
+	scene.ForEachComponent<comp::Player, comp::Transform, comp::Network>([&](comp::Player& player, comp::Transform& t, comp::Network& n)
 		{
 			/*
 				Own players health should be displayed at the lower left corner.
@@ -184,7 +184,7 @@ void GameSystems::UpdatePlayerVisuals(Game* game)
 					rtd::Text* namePlate = dynamic_cast<rtd::Text*>(collection->elements[0].get());
 					if (namePlate)
 					{
-						Camera* cam = scene->GetCurrentCamera();
+						Camera* cam = scene.GetCurrentCamera();
 
 						if (cam->GetCameraMatrixes())
 						{

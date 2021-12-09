@@ -28,12 +28,27 @@ LRESULT CALLBACK Window::WinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 		InputSystem::Get().GetMouse()->ProcessMessage(uMsg, wParam, lParam);
 		break;
 	case WM_KEYDOWN:
-		InputSystem::Get().GetKeyboard()->ProcessMessage(uMsg, wParam, lParam);
+		//if (InputSystem::Get().GetInputState() == SystemState::GAME)
+		//{
+			InputSystem::Get().GetKeyboard()->ProcessMessage(uMsg, wParam, lParam);
+		//}
+		//else
+		//{
+			InputSystem::Get().AddToDownQueue(wParam);
+		//}
+
 		//if (wParam == VK_ESCAPE)
 		//	PostQuitMessage(0);
 		break;
 	case WM_KEYUP:
-		InputSystem::Get().GetKeyboard()->ProcessMessage(uMsg, wParam, lParam);
+		//if (InputSystem::Get().GetInputState() == SystemState::GAME)
+		//{
+			InputSystem::Get().GetKeyboard()->ProcessMessage(uMsg, wParam, lParam);
+		//}
+		//else
+		//{
+			InputSystem::Get().AddToUpQueue(wParam);
+		//}
 		break;
 	case WM_MOUSEMOVE:
 		InputSystem::Get().GetMouse()->ProcessMessage(uMsg, wParam, lParam);
@@ -166,7 +181,7 @@ bool Window::Initialize(const Desc& desc)
 		nullptr, nullptr, desc.hInstance, nullptr);
 
 	assert(this->m_hWnd && "Window wasn't successfully created.");
-	
+
 	UpdateWindow(this->m_hWnd);
 
 	if (fullscreen == 0)
@@ -225,7 +240,7 @@ void Window::SetWindowTitle(const LPCWSTR& title)
 
 void Window::SetWindowTextBar(const std::string& text)
 {
-	SetWindowTextA(this->m_hWnd,text.c_str());
+	SetWindowTextA(this->m_hWnd, text.c_str());
 }
 
 void Window::SetFullScreen(bool fullscreen)

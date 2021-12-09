@@ -25,7 +25,7 @@ public:
 	void RemoveDefenseEntity(Entity entity);
 	Node* AddNode(Vector2I id);
 	void CreateNodes(GridSystem* grid);
-	void AStarSearch(Entity npcEntity);
+	void AStarSearch(Entity npcEntity, Blackboard* blackboard);
 	bool PlayerAStar(sm::Vector3 playerPos);
 	bool ReachedNode(const Entity npcEntity);
 	Node* FindClosestNode(sm::Vector3 position);
