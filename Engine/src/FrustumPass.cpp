@@ -25,8 +25,9 @@ void FrustumPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 
 void FrustumPass::Render(Scene* pScene)
 {
+	PROFILE_FUNCTION();
+
 	GetDeviceContext()->Dispatch(PM->m_dispatchParams.numThreads.x, PM->m_dispatchParams.numThreads.y, 1);
-	LOG_WARNING("FrustumPass executed.")
 }
 
 void FrustumPass::PostRender(ID3D11DeviceContext* pDeviceContext)

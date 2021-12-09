@@ -25,7 +25,13 @@ void DepthPass::Render(Scene* pScene)
 {
     PROFILE_FUNCTION();
 
-    pScene->Render();
+	PM->SetCullBack(true);
+
+	// opaque.
+
+    PM->SetCullBack(false);
+
+    // transparent.
 }
 
 void DepthPass::PostRender(ID3D11DeviceContext* pDeviceContext)
@@ -33,4 +39,6 @@ void DepthPass::PostRender(ID3D11DeviceContext* pDeviceContext)
     // Cleanup.
     //ID3D11DepthStencilView* nullDSV = { nullptr };
     //DC->OMSetRenderTargets(0, nullptr, nullDSV);
+
+	PM->SetCullBack(true);
 }

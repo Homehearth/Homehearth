@@ -12,17 +12,16 @@ void Renderer::Initialize(Window* pWindow)
 	m_pipelineManager.Initialize(pWindow);
     m_d3d11 = &D3D11Core::Get();
 
-    //AddPass(&m_depthPass);
+    AddPass(&m_depthPass);
     AddPass(&m_frustumPass);
     AddPass(&m_cullingPass);
     AddPass(&m_textureEffectPass);
 	AddPass(&m_waterEffectPass);
-    
-	//AddPass(&m_depthPass);  
+
 	AddPass(&m_shadowPass);
 	m_shadowPass.StartUp();
 
-	AddPass(&m_decalPass); // måste vara före basepass
+	AddPass(&m_decalPass); // måste vara före basepasset
 	m_decalPass.Create();
 
 	AddPass(&m_basePass);   
