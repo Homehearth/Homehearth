@@ -399,9 +399,10 @@ void CombatSystem::DoDamage(HeadlessScene& scene, Entity attacker, Entity attack
 
 	bool isStaticTarget = target.HasComponent<comp::Tag<STATIC>>();
 	bool isHouseTarget = target.HasComponent<comp::House>();
+	bool isDefenseTarget = target.HasComponent<comp::Tag<DEFENCE>>();
 	bool isPlayerAttacker = attacker.HasComponent<comp::Player>();
 	// hit map bounds
-	if (isStaticTarget && !isHouseTarget)
+	if (isStaticTarget && !isHouseTarget && !isDefenseTarget)
 	{
 		return;
 	}
@@ -415,7 +416,7 @@ void CombatSystem::DoDamage(HeadlessScene& scene, Entity attacker, Entity attack
 		doKnockback = false;
 		playTargetHitSound = false;
 	}
-	else if (isStaticTarget) // hit a collider
+	else if (isStaticTarget && !isDefenseTarget) // hit a collider
 	{
 		doDamage = false;
 		doKnockback = false;
