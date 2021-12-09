@@ -505,50 +505,79 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 						else if (p.shopItem == ShopItem::Defence1x3)
 							cost = 30;
 
-						if (simulation->GetCurrency().GetAmount() >= cost)
-						{
-							if (simulation->GetGrid().PlaceDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, blackboard->GetPathFindManager(), dynamicQT))
+							if (simulation->GetCurrency().GetAmount() >= cost)
 							{
-								audio_t audio =
+								if (simulation->GetGrid().PlaceDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, blackboard->GetPathFindManager(), dynamicQT, blackboard))
 								{
-									ESoundEvent::Game_OnDefencePlaced,
-									e.GetComponent<comp::Transform>()->position,
-									1.0f,
-									250.f,
-									true,
-									false,
-									true,
-									false,
-								};
-								e.GetComponent<comp::AudioState>()->data.emplace(audio);
+									audio_t audio =
+									{
+										ESoundEvent::Game_OnDefencePlaced,
+										e.GetComponent<comp::Transform>()->position,
+										1.0f,
+										250.f,
+										true,
+										false,
+										true,
+										false,
+									};
+									e.GetComponent<comp::AudioState>()->data.emplace(audio);
 
-								simulation->GetCurrency() -= cost;
-								anim.toSend = EAnimationType::PLACE_DEFENCE;
+									simulation->GetCurrency() -= cost;
+									anim.toSend = EAnimationType::PLACE_DEFENCE;
+
+
+									//Check all house nodes to se if they have become unreachable
+									scene.ForEachComponent<comp::House, comp::Transform>([&](Entity entity, comp::House& house, comp::Transform& transform)
+									{
+											Node* homeNode = house.homeNode;
+											if(homeNode)
+											{
+												if(!blackboard->GetPathFindManager()->PlayerAStar(house.homeNode->position))
+												{
+													house.homeNode->reachable = false;
+												}
+											}
+									});
+
+								}
 							}
 						}
+						break;
 					}
-					break;
-				}
-				case ShopItem::Destroy_Tool:
-				{
-					simulation->GetGrid().RemoveDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, blackboard);
-					break;
-				}
-				default:
-					break;
-				}
-			}
-			else if (p.lastInputState.rightMouse)
-			{
-				if (p.classType != comp::Player::Class::WARRIOR)
-				{
-					if (ecs::UseAbility(e, p.secondaryAbilty, &p.mousePoint))
+					case ShopItem::Destroy_Tool:
 					{
-						LOG_INFO("Used secondary");
-						anim.toSend = EAnimationType::SECONDARY_ATTACK;
+						if(simulation->GetGrid().RemoveDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, blackboard))
+						{
+							//Check all house nodes to se if they have become unreachable
+							scene.ForEachComponent<comp::House, comp::Transform>([&](Entity entity, comp::House& house, comp::Transform& transform)
+								{
+									Node* homeNode = house.homeNode;
+									if (homeNode)
+									{
+										if (blackboard->GetPathFindManager()->PlayerAStar(house.homeNode->position))
+										{
+											house.homeNode->reachable = true;
+										}
+									}
+								});
+						}
+						break;
+					}
+					default:
+						break;
 					}
 				}
-			}
+				else if (p.lastInputState.rightMouse)
+				{
+					if (p.classType != comp::Player::Class::WARRIOR)
+					{
+						if (ecs::UseAbility(e, p.secondaryAbilty, &p.mousePoint))
+						{
+							LOG_INFO("Used secondary");
+							anim.toSend = EAnimationType::SECONDARY_ATTACK;
+						}
+					}
+				}
 
 			if (p.lastInputState.key_shift)
 			{
@@ -631,7 +660,7 @@ void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money
 					audio.type = ESoundEvent::Game_OnDefenceDestroyed;
 
 					//Removing the defence and its neighbours if needed
-					grid.RemoveDefence(entity);
+					grid.RemoveDefence(entity, blackboard);
 					entity.Destroy();
 				}
 				else if (house)

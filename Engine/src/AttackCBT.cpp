@@ -36,6 +36,8 @@ BT::NodeStatus BT::AttackCBT::Tick()
 	else
 		attackAbility->targetPoint = target->GetComponent<comp::Transform>()->position;
 
+	attackAbility->targetPoint.y = 0.0f;
+
 	//Use the ability stored in attackAbility
 	if (ecs::UseAbility(attackAbility))
 	{
@@ -43,6 +45,8 @@ BT::NodeStatus BT::AttackCBT::Tick()
 		//Activate attack animation
 		if (animState)
 			animState->toSend = EAnimationType::PRIMARY_ATTACK;
+
+		entity.UpdateNetwork();
 	};
 
 	return BT::NodeStatus::SUCCESS;
