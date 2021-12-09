@@ -1223,7 +1223,7 @@ namespace sceneHelp
 		rtd::Border* bloomBorder = graphicsCategory->AddElement<rtd::Border>(draw_t(canvasPos.x + padding.x, graphicsPos.y, canvasSize.x - padding.x * 2, scale.y));
 		bloomBorder->SetColor(D2D1::ColorF(53.f / 255.f, 22.f / 255.f, 26.f / 255.f));
 		bloomBorder->SetLineWidth(LineWidth::LARGE);
-		graphicsCategory->AddElement<rtd::Text>("Bloom", draw_t(canvasPos.x - padding.x, graphicsPos.y, scale.x * 2.f, scale.y));
+		graphicsCategory->AddElement<rtd::Text>("Bloom Effect", draw_t(canvasPos.x - padding.x, graphicsPos.y, scale.x * 2.f, scale.y));
 		rtd::Button* bloomOpt = graphicsCategory->AddElement<rtd::Button>("Button.png", draw_t(graphicsPos.x, graphicsPos.y, scale.x, scale.y));
 		rtd::Text* bloomText = graphicsCategory->AddElement<rtd::Text>("ON", draw_t(graphicsPos.x, graphicsPos.y, scale.x, scale.y));
 		static std::string bloomOption = OptionSystem::Get().GetOption("Bloom");
