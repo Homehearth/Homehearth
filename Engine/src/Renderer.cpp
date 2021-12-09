@@ -24,6 +24,8 @@ void Renderer::Initialize(Window* pWindow)
 	AddPass(&m_decalPass); // måste vara före basepasset
 	m_decalPass.Create();
 
+	AddPass(&m_textureEffectPass);
+	AddPass(&m_waterEffectPass);
 	AddPass(&m_basePass);   
 	AddPass(&m_animPass);	
 	AddPass(&m_skyPass);
@@ -36,6 +38,9 @@ void Renderer::Initialize(Window* pWindow)
 	m_depthPass.SetEnable(true);
     m_cullingPass.SetEnable(true);
 	m_basePass.SetEnable(true);
+	m_depthPass.SetEnable(true);
+	m_textureEffectPass.SetEnable(true);
+	m_waterEffectPass.SetEnable(true);
 	m_animPass.SetEnable(true);
 	m_decalPass.SetEnable(true);
 	m_particlePass.SetEnable(true);

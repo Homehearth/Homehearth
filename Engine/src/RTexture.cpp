@@ -10,12 +10,14 @@ RTexture::RTexture()
 {
 	m_format = ETextureChannelType::fourChannels;
 	m_useMipmaps = true;
+	m_hasTransparency = false;
 }
 
 RTexture::RTexture(ETextureChannelType format, bool useMipmaps)
 {
 	m_format = format;
 	m_useMipmaps = useMipmaps;
+	m_hasTransparency = false;
 }
 
 RTexture::~RTexture()
@@ -182,6 +184,20 @@ bool RTexture::Create(const std::string& filename)
 		}
 	}
 
+	//Check if the texture is transparent
+	if (m_format == ETextureChannelType::fourChannels)
+	{
+		//Only checks alphachannels
+		for (int i = 3; i < (width * height) && !m_hasTransparency; i+=4)
+		{
+			//Fully transparent texture
+			if (static_cast<UINT>(image[i]) == ALPHA_THRESHOLD)
+			{
+				m_hasTransparency = true;
+			}
+		}	
+	}
+
 	stbi_image_free(image);
 	return true;
 }
@@ -199,6 +215,11 @@ ID3D11Texture2D*& RTexture::GetTexture2D()
 const std::string& RTexture::GetFilename() const
 {
 	return m_filename;
+}
+
+bool RTexture::IsTransparent() const
+{
+	return m_hasTransparency;
 }
 
 bool RTexture::DisableMipmaps()

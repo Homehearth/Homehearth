@@ -42,13 +42,14 @@ cbuffer CameraCB : register(b1)
 cbuffer MatPropertiesCB : register(b2)
 {
     //If a texture is set this will be 1
-    int c_hasAlbedo;
-    int c_hasNormal;
-    int c_hasMetalness;
-    int c_hasRoughness;
-    int c_hasAoMap;
-    int c_hasDisplace;
-    int c_hasOpacity;
+    int     c_hasAlbedo;
+    int     c_hasNormal;
+    int     c_hasMetalness;
+    int     c_hasRoughness;
+    int     c_hasAoMap;
+    int     c_hasDisplace;
+    int     c_hasOpacity;
+    float   c_transparency; //1.0f is not transparent
 }
 
 cbuffer LightsInfoCB : register(b3)

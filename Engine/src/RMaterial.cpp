@@ -3,6 +3,7 @@
 
 RMaterial::RMaterial()
 {
+    m_isTransparent = false;
 }
 
 RMaterial::~RMaterial()
@@ -49,25 +50,6 @@ bool RMaterial::LoadTexture(const ETextureType& type, const std::string& filenam
     return true;
 }
 
-bool RMaterial::CreateConstBuf(const matConstants_t& mat)
-{
-    D3D11_BUFFER_DESC desc;
-    desc.ByteWidth           = sizeof(matConstants_t);
-    desc.Usage               = D3D11_USAGE_DYNAMIC;
-    desc.BindFlags           = D3D11_BIND_CONSTANT_BUFFER;
-    desc.CPUAccessFlags      = D3D11_CPU_ACCESS_WRITE;
-    desc.MiscFlags           = 0;
-    desc.StructureByteStride = 0;
-
-    D3D11_SUBRESOURCE_DATA data;
-    data.pSysMem            = &mat;
-    data.SysMemPitch        = 0;
-    data.SysMemSlicePitch   = 0;
-
-    HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&desc, &data, m_matConstCB.GetAddressOf());
-    return !FAILED(hr);
-}
-
 bool RMaterial::CreateConstBuf(const properties_t& mat)
 {
     D3D11_BUFFER_DESC desc;
@@ -92,7 +74,6 @@ void RMaterial::BindMaterial(ID3D11DeviceContext* context)
     /*
         Bind the constant buffers
     */
-    //context->PSSetConstantBuffers(CB_MAT_SLOT,         1, m_matConstCB.GetAddressOf());
     context->PSSetConstantBuffers(CB_PROPERTIES_SLOT,  1, m_hasTextureCB.GetAddressOf());
 
     /*
@@ -115,7 +96,6 @@ void RMaterial::UnBindMaterial(ID3D11DeviceContext* context)
 {
     //Unbind the constantbuffers
     ID3D11Buffer* nullBuffer = nullptr;
-    //context->PSSetConstantBuffers(CB_MAT_SLOT,         1, &nullBuffer);
     context->PSSetConstantBuffers(CB_PROPERTIES_SLOT,  1, &nullBuffer);
 
     //Unbind all the textures
@@ -148,37 +128,16 @@ const std::shared_ptr<RTexture> RMaterial::GetTexture(const ETextureType& type) 
     return texture;
 }
 
+bool RMaterial::IsTransparent() const
+{
+    return m_isTransparent;
+}
+
 bool RMaterial::Create(aiMaterial* aiMat)
 {
-    /*
-        Load in material constants
-    
-    matConstants_t matConst;
-    aiColor3D ambient = { 0.f, 0.f, 0.f };
-    if (AI_SUCCESS == aiMat->Get(AI_MATKEY_COLOR_AMBIENT, ambient))
-        matConst.ambient = { ambient.r, ambient.g, ambient.b };
-    
-    aiColor3D diffuse = { 0.f, 0.f, 0.f };
-    if (AI_SUCCESS == aiMat->Get(AI_MATKEY_COLOR_DIFFUSE,  diffuse))
-        matConst.diffuse = { diffuse.r, diffuse.g, diffuse.b };
-    
-    aiColor3D specular = { 0.f, 0.f, 0.f };
-    if (AI_SUCCESS == aiMat->Get(AI_MATKEY_COLOR_SPECULAR, specular))
-        matConst.specular = { specular.r, specular.g, specular.b };
-
-    float shiniess = 0.0f;
-    if (AI_SUCCESS == aiMat->Get(AI_MATKEY_SHININESS, shiniess))
-        matConst.shiniess = shiniess;
-    
-    
-    if (!CreateConstBuf(matConst))
-    {
-#ifdef _DEBUG
-        LOG_WARNING("Failed to create constantbuffer for material constants");
-#endif 
-        return false;
-    }
-    */
+    float transparency = 1.0f;
+    if (AI_SUCCESS == aiMat->Get(AI_MATKEY_OPACITY, transparency))
+        m_properties.transparency = transparency;
 
     /*
         Load in textures
@@ -233,6 +192,17 @@ bool RMaterial::Create(aiMaterial* aiMat)
         return false;
     }
 
+    /*
+        Check if the material should be counted as transparent
+    */
+    if (m_textures[(uint8_t)ETextureType::albedo])
+    {
+        if (m_textures[(uint8_t)ETextureType::albedo]->IsTransparent())
+            m_isTransparent = true;
+    }
+    else if (m_properties.transparency < 1.0f)
+        m_isTransparent = true;
+
     return true;
 }
 
@@ -253,40 +223,18 @@ bool RMaterial::CreateFromMTL(std::string& text)
     /*
         Finally loading in the data
     */
-    matConstants_t matConst;
     for (size_t i = 0; i < allLines.size(); i++)
     {
         std::stringstream ss(allLines[i]);
         std::string prefix;
         ss >> prefix;
 
-        /*
-        //Ambient
-        if (prefix == "Ka")
-        {
-            ss >> matConst.ambient.x >> matConst.ambient.y >> matConst.ambient.z;
-        }
-        //Diffuse
-        else if (prefix == "Kd")
-        {
-            ss >> matConst.diffuse.x >> matConst.diffuse.y >> matConst.diffuse.z;
-        }
-        //Specular
-        else if (prefix == "Ks")
-        {
-            ss >> matConst.specular.x >> matConst.specular.y >> matConst.specular.z;
-        }
-        //Shiniess
-        else if (prefix == "Ns")
-        {
-            ss >> matConst.shiniess;
-        }
         //Transparency/ opacity
-        else if (prefix == "Tr")
+        if (prefix == "d")
         {
-            ss >> matConst.opacity;
+            ss >> m_properties.transparency;
         }
-        */
+        
 
         //Albedo map
         if (prefix == "map_Kd")
@@ -368,14 +316,6 @@ bool RMaterial::CreateFromMTL(std::string& text)
 
     }
 
-//    if (!CreateConstBuf(matConst))
-//    {
-//#ifdef _DEBUG
-//        LOG_WARNING("Failed to create constantbuffer for material constants");
-//#endif 
-//        return false;
-//    }
-
     if (!CreateConstBuf(m_properties))
     {
 #ifdef _DEBUG
@@ -383,6 +323,14 @@ bool RMaterial::CreateFromMTL(std::string& text)
 #endif 
         return false;
     }
+
+    /*
+        Check if the material should be counted as transparent
+    */
+    if (m_textures[(uint8_t)ETextureType::albedo]->IsTransparent())
+        m_isTransparent = true;
+    else if (m_properties.transparency < 1.0f)
+        m_isTransparent = true;
     
     return true;
 }

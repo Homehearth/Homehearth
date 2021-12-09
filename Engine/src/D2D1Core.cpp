@@ -381,7 +381,7 @@ HRESULT D2D1Core::LoadBitMap(const LPCWSTR& filePath, ID2D1Bitmap** bitMap)
 			bitMap
 		);
 
-		LOG_INFO("Creating bitmap success!");
+		//LOG_INFO("Creating bitmap success!");
 
 		// Release
 		if (convert)
