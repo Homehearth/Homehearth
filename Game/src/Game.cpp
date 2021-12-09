@@ -1262,7 +1262,8 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 				msg >> hp;
 				if (!skip)
 				{
-					if (GetCurrentScene() == &GetScene("Game"))
+					Scene& scene = GetScene("Game");
+					if (GetCurrentScene() == &scene)
 					{
 						GameSystems::UpdateHealthbar(this);
 
@@ -1271,7 +1272,6 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 							if (!hp.isAlive)
 							{
 								m_isSpectating = true;
-								Scene& scene = GetScene("Game");
 								scene.GetCollection("SpectateUI")->elements[0]->SetVisiblity(true);
 								scene.GetCollection("SpectateUI")->elements[1]->SetVisiblity(true);
 							}
@@ -1279,7 +1279,6 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 							{
 								if (m_isSpectating)
 								{
-									Scene& scene = GetScene("Game");
 									scene.GetCollection("SpectateUI")->elements[0]->SetVisiblity(false);
 									scene.GetCollection("SpectateUI")->elements[1]->SetVisiblity(false);
 									m_isSpectating = false;
