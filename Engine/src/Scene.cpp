@@ -246,11 +246,11 @@ void Scene::RenderParticles(void* voidPass)
 		{
 			//Constant buffer
 			pass->m_particleUpdate.emitterPosition = sm::Vector4(emitter.transformCopy.position.x + emitter.positionOffset.x, emitter.transformCopy.position.y + emitter.positionOffset.y, emitter.transformCopy.position.z + emitter.positionOffset.z, 1.f);
-			pass->m_particleUpdate.deltaTime = Stats::Get().GetFrameTime();
 			pass->m_particleUpdate.counter = pass->m_counter;
 			pass->m_particleUpdate.lifeTime = emitter.lifeTime;
 			pass->m_particleUpdate.particleSizeMulitplier = emitter.sizeMulitplier;
 			pass->m_particleUpdate.speed = emitter.speed;
+			pass->m_particleUpdate.deltaTime = Stats::Get().GetFrameTime();
 
 			pass->m_particleModeUpdate.type = emitter.type;
 
@@ -259,7 +259,6 @@ void Scene::RenderParticles(void* voidPass)
 
 			pass->m_constantBufferParticleMode.SetData(D3D11Core::Get().DeviceContext(), pass->m_particleModeUpdate);
 			ID3D11Buffer* cbP = { pass->m_constantBufferParticleMode.GetBuffer() };
-
 
 			//Binding emitter speceific data
 			D3D11Core::Get().DeviceContext()->CSSetConstantBuffers(8, 1, &cb);
@@ -281,7 +280,6 @@ void Scene::RenderParticles(void* voidPass)
 			}
 		}
 	}
-
 }
 
 Skybox* Scene::GetSkybox()

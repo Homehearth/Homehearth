@@ -238,6 +238,15 @@ namespace sceneHelp
 						bullColl->Hide();
 
 						SoundHandler::Get().SetCurrentMusic("NightTheme");
+						Collection2D* waveColl = game->GetCurrentScene()->GetCollection("ZWaveCounter");
+						if (waveColl)
+						{
+							rtd::Text* waveText = dynamic_cast<rtd::Text*>(waveColl->elements[1].get());
+							if (waveText)
+							{
+								waveText->SetText(std::to_string(++game->GetWaveCounter()));
+							}
+						}
 
 						scene.ForEachComponent<comp::Light>([](comp::Light& l)
 							{
@@ -265,7 +274,6 @@ namespace sceneHelp
 									l.lightData.enabled = 0;
 								}
 							});
-
 						break;
 					}
 					case CyclePeriod::EVENING:
@@ -290,37 +298,43 @@ namespace sceneHelp
 
 				ShopItem shopitem = game->GetShopItem();
 
-				if (shopitem == ShopItem::Destroy_Tool)
+				if (bullColl)
 				{
-					bullColl->Show();
-					bullIcon->SetPosition((FLOAT)InputSystem::Get().GetMousePos().x, (FLOAT)InputSystem::Get().GetMousePos().y);
-				}
+					rtd::Picture* bullIcon = dynamic_cast<rtd::Picture*>(bullColl->elements[0].get());
+					ShopItem shopitem = game->GetShopItem();
 
-				ElementState shopMenuState = game->GetScene("Game").GetCollection("shopMenu")->GetState();
-				Collection2D* menu = game->GetScene("Game").GetCollection("inGameMenu");
-				ElementState shopIconState = game->GetScene("Game").GetCollection("shopIcon")->GetState();
-
-				if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Keys::Escape, KeyState::PRESSED))
-				{
-					if (shopMenuState == ElementState::NONE && menu->GetState() == ElementState::NONE)
+					if (shopitem == ShopItem::Destroy_Tool)
 					{
-						menu->Show();
+						bullColl->Show();
+						bullIcon->SetPosition((FLOAT)InputSystem::Get().GetMousePos().x, (FLOAT)InputSystem::Get().GetMousePos().y);
 					}
-					else
-					{
-						menu->Hide();
-					}
-				}
 
-				if (shopMenuState == ElementState::OUTSIDE && shopIconState == ElementState::OUTSIDE)
-				{
-					if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Keys::Escape, KeyState::PRESSED) ||
-						InputSystem::Get().CheckMouseKey(MouseKey::RIGHT, KeyState::PRESSED) ||
-						(InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED) && game->GetShopItem() == ShopItem::None))
+					ElementState shopMenuState = game->GetScene("Game").GetCollection("shopMenu")->GetState();
+					Collection2D* menu = game->GetScene("Game").GetCollection("inGameMenu");
+					ElementState shopIconState = game->GetScene("Game").GetCollection("shopIcon")->GetState();
+
+					if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Keys::Escape, KeyState::PRESSED))
 					{
-						game->GetScene("Game").GetCollection("shopMenu")->Hide();
-						game->SetShopItem(ShopItem::None);
-						bullColl->Hide();
+						if (shopMenuState == ElementState::NONE && menu->GetState() == ElementState::NONE)
+						{
+							menu->Show();
+						}
+						else
+						{
+							menu->Hide();
+						}
+					}
+
+					if (shopMenuState == ElementState::OUTSIDE && shopIconState == ElementState::OUTSIDE)
+					{
+						if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Keys::Escape, KeyState::PRESSED) ||
+							InputSystem::Get().CheckMouseKey(MouseKey::RIGHT, KeyState::PRESSED) ||
+							(InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED) && game->GetShopItem() == ShopItem::None))
+						{
+							game->GetScene("Game").GetCollection("shopMenu")->Hide();
+							game->SetShopItem(ShopItem::None);
+							bullColl->Hide();
+						}
 					}
 				}
 
@@ -428,11 +442,7 @@ namespace sceneHelp
 		rtd::Text* deadServerText = connectFields->AddElement<rtd::Text>("Error connecting to server", draw_text_t((width / 8.0f), (height / 8.0f) * 5.0f, width / 4.0f, height / 8.0f));
 		deadServerText->SetVisiblity(false);
 
-#ifdef _DEBUG
 		ipField->SetPresetText("127.0.0.1");
-#else
-		ipField->SetPresetText("homehearth.ddns.net");
-#endif
 		portField->SetPresetText("4950");
 
 
@@ -483,10 +493,7 @@ namespace sceneHelp
 
 	void SetupInGameScreen(Game* game)
 	{
-		//// Temp textures
 		Scene& scene = game->GetScene("Game");
-		const std::string& texture1 = "like.png";
-		const std::string& texture2 = "swordUI.png";
 		float width = (float)game->GetWindow()->GetWidth();
 		float height = (float)game->GetWindow()->GetHeight();
 
@@ -514,20 +521,38 @@ namespace sceneHelp
 			{
 				playerHp->Hide();
 			}
-			scene.Add2DCollection(playerHp, "player" + std::to_string(i + 1) + "Info");
+			scene.Add2DCollection(playerHp, "Aplayer" + std::to_string(i + 1) + "Info");
 		}
 
 		for (int i = 0; i < MAX_PLAYERS_PER_LOBBY; i++)
 		{
 			Collection2D* nameCollection = new Collection2D;
 			nameCollection->AddElement<rtd::Text>("Player", draw_text_t(0, 0, widthScale / 14, height / 6));
-			scene.Add2DCollection(nameCollection, "dynamicPlayer" + std::to_string(i + 1) + "namePlate");
+			scene.Add2DCollection(nameCollection, "AdynamicPlayer" + std::to_string(i + 1) + "namePlate");
 			nameCollection->Hide();
 		}
 
+		sm::Vector2 moneyScale = { widthScale / 8.0f, height / 11.0f };
+		sm::Vector2 moneyPos = { width - (moneyScale.x + padding.x), padding.y };
 		Collection2D* money = new Collection2D;
-		rtd::MoneyUI* mMoney = money->AddElement<rtd::MoneyUI>(draw_text_t(width - (widthScale / 8.0f + padding.x), padding.y, widthScale / 8.0f, height / 11.0f));
-		scene.Add2DCollection(money, "MoneyUI");
+		rtd::MoneyUI* mMoney = money->AddElement<rtd::MoneyUI>(draw_text_t(moneyPos.x, moneyPos.y, moneyScale.x, moneyScale.y));
+		scene.Add2DCollection(money, "ZMoneyUI");
+
+		Collection2D* waveAmount = new Collection2D;
+		waveAmount->AddElement<rtd::Picture>("Wave.png", draw_t(moneyPos.x - (moneyScale.x) * 0.50f - padding.x, padding.y, widthScale / 16.0f, height / 22.0f));
+		waveAmount->AddElement<rtd::Text>("0", draw_t(moneyPos.x - (moneyScale.x) * 0.50f - padding.x, padding.y, widthScale / 16.0f, height / 22.0f));
+		scene.Add2DCollection(waveAmount, "ZWaveCounter");
+
+		Collection2D* killAmount = new Collection2D;
+		killAmount->AddElement<rtd::Picture>("Kills.png", draw_t(moneyPos.x - (moneyScale.x) * 1.50f - padding.x * 3.0f, padding.y, widthScale / 16.0f, height / 22.0f));
+		killAmount->AddElement<rtd::Text>("0", draw_t(moneyPos.x - (moneyScale.x) * 1.50f - padding.x * 3.0f, padding.y, widthScale / 16.0f, height / 22.0f));
+		scene.Add2DCollection(killAmount, "ZKillCounter");
+
+		Collection2D* deathAmount = new Collection2D;
+		deathAmount->AddElement<rtd::Picture>("Deaths.png", draw_t(moneyPos.x - (moneyScale.x) * 1.00f - padding.x * 2.0f, padding.y, widthScale / 16.0f, height / 22.0f));
+		deathAmount->AddElement<rtd::Text>("0", draw_t(moneyPos.x - (moneyScale.x) * 1.00f - padding.x * 2.0f, padding.y, widthScale / 16.0f, height / 22.0f));
+		scene.Add2DCollection(deathAmount, "ZDeathCounter");
+
 
 
 		Collection2D* abilities = new Collection2D;
@@ -540,18 +565,24 @@ namespace sceneHelp
 		rtd::AbilityUI* primary = abilities->AddElement<rtd::AbilityUI>(draw_t(abillityPos.x - (abillitySize.x * 2 + padding.x), abillityPos.y, abillitySize.x, abillitySize.y), D2D1::ColorF(0, 1.0f), "Attack2.png");
 		primary->SetActivateButton("LMB");
 		primary->SetReference(&game->m_primaryCooldown);
+		primary->SetMaxReference(&game->m_primaryMaxCooldown);
+
 		rtd::AbilityUI* secondary = abilities->AddElement<rtd::AbilityUI>(draw_t(abillityPos.x - (abillitySize.x + padding.x / 2), abillityPos.y, abillitySize.x, abillitySize.y), D2D1::ColorF(0, 1.0f), "Block.png");
 		secondary->SetActivateButton("RMB");
 		secondary->SetReference(&game->m_secondaryCooldown);
+		secondary->SetMaxReference(&game->m_secondaryMaxCooldown);
+
 		rtd::AbilityUI* third = abilities->AddElement<rtd::AbilityUI>(draw_t(abillityPos.x, abillityPos.y, abillitySize.x, abillitySize.y), D2D1::ColorF(0, 1.0f), "Dodge.png");
 		third->SetActivateButton("Shift");
 		third->SetReference(&game->m_dodgeCooldown);
+		third->SetMaxReference(&game->m_dodgeMaxCooldown);
+
 		rtd::AbilityUI* fourth = abilities->AddElement<rtd::AbilityUI>(draw_t(abillityPos.x + (abillitySize.x + padding.x / 2), abillityPos.y, abillitySize.x, abillitySize.y), D2D1::ColorF(0, 1.0f), "LockedIcon.png");
 		rtd::AbilityUI* fith = abilities->AddElement<rtd::AbilityUI>(draw_t(abillityPos.x + (abillitySize.x * 2 + padding.x), abillityPos.y, abillitySize.x, abillitySize.y), D2D1::ColorF(0, 1.0f), "LockedIcon.png");
-		scene.Add2DCollection(abilities, "AbilityUI");
+		scene.Add2DCollection(abilities, "ZAbilityUI");
 		Collection2D* spectatingCollection = new Collection2D;
-		rtd::Text* deadText = spectatingCollection->AddElement<rtd::Text>("You are dead!", draw_t((width / 2)  - widthScale, (height / 2) + (height / 4), (widthScale / 10.f), (height / 8.f)));
-		rtd::Text* spectateText = spectatingCollection->AddElement<rtd::Text>("LMB to spectate another player", draw_t((width / 2) - widthScale, (height / 2) + (height / 4), (widthScale / 3.f), (height / 8.f)));
+		rtd::Text* deadText = spectatingCollection->AddElement<rtd::Text>("You are dead!", draw_t((width / 2) - (widthScale / 17.f) , (height / 2) + (height / 8.5f), (widthScale / 10.f), (height / 8.f)));
+		rtd::Text* spectateText = spectatingCollection->AddElement<rtd::Text>("LMB to spectate another player", draw_t((width / 2) - (widthScale / 6.f), (height / 4.f) + (height / 2.5f), (widthScale / 3.f), (height / 8.f)));
 		scene.Add2DCollection(spectatingCollection, "SpectateUI");
 
 		deadText->SetVisiblity(false);
@@ -848,6 +879,7 @@ namespace sceneHelp
 		exitButton->SetOnPressedEvent([=]()
 			{
 				game->SetScene("MainMenu");
+				OptionSystem::Get().OnShutdown();
 			});
 		scene.Add2DCollection(general, "AMenuBG");
 		/*---------General---------*/
@@ -1022,7 +1054,8 @@ namespace sceneHelp
 		sm::Vector2 minPos = { canvasPos.x + padding.x + canvasSize.x / 2.f, posAudio.y };
 		sm::Vector2 maxPos = { width - (scale.x + padding.x * 2.f), posAudio.y };
 		rtd::Canvas* masterVolCanvas = audioCategory->AddElement<rtd::Canvas>(D2D1::ColorF(53.f / 255.f, 22.f / 255.f, 26.f / 255.f), draw_t(minPos.x - 6.f, posAudio.y, ((canvasSize.x / 2.f) + 6.f) - padding.x * 2.f, scale.y));
-		rtd::Slider* masterVolumeSL = audioCategory->AddElement<rtd::Slider>(D2D1::ColorF(0, 0, 0), draw_t(minPos.x, posAudio.y, scale.x, scale.y), &game->m_masterVolume, 1.0f, 0.0f);
+		masterVolCanvas->SetShape(Shapes::RECTANGLE_ROUNDED);
+		rtd::Slider* masterVolumeSL = audioCategory->AddElement<rtd::Slider>(D2D1::ColorF(0,0,0), draw_t(minPos.x, posAudio.y, scale.x, scale.y), &SoundHandler::Get().AdjustMasterVolume(), 1.0f, 0.0f);
 		masterVolumeSL->SetMinPos(minPos);
 		masterVolumeSL->SetMaxPos(maxPos);
 		rtd::Text* valueText = masterVolumeSL->GetValueText();
@@ -1194,6 +1227,50 @@ namespace sceneHelp
 				});
 		}
 
+		//Bloom
+		graphicsPos.y += scale.y + padding.y;
+		rtd::Border* bloomBorder = graphicsCategory->AddElement<rtd::Border>(draw_t(canvasPos.x + padding.x, graphicsPos.y, canvasSize.x - padding.x * 2, scale.y));
+		bloomBorder->SetColor(D2D1::ColorF(53.f / 255.f, 22.f / 255.f, 26.f / 255.f));
+		bloomBorder->SetLineWidth(LineWidth::LARGE);
+		graphicsCategory->AddElement<rtd::Text>("Bloom Effect", draw_t(canvasPos.x - padding.x, graphicsPos.y, scale.x * 2.f, scale.y));
+		rtd::Button* bloomOpt = graphicsCategory->AddElement<rtd::Button>("Button.png", draw_t(graphicsPos.x, graphicsPos.y, scale.x, scale.y));
+		rtd::Text* bloomText = graphicsCategory->AddElement<rtd::Text>("ON", draw_t(graphicsPos.x, graphicsPos.y, scale.x, scale.y));
+		static std::string bloomOption = OptionSystem::Get().GetOption("Bloom");
+		if (bloomOption == "0")
+			bloomOption = "ON";
+		
+		if (bloomOption == "ON")
+		{
+			bloomText->SetText("ON");
+			thread::RenderThreadHandler::Get().GetRenderer()->GetBloomPass()->SetEnable(true);
+		}
+		else // OFF
+		{
+			bloomText->SetText("OFF");
+			thread::RenderThreadHandler::Get().GetRenderer()->GetBloomPass()->SetEnable(false);
+		}
+		OptionSystem::Get().SetOption("Bloom", bloomOption);
+
+		bloomOpt->SetOnPressedEvent([=] {
+
+			if (bloomOption == "ON")
+			{
+				bloomText->SetText("OFF");
+				bloomOption = "OFF";
+				thread::RenderThreadHandler::Get().GetRenderer()->GetBloomPass()->SetEnable(false);
+			}
+			else if (bloomOption == "OFF")
+			{
+				
+				bloomText->SetText("ON");
+				bloomOption = "ON";
+				thread::RenderThreadHandler::Get().GetRenderer()->GetBloomPass()->SetEnable(true);
+			}
+
+			OptionSystem::Get().SetOption("Bloom", bloomOption);
+
+			});
+		
 		//Shadows
 		graphicsPos.y += scale.y + padding.y;
 		rtd::Border* shadowsBorder = graphicsCategory->AddElement<rtd::Border>(draw_t(canvasPos.x + padding.x, graphicsPos.y, canvasSize.x - padding.x * 2, scale.y));

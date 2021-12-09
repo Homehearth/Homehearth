@@ -210,22 +210,36 @@ void D2D1Core::DrawF(const draw_t& fig, const draw_shape_t& shape, const LineWid
 	// Determine which shape to render.
 	switch (shape.shape)
 	{
+
+	// Draws a filled rectangle.
 	case Shapes::RECTANGLE_FILLED:
 	{
 		D2D1_RECT_F rectangle_filled = D2D1::RectF(fig.x_pos, fig.y_pos, fig.x_pos + fig.width, fig.y_pos + fig.height);
 		INSTANCE->m_renderTarget->FillRectangle(&rectangle_filled, INSTANCE->m_solidBrush.Get());
 		break;
 	}
+
+	// Draws a border.
 	case Shapes::RECTANGLE_OUTLINED:
 	{
 		D2D1_RECT_F rectangle_outlined = D2D1::RectF(fig.x_pos, fig.y_pos, fig.x_pos + fig.width, fig.y_pos + fig.height);
 		INSTANCE->m_renderTarget->DrawRectangle(&rectangle_outlined, INSTANCE->m_solidBrush.Get(), static_cast<int>(thickness) * 2.0f);
 		break;
 	}
+
+	// Draws a border with rounded edges.
 	case Shapes::RECTANGLE_ROUNDED_OUTLINED:
 	{
 		D2D1_ROUNDED_RECT rectangle_outlined = D2D1::RoundedRect(D2D1::RectF(fig.x_pos, fig.y_pos, fig.x_pos + fig.width, fig.y_pos + fig.height), 15.f, 15.f);
 		INSTANCE->m_renderTarget->DrawRoundedRectangle(&rectangle_outlined, INSTANCE->m_solidBrush.Get(), static_cast<int>(thickness) * 2.0f);
+		break;
+	}
+
+	// Draws a rounded filled rectangle.
+	case Shapes::RECTANGLE_ROUNDED:
+	{
+		D2D1_ROUNDED_RECT rectangle_outlined = D2D1::RoundedRect(D2D1::RectF(fig.x_pos, fig.y_pos, fig.x_pos + fig.width, fig.y_pos + fig.height), 15.f, 15.f);
+		INSTANCE->m_renderTarget->FillRoundedRectangle(&rectangle_outlined, INSTANCE->m_solidBrush.Get());
 		break;
 	}
 	case Shapes::TRIANGLE_FILLED:

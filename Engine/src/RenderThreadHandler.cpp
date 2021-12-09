@@ -22,6 +22,7 @@ void RenderObjects(DoubleBuffer<std::vector<comp::Renderable>>* objects, dx::Con
 thread::RenderThreadHandler::RenderThreadHandler()
 {
 	m_workerThreads = nullptr;
+	m_shadows = nullptr;
 	m_amount = 0;
 	m_camera = nullptr;
 	m_renderer = nullptr;
@@ -64,15 +65,15 @@ void thread::RenderThreadHandler::Finish()
 	{
 		if (!INSTANCE.m_isPooled)
 		{
-			for (int i = 0; i < (int)INSTANCE.m_amount; i++)
+			for (int i = 0; i < (int)INSTANCE.m_activeThreads; i++)
 			{
 				INSTANCE.m_workerThreads[i].join();
 			}
 		}
 		else
 		{
-			// Block until all threads have gotten their jobs.
-			while ((int)INSTANCE.m_commands.size() != INSTANCE.m_amount) {
+			// Block until all threads have returned their results.
+			while ((int)INSTANCE.m_commands.size() != INSTANCE.m_activeThreads) {
 			};
 		}
 	}
@@ -127,13 +128,16 @@ const render_instructions_t thread::RenderThreadHandler::Launch(const int& amoun
 {
 	render_instructions_t inst;
 	const unsigned int objects_per_thread = (unsigned int)std::floor((float)amount_of_objects / (float)(INSTANCE.m_amount + 1));
-	int main_start = 0;
-	if (objects_per_thread >= thread::BASE_THRESHOLD && amount_of_objects >= (int)(INSTANCE.m_amount + 1))
-	{
+	
+	if (((objects_per_thread >= thread::BASE_THRESHOLD) & (amount_of_objects >= (int)(INSTANCE.m_amount + 1))) == 1)
+	{		
+		INSTANCE.m_activeThreads = std::floor((float)amount_of_objects / (float)objects_per_thread) - 1;
+		//LOG_INFO("%d", INSTANCE.m_activeThreads)
+		int main_start = 0;
 		// Launch Threads
 		if (INSTANCE.m_isPooled)
 		{
-			for (unsigned int i = 0; i < INSTANCE.m_amount; i++)
+			for (unsigned int i = 0; i < (INSTANCE.m_activeThreads); i++)
 			{
 				const int start = i * objects_per_thread;
 				const int stop = start + objects_per_thread;
@@ -166,10 +170,12 @@ const render_instructions_t thread::RenderThreadHandler::DoShadows(const int& am
 	int main_start = 0;
 	if (objects_per_thread >= thread::SHADOW_THRESHOLD && amount_of_objects >= (int)(INSTANCE.m_amount + 1))
 	{
+		INSTANCE.m_activeThreads = std::floor((float)amount_of_objects / (float)objects_per_thread) - 1;
+		//LOG_INFO("%d", INSTANCE.m_activeThreads)
 		// Launch Threads
 		if (INSTANCE.m_isPooled)
 		{
-			for (unsigned int i = 0; i < INSTANCE.m_amount; i++)
+			for (unsigned int i = 0; i < INSTANCE.m_activeThreads; i++)
 			{
 				const int start = i * objects_per_thread;
 				const int stop = start + objects_per_thread;

@@ -522,7 +522,7 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 
 							if (simulation->GetCurrency().GetAmount() >= cost)
 							{
-								if (simulation->GetGrid().PlaceDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, blackboard->GetPathFindManager(), dynamicQT))
+								if (simulation->GetGrid().PlaceDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, blackboard->GetPathFindManager(), dynamicQT, blackboard))
 								{
 									audio_t audio =
 									{
@@ -539,6 +539,21 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 
 									simulation->GetCurrency() -= cost;
 									anim.toSend = EAnimationType::PLACE_DEFENCE;
+
+
+									//Check all house nodes to se if they have become unreachable
+									scene.ForEachComponent<comp::House, comp::Transform>([&](Entity entity, comp::House& house, comp::Transform& transform)
+									{
+											Node* homeNode = house.homeNode;
+											if(homeNode)
+											{
+												if(!blackboard->GetPathFindManager()->PlayerAStar(house.homeNode->position))
+												{
+													house.homeNode->reachable = false;
+												}
+											}
+									});
+
 								}
 							}
 						}
@@ -546,7 +561,21 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 					}
 					case ShopItem::Destroy_Tool:
 					{
-						simulation->GetGrid().RemoveDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, blackboard);
+						if(simulation->GetGrid().RemoveDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, blackboard))
+						{
+							//Check all house nodes to se if they have become unreachable
+							scene.ForEachComponent<comp::House, comp::Transform>([&](Entity entity, comp::House& house, comp::Transform& transform)
+								{
+									Node* homeNode = house.homeNode;
+									if (homeNode)
+									{
+										if (blackboard->GetPathFindManager()->PlayerAStar(house.homeNode->position))
+										{
+											house.homeNode->reachable = true;
+										}
+									}
+								});
+						}
 						break;
 					}
 					default:
@@ -625,6 +654,12 @@ void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money
 					false,
 				};
 
+				comp::KillDeaths* kd = entity.GetComponent<comp::KillDeaths>();
+				if (kd)
+				{
+					kd->deaths++;
+				}
+
 				if (p)
 				{
 					audio.type = ESoundEvent::Player_OnDeath;
@@ -643,7 +678,7 @@ void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money
 					audio.type = ESoundEvent::Game_OnDefenceDestroyed;
 
 					//Removing the defence and its neighbours if needed
-					grid.RemoveDefence(entity);
+					grid.RemoveDefence(entity, blackboard);
 					entity.Destroy();
 				}
 				else if (house)
@@ -654,7 +689,7 @@ void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money
 					qt->Insert(newHouse);
 
 					sm::Vector3 emitterOffset = newHouse.GetComponent<comp::OrientedBoxCollider>()->Center;
-					newHouse.AddComponent<comp::PARTICLEEMITTER>(emitterOffset, 100, 2.5f, PARTICLEMODE::SMOKEAREA, 4.0f, 1.f, false);
+					newHouse.AddComponent<comp::ParticleEmitter>(emitterOffset, 100, 2.5f, ParticleMode::SMOKEAREA, 4.0f, 1.f, false);
 
 
 					//Remove house from blackboard
@@ -918,7 +953,7 @@ void ServerSystems::CombatSystem(HeadlessScene& scene, float dt, Blackboard* bla
 }
 void ServerSystems::DeathParticleTimer(HeadlessScene& scene)
 {
-	scene.ForEachComponent<comp::PARTICLEEMITTER>([&](Entity& e, comp::PARTICLEEMITTER& emitter)
+	scene.ForEachComponent<comp::ParticleEmitter>([&](Entity& e, comp::ParticleEmitter& emitter)
 		{
 			if (emitter.hasDeathTimer == true && emitter.lifeLived <= emitter.lifeTime)
 			{
@@ -926,7 +961,7 @@ void ServerSystems::DeathParticleTimer(HeadlessScene& scene)
 			}
 			else if (emitter.hasDeathTimer == true && emitter.lifeLived >= emitter.lifeTime)
 			{
-				e.RemoveComponent<comp::PARTICLEEMITTER>();
+				e.RemoveComponent<comp::ParticleEmitter>();
 			}
 		});
 }

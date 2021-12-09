@@ -18,8 +18,6 @@ void rtd::TextField::Update()
 		{
 			switch (*currentKey)
 			{
-			case VK_MENU:
-				break;
 			case VK_BACK:
 				if (InputSystem::Get().IsInCTRLMode())
 				{
@@ -39,8 +37,6 @@ void rtd::TextField::Update()
 				{
 					m_stringText.push_back(static_cast<char>(0x2E));
 				}
-				break;
-			case VK_RETURN:
 				break;
 			case VK_OEM_6:
 				if ((InputSystem::Get().IsInShiftMode() && !InputSystem::Get().IsInCapsLock()) || (InputSystem::Get().IsInCapsLock() && !InputSystem::Get().IsInShiftMode()))
@@ -71,10 +67,6 @@ void rtd::TextField::Update()
 				{
 					m_stringText.push_back(static_cast<char>(0xE4));
 				}
-				break;
-			case VK_LWIN:
-				break;
-			case VK_RWIN:
 				break;
 			case VK_NUMPAD0:
 				m_stringText.push_back(static_cast<char>(0x30));
@@ -110,7 +102,25 @@ void rtd::TextField::Update()
 				break;
 			case VK_CONTROL:
 				break;
-			default:
+			case VK_RETURN:
+				break;
+			case VK_LWIN:
+				break;
+			case VK_RWIN:
+				break;
+			case VK_MENU:
+				break;
+			default:		
+			if (InputSystem::Get().IsInCTRLMode() && *currentKey == 0x56)
+			{
+				m_stringText = InputSystem::Get().GetClipboard();
+				if (m_stringText.length() > m_textLimit)
+				{
+					m_stringText = m_stringText.substr(0, m_textLimit);
+				}
+			}
+			else
+			{
 				if ((InputSystem::Get().IsInShiftMode() && !InputSystem::Get().IsInCapsLock()) || (InputSystem::Get().IsInCapsLock() && !InputSystem::Get().IsInShiftMode()))
 				{
 					m_stringText.push_back(static_cast<char>(*currentKey));
@@ -119,8 +129,8 @@ void rtd::TextField::Update()
 				{
 					m_stringText.push_back(static_cast<char>(std::tolower(*currentKey)));
 				}
-				break;
 			}
+			break;
 		}
 		else
 		{

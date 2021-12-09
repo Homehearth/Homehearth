@@ -6,16 +6,16 @@ ALIGN16
 struct ParticleUpdate 
 {
 	sm::Vector4 emitterPosition;;
-	float deltaTime;
 	UINT counter;
 	float lifeTime;
 	float particleSizeMulitplier;
 	float speed;
+	float deltaTime;
 };
 ALIGN16
 struct ParticleModePUpdate 
 {
-	PARTICLEMODE type;
+	ParticleMode type;
 };
 
 class ParticlePass :public IRenderPass

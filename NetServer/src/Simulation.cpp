@@ -94,7 +94,7 @@ void Simulation::InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg, c
 		}
 		case ecs::Component::PARTICLEMITTER:
 		{
-			comp::PARTICLEEMITTER* p = entity.GetComponent<comp::PARTICLEEMITTER>();
+			comp::ParticleEmitter* p = entity.GetComponent<comp::ParticleEmitter>();
 			if (p)
 			{
 				compSet.set(ecs::Component::PARTICLEMITTER);
@@ -122,6 +122,16 @@ void Simulation::InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg, c
 			}
 			break;
 		}
+		case ecs::Component::KD:
+		{
+			comp::KillDeaths* kd = entity.GetComponent<comp::KillDeaths>();
+			if (kd)
+			{
+				compSet.set(ecs::Component::KD);
+				msg << *kd;
+			}
+			break;
+		}
 		default:
 			LOG_WARNING("Trying to send unimplemented component %u", i);
 			break;
@@ -135,6 +145,7 @@ void Simulation::InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg, c
 void Simulation::ResetPlayer(Entity player)
 {
 	comp::Player* playerComp = player.GetComponent<comp::Player>();
+	comp::KillDeaths* kd = player.AddComponent<comp::KillDeaths>();
 	if (!playerComp)
 	{
 		LOG_WARNING("ResetPlayer: Entity is not a Player");
@@ -145,6 +156,8 @@ void Simulation::ResetPlayer(Entity player)
 	playerComp->runSpeed = 30.f;
 	playerComp->state = comp::Player::State::IDLE;
 	playerComp->isReady = false;
+	kd->kills = 0;
+	kd->deaths = 0;
 
 	comp::Transform* transform = player.AddComponent<comp::Transform>();
 	transform->position = playerComp->spawnPoint;
@@ -182,10 +195,10 @@ void Simulation::ResetPlayer(Entity player)
 		health->currentHealth = 125.f;
 
 		comp::MeleeAttackAbility* attackAbility = player.AddComponent<comp::MeleeAttackAbility>();
-		attackAbility->cooldown = 0.50f;
+		attackAbility->cooldown = 0.8f;
 		attackAbility->attackDamage = 20.f;
 		attackAbility->lifetime = 0.1f;
-		attackAbility->useTime = 0.2f;
+		attackAbility->useTime = 0.5f;
 		attackAbility->delay = 0.2f;
 		attackAbility->attackRange = 8.f;
 
@@ -510,7 +523,7 @@ void Simulation::SendSnapshot()
 		std::bitset<ecs::Component::COMPONENT_MAX> compMask;
 		compMask.set(ecs::Component::TRANSFORM);
 		compMask.set(ecs::Component::BOUNDING_ORIENTED_BOX);
-		compMask.set(ecs::Component::COST);
+		//compMask.set(ecs::Component::COST);
 #if DEBUG_SNAPSHOT
 		compMask.set(ecs::Component::BOUNDING_SPHERE);
 #endif
@@ -542,29 +555,29 @@ void Simulation::SendSnapshot()
 				if (melee)
 				{
 					count++;
-					msg4 << AbilityIndex::Primary << melee->cooldownTimer;
+					msg4 << AbilityIndex::Primary << melee->cooldownTimer << melee->cooldown;
 				}
 				else if (range)
 				{
 					count++;
-					msg4 << AbilityIndex::Primary << range->cooldownTimer;
+					msg4 << AbilityIndex::Primary << range->cooldownTimer << range->cooldown;
 				}
 
 				if (blink)
 				{
 					count++;
-					msg4 << AbilityIndex::Dodge << blink->cooldownTimer;
+					msg4 << AbilityIndex::Dodge << blink->cooldownTimer << blink->cooldown;
 				}
 				else if (dash)
 				{
 					count++;
-					msg4 << AbilityIndex::Dodge << dash->cooldownTimer;
+					msg4 << AbilityIndex::Dodge << dash->cooldownTimer << dash->cooldown;
 				}
 
 				if (heal)
 				{
 					count++;
-					msg4 << AbilityIndex::Secondary << heal->cooldownTimer;
+					msg4 << AbilityIndex::Secondary << heal->cooldownTimer << heal->cooldown;
 				}
 
 				msg4 << count;
@@ -744,14 +757,14 @@ void Simulation::UpgradeDefence(const uint32_t& id)
 				{
 					if (m_currency >= c->cost)
 					{
-						c->cost += 5;
 						// Add upgrades here.
 						h->maxHealth += 35;
 						h->currentHealth += 35;
 
 						// Cost is here.
 						m_currency -= c->cost;
-						e.UpdateNetwork();
+						c->cost += 5;
+						m_pGameScene->publish<EComponentUpdated>(e, ecs::Component::COST);
 					}
 				}
 			}
@@ -773,7 +786,7 @@ void Simulation::SetGameScene()
 	ResetGameScene();
 	m_pCurrentScene = m_pGameScene;
 	m_lobby.SetActive(false);
-
+	m_currency = 100000;
 #if GOD_MODE
 	// During debug give players 1000 gold/monies.
 	m_currency = 1000;
@@ -825,7 +838,7 @@ void Simulation::ResetGameScene()
 		this->Broadcast(msg);
 	}
 
-	m_currency.Zero();
+	m_currency = 50;
 
 	EnemyManagement::CreateWaves(waveQueue, currentRound);
 
@@ -834,6 +847,7 @@ void Simulation::ResetGameScene()
 
 	m_timeCycler.SetTime(MORNING);
 	m_timeCycler.SetCycleSpeed(1.0f);
+
 }
 
 void Simulation::SendEntities(const std::vector<Entity>& entities, GameMsg msgID, const std::bitset<ecs::Component::COMPONENT_MAX>& componentMask)

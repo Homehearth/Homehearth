@@ -100,7 +100,7 @@ enum class TypeLight : UINT
 	POINT
 };
 
-enum class PARTICLEMODE : UINT
+enum class ParticleMode : UINT
 {
 	BLOOD,
 	LEAF,
@@ -575,7 +575,7 @@ struct Particle_t
 	sm::Vector4		color;
 
 	sm::Vector2		size = { 1, 1, };
-	PARTICLEMODE	type = PARTICLEMODE::BLOOD;
+	ParticleMode	type = ParticleMode::BLOOD;
 	UINT			life = 0;
 };
 

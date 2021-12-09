@@ -1,9 +1,9 @@
-BloodParticle.png
+Blood.png
 smoke.png
-smoke_opacity.png
+smoke_Opacity.png
 waterSplash.png
 round_Opacity.png
 MageHeal.png
 fire.png
-fire_opacity.png
+fire_Opacity.png
 thisisfine.png
