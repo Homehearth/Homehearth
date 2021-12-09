@@ -122,6 +122,16 @@ void Simulation::InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg, c
 			}
 			break;
 		}
+		case ecs::Component::KD:
+		{
+			comp::KillDeaths* kd = entity.GetComponent<comp::KillDeaths>();
+			if (kd)
+			{
+				compSet.set(ecs::Component::KD);
+				msg << *kd;
+			}
+			break;
+		}
 		default:
 			LOG_WARNING("Trying to send unimplemented component %u", i);
 			break;
@@ -135,6 +145,7 @@ void Simulation::InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg, c
 void Simulation::ResetPlayer(Entity player)
 {
 	comp::Player* playerComp = player.GetComponent<comp::Player>();
+	comp::KillDeaths* kd = player.AddComponent<comp::KillDeaths>();
 	if (!playerComp)
 	{
 		LOG_WARNING("ResetPlayer: Entity is not a Player");
@@ -145,6 +156,8 @@ void Simulation::ResetPlayer(Entity player)
 	playerComp->runSpeed = 30.f;
 	playerComp->state = comp::Player::State::IDLE;
 	playerComp->isReady = false;
+	kd->kills = 0;
+	kd->deaths = 0;
 
 	comp::Transform* transform = player.AddComponent<comp::Transform>();
 	transform->position = playerComp->spawnPoint;
@@ -509,7 +522,7 @@ void Simulation::SendSnapshot()
 		std::bitset<ecs::Component::COMPONENT_MAX> compMask;
 		compMask.set(ecs::Component::TRANSFORM);
 		compMask.set(ecs::Component::BOUNDING_ORIENTED_BOX);
-		compMask.set(ecs::Component::COST);
+		//compMask.set(ecs::Component::COST);
 #if DEBUG_SNAPSHOT
 		compMask.set(ecs::Component::BOUNDING_SPHERE);
 #endif
@@ -745,14 +758,14 @@ void Simulation::UpgradeDefence(const uint32_t& id)
 				{
 					if (m_currency >= c->cost)
 					{
-						c->cost += 5;
 						// Add upgrades here.
 						h->maxHealth += 35;
 						h->currentHealth += 35;
 
 						// Cost is here.
 						m_currency -= c->cost;
-						e.UpdateNetwork();
+						c->cost += 5;
+						m_pGameScene->publish<EComponentUpdated>(e, ecs::Component::COST);
 					}
 				}
 			}
@@ -837,7 +850,7 @@ void Simulation::ResetGameScene()
 		this->Broadcast(msg);
 	}
 
-	m_currency.Zero();
+	m_currency = 50;
 
 	EnemyManagement::CreateWaves(waveQueue, currentRound);
 

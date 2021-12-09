@@ -21,6 +21,9 @@ namespace ecs
 		BOUNDING_SPHERE,
 		PLAYER,
 		COST,
+
+		// Kills and Deaths
+		KD,
 		COMPONENT_COUNT,
 		COMPONENT_MAX = 32
 	};
@@ -367,6 +370,17 @@ namespace ecs
 			//Place defence option 
 			float			buildDistance = 32.0f;		//A tiles width is ~8
 			bool			rotateDefence = false;
+		};
+
+		struct KillDeaths
+		{
+			unsigned int kills = 0;
+			unsigned int deaths = 0;
+		};
+
+		struct PlayerReference
+		{
+			Entity player;
 		};
 
 		

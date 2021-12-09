@@ -241,6 +241,8 @@ Entity CombatSystem::CreateAttackEntity(Entity entity, HeadlessScene& scene, com
 	bos->Radius = stats->attackRange;
 	float attackRangeMultiplier = 1.3f;
 
+	attackEntity.AddComponent<comp::PlayerReference>()->player = entity;
+
 	sm::Vector3 targetDir = stats->targetPoint - transform->position;
 	targetDir.Normalize();
 	t->position = transform->position + targetDir * stats->attackRange * attackRangeMultiplier;
@@ -521,6 +523,16 @@ void CombatSystem::DoDamage(HeadlessScene& scene, Entity attacker, Entity attack
 		{
 			// Blood particle
 			target.AddComponent<comp::PARTICLEEMITTER>(sm::Vector3{ 0,6,0 }, 50, 5.f, PARTICLEMODE::BLOOD, 1.5f, 1.f, true);
+		}
+
+		if (otherHealth->currentHealth <= 0.0f)
+		{
+			comp::KillDeaths* kd = attacker.GetComponent<comp::KillDeaths>();
+			if (kd)
+			{
+				kd->kills++;
+				scene.publish<EComponentUpdated>(attacker, ecs::Component::KD);
+			}
 		}
 
 		scene.publish<EComponentUpdated>(target, ecs::Component::PARTICLEMITTER);
