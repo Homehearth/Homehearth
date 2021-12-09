@@ -142,7 +142,7 @@ namespace ecs
 				else if (type == ParticleMode::MAGERANGE || type == ParticleMode::EXPLOSION)
 				{
 					textureName = "fire.png";
-					opacityTextureName = "fire_opacity.png";
+					opacityTextureName = "fire_Opacity.png";
 				}
 
 				texture = ResourceManager::Get().GetResource<RTexture>(textureName);
