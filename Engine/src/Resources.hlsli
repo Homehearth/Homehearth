@@ -121,10 +121,7 @@ cbuffer SkyboxTint : register(b13)
     float3      c_tint = 1.f;
     float       pad;
 }
-//cbuffer WaterEffectVertexColorCB : register (b14)
-//{
-    
-//}
+
 
 
 //---------------------------------------------------------------------------
