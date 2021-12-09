@@ -766,6 +766,8 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 
 		for (uint32_t i = 0; i < count; i++)
 		{
+			float maxCooldown = 0.0f;
+			msg >> maxCooldown;
 			float cooldown = 0.0f;
 			msg >> cooldown;
 
@@ -776,16 +778,19 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			case AbilityIndex::Primary:
 			{
 				m_primaryCooldown = cooldown;
+				m_primaryMaxCooldown = maxCooldown;
 				break;
 			}
 			case AbilityIndex::Secondary:
 			{
 				m_secondaryCooldown = cooldown;
+				m_secondaryMaxCooldown = maxCooldown;
 				break;
 			}
 			case AbilityIndex::Dodge:
 			{
 				m_dodgeCooldown = cooldown;
+				m_dodgeMaxCooldown = maxCooldown;
 				break;
 			}
 			default:

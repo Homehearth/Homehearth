@@ -541,29 +541,29 @@ void Simulation::SendSnapshot()
 				if (melee)
 				{
 					count++;
-					msg4 << AbilityIndex::Primary << melee->cooldownTimer;
+					msg4 << AbilityIndex::Primary << melee->cooldownTimer << melee->cooldown;
 				}
 				else if (range)
 				{
 					count++;
-					msg4 << AbilityIndex::Primary << range->cooldownTimer;
+					msg4 << AbilityIndex::Primary << range->cooldownTimer << range->cooldown;
 				}
 
 				if (blink)
 				{
 					count++;
-					msg4 << AbilityIndex::Dodge << blink->cooldownTimer;
+					msg4 << AbilityIndex::Dodge << blink->cooldownTimer << blink->cooldown;
 				}
 				else if (dash)
 				{
 					count++;
-					msg4 << AbilityIndex::Dodge << dash->cooldownTimer;
+					msg4 << AbilityIndex::Dodge << dash->cooldownTimer << dash->cooldown;
 				}
 
 				if (heal)
 				{
 					count++;
-					msg4 << AbilityIndex::Secondary << heal->cooldownTimer;
+					msg4 << AbilityIndex::Secondary << heal->cooldownTimer << heal->cooldown;
 				}
 
 				msg4 << count;
