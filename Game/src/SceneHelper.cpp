@@ -271,6 +271,7 @@ namespace sceneHelp
 					}
 					case CyclePeriod::EVENING:
 					{
+						// Hide skip day button.
 						Collection2D* skipButtonUI = scene.GetCollection("SkipUI");
 						rtd::Button* skipButton = dynamic_cast<rtd::Button*>(skipButtonUI->elements[0].get());
 						rtd::Text* skipText = dynamic_cast<rtd::Text*>(skipButtonUI->elements[1].get());
@@ -283,6 +284,13 @@ namespace sceneHelp
 									l.lightData.enabled = 1;
 								}
 							});
+
+						// Hide pricetag.
+						Collection2D* priceTagUI = scene.GetCollection("priceTag");
+						if (priceTagUI)
+						{
+							priceTagUI->Hide();
+						}
 						break;
 					}
 					case CyclePeriod::DAY:
