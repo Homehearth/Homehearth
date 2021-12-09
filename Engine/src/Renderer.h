@@ -58,6 +58,7 @@ public:
 	IRenderPass* GetCurrentPass() const;
 
 	DOFPass* GetDoFPass();
+	BloomPass* GetBloomPass();
 
 	ShadowPass* GetShadowPass();
 

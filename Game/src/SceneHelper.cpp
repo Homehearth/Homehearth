@@ -1218,6 +1218,50 @@ namespace sceneHelp
 				});
 		}
 
+		//Bloom
+		graphicsPos.y += scale.y + padding.y;
+		rtd::Border* bloomBorder = graphicsCategory->AddElement<rtd::Border>(draw_t(canvasPos.x + padding.x, graphicsPos.y, canvasSize.x - padding.x * 2, scale.y));
+		bloomBorder->SetColor(D2D1::ColorF(53.f / 255.f, 22.f / 255.f, 26.f / 255.f));
+		bloomBorder->SetLineWidth(LineWidth::LARGE);
+		graphicsCategory->AddElement<rtd::Text>("Bloom", draw_t(canvasPos.x - padding.x, graphicsPos.y, scale.x * 2.f, scale.y));
+		rtd::Button* bloomOpt = graphicsCategory->AddElement<rtd::Button>("Button.png", draw_t(graphicsPos.x, graphicsPos.y, scale.x, scale.y));
+		rtd::Text* bloomText = graphicsCategory->AddElement<rtd::Text>("ON", draw_t(graphicsPos.x, graphicsPos.y, scale.x, scale.y));
+		static std::string bloomOption = OptionSystem::Get().GetOption("Bloom");
+		if (bloomOption == "0")
+			bloomOption = "ON";
+		
+		if (bloomOption == "ON")
+		{
+			bloomText->SetText("ON");
+			thread::RenderThreadHandler::Get().GetRenderer()->GetBloomPass()->SetEnable(true);
+		}
+		else // OFF
+		{
+			bloomText->SetText("OFF");
+			thread::RenderThreadHandler::Get().GetRenderer()->GetBloomPass()->SetEnable(false);
+		}
+		OptionSystem::Get().SetOption("Bloom", bloomOption);
+
+		bloomOpt->SetOnPressedEvent([=] {
+
+			if (bloomOption == "ON")
+			{
+				bloomText->SetText("OFF");
+				bloomOption = "OFF";
+				thread::RenderThreadHandler::Get().GetRenderer()->GetBloomPass()->SetEnable(false);
+			}
+			else if (bloomOption == "OFF")
+			{
+				
+				bloomText->SetText("ON");
+				bloomOption = "ON";
+				thread::RenderThreadHandler::Get().GetRenderer()->GetBloomPass()->SetEnable(true);
+			}
+
+			OptionSystem::Get().SetOption("Bloom", bloomOption);
+
+			});
+		
 		//Shadows
 		graphicsPos.y += scale.y + padding.y;
 		rtd::Border* shadowsBorder = graphicsCategory->AddElement<rtd::Border>(draw_t(canvasPos.x + padding.x, graphicsPos.y, canvasSize.x - padding.x * 2, scale.y));

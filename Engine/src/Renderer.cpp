@@ -140,6 +140,11 @@ DOFPass* Renderer::GetDoFPass()
 	return &m_dofPass;
 }
 
+BloomPass* Renderer::GetBloomPass()
+{
+	return &m_bloomPass;
+}
+
 ShadowPass* Renderer::GetShadowPass()
 {
 	return &m_shadowPass;
