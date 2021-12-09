@@ -2,6 +2,16 @@
 #include "IRenderPass.h"
 #include "BlurPass.h"
 
+/*
+	The render views are as following:
+	FULL
+	HALF
+	QUARTER
+	TINY
+	SMOL
+	SMOLLEST
+*/
+
 class BloomPass : public IRenderPass
 {
 private:
@@ -10,6 +20,12 @@ private:
 	{
 		FULL_TO_HALF,
 		HALF_TO_QUARTER,
+		QUARTER_TO_TINY,
+		TINY_TO_SMOL,
+		SMOL_TO_SMOLLEST,
+		SMOLLEST_TO_SMOL,
+		SMOL_TO_TINY,
+		TINY_TO_QUARTER,
 		QUARTER_TO_HALF,
 		HALF_TO_FULL
 	};
@@ -50,9 +66,21 @@ private:
 	ComPtr<ID3D11ShaderResourceView>	m_halfSizeView;
 	ComPtr<ID3D11RenderTargetView>		m_halfSizeRenderTarget;
 
-	ComPtr<ID3D11Texture2D>				m_quarterSize; // (Window Size / 2)
+	ComPtr<ID3D11Texture2D>				m_quarterSize; // (Window Size / 4)
 	ComPtr<ID3D11ShaderResourceView>	m_quarterSizeView;
 	ComPtr<ID3D11RenderTargetView>		m_quarterSizeRenderTarget;
+
+	ComPtr<ID3D11Texture2D>				m_tinySize; // (Window Size / 8)
+	ComPtr<ID3D11ShaderResourceView>	m_tinySizeView;
+	ComPtr<ID3D11RenderTargetView>		m_tinySizeRenderTarget;
+
+	ComPtr<ID3D11Texture2D>				m_smolSize; // (Window Size / 16)
+	ComPtr<ID3D11ShaderResourceView>	m_smolSizeView;
+	ComPtr<ID3D11RenderTargetView>		m_smolSizeRenderTarget;
+
+	ComPtr<ID3D11Texture2D>				m_smollestSize; // (Window Size / 32)
+	ComPtr<ID3D11ShaderResourceView>	m_smollestSizeView;
+	ComPtr<ID3D11RenderTargetView>		m_smollestSizeRenderTarget;
 
 	ID3D11Buffer*						m_screenSpaceQuad;
 	ID3D11Buffer*						m_indexBuffer;
