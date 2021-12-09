@@ -4,23 +4,8 @@
 SoundHandler::SoundHandler()
 	: m_currentMusic(nullptr)
 {
-    // Start the sound engine with default parameters.
-    m_soundEngine = irrklang::createIrrKlangDevice();
-
-    if (m_soundEngine == nullptr)
-    {
-        LOG_ERROR("failed starting up the irrklang sound engine.")
-    }
-    else
-    {
-        m_soundEngine->setDefault3DSoundMinDistance(100.0f);
-        m_soundEngine->setRolloffFactor(70.0f);
-        m_soundEngine->setSoundVolume(1.0f);
-
-        LOG_INFO("Irrklang sound engine successfully loaded.")
-    }
-
-    LoadAllSounds();
+    m_soundEngine = nullptr;
+    m_masterVolume = 0.3f;
 }
 
 void SoundHandler::UpdateCurrentMusic(irrklang::ISoundSource* musicSrc, bool loopMusic)
@@ -33,7 +18,7 @@ void SoundHandler::UpdateCurrentMusic(irrklang::ISoundSource* musicSrc, bool loo
     }
 
     m_currentMusic = m_soundEngine->play2D(musicSrc, loopMusic, true, false, false);
-    m_currentMusic->setVolume(0.3f);
+    m_currentMusic->setVolume(m_masterVolume);
     m_currentMusic->setIsPaused(false);
 }
 
@@ -95,8 +80,30 @@ SoundHandler& SoundHandler::Get()
     return s_instance;
 }
 
+void SoundHandler::Setup()
+{
+    // Start the sound engine with default parameters.
+    m_soundEngine = irrklang::createIrrKlangDevice();
+
+    if (m_soundEngine == nullptr)
+    {
+        LOG_ERROR("failed starting up the irrklang sound engine.")
+    }
+    else
+    {
+        m_soundEngine->setDefault3DSoundMinDistance(100.0f);
+        m_soundEngine->setRolloffFactor(70.0f);
+        m_soundEngine->setSoundVolume(m_masterVolume);
+
+        LOG_INFO("Irrklang sound engine successfully loaded.")
+    }
+
+    LoadAllSounds();
+}
+
 void SoundHandler::Update()
 {
+    m_soundEngine->setSoundVolume(m_masterVolume);
     m_soundEngine->update();
 }
 
@@ -171,7 +178,8 @@ irrklang::ISound* SoundHandler::PlaySound(const std::string& name, const audio_t
                 data.playLooped, true, false, false);
 
             const float minDist = (data.minDistance <= 0) ? m_soundEngine->getDefault3DSoundMinDistance() : data.minDistance;
-            const float volume = (data.volume <= 0.1f) ? 1.0f : data.volume;
+            float volume = (data.volume <= 0.1f) ? 1.0f : data.volume;
+            volume *= m_masterVolume;
 
             sound->setMinDistance(minDist);
             sound->setVolume(data.volume);
@@ -180,13 +188,29 @@ irrklang::ISound* SoundHandler::PlaySound(const std::string& name, const audio_t
         else
         {
             sound = m_soundEngine->play2D(m_soundSources[name], data.playLooped, true, false, false);
-            const float volume = (data.volume <= 0.1f) ? 1.0f : data.volume;
+            float volume = (data.volume <= 0.1f) ? 1.0f : data.volume;
+            volume *= m_masterVolume;
         	sound->setVolume(volume);
             sound->setIsPaused(false);
         }
     }
 
     return sound;
+}
+
+void SoundHandler::SetMasterVolume(float value)
+{
+    m_masterVolume = value;
+}
+
+const float& SoundHandler::GetMasterVolume() const
+{
+    return m_masterVolume;
+}
+
+float& SoundHandler::AdjustMasterVolume()
+{
+    return m_masterVolume;
 }
 
 

@@ -20,7 +20,11 @@ public:
 
 	// PUBLIC AVAILABLE DATA.
 	ComPtr<ID3D11RenderTargetView>	  m_backBuffer;
+	ComPtr<ID3D11UnorderedAccessView> m_backBufferAccessView;
 	ComPtr<ID3D11RenderTargetView>	  m_renderTargetView;
+	ComPtr<ID3D11RenderTargetView>	  m_bloomTargetView;
+	ComPtr<ID3D11Texture2D>			  m_bloomTexture;
+	ComPtr<ID3D11UnorderedAccessView> m_bloomAccessView;
 
 	ComPtr<ID3D11Texture2D>			  m_depthStencilTexture;
 	ComPtr<ID3D11DepthStencilView>	  m_depthStencilView;
@@ -61,11 +65,13 @@ public:
 	Shaders::VertexShader			m_animationVertexShader;
 	Shaders::VertexShader			m_skyboxVertexShader;
 	Shaders::VertexShader			m_ParticleVertexShader;
+	Shaders::VertexShader			m_bloomVertexShader;
 
 	Shaders::PixelShader			m_defaultPixelShader;
 	Shaders::PixelShader			m_debugPixelShader;
 	Shaders::PixelShader			m_skyboxPixelShader;
 	Shaders::PixelShader			m_ParticlePixelShader;
+	Shaders::PixelShader			m_bloomPixelShader;
 
 	//Shadows
 	Shaders::VertexShader			m_paraboloidVertexShader;
@@ -77,6 +83,8 @@ public:
 	
 	Shaders::ComputeShader			m_blurComputeShader;
 	Shaders::ComputeShader			m_dofComputeShader;
+	Shaders::ComputeShader			m_bloomComputeShader;
+	
 	
 	D3D11_VIEWPORT					m_viewport;
 

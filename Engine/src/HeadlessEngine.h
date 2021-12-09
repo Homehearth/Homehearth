@@ -83,8 +83,8 @@ inline void BasicEngine<SceneType>::SetUpdateRate(float rate)
 template<typename SceneType>
 void BasicEngine<SceneType>::Start()
 {
-	this->Startup();
 	m_isEngineRunning = true;
+	this->Startup();
 	this->Run();
 	this->OnShutdown();
 }
