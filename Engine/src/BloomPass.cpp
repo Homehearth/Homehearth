@@ -47,7 +47,7 @@ void BloomPass::Draw(const RenderVersion& drawType)
     {
         m_info.samplingInfo = { 16.0f, 1.0f, 1.0f, 1.0f };
         m_samplingInfoBuffer.SetData(D3D11Core::Get().DeviceContext(), m_info.samplingInfo);
-        D3D11Core::Get().DeviceContext()->PSSetShaderResources(1, 1, m_tinySizeView.GetAddressOf());
+        D3D11Core::Get().DeviceContext()->PSSetShaderResources(1, 1, m_tinyBlurredView.GetAddressOf());
         D3D11Core::Get().DeviceContext()->OMSetRenderTargets(1, m_smolSizeRenderTarget.GetAddressOf(), nullptr);
         break;
     }
@@ -55,7 +55,7 @@ void BloomPass::Draw(const RenderVersion& drawType)
     {
         m_info.samplingInfo = { 32.0f, 1.0f, 1.0f, 1.0f };
         m_samplingInfoBuffer.SetData(D3D11Core::Get().DeviceContext(), m_info.samplingInfo);
-        D3D11Core::Get().DeviceContext()->PSSetShaderResources(1, 1, m_smolSizeView.GetAddressOf());
+        D3D11Core::Get().DeviceContext()->PSSetShaderResources(1, 1, m_smolBlurredView.GetAddressOf());
         D3D11Core::Get().DeviceContext()->OMSetRenderTargets(1, m_smollestSizeRenderTarget.GetAddressOf(), nullptr);
         break;
     }
@@ -150,7 +150,7 @@ BloomPass::~BloomPass()
 void BloomPass::Setup()
 {
 	m_blurPass.Initialize(D3D11Core::Get().DeviceContext(), PM);
-	m_blurPass.Create(BlurLevel::MEDIUM, BlurType::BOX);
+	m_blurPass.Create(BlurLevel::LOW, BlurType::BOX);
     m_samplingInfoBuffer.Create(D3D11Core::Get().Device());
 
     HRESULT hr = S_FALSE;
@@ -267,12 +267,24 @@ void BloomPass::Setup()
     hr = D3D11Core::Get().Device()->CreateTexture2D(&texDesc, nullptr, m_tinySize.GetAddressOf());
     hr = D3D11Core::Get().Device()->CreateShaderResourceView(m_tinySize.Get(), NULL, m_tinySizeView.GetAddressOf());
     hr = D3D11Core::Get().Device()->CreateRenderTargetView(m_tinySize.Get(), NULL, m_tinySizeRenderTarget.GetAddressOf());
+    hr = D3D11Core::Get().Device()->CreateUnorderedAccessView(m_tinySize.Get(), NULL, m_tinySizeAccess.GetAddressOf());
+
+    hr = D3D11Core::Get().Device()->CreateTexture2D(&texDesc, nullptr, m_tinyBlurred.GetAddressOf());
+    hr = D3D11Core::Get().Device()->CreateShaderResourceView(m_tinyBlurred.Get(), NULL, m_tinyBlurredView.GetAddressOf());
+    hr = D3D11Core::Get().Device()->CreateRenderTargetView(m_tinyBlurred.Get(), NULL, m_tinyBlurredRenderTarget.GetAddressOf());
+    hr = D3D11Core::Get().Device()->CreateUnorderedAccessView(m_tinyBlurred.Get(), NULL, m_tinyBlurredAccess.GetAddressOf());
 
     texDesc.Height /= 2;
     texDesc.Width /= 2;
     hr = D3D11Core::Get().Device()->CreateTexture2D(&texDesc, nullptr, m_smolSize.GetAddressOf());
     hr = D3D11Core::Get().Device()->CreateShaderResourceView(m_smolSize.Get(), NULL, m_smolSizeView.GetAddressOf());
     hr = D3D11Core::Get().Device()->CreateRenderTargetView(m_smolSize.Get(), NULL, m_smolSizeRenderTarget.GetAddressOf());
+    hr = D3D11Core::Get().Device()->CreateUnorderedAccessView(m_smolSize.Get(), NULL, m_smolSizeAccess.GetAddressOf());
+
+    hr = D3D11Core::Get().Device()->CreateTexture2D(&texDesc, nullptr, m_smolBlurred.GetAddressOf());
+    hr = D3D11Core::Get().Device()->CreateShaderResourceView(m_smolBlurred.Get(), NULL, m_smolBlurredView.GetAddressOf());
+    hr = D3D11Core::Get().Device()->CreateRenderTargetView(m_smolBlurred.Get(), NULL, m_smolBlurredRenderTarget.GetAddressOf());
+    hr = D3D11Core::Get().Device()->CreateUnorderedAccessView(m_smolBlurred.Get(), NULL, m_smolBlurredAccess.GetAddressOf());
 
     texDesc.Height /= 2;
     texDesc.Width /= 2;
@@ -304,7 +316,9 @@ void BloomPass::Render(Scene* pScene)
     this->Draw(RenderVersion::HALF_TO_QUARTER);
     m_blurPass.BlurTexture(sm::Vector2(PM->m_windowWidth / 4.0f, PM->m_windowHeight / 4.0f), m_quarterBlurredAccess.GetAddressOf(), m_quarterSizeAccess.GetAddressOf());
     this->Draw(RenderVersion::QUARTER_TO_TINY);
+    m_blurPass.BlurTexture(sm::Vector2(PM->m_windowWidth / 8.0f, PM->m_windowHeight / 8.0f), m_tinySizeAccess.GetAddressOf(), m_tinyBlurredAccess.GetAddressOf());
     this->Draw(RenderVersion::TINY_TO_SMOL);
+    m_blurPass.BlurTexture(sm::Vector2(PM->m_windowWidth / 16.0f, PM->m_windowHeight / 16.0f), m_smolSizeAccess.GetAddressOf(), m_smolBlurredAccess.GetAddressOf());
     this->Draw(RenderVersion::SMOL_TO_SMOLLEST);
     this->Draw(RenderVersion::SMOLLEST_TO_SMOL);
     this->Draw(RenderVersion::SMOL_TO_TINY);

@@ -79,10 +79,22 @@ private:
 	ComPtr<ID3D11Texture2D>				m_tinySize; // (Window Size / 8)
 	ComPtr<ID3D11ShaderResourceView>	m_tinySizeView;
 	ComPtr<ID3D11RenderTargetView>		m_tinySizeRenderTarget;
+	ComPtr<ID3D11UnorderedAccessView>	m_tinySizeAccess;
+
+	ComPtr<ID3D11Texture2D>				m_tinyBlurred; // (Window Size / 8) Blurred
+	ComPtr<ID3D11ShaderResourceView>	m_tinyBlurredView;
+	ComPtr<ID3D11RenderTargetView>		m_tinyBlurredRenderTarget;
+	ComPtr<ID3D11UnorderedAccessView>	m_tinyBlurredAccess;
 
 	ComPtr<ID3D11Texture2D>				m_smolSize; // (Window Size / 16)
 	ComPtr<ID3D11ShaderResourceView>	m_smolSizeView;
 	ComPtr<ID3D11RenderTargetView>		m_smolSizeRenderTarget;
+	ComPtr<ID3D11UnorderedAccessView>	m_smolSizeAccess;
+
+	ComPtr<ID3D11Texture2D>				m_smolBlurred; // (Window Size / 16)
+	ComPtr<ID3D11ShaderResourceView>	m_smolBlurredView;
+	ComPtr<ID3D11RenderTargetView>		m_smolBlurredRenderTarget;
+	ComPtr<ID3D11UnorderedAccessView>	m_smolBlurredAccess;
 
 	ComPtr<ID3D11Texture2D>				m_smollestSize; // (Window Size / 32)
 	ComPtr<ID3D11ShaderResourceView>	m_smollestSizeView;
