@@ -12,6 +12,7 @@ private:
 	SoundHandler& operator=(const SoundHandler& other) = delete;
 
 	irrklang::ISoundEngine* m_soundEngine;
+	float m_masterVolume;
 
 	std::unordered_map<std::string, irrklang::ISoundSource*> m_soundSources;
 	std::unordered_map<std::string, irrklang::ISoundSource*>::iterator m_iterator;
@@ -31,6 +32,8 @@ public:
 	 */
 	static SoundHandler& Get();
 
+	void Setup();
+
 	void Update();
 
 	void AddSoundSource(const std::string& filePath);
@@ -44,4 +47,8 @@ public:
 	void SetListenerPosition(const sm::Vector3& pos, const sm::Vector3& lookDir);
 
 	irrklang::ISound* PlaySound(const std::string &name, const audio_t &data);
+
+	void SetMasterVolume(float value);
+	const float& GetMasterVolume() const;
+	float& AdjustMasterVolume();
 };

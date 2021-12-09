@@ -35,9 +35,10 @@ private:
 
 	virtual void OnUserUpdate(float deltaTime) = 0;
 
+	void SetupLoadingScreen();
+
 public:
 
-	float m_masterVolume = 5.0f;
 	Engine();
 	Engine(const Engine& other) = delete;
 	Engine(Engine&& other) = delete;

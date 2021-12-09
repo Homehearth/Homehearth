@@ -52,6 +52,8 @@ public:
 	bool Create(BlurLevel pLevel, BlurType pType);
 
 	void PreRenderTexture(Camera* pCam = nullptr, ID3D11DeviceContext* pDeviceContext = D3D11Core::Get().DeviceContext(), ID3D11Texture2D* pTexture = nullptr);
+	void BlurTexture(ID3D11UnorderedAccessView** viewIn, ID3D11UnorderedAccessView** viewOut, ID3D11DeviceContext* pDeviceContext = D3D11Core::Get().DeviceContext());
+	void BlurTexture(const sm::Vector2& texSize, ID3D11UnorderedAccessView** viewIn, ID3D11UnorderedAccessView** viewOut, ID3D11DeviceContext* pDeviceContext = D3D11Core::Get().DeviceContext());
 
 	// Inherited via IRenderPass
 	virtual void PreRender(Camera* pCam = nullptr, ID3D11DeviceContext* pDeviceContext = D3D11Core::Get().DeviceContext())	override;
@@ -67,4 +69,6 @@ private:
 	void GenerateBoxFilter(BlurLevel pLevel);
 	void UpdateBlurSettings();
 	void SwapBlurDirection();
+
+	ID3D11Texture2D* GetBackBuffer();
 };

@@ -12,7 +12,8 @@ private:
 	std::unordered_map<uint32_t, Entity> m_gameEntities;
 
 	GridSystem m_grid;
-	uint32_t m_money;	
+	uint32_t m_money;
+	uint32_t m_waveCounter;
 	ParticleSystem m_particles;
 	
 	Cycler m_cycler;
@@ -50,6 +51,7 @@ public:
 	void JoinLobby(uint32_t lobbyID);
 	void CreateLobby();
 	Cycler& GetCycler();
+	uint32_t& GetWaveCounter();
 
 	const uint32_t& GetMoney() const;
 	void SetPlayerWantsToSkip(bool value);
@@ -65,8 +67,14 @@ public:
 	void UpgradeDefence(const uint32_t& id);
 
 	float m_primaryCooldown = 0.0f;
+	float m_primaryMaxCooldown = 0.0f;
+
 	float m_secondaryCooldown = 0.0f;
+	float m_secondaryMaxCooldown = 0.0f;
+
 	float m_dodgeCooldown = 0.0f;
+	float m_dodgeMaxCooldown = 0.0f;
+
 	uint32_t m_currentSpree = 1;
 	bool m_isSpectating;
 };

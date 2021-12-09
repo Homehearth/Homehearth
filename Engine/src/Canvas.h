@@ -14,6 +14,7 @@ namespace rtd
 		D2D1_COLOR_F m_color;
 		draw_t m_drawOpts;
 		std::unique_ptr<Border> m_border;
+		Shapes m_shape = Shapes::RECTANGLE_FILLED;
 
 	public:
 
@@ -37,6 +38,7 @@ namespace rtd
 		const draw_t GetOpts() const;
 		void SetBorderThickness(const LineWidth& thicc);
 		void SetBorderShape(const Shapes& shape);
+		void SetShape(const Shapes& shape);
 
 		void SetBorderColor(const D2D1_COLOR_F& new_color);
 		void HideBorder();
