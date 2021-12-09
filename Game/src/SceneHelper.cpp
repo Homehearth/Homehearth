@@ -259,7 +259,7 @@ namespace sceneHelp
 								}
 							});
 
-						Collection2D* waveColl = game->GetCurrentScene()->GetCollection("WaveCounter");
+						Collection2D* waveColl = game->GetCurrentScene()->GetCollection("ZWaveCounter");
 						if (waveColl)
 						{
 							rtd::Text* waveText = dynamic_cast<rtd::Text*>(waveColl->elements[1].get());
