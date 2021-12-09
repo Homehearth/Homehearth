@@ -18,8 +18,8 @@ rtd::Slider::Slider(D2D1_COLOR_F color, const draw_t& draw_opts, float* value, f
     m_value = value;
 	m_drawOpts = draw_opts;
 	m_isHorizontal = horizontal;
-	m_maxVal = max * *value;
-	m_minVal = min * *value;
+	m_maxVal = max;
+	m_minVal = min;
 
 	std::string tmp = std::to_string(*m_value);
 	auto length = std::snprintf(&m_valueString[0], m_valueString.size(), "%.2f", *m_value);
@@ -45,6 +45,15 @@ Border* rtd::Slider::GetBorder()
         m_border = std::make_unique<Border>(m_drawOpts);
     }
     return m_border.get();
+}
+
+Text* rtd::Slider::GetValueText()
+{
+	if (!m_valueText)
+	{
+		m_valueText = std::make_unique<Text>(m_valueString);
+	}
+	return m_valueText.get();
 }
 
 void rtd::Slider::SetValue(float* value)
@@ -121,6 +130,25 @@ void Slider::OnClick()
 void Slider::OnHover()
 {
 	m_valueText.get()->SetText(m_explanationString + m_valueString);
+	m_slider.get()->SetPosition(m_drawOpts.x_pos, m_drawOpts.y_pos);
+	// Update the value
+	if (m_value)
+	{
+		m_valueString = std::to_string(*m_value);
+		auto length = std::snprintf(&m_valueString[0], m_valueString.size(), "%.2f", *m_value);
+		m_valueString.resize(length);
+		m_valueText.get()->SetText(m_explanationString + m_valueString);
+		if (m_isHorizontal)
+		{
+			float old_range = (m_drawOpts.x_pos - m_minPos.x) / (m_maxPos.x - m_minPos.x);
+			*m_value = ((m_maxVal - m_minVal) * old_range) + m_minVal;
+		}
+		else
+		{
+			float old_range = (m_drawOpts.y_pos - m_minPos.y) / (m_maxPos.y - m_minPos.y);
+			*m_value = ((m_maxVal - m_minVal) * old_range) + m_minVal;
+		}
+	}
 }
 
 bool Slider::CheckHover()

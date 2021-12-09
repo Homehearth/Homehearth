@@ -131,29 +131,29 @@ uint32_t CollisionSystem::GetCollisionCount(Entity entity) const
 	return count;
 }
 
-CollisionSystem::Projection_t CollisionSystem::GetProjection(sm::Vector3 axis, sm::Vector3* corners)
-{
-	float min = axis.Dot(corners[0]);
-	float max = min;
-
-	for (int i = 1; i < 8; i++)
-	{
-		float p = axis.Dot(corners[i]);
-
-		if (p < min)
-		{
-			min = p;
-		}
-		else if (p > max)
-		{
-			max = p;
-		}
-
-	}
-
-	//Projection_t projection = {min, max};
-	return { min, max };
-}
+//CollisionSystem::Projection_t CollisionSystem::GetProjection(sm::Vector3 axis, sm::Vector3* corners)
+//{
+//	float min = axis.Dot(corners[0]);
+//	float max = min;
+//
+//	for (int i = 1; i < 8; i++)
+//	{
+//		float p = axis.Dot(corners[i]);
+//
+//		if (p < min)
+//		{
+//			min = p;
+//		}
+//		else if (p > max)
+//		{
+//			max = p;
+//		}
+//
+//	}
+//
+//	//Projection_t projection = {min, max};
+//	return { min, max };
+//}
 
 std::pair<Entity, Entity> CollisionSystem::MakeEntityPair(Entity entity1, Entity entity2)
 {
@@ -173,8 +173,9 @@ CollisionInfo_t CollisionSystem::Intersection(Entity entity1, Entity entity2)
 	// Sphere - Sphere
 	if (p1Tags & TagType::DYNAMIC && p2Tags & TagType::DYNAMIC)
 	{
-		comp::BoundingSphere* p1BoS = entity1.GetComponent<comp::BoundingSphere>();
-		comp::BoundingSphere* p2BoS = entity2.GetComponent<comp::BoundingSphere>();
+		comp::SphereCollider* p1BoS = entity1.GetComponent<comp::SphereCollider>();
+		comp::SphereCollider* p2BoS = entity2.GetComponent<comp::SphereCollider>();
+		
 		sm::Vector3 vec = sm::Vector3(p2BoS->Center) - sm::Vector3(p1BoS->Center);
 		float distance = vec.Length();
 		vec.Normalize();
@@ -189,8 +190,17 @@ CollisionInfo_t CollisionSystem::Intersection(Entity entity1, Entity entity2)
 	//Sphere - OBB
 	else if (p1Tags & TagType::DYNAMIC && p2Tags & TagType::STATIC)
 	{
-		comp::BoundingSphere* p1BoS = entity1.GetComponent<comp::BoundingSphere>();
-		comp::BoundingOrientedBox* p2OBB = entity2.GetComponent<comp::BoundingOrientedBox>();
+		if (p2Tags & TagType::MAP_BOUNDS && !entity1.GetComponent<comp::Player>())
+		{
+			return { false, 0.0f, sm::Vector3::Zero };
+		}
+		comp::SphereCollider* p1BoS = entity1.GetComponent<comp::SphereCollider>();
+		comp::OrientedBoxCollider* p2OBB = entity2.GetComponent<comp::OrientedBoxCollider>();
+
+		if (!p1BoS || !p2OBB)
+		{
+			return { false, 0.f, sm::Vector3::Zero };
+		}
 
 		sm::Matrix Translation = sm::Matrix::CreateTranslation(p2OBB->Center).Invert();
 		sm::Matrix Rotation = sm::Matrix::CreateFromQuaternion(p2OBB->Orientation).Transpose();
@@ -198,20 +208,17 @@ CollisionInfo_t CollisionSystem::Intersection(Entity entity1, Entity entity2)
 		sm::Vector3 sCenter = p1BoS->Center;
 		// Put the sphere in the obb's local space
 		sCenter = sm::Vector3::Transform(sCenter, obbInverse);
-		//sCenter.y = 0.f;
+		sCenter.y = 0.f;
 
 		float minX = (-p2OBB->Extents.x);
 		float maxX = p2OBB->Extents.x;
-		float minY = (-p2OBB->Extents.y);
-		float maxY = p2OBB->Extents.y;
 		float minZ = (-p2OBB->Extents.z);
 		float maxZ = p2OBB->Extents.z;
 
 		// Get the closest point on the OBB that is inside the sphere
 		float closestX = max(minX, min(sCenter.x, maxX));
-		float closestY = max(minY, min(sCenter.y, maxY));
 		float closestZ = max(minZ, min(sCenter.z, maxZ));
-		sm::Vector3 ClosestPoint = { closestX, closestY, closestZ };
+		sm::Vector3 ClosestPoint = { closestX, 0.f, closestZ };
 		sm::Vector3 pointToSphere = sCenter - ClosestPoint;
 
 		float distance = pointToSphere.Length();
@@ -353,15 +360,16 @@ void CollisionSystem::CollisionResponse(CollisionInfo_t collisionInfo, Entity en
 {
 	tag_bits p1Tags = entity1.GetTags();
 	tag_bits p2Tags = entity2.GetTags();
+	sm::Vector3 dir = collisionInfo.smallestVec * collisionInfo.overlap;
 
 	if (p1Tags & TagType::DYNAMIC && p2Tags & TagType::STATIC)
 	{
 		comp::Transform* transform = entity1.GetComponent<comp::Transform>();
-		comp::BoundingSphere* BoS = entity1.GetComponent<comp::BoundingSphere>();
+		comp::SphereCollider* BoS = entity1.GetComponent<comp::SphereCollider>();
 		if (transform)
 		{
-			transform->position = transform->position + sm::Vector3(collisionInfo.smallestVec * collisionInfo.overlap);
-			//transform->position.y = 0.f;
+			transform->position.x = transform->position.x + dir.x;
+			transform->position.z = transform->position.z + dir.z;
 
 			if (BoS)
 			{
@@ -376,13 +384,13 @@ void CollisionSystem::CollisionResponse(CollisionInfo_t collisionInfo, Entity en
 	{
 		comp::Transform* transform1 = entity1.GetComponent<comp::Transform>();
 		comp::Transform* transform2 = entity2.GetComponent<comp::Transform>();
-		comp::BoundingSphere* BoS1 = entity1.GetComponent<comp::BoundingSphere>();
-		comp::BoundingSphere* BoS2 = entity2.GetComponent<comp::BoundingSphere>();
+		comp::SphereCollider* BoS1 = entity1.GetComponent<comp::SphereCollider>();
+		comp::SphereCollider* BoS2 = entity2.GetComponent<comp::SphereCollider>();
 		//Dynamic
 		if (transform1)
 		{
-			transform1->position = transform1->position + (sm::Vector3(collisionInfo.smallestVec * collisionInfo.overlap * -1.0f));
-			//transform1->position.y = 0.f;
+			transform1->position.x = transform1->position.x + dir.x * -1.f;
+			transform1->position.z = transform1->position.z + dir.z * -1.f;
 
 			if (BoS1)
 			{
@@ -393,8 +401,8 @@ void CollisionSystem::CollisionResponse(CollisionInfo_t collisionInfo, Entity en
 		}
 		if (transform2)
 		{
-			transform2->position = transform2->position + (sm::Vector3(collisionInfo.smallestVec * collisionInfo.overlap));
-			//transform2->position.y = 0.f;
+			transform2->position.x = transform2->position.x + dir.x;
+			transform2->position.z = transform2->position.z + dir.z;
 
 			if (BoS2)
 			{

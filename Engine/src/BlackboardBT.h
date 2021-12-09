@@ -23,25 +23,29 @@ struct PlayersPosition_t
 	std::vector<Entity> players{};
 };
 
+struct Houses_t
+{
+	std::unordered_map<Entity, Entity> houses{};
+};
+
+
 
 class Blackboard final
 {
 public:
-	virtual ~Blackboard() = default;
-	static auto& Get()
-	{
-		static Blackboard s_instance;
-		return s_instance;
-	}
-
-	template<typename T>
-	T* GetValue(std::string key);
-
-	template<typename T>
-	bool AddValue(std::string key, T value);
-	PathFinderManager* GetPathFindManager();
-private:
 	Blackboard() = default;
+	virtual ~Blackboard() = default;
+
+	template<typename T>
+	T* GetValue(const std::string& key);
+
+	template<typename T>
+	bool AddValue(const std::string& key, T value);
+	PathFinderManager* GetPathFindManager();
+
+	template <typename T>
+	void ClearValue(const std::string& key);
+private:
 	std::unordered_map<std::string, std::unique_ptr<Base>> storage{};
 	PathFinderManager pathFindManager;
 };
@@ -52,7 +56,18 @@ inline PathFinderManager* Blackboard::GetPathFindManager()
 }
 
 template <typename T>
-T* Blackboard::GetValue(std::string key)
+void Blackboard::ClearValue(const std::string& key)
+{
+	const auto iterator = storage.find(key);
+
+	if (iterator != storage.end())
+	{
+		storage.erase(iterator);
+	}
+}
+
+template <typename T>
+T* Blackboard::GetValue(const std::string& key)
 {
 	const auto iterator = storage.find(key);
 
@@ -76,7 +91,7 @@ T* Blackboard::GetValue(std::string key)
 }
 
 template <typename T>
-bool Blackboard::AddValue(std::string key, T value)
+bool Blackboard::AddValue(const std::string& key, T value)
 {
 	const auto& iterator = storage.find(key);
 	if(iterator == storage.end())

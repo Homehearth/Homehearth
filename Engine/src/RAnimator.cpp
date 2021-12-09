@@ -6,7 +6,6 @@ RAnimator::RAnimator()
 	m_useInterpolation	= true;
 	m_currentType		= EAnimationType::NONE;
 	m_nextType			= EAnimationType::NONE;
-	m_defaultType		= EAnimationType::NONE;
 }
 
 RAnimator::~RAnimator()
@@ -127,7 +126,8 @@ EAnimationType RAnimator::StringToAnimationType(const std::string& name) const
 		{"ABILITY3",			EAnimationType::ABILITY3},
 		{"ABILITY4",			EAnimationType::ABILITY4},
 		{"TAKE_DAMAGE",			EAnimationType::TAKE_DAMAGE},
-		{"PLACE_DEFENCE",		EAnimationType::PLACE_DEFENCE}
+		{"PLACE_DEFENCE",		EAnimationType::PLACE_DEFENCE},
+		{"DEAD",				EAnimationType::DEAD}
 	};
 
 	//Search for the keyword
@@ -163,7 +163,7 @@ void RAnimator::UpdateTime(const EAnimationType& type)
 		//We dont add to the timer if we reached the end
 		if (!anim->reachedEnd)
 		{
-			double tick = anim->animation->GetTicksPerFrame() * Stats::Get().GetUpdateTime();
+			double tick = anim->animation->GetTicksPerFrame() * Stats::Get().GetFrameTime();
 
 			if (anim->currentTick != tick)
 			{
@@ -251,18 +251,8 @@ void RAnimator::BlendAnimations()
 void RAnimator::SwapAnimationState()
 {
 	ResetAnimation(m_currentType);
-
-	//Not loopable - add the previous to the queue again
-	if (!m_animations[m_nextType].animation->IsLoopable())
-	{
-		m_currentType = m_nextType;
-		m_nextType = m_defaultType;
-	}
-	else
-	{
-		m_currentType = m_nextType;
-		m_nextType = EAnimationType::NONE;
-	}
+	m_currentType = m_nextType;
+	m_nextType = EAnimationType::NONE;
 }
 
 bool RAnimator::Create(const std::string& filename)
@@ -307,7 +297,7 @@ bool RAnimator::Create(const std::string& filename)
 					EAnimationType animType = StringToAnimationType(key);
 					if (animType != EAnimationType::NONE)
 					{
-						std::shared_ptr<RAnimation> animation = ResourceManager::Get().GetResource<RAnimation>(animName);
+						std::shared_ptr<RAnimation> animation = ResourceManager::Get().CopyResource<RAnimation>(animName, true);
 						if (animation)
 						{
 							animation_t animStruct;
@@ -315,19 +305,6 @@ bool RAnimator::Create(const std::string& filename)
 							m_animations[animType] = animStruct;
 							lastAnimation = animation;
 						}
-					}
-				}
-			}
-			else if (keyword == "defaultAnim")
-			{
-				std::string key;
-				if (ss >> key)
-				{
-					EAnimationType animType = StringToAnimationType(key);
-					if (m_animations.find(animType) != m_animations.end())
-					{
-						m_defaultType = animType;
-						m_currentType = animType;
 					}
 				}
 			}
@@ -379,11 +356,23 @@ bool RAnimator::ChangeAnimation(const EAnimationType& type)
 	//Check if animation exist
 	if (m_animations.find(type) != m_animations.end())
 	{ 
-		//Not in one of this states
-		if (m_nextType != type && m_currentType != type)
+		//No current
+		if (m_currentType == EAnimationType::NONE)
 		{
-			m_nextType = type;
-			swapSuccess = true;
+			m_currentType = type;
+		}
+		//Check if we are going to place in the queue
+		else
+		{
+			if (m_currentType != type)
+			{
+				if (m_nextType == EAnimationType::NONE)
+				{
+					m_nextType = type;
+					swapSuccess = true;
+				}
+			}
+			//Else: Already in this state
 		}
 	}
 	return swapSuccess;

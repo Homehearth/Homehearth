@@ -7,8 +7,8 @@ Camera::Camera()
 {
 	m_FOV = dx::XMConvertToRadians(90.f); //0.4f * 3.14f;
 	m_zoomValue = 1;
-	m_nearPlane = 0.1f; // 1.0f;
-	m_farPlane = 400.0; // 1000.0f
+	m_nearPlane = 40.0f; // 1.0f;
+	m_farPlane = 220.0f; // 1000.0f
 	m_rollPitchYaw = { 0.0f, 0.0f, 0.0f };
 	m_move = { 0.0f, 0.0f, 0.0f };
 	m_aspectRatio = 0;
@@ -49,6 +49,8 @@ void Camera::Initialize(sm::Vector3 pos, sm::Vector3 target, sm::Vector3 up, sm:
 	m_cameraMat.target = sm::Vector4(m_target.x, m_target.y, m_target.z, 0);
 	m_cameraMat.projection = m_projection;
 	m_cameraMat.view = m_view;
+
+	dx::BoundingFrustum::CreateFromMatrix(m_frustum, m_projection);
 
 	//Constant buffer already created
 	if (m_viewConstantBuffer != nullptr)
@@ -183,6 +185,7 @@ void Camera::Update(const float& deltaTime)
 	m_cameraMat.position = { m_position.x, m_position.y, m_position.z, 0.0f };
 	m_cameraMat.target = { m_target.x, m_target.y, m_target.z, 0 };
 	m_cameraMat.projection = m_projection;
+	//dx::BoundingFrustum::CreateFromMatrix(m_frustum, m_projection);
 	m_cameraMat.view = m_view;
 	s_cameraBuffers[0] = m_cameraMat;
 }
@@ -246,6 +249,16 @@ CAMERATYPE Camera::GetCameraType()const
 sm::Vector3 Camera::GetRollPitchYaw() const
 {
 	return m_rollPitchYaw;
+}
+
+sm::Quaternion Camera::GetRotation() const
+{
+	return m_rotation;
+}
+
+Entity Camera::GetTargetEntity() const
+{
+	return m_targetEntity;
 }
 
 void Camera::SetPosition(sm::Vector3 newPosition)

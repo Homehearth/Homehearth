@@ -3,6 +3,21 @@
 
 using namespace rtd;
 
+void rtd::Scroller::SetOnPrimeButtonPress(std::function<void()> func)
+{
+    m_function = func;
+}
+
+void rtd::Scroller::SetOnPrimeButtonHover(std::function<void()> func)
+{
+    m_button->SetOnHoverEvent(func);
+}
+
+void rtd::Scroller::ScrollUp()
+{
+    m_isPressed = false;
+}
+
 void rtd::Scroller::Update()
 {
     // Transition to the endPos position.
@@ -39,16 +54,23 @@ void rtd::Scroller::Update()
                 m_buttons[i]->OnHover();
         }
     }
+    if (m_button->CheckHover())
+    {
+        m_button->OnHover();
+    }
 }
 
 rtd::Scroller::Scroller(const draw_t& startPos, const sm::Vector2& endPos)
 {
+    const unsigned int width = D2D1Core::GetWindow()->GetWidth();
+    const unsigned int height = D2D1Core::GetWindow()->GetHeight();
+
     m_startPos = startPos;
     m_endPos = endPos;
     m_isPressed = false;
     m_currentPos = { startPos.x_pos, startPos.y_pos };
 
-    m_button = std::make_unique<Button>("pilNed.png", draw_t(0.0f, 0.0f, 32.0f, 32.0f));
+    m_button = std::make_unique<Button>("DropDownIcon.png", draw_t(0.0f, 0.0f, width / 24.0f, height / 14.0f));
     m_canvas = std::make_unique<Canvas>(startPos);
 }
 
@@ -70,20 +92,20 @@ rtd::Scroller::~Scroller()
 
 void Scroller::Draw()
 {
-    if (m_canvas)
-        m_canvas->Draw();
-    if (m_button)
-        m_button->Draw();
+    //if (m_canvas)
+      //  m_canvas->Draw();
     for (size_t i = 0; i < m_buttons.size(); i++)
     {
         if (m_buttons[i])
             m_buttons[i]->Draw();
     }
+    if (m_button)
+        m_button->Draw();
 }
 
 void Scroller::OnClick()
 {
-    m_isPressed = !m_isPressed;
+
 }
 
 void Scroller::OnHover()
@@ -91,9 +113,6 @@ void Scroller::OnHover()
     this->Update();
 }
 
-/*
-    Temp update.
-*/
 bool Scroller::CheckHover()
 {
     return true;
@@ -102,6 +121,13 @@ bool Scroller::CheckHover()
 ElementState Scroller::CheckClick()
 {
     ElementState state = m_button->CheckClick();
+    if (state == ElementState::INSIDE)
+    {
+        m_isPressed = !m_isPressed;
+
+        if (m_function)
+            m_function();
+    }
 
     for (size_t i = 0; i < m_buttons.size(); i++)
     {

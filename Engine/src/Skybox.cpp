@@ -107,9 +107,54 @@ bool Skybox::CreateTextureAndSRV(const std::string& fileName)
 	return true;
 }
 
+bool Skybox::CreateConstBuffer()
+{
+	D3D11_BUFFER_DESC desc;
+	desc.ByteWidth = sizeof(sm::Vector4);
+	desc.Usage = D3D11_USAGE_DEFAULT;
+	desc.CPUAccessFlags = 0;
+	desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	desc.MiscFlags = 0;
+
+	D3D11_SUBRESOURCE_DATA data = {};
+	data.pSysMem = &m_tintCol;
+
+	HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&desc, &data, m_constBuffer.GetAddressOf());
+
+	return !FAILED(hr);
+}
+
+void Skybox::Update(ID3D11DeviceContext* dc = DCSB)
+{
+
+	if (m_currentTime > MORNING && m_currentTime < DAY)
+		this->Tint(m_currentTime, MORNING, DAY, m_tintColMorning, m_tintColDay);
+
+	else if (m_currentTime > MID_DAY && m_currentTime < EVENING)
+		this->Tint(m_currentTime, MID_DAY, EVENING, m_tintColDay, m_tintColEvening);
+
+	else if (m_currentTime > EVENING && m_currentTime < NIGHT)
+		this->Tint(m_currentTime, EVENING, NIGHT, m_tintColEvening, m_tintColNight);
+
+	else if (m_currentTime > EARLY_MORNING)
+		this->Tint(m_currentTime, EARLY_MORNING, 1.0f, m_tintColNight, m_tintColMorning);
+
+
+	dc->UpdateSubresource(m_constBuffer.Get(), 0, nullptr, &m_tintCol, 0, 0);
+}
+
+void Skybox::Tint(float currentTime, float startTime, float endTime, sm::Vector3 startColor, sm::Vector3 endColor)
+{
+	float diff = endTime - startTime;
+	float progress = (currentTime - startTime) / diff;
+	m_tintCol = util::Lerp(startColor, endColor, progress);
+}
+
 Skybox::Skybox()
 {
 	nrOfIndices = 0;
+	m_currentTime = 0.f;
+	m_tintCol = m_tintColMorning;
 }
 
 Skybox::~Skybox()
@@ -122,6 +167,8 @@ bool Skybox::Initialize(const std::string& fileName)
 		return false;
 	if (!CreateTextureAndSRV(fileName))
 		return false;
+	if (!CreateConstBuffer())
+		return false;
 
 	return true;
 }
@@ -133,10 +180,7 @@ void Skybox::Render()
 	DCSB->IASetVertexBuffers(0, 1, m_vertexBuffer.GetAddressOf(), &stride, &offset);
 	DCSB->IASetIndexBuffer(m_indexBuffer.Get(), DXGI_FORMAT_R16_UINT, offset);
 
-	DCSB->PSSetShaderResources(96, 1, m_radianceSrv.GetAddressOf());
-	DCSB->PSSetShaderResources(97, 1, m_irradianceSrv.GetAddressOf());
-	DCSB->PSSetShaderResources(98, 1, m_skySrv.GetAddressOf());
-	DCSB->PSSetShaderResources(99, 1, &m_brdfLUT.get()->GetShaderView());
+	Bind(DCSB);
 
 	DCSB->DrawIndexed(nrOfIndices, 0, 0);
 }
@@ -147,4 +191,12 @@ void Skybox::Bind(ID3D11DeviceContext* dc = DCSB)
 	dc->PSSetShaderResources(97, 1, m_irradianceSrv.GetAddressOf());
 	dc->PSSetShaderResources(98, 1, m_skySrv.GetAddressOf());
 	dc->PSSetShaderResources(99, 1, &m_brdfLUT.get()->GetShaderView());
+	dc->PSSetConstantBuffers(13, 1, m_constBuffer.GetAddressOf());
+
+	Update(dc);
+}
+
+void Skybox::UpdateTime(float pTime)
+{
+	m_currentTime = pTime;
 }

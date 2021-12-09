@@ -21,10 +21,10 @@ void rtd::Healthbar::Update()
             const float targetWidth = (m_sizeFull * scale) > 0 ? (m_sizeFull * scale) : 0;
             const float time = min(Stats::Get().GetUpdateTime() * 10.f, 1.0f);
 
-            m_drawOpts[0].width = util::Lerp(m_drawOpts[0].width, targetWidth, time);
+            m_currentScale = util::Lerp(m_currentScale, targetWidth, time);
 
             //m_foreGround.get()->SetPosition(m_drawOpts[0].x_pos, m_drawOpts[0].y_pos);
-            m_foreGround.get()->SetScale(m_drawOpts[0].width, m_drawOpts[0].height);
+            m_foreGround.get()->SetScale(m_currentScale, m_drawOpts[0].height);
             //m_healthInfo.get()->SetText("Health: " + std::to_string((int)h->currentHealth));
         }
     }
@@ -34,6 +34,7 @@ rtd::Healthbar::Healthbar(const draw_t& drawOpts)
 {
     m_drawOpts[0] = drawOpts;
     m_sizeFull = drawOpts.width;
+    m_currentScale = drawOpts.width;
     
     m_backGround = std::make_unique<Canvas>(m_drawOpts[0]);
     m_foreGround = std::make_unique<Canvas>(m_drawOpts[0]);
@@ -48,6 +49,7 @@ rtd::Healthbar::Healthbar(const draw_t& drawOpts)
     m_backGround.get()->SetBorderColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
     m_backGround.get()->ShowBorder();
     m_backGround.get()->SetBorderWidth(LineWidth::SMALL);
+    m_backGround->SetBorderShape(Shapes::RECTANGLE_OUTLINED);
 }
 
 rtd::Healthbar::~Healthbar()
@@ -64,9 +66,10 @@ void rtd::Healthbar::SetPosition(const float& x, const float& y)
 {
     m_drawOpts[0].x_pos = x;
     m_drawOpts[0].y_pos = y;
-    m_drawOpts.Swap();
 
     m_drawOpts[0].height = m_drawOpts[1].height;
+    if (!m_drawOpts.IsSwapped())
+        m_drawOpts.Swap();
 }
 
 void rtd::Healthbar::SetStretch(const float& x, const float& y)
@@ -76,7 +79,7 @@ void rtd::Healthbar::SetStretch(const float& x, const float& y)
     m_drawOpts.Swap();
     m_drawOpts[0].height = y;
     m_drawOpts[0].width = x;
-    m_foreGround.get()->SetScale(x, y);
+    //m_foreGround.get()->SetScale(x, y);
     m_backGround.get()->SetScale(x, y);
     m_sizeFull = x;
 }

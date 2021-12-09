@@ -1,6 +1,7 @@
 #include "EnginePCH.h"
 #include "GridSystem.h"
 #include "PathFinderManager.h"
+#include "QuadTree.h"
 
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -13,6 +14,62 @@ GridSystem::GridSystem()
 
 GridSystem::~GridSystem()
 {
+}
+
+bool GridSystem::InsideGrid(const int& xpos, const int& zpos) const
+{
+	return xpos >= 0 && m_gridSize.x && xpos < m_gridSize.x&& zpos >= 0 && m_gridSize.y && zpos < m_gridSize.y;
+}
+
+int GridSystem::TileOffset(const int& index) const
+{
+	bool isNegative = false;
+	if (index % 2 == 0)
+		isNegative = true;
+
+	int offset = static_cast<int>(std::ceil(index / 2.0f));
+	if (isNegative)
+		offset *= -1;
+
+	return offset;
+}
+
+sm::Vector3 GridSystem::CalcCenterPoint(const std::vector<std::pair<UINT, UINT>>& coordinates)
+{
+	sm::Vector3 center = { 0,0,0 };
+
+	if (!coordinates.empty())
+	{
+		sm::Vector3 min = sm::Vector3(static_cast<float>(m_mapSize.x), m_tileHalfWidth * 2.f, static_cast<float>(m_mapSize.y));
+		sm::Vector3 max = min * -1;
+
+		for (size_t i = 0; i < coordinates.size(); i++)
+		{
+			UINT zPos = coordinates[i].first;
+			UINT xPos = coordinates[i].second;
+			Tile tile = m_tiles[zPos][xPos];
+			sm::Vector3 minTile = tile.position - sm::Vector3(m_tileHalfWidth);
+			sm::Vector3 maxTile = tile.position + sm::Vector3(m_tileHalfWidth);
+
+			if (minTile.x < min.x)
+				min.x = minTile.x;
+			if (maxTile.x > max.x)
+				max.x = maxTile.x;
+
+			if (minTile.y < min.y)
+				min.y = minTile.y;
+			if (maxTile.y > max.y)
+				max.y = maxTile.y;
+
+			if (minTile.z < min.z)
+				min.z = minTile.z;
+			if (maxTile.z > max.z)
+				max.z = maxTile.z;
+		}
+
+		center = (min + max) / 2.f;
+	}
+	return center;
 }
 
 void GridSystem::Initialize(Vector2I mapSize, sm::Vector3 position, std::string fileName, HeadlessScene* scene)
@@ -68,10 +125,9 @@ void GridSystem::Initialize(Vector2I mapSize, sm::Vector3 position, std::string 
 			sm::Vector3 tilePosition = { m_tileSize.x * row + m_tileHalfWidth, 0.f , (m_tileSize.y * -col) - m_tileHalfWidth };
 
 			Tile tileTemp;
-			tileTemp.gridID = { col, row };
-			tileTemp.halfWidth = m_tileHalfWidth;
-			tileTemp.type = tileTypeTemp;
-			tileTemp.position = tilePosition;
+			tileTemp.gridID		= { col, row };
+			tileTemp.type		= tileTypeTemp;
+			tileTemp.position	= tilePosition;
 
 			if (rowTilesTemp.size() < m_gridSize.x)
 				rowTilesTemp.push_back(tileTemp);
@@ -88,7 +144,7 @@ void GridSystem::Initialize(Vector2I mapSize, sm::Vector3 position, std::string 
 
 				transform->position = tileTemp.position;
 
-				tileEntity.AddComponent<comp::MeshName>()->name = "Cube.obj";
+				tileEntity.AddComponent<comp::MeshName>()->name = NameType::MESH_CUBE;
 			}
 
 			//transform->scale = { 4.2f, 0.5f, 4.2f };
@@ -117,21 +173,147 @@ void GridSystem::Initialize(Vector2I mapSize, sm::Vector3 position, std::string 
 	stbi_image_free(pixelsData);
 }
 
-bool GridSystem::RemoveDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, PathFinderManager* aiHandler)
+std::vector<Entity> GridSystem::UpdateHoverDefence()
+{
+	/*
+		Not fully optimized but works for now
+	*/
+	std::vector<Entity> entities;
+
+	//Go through the players
+	m_scene->ForEachComponent<comp::Player, comp::Network>([&](comp::Player& player, comp::Network& net)
+		{
+			bool okayToPlace = false;
+
+			//Did not find the hover defence for this player
+			if (m_hoveredDefences.find(net.id) == m_hoveredDefences.end())
+			{
+				Entity entity1 = m_scene->CreateEntity();
+				entity1.AddComponent<comp::Transform>();
+				entity1.AddComponent<comp::Network>();
+				entity1.AddComponent<comp::MeshName>()->name = NameType::MESH_DEFENCE1X1;
+				
+				Entity entity2 = m_scene->CreateEntity();
+				entity2.AddComponent<comp::Transform>();
+				entity2.AddComponent<comp::Network>();
+				entity2.AddComponent<comp::MeshName>()->name = NameType::MESH_DEFENCE1X3;
+				m_hoveredDefences[net.id] = {entity1, entity2};
+			}
+			else
+			{
+				if (player.shopItem == ShopItem::Defence1x1 ||
+					player.shopItem == ShopItem::Defence1x3)
+				{
+					if (!CheckDefenceLocation(player.lastInputState.mouseRay, net.id).empty())
+						okayToPlace = true;
+				}
+
+				if (okayToPlace)
+				{
+					Plane_t plane;
+					plane.normal = { 0.0f, 1.0f, 0.0f };
+					sm::Vector3 pos;
+					if (player.lastInputState.mouseRay.Intersects(plane, &pos))
+					{
+						//Snap the position to the grid
+						int centerTileX = static_cast<int>(std::abs(pos.x) / m_tileSize.x);
+						int centerTileZ = static_cast<int>(std::abs(pos.z) / m_tileSize.y);
+						if (InsideGrid(centerTileX, centerTileZ))
+							pos = m_tiles[centerTileZ][centerTileX].position;
+						pos.y = 5.f;
+
+						comp::Transform* transform;
+
+						if (player.shopItem == ShopItem::Defence1x1)
+						{
+							transform = m_hoveredDefences.at(net.id).def1x1.GetComponent<comp::Transform>();
+							transform->position = pos;
+							if (player.rotateDefence)
+								transform->rotation = sm::Quaternion::CreateFromYawPitchRoll(static_cast<float>(PI / 2.f), 0.f, 0.f);
+							else
+								transform->rotation = sm::Quaternion(0, 0, 0, 0);
+
+							m_hoveredDefences.at(net.id).def1x1.GetComponent<comp::MeshName>()->name = NameType::MESH_DEFENCE1X1;
+
+							entities.push_back(m_hoveredDefences.at(net.id).def1x1);
+						}
+						else if (player.shopItem == ShopItem::Defence1x3)
+						{
+							transform = m_hoveredDefences.at(net.id).def1x3.GetComponent<comp::Transform>();
+							transform->position = pos;
+							if (player.rotateDefence)
+								transform->rotation = sm::Quaternion::CreateFromYawPitchRoll(static_cast<float>(PI / 2.f), 0.f, 0.f);
+							else
+								transform->rotation = sm::Quaternion(0, 0, 0, 0);
+
+							m_hoveredDefences.at(net.id).def1x3.GetComponent<comp::MeshName>()->name = NameType::MESH_DEFENCE1X3;
+
+							entities.push_back(m_hoveredDefences.at(net.id).def1x3);
+						}
+					}
+				}
+				else
+				{
+					comp::Transform* trans1 = m_hoveredDefences.at(net.id).def1x1.GetComponent<comp::Transform>();
+					if (trans1->position != sm::Vector3(0, 0, 0))
+					{
+						trans1->position = sm::Vector3(0, 0, 0);
+						entities.push_back(m_hoveredDefences.at(net.id).def1x1);
+					}
+					comp::Transform* trans2 = m_hoveredDefences.at(net.id).def1x3.GetComponent<comp::Transform>();
+					if (trans2->position != sm::Vector3(0, 0, 0))
+					{
+						trans2->position = sm::Vector3(0, 0, 0);
+						entities.push_back(m_hoveredDefences.at(net.id).def1x3);
+					}
+				}
+			}
+		});
+
+	return entities;
+}
+
+std::vector<Entity> GridSystem::HideHoverDefence()
+{
+	std::vector<Entity> entities;
+
+	for (auto& def : m_hoveredDefences)
+	{
+		comp::Transform* trans1 = def.second.def1x1.GetComponent<comp::Transform>();
+		if (trans1->position != sm::Vector3(0, 0, 0))
+		{
+			trans1->position = sm::Vector3(0, 0, 0);
+			entities.push_back(def.second.def1x1);
+		}
+		comp::Transform* trans2 = def.second.def1x3.GetComponent<comp::Transform>();
+		if (trans2->position != sm::Vector3(0, 0, 0))
+		{
+			trans2->position = sm::Vector3(0, 0, 0);
+			entities.push_back(def.second.def1x3);
+		}
+	}
+
+	return entities;
+}
+
+bool GridSystem::RemoveDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, Blackboard* blackboard)
 {
 	sm::Vector3 localPlayer;
+	comp::Player player;
+	PathFinderManager* aiHandler = blackboard->GetPathFindManager();
 	m_scene->ForEachComponent<comp::Player, comp::Transform, comp::Network>([&](comp::Player& p, comp::Transform& t, comp::Network& net)
 		{
 			if (net.id == playerWhoPressedMouse)
 			{
 				localPlayer = t.position;
+				player = p;
 			}
 		});
 
 	float t = 0;
 	float tMin = FLT_MAX;
 	Entity closestEntity;
-	m_scene->ForEachComponent<comp::Transform, comp::Tag<TagType::DEFENCE>, comp::BoundingOrientedBox>([&](Entity e, comp::Transform& transform, comp::Tag<TagType::DEFENCE>& d, comp::BoundingOrientedBox& b)
+	m_scene->ForEachComponent<comp::Transform, comp::Tag<TagType::DEFENCE>, comp::OrientedBoxCollider>([&](Entity e, comp::Transform& transform, comp::Tag<TagType::DEFENCE>& d, comp::OrientedBoxCollider& b)
 		{
 			if (mouseRay.Intersects(b, &t))
 			{
@@ -144,39 +326,38 @@ bool GridSystem::RemoveDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, 
 		});
 	if (tMin != FLT_MAX)
 	{
-		comp::Transform* closestTransform = closestEntity.GetComponent<comp::Transform>();
-		int clampedX = static_cast<int>((abs(closestTransform->position.x) / m_tileSize.x));
-		int clampedZ = static_cast<int>((abs(closestTransform->position.z) / m_tileSize.y));
-
-		m_tiles[clampedZ][clampedX].type = TileType::EMPTY;
-		Node* node = aiHandler->GetNodeByID(m_tiles[clampedZ][clampedX].gridID);
-		node->defencePlaced = false;
-		node->reachable = true;
-		std::vector<Node*> diagNeighbors = node->GetDiagonalConnections();
-		for (Node* diagNeighbor : diagNeighbors)
+		comp::TileSet* tileset = closestEntity.GetComponent<comp::TileSet>();
+		if (tileset)
 		{
-			if (diagNeighbor->defencePlaced || !diagNeighbor->reachable)
+			//	Go throgh all the tiles and fix them
+			for (size_t i = 0; i < tileset->coordinates.size(); i++)
 			{
-				Vector2I difference = node->id - diagNeighbor->id;
-				Node* node1 = aiHandler->GetNodeByID(Vector2I(diagNeighbor->id.x + difference.x, diagNeighbor->id.y));
-				Node* node2 = aiHandler->GetNodeByID(Vector2I(diagNeighbor->id.x, diagNeighbor->id.y + difference.y));
+				int zpos = tileset->coordinates[i].first;
+				int xpos = tileset->coordinates[i].second;
+				m_tiles[zpos][xpos].type = TileType::EMPTY;
 
-				node1->connections.push_back(node2);
-				node2->connections.push_back(node1);
-			}
-		}
-		if (aiHandler->PlayerAStar(localPlayer))
-		{
-			m_scene->ForEachComponent<comp::Player, comp::Network>([&](comp::Player& p, comp::Network& net)
+				Node* node = aiHandler->GetNodeByID(m_tiles[zpos][xpos].gridID);
+				node->defencePlaced = false;
+				node->reachable = true;
+				std::vector<Node*> diagNeighbors = node->GetDiagonalConnections();
+				for (Node* diagNeighbor : diagNeighbors)
 				{
-					if (net.id == playerWhoPressedMouse)
+					if (diagNeighbor->defencePlaced || !diagNeighbor->reachable)
 					{
-						p.reachable = true;
+						Vector2I difference = node->id - diagNeighbor->id;
+						Node* node1 = aiHandler->GetNodeByID(Vector2I(diagNeighbor->id.x + difference.x, diagNeighbor->id.y));
+						Node* node2 = aiHandler->GetNodeByID(Vector2I(diagNeighbor->id.x, diagNeighbor->id.y + difference.y));
+						node1->connections.push_back(node2);
+						node2->connections.push_back(node1);
 					}
-				});
+				}
+			}
+
+			if (aiHandler->PlayerAStar(localPlayer))
+				player.reachable = true;
 		}
 
-		Blackboard::Get().GetPathFindManager()->RemoveDefenseEntity(closestEntity);
+		aiHandler->RemoveDefenseEntity(closestEntity);
 		closestEntity.Destroy();
 		
 		return true;
@@ -187,124 +368,247 @@ bool GridSystem::RemoveDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, 
 	}
 }
 
-
-bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, PathFinderManager* aiHandler)
+void GridSystem::RemoveDefence(const Entity& entity)
 {
-	Plane_t plane;
-	plane.normal = { 0.0f, 1.0f, 0.0f };
-	sm::Vector3 pos;
-	bool canBuild = false;
-
-	dx::BoundingSphere localPlayer;
-	std::vector<dx::BoundingSphere> ePos;
-
-	// Save positions to calculate distances to the tile for players
-	m_scene->ForEachComponent<comp::Player, comp::BoundingSphere, comp::Network>([&](comp::Player& p, comp::BoundingSphere& bs, comp::Network& net)
+	comp::TileSet* tileset = entity.GetComponent<comp::TileSet>();
+	if (tileset)
+	{
+		//Go throgh all the tiles and fix them
+		for (size_t i = 0; i < tileset->coordinates.size(); i++)
 		{
-			if (net.id == playerWhoPressedMouse)
+			int zpos = tileset->coordinates[i].first;
+			int xpos = tileset->coordinates[i].second;
+			m_tiles[zpos][xpos].type = TileType::EMPTY;
+		}
+	}
+}
+
+std::vector<std::pair<UINT, UINT>> GridSystem::CheckDefenceLocation(Ray_t& mouseRay, const uint32_t& playerID)
+{
+	bool okayToPlace = true;
+	uint8_t playerIndex = -1;
+	comp::Player player;
+
+	std::vector<std::pair<UINT, UINT>> coordinates;
+	std::vector<comp::SphereCollider> ePos;
+	m_scene->ForEachComponent<comp::Player, comp::SphereCollider, comp::Network>([&](comp::Player& p, comp::SphereCollider bs, comp::Network& net)
+		{
+			if (net.id == playerID)
 			{
-				localPlayer = bs;
+				playerIndex = static_cast<uint8_t>(ePos.size());
+				player = p;
 			}
 			ePos.push_back(bs);
 		});
-	// Do the same for all NPC entities
-	m_scene->ForEachComponent<comp::NPC, comp::BoundingSphere>([&](comp::NPC& p, comp::BoundingSphere& bs)
+	m_scene->ForEachComponent<comp::NPC, comp::SphereCollider>([&](comp::NPC& p, comp::SphereCollider& bs)
 		{
 			ePos.push_back(bs);
 		});
 
-	if (mouseRay.Intersects(plane, &pos))
-	{
-
-		int clampedX = static_cast<int>((abs(pos.x) / m_tileSize.x));
-		int clampedZ = static_cast<int>((abs(pos.z) / m_tileSize.y));
-		Tile tile = m_tiles[clampedZ][clampedX];
-
-		// Basically an AABB check
-		float right = tile.position.x + tile.halfWidth;
-		float left = tile.position.x - tile.halfWidth;
-		float top = tile.position.z + tile.halfWidth;
-		float bottom = tile.position.z - tile.halfWidth;
-
-		// Is mouse position we clicked at within the tiles bounds
-		if (pos.x > left && pos.x < right && pos.z < top && pos.z > bottom)
+	m_scene->ForEachComponent<comp::Villager, comp::SphereCollider>([&](comp::Villager& v, comp::SphereCollider& bs)
 		{
-			if (tile.type == TileType::EMPTY)
+			ePos.push_back(bs);
+		});
+
+	if (playerIndex != -1)
+	{
+		Plane_t plane;
+		plane.normal = { 0.0f, 1.0f, 0.0f };
+		sm::Vector3 pos;
+		if (mouseRay.Intersects(plane, &pos))
+		{
+			//Tile touched
+			int centerTileX = static_cast<int>(std::abs(pos.x) / m_tileSize.x);
+			int centerTileZ = static_cast<int>(std::abs(pos.z) / m_tileSize.y);
+
+			//Check distance between player and the tile what we touched
+			float tileToPlayerDistance = (ePos[playerIndex].Center - m_tiles[centerTileZ][centerTileX].position).Length();
+			if (tileToPlayerDistance >= player.buildDistance)
+				okayToPlace = false;
+
+			UINT numberOfDefences = 0;
+			ShopItem shopitem = player.shopItem;
+			if (shopitem == ShopItem::Defence1x1)
+				numberOfDefences = 1;
+			else if (shopitem == ShopItem::Defence1x3)
+				numberOfDefences = 3;
+
+			//Check if it was okay to place all the defences here
+			for (UINT d = 0; d < numberOfDefences && okayToPlace; d++)
 			{
-				bool tileOccupied = false;
-				// Checking so the other entities doesnt occupy the tile
-				for (int i = 0; i < ePos.size() && !tileOccupied; i++)
+				int xPos = centerTileX;
+				int zPos = centerTileZ;
+				if (player.rotateDefence)
+					zPos += TileOffset(d);
+				else
+					xPos += TileOffset(d);
+
+				Tile tile = m_tiles[zPos][xPos];
+
+				//Check the tiles current type
+				if (tile.type != TileType::EMPTY)
+					okayToPlace = false;
+
+				coordinates.push_back({ zPos, xPos });
+
+				//Make sure we are within the grid
+				if (InsideGrid(xPos, zPos))
 				{
-					// Is the entity occupying a tile?
+					//Each side of the tile
+					float right = tile.position.x + m_tileHalfWidth;
+					float left = tile.position.x - m_tileHalfWidth;
+					float top = tile.position.z + m_tileHalfWidth;
+					float bottom = tile.position.z - m_tileHalfWidth;
 
-					float closestX = max(left, min(ePos[i].Center.x, right));
-					float closestZ = max(bottom, min(ePos[i].Center.z, top));
-
-					sm::Vector3 pointToSphere = ePos[i].Center - sm::Vector3(closestX, 0.f, closestZ);
-					float distance = pointToSphere.Length();
-
-					if (distance < ePos[i].Radius)
+					// Checking so the other entities doesnt occupy the tile
+					for (int i = 0; i < ePos.size() && okayToPlace; i++)
 					{
-						tileOccupied = true;
+						float closestX = max(left, min(ePos[i].Center.x, right));
+						float closestZ = max(bottom, min(ePos[i].Center.z, top));
+
+						//Distance between the tiles closest side and the entity
+						float distance = (ePos[i].Center - sm::Vector3(closestX, 0.f, closestZ)).Length();
+
+						//To close
+						if (distance < ePos[i].Radius)
+							okayToPlace = false;
 					}
 				}
-				if (!tileOccupied)
+				else
+					okayToPlace = false;
+			}
+			if (numberOfDefences == 0)
+				okayToPlace = false;
+		}
+	}
+	else
+	{
+		okayToPlace = false;
+	}
+	
+	//Okay to place so we return all the coordinates of the relevant tiles
+	if (okayToPlace)
+	{
+		coordinates.shrink_to_fit();
+		return coordinates;
+	}
+	else
+	{
+		coordinates.clear();
+		return coordinates;
+	}
+}
+
+bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, PathFinderManager* aiHandler, QuadTree* dynamicQT)
+{	
+	std::vector<std::pair<UINT, UINT>> coordinates = CheckDefenceLocation(mouseRay, playerWhoPressedMouse);
+
+	//Check that it was okay to place here
+	if (!coordinates.empty())
+	{
+		comp::Player player;
+		comp::SphereCollider playerCollider;
+
+		m_scene->ForEachComponent<comp::Player, comp::Network, comp::SphereCollider>([&](comp::Player& p, comp::Network& net, comp::SphereCollider& sc)
+			{
+				if (net.id == playerWhoPressedMouse)
 				{
-					m_tiles[clampedZ][clampedX].type = TileType::DEFENCE;
-
-					Entity defenseEntity = m_scene->CreateEntity();
-					comp::Transform* transform = defenseEntity.AddComponent<comp::Transform>();
-					transform->position = { tile.position.x , 5.f, tile.position.z };
-					transform->scale = { 1.35f, 1.f, 1.35f };
-
-					comp::BoundingOrientedBox* collider = defenseEntity.AddComponent<comp::BoundingOrientedBox>();
-					collider->Extents = { m_tileHalfWidth, m_tileHalfWidth, m_tileHalfWidth };
-					defenseEntity.AddComponent<comp::Tag<TagType::STATIC>>();
-					defenseEntity.AddComponent<comp::Tag<TagType::DEFENCE>>();
-					defenseEntity.AddComponent<comp::MeshName>()->name = "Defence.obj";
-					defenseEntity.AddComponent<comp::Health>();
-					defenseEntity.AddComponent<comp::Network>();
-					aiHandler->AddDefenseEntity(defenseEntity);
-
-					Node* node = aiHandler->GetNodeByID(Vector2I(clampedZ, clampedX));
-					node->defencePlaced = true;
-					node->reachable = false;
-					//Check if connections need to be severed
-					std::vector<Node*> diagNeighbors = node->GetDiagonalConnections();
-					for (Node* diagNeighbor : diagNeighbors)
-					{
-						if (diagNeighbor->defencePlaced || !diagNeighbor->reachable)
-						{
-							Vector2I difference = node->id - diagNeighbor->id;
-							Node* connectionRemovalNode1 = aiHandler->GetNodeByID(Vector2I(diagNeighbor->id.x + difference.x, diagNeighbor->id.y));
-							Node* connectionRemovalNode2 = aiHandler->GetNodeByID(Vector2I(diagNeighbor->id.x, diagNeighbor->id.y + difference.y));
-							if (!connectionRemovalNode1->RemoveConnection(connectionRemovalNode2))
-							{
-								LOG_INFO("Failed to remove connection1");
-							}
-							if (!connectionRemovalNode2->RemoveConnection(connectionRemovalNode1))
-							{
-								LOG_INFO("Failed to remove connection2");
-							}
-						}
-					}
-					if (!aiHandler->PlayerAStar(localPlayer.Center))
-					{
-						m_scene->ForEachComponent<comp::Player, comp::Network>([&](comp::Player& p, comp::Network& net)
-							{
-								if (net.id == playerWhoPressedMouse)
-								{
-									p.reachable = false;
-								}
-							});
-					}
+					player = p;
+					playerCollider = sc;
 				}
-				return true;
+			});
+
+		//Go through all the tiles and set them to defence
+		for (size_t t = 0; t < coordinates.size(); t++)
+		{
+			int zPos = coordinates[t].first;
+			int xPos = coordinates[t].second;
+			m_tiles[zPos][xPos].type = TileType::DEFENCE;
+
+			Node* node = aiHandler->GetNodeByID(Vector2I(zPos, xPos));
+			node->defencePlaced = true;
+			node->reachable = false;
+
+			//Check if connections need to be severed
+			std::vector<Node*> diagNeighbors = node->GetDiagonalConnections();
+			for (Node* diagNeighbor : diagNeighbors)
+			{
+				if (diagNeighbor->defencePlaced || !diagNeighbor->reachable)
+				{
+					Vector2I difference = node->id - diagNeighbor->id;
+					Node* connectionRemovalNode1 = aiHandler->GetNodeByID(Vector2I(diagNeighbor->id.x + difference.x, diagNeighbor->id.y));
+					Node* connectionRemovalNode2 = aiHandler->GetNodeByID(Vector2I(diagNeighbor->id.x, diagNeighbor->id.y + difference.y));
+					connectionRemovalNode1->RemoveConnection(connectionRemovalNode2);
+					connectionRemovalNode2->RemoveConnection(connectionRemovalNode1);
+				}
 			}
 		}
 
+		//A-star-check
+		if (!aiHandler->PlayerAStar(playerCollider.Center))
+			player.reachable = false;
+
+		/*
+			Create the model for this tiles
+		*/
+		Entity tileEntity = m_scene->CreateEntity();
+		tileEntity.AddComponent<comp::Tag<TagType::STATIC>>();
+		tileEntity.AddComponent<comp::Tag<TagType::DEFENCE>>();
+		tileEntity.AddComponent<comp::Network>();
+		tileEntity.AddComponent<comp::Cost>()->cost = 5;
+		tileEntity.AddComponent<comp::TileSet>()->coordinates = coordinates;
+
+		comp::Transform* transform = tileEntity.AddComponent<comp::Transform>();
+		comp::OrientedBoxCollider* collider = tileEntity.AddComponent<comp::OrientedBoxCollider>();
+		comp::Health* health = tileEntity.AddComponent<comp::Health>();
+
+		sm::Vector3 centerpoint = CalcCenterPoint(coordinates);
+		transform->position = { centerpoint.x, 5.f, centerpoint.z };
+		collider->Center = transform->position;
+		
+		UINT numberOfDefences = 0;
+		ShopItem shopitem = player.shopItem;
+		if (shopitem == ShopItem::Defence1x1)
+			numberOfDefences = 1;
+		else if (shopitem == ShopItem::Defence1x3)
+			numberOfDefences = 3;
+
+		if (numberOfDefences != 0)
+		{
+			if (player.rotateDefence)
+			{
+				transform->rotation = sm::Quaternion::CreateFromYawPitchRoll(static_cast<float>(PI / 2.f), 0.f, 0.f);
+				collider->Extents = { m_tileHalfWidth, m_tileHalfWidth, m_tileHalfWidth * numberOfDefences };
+			}
+			else
+			{
+				collider->Extents = { m_tileHalfWidth * numberOfDefences, m_tileHalfWidth, m_tileHalfWidth };
+			}
+
+			if (shopitem == ShopItem::Defence1x1)
+			{
+				health->maxHealth = 100.0f;
+				health->currentHealth = health->maxHealth;
+				tileEntity.AddComponent<comp::MeshName>()->name = NameType::MESH_DEFENCE1X1;
+			}
+			else if (shopitem == ShopItem::Defence1x3)
+			{
+				health->maxHealth = 300.0f;
+				health->currentHealth = health->maxHealth;
+				tileEntity.AddComponent<comp::MeshName>()->name = NameType::MESH_DEFENCE1X3;
+			}
+			dynamicQT->Insert(tileEntity);
+			return true;
+		}
+		else
+		{
+			return false;
+		}
 	}
-	return false;
+	else
+	{
+		return false;
+	}
 }
 
 uint32_t GridSystem::GetTileCount() const

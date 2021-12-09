@@ -1,6 +1,7 @@
 #include "EnginePCH.h"
 #include "RenderThreadHandler.h"
 #include "multi_thread_manager.h"
+#include "ShadowPass.h"
 #include <omp.h>
 
 #define INSTANCE thread::RenderThreadHandler::Get()
@@ -14,6 +15,9 @@ bool shouldRender = true;
 bool ShouldContinue();
 void RenderMain(const unsigned int id);
 void RenderJob(const unsigned int start, unsigned int stop, void* buffer, void* context);
+void RenderShadow(const unsigned int start, unsigned int stop, void* buffer, void* context);
+
+void RenderObjects(DoubleBuffer<std::vector<comp::Renderable>>* objects, dx::ConstantBuffer<basic_model_matrix_t>* buffer, ID3D11DeviceContext* context);
 
 thread::RenderThreadHandler::RenderThreadHandler()
 {
@@ -92,7 +96,7 @@ std::function<void(void*, void*)> thread::RenderThreadHandler::GetJob()
 	{
 		return nullptr;
 	}
-	
+
 	const int size = (int)INSTANCE.m_jobs.size() - 1;
 
 	return INSTANCE.m_jobs[size];
@@ -124,7 +128,7 @@ const render_instructions_t thread::RenderThreadHandler::Launch(const int& amoun
 	render_instructions_t inst;
 	const unsigned int objects_per_thread = (unsigned int)std::floor((float)amount_of_objects / (float)(INSTANCE.m_amount + 1));
 	int main_start = 0;
-	if (objects_per_thread >= thread::THRESHOLD && amount_of_objects >= (int)(INSTANCE.m_amount + 1))
+	if (objects_per_thread >= thread::BASE_THRESHOLD && amount_of_objects >= (int)(INSTANCE.m_amount + 1))
 	{
 		// Launch Threads
 		if (INSTANCE.m_isPooled)
@@ -137,6 +141,42 @@ const render_instructions_t thread::RenderThreadHandler::Launch(const int& amoun
 				auto f = [=](void* buffer, void* context)
 				{
 					RenderJob(start, stop, buffer, context);
+				};
+
+				INSTANCE.m_jobs.push_back(f);
+				main_start = stop;
+			}
+			cv.notify_all();
+		}
+
+		inst.start = main_start;
+		inst.stop = amount_of_objects;
+		INSTANCE.m_isActive = true;
+		return inst;
+	}
+
+	INSTANCE.m_isActive = false;
+	return inst;
+}
+
+const render_instructions_t thread::RenderThreadHandler::DoShadows(const int& amount_of_objects)
+{
+	render_instructions_t inst;
+	const unsigned int objects_per_thread = (unsigned int)std::floor((float)amount_of_objects / (float)(INSTANCE.m_amount + 1));
+	int main_start = 0;
+	if (objects_per_thread >= thread::SHADOW_THRESHOLD && amount_of_objects >= (int)(INSTANCE.m_amount + 1))
+	{
+		// Launch Threads
+		if (INSTANCE.m_isPooled)
+		{
+			for (unsigned int i = 0; i < INSTANCE.m_amount; i++)
+			{
+				const int start = i * objects_per_thread;
+				const int stop = start + objects_per_thread;
+				// Prepare job for threads.
+				auto f = [=](void* buffer, void* context)
+				{
+					RenderShadow(start, stop, buffer, context);
 				};
 
 				INSTANCE.m_jobs.push_back(f);
@@ -234,12 +274,28 @@ void* thread::RenderThreadHandler::GetObjectsBuffer()
 
 void thread::RenderThreadHandler::SetCamera(void* camera)
 {
+	if (!camera)
+	{
+		LOG_ERROR("RenderThreadHandler tried to set a camera that was nullptr");
+		return;
+	}
+
 	INSTANCE.m_camera = camera;
 }
 
 void* thread::RenderThreadHandler::GetCamera()
 {
 	return INSTANCE.m_camera;
+}
+
+void thread::RenderThreadHandler::SetShadows(void* shadows)
+{
+	INSTANCE.m_shadows = shadows;
+}
+
+void* thread::RenderThreadHandler::GetShadows()
+{
+	return INSTANCE.m_shadows;
 }
 
 bool ShouldContinue()
@@ -272,7 +328,7 @@ void RenderMain(const unsigned int id)
 	m_privateBuffer.Create(D3D11Core::Get().Device());
 	thread::RenderThreadHandler::UpdateStatus(t_id, thread::thread_running);
 
-	
+
 	// On Update
 	while (INSTANCE.GetHandlerStatus())
 	{
@@ -331,8 +387,8 @@ void RenderJob(const unsigned int start,
 		// Make sure not to go out of range
 		if (stop > (unsigned int)(*m_objects)[1].size())
 			stop = (unsigned int)(*m_objects)[1].size();
-		
-		
+
+
 		// On Render
 		for (unsigned int i = start; i < stop; i++)
 		{
@@ -344,7 +400,7 @@ void RenderJob(const unsigned int start,
 
 			m_buffer->SetData(m_context, it->data);
 			m_context->VSSetConstantBuffers(0, 1, buffers);
-			
+
 			if (it->model)
 				it->model->Render(m_context);
 
@@ -362,4 +418,99 @@ void RenderJob(const unsigned int start,
 	}
 
 	return;
+}
+
+void RenderShadow(const unsigned int start, unsigned int stop, void* buffer, void* context)
+{
+	DoubleBuffer<std::vector<comp::Renderable>>* m_objects = (DoubleBuffer<std::vector<comp::Renderable>>*)thread::RenderThreadHandler::GetObjectsBuffer();
+	std::vector<ShadowSection>* m_shadows = (std::vector<ShadowSection>*)thread::RenderThreadHandler::Get().GetShadows();
+	dx::ConstantBuffer<basic_model_matrix_t>* m_buffer = (dx::ConstantBuffer<basic_model_matrix_t>*)buffer;
+	ID3D11DeviceContext* m_context = (ID3D11DeviceContext*)context;
+	ShadowPass* currentPass = dynamic_cast<ShadowPass*>(thread::RenderThreadHandler::Get().GetRenderer()->GetCurrentPass());
+	ID3D11CommandList* commandList = nullptr;
+
+	if (m_objects && m_shadows)
+	{
+		// Prerender.
+		currentPass->PreRender(nullptr, m_context);
+
+		// For each shadow.
+		for (unsigned int i = start; i < stop; i++)
+		{
+			auto& shadow = (*m_shadows)[i];
+			const light_t* light = shadow.pLight;
+
+			if (!light->enabled)
+				continue;
+
+			m_context->ClearDepthStencilView(shadow.shadowDepth[0].Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+			m_context->VSSetConstantBuffers(1, 1, shadow.lightBuffer.GetAddressOf());
+			ID3D11RenderTargetView* nullTargets[8] = { nullptr };
+			m_context->OMSetRenderTargets(8, nullTargets, shadow.shadowDepth[0].Get());
+			switch (shadow.pLight->type)
+			{
+			case TypeLight::DIRECTIONAL:
+			{
+				currentPass->UpdateLightBuffer(m_context, shadow.lightBuffer.Get(), *shadow.pLight, sm::Vector3(shadow.pLight->direction));
+				m_context->VSSetShader(currentPass->GetPipelineManager()->m_defaultVertexShader.Get(), nullptr, 0);
+				RenderObjects(m_objects, m_buffer, m_context);
+
+
+				break;
+			}
+			case TypeLight::POINT:
+			{
+				m_context->ClearDepthStencilView(shadow.shadowDepth[1].Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+
+				currentPass->UpdateLightBuffer(m_context, shadow.lightBuffer.Get(), *shadow.pLight, sm::Vector3::Down);
+				m_context->VSSetShader(currentPass->GetPipelineManager()->m_paraboloidVertexShader.Get(), nullptr, 0);
+				RenderObjects(m_objects, m_buffer, m_context);
+
+				m_context->OMSetRenderTargets(8, nullTargets, shadow.shadowDepth[1].Get());
+				currentPass->UpdateLightBuffer(m_context, shadow.lightBuffer.Get(), *shadow.pLight, sm::Vector3::Up);
+				RenderObjects(m_objects, m_buffer, m_context);
+
+
+				break;
+			}
+			default:
+				break;
+			}
+
+			// For each object in world.
+
+			m_context->OMSetRenderTargets(8, nullTargets, nullptr);
+		}
+
+
+		// Postrender.
+		currentPass->PostRender(m_context);
+
+		HRESULT hr = m_context->FinishCommandList(false, &commandList);
+		EnterCriticalSection(&pushSection);
+		if (SUCCEEDED(hr))
+			thread::RenderThreadHandler::Get().InsertCommandList(std::move(commandList));
+		LeaveCriticalSection(&pushSection);
+	}
+}
+
+void RenderObjects(DoubleBuffer<std::vector<comp::Renderable>>* objects, dx::ConstantBuffer<basic_model_matrix_t>* buffer, ID3D11DeviceContext* context)
+{
+	// For each object in world.
+	for (int j = 0; j < (*objects)[1].size(); j++)
+	{
+		comp::Renderable* it = &(*objects)[1][j];
+		if (it->isSolid && it->visible && it->castShadow)
+		{
+			ID3D11Buffer* const buffers[1] =
+			{
+				buffer->GetBuffer()
+			};
+
+			buffer->SetData(context, it->data);
+			context->VSSetConstantBuffers(0, 1, buffers);
+			if (it->model)
+				it->model->Render(context);
+		}
+	}
 }

@@ -18,7 +18,8 @@ project "Engine"
         "src/**.h",
         "src/**.cpp",
         "**.hlsl", 
-        "**.hlsli"
+        "**.hlsli",
+        "*.mp3"
     }
 
 
@@ -32,7 +33,9 @@ project "Engine"
         "../ThirdParty/stb_image/",
 		"../ThirdParty/networking/",
         "../ThirdParty/entt/",
-        "../ThirdParty/assimp/include/"
+        "../ThirdParty/irrKlang/include/",
+        "../ThirdParty/assimp/include/",
+        "../Assets/Sounds/"
     }
 
 
@@ -44,10 +47,10 @@ project "Engine"
             ["src/Engine/AI"] = { "**AISystem*", "**PathFinderManager.*", "**AIBehaviors.*" },  
                 ["src/Engine/AI/BehaviorTree"] = {"**BT.*"},
                 ["src/Engine/AI/BehaviorTree/CustomNodes"] = {"**CBT.*"},
-
+            ["src/Engine/Sound"] = { "**SoundHandler.*" },
             ["src/Engine/Core"] = { "**Engine.*", "**EventTypes.*", "**Window.*" },
             ["src/Engine/ECS"] = { "**Components.*",  "**Entity.*", "**Tags*" }, 
-            ["src/Engine/GamePlay"] = { "**GridSystem.*", "**CollisionSystem.*", "**CombatSystem.*", "**Systems.*" },
+            ["src/Engine/GamePlay"] = { "**GridSystem.*", "**CollisionSystem.*", "**CombatSystem.*", "**Systems.*", "**SpreeHandler.*" },
 
              ["src/Engine/Graphics/Renderer"] = {"**Renderer.*", "**PipelineManager.*", "**DoubleBuffer.*"},
                 ["src/Engine/Graphics/Renderer/RenderPass"] = {"**Pass.*"},
@@ -56,7 +59,9 @@ project "Engine"
 			["src/Engine/Graphics/D2D1"] = { "**D2D1Core.*" },
 
             ["src/Engine/Input"] = { "**InputSystem.*" },
-
+			
+			["src/Engine/Options"] = { "**OptionSystem.*", "**FileHandler.*" },
+			
             ["src/Engine/Resources"] = { "**ResourceManager.*", "**GResource.*", "**RModel.*", "**RTexture.*", "**RMaterial.*"},
                 ["src/Engine/Resources/Shaders"] = { "**.hlsl", "**.hlsli", "**Shader.*" },
 		        ["src/Engine/Resources/Animation"] = {"**RAnimation.*", "**RAnimator.*", "**AnimStructures.*"},
@@ -64,8 +69,8 @@ project "Engine"
             ["src/Engine/Scene"] = {"**Scene.*", "**Camera.*", "**Lights.*", "**ModelIdentifier.*", "**ParticleSystem.*" , "**Skybox.*" },
             ["src/Engine/Thread"] = { "**multi_thread_manager.*", "**ThreadSyncer.*", "**RenderThreadHandler.*"},
             
-		    ["src/Engine/UI Elements"] = {"**Canvas.*", "**Picture.*", "**Border.*", "**Button.*", "**Text.*", "**TextField.*", "**Slider.*", "**Healthbar.*", "**Scroller.*", "**MoneyUI.*"},
-            ["src/Engine/Utility"] = { "**Timer.*", "**Profiler.*", "**Logger.*", "**Stats.*" },
+		    ["src/Engine/UI Elements"] = {"**Canvas.*", "**Picture.*", "**Border.*", "**Button.*", "**Text.*", "**TextField.*", "**Slider.*", "**Healthbar.*", "**Scroller.*", "**MoneyUI.*", "**AbilityUI.*", "**ShopUI.*", "**MenuUI.*"},
+            ["src/Engine/Utility"] = { "**Timer.*", "**Profiler.*", "**Logger.*", "**Stats.*", "**QuadTree.*" },
         
             ["src/Engine/Audio"] = {  },
             ["src/Engine/Physics"] = {  },
@@ -78,10 +83,14 @@ project "Engine"
     links{
         "dxgi", -- links d3d11 d2d1 dwrite
         "DirectXTK",
-        "ImGui"
+        "ImGui",
+        "irrKlang.lib"
     }
 
-    libdirs{"../ThirdParty/imGUI/"}
+    libdirs{
+        "../ThirdParty/imGUI/",
+        "../ThirdParty/irrKlang/lib/Winx64-visualStudio/"
+    }
 
     -- Define a macro/symbol which applies for the Windows system.
     filter {"system:windows"}
@@ -133,8 +142,3 @@ project "Engine"
         filter("files:**_cs.hlsl")
             shadertype("Compute")
 			
-	postbuildcommands
-	{
-		--Does not work... "../Game/build/bin/" .. outputdir .. "/Game/assimp-vc142-mt
-		os.copyfile("../ThirdParty/assimp/lib/assimp-vc142-mt.dll" , "../Game/build/bin/Debug-windows-x86_64/Game/assimp-vc142-mt.dll")
-	}

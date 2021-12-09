@@ -2,7 +2,7 @@
 #include "IRenderPass.h"
 #include "BlurPass.h"
 
-enum class DoFType
+enum class DoFType : UINT
 {
 	DEFAULT = 0,
 	ADAPTIVE = 1,
@@ -26,10 +26,11 @@ private:
 
 	struct DoFHelpStruct
 	{
-		sm::Matrix		inverseView;
+		sm::Matrix		view;
 		sm::Matrix		inverseProjection;
 		UINT			dofType;
 		sm::Vector3		padding;
+		//sm::Vector4		playerPosView;
 	}m_dofHelp;
 
 public:

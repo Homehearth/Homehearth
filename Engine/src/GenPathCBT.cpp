@@ -2,30 +2,47 @@
 #include "GenPathCBT.h"
 #include "PathFinderManager.h"
 
-BT::GenPathCBT::GenPathCBT(const std::string& name, Entity entity)
+BT::GenPathCBT::GenPathCBT(const std::string& name, Entity entity, Blackboard* blackboard)
 	:ActionNode(name),
 	entity(entity),
-	refreshRate(0.2f)
+	refreshRate(0.2f),
+	blackboard(blackboard)
 {
 	generatePathTimer.Start();
 }
 
 BT::NodeStatus BT::GenPathCBT::Tick()
 {
-	PathFinderManager* aiHandler = Blackboard::Get().GetPathFindManager();
+	PathFinderManager* aiHandler = blackboard->GetPathFindManager();
 
 	if(aiHandler != nullptr)
 	{
 		comp::NPC* npc = entity.GetComponent<comp::NPC>();
-		npc->currentNode = aiHandler->FindClosestNode(entity.GetComponent<comp::Transform>()->position);
-
-		if(npc->path.empty() || generatePathTimer.GetElapsedTime<std::chrono::seconds>() > refreshRate)
+		comp::Villager* villager = entity.GetComponent<comp::Villager>();
+		if(npc)
 		{
-			generatePathTimer.Start();
-			aiHandler->AStarSearch(entity);
-		}
+			npc->currentNode = aiHandler->FindClosestNode(entity.GetComponent<comp::Transform>()->position);
 
-		return BT::NodeStatus::SUCCESS;
+			if( (npc->path.empty() || generatePathTimer.GetElapsedTime<std::chrono::seconds>() > refreshRate))
+			{
+				generatePathTimer.Start();
+				
+				aiHandler->AStarSearch(entity, blackboard);
+			}
+			return BT::NodeStatus::SUCCESS;
+		}
+		else if(villager)
+		{
+			villager->currentNode = aiHandler->FindClosestNode(entity.GetComponent<comp::Transform>()->position);
+
+			if ((villager->path.empty() || generatePathTimer.GetElapsedTime<std::chrono::seconds>() > refreshRate))
+			{
+				generatePathTimer.Start();
+
+				aiHandler->AStarSearch(entity, blackboard);
+			}
+			return BT::NodeStatus::SUCCESS;
+		}
 	}
 	else
 	{

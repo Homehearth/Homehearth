@@ -7,3 +7,14 @@ void IRenderPass::SetLights(Lights* light)
 	if (!m_lights->IsInitialize())
 		m_lights->Initialize();
 }
+
+unsigned int IRenderPass::GetLightCount(TypeLight type) const
+{
+	unsigned int count = 0;
+	for (auto& light : m_lights->GetLights())
+	{
+		if (light.type == type)
+			count++;
+	}
+	return count;
+}

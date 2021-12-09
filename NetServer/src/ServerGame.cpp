@@ -71,7 +71,16 @@ bool ServerGame::OnStartup()
 	}
 	m_inputThread = std::thread(&ServerGame::InputThread, this);
 
+	// MAP BOUNDS FIRST DONT MOVE ORDER
+	LoadMapColliders("MapBounds.fbx");
 	LoadMapColliders("VillageColliders.fbx");
+	LoadHouseColliders("House5_Collider.fbx");
+	LoadHouseColliders("House6_Collider.fbx");
+	LoadHouseColliders("House7_Collider.fbx");
+	LoadHouseColliders("House8_Collider.fbx");
+	LoadHouseColliders("House9_Collider.fbx");
+	LoadHouseColliders("House10_Collider.fbx");
+	LoadHouseColliders("WaterMillHouse_Collider.fbx");
 
 	return true;
 }
@@ -80,7 +89,6 @@ void ServerGame::OnShutdown()
 {
 	m_inputThread.join();
 }
-
 
 void ServerGame::UpdateNetwork(float deltaTime)
 {
@@ -93,35 +101,40 @@ void ServerGame::UpdateNetwork(float deltaTime)
 		timer = 0.0f;
 	}
 
-	// Check incoming messages
-	this->m_server.Update();
-
-	// Update the simulations
-	for (auto it = m_simulations.begin(); it != m_simulations.end();)
 	{
-		if (it->second->IsEmpty())
+		PROFILE_SCOPE("Server UPDATE");
+		// Check incoming messages
+		this->m_server.Update();
+	}
+
+	{
+		PROFILE_SCOPE("Simulations UPDATE");
+		// Update the simulations
+		for (auto it = m_simulations.begin(); it != m_simulations.end();)
 		{
-			it->second->Destroy();
-			LOG_INFO("Destroyed empty lobby %d", it->first);
-			it = m_simulations.erase(it);
-		}
-		else
-		{
-			// Update the simulation
-			it->second->Update(deltaTime);
-			// Send the snapshot of the updated simulation to all clients in the sim
-			it->second->SendSnapshot();
-			it->second->NextTick();
-			it++;
+			if (it->second->IsEmpty())
+			{
+				it->second->Destroy();
+				LOG_INFO("Destroyed empty lobby %d", it->first);
+				it = m_simulations.erase(it);
+			}
+			else
+			{
+				// Update the simulation
+				it->second->Update(deltaTime);
+				// Send the snapshot of the updated simulation to all clients in the sim
+				it->second->SendSnapshot();
+				it->second->NextTick();
+				it++;
+			}
 		}
 	}
 }
 
-bool ServerGame::LoadMapColliders(const std::string& filename)
+bool ServerGame::LoadHouseColliders(const std::string& filename)
 {
 	std::string filepath = BOUNDSPATH + filename;
 	Assimp::Importer importer;
-
 	const aiScene* scene = importer.ReadFile
 	(
 		filepath,
@@ -146,7 +159,64 @@ bool ServerGame::LoadMapColliders(const std::string& filename)
 		importer.FreeScene();
 		return false;
 	}
+
+	const aiMesh* mesh = scene->mMeshes[0];
+
+	aiNode* node = scene->mRootNode->FindNode(mesh->mName);
+
+	if (node)
+	{
+		aiVector3D pos;
+		aiVector3D scl;
+		aiQuaternion rot;
+		node->mTransformation.Decompose(scl, rot, pos);
+
+		dx::XMFLOAT3 center = { pos.x, pos.y, pos.z };
+		dx::XMFLOAT3 extents = { scl.x / 2.f, scl.y / 2.f, scl.z / 2.f };
+		dx::XMFLOAT4 orientation = { rot.x, rot.y, rot.z, rot.w };
+
+		comp::OrientedBoxCollider bob;
+		bob.Center = center;
+		bob.Extents = extents;
+		bob.Orientation = orientation;
+
+		m_houseColliders.insert(std::pair<std::string, comp::OrientedBoxCollider>(filename, bob));
+	}
+	return true;
+}
+
+bool ServerGame::LoadMapColliders(const std::string& filename)
+{
+	std::string filepath = BOUNDSPATH + filename;
+	Assimp::Importer importer;
+
+	const aiScene* scene = importer.ReadFile
+	(
+		filepath,
+		aiProcess_JoinIdenticalVertices |
+		aiProcess_Triangulate			|
+		aiProcess_ConvertToLeftHanded
+	);
+
+	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
+	{
+#ifdef _DEBUG
+		LOG_WARNING("[Bounds] Assimp error: %s", importer.GetErrorString());
+#endif 
+		importer.FreeScene();
+		return false;
+	}
+
+	if (!scene->HasMeshes())
+	{
+#ifdef _DEBUG
+		LOG_WARNING("[Bounds] has no meshes...");
+#endif 
+		importer.FreeScene();
+		return false;
+	}
 	// Go through all the meshes and create boundingboxes for them
+
 	for (UINT i = 0; i < scene->mNumMeshes; i++)
 	{
 		const aiMesh* mesh = scene->mMeshes[i];
@@ -201,7 +271,7 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 		{
 			message<GameMsg> lobbyMsg;
 			lobbyMsg.header.id = GameMsg::Lobby_Invalid;
-			msg << std::string("Request denied: Invalid Lobby ID!");
+			//msg << std::string("Request denied: Invalid Lobby ID!");
 			m_server.SendToClient(playerID, lobbyMsg);
 		}
 
@@ -269,6 +339,19 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 
 		break;
 	}
+	case GameMsg::Game_PlayerSkipDay:
+		uint32_t gameID, playerID;
+		msg >> gameID >> playerID;
+		if (m_simulations.find(gameID) != m_simulations.end())
+		{
+			comp::Player* p = m_simulations.at(gameID)->GetPlayer(playerID).GetComponent<comp::Player>();
+			if (p)
+			{
+				p->wantsToSkipDay = true;
+				ServerSystems::CheckSkipDay(m_simulations.at(gameID).get());
+			}
+		}
+		break;
 	case GameMsg::Game_PlayerReady:
 	{
 		uint32_t playerID;
@@ -304,7 +387,7 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 
 		break;
 	}
-	case GameMsg::Game_UseShop:
+	case GameMsg::Game_UpdateShopItem:
 	{
 		uint32_t playerID;
 		uint32_t gameID;
@@ -313,8 +396,22 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 
 		if (m_simulations.find(gameID) != m_simulations.end())
 		{
+			m_simulations.at(gameID)->GetPlayer(playerID).GetComponent<comp::Player>()->shopItem = shopItem;
 			m_simulations.at(gameID)->UseShop(shopItem, playerID);
 		}
+		break;
+	}
+	case GameMsg::Game_UpgradeDefence:
+	{
+		uint32_t playerID;
+		uint32_t gameID;
+		uint32_t id;
+		msg >> gameID >> playerID >> id;
+		if (m_simulations.find(gameID) != m_simulations.end())
+		{
+			m_simulations.at(gameID)->UpgradeDefence(id);
+		}
+		break;
 	}
 	}
 }
@@ -322,7 +419,7 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 uint32_t ServerGame::CreateSimulation()
 {
 	m_simulations[m_nGameID] = std::make_unique<Simulation>(&m_server, this);
-	if (!m_simulations[m_nGameID]->Create(m_nGameID, &m_mapColliders))
+	if (!m_simulations[m_nGameID]->Create(m_nGameID, &m_mapColliders, &m_houseColliders))
 	{
 		m_simulations.erase(m_nGameID);
 

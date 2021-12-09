@@ -9,11 +9,13 @@
 RTexture::RTexture()
 {
 	m_format = ETextureChannelType::fourChannels;
+	m_useMipmaps = true;
 }
 
-RTexture::RTexture(ETextureChannelType format)
+RTexture::RTexture(ETextureChannelType format, bool useMipmaps)
 {
 	m_format = format;
+	m_useMipmaps = useMipmaps;
 }
 
 RTexture::~RTexture()
@@ -41,7 +43,7 @@ bool RTexture::StandardSetup(unsigned char* image, const UINT& width, const UINT
 	textureDesc.SampleDesc.Count = 1;
 	textureDesc.SampleDesc.Quality = 0;
 	textureDesc.Usage = D3D11_USAGE_DEFAULT;
-	textureDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
+	textureDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS;
 	textureDesc.CPUAccessFlags = 0;
 
 	if (m_format == ETextureChannelType::oneChannel)
@@ -82,7 +84,7 @@ bool RTexture::GenerateMipMaps(unsigned char* image, const UINT& width, const UI
 	textureDesc.SampleDesc.Count = 1;
 	textureDesc.SampleDesc.Quality = 0;
 	textureDesc.Usage = D3D11_USAGE_DEFAULT;
-	textureDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
+	textureDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET | D3D11_BIND_UNORDERED_ACCESS;
 	textureDesc.CPUAccessFlags = 0;
 
 	if (m_format == ETextureChannelType::oneChannel)
@@ -131,6 +133,7 @@ bool RTexture::GenerateMipMaps(unsigned char* image, const UINT& width, const UI
 
 bool RTexture::Create(const std::string& filename)
 {
+	m_filename = filename;
 	std::string filepath = TEXTUREPATH + filename;
 	int width = 0;
 	int height = 0;
@@ -151,7 +154,7 @@ bool RTexture::Create(const std::string& filename)
 		return false;
 	}
 
-	if (USE_MIPMAPS)
+	if (m_useMipmaps)
 	{
 		if(width % 2 == 0 && height % 2 == 0)
 		{
@@ -191,6 +194,24 @@ ID3D11ShaderResourceView*& RTexture::GetShaderView()
 ID3D11Texture2D*& RTexture::GetTexture2D()
 {
 	return *m_texture2D.GetAddressOf();
+}
+
+const std::string& RTexture::GetFilename() const
+{
+	return m_filename;
+}
+
+bool RTexture::DisableMipmaps()
+{
+	bool success = true;
+
+	if (m_useMipmaps)
+	{
+		m_useMipmaps = false;
+		if (!Create(m_filename))
+			success = false;
+	}
+	return success;
 }
 
 bool RBitMap::Create(const std::string& filename)

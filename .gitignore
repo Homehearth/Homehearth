@@ -46,6 +46,7 @@ Generated\ Files/
 [Ee]ngine/*.cso
 [Gg]ame/*.cso
 [Gg]ame/*.ini
+[Aa]ssets/[Oo]ptions/*.txt
 # NUNIT
 *.VisualState.xml
 TestResult.xml
@@ -360,4 +361,7 @@ healthchecksdb
 
 # imgui.ini
 **.ini
+
+# Textfiles
+Assets/Other/Options.opt
 /Game/imgui.ini~Dev
