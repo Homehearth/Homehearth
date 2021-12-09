@@ -525,6 +525,16 @@ void CombatSystem::DoDamage(HeadlessScene& scene, Entity attacker, Entity attack
 			target.AddComponent<comp::PARTICLEEMITTER>(sm::Vector3{ 0,6,0 }, 50, 5.f, PARTICLEMODE::BLOOD, 1.5f, 1.f, true);
 		}
 
+		if (otherHealth->currentHealth <= 0.0f)
+		{
+			comp::KillDeaths* kd = attacker.GetComponent<comp::KillDeaths>();
+			if (kd)
+			{
+				kd->kills++;
+				scene.publish<EComponentUpdated>(attacker, ecs::Component::KD);
+			}
+		}
+
 		scene.publish<EComponentUpdated>(target, ecs::Component::PARTICLEMITTER);
 
 		comp::AnimationState* anim = target.GetComponent<comp::AnimationState>();
