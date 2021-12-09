@@ -405,11 +405,12 @@ enum class ShopItem : uint8_t
 ALIGN16
 struct simple_vertex_t
 {
-	sm::Vector3 position = {};
-	sm::Vector2 uv = {};
-	sm::Vector3 normal = {};
-	sm::Vector3 tangent = {};
-	sm::Vector3 bitanget = {};
+	sm::Vector3 position	= {};
+	sm::Vector2 uv			= {};
+	sm::Vector3 normal		= {};
+	sm::Vector3 tangent		= {};
+	sm::Vector3 bitanget	= {};
+	sm::Vector3	color		= {};
 };
 
 /*
@@ -420,12 +421,13 @@ struct simple_vertex_t
 ALIGN16
 struct anim_vertex_t
 {
-	sm::Vector3 position = {};
-	sm::Vector2	uv = {};
-	sm::Vector3	normal = {};
-	sm::Vector3	tangent = {};
-	sm::Vector3	bitanget = {};
-	dx::XMUINT4	boneIDs = {};
+	sm::Vector3 position	= {};
+	sm::Vector2	uv			= {};
+	sm::Vector3	normal		= {};
+	sm::Vector3	tangent		= {};
+	sm::Vector3	bitanget	= {};
+	sm::Vector3	color		= {};
+	dx::XMUINT4	boneIDs		= {};
 	sm::Vector4	boneWeights = {};
 };
 

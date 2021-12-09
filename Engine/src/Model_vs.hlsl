@@ -10,10 +10,11 @@ VertexOut main(VertexIn input)
     output.pos = mul(c_view, output.pos);
     output.pos = mul(c_projection, output.pos);
 
-    output.normal = mul((float3x3) c_world, input.normal);
-    output.uv = input.uv;
-    output.tangent = input.tangent;
-    output.biTangent = input.biTangent;
+    output.normal       = mul((float3x3) c_world, input.normal);
+    output.uv           = input.uv;
+    output.tangent      = input.tangent;
+    output.biTangent    = input.biTangent;
+    output.color        = input.color;
     
     return output;
 }
