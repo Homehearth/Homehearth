@@ -19,38 +19,25 @@ private:
 	std::vector<bone_t>						m_bones;
 	std::unordered_map<std::string, UINT>	m_nameToBone;
 
-	//std::queue<EAnimationType> m_queue;
-	//std::vector<EAnimationType> m_queue;
-
 	EAnimationType m_currentState;
 	EAnimationType m_nextState;
 	EAnimationType m_upperState;
-
 	
 	struct animation_t
 	{
 		//Shared data
 		std::shared_ptr<RAnimation>					animation;
-
 		//Specific data for this animation in this animator
 		double										frameTimer	= 0;
-		double										blendTimer	= 0;
+		//double										blendTimer	= 0;
 		double										currentTick	= 0;
 		std::unordered_map<std::string, lastKeys_t> lastKeys;
-		bool										reachedEnd	= false;
-
-		//Will not get reseted
-		bool										isUpperBody	= false;
-		std::string									devideBone  = "";
+		//bool										reachedEnd	= false;			//remove?
 	};
 
 	//All the animations
-	std::unordered_map<EAnimationType, animation_t>			m_animations;
-	std::unordered_map<blendstate_t, double, blend_hash_fn> m_blendStates;					//MOVE	 IDLE		0.2
-	std::unordered_map<blendstate_t, std::string, blend_hash_fn> m_upperLowerState;			//MOVE	 PRIMARY	QuickRigCharacter_Spine
-
-	//Change name on blendstate_t
-	//std::unodered_map<blendstate_t, struct, blend_hash_fn> m_states;
+	std::unordered_map<EAnimationType, animation_t>						m_animations;
+	std::unordered_map<animstate_t, animstateInfo, animstate_hash_fn>	m_states;
 
 	//Matrices that is going up to the GPU - structure buffer - in modelspace
 	std::vector<sm::Matrix>			 m_localMatrices;
@@ -72,15 +59,29 @@ private:
 	//Update the time for an animation. Return false when reached end
 	bool UpdateTime(const EAnimationType& type);
 
-	//Animation with only one state
-	void RegularAnimation(const EAnimationType& state);
-	//Blend between two animations
-	void BlendAnimations(const EAnimationType& state1, const EAnimationType& state2);
-	//Animate the lower body as usual and swap to upper when reached a bone
-	void UpperLowerbodyAnimation(const EAnimationType& upper, const EAnimationType& lower);
-	void BlendUpperBodyAnimations(const EAnimationType& state1, const EAnimationType& state2, const EAnimationType& upper);
+	bool UpdateBlendTime(const EAnimationType& from, const EAnimationType& to, double& blendTime, double& blendDuration);
 
-	void SwapAnimationState();
+	/*
+		REMOVE LATER
+	*/
+	//Animation with only one state
+	//void RegularAnimation(const EAnimationType& state);																			//DONE
+	//Blend between two animations
+	//void BlendAnimations(const EAnimationType& state1, const EAnimationType& state2);											//DONE
+	//Animate the lower body as usual and swap to upper when reached a bone
+	//void UpperLowerbodyAnimation(const EAnimationType& upper, const EAnimationType& lower);										//DONE
+	//void BlendUpperBodyAnimations(const EAnimationType& state1, const EAnimationType& state2, const EAnimationType& upper);			
+
+	/*
+		NEW ONE
+	*/
+	void StandardAnim();			//Current
+	void BlendTwoAnims();			//Current + next
+	void UpperLowerAnims();			//Current + upper
+	void BlendUpperLowerAnims();	//Current + next + upper
+
+
+	void SwapAnimationState();		//REMOVE
 
 	EAnimationCode GetAnimationCode() const;
 

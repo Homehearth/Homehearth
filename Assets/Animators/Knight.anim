@@ -17,55 +17,31 @@ loopable		DEAD				0
 tickSpeed		PRIMARY_ATTACK		38
 
 
-state			IDLE				MOVE				BLEND			0.2
-state			MOVE				IDLE				BLEND			0.2
-state			MOVE				PRIMARY_ATTACK		UPPERLOWER		QuickRigCharacter_Spine
+state 			IDLE				MOVE				0.5
+state			IDLE				PRIMARY_ATTACK		0
+state 			IDLE				TAKE_DAMAGE			0
+state			IDLE 				PLACE_DEFENCE		0
+state			IDLE				DEAD				0
+state			IDLE				ABILITY1			0
 
+state 			MOVE				IDLE				0.2
+state			MOVE				TAKE_DAMAGE			0
+state			MOVE				PRIMARY_ATTACK		0.1			QuickRigCharacter_Spine
+state			MOVE				PLACE_DEFENCE		0
+state			MOVE				DEAD				0.1
+state			MOVE				ABILITY1			0
 
-upperbody		PRIMARY_ATTACK		QuickRigCharacter_Spine
-upperbody		TAKE_DAMAGE			QuickRigCharacter_Spine
-upperbody		PLACE_DEFENCE		QuickRigCharacter_Spine
+state			PRIMARY_ATTACK		IDLE				0.2
+state			PRIMARY_ATTACK		MOVE				0.2	
 
-
-blendstate 		IDLE				MOVE				0.2
-blendstate 		MOVE				IDLE				0.2
-
-
-blendstate		IDLE				PRIMARY_ATTACK		0
-blendstate		PRIMARY_ATTACK		IDLE				0.2
-
-
-blendstate 		IDLE				TAKE_DAMAGE			0
-blendstate		TAKE_DAMAGE			IDLE				0.2
-
-
-blendstate		IDLE 				PLACE_DEFENCE		0
-blendstate		PLACE_DEFENCE		IDLE				0.2
+state			TAKE_DAMAGE			IDLE				0.2
+state			TAKE_DAMAGE			MOVE				0.2
+		
+state			PLACE_DEFENCE		IDLE				0.2
+state			PLACE_DEFENCE		MOVE				0.2
 	
+state			DEAD				IDLE				0.2
+state			DEAD				MOVE				0.2
 	
-blendstate		MOVE				TAKE_DAMAGE			0
-blendstate		TAKE_DAMAGE			MOVE				0.2
-	
-	
-blendstate		MOVE				PRIMARY_ATTACK		0
-blendstate		PRIMARY_ATTACK		MOVE				0.2
-	
-	
-blendstate		MOVE				PLACE_DEFENCE		0
-blendstate		PLACE_DEFENCE		MOVE				0.2
-
-
-blendstate		IDLE				DEAD				0.1
-blendstate		DEAD				IDLE				0.2
-
-
-blendstate		MOVE				DEAD				0.1
-blendstate		DEAD				MOVE				0.2
-
-
-blendstate		IDLE				ABILITY1			0
-blendstate		ABILITY1			IDLE				0.1
-
-
-blendstate		MOVE				ABILITY1			0
-blendstate		ABILITY1			MOVE				0.1
+state			ABILITY1			IDLE				0.1
+state			ABILITY1			MOVE				0.1

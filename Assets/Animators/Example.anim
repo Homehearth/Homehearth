@@ -12,6 +12,8 @@ loopable		IDLE			0
 tickSpeed		IDLE			30
 
 
-// Blending two animations. The blending time is in seconds.
-// 				from			to		blendtime
-blendstate		IDLE 	 		RUN		1.0
+// Animation state between two animations
+// 				from			to					blendtime (seconds)		devidebone for upperanimation
+state			IDLE 	 		RUN					1.0
+state			IDLE 	 		PRIMARY_ATTACK		1.0						QuickRigCharacter_Spine
+

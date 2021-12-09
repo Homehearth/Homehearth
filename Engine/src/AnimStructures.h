@@ -31,30 +31,37 @@ enum class EAnimationType : uint32_t
 	DEAD
 };
 
-struct blendstate_t
+struct animstate_t
 {
 	EAnimationType from;
 	EAnimationType to;
 
-	blendstate_t(EAnimationType x, EAnimationType y)
+	animstate_t(EAnimationType x, EAnimationType y)
 	{
 		this->from = x;
 		this->to = y;
 	}
-	bool operator==(const blendstate_t& state) const
+	bool operator==(const animstate_t& state) const
 	{
 		return from == state.from && to == state.to;
 	}
 };
 
-struct blend_hash_fn
+struct animstate_hash_fn
 {
-	std::size_t operator() (const blendstate_t& state) const
+	std::size_t operator() (const animstate_t& state) const
 	{
 		std::size_t h1 = std::hash<EAnimationType>()(state.from);
 		std::size_t h2 = std::hash<EAnimationType>()(state.to);
 		return h1 ^ h2;
 	}
+};
+
+struct animstateInfo
+{
+	double		blendTimer		= 0;	//How long we have blended so far
+	double		blendDuration	= 0;	//How long to blend
+	std::string devidebone		= "";	//With an upper animation this is the bone to start at
 };
 
 enum class EAnimationCode

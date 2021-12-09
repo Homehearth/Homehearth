@@ -22,6 +22,11 @@ Scene::Scene()
 
 void Scene::Update(float dt)
 {
+	/*std::cout << "Frametime: " << Stats::Get().GetFrameTime() << std::endl;
+	std::cout << "Updatetime: " << Stats::Get().GetUpdateTime() << std::endl;
+	std::cout << "DT: " << dt << std::endl;*/
+
+
 	//Update all the animations that can be updated
 	m_registry.view<comp::Animator>().each([&](comp::Animator& anim)
 		{
