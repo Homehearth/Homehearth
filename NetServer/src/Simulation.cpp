@@ -141,6 +141,7 @@ void Simulation::ResetPlayer(Entity player)
 		return;
 	}
 
+	playerComp->wantsToSkipDay = false;
 	playerComp->runSpeed = 30.f;
 	playerComp->state = comp::Player::State::IDLE;
 	playerComp->isReady = false;
@@ -183,7 +184,7 @@ void Simulation::ResetPlayer(Entity player)
 		comp::MeleeAttackAbility* attackAbility = player.AddComponent<comp::MeleeAttackAbility>();
 		attackAbility->cooldown = 0.50f;
 		attackAbility->attackDamage = 20.f;
-		attackAbility->lifetime = 0.2f;
+		attackAbility->lifetime = 0.1f;
 		attackAbility->useTime = 0.2f;
 		attackAbility->delay = 0.2f;
 		attackAbility->attackRange = 8.f;
@@ -246,7 +247,7 @@ void Simulation::ResetPlayer(Entity player)
 		player.AddComponent<comp::AnimatorName>()->name = AnimName::ANIM_MAGE;
 	}
 
-	player.AddComponent<comp::SphereCollider>()->Radius = 3.f;
+	player.AddComponent<comp::SphereCollider>()->Radius = 2.5f;
 
 	//
 	// AudioState
@@ -448,7 +449,7 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 
 	m_addedEntities.clear();
 #if RENDER_AINODES
-	std::vector<std::vector<std::shared_ptr<Node>>> nodes = Blackboard::Get().GetPathFindManager()->GetNodes();
+	std::vector<std::vector<std::shared_ptr<Node>>> nodes = blackboard.GetPathFindManager()->GetNodes();
 	for (int y = 0; y < nodes[0].size(); y++)
 	{
 		for (int x = 0; x < nodes[0].size(); x++)

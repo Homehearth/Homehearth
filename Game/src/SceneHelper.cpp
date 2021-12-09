@@ -239,12 +239,17 @@ namespace sceneHelp
 						bullColl->Hide();
 
 						SoundHandler::Get().SetCurrentMusic("NightTheme");
-						
+
 						break;
 					}
 					case CyclePeriod::MORNING:
 					{
 						SoundHandler::Get().SetCurrentMusic("MenuTheme");
+						Collection2D* skipButtonUI = scene.GetCollection("SkipUI");
+						rtd::Button* skipButton = dynamic_cast<rtd::Button*>(skipButtonUI->elements[0].get());
+						rtd::Text* skipText = dynamic_cast<rtd::Text*>(skipButtonUI->elements[1].get());
+						skipText->SetVisiblity(true);
+						skipButton->SetVisiblity(true);
 
 						scene.ForEachComponent<comp::Light>([](comp::Light& l)
 							{
@@ -253,10 +258,16 @@ namespace sceneHelp
 									l.lightData.enabled = 0;
 								}
 							});
+
 						break;
 					}
 					case CyclePeriod::EVENING:
 					{
+						Collection2D* skipButtonUI = scene.GetCollection("SkipUI");
+						rtd::Button* skipButton = dynamic_cast<rtd::Button*>(skipButtonUI->elements[0].get());
+						rtd::Text* skipText = dynamic_cast<rtd::Text*>(skipButtonUI->elements[1].get());
+						skipText->SetVisiblity(false);
+						skipButton->SetVisiblity(false);
 						scene.ForEachComponent<comp::Light>([](comp::Light& l)
 							{
 								if (l.lightData.type == TypeLight::POINT)
@@ -264,6 +275,10 @@ namespace sceneHelp
 									l.lightData.enabled = 1;
 								}
 							});
+						break;
+					}
+					case CyclePeriod::DAY:
+					{
 						break;
 					}
 					default:
@@ -382,7 +397,7 @@ namespace sceneHelp
 
 		/*---------Textfields---------*/
 		Collection2D* connectFields = new Collection2D;
-		rtd::TextField* ipField = connectFields->AddElement<rtd::TextField>(draw_text_t((width / 2.f) - (widthScale * 0.25f), height * 0.55f, widthScale * 0.25f, D2D1Core::GetDefaultFontSize()), 30, true);
+		rtd::TextField* ipField = connectFields->AddElement<rtd::TextField>(draw_text_t((width / 2.f) - (widthScale * 0.25f), height * 0.55f, widthScale * 0.25f, D2D1Core::GetDefaultFontSize()), 25, true);
 		ipField->SetDescriptionText("IP Address:");
 		padding = (widthScale / 64.f);
 		rtd::TextField* portField = connectFields->AddElement<rtd::TextField>(draw_text_t((width / 2.f) + padding, height * 0.55f, widthScale * 0.25f, D2D1Core::GetDefaultFontSize()), 6);
@@ -532,6 +547,31 @@ namespace sceneHelp
 		rtd::AbilityUI* fourth = abilities->AddElement<rtd::AbilityUI>(draw_t(abillityPos.x + (abillitySize.x + padding.x / 2), abillityPos.y, abillitySize.x, abillitySize.y), D2D1::ColorF(0, 1.0f), "LockedIcon.png");
 		rtd::AbilityUI* fith = abilities->AddElement<rtd::AbilityUI>(draw_t(abillityPos.x + (abillitySize.x * 2 + padding.x), abillityPos.y, abillitySize.x, abillitySize.y), D2D1::ColorF(0, 1.0f), "LockedIcon.png");
 		scene.Add2DCollection(abilities, "AbilityUI");
+		Collection2D* spectatingCollection = new Collection2D;
+		rtd::Text* deadText = spectatingCollection->AddElement<rtd::Text>("You are dead!", draw_t((width / 2)  - widthScale, (height / 2) + (height / 4), (widthScale / 10.f), (height / 8.f)));
+		rtd::Text* spectateText = spectatingCollection->AddElement<rtd::Text>("LMB to spectate another player", draw_t((width / 2) - widthScale, (height / 2) + (height / 4), (widthScale / 3.f), (height / 8.f)));
+		scene.Add2DCollection(spectatingCollection, "SpectateUI");
+
+		deadText->SetVisiblity(false);
+		spectateText->SetVisiblity(false);
+		Collection2D* skipCollection = new Collection2D;
+		rtd::Button* skipToNightButton = skipCollection->AddElement<rtd::Button>("Button.png", draw_t(width - ((widthScale / 9.f)), (height / 2) - (height / 8), (widthScale / 10.f), (height / 8.f)), false);
+		rtd::Text* skipToNightText = skipCollection->AddElement<rtd::Text>("Skip Day", draw_t(width - ((widthScale / 9.f)), (height / 2) - (height / 8), (widthScale / 10.f), (height / 8.f)));
+
+		scene.Add2DCollection(skipCollection, "SkipUI");
+		skipToNightButton->SetOnPressedEvent([=]
+			{
+				Entity player;
+				game->GetLocalPlayer(player);
+				game->SetPlayerWantsToSkip(true);
+				skipCollection->elements[0].get()->SetVisiblity(false);
+				skipCollection->elements[1].get()->SetVisiblity(false);
+			});
+		skipToNightButton->SetOnHoverEvent([=]()
+			{
+				game->m_inputState.leftMouse = false;
+				game->m_inputState.rightMouse = false;
+			});
 
 		Collection2D* pauseMenu = new Collection2D;
 		sm::Vector2 pauseMenuPos = { width * 0.5f - (widthScale * 0.125f), (height / 2) - (height * 0.25f) };

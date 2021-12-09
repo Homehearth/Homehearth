@@ -424,7 +424,9 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		SoundHandler::Get().PlaySound("OnGameOver", audio);
 		rtd::Text* mainMenuErrorText = dynamic_cast<rtd::Text*>(GetScene("MainMenu").GetCollection("ConnectFields")->elements[6].get());
 		mainMenuErrorText->SetVisiblity(false);
-
+		Scene& scene = GetScene("Game");
+		scene.GetCollection("SpectateUI")->elements[0]->SetVisiblity(false);
+		scene.GetCollection("SpectateUI")->elements[1]->SetVisiblity(false);
 		uint32_t gatheredMoney, wavesSurvived;
 		msg >> wavesSurvived >> gatheredMoney;
 		SetScene("GameOver");
@@ -439,6 +441,20 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		{
 			it->second.Destroy();
 			it = m_gameEntities.erase(it);
+		}
+
+		it = m_players.begin();
+
+		while (it != m_players.end())
+		{
+			it->second.Destroy();
+			it = m_players.erase(it);
+		}
+
+		for (int i = 0; i < MAX_PLAYERS_PER_LOBBY; i++)
+		{
+			GetScene("Game").GetCollection("player" + std::to_string(i + 1) + +"Info")->Hide();
+			GetScene("Game").GetCollection("dynamicPlayer" + std::to_string(i + 1) + "namePlate");
 		}
 
 		m_isSpectating = false;
@@ -533,7 +549,12 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 					l.lightData.enabled = 0;
 				}
 			});
-
+		Scene& scene = GetScene("Game");
+		Collection2D* skipButtonUI = scene.GetCollection("SkipUI");
+		rtd::Button* skipButton = dynamic_cast<rtd::Button*>(skipButtonUI->elements[0].get());
+		rtd::Text* skipText = dynamic_cast<rtd::Text*>(skipButtonUI->elements[1].get());
+		skipText->SetVisiblity(true);
+		skipButton->SetVisiblity(true);
 
 		SoundHandler::Get().SetCurrentMusic("MenuTheme");
 		rtd::Text* lobbyErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("LobbyFields")->elements[5].get());
@@ -586,6 +607,10 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		msg >> speed;
 		float time;
 		msg >> time;
+		if (speed == m_cycler.GetDefaultSpeed())
+		{
+			m_players.at(m_localPID).GetComponent<comp::Player>()->wantsToSkipDay = false;
+		}
 		m_cycler.SetCycleSpeed(speed);
 		m_cycler.SetTime(time);
 		break;
@@ -694,8 +719,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			}
 			}
 		}
-
-		GameSystems::UpdateHealthbar(this);
 		break;
 
 	}
@@ -803,6 +826,19 @@ void Game::JoinLobby(uint32_t lobbyID)
 	else
 	{
 		LOG_WARNING("Request denied: You are already in a lobby");
+	}
+}
+
+void Game::SetPlayerWantsToSkip(bool value)
+{
+	m_players.at(m_localPID).GetComponent<comp::Player>()->wantsToSkipDay = value;
+	if (value)
+	{
+		message<GameMsg> msg;
+		msg.header.id = GameMsg::Game_PlayerSkipDay;
+		msg << this->m_localPID << m_gameID;
+		m_client.Send(msg);
+		LOG_INFO("Player wants to skip to Night")
 	}
 }
 
@@ -1211,16 +1247,24 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 				{
 					if (GetCurrentScene() == &GetScene("Game"))
 					{
+						GameSystems::UpdateHealthbar(this);
+
 						if (e == m_players.at(m_localPID))
 						{
 							if (!hp.isAlive)
 							{
 								m_isSpectating = true;
+								Scene& scene = GetScene("Game");
+								scene.GetCollection("SpectateUI")->elements[0]->SetVisiblity(true);
+								scene.GetCollection("SpectateUI")->elements[1]->SetVisiblity(true);
 							}
 							else
 							{
 								if (m_isSpectating)
 								{
+									Scene& scene = GetScene("Game");
+									scene.GetCollection("SpectateUI")->elements[0]->SetVisiblity(false);
+									scene.GetCollection("SpectateUI")->elements[1]->SetVisiblity(false);
 									m_isSpectating = false;
 									Camera* cam = GetCurrentScene()->GetCurrentCamera();
 
