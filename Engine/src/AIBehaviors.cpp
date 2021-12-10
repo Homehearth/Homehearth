@@ -50,12 +50,12 @@ std::shared_ptr<BT::FallbackNode> AIBehaviors::GetFocusPlayerAIBehavior(Entity e
 	//Try to find target that is close to AI
 	auto findClosePlayerTarget = std::make_shared<BT::TargetPlayerCBT>(BT::TargetPlayerCBT("FindClosePlayerTarget", entity, blackboard, closeRange));
 	auto findCloseBuildingTarget = std::make_shared<BT::TargetHouseCBT>(BT::TargetHouseCBT("FindCloseBuildingTarget", entity, blackboard, closeRange));
-	auto findCloseDefenseTarget = std::make_shared<BT::TargetHouseCBT>(BT::TargetHouseCBT("FindCloseBuildingTarget", entity, blackboard, closeRange));
+	auto findCloseDefenseTarget = std::make_shared<BT::TargetDefencesCBT>(BT::TargetDefencesCBT("FindCloseDefenseTarget", entity, blackboard, closeRange));
 
 	//If nothing nearby was found, look across the map
 	auto findPlayer = std::make_shared<BT::TargetPlayerCBT>(BT::TargetPlayerCBT("FindTarget", entity, blackboard, maxAggro));
 	auto findBuildingTarget = std::make_shared<BT::TargetHouseCBT>(BT::TargetHouseCBT("FindBuildingTarget", entity, blackboard, maxAggro));
-	auto findDefenseTarget = std::make_shared<BT::TargetHouseCBT>(BT::TargetHouseCBT("FindBuildingTarget", entity, blackboard, maxAggro));
+	auto findDefenseTarget = std::make_shared<BT::TargetDefencesCBT>(BT::TargetDefencesCBT("FindDefenseTarget", entity, blackboard, maxAggro));
 
 	auto moveToTarget = std::make_shared<BT::MoveCBT>(BT::MoveCBT("MoveToTarget", entity, blackboard));
 	auto attackTarget = std::make_shared<BT::AttackCBT>(BT::AttackCBT("AttackTarget", entity, blackboard));
@@ -104,11 +104,11 @@ std::shared_ptr<BT::FallbackNode> AIBehaviors::GetFocusBuildingAIBehavior(Entity
 	//Try to find target that is close to AI
 	auto findClosePlayerTarget = std::make_shared<BT::TargetPlayerCBT>(BT::TargetPlayerCBT("FindClosePlayerTarget", entity, blackboard, closeRange));
 	auto findCloseBuildingTarget = std::make_shared<BT::TargetHouseCBT>(BT::TargetHouseCBT("FindCloseBuildingTarget", entity, blackboard, closeRange));
-	auto findCloseDefenseTarget = std::make_shared<BT::TargetHouseCBT>(BT::TargetHouseCBT("FindCloseBuildingTarget", entity, blackboard, closeRange));
+	auto findCloseDefenseTarget = std::make_shared<BT::TargetDefencesCBT>(BT::TargetDefencesCBT("FindCloseDefenseTarget", entity, blackboard, closeRange));
 
 	//If nothing nearby was found, look across the map
 	auto findBuildingTarget = std::make_shared<BT::TargetHouseCBT>(BT::TargetHouseCBT("FindBuildingTarget", entity, blackboard,  maxAggro));
-	auto findDefenseTarget = std::make_shared<BT::TargetHouseCBT>(BT::TargetHouseCBT("FindBuildingTarget", entity, blackboard, maxAggro));
+	auto findDefenseTarget = std::make_shared<BT::TargetDefencesCBT>(BT::TargetDefencesCBT("FindDefenseTarget", entity, blackboard, maxAggro));
 	auto findPlayer = std::make_shared<BT::TargetPlayerCBT>(BT::TargetPlayerCBT("FindTarget", entity, blackboard, maxAggro));
 
 	auto moveToTarget = std::make_shared<BT::MoveCBT>(BT::MoveCBT("MoveToTarget", entity, blackboard));

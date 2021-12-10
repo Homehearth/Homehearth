@@ -49,7 +49,7 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 
 		npc->movementSpeed = 15.f;
 		attackAbility->cooldown = 1.0f;
-		attackAbility->attackDamage = 20.f;
+		attackAbility->attackDamage = 15.f;
 		attackAbility->lifetime = 0.1f;
 		attackAbility->attackRange = 4.f;
 		attackAbility->useTime = 0.3f;
@@ -83,7 +83,7 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 
 		npc->movementSpeed = 15.f;
 		attackAbility->cooldown = 3.0f;
-		attackAbility->attackDamage = 20.f;
+		attackAbility->attackDamage = 10.f;
 		attackAbility->lifetime = 5.0f;
 		attackAbility->attackRange = 60.f;
 		attackAbility->useTime = 0.3f;
@@ -102,8 +102,8 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		meshName->name = NameType::MESH_MONSTER;
 		animatorName->name = AnimName::ANIM_MONSTER;
 		bos->Radius = 3.f;
-		attackAbility->cooldown = 1.0f;
-		attackAbility->attackDamage = 20.f;
+		attackAbility->cooldown = 0.8f;
+		attackAbility->attackDamage = 10.f;
 		attackAbility->lifetime = 0.3f;
 		attackAbility->attackRange = 7.0f;
 		attackAbility->useTime = 0.3f;
@@ -122,14 +122,15 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		meshName->name = NameType::MESH_MONSTER;
 		animatorName->name = AnimName::ANIM_MONSTER;
 		bos->Radius = 3.f;
-		attackAbility->cooldown = 1.0f;
+		attackAbility->cooldown = 2.0f;
 		attackAbility->attackDamage = 20.f;
 		attackAbility->lifetime = 0.3f;
-		attackAbility->attackRange = 20.0f;
+		attackAbility->attackRange = 14.0f;
 		attackAbility->useTime = 0.3f;
 		attackAbility->delay = 0.2f;
 		attackAbility->movementSpeedAlt = 0.0f;
 		npc->movementSpeed = 10.f;
+		health->maxHealth = 1500.f;
 		health->currentHealth = 1500.f;
 		behaviorTree->root = AIBehaviors::GetFocusPlayerAIBehavior(entity, simulation->GetBlackboard());
 	}
@@ -156,6 +157,8 @@ void EnemyManagement::CreateWaves(std::queue<Wave>& waveQueue, int currentRound)
 	{
 		Wave::Group group1;
 		group1.AddEnemy(EnemyType::Default, 8 + 4 * currentRound);
+		if (currentRound > 0)
+			group1.AddEnemy(EnemyType::Runner, 2 + currentRound);
 		group1.SetSpawnPoint({ 490.f, -150.0f });
 		wave1.SetTimeLimit(5);
 		wave1.AddGroup(group1);
@@ -166,7 +169,8 @@ void EnemyManagement::CreateWaves(std::queue<Wave>& waveQueue, int currentRound)
 
 		group1.AddEnemy(EnemyType::Default, 5 + 3 * currentRound);
 		group2.AddEnemy(EnemyType::Default, 5 + 3 * currentRound);
-		group2.AddEnemy(EnemyType::Runner, 1 + 1 * currentRound);
+		if (currentRound > 0)
+			group2.AddEnemy(EnemyType::Runner, 4 + currentRound);
 		group1.SetSpawnPoint({ 490.f, -150.0f });
 		group2.SetSpawnPoint({ 170, -80.0f });
 		wave2.AddGroup(group1);
@@ -182,14 +186,14 @@ void EnemyManagement::CreateWaves(std::queue<Wave>& waveQueue, int currentRound)
 		group1.AddEnemy(EnemyType::Runner, 1 + 2 * currentRound);
 		group1.SetSpawnPoint({ 490.f, -150.0f });
 
-		group2.AddEnemy(EnemyType::Default, 3 + currentRound);
+		group2.AddEnemy(EnemyType::Default, 3 + 3* currentRound);
 		group2.AddEnemy(EnemyType::Runner, 1 + currentRound);
 		group2.SetSpawnPoint({ 170, -80.0f });
 
 		group3.AddEnemy(EnemyType::Default, 3 + 3 * currentRound);
 		group3.SetSpawnPoint({ 80.0f, -500.0f });
 
-		group4.AddEnemy(EnemyType::Default, 2 + 3 * currentRound);
+		group4.AddEnemy(EnemyType::Default, 3 + 3 * currentRound);
 		group4.SetSpawnPoint({ 520.f, -540.0f });
 
 		wave3.AddGroup(group1);
@@ -203,19 +207,19 @@ void EnemyManagement::CreateWaves(std::queue<Wave>& waveQueue, int currentRound)
 		Wave::Group group1, group2, group3, group4;
 
 		group1.AddEnemy(EnemyType::Default, 4 + 3 * currentRound);
-		group1.AddEnemy(EnemyType::Runner, 1 + currentRound);
+		group1.AddEnemy(EnemyType::Runner, 2 + currentRound);
 		group1.SetSpawnPoint({ 490.f, -150.0f });
 
 		group2.AddEnemy(EnemyType::Default, 4 + 3 * currentRound);
 		group2.AddEnemy(EnemyType::Runner, 1 + 3 * currentRound);
 		group2.SetSpawnPoint({ 170, -80.0f });
 
-		group3.AddEnemy(EnemyType::Default, 2 + 3 * currentRound);
+		group3.AddEnemy(EnemyType::Default, 4 + 3 * currentRound);
 		group3.AddEnemy(EnemyType::Runner, 2 + currentRound);
 		group3.SetSpawnPoint({ 80.0f, -500.0f });
 
 		group4.AddEnemy(EnemyType::Default, 4 + 3 * currentRound);
-		group4.AddEnemy(EnemyType::Runner, 1 + currentRound);
+		group4.AddEnemy(EnemyType::Runner, 2 + currentRound);
 		group4.SetSpawnPoint({ 520.f, -540.0f });
 
 		wave4.AddGroup(group1);
@@ -228,17 +232,17 @@ void EnemyManagement::CreateWaves(std::queue<Wave>& waveQueue, int currentRound)
 	{ // Wave_5 BOSS
 		Wave::Group group1, group2, group3, group4;
 
-		group1.AddEnemy(EnemyType::Mage, 2 + currentRound);
-		group1.AddEnemy(EnemyType::BIGMOMMA, 1);
+		group1.AddEnemy(EnemyType::Mage, 2 + 2 * currentRound);
+		group1.AddEnemy(EnemyType::BIGMOMMA, 1 + currentRound);
 		group1.SetSpawnPoint({ 490.f, -150.0f });
 
-		group2.AddEnemy(EnemyType::Default, 1 + 3 * currentRound);
+		group2.AddEnemy(EnemyType::Default, 5 + 3 * currentRound);
 		group2.SetSpawnPoint({ 170, -80.0f });
 
-		group3.AddEnemy(EnemyType::Default, 2 + 3 * currentRound);
+		group3.AddEnemy(EnemyType::Default, 5 + 3 * currentRound);
 		group3.SetSpawnPoint({ 80.0f, -500.0f });
 
-		group4.AddEnemy(EnemyType::Default, 1 + 3 * currentRound);
+		group4.AddEnemy(EnemyType::Default, 5 + 3 * currentRound);
 		group4.SetSpawnPoint({ 520.f, -540.0f });
 
 		wave5.AddGroup(group1);
@@ -371,7 +375,7 @@ void ServerSystems::WaveSystem(Simulation* simulation,
 		}
 
 		//Add count and pop from queue
-		simulation->IncreaseWavesSurvived();
+		simulation->m_wavesSurvived++;
 		waves.pop();
 	}
 }
@@ -385,7 +389,9 @@ void ServerSystems::OnCycleChange(Simulation* simulation)
 	//Publish event when timeToFinish been exceeded.
 	if (simulation->m_timeCycler.HasChangedPeriod())
 	{
-		if (simulation->m_timeCycler.GetTimePeriod() == CyclePeriod::MORNING)
+		switch (simulation->m_timeCycler.GetTimePeriod())
+		{
+		case CyclePeriod::MORNING:
 		{
 			simulation->m_timeCycler.ResetCycleSpeed();
 			// remove all bad guys
@@ -403,9 +409,19 @@ void ServerSystems::OnCycleChange(Simulation* simulation)
 						hp.currentHealth = 0.25f * hp.maxHealth;
 					}
 				});
-		}
 
-		if (simulation->m_timeCycler.GetTimePeriod() == CyclePeriod::NIGHT)
+			if (simulation->waveQueue.size() == 0)
+			{
+				EnemyManagement::CreateWaves(simulation->waveQueue, simulation->currentRound++);
+			}
+
+			break;
+		}
+		case CyclePeriod::DAY:
+		{
+			break;
+		}
+		case CyclePeriod::NIGHT:
 		{
 			simulation->m_timeCycler.ResetCycleSpeed();
 
@@ -414,12 +430,17 @@ void ServerSystems::OnCycleChange(Simulation* simulation)
 				// start new wave
 				simulation->GetGameScene()->publish<ESceneCallWaveSystem>(0.0f);
 			}
-			else
-			{
-				EnemyManagement::CreateWaves(simulation->waveQueue, simulation->currentRound++);
-			}
-
+			break;
 		}
+		}
+
+		network::message<GameMsg> msg;
+		msg.header.id = GameMsg::Game_Time;
+		msg << simulation->m_timeCycler.GetCycleSpeed();
+		msg << simulation->m_timeCycler.GetTimePeriod();
+		bool hasChangedPeriod = true;
+		msg << hasChangedPeriod;
+		simulation->Broadcast(msg);
 	}
 	if (simulation->m_timeCycler.GetTimePeriod() == CyclePeriod::NIGHT)
 	{
@@ -432,13 +453,21 @@ void ServerSystems::OnCycleChange(Simulation* simulation)
 		if (count == 0)
 		{
 			simulation->m_timeCycler.SetCycleSpeed(15.0f);
+
+			network::message<GameMsg> msg;
+			msg.header.id = GameMsg::Game_Time;
+			msg << simulation->m_timeCycler.GetCycleSpeed();
+			msg << simulation->m_timeCycler.GetTimePeriod();
+			bool hasChangedPeriod = false;
+			msg << hasChangedPeriod;
+			simulation->Broadcast(msg);
 		}
 	}
 }
 
 void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene& scene, float dt, QuadTree* dynamicQT, Blackboard* blackboard)
 {
-	scene.ForEachComponent<comp::Player, comp::Transform, comp::Velocity>([&](comp::Player& p, comp::Transform& t, comp::Velocity& v)
+	scene.ForEachComponent<comp::Player, comp::Transform, comp::Velocity, comp::AnimationState>([&](comp::Player& p, comp::Transform& t, comp::Velocity& v, comp::AnimationState& anim)
 		{
 			// update velocity
 			sm::Vector3 vel = sm::Vector3(static_cast<float>(p.lastInputState.axisHorizontal), 0, static_cast<float>(p.lastInputState.axisVertical));
@@ -451,7 +480,9 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 			vel = sm::Vector3::TransformNormal(vel, sm::Matrix::CreateRotationY(targetRotation));
 
 			if (vel.Length() > 0.01f)
+			{
 				p.state = comp::Player::State::WALK;
+			}
 
 			vel *= p.runSpeed;
 			v.vel = vel;
@@ -501,17 +532,17 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 					case ShopItem::Defence1x1:
 					case ShopItem::Defence1x3:
 					{
-						if (simulation->m_timeCycler.GetTimePeriod() == CyclePeriod::DAY)
+						if (simulation->m_timeCycler.GetTimePeriod() != CyclePeriod::NIGHT)
 						{
 							uint32_t cost = 0;
 							if (p.shopItem == ShopItem::Defence1x1)
-								cost = 10;
+								cost = 100;
 							else if (p.shopItem == ShopItem::Defence1x3)
-								cost = 30;
+								cost = 250;
 
 							if (simulation->GetCurrency().GetAmount() >= cost)
 							{
-								if (simulation->GetGrid().PlaceDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, blackboard->GetPathFindManager(), dynamicQT))
+								if (simulation->GetGrid().PlaceDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, blackboard->GetPathFindManager(), dynamicQT, blackboard))
 								{
 									audio_t audio =
 									{
@@ -528,6 +559,21 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 
 									simulation->GetCurrency() -= cost;
 									anim.toSend = EAnimationType::PLACE_DEFENCE;
+
+
+									//Check all house nodes to se if they have become unreachable
+									scene.ForEachComponent<comp::House, comp::Transform>([&](Entity entity, comp::House& house, comp::Transform& transform)
+										{
+											Node* homeNode = house.homeNode;
+											if (homeNode)
+											{
+												if (!blackboard->GetPathFindManager()->PlayerAStar(house.homeNode->position))
+												{
+													house.homeNode->reachable = false;
+												}
+											}
+										});
+
 								}
 							}
 						}
@@ -535,7 +581,21 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 					}
 					case ShopItem::Destroy_Tool:
 					{
-						simulation->GetGrid().RemoveDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, blackboard);
+						if (simulation->GetGrid().RemoveDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, blackboard))
+						{
+							//Check all house nodes to se if they have become unreachable
+							scene.ForEachComponent<comp::House, comp::Transform>([&](Entity entity, comp::House& house, comp::Transform& transform)
+								{
+									Node* homeNode = house.homeNode;
+									if (homeNode)
+									{
+										if (blackboard->GetPathFindManager()->PlayerAStar(house.homeNode->position))
+										{
+											house.homeNode->reachable = true;
+										}
+									}
+								});
+						}
 						break;
 					}
 					default:
@@ -581,7 +641,6 @@ void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money
 			{
 				comp::AnimationState* anim = entity.GetComponent<comp::AnimationState>();
 
-
 				if (anim)
 				{
 					anim->toSend = EAnimationType::DEAD;
@@ -593,8 +652,8 @@ void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money
 				// increase money
 				if (entity.GetComponent<comp::Tag<BAD>>())
 				{
-					money_ref += 5 * spree.GetSpree();
-					money_ref.IncreaseTotal(5 * spree.GetSpree());
+					money_ref += 25 * spree.GetSpree();
+					money_ref.IncreaseTotal(25 * spree.GetSpree());
 					spree.AddSpree();
 				}
 
@@ -640,7 +699,7 @@ void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money
 					audio.type = ESoundEvent::Game_OnDefenceDestroyed;
 
 					//Removing the defence and its neighbours if needed
-					grid.RemoveDefence(entity);
+					grid.RemoveDefence(entity, blackboard);
 					entity.Destroy();
 				}
 				else if (house)
@@ -651,7 +710,7 @@ void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money
 					qt->Insert(newHouse);
 
 					sm::Vector3 emitterOffset = newHouse.GetComponent<comp::OrientedBoxCollider>()->Center;
-					newHouse.AddComponent<comp::PARTICLEEMITTER>(emitterOffset, 100, 2.5f, PARTICLEMODE::SMOKEAREA, 4.0f, 1.f, false);
+					newHouse.AddComponent<comp::ParticleEmitter>(emitterOffset, 100, 2.5f, ParticleMode::SMOKEAREA, 4.0f, 1.f, false);
 
 
 					//Remove house from blackboard
@@ -701,7 +760,7 @@ void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& sce
 
 		});
 
-	scene.ForEachComponent<comp::Player, comp::Health, comp::Network, comp::AnimationState>([&](Entity e, comp::Player& p, comp::Health& health, comp::Network n, comp::AnimationState anim)
+	scene.ForEachComponent<comp::Player, comp::Health, comp::Network>([&](Entity e, comp::Player& p, comp::Health& health, comp::Network n)
 		{
 			if (!health.isAlive)
 			{
@@ -781,7 +840,7 @@ void ServerSystems::CheckGameOver(Simulation* simulation, HeadlessScene& scene)
 	PROFILE_FUNCTION();
 
 	bool gameOver = true;
-	bool isHousesDestroyed = true;
+	bool isVillagerDead = true;
 	//Check if all players is dead
 	scene.ForEachComponent<comp::Player, comp::Health>([&](comp::Player& p, comp::Health& h)
 		{
@@ -791,18 +850,23 @@ void ServerSystems::CheckGameOver(Simulation* simulation, HeadlessScene& scene)
 			}
 		});
 
-	scene.ForEachComponent<comp::House>([&](comp::House& house)
+	scene.ForEachComponent<comp::Villager, comp::Health>([&](Entity& e, comp::Villager& villager, comp::Health& hp)
 		{
-			if (!house.isDead)
+			if (hp.isAlive)
 			{
-				isHousesDestroyed = false;
+				isVillagerDead = false;
 			}
 		});
 
-
-	if (gameOver || isHousesDestroyed)
+	if (gameOver || isVillagerDead)
 	{
-		simulation->SetGameOver();
+		message<GameMsg> msg;
+		msg.header.id = GameMsg::Game_Over;
+		msg << simulation->GetCurrency().GetTotalGathered() << simulation->m_wavesSurvived - 1;
+		simulation->Broadcast(msg);
+
+		simulation->SetScene(simulation->GetGameOverScene());
+		simulation->m_lobby.Clear();
 	}
 }
 
@@ -822,13 +886,12 @@ void ServerSystems::AnimationSystem(Simulation* simulation, HeadlessScene& scene
 	scene.ForEachComponent<comp::Network, comp::AnimationState>([&](comp::Network& net, comp::AnimationState& anim)
 		{
 			//Have to send every time - otherwise animations can be locked to one
-			if (anim.toSend != EAnimationType::NONE)
+			if (anim.toSend != anim.lastSend)
 			{
 				count++;
 				msg << anim.toSend << net.id;
 
 				anim.lastSend = anim.toSend;
-				anim.toSend = EAnimationType::NONE;
 			}
 		});
 	if (count > 0)
@@ -909,7 +972,7 @@ void ServerSystems::CombatSystem(HeadlessScene& scene, float dt, Blackboard* bla
 }
 void ServerSystems::DeathParticleTimer(HeadlessScene& scene)
 {
-	scene.ForEachComponent<comp::PARTICLEEMITTER>([&](Entity& e, comp::PARTICLEEMITTER& emitter)
+	scene.ForEachComponent<comp::ParticleEmitter>([&](Entity& e, comp::ParticleEmitter& emitter)
 		{
 			if (emitter.hasDeathTimer == true && emitter.lifeLived <= emitter.lifeTime)
 			{
@@ -917,7 +980,7 @@ void ServerSystems::DeathParticleTimer(HeadlessScene& scene)
 			}
 			else if (emitter.hasDeathTimer == true && emitter.lifeLived >= emitter.lifeTime)
 			{
-				e.RemoveComponent<comp::PARTICLEEMITTER>();
+				e.RemoveComponent<comp::ParticleEmitter>();
 			}
 		});
 }
@@ -937,6 +1000,14 @@ void ServerSystems::CheckSkipDay(Simulation* simulation)
 	if (allPlayersSkip)
 	{
 		simulation->m_timeCycler.SetCycleSpeed(15.f);
+
+		network::message<GameMsg> msg;
+		msg.header.id = GameMsg::Game_Time;
+		msg << simulation->m_timeCycler.GetCycleSpeed();
+		msg << simulation->m_timeCycler.GetTimePeriod();
+		bool hasChangedPeriod = false;
+		msg << hasChangedPeriod;
+		simulation->Broadcast(msg);
 	}
 }
 

@@ -87,14 +87,6 @@ bool Game::OnStartup()
 	// Set Current Scene
 	SetScene("MainMenu");
 
-	/*Entity emitter4 = GetScene("Game").CreateEntity();
-	emitter4.AddComponent<comp::Transform>()->position = { 250, 5, -340 };
-	emitter4.AddComponent<comp::EmitterParticle>(sm::Vector3{ 0,0,0 }, 102, 2.f, PARTICLEMODE::MAGEHEAL, 3.5f, 1.f, false);*/
-
-	/*Entity waterSplash = GetScene("Game").CreateEntity();
-	waterSplash.AddComponent<comp::Transform>()->position = { 270, 13, -370 };
-	waterSplash.AddComponent <comp::EmitterParticle>(sm::Vector3{ 0,0,0 }, 150, 1.f, PARTICLEMODE::WATERSPLASH, 2.0f, 1.f, false);*/
-
 	return true;
 }
 
@@ -191,7 +183,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 
 		if (msg.payload.size() > 0)
 		{
-			LOG_ERROR("TCP FUCKED UP");
+			LOG_ERROR("TCP UPDATE ENTITY FUCKED UP");
 		}
 
 		break;
@@ -221,7 +213,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 
 		if (msg.payload.size() > 0)
 		{
-			LOG_ERROR("TCP FUCKED UP");
+			LOG_ERROR("TCP UPDATE COMPONENT FUCKED UP");
 		}
 
 		break;
@@ -259,7 +251,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 
 		if (msg.payload.size() > 0)
 		{
-			LOG_ERROR("TCP FUCKED UP");
+			LOG_ERROR("TCP ADD ENTITY FUCKED UP");
 		}
 
 		break;
@@ -268,6 +260,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	{
 		uint32_t count;
 		msg >> count;
+		int removed = 0;
 		for (uint32_t i = 0; i < count; i++)
 		{
 			uint32_t id;
@@ -294,15 +287,16 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 				}
 				m_gameEntities.at(id).Destroy();
 				m_gameEntities.erase(id);
+				removed++;
 			}
 		}
 #ifdef _DEBUG
-		LOG_INFO("Removed %u entities", count);
+		LOG_INFO("Removed %u entities", removed);
 #endif
 
 		if (msg.payload.size() > 0)
 		{
-			LOG_ERROR("TCP FUCKED UP");
+			LOG_ERROR("TCP REMOVED FUCKED UP SIZE LEFT %lu", msg.payload.size());
 		}
 
 		break;
@@ -433,6 +427,9 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	}
 	case GameMsg::Game_Over:
 	{
+		uint32_t gatheredMoney, wavesSurvived;
+		msg >> wavesSurvived >> gatheredMoney;
+
 		SoundHandler::Get().GetCurrentMusic()->stop();
 
 		audio_t audio = {};
@@ -443,16 +440,16 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		SoundHandler::Get().PlaySound("OnGameOver", audio);
 		rtd::Text* mainMenuErrorText = dynamic_cast<rtd::Text*>(GetScene("MainMenu").GetCollection("ConnectFields")->elements[6].get());
 		mainMenuErrorText->SetVisiblity(false);
-		Scene& scene = GetScene("Game");
-		scene.GetCollection("SpectateUI")->elements[0]->SetVisiblity(false);
-		scene.GetCollection("SpectateUI")->elements[1]->SetVisiblity(false);
-		uint32_t gatheredMoney, wavesSurvived;
-		msg >> wavesSurvived >> gatheredMoney;
-		SetScene("GameOver");
+		Scene& gameScene = GetScene("Game");
+		gameScene.GetCollection("SpectateUI")->elements[0]->SetVisiblity(false);
+		gameScene.GetCollection("SpectateUI")->elements[1]->SetVisiblity(false);
 		rtd::Text* scoreText = dynamic_cast<rtd::Text*>(GetScene("GameOver").GetCollection("GameOver")->elements[1].get());
 		scoreText->SetText("Score: " + std::to_string(gatheredMoney));
 		rtd::Text* wavesText = dynamic_cast<rtd::Text*>(GetScene("GameOver").GetCollection("GameOver")->elements[2].get());
 		wavesText->SetText("Waves: " + std::to_string(wavesSurvived));
+		SetScene("GameOver");
+
+		m_gameID = -1;
 
 		auto it = m_gameEntities.begin();
 
@@ -462,39 +459,32 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			it = m_gameEntities.erase(it);
 		}
 
-		it = m_players.begin();
+		m_cycler.SetTime(MORNING);
 
+		it = m_players.begin();
+		int i = 1;
+		Scene& lobbyScene = GetScene("Lobby");
 		while (it != m_players.end())
 		{
 			it->second.Destroy();
 			it = m_players.erase(it);
-		}
 
-		for (int i = 0; i < MAX_PLAYERS_PER_LOBBY; i++)
-		{
 			GetScene("Game").GetCollection("Aplayer" + std::to_string(i + 1) + +"Info")->Hide();
 			GetScene("Game").GetCollection("AdynamicPlayer" + std::to_string(i + 1) + "namePlate");
+			lobbyScene.GetCollection("playerIcon" + std::to_string(i))->Hide();
 		}
 
 		m_isSpectating = false;
 
-		rtd::Button* readyText = dynamic_cast<rtd::Button*>(GetScene("Lobby").GetCollection("StartGame")->elements[0].get());
+		rtd::Button* readyText = dynamic_cast<rtd::Button*>(lobbyScene.GetCollection("StartGame")->elements[0].get());
 		readyText->GetPicture()->SetTexture("Ready.png");
 
-		rtd::Button* wizardButton = dynamic_cast<rtd::Button*>(GetScene("Lobby").GetCollection("ClassButtons")->elements[0].get());
-		rtd::Button* warriorButton = dynamic_cast<rtd::Button*>(GetScene("Lobby").GetCollection("ClassButtons")->elements[1].get());
+		rtd::Button* wizardButton = dynamic_cast<rtd::Button*>(lobbyScene.GetCollection("ClassButtons")->elements[0].get());
 		wizardButton->GetBorder()->SetVisiblity(false);
+		rtd::Button* warriorButton = dynamic_cast<rtd::Button*>(lobbyScene.GetCollection("ClassButtons")->elements[1].get());
 		warriorButton->GetBorder()->SetVisiblity(true);
-		rtd::Picture* desc = dynamic_cast<rtd::Picture*>(GetScene("Lobby").GetCollection("ClassTextCanvas")->elements[0].get());
+		rtd::Picture* desc = dynamic_cast<rtd::Picture*>(lobbyScene.GetCollection("ClassTextCanvas")->elements[0].get());
 		desc->SetTexture("WarriorDesc.png");
-		rtd::Picture* checkMark = dynamic_cast<rtd::Picture*>(GetScene("Lobby").GetCollection("playerIcon1")->elements[3].get());
-		checkMark->SetVisiblity(false);
-		checkMark = dynamic_cast<rtd::Picture*>(GetScene("Lobby").GetCollection("playerIcon2")->elements[3].get());
-		checkMark->SetVisiblity(false);
-		checkMark = dynamic_cast<rtd::Picture*>(GetScene("Lobby").GetCollection("playerIcon3")->elements[3].get());
-		checkMark->SetVisiblity(false);
-		checkMark = dynamic_cast<rtd::Picture*>(GetScene("Lobby").GetCollection("playerIcon4")->elements[3].get());
-		checkMark->SetVisiblity(false);
 
 		break;
 	}
@@ -623,16 +613,24 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	}
 	case GameMsg::Game_Time:
 	{
+		CyclePeriod timePeriod;
 		float speed;
+		bool hasChangedPeriod;
+		msg >> hasChangedPeriod;
+		msg >> timePeriod;
 		msg >> speed;
+		m_cycler.SetTimePeriod(timePeriod, hasChangedPeriod);
+		m_cycler.SetCycleSpeed(speed);
+		break;
+	}
+	case GameMsg::Game_Time_Update:
+	{
+		float speed;
 		float time;
 		msg >> time;
-		if (speed == m_cycler.GetDefaultSpeed())
-		{
-			m_players.at(m_localPID).GetComponent<comp::Player>()->wantsToSkipDay = false;
-		}
-		m_cycler.SetCycleSpeed(speed);
+		msg >> speed;
 		m_cycler.SetTime(time);
+		m_cycler.SetCycleSpeed(speed);
 		break;
 	}
 	case GameMsg::Lobby_Update:
@@ -786,6 +784,8 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 
 		for (uint32_t i = 0; i < count; i++)
 		{
+			float maxCooldown = 0.0f;
+			msg >> maxCooldown;
 			float cooldown = 0.0f;
 			msg >> cooldown;
 
@@ -796,16 +796,19 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			case AbilityIndex::Primary:
 			{
 				m_primaryCooldown = cooldown;
+				m_primaryMaxCooldown = maxCooldown;
 				break;
 			}
 			case AbilityIndex::Secondary:
 			{
 				m_secondaryCooldown = cooldown;
+				m_secondaryMaxCooldown = maxCooldown;
 				break;
 			}
 			case AbilityIndex::Dodge:
 			{
 				m_dodgeCooldown = cooldown;
+				m_dodgeMaxCooldown = maxCooldown;
 				break;
 			}
 			default:
@@ -1265,7 +1268,8 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 				msg >> hp;
 				if (!skip)
 				{
-					if (GetCurrentScene() == &GetScene("Game"))
+					Scene& scene = GetScene("Game");
+					if (GetCurrentScene() == &scene)
 					{
 						GameSystems::UpdateHealthbar(this);
 
@@ -1274,7 +1278,6 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 							if (!hp.isAlive)
 							{
 								m_isSpectating = true;
-								Scene& scene = GetScene("Game");
 								scene.GetCollection("SpectateUI")->elements[0]->SetVisiblity(true);
 								scene.GetCollection("SpectateUI")->elements[1]->SetVisiblity(true);
 							}
@@ -1282,7 +1285,6 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 							{
 								if (m_isSpectating)
 								{
-									Scene& scene = GetScene("Game");
 									scene.GetCollection("SpectateUI")->elements[0]->SetVisiblity(false);
 									scene.GetCollection("SpectateUI")->elements[1]->SetVisiblity(false);
 									m_isSpectating = false;
@@ -1324,7 +1326,7 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 			}
 			case ecs::Component::PARTICLEMITTER:
 			{
-				comp::PARTICLEEMITTER p;
+				comp::ParticleEmitter p;
 				msg >> p;
 				if (!skip)
 				{

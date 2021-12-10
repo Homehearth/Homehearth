@@ -41,7 +41,9 @@ namespace sceneHelp
 
 		scene.GetLights()->EditLight(lightEntity.GetComponent<comp::Light>()->lightData, lightEntity.GetComponent<comp::Light>()->index);
 
-		lightEntity.AddComponent<comp::SphereCollider>();
+		lightEntity.AddComponent<comp::SphereCollider>()->Center = sm::Vector3(pos.x, pos.y, pos.z);
+		lightEntity.GetComponent<comp::SphereCollider>()->Radius = 3.f;
+
 
 
 		return lightEntity;
@@ -182,8 +184,6 @@ namespace sceneHelp
 						}
 					});
 
-				game->GetCycler().Update(e.dt);
-
 				if (game->m_players.find(game->m_localPID) != game->m_players.end())
 				{
 					Camera* cam = scene.GetCurrentCamera();
@@ -200,7 +200,7 @@ namespace sceneHelp
 					comp::Light* l = sun.GetComponent<comp::Light>();
 
 					float angle = 360.f * game->GetCycler().GetTime();
-					float intensity = sunIntensity;
+
 					for (int i = 0; i < 2; i++)
 					{
 						sm::Vector3 dir = sm::Vector3::TransformNormal(sm::Vector3(-1, 0, -1), sm::Matrix::CreateRotationZ(dx::XMConvertToRadians(angle)));
@@ -217,11 +217,9 @@ namespace sceneHelp
 						l->lightData.position.w = 1.0f;
 
 						float d = std::abs(dir.Dot(sm::Vector3::Up));
-						l->lightData.intensity = intensity * d;
 
 						l = moon.GetComponent<comp::Light>();
 						angle -= 180.f;
-						intensity = moonIntensity;
 					}
 				}
 
@@ -234,6 +232,10 @@ namespace sceneHelp
 					{
 					case CyclePeriod::NIGHT:
 					{
+						Collection2D* skipButtonUI = scene.GetCollection("SkipUI");
+						skipButtonUI->Hide();
+
+						game->m_players.at(game->m_localPID).GetComponent<comp::Player>()->wantsToSkipDay = false;
 						game->GetScene("Game").GetCollection("shopMenu")->Hide();
 						game->SetShopItem(ShopItem::None);
 						bullColl->Hide();
@@ -249,16 +251,25 @@ namespace sceneHelp
 							}
 						}
 
+						scene.ForEachComponent<comp::Light>([](comp::Light& l)
+							{
+								if (l.lightData.type == TypeLight::POINT)
+								{
+									l.lightData.enabled = 1;
+								}
+							});
+
 						break;
 					}
 					case CyclePeriod::MORNING:
 					{
 						SoundHandler::Get().SetCurrentMusic("MenuTheme");
 						Collection2D* skipButtonUI = scene.GetCollection("SkipUI");
-						rtd::Button* skipButton = dynamic_cast<rtd::Button*>(skipButtonUI->elements[0].get());
-						rtd::Text* skipText = dynamic_cast<rtd::Text*>(skipButtonUI->elements[1].get());
-						skipText->SetVisiblity(true);
-						skipButton->SetVisiblity(true);
+						skipButtonUI->Show();
+						//rtd::Button* skipButton = dynamic_cast<rtd::Button*>(skipButtonUI->elements[0].get());
+						//rtd::Text* skipText = dynamic_cast<rtd::Text*>(skipButtonUI->elements[1].get());
+						//skipText->SetVisiblity(true);
+						//skipButton->SetVisiblity(true);
 
 						scene.ForEachComponent<comp::Light>([](comp::Light& l)
 							{
@@ -271,19 +282,19 @@ namespace sceneHelp
 					}
 					case CyclePeriod::EVENING:
 					{
-						// Hide skip day button.
-						Collection2D* skipButtonUI = scene.GetCollection("SkipUI");
-						rtd::Button* skipButton = dynamic_cast<rtd::Button*>(skipButtonUI->elements[0].get());
-						rtd::Text* skipText = dynamic_cast<rtd::Text*>(skipButtonUI->elements[1].get());
-						skipText->SetVisiblity(false);
-						skipButton->SetVisiblity(false);
-						scene.ForEachComponent<comp::Light>([](comp::Light& l)
-							{
-								if (l.lightData.type == TypeLight::POINT)
-								{
-									l.lightData.enabled = 1;
-								}
-							});
+						//// Hide skip day button.
+						//Collection2D* skipButtonUI = scene.GetCollection("SkipUI");
+						//rtd::Button* skipButton = dynamic_cast<rtd::Button*>(skipButtonUI->elements[0].get());
+						//rtd::Text* skipText = dynamic_cast<rtd::Text*>(skipButtonUI->elements[1].get());
+						//skipText->SetVisiblity(false);
+						//skipButton->SetVisiblity(false);
+						//scene.ForEachComponent<comp::Light>([](comp::Light& l)
+						//	{
+						//		if (l.lightData.type == TypeLight::POINT)
+						//		{
+						//			l.lightData.enabled = 1;
+						//		}
+						//	});
 
 						// Hide pricetag.
 						Collection2D* priceTagUI = scene.GetCollection("priceTag");
@@ -302,6 +313,9 @@ namespace sceneHelp
 					}
 				}
 
+				game->GetCycler().Update(e.dt);
+
+				ShopItem shopitem = game->GetShopItem();
 
 				if (bullColl)
 				{
@@ -565,23 +579,29 @@ namespace sceneHelp
 		rtd::Picture* abilityBar = abilities->AddElement<rtd::Picture>("AbilityBar.png", draw_t(barPos.x, barPos.y, (widthScale / 16.0f) * 5.0f, height / 9.0f));
 
 		sm::Vector2 abillitySize = { widthScale / 18.0f, height / 11.0f };
-		sm::Vector2 abillityPos = { (width / 2.f) - (abillitySize.x / 2), barPos.y + (padding.y * 0.5f) };
+		sm::Vector2 abillityPos = { (width / 2.f) - (abillitySize.x / 2), barPos.y + (padding.y * 0.25f) };
 
 		rtd::AbilityUI* primary = abilities->AddElement<rtd::AbilityUI>(draw_t(abillityPos.x - (abillitySize.x * 2 + padding.x), abillityPos.y, abillitySize.x, abillitySize.y), D2D1::ColorF(0, 1.0f), "Attack2.png");
 		primary->SetActivateButton("LMB");
 		primary->SetReference(&game->m_primaryCooldown);
+		primary->SetMaxReference(&game->m_primaryMaxCooldown);
+
 		rtd::AbilityUI* secondary = abilities->AddElement<rtd::AbilityUI>(draw_t(abillityPos.x - (abillitySize.x + padding.x / 2), abillityPos.y, abillitySize.x, abillitySize.y), D2D1::ColorF(0, 1.0f), "Block.png");
 		secondary->SetActivateButton("RMB");
 		secondary->SetReference(&game->m_secondaryCooldown);
+		secondary->SetMaxReference(&game->m_secondaryMaxCooldown);
+
 		rtd::AbilityUI* third = abilities->AddElement<rtd::AbilityUI>(draw_t(abillityPos.x, abillityPos.y, abillitySize.x, abillitySize.y), D2D1::ColorF(0, 1.0f), "Dodge.png");
 		third->SetActivateButton("Shift");
 		third->SetReference(&game->m_dodgeCooldown);
+		third->SetMaxReference(&game->m_dodgeMaxCooldown);
+
 		rtd::AbilityUI* fourth = abilities->AddElement<rtd::AbilityUI>(draw_t(abillityPos.x + (abillitySize.x + padding.x / 2), abillityPos.y, abillitySize.x, abillitySize.y), D2D1::ColorF(0, 1.0f), "LockedIcon.png");
 		rtd::AbilityUI* fith = abilities->AddElement<rtd::AbilityUI>(draw_t(abillityPos.x + (abillitySize.x * 2 + padding.x), abillityPos.y, abillitySize.x, abillitySize.y), D2D1::ColorF(0, 1.0f), "LockedIcon.png");
 		scene.Add2DCollection(abilities, "ZAbilityUI");
 		Collection2D* spectatingCollection = new Collection2D;
-		rtd::Text* deadText = spectatingCollection->AddElement<rtd::Text>("You are dead!", draw_t((width / 2)  - widthScale, (height / 2) + (height / 4), (widthScale / 10.f), (height / 8.f)));
-		rtd::Text* spectateText = spectatingCollection->AddElement<rtd::Text>("LMB to spectate another player", draw_t((width / 2) - widthScale, (height / 2) + (height / 4), (widthScale / 3.f), (height / 8.f)));
+		rtd::Text* deadText = spectatingCollection->AddElement<rtd::Text>("You are dead!", draw_t((width / 2) - (widthScale / 17.f) , (height / 2) + (height / 8.5f), (widthScale / 10.f), (height / 8.f)));
+		rtd::Text* spectateText = spectatingCollection->AddElement<rtd::Text>("LMB to spectate another player", draw_t((width / 2) - (widthScale / 6.f), (height / 4.f) + (height / 2.5f), (widthScale / 3.f), (height / 8.f)));
 		scene.Add2DCollection(spectatingCollection, "SpectateUI");
 
 		deadText->SetVisiblity(false);
@@ -596,8 +616,9 @@ namespace sceneHelp
 				Entity player;
 				game->GetLocalPlayer(player);
 				game->SetPlayerWantsToSkip(true);
-				skipCollection->elements[0].get()->SetVisiblity(false);
-				skipCollection->elements[1].get()->SetVisiblity(false);
+				skipCollection->Hide();
+				//skipCollection->elements[0].get()->SetVisiblity(false);
+				//skipCollection->elements[1].get()->SetVisiblity(false);
 			});
 		skipToNightButton->SetOnHoverEvent([=]()
 			{
@@ -660,7 +681,7 @@ namespace sceneHelp
 		button = shopIcon->AddElement<rtd::Button>("ShopIcon.png", draw_t(0.0f, 0.0f, widthScale / 24, height / 14));
 		button->SetOnPressedEvent([=]()
 			{
-				if (game->GetCycler().GetTimePeriod() == CyclePeriod::DAY)
+				if (game->GetCycler().GetTimePeriod() != CyclePeriod::NIGHT)
 				{
 					shopMenu->Show();
 					bullDoze->Hide();
@@ -684,36 +705,60 @@ namespace sceneHelp
 		shop->SetOnPressedEvent(0, [=]()
 			{
 				game->SetShopItem(ShopItem::Defence1x1);
+				audio_t audio = {};
+				audio.isUnique = false;
+				audio.volume = SoundHandler::Get().GetMasterVolume();
+				SoundHandler::Get().PlaySound("ButtonClick", audio);
 				bullDoze->Hide();
 			});
 		// 1x3 tower button.
 		shop->SetOnPressedEvent(1, [=]()
 			{
 				game->SetShopItem(ShopItem::Defence1x3);
+				audio_t audio = {};
+				audio.isUnique = false;
+				audio.volume = SoundHandler::Get().GetMasterVolume();
+				SoundHandler::Get().PlaySound("ButtonClick", audio);
 				bullDoze->Hide();
 			});
 		// Primary upgrade button.
 		shop->SetOnPressedEvent(2, [=]()
 			{
 				game->SetShopItem(ShopItem::Primary_Upgrade);
+				audio_t audio = {};
+				audio.isUnique = false;
+				audio.volume = SoundHandler::Get().GetMasterVolume();
+				SoundHandler::Get().PlaySound("ButtonClick", audio);
 				bullDoze->Hide();
 			});
 		// Armor upgrade button.
 		shop->SetOnPressedEvent(3, [=]()
 			{
 				game->SetShopItem(ShopItem::Primary_Upgrade);
+				audio_t audio = {};
+				audio.isUnique = false;
+				audio.volume = SoundHandler::Get().GetMasterVolume();
+				SoundHandler::Get().PlaySound("ButtonClick", audio);
 				bullDoze->Hide();
 			});
 		// Heal button.
 		shop->SetOnPressedEvent(4, [=]()
 			{
 				game->SetShopItem(ShopItem::Heal);
+				audio_t audio = {};
+				audio.isUnique = false;
+				audio.volume = SoundHandler::Get().GetMasterVolume();
+				SoundHandler::Get().PlaySound("ButtonClick", audio);
 				bullDoze->Hide();
 			});
 		// Remove defences button.
 		shop->SetOnPressedEvent(5, [=]()
 			{
 				game->SetShopItem(ShopItem::Destroy_Tool);
+				audio_t audio = {};
+				audio.isUnique = false;
+				audio.volume = SoundHandler::Get().GetMasterVolume();
+				SoundHandler::Get().PlaySound("ButtonClick", audio);
 				bullDoze->Show();
 			});
 		shop->SetMoneyRef(mMoney);
@@ -1426,7 +1471,6 @@ namespace sceneHelp
 		mainMenuButton->SetOnPressedEvent([=]
 			{
 				game->SetScene("JoinLobby");
-				game->m_gameID = -1;
 			});
 
 		scene.Add2DCollection(gameOverCollection, "GameOver");

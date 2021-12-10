@@ -315,7 +315,7 @@ Entity CombatSystem::CreateAttackEntity(Entity entity, HeadlessScene& scene, com
 		comp::RangeAttackAbility* ability = entity.GetComponent<comp::RangeAttackAbility>();
 		Entity explosion = CreateAreaAttackCollider(scene, attackEntity.GetComponent<comp::Transform>()->position, ability->attackRange, 0.5f);
 
-		explosion.AddComponent<comp::PARTICLEEMITTER>(sm::Vector3{ 0,0,0 }, 200, 6.f, PARTICLEMODE::EXPLOSION, 2.0f, 40.f, false);
+		explosion.AddComponent<comp::ParticleEmitter>(sm::Vector3{ 0,0,0 }, 200, 6.f, ParticleMode::EXPLOSION, 2.0f, 40.f, false);
 
 
 		CollisionSystem::Get().AddOnCollisionEnter(explosion, [=, &scene](Entity expl, Entity other)
@@ -327,8 +327,8 @@ Entity CombatSystem::CreateAttackEntity(Entity entity, HeadlessScene& scene, com
 					DoDamage(scene, entity, expl, other, ability->attackDamage, 40.0f, AttackType::RANGE);
 			});
 	};
-
-	attackEntity.AddComponent<comp::PARTICLEEMITTER>(sm::Vector3{ 0,0,0 }, 200, 1.f, PARTICLEMODE::MAGERANGE, 1.7f, 1.f, false);
+	
+	attackEntity.AddComponent<comp::ParticleEmitter>(sm::Vector3{ 0,0,0 }, 200, 1.f, ParticleMode::MAGERANGE, 1.7f, 1.f, false);
 
 	attackEntity.AddComponent<comp::Network>();
 
@@ -399,9 +399,10 @@ void CombatSystem::DoDamage(HeadlessScene& scene, Entity attacker, Entity attack
 
 	bool isStaticTarget = target.HasComponent<comp::Tag<STATIC>>();
 	bool isHouseTarget = target.HasComponent<comp::House>();
+	bool isDefenseTarget = target.HasComponent<comp::Tag<DEFENCE>>();
 	bool isPlayerAttacker = attacker.HasComponent<comp::Player>();
 	// hit map bounds
-	if (isStaticTarget && !isHouseTarget)
+	if (isStaticTarget && !isHouseTarget && !isDefenseTarget)
 	{
 		return;
 	}
@@ -415,7 +416,7 @@ void CombatSystem::DoDamage(HeadlessScene& scene, Entity attacker, Entity attack
 		doKnockback = false;
 		playTargetHitSound = false;
 	}
-	else if (isStaticTarget) // hit a collider
+	else if (isStaticTarget && !isDefenseTarget) // hit a collider
 	{
 		doDamage = false;
 		doKnockback = false;
@@ -509,20 +510,20 @@ void CombatSystem::DoDamage(HeadlessScene& scene, Entity attacker, Entity attack
 		// update Health on network
 		scene.publish<EComponentUpdated>(target, ecs::Component::HEALTH);
 
-		if (target.GetComponent<comp::PARTICLEEMITTER>())
+		if (target.GetComponent<comp::ParticleEmitter>())
 		{
-			target.RemoveComponent<comp::PARTICLEEMITTER>();
+			target.RemoveComponent<comp::ParticleEmitter>();
 		}
-
+		
 		if (target.GetComponent<comp::Tag<TagType::DEFENCE>>())
 		{
 			//Smoke particles
-			target.AddComponent<comp::PARTICLEEMITTER>(sm::Vector3{ 0,10,0 }, 50, 10.f, PARTICLEMODE::SMOKEAREA, 3.5f, 1.f, true);
+			target.AddComponent<comp::ParticleEmitter>(sm::Vector3{ 0,10,0 }, 50, 10.f, ParticleMode::SMOKEAREA, 3.5f, 1.f, true);
 		}
 		else
 		{
 			// Blood particle
-			target.AddComponent<comp::PARTICLEEMITTER>(sm::Vector3{ 0,6,0 }, 50, 5.f, PARTICLEMODE::BLOOD, 1.5f, 1.f, true);
+			target.AddComponent<comp::ParticleEmitter>(sm::Vector3{ 0,6,0 }, 50, 1.5f, ParticleMode::BLOOD, 2.0f, 1.f, true);
 		}
 
 		if (otherHealth->currentHealth <= 0.0f)

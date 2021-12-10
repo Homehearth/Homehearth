@@ -368,7 +368,7 @@ bool GridSystem::RemoveDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, 
 	}
 }
 
-void GridSystem::RemoveDefence(const Entity& entity)
+void GridSystem::RemoveDefence(const Entity& entity, Blackboard* blackboard)
 {
 	comp::TileSet* tileset = entity.GetComponent<comp::TileSet>();
 	if (tileset)
@@ -381,6 +381,8 @@ void GridSystem::RemoveDefence(const Entity& entity)
 			m_tiles[zpos][xpos].type = TileType::EMPTY;
 		}
 	}
+
+	blackboard->GetPathFindManager()->RemoveDefenseEntity(entity);
 }
 
 std::vector<std::pair<UINT, UINT>> GridSystem::CheckDefenceLocation(Ray_t& mouseRay, const uint32_t& playerID)
@@ -499,7 +501,7 @@ std::vector<std::pair<UINT, UINT>> GridSystem::CheckDefenceLocation(Ray_t& mouse
 	}
 }
 
-bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, PathFinderManager* aiHandler, QuadTree* dynamicQT)
+bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, PathFinderManager* aiHandler, QuadTree* dynamicQT, Blackboard* blackboard)
 {	
 	std::vector<std::pair<UINT, UINT>> coordinates = CheckDefenceLocation(mouseRay, playerWhoPressedMouse);
 
@@ -548,6 +550,7 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 		if (!aiHandler->PlayerAStar(playerCollider.Center))
 			player.reachable = false;
 
+		
 		/*
 			Create the model for this tiles
 		*/
@@ -555,12 +558,14 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 		tileEntity.AddComponent<comp::Tag<TagType::STATIC>>();
 		tileEntity.AddComponent<comp::Tag<TagType::DEFENCE>>();
 		tileEntity.AddComponent<comp::Network>();
-		tileEntity.AddComponent<comp::Cost>()->cost = 5;
+		tileEntity.AddComponent<comp::Cost>()->cost = 100;
 		tileEntity.AddComponent<comp::TileSet>()->coordinates = coordinates;
 
 		comp::Transform* transform = tileEntity.AddComponent<comp::Transform>();
 		comp::OrientedBoxCollider* collider = tileEntity.AddComponent<comp::OrientedBoxCollider>();
 		comp::Health* health = tileEntity.AddComponent<comp::Health>();
+
+		blackboard->GetPathFindManager()->AddDefenseEntity(tileEntity);
 
 		sm::Vector3 centerpoint = CalcCenterPoint(coordinates);
 		transform->position = { centerpoint.x, 5.f, centerpoint.z };

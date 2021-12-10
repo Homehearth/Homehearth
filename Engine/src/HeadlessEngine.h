@@ -153,6 +153,7 @@ void BasicEngine<SceneType>::Run()
 			UpdateNetwork(network_time);
 			network_time = 0.f;
 		}
+
 		lastFrame = currentFrame;
 	}
 }
