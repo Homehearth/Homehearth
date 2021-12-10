@@ -557,7 +557,7 @@ namespace sceneHelp
 		rtd::Picture* abilityBar = abilities->AddElement<rtd::Picture>("AbilityBar.png", draw_t(barPos.x, barPos.y, (widthScale / 16.0f) * 5.0f, height / 9.0f));
 
 		sm::Vector2 abillitySize = { widthScale / 18.0f, height / 11.0f };
-		sm::Vector2 abillityPos = { (width / 2.f) - (abillitySize.x / 2), barPos.y + (padding.y * 0.5f) };
+		sm::Vector2 abillityPos = { (width / 2.f) - (abillitySize.x / 2), barPos.y + (padding.y * 0.25f) };
 
 		rtd::AbilityUI* primary = abilities->AddElement<rtd::AbilityUI>(draw_t(abillityPos.x - (abillitySize.x * 2 + padding.x), abillityPos.y, abillitySize.x, abillitySize.y), D2D1::ColorF(0, 1.0f), "Attack2.png");
 		primary->SetActivateButton("LMB");
@@ -682,36 +682,60 @@ namespace sceneHelp
 		shop->SetOnPressedEvent(0, [=]()
 			{
 				game->SetShopItem(ShopItem::Defence1x1);
+				audio_t audio = {};
+				audio.isUnique = false;
+				audio.volume = SoundHandler::Get().GetMasterVolume();
+				SoundHandler::Get().PlaySound("ButtonClick", audio);
 				bullDoze->Hide();
 			});
 		// 1x3 tower button.
 		shop->SetOnPressedEvent(1, [=]()
 			{
 				game->SetShopItem(ShopItem::Defence1x3);
+				audio_t audio = {};
+				audio.isUnique = false;
+				audio.volume = SoundHandler::Get().GetMasterVolume();
+				SoundHandler::Get().PlaySound("ButtonClick", audio);
 				bullDoze->Hide();
 			});
 		// Primary upgrade button.
 		shop->SetOnPressedEvent(2, [=]()
 			{
 				game->SetShopItem(ShopItem::Primary_Upgrade);
+				audio_t audio = {};
+				audio.isUnique = false;
+				audio.volume = SoundHandler::Get().GetMasterVolume();
+				SoundHandler::Get().PlaySound("ButtonClick", audio);
 				bullDoze->Hide();
 			});
 		// Armor upgrade button.
 		shop->SetOnPressedEvent(3, [=]()
 			{
 				game->SetShopItem(ShopItem::Primary_Upgrade);
+				audio_t audio = {};
+				audio.isUnique = false;
+				audio.volume = SoundHandler::Get().GetMasterVolume();
+				SoundHandler::Get().PlaySound("ButtonClick", audio);
 				bullDoze->Hide();
 			});
 		// Heal button.
 		shop->SetOnPressedEvent(4, [=]()
 			{
 				game->SetShopItem(ShopItem::Heal);
+				audio_t audio = {};
+				audio.isUnique = false;
+				audio.volume = SoundHandler::Get().GetMasterVolume();
+				SoundHandler::Get().PlaySound("ButtonClick", audio);
 				bullDoze->Hide();
 			});
 		// Remove defences button.
 		shop->SetOnPressedEvent(5, [=]()
 			{
 				game->SetShopItem(ShopItem::Destroy_Tool);
+				audio_t audio = {};
+				audio.isUnique = false;
+				audio.volume = SoundHandler::Get().GetMasterVolume();
+				SoundHandler::Get().PlaySound("ButtonClick", audio);
 				bullDoze->Show();
 			});
 		shop->SetMoneyRef(mMoney);

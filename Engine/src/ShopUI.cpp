@@ -8,7 +8,7 @@ constexpr unsigned int TOWER_1X1_COST = 100;
 constexpr unsigned int TOWER_1X3_COST = 250;
 constexpr unsigned int PRIMARY_ABILITITY_COST = 300;
 constexpr unsigned int HEAL_COST = 150;
-constexpr unsigned int ARMOR_COST = 20;
+constexpr unsigned int ARMOR_COST = 150;
 constexpr unsigned int REMOVE_DEFENCE_COST = 0;
 
 using namespace rtd;
@@ -133,9 +133,13 @@ bool ShopUI::CheckHover()
 		m_signTexture->SetVisiblity(true);
 		m_signTexture->SetPosition((FLOAT)InputSystem::Get().GetMousePos().x, (FLOAT)InputSystem::Get().GetMousePos().y);
 		m_signText->SetPosition((FLOAT)InputSystem::Get().GetMousePos().x + width * 0.019f, (FLOAT)InputSystem::Get().GetMousePos().y);
-		m_signText->SetText("Cost: " + std::to_string(PRIMARY_ABILITITY_COST));
+		
+		if (m_atkUpgradeCount >= 3)
+			m_signText->SetText("MAX LEVEL");
+		else
+			m_signText->SetText("Cost: " + std::to_string(PRIMARY_ABILITITY_COST));
 
-		if (m_moneyRef->GetNetworkMoney() >= PRIMARY_ABILITITY_COST)
+		if (m_moneyRef->GetNetworkMoney() >= PRIMARY_ABILITITY_COST && m_atkUpgradeCount < 3)
 		{
 			m_signTexture->SetTexture("EnoughMoneySign.png");
 		}
@@ -156,7 +160,11 @@ bool ShopUI::CheckHover()
 		m_signTexture->SetVisiblity(true);
 		m_signTexture->SetPosition((FLOAT)InputSystem::Get().GetMousePos().x, (FLOAT)InputSystem::Get().GetMousePos().y);
 		m_signText->SetPosition((FLOAT)InputSystem::Get().GetMousePos().x + width * 0.019f, (FLOAT)InputSystem::Get().GetMousePos().y);
-		m_signText->SetText("Cost: " + std::to_string(ARMOR_COST));
+		
+		if (m_armorUpgradeCount >= 3)
+			m_signText->SetText("MAX LEVEL");
+		else
+			m_signText->SetText("Cost: " + std::to_string(ARMOR_COST));
 
 		if (m_moneyRef->GetNetworkMoney() >= ARMOR_COST)
 		{
@@ -179,9 +187,12 @@ bool ShopUI::CheckHover()
 		m_signTexture->SetVisiblity(true);
 		m_signTexture->SetPosition((FLOAT)InputSystem::Get().GetMousePos().x, (FLOAT)InputSystem::Get().GetMousePos().y);
 		m_signText->SetPosition((FLOAT)InputSystem::Get().GetMousePos().x + width * 0.019f, (FLOAT)InputSystem::Get().GetMousePos().y);
-		m_signText->SetText("Cost: " + std::to_string(HEAL_COST));
+		if (m_healthUpgradeCount >= 3)
+			m_signText->SetText("MAX LEVEL");
+		else
+			m_signText->SetText("Cost: " + std::to_string(HEAL_COST));
 
-		if (m_moneyRef->GetNetworkMoney() >= HEAL_COST)
+		if (m_moneyRef->GetNetworkMoney() >= HEAL_COST && m_healthUpgradeCount < 3)
 		{
 			m_signTexture->SetTexture("EnoughMoneySign.png");
 		}
@@ -203,7 +214,7 @@ bool ShopUI::CheckHover()
 		m_signTexture->SetPosition((FLOAT)InputSystem::Get().GetMousePos().x, (FLOAT)InputSystem::Get().GetMousePos().y);
 		m_signText->SetPosition((FLOAT)InputSystem::Get().GetMousePos().x + width * 0.019f, (FLOAT)InputSystem::Get().GetMousePos().y);
 		m_signText->SetText("Cost: " + std::to_string(REMOVE_DEFENCE_COST));
-
+		
 		if (m_moneyRef->GetNetworkMoney() >= REMOVE_DEFENCE_COST)
 		{
 			m_signTexture->SetTexture("EnoughMoneySign.png");
@@ -256,17 +267,30 @@ ElementState ShopUI::CheckClick()
 			if (m_buttonHovering[2])
 			{
 				if (m_functions[2])
+				{
 					m_functions[2]();
+					m_atkUpgradeCount++;
+				}
+					
 			}
 			if (m_buttonHovering[3])
 			{
 				if (m_functions[3])
+				{
 					m_functions[3]();
+					m_armorUpgradeCount++;
+				}
+					
+					
 			}
 			if (m_buttonHovering[4])
 			{
 				if (m_functions[4])
+				{
 					m_functions[4]();
+					m_healthUpgradeCount++;
+				}
+					
 			}
 			if (m_buttonHovering[5])
 			{
