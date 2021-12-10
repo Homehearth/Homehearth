@@ -6,8 +6,8 @@
 */
 constexpr unsigned int TOWER_1X1_COST = 100;
 constexpr unsigned int TOWER_1X3_COST = 300;
-constexpr unsigned int PRIMARY_ABILITITY_COST = 100;
-constexpr unsigned int HEAL_COST = 50;
+constexpr unsigned int PRIMARY_ABILITITY_COST = 300;
+constexpr unsigned int HEAL_COST = 150;
 constexpr unsigned int ARMOR_COST = 20;
 constexpr unsigned int REMOVE_DEFENCE_COST = 0;
 

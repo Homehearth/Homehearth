@@ -593,8 +593,8 @@ void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money
 				// increase money
 				if (entity.GetComponent<comp::Tag<BAD>>())
 				{
-					money_ref += 50 * spree.GetSpree();
-					money_ref.IncreaseTotal(50 * spree.GetSpree());
+					money_ref += 25 * spree.GetSpree();
+					money_ref.IncreaseTotal(25 * spree.GetSpree());
 					spree.AddSpree();
 				}
 
