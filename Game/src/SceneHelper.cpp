@@ -1269,6 +1269,26 @@ namespace sceneHelp
 			OptionSystem::Get().SetOption("Bloom", bloomOption);
 
 			});
+
+		// Bloom Intensity
+		graphicsPos.y += scale.y + padding.y;
+		posAudio = { width - (scale.x + padding.x * 2), graphicsPos.y + padding.y };
+		minPos = { canvasPos.x + padding.x + canvasSize.x / 2.f, posAudio.y };
+		maxPos = { width - (scale.x + padding.x * 2.f), posAudio.y };
+		
+		rtd::Canvas* bloomVolCanvas = graphicsCategory->AddElement<rtd::Canvas>(D2D1::ColorF(53.f / 255.f, 22.f / 255.f, 26.f / 255.f), draw_t(minPos.x - 6.f, posAudio.y, ((canvasSize.x / 2.f) + 6.f) - padding.x * 2.f, scale.y));
+		bloomVolCanvas->SetShape(Shapes::RECTANGLE_ROUNDED);
+		rtd::Slider* bloomVolumeSL = graphicsCategory->AddElement<rtd::Slider>(D2D1::ColorF(0, 0, 0), draw_t(minPos.x, posAudio.y, scale.x, scale.y), &thread::RenderThreadHandler::Get().GetRenderer()->GetBloomPass()->AdjustBloomIntensity(), 1.0f, 0.0f);
+		bloomVolumeSL->SetMinPos(minPos);
+		bloomVolumeSL->SetMaxPos(maxPos);
+		valueText = bloomVolumeSL->GetValueText();
+		valueTextPos = { minPos.x + (maxPos.x - minPos.x) / 2 + (valueText->GetText().length() * D2D1Core::GetDefaultFontSize()) / 2.f, posAudio.y };
+		valueText->SetPosition(valueTextPos.x, valueTextPos.y);
+
+		graphicsCategory->AddElement<rtd::Text>("Bloom Intensity", draw_t(canvasPos.x + padding.x, posAudio.y, scale.x, scale.y));
+		lineBorder = graphicsCategory->AddElement<rtd::Border>(draw_t(canvasPos.x + padding.x, posAudio.y, canvasSize.x - padding.x * 2.f, scale.y));
+		lineBorder->SetColor(D2D1::ColorF(53.f / 255.f, 22.f / 255.f, 26.f / 255.f));
+		lineBorder->SetLineWidth(LineWidth::LARGE);
 		
 		//Shadows
 		graphicsPos.y += scale.y + padding.y;

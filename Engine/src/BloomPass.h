@@ -105,6 +105,8 @@ private:
 	dx::ConstantBuffer<sm::Vector4>		m_samplingInfoBuffer;
 	ComPtr<ID3D11InputLayout>			m_inputLayout;
 
+	float								m_bloomIntensity = 1.0f;
+
 	void Unlink();
 	void Draw(const RenderVersion& drawType);
 	void AdditiveBlend();
@@ -123,4 +125,5 @@ public:
 
 	virtual void PostRender(ID3D11DeviceContext* pDeviceContext = D3D11Core::Get().DeviceContext()) override;
 
+	float& AdjustBloomIntensity();
 };

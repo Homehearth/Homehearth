@@ -126,6 +126,10 @@ void BloomPass::Draw(const RenderVersion& drawType)
 void BloomPass::AdditiveBlend()
 {
     this->Unlink();
+    m_info.samplingInfo = { 4.0f, m_bloomIntensity, 1.0f, 1.0f };
+    m_samplingInfoBuffer.SetData(D3D11Core::Get().DeviceContext(), m_info.samplingInfo);
+    ID3D11Buffer* buff = { m_samplingInfoBuffer.GetBuffer() };
+    D3D11Core::Get().DeviceContext()->CSSetConstantBuffers(4, 1, &buff);
     D3D11Core::Get().DeviceContext()->CSSetUnorderedAccessViews(1, 1, PM->m_backBufferAccessView.GetAddressOf(), nullptr);
     D3D11Core::Get().DeviceContext()->CSSetUnorderedAccessViews(0, 1, m_blurredAccess.GetAddressOf(), nullptr);
     D3D11Core::Get().DeviceContext()->CSSetShader(PM->m_bloomComputeShader.Get(), nullptr, 0);
@@ -314,11 +318,11 @@ void BloomPass::Render(Scene* pScene)
 {
     this->Draw(RenderVersion::FULL_TO_HALF);
     this->Draw(RenderVersion::HALF_TO_QUARTER);
-    m_blurPass.BlurTexture(sm::Vector2(PM->m_windowWidth / 4.0f, PM->m_windowHeight / 4.0f), m_quarterBlurredAccess.GetAddressOf(), m_quarterSizeAccess.GetAddressOf());
+    m_blurPass.BlurTexture(sm::Vector2(PM->m_windowWidth / 2.0f, PM->m_windowHeight / 2.0f), m_quarterBlurredAccess.GetAddressOf(), m_quarterSizeAccess.GetAddressOf());
     this->Draw(RenderVersion::QUARTER_TO_TINY);
-    m_blurPass.BlurTexture(sm::Vector2(PM->m_windowWidth / 8.0f, PM->m_windowHeight / 8.0f), m_tinySizeAccess.GetAddressOf(), m_tinyBlurredAccess.GetAddressOf());
+    m_blurPass.BlurTexture(sm::Vector2(PM->m_windowWidth / 4.0f, PM->m_windowHeight / 4.0f), m_tinySizeAccess.GetAddressOf(), m_tinyBlurredAccess.GetAddressOf());
     this->Draw(RenderVersion::TINY_TO_SMOL);
-    m_blurPass.BlurTexture(sm::Vector2(PM->m_windowWidth / 16.0f, PM->m_windowHeight / 16.0f), m_smolSizeAccess.GetAddressOf(), m_smolBlurredAccess.GetAddressOf());
+    m_blurPass.BlurTexture(sm::Vector2(PM->m_windowWidth / 8.0f, PM->m_windowHeight / 8.0f), m_smolSizeAccess.GetAddressOf(), m_smolBlurredAccess.GetAddressOf());
     this->Draw(RenderVersion::SMOL_TO_SMOLLEST);
     this->Draw(RenderVersion::SMOLLEST_TO_SMOL);
     this->Draw(RenderVersion::SMOL_TO_TINY);
@@ -330,4 +334,9 @@ void BloomPass::Render(Scene* pScene)
 
 void BloomPass::PostRender(ID3D11DeviceContext* pDeviceContext)
 {
+}
+
+float& BloomPass::AdjustBloomIntensity()
+{
+    return m_bloomIntensity;
 }

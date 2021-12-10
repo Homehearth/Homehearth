@@ -220,7 +220,7 @@ PixelOut main(PixelIn input)
     
     
     
-    float3 color = (ambient + Lo) * pow(lightVolumeFactor, 2.5f);   
+    float3 color = (ambient + Lo) * lightVolumeFactor;   
     float brightness = dot(color, float3(0.2126, 0.7152, 0.0722));
     
     //HDR tonemapping
