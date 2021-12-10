@@ -203,7 +203,7 @@ bool RAnimator::UpdateTime(const EAnimationType& type)
 
 bool RAnimator::UpdateBlendTime(const EAnimationType& from, const EAnimationType& to, double& blendTime, double& blendDuration)
 {
-	bool success = false;
+	bool success = true;
 
 	blendTime = 0;
 	blendDuration = 0;
@@ -215,17 +215,14 @@ bool RAnimator::UpdateBlendTime(const EAnimationType& from, const EAnimationType
 		blendTime = m_states.at({ from, to }).blendTimer;
 	}
 
-	//Success
-	if (blendTime < blendDuration)
-	{
-		success = true;
-	}
-	else
+	//Reset blendtimer
+	if (blendTime > blendDuration)
 	{
 		if (m_states.find({ from, to }) != m_states.end())
 			m_states.at({ from, to }).blendTimer = 0;
-	}
-
+		success = false;
+	}	
+	
 	return success;
 }
 
@@ -428,22 +425,21 @@ void RAnimator::BlendTwoAnims()
 				for (size_t i = 0; i < m_bones.size(); i++)
 				{
 					//From 
-					sm::Vector3 pos1 = anim1->animation->GetPosition(m_bones[i].name, anim1->frameTimer, anim1->lastKeys[m_bones[i].name].keys[0], m_useInterpolation);
-					sm::Vector3 scl1 = anim1->animation->GetScale(m_bones[i].name, anim1->frameTimer, anim1->lastKeys[m_bones[i].name].keys[1], m_useInterpolation);
-					sm::Quaternion rot1 = anim1->animation->GetRotation(m_bones[i].name, anim1->frameTimer, anim1->lastKeys[m_bones[i].name].keys[2], m_useInterpolation);
+					sm::Vector3 pos1		= anim1->animation->GetPosition(m_bones[i].name, anim1->frameTimer, anim1->lastKeys[m_bones[i].name].keys[0], m_useInterpolation);
+					sm::Vector3 scl1		= anim1->animation->GetScale(	m_bones[i].name, anim1->frameTimer, anim1->lastKeys[m_bones[i].name].keys[1], m_useInterpolation);
+					sm::Quaternion rot1		= anim1->animation->GetRotation(m_bones[i].name, anim1->frameTimer, anim1->lastKeys[m_bones[i].name].keys[2], m_useInterpolation);
 					//To
-					sm::Vector3 pos2 = anim2->animation->GetPosition(m_bones[i].name, anim2->frameTimer, anim2->lastKeys[m_bones[i].name].keys[0], m_useInterpolation);
-					sm::Vector3 scl2 = anim2->animation->GetScale(m_bones[i].name, anim2->frameTimer, anim2->lastKeys[m_bones[i].name].keys[1], m_useInterpolation);
-					sm::Quaternion rot2 = anim2->animation->GetRotation(m_bones[i].name, anim2->frameTimer, anim2->lastKeys[m_bones[i].name].keys[2], m_useInterpolation);
+					sm::Vector3 pos2		= anim2->animation->GetPosition(m_bones[i].name, anim2->frameTimer, anim2->lastKeys[m_bones[i].name].keys[0], m_useInterpolation);
+					sm::Vector3 scl2		= anim2->animation->GetScale(	m_bones[i].name, anim2->frameTimer, anim2->lastKeys[m_bones[i].name].keys[1], m_useInterpolation);
+					sm::Quaternion rot2		= anim2->animation->GetRotation(m_bones[i].name, anim2->frameTimer, anim2->lastKeys[m_bones[i].name].keys[2], m_useInterpolation);
 
-					float lerpTime = float(blendTime / blendDuration);
-					sm::Vector3 lerpPos = sm::Vector3::Lerp(pos1, pos2, lerpTime);
-					sm::Vector3 lerpScl = sm::Vector3::Lerp(scl1, scl2, lerpTime);
-					sm::Quaternion lerpRot = sm::Quaternion::Slerp(rot1, rot2, lerpTime);
+					float lerpTime			= float(blendTime / blendDuration);
+					sm::Vector3 lerpPos		= sm::Vector3::Lerp(pos1, pos2, lerpTime);
+					sm::Vector3 lerpScl		= sm::Vector3::Lerp(scl1, scl2, lerpTime);
+					sm::Quaternion lerpRot	= sm::Quaternion::Slerp(rot1, rot2, lerpTime);
 					lerpRot.Normalize();
 
-					sm::Matrix bonePoseRelative;
-					bonePoseRelative = sm::Matrix::CreateScale(lerpScl) * sm::Matrix::CreateFromQuaternion(lerpRot) * sm::Matrix::CreateTranslation(lerpPos);
+					sm::Matrix bonePoseRelative = sm::Matrix::CreateScale(lerpScl) * sm::Matrix::CreateFromQuaternion(lerpRot) * sm::Matrix::CreateTranslation(lerpPos);
 
 					if (m_bones[i].parentIndex == -1)
 						bonePoseAbsolute[i] = bonePoseRelative;
@@ -466,22 +462,29 @@ void RAnimator::UpperLowerAnims()
 {
 	animation_t* lowerAnim = &m_animations[m_currentState];
 	animation_t* upperAnim = &m_animations[m_upperState];
-	if (upperAnim && lowerAnim)
+	animation_t* anim;	//Current
+	
+	if (lowerAnim && upperAnim)
 	{
 		if (UpdateTime(m_currentState) && UpdateTime(m_upperState))
 		{
 			std::string devideBone = m_states.at({ m_currentState, m_upperState }).devidebone;
 			std::vector<sm::Matrix> bonePoseAbsolute;
 			bonePoseAbsolute.resize(m_bones.size(), sm::Matrix::Identity);
+			anim = lowerAnim;
 
 			//Go through all the bones
 			for (size_t i = 0; i < m_bones.size(); i++)
 			{
+				std::string name = m_bones[i].name;
 				sm::Matrix bonePoseRelative;
-				if (m_bones[i].name == devideBone)
-					bonePoseRelative = upperAnim->animation->GetMatrix(m_bones[i].name, upperAnim->frameTimer, upperAnim->lastKeys[m_bones[i].name].keys, m_useInterpolation);
-				else
-					bonePoseRelative = lowerAnim->animation->GetMatrix(m_bones[i].name, lowerAnim->frameTimer, lowerAnim->lastKeys[m_bones[i].name].keys, m_useInterpolation);
+
+				if (name == devideBone) 
+				{
+					anim = upperAnim;
+				}
+				
+				bonePoseRelative = anim->animation->GetMatrix(name, anim->frameTimer, anim->lastKeys[name].keys, m_useInterpolation);
 
 				if (m_bones[i].parentIndex == -1)
 					bonePoseAbsolute[i] = bonePoseRelative;

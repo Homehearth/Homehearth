@@ -808,7 +808,8 @@ void ServerSystems::AnimationSystem(Simulation* simulation, HeadlessScene& scene
 	scene.ForEachComponent<comp::Network, comp::AnimationState>([&](comp::Network& net, comp::AnimationState& anim)
 		{
 			//Have to send every time - otherwise animations can be locked to one
-			if (anim.toSend != EAnimationType::NONE)
+			//if (anim.toSend != EAnimationType::NONE)
+			if (anim.toSend != anim.lastSend)
 			{
 				count++;
 				msg << anim.toSend << net.id;
