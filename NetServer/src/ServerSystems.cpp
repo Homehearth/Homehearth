@@ -507,7 +507,7 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 							if (p.shopItem == ShopItem::Defence1x1)
 								cost = 100;
 							else if (p.shopItem == ShopItem::Defence1x3)
-								cost = 300;
+								cost = 250;
 
 							if (simulation->GetCurrency().GetAmount() >= cost)
 							{
