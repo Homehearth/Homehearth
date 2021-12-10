@@ -214,7 +214,7 @@ void EnemyManagement::CreateWaves(std::queue<Wave>& waveQueue, int currentRound)
 		group2.AddEnemy(EnemyType::Runner, 1 + 3 * currentRound);
 		group2.SetSpawnPoint({ 170, -80.0f });
 
-		group3.AddEnemy(EnemyType::Default, 2 + 3 * currentRound);
+		group3.AddEnemy(EnemyType::Default, 4 + 3 * currentRound);
 		group3.AddEnemy(EnemyType::Runner, 2 + currentRound);
 		group3.SetSpawnPoint({ 80.0f, -500.0f });
 
