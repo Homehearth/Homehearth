@@ -50,12 +50,19 @@ void IShop::UseShop(const ShopItem& whatToBuy, const uint32_t& player)
 				comp::Health* h = m_sim->GetPlayer(player).GetComponent<comp::Health>();
 				if (h && h->upgradeLevel <= 2)
 				{
-					h->maxHealth += 25;
+					if (h->currentHealth == h->maxHealth)
+					{
+						h->maxHealth += 25;
+						h->currentHealth = h->maxHealth;
+					}
+					else
+						h->maxHealth += 25;
+					
 					h->upgradeLevel++;
 					m_sim->GetCurrency() -= cost;
 				}
 
-				m_sim->GetPlayer(player).UpdateNetwork();
+				m_sim->GetGameScene()->publish<EComponentUpdated>(m_sim->GetPlayer(player), ecs::Component::HEALTH);
 			}
 			
 			break;
