@@ -878,6 +878,7 @@ namespace sceneHelp
 		exitButton->SetOnPressedEvent([=]()
 			{
 				game->SetScene("MainMenu");
+				OptionSystem::Get().SetOption("BloomIntensity", std::to_string(thread::RenderThreadHandler::Get().GetRenderer()->GetBloomPass()->AdjustBloomIntensity()));
 				OptionSystem::Get().OnShutdown();
 			});
 		scene.Add2DCollection(general, "AMenuBG");
@@ -1272,24 +1273,19 @@ namespace sceneHelp
 
 		// Bloom Intensity
 		graphicsPos.y += scale.y + padding.y;
-		posAudio = { width - (scale.x + padding.x * 2), graphicsPos.y + padding.y };
-		minPos = { canvasPos.x + padding.x + canvasSize.x / 2.f, posAudio.y };
-		maxPos = { width - (scale.x + padding.x * 2.f), posAudio.y };
-		
-		rtd::Canvas* bloomVolCanvas = graphicsCategory->AddElement<rtd::Canvas>(D2D1::ColorF(53.f / 255.f, 22.f / 255.f, 26.f / 255.f), draw_t(minPos.x - 6.f, posAudio.y, ((canvasSize.x / 2.f) + 6.f) - padding.x * 2.f, scale.y));
+		rtd::Border* bloomIntensityBorder = graphicsCategory->AddElement<rtd::Border>(draw_t(canvasPos.x + padding.x, graphicsPos.y, canvasSize.x - padding.x * 2, scale.y));
+		bloomIntensityBorder->SetColor(D2D1::ColorF(53.f / 255.f, 22.f / 255.f, 26.f / 255.f));
+		bloomIntensityBorder->SetLineWidth(LineWidth::LARGE);
+		rtd::Canvas* bloomVolCanvas = graphicsCategory->AddElement<rtd::Canvas>(D2D1::ColorF(53.f / 255.f, 22.f / 255.f, 26.f / 255.f), draw_t(minPos.x - 6.f, graphicsPos.y, ((canvasSize.x / 2.f) + 6.f) - padding.x * 2.f, scale.y));
 		bloomVolCanvas->SetShape(Shapes::RECTANGLE_ROUNDED);
-		rtd::Slider* bloomVolumeSL = graphicsCategory->AddElement<rtd::Slider>(D2D1::ColorF(0, 0, 0), draw_t(minPos.x, posAudio.y, scale.x, scale.y), &thread::RenderThreadHandler::Get().GetRenderer()->GetBloomPass()->AdjustBloomIntensity(), 1.0f, 0.0f);
+		graphicsCategory->AddElement<rtd::Text>("Bloom Intensity", draw_t(canvasPos.x - padding.x, graphicsPos.y, scale.x * 2.f, scale.y));
+		rtd::Slider* bloomVolumeSL = graphicsCategory->AddElement<rtd::Slider>(D2D1::ColorF(0, 0, 0), draw_t(minPos.x, graphicsPos.y, scale.x, scale.y), &thread::RenderThreadHandler::Get().GetRenderer()->GetBloomPass()->AdjustBloomIntensity(), 1.0f, 0.0f);
 		bloomVolumeSL->SetMinPos(minPos);
 		bloomVolumeSL->SetMaxPos(maxPos);
-		valueText = bloomVolumeSL->GetValueText();
-		valueTextPos = { minPos.x + (maxPos.x - minPos.x) / 2 + (valueText->GetText().length() * D2D1Core::GetDefaultFontSize()) / 2.f, posAudio.y };
-		valueText->SetPosition(valueTextPos.x, valueTextPos.y);
+		rtd::Text* bloomValueText = bloomVolumeSL->GetValueText();
+		sm::Vector2 bloomValueTextPos = { minPos.x + (maxPos.x - minPos.x) / 2 + (bloomValueText->GetText().length() * D2D1Core::GetDefaultFontSize()) / 2.f, graphicsPos.y };
+		bloomValueText->SetPosition(bloomValueTextPos.x, bloomValueTextPos.y);
 
-		graphicsCategory->AddElement<rtd::Text>("Bloom Intensity", draw_t(canvasPos.x + padding.x, posAudio.y, scale.x, scale.y));
-		lineBorder = graphicsCategory->AddElement<rtd::Border>(draw_t(canvasPos.x + padding.x, posAudio.y, canvasSize.x - padding.x * 2.f, scale.y));
-		lineBorder->SetColor(D2D1::ColorF(53.f / 255.f, 22.f / 255.f, 26.f / 255.f));
-		lineBorder->SetLineWidth(LineWidth::LARGE);
-		
 		//Shadows
 		graphicsPos.y += scale.y + padding.y;
 		rtd::Border* shadowsBorder = graphicsCategory->AddElement<rtd::Border>(draw_t(canvasPos.x + padding.x, graphicsPos.y, canvasSize.x - padding.x * 2, scale.y));

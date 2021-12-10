@@ -6,7 +6,7 @@
 
 void GameSystems::DisplayUpgradeDefences(Game* game)
 {
-	Collection2D* coll = game->GetCurrentScene()->GetCollection("priceTag");
+	Collection2D* coll = game->GetScene("Game").GetCollection("priceTag");
 	
 	if (game->GetCycler().GetTimePeriod() == CyclePeriod::DAY)
 	{
@@ -75,6 +75,8 @@ void GameSystems::DisplayUpgradeDefences(Game* game)
 			if (shouldNotShow)
 				coll->Hide();
 		}
+		else
+			coll->Hide();
 	}
 	else
 		coll->Hide();

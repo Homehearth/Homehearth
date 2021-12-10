@@ -1,5 +1,6 @@
 #include "EnginePCH.h"
 #include "BloomPass.h"
+#include "OptionSystem.h"
 
 void BloomPass::Unlink()
 {
@@ -295,6 +296,8 @@ void BloomPass::Setup()
     hr = D3D11Core::Get().Device()->CreateTexture2D(&texDesc, nullptr, m_smollestSize.GetAddressOf());
     hr = D3D11Core::Get().Device()->CreateShaderResourceView(m_smollestSize.Get(), NULL, m_smollestSizeView.GetAddressOf());
     hr = D3D11Core::Get().Device()->CreateRenderTargetView(m_smollestSize.Get(), NULL, m_smollestSizeRenderTarget.GetAddressOf());
+
+    m_bloomIntensity = std::stof(OptionSystem::Get().GetOption("BloomIntensity"));
 }
 
 void BloomPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
