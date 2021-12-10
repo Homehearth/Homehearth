@@ -12,28 +12,33 @@ void Renderer::Initialize(Window* pWindow)
 	m_pipelineManager.Initialize(pWindow);
     m_d3d11 = &D3D11Core::Get();
 
+    AddPass(&m_shadowPass);
+    m_shadowPass.StartUp();
+
     AddPass(&m_depthPass);
     AddPass(&m_frustumPass);
     AddPass(&m_cullingPass);
+
+    AddPass(&m_decalPass); // måste vara före basepasset
+    m_decalPass.Create();
+
     AddPass(&m_opaquePass);
-    AddPass(&m_transparentPass);
+    //AddPass(&m_transparentPass);
     AddPass(&m_textureEffectPass);
 	AddPass(&m_waterEffectPass);
 
-	AddPass(&m_shadowPass);
-	m_shadowPass.StartUp();
 
-	AddPass(&m_decalPass); // måste vara före basepasset
-	m_decalPass.Create();
 
 	AddPass(&m_animPass);	
-	AddPass(&m_basePass);   
+	//AddPass(&m_basePass);   
 	AddPass(&m_skyPass);
 	AddPass(&m_dofPass);	
 	AddPass(&m_particlePass);
 
 	m_basePass.m_pShadowPass = &m_shadowPass;
 	m_animPass.m_pShadowPass = &m_shadowPass;
+    m_opaquePass.m_shadowPassRef = &m_shadowPass;
+    m_transparentPass.m_shadowPassRef = &m_shadowPass;
 
 	m_depthPass.SetEnable(true);
     m_cullingPass.SetEnable(true);
@@ -102,6 +107,9 @@ void Renderer::Render(Scene* pScene)
 			m_basePass.m_skyboxRef = pScene->GetSkybox();
 			m_animPass.m_skyboxRef = pScene->GetSkybox();
 			m_particlePass.m_skyboxRef = pScene->GetSkybox();
+            m_opaquePass.m_skyBoxRef = pScene->GetSkybox();
+            m_transparentPass.m_skyBoxRef = pScene->GetSkybox();
+
 			if (pScene->GetCurrentCamera()->IsSwapped())
 			{
 				this->UpdatePerFrame(pScene->GetCurrentCamera());

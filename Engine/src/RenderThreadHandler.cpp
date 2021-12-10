@@ -14,7 +14,10 @@ bool shouldRender = true;
 
 bool ShouldContinue();
 void RenderMain(const unsigned int id);
+// Opaque
 void RenderJob(const unsigned int start, unsigned int stop, void* buffer, void* context);
+// Transparent
+void RenderJob2(const unsigned int start, unsigned int stop, void* buffer, void* context);
 void RenderShadow(const unsigned int start, unsigned int stop, void* buffer, void* context);
 
 void RenderObjects(DoubleBuffer<std::vector<comp::Renderable>>* objects, dx::ConstantBuffer<basic_model_matrix_t>* buffer, ID3D11DeviceContext* context);
@@ -123,7 +126,43 @@ void thread::RenderThreadHandler::Setup(const int& amount)
 	INSTANCE.m_isPooled = true;
 }
 
-const render_instructions_t thread::RenderThreadHandler::Launch(const int& amount_of_objects)
+const render_instructions_t thread::RenderThreadHandler::LaunchOpaque(const int& amount_of_objects)
+{
+	render_instructions_t inst;
+	const unsigned int objects_per_thread = (unsigned int)std::floor((float)amount_of_objects / (float)(INSTANCE.m_amount + 1));
+	int main_start = 0;
+	if (objects_per_thread >= thread::BASE_THRESHOLD && amount_of_objects >= (int)(INSTANCE.m_amount + 1))
+	{
+		// Launch Threads
+		if (INSTANCE.m_isPooled)
+		{
+			for (unsigned int i = 0; i < INSTANCE.m_amount; i++)
+			{
+				const int start = i * objects_per_thread;
+				const int stop = start + objects_per_thread;
+				// Prepare job for threads.
+				auto f = [=](void* buffer, void* context)
+				{
+					RenderJob(start, stop, buffer, context);
+				};
+
+				INSTANCE.m_jobs.push_back(f);
+				main_start = stop;
+			}
+			cv.notify_all();
+		}
+
+		inst.start = main_start;
+		inst.stop = amount_of_objects;
+		INSTANCE.m_isActive = true;
+		return inst;
+	}
+
+	INSTANCE.m_isActive = false;
+	return inst;
+}
+
+const render_instructions_t thread::RenderThreadHandler::LaunchTransparent(const int& amount_of_objects)
 {
 	render_instructions_t inst;
 	const unsigned int objects_per_thread = (unsigned int)std::floor((float)amount_of_objects / (float)(INSTANCE.m_amount + 1));
@@ -395,8 +434,64 @@ void RenderJob(const unsigned int start,
 			m_buffer->SetData(m_context, it->data);
 			m_context->VSSetConstantBuffers(0, 1, buffers);
 			
-			if (it->model)
-				it->model->Render(m_context);
+			for (const auto& mesh : it->model->GetMeshes())
+			{
+				if (!mesh.GetMaterial()->IsTransparent())
+					mesh.Render(m_context);
+			}
+
+		}
+
+		pass->PostRender(m_context);
+
+		// On Render Finish
+		HRESULT hr = m_context->FinishCommandList(0, &command_list);
+
+		EnterCriticalSection(&pushSection);
+		if (SUCCEEDED(hr))
+			thread::RenderThreadHandler::Get().InsertCommandList(std::move(command_list));
+		LeaveCriticalSection(&pushSection);
+	}
+
+	return;
+}
+
+void RenderJob2(const unsigned int start, unsigned int stop, void* buffer, void* context)
+{
+	DoubleBuffer<std::vector<comp::Renderable>>* m_objects = (DoubleBuffer<std::vector<comp::Renderable>>*)thread::RenderThreadHandler::GetObjectsBuffer();
+	dx::ConstantBuffer<basic_model_matrix_t>* m_buffer = (dx::ConstantBuffer<basic_model_matrix_t>*)buffer;
+	ID3D11DeviceContext* m_context = (ID3D11DeviceContext*)context;
+	if (m_objects)
+	{
+		// On Render Start
+		ID3D11CommandList* command_list = nullptr;
+		IRenderPass* pass = thread::RenderThreadHandler::Get().GetRenderer()->GetCurrentPass();
+		Camera* cam = (Camera*)INSTANCE.Get().GetCamera();
+
+		pass->PreRender(cam, m_context);
+
+		// Make sure not to go out of range
+		if (stop > (unsigned int)(*m_objects)[1].size())
+			stop = (unsigned int)(*m_objects)[1].size();
+
+
+		// On Render
+		for (unsigned int i = start; i < stop; i++)
+		{
+			comp::Renderable* it = &(*m_objects)[1][i];
+			ID3D11Buffer* const buffers[1] =
+			{
+				m_buffer->GetBuffer()
+			};
+
+			m_buffer->SetData(m_context, it->data);
+			m_context->VSSetConstantBuffers(0, 1, buffers);
+
+			for (const auto& mesh : it->model->GetMeshes())
+			{
+				if (mesh.GetMaterial()->IsTransparent())
+					mesh.Render(m_context);
+			}
 
 		}
 

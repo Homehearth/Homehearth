@@ -12,5 +12,5 @@ void main(PixelIn input)
         alpha = t_albedo.Sample(s_linear, input.uv).a;
     }
 
-	clip(alpha < 1.0f ? -1 : 1); // discard.
+	clip(alpha < 0.9f ? -1 : 1); // discard.
 }

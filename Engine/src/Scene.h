@@ -59,7 +59,9 @@ public:
 	void RenderParticles(void* pass);
 
 	void RenderOpaque();
+	void RenderOpaqueThreaded();
 	void RenderTransparent();
+	void RenderTransparentThreaded();
 
 	Skybox* GetSkybox();
 

@@ -116,43 +116,43 @@ void Scene::Update2D()
 
 void Scene::Render()
 {
-	PROFILE_FUNCTION();
+	//PROFILE_FUNCTION();
 
-	thread::RenderThreadHandler::Get().SetObjectsBuffer(&m_renderableCopies);
-	// Divides up work between threads.
-	const render_instructions_t inst = thread::RenderThreadHandler::Get().Launch(static_cast<int>(m_renderableCopies[1].size()));
+	//thread::RenderThreadHandler::Get().SetObjectsBuffer(&m_renderableCopies);
+	//// Divides up work between threads.
+	//const render_instructions_t inst = thread::RenderThreadHandler::Get().Launch(static_cast<int>(m_renderableCopies[1].size()));
 
-	ID3D11Buffer* const buffers[1] = { m_publicBuffer.GetBuffer() };
-	D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, buffers);
+	//ID3D11Buffer* const buffers[1] = { m_publicBuffer.GetBuffer() };
+	//D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, buffers);
 
-	// Render everything on same thread.
-	if ((inst.start | inst.stop) == 0)
-	{
-		// System that renders Renderable component
-		for (const auto& it : m_renderableCopies[1])
-		{
-			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
+	//// Render everything on same thread.
+	//if ((inst.start | inst.stop) == 0)
+	//{
+	//	// System that renders Renderable component
+	//	for (const auto& it : m_renderableCopies[1])
+	//	{
+	//		m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
 
-			if (it.model)
-				it.model->Render(D3D11Core::Get().DeviceContext());
-		}
-	}
-	// Render third part of the scene with immediate context
-	else
-	{
-		// System that renders Renderable component
-		for (int i = inst.start; i < inst.stop; i++)
-		{
-			const auto& it = m_renderableCopies[1][i];
-			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
+	//		if (it.model)
+	//			it.model->Render(D3D11Core::Get().DeviceContext());
+	//	}
+	//}
+	//// Render third part of the scene with immediate context
+	//else
+	//{
+	//	// System that renders Renderable component
+	//	for (int i = inst.start; i < inst.stop; i++)
+	//	{
+	//		const auto& it = m_renderableCopies[1][i];
+	//		m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
 
-			if (it.model)
-				it.model->Render(D3D11Core::Get().DeviceContext());
-		}
-	}
+	//		if (it.model)
+	//			it.model->Render(D3D11Core::Get().DeviceContext());
+	//	}
+	//}
 
-	// Run any available Command lists from worker threads.
-	thread::RenderThreadHandler::ExecuteCommandLists();
+	//// Run any available Command lists from worker threads.
+	//thread::RenderThreadHandler::ExecuteCommandLists();
 }
 
 void Scene::RenderDebug()
@@ -310,6 +310,59 @@ void Scene::RenderOpaque()
 	}
 }
 
+void Scene::RenderOpaqueThreaded()
+{
+	PROFILE_FUNCTION();
+
+	thread::RenderThreadHandler::Get().SetObjectsBuffer(&m_renderableCopies);
+	// Divides up work between threads.
+	const render_instructions_t inst = thread::RenderThreadHandler::Get().LaunchOpaque(static_cast<int>(m_renderableCopies[1].size()));
+
+	ID3D11Buffer* const buffers[1] = { m_publicBuffer.GetBuffer() };
+	D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, buffers);
+
+	// Render everything on same thread.
+	if ((inst.start | inst.stop) == 0)
+	{
+		// System that renders Renderable component
+		for (const auto& it : m_renderableCopies[1])
+		{
+			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
+
+			if (it.model)
+			{
+				for (const auto& mesh : it.model->GetMeshes())
+				{
+					if (!mesh.GetMaterial()->IsTransparent())
+						mesh.Render(D3D11Core::Get().DeviceContext());
+				}
+			}
+		}
+	}
+	// Render third part of the scene with immediate context
+	else
+	{
+		// System that renders Renderable component
+		for (int i = inst.start; i < inst.stop; i++)
+		{
+			const auto& it = m_renderableCopies[1][i];
+			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
+
+			if (it.model)
+			{
+				for (const auto& mesh : it.model->GetMeshes())
+				{
+					if (!mesh.GetMaterial()->IsTransparent())
+						mesh.Render(D3D11Core::Get().DeviceContext());
+				}
+			}
+		}
+	}
+
+	// Run any available Command lists from worker threads.
+	thread::RenderThreadHandler::ExecuteCommandLists();
+}
+
 void Scene::RenderTransparent()
 {
 	PROFILE_FUNCTION();
@@ -334,6 +387,56 @@ void Scene::RenderTransparent()
 			}
 		}
 	}
+}
+
+void Scene::RenderTransparentThreaded()
+{
+	PROFILE_FUNCTION();
+
+	thread::RenderThreadHandler::Get().SetObjectsBuffer(&m_renderableCopies);
+	// Divides up work between threads.
+	const render_instructions_t inst = thread::RenderThreadHandler::Get().LaunchTransparent(static_cast<int>(m_renderableCopies[1].size()));
+
+	ID3D11Buffer* const buffers[1] = { m_publicBuffer.GetBuffer() };
+	D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, buffers);
+
+	
+	// Render everything on same thread.
+	if ((inst.start | inst.stop) == 0)
+	{
+		// System that renders Renderable component
+		for (const auto& it : m_renderableCopies[1])
+		{
+			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
+
+			for (const auto& mesh : it.model->GetMeshes())
+			{
+				if (mesh.GetMaterial()->IsTransparent())
+				{
+					mesh.Render(D3D11Core::Get().DeviceContext());
+				}
+			}
+		}
+	}
+	// Render third part of the scene with immediate context
+	else
+	{
+		// System that renders Renderable component
+		for (int i = inst.start; i < inst.stop; i++)
+		{
+			const auto& it = m_renderableCopies[1][i];
+			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
+
+			for (const auto& mesh : it.model->GetMeshes())
+			{
+				if (mesh.GetMaterial()->IsTransparent())
+					mesh.Render(D3D11Core::Get().DeviceContext());
+			}
+		}
+	}
+
+	// Run any available Command lists from worker threads.
+	thread::RenderThreadHandler::ExecuteCommandLists();
 }
 
 Skybox* Scene::GetSkybox()

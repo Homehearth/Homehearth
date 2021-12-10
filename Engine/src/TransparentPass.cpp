@@ -3,6 +3,10 @@
 
 void TransparentPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 {
+    if (m_skyBoxRef)
+    {
+        m_skyBoxRef->Bind(pDeviceContext);
+    }
     // Transparent pipeline.
 	DC->OMSetRenderTargets(1, PM->m_backBuffer.GetAddressOf(), nullptr);
 	DC->OMSetDepthStencilState(PM->m_depthStencilStateLessOrEqual.Get(), 0);
@@ -25,13 +29,17 @@ void TransparentPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContex
     DC->PSSetSamplers(1, 1, PM->m_linearSamplerState.GetAddressOf());
     DC->PSSetSamplers(2, 1, PM->m_anisotropicSamplerState.GetAddressOf());
     DC->PSSetSamplers(3, 1, PM->m_cubemapSamplerState.GetAddressOf());
+
+    if (m_shadowPassRef)
+        m_shadowPassRef->PostRender(DC);
+
     //m_lights->Render(DC);
     PM->SetCullBack(false, DC);
 }
 
 void TransparentPass::Render(Scene* pScene)
 {
-    pScene->RenderTransparent();
+    pScene->RenderTransparentThreaded();
 }
 
 void TransparentPass::PostRender(ID3D11DeviceContext* pDeviceContext)
