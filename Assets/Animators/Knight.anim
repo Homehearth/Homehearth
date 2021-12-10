@@ -31,7 +31,7 @@ state			MOVE				PLACE_DEFENCE		0
 state			MOVE				DEAD				0.1
 state			MOVE				ABILITY1			0
 
-state			PRIMARY_ATTACK		IDLE				0.2
+state			PRIMARY_ATTACK		IDLE				0.1
 state			PRIMARY_ATTACK		MOVE				0.2	
 
 state			TAKE_DAMAGE			IDLE				0.2

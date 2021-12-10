@@ -45,7 +45,6 @@ void RAnimation::LoadPositions(const std::string& bonename, aiNodeAnim* channel)
 	m_keyFrames[bonename] = keyframes;
 }
 
-#if !OPTIMIZE_ANIMATION
 void RAnimation::LoadScales(const std::string& bonename, aiNodeAnim* channel)
 {
 	keyFrames_t keyframes;
@@ -66,7 +65,6 @@ void RAnimation::LoadScales(const std::string& bonename, aiNodeAnim* channel)
 
 	m_keyFrames[bonename] = keyframes;
 }
-#endif
 
 void RAnimation::LoadRotations(const std::string& bonename, aiNodeAnim* channel)
 {
@@ -206,6 +204,15 @@ const double& RAnimation::GetTicksPerFrame() const
 const double& RAnimation::GetDuration() const
 {
 	return m_duration;
+}
+
+const double RAnimation::GetDurationInSeconds() const
+{
+	double time = 0;
+	if (m_ticksPerFrame > 0)
+		time = m_duration / m_ticksPerFrame;
+
+	return time;
 }
 
 const sm::Vector3 RAnimation::GetPosition(const std::string& bonename, const double& currentFrame, UINT& lastKey, bool interpolate) const

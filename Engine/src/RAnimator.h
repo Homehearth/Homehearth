@@ -22,6 +22,9 @@ private:
 	EAnimationType m_currentState;
 	EAnimationType m_nextState;
 	EAnimationType m_upperState;
+
+	//std::queue<EAnimationType> m_queue;
+	std::deque<EAnimationType> m_queue;
 	
 	struct animation_t
 	{
@@ -30,7 +33,7 @@ private:
 		//Specific data for this animation in this animator
 		double										frameTimer	= 0;
 		//double										blendTimer	= 0;
-		double										currentTick	= 0;
+		//double										currentTick	= 0;
 		std::unordered_map<std::string, lastKeys_t> lastKeys;
 		//bool										reachedEnd	= false;			//remove?
 	};
@@ -53,6 +56,8 @@ private:
 	//Convert a string to enum
 	EAnimationType StringToAnimationType(const std::string& name) const;
 
+	void CheckQueue();
+
 	//Reset the time of currentFrametime
 	void ResetAnimation(const EAnimationType& type);
 
@@ -65,12 +70,13 @@ private:
 		REMOVE LATER
 	*/
 	//Animation with only one state
-	//void RegularAnimation(const EAnimationType& state);																			//DONE
+	//void RegularAnimation(const EAnimationType& state);																		//DONE
 	//Blend between two animations
 	//void BlendAnimations(const EAnimationType& state1, const EAnimationType& state2);											//DONE
 	//Animate the lower body as usual and swap to upper when reached a bone
-	//void UpperLowerbodyAnimation(const EAnimationType& upper, const EAnimationType& lower);										//DONE
+	//void UpperLowerbodyAnimation(const EAnimationType& upper, const EAnimationType& lower);									//DONE
 	//void BlendUpperBodyAnimations(const EAnimationType& state1, const EAnimationType& state2, const EAnimationType& upper);			
+	//void SwapAnimationState();																								//REMOVE
 
 	/*
 		NEW ONE
@@ -79,9 +85,6 @@ private:
 	void BlendTwoAnims();			//Current + next
 	void UpperLowerAnims();			//Current + upper
 	void BlendUpperLowerAnims();	//Current + next + upper
-
-
-	void SwapAnimationState();		//REMOVE
 
 	EAnimationCode GetAnimationCode() const;
 

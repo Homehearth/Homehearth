@@ -67,6 +67,7 @@ public:
 	void SetTicksPerFrame(const double& speed);
 	const double& GetTicksPerFrame() const;
 	const double& GetDuration() const;
+	const double  GetDurationInSeconds() const;
 
 	/*
 		Data for doing animation
