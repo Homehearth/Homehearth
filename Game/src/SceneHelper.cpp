@@ -340,6 +340,8 @@ namespace sceneHelp
 					{
 						scene.SetCurrentCameraEntity(debugCameraEntity);
 						scene.GetCurrentCamera()->SetNearFarPlane(0.1f, 800.f);
+						thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::VIGNETTE);
+
 						if (InputSystem::Get().IsMouseRelative())
 						{
 							InputSystem::Get().SwitchMouseMode();

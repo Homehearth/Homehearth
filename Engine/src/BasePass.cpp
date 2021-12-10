@@ -40,7 +40,7 @@ void BasePass::Render(Scene* pScene)
 {
     PROFILE_FUNCTION();
 
-    pScene->RenderOpaque();
+    pScene->RenderOpaque(PM);
     PM->SetCullBack(false, GetDeviceContext());
     pScene->RenderTransparent();
 }

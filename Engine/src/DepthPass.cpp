@@ -25,10 +25,11 @@ void DepthPass::Render(Scene* pScene)
 
 	PM->SetCullBack(true, GetDeviceContext());
 
-    pScene->RenderOpaque();
+    pScene->RenderOpaque(PM);
 
     PM->SetCullBack(false, GetDeviceContext());
-
+    D3D11Core::Get().DeviceContext()->VSSetShader(PM->m_depthPassVertexShader.Get(), nullptr, 0);
+    D3D11Core::Get().DeviceContext()->IASetInputLayout(PM->m_defaultInputLayout.Get());
     pScene->RenderTransparent();
 
 	PM->SetCullBack(true, GetDeviceContext());

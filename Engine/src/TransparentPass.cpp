@@ -9,7 +9,7 @@ void TransparentPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContex
     }
 
     DC->OMSetRenderTargets(1, PM->m_backBuffer.GetAddressOf(), PM->m_depth.dsv.Get());
-    DC->OMSetDepthStencilState(PM->m_depthStencilStateLess.Get(), 0);
+    DC->OMSetDepthStencilState(PM->m_depthStencilStateLessOrEqual.Get(), 0);
     DC->IASetInputLayout(PM->m_defaultInputLayout.Get());
 
     DC->VSSetShader(PM->m_defaultVertexShader.Get(), nullptr, 0);

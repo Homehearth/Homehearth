@@ -4,6 +4,8 @@
 #include "Handler2D.h"
 #include "Skybox.h"
 
+class PipelineManager;
+
 class Scene : public BasicScene<Scene>
 {
 private:
@@ -58,7 +60,7 @@ public:
 
 	void RenderParticles(void* pass);
 
-	void RenderOpaque();
+	void RenderOpaque(PipelineManager* pm);
 	void RenderOpaqueThreaded();
 	void RenderTransparent();
 	void RenderTransparentThreaded();

@@ -19,7 +19,7 @@ void ParticlePass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 	DC->CSSetShader(PM->m_ParticleComputeShader.Get(), nullptr, 0);
 
 	DC->OMSetBlendState(PM->m_blendStateParticle.Get(), nullptr, 0xffffffff);
-	DC->OMSetRenderTargets(1, PM->m_backBuffer.GetAddressOf(), PM->m_depthStencilView.Get());
+	DC->OMSetRenderTargets(1, PM->m_backBuffer.GetAddressOf(), PM->m_depth.dsv.Get());
 
 	DC->IASetVertexBuffers(0, 1, &m_nullBuffer, &m_stride, &m_offset);
 	DC->GSSetConstantBuffers(1, 1, pCam->m_viewConstantBuffer.GetAddressOf());

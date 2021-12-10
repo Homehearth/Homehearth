@@ -28,8 +28,8 @@ void Scene::Update(float dt)
 			if (anim.animator && anim.updating)
 				anim.animator->Update();
 		});
-	
-	
+
+
 
 	m_2dHandler.Update();
 	PROFILE_FUNCTION();
@@ -207,7 +207,7 @@ void Scene::RenderShadow()
 			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), model.data);
 			ID3D11Buffer* buffer[] = { m_publicBuffer.GetBuffer() };
 			D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, buffer);
-			if(model.model)
+			if (model.model)
 				model.model->Render(D3D11Core::Get().DeviceContext());
 		}
 	}
@@ -284,7 +284,7 @@ void Scene::RenderParticles(void* voidPass)
 
 }
 
-void Scene::RenderOpaque()
+void Scene::RenderOpaque(PipelineManager* pm)
 {
 	PROFILE_FUNCTION();
 
@@ -302,11 +302,16 @@ void Scene::RenderOpaque()
 			{
 				for (const auto& mesh : it.model->GetMeshes())
 				{
-					if(!mesh.GetMaterial()->IsTransparent())
+					if (!mesh.GetMaterial()->IsTransparent())
+					{
 						mesh.Render(D3D11Core::Get().DeviceContext());
+					}
 				}
 			}
 		}
+		//D3D11Core::Get().DeviceContext()->IASetInputLayout(pm->m_animationInputLayout.Get());
+		//D3D11Core::Get().DeviceContext()->VSSetShader(pm->m_animationVertexShader.Get(), nullptr, 0);
+		//RenderAnimation();
 	}
 }
 
@@ -400,7 +405,7 @@ void Scene::RenderTransparentThreaded()
 	ID3D11Buffer* const buffers[1] = { m_publicBuffer.GetBuffer() };
 	D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, buffers);
 
-	
+
 	// Render everything on same thread.
 	if ((inst.start | inst.stop) == 0)
 	{

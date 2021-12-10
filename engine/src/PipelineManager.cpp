@@ -300,7 +300,6 @@ bool PipelineManager::CreateDepthStencilStates()
 
     // Create m_depthStencilStateLessOrEqual.
     depthStencilDesc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
-    depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
     hr = m_d3d11->Device()->CreateDepthStencilState(&depthStencilDesc, m_depthStencilStateLessOrEqual.GetAddressOf());
     if (FAILED(hr))
         return false;
@@ -314,8 +313,8 @@ bool PipelineManager::CreateDepthStencilStates()
 
     // Create m_depthStencilStateGreater
     depthStencilDesc.DepthFunc = D3D11_COMPARISON_GREATER_EQUAL;
-    depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
-    depthStencilDesc.DepthEnable = false;
+    //depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+    //depthStencilDesc.DepthEnable = false;
     hr = m_d3d11->Device()->CreateDepthStencilState(&depthStencilDesc, m_depthStencilStateGreater.GetAddressOf());
     if (FAILED(hr))
         return false;

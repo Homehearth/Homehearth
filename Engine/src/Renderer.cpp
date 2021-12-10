@@ -12,10 +12,11 @@ void Renderer::Initialize(Window* pWindow)
 	m_pipelineManager.Initialize(pWindow);
     m_d3d11 = &D3D11Core::Get();
 
+    AddPass(&m_depthPass);
+
     AddPass(&m_shadowPass);
     m_shadowPass.StartUp();
 
-    AddPass(&m_depthPass);
     AddPass(&m_frustumPass);
     AddPass(&m_cullingPass);
 
@@ -23,13 +24,11 @@ void Renderer::Initialize(Window* pWindow)
     m_decalPass.Create();
 
     AddPass(&m_opaquePass);
+	AddPass(&m_animPass);
 	AddPass(&m_transparentPass);
+
     AddPass(&m_textureEffectPass);
 	AddPass(&m_waterEffectPass);
-
-
-
-	AddPass(&m_animPass);	
 	//AddPass(&m_basePass);   
 	AddPass(&m_skyPass);
 	AddPass(&m_dofPass);	
@@ -45,7 +44,7 @@ void Renderer::Initialize(Window* pWindow)
     m_opaquePass.SetEnable(true);
     m_transparentPass.SetEnable(true);
 
-	//m_basePass.SetEnable(false);
+	////m_basePass.SetEnable(false);
 
 	m_textureEffectPass.SetEnable(true);
 	m_waterEffectPass.SetEnable(true);
@@ -57,8 +56,8 @@ void Renderer::Initialize(Window* pWindow)
 	m_shadowPass.SetEnable(true);
 
 #ifdef _DEBUG
-	AddPass(&m_debugPass);  
-    m_debugPass.SetEnable(true);
+	//AddPass(&m_debugPass);  
+ //   m_debugPass.SetEnable(true);
 #endif
 
 	LOG_INFO("Number of rendering passes: %d", static_cast<int>(m_passes.size()));
@@ -98,7 +97,6 @@ void Renderer::ClearFrame()
 
 void Renderer::Render(Scene* pScene)
 {
-
 	if (pScene)
 	{
 		if (!m_passes.empty())

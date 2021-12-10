@@ -6,8 +6,8 @@ void CullingPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
     ID3D11RenderTargetView* nullRTV[] = { nullptr };
     ID3D11DepthStencilView* nullDSV = { nullptr };
    
-    DC->OMSetRenderTargets(1, nullRTV, nullDSV);
-    DC->OMSetDepthStencilState(PM->m_depthStencilStateLessOrEqual.Get(), 0);
+    //DC->OMSetRenderTargets(1, nullRTV, nullDSV);
+    //DC->OMSetDepthStencilState(PM->m_depthStencilStateLessOrEqual.Get(), 0);
 
     DC->VSSetShader(nullptr, nullptr, 0);      
     DC->PSSetShader(nullptr, nullptr, 0);     

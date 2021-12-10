@@ -58,10 +58,9 @@ void DOFPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 		m_dofHelp.inverseProjection = pCam->GetProjection().Invert();
 		m_dofHelp.dofType = UINT(m_currentType);
 
-
 		DC->CSSetUnorderedAccessViews(2, 1, m_inFocusView.GetAddressOf(), nullptr);
 		DC->CSSetUnorderedAccessViews(3, 1, m_outOfFocusView.GetAddressOf(), nullptr);
-		DC->CSSetShaderResources(0, 1, PM->m_depthBufferSRV.GetAddressOf());
+		DC->CSSetShaderResources(0, 1, PM->m_depth.srv.GetAddressOf());
 		DC->CSSetUnorderedAccessViews(4, 1, m_outputView.GetAddressOf(), nullptr);
 		DC->CSSetConstantBuffers(9, 1, m_constBuff.GetAddressOf());
 	}
