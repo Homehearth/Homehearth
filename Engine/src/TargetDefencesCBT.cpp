@@ -1,17 +1,18 @@
 #include "EnginePCH.h"
 #include "TargetDefencesCBT.h"
 
-BT::TargetDefencesCBT::TargetDefencesCBT(const std::string& name, Entity entity, float aggroRange)
+BT::TargetDefencesCBT::TargetDefencesCBT(const std::string& name, Entity entity, Blackboard* blackboard, float aggroRange)
 	:ActionNode(name),
 	entity(entity),
-	aggroRange(aggroRange)
+	aggroRange(aggroRange),
+	blackboard(blackboard)
 {
 }
 
 BT::NodeStatus BT::TargetDefencesCBT::Tick()
 {
 	//Get all defense entities in current game
-	std::unordered_map<Entity, Entity>* defenseEntities = Blackboard::Get().GetPathFindManager()->GetDefenseEntities();
+	std::unordered_map<Entity, Entity>* defenseEntities = blackboard->GetPathFindManager()->GetDefenseEntities();
 	//Get AI's transform component
 	const comp::Transform* transform = this->entity.GetComponent<comp::Transform>();
 
@@ -24,7 +25,7 @@ BT::NodeStatus BT::TargetDefencesCBT::Tick()
 			//if a value inside the map is null remove it from the system
 			if (defenseEntity.second.IsNull())
 			{
-				Blackboard::Get().GetPathFindManager()->RemoveDefenseEntity(defenseEntity.second);
+				blackboard->GetPathFindManager()->RemoveDefenseEntity(defenseEntity.second);
 				continue;
 			}
 			//If no target init it if it's in aggroRrange
@@ -44,7 +45,7 @@ BT::NodeStatus BT::TargetDefencesCBT::Tick()
 		//If target was found return success
 		if (!currentTarget.IsNull())
 		{
-			Blackboard::Get().AddValue("target" + std::to_string(entity), currentTarget);
+			blackboard->AddValue("target" + std::to_string(entity), currentTarget);
 			return BT::NodeStatus::SUCCESS;
 		}
 	}

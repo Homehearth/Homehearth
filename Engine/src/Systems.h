@@ -25,7 +25,4 @@ namespace Systems
 	void ClearCollidingList(HeadlessScene& scene, QuadTree* qtDynamic);
 
 	void CheckCollisions(HeadlessScene& scene, float dt);
-
-	void AISystem(HeadlessScene& scene, PathFinderManager* aiHandler);
-
 }

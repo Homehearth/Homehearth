@@ -2,9 +2,10 @@
 #include "Simulation.h"
 #include "IShop.h"
 
-void IShop::SetSimulation(Simulation* sim)
+
+IShop::IShop(Simulation* simRef)
 {
-	m_sim = sim;
+	m_sim = simRef;
 }
 
 void IShop::UseShop(const ShopItem& whatToBuy, const uint32_t& player)

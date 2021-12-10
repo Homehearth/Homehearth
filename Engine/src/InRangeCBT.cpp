@@ -1,9 +1,10 @@
 #include "EnginePCH.h"
 #include "InRangeCBT.h"
 
-BT::InRangeCBT::InRangeCBT(const std::string& name, Entity entity)
+BT::InRangeCBT::InRangeCBT(const std::string& name, Entity entity, Blackboard* blackboard)
 	:ConditionNode(name),
-	entity(entity)
+	entity(entity),
+	blackboard(blackboard)
 {
 }
 
@@ -15,7 +16,7 @@ BT::NodeStatus BT::InRangeCBT::Tick()
 
 	comp::MeleeAttackAbility* attackMAbility = entity.GetComponent<comp::MeleeAttackAbility>();
 	comp::RangeAttackAbility* attackRAbility = entity.GetComponent<comp::RangeAttackAbility>();
-	Entity* target = Blackboard::Get().GetValue<Entity>("target" + std::to_string(entity));
+	Entity* target = blackboard->GetValue<Entity>("target" + std::to_string(entity));
 
 	if(transform == nullptr || attackMAbility && attackRAbility)
 	{
@@ -34,6 +35,13 @@ BT::NodeStatus BT::InRangeCBT::Tick()
 		LOG_ERROR("Failed to get target position");
 		return BT::NodeStatus::FAILURE;
 	}
+
+	float extendedRange = 1.5f;
+	if(target->GetComponent<comp::Tag<DEFENCE>>())
+	{
+		extendedRange = 2.5f;
+	}
+
 	//If target is a house
 	if(house && house->homeNode)
 	{
@@ -44,9 +52,12 @@ BT::NodeStatus BT::InRangeCBT::Tick()
 		position = target->GetComponent<comp::Transform>()->position;
 	}
 
+
+
 	if (attackMAbility)
 	{
-		if (sm::Vector3::Distance(transform->position, position) <= (attackMAbility->attackRange * 1.5f))
+		float distance = sm::Vector3::Distance(transform->position, position);
+		if (sm::Vector3::Distance(transform->position, position) <= (attackMAbility->attackRange * extendedRange))
 		{
 			return BT::NodeStatus::SUCCESS;
 		}

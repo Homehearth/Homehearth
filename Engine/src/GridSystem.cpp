@@ -296,10 +296,11 @@ std::vector<Entity> GridSystem::HideHoverDefence()
 	return entities;
 }
 
-bool GridSystem::RemoveDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, PathFinderManager* aiHandler)
+bool GridSystem::RemoveDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, Blackboard* blackboard)
 {
 	sm::Vector3 localPlayer;
 	comp::Player player;
+	PathFinderManager* aiHandler = blackboard->GetPathFindManager();
 	m_scene->ForEachComponent<comp::Player, comp::Transform, comp::Network>([&](comp::Player& p, comp::Transform& t, comp::Network& net)
 		{
 			if (net.id == playerWhoPressedMouse)
@@ -356,7 +357,7 @@ bool GridSystem::RemoveDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, 
 				player.reachable = true;
 		}
 
-		Blackboard::Get().GetPathFindManager()->RemoveDefenseEntity(closestEntity);
+		aiHandler->RemoveDefenseEntity(closestEntity);
 		closestEntity.Destroy();
 		
 		return true;
@@ -367,7 +368,7 @@ bool GridSystem::RemoveDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, 
 	}
 }
 
-void GridSystem::RemoveDefence(const Entity& entity)
+void GridSystem::RemoveDefence(const Entity& entity, Blackboard* blackboard)
 {
 	comp::TileSet* tileset = entity.GetComponent<comp::TileSet>();
 	if (tileset)
@@ -380,6 +381,8 @@ void GridSystem::RemoveDefence(const Entity& entity)
 			m_tiles[zpos][xpos].type = TileType::EMPTY;
 		}
 	}
+
+	blackboard->GetPathFindManager()->RemoveDefenseEntity(entity);
 }
 
 std::vector<std::pair<UINT, UINT>> GridSystem::CheckDefenceLocation(Ray_t& mouseRay, const uint32_t& playerID)
@@ -498,7 +501,7 @@ std::vector<std::pair<UINT, UINT>> GridSystem::CheckDefenceLocation(Ray_t& mouse
 	}
 }
 
-bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, PathFinderManager* aiHandler, QuadTree* dynamicQT)
+bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, PathFinderManager* aiHandler, QuadTree* dynamicQT, Blackboard* blackboard)
 {	
 	std::vector<std::pair<UINT, UINT>> coordinates = CheckDefenceLocation(mouseRay, playerWhoPressedMouse);
 
@@ -547,6 +550,7 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 		if (!aiHandler->PlayerAStar(playerCollider.Center))
 			player.reachable = false;
 
+		
 		/*
 			Create the model for this tiles
 		*/
@@ -560,6 +564,8 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 		comp::Transform* transform = tileEntity.AddComponent<comp::Transform>();
 		comp::OrientedBoxCollider* collider = tileEntity.AddComponent<comp::OrientedBoxCollider>();
 		comp::Health* health = tileEntity.AddComponent<comp::Health>();
+
+		blackboard->GetPathFindManager()->AddDefenseEntity(tileEntity);
 
 		sm::Vector3 centerpoint = CalcCenterPoint(coordinates);
 		transform->position = { centerpoint.x, 5.f, centerpoint.z };

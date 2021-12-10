@@ -1,9 +1,10 @@
 #include "EnginePCH.h"
 #include "AttackCBT.h"
 
-BT::AttackCBT::AttackCBT(const std::string& name, Entity entity)
+BT::AttackCBT::AttackCBT(const std::string& name, Entity entity, Blackboard* blackboard)
 	:ActionNode(name),
-	entity(entity)
+	entity(entity),
+	blackboard(blackboard)
 {
 }
 
@@ -20,7 +21,7 @@ BT::NodeStatus BT::AttackCBT::Tick()
 	else if (attackRAbility)
 		attackAbility = attackRAbility;
 
-	Entity* target = Blackboard::Get().GetValue<Entity>("target" + std::to_string(entity));
+	Entity* target = blackboard->GetValue<Entity>("target" + std::to_string(entity));
 
 	//Catch nullptr
 	if(attackAbility == nullptr || target == nullptr)
@@ -35,6 +36,8 @@ BT::NodeStatus BT::AttackCBT::Tick()
 	else
 		attackAbility->targetPoint = target->GetComponent<comp::Transform>()->position;
 
+	attackAbility->targetPoint.y = 0.0f;
+
 	//Use the ability stored in attackAbility
 	if (ecs::UseAbility(attackAbility))
 	{
@@ -42,6 +45,8 @@ BT::NodeStatus BT::AttackCBT::Tick()
 		//Activate attack animation
 		if (animState)
 			animState->toSend = EAnimationType::PRIMARY_ATTACK;
+
+		entity.UpdateNetwork();
 	};
 
 	return BT::NodeStatus::SUCCESS;

@@ -88,7 +88,7 @@ void Systems::HealingSystem(HeadlessScene& scene, float dt)
 				comp::SphereCollider* sphere = collider.AddComponent<comp::SphereCollider>();
 				sphere->Center = transform->position;
 
-				collider.AddComponent<comp::PARTICLEEMITTER>(sm::Vector3{ 0,0,0 }, 200, 2.f, PARTICLEMODE::MAGEHEAL, 10.f, 70.f, false);
+				collider.AddComponent<comp::ParticleEmitter>(sm::Vector3{ 0,0,0 }, 200, 2.f, ParticleMode::MAGEHEAL, 30.f, 70.f, false);
 
 				collider.AddComponent<comp::Tag<TagType::DYNAMIC>>();
 
@@ -242,6 +242,9 @@ void Systems::SelfDestructSystem(HeadlessScene& scene, float dt)
 			s.lifeTime -= dt;
 			if (s.lifeTime <= 0)
 			{
+				if(s.onDestruct)
+					s.onDestruct();
+
 				ent.Destroy();
 			}
 		});
@@ -266,7 +269,6 @@ void Systems::MovementSystem(HeadlessScene& scene, float dt)
 			while (it != p.forces.end())
 			{
 				comp::TemporaryPhysics::Force& f = *it;
-
 				if (f.isImpulse)
 				{
 					if (f.wasApplied)
@@ -288,7 +290,7 @@ void Systems::MovementSystem(HeadlessScene& scene, float dt)
 				}
 
 				sm::Vector3 newPos = t.position + v.vel * dt;
-				if (newPos.y < 0.0f)
+				if (newPos.y < 0.75f)
 				{
 					v.vel.y = 0;
 					f.force.y = 0;
@@ -336,9 +338,9 @@ void Systems::MovementSystem(HeadlessScene& scene, float dt)
 
 				transform.position += velocity.vel * dt;
 
-				if (transform.position.y < 0.f)
+				if (transform.position.y < 0.75f)
 				{
-					transform.position.y = 0.f;
+					transform.position.y = 0.75f;
 					velocity.vel.y = 0;
 				}
 				velocity.oldVel = velocity.vel; // updated old vel position

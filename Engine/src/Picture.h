@@ -15,6 +15,7 @@ namespace rtd
 		std::unique_ptr<Border> m_border;
 		DoubleBuffer<std::shared_ptr<RBitMap>> m_texture;
 		FLOAT m_opacity = 1.0f;
+		std::function<void()> m_hoverFunction = nullptr;
 
 	public:
 
@@ -34,6 +35,8 @@ namespace rtd
 
 		// remove the border and deallocate the space used for it.
 		void RemoveBorder();
+
+		void SetOnHoverEvent(const std::function<void()>& func);
 
 		// set the texture of the picture.
 		void SetTexture(const std::string& fileName);

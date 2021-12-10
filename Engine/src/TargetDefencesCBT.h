@@ -5,7 +5,7 @@ namespace BT
 	class TargetDefencesCBT : public BT::ActionNode
 	{
 	public:
-		TargetDefencesCBT(const std::string& name, Entity entity, float aggroRange = 25.f);
+		TargetDefencesCBT(const std::string& name, Entity entity, Blackboard* blackboard, float aggroRange = 25.f);
 		~TargetDefencesCBT() override = default;
 
 		//Executes the attack ability against the current target
@@ -14,5 +14,6 @@ namespace BT
 	private:
 		Entity entity;
 		float aggroRange;
+		Blackboard* blackboard;
 	};
 }

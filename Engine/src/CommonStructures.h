@@ -100,7 +100,7 @@ enum class TypeLight : UINT
 	POINT
 };
 
-enum class PARTICLEMODE : UINT
+enum class ParticleMode : UINT
 {
 	BLOOD,
 	LEAF,
@@ -111,7 +111,8 @@ enum class PARTICLEMODE : UINT
 	RAIN,
 	DUST,
 	MAGEHEAL,
-	MAGERANGE
+	MAGERANGE,
+	EXPLOSION
 };
 
 //enum class EDefenceType : UINT
@@ -325,6 +326,7 @@ enum class GameMsg : uint16_t
 	Game_BackToLobby,
 	Game_WaveTimer,
 	Game_Time,
+	Game_Time_Update,
 
 	Game_PlaySound,
 	Game_ClassSelected,
@@ -333,6 +335,7 @@ enum class GameMsg : uint16_t
 	Game_AddNPC,
 	Game_RemoveNPC,
 	Game_PlayerInput,
+	Game_PlayerSkipDay,
 	Game_Money,
 	Game_UpdateShopItem,
 	Game_UpgradeDefence,
@@ -572,7 +575,7 @@ struct Particle_t
 	sm::Vector4		color;
 
 	sm::Vector2		size = { 1, 1, };
-	PARTICLEMODE	type = PARTICLEMODE::BLOOD;
+	ParticleMode	type = ParticleMode::BLOOD;
 	UINT			life = 0;
 };
 
