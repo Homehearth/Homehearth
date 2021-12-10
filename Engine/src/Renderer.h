@@ -15,6 +15,8 @@
 #include "DepthOfFieldPass.h"
 #include "FrustumPass.h"
 #include "HeadlessEngine.h"
+#include "OpaquePass.h"
+#include "TransparentPass.h"
 #include "WaterEffectPass.h"
 
 class Renderer
@@ -30,6 +32,8 @@ private:
 	WaterEffectPass		m_waterEffectPass; 
 	FrustumPass			m_frustumPass;
 	CullingPass			m_cullingPass;
+	OpaquePass			m_opaquePass;
+	TransparentPass		m_transparentPass;
 	DebugPass			m_debugPass;
 	AnimationPass		m_animPass;
 	DecalPass			m_decalPass;

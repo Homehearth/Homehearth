@@ -58,6 +58,9 @@ public:
 
 	void RenderParticles(void* pass);
 
+	void RenderOpaque();
+	void RenderTransparent();
+
 	Skybox* GetSkybox();
 
 	bool IsRenderReady() const;

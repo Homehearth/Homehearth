@@ -39,6 +39,6 @@ public:
 	//Set the material from a part of a mtl-file
 	bool SetMaterialFromMTL(std::string& mtlpart);
 
-	void Render(ID3D11DeviceContext* context);
+	void Render(ID3D11DeviceContext* context) const;
 
 };

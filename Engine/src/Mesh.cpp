@@ -507,7 +507,7 @@ bool Mesh::SetMaterialFromMTL(std::string& mtlpart)
     return success;
 }
 
-void Mesh::Render(ID3D11DeviceContext* context)
+void Mesh::Render(ID3D11DeviceContext* context) const
 {
     UINT offset = 0;
     UINT stride = 0;

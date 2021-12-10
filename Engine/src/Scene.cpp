@@ -284,6 +284,58 @@ void Scene::RenderParticles(void* voidPass)
 
 }
 
+void Scene::RenderOpaque()
+{
+	PROFILE_FUNCTION();
+
+	ID3D11Buffer* const buffers[1] = { m_publicBuffer.GetBuffer() };
+	D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, buffers);
+
+	// Render everything on same thread.
+	{
+		// System that renders Renderable component
+		for (const auto& it : m_renderableCopies[1])
+		{
+			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
+
+			if (it.model)
+			{
+				for (const auto& mesh : it.model->GetMeshes())
+				{
+					if(!mesh.GetMaterial()->IsTransparent())
+						mesh.Render(D3D11Core::Get().DeviceContext());
+				}
+			}
+		}
+	}
+}
+
+void Scene::RenderTransparent()
+{
+	PROFILE_FUNCTION();
+
+	ID3D11Buffer* const buffers[1] = { m_publicBuffer.GetBuffer() };
+	D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, buffers);
+
+	// Render everything on same thread.
+	{
+		// System that renders Renderable component
+		for (const auto& it : m_renderableCopies[1])
+		{
+			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
+
+			if (it.model)
+			{
+				for (const auto& mesh : it.model->GetMeshes())
+				{
+					if (mesh.GetMaterial()->IsTransparent())
+						mesh.Render(D3D11Core::Get().DeviceContext());
+				}
+			}
+		}
+	}
+}
+
 Skybox* Scene::GetSkybox()
 {
 	return &m_sky;

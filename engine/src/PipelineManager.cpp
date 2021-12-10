@@ -89,6 +89,11 @@ void PipelineManager::Initialize(Window* pWindow, ID3D11DeviceContext* context)
 
     // Initialize Forward+ related resources.
     {
+        if (!this->CreateDepth())
+        {
+            LOG_ERROR("failed creating depth for pre-pass.");
+        }
+
         m_dispatchParamsCB.Create(m_d3d11->Device());
         m_screenToViewParamsCB.Create(m_d3d11->Device());
     }
@@ -175,18 +180,18 @@ bool PipelineManager::CreateStructuredBuffer(void* data, unsigned byteStride, un
     return !FAILED(hr);
 }
 
-void PipelineManager::SetCullBack(bool cullNone)
+void PipelineManager::SetCullBack(bool cullNone, ID3D11DeviceContext* pDeviceContext)
 {
+	constexpr float blendFactor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
     if (cullNone)
     {
-        m_d3d11->DeviceContext()->RSSetState(m_rasterState.Get());
-        m_d3d11->DeviceContext()->OMSetBlendState(m_blendOff.Get(), nullptr, 0xffffffff);
+        pDeviceContext->RSSetState(m_rasterState.Get());
+        pDeviceContext->OMSetBlendState(m_blendOff.Get(), blendFactor, 0xffffffff);
     }
     else
     {
-        constexpr float blendFactor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
-        m_d3d11->DeviceContext()->RSSetState(m_rasterStateNoCulling.Get());
-        m_d3d11->DeviceContext()->OMSetBlendState(m_blendOn.Get(), blendFactor, 0xffffffff);
+        pDeviceContext->RSSetState(m_rasterStateNoCulling.Get());
+        pDeviceContext->OMSetBlendState(m_blendOn.Get(), blendFactor, 0xffffffff);
     }
 }
 
@@ -267,9 +272,9 @@ bool PipelineManager::CreateDepthStencilStates()
 
     // Set up the description of the stencil state (Less).
     depthStencilDesc.DepthEnable = true;
+    depthStencilDesc.StencilEnable = true;
     depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
     depthStencilDesc.DepthFunc = D3D11_COMPARISON_LESS;
-    depthStencilDesc.StencilEnable = true;
     depthStencilDesc.StencilReadMask = D3D11_DEFAULT_STENCIL_READ_MASK;
     depthStencilDesc.StencilWriteMask = D3D11_DEFAULT_STENCIL_WRITE_MASK;
 
@@ -290,9 +295,17 @@ bool PipelineManager::CreateDepthStencilStates()
     if (FAILED(hr))
         return false;
 
-    // Create m_depthStencilStateLessEqual.
+    // Create m_depthStencilStateLessOrEqual.
     depthStencilDesc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
-    hr = m_d3d11->Device()->CreateDepthStencilState(&depthStencilDesc, m_depthStencilStateLessEqual.GetAddressOf());
+    depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+    hr = m_d3d11->Device()->CreateDepthStencilState(&depthStencilDesc, m_depthStencilStateLessOrEqual.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+
+
+    // Create m_depthStencilStateLessOrEqualEnableDepthWrite.
+    depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+    hr = m_d3d11->Device()->CreateDepthStencilState(&depthStencilDesc, m_depthStencilStateLessOrEqualEnableDepthWrite.GetAddressOf());
     if (FAILED(hr))
         return false;
 
@@ -302,13 +315,6 @@ bool PipelineManager::CreateDepthStencilStates()
     if (FAILED(hr))
         return false;
 
-    // Create m_depthStencilStateEqualAndDisableDepthWrite.
-    depthStencilDesc.StencilEnable = FALSE;
-    depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
-    depthStencilDesc.DepthFunc = D3D11_COMPARISON_EQUAL;
-    hr = m_d3d11->Device()->CreateDepthStencilState(&depthStencilDesc, m_depthStencilStateEqualAndDisableDepthWrite.GetAddressOf());
-    if (FAILED(hr))
-        return false;
 
     return !FAILED(hr);
 }
@@ -508,8 +514,14 @@ bool PipelineManager::CreateBlendStates()
     if (FAILED(hr))
         return false;
 
+	blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+    blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+    hr = m_d3d11->Device()->CreateBlendState(&blendDesc, m_alphaBlending.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+
     blendStateDesc.RenderTarget[0].BlendEnable = false;
-    blendStateDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+    blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_ONE;
     hr = m_d3d11->Device()->CreateBlendState(&blendDesc, m_blendOff.GetAddressOf());
 
     D3D11_BLEND_DESC blendStateParticleDesc = {};
@@ -812,6 +824,48 @@ bool PipelineManager::CreateTextureEffectResources()
     return true;
 }
 
+bool PipelineManager::CreateDepth()
+{
+    D3D11_SHADER_RESOURCE_VIEW_DESC shaderResourceViewDesc = {};
+    D3D11_TEXTURE2D_DESC textureDesc = {};
+    D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc = {};
+
+    textureDesc.Width = static_cast<FLOAT>(this->m_window->GetWidth());
+    textureDesc.Height = static_cast<FLOAT>(this->m_window->GetHeight());
+    textureDesc.MipLevels = 1;
+    textureDesc.ArraySize = 1;
+    textureDesc.Format = DXGI_FORMAT_R24G8_TYPELESS;
+    textureDesc.SampleDesc.Count = 1;
+    textureDesc.Usage = D3D11_USAGE_DEFAULT;
+    textureDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
+    textureDesc.CPUAccessFlags = 0;
+    textureDesc.MiscFlags = 0;
+
+    HRESULT hr = m_d3d11->Device()->CreateTexture2D(&textureDesc, nullptr, m_depth.texture.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+
+    depthStencilViewDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+    depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+    depthStencilViewDesc.Texture2D.MipSlice = 0;
+    depthStencilViewDesc.Flags = 0;
+    depthStencilViewDesc.Texture2D.MipSlice = 0;
+    // Create the depth stencil view.
+    hr = m_d3d11->Device()->CreateDepthStencilView(m_depth.texture.Get(), &depthStencilViewDesc, m_depth.dsv.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+
+    shaderResourceViewDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
+    shaderResourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+    shaderResourceViewDesc.Texture2D.MostDetailedMip = 0;
+    shaderResourceViewDesc.Texture2D.MipLevels = textureDesc.MipLevels;
+
+    hr = m_d3d11->Device()->CreateShaderResourceView(m_depth.texture.Get(), &shaderResourceViewDesc, m_depth.srv.GetAddressOf()); 
+
+    return !FAILED(hr);
+
+}
+
 bool PipelineManager::CreateShaders()
 {
     if (!m_defaultVertexShader.Create("Model_vs"))
@@ -823,6 +877,12 @@ bool PipelineManager::CreateShaders()
     if (!m_lightCullingShader.Create("LightCulling_cs"))
     {
         LOG_WARNING("failed creating LightCulling_cs.");
+        return false;
+    }
+
+    if (!m_depthPassPixelShader.Create("Depth_ps"))
+    {
+        LOG_WARNING("failed creating Depth_ps.");
         return false;
     }
 

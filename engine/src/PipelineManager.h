@@ -13,6 +13,13 @@ class PipelineManager
 		ComPtr<ID3D11UnorderedAccessView> uav;
 	};
 
+	struct TextureStencilView
+	{
+		ComPtr<ID3D11Texture2D>				texture;
+		ComPtr<ID3D11DepthStencilView>		dsv;
+		ComPtr<ID3D11ShaderResourceView>	srv;
+	};
+
 private:
 	Window*							m_window;
 	D3D11Core*						m_d3d11;
@@ -37,10 +44,12 @@ public:
 	ComPtr<ID3D11DepthStencilView>		m_debugDepthStencilView;
 	ComPtr<ID3D11ShaderResourceView>	m_debugDepthBufferSRV;
 
+	TextureStencilView					m_depth; // used for depth pass.
+	
 	ComPtr<ID3D11DepthStencilState>		m_depthStencilStateLess;
-	ComPtr<ID3D11DepthStencilState>		m_depthStencilStateLessEqual;
+	ComPtr<ID3D11DepthStencilState>		m_depthStencilStateLessOrEqual;
 	ComPtr<ID3D11DepthStencilState>		m_depthStencilStateGreater;
-	ComPtr<ID3D11DepthStencilState>		m_depthStencilStateEqualAndDisableDepthWrite;
+	ComPtr<ID3D11DepthStencilState>		m_depthStencilStateLessOrEqualEnableDepthWrite;
 	
 	ComPtr<ID3D11RasterizerState>		m_rasterState;
 	ComPtr<ID3D11RasterizerState>		m_rasterStateNoCulling;
@@ -54,6 +63,7 @@ public:
 	ComPtr<ID3D11BlendState>			m_blendStateParticle;
 	ComPtr<ID3D11BlendState>			m_blendOn;
 	ComPtr<ID3D11BlendState>			m_blendOff;
+	ComPtr<ID3D11BlendState>			m_alphaBlending;
 
 	ComPtr<ID3D11SamplerState>			m_linearSamplerState;		//Low settings
 	ComPtr<ID3D11SamplerState>			m_linearClampSamplerState;
@@ -72,6 +82,7 @@ public:
 	Shaders::VertexShader				m_skyboxVertexShader;
 	Shaders::VertexShader				m_ParticleVertexShader;
 
+	Shaders::PixelShader				m_depthPassPixelShader;
 	Shaders::PixelShader				m_defaultPixelShader;
 	Shaders::PixelShader				m_debugPixelShader;
 	Shaders::PixelShader				m_skyboxPixelShader;
@@ -97,7 +108,7 @@ public:
 
 	bool CreateStructuredBuffer(void* data, unsigned int byteStride, unsigned int arraySize, ResourceAccessView& rav);
 
-	void SetCullBack(bool cullNone);
+	void SetCullBack(bool cullNone, ID3D11DeviceContext* pDeviceContext);
 
 	//
 	// Forward+ Resources.
@@ -196,6 +207,7 @@ private:
 
 	bool CreateTextureEffectConstantBuffer();
 	bool CreateTextureEffectResources();
+	bool CreateDepth();
 };
 
 

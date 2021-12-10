@@ -8,7 +8,7 @@ void FrustumPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 
 	// Setup.
 	DC->OMSetRenderTargets(ARRAYSIZE(nullRTV), nullRTV, nullDSV);
-	DC->OMSetDepthStencilState(PM->m_depthStencilStateLessEqual.Get(), 0);
+	DC->OMSetDepthStencilState(PM->m_depthStencilStateLessOrEqual.Get(), 0);
 
 	DC->VSSetShader(nullptr, nullptr, 0);
 	DC->PSSetShader(nullptr, nullptr, 0);

@@ -15,6 +15,8 @@ void Renderer::Initialize(Window* pWindow)
     AddPass(&m_depthPass);
     AddPass(&m_frustumPass);
     AddPass(&m_cullingPass);
+    AddPass(&m_opaquePass);
+    AddPass(&m_transparentPass);
     AddPass(&m_textureEffectPass);
 	AddPass(&m_waterEffectPass);
 
@@ -24,10 +26,8 @@ void Renderer::Initialize(Window* pWindow)
 	AddPass(&m_decalPass); // måste vara före basepasset
 	m_decalPass.Create();
 
-	AddPass(&m_textureEffectPass);
-	AddPass(&m_waterEffectPass);
-	AddPass(&m_basePass);   
 	AddPass(&m_animPass);	
+	AddPass(&m_basePass);   
 	AddPass(&m_skyPass);
 	AddPass(&m_dofPass);	
 	AddPass(&m_particlePass);
@@ -37,8 +37,10 @@ void Renderer::Initialize(Window* pWindow)
 
 	m_depthPass.SetEnable(true);
     m_cullingPass.SetEnable(true);
-	m_basePass.SetEnable(true);
-	m_depthPass.SetEnable(true);
+    m_opaquePass.SetEnable(true);
+    m_transparentPass.SetEnable(true);
+
+	m_basePass.SetEnable(false);
 	m_textureEffectPass.SetEnable(true);
 	m_waterEffectPass.SetEnable(true);
 	m_animPass.SetEnable(true);
@@ -87,7 +89,7 @@ void Renderer::ClearFrame()
 	m_d3d11->DeviceContext()->ClearRenderTargetView(m_pipelineManager.m_backBuffer.Get(), m_clearColor);
 	m_d3d11->DeviceContext()->ClearDepthStencilView(m_pipelineManager.m_depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 	m_d3d11->DeviceContext()->ClearDepthStencilView(m_pipelineManager.m_debugDepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-
+    m_d3d11->DeviceContext()->ClearDepthStencilView(m_pipelineManager.m_depth.dsv.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 }
 
 void Renderer::Render(Scene* pScene)
