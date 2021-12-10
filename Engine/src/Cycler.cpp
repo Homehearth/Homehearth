@@ -28,8 +28,10 @@ Cycler::Cycler()
 
 void Cycler::Update(float dt)
 {
-	m_timer += dt * m_cycleSpeed;
-
+	if (m_timePeriod == CyclePeriod::DAY)
+		m_timer += dt * m_cycleSpeed * 10.f;
+	else
+		m_timer += dt * m_cycleSpeed;
 	if (m_timer > DAY_DURATION)
 	{
 		m_timer -= DAY_DURATION;

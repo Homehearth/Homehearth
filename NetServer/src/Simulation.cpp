@@ -198,7 +198,7 @@ void Simulation::ResetPlayer(Entity player)
 		attackAbility->cooldown = 0.50f;
 		attackAbility->attackDamage = 25.f;
 		attackAbility->lifetime = 0.1f;
-		attackAbility->useTime = 0.2f;
+		attackAbility->useTime = 0.5f;
 		attackAbility->delay = 0.2f;
 		attackAbility->attackRange = 8.f;
 
@@ -554,29 +554,29 @@ void Simulation::SendSnapshot()
 				if (melee)
 				{
 					count++;
-					msg4 << AbilityIndex::Primary << melee->cooldownTimer;
+					msg4 << AbilityIndex::Primary << melee->cooldownTimer << melee->cooldown;
 				}
 				else if (range)
 				{
 					count++;
-					msg4 << AbilityIndex::Primary << range->cooldownTimer;
+					msg4 << AbilityIndex::Primary << range->cooldownTimer << range->cooldown;
 				}
 
 				if (blink)
 				{
 					count++;
-					msg4 << AbilityIndex::Dodge << blink->cooldownTimer;
+					msg4 << AbilityIndex::Dodge << blink->cooldownTimer << blink->cooldown;
 				}
 				else if (dash)
 				{
 					count++;
-					msg4 << AbilityIndex::Dodge << dash->cooldownTimer;
+					msg4 << AbilityIndex::Dodge << dash->cooldownTimer << dash->cooldown;
 				}
 
 				if (heal)
 				{
 					count++;
-					msg4 << AbilityIndex::Secondary << heal->cooldownTimer;
+					msg4 << AbilityIndex::Secondary << heal->cooldownTimer << heal->cooldown;
 				}
 
 				msg4 << count;
@@ -800,7 +800,7 @@ void Simulation::SetGameScene()
 	ResetGameScene();
 	m_pCurrentScene = m_pGameScene;
 	m_lobby.SetActive(false);
-
+	m_currency = 100000;
 #if GOD_MODE
 	// During debug give players 1000 gold/monies.
 	m_currency = 1000;

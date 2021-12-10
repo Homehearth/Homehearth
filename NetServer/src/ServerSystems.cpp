@@ -511,7 +511,7 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 
 							if (simulation->GetCurrency().GetAmount() >= cost)
 							{
-								if (simulation->GetGrid().PlaceDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, blackboard->GetPathFindManager(), dynamicQT))
+								if (simulation->GetGrid().PlaceDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, blackboard->GetPathFindManager(), dynamicQT, blackboard))
 								{
 									audio_t audio =
 									{
@@ -528,6 +528,21 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 
 									simulation->GetCurrency() -= cost;
 									anim.toSend = EAnimationType::PLACE_DEFENCE;
+
+
+									//Check all house nodes to se if they have become unreachable
+									scene.ForEachComponent<comp::House, comp::Transform>([&](Entity entity, comp::House& house, comp::Transform& transform)
+									{
+											Node* homeNode = house.homeNode;
+											if(homeNode)
+											{
+												if(!blackboard->GetPathFindManager()->PlayerAStar(house.homeNode->position))
+												{
+													house.homeNode->reachable = false;
+												}
+											}
+									});
+
 								}
 							}
 						}
@@ -535,7 +550,21 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 					}
 					case ShopItem::Destroy_Tool:
 					{
-						simulation->GetGrid().RemoveDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, blackboard);
+						if(simulation->GetGrid().RemoveDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, blackboard))
+						{
+							//Check all house nodes to se if they have become unreachable
+							scene.ForEachComponent<comp::House, comp::Transform>([&](Entity entity, comp::House& house, comp::Transform& transform)
+								{
+									Node* homeNode = house.homeNode;
+									if (homeNode)
+									{
+										if (blackboard->GetPathFindManager()->PlayerAStar(house.homeNode->position))
+										{
+											house.homeNode->reachable = true;
+										}
+									}
+								});
+						}
 						break;
 					}
 					default:
@@ -639,7 +668,7 @@ void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money
 					audio.type = ESoundEvent::Game_OnDefenceDestroyed;
 
 					//Removing the defence and its neighbours if needed
-					grid.RemoveDefence(entity);
+					grid.RemoveDefence(entity, blackboard);
 					entity.Destroy();
 				}
 				else if (house)
