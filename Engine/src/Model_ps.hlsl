@@ -227,5 +227,5 @@ float4 main(PixelIn input) : SV_TARGET
     
     color = lerp(color, fogColor.xyz, fogFactor);
 
-    return float4(color, 5.0f);
+    return float4(color, c_transparency);
 }
