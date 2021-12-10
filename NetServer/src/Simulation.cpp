@@ -660,11 +660,6 @@ void Simulation::OnNetworkEntityDestroy(entt::registry& reg, entt::entity entity
 	// Network has not been destroyed yet
 	comp::Network* net = e.GetComponent<comp::Network>();
 	m_removedEntities.push_back(net->id);
-	auto it = std::find(m_updatedEntities.begin(), m_updatedEntities.end(), e);
-	if (it != m_updatedEntities.end())
-	{
-		m_updatedEntities.erase(it);
-	}
 }
 
 void Simulation::OnNetworkEntityUpdated(entt::registry& reg, entt::entity entity)
@@ -918,7 +913,7 @@ void Simulation::SendRemoveAllEntitiesToPlayer(uint32_t playerID) const
 	uint32_t count = 0;
 	m_pGameScene->ForEachComponent<comp::Network>([&](Entity e, comp::Network& n)
 		{
-			InsertEntityIntoMessage(e, msg);
+			msg << n.id;
 			count++;
 
 			if (count == PACKET_CHUNK_SIZE)
