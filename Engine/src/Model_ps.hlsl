@@ -103,7 +103,7 @@ PixelOut main(PixelIn input)
                                 float depth = t_shadowMaps.Sample(s_linear, float3(shadowCoords, shadowIndex));
                                 if (depth > cameraShadowSpace.z & ((saturate(shadowCoords.x) == shadowCoords.x) & (saturate(shadowCoords.y) == shadowCoords.y)))
                                 {
-                                    lightVolume += scatter;
+                                    lightVolume += sb_lights[i].color.xyz / 255.0f;
                                 }
                         
                                 currentPos += step;
