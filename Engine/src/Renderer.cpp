@@ -23,7 +23,7 @@ void Renderer::Initialize(Window* pWindow)
     m_decalPass.Create();
 
     AddPass(&m_opaquePass);
-    //AddPass(&m_transparentPass);
+	AddPass(&m_transparentPass);
     AddPass(&m_textureEffectPass);
 	AddPass(&m_waterEffectPass);
 
@@ -34,7 +34,7 @@ void Renderer::Initialize(Window* pWindow)
 	AddPass(&m_skyPass);
 	AddPass(&m_dofPass);	
 	AddPass(&m_particlePass);
-
+    
 	m_basePass.m_pShadowPass = &m_shadowPass;
 	m_animPass.m_pShadowPass = &m_shadowPass;
     m_opaquePass.m_shadowPassRef = &m_shadowPass;
@@ -45,7 +45,8 @@ void Renderer::Initialize(Window* pWindow)
     m_opaquePass.SetEnable(true);
     m_transparentPass.SetEnable(true);
 
-	m_basePass.SetEnable(false);
+	//m_basePass.SetEnable(false);
+
 	m_textureEffectPass.SetEnable(true);
 	m_waterEffectPass.SetEnable(true);
 	m_animPass.SetEnable(true);
@@ -54,8 +55,6 @@ void Renderer::Initialize(Window* pWindow)
 	m_skyPass.SetEnable(true);
 	m_dofPass.SetEnable(true);
 	m_shadowPass.SetEnable(true);
-	m_textureEffectPass.SetEnable(true);
-	m_waterEffectPass.SetEnable(true);
 
 #ifdef _DEBUG
 	AddPass(&m_debugPass);  

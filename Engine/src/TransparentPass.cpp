@@ -7,14 +7,10 @@ void TransparentPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContex
     {
         m_skyBoxRef->Bind(pDeviceContext);
     }
-    // Transparent pipeline.
-	DC->OMSetRenderTargets(1, PM->m_backBuffer.GetAddressOf(), nullptr);
-	DC->OMSetDepthStencilState(PM->m_depthStencilStateLessOrEqual.Get(), 0);
+
+    DC->OMSetRenderTargets(1, PM->m_backBuffer.GetAddressOf(), PM->m_depth.dsv.Get());
+    DC->OMSetDepthStencilState(PM->m_depthStencilStateLess.Get(), 0);
     DC->IASetInputLayout(PM->m_defaultInputLayout.Get());
-    
-    // Blend mode for alpha blending.
-    constexpr float blendFactor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
-    DC->OMSetBlendState(PM->m_alphaBlending.Get(), blendFactor, 0xffffffff);
 
     DC->VSSetShader(PM->m_defaultVertexShader.Get(), nullptr, 0);
     DC->PSSetShader(PM->m_defaultPixelShader.Get(), nullptr, 0);
@@ -23,7 +19,6 @@ void TransparentPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContex
     DC->PSSetConstantBuffers(1, 1, pCam->m_viewConstantBuffer.GetAddressOf());
 
     DC->RSSetViewports(1, &PM->m_viewport);
-    DC->RSSetState(PM->m_rasterStateNoCulling.Get());
 
     DC->PSSetSamplers(0, 1, PM->m_pointSamplerState.GetAddressOf());
     DC->PSSetSamplers(1, 1, PM->m_linearSamplerState.GetAddressOf());
@@ -33,7 +28,7 @@ void TransparentPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContex
     if (m_shadowPassRef)
         m_shadowPassRef->PostRender(DC);
 
-    //m_lights->Render(DC);
+    m_lights->Render(DC);
     PM->SetCullBack(false, DC);
 }
 

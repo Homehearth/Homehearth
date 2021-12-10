@@ -6,7 +6,7 @@ void DepthPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 {
     // Set DepthBuffer.
     ID3D11RenderTargetView* nullRTV[] = { nullptr };
-    DC->OMSetRenderTargets(0, nullRTV, PM->m_depthStencilView.Get());
+    DC->OMSetRenderTargets(0, nullRTV, PM->m_depth.dsv.Get());
     DC->OMSetDepthStencilState(PM->m_depthStencilStateLessOrEqualEnableDepthWrite.Get(), 0);
 
     DC->IASetInputLayout(PM->m_defaultInputLayout.Get());

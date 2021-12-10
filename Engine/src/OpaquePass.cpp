@@ -3,14 +3,13 @@
 
 void OpaquePass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 {
-    if (m_skyBoxRef)
+    if(m_skyBoxRef)
     {
         m_skyBoxRef->Bind(pDeviceContext);
     }
 
-    // Opaque pipeline
-    DC->OMSetRenderTargets(1, PM->m_backBuffer.GetAddressOf(), nullptr);
-    //DC->OMSetDepthStencilState(PM->m_depthStencilStateGreater.Get(), 0);
+    DC->OMSetRenderTargets(1, PM->m_backBuffer.GetAddressOf(), PM->m_depth.dsv.Get());
+    DC->OMSetDepthStencilState(PM->m_depthStencilStateLess.Get(), 0);
     DC->IASetInputLayout(PM->m_defaultInputLayout.Get());
 
     DC->VSSetShader(PM->m_defaultVertexShader.Get(), nullptr, 0);
@@ -18,7 +17,7 @@ void OpaquePass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 
     DC->VSSetConstantBuffers(1, 1, pCam->m_viewConstantBuffer.GetAddressOf());
     DC->PSSetConstantBuffers(1, 1, pCam->m_viewConstantBuffer.GetAddressOf());
-
+    
     DC->RSSetViewports(1, &PM->m_viewport);
 
     DC->PSSetSamplers(0, 1, PM->m_pointSamplerState.GetAddressOf());

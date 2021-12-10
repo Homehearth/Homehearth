@@ -17,7 +17,8 @@ void SkyboxPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 
     DC->RSSetState(PM->m_rasterStateNoCulling.Get());
 
-    DC->OMSetDepthStencilState(PM->m_depthStencilStateLessOrEqual.Get(), 0);
+    DC->OMSetRenderTargets(1, PM->m_backBuffer.GetAddressOf(), PM->m_depth.dsv.Get());
+    DC->OMSetDepthStencilState(PM->m_depthStencilStateLess.Get(), 0);
 }
 
 void SkyboxPass::Render(Scene* pScene)

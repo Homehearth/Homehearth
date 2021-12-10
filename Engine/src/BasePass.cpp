@@ -26,7 +26,7 @@ void BasePass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
     m_lights->Render(DC);
     
     DC->RSSetViewports(1, &PM->m_viewport);
-    DC->RSSetState(PM->m_rasterState.Get());
+    DC->RSSetState(PM->m_rasterStateBackCulling.Get());
 
     DC->OMSetRenderTargets(1, PM->m_backBuffer.GetAddressOf(), PM->m_depthStencilView.Get());
     DC->OMSetDepthStencilState(PM->m_depthStencilStateLessOrEqual.Get(), 0);

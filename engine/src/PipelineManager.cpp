@@ -93,7 +93,10 @@ void PipelineManager::Initialize(Window* pWindow, ID3D11DeviceContext* context)
         {
             LOG_ERROR("failed creating depth for pre-pass.");
         }
-
+		if (!this->CreateForwardBlendStates())
+		{
+			LOG_ERROR("failed creating blend states.");
+		}   
         m_dispatchParamsCB.Create(m_d3d11->Device());
         m_screenToViewParamsCB.Create(m_d3d11->Device());
     }
@@ -183,15 +186,15 @@ bool PipelineManager::CreateStructuredBuffer(void* data, unsigned byteStride, un
 void PipelineManager::SetCullBack(bool cullNone, ID3D11DeviceContext* pDeviceContext)
 {
 	constexpr float blendFactor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
-    if (cullNone)
-    {
-        pDeviceContext->RSSetState(m_rasterState.Get());
-        pDeviceContext->OMSetBlendState(m_blendOff.Get(), blendFactor, 0xffffffff);
-    }
-    else
+    if (!cullNone)
     {
         pDeviceContext->RSSetState(m_rasterStateNoCulling.Get());
         pDeviceContext->OMSetBlendState(m_blendOn.Get(), blendFactor, 0xffffffff);
+    }
+    else
+    {
+        pDeviceContext->RSSetState(m_rasterStateBackCulling.Get());
+        pDeviceContext->OMSetBlendState(m_blendOff.Get(), blendFactor, 0xffffffff);
     }
 }
 
@@ -273,7 +276,7 @@ bool PipelineManager::CreateDepthStencilStates()
     // Set up the description of the stencil state (Less).
     depthStencilDesc.DepthEnable = true;
     depthStencilDesc.StencilEnable = true;
-    depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+    depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
     depthStencilDesc.DepthFunc = D3D11_COMPARISON_LESS;
     depthStencilDesc.StencilReadMask = D3D11_DEFAULT_STENCIL_READ_MASK;
     depthStencilDesc.StencilWriteMask = D3D11_DEFAULT_STENCIL_WRITE_MASK;
@@ -310,7 +313,9 @@ bool PipelineManager::CreateDepthStencilStates()
         return false;
 
     // Create m_depthStencilStateGreater
-    depthStencilDesc.DepthFunc = D3D11_COMPARISON_GREATER;
+    depthStencilDesc.DepthFunc = D3D11_COMPARISON_GREATER_EQUAL;
+    depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+    depthStencilDesc.DepthEnable = false;
     hr = m_d3d11->Device()->CreateDepthStencilState(&depthStencilDesc, m_depthStencilStateGreater.GetAddressOf());
     if (FAILED(hr))
         return false;
@@ -335,23 +340,17 @@ bool PipelineManager::CreateRasterizerStates()
     rasterizerDesc.DepthBiasClamp = 0.0f;
     rasterizerDesc.SlopeScaledDepthBias = 0.0f;
     rasterizerDesc.FillMode = D3D11_FILL_MODE::D3D11_FILL_SOLID;
-    // Backface culling refers to the process of discarding back-facing triangles from the pipeline. 
-    // This can potentially reduce the amount of triangles that need to be processed by half, hence it will be set as default.
     rasterizerDesc.CullMode = D3D11_CULL_MODE::D3D11_CULL_BACK;
-
     // Create the rasterizer state from the description we just filled out.
-    HRESULT hr = m_d3d11->Device()->CreateRasterizerState(&rasterizerDesc, m_rasterState.GetAddressOf());
+    HRESULT hr = m_d3d11->Device()->CreateRasterizerState(&rasterizerDesc, m_rasterStateBackCulling.GetAddressOf());
 
 
     rasterizerDesc.CullMode = D3D11_CULL_MODE::D3D11_CULL_FRONT;
     // Create front face culling rasterizer state.
     hr = m_d3d11->Device()->CreateRasterizerState(&rasterizerDesc, m_rasterStateFrontCulling.GetAddressOf());
 
-
     // Setup a raster description with no back face culling.
     rasterizerDesc.CullMode = D3D11_CULL_NONE;
-
-    // Create the no culling rasterizer state.
     hr = m_d3d11->Device()->CreateRasterizerState(&rasterizerDesc, m_rasterStateNoCulling.GetAddressOf());
     if (FAILED(hr))
         return false;
@@ -503,26 +502,16 @@ bool PipelineManager::CreateBlendStates()
     blendDesc.IndependentBlendEnable = true;
     blendDesc.RenderTarget[0].BlendEnable = true;
     blendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
-    blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_ONE;
     blendDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
     blendDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ZERO;
     blendDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
     blendDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
-    blendDesc.RenderTarget[0].RenderTargetWriteMask = 0x0f;
-
-    hr = m_d3d11->Device()->CreateBlendState(&blendDesc, m_blendOn.GetAddressOf());
-    if (FAILED(hr))
-        return false;
-
 	blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
     blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+
     hr = m_d3d11->Device()->CreateBlendState(&blendDesc, m_alphaBlending.GetAddressOf());
     if (FAILED(hr))
         return false;
-
-    blendStateDesc.RenderTarget[0].BlendEnable = false;
-    blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_ONE;
-    hr = m_d3d11->Device()->CreateBlendState(&blendDesc, m_blendOff.GetAddressOf());
 
     D3D11_BLEND_DESC blendStateParticleDesc = {};
     blendStateParticleDesc.AlphaToCoverageEnable = true;
@@ -864,6 +853,37 @@ bool PipelineManager::CreateDepth()
 
     return !FAILED(hr);
 
+}
+
+bool PipelineManager::CreateForwardBlendStates()
+{
+    D3D11_BLEND_DESC blendDescOn;
+    ZeroMemory(&blendDescOn, sizeof(D3D11_BLEND_DESC));
+    // HERE IS MY GREATEST SUCC
+    blendDescOn.AlphaToCoverageEnable = TRUE;
+    blendDescOn.IndependentBlendEnable = TRUE;
+    blendDescOn.RenderTarget[0].BlendEnable = TRUE;
+    blendDescOn.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+    blendDescOn.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+    blendDescOn.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+    blendDescOn.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+    blendDescOn.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+    blendDescOn.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+    blendDescOn.RenderTarget[0].RenderTargetWriteMask = 0x0f;
+
+    D3D11_BLEND_DESC blendDescOff;
+    ZeroMemory(&blendDescOff, sizeof(D3D11_BLEND_DESC));
+
+    blendDescOff.RenderTarget[0].BlendEnable = false;
+    blendDescOff.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+
+    HRESULT hr = m_d3d11->Device()->CreateBlendState(&blendDescOn, m_blendOn.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+
+    hr = m_d3d11->Device()->CreateBlendState(&blendDescOff, m_blendOff.GetAddressOf());
+
+    return !FAILED(hr);
 }
 
 bool PipelineManager::CreateShaders()

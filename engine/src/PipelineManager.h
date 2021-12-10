@@ -51,7 +51,7 @@ public:
 	ComPtr<ID3D11DepthStencilState>		m_depthStencilStateGreater;
 	ComPtr<ID3D11DepthStencilState>		m_depthStencilStateLessOrEqualEnableDepthWrite;
 	
-	ComPtr<ID3D11RasterizerState>		m_rasterState;
+	ComPtr<ID3D11RasterizerState>		m_rasterStateBackCulling;
 	ComPtr<ID3D11RasterizerState>		m_rasterStateNoCulling;
 	ComPtr<ID3D11RasterizerState>		m_rasterStateFrontCulling;
 	ComPtr<ID3D11RasterizerState>		m_rasterStateWireframe;
@@ -208,6 +208,7 @@ private:
 	bool CreateTextureEffectConstantBuffer();
 	bool CreateTextureEffectResources();
 	bool CreateDepth();
+	bool CreateForwardBlendStates();
 };
 
 
