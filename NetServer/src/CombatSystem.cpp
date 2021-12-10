@@ -99,16 +99,33 @@ void CombatSystem::UpdateTeleport(HeadlessScene& scene, Blackboard* blackboard)
 					bool hasSetTarget = false;
 					while (!hasSetTarget && dir.Length() > pathFinderManager->GetNodeSize())
 					{
+
 						sm::Vector3 newPos = transform.position + dir;
 						if (pathFinderManager->FindClosestNode(newPos)->reachable)
 						{
 							entity.GetComponent<comp::Transform>()->position = newPos;
+
+							if (entity.GetComponent<comp::ParticleEmitter>())
+								entity.RemoveComponent<comp::ParticleEmitter>();
+
+							entity.AddComponent<comp::ParticleEmitter>(sm::Vector3(0, 6, 0), 200, 3.0f, ParticleMode::MAGEBLINK, 1.f, 30.f, TRUE);
+							entity.GetComponent<comp::ParticleEmitter>()->direction = dir;
+							scene.publish<EComponentUpdated>(entity, ecs::Component::PARTICLEMITTER);
+
+							Entity blinkParticle = scene.CreateEntity();
+							blinkParticle.AddComponent<comp::Transform>(newPos);
+							blinkParticle.AddComponent<comp::ParticleEmitter>(sm::Vector3(0, 6, 0), 200, 3.0f, ParticleMode::MAGEBLINK, 1.0f, 30.f, TRUE);
+							blinkParticle.GetComponent<comp::ParticleEmitter>()->direction = -dir;
+							blinkParticle.AddComponent<comp::Network>();
+							blinkParticle.UpdateNetwork();
+
 							hasSetTarget = true;
 							entity.UpdateNetwork();
 							if (pathFinderManager->PlayerAStar(entity.GetComponent<comp::Transform>()->position))
 							{
 								p->reachable = true;
 							}
+
 
 							audio_t audio = {
 								ESoundEvent::Player_OnCastBlink,
@@ -162,6 +179,8 @@ void CombatSystem::UpdateDash(HeadlessScene& scene)
 
 					Entity collider = CreateAreaAttackCollider(scene, entity.GetComponent<comp::Transform>()->position, 10, dashAbility.useTime);
 					collider.AddComponent<comp::Velocity>()->vel = dashAbility.velocityBeforeDash * dashAbility.force;
+
+					//entity.AddComponent<comp::ParticleEmitter>(sm::Vector3(0, 6, 0), 100, 10.f, ParticleMode::MAGEBLINK, 2.f, 1.f, FALSE);
 
 					CollisionSystem::Get().AddOnCollisionEnter(collider, [=](Entity thisEntity, Entity other)
 						{
@@ -315,7 +334,7 @@ Entity CombatSystem::CreateAttackEntity(Entity entity, HeadlessScene& scene, com
 		comp::RangeAttackAbility* ability = entity.GetComponent<comp::RangeAttackAbility>();
 		Entity explosion = CreateAreaAttackCollider(scene, attackEntity.GetComponent<comp::Transform>()->position, ability->attackRange, 0.5f);
 
-		explosion.AddComponent<comp::ParticleEmitter>(sm::Vector3{ 0,0,0 }, 200, 6.f, ParticleMode::EXPLOSION, 2.0f, 40.f, false);
+		explosion.AddComponent<comp::ParticleEmitter>(sm::Vector3{ 0,0,0 }, 200, 6.f, ParticleMode::EXPLOSION, 2.0f, 40.f, FALSE);
 
 
 		CollisionSystem::Get().AddOnCollisionEnter(explosion, [=, &scene](Entity expl, Entity other)
@@ -328,7 +347,7 @@ Entity CombatSystem::CreateAttackEntity(Entity entity, HeadlessScene& scene, com
 			});
 	};
 	
-	attackEntity.AddComponent<comp::ParticleEmitter>(sm::Vector3{ 0,0,0 }, 200, 1.f, ParticleMode::MAGERANGE, 1.7f, 1.f, false);
+	attackEntity.AddComponent<comp::ParticleEmitter>(sm::Vector3{ 0,0,0 }, 200, 1.f, ParticleMode::MAGERANGE, 1.7f, 1.f, FALSE);
 
 	attackEntity.AddComponent<comp::Network>();
 
@@ -501,6 +520,7 @@ void CombatSystem::DoDamage(HeadlessScene& scene, Entity attacker, Entity attack
 		}
 	}
 
+	doDamage = true;
 
 	comp::Health* otherHealth = target.GetComponent<comp::Health>();
 	if (otherHealth && doDamage)
@@ -517,12 +537,12 @@ void CombatSystem::DoDamage(HeadlessScene& scene, Entity attacker, Entity attack
 		if (target.GetComponent<comp::Tag<TagType::DEFENCE>>())
 		{
 			//Smoke particles
-			target.AddComponent<comp::ParticleEmitter>(sm::Vector3{ 0,10,0 }, 50, 10.f, ParticleMode::SMOKEAREA, 3.5f, 1.f, true);
+			target.AddComponent<comp::ParticleEmitter>(sm::Vector3{ 0,10,0 }, 50, 10.f, ParticleMode::SMOKEAREA, 3.5f, 1.f, TRUE);
 		}
 		else
 		{
 			// Blood particle
-			target.AddComponent<comp::ParticleEmitter>(sm::Vector3{ 0,6,0 }, 50, 1.5f, ParticleMode::BLOOD, 2.0f, 1.f, true);
+			target.AddComponent<comp::ParticleEmitter>(sm::Vector3{ 0,6,0 }, 50, 1.5f, ParticleMode::BLOOD, 2.0f, 1.f, TRUE);
 		}
 
 		if (otherHealth->currentHealth <= 0.0f)

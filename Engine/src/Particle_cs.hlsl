@@ -19,6 +19,7 @@ void RainSimmulation(inout VertexParticleIn particle, in uint id);
 void MageHealSimulation(inout VertexParticleIn particle, in uint id);
 void MageRangeSimulation(inout VertexParticleIn particle, in uint id);
 void ExplosionSimulation(inout VertexParticleIn particle, in uint id);
+void MageBlinkSimulation(inout VertexParticleIn particle, in uint id);
 
 
 [numthreads(50, 1, 1)]
@@ -47,7 +48,9 @@ void main(uint3 particleID : SV_DispatchThreadID)
     else if (vertex.type == 9)
         MageRangeSimulation(vertex, id);
     else if (vertex.type == 10)
-        ExplosionSimulation(vertex, id);
+        ExplosionSimulation(vertex, id);    
+    else if (vertex.type == 11)
+        MageBlinkSimulation(vertex, id);
     
     vertex.life += dt;
     //vertex.size += particleSizeMulitplier * deltaTime;
@@ -179,7 +182,7 @@ void SmokePointSimmulation(inout VertexParticleIn particle, in uint id)
         float sizeChange = abs(randomNumbers[id + counter]) * dt;
         particle.size += sizeChange * sizeMulitplier;
         
-        if (particle.color.a >= 0 && particle.life >= particleLifeTime - 1.5)
+        if (particle.color.a >= 0 && particle.life >= particleLifeTime - 2.0)
         {
             particle.color.a -= dt;
             particle.color.rgb -= dt;
@@ -211,7 +214,7 @@ void SmokeAreaSimmulation(inout VertexParticleIn particle, in uint id)
         float sizeChange = abs(randomNumbers[id + counter]) * dt;
         particle.size += sizeChange * sizeMulitplier;
         
-        if (particle.color.a >= 0 && particle.life >= particleLifeTime - 1.5)
+        if (particle.color.a >= 0 && particle.life >= particleLifeTime - 2.0)
         {
             particle.color.a -= dt;
             particle.color.rgb -= dt;
@@ -330,15 +333,39 @@ void MageRangeSimulation(inout VertexParticleIn particle, in uint id)
 }
 
 void ExplosionSimulation(inout VertexParticleIn particle, in uint id)
-{
-    float4 emitterToParticle = particle.pos - emitterPos;
-    
+{    
     particle.pos += particle.velocity * speed * dt;
-    
-    if (particle.size.x > 0)
-        particle.size += dt * sizeMulitplier;
+    particle.size += dt * sizeMulitplier;
         
     if (particle.color.a > 0)
         particle.color.a -= dt * sizeMulitplier * 0.5f;
     
+}
+
+void MageBlinkSimulation(inout VertexParticleIn particle, in uint id)
+{
+    if (particle.life <= lifeTime)
+    {
+    
+        float particleUniqueSpeed = speed * abs(randomNumbers[id + counter]);
+        
+        particle.velocity *= 1.0002f;
+        //particle.velocity += float4(normalize(c_pDirection), 1) / 100.f;
+        //particle.velocity = normalize(particle.velocity);
+        particle.pos += -particle.velocity * particleUniqueSpeed * dt;
+    
+        if (particle.size.x > 0)
+            particle.size -= ((particle.life) / (lifeTime)) * speed * dt;
+        
+        if (particle.color.a > 0)
+            particle.color.a -= dt * sizeMulitplier * 0.5f;
+        
+        
+        particle.color.b += dt * sizeMulitplier * 10.f;
+    }
+    else
+    {
+        particle.pos = emitterPos;
+        particle.life = 0;
+    }
 }

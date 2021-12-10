@@ -104,6 +104,16 @@ void ParticleSystem::InitializeParticles(entt::registry& reg, entt::entity ent)
 			m_tempParticle.size = sm::Vector2(emitter->sizeMulitplier, emitter->sizeMulitplier);
 			break;
 		}
+		case ParticleMode::MAGEBLINK:
+		{
+			float radius = 6.5f;
+			RandomSetVelocity(-1.0f, 1.0f);
+			m_tempParticle.velocity.Normalize();
+			m_tempParticle.position += radius * m_tempParticle.velocity; 
+			m_tempParticle.size = sm::Vector2(emitter->sizeMulitplier, emitter->sizeMulitplier);
+			RandomAddSize(-0.5f, 0.5f);
+			m_tempParticle.color = sm::Vector4(0,0,0.0f,1);
+		}
 		}
 
 		particles[i] =  m_tempParticle;
@@ -172,6 +182,12 @@ void ParticleSystem::RandomAddPosition(float min, float max)
 	m_tempParticle.position.x += (float)rand() / (RAND_MAX + 1.f) * (max - (min)) + (min);
 	m_tempParticle.position.y += (float)rand() / (RAND_MAX + 1.f) * (max - (min)) + (min);
 	m_tempParticle.position.z += (float)rand() / (RAND_MAX + 1.f) * (max - (min)) + (min);
+}
+
+void ParticleSystem::RandomAddSize(float min, float max)
+{
+	m_tempParticle.size.x += (float)rand() / (RAND_MAX + 1.f) * (max - (min)) + (min);
+	m_tempParticle.size.y += (float)rand() / (RAND_MAX + 1.f) * (max - (min)) + (min);
 }
 
 void ParticleSystem::RandomAddPositionXYZ(sm::Vector2 minMaxX, sm::Vector2 minMaxY, sm::Vector2 minMaxZ)

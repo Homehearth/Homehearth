@@ -21,7 +21,8 @@ float4 main(PixelParticleIn input) : SV_TARGET
     {
         finalColor = albedo;
     }
-        
+    finalColor = albedo;
+
     finalColor = ACESFitted(finalColor);
     finalColor = pow(max(finalColor, 0.0f), float3(gamma, gamma, gamma));
     

@@ -92,7 +92,7 @@ namespace ecs
 			float								lifeTime		= 0.f;
 			float								sizeMulitplier	= 0.f;
 			float								speed			= 0.f;
-			bool								hasDeathTimer	= false;
+			int									hasDeathTimer	= FALSE;
 			float								lifeLived		= 0.f;
 
 			std::string textureName								= "";
@@ -105,8 +105,9 @@ namespace ecs
 			ComPtr<ID3D11UnorderedAccessView>	particleUAV		= nullptr;
 
 			component::Transform				transformCopy;
+			sm::Vector3							direction		= { 0,0,0 };
 
-			EmitterParticle(sm::Vector3 positionOffset = {0,0,0}, int nrOfParticles = 10, float sizeMulitplier = 1.f, ParticleMode type = ParticleMode::BLOOD, float lifeTime = 2.f, float speed = 1, bool hasDeathTimer = false)
+			EmitterParticle(sm::Vector3 positionOffset = {0,0,0}, int nrOfParticles = 10, float sizeMulitplier = 1.f, ParticleMode type = ParticleMode::BLOOD, float lifeTime = 2.f, float speed = 1, int hasDeathTimer = FALSE)
 			{
 				textureName = "thisisfine.png";
 				opacityTextureName = "round_Opacity.png";
@@ -142,7 +143,7 @@ namespace ecs
 				{
 					textureName = "MageHeal.png";
 				}
-				else if (type == ParticleMode::MAGERANGE || type == ParticleMode::EXPLOSION)
+				else if (type == ParticleMode::MAGERANGE || type == ParticleMode::EXPLOSION || type == ParticleMode::MAGEBLINK)
 				{
 					textureName = "fire.png";
 					opacityTextureName = "fire_Opacity.png";
@@ -178,10 +179,11 @@ namespace ecs
 			float			lifeTime		= 0.f;
 			float			sizeMulitplier	= 0.f;
 			float			speed			= 0.f;
-			bool			hasDeathTimer	= false;
+			int				hasDeathTimer	= FALSE;
 			float			lifeLived		= 0.f;
+			sm::Vector3		direction		= { 0,0,0 };
 
-			ParticleEmitter(sm::Vector3 positionOffset = { 0,0,0 }, int nrOfParticles = 10, float sizeMulitplier = 1.f, ParticleMode type = ParticleMode::BLOOD, float lifeTime = 2.f, float speed = 1, bool hasDeathTimer = false)
+			ParticleEmitter(sm::Vector3 positionOffset = { 0,0,0 }, int nrOfParticles = 10, float sizeMulitplier = 1.f, ParticleMode type = ParticleMode::BLOOD, float lifeTime = 2.f, float speed = 1, int hasDeathTimer = FALSE)
 			{
 				this->nrOfParticles		= (UINT)nrOfParticles;
 				this->type				= type;
