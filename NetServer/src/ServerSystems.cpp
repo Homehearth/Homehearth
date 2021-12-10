@@ -375,7 +375,7 @@ void ServerSystems::WaveSystem(Simulation* simulation,
 		}
 
 		//Add count and pop from queue
-		simulation->IncreaseWavesSurvived();
+		simulation->m_wavesSurvived++;
 		waves.pop();
 	}
 }
@@ -422,8 +422,15 @@ void ServerSystems::OnCycleChange(Simulation* simulation)
 			{
 				EnemyManagement::CreateWaves(simulation->waveQueue, simulation->currentRound++);
 			}
-
 		}
+		
+		network::message<GameMsg> msg;
+		msg.header.id = GameMsg::Game_Time;
+		msg << simulation->m_timeCycler.GetCycleSpeed();
+		msg << simulation->m_timeCycler.GetTimePeriod();
+		bool hasChangedPeriod = true;
+		msg << hasChangedPeriod;
+		simulation->Broadcast(msg);
 	}
 	if (simulation->m_timeCycler.GetTimePeriod() == CyclePeriod::NIGHT)
 	{
@@ -436,13 +443,21 @@ void ServerSystems::OnCycleChange(Simulation* simulation)
 		if (count == 0)
 		{
 			simulation->m_timeCycler.SetCycleSpeed(15.0f);
+
+			network::message<GameMsg> msg;
+			msg.header.id = GameMsg::Game_Time;
+			msg << simulation->m_timeCycler.GetCycleSpeed();
+			msg << simulation->m_timeCycler.GetTimePeriod();
+			bool hasChangedPeriod = false;
+			msg << hasChangedPeriod;
+			simulation->Broadcast(msg);
 		}
 	}
 }
 
 void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene& scene, float dt, QuadTree* dynamicQT, Blackboard* blackboard)
 {
-	scene.ForEachComponent<comp::Player, comp::Transform, comp::Velocity>([&](comp::Player& p, comp::Transform& t, comp::Velocity& v)
+	scene.ForEachComponent<comp::Player, comp::Transform, comp::Velocity, comp::AnimationState>([&](comp::Player& p, comp::Transform& t, comp::Velocity& v, comp::AnimationState& anim)
 		{
 			// update velocity
 			sm::Vector3 vel = sm::Vector3(static_cast<float>(p.lastInputState.axisHorizontal), 0, static_cast<float>(p.lastInputState.axisVertical));
@@ -455,7 +470,9 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 			vel = sm::Vector3::TransformNormal(vel, sm::Matrix::CreateRotationY(targetRotation));
 
 			if (vel.Length() > 0.01f)
+			{
 				p.state = comp::Player::State::WALK;
+			}
 
 			vel *= p.runSpeed;
 			v.vel = vel;
@@ -505,7 +522,7 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 					case ShopItem::Defence1x1:
 					case ShopItem::Defence1x3:
 					{
-						if (simulation->m_timeCycler.GetTimePeriod() == CyclePeriod::DAY)
+						if (simulation->m_timeCycler.GetTimePeriod() != CyclePeriod::NIGHT)
 						{
 							uint32_t cost = 0;
 							if (p.shopItem == ShopItem::Defence1x1)
@@ -613,7 +630,6 @@ void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money
 			if (health.currentHealth <= 0 && health.isAlive)
 			{
 				comp::AnimationState* anim = entity.GetComponent<comp::AnimationState>();
-
 
 				if (anim)
 				{
@@ -733,7 +749,7 @@ void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& sce
 
 		});
 
-	scene.ForEachComponent<comp::Player, comp::Health, comp::Network, comp::AnimationState>([&](Entity e, comp::Player& p, comp::Health& health, comp::Network n, comp::AnimationState anim)
+	scene.ForEachComponent<comp::Player, comp::Health, comp::Network>([&](Entity e, comp::Player& p, comp::Health& health, comp::Network n)
 		{
 			if (!health.isAlive)
 			{
@@ -813,7 +829,7 @@ void ServerSystems::CheckGameOver(Simulation* simulation, HeadlessScene& scene)
 	PROFILE_FUNCTION();
 
 	bool gameOver = true;
-	bool isHousesDestroyed = true;
+	bool isVillagerDead = true;
 	//Check if all players is dead
 	scene.ForEachComponent<comp::Player, comp::Health>([&](comp::Player& p, comp::Health& h)
 		{
@@ -823,18 +839,23 @@ void ServerSystems::CheckGameOver(Simulation* simulation, HeadlessScene& scene)
 			}
 		});
 
-	scene.ForEachComponent<comp::House>([&](comp::House& house)
+	scene.ForEachComponent<comp::Villager, comp::Health>([&](Entity& e, comp::Villager& villager, comp::Health& hp)
 		{
-			if (!house.isDead)
+			if (hp.isAlive)
 			{
-				isHousesDestroyed = false;
+				isVillagerDead = false;
 			}
 		});
 
-
-	if (gameOver || isHousesDestroyed)
+	if (gameOver || isVillagerDead)
 	{
-		simulation->SetGameOver();
+		message<GameMsg> msg;
+		msg.header.id = GameMsg::Game_Over;
+		msg << simulation->GetCurrency().GetTotalGathered() << simulation->m_wavesSurvived - 1;
+		simulation->Broadcast(msg);
+
+		simulation->SetScene(simulation->GetGameOverScene());
+		simulation->m_lobby.Clear();
 	}
 }
 
@@ -854,13 +875,12 @@ void ServerSystems::AnimationSystem(Simulation* simulation, HeadlessScene& scene
 	scene.ForEachComponent<comp::Network, comp::AnimationState>([&](comp::Network& net, comp::AnimationState& anim)
 		{
 			//Have to send every time - otherwise animations can be locked to one
-			if (anim.toSend != EAnimationType::NONE)
+			if (anim.toSend != anim.lastSend)
 			{
 				count++;
 				msg << anim.toSend << net.id;
 
 				anim.lastSend = anim.toSend;
-				anim.toSend = EAnimationType::NONE;
 			}
 		});
 	if (count > 0)
@@ -969,6 +989,14 @@ void ServerSystems::CheckSkipDay(Simulation* simulation)
 	if (allPlayersSkip)
 	{
 		simulation->m_timeCycler.SetCycleSpeed(15.f);
+
+		network::message<GameMsg> msg;
+		msg.header.id = GameMsg::Game_Time;
+		msg << simulation->m_timeCycler.GetCycleSpeed();
+		msg << simulation->m_timeCycler.GetTimePeriod();
+		bool hasChangedPeriod = false;
+		msg << hasChangedPeriod;
+		simulation->Broadcast(msg);
 	}
 }
 

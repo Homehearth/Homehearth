@@ -41,7 +41,9 @@ namespace sceneHelp
 
 		scene.GetLights()->EditLight(lightEntity.GetComponent<comp::Light>()->lightData, lightEntity.GetComponent<comp::Light>()->index);
 
-		lightEntity.AddComponent<comp::SphereCollider>();
+		lightEntity.AddComponent<comp::SphereCollider>()->Center = sm::Vector3(pos.x, pos.y, pos.z);
+		lightEntity.GetComponent<comp::SphereCollider>()->Radius = 3.f;
+
 
 
 		return lightEntity;
@@ -182,8 +184,6 @@ namespace sceneHelp
 						}
 					});
 
-				game->GetCycler().Update(e.dt);
-
 				if (game->m_players.find(game->m_localPID) != game->m_players.end())
 				{
 					Camera* cam = scene.GetCurrentCamera();
@@ -200,7 +200,7 @@ namespace sceneHelp
 					comp::Light* l = sun.GetComponent<comp::Light>();
 
 					float angle = 360.f * game->GetCycler().GetTime();
-					float intensity = sunIntensity;
+
 					for (int i = 0; i < 2; i++)
 					{
 						sm::Vector3 dir = sm::Vector3::TransformNormal(sm::Vector3(-1, 0, -1), sm::Matrix::CreateRotationZ(dx::XMConvertToRadians(angle)));
@@ -217,11 +217,9 @@ namespace sceneHelp
 						l->lightData.position.w = 1.0f;
 
 						float d = std::abs(dir.Dot(sm::Vector3::Up));
-						l->lightData.intensity = intensity * d;
 
 						l = moon.GetComponent<comp::Light>();
 						angle -= 180.f;
-						intensity = moonIntensity;
 					}
 				}
 
@@ -234,6 +232,10 @@ namespace sceneHelp
 					{
 					case CyclePeriod::NIGHT:
 					{
+						Collection2D* skipButtonUI = scene.GetCollection("SkipUI");
+						skipButtonUI->Hide();
+
+						game->m_players.at(game->m_localPID).GetComponent<comp::Player>()->wantsToSkipDay = false;
 						game->GetScene("Game").GetCollection("shopMenu")->Hide();
 						game->SetShopItem(ShopItem::None);
 						bullColl->Hide();
@@ -249,16 +251,25 @@ namespace sceneHelp
 							}
 						}
 
+						scene.ForEachComponent<comp::Light>([](comp::Light& l)
+							{
+								if (l.lightData.type == TypeLight::POINT)
+								{
+									l.lightData.enabled = 1;
+								}
+							});
+
 						break;
 					}
 					case CyclePeriod::MORNING:
 					{
 						SoundHandler::Get().SetCurrentMusic("MenuTheme");
 						Collection2D* skipButtonUI = scene.GetCollection("SkipUI");
-						rtd::Button* skipButton = dynamic_cast<rtd::Button*>(skipButtonUI->elements[0].get());
-						rtd::Text* skipText = dynamic_cast<rtd::Text*>(skipButtonUI->elements[1].get());
-						skipText->SetVisiblity(true);
-						skipButton->SetVisiblity(true);
+						skipButtonUI->Show();
+						//rtd::Button* skipButton = dynamic_cast<rtd::Button*>(skipButtonUI->elements[0].get());
+						//rtd::Text* skipText = dynamic_cast<rtd::Text*>(skipButtonUI->elements[1].get());
+						//skipText->SetVisiblity(true);
+						//skipButton->SetVisiblity(true);
 
 						scene.ForEachComponent<comp::Light>([](comp::Light& l)
 							{
@@ -271,18 +282,11 @@ namespace sceneHelp
 					}
 					case CyclePeriod::EVENING:
 					{
-						Collection2D* skipButtonUI = scene.GetCollection("SkipUI");
-						rtd::Button* skipButton = dynamic_cast<rtd::Button*>(skipButtonUI->elements[0].get());
-						rtd::Text* skipText = dynamic_cast<rtd::Text*>(skipButtonUI->elements[1].get());
-						skipText->SetVisiblity(false);
-						skipButton->SetVisiblity(false);
-						scene.ForEachComponent<comp::Light>([](comp::Light& l)
-							{
-								if (l.lightData.type == TypeLight::POINT)
-								{
-									l.lightData.enabled = 1;
-								}
-							});
+						//Collection2D* skipButtonUI = scene.GetCollection("SkipUI");
+						//rtd::Button* skipButton = dynamic_cast<rtd::Button*>(skipButtonUI->elements[0].get());
+						//rtd::Text* skipText = dynamic_cast<rtd::Text*>(skipButtonUI->elements[1].get());
+						//skipText->SetVisiblity(false);
+						//skipButton->SetVisiblity(false);
 						break;
 					}
 					case CyclePeriod::DAY:
@@ -294,6 +298,9 @@ namespace sceneHelp
 					}
 				}
 
+				game->GetCycler().Update(e.dt);
+
+				ShopItem shopitem = game->GetShopItem();
 
 				if (bullColl)
 				{
@@ -594,8 +601,9 @@ namespace sceneHelp
 				Entity player;
 				game->GetLocalPlayer(player);
 				game->SetPlayerWantsToSkip(true);
-				skipCollection->elements[0].get()->SetVisiblity(false);
-				skipCollection->elements[1].get()->SetVisiblity(false);
+				skipCollection->Hide();
+				//skipCollection->elements[0].get()->SetVisiblity(false);
+				//skipCollection->elements[1].get()->SetVisiblity(false);
 			});
 		skipToNightButton->SetOnHoverEvent([=]()
 			{
@@ -658,7 +666,7 @@ namespace sceneHelp
 		button = shopIcon->AddElement<rtd::Button>("ShopIcon.png", draw_t(0.0f, 0.0f, widthScale / 24, height / 14));
 		button->SetOnPressedEvent([=]()
 			{
-				if (game->GetCycler().GetTimePeriod() == CyclePeriod::DAY)
+				if (game->GetCycler().GetTimePeriod() != CyclePeriod::NIGHT)
 				{
 					shopMenu->Show();
 					bullDoze->Hide();
@@ -1432,7 +1440,6 @@ namespace sceneHelp
 		mainMenuButton->SetOnPressedEvent([=]
 			{
 				game->SetScene("JoinLobby");
-				game->m_gameID = -1;
 			});
 
 		scene.Add2DCollection(gameOverCollection, "GameOver");
