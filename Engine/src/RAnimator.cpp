@@ -168,7 +168,7 @@ void RAnimator::ResetAnimation(const EAnimationType& type)
 
 bool RAnimator::UpdateTime(const EAnimationType& type)
 {
-	bool updateSuccess = true;
+	bool updateSuccess = false;
 	animation_t* anim = &m_animations[type];
 	if (anim)
 	{
@@ -185,17 +185,23 @@ bool RAnimator::UpdateTime(const EAnimationType& type)
 				if (anim->animation->IsLoopable())
 				{
 					anim->frameTimer = fmod(anim->frameTimer, anim->animation->GetDuration());
+					//std::cout << "Reached end. Reseting" << std::endl;
+					updateSuccess = true;
 				}
 				else
 				{
+					/*if (m_currentState == EAnimationType::MOVE && m_upperState == EAnimationType::PRIMARY_ATTACK)
+					{
+						std::cout << "We here" << std::endl;
+					}*/
+
 					ResetAnimation(type);
-					updateSuccess = false;
 				}
 			}
-		}
-		else
-		{
-			updateSuccess = false;
+			else
+			{
+				updateSuccess = true;
+			}
 		}
 	}	
 	return updateSuccess;
@@ -203,8 +209,6 @@ bool RAnimator::UpdateTime(const EAnimationType& type)
 
 bool RAnimator::UpdateBlendTime(const EAnimationType& from, const EAnimationType& to, double& blendTime, double& blendDuration)
 {
-	bool success = true;
-
 	blendTime = 0;
 	blendDuration = 0;
 
@@ -213,17 +217,20 @@ bool RAnimator::UpdateBlendTime(const EAnimationType& from, const EAnimationType
 		blendDuration = m_states.at({ from, to }).blendDuration;
 		m_states.at({ from, to }).blendTimer += Stats::Get().GetFrameTime();			//GetUpdateTime();
 		blendTime = m_states.at({ from, to }).blendTimer;
-	}
 
-	//Reset blendtimer
-	if (blendTime > blendDuration)
-	{
-		if (m_states.find({ from, to }) != m_states.end())
+		//Reset blendtimer
+		if (blendTime > blendDuration)
+		{
 			m_states.at({ from, to }).blendTimer = 0;
-		success = false;
-	}	
+			return false;
+		}
+		else
+		{
+			return true;
+		}
+	}
 	
-	return success;
+	return false;
 }
 
 /*
@@ -466,35 +473,46 @@ void RAnimator::UpperLowerAnims()
 	
 	if (lowerAnim && upperAnim)
 	{
-		if (UpdateTime(m_currentState) && UpdateTime(m_upperState))
+		if (UpdateTime(m_currentState))
 		{
-			std::string devideBone = m_states.at({ m_currentState, m_upperState }).devidebone;
-			std::vector<sm::Matrix> bonePoseAbsolute;
-			bonePoseAbsolute.resize(m_bones.size(), sm::Matrix::Identity);
-			anim = lowerAnim;
-
-			//Go through all the bones
-			for (size_t i = 0; i < m_bones.size(); i++)
+			if (UpdateTime(m_upperState))
 			{
-				std::string name = m_bones[i].name;
-				sm::Matrix bonePoseRelative;
+				std::string devideBone = m_states.at({ m_currentState, m_upperState }).devidebone;
+				std::vector<sm::Matrix> bonePoseAbsolute;
+				bonePoseAbsolute.resize(m_bones.size(), sm::Matrix::Identity);
+				anim = lowerAnim;
 
-				if (name == devideBone) 
+				//Go through all the bones
+				for (size_t i = 0; i < m_bones.size(); i++)
 				{
-					anim = upperAnim;
+					std::string name = m_bones[i].name;
+					sm::Matrix bonePoseRelative;
+
+					//Swap to the other animation
+					if (name == devideBone)
+						anim = upperAnim;
+
+					bonePoseRelative = anim->animation->GetMatrix(name, anim->frameTimer, anim->lastKeys[name].keys, m_useInterpolation);
+
+					if (m_bones[i].parentIndex == -1)
+						bonePoseAbsolute[i] = bonePoseRelative;
+					else
+						bonePoseAbsolute[i] = bonePoseRelative * bonePoseAbsolute[m_bones[i].parentIndex];
+
+					m_localMatrices[i] = m_bones[i].inverseBind * bonePoseAbsolute[i];
 				}
-				
-				bonePoseRelative = anim->animation->GetMatrix(name, anim->frameTimer, anim->lastKeys[name].keys, m_useInterpolation);
-
-				if (m_bones[i].parentIndex == -1)
-					bonePoseAbsolute[i] = bonePoseRelative;
-				else
-					bonePoseAbsolute[i] = bonePoseRelative * bonePoseAbsolute[m_bones[i].parentIndex];
-
-				m_localMatrices[i] = m_bones[i].inverseBind * bonePoseAbsolute[i];
+				bonePoseAbsolute.clear();
 			}
-			bonePoseAbsolute.clear();
+			else
+			{
+				std::cout << "Reached end on upperstate" << std::endl;
+			}
 		}
+		else
+		{ 
+			std::cout << "Reached end on currentstate" << std::endl;
+		}
+
 	}
 }
 
@@ -512,41 +530,52 @@ void RAnimator::BlendUpperLowerAnims()
 			double blendDuration;
 			double blendTime2;
 			double blendDuration2;
+			bool keepGoing = true;
 
-			if (UpdateBlendTime(m_currentState, m_nextState, blendTime, blendDuration) &&
-				UpdateBlendTime(m_currentState, m_upperState, blendTime2, blendDuration2))
+			if (!UpdateBlendTime(m_currentState, m_nextState, blendTime, blendDuration))
+			{
+				ResetAnimation(m_currentState);
+				keepGoing = false;
+			}
+			if (!UpdateBlendTime(m_currentState, m_upperState, blendTime2, blendDuration2))
+			{
+				ResetAnimation(m_upperState);
+				keepGoing = false;
+			}
+
+			if (keepGoing)
 			{
 				std::string devideBone = m_states.at({ m_currentState, m_upperState }).devidebone;
 				std::vector<sm::Matrix> bonePoseAbsolute;
 				bonePoseAbsolute.resize(m_bones.size(), sm::Matrix::Identity);
-				bool swapped = false;
 
 				for (size_t i = 0; i < m_bones.size(); i++)
 				{
-					if (m_bones[i].name == devideBone && !swapped)
+					std::string name = m_bones[i].name;
+
+					if (name == devideBone)
 					{
-						anim2 = upperAnim;
-						blendTime = blendTime2;
-						blendDuration = blendDuration2;
+						anim2			= upperAnim;
+						blendTime		= blendTime2;
+						blendDuration	= blendDuration2;
 						//NOTE: Need to fix the scaling. Different between this two
 						//double blendDelta = blendDuration - blendtimer;
-						swapped = true;
 					}
 
 					sm::Matrix bonePoseRelative;
 					//From 
-					sm::Vector3 pos1 = anim1->animation->GetPosition(m_bones[i].name, anim1->frameTimer, anim1->lastKeys[m_bones[i].name].keys[0], m_useInterpolation);
-					sm::Vector3 scl1 = anim1->animation->GetScale(m_bones[i].name, anim1->frameTimer, anim1->lastKeys[m_bones[i].name].keys[1], m_useInterpolation);
-					sm::Quaternion rot1 = anim1->animation->GetRotation(m_bones[i].name, anim1->frameTimer, anim1->lastKeys[m_bones[i].name].keys[2], m_useInterpolation);
+					sm::Vector3 pos1		= anim1->animation->GetPosition(name, anim1->frameTimer, anim1->lastKeys[name].keys[0], m_useInterpolation);
+					sm::Vector3 scl1		= anim1->animation->GetScale(	name, anim1->frameTimer, anim1->lastKeys[name].keys[1], m_useInterpolation);
+					sm::Quaternion rot1		= anim1->animation->GetRotation(name, anim1->frameTimer, anim1->lastKeys[name].keys[2], m_useInterpolation);
 					//To
-					sm::Vector3 pos2 = anim2->animation->GetPosition(m_bones[i].name, anim2->frameTimer, anim2->lastKeys[m_bones[i].name].keys[0], m_useInterpolation);
-					sm::Vector3 scl2 = anim2->animation->GetScale(m_bones[i].name, anim2->frameTimer, anim2->lastKeys[m_bones[i].name].keys[1], m_useInterpolation);
-					sm::Quaternion rot2 = anim2->animation->GetRotation(m_bones[i].name, anim2->frameTimer, anim2->lastKeys[m_bones[i].name].keys[2], m_useInterpolation);
+					sm::Vector3 pos2		= anim2->animation->GetPosition(name, anim2->frameTimer, anim2->lastKeys[name].keys[0], m_useInterpolation);
+					sm::Vector3 scl2		= anim2->animation->GetScale(	name, anim2->frameTimer, anim2->lastKeys[name].keys[1], m_useInterpolation);
+					sm::Quaternion rot2		= anim2->animation->GetRotation(name, anim2->frameTimer, anim2->lastKeys[name].keys[2], m_useInterpolation);
 
-					float lerpTime = float(blendTime / blendDuration);
-					sm::Vector3 lerpPos = sm::Vector3::Lerp(pos1, pos2, lerpTime);
-					sm::Vector3 lerpScl = sm::Vector3::Lerp(scl1, scl2, lerpTime);
-					sm::Quaternion lerpRot = sm::Quaternion::Slerp(rot1, rot2, lerpTime);
+					float lerpTime			= float(blendTime / blendDuration);
+					sm::Vector3 lerpPos		= sm::Vector3::Lerp(pos1, pos2, lerpTime);
+					sm::Vector3 lerpScl		= sm::Vector3::Lerp(scl1, scl2, lerpTime);
+					sm::Quaternion lerpRot	= sm::Quaternion::Slerp(rot1, rot2, lerpTime);
 					lerpRot.Normalize();
 
 					bonePoseRelative = sm::Matrix::CreateScale(lerpScl) * sm::Matrix::CreateFromQuaternion(lerpRot) * sm::Matrix::CreateTranslation(lerpPos);
@@ -559,10 +588,6 @@ void RAnimator::BlendUpperLowerAnims()
 					m_localMatrices[i] = m_bones[i].inverseBind * bonePoseAbsolute[i];
 				}
 				bonePoseAbsolute.clear();
-			}
-			else
-			{
-				ResetAnimation(m_currentState);
 			}
 		}
 	}
