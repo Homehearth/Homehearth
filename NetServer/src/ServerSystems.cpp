@@ -130,6 +130,7 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		attackAbility->delay = 0.2f;
 		attackAbility->movementSpeedAlt = 0.0f;
 		npc->movementSpeed = 10.f;
+		health->maxHealth = 1500.f;
 		health->currentHealth = 1500.f;
 		behaviorTree->root = AIBehaviors::GetFocusPlayerAIBehavior(entity, simulation->GetBlackboard());
 	}
