@@ -232,6 +232,9 @@ namespace sceneHelp
 					{
 					case CyclePeriod::NIGHT:
 					{
+						Collection2D* skipButtonUI = scene.GetCollection("SkipUI");
+						skipButtonUI->Hide();
+
 						game->m_players.at(game->m_localPID).GetComponent<comp::Player>()->wantsToSkipDay = false;
 						game->GetScene("Game").GetCollection("shopMenu")->Hide();
 						game->SetShopItem(ShopItem::None);
@@ -262,10 +265,11 @@ namespace sceneHelp
 					{
 						SoundHandler::Get().SetCurrentMusic("MenuTheme");
 						Collection2D* skipButtonUI = scene.GetCollection("SkipUI");
-						rtd::Button* skipButton = dynamic_cast<rtd::Button*>(skipButtonUI->elements[0].get());
-						rtd::Text* skipText = dynamic_cast<rtd::Text*>(skipButtonUI->elements[1].get());
-						skipText->SetVisiblity(true);
-						skipButton->SetVisiblity(true);
+						skipButtonUI->Show();
+						//rtd::Button* skipButton = dynamic_cast<rtd::Button*>(skipButtonUI->elements[0].get());
+						//rtd::Text* skipText = dynamic_cast<rtd::Text*>(skipButtonUI->elements[1].get());
+						//skipText->SetVisiblity(true);
+						//skipButton->SetVisiblity(true);
 
 						scene.ForEachComponent<comp::Light>([](comp::Light& l)
 							{
@@ -278,11 +282,11 @@ namespace sceneHelp
 					}
 					case CyclePeriod::EVENING:
 					{
-						Collection2D* skipButtonUI = scene.GetCollection("SkipUI");
-						rtd::Button* skipButton = dynamic_cast<rtd::Button*>(skipButtonUI->elements[0].get());
-						rtd::Text* skipText = dynamic_cast<rtd::Text*>(skipButtonUI->elements[1].get());
-						skipText->SetVisiblity(false);
-						skipButton->SetVisiblity(false);
+						//Collection2D* skipButtonUI = scene.GetCollection("SkipUI");
+						//rtd::Button* skipButton = dynamic_cast<rtd::Button*>(skipButtonUI->elements[0].get());
+						//rtd::Text* skipText = dynamic_cast<rtd::Text*>(skipButtonUI->elements[1].get());
+						//skipText->SetVisiblity(false);
+						//skipButton->SetVisiblity(false);
 						break;
 					}
 					case CyclePeriod::DAY:
@@ -597,8 +601,9 @@ namespace sceneHelp
 				Entity player;
 				game->GetLocalPlayer(player);
 				game->SetPlayerWantsToSkip(true);
-				skipCollection->elements[0].get()->SetVisiblity(false);
-				skipCollection->elements[1].get()->SetVisiblity(false);
+				skipCollection->Hide();
+				//skipCollection->elements[0].get()->SetVisiblity(false);
+				//skipCollection->elements[1].get()->SetVisiblity(false);
 			});
 		skipToNightButton->SetOnHoverEvent([=]()
 			{
@@ -661,7 +666,7 @@ namespace sceneHelp
 		button = shopIcon->AddElement<rtd::Button>("ShopIcon.png", draw_t(0.0f, 0.0f, widthScale / 24, height / 14));
 		button->SetOnPressedEvent([=]()
 			{
-				if (game->GetCycler().GetTimePeriod() == CyclePeriod::DAY)
+				if (game->GetCycler().GetTimePeriod() != CyclePeriod::NIGHT)
 				{
 					shopMenu->Show();
 					bullDoze->Hide();

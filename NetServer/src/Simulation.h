@@ -52,11 +52,12 @@ private:
 
 	void InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg, const std::bitset<ecs::Component::COMPONENT_MAX>& componentMask = UINT32_MAX) const;
 
-	uint32_t GetTick()const;
-
 	std::queue<sm::Vector3> m_spawnPoints;
 	HouseManager houseManager;
 
+	void SendSnapshot();
+	void SendAddedEntities();
+	void SendRemovedEntities();
 	void OnNetworkEntityCreate(entt::registry& reg, entt::entity entity);
 	void OnNetworkEntityDestroy(entt::registry& reg, entt::entity entity);
 
@@ -75,14 +76,11 @@ public:
 	Simulation(Server* pServer, HeadlessEngine* pEngine);
 	virtual ~Simulation() = default;
 
-	void SendSnapshot();
 	void JoinLobby(uint32_t gameID, uint32_t playerID, const std::string& name = "Noobie");
 	void LeaveLobby(uint32_t playerID);
 
 	bool Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* mapColliders, std::unordered_map<std::string, comp::OrientedBoxCollider>* houseColliders);
 	void Destroy();
-
-	void NextTick();
 
 	void Update(float dt);
 	void UpdateInput(InputState state, uint32_t playerID);

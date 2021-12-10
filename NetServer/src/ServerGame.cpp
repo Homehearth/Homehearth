@@ -122,9 +122,6 @@ void ServerGame::UpdateNetwork(float deltaTime)
 			{
 				// Update the simulation
 				it->second->Update(deltaTime);
-				// Send the snapshot of the updated simulation to all clients in the sim
-				it->second->SendSnapshot();
-				it->second->NextTick();
 				it++;
 			}
 		}

@@ -28,10 +28,8 @@ Cycler::Cycler()
 
 void Cycler::Update(float dt)
 {
-	if (m_timePeriod == CyclePeriod::DAY)
-		m_timer += dt * m_cycleSpeed * 10.f;
-	else
-		m_timer += dt * m_cycleSpeed;
+	m_timer += dt * m_cycleSpeed;
+
 	if (m_timer > DAY_DURATION)
 	{
 		m_timer -= DAY_DURATION;
@@ -85,10 +83,13 @@ float Cycler::GetDefaultSpeed() const
 	return m_defaultCycleSpeed;
 }
 
-void Cycler::SetTimePeriod(CyclePeriod period)
+void Cycler::SetTimePeriod(CyclePeriod period, bool hasChangedPeriod)
 {
-	m_timePeriod = period;
-	m_changedPeriod = true;
+	if (hasChangedPeriod)
+	{
+		m_timePeriod = period;
+		m_changedPeriod = true;
+	}
 }
 
 void Cycler::SetCycleSpeed(float speed)

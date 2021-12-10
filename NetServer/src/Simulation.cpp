@@ -285,7 +285,7 @@ void Simulation::ResetPlayer(Entity player)
 
 Simulation::Simulation(Server* pServer, HeadlessEngine* pEngine)
 	: m_pServer(pServer)
-	, m_pEngine(pEngine), m_pLobbyScene(nullptr), m_pGameScene(nullptr), m_pGameOverScene(nullptr), 
+	, m_pEngine(pEngine), m_pLobbyScene(nullptr), m_pGameScene(nullptr), m_pGameOverScene(nullptr),
 	m_pCurrentScene(nullptr), currentRound(0), houseManager(&blackboard), m_shop(this)
 {
 	this->m_gameID = 0;
@@ -348,7 +348,6 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 				});
 
 #endif
-
 			//  run all game logic systems
 			{
 				PROFILE_SCOPE("Systems");
@@ -435,6 +434,8 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 				ServerSystems::OnCycleChange(this);
 			}
 
+			ServerSystems::DeathParticleTimer(scene);
+
 			m_spreeHandler.Update();
 
 		});
@@ -452,8 +453,6 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 		{
 			OnComponentUpdated(e.entity, e.component);
 		});
-
-
 
 	//Gridsystem
 	m_grid.Initialize(gridOptions.mapSize, gridOptions.position, gridOptions.fileName, m_pGameScene);
@@ -497,15 +496,23 @@ void Simulation::Destroy()
 	m_pLobbyScene->Clear();
 }
 
-void Simulation::SendSnapshot()
+void Simulation::SendRemovedEntities()
 {
-	PROFILE_FUNCTION();
-	// remove any client disconnected
-	m_lobby.ScanForDisconnects();
+	// All destroyed Entities
+	this->SendRemoveEntities(m_removedEntities);
+	m_removedEntities.clear();
+}
 
+void Simulation::SendAddedEntities()
+{
 	// All new Entities
 	this->SendEntities(m_addedEntities, GameMsg::Game_AddEntity);
 	m_addedEntities.clear();
+}
+
+void Simulation::SendSnapshot()
+{
+	PROFILE_FUNCTION();
 
 	if (m_pCurrentScene == m_pGameScene)
 	{
@@ -604,19 +611,23 @@ void Simulation::SendSnapshot()
 	{
 		m_lobby.Update();
 	}
-
-	// All destroyed Entities
-	this->SendRemoveEntities(m_removedEntities);
-	m_removedEntities.clear();
 }
 
 void Simulation::Update(float dt)
 {
 	PROFILE_FUNCTION();
-	if (m_pCurrentScene)
-		m_pCurrentScene->Update(dt);
 
-	ServerSystems::DeathParticleTimer(*m_pGameScene);
+	// ORDER IS IMPORTANT
+	m_lobby.ScanForDisconnects();
+
+	this->SendAddedEntities();
+
+	m_pCurrentScene->Update(dt);
+	this->SendRemovedEntities();
+
+	this->SendSnapshot();
+
+	m_tick++;
 }
 
 void Simulation::UpdateInput(InputState state, uint32_t playerID)
@@ -629,16 +640,6 @@ void Simulation::UpdateInput(InputState state, uint32_t playerID)
 	{
 		e.GetComponent<comp::Player>()->lastInputState = state;
 	}
-}
-
-void Simulation::NextTick()
-{
-	this->m_tick++;
-}
-
-uint32_t Simulation::GetTick() const
-{
-	return this->m_tick;
 }
 
 void Simulation::OnNetworkEntityCreate(entt::registry& reg, entt::entity entity)
@@ -699,7 +700,7 @@ void Simulation::BuildMapColliders(std::vector<dx::BoundingOrientedBox>* mapColl
 		obb->Extents = mapColliders->at(i).Extents;
 		obb->Orientation = mapColliders->at(i).Orientation;
 		collider.AddComponent<comp::Tag<STATIC>>();
-		// Map bounds is loaded in last, 6 obbs surrounding village put the correct tag for collision system
+		// Map bounds is loaded in first, 6 obbs surrounding village put the correct tag for collision system
 		if (i < 6)
 		{
 			collider.AddComponent<comp::Tag<MAP_BOUNDS>>();
@@ -786,7 +787,6 @@ void Simulation::SetGameScene()
 	ResetGameScene();
 	m_pCurrentScene = m_pGameScene;
 	m_lobby.SetActive(false);
-	m_currency = 100000;
 #if GOD_MODE
 	// During debug give players 1000 gold/monies.
 	m_currency = 1000;
@@ -847,7 +847,6 @@ void Simulation::ResetGameScene()
 
 	m_timeCycler.SetTime(MORNING);
 	m_timeCycler.SetCycleSpeed(1.0f);
-
 }
 
 void Simulation::SendEntities(const std::vector<Entity>& entities, GameMsg msgID, const std::bitset<ecs::Component::COMPONENT_MAX>& componentMask)
@@ -1045,5 +1044,3 @@ Blackboard* Simulation::GetBlackboard()
 {
 	return &blackboard;
 }
-
-

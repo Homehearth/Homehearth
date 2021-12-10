@@ -457,6 +457,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			it = m_gameEntities.erase(it);
 		}
 
+		m_cycler.SetTime(MORNING);
 
 		it = m_players.begin();
 		int i = 1;
@@ -612,9 +613,11 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	{
 		CyclePeriod timePeriod;
 		float speed;
+		bool hasChangedPeriod;
+		msg >> hasChangedPeriod;
 		msg >> timePeriod;
 		msg >> speed;
-		m_cycler.SetTimePeriod(timePeriod);
+		m_cycler.SetTimePeriod(timePeriod, hasChangedPeriod);
 		m_cycler.SetCycleSpeed(speed);
 		break;
 	}
