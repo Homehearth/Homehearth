@@ -389,7 +389,9 @@ void ServerSystems::OnCycleChange(Simulation* simulation)
 	//Publish event when timeToFinish been exceeded.
 	if (simulation->m_timeCycler.HasChangedPeriod())
 	{
-		if (simulation->m_timeCycler.GetTimePeriod() == CyclePeriod::MORNING)
+		switch (simulation->m_timeCycler.GetTimePeriod())
+		{
+		case CyclePeriod::MORNING:
 		{
 			simulation->m_timeCycler.ResetCycleSpeed();
 			// remove all bad guys
@@ -407,9 +409,19 @@ void ServerSystems::OnCycleChange(Simulation* simulation)
 						hp.currentHealth = 0.25f * hp.maxHealth;
 					}
 				});
-		}
 
-		if (simulation->m_timeCycler.GetTimePeriod() == CyclePeriod::NIGHT)
+			if (simulation->waveQueue.size() == 0)
+			{
+				EnemyManagement::CreateWaves(simulation->waveQueue, simulation->currentRound++);
+			}
+
+			break;
+		}
+		case CyclePeriod::DAY:
+		{
+			break;
+		}
+		case CyclePeriod::NIGHT:
 		{
 			simulation->m_timeCycler.ResetCycleSpeed();
 
@@ -418,12 +430,10 @@ void ServerSystems::OnCycleChange(Simulation* simulation)
 				// start new wave
 				simulation->GetGameScene()->publish<ESceneCallWaveSystem>(0.0f);
 			}
-			else
-			{
-				EnemyManagement::CreateWaves(simulation->waveQueue, simulation->currentRound++);
-			}
+			break;
 		}
-		
+		}
+
 		network::message<GameMsg> msg;
 		msg.header.id = GameMsg::Game_Time;
 		msg << simulation->m_timeCycler.GetCycleSpeed();
@@ -553,16 +563,16 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 
 									//Check all house nodes to se if they have become unreachable
 									scene.ForEachComponent<comp::House, comp::Transform>([&](Entity entity, comp::House& house, comp::Transform& transform)
-									{
+										{
 											Node* homeNode = house.homeNode;
-											if(homeNode)
+											if (homeNode)
 											{
-												if(!blackboard->GetPathFindManager()->PlayerAStar(house.homeNode->position))
+												if (!blackboard->GetPathFindManager()->PlayerAStar(house.homeNode->position))
 												{
 													house.homeNode->reachable = false;
 												}
 											}
-									});
+										});
 
 								}
 							}
@@ -571,7 +581,7 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 					}
 					case ShopItem::Destroy_Tool:
 					{
-						if(simulation->GetGrid().RemoveDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, blackboard))
+						if (simulation->GetGrid().RemoveDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, blackboard))
 						{
 							//Check all house nodes to se if they have become unreachable
 							scene.ForEachComponent<comp::House, comp::Transform>([&](Entity entity, comp::House& house, comp::Transform& transform)

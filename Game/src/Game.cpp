@@ -183,7 +183,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 
 		if (msg.payload.size() > 0)
 		{
-			LOG_ERROR("TCP FUCKED UP");
+			LOG_ERROR("TCP UPDATE ENTITY FUCKED UP");
 		}
 
 		break;
@@ -213,7 +213,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 
 		if (msg.payload.size() > 0)
 		{
-			LOG_ERROR("TCP FUCKED UP");
+			LOG_ERROR("TCP UPDATE COMPONENT FUCKED UP");
 		}
 
 		break;
@@ -251,7 +251,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 
 		if (msg.payload.size() > 0)
 		{
-			LOG_ERROR("TCP FUCKED UP");
+			LOG_ERROR("TCP ADD ENTITY FUCKED UP");
 		}
 
 		break;
@@ -260,6 +260,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	{
 		uint32_t count;
 		msg >> count;
+		int removed = 0;
 		for (uint32_t i = 0; i < count; i++)
 		{
 			uint32_t id;
@@ -286,15 +287,16 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 				}
 				m_gameEntities.at(id).Destroy();
 				m_gameEntities.erase(id);
+				removed++;
 			}
 		}
 #ifdef _DEBUG
-		LOG_INFO("Removed %u entities", count);
+		LOG_INFO("Removed %u entities", removed);
 #endif
 
 		if (msg.payload.size() > 0)
 		{
-			LOG_ERROR("TCP FUCKED UP");
+			LOG_ERROR("TCP REMOVED FUCKED UP SIZE LEFT %lu", msg.payload.size());
 		}
 
 		break;

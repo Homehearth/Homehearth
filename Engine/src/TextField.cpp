@@ -98,6 +98,8 @@ void rtd::TextField::Update()
 			case VK_NUMPAD9:
 				m_stringText.push_back(static_cast<char>(0x39));
 				break;
+			case VK_CAPITAL:
+				break;
 			case VK_NUMLOCK:
 				break;
 			case VK_CONTROL:
