@@ -514,7 +514,7 @@ void CombatSystem::DoDamage(HeadlessScene& scene, Entity attacker, Entity attack
 		{
 			target.RemoveComponent<comp::ParticleEmitter>();
 		}
-
+		
 		if (target.GetComponent<comp::Tag<TagType::DEFENCE>>())
 		{
 			//Smoke particles
