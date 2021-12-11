@@ -19,12 +19,13 @@ private:
 	std::vector<bone_t>						m_bones;
 	std::unordered_map<std::string, UINT>	m_nameToBone;
 
-	EAnimationType m_currentState;
-	EAnimationType m_nextState;
-	EAnimationType m_upperState;
+	EAnimationType m_currentState;	//The main focus animation
+	EAnimationType m_blendState;	//The animation we blending to
+	EAnimationType m_upperState;	//Upper animation
+	EAnimationType m_queueState;	//Queued up
 
 	//std::queue<EAnimationType> m_queue;
-	std::deque<EAnimationType> m_queue;
+	//std::deque<EAnimationType> m_queue;
 	
 	struct animation_t
 	{
@@ -76,15 +77,14 @@ private:
 	//Animate the lower body as usual and swap to upper when reached a bone
 	//void UpperLowerbodyAnimation(const EAnimationType& upper, const EAnimationType& lower);									//DONE
 	//void BlendUpperBodyAnimations(const EAnimationType& state1, const EAnimationType& state2, const EAnimationType& upper);			
-	//void SwapAnimationState();																								//REMOVE
 
 	/*
 		NEW ONE
 	*/
 	void StandardAnim();			//Current
-	void BlendTwoAnims();			//Current + next
+	void BlendTwoAnims();			//Current + blend
 	void UpperLowerAnims();			//Current + upper
-	void BlendUpperLowerAnims();	//Current + next + upper
+	void BlendUpperLowerAnims();	//Current + blend + upper
 
 	EAnimationCode GetAnimationCode() const;
 

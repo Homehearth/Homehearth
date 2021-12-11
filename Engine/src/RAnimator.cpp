@@ -5,7 +5,7 @@ RAnimator::RAnimator()
 {
 	m_useInterpolation	= true;
 	m_currentState	= EAnimationType::NONE;
-	m_nextState		= EAnimationType::NONE;
+	m_blendState	= EAnimationType::NONE;
 	m_upperState	= EAnimationType::NONE;
 }
 
@@ -20,7 +20,7 @@ RAnimator::~RAnimator()
 	m_animations.clear();
 	m_states.clear();
 	m_localMatrices.clear();
-	//m_queue.pop();	//pop all the types
+	//m_queue.clear();
 }
 
 bool RAnimator::LoadSkeleton(const std::vector<bone_t>& skeleton)
@@ -142,50 +142,50 @@ EAnimationType RAnimator::StringToAnimationType(const std::string& name) const
 
 void RAnimator::CheckQueue()
 {
-	if (!m_queue.empty())
-	{
-		bool pop = false;
-		EAnimationType first = m_queue.front();
-		//Not in one of this states
-		if (m_currentState != first &&
-			m_nextState != first &&
-			m_upperState != first)
-		{
-			if (m_currentState == EAnimationType::NONE)
-			{
-				m_currentState = first;
-				pop = true;
-			}
-			else
-			{
-				if (m_states.find({ m_currentState, first }) != m_states.end())
-				{
-					//Upperbody
-					if (!m_states.at({ m_currentState, first }).devidebone.empty())
-					{
-						if (m_upperState == EAnimationType::NONE)
-						{
-							m_upperState = first;
-							pop = true;
-						}
-					}
-					else
-					{
-						if (m_nextState == EAnimationType::NONE)
-						{
-							m_nextState = first;
-							pop = true;
-						}
-					}
-				}
-			}
-		}
+	//if (!m_queue.empty())
+	//{
+	//	bool pop = false;
+	//	EAnimationType first = m_queue.front();
+	//	//Not in one of this states
+	//	if (m_currentState != first &&
+	//		m_nextState != first &&
+	//		m_upperState != first)
+	//	{
+	//		if (m_currentState == EAnimationType::NONE)
+	//		{
+	//			m_currentState = first;
+	//			pop = true;
+	//		}
+	//		else
+	//		{
+	//			if (m_states.find({ m_currentState, first }) != m_states.end())
+	//			{
+	//				//Upperbody
+	//				if (!m_states.at({ m_currentState, first }).devidebone.empty())
+	//				{
+	//					if (m_upperState == EAnimationType::NONE)
+	//					{
+	//						m_upperState = first;
+	//						pop = true;
+	//					}
+	//				}
+	//				else
+	//				{
+	//					if (m_nextState == EAnimationType::NONE)
+	//					{
+	//						m_nextState = first;
+	//						pop = true;
+	//					}
+	//				}
+	//			}
+	//		}
+	//	}
 
-		if (pop)
-		{
-			m_queue.pop_front();
-		}
-	}
+	//	if (pop)
+	//	{
+	//		m_queue.pop_front();
+	//	}
+	//}
 }
 
 void RAnimator::ResetAnimation(const EAnimationType& type)
@@ -198,17 +198,15 @@ void RAnimator::ResetAnimation(const EAnimationType& type)
 		//anim->reachedEnd	= false;
 
 		for (auto& key : anim->lastKeys)
-		{
 			key.second = { 0,0,0 };
-		}
 
 		if (type == m_currentState)
 		{
-			m_currentState = m_nextState;
-			m_nextState = EAnimationType::NONE;
+			m_currentState = m_blendState;
+			m_blendState = EAnimationType::NONE;
 		}
-		else if (type == m_nextState)
-			m_nextState = EAnimationType::NONE;
+		else if (type == m_blendState)
+			m_blendState = EAnimationType::NONE;
 		else if (type == m_upperState)
 			m_upperState = EAnimationType::NONE;
 	}
@@ -463,17 +461,17 @@ void RAnimator::StandardAnim()
 void RAnimator::BlendTwoAnims()
 {
 	animation_t* anim1 = &m_animations[m_currentState];
-	animation_t* anim2 = &m_animations[m_nextState];
+	animation_t* anim2 = &m_animations[m_blendState];
 
 	if (anim1 && anim2)
 	{
 		if (UpdateTime(m_currentState))
 		{
-			if (UpdateTime(m_nextState))
+			if (UpdateTime(m_blendState))
 			{
 				double blendTime;
 				double blendDuration;
-				if (UpdateBlendTime(m_currentState, m_nextState, blendTime, blendDuration))
+				if (UpdateBlendTime(m_currentState, m_blendState, blendTime, blendDuration))
 				{
 					std::vector<sm::Matrix> bonePoseAbsolute;
 					bonePoseAbsolute.resize(m_bones.size(), sm::Matrix::Identity);
@@ -577,12 +575,12 @@ void RAnimator::UpperLowerAnims()
 void RAnimator::BlendUpperLowerAnims()
 {
 	animation_t* anim1		= &m_animations[m_currentState];
-	animation_t* anim2		= &m_animations[m_nextState];
+	animation_t* anim2		= &m_animations[m_blendState];
 	animation_t* upperAnim	= &m_animations[m_upperState];
 	
 	if (anim1 && anim2 && upperAnim)
 	{
-		if (UpdateTime(m_currentState) && UpdateTime(m_nextState) && UpdateTime(m_upperState))
+		if (UpdateTime(m_currentState) && UpdateTime(m_blendState) && UpdateTime(m_upperState))
 		{
 			double blendTime;
 			double blendDuration;
@@ -590,7 +588,7 @@ void RAnimator::BlendUpperLowerAnims()
 			double blendDuration2;
 			bool keepGoing = true;
 
-			if (!UpdateBlendTime(m_currentState, m_nextState, blendTime, blendDuration))
+			if (!UpdateBlendTime(m_currentState, m_blendState, blendTime, blendDuration))
 			{
 				ResetAnimation(m_currentState);
 				keepGoing = false;
@@ -651,13 +649,6 @@ void RAnimator::BlendUpperLowerAnims()
 	}
 }
 
-//void RAnimator::SwapAnimationState()
-//{
-//	ResetAnimation(m_currentState);
-//	m_currentState = m_nextState;
-//	m_nextState = EAnimationType::NONE;
-//}
-
 EAnimationCode RAnimator::GetAnimationCode() const
 {
 	EAnimationCode codetype = EAnimationCode::NONE;
@@ -672,7 +663,7 @@ EAnimationCode RAnimator::GetAnimationCode() const
 
 	if (m_currentState	!= EAnimationType::NONE)
 		state |= bitstate::current;
-	if (m_nextState		!= EAnimationType::NONE)
+	if (m_blendState != EAnimationType::NONE)
 		state |= bitstate::next;
 	if (m_upperState	!= EAnimationType::NONE)
 		state |= bitstate::upper;
@@ -818,17 +809,106 @@ bool RAnimator::ChangeAnimation(const EAnimationType& type)
 	//Check if animation exist
 	if (m_animations.find(type) != m_animations.end())
 	{
-		std::deque<EAnimationType>::iterator it = std::find(m_queue.begin(), m_queue.end(), type);
-		if (it == m_queue.end())
+		if (m_animations.size() == 7)
 		{
-			m_queue.push_back(type);
+			std::cout << "Start - Incoming animation: " << (UINT)type << std::endl;
+			std::cout << "Current anim: " << (UINT)m_currentState << std::endl;
+			std::cout << "Blend anim: " << (UINT)m_blendState << std::endl;
+			std::cout << "Upper anim: " << (UINT)m_upperState << std::endl;
+			std::cout << std::endl;
+		}
 
-			//debug
+		//Handle logic
+		//1. No animation is running
+		if (m_currentState == EAnimationType::NONE)
+		{
+			m_currentState = type;
+		}
+		else
+		{
+			//Deside if it will be blending or upper anim
+			if (m_states.find({ m_currentState, type }) != m_states.end())
+			{
+				//2. Is upper animation
+				if (!m_states.at({ m_currentState, type }).devidebone.empty())
+				{
+					//Reset the current upper animation and set to changed
+					if (m_upperState != EAnimationType::NONE)
+					{
+						ResetAnimation(m_upperState);
+						if (m_states.find({ m_currentState, m_upperState }) != m_states.end())
+						{
+							m_states.at({ m_currentState, m_upperState }).blendTimer = 0;
+						}
+					}
+					m_upperState = type;
+
+				}
+				//Not upper animation
+				else
+				{
+					if (m_blendState != EAnimationType::NONE)
+					{
+						ResetAnimation(m_blendState);
+						if (m_states.find({ m_currentState, m_blendState }) != m_states.end())
+						{
+							m_states.at({ m_currentState, m_blendState }).blendTimer = 0;
+						}
+					}
+					m_blendState = type;
+				}
+			}
+			//Fails here - current is idle and incoming is idle. Does nothing...
+			//What to do:
+			else
+			{
+				//Already in this state - reset the other
+				if (m_currentState == type)
+				{
+					if (m_blendState != EAnimationType::NONE)
+					{
+						ResetAnimation(m_blendState);
+						if (m_states.find({ m_currentState, m_blendState }) != m_states.end())
+						{
+							m_states.at({ m_currentState, m_blendState }).blendTimer = 0;
+						}
+						m_blendState = EAnimationType::NONE;
+					}
+				}
+			} 
+			
 			if (m_animations.size() == 7)
 			{
-				std::cout << "Pushed: " << (UINT)type << std::endl;
+				std::cout << "Current anim: " << (UINT)m_currentState << std::endl;
+				std::cout << "Blend anim: " << (UINT)m_blendState << std::endl;
+				std::cout << "Upper anim: " << (UINT)m_upperState << std::endl;
+				std::cout << "-------------" << std::endl;
 			}
+
+
+			//Last alternative
+			//Overwrite the queue if there is something here
+			//m_queueState = type;
 		}
+
+
+
+
+
+		//std::deque<EAnimationType>::iterator it = std::find(m_queue.begin(), m_queue.end(), type);
+
+		////Animationstate not in the queue
+		//if (it == m_queue.end())
+		//{
+		//	m_queue.push_back(type);
+		//	queueSuccess = true;
+
+		//	//debug
+		//	if (m_animations.size() == 7)
+		//	{
+		//		std::cout << "Pushed: " << (UINT)type << std::endl;
+		//	}
+		//}
 	}
 
 	/*if (m_animations.size() == 7)
@@ -879,6 +959,8 @@ void RAnimator::Update()
 			StandardAnim();
 			break;
 		case EAnimationCode::TWO_ANIM_BLEND:
+			if (m_animations.size() == 7)
+				std::cout << "Blending" << std::endl;
 			BlendTwoAnims();
 			break;
 		case EAnimationCode::TWO_ANIM_UPPER_LOWER:
