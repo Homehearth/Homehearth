@@ -47,9 +47,9 @@ public:
 	//Updates KB and Mouse, checking new inputs
 	void UpdateEvents();
 
-	const bool& IsInShiftMode() const;
-	const bool& IsInCapsLock() const;
-	const bool& IsInCTRLMode() const;
+	bool IsInShiftMode() const;
+	bool IsInCapsLock() const;
+	bool IsInCTRLMode() const;
 
 	//CheckCollisions if keyboard keys are pressed,held or released. Enums 2nd arg: PRESSED, RELEASED or HELD
 	bool CheckKeyboardKey(const dx::Keyboard::Keys& key, const KeyState state) const;
@@ -58,7 +58,7 @@ public:
 	SystemState GetInputState() const;
 
 	void AddToUpQueue(WPARAM wParam);
-	WPARAM* GetKeyFromUPQueue();
+	WPARAM GetKeyFromUPQueue();
 
 	void AddToDownQueue(WPARAM wParam);
 	WPARAM* GetKeyFromDownQueue();
@@ -71,10 +71,10 @@ public:
 	bool CheckMouseKey(const MouseKey mouseButton, const KeyState state) const;
 
 	//Positive direction is forward towards the cabel
-	const int GetMouseWheelRotation();
+	int GetMouseWheelRotation();
 
 	//Get the rotation direction of the mouse
-	const int GetMouseWheelDirection();
+	int GetMouseWheelDirection();
 
 	//Checks if the user is holding down an axis key (WASD and Arrow keys) returns 1 on right or up, -1 on left or down (0 if nothing). Use Axis enums: V�RTICAL, HORIZONTAL
 	int GetAxis(Axis axis) const;
@@ -89,7 +89,7 @@ public:
 	const Ray_t& GetMouseRay() const;
 
 	//CheckCollisions if mouse is relative
-	const bool IsMouseRelative() const;
+	bool IsMouseRelative() const;
 
 	//Get the position of the Mouse (only really works in Absolute mode)
 	const MousePos& GetMousePos() const;

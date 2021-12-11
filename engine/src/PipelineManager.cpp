@@ -208,6 +208,13 @@ bool PipelineManager::CreateRenderTargetView()
 
     // Create the renderTargetView with the back buffer pointer.
     HRESULT hr = m_d3d11->Device()->CreateRenderTargetView(pBackBuffer, nullptr, m_backBuffer.GetAddressOf());
+    m_d3d11->Device()->CreateUnorderedAccessView(pBackBuffer, nullptr, m_backBufferAccessView.GetAddressOf());
+    D3D11_TEXTURE2D_DESC desc = {};
+    pBackBuffer->GetDesc(&desc);
+    desc.Format = DXGI_FORMAT_R16G16B16A16_UNORM;
+    hr = m_d3d11->Device()->CreateTexture2D(&desc, nullptr, m_bloomTexture.GetAddressOf());
+    hr = m_d3d11->Device()->CreateRenderTargetView(m_bloomTexture.Get(), nullptr, m_bloomTargetView.GetAddressOf());
+    m_d3d11->Device()->CreateUnorderedAccessView(m_bloomTexture.Get(), nullptr, m_bloomAccessView.GetAddressOf());
 
     // Release pointer to the back buffer.
     pBackBuffer->Release();
@@ -1034,6 +1041,24 @@ bool PipelineManager::CreateShaders()
     if (!m_dofComputeShader.Create("DOF_cs"))
     {
         LOG_WARNING("failed creating DOF_cs");
+        return false;
+    }
+
+    if (!m_bloomVertexShader.Create("Bloom_vs"))
+    {
+        LOG_WARNING("failed creating Bloom_vs");
+        return false;
+    }
+
+    if (!m_bloomPixelShader.Create("Bloom_ps"))
+    {
+        LOG_WARNING("failed creating Bloom_ps");
+        return false;
+    }
+
+    if (!m_bloomComputeShader.Create("Bloom_cs"))
+    {
+        LOG_WARNING("failed creating Bloom_cs");
         return false;
     }
 

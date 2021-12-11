@@ -9,53 +9,145 @@ void rtd::TextField::Update()
 	if (m_stringText.size() <= m_textLimit)
 	{
 		WPARAM* currentKey = InputSystem::Get().GetKeyFromDownQueue();
-		if (currentKey)
+		if (!currentKey)
 		{
-			if (m_stringText.size() < m_textLimit)
+			return;
+		}
+
+		if (m_stringText.size() < m_textLimit)
+		{
+			switch (*currentKey)
 			{
-				switch (*currentKey)
+			case VK_BACK:
+				if (InputSystem::Get().IsInCTRLMode())
 				{
-				case VK_BACK:
-					if (InputSystem::Get().IsInCTRLMode())
-					{
-						m_stringText.clear();
-					}
-					else if (m_stringText.size() > 0)
-					{
-						m_stringText.pop_back();
-					}
-					break;
-				case VK_OEM_PERIOD:
+					m_stringText.clear();
+				}
+				else if (m_stringText.size() > 0)
+				{
+					m_stringText.pop_back();
+				}
+				break;
+			case VK_OEM_PERIOD:
+				if ((InputSystem::Get().IsInShiftMode() && !InputSystem::Get().IsInCapsLock()) || (InputSystem::Get().IsInCapsLock() && !InputSystem::Get().IsInShiftMode()))
+				{
+					m_stringText.push_back(static_cast<char>(0x3A));
+				}
+				else
+				{
 					m_stringText.push_back(static_cast<char>(0x2E));
-					break;
-				default:
+				}
+				break;
+			case VK_OEM_6:
+				if ((InputSystem::Get().IsInShiftMode() && !InputSystem::Get().IsInCapsLock()) || (InputSystem::Get().IsInCapsLock() && !InputSystem::Get().IsInShiftMode()))
+				{
+					m_stringText.push_back(static_cast<char>(0xC5));
+				}
+				else
+				{
+					m_stringText.push_back(static_cast<char>(0xE5));
+				}
+				break;
+			case VK_OEM_3:
+				if ((InputSystem::Get().IsInShiftMode() && !InputSystem::Get().IsInCapsLock()) || (InputSystem::Get().IsInCapsLock() && !InputSystem::Get().IsInShiftMode()))
+				{
+					m_stringText.push_back(static_cast<char>(0xD6));
+				}
+				else
+				{
+					m_stringText.push_back(static_cast<char>(0xF6));
+				}
+				break;
+			case VK_OEM_7:
+				if ((InputSystem::Get().IsInShiftMode() && !InputSystem::Get().IsInCapsLock()) || (InputSystem::Get().IsInCapsLock() && !InputSystem::Get().IsInShiftMode()))
+				{
+					m_stringText.push_back(static_cast<char>(0xC4));
+				}
+				else
+				{
+					m_stringText.push_back(static_cast<char>(0xE4));
+				}
+				break;
+			case VK_NUMPAD0:
+				m_stringText.push_back(static_cast<char>(0x30));
+				break;
+			case VK_NUMPAD1:
+				m_stringText.push_back(static_cast<char>(0x31));
+				break;
+			case VK_NUMPAD2:
+				m_stringText.push_back(static_cast<char>(0x32));
+				break;
+			case VK_NUMPAD3:
+				m_stringText.push_back(static_cast<char>(0x33));
+				break;
+			case VK_NUMPAD4:
+				m_stringText.push_back(static_cast<char>(0x34));
+				break;
+			case VK_NUMPAD5:
+				m_stringText.push_back(static_cast<char>(0x35));
+				break;
+			case VK_NUMPAD6:
+				m_stringText.push_back(static_cast<char>(0x36));
+				break;
+			case VK_NUMPAD7:
+				m_stringText.push_back(static_cast<char>(0x37));
+				break;
+			case VK_NUMPAD8:
+				m_stringText.push_back(static_cast<char>(0x38));
+				break;
+			case VK_NUMPAD9:
+				m_stringText.push_back(static_cast<char>(0x39));
+				break;
+			case VK_CAPITAL:
+				break;
+			case VK_NUMLOCK:
+				break;
+			case VK_CONTROL:
+				break;
+			case VK_RETURN:
+				break;
+			case VK_LWIN:
+				break;
+			case VK_RWIN:
+				break;
+			case VK_MENU:
+				break;
+			default:
+				if (InputSystem::Get().IsInCTRLMode() && *currentKey == 0x56)
+				{
+					m_stringText = InputSystem::Get().GetClipboard();
+					if (m_stringText.length() > m_textLimit)
+					{
+						m_stringText = m_stringText.substr(0, m_textLimit);
+					}
+				}
+				else
+				{
 					if ((InputSystem::Get().IsInShiftMode() && !InputSystem::Get().IsInCapsLock()) || (InputSystem::Get().IsInCapsLock() && !InputSystem::Get().IsInShiftMode()))
 					{
-						m_stringText.push_back((wchar_t)*currentKey);
+						m_stringText.push_back(static_cast<char>(*currentKey));
 					}
 					else
 					{
-						m_stringText.push_back(std::tolower((wchar_t)*currentKey));
-					}
-					break;
-				}
-			}
-			else
-			{
-				if (*currentKey == VK_BACK)
-				{
-					if (m_stringText.size() > 0)
-					{
-						m_stringText.pop_back();
+						m_stringText.push_back(static_cast<char>(std::tolower(*currentKey)));
 					}
 				}
+				break;
 			}
-			currentKey = nullptr;
 		}
-		currentKey = InputSystem::Get().GetKeyFromUPQueue();
+		else
+		{
+			if (*currentKey == VK_BACK)
+			{
+				if (m_stringText.size() > 0)
+				{
+					m_stringText.pop_back();
+				}
+			}
+		}
 
+		InputSystem::Get().GetKeyFromUPQueue();
 	}
-
 
 	// Update the text
 	m_text->SetText(m_stringText);

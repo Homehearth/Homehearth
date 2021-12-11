@@ -57,4 +57,5 @@ namespace ServerSystems
 	void CombatSystem(HeadlessScene& scene, float dt, Blackboard* blackboard);
 
 	void DeathParticleTimer(HeadlessScene& scene);
+	void CheckSkipDay(Simulation* simulation);
 }

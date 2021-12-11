@@ -18,7 +18,7 @@ namespace thread
 	for it to be considered benefitable to divide up the rendering
 	between threads.
 	*/
-	const int BASE_THRESHOLD = 1;
+	const int BASE_THRESHOLD = 10;
 	const int SHADOW_THRESHOLD = 1;
 
 	class RenderThreadHandler
@@ -36,6 +36,7 @@ namespace thread
 		void* m_camera;
 		void* m_shadows;
 		bool m_isActive;
+		unsigned int m_activeThreads = 0;
 
 		unsigned int m_amount;
 		RenderThreadHandler();

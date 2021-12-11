@@ -5,13 +5,13 @@ CyclePeriod Cycler::CalculatePeriod()
 {
 	if (m_relativeTime > NIGHT)
 		return CyclePeriod::NIGHT;
-	
+
 	else if (m_relativeTime > EVENING)
 		return CyclePeriod::EVENING;
 
 	else if (m_relativeTime > DAY)
 		return CyclePeriod::DAY;
-	
+
 
 	return CyclePeriod::MORNING;
 }
@@ -29,22 +29,26 @@ Cycler::Cycler()
 void Cycler::Update(float dt)
 {
 	m_timer += dt * m_cycleSpeed;
+
 	if (m_timer > DAY_DURATION)
 	{
-		m_timer = 0.0f;
+		m_timer -= DAY_DURATION;
 	}
 	m_relativeTime = m_timer / DAY_DURATION;
 
-	CyclePeriod newPeriod = this->CalculatePeriod();
 	m_changedPeriod = false;
-	if (newPeriod != m_timePeriod)
-	{
-		m_changedPeriod = true;
 
-		if(blackboard != nullptr)
+	if (blackboard)
+	{
+		CyclePeriod newPeriod = this->CalculatePeriod();
+		if (newPeriod != m_timePeriod)
+		{
+			m_changedPeriod = true;
+
 			blackboard->AddValue<CyclePeriod>("cycle", newPeriod);
+		}
+		m_timePeriod = newPeriod;
 	}
-	m_timePeriod = newPeriod;
 }
 
 CyclePeriod Cycler::GetTimePeriod() const
@@ -74,6 +78,20 @@ float Cycler::GetCycleSpeed() const
 	return m_cycleSpeed;
 }
 
+float Cycler::GetDefaultSpeed() const
+{
+	return m_defaultCycleSpeed;
+}
+
+void Cycler::SetTimePeriod(CyclePeriod period, bool hasChangedPeriod)
+{
+	if (hasChangedPeriod)
+	{
+		m_timePeriod = period;
+		m_changedPeriod = true;
+	}
+}
+
 void Cycler::SetCycleSpeed(float speed)
 {
 	m_cycleSpeed = speed;
@@ -82,4 +100,9 @@ void Cycler::SetCycleSpeed(float speed)
 void Cycler::setBlackboard(Blackboard* blackboard)
 {
 	this->blackboard = blackboard;
+}
+
+void Cycler::ResetCycleSpeed()
+{
+	this->m_cycleSpeed = m_defaultCycleSpeed;
 }

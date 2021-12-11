@@ -4,13 +4,13 @@
 class Cycler
 {
 private:
-
 	float m_timer;
 	float m_relativeTime;
 	CyclePeriod m_timePeriod = CyclePeriod::DAY;
 	bool m_changedPeriod;
 
 	float m_cycleSpeed;
+	const float m_defaultCycleSpeed = 1.f;
 
 	CyclePeriod CalculatePeriod();
 	Blackboard* blackboard;
@@ -30,9 +30,11 @@ public:
 	void SetTime(float time);
 
 	float GetCycleSpeed() const;
+	float GetDefaultSpeed() const;
+	void SetTimePeriod(CyclePeriod period, bool hasChangedPeriod);
 	void SetCycleSpeed(float speed);
 	void setBlackboard(Blackboard* blackboard);
 
-
+	void ResetCycleSpeed();
 
 };

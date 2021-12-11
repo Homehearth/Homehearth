@@ -6,11 +6,6 @@ skel 			Model.fbx
 anim 			IDLE 			Model_Idle.fbx
 
 
-// Have to set default animation that it will return 
-// to after an animation that can't be looped
-defaultAnim 	IDLE
-
-
 // Possible to set options for animation. 
 // Set by default if nothing was set.
 loopable		1

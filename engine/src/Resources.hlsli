@@ -59,13 +59,13 @@ cbuffer LightsInfoCB : register(b3)
 
 cbuffer ParticleUpdate : register(b4)
 {
-    float4 emitterPosition;
-    float deltaTime;
-    uint counter;
-    float lifeTime;
-    float particleSizeMulitplier;
-    float c_particleSpeed;
-    float3 c_pPadding;
+    float4  c_pEmitterPosition;
+    uint    c_pCounter;
+    float   c_pLifeTime;
+    float   c_pSizeMulitplier;
+    float   c_pSpeed;    
+    float   c_pDeltatime;
+    float3  c_pPadding;
 }
 
 cbuffer ParticleMode : register(b5)
@@ -205,6 +205,7 @@ RWTexture2D<unorm float4> t_bufferOut                   : register(u1);
 RWTexture2D<unorm float4> t_inFocus                     : register(u2);
 RWTexture2D<unorm float4> t_outOfFocus                  : register(u3);
 RWTexture2D<float4> t_dofOut                            : register(u4);
+RWTexture2D<float4> t_backBufferOut                     : register(u5);
 
 // Water (1)
 RWTexture2D<unorm float4> u_waterFloorTexture           : register(u5);

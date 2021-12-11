@@ -18,6 +18,7 @@
 #include "OpaquePass.h"
 #include "TransparentPass.h"
 #include "WaterEffectPass.h"
+#include "BloomPass.h"
 
 class Renderer
 {
@@ -41,6 +42,7 @@ private:
 	SkyboxPass			m_skyPass;
 	ShadowPass			m_shadowPass;
 	DOFPass				m_dofPass;
+	BloomPass			m_bloomPass;
 	unsigned int m_currentPass = 0;
 	bool m_isForwardPlusInitialized;
 
@@ -71,6 +73,7 @@ public:
 	IRenderPass* GetCurrentPass() const;
 
 	DOFPass* GetDoFPass();
+	BloomPass* GetBloomPass();
 
 	ShadowPass* GetShadowPass();
 

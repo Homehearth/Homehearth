@@ -21,9 +21,9 @@ class PipelineManager
 	};
 
 private:
-	Window*							m_window;
-	D3D11Core*						m_d3d11;
-	ID3D11DeviceContext*			m_context;
+	Window*								m_window;
+	D3D11Core*							m_d3d11;
+	ID3D11DeviceContext*				m_context;
 	
 public:
 	PipelineManager();
@@ -35,6 +35,11 @@ public:
 	// PUBLIC AVAILABLE DATA.
 	ComPtr<ID3D11RenderTargetView>		m_backBuffer;
 	ComPtr<ID3D11RenderTargetView>		m_renderTargetView;
+
+	ComPtr<ID3D11UnorderedAccessView> 	m_backBufferAccessView;
+	ComPtr<ID3D11RenderTargetView>	  	m_bloomTargetView;
+	ComPtr<ID3D11Texture2D>			  	m_bloomTexture;
+	ComPtr<ID3D11UnorderedAccessView> 	m_bloomAccessView;
 
 	ComPtr<ID3D11Texture2D>				m_depthStencilTexture;
 	ComPtr<ID3D11DepthStencilView>		m_depthStencilView;
@@ -76,17 +81,18 @@ public:
 	ComPtr<ID3D11InputLayout>			m_skyboxInputLayout;
 	ComPtr<ID3D11InputLayout>			m_ParticleInputLayout;
 
-	Shaders::VertexShader				m_defaultVertexShader;
-	Shaders::VertexShader				m_depthPassVertexShader;
-	Shaders::VertexShader				m_animationVertexShader;
-	Shaders::VertexShader				m_skyboxVertexShader;
-	Shaders::VertexShader				m_ParticleVertexShader;
+	Shaders::VertexShader			m_defaultVertexShader;
+	Shaders::VertexShader			m_depthPassVertexShader;
+	Shaders::VertexShader			m_animationVertexShader;
+	Shaders::VertexShader			m_skyboxVertexShader;
+	Shaders::VertexShader			m_ParticleVertexShader;
+	Shaders::VertexShader			m_bloomVertexShader;
 
-	Shaders::PixelShader				m_depthPassPixelShader;
-	Shaders::PixelShader				m_defaultPixelShader;
-	Shaders::PixelShader				m_debugPixelShader;
-	Shaders::PixelShader				m_skyboxPixelShader;
-	Shaders::PixelShader				m_ParticlePixelShader;
+	Shaders::PixelShader			m_defaultPixelShader;
+	Shaders::PixelShader			m_debugPixelShader;
+	Shaders::PixelShader			m_skyboxPixelShader;
+	Shaders::PixelShader			m_ParticlePixelShader;
+	Shaders::PixelShader			m_bloomPixelShader;
 
 	//Shadows
 	Shaders::VertexShader				m_paraboloidVertexShader;
@@ -101,6 +107,10 @@ public:
 	Shaders::ComputeShader				m_blurComputeShader;
 	Shaders::ComputeShader				m_dofComputeShader;
 	
+	Shaders::ComputeShader				m_blurComputeShader;
+	Shaders::ComputeShader				m_dofComputeShader;
+	Shaders::ComputeShader				m_bloomComputeShader;
+
 	D3D11_VIEWPORT						m_viewport;
 
 	bool CreateStructuredBuffer(ComPtr<ID3D11Buffer>& buffer, void* data, unsigned int byteStride,
@@ -153,44 +163,44 @@ public:
 	ComPtr<ID3D11ShaderResourceView>	m_gridFrustumSRV;
 	
 	// Nikkis stuff
-	Shaders::VertexShader             m_textureEffectVertexShader;  // Dummy.
-	Shaders::ComputeShader            m_textureEffectComputeShader; // Water refraction effect compute shader.
-	Shaders::PixelShader              m_textureEffectPixelShader;   // Dummy.
+	Shaders::VertexShader				m_textureEffectVertexShader;  // Dummy.
+	Shaders::ComputeShader				m_textureEffectComputeShader; // Water refraction effect compute shader.
+	Shaders::PixelShader				m_textureEffectPixelShader;   // Dummy.
 
-	Shaders::VertexShader             m_WaterEffectVertexShader;  // Dummy.
-	Shaders::ComputeShader            m_WaterEffectComputeShader; // Water effect compute shader.
-	Shaders::PixelShader              m_WaterEffectPixelShader;   // Dummy.
+	Shaders::VertexShader				m_WaterEffectVertexShader;  // Dummy.
+	Shaders::ComputeShader				m_WaterEffectComputeShader; // Water effect compute shader.
+	Shaders::PixelShader				m_WaterEffectPixelShader;   // Dummy.
 
-	ComPtr<ID3D11Buffer>			  m_textureEffectConstantBuffer;
+	ComPtr<ID3D11Buffer>				m_textureEffectConstantBuffer;
 	//ComPtr<ID3D11Buffer>              m_deltaTimeBuffer;
 
-	ComPtr<ID3D11ShaderResourceView>  m_SRV_TextureEffectBlendMap;
-	ComPtr<ID3D11ShaderResourceView>  m_SRV_TextureEffectWaterMap;
-	ComPtr<ID3D11ShaderResourceView>  m_SRV_TextureEffectWaterFloorMap;
+	ComPtr<ID3D11ShaderResourceView>	m_SRV_TextureEffectBlendMap;
+	ComPtr<ID3D11ShaderResourceView>	m_SRV_TextureEffectWaterMap;
+	ComPtr<ID3D11ShaderResourceView>	m_SRV_TextureEffectWaterFloorMap;
 	//ComPtr<ID3D11ShaderResourceView>  m_SRV_TextureEffectWaterEdgeMap;
-	ComPtr<ID3D11ShaderResourceView>  m_SRV_TextureEffectWaterNormalMap;
+	ComPtr<ID3D11ShaderResourceView>	m_SRV_TextureEffectWaterNormalMap;
 
-	ComPtr<ID3D11UnorderedAccessView> m_UAV_TextureEffectBlendMap;
-	ComPtr<ID3D11UnorderedAccessView> m_UAV_TextureEffectWaterMap;
-	ComPtr<ID3D11UnorderedAccessView> m_UAV_TextureEffectWaterFloorMap;
+	ComPtr<ID3D11UnorderedAccessView>	m_UAV_TextureEffectBlendMap;
+	ComPtr<ID3D11UnorderedAccessView>	m_UAV_TextureEffectWaterMap;
+	ComPtr<ID3D11UnorderedAccessView>	m_UAV_TextureEffectWaterFloorMap;
 	//ComPtr<ID3D11UnorderedAccessView> m_UAV_TextureEffectWaterEdgeMap;
-	ComPtr<ID3D11UnorderedAccessView> m_UAV_TextureEffectWaterNormalMap;
+	ComPtr<ID3D11UnorderedAccessView>	m_UAV_TextureEffectWaterNormalMap;
 
-	std::shared_ptr<RModel> m_WaterModel;
-	std::shared_ptr<RModel> m_WaterEdgeModel;
-	std::shared_ptr<RModel> m_WaterFloorModel;
+	std::shared_ptr<RModel>				m_WaterModel;
+	std::shared_ptr<RModel>				m_WaterEdgeModel;
+	std::shared_ptr<RModel>				m_WaterFloorModel;
 
-	ComPtr<ID3D11Texture2D> m_WaterAlbedoMap;
-	ComPtr<ID3D11Texture2D> m_WaterNormalMap;
-	ComPtr<ID3D11Texture2D> m_WaterEdgeAlbedoMap;
-	ComPtr<ID3D11Texture2D>	m_WaterFloorAlbedoMap;
-	ComPtr<ID3D11Texture2D> m_WaterBlendAlbedoMap; //This one is a stand alone texture and is not found on a model.
+	ComPtr<ID3D11Texture2D>				m_WaterAlbedoMap;
+	ComPtr<ID3D11Texture2D>				m_WaterNormalMap;
+	ComPtr<ID3D11Texture2D>				m_WaterEdgeAlbedoMap;
+	ComPtr<ID3D11Texture2D>				m_WaterFloorAlbedoMap;
+	ComPtr<ID3D11Texture2D>				m_WaterBlendAlbedoMap; //This one is a stand alone texture and is not found on a model.
 
-	std::shared_ptr<RTexture> m_ModdedWaterAlbedoMap;
-	std::shared_ptr<RTexture> m_ModdedWaterNormalMap;
-	std::shared_ptr<RTexture> m_ModdedWaterEdgeAlbedoMap;
-	std::shared_ptr<RTexture> m_ModdedWaterFloorAlbedoMap;
-	std::shared_ptr<RTexture> m_ModdedWaterBlendAlbedoMap;
+	std::shared_ptr<RTexture>			m_ModdedWaterAlbedoMap;
+	std::shared_ptr<RTexture>			m_ModdedWaterNormalMap;
+	std::shared_ptr<RTexture>			m_ModdedWaterEdgeAlbedoMap;
+	std::shared_ptr<RTexture>			m_ModdedWaterFloorAlbedoMap;
+	std::shared_ptr<RTexture>			m_ModdedWaterBlendAlbedoMap;
 
 private:
 	// INITIALIZE METHODS.

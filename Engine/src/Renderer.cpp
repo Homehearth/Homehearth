@@ -33,7 +33,8 @@ void Renderer::Initialize(Window* pWindow)
 	AddPass(&m_skyPass);
 	AddPass(&m_dofPass);	
 	AddPass(&m_particlePass);
-    
+    AddPass(&m_bloomPass);
+
 	m_basePass.m_pShadowPass = &m_shadowPass;
 	m_animPass.m_pShadowPass = &m_shadowPass;
     m_opaquePass.m_shadowPassRef = &m_shadowPass;
@@ -54,6 +55,7 @@ void Renderer::Initialize(Window* pWindow)
 	m_skyPass.SetEnable(true);
 	m_dofPass.SetEnable(true);
 	m_shadowPass.SetEnable(true);
+	m_bloomPass.SetEnable(true);
 
 #ifdef _DEBUG
 	//AddPass(&m_debugPass);  
@@ -68,6 +70,7 @@ void Renderer::Initialize(Window* pWindow)
 	}
 
 	m_dofPass.Create(DoFType::VIGNETTE);
+	m_bloomPass.Setup();
     m_isForwardPlusInitialized = false;
 }
 
@@ -107,10 +110,17 @@ void Renderer::Render(Scene* pScene)
             m_opaquePass.m_skyBoxRef = pScene->GetSkybox();
             m_transparentPass.m_skyBoxRef = pScene->GetSkybox();
 
-			if (pScene->GetCurrentCamera()->IsSwapped())
+			Camera* cam = pScene->GetCurrentCamera();
+			if (!cam)
 			{
-				this->UpdatePerFrame(pScene->GetCurrentCamera());
-				thread::RenderThreadHandler::SetCamera(pScene->GetCurrentCamera());
+				LOG_ERROR("Camera was null bailing from Render");
+				return;
+			}
+
+			if (cam->IsSwapped())
+			{
+				this->UpdatePerFrame(cam);
+				thread::RenderThreadHandler::SetCamera(cam);
 
 				for (int i = 0; i < m_passes.size(); i++)
 				{
@@ -119,14 +129,14 @@ void Renderer::Render(Scene* pScene)
 					if (pass->IsEnabled())
 					{
 						pass->SetLights(pScene->GetLights());
-						pass->PreRender(pScene->GetCurrentCamera());
+						pass->PreRender(cam);
 						pass->Render(pScene);
 						pass->PostRender();
 					}
 				}
 			}
-
-			pScene->GetCurrentCamera()->ReadySwap();
+            
+			cam->ReadySwap();
 			pScene->ReadyForSwap();
 		}
 	}
@@ -140,6 +150,11 @@ IRenderPass* Renderer::GetCurrentPass() const
 DOFPass* Renderer::GetDoFPass()
 {
 	return &m_dofPass;
+}
+
+BloomPass* Renderer::GetBloomPass()
+{
+	return &m_bloomPass;
 }
 
 ShadowPass* Renderer::GetShadowPass()

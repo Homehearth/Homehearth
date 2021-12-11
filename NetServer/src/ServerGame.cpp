@@ -93,13 +93,13 @@ void ServerGame::OnShutdown()
 void ServerGame::UpdateNetwork(float deltaTime)
 {
 	PROFILE_FUNCTION();
-	//static float timer = 0.0f;
-	//timer += deltaTime;
-	//if (timer >= 1.0f)
-	//{
-	//	LOG_INFO("Update: %f", 1.f / deltaTime);
-	//	timer = 0.0f;
-	//}
+	static float timer = 0.0f;
+	timer += deltaTime;
+	if (timer >= 1.0f)
+	{
+		LOG_INFO("Update: %f", 1.f / deltaTime);
+		timer = 0.0f;
+	}
 
 	{
 		PROFILE_SCOPE("Server UPDATE");
@@ -122,9 +122,6 @@ void ServerGame::UpdateNetwork(float deltaTime)
 			{
 				// Update the simulation
 				it->second->Update(deltaTime);
-				// Send the snapshot of the updated simulation to all clients in the sim
-				it->second->SendSnapshot();
-				it->second->NextTick();
 				it++;
 			}
 		}
@@ -335,10 +332,23 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 		else
 		{
 			LOG_WARNING("Invalid GameID for player input message");
-		}
+		} 
 
 		break;
 	}
+	case GameMsg::Game_PlayerSkipDay:
+		uint32_t gameID, playerID;
+		msg >> gameID >> playerID;
+		if (m_simulations.find(gameID) != m_simulations.end())
+		{
+			comp::Player* p = m_simulations.at(gameID)->GetPlayer(playerID).GetComponent<comp::Player>();
+			if (p)
+			{
+				p->wantsToSkipDay = true;
+				ServerSystems::CheckSkipDay(m_simulations.at(gameID).get());
+			}
+		}
+		break;
 	case GameMsg::Game_PlayerReady:
 	{
 		uint32_t playerID;
@@ -384,7 +394,7 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 		if (m_simulations.find(gameID) != m_simulations.end())
 		{
 			m_simulations.at(gameID)->GetPlayer(playerID).GetComponent<comp::Player>()->shopItem = shopItem;
-			m_simulations.at(gameID)->UseShop(shopItem, playerID);
+			m_simulations.at(gameID)->m_shop.UseShop(shopItem, playerID);
 		}
 		break;
 	}
