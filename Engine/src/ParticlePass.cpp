@@ -18,8 +18,14 @@ void ParticlePass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 	DC->PSSetShader(PM->m_ParticlePixelShader.Get(), nullptr, 0);
 	DC->CSSetShader(PM->m_ParticleComputeShader.Get(), nullptr, 0);
 
+	ID3D11RenderTargetView* renderTargets[2];
+	renderTargets[0] = PM->m_backBuffer.Get();
+	renderTargets[1] = PM->m_bloomTargetView.Get();
+
+	DC->OMSetRenderTargets(2, renderTargets, PM->m_depth.dsv.Get());
+	DC->OMSetDepthStencilState(PM->m_depthStencilStateLessOrEqual.Get(), 0);
+
 	DC->OMSetBlendState(PM->m_blendStateParticle.Get(), nullptr, 0xffffffff);
-	DC->OMSetRenderTargets(1, PM->m_backBuffer.GetAddressOf(), PM->m_depth.dsv.Get());
 
 	DC->IASetVertexBuffers(0, 1, &m_nullBuffer, &m_stride, &m_offset);
 	DC->GSSetConstantBuffers(1, 1, pCam->m_viewConstantBuffer.GetAddressOf());
@@ -29,7 +35,6 @@ void ParticlePass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 
 void ParticlePass::CreateRandomNumbers()
 {
-
 	HRESULT hr;
 
 	for (UINT i = 0; i < m_nrOfRandomNumbers; i++)
@@ -95,11 +100,10 @@ void ParticlePass::PostRender(ID3D11DeviceContext* pDeviceContext)
 	DC->GSSetConstantBuffers(1, 1, &m_nullBuffer);
 	DC->PSSetConstantBuffers(5, 1, &m_nullBuffer);
 	DC->CSSetUnorderedAccessViews(7, 1, &m_nullUAV, nullptr);
-	DC->CSSetShaderResources(8, 1, &m_nullSRV);
+	DC->CSSetShaderResources(7, 1, &m_nullSRV);
 
 	DC->GSSetShader(m_nullGS, nullptr, 0);
 	DC->CSSetShader(m_nullCS, nullptr, 0);
 
 	DC->OMSetBlendState(PM->m_blendStatepOpaque.Get(), 0, 0xffffffff);
-
 }

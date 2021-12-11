@@ -90,6 +90,7 @@ public:
 
 	Shaders::PixelShader			m_defaultPixelShader;
 	Shaders::PixelShader			m_debugPixelShader;
+	Shaders::PixelShader			m_depthPassPixelShader;
 	Shaders::PixelShader			m_skyboxPixelShader;
 	Shaders::PixelShader			m_ParticlePixelShader;
 	Shaders::PixelShader			m_bloomPixelShader;
@@ -104,9 +105,6 @@ public:
 
 	Shaders::ComputeShader				m_lightCullingShader;
 	Shaders::ComputeShader				m_computeFrustumsShader;
-	Shaders::ComputeShader				m_blurComputeShader;
-	Shaders::ComputeShader				m_dofComputeShader;
-	
 	Shaders::ComputeShader				m_blurComputeShader;
 	Shaders::ComputeShader				m_dofComputeShader;
 	Shaders::ComputeShader				m_bloomComputeShader;

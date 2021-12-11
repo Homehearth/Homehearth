@@ -20,7 +20,7 @@ void Renderer::Initialize(Window* pWindow)
     AddPass(&m_frustumPass);
     AddPass(&m_cullingPass);
 
-    AddPass(&m_decalPass); // måste vara före basepasset
+    AddPass(&m_decalPass); // måste vara före basepasset.
     m_decalPass.Create();
 
     AddPass(&m_opaquePass);
@@ -29,11 +29,10 @@ void Renderer::Initialize(Window* pWindow)
 
     AddPass(&m_textureEffectPass);
 	AddPass(&m_waterEffectPass);
-	AddPass(&m_basePass);   
-	AddPass(&m_skyPass);
-	AddPass(&m_dofPass);	
-	AddPass(&m_particlePass);
+	AddPass(&m_particlePass); // saknar stor explosion.
     AddPass(&m_bloomPass);
+	AddPass(&m_dofPass);	
+	AddPass(&m_skyPass);
 
 	m_basePass.m_pShadowPass = &m_shadowPass;
 	m_animPass.m_pShadowPass = &m_shadowPass;
@@ -45,8 +44,6 @@ void Renderer::Initialize(Window* pWindow)
     m_opaquePass.SetEnable(true);
     m_transparentPass.SetEnable(true);
 
-	////m_basePass.SetEnable(false);
-
 	m_textureEffectPass.SetEnable(true);
 	m_waterEffectPass.SetEnable(true);
 	m_animPass.SetEnable(true);
@@ -56,11 +53,6 @@ void Renderer::Initialize(Window* pWindow)
 	m_dofPass.SetEnable(true);
 	m_shadowPass.SetEnable(true);
 	m_bloomPass.SetEnable(true);
-
-#ifdef _DEBUG
-	//AddPass(&m_debugPass);  
- //   m_debugPass.SetEnable(true);
-#endif
 
 	LOG_INFO("Number of rendering passes: %d", static_cast<int>(m_passes.size()));
 
@@ -91,8 +83,10 @@ void Renderer::Setup(BasicEngine<Scene>& engine)
 void Renderer::ClearFrame()
 {
 	// Clear the back buffer.
-	const float m_clearColor[4] = { 0.5f, 0.5f, 1.0f, 1.0f };
-	m_d3d11->DeviceContext()->ClearRenderTargetView(m_pipelineManager.m_backBuffer.Get(), m_clearColor);
+	const float clearColor[4] = { 0.5f, 0.5f, 0.5f, 1.0f };
+    const float clearBloomColor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+	m_d3d11->DeviceContext()->ClearRenderTargetView(m_pipelineManager.m_backBuffer.Get(), clearColor);
+    m_d3d11->DeviceContext()->ClearRenderTargetView(m_pipelineManager.m_bloomTargetView.Get(), clearBloomColor);
 	m_d3d11->DeviceContext()->ClearDepthStencilView(m_pipelineManager.m_depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 	m_d3d11->DeviceContext()->ClearDepthStencilView(m_pipelineManager.m_debugDepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
     m_d3d11->DeviceContext()->ClearDepthStencilView(m_pipelineManager.m_depth.dsv.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);

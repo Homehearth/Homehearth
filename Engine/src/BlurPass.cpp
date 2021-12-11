@@ -55,7 +55,7 @@ void BlurPass::BlurTexture(ID3D11UnorderedAccessView** viewIn, ID3D11UnorderedAc
 		DC->OMSetRenderTargets(1, &nullRTV, nullptr);
 
 		DC->CSSetShader(PM->m_blurComputeShader.Get(), nullptr, 0);
-		DC->CSSetConstantBuffers(11, 1, m_settingsBuffer.GetAddressOf());
+		DC->CSSetConstantBuffers(7, 1, m_settingsBuffer.GetAddressOf());
 
 		DC->CSSetUnorderedAccessViews(0, 1, viewIn, nullptr);
 		DC->CSSetUnorderedAccessViews(1, 1, viewOut, nullptr);
@@ -90,7 +90,7 @@ void BlurPass::BlurTexture(const sm::Vector2& texSize, ID3D11UnorderedAccessView
 		DC->OMSetRenderTargets(1, &nullRTV, nullptr);
 
 		DC->CSSetShader(PM->m_blurComputeShader.Get(), nullptr, 0);
-		DC->CSSetConstantBuffers(11, 1, m_settingsBuffer.GetAddressOf());
+		DC->CSSetConstantBuffers(7, 1, m_settingsBuffer.GetAddressOf());
 
 		DC->CSSetUnorderedAccessViews(0, 1, viewIn, nullptr);
 		DC->CSSetUnorderedAccessViews(1, 1, viewOut, nullptr);

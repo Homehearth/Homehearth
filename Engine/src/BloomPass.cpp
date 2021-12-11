@@ -116,8 +116,7 @@ void BloomPass::Draw(const RenderVersion& drawType)
     UINT offset = 0;
 
     ID3D11Buffer* buff = { m_samplingInfoBuffer.GetBuffer() };
-
-    D3D11Core::Get().DeviceContext()->PSSetConstantBuffers(4, 1, &buff);
+    D3D11Core::Get().DeviceContext()->PSSetConstantBuffers(3, 1, &buff);
     D3D11Core::Get().DeviceContext()->IASetVertexBuffers(0, 1, &m_screenSpaceQuad, &stride, &offset);
     D3D11Core::Get().DeviceContext()->IASetIndexBuffer(m_indexBuffer, DXGI_FORMAT_R32_UINT, 0);
     D3D11Core::Get().DeviceContext()->DrawIndexed(6, 0, 0);

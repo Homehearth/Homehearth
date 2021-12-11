@@ -34,7 +34,7 @@ void AnimationPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
     renderTargets[1] = PM->m_bloomTargetView.Get();
 
     DC->OMSetRenderTargets(2, renderTargets, PM->m_depth.dsv.Get());
-    DC->OMSetDepthStencilState(PM->m_depthStencilStateLessEqual.Get(), 0);
+    DC->OMSetDepthStencilState(PM->m_depthStencilStateLessOrEqual.Get(), 0);
     PM->SetCullBack(true, DC);
 
     if (m_pShadowPass)

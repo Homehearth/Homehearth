@@ -35,7 +35,6 @@ private:
 	CullingPass			m_cullingPass;
 	OpaquePass			m_opaquePass;
 	TransparentPass		m_transparentPass;
-	DebugPass			m_debugPass;
 	AnimationPass		m_animPass;
 	DecalPass			m_decalPass;
 	ParticlePass		m_particlePass;
