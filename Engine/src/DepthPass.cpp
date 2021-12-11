@@ -23,6 +23,14 @@ void DepthPass::Render(Scene* pScene)
 {
     PROFILE_FUNCTION();
 
+    pScene->GetRegistry()->view<comp::Animator>().each([&](comp::Animator& anim)
+        {
+            if (anim.animator && anim.updating)
+            {
+                anim.animator->Update();
+            }
+        });
+
 	PM->SetCullBack(true, GetDeviceContext());
 
     pScene->RenderOpaque(PM);

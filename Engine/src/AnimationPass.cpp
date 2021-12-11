@@ -28,10 +28,9 @@ void AnimationPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
     m_lights->Render(DC);
 
     DC->RSSetViewports(1, &PM->m_viewport);
-    DC->RSSetState(PM->m_rasterStateBackCulling.Get());
 
     DC->OMSetRenderTargets(1, PM->m_backBuffer.GetAddressOf(), PM->m_depth.dsv.Get());
-    DC->OMSetDepthStencilState(PM->m_depthStencilStateLessOrEqualEnableDepthWrite.Get(), 0);
+    DC->OMSetDepthStencilState(PM->m_depthStencilStateLessOrEqual.Get(), 0);
     PM->SetCullBack(true, DC);
 
     if (m_pShadowPass)

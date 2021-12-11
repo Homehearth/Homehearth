@@ -23,14 +23,6 @@ Scene::Scene()
 void Scene::Update(float dt)
 {
 	//Update all the animations that can be updated
-	m_registry.view<comp::Animator>().each([&](comp::Animator& anim)
-		{
-			if (anim.animator && anim.updating)
-				anim.animator->Update();
-		});
-
-
-
 	m_2dHandler.Update();
 	PROFILE_FUNCTION();
 
@@ -281,7 +273,6 @@ void Scene::RenderParticles(void* voidPass)
 			}
 		}
 	}
-
 }
 
 void Scene::RenderOpaque(PipelineManager* pm)
@@ -309,9 +300,9 @@ void Scene::RenderOpaque(PipelineManager* pm)
 				}
 			}
 		}
-		//D3D11Core::Get().DeviceContext()->IASetInputLayout(pm->m_animationInputLayout.Get());
-		//D3D11Core::Get().DeviceContext()->VSSetShader(pm->m_animationVertexShader.Get(), nullptr, 0);
-		//RenderAnimation();
+		D3D11Core::Get().DeviceContext()->IASetInputLayout(pm->m_animationInputLayout.Get());
+		D3D11Core::Get().DeviceContext()->VSSetShader(pm->m_animationVertexShader.Get(), nullptr, 0);
+		RenderAnimation();
 	}
 }
 

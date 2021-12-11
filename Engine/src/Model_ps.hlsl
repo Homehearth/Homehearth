@@ -3,7 +3,6 @@
 float4 main(PixelIn input) : SV_TARGET
 {
     //return t_shadowMaps.Sample(s_linear, float3(input.uv, 0.0f));
-
     static unsigned int rolls = infoData.x;
     static float LIGHT_RANGE = 215.0f;
     const float LIGHT_VOLUME_RANGE = 250.0f;

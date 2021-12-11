@@ -452,7 +452,7 @@ void RAnimator::Update()
 				else
 				{
 					UpdateTime(m_nextType);
-					anim1->blendTimer += Stats::Get().GetUpdateTime();
+					anim1->blendTimer += Stats::Get().GetFrameTime();
 
 					//Do blending while we can. When we reached the end we swap animation
 					if (anim1->blendTimer < blendDuration)
