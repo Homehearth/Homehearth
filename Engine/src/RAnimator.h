@@ -22,21 +22,18 @@ private:
 	EAnimationType m_currentState;	//The main focus animation
 	EAnimationType m_blendState;	//The animation we blending to
 	EAnimationType m_upperState;	//Upper animation
-	EAnimationType m_queueState;	//Queued up
+	//EAnimationType m_queueState;	//Queued up
+	bool		   m_blendDir;		//True: Positive, False: Negative
 
-	//std::queue<EAnimationType> m_queue;
-	//std::deque<EAnimationType> m_queue;
-	
 	struct animation_t
 	{
 		//Shared data
 		std::shared_ptr<RAnimation>					animation;
 		//Specific data for this animation in this animator
 		double										frameTimer	= 0;
-		//double										blendTimer	= 0;
+		//double										blendTimer	= 0; 
 		//double										currentTick	= 0;
 		std::unordered_map<std::string, lastKeys_t> lastKeys;
-		//bool										reachedEnd	= false;			//remove?
 	};
 
 	//All the animations
@@ -66,17 +63,6 @@ private:
 	bool UpdateTime(const EAnimationType& type);
 
 	bool UpdateBlendTime(const EAnimationType& from, const EAnimationType& to, double& blendTime, double& blendDuration);
-
-	/*
-		REMOVE LATER
-	*/
-	//Animation with only one state
-	//void RegularAnimation(const EAnimationType& state);																		//DONE
-	//Blend between two animations
-	//void BlendAnimations(const EAnimationType& state1, const EAnimationType& state2);											//DONE
-	//Animate the lower body as usual and swap to upper when reached a bone
-	//void UpperLowerbodyAnimation(const EAnimationType& upper, const EAnimationType& lower);									//DONE
-	//void BlendUpperBodyAnimations(const EAnimationType& state1, const EAnimationType& state2, const EAnimationType& upper);			
 
 	/*
 		NEW ONE
