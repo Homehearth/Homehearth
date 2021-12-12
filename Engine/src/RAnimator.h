@@ -71,6 +71,9 @@ private:
 
 	EAnimStatus GetAnimStatus() const;
 
+	//Before check - check if anything need to be queued up
+	void CheckQueue();
+
 public:
 	RAnimator();
 	~RAnimator();

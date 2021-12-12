@@ -173,9 +173,15 @@ bool RAnimator::UpdateTime(const EAnimationType& type)
 			{
 				ResetAnimation(type);
 
-				//Note: Fix this
-				m_currentState = m_blendState;
-				m_blendState = EAnimationType::NONE;
+				if (m_currentState == type)
+				{
+					m_currentState = m_blendState;
+					m_blendState = EAnimationType::NONE;
+				}
+				else if (m_blendState == type)
+				{
+					m_blendState = EAnimationType::NONE;
+				}
 			}
 		}
 		else
@@ -506,6 +512,14 @@ EAnimStatus RAnimator::GetAnimStatus() const
 	return codetype;
 }
 
+void RAnimator::CheckQueue()
+{
+	if (m_queueState != EAnimationType::NONE)
+	{
+
+	}
+}
+
 bool RAnimator::Create(const std::string& filename)
 {
 	std::ifstream readfile(ANIMATORPATH + filename);
@@ -646,6 +660,15 @@ void RAnimator::ChangeAnimation(const EAnimationType& type)
 				if (m_states.find({ m_currentState, type }) != m_states.end())
 				{
 					m_blendState = type;
+
+					/*if (m_states.at({ m_currentState, type }).devidebone.empty())
+					{
+						m_blendState = type;
+					}
+					else
+					{
+						m_upperState = type;
+					}*/
 				}
 				break;
 			}
@@ -717,7 +740,7 @@ void RAnimator::Update()
 	if (!m_bones.empty())
 	{
 		//Check queue - fix function
-		if (m_queueState != EAnimationType::NONE)
+		/*if (m_queueState != EAnimationType::NONE)
 		{
 			if (m_currentState != EAnimationType::NONE)
 			{
@@ -729,7 +752,9 @@ void RAnimator::Update()
 				m_blendState = m_queueState;
 				m_queueState = EAnimationType::NONE;
 			}
-		}
+		}*/
+
+		CheckQueue();
 
 		switch (GetAnimStatus())
 		{
@@ -740,7 +765,7 @@ void RAnimator::Update()
 			BlendTwoAnims();
 			break;
 		case EAnimStatus::TWO_ANIM_UPPER_LOWER:
-			//UpperLowerAnims();							//temp
+			UpperLowerAnims();							//temp
 			break;
 		case EAnimStatus::THREE_ANIM_UPPER_LOWER_BLEND:
 			//BlendUpperLowerAnims();						//temp
@@ -748,6 +773,8 @@ void RAnimator::Update()
 		default:
 			break;
 		}
+
+		//Check if any animation has ended? Reset? 
 	}
 }
 
