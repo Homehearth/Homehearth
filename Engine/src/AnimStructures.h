@@ -59,12 +59,13 @@ struct animstate_hash_fn
 
 struct animstateInfo
 {
-	double		blendTimer		= 0;	//How long we have blended so far
-	double		blendDuration	= 0;	//How long to blend
-	std::string devidebone		= "";	//With an upper animation this is the bone to start at
+	double		blendTimer		= 0;		//How long we have blended so far
+	double		blendDuration	= 0;		//How long to blend
+	bool		animationCancel = false;	//Possible to cancel animation
+	std::string devidebone		= "";		//With an upper animation this is the bone to start at
 };
 
-enum class EAnimationCode
+enum class EAnimStatus
 {
 	NONE,
 	ONE_ANIM,

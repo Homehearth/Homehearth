@@ -22,8 +22,8 @@ private:
 	EAnimationType m_currentState;	//The main focus animation
 	EAnimationType m_blendState;	//The animation we blending to
 	EAnimationType m_upperState;	//Upper animation
-	//EAnimationType m_queueState;	//Queued up
-	bool		   m_blendDir;		//True: Positive, False: Negative
+	EAnimationType m_queueState;	//Waiting for a possibility to be played
+	bool		   m_blendDir;		//True: toward blend, False: toward current
 
 	struct animation_t
 	{
@@ -31,8 +31,7 @@ private:
 		std::shared_ptr<RAnimation>					animation;
 		//Specific data for this animation in this animator
 		double										frameTimer	= 0;
-		//double										blendTimer	= 0; 
-		//double										currentTick	= 0;
+		//double									currentTick	= 0;	//Add back?
 		std::unordered_map<std::string, lastKeys_t> lastKeys;
 	};
 
@@ -54,8 +53,6 @@ private:
 	//Convert a string to enum
 	EAnimationType StringToAnimationType(const std::string& name) const;
 
-	void CheckQueue();
-
 	//Reset the time of currentFrametime
 	void ResetAnimation(const EAnimationType& type);
 
@@ -72,7 +69,7 @@ private:
 	void UpperLowerAnims();			//Current + upper
 	void BlendUpperLowerAnims();	//Current + blend + upper
 
-	EAnimationCode GetAnimationCode() const;
+	EAnimStatus GetAnimStatus() const;
 
 public:
 	RAnimator();
@@ -89,7 +86,7 @@ public:
 	void RandomizeTime();
 
 	//Queue up what animation to play next
-	bool ChangeAnimation(const EAnimationType& type);
+	void ChangeAnimation(const EAnimationType& type);
 
 	//Get the enum of what state the animator is in
 	const EAnimationType& GetCurrentState() const;
