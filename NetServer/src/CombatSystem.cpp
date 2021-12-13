@@ -452,15 +452,45 @@ void CombatSystem::DoDamage(HeadlessScene& scene, Entity attacker, Entity attack
 		doKnockback = false;
 	}
 
+	
+
+	bool isStaticTarget = target.HasComponent<comp::Tag<STATIC>>();
+	bool isHouseTarget = target.HasComponent<comp::House>();
+	bool isDefenseTarget = target.HasComponent<comp::Tag<DEFENCE>>();
+	bool isPlayerAttacker = attacker.HasComponent<comp::Player>();
+	// hit map bounds
+	if (isStaticTarget && !isHouseTarget && !isDefenseTarget)
+	{
+		return;
+	}
+	else if (isHouseTarget) // hit a house
+	{
+		playHitSound = false;
+		if (isPlayerAttacker)
+		{
+			doDamage = false;
+			playHitSound = true;
+		}
+		doKnockback = false;
+		playTargetHitSound = false;
+	}
+	else if (isStaticTarget && !isDefenseTarget) // hit a collider
+	{
+		doDamage = false;
+		doKnockback = false;
+		playTargetHitSound = false;
+		playHitSound = false;
+	}
+
 	comp::ShieldBlockAbility* block = target.GetComponent<comp::ShieldBlockAbility>();
 	if (block)
 	{
 		if (ecs::IsUsing(block))
 		{
-			//Check if in front
 			sm::Vector3 toAttacker = attacker.GetComponent<comp::Transform>()->position - target.GetComponent<comp::Transform>()->position;
 			toAttacker.Normalize();
 			sm::Vector3 targetForward = ecs::GetForward(*target.GetComponent<comp::Transform>());
+			//Check if in front
 			if (toAttacker.Dot(targetForward) > 0)
 			{
 				doDamage = false;
@@ -482,33 +512,6 @@ void CombatSystem::DoDamage(HeadlessScene& scene, Entity attacker, Entity attack
 				block->damageTaken = 0.0f;
 			}
 		}
-	}
-
-	bool isStaticTarget = target.HasComponent<comp::Tag<STATIC>>();
-	bool isHouseTarget = target.HasComponent<comp::House>();
-	bool isDefenseTarget = target.HasComponent<comp::Tag<DEFENCE>>();
-	bool isPlayerAttacker = attacker.HasComponent<comp::Player>();
-	// hit map bounds
-	if (isStaticTarget && !isHouseTarget && !isDefenseTarget)
-	{
-		return;
-	}
-	else if (isHouseTarget) // hit a house
-	{
-		if (isPlayerAttacker)
-		{
-			doDamage = false;
-			playHitSound = true;
-		}
-		doKnockback = false;
-		playTargetHitSound = false;
-	}
-	else if (isStaticTarget && !isDefenseTarget) // hit a collider
-	{
-		doDamage = false;
-		doKnockback = false;
-		playTargetHitSound = false;
-		playHitSound = false;
 	}
 
 	// hit entity on same team
@@ -579,7 +582,7 @@ void CombatSystem::DoDamage(HeadlessScene& scene, Entity attacker, Entity attack
 
 		if (playHitSound)
 		{
-			if (type == AttackType::MELEE && attacker.GetComponent<comp::Player>())
+			if (type == AttackType::MELEE)
 			{
 				audio.type = ESoundEvent::Player_OnMeleeAttackHit;
 				audio.is3D = false;

@@ -1441,6 +1441,11 @@ void Game::UpdateInput()
 		m_inputState.leftMouse = true;
 	}
 
+	if (InputSystem::Get().CheckMouseKey(MouseKey::RIGHT, KeyState::HELD))
+	{
+		m_inputState.rightMouse = true;
+	}
+
 	if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED))
 	{
 		this->ChangeSpectatedPlayer();
@@ -1461,7 +1466,6 @@ void Game::UpdateInput()
 		}
 		case ShopItem::None:
 		{
-			m_inputState.rightMouse = true;
 			break;
 		}
 		}

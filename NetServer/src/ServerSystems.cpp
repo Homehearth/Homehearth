@@ -521,7 +521,7 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 							p.state = comp::Player::State::LOOK_TO_MOUSE; // set state even if ability is not ready for use yet
 							if (ecs::UseAbility(e, p.primaryAbilty, &p.mousePoint))
 							{
-								anim.toSend = EAnimationType::PRIMARY_ATTACK;
+anim.toSend = EAnimationType::PRIMARY_ATTACK;
 							}
 
 							// make sure movement alteration is not applied when using, because then its applied atomatically
@@ -605,19 +605,33 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 						break;
 					}
 				}
-				else if (p.inputState.rightMouse)
+				else if (p.inputState.rightMouse) // if held
 				{
-					if (!ecs::IsPlayerUsingAnyAbility(e) && ecs::UseAbility(e, p.secondaryAbilty, &p.mousePoint))
+					if (!ecs::IsPlayerUsingAnyAbility(e))
 					{
-						LOG_INFO("Used secondary");
-						anim.toSend = EAnimationType::SECONDARY_ATTACK;
+						if (p.secondaryAbilty == entt::resolve<comp::ShieldBlockAbility>())
+						{
+							if (ecs::UseAbility(e, p.secondaryAbilty, &p.mousePoint))
+							{
+								anim.toSend = EAnimationType::SECONDARY_ATTACK;
+							}
+						}
+						else
+						{
+							if (p.lastInputState.rightMouse != p.inputState.rightMouse) // on pressed
+							{
+								if(ecs::UseAbility(e, p.secondaryAbilty, &p.mousePoint))
+								{
+									anim.toSend = EAnimationType::SECONDARY_ATTACK;
+								}
+							}
+						}
 					}
-					else if (ecs::IsUsing(e, p.secondaryAbilty) && p.secondaryAbilty == entt::resolve<comp::ShieldBlockAbility>())
-					{
-						ecs::CancelAbility(e, p.secondaryAbilty);
-						static_cast<comp::ShieldBlockAbility*>(ecs::GetAbility(e, p.secondaryAbilty))->damageTaken = 0.0f;
-
-					}
+				}
+				else if (ecs::IsUsing(e, p.secondaryAbilty) && p.secondaryAbilty == entt::resolve<comp::ShieldBlockAbility>())
+				{
+					ecs::CancelAbility(e, p.secondaryAbilty);
+					static_cast<comp::ShieldBlockAbility*>(ecs::GetAbility(e, p.secondaryAbilty))->damageTaken = 0.0f;
 				}
 
 				if (p.inputState.key_shift)
