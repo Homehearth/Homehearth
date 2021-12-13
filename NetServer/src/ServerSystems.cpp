@@ -521,14 +521,14 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 							p.state = comp::Player::State::LOOK_TO_MOUSE; // set state even if ability is not ready for use yet
 							if (ecs::UseAbility(e, p.primaryAbilty, &p.mousePoint))
 							{
-anim.toSend = EAnimationType::PRIMARY_ATTACK;
+								anim.toSend = EAnimationType::PRIMARY_ATTACK;
 							}
 
-							// make sure movement alteration is not applied when using, because then its applied atomatically
-							if (!ecs::IsUsing(e, p.primaryAbilty))
-							{
-								e.GetComponent<comp::Velocity>()->vel *= ecs::GetAbility(e, p.primaryAbilty)->movementSpeedAlt;
-							}
+						}
+						// make sure movement alteration is not applied when using, because then its applied atomatically
+						if (!ecs::IsUsing(e, p.primaryAbilty))
+						{
+							e.GetComponent<comp::Velocity>()->vel *= ecs::GetAbility(e, p.primaryAbilty)->movementSpeedAlt;
 						}
 						break;
 					}
@@ -605,42 +605,30 @@ anim.toSend = EAnimationType::PRIMARY_ATTACK;
 						break;
 					}
 				}
-				else if (p.inputState.rightMouse) // if held
+				else if (p.inputState.rightMouse) // held
 				{
-					if (!ecs::IsPlayerUsingAnyAbility(e))
+					if (!ecs::IsPlayerUsingAnyAbility(e) && ecs::UseAbility(e, p.secondaryAbilty, nullptr))
 					{
-						if (p.secondaryAbilty == entt::resolve<comp::ShieldBlockAbility>())
-						{
-							if (ecs::UseAbility(e, p.secondaryAbilty, &p.mousePoint))
-							{
-								anim.toSend = EAnimationType::SECONDARY_ATTACK;
-							}
-						}
-						else
-						{
-							if (p.lastInputState.rightMouse != p.inputState.rightMouse) // on pressed
-							{
-								if(ecs::UseAbility(e, p.secondaryAbilty, &p.mousePoint))
-								{
-									anim.toSend = EAnimationType::SECONDARY_ATTACK;
-								}
-							}
-						}
+						anim.toSend = EAnimationType::SECONDARY_ATTACK;
 					}
 				}
-				else if (ecs::IsUsing(e, p.secondaryAbilty) && p.secondaryAbilty == entt::resolve<comp::ShieldBlockAbility>())
+				else if (p.inputState.key_shift) // pressed
 				{
-					ecs::CancelAbility(e, p.secondaryAbilty);
-					static_cast<comp::ShieldBlockAbility*>(ecs::GetAbility(e, p.secondaryAbilty))->damageTaken = 0.0f;
-				}
-
-				if (p.inputState.key_shift)
-				{
-					if (!ecs::IsPlayerUsingAnyAbility(e) && ecs::UseAbility(e, p.moveAbilty, &p.mousePoint))
+					if (!ecs::IsPlayerUsingAnyAbility(e) && ecs::UseAbility(e, p.moveAbilty, nullptr))
 					{
 						anim.toSend = EAnimationType::ABILITY1;
 					}
 				}
+				
+				// stop blocking of rightmouse is released
+				if (p.secondaryAbilty == entt::resolve<comp::ShieldBlockAbility>() &&
+					ecs::IsUsing(e, p.secondaryAbilty) && 
+					!p.inputState.rightMouse &&
+					p.inputState.rightMouse != p.lastInputState.rightMouse)
+				{
+					ecs::CancelAbility(e, p.secondaryAbilty);
+				}
+
 
 				//Rotate defences 90 or not
 				if (p.inputState.mousewheelDir > 0)
@@ -773,11 +761,12 @@ void ServerSystems::PlayerStateSystem(Simulation* simulation, HeadlessScene& sce
 	PROFILE_FUNCTION();
 	scene.ForEachComponent<comp::Player>([](Entity e, comp::Player& p)
 		{
-			if (ecs::IsPlayerUsingAnyAbility(e))
+			if (ecs::IsUsing(e, p.primaryAbilty) ||
+				p.secondaryAbilty == entt::resolve<comp::ShieldBlockAbility>() && ecs::IsUsing(e, p.secondaryAbilty))
 			{
-				p.state = comp::Player::State::LOOK_TO_MOUSE; // always use this state if any ability is being used
+				p.state = comp::Player::State::LOOK_TO_MOUSE; // always use this state if primary ability is being used
 			}
-
+			
 		});
 
 	scene.ForEachComponent<comp::Player, comp::Health, comp::Network>([&](Entity e, comp::Player& p, comp::Health& health, comp::Network n)

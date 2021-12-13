@@ -199,7 +199,11 @@ void CombatSystem::UpdateBlock(HeadlessScene& scene)
 {
 	scene.ForEachComponent<comp::ShieldBlockAbility>([&](Entity entity, comp::ShieldBlockAbility& ability)
 		{
-			if (ecs::ReadyToUse(&ability))
+			sm::Vector3* updateTargetPoint = nullptr;
+
+			UpdateTargetPoint(entity, updateTargetPoint);
+
+			if (ecs::ReadyToUse(&ability, updateTargetPoint))
 			{
 				/*
 				entity.AddComponent<comp::Invincible>();

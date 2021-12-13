@@ -255,7 +255,7 @@ void Simulation::ResetPlayer(Entity player)
 		healAbility->healAmount = 30.f;
 		healAbility->lifetime = 1.0f;
 		healAbility->range = 30.f;
-		healAbility->useTime = 1.0f;
+		healAbility->useTime = 0.2f;
 		healAbility->movementSpeedAlt = 1.0f;
 
 		playerComp->secondaryAbilty = entt::resolve<comp::HealAbility>();
