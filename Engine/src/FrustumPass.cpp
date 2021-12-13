@@ -3,13 +3,6 @@
 
 void FrustumPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 {
-	ID3D11RenderTargetView* nullRTV[] = { nullptr };
-	ID3D11DepthStencilView* nullDSV = { nullptr };
-
-	// Setup.
-	DC->OMSetRenderTargets(ARRAYSIZE(nullRTV), nullRTV, nullDSV);
-	DC->OMSetDepthStencilState(PM->m_depthStencilStateLessOrEqual.Get(), 0);
-
 	DC->VSSetShader(nullptr, nullptr, 0);
 	DC->PSSetShader(nullptr, nullptr, 0);
 	DC->CSSetShader(PM->m_computeFrustumsShader.Get(), nullptr, 0);

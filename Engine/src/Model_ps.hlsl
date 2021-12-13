@@ -42,9 +42,19 @@ PixelOut main(PixelIn input)
     float3 Lo = float3(0.f, 0.f, 0.f);
     float3 rad = float3(0.f, 0.f, 0.f);
     float3 lightCol = float3(0.f, 0.f, 0.f);
+
+    // Get the index of the current pixel in the light grid.
+    const uint2 tileIndex = uint2(floor(input.pos.xy / (TILE_SIZE)));
+
+    // Get the start position and offset of the light in the light index list.
+    const uint startOffset = t_lightGrid[tileIndex].x;
+    const uint lightCount = t_lightGrid[tileIndex].y;
+
     [loop]
     for (int i = 0; i < c_info.x; i++)
     {
+        const uint lightIndex = sb_lightIndexList[startOffset + i];
+
         if(sb_lights[i].enabled == 1)
         {
 			float4x4 lightMat = sb_lights[i].lightMatrix;

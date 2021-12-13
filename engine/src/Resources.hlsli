@@ -174,6 +174,7 @@ TextureCube t_irradiance                            : register(t97);
 TextureCube t_sky                                   : register(t98);
 Texture2D t_BRDFLUT                                 : register(t99);
 
+
 //---------------------------------------------------------------------------
 //	UAV's.
 //---------------------------------------------------------------------------
@@ -184,17 +185,17 @@ Texture2D t_BRDFLUT                                 : register(t99);
 RWStructuredBuffer<Frustum> rw_frustums_out             : register(u0);
 
 // Global counter for current index into the light index list.
-RWStructuredBuffer<uint> rw_opaq_LightIndexCounter      : register(u1);
-RWStructuredBuffer<uint> rw_trans_LightIndexCounter     : register(u2);
+RWStructuredBuffer<uint> rw_opaq_lightIndexCounter      : register(u1);
+RWStructuredBuffer<uint> rw_trans_lightIndexCounter     : register(u2);
 
 // Light index lists and light grids.
-RWStructuredBuffer<uint> rw_opaq_LightIndexList         : register(u3);
-RWStructuredBuffer<uint> rw_trans_LightIndexList        : register(u4);
+RWStructuredBuffer<uint> rw_opaq_lightIndexList         : register(u3);
+RWStructuredBuffer<uint> rw_trans_lightIndexList        : register(u4);
       
 // Each texel is a 2-component unsigned integer vector.
 // The light grid texture is created using the R32G32_UINT format.
-RWTexture2D<uint2> rw_opaq_LightGrid                    : register(u5);
-RWTexture2D<uint2> rw_trans_LightGrid                   : register(u6);
+RWTexture2D<uint2> rw_opaq_lightGrid                    : register(u5);
+RWTexture2D<uint2> rw_trans_lightGrid                   : register(u6);
 
 RWTexture2D<float4> rw_heatMap                          : register(u7);
 

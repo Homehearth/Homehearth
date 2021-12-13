@@ -81,19 +81,19 @@ public:
 	ComPtr<ID3D11InputLayout>			m_skyboxInputLayout;
 	ComPtr<ID3D11InputLayout>			m_ParticleInputLayout;
 
-	Shaders::VertexShader			m_defaultVertexShader;
-	Shaders::VertexShader			m_depthPassVertexShader;
-	Shaders::VertexShader			m_animationVertexShader;
-	Shaders::VertexShader			m_skyboxVertexShader;
-	Shaders::VertexShader			m_ParticleVertexShader;
-	Shaders::VertexShader			m_bloomVertexShader;
+	Shaders::VertexShader				m_defaultVertexShader;
+	Shaders::VertexShader				m_depthPassVertexShader;
+	Shaders::VertexShader				m_animationVertexShader;
+	Shaders::VertexShader				m_skyboxVertexShader;
+	Shaders::VertexShader				m_ParticleVertexShader;
+	Shaders::VertexShader				m_bloomVertexShader;
 
-	Shaders::PixelShader			m_defaultPixelShader;
-	Shaders::PixelShader			m_debugPixelShader;
-	Shaders::PixelShader			m_depthPassPixelShader;
-	Shaders::PixelShader			m_skyboxPixelShader;
-	Shaders::PixelShader			m_ParticlePixelShader;
-	Shaders::PixelShader			m_bloomPixelShader;
+	Shaders::PixelShader				m_defaultPixelShader;
+	Shaders::PixelShader				m_debugPixelShader;
+	Shaders::PixelShader				m_depthPassPixelShader;
+	Shaders::PixelShader				m_skyboxPixelShader;
+	Shaders::PixelShader				m_ParticlePixelShader;
+	Shaders::PixelShader				m_bloomPixelShader;
 
 	//Shadows
 	Shaders::VertexShader				m_paraboloidVertexShader;
@@ -113,7 +113,7 @@ public:
 
 	bool CreateStructuredBuffer(ComPtr<ID3D11Buffer>& buffer, void* data, unsigned int byteStride,
 		unsigned int arraySize, ComPtr<ID3D11UnorderedAccessView>& uav);
-
+	bool CreateCopyBuffer(ID3D11Buffer** buffer, unsigned int byteStride, unsigned int arraySize);
 	bool CreateStructuredBuffer(void* data, unsigned int byteStride, unsigned int arraySize, ResourceAccessView& rav);
 
 	void SetCullBack(bool cullNone, ID3D11DeviceContext* pDeviceContext);
@@ -130,6 +130,7 @@ public:
 	DirectX::ConstantBuffer<screen_view_params_t> m_screenToViewParamsCB;
 
 	std::vector<frustum_t> m_frustums_data;
+
 	std::vector<UINT> opaq_LightIndexCounter_data;
 	std::vector<UINT> trans_LightIndexCounter_data;
 	std::vector<UINT> opaq_LightIndexList_data;
@@ -152,9 +153,10 @@ public:
 	ResourceAccessView trans_LightGrid;
 
 	ResourceAccessView m_heatMap;
+	std::shared_ptr<RTexture> m_lightCountHeatMap;
 
-	UINT							m_windowWidth;
-	UINT							m_windowHeight;
+	UINT								m_windowWidth;
+	UINT								m_windowHeight;
 
 	// View space frustums for the grid cells used in ForwardPlus rendering.
 	ComPtr<ID3D11Buffer>				m_gridFrustum;
@@ -217,6 +219,7 @@ private:
 	bool CreateTextureEffectResources();
 	bool CreateDepth();
 	bool CreateForwardBlendStates();
+	bool CreateHeatMapTexture();
 };
 
 

@@ -33,7 +33,7 @@ Plane ComputePlane(float3 p0, float3 p1, float3 p2)
     const float3 v0 = p1 - p0; // C-A.
     const float3 v2 = p2 - p0; // C-A.
 
-    plane.normal = normalize(cross(v0, v2));
+    plane.normal = normalize(cross(v2, v0));
 
     // Compute the distance to the origin using p0.
     plane.distanceToOrigin = dot(plane.normal, p0);
@@ -53,7 +53,7 @@ bool SphereInsideFrustum(Sphere sphere, Frustum frustum, float zNear, float zFar
     // First check depth
     // Note: Here, the view vector points in the -Z axis so the 
     // far depth value will be approaching -infinity.
-    if (sphere.center.z - sphere.radius > zNear || sphere.center.z + sphere.radius < zFar)
+    if (sphere.center.z - sphere.radius > zFar || sphere.center.z + sphere.radius < zNear)
     {
         result = false;
     }

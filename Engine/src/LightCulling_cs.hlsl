@@ -58,7 +58,7 @@ void main(ComputeShaderIn input)
 	const float fDepth = t_depth.Load(int3(texCoord, 0)).r;
 	const uint uDepth = asuint(fDepth);
 
-    if (input.groupIndex == 0) // Avoid contention by other threads in the group.
+    if (input.groupIndex == 0)
     {
         group_uMinDepth = 0xffffffff;
 		group_uMaxDepth = 0;
@@ -91,7 +91,7 @@ void main(ComputeShaderIn input)
 
     // Clipping plane for minimum depth value 
     // (used for testing lights within the bounds of opaque geometry).
-    const Plane minPlane = { float3(0, 0, -1), -minDepthVS };
+    const Plane minPlane = { float3(0, 0, 1), minDepthVS };
 
     // Cull lights.
     // Each thread in a group will cull 1 light until all lights have been culled.
@@ -111,9 +111,9 @@ void main(ComputeShaderIn input)
 				break;
 				case POINT_LIGHT:
 				{
-					const float3 lightPositionVS = mul(light.position, c_view).xyz;
-					const Sphere sphere = { lightPositionVS, light.range };
-					if (SphereInsideFrustum(sphere, group_GroupFrustum, nearClipVS, maxDepthVS))
+					const float4 lightPositionVS = mul(c_view, light.position);
+					const Sphere sphere = { lightPositionVS.xyz, light.range };
+					if (SphereInsideFrustum(sphere, group_GroupFrustum, nearClipVS, maxDepthVS)) // Z wrong ?
 					{
 						// Add light to light list for transparent geometry.
 						AddLightToOpaqueList(i);
@@ -141,12 +141,12 @@ void main(ComputeShaderIn input)
 	if (input.groupIndex == 0)
 	{
 		// Update light grid for opaque geometry.
-		InterlockedAdd(rw_opaq_LightIndexCounter[0], group_opaq_LightCount, group_opaq_LightIndexStartOffset); // Performs a guaranteed atomic add of value to the dest resource variable.
-		rw_opaq_LightGrid[input.groupID.xy] = uint2(group_opaq_LightIndexStartOffset, group_opaq_LightCount);
+		InterlockedAdd(rw_opaq_lightIndexCounter[0], group_opaq_LightCount, group_opaq_LightIndexStartOffset); // Performs a guaranteed atomic add of value to the dest resource variable.
+		rw_opaq_lightGrid[input.groupID.xy] = uint2(group_opaq_LightIndexStartOffset, group_opaq_LightCount);
 
 		// Update light grid for transparent geometry.
-		InterlockedAdd(rw_trans_LightIndexCounter[0], group_trans_LightCount, group_trans_LightIndexStartOffset);
-		rw_trans_LightGrid[input.groupID.xy] = uint2(group_trans_LightIndexStartOffset, group_trans_LightCount);
+		InterlockedAdd(rw_trans_lightIndexCounter[0], group_trans_LightCount, group_trans_LightIndexStartOffset);
+		rw_trans_lightGrid[input.groupID.xy] = uint2(group_trans_LightIndexStartOffset, group_trans_LightCount);
 	}
 
 	GroupMemoryBarrierWithGroupSync();
@@ -155,29 +155,32 @@ void main(ComputeShaderIn input)
 	// For opaque geometry.
 	for (uint i = input.groupIndex; i < group_opaq_LightCount; i += TILE_SIZE * TILE_SIZE)
 	{
-		rw_opaq_LightIndexList[group_opaq_LightIndexStartOffset + i] = group_opaq_LightList[i];
+		rw_opaq_lightIndexList[group_opaq_LightIndexStartOffset + i] = group_opaq_LightList[i];
 	}
 
 	// For transparent geometry.
 	for (uint i = input.groupIndex; i < group_trans_LightCount; i += TILE_SIZE * TILE_SIZE)
 	{
-		rw_trans_LightIndexList[group_trans_LightIndexStartOffset + i] = group_trans_LightList[i];
+		rw_trans_lightIndexList[group_trans_LightIndexStartOffset + i] = group_trans_LightList[i];
 	}
 
 
 	// Update the debug texture output.
 	if (input.groupThreadID.x == 0 || input.groupThreadID.y == 0)
 	{
-		rw_heatMap[texCoord] = float4(0, 0, 0, 0.9f);
+		rw_heatMap[texCoord] = float4(0, 0, 0, 1.0f);
 	}
 	else if (input.groupThreadID.x == 1 || input.groupThreadID.y == 1)
 	{
-		rw_heatMap[texCoord] = float4(1, 1, 1, 0.5f);
+		rw_heatMap[texCoord] = float4(1, 1, 1, 1.0f);
 	}
 	else if (group_opaq_LightCount > 0)
 	{
-		float normalizedLightCount = group_opaq_LightCount / 50.0f;
+		const float normalizedLightCount = group_opaq_LightCount / 50.0f;
 		const float4 lightCountHeatMapColor = t_lightCountHeatMap.SampleLevel(s_linearClamp, float2(normalizedLightCount, 0), 0);
+
+		// Wtf is wrong? Weird Texture2D.
+
 		rw_heatMap[texCoord] = lightCountHeatMapColor;
 	}
 	else

@@ -43,7 +43,7 @@ public:
 	const bool IsInitialize() const;
 
 	//Render a lights
-	void Render(ID3D11DeviceContext* dc);
+	void Render(ID3D11DeviceContext* dc, bool isComputeShader = false);
 
 	//Edit the light in m_lights at index
 	void EditLight(light_t L, const int& index = -1);

@@ -223,7 +223,7 @@ void Renderer::InitilializeForwardPlus(Camera* camera)
     m_pipelineManager.m_screenToViewParams.screenDimensions.x = static_cast<float>(screenWidth);
     m_pipelineManager.m_screenToViewParams.screenDimensions.y = static_cast<float>(screenHeight);
     dx::XMStoreFloat4x4(&m_pipelineManager.m_screenToViewParams.inverseProjection,
-        dx::XMMatrixTranspose(dx::XMMatrixInverse(nullptr, camera->GetProjection())));
+      dx::XMMatrixInverse(nullptr, camera->GetProjection()));
     m_pipelineManager.m_screenToViewParamsCB.SetData(m_d3d11->DeviceContext(), m_pipelineManager.m_screenToViewParams);
 
     //
@@ -232,7 +232,10 @@ void Renderer::InitilializeForwardPlus(Camera* camera)
 
     const uint32_t numGridCells = m_pipelineManager.m_dispatchParams.numThreads.x *
         m_pipelineManager.m_dispatchParams.numThreads.y * m_pipelineManager.m_dispatchParams.numThreads.z;
+
+    //out_Frustums Forward+
     m_pipelineManager.m_frustums_data.resize(numFrustums);
+    m_pipelineManager.CreateCopyBuffer(m_pipelineManager.m_frustums.buffer.GetAddressOf(), sizeof(frustum_t), m_pipelineManager.m_frustums_data.size());
     m_pipelineManager.CreateStructuredBuffer(m_pipelineManager.m_frustums_data.data(),
         sizeof(frustum_t), m_pipelineManager.m_frustums_data.size(), m_pipelineManager.m_frustums);
 
@@ -337,7 +340,7 @@ bool Renderer::CreateLightGridRWB()
 bool Renderer::CreateLightIndexListRWB(const uint32_t& COUNT)
 {
     // Size of the light index list: for a screen resolution of 1280x720 and
-    // a tile size of 16�16 results in a 80x45 (3, 600) light grid.
+    // a tile size of 16x16 results in a 80x45 (3, 600) light grid.
     // Assuming an average of 100 lights per tile,
     // this would require a light index list of 360,000 indices.
     // Each light index cost 4 bytes (for a 32 - bit unsigned integer)
@@ -352,7 +355,7 @@ bool Renderer::CreateLightIndexListRWB(const uint32_t& COUNT)
     m_pipelineManager.trans_LightIndexList_data.clear();
 
     m_pipelineManager.opaq_LightIndexList_data.resize(SIZE);
-    if (!m_pipelineManager.CreateStructuredBuffer(m_pipelineManager.opaq_LightIndexList_data.data(), sizeof(UINT), m_pipelineManager.opaq_LightIndexList_data.size(), m_pipelineManager.trans_LightIndexList))
+    if (!m_pipelineManager.CreateStructuredBuffer(m_pipelineManager.opaq_LightIndexList_data.data(), sizeof(UINT), m_pipelineManager.opaq_LightIndexList_data.size(), m_pipelineManager.opaq_LightIndexList))
     {
         return false;
     }
@@ -369,7 +372,7 @@ bool Renderer::CreateLightIndexListRWB(const uint32_t& COUNT)
 bool Renderer::CreateLightIndexCounterRWB()
 {
     m_pipelineManager.opaq_LightIndexCounter_data.clear();
-    m_pipelineManager.opaq_LightIndexCounter_data.clear();
+    m_pipelineManager.trans_LightIndexCounter_data.clear();
 
     m_pipelineManager.opaq_LightIndexCounter_data.push_back(0);
     if (!m_pipelineManager.CreateStructuredBuffer(m_pipelineManager.opaq_LightIndexCounter.buffer, m_pipelineManager.opaq_LightIndexCounter_data.data(),
@@ -380,7 +383,7 @@ bool Renderer::CreateLightIndexCounterRWB()
 
     m_pipelineManager.trans_LightIndexCounter_data.push_back(0);
     if (!m_pipelineManager.CreateStructuredBuffer(m_pipelineManager.trans_LightIndexCounter.buffer, m_pipelineManager.trans_LightIndexCounter_data.data(),
-        sizeof(UINT), m_pipelineManager.trans_LightIndexCounter_data.size(), m_pipelineManager.opaq_LightIndexCounter.uav))
+        sizeof(UINT), m_pipelineManager.trans_LightIndexCounter_data.size(), m_pipelineManager.trans_LightIndexCounter.uav))
     {
         return false;
     }
@@ -395,8 +398,8 @@ bool Renderer::CreateHeatMapRWB()
     D3D11_TEXTURE2D_DESC textureDesc;
     ZeroMemory(&textureDesc, sizeof(D3D11_TEXTURE2D_DESC));
 
-    textureDesc.Width = m_pipelineManager.m_dispatchParams.numThreads.x;
-    textureDesc.Height = m_pipelineManager.m_dispatchParams.numThreads.y;
+    textureDesc.Width = m_pipelineManager.m_viewport.Width;
+    textureDesc.Height = m_pipelineManager.m_viewport.Height;
     textureDesc.MipLevels = 1;
     textureDesc.ArraySize = 1;
     textureDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;

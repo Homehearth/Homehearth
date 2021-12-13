@@ -113,7 +113,7 @@ const bool Lights::IsInitialize() const
     return m_isInit;
 }
 
-void Lights::Render(ID3D11DeviceContext* dc)
+void Lights::Render(ID3D11DeviceContext* dc, bool isComputeShader)
 {
     if (dc == D3D11Core::Get().DeviceContext() && m_isInit)
     {
@@ -121,8 +121,16 @@ void Lights::Render(ID3D11DeviceContext* dc)
         UpdateLightBuffer();
     }
 
-    dc->PSSetConstantBuffers(3, 1, m_lightInfoBuffer.GetAddressOf());
-    dc->PSSetShaderResources(T2D_SLOT, 1, m_lightShaderView.GetAddressOf());
+    if(isComputeShader)
+    {
+        dc->CSSetConstantBuffers(3, 1, m_lightInfoBuffer.GetAddressOf());
+        dc->CSSetShaderResources(T2D_SLOT, 1, m_lightShaderView.GetAddressOf());
+    }
+    else
+    {
+	    dc->PSSetConstantBuffers(3, 1, m_lightInfoBuffer.GetAddressOf());
+	    dc->PSSetShaderResources(T2D_SLOT, 1, m_lightShaderView.GetAddressOf());
+    }
 }
 
 void Lights::EditLight(light_t L, const int& index)

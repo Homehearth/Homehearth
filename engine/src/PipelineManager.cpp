@@ -96,9 +96,14 @@ void PipelineManager::Initialize(Window* pWindow, ID3D11DeviceContext* context)
 		if (!this->CreateForwardBlendStates())
 		{
 			LOG_ERROR("failed creating blend states.");
-		}   
+		}
+        if(!this->CreateHeatMapTexture())
+        {
+            LOG_ERROR("failed creating heatmap texture.");
+        }
+
         m_dispatchParamsCB.Create(m_d3d11->Device());
-        m_screenToViewParamsCB.Create(m_d3d11->Device());
+        m_screenToViewParamsCB.Create(m_d3d11->Device());        
     }
 
     // Set Viewport.
@@ -137,6 +142,21 @@ bool PipelineManager::CreateStructuredBuffer(ComPtr<ID3D11Buffer>& buffer, void*
     uavDesc.Buffer.NumElements = arraySize;
     hr = m_d3d11->Device()->CreateUnorderedAccessView(buffer.Get(), &uavDesc, uav.GetAddressOf());
 
+    return !FAILED(hr);
+}
+
+bool PipelineManager::CreateCopyBuffer(ID3D11Buffer** buffer, unsigned byteStride, unsigned arraySize)
+{
+    D3D11_BUFFER_DESC outputDesc = {};
+    outputDesc.ByteWidth = byteStride * arraySize;
+    outputDesc.StructureByteStride = byteStride;
+    outputDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
+
+    outputDesc.Usage = D3D11_USAGE_STAGING;
+    outputDesc.BindFlags = 0;
+    outputDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ | D3D11_CPU_ACCESS_WRITE;
+
+    HRESULT hr = m_d3d11->Device()->CreateBuffer(&outputDesc, 0, buffer);
     return !FAILED(hr);
 }
 
@@ -902,6 +922,12 @@ bool PipelineManager::CreateForwardBlendStates()
     hr = m_d3d11->Device()->CreateBlendState(&blendDescOff, m_blendOff.GetAddressOf());
 
     return !FAILED(hr);
+}
+
+bool PipelineManager::CreateHeatMapTexture()
+{
+    m_lightCountHeatMap = std::make_shared<RTexture>();
+    return m_lightCountHeatMap->Create("HeatMap.png");
 }
 
 bool PipelineManager::CreateShaders()
