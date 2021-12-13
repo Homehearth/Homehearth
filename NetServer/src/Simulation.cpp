@@ -183,12 +183,13 @@ void Simulation::ResetPlayer(Entity player)
 		health->currentHealth = 125.f;
 
 		comp::MeleeAttackAbility* attackAbility = player.AddComponent<comp::MeleeAttackAbility>();
-		attackAbility->cooldown = 0.8f;
-		attackAbility->attackDamage = 20.f;
+		attackAbility->cooldown = 0.60f;
+		attackAbility->attackDamage = 25.f;
 		attackAbility->lifetime = 0.1f;
 		attackAbility->useTime = 0.5f;
 		attackAbility->delay = 0.2f;
 		attackAbility->attackRange = 8.f;
+		attackAbility->movementSpeedAlt = 0.5f;
 
 		playerComp->primaryAbilty = entt::resolve<comp::MeleeAttackAbility>();
 
@@ -238,13 +239,14 @@ void Simulation::ResetPlayer(Entity player)
 
 		comp::RangeAttackAbility* attackAbility = player.AddComponent<comp::RangeAttackAbility>();
 		attackAbility->cooldown = 0.8f;
-		attackAbility->attackDamage = 20.f;
+		attackAbility->attackDamage = 25.f;
 		attackAbility->lifetime = 2.0f;
 		attackAbility->projectileSpeed = 80.f;
 		attackAbility->projectileSize = 3.f;
 		attackAbility->attackRange = 13.0f;
 		attackAbility->useTime = 0.3f;
 		attackAbility->delay = 0.3f;
+		attackAbility->movementSpeedAlt = 0.5f;
 		playerComp->primaryAbilty = entt::resolve<comp::RangeAttackAbility>();
 
 		comp::HealAbility* healAbility = player.AddComponent<comp::HealAbility>();
@@ -774,15 +776,17 @@ void Simulation::UpgradeDefence(const uint32_t& id)
 
 				if (c && h)
 				{
-					if (m_currency >= c->cost)
+					if (m_currency >= c->cost && h->upgradeLevel <= 2)
 					{
 						// Add upgrades here.
 						h->maxHealth += 35;
 						h->currentHealth += 35;
+						h->upgradeLevel++;
 
 						// Cost is here.
+						e.UpdateNetwork();
 						m_currency -= c->cost;
-						c->cost += 5;
+						c->cost *= 1.5f;
 						m_pGameScene->publish<EComponentUpdated>(e, ecs::Component::COST);
 					}
 				}
@@ -808,6 +812,8 @@ void Simulation::SetGameScene()
 #if GOD_MODE
 	// During debug give players 1000 gold/monies.
 	m_currency = 1000;
+#else
+	m_currency = 500;
 #endif
 
 #if NO_CLIP

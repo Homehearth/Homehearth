@@ -282,11 +282,26 @@ namespace sceneHelp
 					}
 					case CyclePeriod::EVENING:
 					{
+						//// Hide skip day button.
 						//Collection2D* skipButtonUI = scene.GetCollection("SkipUI");
 						//rtd::Button* skipButton = dynamic_cast<rtd::Button*>(skipButtonUI->elements[0].get());
 						//rtd::Text* skipText = dynamic_cast<rtd::Text*>(skipButtonUI->elements[1].get());
 						//skipText->SetVisiblity(false);
 						//skipButton->SetVisiblity(false);
+						//scene.ForEachComponent<comp::Light>([](comp::Light& l)
+						//	{
+						//		if (l.lightData.type == TypeLight::POINT)
+						//		{
+						//			l.lightData.enabled = 1;
+						//		}
+						//	});
+
+						// Hide pricetag.
+						Collection2D* priceTagUI = scene.GetCollection("priceTag");
+						if (priceTagUI)
+						{
+							priceTagUI->Hide();
+						}
 						break;
 					}
 					case CyclePeriod::DAY:
@@ -564,7 +579,7 @@ namespace sceneHelp
 		rtd::Picture* abilityBar = abilities->AddElement<rtd::Picture>("AbilityBar.png", draw_t(barPos.x, barPos.y, (widthScale / 16.0f) * 5.0f, height / 9.0f));
 
 		sm::Vector2 abillitySize = { widthScale / 18.0f, height / 11.0f };
-		sm::Vector2 abillityPos = { (width / 2.f) - (abillitySize.x / 2), barPos.y + (padding.y * 0.5f) };
+		sm::Vector2 abillityPos = { (width / 2.f) - (abillitySize.x / 2), barPos.y + (padding.y * 0.25f) };
 
 		rtd::AbilityUI* primary = abilities->AddElement<rtd::AbilityUI>(draw_t(abillityPos.x - (abillitySize.x * 2 + padding.x), abillityPos.y, abillitySize.x, abillitySize.y), D2D1::ColorF(0, 1.0f), "Attack2.png");
 		primary->SetActivateButton("LMB");
@@ -690,36 +705,60 @@ namespace sceneHelp
 		shop->SetOnPressedEvent(0, [=]()
 			{
 				game->SetShopItem(ShopItem::Defence1x1);
+				audio_t audio = {};
+				audio.isUnique = false;
+				audio.volume = SoundHandler::Get().GetMasterVolume();
+				SoundHandler::Get().PlaySound("ButtonClick", audio);
 				bullDoze->Hide();
 			});
 		// 1x3 tower button.
 		shop->SetOnPressedEvent(1, [=]()
 			{
 				game->SetShopItem(ShopItem::Defence1x3);
+				audio_t audio = {};
+				audio.isUnique = false;
+				audio.volume = SoundHandler::Get().GetMasterVolume();
+				SoundHandler::Get().PlaySound("ButtonClick", audio);
 				bullDoze->Hide();
 			});
 		// Primary upgrade button.
 		shop->SetOnPressedEvent(2, [=]()
 			{
 				game->SetShopItem(ShopItem::Primary_Upgrade);
+				audio_t audio = {};
+				audio.isUnique = false;
+				audio.volume = SoundHandler::Get().GetMasterVolume();
+				SoundHandler::Get().PlaySound("ButtonClick", audio);
 				bullDoze->Hide();
 			});
 		// Armor upgrade button.
 		shop->SetOnPressedEvent(3, [=]()
 			{
 				game->SetShopItem(ShopItem::Primary_Upgrade);
+				audio_t audio = {};
+				audio.isUnique = false;
+				audio.volume = SoundHandler::Get().GetMasterVolume();
+				SoundHandler::Get().PlaySound("ButtonClick", audio);
 				bullDoze->Hide();
 			});
 		// Heal button.
 		shop->SetOnPressedEvent(4, [=]()
 			{
 				game->SetShopItem(ShopItem::Heal);
+				audio_t audio = {};
+				audio.isUnique = false;
+				audio.volume = SoundHandler::Get().GetMasterVolume();
+				SoundHandler::Get().PlaySound("ButtonClick", audio);
 				bullDoze->Hide();
 			});
 		// Remove defences button.
 		shop->SetOnPressedEvent(5, [=]()
 			{
 				game->SetShopItem(ShopItem::Destroy_Tool);
+				audio_t audio = {};
+				audio.isUnique = false;
+				audio.volume = SoundHandler::Get().GetMasterVolume();
+				SoundHandler::Get().PlaySound("ButtonClick", audio);
 				bullDoze->Show();
 			});
 		shop->SetMoneyRef(mMoney);
@@ -884,6 +923,7 @@ namespace sceneHelp
 		exitButton->SetOnPressedEvent([=]()
 			{
 				game->SetScene("MainMenu");
+				OptionSystem::Get().SetOption("BloomIntensity", std::to_string(thread::RenderThreadHandler::Get().GetRenderer()->GetBloomPass()->AdjustBloomIntensity()));
 				OptionSystem::Get().OnShutdown();
 			});
 		scene.Add2DCollection(general, "AMenuBG");
@@ -1275,7 +1315,22 @@ namespace sceneHelp
 			OptionSystem::Get().SetOption("Bloom", bloomOption);
 
 			});
-		
+
+		// Bloom Intensity
+		graphicsPos.y += scale.y + padding.y;
+		rtd::Border* bloomIntensityBorder = graphicsCategory->AddElement<rtd::Border>(draw_t(canvasPos.x + padding.x, graphicsPos.y, canvasSize.x - padding.x * 2, scale.y));
+		bloomIntensityBorder->SetColor(D2D1::ColorF(53.f / 255.f, 22.f / 255.f, 26.f / 255.f));
+		bloomIntensityBorder->SetLineWidth(LineWidth::LARGE);
+		rtd::Canvas* bloomVolCanvas = graphicsCategory->AddElement<rtd::Canvas>(D2D1::ColorF(53.f / 255.f, 22.f / 255.f, 26.f / 255.f), draw_t(minPos.x - 6.f, graphicsPos.y, ((canvasSize.x / 2.f) + 6.f) - padding.x * 2.f, scale.y));
+		bloomVolCanvas->SetShape(Shapes::RECTANGLE_ROUNDED);
+		graphicsCategory->AddElement<rtd::Text>("Bloom Intensity", draw_t(canvasPos.x - padding.x, graphicsPos.y, scale.x * 2.f, scale.y));
+		rtd::Slider* bloomVolumeSL = graphicsCategory->AddElement<rtd::Slider>(D2D1::ColorF(0, 0, 0), draw_t(minPos.x, graphicsPos.y, scale.x, scale.y), &thread::RenderThreadHandler::Get().GetRenderer()->GetBloomPass()->AdjustBloomIntensity(), 1.0f, 0.05f);
+		bloomVolumeSL->SetMinPos(minPos);
+		bloomVolumeSL->SetMaxPos(maxPos);
+		rtd::Text* bloomValueText = bloomVolumeSL->GetValueText();
+		sm::Vector2 bloomValueTextPos = { minPos.x + (maxPos.x - minPos.x) / 2 + (bloomValueText->GetText().length() * D2D1Core::GetDefaultFontSize()) / 2.f, graphicsPos.y };
+		bloomValueText->SetPosition(bloomValueTextPos.x, bloomValueTextPos.y);
+
 		//Shadows
 		graphicsPos.y += scale.y + padding.y;
 		rtd::Border* shadowsBorder = graphicsCategory->AddElement<rtd::Border>(draw_t(canvasPos.x + padding.x, graphicsPos.y, canvasSize.x - padding.x * 2, scale.y));

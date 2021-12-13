@@ -75,6 +75,8 @@ void thread::RenderThreadHandler::Finish()
 			// Block until all threads have returned their results.
 			while ((int)INSTANCE.m_commands.size() != INSTANCE.m_activeThreads) {
 			};
+
+			INSTANCE.m_activeThreads = 0;
 		}
 	}
 	else

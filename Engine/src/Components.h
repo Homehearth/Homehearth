@@ -422,6 +422,7 @@ namespace ecs
 			float maxHealth = 100.f;
 			float currentHealth = 100.f;
 			bool isAlive = true;
+			int upgradeLevel = 0;
 		};
 
 		struct IAbility
@@ -454,6 +455,8 @@ namespace ecs
 
 			// set to be target for ability
 			sm::Vector3 targetPoint;
+
+			int upgradeLevel = 0;
 		};
 
 		//---------- WARRIOR ABILITIES ----------

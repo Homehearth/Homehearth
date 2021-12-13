@@ -49,7 +49,7 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 
 		npc->movementSpeed = 15.f;
 		attackAbility->cooldown = 1.0f;
-		attackAbility->attackDamage = 20.f;
+		attackAbility->attackDamage = 15.f;
 		attackAbility->lifetime = 0.1f;
 		attackAbility->attackRange = 4.f;
 		attackAbility->useTime = 0.3f;
@@ -83,7 +83,7 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 
 		npc->movementSpeed = 15.f;
 		attackAbility->cooldown = 3.0f;
-		attackAbility->attackDamage = 20.f;
+		attackAbility->attackDamage = 10.f;
 		attackAbility->lifetime = 5.0f;
 		attackAbility->attackRange = 60.f;
 		attackAbility->useTime = 0.3f;
@@ -102,8 +102,8 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		meshName->name = NameType::MESH_MONSTER;
 		animatorName->name = AnimName::ANIM_MONSTER;
 		bos->Radius = 3.f;
-		attackAbility->cooldown = 1.0f;
-		attackAbility->attackDamage = 20.f;
+		attackAbility->cooldown = 0.8f;
+		attackAbility->attackDamage = 10.f;
 		attackAbility->lifetime = 0.3f;
 		attackAbility->attackRange = 7.0f;
 		attackAbility->useTime = 0.3f;
@@ -122,14 +122,15 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		meshName->name = NameType::MESH_MONSTER;
 		animatorName->name = AnimName::ANIM_MONSTER;
 		bos->Radius = 3.f;
-		attackAbility->cooldown = 1.0f;
+		attackAbility->cooldown = 2.0f;
 		attackAbility->attackDamage = 20.f;
 		attackAbility->lifetime = 0.3f;
-		attackAbility->attackRange = 20.0f;
+		attackAbility->attackRange = 14.0f;
 		attackAbility->useTime = 0.3f;
 		attackAbility->delay = 0.2f;
 		attackAbility->movementSpeedAlt = 0.0f;
 		npc->movementSpeed = 10.f;
+		health->maxHealth = 1500.f;
 		health->currentHealth = 1500.f;
 		behaviorTree->root = AIBehaviors::GetFocusPlayerAIBehavior(entity, simulation->GetBlackboard());
 	}
@@ -156,6 +157,8 @@ void EnemyManagement::CreateWaves(std::queue<Wave>& waveQueue, int currentRound)
 	{
 		Wave::Group group1;
 		group1.AddEnemy(EnemyType::Default, 8 + 4 * currentRound);
+		if (currentRound > 0)
+			group1.AddEnemy(EnemyType::Runner, 2 + currentRound);
 		group1.SetSpawnPoint({ 490.f, -150.0f });
 		wave1.SetTimeLimit(5);
 		wave1.AddGroup(group1);
@@ -166,7 +169,8 @@ void EnemyManagement::CreateWaves(std::queue<Wave>& waveQueue, int currentRound)
 
 		group1.AddEnemy(EnemyType::Default, 5 + 3 * currentRound);
 		group2.AddEnemy(EnemyType::Default, 5 + 3 * currentRound);
-		group2.AddEnemy(EnemyType::Runner, 1 + 1 * currentRound);
+		if (currentRound > 0)
+			group2.AddEnemy(EnemyType::Runner, 4 + currentRound);
 		group1.SetSpawnPoint({ 490.f, -150.0f });
 		group2.SetSpawnPoint({ 170, -80.0f });
 		wave2.AddGroup(group1);
@@ -182,14 +186,14 @@ void EnemyManagement::CreateWaves(std::queue<Wave>& waveQueue, int currentRound)
 		group1.AddEnemy(EnemyType::Runner, 1 + 2 * currentRound);
 		group1.SetSpawnPoint({ 490.f, -150.0f });
 
-		group2.AddEnemy(EnemyType::Default, 3 + currentRound);
+		group2.AddEnemy(EnemyType::Default, 3 + 3* currentRound);
 		group2.AddEnemy(EnemyType::Runner, 1 + currentRound);
 		group2.SetSpawnPoint({ 170, -80.0f });
 
 		group3.AddEnemy(EnemyType::Default, 3 + 3 * currentRound);
 		group3.SetSpawnPoint({ 80.0f, -500.0f });
 
-		group4.AddEnemy(EnemyType::Default, 2 + 3 * currentRound);
+		group4.AddEnemy(EnemyType::Default, 3 + 3 * currentRound);
 		group4.SetSpawnPoint({ 520.f, -540.0f });
 
 		wave3.AddGroup(group1);
@@ -203,19 +207,19 @@ void EnemyManagement::CreateWaves(std::queue<Wave>& waveQueue, int currentRound)
 		Wave::Group group1, group2, group3, group4;
 
 		group1.AddEnemy(EnemyType::Default, 4 + 3 * currentRound);
-		group1.AddEnemy(EnemyType::Runner, 1 + currentRound);
+		group1.AddEnemy(EnemyType::Runner, 2 + currentRound);
 		group1.SetSpawnPoint({ 490.f, -150.0f });
 
 		group2.AddEnemy(EnemyType::Default, 4 + 3 * currentRound);
 		group2.AddEnemy(EnemyType::Runner, 1 + 3 * currentRound);
 		group2.SetSpawnPoint({ 170, -80.0f });
 
-		group3.AddEnemy(EnemyType::Default, 2 + 3 * currentRound);
+		group3.AddEnemy(EnemyType::Default, 4 + 3 * currentRound);
 		group3.AddEnemy(EnemyType::Runner, 2 + currentRound);
 		group3.SetSpawnPoint({ 80.0f, -500.0f });
 
 		group4.AddEnemy(EnemyType::Default, 4 + 3 * currentRound);
-		group4.AddEnemy(EnemyType::Runner, 1 + currentRound);
+		group4.AddEnemy(EnemyType::Runner, 2 + currentRound);
 		group4.SetSpawnPoint({ 520.f, -540.0f });
 
 		wave4.AddGroup(group1);
@@ -228,17 +232,17 @@ void EnemyManagement::CreateWaves(std::queue<Wave>& waveQueue, int currentRound)
 	{ // Wave_5 BOSS
 		Wave::Group group1, group2, group3, group4;
 
-		group1.AddEnemy(EnemyType::Mage, 2 + currentRound);
-		group1.AddEnemy(EnemyType::BIGMOMMA, 1);
+		group1.AddEnemy(EnemyType::Mage, 2 + 2 * currentRound);
+		group1.AddEnemy(EnemyType::BIGMOMMA, 1 + currentRound);
 		group1.SetSpawnPoint({ 490.f, -150.0f });
 
-		group2.AddEnemy(EnemyType::Default, 1 + 3 * currentRound);
+		group2.AddEnemy(EnemyType::Default, 5 + 3 * currentRound);
 		group2.SetSpawnPoint({ 170, -80.0f });
 
-		group3.AddEnemy(EnemyType::Default, 2 + 3 * currentRound);
+		group3.AddEnemy(EnemyType::Default, 5 + 3 * currentRound);
 		group3.SetSpawnPoint({ 80.0f, -500.0f });
 
-		group4.AddEnemy(EnemyType::Default, 1 + 3 * currentRound);
+		group4.AddEnemy(EnemyType::Default, 5 + 3 * currentRound);
 		group4.SetSpawnPoint({ 520.f, -540.0f });
 
 		wave5.AddGroup(group1);
@@ -535,9 +539,9 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 						{
 							uint32_t cost = 0;
 							if (p.shopItem == ShopItem::Defence1x1)
-								cost = 10;
+								cost = 100;
 							else if (p.shopItem == ShopItem::Defence1x3)
-								cost = 30;
+								cost = 250;
 
 							if (simulation->GetCurrency().GetAmount() >= cost)
 							{
@@ -654,8 +658,8 @@ void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money
 				// increase money
 				if (entity.GetComponent<comp::Tag<BAD>>())
 				{
-					money_ref += 5 * spree.GetSpree();
-					money_ref.IncreaseTotal(5 * spree.GetSpree());
+					money_ref += 25 * spree.GetSpree();
+					money_ref.IncreaseTotal(25 * spree.GetSpree());
 					spree.AddSpree();
 				}
 
@@ -680,6 +684,7 @@ void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money
 				if (kd)
 				{
 					kd->deaths++;
+					scene.publish<EComponentUpdated>(entity, ecs::Component::KD);
 				}
 
 				if (p)
