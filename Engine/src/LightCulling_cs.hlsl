@@ -58,24 +58,24 @@ void main(ComputeShaderIn input)
 	// depth buffer only once for the current thread and
 	// thus all threads in a group will sample all depth
 	// values for a single tile.
-	const int2 texCoord = input.dispatchThreadID.xy;
-	const float z_b = t_depth.Load(int3(texCoord, 0)).r;
-	const float z_n = 2.0 * z_b - 1.0;
+	int2 texCoord = input.dispatchThreadID.xy;
+	float z_b = t_depth.Load(int3(texCoord, 0)).r;
+	float z_n = 2.0 * z_b - 1.0;
 
-	const float zNear = 40.0f;
-	const float zFar = 220.0f;
+	float zNear = 40.0f;
+	float zFar = 220.0f;
 
 	// Linear Depth.
-	const float z_w = 2.0 * zNear * zFar / (zFar + zNear - z_n * (zFar - zNear));
+	float z_w = 2.0 * zNear * zFar / (zFar + zNear - z_n * (zFar - zNear));
 
-	const float fDepth = z_w;
+	float fDepth = z_w;
 
 	// atomic operations only work on integers,
 	// hence we reinterrpret the bits from the
 	// floating-point depth as an unsigned integer.
 	// Since we expect all depth values in the depth
 	// map to be stored in the range [0..1].
-	const uint uDepth = asuint(fDepth);
+	uint uDepth = asuint(fDepth);
 
 	// Since we are setting group-shared variables,
 	// only one thread in the group needs to set them.
@@ -110,27 +110,27 @@ void main(ComputeShaderIn input)
     float fMaxDepth = asfloat(group_uMaxDepth);
 
     // Convert depth values to view space.
-    const float minDepthVS = ScreenToView(float4(0, 0, fMinDepth, 1)).z;
-    const float maxDepthVS = ScreenToView(float4(0, 0, fMaxDepth, 1)).z;
+    float minDepthVS = ScreenToView(float4(0, 0, fMinDepth, 1)).z;
+    float maxDepthVS = ScreenToView(float4(0, 0, fMaxDepth, 1)).z;
 
 	// When culling lights for transparent geometry, we don’t want to use
 	// the minimum depth value from the depth map. Instead we will clip the
 	// lights using the camera’s near clipping plane. In this case, we will
 	// use the nearClipVS value which is the distance to the camera’s near
 	// clipping plane in view space.
-    const float nearClipVS = ScreenToView(float4(0, 0, 0, 1)).z;
+    float nearClipVS = ScreenToView(float4(0, 0, 0, 1)).z;
 
     // Clipping plane for minimum depth value 
     // (used for testing lights within the bounds of opaque geometry).
 	// assuming left-handed coord.
-    const Plane minPlane = { float3(0, 0, 1), minDepthVS };
+    Plane minPlane = { float3(0, 0, 1), minDepthVS };
 
     // Each thread in a group will cull 1 light until all lights have been culled.
 	for (uint i = input.groupIndex; i < c_info.x; i += TILE_SIZE * TILE_SIZE)
 	{
 		if (sb_lights[i].enabled)
 		{
-			const Light light = sb_lights[i];
+			Light light = sb_lights[i];
 
 			switch (light.type)
 			{
@@ -142,8 +142,8 @@ void main(ComputeShaderIn input)
 				break;
 				case POINT_LIGHT:
 				{
-					const float3 lightPositionVS = mul(c_view, light.position).xyz;
-					const Sphere sphere = { lightPositionVS, light.range };
+					float3 lightPositionVS = mul(c_view, light.position).xyz;
+					Sphere sphere = { lightPositionVS, light.range };
 					if (SphereInsideFrustum(sphere, group_GroupFrustum, nearClipVS, maxDepthVS))
 					{
 						// Add light to light list for transparent geometry.
@@ -210,8 +210,8 @@ void main(ComputeShaderIn input)
 	}
 	else if (group_opaq_LightCount > 0)
 	{
-		const float normalizedLightCount = group_opaq_LightCount / 50.0f;
-		const float4 lightCountHeatMapColor = t_lightCountHeatMap.SampleLevel(s_linearClamp, float2(normalizedLightCount, 0), 0);
+		float normalizedLightCount = group_opaq_LightCount / 50.0f;
+		float4 lightCountHeatMapColor = t_lightCountHeatMap.SampleLevel(s_linearClamp, float2(normalizedLightCount, 0), 0);
 		rw_heatMap[texCoord] = lightCountHeatMapColor;
 	}
 	else
