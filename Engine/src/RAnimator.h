@@ -19,11 +19,11 @@ private:
 	std::vector<bone_t>						m_bones;
 	std::unordered_map<std::string, UINT>	m_nameToBone;
 
-	EAnimationType m_currentState;	//The main focus animation
-	EAnimationType m_blendState;	//The animation we blending to
-	EAnimationType m_upperState;	//Upper animation
-	EAnimationType m_queueState;	//Waiting for a possibility to be played
-	bool		   m_blendDir;		//True: toward blend, False: toward current
+	EAnimationType	m_currentState;	//The main focus animation
+	EAnimationType	m_blendState;	//The animation we blending to
+	EAnimationType	m_upperState;	//Upper animation
+	EAnimationType	m_queueState;	//Waiting for a possibility to be played
+	bool			m_blendDir;		//True: toward blend, False: toward current
 
 	struct animation_t
 	{
@@ -33,6 +33,7 @@ private:
 		float										frameTimer	= 0;
 		//double									currentTick	= 0;	//Add back?
 		std::unordered_map<std::string, lastKeys_t> lastKeys;
+		bool										needReset = false;
 	};
 
 	//All the animations
@@ -73,6 +74,8 @@ private:
 
 	//Before check - check if anything need to be queued up
 	void CheckQueue();
+
+	void CheckEndedAnims();
 
 public:
 	RAnimator();
