@@ -7,7 +7,7 @@ namespace rtd
 	{
 	private:
 
-		DoubleBuffer<draw_text_t> m_opts;
+		draw_text_t m_opts;
 		D2D1_COLOR_F m_color = { 0.0f, 0.0f, 0.0f, 1.0f };
 		std::string m_text;
 
