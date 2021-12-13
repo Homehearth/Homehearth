@@ -32,6 +32,7 @@ namespace util {
 		return util::BezierCurve<T>(begin, end - 1, t);
 	}
 
+	sm::Vector2 WorldSpaceToScreenSpace(const sm::Vector3& worldPos, Camera* currentCam);
 
 	/*
 		Rebases the old_value onto a new range between the new_max and new_min.
@@ -44,6 +45,7 @@ namespace util {
 		T newRange = new_max - new_min;
 		return (((old_value - old_min) * newRange) / oldRange) + new_min;
 	}
+
 	std::string VecToStr(const sm::Vector3& v);
 	
 }

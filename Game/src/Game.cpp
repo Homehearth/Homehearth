@@ -1295,6 +1295,25 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 							}
 						}
 					}
+					comp::Health* health = e.GetComponent<comp::Health>();
+					comp::Transform* transform = e.GetComponent<comp::Transform>();
+					if (health && transform)
+					{
+						combat_text_inst_t cText;
+						// Signal health gain.
+						if (health->currentHealth < hp.currentHealth)
+						{
+							cText.type = combat_text_enum::HEALTH_GAIN;
+							cText.pos = transform->position;
+						}
+						else
+						{
+							cText.type = combat_text_enum::HEALTH_LOSS;
+							cText.pos = transform->position;
+						}
+						cText.amount = std::abs(health->currentHealth - hp.currentHealth);
+						GetScene("Game").PushCombatText(cText);
+					}
 					e.AddComponent<comp::Health>(hp);
 				}
 				break;
