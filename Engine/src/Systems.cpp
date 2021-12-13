@@ -233,7 +233,6 @@ void Systems::HeroLeapSystem(HeadlessScene& scene, float dt)
 		});
 }
 
-
 void Systems::SelfDestructSystem(HeadlessScene& scene, float dt)
 {
 	//Entity destroys self after set time

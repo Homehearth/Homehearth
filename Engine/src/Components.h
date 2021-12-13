@@ -354,7 +354,9 @@ namespace ecs
 
 			float runSpeed;
 
+			InputState inputState;
 			InputState lastInputState;
+
 			sm::Vector3 mousePoint;
 			sm::Vector3 fowardDir;
 
@@ -469,6 +471,14 @@ namespace ecs
 			float maxRange = 30.f;
 		};
 
+		struct ShieldBlockAbility : public IAbility
+		{
+			Entity shieldCollider;
+
+			float maxDamage = 50.f;
+			float damageTaken = 0.0f;
+		};
+
 		struct DashAbility : public IAbility
 		{
 			//The duration for the force
@@ -501,6 +511,18 @@ namespace ecs
 		};
 		//------------------END----------------------
 
+		//----------------- EFFECTS -----------------
+		struct Stun
+		{
+			float stunTime = 5.0f;
+			float movementSpeedAlt = 0.0f;
+		};
+
+		struct Invincible {
+			float time = 1.0f;
+		};
+
+		//------------------END----------------------
 
 
 		struct SelfDestruct
@@ -593,6 +615,11 @@ namespace ecs
 
 	// returns if the ability is currently used
 	bool IsUsing(Entity entity, entt::meta_type abilityType);
+
+
+	void CancelAbility(component::IAbility* abilityComponent);
+	void CancelAbility(Entity entity, entt::meta_type abilityType);
+
 
 	bool IsPlayerUsingAnyAbility(Entity player);
 

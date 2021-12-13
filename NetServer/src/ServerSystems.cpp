@@ -466,10 +466,10 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 	scene.ForEachComponent<comp::Player, comp::Transform, comp::Velocity, comp::AnimationState>([&](comp::Player& p, comp::Transform& t, comp::Velocity& v, comp::AnimationState& anim)
 		{
 			// update velocity
-			sm::Vector3 vel = sm::Vector3(static_cast<float>(p.lastInputState.axisHorizontal), 0, static_cast<float>(p.lastInputState.axisVertical));
+			sm::Vector3 vel = sm::Vector3(static_cast<float>(p.inputState.axisHorizontal), 0, static_cast<float>(p.inputState.axisVertical));
 			vel.Normalize();
 
-			sm::Vector3 cameraToPlayer = t.position - p.lastInputState.mouseRay.origin;
+			sm::Vector3 cameraToPlayer = t.position - p.inputState.mouseRay.origin;
 			cameraToPlayer.y = 0;
 			cameraToPlayer.Normalize();
 			float targetRotation = atan2(-cameraToPlayer.x, -cameraToPlayer.z);
@@ -494,7 +494,7 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 				plane.normal = sm::Vector3(0, 1, 0);
 				plane.point = sm::Vector3(0, 0, 0);
 
-				if (!p.lastInputState.mouseRay.Intersects(plane, &p.mousePoint))
+				if (!p.inputState.mouseRay.Intersects(plane, &p.mousePoint))
 				{
 					LOG_WARNING("Mouse click ray missed walking plane. Should not happen...");
 				}
@@ -505,23 +505,26 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 					anim.toSend = EAnimationType::IDLE;
 
 				// check if using abilities
-				if (p.lastInputState.leftMouse) // is held
+				if (p.inputState.leftMouse) // is held
 				{
 					switch (p.shopItem)
 					{
 						//In playmode
 					case ShopItem::None:
 					{
-						p.state = comp::Player::State::LOOK_TO_MOUSE; // set state even if ability is not ready for use yet
-						if (ecs::UseAbility(e, p.primaryAbilty, &p.mousePoint))
+						if (!ecs::IsPlayerUsingAnyAbility(e))
 						{
-							anim.toSend = EAnimationType::PRIMARY_ATTACK;
-						}
+							p.state = comp::Player::State::LOOK_TO_MOUSE; // set state even if ability is not ready for use yet
+							if (ecs::UseAbility(e, p.primaryAbilty, &p.mousePoint))
+							{
+								anim.toSend = EAnimationType::PRIMARY_ATTACK;
+							}
 
-						// make sure movement alteration is not applied when using, because then its applied atomatically
-						if (!ecs::IsUsing(e, p.primaryAbilty))
-						{
-							e.GetComponent<comp::Velocity>()->vel *= ecs::GetAbility(e, p.primaryAbilty)->movementSpeedAlt;
+							// make sure movement alteration is not applied when using, because then its applied atomatically
+							if (!ecs::IsUsing(e, p.primaryAbilty))
+							{
+								e.GetComponent<comp::Velocity>()->vel *= ecs::GetAbility(e, p.primaryAbilty)->movementSpeedAlt;
+							}
 						}
 						break;
 					}
@@ -538,7 +541,7 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 
 							if (simulation->GetCurrency().GetAmount() >= cost)
 							{
-								if (simulation->GetGrid().PlaceDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, blackboard->GetPathFindManager(), dynamicQT, blackboard))
+								if (simulation->GetGrid().PlaceDefence(p.inputState.mouseRay, e.GetComponent<comp::Network>()->id, blackboard->GetPathFindManager(), dynamicQT, blackboard))
 								{
 									audio_t audio =
 									{
@@ -577,7 +580,7 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 					}
 					case ShopItem::Destroy_Tool:
 					{
-						if (simulation->GetGrid().RemoveDefence(p.lastInputState.mouseRay, e.GetComponent<comp::Network>()->id, blackboard))
+						if (simulation->GetGrid().RemoveDefence(p.inputState.mouseRay, e.GetComponent<comp::Network>()->id, blackboard))
 						{
 							//Check all house nodes to se if they have become unreachable
 							scene.ForEachComponent<comp::House, comp::Transform>([&](Entity entity, comp::House& house, comp::Transform& transform)
@@ -598,30 +601,33 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 						break;
 					}
 				}
-				else if (p.lastInputState.rightMouse)
+				else if (p.inputState.rightMouse)
 				{
-					if (p.classType != comp::Player::Class::WARRIOR)
+					if (!ecs::IsPlayerUsingAnyAbility(e) && ecs::UseAbility(e, p.secondaryAbilty, &p.mousePoint))
 					{
-						if (ecs::UseAbility(e, p.secondaryAbilty, &p.mousePoint))
-						{
-							LOG_INFO("Used secondary");
-							anim.toSend = EAnimationType::SECONDARY_ATTACK;
-						}
+						LOG_INFO("Used secondary");
+						anim.toSend = EAnimationType::SECONDARY_ATTACK;
+					}
+					else if (ecs::IsUsing(e, p.secondaryAbilty) && p.secondaryAbilty == entt::resolve<comp::ShieldBlockAbility>())
+					{
+						ecs::CancelAbility(e, p.secondaryAbilty);
+						static_cast<comp::ShieldBlockAbility*>(ecs::GetAbility(e, p.secondaryAbilty))->damageTaken = 0.0f;
+
 					}
 				}
 
-				if (p.lastInputState.key_shift)
+				if (p.inputState.key_shift)
 				{
-					if (ecs::UseAbility(e, p.moveAbilty, &p.mousePoint))
+					if (!ecs::IsPlayerUsingAnyAbility(e) && ecs::UseAbility(e, p.moveAbilty, &p.mousePoint))
 					{
 						anim.toSend = EAnimationType::ABILITY1;
 					}
 				}
 
 				//Rotate defences 90 or not
-				if (p.lastInputState.mousewheelDir > 0)
+				if (p.inputState.mousewheelDir > 0)
 					p.rotateDefence = true;
-				else if (p.lastInputState.mousewheelDir < 0)
+				else if (p.inputState.mousewheelDir < 0)
 					p.rotateDefence = false;
 			}
 		});
@@ -964,6 +970,7 @@ void ServerSystems::SoundSystem(Simulation* simulation, HeadlessScene& scene)
 void ServerSystems::CombatSystem(HeadlessScene& scene, float dt, Blackboard* blackboard)
 {
 	CombatSystem::UpdateCombatSystem(scene, dt, blackboard);
+	CombatSystem::UpdateEffects(scene, dt);
 }
 void ServerSystems::DeathParticleTimer(HeadlessScene& scene)
 {

@@ -175,20 +175,8 @@ void Simulation::ResetPlayer(Entity player)
 	player.AddComponent<comp::AnimationState>();
 	comp::Health* health = player.AddComponent<comp::Health>();
 	health->isAlive = true;
+
 	// only if Melee
-
-	if (playerComp->classType == comp::Player::Class::WARRIOR)
-	{
-		player.RemoveComponent<comp::MeleeAttackAbility>();
-		player.RemoveComponent<comp::DashAbility>();
-	}
-	else if (playerComp->classType == comp::Player::Class::MAGE)
-	{
-		player.RemoveComponent<comp::RangeAttackAbility>();
-		player.RemoveComponent<comp::BlinkAbility>();
-		player.RemoveComponent<comp::HealAbility>();
-	}
-
 	if (playerComp->classType == comp::Player::Class::WARRIOR)
 	{
 		health->maxHealth = 125.f;
@@ -205,8 +193,31 @@ void Simulation::ResetPlayer(Entity player)
 		playerComp->primaryAbilty = entt::resolve<comp::MeleeAttackAbility>();
 
 		// TEMP
-		playerComp->secondaryAbilty = entt::resolve<comp::MeleeAttackAbility>();
+		/*
+		comp::HeroLeapAbility* leap = player.AddComponent<comp::HeroLeapAbility>();
+		leap->cooldown = 1.0f;
+		leap->damage = 30.f;
+		leap->damageRadius = 10;
+		leap->delay = 0.0f;
+		leap->lifetime = 0.5f;
+		leap->maxRange = 30.f;
+		leap->movementSpeedAlt = 1.0f;
+		leap->useTime = 0.5f;
+
+		playerComp->secondaryAbilty = entt::resolve<comp::HeroLeapAbility>();
+		*/
 		// END TEMP
+
+		comp::ShieldBlockAbility* block = player.AddComponent<comp::ShieldBlockAbility>();
+		block->cooldown = 2.0f;
+		block->delay = 0.0f;
+		block->lifetime = 0.5f;
+		block->movementSpeedAlt = 0.3f;
+		block->useTime = 1000000.f;
+		block->maxDamage = 70.f;
+
+		playerComp->secondaryAbilty = entt::resolve<comp::ShieldBlockAbility>();
+
 
 		comp::DashAbility* dashAbility = player.AddComponent<comp::DashAbility>();
 		dashAbility->cooldown = 6.0f;
@@ -374,6 +385,8 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 					PROFILE_SCOPE("Abilities and Combat");
 					Systems::UpdateAbilities(scene, e.dt);
 					ServerSystems::CombatSystem(scene, e.dt, &blackboard);
+					
+					Systems::HeroLeapSystem(scene, e.dt);
 					Systems::HealingSystem(scene, e.dt);
 					Systems::SelfDestructSystem(scene, e.dt);
 				}
@@ -559,6 +572,7 @@ void Simulation::SendSnapshot()
 				comp::BlinkAbility* blink = p.GetComponent<comp::BlinkAbility>();
 				comp::DashAbility* dash = p.GetComponent<comp::DashAbility>();
 				comp::HealAbility* heal = p.GetComponent<comp::HealAbility>();
+				comp::ShieldBlockAbility* block = p.GetComponent<comp::ShieldBlockAbility>();
 				if (melee)
 				{
 					count++;
@@ -585,6 +599,12 @@ void Simulation::SendSnapshot()
 				{
 					count++;
 					msg4 << AbilityIndex::Secondary << heal->cooldownTimer << heal->cooldown;
+				}
+
+				if (block)
+				{
+					count++;
+					msg4 << AbilityIndex::Secondary << block->cooldownTimer << block->cooldown;
 				}
 
 				msg4 << count;
@@ -638,7 +658,10 @@ void Simulation::UpdateInput(InputState state, uint32_t playerID)
 	Entity e = m_lobby.GetPlayer(playerID);
 	if (!e.IsNull() && e.GetComponent<comp::Health>()->isAlive)
 	{
-		e.GetComponent<comp::Player>()->lastInputState = state;
+		comp::Player* p = e.GetComponent<comp::Player>();
+
+		p->lastInputState = p->inputState;
+		p->inputState = state;
 	}
 }
 
