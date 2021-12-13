@@ -69,7 +69,7 @@ project "Engine"
             ["src/Engine/Scene"] = {"**Scene.*", "**Camera.*", "**Lights.*", "**ModelIdentifier.*", "**ParticleSystem.*" , "**Skybox.*" },
             ["src/Engine/Thread"] = { "**multi_thread_manager.*", "**ThreadSyncer.*", "**RenderThreadHandler.*"},
             
-		    ["src/Engine/UI Elements"] = {"**Canvas.*", "**Picture.*", "**Border.*", "**Button.*", "**Text.*", "**TextField.*", "**Slider.*", "**Healthbar.*", "**Scroller.*", "**MoneyUI.*", "**AbilityUI.*", "**ShopUI.*", "**MenuUI.*"},
+		    ["src/Engine/UI Elements"] = {"**Canvas.*", "**Picture.*", "**Border.*", "**Button.*", "**Text.*", "**TextField.*", "**LobbyUI.*", "**Slider.*", "**Healthbar.*", "**Scroller.*", "**MoneyUI.*", "**AbilityUI.*", "**ShopUI.*", "**MenuUI.*"},
             ["src/Engine/Utility"] = { "**Timer.*", "**Profiler.*", "**Logger.*", "**Stats.*", "**QuadTree.*" },
         
             ["src/Engine/Audio"] = {  },
