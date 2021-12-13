@@ -81,7 +81,7 @@ void main(ComputeShaderIn input)
 	// only one thread in the group needs to set them.
     if (input.groupIndex == 0)
     {
-        group_uMinDepth = 0xffffffff;
+        group_uMinDepth = 0xffffffff; // FLT_MAX as a uint
 		group_uMaxDepth = 0;
 		group_opaq_LightCount = 0;
 		group_trans_LightCount = 0;
@@ -92,7 +92,6 @@ void main(ComputeShaderIn input)
 	// all group shared accesses have been completed and
 	// all threads in the group have reached this call.
     GroupMemoryBarrierWithGroupSync();
-
 
 	// The InterlockedMin and InterlockedMax methods
 	// are used to atomically update the uMinDepth and
@@ -126,6 +125,7 @@ void main(ComputeShaderIn input)
     Plane minPlane = { float3(0, 0, 1), minDepthVS };
 
     // Each thread in a group will cull 1 light until all lights have been culled.
+	[unroll]
 	for (uint i = input.groupIndex; i < c_info.x; i += TILE_SIZE * TILE_SIZE)
 	{
 		if (sb_lights[i].enabled)
@@ -158,7 +158,6 @@ void main(ComputeShaderIn input)
 				}
 				break;
 				default:
-#pragma message( "You want spot lights? Implement it yourself then!")
 				break;
 			}
 		}
