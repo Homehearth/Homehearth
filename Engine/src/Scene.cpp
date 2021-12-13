@@ -20,7 +20,7 @@ Scene::Scene()
 
 	m_sky.Initialize("storm.dds");
 
-	m_combatText = new rtd::CText("ERROR", draw_text_t(0.0f, 0.0f, D2D1Core::GetDefaultFontSize() * 10, D2D1Core::GetDefaultFontSize()), D2D1::ColorF(0.0f, 0.0f, 0.0f));
+	m_combatText = new rtd::CText("ERROR", draw_text_t(0.0f, 0.0f, D2D1Core::GetDefaultFontSize() * 3, D2D1Core::GetDefaultFontSize()), D2D1::ColorF(0.0f, 0.0f, 0.0f));
 }
 
 Scene::~Scene()
@@ -318,7 +318,7 @@ void Scene::HandleCombatText()
 		{
 			sm::Vector2 screenPos = util::WorldSpaceToScreenSpace(current_text.pos, GetCurrentCamera());
 			m_combatText->SetColor(D2D1::ColorF(0.0f, 1.0f, 0.0f));
-			m_combatText->SetPosition(screenPos.x, screenPos.y);
+			m_combatText->SetPosition(screenPos.x - D2D1Core::GetDefaultFontSize() * 1.5f, screenPos.y);
 			m_combatText->SetText(std::to_string(current_text.amount));
 			m_combatText->Draw();
 			m_combatTextList[i].framesRendered++;
@@ -329,7 +329,7 @@ void Scene::HandleCombatText()
 			sm::Vector2 screenPos = util::WorldSpaceToScreenSpace(current_text.pos, GetCurrentCamera());
 			m_combatText->SetColor(D2D1::ColorF(1.0f, 0.0f, 0.0f));
 			m_combatText->SetText(std::to_string(current_text.amount));
-			m_combatText->SetPosition(screenPos.x, screenPos.y);
+			m_combatText->SetPosition(screenPos.x - D2D1Core::GetDefaultFontSize() * 1.5f, screenPos.y);
 			m_combatText->Draw();
 			m_combatTextList[i].framesRendered++;
 			break;

@@ -1301,16 +1301,17 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 					{
 						combat_text_inst_t cText;
 						// Signal health gain.
-						if (health->currentHealth < hp.currentHealth)
+						if (health->currentHealth <= hp.currentHealth)
 						{
 							cText.type = combat_text_enum::HEALTH_GAIN;
 							cText.pos = transform->position;
 						}
-						else
+						else if (health->currentHealth > hp.currentHealth)
 						{
 							cText.type = combat_text_enum::HEALTH_LOSS;
 							cText.pos = transform->position;
 						}
+						cText.pos.y += 15;
 						cText.amount = std::abs(health->currentHealth - hp.currentHealth);
 						GetScene("Game").PushCombatText(cText);
 					}
