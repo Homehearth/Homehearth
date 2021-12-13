@@ -282,11 +282,26 @@ namespace sceneHelp
 					}
 					case CyclePeriod::EVENING:
 					{
+						//// Hide skip day button.
 						//Collection2D* skipButtonUI = scene.GetCollection("SkipUI");
 						//rtd::Button* skipButton = dynamic_cast<rtd::Button*>(skipButtonUI->elements[0].get());
 						//rtd::Text* skipText = dynamic_cast<rtd::Text*>(skipButtonUI->elements[1].get());
 						//skipText->SetVisiblity(false);
 						//skipButton->SetVisiblity(false);
+						//scene.ForEachComponent<comp::Light>([](comp::Light& l)
+						//	{
+						//		if (l.lightData.type == TypeLight::POINT)
+						//		{
+						//			l.lightData.enabled = 1;
+						//		}
+						//	});
+
+						// Hide pricetag.
+						Collection2D* priceTagUI = scene.GetCollection("priceTag");
+						if (priceTagUI)
+						{
+							priceTagUI->Hide();
+						}
 						break;
 					}
 					case CyclePeriod::DAY:
@@ -908,6 +923,7 @@ namespace sceneHelp
 		exitButton->SetOnPressedEvent([=]()
 			{
 				game->SetScene("MainMenu");
+				OptionSystem::Get().SetOption("BloomIntensity", std::to_string(thread::RenderThreadHandler::Get().GetRenderer()->GetBloomPass()->AdjustBloomIntensity()));
 				OptionSystem::Get().OnShutdown();
 			});
 		scene.Add2DCollection(general, "AMenuBG");
@@ -1299,7 +1315,22 @@ namespace sceneHelp
 			OptionSystem::Get().SetOption("Bloom", bloomOption);
 
 			});
-		
+
+		// Bloom Intensity
+		graphicsPos.y += scale.y + padding.y;
+		rtd::Border* bloomIntensityBorder = graphicsCategory->AddElement<rtd::Border>(draw_t(canvasPos.x + padding.x, graphicsPos.y, canvasSize.x - padding.x * 2, scale.y));
+		bloomIntensityBorder->SetColor(D2D1::ColorF(53.f / 255.f, 22.f / 255.f, 26.f / 255.f));
+		bloomIntensityBorder->SetLineWidth(LineWidth::LARGE);
+		rtd::Canvas* bloomVolCanvas = graphicsCategory->AddElement<rtd::Canvas>(D2D1::ColorF(53.f / 255.f, 22.f / 255.f, 26.f / 255.f), draw_t(minPos.x - 6.f, graphicsPos.y, ((canvasSize.x / 2.f) + 6.f) - padding.x * 2.f, scale.y));
+		bloomVolCanvas->SetShape(Shapes::RECTANGLE_ROUNDED);
+		graphicsCategory->AddElement<rtd::Text>("Bloom Intensity", draw_t(canvasPos.x - padding.x, graphicsPos.y, scale.x * 2.f, scale.y));
+		rtd::Slider* bloomVolumeSL = graphicsCategory->AddElement<rtd::Slider>(D2D1::ColorF(0, 0, 0), draw_t(minPos.x, graphicsPos.y, scale.x, scale.y), &thread::RenderThreadHandler::Get().GetRenderer()->GetBloomPass()->AdjustBloomIntensity(), 1.0f, 0.05f);
+		bloomVolumeSL->SetMinPos(minPos);
+		bloomVolumeSL->SetMaxPos(maxPos);
+		rtd::Text* bloomValueText = bloomVolumeSL->GetValueText();
+		sm::Vector2 bloomValueTextPos = { minPos.x + (maxPos.x - minPos.x) / 2 + (bloomValueText->GetText().length() * D2D1Core::GetDefaultFontSize()) / 2.f, graphicsPos.y };
+		bloomValueText->SetPosition(bloomValueTextPos.x, bloomValueTextPos.y);
+
 		//Shadows
 		graphicsPos.y += scale.y + padding.y;
 		rtd::Border* shadowsBorder = graphicsCategory->AddElement<rtd::Border>(draw_t(canvasPos.x + padding.x, graphicsPos.y, canvasSize.x - padding.x * 2, scale.y));
