@@ -21,7 +21,9 @@ private:
 
 	EAnimationType	m_currentState;	//The main focus animation
 	EAnimationType	m_blendState;	//The animation we blending to
-	EAnimationType	m_queueState;	//Waiting for a possibility to be played
+	EAnimationType	m_upperState;	//Animation 
+	//Queue of animations to play in order
+	std::queue<EAnimationType> m_queue;
 	bool			m_blendDir;		//True: toward blend, False: toward current
 
 
@@ -35,7 +37,6 @@ private:
 		BLEND_TWO				//Blending together two animations				Both need to be loopable?				
 	*/
 
-	EAnimationType m_upperState;
 
 	struct animation_t
 	{
@@ -45,7 +46,6 @@ private:
 		float										frameTimer	= 0;
 		//double									currentTick	= 0;	//Add back?
 		std::unordered_map<std::string, lastKeys_t> lastKeys;
-		//bool										needReset = false;
 	};
 
 	//All the animations
@@ -71,7 +71,8 @@ private:
 
 	//Update the time for an animation. Return false when reached end
 	bool UpdateTime(const EAnimationType& type);
-
+	//Update the blend timer for a transition between two animations. Return true on success. 
+	//Lerptime will be returned as a parameter on success.
 	bool UpdateBlendTime(const EAnimationType& from, const EAnimationType& to, float& lerpTime);
 
 	/*
@@ -88,8 +89,6 @@ private:
 
 	//Before check - check if anything need to be queued up
 	void CheckQueue();
-
-	//void CheckEndedAnims();
 
 public:
 	RAnimator();

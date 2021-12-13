@@ -7,7 +7,7 @@ RAnimator::RAnimator()
 	m_currentState		= EAnimationType::NONE;
 	m_blendState		= EAnimationType::NONE;
 	m_upperState		= EAnimationType::NONE;
-	m_queueState		= EAnimationType::NONE;
+	//m_queueState		= EAnimationType::NONE;
 	m_blendDir			= true;
 }
 
@@ -540,8 +540,11 @@ bool RAnimator::ReadyToBlend(const EAnimationType& from, const EAnimationType& t
 
 void RAnimator::CheckQueue()
 {
-	if (m_queueState != EAnimationType::NONE)
+	//if (m_queueState != EAnimationType::NONE)
+	if (!m_queue.empty())
 	{
+		EAnimationType queued = m_queue.front();
+
 		/*if (m_animations.size() == 7)
 			if (m_currentState == EAnimationType::PRIMARY_ATTACK)
 				std::cout << "Stop right there!" << std::endl;*/
@@ -549,192 +552,92 @@ void RAnimator::CheckQueue()
 		//No animation
 		if (m_currentState == EAnimationType::NONE)
 		{
-			m_currentState  = m_queueState;
-			m_queueState = EAnimationType::NONE;
+			m_currentState  = queued;
+			m_queue.pop();
 		}
 		//Currently running one animation
 		else if (!IsBlending())
 		{
-			if (m_states.find({ m_currentState, m_queueState }) != m_states.end())
+			if (m_states.find({ m_currentState, queued }) != m_states.end())
 			{
 				if (!m_animations.at(m_currentState).animation->IsLoopable())
 				{
-					if (ReadyToBlend(m_currentState, m_queueState))
+					if (ReadyToBlend(m_currentState, queued))
 					{
-						m_blendState = m_queueState;
-						m_queueState = EAnimationType::NONE;
+						m_blendState = queued;
+						m_queue.pop();
 					}
 					//Keep waiting
 				}
 				else
 				{
-					m_blendState = m_queueState;
-					m_queueState = EAnimationType::NONE;
+					m_blendState = queued;
+					m_queue.pop();
 				}
 			}
 			else
 			{
-				m_queueState = EAnimationType::NONE;
+				m_queue.pop();
 			}
 		}
 		//Blending two animations
 		else
 		{
 			//Swap direction of blend if needed
-			if (m_animations.at(m_currentState).animation->IsLoopable()&&
+			if (m_animations.at(m_currentState).animation->IsLoopable() &&
 				m_animations.at(m_blendState).animation->IsLoopable())
 			{
 				//Blend back to current again
-				if (m_currentState == m_queueState)
+				if (m_currentState == queued)
 				{
 					m_blendDir = false;
-					m_queueState = EAnimationType::NONE;
+					m_queue.pop();
 				}
 				//Blend toward the next animation
-				else if (m_blendState == m_queueState)
+				else if (m_blendState == queued)
 				{
 					m_blendDir = true;
-					m_queueState = EAnimationType::NONE;
+					m_queue.pop();
+				}
+				//Cancel the blending with the queued up one
+				else 
+				{
+					//If upper animation
+					//Set it
+
+					//Blending toward blendstate
+					//if (m_blendDir)
+					//{
+					//	m_states.at({ m_currentState, m_blendState }).blendTimer = 0;
+					//	ResetAnimation(m_currentState);
+					//	ResetAnimation(m_blendState);
+					//	//Reset blendstate to?
+					//	m_currentState = m_blendState;
+					//	m_blendState = m_queueState;
+					//	m_queueState = EAnimationType::NONE;
+					//}
+					//else
+					//{
+					//	m_states.at({ m_currentState, m_blendState }).blendTimer = 0;
+					//	ResetAnimation(m_currentState);
+					//	ResetAnimation(m_blendState);
+					//	//Reset current to?
+					//	m_blendState = m_queueState;
+					//	m_queueState = EAnimationType::NONE;
+					//}
 				}
 			}
 		}
 
-		/*if (!m_animations.at(m_queueState).animation->IsLoopable())
+		if (m_animations.size() == 7)
 		{
-			ResetAnimation(m_currentState);
-			if (IsBlending())
-			{
-				ResetAnimation(m_blendState);
-				m_blendState = EAnimationType::NONE;
-			}
-
-			m_currentState = m_queueState;
-			m_queueState = EAnimationType::NONE;
+			std::cout << "Currently: " << (UINT)m_currentState << std::endl;
+			std::cout << "Blending: " << (UINT)m_blendState << std::endl;
+			std::cout << "Queue: " << (UINT)queued << std::endl;
+			std::cout << "------" << std::endl;
 		}
-		else
-		{
-
-		}*/
-
-		//switch (GetAnimStatus())
-		//{
-		//	case EAnimStatus::NONE:
-		//	{
-		//		m_currentState = m_queueState;
-		//		m_queueState = EAnimationType::NONE;
-		//		break;
-		//	}
-		//	//Only one animation running for now
-		//	case EAnimStatus::ONE_ANIM:
-		//	{
-		//		//Wait until perfect moment for Oneshot animations
-		//		if (!m_animations.at(m_currentState).animation->IsLoopable())
-		//		{
-		//			float blendDuration = 0.f;
-		//			if (m_states.find({ m_currentState, m_queueState }) != m_states.end())
-		//			{
-		//				blendDuration = m_states.at({ m_currentState, m_queueState }).blendDuration;
-		//			}
-		//			float duration = m_animations.at(m_currentState).animation->GetDurationInSeconds();
-		//			float startPoint = duration - blendDuration;
-
-		//			if (m_animations.at(m_currentState).frameTimer > startPoint)
-		//			{
-		//				m_blendState = m_queueState;
-		//				m_queueState = EAnimationType::NONE;
-		//			}
-		//		}
-		//		else
-		//		{
-		//			//Blendstate exist
-		//			if (m_states.find({ m_currentState, m_queueState }) != m_states.end())
-		//			{
-		//				m_blendState = m_queueState;
-		//				m_queueState = EAnimationType::NONE;
-		//			}
-		//			//No blendstate override
-		//			else
-		//			{
-		//				ResetAnimation(m_currentState);
-		//				m_currentState = m_queueState;
-		//				m_queueState = EAnimationType::NONE;
-		//			}
-		//		}
-
-		//		//Animations that can't be looped is play once animations
-		//		/*if (!m_animations.at(m_queueState).animation->IsLoopable())
-		//		{
-		//			m_currentState	= m_queueState;
-		//			m_queueState	= EAnimationType::NONE;
-		//		}
-		//		else
-		//		{
-		//			if (m_states.find({ m_currentState, m_queueState }) != m_states.end())
-		//			{
-		//				m_blendState = m_queueState;
-		//				m_queueState = EAnimationType::NONE;
-		//			}
-		//		}*/
-		//		break;
-		//	}
-		//	case EAnimStatus::TWO_ANIM_BLEND:
-		//	{
-		//		//Only works for loopable animations
-		//		if (m_animations.at(m_currentState).animation->IsLoopable() &&
-		//			m_animations.at(m_blendState).animation->IsLoopable())
-		//		{
-		//			//Blend back to current again
-		//			if (m_currentState == m_queueState)
-		//			{
-		//				m_blendDir = false;
-		//				m_queueState = EAnimationType::NONE;
-		//			}
-		//			//Blend toward the next animation
-		//			else if (m_blendState == m_queueState)
-		//			{
-		//				m_blendDir = true;
-		//				m_queueState = EAnimationType::NONE;
-		//			}
-		//		}
-		//		else
-		//		{
-		//			ResetAnimation(m_blendState);
-		//			m_blendDir = true;
-		//			m_blendState = m_queueState;
-		//			m_queueState = EAnimationType::NONE;
-		//		}
-		//		break;
-		//	}
-		//	default:
-		//		break;
-		//}
 	}
 }
-
-//void RAnimator::CheckEndedAnims()
-//{
-//	if (m_currentState != EAnimationType::NONE)
-//	{
-//		if (m_animations.at(m_currentState).needReset)
-//		{
-//			ResetAnimation(m_currentState);
-//			m_blendDir = true;
-//
-//			m_currentState = m_blendState;
-//			m_blendState = EAnimationType::NONE;
-//		}
-//	}
-//	if (m_blendState != EAnimationType::NONE)
-//	{
-//		if (m_animations.at(m_blendState).needReset)
-//		{
-//			ResetAnimation(m_blendState);
-//			m_blendState = EAnimationType::NONE;
-//			m_blendDir = true;
-//		}
-//	}
-//}
-
 
 bool RAnimator::Create(const std::string& filename)
 {
@@ -851,87 +754,14 @@ bool RAnimator::Create(const std::string& filename)
 
 void RAnimator::ChangeAnimation(const EAnimationType& type)
 {
+	/*if (type == EAnimationType::PLACE_DEFENCE)
+		std::cout << "Woudl like to place here plz" << std::endl;*/
+
 	//Check if animation exist
 	if (m_animations.find(type) != m_animations.end())
 	{
-		m_queueState = type;
-
-		//Get current status of what is set
-		//switch (GetAnimStatus())
-		//{
-		//	//No animation is running
-		//	case EAnimStatus::NONE:
-		//	{
-		//		m_currentState = type;
-		//		break;
-		//	}
-		//	//Only one animation running for now
-		//	case EAnimStatus::ONE_ANIM:
-		//	{
-		//		//Queue up one more?
-		//		//Possible to go to this state from current
-		//		if (m_states.find({ m_currentState, type }) != m_states.end())
-		//		{
-		//			if (!m_animations.at(type).animation->IsLoopable())
-		//			{
-		//				m_currentState = type;
-		//			}
-		//			/*else
-		//			{
-		//				m_blendState = type;
-		//			}*/
-
-
-		//			/*if (m_states.at({ m_currentState, type }).devidebone.empty())
-		//			{
-		//				m_blendState = type;
-		//			}
-		//			else
-		//			{
-		//				m_upperState = type;
-		//			}*/
-		//		}
-		//		break;
-		//	}
-		//	case EAnimStatus::TWO_ANIM_BLEND:
-		//	{
-		//		//Blend back to current again
-		//		if (m_currentState == type)
-		//		{
-		//			if (m_states.at({m_currentState, m_blendState}).animationCancel)
-		//				m_blendDir = false;
-		//			 else
-		//				m_queueState = type;
-		//		}
-		//		//Blend toward the next animation
-		//		else if (m_blendState == type)
-		//		{
-		//			if (m_states.at({ m_currentState, m_blendState }).animationCancel)
-		//				m_blendDir = true;
-		//			else
-		//				m_queueState = type;
-		//		}
-		//		break;
-		//	}
-		//	default:
-		//		break;
-		//};
-
-
-		//DEBUGGING
-		//if (m_animations.size() == 7)
-		//{
-		//	std::cout << "Start - Incoming animation: " << (UINT)type << std::endl;
-		//	std::cout << "Current anim: " << (UINT)m_currentState << std::endl;
-		//	std::cout << "Blend anim: " << (UINT)m_blendState << std::endl;
-		//	//std::cout << "Upper anim: " << (UINT)m_upperState << std::endl;
-		//	if (m_blendDir)
-		//		std::cout << "Blending toward: " << (UINT)m_blendState << " [+]" << std::endl;
-		//	else
-		//		std::cout << "Blending toward: " << (UINT)m_currentState << " [-]" << std::endl;
-		//	std::cout << "-------------" << std::endl;
-		//}
-		//DEBUGGING
+		//Queue up the animation
+		m_queue.push(type);
 	}
 }
 
@@ -960,11 +790,8 @@ void RAnimator::Update()
 	//Need to have a skeleton
 	if (!m_bones.empty())
 	{
+		//Check if there was anyone in queue
 		CheckQueue();
-
-		if (m_animations.size() == 7)
-			if (m_queueState != EAnimationType::NONE)
-				std::cout << "Queued: " << (UINT)m_queueState << std::endl;
 
 		switch (GetAnimStatus())
 		{
@@ -988,9 +815,6 @@ void RAnimator::Update()
 		default:
 			break;
 		}
-
-		//Check if any animation has ended? Reset? 
-		//CheckEndedAnims();
 	}
 }
 
