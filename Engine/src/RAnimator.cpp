@@ -147,7 +147,6 @@ void RAnimator::ResetAnimation(const EAnimationType& type)
 	{
 		animation_t* anim	= &m_animations[type];
 		anim->frameTimer	= 0;
-		anim->needReset		= false;
 
 		for (auto& key : anim->lastKeys)
 			key.second = { 0,0,0 };
@@ -172,9 +171,7 @@ bool RAnimator::UpdateTime(const EAnimationType& type)
 			}
 			else
 			{
-				anim->needReset = true;
-
-				/*ResetAnimation(type);
+				ResetAnimation(type);
 				if (m_currentState == type)
 				{
 					m_currentState = m_blendState;
@@ -183,7 +180,7 @@ bool RAnimator::UpdateTime(const EAnimationType& type)
 				else if (m_blendState == type)
 				{
 					m_blendState = EAnimationType::NONE;
-				}*/
+				}
 			}
 		}
 		else
@@ -213,13 +210,18 @@ bool RAnimator::UpdateBlendTime(const EAnimationType& from, const EAnimationType
 		if (blendTime > blendDuration)
 		{
 			m_states.at({ from, to }).blendTimer = 0;
-			m_animations.at(from).needReset = true;
+			m_blendDir = true;
+			ResetAnimation(from);
+			m_currentState = m_blendState;
+			m_blendState = EAnimationType::NONE;
 			return false;
 		}
 		else if (blendTime < 0)
 		{
 			m_states.at({ from, to }).blendTimer = 0;
-			m_animations.at(to).needReset = true;
+			m_blendDir = true;
+			ResetAnimation(to);
+			m_blendState = EAnimationType::NONE;
 			return false;
 		}
 		//Successfully updated the blendtime
@@ -290,10 +292,10 @@ void RAnimator::BlendTwoAnims()
 					std::vector<sm::Matrix> bonePoseAbsolute;
 					bonePoseAbsolute.resize(m_bones.size(), sm::Matrix::Identity);
 					std::string name = "";
-					if (m_animations.size() == 7)
+					/*if (m_animations.size() == 7)
 					{
 						std::cout << "Current: " << 1.f - lerpTime << " | " << "Blending: " << lerpTime << std::endl;
-					}
+					}*/
 
 					for (size_t i = 0; i < m_bones.size(); i++)
 					{
@@ -504,29 +506,124 @@ EAnimStatus RAnimator::GetAnimStatus() const
 	return codetype;
 }
 
+bool RAnimator::IsBlending() const
+{
+	bool isblending = false;
+
+	if (m_currentState != EAnimationType::NONE &&
+		m_blendState != EAnimationType::NONE)
+		isblending = true;
+
+	return isblending;
+}
+
+bool RAnimator::ReadyToBlend(const EAnimationType& from, const EAnimationType& to) const
+{
+	bool ready = false;
+
+	float blendDuration = 0.f;
+	if (m_states.find({ from, to }) != m_states.end())
+		blendDuration = m_states.at({ from, to }).blendDuration;
+	
+	float duration = m_animations.at(m_currentState).animation->GetDurationInSeconds();
+	float startPoint = duration - blendDuration;
+	
+	//Need to get where it is in the timeline in seconds
+	float actualTime = m_animations.at(from).frameTimer / m_animations.at(m_currentState).animation->GetDuration();
+
+	//Startpoint is in seconds
+	if (actualTime > startPoint)
+		ready = true;
+
+	return ready;
+}
+
 void RAnimator::CheckQueue()
 {
 	if (m_queueState != EAnimationType::NONE)
 	{
-		if (m_animations.at(m_currentState).animation->IsLoopable())
+		/*if (m_animations.size() == 7)
+			if (m_currentState == EAnimationType::PRIMARY_ATTACK)
+				std::cout << "Stop right there!" << std::endl;*/
+
+		//No animation
+		if (m_currentState == EAnimationType::NONE)
+		{
+			m_currentState  = m_queueState;
+			m_queueState = EAnimationType::NONE;
+		}
+		//Currently running one animation
+		else if (!IsBlending())
 		{
 			if (m_states.find({ m_currentState, m_queueState }) != m_states.end())
 			{
-				m_blendState = m_queueState;
+				if (!m_animations.at(m_currentState).animation->IsLoopable())
+				{
+					if (ReadyToBlend(m_currentState, m_queueState))
+					{
+						m_blendState = m_queueState;
+						m_queueState = EAnimationType::NONE;
+					}
+					//Keep waiting
+				}
+				else
+				{
+					m_blendState = m_queueState;
+					m_queueState = EAnimationType::NONE;
+				}
+			}
+			else
+			{
 				m_queueState = EAnimationType::NONE;
 			}
 		}
-		
+		//Blending two animations
+		else
+		{
+			//Swap direction of blend if needed
+			if (m_animations.at(m_currentState).animation->IsLoopable()&&
+				m_animations.at(m_blendState).animation->IsLoopable())
+			{
+				//Blend back to current again
+				if (m_currentState == m_queueState)
+				{
+					m_blendDir = false;
+					m_queueState = EAnimationType::NONE;
+				}
+				//Blend toward the next animation
+				else if (m_blendState == m_queueState)
+				{
+					m_blendDir = true;
+					m_queueState = EAnimationType::NONE;
+				}
+			}
+		}
 
+		/*if (!m_animations.at(m_queueState).animation->IsLoopable())
+		{
+			ResetAnimation(m_currentState);
+			if (IsBlending())
+			{
+				ResetAnimation(m_blendState);
+				m_blendState = EAnimationType::NONE;
+			}
+
+			m_currentState = m_queueState;
+			m_queueState = EAnimationType::NONE;
+		}
+		else
+		{
+
+		}*/
 
 		//switch (GetAnimStatus())
 		//{
 		//	case EAnimStatus::NONE:
 		//	{
-		//		m_currentState	= m_queueState;
-		//		m_queueState	= EAnimationType::NONE;
+		//		m_currentState = m_queueState;
+		//		m_queueState = EAnimationType::NONE;
 		//		break;
-		//	}     
+		//	}
 		//	//Only one animation running for now
 		//	case EAnimStatus::ONE_ANIM:
 		//	{
@@ -540,7 +637,7 @@ void RAnimator::CheckQueue()
 		//			}
 		//			float duration = m_animations.at(m_currentState).animation->GetDurationInSeconds();
 		//			float startPoint = duration - blendDuration;
-		//			
+
 		//			if (m_animations.at(m_currentState).frameTimer > startPoint)
 		//			{
 		//				m_blendState = m_queueState;
@@ -599,45 +696,44 @@ void RAnimator::CheckQueue()
 		//				m_queueState = EAnimationType::NONE;
 		//			}
 		//		}
-		//		/*else
+		//		else
 		//		{
 		//			ResetAnimation(m_blendState);
 		//			m_blendDir = true;
 		//			m_blendState = m_queueState;
 		//			m_queueState = EAnimationType::NONE;
-		//		}*/
+		//		}
 		//		break;
 		//	}
 		//	default:
 		//		break;
-
 		//}
 	}
 }
 
-void RAnimator::CheckEndedAnims()
-{
-	if (m_currentState != EAnimationType::NONE)
-	{
-		if (m_animations.at(m_currentState).needReset)
-		{
-			ResetAnimation(m_currentState);
-			m_blendDir = true;
-
-			m_currentState = m_blendState;
-			m_blendState = EAnimationType::NONE;
-		}
-	}
-	if (m_blendState != EAnimationType::NONE)
-	{
-		if (m_animations.at(m_blendState).needReset)
-		{
-			ResetAnimation(m_blendState);
-			m_blendState = EAnimationType::NONE;
-			m_blendDir = true;
-		}
-	}
-}
+//void RAnimator::CheckEndedAnims()
+//{
+//	if (m_currentState != EAnimationType::NONE)
+//	{
+//		if (m_animations.at(m_currentState).needReset)
+//		{
+//			ResetAnimation(m_currentState);
+//			m_blendDir = true;
+//
+//			m_currentState = m_blendState;
+//			m_blendState = EAnimationType::NONE;
+//		}
+//	}
+//	if (m_blendState != EAnimationType::NONE)
+//	{
+//		if (m_animations.at(m_blendState).needReset)
+//		{
+//			ResetAnimation(m_blendState);
+//			m_blendState = EAnimationType::NONE;
+//			m_blendDir = true;
+//		}
+//	}
+//}
 
 
 bool RAnimator::Create(const std::string& filename)
@@ -894,7 +990,7 @@ void RAnimator::Update()
 		}
 
 		//Check if any animation has ended? Reset? 
-		CheckEndedAnims();
+		//CheckEndedAnims();
 	}
 }
 

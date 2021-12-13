@@ -21,9 +21,21 @@ private:
 
 	EAnimationType	m_currentState;	//The main focus animation
 	EAnimationType	m_blendState;	//The animation we blending to
-	EAnimationType	m_upperState;	//Upper animation
 	EAnimationType	m_queueState;	//Waiting for a possibility to be played
 	bool			m_blendDir;		//True: toward blend, False: toward current
+
+
+
+	//EAnimationType m_playOnce;
+	//EAnimationType m_regular
+	//EAnimationType m_blending[2];
+	/*
+		PLAY_ONCE,				//Play directly when we recieve message.		Not loopable
+		LOOP_ONE				//Keep looping this one when we got it.			Is loopable
+		BLEND_TWO				//Blending together two animations				Both need to be loopable?				
+	*/
+
+	EAnimationType m_upperState;
 
 	struct animation_t
 	{
@@ -33,7 +45,7 @@ private:
 		float										frameTimer	= 0;
 		//double									currentTick	= 0;	//Add back?
 		std::unordered_map<std::string, lastKeys_t> lastKeys;
-		bool										needReset = false;
+		//bool										needReset = false;
 	};
 
 	//All the animations
@@ -67,15 +79,17 @@ private:
 	*/
 	void StandardAnim();			//Current
 	void BlendTwoAnims();			//Current + blend
-	void UpperLowerAnims();			//Current + upper
-	void BlendUpperLowerAnims();	//Current + blend + upper
+	void UpperLowerAnims();			//Current + upper				//REMOVE
+	void BlendUpperLowerAnims();	//Current + blend + upper		//REMOVE
 
 	EAnimStatus GetAnimStatus() const;
+	bool IsBlending() const;
+	bool ReadyToBlend(const EAnimationType& from, const EAnimationType& to) const;
 
 	//Before check - check if anything need to be queued up
 	void CheckQueue();
 
-	void CheckEndedAnims();
+	//void CheckEndedAnims();
 
 public:
 	RAnimator();
