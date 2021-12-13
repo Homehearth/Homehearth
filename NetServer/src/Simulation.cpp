@@ -179,14 +179,14 @@ void Simulation::ResetPlayer(Entity player)
 
 	if (playerComp->classType == comp::Player::Class::WARRIOR)
 	{
-		player.RemoveComponent<comp::MeleeAttackAbility>();
-		player.RemoveComponent<comp::DashAbility>();
-	}
-	else if (playerComp->classType == comp::Player::Class::MAGE)
-	{
 		player.RemoveComponent<comp::RangeAttackAbility>();
 		player.RemoveComponent<comp::BlinkAbility>();
 		player.RemoveComponent<comp::HealAbility>();
+	}
+	else if (playerComp->classType == comp::Player::Class::MAGE)
+	{
+		player.RemoveComponent<comp::MeleeAttackAbility>();
+		player.RemoveComponent<comp::DashAbility>();
 	}
 
 	if (playerComp->classType == comp::Player::Class::WARRIOR)
@@ -195,7 +195,7 @@ void Simulation::ResetPlayer(Entity player)
 		health->currentHealth = 125.f;
 
 		comp::MeleeAttackAbility* attackAbility = player.AddComponent<comp::MeleeAttackAbility>();
-		attackAbility->cooldown = 0.50f;
+		attackAbility->cooldown = 0.60f;
 		attackAbility->attackDamage = 25.f;
 		attackAbility->lifetime = 0.1f;
 		attackAbility->useTime = 0.5f;
