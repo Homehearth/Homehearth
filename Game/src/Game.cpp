@@ -632,7 +632,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	}
 	case GameMsg::Lobby_RefreshList:
 	{
-		uint32_t gameID;
 		uint8_t playerCount;
 		uint8_t sceneStatus;
 
