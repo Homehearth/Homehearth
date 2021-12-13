@@ -30,7 +30,7 @@ private:
 		//Shared data
 		std::shared_ptr<RAnimation>					animation;
 		//Specific data for this animation in this animator
-		double										frameTimer	= 0;
+		float										frameTimer	= 0;
 		//double									currentTick	= 0;	//Add back?
 		std::unordered_map<std::string, lastKeys_t> lastKeys;
 	};
@@ -59,7 +59,7 @@ private:
 	//Update the time for an animation. Return false when reached end
 	bool UpdateTime(const EAnimationType& type);
 
-	bool UpdateBlendTime(const EAnimationType& from, const EAnimationType& to, double& blendTime, double& blendDuration);
+	bool UpdateBlendTime(const EAnimationType& from, const EAnimationType& to, float& lerpTime);
 
 	/*
 		NEW ONE

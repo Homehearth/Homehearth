@@ -7,7 +7,7 @@ anim 			TAKE_DAMAGE 		Player_TakeDamage.fbx
 anim			PLACE_DEFENCE		Player_PlaceDefence.fbx
 anim			DEAD				Player_Dead.fbx
 
-
+//One shot animations
 loopable		PRIMARY_ATTACK		0
 loopable		ABILITY1			0
 loopable		TAKE_DAMAGE			0
@@ -15,34 +15,42 @@ loopable		PLACE_DEFENCE		0
 loopable		DEAD				0
 
 tickSpeed		PRIMARY_ATTACK		38
+tickMultiplier  PRIMARY_ATTACK 		1.5
 
 
-//				From				To					Blendtime		Stoppable		Devidebone
-state 			IDLE				MOVE				0.75			1
-state			IDLE				PRIMARY_ATTACK		0.05			0
-state 			IDLE				TAKE_DAMAGE			0				0
-state			IDLE 				PLACE_DEFENCE		0				0
-state			IDLE				DEAD				0				0
-state			IDLE				ABILITY1			0				0
+//				From				To					Blendtime	Devidebone
+state 			IDLE				MOVE				0.75	
+-----			IDLE				PRIMARY_ATTACK		0.1	
+----- 			IDLE				TAKE_DAMAGE			0		
+-----			IDLE 				PLACE_DEFENCE		0		
+-----			IDLE				DEAD				0		
+-----			IDLE				ABILITY1			0		
 	
-state 			MOVE				IDLE				0.5				1
-state			MOVE				TAKE_DAMAGE			0				0
-state			MOVE				PRIMARY_ATTACK		0				0				QuickRigCharacter_Spine
-state			MOVE				PLACE_DEFENCE		0				0
-state			MOVE				DEAD				0.1         	0
-state			MOVE				ABILITY1			0           	0
+state 			MOVE				IDLE				0.5		
+-----			MOVE				TAKE_DAMAGE			0		
+-----			MOVE				PRIMARY_ATTACK		0			QuickRigCharacter_Spine
+-----			MOVE				PLACE_DEFENCE		0		
+-----			MOVE				DEAD				0.1        
+-----			MOVE				ABILITY1			0          
 	
-state			PRIMARY_ATTACK		IDLE				0.05			0
-state			PRIMARY_ATTACK		MOVE				0				0
+-----			PRIMARY_ATTACK		IDLE				0.1	
+-----			PRIMARY_ATTACK		MOVE				0		
 	
-state			TAKE_DAMAGE			IDLE				0.2				0
-state			TAKE_DAMAGE			MOVE				0.2				0
+-----			TAKE_DAMAGE			IDLE				0.2		
+-----			TAKE_DAMAGE			MOVE				0.2		
 			
-state			PLACE_DEFENCE		IDLE				0.2				0
-state			PLACE_DEFENCE		MOVE				0.2				0
+-----			PLACE_DEFENCE		IDLE				0.2		
+-----			PLACE_DEFENCE		MOVE				0.2		
 		
-state			DEAD				IDLE				0.2				0
-state			DEAD				MOVE				0.2				0
+-----			DEAD				IDLE				0.2		
+-----			DEAD				MOVE				0.2		
 		
-state			ABILITY1			IDLE				0.1				0
-state			ABILITY1			MOVE				0.1				0
+-----			ABILITY1			IDLE				0.1		
+-----			ABILITY1			MOVE				0.1		
+
+
+
+
+//Example
+somestate		IDLE			PRIMARY_ATTACK		0.05				//Fading in
+somestate		PRIMARY_ATTACK 	IDLE				0.1					//Fading out

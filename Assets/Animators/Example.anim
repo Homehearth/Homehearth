@@ -17,3 +17,10 @@ tickSpeed		IDLE			30
 state			IDLE 	 		RUN					1.0
 state			IDLE 	 		PRIMARY_ATTACK		1.0						QuickRigCharacter_Spine
 
+
+
+
+//New version example?
+blendstate		IDLE		MOVE		0.2
+
+if nothing it means that there will be no transition between them
