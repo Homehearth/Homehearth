@@ -307,7 +307,7 @@ struct combat_text_inst_t
 	sm::Vector3 pos;
 
 	// DONT TOUCH!!!!1
-	uint8_t framesRendered = 0;
+	float timeRendered = 0;
 };
 
 struct InputState

@@ -321,7 +321,6 @@ void Scene::HandleCombatText()
 			m_combatText->SetPosition(screenPos.x - D2D1Core::GetDefaultFontSize() * 1.5f, screenPos.y);
 			m_combatText->SetText(std::to_string(current_text.amount));
 			m_combatText->Draw();
-			m_combatTextList[i].framesRendered++;
 			break;
 		}
 		case combat_text_enum::HEALTH_LOSS:
@@ -331,15 +330,16 @@ void Scene::HandleCombatText()
 			m_combatText->SetText(std::to_string(current_text.amount));
 			m_combatText->SetPosition(screenPos.x - D2D1Core::GetDefaultFontSize() * 1.5f, screenPos.y);
 			m_combatText->Draw();
-			m_combatTextList[i].framesRendered++;
 			break;
 		}
 		default:
 			break;
 		}
 
-		if (m_combatTextList[i].framesRendered > 30)
+		if (std::abs(omp_get_wtime() - m_combatTextList[i].timeRendered) > 0.35)
+		{
 			m_combatTextList.erase(m_combatTextList.begin() + i);
+		}
 	}
 }
 

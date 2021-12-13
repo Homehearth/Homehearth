@@ -1311,6 +1311,8 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 							cText.type = combat_text_enum::HEALTH_LOSS;
 							cText.pos = transform->position;
 						}
+
+						cText.timeRendered = omp_get_wtime();
 						cText.pos.y += 15;
 						cText.amount = std::abs(health->currentHealth - hp.currentHealth);
 						GetScene("Game").PushCombatText(cText);
