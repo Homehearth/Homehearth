@@ -15,13 +15,12 @@ loopable		PLACE_DEFENCE		0
 loopable		DEAD				0
 
 tickSpeed		PRIMARY_ATTACK		38
-tickMultiplier  PRIMARY_ATTACK 		1.5			//Fix later???
-
-//Will be used while two animations is blending?
-upperBodyDevideBone		QuickRigCharacter_Spine
 
 
-//				From				To					Blendtime	Devidebone
+upperbodyBone	QuickRigCharacter_Spine
+
+
+//				From				To					Blendtime
 state 			IDLE				MOVE				0.75	
 state			IDLE				PRIMARY_ATTACK		0	
 state 			IDLE				TAKE_DAMAGE			0		
@@ -31,7 +30,7 @@ state			IDLE				ABILITY1			0
 	
 state 			MOVE				IDLE				0.5		
 state			MOVE				TAKE_DAMAGE			0		
-state			MOVE				PRIMARY_ATTACK		0			QuickRigCharacter_Spine
+state			MOVE				PRIMARY_ATTACK		0
 state			MOVE				PLACE_DEFENCE		0		
 state			MOVE				DEAD				0        
 state			MOVE				ABILITY1			0          

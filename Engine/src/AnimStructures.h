@@ -61,7 +61,6 @@ struct animstateInfo
 {
 	float			blendTimer		= 0;		//How long we have blended so far
 	float			blendDuration	= 0;		//How long to blend
-	std::string		devidebone		= "";		//With an upper animation this is the bone to start at
 };
 
 enum class EAnimStatus
@@ -71,10 +70,4 @@ enum class EAnimStatus
 	TWO_ANIM_BLEND,
 	TWO_ANIM_UPPER_LOWER,
 	THREE_ANIM_UPPER_LOWER_BLEND
-};
-
-enum class EAnimTransition
-{
-	ONE_SHOT,
-	BLEND
 };

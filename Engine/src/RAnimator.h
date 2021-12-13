@@ -19,24 +19,12 @@ private:
 	std::vector<bone_t>						m_bones;
 	std::unordered_map<std::string, UINT>	m_nameToBone;
 
-	EAnimationType	m_currentState;	//The main focus animation
-	EAnimationType	m_blendState;	//The animation we blending to
-	EAnimationType	m_upperState;	//Animation 
-	//Queue of animations to play in order
-	std::queue<EAnimationType> m_queue;
-	bool			m_blendDir;		//True: toward blend, False: toward current
-
-
-
-	//EAnimationType m_playOnce;
-	//EAnimationType m_regular
-	//EAnimationType m_blending[2];
-	/*
-		PLAY_ONCE,				//Play directly when we recieve message.		Not loopable
-		LOOP_ONE				//Keep looping this one when we got it.			Is loopable
-		BLEND_TWO				//Blending together two animations				Both need to be loopable?				
-	*/
-
+	EAnimationType							m_currentState;		//The main focus animation
+	EAnimationType							m_blendState;		//The animation we blending to
+	EAnimationType							m_upperState;		//Animation that can play on upper half of the body
+	std::queue<EAnimationType>				m_queue;			//Queue of animations to play in order
+	bool									m_blendDir;			//True: toward blend, False: toward current
+	std::string								m_upperbodyBone;	//Bone that devide lower and upper body
 
 	struct animation_t
 	{
@@ -48,7 +36,6 @@ private:
 		std::unordered_map<std::string, lastKeys_t> lastKeys;
 	};
 
-	//All the animations
 	std::unordered_map<EAnimationType, animation_t>						m_animations;
 	std::unordered_map<animstate_t, animstateInfo, animstate_hash_fn>	m_states;
 
@@ -66,7 +53,7 @@ private:
 	//Convert a string to enum
 	EAnimationType StringToAnimationType(const std::string& name) const;
 
-	//Reset the time of currentFrametime
+	//Reset the time and last bones
 	void ResetAnimation(const EAnimationType& type);
 
 	//Update the time for an animation. Return false when reached end
@@ -75,9 +62,8 @@ private:
 	//Lerptime will be returned as a parameter on success.
 	bool UpdateBlendTime(const EAnimationType& from, const EAnimationType& to, float& lerpTime);
 
-	/*
-		NEW ONE
-	*/
+
+	//Different types of doing animations
 	void StandardAnim();			//Current
 	void BlendTwoAnims();			//Current + blend
 	void UpperLowerAnims();			//Current + upper				//REMOVE
@@ -87,7 +73,7 @@ private:
 	bool IsBlending() const;
 	bool ReadyToBlend(const EAnimationType& from, const EAnimationType& to) const;
 
-	//Before check - check if anything need to be queued up
+	//Check what animations that is queued up
 	void CheckQueue();
 
 public:
@@ -119,5 +105,4 @@ public:
 	//Bind/unbind the bones matrices structured buffer
 	void Bind();
 	void Unbind() const;
-
 };

@@ -7,7 +7,6 @@ RAnimator::RAnimator()
 	m_currentState		= EAnimationType::NONE;
 	m_blendState		= EAnimationType::NONE;
 	m_upperState		= EAnimationType::NONE;
-	//m_queueState		= EAnimationType::NONE;
 	m_blendDir			= true;
 }
 
@@ -181,6 +180,10 @@ bool RAnimator::UpdateTime(const EAnimationType& type)
 				{
 					m_blendState = EAnimationType::NONE;
 				}
+				else if (m_upperState == type)
+				{
+					m_upperState = EAnimationType::NONE;
+				}
 			}
 		}
 		else
@@ -227,6 +230,7 @@ bool RAnimator::UpdateBlendTime(const EAnimationType& from, const EAnimationType
 		//Successfully updated the blendtime
 		else
 		{
+			//Avoid devide by 0
 			if (blendDuration > 0)
 				lerpTime = float(blendTime / blendDuration);
 			return true;
@@ -242,10 +246,6 @@ void RAnimator::StandardAnim()
 	
 	if (anim)
 	{
-		/*if (m_animations.size() == 7)
-			if (m_currentState == EAnimationType::PRIMARY_ATTACK)
-				std::cout << "Playing: primary" << std::endl;*/
-
 		//Only update when we get a new timestamp
 		if (UpdateTime(m_currentState))
 		{
@@ -267,10 +267,6 @@ void RAnimator::StandardAnim()
 				m_localMatrices[i] = m_bones[i].inverseBind * bonePoseAbsolute[i];
 			}
 			bonePoseAbsolute.clear();
-		}
-		else
-		{
-			std::cout << "Reached end" << std::endl;
 		}
 	}
 }
@@ -325,19 +321,7 @@ void RAnimator::BlendTwoAnims()
 					}
 					bonePoseAbsolute.clear();
 				}
-				else
-				{
-					//std::cout << "Reached end for blending" << std::endl;
-				}
 			}
-			else
-			{
-				std::cout << "Reached end on blendstate" << std::endl;
-			}
-		}
-		else
-		{
-			std::cout << "Reached end on currentstate: " << (UINT)m_currentState << " blending toward: " << (UINT)m_blendState << std::endl;
 		}
 	}
 }
@@ -354,7 +338,6 @@ void RAnimator::UpperLowerAnims()
 		{
 			if (UpdateTime(m_upperState))
 			{
-				std::string devideBone = m_states.at({ m_currentState, m_upperState }).devidebone;
 				std::vector<sm::Matrix> bonePoseAbsolute;
 				bonePoseAbsolute.resize(m_bones.size(), sm::Matrix::Identity);
 				anim = lowerAnim;
@@ -366,7 +349,7 @@ void RAnimator::UpperLowerAnims()
 					sm::Matrix bonePoseRelative;
 
 					//Swap to the other animation
-					if (name == devideBone)
+					if (name == m_upperbodyBone)
 						anim = upperAnim;
 
 					bonePoseRelative = anim->animation->GetMatrix(name, anim->frameTimer, anim->lastKeys[name].keys, m_useInterpolation);
@@ -380,16 +363,7 @@ void RAnimator::UpperLowerAnims()
 				}
 				bonePoseAbsolute.clear();
 			}
-			else
-			{
-				std::cout << "Reached end on upperstate" << std::endl;
-			}
 		}
-		else
-		{ 
-			std::cout << "Reached end on currentstate" << std::endl;
-		}
-
 	}
 }
 
@@ -420,7 +394,6 @@ void RAnimator::BlendUpperLowerAnims()
 
 			if (keepGoing)
 			{
-				std::string devideBone = m_states.at({ m_currentState, m_upperState }).devidebone;
 				std::vector<sm::Matrix> bonePoseAbsolute;
 				bonePoseAbsolute.resize(m_bones.size(), sm::Matrix::Identity);
 
@@ -428,12 +401,10 @@ void RAnimator::BlendUpperLowerAnims()
 				{
 					std::string name = m_bones[i].name;
 
-					if (name == devideBone)
+					if (name == m_upperbodyBone)
 					{
 						anim2		= upperAnim;
 						lerpTime1	= lerpTime2;
-						//NOTE: Need to fix the scaling. Different between this two
-						//double blendDelta = blendDuration - blendtimer;
 					}
 
 					sm::Matrix bonePoseRelative;
@@ -545,10 +516,6 @@ void RAnimator::CheckQueue()
 	{
 		EAnimationType queued = m_queue.front();
 
-		/*if (m_animations.size() == 7)
-			if (m_currentState == EAnimationType::PRIMARY_ATTACK)
-				std::cout << "Stop right there!" << std::endl;*/
-
 		//No animation
 		if (m_currentState == EAnimationType::NONE)
 		{
@@ -558,8 +525,10 @@ void RAnimator::CheckQueue()
 		//Currently running one animation
 		else if (!IsBlending())
 		{
+			//Transition to this animation exist
 			if (m_states.find({ m_currentState, queued }) != m_states.end())
 			{
+				//Wait for the perfect movement for an oneshot animation
 				if (!m_animations.at(m_currentState).animation->IsLoopable())
 				{
 					if (ReadyToBlend(m_currentState, queued))
@@ -569,12 +538,14 @@ void RAnimator::CheckQueue()
 					}
 					//Keep waiting
 				}
+				//Loopable animation, just queue up the next
 				else
 				{
 					m_blendState = queued;
 					m_queue.pop();
 				}
 			}
+			//No transition - just pop and ignore this animation...
 			else
 			{
 				m_queue.pop();
@@ -602,40 +573,33 @@ void RAnimator::CheckQueue()
 				//Cancel the blending with the queued up one
 				else 
 				{
-					//If upper animation
-					//Set it
-
-					//Blending toward blendstate
-					//if (m_blendDir)
-					//{
-					//	m_states.at({ m_currentState, m_blendState }).blendTimer = 0;
-					//	ResetAnimation(m_currentState);
-					//	ResetAnimation(m_blendState);
-					//	//Reset blendstate to?
-					//	m_currentState = m_blendState;
-					//	m_blendState = m_queueState;
-					//	m_queueState = EAnimationType::NONE;
-					//}
-					//else
-					//{
-					//	m_states.at({ m_currentState, m_blendState }).blendTimer = 0;
-					//	ResetAnimation(m_currentState);
-					//	ResetAnimation(m_blendState);
-					//	//Reset current to?
-					//	m_blendState = m_queueState;
-					//	m_queueState = EAnimationType::NONE;
-					//}
+					//If one shot animation - we can play it on the upperbody
+					if (!m_animations.at(queued).animation->IsLoopable())
+					{
+						if (m_upperState == EAnimationType::NONE)
+						{
+							m_upperState = queued;
+							m_queue.pop();
+						}
+					}
 				}
 			}
 		}
 
-		if (m_animations.size() == 7)
+		/*if (m_animations.size() == 7)
 		{
 			std::cout << "Currently: " << (UINT)m_currentState << std::endl;
 			std::cout << "Blending: " << (UINT)m_blendState << std::endl;
 			std::cout << "Queue: " << (UINT)queued << std::endl;
 			std::cout << "------" << std::endl;
+		}*/
+
+		//Queue is to large - could be stuck...
+		while (m_queue.size() > 3)
+		{
+			m_queue.pop();
 		}
+
 	}
 }
 
@@ -741,8 +705,16 @@ bool RAnimator::Create(const std::string& filename)
 
 						std::string devidebone = "";
 						ss >> devidebone;
-						m_states[{fromType, toType}] = { 0.f, blendtime, devidebone };
+						m_states[{fromType, toType}] = { 0.f, blendtime };
 					}
+				}
+			}
+			else if (keyword == "upperbodyBone")
+			{
+				std::string bonename = "";
+				if (ss >> bonename)
+				{
+					m_upperbodyBone = bonename;
 				}
 			}
 		}
@@ -754,9 +726,6 @@ bool RAnimator::Create(const std::string& filename)
 
 void RAnimator::ChangeAnimation(const EAnimationType& type)
 {
-	/*if (type == EAnimationType::PLACE_DEFENCE)
-		std::cout << "Woudl like to place here plz" << std::endl;*/
-
 	//Check if animation exist
 	if (m_animations.find(type) != m_animations.end())
 	{
@@ -807,10 +776,10 @@ void RAnimator::Update()
 			BlendTwoAnims();
 			break;
 		case EAnimStatus::TWO_ANIM_UPPER_LOWER:
-			UpperLowerAnims();								//temp
+			UpperLowerAnims();								//keep or remove?
 			break;
 		case EAnimStatus::THREE_ANIM_UPPER_LOWER_BLEND:
-			//BlendUpperLowerAnims();						//temp
+			BlendUpperLowerAnims();							//keep or remove?
 			break;
 		default:
 			break;

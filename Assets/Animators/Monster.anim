@@ -9,16 +9,16 @@ loopable		PRIMARY_ATTACK		0
 loopable		TAKE_DAMAGE			0
 
 
-state			IDLE				MOVE				1.0
+state			IDLE				MOVE				0.75
 state			IDLE				PRIMARY_ATTACK		0
-state			IDLE				TAKE_DAMAGE			0.5
+state			IDLE				TAKE_DAMAGE			0.0
 	
 state 			MOVE				IDLE				0.5
 state			MOVE				PRIMARY_ATTACK		0
-state			MOVE				TAKE_DAMAGE			0.5
+state			MOVE				TAKE_DAMAGE			0
 	
-state			PRIMARY_ATTACK		IDLE				0
-state			PRIMARY_ATTACK		MOVE				0.5														 
+state			PRIMARY_ATTACK		IDLE				0.1
+state			PRIMARY_ATTACK		MOVE				0.1													 
 														
-state			TAKE_DAMAGE			IDLE				0.5
-state			TAKE_DAMAGE			MOVE				0.5
+state			TAKE_DAMAGE			IDLE				0.2
+state			TAKE_DAMAGE			MOVE				0.2

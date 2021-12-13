@@ -8,19 +8,18 @@ anim 			IDLE 			Model_Idle.fbx
 
 // Possible to set options for animation. 
 // Set by default if nothing was set.
+
+// Can be repeated when set to 1.
 loopable		IDLE			0
+
+// How fast an animation should go.
 tickSpeed		IDLE			30
+
+// From this bone and up we will use upper animation
+upperbodyBone	QuickRigCharacter_Spine
 
 
 // Animation state between two animations
-// 				from			to					blendtime (seconds)		devidebone for upperanimation
+// 				from			to					blendtime (seconds)
 state			IDLE 	 		RUN					1.0
-state			IDLE 	 		PRIMARY_ATTACK		1.0						QuickRigCharacter_Spine
-
-
-
-
-//New version example?
-blendstate		IDLE		MOVE		0.2
-
-if nothing it means that there will be no transition between them
+state			IDLE 	 		PRIMARY_ATTACK		1.0

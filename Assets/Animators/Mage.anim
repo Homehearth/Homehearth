@@ -7,7 +7,7 @@ anim 			TAKE_DAMAGE 		Player_TakeDamage.fbx
 anim			PLACE_DEFENCE		Player_PlaceDefence.fbx
 anim			DEAD				Player_Dead.fbx
 
-
+//One shot animations
 loopable		PRIMARY_ATTACK		0
 loopable		ABILITY1			0
 loopable		TAKE_DAMAGE			0
@@ -17,31 +17,35 @@ loopable		DEAD				0
 tickSpeed		PRIMARY_ATTACK		30
 
 
-state 			IDLE				MOVE				0.1
-state			IDLE				PRIMARY_ATTACK		0
-state 			IDLE				TAKE_DAMAGE			0
-state			IDLE 				PLACE_DEFENCE		0
-state			IDLE				DEAD				0
-state			IDLE				ABILITY1			0
+upperbodyBone	QuickRigCharacter_Spine
 
-state 			MOVE				IDLE				0.2
-state			MOVE				TAKE_DAMAGE			0
-state			MOVE				PRIMARY_ATTACK		0.1			QuickRigCharacter_Spine
-state			MOVE				PLACE_DEFENCE		0
-state			MOVE				DEAD				0.1
-state			MOVE				ABILITY1			0
 
-state			PRIMARY_ATTACK		IDLE				0.2
-state			PRIMARY_ATTACK		MOVE				0.2	
-
-state			TAKE_DAMAGE			IDLE				0.2
-state			TAKE_DAMAGE			MOVE				0.2
+//				From				To					Blendtime
+state 			IDLE				MOVE				0.75	
+state			IDLE				PRIMARY_ATTACK		0	
+state 			IDLE				TAKE_DAMAGE			0		
+state			IDLE 				PLACE_DEFENCE		0		
+state			IDLE				DEAD				0		
+state			IDLE				ABILITY1			0		
+	
+state 			MOVE				IDLE				0.5		
+state			MOVE				TAKE_DAMAGE			0		
+state			MOVE				PRIMARY_ATTACK		0
+state			MOVE				PLACE_DEFENCE		0		
+state			MOVE				DEAD				0        
+state			MOVE				ABILITY1			0          
+	
+state			PRIMARY_ATTACK		IDLE				0.15	
+state			PRIMARY_ATTACK		MOVE				0.15		
+	
+state			TAKE_DAMAGE			IDLE				0.2		
+state			TAKE_DAMAGE			MOVE				0.2		
+			
+state			PLACE_DEFENCE		IDLE				0.1		
+state			PLACE_DEFENCE		MOVE				0.1		
 		
-state			PLACE_DEFENCE		IDLE				0.2
-state			PLACE_DEFENCE		MOVE				0.2
-	
-state			DEAD				IDLE				0.2
-state			DEAD				MOVE				0.2
-	
-state			ABILITY1			IDLE				0.1
-state			ABILITY1			MOVE				0.1
+state			DEAD				IDLE				0.2		
+state			DEAD				MOVE				0.2		
+		
+state			ABILITY1			IDLE				0.1		
+state			ABILITY1			MOVE				0.1		
