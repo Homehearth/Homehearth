@@ -6,8 +6,8 @@
 
 void GameSystems::DisplayUpgradeDefences(Game* game)
 {
-	Collection2D* coll = game->GetScene("Game").GetCollection("priceTag");
-	
+	Collection2D* coll = game->GetCurrentScene()->GetCollection("priceTag");
+
 	if (game->GetCycler().GetTimePeriod() == CyclePeriod::DAY)
 	{
 		// Display only if in Build mode..
@@ -256,5 +256,23 @@ void GameSystems::DeathParticleTimer(Scene& scene)
 			}
 			else if (emitter.hasDeathTimer == true && emitter.lifeLived >= emitter.lifeTime)
 				e.RemoveComponent<comp::EmitterParticle>();
+		});
+}
+
+void GameSystems::WarningIconSystem(Game* game, Scene& scene)
+{
+	scene.ForEachComponent<comp::House, comp::Transform, comp::Health>([&]( comp::House house, comp::Transform transform, comp::Health health)
+		{
+			if (house.displayWarning)
+			{
+				for (int i = 0; i < NR_OF_HOUSES; i++)
+				{
+					Collection2D* warningColl = scene.GetCollection("HouseWarningIcon" + std::to_string(i + 1));
+					rtd::Picture* icon = static_cast<rtd::Picture*>(warningColl->elements[i].get());
+					icon->SetVisiblity(true);
+
+					icon->SetPosition(transform.position.x, transform.position.y);
+				}
+			}
 		});
 }

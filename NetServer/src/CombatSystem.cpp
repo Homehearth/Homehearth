@@ -105,7 +105,7 @@ void CombatSystem::UpdateTeleport(HeadlessScene& scene, Blackboard* blackboard)
 							entity.GetComponent<comp::Transform>()->position = newPos;
 							hasSetTarget = true;
 							entity.UpdateNetwork();
-							if (pathFinderManager->PlayerAStar(entity.GetComponent<comp::Transform>()->position))
+							if (pathFinderManager->ReverseAStar(entity.GetComponent<comp::Transform>()->position))
 							{
 								p->reachable = true;
 							}

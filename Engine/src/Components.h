@@ -291,6 +291,7 @@ namespace ecs
 			Entity houseRoof;
 			Node* homeNode = nullptr; //AI can walk to this node to attack this house
 			bool isDead;
+			bool displayWarning;
 		};
 
 		struct TemporaryPhysics

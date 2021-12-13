@@ -541,16 +541,18 @@ namespace sceneHelp
 				playerHp->Hide();
 			}
 			scene.Add2DCollection(playerHp, "Aplayer" + std::to_string(i + 1) + "Info");
-		}
-
-		for (int i = 0; i < MAX_PLAYERS_PER_LOBBY; i++)
-		{
 			Collection2D* nameCollection = new Collection2D;
 			nameCollection->AddElement<rtd::Text>("Player", draw_text_t(0, 0, widthScale / 14, height / 6));
 			scene.Add2DCollection(nameCollection, "AdynamicPlayer" + std::to_string(i + 1) + "namePlate");
 			nameCollection->Hide();
 		}
-
+		for (int i = 0; i < NR_OF_HOUSES; i++)
+		{
+			Collection2D* houseWarning = new Collection2D;
+			houseWarning->AddElement<rtd::Picture>("WarningIcon.png", draw_t(0.f, 0.f, 190, 100));
+			scene.Add2DCollection(houseWarning, "HouseWarningIcon" + std::to_string(i + 1));
+			houseWarning->Hide();
+		}
 		sm::Vector2 moneyScale = { widthScale / 8.0f, height / 11.0f };
 		sm::Vector2 moneyPos = { width - (moneyScale.x + padding.x), padding.y };
 		Collection2D* money = new Collection2D;
@@ -599,13 +601,14 @@ namespace sceneHelp
 		rtd::AbilityUI* fourth = abilities->AddElement<rtd::AbilityUI>(draw_t(abillityPos.x + (abillitySize.x + padding.x / 2), abillityPos.y, abillitySize.x, abillitySize.y), D2D1::ColorF(0, 1.0f), "LockedIcon.png");
 		rtd::AbilityUI* fith = abilities->AddElement<rtd::AbilityUI>(draw_t(abillityPos.x + (abillitySize.x * 2 + padding.x), abillityPos.y, abillitySize.x, abillitySize.y), D2D1::ColorF(0, 1.0f), "LockedIcon.png");
 		scene.Add2DCollection(abilities, "ZAbilityUI");
+
 		Collection2D* spectatingCollection = new Collection2D;
 		rtd::Text* deadText = spectatingCollection->AddElement<rtd::Text>("You are dead!", draw_t((width / 2) - (widthScale / 17.f) , (height / 2) + (height / 8.5f), (widthScale / 10.f), (height / 8.f)));
 		rtd::Text* spectateText = spectatingCollection->AddElement<rtd::Text>("LMB to spectate another player", draw_t((width / 2) - (widthScale / 6.f), (height / 4.f) + (height / 2.5f), (widthScale / 3.f), (height / 8.f)));
 		scene.Add2DCollection(spectatingCollection, "SpectateUI");
-
 		deadText->SetVisiblity(false);
 		spectateText->SetVisiblity(false);
+		
 		Collection2D* skipCollection = new Collection2D;
 		rtd::Button* skipToNightButton = skipCollection->AddElement<rtd::Button>("Button.png", draw_t(width - ((widthScale / 9.f)), (height / 2) - (height / 8), (widthScale / 10.f), (height / 8.f)), false);
 		rtd::Text* skipToNightText = skipCollection->AddElement<rtd::Text>("Skip Day", draw_t(width - ((widthScale / 9.f)), (height / 2) - (height / 8), (widthScale / 10.f), (height / 8.f)));
@@ -1793,8 +1796,8 @@ namespace sceneHelp
 			std::string filename;
 
 			file >> filename;
-
-			Entity e = game->GetScene("Game").CreateEntity();
+			Scene& scene = game->GetScene("Game");
+			Entity e = scene.CreateEntity();
 			e.AddComponent<comp::Transform>();
 			e.AddComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>(filename);
 

@@ -567,7 +567,7 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 											Node* homeNode = house.homeNode;
 											if (homeNode)
 											{
-												if (!blackboard->GetPathFindManager()->PlayerAStar(house.homeNode->position))
+												if(!blackboard->GetPathFindManager()->ReverseAStar(house.homeNode->position))
 												{
 													house.homeNode->reachable = false;
 												}
@@ -589,7 +589,7 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 									Node* homeNode = house.homeNode;
 									if (homeNode)
 									{
-										if (blackboard->GetPathFindManager()->PlayerAStar(house.homeNode->position))
+										if (blackboard->GetPathFindManager()->ReverseAStar(house.homeNode->position))
 										{
 											house.homeNode->reachable = true;
 										}
