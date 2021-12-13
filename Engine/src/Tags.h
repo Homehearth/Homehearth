@@ -13,5 +13,8 @@ enum TagType : tag_bits
 	WATERMILL = 64,
 	GOOD = 128,
 	BAD = 256,
-	NO_RESPONSE = 1 << 9,
+	ENEMY_ATTACK = 512,
+	PLAYER_ATTACK = 1024,
+	NO_RESPONSE = 2048
+
 };

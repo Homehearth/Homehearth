@@ -368,6 +368,9 @@ enum class ESoundEvent : uint32_t
 	Enemy_OnDmgRecieved,
 	Enemy_OnDeath,
 
+	House_OnDmgRecieved,
+
+
 	Game_OnPurchase,
 	Game_OnHouseDestroyed,
 	Game_OnDefencePlaced,

@@ -18,6 +18,7 @@ void IShop::UseShop(const ShopItem& whatToBuy, const uint32_t& player)
 			
 			int cost = 300;
 			// Upgrade if melee.
+
 			comp::MeleeAttackAbility* m = m_sim->GetPlayer(player).GetComponent<comp::MeleeAttackAbility>();
 			if (m && m_sim->GetCurrency() >= cost && m->upgradeLevel <= 2)
 			{
@@ -34,7 +35,9 @@ void IShop::UseShop(const ShopItem& whatToBuy, const uint32_t& player)
 				m_sim->GetCurrency() -= cost;
 				r->upgradeLevel++;
 			}
-			
+
+
+
 			break;
 		}
 		case ShopItem::Heal:

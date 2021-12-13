@@ -415,6 +415,9 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			case ESoundEvent::Game_OnHouseDestroyed:
 				SH->PlaySound("Game_OnHouseDestroyed", data);
 				break;
+			case ESoundEvent::House_OnDmgRecieved:
+				SH->PlaySound("House_OnDmgRecieved", data);
+				break;
 			case ESoundEvent::Game_OnPurchase:
 				SH->PlaySound("Game_OnPurchase", data);
 				break;

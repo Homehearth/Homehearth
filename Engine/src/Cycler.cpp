@@ -46,6 +46,8 @@ void Cycler::Update(float dt)
 			m_changedPeriod = true;
 
 			blackboard->AddValue<CyclePeriod>("cycle", newPeriod);
+
+			
 		}
 		m_timePeriod = newPeriod;
 	}

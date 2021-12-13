@@ -236,6 +236,11 @@ Entity CombatSystem::CreateAttackEntity(Entity entity, HeadlessScene& scene, com
 	attackEntity.AddComponent<comp::Tag<TagType::DYNAMIC>>();
 	attackEntity.AddComponent<comp::Tag<TagType::NO_RESPONSE>>();
 
+	if (entity.GetComponent<comp::NPC>())
+		attackEntity.AddComponent<comp::Tag<TagType::ENEMY_ATTACK>>();
+	else
+		attackEntity.AddComponent<comp::Tag<TagType::PLAYER_ATTACK>>();
+
 	comp::SphereCollider* bos = attackEntity.AddComponent<comp::SphereCollider>();
 
 	bos->Radius = stats->attackRange;
@@ -278,6 +283,11 @@ Entity CombatSystem::CreateAttackEntity(Entity entity, HeadlessScene& scene, com
 	comp::Transform* t = attackEntity.AddComponent<comp::Transform>();
 	attackEntity.AddComponent<comp::Tag<TagType::DYNAMIC>>();
 	attackEntity.AddComponent<comp::Tag<TagType::NO_RESPONSE>>();
+
+	if(entity.GetComponent<comp::NPC>())
+		attackEntity.AddComponent<comp::Tag<TagType::ENEMY_ATTACK>>();
+	else
+		attackEntity.AddComponent<comp::Tag<TagType::PLAYER_ATTACK>>();
 
 	comp::SphereCollider* bos = attackEntity.AddComponent<comp::SphereCollider>();
 
