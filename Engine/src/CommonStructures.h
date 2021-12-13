@@ -1,8 +1,8 @@
 #pragma once
 
+constexpr int MAX_LOBBIES = 5;
 constexpr int MAX_PLAYERS_PER_LOBBY = 4;
 constexpr int MAX_HEALTH = 100;
-
 
 
 /*

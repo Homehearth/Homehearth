@@ -24,7 +24,7 @@ namespace rtd
 
 		LobbyUI(const std::string& lobbyID, const draw_t& opts);
 
-		void SetLobbyStatus(const std::string& lobbyStatus);
+		void SetLobbyStatus(bool isInGame = false);
 		void UpdateLobbyPlayerCount(const uint32_t& playerCount);
 		void SetOnPressedEvent(std::function<void()> func);
 

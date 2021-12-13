@@ -117,18 +117,8 @@ void ServerGame::UpdateNetwork(float deltaTime)
 		// Update the simulations
 		for (auto it = m_simulations.begin(); it != m_simulations.end();)
 		{
-			//if (it->second->IsEmpty())
-			//{
-			//	it->second->Destroy();
-			//	LOG_INFO("Destroyed empty lobby %d", it->first);
-			//	it = m_simulations.erase(it);
-			//}
-			//else
-			//{
-				//Update the simulation
-				it->second->Update(deltaTime);
-				it++;
-			//}
+			it->second->Update(deltaTime);
+			it++;
 		}
 	}
 }
@@ -196,7 +186,7 @@ bool ServerGame::LoadMapColliders(const std::string& filename)
 	(
 		filepath,
 		aiProcess_JoinIdenticalVertices |
-		aiProcess_Triangulate			|
+		aiProcess_Triangulate |
 		aiProcess_ConvertToLeftHanded
 	);
 
@@ -303,28 +293,31 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 	}
 	case GameMsg::Lobby_RefreshList:
 	{
-		message<GameMsg> msg;
-		msg.header.id = GameMsg::Lobby_RefreshList;
+		uint32_t sender;
+		msg >> sender;
 
-		auto it = m_simulations.begin();
-
-		while (it != m_simulations.end())
+		if (m_server.isClientConnected(sender))
 		{
-			msg << it->first;
-			msg << static_cast<uint8_t>(it->second->m_lobby.m_players.size());
-			if (it->second->m_lobby.IsActive())
+			auto it = m_simulations.begin();
+
+			while (it != m_simulations.end())
 			{
-				msg << uint8_t(0);
-			}
-			else
-			{
-				msg << uint8_t(1);
+				msg << static_cast<uint8_t>(it->second->m_lobby.m_players.size());
+
+				if (it->second->m_lobby.IsActive())
+				{
+					msg << false;
+				}
+				else
+				{
+					msg << true;
+				}
+
+				it++;
 			}
 
-			it++;
+			m_server.SendToClient(sender, msg);
 		}
-
-		msg << static_cast<uint8_t>(m_simulations.size());
 
 		break;
 	}
@@ -364,7 +357,7 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 		else
 		{
 			LOG_WARNING("Invalid GameID for player input message");
-		} 
+		}
 
 		break;
 	}

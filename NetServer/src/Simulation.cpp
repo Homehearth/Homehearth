@@ -614,17 +614,20 @@ void Simulation::Update(float dt)
 {
 	PROFILE_FUNCTION();
 
-	// ORDER IS IMPORTANT
-	m_lobby.ScanForDisconnects();
+	if (!m_lobby.IsEmpty())
+	{
+		// ORDER IS IMPORTANT
+		m_lobby.ScanForDisconnects();
 
-	this->SendAddedEntities();
+		this->SendAddedEntities();
 
-	m_pCurrentScene->Update(dt);
-	this->SendRemovedEntities();
+		m_pCurrentScene->Update(dt);
+		this->SendRemovedEntities();
 
-	this->SendSnapshot();
+		this->SendSnapshot();
 
-	m_tick++;
+		m_tick++;
+	}
 }
 
 void Simulation::UpdateInput(InputState state, uint32_t playerID)
@@ -696,12 +699,12 @@ void Simulation::BuildMapColliders(std::vector<dx::BoundingOrientedBox>* mapColl
 		if (i < 6)
 		{
 			collider.AddComponent<comp::Tag<MAP_BOUNDS>>();
-		}
+	}
 #if RENDER_COLLIDERS
 		collider.AddComponent<comp::Network>();
 #endif
 		qt->Insert(collider);
-	}
+}
 }
 
 HeadlessScene* Simulation::GetLobbyScene() const
@@ -838,6 +841,7 @@ void Simulation::ResetGameScene()
 
 	m_timeCycler.SetTime(MORNING);
 	m_timeCycler.SetCycleSpeed(1.0f);
+	m_tick = 0;
 }
 
 void Simulation::SendEntities(const std::vector<Entity>& entities, GameMsg msgID, const std::bitset<ecs::Component::COMPONENT_MAX>& componentMask)

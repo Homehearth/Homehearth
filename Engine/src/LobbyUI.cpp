@@ -3,22 +3,27 @@
 
 rtd::LobbyUI::LobbyUI(const std::string& lobbyID, const draw_t& opts)
 {
-    m_lobbyID = std::make_unique<Text>(lobbyID, draw_t(opts.x_pos, opts.y_pos, opts.width * 0.33f, opts.height));
-    m_sceneStatus = std::make_unique<Text>("In Lobby", draw_t(opts.x_pos + (opts.width * 0.66f), opts.y_pos, opts.width * 0.33f, opts.height));
+	m_lobbyID = std::make_unique<Text>(lobbyID, draw_t(opts.x_pos, opts.y_pos, opts.width * 0.33f, opts.height));
+	m_sceneStatus = std::make_unique<Text>("In Lobby", draw_t(opts.x_pos + (opts.width * 0.66f), opts.y_pos, opts.width * 0.33f, opts.height));
 
-    m_playerCountText = std::make_unique<Text>("0/4", draw_t(opts.x_pos + (opts.width * 0.33f), opts.y_pos, opts.width * 0.33f, opts.height));
-    m_border = std::make_unique<Border>(opts);
+	m_playerCountText = std::make_unique<Text>("0/4", draw_t(opts.x_pos + (opts.width * 0.33f), opts.y_pos, opts.width * 0.33f, opts.height));
+	m_border = std::make_unique<Border>(opts);
 	m_canvas = std::make_unique<Canvas>(opts);
 	m_canvas->SetColor({ 178.f / 255.f, 44.f / 255.f, 65.f / 255.f, 1.0f });
 	m_canvas->SetShape(Shapes::RECTANGLE_ROUNDED);
 	m_drawOpts = opts;
-
-    m_border->SetColor(D2D1::ColorF(0.0f, 0.0f, 0.0f));
 }
 
-void rtd::LobbyUI::SetLobbyStatus(const std::string& lobbyStatus)
+void rtd::LobbyUI::SetLobbyStatus(bool isInGame)
 {
-	m_sceneStatus->SetText(lobbyStatus);
+	if (isInGame)
+	{
+		m_sceneStatus->SetText("In Game");
+	}
+	else
+	{
+		m_sceneStatus->SetText("In Lobby");
+	}
 }
 
 void rtd::LobbyUI::UpdateLobbyPlayerCount(const uint32_t& playerCount)
@@ -57,7 +62,6 @@ void rtd::LobbyUI::OnClick()
 
 void rtd::LobbyUI::OnHover()
 {
-	// W H I T E
 	m_border->SetColor(D2D1::ColorF(0.88f, 0.3f, 0.42f, 1.0f));
 }
 
@@ -72,7 +76,6 @@ bool rtd::LobbyUI::CheckHover()
 		return true;
 	}
 
-	// W H I T E
 	m_border->SetColor(D2D1::ColorF(0.2f, 0.07f, 0.09f, 1.0f));
 	return false;
 }
