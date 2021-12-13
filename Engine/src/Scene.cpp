@@ -336,7 +336,7 @@ void Scene::HandleCombatText()
 			break;
 		}
 
-		if (std::abs(omp_get_wtime() - m_combatTextList[i].timeRendered) > 0.35)
+		if (std::abs(omp_get_wtime() - m_combatTextList[i].timeRendered) > 0.5f)
 		{
 			m_combatTextList.erase(m_combatTextList.begin() + i);
 		}

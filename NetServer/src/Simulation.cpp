@@ -985,7 +985,7 @@ void Simulation::ReadyCheck(uint32_t playerID)
 	if (isAllReady)
 	{
 		// Set all players spawn positions once when everyone is ready.
-		m_pGameScene->ForEachComponent<comp::Player>([&](Entity& e, comp::Player& p)
+		m_pGameScene->ForEachComponent<comp::Player>([&](comp::Player& p)
 			{
 				p.spawnPoint = m_spawnPoints.front();
 				m_spawnPoints.pop();

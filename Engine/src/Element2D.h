@@ -73,6 +73,9 @@ public:
 
 	Element2D() = default;
 	virtual ~Element2D() = default;
+	Element2D& operator=(const Element2D& other) = delete;
+	Element2D(const Element2D& other) = delete;
+	Element2D(Element2D&& other) = delete;
 
 	bool IsVisible() const;
 	void SetVisiblity(const bool& toggle);

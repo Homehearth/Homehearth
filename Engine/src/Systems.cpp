@@ -265,7 +265,7 @@ void Systems::MovementSystem(HeadlessScene& scene, float dt)
 			}
 
 			v.vel = v.oldVel; // ignore any changes made to velocity made this frame
-			auto& it = p.forces.begin();
+			auto it = p.forces.begin();
 			while (it != p.forces.end())
 			{
 				comp::TemporaryPhysics::Force& f = *it;

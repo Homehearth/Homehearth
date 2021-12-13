@@ -929,7 +929,6 @@ void Game::OnClientDisconnect()
 	}
 
 	rtd::TextField* ipInput = dynamic_cast<rtd::TextField*>(GetScene("MainMenu").GetCollection("ConnectFields")->elements[0].get());
-	ipInput->SetActive();
 
 	SetScene("MainMenu");
 

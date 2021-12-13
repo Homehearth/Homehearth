@@ -100,7 +100,6 @@ void DecalPass::PostRender(ID3D11DeviceContext* pDeviceContext)
 	{
 		m_infoBuffer.GetBuffer()
 	};
-	ID3D11ShaderResourceView* nullSRV[] = { nullptr };
 
 	DC->PSSetShaderResources(16, 1, &m_shaderView);
 	DC->PSSetConstantBuffers(10, 1, &buff);
