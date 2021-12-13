@@ -303,7 +303,28 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 	}
 	case GameMsg::Lobby_RefreshList:
 	{
+		message<GameMsg> msg;
+		msg.header.id = GameMsg::Lobby_RefreshList;
 
+		auto it = m_simulations.begin();
+
+		while (it != m_simulations.end())
+		{
+			msg << it->first;
+			msg << static_cast<uint8_t>(it->second->m_lobby.m_players.size());
+			if (it->second->m_lobby.IsActive())
+			{
+				msg << uint8_t(0);
+			}
+			else
+			{
+				msg << uint8_t(1);
+			}
+
+			it++;
+		}
+
+		msg << static_cast<uint8_t>(m_simulations.size());
 
 		break;
 	}

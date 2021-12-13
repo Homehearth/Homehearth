@@ -633,6 +633,22 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		m_cycler.SetCycleSpeed(speed);
 		break;
 	}
+	case GameMsg::Lobby_RefreshList:
+	{
+		uint8_t gameCount;
+		uint32_t gameID;
+		uint8_t playerCount;
+		uint8_t sceneStatus;
+
+		msg >> gameCount >> gameID >> playerCount >> sceneStatus;
+
+		for (int i = 0; i < gameCount; i++)
+		{
+
+		}
+
+		break;
+	}
 	case GameMsg::Lobby_Update:
 	{
 		uint8_t count;
