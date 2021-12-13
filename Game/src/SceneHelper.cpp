@@ -390,6 +390,7 @@ namespace sceneHelp
 					{
 						scene.SetCurrentCameraEntity(debugCameraEntity);
 						scene.GetCurrentCamera()->SetNearFarPlane(0.1f, 800.f);
+						thread::RenderThreadHandler::GetRenderer()->GetDoFPass()->SetDoFType(DoFType::ADAPTIVE);
 						if (InputSystem::Get().IsMouseRelative())
 						{
 							InputSystem::Get().SwitchMouseMode();
@@ -1145,7 +1146,7 @@ namespace sceneHelp
 				dofText->SetText("None");
 				break;
 			}
-			case DoFType::ADAPTIVE:
+			case DoFType::STATIC:
 			{
 				dofText->SetText("Adaptive");
 				break;
@@ -1162,7 +1163,7 @@ namespace sceneHelp
 				// Toggle between types.
 				switch (type)
 				{
-				case DoFType::ADAPTIVE:
+				case DoFType::STATIC:
 				{
 					type = DoFType::VIGNETTE;
 					dofText->SetText("Static");
@@ -1180,9 +1181,9 @@ namespace sceneHelp
 				}
 				case DoFType::DEFAULT:
 				{
-					type = DoFType::ADAPTIVE;
+					type = DoFType::STATIC;
 					dofText->SetText("Adaptive");
-					thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::ADAPTIVE);
+					thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::STATIC);
 					OptionSystem::Get().SetOption("BlurType", std::string("1"));
 					break;
 				}
