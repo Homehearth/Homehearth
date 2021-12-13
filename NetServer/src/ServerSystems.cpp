@@ -678,6 +678,7 @@ void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money
 				if (kd)
 				{
 					kd->deaths++;
+					scene.publish<EComponentUpdated>(entity, ecs::Component::KD);
 				}
 
 				if (p)
