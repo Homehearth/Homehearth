@@ -288,6 +288,28 @@ struct Ray_t
 	}
 };
 
+/*
+	Enum for combat text render.
+*/
+enum class combat_text_enum
+{
+	HEALTH_GAIN,
+	HEALTH_LOSS
+};
+
+/*
+	Instructions for the render thread on what to render for combat text.
+*/
+struct combat_text_inst_t
+{
+	combat_text_enum type;
+	int amount = 0;
+	sm::Vector3 pos;
+
+	// DONT TOUCH!!!!1
+	float timeRendered = 0;
+};
+
 struct InputState
 {
 	int		axisHorizontal	: 2;
@@ -326,6 +348,7 @@ enum class GameMsg : uint16_t
 	Game_BackToLobby,
 	Game_WaveTimer,
 	Game_Time,
+	Game_Time_Update,
 
 	Game_PlaySound,
 	Game_ClassSelected,

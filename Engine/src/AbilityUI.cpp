@@ -47,6 +47,7 @@ rtd::AbilityUI::AbilityUI(const draw_t& opts, const D2D1_COLOR_F& color, const s
     draw_t tempOpts = opts;
     tempOpts.y_pos += opts.height;
     m_overlay = std::make_unique<Canvas>(overlayColor, tempOpts);
+    m_overlay->SetShape(Shapes::RECTANGLE_ROUNDED);
     
 }
 

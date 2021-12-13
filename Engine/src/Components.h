@@ -215,8 +215,8 @@ namespace ecs
 
 		struct AnimationState
 		{
-			EAnimationType lastSend;	//Send to user last time
-			EAnimationType toSend;		//Going to be send this update
+			EAnimationType lastSend = EAnimationType::NONE;	//Send to user last time
+			EAnimationType toSend	= EAnimationType::IDLE;	//Going to be send this update
 		};
 
 		struct AudioState
@@ -339,7 +339,6 @@ namespace ecs
 			{
 				IDLE,
 				LOOK_TO_MOUSE,
-				SPECTATING,
 				WALK
 			} state = State::IDLE;
 
@@ -421,6 +420,7 @@ namespace ecs
 			float maxHealth = 100.f;
 			float currentHealth = 100.f;
 			bool isAlive = true;
+			int upgradeLevel = 0;
 		};
 
 		struct IAbility
@@ -453,6 +453,8 @@ namespace ecs
 
 			// set to be target for ability
 			sm::Vector3 targetPoint;
+
+			int upgradeLevel = 0;
 		};
 
 		//---------- WARRIOR ABILITIES ----------

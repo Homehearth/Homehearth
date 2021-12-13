@@ -103,7 +103,7 @@ PixelOut main(PixelIn input)
                                 float depth = t_shadowMaps.Sample(s_linear, float3(shadowCoords, shadowIndex));
                                 if (depth > cameraShadowSpace.z & ((saturate(shadowCoords.x) == shadowCoords.x) & (saturate(shadowCoords.y) == shadowCoords.y)))
                                 {
-                                    lightVolume += scatter;
+                                    lightVolume += sb_lights[i].color.xyz / 255.0f;
                                 }
                         
                                 currentPos += step;
@@ -220,7 +220,7 @@ PixelOut main(PixelIn input)
     
     
     
-    float3 color = (ambient + Lo) * pow(lightVolumeFactor, 2.5f);   
+    float3 color = (ambient + Lo) * lightVolumeFactor;   
     float brightness = dot(color, float3(0.2126, 0.7152, 0.0722));
     
     //HDR tonemapping
