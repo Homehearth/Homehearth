@@ -331,8 +331,6 @@ bool Renderer::CreateLightGridRWB()
         return false;
 
     hr = D3D11Core::Get().Device()->CreateShaderResourceView(texture2D2.Get(), &srvDesc, m_pipelineManager.trans_LightGrid.srv.GetAddressOf());
-    if (FAILED(hr))
-        return false;
 
     return !FAILED(hr);
 }

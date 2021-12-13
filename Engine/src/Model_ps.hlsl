@@ -54,16 +54,17 @@ PixelOut main(PixelIn input)
     for (int i = 0; i < c_info.x; i++)
     {
         const uint lightIndex = sb_lightIndexList[startOffset + i];
+        Light currentLight = sb_lights[i];
 
-        if(sb_lights[i].enabled == 1)
+        if(currentLight.enabled == 1)
         {
-			float4x4 lightMat = sb_lights[i].lightMatrix;
+			float4x4 lightMat = currentLight.lightMatrix;
 			float shadowCoef = 0.0f;
             
             // position of this pixel in the light clip space
             float4 pixelposLightSpace = mul(lightMat, float4(input.worldPos.xyz, 1.0f));
 			
-            int shadowIndex = sb_lights[i].shadowIndex;
+            int shadowIndex = currentLight.shadowIndex;
             
             uint width, height, elementCount;
             t_shadowMaps.GetDimensions(width, height, elementCount);
@@ -72,9 +73,9 @@ PixelOut main(PixelIn input)
             int blurKernalSize = 5;
             
             
-            switch (sb_lights[i].type)
+            switch (currentLight.type)
             {
-                case 0:
+                case DIRECTIONAL_LIGHT:
                 {
                     pixelposLightSpace.xy /= pixelposLightSpace.w;
             
@@ -122,10 +123,10 @@ PixelOut main(PixelIn input)
                         }
                    
                     
-                    lightCol += DoDirectionlight(sb_lights[i], N) * (1.0f - shadowCoef);
+                    lightCol += DoDirectionlight(currentLight, N) * (1.0f - shadowCoef);
                     break;
                 }
-                case 1:
+                case POINT_LIGHT:
 				{
 
                         float len = length(pixelposLightSpace.xyz);
@@ -159,14 +160,14 @@ PixelOut main(PixelIn input)
                             shadowCoef = SampleShadowMap(texCoords, shadowIndex, currentDepth, shadowMapSize, blurKernalSize);
 
                         }
-                        lightCol += DoPointlight(sb_lights[i], input, N) * (1.0f - shadowCoef);
+                        lightCol += DoPointlight(currentLight, input, N) * (1.0f - shadowCoef);
                     break;
                 }
                 default:
                     break;
             }
         
-            CalcRadiance(input, V, N, roughness, metallic, albedo, sb_lights[i].position.xyz, lightCol, F0, rad);
+            CalcRadiance(input, V, N, roughness, metallic, albedo, currentLight.position.xyz, lightCol, F0, rad);
             Lo += rad;
         }
     }

@@ -29,10 +29,14 @@ void OpaquePass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
     DC->PSSetSamplers(2, 1, PM->m_anisotropicSamplerState.GetAddressOf());
     DC->PSSetSamplers(3, 1, PM->m_cubemapSamplerState.GetAddressOf());
 
+	m_lights->Render(DC);
+
+    DC->PSSetShaderResources(3, 1, PM->opaq_LightIndexList.srv.GetAddressOf());
+    DC->PSSetShaderResources(5, 1, PM->opaq_LightGrid.srv.GetAddressOf());
+
     if (m_shadowPassRef)
         m_shadowPassRef->PostRender(DC);
 
-    m_lights->Render(DC);
     PM->SetCullBack(true, DC);
 }
 
@@ -47,4 +51,8 @@ void OpaquePass::PostRender(ID3D11DeviceContext* pDeviceContext)
     nullRender[0] = nullptr;
     nullRender[1] = nullptr;
     DC->OMSetRenderTargets(2, nullRender, nullptr);
+
+    ID3D11ShaderResourceView* nullSRV[] = { nullptr };
+    DC->PSSetShaderResources(3, 1, nullSRV);
+    DC->PSSetShaderResources(5, 1, nullSRV);
 }

@@ -54,10 +54,31 @@ void AddLightToTransparentList(uint lightIndex)
 void main(ComputeShaderIn input)
 {
 	// Calculate min & max depth in threadgroup / tile.
+	// Each thread in the thread group will sample the
+	// depth buffer only once for the current thread and
+	// thus all threads in a group will sample all depth
+	// values for a single tile.
 	const int2 texCoord = input.dispatchThreadID.xy;
-	const float fDepth = t_depth.Load(int3(texCoord, 0)).r;
+	const float z_b = t_depth.Load(int3(texCoord, 0)).r;
+	const float z_n = 2.0 * z_b - 1.0;
+
+	const float zNear = 40.0f;
+	const float zFar = 220.0f;
+
+	// Linear Depth.
+	const float z_w = 2.0 * zNear * zFar / (zFar + zNear - z_n * (zFar - zNear));
+
+	const float fDepth = z_w;
+
+	// atomic operations only work on integers,
+	// hence we reinterrpret the bits from the
+	// floating-point depth as an unsigned integer.
+	// Since we expect all depth values in the depth
+	// map to be stored in the range [0..1].
 	const uint uDepth = asuint(fDepth);
 
+	// Since we are setting group-shared variables,
+	// only one thread in the group needs to set them.
     if (input.groupIndex == 0)
     {
         group_uMinDepth = 0xffffffff;
@@ -81,19 +102,29 @@ void main(ComputeShaderIn input)
 	
     GroupMemoryBarrierWithGroupSync();
 
+	// After the minimum and maximum depth values for
+	// the current tile have been found, we can reinterrpret
+	// the unsigned integer back to a float so that we can use
+	// it to compute the view space clipping planes for the current tile.
     float fMinDepth = asfloat(group_uMinDepth);
     float fMaxDepth = asfloat(group_uMaxDepth);
 
     // Convert depth values to view space.
     const float minDepthVS = ScreenToView(float4(0, 0, fMinDepth, 1)).z;
-    const float maxDepthVS = ScreenToView(float4(0, 0, fMaxDepth, 1)).z;	// Used for spot light.
-    const float nearClipVS = ScreenToView(float4(0, 0, 0, 1)).z;			// Used for spot light.
+    const float maxDepthVS = ScreenToView(float4(0, 0, fMaxDepth, 1)).z;
+
+	// When culling lights for transparent geometry, we don’t want to use
+	// the minimum depth value from the depth map. Instead we will clip the
+	// lights using the camera’s near clipping plane. In this case, we will
+	// use the nearClipVS value which is the distance to the camera’s near
+	// clipping plane in view space.
+    const float nearClipVS = ScreenToView(float4(0, 0, 0, 1)).z;
 
     // Clipping plane for minimum depth value 
     // (used for testing lights within the bounds of opaque geometry).
+	// assuming left-handed coord.
     const Plane minPlane = { float3(0, 0, 1), minDepthVS };
 
-    // Cull lights.
     // Each thread in a group will cull 1 light until all lights have been culled.
 	for (uint i = input.groupIndex; i < c_info.x; i += TILE_SIZE * TILE_SIZE)
 	{
@@ -105,23 +136,23 @@ void main(ComputeShaderIn input)
 			{
 				case DIRECTIONAL_LIGHT:
 				{
-					AddLightToOpaqueList(i);
 					AddLightToTransparentList(i);
+					AddLightToOpaqueList(i);
 				}
 				break;
 				case POINT_LIGHT:
 				{
-					const float4 lightPositionVS = mul(c_view, light.position);
-					const Sphere sphere = { lightPositionVS.xyz, light.range };
-					if (SphereInsideFrustum(sphere, group_GroupFrustum, nearClipVS, maxDepthVS)) // Z wrong ?
+					const float3 lightPositionVS = mul(c_view, light.position).xyz;
+					const Sphere sphere = { lightPositionVS, light.range };
+					if (SphereInsideFrustum(sphere, group_GroupFrustum, nearClipVS, maxDepthVS))
 					{
 						// Add light to light list for transparent geometry.
-						AddLightToOpaqueList(i);
+						AddLightToTransparentList(i);
 
 						if (!SphereInsidePlane(sphere, minPlane))
 						{
 							// Add light to light list for opaque geometry.
-							AddLightToTransparentList(i);
+							AddLightToOpaqueList(i);
 						}
 					}
 				}
@@ -140,6 +171,9 @@ void main(ComputeShaderIn input)
 	// First update the light grid (only thread 0 in group needs to do this)
 	if (input.groupIndex == 0)
 	{
+		// InterlockedAdd guarantees that the group - shared light count variable is only updated by a single thread at a time.
+		// This way we avoid any race conditions that may occur when multiple threads try to increment the group-shared light count at the same time.
+
 		// Update light grid for opaque geometry.
 		InterlockedAdd(rw_opaq_lightIndexCounter[0], group_opaq_LightCount, group_opaq_LightIndexStartOffset); // Performs a guaranteed atomic add of value to the dest resource variable.
 		rw_opaq_lightGrid[input.groupID.xy] = uint2(group_opaq_LightIndexStartOffset, group_opaq_LightCount);
@@ -178,9 +212,6 @@ void main(ComputeShaderIn input)
 	{
 		const float normalizedLightCount = group_opaq_LightCount / 50.0f;
 		const float4 lightCountHeatMapColor = t_lightCountHeatMap.SampleLevel(s_linearClamp, float2(normalizedLightCount, 0), 0);
-
-		// Wtf is wrong? Weird Texture2D.
-
 		rw_heatMap[texCoord] = lightCountHeatMapColor;
 	}
 	else

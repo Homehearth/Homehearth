@@ -15,7 +15,9 @@
 #define BOTTOM_LEFT     2
 #define BOTTOM_RIGHT    3
 
-
+// A kernel to compute frustums for the grid
+// This kernel is executed once per grid cell. Each thread
+// computes a frustum for a grid cell.
 [numthreads(TILE_SIZE, TILE_SIZE, 1)]
 void main(ComputeShaderIn input)
 {
@@ -25,7 +27,7 @@ void main(ComputeShaderIn input)
     // Compute the 4 corner points on the far clipping plane to use as the frustum vertices.
     float4 screenSpace[NUM_CORNERS];
     screenSpace[TOP_LEFT]       = float4(input.dispatchThreadID.xy * TILE_SIZE, 1.0f, 1.0f);
-    screenSpace[TOP_RIGHT]      = float4(float2(input.dispatchThreadID.x + 1, input.dispatchThreadID.y) * TILE_SIZE, 1.0f, 1.0f);
+    screenSpace[TOP_RIGHT]      = float4(float2(input.dispatchThreadID.x + 1, input.dispatchThreadID.y) * TILE_SIZE, 1.0f, 1.0f);   // assuming left-handed coord: z is positive.
     screenSpace[BOTTOM_LEFT]    = float4(float2(input.dispatchThreadID.x, input.dispatchThreadID.y + 1) * TILE_SIZE, 1.0f, 1.0f);
     screenSpace[BOTTOM_RIGHT]   = float4(float2(input.dispatchThreadID.x + 1, input.dispatchThreadID.y + 1) * TILE_SIZE, 1.0f, 1.0f);
 

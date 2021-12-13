@@ -29,7 +29,6 @@ Plane ComputePlane(float3 p0, float3 p1, float3 p2)
     Plane plane;
 
     // Compute a plane from 3 non-collinear points that form a triangle.
-    // Assuming Counter-Clockwise Winding Order.
     const float3 v0 = p1 - p0; // C-A.
     const float3 v2 = p2 - p0; // C-A.
 
@@ -51,7 +50,7 @@ bool SphereInsideFrustum(Sphere sphere, Frustum frustum, float zNear, float zFar
     bool result = true;
 
     // First check depth
-    // Note: Here, the view vector points in the -Z axis so the 
+    // Note: Switched zNear and zFar, because assuming left-handed coord.
     // far depth value will be approaching -infinity.
     if (sphere.center.z - sphere.radius > zFar || sphere.center.z + sphere.radius < zNear)
     {

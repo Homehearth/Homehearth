@@ -142,6 +142,7 @@ namespace sceneHelp
 		float moonIntensity = 0.008f;
 		// The sun
 		Entity sun = CreateLightEntity(gameScene, { 0.f, 0.f, 0.f, 0.f }, { -1.0f, 0.0f, -1.f, 0.f }, { 255.f, 185, 150, 0.f }, 1000.f, sunIntensity, TypeLight::DIRECTIONAL, 1);
+
 		// The moon
 		Entity moon = CreateLightEntity(gameScene, { 0.f, 0.f, 0.f, 0.f }, { -1.0f, 0.0f, -1.f, 0.f }, { 50.f, 50, 200, 0.f }, 1000.f, moonIntensity, TypeLight::DIRECTIONAL, 0);
 

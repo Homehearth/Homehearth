@@ -115,13 +115,13 @@ public:
 		unsigned int arraySize, ComPtr<ID3D11UnorderedAccessView>& uav);
 	bool CreateCopyBuffer(ID3D11Buffer** buffer, unsigned int byteStride, unsigned int arraySize);
 	bool CreateStructuredBuffer(void* data, unsigned int byteStride, unsigned int arraySize, ResourceAccessView& rav);
-
+	void BindStructuredBuffer(size_t startSlot, size_t numUAV, ID3D11Buffer* buffer, void* data, ID3D11UnorderedAccessView** uav);
 	void SetCullBack(bool cullNone, ID3D11DeviceContext* pDeviceContext);
 
 	//
 	// Forward+ Resources.
 	//
-	const uint32_t AVERAGE_OVERLAPPING_LIGHTS_PER_TILE = 100u;
+	const uint32_t AVERAGE_OVERLAPPING_LIGHTS_PER_TILE = 20u;
 	uint32_t m_numFrustums;
 
 	dispatch_params_t m_dispatchParams;

@@ -156,7 +156,7 @@ bool PipelineManager::CreateCopyBuffer(ID3D11Buffer** buffer, unsigned byteStrid
     outputDesc.BindFlags = 0;
     outputDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ | D3D11_CPU_ACCESS_WRITE;
 
-    HRESULT hr = m_d3d11->Device()->CreateBuffer(&outputDesc, 0, buffer);
+    HRESULT hr = m_d3d11->Device()->CreateBuffer(&outputDesc, nullptr, buffer);
     return !FAILED(hr);
 }
 
@@ -201,6 +201,15 @@ bool PipelineManager::CreateStructuredBuffer(void* data, unsigned byteStride, un
     hr = m_d3d11->Device()->CreateShaderResourceView(rav.buffer.Get(), &srvDesc, rav.srv.GetAddressOf());
 
     return !FAILED(hr);
+}
+
+void PipelineManager::BindStructuredBuffer(size_t startSlot, size_t numUAV, ID3D11Buffer* buffer, void* data, ID3D11UnorderedAccessView** uav)
+{
+    assert(buffer != nullptr);
+
+    m_d3d11->DeviceContext()->UpdateSubresource(buffer, 0, nullptr, data, 0, 0);
+
+    m_d3d11->DeviceContext()->CSSetUnorderedAccessViews(startSlot, numUAV, uav, nullptr);
 }
 
 void PipelineManager::SetCullBack(bool cullNone, ID3D11DeviceContext* pDeviceContext)

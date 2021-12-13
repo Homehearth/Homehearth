@@ -31,10 +31,14 @@ void TransparentPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContex
     DC->PSSetSamplers(2, 1, PM->m_anisotropicSamplerState.GetAddressOf());
     DC->PSSetSamplers(3, 1, PM->m_cubemapSamplerState.GetAddressOf());
 
+    m_lights->Render(DC);
+
+	DC->PSSetShaderResources(4, 1, PM->trans_LightIndexList.srv.GetAddressOf());
+    DC->PSSetShaderResources(6, 1, PM->trans_LightGrid.srv.GetAddressOf());
+
     if (m_shadowPassRef)
         m_shadowPassRef->PostRender(DC);
 
-    m_lights->Render(DC);
     PM->SetCullBack(false, DC);
 }
 
@@ -49,6 +53,9 @@ void TransparentPass::PostRender(ID3D11DeviceContext* pDeviceContext)
     nullRender[0] = nullptr;
     nullRender[1] = nullptr;
     DC->OMSetRenderTargets(2, nullRender, nullptr);
-
     PM->SetCullBack(true, DC);
+
+    ID3D11ShaderResourceView* nullSRV[] = { nullptr };
+    DC->PSSetShaderResources(4, 1, nullSRV);
+    DC->PSSetShaderResources(6, 1, nullSRV);
 }
