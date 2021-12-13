@@ -8,6 +8,7 @@ class ServerGame : public HeadlessEngine
 private:
 	Server m_server;
 	std::thread m_inputThread;
+	static const int MAX_ACTIVE_GAMES = 5;
 
 	uint32_t m_nGameID;
 	std::unordered_map<uint32_t, std::unique_ptr<Simulation>> m_simulations;

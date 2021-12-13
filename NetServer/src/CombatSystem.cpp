@@ -320,9 +320,9 @@ Entity CombatSystem::CreateAttackEntity(Entity entity, HeadlessScene& scene, com
 
 		CollisionSystem::Get().AddOnCollisionEnter(explosion, [=, &scene](Entity expl, Entity other)
 			{
-				comp::MeleeAttackAbility* ability = nullptr;
+				comp::RangeAttackAbility* ability = nullptr;
 				if (!entity.IsNull())
-					ability = entity.GetComponent<comp::MeleeAttackAbility>();
+					ability = entity.GetComponent<comp::RangeAttackAbility>();
 				if (ability)
 					DoDamage(scene, entity, expl, other, ability->attackDamage, 40.0f, AttackType::RANGE);
 			});

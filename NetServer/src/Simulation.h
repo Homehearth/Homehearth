@@ -39,14 +39,13 @@ private:
 
 	HeadlessScene* m_pLobbyScene;
 	HeadlessScene* m_pGameScene;
-	HeadlessScene* m_pGameOverScene;
 	HeadlessScene* m_pCurrentScene;
 
 	std::vector<Entity> m_addedEntities;
 	std::vector<uint32_t> m_removedEntities;
 	std::vector<Entity> m_updatedEntities;
 
-	Blackboard blackboard;
+	std::unique_ptr<Blackboard> blackboard;
 
 	std::unordered_map<ecs::Component, std::vector<Entity>> m_updatedComponents;
 
@@ -86,7 +85,6 @@ public:
 	void UpdateInput(InputState state, uint32_t playerID);
 
 	HeadlessScene* GetLobbyScene() const;
-	HeadlessScene* GetGameOverScene() const;
 	HeadlessScene* GetGameScene() const;
 	void SetScene(HeadlessScene* scene);
 

@@ -864,8 +864,8 @@ void ServerSystems::CheckGameOver(Simulation* simulation, HeadlessScene& scene)
 		msg << simulation->GetCurrency().GetTotalGathered() << simulation->m_wavesSurvived - 1;
 		simulation->Broadcast(msg);
 
-		simulation->SetScene(simulation->GetGameOverScene());
 		simulation->m_lobby.Clear();
+		simulation->SetLobbyScene();
 	}
 }
 
@@ -1027,6 +1027,8 @@ Entity VillagerManagement::CreateVillager(HeadlessScene& scene, Entity homeHouse
 	comp::Velocity* velocity = entity.AddComponent<comp::Velocity>();
 	comp::BehaviorTree* behaviorTree = entity.AddComponent<comp::BehaviorTree>();
 	comp::Villager* villager = entity.AddComponent<comp::Villager>();
+	villager->isHiding = false;
+	villager->isFleeing = false;
 	comp::House* house = homeHouse.GetComponent<comp::House>();
 	transform->position = house->homeNode->position;
 	transform->position.y = 0.75f;

@@ -134,7 +134,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	{
 	case GameMsg::Client_Accepted:
 	{
-		rtd::Text* lobbyErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("LobbyFields")->elements[5].get());
+		rtd::Text* lobbyErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("LobbyFields")->elements[4].get());
 		lobbyErrorText->SetVisiblity(false);
 		rtd::Text* nameErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("nameInput")->elements[1].get());
 		nameErrorText->SetVisiblity(false);
@@ -506,7 +506,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		LOG_INFO("Successfully loaded all Assets!");
 #endif
 		SetScene("Lobby");
-		rtd::Text* lobbyErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("LobbyFields")->elements[5].get());
+		rtd::Text* lobbyErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("LobbyFields")->elements[4].get());
 		lobbyErrorText->SetVisiblity(false);
 		rtd::Text* nameErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("nameInput")->elements[1].get());
 		nameErrorText->SetVisiblity(false);
@@ -566,7 +566,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		skipButton->SetVisiblity(true);
 
 		SoundHandler::Get().SetCurrentMusic("MenuTheme");
-		rtd::Text* lobbyErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("LobbyFields")->elements[5].get());
+		rtd::Text* lobbyErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("LobbyFields")->elements[4].get());
 		lobbyErrorText->SetVisiblity(false);
 		rtd::Text* nameErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("nameInput")->elements[1].get());
 		nameErrorText->SetVisiblity(false);

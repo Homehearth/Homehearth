@@ -1474,7 +1474,7 @@ namespace sceneHelp
 		sm::Vector2 buttonSize = { widthScale / 4.f, height * 0.15f };
 		float buttonPosY = height - (buttonSize.y + paddingHeight * 2.f);
 
-		rtd::Button* startLobbyButton = lobbyCollection->AddElement<rtd::Button>("CreateLobby.png", draw_t((width / 2.0f) + (width / 8.0f), buttonPosY, buttonSize.x, buttonSize.y));
+		//rtd::Button* startLobbyButton = lobbyCollection->AddElement<rtd::Button>("CreateLobby.png", draw_t((width / 2.0f) + (width / 8.0f), buttonPosY, buttonSize.x, buttonSize.y));
 		rtd::Button* lobbyButton = lobbyCollection->AddElement<rtd::Button>("joinLobby.png", draw_t(width / 8, buttonPosY, buttonSize.x, buttonSize.y));
 		rtd::TextField* lobbyField = lobbyCollection->AddElement<rtd::TextField>(draw_text_t(width / 8, buttonPosY - paddingHeight * 2.f, widthScale / 4, D2D1Core::GetDefaultFontSize()));
 		lobbyField->SetDescriptionText("Input Lobby ID");
@@ -1487,23 +1487,23 @@ namespace sceneHelp
 				game->m_client.Disconnect();
 			});
 
-		startLobbyButton->SetOnPressedEvent([=]
-			{
-				if (nameInputField->RawGetBuffer()->length() > 0)
-				{
-					game->m_playerName = *nameInputField->RawGetBuffer();
+		//startLobbyButton->SetOnPressedEvent([=]
+		//	{
+		//		if (nameInputField->RawGetBuffer()->length() > 0)
+		//		{
+		//			game->m_playerName = *nameInputField->RawGetBuffer();
 
-					game->CreateLobby();
+		//			game->CreateLobby();
 
-					// Update own name.
-					dynamic_cast<rtd::Text*>(game->GetScene("Lobby").GetCollection("playerIcon1")->elements[1].get())->SetText(game->m_playerName);
-				}
-				else
-				{
-					nameErrorText->SetVisiblity(true);
-					LOG_WARNING("Enter a valid nickname");
-				}
-			});
+		//			// Update own name.
+		//			dynamic_cast<rtd::Text*>(game->GetScene("Lobby").GetCollection("playerIcon1")->elements[1].get())->SetText(game->m_playerName);
+		//		}
+		//		else
+		//		{
+		//			nameErrorText->SetVisiblity(true);
+		//			LOG_WARNING("Enter a valid nickname");
+		//		}
+		//	});
 		lobbyButton->SetOnPressedEvent([=]()
 			{
 				std::string* lobbyString = lobbyField->RawGetBuffer();

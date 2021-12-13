@@ -82,6 +82,11 @@ bool ServerGame::OnStartup()
 	LoadHouseColliders("House10_Collider.fbx");
 	LoadHouseColliders("WaterMillHouse_Collider.fbx");
 
+	for (int i = 0; i < MAX_ACTIVE_GAMES; i++)
+	{
+		this->CreateSimulation();
+	}
+
 	return true;
 }
 
@@ -93,13 +98,13 @@ void ServerGame::OnShutdown()
 void ServerGame::UpdateNetwork(float deltaTime)
 {
 	PROFILE_FUNCTION();
-	static float timer = 0.0f;
-	timer += deltaTime;
-	if (timer >= 1.0f)
-	{
-		LOG_INFO("Update: %f", 1.f / deltaTime);
-		timer = 0.0f;
-	}
+	//static float timer = 0.0f;
+	//timer += deltaTime;
+	//if (timer >= 1.0f)
+	//{
+	//	LOG_INFO("Update: %f", 1.f / deltaTime);
+	//	timer = 0.0f;
+	//}
 
 	{
 		PROFILE_SCOPE("Server UPDATE");
@@ -112,18 +117,18 @@ void ServerGame::UpdateNetwork(float deltaTime)
 		// Update the simulations
 		for (auto it = m_simulations.begin(); it != m_simulations.end();)
 		{
-			if (it->second->IsEmpty())
-			{
-				it->second->Destroy();
-				LOG_INFO("Destroyed empty lobby %d", it->first);
-				it = m_simulations.erase(it);
-			}
-			else
-			{
-				// Update the simulation
+			//if (it->second->IsEmpty())
+			//{
+			//	it->second->Destroy();
+			//	LOG_INFO("Destroyed empty lobby %d", it->first);
+			//	it = m_simulations.erase(it);
+			//}
+			//else
+			//{
+				//Update the simulation
 				it->second->Update(deltaTime);
 				it++;
-			}
+			//}
 		}
 	}
 }
@@ -294,6 +299,12 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 			LOG_WARNING("Player: %d tried to join an invalid lobby!", playerID);
 			m_server.SendToClient(playerID, lobbyMsg);
 		}
+		break;
+	}
+	case GameMsg::Lobby_RefreshList:
+	{
+
+
 		break;
 	}
 	case GameMsg::Lobby_Leave:

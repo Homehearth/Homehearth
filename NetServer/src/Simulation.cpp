@@ -287,8 +287,8 @@ void Simulation::ResetPlayer(Entity player)
 
 Simulation::Simulation(Server* pServer, HeadlessEngine* pEngine)
 	: m_pServer(pServer)
-	, m_pEngine(pEngine), m_pLobbyScene(nullptr), m_pGameScene(nullptr), m_pGameOverScene(nullptr),
-	m_pCurrentScene(nullptr), currentRound(0), houseManager(&blackboard), m_shop(this)
+	, m_pEngine(pEngine), m_pLobbyScene(nullptr), m_pGameScene(nullptr),
+	m_pCurrentScene(nullptr), currentRound(0), m_shop(this)
 {
 	this->m_gameID = 0;
 	this->m_tick = 0;
@@ -335,8 +335,6 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 
 	houseManager.SetHouseColliders(houseColliders);
 
-	m_timeCycler.setBlackboard(&blackboard);
-
 	m_pGameScene->on<ESceneUpdate>([&](const ESceneUpdate& e, HeadlessScene& scene)
 		{
 #if GOD_MODE
@@ -365,7 +363,7 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 				}
 				{
 					PROFILE_SCOPE("Input from Player");
-					ServerSystems::UpdatePlayerWithInput(this, scene, e.dt, qt.get(), &blackboard);
+					ServerSystems::UpdatePlayerWithInput(this, scene, e.dt, qt.get(), blackboard.get());
 				}
 				{
 					PROFILE_SCOPE("Player state");
@@ -375,7 +373,7 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 				{
 					PROFILE_SCOPE("Abilities and Combat");
 					Systems::UpdateAbilities(scene, e.dt);
-					ServerSystems::CombatSystem(scene, e.dt, &blackboard);
+					ServerSystems::CombatSystem(scene, e.dt, blackboard.get());
 					Systems::HealingSystem(scene, e.dt);
 					Systems::SelfDestructSystem(scene, e.dt);
 				}
@@ -400,7 +398,7 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 					Systems::CheckCollisions(scene, e.dt);
 				}
 
-				ServerSystems::HealthSystem(scene, e.dt, m_currency, houseManager, qt.get(), m_grid, m_spreeHandler, &blackboard);
+				ServerSystems::HealthSystem(scene, e.dt, m_currency, houseManager, qt.get(), m_grid, m_spreeHandler, blackboard.get());
 
 				{
 					PROFILE_SCOPE("Animation system");
@@ -459,8 +457,6 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 	//Gridsystem
 	m_grid.Initialize(gridOptions.mapSize, gridOptions.position, gridOptions.fileName, m_pGameScene);
 	//Create the nodes for AI handler on blackboard
-	blackboard.GetPathFindManager()->CreateNodes(&m_grid);
-
 
 	m_addedEntities.clear();
 #if RENDER_AINODES
@@ -532,7 +528,6 @@ void Simulation::SendSnapshot()
 		std::bitset<ecs::Component::COMPONENT_MAX> compMask;
 		compMask.set(ecs::Component::TRANSFORM);
 		compMask.set(ecs::Component::BOUNDING_ORIENTED_BOX);
-		//compMask.set(ecs::Component::COST);
 #if DEBUG_SNAPSHOT
 		compMask.set(ecs::Component::BOUNDING_SPHERE);
 #endif
@@ -714,11 +709,6 @@ HeadlessScene* Simulation::GetLobbyScene() const
 	return m_pLobbyScene;
 }
 
-HeadlessScene* Simulation::GetGameOverScene() const
-{
-	return m_pGameOverScene;
-}
-
 HeadlessScene* Simulation::GetGameScene() const
 {
 	return m_pGameScene;
@@ -774,10 +764,6 @@ void Simulation::UpgradeDefence(const uint32_t& id)
 void Simulation::SetLobbyScene()
 {
 	m_pCurrentScene = m_pLobbyScene;
-	message<GameMsg> msg;
-	msg.header.id = GameMsg::Game_BackToLobby;
-
-	this->Broadcast(msg);
 	m_lobby.SetActive(true);
 }
 
@@ -810,7 +796,6 @@ void Simulation::ResetGameScene()
 
 	while (!m_spawnPoints.empty())
 	{
-
 		m_spawnPoints.pop();
 	}
 
@@ -839,12 +824,17 @@ void Simulation::ResetGameScene()
 		this->Broadcast(msg);
 	}
 
-	m_currency = 50;
+	m_currency = 500;
 
 	EnemyManagement::CreateWaves(waveQueue, currentRound);
+	blackboard = std::make_unique<Blackboard>();
+	blackboard->GetPathFindManager()->CreateNodes(&m_grid);
+	houseManager.SetBlackboard(blackboard.get());
+	m_timeCycler.setBlackboard(blackboard.get());
 
 	houseManager.InitializeHouses(*this->GetGameScene(), qt.get());
-	AIBehaviors::UpdateBlackBoard(*m_pGameScene, &blackboard);
+	AIBehaviors::UpdateBlackBoard(*m_pGameScene, blackboard.get());
+	qt->ClearNullEntities();
 
 	m_timeCycler.SetTime(MORNING);
 	m_timeCycler.SetCycleSpeed(1.0f);
@@ -1043,5 +1033,5 @@ Entity Simulation::GetPlayer(uint32_t playerID) const
 
 Blackboard* Simulation::GetBlackboard()
 {
-	return &blackboard;
+	return blackboard.get();
 }
