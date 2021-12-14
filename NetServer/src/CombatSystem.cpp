@@ -541,7 +541,6 @@ void CombatSystem::DoDamage(HeadlessScene& scene, Entity attacker, Entity attack
 				}
 			}
 			else {
-				block->cooldownTimer = block->cooldown;
 				ecs::CancelAbility(block);
 				block->damageTaken = 0.0f;
 				block->isCooldownActive = true;
