@@ -82,6 +82,13 @@ bool ServerGame::OnStartup()
 	LoadHouseColliders("House10_Collider.fbx");
 	LoadHouseColliders("WaterMillHouse_Collider.fbx");
 
+	for (int i = 0; i < MAX_LOBBIES; i++)
+	{
+		this->CreateSimulation();
+	}
+
+	LOG_INFO("Ready to receive connections!");
+
 	return true;
 }
 
@@ -93,13 +100,13 @@ void ServerGame::OnShutdown()
 void ServerGame::UpdateNetwork(float deltaTime)
 {
 	PROFILE_FUNCTION();
-	static float timer = 0.0f;
-	timer += deltaTime;
-	if (timer >= 1.0f)
-	{
-		LOG_INFO("Update: %f", 1.f / deltaTime);
-		timer = 0.0f;
-	}
+	//static float timer = 0.0f;
+	//timer += deltaTime;
+	//if (timer >= 1.0f)
+	//{
+	//	LOG_INFO("Update: %f", 1.f / deltaTime);
+	//	timer = 0.0f;
+	//}
 
 	{
 		PROFILE_SCOPE("Server UPDATE");
@@ -112,18 +119,8 @@ void ServerGame::UpdateNetwork(float deltaTime)
 		// Update the simulations
 		for (auto it = m_simulations.begin(); it != m_simulations.end();)
 		{
-			if (it->second->IsEmpty())
-			{
-				it->second->Destroy();
-				LOG_INFO("Destroyed empty lobby %d", it->first);
-				it = m_simulations.erase(it);
-			}
-			else
-			{
-				// Update the simulation
-				it->second->Update(deltaTime);
-				it++;
-			}
+			it->second->Update(deltaTime);
+			it++;
 		}
 	}
 }
@@ -191,7 +188,7 @@ bool ServerGame::LoadMapColliders(const std::string& filename)
 	(
 		filepath,
 		aiProcess_JoinIdenticalVertices |
-		aiProcess_Triangulate			|
+		aiProcess_Triangulate |
 		aiProcess_ConvertToLeftHanded
 	);
 
@@ -296,15 +293,52 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 		}
 		break;
 	}
+	case GameMsg::Lobby_RefreshList:
+	{
+		uint32_t sender;
+		msg >> sender;
+
+		if (m_server.isClientConnected(sender))
+		{
+			auto it = m_simulations.begin();
+
+			while (it != m_simulations.end())
+			{
+				msg << static_cast<uint8_t>(it->second->m_lobby.m_players.size());
+
+				if (it->second->m_lobby.IsActive())
+				{
+					msg << false;
+				}
+				else
+				{
+					msg << true;
+				}
+
+				it++;
+			}
+
+			m_server.SendToClient(sender, msg);
+		}
+
+		break;
+	}
 	case GameMsg::Lobby_Leave:
 	{
 		uint32_t gameID;
 		msg >> gameID;
 		uint32_t playerID;
 		msg >> playerID;
-		if (m_simulations.find(gameID) != m_simulations.end())
+		auto sim = m_simulations.find(gameID);
+
+		if (sim != m_simulations.end())
 		{
-			m_simulations[gameID]->LeaveLobby(playerID);
+			sim->second->LeaveLobby(playerID);
+
+			if (sim->second->m_lobby.IsEmpty())
+			{
+				sim->second->ClearOutgoing();
+			}
 		}
 		else
 		{
@@ -332,7 +366,7 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 		else
 		{
 			LOG_WARNING("Invalid GameID for player input message");
-		} 
+		}
 
 		break;
 	}

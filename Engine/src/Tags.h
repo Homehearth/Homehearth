@@ -10,7 +10,7 @@ enum TagType : tag_bits
 	STATIC = 8,
 	MAP_BOUNDS = 16,
 	DEFENCE = 32,
-	WATERMILL = 64,
+	RANGED_ATTACK = 64,
 	GOOD = 128,
 	BAD = 256,
 	NO_RESPONSE = 1 << 9,

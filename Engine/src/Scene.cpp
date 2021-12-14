@@ -281,7 +281,7 @@ void Scene::RenderParticles(void* voidPass)
 			D3D11Core::Get().DeviceContext()->CSSetConstantBuffers(8, 1, &cb);
 			D3D11Core::Get().DeviceContext()->CSSetUnorderedAccessViews(7, 1, emitter.particleUAV.GetAddressOf(), nullptr);
 
-			const int groupCount = static_cast<int>(ceil(emitter.nrOfParticles / 50)); //Hur många grupper som körs
+			const int groupCount = static_cast<int>(ceil(emitter.nrOfParticles / 50)); //Hur m?nga grupper som k?rs
 			D3D11Core::Get().DeviceContext()->Dispatch(groupCount, 1, 1);
 			D3D11Core::Get().DeviceContext()->CSSetUnorderedAccessViews(7, 1, &pass->m_nullUAV, nullptr);
 

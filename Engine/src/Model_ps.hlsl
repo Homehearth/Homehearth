@@ -91,7 +91,7 @@ PixelOut main(PixelIn input)
                             float3 stepLength = length(rayVector) / STEPS;
                             float3 step = rayDir * stepLength;
                             [loop]
-                            for (int j = 0; j < STEPS; j++)
+                            for (uint j = 0; j < STEPS; j++)
                             {
                         // Camera position in shadow space.
                                 float4 cameraShadowSpace = mul(lightMat, float4(currentPos, 1.0f));
@@ -100,7 +100,7 @@ PixelOut main(PixelIn input)
                         // Sample the depth of current position.
                                 shadowCoords.x = cameraShadowSpace.x * 0.5f + 0.5f;
                                 shadowCoords.y = -cameraShadowSpace.y * 0.5f + 0.5f;
-                                float depth = t_shadowMaps.Sample(s_linear, float3(shadowCoords, shadowIndex));
+                                float depth = t_shadowMaps.Sample(s_linear, float3(shadowCoords, shadowIndex)).r;
                                 if (depth > cameraShadowSpace.z & ((saturate(shadowCoords.x) == shadowCoords.x) & (saturate(shadowCoords.y) == shadowCoords.y)))
                                 {
                                     lightVolume += sb_lights[i].color.xyz / 255.0f;
@@ -174,7 +174,7 @@ PixelOut main(PixelIn input)
     //float4 fogColor = float4(0.5f, 0.5f, 0.5f, 1);
 
     float fogFactor = saturate((distanceToCenter - 150.f) / 100.f);
-    float lightVolumeFactor = lightVolume > 0.0f ? lightVolume : 1.0f;
+    float lightVolumeFactor = lightVolume.x > 0.0f ? lightVolume.x : 1.0f;
   
     /*
         This part of the code calculates if a decal should be present at this location.
