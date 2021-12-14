@@ -1314,6 +1314,13 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 						cText.end_pos.y += 50;
 						cText.amount = std::abs(health->currentHealth - hp.currentHealth);
 						GetScene("Game").PushCombatText(cText);
+
+						if (hp.currentHealth <= 0)
+						{
+							// Spawn a bloodsplat.
+							Entity e = GetScene("Game").CreateEntity();
+							e.AddComponent<comp::Decal>(*transform);
+						}
 					}
 
 					e.AddComponent<comp::Health>(hp);
