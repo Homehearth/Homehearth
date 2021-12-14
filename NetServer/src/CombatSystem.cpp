@@ -213,8 +213,6 @@ void CombatSystem::UpdateCombatSystem(HeadlessScene& scene, float dt, Blackboard
 	UpdateDash(scene);
 }
 
-
-
 void CombatSystem::UpdateTargetPoint(Entity entity, sm::Vector3* targetPoint)
 {
 	comp::Player* player = entity.GetComponent<comp::Player>();
@@ -224,8 +222,6 @@ void CombatSystem::UpdateTargetPoint(Entity entity, sm::Vector3* targetPoint)
 		targetPoint = &player->mousePoint; // only update targetPoint if this is a player
 	}
 }
-
-
 
 Entity CombatSystem::CreateAttackEntity(Entity entity, HeadlessScene& scene, comp::Transform* transform, comp::MeleeAttackAbility* stats)
 {
@@ -276,8 +272,9 @@ Entity CombatSystem::CreateAttackEntity(Entity entity, HeadlessScene& scene, com
 	Entity attackEntity = scene.CreateEntity();
 
 	comp::Transform* t = attackEntity.AddComponent<comp::Transform>();
-	attackEntity.AddComponent<comp::Tag<TagType::DYNAMIC>>();
-	attackEntity.AddComponent<comp::Tag<TagType::NO_RESPONSE>>();
+	attackEntity.AddComponent<comp::Tag<DYNAMIC>>();
+	attackEntity.AddComponent<comp::Tag<NO_RESPONSE>>();
+	attackEntity.AddComponent<comp::Tag<RANGED_ATTACK>>();
 
 	comp::SphereCollider* bos = attackEntity.AddComponent<comp::SphereCollider>();
 
@@ -312,9 +309,12 @@ Entity CombatSystem::CreateAttackEntity(Entity entity, HeadlessScene& scene, com
 
 			audioState->data.emplace(audio);
 		}
+
+		// This is the collider and this entity wont be sent over network
 		comp::RangeAttackAbility* ability = entity.GetComponent<comp::RangeAttackAbility>();
 		Entity explosionCollider = CreateAreaAttackCollider(scene, attackEntity.GetComponent<comp::Transform>()->position, ability->attackRange, 0.1f);
 
+		// Only this part will be sent over network
 		Entity explosionEffect = scene.CreateEntity();
 		explosionEffect.AddComponent<comp::Network>();
 		explosionEffect.AddComponent<comp::Transform>()->position = attackEntity.GetComponent<comp::Transform>()->position;
@@ -359,6 +359,11 @@ Entity CombatSystem::CreateAttackEntity(Entity entity, HeadlessScene& scene, com
 		{
 			if (other.HasComponent<comp::Tag<STATIC>>() && !other.HasComponent<comp::House>())
 				return;
+
+			if (thisEntity.GetTags() & RANGED_ATTACK && other.GetTags() & RANGED_ATTACK)
+			{
+				return;
+			}
 
 			thisEntity.GetComponent<comp::SelfDestruct>()->lifeTime = 0.0f;
 		});
@@ -453,8 +458,6 @@ void CombatSystem::DoDamage(HeadlessScene& scene, Entity attacker, Entity attack
 		playHitSound = true;
 	}
 
-
-
 	// SOUND
 	audio_t audio = {
 		ESoundEvent::NONE,
@@ -505,7 +508,6 @@ void CombatSystem::DoDamage(HeadlessScene& scene, Entity attacker, Entity attack
 			}
 		}
 	}
-
 
 	comp::Health* otherHealth = target.GetComponent<comp::Health>();
 	if (otherHealth && doDamage)
@@ -565,12 +567,10 @@ void CombatSystem::DoDamage(HeadlessScene& scene, Entity attacker, Entity attack
 		knockbackDir.Normalize();
 	}
 
-
 	if (doKnockback)
 	{
 		AddKnockback(target, knockbackDir, knockback);
 	}
-
 }
 
 void CombatSystem::AddKnockback(Entity target, sm::Vector3 dir, float power)
