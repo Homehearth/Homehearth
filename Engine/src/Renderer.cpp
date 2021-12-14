@@ -40,6 +40,7 @@ void Renderer::Initialize(Window* pWindow)
 
 	m_basePass.m_pShadowPass = &m_shadowPass;
 	m_animPass.m_pShadowPass = &m_shadowPass;
+	m_basePass.m_decalPass = &m_decalPass;
 
 	//m_depthPass.SetEnable(true);
 	m_basePass.SetEnable(true);
