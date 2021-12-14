@@ -35,7 +35,7 @@ PixelOut main(PixelIn input)
     // calculate reflectance at normal incidence; if dia-electric (like plastic) use F0 
     // of 0.04 and if it's a metal, use the albedo color as F0 (metallic workflow)
     float3 F0 = float3(0.04f, 0.04f, 0.04f);
-    F0 = lerp(F0, albedo, metallic);
+    F0 = lerp(F0, albedo * 15.f, metallic);
    
 
     //Reflectance Equation
@@ -91,7 +91,7 @@ PixelOut main(PixelIn input)
                             float3 stepLength = length(rayVector) / STEPS;
                             float3 step = rayDir * stepLength;
                             [loop]
-                            for (int j = 0; j < STEPS; j++)
+                            for (uint j = 0; j < STEPS; j++)
                             {
                         // Camera position in shadow space.
                                 float4 cameraShadowSpace = mul(lightMat, float4(currentPos, 1.0f));
@@ -100,10 +100,10 @@ PixelOut main(PixelIn input)
                         // Sample the depth of current position.
                                 shadowCoords.x = cameraShadowSpace.x * 0.5f + 0.5f;
                                 shadowCoords.y = -cameraShadowSpace.y * 0.5f + 0.5f;
-                                float depth = t_shadowMaps.Sample(s_linear, float3(shadowCoords, shadowIndex));
+                                float depth = t_shadowMaps.Sample(s_linear, float3(shadowCoords, shadowIndex)).r;
                                 if (depth > cameraShadowSpace.z & ((saturate(shadowCoords.x) == shadowCoords.x) & (saturate(shadowCoords.y) == shadowCoords.y)))
                                 {
-                                    lightVolume += scatter;
+                                    lightVolume += sb_lights[i].color.xyz / 255.0f;
                                 }
                         
                                 currentPos += step;
@@ -174,7 +174,7 @@ PixelOut main(PixelIn input)
     //float4 fogColor = float4(0.5f, 0.5f, 0.5f, 1);
 
     float fogFactor = saturate((distanceToCenter - 150.f) / 100.f);
-    float lightVolumeFactor = lightVolume > 0.0f ? lightVolume : 1.0f;
+    float lightVolumeFactor = lightVolume.x > 0.0f ? lightVolume.x : 1.0f;
   
     /*
         This part of the code calculates if a decal should be present at this location.
@@ -220,7 +220,7 @@ PixelOut main(PixelIn input)
     
     
     
-    float3 color = (ambient + Lo) * pow(lightVolumeFactor, 2.5f);   
+    float3 color = (ambient + Lo) * lightVolumeFactor;   
     float brightness = dot(color, float3(0.2126, 0.7152, 0.0722));
     
     //HDR tonemapping

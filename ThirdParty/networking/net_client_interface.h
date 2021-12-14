@@ -472,7 +472,7 @@ namespace network
 
 		WORD version = MAKEWORD(2, 2);
 
-		int8_t rv = WSAStartup(version, &wsaData);
+		int rv = WSAStartup(version, &wsaData);
 
 		if (rv != 0)
 		{

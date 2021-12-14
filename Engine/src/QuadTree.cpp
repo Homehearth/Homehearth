@@ -15,11 +15,6 @@ QuadTree::~QuadTree()
 
 void QuadTree::GetSize(size_t& size)
 {
-	if (m_entities.size() == 0)
-	{
-		return;
-	}
-
 	size += m_entities.size();
 
 	if (m_divided)
@@ -100,6 +95,31 @@ bool QuadTree::Insert(const Entity& e)
 	this->SouthEast->Insert(e);
 
 	return true;
+}
+
+void QuadTree::ClearNullEntities()
+{
+	auto it = m_entities.begin();
+
+	while (it != m_entities.end())
+	{
+		if (it->IsNull())
+		{
+			it = m_entities.erase(it);
+		}
+		else
+		{
+			it++;
+		}
+	}
+
+	if (m_divided)
+	{
+		NorthWest->ClearNullEntities();
+		NorthEast->ClearNullEntities();
+		SouthWest->ClearNullEntities();
+		SouthEast->ClearNullEntities();
+	}
 }
 
 void QuadTree::Clear()
