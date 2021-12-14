@@ -1,8 +1,8 @@
 #pragma once
 
+constexpr int MAX_LOBBIES = 5;
 constexpr int MAX_PLAYERS_PER_LOBBY = 4;
 constexpr int MAX_HEALTH = 100;
-
 
 
 /*
@@ -305,6 +305,7 @@ struct combat_text_inst_t
 	combat_text_enum type;
 	int amount = 0;
 	sm::Vector3 pos;
+	sm::Vector3 end_pos;
 
 	// DONT TOUCH!!!!1
 	float timeRendered = 0;
@@ -333,8 +334,7 @@ enum class GameMsg : uint16_t
 	Lobby_AcceptedLeave,
 	Lobby_Invalid,
 	Lobby_Update,
-	Lobby_PlayerLeft,
-	Lobby_PlayerJoin,
+	Lobby_RefreshList,
 
 	Server_AssignID,
 	Server_GetPing,

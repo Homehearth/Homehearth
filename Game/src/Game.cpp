@@ -7,6 +7,7 @@
 #include "MoneyUI.h"
 #include "OptionSystem.h"
 #include "AbilityUI.h"
+#include "LobbyUI.h"
 
 using namespace std::placeholders;
 
@@ -42,17 +43,34 @@ Game::~Game()
 void Game::UpdateNetwork(float deltaTime)
 {
 	static float pingCheck = 0.f;
+	static float refreshLobbyList = 0.f;
 	const float TARGET_PING_TIME = 5.0f;
+	const float TARGET_REFRESH = 0.2f;
 	if (m_client.IsConnected())
 	{
 		m_client.Update();
 
-		pingCheck += deltaTime;
+		//pingCheck += deltaTime;
 
-		if (pingCheck > TARGET_PING_TIME)
+		//if (pingCheck > TARGET_PING_TIME)
+		//{
+		//	//this->PingServer();
+		//	pingCheck -= TARGET_PING_TIME;
+		//}
+
+		refreshLobbyList += deltaTime;
+
+		if (refreshLobbyList >= TARGET_REFRESH)
 		{
-			//this->PingServer();
-			pingCheck -= TARGET_PING_TIME;
+			refreshLobbyList -= TARGET_REFRESH;
+
+			if (GetCurrentScene() == &(GetScene("JoinLobby")))
+			{
+				message<GameMsg> msg;
+				msg.header.id = GameMsg::Lobby_RefreshList;
+				msg << m_localPID;
+				m_client.Send(msg);
+			}
 		}
 
 		if (GetCurrentScene() == &GetScene("Game"))
@@ -134,10 +152,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	{
 	case GameMsg::Client_Accepted:
 	{
-		rtd::Text* lobbyErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("LobbyFields")->elements[5].get());
-		lobbyErrorText->SetVisiblity(false);
-		rtd::Text* nameErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("nameInput")->elements[1].get());
-		nameErrorText->SetVisiblity(false);
 		rtd::Text* mainMenuErrorText = dynamic_cast<rtd::Text*>(GetScene("MainMenu").GetCollection("ConnectFields")->elements[6].get());
 		mainMenuErrorText->SetVisiblity(false);
 		LOG_INFO("You are validated!");
@@ -181,11 +195,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			UpdateEntityFromMessage(entity, msg, skip);
 		}
 
-		if (msg.payload.size() > 0)
-		{
-			LOG_ERROR("TCP UPDATE ENTITY FUCKED UP");
-		}
-
 		break;
 	}
 	case GameMsg::Game_UpdateComponent:
@@ -209,11 +218,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 				LOG_WARNING("Updating component: Entity %u not in m_gameEntities, skipping over this comp!", entityID);
 			}
 			UpdateEntityFromMessage(entity, msg, skip);
-		}
-
-		if (msg.payload.size() > 0)
-		{
-			LOG_ERROR("TCP UPDATE COMPONENT FUCKED UP");
 		}
 
 		break;
@@ -247,11 +251,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 				LOG_INFO("A remote player added!");
 				m_players[e.GetComponent<comp::Network>()->id] = e;
 			}
-		}
-
-		if (msg.payload.size() > 0)
-		{
-			LOG_ERROR("TCP ADD ENTITY FUCKED UP");
 		}
 
 		break;
@@ -291,14 +290,8 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			}
 		}
 #ifdef _DEBUG
-		LOG_INFO("Removed %u entities", removed);
+		LOG_INFO("Removed %d entities", removed);
 #endif
-
-		if (msg.payload.size() > 0)
-		{
-			LOG_ERROR("TCP REMOVED FUCKED UP SIZE LEFT %lu", msg.payload.size());
-		}
-
 		break;
 	}
 	case GameMsg::Game_BackToLobby:
@@ -506,10 +499,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		LOG_INFO("Successfully loaded all Assets!");
 #endif
 		SetScene("Lobby");
-		rtd::Text* lobbyErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("LobbyFields")->elements[5].get());
-		lobbyErrorText->SetVisiblity(false);
-		rtd::Text* nameErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("nameInput")->elements[1].get());
-		nameErrorText->SetVisiblity(false);
 		LOG_INFO("You are now in lobby: %lu", m_gameID);
 		break;
 	}
@@ -519,8 +508,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		//msg >> err;
 		SetScene("JoinLobby");
 		//LOG_WARNING("%s", err.c_str());
-		rtd::Text* lobbyErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("LobbyFields")->elements[5].get());
-		lobbyErrorText->SetVisiblity(true);
 		break;
 	}
 	case GameMsg::Lobby_AcceptedLeave:
@@ -533,10 +520,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		{
 			textField->SetPresetText("");
 		}
-		rtd::Text* lobbyErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("LobbyFields")->elements[5].get());
-		lobbyErrorText->SetVisiblity(false);
-		rtd::Text* nameErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("nameInput")->elements[1].get());
-		nameErrorText->SetVisiblity(false);
 		break;
 	}
 	case GameMsg::Game_Start:
@@ -566,10 +549,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		skipButton->SetVisiblity(true);
 
 		SoundHandler::Get().SetCurrentMusic("MenuTheme");
-		rtd::Text* lobbyErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("LobbyFields")->elements[5].get());
-		lobbyErrorText->SetVisiblity(false);
-		rtd::Text* nameErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("nameInput")->elements[1].get());
-		nameErrorText->SetVisiblity(false);
 		SetScene("Game");
 		//thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::ADAPTIVE);
 		Entity e;
@@ -631,6 +610,22 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		msg >> speed;
 		m_cycler.SetTime(time);
 		m_cycler.SetCycleSpeed(speed);
+		break;
+	}
+	case GameMsg::Lobby_RefreshList:
+	{
+		uint8_t playerCount;
+		uint8_t sceneStatus;
+
+		for (int i = MAX_LOBBIES - 1; i >= 0; i--)
+		{
+			msg >> sceneStatus >> playerCount;
+
+			rtd::LobbyUI* lobbyUI = dynamic_cast<rtd::LobbyUI*>(GetScene("JoinLobby").GetCollection("LobbySelect")->elements[i].get());
+			lobbyUI->UpdateLobbyPlayerCount(playerCount);
+			lobbyUI->SetLobbyStatus(sceneStatus);
+		}
+
 		break;
 	}
 	case GameMsg::Lobby_Update:
@@ -714,7 +709,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			}
 		}
 
-		dynamic_cast<rtd::Text*>(GetScene("Lobby").GetCollection("LobbyDesc")->elements[1].get())->SetText("Lobby ID: " + std::to_string(m_gameID));
+		dynamic_cast<rtd::Text*>(GetScene("Lobby").GetCollection("LobbyDesc")->elements[1].get())->SetText("Lobby " + std::to_string(m_gameID + 1));
 
 		for (uint32_t i = 0; i < MAX_PLAYERS_PER_LOBBY; i++)
 		{
@@ -916,7 +911,6 @@ void Game::OnClientDisconnect()
 	}
 
 	rtd::TextField* ipInput = dynamic_cast<rtd::TextField*>(GetScene("MainMenu").GetCollection("ConnectFields")->elements[0].get());
-	ipInput->SetActive();
 
 	SetScene("MainMenu");
 
@@ -1314,9 +1308,12 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 
 						cText.timeRendered = omp_get_wtime();
 						cText.pos.y += 15;
+						cText.end_pos = cText.pos;
+						cText.end_pos.y += 50;
 						cText.amount = std::abs(health->currentHealth - hp.currentHealth);
 						GetScene("Game").PushCombatText(cText);
 					}
+
 					e.AddComponent<comp::Health>(hp);
 				}
 				break;

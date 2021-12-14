@@ -383,7 +383,6 @@ namespace ecs
 		{
 			Entity player;
 		};
-
 		
 		struct TileSet
 		{

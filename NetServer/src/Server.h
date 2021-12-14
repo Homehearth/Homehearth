@@ -8,7 +8,7 @@ class Server : public server_interface<GameMsg>
 private:
 	// Inherited via server_interface
 	virtual void OnClientConnect(std::string&& ip, const uint16_t& port) override;
-	virtual void OnClientDisconnect(const SOCKET& socket) override;
+	virtual void OnClientDisconnect() override;
 	virtual void OnMessageReceived(message<GameMsg>& msg) override;
 	virtual void OnClientValidated(const SOCKET& socket) override;
 

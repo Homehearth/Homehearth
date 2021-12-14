@@ -29,5 +29,5 @@ public:
 	/*
 		Edit the value of an option parameter.
 	*/
-	static bool SetOption(const std::string& optionName, std::string& value);
+	static bool SetOption(std::string optionName, std::string value);
 };

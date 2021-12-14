@@ -14,7 +14,7 @@ loopable		TAKE_DAMAGE			0
 loopable		PLACE_DEFENCE		0
 loopable		DEAD				0
 
-tickSpeed		PRIMARY_ATTACK		30
+tickSpeed		PRIMARY_ATTACK		20
 upperbody		PRIMARY_ATTACK		QuickRigCharacter_Spine
 
 
