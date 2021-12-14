@@ -974,13 +974,12 @@ void ServerSystems::DeathParticleTimer(HeadlessScene& scene)
 {
 	scene.ForEachComponent<comp::ParticleEmitter>([&](Entity& e, comp::ParticleEmitter& emitter)
 		{
-			if (emitter.hasDeathTimer == true && emitter.lifeLived <= emitter.lifeTime)
+			if (emitter.hasDeathTimer > 0)
 			{
-				emitter.lifeLived += Stats::Get().GetFrameTime();
-			}
-			else if (emitter.hasDeathTimer == true && emitter.lifeLived >= emitter.lifeTime)
-			{
-				e.RemoveComponent<comp::ParticleEmitter>();
+				if ( emitter.lifeLived <= (emitter.lifeTime * emitter.hasDeathTimer))
+					emitter.lifeLived += Stats::Get().GetUpdateTime();
+				else if (emitter.lifeLived >= (emitter.lifeTime * emitter.hasDeathTimer))
+					e.RemoveComponent<comp::ParticleEmitter>();
 			}
 		});
 }
