@@ -1033,6 +1033,7 @@ Entity VillagerManagement::CreateVillager(HeadlessScene& scene, Entity homeHouse
 	comp::House* house = homeHouse.GetComponent<comp::House>();
 	transform->position = house->homeNode->position;
 	transform->position.y = 0.75f;
+	transform->rotation.y = -180;
 	villager->homeHouse = homeHouse;
 	meshName->name = NameType::MESH_VILLAGER;
 	animatorName->name = AnimName::ANIM_VILLAGER;

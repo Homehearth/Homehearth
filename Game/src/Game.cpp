@@ -1160,14 +1160,44 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 						nameString = "HouseRoof.fbx";
 						break;
 					}
-					case NameType::MESH_DEFENCE1X1:
+					case NameType::MESH_DEFENCE1X1_LVL0:
 					{
-						nameString = "Defence1x1.obj";
+						nameString = "lvl0_1x1.fbx";
 						break;
 					}
-					case NameType::MESH_DEFENCE1X3:
+					case NameType::MESH_DEFENCE1X1_LVL1:
 					{
-						nameString = "Defence1x3.obj";
+						nameString = "lvl1_1x1.fbx";
+						break;
+					}
+					case NameType::MESH_DEFENCE1X1_LVL2:
+					{
+						nameString = "lvl2_1x1.fbx";
+						break;
+					}
+					case NameType::MESH_DEFENCE1X1_LVL3:
+					{
+						nameString = "lvl3_1x1.fbx";
+						break;
+					}
+					case NameType::MESH_DEFENCE1X3_LVL0:
+					{
+						nameString = "lvl0_1x3.fbx";
+						break;
+					}
+					case NameType::MESH_DEFENCE1X3_LVL1:
+					{
+						nameString = "lvl1_1x3.fbx";
+						break;
+					}
+					case NameType::MESH_DEFENCE1X3_LVL2:
+					{
+						nameString = "lvl2_1x3.fbx";
+						break;
+					}
+					case NameType::MESH_DEFENCE1X3_LVL3:
+					{
+						nameString = "lvl3_1x3.fbx";
 						break;
 					}
 					case NameType::MESH_KNIGHT:

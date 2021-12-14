@@ -39,7 +39,7 @@ BT::NodeStatus BT::GenPathCBT::Tick()
 			{
 				generatePathTimer.Start();
 
-				aiHandler->AStarSearch(entity, blackboard);
+				//aiHandler->AStarSearch(entity, blackboard);
 			}
 			return BT::NodeStatus::SUCCESS;
 		}

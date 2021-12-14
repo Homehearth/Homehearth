@@ -737,8 +737,9 @@ void Simulation::UpgradeDefence(const uint32_t& id)
 			{
 				comp::Cost* c = e.GetComponent<comp::Cost>();
 				comp::Health* h = e.GetComponent<comp::Health>();
+				comp::MeshName* m = e.GetComponent<comp::MeshName>();
 
-				if (c && h)
+				if (c && h && m)
 				{
 					if (m_currency >= c->cost && h->upgradeLevel <= 2)
 					{
@@ -747,11 +748,48 @@ void Simulation::UpgradeDefence(const uint32_t& id)
 						h->currentHealth += 35;
 						h->upgradeLevel++;
 
+						switch (m->name)
+						{
+						case NameType::MESH_DEFENCE1X1_LVL0:
+						{
+							m->name = NameType::MESH_DEFENCE1X1_LVL1;
+							break;
+						}
+						case NameType::MESH_DEFENCE1X1_LVL1:
+						{
+							m->name = NameType::MESH_DEFENCE1X1_LVL2;
+							break;
+						}
+						case NameType::MESH_DEFENCE1X1_LVL2:
+						{
+							m->name = NameType::MESH_DEFENCE1X1_LVL3;
+							break;
+						}
+						case NameType::MESH_DEFENCE1X3_LVL0:
+						{
+							m->name = NameType::MESH_DEFENCE1X3_LVL1;
+							break;
+						}
+						case NameType::MESH_DEFENCE1X3_LVL1:
+						{
+							m->name = NameType::MESH_DEFENCE1X3_LVL2;
+							break;
+						}
+						case NameType::MESH_DEFENCE1X3_LVL2:
+						{
+							m->name = NameType::MESH_DEFENCE1X3_LVL3;
+							break;
+						}
+						default:
+							break;
+						}
+
 						// Cost is here.
 						e.UpdateNetwork();
 						m_currency -= c->cost;
 						c->cost *= 1.5f;
 						m_pGameScene->publish<EComponentUpdated>(e, ecs::Component::COST);
+						m_pGameScene->publish<EComponentUpdated>(e, ecs::Component::MESH_NAME);
 					}
 				}
 			}
@@ -841,8 +879,9 @@ void Simulation::ResetGameScene()
 	AIBehaviors::UpdateBlackBoard(*m_pGameScene, blackboard.get());
 	qt->ClearNullEntities();
 
-	m_timeCycler.SetTime(MORNING);
-	m_timeCycler.SetCycleSpeed(1.0f);
+	
+	m_timeCycler.SetTime(DAY);
+	m_timeCycler.SetCycleSpeed(0.0f);
 	m_tick = 0;
 }
 
