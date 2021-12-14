@@ -78,6 +78,20 @@ bool InputSystem::CheckKeyboardKey(const dx::Keyboard::Keys& key, const KeyState
 void InputSystem::AddToUpQueue(WPARAM wParam)
 {
 	this->m_keyUpQueue.push(wParam);
+	switch (wParam)
+	{
+	case VK_SHIFT:
+		m_shiftMode = false;
+		break;
+	case VK_CONTROL:
+		m_ctrlMode = false;
+		break;
+	case VK_CAPITAL:
+		m_capsLockMode = !m_capsLockMode;
+		break;
+	default:
+		break;
+	}
 }
 
 WPARAM InputSystem::GetKeyFromUPQueue()
@@ -86,20 +100,7 @@ WPARAM InputSystem::GetKeyFromUPQueue()
 	{
 		WPARAM queueKey = m_keyUpQueue.front();
 		m_keyUpQueue.pop();
-		switch (queueKey)
-		{
-		case VK_SHIFT:
-			m_shiftMode = false;
-			break;
-		case VK_CONTROL:
-			m_ctrlMode = false;
-			break;
-		case VK_CAPITAL:
-			m_capsLockMode = !m_capsLockMode;
-			break;
-		default:
-			break;
-		}
+
 	}
 	
 	return 0;

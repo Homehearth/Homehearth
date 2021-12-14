@@ -343,6 +343,10 @@ void Scene::HandleCombatText()
 	}
 }
 
+void Scene::HouseWarningIcons()
+{
+}
+
 Skybox* Scene::GetSkybox()
 {
 	return &m_sky;

@@ -261,17 +261,22 @@ void GameSystems::DeathParticleTimer(Scene& scene)
 
 void GameSystems::WarningIconSystem(Game* game, Scene& scene)
 {
-	scene.ForEachComponent<comp::House, comp::Transform, comp::Health>([&]( comp::House house, comp::Transform transform, comp::Health health)
+	scene.ForEachComponent<comp::House, comp::Transform, comp::Health>([&](comp::House house, comp::Transform transform, comp::Health health)
 		{
 			if (house.displayWarning)
 			{
-				for (int i = 0; i < NR_OF_HOUSES; i++)
+				Collection2D* collection = scene.GetCollection("HouseWarningIcon" + std::to_string(house.iconID + 1));
+				rtd::Picture* icon = static_cast<rtd::Picture*> (collection->elements[0].get());
+				if (omp_get_wtime() - house.warningIcon.timeRendered > 2.f)
 				{
-					Collection2D* warningColl = scene.GetCollection("HouseWarningIcon" + std::to_string(i + 1));
-					rtd::Picture* icon = static_cast<rtd::Picture*>(warningColl->elements[i].get());
-					icon->SetVisiblity(true);
-
-					icon->SetPosition(transform.position.x, transform.position.y);
+					icon->SetVisiblity(false);
+					house.displayWarning = false;
+				}
+				else
+				{
+					sm::Vector2 clipSpaceCoords = util::WorldSpaceToScreenSpace(transform.position, scene.GetCurrentCamera());
+					//set the position of the warning icon in clip space
+					icon->SetPosition(clipSpaceCoords.x, clipSpaceCoords.y);
 				}
 			}
 		});
