@@ -8,7 +8,7 @@ void GameSystems::DisplayUpgradeDefences(Game* game)
 {
 	Collection2D* coll = game->GetScene("Game").GetCollection("priceTag");
 	
-	if (game->GetCycler().GetTimePeriod() == CyclePeriod::DAY)
+	if (game->GetCycler().GetTimePeriod() != CyclePeriod::NIGHT)
 	{
 		// Display only if in Build mode..
 		ShopItem shopitem = game->GetShopItem();
