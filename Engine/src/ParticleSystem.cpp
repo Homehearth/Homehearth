@@ -23,13 +23,13 @@ void ParticleSystem::InitializeParticles(entt::registry& reg, entt::entity ent)
 	if (!t || !emitter)
 		return;
 
-	sm::Vector3 entityPosition = t->position;
-	entityPosition = sm::Vector3{ entityPosition.x + emitter->positionOffset.x, entityPosition.y + emitter->positionOffset.y, entityPosition.z + emitter->positionOffset.z };
+	sm::Vector4 entityPosition = t->position;
+	entityPosition = sm::Vector4{ entityPosition.x + emitter->positionOffset.x, entityPosition.y + emitter->positionOffset.y, entityPosition.z + emitter->positionOffset.z, 1.f };
 
 	std::vector<Particle_t> particles(emitter->nrOfParticles);
 	for (UINT i = 0; i < emitter->nrOfParticles; i++)
 	{
-		m_tempParticle.position = sm::Vector4(entityPosition.x , entityPosition.y, entityPosition.z, 1.f);
+		m_tempParticle.position = entityPosition;
 		m_tempParticle.type = emitter->type;
 		m_tempParticle.size = { 1 , 1 };
 		m_tempParticle.color = { 1,1,1,1 };
@@ -106,13 +106,26 @@ void ParticleSystem::InitializeParticles(entt::registry& reg, entt::entity ent)
 		}
 		case ParticleMode::MAGEBLINK:
 		{
-			float radius = 6.5f;
+			if (emitter->speed < 0)
+			{
+				float radius = 6.5f;
+				m_tempParticle.position += radius * m_tempParticle.velocity;
+			}
 			RandomSetVelocity(-1.0f, 1.0f);
 			m_tempParticle.velocity.Normalize();
-			m_tempParticle.position += radius * m_tempParticle.velocity; 
 			m_tempParticle.size = sm::Vector2(emitter->sizeMulitplier, emitter->sizeMulitplier);
 			RandomAddSize(-0.5f, 0.5f);
 			m_tempParticle.color = sm::Vector4(0,0,0.0f,1);
+			break;
+		}
+		case ParticleMode::UPGRADE:
+		{
+			//RandomSetVelocity(-1.0f, 1.0f);
+			float radius = 6.5f;
+			//m_tempParticle.position += radius * m_tempParticle.velocity;
+			m_tempParticle.position.y = entityPosition.y;
+			m_tempParticle.size = sm::Vector2(emitter->sizeMulitplier, emitter->sizeMulitplier);
+			break;
 		}
 		}
 

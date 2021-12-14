@@ -261,6 +261,16 @@ void Scene::RenderParticles(void* voidPass)
 
 		if (emitter.particleBuffer.Get())
 		{
+
+			pass->m_counter += Stats::Get().GetFrameTime() * pass->m_counterAdd;
+
+			if (pass->m_counter >= 10 )// || pass->m_counter <= 0)
+				pass->m_counter = 0;
+				//pass->m_counterAdd *= -1.f;
+			
+
+			std::cout << pass->m_counter << std::endl;
+
 			//Constant buffer
 			pass->m_particleUpdate.emitterPosition = sm::Vector4(emitter.transformCopy.position.x + emitter.positionOffset.x, emitter.transformCopy.position.y + emitter.positionOffset.y, emitter.transformCopy.position.z + emitter.positionOffset.z, 1.f);
 			pass->m_particleUpdate.counter = pass->m_counter;
