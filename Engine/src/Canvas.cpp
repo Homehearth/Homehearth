@@ -103,7 +103,6 @@ void Canvas::Draw()
 	{
 		m_border->Draw();
 	}
-
 	D2D1Core::DrawF(m_drawOpts, draw_shape_t(m_shape, m_color));
 }
 

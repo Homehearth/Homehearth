@@ -125,9 +125,9 @@ void GridSystem::Initialize(Vector2I mapSize, sm::Vector3 position, std::string 
 			sm::Vector3 tilePosition = { m_tileSize.x * row + m_tileHalfWidth, 0.f , (m_tileSize.y * -col) - m_tileHalfWidth };
 
 			Tile tileTemp;
-			tileTemp.gridID		= { col, row };
-			tileTemp.type		= tileTypeTemp;
-			tileTemp.position	= tilePosition;
+			tileTemp.gridID = { col, row };
+			tileTemp.type = tileTypeTemp;
+			tileTemp.position = tilePosition;
 
 			if (rowTilesTemp.size() < m_gridSize.x)
 				rowTilesTemp.push_back(tileTemp);
@@ -192,12 +192,12 @@ std::vector<Entity> GridSystem::UpdateHoverDefence()
 				entity1.AddComponent<comp::Transform>();
 				entity1.AddComponent<comp::Network>();
 				entity1.AddComponent<comp::MeshName>()->name = NameType::MESH_DEFENCE1X1;
-				
+
 				Entity entity2 = m_scene->CreateEntity();
 				entity2.AddComponent<comp::Transform>();
 				entity2.AddComponent<comp::Network>();
 				entity2.AddComponent<comp::MeshName>()->name = NameType::MESH_DEFENCE1X3;
-				m_hoveredDefences[net.id] = {entity1, entity2};
+				m_hoveredDefences[net.id] = { entity1, entity2 };
 			}
 			else
 			{
@@ -255,16 +255,22 @@ std::vector<Entity> GridSystem::UpdateHoverDefence()
 				else
 				{
 					comp::Transform* trans1 = m_hoveredDefences.at(net.id).def1x1.GetComponent<comp::Transform>();
-					if (trans1->position != sm::Vector3(0, 0, 0))
+					if (trans1)
 					{
-						trans1->position = sm::Vector3(0, 0, 0);
-						entities.push_back(m_hoveredDefences.at(net.id).def1x1);
+						if (trans1->position != sm::Vector3(0, 0, 0))
+						{
+							trans1->position = sm::Vector3(0, 0, 0);
+							entities.push_back(m_hoveredDefences.at(net.id).def1x1);
+						}
 					}
 					comp::Transform* trans2 = m_hoveredDefences.at(net.id).def1x3.GetComponent<comp::Transform>();
-					if (trans2->position != sm::Vector3(0, 0, 0))
+					if (trans2)
 					{
-						trans2->position = sm::Vector3(0, 0, 0);
-						entities.push_back(m_hoveredDefences.at(net.id).def1x3);
+						if (trans2->position != sm::Vector3(0, 0, 0))
+						{
+							trans2->position = sm::Vector3(0, 0, 0);
+							entities.push_back(m_hoveredDefences.at(net.id).def1x3);
+						}
 					}
 				}
 			}
@@ -280,16 +286,22 @@ std::vector<Entity> GridSystem::HideHoverDefence()
 	for (auto& def : m_hoveredDefences)
 	{
 		comp::Transform* trans1 = def.second.def1x1.GetComponent<comp::Transform>();
-		if (trans1->position != sm::Vector3(0, 0, 0))
+		if (trans1)
 		{
-			trans1->position = sm::Vector3(0, 0, 0);
-			entities.push_back(def.second.def1x1);
+			if (trans1->position != sm::Vector3(0, 0, 0))
+			{
+				trans1->position = sm::Vector3(0, 0, 0);
+				entities.push_back(def.second.def1x1);
+			}
 		}
 		comp::Transform* trans2 = def.second.def1x3.GetComponent<comp::Transform>();
-		if (trans2->position != sm::Vector3(0, 0, 0))
+		if (trans2)
 		{
-			trans2->position = sm::Vector3(0, 0, 0);
-			entities.push_back(def.second.def1x3);
+			if (trans2->position != sm::Vector3(0, 0, 0))
+			{
+				trans2->position = sm::Vector3(0, 0, 0);
+				entities.push_back(def.second.def1x3);
+			}
 		}
 	}
 
@@ -359,7 +371,7 @@ bool GridSystem::RemoveDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, 
 
 		aiHandler->RemoveDefenseEntity(closestEntity);
 		closestEntity.Destroy();
-		
+
 		return true;
 	}
 	else
@@ -487,7 +499,7 @@ std::vector<std::pair<UINT, UINT>> GridSystem::CheckDefenceLocation(Ray_t& mouse
 	{
 		okayToPlace = false;
 	}
-	
+
 	//Okay to place so we return all the coordinates of the relevant tiles
 	if (okayToPlace)
 	{
@@ -502,7 +514,7 @@ std::vector<std::pair<UINT, UINT>> GridSystem::CheckDefenceLocation(Ray_t& mouse
 }
 
 bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, PathFinderManager* aiHandler, QuadTree* dynamicQT, Blackboard* blackboard)
-{	
+{
 	std::vector<std::pair<UINT, UINT>> coordinates = CheckDefenceLocation(mouseRay, playerWhoPressedMouse);
 
 	//Check that it was okay to place here
@@ -550,7 +562,7 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 		if (!aiHandler->ReverseAStar(playerCollider.Center))
 			player.reachable = false;
 
-		
+
 		/*
 			Create the model for this tiles
 		*/
@@ -570,7 +582,7 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 		sm::Vector3 centerpoint = CalcCenterPoint(coordinates);
 		transform->position = { centerpoint.x, 5.f, centerpoint.z };
 		collider->Center = transform->position;
-		
+
 		UINT numberOfDefences = 0;
 		ShopItem shopitem = player.shopItem;
 		if (shopitem == ShopItem::Defence1x1)

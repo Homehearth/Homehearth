@@ -5,8 +5,9 @@
 enum class DoFType : UINT
 {
 	DEFAULT = 0,
-	ADAPTIVE = 1,
-	VIGNETTE = 2
+	STATIC = 1,
+	VIGNETTE = 2,
+	ADAPTIVE = 3
 };
 
 class DOFPass : public IRenderPass

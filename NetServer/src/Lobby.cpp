@@ -201,5 +201,22 @@ void Lobby::RemovePlayer(uint32_t playerID)
 
 void Lobby::Clear()
 {
+	auto it = m_players.begin();
+
+	while (it != m_players.end())
+	{
+		comp::Player* p = it->second.GetComponent<comp::Player>();
+
+		if (p)
+		{
+			m_playerTypes.push(p->playerType);
+		}
+
+		LOG_INFO("Removed player %u from scene", it->first);
+
+		it->second.Destroy();
+		it = m_players.erase(it);
+	}
+
 	m_players.clear();
 }

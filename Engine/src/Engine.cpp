@@ -47,8 +47,8 @@ void Engine::Startup()
 			config.height = 720;
 			config.width = 1280;
 
-			OptionSystem::Get().SetOption("WindowHeight", std::string("720"));
-			OptionSystem::Get().SetOption("WindowWidth", std::string("1280"));
+			OptionSystem::Get().SetOption("WindowHeight", "720");
+			OptionSystem::Get().SetOption("WindowWidth", "1280");
 		}
 	}
 
@@ -535,12 +535,24 @@ void Engine::Render()
 		m_renderer.Render(GetCurrentScene());
 	}
 
+#if RENDER_INGAME_UI
 	{
 		PROFILE_SCOPE("Render D2D1");
 		D2D1Core::Begin();
 		GetCurrentScene()->Render2D();
 		D2D1Core::Present();
+}
+#else
+	{
+		if (GetCurrentScene() != &GetScene("Game"))
+		{
+			PROFILE_SCOPE("Render D2D1");
+			D2D1Core::Begin();
+			GetCurrentScene()->Render2D();
+			D2D1Core::Present();
+		}		
 	}
+#endif	
 
 	{
 		PROFILE_SCOPE("Render ImGui");
