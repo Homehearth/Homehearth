@@ -31,10 +31,10 @@ private:
 		std::shared_ptr<RAnimation>					animation;
 		
 		//Specific data for this animation in this animator
-		float										frameTimer	= 0;
-		//double									currentTick	= 0;	//Add back?
+		float										frameTimer		= 0;
+		float										lastTick		= 0;
 		std::unordered_map<std::string, lastKeys_t> lastKeys;
-		std::string									upperbodybone = "";	//Bone that devide lower and upper body
+		std::string									upperbodybone	= "";	//Bone that devide lower and upper body
 	};
 
 	std::unordered_map<EAnimationType, animation_t>						m_animations;
@@ -46,7 +46,6 @@ private:
 	ComPtr<ID3D11ShaderResourceView> m_bonesSB_RSV;
 
 private:
-	//All the bones
 	bool LoadSkeleton(const std::vector<bone_t>& skeleton);
 	bool CreateBonesSB();
 	void UpdateStructureBuffer();

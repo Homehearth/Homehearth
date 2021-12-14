@@ -21,6 +21,9 @@ RAnimator::~RAnimator()
 	m_animations.clear();
 	m_states.clear();
 	m_localMatrices.clear();
+
+	while (!m_queue.empty())
+		m_queue.pop();
 }
 
 bool RAnimator::LoadSkeleton(const std::vector<bone_t>& skeleton)
@@ -145,7 +148,8 @@ void RAnimator::ResetAnimation(const EAnimationType& type)
 	if (m_animations.find(type) != m_animations.end())
 	{
 		animation_t* anim	= &m_animations[type];
-		anim->frameTimer	= 0;
+		anim->frameTimer	= 0.f;
+		anim->lastTick		= 0.f;
 
 		for (auto& key : anim->lastKeys)
 			key.second = { 0,0,0 };
@@ -158,37 +162,43 @@ bool RAnimator::UpdateTime(const EAnimationType& type)
 	animation_t* anim = &m_animations[type];
 	if (anim)
 	{
-		anim->frameTimer += anim->animation->GetTicksPerFrame() * Stats::Get().GetUpdateTime();
+		float tick = anim->animation->GetTicksPerFrame() * Stats::Get().GetUpdateTime();
 
-		//Reached end
-		if (anim->frameTimer >= anim->animation->GetDuration())
+		if (tick != anim->lastTick)
 		{
-			if (anim->animation->IsLoopable())
+			anim->lastTick		= tick;
+			anim->frameTimer	+= tick;
+
+			//Reached end
+			if (anim->frameTimer >= anim->animation->GetDuration())
 			{
-				anim->frameTimer = fmod(anim->frameTimer, anim->animation->GetDuration());
-				updateSuccess = true;
+				if (anim->animation->IsLoopable())
+				{
+					anim->frameTimer = fmod(anim->frameTimer, anim->animation->GetDuration());
+					updateSuccess = true;
+				}
+				else
+				{
+					ResetAnimation(type);
+					if (m_currentState == type)
+					{
+						m_currentState = m_blendState;
+						m_blendState = EAnimationType::NONE;
+					}
+					else if (m_blendState == type)
+					{
+						m_blendState = EAnimationType::NONE;
+					}
+					else if (m_upperState == type)
+					{
+						m_upperState = EAnimationType::NONE;
+					}
+				}
 			}
 			else
 			{
-				ResetAnimation(type);
-				if (m_currentState == type)
-				{
-					m_currentState = m_blendState;
-					m_blendState = EAnimationType::NONE;
-				}
-				else if (m_blendState == type)
-				{
-					m_blendState = EAnimationType::NONE;
-				}
-				else if (m_upperState == type)
-				{
-					m_upperState = EAnimationType::NONE;
-				}
+				updateSuccess = true;
 			}
-		}
-		else
-		{
-			updateSuccess = true;
 		}
 	}
 	return updateSuccess;
@@ -441,7 +451,7 @@ EAnimStatus RAnimator::GetAnimStatus() const
 	enum bitstate
 	{
 		current = 0x01,
-		next	= 0x02,
+		blend	= 0x02,
 		upper	= 0x04
 	};
 	UINT state = 0;
@@ -449,7 +459,7 @@ EAnimStatus RAnimator::GetAnimStatus() const
 	if (m_currentState	!= EAnimationType::NONE)
 		state |= bitstate::current;
 	if (m_blendState != EAnimationType::NONE)
-		state |= bitstate::next;
+		state |= bitstate::blend;
 	if (m_upperState	!= EAnimationType::NONE)
 		state |= bitstate::upper;
 
@@ -458,13 +468,13 @@ EAnimStatus RAnimator::GetAnimStatus() const
 	case 1:	//Current
 		codetype = EAnimStatus::ONE_ANIM;
 		break;
-	case 3:	//Current + Next
+	case 3:	//Current + Blend
 		codetype = EAnimStatus::TWO_ANIM_BLEND;
 		break;
 	case 5: //Current + Upper
 		codetype = EAnimStatus::TWO_ANIM_UPPER_LOWER;
 		break;
-	case 7: //Current + Next + Upper
+	case 7: //Current + Blend + Upper
 		codetype = EAnimStatus::THREE_ANIM_UPPER_LOWER_BLEND;
 		break;
 	default:
@@ -497,7 +507,6 @@ bool RAnimator::ReadyToBlend(const EAnimationType& from, const EAnimationType& t
 
 void RAnimator::CheckQueue()
 {
-	//if (m_queueState != EAnimationType::NONE)
 	if (!m_queue.empty())
 	{
 		EAnimationType queued = m_queue.front();
@@ -591,7 +600,7 @@ void RAnimator::CheckQueue()
 			break;
 		}
 
-		//Queue is to large - could be stuck...
+		//Queue is to big - could be stuck...
 		while (m_queue.size() > 3)
 		{
 			m_queue.pop();
