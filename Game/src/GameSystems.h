@@ -12,4 +12,5 @@ namespace GameSystems
 	void UpdatePlayerVisuals(Game* game);
 	void DisplayUpgradeDefences(Game* game);
 	void DeathParticleTimer(Scene& scene);
+	void WarningIconSystem(Game* game, Scene& scene);
 }

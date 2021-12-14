@@ -20,6 +20,11 @@ rtd::Picture::~Picture()
 {
 }
 
+const draw_t& rtd::Picture::GetOpts() const
+{
+	return m_drawOpts;
+}
+
 Border* rtd::Picture::GetBorder()
 {
 	if (!m_border)
