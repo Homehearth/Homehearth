@@ -108,14 +108,17 @@ void CombatSystem::UpdateTeleport(HeadlessScene& scene, Blackboard* blackboard)
 							if (entity.GetComponent<comp::ParticleEmitter>())
 								entity.RemoveComponent<comp::ParticleEmitter>();
 
-							entity.AddComponent<comp::ParticleEmitter>(sm::Vector3(0, 6, 0), 200, 3.0f, ParticleMode::MAGEBLINK, 1.f, 30.f, TRUE);
-							entity.GetComponent<comp::ParticleEmitter>()->direction = dir;
+							sm::Vector3 dirNormal = dir;
+							dirNormal.Normalize();
+							entity.AddComponent<comp::ParticleEmitter>(sm::Vector3(0, 6, 0), 200, 3.0f, ParticleMode::MAGEBLINK, 0.5f, -10.f, TRUE);
+							entity.GetComponent<comp::ParticleEmitter>()->direction = dirNormal;
 							scene.publish<EComponentUpdated>(entity, ecs::Component::PARTICLEMITTER);
 
+							dirNormal *= -1;
 							Entity blinkParticle = scene.CreateEntity();
 							blinkParticle.AddComponent<comp::Transform>(newPos);
-							blinkParticle.AddComponent<comp::ParticleEmitter>(sm::Vector3(0, 6, 0), 200, 3.0f, ParticleMode::MAGEBLINK, 1.0f, 30.f, TRUE);
-							blinkParticle.GetComponent<comp::ParticleEmitter>()->direction = -dir;
+							blinkParticle.AddComponent<comp::ParticleEmitter>(sm::Vector3(0, 6, 0), 200, 3.0f, ParticleMode::MAGEBLINK, 0.2f, 20.f, TRUE);
+							blinkParticle.GetComponent<comp::ParticleEmitter>()->direction = dirNormal;
 							blinkParticle.AddComponent<comp::Network>();
 							blinkParticle.UpdateNetwork();
 

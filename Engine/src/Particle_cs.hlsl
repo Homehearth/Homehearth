@@ -8,6 +8,7 @@
 #define emitterPos      c_pEmitterPosition
 #define gravity         9.82f
 #define dt              c_pDeltatime
+#define dir             c_pDirection
 
 void BloodSimmulation(inout VertexParticleIn particle, in uint id);
 void LeafSimmulation(inout VertexParticleIn particle, in uint id);
@@ -349,13 +350,14 @@ void MageBlinkSimulation(inout VertexParticleIn particle, in uint id)
     
         float particleUniqueSpeed = speed * abs(randomNumbers[id + counter]);
         
+        
         particle.velocity *= 1.0002f;
-        //particle.velocity += float4(normalize(c_pDirection), 1) / 100.f;
-        //particle.velocity = normalize(particle.velocity);
-        particle.pos += -particle.velocity * particleUniqueSpeed * dt;
+        //particle.velocity += (float4((dir), 1) / 100) * dt;
+        particle.velocity = normalize(particle.velocity);
+        particle.pos += particle.velocity * particleUniqueSpeed * dt;
     
         if (particle.size.x > 0)
-            particle.size -= ((particle.life) / (lifeTime)) * speed * dt;
+            particle.size -= ((particle.life) / (lifeTime)) * particleUniqueSpeed * dt;
         
         if (particle.color.a > 0)
             particle.color.a -= dt * sizeMulitplier * 0.5f;

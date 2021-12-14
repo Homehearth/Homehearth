@@ -244,7 +244,6 @@ void Scene::RenderParticles(void* voidPass)
 
 		if (emitter.particleBuffer.Get())
 		{
-			emitter.direction.Normalize();
 			//Constant buffer
 			pass->m_particleUpdate.emitterPosition = sm::Vector4(emitter.transformCopy.position.x + emitter.positionOffset.x, emitter.transformCopy.position.y + emitter.positionOffset.y, emitter.transformCopy.position.z + emitter.positionOffset.z, 1.f);
 			pass->m_particleUpdate.counter = pass->m_counter;
