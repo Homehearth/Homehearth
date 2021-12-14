@@ -215,17 +215,8 @@ bool RAnimator::UpdateBlendTime(const EAnimationType& from, const EAnimationType
 			m_states.at({ from, to }).blendTimer = 0;
 			m_blendDir = true;
 			ResetAnimation(from);
-
-			if (from == m_currentState && to == m_blendState)
-			{
-				m_currentState = m_blendState;
-				m_blendState = EAnimationType::NONE;
-			}
-			else if (from == m_currentState && to == m_upperState)
-			{
-				/*m_currentState = m_blendState;
-				m_blendState = EAnimationType::NONE;*/
-			}
+			m_currentState = m_blendState;
+			m_blendState = EAnimationType::NONE;
 			return false;
 		}
 		else if (blendTime < 0)
@@ -297,10 +288,6 @@ void RAnimator::BlendTwoAnims()
 					std::vector<sm::Matrix> bonePoseAbsolute;
 					bonePoseAbsolute.resize(m_bones.size(), sm::Matrix::Identity);
 					std::string name = "";
-					/*if (m_animations.size() == 7)
-					{
-						std::cout << "Current: " << 1.f - lerpTime << " | " << "Blending: " << lerpTime << std::endl;
-					}*/
 
 					for (size_t i = 0; i < m_bones.size(); i++)
 					{
@@ -392,11 +379,9 @@ void RAnimator::BlendUpperLowerAnims()
 				if (UpdateTime(m_upperState))
 				{
 					bool keepGoing = true;
-					float lerpTime1;
-					float lerpTime2;
+					float lerpTime;
 
-					if (UpdateBlendTime(m_currentState, m_blendState, lerpTime1)) // &&
-						//UpdateBlendTime(m_currentState, m_upperState, lerpTime2))
+					if (UpdateBlendTime(m_currentState, m_blendState, lerpTime))
 					{
 						std::vector<sm::Matrix> bonePoseAbsolute;
 						bonePoseAbsolute.resize(m_bones.size(), sm::Matrix::Identity);
@@ -408,16 +393,12 @@ void RAnimator::BlendUpperLowerAnims()
 							std::string name = m_bones[i].name;
 
 							if (name == bonename)
-							{
-								anim2 = upperAnim;
-								//lerpTime1 = lerpTime2;
 								switched = true;
-							}
 
 							sm::Matrix bonePoseRelative;
 							if (switched)
 							{
-								bonePoseRelative = anim2->animation->GetMatrix(name, anim2->frameTimer, anim2->lastKeys[name].keys, m_useInterpolation);
+								bonePoseRelative		= upperAnim->animation->GetMatrix(name, upperAnim->frameTimer, upperAnim->lastKeys[name].keys, m_useInterpolation);
 							}
 							else
 							{
@@ -430,9 +411,9 @@ void RAnimator::BlendUpperLowerAnims()
 								sm::Vector3 scl2		= anim2->animation->GetScale(	name, anim2->frameTimer, anim2->lastKeys[name].keys[1], m_useInterpolation);
 								sm::Quaternion rot2		= anim2->animation->GetRotation(name, anim2->frameTimer, anim2->lastKeys[name].keys[2], m_useInterpolation);
 
-								sm::Vector3 lerpPos		= sm::Vector3::Lerp(pos1, pos2, lerpTime1);
-								sm::Vector3 lerpScl		= sm::Vector3::Lerp(scl1, scl2, lerpTime1);
-								sm::Quaternion lerpRot	= sm::Quaternion::Slerp(rot1, rot2, lerpTime1);
+								sm::Vector3 lerpPos		= sm::Vector3::Lerp(pos1, pos2, lerpTime);
+								sm::Vector3 lerpScl		= sm::Vector3::Lerp(scl1, scl2, lerpTime);
+								sm::Quaternion lerpRot	= sm::Quaternion::Slerp(rot1, rot2, lerpTime);
 								lerpRot.Normalize();
 
 								bonePoseRelative		= sm::Matrix::CreateScale(lerpScl) * sm::Matrix::CreateFromQuaternion(lerpRot) * sm::Matrix::CreateTranslation(lerpPos);
@@ -493,17 +474,6 @@ EAnimStatus RAnimator::GetAnimStatus() const
 	return codetype;
 }
 
-bool RAnimator::IsBlending() const
-{
-	bool isblending = false;
-
-	if (m_currentState != EAnimationType::NONE &&
-		m_blendState != EAnimationType::NONE)
-		isblending = true;
-
-	return isblending;
-}
-
 bool RAnimator::ReadyToBlend(const EAnimationType& from, const EAnimationType& to) const
 {
 	bool ready = false;
@@ -547,12 +517,7 @@ void RAnimator::CheckQueue()
 			//Transition to this animation exist
 			if (m_states.find({ m_currentState, queued }) != m_states.end())
 			{
-				/*if (!m_animations.at(queued).upperbodybone.empty())
-				{
-
-				}*/
-
-				//Wait for the perfect movement for an oneshot animation
+				//Wait for the perfect movement for quueuing up an animation after oneshot animation
 				if (!m_animations.at(m_currentState).animation->IsLoopable())
 				{
 					if (ReadyToBlend(m_currentState, queued))
@@ -562,11 +527,20 @@ void RAnimator::CheckQueue()
 					}
 					//Keep waiting
 				}
-				//Loopable animation, just queue up the next
 				else
 				{
-					m_blendState = queued;
-					m_queue.pop();
+					//Upper part animation - Do not work on idle
+					if (!m_animations.at(queued).upperbodybone.empty() && m_currentState != EAnimationType::IDLE)
+					{
+						m_upperState = queued;
+						m_queue.pop();
+					}
+					//Loopable animation, just queue up the next
+					else
+					{
+						m_blendState = queued;
+						m_queue.pop();
+					}
 				}
 			}
 			//No transition - just pop and ignore this animation...
@@ -605,36 +579,23 @@ void RAnimator::CheckQueue()
 						{
 							m_upperState = queued;
 							m_queue.pop();
-							std::cout << "Currently: " << (UINT)m_currentState << std::endl;
-							std::cout << "Blending: " << (UINT)m_blendState << std::endl;
-							std::cout << "Queue: " << (UINT)queued << std::endl;
-							std::cout << "------" << std::endl;
 						}
 					}
 				}
 			}
 			break;
 		}
-		
-
+		//In current + upper:			ignore
+		//In current + upper + blend:	ignore
 		default:
 			break;
 		}
-
-		/*if (m_animations.size() == 7)
-		{
-			std::cout << "Currently: " << (UINT)m_currentState << std::endl;
-			std::cout << "Blending: " << (UINT)m_blendState << std::endl;
-			std::cout << "Queue: " << (UINT)queued << std::endl;
-			std::cout << "------" << std::endl;
-		}*/
 
 		//Queue is to large - could be stuck...
 		while (m_queue.size() > 3)
 		{
 			m_queue.pop();
 		}
-
 	}
 }
 
@@ -805,20 +766,13 @@ void RAnimator::Update()
 			StandardAnim();
 			break;
 		case EAnimStatus::TWO_ANIM_BLEND:
-			/*if (m_currentState == EAnimationType::PRIMARY_ATTACK)
-				std::cout << "Fading in primary" << std::endl;
-			else if (m_blendState == EAnimationType::PRIMARY_ATTACK)
-				std::cout << "Fading out primary" << std::endl;*/
-
 			BlendTwoAnims();
 			break;
 		case EAnimStatus::TWO_ANIM_UPPER_LOWER:
-			std::cout << "Upper and lower animation" << std::endl;
-			UpperLowerAnims();								//keep or remove?
+			UpperLowerAnims();
 			break;
 		case EAnimStatus::THREE_ANIM_UPPER_LOWER_BLEND:
-			std::cout << "Upper and lower with blending" << std::endl;
-			BlendUpperLowerAnims();							//keep or remove?
+			BlendUpperLowerAnims();
 			break;
 		default:
 			break;

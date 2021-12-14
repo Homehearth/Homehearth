@@ -71,7 +71,6 @@ private:
 	void BlendUpperLowerAnims();	//Current + blend + upper		//REMOVE
 
 	EAnimStatus GetAnimStatus() const;
-	bool IsBlending() const;
 	bool ReadyToBlend(const EAnimationType& from, const EAnimationType& to) const;
 
 	//Check what animations that is queued up
