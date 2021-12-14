@@ -217,6 +217,39 @@ void CombatSystem::UpdateDash(HeadlessScene& scene)
 		});
 }
 
+void CombatSystem::UpdateBlock(HeadlessScene& scene, float dt)
+{
+	scene.ForEachComponent<comp::ShieldBlockAbility>([&](Entity entity, comp::ShieldBlockAbility& ability)
+		{
+			sm::Vector3* updateTargetPoint = nullptr;
+
+			UpdateTargetPoint(entity, updateTargetPoint);
+
+			if (ecs::ReadyToUse(&ability, updateTargetPoint))
+			{
+				ability.isCooldownActive = false;
+			}
+
+			if (ecs::IsUsing(&ability))
+			{
+				ability.cooldownTimer = (ability.damageTaken / ability.maxDamage) * ability.cooldown;
+			}
+			else
+			{
+				if (!ability.isCooldownActive)
+				{
+					ability.timeSinceUse += dt;
+					if (ability.timeSinceUse > 5.0f)
+					{
+						ability.isCooldownActive = true;
+						ability.damageTaken = 0.0f;
+						ability.timeSinceUse = 0.0f;
+					}
+				}
+			}
+
+		});
+}
 
 void CombatSystem::UpdateCombatSystem(HeadlessScene& scene, float dt, Blackboard* blackboard)
 {
@@ -233,6 +266,20 @@ void CombatSystem::UpdateCombatSystem(HeadlessScene& scene, float dt, Blackboard
 
 	//For each entity that can use Dash
 	UpdateDash(scene);
+
+	UpdateBlock(scene, dt);
+}
+
+void CombatSystem::UpdateEffects(HeadlessScene& scene, float dt)
+{
+	scene.ForEachComponent<comp::Velocity, comp::Stun>([=](Entity e, comp::Velocity& v, comp::Stun& s)
+		{
+			v.vel *= s.movementSpeedAlt;
+
+			s.stunTime -= dt;
+			if (s.stunTime <= 0.0f)
+				e.RemoveComponent<comp::Stun>();
+		});
 }
 
 void CombatSystem::UpdateTargetPoint(Entity entity, sm::Vector3* targetPoint)
@@ -279,11 +326,11 @@ Entity CombatSystem::CreateAttackEntity(Entity entity, HeadlessScene& scene, com
 			comp::MeleeAttackAbility* ability = nullptr;
 			if (!entity.IsNull())
 				ability = entity.GetComponent<comp::MeleeAttackAbility>();
+
 			if (ability)
 				DoDamage(scene, entity, thisEntity, other, ability->attackDamage, 40.0f, AttackType::MELEE);
-
+			
 		});
-
 	return attackEntity;
 }
 
@@ -428,6 +475,16 @@ void CombatSystem::DoDamage(HeadlessScene& scene, Entity attacker, Entity attack
 	if (target == attacker)
 		return;
 
+	if (target.HasComponent<comp::Invincible>())
+	{
+		doDamage = false;
+		playTargetHitSound = false;
+		playHitSound = true;
+		doKnockback = false;
+	}
+
+	
+
 	bool isStaticTarget = target.HasComponent<comp::Tag<STATIC>>();
 	bool isHouseTarget = target.HasComponent<comp::House>();
 	bool isDefenseTarget = target.HasComponent<comp::Tag<DEFENCE>>();
@@ -439,6 +496,7 @@ void CombatSystem::DoDamage(HeadlessScene& scene, Entity attacker, Entity attack
 	}
 	else if (isHouseTarget) // hit a house
 	{
+		playHitSound = false;
 		if (isPlayerAttacker)
 		{
 			doDamage = false;
@@ -453,6 +511,41 @@ void CombatSystem::DoDamage(HeadlessScene& scene, Entity attacker, Entity attack
 		doKnockback = false;
 		playTargetHitSound = false;
 		playHitSound = false;
+	}
+
+	comp::ShieldBlockAbility* block = target.GetComponent<comp::ShieldBlockAbility>();
+	if (block)
+	{
+		if (ecs::IsUsing(block))
+		{
+			sm::Vector3 toAttacker = attacker.GetComponent<comp::Transform>()->position - target.GetComponent<comp::Transform>()->position;
+			toAttacker.Normalize();
+			sm::Vector3 targetForward = ecs::GetForward(*target.GetComponent<comp::Transform>());
+			//Check if in front
+			if (toAttacker.Dot(targetForward) > 0)
+			{
+				doDamage = false;
+				playTargetHitSound = false;
+				playHitSound = true;
+				doKnockback = true;
+				knockback *= 0.5f;
+				block->damageTaken += damage;
+
+				if (block->damageTaken >= block->maxDamage)
+				{
+					block->cooldownTimer = block->cooldown;
+					ecs::CancelAbility(block);
+					block->damageTaken = 0.0f;
+					block->isCooldownActive = true;
+
+				}
+			}
+			else {
+				ecs::CancelAbility(block);
+				block->damageTaken = 0.0f;
+				block->isCooldownActive = true;
+			}
+		}
 	}
 
 	// hit entity on same team
@@ -521,7 +614,7 @@ void CombatSystem::DoDamage(HeadlessScene& scene, Entity attacker, Entity attack
 
 		if (playHitSound)
 		{
-			if (type == AttackType::MELEE && attacker.GetComponent<comp::Player>())
+			if (type == AttackType::MELEE)
 			{
 				audio.type = ESoundEvent::Player_OnMeleeAttackHit;
 				audio.is3D = false;
@@ -534,6 +627,7 @@ void CombatSystem::DoDamage(HeadlessScene& scene, Entity attacker, Entity attack
 	comp::Health* otherHealth = target.GetComponent<comp::Health>();
 	if (otherHealth && doDamage)
 	{
+
 		otherHealth->currentHealth -= damage;
 		// update Health on network
 		scene.publish<EComponentUpdated>(target, ecs::Component::HEALTH);

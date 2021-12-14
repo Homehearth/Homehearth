@@ -5,6 +5,8 @@ anim 			PRIMARY_ATTACK 		Monster_Attack.fbx
 loopable		0
 anim 			TAKE_DAMAGE 		Monster_TakeDamage.fbx
 loopable		0
+anim			DEAD				Player_Dead.fbx		
+loopable		0
 
 blendstate		IDLE				MOVE				1.0
 blendstate 		MOVE				IDLE				0.5
@@ -24,3 +26,11 @@ blendstate		PRIMARY_ATTACK		MOVE				0.5
 														 
 blendstate		MOVE				TAKE_DAMAGE			0.5
 blendstate		TAKE_DAMAGE			MOVE				0.5
+
+
+blendstate		IDLE				DEAD				0.05
+blendstate		DEAD				IDLE				0.05
+
+
+blendstate		MOVE				DEAD				0.05
+blendstate		DEAD				MOVE				0.05
