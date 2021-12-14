@@ -184,8 +184,20 @@ void Renderer::UpdatePerFrame(Camera* pCam)
 		m_d3d11->DeviceContext()->UpdateSubresource(pCam->m_viewConstantBuffer.Get(),
 			0, nullptr, pCam->GetCameraMatrixes(), 0, 0);
 
+        const auto screenWidth = static_cast<uint32_t>(max(m_pipelineManager.m_viewport.Width, 1u));
+        const auto screenHeight = static_cast<uint32_t>(max(m_pipelineManager.m_viewport.Height, 1u));
+
+        m_pipelineManager.m_screenToViewParams.screenDimensions.x = static_cast<float>(screenWidth);
+        m_pipelineManager.m_screenToViewParams.screenDimensions.y = static_cast<float>(screenHeight);
+
+        m_pipelineManager.m_screenToViewParams.inverseProjection = pCam->GetInverseProjection();
+
+        m_pipelineManager.m_screenToViewParamsCB.SetData(m_d3d11->DeviceContext(), m_pipelineManager.m_screenToViewParams);
+
         if (!m_isForwardPlusInitialized)
             InitilializeForwardPlus(pCam);
+
+
 	}
 }
 
@@ -223,7 +235,7 @@ void Renderer::InitilializeForwardPlus(Camera* camera)
     m_pipelineManager.m_screenToViewParams.screenDimensions.x = static_cast<float>(screenWidth);
     m_pipelineManager.m_screenToViewParams.screenDimensions.y = static_cast<float>(screenHeight);
     dx::XMStoreFloat4x4(&m_pipelineManager.m_screenToViewParams.inverseProjection,
-      dx::XMMatrixInverse(nullptr, camera->GetProjection()));
+      camera->GetInverseProjection());
     m_pipelineManager.m_screenToViewParamsCB.SetData(m_d3d11->DeviceContext(), m_pipelineManager.m_screenToViewParams);
 
     //
@@ -330,6 +342,7 @@ bool Renderer::CreateLightGridRWB()
         return false;
 
     hr = D3D11Core::Get().Device()->CreateShaderResourceView(texture2D2.Get(), &srvDesc, m_pipelineManager.trans_LightGrid.srv.GetAddressOf());
+
 
     return !FAILED(hr);
 }

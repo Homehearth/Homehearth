@@ -953,6 +953,12 @@ bool PipelineManager::CreateShaders()
         return false;
     }
 
+    if (!m_transPixelShader.Create("Transparent_ps"))
+    {
+        LOG_WARNING("failed creating Transparent_ps.");
+        return false;
+    }
+
     if (!m_depthPassPixelShader.Create("Depth_ps"))
     {
         LOG_WARNING("failed creating Depth_ps.");
@@ -989,7 +995,7 @@ bool PipelineManager::CreateShaders()
         return false;
     }
 
-    if (!m_defaultPixelShader.Create("Model_ps"))
+    if (!m_opaquePixelShader.Create("Model_ps"))
     {
         LOG_WARNING("failed creating Model_ps.");
         return false;

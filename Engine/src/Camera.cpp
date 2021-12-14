@@ -206,6 +206,11 @@ sm::Matrix Camera::GetProjection() const
 	return m_projection;
 }
 
+sm::Matrix Camera::GetInverseProjection() const
+{
+	return m_projection.Invert();
+}
+
 sm::Vector3 Camera::GetPosition() const
 {
 	return m_position;

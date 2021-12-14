@@ -12,7 +12,7 @@ void BasePass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 	DC->IASetInputLayout(PM->m_defaultInputLayout.Get());
 	
     DC->VSSetShader(PM->m_defaultVertexShader.Get(), nullptr, 0);
-    DC->PSSetShader(PM->m_defaultPixelShader.Get(), nullptr, 0);
+    DC->PSSetShader(PM->m_opaquePixelShader.Get(), nullptr, 0);
    
 	DC->VSSetConstantBuffers(1, 1, pCam->m_viewConstantBuffer.GetAddressOf()); 
 	DC->PSSetConstantBuffers(1, 1, pCam->m_viewConstantBuffer.GetAddressOf()); 

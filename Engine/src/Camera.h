@@ -57,6 +57,7 @@ public:
 	//Get Functions
 	sm::Matrix GetView() const;
 	sm::Matrix GetProjection() const;
+	sm::Matrix GetInverseProjection() const;
 	sm::Vector3 GetPosition() const;
 	sm::Vector3 GetTarget() const;
 	sm::Vector3 GetUp() const;

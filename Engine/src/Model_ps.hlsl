@@ -47,13 +47,13 @@ PixelOut main(PixelIn input)
     const uint2 tileIndex = uint2(floor(input.pos.xy / (TILE_SIZE)));
 
     // Get the start position and offset of the light in the light index list.
-    const uint startOffset = t_lightGrid[tileIndex].x;
-    const uint lightCount = t_lightGrid[tileIndex].y;
+    const uint startOffset = t_lightGridOpaque[tileIndex].x;
+    const uint lightCount = t_lightGridOpaque[tileIndex].y;
 
     [loop]
-    for (int i = 0; i < c_info.x; i++)
+    for (int i = 0; i < lightCount; i++)
     {
-        const uint lightIndex = sb_lightIndexList[startOffset + i];
+        const uint lightIndex = sb_lightIndexListOpaque[startOffset + i];
         Light currentLight = sb_lights[i];
 
         if(currentLight.enabled == 1)

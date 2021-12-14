@@ -88,12 +88,14 @@ public:
 	Shaders::VertexShader				m_ParticleVertexShader;
 	Shaders::VertexShader				m_bloomVertexShader;
 
-	Shaders::PixelShader				m_defaultPixelShader;
+	Shaders::PixelShader				m_opaquePixelShader;
 	Shaders::PixelShader				m_debugPixelShader;
 	Shaders::PixelShader				m_depthPassPixelShader;
 	Shaders::PixelShader				m_skyboxPixelShader;
 	Shaders::PixelShader				m_ParticlePixelShader;
 	Shaders::PixelShader				m_bloomPixelShader;
+	Shaders::PixelShader				m_transPixelShader;
+
 
 	//Shadows
 	Shaders::VertexShader				m_paraboloidVertexShader;

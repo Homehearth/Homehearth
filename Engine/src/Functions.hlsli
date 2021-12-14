@@ -2,10 +2,10 @@
 	#error You may not include this header directly.
 #endif
 
-float4 ClipToView(const float4 clip)
+float4 ClipToView(float4 clip)
 {
     // View space position.
-    float4 view = mul(c_inverseProjection, clip);
+    float4 view = mul(inverseProjection, clip);
 
     // Perspective projection.
     view = view / view.w;

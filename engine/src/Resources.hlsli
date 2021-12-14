@@ -164,10 +164,12 @@ Texture2D t_waterTexture                            : register(t20);
 Texture2D t_waterTextureN                           : register(t21);
 Texture2D t_waterBlend                              : register(t22);
 
-Texture2D<uint2> t_lightGrid                        : register(t23);
+Texture2D<uint2> t_lightGridOpaque                  : register(t23);
 StructuredBuffer<Frustum> sb_frustums_in            : register(t24);    // Precomputed frustums for the grid.
-StructuredBuffer<uint> sb_lightIndexList            : register(t25);
+StructuredBuffer<uint> sb_lightIndexListOpaque      : register(t25);
 Texture2D t_lightCountHeatMap                       : register(t26);
+Texture2D<uint2> t_lightGridTrans                   : register(t27);
+StructuredBuffer<uint> sb_lightIndexListTrans       : register(t28);
 
 TextureCube t_radiance                              : register(t96);
 TextureCube t_irradiance                            : register(t97);

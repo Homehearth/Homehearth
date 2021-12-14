@@ -60,15 +60,15 @@ void main(ComputeShaderIn input)
 	// values for a single tile.
 	int2 texCoord = input.dispatchThreadID.xy;
 	float z_b = t_depth.Load(int3(texCoord, 0)).r;
-	float z_n = 2.0 * z_b - 1.0;
+	//float z_n = 2.0 * z_b - 1.0;
 
-	float zNear = 40.0f;
-	float zFar = 220.0f;
+	//float zNear = 40.0f;
+	//float zFar = 220.0f;
 
-	// Linear Depth.
-	float z_w = 2.0 * zNear * zFar / (zFar + zNear - z_n * (zFar - zNear));
+	//// Linear Depth.
+	//float z_w = 2.0 * zNear * zFar / (zFar + zNear - z_n * (zFar - zNear));
 
-	float fDepth = z_w;
+	float fDepth = z_b;
 
 	// atomic operations only work on integers,
 	// hence we reinterrpret the bits from the
@@ -109,15 +109,15 @@ void main(ComputeShaderIn input)
     float fMaxDepth = asfloat(group_uMaxDepth);
 
     // Convert depth values to view space.
-    float minDepthVS = ScreenToView(float4(0, 0, fMinDepth, 1)).z;
-    float maxDepthVS = ScreenToView(float4(0, 0, fMaxDepth, 1)).z;
+    float minDepthVS = ClipToView(float4(0, 0, fMinDepth, 1)).z;
+    float maxDepthVS = ClipToView(float4(0, 0, fMaxDepth, 1)).z;
 
 	// When culling lights for transparent geometry, we don’t want to use
 	// the minimum depth value from the depth map. Instead we will clip the
 	// lights using the camera’s near clipping plane. In this case, we will
 	// use the nearClipVS value which is the distance to the camera’s near
 	// clipping plane in view space.
-    float nearClipVS = ScreenToView(float4(0, 0, 0, 1)).z;
+    float nearClipVS = ClipToView(float4(0, 0, 0, 1)).z;
 
     // Clipping plane for minimum depth value 
     // (used for testing lights within the bounds of opaque geometry).
@@ -208,7 +208,7 @@ void main(ComputeShaderIn input)
 	}
 	else if (group_opaq_LightCount > 0)
 	{
-		float normalizedLightCount = group_opaq_LightCount / 50.0f;
+		float normalizedLightCount = group_opaq_LightCount / 10.0f;
 		float4 lightCountHeatMapColor = t_lightCountHeatMap.SampleLevel(s_linearClamp, float2(normalizedLightCount, 0), 0);
 		rw_heatMap[texCoord] = lightCountHeatMapColor;
 	}
