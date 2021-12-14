@@ -694,6 +694,11 @@ bool PipelineManager::CreateTextureEffectResources()
     if (FAILED(hr))
         return false;
 
+    // SRV FOR MODDED TEXTURE //
+    hr = m_d3d11->Device()->CreateShaderResourceView(m_ModdedWaterBlendAlbedoMap.get()->GetTexture2D(), nullptr, m_SRV_ModdedTextureEffectBlendMap.GetAddressOf());
+    if (FAILED(hr))
+        return false;
+
     return true;
 }
 

@@ -27,8 +27,8 @@ void main(uint3 id : SV_DispatchThreadID)
     
     //Texture scaling
     uv.xy = uv.xy * 2;
-    uv3.xy = uv3.xy * 3;
-    uv4.xy = uv4.xy * 3;
+    uv3.xy = uv3.xy * 3.5;
+    uv4.xy = uv4.xy * 3.5;
     
     //Wave
     uv.y += sin(uv.x * frequency) * amplitude * sin(c_counter + 10);
@@ -40,8 +40,8 @@ void main(uint3 id : SV_DispatchThreadID)
     uv2.y += uv2.y + (c_counter * 20);
     uv2.x += uv2.y + (c_counter * 20);
     
-    uv3.y += uv3.y + (c_counter * 60); //blend
-    uv4.x += uv4.x + (c_counter * 60);
+    uv3.y += uv3.y + (c_counter * 30); //blend
+    uv4.x += uv4.x + (c_counter * 20);
     
     //Make sure it tiles. 
     uv.x = uv.x % dimensions.x;
@@ -66,16 +66,16 @@ void main(uint3 id : SV_DispatchThreadID)
     float4 tempColor = t_waterTexture[uv.xy];
     
     //multiply the 2 blend textures
-    colorB2 = colorB * colorB2 * 4;
+    colorB2 = colorB * colorB2 * 3;
     
     //Add foam on water
     if (colorB2.r >= upperClamp.r || colorB2.g >= upperClamp.g || colorB2.b >= upperClamp.b)
     {
-        color.r = color.r + (colorB2.r * 0.7);
-        color.g = color.g + (colorB2.g * 0.7);
-        color.b = color.b + (colorB2.b * 0.7);
+        color.r = color.r + (colorB2.r * 0.5);
+        color.g = color.g + (colorB2.g * 0.5);
+        color.b = color.b + (colorB2.b * 0.5);
         
-        //Add edge on foam. 
+        ////Add edge on foam. 
         if (colorB2.r <= lowerClamp.r || colorB2.g <= lowerClamp.g || colorB2.b <= lowerClamp.b)
         {
             color.r = tempColor.r + (colorB2.r * 0.3);
