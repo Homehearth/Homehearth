@@ -310,7 +310,7 @@ void Scene::HandleCombatText()
 {
 	for (int i = 0; i < m_combatTextList.size(); i++)
 	{
-		combat_text_inst_t current_text = m_combatTextList[i];
+		combat_text_inst_t& current_text = m_combatTextList[i];
 
 		switch (current_text.type)
 		{
@@ -335,6 +335,8 @@ void Scene::HandleCombatText()
 		default:
 			break;
 		}
+
+		current_text.pos = sm::Vector3::Lerp(current_text.pos, current_text.end_pos, Stats::Get().GetFrameTime() * 0.25f);
 
 		if (std::abs(omp_get_wtime() - m_combatTextList[i].timeRendered) > 0.35)
 		{

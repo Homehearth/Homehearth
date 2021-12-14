@@ -305,6 +305,7 @@ struct combat_text_inst_t
 	combat_text_enum type;
 	int amount = 0;
 	sm::Vector3 pos;
+	sm::Vector3 end_pos;
 
 	// DONT TOUCH!!!!1
 	float timeRendered = 0;
