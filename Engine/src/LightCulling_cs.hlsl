@@ -13,7 +13,7 @@
 // Group shared variables.
 groupshared uint group_uMinDepth;
 groupshared uint group_uMaxDepth;
-groupshared Frustum group_GroupFrustum;
+groupshared Frustum group_GroupFrustum; // COULD THIS BE THE ERROR !?!?!?
 
 // To keep track of the number of lights that
 // are intersecting the current tile frustum.
@@ -144,7 +144,7 @@ void main(ComputeShaderIn input)
 				{
 					float3 lightPositionVS = mul(c_view, light.position).xyz;
 					Sphere sphere = { lightPositionVS, light.range };
-					if (SphereInsideFrustum(sphere, group_GroupFrustum, nearClipVS, maxDepthVS))
+					if (SphereInsideFrustum(sphere, sb_frustums_in[i], nearClipVS, maxDepthVS))
 					{
 						// Add light to light list for transparent geometry.
 						AddLightToTransparentList(i);
