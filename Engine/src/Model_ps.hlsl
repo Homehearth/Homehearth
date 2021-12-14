@@ -245,7 +245,7 @@ PixelOut main(PixelIn input)
                 
                 if (alpha > 0.4f)
                 {
-                    float3 colorDecal = (ambientIBL(albedoDecal, float3(0, 1, 0), V, F0, 0.f, 0.2f, 1.f) + Lo) * pow(lightVolumeFactor, 4.0f);
+                    float3 colorDecal = (ambientIBL(albedoDecal, float3(0, 1, 0), V, F0, 0.f, 0.2f, 1.f) + Lo);
                     
                     //HDR tonemapping
                     //colorDecal = colorDecal / (colorDecal + float3(1.0, 1.0, 1.0));

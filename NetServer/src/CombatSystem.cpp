@@ -99,16 +99,36 @@ void CombatSystem::UpdateTeleport(HeadlessScene& scene, Blackboard* blackboard)
 					bool hasSetTarget = false;
 					while (!hasSetTarget && dir.Length() > pathFinderManager->GetNodeSize())
 					{
+
 						sm::Vector3 newPos = transform.position + dir;
 						if (pathFinderManager->FindClosestNode(newPos)->reachable)
 						{
 							entity.GetComponent<comp::Transform>()->position = newPos;
+
+							if (entity.GetComponent<comp::ParticleEmitter>())
+								entity.RemoveComponent<comp::ParticleEmitter>();
+
+							sm::Vector3 dirNormal = dir;
+							dirNormal.Normalize();
+							entity.AddComponent<comp::ParticleEmitter>(sm::Vector3(0, 6, 0), 200, 3.0f, ParticleMode::MAGEBLINK, 0.5f, -10.f, TRUE);
+							entity.GetComponent<comp::ParticleEmitter>()->direction = dirNormal;
+							scene.publish<EComponentUpdated>(entity, ecs::Component::PARTICLEMITTER);
+
+							dirNormal *= -1;
+							Entity blinkParticle = scene.CreateEntity();
+							blinkParticle.AddComponent<comp::Transform>(newPos);
+							blinkParticle.AddComponent<comp::ParticleEmitter>(sm::Vector3(0, 6, 0), 200, 3.0f, ParticleMode::MAGEBLINK, 0.2f, 20.f, TRUE);
+							blinkParticle.GetComponent<comp::ParticleEmitter>()->direction = dirNormal;
+							blinkParticle.AddComponent<comp::Network>();
+							blinkParticle.UpdateNetwork();
+
 							hasSetTarget = true;
 							entity.UpdateNetwork();
 							if (pathFinderManager->ReverseAStar(entity.GetComponent<comp::Transform>()->position))
 							{
 								p->reachable = true;
 							}
+
 
 							audio_t audio = {
 								ESoundEvent::Player_OnCastBlink,
@@ -163,6 +183,8 @@ void CombatSystem::UpdateDash(HeadlessScene& scene)
 					Entity collider = CreateAreaAttackCollider(scene, entity.GetComponent<comp::Transform>()->position, 10, dashAbility.useTime);
 					collider.AddComponent<comp::Velocity>()->vel = dashAbility.velocityBeforeDash * dashAbility.force;
 
+					//entity.AddComponent<comp::ParticleEmitter>(sm::Vector3(0, 6, 0), 100, 10.f, ParticleMode::MAGEBLINK, 2.f, 1.f, FALSE);
+
 					CollisionSystem::Get().AddOnCollisionEnter(collider, [=](Entity thisEntity, Entity other)
 						{
 							tag_bits goodOrBad = TagType::GOOD | TagType::BAD;
@@ -195,6 +217,39 @@ void CombatSystem::UpdateDash(HeadlessScene& scene)
 		});
 }
 
+void CombatSystem::UpdateBlock(HeadlessScene& scene, float dt)
+{
+	scene.ForEachComponent<comp::ShieldBlockAbility>([&](Entity entity, comp::ShieldBlockAbility& ability)
+		{
+			sm::Vector3* updateTargetPoint = nullptr;
+
+			UpdateTargetPoint(entity, updateTargetPoint);
+
+			if (ecs::ReadyToUse(&ability, updateTargetPoint))
+			{
+				ability.isCooldownActive = false;
+			}
+
+			if (ecs::IsUsing(&ability))
+			{
+				ability.cooldownTimer = (ability.damageTaken / ability.maxDamage) * ability.cooldown;
+			}
+			else
+			{
+				if (!ability.isCooldownActive)
+				{
+					ability.timeSinceUse += dt;
+					if (ability.timeSinceUse > 5.0f)
+					{
+						ability.isCooldownActive = true;
+						ability.damageTaken = 0.0f;
+						ability.timeSinceUse = 0.0f;
+					}
+				}
+			}
+
+		});
+}
 
 void CombatSystem::UpdateCombatSystem(HeadlessScene& scene, float dt, Blackboard* blackboard)
 {
@@ -211,6 +266,20 @@ void CombatSystem::UpdateCombatSystem(HeadlessScene& scene, float dt, Blackboard
 
 	//For each entity that can use Dash
 	UpdateDash(scene);
+
+	UpdateBlock(scene, dt);
+}
+
+void CombatSystem::UpdateEffects(HeadlessScene& scene, float dt)
+{
+	scene.ForEachComponent<comp::Velocity, comp::Stun>([=](Entity e, comp::Velocity& v, comp::Stun& s)
+		{
+			v.vel *= s.movementSpeedAlt;
+
+			s.stunTime -= dt;
+			if (s.stunTime <= 0.0f)
+				e.RemoveComponent<comp::Stun>();
+		});
 }
 
 void CombatSystem::UpdateTargetPoint(Entity entity, sm::Vector3* targetPoint)
@@ -257,11 +326,11 @@ Entity CombatSystem::CreateAttackEntity(Entity entity, HeadlessScene& scene, com
 			comp::MeleeAttackAbility* ability = nullptr;
 			if (!entity.IsNull())
 				ability = entity.GetComponent<comp::MeleeAttackAbility>();
+
 			if (ability)
 				DoDamage(scene, entity, thisEntity, other, ability->attackDamage, 40.0f, AttackType::MELEE);
-
+			
 		});
-
 	return attackEntity;
 }
 
@@ -332,7 +401,7 @@ Entity CombatSystem::CreateAttackEntity(Entity entity, HeadlessScene& scene, com
 			});
 	};
 	
-	attackEntity.AddComponent<comp::ParticleEmitter>(sm::Vector3{ 0,0,0 }, 200, 1.f, ParticleMode::MAGERANGE, 1.7f, 1.f, false);
+	attackEntity.AddComponent<comp::ParticleEmitter>(sm::Vector3{ 0,0,0 }, 200, 1.f, ParticleMode::MAGERANGE, 1.7f, 1.f, FALSE);
 
 	attackEntity.AddComponent<comp::Network>();
 
@@ -406,6 +475,16 @@ void CombatSystem::DoDamage(HeadlessScene& scene, Entity attacker, Entity attack
 	if (target == attacker)
 		return;
 
+	if (target.HasComponent<comp::Invincible>())
+	{
+		doDamage = false;
+		playTargetHitSound = false;
+		playHitSound = true;
+		doKnockback = false;
+	}
+
+	
+
 	bool isStaticTarget = target.HasComponent<comp::Tag<STATIC>>();
 	bool isHouseTarget = target.HasComponent<comp::House>();
 	bool isDefenseTarget = target.HasComponent<comp::Tag<DEFENCE>>();
@@ -417,6 +496,7 @@ void CombatSystem::DoDamage(HeadlessScene& scene, Entity attacker, Entity attack
 	}
 	else if (isHouseTarget) // hit a house
 	{
+		playHitSound = false;
 		if (isPlayerAttacker)
 		{
 			doDamage = false;
@@ -431,6 +511,41 @@ void CombatSystem::DoDamage(HeadlessScene& scene, Entity attacker, Entity attack
 		doKnockback = false;
 		playTargetHitSound = false;
 		playHitSound = false;
+	}
+
+	comp::ShieldBlockAbility* block = target.GetComponent<comp::ShieldBlockAbility>();
+	if (block)
+	{
+		if (ecs::IsUsing(block))
+		{
+			sm::Vector3 toAttacker = attacker.GetComponent<comp::Transform>()->position - target.GetComponent<comp::Transform>()->position;
+			toAttacker.Normalize();
+			sm::Vector3 targetForward = ecs::GetForward(*target.GetComponent<comp::Transform>());
+			//Check if in front
+			if (toAttacker.Dot(targetForward) > 0)
+			{
+				doDamage = false;
+				playTargetHitSound = false;
+				playHitSound = true;
+				doKnockback = true;
+				knockback *= 0.5f;
+				block->damageTaken += damage;
+
+				if (block->damageTaken >= block->maxDamage)
+				{
+					block->cooldownTimer = block->cooldown;
+					ecs::CancelAbility(block);
+					block->damageTaken = 0.0f;
+					block->isCooldownActive = true;
+
+				}
+			}
+			else {
+				ecs::CancelAbility(block);
+				block->damageTaken = 0.0f;
+				block->isCooldownActive = true;
+			}
+		}
 	}
 
 	// hit entity on same team
@@ -499,7 +614,7 @@ void CombatSystem::DoDamage(HeadlessScene& scene, Entity attacker, Entity attack
 
 		if (playHitSound)
 		{
-			if (type == AttackType::MELEE && attacker.GetComponent<comp::Player>())
+			if (type == AttackType::MELEE)
 			{
 				audio.type = ESoundEvent::Player_OnMeleeAttackHit;
 				audio.is3D = false;
@@ -512,6 +627,7 @@ void CombatSystem::DoDamage(HeadlessScene& scene, Entity attacker, Entity attack
 	comp::Health* otherHealth = target.GetComponent<comp::Health>();
 	if (otherHealth && doDamage)
 	{
+
 		otherHealth->currentHealth -= damage;
 		// update Health on network
 		scene.publish<EComponentUpdated>(target, ecs::Component::HEALTH);
@@ -524,12 +640,12 @@ void CombatSystem::DoDamage(HeadlessScene& scene, Entity attacker, Entity attack
 		if (target.GetComponent<comp::Tag<TagType::DEFENCE>>())
 		{
 			//Smoke particles
-			target.AddComponent<comp::ParticleEmitter>(sm::Vector3{ 0,10,0 }, 50, 10.f, ParticleMode::SMOKEAREA, 3.5f, 1.f, true);
+			target.AddComponent<comp::ParticleEmitter>(sm::Vector3{ 0,10,0 }, 50, 10.f, ParticleMode::SMOKEAREA, 3.5f, 1.f, TRUE);
 		}
 		else
 		{
 			// Blood particle
-			target.AddComponent<comp::ParticleEmitter>(sm::Vector3{ 0,6,0 }, 50, 1.5f, ParticleMode::BLOOD, 2.0f, 1.f, true);
+			target.AddComponent<comp::ParticleEmitter>(sm::Vector3{ 0,6,0 }, 50, 1.5f, ParticleMode::BLOOD, 2.0f, 1.f, TRUE);
 		}
 
 		if (otherHealth->currentHealth <= 0.0f)

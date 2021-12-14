@@ -578,6 +578,8 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		m_dodgeCooldown = 0.0f;
 		m_waveCounter = 0;
 
+		dynamic_cast<rtd::Text*>(GetScene("Game").GetCollection("ZWaveCounter")->elements[1].get())->SetText("0");
+
 		this->m_inputState = { };
 		SetScene("Game");
 		break;
@@ -1315,11 +1317,11 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 							cText.pos = transform->position;
 						}
 
-						cText.timeRendered = omp_get_wtime();
+						cText.timeRendered = static_cast<float>(omp_get_wtime());
 						cText.pos.y += 15;
 						cText.end_pos = cText.pos;
 						cText.end_pos.y += 50;
-						cText.amount = std::abs(health->currentHealth - hp.currentHealth);
+						cText.amount = std::abs(static_cast<int>(health->currentHealth - hp.currentHealth));
 						GetScene("Game").PushCombatText(cText);
 						comp::House* house = e.GetComponent<comp::House>();
 						if (house)
@@ -1345,6 +1347,13 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 									}
 								}
 							}
+						}
+
+						if (hp.currentHealth <= 0)
+						{
+							// Spawn a bloodsplat.
+							Entity e = GetScene("Game").CreateEntity();
+							e.AddComponent<comp::Decal>(*transform);
 						}
 					}
 
@@ -1488,6 +1497,11 @@ void Game::UpdateInput()
 		m_inputState.leftMouse = true;
 	}
 
+	if (InputSystem::Get().CheckMouseKey(MouseKey::RIGHT, KeyState::HELD))
+	{
+		m_inputState.rightMouse = true;
+	}
+
 	if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED))
 	{
 		this->ChangeSpectatedPlayer();
@@ -1508,7 +1522,6 @@ void Game::UpdateInput()
 		}
 		case ShopItem::None:
 		{
-			m_inputState.rightMouse = true;
 			break;
 		}
 		}

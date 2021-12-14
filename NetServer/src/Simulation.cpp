@@ -175,20 +175,8 @@ void Simulation::ResetPlayer(Entity player)
 	player.AddComponent<comp::AnimationState>();
 	comp::Health* health = player.AddComponent<comp::Health>();
 	health->isAlive = true;
+
 	// only if Melee
-
-	if (playerComp->classType == comp::Player::Class::WARRIOR)
-	{
-		player.RemoveComponent<comp::RangeAttackAbility>();
-		player.RemoveComponent<comp::BlinkAbility>();
-		player.RemoveComponent<comp::HealAbility>();
-	}
-	else if (playerComp->classType == comp::Player::Class::MAGE)
-	{
-		player.RemoveComponent<comp::MeleeAttackAbility>();
-		player.RemoveComponent<comp::DashAbility>();
-	}
-
 	if (playerComp->classType == comp::Player::Class::WARRIOR)
 	{
 		health->maxHealth = 125.f;
@@ -205,9 +193,16 @@ void Simulation::ResetPlayer(Entity player)
 
 		playerComp->primaryAbilty = entt::resolve<comp::MeleeAttackAbility>();
 
-		// TEMP
-		playerComp->secondaryAbilty = entt::resolve<comp::MeleeAttackAbility>();
-		// END TEMP
+		comp::ShieldBlockAbility* block = player.AddComponent<comp::ShieldBlockAbility>();
+		block->cooldown = 5.0f;
+		block->delay = 0.0f;
+		block->lifetime = 0.5f;
+		block->movementSpeedAlt = 0.3f;
+		block->useTime = 1000000.f;
+		block->maxDamage = 70.f;
+
+		playerComp->secondaryAbilty = entt::resolve<comp::ShieldBlockAbility>();
+
 
 		comp::DashAbility* dashAbility = player.AddComponent<comp::DashAbility>();
 		dashAbility->cooldown = 6.0f;
@@ -244,7 +239,7 @@ void Simulation::ResetPlayer(Entity player)
 		healAbility->healAmount = 30.f;
 		healAbility->lifetime = 1.0f;
 		healAbility->range = 30.f;
-		healAbility->useTime = 1.0f;
+		healAbility->useTime = 0.2f;
 		healAbility->movementSpeedAlt = 1.0f;
 
 		playerComp->secondaryAbilty = entt::resolve<comp::HealAbility>();
@@ -549,6 +544,7 @@ void Simulation::SendSnapshot()
 				comp::BlinkAbility* blink = p.GetComponent<comp::BlinkAbility>();
 				comp::DashAbility* dash = p.GetComponent<comp::DashAbility>();
 				comp::HealAbility* heal = p.GetComponent<comp::HealAbility>();
+				comp::ShieldBlockAbility* block = p.GetComponent<comp::ShieldBlockAbility>();
 				if (melee)
 				{
 					count++;
@@ -575,6 +571,12 @@ void Simulation::SendSnapshot()
 				{
 					count++;
 					msg4 << AbilityIndex::Secondary << heal->cooldownTimer << heal->cooldown;
+				}
+
+				if (block)
+				{
+					count++;
+					msg4 << AbilityIndex::Secondary << block->cooldownTimer << block->cooldown;
 				}
 
 				msg4 << count;
@@ -632,7 +634,10 @@ void Simulation::UpdateInput(InputState state, uint32_t playerID)
 	Entity e = m_lobby.GetPlayer(playerID);
 	if (!e.IsNull() && e.GetComponent<comp::Health>()->isAlive)
 	{
-		e.GetComponent<comp::Player>()->lastInputState = state;
+		comp::Player* p = e.GetComponent<comp::Player>();
+
+		p->lastInputState = p->inputState;
+		p->inputState = state;
 	}
 }
 
@@ -750,7 +755,7 @@ void Simulation::UpgradeDefence(const uint32_t& id)
 						// Cost is here.
 						e.UpdateNetwork();
 						m_currency -= c->cost;
-						c->cost *= 1.5f;
+						c->cost *= static_cast<uint32_t>(1.5f);
 						m_pGameScene->publish<EComponentUpdated>(e, ecs::Component::COST);
 					}
 				}

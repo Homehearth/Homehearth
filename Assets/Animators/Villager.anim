@@ -2,6 +2,6 @@ skel 			Villager.fbx
 anim 			IDLE 				Villager_Idle.fbx
 anim 			MOVE 				Villager_Walk.fbx
 
-blendstate 		IDLE				MOVE				0.1
-blendstate 		MOVE				IDLE				0.1
+state 			IDLE				MOVE				0.2
+state 			MOVE				IDLE				0.2
 
