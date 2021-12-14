@@ -730,9 +730,6 @@ bool RAnimator::Create(const std::string& filename)
 
 void RAnimator::ChangeAnimation(const EAnimationType& type)
 {
-	if (m_animations.size() == 8)
-		std::cout << "Incoming" << (UINT)type << std::endl;
-
 	//Check if animation exist
 	if (m_animations.find(type) != m_animations.end())
 	{
