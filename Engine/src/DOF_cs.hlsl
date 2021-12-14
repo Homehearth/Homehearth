@@ -33,7 +33,7 @@ void main( uint3 DTid : SV_DispatchThreadID )
     }
     
     
-    if(c_dofType == 2)
+    else if(c_dofType == 2)
     {
         float inner = 0.1f;
         float outer = 1.2f;
@@ -49,7 +49,25 @@ void main( uint3 DTid : SV_DispatchThreadID )
         float vignette = 1 - strength * smoothstep(inner, outer, edge);
     
         finalColor = lerp(outOfFocusColor, focusColor, vignette);
-    }  
+    }
+    
+    else if(c_dofType == 3)
+    {
+        float minDistance = 10.f;
+        float maxDistance = 30.f;
+    
+        float4 position = ViewPosFromDepth(saturate(t_depth[DTid.xy].x), DTid.xy);
+
+        width /= 2;
+        height /= 2;
+    
+        float2 focus = float2(width, height);
+        float4 focusPoint = ViewPosFromDepth(t_depth[focus].x, focus);
+            
+        float blur = smoothstep(minDistance, maxDistance, abs(position.z - focusPoint.z));
+    
+        finalColor = lerp(focusColor, outOfFocusColor, blur);
+    }
     
     t_dofOut[DTid.xy] = finalColor;
 }

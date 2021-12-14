@@ -535,12 +535,24 @@ void Engine::Render()
 		m_renderer.Render(GetCurrentScene());
 	}
 
+#if RENDER_INGAME_UI
 	{
 		PROFILE_SCOPE("Render D2D1");
 		D2D1Core::Begin();
 		GetCurrentScene()->Render2D();
 		D2D1Core::Present();
+}
+#else
+	{
+		if (GetCurrentScene() != &GetScene("Game"))
+		{
+			PROFILE_SCOPE("Render D2D1");
+			D2D1Core::Begin();
+			GetCurrentScene()->Render2D();
+			D2D1Core::Present();
+		}		
 	}
+#endif	
 
 	{
 		PROFILE_SCOPE("Render ImGui");
