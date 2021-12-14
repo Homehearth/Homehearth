@@ -18,7 +18,7 @@
 
 #define RENDER_AINODES 0
 
-#define RENDER_INGAME_UI 0
+#define RENDER_INGAME_UI 1
 
 //Macros
 #if RENDER_IMGUI
