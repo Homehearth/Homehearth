@@ -28,6 +28,41 @@ PixelOut main(PixelIn input)
     SampleTextures(input, albedo, N, roughness, metallic, ao);
     //albedo = ACESFitted(albedo);
     
+    
+    //-----------------------------------------------------------------
+    // WATER FOAM //
+    /*
+    The higher the level of vertex color, the more the foam should show.
+    */
+    
+    float3 threshold = float3(0.99, 0.99, 0.99);
+    float3 finalFoam = float3(0.f, 0.f, 0.f);
+    
+    float3 foam = t_waterBlend.Sample(s_linear, input.uv).xyz;
+    foam = foam * 4;
+    
+    //Makes a nice fade
+    threshold = threshold * input.color.r;
+    finalFoam.rgb += ((input.color.r * input.color.r) * 0.5);
+    threshold *= input.color.b;
+    
+
+    //Makes blobs of foam 
+    if (foam.r >= threshold.r)
+    {
+        finalFoam = foam;
+        finalFoam = finalFoam * input.color.b;
+    }
+    
+    //Adds the effect
+    finalFoam = finalFoam * input.color.b;
+    
+    //-----------------------------------------------------------------
+    
+    
+    
+    
+    
     //If normal texture exists, sample from it
 
     //---------------------------------PBR-Shading Calculations---------------------------------
@@ -113,6 +148,8 @@ PixelOut main(PixelIn input)
                    
                     
                     lightCol += DoDirectionlight(sb_lights[i], N) * (1.0f - shadowCoef);
+                    finalFoam *= (1.0f - shadowCoef);
+                    finalFoam *= 0.6;
                     break;
                 }
                 case 1:
@@ -149,7 +186,10 @@ PixelOut main(PixelIn input)
                             shadowCoef = SampleShadowMap(texCoords, shadowIndex, currentDepth, shadowMapSize, blurKernalSize);
 
                         }
+                    
                         lightCol += DoPointlight(sb_lights[i], input, N) * (1.0f - shadowCoef);
+                        finalFoam += (DoPointlight(sb_lights[i], input, N) * (1.0f - shadowCoef) * 0.5);
+                    
                     break;
                 }
                 default:
@@ -158,8 +198,12 @@ PixelOut main(PixelIn input)
         
             CalcRadiance(input, V, N, roughness, metallic, albedo, sb_lights[i].position.xyz, lightCol, F0, rad);
             Lo += rad;
+            finalFoam += rad;
+            finalFoam *= input.color.b;
         }
     }
+    
+    //finalFoam *= rad;
     
     //Ambient lighting
     float3 ambient = float3(0.7f, 0.15f, 0.5f) * albedo * ao;
@@ -222,6 +266,8 @@ PixelOut main(PixelIn input)
     
     float3 color = (ambient + Lo) * lightVolumeFactor;   
     float brightness = dot(color, float3(0.2126, 0.7152, 0.0722));
+    
+    color += finalFoam;
     
     //HDR tonemapping
     color = ACESFitted(color);

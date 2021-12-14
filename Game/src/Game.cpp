@@ -1308,6 +1308,8 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 
 						cText.timeRendered = omp_get_wtime();
 						cText.pos.y += 15;
+						cText.end_pos = cText.pos;
+						cText.end_pos.y += 50;
 						cText.amount = std::abs(health->currentHealth - hp.currentHealth);
 						GetScene("Game").PushCombatText(cText);
 					}
@@ -1436,6 +1438,11 @@ void Game::UpdateInput()
 		m_inputState.leftMouse = true;
 	}
 
+	if (InputSystem::Get().CheckMouseKey(MouseKey::RIGHT, KeyState::HELD))
+	{
+		m_inputState.rightMouse = true;
+	}
+
 	if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED))
 	{
 		this->ChangeSpectatedPlayer();
@@ -1456,7 +1463,6 @@ void Game::UpdateInput()
 		}
 		case ShopItem::None:
 		{
-			m_inputState.rightMouse = true;
 			break;
 		}
 		}

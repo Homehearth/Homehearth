@@ -80,7 +80,6 @@ namespace ecs {
 
         if (abilityComponent->isUsing && abilityComponent->delayTimer <= 0.f)
         {
-            //abilityComponent->cooldownTimer = abilityComponent->cooldown;
             abilityComponent->isUsing = false;
             return true;
         }
@@ -116,12 +115,28 @@ namespace ecs {
         return IsUsing(ability);
     }
 
+    void CancelAbility(component::IAbility* abilityComponent)
+    {
+        abilityComponent->isUsing = false;
+        abilityComponent->useTimer = 0.0f;
+    }
+
+    void CancelAbility(Entity entity, entt::meta_type abilityType)
+    {
+        comp::IAbility* ability = GetAbility(entity, abilityType);
+        if (!ability)
+        {
+            LOG_WARNING("This entity does not have this ability");
+        }
+        CancelAbility(ability);
+    }
+
     bool IsPlayerUsingAnyAbility(Entity player)
     {
         component::Player* p = player.GetComponent<component::Player>();
         if (p)
         {
-            return IsUsing(player, p->primaryAbilty) || IsUsing(player, p->secondaryAbilty);
+            return IsUsing(player, p->primaryAbilty) || IsUsing(player, p->secondaryAbilty) || IsUsing(player, p->moveAbilty);
         }
         return false;
     }
