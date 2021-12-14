@@ -356,7 +356,9 @@ namespace ecs
 
 			float runSpeed;
 
+			InputState inputState;
 			InputState lastInputState;
+
 			sm::Vector3 mousePoint;
 			sm::Vector3 fowardDir;
 
@@ -430,6 +432,7 @@ namespace ecs
 			float cooldown = 1.5f;
 			// !DO NOT TOUCH!
 			float cooldownTimer = 0.f;
+			bool isCooldownActive = true;
 
 			// set this for delay before ability is actually used after the cooldown is done and the ecs::UseAbility has bee called
 			float delay = 0.1f;
@@ -473,6 +476,16 @@ namespace ecs
 			float maxRange = 30.f;
 		};
 
+		struct ShieldBlockAbility : public IAbility
+		{
+			Entity shieldCollider;
+
+			float maxDamage = 50.f;
+			float damageTaken = 0.0f;
+
+			float timeSinceUse = 0.0f;
+		};
+
 		struct DashAbility : public IAbility
 		{
 			//The duration for the force
@@ -505,6 +518,18 @@ namespace ecs
 		};
 		//------------------END----------------------
 
+		//----------------- EFFECTS -----------------
+		struct Stun
+		{
+			float stunTime = 5.0f;
+			float movementSpeedAlt = 0.0f;
+		};
+
+		struct Invincible {
+			float time = 1.0f;
+		};
+
+		//------------------END----------------------
 
 
 		struct SelfDestruct
@@ -597,6 +622,11 @@ namespace ecs
 
 	// returns if the ability is currently used
 	bool IsUsing(Entity entity, entt::meta_type abilityType);
+
+
+	void CancelAbility(component::IAbility* abilityComponent);
+	void CancelAbility(Entity entity, entt::meta_type abilityType);
+
 
 	bool IsPlayerUsingAnyAbility(Entity player);
 
