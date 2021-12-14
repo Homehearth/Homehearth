@@ -15,9 +15,7 @@ loopable		PLACE_DEFENCE		0
 loopable		DEAD				0
 
 tickSpeed		PRIMARY_ATTACK		38
-
-
-upperbodyBone	QuickRigCharacter_Spine
+upperbody		PRIMARY_ATTACK		QuickRigCharacter_Spine
 
 
 //				From				To					Blendtime

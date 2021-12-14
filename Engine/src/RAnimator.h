@@ -24,16 +24,17 @@ private:
 	EAnimationType							m_upperState;		//Animation that can play on upper half of the body
 	std::queue<EAnimationType>				m_queue;			//Queue of animations to play in order
 	bool									m_blendDir;			//True: toward blend, False: toward current
-	std::string								m_upperbodyBone;	//Bone that devide lower and upper body
 
 	struct animation_t
 	{
 		//Shared data
 		std::shared_ptr<RAnimation>					animation;
+		
 		//Specific data for this animation in this animator
 		float										frameTimer	= 0;
 		//double									currentTick	= 0;	//Add back?
 		std::unordered_map<std::string, lastKeys_t> lastKeys;
+		std::string									upperbodybone = "";	//Bone that devide lower and upper body
 	};
 
 	std::unordered_map<EAnimationType, animation_t>						m_animations;
