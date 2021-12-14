@@ -721,6 +721,19 @@ bool RAnimator::Create(const std::string& filename)
 					}
 				}
 			}
+			else if (keyword == "stayAtEnd")
+			{
+				std::string key;
+				bool stayAtEnd = false;
+				if (ss >> key >> stayAtEnd)
+				{
+					EAnimationType animType = StringToAnimationType(key);
+					if (m_animations.find(animType) != m_animations.end())
+					{
+						m_animations.at(animType).stayAtEnd = stayAtEnd;
+					}
+				}
+			}
 		}
 	}
 

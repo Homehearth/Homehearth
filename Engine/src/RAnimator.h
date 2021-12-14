@@ -35,6 +35,7 @@ private:
 		float										lastTick		= 0;
 		std::unordered_map<std::string, lastKeys_t> lastKeys;
 		std::string									upperbodybone	= "";	//Bone that devide lower and upper body
+		bool										stayAtEnd		= false;
 	};
 
 	std::unordered_map<EAnimationType, animation_t>						m_animations;
