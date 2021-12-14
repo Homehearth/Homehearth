@@ -104,6 +104,7 @@ bool Game::OnStartup()
 
 	// Set Current Scene
 	SetScene("MainMenu");
+	GetScene("Game").GetRegistry()->on_destroy<comp::House>().connect<&Game::OnHouseDestroy>(this);
 
 	return true;
 }
@@ -1327,12 +1328,12 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 							{
 								LOG_INFO("House took damage");
 								house->displayWarning = true;
-								house->warningIcon.pos = transform->position;
+								house->warningIcon.pos = e.GetComponent<comp::OrientedBoxCollider>()->Center;
 								house->warningIcon.timeRendered = omp_get_wtime();
 								if (house->iconID == -1)
 								{
 									//Create a new warning Icon and display it(6 exists as collections in the UI)
-									for (int i = 0; i < NR_OF_HOUSES; i++)
+									for (int i = 0; i < NR_OF_HOUSES && house->iconID == -1; i++)
 									{
 										Collection2D* collection = scene.GetCollection("HouseWarningIcon" + std::to_string(i + 1));
 										rtd::Picture* icon = static_cast<rtd::Picture*>(collection->elements[0].get());
@@ -1343,16 +1344,7 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 										}
 									}
 								}
-								else
-								{
-									//Collection2D* collection = scene.GetCollection("HouseWarningIcon" + std::to_string(house->iconID + 1));
-									//rtd::Picture* icon = static_cast<rtd::Picture*>(collection->elements[0].get());
-								}
 							}
-						}
-						else
-						{
-							LOG_INFO("NOT HOUSE");
 						}
 					}
 
@@ -1467,6 +1459,22 @@ void Game::ChangeSpectatedPlayer()
 			}
 		}
 	}
+}
+
+void Game::OnHouseDestroy(entt::registry& registry, entt::entity e)
+{
+	Entity entity(registry, e);
+	comp::House* house = entity.GetComponent<comp::House>();
+	if (house)
+	{
+		if (house->iconID != -1)
+		{
+			Collection2D* collection = GetScene("Game").GetCollection("HouseWarningIcon" + std::to_string(house->iconID + 1));
+			rtd::Picture* icon = static_cast<rtd::Picture*> (collection->elements[0].get());
+			icon->SetVisiblity(false);
+		}
+	}
+
 }
 
 void Game::UpdateInput()
