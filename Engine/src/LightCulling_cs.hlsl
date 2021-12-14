@@ -125,7 +125,6 @@ void main(ComputeShaderIn input)
     Plane minPlane = { float3(0, 0, 1), minDepthVS };
 
     // Each thread in a group will cull 1 light until all lights have been culled.
-	[unroll]
 	for (uint i = input.groupIndex; i < c_info.x; i += TILE_SIZE * TILE_SIZE)
 	{
 		if (sb_lights[i].enabled)
@@ -144,7 +143,7 @@ void main(ComputeShaderIn input)
 				{
 					float3 lightPositionVS = mul(c_view, light.position).xyz;
 					Sphere sphere = { lightPositionVS, light.range };
-					if (SphereInsideFrustum(sphere, sb_frustums_in[i], nearClipVS, maxDepthVS))
+					if (SphereInsideFrustum(sphere, group_GroupFrustum, nearClipVS, maxDepthVS))
 					{
 						// Add light to light list for transparent geometry.
 						AddLightToTransparentList(i);
