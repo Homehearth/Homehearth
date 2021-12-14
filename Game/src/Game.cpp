@@ -271,13 +271,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 					m_players.erase(id);
 				}
 
-				// Spawn blood splat when enemy dies.
-				if (m_gameEntities.at(id).GetComponent<comp::Tag<BAD>>())
-				{
-					Entity bloodDecal = GetCurrentScene()->CreateEntity();
-					bloodDecal.AddComponent<comp::Decal>(*m_gameEntities.at(id).GetComponent<comp::Transform>());
-				}
-
 				comp::Player* p = m_gameEntities.at(id).GetComponent<comp::Player>();
 				if (p)
 				{
@@ -1268,10 +1261,21 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 					if (GetCurrentScene() == &scene)
 					{
 						GameSystems::UpdateHealthbar(this);
-
-						if (e == m_players.at(m_localPID))
+						comp::Transform* t = e.GetComponent<comp::Transform>();
+						if (!hp.isAlive)
 						{
-							if (!hp.isAlive)
+							if (hp.currentHealth <= 0 && !e.GetComponent<comp::House>())
+							{
+								// Spawn a bloodsplat.
+								Entity e = GetScene("Game").CreateEntity();
+								if (t)
+								{
+									e.AddComponent<comp::Decal>(t->position);
+									e.AddComponent<comp::SelfDestruct>()->lifeTime = 15.f;
+								}
+							}
+
+							if (e == m_players.at(m_localPID))
 							{
 								m_isSpectating = true;
 								scene.GetCollection("SpectateUI")->elements[0]->SetVisiblity(true);
@@ -1290,39 +1294,31 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 								}
 							}
 						}
-					}
-					comp::Health* health = e.GetComponent<comp::Health>();
-					comp::Transform* transform = e.GetComponent<comp::Transform>();
-					if (health && transform)
-					{
-						combat_text_inst_t cText;
-						// Signal health gain.
-						if (health->currentHealth <= hp.currentHealth)
-						{
-							cText.type = combat_text_enum::HEALTH_GAIN;
-							cText.pos = transform->position;
-						}
-						else if (health->currentHealth > hp.currentHealth)
-						{
-							cText.type = combat_text_enum::HEALTH_LOSS;
-							cText.pos = transform->position;
-						}
 
-						cText.timeRendered = omp_get_wtime();
-						cText.pos.y += 15;
-						cText.end_pos = cText.pos;
-						cText.end_pos.y += 50;
-						cText.amount = std::abs(health->currentHealth - hp.currentHealth);
-						GetScene("Game").PushCombatText(cText);
-
-						if (hp.currentHealth <= 0)
+						comp::Health* health = e.GetComponent<comp::Health>();
+						if (health && t)
 						{
-							// Spawn a bloodsplat.
-							Entity e = GetScene("Game").CreateEntity();
-							e.AddComponent<comp::Decal>(*transform);
+							combat_text_inst_t cText;
+							// Signal health gain.
+							if (health->currentHealth <= hp.currentHealth)
+							{
+								cText.type = combat_text_enum::HEALTH_GAIN;
+								cText.pos = t->position;
+							}
+							else if (health->currentHealth > hp.currentHealth)
+							{
+								cText.type = combat_text_enum::HEALTH_LOSS;
+								cText.pos = t->position;
+							}
+
+							cText.timeRendered = omp_get_wtime();
+							cText.pos.y += 15;
+							cText.end_pos = cText.pos;
+							cText.end_pos.y += 50;
+							cText.amount = std::abs(health->currentHealth - hp.currentHealth);
+							GetScene("Game").PushCombatText(cText);
 						}
 					}
-
 					e.AddComponent<comp::Health>(hp);
 				}
 				break;
