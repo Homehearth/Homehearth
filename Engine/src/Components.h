@@ -63,7 +63,7 @@ namespace ecs
 		{
 			sm::Matrix viewPoint;
 			// Life span in seconds.
-			float lifespan = 5.0f;
+			float lifespan = 7.5f;
 
 			Decal(const Transform& t)
 			{
