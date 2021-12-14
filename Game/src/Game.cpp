@@ -576,6 +576,8 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		m_dodgeCooldown = 0.0f;
 		m_waveCounter = 0;
 
+		dynamic_cast<rtd::Text*>(GetScene("Game").GetCollection("ZWaveCounter")->elements[1].get())->SetText("0");
+
 		this->m_inputState = { };
 		SetScene("Game");
 		break;
