@@ -14,8 +14,7 @@ private:
 
 	Window m_window;
 	Renderer m_renderer;
-	std::unique_ptr<DirectX::AudioEngine> m_audio_engine;
-	
+
 	// Startup the Engine and its instances in a specific order.
 	void Startup() override;
 
@@ -36,9 +35,10 @@ private:
 
 	virtual void OnUserUpdate(float deltaTime) = 0;
 
+	void SetupLoadingScreen();
+
 public:
 
-	float m_masterVolume = 5.0f;
 	Engine();
 	Engine(const Engine& other) = delete;
 	Engine(Engine&& other) = delete;

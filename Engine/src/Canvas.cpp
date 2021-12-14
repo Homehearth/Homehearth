@@ -58,6 +58,21 @@ const draw_t rtd::Canvas::GetOpts() const
 	return m_drawOpts;
 }
 
+void rtd::Canvas::SetBorderThickness(const LineWidth& thicc)
+{
+	m_border->SetLineWidth(thicc);
+}
+
+void rtd::Canvas::SetBorderShape(const Shapes& shape)
+{
+	m_border->SetShape(shape);
+}
+
+void rtd::Canvas::SetShape(const Shapes& shape)
+{
+	m_shape = shape;
+}
+
 void rtd::Canvas::SetBorderColor(const D2D1_COLOR_F& new_color)
 {
 	if (!m_border)
@@ -88,8 +103,7 @@ void Canvas::Draw()
 	{
 		m_border->Draw();
 	}
-
-	D2D1Core::DrawF(m_drawOpts, draw_shape_t(Shapes::RECTANGLE_FILLED, m_color));
+	D2D1Core::DrawF(m_drawOpts, draw_shape_t(m_shape, m_color));
 }
 
 void rtd::Canvas::OnClick()

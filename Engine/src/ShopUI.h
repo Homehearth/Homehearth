@@ -17,6 +17,11 @@ namespace rtd
 
 		bool m_buttonHovering[6] = { false };
 		std::function<void()> m_functions[6] = {nullptr};
+		std::function<void()> m_onHoverFunction = nullptr;
+
+		int m_atkUpgradeCount = 0;
+		int m_healthUpgradeCount = 0;
+		int m_armorUpgradeCount = 0;
 
 	public:
 
@@ -25,6 +30,7 @@ namespace rtd
 
 		void SetMoneyRef(MoneyUI* money);
 		void SetOnPressedEvent(unsigned int index, std::function<void()> func);
+		void SetOnHoverEvent(std::function<void()> func);
 
 		// Inherited via Element2D
 		virtual void Draw() override;

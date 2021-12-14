@@ -3,6 +3,7 @@
 #include <Engine.h>
 #include "ModelIdentifier.h"
 #include "ParticleSystem.h"
+#include "Cycler.h"
 
 class Game : public Engine
 {
@@ -11,15 +12,14 @@ private:
 	std::unordered_map<uint32_t, Entity> m_gameEntities;
 
 	GridSystem m_grid;
-	uint32_t m_waveTimer = 0;
 	uint32_t m_money;
+	uint32_t m_waveCounter;
 	ParticleSystem m_particles;
-	Mode m_mode = Mode::PLAY_MODE;
-	Cycle m_serverCycle = Cycle::DAY;
+	
+	Cycler m_cycler;
+	bool hasLoaded = false;
 
 	Entity m_mapEntity;
-
-	InputState m_inputState;
 
 	// Inherited via Engine
 	virtual bool OnStartup() override;
@@ -30,11 +30,12 @@ private:
 	// User defined function to check messages which must comply with the function pointer arguments from Client
 	void CheckIncoming(message<GameMsg>& msg);
 	void PingServer();
-	void OnClientDisconnect();
-	
+	void OnClientDisconnect();	
 	void UpdateEntityFromMessage(Entity entity, message<GameMsg>& msg, bool skip = false);
-
 	void UpdateInput();
+	void ChangeSpectatedPlayer();
+
+	void OnHouseDestroy(entt::registry& registry, entt::entity e);
 
 public:
 	Client m_client;
@@ -45,29 +46,37 @@ public:
 	std::unordered_map<ModelID, std::vector<Entity>> m_models;
 	std::vector<std::pair<ModelID, dx::BoundingSphere>> m_LOSColliders;
 	std::unordered_map<uint32_t, Entity> m_players;
-
-
-	float m_elapsedCycleTime = 0;
+	InputState m_inputState;
 
 	Game();
 	virtual ~Game();
 	void JoinLobby(uint32_t lobbyID);
 	void CreateLobby();
-	const Mode& GetCurrentMode() const;
-	const Cycle& GetCurrentCycle() const;
-	void SetMode(const Mode& mode);
+	Cycler& GetCycler();
+	uint32_t& GetWaveCounter();
+
 	const uint32_t& GetMoney() const;
-	
+	void SetPlayerWantsToSkip(bool value);
 	void SendStartGame();
 	void SendSelectedClass(comp::Player::Class classType);
 
-	Entity& GetLocalPlayer();
-
+	bool GetLocalPlayer(Entity& player);
 	ParticleSystem* GetParticleSystem();
-	void UseShop(const ShopItem& whatToBuy);
+	
+	//Using the shop
+	void SetShopItem(const ShopItem& whatToBuy);
+	ShopItem GetShopItem() const;
 	void UpgradeDefence(const uint32_t& id);
 
 	float m_primaryCooldown = 0.0f;
+	float m_primaryMaxCooldown = 0.0f;
+
 	float m_secondaryCooldown = 0.0f;
+	float m_secondaryMaxCooldown = 0.0f;
+
 	float m_dodgeCooldown = 0.0f;
+	float m_dodgeMaxCooldown = 0.0f;
+
+	uint32_t m_currentSpree = 1;
+	bool m_isSpectating;
 };

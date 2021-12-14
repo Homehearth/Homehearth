@@ -30,8 +30,15 @@ void AnimationPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
     DC->RSSetViewports(1, &PM->m_viewport);
     DC->RSSetState(PM->m_rasterState.Get());
 
-    DC->OMSetRenderTargets(1, PM->m_backBuffer.GetAddressOf(), PM->m_depthStencilView.Get());
+    ID3D11RenderTargetView* renderTargets[2];
+    renderTargets[0] = PM->m_backBuffer.Get();
+    renderTargets[1] = PM->m_bloomTargetView.Get();
+
+    DC->OMSetRenderTargets(2, renderTargets, PM->m_depthStencilView.Get());
     DC->OMSetDepthStencilState(PM->m_depthStencilStateLessEqual.Get(), 0);
+
+    if (m_pShadowPass)
+        m_pShadowPass->PostRender(DC);
 }
 
 void AnimationPass::Render(Scene* pScene)

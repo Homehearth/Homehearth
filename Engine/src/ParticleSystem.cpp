@@ -17,33 +17,106 @@ void ParticleSystem::Initialize(ID3D11Device* pDevice)
 
 void ParticleSystem::InitializeParticles(entt::registry& reg, entt::entity ent)
 {
-	comp::EmitterParticle* emitter = &reg.get<comp::EmitterParticle>(ent);
-	sm::Vector3 entityPosition = reg.get<comp::Transform>(ent).position;
+	comp::EmitterParticle* emitter = reg.try_get<comp::EmitterParticle>(ent);
+	comp::Transform* t = reg.try_get<comp::Transform>(ent);
+
+	if (!t || !emitter)
+		return;
+
+	sm::Vector3 entityPosition = t->position;
 	entityPosition = sm::Vector3{ entityPosition.x + emitter->positionOffset.x, entityPosition.y + emitter->positionOffset.y, entityPosition.z + emitter->positionOffset.z };
 
 	std::vector<Particle_t> particles(emitter->nrOfParticles);
 	for (UINT i = 0; i < emitter->nrOfParticles; i++)
 	{
-		Particle_t tempParticle;
-		tempParticle.position = sm::Vector4(entityPosition.x , entityPosition.y, entityPosition.z, 1.f);
-		tempParticle.type = emitter->type;
-		tempParticle.size = { 1 , 1 };
-		tempParticle.color = { 1,1,1,1 };
-		tempParticle.life = 0;
-		tempParticle.velocity = {0,0,0,0};
+		m_tempParticle.position = sm::Vector4(entityPosition.x , entityPosition.y, entityPosition.z, 1.f);
+		m_tempParticle.type = emitter->type;
+		m_tempParticle.size = { 1 , 1 };
+		m_tempParticle.color = { 1,1,1,1 };
+		m_tempParticle.life = 0;
+		m_tempParticle.velocity = {0,0,0,0};
 
-		if (tempParticle.type == PARTICLEMODE::BLOOD)
+		switch (m_tempParticle.type)
 		{
-			tempParticle.velocity.x = (float)rand() / (RAND_MAX + 1.f) * (2.0f - (-2.0f)) + (-2.0f);
-			tempParticle.velocity.y = (float)rand() / (RAND_MAX + 1.f) * (2.0f - (-2.0f)) + (-2.0f);
-			tempParticle.velocity.z = (float)rand() / (RAND_MAX + 1.f) * (2.0f - (-2.0f)) + (-2.0f);
-		}
-		if (tempParticle.type == PARTICLEMODE::WATERSPLASH)
+		case ParticleMode::BLOOD:
 		{
-			tempParticle.color = { 0.f, 0.f, 0.5f, 0.5f };
+			RandomSetVelocity(-2.0f, 2.0f);
+			m_tempParticle.size = { emitter->sizeMulitplier , emitter->sizeMulitplier };
+			break;
 		}
 
-		particles[i] =  tempParticle;
+		case ParticleMode::LEAF:
+		{
+			break;
+		}
+		case ParticleMode::WATERSPLASH:
+		{
+			RandomAddPosition(-1.0f, 1.0f);
+			RandomSetVelocity(-2.0f, 2.0f);
+			m_tempParticle.size = { emitter->sizeMulitplier , emitter->sizeMulitplier };
+			m_tempParticle.color = { 0.f, 0.f, 0.5f, 0.5f };
+			break;
+		}
+		case ParticleMode::SMOKEPOINT:
+		{
+			break;
+		}
+		case ParticleMode::SMOKEAREA:
+		{
+			RandomAddPosition(-1.0f, 1.0f);
+			break;
+		}
+		case ParticleMode::SPARKLES:
+		{
+			break;
+		}
+		case ParticleMode::RAIN:
+		{
+			RandomAddPositionXYZ(sm::Vector2(-200.f, 250.f), sm::Vector2(0 , 0), sm::Vector2(-200.f, 250.f ));
+			m_tempParticle.size = { emitter->sizeMulitplier , emitter->sizeMulitplier };
+			break;
+		}
+		case ParticleMode::DUST:
+		{
+			break;
+		}
+		case ParticleMode::MAGEHEAL:
+		{
+			RandomSetVelocity(-1.0f, 1.0f);
+
+			m_tempParticle.velocity.y = 0.0f;
+			m_tempParticle.velocity.Normalize();
+			m_tempParticle.size = sm::Vector2(emitter->sizeMulitplier, emitter->sizeMulitplier);
+			m_tempParticle.position.y = (float)rand() / (RAND_MAX + 1.f) * (10.0f - (1.0f)) + (1.0f);
+			break;
+		}
+		case ParticleMode::MAGERANGE:
+		{
+			RandomAddPosition(-1.0f, 1.0f);
+			RandomSetVelocity(-2.0f, 2.0f);
+			m_tempParticle.size = { emitter->sizeMulitplier , emitter->sizeMulitplier };
+			break;
+		}
+		case ParticleMode::EXPLOSION:
+		{
+			RandomSetVelocity(-1.0f, 1.0f);
+			m_tempParticle.velocity.Normalize();
+			m_tempParticle.size = sm::Vector2(emitter->sizeMulitplier, emitter->sizeMulitplier);
+			break;
+		}
+		case ParticleMode::MAGEBLINK:
+		{
+			float radius = 6.5f;
+			RandomSetVelocity(-1.0f, 1.0f);
+			m_tempParticle.velocity.Normalize();
+			m_tempParticle.position += radius * m_tempParticle.velocity; 
+			m_tempParticle.size = sm::Vector2(emitter->sizeMulitplier, emitter->sizeMulitplier);
+			RandomAddSize(-0.5f, 0.5f);
+			m_tempParticle.color = sm::Vector4(0,0,0.0f,1);
+		}
+		}
+
+		particles[i] =  m_tempParticle;
 	}
 
 	CreateBufferSRVUAV(particles, emitter);
@@ -54,7 +127,7 @@ bool ParticleSystem::CreateBufferSRVUAV(std::vector<Particle_t> particles, comp:
 	D3D11_BUFFER_DESC descVert;
 	ZeroMemory(&descVert, sizeof(descVert));
 	descVert.Usage = D3D11_USAGE_DEFAULT;
-	//assert(sizeof(Particle) % 16 == 0);				//Ser till att det är 16 bitar
+	assert(sizeof(Particle_t) % 16 == 0);
 	descVert.ByteWidth = sizeof(Particle_t) * emitter->nrOfParticles;
 	descVert.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS;
 	descVert.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
@@ -102,4 +175,31 @@ bool ParticleSystem::CreateBufferSRVUAV(std::vector<Particle_t> particles, comp:
 	}
 
 	return true;
+}
+
+void ParticleSystem::RandomAddPosition(float min, float max)
+{
+	m_tempParticle.position.x += (float)rand() / (RAND_MAX + 1.f) * (max - (min)) + (min);
+	m_tempParticle.position.y += (float)rand() / (RAND_MAX + 1.f) * (max - (min)) + (min);
+	m_tempParticle.position.z += (float)rand() / (RAND_MAX + 1.f) * (max - (min)) + (min);
+}
+
+void ParticleSystem::RandomAddSize(float min, float max)
+{
+	m_tempParticle.size.x += (float)rand() / (RAND_MAX + 1.f) * (max - (min)) + (min);
+	m_tempParticle.size.y += (float)rand() / (RAND_MAX + 1.f) * (max - (min)) + (min);
+}
+
+void ParticleSystem::RandomAddPositionXYZ(sm::Vector2 minMaxX, sm::Vector2 minMaxY, sm::Vector2 minMaxZ)
+{
+	m_tempParticle.position.x += (float)rand() / (RAND_MAX + 1.f) * (minMaxX.y - (minMaxX.x)) + (minMaxX.x);
+	m_tempParticle.position.y += (float)rand() / (RAND_MAX + 1.f) * (minMaxY.y - (minMaxY.x)) + (minMaxY.x);
+	m_tempParticle.position.z += (float)rand() / (RAND_MAX + 1.f) * (minMaxZ.y - (minMaxZ.x)) + (minMaxZ.x);
+}
+
+void ParticleSystem::RandomSetVelocity(float min, float max)
+{
+	m_tempParticle.velocity.x = (float)rand() / (RAND_MAX + 1.f) * (max - (min)) + (min);
+	m_tempParticle.velocity.y = (float)rand() / (RAND_MAX + 1.f) * (max - (min)) + (min);
+	m_tempParticle.velocity.z = (float)rand() / (RAND_MAX + 1.f) * (max - (min)) + (min);
 }

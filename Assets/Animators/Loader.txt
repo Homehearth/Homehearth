@@ -1,0 +1,4 @@
+Knight.anim
+Mage.anim
+Monster.anim
+Villager.anim

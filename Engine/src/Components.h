@@ -11,6 +11,7 @@ namespace ecs
 {
 	enum Component : uint32_t
 	{
+		PARTICLEMITTER,
 		TRANSFORM,
 		VELOCITY,
 		MESH_NAME,
@@ -18,9 +19,11 @@ namespace ecs
 		HEALTH,
 		BOUNDING_ORIENTED_BOX,
 		BOUNDING_SPHERE,
-		PARTICLEMITTER,
 		PLAYER,
 		COST,
+
+		// Kills and Deaths
+		KD,
 		COMPONENT_COUNT,
 		COMPONENT_MAX = 32
 	};
@@ -60,7 +63,7 @@ namespace ecs
 		{
 			sm::Matrix viewPoint;
 			// Life span in seconds.
-			float lifespan = 10.0f;
+			float lifespan = 7.5f;
 
 			Decal(const Transform& t)
 			{
@@ -76,15 +79,20 @@ namespace ecs
 			}
 		};
 
+		struct Watermill
+		{
+			float theta = 0;
+		};
+
 		struct EmitterParticle
 		{
 			sm::Vector3							positionOffset	= { 0,0,0 };
 			UINT								nrOfParticles	= 0;
-			PARTICLEMODE						type			= PARTICLEMODE::BLOOD;
+			ParticleMode						type			= ParticleMode::BLOOD;
 			float								lifeTime		= 0.f;
 			float								sizeMulitplier	= 0.f;
 			float								speed			= 0.f;
-			bool								hasDeathTimer	= false;
+			int									hasDeathTimer	= FALSE;
 			float								lifeLived		= 0.f;
 
 			std::string textureName								= "";
@@ -96,47 +104,63 @@ namespace ecs
 			ComPtr<ID3D11ShaderResourceView>	particleSRV		= nullptr;
 			ComPtr<ID3D11UnorderedAccessView>	particleUAV		= nullptr;
 
-			EmitterParticle(sm::Vector3 positionOffset = {0,0,0}, int nrOfParticles = 10, float sizeMulitplier = 1.f, PARTICLEMODE type = PARTICLEMODE::BLOOD, float lifeTime = 2.f, float speed = 1, bool hasDeathTimer = false)
+			component::Transform				transformCopy;
+			sm::Vector3							direction		= { 0,0,0 };
+
+			EmitterParticle(sm::Vector3 positionOffset = {0,0,0}, int nrOfParticles = 10, float sizeMulitplier = 1.f, ParticleMode type = ParticleMode::BLOOD, float lifeTime = 2.f, float speed = 1, int hasDeathTimer = FALSE)
 			{
-				if (type == PARTICLEMODE::BLOOD)
+				textureName = "thisisfine.png";
+				opacityTextureName = "round_Opacity.png";
+
+				if (type == ParticleMode::BLOOD)
 				{
-					textureName = "BloodParticle.png";
-					opacityTextureName = "round_Opacity.png";
+					textureName = "Blood.png";
 				}
-				else if (type == PARTICLEMODE::LEAF)
+				else if (type == ParticleMode::LEAF)
 				{
-					textureName = "thisisfine.png";
-					opacityTextureName = "round_Opacity.png";
 				}
-				else if (type == PARTICLEMODE::WATERSPLASH)
+				else if (type == ParticleMode::WATERSPLASH)
 				{
 					textureName = "waterSplash.png";
-					opacityTextureName = "round_Opacity.png";
 				}
-				else if (type == PARTICLEMODE::SMOKE)
+				else if (type == ParticleMode::SMOKEPOINT || type == ParticleMode::SMOKEAREA)
 				{
 					textureName = "smoke.png";
-					opacityTextureName = "smoke_opacity.png";
+					opacityTextureName = "smoke_Opacity.png";
 				}
-				else if (type == PARTICLEMODE::SPARKLES)
+				else if (type == ParticleMode::SPARKLES)
 				{
-					textureName = "thisisfine.png";
-					opacityTextureName = "round_Opacity.png";
 				}
-				else if (type == PARTICLEMODE::RAIN)
+				else if (type == ParticleMode::RAIN)
 				{
-					textureName = "thisisfine.png";
-					opacityTextureName = "round_Opacity.png";
+					textureName = "drop.png";
+					opacityTextureName = "drop_Opacity.png";
 				}
-				else if (type == PARTICLEMODE::DUST)
+				else if (type == ParticleMode::DUST)
 				{
-					textureName = "thisisfine.png";
-					opacityTextureName = "round_Opacity.png";
+				}				
+				else if (type == ParticleMode::MAGEHEAL)
+				{
+					textureName = "MageHeal.png";
+				}
+				else if (type == ParticleMode::MAGERANGE || type == ParticleMode::EXPLOSION || type == ParticleMode::MAGEBLINK)
+				{
+					textureName = "fire.png";
+					opacityTextureName = "fire_Opacity.png";
 				}
 
 				texture = ResourceManager::Get().GetResource<RTexture>(textureName);
 				opacityTexture = ResourceManager::Get().GetResource<RTexture>(opacityTextureName);
 
+				if (!texture)
+				{
+					LOG_ERROR("Couldnt load particle texture %s", textureName.c_str());
+				}
+				if (!opacityTexture)
+				{
+					LOG_ERROR("Couldnt load particle opacity texture %s", opacityTextureName.c_str());
+				}
+				
 				this->nrOfParticles		= (UINT)nrOfParticles;
 				this->type				= type;
 				this->lifeTime			= lifeTime;
@@ -147,18 +171,19 @@ namespace ecs
 			}
 		};
 
-		struct PARTICLEEMITTER 
+		struct ParticleEmitter 
 		{
 			sm::Vector3		positionOffset	= { 0,0,0 };
 			UINT			nrOfParticles	= 0;
-			PARTICLEMODE	type			= PARTICLEMODE::BLOOD;
+			ParticleMode	type			= ParticleMode::BLOOD;
 			float			lifeTime		= 0.f;
 			float			sizeMulitplier	= 0.f;
 			float			speed			= 0.f;
-			bool			hasDeathTimer	= false;
+			int				hasDeathTimer	= FALSE;
 			float			lifeLived		= 0.f;
+			sm::Vector3		direction		= { 0,0,0 };
 
-			PARTICLEEMITTER(sm::Vector3 positionOffset = { 0,0,0 }, int nrOfParticles = 10, float sizeMulitplier = 1.f, PARTICLEMODE type = PARTICLEMODE::BLOOD, float lifeTime = 2.f, float speed = 1, bool hasDeathTimer = false)
+			ParticleEmitter(sm::Vector3 positionOffset = { 0,0,0 }, int nrOfParticles = 10, float sizeMulitplier = 1.f, ParticleMode type = ParticleMode::BLOOD, float lifeTime = 2.f, float speed = 1, int hasDeathTimer = FALSE)
 			{
 				this->nrOfParticles		= (UINT)nrOfParticles;
 				this->type				= type;
@@ -192,8 +217,13 @@ namespace ecs
 
 		struct AnimationState
 		{
-			EAnimationType lastSend;	//Send to user last time
-			EAnimationType toSend;		//Going to be send this update
+			EAnimationType lastSend = EAnimationType::NONE;	//Send to user last time
+			EAnimationType toSend	= EAnimationType::NONE;	//Going to be send this update
+		};
+
+		struct AudioState
+		{
+			std::queue<audio_t> data;
 		};
 
 		// Used on server side
@@ -237,6 +267,36 @@ namespace ecs
 			std::shared_ptr<BT::ParentNode> root;
 		};
 
+		struct Villager
+		{
+			std::vector<Node*> path;
+			//Stress implementation - fix later -
+			std::vector<sm::Vector3> idlePos = {sm::Vector3(250.f, 0.f, -320.f),
+												sm::Vector3(212.f, 0.f, -297.f),
+												sm::Vector3(237.f, 0.f, -297.f),
+												sm::Vector3(325.f, 0.f, -370.f),
+												sm::Vector3(330.f, 0.f, -285.f),
+												sm::Vector3(135.f, 0.f, -374.f)}; //Positions villager can go and idle at
+			Node* currentNode;
+			Entity homeHouse;
+			float movementSpeed = 15.f;
+			bool isHiding = false;
+			bool isFleeing = false;
+		};
+
+		struct House
+		{
+			NameType houseType = NameType::EMPTY;
+			NameType doorType = NameType::EMPTY;
+			NameType roofType = NameType::EMPTY;
+			Entity door;
+			Entity houseRoof;
+			Node* homeNode = nullptr; //AI can walk to this node to attack this house
+			bool isDead;
+			bool displayWarning;
+			int iconID = -1;
+			house_warning_icon_inst warningIcon;
+		};
 
 		struct TemporaryPhysics
 		{
@@ -274,16 +334,16 @@ namespace ecs
 		{
 			enum class PlayerType : uint16_t
 			{
-				PLAYER_ONE = 1,
-				PLAYER_TWO = 2,
-				PLAYER_THREE = 3,
-				PLAYER_FOUR = 4
-			} playerType = PlayerType::PLAYER_ONE;
+				NONE,
+				PLAYER_ONE,
+				PLAYER_TWO,
+				PLAYER_THREE,
+				PLAYER_FOUR
+			} playerType = PlayerType::NONE;
 			enum class State
 			{
 				IDLE,
 				LOOK_TO_MOUSE,
-				SPECTATING,
 				WALK
 			} state = State::IDLE;
 
@@ -299,7 +359,9 @@ namespace ecs
 
 			float runSpeed;
 
+			InputState inputState;
 			InputState lastInputState;
+
 			sm::Vector3 mousePoint;
 			sm::Vector3 fowardDir;
 
@@ -307,21 +369,32 @@ namespace ecs
 			float respawnTimer;
 			bool isReady = false;
 			bool reachable = true;
+			bool wantsToSkipDay = false;
 
-			char name[12] = {};
+			char name[13] = {};
 
-			//Place defence option
-			EDefenceType towerSelected = EDefenceType::SMALL;
-			float		 buildDistance = 24.0f;		//A tiles width is ~8
-			bool		 rotateDefence = false;
+			ShopItem		shopItem = ShopItem::None;
+
+			//Place defence option 
+			float			buildDistance = 32.0f;		//A tiles width is ~8
+			bool			rotateDefence = false;
 		};
 
+		struct KillDeaths
+		{
+			unsigned int kills = 0;
+			unsigned int deaths = 0;
+		};
+
+		struct PlayerReference
+		{
+			Entity player;
+		};
 		
 		struct TileSet
 		{
 			std::vector<std::pair<UINT, UINT>> coordinates;
 		};
-	
 
 		struct NPC
 		{
@@ -345,6 +418,7 @@ namespace ecs
 			float flickerTimer = 1.f;
 			float maxFlickerTime = 1.f;
 			bool increase;
+			float enabledTimer = 1.f;
 		};
 
 		struct Health
@@ -352,6 +426,7 @@ namespace ecs
 			float maxHealth = 100.f;
 			float currentHealth = 100.f;
 			bool isAlive = true;
+			int upgradeLevel = 0;
 		};
 
 		struct IAbility
@@ -360,6 +435,7 @@ namespace ecs
 			float cooldown = 1.5f;
 			// !DO NOT TOUCH!
 			float cooldownTimer = 0.f;
+			bool isCooldownActive = true;
 
 			// set this for delay before ability is actually used after the cooldown is done and the ecs::UseAbility has bee called
 			float delay = 0.1f;
@@ -384,6 +460,8 @@ namespace ecs
 
 			// set to be target for ability
 			sm::Vector3 targetPoint;
+
+			int upgradeLevel = 0;
 		};
 
 		//---------- WARRIOR ABILITIES ----------
@@ -399,6 +477,16 @@ namespace ecs
 			float damage = 10.f;
 			float damageRadius = 20.f;
 			float maxRange = 30.f;
+		};
+
+		struct ShieldBlockAbility : public IAbility
+		{
+			Entity shieldCollider;
+
+			float maxDamage = 50.f;
+			float damageTaken = 0.0f;
+
+			float timeSinceUse = 0.0f;
 		};
 
 		struct DashAbility : public IAbility
@@ -433,11 +521,24 @@ namespace ecs
 		};
 		//------------------END----------------------
 
+		//----------------- EFFECTS -----------------
+		struct Stun
+		{
+			float stunTime = 5.0f;
+			float movementSpeedAlt = 0.0f;
+		};
+
+		struct Invincible {
+			float time = 1.0f;
+		};
+
+		//------------------END----------------------
 
 
 		struct SelfDestruct
 		{
 			float lifeTime;
+			std::function<void()> onDestruct;
 		};
 
 
@@ -524,6 +625,11 @@ namespace ecs
 
 	// returns if the ability is currently used
 	bool IsUsing(Entity entity, entt::meta_type abilityType);
+
+
+	void CancelAbility(component::IAbility* abilityComponent);
+	void CancelAbility(Entity entity, entt::meta_type abilityType);
+
 
 	bool IsPlayerUsingAnyAbility(Entity player);
 

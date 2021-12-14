@@ -103,3 +103,69 @@ float SampleShadowMap(float2 texCoords, int shadowIndex, float currentDepth, int
     shadowCoef /= kernalSize * kernalSize;
     return shadowCoef;
 }
+
+float3 RRTAndODTFit(float3 v)
+{
+    float3 a = v * (v + 0.0245786f) - 0.000090537f;
+    float3 b = v * (0.983729f * v + 0.4329510f) + 0.238081f;
+    return a / b;
+}
+
+float3 ACESFitted(float3 color)
+{
+    color = mul(ACESInputMat, color);
+
+    // Apply RRT and ODT
+    color = RRTAndODTFit(color);
+
+    color = mul(ACESOutputMat, color);
+
+    // Clamp to [0, 1]
+    color = saturate(color);
+
+    return color;
+}
+
+//void DilateBlur(RWTexture2D<unorm float4> t_bokehBufferRead, out RWTexture2D<unorm float4> t_bokehBufferOut, uint3 DTid)
+//{
+//    int size = 1;
+//    float separation = 1.f;
+//    float minThreshold = 0.1f;
+//    float maxThreshold = 0.3f;
+    
+//    int width, height;
+//    t_bokehBufferRead.GetDimensions(width, height);
+//    float2 texSize = float2(width, height);
+    
+//    float2 texCoord = DTid.xy;
+    
+//    float4 color = t_bokehBufferRead[texCoord / texSize];
+    
+//    float mx = 0.f;
+//    float4 cmx = color;
+    
+//    for (int i = -size; i <= size; i++)
+//    {
+//        for (int j = -size; j <= size; j++)
+//        {
+//            if (!(distance(float2(i, j), float2(0, 0)) <= size))
+//            {
+//                continue;
+//            }
+            
+//            float4 c = t_bokehBufferRead[(texCoord.xy + (float2(i, j) * separation)) / texSize];
+            
+//            float mxt = dot(c.rgb, float3(0.3, 0.59, 0.11));
+            
+//            if (mxt > mx)
+//            {
+//                mx = mxt;
+//                cmx = c;
+//            }
+//        }
+
+//    }
+
+    
+//    t_bokehBufferOut[DTid.xy] = lerp(color, cmx, smoothstep(minThreshold, maxThreshold, mx));
+//}

@@ -4,6 +4,8 @@
 #include "Camera.h"
 #include "GridSystem.h"
 #include "OptionSystem.h"
+#include "Picture.h"
+#include "Canvas.h"
 
 /*
 	We only need the loading screen rendered once. 
@@ -16,11 +18,12 @@ Engine::Engine()
 	: BasicEngine()
 {
 	LOG_INFO("Engine(): " __TIMESTAMP__);
+	SoundHandler::Get();
+	OptionSystem::Get().OnStartUp();
 }
 
 void Engine::Startup()
 {
-	OptionSystem::Get().OnStartUp();
 	T_INIT(1, thread::ThreadType::POOL_FIFO);
 	srand(static_cast<unsigned>(time(NULL)));
 
@@ -29,9 +32,25 @@ void Engine::Startup()
 
 	//Get heighest possible 16:9 resolution
 	//90% of the height
-	config.height = static_cast<UINT>(GetSystemMetrics(SM_CYSCREEN) * 0.85f);
-	float aspectRatio = 16.0f / 9.0f;
-	config.width = static_cast<UINT>(aspectRatio * config.height);
+	//config.height = static_cast<UINT>(GetSystemMetrics(SM_CYSCREEN) * 0.50f);
+	//float aspectRatio = 16.0f / 9.0f;
+	//config.width = static_cast<UINT>(aspectRatio * config.height);
+
+
+	int fullscreen = std::stoi(OptionSystem::Get().GetOption("Fullscreen"));
+	if (fullscreen == 0)
+	{
+		config.height = std::stoi(OptionSystem::Get().GetOption("WindowHeight"));
+		config.width = std::stoi(OptionSystem::Get().GetOption("WindowWidth"));
+		if ((config.width | config.height) == 0)
+		{
+			config.height = 720;
+			config.width = 1280;
+
+			OptionSystem::Get().SetOption("WindowHeight", "720");
+			OptionSystem::Get().SetOption("WindowWidth", "1280");
+		}
+	}
 
 	config.title = L"Homehearth";
 	if (!m_window.Initialize(config))
@@ -42,24 +61,6 @@ void Engine::Startup()
 	// DirectX Startup:
 	D3D11Core::Get().Initialize(&m_window);
 	D2D1Core::Initialize(&m_window);
-
-	m_renderer.Initialize(&m_window);
-	m_renderer.Setup(*this);
-
-	// Thread should be launched after s_engineRunning is set to true and D3D11 is initialized.
-	//
-	// AUDIO - we supposed to use other audio engine
-	//
-	HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
-	if (FAILED(hr))
-	{
-		LOG_ERROR("Failed to initialize AudioEngine.");
-	}
-	DirectX::AUDIO_ENGINE_FLAGS eflags = DirectX::AudioEngine_Default;
-#ifdef _DEBUG
-	eflags |= DirectX::AudioEngine_Debug;
-#endif
-	this->m_audio_engine = std::make_unique<DirectX::AudioEngine>(eflags);
 
 	IMGUI(
 		// Setup ImGUI
@@ -73,21 +74,29 @@ void Engine::Startup()
 		LOG_INFO("ImGui was successfully initialized");
 	);
 
+	this->SetupLoadingScreen();
+	SetScene("Loading");
+	if (thread::IsThreadActive())
+		T_CJOB(Engine, RenderThread);
+
+	m_renderer.Initialize(&m_window);
+	m_renderer.Setup(*this);
+
 	// Thread Startup.
 	thread::RenderThreadHandler::Get().SetRenderer(&m_renderer);
 	thread::RenderThreadHandler::Get().SetWindow(&m_window);
 	thread::RenderThreadHandler::Get().Setup(2);
 
 	InputSystem::Get().SetMouseWindow(m_window.GetHWnd(), m_window.GetWidth(), m_window.GetHeight());
+
+	SoundHandler::Get().SetMasterVolume(std::stof(OptionSystem::Get().GetOption("MasterVolume")));
+	SoundHandler::Get().Setup();
 	
 	BasicEngine::Startup();
 }
 
 void Engine::Run()
 {
-	if (thread::IsThreadActive())
-		T_CJOB(Engine, RenderThread);
-
 	BasicEngine::Run();
 	// Wait for the rendering thread to exit its last render cycle and shutdown
 #if _DEBUG
@@ -105,10 +114,6 @@ void Engine::Run()
     T_DESTROY();
     D2D1Core::Destroy();
 	ResourceManager::Get().Destroy();
-
-
-	OptionSystem::Get().SetOption("MasterVolume", std::to_string(m_masterVolume));
-	OptionSystem::Get().OnShutdown();
 }
 
 
@@ -408,6 +413,20 @@ void Engine::drawImGUI()
 	
 }
 
+void Engine::SetupLoadingScreen()
+{
+	const float width = (float)GetWindow()->GetWidth();
+	const float height = (float)GetWindow()->GetHeight();
+	Scene& scene = GetScene("Loading");
+
+	Collection2D* loadingScreen = new Collection2D;
+
+	loadingScreen->AddElement<rtd::Picture>("LoadingScreen.png", (draw_t(0.0f, 0.0f, width, height)));
+	loadingScreen->AddElement<rtd::Canvas>(D2D1::ColorF(0, 0.0f), draw_t(0.0f, 0.0f, width / 2.0f, height / 2.0f));
+
+	scene.Add2DCollection(loadingScreen, "LoadingScreen");
+}
+
 void Engine::RenderThread()
 {
 	double currentFrame = 0.f;
@@ -516,12 +535,24 @@ void Engine::Render()
 		m_renderer.Render(GetCurrentScene());
 	}
 
+#if RENDER_INGAME_UI
 	{
 		PROFILE_SCOPE("Render D2D1");
 		D2D1Core::Begin();
 		GetCurrentScene()->Render2D();
 		D2D1Core::Present();
+}
+#else
+	{
+		if (GetCurrentScene() != &GetScene("Game"))
+		{
+			PROFILE_SCOPE("Render D2D1");
+			D2D1Core::Begin();
+			GetCurrentScene()->Render2D();
+			D2D1Core::Present();
+		}		
 	}
+#endif	
 
 	{
 		PROFILE_SCOPE("Render ImGui");
@@ -532,9 +563,7 @@ void Engine::Render()
 		m_imguiMutex.unlock();
 		);
 	}
-
 	
-
 	{
 		PROFILE_SCOPE("Present");
 		D3D11Core::Get().SwapChain()->Present(0, 0);

@@ -20,6 +20,11 @@ rtd::Picture::~Picture()
 {
 }
 
+const draw_t& rtd::Picture::GetOpts() const
+{
+	return m_drawOpts;
+}
+
 Border* rtd::Picture::GetBorder()
 {
 	if (!m_border)
@@ -63,6 +68,11 @@ void rtd::Picture::SetOpacity(const FLOAT& opacity)
 	m_opacity = opacity;
 }
 
+void rtd::Picture::SetOnHoverEvent(const std::function<void()>& func)
+{
+	m_hoverFunction = func;
+}
+
 void Picture::Draw()
 {
 	if (m_border)
@@ -80,6 +90,10 @@ void rtd::Picture::OnClick()
 
 void rtd::Picture::OnHover()
 {
+	if (m_hoverFunction)
+	{
+		m_hoverFunction();
+	}
 }
 
 ElementState rtd::Picture::CheckClick()

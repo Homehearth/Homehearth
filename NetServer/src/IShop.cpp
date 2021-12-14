@@ -2,88 +2,61 @@
 #include "Simulation.h"
 #include "IShop.h"
 
-void IShop::SetSimulation(Simulation* sim)
+
+IShop::IShop(Simulation* simRef)
 {
-	m_sim = sim;
+	m_sim = simRef;
 }
 
 void IShop::UseShop(const ShopItem& whatToBuy, const uint32_t& player)
 {
-	if (m_sim->m_timeCycler.GetTimePeriod() == Cycle::DAY)
-	{
+	
 		switch (whatToBuy)
 		{
 		case ShopItem::Primary_Upgrade:
 		{
-			if (m_sim->GetPlayer(player))
+			
+			int cost = 300;
+			// Upgrade if melee.
+			comp::MeleeAttackAbility* m = m_sim->GetPlayer(player).GetComponent<comp::MeleeAttackAbility>();
+			if (m && m_sim->GetCurrency() >= cost && m->upgradeLevel <= 2)
 			{
-				// Upgrade if melee.
-				comp::MeleeAttackAbility* m = m_sim->GetPlayer(player).GetComponent<comp::MeleeAttackAbility>();
-				if (m && m_sim->GetCurrency() >= 10)
-				{
-					m->attackDamage += .5f;
-					m_sim->GetCurrency() -= 10;
-					m_sim->GetCurrency().hasUpdated = true;
-				}
-
-				// Upgrade if ranged.
-				comp::RangeAttackAbility* r = m_sim->GetPlayer(player).GetComponent<comp::RangeAttackAbility>();
-				if (r && m_sim->GetCurrency() >= 10)
-				{
-					r->attackDamage += .5f;
-					m_sim->GetCurrency() -= 10;
-					m_sim->GetCurrency().hasUpdated = true;
-				}
+				m->attackDamage *= 1.5f;
+				m_sim->GetCurrency() -= cost;
+				m->upgradeLevel++;
 			}
-			break;
-		}
-		case ShopItem::Tower_Upgrade:
-		{
-			if (m_sim->GetCurrency() < 20)
-				break;
 
-			/*Upgrade a tower or ALL towers?*/
-			//m_pCurrentScene->ForEachComponent<comp::Health, comp::Tag<TagType::STATIC>>([&](comp::Health& h, comp::Tag<TagType::STATIC>& t) {
-
-			//	h.maxHealth += 20;
-			//	h.currentHealth += 20;
-
-			//	});
-
-			m_sim->GetCurrency() -= 20;
-
+			// Upgrade if ranged.
+			comp::RangeAttackAbility* r = m_sim->GetPlayer(player).GetComponent<comp::RangeAttackAbility>();
+			if (r && m_sim->GetCurrency() >= cost && r->upgradeLevel <= 2)
+			{
+				r->attackDamage *= 1.5f;
+				m_sim->GetCurrency() -= cost;
+				r->upgradeLevel++;
+			}
+			
 			break;
 		}
 		case ShopItem::Heal:
 		{
-			if (m_sim->GetCurrency() < 5)
+			int cost = 150;
+			if (m_sim->GetCurrency() < cost)
 				break;
 
-			if (m_sim->GetPlayer(player))
+			comp::Health* h = m_sim->GetPlayer(player).GetComponent<comp::Health>();
+			if (h && h->upgradeLevel <= 2)
 			{
-				comp::Health* h = m_sim->GetPlayer(player).GetComponent<comp::Health>();
-				if (h)
+				if (h->currentHealth == h->maxHealth)
 				{
+					h->maxHealth += 25;
 					h->currentHealth = h->maxHealth;
 				}
-			}
-
-			m_sim->GetCurrency() -= 5;
-			break;
-		}
-		case ShopItem::LONG_TOWER:
-		{
-			if (m_sim->GetPlayer(player))
-			{
-				m_sim->GetPlayer(player).GetComponent<comp::Player>()->towerSelected = EDefenceType::LARGE;
-			}
-			break;
-		}
-		case ShopItem::SHORT_TOWER:
-		{
-			if (m_sim->GetPlayer(player))
-			{
-				m_sim->GetPlayer(player).GetComponent<comp::Player>()->towerSelected = EDefenceType::SMALL;
+				else
+					h->maxHealth += 25;
+				
+				h->upgradeLevel++;
+				m_sim->GetCurrency() -= cost;
+				m_sim->GetGameScene()->publish<EComponentUpdated>(m_sim->GetPlayer(player), ecs::Component::HEALTH);
 			}
 			break;
 		}
@@ -92,5 +65,4 @@ void IShop::UseShop(const ShopItem& whatToBuy, const uint32_t& player)
 			break;
 		}
 		}
-	}
 }

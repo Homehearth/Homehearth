@@ -1,27 +1,32 @@
-skel			Monster.fbx
+skel								Monster.fbx
 anim 			IDLE 				Monster_Idle.fbx
 anim 			MOVE 				Monster_Walk.fbx
-anim 			PRIMARY_ATTACK 		Monster_Attack.fbx
-loopable		0
+anim 			PRIMARY 			Monster_Attack.fbx
 anim 			TAKE_DAMAGE 		Monster_TakeDamage.fbx
-loopable		0
-defaultAnim 	IDLE
+anim			DEAD				Dead.fbx
 
-blendstate		IDLE				MOVE				1.4
-blendstate 		MOVE				IDLE				0.5
 
+loopable		PRIMARY				0
+loopable		TAKE_DAMAGE			0
+loopable		DEAD				0
+upperbody		PRIMARY				QuickRigCharacter_Spine
+
+
+state			IDLE				MOVE				0.3
+state			IDLE				PRIMARY				0
+state			IDLE				TAKE_DAMAGE			0
+state			IDLE				DEAD				0
 	
-----NO----		IDLE				PRIMARY_ATTACK		0
-----NO----		PRIMARY_ATTACK		IDLE				0
-														 
-														 
-blendstate		IDLE				TAKE_DAMAGE			0.5
-blendstate		TAKE_DAMAGE			IDLE				0.5
-														 
-														 
-----NO----		MOVE				PRIMARY_ATTACK		0
-blendstate		PRIMARY_ATTACK		MOVE				0.5
-														 
-														 
-blendstate		MOVE				TAKE_DAMAGE			0.5
-blendstate		TAKE_DAMAGE			MOVE				0.5
+state 			MOVE				IDLE				0.2
+state			MOVE				PRIMARY				0
+state			MOVE				TAKE_DAMAGE			0
+state			MOVE				DEAD				0
+	
+state			PRIMARY				IDLE				0.15
+state			PRIMARY				MOVE				0.15												 
+														
+state			TAKE_DAMAGE			IDLE				0.2
+state			TAKE_DAMAGE			MOVE				0.2
+
+state			DEAD				IDLE				0.05
+state			DEAD				MOVE				0.05

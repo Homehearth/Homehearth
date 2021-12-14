@@ -24,7 +24,6 @@ namespace ecs {
 
     bool StepRotateTo(sm::Quaternion& rotation, const sm::Vector3& targetVector, float t)
     {
-        const float acceptableRange = 0.01f;
         float targetRotation = atan2(-targetVector.x, -targetVector.z);
         sm::Quaternion targetQuat = sm::Quaternion::CreateFromAxisAngle(sm::Vector3::Up, targetRotation);
         targetQuat.Normalize();
@@ -33,16 +32,11 @@ namespace ecs {
             rotation = targetQuat;
             return true;
         }
+
         rotation = sm::Quaternion::Slerp(rotation, targetQuat, t);
         rotation.Normalize();
 
-        if (1.f - std::abs(rotation.Dot(targetQuat)) < acceptableRange)
-        {
-            rotation = targetQuat;
-            return true;
-        }
-
-        return false;
+        return true;
     }
 
     bool StepTranslateTo(sm::Vector3& translation, const sm::Vector3& target, float t)
@@ -63,8 +57,9 @@ namespace ecs {
             abilityComponent->cooldownTimer = abilityComponent->cooldown;
             abilityComponent->delayTimer = abilityComponent->delay;
             abilityComponent->useTimer = abilityComponent->useTime;
+            return true;
         }
-        return abilityComponent->isUsing;
+        return false;
     }
     
     bool UseAbility(Entity entity, entt::meta_type abilityType, sm::Vector3* targetPoint)
@@ -85,7 +80,6 @@ namespace ecs {
 
         if (abilityComponent->isUsing && abilityComponent->delayTimer <= 0.f)
         {
-            abilityComponent->cooldownTimer = abilityComponent->cooldown;
             abilityComponent->isUsing = false;
             return true;
         }
@@ -121,12 +115,28 @@ namespace ecs {
         return IsUsing(ability);
     }
 
+    void CancelAbility(component::IAbility* abilityComponent)
+    {
+        abilityComponent->isUsing = false;
+        abilityComponent->useTimer = 0.0f;
+    }
+
+    void CancelAbility(Entity entity, entt::meta_type abilityType)
+    {
+        comp::IAbility* ability = GetAbility(entity, abilityType);
+        if (!ability)
+        {
+            LOG_WARNING("This entity does not have this ability");
+        }
+        CancelAbility(ability);
+    }
+
     bool IsPlayerUsingAnyAbility(Entity player)
     {
         component::Player* p = player.GetComponent<component::Player>();
         if (p)
         {
-            return IsUsing(player, p->primaryAbilty) || IsUsing(player, p->secondaryAbilty);
+            return IsUsing(player, p->primaryAbilty) || IsUsing(player, p->secondaryAbilty) || IsUsing(player, p->moveAbilty);
         }
         return false;
     }

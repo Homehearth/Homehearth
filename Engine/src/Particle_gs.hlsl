@@ -38,6 +38,7 @@ void main(point VertexParticleOut input[1], inout TriangleStream<PixelParticleIn
 	[unroll]
     for (int i = 0; i < 6; i++)
     {
+        output.worldPos = v[i];
         output.pos = mul(c_view, v[i]);
         output.pos = mul(c_projection, output.pos);
         output.uv = cTextCoords[i];

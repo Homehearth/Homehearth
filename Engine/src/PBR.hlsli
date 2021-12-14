@@ -117,14 +117,14 @@ float3 DoDirectionlight(Light L, float3 normal)
     float3 N = normalize(normal);
     float3 VL = -normalize(L.direction.xyz);
     
-    float3 diff = L.color.xyz * L.intensity;
+    float3 diff = L.color.xyz;
     
     float diffuseFactor = max(dot(VL, N), 0.0f);
     
     diff *= diffuseFactor;
     
     float3 radiance = diff; //multiply here with shadowCoeff if shadows
-    return radiance;
+    return radiance * L.intensity;
 }
 
 //Calculates the outgoing radiance level of each light
@@ -162,11 +162,11 @@ float3 ambientIBL(float3 albedo, float3 N, float3 V, float3 F0, float metallic, 
     float3 kD = 1.0f - kS;
     kD *= (1.0f - metallic);
     
-    float3 irradiance = pow(max(t_irradiance.Sample(s_linear, N).rgb, 0.0f), 2.2f) * c_tint;
+    float3 irradiance = t_irradiance.Sample(s_linear, N).rgb * c_tint;
     float3 diffuse = albedo * irradiance;
     
     const float MAX_REF_LOD = 4.0f;
-    float3 prefilteredColor = pow(max(t_radiance.SampleLevel(s_linear, R, roughness * MAX_REF_LOD).rgb, 0.0f), 2.2f) * c_tint;
+    float3 prefilteredColor = t_radiance.SampleLevel(s_linear, R, roughness * MAX_REF_LOD).rgb * c_tint;
     float2 brdf = t_BRDFLUT.Sample(s_linear, float2(max(dot(N, V), 0.0f), roughness)).rg;
     float3 specular = prefilteredColor * (F * brdf.x + brdf.y);
 

@@ -29,7 +29,7 @@ std::string OptionSystem::GetOption(const std::string& optionName)
 	return std::string("0");
 }
 
-bool OptionSystem::SetOption(const std::string& optionName, std::string& value)
+bool OptionSystem::SetOption(std::string optionName, std::string value)
 {
 	for (size_t i = 0; i < INSTANCE.m_options.size(); i++)
 	{

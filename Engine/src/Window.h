@@ -7,8 +7,8 @@ public:
     // Use when initializing m_window.
     struct Desc
     {
-        unsigned int width = static_cast<unsigned int>(GetSystemMetrics(SM_CXSCREEN) / 2);
-        unsigned int height = static_cast<unsigned int>(GetSystemMetrics(SM_CYSCREEN) / 2);
+        unsigned int width = static_cast<unsigned int>(GetSystemMetrics(SM_CXSCREEN));
+        unsigned int height = static_cast<unsigned int>(GetSystemMetrics(SM_CYSCREEN));
         LPCWSTR title = L"Default";
         bool fullScreen = false;
         bool resizableWindow = false;

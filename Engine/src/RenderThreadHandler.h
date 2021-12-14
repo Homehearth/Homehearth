@@ -36,6 +36,7 @@ namespace thread
 		void* m_camera;
 		void* m_shadows;
 		bool m_isActive;
+		unsigned int m_activeThreads = 0;
 
 		unsigned int m_amount;
 		RenderThreadHandler();

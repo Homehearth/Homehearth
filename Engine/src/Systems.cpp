@@ -55,10 +55,10 @@ void Systems::UpdateAbilities(HeadlessScene& scene, float dt)
 			if (ability->useTimer > 0.f)
 				ability->useTimer -= dt;
 
-			if (ability->cooldownTimer > 0.f)
+			if (ability->cooldownTimer > 0.f && ability->isCooldownActive)
 				ability->cooldownTimer -= dt;
 
-			if (ability->cooldownTimer <= 0.f && ability->delayTimer <= 0.f && ability->useTimer <= 0.f)
+			if ((!ability->isCooldownActive || ability->cooldownTimer <= 0.f) && ability->delayTimer <= 0.f && ability->useTimer <= 0.f)
 				ability->isReady = true;
 
 			comp::Velocity* vel = entity.GetComponent<comp::Velocity>();
@@ -69,11 +69,6 @@ void Systems::UpdateAbilities(HeadlessScene& scene, float dt)
 		}
 	}
 
-}
-
-void Systems::CombatSystem(HeadlessScene& scene, float dt)
-{
-	CombatSystem::UpdateCombatSystem(scene, dt);
 }
 
 void Systems::HealingSystem(HeadlessScene& scene, float dt)
@@ -93,9 +88,26 @@ void Systems::HealingSystem(HeadlessScene& scene, float dt)
 				comp::SphereCollider* sphere = collider.AddComponent<comp::SphereCollider>();
 				sphere->Center = transform->position;
 
+				collider.AddComponent<comp::ParticleEmitter>(sm::Vector3{ 0,0,0 }, 200, 2.f, ParticleMode::MAGEHEAL, 30.f, 70.f, false);
+
 				collider.AddComponent<comp::Tag<TagType::DYNAMIC>>();
 
+				audio_t audio = {
+					ESoundEvent::Player_OnHealing,
+					entity.GetComponent<comp::Transform>()->position,
+					1.0f,
+					100.f,
+					true,
+					false,
+					true,
+					false,
+				};
+
+				// Send audio to healer.
+				entity.GetComponent<comp::AudioState>()->data.emplace(audio);
+
 				comp::BezierAnimation* a = collider.AddComponent<comp::BezierAnimation>();
+				a->speed = 0.5f;
 				a->scalePoints.push_back(transform->scale);
 				a->scalePoints.push_back(transform->scale + sm::Vector3(ability.range));
 
@@ -110,11 +122,19 @@ void Systems::HealingSystem(HeadlessScene& scene, float dt)
 						if (entity.IsNull())
 							return;
 
-						comp::Health* h = other.GetComponent<comp::Health>();
-						if (h)
+						comp::Player* p = other.GetComponent<comp::Player>();
+						if (p)
 						{
-							h->currentHealth += ability.healAmount;
 							scene.publish<EComponentUpdated>(other, ecs::Component::HEALTH);
+							// Send audio to everyone effected by heal.
+							other.GetComponent<comp::AudioState>()->data.emplace(audio);
+							comp::Health* h = other.GetComponent<comp::Health>();
+
+							if (h)
+							{
+								h->currentHealth += ability.healAmount;
+								scene.publish<EComponentUpdated>(other, ecs::Component::HEALTH);
+							}
 						}
 					});
 			}
@@ -206,62 +226,9 @@ void Systems::HeroLeapSystem(HeadlessScene& scene, float dt)
 
 								auto gravity = ecs::GetGravityForce();
 								p->forces.push_back(gravity);
-
 							}
 						});
 				};
-			}
-		});
-}
-
-void Systems::HealthSystem(HeadlessScene& scene, float dt, Currency& money_ref, GridSystem& grid)
-{
-	//Entity destoys self if health <= 0
-	scene.ForEachComponent<comp::Health>([&](Entity& entity, comp::Health& health)
-		{
-			//Check if something should be dead, and if so set isAlive to false
-			if (health.currentHealth <= 0 && health.isAlive)
-			{
-				comp::Network* net = entity.GetComponent<comp::Network>();
-				health.isAlive = false;
-				// increase money
-				if (entity.GetComponent<comp::Tag<TagType::BAD>>())
-				{
-					money_ref += 5;
-					money_ref.hasUpdated = true;
-				}
-
-				// if player
-				comp::Player* p = entity.GetComponent<comp::Player>();
-				if (p)
-				{
-					p->respawnTimer = 10.f;
-					p->state = comp::Player::State::SPECTATING;
-					entity.RemoveComponent<comp::Tag<TagType::DYNAMIC>>();
-				}
-				else if (entity.GetComponent<comp::Tag<TagType::DEFENCE>>())
-				{
-					comp::Transform* buildTransform = entity.GetComponent<comp::Transform>();
-					
-					Node* node = Blackboard::Get().GetPathFindManager()->FindClosestNode(buildTransform->position);
-					//Remove from the container map so ai wont consider this defense
-					Blackboard::Get().GetPathFindManager()->RemoveDefenseEntity(entity);
-					node->reachable = true;
-					node->defencePlaced = false;
-
-					//Removing the defence and its neighbours if needed
-					grid.RemoveDefence(entity);
-
-					entity.Destroy();
-				}
-				else
-				{
-					entity.Destroy();
-				}
-			}
-			else if (health.currentHealth > health.maxHealth)
-			{
-				health.currentHealth = health.maxHealth;
 			}
 		});
 }
@@ -274,6 +241,9 @@ void Systems::SelfDestructSystem(HeadlessScene& scene, float dt)
 			s.lifeTime -= dt;
 			if (s.lifeTime <= 0)
 			{
+				if(s.onDestruct)
+					s.onDestruct();
+
 				ent.Destroy();
 			}
 		});
@@ -284,15 +254,20 @@ void Systems::MovementSystem(HeadlessScene& scene, float dt)
 	PROFILE_FUNCTION();
 
 	//Transform
-
 	scene.ForEachComponent<comp::Transform, comp::Velocity, comp::TemporaryPhysics >([&](Entity e, comp::Transform& t, comp::Velocity& v, comp::TemporaryPhysics& p)
 		{
+			//Don't update villager that is in hiding
+			comp::Villager* villager = e.GetComponent<comp::Villager>();
+			if (villager != nullptr && villager->isHiding)
+			{
+				return;
+			}
+
 			v.vel = v.oldVel; // ignore any changes made to velocity made this frame
-			auto& it = p.forces.begin();
+			auto it = p.forces.begin();
 			while (it != p.forces.end())
 			{
 				comp::TemporaryPhysics::Force& f = *it;
-
 				if (f.isImpulse)
 				{
 					if (f.wasApplied)
@@ -314,7 +289,7 @@ void Systems::MovementSystem(HeadlessScene& scene, float dt)
 				}
 
 				sm::Vector3 newPos = t.position + v.vel * dt;
-				if (newPos.y < 0.0f)
+				if (newPos.y < 0.75f)
 				{
 					v.vel.y = 0;
 					f.force.y = 0;
@@ -347,6 +322,14 @@ void Systems::MovementSystem(HeadlessScene& scene, float dt)
 		scene.ForEachComponent<comp::Transform, comp::Velocity>([&, dt]
 		(Entity e, comp::Transform& transform, comp::Velocity& velocity)
 			{
+
+				//Don't update villager that is in hiding
+				comp::Villager* villager = e.GetComponent<comp::Villager>();
+				if (villager != nullptr && villager->isHiding)
+				{
+					return;
+				}
+
 				if (velocity.vel.Length() > 0.01f)
 				{
 					e.UpdateNetwork();
@@ -354,9 +337,9 @@ void Systems::MovementSystem(HeadlessScene& scene, float dt)
 
 				transform.position += velocity.vel * dt;
 
-				if (transform.position.y < 0.f)
+				if (transform.position.y < 0.75f)
 				{
-					transform.position.y = 0.f;
+					transform.position.y = 0.75f;
 					velocity.vel.y = 0;
 				}
 				velocity.oldVel = velocity.vel; // updated old vel position
@@ -370,12 +353,18 @@ void Systems::MovementColliderSystem(HeadlessScene& scene, float dt)
 
 	//BoundingOrientedBox
 	scene.ForEachComponent<comp::Transform, comp::OrientedBoxCollider>([&, dt]
-	(comp::Transform& transform, comp::OrientedBoxCollider& obb)
+	(Entity entity, comp::Transform& transform, comp::OrientedBoxCollider& obb)
 		{
-			obb.Center = transform.position;
-			/*obb.Orientation = transform.rotation;*/
-			if (transform.syncColliderScale)
-				obb.Extents = transform.scale;
+			//If its not a house update obb!
+			if (!entity.GetComponent<comp::House>())
+			{
+
+
+				obb.Center = transform.position;
+				/*obb.Orientation = transform.rotation;*/
+				if (transform.syncColliderScale)
+					obb.Extents = transform.scale;
+			}
 		});
 
 	//BoundingSphere
@@ -401,23 +390,34 @@ void Systems::LightSystem(Scene& scene, float dt)
 				light.lightData.position = sm::Vector4(t->position.x, t->position.y, t->position.z, 1.f);
 			}
 
-			if (light.lightData.type == TypeLight::POINT)
+			if (light.lightData.type == TypeLight::POINT && light.lightData.enabled)
 			{
-				if (light.flickerTimer >= light.maxFlickerTime)
-					light.increase = false;
-				else if (light.flickerTimer <= 0.f)
+				if (light.enabledTimer > 0.f)
 				{
-					light.increase = true;
-					light.maxFlickerTime = (float)(rand() % 10 + 1) / 10.f;
+					light.enabledTimer -= dt;
+					light.lightData.intensity = util::Lerp(light.lightData.intensity, 0.3f, dt);
+				}
+				else
+				{
+					if (light.flickerTimer >= light.maxFlickerTime)
+						light.increase = false;
+					else if (light.flickerTimer <= 0.f)
+					{
+						light.increase = true;
+						light.maxFlickerTime = (float)(rand() % 10 + 1) / 10.f;
+					}
+
+					if (light.increase)
+						light.flickerTimer += dt * (rand() % 2 + 1);
+					else
+						light.flickerTimer -= dt * (rand() % 2 + 1);
+
+					light.lightData.intensity = util::Lerp(0.5f, 0.7f, light.flickerTimer);
 				}
 
-				if (light.increase)
-					light.flickerTimer += dt * (rand() % 2 + 1);
-				else
-					light.flickerTimer -= dt * (rand() % 2 + 1);
-
-				light.lightData.intensity = util::Lerp(0.5f, 0.7f, light.flickerTimer);
 			}
+			else if (light.lightData.type == TypeLight::POINT && !light.lightData.enabled)
+				light.enabledTimer = 1.f;
 
 			scene.GetLights()->EditLight(light.lightData, light.index);
 		});

@@ -132,19 +132,22 @@ enum class Shapes
 	NONE,
 	RECTANGLE_FILLED,
 	RECTANGLE_OUTLINED,
+	RECTANGLE_ROUNDED_OUTLINED,
+	RECTANGLE_ROUNDED,
 	TRIANGLE_FILLED,
 	TRIANGLE_OUTLINED,
 	CIRCLE_OUTLINE,
 	NR_OF_SHAPES
 };
 
-enum class LineWidth
+enum class LineWidth : UINT
 {
 	NONE,
 	SMALL,
 	MEDIUM,
 	LARGE,
 	THICK,
+	THICC,
 	NR_OF
 };
 
@@ -223,6 +226,7 @@ public:
 		Text will be drawn at the center of the window.
 	*/
 	static void DrawT(const std::string& text = "Basic Text", const draw_text_t& opt = draw_text_t());
+	static void DrawT(const std::string& text, const D2D1_COLOR_F& color, const draw_text_t& opt = draw_text_t());
 
 	/*
 		Draws the specified shape with _DRAW input specifications.

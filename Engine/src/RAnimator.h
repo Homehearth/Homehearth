@@ -19,34 +19,33 @@ private:
 	std::vector<bone_t>						m_bones;
 	std::unordered_map<std::string, UINT>	m_nameToBone;
 
-	//States
-	EAnimationType m_currentType;
-	EAnimationType m_nextType;
-	EAnimationType m_defaultType;
-	
+	EAnimationType							m_currentState;		//The main focus animation
+	EAnimationType							m_blendState;		//The animation we blending to
+	EAnimationType							m_upperState;		//Animation that can play on upper half of the body
+	std::queue<EAnimationType>				m_queue;			//Queue of animations to play in order
+	bool									m_blendDir;			//True: toward blend, False: toward current
+
 	struct animation_t
 	{
+		//Shared data
 		std::shared_ptr<RAnimation>					animation;
-		double										frameTimer	= 0;
-		double										blendTimer	= 0;
-		double										currentTick	= 0;
+		
+		//Specific data for this animation in this animator
+		float										frameTimer		= 0;
+		float										lastTick		= 0;
 		std::unordered_map<std::string, lastKeys_t> lastKeys;
-		bool										reachedEnd	= false;
+		std::string									upperbodybone	= "";	//Bone that devide lower and upper body
 	};
 
-	//All the animations
-	std::unordered_map<EAnimationType, animation_t> m_animations;
+	std::unordered_map<EAnimationType, animation_t>						m_animations;
+	std::unordered_map<animstate_t, animstateInfo, animstate_hash_fn>	m_states;
 
-	//Blendstates
-	std::unordered_map<blendstate_t, double, blend_hash_fn> m_blendStates;
-
-	//Matrices that is going up to the GPU - structure buffer
-	std::vector<sm::Matrix>			 m_localMatrices;	//In modelspace
+	//Matrices that is going up to the GPU - structure buffer - in modelspace
+	std::vector<sm::Matrix>			 m_localMatrices;
 	ComPtr<ID3D11Buffer>			 m_bonesSB_Buffer;
 	ComPtr<ID3D11ShaderResourceView> m_bonesSB_RSV;
 
 private:
-	//All the bones
 	bool LoadSkeleton(const std::vector<bone_t>& skeleton);
 	bool CreateBonesSB();
 	void UpdateStructureBuffer();
@@ -54,15 +53,27 @@ private:
 	//Convert a string to enum
 	EAnimationType StringToAnimationType(const std::string& name) const;
 
-	//Reset the time of currentFrametime
+	//Reset the time and last bones
 	void ResetAnimation(const EAnimationType& type);
 
-	//Update the time for an animation
-	void UpdateTime(const EAnimationType& type);
+	//Update the time for an animation. Return false when reached end
+	bool UpdateTime(const EAnimationType& type);
+	//Update the blend timer for a transition between two animations. Return true on success. 
+	//Lerptime will be returned as a parameter on success.
+	bool UpdateBlendTime(const EAnimationType& from, const EAnimationType& to, float& lerpTime);
 
-	void RegularAnimation();
-	void BlendAnimations();
-	void SwapAnimationState();
+
+	//Different types of doing animations
+	void StandardAnim();			//Current
+	void BlendTwoAnims();			//Current + blend
+	void UpperLowerAnims();			//Current + upper				//REMOVE
+	void BlendUpperLowerAnims();	//Current + blend + upper		//REMOVE
+
+	EAnimStatus GetAnimStatus() const;
+	bool ReadyToBlend(const EAnimationType& from, const EAnimationType& to) const;
+
+	//Check what animations that is queued up
+	void CheckQueue();
 
 public:
 	RAnimator();
@@ -79,7 +90,7 @@ public:
 	void RandomizeTime();
 
 	//Queue up what animation to play next
-	bool ChangeAnimation(const EAnimationType& type);
+	void ChangeAnimation(const EAnimationType& type);
 
 	//Get the enum of what state the animator is in
 	const EAnimationType& GetCurrentState() const;
@@ -90,10 +101,7 @@ public:
 	//Update the animation
 	void Update();
 
-	//Bind the bones matrices structured buffer
+	//Bind/unbind the bones matrices structured buffer
 	void Bind();
-
-	//Unbind the bones matrices structured buffer
 	void Unbind() const;
-
 };
