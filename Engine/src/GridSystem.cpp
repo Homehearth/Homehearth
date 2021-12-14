@@ -204,7 +204,7 @@ std::vector<Entity> GridSystem::UpdateHoverDefence()
 				if (player.shopItem == ShopItem::Defence1x1 ||
 					player.shopItem == ShopItem::Defence1x3)
 				{
-					if (!CheckDefenceLocation(player.lastInputState.mouseRay, net.id).empty())
+					if (!CheckDefenceLocation(player.inputState.mouseRay, net.id).empty())
 						okayToPlace = true;
 				}
 
@@ -213,7 +213,7 @@ std::vector<Entity> GridSystem::UpdateHoverDefence()
 					Plane_t plane;
 					plane.normal = { 0.0f, 1.0f, 0.0f };
 					sm::Vector3 pos;
-					if (player.lastInputState.mouseRay.Intersects(plane, &pos))
+					if (player.inputState.mouseRay.Intersects(plane, &pos))
 					{
 						//Snap the position to the grid
 						int centerTileX = static_cast<int>(std::abs(pos.x) / m_tileSize.x);

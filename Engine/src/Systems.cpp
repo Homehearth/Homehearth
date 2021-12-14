@@ -55,10 +55,10 @@ void Systems::UpdateAbilities(HeadlessScene& scene, float dt)
 			if (ability->useTimer > 0.f)
 				ability->useTimer -= dt;
 
-			if (ability->cooldownTimer > 0.f)
+			if (ability->cooldownTimer > 0.f && ability->isCooldownActive)
 				ability->cooldownTimer -= dt;
 
-			if (ability->cooldownTimer <= 0.f && ability->delayTimer <= 0.f && ability->useTimer <= 0.f)
+			if ((!ability->isCooldownActive || ability->cooldownTimer <= 0.f) && ability->delayTimer <= 0.f && ability->useTimer <= 0.f)
 				ability->isReady = true;
 
 			comp::Velocity* vel = entity.GetComponent<comp::Velocity>();
@@ -232,7 +232,6 @@ void Systems::HeroLeapSystem(HeadlessScene& scene, float dt)
 			}
 		});
 }
-
 
 void Systems::SelfDestructSystem(HeadlessScene& scene, float dt)
 {

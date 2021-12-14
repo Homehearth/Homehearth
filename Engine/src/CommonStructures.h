@@ -112,7 +112,8 @@ enum class ParticleMode : UINT
 	DUST,
 	MAGEHEAL,
 	MAGERANGE,
-	EXPLOSION
+	EXPLOSION,
+	MAGEBLINK
 };
 
 //enum class EDefenceType : UINT
