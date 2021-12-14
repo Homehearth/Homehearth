@@ -1,11 +1,11 @@
 #pragma once
 
 //Options
-#define RENDER_IMGUI 1
+#define RENDER_IMGUI 0
 #define PROFILER 1
 
 // Feel free to add more things to this, currently only gives more money :)
-#define GOD_MODE 0
+#define GOD_MODE 1
 #define NO_CLIP 0
 #define SPAWN_MONSTERS 1
 
@@ -18,7 +18,7 @@
 
 #define RENDER_AINODES 0
 
-#define RENDER_INGAME_UI 1
+#define RENDER_INGAME_UI 0
 
 //Macros
 #if RENDER_IMGUI
