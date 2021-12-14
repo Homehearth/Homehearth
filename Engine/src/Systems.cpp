@@ -88,7 +88,7 @@ void Systems::HealingSystem(HeadlessScene& scene, float dt)
 				comp::SphereCollider* sphere = collider.AddComponent<comp::SphereCollider>();
 				sphere->Center = transform->position;
 
-				collider.AddComponent<comp::PARTICLEEMITTER>(sm::Vector3{ 0,0,0 }, 200, 2.f, PARTICLEMODE::MAGEHEAL, 10.f, 70.f, false);
+				collider.AddComponent<comp::ParticleEmitter>(sm::Vector3{ 0,0,0 }, 200, 2.f, ParticleMode::MAGEHEAL, 30.f, 70.f, false);
 
 				collider.AddComponent<comp::Tag<TagType::DYNAMIC>>();
 
@@ -265,7 +265,7 @@ void Systems::MovementSystem(HeadlessScene& scene, float dt)
 			}
 
 			v.vel = v.oldVel; // ignore any changes made to velocity made this frame
-			auto& it = p.forces.begin();
+			auto it = p.forces.begin();
 			while (it != p.forces.end())
 			{
 				comp::TemporaryPhysics::Force& f = *it;

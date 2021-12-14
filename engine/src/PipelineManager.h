@@ -7,9 +7,9 @@
 class PipelineManager
 {
 private:
-	Window*							m_window;
-	D3D11Core*						m_d3d11;
-	ID3D11DeviceContext*			m_context;
+	Window*								m_window;
+	D3D11Core*							m_d3d11;
+	ID3D11DeviceContext*				m_context;
 	
 public:
 	PipelineManager();
@@ -26,39 +26,39 @@ public:
 	ComPtr<ID3D11Texture2D>			  m_bloomTexture;
 	ComPtr<ID3D11UnorderedAccessView> m_bloomAccessView;
 
-	ComPtr<ID3D11Texture2D>			  m_depthStencilTexture;
-	ComPtr<ID3D11DepthStencilView>	  m_depthStencilView;
-	ComPtr<ID3D11ShaderResourceView>  m_depthBufferSRV;
+	ComPtr<ID3D11Texture2D>				m_depthStencilTexture;
+	ComPtr<ID3D11DepthStencilView>		m_depthStencilView;
+	ComPtr<ID3D11ShaderResourceView>	m_depthBufferSRV;
 
-	ComPtr<ID3D11Texture2D>			m_debugDepthStencilTexture;
-	ComPtr<ID3D11DepthStencilView>	m_debugDepthStencilView;
-	ComPtr<ID3D11ShaderResourceView>m_debugDepthBufferSRV;
+	ComPtr<ID3D11Texture2D>				m_debugDepthStencilTexture;
+	ComPtr<ID3D11DepthStencilView>		m_debugDepthStencilView;
+	ComPtr<ID3D11ShaderResourceView>	m_debugDepthBufferSRV;
 
-	ComPtr<ID3D11DepthStencilState>	m_depthStencilStateLess;
-	ComPtr<ID3D11DepthStencilState>	m_depthStencilStateLessEqual;
-	ComPtr<ID3D11DepthStencilState> m_depthStencilStateGreater;
-	ComPtr<ID3D11DepthStencilState> m_depthStencilStateEqualAndDisableDepthWrite;
+	ComPtr<ID3D11DepthStencilState>		m_depthStencilStateLess;
+	ComPtr<ID3D11DepthStencilState>		m_depthStencilStateLessEqual;
+	ComPtr<ID3D11DepthStencilState>		m_depthStencilStateGreater;
+	ComPtr<ID3D11DepthStencilState>		m_depthStencilStateEqualAndDisableDepthWrite;
 	
-	ComPtr<ID3D11RasterizerState>	m_rasterState;
-	ComPtr<ID3D11RasterizerState>	m_rasterStateNoCulling;
-	ComPtr<ID3D11RasterizerState>	m_rasterStateFrontCulling;
-	ComPtr<ID3D11RasterizerState>	m_rasterStateWireframe;
+	ComPtr<ID3D11RasterizerState>		m_rasterState;
+	ComPtr<ID3D11RasterizerState>		m_rasterStateNoCulling;
+	ComPtr<ID3D11RasterizerState>		m_rasterStateFrontCulling;
+	ComPtr<ID3D11RasterizerState>		m_rasterStateWireframe;
 
-	ComPtr<ID3D11BlendState>		m_blendStatepOpaque;
-	ComPtr<ID3D11BlendState>		m_blendStatepDepthOnlyAlphaTest;
-	ComPtr<ID3D11BlendState>		m_blendStateDepthOnlyAlphaToCoverage;
-	ComPtr<ID3D11BlendState>		m_blendStateAlphaBlending;
-	ComPtr<ID3D11BlendState>		m_blendStateParticle;
+	ComPtr<ID3D11BlendState>			m_blendStatepOpaque;
+	ComPtr<ID3D11BlendState>			m_blendStatepDepthOnlyAlphaTest;
+	ComPtr<ID3D11BlendState>			m_blendStateDepthOnlyAlphaToCoverage;
+	ComPtr<ID3D11BlendState>			m_blendStateAlphaBlending;
+	ComPtr<ID3D11BlendState>			m_blendStateParticle;
 	
-	ComPtr<ID3D11SamplerState>		m_linearSamplerState;		//Low settings
-	ComPtr<ID3D11SamplerState>		m_anisotropicSamplerState;	//High settings
-	ComPtr<ID3D11SamplerState>		m_pointSamplerState;
-	ComPtr<ID3D11SamplerState>		m_cubemapSamplerState;
+	ComPtr<ID3D11SamplerState>			m_linearSamplerState;		//Low settings
+	ComPtr<ID3D11SamplerState>			m_anisotropicSamplerState;	//High settings
+	ComPtr<ID3D11SamplerState>			m_pointSamplerState;
+	ComPtr<ID3D11SamplerState>			m_cubemapSamplerState;
 
-	ComPtr<ID3D11InputLayout>		m_defaultInputLayout;
-	ComPtr<ID3D11InputLayout>		m_animationInputLayout;
-	ComPtr<ID3D11InputLayout>		m_skyboxInputLayout;
-	ComPtr<ID3D11InputLayout>		m_ParticleInputLayout;
+	ComPtr<ID3D11InputLayout>			m_defaultInputLayout;
+	ComPtr<ID3D11InputLayout>			m_animationInputLayout;
+	ComPtr<ID3D11InputLayout>			m_skyboxInputLayout;
+	ComPtr<ID3D11InputLayout>			m_ParticleInputLayout;
 
 	Shaders::VertexShader			m_defaultVertexShader;
 	Shaders::VertexShader			m_depthPassVertexShader;
@@ -74,22 +74,22 @@ public:
 	Shaders::PixelShader			m_bloomPixelShader;
 
 	//Shadows
-	Shaders::VertexShader			m_paraboloidVertexShader;
-	Shaders::VertexShader			m_paraboloidAnimationVertexShader;
-	Shaders::PixelShader			m_shadowPixelShader;
+	Shaders::VertexShader				m_paraboloidVertexShader;
+	Shaders::VertexShader				m_paraboloidAnimationVertexShader;
+	Shaders::PixelShader				m_shadowPixelShader;
 
-	Shaders::ComputeShader			m_ParticleComputeShader;
-	Shaders::GeometryShader			m_ParticleGeometryShader;
+	Shaders::ComputeShader				m_ParticleComputeShader;
+	Shaders::GeometryShader				m_ParticleGeometryShader;
 	
 	Shaders::ComputeShader			m_blurComputeShader;
 	Shaders::ComputeShader			m_dofComputeShader;
 	Shaders::ComputeShader			m_bloomComputeShader;
 	
 	
-	D3D11_VIEWPORT					m_viewport;
+	D3D11_VIEWPORT						m_viewport;
 
-	UINT							m_windowWidth;
-	UINT							m_windowHeight;
+	UINT								m_windowWidth;
+	UINT								m_windowHeight;
 	
 	// View space frustums for the grid cells used in ForwardPlus rendering.
 	ComPtr<ID3D11Buffer>				m_gridFrustum;
@@ -97,13 +97,13 @@ public:
 
 
 	// Nikkis stuff
-	Shaders::VertexShader             m_textureEffectVertexShader;  // Dummy.
-	Shaders::ComputeShader            m_textureEffectComputeShader; // Water refraction effect compute shader.
-	Shaders::PixelShader              m_textureEffectPixelShader;   // Dummy.
+	Shaders::VertexShader				m_textureEffectVertexShader;  // Dummy.
+	Shaders::ComputeShader				m_textureEffectComputeShader; // Water refraction effect compute shader.
+	Shaders::PixelShader				m_textureEffectPixelShader;   // Dummy.
 
-	Shaders::VertexShader             m_WaterEffectVertexShader;  // Dummy.
-	Shaders::ComputeShader            m_WaterEffectComputeShader; // Water effect compute shader.
-	Shaders::PixelShader              m_WaterEffectPixelShader;   // Dummy.
+	Shaders::VertexShader				m_WaterEffectVertexShader;  // Dummy.
+	Shaders::ComputeShader				m_WaterEffectComputeShader; // Water effect compute shader.
+	Shaders::PixelShader				m_WaterEffectPixelShader;   // Dummy.
 
 	ComPtr<ID3D11Buffer>			  m_textureEffectConstantBuffer;
 

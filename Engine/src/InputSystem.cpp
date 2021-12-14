@@ -80,13 +80,13 @@ void InputSystem::AddToUpQueue(WPARAM wParam)
 	this->m_keyUpQueue.push(wParam);
 }
 
-WPARAM* InputSystem::GetKeyFromUPQueue()
+WPARAM InputSystem::GetKeyFromUPQueue()
 {
-	if (!m_keyUpQueue.empty())
+	while(!m_keyUpQueue.empty())
 	{
-		WPARAM* queueKey = &m_keyUpQueue.front();
+		WPARAM queueKey = m_keyUpQueue.front();
 		m_keyUpQueue.pop();
-		switch (*queueKey)
+		switch (queueKey)
 		{
 		case VK_SHIFT:
 			m_shiftMode = false;
@@ -100,12 +100,9 @@ WPARAM* InputSystem::GetKeyFromUPQueue()
 		default:
 			break;
 		}
-		return queueKey;
 	}
-	else
-	{
-		return nullptr;
-	}
+	
+	return 0;
 }
 
 void InputSystem::AddToDownQueue(WPARAM wParam)
@@ -140,40 +137,38 @@ void InputSystem::SetInputState(SystemState state)
 
 WPARAM* InputSystem::GetKeyFromDownQueue()
 {
-	if (!m_keyDownQueue.empty())
-	{
-		WPARAM* queueKey = &m_keyDownQueue.front();
-		m_keyDownQueue.pop();
-		switch (*queueKey)
-		{
-		case VK_SHIFT:
-			m_shiftMode = true;
-			break;
-		case VK_CONTROL:
-			m_ctrlMode = true;
-			break;
-		default:
-			break;
-		}
-		return queueKey;
-	}
-	else
+	if (m_keyDownQueue.empty())
 	{
 		return nullptr;
 	}
+
+	WPARAM* queueKey = &m_keyDownQueue.front();
+	m_keyDownQueue.pop();
+	switch (*queueKey)
+	{
+	case VK_SHIFT:
+		m_shiftMode = true;
+		break;
+	case VK_CONTROL:
+		m_ctrlMode = true;
+		break;
+	default:
+		break;
+	}
+	return queueKey;
 }
 
 
-const bool& InputSystem::IsInShiftMode() const
+bool InputSystem::IsInShiftMode() const
 {
 	return m_shiftMode;
 }
-const bool& InputSystem::IsInCapsLock() const
+bool InputSystem::IsInCapsLock() const
 {
 	return m_capsLockMode;
 }
 
-const bool& InputSystem::IsInCTRLMode() const
+bool InputSystem::IsInCTRLMode() const
 {
 	return m_ctrlMode;
 }
@@ -233,7 +228,7 @@ bool InputSystem::CheckMouseKey(const MouseKey mouseButton, const KeyState state
 	}
 }
 
-const int InputSystem::GetMouseWheelRotation()
+int InputSystem::GetMouseWheelRotation()
 {
 	int currentValue = m_mouseState.scrollWheelValue;
 	int difference = currentValue - m_lastScrollValue;
@@ -241,7 +236,7 @@ const int InputSystem::GetMouseWheelRotation()
 	return difference;
 }
 
-const int InputSystem::GetMouseWheelDirection()
+int InputSystem::GetMouseWheelDirection()
 {
 	int currentValue = m_mouseState.scrollWheelValue;
 	int difference = currentValue - m_lastScrollValue;
@@ -384,7 +379,7 @@ const Ray_t& InputSystem::GetMouseRay() const
 	return m_mouseRay;
 }
 
-const bool InputSystem::IsMouseRelative() const
+bool InputSystem::IsMouseRelative() const
 {
 	bool isRelative = false;
 	if (m_mouseState.positionMode == dx::Mouse::MODE_RELATIVE)

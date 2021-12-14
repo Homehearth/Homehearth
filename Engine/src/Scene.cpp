@@ -2,6 +2,7 @@
 #include "Scene.h"
 #include <omp.h>
 #include "Systems.h"
+#include "CText.h"
 
 #include "ParticlePass.h"
 
@@ -18,6 +19,16 @@ Scene::Scene()
 	SetCurrentCameraEntity(m_defaultCamera);
 
 	m_sky.Initialize("storm.dds");
+
+	m_combatText = new rtd::CText("ERROR", draw_text_t(0.0f, 0.0f, D2D1Core::GetDefaultFontSize() * 3, D2D1Core::GetDefaultFontSize()), D2D1::ColorF(0.0f, 0.0f, 0.0f));
+}
+
+Scene::~Scene()
+{
+	if (m_combatText)
+	{
+		delete m_combatText;
+	}
 }
 
 void Scene::Update(float dt)
@@ -191,6 +202,12 @@ void Scene::Render2D()
 {
 	m_2dHandler.Render();
 
+	if (m_combatTextList.size() > 0)
+	{
+		m_combatTextMutex.lock();
+		this->HandleCombatText();
+		m_combatTextMutex.unlock();
+	}
 }
 
 void Scene::RenderSkybox()
@@ -246,11 +263,11 @@ void Scene::RenderParticles(void* voidPass)
 		{
 			//Constant buffer
 			pass->m_particleUpdate.emitterPosition = sm::Vector4(emitter.transformCopy.position.x + emitter.positionOffset.x, emitter.transformCopy.position.y + emitter.positionOffset.y, emitter.transformCopy.position.z + emitter.positionOffset.z, 1.f);
-			pass->m_particleUpdate.deltaTime = Stats::Get().GetFrameTime();
 			pass->m_particleUpdate.counter = pass->m_counter;
 			pass->m_particleUpdate.lifeTime = emitter.lifeTime;
 			pass->m_particleUpdate.particleSizeMulitplier = emitter.sizeMulitplier;
 			pass->m_particleUpdate.speed = emitter.speed;
+			pass->m_particleUpdate.deltaTime = Stats::Get().GetFrameTime();
 
 			pass->m_particleModeUpdate.type = emitter.type;
 
@@ -260,12 +277,11 @@ void Scene::RenderParticles(void* voidPass)
 			pass->m_constantBufferParticleMode.SetData(D3D11Core::Get().DeviceContext(), pass->m_particleModeUpdate);
 			ID3D11Buffer* cbP = { pass->m_constantBufferParticleMode.GetBuffer() };
 
-
 			//Binding emitter speceific data
 			D3D11Core::Get().DeviceContext()->CSSetConstantBuffers(8, 1, &cb);
 			D3D11Core::Get().DeviceContext()->CSSetUnorderedAccessViews(7, 1, emitter.particleUAV.GetAddressOf(), nullptr);
 
-			const int groupCount = static_cast<int>(ceil(emitter.nrOfParticles / 50)); //Hur många grupper som körs
+			const int groupCount = static_cast<int>(ceil(emitter.nrOfParticles / 50)); //Hur m?nga grupper som k?rs
 			D3D11Core::Get().DeviceContext()->Dispatch(groupCount, 1, 1);
 			D3D11Core::Get().DeviceContext()->CSSetUnorderedAccessViews(7, 1, &pass->m_nullUAV, nullptr);
 
@@ -281,7 +297,52 @@ void Scene::RenderParticles(void* voidPass)
 			}
 		}
 	}
+}
 
+void Scene::PushCombatText(const combat_text_inst_t& combat_text)
+{
+	m_combatTextMutex.lock();
+	m_combatTextList.push_back(combat_text);
+	m_combatTextMutex.unlock();
+}
+
+void Scene::HandleCombatText()
+{
+	for (int i = 0; i < m_combatTextList.size(); i++)
+	{
+		combat_text_inst_t& current_text = m_combatTextList[i];
+
+		switch (current_text.type)
+		{
+		case combat_text_enum::HEALTH_GAIN:
+		{
+			sm::Vector2 screenPos = util::WorldSpaceToScreenSpace(current_text.pos, GetCurrentCamera());
+			m_combatText->SetColor(D2D1::ColorF(0.0f, 1.0f, 0.0f));
+			m_combatText->SetPosition(screenPos.x - D2D1Core::GetDefaultFontSize() * 1.5f, screenPos.y);
+			m_combatText->SetText(std::to_string(current_text.amount));
+			m_combatText->Draw();
+			break;
+		}
+		case combat_text_enum::HEALTH_LOSS:
+		{
+			sm::Vector2 screenPos = util::WorldSpaceToScreenSpace(current_text.pos, GetCurrentCamera());
+			m_combatText->SetColor(D2D1::ColorF(1.0f, 0.0f, 0.0f));
+			m_combatText->SetText(std::to_string(current_text.amount));
+			m_combatText->SetPosition(screenPos.x - D2D1Core::GetDefaultFontSize() * 1.5f, screenPos.y);
+			m_combatText->Draw();
+			break;
+		}
+		default:
+			break;
+		}
+
+		current_text.pos = sm::Vector3::Lerp(current_text.pos, current_text.end_pos, Stats::Get().GetFrameTime() * 0.25f);
+
+		if (std::abs(omp_get_wtime() - m_combatTextList[i].timeRendered) > 0.35)
+		{
+			m_combatTextList.erase(m_combatTextList.begin() + i);
+		}
+	}
 }
 
 Skybox* Scene::GetSkybox()

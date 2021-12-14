@@ -18,25 +18,32 @@ BT::NodeStatus BT::InRangeCBT::Tick()
 	comp::RangeAttackAbility* attackRAbility = entity.GetComponent<comp::RangeAttackAbility>();
 	Entity* target = blackboard->GetValue<Entity>("target" + std::to_string(entity));
 
-	if(transform == nullptr || attackMAbility && attackRAbility)
+	if (transform == nullptr || attackMAbility && attackRAbility)
 	{
 		LOG_ERROR("Failed to get components from entity");
 		return BT::NodeStatus::FAILURE;
 	}
-	if(target == nullptr)
+	if (target == nullptr)
 	{
 		LOG_ERROR("Failed to get target position");
 		return BT::NodeStatus::FAILURE;
 	}
 	comp::House* house = target->GetComponent<comp::House>();
 	comp::Transform* targetTransform = target->GetComponent<comp::Transform>();
-	if(targetTransform == nullptr)
+	if (targetTransform == nullptr)
 	{
 		LOG_ERROR("Failed to get target position");
 		return BT::NodeStatus::FAILURE;
 	}
+
+	float extendedRange = 2.f;
+	if (target->GetComponent<comp::Tag<DEFENCE>>())
+	{
+		extendedRange = 2.5f;
+	}
+
 	//If target is a house
-	if(house && house->homeNode)
+	if (house && house->homeNode)
 	{
 		position = house->homeNode->position;
 	}
@@ -45,16 +52,17 @@ BT::NodeStatus BT::InRangeCBT::Tick()
 		position = target->GetComponent<comp::Transform>()->position;
 	}
 
+	float distance = sm::Vector3::Distance(transform->position, position);
 	if (attackMAbility)
 	{
-		if (sm::Vector3::Distance(transform->position, position) <= (attackMAbility->attackRange * 1.5f))
+		if (distance <= (attackMAbility->attackRange * extendedRange))
 		{
 			return BT::NodeStatus::SUCCESS;
 		}
 	}
-	else if(attackRAbility)
+	else if (attackRAbility)
 	{
-		if (sm::Vector3::Distance(transform->position, position) <= attackRAbility->attackRange)
+		if (distance <= attackRAbility->attackRange)
 		{
 			return BT::NodeStatus::SUCCESS;
 		}

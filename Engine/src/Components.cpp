@@ -57,8 +57,9 @@ namespace ecs {
             abilityComponent->cooldownTimer = abilityComponent->cooldown;
             abilityComponent->delayTimer = abilityComponent->delay;
             abilityComponent->useTimer = abilityComponent->useTime;
+            return true;
         }
-        return abilityComponent->isUsing;
+        return false;
     }
     
     bool UseAbility(Entity entity, entt::meta_type abilityType, sm::Vector3* targetPoint)
@@ -79,7 +80,7 @@ namespace ecs {
 
         if (abilityComponent->isUsing && abilityComponent->delayTimer <= 0.f)
         {
-            abilityComponent->cooldownTimer = abilityComponent->cooldown;
+            //abilityComponent->cooldownTimer = abilityComponent->cooldown;
             abilityComponent->isUsing = false;
             return true;
         }

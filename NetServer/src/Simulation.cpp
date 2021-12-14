@@ -94,7 +94,7 @@ void Simulation::InsertEntityIntoMessage(Entity entity, message<GameMsg>& msg, c
 		}
 		case ecs::Component::PARTICLEMITTER:
 		{
-			comp::PARTICLEEMITTER* p = entity.GetComponent<comp::PARTICLEEMITTER>();
+			comp::ParticleEmitter* p = entity.GetComponent<comp::ParticleEmitter>();
 			if (p)
 			{
 				compSet.set(ecs::Component::PARTICLEMITTER);
@@ -177,16 +177,16 @@ void Simulation::ResetPlayer(Entity player)
 	health->isAlive = true;
 	// only if Melee
 
-	if (player.GetComponent<comp::MeleeAttackAbility>())
-	{
-		player.RemoveComponent<comp::MeleeAttackAbility>();
-		player.RemoveComponent<comp::DashAbility>();
-	}
-	if (player.GetComponent<comp::RangeAttackAbility>())
+	if (playerComp->classType == comp::Player::Class::WARRIOR)
 	{
 		player.RemoveComponent<comp::RangeAttackAbility>();
 		player.RemoveComponent<comp::BlinkAbility>();
 		player.RemoveComponent<comp::HealAbility>();
+	}
+	else if (playerComp->classType == comp::Player::Class::MAGE)
+	{
+		player.RemoveComponent<comp::MeleeAttackAbility>();
+		player.RemoveComponent<comp::DashAbility>();
 	}
 
 	if (playerComp->classType == comp::Player::Class::WARRIOR)
@@ -195,12 +195,13 @@ void Simulation::ResetPlayer(Entity player)
 		health->currentHealth = 125.f;
 
 		comp::MeleeAttackAbility* attackAbility = player.AddComponent<comp::MeleeAttackAbility>();
-		attackAbility->cooldown = 0.50f;
-		attackAbility->attackDamage = 20.f;
+		attackAbility->cooldown = 0.60f;
+		attackAbility->attackDamage = 25.f;
 		attackAbility->lifetime = 0.1f;
-		attackAbility->useTime = 0.2f;
+		attackAbility->useTime = 0.5f;
 		attackAbility->delay = 0.2f;
 		attackAbility->attackRange = 8.f;
+		attackAbility->movementSpeedAlt = 0.5f;
 
 		playerComp->primaryAbilty = entt::resolve<comp::MeleeAttackAbility>();
 
@@ -226,14 +227,15 @@ void Simulation::ResetPlayer(Entity player)
 		health->currentHealth = 80.f;
 
 		comp::RangeAttackAbility* attackAbility = player.AddComponent<comp::RangeAttackAbility>();
-		attackAbility->cooldown = 0.8f;
-		attackAbility->attackDamage = 20.f;
-		attackAbility->lifetime = 2.0f;
+		attackAbility->cooldown = 1.2f;
+		attackAbility->attackDamage = 15.f;
+		attackAbility->lifetime = 0.1f;
 		attackAbility->projectileSpeed = 80.f;
-		attackAbility->projectileSize = 3.f;
+		attackAbility->projectileSize = 2.5f;
 		attackAbility->attackRange = 13.0f;
-		attackAbility->useTime = 0.3f;
-		attackAbility->delay = 0.3f;
+		attackAbility->useTime = 0.4f;
+		attackAbility->delay = 0.4f;
+		attackAbility->movementSpeedAlt = 0.1f;
 		playerComp->primaryAbilty = entt::resolve<comp::RangeAttackAbility>();
 
 		comp::HealAbility* healAbility = player.AddComponent<comp::HealAbility>();
@@ -285,7 +287,8 @@ void Simulation::ResetPlayer(Entity player)
 
 Simulation::Simulation(Server* pServer, HeadlessEngine* pEngine)
 	: m_pServer(pServer)
-	, m_pEngine(pEngine), m_pLobbyScene(nullptr), m_pGameScene(nullptr), m_pGameOverScene(nullptr), m_pCurrentScene(nullptr), currentRound(0), houseManager(&blackboard)
+	, m_pEngine(pEngine), m_pLobbyScene(nullptr), m_pGameScene(nullptr),
+	m_pCurrentScene(nullptr), currentRound(0), m_shop(this)
 {
 	this->m_gameID = 0;
 	this->m_tick = 0;
@@ -300,7 +303,6 @@ Simulation::Simulation(Server* pServer, HeadlessEngine* pEngine)
 	m_spawnPoints.push(TR);
 	m_spawnPoints.push(BL);
 	m_spawnPoints.push(BR);
-	m_shop.SetSimulation(this);
 }
 
 void Simulation::JoinLobby(uint32_t gameID, uint32_t playerID, const std::string& name)
@@ -333,8 +335,6 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 
 	houseManager.SetHouseColliders(houseColliders);
 
-	m_timeCycler.setBlackboard(&blackboard);
-
 	m_pGameScene->on<ESceneUpdate>([&](const ESceneUpdate& e, HeadlessScene& scene)
 		{
 #if GOD_MODE
@@ -348,7 +348,6 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 				});
 
 #endif
-
 			//  run all game logic systems
 			{
 				PROFILE_SCOPE("Systems");
@@ -364,7 +363,7 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 				}
 				{
 					PROFILE_SCOPE("Input from Player");
-					ServerSystems::UpdatePlayerWithInput(this, scene, e.dt, qt.get(), &blackboard);
+					ServerSystems::UpdatePlayerWithInput(this, scene, e.dt, qt.get(), blackboard.get());
 				}
 				{
 					PROFILE_SCOPE("Player state");
@@ -374,9 +373,8 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 				{
 					PROFILE_SCOPE("Abilities and Combat");
 					Systems::UpdateAbilities(scene, e.dt);
-					ServerSystems::CombatSystem(scene, e.dt, &blackboard);
+					ServerSystems::CombatSystem(scene, e.dt, blackboard.get());
 					Systems::HealingSystem(scene, e.dt);
-					ServerSystems::HealthSystem(scene, e.dt, m_currency, houseManager, qt.get(), m_grid, m_spreeHandler, &blackboard);
 					Systems::SelfDestructSystem(scene, e.dt);
 				}
 
@@ -399,6 +397,8 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 					PROFILE_SCOPE("Collision");
 					Systems::CheckCollisions(scene, e.dt);
 				}
+
+				ServerSystems::HealthSystem(scene, e.dt, m_currency, houseManager, qt.get(), m_grid, m_spreeHandler, blackboard.get());
 
 				{
 					PROFILE_SCOPE("Animation system");
@@ -434,6 +434,8 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 				ServerSystems::OnCycleChange(this);
 			}
 
+			ServerSystems::DeathParticleTimer(scene);
+
 			m_spreeHandler.Update();
 
 		});
@@ -452,15 +454,11 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 			OnComponentUpdated(e.entity, e.component);
 		});
 
-
-
 	//Gridsystem
+	m_addedEntities.clear();
 	m_grid.Initialize(gridOptions.mapSize, gridOptions.position, gridOptions.fileName, m_pGameScene);
 	//Create the nodes for AI handler on blackboard
-	blackboard.GetPathFindManager()->CreateNodes(&m_grid);
 
-
-	m_addedEntities.clear();
 #if RENDER_AINODES
 	std::vector<std::vector<std::shared_ptr<Node>>> nodes = blackboard.GetPathFindManager()->GetNodes();
 	for (int y = 0; y < nodes[0].size(); y++)
@@ -496,15 +494,16 @@ void Simulation::Destroy()
 	m_pLobbyScene->Clear();
 }
 
-void Simulation::SendSnapshot()
+void Simulation::SendAddedEntities()
 {
-	PROFILE_FUNCTION();
-	// remove any client disconnected
-	m_lobby.ScanForDisconnects();
-
 	// All new Entities
 	this->SendEntities(m_addedEntities, GameMsg::Game_AddEntity);
 	m_addedEntities.clear();
+}
+
+void Simulation::SendSnapshot()
+{
+	PROFILE_FUNCTION();
 
 	if (m_pCurrentScene == m_pGameScene)
 	{
@@ -522,7 +521,6 @@ void Simulation::SendSnapshot()
 		std::bitset<ecs::Component::COMPONENT_MAX> compMask;
 		compMask.set(ecs::Component::TRANSFORM);
 		compMask.set(ecs::Component::BOUNDING_ORIENTED_BOX);
-		//compMask.set(ecs::Component::COST);
 #if DEBUG_SNAPSHOT
 		compMask.set(ecs::Component::BOUNDING_SPHERE);
 #endif
@@ -554,29 +552,29 @@ void Simulation::SendSnapshot()
 				if (melee)
 				{
 					count++;
-					msg4 << AbilityIndex::Primary << melee->cooldownTimer;
+					msg4 << AbilityIndex::Primary << melee->cooldownTimer << melee->cooldown;
 				}
 				else if (range)
 				{
 					count++;
-					msg4 << AbilityIndex::Primary << range->cooldownTimer;
+					msg4 << AbilityIndex::Primary << range->cooldownTimer << range->cooldown;
 				}
 
 				if (blink)
 				{
 					count++;
-					msg4 << AbilityIndex::Dodge << blink->cooldownTimer;
+					msg4 << AbilityIndex::Dodge << blink->cooldownTimer << blink->cooldown;
 				}
 				else if (dash)
 				{
 					count++;
-					msg4 << AbilityIndex::Dodge << dash->cooldownTimer;
+					msg4 << AbilityIndex::Dodge << dash->cooldownTimer << dash->cooldown;
 				}
 
 				if (heal)
 				{
 					count++;
-					msg4 << AbilityIndex::Secondary << heal->cooldownTimer;
+					msg4 << AbilityIndex::Secondary << heal->cooldownTimer << heal->cooldown;
 				}
 
 				msg4 << count;
@@ -590,12 +588,12 @@ void Simulation::SendSnapshot()
 		//msg5 << (uint32_t)m_spreeHandler.GetSpree();
 		//this->Broadcast(msg5);
 
-		if (this->m_tick % 40 == 0)
+		if (this->m_tick % 600 == 0)
 		{
 			network::message<GameMsg> timeMsg;
-			timeMsg.header.id = GameMsg::Game_Time;
-			timeMsg << m_timeCycler.GetTime();
+			timeMsg.header.id = GameMsg::Game_Time_Update;
 			timeMsg << m_timeCycler.GetCycleSpeed();
+			timeMsg << m_timeCycler.GetTime();
 			this->Broadcast(timeMsg);
 		}
 	}
@@ -603,19 +601,27 @@ void Simulation::SendSnapshot()
 	{
 		m_lobby.Update();
 	}
-
-	// All destroyed Entities
-	this->SendRemoveEntities(m_removedEntities);
-	m_removedEntities.clear();
 }
 
 void Simulation::Update(float dt)
 {
 	PROFILE_FUNCTION();
-	if (m_pCurrentScene)
+
+	if (!m_lobby.IsEmpty())
+	{
+		// ORDER IS IMPORTANT
+		m_lobby.ScanForDisconnects();
+
+		this->SendAddedEntities();
+
 		m_pCurrentScene->Update(dt);
 
-	ServerSystems::DeathParticleTimer(*m_pGameScene);
+		this->SendRemovedEntities();
+
+		this->SendSnapshot();
+
+		m_tick++;
+	}
 }
 
 void Simulation::UpdateInput(InputState state, uint32_t playerID)
@@ -628,16 +634,6 @@ void Simulation::UpdateInput(InputState state, uint32_t playerID)
 	{
 		e.GetComponent<comp::Player>()->lastInputState = state;
 	}
-}
-
-void Simulation::NextTick()
-{
-	this->m_tick++;
-}
-
-uint32_t Simulation::GetTick() const
-{
-	return this->m_tick;
 }
 
 void Simulation::OnNetworkEntityCreate(entt::registry& reg, entt::entity entity)
@@ -658,11 +654,6 @@ void Simulation::OnNetworkEntityDestroy(entt::registry& reg, entt::entity entity
 	// Network has not been destroyed yet
 	comp::Network* net = e.GetComponent<comp::Network>();
 	m_removedEntities.push_back(net->id);
-	auto it = std::find(m_updatedEntities.begin(), m_updatedEntities.end(), e);
-	if (it != m_updatedEntities.end())
-	{
-		m_updatedEntities.erase(it);
-	}
 }
 
 void Simulation::OnNetworkEntityUpdated(entt::registry& reg, entt::entity entity)
@@ -698,7 +689,7 @@ void Simulation::BuildMapColliders(std::vector<dx::BoundingOrientedBox>* mapColl
 		obb->Extents = mapColliders->at(i).Extents;
 		obb->Orientation = mapColliders->at(i).Orientation;
 		collider.AddComponent<comp::Tag<STATIC>>();
-		// Map bounds is loaded in last, 6 obbs surrounding village put the correct tag for collision system
+		// Map bounds is loaded in first, 6 obbs surrounding village put the correct tag for collision system
 		if (i < 6)
 		{
 			collider.AddComponent<comp::Tag<MAP_BOUNDS>>();
@@ -715,14 +706,17 @@ HeadlessScene* Simulation::GetLobbyScene() const
 	return m_pLobbyScene;
 }
 
-HeadlessScene* Simulation::GetGameOverScene() const
-{
-	return m_pGameOverScene;
-}
-
 HeadlessScene* Simulation::GetGameScene() const
 {
 	return m_pGameScene;
+}
+
+void Simulation::SetScene(HeadlessScene* scene)
+{
+	if (!scene)
+	{
+		m_pCurrentScene = scene;
+	}
 }
 
 GridSystem& Simulation::GetGrid()
@@ -733,16 +727,6 @@ GridSystem& Simulation::GetGrid()
 Currency& Simulation::GetCurrency()
 {
 	return m_currency;
-}
-
-void Simulation::IncreaseWavesSurvived()
-{
-	this->m_wavesSurvived++;
-}
-
-void Simulation::UseShop(const ShopItem& item, const uint32_t& player)
-{
-	m_shop.UseShop(item, player);
 }
 
 void Simulation::UpgradeDefence(const uint32_t& id)
@@ -756,15 +740,17 @@ void Simulation::UpgradeDefence(const uint32_t& id)
 
 				if (c && h)
 				{
-					if (m_currency >= c->cost)
+					if (m_currency >= c->cost && h->upgradeLevel <= 2)
 					{
 						// Add upgrades here.
 						h->maxHealth += 35;
 						h->currentHealth += 35;
+						h->upgradeLevel++;
 
 						// Cost is here.
+						e.UpdateNetwork();
 						m_currency -= c->cost;
-						c->cost += 5;
+						c->cost *= 1.5f;
 						m_pGameScene->publish<EComponentUpdated>(e, ecs::Component::COST);
 					}
 				}
@@ -772,25 +758,18 @@ void Simulation::UpgradeDefence(const uint32_t& id)
 		});
 }
 
+void Simulation::ClearOutgoing()
+{
+	m_addedEntities.clear();
+	m_removedEntities.clear();
+	m_updatedComponents.clear();
+	m_updatedEntities.clear();
+}
+
 void Simulation::SetLobbyScene()
 {
 	m_pCurrentScene = m_pLobbyScene;
-	message<GameMsg> msg;
-	msg.header.id = GameMsg::Game_BackToLobby;
-
-	this->Broadcast(msg);
 	m_lobby.SetActive(true);
-}
-
-void Simulation::SetGameOver()
-{
-	m_pCurrentScene = m_pGameOverScene;
-	message<GameMsg> msg;
-	msg.header.id = GameMsg::Game_Over;
-	msg << m_currency.GetTotalGathered() << m_wavesSurvived - 1;
-	this->Broadcast(msg);
-
-	m_lobby.Clear();
 }
 
 void Simulation::SetGameScene()
@@ -798,10 +777,11 @@ void Simulation::SetGameScene()
 	ResetGameScene();
 	m_pCurrentScene = m_pGameScene;
 	m_lobby.SetActive(false);
-
 #if GOD_MODE
 	// During debug give players 1000 gold/monies.
 	m_currency = 1000;
+#else
+	m_currency = 500;
 #endif
 
 #if NO_CLIP
@@ -821,7 +801,6 @@ void Simulation::ResetGameScene()
 
 	while (!m_spawnPoints.empty())
 	{
-
 		m_spawnPoints.pop();
 	}
 
@@ -850,15 +829,21 @@ void Simulation::ResetGameScene()
 		this->Broadcast(msg);
 	}
 
-	m_currency = 50;
+	m_currency = 500;
 
 	EnemyManagement::CreateWaves(waveQueue, currentRound);
+	blackboard = std::make_unique<Blackboard>();
+	blackboard->GetPathFindManager()->CreateNodes(&m_grid);
+	houseManager.SetBlackboard(blackboard.get());
+	m_timeCycler.setBlackboard(blackboard.get());
 
 	houseManager.InitializeHouses(*this->GetGameScene(), qt.get());
-	AIBehaviors::UpdateBlackBoard(*m_pGameScene, &blackboard);
+	AIBehaviors::UpdateBlackBoard(*m_pGameScene, blackboard.get());
+	qt->ClearNullEntities();
 
-	m_timeCycler.SetTime(DAY);
+	m_timeCycler.SetTime(MORNING);
 	m_timeCycler.SetCycleSpeed(1.0f);
+	m_tick = 0;
 }
 
 void Simulation::SendEntities(const std::vector<Entity>& entities, GameMsg msgID, const std::bitset<ecs::Component::COMPONENT_MAX>& componentMask)
@@ -930,7 +915,7 @@ void Simulation::SendRemoveAllEntitiesToPlayer(uint32_t playerID) const
 	uint32_t count = 0;
 	m_pGameScene->ForEachComponent<comp::Network>([&](Entity e, comp::Network& n)
 		{
-			InsertEntityIntoMessage(e, msg);
+			msg << n.id;
 			count++;
 
 			if (count == PACKET_CHUNK_SIZE)
@@ -949,6 +934,11 @@ void Simulation::SendRemoveAllEntitiesToPlayer(uint32_t playerID) const
 
 		this->m_pServer->SendToClient(playerID, msg);
 	}
+}
+
+void Simulation::SendRemovedEntities()
+{
+	SendRemoveEntities(m_removedEntities);
 }
 
 void Simulation::SendRemoveEntities(const std::vector<uint32_t> entitiesNetIDs)
@@ -972,6 +962,8 @@ void Simulation::SendRemoveEntities(const std::vector<uint32_t> entitiesNetIDs)
 			msg.clear();
 		}
 	}
+
+	m_removedEntities.clear();
 }
 
 void Simulation::SendMsg(uint32_t playerID, message<GameMsg>& msg) const
@@ -1002,7 +994,7 @@ void Simulation::ReadyCheck(uint32_t playerID)
 	if (isAllReady)
 	{
 		// Set all players spawn positions once when everyone is ready.
-		m_pGameScene->ForEachComponent<comp::Player>([&](Entity& e, comp::Player& p)
+		m_pGameScene->ForEachComponent<comp::Player>([&](comp::Player& p)
 			{
 				p.spawnPoint = m_spawnPoints.front();
 				m_spawnPoints.pop();
@@ -1054,7 +1046,5 @@ Entity Simulation::GetPlayer(uint32_t playerID) const
 
 Blackboard* Simulation::GetBlackboard()
 {
-	return &blackboard;
+	return blackboard.get();
 }
-
-
