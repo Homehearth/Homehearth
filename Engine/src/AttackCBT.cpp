@@ -44,7 +44,7 @@ BT::NodeStatus BT::AttackCBT::Tick()
 		comp::AnimationState* animState = entity.GetComponent<comp::AnimationState>();
 		//Activate attack animation
 		if (animState)
-			animState->toSend = EAnimationType::PRIMARY_ATTACK;
+			animState->toSend = EAnimationType::PRIMARY;
 
 		entity.UpdateNetwork();
 	};

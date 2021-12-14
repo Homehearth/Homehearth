@@ -104,6 +104,7 @@ bool Game::OnStartup()
 
 	// Set Current Scene
 	SetScene("MainMenu");
+	GetScene("Game").GetRegistry()->on_destroy<comp::House>().connect<&Game::OnHouseDestroy>(this);
 
 	return true;
 }
@@ -119,6 +120,7 @@ void Game::OnUserUpdate(float deltaTime)
 
 	Scene& scene = GetScene("Game");
 	Entity e;
+	GameSystems::WarningIconSystem(this, scene);
 	if (GetLocalPlayer(e))
 	{
 		comp::KillDeaths* p = e.GetComponent<comp::KillDeaths>();
@@ -1048,6 +1050,7 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 					case NameType::MESH_WATERMILLHOUSE:
 					{
 						nameString = "WaterMillHouse.fbx";
+						e.AddComponent<comp::House>();
 						break;
 					}
 					case NameType::MESH_RUINED_WATERMILLHOUSE:
@@ -1058,6 +1061,7 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 					case NameType::MESH_HOUSE5:
 					{
 						nameString = "House5.fbx";
+						e.AddComponent<comp::House>();
 						break;
 					}
 					case NameType::MESH_RUINED_HOUSE5:
@@ -1068,6 +1072,7 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 					case NameType::MESH_HOUSE6:
 					{
 						nameString = "House6.fbx";
+						e.AddComponent<comp::House>();
 						break;
 					}
 					case NameType::MESH_RUINED_HOUSE6:
@@ -1078,6 +1083,7 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 					case NameType::MESH_HOUSE7:
 					{
 						nameString = "House7.fbx";
+						e.AddComponent<comp::House>();
 						break;
 					}
 					case NameType::MESH_RUINED_HOUSE7:
@@ -1088,6 +1094,7 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 					case NameType::MESH_HOUSE8:
 					{
 						nameString = "House8.fbx";
+						e.AddComponent<comp::House>();
 						break;
 					}
 					case NameType::MESH_RUINED_HOUSE8:
@@ -1098,6 +1105,7 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 					case NameType::MESH_HOUSE9:
 					{
 						nameString = "House9.fbx";
+						e.AddComponent<comp::House>();
 						break;
 					}
 					case NameType::MESH_RUINED_HOUSE9:
@@ -1108,6 +1116,7 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 					case NameType::MESH_HOUSE10:
 					{
 						nameString = "House10.fbx";
+						e.AddComponent<comp::House>();
 						break;
 					}
 					case NameType::MESH_RUINED_HOUSE10:
@@ -1294,6 +1303,55 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 								}
 							}
 						}
+					}
+					comp::Health* health = e.GetComponent<comp::Health>();
+					comp::Transform* transform = e.GetComponent<comp::Transform>();
+					if (health && transform)
+					{
+						combat_text_inst_t cText;
+						// Signal health gain.
+						if (health->currentHealth <= hp.currentHealth)
+						{
+							cText.type = combat_text_enum::HEALTH_GAIN;
+							cText.pos = transform->position;
+						}
+						else if (health->currentHealth > hp.currentHealth)
+						{
+							cText.type = combat_text_enum::HEALTH_LOSS;
+							cText.pos = transform->position;
+						}
+
+						cText.timeRendered = static_cast<float>(omp_get_wtime());
+						cText.pos.y += 15;
+						cText.end_pos = cText.pos;
+						cText.end_pos.y += 50;
+						cText.amount = std::abs(static_cast<int>(health->currentHealth - hp.currentHealth));
+						GetScene("Game").PushCombatText(cText);
+						comp::House* house = e.GetComponent<comp::House>();
+						if (house)
+						{
+							if (hp.currentHealth < health->currentHealth)
+							{
+								LOG_INFO("House took damage");
+								house->displayWarning = true;
+								house->warningIcon.pos = e.GetComponent<comp::OrientedBoxCollider>()->Center;
+								house->warningIcon.timeRendered = omp_get_wtime();
+								if (house->iconID == -1)
+								{
+									//Create a new warning Icon and display it(6 exists as collections in the UI)
+									for (int i = 0; i < NR_OF_HOUSES && house->iconID == -1; i++)
+									{
+										Collection2D* collection = scene.GetCollection("HouseWarningIcon" + std::to_string(i + 1));
+										rtd::Picture* icon = static_cast<rtd::Picture*>(collection->elements[0].get());
+										if (!icon->IsVisible())
+										{
+											house->iconID = i;
+											icon->SetVisiblity(true);
+										}
+									}
+								}
+							}
+						}
 
 						comp::Health* health = e.GetComponent<comp::Health>();
 						if (health && t)
@@ -1430,6 +1488,22 @@ void Game::ChangeSpectatedPlayer()
 			}
 		}
 	}
+}
+
+void Game::OnHouseDestroy(entt::registry& registry, entt::entity e)
+{
+	Entity entity(registry, e);
+	comp::House* house = entity.GetComponent<comp::House>();
+	if (house)
+	{
+		if (house->iconID != -1)
+		{
+			Collection2D* collection = GetScene("Game").GetCollection("HouseWarningIcon" + std::to_string(house->iconID + 1));
+			rtd::Picture* icon = static_cast<rtd::Picture*> (collection->elements[0].get());
+			icon->SetVisiblity(false);
+		}
+	}
+
 }
 
 void Game::UpdateInput()

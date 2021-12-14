@@ -129,7 +129,7 @@ void rtd::TextField::Update()
 					}
 					else
 					{
-						m_stringText.push_back(static_cast<char>(std::tolower(*currentKey)));
+						m_stringText.push_back(static_cast<char>(std::tolower(static_cast<int>(*currentKey))));
 					}
 				}
 				break;

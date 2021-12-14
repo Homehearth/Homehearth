@@ -13,8 +13,8 @@ struct aiNodeAnim;
 class RAnimation : public resource::GResource
 {
 private:
-	double	m_ticksPerFrame;
-	double	m_duration;
+	float	m_ticksPerFrame;
+	float	m_duration;
 	bool	m_isLoopable;
 
 	/*
@@ -22,17 +22,17 @@ private:
 	*/
 	struct positionKey_t
 	{
-		double		time;
+		float		time;
 		sm::Vector3 val;
 	};
 	struct scaleKey_t
 	{
-		double		time;
+		float		time;
 		sm::Vector3	val;
 	};
 	struct rotationKey_t
 	{
-		double			time;
+		float			time;
 		sm::Quaternion	val;
 	};
 	struct keyFrames_t
@@ -64,16 +64,17 @@ public:
 	//Set and get
 	void SetLoopable(bool& enable);
 	bool IsLoopable() const;
-	void SetTicksPerFrame(const double& speed);
-	const double& GetTicksPerFrame() const;
-	const double& GetDuraction() const;
+	void SetTicksPerFrame(const float& speed);
+	const float& GetTicksPerFrame() const;
+	const float& GetDuration() const;
+	const float  GetDurationInSeconds() const;
 
 	/*
 		Data for doing animation
 	*/
-	const sm::Vector3 GetPosition(const std::string& bonename, const double& currentFrame, UINT& lastKey, bool interpolate) const;
-	const sm::Vector3 GetScale(const std::string& bonename, const double& currentFrame, UINT& lastKey, bool interpolate) const;
-	const sm::Quaternion GetRotation(const std::string& bonename, const double& currentFrame, UINT& lastKey, bool interpolate) const;
+	const sm::Vector3	 GetPosition(const std::string& bonename, const float& currentFrame, UINT& lastKey, bool interpolate = true) const;
+	const sm::Vector3	 GetScale(	 const std::string& bonename, const float& currentFrame, UINT& lastKey, bool interpolate = true) const;
+	const sm::Quaternion GetRotation(const std::string& bonename, const float& currentFrame, UINT& lastKey, bool interpolate = true) const;
 
 	/*
 		Get translations depending on the bone.
@@ -82,7 +83,7 @@ public:
 		Can use interpolation for smoother animations. By default it's is on
 	*/
 	const sm::Matrix GetMatrix(const std::string& bonename, 
-								const double& currentFrame, 
+								const float& currentFrame, 
 								UINT (&lastKeys)[3], 
 								bool interpolate = true) const;
 

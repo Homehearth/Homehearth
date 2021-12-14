@@ -755,7 +755,7 @@ void Simulation::UpgradeDefence(const uint32_t& id)
 						// Cost is here.
 						e.UpdateNetwork();
 						m_currency -= c->cost;
-						c->cost *= 1.5f;
+						c->cost *= static_cast<uint32_t>(1.5f);
 						m_pGameScene->publish<EComponentUpdated>(e, ecs::Component::COST);
 					}
 				}
