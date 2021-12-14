@@ -17,7 +17,11 @@ void BasePass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 	DC->VSSetConstantBuffers(1, 1, pCam->m_viewConstantBuffer.GetAddressOf()); 
 	DC->PSSetConstantBuffers(1, 1, pCam->m_viewConstantBuffer.GetAddressOf()); 
     
-   //DC->PSSetShaderResources(0, 1, PM->m_depthBufferSRV.GetAddressOf());   // DepthBuffer.
+    //DC->PSSetShaderResources(0, 1, PM->m_depthBufferSRV.GetAddressOf());   // DepthBuffer.
+   
+    //Water blend map
+    DC->PSSetShaderResources(22, 1, PM->m_SRV_ModdedTextureEffectBlendMap.GetAddressOf());
+
 
     DC->PSSetSamplers(0, 1, PM->m_pointSamplerState.GetAddressOf());
     DC->PSSetSamplers(1, 1, PM->m_linearSamplerState.GetAddressOf());
@@ -58,4 +62,7 @@ void BasePass::PostRender(ID3D11DeviceContext* pDeviceContext)
     ID3D11Buffer* nullBuffer = nullptr;
     DC->PSSetConstantBuffers(1, 1, &nullBuffer);
     DC->VSSetConstantBuffers(1, 1, &nullBuffer);
+
+    ID3D11ShaderResourceView* kill = nullptr;
+    DC->PSSetShaderResources(22, 1, &kill);
 }

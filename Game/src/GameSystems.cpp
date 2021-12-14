@@ -250,11 +250,12 @@ void GameSystems::DeathParticleTimer(Scene& scene)
 {
 	scene.ForEachComponent<comp::EmitterParticle>([&](Entity e, comp::EmitterParticle& emitter)
 		{
-			if (emitter.hasDeathTimer == true && emitter.lifeLived <= emitter.lifeTime)
+			if (emitter.hasDeathTimer > 0)
 			{
-				emitter.lifeLived += Stats::Get().GetFrameTime();
+				if (emitter.lifeLived <= (emitter.lifeTime * emitter.hasDeathTimer))
+					emitter.lifeLived += Stats::Get().GetUpdateTime();
+				else if (emitter.lifeLived >= (emitter.lifeTime * emitter.hasDeathTimer))
+					e.RemoveComponent<comp::EmitterParticle>();
 			}
-			else if (emitter.hasDeathTimer == true && emitter.lifeLived >= emitter.lifeTime)
-				e.RemoveComponent<comp::EmitterParticle>();
 		});
 }

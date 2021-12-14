@@ -273,6 +273,7 @@ void Scene::RenderParticles(void* voidPass)
 			pass->m_particleUpdate.particleSizeMulitplier = emitter.sizeMulitplier;
 			pass->m_particleUpdate.speed = emitter.speed;
 			pass->m_particleUpdate.deltaTime = Stats::Get().GetFrameTime();
+			pass->m_particleUpdate.direction = emitter.direction;
 
 			pass->m_particleModeUpdate.type = emitter.type;
 
