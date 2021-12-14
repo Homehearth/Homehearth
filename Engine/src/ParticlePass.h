@@ -11,6 +11,7 @@ struct ParticleUpdate
 	float particleSizeMulitplier;
 	float speed;
 	float deltaTime;
+	sm::Vector3 direction;
 };
 ALIGN16
 struct ParticleModePUpdate 

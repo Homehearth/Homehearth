@@ -874,8 +874,8 @@ void ServerSystems::CheckGameOver(Simulation* simulation, HeadlessScene& scene)
 		msg << simulation->GetCurrency().GetTotalGathered() << simulation->m_wavesSurvived - 1;
 		simulation->Broadcast(msg);
 
-		simulation->SetScene(simulation->GetGameOverScene());
 		simulation->m_lobby.Clear();
+		simulation->SetLobbyScene();
 	}
 }
 
@@ -984,13 +984,12 @@ void ServerSystems::DeathParticleTimer(HeadlessScene& scene)
 {
 	scene.ForEachComponent<comp::ParticleEmitter>([&](Entity& e, comp::ParticleEmitter& emitter)
 		{
-			if (emitter.hasDeathTimer == true && emitter.lifeLived <= emitter.lifeTime)
+			if (emitter.hasDeathTimer > 0)
 			{
-				emitter.lifeLived += Stats::Get().GetFrameTime();
-			}
-			else if (emitter.hasDeathTimer == true && emitter.lifeLived >= emitter.lifeTime)
-			{
-				e.RemoveComponent<comp::ParticleEmitter>();
+				if ( emitter.lifeLived <= (emitter.lifeTime * emitter.hasDeathTimer))
+					emitter.lifeLived += Stats::Get().GetUpdateTime();
+				else if (emitter.lifeLived >= (emitter.lifeTime * emitter.hasDeathTimer))
+					e.RemoveComponent<comp::ParticleEmitter>();
 			}
 		});
 }
@@ -1038,6 +1037,8 @@ Entity VillagerManagement::CreateVillager(HeadlessScene& scene, Entity homeHouse
 	comp::Velocity* velocity = entity.AddComponent<comp::Velocity>();
 	comp::BehaviorTree* behaviorTree = entity.AddComponent<comp::BehaviorTree>();
 	comp::Villager* villager = entity.AddComponent<comp::Villager>();
+	villager->isHiding = false;
+	villager->isFleeing = false;
 	comp::House* house = homeHouse.GetComponent<comp::House>();
 	transform->position = house->homeNode->position;
 	transform->position.y = 0.75f;

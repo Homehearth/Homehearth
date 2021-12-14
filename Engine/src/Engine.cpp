@@ -47,8 +47,8 @@ void Engine::Startup()
 			config.height = 720;
 			config.width = 1280;
 
-			OptionSystem::Get().SetOption("WindowHeight", std::string("720"));
-			OptionSystem::Get().SetOption("WindowWidth", std::string("1280"));
+			OptionSystem::Get().SetOption("WindowHeight", "720");
+			OptionSystem::Get().SetOption("WindowWidth", "1280");
 		}
 	}
 

@@ -34,7 +34,7 @@ namespace network
 		// Called once when a client connects
 		virtual void OnClientConnect(std::string&& ip, const uint16_t& port) = 0;
 		// Called once when a client connects
-		virtual void OnClientDisconnect(const SOCKET& socket) = 0;
+		virtual void OnClientDisconnect() = 0;
 		// Called once when a message is received
 		virtual void OnMessageReceived(message<T>& msg) = 0;
 		// Client has solved the puzzle from the server and is now validated
@@ -57,8 +57,8 @@ namespace network
 		// FUNCTIONS TO EASIER HANDLE DATA IN AND OUT FROM SERVER
 		void WriteValidation(const SOCKET& socketId, uint64_t handshakeOut);
 		void ReadValidation(SOCKET_INFORMATION<T>*& SI, PER_IO_DATA* context);
-		void ReadHeader(SOCKET_INFORMATION<T>*& SI, PER_IO_DATA* context);
-		void ReadPayload(SOCKET_INFORMATION<T>*& SI, PER_IO_DATA* context);
+		void ReadHeader(SOCKET_INFORMATION<T>*& SI);
+		void ReadPayload(SOCKET_INFORMATION<T>*& SI);
 		void WriteHeader();
 		void WritePacket();
 		void WritePayload();
@@ -244,7 +244,7 @@ namespace network
 	}
 
 	template <typename T>
-	void server_interface<T>::ReadPayload(SOCKET_INFORMATION<T>*& SI, PER_IO_DATA* context)
+	void server_interface<T>::ReadPayload(SOCKET_INFORMATION<T>*& SI)
 	{
 		this->m_qMessagesIn.push_back(SI->msgTempIn);
 		SI->msgTempIn.payload.clear();
@@ -252,7 +252,7 @@ namespace network
 	}
 
 	template <typename T>
-	void server_interface<T>::ReadHeader(SOCKET_INFORMATION<T>*& SI, PER_IO_DATA* context)
+	void server_interface<T>::ReadHeader(SOCKET_INFORMATION<T>*& SI)
 	{
 		if (SI->msgTempIn.header.size > 0)
 		{
@@ -467,7 +467,7 @@ namespace network
 			delete SI;
 			SI = nullptr;
 
-			this->OnClientDisconnect(socket);
+			this->OnClientDisconnect();
 		}
 		LeaveCriticalSection(&lock);
 		LeaveCriticalSection(&udpLock);
@@ -562,7 +562,7 @@ namespace network
 
 		WORD version = MAKEWORD(2, 2);
 
-		int8_t rv = WSAStartup(version, &wsaData);
+		int rv = WSAStartup(version, &wsaData);
 
 		if (rv != 0)
 		{
@@ -667,7 +667,7 @@ namespace network
 			hints.ai_protocol = IPPROTO_UDP;
 		}
 
-		int8_t rv = getaddrinfo(NULL, std::to_string(port).c_str(), &hints, &servinfo);
+		INT rv = getaddrinfo(NULL, std::to_string(port).c_str(), &hints, &servinfo);
 
 		if (rv != 0)
 		{
@@ -675,7 +675,7 @@ namespace network
 			return INVALID_SOCKET;
 		}
 
-		SOCKET socket;
+		SOCKET socket = INVALID_SOCKET;
 
 		// Loop through linked list of possible network structures
 		for (p = servinfo; p != nullptr; p = p->ai_next)
@@ -700,7 +700,7 @@ namespace network
 				if (setsockopt(socket, IPPROTO_TCP, TCP_NODELAY, (char*)&enable, sizeof(int)) != 0)
 				{
 					LOG_ERROR("setsockopt: %d", WSAGetLastError());
-					return false;
+					return INVALID_SOCKET;
 				}
 			}
 
@@ -847,7 +847,6 @@ namespace network
 	template <typename T>
 	DWORD server_interface<T>::ProcessUDPIO()
 	{
-		SOCKET_INFORMATION<T>* SI = nullptr;
 		PER_IO_DATA* context;
 		const DWORD CAP = 50;
 		OVERLAPPED_ENTRY Entries[CAP];
@@ -934,8 +933,6 @@ namespace network
 	template <typename T>
 	DWORD server_interface<T>::ProcessTCPIO()
 	{
-		DWORD BytesTransferred = 0;
-		SOCKET_INFORMATION<T>* SI = nullptr;
 		PER_IO_DATA* context;
 		const DWORD CAP = 50;
 		OVERLAPPED_ENTRY Entries[CAP];
@@ -1003,12 +1000,12 @@ namespace network
 						{
 						case NetState::READ_HEADER:
 						{
-							this->ReadHeader(SI, context);
+							this->ReadHeader(SI);
 							break;
 						}
 						case NetState::READ_PAYLOAD:
 						{
-							this->ReadPayload(SI, context);
+							this->ReadPayload(SI);
 							break;
 						}
 						case NetState::READ_VALIDATION:

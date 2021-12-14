@@ -268,6 +268,7 @@ void Scene::RenderParticles(void* voidPass)
 			pass->m_particleUpdate.particleSizeMulitplier = emitter.sizeMulitplier;
 			pass->m_particleUpdate.speed = emitter.speed;
 			pass->m_particleUpdate.deltaTime = Stats::Get().GetFrameTime();
+			pass->m_particleUpdate.direction = emitter.direction;
 
 			pass->m_particleModeUpdate.type = emitter.type;
 
@@ -281,7 +282,7 @@ void Scene::RenderParticles(void* voidPass)
 			D3D11Core::Get().DeviceContext()->CSSetConstantBuffers(8, 1, &cb);
 			D3D11Core::Get().DeviceContext()->CSSetUnorderedAccessViews(7, 1, emitter.particleUAV.GetAddressOf(), nullptr);
 
-			const int groupCount = static_cast<int>(ceil(emitter.nrOfParticles / 50)); //Hur många grupper som körs
+			const int groupCount = static_cast<int>(ceil(emitter.nrOfParticles / 50)); //Hur m?nga grupper som k?rs
 			D3D11Core::Get().DeviceContext()->Dispatch(groupCount, 1, 1);
 			D3D11Core::Get().DeviceContext()->CSSetUnorderedAccessViews(7, 1, &pass->m_nullUAV, nullptr);
 
@@ -310,7 +311,7 @@ void Scene::HandleCombatText()
 {
 	for (int i = 0; i < m_combatTextList.size(); i++)
 	{
-		combat_text_inst_t current_text = m_combatTextList[i];
+		combat_text_inst_t& current_text = m_combatTextList[i];
 
 		switch (current_text.type)
 		{
@@ -335,6 +336,8 @@ void Scene::HandleCombatText()
 		default:
 			break;
 		}
+
+		current_text.pos = sm::Vector3::Lerp(current_text.pos, current_text.end_pos, Stats::Get().GetFrameTime() * 0.25f);
 
 		if (std::abs(omp_get_wtime() - m_combatTextList[i].timeRendered) > 0.35)
 		{

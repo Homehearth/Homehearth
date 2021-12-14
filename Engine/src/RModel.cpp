@@ -101,6 +101,79 @@ const std::vector<sm::Vector2> RModel::GetTextureCoords() const
     return texturecoords;
 }
 
+const std::vector<sm::Vector3> RModel::GetVertexColors() const
+{
+    std::vector<sm::Vector3> vertexColors;
+
+    ComPtr<ID3D11Buffer> tempResource;
+    D3D11_BUFFER_DESC desc = {};
+    desc.Usage = D3D11_USAGE_STAGING;
+    desc.BindFlags = 0;
+    desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+    desc.MiscFlags = 0;
+    desc.StructureByteStride = 0;
+
+    //Go through all the meshes
+    for (size_t i = 0; i < m_meshes.size(); i++)
+    {
+        UINT byteWidth = 0;
+
+        if (m_meshes[i].hasBones)
+            byteWidth = static_cast<UINT>(sizeof(anim_vertex_t) * m_meshes[i].vertexCount);
+        else
+            byteWidth = static_cast<UINT>(sizeof(simple_vertex_t) * m_meshes[i].vertexCount);
+
+        desc.ByteWidth = byteWidth;
+
+        HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&desc, nullptr, tempResource.GetAddressOf());
+        if (FAILED(hr))
+        {
+#ifdef _DEBUG
+            LOG_ERROR("Failed to create staging buffer for get vertexcolors...");
+#endif // _DEBUG
+            return vertexColors;
+        }
+
+        //Copy the resource to staging buffer so that we can read it
+        D3D11Core::Get().DeviceContext()->CopyResource(tempResource.Get(), m_meshes[i].vertexBuffer.Get());
+
+        std::vector<simple_vertex_t> simpleVertices;
+        std::vector<anim_vertex_t>   animVertices;
+
+        //Copy the data
+        D3D11_MAPPED_SUBRESOURCE data;
+        D3D11Core::Get().DeviceContext()->Map(tempResource.Get(), 0, D3D11_MAP_READ, 0, &data);
+
+        if (m_meshes[i].hasBones)
+        {
+            animVertices.resize(m_meshes[i].vertexCount);
+            memcpy(&animVertices[0], data.pData, byteWidth);
+
+            //Go through the vector of vertices and get the vertexcolors
+            for (size_t v = 0; v < animVertices.size(); v++)
+            {
+                vertexColors.push_back(animVertices[v].color);
+            }
+            animVertices.clear();
+        }
+        else
+        {
+            simpleVertices.resize(m_meshes[i].vertexCount);
+            memcpy(&simpleVertices[0], data.pData, byteWidth);
+
+            //Go through the vector of vertices and get the vertexcolors
+            for (size_t v = 0; v < simpleVertices.size(); v++)
+            {
+                vertexColors.push_back(simpleVertices[v].color);
+            }
+            simpleVertices.clear();
+        }
+        D3D11Core::Get().DeviceContext()->Unmap(tempResource.Get(), 0);
+    }
+
+    return vertexColors;
+}
+
 const std::vector<std::shared_ptr<RTexture>> RModel::GetTextures(const ETextureType& type) const
 {
     std::vector<std::shared_ptr<RTexture>> textures;
@@ -216,6 +289,10 @@ bool RModel::CombineMeshes(std::vector<aiMesh*>& submeshes, submesh_t& submesh, 
             vert.normal     = { aimesh->mNormals[v].x,          aimesh->mNormals[v].y,        aimesh->mNormals[v].z     };
             vert.tangent    = { aimesh->mTangents[v].x,         aimesh->mTangents[v].y,       aimesh->mTangents[v].z    };
             vert.bitanget   = { aimesh->mBitangents[v].x,       aimesh->mBitangents[v].y,     aimesh->mBitangents[v].z  };
+
+            //Only accept the first colorset for now
+            if (aimesh->HasVertexColors(0))
+                vert.color  = { aimesh->mColors[0][v].r,        aimesh->mColors[0][v].g,      aimesh->mColors[0][v].b   };
             simpleVertices.push_back(vert);
             
             if (aimesh->HasBones())
@@ -226,6 +303,7 @@ bool RModel::CombineMeshes(std::vector<aiMesh*>& submeshes, submesh_t& submesh, 
                 animVert.normal     = vert.normal;
                 animVert.tangent    = vert.tangent;
                 animVert.bitanget   = vert.bitanget;
+                animVert.color      = vert.color;
                 skeletonVertices.push_back(animVert);
             }
         }

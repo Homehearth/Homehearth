@@ -99,16 +99,36 @@ void CombatSystem::UpdateTeleport(HeadlessScene& scene, Blackboard* blackboard)
 					bool hasSetTarget = false;
 					while (!hasSetTarget && dir.Length() > pathFinderManager->GetNodeSize())
 					{
+
 						sm::Vector3 newPos = transform.position + dir;
 						if (pathFinderManager->FindClosestNode(newPos)->reachable)
 						{
 							entity.GetComponent<comp::Transform>()->position = newPos;
+
+							if (entity.GetComponent<comp::ParticleEmitter>())
+								entity.RemoveComponent<comp::ParticleEmitter>();
+
+							sm::Vector3 dirNormal = dir;
+							dirNormal.Normalize();
+							entity.AddComponent<comp::ParticleEmitter>(sm::Vector3(0, 6, 0), 200, 3.0f, ParticleMode::MAGEBLINK, 0.5f, -10.f, TRUE);
+							entity.GetComponent<comp::ParticleEmitter>()->direction = dirNormal;
+							scene.publish<EComponentUpdated>(entity, ecs::Component::PARTICLEMITTER);
+
+							dirNormal *= -1;
+							Entity blinkParticle = scene.CreateEntity();
+							blinkParticle.AddComponent<comp::Transform>(newPos);
+							blinkParticle.AddComponent<comp::ParticleEmitter>(sm::Vector3(0, 6, 0), 200, 3.0f, ParticleMode::MAGEBLINK, 0.2f, 20.f, TRUE);
+							blinkParticle.GetComponent<comp::ParticleEmitter>()->direction = dirNormal;
+							blinkParticle.AddComponent<comp::Network>();
+							blinkParticle.UpdateNetwork();
+
 							hasSetTarget = true;
 							entity.UpdateNetwork();
 							if (pathFinderManager->PlayerAStar(entity.GetComponent<comp::Transform>()->position))
 							{
 								p->reachable = true;
 							}
+
 
 							audio_t audio = {
 								ESoundEvent::Player_OnCastBlink,
@@ -162,6 +182,8 @@ void CombatSystem::UpdateDash(HeadlessScene& scene)
 
 					Entity collider = CreateAreaAttackCollider(scene, entity.GetComponent<comp::Transform>()->position, 10, dashAbility.useTime);
 					collider.AddComponent<comp::Velocity>()->vel = dashAbility.velocityBeforeDash * dashAbility.force;
+
+					//entity.AddComponent<comp::ParticleEmitter>(sm::Vector3(0, 6, 0), 100, 10.f, ParticleMode::MAGEBLINK, 2.f, 1.f, FALSE);
 
 					CollisionSystem::Get().AddOnCollisionEnter(collider, [=](Entity thisEntity, Entity other)
 						{
@@ -270,8 +292,6 @@ void CombatSystem::UpdateTargetPoint(Entity entity, sm::Vector3* targetPoint)
 	}
 }
 
-
-
 Entity CombatSystem::CreateAttackEntity(Entity entity, HeadlessScene& scene, comp::Transform* transform, comp::MeleeAttackAbility* stats)
 {
 	//Creates an entity that's used to check collision if an attack lands.
@@ -321,8 +341,9 @@ Entity CombatSystem::CreateAttackEntity(Entity entity, HeadlessScene& scene, com
 	Entity attackEntity = scene.CreateEntity();
 
 	comp::Transform* t = attackEntity.AddComponent<comp::Transform>();
-	attackEntity.AddComponent<comp::Tag<TagType::DYNAMIC>>();
-	attackEntity.AddComponent<comp::Tag<TagType::NO_RESPONSE>>();
+	attackEntity.AddComponent<comp::Tag<DYNAMIC>>();
+	attackEntity.AddComponent<comp::Tag<NO_RESPONSE>>();
+	attackEntity.AddComponent<comp::Tag<RANGED_ATTACK>>();
 
 	comp::SphereCollider* bos = attackEntity.AddComponent<comp::SphereCollider>();
 
@@ -357,23 +378,30 @@ Entity CombatSystem::CreateAttackEntity(Entity entity, HeadlessScene& scene, com
 
 			audioState->data.emplace(audio);
 		}
+
+		// This is the collider and this entity wont be sent over network
 		comp::RangeAttackAbility* ability = entity.GetComponent<comp::RangeAttackAbility>();
-		Entity explosion = CreateAreaAttackCollider(scene, attackEntity.GetComponent<comp::Transform>()->position, ability->attackRange, 0.5f);
+		Entity explosionCollider = CreateAreaAttackCollider(scene, attackEntity.GetComponent<comp::Transform>()->position, ability->attackRange, 0.1f);
 
-		explosion.AddComponent<comp::ParticleEmitter>(sm::Vector3{ 0,0,0 }, 200, 6.f, ParticleMode::EXPLOSION, 2.0f, 40.f, false);
+		// Only this part will be sent over network
+		Entity explosionEffect = scene.CreateEntity();
+		explosionEffect.AddComponent<comp::Network>();
+		explosionEffect.AddComponent<comp::Transform>()->position = attackEntity.GetComponent<comp::Transform>()->position;
+		explosionEffect.AddComponent<comp::SelfDestruct>()->lifeTime = 0.5f;
+		explosionEffect.AddComponent<comp::ParticleEmitter>(sm::Vector3{ 0,0,0 }, 200, 6.f, ParticleMode::EXPLOSION, 2.0f, 40.f, false);
 
 
-		CollisionSystem::Get().AddOnCollisionEnter(explosion, [=, &scene](Entity expl, Entity other)
+		CollisionSystem::Get().AddOnCollisionEnter(explosionCollider, [=, &scene](Entity expl, Entity other)
 			{
-				comp::MeleeAttackAbility* ability = nullptr;
+				comp::RangeAttackAbility* ability = nullptr;
 				if (!entity.IsNull())
-					ability = entity.GetComponent<comp::MeleeAttackAbility>();
+					ability = entity.GetComponent<comp::RangeAttackAbility>();
 				if (ability)
 					DoDamage(scene, entity, expl, other, ability->attackDamage, 40.0f, AttackType::RANGE);
 			});
 	};
 	
-	attackEntity.AddComponent<comp::ParticleEmitter>(sm::Vector3{ 0,0,0 }, 200, 1.f, ParticleMode::MAGERANGE, 1.7f, 1.f, false);
+	attackEntity.AddComponent<comp::ParticleEmitter>(sm::Vector3{ 0,0,0 }, 200, 1.f, ParticleMode::MAGERANGE, 1.7f, 1.f, FALSE);
 
 	attackEntity.AddComponent<comp::Network>();
 
@@ -401,6 +429,11 @@ Entity CombatSystem::CreateAttackEntity(Entity entity, HeadlessScene& scene, com
 			if (other.HasComponent<comp::Tag<STATIC>>() && !other.HasComponent<comp::House>())
 				return;
 
+			if (thisEntity.GetTags() & RANGED_ATTACK && other.GetTags() & RANGED_ATTACK)
+			{
+				return;
+			}
+
 			thisEntity.GetComponent<comp::SelfDestruct>()->lifeTime = 0.0f;
 		});
 
@@ -419,7 +452,7 @@ Entity CombatSystem::CreateAreaAttackCollider(HeadlessScene& scene, sm::Vector3 
 	e.AddComponent<comp::Tag<TagType::NO_RESPONSE>>();
 
 	e.AddComponent<comp::SelfDestruct>()->lifeTime = lifeTime;
-	e.AddComponent<comp::Network>();
+
 	return e;
 }
 
@@ -541,8 +574,6 @@ void CombatSystem::DoDamage(HeadlessScene& scene, Entity attacker, Entity attack
 		playHitSound = true;
 	}
 
-
-
 	// SOUND
 	audio_t audio = {
 		ESoundEvent::NONE,
@@ -594,7 +625,6 @@ void CombatSystem::DoDamage(HeadlessScene& scene, Entity attacker, Entity attack
 		}
 	}
 
-
 	comp::Health* otherHealth = target.GetComponent<comp::Health>();
 	if (otherHealth && doDamage)
 	{
@@ -611,12 +641,12 @@ void CombatSystem::DoDamage(HeadlessScene& scene, Entity attacker, Entity attack
 		if (target.GetComponent<comp::Tag<TagType::DEFENCE>>())
 		{
 			//Smoke particles
-			target.AddComponent<comp::ParticleEmitter>(sm::Vector3{ 0,10,0 }, 50, 10.f, ParticleMode::SMOKEAREA, 3.5f, 1.f, true);
+			target.AddComponent<comp::ParticleEmitter>(sm::Vector3{ 0,10,0 }, 50, 10.f, ParticleMode::SMOKEAREA, 3.5f, 1.f, TRUE);
 		}
 		else
 		{
 			// Blood particle
-			target.AddComponent<comp::ParticleEmitter>(sm::Vector3{ 0,6,0 }, 50, 1.5f, ParticleMode::BLOOD, 2.0f, 1.f, true);
+			target.AddComponent<comp::ParticleEmitter>(sm::Vector3{ 0,6,0 }, 50, 1.5f, ParticleMode::BLOOD, 2.0f, 1.f, TRUE);
 		}
 
 		if (otherHealth->currentHealth <= 0.0f)
@@ -654,12 +684,10 @@ void CombatSystem::DoDamage(HeadlessScene& scene, Entity attacker, Entity attack
 		knockbackDir.Normalize();
 	}
 
-
 	if (doKnockback)
 	{
 		AddKnockback(target, knockbackDir, knockback);
 	}
-
 }
 
 void CombatSystem::AddKnockback(Entity target, sm::Vector3 dir, float power)
