@@ -124,14 +124,11 @@ EAnimationType RAnimator::StringToAnimationType(const std::string& name) const
 		{"NONE",				EAnimationType::NONE},
 		{"IDLE",				EAnimationType::IDLE},
 		{"MOVE",				EAnimationType::MOVE},
-		{"PRIMARY_ATTACK",		EAnimationType::PRIMARY_ATTACK},
-		{"SECONDARY_ATTACK",	EAnimationType::SECONDARY_ATTACK},
-		{"ABILITY1",			EAnimationType::ABILITY1},
-		{"ABILITY2",			EAnimationType::ABILITY2},
-		{"ABILITY3",			EAnimationType::ABILITY3},
-		{"ABILITY4",			EAnimationType::ABILITY4},
-		{"TAKE_DAMAGE",			EAnimationType::TAKE_DAMAGE},
+		{"PRIMARY",				EAnimationType::PRIMARY},
+		{"SECONDARY",			EAnimationType::SECONDARY},
+		{"ESCAPE",				EAnimationType::ESCAPE},
 		{"PLACE_DEFENCE",		EAnimationType::PLACE_DEFENCE},
+		{"TAKE_DAMAGE",			EAnimationType::TAKE_DAMAGE},
 		{"DEAD",				EAnimationType::DEAD}
 	};
 
@@ -733,6 +730,9 @@ bool RAnimator::Create(const std::string& filename)
 
 void RAnimator::ChangeAnimation(const EAnimationType& type)
 {
+	if (m_animations.size() == 8)
+		std::cout << "Incoming" << (UINT)type << std::endl;
+
 	//Check if animation exist
 	if (m_animations.find(type) != m_animations.end())
 	{
