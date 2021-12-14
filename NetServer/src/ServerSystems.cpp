@@ -604,14 +604,10 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 				}
 				else if (p.lastInputState.rightMouse)
 				{
-					if (p.classType != comp::Player::Class::WARRIOR)
+					if (ecs::UseAbility(e, p.secondaryAbilty, &p.mousePoint))
 					{
-						if (ecs::UseAbility(e, p.secondaryAbilty, &p.mousePoint))
-						{
-							LOG_INFO("Used secondary");
-							anim.toSend = EAnimationType::SECONDARY_ATTACK;
-						}
-					}
+						anim.toSend = EAnimationType::SECONDARY_ATTACK;
+					}					
 				}
 
 				if (p.lastInputState.key_shift)

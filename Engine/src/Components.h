@@ -218,7 +218,7 @@ namespace ecs
 		struct AnimationState
 		{
 			EAnimationType lastSend = EAnimationType::NONE;	//Send to user last time
-			EAnimationType toSend	= EAnimationType::IDLE;	//Going to be send this update
+			EAnimationType toSend	= EAnimationType::NONE;	//Going to be send this update
 		};
 
 		struct AudioState
