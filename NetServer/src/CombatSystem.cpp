@@ -195,7 +195,7 @@ void CombatSystem::UpdateDash(HeadlessScene& scene)
 		});
 }
 
-void CombatSystem::UpdateBlock(HeadlessScene& scene)
+void CombatSystem::UpdateBlock(HeadlessScene& scene, float dt)
 {
 	scene.ForEachComponent<comp::ShieldBlockAbility>([&](Entity entity, comp::ShieldBlockAbility& ability)
 		{
@@ -205,31 +205,25 @@ void CombatSystem::UpdateBlock(HeadlessScene& scene)
 
 			if (ecs::ReadyToUse(&ability, updateTargetPoint))
 			{
-				/*
-				entity.AddComponent<comp::Invincible>();
-				ability.shieldCollider = scene.CreateEntity();
-				ability.shieldCollider.AddComponent<comp::Transform>()->position = entity.GetComponent<comp::Transform>()->position;
-				ability.shieldCollider.AddComponent<comp::Tag<TagType::DYNAMIC>>();
-				ability.shieldCollider.AddComponent<comp::Tag<TagType::NO_RESPONSE>>();
-				comp::SphereCollider* coll = ability.shieldCollider.AddComponent<comp::SphereCollider>();
-				coll->Center = ability.shieldCollider.GetComponent<comp::Transform>()->position;
-				coll->Radius = 10.f;
-
-				// TEMP
-				ability.shieldCollider.AddComponent<comp::Network>();
-
-
-				CollisionSystem::Get().AddOnCollisionEnter(ability.shieldCollider, [](Entity thisEntity, Entity other)
-					{
-
-					});
-				*/
-
+				ability.isCooldownActive = false;
 			}
 
 			if (ecs::IsUsing(&ability))
 			{
-				ability.cooldownTimer = 0.0f;
+				ability.cooldownTimer = (ability.damageTaken / ability.maxDamage) * ability.cooldown;
+			}
+			else
+			{
+				if (!ability.isCooldownActive)
+				{
+					ability.timeSinceUse += dt;
+					if (ability.timeSinceUse > 5.0f)
+					{
+						ability.isCooldownActive = true;
+						ability.damageTaken = 0.0f;
+						ability.timeSinceUse = 0.0f;
+					}
+				}
 			}
 
 		});
@@ -251,7 +245,7 @@ void CombatSystem::UpdateCombatSystem(HeadlessScene& scene, float dt, Blackboard
 	//For each entity that can use Dash
 	UpdateDash(scene);
 
-	UpdateBlock(scene);
+	UpdateBlock(scene, dt);
 }
 
 void CombatSystem::UpdateEffects(HeadlessScene& scene, float dt)
@@ -503,17 +497,21 @@ void CombatSystem::DoDamage(HeadlessScene& scene, Entity attacker, Entity attack
 				doKnockback = true;
 				knockback *= 0.5f;
 				block->damageTaken += damage;
+
 				if (block->damageTaken >= block->maxDamage)
 				{
 					block->cooldownTimer = block->cooldown;
 					ecs::CancelAbility(block);
 					block->damageTaken = 0.0f;
+					block->isCooldownActive = true;
+
 				}
 			}
 			else {
 				block->cooldownTimer = block->cooldown;
 				ecs::CancelAbility(block);
 				block->damageTaken = 0.0f;
+				block->isCooldownActive = true;
 			}
 		}
 	}

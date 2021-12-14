@@ -431,6 +431,7 @@ namespace ecs
 			float cooldown = 1.5f;
 			// !DO NOT TOUCH!
 			float cooldownTimer = 0.f;
+			bool isCooldownActive = true;
 
 			// set this for delay before ability is actually used after the cooldown is done and the ecs::UseAbility has bee called
 			float delay = 0.1f;
@@ -480,6 +481,8 @@ namespace ecs
 
 			float maxDamage = 50.f;
 			float damageTaken = 0.0f;
+
+			float timeSinceUse = 0.0f;
 		};
 
 		struct DashAbility : public IAbility

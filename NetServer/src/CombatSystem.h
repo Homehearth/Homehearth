@@ -27,7 +27,7 @@ private:
 	//Update all entity with dash abilities
 	static void UpdateDash(HeadlessScene& scene);
 	
-	static void UpdateBlock(HeadlessScene& scene);
+	static void UpdateBlock(HeadlessScene& scene, float dt);
 
 	//Update target point if entity is player
 	static void UpdateTargetPoint(Entity entity, sm::Vector3* targetPoint);

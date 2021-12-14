@@ -193,24 +193,8 @@ void Simulation::ResetPlayer(Entity player)
 
 		playerComp->primaryAbilty = entt::resolve<comp::MeleeAttackAbility>();
 
-		// TEMP
-		/*
-		comp::HeroLeapAbility* leap = player.AddComponent<comp::HeroLeapAbility>();
-		leap->cooldown = 1.0f;
-		leap->damage = 30.f;
-		leap->damageRadius = 10;
-		leap->delay = 0.0f;
-		leap->lifetime = 0.5f;
-		leap->maxRange = 30.f;
-		leap->movementSpeedAlt = 1.0f;
-		leap->useTime = 0.5f;
-
-		playerComp->secondaryAbilty = entt::resolve<comp::HeroLeapAbility>();
-		*/
-		// END TEMP
-
 		comp::ShieldBlockAbility* block = player.AddComponent<comp::ShieldBlockAbility>();
-		block->cooldown = 2.0f;
+		block->cooldown = 5.0f;
 		block->delay = 0.0f;
 		block->lifetime = 0.5f;
 		block->movementSpeedAlt = 0.3f;
