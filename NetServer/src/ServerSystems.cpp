@@ -397,7 +397,11 @@ void ServerSystems::OnCycleChange(Simulation* simulation)
 			// remove all bad guys
 			simulation->GetGameScene()->ForEachComponent<comp::Tag<BAD>>([](Entity e, comp::Tag<BAD>&)
 				{
-					e.Destroy();
+					e.AddComponent<comp::SelfDestruct>()->lifeTime = 7.5f;
+					e.RemoveComponent<comp::Tag<DYNAMIC>>();
+					e.RemoveComponent<comp::Velocity>();
+					e.RemoveComponent<comp::BehaviorTree>();
+					e.GetComponent<comp::AnimationState>()->toSend = EAnimationType::DEAD;
 				});
 
 			simulation->GetGameScene()->ForEachComponent<comp::Player, comp::Health>([=](Entity e, comp::Player& p, comp::Health& hp)
@@ -727,7 +731,11 @@ void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money
 				else if (npc)
 				{
 					audio.type = ESoundEvent::Enemy_OnDeath;
-					entity.Destroy();
+					entity.AddComponent<comp::SelfDestruct>()->lifeTime = 7.5f;
+					entity.RemoveComponent<comp::Tag<DYNAMIC>>();
+					entity.RemoveComponent<comp::Velocity>();
+					entity.RemoveComponent<comp::BehaviorTree>();
+					entity.GetComponent<comp::AnimationState>()->toSend = EAnimationType::DEAD;
 				}
 				else
 				{
