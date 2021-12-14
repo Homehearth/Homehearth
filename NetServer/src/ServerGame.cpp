@@ -82,10 +82,12 @@ bool ServerGame::OnStartup()
 	LoadHouseColliders("House10_Collider.fbx");
 	LoadHouseColliders("WaterMillHouse_Collider.fbx");
 
-	for (int i = 0; i < MAX_ACTIVE_GAMES; i++)
+	for (int i = 0; i < MAX_LOBBIES; i++)
 	{
 		this->CreateSimulation();
 	}
+
+	LOG_INFO("Ready to receive connections!");
 
 	return true;
 }
@@ -327,9 +329,16 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 		msg >> gameID;
 		uint32_t playerID;
 		msg >> playerID;
-		if (m_simulations.find(gameID) != m_simulations.end())
+		auto sim = m_simulations.find(gameID);
+
+		if (sim != m_simulations.end())
 		{
-			m_simulations[gameID]->LeaveLobby(playerID);
+			sim->second->LeaveLobby(playerID);
+
+			if (sim->second->m_lobby.IsEmpty())
+			{
+				sim->second->ClearOutgoing();
+			}
 		}
 		else
 		{

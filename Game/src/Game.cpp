@@ -152,10 +152,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	{
 	case GameMsg::Client_Accepted:
 	{
-		rtd::Text* lobbyErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("LobbyFields")->elements[2].get());
-		lobbyErrorText->SetVisiblity(false);
-		rtd::Text* nameErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("nameInput")->elements[1].get());
-		nameErrorText->SetVisiblity(false);
 		rtd::Text* mainMenuErrorText = dynamic_cast<rtd::Text*>(GetScene("MainMenu").GetCollection("ConnectFields")->elements[6].get());
 		mainMenuErrorText->SetVisiblity(false);
 		LOG_INFO("You are validated!");
@@ -503,10 +499,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		LOG_INFO("Successfully loaded all Assets!");
 #endif
 		SetScene("Lobby");
-		rtd::Text* lobbyErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("LobbyFields")->elements[2].get());
-		lobbyErrorText->SetVisiblity(false);
-		rtd::Text* nameErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("nameInput")->elements[1].get());
-		nameErrorText->SetVisiblity(false);
 		LOG_INFO("You are now in lobby: %lu", m_gameID);
 		break;
 	}
@@ -516,8 +508,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		//msg >> err;
 		SetScene("JoinLobby");
 		//LOG_WARNING("%s", err.c_str());
-		rtd::Text* lobbyErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("LobbyFields")->elements[2].get());
-		lobbyErrorText->SetVisiblity(true);
 		break;
 	}
 	case GameMsg::Lobby_AcceptedLeave:
@@ -530,10 +520,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		{
 			textField->SetPresetText("");
 		}
-		rtd::Text* lobbyErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("LobbyFields")->elements[2].get());
-		lobbyErrorText->SetVisiblity(false);
-		rtd::Text* nameErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("nameInput")->elements[1].get());
-		nameErrorText->SetVisiblity(false);
 		break;
 	}
 	case GameMsg::Game_Start:
@@ -563,10 +549,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		skipButton->SetVisiblity(true);
 
 		SoundHandler::Get().SetCurrentMusic("MenuTheme");
-		rtd::Text* lobbyErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("LobbyFields")->elements[2].get());
-		lobbyErrorText->SetVisiblity(false);
-		rtd::Text* nameErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("nameInput")->elements[1].get());
-		nameErrorText->SetVisiblity(false);
 		SetScene("Game");
 		//thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::ADAPTIVE);
 		Entity e;
@@ -1307,27 +1289,30 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 							}
 						}
 					}
-					comp::Health* health = e.GetComponent<comp::Health>();
-					comp::Transform* transform = e.GetComponent<comp::Transform>();
-					if (health && transform)
+					if (msg.header.id != GameMsg::Game_AddEntity)
 					{
-						combat_text_inst_t cText;
-						// Signal health gain.
-						if (health->currentHealth <= hp.currentHealth)
+						comp::Health* health = e.GetComponent<comp::Health>();
+						comp::Transform* transform = e.GetComponent<comp::Transform>();
+						if (health && transform)
 						{
-							cText.type = combat_text_enum::HEALTH_GAIN;
-							cText.pos = transform->position;
-						}
-						else if (health->currentHealth > hp.currentHealth)
-						{
-							cText.type = combat_text_enum::HEALTH_LOSS;
-							cText.pos = transform->position;
-						}
+							combat_text_inst_t cText;
+							// Signal health gain.
+							if (health->currentHealth <= hp.currentHealth)
+							{
+								cText.type = combat_text_enum::HEALTH_GAIN;
+								cText.pos = transform->position;
+							}
+							else if (health->currentHealth > hp.currentHealth)
+							{
+								cText.type = combat_text_enum::HEALTH_LOSS;
+								cText.pos = transform->position;
+							}
 
-						cText.timeRendered = omp_get_wtime();
-						cText.pos.y += 15;
-						cText.amount = std::abs(health->currentHealth - hp.currentHealth);
-						GetScene("Game").PushCombatText(cText);
+							cText.timeRendered = omp_get_wtime();
+							cText.pos.y += 15;
+							cText.amount = std::abs(health->currentHealth - hp.currentHealth);
+							GetScene("Game").PushCombatText(cText);
+						}
 					}
 					e.AddComponent<comp::Health>(hp);
 				}

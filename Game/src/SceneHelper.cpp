@@ -1493,7 +1493,8 @@ namespace sceneHelp
 		rtd::TextField* nameInputField = nameCollection->AddElement<rtd::TextField>(draw_text_t(width * 0.25f, height / 8, widthScale / 4, D2D1Core::GetDefaultFontSize()), 12);
 		nameInputField->SetDescriptionText("Nickname");
 		nameInputField->SetShape(Shapes::RECTANGLE_ROUNDED);
-		rtd::Text* nameErrorText = nameCollection->AddElement<rtd::Text>("Invalid Name", draw_text_t((width / 2.0f) - (width / 8), (height / 8.0f) * 1.5f, widthScale / 4.0f, height / 8.0f));
+
+		rtd::Text* nameErrorText = nameCollection->AddElement<rtd::Text>("You must enter a valid name!", draw_text_t((width / 2.0f) - (width / 8), height * 0.8f, widthScale / 4.0f, height / 8.0f));
 		nameErrorText->SetVisiblity(false);
 #ifdef _DEBUG
 		nameInputField->SetPresetText("Player");
@@ -1507,77 +1508,14 @@ namespace sceneHelp
 		sm::Vector2 buttonSize = { widthScale / 4.f, height * 0.15f };
 		float buttonPosY = height - (buttonSize.y + paddingHeight * 2.f);
 
-		//rtd::Button* startLobbyButton = lobbyCollection->AddElement<rtd::Button>("CreateLobby.png", draw_t((width / 2.0f) + (width / 8.0f), buttonPosY, buttonSize.x, buttonSize.y));
-		//rtd::Button* lobbyButton = lobbyCollection->AddElement<rtd::Button>("joinLobby.png", draw_t(width / 8, buttonPosY, buttonSize.x, buttonSize.y));
-		//rtd::TextField* lobbyField = lobbyCollection->AddElement<rtd::TextField>(draw_text_t(width / 8, buttonPosY - paddingHeight * 2.f, widthScale / 4, D2D1Core::GetDefaultFontSize()));
-		//lobbyField->SetDescriptionText("Input Lobby ID");
-
 		rtd::Button* exitButton = lobbyCollection->AddElement<rtd::Button>("No.png", draw_t(paddingWidth, paddingHeight, widthScale / 24, height / 14));
-		rtd::Text* lobbyErrorText = lobbyCollection->AddElement<rtd::Text>("Invalid Lobby ID", draw_text_t((width / 2.f) - (widthScale / 8.f), (height / 2) - (D2D1Core::GetDefaultFontSize() / 2), widthScale / 4.0f, D2D1Core::GetDefaultFontSize()));
-		lobbyErrorText->SetVisiblity(false);
 		exitButton->SetOnPressedEvent([=]
 			{
+				nameErrorText->SetVisiblity(false);
 				game->m_client.Disconnect();
 			});
 
-		//startLobbyButton->SetOnPressedEvent([=]
-		//	{
-		//		if (nameInputField->RawGetBuffer()->length() > 0)
-		//		{
-		//			game->m_playerName = *nameInputField->RawGetBuffer();
-
-		//			game->CreateLobby();
-
-		//			// Update own name.
-		//			dynamic_cast<rtd::Text*>(game->GetScene("Lobby").GetCollection("playerIcon1")->elements[1].get())->SetText(game->m_playerName);
-		//		}
-		//		else
-		//		{
-		//			nameErrorText->SetVisiblity(true);
-		//			LOG_WARNING("Enter a valid nickname");
-		//		}
-		//	});
-		//lobbyButton->SetOnPressedEvent([=]()
-		//	{
-		//		std::string* lobbyString = lobbyField->RawGetBuffer();
-
-		//		if (lobbyString)
-		//		{
-		//			game->m_playerName = *nameInputField->RawGetBuffer();
-		//			int lobbyID = -1;
-		//			try
-		//			{
-		//				lobbyID = std::stoi(*lobbyString);
-		//			}
-		//			catch (std::exception e)
-		//			{
-		//				lobbyErrorText->SetVisiblity(true);
-		//				LOG_WARNING("Request denied: Invalid lobby ID: Was not numerical");
-		//			}
-
-		//			if (lobbyID > -1)
-		//			{
-		//				if (nameInputField->RawGetBuffer()->length() > 0)
-		//				{
-		//					game->JoinLobby(lobbyID);
-		//					// Update own name.
-		//					dynamic_cast<rtd::Text*>(game->GetScene("Lobby").GetCollection("playerIcon1")->elements[1].get())->SetText(game->m_playerName);
-		//				}
-		//				else
-		//				{
-		//					nameErrorText->SetVisiblity(true);
-		//					LOG_WARNING("Request denied: Enter a valid nickname");
-		//				}
-		//			}
-		//		}
-		//	});
-
 		scene.Add2DCollection(lobbyCollection, "LobbyFields");
-
-
-		//rtd::Canvas* lobbySelectCanvas = lobbySelectCollection->AddElement<rtd::Canvas>(draw_t(width * 0.1f, height * 0.2f, widthScale * 0.8f, height * 0.75f));
-		//lobbySelectCanvas->SetShape(Shapes::RECTANGLE_ROUNDED);
-		//lobbySelectCanvas->SetColor(D2D1::ColorF(0.5f));
 
 		float yPos = (height * 0.60f) / 5.0f;
 		float yScale = ((height * 0.60f) / 5.0f) - paddingHeight;
@@ -1590,12 +1528,17 @@ namespace sceneHelp
 				{
 					if (nameInputField->RawGetBuffer()->length() > 0)
 					{
+						nameErrorText->SetVisiblity(false);
 						game->m_playerName = *nameInputField->RawGetBuffer();
 
 						// Update own name.
 						dynamic_cast<rtd::Text*>(game->GetScene("Lobby").GetCollection("playerIcon1")->elements[1].get())->SetText(game->m_playerName);
 
 						game->JoinLobby(i);
+					}
+					else
+					{
+						nameErrorText->SetVisiblity(true);
 					}
 					});
 			}

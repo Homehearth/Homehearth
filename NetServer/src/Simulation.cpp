@@ -227,15 +227,15 @@ void Simulation::ResetPlayer(Entity player)
 		health->currentHealth = 80.f;
 
 		comp::RangeAttackAbility* attackAbility = player.AddComponent<comp::RangeAttackAbility>();
-		attackAbility->cooldown = 0.8f;
-		attackAbility->attackDamage = 25.f;
-		attackAbility->lifetime = 2.0f;
+		attackAbility->cooldown = 1.2f;
+		attackAbility->attackDamage = 15.f;
+		attackAbility->lifetime = 0.1f;
 		attackAbility->projectileSpeed = 80.f;
-		attackAbility->projectileSize = 3.f;
+		attackAbility->projectileSize = 2.5f;
 		attackAbility->attackRange = 13.0f;
-		attackAbility->useTime = 0.3f;
-		attackAbility->delay = 0.3f;
-		attackAbility->movementSpeedAlt = 0.5f;
+		attackAbility->useTime = 0.4f;
+		attackAbility->delay = 0.4f;
+		attackAbility->movementSpeedAlt = 0.1f;
 		playerComp->primaryAbilty = entt::resolve<comp::RangeAttackAbility>();
 
 		comp::HealAbility* healAbility = player.AddComponent<comp::HealAbility>();
@@ -455,10 +455,10 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 		});
 
 	//Gridsystem
+	m_addedEntities.clear();
 	m_grid.Initialize(gridOptions.mapSize, gridOptions.position, gridOptions.fileName, m_pGameScene);
 	//Create the nodes for AI handler on blackboard
 
-	m_addedEntities.clear();
 #if RENDER_AINODES
 	std::vector<std::vector<std::shared_ptr<Node>>> nodes = blackboard.GetPathFindManager()->GetNodes();
 	for (int y = 0; y < nodes[0].size(); y++)
@@ -492,13 +492,6 @@ void Simulation::Destroy()
 	m_pGameScene->GetRegistry()->on_destroy<comp::Network>().disconnect<&Simulation::OnNetworkEntityDestroy>(this);
 	m_pGameScene->Clear();
 	m_pLobbyScene->Clear();
-}
-
-void Simulation::SendRemovedEntities()
-{
-	// All destroyed Entities
-	this->SendRemoveEntities(m_removedEntities);
-	m_removedEntities.clear();
 }
 
 void Simulation::SendAddedEntities()
@@ -622,6 +615,7 @@ void Simulation::Update(float dt)
 		this->SendAddedEntities();
 
 		m_pCurrentScene->Update(dt);
+
 		this->SendRemovedEntities();
 
 		this->SendSnapshot();
@@ -699,12 +693,12 @@ void Simulation::BuildMapColliders(std::vector<dx::BoundingOrientedBox>* mapColl
 		if (i < 6)
 		{
 			collider.AddComponent<comp::Tag<MAP_BOUNDS>>();
-	}
+		}
 #if RENDER_COLLIDERS
 		collider.AddComponent<comp::Network>();
 #endif
 		qt->Insert(collider);
-}
+	}
 }
 
 HeadlessScene* Simulation::GetLobbyScene() const
@@ -762,6 +756,14 @@ void Simulation::UpgradeDefence(const uint32_t& id)
 				}
 			}
 		});
+}
+
+void Simulation::ClearOutgoing()
+{
+	m_addedEntities.clear();
+	m_removedEntities.clear();
+	m_updatedComponents.clear();
+	m_updatedEntities.clear();
 }
 
 void Simulation::SetLobbyScene()
@@ -934,6 +936,11 @@ void Simulation::SendRemoveAllEntitiesToPlayer(uint32_t playerID) const
 	}
 }
 
+void Simulation::SendRemovedEntities()
+{
+	SendRemoveEntities(m_removedEntities);
+}
+
 void Simulation::SendRemoveEntities(const std::vector<uint32_t> entitiesNetIDs)
 {
 	if (entitiesNetIDs.size() == 0)
@@ -955,6 +962,8 @@ void Simulation::SendRemoveEntities(const std::vector<uint32_t> entitiesNetIDs)
 			msg.clear();
 		}
 	}
+
+	m_removedEntities.clear();
 }
 
 void Simulation::SendMsg(uint32_t playerID, message<GameMsg>& msg) const

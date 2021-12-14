@@ -53,10 +53,10 @@ private:
 
 	std::queue<sm::Vector3> m_spawnPoints;
 	HouseManager houseManager;
+	void SendRemoveEntities(const std::vector<uint32_t> entitiesNetIDs);
 
 	void SendSnapshot();
 	void SendAddedEntities();
-	void SendRemovedEntities();
 	void OnNetworkEntityCreate(entt::registry& reg, entt::entity entity);
 	void OnNetworkEntityDestroy(entt::registry& reg, entt::entity entity);
 
@@ -101,7 +101,7 @@ public:
 	void SendAllEntitiesToPlayer(uint32_t playerID) const;
 
 	void SendRemoveAllEntitiesToPlayer(uint32_t playerID) const;
-	void SendRemoveEntities(const std::vector<uint32_t> entitiesNetIDs);
+	void SendRemovedEntities();
 
 	void SendMsg(uint32_t playerID, message<GameMsg>& msg)const;
 	void SendMsgUDP(uint32_t playerID, message<GameMsg>& msg)const;
@@ -116,4 +116,5 @@ public:
 	Blackboard* GetBlackboard();
 
 	void UpgradeDefence(const uint32_t& id);
+	void ClearOutgoing();
 };
