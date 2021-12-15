@@ -11,7 +11,7 @@ namespace Systems
 	void UpdateAbilities(HeadlessScene& scene, float dt);
 	void HealingSystem(HeadlessScene& scene, float dt);
 	void HeroLeapSystem(HeadlessScene& scene, float dt);
-
+	
 	void SelfDestructSystem(HeadlessScene& scene, float dt);
 
 	void MovementSystem(HeadlessScene& scene, float dt);

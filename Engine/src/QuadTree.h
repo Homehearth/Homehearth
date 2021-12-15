@@ -25,4 +25,5 @@ public:
 	void Query(std::set<Entity>& returnVec, const dx::BoundingFrustum& range);
 	void GetSize(size_t& size);
 	void Clear();
+	void ClearNullEntities();
 };

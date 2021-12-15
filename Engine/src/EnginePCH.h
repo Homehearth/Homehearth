@@ -1,7 +1,7 @@
 #pragma once
 
 //Options
-#define RENDER_IMGUI 0
+#define RENDER_IMGUI 1
 #define PROFILER 1
 
 // Feel free to add more things to this, currently only gives more money :)
@@ -18,13 +18,14 @@
 
 #define RENDER_AINODES 0
 
+#define RENDER_INGAME_UI 1
+
 //Macros
 #if RENDER_IMGUI
 #define IMGUI(a) do {a} while(0)
 #else
 #define IMGUI(a) do {} while(0)
 #endif
-
 
 
 // Windows

@@ -18,7 +18,7 @@ namespace thread
 	for it to be considered benefitable to divide up the rendering
 	between threads.
 	*/
-	const int BASE_THRESHOLD = 10;
+	const int BASE_THRESHOLD = 1;
 	const int SHADOW_THRESHOLD = 1;
 
 	class RenderThreadHandler

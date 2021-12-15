@@ -284,8 +284,7 @@ std::function<void()> MultiThreader::CheckJob()
 			return nullptr;
 		break;
 	default:
-		return nullptr;
-	break;
+		break;
 	}
 
 	// Nothing found or no ThreadType was specified.
@@ -343,7 +342,6 @@ const int MultiThreader::GetAmountOfJobs()
 		return (int)MULTITHREADER->jobs_queue.size();
 		break;
 	default:
-		return 0;
 		break;
 	}
 

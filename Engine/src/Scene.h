@@ -4,6 +4,11 @@
 #include "Handler2D.h"
 #include "Skybox.h"
 
+namespace rtd
+{
+	class CText;
+};
+
 class Scene : public BasicScene<Scene>
 {
 private:
@@ -11,8 +16,11 @@ private:
 	bool m_updateAnimation;
 	DoubleBuffer<std::vector<comp::RenderableDebug>> m_debugRenderableCopies;
 	DoubleBuffer<std::vector<std::pair<comp::Renderable,comp::Animator>>> m_renderableAnimCopies;
-
 	DoubleBuffer<std::vector<comp::EmitterParticle>> m_emitterParticlesCopies;
+
+	std::vector<combat_text_inst_t> m_combatTextList;
+	std::mutex m_combatTextMutex;
+	rtd::CText* m_combatText = nullptr;
 
 	dx::ConstantBuffer<basic_model_matrix_t> m_publicBuffer;
 	dx::ConstantBuffer<collider_hit_t> m_ColliderHitBuffer;
@@ -34,6 +42,7 @@ public:
 	uint32_t* m_localPIDRef;
 	DoubleBuffer<std::vector<comp::Renderable>> m_renderableCopies;
 	Scene();
+	~Scene();
 
 	// Emit update event and update constant buffers
 
@@ -58,6 +67,11 @@ public:
 	void RenderShadowAnimation();
 
 	void RenderParticles(void* pass);
+
+	void PushCombatText(const combat_text_inst_t& combat_text);
+	void HandleCombatText();
+
+	void HouseWarningIcons();
 
 	Skybox* GetSkybox();
 

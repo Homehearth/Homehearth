@@ -28,6 +28,41 @@ PixelOut main(PixelIn input)
     SampleTextures(input, albedo, N, roughness, metallic, ao);
     //albedo = ACESFitted(albedo);
     
+    
+    //-----------------------------------------------------------------
+    // WATER FOAM //
+    /*
+    The higher the level of vertex color, the more the foam should show.
+    */
+    
+    float3 threshold = float3(0.99, 0.99, 0.99);
+    float3 finalFoam = float3(0.f, 0.f, 0.f);
+    
+    float3 foam = t_waterBlend.Sample(s_linear, input.uv).xyz;
+    foam = foam * 4;
+    
+    //Makes a nice fade
+    threshold = threshold * input.color.r;
+    finalFoam.rgb += ((input.color.r * input.color.r) * 0.5);
+    threshold *= input.color.b;
+    
+
+    //Makes blobs of foam 
+    if (foam.r >= threshold.r)
+    {
+        finalFoam = foam;
+        finalFoam = finalFoam * input.color.b;
+    }
+    
+    //Adds the effect
+    finalFoam = finalFoam * input.color.b;
+    
+    //-----------------------------------------------------------------
+    
+    
+    
+    
+    
     //If normal texture exists, sample from it
 
     //---------------------------------PBR-Shading Calculations---------------------------------
@@ -35,7 +70,7 @@ PixelOut main(PixelIn input)
     // calculate reflectance at normal incidence; if dia-electric (like plastic) use F0 
     // of 0.04 and if it's a metal, use the albedo color as F0 (metallic workflow)
     float3 F0 = float3(0.04f, 0.04f, 0.04f);
-    F0 = lerp(F0, albedo, metallic);
+    F0 = lerp(F0, albedo * 15.f, metallic);
    
 
     //Reflectance Equation
@@ -91,7 +126,7 @@ PixelOut main(PixelIn input)
                             float3 stepLength = length(rayVector) / STEPS;
                             float3 step = rayDir * stepLength;
                             [loop]
-                            for (int j = 0; j < STEPS; j++)
+                            for (uint j = 0; j < STEPS; j++)
                             {
                         // Camera position in shadow space.
                                 float4 cameraShadowSpace = mul(lightMat, float4(currentPos, 1.0f));
@@ -100,10 +135,10 @@ PixelOut main(PixelIn input)
                         // Sample the depth of current position.
                                 shadowCoords.x = cameraShadowSpace.x * 0.5f + 0.5f;
                                 shadowCoords.y = -cameraShadowSpace.y * 0.5f + 0.5f;
-                                float depth = t_shadowMaps.Sample(s_linear, float3(shadowCoords, shadowIndex));
+                                float depth = t_shadowMaps.Sample(s_linear, float3(shadowCoords, shadowIndex)).r;
                                 if (depth > cameraShadowSpace.z & ((saturate(shadowCoords.x) == shadowCoords.x) & (saturate(shadowCoords.y) == shadowCoords.y)))
                                 {
-                                    lightVolume += scatter;
+                                    lightVolume += sb_lights[i].color.xyz / 255.0f;
                                 }
                         
                                 currentPos += step;
@@ -113,6 +148,8 @@ PixelOut main(PixelIn input)
                    
                     
                     lightCol += DoDirectionlight(sb_lights[i], N) * (1.0f - shadowCoef);
+                    finalFoam *= (1.0f - shadowCoef);
+                    finalFoam *= 0.6;
                     break;
                 }
                 case 1:
@@ -149,7 +186,10 @@ PixelOut main(PixelIn input)
                             shadowCoef = SampleShadowMap(texCoords, shadowIndex, currentDepth, shadowMapSize, blurKernalSize);
 
                         }
+                    
                         lightCol += DoPointlight(sb_lights[i], input, N) * (1.0f - shadowCoef);
+                        finalFoam += (DoPointlight(sb_lights[i], input, N) * (1.0f - shadowCoef) * 0.5);
+                    
                     break;
                 }
                 default:
@@ -158,8 +198,12 @@ PixelOut main(PixelIn input)
         
             CalcRadiance(input, V, N, roughness, metallic, albedo, sb_lights[i].position.xyz, lightCol, F0, rad);
             Lo += rad;
+            finalFoam += rad;
+            finalFoam *= input.color.b;
         }
     }
+    
+    //finalFoam *= rad;
     
     //Ambient lighting
     float3 ambient = float3(0.7f, 0.15f, 0.5f) * albedo * ao;
@@ -174,7 +218,7 @@ PixelOut main(PixelIn input)
     //float4 fogColor = float4(0.5f, 0.5f, 0.5f, 1);
 
     float fogFactor = saturate((distanceToCenter - 150.f) / 100.f);
-    float lightVolumeFactor = lightVolume > 0.0f ? lightVolume : 1.0f;
+    float lightVolumeFactor = lightVolume.x > 0.0f ? lightVolume.x : 1.0f;
   
     /*
         This part of the code calculates if a decal should be present at this location.
@@ -201,7 +245,7 @@ PixelOut main(PixelIn input)
                 
                 if (alpha > 0.4f)
                 {
-                    float3 colorDecal = (ambientIBL(albedoDecal, float3(0, 1, 0), V, F0, 0.f, 0.2f, 1.f) + Lo) * pow(lightVolumeFactor, 4.0f);
+                    float3 colorDecal = (ambientIBL(albedoDecal, float3(0, 1, 0), V, F0, 0.f, 0.2f, 1.f) + Lo);
                     
                     //HDR tonemapping
                     //colorDecal = colorDecal / (colorDecal + float3(1.0, 1.0, 1.0));
@@ -220,8 +264,10 @@ PixelOut main(PixelIn input)
     
     
     
-    float3 color = (ambient + Lo) * pow(lightVolumeFactor, 2.5f);   
+    float3 color = (ambient + Lo) * lightVolumeFactor;   
     float brightness = dot(color, float3(0.2126, 0.7152, 0.0722));
+    
+    color += finalFoam;
     
     //HDR tonemapping
     color = ACESFitted(color);

@@ -1,59 +1,56 @@
-skel 			Knight.fbx
+skel 								Knight.fbx
 anim 			IDLE 				Player_Idle.fbx
 anim 			MOVE 				Player_Run.fbx
-anim 			PRIMARY_ATTACK 		Player_Slash.fbx
-loopable 		0                   
-tickSpeed		40                 
-anim 			TAKE_DAMAGE 		Player_TakeDamage.fbx
-loopable		0         
-tickSpeed		38           
+anim 			PRIMARY	 			Player_Slash.fbx
+anim			SECONDARY			Player_Block.fbx
+anim			ESCAPE				Player_Dash.fbx
 anim			PLACE_DEFENCE		Player_PlaceDefence.fbx
-loopable		0
-anim			DEAD				Player_Dead.fbx		
-loopable		0
-anim			ABILITY1			Player_Dash.fbx
-loopable		0
+anim 			TAKE_DAMAGE 		Player_TakeDamage.fbx
+anim			DEAD				Dead.fbx
+
+//One shot animations
+loopable		PRIMARY				0
+loopable		SECONDARY			0
+loopable		ESCAPE				0
+loopable		PLACE_DEFENCE		0
+loopable		TAKE_DAMAGE			0
+loopable		DEAD				0
+
+tickSpeed		PRIMARY				38
+upperbody		PRIMARY				QuickRigCharacter_Spine
+upperbody		SECONDARY			QuickRigCharacter_Spine
 
 
-blendstate 		IDLE				MOVE				0
-blendstate 		MOVE				IDLE				0
-
-
-blendstate		IDLE				PRIMARY_ATTACK		0
-blendstate		PRIMARY_ATTACK		IDLE				0
-
-
-blendstate 		IDLE				TAKE_DAMAGE			0
-blendstate		TAKE_DAMAGE			IDLE				0
-
-
-blendstate		IDLE 				PLACE_DEFENCE		0
-blendstate		PLACE_DEFENCE		IDLE				0
+state 			IDLE				MOVE				0.3	
+state			IDLE				PRIMARY				0
+state			IDLE				SECONDARY 			0	
+state 			IDLE				TAKE_DAMAGE			0		
+state			IDLE 				PLACE_DEFENCE		0		
+state			IDLE				DEAD				0		
+state			IDLE				ESCAPE				0		
 	
+state 			MOVE				IDLE				0.2		
+state			MOVE				PRIMARY				0
+state			MOVE				SECONDARY			0
+state			MOVE				TAKE_DAMAGE			0		
+state			MOVE				PLACE_DEFENCE		0		
+state			MOVE				DEAD				0        
+state			MOVE				ESCAPE				0          
 	
-blendstate		MOVE				TAKE_DAMAGE			0
-blendstate		TAKE_DAMAGE			MOVE				0
+state			PRIMARY				IDLE				0.15	
+state			PRIMARY				MOVE				0.15		
 	
-	
-blendstate		MOVE				PRIMARY_ATTACK		0
-blendstate		PRIMARY_ATTACK		MOVE				0
-	
-	
-blendstate		MOVE				PLACE_DEFENCE		0
-blendstate		PLACE_DEFENCE		MOVE				0
+state			SECONDARY			IDLE				0.1
+state			SECONDARY			MOVE				0.1	
 
-
-blendstate		IDLE				DEAD				0.05
-blendstate		DEAD				IDLE				0.05
-
-
-blendstate		MOVE				DEAD				0.05
-blendstate		DEAD				MOVE				0.05
-
-
-blendstate		IDLE				ABILITY1			0
-blendstate		ABILITY1			IDLE				0.1
-
-
-blendstate		MOVE				ABILITY1			0
-blendstate		ABILITY1			MOVE				0.1
+state			TAKE_DAMAGE			IDLE				0.2		
+state			TAKE_DAMAGE			MOVE				0.2		
+			
+state			PLACE_DEFENCE		IDLE				0.1		
+state			PLACE_DEFENCE		MOVE				0.1		
+		
+state			DEAD				IDLE				0.2		
+state			DEAD				MOVE				0.2		
+		
+state			ESCAPE				IDLE				0.1		
+state			ESCAPE				MOVE				0.1		

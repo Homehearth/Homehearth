@@ -75,6 +75,8 @@ void thread::RenderThreadHandler::Finish()
 			// Block until all threads have returned their results.
 			while ((int)INSTANCE.m_commands.size() != INSTANCE.m_activeThreads) {
 			};
+
+			INSTANCE.m_activeThreads = 0;
 		}
 	}
 	else
@@ -131,7 +133,7 @@ const render_instructions_t thread::RenderThreadHandler::Launch(const int& amoun
 	
 	if (((objects_per_thread >= thread::BASE_THRESHOLD) & (amount_of_objects >= (int)(INSTANCE.m_amount + 1))) == 1)
 	{		
-		INSTANCE.m_activeThreads = std::floor((float)amount_of_objects / (float)objects_per_thread) - 1;
+		INSTANCE.m_activeThreads = static_cast<unsigned int>(std::floor((float)amount_of_objects / (float)objects_per_thread) - 1);
 		//LOG_INFO("%d", INSTANCE.m_activeThreads)
 		int main_start = 0;
 		// Launch Threads
@@ -170,7 +172,7 @@ const render_instructions_t thread::RenderThreadHandler::DoShadows(const int& am
 	int main_start = 0;
 	if (objects_per_thread >= thread::SHADOW_THRESHOLD && amount_of_objects >= (int)(INSTANCE.m_amount + 1))
 	{
-		INSTANCE.m_activeThreads = std::floor((float)amount_of_objects / (float)objects_per_thread) - 1;
+		INSTANCE.m_activeThreads = static_cast<unsigned int>(std::floor((float)amount_of_objects / (float)objects_per_thread) - 1);
 		//LOG_INFO("%d", INSTANCE.m_activeThreads)
 		// Launch Threads
 		if (INSTANCE.m_isPooled)
@@ -251,7 +253,6 @@ void thread::RenderThreadHandler::ExecuteCommandLists()
 	{
 		if (INSTANCE.m_commands[i])
 		{
-			int j = (int)INSTANCE.m_commands.size();
 #if RENDER_IMGUI
 			D3D11Core::Get().DeviceContext()->ExecuteCommandList(INSTANCE.m_commands[i], 1);
 #else
@@ -265,7 +266,6 @@ void thread::RenderThreadHandler::ExecuteCommandLists()
 
 	// Remove all traces of evidence.
 	INSTANCE.m_commands.clear();
-	int j = (int)INSTANCE.m_commands.size();
 }
 
 void thread::RenderThreadHandler::SetObjectsBuffer(void* objects)

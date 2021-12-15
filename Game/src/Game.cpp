@@ -7,6 +7,7 @@
 #include "MoneyUI.h"
 #include "OptionSystem.h"
 #include "AbilityUI.h"
+#include "LobbyUI.h"
 
 using namespace std::placeholders;
 
@@ -42,17 +43,34 @@ Game::~Game()
 void Game::UpdateNetwork(float deltaTime)
 {
 	static float pingCheck = 0.f;
+	static float refreshLobbyList = 0.f;
 	const float TARGET_PING_TIME = 5.0f;
+	const float TARGET_REFRESH = 0.2f;
 	if (m_client.IsConnected())
 	{
 		m_client.Update();
 
-		pingCheck += deltaTime;
+		//pingCheck += deltaTime;
 
-		if (pingCheck > TARGET_PING_TIME)
+		//if (pingCheck > TARGET_PING_TIME)
+		//{
+		//	//this->PingServer();
+		//	pingCheck -= TARGET_PING_TIME;
+		//}
+
+		refreshLobbyList += deltaTime;
+
+		if (refreshLobbyList >= TARGET_REFRESH)
 		{
-			//this->PingServer();
-			pingCheck -= TARGET_PING_TIME;
+			refreshLobbyList -= TARGET_REFRESH;
+
+			if (GetCurrentScene() == &(GetScene("JoinLobby")))
+			{
+				message<GameMsg> msg;
+				msg.header.id = GameMsg::Lobby_RefreshList;
+				msg << m_localPID;
+				m_client.Send(msg);
+			}
 		}
 
 		if (GetCurrentScene() == &GetScene("Game"))
@@ -86,6 +104,7 @@ bool Game::OnStartup()
 
 	// Set Current Scene
 	SetScene("MainMenu");
+	GetScene("Game").GetRegistry()->on_destroy<comp::House>().connect<&Game::OnHouseDestroy>(this);
 
 	return true;
 }
@@ -101,6 +120,7 @@ void Game::OnUserUpdate(float deltaTime)
 
 	Scene& scene = GetScene("Game");
 	Entity e;
+	GameSystems::WarningIconSystem(this, scene);
 	if (GetLocalPlayer(e))
 	{
 		comp::KillDeaths* p = e.GetComponent<comp::KillDeaths>();
@@ -134,10 +154,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	{
 	case GameMsg::Client_Accepted:
 	{
-		rtd::Text* lobbyErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("LobbyFields")->elements[5].get());
-		lobbyErrorText->SetVisiblity(false);
-		rtd::Text* nameErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("nameInput")->elements[1].get());
-		nameErrorText->SetVisiblity(false);
 		rtd::Text* mainMenuErrorText = dynamic_cast<rtd::Text*>(GetScene("MainMenu").GetCollection("ConnectFields")->elements[6].get());
 		mainMenuErrorText->SetVisiblity(false);
 		LOG_INFO("You are validated!");
@@ -181,11 +197,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			UpdateEntityFromMessage(entity, msg, skip);
 		}
 
-		if (msg.payload.size() > 0)
-		{
-			LOG_ERROR("TCP UPDATE ENTITY FUCKED UP");
-		}
-
 		break;
 	}
 	case GameMsg::Game_UpdateComponent:
@@ -209,11 +220,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 				LOG_WARNING("Updating component: Entity %u not in m_gameEntities, skipping over this comp!", entityID);
 			}
 			UpdateEntityFromMessage(entity, msg, skip);
-		}
-
-		if (msg.payload.size() > 0)
-		{
-			LOG_ERROR("TCP UPDATE COMPONENT FUCKED UP");
 		}
 
 		break;
@@ -247,11 +253,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 				LOG_INFO("A remote player added!");
 				m_players[e.GetComponent<comp::Network>()->id] = e;
 			}
-		}
-
-		if (msg.payload.size() > 0)
-		{
-			LOG_ERROR("TCP ADD ENTITY FUCKED UP");
 		}
 
 		break;
@@ -291,14 +292,8 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			}
 		}
 #ifdef _DEBUG
-		LOG_INFO("Removed %u entities", removed);
+		LOG_INFO("Removed %d entities", removed);
 #endif
-
-		if (msg.payload.size() > 0)
-		{
-			LOG_ERROR("TCP REMOVED FUCKED UP SIZE LEFT %lu", msg.payload.size());
-		}
-
 		break;
 	}
 	case GameMsg::Game_BackToLobby:
@@ -509,10 +504,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		LOG_INFO("Successfully loaded all Assets!");
 #endif
 		SetScene("Lobby");
-		rtd::Text* lobbyErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("LobbyFields")->elements[5].get());
-		lobbyErrorText->SetVisiblity(false);
-		rtd::Text* nameErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("nameInput")->elements[1].get());
-		nameErrorText->SetVisiblity(false);
 		LOG_INFO("You are now in lobby: %lu", m_gameID);
 		break;
 	}
@@ -522,8 +513,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		//msg >> err;
 		SetScene("JoinLobby");
 		//LOG_WARNING("%s", err.c_str());
-		rtd::Text* lobbyErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("LobbyFields")->elements[5].get());
-		lobbyErrorText->SetVisiblity(true);
 		break;
 	}
 	case GameMsg::Lobby_AcceptedLeave:
@@ -536,10 +525,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		{
 			textField->SetPresetText("");
 		}
-		rtd::Text* lobbyErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("LobbyFields")->elements[5].get());
-		lobbyErrorText->SetVisiblity(false);
-		rtd::Text* nameErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("nameInput")->elements[1].get());
-		nameErrorText->SetVisiblity(false);
 		break;
 	}
 	case GameMsg::Game_Start:
@@ -569,10 +554,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		skipButton->SetVisiblity(true);
 
 		SoundHandler::Get().SetCurrentMusic("MenuTheme");
-		rtd::Text* lobbyErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("LobbyFields")->elements[5].get());
-		lobbyErrorText->SetVisiblity(false);
-		rtd::Text* nameErrorText = dynamic_cast<rtd::Text*>(GetScene("JoinLobby").GetCollection("nameInput")->elements[1].get());
-		nameErrorText->SetVisiblity(false);
 		SetScene("Game");
 		//thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::ADAPTIVE);
 		Entity e;
@@ -599,6 +580,8 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		m_secondaryCooldown = 0.0f;
 		m_dodgeCooldown = 0.0f;
 		m_waveCounter = 0;
+
+		dynamic_cast<rtd::Text*>(GetScene("Game").GetCollection("ZWaveCounter")->elements[1].get())->SetText("0");
 
 		this->m_inputState = { };
 		SetScene("Game");
@@ -634,6 +617,22 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		msg >> speed;
 		m_cycler.SetTime(time);
 		m_cycler.SetCycleSpeed(speed);
+		break;
+	}
+	case GameMsg::Lobby_RefreshList:
+	{
+		uint8_t playerCount;
+		uint8_t sceneStatus;
+
+		for (int i = MAX_LOBBIES - 1; i >= 0; i--)
+		{
+			msg >> sceneStatus >> playerCount;
+
+			rtd::LobbyUI* lobbyUI = dynamic_cast<rtd::LobbyUI*>(GetScene("JoinLobby").GetCollection("LobbySelect")->elements[i].get());
+			lobbyUI->UpdateLobbyPlayerCount(playerCount);
+			lobbyUI->SetLobbyStatus(sceneStatus);
+		}
+
 		break;
 	}
 	case GameMsg::Lobby_Update:
@@ -717,7 +716,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			}
 		}
 
-		dynamic_cast<rtd::Text*>(GetScene("Lobby").GetCollection("LobbyDesc")->elements[1].get())->SetText("Lobby ID: " + std::to_string(m_gameID));
+		dynamic_cast<rtd::Text*>(GetScene("Lobby").GetCollection("LobbyDesc")->elements[1].get())->SetText("Lobby " + std::to_string(m_gameID + 1));
 
 		for (uint32_t i = 0; i < MAX_PLAYERS_PER_LOBBY; i++)
 		{
@@ -919,7 +918,6 @@ void Game::OnClientDisconnect()
 	}
 
 	rtd::TextField* ipInput = dynamic_cast<rtd::TextField*>(GetScene("MainMenu").GetCollection("ConnectFields")->elements[0].get());
-	ipInput->SetActive();
 
 	SetScene("MainMenu");
 
@@ -1062,6 +1060,7 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 					case NameType::MESH_WATERMILLHOUSE:
 					{
 						nameString = "WaterMillHouse.fbx";
+						e.AddComponent<comp::House>();
 						break;
 					}
 					case NameType::MESH_RUINED_WATERMILLHOUSE:
@@ -1072,6 +1071,7 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 					case NameType::MESH_HOUSE5:
 					{
 						nameString = "House5.fbx";
+						e.AddComponent<comp::House>();
 						break;
 					}
 					case NameType::MESH_RUINED_HOUSE5:
@@ -1082,6 +1082,7 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 					case NameType::MESH_HOUSE6:
 					{
 						nameString = "House6.fbx";
+						e.AddComponent<comp::House>();
 						break;
 					}
 					case NameType::MESH_RUINED_HOUSE6:
@@ -1092,6 +1093,7 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 					case NameType::MESH_HOUSE7:
 					{
 						nameString = "House7.fbx";
+						e.AddComponent<comp::House>();
 						break;
 					}
 					case NameType::MESH_RUINED_HOUSE7:
@@ -1102,6 +1104,7 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 					case NameType::MESH_HOUSE8:
 					{
 						nameString = "House8.fbx";
+						e.AddComponent<comp::House>();
 						break;
 					}
 					case NameType::MESH_RUINED_HOUSE8:
@@ -1112,6 +1115,7 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 					case NameType::MESH_HOUSE9:
 					{
 						nameString = "House9.fbx";
+						e.AddComponent<comp::House>();
 						break;
 					}
 					case NameType::MESH_RUINED_HOUSE9:
@@ -1122,6 +1126,7 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 					case NameType::MESH_HOUSE10:
 					{
 						nameString = "House10.fbx";
+						e.AddComponent<comp::House>();
 						break;
 					}
 					case NameType::MESH_RUINED_HOUSE10:
@@ -1298,6 +1303,63 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 							}
 						}
 					}
+					comp::Health* health = e.GetComponent<comp::Health>();
+					comp::Transform* transform = e.GetComponent<comp::Transform>();
+					if (health && transform)
+					{
+						combat_text_inst_t cText;
+						// Signal health gain.
+						if (health->currentHealth <= hp.currentHealth)
+						{
+							cText.type = combat_text_enum::HEALTH_GAIN;
+							cText.pos = transform->position;
+						}
+						else if (health->currentHealth > hp.currentHealth)
+						{
+							cText.type = combat_text_enum::HEALTH_LOSS;
+							cText.pos = transform->position;
+						}
+
+						cText.timeRendered = static_cast<float>(omp_get_wtime());
+						cText.pos.y += 15;
+						cText.end_pos = cText.pos;
+						cText.end_pos.y += 50;
+						cText.amount = std::abs(static_cast<int>(health->currentHealth - hp.currentHealth));
+						GetScene("Game").PushCombatText(cText);
+						comp::House* house = e.GetComponent<comp::House>();
+						if (house)
+						{
+							if (hp.currentHealth < health->currentHealth)
+							{
+								LOG_INFO("House took damage");
+								house->displayWarning = true;
+								house->warningIcon.pos = e.GetComponent<comp::OrientedBoxCollider>()->Center;
+								house->warningIcon.timeRendered = omp_get_wtime();
+								if (house->iconID == -1)
+								{
+									//Create a new warning Icon and display it(6 exists as collections in the UI)
+									for (int i = 0; i < NR_OF_HOUSES && house->iconID == -1; i++)
+									{
+										Collection2D* collection = scene.GetCollection("HouseWarningIcon" + std::to_string(i + 1));
+										rtd::Picture* icon = static_cast<rtd::Picture*>(collection->elements[0].get());
+										if (!icon->IsVisible())
+										{
+											house->iconID = i;
+											icon->SetVisiblity(true);
+										}
+									}
+								}
+							}
+						}
+
+						if (hp.currentHealth <= 0)
+						{
+							// Spawn a bloodsplat.
+							Entity e = GetScene("Game").CreateEntity();
+							e.AddComponent<comp::Decal>(*transform);
+						}
+					}
+
 					e.AddComponent<comp::Health>(hp);
 				}
 				break;
@@ -1411,6 +1473,22 @@ void Game::ChangeSpectatedPlayer()
 	}
 }
 
+void Game::OnHouseDestroy(entt::registry& registry, entt::entity e)
+{
+	Entity entity(registry, e);
+	comp::House* house = entity.GetComponent<comp::House>();
+	if (house)
+	{
+		if (house->iconID != -1)
+		{
+			Collection2D* collection = GetScene("Game").GetCollection("HouseWarningIcon" + std::to_string(house->iconID + 1));
+			rtd::Picture* icon = static_cast<rtd::Picture*> (collection->elements[0].get());
+			icon->SetVisiblity(false);
+		}
+	}
+
+}
+
 void Game::UpdateInput()
 {
 	m_inputState.axisHorizontal = InputSystem::Get().GetAxis(Axis::HORIZONTAL);
@@ -1420,6 +1498,11 @@ void Game::UpdateInput()
 	if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::HELD))
 	{
 		m_inputState.leftMouse = true;
+	}
+
+	if (InputSystem::Get().CheckMouseKey(MouseKey::RIGHT, KeyState::HELD))
+	{
+		m_inputState.rightMouse = true;
 	}
 
 	if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED))
@@ -1442,7 +1525,6 @@ void Game::UpdateInput()
 		}
 		case ShopItem::None:
 		{
-			m_inputState.rightMouse = true;
 			break;
 		}
 		}

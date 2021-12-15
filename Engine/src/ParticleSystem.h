@@ -9,6 +9,8 @@ private:
 
 	/*	m_tempParticle.position += (float)rand() / (RAND_MAX + 1.f) * (max - (min)) + (min);*/
 	void RandomAddPosition(float min, float max);
+	/*	m_tempParticle.size.x += (float)rand() / (RAND_MAX + 1.f) * (max - (min)) + (min);*/
+	void RandomAddSize(float min, float max);
 	void RandomAddPositionXYZ(sm::Vector2 minMaxX, sm::Vector2 minMaxY, sm::Vector2 minMaxZ);
 
 	/*	m_tempParticle.velocity = (float)rand() / (RAND_MAX + 1.f) * (max - (min)) + (min);*/

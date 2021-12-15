@@ -63,7 +63,7 @@ namespace ecs
 		{
 			sm::Matrix viewPoint;
 			// Life span in seconds.
-			float lifespan = 10.0f;
+			float lifespan = 7.5f;
 
 			Decal(const Transform& t)
 			{
@@ -92,7 +92,7 @@ namespace ecs
 			float								lifeTime		= 0.f;
 			float								sizeMulitplier	= 0.f;
 			float								speed			= 0.f;
-			bool								hasDeathTimer	= false;
+			int									hasDeathTimer	= FALSE;
 			float								lifeLived		= 0.f;
 
 			std::string textureName								= "";
@@ -105,8 +105,9 @@ namespace ecs
 			ComPtr<ID3D11UnorderedAccessView>	particleUAV		= nullptr;
 
 			component::Transform				transformCopy;
+			sm::Vector3							direction		= { 0,0,0 };
 
-			EmitterParticle(sm::Vector3 positionOffset = {0,0,0}, int nrOfParticles = 10, float sizeMulitplier = 1.f, ParticleMode type = ParticleMode::BLOOD, float lifeTime = 2.f, float speed = 1, bool hasDeathTimer = false)
+			EmitterParticle(sm::Vector3 positionOffset = {0,0,0}, int nrOfParticles = 10, float sizeMulitplier = 1.f, ParticleMode type = ParticleMode::BLOOD, float lifeTime = 2.f, float speed = 1, int hasDeathTimer = FALSE)
 			{
 				textureName = "thisisfine.png";
 				opacityTextureName = "round_Opacity.png";
@@ -142,7 +143,7 @@ namespace ecs
 				{
 					textureName = "MageHeal.png";
 				}
-				else if (type == ParticleMode::MAGERANGE || type == ParticleMode::EXPLOSION)
+				else if (type == ParticleMode::MAGERANGE || type == ParticleMode::EXPLOSION || type == ParticleMode::MAGEBLINK)
 				{
 					textureName = "fire.png";
 					opacityTextureName = "fire_Opacity.png";
@@ -178,10 +179,11 @@ namespace ecs
 			float			lifeTime		= 0.f;
 			float			sizeMulitplier	= 0.f;
 			float			speed			= 0.f;
-			bool			hasDeathTimer	= false;
+			int				hasDeathTimer	= FALSE;
 			float			lifeLived		= 0.f;
+			sm::Vector3		direction		= { 0,0,0 };
 
-			ParticleEmitter(sm::Vector3 positionOffset = { 0,0,0 }, int nrOfParticles = 10, float sizeMulitplier = 1.f, ParticleMode type = ParticleMode::BLOOD, float lifeTime = 2.f, float speed = 1, bool hasDeathTimer = false)
+			ParticleEmitter(sm::Vector3 positionOffset = { 0,0,0 }, int nrOfParticles = 10, float sizeMulitplier = 1.f, ParticleMode type = ParticleMode::BLOOD, float lifeTime = 2.f, float speed = 1, int hasDeathTimer = FALSE)
 			{
 				this->nrOfParticles		= (UINT)nrOfParticles;
 				this->type				= type;
@@ -216,7 +218,7 @@ namespace ecs
 		struct AnimationState
 		{
 			EAnimationType lastSend = EAnimationType::NONE;	//Send to user last time
-			EAnimationType toSend	= EAnimationType::IDLE;	//Going to be send this update
+			EAnimationType toSend	= EAnimationType::NONE;	//Going to be send this update
 		};
 
 		struct AudioState
@@ -291,6 +293,9 @@ namespace ecs
 			Entity houseRoof;
 			Node* homeNode = nullptr; //AI can walk to this node to attack this house
 			bool isDead;
+			bool displayWarning;
+			int iconID = -1;
+			house_warning_icon_inst warningIcon;
 		};
 
 		struct TemporaryPhysics
@@ -354,7 +359,9 @@ namespace ecs
 
 			float runSpeed;
 
+			InputState inputState;
 			InputState lastInputState;
+
 			sm::Vector3 mousePoint;
 			sm::Vector3 fowardDir;
 
@@ -383,7 +390,6 @@ namespace ecs
 		{
 			Entity player;
 		};
-
 		
 		struct TileSet
 		{
@@ -429,6 +435,7 @@ namespace ecs
 			float cooldown = 1.5f;
 			// !DO NOT TOUCH!
 			float cooldownTimer = 0.f;
+			bool isCooldownActive = true;
 
 			// set this for delay before ability is actually used after the cooldown is done and the ecs::UseAbility has bee called
 			float delay = 0.1f;
@@ -472,6 +479,16 @@ namespace ecs
 			float maxRange = 30.f;
 		};
 
+		struct ShieldBlockAbility : public IAbility
+		{
+			Entity shieldCollider;
+
+			float maxDamage = 50.f;
+			float damageTaken = 0.0f;
+
+			float timeSinceUse = 0.0f;
+		};
+
 		struct DashAbility : public IAbility
 		{
 			//The duration for the force
@@ -504,6 +521,18 @@ namespace ecs
 		};
 		//------------------END----------------------
 
+		//----------------- EFFECTS -----------------
+		struct Stun
+		{
+			float stunTime = 5.0f;
+			float movementSpeedAlt = 0.0f;
+		};
+
+		struct Invincible {
+			float time = 1.0f;
+		};
+
+		//------------------END----------------------
 
 
 		struct SelfDestruct
@@ -596,6 +625,11 @@ namespace ecs
 
 	// returns if the ability is currently used
 	bool IsUsing(Entity entity, entt::meta_type abilityType);
+
+
+	void CancelAbility(component::IAbility* abilityComponent);
+	void CancelAbility(Entity entity, entt::meta_type abilityType);
+
 
 	bool IsPlayerUsingAnyAbility(Entity player);
 

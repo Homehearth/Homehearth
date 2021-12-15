@@ -129,7 +129,7 @@ void rtd::TextField::Update()
 					}
 					else
 					{
-						m_stringText.push_back(static_cast<char>(std::tolower(*currentKey)));
+						m_stringText.push_back(static_cast<char>(std::tolower(static_cast<int>(*currentKey))));
 					}
 				}
 				break;
@@ -161,12 +161,16 @@ rtd::TextField::TextField(const draw_text_t& opts, size_t textLimit, bool isUsed
 	m_canvas = std::make_unique<Canvas>(D2D1_COLOR_F({ 0.8f, 0.2f, 0.3f, 1.0f }), draw_t(m_opts.x_pos, m_opts.y_pos, m_opts.x_stretch, m_opts.y_stretch));
 	if (m_isUsed)
 	{
-		m_canvas->SetBorderColor(borderColor);
+		//m_canvas->SetBorderColor(borderColor);
+		m_canvas->SetBorderColor({ 0.88f, 0.3f, 0.42f, 1.0f });
 	}
 	else
 	{
-		m_canvas->SetBorderColor({ borderColor.r, borderColor.g, borderColor.b, 0.f });
+		m_canvas->SetBorderColor({ 0.2f, 0.07f, 0.09f, 1.0f });
+		//m_canvas->SetBorderColor({ borderColor.r, borderColor.g, borderColor.b, 0.f });
 	}
+
+	m_canvas->ShowBorder();
 
 	m_canvas->SetBorderThickness(LineWidth::THICC);
 	m_canvas->SetBorderShape(Shapes::RECTANGLE_OUTLINED);
@@ -187,6 +191,12 @@ void rtd::TextField::SetDescriptionText(const std::string& displayText)
 	m_infoText->SetText(displayText);
 }
 
+void rtd::TextField::SetShape(const Shapes& shape)
+{
+	m_canvas->SetShape(shape);
+	m_canvas->SetBorderShape(Shapes::RECTANGLE_ROUNDED_OUTLINED);
+}
+
 void rtd::TextField::SetPresetText(const std::string& displayText)
 {
 	m_text->SetText(displayText);
@@ -201,8 +211,7 @@ std::string* rtd::TextField::RawGetBuffer()
 void rtd::TextField::SetActive()
 {
 	m_isUsed = true;
-	m_canvas->ShowBorder();
-
+	m_canvas->SetBorderColor({ 0.88f, 0.3f, 0.42f, 1.0f });
 }
 
 void rtd::TextField::Draw()
@@ -223,13 +232,31 @@ void rtd::TextField::OnClick()
 
 void rtd::TextField::OnHover()
 {
-	if (m_isUsed)
-		this->Update();
+	m_canvas->SetBorderColor(D2D1::ColorF(0.88f, 0.3f, 0.42f, 1.0f));
 }
 
 bool rtd::TextField::CheckHover()
 {
-	return true;
+	if (m_isUsed)
+	{
+		this->Update();
+		return false;
+	}
+
+	if (InputSystem::Get().GetMousePos().x > m_opts.x_pos &&
+		InputSystem::Get().GetMousePos().x < m_opts.x_pos + m_opts.x_stretch &&
+		InputSystem::Get().GetMousePos().y > m_opts.y_pos &&
+		InputSystem::Get().GetMousePos().y < m_opts.y_pos + m_opts.y_stretch)
+	{
+		return true;
+	}
+
+	if (!m_isUsed)
+	{
+		m_canvas->SetBorderColor({ 0.2f, 0.07f, 0.09f, 1.0f });
+	}
+
+	return false;
 }
 
 ElementState rtd::TextField::CheckClick()
@@ -243,13 +270,14 @@ ElementState rtd::TextField::CheckClick()
 			InputSystem::Get().GetMousePos().y < m_opts.y_pos + m_opts.y_stretch)
 		{
 			InputSystem::Get().SetInputState(SystemState::TEXTFIELD);
+			m_canvas->SetBorderColor({ 0.88f, 0.3f, 0.42f, 1.0f });
 			return ElementState::INSIDE;
 		}
 		else
 		{
+			m_canvas->SetBorderColor({ 0.2f, 0.07f, 0.09f, 1.0f });
 			m_isUsed = false;
 			InputSystem::Get().SetInputState(SystemState::GAME);
-			m_canvas->HideBorder();
 		}
 	}
 	return ElementState::NONE;

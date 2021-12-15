@@ -47,8 +47,8 @@ void Engine::Startup()
 			config.height = 720;
 			config.width = 1280;
 
-			OptionSystem::Get().SetOption("WindowHeight", std::string("720"));
-			OptionSystem::Get().SetOption("WindowWidth", std::string("1280"));
+			OptionSystem::Get().SetOption("WindowHeight", "720");
+			OptionSystem::Get().SetOption("WindowWidth", "1280");
 		}
 	}
 
@@ -422,7 +422,7 @@ void Engine::SetupLoadingScreen()
 	Collection2D* loadingScreen = new Collection2D;
 
 	loadingScreen->AddElement<rtd::Picture>("LoadingScreen.png", (draw_t(0.0f, 0.0f, width, height)));
-	loadingScreen->AddElement<rtd::Canvas>(D2D1::ColorF(0.0f, 0.0f), draw_t(0.0f, 0.0f, width / 2.0f, height / 2.0f));
+	loadingScreen->AddElement<rtd::Canvas>(D2D1::ColorF(0, 0.0f), draw_t(0.0f, 0.0f, width / 2.0f, height / 2.0f));
 
 	scene.Add2DCollection(loadingScreen, "LoadingScreen");
 }
@@ -535,12 +535,24 @@ void Engine::Render()
 		m_renderer.Render(GetCurrentScene());
 	}
 
+#if RENDER_INGAME_UI
 	{
 		PROFILE_SCOPE("Render D2D1");
 		D2D1Core::Begin();
 		GetCurrentScene()->Render2D();
 		D2D1Core::Present();
+}
+#else
+	{
+		if (GetCurrentScene() != &GetScene("Game"))
+		{
+			PROFILE_SCOPE("Render D2D1");
+			D2D1Core::Begin();
+			GetCurrentScene()->Render2D();
+			D2D1Core::Present();
+		}		
 	}
+#endif	
 
 	{
 		PROFILE_SCOPE("Render ImGui");

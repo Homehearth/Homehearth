@@ -18,6 +18,7 @@
 #include "AbilityUI.h"
 #include "ShopUI.h"
 #include "OptionSystem.h"
+#include "LobbyUI.h"
 
 // Used to show and hide shopMenu
 static bool toggle = false;
@@ -282,11 +283,26 @@ namespace sceneHelp
 					}
 					case CyclePeriod::EVENING:
 					{
+						//// Hide skip day button.
 						//Collection2D* skipButtonUI = scene.GetCollection("SkipUI");
 						//rtd::Button* skipButton = dynamic_cast<rtd::Button*>(skipButtonUI->elements[0].get());
 						//rtd::Text* skipText = dynamic_cast<rtd::Text*>(skipButtonUI->elements[1].get());
 						//skipText->SetVisiblity(false);
 						//skipButton->SetVisiblity(false);
+						//scene.ForEachComponent<comp::Light>([](comp::Light& l)
+						//	{
+						//		if (l.lightData.type == TypeLight::POINT)
+						//		{
+						//			l.lightData.enabled = 1;
+						//		}
+						//	});
+
+						// Hide pricetag.
+						Collection2D* priceTagUI = scene.GetCollection("priceTag");
+						if (priceTagUI)
+						{
+							priceTagUI->Hide();
+						}
 						break;
 					}
 					case CyclePeriod::DAY:
@@ -375,6 +391,7 @@ namespace sceneHelp
 					{
 						scene.SetCurrentCameraEntity(debugCameraEntity);
 						scene.GetCurrentCamera()->SetNearFarPlane(0.1f, 800.f);
+						thread::RenderThreadHandler::GetRenderer()->GetDoFPass()->SetDoFType(DoFType::ADAPTIVE);
 						if (InputSystem::Get().IsMouseRelative())
 						{
 							InputSystem::Get().SwitchMouseMode();
@@ -417,11 +434,13 @@ namespace sceneHelp
 
 		/*---------Textfields---------*/
 		Collection2D* connectFields = new Collection2D;
-		rtd::TextField* ipField = connectFields->AddElement<rtd::TextField>(draw_text_t((width / 2.f) - (widthScale * 0.25f), height * 0.55f, widthScale * 0.25f, D2D1Core::GetDefaultFontSize()), 25, true);
+		rtd::TextField* ipField = connectFields->AddElement<rtd::TextField>(draw_text_t((width / 2.f) - (widthScale * 0.25f), height * 0.55f, widthScale * 0.25f, D2D1Core::GetDefaultFontSize()), 25);
 		ipField->SetDescriptionText("IP Address:");
+		ipField->SetShape(Shapes::RECTANGLE_ROUNDED);
 		padding = (widthScale / 64.f);
 		rtd::TextField* portField = connectFields->AddElement<rtd::TextField>(draw_text_t((width / 2.f) + padding, height * 0.55f, widthScale * 0.25f, D2D1Core::GetDefaultFontSize()), 6);
 		portField->SetDescriptionText("Port:");
+		portField->SetShape(Shapes::RECTANGLE_ROUNDED);
 		/*---------Textfields---------*/
 
 
@@ -461,7 +480,6 @@ namespace sceneHelp
 					if (game->m_client.Connect(ipConnect->c_str(), std::stoi(portConnect->c_str())))
 					{
 						rtd::TextField* nameInput = dynamic_cast<rtd::TextField*>(game->GetScene("JoinLobby").GetCollection("nameInput")->elements[0].get());
-						nameInput->SetActive();
 						game->SetScene("JoinLobby");
 						deadServerText->SetVisiblity(false);
 
@@ -518,24 +536,23 @@ namespace sceneHelp
 			playerHp->AddElement<rtd::Healthbar>(draw_t(width / 8, (i * ((height / 12)) + (height / 32)), (widthScale / 24), (height / 100)));
 
 			// You and Friend text
-			if (i == 0)
-			{
-			}
-			else
+			if (i != 0)
 			{
 				playerHp->Hide();
 			}
 			scene.Add2DCollection(playerHp, "Aplayer" + std::to_string(i + 1) + "Info");
-		}
-
-		for (int i = 0; i < MAX_PLAYERS_PER_LOBBY; i++)
-		{
 			Collection2D* nameCollection = new Collection2D;
 			nameCollection->AddElement<rtd::Text>("Player", draw_text_t(0, 0, widthScale / 14, height / 6));
 			scene.Add2DCollection(nameCollection, "AdynamicPlayer" + std::to_string(i + 1) + "namePlate");
 			nameCollection->Hide();
 		}
-
+		for (int i = 0; i < NR_OF_HOUSES; i++)
+		{
+			Collection2D* houseWarning = new Collection2D;
+			houseWarning->AddElement<rtd::Picture>("WarningIcon.png", draw_t(0.f, 0.f, 100, 80));
+			scene.Add2DCollection(houseWarning, "HouseWarningIcon" + std::to_string(i + 1));
+			houseWarning->Hide();
+		}
 		sm::Vector2 moneyScale = { widthScale / 8.0f, height / 11.0f };
 		sm::Vector2 moneyPos = { width - (moneyScale.x + padding.x), padding.y };
 		Collection2D* money = new Collection2D;
@@ -584,13 +601,14 @@ namespace sceneHelp
 		rtd::AbilityUI* fourth = abilities->AddElement<rtd::AbilityUI>(draw_t(abillityPos.x + (abillitySize.x + padding.x / 2), abillityPos.y, abillitySize.x, abillitySize.y), D2D1::ColorF(0, 1.0f), "LockedIcon.png");
 		rtd::AbilityUI* fith = abilities->AddElement<rtd::AbilityUI>(draw_t(abillityPos.x + (abillitySize.x * 2 + padding.x), abillityPos.y, abillitySize.x, abillitySize.y), D2D1::ColorF(0, 1.0f), "LockedIcon.png");
 		scene.Add2DCollection(abilities, "ZAbilityUI");
+
 		Collection2D* spectatingCollection = new Collection2D;
-		rtd::Text* deadText = spectatingCollection->AddElement<rtd::Text>("You are dead!", draw_t((width / 2) - (widthScale / 17.f) , (height / 2) + (height / 8.5f), (widthScale / 10.f), (height / 8.f)));
+		rtd::Text* deadText = spectatingCollection->AddElement<rtd::Text>("You are dead!", draw_t((width / 2) - (widthScale / 17.f), (height / 2) + (height / 8.5f), (widthScale / 10.f), (height / 8.f)));
 		rtd::Text* spectateText = spectatingCollection->AddElement<rtd::Text>("LMB to spectate another player", draw_t((width / 2) - (widthScale / 6.f), (height / 4.f) + (height / 2.5f), (widthScale / 3.f), (height / 8.f)));
 		scene.Add2DCollection(spectatingCollection, "SpectateUI");
-
 		deadText->SetVisiblity(false);
 		spectateText->SetVisiblity(false);
+		
 		Collection2D* skipCollection = new Collection2D;
 		rtd::Button* skipToNightButton = skipCollection->AddElement<rtd::Button>("Button.png", draw_t(width - ((widthScale / 9.f)), (height / 2) - (height / 8), (widthScale / 10.f), (height / 8.f)), false);
 		rtd::Text* skipToNightText = skipCollection->AddElement<rtd::Text>("Skip Day", draw_t(width - ((widthScale / 9.f)), (height / 2) - (height / 8), (widthScale / 10.f), (height / 8.f)));
@@ -831,7 +849,6 @@ namespace sceneHelp
 					msg << game->m_localPID << game->m_gameID;
 					game->m_client.Send(msg);
 					rtd::TextField* nameInput = dynamic_cast<rtd::TextField*>(game->GetScene("JoinLobby").GetCollection("nameInput")->elements[0].get());
-					nameInput->SetActive();
 				}
 			});
 		scene.Add2DCollection(general, "AGeneral");
@@ -908,6 +925,7 @@ namespace sceneHelp
 		exitButton->SetOnPressedEvent([=]()
 			{
 				game->SetScene("MainMenu");
+				OptionSystem::Get().SetOption("BloomIntensity", std::to_string(thread::RenderThreadHandler::Get().GetRenderer()->GetBloomPass()->AdjustBloomIntensity()));
 				OptionSystem::Get().OnShutdown();
 			});
 		scene.Add2DCollection(general, "AMenuBG");
@@ -1084,7 +1102,7 @@ namespace sceneHelp
 		sm::Vector2 maxPos = { width - (scale.x + padding.x * 2.f), posAudio.y };
 		rtd::Canvas* masterVolCanvas = audioCategory->AddElement<rtd::Canvas>(D2D1::ColorF(53.f / 255.f, 22.f / 255.f, 26.f / 255.f), draw_t(minPos.x - 6.f, posAudio.y, ((canvasSize.x / 2.f) + 6.f) - padding.x * 2.f, scale.y));
 		masterVolCanvas->SetShape(Shapes::RECTANGLE_ROUNDED);
-		rtd::Slider* masterVolumeSL = audioCategory->AddElement<rtd::Slider>(D2D1::ColorF(0,0,0), draw_t(minPos.x, posAudio.y, scale.x, scale.y), &SoundHandler::Get().AdjustMasterVolume(), 1.0f, 0.0f);
+		rtd::Slider* masterVolumeSL = audioCategory->AddElement<rtd::Slider>(D2D1::ColorF(0, 0, 0), draw_t(minPos.x, posAudio.y, scale.x, scale.y), &SoundHandler::Get().AdjustMasterVolume(), 1.0f, 0.0f);
 		masterVolumeSL->SetMinPos(minPos);
 		masterVolumeSL->SetMaxPos(maxPos);
 		rtd::Text* valueText = masterVolumeSL->GetValueText();
@@ -1129,7 +1147,7 @@ namespace sceneHelp
 				dofText->SetText("None");
 				break;
 			}
-			case DoFType::ADAPTIVE:
+			case DoFType::STATIC:
 			{
 				dofText->SetText("Adaptive");
 				break;
@@ -1146,7 +1164,7 @@ namespace sceneHelp
 				// Toggle between types.
 				switch (type)
 				{
-				case DoFType::ADAPTIVE:
+				case DoFType::STATIC:
 				{
 					type = DoFType::VIGNETTE;
 					dofText->SetText("Static");
@@ -1164,9 +1182,9 @@ namespace sceneHelp
 				}
 				case DoFType::DEFAULT:
 				{
-					type = DoFType::ADAPTIVE;
+					type = DoFType::STATIC;
 					dofText->SetText("Adaptive");
-					thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::ADAPTIVE);
+					thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::STATIC);
 					OptionSystem::Get().SetOption("BlurType", std::string("1"));
 					break;
 				}
@@ -1267,7 +1285,7 @@ namespace sceneHelp
 		static std::string bloomOption = OptionSystem::Get().GetOption("Bloom");
 		if (bloomOption == "0")
 			bloomOption = "ON";
-		
+
 		if (bloomOption == "ON")
 		{
 			bloomText->SetText("ON");
@@ -1290,7 +1308,7 @@ namespace sceneHelp
 			}
 			else if (bloomOption == "OFF")
 			{
-				
+
 				bloomText->SetText("ON");
 				bloomOption = "ON";
 				thread::RenderThreadHandler::Get().GetRenderer()->GetBloomPass()->SetEnable(true);
@@ -1299,7 +1317,22 @@ namespace sceneHelp
 			OptionSystem::Get().SetOption("Bloom", bloomOption);
 
 			});
-		
+
+		// Bloom Intensity
+		graphicsPos.y += scale.y + padding.y;
+		rtd::Border* bloomIntensityBorder = graphicsCategory->AddElement<rtd::Border>(draw_t(canvasPos.x + padding.x, graphicsPos.y, canvasSize.x - padding.x * 2, scale.y));
+		bloomIntensityBorder->SetColor(D2D1::ColorF(53.f / 255.f, 22.f / 255.f, 26.f / 255.f));
+		bloomIntensityBorder->SetLineWidth(LineWidth::LARGE);
+		rtd::Canvas* bloomVolCanvas = graphicsCategory->AddElement<rtd::Canvas>(D2D1::ColorF(53.f / 255.f, 22.f / 255.f, 26.f / 255.f), draw_t(minPos.x - 6.f, graphicsPos.y, ((canvasSize.x / 2.f) + 6.f) - padding.x * 2.f, scale.y));
+		bloomVolCanvas->SetShape(Shapes::RECTANGLE_ROUNDED);
+		graphicsCategory->AddElement<rtd::Text>("Bloom Intensity", draw_t(canvasPos.x - padding.x, graphicsPos.y, scale.x * 2.f, scale.y));
+		rtd::Slider* bloomVolumeSL = graphicsCategory->AddElement<rtd::Slider>(D2D1::ColorF(0, 0, 0), draw_t(minPos.x, graphicsPos.y, scale.x, scale.y), &thread::RenderThreadHandler::Get().GetRenderer()->GetBloomPass()->AdjustBloomIntensity(), 1.0f, 0.05f);
+		bloomVolumeSL->SetMinPos(minPos);
+		bloomVolumeSL->SetMaxPos(maxPos);
+		rtd::Text* bloomValueText = bloomVolumeSL->GetValueText();
+		sm::Vector2 bloomValueTextPos = { minPos.x + (maxPos.x - minPos.x) / 2 + (bloomValueText->GetText().length() * D2D1Core::GetDefaultFontSize()) / 2.f, graphicsPos.y };
+		bloomValueText->SetPosition(bloomValueTextPos.x, bloomValueTextPos.y);
+
 		//Shadows
 		graphicsPos.y += scale.y + padding.y;
 		rtd::Border* shadowsBorder = graphicsCategory->AddElement<rtd::Border>(draw_t(canvasPos.x + padding.x, graphicsPos.y, canvasSize.x - padding.x * 2, scale.y));
@@ -1456,11 +1489,13 @@ namespace sceneHelp
 
 		Scene& scene = game->GetScene("JoinLobby");
 
-
+		Collection2D* lobbySelectCollection = new Collection2D;
 		Collection2D* nameCollection = new Collection2D;
-		rtd::TextField* nameInputField = nameCollection->AddElement<rtd::TextField>(draw_text_t((width / 2) - (widthScale / 8), height / 8, widthScale / 4, D2D1Core::GetDefaultFontSize()), 12, true);
-		nameInputField->SetDescriptionText("Input Name");
-		rtd::Text* nameErrorText = nameCollection->AddElement<rtd::Text>("Invalid Name", draw_text_t((width / 2.0f) - (width / 8), (height / 8.0f) * 1.5f, widthScale / 4.0f, height / 8.0f));
+		rtd::TextField* nameInputField = nameCollection->AddElement<rtd::TextField>(draw_text_t(width * 0.25f, height / 8, widthScale / 4, D2D1Core::GetDefaultFontSize()), 12);
+		nameInputField->SetDescriptionText("Nickname");
+		nameInputField->SetShape(Shapes::RECTANGLE_ROUNDED);
+
+		rtd::Text* nameErrorText = nameCollection->AddElement<rtd::Text>("You must enter a valid name!", draw_text_t((width / 2.0f) - (width / 8), height * 0.8f, widthScale / 4.0f, height / 8.0f));
 		nameErrorText->SetVisiblity(false);
 #ifdef _DEBUG
 		nameInputField->SetPresetText("Player");
@@ -1474,350 +1509,319 @@ namespace sceneHelp
 		sm::Vector2 buttonSize = { widthScale / 4.f, height * 0.15f };
 		float buttonPosY = height - (buttonSize.y + paddingHeight * 2.f);
 
-		rtd::Button* startLobbyButton = lobbyCollection->AddElement<rtd::Button>("CreateLobby.png", draw_t((width / 2.0f) + (width / 8.0f), buttonPosY, buttonSize.x, buttonSize.y));
-		rtd::Button* lobbyButton = lobbyCollection->AddElement<rtd::Button>("joinLobby.png", draw_t(width / 8, buttonPosY, buttonSize.x, buttonSize.y));
-		rtd::TextField* lobbyField = lobbyCollection->AddElement<rtd::TextField>(draw_text_t(width / 8, buttonPosY - paddingHeight * 2.f, widthScale / 4, D2D1Core::GetDefaultFontSize()));
-		lobbyField->SetDescriptionText("Input Lobby ID");
-
 		rtd::Button* exitButton = lobbyCollection->AddElement<rtd::Button>("No.png", draw_t(paddingWidth, paddingHeight, widthScale / 24, height / 14));
-		rtd::Text* lobbyErrorText = lobbyCollection->AddElement<rtd::Text>("Invalid Lobby ID", draw_text_t((width / 2.f) - (widthScale / 8.f), (height / 2) - (D2D1Core::GetDefaultFontSize() / 2), widthScale / 4.0f, D2D1Core::GetDefaultFontSize()));
-		lobbyErrorText->SetVisiblity(false);
 		exitButton->SetOnPressedEvent([=]
 			{
+				nameErrorText->SetVisiblity(false);
 				game->m_client.Disconnect();
-			});
-
-		startLobbyButton->SetOnPressedEvent([=]
-			{
-				if (nameInputField->RawGetBuffer()->length() > 0)
-				{
-					game->m_playerName = *nameInputField->RawGetBuffer();
-
-					game->CreateLobby();
-
-					// Update own name.
-					dynamic_cast<rtd::Text*>(game->GetScene("Lobby").GetCollection("playerIcon1")->elements[1].get())->SetText(game->m_playerName);
-				}
-				else
-				{
-					nameErrorText->SetVisiblity(true);
-					LOG_WARNING("Enter a valid nickname");
-				}
-			});
-		lobbyButton->SetOnPressedEvent([=]()
-			{
-				std::string* lobbyString = lobbyField->RawGetBuffer();
-
-				if (lobbyString)
-				{
-					game->m_playerName = *nameInputField->RawGetBuffer();
-					int lobbyID = -1;
-					try
-					{
-						lobbyID = std::stoi(*lobbyString);
-					}
-					catch (std::exception e)
-					{
-						lobbyErrorText->SetVisiblity(true);
-						LOG_WARNING("Request denied: Invalid lobby ID: Was not numerical");
-					}
-
-					if (lobbyID > -1)
-					{
-						if (nameInputField->RawGetBuffer()->length() > 0)
-						{
-							game->JoinLobby(lobbyID);
-							// Update own name.
-							dynamic_cast<rtd::Text*>(game->GetScene("Lobby").GetCollection("playerIcon1")->elements[1].get())->SetText(game->m_playerName);
-						}
-						else
-						{
-							nameErrorText->SetVisiblity(true);
-							LOG_WARNING("Request denied: Enter a valid nickname");
-						}
-					}
-				}
 			});
 
 		scene.Add2DCollection(lobbyCollection, "LobbyFields");
 
-	}
+		float yPos = (height * 0.60f) / 5.0f;
+		float yScale = ((height * 0.60f) / 5.0f) - paddingHeight;
 
-	bool LoadMapColliders(Game* game)
-	{
-		std::fstream file;
-
-		file.open(BOUNDSLOADER);
-
-		if (!file.is_open())
+		for (int i = 0; i < MAX_LOBBIES; i++)
 		{
-			return false;
+			rtd::LobbyUI* lobby = lobbySelectCollection->AddElement<rtd::LobbyUI>("Lobby " + std::to_string(i + 1), draw_t(width * 0.25f, height * 0.2f + yPos * i + 1.0f, widthScale * 0.5f, yScale));
+
+			lobby->SetOnPressedEvent([=]()
+				{
+					if (nameInputField->RawGetBuffer()->length() > 0)
+					{
+						nameErrorText->SetVisiblity(false);
+						game->m_playerName = *nameInputField->RawGetBuffer();
+
+						// Update own name.
+						dynamic_cast<rtd::Text*>(game->GetScene("Lobby").GetCollection("playerIcon1")->elements[1].get())->SetText(game->m_playerName);
+
+						game->JoinLobby(i);
+					}
+					else
+					{
+						nameErrorText->SetVisiblity(true);
+					}
+					});
+			}
+
+			scene.Add2DCollection(lobbySelectCollection, "LobbySelect");
 		}
 
-		int nrOf = 0;
-		while (!file.eof())
+		bool LoadMapColliders(Game * game)
 		{
-			std::string filename;
-			file >> filename;
-			std::string colliderPath = BOUNDSPATH + filename;
-			ModelID modelID;
+			std::fstream file;
 
-			// Remove .obj / .fbx
-			size_t count = filename.find_last_of('.');
-			filename = filename.substr(0, count);
+			file.open(BOUNDSLOADER);
 
-			if (House5 == filename)
+			if (!file.is_open())
 			{
-				modelID = ModelID::HOUSE5;
-			}
-			else if (House6 == filename)
-			{
-				modelID = ModelID::HOUSE6;
-			}
-			else if (House7 == filename)
-			{
-				modelID = ModelID::HOUSE7;
-			}
-			else if (House8 == filename)
-			{
-				modelID = ModelID::HOUSE8;
-			}
-			else if (House9 == filename)
-			{
-				modelID = ModelID::HOUSE9;
-			}
-			else if (House10 == filename)
-			{
-				modelID = ModelID::HOUSE10;
-			}
-			else if (HouseRoof == filename)
-			{
-				modelID = ModelID::HOUSEROOF;
-			}
-			else if (Tree3 == filename)
-			{
-				modelID = ModelID::TREE3;
-			}
-			else if (Tree5 == filename)
-			{
-				modelID = ModelID::TREE5;
-			}
-			else if (Tree6 == filename)
-			{
-				modelID = ModelID::TREE6;
-			}
-			else if (Tree8 == filename)
-			{
-				modelID = ModelID::TREE8;
-			}
-
-			Assimp::Importer importer;
-
-			const aiScene* aiScene = importer.ReadFile
-			(
-				colliderPath,
-				aiProcess_JoinIdenticalVertices |
-				aiProcess_ConvertToLeftHanded
-			);
-
-			if (!aiScene || aiScene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !aiScene->mRootNode)
-			{
-#ifdef _DEBUG
-				LOG_WARNING("[Bounds] Assimp error: %s", importer.GetErrorString());
-#endif 
-				importer.FreeScene();
 				return false;
 			}
 
-			if (!aiScene->HasMeshes())
+			int nrOf = 0;
+			while (!file.eof())
 			{
-#ifdef _DEBUG
-				LOG_WARNING("[Bounds] has no meshes...");
-#endif 
-				importer.FreeScene();
-				return false;
-			}
-			// Go through all the meshes and create boundingboxes for them
-			for (UINT i = 0; i < aiScene->mNumMeshes; i++)
-			{
-				const aiMesh* mesh = aiScene->mMeshes[i];
+				std::string filename;
+				file >> filename;
+				std::string colliderPath = BOUNDSPATH + filename;
+				ModelID modelID;
 
-				aiNode* node = aiScene->mRootNode->FindNode(mesh->mName);
+				// Remove .obj / .fbx
+				size_t count = filename.find_last_of('.');
+				filename = filename.substr(0, count);
 
-				if (node)
+				if (House5 == filename)
 				{
-					aiVector3D pos;
-					aiVector3D scl;
-					aiQuaternion rot;
-					node->mTransformation.Decompose(scl, rot, pos);
+					modelID = ModelID::HOUSE5;
+				}
+				else if (House6 == filename)
+				{
+					modelID = ModelID::HOUSE6;
+				}
+				else if (House7 == filename)
+				{
+					modelID = ModelID::HOUSE7;
+				}
+				else if (House8 == filename)
+				{
+					modelID = ModelID::HOUSE8;
+				}
+				else if (House9 == filename)
+				{
+					modelID = ModelID::HOUSE9;
+				}
+				else if (House10 == filename)
+				{
+					modelID = ModelID::HOUSE10;
+				}
+				else if (HouseRoof == filename)
+				{
+					modelID = ModelID::HOUSEROOF;
+				}
+				else if (Tree3 == filename)
+				{
+					modelID = ModelID::TREE3;
+				}
+				else if (Tree5 == filename)
+				{
+					modelID = ModelID::TREE5;
+				}
+				else if (Tree6 == filename)
+				{
+					modelID = ModelID::TREE6;
+				}
+				else if (Tree8 == filename)
+				{
+					modelID = ModelID::TREE8;
+				}
 
-					dx::XMFLOAT3 center = { pos.x, pos.y, pos.z };
-					const float radius = scl.x;
+				Assimp::Importer importer;
 
-					dx::BoundingSphere boS(center, scl.x);
+				const aiScene* aiScene = importer.ReadFile
+				(
+					colliderPath,
+					aiProcess_JoinIdenticalVertices |
+					aiProcess_ConvertToLeftHanded
+				);
 
-					//Entity collider = game->GetScene("Game").CreateEntity();
-					//collider.AddComponent<comp::BoundingSphere>()->Center = center;
-					//collider.GetComponent<comp::BoundingSphere>()->Radius = radius;
-					//collider.AddComponent<comp::Tag<TagType::STATIC>>();
-					//collider.AddComponent<comp::Tag<TagType::MAP_BOUNDS>>();
+				if (!aiScene || aiScene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !aiScene->mRootNode)
+				{
+#ifdef _DEBUG
+					LOG_WARNING("[Bounds] Assimp error: %s", importer.GetErrorString());
+#endif 
+					importer.FreeScene();
+					return false;
+				}
 
-					game->m_LOSColliders.push_back(std::make_pair(modelID, boS));
+				if (!aiScene->HasMeshes())
+				{
+#ifdef _DEBUG
+					LOG_WARNING("[Bounds] has no meshes...");
+#endif 
+					importer.FreeScene();
+					return false;
+				}
+				// Go through all the meshes and create boundingboxes for them
+				for (UINT i = 0; i < aiScene->mNumMeshes; i++)
+				{
+					const aiMesh* mesh = aiScene->mMeshes[i];
+
+					aiNode* node = aiScene->mRootNode->FindNode(mesh->mName);
+
+					if (node)
+					{
+						aiVector3D pos;
+						aiVector3D scl;
+						aiQuaternion rot;
+						node->mTransformation.Decompose(scl, rot, pos);
+
+						dx::XMFLOAT3 center = { pos.x, pos.y, pos.z };
+						const float radius = scl.x;
+
+						dx::BoundingSphere boS(center, scl.x);
+
+						//Entity collider = game->GetScene("Game").CreateEntity();
+						//collider.AddComponent<comp::BoundingSphere>()->Center = center;
+						//collider.GetComponent<comp::BoundingSphere>()->Radius = radius;
+						//collider.AddComponent<comp::Tag<TagType::STATIC>>();
+						//collider.AddComponent<comp::Tag<TagType::MAP_BOUNDS>>();
+
+						game->m_LOSColliders.push_back(std::make_pair(modelID, boS));
+					}
 				}
 			}
+
+			file.close();
+
+			return true;
 		}
 
-		file.close();
+		void LoadResources(Game * game)
+		{
+			std::fstream file;
+			file.open(RESOURCELOADER);
+			if (!file.is_open())
+			{
+				LOG_ERROR("Failed to load GameScene!");
+				return;
+			}
 
-		return true;
+			while (!file.eof())
+			{
+				std::string filename;
+
+				file >> filename;
+
+				ResourceManager::Get().GetResource<RModel>(filename);
+			}
+
+			file.close();
+
+			file.open(TEXTUREPATH + "Loader.txt");
+			if (!file.is_open())
+			{
+				LOG_ERROR("Failed to load textures!");
+				return;
+			}
+
+			while (!file.eof())
+			{
+				std::string filename;
+
+				file >> filename;
+
+				ResourceManager::Get().GetResource<RTexture>(filename);
+			}
+			file.close();
+
+			file.open(ANIMATIONPATH + "Loader.txt");
+
+			if (!file.is_open())
+			{
+				LOG_ERROR("Failed to load Animations!");
+				return;
+			}
+
+			while (!file.eof())
+			{
+				std::string filename;
+
+				file >> filename;
+
+				ResourceManager::Get().GetResource<RAnimation>(filename);
+			}
+			file.close();
+
+			file.open(ANIMATORPATH + "Loader.txt");
+
+			if (!file.is_open())
+			{
+				LOG_ERROR("Failed to load Animations!");
+				return;
+			}
+
+			while (!file.eof())
+			{
+				std::string filename;
+
+				file >> filename;
+
+				ResourceManager::Get().GetResource<RAnimator>(filename);
+			}
+			file.close();
+		}
+
+		void LoadGameScene(Game * game)
+		{
+			std::fstream file;
+			file.open(ASSETLOADER);
+			if (!file.is_open())
+			{
+				LOG_ERROR("Failed to load GameScene!");
+				return;
+			}
+
+			while (!file.eof())
+			{
+				std::string filename;
+
+				file >> filename;
+
+				Entity e = game->GetScene("Game").CreateEntity();
+				e.AddComponent<comp::Transform>();
+				e.AddComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>(filename);
+
+				// Remove .obj / .fbx
+				size_t count = filename.find_last_of('.');
+				filename = filename.substr(0, count);
+
+				if (House5 == filename || Door5 == filename)
+				{
+					game->m_models[ModelID::HOUSE5].push_back(e);
+				}
+				else if (House6 == filename || Door6 == filename)
+				{
+					game->m_models[ModelID::HOUSE6].push_back(e);
+				}
+				else if (House7 == filename || Door7 == filename)
+				{
+					game->m_models[ModelID::HOUSE7].push_back(e);
+				}
+				else if (House8 == filename || Door8 == filename)
+				{
+					game->m_models[ModelID::HOUSE8].push_back(e);
+				}
+				else if (House9 == filename || Door9 == filename)
+				{
+					game->m_models[ModelID::HOUSE9].push_back(e);
+				}
+				else if (House10 == filename || Door10 == filename)
+				{
+					game->m_models[ModelID::HOUSE10].push_back(e);
+				}
+				else if (HouseRoof == filename)
+				{
+					game->m_models[ModelID::HOUSEROOF].push_back(e);
+				}
+				else if (Tree3 == filename)
+				{
+					game->m_models[ModelID::TREE3].push_back(e);
+				}
+				else if (Tree5 == filename)
+				{
+					game->m_models[ModelID::TREE5].push_back(e);
+				}
+				else if (Tree6 == filename)
+				{
+					game->m_models[ModelID::TREE6].push_back(e);
+				}
+				else if (Tree8 == filename)
+				{
+					game->m_models[ModelID::TREE8].push_back(e);
+				}
+			}
+
+			file.close();
+		}
+
 	}
-
-	void LoadResources(Game* game)
-	{
-		std::fstream file;
-		file.open(RESOURCELOADER);
-		if (!file.is_open())
-		{
-			LOG_ERROR("Failed to load GameScene!");
-			return;
-		}
-
-		while (!file.eof())
-		{
-			std::string filename;
-
-			file >> filename;
-
-			ResourceManager::Get().GetResource<RModel>(filename);
-		}
-
-		file.close();
-
-		file.open(TEXTUREPATH + "Loader.txt");
-		if (!file.is_open())
-		{
-			LOG_ERROR("Failed to load textures!");
-			return;
-		}
-
-		while (!file.eof())
-		{
-			std::string filename;
-
-			file >> filename;
-
-			ResourceManager::Get().GetResource<RTexture>(filename);
-		}
-		file.close();
-
-		file.open(ANIMATIONPATH + "Loader.txt");
-
-		if (!file.is_open())
-		{
-			LOG_ERROR("Failed to load Animations!");
-			return;
-		}
-
-		while (!file.eof())
-		{
-			std::string filename;
-
-			file >> filename;
-
-			ResourceManager::Get().GetResource<RAnimation>(filename);
-		}
-		file.close();
-
-		file.open(ANIMATORPATH + "Loader.txt");
-
-		if (!file.is_open())
-		{
-			LOG_ERROR("Failed to load Animations!");
-			return;
-		}
-
-		while (!file.eof())
-		{
-			std::string filename;
-
-			file >> filename;
-
-			ResourceManager::Get().GetResource<RAnimator>(filename);
-		}
-		file.close();
-	}
-
-	void LoadGameScene(Game* game)
-	{
-		std::fstream file;
-		file.open(ASSETLOADER);
-		if (!file.is_open())
-		{
-			LOG_ERROR("Failed to load GameScene!");
-			return;
-		}
-
-		while (!file.eof())
-		{
-			std::string filename;
-
-			file >> filename;
-
-			Entity e = game->GetScene("Game").CreateEntity();
-			e.AddComponent<comp::Transform>();
-			e.AddComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>(filename);
-
-			// Remove .obj / .fbx
-			size_t count = filename.find_last_of('.');
-			filename = filename.substr(0, count);
-
-			if (House5 == filename || Door5 == filename)
-			{
-				game->m_models[ModelID::HOUSE5].push_back(e);
-			}
-			else if (House6 == filename || Door6 == filename)
-			{
-				game->m_models[ModelID::HOUSE6].push_back(e);
-			}
-			else if (House7 == filename || Door7 == filename)
-			{
-				game->m_models[ModelID::HOUSE7].push_back(e);
-			}
-			else if (House8 == filename || Door8 == filename)
-			{
-				game->m_models[ModelID::HOUSE8].push_back(e);
-			}
-			else if (House9 == filename || Door9 == filename)
-			{
-				game->m_models[ModelID::HOUSE9].push_back(e);
-			}
-			else if (House10 == filename || Door10 == filename)
-			{
-				game->m_models[ModelID::HOUSE10].push_back(e);
-			}
-			else if (HouseRoof == filename)
-			{
-				game->m_models[ModelID::HOUSEROOF].push_back(e);
-			}
-			else if (Tree3 == filename)
-			{
-				game->m_models[ModelID::TREE3].push_back(e);
-			}
-			else if (Tree5 == filename)
-			{
-				game->m_models[ModelID::TREE5].push_back(e);
-			}
-			else if (Tree6 == filename)
-			{
-				game->m_models[ModelID::TREE6].push_back(e);
-			}
-			else if (Tree8 == filename)
-			{
-				game->m_models[ModelID::TREE8].push_back(e);
-			}
-		}
-
-		file.close();
-	}
-
-}

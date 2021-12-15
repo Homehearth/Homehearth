@@ -48,7 +48,7 @@ void Server::OnClientConnect(std::string&& ip, const uint16_t& port)
 	LOG_INFO("Client connected from %s:%d", ip.c_str(), port);
 }
 
-void Server::OnClientDisconnect(const SOCKET& socket)
+void Server::OnClientDisconnect()
 {
 	LOG_INFO("Client disconnected!");
 }

@@ -1,9 +1,9 @@
 #include "NetServerPCH.h"
 #include "HouseManager.h"
 #include "ServerSystems.h"
-HouseManager::HouseManager(Blackboard* blackboard)
-	:houseColliders(nullptr),
-	blackboard(blackboard)
+
+HouseManager::HouseManager()
+	:houseColliders(nullptr), blackboard(nullptr)
 {
 }
 
@@ -49,7 +49,7 @@ void HouseManager::AddCollider(NameType houseType, Entity house) const
 		obb->Orientation = houseColliders->at("House5_Collider.fbx").Orientation;
 		obb->Center.y = 0.0f;
 
-		if(houseType == NameType::MESH_RUINED_HOUSE5)
+		if (houseType == NameType::MESH_RUINED_HOUSE5)
 		{
 			houseComp->homeNode = nullptr;
 			houseComp->isDead = true;
@@ -215,11 +215,12 @@ Entity HouseManager::CreateHouse(HeadlessScene& scene, NameType houseType, NameT
 
 	//Add the correct collider for the specified house type
 	AddCollider(houseType, houseEntity);
+	scene.publish<EComponentUpdated>(houseEntity, ecs::Component::BOUNDING_ORIENTED_BOX);
 
 	//insert in house map for blackboard so (AI can target it) Entity is both key and value
 	Houses_t* houses = blackboard->GetValue<Houses_t>("houses");
 	//If no house map is present in blackboard add one
-	if(houses == nullptr)
+	if (houses == nullptr)
 	{
 		Houses_t houseMap;
 		blackboard->AddValue<Houses_t>("houses", houseMap);
@@ -265,11 +266,11 @@ void HouseManager::SetHouseColliders(std::unordered_map<std::string, comp::Orien
 
 NameType HouseManager::GetRuinedHouseType(NameType houseType)
 {
-	if(houseType == NameType::MESH_HOUSE5)
+	if (houseType == NameType::MESH_HOUSE5)
 	{
 		return NameType::MESH_RUINED_HOUSE5;
 	}
-	if(houseType == NameType::MESH_HOUSE6)
+	if (houseType == NameType::MESH_HOUSE6)
 	{
 		return NameType::MESH_RUINED_HOUSE6;
 	}
@@ -295,4 +296,9 @@ NameType HouseManager::GetRuinedHouseType(NameType houseType)
 	}
 
 	return NameType::EMPTY;
+}
+
+void HouseManager::SetBlackboard(Blackboard* blackboard)
+{
+	this->blackboard = blackboard;
 }

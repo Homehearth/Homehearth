@@ -2,20 +2,24 @@
 skel 			Model.fbx
 
 
-// Add an animation
+// Add an animation with correct enum (case sensitive)
 anim 			IDLE 			Model_Idle.fbx
 
 
 // Possible to set options for animation. 
 // Set by default if nothing was set.
-loopable		1
-tickSpeed		30
+
+// Can be repeated when set to 1.
+loopable		IDLE			0
+
+// How fast an animation should go.
+tickSpeed		IDLE			30
+
+// From this bone and up we will use upper animation
+upperbodyBone	QuickRigCharacter_Spine
 
 
-// Blending two animations. The blending time is in seconds.
-// 				from			to		blendtime
-blendstate		IDLE 	 		RUN		1.0
-
-
-blendstate		IDLE				PRIMARY_ATTACK		0.3
-blendstate		PRIMARY_ATTACK		IDLE				0.2
+// Animation state between two animations
+// 				from			to					blendtime (seconds)
+state			IDLE 	 		RUN					1.0
+state			IDLE 	 		PRIMARY_ATTACK		1.0

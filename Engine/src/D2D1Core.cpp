@@ -196,6 +196,47 @@ void D2D1Core::DrawT(const std::string& text, const draw_text_t& opt)
 	}
 }
 
+void D2D1Core::DrawT(const std::string& text, const D2D1_COLOR_F& color, const draw_text_t& opt)
+{
+	if (INSTANCE->m_renderTarget)
+	{
+		IDWriteTextFormat* current_format = INSTANCE->m_writeFormat.Get();
+		if (opt.textFormat)
+			current_format = opt.textFormat;
+
+		RECT rc;
+		GetClientRect(INSTANCE->m_windowPointer->GetHWnd(), &rc);
+		D2D1_RECT_F layoutRect = D2D1::RectF(
+			opt.x_pos,
+			opt.y_pos,
+			opt.x_pos + opt.x_stretch / opt.scale,
+			opt.y_pos + opt.y_stretch / opt.scale
+		);
+
+		/*
+			Convert the text to WCHAR.
+		*/
+		const char* t = text.c_str();
+		const WCHAR* pwcsName;
+		int nChars = MultiByteToWideChar(CP_ACP, 0, t, -1, NULL, 0);
+		pwcsName = new WCHAR[nChars];
+		MultiByteToWideChar(CP_ACP, 0, t, -1, (LPWSTR)pwcsName, nChars);
+
+		INSTANCE->m_renderTarget->SetTransform(D2D1::Matrix3x2F::Scale(D2D1::SizeF(opt.scale, opt.scale), D2D1::Point2F(opt.x_pos, opt.y_pos)));
+
+		D2D1_COLOR_F oldColor = INSTANCE->m_solidBrush.Get()->GetColor();
+		INSTANCE->m_solidBrush.Get()->SetColor(color);
+		INSTANCE->m_renderTarget->DrawTextW(pwcsName,
+			(UINT32)text.length(),
+			current_format,
+			layoutRect,
+			INSTANCE->m_solidBrush.Get()
+		);
+		INSTANCE->m_solidBrush.Get()->SetColor(oldColor);
+		delete[] pwcsName;
+	}
+}
+
 void D2D1Core::DrawF(const draw_t& fig, const draw_shape_t& shape, const LineWidth& thickness)
 {
 	D2D1_COLOR_F oldColor = INSTANCE->m_solidBrush->GetColor();
@@ -395,7 +436,7 @@ HRESULT D2D1Core::LoadBitMap(const LPCWSTR& filePath, ID2D1Bitmap** bitMap)
 			bitMap
 		);
 
-		LOG_INFO("Creating bitmap success!");
+		//LOG_INFO("Creating bitmap success!");
 
 		// Release
 		if (convert)

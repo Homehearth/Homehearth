@@ -32,13 +32,13 @@ rtd::Slider::Slider(D2D1_COLOR_F color, const draw_t& draw_opts, float* value, f
 	{
 		m_minPos = { m_drawOpts.x_pos, m_drawOpts.y_pos };
 		m_maxPos = { m_drawOpts.x_pos + 100.0f, m_drawOpts.y_pos };
-		m_drawOpts.x_pos = util::Rebase(*m_value, m_maxVal, m_minVal, m_maxPos.x, m_minPos.x);
+		//m_drawOpts.x_pos = util::Rebase(*m_value, m_maxVal, m_minVal, m_maxPos.x, m_minPos.x);
 	}
 	else
 	{
 		m_minPos = { m_drawOpts.x_pos, m_drawOpts.y_pos };
 		m_maxPos = { m_drawOpts.x_pos + 100.0f, m_drawOpts.y_pos };
-		m_drawOpts.y_pos = util::Rebase(*m_value, m_maxVal, m_minVal, m_maxPos.y, m_minPos.y);
+		//m_drawOpts.y_pos = util::Rebase(*m_value, m_maxVal, m_minVal, m_maxPos.y, m_minPos.y);
 	}
 }
 
