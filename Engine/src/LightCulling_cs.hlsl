@@ -93,7 +93,6 @@ void main(ComputeShaderIn input)
 		GroupFrustum = in_Frustums[input.groupID.x + (input.groupID.y * numThreadGroups.x)];
 	}
 
-
 	// Blocks execution of all threads in a group until
 	// all group shared accesses have been completed and
 	// all threads in the group have reached this call.
