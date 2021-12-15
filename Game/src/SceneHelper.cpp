@@ -733,6 +733,10 @@ namespace sceneHelp
 				audio.volume = SoundHandler::Get().GetMasterVolume();
 				SoundHandler::Get().PlaySound("ButtonClick", audio);
 				bullDoze->Hide();
+
+				Entity* player = &game->m_players.at(game->m_localPID);
+				player->AddComponent<comp::EmitterParticle>(sm::Vector3(0, -15, 0), 50, 2.5f, ParticleMode::UPGRADE, 1.0f, 5.f, TRUE);
+
 			});
 		// Armor upgrade button.
 		shop->SetOnPressedEvent(3, [=]()

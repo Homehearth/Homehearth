@@ -148,6 +148,11 @@ namespace ecs
 					textureName = "fire.png";
 					opacityTextureName = "fire_Opacity.png";
 				}
+				else if (type == ParticleMode::UPGRADE) 
+				{
+					textureName = "upgrade.png";
+					opacityTextureName = "upgrade_Opacity.png";
+				}
 
 				texture = ResourceManager::Get().GetResource<RTexture>(textureName);
 				opacityTexture = ResourceManager::Get().GetResource<RTexture>(opacityTextureName);

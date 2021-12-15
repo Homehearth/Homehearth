@@ -269,7 +269,7 @@ void Scene::RenderParticles(void* voidPass)
 				//pass->m_counterAdd *= -1.f;
 			
 
-			std::cout << pass->m_counter << std::endl;
+			//std::cout << pass->m_counter << std::endl;
 
 			//Constant buffer
 			pass->m_particleUpdate.emitterPosition = sm::Vector4(emitter.transformCopy.position.x + emitter.positionOffset.x, emitter.transformCopy.position.y + emitter.positionOffset.y, emitter.transformCopy.position.z + emitter.positionOffset.z, 1.f);

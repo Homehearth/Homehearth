@@ -377,18 +377,38 @@ void MageBlinkSimulation(inout VertexParticleIn particle, in uint id)
 
 void UpgradeSimulation(inout VertexParticleIn particle, in uint id)
 {
-    //if (particle.life <= lifeTime)
-    //{
-
-    //}
-    //else
-    //{
-
-    //}
+    if (particle.life <= lifeTime)
+    {
+        particle.velocity.y += gravity * dt;
     
-    particle.velocity.x = cos(counter);
-    particle.velocity.z = sin(counter);
+        float particleUniqueSpeed = speed * abs(randomNumbers[id + counter]);
+ 
+        particle.velocity.x = cos(counter + id);
+        particle.velocity.z = sin(counter + id);
+        
+        particle.pos += particle.velocity * speed * dt;
+        
+        if (particle.size.x > 0)
+            particle.size -= ((particle.life) / (lifeTime)) * speed * dt;
+    }
+    else
+    {
+        particle.velocity = 0;
+        particle.pos.y = emitterPos.y;
+        particle.size = float2(sizeMulitplier, sizeMulitplier);
+        particle.life = 0;
+
+    }
+                                           
+    //particle.velocity.x = cos(counter * (id) * PI * 2);
+    //particle.velocity.z = sin(counter * (id) * PI * 2);   
     
-    particle.pos += particle.velocity * speed * dt;
+    
+    //particle.velocity.x = cos(counter + id);
+    //particle.velocity.z = sin(counter + id);
+    //particle.velocity.y = cos(counter + id);
+    //particle.velocity.y += randomNumbers[id + counter] * dt;
+    
+   
 
 }

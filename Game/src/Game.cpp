@@ -105,11 +105,6 @@ bool Game::OnStartup()
 	// Set Current Scene
 	SetScene("MainMenu");
 
-
-	Entity emitterTest = GetScene("Game").CreateEntity();
-	emitterTest.AddComponent<comp::Transform>()->position = { 250, 20, -360 };
-	emitterTest.AddComponent <comp::EmitterParticle>(sm::Vector3(0, 0, 0), 100, 1.0f, ParticleMode::UPGRADE, 5.f, 10.f, FALSE);
-
 	return true;
 }
 

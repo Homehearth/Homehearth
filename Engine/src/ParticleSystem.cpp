@@ -115,16 +115,30 @@ void ParticleSystem::InitializeParticles(entt::registry& reg, entt::entity ent)
 			m_tempParticle.velocity.Normalize();
 			m_tempParticle.size = sm::Vector2(emitter->sizeMulitplier, emitter->sizeMulitplier);
 			RandomAddSize(-0.5f, 0.5f);
-			m_tempParticle.color = sm::Vector4(0,0,0.0f,1);
 			break;
 		}
 		case ParticleMode::UPGRADE:
 		{
-			//RandomSetVelocity(-1.0f, 1.0f);
-			float radius = 6.5f;
-			//m_tempParticle.position += radius * m_tempParticle.velocity;
-			m_tempParticle.position.y = entityPosition.y;
+			//m_tempParticle.velocity = sm::Vector4(0,0,10,0);
+			RandomSetVelocity(-1.0f, 1.0f);
+			float temp = m_tempParticle.velocity.y;
+			m_tempParticle.velocity.Normalize();
+			m_tempParticle.velocity.y = 0;
+
+			float radius = 3.0f;
+			m_tempParticle.position += radius * m_tempParticle.velocity;
+			m_tempParticle.position.y = (float)rand() / (RAND_MAX + 1.f) * (5.0f - (1.0f)) + (1.0f);
+
+			/*float radius = 10.f;
+			if (i != 0)
+			{
+				m_tempParticle.position = particles[i - 1].position + m_tempParticle.velocity;
+			} */
+
+			m_tempParticle.velocity = { 0,0,0,0 };
+			m_tempParticle.velocity.y = abs(temp);
 			m_tempParticle.size = sm::Vector2(emitter->sizeMulitplier, emitter->sizeMulitplier);
+
 			break;
 		}
 		}
