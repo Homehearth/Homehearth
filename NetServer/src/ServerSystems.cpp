@@ -1047,7 +1047,6 @@ Entity VillagerManagement::CreateVillager(HeadlessScene& scene, Entity homeHouse
 	entity.AddComponent<comp::Tag<GOOD>>();
 
 	comp::Transform* transform = entity.AddComponent<comp::Transform>();
-	transform->scale = sm::Vector3(1.7f, 1.7f, 1.7f);
 	comp::Health* health = entity.AddComponent<comp::Health>();
 	comp::MeshName* meshName = entity.AddComponent<comp::MeshName>();
 	comp::AnimatorName* animatorName = entity.AddComponent<comp::AnimatorName>();
@@ -1064,6 +1063,23 @@ Entity VillagerManagement::CreateVillager(HeadlessScene& scene, Entity homeHouse
 	villager->homeHouse = homeHouse;
 	meshName->name = NameType::MESH_VILLAGER;
 	animatorName->name = AnimName::ANIM_VILLAGER;
+
+	//Set random sizes on villagers
+	switch (rand() % 3)
+	{
+	//Child
+	case 0:
+		transform->scale = sm::Vector3(1.2f, 1.2f, 1.2f);
+		break;
+	//Teenage
+	case 1:
+		transform->scale = sm::Vector3(1.45f, 1.45f, 1.45f);
+		break;
+	//Adult
+	case 2:
+		transform->scale = sm::Vector3(1.7f, 1.7f, 1.7f);
+		break;
+	}
 
 	bos->Radius = 3.f;
 	villager->movementSpeed = 15.f;
