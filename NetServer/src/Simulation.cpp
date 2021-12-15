@@ -484,6 +484,7 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 	this->BuildMapColliders(mapColliders);
 	EnemyManagement::CreateWaves(waveQueue, currentRound++);
 
+	m_rainEntity = m_pGameScene->CreateEntity();
 	m_pCurrentScene = m_pLobbyScene;
 
 	return true;

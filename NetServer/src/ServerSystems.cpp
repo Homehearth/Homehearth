@@ -393,6 +393,12 @@ void ServerSystems::OnCycleChange(Simulation* simulation)
 		{
 		case CyclePeriod::MORNING:
 		{
+			if (simulation->m_rainEntity.GetComponent<comp::ParticleEmitter>())
+			{
+				simulation->m_rainEntity.RemoveComponent<comp::ParticleEmitter>();
+				simulation->m_rainEntity.UpdateNetwork();
+			}
+
 			simulation->m_timeCycler.ResetCycleSpeed();
 			// remove all bad guys
 			simulation->GetGameScene()->ForEachComponent<comp::Tag<BAD>>([=](Entity e, comp::Tag<BAD>&)
@@ -427,6 +433,11 @@ void ServerSystems::OnCycleChange(Simulation* simulation)
 		}
 		case CyclePeriod::DAY:
 		{
+			if (simulation->m_rainEntity.GetComponent<comp::ParticleEmitter>())
+			{
+				simulation->m_rainEntity.RemoveComponent<comp::ParticleEmitter>();
+				simulation->m_rainEntity.UpdateNetwork();
+			}
 			break;
 		}
 		case CyclePeriod::NIGHT:
@@ -437,6 +448,15 @@ void ServerSystems::OnCycleChange(Simulation* simulation)
 			{
 				// start new wave
 				simulation->GetGameScene()->publish<ESceneCallWaveSystem>(0.0f);
+
+				if (rand()% 10 == 0)
+				{
+					simulation->m_rainEntity.AddComponent<comp::Network>();
+					simulation->m_rainEntity.AddComponent<comp::Transform>()->position = { 250, 80, -360 };
+					simulation->m_rainEntity.AddComponent<comp::ParticleEmitter>(sm::Vector3{ 0,0,0 }, 15000, 1.0f, ParticleMode::RAIN, 85.0f, 20.f, true);
+
+					simulation->m_rainEntity.UpdateNetwork();
+				}
 			}
 			break;
 		}
