@@ -387,6 +387,7 @@ enum class ESoundEvent : uint32_t
 	Player_OnHealingRecieved,
 	Player_OnDeath,
 	Player_OnRespawn,
+	Player_OnBuy,
 
 	Enemy_OnMovement,
 	Enemy_OnMeleeAttack,

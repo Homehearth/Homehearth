@@ -63,6 +63,7 @@ void SoundHandler::LoadAllSounds()
     AddSoundSource("../Assets/Sounds/Enemy_OnDmgRecieved.ogg");
     AddSoundSource("../Assets/Sounds/Enemy_OnDeath.wav");
     AddSoundSource("../Assets/Sounds/House_OnDmgRecieved.mp3");
+    AddSoundSource("../Assets/Sounds/Player_OnBuy.mp3");
 }
 
 SoundHandler::~SoundHandler()

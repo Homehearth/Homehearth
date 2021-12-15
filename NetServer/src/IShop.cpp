@@ -25,6 +25,25 @@ void IShop::UseShop(const ShopItem& whatToBuy, const uint32_t& player)
 				m->attackDamage *= 1.5f;
 				m_sim->GetCurrency() -= cost;
 				m->upgradeLevel++;
+
+				audio_t audio = {
+
+				ESoundEvent::Player_OnBuy,
+				sm::Vector3(0.f,0.f,0.f),
+					1.0f,
+				1000.f,
+					false,
+					false,
+					false,
+					false,
+				};
+
+
+				m_sim->GetGameScene()->ForEachComponent<comp::Player>([&](Entity& playerEntity, comp::Player& player)
+					{
+						playerEntity.GetComponent<comp::AudioState>()->data.emplace(audio);
+					});
+			
 			}
 
 			// Upgrade if ranged.
@@ -34,6 +53,26 @@ void IShop::UseShop(const ShopItem& whatToBuy, const uint32_t& player)
 				r->attackDamage *= 1.5f;
 				m_sim->GetCurrency() -= cost;
 				r->upgradeLevel++;
+
+
+				audio_t audio = {
+
+					ESoundEvent::Player_OnBuy,
+					sm::Vector3(0.f,0.f,0.f),
+						1.0f,
+					1000.f,
+						false,
+						false,
+						false,
+						false,
+				};
+
+
+				m_sim->GetGameScene()->ForEachComponent<comp::Player>([&](Entity& playerEntity, comp::Player& player)
+					{
+						playerEntity.GetComponent<comp::AudioState>()->data.emplace(audio);
+					});
+
 			}
 
 
@@ -60,6 +99,26 @@ void IShop::UseShop(const ShopItem& whatToBuy, const uint32_t& player)
 				h->upgradeLevel++;
 				m_sim->GetCurrency() -= cost;
 				m_sim->GetGameScene()->publish<EComponentUpdated>(m_sim->GetPlayer(player), ecs::Component::HEALTH);
+
+
+				audio_t audio = {
+
+					ESoundEvent::Player_OnBuy,
+					sm::Vector3(0.f,0.f,0.f),
+						1.0f,
+					1000.f,
+						false,
+						false,
+						false,
+						false,
+				};
+
+
+				m_sim->GetGameScene()->ForEachComponent<comp::Player>([&](Entity& playerEntity, comp::Player& player)
+					{
+						playerEntity.GetComponent<comp::AudioState>()->data.emplace(audio);
+					});
+
 			}
 			break;
 		}
