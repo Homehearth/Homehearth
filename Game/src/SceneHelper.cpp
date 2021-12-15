@@ -314,7 +314,7 @@ namespace sceneHelp
 					}
 				}
 
-				game->GetCycler().Update(e.dt);
+				game->GetCycler().Update(e.dt, scene);
 
 				ShopItem shopitem = game->GetShopItem();
 

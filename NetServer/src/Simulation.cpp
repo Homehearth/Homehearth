@@ -405,7 +405,7 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 				}
 				ServerSystems::SoundSystem(this, scene);
 			}
-			m_timeCycler.Update(e.dt);
+			m_timeCycler.Update(e.dt, scene);
 
 			{
 				PROFILE_SCOPE("Hover defences");

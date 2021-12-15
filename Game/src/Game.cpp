@@ -419,6 +419,12 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			case ESoundEvent::Game_OnPurchase:
 				SH->PlaySound("Game_OnPurchase", data);
 				break;
+			case ESoundEvent::Game_OnMorning:
+				SH->PlaySound("Game_OnMorning", data);
+				break;
+			case ESoundEvent::Game_OnNight:
+				SH->PlaySound("Game_OnNight", data);
+				break;
 			default:
 				break;
 			}

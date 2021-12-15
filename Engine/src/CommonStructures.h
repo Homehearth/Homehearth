@@ -403,6 +403,8 @@ enum class ESoundEvent : uint32_t
 	Game_OnHouseDestroyed,
 	Game_OnDefencePlaced,
 	Game_OnDefenceDestroyed,
+	Game_OnMorning,
+	Game_OnNight,
 
 	ENUM_SIZE
 };
