@@ -15,7 +15,7 @@ loopable		TAKE_DAMAGE			0
 loopable		DEAD				0
 
 tickSpeed		PRIMARY				20
-upperbody		PRIMARY				QuickRigCharacter_Spine
+upperbodi		PRIMARY				QuickRigCharacter_Spine
 
 
 state 			IDLE				MOVE				0.3	

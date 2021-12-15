@@ -1327,6 +1327,7 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 						cText.end_pos.y += 50;
 						cText.amount = std::abs(static_cast<int>(health->currentHealth - hp.currentHealth));
 						GetScene("Game").PushCombatText(cText);
+
 						comp::House* house = e.GetComponent<comp::House>();
 						if (house)
 						{
@@ -1351,30 +1352,6 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 									}
 								}
 							}
-						}
-
-						comp::Health* health = e.GetComponent<comp::Health>();
-						if (health && t)
-						{
-							combat_text_inst_t cText;
-							// Signal health gain.
-							if (health->currentHealth <= hp.currentHealth)
-							{
-								cText.type = combat_text_enum::HEALTH_GAIN;
-								cText.pos = t->position;
-							}
-							else if (health->currentHealth > hp.currentHealth)
-							{
-								cText.type = combat_text_enum::HEALTH_LOSS;
-								cText.pos = t->position;
-							}
-
-							cText.timeRendered = omp_get_wtime();
-							cText.pos.y += 15;
-							cText.end_pos = cText.pos;
-							cText.end_pos.y += 50;
-							cText.amount = std::abs(health->currentHealth - hp.currentHealth);
-							GetScene("Game").PushCombatText(cText);
 						}
 					}
 					e.AddComponent<comp::Health>(hp);

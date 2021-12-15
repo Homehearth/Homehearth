@@ -139,7 +139,26 @@ void Systems::HealingSystem(HeadlessScene& scene, float dt)
 					});
 			}
 		});
+}
 
+void Systems::RotateWatermillWheel(Scene& scene, float dt)
+{
+	scene.ForEachComponent<comp::Watermill>([=](Entity& entity, comp::Watermill& mill)
+		{
+			mill.theta += 45.f * dt;
+
+			if (mill.theta >= 360.f)
+			{
+				mill.theta -= 360.f;
+			}
+
+			comp::Transform* t = entity.GetComponent<comp::Transform>();
+
+			if (t)
+			{
+				t->rotation = sm::Quaternion::CreateFromAxisAngle({ 1,0,0 }, dx::XMConvertToRadians(-mill.theta));
+			}
+		});
 }
 
 void Systems::HeroLeapSystem(HeadlessScene& scene, float dt)
@@ -368,20 +387,18 @@ void Systems::MovementColliderSystem(HeadlessScene& scene, float dt)
 	PROFILE_FUNCTION();
 
 	//BoundingOrientedBox
-	scene.ForEachComponent<comp::Transform, comp::OrientedBoxCollider>([&, dt]
-	(Entity entity, comp::Transform& transform, comp::OrientedBoxCollider& obb)
-		{
-			//If its not a house update obb!
-			if (!entity.GetComponent<comp::House>())
-			{
-
-
-				obb.Center = transform.position;
-				/*obb.Orientation = transform.rotation;*/
-				if (transform.syncColliderScale)
-					obb.Extents = transform.scale;
-			}
-		});
+	//scene.ForEachComponent<comp::Transform, comp::OrientedBoxCollider>([&, dt]
+	//(Entity entity, comp::Transform& transform, comp::OrientedBoxCollider& obb)
+	//	{
+	//		//If its not a house update obb!
+	//		if (!entity.GetComponent<comp::House>())
+	//		{
+	//			obb.Center = transform.position;
+	//			/*obb.Orientation = transform.rotation;*/
+	//			if (transform.syncColliderScale)
+	//				obb.Extents = transform.scale;
+	//		}
+	//	});
 
 	//BoundingSphere
 	scene.ForEachComponent<comp::Transform, comp::SphereCollider>([&, dt]
@@ -519,26 +536,6 @@ void Systems::CheckCollisions(HeadlessScene& scene, float dt)
 						}
 					}
 				}
-			}
-		});
-}
-
-void Systems::RotateWatermillWheel(Scene& scene, float dt)
-{
-	scene.ForEachComponent<comp::Watermill>([=](Entity& entity, comp::Watermill& mill)
-		{
-			mill.theta += 45.f * dt;
-
-			if (mill.theta >= 360.f)
-			{
-				mill.theta -= 360.f;
-			}
-
-			comp::Transform* t = entity.GetComponent<comp::Transform>();
-
-			if (t)
-			{
-				t->rotation = sm::Quaternion::CreateFromAxisAngle({ 1,0,0 }, dx::XMConvertToRadians(-mill.theta));
 			}
 		});
 }
