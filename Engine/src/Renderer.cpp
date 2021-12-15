@@ -251,8 +251,8 @@ void Renderer::InitilializeForwardPlus(Camera* camera)
     
     //out_Frustums Forward+
     m_pipelineManager.m_frustums_data.resize(count);
-    //m_pipelineManager.CreateCopyBuffer(m_pipelineManager.m_frustums.buffer.GetAddressOf(),
-      //  sizeof(frustum_t), m_pipelineManager.m_frustums_data.size());
+   // m_pipelineManager.CreateCopyBuffer(m_pipelineManager.m_frustums.buffer.GetAddressOf(),
+	//	sizeof(frustum_t), m_pipelineManager.m_frustums_data.size());
     m_pipelineManager.CreateStructuredBuffer(m_pipelineManager.m_frustums_data.data(),
         sizeof(frustum_t), m_pipelineManager.m_frustums_data.size(), m_pipelineManager.m_frustums);
 

@@ -24,27 +24,23 @@ float4 ScreenToView(float4 screen)
     return ClipToView(clip);
 }
 
-Plane ComputePlane(float3 p0, float3 p1, float3 p2)
+Plane ComputePlane(float3 b, float3 c)
 {
     Plane plane;
+    // normalize(cross( b-a, c-a )), except we know "a" is the origin
+	// also, typically there would be a fourth term of the plane equation, 
+	// -(n dot a), except we know "a" is the origin
+    plane.normal = normalize(cross(b, c));
 
-    // Compute a plane from 3 non-collinear points that form a triangle.
-    float3 v0 = p1 - p0; // C-A.
-    float3 v2 = p2 - p0; // C-A.
-
-    plane.normal = normalize(cross(v2, v0));
-
-    // Compute the distance to the origin using p0.
-    plane.distanceToOrigin = dot(plane.normal, p0);
+    plane.distanceToOrigin = 0;
 
     return plane;
 }
 
 bool SphereInsidePlane(Sphere sphere, Plane plane)
 {
-    return dot(plane.normal, sphere.center) - plane.distanceToOrigin < -sphere.radius;
+    return dot(plane.normal, sphere.center) < -sphere.radius;
 }
-
 
 bool SphereInsideFrustum(Sphere sphere, Frustum frustum, float zNear, float zFar)
 {
@@ -52,12 +48,12 @@ bool SphereInsideFrustum(Sphere sphere, Frustum frustum, float zNear, float zFar
 
     // First check depth
     // Note: Switched zNear and zFar, because assuming left-handed coord.
-    // far depth value will be approaching -infinity.
-    if (sphere.center.z - sphere.radius > zFar || sphere.center.z + sphere.radius < zNear)
+    // far depth value will be approaching infinity.
+    if (sphere.center.z > zFar - sphere.radius || sphere.center.z < zNear + sphere.radius) // OUTSIDE
     {
         result = false;
     }
-    
+
     // Then check frustum planes
     for (int i = 0; i < 4 && result; i++)
     {

@@ -70,6 +70,9 @@ void main(ComputeShaderIn input)
 	//float zNear = 40.f;
 	//float zFar = 220.f;
 
+	// Linearize the depth value from depth buffer (must do this because we created it using projection)
+	//fDepth = (0.5 * c_projection[3][2]) / (fDepth + 0.5 * c_projection[2][2] - 0.5);
+	
 	//fDepth = ((2.0f * zNear) / (zFar + zNear - fDepth * (zFar - zNear)));
 
 	// atomic operations only work on integers,
@@ -81,7 +84,7 @@ void main(ComputeShaderIn input)
 
 	// Since we are setting group-shared variables,
 	// only one thread in the group needs to set them.
-	if (input.groupIndex == 0) // Avoid contention by other threads in the group.
+	if (input.groupIndex == 0)
 	{
 		uMinDepth = 0xffffffff; // FLT_MAX as a uint
 		uMaxDepth = 0;
@@ -89,6 +92,7 @@ void main(ComputeShaderIn input)
 		t_LightCount = 0;
 		GroupFrustum = in_Frustums[input.groupID.x + (input.groupID.y * numThreadGroups.x)];
 	}
+
 
 	// Blocks execution of all threads in a group until
 	// all group shared accesses have been completed and
@@ -124,7 +128,7 @@ void main(ComputeShaderIn input)
     // Clipping plane for minimum depth value 
     // (used for testing lights within the bounds of opaque geometry).
 	// assuming left-handed coord.
-    Plane minPlane = { float3(0, 0, 1), minDepthVS };
+    Plane minPlane = { float3(0, 0, 1), minDepthVS };  
 
     // Each thread in a group will cull 1 light until all lights have been culled.
 	for (uint i = input.groupIndex; i < c_info.x; i += TILE_SIZE * TILE_SIZE)
@@ -209,7 +213,7 @@ void main(ComputeShaderIn input)
 	}
 	else if (o_LightCount > 0)
 	{
-		float normalizedLightCount = o_LightCount / 50.0f;
+		float normalizedLightCount = o_LightCount / 10.0f;
 		float4 lightCountHeatMapColor = t_LightCountHeatMap.SampleLevel(s_linearClamp, float2(normalizedLightCount, 0), 0);
 		rw_heatMap[texCoord] = lightCountHeatMapColor;
 	}
