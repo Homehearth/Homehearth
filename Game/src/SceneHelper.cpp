@@ -737,7 +737,7 @@ namespace sceneHelp
 		// Armor upgrade button.
 		shop->SetOnPressedEvent(3, [=]()
 			{
-				game->SetShopItem(ShopItem::Primary_Upgrade);
+				game->SetShopItem(ShopItem::Heal);
 				audio_t audio = {};
 				audio.isUnique = false;
 				audio.volume = SoundHandler::Get().GetMasterVolume();
@@ -747,7 +747,7 @@ namespace sceneHelp
 		// Heal button.
 		shop->SetOnPressedEvent(4, [=]()
 			{
-				game->SetShopItem(ShopItem::Heal);
+				game->SetShopItem(ShopItem::Health);
 				audio_t audio = {};
 				audio.isUnique = false;
 				audio.volume = SoundHandler::Get().GetMasterVolume();

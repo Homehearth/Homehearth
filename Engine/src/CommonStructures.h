@@ -421,6 +421,7 @@ enum class ShopItem : uint8_t
 	Tower_Upgrade,
 	Speed_Upgrade,
 	Heal,
+	Health,
 	Defence1x1,		//Lets the player build a 1x3 tower when pressing build key.
 	Defence1x3,		//Lets the player build a 1x1 tower when pressing build key.
 	Destroy_Tool,

@@ -8,7 +8,7 @@ constexpr unsigned int TOWER_1X1_COST = 100;
 constexpr unsigned int TOWER_1X3_COST = 250;
 constexpr unsigned int PRIMARY_ABILITITY_COST = 300;
 constexpr unsigned int HEAL_COST = 150;
-constexpr unsigned int ARMOR_COST = 150;
+constexpr unsigned int ARMOR_COST = 75; // Actually heal cost.
 constexpr unsigned int REMOVE_DEFENCE_COST = 0;
 
 using namespace rtd;
@@ -312,7 +312,6 @@ ElementState ShopUI::CheckClick()
 				if (m_functions[3])
 				{
 					m_functions[3]();
-					m_armorUpgradeCount++;
 				}
 					
 					
