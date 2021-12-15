@@ -370,6 +370,12 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			case ESoundEvent::Player_OnRespawn:
 				SH->PlaySound("Player_OnRespawn", data);
 				break;
+			case ESoundEvent::Player_OnBuy:
+				SH->PlaySound("Player_OnBuy", data);
+				break;
+			case ESoundEvent::Player_OnCantBuy:
+				SH->PlaySound("Player_OnCantBuy", data);
+				break;
 				//--------------------	ENEMY	--------------------------------------
 			case ESoundEvent::Enemy_OnMovement:
 				SH->PlaySound("Enemy_OnMovement", data);
@@ -403,8 +409,17 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			case ESoundEvent::Game_OnHouseDestroyed:
 				SH->PlaySound("Game_OnHouseDestroyed", data);
 				break;
+			case ESoundEvent::House_OnDmgRecieved:
+				SH->PlaySound("House_OnDmgRecieved", data);
+				break;
 			case ESoundEvent::Game_OnPurchase:
 				SH->PlaySound("Game_OnPurchase", data);
+				break;
+			case ESoundEvent::Game_OnMorning:
+				SH->PlaySound("Game_OnMorning", data);
+				break;
+			case ESoundEvent::Game_OnNight:
+				SH->PlaySound("Game_OnNight", data);
 				break;
 			default:
 				break;

@@ -301,7 +301,7 @@ namespace sceneHelp
 					}
 				}
 
-				game->GetCycler().Update(e.dt);
+				game->GetCycler().Update(e.dt, scene);
 
 				ShopItem shopitem = game->GetShopItem();
 
@@ -536,7 +536,7 @@ namespace sceneHelp
 		for (int i = 0; i < NR_OF_HOUSES; i++)
 		{
 			Collection2D* houseWarning = new Collection2D;
-			houseWarning->AddElement<rtd::Picture>("WarningIcon.png", draw_t(0.f, 0.f, 100, 80));
+			houseWarning->AddElement<rtd::Picture>("WarningIcon.png", draw_t(0.f, 0.f, 40, 100));
 			scene.Add2DCollection(houseWarning, "HouseWarningIcon" + std::to_string(i + 1));
 			houseWarning->Hide();
 		}

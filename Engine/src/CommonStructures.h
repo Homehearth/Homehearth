@@ -387,6 +387,8 @@ enum class ESoundEvent : uint32_t
 	Player_OnHealingRecieved,
 	Player_OnDeath,
 	Player_OnRespawn,
+	Player_OnBuy,
+	Player_OnCantBuy,
 
 	Enemy_OnMovement,
 	Enemy_OnMeleeAttack,
@@ -395,10 +397,15 @@ enum class ESoundEvent : uint32_t
 	Enemy_OnDmgRecieved,
 	Enemy_OnDeath,
 
+	House_OnDmgRecieved,
+
+
 	Game_OnPurchase,
 	Game_OnHouseDestroyed,
 	Game_OnDefencePlaced,
 	Game_OnDefenceDestroyed,
+	Game_OnMorning,
+	Game_OnNight,
 
 	ENUM_SIZE
 };
