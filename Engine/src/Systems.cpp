@@ -139,7 +139,26 @@ void Systems::HealingSystem(HeadlessScene& scene, float dt)
 					});
 			}
 		});
+}
 
+void Systems::RotateWatermillWheel(Scene& scene, float dt)
+{
+	scene.ForEachComponent<comp::Watermill>([=](Entity& entity, comp::Watermill& mill)
+		{
+			mill.theta += 45.f * dt;
+
+			if (mill.theta >= 360.f)
+			{
+				mill.theta -= 360.f;
+			}
+
+			comp::Transform* t = entity.GetComponent<comp::Transform>();
+
+			if (t)
+			{
+				t->rotation = sm::Quaternion::CreateFromAxisAngle({ 1,0,0 }, dx::XMConvertToRadians(-mill.theta));
+			}
+		});
 }
 
 void Systems::HeroLeapSystem(HeadlessScene& scene, float dt)
@@ -242,6 +261,22 @@ void Systems::SelfDestructSystem(HeadlessScene& scene, float dt)
 			if (s.lifeTime <= 0)
 			{
 				if(s.onDestruct)
+					s.onDestruct();
+
+				ent.Destroy();
+			}
+		});
+}
+
+void Systems::SelfDestructSystem(Scene& scene, float dt)
+{
+	//Entity destroys self after set time
+	scene.ForEachComponent<comp::SelfDestruct>([&](Entity& ent, comp::SelfDestruct& s)
+		{
+			s.lifeTime -= dt;
+			if (s.lifeTime <= 0)
+			{
+				if (s.onDestruct)
 					s.onDestruct();
 
 				ent.Destroy();

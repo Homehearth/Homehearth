@@ -228,6 +228,34 @@ Entity HouseManager::CreateHouse(HeadlessScene& scene, NameType houseType, NameT
 	houses = blackboard->GetValue<Houses_t>("houses");
 	houses->houses.insert(std::pair<Entity, Entity>(houseEntity, houseEntity));
 
+
+	CollisionSystem::Get().AddOnCollisionEnter(houseEntity, [=, &scene](Entity thisEntity, Entity other)
+		{
+			//Plays sound when enemy hit house
+			if(other.GetComponent<comp::Tag<ENEMY_ATTACK>>())
+			{
+				audio_t audio = {
+
+				ESoundEvent::House_OnDmgRecieved,
+				houseEntity.GetComponent<comp::OrientedBoxCollider>()->Center,
+					1.0f,
+				250.f,
+					true,
+					false,
+					false,
+					false,
+							};
+
+
+				scene.ForEachComponent<comp::Player>([&](Entity& playerEntity, comp::Player& player)
+					{
+						playerEntity.GetComponent<comp::AudioState>()->data.emplace(audio);
+					});
+			}
+		});
+
+
+
 	return houseEntity;
 }
 

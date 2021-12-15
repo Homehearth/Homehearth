@@ -6,7 +6,7 @@ ALIGN16
 struct ParticleUpdate 
 {
 	sm::Vector4 emitterPosition;;
-	UINT counter;
+	float counter;
 	float lifeTime;
 	float particleSizeMulitplier;
 	float speed;
@@ -26,7 +26,8 @@ public:
 	UINT m_offset = sizeof(Particle_t);
 	UINT m_stride = 0;
 
-	UINT								m_counter = 0;
+	int									m_counterAdd = -1;
+	float								m_counter = 0;
 	UINT								m_nrOfRandomNumbers = 0;
 	std::vector<float>					m_randomNumbers;
 

@@ -179,6 +179,10 @@ void Simulation::ResetPlayer(Entity player)
 	// only if Melee
 	if (playerComp->classType == comp::Player::Class::WARRIOR)
 	{
+		player.RemoveComponent<comp::RangeAttackAbility>();
+		player.RemoveComponent<comp::BlinkAbility>();
+		player.RemoveComponent<comp::HealAbility>();
+
 		health->maxHealth = 125.f;
 		health->currentHealth = 125.f;
 
@@ -218,6 +222,10 @@ void Simulation::ResetPlayer(Entity player)
 	}
 	else if (playerComp->classType == comp::Player::Class::MAGE)
 	{
+		player.RemoveComponent<comp::MeleeAttackAbility>();
+		player.RemoveComponent<comp::DashAbility>();
+		player.RemoveComponent<comp::ShieldBlockAbility>();
+
 		health->maxHealth = 80.f;
 		health->currentHealth = 80.f;
 
@@ -405,7 +413,7 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 				}
 				ServerSystems::SoundSystem(this, scene);
 			}
-			m_timeCycler.Update(e.dt);
+			m_timeCycler.Update(e.dt, scene);
 
 			{
 				PROFILE_SCOPE("Hover defences");

@@ -65,15 +65,15 @@ namespace ecs
 			// Life span in seconds.
 			float lifespan = 7.5f;
 
-			Decal(const Transform& t)
+			Decal(sm::Vector3& pos)
 			{
 				// Be positioned slightly above.
-				sm::Vector3 position = t.position;
+				sm::Vector3 position = pos;
 				position.y = 10.0f;
 				position.x += 0.0001f;
 				position.z -= 0.0001f;
 
-				sm::Vector3 lookAt = t.position;
+				sm::Vector3 lookAt = pos;
 				lookAt.y = 0;
 				viewPoint = dx::XMMatrixLookAtLH(position, lookAt, { 0.0f, 1.0f, 0.0f });
 			}
@@ -84,7 +84,7 @@ namespace ecs
 			float theta = 0;
 		};
 
-		struct EmitterParticle
+		struct EmitterParticle //For client not network
 		{
 			sm::Vector3							positionOffset	= { 0,0,0 };
 			UINT								nrOfParticles	= 0;
@@ -148,6 +148,11 @@ namespace ecs
 					textureName = "fire.png";
 					opacityTextureName = "fire_Opacity.png";
 				}
+				else if (type == ParticleMode::UPGRADE) 
+				{
+					textureName = "upgrade.png";
+					opacityTextureName = "upgrade_Opacity.png";
+				}
 
 				texture = ResourceManager::Get().GetResource<RTexture>(textureName);
 				opacityTexture = ResourceManager::Get().GetResource<RTexture>(opacityTextureName);
@@ -171,7 +176,7 @@ namespace ecs
 			}
 		};
 
-		struct ParticleEmitter 
+		struct ParticleEmitter //For network
 		{
 			sm::Vector3		positionOffset	= { 0,0,0 };
 			UINT			nrOfParticles	= 0;
