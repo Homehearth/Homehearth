@@ -7,6 +7,11 @@
 void GameSystems::DisplayUpgradeDefences(Game* game)
 {
 	Collection2D* coll = game->GetCurrentScene()->GetCollection("priceTag");
+	
+	if (!coll)
+	{
+		return;
+	}
 
 	if (game->GetCycler().GetTimePeriod() == CyclePeriod::DAY)
 	{
@@ -25,8 +30,8 @@ void GameSystems::DisplayUpgradeDefences(Game* game)
 				pressed = true;
 			}
 
-
 			float t = 9999;
+
 			rtd::Picture* pc = dynamic_cast<rtd::Picture*>(coll->elements[0].get());
 			rtd::Text* tc = dynamic_cast<rtd::Text*>(coll->elements[1].get());
 			uint32_t id;
