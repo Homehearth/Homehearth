@@ -35,6 +35,8 @@ private:
 	void UpdateInput();
 	void ChangeSpectatedPlayer();
 
+	void OnHouseDestroy(entt::registry& registry, entt::entity e);
+
 public:
 	Client m_client;
 	uint32_t m_localPID;

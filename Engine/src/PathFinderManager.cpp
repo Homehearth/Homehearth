@@ -340,7 +340,7 @@ void PathFinderManager::AStarSearch(Entity npcEntity, Blackboard* blackboard)
 
 }
 
-bool PathFinderManager::PlayerAStar(sm::Vector3 playerPos)
+bool PathFinderManager::ReverseAStar(sm::Vector3 playerPos)
 {
 	std::vector<Node*> openList, closedList;
 	Node* startingNode = FindClosestNode(playerPos);

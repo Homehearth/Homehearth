@@ -422,7 +422,7 @@ void Engine::SetupLoadingScreen()
 	Collection2D* loadingScreen = new Collection2D;
 
 	loadingScreen->AddElement<rtd::Picture>("LoadingScreen.png", (draw_t(0.0f, 0.0f, width, height)));
-	loadingScreen->AddElement<rtd::Canvas>(D2D1::ColorF(0.0f, 0.0f), draw_t(0.0f, 0.0f, width / 2.0f, height / 2.0f));
+	loadingScreen->AddElement<rtd::Canvas>(D2D1::ColorF(0, 0.0f), draw_t(0.0f, 0.0f, width / 2.0f, height / 2.0f));
 
 	scene.Add2DCollection(loadingScreen, "LoadingScreen");
 }

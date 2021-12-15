@@ -4,12 +4,13 @@ Monster_TakeDamage.fbx
 Monster_Walk.fbx
 Player_Blink.fbx
 Player_Dash.fbx
-Player_Dead.fbx
 Player_Idle.fbx
 Player_Idle.fbx
 Player_PlaceDefence.fbx
 Player_Run.fbx
 Player_Slash.fbx
 Player_TakeDamage.fbx
+Player_Block.fbx
 Villager_Idle.fbx
 Villager_Walk.fbx
+Dead.fbx
