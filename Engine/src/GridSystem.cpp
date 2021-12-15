@@ -365,7 +365,7 @@ bool GridSystem::RemoveDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, 
 				}
 			}
 
-			if (aiHandler->PlayerAStar(localPlayer))
+			if (aiHandler->ReverseAStar(localPlayer))
 				player.reachable = true;
 		}
 
@@ -559,7 +559,7 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 		}
 
 		//A-star-check
-		if (!aiHandler->PlayerAStar(playerCollider.Center))
+		if (!aiHandler->ReverseAStar(playerCollider.Center))
 			player.reachable = false;
 
 

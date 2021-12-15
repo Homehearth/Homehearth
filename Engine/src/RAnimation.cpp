@@ -3,7 +3,7 @@
 
 RAnimation::RAnimation()
 {
-	m_ticksPerFrame = 30;
+	m_ticksPerFrame = 30.f;
 	m_duration		= 0;
 	m_isLoopable	= true;
 }
@@ -13,7 +13,9 @@ RAnimation::~RAnimation()
 	for (auto& translation : m_keyFrames)
 	{
 		translation.second.position.clear();
+#if !OPTIMIZE_ANIMATION
 		translation.second.scale.clear();
+#endif
 		translation.second.rotation.clear();
 	}
 	m_keyFrames.clear();
@@ -37,7 +39,7 @@ void RAnimation::LoadPositions(const std::string& bonename, aiNodeAnim* channel)
 	keyframes.position.reserve(size_t(channel->mNumPositionKeys));
 	for (UINT i = 0; i < channel->mNumPositionKeys; i++)
 	{
-		keyframes.position.push_back({ channel->mPositionKeys[i].mTime, sm::Vector3(&channel->mPositionKeys[i].mValue.x) });
+		keyframes.position.push_back({ static_cast<float>(channel->mPositionKeys[i].mTime), sm::Vector3(&channel->mPositionKeys[i].mValue.x) });
 	}
 
 	m_keyFrames[bonename] = keyframes;
@@ -58,7 +60,7 @@ void RAnimation::LoadScales(const std::string& bonename, aiNodeAnim* channel)
 	keyframes.scale.reserve(size_t(channel->mNumScalingKeys));
 	for (UINT i = 0; i < channel->mNumScalingKeys; i++)
 	{
-		keyframes.scale.push_back({ channel->mScalingKeys[i].mTime, sm::Vector3(&channel->mScalingKeys[i].mValue.x) });
+		keyframes.scale.push_back({ static_cast<float>(channel->mScalingKeys[i].mTime), sm::Vector3(&channel->mScalingKeys[i].mValue.x) });
 	}
 
 	m_keyFrames[bonename] = keyframes;
@@ -80,7 +82,7 @@ void RAnimation::LoadRotations(const std::string& bonename, aiNodeAnim* channel)
 	keyframes.rotation.reserve(size_t(channel->mNumRotationKeys));
 	for (UINT i = 0; i < channel->mNumRotationKeys; i++)
 	{
-		rot.time = channel->mRotationKeys[i].mTime;
+		rot.time = static_cast<float>(channel->mRotationKeys[i].mTime);
 		const aiQuaternion aiRot = channel->mRotationKeys[i].mValue;
 		rot.val = { aiRot.x, aiRot.y, aiRot.z, aiRot.w };
 		keyframes.rotation.push_back(rot);
@@ -126,8 +128,8 @@ void RAnimation::LoadKeyframes(const aiAnimation* animation)
 */
 void RAnimation::Create(const aiAnimation* animation)
 {
-	m_duration = animation->mDuration;
-	m_ticksPerFrame = animation->mTicksPerSecond;
+	m_duration		= static_cast<float>(animation->mDuration);
+	m_ticksPerFrame = static_cast<float>(animation->mTicksPerSecond);
 
 	//Load in all the keyframes
 	LoadKeyframes(animation);
@@ -165,8 +167,8 @@ bool RAnimation::Create(const std::string& filename)
 	//Only supports to load in the first animation
 	const aiAnimation* animation = scene->mAnimations[0];
 
-	m_duration = animation->mDuration;
-	m_ticksPerFrame = animation->mTicksPerSecond;
+	m_duration		= static_cast<float>(animation->mDuration);
+	m_ticksPerFrame = static_cast<float>(animation->mTicksPerSecond);
 
 	//Load in all the keyframes - works with only one animation at time
 	LoadKeyframes(animation);
@@ -189,22 +191,31 @@ bool RAnimation::IsLoopable() const
 	return m_isLoopable;
 }
 
-void RAnimation::SetTicksPerFrame(const double& speed)
+void RAnimation::SetTicksPerFrame(const float& speed)
 {
 	m_ticksPerFrame = speed;
 }
 
-const double& RAnimation::GetTicksPerFrame() const
+const float& RAnimation::GetTicksPerFrame() const
 {
 	return m_ticksPerFrame;
 }
 
-const double& RAnimation::GetDuraction() const
+const float& RAnimation::GetDuration() const
 {
 	return m_duration;
 }
 
-const sm::Vector3 RAnimation::GetPosition(const std::string& bonename, const double& currentFrame, UINT& lastKey, bool interpolate) const
+const float RAnimation::GetDurationInSeconds() const
+{
+	float time = 0.f;
+	if (m_ticksPerFrame > 0.f)
+		time = m_duration / m_ticksPerFrame;
+
+	return time;
+}
+
+const sm::Vector3 RAnimation::GetPosition(const std::string& bonename, const float& currentFrame, UINT& lastKey, bool interpolate) const
 {
 	sm::Vector3 finalVec;
 	UINT nrOfKeys = static_cast<UINT>(m_keyFrames.at(bonename).position.size());
@@ -235,11 +246,11 @@ const sm::Vector3 RAnimation::GetPosition(const std::string& bonename, const dou
 
 	if (interpolate)
 	{
-		double firstTime = m_keyFrames.at(bonename).position[closestLeft].time;
-		double secondTime = m_keyFrames.at(bonename).position[closestRight].time;
+		float firstTime = m_keyFrames.at(bonename).position[closestLeft].time;
+		float secondTime = m_keyFrames.at(bonename).position[closestRight].time;
 		sm::Vector3 firstVal = m_keyFrames.at(bonename).position[closestLeft].val;
 		sm::Vector3 secondVal = m_keyFrames.at(bonename).position[closestRight].val;
-		float lerpTime = float((currentFrame - firstTime) / (secondTime - firstTime));
+		float lerpTime = (currentFrame - firstTime) / (secondTime - firstTime);
 		finalVec = sm::Vector3::Lerp(firstVal, secondVal, lerpTime);
 	}
 	else
@@ -251,7 +262,7 @@ const sm::Vector3 RAnimation::GetPosition(const std::string& bonename, const dou
 	return finalVec;
 }
 
-const sm::Vector3 RAnimation::GetScale(const std::string& bonename, const double& currentFrame, UINT& lastKey, bool interpolate) const
+const sm::Vector3 RAnimation::GetScale(const std::string& bonename, const float& currentFrame, UINT& lastKey, bool interpolate) const
 {
 	sm::Vector3 finalVec;
 	UINT nrOfKeys = static_cast<UINT>(m_keyFrames.at(bonename).scale.size());
@@ -282,11 +293,11 @@ const sm::Vector3 RAnimation::GetScale(const std::string& bonename, const double
 
 	if (interpolate)
 	{
-		double firstTime = m_keyFrames.at(bonename).scale[closestLeft].time;
-		double secondTime = m_keyFrames.at(bonename).scale[closestRight].time;
+		float firstTime = m_keyFrames.at(bonename).scale[closestLeft].time;
+		float secondTime = m_keyFrames.at(bonename).scale[closestRight].time;
 		sm::Vector3 firstVal = m_keyFrames.at(bonename).scale[closestLeft].val;
 		sm::Vector3 secondVal = m_keyFrames.at(bonename).scale[closestRight].val;
-		float lerpTime = float((currentFrame - firstTime) / (secondTime - firstTime));
+		float lerpTime = (currentFrame - firstTime) / (secondTime - firstTime);
 		finalVec = sm::Vector3::Lerp(firstVal, secondVal, lerpTime);
 	}
 	else
@@ -298,7 +309,7 @@ const sm::Vector3 RAnimation::GetScale(const std::string& bonename, const double
 	return finalVec;
 }
 
-const sm::Quaternion RAnimation::GetRotation(const std::string& bonename, const double& currentFrame, UINT& lastKey, bool interpolate) const
+const sm::Quaternion RAnimation::GetRotation(const std::string& bonename, const float& currentFrame, UINT& lastKey, bool interpolate) const
 {
 	sm::Quaternion finalQuat;
 	UINT nrOfKeys = static_cast<UINT>(m_keyFrames.at(bonename).rotation.size());
@@ -329,11 +340,11 @@ const sm::Quaternion RAnimation::GetRotation(const std::string& bonename, const 
 
 	if (interpolate)
 	{
-		double firstTime = m_keyFrames.at(bonename).rotation[closestLeft].time;
-		double secondTime = m_keyFrames.at(bonename).rotation[closestRight].time;
+		float firstTime = m_keyFrames.at(bonename).rotation[closestLeft].time;
+		float secondTime = m_keyFrames.at(bonename).rotation[closestRight].time;
 		sm::Quaternion firstVal = m_keyFrames.at(bonename).rotation[closestLeft].val;
 		sm::Quaternion secondVal = m_keyFrames.at(bonename).rotation[closestRight].val;
-		float lerpTime = float((currentFrame - firstTime) / (secondTime - firstTime));
+		float lerpTime = (currentFrame - firstTime) / (secondTime - firstTime);
 		finalQuat = sm::Quaternion::Slerp(firstVal, secondVal, lerpTime);
 		finalQuat.Normalize();
 	}
@@ -346,7 +357,7 @@ const sm::Quaternion RAnimation::GetRotation(const std::string& bonename, const 
 	return finalQuat;
 }
 
-const sm::Matrix RAnimation::GetMatrix(const std::string& bonename, const double& currentFrame, UINT (&lastKeys)[3], bool interpolate) const
+const sm::Matrix RAnimation::GetMatrix(const std::string& bonename, const float& currentFrame, UINT (&lastKeys)[3], bool interpolate) const
 {
 	sm::Matrix finalMatrix = sm::Matrix::Identity;
 

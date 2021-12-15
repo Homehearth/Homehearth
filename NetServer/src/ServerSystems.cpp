@@ -525,7 +525,7 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 							p.state = comp::Player::State::LOOK_TO_MOUSE; // set state even if ability is not ready for use yet
 							if (ecs::UseAbility(e, p.primaryAbilty, &p.mousePoint))
 							{
-								anim.toSend = EAnimationType::PRIMARY_ATTACK;
+								anim.toSend = EAnimationType::PRIMARY;
 							}
 
 						}
@@ -574,7 +574,7 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 											Node* homeNode = house.homeNode;
 											if (homeNode)
 											{
-												if (!blackboard->GetPathFindManager()->PlayerAStar(house.homeNode->position))
+												if(!blackboard->GetPathFindManager()->ReverseAStar(house.homeNode->position))
 												{
 													house.homeNode->reachable = false;
 												}
@@ -596,7 +596,7 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 									Node* homeNode = house.homeNode;
 									if (homeNode)
 									{
-										if (blackboard->GetPathFindManager()->PlayerAStar(house.homeNode->position))
+										if (blackboard->GetPathFindManager()->ReverseAStar(house.homeNode->position))
 										{
 											house.homeNode->reachable = true;
 										}
@@ -613,14 +613,14 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 				{
 					if (!ecs::IsPlayerUsingAnyAbility(e) && ecs::UseAbility(e, p.secondaryAbilty, nullptr))
 					{
-						anim.toSend = EAnimationType::SECONDARY_ATTACK;
+						anim.toSend = EAnimationType::SECONDARY;
 					}
 				}
 				else if (p.inputState.key_shift) // pressed
 				{
 					if (!ecs::IsPlayerUsingAnyAbility(e) && ecs::UseAbility(e, p.moveAbilty, nullptr))
 					{
-						anim.toSend = EAnimationType::ABILITY1;
+						anim.toSend = EAnimationType::ESCAPE;
 					}
 				}
 				

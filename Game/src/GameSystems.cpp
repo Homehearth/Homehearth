@@ -259,3 +259,31 @@ void GameSystems::DeathParticleTimer(Scene& scene)
 			}
 		});
 }
+
+void GameSystems::WarningIconSystem(Game* game, Scene& scene)
+{
+	scene.ForEachComponent<comp::House, comp::Transform, comp::Health>([&](comp::House house, comp::Transform transform, comp::Health health)
+		{
+			if (house.displayWarning)
+			{
+				Collection2D* collection = scene.GetCollection("HouseWarningIcon" + std::to_string(house.iconID + 1));
+				rtd::Picture* icon = static_cast<rtd::Picture*> (collection->elements[0].get());
+				if (omp_get_wtime() - house.warningIcon.timeRendered > 2.f)
+				{
+					icon->SetVisiblity(false);
+					house.displayWarning = false;
+					house.iconID = -1;
+				}
+				else
+				{
+					house.warningIcon.pos.y = 20.f;
+					sm::Vector2 clipSpaceCoords = util::WorldSpaceToScreenSpace(house.warningIcon.pos, scene.GetCurrentCamera());
+					clipSpaceCoords.x = std::clamp(clipSpaceCoords.x, 0.f, (float)D2D1Core::GetWindow()->GetWidth() - icon->GetOpts().width);
+					clipSpaceCoords.y = std::clamp(clipSpaceCoords.y, 0.f, (float)D2D1Core::GetWindow()->GetHeight() - icon->GetOpts().height);
+
+					//set the position of the warning icon in clip space
+					icon->SetPosition(clipSpaceCoords.x, clipSpaceCoords.y);
+				}
+			}
+		});
+}

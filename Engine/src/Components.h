@@ -218,7 +218,7 @@ namespace ecs
 		struct AnimationState
 		{
 			EAnimationType lastSend = EAnimationType::NONE;	//Send to user last time
-			EAnimationType toSend	= EAnimationType::IDLE;	//Going to be send this update
+			EAnimationType toSend	= EAnimationType::NONE;	//Going to be send this update
 		};
 
 		struct AudioState
@@ -293,6 +293,9 @@ namespace ecs
 			Entity houseRoof;
 			Node* homeNode = nullptr; //AI can walk to this node to attack this house
 			bool isDead;
+			bool displayWarning;
+			int iconID = -1;
+			house_warning_icon_inst warningIcon;
 		};
 
 		struct TemporaryPhysics

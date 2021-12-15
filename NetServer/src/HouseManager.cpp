@@ -215,6 +215,7 @@ Entity HouseManager::CreateHouse(HeadlessScene& scene, NameType houseType, NameT
 
 	//Add the correct collider for the specified house type
 	AddCollider(houseType, houseEntity);
+	scene.publish<EComponentUpdated>(houseEntity, ecs::Component::BOUNDING_ORIENTED_BOX);
 
 	//insert in house map for blackboard so (AI can target it) Entity is both key and value
 	Houses_t* houses = blackboard->GetValue<Houses_t>("houses");
