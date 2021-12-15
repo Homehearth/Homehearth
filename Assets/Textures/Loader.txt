@@ -7,3 +7,5 @@ MageHeal.png
 fire.png
 fire_Opacity.png
 thisisfine.png
+upgrade.png
+upgrade_Opacity.png

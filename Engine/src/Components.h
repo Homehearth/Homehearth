@@ -84,7 +84,7 @@ namespace ecs
 			float theta = 0;
 		};
 
-		struct EmitterParticle
+		struct EmitterParticle //For client not network
 		{
 			sm::Vector3							positionOffset	= { 0,0,0 };
 			UINT								nrOfParticles	= 0;
@@ -148,6 +148,11 @@ namespace ecs
 					textureName = "fire.png";
 					opacityTextureName = "fire_Opacity.png";
 				}
+				else if (type == ParticleMode::UPGRADE) 
+				{
+					textureName = "upgrade.png";
+					opacityTextureName = "upgrade_Opacity.png";
+				}
 
 				texture = ResourceManager::Get().GetResource<RTexture>(textureName);
 				opacityTexture = ResourceManager::Get().GetResource<RTexture>(opacityTextureName);
@@ -171,7 +176,7 @@ namespace ecs
 			}
 		};
 
-		struct ParticleEmitter 
+		struct ParticleEmitter //For network
 		{
 			sm::Vector3		positionOffset	= { 0,0,0 };
 			UINT			nrOfParticles	= 0;

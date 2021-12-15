@@ -21,6 +21,7 @@ void MageHealSimulation(inout VertexParticleIn particle, in uint id);
 void MageRangeSimulation(inout VertexParticleIn particle, in uint id);
 void ExplosionSimulation(inout VertexParticleIn particle, in uint id);
 void MageBlinkSimulation(inout VertexParticleIn particle, in uint id);
+void UpgradeSimulation(inout VertexParticleIn particle, in uint id);
 
 
 [numthreads(50, 1, 1)]
@@ -51,7 +52,9 @@ void main(uint3 particleID : SV_DispatchThreadID)
     else if (vertex.type == 10)
         ExplosionSimulation(vertex, id);    
     else if (vertex.type == 11)
-        MageBlinkSimulation(vertex, id);
+        MageBlinkSimulation(vertex, id);    
+    else if (vertex.type == 12)
+        UpgradeSimulation(vertex, id);
     
     vertex.life += dt;
     //vertex.size += particleSizeMulitplier * deltaTime;
@@ -370,4 +373,42 @@ void MageBlinkSimulation(inout VertexParticleIn particle, in uint id)
         particle.pos = emitterPos;
         particle.life = 0;
     }
+}
+
+void UpgradeSimulation(inout VertexParticleIn particle, in uint id)
+{
+    if (particle.life <= lifeTime)
+    {
+        particle.velocity.y += gravity * dt;
+    
+        float particleUniqueSpeed = speed * abs(randomNumbers[id + counter]);
+ 
+        particle.velocity.x = cos(counter + id);
+        particle.velocity.z = sin(counter + id);
+        
+        particle.pos += particle.velocity * speed * dt;
+        
+        if (particle.size.x > 0)
+            particle.size -= ((particle.life) / (lifeTime)) * speed * dt;
+    }
+    else
+    {
+        particle.velocity = 0;
+        particle.pos.y = emitterPos.y;
+        particle.size = float2(sizeMulitplier, sizeMulitplier);
+        particle.life = 0;
+
+    }
+                                           
+    //particle.velocity.x = cos(counter * (id) * PI * 2);
+    //particle.velocity.z = sin(counter * (id) * PI * 2);   
+    
+    
+    //particle.velocity.x = cos(counter + id);
+    //particle.velocity.z = sin(counter + id);
+    //particle.velocity.y = cos(counter + id);
+    //particle.velocity.y += randomNumbers[id + counter] * dt;
+    
+   
+
 }
