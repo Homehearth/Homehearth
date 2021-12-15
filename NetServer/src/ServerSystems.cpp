@@ -156,7 +156,7 @@ void EnemyManagement::CreateWaves(std::queue<Wave>& waveQueue, int currentRound)
 	Wave wave1, wave2, wave3, wave4, wave5; // Default: WaveType::Zone
 	{
 		Wave::Group group1;
-		group1.AddEnemy(EnemyType::Default, 8 + 4 * currentRound);
+		group1.AddEnemy(EnemyType::BIGMOMMA, 1);
 		if (currentRound > 0)
 			group1.AddEnemy(EnemyType::Runner, 2 + currentRound);
 		group1.SetSpawnPoint({ 490.f, -150.0f });

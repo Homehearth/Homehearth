@@ -884,9 +884,13 @@ void Simulation::ResetGameScene()
 	AIBehaviors::UpdateBlackBoard(*m_pGameScene, blackboard.get());
 	qt->ClearNullEntities();
 
-	
+#if DAYCYCLE
+	m_timeCycler.SetTime(MORNING);
+	m_timeCycler.SetCycleSpeed(1.0f);
+#else
 	m_timeCycler.SetTime(DAY);
 	m_timeCycler.SetCycleSpeed(0.0f);
+#endif
 	m_tick = 0;
 }
 
