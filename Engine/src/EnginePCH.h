@@ -1,7 +1,7 @@
 #pragma once
 
 //Options
-#define RENDER_IMGUI 1
+#define RENDER_IMGUI 0
 #define PROFILER 1
 
 // Feel free to add more things to this, currently only gives more money :)
@@ -18,7 +18,7 @@
 
 #define RENDER_AINODES 0
 
-#define RENDER_INGAME_UI 1
+#define RENDER_INGAME_UI 0
 #define DAYCYCLE 1
 
 //Macros
