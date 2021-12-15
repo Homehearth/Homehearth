@@ -142,10 +142,10 @@ bool ShopUI::CheckHover()
 	}
 
 	// Attack button.
-	if (InputSystem::Get().GetMousePos().x > m_drawOpts.x_pos + m_drawOpts.width * 0.15f &&
+	if (InputSystem::Get().GetMousePos().x > m_drawOpts.x_pos + m_drawOpts.width * 0.17f &&
 		InputSystem::Get().GetMousePos().x < m_drawOpts.x_pos + m_drawOpts.width * 0.35f &&
-		InputSystem::Get().GetMousePos().y > m_drawOpts.y_pos + m_drawOpts.height * 0.55f &&
-		InputSystem::Get().GetMousePos().y < m_drawOpts.y_pos + m_drawOpts.height * 0.75f)
+		InputSystem::Get().GetMousePos().y > m_drawOpts.y_pos + m_drawOpts.height * 0.57f &&
+		InputSystem::Get().GetMousePos().y < m_drawOpts.y_pos + m_drawOpts.height * 0.715f)
 	{
 		m_buttonHovering[2] = true;
 		//LOG_INFO("Attack Upgrade hovering");
@@ -165,17 +165,17 @@ bool ShopUI::CheckHover()
 		else
 			m_signTexture->SetTexture("NotEnoughMoneySign.png");
 
-		m_chosenBorder->UpdatePos(draw_t(m_drawOpts.x_pos + m_drawOpts.width * 0.15f, m_drawOpts.y_pos + m_drawOpts.height * 0.55f, (m_drawOpts.x_pos + m_drawOpts.width * 0.35f) - (m_drawOpts.x_pos + m_drawOpts.width * 0.15f), (m_drawOpts.y_pos + m_drawOpts.height * 0.75f) - (m_drawOpts.y_pos + m_drawOpts.height * 0.55f)));
+		m_chosenBorder->UpdatePos(draw_t(m_drawOpts.x_pos + m_drawOpts.width * 0.17f, m_drawOpts.y_pos + m_drawOpts.height * 0.57f, (m_drawOpts.x_pos + m_drawOpts.width * 0.35f) - (m_drawOpts.x_pos + m_drawOpts.width * 0.17f), (m_drawOpts.y_pos + m_drawOpts.height * 0.715f) - (m_drawOpts.y_pos + m_drawOpts.height * 0.57f)));
 		m_chosenBorder->SetVisiblity(true);
 
 		hoveringState = ElementState::INSIDE;
 	}
 
-	// Armour button.
-	if (InputSystem::Get().GetMousePos().x > m_drawOpts.x_pos + m_drawOpts.width * 0.4f &&
+	// Heal button.
+	if (InputSystem::Get().GetMousePos().x > m_drawOpts.x_pos + m_drawOpts.width * 0.41f &&
 		InputSystem::Get().GetMousePos().x < m_drawOpts.x_pos + m_drawOpts.width * 0.6f &&
-		InputSystem::Get().GetMousePos().y > m_drawOpts.y_pos + m_drawOpts.height * 0.55f &&
-		InputSystem::Get().GetMousePos().y < m_drawOpts.y_pos + m_drawOpts.height * 0.75f)
+		InputSystem::Get().GetMousePos().y > m_drawOpts.y_pos + m_drawOpts.height * 0.56f &&
+		InputSystem::Get().GetMousePos().y < m_drawOpts.y_pos + m_drawOpts.height * 0.71f)
 	{
 		m_buttonHovering[3] = true;
 		//LOG_INFO("Armor Upgrade hovering");
@@ -195,17 +195,17 @@ bool ShopUI::CheckHover()
 		else
 			m_signTexture->SetTexture("NotEnoughMoneySign.png");
 
-		m_chosenBorder->UpdatePos(draw_t(m_drawOpts.x_pos + m_drawOpts.width * 0.4f, m_drawOpts.y_pos + m_drawOpts.height * 0.55f, (m_drawOpts.x_pos + m_drawOpts.width * 0.6f) - (m_drawOpts.x_pos + m_drawOpts.width * 0.4f), (m_drawOpts.y_pos + m_drawOpts.height * 0.75f) - (m_drawOpts.y_pos + m_drawOpts.height * 0.55f)));
+		m_chosenBorder->UpdatePos(draw_t(m_drawOpts.x_pos + m_drawOpts.width * 0.41f, m_drawOpts.y_pos + m_drawOpts.height * 0.56f, (m_drawOpts.x_pos + m_drawOpts.width * 0.6f) - (m_drawOpts.x_pos + m_drawOpts.width * 0.41f), (m_drawOpts.y_pos + m_drawOpts.height * 0.71f) - (m_drawOpts.y_pos + m_drawOpts.height * 0.56f)));
 		m_chosenBorder->SetVisiblity(true);
 
 		hoveringState = ElementState::INSIDE;
 	}
 
 	// Health button.
-	if (InputSystem::Get().GetMousePos().x > m_drawOpts.x_pos + m_drawOpts.width * 0.66f &&
+	if (InputSystem::Get().GetMousePos().x > m_drawOpts.x_pos + m_drawOpts.width * 0.65f &&
 		InputSystem::Get().GetMousePos().x < m_drawOpts.x_pos + m_drawOpts.width * 0.85f &&
-		InputSystem::Get().GetMousePos().y > m_drawOpts.y_pos + m_drawOpts.height * 0.55f &&
-		InputSystem::Get().GetMousePos().y < m_drawOpts.y_pos + m_drawOpts.height * 0.75f)
+		InputSystem::Get().GetMousePos().y > m_drawOpts.y_pos + m_drawOpts.height * 0.56f &&
+		InputSystem::Get().GetMousePos().y < m_drawOpts.y_pos + m_drawOpts.height * 0.715f)
 	{
 		m_buttonHovering[4] = true;
 		//LOG_INFO("Health Upgrade hovering");
@@ -224,7 +224,7 @@ bool ShopUI::CheckHover()
 		else
 			m_signTexture->SetTexture("NotEnoughMoneySign.png");
 
-		m_chosenBorder->UpdatePos(draw_t(m_drawOpts.x_pos + m_drawOpts.width * 0.66f, m_drawOpts.y_pos + m_drawOpts.height * 0.55f, (m_drawOpts.x_pos + m_drawOpts.width * 0.85f) - (m_drawOpts.x_pos + m_drawOpts.width * 0.66f), (m_drawOpts.y_pos + m_drawOpts.height * 0.75f) - (m_drawOpts.y_pos + m_drawOpts.height * 0.55f)));
+		m_chosenBorder->UpdatePos(draw_t(m_drawOpts.x_pos + m_drawOpts.width * 0.66f, m_drawOpts.y_pos + m_drawOpts.height * 0.56f, (m_drawOpts.x_pos + m_drawOpts.width * 0.85f) - (m_drawOpts.x_pos + m_drawOpts.width * 0.66f), (m_drawOpts.y_pos + m_drawOpts.height * 0.715f) - (m_drawOpts.y_pos + m_drawOpts.height * 0.56f)));
 		m_chosenBorder->SetVisiblity(true);
 
 		hoveringState = ElementState::INSIDE;
