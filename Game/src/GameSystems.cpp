@@ -267,7 +267,7 @@ void GameSystems::DeathParticleTimer(Scene& scene)
 
 void GameSystems::WarningIconSystem(Scene& scene)
 {
-	scene.ForEachComponent<comp::House, comp::Transform, comp::Health>([&](comp::House house, comp::Transform transform, comp::Health health)
+	scene.ForEachComponent<comp::House>([&](comp::House house)
 		{
 			if (house.displayWarning)
 			{
