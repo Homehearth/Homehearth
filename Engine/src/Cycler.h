@@ -20,7 +20,8 @@ public:
 	Cycler();
 	~Cycler() = default;
 
-	void Update(float dt);
+	void Update(float dt, HeadlessScene& scene);
+	void Update(float dt, Scene& scene);
 
 	CyclePeriod GetTimePeriod() const;
 	

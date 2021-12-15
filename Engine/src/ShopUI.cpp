@@ -303,7 +303,8 @@ ElementState ShopUI::CheckClick()
 				if (m_functions[2])
 				{
 					m_functions[2]();
-					m_atkUpgradeCount++;
+					if (m_moneyRef->GetNetworkMoney() > PRIMARY_ABILITITY_COST)
+						m_atkUpgradeCount++;
 				}
 					
 			}
@@ -321,7 +322,8 @@ ElementState ShopUI::CheckClick()
 				if (m_functions[4])
 				{
 					m_functions[4]();
-					m_healthUpgradeCount++;
+					if (m_moneyRef->GetNetworkMoney() > HEAL_COST)
+						m_healthUpgradeCount++;
 				}
 					
 			}

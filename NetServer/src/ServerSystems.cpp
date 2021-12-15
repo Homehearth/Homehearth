@@ -395,13 +395,16 @@ void ServerSystems::OnCycleChange(Simulation* simulation)
 		{
 			simulation->m_timeCycler.ResetCycleSpeed();
 			// remove all bad guys
-			simulation->GetGameScene()->ForEachComponent<comp::Tag<BAD>>([](Entity e, comp::Tag<BAD>&)
+			simulation->GetGameScene()->ForEachComponent<comp::Tag<BAD>>([=](Entity e, comp::Tag<BAD>&)
 				{
 					e.AddComponent<comp::SelfDestruct>()->lifeTime = 7.5f;
 					e.RemoveComponent<comp::Tag<DYNAMIC>>();
 					e.RemoveComponent<comp::Velocity>();
 					e.RemoveComponent<comp::BehaviorTree>();
 					e.GetComponent<comp::AnimationState>()->toSend = EAnimationType::DEAD;
+					e.GetComponent<comp::Health>()->currentHealth -= e.GetComponent<comp::Health>()->currentHealth;
+					
+					simulation->GetGameScene()->publish<EComponentUpdated>(e, ecs::Component::HEALTH);
 				});
 
 			simulation->GetGameScene()->ForEachComponent<comp::Player, comp::Health>([=](Entity e, comp::Player& p, comp::Health& hp)

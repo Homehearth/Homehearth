@@ -1,5 +1,6 @@
 #pragma once
 #include "Lights.h"
+#include "EnginePCH.h"
 
 // Forward declaration to not get circular include
 class Game;
