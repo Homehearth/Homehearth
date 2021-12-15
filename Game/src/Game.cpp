@@ -1343,7 +1343,7 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 							comp::House* house = e.GetComponent<comp::House>();
 							if (house && hp.currentHealth < health->currentHealth)
 							{
-
+								LOG_INFO("HOUSE DAMAGED!");
 								house->displayWarning = true;
 								house->warningIcon.pos = e.GetComponent<comp::OrientedBoxCollider>()->Center;
 								house->warningIcon.timeRendered = omp_get_wtime();

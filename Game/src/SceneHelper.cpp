@@ -256,11 +256,16 @@ namespace sceneHelp
 						SoundHandler::Get().SetCurrentMusic("MenuTheme");
 						Collection2D* skipButtonUI = scene.GetCollection("SkipUI");
 						skipButtonUI->Show();
-						//rtd::Button* skipButton = dynamic_cast<rtd::Button*>(skipButtonUI->elements[0].get());
-						//rtd::Text* skipText = dynamic_cast<rtd::Text*>(skipButtonUI->elements[1].get());
-						//skipText->SetVisiblity(true);
-						//skipButton->SetVisiblity(true);
-
+						scene.ForEachComponent<comp::House>([=](comp::House& house) 
+							{
+								house.displayWarning = false;
+								house.iconID = -1;
+							});
+						for (int i = 0; i < NR_OF_HOUSES; i++)
+						{
+							Collection2D* collection = scene.GetCollection("zzzzHouseWarningIcon" + std::to_string(i + 1));
+							collection->Hide();
+						}
 						scene.ForEachComponent<comp::Light>([](comp::Light& l)
 							{
 								if (l.lightData.type == TypeLight::POINT)
