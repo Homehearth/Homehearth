@@ -15,29 +15,36 @@ void IShop::UseShop(const ShopItem& whatToBuy, const uint32_t& player)
 		{
 		case ShopItem::Primary_Upgrade:
 		{
-			
 			int cost = 300;
-			// Upgrade if melee.
-			comp::MeleeAttackAbility* m = m_sim->GetPlayer(player).GetComponent<comp::MeleeAttackAbility>();
-			if (m && m_sim->GetCurrency() >= cost && m->upgradeLevel <= 2)
-			{
-				m->attackDamage *= 1.5f;
-				m_sim->GetCurrency() -= cost;
-				m->upgradeLevel++;
-			}
 
-			// Upgrade if ranged.
-			comp::RangeAttackAbility* r = m_sim->GetPlayer(player).GetComponent<comp::RangeAttackAbility>();
-			if (r && m_sim->GetCurrency() >= cost && r->upgradeLevel <= 2)
+			if (m_sim->GetCurrency() >= cost)
 			{
-				r->attackDamage *= 1.5f;
-				m_sim->GetCurrency() -= cost;
-				r->upgradeLevel++;
+				// Upgrade if melee.
+				comp::MeleeAttackAbility* m = m_sim->GetPlayer(player).GetComponent<comp::MeleeAttackAbility>();
+				if (m && m->upgradeLevel <= 2)
+				{
+					m->attackDamage *= 1.5f;
+					m_sim->GetCurrency() -= cost;
+					m->upgradeLevel++;
+
+					//Upgrade particles
+					m_sim->GetPlayer(player).AddComponent<comp::ParticleEmitter>(sm::Vector3(0, -15, 0), 50, 2.5f, ParticleMode::UPGRADE, 1.0f, 5.f, TRUE);
+					m_sim->GetGameScene()->publish<EComponentUpdated>(m_sim->GetPlayer(player), ecs::Component::PARTICLEMITTER);
+				}
+
+				// Upgrade if ranged.
+				comp::RangeAttackAbility* r = m_sim->GetPlayer(player).GetComponent<comp::RangeAttackAbility>();
+				if (r && r->upgradeLevel <= 2)
+				{
+					r->attackDamage *= 1.5f;
+					m_sim->GetCurrency() -= cost;
+					r->upgradeLevel++;
+
+					//Upgrade particles
+					m_sim->GetPlayer(player).AddComponent<comp::ParticleEmitter>(sm::Vector3(0, -15, 0), 50, 2.5f, ParticleMode::UPGRADE, 1.0f, 5.f, TRUE);
+					m_sim->GetGameScene()->publish<EComponentUpdated>(m_sim->GetPlayer(player), ecs::Component::PARTICLEMITTER);
+				}
 			}
-			
-			//Upgrade particles
-			m_sim->GetPlayer(player).AddComponent<comp::ParticleEmitter>(sm::Vector3(0, -15, 0), 50, 2.5f, ParticleMode::UPGRADE, 1.0f, 5.f, TRUE);
-			m_sim->GetGameScene()->publish<EComponentUpdated>(m_sim->GetPlayer(player), ecs::Component::PARTICLEMITTER);
 
 			break;
 		}
