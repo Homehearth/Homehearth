@@ -430,8 +430,8 @@ void ServerGame::CheckIncoming(message<GameMsg>& msg)
 			m_simulations.at(gameID)->GetPlayer(playerID).GetComponent<comp::Player>()->shopItem = shopItem;
 			m_simulations.at(gameID)->m_shop.UseShop(shopItem, playerID);
 
-			if (shopItem == ShopItem::Primary_Upgrade || shopItem == ShopItem::Heal)
-				m_simulations.at(gameID)->GetPlayer(playerID).AddComponent<comp::ParticleEmitter>(sm::Vector3(0, -15, 0), 50, 2.5f, ParticleMode::UPGRADE, 1.0f, 5.f, TRUE);
+			
+			m_simulations.at(gameID)->GetPlayer(playerID).AddComponent<comp::ParticleEmitter>(sm::Vector3(0, -15, 0), 50, 2.5f, ParticleMode::UPGRADE, 1.0f, 5.f, TRUE);
 		}
 		break;
 	}
