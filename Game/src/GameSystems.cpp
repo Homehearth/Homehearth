@@ -260,13 +260,13 @@ void GameSystems::DeathParticleTimer(Scene& scene)
 		});
 }
 
-void GameSystems::WarningIconSystem(Game* game, Scene& scene)
+void GameSystems::WarningIconSystem(Scene& scene)
 {
 	scene.ForEachComponent<comp::House, comp::Transform, comp::Health>([&](comp::House house, comp::Transform transform, comp::Health health)
 		{
 			if (house.displayWarning)
 			{
-				Collection2D* collection = scene.GetCollection("HouseWarningIcon" + std::to_string(house.iconID + 1));
+				Collection2D* collection = scene.GetCollection("zzzzHouseWarningIcon" + std::to_string(house.iconID + 1));
 				rtd::Picture* icon = static_cast<rtd::Picture*> (collection->elements[0].get());
 				if (omp_get_wtime() - house.warningIcon.timeRendered > 2.f)
 				{

@@ -120,7 +120,6 @@ void Game::OnUserUpdate(float deltaTime)
 
 	Scene& scene = GetScene("Game");
 	Entity e;
-	GameSystems::WarningIconSystem(this, scene);
 	if (GetLocalPlayer(e))
 	{
 		comp::KillDeaths* p = e.GetComponent<comp::KillDeaths>();
@@ -137,7 +136,6 @@ void Game::OnUserUpdate(float deltaTime)
 			}
 		}
 	}
-
 }
 
 void Game::OnShutdown()
@@ -1357,7 +1355,7 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 									//Create a new warning Icon and display it(6 exists as collections in the UI)
 									for (int i = 0; i < NR_OF_HOUSES && house->iconID == -1; i++)
 									{
-										Collection2D* collection = scene.GetCollection("HouseWarningIcon" + std::to_string(i + 1));
+										Collection2D* collection = scene.GetCollection("zzzzHouseWarningIcon" + std::to_string(i + 1));
 										rtd::Picture* icon = static_cast<rtd::Picture*>(collection->elements[0].get());
 										if (!icon->IsVisible())
 										{
@@ -1490,12 +1488,11 @@ void Game::OnHouseDestroy(entt::registry& registry, entt::entity e)
 	{
 		if (house->iconID != -1)
 		{
-			Collection2D* collection = GetScene("Game").GetCollection("HouseWarningIcon" + std::to_string(house->iconID + 1));
+			Collection2D* collection = GetScene("Game").GetCollection("zzzzHouseWarningIcon" + std::to_string(house->iconID + 1));
 			rtd::Picture* icon = static_cast<rtd::Picture*> (collection->elements[0].get());
 			icon->SetVisiblity(false);
 		}
 	}
-
 }
 
 void Game::UpdateInput()

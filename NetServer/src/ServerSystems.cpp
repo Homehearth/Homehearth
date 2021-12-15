@@ -51,7 +51,7 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		attackAbility->cooldown = 1.0f;
 		attackAbility->attackDamage = 15.f;
 		attackAbility->lifetime = 0.1f;
-		attackAbility->attackRange = 4.f;
+		attackAbility->attackRange = 3.f;
 		attackAbility->useTime = 0.3f;
 		attackAbility->delay = 0.2f;
 		attackAbility->movementSpeedAlt = 0.0f;
@@ -402,7 +402,8 @@ void ServerSystems::OnCycleChange(Simulation* simulation)
 					e.RemoveComponent<comp::Velocity>();
 					e.RemoveComponent<comp::BehaviorTree>();
 					e.GetComponent<comp::AnimationState>()->toSend = EAnimationType::DEAD;
-					e.GetComponent<comp::Health>()->currentHealth -= e.GetComponent<comp::Health>()->currentHealth;
+					comp::Health* hp = e.GetComponent<comp::Health>();
+					e.GetComponent<comp::Health>()->currentHealth -= hp->maxHealth;
 					
 					simulation->GetGameScene()->publish<EComponentUpdated>(e, ecs::Component::HEALTH);
 				});
@@ -661,9 +662,9 @@ void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money
 					anim->toSend = EAnimationType::DEAD;
 				}
 
-				comp::Network* net = entity.GetComponent<comp::Network>();
-				health.isAlive = false;
 				scene.publish<EComponentUpdated>(entity, ecs::Component::HEALTH);
+				health.isAlive = false;
+
 				// increase money
 				if (entity.GetComponent<comp::Tag<BAD>>())
 				{
@@ -746,7 +747,14 @@ void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money
 					entity.RemoveComponent<comp::Tag<DYNAMIC>>();
 					entity.RemoveComponent<comp::Velocity>();
 					entity.RemoveComponent<comp::BehaviorTree>();
-					entity.GetComponent<comp::AnimationState>()->toSend = EAnimationType::DEAD;
+				}
+				else if(villager)
+				{
+					audio.type = ESoundEvent::Player_OnDeath;
+					entity.AddComponent<comp::SelfDestruct>()->lifeTime = 7.5f;
+					entity.RemoveComponent<comp::Tag<DYNAMIC>>();
+					entity.RemoveComponent<comp::Velocity>();
+					entity.RemoveComponent<comp::BehaviorTree>();
 				}
 				else
 				{

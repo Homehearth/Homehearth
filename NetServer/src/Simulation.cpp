@@ -192,7 +192,7 @@ void Simulation::ResetPlayer(Entity player)
 		attackAbility->lifetime = 0.1f;
 		attackAbility->useTime = 0.5f;
 		attackAbility->delay = 0.2f;
-		attackAbility->attackRange = 8.f;
+		attackAbility->attackRange = 5.f;
 		attackAbility->movementSpeedAlt = 0.5f;
 
 		playerComp->primaryAbilty = entt::resolve<comp::MeleeAttackAbility>();

@@ -172,6 +172,8 @@ namespace sceneHelp
 
 				Systems::RotateWatermillWheel(scene, e.dt);
 
+				GameSystems::WarningIconSystem(scene);
+
 				if (game->m_players.find(game->m_localPID) != game->m_players.end())
 				{
 					Camera* cam = scene.GetCurrentCamera();
@@ -537,7 +539,7 @@ namespace sceneHelp
 		{
 			Collection2D* houseWarning = new Collection2D;
 			houseWarning->AddElement<rtd::Picture>("WarningIcon.png", draw_t(0.f, 0.f, 40, 100));
-			scene.Add2DCollection(houseWarning, "HouseWarningIcon" + std::to_string(i + 1));
+			scene.Add2DCollection(houseWarning, "zzzzHouseWarningIcon" + std::to_string(i + 1));
 			houseWarning->Hide();
 		}
 		sm::Vector2 moneyScale = { widthScale / 8.0f, height / 11.0f };

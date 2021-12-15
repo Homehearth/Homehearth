@@ -309,7 +309,7 @@ Entity CombatSystem::CreateAttackEntity(Entity entity, HeadlessScene& scene, com
 	comp::SphereCollider* bos = attackEntity.AddComponent<comp::SphereCollider>();
 
 	bos->Radius = stats->attackRange;
-	float attackRangeMultiplier = 1.3f;
+	float attackRangeMultiplier = 2.f;
 
 	attackEntity.AddComponent<comp::PlayerReference>()->player = entity;
 
