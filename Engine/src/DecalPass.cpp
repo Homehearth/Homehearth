@@ -34,7 +34,7 @@ void DecalPass::CreateBuffer()
 		if (SUCCEEDED(hr))
 			D3D11Core::Get().Device()->CreateShaderResourceView(m_buffer, NULL, &m_shaderView);
 	}
-	
+
 	m_decalInfoBuffer.info = { (float)m_matrices.size(), 0.0f, 0.0f, 0.0f };
 
 	m_infoBuffer.SetData(D3D11Core::Get().DeviceContext(), m_decalInfoBuffer);
@@ -73,24 +73,11 @@ void DecalPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 void DecalPass::Render(Scene* pScene)
 {
 	m_matrices.clear();
-	pScene->ForEachComponent<comp::Decal>([&](Entity e, comp::Decal& d) {
-
-		// Decrease lifespan.
-		d.lifespan -= Stats::Get().GetFrameTime();
-		if (d.lifespan > 0)
+	pScene->ForEachComponent<comp::Decal>([&](Entity e, comp::Decal& d)
 		{
 			m_matrices.push_back(d.viewPoint);
-		}
-
-		/*
-			Remove the component when not needed anymore.
-		*/
-		if (d.lifespan <= 0)
-		{
-			e.Destroy();
-		}
 		});
-	
+
 	this->CreateBuffer();
 }
 

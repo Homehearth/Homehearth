@@ -51,7 +51,7 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		attackAbility->cooldown = 1.0f;
 		attackAbility->attackDamage = 15.f;
 		attackAbility->lifetime = 0.1f;
-		attackAbility->attackRange = 4.f;
+		attackAbility->attackRange = 3.f;
 		attackAbility->useTime = 0.3f;
 		attackAbility->delay = 0.2f;
 		attackAbility->movementSpeedAlt = 0.0f;
@@ -395,13 +395,17 @@ void ServerSystems::OnCycleChange(Simulation* simulation)
 		{
 			simulation->m_timeCycler.ResetCycleSpeed();
 			// remove all bad guys
-			simulation->GetGameScene()->ForEachComponent<comp::Tag<BAD>>([](Entity e, comp::Tag<BAD>&)
+			simulation->GetGameScene()->ForEachComponent<comp::Tag<BAD>>([=](Entity e, comp::Tag<BAD>&)
 				{
 					e.AddComponent<comp::SelfDestruct>()->lifeTime = 7.5f;
 					e.RemoveComponent<comp::Tag<DYNAMIC>>();
 					e.RemoveComponent<comp::Velocity>();
 					e.RemoveComponent<comp::BehaviorTree>();
 					e.GetComponent<comp::AnimationState>()->toSend = EAnimationType::DEAD;
+					comp::Health* hp = e.GetComponent<comp::Health>();
+					e.GetComponent<comp::Health>()->currentHealth -= hp->maxHealth;
+					
+					simulation->GetGameScene()->publish<EComponentUpdated>(e, ecs::Component::HEALTH);
 				});
 
 			simulation->GetGameScene()->ForEachComponent<comp::Player, comp::Health>([=](Entity e, comp::Player& p, comp::Health& hp)
@@ -574,7 +578,7 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 											Node* homeNode = house.homeNode;
 											if (homeNode)
 											{
-												if (!blackboard->GetPathFindManager()->PlayerAStar(house.homeNode->position))
+												if(!blackboard->GetPathFindManager()->ReverseAStar(house.homeNode->position))
 												{
 													house.homeNode->reachable = false;
 												}
@@ -596,7 +600,7 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 									Node* homeNode = house.homeNode;
 									if (homeNode)
 									{
-										if (blackboard->GetPathFindManager()->PlayerAStar(house.homeNode->position))
+										if (blackboard->GetPathFindManager()->ReverseAStar(house.homeNode->position))
 										{
 											house.homeNode->reachable = true;
 										}
@@ -660,9 +664,9 @@ void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money
 					anim->toSend = EAnimationType::DEAD;
 				}
 
-				comp::Network* net = entity.GetComponent<comp::Network>();
-				health.isAlive = false;
 				scene.publish<EComponentUpdated>(entity, ecs::Component::HEALTH);
+				health.isAlive = false;
+
 				// increase money
 				if (entity.GetComponent<comp::Tag<BAD>>())
 				{
@@ -745,7 +749,14 @@ void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money
 					entity.RemoveComponent<comp::Tag<DYNAMIC>>();
 					entity.RemoveComponent<comp::Velocity>();
 					entity.RemoveComponent<comp::BehaviorTree>();
-					entity.GetComponent<comp::AnimationState>()->toSend = EAnimationType::DEAD;
+				}
+				else if(villager)
+				{
+					audio.type = ESoundEvent::Player_OnDeath;
+					entity.AddComponent<comp::SelfDestruct>()->lifeTime = 7.5f;
+					entity.RemoveComponent<comp::Tag<DYNAMIC>>();
+					entity.RemoveComponent<comp::Velocity>();
+					entity.RemoveComponent<comp::BehaviorTree>();
 				}
 				else
 				{
@@ -1072,6 +1083,23 @@ Entity VillagerManagement::CreateVillager(HeadlessScene& scene, Entity homeHouse
 	villager->homeHouse = homeHouse;
 	meshName->name = NameType::MESH_VILLAGER;
 	animatorName->name = AnimName::ANIM_VILLAGER;
+
+	//Set random sizes on villagers
+	switch (rand() % 3)
+	{
+	//Child
+	case 0:
+		transform->scale = sm::Vector3(1.2f, 1.2f, 1.2f);
+		break;
+	//Teenage
+	case 1:
+		transform->scale = sm::Vector3(1.45f, 1.45f, 1.45f);
+		break;
+	//Adult
+	case 2:
+		transform->scale = sm::Vector3(1.7f, 1.7f, 1.7f);
+		break;
+	}
 
 	bos->Radius = 3.f;
 	villager->movementSpeed = 15.f;

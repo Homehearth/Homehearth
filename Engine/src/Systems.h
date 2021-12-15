@@ -13,6 +13,7 @@ namespace Systems
 	void HeroLeapSystem(HeadlessScene& scene, float dt);
 	
 	void SelfDestructSystem(HeadlessScene& scene, float dt);
+	void SelfDestructSystem(Scene& scene, float dt);
 
 	void MovementSystem(HeadlessScene& scene, float dt);
 	void MovementColliderSystem(HeadlessScene& scene, float dt);
@@ -25,4 +26,5 @@ namespace Systems
 	void ClearCollidingList(HeadlessScene& scene, QuadTree* qtDynamic);
 
 	void CheckCollisions(HeadlessScene& scene, float dt);
+	void RotateWatermillWheel(Scene& scene, float dt);
 }

@@ -197,7 +197,7 @@ bool Window::Initialize(const Desc& desc)
 
 	OptionSystem::Get().SetOption("Fullscreen", std::to_string(fullscreen));
 	//ConfineCursor(this->m_hWnd);
-
+	SetWindowTextA(m_hWnd, "Homehearth");
 	this->m_windowDesc = desc;
 
 	return true;

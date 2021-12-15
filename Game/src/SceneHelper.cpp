@@ -168,22 +168,11 @@ namespace sceneHelp
 
 		gameScene.on<ESceneUpdate>([=](const ESceneUpdate& e, Scene& scene)
 			{
-				scene.ForEachComponent<comp::Watermill>([=](Entity& entity, comp::Watermill& mill)
-					{
-						mill.theta += 45.f * e.dt;
+				Systems::SelfDestructSystem(scene, e.dt);
 
-						if (mill.theta >= 360.f)
-						{
-							mill.theta -= 360.f;
-						}
+				Systems::RotateWatermillWheel(scene, e.dt);
 
-						comp::Transform* t = entity.GetComponent<comp::Transform>();
-
-						if (t)
-						{
-							t->rotation = sm::Quaternion::CreateFromAxisAngle({ 1,0,0 }, dx::XMConvertToRadians(-mill.theta));
-						}
-					});
+				GameSystems::WarningIconSystem(scene);
 
 				if (game->m_players.find(game->m_localPID) != game->m_players.end())
 				{
@@ -314,7 +303,7 @@ namespace sceneHelp
 					}
 				}
 
-				game->GetCycler().Update(e.dt);
+				game->GetCycler().Update(e.dt, scene);
 
 				ShopItem shopitem = game->GetShopItem();
 
@@ -536,24 +525,23 @@ namespace sceneHelp
 			playerHp->AddElement<rtd::Healthbar>(draw_t(width / 8, (i * ((height / 12)) + (height / 32)), (widthScale / 24), (height / 100)));
 
 			// You and Friend text
-			if (i == 0)
-			{
-			}
-			else
+			if (i != 0)
 			{
 				playerHp->Hide();
 			}
 			scene.Add2DCollection(playerHp, "Aplayer" + std::to_string(i + 1) + "Info");
-		}
-
-		for (int i = 0; i < MAX_PLAYERS_PER_LOBBY; i++)
-		{
 			Collection2D* nameCollection = new Collection2D;
 			nameCollection->AddElement<rtd::Text>("Player", draw_text_t(0, 0, widthScale / 14, height / 6));
 			scene.Add2DCollection(nameCollection, "AdynamicPlayer" + std::to_string(i + 1) + "namePlate");
 			nameCollection->Hide();
 		}
-
+		for (int i = 0; i < NR_OF_HOUSES; i++)
+		{
+			Collection2D* houseWarning = new Collection2D;
+			houseWarning->AddElement<rtd::Picture>("WarningIcon.png", draw_t(0.f, 0.f, widthScale * 0.025f, height * 0.1f));
+			scene.Add2DCollection(houseWarning, "zzzzHouseWarningIcon" + std::to_string(i + 1));
+			houseWarning->Hide();
+		}
 		sm::Vector2 moneyScale = { widthScale / 8.0f, height / 11.0f };
 		sm::Vector2 moneyPos = { width - (moneyScale.x + padding.x), padding.y };
 		Collection2D* money = new Collection2D;
@@ -602,16 +590,17 @@ namespace sceneHelp
 		rtd::AbilityUI* fourth = abilities->AddElement<rtd::AbilityUI>(draw_t(abillityPos.x + (abillitySize.x + padding.x / 2), abillityPos.y, abillitySize.x, abillitySize.y), D2D1::ColorF(0, 1.0f), "LockedIcon.png");
 		rtd::AbilityUI* fith = abilities->AddElement<rtd::AbilityUI>(draw_t(abillityPos.x + (abillitySize.x * 2 + padding.x), abillityPos.y, abillitySize.x, abillitySize.y), D2D1::ColorF(0, 1.0f), "LockedIcon.png");
 		scene.Add2DCollection(abilities, "ZAbilityUI");
+
 		Collection2D* spectatingCollection = new Collection2D;
 		rtd::Text* deadText = spectatingCollection->AddElement<rtd::Text>("You are dead!", draw_t((width / 2) - (widthScale / 17.f), (height / 2) + (height / 8.5f), (widthScale / 10.f), (height / 8.f)));
 		rtd::Text* spectateText = spectatingCollection->AddElement<rtd::Text>("LMB to spectate another player", draw_t((width / 2) - (widthScale / 6.f), (height / 4.f) + (height / 2.5f), (widthScale / 3.f), (height / 8.f)));
 		scene.Add2DCollection(spectatingCollection, "SpectateUI");
-
 		deadText->SetVisiblity(false);
 		spectateText->SetVisiblity(false);
+		
 		Collection2D* skipCollection = new Collection2D;
-		rtd::Button* skipToNightButton = skipCollection->AddElement<rtd::Button>("Button.png", draw_t(width - ((widthScale / 9.f)), (height / 2) - (height / 8), (widthScale / 10.f), (height / 8.f)), false);
-		rtd::Text* skipToNightText = skipCollection->AddElement<rtd::Text>("Skip Day", draw_t(width - ((widthScale / 9.f)), (height / 2) - (height / 8), (widthScale / 10.f), (height / 8.f)));
+		rtd::Button* skipToNightButton = skipCollection->AddElement<rtd::Button>("SkipDay.png", draw_t(width - (widthScale / 6.f) - (widthScale * 0.01f), (height / 2) - (height / 8), (widthScale / 6.f), (height / 8.f)), false);
+		//rtd::Text* skipToNightText = skipCollection->AddElement<rtd::Text>("Skip Day", draw_t(width - ((widthScale / 9.f)), (height / 2) - (height / 8), (widthScale / 10.f), (height / 8.f)));
 
 		scene.Add2DCollection(skipCollection, "SkipUI");
 		skipToNightButton->SetOnPressedEvent([=]
@@ -737,7 +726,7 @@ namespace sceneHelp
 		// Armor upgrade button.
 		shop->SetOnPressedEvent(3, [=]()
 			{
-				game->SetShopItem(ShopItem::Primary_Upgrade);
+				game->SetShopItem(ShopItem::Heal);
 				audio_t audio = {};
 				audio.isUnique = false;
 				audio.volume = SoundHandler::Get().GetMasterVolume();
@@ -747,7 +736,7 @@ namespace sceneHelp
 		// Heal button.
 		shop->SetOnPressedEvent(4, [=]()
 			{
-				game->SetShopItem(ShopItem::Heal);
+				game->SetShopItem(ShopItem::Health);
 				audio_t audio = {};
 				audio.isUnique = false;
 				audio.volume = SoundHandler::Get().GetMasterVolume();

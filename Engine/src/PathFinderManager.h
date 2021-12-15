@@ -26,7 +26,7 @@ public:
 	Node* AddNode(Vector2I id);
 	void CreateNodes(GridSystem* grid);
 	void AStarSearch(Entity npcEntity, Blackboard* blackboard);
-	bool PlayerAStar(sm::Vector3 playerPos);
+	bool ReverseAStar(sm::Vector3 playerPos);
 	bool ReachedNode(const Entity npcEntity);
 	Node* FindClosestNode(sm::Vector3 position);
 	float GetNodeSize()const;

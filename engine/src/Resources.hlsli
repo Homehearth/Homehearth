@@ -73,7 +73,7 @@ cbuffer IsCollidingCB : register(b5)
 cbuffer ParticleUpdate : register(b8)
 {
     float4  c_pEmitterPosition;
-    uint    c_pCounter;
+    float   c_pCounter;
     float   c_pLifeTime;
     float   c_pSizeMulitplier;
     float   c_pSpeed;    

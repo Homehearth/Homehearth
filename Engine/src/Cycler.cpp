@@ -26,10 +26,9 @@ Cycler::Cycler()
 {
 }
 
-void Cycler::Update(float dt)
+void Cycler::Update(float dt, HeadlessScene& scene)
 {
-	m_timer += /*dt * 0.1f;*/dt * m_cycleSpeed;
-
+		m_timer += dt * m_cycleSpeed;
 	if (m_timer > DAY_DURATION)
 	{
 		m_timer -= DAY_DURATION;
@@ -46,6 +45,116 @@ void Cycler::Update(float dt)
 			m_changedPeriod = true;
 
 			blackboard->AddValue<CyclePeriod>("cycle", newPeriod);
+
+			//Play roster sound
+			if(newPeriod == CyclePeriod::MORNING)
+			{
+						audio_t audio = {
+
+			ESoundEvent::Game_OnMorning,
+			sm::Vector3(250.f,0.f,-320.f),
+				1.0f,
+			150.f,
+				true,
+				false,
+				false,
+				false,
+						};
+
+
+				scene.ForEachComponent<comp::Player>([&](Entity& playerEntity, comp::Player& player)
+					{
+						playerEntity.GetComponent<comp::AudioState>()->data.emplace(audio);
+					});
+			}
+			//Play owl sound
+			else if(newPeriod == CyclePeriod::NIGHT)
+			{
+				audio_t audio = {
+
+					ESoundEvent::Game_OnNight,
+					sm::Vector3(250.f,0.f,-320.f),
+						1.0f,
+					150.f,
+						true,
+						false,
+						false,
+						false,
+									};
+
+
+				scene.ForEachComponent<comp::Player>([&](Entity& playerEntity, comp::Player& player)
+					{
+						playerEntity.GetComponent<comp::AudioState>()->data.emplace(audio);
+					});
+			}
+		}
+		m_timePeriod = newPeriod;
+	}
+}
+
+void Cycler::Update(float dt, Scene& scene)
+{
+	m_timer += dt * m_cycleSpeed;
+	if (m_timer > DAY_DURATION)
+	{
+		m_timer -= DAY_DURATION;
+	}
+	m_relativeTime = m_timer / DAY_DURATION;
+
+	m_changedPeriod = false;
+
+	if (blackboard)
+	{
+		CyclePeriod newPeriod = this->CalculatePeriod();
+		if (newPeriod != m_timePeriod)
+		{
+			m_changedPeriod = true;
+
+			blackboard->AddValue<CyclePeriod>("cycle", newPeriod);
+
+			//Play roster sound
+			if (newPeriod == CyclePeriod::MORNING)
+			{
+				audio_t audio = {
+
+	ESoundEvent::Game_OnMorning,
+	sm::Vector3(250.f,0.f,-320.f),
+		1.0f,
+	150.f,
+		true,
+		false,
+		false,
+		false,
+				};
+
+
+				scene.ForEachComponent<comp::Player>([&](Entity& playerEntity, comp::Player& player)
+					{
+						playerEntity.GetComponent<comp::AudioState>()->data.emplace(audio);
+					});
+			}
+			//Play owl sound
+			else if (newPeriod == CyclePeriod::NIGHT)
+			{
+				audio_t audio = {
+
+					ESoundEvent::Game_OnNight,
+					sm::Vector3(250.f,0.f,-320.f),
+						1.0f,
+					150.f,
+						true,
+						false,
+						false,
+						false,
+				};
+
+
+				scene.ForEachComponent<comp::Player>([&](Entity& playerEntity, comp::Player& player)
+					{
+						playerEntity.GetComponent<comp::AudioState>()->data.emplace(audio);
+					});
+			}
 		}
 		m_timePeriod = newPeriod;
 	}

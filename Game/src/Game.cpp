@@ -104,6 +104,7 @@ bool Game::OnStartup()
 
 	// Set Current Scene
 	SetScene("MainMenu");
+	GetScene("Game").GetRegistry()->on_destroy<comp::House>().connect<&Game::OnHouseDestroy>(this);
 
 	return true;
 }
@@ -135,7 +136,6 @@ void Game::OnUserUpdate(float deltaTime)
 			}
 		}
 	}
-
 }
 
 void Game::OnShutdown()
@@ -271,13 +271,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 					m_players.erase(id);
 				}
 
-				// Spawn blood splat when enemy dies.
-				if (m_gameEntities.at(id).GetComponent<comp::Tag<BAD>>())
-				{
-					Entity bloodDecal = GetCurrentScene()->CreateEntity();
-					bloodDecal.AddComponent<comp::Decal>(*m_gameEntities.at(id).GetComponent<comp::Transform>());
-				}
-
 				comp::Player* p = m_gameEntities.at(id).GetComponent<comp::Player>();
 				if (p)
 				{
@@ -375,6 +368,12 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			case ESoundEvent::Player_OnRespawn:
 				SH->PlaySound("Player_OnRespawn", data);
 				break;
+			case ESoundEvent::Player_OnBuy:
+				SH->PlaySound("Player_OnBuy", data);
+				break;
+			case ESoundEvent::Player_OnCantBuy:
+				SH->PlaySound("Player_OnCantBuy", data);
+				break;
 				//--------------------	ENEMY	--------------------------------------
 			case ESoundEvent::Enemy_OnMovement:
 				SH->PlaySound("Enemy_OnMovement", data);
@@ -408,8 +407,17 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			case ESoundEvent::Game_OnHouseDestroyed:
 				SH->PlaySound("Game_OnHouseDestroyed", data);
 				break;
+			case ESoundEvent::House_OnDmgRecieved:
+				SH->PlaySound("House_OnDmgRecieved", data);
+				break;
 			case ESoundEvent::Game_OnPurchase:
 				SH->PlaySound("Game_OnPurchase", data);
+				break;
+			case ESoundEvent::Game_OnMorning:
+				SH->PlaySound("Game_OnMorning", data);
+				break;
+			case ESoundEvent::Game_OnNight:
+				SH->PlaySound("Game_OnNight", data);
 				break;
 			default:
 				break;
@@ -543,10 +551,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			});
 		Scene& scene = GetScene("Game");
 		Collection2D* skipButtonUI = scene.GetCollection("SkipUI");
-		rtd::Button* skipButton = dynamic_cast<rtd::Button*>(skipButtonUI->elements[0].get());
-		rtd::Text* skipText = dynamic_cast<rtd::Text*>(skipButtonUI->elements[1].get());
-		skipText->SetVisiblity(true);
-		skipButton->SetVisiblity(true);
+		skipButtonUI->Show();
 
 		SoundHandler::Get().SetCurrentMusic("MenuTheme");
 		SetScene("Game");
@@ -1055,6 +1060,7 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 					case NameType::MESH_WATERMILLHOUSE:
 					{
 						nameString = "WaterMillHouse.fbx";
+						e.AddComponent<comp::House>();
 						break;
 					}
 					case NameType::MESH_RUINED_WATERMILLHOUSE:
@@ -1065,6 +1071,7 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 					case NameType::MESH_HOUSE5:
 					{
 						nameString = "House5.fbx";
+						e.AddComponent<comp::House>();
 						break;
 					}
 					case NameType::MESH_RUINED_HOUSE5:
@@ -1075,6 +1082,7 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 					case NameType::MESH_HOUSE6:
 					{
 						nameString = "House6.fbx";
+						e.AddComponent<comp::House>();
 						break;
 					}
 					case NameType::MESH_RUINED_HOUSE6:
@@ -1085,6 +1093,7 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 					case NameType::MESH_HOUSE7:
 					{
 						nameString = "House7.fbx";
+						e.AddComponent<comp::House>();
 						break;
 					}
 					case NameType::MESH_RUINED_HOUSE7:
@@ -1095,6 +1104,7 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 					case NameType::MESH_HOUSE8:
 					{
 						nameString = "House8.fbx";
+						e.AddComponent<comp::House>();
 						break;
 					}
 					case NameType::MESH_RUINED_HOUSE8:
@@ -1105,6 +1115,7 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 					case NameType::MESH_HOUSE9:
 					{
 						nameString = "House9.fbx";
+						e.AddComponent<comp::House>();
 						break;
 					}
 					case NameType::MESH_RUINED_HOUSE9:
@@ -1115,6 +1126,7 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 					case NameType::MESH_HOUSE10:
 					{
 						nameString = "House10.fbx";
+						e.AddComponent<comp::House>();
 						break;
 					}
 					case NameType::MESH_RUINED_HOUSE10:
@@ -1268,10 +1280,21 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 					if (GetCurrentScene() == &scene)
 					{
 						GameSystems::UpdateHealthbar(this);
-
-						if (e == m_players.at(m_localPID))
+						comp::Transform* t = e.GetComponent<comp::Transform>();
+						if (!hp.isAlive)
 						{
-							if (!hp.isAlive)
+							if (hp.currentHealth <= 0 && !e.GetComponent<comp::House>())
+							{
+								// Spawn a bloodsplat.
+								Entity e = GetScene("Game").CreateEntity();
+								if (t)
+								{
+									e.AddComponent<comp::Decal>(t->position);
+									e.AddComponent<comp::SelfDestruct>()->lifeTime = 15.f;
+								}
+							}
+
+							if (e == m_players.at(m_localPID))
 							{
 								m_isSpectating = true;
 								scene.GetCollection("SpectateUI")->elements[0]->SetVisiblity(true);
@@ -1315,14 +1338,32 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 						cText.amount = std::abs(static_cast<int>(health->currentHealth - hp.currentHealth));
 						GetScene("Game").PushCombatText(cText);
 
-						if (hp.currentHealth <= 0)
+						comp::House* house = e.GetComponent<comp::House>();
+						if (house)
 						{
-							// Spawn a bloodsplat.
-							Entity e = GetScene("Game").CreateEntity();
-							e.AddComponent<comp::Decal>(*transform);
+							if (hp.currentHealth < health->currentHealth)
+							{
+								LOG_INFO("House took damage");
+								house->displayWarning = true;
+								house->warningIcon.pos = e.GetComponent<comp::OrientedBoxCollider>()->Center;
+								house->warningIcon.timeRendered = omp_get_wtime();
+								if (house->iconID == -1)
+								{
+									//Create a new warning Icon and display it(6 exists as collections in the UI)
+									for (int i = 0; i < NR_OF_HOUSES && house->iconID == -1; i++)
+									{
+										Collection2D* collection = scene.GetCollection("zzzzHouseWarningIcon" + std::to_string(i + 1));
+										rtd::Picture* icon = static_cast<rtd::Picture*>(collection->elements[0].get());
+										if (!icon->IsVisible())
+										{
+											house->iconID = i;
+											icon->SetVisiblity(true);
+										}
+									}
+								}
+							}
 						}
 					}
-
 					e.AddComponent<comp::Health>(hp);
 				}
 				break;
@@ -1432,6 +1473,21 @@ void Game::ChangeSpectatedPlayer()
 				}
 				it++;
 			}
+		}
+	}
+}
+
+void Game::OnHouseDestroy(entt::registry& registry, entt::entity e)
+{
+	Entity entity(registry, e);
+	comp::House* house = entity.GetComponent<comp::House>();
+	if (house)
+	{
+		if (house->iconID != -1)
+		{
+			Collection2D* collection = GetScene("Game").GetCollection("zzzzHouseWarningIcon" + std::to_string(house->iconID + 1));
+			rtd::Picture* icon = static_cast<rtd::Picture*> (collection->elements[0].get());
+			icon->SetVisiblity(false);
 		}
 	}
 }

@@ -2,6 +2,7 @@
 #include "Element2D.h"
 #include "Picture.h"
 #include "MoneyUI.h"
+#include "Border.h"
 
 namespace rtd
 {
@@ -12,6 +13,7 @@ namespace rtd
 		std::unique_ptr<Picture> m_texture = nullptr;
 		std::unique_ptr<Picture> m_signTexture = nullptr;
 		std::unique_ptr<Text> m_signText = nullptr;
+		std::unique_ptr<Border> m_chosenBorder = nullptr;
 		draw_t m_drawOpts;
 		MoneyUI* m_moneyRef = nullptr;
 

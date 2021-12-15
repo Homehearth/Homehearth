@@ -215,6 +215,7 @@ Entity HouseManager::CreateHouse(HeadlessScene& scene, NameType houseType, NameT
 
 	//Add the correct collider for the specified house type
 	AddCollider(houseType, houseEntity);
+	scene.publish<EComponentUpdated>(houseEntity, ecs::Component::BOUNDING_ORIENTED_BOX);
 
 	//insert in house map for blackboard so (AI can target it) Entity is both key and value
 	Houses_t* houses = blackboard->GetValue<Houses_t>("houses");
@@ -226,6 +227,34 @@ Entity HouseManager::CreateHouse(HeadlessScene& scene, NameType houseType, NameT
 	}
 	houses = blackboard->GetValue<Houses_t>("houses");
 	houses->houses.insert(std::pair<Entity, Entity>(houseEntity, houseEntity));
+
+
+	CollisionSystem::Get().AddOnCollisionEnter(houseEntity, [=, &scene](Entity thisEntity, Entity other)
+		{
+			//Plays sound when enemy hit house
+			if(other.GetComponent<comp::Tag<ENEMY_ATTACK>>())
+			{
+				audio_t audio = {
+
+				ESoundEvent::House_OnDmgRecieved,
+				houseEntity.GetComponent<comp::OrientedBoxCollider>()->Center,
+					1.0f,
+				250.f,
+					true,
+					false,
+					false,
+					false,
+							};
+
+
+				scene.ForEachComponent<comp::Player>([&](Entity& playerEntity, comp::Player& player)
+					{
+						playerEntity.GetComponent<comp::AudioState>()->data.emplace(audio);
+					});
+			}
+		});
+
+
 
 	return houseEntity;
 }

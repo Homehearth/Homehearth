@@ -27,7 +27,7 @@ namespace rtd
 		Picture(const std::string& fileName, const draw_t& opts);
 		Picture();
 		virtual ~Picture() override;
-
+		const draw_t& GetOpts() const;
 		/*
 			First time this function is called a border will be created.
 		*/

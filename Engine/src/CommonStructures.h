@@ -3,7 +3,7 @@
 constexpr int MAX_LOBBIES = 5;
 constexpr int MAX_PLAYERS_PER_LOBBY = 4;
 constexpr int MAX_HEALTH = 100;
-
+constexpr int NR_OF_HOUSES = 6;
 
 /*
 	Change these to tweak the day and night cycle timers.
@@ -13,13 +13,13 @@ constexpr uint32_t TIME_LIMIT_NIGHT = 50;
 constexpr uint32_t TIME_LIMIT_MORNING = 10;
 constexpr float ROTATION = 180.0f / (float)(TIME_LIMIT_DAY + TIME_LIMIT_MORNING);
 
-const float DAY_DURATION	= 150.0f;
-const float MORNING			= 0.0f;
-const float DAY				= 0.1f;
-const float MID_DAY			= 0.3f;
-const float EVENING			= 0.45f;
-const float NIGHT			= 0.5f;
-const float EARLY_MORNING	= 0.9f;
+const float DAY_DURATION = 150.0f;
+const float MORNING = 0.0f;
+const float DAY = 0.1f;
+const float MID_DAY = 0.3f;
+const float EVENING = 0.45f;
+const float NIGHT = 0.5f;
+const float EARLY_MORNING = 0.9f;
 
 
 enum class CyclePeriod : UINT
@@ -113,7 +113,8 @@ enum class ParticleMode : UINT
 	MAGEHEAL,
 	MAGERANGE,
 	EXPLOSION,
-	MAGEBLINK
+	MAGEBLINK,
+	UPGRADE
 };
 
 //enum class EDefenceType : UINT
@@ -311,15 +312,19 @@ struct combat_text_inst_t
 	// DONT TOUCH!!!!1
 	float timeRendered = 0;
 };
-
+struct house_warning_icon_inst
+{
+	sm::Vector3 pos;
+	float timeRendered = 0;
+};
 struct InputState
 {
-	int		axisHorizontal	: 2;
-	int		axisVertical	: 2;
-	bool	leftMouse		: 1;
-	bool	rightMouse		: 1;
-	bool	key_shift		: 1;
-	int		mousewheelDir	: 8;
+	int		axisHorizontal : 2;
+	int		axisVertical : 2;
+	bool	leftMouse : 1;
+	bool	rightMouse : 1;
+	bool	key_shift : 1;
+	int		mousewheelDir : 8;
 
 	Ray_t mouseRay;
 };
@@ -383,6 +388,8 @@ enum class ESoundEvent : uint32_t
 	Player_OnHealingRecieved,
 	Player_OnDeath,
 	Player_OnRespawn,
+	Player_OnBuy,
+	Player_OnCantBuy,
 
 	Enemy_OnMovement,
 	Enemy_OnMeleeAttack,
@@ -391,10 +398,15 @@ enum class ESoundEvent : uint32_t
 	Enemy_OnDmgRecieved,
 	Enemy_OnDeath,
 
+	House_OnDmgRecieved,
+
+
 	Game_OnPurchase,
 	Game_OnHouseDestroyed,
 	Game_OnDefencePlaced,
 	Game_OnDefenceDestroyed,
+	Game_OnMorning,
+	Game_OnNight,
 
 	ENUM_SIZE
 };
@@ -417,6 +429,7 @@ enum class ShopItem : uint8_t
 	Tower_Upgrade,
 	Speed_Upgrade,
 	Heal,
+	Health,
 	Defence1x1,		//Lets the player build a 1x3 tower when pressing build key.
 	Defence1x3,		//Lets the player build a 1x1 tower when pressing build key.
 	Destroy_Tool,
@@ -466,7 +479,7 @@ struct texture_effect_t
 {
 	unsigned int frequency = 0;
 	unsigned int amplitude = 0;
-	float counter   = 0.f;
+	float counter = 0.f;
 };
 
 ALIGN16
