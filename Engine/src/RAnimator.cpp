@@ -176,19 +176,26 @@ bool RAnimator::UpdateTime(const EAnimationType& type)
 				}
 				else
 				{
-					ResetAnimation(type);
-					if (m_currentState == type)
+					if (!m_animations.at(type).stayAtEnd)
 					{
-						m_currentState = m_blendState;
-						m_blendState = EAnimationType::NONE;
+						ResetAnimation(type);
+						if (m_currentState == type)
+						{
+							m_currentState = m_blendState;
+							m_blendState = EAnimationType::NONE;
+						}
+						else if (m_blendState == type)
+						{
+							m_blendState = EAnimationType::NONE;
+						}
+						else if (m_upperState == type)
+						{
+							m_upperState = EAnimationType::NONE;
+						}
 					}
-					else if (m_blendState == type)
+					else
 					{
-						m_blendState = EAnimationType::NONE;
-					}
-					else if (m_upperState == type)
-					{
-						m_upperState = EAnimationType::NONE;
+						std::cout << "stay" << std::endl;
 					}
 				}
 			}
