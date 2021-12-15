@@ -1300,7 +1300,10 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 								scene.GetCollection("SpectateUI")->elements[0]->SetVisiblity(true);
 								scene.GetCollection("SpectateUI")->elements[1]->SetVisiblity(true);
 							}
-							else
+						}
+						else
+						{
+							if (e == m_players.at(m_localPID))
 							{
 								if (m_isSpectating)
 								{
@@ -1313,52 +1316,53 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 								}
 							}
 						}
-					}
-					comp::Health* health = e.GetComponent<comp::Health>();
-					comp::Transform* transform = e.GetComponent<comp::Transform>();
-					if (health && transform)
-					{
-						combat_text_inst_t cText;
-						// Signal health gain.
-						if (health->currentHealth <= hp.currentHealth)
+						comp::Health* health = e.GetComponent<comp::Health>();
+						comp::Transform* transform = e.GetComponent<comp::Transform>();
+						if (health && transform)
 						{
-							cText.type = combat_text_enum::HEALTH_GAIN;
-							cText.pos = transform->position;
-						}
-						else if (health->currentHealth > hp.currentHealth)
-						{
-							cText.type = combat_text_enum::HEALTH_LOSS;
-							cText.pos = transform->position;
-						}
-
-						cText.timeRendered = static_cast<float>(omp_get_wtime());
-						cText.pos.y += 15;
-						cText.end_pos = cText.pos;
-						cText.end_pos.y += 50;
-						cText.amount = std::abs(static_cast<int>(health->currentHealth - hp.currentHealth));
-						GetScene("Game").PushCombatText(cText);
-
-						comp::House* house = e.GetComponent<comp::House>();
-						if (house && hp.currentHealth < health->currentHealth)
-						{
-							house->displayWarning = true;
-							house->warningIcon.pos = e.GetComponent<comp::OrientedBoxCollider>()->Center;
-							house->warningIcon.timeRendered = omp_get_wtime();
-							if (house->iconID == -1)
+							combat_text_inst_t cText;
+							// Signal health gain.
+							if (health->currentHealth <= hp.currentHealth)
 							{
-								//Create a new warning Icon and display it(6 exists as collections in the UI)
-								for (int i = 0; i < NR_OF_HOUSES && house->iconID == -1; i++)
-								{
-									Collection2D* collection = scene.GetCollection("zzzzHouseWarningIcon" + std::to_string(i + 1));
-									rtd::Picture* icon = static_cast<rtd::Picture*>(collection->elements[0].get());
-									if (!icon->IsVisible())
-									{
-										house->iconID = i;
-										icon->SetVisiblity(true);
-									}
-								}
+								cText.type = combat_text_enum::HEALTH_GAIN;
+								cText.pos = transform->position;
+							}
+							else if (health->currentHealth > hp.currentHealth)
+							{
+								cText.type = combat_text_enum::HEALTH_LOSS;
+								cText.pos = transform->position;
 							}
 
+							cText.timeRendered = static_cast<float>(omp_get_wtime());
+							cText.pos.y += 15;
+							cText.end_pos = cText.pos;
+							cText.end_pos.y += 50;
+							cText.amount = std::abs(static_cast<int>(health->currentHealth - hp.currentHealth));
+							scene.PushCombatText(cText);
+
+							comp::House* house = e.GetComponent<comp::House>();
+							if (house && hp.currentHealth < health->currentHealth)
+							{
+
+									house->displayWarning = true;
+									house->warningIcon.pos = e.GetComponent<comp::OrientedBoxCollider>()->Center;
+									house->warningIcon.timeRendered = omp_get_wtime();
+									if (house->iconID == -1)
+									{
+										//Create a new warning Icon and display it(6 exists as collections in the UI)
+										for (int i = 0; i < NR_OF_HOUSES && house->iconID == -1; i++)
+										{
+											Collection2D* collection = scene.GetCollection("zzzzHouseWarningIcon" + std::to_string(i + 1));
+											rtd::Picture* icon = static_cast<rtd::Picture*>(collection->elements[0].get());
+											if (!icon->IsVisible())
+											{
+												house->iconID = i;
+												icon->SetVisiblity(true);
+											}
+										}
+									
+								}
+							}
 						}
 					}
 					e.AddComponent<comp::Health>(hp);
