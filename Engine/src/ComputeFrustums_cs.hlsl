@@ -45,9 +45,9 @@ void main(ComputeShaderIn input)
     frustum.planes[BOTTOM]  = ComputePlane(eyePos, viewSpace[BOTTOM_RIGHT], viewSpace[BOTTOM_LEFT]);
 
     // Store the computed frustum in global memory (if our thread ID is in bounds of the grid).
-    if (input.dispatchThreadID.x < numThreads.x && input.dispatchThreadID.y < numThreads.y)
+    if (input.dispatchThreadID.x < numThreads.x && input.dispatchThreadID.y < numThreads.y) 
     {
-        const uint index = input.dispatchThreadID.x + (input.dispatchThreadID.y * numThreads.x);
-        rw_frustums_out[index] = frustum;
+        uint index = input.dispatchThreadID.x + (input.dispatchThreadID.y * numThreads.x);
+        out_Frustums[index] = frustum;
     }
 }

@@ -870,7 +870,7 @@ bool PipelineManager::CreateDepth()
     textureDesc.Height = static_cast<FLOAT>(this->m_window->GetHeight());
     textureDesc.MipLevels = 1;
     textureDesc.ArraySize = 1;
-    textureDesc.Format = DXGI_FORMAT_R24G8_TYPELESS;
+    textureDesc.Format = DXGI_FORMAT_R32_TYPELESS;
     textureDesc.SampleDesc.Count = 1;
     textureDesc.Usage = D3D11_USAGE_DEFAULT;
     textureDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
@@ -881,7 +881,7 @@ bool PipelineManager::CreateDepth()
     if (FAILED(hr))
         return false;
 
-    depthStencilViewDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+    depthStencilViewDesc.Format = DXGI_FORMAT_D32_FLOAT;
     depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
     depthStencilViewDesc.Texture2D.MipSlice = 0;
     depthStencilViewDesc.Flags = 0;
@@ -891,7 +891,7 @@ bool PipelineManager::CreateDepth()
     if (FAILED(hr))
         return false;
 
-    shaderResourceViewDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
+    shaderResourceViewDesc.Format = DXGI_FORMAT_R32_FLOAT;
     shaderResourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
     shaderResourceViewDesc.Texture2D.MostDetailedMip = 0;
     shaderResourceViewDesc.Texture2D.MipLevels = textureDesc.MipLevels;
@@ -953,12 +953,6 @@ bool PipelineManager::CreateShaders()
         return false;
     }
 
-    if (!m_transPixelShader.Create("Transparent_ps"))
-    {
-        LOG_WARNING("failed creating Transparent_ps.");
-        return false;
-    }
-
     if (!m_depthPassPixelShader.Create("Depth_ps"))
     {
         LOG_WARNING("failed creating Depth_ps.");
@@ -995,7 +989,7 @@ bool PipelineManager::CreateShaders()
         return false;
     }
 
-    if (!m_opaquePixelShader.Create("Model_ps"))
+    if (!m_defaultPixelShader.Create("Model_ps"))
     {
         LOG_WARNING("failed creating Model_ps.");
         return false;

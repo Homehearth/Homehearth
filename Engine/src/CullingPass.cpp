@@ -10,8 +10,8 @@ void CullingPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 	DC->CSSetShader(PM->m_lightCullingShader.Get(), nullptr, 0);
 
     DC->CSSetShaderResources(0, 1, PM->m_depth.srv.GetAddressOf());
-    DC->CSSetShaderResources(24, 1, PM->m_frustums.srv.GetAddressOf());
-    DC->CSSetShaderResources(26, 1, &PM->m_lightCountHeatMap.get()->GetShaderView());
+    DC->CSSetShaderResources(24, 1, &PM->m_lightCountHeatMap.get()->GetShaderView());
+    DC->CSSetShaderResources(25, 1, PM->m_frustums.srv.GetAddressOf());
 
     ID3D11Buffer* const buffers[] = {
 		PM->m_screenToViewParamsCB.GetBuffer(),
@@ -22,24 +22,24 @@ void CullingPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 
 	m_lights->Render(DC, true);
 
-    PM->trans_LightIndexCounter_data[0] = 0;
-    PM->opaq_LightIndexCounter_data[0] = 0;
+    PM->o_LightIndexCounter_data[0] = 0;
+    PM->t_LightIndexCounter_data[0] = 0;
 
-    PM->BindStructuredBuffer(1, 1, PM->opaq_LightIndexCounter.buffer.Get(), 
-        PM->opaq_LightIndexCounter_data.data(),PM->opaq_LightIndexCounter.uav.GetAddressOf());
+    PM->BindStructuredBuffer(6, 1, PM->o_LightIndexCounter.buffer.Get(), 
+        PM->o_LightIndexCounter_data.data(),PM->o_LightIndexCounter.uav.GetAddressOf());
 
-    PM->BindStructuredBuffer(2, 1, PM->trans_LightIndexCounter.buffer.Get(),
-        PM->trans_LightIndexCounter_data.data(), PM->trans_LightIndexCounter.uav.GetAddressOf());
+    PM->BindStructuredBuffer(7, 1, PM->t_LightIndexCounter.buffer.Get(),
+        PM->t_LightIndexCounter_data.data(), PM->t_LightIndexCounter.uav.GetAddressOf());
 
-    PM->BindStructuredBuffer(3, 1, PM->opaq_LightIndexList.buffer.Get(),
-        PM->opaq_LightIndexList_data.data(), PM->opaq_LightIndexList.uav.GetAddressOf());
+    PM->BindStructuredBuffer(3, 1, PM->o_LightIndexList.buffer.Get(),
+        PM->o_LightIndexList_data.data(), PM->o_LightIndexList.uav.GetAddressOf());
 
-    PM->BindStructuredBuffer(4, 1, PM->trans_LightIndexList.buffer.Get(),
-        PM->trans_LightIndexList_data.data(), PM->trans_LightIndexList.uav.GetAddressOf());
+    PM->BindStructuredBuffer(4, 1, PM->t_LightIndexList.buffer.Get(),
+        PM->t_LightIndexList_data.data(), PM->t_LightIndexList.uav.GetAddressOf());
 
-    DC->CSSetUnorderedAccessViews(5, 1, PM->opaq_LightGrid.uav.GetAddressOf(), nullptr);
-    DC->CSSetUnorderedAccessViews(6, 1, PM->trans_LightGrid.uav.GetAddressOf(), nullptr);
-    DC->CSSetUnorderedAccessViews(7, 1, PM->m_heatMap.uav.GetAddressOf(), nullptr);
+    DC->CSSetUnorderedAccessViews(1, 1, PM->o_LightGrid.uav.GetAddressOf(), nullptr);
+    DC->CSSetUnorderedAccessViews(2, 1, PM->t_LightGrid.uav.GetAddressOf(), nullptr);
+    DC->CSSetUnorderedAccessViews(5, 1, PM->m_heatMap.uav.GetAddressOf(), nullptr);
 }   
 
 void CullingPass::Render(Scene* pScene)
@@ -57,7 +57,7 @@ void CullingPass::PostRender(ID3D11DeviceContext* pDeviceContext)
     DC->CSSetShader(nullptr, nullptr, 0);
     DC->CSSetShaderResources(0, 1, nullSRV);
     DC->CSSetShaderResources(24, 1, nullSRV);
-    DC->CSSetShaderResources(26, 1, nullSRV);
+    DC->CSSetShaderResources(25, 1, nullSRV);
 
     DC->CSSetUnorderedAccessViews(1, 1, nullUAV, nullptr);
     DC->CSSetUnorderedAccessViews(2, 1, nullUAV, nullptr);

@@ -19,7 +19,7 @@ void TransparentPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContex
     DC->IASetInputLayout(PM->m_defaultInputLayout.Get());
 
     DC->VSSetShader(PM->m_defaultVertexShader.Get(), nullptr, 0);
-    DC->PSSetShader(PM->m_transPixelShader.Get(), nullptr, 0);
+    DC->PSSetShader(PM->m_defaultPixelShader.Get(), nullptr, 0);
 
     DC->VSSetConstantBuffers(1, 1, pCam->m_viewConstantBuffer.GetAddressOf());
     DC->PSSetConstantBuffers(1, 1, pCam->m_viewConstantBuffer.GetAddressOf());
@@ -33,8 +33,8 @@ void TransparentPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContex
 
     m_lights->Render(DC);
 
-	DC->PSSetShaderResources(28, 1, PM->trans_LightIndexList.srv.GetAddressOf());
-    DC->PSSetShaderResources(27, 1, PM->trans_LightGrid.srv.GetAddressOf());
+    DC->PSSetShaderResources(26, 1, PM->t_LightIndexList.srv.GetAddressOf());
+    DC->PSSetShaderResources(27, 1, PM->t_LightGrid.srv.GetAddressOf());
 
     if (m_shadowPassRef)
         m_shadowPassRef->PostRender(DC);
@@ -56,6 +56,6 @@ void TransparentPass::PostRender(ID3D11DeviceContext* pDeviceContext)
     PM->SetCullBack(true, DC);
 
     ID3D11ShaderResourceView* nullSRV[] = { nullptr };
-    DC->PSSetShaderResources(28, 1, nullSRV);
+    DC->PSSetShaderResources(26, 1, nullSRV);
     DC->PSSetShaderResources(27, 1, nullSRV);
 }

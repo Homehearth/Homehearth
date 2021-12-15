@@ -217,12 +217,18 @@ void Renderer::InitilializeForwardPlus(Camera* camera)
     constexpr uint32_t TILE_SIZE = 16u;
     const uint32_t numFrustums = { (screenWidth / TILE_SIZE) * (screenHeight / TILE_SIZE) };
 
-    //
+	//
     // Update DispatchParams.
     //
 
     const dx::XMUINT4 numThreads = { static_cast<uint32_t>(std::ceil(screenWidth / TILE_SIZE)), static_cast<uint32_t>(std::ceil(screenHeight / TILE_SIZE)), 1u, 1u };
-    const dx::XMUINT4 numThreadGroups = { static_cast<uint32_t>(std::ceil(numThreads.x / TILE_SIZE)), static_cast<uint32_t>(std::ceil(numThreads.y / TILE_SIZE)), 1u, 1u };
+    const dx::XMUINT4 numThreadGroups = { static_cast<uint32_t>(std::ceil((float)numThreads.x / (float)TILE_SIZE)), static_cast<uint32_t>(std::ceil((float)numThreads.y / (float)TILE_SIZE)), 1u, 1u };
+
+    const uint32_t count = numThreads.x * numThreads.y * numThreads.z; // numGridCells
+    if (numFrustums != count)
+    {
+        LOG_WARNING("numFrustums != count")
+    }
 
     m_pipelineManager.m_dispatchParams.numThreadGroups = numThreadGroups;
     m_pipelineManager.m_dispatchParams.numThreads = numThreads;
@@ -241,12 +247,12 @@ void Renderer::InitilializeForwardPlus(Camera* camera)
     //
     // Update GridFrustums.
     //
-
-    const uint32_t numGridCells = m_pipelineManager.m_dispatchParams.numThreads.x *
-        m_pipelineManager.m_dispatchParams.numThreads.y * m_pipelineManager.m_dispatchParams.numThreads.z;
-
+    //
+    
     //out_Frustums Forward+
-    m_pipelineManager.m_frustums_data.resize(numFrustums);
+    m_pipelineManager.m_frustums_data.resize(count);
+    //m_pipelineManager.CreateCopyBuffer(m_pipelineManager.m_frustums.buffer.GetAddressOf(),
+      //  sizeof(frustum_t), m_pipelineManager.m_frustums_data.size());
     m_pipelineManager.CreateStructuredBuffer(m_pipelineManager.m_frustums_data.data(),
         sizeof(frustum_t), m_pipelineManager.m_frustums_data.size(), m_pipelineManager.m_frustums);
 
@@ -269,7 +275,7 @@ void Renderer::InitilializeForwardPlus(Camera* camera)
     //
     // Create LightIndexList.
     //
-    if (!CreateLightIndexListRWB(numGridCells))
+    if (!CreateLightIndexListRWB(count))
     {
         LOG_ERROR("failed to create LightIndexListRWB")
     }
@@ -293,8 +299,7 @@ bool Renderer::CreateLightGridRWB()
     ComPtr<ID3D11Texture2D> texture2D1 = nullptr;
     ComPtr<ID3D11Texture2D> texture2D2 = nullptr;
 
-    D3D11_TEXTURE2D_DESC textureDesc;
-    ZeroMemory(&textureDesc, sizeof(D3D11_TEXTURE2D_DESC));
+    D3D11_TEXTURE2D_DESC textureDesc = {};
 
     textureDesc.Width = m_pipelineManager.m_dispatchParams.numThreads.x;
     textureDesc.Height = m_pipelineManager.m_dispatchParams.numThreads.y;
@@ -304,7 +309,7 @@ bool Renderer::CreateLightGridRWB()
     textureDesc.SampleDesc.Count = 1;
     textureDesc.Usage = D3D11_USAGE_DEFAULT;
     textureDesc.BindFlags = D3D11_BIND_UNORDERED_ACCESS | D3D11_BIND_SHADER_RESOURCE;
-    textureDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ | D3D11_CPU_ACCESS_WRITE;
+    textureDesc.CPUAccessFlags = 0;
     textureDesc.MiscFlags = 0;
 
     HRESULT hr = D3D11Core::Get().Device()->CreateTexture2D(&textureDesc, nullptr, texture2D1.GetAddressOf());
@@ -315,33 +320,29 @@ bool Renderer::CreateLightGridRWB()
     if (FAILED(hr))
         return false;
 
-    D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc;
-    ZeroMemory(&uavDesc, sizeof(D3D11_UNORDERED_ACCESS_VIEW_DESC));
-
+    D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
     uavDesc.Format = DXGI_FORMAT_R32G32_UINT;
     uavDesc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2D;
 
-    D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
-    ZeroMemory(&srvDesc, sizeof(D3D11_SHADER_RESOURCE_VIEW_DESC));
-
+    D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
     srvDesc.Format = DXGI_FORMAT_R32G32_UINT;
     srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
     srvDesc.Texture2D.MostDetailedMip = 0;
     srvDesc.Texture2D.MipLevels = textureDesc.MipLevels;
 
-    hr = D3D11Core::Get().Device()->CreateUnorderedAccessView(texture2D1.Get(), &uavDesc, m_pipelineManager.opaq_LightGrid.uav.GetAddressOf());
+    hr = D3D11Core::Get().Device()->CreateUnorderedAccessView(texture2D1.Get(), &uavDesc, m_pipelineManager.o_LightGrid.uav.GetAddressOf());
     if (FAILED(hr))
         return false;
 
-    hr = D3D11Core::Get().Device()->CreateUnorderedAccessView(texture2D2.Get(), &uavDesc, m_pipelineManager.trans_LightGrid.uav.GetAddressOf());
+    hr = D3D11Core::Get().Device()->CreateUnorderedAccessView(texture2D2.Get(), &uavDesc, m_pipelineManager.t_LightGrid.uav.GetAddressOf());
     if (FAILED(hr))
         return false;
 
-    hr = D3D11Core::Get().Device()->CreateShaderResourceView(texture2D1.Get(), &srvDesc, m_pipelineManager.opaq_LightGrid.srv.GetAddressOf());
+    hr = D3D11Core::Get().Device()->CreateShaderResourceView(texture2D1.Get(), &srvDesc, m_pipelineManager.o_LightGrid.srv.GetAddressOf());
     if (FAILED(hr))
         return false;
 
-    hr = D3D11Core::Get().Device()->CreateShaderResourceView(texture2D2.Get(), &srvDesc, m_pipelineManager.trans_LightGrid.srv.GetAddressOf());
+    hr = D3D11Core::Get().Device()->CreateShaderResourceView(texture2D2.Get(), &srvDesc, m_pipelineManager.t_LightGrid.srv.GetAddressOf());
 
 
     return !FAILED(hr);
@@ -359,19 +360,19 @@ bool Renderer::CreateLightIndexListRWB(const uint32_t& COUNT)
     // usage will double.
 
     // Size of the light index list:
-    const uint32_t SIZE = COUNT * m_pipelineManager.AVERAGE_OVERLAPPING_LIGHTS_PER_TILE;
+    const uint32_t SIZE = COUNT * m_pipelineManager.AVG_LIGHTS_PER_TILE;
 
-    m_pipelineManager.opaq_LightIndexList_data.clear();
-    m_pipelineManager.trans_LightIndexList_data.clear();
+    m_pipelineManager.o_LightIndexList_data.clear();
+    m_pipelineManager.t_LightIndexList_data.clear();
 
-    m_pipelineManager.opaq_LightIndexList_data.resize(SIZE);
-    if (!m_pipelineManager.CreateStructuredBuffer(m_pipelineManager.opaq_LightIndexList_data.data(), sizeof(UINT), m_pipelineManager.opaq_LightIndexList_data.size(), m_pipelineManager.opaq_LightIndexList))
+    m_pipelineManager.o_LightIndexList_data.resize(SIZE);
+    if (!m_pipelineManager.CreateStructuredBuffer(m_pipelineManager.o_LightIndexList_data.data(), sizeof(UINT), m_pipelineManager.o_LightIndexList_data.size(), m_pipelineManager.o_LightIndexList))
     {
         return false;
     }
 
-    m_pipelineManager.trans_LightIndexList_data.resize(SIZE);
-    if (!m_pipelineManager.CreateStructuredBuffer(m_pipelineManager.trans_LightIndexList_data.data(), sizeof(UINT), m_pipelineManager.trans_LightIndexList_data.size(), m_pipelineManager.trans_LightIndexList))
+    m_pipelineManager.t_LightIndexList_data.resize(SIZE);
+    if (!m_pipelineManager.CreateStructuredBuffer(m_pipelineManager.t_LightIndexList_data.data(), sizeof(UINT), m_pipelineManager.t_LightIndexList_data.size(), m_pipelineManager.t_LightIndexList))
     {
         return false;
     }
@@ -381,19 +382,19 @@ bool Renderer::CreateLightIndexListRWB(const uint32_t& COUNT)
 
 bool Renderer::CreateLightIndexCounterRWB()
 {
-    m_pipelineManager.opaq_LightIndexCounter_data.clear();
-    m_pipelineManager.trans_LightIndexCounter_data.clear();
+    m_pipelineManager.o_LightIndexCounter_data.clear();
+    m_pipelineManager.t_LightIndexCounter_data.clear();
 
-    m_pipelineManager.opaq_LightIndexCounter_data.push_back(0);
-    if (!m_pipelineManager.CreateStructuredBuffer(m_pipelineManager.opaq_LightIndexCounter.buffer, m_pipelineManager.opaq_LightIndexCounter_data.data(),
-        sizeof(UINT), m_pipelineManager.opaq_LightIndexCounter_data.size(), m_pipelineManager.opaq_LightIndexCounter.uav))
+    m_pipelineManager.o_LightIndexCounter_data.push_back(0);
+    if (!m_pipelineManager.CreateStructuredBuffer(m_pipelineManager.o_LightIndexCounter.buffer, m_pipelineManager.o_LightIndexCounter_data.data(),
+        sizeof(UINT), m_pipelineManager.o_LightIndexCounter_data.size(), m_pipelineManager.o_LightIndexCounter.uav))
     {
         return false;
     }
 
-    m_pipelineManager.trans_LightIndexCounter_data.push_back(0);
-    if (!m_pipelineManager.CreateStructuredBuffer(m_pipelineManager.trans_LightIndexCounter.buffer, m_pipelineManager.trans_LightIndexCounter_data.data(),
-        sizeof(UINT), m_pipelineManager.trans_LightIndexCounter_data.size(), m_pipelineManager.trans_LightIndexCounter.uav))
+    m_pipelineManager.t_LightIndexCounter_data.push_back(0);
+    if (!m_pipelineManager.CreateStructuredBuffer(m_pipelineManager.t_LightIndexCounter.buffer, m_pipelineManager.t_LightIndexCounter_data.data(),
+        sizeof(UINT), m_pipelineManager.t_LightIndexCounter_data.size(), m_pipelineManager.t_LightIndexCounter.uav))
     {
         return false;
     }
@@ -416,13 +417,13 @@ bool Renderer::CreateHeatMapRWB()
     textureDesc.SampleDesc.Count = 1;
     textureDesc.Usage = D3D11_USAGE_DEFAULT;
     textureDesc.BindFlags = D3D11_BIND_UNORDERED_ACCESS | D3D11_BIND_SHADER_RESOURCE;
-    textureDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ | D3D11_CPU_ACCESS_WRITE;
+    textureDesc.CPUAccessFlags = 0;
     textureDesc.MiscFlags = 0;
 
     HRESULT hr = D3D11Core::Get().Device()->CreateTexture2D(&textureDesc, nullptr, texture2D.GetAddressOf());
     if (FAILED(hr))
         return false;
-
+    
     D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc;
     ZeroMemory(&uavDesc, sizeof(D3D11_UNORDERED_ACCESS_VIEW_DESC));
 

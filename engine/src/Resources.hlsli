@@ -164,12 +164,9 @@ Texture2D t_waterTexture                            : register(t20);
 Texture2D t_waterTextureN                           : register(t21);
 Texture2D t_waterBlend                              : register(t22);
 
-Texture2D<uint2> t_lightGridOpaque                  : register(t23);
-StructuredBuffer<Frustum> sb_frustums_in            : register(t24);    // Precomputed frustums for the grid.
-StructuredBuffer<uint> sb_lightIndexListOpaque      : register(t25);
-Texture2D t_lightCountHeatMap                       : register(t26);
-Texture2D<uint2> t_lightGridTrans                   : register(t27);
-StructuredBuffer<uint> sb_lightIndexListTrans       : register(t28);
+StructuredBuffer<Frustum> in_Frustums               : register(t25);
+StructuredBuffer<uint> LightIndexList               : register(t26);
+Texture2D<uint2> LightGrid                          : register(t27);
 
 TextureCube t_radiance                              : register(t96);
 TextureCube t_irradiance                            : register(t97);
@@ -182,25 +179,22 @@ Texture2D t_BRDFLUT                                 : register(t99);
 //---------------------------------------------------------------------------
 
 // RWStructuredBuffers.
+RWStructuredBuffer<Frustum> out_Frustums				        : register(u0);
 
-// ForwardPlus (0)
-RWStructuredBuffer<Frustum> rw_frustums_out             : register(u0);
-
-// Global counter for current index into the light index list.
-RWStructuredBuffer<uint> rw_opaq_lightIndexCounter      : register(u1);
-RWStructuredBuffer<uint> rw_trans_lightIndexCounter     : register(u2);
-
-// Light index lists and light grids.
-RWStructuredBuffer<uint> rw_opaq_lightIndexList         : register(u3);
-RWStructuredBuffer<uint> rw_trans_lightIndexList        : register(u4);
-      
 // Each texel is a 2-component unsigned integer vector.
 // The light grid texture is created using the R32G32_UINT format.
-RWTexture2D<uint2> rw_opaq_lightGrid                    : register(u5);
-RWTexture2D<uint2> rw_trans_lightGrid                   : register(u6);
+RWTexture2D<uint2> o_LightGrid									: register(u1);
+RWTexture2D<uint2> t_LightGrid									: register(u2);
 
-RWTexture2D<float4> rw_heatMap                          : register(u7);
+// Light index lists and light grids.
+RWStructuredBuffer<uint> o_LightIndexList						: register(u3);
+RWStructuredBuffer<uint> t_LightIndexList						: register(u4);
 
+RWTexture2D<float4> rw_heatMap									: register(u5);
+Texture2D t_LightCountHeatMap									: register(t24);
+
+RWStructuredBuffer<uint> o_LightIndexCounter 					: register(u6);
+RWStructuredBuffer<uint> t_LightIndexCounter					: register(u7);
 
 // Blur Pass (2) 
 RWTexture2D<unorm float4> t_bufferRead                  : register(u0);

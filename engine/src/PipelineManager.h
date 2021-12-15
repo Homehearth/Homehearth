@@ -88,14 +88,12 @@ public:
 	Shaders::VertexShader				m_ParticleVertexShader;
 	Shaders::VertexShader				m_bloomVertexShader;
 
-	Shaders::PixelShader				m_opaquePixelShader;
+	Shaders::PixelShader				m_defaultPixelShader;
 	Shaders::PixelShader				m_debugPixelShader;
 	Shaders::PixelShader				m_depthPassPixelShader;
 	Shaders::PixelShader				m_skyboxPixelShader;
 	Shaders::PixelShader				m_ParticlePixelShader;
 	Shaders::PixelShader				m_bloomPixelShader;
-	Shaders::PixelShader				m_transPixelShader;
-
 
 	//Shadows
 	Shaders::VertexShader				m_paraboloidVertexShader;
@@ -123,36 +121,35 @@ public:
 	//
 	// Forward+ Resources.
 	//
-	const uint32_t AVERAGE_OVERLAPPING_LIGHTS_PER_TILE = 20u;
+	const uint32_t AVG_LIGHTS_PER_TILE = 20u;
 	uint32_t m_numFrustums;
 
 	dispatch_params_t m_dispatchParams;
 	screen_view_params_t m_screenToViewParams;
+
 	DirectX::ConstantBuffer<dispatch_params_t> m_dispatchParamsCB;
 	DirectX::ConstantBuffer<screen_view_params_t> m_screenToViewParamsCB;
 
 	std::vector<frustum_t> m_frustums_data;
-
-	std::vector<UINT> opaq_LightIndexCounter_data;
-	std::vector<UINT> trans_LightIndexCounter_data;
-	std::vector<UINT> opaq_LightIndexList_data;
-	std::vector<UINT> trans_LightIndexList_data;
-
-	// SRV: Precomputed frustums used in LightCulling_cs.
-	// UAV: Used in ComputerFrustums_cs to store computed frustums.
 	ResourceAccessView m_frustums;
 
-	ResourceAccessView opaq_LightIndexCounter;
-	ResourceAccessView trans_LightIndexCounter;
+	std::vector<UINT> o_LightIndexCounter_data;
+	ResourceAccessView o_LightIndexCounter; // only buffer & uav
+
+	std::vector<UINT> t_LightIndexCounter_data;
+	ResourceAccessView t_LightIndexCounter; // only buffer & uav
 
 	// Count of values stored in a light index list.
 	// Size is based the expected average number of overlapping lights per tile.
-	ResourceAccessView opaq_LightIndexList;
-	ResourceAccessView trans_LightIndexList;
+	std::vector<UINT> o_LightIndexList_data;
+	ResourceAccessView o_LightIndexList;
+
+	std::vector<UINT> t_LightIndexList_data;
+	ResourceAccessView t_LightIndexList;
 
 	// Stores an offset.
-	ResourceAccessView opaq_LightGrid;
-	ResourceAccessView trans_LightGrid;
+	ResourceAccessView o_LightGrid; // only srv & uav
+	ResourceAccessView t_LightGrid; // only srv & uav
 
 	ResourceAccessView m_heatMap;
 	std::shared_ptr<RTexture> m_lightCountHeatMap;
@@ -160,9 +157,6 @@ public:
 	UINT								m_windowWidth;
 	UINT								m_windowHeight;
 
-	// View space frustums for the grid cells used in ForwardPlus rendering.
-	ComPtr<ID3D11Buffer>				m_gridFrustum;
-	ComPtr<ID3D11ShaderResourceView>	m_gridFrustumSRV;
 	
 	// Nikkis stuff
 	Shaders::VertexShader				m_textureEffectVertexShader;  // Dummy.

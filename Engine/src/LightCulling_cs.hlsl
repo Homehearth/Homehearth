@@ -11,43 +11,48 @@
 //		- Light index list for transparent geometry
 
 // Group shared variables.
-groupshared uint group_uMinDepth;
-groupshared uint group_uMaxDepth;
-groupshared Frustum group_GroupFrustum; // COULD THIS BE THE ERROR !?!?!?
+groupshared uint uMinDepth;
+groupshared uint uMaxDepth;
+groupshared Frustum GroupFrustum;
+
+// Opaque geometry light lists.
 
 // To keep track of the number of lights that
 // are intersecting the current tile frustum.
-groupshared uint group_opaq_LightCount;
+groupshared uint o_LightCount;
 
 // Offset into the global light index list.
 // This index will be written to the light grid and
 // is used as the starting offset when copying the
 // local light index list to global light index list.
-groupshared uint group_opaq_LightIndexStartOffset;
-groupshared uint group_opaq_LightList[MAX_LIGHTS];
+groupshared uint o_LightIndexStartOffset;
+groupshared uint o_LightList[MAX_LIGHTS];
 
-groupshared uint group_trans_LightCount;
-groupshared uint group_trans_LightIndexStartOffset;
-groupshared uint group_trans_LightList[MAX_LIGHTS];
+// Transparent geometry light lists.
+groupshared uint t_LightCount;
+groupshared uint t_LightIndexStartOffset;
+groupshared uint t_LightList[MAX_LIGHTS];
 
-void AddLightToOpaqueList(uint lightIndex)
+// Add the light to the visible light list for opaque geometry.
+void o_AppendLight(uint lightIndex)
 {
-    uint index; // Index into the visible lights array.
-    InterlockedAdd(group_opaq_LightCount, 1, index);
-    if (index < MAX_LIGHTS)
-    {
-        group_opaq_LightList[index] = lightIndex;
-    }
+	uint index; // Index into the visible lights array.
+	InterlockedAdd(o_LightCount, 1, index);
+	if (index < MAX_LIGHTS)
+	{
+		o_LightList[index] = lightIndex;
+	}
 }
 
-void AddLightToTransparentList(uint lightIndex)
+// Add the light to the visible light list for transparent geometry.
+void t_AppendLight(uint lightIndex)
 {
-    uint index; // Index into the visible lights array.
-    InterlockedAdd(group_trans_LightCount, 1, index);
-    if (index < MAX_LIGHTS)
-    {
-        group_trans_LightList[index] = lightIndex;
-    }
+	uint index; // Index into the visible lights array.
+	InterlockedAdd(t_LightCount, 1, index);
+	if (index < MAX_LIGHTS)
+	{
+		t_LightList[index] = lightIndex;
+	}
 }
 
 [numthreads(TILE_SIZE, TILE_SIZE, 1)]
@@ -58,17 +63,14 @@ void main(ComputeShaderIn input)
 	// depth buffer only once for the current thread and
 	// thus all threads in a group will sample all depth
 	// values for a single tile.
+
 	int2 texCoord = input.dispatchThreadID.xy;
-	float z_b = t_depth.Load(int3(texCoord, 0)).r;
-	//float z_n = 2.0 * z_b - 1.0;
+	float fDepth = t_depth.Load(int3(texCoord, 0)).r;
 
-	//float zNear = 40.0f;
-	//float zFar = 220.0f;
+	//float zNear = 40.f;
+	//float zFar = 220.f;
 
-	//// Linear Depth.
-	//float z_w = 2.0 * zNear * zFar / (zFar + zNear - z_n * (zFar - zNear));
-
-	float fDepth = z_b;
+	//fDepth = ((2.0f * zNear) / (zFar + zNear - fDepth * (zFar - zNear)));
 
 	// atomic operations only work on integers,
 	// hence we reinterrpret the bits from the
@@ -79,14 +81,14 @@ void main(ComputeShaderIn input)
 
 	// Since we are setting group-shared variables,
 	// only one thread in the group needs to set them.
-    if (input.groupIndex == 0)
-    {
-        group_uMinDepth = 0xffffffff; // FLT_MAX as a uint
-		group_uMaxDepth = 0;
-		group_opaq_LightCount = 0;
-		group_trans_LightCount = 0;
-		group_GroupFrustum = sb_frustums_in[input.groupID.x + (input.groupID.y * numThreadGroups.x)];
-    }
+	if (input.groupIndex == 0) // Avoid contention by other threads in the group.
+	{
+		uMinDepth = 0xffffffff; // FLT_MAX as a uint
+		uMaxDepth = 0;
+		o_LightCount = 0;
+		t_LightCount = 0;
+		GroupFrustum = in_Frustums[input.groupID.x + (input.groupID.y * numThreadGroups.x)];
+	}
 
 	// Blocks execution of all threads in a group until
 	// all group shared accesses have been completed and
@@ -96,8 +98,8 @@ void main(ComputeShaderIn input)
 	// The InterlockedMin and InterlockedMax methods
 	// are used to atomically update the uMinDepth and
 	// uMaxDepth group - shared variables based on the current threads depth value.
-    InterlockedMin(group_uMinDepth, uDepth);	// Performs a guaranteed atomic min.
-	InterlockedMax(group_uMaxDepth, uDepth);	// Performs a guaranteed atomic max.
+    InterlockedMin(uMinDepth, uDepth);	// Performs a guaranteed atomic min.
+	InterlockedMax(uMaxDepth, uDepth);	// Performs a guaranteed atomic max.
 	
     GroupMemoryBarrierWithGroupSync();
 
@@ -105,8 +107,8 @@ void main(ComputeShaderIn input)
 	// the current tile have been found, we can reinterrpret
 	// the unsigned integer back to a float so that we can use
 	// it to compute the view space clipping planes for the current tile.
-    float fMinDepth = asfloat(group_uMinDepth);
-    float fMaxDepth = asfloat(group_uMaxDepth);
+    float fMinDepth = asfloat(uMinDepth);
+    float fMaxDepth = asfloat(uMaxDepth);
 
     // Convert depth values to view space.
     float minDepthVS = ClipToView(float4(0, 0, fMinDepth, 1)).z;
@@ -135,23 +137,24 @@ void main(ComputeShaderIn input)
 			{
 				case DIRECTIONAL_LIGHT:
 				{
-					AddLightToTransparentList(i);
-					AddLightToOpaqueList(i);
+					t_AppendLight(i);
+					o_AppendLight(i);
 				}
 				break;
 				case POINT_LIGHT:
 				{
 					float3 lightPositionVS = mul(c_view, light.position).xyz;
 					Sphere sphere = { lightPositionVS, light.range };
-					if (SphereInsideFrustum(sphere, group_GroupFrustum, nearClipVS, maxDepthVS))
+					Frustum frustum = in_Frustums[input.groupID.x + (input.groupID.y * numThreadGroups.x)];
+					if (SphereInsideFrustum(sphere, frustum, nearClipVS, maxDepthVS))
 					{
 						// Add light to light list for transparent geometry.
-						AddLightToTransparentList(i);
+						t_AppendLight(i);
 
 						if (!SphereInsidePlane(sphere, minPlane))
 						{
 							// Add light to light list for opaque geometry.
-							AddLightToOpaqueList(i);
+							o_AppendLight(i);
 						}
 					}
 				}
@@ -169,47 +172,45 @@ void main(ComputeShaderIn input)
 	// First update the light grid (only thread 0 in group needs to do this)
 	if (input.groupIndex == 0)
 	{
-		// InterlockedAdd guarantees that the group - shared light count variable is only updated by a single thread at a time.
+		// InterlockedAdd guarantees that the group - shared light count variabl is only updated by a single thread at a time.
 		// This way we avoid any race conditions that may occur when multiple threads try to increment the group-shared light count at the same time.
 
 		// Update light grid for opaque geometry.
-		InterlockedAdd(rw_opaq_lightIndexCounter[0], group_opaq_LightCount, group_opaq_LightIndexStartOffset); // Performs a guaranteed atomic add of value to the dest resource variable.
-		rw_opaq_lightGrid[input.groupID.xy] = uint2(group_opaq_LightIndexStartOffset, group_opaq_LightCount);
+		InterlockedAdd(o_LightIndexCounter[0], o_LightCount, o_LightIndexStartOffset);
+		o_LightGrid[input.groupID.xy] = uint2(o_LightIndexStartOffset, o_LightCount);
 
 		// Update light grid for transparent geometry.
-		InterlockedAdd(rw_trans_lightIndexCounter[0], group_trans_LightCount, group_trans_LightIndexStartOffset);
-		rw_trans_lightGrid[input.groupID.xy] = uint2(group_trans_LightIndexStartOffset, group_trans_LightCount);
+		InterlockedAdd(t_LightIndexCounter[0], t_LightCount, t_LightIndexStartOffset);
+		t_LightGrid[input.groupID.xy] = uint2(t_LightIndexStartOffset, t_LightCount);
 	}
 
 	GroupMemoryBarrierWithGroupSync();
 
-	// Update the light index list (all threads).
-	// For opaque geometry.
-	for (uint i = input.groupIndex; i < group_opaq_LightCount; i += TILE_SIZE * TILE_SIZE)
+	// Now update the light index list (all threads).
+	// For opaque goemetry.
+	for (uint i = input.groupIndex; i < o_LightCount; i += TILE_SIZE * TILE_SIZE)
 	{
-		rw_opaq_lightIndexList[group_opaq_LightIndexStartOffset + i] = group_opaq_LightList[i];
+		o_LightIndexList[o_LightIndexStartOffset + i] = o_LightList[i];
 	}
-
 	// For transparent geometry.
-	for (uint i = input.groupIndex; i < group_trans_LightCount; i += TILE_SIZE * TILE_SIZE)
+	for (uint i = input.groupIndex; i < t_LightCount; i += TILE_SIZE * TILE_SIZE)
 	{
-		rw_trans_lightIndexList[group_trans_LightIndexStartOffset + i] = group_trans_LightList[i];
+		t_LightIndexList[t_LightIndexStartOffset + i] = t_LightList[i];
 	}
-
 
 	// Update the debug texture output.
 	if (input.groupThreadID.x == 0 || input.groupThreadID.y == 0)
 	{
-		rw_heatMap[texCoord] = float4(0, 0, 0, 1.0f);
+		rw_heatMap[texCoord] = float4(0, 0, 0, 0.9f);
 	}
 	else if (input.groupThreadID.x == 1 || input.groupThreadID.y == 1)
 	{
-		rw_heatMap[texCoord] = float4(1, 1, 1, 1.0f);
+		rw_heatMap[texCoord] = float4(1, 1, 1, 0.5f);
 	}
-	else if (group_opaq_LightCount > 0)
+	else if (o_LightCount > 0)
 	{
-		float normalizedLightCount = group_opaq_LightCount / 10.0f;
-		float4 lightCountHeatMapColor = t_lightCountHeatMap.SampleLevel(s_linearClamp, float2(normalizedLightCount, 0), 0);
+		float normalizedLightCount = o_LightCount / 50.0f;
+		float4 lightCountHeatMapColor = t_LightCountHeatMap.SampleLevel(s_linearClamp, float2(normalizedLightCount, 0), 0);
 		rw_heatMap[texCoord] = lightCountHeatMapColor;
 	}
 	else

@@ -29,8 +29,8 @@ Plane ComputePlane(float3 p0, float3 p1, float3 p2)
     Plane plane;
 
     // Compute a plane from 3 non-collinear points that form a triangle.
-    const float3 v0 = p1 - p0; // C-A.
-    const float3 v2 = p2 - p0; // C-A.
+    float3 v0 = p1 - p0; // C-A.
+    float3 v2 = p2 - p0; // C-A.
 
     plane.normal = normalize(cross(v2, v0));
 
@@ -45,6 +45,7 @@ bool SphereInsidePlane(Sphere sphere, Plane plane)
     return dot(plane.normal, sphere.center) - plane.distanceToOrigin < -sphere.radius;
 }
 
+
 bool SphereInsideFrustum(Sphere sphere, Frustum frustum, float zNear, float zFar)
 {
     bool result = true;
@@ -56,7 +57,7 @@ bool SphereInsideFrustum(Sphere sphere, Frustum frustum, float zNear, float zFar
     {
         result = false;
     }
-
+    
     // Then check frustum planes
     for (int i = 0; i < 4 && result; i++)
     {
