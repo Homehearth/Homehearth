@@ -527,40 +527,56 @@ void RAnimator::CheckQueue()
 		//Currently running one animation
 		case EAnimStatus::ONE_ANIM:
 		{
-			//Transition to this animation exist
-			if (m_states.find({ m_currentState, queued }) != m_states.end())
+			/*if (m_animations.at(m_currentState).stayAtEnd)
 			{
-				//Wait for the perfect movement for quueuing up an animation after oneshot animation
-				if (!m_animations.at(m_currentState).animation->IsLoopable())
-				{
-					if (ReadyToBlend(m_currentState, queued))
-					{
-						m_blendState = queued;
-						m_queue.pop();
-					}
-					//Keep waiting
-				}
+				if (m_currentState != queued)
+					m_queue.pop();
 				else
 				{
-					//Upper part animation - Do not work on idle
-					if (!m_animations.at(queued).upperbodybone.empty() && m_currentState != EAnimationType::IDLE)
+					ResetAnimation(m_currentState);
+					m_currentState = EAnimationType::NONE;
+					m_queue.pop();
+					if (!m_queue.empty())
+						m_currentState = m_queue.front();
+				}
+			}*/
+			//else
+			//{
+				//Transition to this animation exist
+				if (m_states.find({ m_currentState, queued }) != m_states.end())
+				{
+					//Wait for the perfect movement for quueuing up an animation after oneshot animation
+					if (!m_animations.at(m_currentState).animation->IsLoopable())
 					{
-						m_upperState = queued;
-						m_queue.pop();
+						if (ReadyToBlend(m_currentState, queued))
+						{
+							m_blendState = queued;
+							m_queue.pop();
+						}
+						//Keep waiting
 					}
-					//Loopable animation, just queue up the next
 					else
 					{
-						m_blendState = queued;
-						m_queue.pop();
+						//Upper part animation - Do not work on idle
+						if (!m_animations.at(queued).upperbodybone.empty() && m_currentState != EAnimationType::IDLE)
+						{
+							m_upperState = queued;
+							m_queue.pop();
+						}
+						//Loopable animation, just queue up the next
+						else
+						{
+							m_blendState = queued;
+							m_queue.pop();
+						}
 					}
 				}
-			}
-			//No transition - just pop and ignore this animation...
-			else
-			{
-				m_queue.pop();
-			}
+				//No transition - just pop and ignore this animation...
+				else
+				{
+					m_queue.pop();
+				}
+			//}
 			break;
 		}
 		//Blending two animations
@@ -603,13 +619,14 @@ void RAnimator::CheckQueue()
 		default:
 			break;
 		}
-
-		//Queue is to big - could be stuck...
-		while (m_queue.size() > 3)
-		{
-			m_queue.pop();
-		}
 	}
+
+	//Queue is to big - could be stuck...
+	while (m_queue.size() > 3)
+	{
+		m_queue.pop();
+	}
+	
 }
 
 bool RAnimator::Create(const std::string& filename)
@@ -788,6 +805,18 @@ void RAnimator::Update()
 	{
 		//Check if there was anyone in queue
 		CheckQueue();
+
+		/*if (m_animations.size() == 8 &&
+			(m_currentState == EAnimationType::SECONDARY ||
+			m_blendState == EAnimationType::SECONDARY ||
+			m_upperState == EAnimationType::SECONDARY))
+		{
+			std::cout << "Current:" << (UINT)m_currentState << std::endl;
+			std::cout << "Blend:" << (UINT)m_blendState << std::endl;
+			std::cout << "Upper:" << (UINT)m_upperState << std::endl;
+			std::cout << "Queue size: " << (UINT)m_queue.size() << std::endl;
+			std::cout << std::endl;
+		}*/
 
 		switch (GetAnimStatus())
 		{

@@ -18,7 +18,7 @@ loopable		DEAD				0
 
 tickSpeed		PRIMARY				38
 upperbody		PRIMARY				QuickRigCharacter_Spine
-upperbody		SECONDARY			QuickRigCharacter_Spine
+---upperbody		SECONDARY			QuickRigCharacter_Spine
 stayAtEnd		SECONDARY			1	
 
 
