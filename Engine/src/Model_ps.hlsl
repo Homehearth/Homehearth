@@ -210,8 +210,9 @@ PixelOut main(PixelIn input)
     ambient = ambientIBL(albedo, N, V, F0, metallic, roughness, ao);
     
     // FOG
-    input.worldPos.y = 0;
-    float3 toCenter = float3(247, 0, -350) - input.worldPos.xyz;
+    float3 pos = input.worldPos.xyz;
+    pos.y = 0;
+    float3 toCenter = float3(247, 0, -350) - pos;
     float distanceToCenter = length(toCenter);
 
     float4 fogColor = float4(0.04f, 0.06f, 0.2f, 1);
