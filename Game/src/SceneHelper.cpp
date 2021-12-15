@@ -168,22 +168,9 @@ namespace sceneHelp
 
 		gameScene.on<ESceneUpdate>([=](const ESceneUpdate& e, Scene& scene)
 			{
-				scene.ForEachComponent<comp::Watermill>([=](Entity& entity, comp::Watermill& mill)
-					{
-						mill.theta += 45.f * e.dt;
+				Systems::SelfDestructSystem(scene, e.dt);
 
-						if (mill.theta >= 360.f)
-						{
-							mill.theta -= 360.f;
-						}
-
-						comp::Transform* t = entity.GetComponent<comp::Transform>();
-
-						if (t)
-						{
-							t->rotation = sm::Quaternion::CreateFromAxisAngle({ 1,0,0 }, dx::XMConvertToRadians(-mill.theta));
-						}
-					});
+				Systems::RotateWatermillWheel(scene, e.dt);
 
 				if (game->m_players.find(game->m_localPID) != game->m_players.end())
 				{
@@ -314,7 +301,7 @@ namespace sceneHelp
 					}
 				}
 
-				game->GetCycler().Update(e.dt);
+				game->GetCycler().Update(e.dt, scene);
 
 				ShopItem shopitem = game->GetShopItem();
 
@@ -549,7 +536,7 @@ namespace sceneHelp
 		for (int i = 0; i < NR_OF_HOUSES; i++)
 		{
 			Collection2D* houseWarning = new Collection2D;
-			houseWarning->AddElement<rtd::Picture>("WarningIcon.png", draw_t(0.f, 0.f, 100, 80));
+			houseWarning->AddElement<rtd::Picture>("WarningIcon.png", draw_t(0.f, 0.f, 40, 100));
 			scene.Add2DCollection(houseWarning, "HouseWarningIcon" + std::to_string(i + 1));
 			houseWarning->Hide();
 		}

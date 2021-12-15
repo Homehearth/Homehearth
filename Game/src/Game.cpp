@@ -274,13 +274,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 					m_players.erase(id);
 				}
 
-				// Spawn blood splat when enemy dies.
-				if (m_gameEntities.at(id).GetComponent<comp::Tag<BAD>>())
-				{
-					Entity bloodDecal = GetCurrentScene()->CreateEntity();
-					bloodDecal.AddComponent<comp::Decal>(*m_gameEntities.at(id).GetComponent<comp::Transform>());
-				}
-
 				comp::Player* p = m_gameEntities.at(id).GetComponent<comp::Player>();
 				if (p)
 				{
@@ -378,6 +371,12 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			case ESoundEvent::Player_OnRespawn:
 				SH->PlaySound("Player_OnRespawn", data);
 				break;
+			case ESoundEvent::Player_OnBuy:
+				SH->PlaySound("Player_OnBuy", data);
+				break;
+			case ESoundEvent::Player_OnCantBuy:
+				SH->PlaySound("Player_OnCantBuy", data);
+				break;
 				//--------------------	ENEMY	--------------------------------------
 			case ESoundEvent::Enemy_OnMovement:
 				SH->PlaySound("Enemy_OnMovement", data);
@@ -411,8 +410,17 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			case ESoundEvent::Game_OnHouseDestroyed:
 				SH->PlaySound("Game_OnHouseDestroyed", data);
 				break;
+			case ESoundEvent::House_OnDmgRecieved:
+				SH->PlaySound("House_OnDmgRecieved", data);
+				break;
 			case ESoundEvent::Game_OnPurchase:
 				SH->PlaySound("Game_OnPurchase", data);
+				break;
+			case ESoundEvent::Game_OnMorning:
+				SH->PlaySound("Game_OnMorning", data);
+				break;
+			case ESoundEvent::Game_OnNight:
+				SH->PlaySound("Game_OnNight", data);
 				break;
 			default:
 				break;
@@ -1278,10 +1286,21 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 					if (GetCurrentScene() == &scene)
 					{
 						GameSystems::UpdateHealthbar(this);
-
-						if (e == m_players.at(m_localPID))
+						comp::Transform* t = e.GetComponent<comp::Transform>();
+						if (!hp.isAlive)
 						{
-							if (!hp.isAlive)
+							if (hp.currentHealth <= 0 && !e.GetComponent<comp::House>())
+							{
+								// Spawn a bloodsplat.
+								Entity e = GetScene("Game").CreateEntity();
+								if (t)
+								{
+									e.AddComponent<comp::Decal>(t->position);
+									e.AddComponent<comp::SelfDestruct>()->lifeTime = 15.f;
+								}
+							}
+
+							if (e == m_players.at(m_localPID))
 							{
 								m_isSpectating = true;
 								scene.GetCollection("SpectateUI")->elements[0]->SetVisiblity(true);
@@ -1324,6 +1343,7 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 						cText.end_pos.y += 50;
 						cText.amount = std::abs(static_cast<int>(health->currentHealth - hp.currentHealth));
 						GetScene("Game").PushCombatText(cText);
+
 						comp::House* house = e.GetComponent<comp::House>();
 						if (house)
 						{
@@ -1349,15 +1369,7 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 								}
 							}
 						}
-
-						if (hp.currentHealth <= 0)
-						{
-							// Spawn a bloodsplat.
-							Entity e = GetScene("Game").CreateEntity();
-							e.AddComponent<comp::Decal>(*transform);
-						}
 					}
-
 					e.AddComponent<comp::Health>(hp);
 				}
 				break;

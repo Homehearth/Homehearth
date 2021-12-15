@@ -206,8 +206,8 @@ PixelOut main(PixelIn input)
     //finalFoam *= rad;
     
     //Ambient lighting
-    float3 ambient = float3(0.7f, 0.15f, 0.5f) * albedo * ao;
-    ambient = ambientIBL(albedo, N, V, F0, metallic, roughness, ao);
+    float3 staticAmbient = float3(0.7f, 0.15f, 0.5f) * albedo * ao;
+    float3 ambient = ambientIBL(albedo, N, V, F0, metallic, roughness, ao);
     
     // FOG
     input.worldPos.y = 0;
@@ -245,7 +245,7 @@ PixelOut main(PixelIn input)
                 
                 if (alpha > 0.4f)
                 {
-                    float3 colorDecal = (ambientIBL(albedoDecal, float3(0, 1, 0), V, F0, 0.f, 0.2f, 1.f) + Lo);
+                    float3 colorDecal = staticAmbient + Lo; //ambientIBL(albedoDecal, float3(0, 1, 0), V, F0, 0.f, 0.2f, 1.f) + Lo;
                     
                     //HDR tonemapping
                     //colorDecal = colorDecal / (colorDecal + float3(1.0, 1.0, 1.0));

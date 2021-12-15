@@ -65,15 +65,15 @@ namespace ecs
 			// Life span in seconds.
 			float lifespan = 7.5f;
 
-			Decal(const Transform& t)
+			Decal(sm::Vector3& pos)
 			{
 				// Be positioned slightly above.
-				sm::Vector3 position = t.position;
+				sm::Vector3 position = pos;
 				position.y = 10.0f;
 				position.x += 0.0001f;
 				position.z -= 0.0001f;
 
-				sm::Vector3 lookAt = t.position;
+				sm::Vector3 lookAt = pos;
 				lookAt.y = 0;
 				viewPoint = dx::XMMatrixLookAtLH(position, lookAt, { 0.0f, 1.0f, 0.0f });
 			}
