@@ -35,6 +35,10 @@ void IShop::UseShop(const ShopItem& whatToBuy, const uint32_t& player)
 				r->upgradeLevel++;
 			}
 			
+			//Upgrade particles
+			m_sim->GetPlayer(player).AddComponent<comp::ParticleEmitter>(sm::Vector3(0, -15, 0), 50, 2.5f, ParticleMode::UPGRADE, 1.0f, 5.f, TRUE);
+			m_sim->GetGameScene()->publish<EComponentUpdated>(m_sim->GetPlayer(player), ecs::Component::PARTICLEMITTER);
+
 			break;
 		}
 		case ShopItem::Heal:

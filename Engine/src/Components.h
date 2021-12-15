@@ -84,7 +84,7 @@ namespace ecs
 			float theta = 0;
 		};
 
-		struct EmitterParticle
+		struct EmitterParticle //For client not network
 		{
 			sm::Vector3							positionOffset	= { 0,0,0 };
 			UINT								nrOfParticles	= 0;
@@ -176,7 +176,7 @@ namespace ecs
 			}
 		};
 
-		struct ParticleEmitter 
+		struct ParticleEmitter //For network
 		{
 			sm::Vector3		positionOffset	= { 0,0,0 };
 			UINT			nrOfParticles	= 0;
