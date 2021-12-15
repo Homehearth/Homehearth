@@ -380,6 +380,9 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			case ESoundEvent::Player_OnBuy:
 				SH->PlaySound("Player_OnBuy", data);
 				break;
+			case ESoundEvent::Player_OnCantBuy:
+				SH->PlaySound("Player_OnCantBuy", data);
+				break;
 				//--------------------	ENEMY	--------------------------------------
 			case ESoundEvent::Enemy_OnMovement:
 				SH->PlaySound("Enemy_OnMovement", data);
