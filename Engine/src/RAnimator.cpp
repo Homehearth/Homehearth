@@ -55,6 +55,25 @@ void RAnimator::SetInterpolation(bool& toggle)
 	m_useInterpolation = toggle;
 }
 
+bool RAnimator::HasStayAtEndAnim()
+{
+	bool hasStayAtEnd = false;
+
+	if (m_currentState != EAnimationType::NONE)
+		if (m_animations.at(m_currentState).stayAtEnd)
+			hasStayAtEnd = true;
+
+	if (m_blendState != EAnimationType::NONE)
+		if (m_animations.at(m_blendState).stayAtEnd)
+			hasStayAtEnd = true;
+
+	if (m_upperState != EAnimationType::NONE)
+		if (m_animations.at(m_upperState).stayAtEnd)
+			hasStayAtEnd = true;
+
+	return hasStayAtEnd;
+}
+
 void RAnimator::RandomizeTime()
 {
 	auto iterator = m_animations.find(m_currentState);
@@ -773,8 +792,20 @@ void RAnimator::ChangeAnimation(const EAnimationType& type)
 	//Check if animation exist
 	if (m_animations.find(type) != m_animations.end())
 	{
-		//Queue up the animation
-		m_queue.push(type);
+		if (!HasStayAtEndAnim() &&
+			m_currentState != type)
+		{
+			//Queue up the animation
+			m_queue.push(type);
+		}
+		/*else
+		{
+			if (m_currentState == type)
+			{
+				ResetAnimation(m_currentState);
+				m_queue.push(type);
+			}
+		}*/
 	}
 }
 

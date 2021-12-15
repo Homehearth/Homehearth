@@ -72,6 +72,7 @@ private:
 
 	EAnimStatus GetAnimStatus() const;
 	bool ReadyToBlend(const EAnimationType& from, const EAnimationType& to) const;
+	bool HasStayAtEndAnim();
 
 	//Check what animations that is queued up
 	void CheckQueue();
