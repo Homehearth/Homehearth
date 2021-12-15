@@ -1344,23 +1344,23 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 							if (house && hp.currentHealth < health->currentHealth)
 							{
 
-									house->displayWarning = true;
-									house->warningIcon.pos = e.GetComponent<comp::OrientedBoxCollider>()->Center;
-									house->warningIcon.timeRendered = omp_get_wtime();
-									if (house->iconID == -1)
+								house->displayWarning = true;
+								house->warningIcon.pos = e.GetComponent<comp::OrientedBoxCollider>()->Center;
+								house->warningIcon.timeRendered = omp_get_wtime();
+								if (house->iconID == -1)
+								{
+									//Create a new warning Icon and display it(6 exists as collections in the UI)
+									for (int i = 0; i < NR_OF_HOUSES && house->iconID == -1; i++)
 									{
-										//Create a new warning Icon and display it(6 exists as collections in the UI)
-										for (int i = 0; i < NR_OF_HOUSES && house->iconID == -1; i++)
+										Collection2D* collection = scene.GetCollection("zzzzHouseWarningIcon" + std::to_string(i + 1));
+										rtd::Picture* icon = static_cast<rtd::Picture*>(collection->elements[0].get());
+										if (!icon->IsVisible())
 										{
-											Collection2D* collection = scene.GetCollection("zzzzHouseWarningIcon" + std::to_string(i + 1));
-											rtd::Picture* icon = static_cast<rtd::Picture*>(collection->elements[0].get());
-											if (!icon->IsVisible())
-											{
-												house->iconID = i;
-												icon->SetVisiblity(true);
-											}
+											house->iconID = i;
+											icon->SetVisiblity(true);
 										}
-									
+									}
+
 								}
 							}
 						}
