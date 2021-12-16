@@ -337,6 +337,10 @@ namespace network
 	void server_interface<T>::WritePacket()
 	{
 		owned_message<T> msg = m_qPrioMessagesOut.front();
+		if (m_socketInfo.find(msg.remote) == m_socketInfo.end())
+		{
+			return;
+		}
 
 		PER_IO_DATA* context = new PER_IO_DATA;
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
@@ -357,7 +361,6 @@ namespace network
 				delete context;
 			}
 		}
-
 	}
 
 	template <typename T>
@@ -957,14 +960,18 @@ namespace network
 				{
 					EnterCriticalSection(&lock);
 					owned_message<T>* s = (owned_message<T>*)Entries[i].lpCompletionKey;
-					bool write_in_progress = !m_qMessagesOut.empty();
-					m_qMessagesOut.push_back(std::move(*s));
 
-					if (!write_in_progress)
+					if (m_socketInfo.find(s->remote) != m_socketInfo.end())
 					{
-						this->WriteHeader();
+						bool write_in_progress = !m_qMessagesOut.empty();
+						m_qMessagesOut.push_back(std::move(*s));
+
+						if (!write_in_progress)
+						{
+							this->WriteHeader();
+						}
+						delete s;
 					}
-					delete s;
 					LeaveCriticalSection(&lock);
 					continue;
 				}
