@@ -21,7 +21,10 @@ include "Game"
 include "NetServer"
 include "Engine"
 
-
+project "Game"
+	targetname "Homehearth"
+project "NetServer"
+	targetname "Homehearth Server"
 
 -- Clean.
 newaction {
