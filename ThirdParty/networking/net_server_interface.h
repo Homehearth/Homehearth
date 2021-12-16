@@ -906,7 +906,7 @@ namespace network
 						}
 						case NetState::READ_PACKET:
 						{
-							LOG_INFO("%s: %d", context->DataBuf.buf);
+							LOG_INFO("%s", context->DataBuf.buf);
 
 							break;
 						}
