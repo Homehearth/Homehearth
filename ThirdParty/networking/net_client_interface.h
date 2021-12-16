@@ -130,9 +130,10 @@ namespace network
 	{
 		PER_IO_DATA* context = new PER_IO_DATA;
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
-		char buffer[1] = { 95 };
+		char buffer[] = "This is an udp packet from a client\n\0";
 		context->DataBuf.buf = buffer;
 		context->DataBuf.len = static_cast<ULONG>(sizeof(buffer));
+		LOG_INFO("Sending %d bytes!", context->DataBuf.len);
 		context->state = NetState::WRITE_PACKET;
 		DWORD bytes = 0;
 		socklen_t len = sizeof(m_endpoint);

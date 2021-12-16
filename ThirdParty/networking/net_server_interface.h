@@ -194,7 +194,7 @@ namespace network
 	{
 		PER_IO_DATA* context = new PER_IO_DATA;
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
-		char buffer[10] = {};
+		char buffer[500] = {};
 		context->DataBuf.buf = buffer;
 		context->DataBuf.len = static_cast<ULONG>(sizeof(buffer));
 		context->state = NetState::READ_PACKET;
@@ -337,10 +337,6 @@ namespace network
 	void server_interface<T>::WritePacket()
 	{
 		owned_message<T> msg = m_qPrioMessagesOut.front();
-		if (m_socketInfo.find(msg.remote) == m_socketInfo.end())
-		{
-			return;
-		}
 
 		PER_IO_DATA* context = new PER_IO_DATA;
 		ZeroMemory(&context->Overlapped, sizeof(OVERLAPPED));
@@ -875,15 +871,13 @@ namespace network
 				{
 					EnterCriticalSection(&udpLock);
 					owned_message<T>* s = (owned_message<T>*)Entries[i].lpCompletionKey;
-					if (m_socketInfo.find(s->remote) != m_socketInfo.end())
-					{
-						bool write_in_progress = !m_qPrioMessagesOut.empty();
-						m_qPrioMessagesOut.push_back(std::move(*s));
 
-						if (!write_in_progress)
-						{
-							this->WritePacket();
-						}
+					bool write_in_progress = !m_qPrioMessagesOut.empty();
+					m_qPrioMessagesOut.push_back(std::move(*s));
+
+					if (!write_in_progress)
+					{
+						this->WritePacket();
 					}
 
 					delete s;
@@ -912,7 +906,8 @@ namespace network
 						}
 						case NetState::READ_PACKET:
 						{
-							LOG_INFO("Registered user to receive UDP packets");
+							LOG_INFO("%s: %d", context->DataBuf.buf);
+
 							break;
 						}
 						}
