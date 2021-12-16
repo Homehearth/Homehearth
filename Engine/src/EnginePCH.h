@@ -18,7 +18,7 @@
 
 #define RENDER_AINODES 0
 
-#define RENDER_INGAME_UI 0
+#define RENDER_INGAME_UI 1
 #define DAYCYCLE 1
 
 //Macros

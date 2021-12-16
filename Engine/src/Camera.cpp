@@ -91,7 +91,7 @@ void Camera::Update(const float& deltaTime)
 		m_rotationMatrix = dx::XMMatrixRotationRollPitchYaw(m_rollPitchYaw.y, m_rollPitchYaw.z, m_rollPitchYaw.x);
 
 		//float speed = m_movingSpeed;
-		float speed = 2.f;
+		float speed = m_movingSpeed;
 		if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::Keys::LeftShift, KeyState::HELD))
 		{
 			speed *= 6;
