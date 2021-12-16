@@ -655,8 +655,10 @@ void ServerSystems::UpdatePlayerWithInput(Simulation* simulation, HeadlessScene&
 					p.inputState.rightMouse != p.lastInputState.rightMouse)
 				{
 					ecs::CancelAbility(e, p.secondaryAbilty);
-				}
 
+					//Cancel the animation by sending it again
+					anim.toSend = EAnimationType::SECONDARY;
+				}
 
 				//Rotate defences 90 or not
 				if (p.inputState.mousewheelDir > 0)

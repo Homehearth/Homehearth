@@ -6,7 +6,7 @@ RAnimator::RAnimator()
 	m_useInterpolation	= true;
 	m_currentState		= EAnimationType::NONE;
 	m_blendState		= EAnimationType::NONE;
-	m_upperState		= EAnimationType::NONE;
+	m_partialState		= EAnimationType::NONE;
 	m_blendDir			= true;
 }
 
@@ -53,6 +53,25 @@ bool RAnimator::LoadSkeleton(const std::vector<bone_t>& skeleton)
 void RAnimator::SetInterpolation(bool& toggle)
 {
 	m_useInterpolation = toggle;
+}
+
+bool RAnimator::HasStayAtEndAnim()
+{
+	bool hasStayAtEnd = false;
+
+	if (m_currentState != EAnimationType::NONE)
+		if (m_animations.at(m_currentState).stayAtEnd)
+			hasStayAtEnd = true;
+
+	if (m_blendState != EAnimationType::NONE)
+		if (m_animations.at(m_blendState).stayAtEnd)
+			hasStayAtEnd = true;
+
+	if (m_partialState != EAnimationType::NONE)
+		if (m_animations.at(m_partialState).stayAtEnd)
+			hasStayAtEnd = true;
+
+	return hasStayAtEnd;
 }
 
 void RAnimator::RandomizeTime()
@@ -186,10 +205,10 @@ bool RAnimator::UpdateTime(const EAnimationType& type)
 					{
 						m_blendState = EAnimationType::NONE;
 					}
-					else if (m_upperState == type)
+					else if (m_partialState == type)
 					{
-						m_upperState = EAnimationType::NONE;
-					}
+						m_partialState = EAnimationType::NONE;
+					}					
 				}
 			}
 			else
@@ -329,22 +348,23 @@ void RAnimator::BlendTwoAnims()
 	}
 }
 
-void RAnimator::UpperLowerAnims()
+void RAnimator::PartialAnim()
 {
-	animation_t* lowerAnim = &m_animations[m_currentState];
-	animation_t* upperAnim = &m_animations[m_upperState];
+	animation_t* standard = &m_animations[m_currentState];
+	animation_t* partial = &m_animations[m_partialState];
 	animation_t* anim;	//Current
 	
-	if (lowerAnim && upperAnim)
+	if (standard && partial)
 	{
 		if (UpdateTime(m_currentState))
 		{
-			if (UpdateTime(m_upperState))
+			if (UpdateTime(m_partialState))
 			{
 				std::vector<sm::Matrix> bonePoseAbsolute;
 				bonePoseAbsolute.resize(m_bones.size(), sm::Matrix::Identity);
-				anim = lowerAnim;
-				std::string bonename = m_animations.at(m_upperState).upperbodybone;
+				anim = standard;
+				std::string startBone = m_animations.at(m_partialState).partialStartBone;
+				std::string endBone = m_animations.at(m_partialState).partialEndBone;
 
 				//Go through all the bones
 				for (size_t i = 0; i < m_bones.size(); i++)
@@ -352,9 +372,11 @@ void RAnimator::UpperLowerAnims()
 					std::string name = m_bones[i].name;
 					sm::Matrix bonePoseRelative;
 
-					//Swap to the other animation
-					if (name == bonename)
-						anim = upperAnim;
+					//Swapping between animations
+					if (name == startBone)
+						anim = partial;
+					else if (name == endBone)
+						anim = standard;
 
 					bonePoseRelative = anim->animation->GetMatrix(name, anim->frameTimer, anim->lastKeys[name].keys, m_useInterpolation);
 
@@ -371,41 +393,43 @@ void RAnimator::UpperLowerAnims()
 	}
 }
 
-void RAnimator::BlendUpperLowerAnims()
+void RAnimator::BlendPartialAnim()
 {
 	animation_t* anim1		= &m_animations[m_currentState];
 	animation_t* anim2		= &m_animations[m_blendState];
-	animation_t* upperAnim	= &m_animations[m_upperState];
+	animation_t* partial	= &m_animations[m_partialState];
 	
-	if (anim1 && anim2 && upperAnim)
+	if (anim1 && anim2 && partial)
 	{
 		if (UpdateTime(m_currentState))
 		{
 			if (UpdateTime(m_blendState))
 			{
-				if (UpdateTime(m_upperState))
+				if (UpdateTime(m_partialState))
 				{
-					bool keepGoing = true;
 					float lerpTime;
-
 					if (UpdateBlendTime(m_currentState, m_blendState, lerpTime))
 					{
 						std::vector<sm::Matrix> bonePoseAbsolute;
 						bonePoseAbsolute.resize(m_bones.size(), sm::Matrix::Identity);
-						std::string bonename = m_animations.at(m_upperState).upperbodybone;
+						std::string startBone = m_animations.at(m_partialState).partialStartBone;
+						std::string endBone = m_animations.at(m_partialState).partialEndBone;
 						bool switched = false;
 
 						for (size_t i = 0; i < m_bones.size(); i++)
 						{
 							std::string name = m_bones[i].name;
 
-							if (name == bonename)
+							//Swapping between animations
+							if (name == startBone)
 								switched = true;
+							else if (name == endBone)
+								switched = false;
 
 							sm::Matrix bonePoseRelative;
 							if (switched)
 							{
-								bonePoseRelative		= upperAnim->animation->GetMatrix(name, upperAnim->frameTimer, upperAnim->lastKeys[name].keys, m_useInterpolation);
+								bonePoseRelative		= partial->animation->GetMatrix(name, partial->frameTimer, partial->lastKeys[name].keys, m_useInterpolation);
 							}
 							else
 							{
@@ -449,16 +473,16 @@ EAnimStatus RAnimator::GetAnimStatus() const
 	{
 		current = 0x01,
 		blend	= 0x02,
-		upper	= 0x04
+		partial	= 0x04
 	};
 	UINT state = 0;
 
 	if (m_currentState	!= EAnimationType::NONE)
 		state |= bitstate::current;
-	if (m_blendState != EAnimationType::NONE)
+	if (m_blendState	!= EAnimationType::NONE)
 		state |= bitstate::blend;
-	if (m_upperState	!= EAnimationType::NONE)
-		state |= bitstate::upper;
+	if (m_partialState	!= EAnimationType::NONE)
+		state |= bitstate::partial;
 
 	switch (state)
 	{
@@ -468,11 +492,11 @@ EAnimStatus RAnimator::GetAnimStatus() const
 	case 3:	//Current + Blend
 		codetype = EAnimStatus::TWO_ANIM_BLEND;
 		break;
-	case 5: //Current + Upper
-		codetype = EAnimStatus::TWO_ANIM_UPPER_LOWER;
+	case 5: //Current + Partial
+		codetype = EAnimStatus::TWO_ANIM_PARTIAL;
 		break;
-	case 7: //Current + Blend + Upper
-		codetype = EAnimStatus::THREE_ANIM_UPPER_LOWER_BLEND;
+	case 7: //Current + Blend + Partial
+		codetype = EAnimStatus::THREE_ANIM_PARTIAL_BLEND;
 		break;
 	default:
 		break;
@@ -535,10 +559,10 @@ void RAnimator::CheckQueue()
 				}
 				else
 				{
-					//Upper part animation - Do not work on idle
-					if (!m_animations.at(queued).upperbodybone.empty() && m_currentState != EAnimationType::IDLE)
+					//Partial animation - Do not work on idle - should use ful animation at this time
+					if (!m_animations.at(queued).partialStartBone.empty() && m_currentState != EAnimationType::IDLE)
 					{
-						m_upperState = queued;
+						m_partialState = queued;
 						m_queue.pop();
 					}
 					//Loopable animation, just queue up the next
@@ -578,12 +602,12 @@ void RAnimator::CheckQueue()
 				//Cancel the blending with the queued up one
 				else
 				{
-					//Has a upperbody bone, then okay to queue it to upperstate
-					if (!m_animations.at(queued).upperbodybone.empty())
+					//Has a partial bone, then okay to queue it to partialState
+					if (!m_animations.at(queued).partialStartBone.empty())
 					{
-						if (m_upperState == EAnimationType::NONE)
+						if (m_partialState == EAnimationType::NONE)
 						{
-							m_upperState = queued;
+							m_partialState = queued;
 							m_queue.pop();
 						}
 					}
@@ -591,18 +615,19 @@ void RAnimator::CheckQueue()
 			}
 			break;
 		}
-		//In current + upper:			ignore
-		//In current + upper + blend:	ignore
+		//In current + partial:			ignore
+		//In current + partial + blend:	ignore
 		default:
 			break;
 		}
-
-		//Queue is to big - could be stuck...
-		while (m_queue.size() > 3)
-		{
-			m_queue.pop();
-		}
 	}
+
+	//Queue is to big - could be stuck...
+	while (m_queue.size() > 3)
+	{
+		m_queue.pop();
+	}
+	
 }
 
 bool RAnimator::Create(const std::string& filename)
@@ -708,16 +733,33 @@ bool RAnimator::Create(const std::string& filename)
 					}
 				}
 			}
-			else if (keyword == "upperbody")
+			else if (keyword == "partialAnim")
 			{
 				std::string key;
-				std::string bonename;
-				if (ss >> key >> bonename)
+				std::string startbone	= "";
+				std::string endbone		= "";
+				if (ss >> key >> startbone)
+				{
+					ss >> endbone;
+
+					EAnimationType animType = StringToAnimationType(key);
+					if (m_animations.find(animType) != m_animations.end())
+					{
+						m_animations.at(animType).partialStartBone	= startbone;
+						m_animations.at(animType).partialEndBone	= endbone;
+					}
+				}
+			}
+			else if (keyword == "stayAtEnd")
+			{
+				std::string key;
+				bool stayAtEnd = false;
+				if (ss >> key >> stayAtEnd)
 				{
 					EAnimationType animType = StringToAnimationType(key);
 					if (m_animations.find(animType) != m_animations.end())
 					{
-						m_animations.at(animType).upperbodybone = bonename;
+						m_animations.at(animType).stayAtEnd = stayAtEnd;
 					}
 				}
 			}
@@ -733,8 +775,12 @@ void RAnimator::ChangeAnimation(const EAnimationType& type)
 	//Check if animation exist
 	if (m_animations.find(type) != m_animations.end())
 	{
-		//Queue up the animation
-		m_queue.push(type);
+		if (!HasStayAtEndAnim() &&
+			m_currentState != type)
+		{
+			//Queue up the animation
+			m_queue.push(type);
+		}
 	}
 }
 
@@ -774,11 +820,11 @@ void RAnimator::Update()
 		case EAnimStatus::TWO_ANIM_BLEND:
 			BlendTwoAnims();
 			break;
-		case EAnimStatus::TWO_ANIM_UPPER_LOWER:
-			UpperLowerAnims();
+		case EAnimStatus::TWO_ANIM_PARTIAL:
+			PartialAnim();
 			break;
-		case EAnimStatus::THREE_ANIM_UPPER_LOWER_BLEND:
-			BlendUpperLowerAnims();
+		case EAnimStatus::THREE_ANIM_PARTIAL_BLEND:
+			BlendPartialAnim();
 			break;
 		default:
 			break;
