@@ -21,7 +21,7 @@ private:
 
 	EAnimationType							m_currentState;		//The main focus animation
 	EAnimationType							m_blendState;		//The animation we blending to
-	EAnimationType							m_upperState;		//Animation that can play on upper half of the body
+	EAnimationType							m_partialState;		//Secondary animation that can be played on a part of the body
 	std::queue<EAnimationType>				m_queue;			//Queue of animations to play in order
 	bool									m_blendDir;			//True: toward blend, False: toward current
 
@@ -31,11 +31,12 @@ private:
 		std::shared_ptr<RAnimation>					animation;
 		
 		//Specific data for this animation in this animator
-		float										frameTimer		= 0;
-		float										lastTick		= 0;
+		float										frameTimer			= 0;
+		float										lastTick			= 0;
 		std::unordered_map<std::string, lastKeys_t> lastKeys;
-		std::string									upperbodybone	= "";	//Bone that devide lower and upper body
-		bool										stayAtEnd		= false;
+		std::string									partialStartBone	= "";	//Start bone of partial animation
+		std::string									partialEndBone		= "";	//End bone of partial animation - okay to leave blank
+		bool										stayAtEnd			= false;
 	};
 
 	std::unordered_map<EAnimationType, animation_t>						m_animations;
@@ -63,12 +64,11 @@ private:
 	//Lerptime will be returned as a parameter on success.
 	bool UpdateBlendTime(const EAnimationType& from, const EAnimationType& to, float& lerpTime);
 
-
 	//Different types of doing animations
 	void StandardAnim();			//Current
 	void BlendTwoAnims();			//Current + blend
-	void UpperLowerAnims();			//Current + upper				//REMOVE
-	void BlendUpperLowerAnims();	//Current + blend + upper		//REMOVE
+	void PartialAnim();				//Current + partial
+	void BlendPartialAnim();		//Current + blend + partial
 
 	EAnimStatus GetAnimStatus() const;
 	bool ReadyToBlend(const EAnimationType& from, const EAnimationType& to) const;

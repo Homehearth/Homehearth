@@ -9,7 +9,8 @@ anim			DEAD				Dead.fbx
 loopable		PRIMARY				0
 loopable		TAKE_DAMAGE			0
 loopable		DEAD				0
-upperbodi		PRIMARY				QuickRigCharacter_Spine
+
+partialAnim		PRIMARY				QuickRigCharacter_Spine
 
 
 state			IDLE				MOVE				0.3
