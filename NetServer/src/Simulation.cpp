@@ -484,6 +484,7 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 	this->BuildMapColliders(mapColliders);
 	EnemyManagement::CreateWaves(waveQueue, currentRound++);
 
+	m_rainEntity = m_pGameScene->CreateEntity();
 	m_pCurrentScene = m_pLobbyScene;
 
 	return true;
@@ -750,8 +751,9 @@ void Simulation::UpgradeDefence(const uint32_t& id)
 			{
 				comp::Cost* c = e.GetComponent<comp::Cost>();
 				comp::Health* h = e.GetComponent<comp::Health>();
+				comp::MeshName* m = e.GetComponent<comp::MeshName>();
 
-				if (c && h)
+				if (c && h && m)
 				{
 					if (m_currency >= c->cost && h->upgradeLevel <= 2)
 					{
@@ -760,11 +762,48 @@ void Simulation::UpgradeDefence(const uint32_t& id)
 						h->currentHealth += 35;
 						h->upgradeLevel++;
 
+						switch (m->name)
+						{
+						case NameType::MESH_DEFENCE1X1_LVL0:
+						{
+							m->name = NameType::MESH_DEFENCE1X1_LVL1;
+							break;
+						}
+						case NameType::MESH_DEFENCE1X1_LVL1:
+						{
+							m->name = NameType::MESH_DEFENCE1X1_LVL2;
+							break;
+						}
+						case NameType::MESH_DEFENCE1X1_LVL2:
+						{
+							m->name = NameType::MESH_DEFENCE1X1_LVL3;
+							break;
+						}
+						case NameType::MESH_DEFENCE1X3_LVL0:
+						{
+							m->name = NameType::MESH_DEFENCE1X3_LVL1;
+							break;
+						}
+						case NameType::MESH_DEFENCE1X3_LVL1:
+						{
+							m->name = NameType::MESH_DEFENCE1X3_LVL2;
+							break;
+						}
+						case NameType::MESH_DEFENCE1X3_LVL2:
+						{
+							m->name = NameType::MESH_DEFENCE1X3_LVL3;
+							break;
+						}
+						default:
+							break;
+						}
+
 						// Cost is here.
 						e.UpdateNetwork();
 						m_currency -= c->cost;
 						c->cost *= static_cast<uint32_t>(1.5f);
 						m_pGameScene->publish<EComponentUpdated>(e, ecs::Component::COST);
+						m_pGameScene->publish<EComponentUpdated>(e, ecs::Component::MESH_NAME);
 					}
 				}
 			}
@@ -792,7 +831,7 @@ void Simulation::SetGameScene()
 	m_lobby.SetActive(false);
 #if GOD_MODE
 	// During debug give players 1000 gold/monies.
-	m_currency = 1000;
+	m_currency = 10000;
 #else
 	m_currency = 500;
 #endif
@@ -854,8 +893,13 @@ void Simulation::ResetGameScene()
 	AIBehaviors::UpdateBlackBoard(*m_pGameScene, blackboard.get());
 	qt->ClearNullEntities();
 
+#if DAYCYCLE
 	m_timeCycler.SetTime(MORNING);
 	m_timeCycler.SetCycleSpeed(1.0f);
+#else
+	m_timeCycler.SetTime(DAY);
+	m_timeCycler.SetCycleSpeed(0.0f);
+#endif
 	m_tick = 0;
 }
 

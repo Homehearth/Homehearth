@@ -71,6 +71,7 @@ public:
 	Lobby m_lobby;
 	uint32_t m_wavesSurvived;
 	IShop m_shop;
+	Entity m_rainEntity;
 
 	Simulation(Server* pServer, HeadlessEngine* pEngine);
 	virtual ~Simulation() = default;

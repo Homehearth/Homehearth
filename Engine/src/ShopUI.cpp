@@ -109,7 +109,7 @@ bool ShopUI::CheckHover()
 		else
 			m_signTexture->SetTexture("NotEnoughMoneySign.png");
 
-		m_chosenBorder->UpdatePos(draw_t(m_drawOpts.x_pos + m_drawOpts.width * 0.15f, m_drawOpts.y_pos + m_drawOpts.height * 0.14f, m_drawOpts.width * 0.475f - m_drawOpts.x_pos, m_drawOpts.height * 0.40f - m_drawOpts.y_pos));
+		m_chosenBorder->UpdatePos(draw_t(m_drawOpts.x_pos + m_drawOpts.width * 0.15f, m_drawOpts.y_pos + m_drawOpts.height * 0.14f, (m_drawOpts.x_pos + m_drawOpts.width * 0.475f) - (m_drawOpts.width * 0.15f + m_drawOpts.x_pos), (m_drawOpts.y_pos + m_drawOpts.height * 0.4f) - (m_drawOpts.height * 0.14f + m_drawOpts.y_pos)));
 		m_chosenBorder->SetVisiblity(true);
 
 		hoveringState = ElementState::INSIDE;
@@ -119,7 +119,7 @@ bool ShopUI::CheckHover()
 	if (InputSystem::Get().GetMousePos().x > m_drawOpts.x_pos + m_drawOpts.width * 0.53f &&
 		InputSystem::Get().GetMousePos().x < m_drawOpts.x_pos + m_drawOpts.width * 0.85f &&
 		InputSystem::Get().GetMousePos().y > m_drawOpts.y_pos + m_drawOpts.height * 0.14f &&
-		InputSystem::Get().GetMousePos().y < m_drawOpts.y_pos + m_drawOpts.height * 0.45f)
+		InputSystem::Get().GetMousePos().y < m_drawOpts.y_pos + m_drawOpts.height * 0.415f)
 	{
 		m_buttonHovering[1] = true;
 		//LOG_INFO("1x3 Defence hovering");
@@ -135,7 +135,7 @@ bool ShopUI::CheckHover()
 		else
 			m_signTexture->SetTexture("NotEnoughMoneySign.png");
 
-		m_chosenBorder->UpdatePos(draw_t(m_drawOpts.x_pos + m_drawOpts.width * 0.53f, m_drawOpts.y_pos + m_drawOpts.height * 0.14f, m_drawOpts.width * 0.475f - m_drawOpts.x_pos, m_drawOpts.height * 0.40f - m_drawOpts.y_pos));
+		m_chosenBorder->UpdatePos(draw_t(m_drawOpts.x_pos + m_drawOpts.width * 0.53f, m_drawOpts.y_pos + m_drawOpts.height * 0.14f, (m_drawOpts.width * 0.85f + m_drawOpts.x_pos) - (m_drawOpts.width * 0.53f + m_drawOpts.x_pos), (m_drawOpts.height * 0.415f + m_drawOpts.y_pos) - (m_drawOpts.height * 0.14f + m_drawOpts.y_pos)));
 		m_chosenBorder->SetVisiblity(true);
 
 		hoveringState = ElementState::INSIDE;

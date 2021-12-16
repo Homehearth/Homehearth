@@ -57,8 +57,6 @@ void main(uint3 particleID : SV_DispatchThreadID)
         UpgradeSimulation(vertex, id);
     
     vertex.life += dt;
-    //vertex.size += particleSizeMulitplier * deltaTime;
-
 }
 
 void BloodSimmulation(inout VertexParticleIn particle, in uint id)
@@ -71,24 +69,6 @@ void BloodSimmulation(inout VertexParticleIn particle, in uint id)
         
         particle.velocity.y -= gravity * dt;
         
-        //Particles branch old
-        //if (particle.size.x >= 0 && particle.life <= particleLifeTime / 3)
-        //{
-        //    float sizeChange = abs((randomNumbers[id + counter]) * dt);
-        //    particle.size -= ((particle.life / 3) / (particleLifeTime / 3)) * sizeMulitplier;
-        //    particle.color.rgb += 1.0f * dt;
-        //}
-        
-        //Particles branch new
-
-        //if (particle.size.x >= 0 && particle.life <= particleLifeTime / 3)
-        //{
-        //    float sizeChange = abs((randomNumbers[id + counter]) * dt);
-        //    particle.color.rgb += 1.0f * dt;
-        //}
-        //particle.size -= ((particle.life) / (particleLifeTime));
-        
-        //Dev brnahc
         if (particle.size.x >= 0 && particle.life <= particleLifeTime / 3)
         {
             float sizeChange = abs((randomNumbers[id + counter]) * dt);
@@ -110,8 +90,6 @@ void BloodSimmulation(inout VertexParticleIn particle, in uint id)
         particle.velocity.y = (randomNumbers[id + 1]);
         particle.velocity.z = (randomNumbers[id + counter]);
     }
-    
-
 }
 
 void LeafSimmulation(inout VertexParticleIn particle, in uint id) //OLD
@@ -350,12 +328,9 @@ void MageBlinkSimulation(inout VertexParticleIn particle, in uint id)
 {
     if (particle.life <= lifeTime)
     {
-    
         float particleUniqueSpeed = speed * abs(randomNumbers[id + counter]);
         
-        
         particle.velocity *= 1.0002f;
-        //particle.velocity += (float4((dir), 1) / 100) * dt;
         particle.velocity = normalize(particle.velocity);
         particle.pos += particle.velocity * particleUniqueSpeed * dt;
     
@@ -363,8 +338,7 @@ void MageBlinkSimulation(inout VertexParticleIn particle, in uint id)
             particle.size -= ((particle.life) / (lifeTime)) * particleUniqueSpeed * dt;
         
         if (particle.color.a > 0)
-            particle.color.a -= dt * sizeMulitplier * 0.5f;
-        
+            particle.color.a -= dt * sizeMulitplier * 0.5f;   
         
         particle.color.b += dt * sizeMulitplier * 10.f;
     }
@@ -398,17 +372,5 @@ void UpgradeSimulation(inout VertexParticleIn particle, in uint id)
         particle.size = float2(sizeMulitplier, sizeMulitplier);
         particle.life = 0;
 
-    }
-                                           
-    //particle.velocity.x = cos(counter * (id) * PI * 2);
-    //particle.velocity.z = sin(counter * (id) * PI * 2);   
-    
-    
-    //particle.velocity.x = cos(counter + id);
-    //particle.velocity.z = sin(counter + id);
-    //particle.velocity.y = cos(counter + id);
-    //particle.velocity.y += randomNumbers[id + counter] * dt;
-    
-   
-
+    }   
 }

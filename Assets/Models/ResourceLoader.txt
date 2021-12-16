@@ -4,8 +4,14 @@ Monster.fbx
 mage.fbx
 Barrel.obj
 Cube.obj
-Defence1x1.obj
-Defence1x3.obj
+lvl0_1x1.fbx
+lvl0_1x3.fbx
+lvl1_1x1.fbx
+lvl1_1x3.fbx
+lvl2_1x1.fbx
+lvl2_1x3.fbx
+lvl3_1x1.fbx
+lvl3_1x3.fbx
 Door1.fbx
 Door5.fbx
 Door6.fbx

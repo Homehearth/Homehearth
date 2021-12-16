@@ -191,12 +191,12 @@ std::vector<Entity> GridSystem::UpdateHoverDefence()
 				Entity entity1 = m_scene->CreateEntity();
 				entity1.AddComponent<comp::Transform>();
 				entity1.AddComponent<comp::Network>();
-				entity1.AddComponent<comp::MeshName>()->name = NameType::MESH_DEFENCE1X1;
+				entity1.AddComponent<comp::MeshName>()->name = NameType::MESH_DEFENCE1X1_LVL0;
 
 				Entity entity2 = m_scene->CreateEntity();
 				entity2.AddComponent<comp::Transform>();
 				entity2.AddComponent<comp::Network>();
-				entity2.AddComponent<comp::MeshName>()->name = NameType::MESH_DEFENCE1X3;
+				entity2.AddComponent<comp::MeshName>()->name = NameType::MESH_DEFENCE1X3_LVL0;
 				m_hoveredDefences[net.id] = { entity1, entity2 };
 			}
 			else
@@ -220,7 +220,7 @@ std::vector<Entity> GridSystem::UpdateHoverDefence()
 						int centerTileZ = static_cast<int>(std::abs(pos.z) / m_tileSize.y);
 						if (InsideGrid(centerTileX, centerTileZ))
 							pos = m_tiles[centerTileZ][centerTileX].position;
-						pos.y = 5.f;
+						//pos.y = 5.f;
 
 						comp::Transform* transform;
 
@@ -233,7 +233,7 @@ std::vector<Entity> GridSystem::UpdateHoverDefence()
 							else
 								transform->rotation = sm::Quaternion(0, 0, 0, 0);
 
-							m_hoveredDefences.at(net.id).def1x1.GetComponent<comp::MeshName>()->name = NameType::MESH_DEFENCE1X1;
+							m_hoveredDefences.at(net.id).def1x1.GetComponent<comp::MeshName>()->name = NameType::MESH_DEFENCE1X1_LVL0;
 
 							entities.push_back(m_hoveredDefences.at(net.id).def1x1);
 						}
@@ -246,7 +246,7 @@ std::vector<Entity> GridSystem::UpdateHoverDefence()
 							else
 								transform->rotation = sm::Quaternion(0, 0, 0, 0);
 
-							m_hoveredDefences.at(net.id).def1x3.GetComponent<comp::MeshName>()->name = NameType::MESH_DEFENCE1X3;
+							m_hoveredDefences.at(net.id).def1x3.GetComponent<comp::MeshName>()->name = NameType::MESH_DEFENCE1X3_LVL0;
 
 							entities.push_back(m_hoveredDefences.at(net.id).def1x3);
 						}
@@ -580,8 +580,9 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 		blackboard->GetPathFindManager()->AddDefenseEntity(tileEntity);
 
 		sm::Vector3 centerpoint = CalcCenterPoint(coordinates);
-		transform->position = { centerpoint.x, 5.f, centerpoint.z };
+		transform->position = { centerpoint.x, 0.f, centerpoint.z };
 		collider->Center = transform->position;
+		collider->Center.y = 5.f;
 
 		UINT numberOfDefences = 0;
 		ShopItem shopitem = player.shopItem;
@@ -606,13 +607,13 @@ bool GridSystem::PlaceDefence(Ray_t& mouseRay, uint32_t playerWhoPressedMouse, P
 			{
 				health->maxHealth = 100.0f;
 				health->currentHealth = health->maxHealth;
-				tileEntity.AddComponent<comp::MeshName>()->name = NameType::MESH_DEFENCE1X1;
+				tileEntity.AddComponent<comp::MeshName>()->name = NameType::MESH_DEFENCE1X1_LVL0;
 			}
 			else if (shopitem == ShopItem::Defence1x3)
 			{
 				health->maxHealth = 300.0f;
 				health->currentHealth = health->maxHealth;
-				tileEntity.AddComponent<comp::MeshName>()->name = NameType::MESH_DEFENCE1X3;
+				tileEntity.AddComponent<comp::MeshName>()->name = NameType::MESH_DEFENCE1X3_LVL0;
 			}
 			dynamicQT->Insert(tileEntity);
 			return true;

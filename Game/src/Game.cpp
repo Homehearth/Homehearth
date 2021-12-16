@@ -1174,14 +1174,44 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 						nameString = "HouseRoof.fbx";
 						break;
 					}
-					case NameType::MESH_DEFENCE1X1:
+					case NameType::MESH_DEFENCE1X1_LVL0:
 					{
-						nameString = "Defence1x1.obj";
+						nameString = "lvl0_1x1.fbx";
 						break;
 					}
-					case NameType::MESH_DEFENCE1X3:
+					case NameType::MESH_DEFENCE1X1_LVL1:
 					{
-						nameString = "Defence1x3.obj";
+						nameString = "lvl1_1x1.fbx";
+						break;
+					}
+					case NameType::MESH_DEFENCE1X1_LVL2:
+					{
+						nameString = "lvl2_1x1.fbx";
+						break;
+					}
+					case NameType::MESH_DEFENCE1X1_LVL3:
+					{
+						nameString = "lvl3_1x1.fbx";
+						break;
+					}
+					case NameType::MESH_DEFENCE1X3_LVL0:
+					{
+						nameString = "lvl0_1x3.fbx";
+						break;
+					}
+					case NameType::MESH_DEFENCE1X3_LVL1:
+					{
+						nameString = "lvl1_1x3.fbx";
+						break;
+					}
+					case NameType::MESH_DEFENCE1X3_LVL2:
+					{
+						nameString = "lvl2_1x3.fbx";
+						break;
+					}
+					case NameType::MESH_DEFENCE1X3_LVL3:
+					{
+						nameString = "lvl3_1x3.fbx";
 						break;
 					}
 					case NameType::MESH_KNIGHT:
@@ -1300,7 +1330,10 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 								scene.GetCollection("SpectateUI")->elements[0]->SetVisiblity(true);
 								scene.GetCollection("SpectateUI")->elements[1]->SetVisiblity(true);
 							}
-							else
+						}
+						else
+						{
+							if (e == m_players.at(m_localPID))
 							{
 								if (m_isSpectating)
 								{
@@ -1313,37 +1346,34 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 								}
 							}
 						}
-					}
-					comp::Health* health = e.GetComponent<comp::Health>();
-					comp::Transform* transform = e.GetComponent<comp::Transform>();
-					if (health && transform)
-					{
-						combat_text_inst_t cText;
-						// Signal health gain.
-						if (health->currentHealth <= hp.currentHealth)
+						comp::Health* health = e.GetComponent<comp::Health>();
+						comp::Transform* transform = e.GetComponent<comp::Transform>();
+						if (health && transform)
 						{
-							cText.type = combat_text_enum::HEALTH_GAIN;
-							cText.pos = transform->position;
-						}
-						else if (health->currentHealth > hp.currentHealth)
-						{
-							cText.type = combat_text_enum::HEALTH_LOSS;
-							cText.pos = transform->position;
-						}
-
-						cText.timeRendered = static_cast<float>(omp_get_wtime());
-						cText.pos.y += 15;
-						cText.end_pos = cText.pos;
-						cText.end_pos.y += 50;
-						cText.amount = std::abs(static_cast<int>(health->currentHealth - hp.currentHealth));
-						GetScene("Game").PushCombatText(cText);
-
-						comp::House* house = e.GetComponent<comp::House>();
-						if (house)
-						{
-							if (hp.currentHealth < health->currentHealth)
+							combat_text_inst_t cText;
+							// Signal health gain.
+							if (health->currentHealth <= hp.currentHealth)
 							{
-								LOG_INFO("House took damage");
+								cText.type = combat_text_enum::HEALTH_GAIN;
+								cText.pos = transform->position;
+							}
+							else if (health->currentHealth > hp.currentHealth)
+							{
+								cText.type = combat_text_enum::HEALTH_LOSS;
+								cText.pos = transform->position;
+							}
+
+							cText.timeRendered = static_cast<float>(omp_get_wtime());
+							cText.pos.y += 15;
+							cText.end_pos = cText.pos;
+							cText.end_pos.y += 50;
+							cText.amount = std::abs(static_cast<int>(health->currentHealth - hp.currentHealth));
+							scene.PushCombatText(cText);
+
+							comp::House* house = e.GetComponent<comp::House>();
+							if (house && hp.currentHealth < health->currentHealth)
+							{
+								LOG_INFO("HOUSE DAMAGED!");
 								house->displayWarning = true;
 								house->warningIcon.pos = e.GetComponent<comp::OrientedBoxCollider>()->Center;
 								house->warningIcon.timeRendered = omp_get_wtime();
@@ -1360,6 +1390,7 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 											icon->SetVisiblity(true);
 										}
 									}
+
 								}
 							}
 						}

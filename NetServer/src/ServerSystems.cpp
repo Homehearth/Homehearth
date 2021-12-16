@@ -105,7 +105,7 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		attackAbility->cooldown = 0.8f;
 		attackAbility->attackDamage = 10.f;
 		attackAbility->lifetime = 0.3f;
-		attackAbility->attackRange = 7.0f;
+		attackAbility->attackRange = 3.0f;
 		attackAbility->useTime = 0.3f;
 		attackAbility->delay = 0.2f;
 		attackAbility->movementSpeedAlt = 0.0f;
@@ -125,7 +125,7 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		attackAbility->cooldown = 2.0f;
 		attackAbility->attackDamage = 20.f;
 		attackAbility->lifetime = 0.3f;
-		attackAbility->attackRange = 14.0f;
+		attackAbility->attackRange = 10.0f;
 		attackAbility->useTime = 0.3f;
 		attackAbility->delay = 0.2f;
 		attackAbility->movementSpeedAlt = 0.0f;
@@ -393,6 +393,12 @@ void ServerSystems::OnCycleChange(Simulation* simulation)
 		{
 		case CyclePeriod::MORNING:
 		{
+			if (simulation->m_rainEntity.GetComponent<comp::ParticleEmitter>())
+			{
+				simulation->m_rainEntity.RemoveComponent<comp::ParticleEmitter>();
+				simulation->m_rainEntity.UpdateNetwork();
+			}
+
 			simulation->m_timeCycler.ResetCycleSpeed();
 			// remove all bad guys
 			simulation->GetGameScene()->ForEachComponent<comp::Tag<BAD>>([=](Entity e, comp::Tag<BAD>&)
@@ -427,6 +433,11 @@ void ServerSystems::OnCycleChange(Simulation* simulation)
 		}
 		case CyclePeriod::DAY:
 		{
+			if (simulation->m_rainEntity.GetComponent<comp::ParticleEmitter>())
+			{
+				simulation->m_rainEntity.RemoveComponent<comp::ParticleEmitter>();
+				simulation->m_rainEntity.UpdateNetwork();
+			}
 			break;
 		}
 		case CyclePeriod::NIGHT:
@@ -437,6 +448,15 @@ void ServerSystems::OnCycleChange(Simulation* simulation)
 			{
 				// start new wave
 				simulation->GetGameScene()->publish<ESceneCallWaveSystem>(0.0f);
+
+				if (rand()% 10 == 0)
+				{
+					simulation->m_rainEntity.AddComponent<comp::Network>();
+					simulation->m_rainEntity.AddComponent<comp::Transform>()->position = { 250, 80, -360 };
+					simulation->m_rainEntity.AddComponent<comp::ParticleEmitter>(sm::Vector3{ 0,0,0 }, 15000, 1.0f, ParticleMode::RAIN, 85.0f, 20.f, true);
+
+					simulation->m_rainEntity.UpdateNetwork();
+				}
 			}
 			break;
 		}
@@ -1062,24 +1082,7 @@ Entity VillagerManagement::CreateVillager(HeadlessScene& scene, Entity homeHouse
 	comp::House* house = homeHouse.GetComponent<comp::House>();
 	transform->position = house->homeNode->position;
 	transform->position.y = 0.75f;
-	transform->scale = sm::Vector3(1.7f, 1.7f, 1.7f);
-
-	switch (rand() % 3)
-	{
-	//Child
-	case 0:
-		transform->scale = sm::Vector3(1.f, 1.f, 1.f);
-		break;
-	//Teenage
-	case 2:
-		transform->scale = sm::Vector3(1.4f, 1.4f, 1.4f);
-		break;
-	//Adult
-	case 3:
-		transform->scale = sm::Vector3(1.7f, 1.7f, 1.7f);
-		break;
-	}
-
+	transform->rotation.y = -180;
 	villager->homeHouse = homeHouse;
 	meshName->name = NameType::MESH_VILLAGER;
 	animatorName->name = AnimName::ANIM_VILLAGER;

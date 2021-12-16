@@ -386,20 +386,6 @@ void Systems::MovementColliderSystem(HeadlessScene& scene, float dt)
 {
 	PROFILE_FUNCTION();
 
-	//BoundingOrientedBox
-	//scene.ForEachComponent<comp::Transform, comp::OrientedBoxCollider>([&, dt]
-	//(Entity entity, comp::Transform& transform, comp::OrientedBoxCollider& obb)
-	//	{
-	//		//If its not a house update obb!
-	//		if (!entity.GetComponent<comp::House>())
-	//		{
-	//			obb.Center = transform.position;
-	//			/*obb.Orientation = transform.rotation;*/
-	//			if (transform.syncColliderScale)
-	//				obb.Extents = transform.scale;
-	//		}
-	//	});
-
 	//BoundingSphere
 	scene.ForEachComponent<comp::Transform, comp::SphereCollider>([&, dt]
 	(comp::Transform& transform, comp::SphereCollider& sphere)
