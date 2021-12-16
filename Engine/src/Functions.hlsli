@@ -49,7 +49,7 @@ bool SphereInsideFrustum(Sphere sphere, Frustum frustum, float zNear, float zFar
     // First check depth
     // Note: Switched zNear and zFar, because assuming left-handed coord.
     // far depth value will be approaching infinity.
-    if (sphere.center.z > zFar - sphere.radius || sphere.center.z < zNear + sphere.radius) // OUTSIDE
+    if (sphere.center.z - sphere.radius > zFar || sphere.center.z + sphere.radius < zNear) // OUTSIDE
     {
         result = false;
     }

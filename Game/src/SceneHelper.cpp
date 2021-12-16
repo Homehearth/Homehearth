@@ -31,6 +31,7 @@ namespace sceneHelp
 
 		lightEntity.AddComponent<comp::Light>();
 		lightEntity.GetComponent<comp::Light>()->lightData.position = pos;
+		lightEntity.AddComponent<comp::Transform>()->position = sm::Vector3(pos.x, pos.y, pos.z);
 		lightEntity.GetComponent<comp::Light>()->lightData.direction = dir;
 		lightEntity.GetComponent<comp::Light>()->lightData.color = col;
 		lightEntity.GetComponent<comp::Light>()->lightData.range = range;

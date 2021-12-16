@@ -127,8 +127,9 @@ void main(ComputeShaderIn input)
     // Clipping plane for minimum depth value 
     // (used for testing lights within the bounds of opaque geometry).
 	// assuming left-handed coord.
-    Plane minPlane = { float3(0, 0, 1), minDepthVS };  
+    Plane minPlane = { float3(0, 0, 1), minDepthVS };
 
+	Frustum frustum = in_Frustums[input.groupID.x + (input.groupID.y * numThreadGroups.x)];
     // Each thread in a group will cull 1 light until all lights have been culled.
 	for (uint i = input.groupIndex; i < c_info.x; i += TILE_SIZE * TILE_SIZE)
 	{
@@ -146,9 +147,7 @@ void main(ComputeShaderIn input)
 				break;
 				case POINT_LIGHT:
 				{
-					float3 lightPositionVS = mul(c_view, light.position).xyz;
-					Sphere sphere = { lightPositionVS, light.range };
-					Frustum frustum = in_Frustums[input.groupID.x + (input.groupID.y * numThreadGroups.x)];
+					Sphere sphere = { light.positionVS.xyz, light.range };
 					if (SphereInsideFrustum(sphere, frustum, nearClipVS, maxDepthVS))
 					{
 						// Add light to light list for transparent geometry.

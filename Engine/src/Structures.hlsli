@@ -97,6 +97,7 @@ struct PixelParticleIn
 struct Light
 {
     float4      position;    //Only in use on Point Lights
+    float4      positionVS;  // Lightpos in view space
     float4      direction;   //Only in use on Directional Lights
     float4      color;       //Color and Intensity of the Lamp
     float       range;       //Only in use on Point Lights

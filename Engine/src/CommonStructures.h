@@ -469,7 +469,8 @@ struct camera_Matrix_t
 ALIGN16
 struct light_t
 {
-	sm::Vector4 position = {};	//Only in use on Point Lights						
+	sm::Vector4 position = {};	//Only in use on Point Lights
+	sm::Vector4 positionVS = {};
 	sm::Vector4 direction = {};	//Only in use on Directional Lights					
 	sm::Vector4 color = {};	//Color of the Lamp										
 	float		range = 0;	//Only in use on Point Lights							

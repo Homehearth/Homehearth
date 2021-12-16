@@ -31,5 +31,5 @@ void FrustumPass::PostRender(ID3D11DeviceContext* pDeviceContext)
 	DC->CSSetUnorderedAccessViews(0, 1, nullUAV, nullptr);
 
     // Only run this pass once.
-    SetEnable(true);
+    SetEnable(false);
 }
