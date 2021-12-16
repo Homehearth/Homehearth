@@ -2,9 +2,7 @@
 #include "D2D1Core.h"
 
 #define INSTANCE D2D1Core::instance
-#define LOADER FontCollectionLoader::instance
 D2D1Core* INSTANCE = nullptr;
-FontCollectionLoader* LOADER = nullptr;
 
 D2D1Core::D2D1Core()
 {
@@ -38,7 +36,7 @@ const bool D2D1Core::Setup(Window* window)
 	options.debugLevel = D2D1_DEBUG_LEVEL_INFORMATION;
 #endif
 	// Create a factory for D2D1, if it fails we LOG_ERROR and return false.
-	HRESULT hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, options, m_factory.GetAddressOf());
+	HRESULT hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_MULTI_THREADED, options, m_factory.GetAddressOf());
 	if (FAILED(hr))
 		[] {LOG_ERROR("Creating D2D1Factory failed."); return false; };
 
@@ -82,8 +80,10 @@ const bool D2D1Core::Setup(Window* window)
 		[] {LOG_WARNING("Creating default solid color brush failed."); };
 
 	// Somehow scales the text to window size
-	float res = ((window->GetWidth()) / ((float)window->GetHeight()));
-	const float font = ((window->GetWidth() * res) - (window->GetHeight() * res)) * 0.03f;
+	//float res = ((window->GetWidth()) / ((float)window->GetHeight()));
+	float res = 16.f / 9.f;
+	//const float font = ((window->GetWidth() * res) - (window->GetHeight() * res)) * 0.03f > 0.0f ? ((window->GetWidth() * res) - (window->GetHeight() * res)) * 0.03f : ((window->GetWidth() * res) - (window->GetHeight() * res)) * 0.03f * -1.0f;
+	const float font = ((window->GetHeight() * res) - window->GetHeight()) * 0.04f > 0.0f ? ((window->GetHeight() * res) - window->GetHeight()) * 0.04f : ((window->GetHeight() * res) - window->GetHeight()) * 0.04f * -1.0f;
 
 	/*
 		Load in custom FONT
@@ -93,7 +93,7 @@ const bool D2D1Core::Setup(Window* window)
 	//SendMessageW(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
 
 	hr = m_writeFactory->CreateTextFormat(
-		L"Ink Free",
+		L"Impact",
 		NULL,
 		DWRITE_FONT_WEIGHT_REGULAR,
 		DWRITE_FONT_STYLE_NORMAL,
@@ -117,7 +117,7 @@ const bool D2D1Core::Setup(Window* window)
 		CLSCTX_INPROC_SERVER,
 		IID_PPV_ARGS(&m_imageFactory));
 
-
+	INSTANCE->m_solidBrush.Get()->SetColor({ 1.f, 0.7f, 0.0f, 1.f });
 
 	return true;
 }
@@ -140,6 +140,21 @@ void D2D1Core::Destroy()
 float D2D1Core::GetDefaultFontSize()
 {
 	return INSTANCE->m_writeFormat.Get()->GetFontSize();
+}
+
+Window* D2D1Core::GetWindow()
+{
+	return INSTANCE->m_windowPointer;
+}
+
+ID2D1Factory* D2D1Core::GetFactory()
+{
+	return INSTANCE->m_factory.Get();
+}
+
+void D2D1Core::ChangeColorOfBrush(const D2D1_COLOR_F& newColor)
+{
+	INSTANCE->m_solidBrush->SetColor(newColor);
 }
 
 void D2D1Core::DrawT(const std::string& text, const draw_text_t& opt)
@@ -170,20 +185,59 @@ void D2D1Core::DrawT(const std::string& text, const draw_text_t& opt)
 		
 		INSTANCE->m_renderTarget->SetTransform(D2D1::Matrix3x2F::Scale(D2D1::SizeF(opt.scale, opt.scale), D2D1::Point2F(opt.x_pos, opt.y_pos)));
 
-		INSTANCE->m_solidBrush.Get()->SetColor({ 0.f, 0.f, 0.f, 1.f });
 		INSTANCE->m_renderTarget->DrawTextW(pwcsName,
 			(UINT32)text.length(),
 			current_format,
 			layoutRect,
 			INSTANCE->m_solidBrush.Get()
 		);
-		INSTANCE->m_solidBrush.Get()->SetColor({ 1.f, 1.f, 1.f, 1.f });
 
 		delete[] pwcsName;
 	}
 }
 
-void D2D1Core::DrawF(const draw_t& fig, const draw_shape_t& shape)
+void D2D1Core::DrawT(const std::string& text, const D2D1_COLOR_F& color, const draw_text_t& opt)
+{
+	if (INSTANCE->m_renderTarget)
+	{
+		IDWriteTextFormat* current_format = INSTANCE->m_writeFormat.Get();
+		if (opt.textFormat)
+			current_format = opt.textFormat;
+
+		RECT rc;
+		GetClientRect(INSTANCE->m_windowPointer->GetHWnd(), &rc);
+		D2D1_RECT_F layoutRect = D2D1::RectF(
+			opt.x_pos,
+			opt.y_pos,
+			opt.x_pos + opt.x_stretch / opt.scale,
+			opt.y_pos + opt.y_stretch / opt.scale
+		);
+
+		/*
+			Convert the text to WCHAR.
+		*/
+		const char* t = text.c_str();
+		const WCHAR* pwcsName;
+		int nChars = MultiByteToWideChar(CP_ACP, 0, t, -1, NULL, 0);
+		pwcsName = new WCHAR[nChars];
+		MultiByteToWideChar(CP_ACP, 0, t, -1, (LPWSTR)pwcsName, nChars);
+
+		INSTANCE->m_renderTarget->SetTransform(D2D1::Matrix3x2F::Scale(D2D1::SizeF(opt.scale, opt.scale), D2D1::Point2F(opt.x_pos, opt.y_pos)));
+
+		D2D1_COLOR_F oldColor = INSTANCE->m_solidBrush.Get()->GetColor();
+		INSTANCE->m_solidBrush.Get()->SetColor(color);
+		INSTANCE->m_renderTarget->DrawTextW(pwcsName,
+			(UINT32)text.length(),
+			current_format,
+			layoutRect,
+			INSTANCE->m_solidBrush.Get()
+		);
+		INSTANCE->m_solidBrush.Get()->SetColor(oldColor);
+		delete[] pwcsName;
+	}
+}
+
+void D2D1Core::DrawF(const draw_t& fig, const draw_shape_t& shape, const LineWidth& thickness)
 {
 	D2D1_COLOR_F oldColor = INSTANCE->m_solidBrush->GetColor();
 	INSTANCE->m_renderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
@@ -197,15 +251,40 @@ void D2D1Core::DrawF(const draw_t& fig, const draw_shape_t& shape)
 	// Determine which shape to render.
 	switch (shape.shape)
 	{
+
+	// Draws a filled rectangle.
 	case Shapes::RECTANGLE_FILLED:
-		D2D1_RECT_F rectangle_filled = D2D1::RectF(fig.x_pos, fig.y_pos, fig.x_pos + fig.width , fig.y_pos + fig.height);
+	{
+		D2D1_RECT_F rectangle_filled = D2D1::RectF(fig.x_pos, fig.y_pos, fig.x_pos + fig.width, fig.y_pos + fig.height);
 		INSTANCE->m_renderTarget->FillRectangle(&rectangle_filled, INSTANCE->m_solidBrush.Get());
 		break;
+	}
+
+	// Draws a border.
 	case Shapes::RECTANGLE_OUTLINED:
+	{
 		D2D1_RECT_F rectangle_outlined = D2D1::RectF(fig.x_pos, fig.y_pos, fig.x_pos + fig.width, fig.y_pos + fig.height);
-		INSTANCE->m_renderTarget->DrawRectangle(&rectangle_outlined, INSTANCE->m_solidBrush.Get(), 5.0f);
+		INSTANCE->m_renderTarget->DrawRectangle(&rectangle_outlined, INSTANCE->m_solidBrush.Get(), static_cast<int>(thickness) * 2.0f);
 		break;
+	}
+
+	// Draws a border with rounded edges.
+	case Shapes::RECTANGLE_ROUNDED_OUTLINED:
+	{
+		D2D1_ROUNDED_RECT rectangle_outlined = D2D1::RoundedRect(D2D1::RectF(fig.x_pos, fig.y_pos, fig.x_pos + fig.width, fig.y_pos + fig.height), 15.f, 15.f);
+		INSTANCE->m_renderTarget->DrawRoundedRectangle(&rectangle_outlined, INSTANCE->m_solidBrush.Get(), static_cast<int>(thickness) * 2.0f);
+		break;
+	}
+
+	// Draws a rounded filled rectangle.
+	case Shapes::RECTANGLE_ROUNDED:
+	{
+		D2D1_ROUNDED_RECT rectangle_outlined = D2D1::RoundedRect(D2D1::RectF(fig.x_pos, fig.y_pos, fig.x_pos + fig.width, fig.y_pos + fig.height), 15.f, 15.f);
+		INSTANCE->m_renderTarget->FillRoundedRectangle(&rectangle_outlined, INSTANCE->m_solidBrush.Get());
+		break;
+	}
 	case Shapes::TRIANGLE_FILLED:
+	{
 		INSTANCE->m_factory->CreatePathGeometry(&geometry);
 		if (!geometry)
 			break;
@@ -226,12 +305,21 @@ void D2D1Core::DrawF(const draw_t& fig, const draw_shape_t& shape)
 		geometry->Release();
 		break;
 	}
+	}
 
 	// Reset it to its old color.
 	INSTANCE->m_solidBrush->SetColor(oldColor);
 }
 
-void D2D1Core::DrawP(const draw_t& fig, ID2D1Bitmap* texture)
+void D2D1Core::DrawF(ID2D1PathGeometry* geometry = nullptr)
+{
+	if (geometry)
+	{
+		INSTANCE->m_renderTarget->DrawGeometry(geometry, INSTANCE->m_solidBrush.Get());
+	}
+}
+
+void D2D1Core::DrawP(const draw_t& fig, ID2D1Bitmap* texture, const float& opacity)
 {
 	if (texture == nullptr)
 		return;
@@ -244,7 +332,7 @@ void D2D1Core::DrawP(const draw_t& fig, ID2D1Bitmap* texture)
 	D2D1_RECT_F dest = D2D1::RectF(upperLeftCorner.x, upperLeftCorner.y,
 		(upperLeftCorner.x + fig.width), (upperLeftCorner.y + fig.height));
 
-	INSTANCE->m_renderTarget->DrawBitmap(texture, dest);
+	INSTANCE->m_renderTarget->DrawBitmap(texture, dest, opacity);
 }
 
 void D2D1Core::Begin()
@@ -265,7 +353,7 @@ const bool D2D1Core::CreateImage(const std::string& filename, ID2D1Bitmap** p_po
 		Setup searchpath, convert char* to WCHAR*
 		Load Bitmap from file.
 	*/
-	std::string searchPath = TEXTUREPATH;
+	std::string searchPath = UIPATH;
 	searchPath.append(filename);
 	const char* t = searchPath.c_str();
 	const WCHAR* pwcsName;
@@ -348,7 +436,7 @@ HRESULT D2D1Core::LoadBitMap(const LPCWSTR& filePath, ID2D1Bitmap** bitMap)
 			bitMap
 		);
 
-		LOG_INFO("Creating bitmap success!");
+		//LOG_INFO("Creating bitmap success!");
 
 		// Release
 		if (convert)
@@ -373,105 +461,6 @@ HRESULT D2D1Core::LoadBitMap(const LPCWSTR& filePath, ID2D1Bitmap** bitMap)
 		fDecoder->Release();
 	if(decoder)
 		decoder->Release();
-
-	return E_FAIL;
-}
-
-void FontCollectionLoader::Initialize()
-{
-	if (!LOADER)
-		LOADER = new FontCollectionLoader;
-}
-
-void FontCollectionLoader::Destroy()
-{
-	if (LOADER)
-		delete LOADER;
-}
-
-
-HRESULT __stdcall FontCollectionLoader::QueryInterface(REFIID riid, void** ppvObject)
-{
-	return E_NOTIMPL;
-}
-
-HRESULT __stdcall FontCollectionLoader::CreateEnumeratorFromKey(IDWriteFactory* factory, void const* collectionKey, UINT32 collectionKeySize, IDWriteFontFileEnumerator** fontFileEnumerator)
-{
-	if (!*fontFileEnumerator)
-	{
-		FontFileEnumerator* point = dynamic_cast<FontFileEnumerator*>(*fontFileEnumerator = new FontFileEnumerator(factory));
-		if (point)
-		{
-			point->SetKey(collectionKey);
-			return S_OK;
-		}
-		else
-			return E_FAIL;
-	}
-	else
-		return E_FAIL;
-
-}
-
-ULONG __stdcall FontCollectionLoader::AddRef(void)
-{
-	return m_refs++;
-}
-
-ULONG __stdcall FontCollectionLoader::Release(void)
-{
-	return m_refs--;
-}
-
-FontFileEnumerator::FontFileEnumerator(IDWriteFactory* ref)
-{
-	//AddFontResourceEx(L"../Assets/Fonts/Bookworm.ttf", FR_PRIVATE, 0);
-}
-
-void FontFileEnumerator::SetKey(const void* pointer)
-{
-	m_key = (UINT64)pointer;
-}
-
-HRESULT __stdcall FontFileEnumerator::QueryInterface(REFIID riid, void** ppvObject)
-{
-	return E_NOTIMPL;
-}
-
-ULONG __stdcall FontFileEnumerator::AddRef(void)
-{
-	return m_refs++;
-}
-
-ULONG __stdcall FontFileEnumerator::Release(void)
-{
-	return m_refs--;
-}
-
-HRESULT __stdcall FontFileEnumerator::MoveNext(BOOL* hasCurrentFile)
-{
-	for (int i = 0; i < m_fonts.size(); i++)
-	{
-		m_pos = i;
-		IDWriteFontFile* font = m_fonts[m_pos];
-		if (font)
-		{
-			*hasCurrentFile = 1;
-			return S_OK;
-		}
-	}
-
-	*hasCurrentFile = 0;
-	return E_FAIL;
-}
-
-HRESULT __stdcall FontFileEnumerator::GetCurrentFontFile(IDWriteFontFile** fontFile)
-{
-	if (m_fonts[m_pos])
-	{
-		fontFile = &m_fonts[m_pos];
-		return S_OK;
-	}
 
 	return E_FAIL;
 }

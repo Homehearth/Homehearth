@@ -11,17 +11,34 @@ Collection2D::~Collection2D()
 
 void Collection2D::UpdateCollection()
 {
+	/*
+		If any of the elements were pressed inside we act 
+	*/
+	ElementState checkSum = ElementState::NONE;
 	for (size_t i = 0; i < elements.size(); i++)
 	{
-		if (elements[i]->CheckClick())
+		if (elements[i]->IsVisible())
 		{
-			elements[i]->OnClick();
-		}
-		if (elements[i]->CheckHover())
-		{
-			elements[i]->OnHover();
+			if (elements[i]->CheckClick() == ElementState::INSIDE)
+			{
+				elements[i]->OnClick();
+				checkSum = ElementState::INSIDE;
+			}
+			else
+			{
+				if (checkSum != ElementState::INSIDE)
+				{
+					checkSum = ElementState::OUTSIDE;
+				}
+			}
+			if (elements[i]->CheckHover())
+			{
+				elements[i]->OnHover();
+			}
 		}
 	}
+
+	m_state = checkSum;
 }
 
 void Collection2D::Show()
@@ -38,4 +55,9 @@ void Collection2D::Hide()
 	{
 		elements[i]->SetVisiblity(false);
 	}
+}
+
+const ElementState& Collection2D::GetState() const
+{
+	return m_state;
 }

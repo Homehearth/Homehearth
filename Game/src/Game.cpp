@@ -1,8 +1,13 @@
 #include "Game.h"
+#include "GameSystems.h"
 #include "Button.h"
 #include "TextField.h"
-#include <DemoScene.h>
+#include "SceneHelper.h"
 #include "Healthbar.h"
+#include "MoneyUI.h"
+#include "OptionSystem.h"
+#include "AbilityUI.h"
+#include "LobbyUI.h"
 
 using namespace std::placeholders;
 
@@ -11,12 +16,18 @@ Game::Game()
 	, Engine()
 {
 	this->m_localPID = -1;
+	this->m_spectatingID = -1;
+	this->m_money = 0;
+	this->m_waveCounter = 0;
 	this->m_gameID = -1;
-	this->m_predictionThreshhold = 0.001f;
-	m_waveTimer = 0;
+	this->m_inputState = {};
+	this->m_isSpectating = false;
 }
 
-
+uint32_t& Game::GetWaveCounter()
+{
+	return m_waveCounter;
+}
 
 Game::~Game()
 {
@@ -24,13 +35,17 @@ Game::~Game()
 	{
 		m_client.Disconnect();
 	}
-}
 
+	OptionSystem::Get().SetOption("MasterVolume", std::to_string(SoundHandler::Get().GetMasterVolume()));
+	OptionSystem::Get().OnShutdown();
+}
 
 void Game::UpdateNetwork(float deltaTime)
 {
-	//static float pingCheck = 0.f;
-	//const float TARGET_PING_TIME = 5.0f;
+	static float pingCheck = 0.f;
+	static float refreshLobbyList = 0.f;
+	const float TARGET_PING_TIME = 5.0f;
+	const float TARGET_REFRESH = 0.2f;
 	if (m_client.IsConnected())
 	{
 		m_client.Update();
@@ -39,26 +54,38 @@ void Game::UpdateNetwork(float deltaTime)
 
 		//if (pingCheck > TARGET_PING_TIME)
 		//{
-		//	this->PingServer();
+		//	//this->PingServer();
 		//	pingCheck -= TARGET_PING_TIME;
 		//}
 
+		refreshLobbyList += deltaTime;
+
+		if (refreshLobbyList >= TARGET_REFRESH)
+		{
+			refreshLobbyList -= TARGET_REFRESH;
+
+			if (GetCurrentScene() == &(GetScene("JoinLobby")))
+			{
+				message<GameMsg> msg;
+				msg.header.id = GameMsg::Lobby_RefreshList;
+				msg << m_localPID;
+				m_client.Send(msg);
+			}
+		}
+
 		if (GetCurrentScene() == &GetScene("Game"))
 		{
-			if (GetCurrentScene()->GetCurrentCamera()->GetCameraType() == CAMERATYPE::PLAY)
+			if (GetCurrentScene()->GetCurrentCamera()->GetCameraType() == CAMERATYPE::PLAY && !m_isSpectating)
 			{
-
 				message<GameMsg> msg;
 				msg.header.id = GameMsg::Game_PlayerInput;
-
 
 				msg << this->m_localPID << m_gameID << m_inputState;
 
 				m_client.Send(msg);
 
 				//reset input
-				m_inputState.leftMouse = false;
-				m_inputState.rightMouse = false;
+				memset(&m_inputState, 0, sizeof(m_inputState));
 			}
 		}
 	}
@@ -71,70 +98,53 @@ bool Game::OnStartup()
 	sceneHelp::CreateGameScene(this);
 	sceneHelp::CreateMainMenuScene(this);
 	sceneHelp::CreateJoinLobbyScene(this);
-	sceneHelp::CreateLoadingScene(this);
+	sceneHelp::CreateGameOverScene(this);
+
+	sceneHelp::CreateOptionsScene(this);
 
 	// Set Current Scene
 	SetScene("MainMenu");
+	GetScene("Game").GetRegistry()->on_destroy<comp::House>().connect<&Game::OnHouseDestroy>(this);
 
 	return true;
 }
 
 void Game::OnUserUpdate(float deltaTime)
 {
-	static float pingCheck = 0.f;
-	const float PING_TARGET = 5.0f;
+	this->UpdateInput();
 
+	//scene.ForEachComponent<comp::Light>([&](Entity e, comp::Light& l)
+	//	{
+	//		e.GetComponent<comp::SphereCollider>()->Center = sm::Vector3(l.lightData.position);
+	//	});
 
-	if (m_client.IsConnected())
+	Scene& scene = GetScene("Game");
+	Entity e;
+	if (GetLocalPlayer(e))
 	{
-		pingCheck += deltaTime;
-		if (pingCheck >= PING_TARGET)
-		{
-			PingServer();
-			pingCheck = 0.f;
-		}
-	}
-	/*
-if (GetCurrentScene() == &GetScene("Game") && GetCurrentScene()->GetCurrentCamera()->GetCameraType() == CAMERATYPE::PLAY)
-{
-	if (m_players.find(m_localPID) != m_players.end())
-	{
-		comp::Transform* t = m_players.at(m_localPID).GetComponent<comp::Transform>();
+		comp::KillDeaths* p = e.GetComponent<comp::KillDeaths>();
 
-		int x = InputSystem::Get().GetAxis(Axis::HORIZONTAL);
-		int z = InputSystem::Get().GetAxis(Axis::VERTICAL);
-		if (x || z)
+		// Update the death and kill counter.
+		if (p)
 		{
-			t->position.x += 10.f * deltaTime * x;
-			t->position.z += 10.f * deltaTime * z;
-
-			predictedPositions.push_back(*t);
-		}
-
-		//LOG_INFO("Predicted size: %llu", predictedPositions.size());
-		if (sm::Vector3::Distance(t->position, test.position) > m_predictionThreshhold)
-		{
-			t->position.x = test.position.x;
-			t->position.z = test.position.z;
+			Collection2D* killColl = scene.GetCollection("ZKillCounter");
+			Collection2D* deathColl = scene.GetCollection("ZDeathCounter");
+			if (killColl && deathColl)
+			{
+				dynamic_cast<rtd::Text*>(killColl->elements[1].get())->SetText(std::to_string(p->kills));
+				dynamic_cast<rtd::Text*>(deathColl->elements[1].get())->SetText(std::to_string(p->deaths));
+			}
 		}
 	}
 }
-		*/
-
-		//Update InputState
-	if (GetCurrentScene() == &GetScene("Game"))
-	{
-		this->UpdateInput();
-	}
-}
-
 
 void Game::OnShutdown()
 {
 	m_players.clear();
 	m_mapEntity.Destroy();
+	m_models.clear();
+	m_LOSColliders.clear();
 }
-
 
 void Game::CheckIncoming(message<GameMsg>& msg)
 {
@@ -142,6 +152,8 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	{
 	case GameMsg::Client_Accepted:
 	{
+		rtd::Text* mainMenuErrorText = dynamic_cast<rtd::Text*>(GetScene("MainMenu").GetCollection("ConnectFields")->elements[6].get());
+		mainMenuErrorText->SetVisiblity(false);
 		LOG_INFO("You are validated!");
 		break;
 	}
@@ -160,8 +172,6 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 	}
 	case GameMsg::Game_Snapshot:
 	{
-		uint32_t currentTick;
-		msg >> currentTick;
 		uint32_t count;
 		msg >> count;
 
@@ -171,23 +181,49 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			msg >> entityID;
 
 			Entity entity;
+			bool skip = false;
 			if (m_gameEntities.find(entityID) != m_gameEntities.end())
 			{
 				entity = m_gameEntities.at(entityID);
-				UpdateEntityFromMessage(entity, msg);
 			}
-			else {
-				LOG_WARNING("Updating: Entity %u not in m_gameEntities, should not happen...", entityID);
-				
+			else
+			{
+				LOG_WARNING("Updating: Entity %u not in m_gameEntities, skipping over this entity!", entityID);
+				skip = true;
 			}
+
+			UpdateEntityFromMessage(entity, msg, skip);
+		}
+
+		break;
+	}
+	case GameMsg::Game_UpdateComponent:
+	{
+		uint32_t count; // Could be more than one Entity
+		msg >> count;
+		for (uint32_t i = 0; i < count; i++)
+		{
+			uint32_t entityID;
+			msg >> entityID;
+
+			Entity entity;
+			bool skip = false;
+			if (m_gameEntities.find(entityID) != m_gameEntities.end())
+			{
+				entity = m_gameEntities.at(entityID);
+			}
+			else
+			{
+				skip = true;
+				LOG_WARNING("Updating component: Entity %u not in m_gameEntities, skipping over this comp!", entityID);
+			}
+			UpdateEntityFromMessage(entity, msg, skip);
 		}
 
 		break;
 	}
 	case GameMsg::Game_AddEntity:
 	{
-		uint32_t currentTick;
-		msg >> currentTick;
 		uint32_t count; // Could be more than one Entity
 		msg >> count;
 #ifdef _DEBUG
@@ -201,7 +237,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			msg >> entityID;
 			e.AddComponent<comp::Network>(entityID);
 			UpdateEntityFromMessage(e, msg);
-			
+
 			m_gameEntities.insert(std::make_pair(entityID, e));
 			if (e.GetComponent<comp::Network>()->id == m_localPID)
 			{
@@ -209,89 +245,277 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 				LOG_INFO("You added yourself, congratulations!");
 #endif
 				m_players[m_localPID] = e;
-
-				GetScene("Game").ForEachComponent<comp::Tag<TagType::CAMERA>>([&](Entity entt, comp::Tag<TagType::CAMERA>& t)
-					{
-						comp::Camera3D* c = entt.GetComponent<comp::Camera3D>();
-						if (c)
-						{
-							c->camera.SetFollowEntity(e);
-						}
-					});
 			}
 			else if (e.GetComponent<comp::Player>())
 			{
 				LOG_INFO("A remote player added!");
 				m_players[e.GetComponent<comp::Network>()->id] = e;
 			}
-			
-#ifdef  _DEBUG
-			CreateVisualGrid(e);
-#endif //  _DEBUG
 		}
 
-		if (GetCurrentScene() == &GetScene("Loading"))
-		{
-			SetScene("Lobby");
-		}
-#ifdef _DEBUG
-		LOG_INFO("Successfully loaded all entities!");
-#endif
-
-		break;
-	}
-	case GameMsg::Grid_PlaceDefence:
-	{
-		PlaceDefenceDebug(msg);
-		PlaceDefenceRelease(msg);
 		break;
 	}
 	case GameMsg::Game_RemoveEntity:
 	{
 		uint32_t count;
 		msg >> count;
+		int removed = 0;
 		for (uint32_t i = 0; i < count; i++)
 		{
 			uint32_t id;
 			msg >> id;
 			if (m_gameEntities.find(id) != m_gameEntities.end())
 			{
+				if (m_players.find(id) != m_players.end())
+				{
+					m_players.erase(id);
+				}
+
+				comp::Player* p = m_gameEntities.at(id).GetComponent<comp::Player>();
+				if (p)
+				{
+					GetScene("Game").GetCollection("Aplayer" + std::to_string(static_cast<uint16_t>(p->playerType)) + "Info")->Hide();
+					GetScene("Game").GetCollection("AdynamicPlayer" + std::to_string(static_cast<uint16_t>(p->playerType)) + "namePlate")->Hide();
+				}
 				m_gameEntities.at(id).Destroy();
 				m_gameEntities.erase(id);
+				removed++;
 			}
-			// Was the entity a player?
-			if (m_players.find(id) != m_players.end())
-			{
-				m_players.at(id).Destroy();
-				m_players.erase(id);
-			}
-
 		}
 #ifdef _DEBUG
-		LOG_INFO("Removed %u entities", count);
+		LOG_INFO("Removed %d entities", removed);
 #endif
 		break;
 	}
 	case GameMsg::Game_BackToLobby:
 	{
+		auto it = m_players.begin();
+		while (it != m_players.end())
+		{
+			it->second.GetComponent<comp::Player>()->isReady = false;
+			it++;
+		}
 		SetScene("Lobby");
 		break;
-	}	
+	}
+	case GameMsg::Game_PlaySound:
+	{
+		uint32_t nrOfSounds = 0u;
+		msg >> nrOfSounds;
+
+		audio_t data = {};
+
+		const auto SH = &SoundHandler::Get();
+
+		for (uint32_t i = 0; i < nrOfSounds; i++)
+		{
+			// Extract Sound Information.
+			msg >> data.playLooped;
+			msg >> data.shouldBroadcast;
+			msg >> data.isUnique;
+			msg >> data.is3D;
+			msg >> data.minDistance;
+			msg >> data.volume;
+			msg >> data.position;
+			msg >> data.type;
+
+			switch (data.type)
+			{
+				//--------------------	PLAYER	--------------------------------------
+			case ESoundEvent::Player_OnMeleeAttack:
+				SH->PlaySound("Player_OnMeleeAttack", data);
+				break;
+			case ESoundEvent::Player_OnMeleeAttackHit:
+			{
+				int version = rand() % 3 + 1;
+				std::string onAttackName = "Player_OnMeleeAttackHit" + std::to_string(version);
+				SH->PlaySound(onAttackName, data);
+			}
+			break;
+			case ESoundEvent::Player_OnMovement:
+				SH->PlaySound("Player_OnMovement", data);
+				break;
+			case ESoundEvent::Player_OnRangeAttack:
+				SH->PlaySound("Player_OnRangeAttack", data);
+				break;
+			case ESoundEvent::Player_OnRangeAttackHit:
+				SH->PlaySound("Player_OnRangeAttackHit", data);
+				break;
+			case ESoundEvent::Player_OnDmgDealt:
+				SH->PlaySound("Player_OnDmgDealt", data);
+				break;
+			case ESoundEvent::Player_OnDmgRecieved:
+				SH->PlaySound("Player_OnDmgRecieved", data);
+				break;
+			case ESoundEvent::Player_OnHealing:
+				SH->PlaySound("Player_OnHealing", data);
+				break;
+			case ESoundEvent::Player_OnCastDash:
+			{
+				int version = rand() % 10;
+				if (version == 0)
+					SH->PlaySound("Player_OnCastDash1", data);
+				else
+					SH->PlaySound("Player_OnCastDash", data);
+			}
+			break;
+			case ESoundEvent::Player_OnCastBlink:
+				SH->PlaySound("Player_OnCastBlink", data);
+				break;
+			case ESoundEvent::Player_OnDeath:
+				SH->PlaySound("Player_OnDeath", data);
+				break;
+			case ESoundEvent::Player_OnRespawn:
+				SH->PlaySound("Player_OnRespawn", data);
+				break;
+			case ESoundEvent::Player_OnBuy:
+				SH->PlaySound("Player_OnBuy", data);
+				break;
+			case ESoundEvent::Player_OnCantBuy:
+				SH->PlaySound("Player_OnCantBuy", data);
+				break;
+				//--------------------	ENEMY	--------------------------------------
+			case ESoundEvent::Enemy_OnMovement:
+				SH->PlaySound("Enemy_OnMovement", data);
+				break;
+			case ESoundEvent::Enemy_OnMeleeAttack:
+			{
+				int version = rand() % 7 + 1;
+				std::string onAttackName = "Enemy_OnMeleeAttack" + std::to_string(version);
+				SH->PlaySound(onAttackName, data);
+			}
+			break;
+			case ESoundEvent::Enemy_OnRangeAttack:
+				SH->PlaySound("Enemy_RangeAttack", data);
+				break;
+			case ESoundEvent::Enemy_OnDmgDealt:
+				SH->PlaySound("Enemy_OnDmgDealt", data);
+				break;
+			case ESoundEvent::Enemy_OnDmgRecieved:
+				SH->PlaySound("Enemy_OnDmgRecieved", data);
+				break;
+			case ESoundEvent::Enemy_OnDeath:
+				SH->PlaySound("Enemy_OnDeath", data);
+				break;
+				//--------------------	GAME	--------------------------------------
+			case ESoundEvent::Game_OnDefencePlaced:
+				SH->PlaySound("Game_OnDefencePlaced", data);
+				break;
+			case ESoundEvent::Game_OnDefenceDestroyed:
+				SH->PlaySound("Game_OnDefenceDestroyed", data);
+				break;
+			case ESoundEvent::Game_OnHouseDestroyed:
+				SH->PlaySound("Game_OnHouseDestroyed", data);
+				break;
+			case ESoundEvent::House_OnDmgRecieved:
+				SH->PlaySound("House_OnDmgRecieved", data);
+				break;
+			case ESoundEvent::Game_OnPurchase:
+				SH->PlaySound("Game_OnPurchase", data);
+				break;
+			case ESoundEvent::Game_OnMorning:
+				SH->PlaySound("Game_OnMorning", data);
+				break;
+			case ESoundEvent::Game_OnNight:
+				SH->PlaySound("Game_OnNight", data);
+				break;
+			default:
+				break;
+			}
+		}
+
+		break;
+	}
+	case GameMsg::Game_Over:
+	{
+		uint32_t gatheredMoney, wavesSurvived;
+		msg >> wavesSurvived >> gatheredMoney;
+
+		SoundHandler::Get().GetCurrentMusic()->stop();
+
+		audio_t audio = {};
+		audio.isUnique = true;
+		audio.playLooped = false;
+		SoundHandler::Get().PlaySound("Player_OnDeath", audio);
+		audio.volume = 0.5f;
+		SoundHandler::Get().PlaySound("OnGameOver", audio);
+		rtd::Text* mainMenuErrorText = dynamic_cast<rtd::Text*>(GetScene("MainMenu").GetCollection("ConnectFields")->elements[6].get());
+		mainMenuErrorText->SetVisiblity(false);
+		Scene& gameScene = GetScene("Game");
+		gameScene.GetCollection("SpectateUI")->elements[0]->SetVisiblity(false);
+		gameScene.GetCollection("SpectateUI")->elements[1]->SetVisiblity(false);
+		rtd::Text* scoreText = dynamic_cast<rtd::Text*>(GetScene("GameOver").GetCollection("GameOver")->elements[1].get());
+		scoreText->SetText("Score: " + std::to_string(gatheredMoney));
+		rtd::Text* wavesText = dynamic_cast<rtd::Text*>(GetScene("GameOver").GetCollection("GameOver")->elements[2].get());
+		wavesText->SetText("Waves: " + std::to_string(wavesSurvived));
+		SetScene("GameOver");
+
+		m_gameID = -1;
+
+		auto it = m_gameEntities.begin();
+
+		while (it != m_gameEntities.end())
+		{
+			it->second.Destroy();
+			it = m_gameEntities.erase(it);
+		}
+
+		m_cycler.SetTime(MORNING);
+
+		it = m_players.begin();
+		int i = 1;
+		Scene& lobbyScene = GetScene("Lobby");
+		while (it != m_players.end())
+		{
+			it->second.Destroy();
+			it = m_players.erase(it);
+
+			GetScene("Game").GetCollection("Aplayer" + std::to_string(i + 1) + +"Info")->Hide();
+			GetScene("Game").GetCollection("AdynamicPlayer" + std::to_string(i + 1) + "namePlate");
+			lobbyScene.GetCollection("playerIcon" + std::to_string(i))->Hide();
+		}
+
+		m_isSpectating = false;
+
+		rtd::Button* readyText = dynamic_cast<rtd::Button*>(lobbyScene.GetCollection("StartGame")->elements[0].get());
+		readyText->GetPicture()->SetTexture("Ready.png");
+
+		rtd::Button* wizardButton = dynamic_cast<rtd::Button*>(lobbyScene.GetCollection("ClassButtons")->elements[0].get());
+		wizardButton->GetBorder()->SetVisiblity(false);
+		rtd::Button* warriorButton = dynamic_cast<rtd::Button*>(lobbyScene.GetCollection("ClassButtons")->elements[1].get());
+		warriorButton->GetBorder()->SetVisiblity(true);
+		rtd::Picture* desc = dynamic_cast<rtd::Picture*>(lobbyScene.GetCollection("ClassTextCanvas")->elements[0].get());
+		desc->SetTexture("WarriorDesc.png");
+
+		break;
+	}
 	case GameMsg::Lobby_Accepted:
 	{
 		msg >> m_gameID;
-		this->SetScene("Loading");
-		this->LoadAllAssets();
 
+		this->SetScene("Loading");
+		if (!hasLoaded)
+		{
+			sceneHelp::LoadGameScene(this);
+			sceneHelp::LoadResources(this);
+			sceneHelp::LoadMapColliders(this);
+
+			hasLoaded = true;
+		}
+
+#ifdef _DEBUG
+		LOG_INFO("Successfully loaded all Assets!");
+#endif
+		SetScene("Lobby");
 		LOG_INFO("You are now in lobby: %lu", m_gameID);
 		break;
 	}
 	case GameMsg::Lobby_Invalid:
 	{
-		std::string err;
-		msg >> err;
+		//std::string err;
+		//msg >> err;
 		SetScene("JoinLobby");
-		LOG_WARNING("%s", err.c_str());
+		//LOG_WARNING("%s", err.c_str());
 		break;
 	}
 	case GameMsg::Lobby_AcceptedLeave:
@@ -299,80 +523,316 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 		LOG_WARNING("Left Lobby %u", m_gameID);
 		m_gameID = -1;
 		SetScene("JoinLobby");
+		rtd::TextField* textField = dynamic_cast<rtd::TextField*>(GetScene("JoinLobby").GetCollection("LobbyFields")->elements[0].get());
+		if (textField)
+		{
+			textField->SetPresetText("");
+		}
 		break;
 	}
 	case GameMsg::Game_Start:
 	{
+		GetScene("Game").ForEachComponent<comp::Tag<TagType::CAMERA>>([&](Entity entt, comp::Tag<TagType::CAMERA>& t)
+			{
+				comp::Camera3D* c = entt.GetComponent<comp::Camera3D>();
+				if (c)
+				{
+					c->camera.SetFollowEntity(m_players.at(m_localPID));
+				}
+			});
+
+
+		GetScene("Game").ForEachComponent<comp::Light>([](comp::Light& l)
+			{
+				if (l.lightData.type == TypeLight::POINT)
+				{
+					l.lightData.enabled = 0;
+				}
+			});
+		Scene& scene = GetScene("Game");
+		Collection2D* skipButtonUI = scene.GetCollection("SkipUI");
+		skipButtonUI->Show();
+
+		SoundHandler::Get().SetCurrentMusic("MenuTheme");
+		SetScene("Game");
+		//thread::RenderThreadHandler::Get().GetRenderer()->GetDoFPass()->SetDoFType(DoFType::ADAPTIVE);
+		Entity e;
+		if (GetLocalPlayer(e))
+		{
+			comp::Player* p = e.GetComponent<comp::Player>();
+
+			if (p)
+			{
+				if (p->classType == comp::Player::Class::WARRIOR)
+				{
+					dynamic_cast<rtd::AbilityUI*>(GetScene("Game").GetCollection("ZAbilityUI")->elements[1].get())->SetTexture("Attack2.png");
+					dynamic_cast<rtd::AbilityUI*>(GetScene("Game").GetCollection("ZAbilityUI")->elements[2].get())->SetTexture("Block.png");
+				}
+				else
+				{
+					dynamic_cast<rtd::AbilityUI*>(GetScene("Game").GetCollection("ZAbilityUI")->elements[1].get())->SetTexture("Attack.png");
+					dynamic_cast<rtd::AbilityUI*>(GetScene("Game").GetCollection("ZAbilityUI")->elements[2].get())->SetTexture("Heal.png");
+				}
+			}
+		}
+
+		m_primaryCooldown = 0.0f;
+		m_secondaryCooldown = 0.0f;
+		m_dodgeCooldown = 0.0f;
+		m_waveCounter = 0;
+
+		dynamic_cast<rtd::Text*>(GetScene("Game").GetCollection("ZWaveCounter")->elements[1].get())->SetText("0");
+
+		this->m_inputState = { };
 		SetScene("Game");
 		break;
 	}
-	case GameMsg::Game_WaveTimer:
+	case GameMsg::Game_Spree:
 	{
-		msg >> m_waveTimer;
-		Element2D* elem = GetScene("Game").GetCollection("timer")->elements[0].get();
-		if (elem)
+		msg >> m_currentSpree;
+		rtd::Text* txt = dynamic_cast<rtd::Text*>(GetScene("Game").GetCollection("SpreeText")->elements[0].get());
+		if (txt)
 		{
-			if (m_waveTimer > 0)
-				dynamic_cast<rtd::Text*>(elem)->SetText("\nUntil next Wave:\n" + std::to_string(m_waveTimer));
-			else
-				dynamic_cast<rtd::Text*>(elem)->SetText("\nUnder Attack!");
+			txt->SetText("X" + std::to_string(m_currentSpree));
 		}
+		break;
+	}
+	case GameMsg::Game_Time:
+	{
+		CyclePeriod timePeriod;
+		float speed;
+		bool hasChangedPeriod;
+		msg >> hasChangedPeriod;
+		msg >> timePeriod;
+		msg >> speed;
+		m_cycler.SetTimePeriod(timePeriod, hasChangedPeriod);
+		m_cycler.SetCycleSpeed(speed);
+		break;
+	}
+	case GameMsg::Game_Time_Update:
+	{
+		float speed;
+		float time;
+		msg >> time;
+		msg >> speed;
+		m_cycler.SetTime(time);
+		m_cycler.SetCycleSpeed(speed);
+		break;
+	}
+	case GameMsg::Lobby_RefreshList:
+	{
+		uint8_t playerCount;
+		uint8_t sceneStatus;
+
+		for (int i = MAX_LOBBIES - 1; i >= 0; i--)
+		{
+			msg >> sceneStatus >> playerCount;
+
+			rtd::LobbyUI* lobbyUI = dynamic_cast<rtd::LobbyUI*>(GetScene("JoinLobby").GetCollection("LobbySelect")->elements[i].get());
+			lobbyUI->UpdateLobbyPlayerCount(playerCount);
+			lobbyUI->SetLobbyStatus(sceneStatus);
+		}
+
 		break;
 	}
 	case GameMsg::Lobby_Update:
 	{
-		uint32_t count;
+		uint8_t count;
 		msg >> count;
-		const uint32_t* spots = &count;
-		std::string ids[MAX_PLAYERS_PER_LOBBY];
 
-		for (uint32_t i = 0; i < count; i++)
+		comp::Player::PlayerType playerTypes[MAX_PLAYERS_PER_LOBBY] = { comp::Player::PlayerType::NONE };
+
+		for (uint8_t i = 0; i < count; i++)
 		{
-			std::string playerPlate;
+			char nameTemp[13] = {};
 			uint32_t playerID;
-			msg >> playerPlate;
+			comp::Player::Class classType;
+			bool isReady = false;
+			msg >> isReady;
+			msg >> classType;
+			msg >> nameTemp;
 			msg >> playerID;
-			ids[i] = playerPlate;
+			std::string name(nameTemp);
 
 			if (m_players.find(playerID) != m_players.end())
 			{
-				m_players.at(playerID).GetComponent<comp::NamePlate>()->namePlate = playerPlate;
-				dynamic_cast<rtd::Text*>(GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i + 1))->elements[1].get())->SetText(playerPlate);
+				comp::Player* p = m_players.at(playerID).GetComponent<comp::Player>();
+				if (!p)
+					break;
+				playerTypes[static_cast<int>(p->playerType) - 1] = p->playerType;
+				dynamic_cast<rtd::Text*>(GetScene("Lobby").GetCollection("playerIcon" + std::to_string(static_cast<uint16_t>(p->playerType)))->elements[1].get())->SetText(name);
+				rtd::Text* plT = dynamic_cast<rtd::Text*>(GetScene("Game").GetCollection("AdynamicPlayer" + std::to_string(static_cast<uint16_t>(p->playerType)) + "namePlate")->elements[0].get());
+				rtd::Picture* plP = dynamic_cast<rtd::Picture*>(GetScene("Lobby").GetCollection("playerIcon" + std::to_string(static_cast<uint16_t>(p->playerType)))->elements[2].get());
+
+				if (plT)
+				{
+					plT->SetText(name);
+					plT->SetStretch(D2D1Core::GetDefaultFontSize() * plT->GetText().length(), D2D1Core::GetDefaultFontSize());
+				}
+
+				if (plP)
+				{
+					switch (classType)
+					{
+					case comp::Player::Class::MAGE:
+					{
+						plP->SetTexture("WizardIcon.png");
+						break;
+					}
+					case comp::Player::Class::WARRIOR:
+					{
+						plP->SetTexture("WarriorIcon.png");
+						break;
+					}
+					}
+				}
+
+				if (isReady)
+				{
+					dynamic_cast<rtd::Picture*>(GetScene("Lobby").GetCollection("playerIcon" + std::to_string(static_cast<uint16_t>(p->playerType)))->elements[3].get())->SetVisiblity(true);
+				}
+				else
+					dynamic_cast<rtd::Picture*>(GetScene("Lobby").GetCollection("playerIcon" + std::to_string(static_cast<uint16_t>(p->playerType)))->elements[3].get())->SetVisiblity(false);
 			}
 		}
 
-		dynamic_cast<rtd::Text*>(GetScene("Lobby").GetCollection("LobbyDesc")->elements[1].get())->SetText("Lobby ID: " + std::to_string(m_gameID));
+		if (m_players.find(m_localPID) != m_players.end())
+		{
+			comp::Player* player = m_players.at(m_localPID).GetComponent<comp::Player>();
+			if (player)
+			{
+				rtd::Button* readyText = dynamic_cast<rtd::Button*>(GetScene("Lobby").GetCollection("StartGame")->elements[0].get());
+				if (readyText)
+				{
+					if (player->isReady && m_players.size() > 1)
+					{
+						readyText->GetPicture()->SetTexture("NotReady.png");
+					}
+					else
+					{
+						readyText->GetPicture()->SetTexture("Ready.png");
+					}
+				}
+			}
+		}
 
+		dynamic_cast<rtd::Text*>(GetScene("Lobby").GetCollection("LobbyDesc")->elements[1].get())->SetText("Lobby " + std::to_string(m_gameID + 1));
+
+		for (uint32_t i = 0; i < MAX_PLAYERS_PER_LOBBY; i++)
+		{
+			switch (playerTypes[i])
+			{
+			case comp::Player::PlayerType::NONE:
+			{
+				GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i + 1))->Hide();
+
+				break;
+			}
+			default:
+			{
+				Collection2D* coll = GetScene("Lobby").GetCollection("playerIcon" + std::to_string(static_cast<int>(playerTypes[i])));
+				coll->elements[0].get()->SetVisiblity(true);
+				coll->elements[1].get()->SetVisiblity(true);
+				coll->elements[2].get()->SetVisiblity(true);
+
+				break;
+			}
+			}
+		}
+		break;
+
+	}
+	case GameMsg::Game_Money:
+	{
+		msg >> m_money;
+		rtd::MoneyUI* elem = dynamic_cast<rtd::MoneyUI*>(GetScene("Game").GetCollection("ZMoneyUI")->elements[0].get());
+		if (elem)
+		{
+			elem->SetNewMoney(m_money);
+		}
+		break;
+	}
+	case GameMsg::Game_ChangeAnimation:
+	{
+		uint32_t id;
+		EAnimationType animType = EAnimationType::NONE;
+		uint16_t count;
+		msg >> count;
+
+		for (uint16_t i = 0; i < count; i++)
+		{
+			msg >> id >> animType;
+
+			if (m_gameEntities.find(id) != m_gameEntities.end())
+			{
+				comp::Animator* animComp = m_gameEntities.at(id).GetComponent<comp::Animator>();
+				if (animComp)
+				{
+					std::shared_ptr<RAnimator> anim = animComp->animator;
+					if (anim)
+					{
+						anim->ChangeAnimation(animType);
+					}
+				}
+			}
+		}
+
+		break;
+	}
+	case GameMsg::Game_Cooldown:
+	{
+		uint32_t count = 0;
+		msg >> count;
 
 		for (uint32_t i = 0; i < count; i++)
 		{
-			GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i + 1))->Show();
-		}
-		for (uint32_t i = count; i < MAX_PLAYERS_PER_LOBBY; i++)
-		{
-			GetScene("Lobby").GetCollection("playerIcon" + std::to_string(i + 1))->Hide();
-		}
+			float maxCooldown = 0.0f;
+			msg >> maxCooldown;
+			float cooldown = 0.0f;
+			msg >> cooldown;
 
-		Scene& gameScene = GetScene("Game");
-		// Map healthbars to players.
-		GameSystems::UpdateHealthbar(gameScene);
-
-		for (size_t i = 0; i < count; i++)
-		{
-			Collection2D* collect = gameScene.GetCollection("player" + std::to_string(i + 1) + "Info");
-			collect->Show();
-			dynamic_cast<rtd::Text*>(collect->elements[1].get())->SetText(ids[i]);
+			AbilityIndex index = AbilityIndex::DEFAULT;
+			msg >> index;
+			switch (index)
+			{
+			case AbilityIndex::Primary:
+			{
+				m_primaryCooldown = cooldown;
+				m_primaryMaxCooldown = maxCooldown;
+				break;
+			}
+			case AbilityIndex::Secondary:
+			{
+				m_secondaryCooldown = cooldown;
+				m_secondaryMaxCooldown = maxCooldown;
+				break;
+			}
+			case AbilityIndex::Dodge:
+			{
+				m_dodgeCooldown = cooldown;
+				m_dodgeMaxCooldown = maxCooldown;
+				break;
+			}
+			default:
+				break;
+			}
 		}
+		break;
+	}
+	default:
+	{
+		LOG_ERROR("This message has an unknown header, should not happen..");
 		break;
 	}
 	}
 }
-
 void Game::PingServer()
 {
 	message<GameMsg> msg = {};
 	msg.header.id = GameMsg::Server_GetPing;
 	msg << this->m_localPID;
+
+	LOG_INFO("Pinging server!");
 
 	this->m_timeThen = std::chrono::system_clock::now();
 	m_client.Send(msg);
@@ -394,6 +854,19 @@ void Game::JoinLobby(uint32_t lobbyID)
 	}
 }
 
+void Game::SetPlayerWantsToSkip(bool value)
+{
+	m_players.at(m_localPID).GetComponent<comp::Player>()->wantsToSkipDay = value;
+	if (value)
+	{
+		message<GameMsg> msg;
+		msg.header.id = GameMsg::Game_PlayerSkipDay;
+		msg << this->m_localPID << m_gameID;
+		m_client.Send(msg);
+		LOG_INFO("Player wants to skip to Night")
+	}
+}
+
 void Game::CreateLobby()
 {
 	if (m_gameID == (uint32_t)-1)
@@ -411,6 +884,16 @@ void Game::CreateLobby()
 	}
 }
 
+Cycler& Game::GetCycler()
+{
+	return m_cycler;
+}
+
+const uint32_t& Game::GetMoney() const
+{
+	return m_money;
+}
+
 void Game::OnClientDisconnect()
 {
 	this->m_gameID = -1;
@@ -423,22 +906,106 @@ void Game::OnClientDisconnect()
 		}
 	);
 
+	rtd::TextField* textField = dynamic_cast<rtd::TextField*>(GetScene("JoinLobby").GetCollection("nameInput")->elements[0].get());
+	if (textField)
+	{
+		textField->SetPresetText("");
+	}
+	textField = dynamic_cast<rtd::TextField*>(GetScene("JoinLobby").GetCollection("LobbyFields")->elements[0].get());
+	if (textField)
+	{
+		textField->SetPresetText("");
+	}
+
+	rtd::TextField* ipInput = dynamic_cast<rtd::TextField*>(GetScene("MainMenu").GetCollection("ConnectFields")->elements[0].get());
+
 	SetScene("MainMenu");
 
+	m_client.m_qPrioMessagesIn.clear();
+	m_client.m_qMessagesIn.clear();
+	m_players.clear();
+	m_gameEntities.clear();
+	SoundHandler::Get().SetCurrentMusic("MenuTheme");
 	LOG_INFO("Disconnected from server!");
 }
+
 
 void Game::SendStartGame()
 {
 	network::message<GameMsg> msg;
 	msg.header.id = GameMsg::Game_PlayerReady;
 	msg << m_localPID << m_gameID;
+
 	m_client.Send(msg);
 }
 
-void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
+void Game::SendSelectedClass(comp::Player::Class classType)
 {
-	
+	network::message<GameMsg> msg;
+	msg.header.id = GameMsg::Game_ClassSelected;
+	msg << classType << m_localPID << m_gameID;
+
+	m_client.Send(msg);
+}
+
+ParticleSystem* Game::GetParticleSystem()
+{
+	return &m_particles;
+}
+
+bool Game::GetLocalPlayer(Entity& player)
+{
+	if (m_players.find(m_localPID) == m_players.end())
+	{
+		return false;
+	}
+
+	player = m_players.at(m_localPID);
+	return true;
+}
+
+void Game::SetShopItem(const ShopItem& whatToBuy)
+{
+	if (m_players.find(m_localPID) != m_players.end())
+	{
+		comp::Player* p = m_players.at(m_localPID).GetComponent<comp::Player>();
+		if (p)
+		{
+			p->shopItem = whatToBuy;
+		}
+	}
+
+	network::message<GameMsg> msg;
+	msg.header.id = GameMsg::Game_UpdateShopItem;
+	msg << whatToBuy << m_localPID << m_gameID;
+	m_client.Send(msg);
+}
+
+ShopItem Game::GetShopItem() const
+{
+	ShopItem item = ShopItem::None;
+	if (m_players.find(m_localPID) != m_players.end())
+	{
+		comp::Player* p = m_players.at(m_localPID).GetComponent<comp::Player>();
+		if (p)
+		{
+			item = p->shopItem;
+		}
+	}
+	return item;
+}
+
+void Game::UpgradeDefence(const uint32_t& id)
+{
+	network::message<GameMsg> msg;
+	msg.header.id = GameMsg::Game_UpgradeDefence;
+	msg << id << m_localPID << m_gameID;
+
+	m_client.Send(msg);
+}
+
+void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
+{
 	uint32_t bits;
 	msg >> bits;
 	std::bitset<ecs::Component::COMPONENT_MAX> compSet(bits);
@@ -453,101 +1020,446 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 			{
 				comp::Transform t;
 				msg >> t;
-				t.rotation.Normalize();
-				e.AddComponent<comp::Transform>(t);
+				if (!skip)
+				{
+					t.rotation.Normalize();
+					e.AddComponent<comp::Transform>(t);
+				}
 				break;
 			}
 			case ecs::Component::VELOCITY:
 			{
 				comp::Velocity v;
 				msg >> v;
-				e.AddComponent<comp::Velocity>(v);
+				if (!skip)
+				{
+					e.AddComponent<comp::Velocity>(v);
+				}
 				break;
 			}
 			case ecs::Component::MESH_NAME:
 			{
-				std::string name;
+				std::string nameString;
+				NameType name;
 				msg >> name;
-				e.AddComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>(name);
+				if (!skip)
+				{
+					switch (name)
+					{
+					case NameType::MESH_CUBE:
+					{
+						nameString = "Cube.obj";
+						break;
+					}
+					case NameType::MESH_WATERMILL:
+					{
+						nameString = "WaterMill.fbx";
+						e.AddComponent<comp::Watermill>();
+						break;
+					}
+					case NameType::MESH_WATERMILLHOUSE:
+					{
+						nameString = "WaterMillHouse.fbx";
+						e.AddComponent<comp::House>();
+						break;
+					}
+					case NameType::MESH_RUINED_WATERMILLHOUSE:
+					{
+						nameString = "WaterMillHousePile.fbx";
+						break;
+					}
+					case NameType::MESH_HOUSE5:
+					{
+						nameString = "House5.fbx";
+						e.AddComponent<comp::House>();
+						break;
+					}
+					case NameType::MESH_RUINED_HOUSE5:
+					{
+						nameString = "House5Pile.fbx";
+						break;
+					}
+					case NameType::MESH_HOUSE6:
+					{
+						nameString = "House6.fbx";
+						e.AddComponent<comp::House>();
+						break;
+					}
+					case NameType::MESH_RUINED_HOUSE6:
+					{
+						nameString = "House6Pile.fbx";
+						break;
+					}
+					case NameType::MESH_HOUSE7:
+					{
+						nameString = "House7.fbx";
+						e.AddComponent<comp::House>();
+						break;
+					}
+					case NameType::MESH_RUINED_HOUSE7:
+					{
+						nameString = "House7Pile.fbx";
+						break;
+					}
+					case NameType::MESH_HOUSE8:
+					{
+						nameString = "House8.fbx";
+						e.AddComponent<comp::House>();
+						break;
+					}
+					case NameType::MESH_RUINED_HOUSE8:
+					{
+						nameString = "House8Pile.fbx";
+						break;
+					}
+					case NameType::MESH_HOUSE9:
+					{
+						nameString = "House9.fbx";
+						e.AddComponent<comp::House>();
+						break;
+					}
+					case NameType::MESH_RUINED_HOUSE9:
+					{
+						nameString = "House9Pile.fbx";
+						break;
+					}
+					case NameType::MESH_HOUSE10:
+					{
+						nameString = "House10.fbx";
+						e.AddComponent<comp::House>();
+						break;
+					}
+					case NameType::MESH_RUINED_HOUSE10:
+					{
+						nameString = "House10Pile.fbx";
+						break;
+					}
+					case NameType::MESH_DOOR1:
+					{
+						nameString = "Door1.fbx";
+						break;
+					}
+					case NameType::MESH_DOOR5:
+					{
+						nameString = "Door5.fbx";
+						break;
+					}
+					case NameType::MESH_DOOR6:
+					{
+						nameString = "Door6.fbx";
+						break;
+					}
+					case NameType::MESH_DOOR7:
+					{
+						nameString = "Door7.fbx";
+						break;
+					}
+					case NameType::MESH_DOOR8:
+					{
+						nameString = "Door8.fbx";
+						break;
+					}
+					case NameType::MESH_DOOR9:
+					{
+						nameString = "Door9.fbx";
+						break;
+					}
+					case NameType::MESH_DOOR10:
+					{
+						nameString = "Door10.fbx";
+						break;
+					}
+					case NameType::MESH_HOUSEROOF:
+					{
+						nameString = "HouseRoof.fbx";
+						break;
+					}
+					case NameType::MESH_DEFENCE1X1_LVL0:
+					{
+						nameString = "lvl0_1x1.fbx";
+						break;
+					}
+					case NameType::MESH_DEFENCE1X1_LVL1:
+					{
+						nameString = "lvl1_1x1.fbx";
+						break;
+					}
+					case NameType::MESH_DEFENCE1X1_LVL2:
+					{
+						nameString = "lvl2_1x1.fbx";
+						break;
+					}
+					case NameType::MESH_DEFENCE1X1_LVL3:
+					{
+						nameString = "lvl3_1x1.fbx";
+						break;
+					}
+					case NameType::MESH_DEFENCE1X3_LVL0:
+					{
+						nameString = "lvl0_1x3.fbx";
+						break;
+					}
+					case NameType::MESH_DEFENCE1X3_LVL1:
+					{
+						nameString = "lvl1_1x3.fbx";
+						break;
+					}
+					case NameType::MESH_DEFENCE1X3_LVL2:
+					{
+						nameString = "lvl2_1x3.fbx";
+						break;
+					}
+					case NameType::MESH_DEFENCE1X3_LVL3:
+					{
+						nameString = "lvl3_1x3.fbx";
+						break;
+					}
+					case NameType::MESH_KNIGHT:
+					{
+						nameString = "Knight.fbx";
+						break;
+					}
+					case NameType::MESH_MAGE:
+					{
+						nameString = "Mage.fbx";
+						break;
+					}
+					case NameType::MESH_MONSTER:
+					{
+						nameString = "Monster.fbx";
+						break;
+					}
+					case NameType::MESH_SPHERE:
+					{
+						nameString = "Sphere.obj";
+						break;
+					}
+					case NameType::MESH_VILLAGER:
+					{
+						nameString = "Villager.fbx";
+						break;
+					}
+					default:
+					{
+						nameString = "Cube.obj";
+						break;
+					}
+					}
+					std::shared_ptr<RModel> model = ResourceManager::Get().CopyResource<RModel>(nameString, true);
+					if (model)
+					{
+						e.AddComponent<comp::Renderable>()->model = model;
+					}
+				}
 				break;
 			}
 			case ecs::Component::ANIMATOR_NAME:
 			{
-				comp::AnimatorName animName;
-				msg >> animName.name;
-
-				//Get model
-				comp::Renderable* renderable = e.GetComponent<comp::Renderable>();
-				if(renderable && renderable->model)
+				AnimName name;
+				msg >> name;
+				if (!skip)
 				{
-
-					//Add an animator if we can get it
-					if (!animName.name.empty())
+					std::string nameString;
+					switch (name)
 					{
-						std::shared_ptr<RAnimator> anim = ResourceManager::Get().CopyResource<RAnimator>(animName.name, true);
-						if (anim)
+					case AnimName::ANIM_KNIGHT:
+					{
+						nameString = "Knight.anim";
+						break;
+					}
+					case AnimName::ANIM_MONSTER:
+					{
+						nameString = "Monster.anim";
+						break;
+					}
+					case AnimName::ANIM_MAGE:
+					{
+						nameString = "Mage.anim";
+						break;
+					}
+					case AnimName::ANIM_VILLAGER:
+					{
+						nameString = "Villager.anim";
+						break;
+					}
+					default:
+					{
+						nameString = "Knight.anim";
+						break;
+					}
+					}
+					if (nameString.length() > 0)
+					{
+						std::shared_ptr<RAnimator> animator = ResourceManager::Get().CopyResource<RAnimator>(nameString, true);
+						if (animator)
 						{
-							if (anim->LoadSkeleton(renderable->model->GetSkeleton()))
-								e.AddComponent<comp::Animator>()->animator = anim;
+							animator->RandomizeTime();
+							e.AddComponent<comp::Animator>()->animator = animator;
 						}
 					}
 				}
 				break;
 			}
-			case ecs::Component::NAME_PLATE:
-			{
-				std::string name;
-				msg >> name;
-				e.AddComponent<comp::NamePlate>()->namePlate = name;
-				break;
-			}
 			case ecs::Component::HEALTH:
 			{
-				comp::Health heal;
-				msg >> heal;
-				e.AddComponent<comp::Health>(heal);
+				comp::Health hp;
+				msg >> hp;
+				if (!skip)
+				{
+					Scene& scene = GetScene("Game");
+					if (GetCurrentScene() == &scene)
+					{
+						GameSystems::UpdateHealthbar(this);
+						comp::Transform* t = e.GetComponent<comp::Transform>();
+						if (!hp.isAlive)
+						{
+							if (hp.currentHealth <= 0 && !e.GetComponent<comp::House>())
+							{
+								// Spawn a bloodsplat.
+								Entity e = GetScene("Game").CreateEntity();
+								if (t)
+								{
+									e.AddComponent<comp::Decal>(t->position);
+									e.AddComponent<comp::SelfDestruct>()->lifeTime = 15.f;
+								}
+							}
+
+							if (e == m_players.at(m_localPID))
+							{
+								m_isSpectating = true;
+								scene.GetCollection("SpectateUI")->elements[0]->SetVisiblity(true);
+								scene.GetCollection("SpectateUI")->elements[1]->SetVisiblity(true);
+							}
+						}
+						else
+						{
+							if (e == m_players.at(m_localPID))
+							{
+								if (m_isSpectating)
+								{
+									scene.GetCollection("SpectateUI")->elements[0]->SetVisiblity(false);
+									scene.GetCollection("SpectateUI")->elements[1]->SetVisiblity(false);
+									m_isSpectating = false;
+									Camera* cam = GetCurrentScene()->GetCurrentCamera();
+
+									cam->SetFollowEntity(m_players.at(m_localPID));
+								}
+							}
+						}
+						comp::Health* health = e.GetComponent<comp::Health>();
+						comp::Transform* transform = e.GetComponent<comp::Transform>();
+						if (health && transform)
+						{
+							combat_text_inst_t cText;
+							// Signal health gain.
+							if (health->currentHealth <= hp.currentHealth)
+							{
+								cText.type = combat_text_enum::HEALTH_GAIN;
+								cText.pos = transform->position;
+							}
+							else if (health->currentHealth > hp.currentHealth)
+							{
+								cText.type = combat_text_enum::HEALTH_LOSS;
+								cText.pos = transform->position;
+							}
+
+							cText.timeRendered = static_cast<float>(omp_get_wtime());
+							cText.pos.y += 15;
+							cText.end_pos = cText.pos;
+							cText.end_pos.y += 50;
+							cText.amount = std::abs(static_cast<int>(health->currentHealth - hp.currentHealth));
+							scene.PushCombatText(cText);
+
+							comp::House* house = e.GetComponent<comp::House>();
+							if (house && hp.currentHealth < health->currentHealth)
+							{
+								LOG_INFO("HOUSE DAMAGED!");
+								house->displayWarning = true;
+								house->warningIcon.pos = e.GetComponent<comp::OrientedBoxCollider>()->Center;
+								house->warningIcon.timeRendered = omp_get_wtime();
+								if (house->iconID == -1)
+								{
+									//Create a new warning Icon and display it(6 exists as collections in the UI)
+									for (int i = 0; i < NR_OF_HOUSES && house->iconID == -1; i++)
+									{
+										Collection2D* collection = scene.GetCollection("zzzzHouseWarningIcon" + std::to_string(i + 1));
+										rtd::Picture* icon = static_cast<rtd::Picture*>(collection->elements[0].get());
+										if (!icon->IsVisible())
+										{
+											house->iconID = i;
+											icon->SetVisiblity(true);
+										}
+									}
+
+								}
+							}
+						}
+					}
+					e.AddComponent<comp::Health>(hp);
+				}
 				break;
 			}
 			case ecs::Component::BOUNDING_ORIENTED_BOX:
 			{
-				comp::BoundingOrientedBox box;
+				dx::BoundingOrientedBox box;
 				msg >> box;
-				e.AddComponent<comp::BoundingOrientedBox>(box);
+				if (!skip)
+				{
+					comp::OrientedBoxCollider* collider = e.AddComponent<comp::OrientedBoxCollider>();
+					collider->Center = box.Center;
+					collider->Extents = box.Extents;
+					collider->Orientation = box.Orientation;
+				}
 				break;
 			}
 			case ecs::Component::BOUNDING_SPHERE:
 			{
-				comp::BoundingSphere s;
+				dx::BoundingSphere s;
 				msg >> s;
-				e.AddComponent<comp::BoundingSphere>(s);
+				if (!skip)
+				{
+					comp::SphereCollider* collider = e.AddComponent<comp::SphereCollider>();
+					collider->Center = s.Center;
+					collider->Radius = s.Radius;
+				}
 				break;
 			}
-			case ecs::Component::PLANECOLLIDER:
+			case ecs::Component::PARTICLEMITTER:
 			{
-				comp::PlaneCollider p;
+				comp::ParticleEmitter p;
 				msg >> p;
-				*e.AddComponent<comp::PlaneCollider>() = p;
-				break;
-			}
-			case ecs::Component::LIGHT:
-			{
-				comp::Light l;
-				msg >> l;
-				e.AddComponent<comp::Light>(l);
+				if (!skip)
+				{
+					e.AddComponent<comp::EmitterParticle>(p.positionOffset, (int)p.nrOfParticles, p.sizeMulitplier, p.type, p.lifeTime, p.speed, p.hasDeathTimer);
+				}
 				break;
 			}
 			case ecs::Component::PLAYER:
 			{
 				comp::Player p;
 				msg >> p;
-				e.AddComponent<comp::Player>(p);
+				if (!skip)
+				{
+					e.AddComponent<comp::Player>(p);
+				}
+
 				break;
 			}
-			case ecs::Component::TILE:
+			case ecs::Component::COST:
 			{
-				comp::Tile t;
-				msg >> t;
-				e.AddComponent<comp::Tile>(t);
+				comp::Cost c;
+				msg >> c;
+				if (!skip)
+				{
+					e.AddComponent<comp::Cost>(c);
+				}
+				break;
+			}
+			case ecs::Component::KD:
+			{
+				comp::KillDeaths kd;
+				msg >> kd;
+				e.AddComponent<comp::KillDeaths>(kd);
 				break;
 			}
 			default:
@@ -556,117 +1468,105 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg)
 			}
 		}
 	}
+}
 
+void Game::ChangeSpectatedPlayer()
+{
+	if (m_isSpectating)
+	{
+		Camera* cam = GetScene("Game").GetCurrentCamera();
+		if (cam->GetCameraType() == CAMERATYPE::PLAY)
+		{
+			Entity current = cam->GetTargetEntity();
+
+			uint32_t key = current.GetComponent<comp::Network>()->id;
+			// START ON CURRENT SPECTATED TARGET
+			auto it = m_players.find(key);
+			it++;
+
+			// Iterate to next the next player
+			for (int i = 0; i < MAX_PLAYERS_PER_LOBBY - 1; i++)
+			{
+				// Sanity check if we reach end of the list
+				if (it == m_players.end())
+				{
+					it = m_players.begin();
+				}
+				// Don't spectate yourself you are dead & check if other player is alive
+				if (it->first != m_localPID && it->second.GetComponent<comp::Health>()->isAlive)
+				{
+					// Check so we are not already following this entity
+					if (current != it->second)
+					{
+						cam->SetFollowEntity(it->second);
+						break;
+					}
+				}
+				it++;
+			}
+		}
+	}
+}
+
+void Game::OnHouseDestroy(entt::registry& registry, entt::entity e)
+{
+	Entity entity(registry, e);
+	comp::House* house = entity.GetComponent<comp::House>();
+	if (house)
+	{
+		if (house->iconID != -1)
+		{
+			Collection2D* collection = GetScene("Game").GetCollection("zzzzHouseWarningIcon" + std::to_string(house->iconID + 1));
+			rtd::Picture* icon = static_cast<rtd::Picture*> (collection->elements[0].get());
+			icon->SetVisiblity(false);
+		}
+	}
 }
 
 void Game::UpdateInput()
 {
 	m_inputState.axisHorizontal = InputSystem::Get().GetAxis(Axis::HORIZONTAL);
 	m_inputState.axisVertical = InputSystem::Get().GetAxis(Axis::VERTICAL);
+	m_inputState.mousewheelDir = InputSystem::Get().GetMouseWheelDirection();
+
 	if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::HELD))
 	{
 		m_inputState.leftMouse = true;
-		m_inputState.mouseRay = InputSystem::Get().GetMouseRay();
-
 	}
-	if (InputSystem::Get().CheckMouseKey(MouseKey::RIGHT, KeyState::PRESSED))
+
+	if (InputSystem::Get().CheckMouseKey(MouseKey::RIGHT, KeyState::HELD))
 	{
 		m_inputState.rightMouse = true;
-		m_inputState.mouseRay = InputSystem::Get().GetMouseRay();
 	}
-}
 
-void Game::PlaceDefenceDebug(message<GameMsg>& msg)
-{
-#ifdef _DEBUG
-	if (RENDER_GRID)
+	if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED))
 	{
-		uint32_t id;
-		msg >> id;
-
-		GetScene("Game").ForEachComponent<comp::Network, comp::Tile>([&](Entity& e, comp::Network& net, comp::Tile& tile)
-			{
-				if (id == net.id)
-				{
-					comp::Renderable* render = e.GetComponent<comp::Renderable>();
-					render->model = ResourceManager::Get().GetResource<RModel>("Defence.obj");
-					render->model->ChangeMaterial("TileDefence.mtl");
-					tile.type = TileType::DEFENCE;
-					LOG_INFO("Placed defence %d", id);
-				}
-			});
+		this->ChangeSpectatedPlayer();
 	}
-	else if (!RENDER_GRID)
+
+	if (InputSystem::Get().CheckMouseKey(MouseKey::RIGHT, KeyState::PRESSED))
 	{
-		sm::Vector3 position;
-		msg >> position;
-
-		Entity defence = GetScene("Game").CreateEntity();
-		comp::Renderable* render = defence.AddComponent<comp::Renderable>();
-		defence.AddComponent<comp::Transform>()->position = position;
-		defence.GetComponent<comp::Transform>()->scale = { 4.2f, 0.5f, 4.2f };
-		render->model = ResourceManager::Get().GetResource<RModel>("Defence.obj");
-		render->model->ChangeMaterial("TileDefence.mtl");
-		LOG_INFO("Placed defence");
-	}
-#endif // DEBUG
-}
-
-void Game::PlaceDefenceRelease(message<GameMsg>& msg)
-{
-#ifdef NDEBUG
-	sm::Vector3 position;
-	msg >> position;
-
-	Entity defence = GetScene("Game").CreateEntity();
-	comp::Renderable* render = defence.AddComponent<comp::Renderable>();
-	defence.AddComponent<comp::Transform>()->position = position;
-	defence.GetComponent<comp::Transform>()->scale = { 4.2f, 0.5f, 4.2f };
-	render->model = ResourceManager::Get().GetResource<RModel>("Defence.obj");
-	render->model->ChangeMaterial("TileDefence.mtl");
-	LOG_INFO("Placed defence");
-
-#endif // NDEBUG		
-}
-
-void Game::CreateVisualGrid(Entity e)
-{
-	if (RENDER_GRID) //TODO dosent work atm
-	{
-		comp::Tile* tile = e.GetComponent<comp::Tile>();
-		if (tile)
+		switch (GetShopItem())
 		{
-			if (tile->type == TileType::EMPTY)
-			{
-				comp::Renderable* renderable = e.AddComponent<comp::Renderable>();
-				renderable->model = ResourceManager::Get().GetResource<RModel>("Plane1.obj");
-				renderable->model->ChangeMaterial("TileEmpty.mtl");
-			}
-			else if (tile->type == TileType::BUILDING || tile->type == TileType::UNPLACABLE)
-			{
-				comp::Renderable* renderable = e.AddComponent<comp::Renderable>();
-				renderable->model = ResourceManager::Get().CopyResource<RModel>("Plane1.obj");
-				renderable->model->ChangeMaterial("TileBuilding.mtl");
-			}
-			else if (tile->type == TileType::DEFENCE)
-			{
-				comp::Renderable* renderable = e.AddComponent<comp::Renderable>();
-				renderable->model = ResourceManager::Get().CopyResource<RModel>("Plane1.obj");
-				renderable->model->ChangeMaterial("TileDefence.mtl");
-			}
-
+		case ShopItem::Defence1x1:
+		{
+			break;
+		}
+		case ShopItem::Defence1x3:
+		{
+			SetShopItem(ShopItem::None);
+			break;
+		}
+		case ShopItem::None:
+		{
+			break;
+		}
 		}
 	}
-}
+	m_inputState.mouseRay = InputSystem::Get().GetMouseRay();
 
-void Game::LoadAllAssets()
-{
-	ResourceManager::Get().GetResource<RModel>("MonsterCharacter.fbx");
-	ResourceManager::Get().GetResource<RModel>("Barrel.obj");
-	ResourceManager::Get().GetResource<RModel>("Defence.obj");
-	ResourceManager::Get().GetResource<RModel>("Plane1.obj");
-	ResourceManager::Get().GetResource<RModel>("Knight.fbx");
-	Entity e = GetScene("Game").CreateEntity();
-	e.AddComponent<comp::Transform>();
-	e.AddComponent<comp::Renderable>()->model = ResourceManager::Get().GetResource<RModel>("GameScene.obj");
+	if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::LeftShift, KeyState::PRESSED))
+	{
+		m_inputState.key_shift = true;
+	}
 }

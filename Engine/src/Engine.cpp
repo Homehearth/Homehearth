@@ -3,19 +3,27 @@
 #include <omp.h>
 #include "Camera.h"
 #include "GridSystem.h"
+#include "OptionSystem.h"
+#include "Picture.h"
+#include "Canvas.h"
+
+/*
+	We only need the loading screen rendered once. 
+*/
+static bool s_loaded = false;
 
 bool Engine::s_safeExit = false;
 
 Engine::Engine()
 	: BasicEngine()
-	//, m_frameTime()
 {
 	LOG_INFO("Engine(): " __TIMESTAMP__);
+	SoundHandler::Get();
+	OptionSystem::Get().OnStartUp();
 }
 
 void Engine::Startup()
 {
-	
 	T_INIT(1, thread::ThreadType::POOL_FIFO);
 	srand(static_cast<unsigned>(time(NULL)));
 
@@ -23,39 +31,36 @@ void Engine::Startup()
 	Window::Desc config;
 
 	//Get heighest possible 16:9 resolution
-	//95% of the height
-	config.height = static_cast<UINT>(GetSystemMetrics(SM_CYSCREEN) * 0.95f);
-	float aspectRatio = 16.0f / 9.0f;
-	config.width = static_cast<UINT>(aspectRatio * config.height);
+	//90% of the height
+	//config.height = static_cast<UINT>(GetSystemMetrics(SM_CYSCREEN) * 0.50f);
+	//float aspectRatio = 16.0f / 9.0f;
+	//config.width = static_cast<UINT>(aspectRatio * config.height);
 
-	//config.width = static_cast<UINT>(GetSystemMetrics(SM_CXSCREEN) * 0.9f);
-	config.title = L"Engine";
+
+	int fullscreen = std::stoi(OptionSystem::Get().GetOption("Fullscreen"));
+	if (fullscreen == 0)
+	{
+		config.height = std::stoi(OptionSystem::Get().GetOption("WindowHeight"));
+		config.width = std::stoi(OptionSystem::Get().GetOption("WindowWidth"));
+		if ((config.width | config.height) == 0)
+		{
+			config.height = 720;
+			config.width = 1280;
+
+			OptionSystem::Get().SetOption("WindowHeight", "720");
+			OptionSystem::Get().SetOption("WindowWidth", "1280");
+		}
+	}
+
+	config.title = L"Homehearth";
 	if (!m_window.Initialize(config))
 	{
 		LOG_ERROR("Could not Initialize m_window.");
 	}
 
 	// DirectX Startup:
-	FontCollectionLoader::Initialize();
 	D3D11Core::Get().Initialize(&m_window);
 	D2D1Core::Initialize(&m_window);
-
-	m_renderer.Initialize(&m_window);
-
-	// Thread should be launched after s_engineRunning is set to true and D3D11 is initialized.
-	//
-	// AUDIO - we supposed to use other audio engine
-	//
-	HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
-	if (FAILED(hr))
-	{
-		LOG_ERROR("Failed to initialize AudioEngine.");
-	}
-	DirectX::AUDIO_ENGINE_FLAGS eflags = DirectX::AudioEngine_Default;
-#ifdef _DEBUG
-	eflags |= DirectX::AudioEngine_Debug;
-#endif
-	this->m_audio_engine = std::make_unique<DirectX::AudioEngine>(eflags);
 
 	IMGUI(
 		// Setup ImGUI
@@ -69,21 +74,29 @@ void Engine::Startup()
 		LOG_INFO("ImGui was successfully initialized");
 	);
 
+	this->SetupLoadingScreen();
+	SetScene("Loading");
+	if (thread::IsThreadActive())
+		T_CJOB(Engine, RenderThread);
+
+	m_renderer.Initialize(&m_window);
+	m_renderer.Setup(*this);
+
 	// Thread Startup.
 	thread::RenderThreadHandler::Get().SetRenderer(&m_renderer);
 	thread::RenderThreadHandler::Get().SetWindow(&m_window);
 	thread::RenderThreadHandler::Get().Setup(2);
 
 	InputSystem::Get().SetMouseWindow(m_window.GetHWnd(), m_window.GetWidth(), m_window.GetHeight());
+
+	SoundHandler::Get().SetMasterVolume(std::stof(OptionSystem::Get().GetOption("MasterVolume")));
+	SoundHandler::Get().Setup();
 	
 	BasicEngine::Startup();
 }
 
 void Engine::Run()
 {
-	if (thread::IsThreadActive())
-		T_CJOB(Engine, RenderThread);
-
 	BasicEngine::Run();
 	// Wait for the rendering thread to exit its last render cycle and shutdown
 #if _DEBUG
@@ -101,7 +114,6 @@ void Engine::Run()
     T_DESTROY();
     D2D1Core::Destroy();
 	ResourceManager::Get().Destroy();
-	FontCollectionLoader::Destroy();
 }
 
 
@@ -110,11 +122,12 @@ Window* Engine::GetWindow()
 	return &m_window;
 }
 
-void Engine::drawImGUI() const
+void Engine::drawImGUI()
 {
 	//Containers for plotting
 	static std::vector<float> fpsContainer;
-	//static std::vector<float> fpsUpdateContainer;
+	static std::vector<float> fpsUpdateContainer;
+	static std::vector<float> fpsNetworkContainer;
 	static std::vector<float> ramUsageContainer;
 	static std::vector<float> vRamUsageContainer;
 
@@ -122,8 +135,9 @@ void Engine::drawImGUI() const
 	static int dots = 0;
 	if (timer.GetElapsedTime<std::chrono::duration<float>>() > 0.5f)
 	{
-		fpsContainer.emplace_back(static_cast<float>(Stats::GetCurrentFPS()));
-		//fpsUpdateContainer.emplace_back(static_cast<float>(Stats::GetUpdateFPS()));
+		fpsContainer.emplace_back(1.f / Stats::Get().GetFrameTime());
+		fpsUpdateContainer.emplace_back(1.f / Stats::Get().GetUpdateTime());
+		fpsNetworkContainer.emplace_back(1.f / Stats::Get().GetNetworkTime());
 		ramUsageContainer.emplace_back((Profiler::GetRAMUsage() / (1024.f * 1024.f)));
 		vRamUsageContainer.emplace_back((Profiler::GetVRAMUsage() / (1042.f * 1024.f)));
 		timer.Start();
@@ -133,8 +147,11 @@ void Engine::drawImGUI() const
 	if (fpsContainer.size() > 10)
 		fpsContainer.erase(fpsContainer.begin());
 
-	/*if (fpsUpdateContainer.size() > 10)
-		fpsUpdateContainer.erase(fpsUpdateContainer.begin());*/
+	if (fpsUpdateContainer.size() > 10)
+		fpsUpdateContainer.erase(fpsUpdateContainer.begin());
+
+	if (fpsNetworkContainer.size() > 10)
+		fpsNetworkContainer.erase(fpsNetworkContainer.begin());
 
 	if (ramUsageContainer.size() > 10)
 		ramUsageContainer.erase(ramUsageContainer.begin());
@@ -177,10 +194,12 @@ void Engine::drawImGUI() const
 #endif
 	if (ImGui::CollapsingHeader("FPS"))
 	{
-		ImGui::PlotLines(("FPS: " + std::to_string(Stats::GetCurrentFPS())).c_str(), fpsContainer.data(), static_cast<int>(fpsContainer.size()), 0, nullptr, 0.0f, Stats::GetMaxFPS(), ImVec2(150, 50));
+		ImGui::PlotLines(("FPS: " + std::to_string(1.f / Stats::Get().GetFrameTime())).c_str(), fpsContainer.data(), static_cast<int>(fpsContainer.size()), 0, nullptr, 0.0f, Stats::Get().GetFramerate(), ImVec2(150, 50));
 		ImGui::Spacing();
-		/*ImGui::PlotLines(("Update FPS: " + std::to_string(Stats::GetUpdateFPS())).c_str(), fpsUpdateContainer.data(), static_cast<int>(fpsUpdateContainer.size()), 0, nullptr, 0.0f, 144.0f, ImVec2(150, 50));
-		ImGui::Spacing();*/
+		ImGui::PlotLines(("Update FPS: " + std::to_string(1.f / Stats::Get().GetUpdateTime())).c_str(), fpsUpdateContainer.data(), static_cast<int>(fpsUpdateContainer.size()), 0, nullptr, 0.0f, Stats::Get().GetUpdaterate(), ImVec2(150, 50));
+		ImGui::Spacing();
+		ImGui::PlotLines(("Network FPS: " + std::to_string(1.f / Stats::Get().GetNetworkTime())).c_str(), fpsNetworkContainer.data(), static_cast<int>(fpsNetworkContainer.size()), 0, nullptr, 0.0f, Stats::Get().GetTickrate(), ImVec2(150, 50));
+		ImGui::Spacing();
 	}
 
 	if (ImGui::CollapsingHeader("Memory"))
@@ -211,8 +230,6 @@ void Engine::drawImGUI() const
 				}
 				ImGui::Spacing();
 			});
-
-		
 	}
 	
 	if (ImGui::CollapsingHeader("Renderable"))
@@ -225,7 +242,7 @@ void Engine::drawImGUI() const
 				ImGui::Text(entityname.c_str());
 				ImGui::Text("Change 'mtl-file'");
 				char str[30] = "";
-				ImGui::InputText("New material", str, IM_ARRAYSIZE(str));
+				ImGui::InputText(entityname.c_str(), str, IM_ARRAYSIZE(str));
 				if (ImGui::IsKeyPressedMap(ImGuiKey_Enter))
 				{
 					renderable.model->ChangeMaterial(str);
@@ -233,9 +250,31 @@ void Engine::drawImGUI() const
 				ImGui::Spacing();
 			});
 	}
+
+	if (ImGui::CollapsingHeader("Animators"))
+	{
+		GetCurrentScene()->ForEachComponent<comp::Animator>([&](Entity& e, comp::Animator& animComp)
+			{
+				std::string entityname = "Entity: " + std::to_string(static_cast<int>((entt::entity)e));
+
+				const char* items[] = { "NONE", "IDLE", "WALK", "RUN", "PRIMARY_ATTACK", 
+										"SECONDARY_ATTACK", "ABILITY1", "ABILITY2", 
+										"ABILITY3", "ABILITY4", "TAKE_DAMAGE", "PLACE_DEFENCE" };
+				int index = (int)animComp.animator->GetCurrentState();
+
+				if (ImGui::ListBox(entityname.c_str(), &index, items, IM_ARRAYSIZE(items), 3))
+				{
+					if (animComp.animator)
+					{
+						animComp.animator->ChangeAnimation(EAnimationType(index));
+					}
+				}
+				ImGui::Spacing();
+			});
+	}
+
 	if (ImGui::CollapsingHeader("Light"))
 	{
-
 		GetCurrentScene()->ForEachComponent<comp::Light>([&](Entity& e, comp::Light& light)
 			{
 				std::string entityname = "Entity: " + std::to_string(static_cast<int>((entt::entity)e));
@@ -245,6 +284,7 @@ void Engine::drawImGUI() const
 				ImGui::SameLine();
 				std::string index = std::to_string(light.index);
 				ImGui::Text("Light index: %d", light.index);
+
 				bool edited = false;
 				if (ImGui::ColorEdit4(("Color##" + index).c_str(), (float*)&light.lightData.color)) 
 					edited = true;
@@ -271,6 +311,7 @@ void Engine::drawImGUI() const
 				}
 
 				ImGui::Spacing();
+
 			});
 
 	}
@@ -295,7 +336,7 @@ void Engine::drawImGUI() const
 		ImGui::Text("Bounding Oriented Box");
 		ImGui::Spacing();
 
-		GetCurrentScene()->ForEachComponent<comp::BoundingOrientedBox>([&](Entity& e, comp::BoundingOrientedBox& box)
+		GetCurrentScene()->ForEachComponent<comp::OrientedBoxCollider>([&](Entity& e, comp::OrientedBoxCollider& box)
 			{
 				std::string id = std::to_string(static_cast<int>((entt::entity)e));
 				
@@ -311,7 +352,7 @@ void Engine::drawImGUI() const
 
 		ImGui::Text("Bounding Sphere");
 		ImGui::Spacing();
-		GetCurrentScene()->ForEachComponent<comp::BoundingSphere>([&](Entity& e, comp::BoundingSphere& s)
+		GetCurrentScene()->ForEachComponent<comp::SphereCollider>([&](Entity& e, comp::SphereCollider& s)
 			{
 				std::string id = std::to_string(static_cast<int>((entt::entity)e));
 
@@ -355,8 +396,35 @@ void Engine::drawImGUI() const
 	{
 		ImGui::Checkbox("Render Colliders", GetCurrentScene()->GetIsRenderingColliders());
 	};
+
+	int size = m_renderer.GetShadowMapSize();
+	if (ImGui::InputInt("ShadowMapResolution", &size, 1024))
+	{
+		size = max(size, 64);
+		m_renderer.SetShadowMapSize(size);
+	}
+
+	if (ImGui::CollapsingHeader("Preview ShadowMap"))
+	{
+		m_renderer.ImGuiShowTextures();
+	}
+
 	ImGui::End();
 	
+}
+
+void Engine::SetupLoadingScreen()
+{
+	const float width = (float)GetWindow()->GetWidth();
+	const float height = (float)GetWindow()->GetHeight();
+	Scene& scene = GetScene("Loading");
+
+	Collection2D* loadingScreen = new Collection2D;
+
+	loadingScreen->AddElement<rtd::Picture>("LoadingScreen.png", (draw_t(0.0f, 0.0f, width, height)));
+	loadingScreen->AddElement<rtd::Canvas>(D2D1::ColorF(0, 0.0f), draw_t(0.0f, 0.0f, width / 2.0f, height / 2.0f));
+
+	scene.Add2DCollection(loadingScreen, "LoadingScreen");
 }
 
 void Engine::RenderThread()
@@ -366,24 +434,37 @@ void Engine::RenderThread()
 	float deltaTime = 0.f;
 	float frameTime = 0.f;
 
-	const float targetDelta = 1.0f / Stats::GetMaxFPS();
+	//Need to place inside of the loop if we have to update it from settings
+	const float TARGET_DELTA = 1.f / Stats::Get().GetFramerate();
+
 	while (IsRunning())
 	{
 		currentFrame = omp_get_wtime();
 		deltaTime = static_cast<float>(currentFrame - lastFrame);
-		
+		frameTime += deltaTime;
+
 		//Render every now and then
-		if (frameTime >= targetDelta)
+		if (frameTime >= TARGET_DELTA)
 		{
-			if (GetCurrentScene()->IsRenderReady()) 
+			if (!s_loaded && GetCurrentScene() == &GetScene("Loading"))
 			{
-				Stats::SetDeltaTime(frameTime);
-				Render(frameTime);
-				//m_frameTime.render = deltaSum;
+				GetCurrentScene()->Update2D();
+				D2D1Core::Begin();
+				GetCurrentScene()->Render2D();
+				D2D1Core::Present();
+				D3D11Core::Get().SwapChain()->Present(0, 0);
+				s_loaded = true;
 				frameTime = 0.f;
 			}
+			if (GetCurrentScene()->IsRenderReady()) // Render Scene.
+			{
+				Stats::Get().SetFrameTime(frameTime);
+				Render();
+				frameTime = 0.f;
+				s_loaded = false;
+			}
 		}
-		frameTime += deltaTime;
+		
 		lastFrame = currentFrame;
 	}
 
@@ -425,21 +506,22 @@ void Engine::Update(float dt)
 		);
 	}
 
-	OnUserUpdate(dt);
-	BasicEngine::Update(dt);
+	OnUserUpdate(Stats::Get().GetUpdateTime());
+	BasicEngine::Update(Stats::Get().GetUpdateTime());
 
 	{
 		PROFILE_SCOPE("Ending ImGui");
 
 		IMGUI(
 			drawImGUI();
+
 			ImGui::EndFrame();
 			m_imguiMutex.unlock();
 		);
 	}
 }
 
-void Engine::Render(float& dt)
+void Engine::Render()
 {
 	PROFILE_FUNCTION();
 
@@ -449,15 +531,28 @@ void Engine::Render(float& dt)
 			Render 3D
 		*/
 		m_renderer.ClearFrame();
+
 		m_renderer.Render(GetCurrentScene());
 	}
 
+#if RENDER_INGAME_UI
 	{
 		PROFILE_SCOPE("Render D2D1");
 		D2D1Core::Begin();
 		GetCurrentScene()->Render2D();
 		D2D1Core::Present();
+}
+#else
+	{
+		if (GetCurrentScene() != &GetScene("Game"))
+		{
+			PROFILE_SCOPE("Render D2D1");
+			D2D1Core::Begin();
+			GetCurrentScene()->Render2D();
+			D2D1Core::Present();
+		}		
 	}
+#endif	
 
 	{
 		PROFILE_SCOPE("Render ImGui");
@@ -468,9 +563,7 @@ void Engine::Render(float& dt)
 		m_imguiMutex.unlock();
 		);
 	}
-
 	
-
 	{
 		PROFILE_SCOPE("Present");
 		D3D11Core::Get().SwapChain()->Present(0, 0);

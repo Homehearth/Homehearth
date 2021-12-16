@@ -26,9 +26,9 @@ void Server::Update(size_t nMaxMessage)
 
 SOCKET Server::GetConnection(uint32_t playerID) const
 {
-	if (connections.find(playerID) != connections.end())
+	if (m_connections.find(playerID) != m_connections.end())
 	{
-		return connections.at(playerID);
+		return m_connections.at(playerID);
 	}
 	else
 	{
@@ -48,7 +48,7 @@ void Server::OnClientConnect(std::string&& ip, const uint16_t& port)
 	LOG_INFO("Client connected from %s:%d", ip.c_str(), port);
 }
 
-void Server::OnClientDisconnect(const SOCKET& socket)
+void Server::OnClientDisconnect()
 {
 	LOG_INFO("Client disconnected!");
 }
@@ -64,7 +64,7 @@ void Server::OnClientValidated(const SOCKET& socket)
 	message<GameMsg> msg = {};
 	msg << id;
 	msg.header.id = GameMsg::Server_AssignID;
-	connections[id] = socket;
+	m_connections[id] = socket;
 	this->SendToClient(id, msg);
 
 	LOG_INFO("Client has been validated on socket %lld", socket);

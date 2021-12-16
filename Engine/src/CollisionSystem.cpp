@@ -2,154 +2,164 @@
 #include "CollisionSystem.h"
 
 
-
-//Returns number of how many colliders the entity is colliding with
-const int CollisionSystem::getCollisionCounts(Entity entity) const
+void CollisionSystem::AddOnCollisionEnter(Entity entity1, std::function<void(Entity, Entity)> func)
 {
-	int count = 0;
-	if (m_CollisionCount.find(entity) != m_CollisionCount.end())
+	if (m_onCollisionEnter.find(entity1) == m_onCollisionEnter.end())
 	{
-		count = this->m_CollisionCount.at(entity);
+		m_onCollisionEnter.insert(std::make_pair(entity1, func));
+	}
+}
+
+void CollisionSystem::OnCollisionEnter(Entity entity1, Entity entity2)
+{
+	for (int i = 0; i < 2; i++)
+	{
+		if (m_onCollisionEnter.find(entity1) != m_onCollisionEnter.end())
+		{
+			if (!entity1.IsNull())
+			{
+				if (!entity2.IsNull())
+				{
+					m_onCollisionEnter.at(entity1)(entity1, entity2);
+				}
+			}
+			else
+			{
+				m_onCollisionEnter.erase(entity1);
+			}
+		}
+		std::swap(entity1, entity2);
 	}
 
-	return count;
 }
 
 
-
-
-const std::set<std::pair<Entity, Entity>>& CollisionSystem::GetCollisions() const
+void CollisionSystem::AddOnCollision(Entity entity1, std::function<void(Entity, Entity)> func)
 {
-	return m_CollisionPairs;
-}
-
-
-
-
-void CollisionSystem::AddPair(const Entity e1, const Entity e2)
-{
-#ifdef _DEBUG
-	//Increase collision count for each Entity
-	if (m_CollisionPairs.find(std::make_pair(e1, e2)) == m_CollisionPairs.end())
+	if (m_onCollision.find(entity1) == m_onCollision.end())
 	{
-		if (m_CollisionCount.find(e1) == m_CollisionCount.end())
-		{
-			m_CollisionCount.insert(std::make_pair(e1, 1));
-		}
-		else
-		{
-			m_CollisionCount.at(e1)++;
-		}
-
-		if (m_CollisionCount.find(e2) == m_CollisionCount.end())
-		{
-			m_CollisionCount.insert(std::make_pair(e2, 1));
-		}
-		else
-		{
-			m_CollisionCount.at(e2)++;
-		}
-	}
-#endif
-
-	if (e1 > e2)
-		m_CollisionPairs.insert({ e1,e2 });
-	else
-		m_CollisionPairs.insert({ e2,e1 });
-
-}
-
-
-
-
-void CollisionSystem::RemovePair(const Entity e1, const Entity e2)
-{
-
-#ifdef _DEBUG
-	//Decrease collision count for each Entity
-	if (m_CollisionPairs.find(std::make_pair(e1, e2)) != m_CollisionPairs.end() || m_CollisionPairs.find(std::make_pair(e2, e1)) != m_CollisionPairs.end())
-	{
-		if (m_CollisionCount.find(e1) != m_CollisionCount.end() && m_CollisionCount.find(e1)->second > 0)
-		{
-			m_CollisionCount.at(e1)--;
-		}
-
-		if (m_CollisionCount.find(e2) != m_CollisionCount.end() && m_CollisionCount.find(e2)->second > 0)
-		{
-			m_CollisionCount.at(e2)--;
-		}
-	}
-#endif
-
-
-	if (e1 > e2)
-		m_CollisionPairs.erase(std::make_pair(e1, e2));
-	else
-		m_CollisionPairs.erase(std::make_pair(e2, e1));
-
-
-}
-
-
-
-
-void CollisionSystem::AddOnCollision(Entity entity1, std::function<void(Entity)> func)
-{
-	if (m_OnCollision.find(entity1) == m_OnCollision.end())
-	{
-		m_OnCollision.insert(std::make_pair(entity1, func));
+		m_onCollision.insert(std::make_pair(entity1, func));
 	}
 }
 
 void CollisionSystem::OnCollision(Entity entity1, Entity entity2)
 {
-	if (m_OnCollision.find(entity1) != m_OnCollision.end())
+	for (int i = 0; i < 2; i++)
 	{
-		if (!entity1.IsNull())
+		if (m_onCollision.find(entity1) != m_onCollision.end())
 		{
-			m_OnCollision.at(entity1)(entity2);
+			if (!entity1.IsNull())
+			{
+				if (!entity2.IsNull())
+				{
+					m_onCollision.at(entity1)(entity1, entity2);
+				}
+			}
+			else
+			{
+				m_onCollision.erase(entity1);
+			}
 		}
-		else
-		{
-			m_OnCollision.erase(entity1);
-		}
-	}
-	if (m_OnCollision.find(entity2) != m_OnCollision.end())
-	{
-		if (!entity2.IsNull())
-		{
-			m_OnCollision.at(entity2)(entity1);
-		}
-		else
-		{
-			m_OnCollision.erase(entity2);
-		}
+		std::swap(entity1, entity2);
 	}
 }
 
-
-CollisionSystem::Projection_t CollisionSystem::GetProjection(sm::Vector3 axis, sm::Vector3* corners)
+void CollisionSystem::AddOnCollisionExit(Entity entity1, std::function<void(Entity, Entity)> func)
 {
-	double min = axis.Dot(corners[0]);
-	double max = min;
-
-	for(int i = 1; i < 8; i++)
+	if (m_onCollisionExit.find(entity1) == m_onCollisionExit.end())
 	{
-		double p = axis.Dot(corners[i]);
-
-		if(p < min)
-		{
-			min = p;
-		}
-		else if(p > max)
-		{
-			max = p;
-		}
-		
+		m_onCollisionExit.insert(std::make_pair(entity1, func));
 	}
+}
 
-	//Projection_t projection = {min, max};
-	return { min, max };
+void CollisionSystem::OnCollisionExit(Entity entity1, Entity entity2)
+{
+	for (int i = 0; i < 2; i++)
+	{
+		if (m_onCollisionExit.find(entity1) != m_onCollisionExit.end())
+		{
+			if (!entity1.IsNull())
+			{
+				if (!entity2.IsNull())
+				{
+					m_onCollisionExit.at(entity1)(entity1, entity2);
+				}
+			}
+			else
+			{
+				m_onCollisionExit.erase(entity1);
+			}
+		}
+		std::swap(entity1, entity2);
+	}
+}
+
+bool CollisionSystem::AddPair(Entity entity1, Entity entity2)
+{
+	size_t collisionSize = m_collisionPairs.size();
+	std::pair<Entity, Entity> entityPair = MakeEntityPair(entity1, entity2);
+	m_collisionPairs.insert(entityPair);
+	if (collisionSize < m_collisionPairs.size())
+	{
+		return true;
+	}
+	return false;
+}
+
+bool CollisionSystem::RemovePair(Entity entity1, Entity entity2)
+{
+	std::pair<Entity, Entity> entityPair = MakeEntityPair(entity1, entity2);
+	size_t collisionSize = m_collisionPairs.size();
+	m_collisionPairs.erase(entityPair);
+	if (collisionSize > m_collisionPairs.size())
+	{
+		return true;
+	}
+	return false;
+}
+
+uint32_t CollisionSystem::GetCollisionCount(Entity entity) const
+{
+	uint32_t count = 0;
+	for (const auto& pair : m_collisionPairs)
+	{
+		if (entity == pair.first || entity == pair.second)
+		{
+			count++;
+		}
+	}
+	return count;
+}
+
+//CollisionSystem::Projection_t CollisionSystem::GetProjection(sm::Vector3 axis, sm::Vector3* corners)
+//{
+//	float min = axis.Dot(corners[0]);
+//	float max = min;
+//
+//	for (int i = 1; i < 8; i++)
+//	{
+//		float p = axis.Dot(corners[i]);
+//
+//		if (p < min)
+//		{
+//			min = p;
+//		}
+//		else if (p > max)
+//		{
+//			max = p;
+//		}
+//
+//	}
+//
+//	//Projection_t projection = {min, max};
+//	return { min, max };
+//}
+
+std::pair<Entity, Entity> CollisionSystem::MakeEntityPair(Entity entity1, Entity entity2)
+{
+	if (entity1 > entity2)
+		return { entity2, entity1 };
+	return { entity1, entity2 };
 }
 
 //Generates a response when two objects collide with each other,
@@ -157,124 +167,249 @@ CollisionSystem::Projection_t CollisionSystem::GetProjection(sm::Vector3 axis, s
 //each corners crosses each other and take the axis that differs the least.
 CollisionInfo_t CollisionSystem::Intersection(Entity entity1, Entity entity2)
 {
-	comp::BoundingOrientedBox* p1Obb = entity1.GetComponent<comp::BoundingOrientedBox>();
-	comp::BoundingOrientedBox* p2Obb = entity2.GetComponent<comp::BoundingOrientedBox>();
+	tag_bits p1Tags = entity1.GetTags();
+	tag_bits p2Tags = entity2.GetTags();
 
-	if (p1Obb == nullptr || p2Obb == nullptr)
+	// Sphere - Sphere
+	if (p1Tags & TagType::DYNAMIC && p2Tags & TagType::DYNAMIC)
 	{
-		LOG_ERROR("Attempt to perform collision response with or against an entity that does not have a collider component");
-		return {false, 0.0, sm::Vector3::Zero};
-	}
-	
-	sm::Vector3 p2Corners[8];
-	sm::Vector3 p1Corners[8];
-	
-	p2Obb->GetCorners(p2Corners);
-	p1Obb->GetCorners(p1Corners);
-	
-	sm::Vector3 normals[6] = { sm::Vector3(1.0,0.0,0.0f),sm::Vector3(0.0,1.0,0.0f), sm::Vector3(0.0,0.0,1.0f), sm::Vector3(-1.0,0.0,0.0f),sm::Vector3(0.0,-1.0,0.0f), sm::Vector3(0.0,0.0,-1.0f) };
-	std::vector<sm::Vector3> allAxis;
-
-	allAxis.emplace_back(DirectX::XMVector3Rotate(normals[0], DirectX::XMLoadFloat4(& p1Obb->Orientation)));
-	allAxis.emplace_back(DirectX::XMVector3Rotate(normals[1], DirectX::XMLoadFloat4(& p1Obb->Orientation)));
-	allAxis.emplace_back(DirectX::XMVector3Rotate(normals[2], DirectX::XMLoadFloat4(& p1Obb->Orientation)));
-	allAxis.emplace_back(DirectX::XMVector3Rotate(normals[3], DirectX::XMLoadFloat4(& p1Obb->Orientation)));
-	allAxis.emplace_back(DirectX::XMVector3Rotate(normals[4], DirectX::XMLoadFloat4(& p1Obb->Orientation)));
-	allAxis.emplace_back(DirectX::XMVector3Rotate(normals[5], DirectX::XMLoadFloat4(& p1Obb->Orientation)));
-	
-	allAxis.emplace_back(DirectX::XMVector3Rotate(normals[0], DirectX::XMLoadFloat4(&p2Obb->Orientation)));
-	allAxis.emplace_back(DirectX::XMVector3Rotate(normals[1], DirectX::XMLoadFloat4(&p2Obb->Orientation)));
-	allAxis.emplace_back(DirectX::XMVector3Rotate(normals[2], DirectX::XMLoadFloat4(&p2Obb->Orientation)));
-	allAxis.emplace_back(DirectX::XMVector3Rotate(normals[3], DirectX::XMLoadFloat4(&p2Obb->Orientation)));
-	allAxis.emplace_back(DirectX::XMVector3Rotate(normals[4], DirectX::XMLoadFloat4(&p2Obb->Orientation)));
-	allAxis.emplace_back(DirectX::XMVector3Rotate(normals[5], DirectX::XMLoadFloat4(&p2Obb->Orientation)));
-	
-	double overlap = DBL_MAX;
-	sm::Vector3 smallest = sm::Vector3::Zero;
-
-	for(int i = 0; i < allAxis.size(); i++)
-	{
-		sm::Vector3 axis = allAxis.at(i);
+		comp::SphereCollider* p1BoS = entity1.GetComponent<comp::SphereCollider>();
+		comp::SphereCollider* p2BoS = entity2.GetComponent<comp::SphereCollider>();
 		
-		//Project both shapes on the axis
-		Projection_t p1 = GetProjection(axis, p1Corners);
-		Projection_t p2 = GetProjection(axis, p2Corners);
-
-		// 1D
-		if((p1.max < p2.min))
+		sm::Vector3 vec = sm::Vector3(p2BoS->Center) - sm::Vector3(p1BoS->Center);
+		float distance = vec.Length();
+		vec.Normalize();
+		float radius = (p1BoS->Radius + p2BoS->Radius);
+		if (distance < radius)
 		{
-			//NO OVERLAP
-			return { false,0.0, sm::Vector3::Zero };
+			float overlap = (radius - distance) * 0.5f;
+
+			return { true, overlap, vec };
 		}
-		else
+	}
+	//Sphere - OBB
+	else if (p1Tags & TagType::DYNAMIC && p2Tags & TagType::STATIC)
+	{
+		if (p2Tags & TagType::MAP_BOUNDS && !entity1.GetComponent<comp::Player>())
 		{
-			//Get the overlap
-			double o = p1.max - p2.min;
+			return { false, 0.0f, sm::Vector3::Zero };
+		}
+		comp::SphereCollider* p1BoS = entity1.GetComponent<comp::SphereCollider>();
+		comp::OrientedBoxCollider* p2OBB = entity2.GetComponent<comp::OrientedBoxCollider>();
 
-			if(o < overlap)
+		if (!p1BoS || !p2OBB)
+		{
+			return { false, 0.f, sm::Vector3::Zero };
+		}
+
+		sm::Matrix Translation = sm::Matrix::CreateTranslation(p2OBB->Center).Invert();
+		sm::Matrix Rotation = sm::Matrix::CreateFromQuaternion(p2OBB->Orientation).Transpose();
+		sm::Matrix obbInverse = Translation * Rotation;
+		sm::Vector3 sCenter = p1BoS->Center;
+		// Put the sphere in the obb's local space
+		sCenter = sm::Vector3::Transform(sCenter, obbInverse);
+		sCenter.y = 0.f;
+
+		float minX = (-p2OBB->Extents.x);
+		float maxX = p2OBB->Extents.x;
+		float minZ = (-p2OBB->Extents.z);
+		float maxZ = p2OBB->Extents.z;
+
+		// Get the closest point on the OBB that is inside the sphere
+		float closestX = max(minX, min(sCenter.x, maxX));
+		float closestZ = max(minZ, min(sCenter.z, maxZ));
+		sm::Vector3 ClosestPoint = { closestX, 0.f, closestZ };
+		sm::Vector3 pointToSphere = sCenter - ClosestPoint;
+
+		float distance = pointToSphere.Length();
+
+		// If the distance between the point that is inside the Sphere (on the OBB) 
+		// is less that the radius we are intersecting
+		if (distance < p1BoS->Radius)
+		{
+			// Center point of the sphere is inside the OBB == EDGE CASE
+			if (distance < 0.001f)
 			{
-				overlap = o;
-				smallest = axis;
-			}
+				// DeltaLeft, DeltaRight, DeltaTop, DeltaBottom
+				float dl = abs(sCenter.x - minX);
+				float dr = abs(sCenter.x - maxX);
+				float dt = abs(sCenter.z - minZ);
+				float db = abs(sCenter.z - maxZ);
 
+				float clampX = sCenter.x;
+				float clampZ = sCenter.z;
+
+				// Clamp to the nearest face of the OBB
+				if (dt < db && dt < dl && dt < dr)
+				{
+					clampZ = minZ;
+				}
+				else if (db < dl && db < dr)
+				{
+					clampZ = maxZ;
+				}
+				else if (dl < dr)
+				{
+					clampX = minX;
+				}
+				else
+				{
+					clampX = maxX;
+				}
+			
+				sm::Vector3 closestPoint = { clampX, 0.f, clampZ };
+
+				// This goes inwards to the obb make sure to flip its direction
+				sm::Vector3 pointToSphere = (sCenter - closestPoint) * -1.f;
+				float overlap = pointToSphere.Length() + p1BoS->Radius;
+
+				pointToSphere = sm::Vector3::TransformNormal(pointToSphere, obbInverse.Invert());
+				pointToSphere.Normalize();
+
+				return { true, overlap, pointToSphere };
+			}
+			else
+			{
+				float overlap = (p1BoS->Radius - distance);
+
+				pointToSphere.Normalize();
+				// To use the normal in world space, transform it back.
+				pointToSphere = sm::Vector3::TransformNormal(pointToSphere, obbInverse.Invert());
+
+				return { true, overlap, pointToSphere };
+			}
 		}
 	}
 
-	return { true,overlap,smallest };
-	
+	return { false, 0.0f, sm::Vector3::Zero };
+
+
+
+
+	/*
+		DONT DELETE IF WE NEED TO REUSE THIS LATER
+	*/
+
+	/*
+		comp::BoundingOrientedBox* p1Obb = entity1.GetComponent<comp::BoundingOrientedBox>();
+		comp::BoundingOrientedBox* p2Obb = entity2.GetComponent<comp::BoundingOrientedBox>();
+		if (p1Obb == nullptr || p2Obb == nullptr)
+		{
+			//LOG_ERROR("Attempt to perform collision response with or against an entity that does not have a collider component");
+			return { false, 0.0f, sm::Vector3::Zero };
+		}
+
+		sm::Vector3 p2Corners[8];
+		sm::Vector3 p1Corners[8];
+
+		p2Obb->GetCorners(p2Corners);
+		p1Obb->GetCorners(p1Corners);
+
+		sm::Vector3 normals[6] = { sm::Vector3(1.0,0.0,0.0f),sm::Vector3(0.0,1.0,0.0f), sm::Vector3(0.0,0.0,1.0f), sm::Vector3(-1.0,0.0,0.0f),sm::Vector3(0.0,-1.0,0.0f), sm::Vector3(0.0,0.0,-1.0f) };
+		std::vector<sm::Vector3> allAxis;
+
+		allAxis.emplace_back(DirectX::XMVector3Rotate(normals[0], DirectX::XMLoadFloat4(&p1Obb->Orientation)));
+		allAxis.emplace_back(DirectX::XMVector3Rotate(normals[1], DirectX::XMLoadFloat4(&p1Obb->Orientation)));
+		allAxis.emplace_back(DirectX::XMVector3Rotate(normals[2], DirectX::XMLoadFloat4(&p1Obb->Orientation)));
+		allAxis.emplace_back(DirectX::XMVector3Rotate(normals[3], DirectX::XMLoadFloat4(&p1Obb->Orientation)));
+		allAxis.emplace_back(DirectX::XMVector3Rotate(normals[4], DirectX::XMLoadFloat4(&p1Obb->Orientation)));
+		allAxis.emplace_back(DirectX::XMVector3Rotate(normals[5], DirectX::XMLoadFloat4(&p1Obb->Orientation)));
+
+		allAxis.emplace_back(DirectX::XMVector3Rotate(normals[0], DirectX::XMLoadFloat4(&p2Obb->Orientation)));
+		allAxis.emplace_back(DirectX::XMVector3Rotate(normals[1], DirectX::XMLoadFloat4(&p2Obb->Orientation)));
+		allAxis.emplace_back(DirectX::XMVector3Rotate(normals[2], DirectX::XMLoadFloat4(&p2Obb->Orientation)));
+		allAxis.emplace_back(DirectX::XMVector3Rotate(normals[3], DirectX::XMLoadFloat4(&p2Obb->Orientation)));
+		allAxis.emplace_back(DirectX::XMVector3Rotate(normals[4], DirectX::XMLoadFloat4(&p2Obb->Orientation)));
+		allAxis.emplace_back(DirectX::XMVector3Rotate(normals[5], DirectX::XMLoadFloat4(&p2Obb->Orientation)));
+
+		float overlap = FLT_MAX;
+		sm::Vector3 smallest = sm::Vector3::Zero;
+
+		for (int i = 0; i < allAxis.size(); i++)
+		{
+			sm::Vector3 axis = allAxis.at(i);
+
+			//Project both shapes on the axis
+			Projection_t p1 = GetProjection(axis, p1Corners);
+			Projection_t p2 = GetProjection(axis, p2Corners);
+
+			// 1D
+			if ((p1.max < p2.min))
+			{
+				//NO OVERLAP
+				return { false, 0.0f, sm::Vector3::Zero };
+			}
+			else
+			{
+				//Get the overlap
+				float o = p1.max - p2.min;
+
+				if (o < overlap)
+				{
+					overlap = o;
+					smallest = axis;
+				}
+			}
+		}
+
+		return { true,overlap,smallest };
+	*/
 }
 
 void CollisionSystem::CollisionResponse(CollisionInfo_t collisionInfo, Entity entity1, Entity entity2)
 {
-	if(entity1.GetComponent<comp::Tag<DYNAMIC>>() && entity2.GetComponent<comp::Tag<STATIC>>())
+	tag_bits p1Tags = entity1.GetTags();
+	tag_bits p2Tags = entity2.GetTags();
+	sm::Vector3 dir = collisionInfo.smallestVec * collisionInfo.overlap;
+
+	if (p1Tags & TagType::DYNAMIC && p2Tags & TagType::STATIC)
 	{
 		comp::Transform* transform = entity1.GetComponent<comp::Transform>();
-		comp::BoundingOrientedBox* obb = entity1.GetComponent<comp::BoundingOrientedBox>();
+		comp::SphereCollider* BoS = entity1.GetComponent<comp::SphereCollider>();
 		if (transform)
 		{
-			transform->position = transform->position + sm::Vector3(collisionInfo.smallestVec * (float)collisionInfo.overlap * -1.1f);
-			
-			if (obb)
-				obb->Center = transform->position;
+			transform->position.x = transform->position.x + dir.x;
+			transform->position.z = transform->position.z + dir.z;
+
+			if (BoS)
+			{
+				BoS->Center = transform->position;
+			}
+
+			// make sure client gets updated position
+			entity1.UpdateNetwork();
 		}
-			
 	}
-	else if(entity2.GetComponent<comp::Tag<DYNAMIC>>() && entity1.GetComponent<comp::Tag<STATIC>>())
-	{
-		comp::Transform* transform = entity2.GetComponent<comp::Transform>();
-		comp::BoundingOrientedBox* obb = entity2.GetComponent<comp::BoundingOrientedBox>();
-		
-		if (transform)
-		{
-			transform->position = transform->position + sm::Vector3(collisionInfo.smallestVec * (float)collisionInfo.overlap * 1.1f);
-			
-			if (obb)
-				obb->Center = transform->position;
-		}
-			
-	}
-	else if(entity2.GetComponent<comp::Tag<DYNAMIC>>() && entity1.GetComponent<comp::Tag<DYNAMIC>>())
+	if (p1Tags & TagType::DYNAMIC && p2Tags & TagType::DYNAMIC)
 	{
 		comp::Transform* transform1 = entity1.GetComponent<comp::Transform>();
 		comp::Transform* transform2 = entity2.GetComponent<comp::Transform>();
-		comp::BoundingOrientedBox* obb1 = entity1.GetComponent<comp::BoundingOrientedBox>();
-		comp::BoundingOrientedBox* obb2 = entity2.GetComponent<comp::BoundingOrientedBox>();
+		comp::SphereCollider* BoS1 = entity1.GetComponent<comp::SphereCollider>();
+		comp::SphereCollider* BoS2 = entity2.GetComponent<comp::SphereCollider>();
 		//Dynamic
 		if (transform1)
 		{
-			transform1->position = transform1->position + (sm::Vector3(collisionInfo.smallestVec * (float)collisionInfo.overlap * -1.1f) / 2.0f);
+			transform1->position.x = transform1->position.x + dir.x * -1.f;
+			transform1->position.z = transform1->position.z + dir.z * -1.f;
 
-			if (obb1)
-				obb1->Center = transform1->position;
+			if (BoS1)
+			{
+				BoS1->Center = transform1->position;
+			}
+
+			entity1.UpdateNetwork();
 		}
-
 		if (transform2)
 		{
-			transform2->position = transform2->position + (sm::Vector3(collisionInfo.smallestVec * (float)collisionInfo.overlap) / 2.0f * 1.1f);
+			transform2->position.x = transform2->position.x + dir.x;
+			transform2->position.z = transform2->position.z + dir.z;
 
-			if (obb2)
-				obb2->Center = transform2->position;
+			if (BoS2)
+			{
+				BoS2->Center = transform2->position;
+			}
+
+			entity2.UpdateNetwork();
 		}
-			
 	}
 }

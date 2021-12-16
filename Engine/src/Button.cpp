@@ -53,15 +53,44 @@ Text* rtd::Button::GetText()
 {
 	if (!m_text)
 	{
-		m_text = std::make_unique<Text>("", 
+		m_text = std::make_unique<Text>("",
 			draw_text_t(
 				m_drawOpts.x_pos,
 				m_drawOpts.y_pos,
-				m_drawOpts.width, 
+				m_drawOpts.width,
 				m_drawOpts.height));
 
 	}
 	return m_text.get();
+}
+
+const draw_t& rtd::Button::GetOpts() const
+{
+	return m_drawOpts;
+}
+
+void rtd::Button::SetPosition(const float& x, const float& y)
+{
+	m_drawOpts.x_pos = x;
+	m_drawOpts.y_pos = y;
+
+	m_picture->UpdatePos(m_drawOpts);
+}
+
+void rtd::Button::SetScale(const float& x, const float& y)
+{
+	m_drawOpts.width = x;
+	m_drawOpts.height = y;
+
+	m_picture->UpdatePos(m_drawOpts);
+}
+
+void rtd::Button::AddPosition(const float& x, const float& y)
+{
+	m_drawOpts.x_pos += x;
+	m_drawOpts.y_pos += y;
+
+	m_picture->UpdatePos(m_drawOpts);
 }
 
 void rtd::Button::SetOnPressedEvent(const std::function<void()>& func)
@@ -69,16 +98,24 @@ void rtd::Button::SetOnPressedEvent(const std::function<void()>& func)
 	m_function = func;
 }
 
+void rtd::Button::SetOnHoverEvent(const std::function<void()>& func)
+{
+	m_hoverFunction = func;
+}
+
 bool Button::CheckClicked() const
 {
-    return m_isClicked;
+	return m_isClicked;
 }
 
 void Button::Draw()
 {
 	// Draw Order
 	if (m_border)
-		m_border->Draw();
+	{
+		if (m_border->IsVisible())
+			m_border->Draw();
+	}
 	if (m_picture)
 		m_picture->Draw();
 	if (m_canvas)
@@ -90,10 +127,13 @@ void Button::Draw()
 
 void rtd::Button::OnHover()
 {
-
+	if (m_hoverFunction)
+	{
+		m_hoverFunction();
+	}
 }
 
-bool rtd::Button::CheckClick()
+ElementState rtd::Button::CheckClick()
 {
 	m_isClicked = false;
 	if (CheckHover())
@@ -102,10 +142,19 @@ bool rtd::Button::CheckClick()
 		if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED))
 		{
 			m_isClicked = true;
+			return ElementState::INSIDE;
+		}
+	}
+	else
+	{
+		// CheckCollisions if mouse key is pressed.
+		if (InputSystem::Get().CheckMouseKey(MouseKey::LEFT, KeyState::PRESSED))
+		{
+			return ElementState::OUTSIDE;
 		}
 	}
 
-	return m_isClicked;
+	return ElementState::NONE;
 }
 
 bool rtd::Button::CheckHover()
@@ -124,6 +173,13 @@ bool rtd::Button::CheckHover()
 
 void Button::OnClick()
 {
-	if(m_function)
+	if (m_function)
+	{
+		audio_t audio = {};
+		audio.isUnique = false;
+		audio.volume = 0.3f;
+		SoundHandler::Get().PlaySound("ButtonClick", audio);
+
 		m_function();
+	}
 }

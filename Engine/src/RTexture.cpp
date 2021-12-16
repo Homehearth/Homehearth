@@ -9,11 +9,13 @@
 RTexture::RTexture()
 {
 	m_format = ETextureChannelType::fourChannels;
+	m_useMipmaps = true;
 }
 
-RTexture::RTexture(ETextureChannelType format)
+RTexture::RTexture(ETextureChannelType format, bool useMipmaps)
 {
 	m_format = format;
+	m_useMipmaps = useMipmaps;
 }
 
 RTexture::~RTexture()
@@ -40,8 +42,8 @@ bool RTexture::StandardSetup(unsigned char* image, const UINT& width, const UINT
 	textureDesc.ArraySize = 1;
 	textureDesc.SampleDesc.Count = 1;
 	textureDesc.SampleDesc.Quality = 0;
-	textureDesc.Usage = D3D11_USAGE_IMMUTABLE; //Only need to read from texture on GPU-side
-	textureDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+	textureDesc.Usage = D3D11_USAGE_DEFAULT;
+	textureDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS;
 	textureDesc.CPUAccessFlags = 0;
 
 	if (m_format == ETextureChannelType::oneChannel)
@@ -49,8 +51,7 @@ bool RTexture::StandardSetup(unsigned char* image, const UINT& width, const UINT
 	else
 		textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 
-	ComPtr<ID3D11Texture2D> texture;
-	HRESULT hr = D3D11Core::Get().Device()->CreateTexture2D(&textureDesc, &data, &texture);
+	HRESULT hr = D3D11Core::Get().Device()->CreateTexture2D(&textureDesc, &data, &m_texture2D);
 	if (FAILED(hr))
 	{
 #ifdef _DEBUG
@@ -59,7 +60,7 @@ bool RTexture::StandardSetup(unsigned char* image, const UINT& width, const UINT
 		return false;
 	}
 
-	hr = D3D11Core::Get().Device()->CreateShaderResourceView(texture.Get(), 0, &m_shaderView);
+	hr = D3D11Core::Get().Device()->CreateShaderResourceView(m_texture2D.Get(), 0, &m_shaderView);
 	if (FAILED(hr))
 	{
 #ifdef _DEBUG
@@ -83,7 +84,7 @@ bool RTexture::GenerateMipMaps(unsigned char* image, const UINT& width, const UI
 	textureDesc.SampleDesc.Count = 1;
 	textureDesc.SampleDesc.Quality = 0;
 	textureDesc.Usage = D3D11_USAGE_DEFAULT;
-	textureDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
+	textureDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET | D3D11_BIND_UNORDERED_ACCESS;
 	textureDesc.CPUAccessFlags = 0;
 
 	if (m_format == ETextureChannelType::oneChannel)
@@ -91,8 +92,7 @@ bool RTexture::GenerateMipMaps(unsigned char* image, const UINT& width, const UI
 	else
 		textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 
-	ComPtr<ID3D11Texture2D> texture;
-	HRESULT hr = D3D11Core::Get().Device()->CreateTexture2D(&textureDesc, nullptr, &texture);
+	HRESULT hr = D3D11Core::Get().Device()->CreateTexture2D(&textureDesc, nullptr, &m_texture2D);
 	if (FAILED(hr))
 	{
 #ifdef _DEBUG
@@ -108,7 +108,7 @@ bool RTexture::GenerateMipMaps(unsigned char* image, const UINT& width, const UI
 		mempitch = width * 4;
 
 	//Write in data to the first level
-	D3D11Core::Get().DeviceContext()->UpdateSubresource(texture.Get(), 0u, nullptr, (void*)image, mempitch, 0u);
+	D3D11Core::Get().DeviceContext()->UpdateSubresource(m_texture2D.Get(), 0u, nullptr, (void*)image, mempitch, 0u);
 
 	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 	srvDesc.Format = textureDesc.Format;
@@ -116,7 +116,7 @@ bool RTexture::GenerateMipMaps(unsigned char* image, const UINT& width, const UI
 	srvDesc.Texture2D.MostDetailedMip = 0;
 	srvDesc.Texture2D.MipLevels = -1;
 
-	hr = D3D11Core::Get().Device()->CreateShaderResourceView(texture.Get(), &srvDesc, &m_shaderView);
+	hr = D3D11Core::Get().Device()->CreateShaderResourceView(m_texture2D.Get(), &srvDesc, &m_shaderView);
 	if (FAILED(hr))
 	{
 #ifdef _DEBUG
@@ -133,6 +133,7 @@ bool RTexture::GenerateMipMaps(unsigned char* image, const UINT& width, const UI
 
 bool RTexture::Create(const std::string& filename)
 {
+	m_filename = filename;
 	std::string filepath = TEXTUREPATH + filename;
 	int width = 0;
 	int height = 0;
@@ -145,9 +146,6 @@ bool RTexture::Create(const std::string& filename)
 	else
 		image = stbi_load(filepath.c_str(), &width, &height, &comp, STBI_rgb_alpha);
 
-
-
-	
 	if (image == nullptr)
 	{
 #ifdef _DEBUG
@@ -156,17 +154,7 @@ bool RTexture::Create(const std::string& filename)
 		return false;
 	}
 
-	//The texture is to large for the engine
-	if (width > MAXSIZE || height > MAXSIZE)
-	{
-#ifdef _DEBUG
-		LOG_WARNING("[Texture] %s is too large (%d x %d)", filename.c_str(), width, height);
-#endif
-		stbi_image_free(image);
-		return false;
-	}
-
-	if (USE_MIPMAPS)
+	if (m_useMipmaps)
 	{
 		if(width % 2 == 0 && height % 2 == 0)
 		{
@@ -184,8 +172,6 @@ bool RTexture::Create(const std::string& filename)
 				return false;
 			}
 		}
-		
-
 	}
 	else
 	{
@@ -203,6 +189,29 @@ bool RTexture::Create(const std::string& filename)
 ID3D11ShaderResourceView*& RTexture::GetShaderView()
 {
 	return *m_shaderView.GetAddressOf();
+}
+
+ID3D11Texture2D*& RTexture::GetTexture2D()
+{
+	return *m_texture2D.GetAddressOf();
+}
+
+const std::string& RTexture::GetFilename() const
+{
+	return m_filename;
+}
+
+bool RTexture::DisableMipmaps()
+{
+	bool success = true;
+
+	if (m_useMipmaps)
+	{
+		m_useMipmaps = false;
+		if (!Create(m_filename))
+			success = false;
+	}
+	return success;
 }
 
 bool RBitMap::Create(const std::string& filename)

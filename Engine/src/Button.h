@@ -19,6 +19,7 @@ namespace rtd
 		std::unique_ptr<Text> m_text = nullptr;
 
 		std::function<void()> m_function = nullptr;
+		std::function<void()> m_hoverFunction = nullptr;
 
 	public:
 
@@ -30,8 +31,14 @@ namespace rtd
 		Picture* GetPicture();
 		Canvas* GetCanvas();
 		Text* GetText();
+		const draw_t& GetOpts() const;
+
+		void SetPosition(const float& x, const float& y);
+		void SetScale(const float& x, const float& y);
+		void AddPosition(const float& x, const float& y);
 
 		void SetOnPressedEvent(const std::function<void()>& func);
+		void SetOnHoverEvent(const std::function<void()>& func);
 
 		// CheckCollisions if the button is clicked.
 		bool CheckClicked() const;
@@ -40,7 +47,7 @@ namespace rtd
 		virtual void Draw() override;
 		virtual void OnClick() override;
 		virtual void OnHover() override;
-		virtual bool CheckClick() override;
+		virtual ElementState CheckClick() override;
 		virtual bool CheckHover() override;
 
 	};

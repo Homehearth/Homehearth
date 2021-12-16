@@ -10,9 +10,11 @@ workspace "Workspace"
         "Debug",
         "Release"
     }
-
-    -- Set the startup project.
+	-- Set the startup project.
     startproject "Game"
+		targetname "Homehearth"
+
+
 
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 

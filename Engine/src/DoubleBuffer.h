@@ -16,6 +16,7 @@ public:
 	void Swap();
 
 	void ReadyForSwap();
+	void UnReadyForSwap();
 
 	bool IsSwapped() const;
 };
@@ -49,6 +50,12 @@ template<typename T>
 inline void DoubleBuffer<T>::ReadyForSwap()
 {
 	m_isSwapped = false;
+}
+
+template<typename T>
+inline void DoubleBuffer<T>::UnReadyForSwap()
+{
+	m_isSwapped = true;
 }
 
 template<typename T>

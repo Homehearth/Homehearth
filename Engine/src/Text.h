@@ -1,5 +1,6 @@
 #pragma once
 #include "Element2D.h"
+#include <SimpleMath.h>
 
 namespace rtd
 {
@@ -9,7 +10,8 @@ namespace rtd
 
 	public:
 		// Pointer to format as well as position, stretch area.
-		draw_text_t m_opts;
+		DoubleBuffer<draw_text_t> m_opts;
+		//draw_text_t m_opts;
 		// Text to be rendered.
 		std::string m_text;
 
@@ -28,17 +30,19 @@ namespace rtd
 			Set the text to display.
 		*/
 		void SetText(const std::string& displayText);
+		const std::string& GetText() const;
 
 		/*
 			Set the position of the text.
 		*/
 		void SetPosition(const float& x, const float& y);
+		const sm::Vector2 GetPosition();
 
 		/*
 			Set the scale of the text.
 		*/
 		void SetScale(float scale);
-
+		void SetStretch(const float& x, const float& y);
 
 		/*
 			Create a custom format to use for this text element.
@@ -57,7 +61,7 @@ namespace rtd
 
 		virtual bool CheckHover() override;
 
-		virtual bool CheckClick() override;
+		virtual ElementState CheckClick() override;
 
 	};
 }

@@ -14,6 +14,7 @@ namespace rtd
 		D2D1_COLOR_F m_color;
 		draw_t m_drawOpts;
 		std::unique_ptr<Border> m_border;
+		Shapes m_shape = Shapes::RECTANGLE_FILLED;
 
 	public:
 
@@ -34,16 +35,21 @@ namespace rtd
 		// Set new color for canvas.
 		void SetColor(const D2D1_COLOR_F& new_color);
 		D2D1_COLOR_F& GetColor();
+		const draw_t GetOpts() const;
+		void SetBorderThickness(const LineWidth& thicc);
+		void SetBorderShape(const Shapes& shape);
+		void SetShape(const Shapes& shape);
 
 		void SetBorderColor(const D2D1_COLOR_F& new_color);
 		void HideBorder();
 		void ShowBorder();
+		void SetBorderWidth(const LineWidth& width);
 
 		// Inherited via Element2D
 		virtual void Draw() override;
 		virtual void OnClick() override;
 		virtual void OnHover() override;
-		virtual bool CheckClick() override;
+		virtual ElementState CheckClick() override;
 
 		// Inherited via Element2D
 		virtual bool CheckHover() override;

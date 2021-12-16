@@ -30,13 +30,15 @@ namespace rtd
 		void Update();
 
 	public:
-		TextField(const draw_text_t& opts, size_t textLimit = -1, bool isUsed = false, D2D1_COLOR_F borderColor = {0.0f, 0.0f, 0.0f, 1.0f});
+		TextField(const draw_text_t& opts, size_t textLimit = -1, bool isUsed = false, D2D1_COLOR_F borderColor = {0.2f, 0.07f, 0.09f, 1.0f});
 
 		void SetDescriptionText(const std::string& displayText);
 		void SetPresetText(const std::string& preset);
 
 		// Get the buffer from textfield directly.
 		std::string* RawGetBuffer();
+		void SetActive();
+		void SetShape(const Shapes& shape);
 
 		// Inherited via Element2D
 		virtual void Draw() override;
@@ -47,7 +49,7 @@ namespace rtd
 
 		virtual bool CheckHover() override;
 
-		virtual bool CheckClick() override;
+		virtual ElementState CheckClick() override;
 
 	};
 }

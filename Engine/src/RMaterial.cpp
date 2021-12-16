@@ -87,63 +87,13 @@ bool RMaterial::CreateConstBuf(const properties_t& mat)
     return !FAILED(hr);
 }
 
-void RMaterial::BindMaterial() const
+void RMaterial::BindMaterial(ID3D11DeviceContext* context)
 {
     /*
         Bind the constant buffers
     */
-    D3D11Core::Get().DeviceContext()->PSSetConstantBuffers(CB_MAT_SLOT,         1, m_matConstCB.GetAddressOf());
-    D3D11Core::Get().DeviceContext()->PSSetConstantBuffers(CB_PROPERTIES_SLOT,  1, m_hasTextureCB.GetAddressOf());
-
-    /*
-        Upload all textures
-    */
-    //Get every shader resource view
-    const UINT nrOfTextures = UINT(ETextureType::length);
-    ID3D11ShaderResourceView* allSRV[nrOfTextures] = { nullptr };
-    for (UINT i = 0; i < nrOfTextures; i++)
-    {
-        //Texture has to exist
-        if (m_textures[i])
-            allSRV[i] = m_textures[i]->GetShaderView();
-    }
-    //Bind all the textures to the GPU's pixelshader
-    D3D11Core::Get().DeviceContext()->PSSetShaderResources(T2D_STARTSLOT, nrOfTextures, allSRV);
-}
-
-void RMaterial::UnBindMaterial() const
-{
-    //Unbind the constantbuffers
-    ID3D11Buffer* nullBuffer = nullptr;
-    D3D11Core::Get().DeviceContext()->PSSetConstantBuffers(CB_MAT_SLOT,         1, &nullBuffer);
-    D3D11Core::Get().DeviceContext()->PSSetConstantBuffers(CB_PROPERTIES_SLOT,  1, &nullBuffer);
-
-    //Unbind all the textures
-    const UINT nrOfTextures = UINT(ETextureType::length);
-    ID3D11ShaderResourceView* nullSRV[nrOfTextures] = { nullptr };
-    D3D11Core::Get().DeviceContext()->PSSetShaderResources(T2D_STARTSLOT, nrOfTextures, nullSRV);
-}
-
-bool RMaterial::HasTexture(const ETextureType& type) const
-{
-    bool foundTexture = false;
-
-    //Ignore length type
-    if (type != ETextureType::length)
-    {
-        if (m_textures[(UINT)type])
-            foundTexture = true;
-    }
-    return foundTexture;
-}
-
-void RMaterial::BindDeferredMaterial(ID3D11DeviceContext* context)
-{
-    /*
-         Bind the constant buffers
-     */
-   context->PSSetConstantBuffers(CB_MAT_SLOT, 1, m_matConstCB.GetAddressOf());
-   context->PSSetConstantBuffers(CB_PROPERTIES_SLOT, 1, m_hasTextureCB.GetAddressOf());
+    context->PSSetConstantBuffers(CB_MAT_SLOT,         1, m_matConstCB.GetAddressOf());
+    context->PSSetConstantBuffers(CB_PROPERTIES_SLOT,  1, m_hasTextureCB.GetAddressOf());
 
     /*
         Upload all textures
@@ -161,12 +111,12 @@ void RMaterial::BindDeferredMaterial(ID3D11DeviceContext* context)
     context->PSSetShaderResources(T2D_STARTSLOT, nrOfTextures, allSRV);
 }
 
-void RMaterial::UnBindDeferredMaterial(ID3D11DeviceContext* context)
+void RMaterial::UnBindMaterial(ID3D11DeviceContext* context)
 {
     //Unbind the constantbuffers
     ID3D11Buffer* nullBuffer = nullptr;
-    context->PSSetConstantBuffers(CB_MAT_SLOT, 1, &nullBuffer);
-    context->PSSetConstantBuffers(CB_PROPERTIES_SLOT, 1, &nullBuffer);
+    context->PSSetConstantBuffers(CB_MAT_SLOT,         1, &nullBuffer);
+    context->PSSetConstantBuffers(CB_PROPERTIES_SLOT,  1, &nullBuffer);
 
     //Unbind all the textures
     const UINT nrOfTextures = UINT(ETextureType::length);
@@ -174,8 +124,31 @@ void RMaterial::UnBindDeferredMaterial(ID3D11DeviceContext* context)
     context->PSSetShaderResources(T2D_STARTSLOT, nrOfTextures, nullSRV);
 }
 
+bool RMaterial::HasTexture(const ETextureType& type) const
+{
+    bool foundTexture = false;
 
-bool RMaterial::Create(aiMaterial* aiMat, bool& useMTL)
+    //Ignore length type
+    if (type != ETextureType::length)
+    {
+        if (m_textures[(UINT)type])
+            foundTexture = true;
+    }
+    return foundTexture;
+}
+
+const std::shared_ptr<RTexture> RMaterial::GetTexture(const ETextureType& type) const
+{
+    std::shared_ptr<RTexture> texture;
+
+    if (HasTexture(type))
+    {
+        texture = m_textures[(UINT)type];
+    }
+    return texture;
+}
+
+bool RMaterial::Create(aiMaterial* aiMat)
 {
     /*
         Load in material constants
@@ -214,24 +187,13 @@ bool RMaterial::Create(aiMaterial* aiMat, bool& useMTL)
     {
         {ETextureType::albedo,              aiTextureType::aiTextureType_DIFFUSE},
         {ETextureType::normal,              aiTextureType::aiTextureType_NORMALS},
+        {ETextureType::metalness,           aiTextureType::aiTextureType_SHININESS},
+        {ETextureType::roughness,           aiTextureType::aiTextureType_SPECULAR},
+        {ETextureType::ambientOcclusion,    aiTextureType::aiTextureType_AMBIENT},
         {ETextureType::displacement,        aiTextureType::aiTextureType_DISPLACEMENT},
         {ETextureType::opacitymask,         aiTextureType::aiTextureType_OPACITY}
     };
-    
-    //MTL has a special format to work with pbr
-    if (useMTL)
-    {
-        textureTypeMap[ETextureType::metalness]         = aiTextureType::aiTextureType_SHININESS;
-        textureTypeMap[ETextureType::roughness]         = aiTextureType::aiTextureType_SPECULAR;
-        textureTypeMap[ETextureType::ambientOcclusion]  = aiTextureType::aiTextureType_AMBIENT;
-    }
-    else
-    {
-        textureTypeMap[ETextureType::metalness]         = aiTextureType::aiTextureType_METALNESS;
-        textureTypeMap[ETextureType::roughness]         = aiTextureType::aiTextureType_DIFFUSE_ROUGHNESS;
-        textureTypeMap[ETextureType::ambientOcclusion]  = aiTextureType::aiTextureType_AMBIENT_OCCLUSION;
-    }
-    
+      
     //For every texturetype: add the texture to the map
     for (auto& type : textureTypeMap)
     {

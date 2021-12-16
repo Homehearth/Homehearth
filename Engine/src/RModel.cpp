@@ -9,8 +9,8 @@ RModel::RModel()
 RModel::~RModel()
 {
     m_meshes.clear();
-    m_allBones.clear();
     m_lights.clear();
+    m_allBones.clear();
 }
 
 bool RModel::HasSkeleton() const
@@ -26,6 +26,164 @@ const std::vector<bone_t>& RModel::GetSkeleton() const
 const std::vector<light_t>& RModel::GetLights() const
 {
     return m_lights;
+}
+
+const std::vector<sm::Vector2> RModel::GetTextureCoords() const
+{
+    std::vector<sm::Vector2> texturecoords;
+
+    ComPtr<ID3D11Buffer> tempResource;
+    D3D11_BUFFER_DESC desc = {};
+    desc.Usage = D3D11_USAGE_STAGING;
+    desc.BindFlags = 0;
+    desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+    desc.MiscFlags = 0;
+    desc.StructureByteStride = 0;
+
+    //Go through all the meshes
+    for (size_t i = 0; i < m_meshes.size(); i++)
+    {
+        UINT byteWidth = 0;
+
+        if (m_meshes[i].hasBones)
+            byteWidth = static_cast<UINT>(sizeof(anim_vertex_t) * m_meshes[i].vertexCount);
+        else
+            byteWidth = static_cast<UINT>(sizeof(simple_vertex_t) * m_meshes[i].vertexCount);
+
+        desc.ByteWidth = byteWidth;
+
+        HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&desc, nullptr, tempResource.GetAddressOf());
+        if (FAILED(hr))
+        {
+#ifdef _DEBUG
+            LOG_ERROR("Failed to create staging buffer for get texturecoords...");
+#endif // _DEBUG
+            return texturecoords;
+        }
+
+        //Copy the resource to staging buffer so that we can read it
+        D3D11Core::Get().DeviceContext()->CopyResource(tempResource.Get(), m_meshes[i].vertexBuffer.Get());
+
+        std::vector<simple_vertex_t> simpleVertices;
+        std::vector<anim_vertex_t>   animVertices;
+
+        //Copy the data
+        D3D11_MAPPED_SUBRESOURCE data;
+        D3D11Core::Get().DeviceContext()->Map(tempResource.Get(), 0, D3D11_MAP_READ, 0, &data);
+
+        if (m_meshes[i].hasBones)
+        {
+            animVertices.resize(m_meshes[i].vertexCount);
+            memcpy(&animVertices[0], data.pData, byteWidth);
+
+            //Go through the vector of vertices and get the texturecoords
+            for (size_t v = 0; v < animVertices.size(); v++)
+            {
+                texturecoords.push_back(animVertices[v].uv);
+            }
+            animVertices.clear();
+        }
+        else
+        {
+            simpleVertices.resize(m_meshes[i].vertexCount);
+            memcpy(&simpleVertices[0], data.pData, byteWidth);
+
+            //Go through the vector of vertices and get the texturecoords
+            for (size_t v = 0; v < simpleVertices.size(); v++)
+            {
+                texturecoords.push_back(simpleVertices[v].uv);
+            }
+            simpleVertices.clear();
+        }
+        D3D11Core::Get().DeviceContext()->Unmap(tempResource.Get(), 0);
+    }
+
+    return texturecoords;
+}
+
+const std::vector<sm::Vector3> RModel::GetVertexColors() const
+{
+    std::vector<sm::Vector3> vertexColors;
+
+    ComPtr<ID3D11Buffer> tempResource;
+    D3D11_BUFFER_DESC desc = {};
+    desc.Usage = D3D11_USAGE_STAGING;
+    desc.BindFlags = 0;
+    desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+    desc.MiscFlags = 0;
+    desc.StructureByteStride = 0;
+
+    //Go through all the meshes
+    for (size_t i = 0; i < m_meshes.size(); i++)
+    {
+        UINT byteWidth = 0;
+
+        if (m_meshes[i].hasBones)
+            byteWidth = static_cast<UINT>(sizeof(anim_vertex_t) * m_meshes[i].vertexCount);
+        else
+            byteWidth = static_cast<UINT>(sizeof(simple_vertex_t) * m_meshes[i].vertexCount);
+
+        desc.ByteWidth = byteWidth;
+
+        HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&desc, nullptr, tempResource.GetAddressOf());
+        if (FAILED(hr))
+        {
+#ifdef _DEBUG
+            LOG_ERROR("Failed to create staging buffer for get vertexcolors...");
+#endif // _DEBUG
+            return vertexColors;
+        }
+
+        //Copy the resource to staging buffer so that we can read it
+        D3D11Core::Get().DeviceContext()->CopyResource(tempResource.Get(), m_meshes[i].vertexBuffer.Get());
+
+        std::vector<simple_vertex_t> simpleVertices;
+        std::vector<anim_vertex_t>   animVertices;
+
+        //Copy the data
+        D3D11_MAPPED_SUBRESOURCE data;
+        D3D11Core::Get().DeviceContext()->Map(tempResource.Get(), 0, D3D11_MAP_READ, 0, &data);
+
+        if (m_meshes[i].hasBones)
+        {
+            animVertices.resize(m_meshes[i].vertexCount);
+            memcpy(&animVertices[0], data.pData, byteWidth);
+
+            //Go through the vector of vertices and get the vertexcolors
+            for (size_t v = 0; v < animVertices.size(); v++)
+            {
+                vertexColors.push_back(animVertices[v].color);
+            }
+            animVertices.clear();
+        }
+        else
+        {
+            simpleVertices.resize(m_meshes[i].vertexCount);
+            memcpy(&simpleVertices[0], data.pData, byteWidth);
+
+            //Go through the vector of vertices and get the vertexcolors
+            for (size_t v = 0; v < simpleVertices.size(); v++)
+            {
+                vertexColors.push_back(simpleVertices[v].color);
+            }
+            simpleVertices.clear();
+        }
+        D3D11Core::Get().DeviceContext()->Unmap(tempResource.Get(), 0);
+    }
+
+    return vertexColors;
+}
+
+const std::vector<std::shared_ptr<RTexture>> RModel::GetTextures(const ETextureType& type) const
+{
+    std::vector<std::shared_ptr<RTexture>> textures;
+
+    for (size_t i = 0; i < m_meshes.size(); i++)
+    {
+        textures.push_back(m_meshes[i].material->GetTexture(type));
+    }
+
+    return textures;
 }
 
 bool RModel::ChangeMaterial(const std::string& mtlfile)
@@ -109,13 +267,7 @@ bool RModel::ChangeMaterial(const std::string& mtlfile)
     return true;
 }
 
-const std::string RModel::GetFileFormat(const std::string& filename) const
-{
-    size_t startIndex = filename.find_last_of(".");
-    return filename.substr(startIndex);
-}
-
-bool RModel::CombineMeshes(std::vector<aiMesh*>& submeshes, submesh_t& submesh)
+bool RModel::CombineMeshes(std::vector<aiMesh*>& submeshes, submesh_t& submesh, const std::unordered_map<std::string, UINT>& boneMap)
 {
     std::vector<simple_vertex_t> simpleVertices;
     std::vector<anim_vertex_t> skeletonVertices;
@@ -137,6 +289,10 @@ bool RModel::CombineMeshes(std::vector<aiMesh*>& submeshes, submesh_t& submesh)
             vert.normal     = { aimesh->mNormals[v].x,          aimesh->mNormals[v].y,        aimesh->mNormals[v].z     };
             vert.tangent    = { aimesh->mTangents[v].x,         aimesh->mTangents[v].y,       aimesh->mTangents[v].z    };
             vert.bitanget   = { aimesh->mBitangents[v].x,       aimesh->mBitangents[v].y,     aimesh->mBitangents[v].z  };
+
+            //Only accept the first colorset for now
+            if (aimesh->HasVertexColors(0))
+                vert.color  = { aimesh->mColors[0][v].r,        aimesh->mColors[0][v].g,      aimesh->mColors[0][v].b   };
             simpleVertices.push_back(vert);
             
             if (aimesh->HasBones())
@@ -147,6 +303,7 @@ bool RModel::CombineMeshes(std::vector<aiMesh*>& submeshes, submesh_t& submesh)
                 animVert.normal     = vert.normal;
                 animVert.tangent    = vert.tangent;
                 animVert.bitanget   = vert.bitanget;
+                animVert.color      = vert.color;
                 skeletonVertices.push_back(animVert);
             }
         }
@@ -176,7 +333,7 @@ bool RModel::CombineMeshes(std::vector<aiMesh*>& submeshes, submesh_t& submesh)
         if (aimesh->HasBones())
         {
             skeletonVertices.shrink_to_fit();
-            LoadVertexSkinning(aimesh, skeletonVertices);
+            LoadVertexSkinning(aimesh, skeletonVertices, boneMap);
             submesh.hasBones = true;
         }
     }
@@ -229,22 +386,21 @@ bool RModel::CreateVertexBuffer(const std::vector<anim_vertex_t>& vertices, subm
     if (vertices.empty())
         return false;
 
-    D3D11_BUFFER_DESC bufferDesc = {};
+    D3D11_BUFFER_DESC desc        = {};
+    desc.ByteWidth                = static_cast<UINT>(sizeof(anim_vertex_t) * vertices.size());
+    desc.Usage                    = D3D11_USAGE::D3D11_USAGE_DEFAULT;
+    desc.BindFlags                = D3D11_BIND_FLAG::D3D11_BIND_VERTEX_BUFFER;
+    desc.CPUAccessFlags           = 0;
+    desc.MiscFlags                = 0;
+    desc.StructureByteStride      = 0;
 
-    bufferDesc.ByteWidth = static_cast<UINT>(sizeof(anim_vertex_t) * vertices.size());
-    bufferDesc.Usage = D3D11_USAGE::D3D11_USAGE_DEFAULT;
-    bufferDesc.BindFlags = D3D11_BIND_FLAG::D3D11_BIND_VERTEX_BUFFER;
-    bufferDesc.CPUAccessFlags = 0;
-    bufferDesc.MiscFlags = 0;
-    bufferDesc.StructureByteStride = 0;
+    D3D11_SUBRESOURCE_DATA data   = {};
+    data.pSysMem                  = &vertices[0];
+    data.SysMemPitch              = 0;
+    data.SysMemSlicePitch         = 0;
 
-    D3D11_SUBRESOURCE_DATA subresData = {};
-
-    subresData.pSysMem = &vertices[0];
-    subresData.SysMemPitch = 0;
-    subresData.SysMemSlicePitch = 0;
-
-    HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&bufferDesc, &subresData, mesh.vertexBuffer.GetAddressOf());
+    mesh.vertexCount = static_cast<UINT>(vertices.size());
+    HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&desc, &data, mesh.vertexBuffer.GetAddressOf());
     return !FAILED(hr);
 }
 
@@ -253,22 +409,21 @@ bool RModel::CreateVertexBuffer(const std::vector<simple_vertex_t>& vertices, su
     if (vertices.empty())
         return false;
 
-    D3D11_BUFFER_DESC bufferDesc = {};
+    D3D11_BUFFER_DESC desc        = {};
+    desc.ByteWidth                = static_cast<UINT>(sizeof(simple_vertex_t) * vertices.size());
+    desc.Usage                    = D3D11_USAGE::D3D11_USAGE_DEFAULT;
+    desc.BindFlags                = D3D11_BIND_FLAG::D3D11_BIND_VERTEX_BUFFER;
+    desc.CPUAccessFlags           = 0;
+    desc.MiscFlags                = 0;
+    desc.StructureByteStride      = 0;
 
-    bufferDesc.ByteWidth = static_cast<UINT>(sizeof(simple_vertex_t) * vertices.size());
-    bufferDesc.Usage = D3D11_USAGE::D3D11_USAGE_DEFAULT;
-    bufferDesc.BindFlags = D3D11_BIND_FLAG::D3D11_BIND_VERTEX_BUFFER;
-    bufferDesc.CPUAccessFlags = 0;
-    bufferDesc.MiscFlags = 0;
-    bufferDesc.StructureByteStride = 0;
+    D3D11_SUBRESOURCE_DATA data   = {};
+    data.pSysMem                  = &vertices[0];
+    data.SysMemPitch              = 0;
+    data.SysMemSlicePitch         = 0;
 
-    D3D11_SUBRESOURCE_DATA subresData = {};
-
-    subresData.pSysMem = &vertices[0];
-    subresData.SysMemPitch = 0;
-    subresData.SysMemSlicePitch = 0;
-
-    HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&bufferDesc, &subresData, mesh.vertexBuffer.GetAddressOf());
+    mesh.vertexCount = static_cast<UINT>(vertices.size());
+    HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&desc, &data, mesh.vertexBuffer.GetAddressOf());
     return !FAILED(hr);
 }
 
@@ -277,24 +432,20 @@ bool RModel::CreateIndexBuffer(const std::vector<UINT>& indices, submesh_t& mesh
     if (indices.empty())
         return false;
 
-    D3D11_BUFFER_DESC indexBufferDesc;
-    ZeroMemory(&indexBufferDesc, sizeof(D3D11_BUFFER_DESC));
+    D3D11_BUFFER_DESC desc = {};
+    desc.ByteWidth              = static_cast<UINT>(sizeof(UINT) * indices.size());
+    desc.Usage                  = D3D11_USAGE::D3D11_USAGE_DEFAULT;
+    desc.BindFlags              = D3D11_BIND_FLAG::D3D11_BIND_INDEX_BUFFER;
+    desc.CPUAccessFlags         = 0;
+    desc.MiscFlags              = 0;
 
-    indexBufferDesc.ByteWidth = sizeof(UINT) * (UINT)indices.size();
-    indexBufferDesc.Usage = D3D11_USAGE::D3D11_USAGE_DEFAULT;
-    indexBufferDesc.BindFlags = D3D11_BIND_FLAG::D3D11_BIND_INDEX_BUFFER;
-    indexBufferDesc.CPUAccessFlags = 0;
-    indexBufferDesc.MiscFlags = 0;
+    D3D11_SUBRESOURCE_DATA data = {};
+    data.pSysMem                = &indices[0];
+    data.SysMemPitch            = 0;
+    data.SysMemSlicePitch       = 0;
 
-    D3D11_SUBRESOURCE_DATA subresData;
-    ZeroMemory(&subresData, sizeof(D3D11_SUBRESOURCE_DATA));
-
-    subresData.pSysMem = &indices[0];
-    subresData.SysMemPitch = 0;
-    subresData.SysMemSlicePitch = 0;
-
-    mesh.indexCount = (UINT)indices.size();
-    HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&indexBufferDesc, &subresData, mesh.indexBuffer.GetAddressOf());
+    mesh.indexCount = static_cast<UINT>(indices.size());
+    HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&desc, &data, mesh.indexBuffer.GetAddressOf());
     return !FAILED(hr);
 }
 
@@ -325,7 +476,7 @@ void RModel::LoadLights(const aiScene* scene)
     m_lights.shrink_to_fit();
 }
 
-void RModel::LoadMaterial(const aiScene* scene, const UINT& matIndex, bool& useMTL, submesh_t& inoutMesh) const
+void RModel::LoadMaterial(const aiScene* scene, const UINT& matIndex, submesh_t& inoutMesh) const
 {
     //Get name of the material
     aiString matName;
@@ -337,7 +488,7 @@ void RModel::LoadMaterial(const aiScene* scene, const UINT& matIndex, bool& useM
     {
         material = std::make_shared<RMaterial>();
         //Add the material to the resourcemanager if it was successfully created
-        if (material->Create(scene->mMaterials[matIndex], useMTL))
+        if (material->Create(scene->mMaterials[matIndex]))
         {
             ResourceManager::Get().AddResource(matName.C_Str(), material);
             inoutMesh.material = material;
@@ -366,7 +517,7 @@ void RModel::BoneHierchy(aiNode* node, std::unordered_map<std::string, bone_t>& 
     }
 }
 
-bool RModel::LoadVertexSkinning(const aiMesh* aimesh, std::vector<anim_vertex_t>& skeletonVertices)
+bool RModel::LoadVertexSkinning(const aiMesh* aimesh, std::vector<anim_vertex_t>& skeletonVertices, const std::unordered_map<std::string, UINT>& boneMap)
 {
     //Data that will be used temporarily for this.
     std::vector<UINT> boneCounter;
@@ -376,7 +527,7 @@ bool RModel::LoadVertexSkinning(const aiMesh* aimesh, std::vector<anim_vertex_t>
     for (UINT b = 0; b < aimesh->mNumBones; b++)
     {
         aiBone* aibone = aimesh->mBones[b];
-        UINT boneNr = m_boneMap[aibone->mName.C_Str()];
+        UINT boneNr = boneMap.at(aibone->mName.C_Str());
 
         //Go through all the vertices that the bone affect
         for (UINT v = 0; v < aibone->mNumWeights; v++)
@@ -431,7 +582,7 @@ bool RModel::LoadVertexSkinning(const aiMesh* aimesh, std::vector<anim_vertex_t>
     return true;
 }
 
-void RModel::Render() const
+void RModel::Render(ID3D11DeviceContext* context)
 {
     UINT offset = 0;
     UINT stride = 0;
@@ -439,44 +590,20 @@ void RModel::Render() const
     for (size_t m = 0; m < m_meshes.size(); m++)
     {
         if (m_meshes[m].material)
-            m_meshes[m].material->BindMaterial();
+            m_meshes[m].material->BindMaterial(context);
         
         if (m_meshes[m].hasBones)
             stride = sizeof(anim_vertex_t);
         else
             stride = sizeof(simple_vertex_t);
 
-        D3D11Core::Get().DeviceContext()->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-        D3D11Core::Get().DeviceContext()->IASetVertexBuffers(0, 1, m_meshes[m].vertexBuffer.GetAddressOf(), &stride, &offset);
-        D3D11Core::Get().DeviceContext()->IASetIndexBuffer(m_meshes[m].indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
-        D3D11Core::Get().DeviceContext()->DrawIndexed(m_meshes[m].indexCount, 0, 0);
-
-		if (m_meshes[m].material)
-            m_meshes[m].material->UnBindMaterial();
-    }
-}
-
-void RModel::RenderDeferred(ID3D11DeviceContext* context)
-{
-    UINT offset = 0;
-    UINT stride = 0;
-
-    for (size_t m = 0; m < m_meshes.size(); m++)
-    {
-        if (m_meshes[m].material)
-            m_meshes[m].material->BindDeferredMaterial(context);
-
-        if (m_meshes[m].hasBones)
-            stride = sizeof(anim_vertex_t);
-        else
-            stride = sizeof(simple_vertex_t);
-
+        context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
         context->IASetVertexBuffers(0, 1, m_meshes[m].vertexBuffer.GetAddressOf(), &stride, &offset);
         context->IASetIndexBuffer(m_meshes[m].indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
         context->DrawIndexed(m_meshes[m].indexCount, 0, 0);
 
-        if (m_meshes[m].material)
-            m_meshes[m].material->UnBindDeferredMaterial(context);
+		if (m_meshes[m].material)
+            m_meshes[m].material->UnBindMaterial(context);
     }
 }
 
@@ -553,28 +680,26 @@ bool RModel::Create(const std::string& filename)
         }
     }
 
-
+    /*
+        Add all the bones that we found. Link together who the parent is.
+    */
+    std::unordered_map<std::string, UINT> boneMap;
     BoneHierchy(scene->mRootNode, nameToBone);
     for (UINT i = 0; i < m_allBones.size(); i++)
     {
-        if (m_boneMap.find(m_allBones[i].name) == m_boneMap.end())
+        if (boneMap.find(m_allBones[i].name) == boneMap.end())
         {
-            m_boneMap[m_allBones[i].name] = i;
+            boneMap[m_allBones[i].name] = i;
         }
 
         std::string parentName = scene->mRootNode->FindNode(m_allBones[i].name.c_str())->mParent->mName.C_Str();
-        if (m_boneMap.find(parentName) != m_boneMap.end())
-            m_allBones[i].parentIndex = m_boneMap[parentName];
+        if (boneMap.find(parentName) != boneMap.end())
+            m_allBones[i].parentIndex = boneMap[parentName];
        
 //#ifdef _DEBUG
 //        std::cout << i << "\t" << m_allBones[i].parentIndex << "\t" << m_allBones[i].name << std::endl;
 //#endif // _DEBUG
     }
-
-    //.fbx uses default material, and .obj uses mtl
-    bool useMTL = false;
-    if (GetFileFormat(filename) == ".obj")
-        useMTL = true;
 
     /*
         Loads in each material and then combine
@@ -584,13 +709,13 @@ bool RModel::Create(const std::string& filename)
     {
         submesh_t submesh;
         
-        //Load in the material at index and with mtl-format or default
-        LoadMaterial(scene, mat.first, useMTL, submesh);
+        //Load in the material at index
+        LoadMaterial(scene, mat.first, submesh);
 
         /*
             Load in vertex- and index-data and combines all the meshes in a set to one
         */
-        if (!CombineMeshes(mat.second, submesh))
+        if (!CombineMeshes(mat.second, submesh, boneMap))
         {
             importer.FreeScene();
             return false;
@@ -603,6 +728,7 @@ bool RModel::Create(const std::string& filename)
 
     //Freeing memory
     matSet.clear();
+    boneMap.clear();
     importer.FreeScene();
     return true;
 }

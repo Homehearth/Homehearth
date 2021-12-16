@@ -117,6 +117,14 @@ struct draw_text_t
 		this->x_stretch = x_stretch;
 		this->y_stretch = y_stretch;
 	}
+
+	draw_text_t(const draw_t& opts)
+	{
+		this->x_pos = opts.x_pos;
+		this->y_pos = opts.y_pos;
+		this->x_stretch = opts.width;
+		this->y_stretch = opts.height;
+	}
 };
 
 enum class Shapes
@@ -124,18 +132,22 @@ enum class Shapes
 	NONE,
 	RECTANGLE_FILLED,
 	RECTANGLE_OUTLINED,
+	RECTANGLE_ROUNDED_OUTLINED,
+	RECTANGLE_ROUNDED,
 	TRIANGLE_FILLED,
 	TRIANGLE_OUTLINED,
+	CIRCLE_OUTLINE,
 	NR_OF_SHAPES
 };
 
-enum class LineWidth
+enum class LineWidth : UINT
 {
 	NONE,
 	SMALL,
 	MEDIUM,
 	LARGE,
 	THICK,
+	THICC,
 	NR_OF
 };
 
@@ -200,6 +212,13 @@ public:
 	static void Destroy();
 
 	static float GetDefaultFontSize();
+	static Window* GetWindow();
+	static ID2D1Factory* GetFactory();
+
+	/*
+		Change the color of the default brush.
+	*/
+	static void ChangeColorOfBrush(const D2D1_COLOR_F& newColor);
 
 	/*
 		Draw Text onto the window assigned in the parameter.
@@ -207,18 +226,24 @@ public:
 		Text will be drawn at the center of the window.
 	*/
 	static void DrawT(const std::string& text = "Basic Text", const draw_text_t& opt = draw_text_t());
+	static void DrawT(const std::string& text, const D2D1_COLOR_F& color, const draw_text_t& opt = draw_text_t());
 
 	/*
 		Draws the specified shape with _DRAW input specifications.
 		This method uses the default brush.
 	*/
-	static void DrawF(const draw_t& fig, const draw_shape_t& shape);
+	static void DrawF(const draw_t& fig, const draw_shape_t& shape, const LineWidth& thickness = LineWidth::MEDIUM);
+
+	/*
+		Draws a shape with own specified geometry.
+	*/
+	static void DrawF(ID2D1PathGeometry* geometry);
 
 	/*
 		Draws a Bitmap onto the screen at the coordinates of
 		_DRAW specification.
 	*/
-	static void DrawP(const draw_t& fig, ID2D1Bitmap* texture = nullptr);
+	static void DrawP(const draw_t& fig, ID2D1Bitmap* texture = nullptr, const float& opacity = (1.0f));
 
 	/*
 		Run buffering D2D1 Draw commands.
@@ -259,52 +284,4 @@ private:
 
 	ComPtr<IDWriteTextFormat> m_writeFormat;
 	ComPtr<ID2D1SolidColorBrush> m_solidBrush;
-};
-
-class FontCollectionLoader : public IDWriteFontCollectionLoader
-{
-private:
-
-	UINT32 m_refs = 0;
-	UINT32 m_key = 1;
-
-public:
-	static FontCollectionLoader* instance;
-	static void Initialize();
-	static void Destroy();
-
-	// Inherited via IDWriteFontCollectionLoader
-	virtual HRESULT __stdcall QueryInterface(REFIID riid, void** ppvObject) override;
-	virtual ULONG __stdcall AddRef(void) override;
-	virtual ULONG __stdcall Release(void) override;
-	virtual HRESULT __stdcall CreateEnumeratorFromKey(IDWriteFactory* factory, void const* collectionKey, UINT32 collectionKeySize, IDWriteFontFileEnumerator** fontFileEnumerator) override;
-};
-
-class FontFileEnumerator : public IDWriteFontFileEnumerator
-{
-private:
-
-	UINT32 m_refs = 0;
-	UINT64 m_key = 1;
-	std::vector<IDWriteFontFile*> m_fonts;
-	IDWriteFactory* m_factoryRef = nullptr;
-	int m_pos = 0;
-
-public:
-
-	FontFileEnumerator(IDWriteFactory* ref);
-	~FontFileEnumerator() = default;
-	void SetKey(const void* pointer);
-
-	// Inherited via IDWriteFontFileEnumerator
-	virtual HRESULT __stdcall QueryInterface(REFIID riid, void** ppvObject) override;
-
-	virtual ULONG __stdcall AddRef(void) override;
-
-	virtual ULONG __stdcall Release(void) override;
-
-	virtual HRESULT __stdcall MoveNext(BOOL* hasCurrentFile) override;
-
-	virtual HRESULT __stdcall GetCurrentFontFile(IDWriteFontFile** fontFile) override;
-
 };

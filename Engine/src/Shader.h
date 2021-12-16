@@ -72,7 +72,7 @@ namespace Shaders
         bool Create(const std::string& filename) override;
 
         ID3D11ComputeShader* const* GetAddressOf() const;
-        ID3D11ComputeShader* Get() const;
+        ID3D11ComputeShader* Get();
     };
 
     class GeometryShader : public IShaders, public resource::GResource

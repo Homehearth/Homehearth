@@ -10,21 +10,50 @@ Renderer::Renderer()
 void Renderer::Initialize(Window* pWindow)
 {
 	m_pipelineManager.Initialize(pWindow);
+
+    m_d3d11 = &D3D11Core::Get();
+    m_basePass.SetEnable(true);
+    m_depthPass.SetEnable(true);
+    m_textureEffectPass.SetEnable(true);
+	m_waterEffectPass.SetEnable(true);
+
+    //AddPass(&m_depthPass);
+    AddPass(&m_textureEffectPass);
+	AddPass(&m_waterEffectPass);
 	m_d3d11 = &D3D11Core::Get();
 
-	/*
-		Had to disable the depth pass to get alpha testing to work correctly... -Filip
-	*/
-	//AddPass(&m_depthPass);  // 1
-	AddPass(&m_basePass);   // 2
-	AddPass(&m_animPass);	// 3
+	//AddPass(&m_depthPass);  
+	AddPass(&m_shadowPass);
+	m_shadowPass.StartUp();
+
+	AddPass(&m_decalPass);
+	m_decalPass.Create();
+
+	AddPass(&m_basePass);  
+	AddPass(&m_animPass);
+	AddPass(&m_bloomPass);
+	AddPass(&m_particlePass);
+	AddPass(&m_skyPass);
+
+	AddPass(&m_dofPass);
+	
+
+	m_basePass.m_pShadowPass = &m_shadowPass;
+	m_animPass.m_pShadowPass = &m_shadowPass;
+	m_basePass.m_decalPass = &m_decalPass;
 
 	//m_depthPass.SetEnable(true);
 	m_basePass.SetEnable(true);
 	m_animPass.SetEnable(true);
+	m_decalPass.SetEnable(true);
+	m_particlePass.SetEnable(true);
+	m_skyPass.SetEnable(true);
+	m_dofPass.SetEnable(true);
+	m_shadowPass.SetEnable(true);
+	m_bloomPass.SetEnable(true);
 
 #ifdef _DEBUG
-	AddPass(&m_debugPass);  // 4
+	AddPass(&m_debugPass);  
     m_debugPass.SetEnable(true);
 #endif
 
@@ -34,15 +63,33 @@ void Renderer::Initialize(Window* pWindow)
 	{
 		pass->Initialize(m_d3d11->DeviceContext(), &m_pipelineManager);
 	}
+
+	m_dofPass.Create(DoFType::VIGNETTE);
+	m_bloomPass.Setup();
+}
+
+void Renderer::Setup(BasicEngine<Scene>& engine)
+{
+	/*
+	engine.GetScene("Game").ForEachComponent<comp::Light>([&](comp::Light& l) {
+
+		m_shadowPass.CreateShadow(l);
+
+		});
+
+	m_shadowPass.SetupMap();
+	*/
+
 }
 
 void Renderer::ClearFrame()
 {
-    // Clear the back buffer.
-    const float m_clearColor[4] = { 0.5f, 0.5f, 0.5f, 1.0f };
-    m_d3d11->DeviceContext()->ClearRenderTargetView(m_pipelineManager.m_backBuffer.Get(), m_clearColor);
-    m_d3d11->DeviceContext()->ClearDepthStencilView(m_pipelineManager.m_depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-    m_d3d11->DeviceContext()->ClearDepthStencilView(m_pipelineManager.m_debugDepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+	// Clear the back buffer.
+	const float m_clearColor[4] = { 0.5f, 0.5f, 0.5f, 1.0f };
+	m_d3d11->DeviceContext()->ClearRenderTargetView(m_pipelineManager.m_backBuffer.Get(), m_clearColor);
+	m_d3d11->DeviceContext()->ClearDepthStencilView(m_pipelineManager.m_depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+	m_d3d11->DeviceContext()->ClearDepthStencilView(m_pipelineManager.m_debugDepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+
 }
 
 void Renderer::Render(Scene* pScene)
@@ -51,25 +98,34 @@ void Renderer::Render(Scene* pScene)
 	{
 		if (!m_passes.empty())
 		{
-			this->UpdatePerFrame(pScene->GetCurrentCamera());
-			thread::RenderThreadHandler::SetCamera(pScene->GetCurrentCamera());
-			/*
-				Optimize idead: Render/Update lights once instead of per pass?
-				Set lights once.
-			*/
-			for (int i = 0; i < m_passes.size(); i++)
+			m_basePass.m_skyboxRef = pScene->GetSkybox();
+			m_animPass.m_skyboxRef = pScene->GetSkybox();
+			m_particlePass.m_skyboxRef = pScene->GetSkybox();
+			Camera* cam = pScene->GetCurrentCamera();
+			if (!cam)
 			{
-				m_currentPass = i;
-				IRenderPass* pass = m_passes[i];
-				if (pass->IsEnabled())
+				LOG_ERROR("Camera was null bailing from Render");
+				return;
+			}
+			if (cam->IsSwapped())
+			{
+				this->UpdatePerFrame(cam);
+				thread::RenderThreadHandler::SetCamera(cam);
+
+				for (int i = 0; i < m_passes.size(); i++)
 				{
-					pass->SetLights(pScene->GetLights());
-					pass->PreRender(pScene->GetCurrentCamera());
-					pass->Render(pScene);
-					pass->PostRender();
+					m_currentPass = i;
+					IRenderPass* pass = m_passes[i];
+					if (pass->IsEnabled())
+					{
+						pass->SetLights(pScene->GetLights());
+						pass->PreRender(cam);
+						pass->Render(pScene);
+						pass->PostRender();
+					}
 				}
 			}
-
+			cam->ReadySwap();
 			pScene->ReadyForSwap();
 		}
 	}
@@ -80,6 +136,36 @@ IRenderPass* Renderer::GetCurrentPass() const
 	return m_passes[m_currentPass];
 }
 
+DOFPass* Renderer::GetDoFPass()
+{
+	return &m_dofPass;
+}
+
+BloomPass* Renderer::GetBloomPass()
+{
+	return &m_bloomPass;
+}
+
+ShadowPass* Renderer::GetShadowPass()
+{
+	return &m_shadowPass;
+}
+
+void Renderer::SetShadowMapSize(uint32_t size)
+{
+	m_shadowPass.SetShadowMapSize(size);
+}
+
+uint32_t Renderer::GetShadowMapSize() const
+{
+	return m_shadowPass.GetShadowMapSize();
+}
+
+void Renderer::ImGuiShowTextures()
+{
+	m_shadowPass.ImGuiShowTextures();
+}
+
 void Renderer::AddPass(IRenderPass* pass)
 {
 	m_passes.emplace_back(pass);
@@ -87,6 +173,9 @@ void Renderer::AddPass(IRenderPass* pass)
 
 void Renderer::UpdatePerFrame(Camera* pCam)
 {
-	// Update Camera constant buffer.
-	m_d3d11->DeviceContext()->UpdateSubresource(pCam->m_viewConstantBuffer.Get(), 0, nullptr, pCam->GetCameraMatrixes(), 0, 0);
+	if (pCam)
+	{
+		// Update Camera constant buffer.
+		m_d3d11->DeviceContext()->UpdateSubresource(pCam->m_viewConstantBuffer.Get(), 0, nullptr, pCam->GetCameraMatrixes(), 0, 0);
+	}
 }

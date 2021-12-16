@@ -18,23 +18,27 @@ rtd::Slider::Slider(D2D1_COLOR_F color, const draw_t& draw_opts, float* value, f
     m_value = value;
 	m_drawOpts = draw_opts;
 	m_isHorizontal = horizontal;
-	m_maxVal = max * *value;
-	m_minVal = min * *value;
+	m_maxVal = max;
+	m_minVal = min;
+
+	m_slider->SetShape(Shapes::RECTANGLE_ROUNDED);
 
 	std::string tmp = std::to_string(*m_value);
 	auto length = std::snprintf(&m_valueString[0], m_valueString.size(), "%.2f", *m_value);
 	tmp.resize(length);
-	m_valueText = std::make_unique<Text>(tmp, draw_text_t(draw_opts.x_pos + (draw_opts.width * 0.5f), draw_opts.y_pos - draw_opts.height, tmp.length() * 24.0f, draw_opts.height));
+	m_valueText = std::make_unique<Text>(tmp, draw_text_t(draw_opts.x_pos + (draw_opts.width * 0.5f), draw_opts.y_pos - draw_opts.height, draw_opts.width, draw_opts.height));
 
 	if (m_isHorizontal)
 	{
 		m_minPos = { m_drawOpts.x_pos, m_drawOpts.y_pos };
 		m_maxPos = { m_drawOpts.x_pos + 100.0f, m_drawOpts.y_pos };
+		//m_drawOpts.x_pos = util::Rebase(*m_value, m_maxVal, m_minVal, m_maxPos.x, m_minPos.x);
 	}
 	else
 	{
 		m_minPos = { m_drawOpts.x_pos, m_drawOpts.y_pos };
 		m_maxPos = { m_drawOpts.x_pos + 100.0f, m_drawOpts.y_pos };
+		//m_drawOpts.y_pos = util::Rebase(*m_value, m_maxVal, m_minVal, m_maxPos.y, m_minPos.y);
 	}
 }
 
@@ -45,6 +49,15 @@ Border* rtd::Slider::GetBorder()
         m_border = std::make_unique<Border>(m_drawOpts);
     }
     return m_border.get();
+}
+
+Text* rtd::Slider::GetValueText()
+{
+	if (!m_valueText)
+	{
+		m_valueText = std::make_unique<Text>(m_valueString);
+	}
+	return m_valueText.get();
 }
 
 void rtd::Slider::SetValue(float* value)
@@ -60,6 +73,22 @@ void rtd::Slider::SetMinPos(sm::Vector2 minPos)
 void rtd::Slider::SetMaxPos(sm::Vector2 maxPos)
 {
 	m_maxPos = maxPos;
+
+	if (m_isHorizontal)
+	{
+		m_valueText->SetPosition(m_minPos.x, m_drawOpts.height);
+		m_valueText->SetStretch(maxPos.x, m_drawOpts.height);
+	}
+	else
+	{
+		m_valueText->SetPosition(m_drawOpts.width, m_minPos.y);
+		m_valueText->SetStretch(m_drawOpts.width, maxPos.y);
+	}
+}
+
+void rtd::Slider::SetExplanationText(const std::string& text)
+{
+	m_explanationString = text;
 }
 
 void Slider::Draw()
@@ -81,13 +110,32 @@ void Slider::OnClick()
 		UpdateSliderPos(m_drawOpts.x_pos, InputSystem::Get().GetMousePos().y - (m_drawOpts.height * 0.5f));
 
 	m_slider.get()->SetPosition(m_drawOpts.x_pos, m_drawOpts.y_pos);
+
+	// Update the value
+	if (m_value)
+	{
+		if (m_isHorizontal)
+		{
+			*m_value = util::Rebase(m_drawOpts.x_pos, m_maxPos.x, m_minPos.x, m_maxVal, m_minVal);
+		}
+		else
+		{
+			*m_value = util::Rebase(m_drawOpts.y_pos, m_maxPos.y, m_minPos.y, m_maxVal, m_minVal);;
+		}
+	}
+}
+
+void Slider::OnHover()
+{
+	m_valueText.get()->SetText(m_explanationString + m_valueString);
+
 	// Update the value
 	if (m_value)
 	{
 		m_valueString = std::to_string(*m_value);
 		auto length = std::snprintf(&m_valueString[0], m_valueString.size(), "%.2f", *m_value);
 		m_valueString.resize(length);
-		m_valueText.get()->SetText(m_valueString);
+		m_valueText.get()->SetText(m_explanationString + m_valueString);
 		if (m_isHorizontal)
 		{
 			float old_range = (m_drawOpts.x_pos - m_minPos.x) / (m_maxPos.x - m_minPos.x);
@@ -101,12 +149,16 @@ void Slider::OnClick()
 	}
 }
 
-void Slider::OnHover()
-{
-}
-
 bool Slider::CheckHover()
 {
+	// Update position and text always.
+	m_drawOpts.x_pos = util::Rebase(*m_value, m_maxVal, m_minVal, m_maxPos.x, m_minPos.x);
+	m_slider.get()->SetPosition(m_drawOpts.x_pos, m_drawOpts.y_pos);
+	m_valueString = std::to_string(*m_value);
+	auto length = std::snprintf(&m_valueString[0], m_valueString.size(), "%.2f", *m_value);
+	m_valueString.resize(length);
+	m_valueText.get()->SetText(m_explanationString + m_valueString);
+
 	m_isHovering = false;
 	// Is within bounds?
 	if (InputSystem::Get().GetMousePos().x > m_drawOpts.x_pos &&
@@ -119,7 +171,7 @@ bool Slider::CheckHover()
 	return m_isHovering;
 }
 
-bool Slider::CheckClick()
+ElementState Slider::CheckClick()
 {
 	m_isHeld = false;
 	// Is within bounds?
@@ -131,8 +183,10 @@ bool Slider::CheckClick()
 		{
 			OnClick();
 			m_isHeld = true;
+
+			return ElementState::INSIDE;
 		}
 	}
 
-	return m_isHeld;
+	return ElementState::NONE;
 }

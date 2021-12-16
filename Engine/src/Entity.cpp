@@ -42,4 +42,24 @@ bool Entity::IsNull() const
 	return m_entity == entt::null || !m_pRegistry->valid(m_entity);
 }
 
+tag_bits Entity::GetTags() const
+{
+	tag_bits tagBits = 0;
+
+	using namespace entt::literals;
+	for (auto type : entt::resolve())
+	{
+		if (type.func("has"_hs).invoke({}, *this).cast<bool>())
+		{
+			
+			auto instance = type.func("get"_hs).invoke({}, *this);
+			comp::ITag* tag = instance.try_cast<comp::ITag>();
+			if (!tag)
+				continue; // this is not a tag type
+			tagBits |= tag->id;
+		}
+	}
+	return tagBits;
+}
+
 

@@ -18,7 +18,8 @@ project "Engine"
         "src/**.h",
         "src/**.cpp",
         "**.hlsl", 
-        "**.hlsli"
+        "**.hlsli",
+        "*.mp3"
     }
 
 
@@ -32,7 +33,9 @@ project "Engine"
         "../ThirdParty/stb_image/",
 		"../ThirdParty/networking/",
         "../ThirdParty/entt/",
-        "../ThirdParty/assimp/include/"
+        "../ThirdParty/irrKlang/include/",
+        "../ThirdParty/assimp/include/",
+        "../Assets/Sounds/"
     }
 
 
@@ -40,45 +43,54 @@ project "Engine"
     -- Note: create your files in 'src' folder on disk, then add them to a filter below (**filename).
     -- Else: specify the path relative to the this premake file.
     vpaths {
-        ["src/Engine"] = { "**EnginePCH.*" },
-            ["src/Engine/Core"] = { "**Engine.*", "**Scene.*", "**EventTypes.*", "**Window.*" },
-            ["src/Engine/Input"] = { "**InputSystem.*" },
-            ["src/Engine/GamePlay"] = { "**GridSystem.*", "**CollisionSystem.*" },
-            ["src/Engine/Thread"] = { "**multi_thread_manager.*", "**ThreadSyncer.*", "**RenderThreadHandler.*"},
+        ["src/Engine"] = { "**EnginePCH.*", "**CommonStructures.*" },
+            ["src/Engine/AI"] = { "**AISystem*", "**PathFinderManager.*", "**AIBehaviors.*" },  
+                ["src/Engine/AI/BehaviorTree"] = {"**BT.*"},
+                ["src/Engine/AI/BehaviorTree/CustomNodes"] = {"**CBT.*"},
+            ["src/Engine/Sound"] = { "**SoundHandler.*" },
+            ["src/Engine/Core"] = { "**Engine.*", "**EventTypes.*", "**Window.*" },
+            ["src/Engine/ECS"] = { "**Components.*",  "**Entity.*", "**Tags*" }, 
+            ["src/Engine/GamePlay"] = { "**GridSystem.*", "**CollisionSystem.*", "**CombatSystem.*", "**Systems.*", "**SpreeHandler.*" },
 
-        ["src/Engine/Utility"] = { "**Timer.*", "**Profiler.*", "**Logger.*", "**Stats.*" },
-		["src/Engine/Elements"] = {"**Canvas.*", "**Picture.*", "**Border.*", "**Button.*", "**Text.*", "**TextField.*", "**Slider.*", "**Healthbar.*"},
-        
-        ["src/Engine"] = {  },
-            ["src/Engine/Graphics/Renderer"] = {"**Renderer.*", "**PipelineManager.*", "**BackBuffer.*"},
+             ["src/Engine/Graphics/Renderer"] = {"**Renderer.*", "**PipelineManager.*", "**DoubleBuffer.*"},
                 ["src/Engine/Graphics/Renderer/RenderPass"] = {"**Pass.*"},
-				["src/Engine/Graphics/Renderer2D"] = {"**Handler2D.*", "**Element2D.*", "**Collection2D.*"},
+			["src/Engine/Graphics/Renderer2D"] = {"**Handler2D.*", "**Element2D.*", "**Collection2D.*"},
             ["src/Engine/Graphics/D3D11"] = { "**D3D11Core.*" },
 			["src/Engine/Graphics/D2D1"] = { "**D2D1Core.*" },
+
+            ["src/Engine/Input"] = { "**InputSystem.*" },
 			
-			["src/Network"] = { "**Client.*" },
+			["src/Engine/Options"] = { "**OptionSystem.*", "**FileHandler.*" },
+			
+            ["src/Engine/Resources"] = { "**ResourceManager.*", "**GResource.*", "**RModel.*", "**RTexture.*", "**RMaterial.*"},
+                ["src/Engine/Resources/Shaders"] = { "**.hlsl", "**.hlsli", "**Shader.*" },
+		        ["src/Engine/Resources/Animation"] = {"**RAnimation.*", "**RAnimator.*", "**AnimStructures.*"},
 
-        ["src/Engine/Resources"] = { "**ResourceManager.*", "**GResource.*", "**RModel.*", "**RTexture.*", "**RMaterial.*"},
-            ["src/Engine/Resources/Shaders"] = { "**.hlsl", "**.hlsli", "**Shader.*" },
-			["src/Engine/Resources/Animation"] = {"**RAnimation.*", "**RAnimator.*", "**AnimStructures.*"},
+            ["src/Engine/Scene"] = {"**Scene.*", "**Camera.*", "**Lights.*", "**ModelIdentifier.*", "**ParticleSystem.*" , "**Skybox.*" },
+            ["src/Engine/Thread"] = { "**multi_thread_manager.*", "**ThreadSyncer.*", "**RenderThreadHandler.*"},
+            
+		    ["src/Engine/UI Elements"] = {"**Canvas.*", "**Picture.*", "**Border.*", "**Button.*", "**Text.*", "**CText.*", "**LobbyUI.*", "**TextField.*", "**Slider.*", "**Healthbar.*", "**Scroller.*", "**MoneyUI.*", "**AbilityUI.*", "**ShopUI.*", "**MenuUI.*"},
+            ["src/Engine/Utility"] = { "**Timer.*", "**Profiler.*", "**Logger.*", "**Stats.*", "**QuadTree.*" },
+        
+            ["src/Engine/Audio"] = {  },
+            ["src/Engine/Physics"] = {  },
 
-        ["src/Engine/Audio"] = {  },
-        ["src/Engine/Physics"] = {  },
-        ["src/Engine/Network"] = { "**Client.*" },
-        ["src/Engine/Animation"] = {  },
-        ["src/Engine/ECS"] = { "**Components.*",  "**Entity.*" }, 
-        ["src/Engine/AI"] = {  },  
-		["src/Engine/Structures"] = { "**VertexStructure.*" }  
+        ["src/Network"] = { "**Client.*" },
+			["src/Network/Prediction"] = {"**Predictor.*"}
     }
 
 
     links{
         "dxgi", -- links d3d11 d2d1 dwrite
         "DirectXTK",
-        "ImGui"
+        "ImGui",
+        "irrKlang.lib"
     }
 
-    libdirs{"../ThirdParty/imGUI/"}
+    libdirs{
+        "../ThirdParty/imGUI/",
+        "../ThirdParty/irrKlang/lib/Winx64-visualStudio/"
+    }
 
     -- Define a macro/symbol which applies for the Windows system.
     filter {"system:windows"}
@@ -130,8 +142,3 @@ project "Engine"
         filter("files:**_cs.hlsl")
             shadertype("Compute")
 			
-	postbuildcommands
-	{
-		--Does not work... "../Game/build/bin/" .. outputdir .. "/Game/assimp-vc142-mt
-		os.copyfile("../ThirdParty/assimp/lib/assimp-vc142-mt.dll" , "../Game/build/bin/Debug-windows-x86_64/Game/assimp-vc142-mt.dll")
-	}

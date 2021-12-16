@@ -3,32 +3,45 @@
 
 RAnimator::RAnimator()
 {
-	m_frameTime = 0;
-	m_useInterpolation = false;
+	m_useInterpolation	= true;
+	m_currentState		= EAnimationType::NONE;
+	m_blendState		= EAnimationType::NONE;
+	m_partialState		= EAnimationType::NONE;
+	m_blendDir			= true;
 }
 
 RAnimator::~RAnimator()
 {
+	for (auto& anim : m_animations)
+	{
+		anim.second.lastKeys.clear();
+	}
 	m_bones.clear();
-	m_finalMatrices.clear();
+	m_nameToBone.clear();
 	m_animations.clear();
+	m_states.clear();
+	m_localMatrices.clear();
+
+	while (!m_queue.empty())
+		m_queue.pop();
 }
 
 bool RAnimator::LoadSkeleton(const std::vector<bone_t>& skeleton)
 {
+	//Clear previous bones and matrices if needed
+	m_localMatrices.clear();
+	m_bones.clear();
+
 	bool loaded = false;
 	if (!skeleton.empty())
 	{
-		for (size_t i = 0; i < skeleton.size(); i++)
-		{
-			bone_keyFrames_t bone;
-			bone.name = skeleton[i].name;
-			bone.inverseBind = skeleton[i].inverseBind;
-			bone.parentIndex = skeleton[i].parentIndex;
-			m_bones.push_back(bone);
-		}
+		m_bones = skeleton;
+		m_localMatrices.resize(m_bones.size(), sm::Matrix::Identity);
 
-		m_finalMatrices.resize(m_bones.size(), sm::Matrix::Identity);
+		for (size_t i = 0; i < m_bones.size(); i++)
+		{
+			m_nameToBone[m_bones[i].name] = static_cast<UINT>(i);
+		}
 
 		//Creating the buffers needed for the GPU
 		if (CreateBonesSB())
@@ -42,12 +55,43 @@ void RAnimator::SetInterpolation(bool& toggle)
 	m_useInterpolation = toggle;
 }
 
+bool RAnimator::HasStayAtEndAnim()
+{
+	bool hasStayAtEnd = false;
+
+	if (m_currentState != EAnimationType::NONE)
+		if (m_animations.at(m_currentState).stayAtEnd)
+			hasStayAtEnd = true;
+
+	if (m_blendState != EAnimationType::NONE)
+		if (m_animations.at(m_blendState).stayAtEnd)
+			hasStayAtEnd = true;
+
+	if (m_partialState != EAnimationType::NONE)
+		if (m_animations.at(m_partialState).stayAtEnd)
+			hasStayAtEnd = true;
+
+	return hasStayAtEnd;
+}
+
+void RAnimator::RandomizeTime()
+{
+	auto iterator = m_animations.find(m_currentState);
+
+	//Check that it is okay to edit this animation
+	if (iterator != m_animations.end())
+	{
+		//Randomizes a double between 0 - duration
+		iterator->second.frameTimer = std::rand() / m_animations[m_currentState].animation->GetDuration();
+	}
+}
+
 bool RAnimator::CreateBonesSB()
 {
-	UINT nrOfMatrices = static_cast<UINT>(m_finalMatrices.size());
+	UINT nrOfMatrices = static_cast<UINT>(m_localMatrices.size());
 
 	//Can't create a buffer if there is no bones...
-	if (m_finalMatrices.empty())
+	if (m_localMatrices.empty())
 	{
 		return false;
 	}
@@ -63,10 +107,7 @@ bool RAnimator::CreateBonesSB()
 	desc.StructureByteStride	= sizeof(sm::Matrix);
 	desc.MiscFlags				= D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
 
-	D3D11_SUBRESOURCE_DATA data = {};
-	data.pSysMem				= &m_finalMatrices[0];
-
-	HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&desc, &data, m_bonesSB_Buffer.GetAddressOf());
+	HRESULT hr = D3D11Core::Get().Device()->CreateBuffer(&desc, nullptr, m_bonesSB_Buffer.GetAddressOf());
 	if (FAILED(hr))
 		return false;
 	
@@ -89,8 +130,504 @@ void RAnimator::UpdateStructureBuffer()
 {
 	D3D11_MAPPED_SUBRESOURCE submap;
 	D3D11Core::Get().DeviceContext()->Map(m_bonesSB_Buffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &submap);
-	memcpy(submap.pData, &m_finalMatrices[0], sizeof(sm::Matrix) * m_finalMatrices.size());
+	memcpy(submap.pData, &m_localMatrices[0], sizeof(sm::Matrix) * m_localMatrices.size());
 	D3D11Core::Get().DeviceContext()->Unmap(m_bonesSB_Buffer.Get(), 0);
+}
+
+EAnimationType RAnimator::StringToAnimationType(const std::string& name) const
+{
+	EAnimationType type = EAnimationType::NONE;
+	
+	std::unordered_map<std::string, EAnimationType> animationMap
+	{
+		{"NONE",				EAnimationType::NONE},
+		{"IDLE",				EAnimationType::IDLE},
+		{"MOVE",				EAnimationType::MOVE},
+		{"PRIMARY",				EAnimationType::PRIMARY},
+		{"SECONDARY",			EAnimationType::SECONDARY},
+		{"ESCAPE",				EAnimationType::ESCAPE},
+		{"PLACE_DEFENCE",		EAnimationType::PLACE_DEFENCE},
+		{"TAKE_DAMAGE",			EAnimationType::TAKE_DAMAGE},
+		{"DEAD",				EAnimationType::DEAD}
+	};
+
+	//Search for the keyword
+	if (animationMap.find(name) != animationMap.end())
+	{
+		type = animationMap[name];
+	}
+	return  type;
+}
+
+void RAnimator::ResetAnimation(const EAnimationType& type)
+{
+	if (m_animations.find(type) != m_animations.end())
+	{
+		animation_t* anim	= &m_animations[type];
+		anim->frameTimer	= 0.f;
+		anim->lastTick		= 0.f;
+
+		for (auto& key : anim->lastKeys)
+			key.second = { 0,0,0 };
+	}
+}
+
+bool RAnimator::UpdateTime(const EAnimationType& type)
+{
+	bool updateSuccess = false;
+	animation_t* anim = &m_animations[type];
+	if (anim)
+	{
+		float tick = anim->animation->GetTicksPerFrame() * Stats::Get().GetUpdateTime();
+
+		if (tick != anim->lastTick)
+		{
+			anim->lastTick		= tick;
+			anim->frameTimer	+= tick;
+
+			//Reached end
+			if (anim->frameTimer >= anim->animation->GetDuration())
+			{
+				if (anim->animation->IsLoopable())
+				{
+					anim->frameTimer = fmod(anim->frameTimer, anim->animation->GetDuration());
+					updateSuccess = true;
+				}
+				else
+				{
+					ResetAnimation(type);
+					if (m_currentState == type)
+					{
+						m_currentState = m_blendState;
+						m_blendState = EAnimationType::NONE;
+					}
+					else if (m_blendState == type)
+					{
+						m_blendState = EAnimationType::NONE;
+					}
+					else if (m_partialState == type)
+					{
+						m_partialState = EAnimationType::NONE;
+					}					
+				}
+			}
+			else
+			{
+				updateSuccess = true;
+			}
+		}
+	}
+	return updateSuccess;
+}
+
+bool RAnimator::UpdateBlendTime(const EAnimationType& from, const EAnimationType& to, float& lerpTime)
+{
+	lerpTime = 0;
+
+	if (m_states.find({ from, to }) != m_states.end())
+	{
+		float blendDuration = m_states.at({ from, to }).blendDuration;
+
+		if (m_blendDir)
+			m_states.at({ from, to }).blendTimer += Stats::Get().GetUpdateTime();
+		else
+			m_states.at({ from, to }).blendTimer -= Stats::Get().GetUpdateTime();
+
+		float blendTime = m_states.at({ from, to }).blendTimer;
+		
+		//Reset blendtimer
+		if (blendTime > blendDuration)
+		{
+			m_states.at({ from, to }).blendTimer = 0;
+			m_blendDir = true;
+			ResetAnimation(from);
+			m_currentState = m_blendState;
+			m_blendState = EAnimationType::NONE;
+			return false;
+		}
+		else if (blendTime < 0)
+		{
+			m_states.at({ from, to }).blendTimer = 0;
+			m_blendDir = true;
+			ResetAnimation(to);
+			m_blendState = EAnimationType::NONE;
+			return false;
+		}
+		//Successfully updated the blendtime
+		else
+		{
+			//Avoid devide by 0
+			if (blendDuration > 0)
+				lerpTime = float(blendTime / blendDuration);
+			return true;
+		}
+	}
+	
+	return false;
+}
+
+void RAnimator::StandardAnim()
+{
+	animation_t* anim = &m_animations[m_currentState];
+	
+	if (anim)
+	{
+		//Only update when we get a new timestamp
+		if (UpdateTime(m_currentState))
+		{
+			std::vector<sm::Matrix> bonePoseAbsolute;
+			bonePoseAbsolute.resize(m_bones.size(), sm::Matrix::Identity);
+			std::string name = "";
+
+			//Go through all the bones
+			for (size_t i = 0; i < m_bones.size(); i++)
+			{
+				name = m_bones[i].name;
+				sm::Matrix bonePoseRelative = anim->animation->GetMatrix(name, anim->frameTimer, anim->lastKeys[name].keys, m_useInterpolation);
+
+				if (m_bones[i].parentIndex == -1)
+					bonePoseAbsolute[i] = bonePoseRelative;
+				else
+					bonePoseAbsolute[i] = bonePoseRelative * bonePoseAbsolute[m_bones[i].parentIndex];
+
+				m_localMatrices[i] = m_bones[i].inverseBind * bonePoseAbsolute[i];
+			}
+			bonePoseAbsolute.clear();
+		}
+	}
+}
+
+void RAnimator::BlendTwoAnims()
+{
+	animation_t* anim1 = &m_animations[m_currentState];
+	animation_t* anim2 = &m_animations[m_blendState];
+
+	if (anim1 && anim2)
+	{
+		if (UpdateTime(m_currentState))
+		{
+			if (UpdateTime(m_blendState))
+			{
+				float lerpTime;
+				if (UpdateBlendTime(m_currentState, m_blendState, lerpTime))
+				{
+					std::vector<sm::Matrix> bonePoseAbsolute;
+					bonePoseAbsolute.resize(m_bones.size(), sm::Matrix::Identity);
+					std::string name = "";
+
+					for (size_t i = 0; i < m_bones.size(); i++)
+					{
+						name = m_bones[i].name;
+						//From 
+						sm::Vector3 pos1		= anim1->animation->GetPosition(name, anim1->frameTimer, anim1->lastKeys[name].keys[0], m_useInterpolation);
+						sm::Vector3 scl1		= anim1->animation->GetScale(	name, anim1->frameTimer, anim1->lastKeys[name].keys[1], m_useInterpolation);
+						sm::Quaternion rot1		= anim1->animation->GetRotation(name, anim1->frameTimer, anim1->lastKeys[name].keys[2], m_useInterpolation);
+						//To
+						sm::Vector3 pos2		= anim2->animation->GetPosition(name, anim2->frameTimer, anim2->lastKeys[name].keys[0], m_useInterpolation);
+						sm::Vector3 scl2		= anim2->animation->GetScale(	name, anim2->frameTimer, anim2->lastKeys[name].keys[1], m_useInterpolation);
+						sm::Quaternion rot2		= anim2->animation->GetRotation(name, anim2->frameTimer, anim2->lastKeys[name].keys[2], m_useInterpolation);
+
+						sm::Vector3 lerpPos		= sm::Vector3::Lerp(pos1, pos2, lerpTime);
+						sm::Vector3 lerpScl		= sm::Vector3::Lerp(scl1, scl2, lerpTime);
+						sm::Quaternion lerpRot	= sm::Quaternion::Slerp(rot1, rot2, lerpTime);
+						lerpRot.Normalize();
+
+						sm::Matrix bonePoseRelative = sm::Matrix::CreateScale(lerpScl) * sm::Matrix::CreateFromQuaternion(lerpRot) * sm::Matrix::CreateTranslation(lerpPos);
+
+						if (m_bones[i].parentIndex == -1)
+							bonePoseAbsolute[i] = bonePoseRelative;
+						else
+							bonePoseAbsolute[i] = bonePoseRelative * bonePoseAbsolute[m_bones[i].parentIndex];
+
+						m_localMatrices[i] = m_bones[i].inverseBind * bonePoseAbsolute[i];
+					}
+					bonePoseAbsolute.clear();
+				}
+			}
+		}
+	}
+}
+
+void RAnimator::PartialAnim()
+{
+	animation_t* standard = &m_animations[m_currentState];
+	animation_t* partial = &m_animations[m_partialState];
+	animation_t* anim;	//Current
+	
+	if (standard && partial)
+	{
+		if (UpdateTime(m_currentState))
+		{
+			if (UpdateTime(m_partialState))
+			{
+				std::vector<sm::Matrix> bonePoseAbsolute;
+				bonePoseAbsolute.resize(m_bones.size(), sm::Matrix::Identity);
+				anim = standard;
+				std::string startBone = m_animations.at(m_partialState).partialStartBone;
+				std::string endBone = m_animations.at(m_partialState).partialEndBone;
+
+				//Go through all the bones
+				for (size_t i = 0; i < m_bones.size(); i++)
+				{
+					std::string name = m_bones[i].name;
+					sm::Matrix bonePoseRelative;
+
+					//Swapping between animations
+					if (name == startBone)
+						anim = partial;
+					else if (name == endBone)
+						anim = standard;
+
+					bonePoseRelative = anim->animation->GetMatrix(name, anim->frameTimer, anim->lastKeys[name].keys, m_useInterpolation);
+
+					if (m_bones[i].parentIndex == -1)
+						bonePoseAbsolute[i] = bonePoseRelative;
+					else
+						bonePoseAbsolute[i] = bonePoseRelative * bonePoseAbsolute[m_bones[i].parentIndex];
+
+					m_localMatrices[i] = m_bones[i].inverseBind * bonePoseAbsolute[i];
+				}
+				bonePoseAbsolute.clear();
+			}
+		}
+	}
+}
+
+void RAnimator::BlendPartialAnim()
+{
+	animation_t* anim1		= &m_animations[m_currentState];
+	animation_t* anim2		= &m_animations[m_blendState];
+	animation_t* partial	= &m_animations[m_partialState];
+	
+	if (anim1 && anim2 && partial)
+	{
+		if (UpdateTime(m_currentState))
+		{
+			if (UpdateTime(m_blendState))
+			{
+				if (UpdateTime(m_partialState))
+				{
+					float lerpTime;
+					if (UpdateBlendTime(m_currentState, m_blendState, lerpTime))
+					{
+						std::vector<sm::Matrix> bonePoseAbsolute;
+						bonePoseAbsolute.resize(m_bones.size(), sm::Matrix::Identity);
+						std::string startBone = m_animations.at(m_partialState).partialStartBone;
+						std::string endBone = m_animations.at(m_partialState).partialEndBone;
+						bool switched = false;
+
+						for (size_t i = 0; i < m_bones.size(); i++)
+						{
+							std::string name = m_bones[i].name;
+
+							//Swapping between animations
+							if (name == startBone)
+								switched = true;
+							else if (name == endBone)
+								switched = false;
+
+							sm::Matrix bonePoseRelative;
+							if (switched)
+							{
+								bonePoseRelative		= partial->animation->GetMatrix(name, partial->frameTimer, partial->lastKeys[name].keys, m_useInterpolation);
+							}
+							else
+							{
+								//From 
+								sm::Vector3 pos1		= anim1->animation->GetPosition(name, anim1->frameTimer, anim1->lastKeys[name].keys[0], m_useInterpolation);
+								sm::Vector3 scl1		= anim1->animation->GetScale(	name, anim1->frameTimer, anim1->lastKeys[name].keys[1], m_useInterpolation);
+								sm::Quaternion rot1		= anim1->animation->GetRotation(name, anim1->frameTimer, anim1->lastKeys[name].keys[2], m_useInterpolation);
+								//To
+								sm::Vector3 pos2		= anim2->animation->GetPosition(name, anim2->frameTimer, anim2->lastKeys[name].keys[0], m_useInterpolation);
+								sm::Vector3 scl2		= anim2->animation->GetScale(	name, anim2->frameTimer, anim2->lastKeys[name].keys[1], m_useInterpolation);
+								sm::Quaternion rot2		= anim2->animation->GetRotation(name, anim2->frameTimer, anim2->lastKeys[name].keys[2], m_useInterpolation);
+
+								sm::Vector3 lerpPos		= sm::Vector3::Lerp(pos1, pos2, lerpTime);
+								sm::Vector3 lerpScl		= sm::Vector3::Lerp(scl1, scl2, lerpTime);
+								sm::Quaternion lerpRot	= sm::Quaternion::Slerp(rot1, rot2, lerpTime);
+								lerpRot.Normalize();
+
+								bonePoseRelative		= sm::Matrix::CreateScale(lerpScl) * sm::Matrix::CreateFromQuaternion(lerpRot) * sm::Matrix::CreateTranslation(lerpPos);
+							}
+
+							if (m_bones[i].parentIndex == -1)
+								bonePoseAbsolute[i] = bonePoseRelative;
+							else
+								bonePoseAbsolute[i] = bonePoseRelative * bonePoseAbsolute[m_bones[i].parentIndex];
+
+							m_localMatrices[i] = m_bones[i].inverseBind * bonePoseAbsolute[i];
+						}
+						bonePoseAbsolute.clear();
+					}
+				}
+			}
+		}
+	}
+}
+
+EAnimStatus RAnimator::GetAnimStatus() const
+{
+	EAnimStatus codetype = EAnimStatus::NONE;
+
+	enum bitstate
+	{
+		current = 0x01,
+		blend	= 0x02,
+		partial	= 0x04
+	};
+	UINT state = 0;
+
+	if (m_currentState	!= EAnimationType::NONE)
+		state |= bitstate::current;
+	if (m_blendState	!= EAnimationType::NONE)
+		state |= bitstate::blend;
+	if (m_partialState	!= EAnimationType::NONE)
+		state |= bitstate::partial;
+
+	switch (state)
+	{
+	case 1:	//Current
+		codetype = EAnimStatus::ONE_ANIM;
+		break;
+	case 3:	//Current + Blend
+		codetype = EAnimStatus::TWO_ANIM_BLEND;
+		break;
+	case 5: //Current + Partial
+		codetype = EAnimStatus::TWO_ANIM_PARTIAL;
+		break;
+	case 7: //Current + Blend + Partial
+		codetype = EAnimStatus::THREE_ANIM_PARTIAL_BLEND;
+		break;
+	default:
+		break;
+	};
+
+	return codetype;
+}
+
+bool RAnimator::ReadyToBlend(const EAnimationType& from, const EAnimationType& to) const
+{
+	bool ready = false;
+
+	float blendDuration = 0.f;
+	if (m_states.find({ from, to }) != m_states.end())
+		blendDuration = m_states.at({ from, to }).blendDuration;
+	
+	float duration = m_animations.at(m_currentState).animation->GetDurationInSeconds();
+	float startPoint = duration - blendDuration;
+	
+	//Need to get where it is in the timeline in seconds
+	float actualTime = m_animations.at(from).frameTimer / m_animations.at(m_currentState).animation->GetDuration();
+
+	//Startpoint is in seconds
+	if (actualTime > startPoint)
+		ready = true;
+
+	return ready;
+}
+
+void RAnimator::CheckQueue()
+{
+	if (!m_queue.empty())
+	{
+		EAnimationType queued = m_queue.front();
+
+		switch (GetAnimStatus())
+		{
+		//No animation
+		case EAnimStatus::NONE:
+		{
+			m_currentState = queued;
+			m_queue.pop();
+			break;
+		}
+		//Currently running one animation
+		case EAnimStatus::ONE_ANIM:
+		{
+			//Transition to this animation exist
+			if (m_states.find({ m_currentState, queued }) != m_states.end())
+			{
+				//Wait for the perfect movement for quueuing up an animation after oneshot animation
+				if (!m_animations.at(m_currentState).animation->IsLoopable())
+				{
+					if (ReadyToBlend(m_currentState, queued))
+					{
+						m_blendState = queued;
+						m_queue.pop();
+					}
+					//Keep waiting
+				}
+				else
+				{
+					//Partial animation - Do not work on idle - should use ful animation at this time
+					if (!m_animations.at(queued).partialStartBone.empty() && m_currentState != EAnimationType::IDLE)
+					{
+						m_partialState = queued;
+						m_queue.pop();
+					}
+					//Loopable animation, just queue up the next
+					else
+					{
+						m_blendState = queued;
+						m_queue.pop();
+					}
+				}
+			}
+			//No transition - just pop and ignore this animation...
+			else
+			{
+				m_queue.pop();
+			}
+			break;
+		}
+		//Blending two animations
+		case EAnimStatus::TWO_ANIM_BLEND:
+		{
+			//Swap direction of blend if needed
+			if (m_animations.at(m_currentState).animation->IsLoopable() &&
+				m_animations.at(m_blendState).animation->IsLoopable())
+			{
+				//Blend back to current again
+				if (m_currentState == queued)
+				{
+					m_blendDir = false;
+					m_queue.pop();
+				}
+				//Blend toward the next animation
+				else if (m_blendState == queued)
+				{
+					m_blendDir = true;
+					m_queue.pop();
+				}
+				//Cancel the blending with the queued up one
+				else
+				{
+					//Has a partial bone, then okay to queue it to partialState
+					if (!m_animations.at(queued).partialStartBone.empty())
+					{
+						if (m_partialState == EAnimationType::NONE)
+						{
+							m_partialState = queued;
+							m_queue.pop();
+						}
+					}
+				}
+			}
+			break;
+		}
+		//In current + partial:			ignore
+		//In current + partial + blend:	ignore
+		default:
+			break;
+		}
+	}
+
+	//Queue is to big - could be stuck...
+	while (m_queue.size() > 3)
+	{
+		m_queue.pop();
+	}
+	
 }
 
 bool RAnimator::Create(const std::string& filename)
@@ -99,76 +636,205 @@ bool RAnimator::Create(const std::string& filename)
 	std::string line;
 
 	/*
-		Load from a customfile later.
-		Loads in all the animations
+		Load in skeleton and animations from custom animator format.
 	*/
 	while (std::getline(readfile, line))
 	{
 		std::stringstream ss(line);
-
 		std::string keyword;
-		ss >> keyword;
-
-		if (keyword == "loadAnim")
+		if (ss >> keyword)
 		{
-			std::string key;
-			std::string animName;
-			ss >> key >> animName;
-
-			std::shared_ptr<RAnimation> animation = ResourceManager::Get().GetResource<RAnimation>(animName);
-			if (animation)
+			if (keyword == "skel")
 			{
-				m_animations[key] = animation;
+				std::string modelName;
+				if (ss >> modelName)
+				{
+					std::shared_ptr<RModel> model = ResourceManager::Get().GetResource<RModel>(modelName);
+					if (model)
+					{
+						if (!LoadSkeleton(model->GetSkeleton()))
+						{
+#ifdef _DEBUG
+							LOG_WARNING("Animator %s could not load in skeleton...", filename.c_str());
+#endif // _DEBUG
+							return false;
+						}
+					}
+				}
 			}
-		}
-		else if (keyword == "setCurrentAnim")
-		{
-			std::string key;
-			ss >> key;
-
-			if (m_animations.find(key) != m_animations.end())
+			else if (keyword == "anim")
 			{
-				m_currentAnim = m_animations[key];
+				std::string key;
+				std::string animName;
+				if (ss >> key >> animName)
+				{
+					EAnimationType animType = StringToAnimationType(key);
+					if (animType != EAnimationType::NONE)
+					{
+						std::shared_ptr<RAnimation> animation = ResourceManager::Get().CopyResource<RAnimation>(animName, true);
+						if (animation)
+						{
+							animation_t animStruct;
+							animStruct.animation = animation;
+							m_animations[animType] = animStruct;
+						}
+					}
+				}
+			}
+			else if (keyword == "loopable")
+			{
+				std::string key;
+				bool option;
+				if (ss >> key >> option)
+				{
+					EAnimationType animType = StringToAnimationType(key);
+					if (m_animations.find(animType) != m_animations.end())
+					{
+						m_animations.at(animType).animation->SetLoopable(option);
+					}
+				}
+			}
+			else if (keyword == "tickSpeed")
+			{
+				std::string key;
+				float speed;
+				if (ss >> key >> speed)
+				{
+					EAnimationType animType = StringToAnimationType(key);
+					if (m_animations.find(animType) != m_animations.end())
+					{
+						m_animations.at(animType).animation->SetTicksPerFrame(speed);
+					}
+				}
+			}
+			else if (keyword == "state")
+			{
+				std::string key1;
+				std::string key2;
+				float		blendtime = 0.f;
+				if (ss >> key1 >> key2 >> blendtime)
+				{
+					EAnimationType fromType = StringToAnimationType(key1);
+					EAnimationType toType	= StringToAnimationType(key2);
+
+					if (fromType != EAnimationType::NONE && toType != EAnimationType::NONE)
+					{
+						if (m_animations.find(fromType) != m_animations.end())
+						{
+							//Set blendtime to end for animation that will not be looped
+							if (!m_animations.at(fromType).animation->IsLoopable())
+							{
+								float duration = m_animations.at(fromType).animation->GetDurationInSeconds();
+								if (blendtime > duration)
+									blendtime = duration;
+							}
+						}
+						m_states[{fromType, toType}] = { 0.f, blendtime };
+					}
+				}
+			}
+			else if (keyword == "partialAnim")
+			{
+				std::string key;
+				std::string startbone	= "";
+				std::string endbone		= "";
+				if (ss >> key >> startbone)
+				{
+					ss >> endbone;
+
+					EAnimationType animType = StringToAnimationType(key);
+					if (m_animations.find(animType) != m_animations.end())
+					{
+						m_animations.at(animType).partialStartBone	= startbone;
+						m_animations.at(animType).partialEndBone	= endbone;
+					}
+				}
+			}
+			else if (keyword == "stayAtEnd")
+			{
+				std::string key;
+				bool stayAtEnd = false;
+				if (ss >> key >> stayAtEnd)
+				{
+					EAnimationType animType = StringToAnimationType(key);
+					if (m_animations.find(animType) != m_animations.end())
+					{
+						m_animations.at(animType).stayAtEnd = stayAtEnd;
+					}
+				}
 			}
 		}
 	}
 
 	readfile.close();
-
 	return true;
+}
+
+void RAnimator::ChangeAnimation(const EAnimationType& type)
+{
+	//Check if animation exist
+	if (m_animations.find(type) != m_animations.end())
+	{
+		if (!HasStayAtEndAnim() &&
+			m_currentState != type)
+		{
+			//Queue up the animation
+			m_queue.push(type);
+		}
+	}
+}
+
+const EAnimationType& RAnimator::GetCurrentState() const
+{
+	return m_currentState;
+}
+
+const sm::Matrix RAnimator::GetLocalMatrix(const std::string& bonename) const
+{
+	sm::Matrix bonematrix = sm::Matrix::Identity;
+
+	//Find the bone and what matrix it has
+	if (m_nameToBone.find(bonename) != m_nameToBone.end())
+	{
+		UINT index = m_nameToBone.at(bonename);
+		bonematrix = m_localMatrices[index];
+	}
+	return bonematrix;
 }
 
 void RAnimator::Update()
 {
-	if (!m_bones.empty() && m_currentAnim)
+	PROFILE_FUNCTION();
+
+	//Need to have a skeleton
+	if (!m_bones.empty())
 	{
-		double tickDT = m_currentAnim->GetTicksPerFrame() * Stats::GetDeltaTime();
-		m_frameTime = fmod(m_frameTime + tickDT, m_currentAnim->GetDuraction());
-		double nextFrameTime = m_frameTime + tickDT;
+		//Check if there was anyone in queue
+		CheckQueue();
 
-		std::vector<sm::Matrix> modelMatrices;
-		modelMatrices.resize(m_bones.size(), sm::Matrix::Identity);
-
-		for (size_t i = 0; i < m_bones.size(); i++)
+		switch (GetAnimStatus())
 		{
-			sm::Matrix localMatrix = m_currentAnim->GetMatrix(m_bones[i].name, m_frameTime, nextFrameTime, m_bones[i].lastKeys, m_useInterpolation);
-
-			if (m_bones[i].parentIndex == -1)
-				modelMatrices[i] = localMatrix;
-			else
-				modelMatrices[i] = localMatrix * modelMatrices[m_bones[i].parentIndex];
-	
-			m_finalMatrices[i] = m_bones[i].inverseBind * modelMatrices[i];
+		case EAnimStatus::ONE_ANIM:
+			StandardAnim();
+			break;
+		case EAnimStatus::TWO_ANIM_BLEND:
+			BlendTwoAnims();
+			break;
+		case EAnimStatus::TWO_ANIM_PARTIAL:
+			PartialAnim();
+			break;
+		case EAnimStatus::THREE_ANIM_PARTIAL_BLEND:
+			BlendPartialAnim();
+			break;
+		default:
+			break;
 		}
-
-		modelMatrices.clear();
-
-		UpdateStructureBuffer();
 	}
 }
 
-void RAnimator::Bind() const
+void RAnimator::Bind()
 {
+	UpdateStructureBuffer();
 	D3D11Core::Get().DeviceContext()->VSSetShaderResources(T2D_BONESLOT, 1, m_bonesSB_RSV.GetAddressOf());
 }
 

@@ -24,8 +24,6 @@ struct aiNode;
 
 	*  Loads a skeleton, which is a hierchi of bones/joints
 	   that can affect the model.
-
-	*  Need an animator to do animations
 */
 
 class RModel : public resource::GResource
@@ -37,6 +35,7 @@ private:
 	struct submesh_t
 	{
 		ComPtr<ID3D11Buffer>		vertexBuffer;
+		UINT						vertexCount = 0;
 		ComPtr<ID3D11Buffer>		indexBuffer;
 		UINT						indexCount = 0;
 		std::shared_ptr<RMaterial>	material;
@@ -44,22 +43,15 @@ private:
 	};
 	std::vector<submesh_t>			m_meshes;
 	std::vector<light_t>			m_lights;
-	
-	/*
-		Skeleton information
-	*/
-	std::vector<bone_t>						m_allBones;
-	std::unordered_map<std::string, UINT>	m_boneMap;		//Move to create later?
+	std::vector<bone_t>				m_allBones;
 
-private:
-	//Get the end of file. Searches for "."
-	const std::string GetFileFormat(const std::string& filename) const;
-	
+private:	
 	/*
 		Combines multiple submeshes that uses the same material to one.
 		This is to avoid to many drawcalls per RModel.
 	*/
-	bool CombineMeshes(std::vector<aiMesh*>& submeshes, submesh_t& submesh);
+	bool CombineMeshes(std::vector<aiMesh*>& submeshes, submesh_t& submesh,
+						const std::unordered_map<std::string, UINT>& boneMap);
 
 	//Creating buffers
 	bool CreateVertexBuffer(const std::vector<anim_vertex_t>&	vertices, submesh_t& mesh);
@@ -68,10 +60,13 @@ private:
 
 	//Loading data from assimp
 	void LoadLights(const aiScene* scene);
-	void LoadMaterial(const aiScene* scene, const UINT& matIndex, bool& useMTL, submesh_t& inoutMesh) const;
+	void LoadMaterial(const aiScene* scene, const UINT& matIndex, submesh_t& inoutMesh) const;
 
+	//Bone structure
 	void BoneHierchy(aiNode* node, std::unordered_map<std::string, bone_t>& nameToBone);
-	bool LoadVertexSkinning(const aiMesh* aimesh, std::vector<anim_vertex_t>& vertices);
+	bool LoadVertexSkinning(const aiMesh* aimesh, 
+							std::vector<anim_vertex_t>& vertices, 
+							const std::unordered_map<std::string, UINT>& boneMap);
 
 public:
 	RModel();
@@ -86,6 +81,15 @@ public:
 	//Get the vector of lights
 	const std::vector<light_t>& GetLights() const;
 
+	//Get all of the texture coordinates for a model
+	const std::vector<sm::Vector2> GetTextureCoords() const;
+
+	//Get all of the vertexcolors for a model
+	const std::vector<sm::Vector3> GetVertexColors() const;
+
+	//Get all the textures of the type from all materials
+	const std::vector<std::shared_ptr<RTexture>> GetTextures(const ETextureType& type) const;
+
 	/*
 		Change the material to other. Uses a mtlfile.
 		Limited to how many materials was set from start.
@@ -98,8 +102,7 @@ public:
 	/*
 		Render all of the submeshes in the RModel with correct material
 	*/
-	void Render() const;
-	void RenderDeferred(ID3D11DeviceContext* context);
+	void Render(ID3D11DeviceContext* context);
 
 	// Inherited via GResource
 	virtual bool Create(const std::string& filename) override;

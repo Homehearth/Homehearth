@@ -27,6 +27,12 @@ namespace network
 			return sizeof(msg_header<T>) + payload.size();
 		}
 
+		void clear()
+		{
+			payload.clear();
+			header.size = 0;
+		}
+
 		friend std::ostream& operator <<(std::ostream& os, const message<T>& msg)
 		{
 			os << "ID:" << (int)msg.header.id << " Size: " << msg.size();
@@ -39,7 +45,7 @@ namespace network
 		{
 			if constexpr (std::is_same<DataType, std::string>::value)
 			{
-				std::string str = data;
+				std::string str = std::move(data);
 				// Cache the size to offset where we in memory want to copy data into
 				size_t i = msg.payload.size();
 

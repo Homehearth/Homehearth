@@ -1,26 +1,56 @@
 #include "EnginePCH.h"
 #include "Scene.h"
 #include <omp.h>
+#include "Systems.h"
+#include "CText.h"
+
+#include "ParticlePass.h"
 
 Scene::Scene()
-	: m_IsRenderingColliders(true), m_updateAnimation(true)
+	: m_IsRenderingColliders(false)
 {
 	m_publicBuffer.Create(D3D11Core::Get().Device());
+	m_publicDecalBuffer.Create(D3D11Core::Get().Device());
 	m_ColliderHitBuffer.Create(D3D11Core::Get().Device());
 	thread::RenderThreadHandler::Get().SetObjectsBuffer(&m_renderableCopies);
 
 	m_defaultCamera = CreateEntity();
 	m_defaultCamera.AddComponent<comp::Camera3D>()->camera.Initialize(sm::Vector3(0, 0, 0), sm::Vector3(0, 0, 1), sm::Vector3(0, 1, 0), sm::Vector2(1000, 1000), CAMERATYPE::DEFAULT);
 	SetCurrentCameraEntity(m_defaultCamera);
+
+	m_sky.Initialize("storm.dds");
+
+	m_combatText = new rtd::CText("ERROR", draw_text_t(0.0f, 0.0f, D2D1Core::GetDefaultFontSize() * 3, D2D1Core::GetDefaultFontSize()), D2D1::ColorF(0.0f, 0.0f, 0.0f));
+}
+
+Scene::~Scene()
+{
+	if (m_combatText)
+	{
+		delete m_combatText;
+	}
 }
 
 void Scene::Update(float dt)
 {
+	/*std::cout << "Frametime: " << Stats::Get().GetFrameTime() << std::endl;
+	std::cout << "Updatetime: " << Stats::Get().GetUpdateTime() << std::endl;
+	std::cout << "DT: " << dt << std::endl;*/
+
+
+	//Update all the animations that can be updated
+	m_registry.view<comp::Animator>().each([&](comp::Animator& anim)
+		{
+			if (anim.animator && anim.updating)
+				anim.animator->Update();
+		});
+	
+	
+
 	m_2dHandler.Update();
 	PROFILE_FUNCTION();
 
 	// Emit event
-
 	GetCurrentCamera()->Update(dt);
 	BasicScene::Update(dt);
 
@@ -32,38 +62,40 @@ void Scene::Update(float dt)
 		m_renderableAnimCopies[0].clear();
 
 		m_registry.view<comp::Renderable, comp::Transform>().each([&](entt::entity entity, comp::Renderable& r, comp::Transform& t)
-		{
-			r.data.worldMatrix = ecs::GetMatrix(t);
-			
-			//Check if the model has an animator too
-			comp::Animator* anim = m_registry.try_get<comp::Animator>(entity);
-			if (anim != nullptr)
 			{
-				m_renderableAnimCopies[0].push_back({r, *anim});
-			}
-			else
-			{
-				m_renderableCopies[0].push_back(r);
-			}
-		});
-		
+				r.data.worldMatrix = ecs::GetMatrix(t);
+
+				//Check if the model has an animator too
+				comp::Animator* anim = m_registry.try_get<comp::Animator>(entity);
+				if (anim != nullptr)
+				{
+					m_renderableAnimCopies[0].push_back({ r, *anim });
+				}
+				else
+				{
+					if (r.visible)
+						m_renderableCopies[0].push_back(r);
+				}
+			});
 		m_renderableCopies.Swap();
 		m_renderableAnimCopies.Swap();
+		GetCurrentCamera()->Swap();
 	}
+
 	if (!m_debugRenderableCopies.IsSwapped())
 	{
 		m_debugRenderableCopies[0].clear();
 		m_registry.view<comp::RenderableDebug>().each([&](entt::entity entity, comp::RenderableDebug& r)
 			{
-				comp::BoundingOrientedBox* obb = m_registry.try_get<comp::BoundingOrientedBox>(entity);
-				comp::BoundingSphere* sphere = m_registry.try_get<comp::BoundingSphere>(entity);
-				
+				comp::OrientedBoxCollider* obb = m_registry.try_get<comp::OrientedBoxCollider>(entity);
+				comp::SphereCollider* sphere = m_registry.try_get<comp::SphereCollider>(entity);
+
 				comp::Transform transform;
 				transform.rotation = sm::Quaternion::Identity;
 
 				if (obb != nullptr)
 				{
-					transform.scale = sm::Vector3(obb->Extents);
+					transform.scale = obb->Extents;
 					transform.position = obb->Center;
 					transform.rotation = obb->Orientation;
 				}
@@ -72,7 +104,7 @@ void Scene::Update(float dt)
 					transform.scale = sm::Vector3(sphere->Radius);
 					transform.position = sphere->Center;
 				}
-				
+
 				r.data.worldMatrix = ecs::GetMatrix(transform);
 				m_debugRenderableCopies[0].push_back(r);
 			});
@@ -80,11 +112,28 @@ void Scene::Update(float dt)
 		m_debugRenderableCopies.Swap();
 	}
 
+	if (!m_emitterParticlesCopies.IsSwapped())
+	{
+		m_emitterParticlesCopies[0].clear();
+		m_registry.view<comp::EmitterParticle, comp::Transform>().each([&](entt::entity entity, comp::EmitterParticle& emitter, comp::Transform& transform)
+			{
+				emitter.transformCopy = transform;
+				m_emitterParticlesCopies[0].push_back(emitter);
+			});
+
+		m_emitterParticlesCopies.Swap();
+	}
+}
+
+void Scene::Update2D()
+{
+	m_2dHandler.Update();
 }
 
 void Scene::Render()
 {
 	PROFILE_FUNCTION();
+
 	thread::RenderThreadHandler::Get().SetObjectsBuffer(&m_renderableCopies);
 	// Divides up work between threads.
 	const render_instructions_t inst = thread::RenderThreadHandler::Get().Launch(static_cast<int>(m_renderableCopies[1].size()));
@@ -93,14 +142,15 @@ void Scene::Render()
 	D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, buffers);
 
 	// Render everything on same thread.
-	if((inst.start | inst.stop) == 0)
+	if ((inst.start | inst.stop) == 0)
 	{
 		// System that renders Renderable component
 		for (const auto& it : m_renderableCopies[1])
 		{
 			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
+
 			if (it.model)
-				it.model->Render();
+				it.model->Render(D3D11Core::Get().DeviceContext());
 		}
 	}
 	// Render third part of the scene with immediate context
@@ -111,16 +161,14 @@ void Scene::Render()
 		{
 			const auto& it = m_renderableCopies[1][i];
 			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
+
 			if (it.model)
-				it.model->Render();
+				it.model->Render(D3D11Core::Get().DeviceContext());
 		}
 	}
 
 	// Run any available Command lists from worker threads.
 	thread::RenderThreadHandler::ExecuteCommandLists();
-
-	// Emit event
-	publish<ESceneRender>();
 }
 
 void Scene::RenderDebug()
@@ -141,18 +189,15 @@ void Scene::RenderDebug()
 		};
 
 		D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, buffers);
-		D3D11Core::Get().DeviceContext()->PSSetConstantBuffers(3, 1, buffer2);
+		D3D11Core::Get().DeviceContext()->PSSetConstantBuffers(5, 1, buffer2);
 		for (const auto& it : m_debugRenderableCopies[1])
 		{
 			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.data);
 			m_ColliderHitBuffer.SetData(D3D11Core::Get().DeviceContext(), it.isColliding);
 
 			if (it.model)
-				it.model->Render();
+				it.model->Render(D3D11Core::Get().DeviceContext());
 		}
-
-		// Emit event
-		publish<ESceneRender>();
 		m_debugRenderableCopies.ReadyForSwap();
 	}
 
@@ -161,6 +206,168 @@ void Scene::RenderDebug()
 void Scene::Render2D()
 {
 	m_2dHandler.Render();
+
+	if (m_combatTextList.size() > 0)
+	{
+		m_combatTextMutex.lock();
+		this->HandleCombatText();
+		m_combatTextMutex.unlock();
+	}
+}
+
+void Scene::RenderSkybox()
+{
+	m_sky.Render();
+}
+
+void Scene::RenderShadow()
+{
+	for (const auto& model : m_renderableCopies[1])
+	{
+		if (model.isSolid && model.visible && model.castShadow)
+		{
+			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), model.data);
+			ID3D11Buffer* buffer[] = { m_publicBuffer.GetBuffer() };
+			D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, buffer);
+			if(model.model)
+				model.model->Render(D3D11Core::Get().DeviceContext());
+		}
+	}
+}
+
+void Scene::RenderShadowAnimation()
+{
+	PROFILE_FUNCTION();
+
+	for (auto& it : m_renderableAnimCopies[1])
+	{
+		if (it.first.isSolid && it.first.visible && it.first.castShadow)
+		{
+			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.first.data);
+			ID3D11Buffer* const buffer = {
+				m_publicBuffer.GetBuffer()
+			};
+			D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, &buffer);
+			it.second.animator->Bind();
+			it.first.model->Render(D3D11Core::Get().DeviceContext());
+			it.second.animator->Unbind();
+		}
+	}
+}
+
+
+
+void Scene::RenderParticles(void* voidPass)
+{
+	ParticlePass* pass = (ParticlePass*)voidPass;
+
+	for (auto& emitter : m_emitterParticlesCopies[1])
+	{
+
+		if (emitter.particleBuffer.Get())
+		{
+
+			pass->m_counter += Stats::Get().GetFrameTime() * pass->m_counterAdd;
+
+			if (pass->m_counter >= 10 )// || pass->m_counter <= 0)
+				pass->m_counter = 0;
+				//pass->m_counterAdd *= -1.f;
+			
+
+			//std::cout << pass->m_counter << std::endl;
+
+			//Constant buffer
+			pass->m_particleUpdate.emitterPosition = sm::Vector4(emitter.transformCopy.position.x + emitter.positionOffset.x, emitter.transformCopy.position.y + emitter.positionOffset.y, emitter.transformCopy.position.z + emitter.positionOffset.z, 1.f);
+			pass->m_particleUpdate.counter = pass->m_counter;
+			pass->m_particleUpdate.lifeTime = emitter.lifeTime;
+			pass->m_particleUpdate.particleSizeMulitplier = emitter.sizeMulitplier;
+			pass->m_particleUpdate.speed = emitter.speed;
+			pass->m_particleUpdate.deltaTime = Stats::Get().GetFrameTime();
+			pass->m_particleUpdate.direction = emitter.direction;
+
+			pass->m_particleModeUpdate.type = emitter.type;
+
+			pass->m_constantBufferParticleUpdate.SetData(D3D11Core::Get().DeviceContext(), pass->m_particleUpdate);
+			ID3D11Buffer* cb = { pass->m_constantBufferParticleUpdate.GetBuffer() };
+
+			pass->m_constantBufferParticleMode.SetData(D3D11Core::Get().DeviceContext(), pass->m_particleModeUpdate);
+			ID3D11Buffer* cbP = { pass->m_constantBufferParticleMode.GetBuffer() };
+
+			//Binding emitter speceific data
+			D3D11Core::Get().DeviceContext()->CSSetConstantBuffers(8, 1, &cb);
+			D3D11Core::Get().DeviceContext()->CSSetUnorderedAccessViews(7, 1, emitter.particleUAV.GetAddressOf(), nullptr);
+
+			const int groupCount = static_cast<int>(ceil(emitter.nrOfParticles / 50)); //Hur m?nga grupper som k?rs
+			D3D11Core::Get().DeviceContext()->Dispatch(groupCount, 1, 1);
+			D3D11Core::Get().DeviceContext()->CSSetUnorderedAccessViews(7, 1, &pass->m_nullUAV, nullptr);
+
+			if (emitter.texture->GetShaderView())
+			{
+				D3D11Core::Get().DeviceContext()->PSSetShaderResources(1, 1, &emitter.texture->GetShaderView());
+				D3D11Core::Get().DeviceContext()->PSSetShaderResources(7, 1, &emitter.opacityTexture->GetShaderView());
+				D3D11Core::Get().DeviceContext()->PSSetConstantBuffers(9, 1, &cbP);
+				D3D11Core::Get().DeviceContext()->VSSetShaderResources(17, 1, emitter.particleSRV.GetAddressOf());
+
+				D3D11Core::Get().DeviceContext()->DrawInstanced(1, emitter.nrOfParticles, 0, 0);
+				D3D11Core::Get().DeviceContext()->VSSetShaderResources(17, 1, &pass->m_nullSRV);
+			}
+		}
+	}
+}
+
+void Scene::PushCombatText(const combat_text_inst_t& combat_text)
+{
+	m_combatTextMutex.lock();
+	m_combatTextList.push_back(combat_text);
+	m_combatTextMutex.unlock();
+}
+
+void Scene::HandleCombatText()
+{
+	for (int i = 0; i < m_combatTextList.size(); i++)
+	{
+		combat_text_inst_t& current_text = m_combatTextList[i];
+
+		switch (current_text.type)
+		{
+		case combat_text_enum::HEALTH_GAIN:
+		{
+			sm::Vector2 screenPos = util::WorldSpaceToScreenSpace(current_text.pos, GetCurrentCamera());
+			m_combatText->SetColor(D2D1::ColorF(0.0f, 1.0f, 0.0f));
+			m_combatText->SetPosition(screenPos.x - D2D1Core::GetDefaultFontSize() * 1.5f, screenPos.y);
+			m_combatText->SetText(std::to_string(current_text.amount));
+			m_combatText->Draw();
+			break;
+		}
+		case combat_text_enum::HEALTH_LOSS:
+		{
+			sm::Vector2 screenPos = util::WorldSpaceToScreenSpace(current_text.pos, GetCurrentCamera());
+			m_combatText->SetColor(D2D1::ColorF(1.0f, 0.0f, 0.0f));
+			m_combatText->SetText(std::to_string(current_text.amount));
+			m_combatText->SetPosition(screenPos.x - D2D1Core::GetDefaultFontSize() * 1.5f, screenPos.y);
+			m_combatText->Draw();
+			break;
+		}
+		default:
+			break;
+		}
+
+		current_text.pos = sm::Vector3::Lerp(current_text.pos, current_text.end_pos, Stats::Get().GetFrameTime() * 0.25f);
+
+		if (std::abs(omp_get_wtime() - m_combatTextList[i].timeRendered) > 0.35)
+		{
+			m_combatTextList.erase(m_combatTextList.begin() + i);
+		}
+	}
+}
+
+void Scene::HouseWarningIcons()
+{
+}
+
+Skybox* Scene::GetSkybox()
+{
+	return &m_sky;
 }
 
 bool Scene::IsRenderReady() const
@@ -187,61 +394,17 @@ void Scene::RenderAnimation()
 {
 	PROFILE_FUNCTION();
 
-	// Divides up work between threads.
-	const render_instructions_t inst = thread::RenderThreadHandler::Get().Launch(static_cast<int>(m_renderableAnimCopies[1].size()));
-	
-	ID3D11Buffer* const buffers[1] = { m_publicBuffer.GetBuffer() };
-	D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, buffers);
-
-	// Render everything on same thread
-	if ((inst.start | inst.stop) == 0)
+	for (auto& it : m_renderableAnimCopies[1])
 	{
-		//Update all the animators
-		if (m_updateAnimation)
-		{
-			m_registry.view<comp::Animator>().each([&](comp::Animator& anim)
-				{
-					anim.animator->Update();
-				});
-		}
-
-		for (auto& it : m_renderableAnimCopies[1])
-		{
-			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.first.data);
-			it.second.animator->Bind();
-			it.first.model->Render();
-			it.second.animator->Unbind();
-		}
+		m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.first.data);
+		ID3D11Buffer* const buffer = {
+			m_publicBuffer.GetBuffer()
+		};
+		D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, &buffer);
+		it.second.animator->Bind();
+		it.first.model->Render(D3D11Core::Get().DeviceContext());
+		it.second.animator->Unbind();
 	}
-	// Render third part of the scene with immediate context
-	else
-	{
-		for (int i = inst.start; i < inst.stop; i++)
-		{
-			//Update all the animators
-			if (m_updateAnimation)
-			{
-				m_registry.view<comp::Animator>().each([&](comp::Animator& anim)
-					{
-						anim.animator->Update();
-					});
-			}
-
-			auto& it = m_renderableAnimCopies[1][i];
-			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.first.data);
-
-			it.second.animator->Bind();
-			it.first.model->Render();
-			it.second.animator->Unbind();
-		}
-	}
-
-	// Run any available Command lists from worker threads.
-	thread::RenderThreadHandler::ExecuteCommandLists();
-
-	// Emit event
-	publish<ESceneRender>();
-
 }
 
 bool Scene::IsRender3DReady() const
@@ -261,7 +424,13 @@ bool Scene::IsRender2DReady() const
 
 Camera* Scene::GetCurrentCamera() const
 {
-	return &m_currentCamera.GetComponent<comp::Camera3D>()->camera;
+	comp::Camera3D* camComponent = m_currentCamera.GetComponent<comp::Camera3D>();
+	if (!camComponent)
+	{
+		return nullptr;
+	}
+
+	return &camComponent->camera;
 }
 
 void Scene::ReadyForSwap()
@@ -269,6 +438,7 @@ void Scene::ReadyForSwap()
 	m_renderableCopies.ReadyForSwap();
 	m_debugRenderableCopies.ReadyForSwap();
 	m_renderableAnimCopies.ReadyForSwap();
+	m_emitterParticlesCopies.ReadyForSwap();
 }
 
 void Scene::SetCurrentCameraEntity(Entity cameraEntity)
@@ -291,6 +461,11 @@ bool* Scene::GetIsRenderingColliders()
 Lights* Scene::GetLights()
 {
 	return &m_lights;
+}
+
+void Scene::UpdateSkybox(float pTime)
+{
+	m_sky.UpdateTime(pTime);
 }
 
 DoubleBuffer<std::vector<comp::Renderable>>* Scene::GetBuffers()

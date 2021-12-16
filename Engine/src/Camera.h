@@ -1,6 +1,4 @@
 #pragma once
-#include "EnginePCH.h"
-#include "Components.h"
 
 enum class CAMERATYPE
 {
@@ -8,6 +6,8 @@ enum class CAMERATYPE
 	DEBUG,
 	PLAY
 };
+
+static DoubleBuffer<camera_Matrix_t> s_cameraBuffers;
 
 class Camera
 {
@@ -37,6 +37,10 @@ private:
 	camera_Matrix_t m_cameraMat;
 	sm::Quaternion quaterion;
 	CAMERATYPE m_type;
+	dx::BoundingFrustum m_frustum;
+
+	//Nikkis stuff
+	float m_deltaTime;
 
 	/*Run in all the set functions*/
 	void UpdateProjection();
@@ -46,7 +50,7 @@ public:
 	~Camera();
 	/* Position, Target, up, windowSize = (window width, window height) */
 	void Initialize(sm::Vector3 pos, sm::Vector3 target, sm::Vector3 up, sm::Vector2 windowSize, CAMERATYPE type) ;
-	void Update(float deltaTime);
+	void Update(const float& deltaTime);
 	void SetFollowEntity(const Entity& entity);
 
 
@@ -57,7 +61,13 @@ public:
 	sm::Vector3 GetTarget() const;
 	sm::Vector3 GetUp() const;
 	camera_Matrix_t* GetCameraMatrixes();
+	void Swap();
+	void ReadySwap();
+	bool IsSwapped() const;
 	CAMERATYPE GetCameraType()const;
+	sm::Vector3 GetRollPitchYaw() const;
+	sm::Quaternion GetRotation() const;
+	Entity GetTargetEntity()const;
 
 	//Set Functions
 	void SetPosition(sm::Vector3 newPosition);
@@ -77,6 +87,7 @@ public:
 	float m_nearPlane;
 	float m_farPlane;
 	sm::Vector3 m_rollPitchYaw;
+	sm::Quaternion m_rotation = sm::Quaternion::Identity;
 	sm::Vector3 m_position;
 };
 

@@ -14,8 +14,7 @@ private:
 
 	Window m_window;
 	Renderer m_renderer;
-	std::unique_ptr<DirectX::AudioEngine> m_audio_engine;
-	
+
 	// Startup the Engine and its instances in a specific order.
 	void Startup() override;
 
@@ -26,18 +25,20 @@ private:
 	void Update(float dt) override;
 	
 	// Renders one frame.
-	void Render(float& dt);
+	void Render();
 
 	// Run the Engine's core loop.
 	void Run() override;
 
-
 	// IMGUI
-	void drawImGUI() const;
+	void drawImGUI();
 
 	virtual void OnUserUpdate(float deltaTime) = 0;
 
+	void SetupLoadingScreen();
+
 public:
+
 	Engine();
 	Engine(const Engine& other) = delete;
 	Engine(Engine&& other) = delete;
@@ -47,3 +48,4 @@ public:
 	Window* GetWindow();
 
 };
+

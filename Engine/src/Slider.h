@@ -13,6 +13,8 @@ namespace rtd
 		std::unique_ptr<Border> m_border;
 		std::unique_ptr<Canvas> m_slider;
 		std::unique_ptr<Text> m_valueText;
+
+		std::string m_explanationString;
 		std::string m_valueString;
 		float* m_value;
 		draw_t m_drawOpts;
@@ -37,6 +39,7 @@ namespace rtd
 		Slider(D2D1_COLOR_F color, const draw_t& draw_opts, float* value, float max = 1.0f, float min = 0.0f, bool horizontal = true);
 
 		Border* GetBorder();
+		Text* GetValueText();
 
 		// Set the value to manipulate with the slider.
 		void SetValue(float* value);
@@ -44,11 +47,13 @@ namespace rtd
 		void SetMinPos(sm::Vector2 minPos);
 		void SetMaxPos(sm::Vector2 maxPos);
 
+		void SetExplanationText(const std::string& text);
+
 		// Inherited via Element2D
 		virtual void Draw() override;
 		virtual void OnClick() override;
 		virtual void OnHover() override;
 		virtual bool CheckHover() override;
-		virtual bool CheckClick() override;
+		virtual ElementState CheckClick() override;
 	};
 }

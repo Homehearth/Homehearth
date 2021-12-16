@@ -10,33 +10,61 @@ struct bone_t
 	int			parentIndex = -1;
 };
 
-/*
-	Also holds when the last 
-	keyframes was for that bone
-*/
-struct bone_keyFrames_t
+struct lastKeys_t
 {
-	std::string			name		= "";
-	sm::Matrix			inverseBind = {};
-	int					parentIndex = -1;
-	std::array<UINT, 3> lastKeys	= {};
+	UINT keys[3] = { 0,0,0 };
 };
 
-/*
-	Keyframes structures
-*/
-struct positionKey_t
+enum class EAnimationType : uint32_t
 {
-	double		time;
-	sm::Vector3 val;
+	NONE,
+	IDLE,
+	MOVE,
+	PRIMARY,
+	SECONDARY,
+	ESCAPE,
+	PLACE_DEFENCE,
+	TAKE_DAMAGE,
+	DEAD
 };
-struct scaleKey_t
+
+struct animstate_t
 {
-	double		time;
-	sm::Vector3	val;
+	EAnimationType from;
+	EAnimationType to;
+
+	animstate_t(EAnimationType x, EAnimationType y)
+	{
+		this->from = x;
+		this->to = y;
+	}
+	bool operator==(const animstate_t& state) const
+	{
+		return from == state.from && to == state.to;
+	}
 };
-struct rotationKey_t
+
+struct animstate_hash_fn
 {
-	double			time;
-	sm::Quaternion	val;
+	std::size_t operator() (const animstate_t& state) const
+	{
+		std::size_t h1 = std::hash<EAnimationType>()(state.from);
+		std::size_t h2 = std::hash<EAnimationType>()(state.to);
+		return h1 ^ h2;
+	}
+};
+
+struct animstateInfo
+{
+	float			blendTimer		= 0;		//How long we have blended so far
+	float			blendDuration	= 0;		//How long to blend
+};
+
+enum class EAnimStatus
+{
+	NONE,
+	ONE_ANIM,
+	TWO_ANIM_BLEND,
+	TWO_ANIM_PARTIAL,
+	THREE_ANIM_PARTIAL_BLEND
 };

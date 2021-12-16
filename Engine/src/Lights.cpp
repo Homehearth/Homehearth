@@ -68,7 +68,7 @@ const bool Lights::UpdateLightBuffer()
 const bool Lights::UpdateInfoBuffer()
 {
     light_info_t newInfo = {};
-    newInfo.nrOfLights = dx::XMFLOAT4((float)m_lights.size(), 0.f, 0.f, 0.f);
+    newInfo.nrOfLights = dx::XMFLOAT4((float)m_lights.size(), static_cast<float>(m_volumeQuality), 0.f, 0.f);
 
     HRESULT hr;
     D3D11_MAPPED_SUBRESOURCE submap;
@@ -121,7 +121,7 @@ void Lights::Render(ID3D11DeviceContext* dc)
         UpdateLightBuffer();
     }
 
-    dc->PSSetConstantBuffers(3, 1, m_lightInfoBuffer.GetAddressOf());
+    dc->PSSetConstantBuffers(4, 1, m_lightInfoBuffer.GetAddressOf());
     dc->PSSetShaderResources(T2D_SLOT, 1, m_lightShaderView.GetAddressOf());
 }
 
@@ -129,7 +129,31 @@ void Lights::EditLight(light_t L, const int& index)
 {
     if (index < (int)m_lights.size() && index >= 0)
     {
+
+        switch (L.type)
+        {
+        case TypeLight::DIRECTIONAL:
+        {
+            L.direction.Normalize();
+            camera_Matrix_t mat = ShadowPass::GetLightMatrix(L, sm::Vector3(L.direction));
+            L.lightMatrix = mat.view;
+            L.lightMatrix *= mat.projection;
+            break;
+        }
+        case TypeLight::POINT:
+        {
+            camera_Matrix_t mat = ShadowPass::GetLightMatrix(L, sm::Vector3::Down);
+            L.lightMatrix = mat.view;
+            L.lightMatrix *= mat.projection;
+            break;
+        }
+        default:
+            break;
+        }
+        // save the shadowIndex so it does not get overwritten
+        int shadowIndex = m_lights[index].shadowIndex;
         m_lights[index] = L;
+        m_lights[index].shadowIndex = shadowIndex;
     }
 }
 
@@ -137,4 +161,14 @@ void Lights::Add(entt::registry& reg, entt::entity ent)
 {
     reg.get<comp::Light>(ent).index = (int)m_lights.size();
     m_lights.push_back(reg.get<comp::Light>(ent).lightData);
+}
+
+void Lights::SetLightVolumeQuality(const unsigned int& quality)
+{
+    m_volumeQuality = quality;
+}
+
+std::vector<light_t>& Lights::GetLights()
+{
+    return m_lights;
 }
