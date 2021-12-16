@@ -120,7 +120,6 @@ void Game::OnUserUpdate(float deltaTime)
 
 	Scene& scene = GetScene("Game");
 	Entity e;
-	GameSystems::WarningIconSystem(this, scene);
 	if (GetLocalPlayer(e))
 	{
 		comp::KillDeaths* p = e.GetComponent<comp::KillDeaths>();
@@ -137,8 +136,6 @@ void Game::OnUserUpdate(float deltaTime)
 			}
 		}
 	}
-
-
 }
 
 void Game::OnShutdown()
@@ -554,10 +551,7 @@ void Game::CheckIncoming(message<GameMsg>& msg)
 			});
 		Scene& scene = GetScene("Game");
 		Collection2D* skipButtonUI = scene.GetCollection("SkipUI");
-		rtd::Button* skipButton = dynamic_cast<rtd::Button*>(skipButtonUI->elements[0].get());
-		rtd::Text* skipText = dynamic_cast<rtd::Text*>(skipButtonUI->elements[1].get());
-		skipText->SetVisiblity(true);
-		skipButton->SetVisiblity(true);
+		skipButtonUI->Show();
 
 		SoundHandler::Get().SetCurrentMusic("MenuTheme");
 		SetScene("Game");
@@ -1336,7 +1330,10 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 								scene.GetCollection("SpectateUI")->elements[0]->SetVisiblity(true);
 								scene.GetCollection("SpectateUI")->elements[1]->SetVisiblity(true);
 							}
-							else
+						}
+						else
+						{
+							if (e == m_players.at(m_localPID))
 							{
 								if (m_isSpectating)
 								{
@@ -1349,37 +1346,34 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 								}
 							}
 						}
-					}
-					comp::Health* health = e.GetComponent<comp::Health>();
-					comp::Transform* transform = e.GetComponent<comp::Transform>();
-					if (health && transform)
-					{
-						combat_text_inst_t cText;
-						// Signal health gain.
-						if (health->currentHealth <= hp.currentHealth)
+						comp::Health* health = e.GetComponent<comp::Health>();
+						comp::Transform* transform = e.GetComponent<comp::Transform>();
+						if (health && transform)
 						{
-							cText.type = combat_text_enum::HEALTH_GAIN;
-							cText.pos = transform->position;
-						}
-						else if (health->currentHealth > hp.currentHealth)
-						{
-							cText.type = combat_text_enum::HEALTH_LOSS;
-							cText.pos = transform->position;
-						}
-
-						cText.timeRendered = static_cast<float>(omp_get_wtime());
-						cText.pos.y += 15;
-						cText.end_pos = cText.pos;
-						cText.end_pos.y += 50;
-						cText.amount = std::abs(static_cast<int>(health->currentHealth - hp.currentHealth));
-						GetScene("Game").PushCombatText(cText);
-
-						comp::House* house = e.GetComponent<comp::House>();
-						if (house)
-						{
-							if (hp.currentHealth < health->currentHealth)
+							combat_text_inst_t cText;
+							// Signal health gain.
+							if (health->currentHealth <= hp.currentHealth)
 							{
-								LOG_INFO("House took damage");
+								cText.type = combat_text_enum::HEALTH_GAIN;
+								cText.pos = transform->position;
+							}
+							else if (health->currentHealth > hp.currentHealth)
+							{
+								cText.type = combat_text_enum::HEALTH_LOSS;
+								cText.pos = transform->position;
+							}
+
+							cText.timeRendered = static_cast<float>(omp_get_wtime());
+							cText.pos.y += 15;
+							cText.end_pos = cText.pos;
+							cText.end_pos.y += 50;
+							cText.amount = std::abs(static_cast<int>(health->currentHealth - hp.currentHealth));
+							scene.PushCombatText(cText);
+
+							comp::House* house = e.GetComponent<comp::House>();
+							if (house && hp.currentHealth < health->currentHealth)
+							{
+								LOG_INFO("HOUSE DAMAGED!");
 								house->displayWarning = true;
 								house->warningIcon.pos = e.GetComponent<comp::OrientedBoxCollider>()->Center;
 								house->warningIcon.timeRendered = omp_get_wtime();
@@ -1388,7 +1382,7 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 									//Create a new warning Icon and display it(6 exists as collections in the UI)
 									for (int i = 0; i < NR_OF_HOUSES && house->iconID == -1; i++)
 									{
-										Collection2D* collection = scene.GetCollection("HouseWarningIcon" + std::to_string(i + 1));
+										Collection2D* collection = scene.GetCollection("zzzzHouseWarningIcon" + std::to_string(i + 1));
 										rtd::Picture* icon = static_cast<rtd::Picture*>(collection->elements[0].get());
 										if (!icon->IsVisible())
 										{
@@ -1396,6 +1390,7 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 											icon->SetVisiblity(true);
 										}
 									}
+
 								}
 							}
 						}
@@ -1521,12 +1516,11 @@ void Game::OnHouseDestroy(entt::registry& registry, entt::entity e)
 	{
 		if (house->iconID != -1)
 		{
-			Collection2D* collection = GetScene("Game").GetCollection("HouseWarningIcon" + std::to_string(house->iconID + 1));
+			Collection2D* collection = GetScene("Game").GetCollection("zzzzHouseWarningIcon" + std::to_string(house->iconID + 1));
 			rtd::Picture* icon = static_cast<rtd::Picture*> (collection->elements[0].get());
 			icon->SetVisiblity(false);
 		}
 	}
-
 }
 
 void Game::UpdateInput()

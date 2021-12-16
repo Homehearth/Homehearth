@@ -51,7 +51,7 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		attackAbility->cooldown = 1.0f;
 		attackAbility->attackDamage = 15.f;
 		attackAbility->lifetime = 0.1f;
-		attackAbility->attackRange = 4.f;
+		attackAbility->attackRange = 3.f;
 		attackAbility->useTime = 0.3f;
 		attackAbility->delay = 0.2f;
 		attackAbility->movementSpeedAlt = 0.0f;
@@ -105,7 +105,7 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		attackAbility->cooldown = 0.8f;
 		attackAbility->attackDamage = 10.f;
 		attackAbility->lifetime = 0.3f;
-		attackAbility->attackRange = 7.0f;
+		attackAbility->attackRange = 3.0f;
 		attackAbility->useTime = 0.3f;
 		attackAbility->delay = 0.2f;
 		attackAbility->movementSpeedAlt = 0.0f;
@@ -125,7 +125,7 @@ Entity EnemyManagement::CreateEnemy(Simulation* simulation, sm::Vector3 spawnP, 
 		attackAbility->cooldown = 2.0f;
 		attackAbility->attackDamage = 20.f;
 		attackAbility->lifetime = 0.3f;
-		attackAbility->attackRange = 14.0f;
+		attackAbility->attackRange = 10.0f;
 		attackAbility->useTime = 0.3f;
 		attackAbility->delay = 0.2f;
 		attackAbility->movementSpeedAlt = 0.0f;
@@ -393,6 +393,12 @@ void ServerSystems::OnCycleChange(Simulation* simulation)
 		{
 		case CyclePeriod::MORNING:
 		{
+			if (simulation->m_rainEntity.GetComponent<comp::ParticleEmitter>())
+			{
+				simulation->m_rainEntity.RemoveComponent<comp::ParticleEmitter>();
+				simulation->m_rainEntity.UpdateNetwork();
+			}
+
 			simulation->m_timeCycler.ResetCycleSpeed();
 			// remove all bad guys
 			simulation->GetGameScene()->ForEachComponent<comp::Tag<BAD>>([=](Entity e, comp::Tag<BAD>&)
@@ -402,7 +408,8 @@ void ServerSystems::OnCycleChange(Simulation* simulation)
 					e.RemoveComponent<comp::Velocity>();
 					e.RemoveComponent<comp::BehaviorTree>();
 					e.GetComponent<comp::AnimationState>()->toSend = EAnimationType::DEAD;
-					e.GetComponent<comp::Health>()->currentHealth -= e.GetComponent<comp::Health>()->currentHealth;
+					comp::Health* hp = e.GetComponent<comp::Health>();
+					e.GetComponent<comp::Health>()->currentHealth -= hp->maxHealth;
 					
 					simulation->GetGameScene()->publish<EComponentUpdated>(e, ecs::Component::HEALTH);
 				});
@@ -426,6 +433,11 @@ void ServerSystems::OnCycleChange(Simulation* simulation)
 		}
 		case CyclePeriod::DAY:
 		{
+			if (simulation->m_rainEntity.GetComponent<comp::ParticleEmitter>())
+			{
+				simulation->m_rainEntity.RemoveComponent<comp::ParticleEmitter>();
+				simulation->m_rainEntity.UpdateNetwork();
+			}
 			break;
 		}
 		case CyclePeriod::NIGHT:
@@ -436,6 +448,15 @@ void ServerSystems::OnCycleChange(Simulation* simulation)
 			{
 				// start new wave
 				simulation->GetGameScene()->publish<ESceneCallWaveSystem>(0.0f);
+
+				if (rand()% 10 == 0)
+				{
+					simulation->m_rainEntity.AddComponent<comp::Network>();
+					simulation->m_rainEntity.AddComponent<comp::Transform>()->position = { 250, 80, -360 };
+					simulation->m_rainEntity.AddComponent<comp::ParticleEmitter>(sm::Vector3{ 0,0,0 }, 15000, 1.0f, ParticleMode::RAIN, 85.0f, 20.f, true);
+
+					simulation->m_rainEntity.UpdateNetwork();
+				}
 			}
 			break;
 		}
@@ -661,9 +682,9 @@ void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money
 					anim->toSend = EAnimationType::DEAD;
 				}
 
-				comp::Network* net = entity.GetComponent<comp::Network>();
-				health.isAlive = false;
 				scene.publish<EComponentUpdated>(entity, ecs::Component::HEALTH);
+				health.isAlive = false;
+
 				// increase money
 				if (entity.GetComponent<comp::Tag<BAD>>())
 				{
@@ -746,7 +767,14 @@ void ServerSystems::HealthSystem(HeadlessScene& scene, float dt, Currency& money
 					entity.RemoveComponent<comp::Tag<DYNAMIC>>();
 					entity.RemoveComponent<comp::Velocity>();
 					entity.RemoveComponent<comp::BehaviorTree>();
-					entity.GetComponent<comp::AnimationState>()->toSend = EAnimationType::DEAD;
+				}
+				else if(villager)
+				{
+					audio.type = ESoundEvent::Player_OnDeath;
+					entity.AddComponent<comp::SelfDestruct>()->lifeTime = 7.5f;
+					entity.RemoveComponent<comp::Tag<DYNAMIC>>();
+					entity.RemoveComponent<comp::Velocity>();
+					entity.RemoveComponent<comp::BehaviorTree>();
 				}
 				else
 				{
@@ -1039,7 +1067,6 @@ Entity VillagerManagement::CreateVillager(HeadlessScene& scene, Entity homeHouse
 	entity.AddComponent<comp::Tag<GOOD>>();
 
 	comp::Transform* transform = entity.AddComponent<comp::Transform>();
-	transform->scale = sm::Vector3(1.7f, 1.7f, 1.7f);
 	comp::Health* health = entity.AddComponent<comp::Health>();
 	comp::MeshName* meshName = entity.AddComponent<comp::MeshName>();
 	comp::AnimatorName* animatorName = entity.AddComponent<comp::AnimatorName>();
@@ -1057,6 +1084,23 @@ Entity VillagerManagement::CreateVillager(HeadlessScene& scene, Entity homeHouse
 	villager->homeHouse = homeHouse;
 	meshName->name = NameType::MESH_VILLAGER;
 	animatorName->name = AnimName::ANIM_VILLAGER;
+
+	//Set random sizes on villagers
+	switch (rand() % 3)
+	{
+	//Child
+	case 0:
+		transform->scale = sm::Vector3(1.2f, 1.2f, 1.2f);
+		break;
+	//Teenage
+	case 1:
+		transform->scale = sm::Vector3(1.45f, 1.45f, 1.45f);
+		break;
+	//Adult
+	case 2:
+		transform->scale = sm::Vector3(1.7f, 1.7f, 1.7f);
+		break;
+	}
 
 	bos->Radius = 3.f;
 	villager->movementSpeed = 15.f;

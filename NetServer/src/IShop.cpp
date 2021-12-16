@@ -62,6 +62,22 @@ void IShop::UseShop(const ShopItem& whatToBuy, const uint32_t& player)
 		}
 		case ShopItem::Heal:
 		{
+			int cost = 75;
+			if (m_sim->GetCurrency() < cost)
+				break;
+
+			comp::Health* h = m_sim->GetPlayer(player).GetComponent<comp::Health>();
+			if (h)
+			{
+				h->currentHealth += h->maxHealth * 0.25f;
+				m_sim->GetCurrency() -= cost;
+				m_sim->GetGameScene()->publish<EComponentUpdated>(m_sim->GetPlayer(player), ecs::Component::HEALTH);
+			}
+			break;
+			break;
+		}
+		case ShopItem::Health:
+		{
 			int cost = 150;
 			if (m_sim->GetCurrency() < cost)
 			{

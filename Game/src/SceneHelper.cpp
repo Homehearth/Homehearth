@@ -172,6 +172,8 @@ namespace sceneHelp
 
 				Systems::RotateWatermillWheel(scene, e.dt);
 
+				GameSystems::WarningIconSystem(scene);
+
 				if (game->m_players.find(game->m_localPID) != game->m_players.end())
 				{
 					Camera* cam = scene.GetCurrentCamera();
@@ -254,11 +256,16 @@ namespace sceneHelp
 						SoundHandler::Get().SetCurrentMusic("MenuTheme");
 						Collection2D* skipButtonUI = scene.GetCollection("SkipUI");
 						skipButtonUI->Show();
-						//rtd::Button* skipButton = dynamic_cast<rtd::Button*>(skipButtonUI->elements[0].get());
-						//rtd::Text* skipText = dynamic_cast<rtd::Text*>(skipButtonUI->elements[1].get());
-						//skipText->SetVisiblity(true);
-						//skipButton->SetVisiblity(true);
-
+						scene.ForEachComponent<comp::House>([=](comp::House& house) 
+							{
+								house.displayWarning = false;
+								house.iconID = -1;
+							});
+						for (int i = 0; i < NR_OF_HOUSES; i++)
+						{
+							Collection2D* collection = scene.GetCollection("zzzzHouseWarningIcon" + std::to_string(i + 1));
+							collection->Hide();
+						}
 						scene.ForEachComponent<comp::Light>([](comp::Light& l)
 							{
 								if (l.lightData.type == TypeLight::POINT)
@@ -535,8 +542,8 @@ namespace sceneHelp
 		for (int i = 0; i < NR_OF_HOUSES; i++)
 		{
 			Collection2D* houseWarning = new Collection2D;
-			houseWarning->AddElement<rtd::Picture>("WarningIcon.png", draw_t(0.f, 0.f, 40, 100));
-			scene.Add2DCollection(houseWarning, "HouseWarningIcon" + std::to_string(i + 1));
+			houseWarning->AddElement<rtd::Picture>("WarningIcon.png", draw_t(0.f, 0.f, widthScale * 0.025f, height * 0.1f));
+			scene.Add2DCollection(houseWarning, "zzzzHouseWarningIcon" + std::to_string(i + 1));
 			houseWarning->Hide();
 		}
 		sm::Vector2 moneyScale = { widthScale / 8.0f, height / 11.0f };
@@ -596,8 +603,8 @@ namespace sceneHelp
 		spectateText->SetVisiblity(false);
 		
 		Collection2D* skipCollection = new Collection2D;
-		rtd::Button* skipToNightButton = skipCollection->AddElement<rtd::Button>("Button.png", draw_t(width - ((widthScale / 9.f)), (height / 2) - (height / 8), (widthScale / 10.f), (height / 8.f)), false);
-		rtd::Text* skipToNightText = skipCollection->AddElement<rtd::Text>("Skip Day", draw_t(width - ((widthScale / 9.f)), (height / 2) - (height / 8), (widthScale / 10.f), (height / 8.f)));
+		rtd::Button* skipToNightButton = skipCollection->AddElement<rtd::Button>("SkipDay.png", draw_t(width - (widthScale / 6.f) - (widthScale * 0.01f), (height / 2) - (height / 8), (widthScale / 6.f), (height / 8.f)), false);
+		//rtd::Text* skipToNightText = skipCollection->AddElement<rtd::Text>("Skip Day", draw_t(width - ((widthScale / 9.f)), (height / 2) - (height / 8), (widthScale / 10.f), (height / 8.f)));
 
 		scene.Add2DCollection(skipCollection, "SkipUI");
 		skipToNightButton->SetOnPressedEvent([=]
@@ -723,7 +730,7 @@ namespace sceneHelp
 		// Armor upgrade button.
 		shop->SetOnPressedEvent(3, [=]()
 			{
-				game->SetShopItem(ShopItem::Primary_Upgrade);
+				game->SetShopItem(ShopItem::Heal);
 				audio_t audio = {};
 				audio.isUnique = false;
 				audio.volume = SoundHandler::Get().GetMasterVolume();
@@ -733,7 +740,7 @@ namespace sceneHelp
 		// Heal button.
 		shop->SetOnPressedEvent(4, [=]()
 			{
-				game->SetShopItem(ShopItem::Heal);
+				game->SetShopItem(ShopItem::Health);
 				audio_t audio = {};
 				audio.isUnique = false;
 				audio.volume = SoundHandler::Get().GetMasterVolume();

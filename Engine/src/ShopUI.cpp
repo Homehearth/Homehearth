@@ -8,7 +8,7 @@ constexpr unsigned int TOWER_1X1_COST = 100;
 constexpr unsigned int TOWER_1X3_COST = 250;
 constexpr unsigned int PRIMARY_ABILITITY_COST = 300;
 constexpr unsigned int HEAL_COST = 150;
-constexpr unsigned int ARMOR_COST = 150;
+constexpr unsigned int ARMOR_COST = 75; // Actually heal cost.
 constexpr unsigned int REMOVE_DEFENCE_COST = 0;
 
 using namespace rtd;
@@ -22,6 +22,10 @@ rtd::ShopUI::ShopUI(const std::string& filePath, const draw_t& opts)
 	m_signTexture = std::make_unique<Picture>("NotEnoughMoneySign.png", draw_t(0.0f, 0.0f, widthScale * 0.15f, height * 0.075f));
 	m_signText = std::make_unique<Text>("Money", draw_t(0.0f, 0.0f, widthScale * 0.15f, height * 0.075f));
     m_drawOpts = opts;
+	m_chosenBorder = std::make_unique<Border>();
+	m_chosenBorder->SetColor(D2D1::ColorF(0.0f, 1.0f, 0.0f));
+	m_chosenBorder->SetVisiblity(false);
+	m_chosenBorder->SetShape(Shapes::RECTANGLE_ROUNDED_OUTLINED);
 }
 
 void rtd::ShopUI::SetMoneyRef(MoneyUI* money)
@@ -44,6 +48,14 @@ void ShopUI::Draw()
     if (m_texture)
         m_texture->Draw();
 
+	if (m_chosenBorder)
+	{
+		if (m_chosenBorder->IsVisible())
+		{
+			m_chosenBorder->Draw();
+		}
+	}
+
 	if (m_signTexture && m_signText)
 	{
 		if (m_signTexture->IsVisible())
@@ -52,6 +64,7 @@ void ShopUI::Draw()
 			m_signText->Draw();
 		}
 	}
+
 }
 
 void ShopUI::OnClick()
@@ -78,9 +91,9 @@ bool ShopUI::CheckHover()
 
 	// 1x1 defence button.
 	if (InputSystem::Get().GetMousePos().x > m_drawOpts.x_pos + m_drawOpts.width * 0.15f &&
-		InputSystem::Get().GetMousePos().x < m_drawOpts.x_pos + m_drawOpts.width * 0.45f &&
-		InputSystem::Get().GetMousePos().y > m_drawOpts.y_pos + m_drawOpts.height * 0.15f &&
-		InputSystem::Get().GetMousePos().y < m_drawOpts.y_pos + m_drawOpts.height * 0.45f)
+		InputSystem::Get().GetMousePos().x < m_drawOpts.x_pos + m_drawOpts.width * 0.475f &&
+		InputSystem::Get().GetMousePos().y > m_drawOpts.y_pos + m_drawOpts.height * 0.14f &&
+		InputSystem::Get().GetMousePos().y < m_drawOpts.y_pos + m_drawOpts.height * 0.40f)
 	{
 		m_buttonHovering[0] = true;
 		//LOG_INFO("1x1 Defence hovering");
@@ -96,13 +109,16 @@ bool ShopUI::CheckHover()
 		else
 			m_signTexture->SetTexture("NotEnoughMoneySign.png");
 
+		m_chosenBorder->UpdatePos(draw_t(m_drawOpts.x_pos + m_drawOpts.width * 0.15f, m_drawOpts.y_pos + m_drawOpts.height * 0.14f, m_drawOpts.width * 0.475f - m_drawOpts.x_pos, m_drawOpts.height * 0.40f - m_drawOpts.y_pos));
+		m_chosenBorder->SetVisiblity(true);
+
 		hoveringState = ElementState::INSIDE;
 	}
 
 	// 1x3 defence button.
-	if (InputSystem::Get().GetMousePos().x > m_drawOpts.x_pos + m_drawOpts.width * 0.52f &&
+	if (InputSystem::Get().GetMousePos().x > m_drawOpts.x_pos + m_drawOpts.width * 0.53f &&
 		InputSystem::Get().GetMousePos().x < m_drawOpts.x_pos + m_drawOpts.width * 0.85f &&
-		InputSystem::Get().GetMousePos().y > m_drawOpts.y_pos + m_drawOpts.height * 0.15f &&
+		InputSystem::Get().GetMousePos().y > m_drawOpts.y_pos + m_drawOpts.height * 0.14f &&
 		InputSystem::Get().GetMousePos().y < m_drawOpts.y_pos + m_drawOpts.height * 0.45f)
 	{
 		m_buttonHovering[1] = true;
@@ -119,14 +135,17 @@ bool ShopUI::CheckHover()
 		else
 			m_signTexture->SetTexture("NotEnoughMoneySign.png");
 
+		m_chosenBorder->UpdatePos(draw_t(m_drawOpts.x_pos + m_drawOpts.width * 0.53f, m_drawOpts.y_pos + m_drawOpts.height * 0.14f, m_drawOpts.width * 0.475f - m_drawOpts.x_pos, m_drawOpts.height * 0.40f - m_drawOpts.y_pos));
+		m_chosenBorder->SetVisiblity(true);
+
 		hoveringState = ElementState::INSIDE;
 	}
 
 	// Attack button.
-	if (InputSystem::Get().GetMousePos().x > m_drawOpts.x_pos + m_drawOpts.width * 0.15f &&
-		InputSystem::Get().GetMousePos().x < m_drawOpts.x_pos + m_drawOpts.width * 0.33f &&
-		InputSystem::Get().GetMousePos().y > m_drawOpts.y_pos + m_drawOpts.height * 0.55f &&
-		InputSystem::Get().GetMousePos().y < m_drawOpts.y_pos + m_drawOpts.height * 0.75f)
+	if (InputSystem::Get().GetMousePos().x > m_drawOpts.x_pos + m_drawOpts.width * 0.17f &&
+		InputSystem::Get().GetMousePos().x < m_drawOpts.x_pos + m_drawOpts.width * 0.35f &&
+		InputSystem::Get().GetMousePos().y > m_drawOpts.y_pos + m_drawOpts.height * 0.57f &&
+		InputSystem::Get().GetMousePos().y < m_drawOpts.y_pos + m_drawOpts.height * 0.715f)
 	{
 		m_buttonHovering[2] = true;
 		//LOG_INFO("Attack Upgrade hovering");
@@ -146,14 +165,17 @@ bool ShopUI::CheckHover()
 		else
 			m_signTexture->SetTexture("NotEnoughMoneySign.png");
 
+		m_chosenBorder->UpdatePos(draw_t(m_drawOpts.x_pos + m_drawOpts.width * 0.17f, m_drawOpts.y_pos + m_drawOpts.height * 0.57f, (m_drawOpts.x_pos + m_drawOpts.width * 0.35f) - (m_drawOpts.x_pos + m_drawOpts.width * 0.17f), (m_drawOpts.y_pos + m_drawOpts.height * 0.715f) - (m_drawOpts.y_pos + m_drawOpts.height * 0.57f)));
+		m_chosenBorder->SetVisiblity(true);
+
 		hoveringState = ElementState::INSIDE;
 	}
 
-	// Armour button.
-	if (InputSystem::Get().GetMousePos().x > m_drawOpts.x_pos + m_drawOpts.width * 0.4f &&
+	// Heal button.
+	if (InputSystem::Get().GetMousePos().x > m_drawOpts.x_pos + m_drawOpts.width * 0.41f &&
 		InputSystem::Get().GetMousePos().x < m_drawOpts.x_pos + m_drawOpts.width * 0.6f &&
-		InputSystem::Get().GetMousePos().y > m_drawOpts.y_pos + m_drawOpts.height * 0.55f &&
-		InputSystem::Get().GetMousePos().y < m_drawOpts.y_pos + m_drawOpts.height * 0.75f)
+		InputSystem::Get().GetMousePos().y > m_drawOpts.y_pos + m_drawOpts.height * 0.56f &&
+		InputSystem::Get().GetMousePos().y < m_drawOpts.y_pos + m_drawOpts.height * 0.71f)
 	{
 		m_buttonHovering[3] = true;
 		//LOG_INFO("Armor Upgrade hovering");
@@ -173,14 +195,17 @@ bool ShopUI::CheckHover()
 		else
 			m_signTexture->SetTexture("NotEnoughMoneySign.png");
 
+		m_chosenBorder->UpdatePos(draw_t(m_drawOpts.x_pos + m_drawOpts.width * 0.41f, m_drawOpts.y_pos + m_drawOpts.height * 0.56f, (m_drawOpts.x_pos + m_drawOpts.width * 0.6f) - (m_drawOpts.x_pos + m_drawOpts.width * 0.41f), (m_drawOpts.y_pos + m_drawOpts.height * 0.71f) - (m_drawOpts.y_pos + m_drawOpts.height * 0.56f)));
+		m_chosenBorder->SetVisiblity(true);
+
 		hoveringState = ElementState::INSIDE;
 	}
 
 	// Health button.
-	if (InputSystem::Get().GetMousePos().x > m_drawOpts.x_pos + m_drawOpts.width * 0.66f &&
+	if (InputSystem::Get().GetMousePos().x > m_drawOpts.x_pos + m_drawOpts.width * 0.65f &&
 		InputSystem::Get().GetMousePos().x < m_drawOpts.x_pos + m_drawOpts.width * 0.85f &&
-		InputSystem::Get().GetMousePos().y > m_drawOpts.y_pos + m_drawOpts.height * 0.55f &&
-		InputSystem::Get().GetMousePos().y < m_drawOpts.y_pos + m_drawOpts.height * 0.75f)
+		InputSystem::Get().GetMousePos().y > m_drawOpts.y_pos + m_drawOpts.height * 0.56f &&
+		InputSystem::Get().GetMousePos().y < m_drawOpts.y_pos + m_drawOpts.height * 0.715f)
 	{
 		m_buttonHovering[4] = true;
 		//LOG_INFO("Health Upgrade hovering");
@@ -198,6 +223,9 @@ bool ShopUI::CheckHover()
 		}
 		else
 			m_signTexture->SetTexture("NotEnoughMoneySign.png");
+
+		m_chosenBorder->UpdatePos(draw_t(m_drawOpts.x_pos + m_drawOpts.width * 0.66f, m_drawOpts.y_pos + m_drawOpts.height * 0.56f, (m_drawOpts.x_pos + m_drawOpts.width * 0.85f) - (m_drawOpts.x_pos + m_drawOpts.width * 0.66f), (m_drawOpts.y_pos + m_drawOpts.height * 0.715f) - (m_drawOpts.y_pos + m_drawOpts.height * 0.56f)));
+		m_chosenBorder->SetVisiblity(true);
 
 		hoveringState = ElementState::INSIDE;
 	}
@@ -222,11 +250,17 @@ bool ShopUI::CheckHover()
 		else
 			m_signTexture->SetTexture("NotEnoughMoneySign.png");
 
+		m_chosenBorder->UpdatePos(draw_t(m_drawOpts.x_pos + m_drawOpts.width * 0.18, m_drawOpts.y_pos + m_drawOpts.height * 0.80f, (m_drawOpts.x_pos + m_drawOpts.width * 0.77f) - (m_drawOpts.x_pos + m_drawOpts.width * 0.18f), (m_drawOpts.y_pos + m_drawOpts.height) - (m_drawOpts.y_pos + m_drawOpts.height * 0.80f)));
+		m_chosenBorder->SetVisiblity(true);
+
 		hoveringState = ElementState::INSIDE;
 	}
 
 	if (hoveringState == ElementState::NONE)
+	{
+		m_chosenBorder->SetVisiblity(false);
 		m_signTexture->SetVisiblity(false);
+	}
 
 	// Main shop UI bounds.
 	if (InputSystem::Get().GetMousePos().x > m_drawOpts.x_pos &&
@@ -279,7 +313,6 @@ ElementState ShopUI::CheckClick()
 				if (m_functions[3])
 				{
 					m_functions[3]();
-					m_armorUpgradeCount++;
 				}
 					
 					

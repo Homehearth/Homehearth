@@ -115,6 +115,7 @@ void ParticleSystem::InitializeParticles(entt::registry& reg, entt::entity ent)
 			m_tempParticle.velocity.Normalize();
 			m_tempParticle.size = sm::Vector2(emitter->sizeMulitplier, emitter->sizeMulitplier);
 			RandomAddSize(-0.5f, 0.5f);
+			m_tempParticle.color = sm::Vector4(0, 0, 0.0f, 1);
 			break;
 		}
 		case ParticleMode::UPGRADE:

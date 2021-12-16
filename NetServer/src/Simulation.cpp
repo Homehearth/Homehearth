@@ -192,7 +192,7 @@ void Simulation::ResetPlayer(Entity player)
 		attackAbility->lifetime = 0.1f;
 		attackAbility->useTime = 0.5f;
 		attackAbility->delay = 0.2f;
-		attackAbility->attackRange = 8.f;
+		attackAbility->attackRange = 5.f;
 		attackAbility->movementSpeedAlt = 0.5f;
 
 		playerComp->primaryAbilty = entt::resolve<comp::MeleeAttackAbility>();
@@ -484,6 +484,7 @@ bool Simulation::Create(uint32_t gameID, std::vector<dx::BoundingOrientedBox>* m
 	this->BuildMapColliders(mapColliders);
 	EnemyManagement::CreateWaves(waveQueue, currentRound++);
 
+	m_rainEntity = m_pGameScene->CreateEntity();
 	m_pCurrentScene = m_pLobbyScene;
 
 	return true;
