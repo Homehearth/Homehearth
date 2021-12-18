@@ -194,22 +194,22 @@ RWStructuredBuffer<uint> t_LightIndexList						: register(u4);
 RWTexture2D<float4> rw_heatMap									: register(u5);
 Texture2D t_LightCountHeatMap									: register(t24);
 
-RWStructuredBuffer<uint> o_LightIndexCounter 					: register(u6);
-RWStructuredBuffer<uint> t_LightIndexCounter					: register(u7);
+globallycoherent RWStructuredBuffer<uint> o_LightIndexCounter   : register(u6);
+globallycoherent RWStructuredBuffer<uint> t_LightIndexCounter   : register(u7);
 
 // Blur Pass (2) 
-RWTexture2D<unorm float4> t_bufferRead                  : register(u0);
-RWTexture2D<unorm float4> t_bufferOut                   : register(u1);
-RWTexture2D<unorm float4> t_inFocus                     : register(u2);
-RWTexture2D<unorm float4> t_outOfFocus                  : register(u3);
-RWTexture2D<float4> t_dofOut                            : register(u4);
-RWTexture2D<float4> t_backBufferOut                     : register(u5);
+RWTexture2D<unorm float4> t_bufferRead                          : register(u0);
+RWTexture2D<unorm float4> t_bufferOut                           : register(u1);
+RWTexture2D<unorm float4> t_inFocus                             : register(u2);
+RWTexture2D<unorm float4> t_outOfFocus                          : register(u3);
+RWTexture2D<float4> t_dofOut                                    : register(u4);
+RWTexture2D<float4> t_backBufferOut                             : register(u5);
 
 // Water (1)
-RWTexture2D<unorm float4> u_waterFloorTexture           : register(u5);
-RWTexture2D<float4> u_waterTexture                      : register(u6);
-RWTexture2D<float4> u_waterTextureN                     : register(u7);
+RWTexture2D<unorm float4> u_waterFloorTexture                   : register(u5);
+RWTexture2D<float4> u_waterTexture                              : register(u6);
+RWTexture2D<float4> u_waterTextureN                             : register(u7);
 
 // Particles (3)
-RWStructuredBuffer<VertexParticleIn> particlesUAV       : register(u7);
+RWStructuredBuffer<VertexParticleIn> particlesUAV               : register(u7);
 

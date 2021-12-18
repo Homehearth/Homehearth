@@ -128,6 +128,8 @@ void main(ComputeShaderIn input)
 	// assuming left-handed coord.
     Plane minPlane = { float3(0, 0, 1), minDepthVS };
 
+    //Frustum frustum = GroupFrustum;
+
     Frustum frustum = in_Frustums[input.dispatchThreadID.x + (input.dispatchThreadID.y * numThreads.x)];
     // Each thread in a group will cull 1 light until all lights have been culled.
     for (uint i = input.groupIndex; i < c_info.x; i += TILE_SIZE * TILE_SIZE)
@@ -140,8 +142,8 @@ void main(ComputeShaderIn input)
             {
                 case DIRECTIONAL_LIGHT:
 				{
-                        t_AppendLight(i);
-                        o_AppendLight(i);
+                        //t_AppendLight(i);
+                        //o_AppendLight(i);
                     break;
                 }
                 case POINT_LIGHT:
@@ -189,12 +191,12 @@ void main(ComputeShaderIn input)
 
 	// Now update the light index list (all threads).
 	// For opaque geometry.
-    for (uint i = input.groupIndex; i < o_LightCount; i += TILE_SIZE * TILE_SIZE)
+    for (i = input.groupIndex; i < o_LightCount; i += TILE_SIZE * TILE_SIZE)
     {
         o_LightIndexList[o_LightIndexStartOffset + i] = o_LightList[i];
     }
 	// For transparent geometry.
-    for (uint i = input.groupIndex; i < t_LightCount; i += TILE_SIZE * TILE_SIZE)
+    for (i = input.groupIndex; i < t_LightCount; i += TILE_SIZE * TILE_SIZE)
     {
         t_LightIndexList[t_LightIndexStartOffset + i] = t_LightList[i];
     }
@@ -210,7 +212,7 @@ void main(ComputeShaderIn input)
     }
     else if (o_LightCount > 0)
     {
-        float normalizedLightCount = o_LightCount / 10.0f;
+        float normalizedLightCount = o_LightCount / 50.0f;
         float4 lightCountHeatMapColor = t_LightCountHeatMap.SampleLevel(s_linearClamp, float2(normalizedLightCount, 0), 0);
         rw_heatMap[texCoord] = lightCountHeatMapColor;
     }
