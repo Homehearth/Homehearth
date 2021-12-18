@@ -215,7 +215,7 @@ void Renderer::InitilializeForwardPlus(Camera* camera)
 	//
     // Update DispatchParams.
     //
-
+    
     const dx::XMUINT4 numThreads = {
     	(uint32_t)std::ceil((float)screenWidth / (float)TILE_SIZE),
         (uint32_t)std::ceil((float)screenHeight / (float)TILE_SIZE),
@@ -230,9 +230,9 @@ void Renderer::InitilializeForwardPlus(Camera* camera)
     	1u
     };
 
-    const uint32_t numFrustums = { (screenWidth / TILE_SIZE) * (screenHeight / TILE_SIZE) };
+    const uint32_t numFrustums = { numThreads.x * numThreads.y };
 
-    m_pipelineManager.m_dispatchParams.numThreadGroups = numThreadGroups;
+    m_pipelineManager.m_dispatchParams.numThreadGroups = numThreads;
     m_pipelineManager.m_dispatchParams.numThreads = numThreads;
     m_pipelineManager.m_dispatchParamsCB.SetData(m_d3d11->DeviceContext(), m_pipelineManager.m_dispatchParams);
 
@@ -242,8 +242,7 @@ void Renderer::InitilializeForwardPlus(Camera* camera)
 
     m_pipelineManager.m_screenToViewParams.screenDimensions.x = static_cast<float>(screenWidth);
     m_pipelineManager.m_screenToViewParams.screenDimensions.y = static_cast<float>(screenHeight);
-    dx::XMStoreFloat4x4(&m_pipelineManager.m_screenToViewParams.inverseProjection,
-      camera->GetInverseProjection());
+    m_pipelineManager.m_screenToViewParams.inverseProjection = camera->GetProjection().Invert();
     m_pipelineManager.m_screenToViewParamsCB.SetData(m_d3d11->DeviceContext(), m_pipelineManager.m_screenToViewParams);
 
     //

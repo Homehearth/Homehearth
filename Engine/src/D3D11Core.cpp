@@ -121,9 +121,7 @@ bool D3D11Core::createDeviceAndSwapChain()
     // Set the feature level to dx 11.
     D3D_FEATURE_LEVEL featureLevels[]
     {
-        D3D_FEATURE_LEVEL_11_0,
-        D3D_FEATURE_LEVEL_10_1,
-        D3D_FEATURE_LEVEL_10_0
+        D3D_FEATURE_LEVEL_11_0
     };
 
     // Create the m_device, swap chain and m_device context.
