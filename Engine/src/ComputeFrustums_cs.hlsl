@@ -23,8 +23,9 @@ void main(ComputeShaderIn input)
 {
     // View space eye position is always at the origin.
     const float3 eyePos = float3(0, 0, 0);
-
+   
     // Compute the 4 corner points on the far clipping plane to use as the frustum vertices.
+    // clockwise from top-left
     float4 screenSpace[NUM_CORNERS];
     screenSpace[TOP_LEFT]       = float4(input.dispatchThreadID.xy * TILE_SIZE, 1.0f, 1.0f);
     screenSpace[TOP_RIGHT]      = float4(float2(input.dispatchThreadID.x + 1, input.dispatchThreadID.y) * TILE_SIZE, 1.0f, 1.0f);   // assuming left-handed coord: z is positive.
@@ -37,7 +38,9 @@ void main(ComputeShaderIn input)
         viewSpace[i] = ScreenToView(screenSpace[i]).xyz;
     }
 
-    // Now build the frustum planes from the view space points.
+    // create plane equations for the four sides of the frustum, 
+	// remember view space is left handed, so use the left-hand rule to determine 
+	// cross product direction
     Frustum frustum;
     frustum.planes[TOP]     = ComputePlane(viewSpace[TOP_LEFT], viewSpace[TOP_RIGHT]);
     frustum.planes[RIGHT]   = ComputePlane(viewSpace[TOP_RIGHT], viewSpace[BOTTOM_RIGHT]);

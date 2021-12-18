@@ -6,10 +6,8 @@ float4 ClipToView(float4 clip)
 {
     // View space position.
     float4 view = mul(inverseProjection, clip);
-
     // Perspective projection.
     view = view / view.w;
-
     return view;
 }
 
@@ -17,10 +15,8 @@ float4 ScreenToView(float4 screen)
 {
     // Convert to normalized texture coordinates.
     const float2 texCoord = screen.xy / screenDimensions;
-
     // Convert to clip space.
     const float4 clip = float4(float2(texCoord.x, 1.0f - texCoord.y) * 2.0f - 1.0f, screen.z, screen.w);
-
     return ClipToView(clip);
 }
 
@@ -32,13 +28,18 @@ Plane ComputePlane(float3 b, float3 c)
 	// -(n dot a), except we know "a" is the origin
     plane.normal = normalize(cross(b, c));
 
+    // -(n dot a), except we know "a" is the origin
     plane.distanceToOrigin = 0;
 
-    return plane;
+	return plane;
 }
 
 bool SphereInsidePlane(Sphere sphere, Plane plane)
 {
+    // point-plane distance, simplified for the case where 
+    // the plane passes through the origin.
+    // dot( plane.normal.xyz, sphere.center.xyz ) + plane.d, , except we know plane.d is zero 
+    // (see ComputePlane above)
     return dot(plane.normal, sphere.center) < -sphere.radius;
 }
 

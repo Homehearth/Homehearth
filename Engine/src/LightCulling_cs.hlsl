@@ -71,9 +71,8 @@ void main(ComputeShaderIn input)
 	//float zFar = 220.f;
 
 	// Linearize the depth value from depth buffer (must do this because we created it using projection)
-	//fDepth = (0.5 * c_projection[3][2]) / (fDepth + 0.5 * c_projection[2][2] - 0.5);
-	
-	//fDepth = ((2.0f * zNear) / (zFar + zNear - fDepth * (zFar - zNear)));
+	//float flinear = zNear / (zFar - fDepth * (zFar - zNear)) * zFar;
+	//fDepth = (flinear * 2.0) - 1.0;
 
 	// atomic operations only work on integers,
 	// hence we reinterrpret the bits from the
@@ -129,7 +128,7 @@ void main(ComputeShaderIn input)
 	// assuming left-handed coord.
     Plane minPlane = { float3(0, 0, 1), minDepthVS };
 
-	Frustum frustum = in_Frustums[input.groupID.x + (input.groupID.y * numThreadGroups.x)];
+	//Frustum frustum = in_Frustums[input.dispatchThreadID.x + (input.dispatchThreadID.y * numThreads.x)];
     // Each thread in a group will cull 1 light until all lights have been culled.
 	for (uint i = input.groupIndex; i < c_info.x; i += TILE_SIZE * TILE_SIZE)
 	{
@@ -148,7 +147,7 @@ void main(ComputeShaderIn input)
 				case POINT_LIGHT:
 				{
 					Sphere sphere = { light.positionVS.xyz, light.range };
-					if (SphereInsideFrustum(sphere, frustum, nearClipVS, maxDepthVS))
+					if (SphereInsideFrustum(sphere, GroupFrustum, nearClipVS, maxDepthVS))
 					{
 						// Add light to light list for transparent geometry.
 						t_AppendLight(i);
@@ -174,7 +173,7 @@ void main(ComputeShaderIn input)
 	// First update the light grid (only thread 0 in group needs to do this)
 	if (input.groupIndex == 0)
 	{
-		// InterlockedAdd guarantees that the group - shared light count variabl is only updated by a single thread at a time.
+		// InterlockedAdd guarantees that the group - shared light count variable is only updated by a single thread at a time.
 		// This way we avoid any race conditions that may occur when multiple threads try to increment the group-shared light count at the same time.
 
 		// Update light grid for opaque geometry.
@@ -189,7 +188,7 @@ void main(ComputeShaderIn input)
 	GroupMemoryBarrierWithGroupSync();
 
 	// Now update the light index list (all threads).
-	// For opaque goemetry.
+	// For opaque geometry.
 	for (uint i = input.groupIndex; i < o_LightCount; i += TILE_SIZE * TILE_SIZE)
 	{
 		o_LightIndexList[o_LightIndexStartOffset + i] = o_LightList[i];

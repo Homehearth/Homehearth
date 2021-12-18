@@ -114,6 +114,7 @@ cbuffer ScreenToViewParamsCB : register(b11)
 {
     float4x4 inverseProjection;
     float2 screenDimensions;
+    float2 padding2;
 }
 
 cbuffer DispatchParamsCB : register (b12) 

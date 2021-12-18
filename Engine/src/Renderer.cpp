@@ -189,15 +189,11 @@ void Renderer::UpdatePerFrame(Camera* pCam)
 
         m_pipelineManager.m_screenToViewParams.screenDimensions.x = static_cast<float>(screenWidth);
         m_pipelineManager.m_screenToViewParams.screenDimensions.y = static_cast<float>(screenHeight);
-
-        m_pipelineManager.m_screenToViewParams.inverseProjection = pCam->GetInverseProjection();
-
+        m_pipelineManager.m_screenToViewParams.inverseProjection = pCam->GetProjection().Invert();
         m_pipelineManager.m_screenToViewParamsCB.SetData(m_d3d11->DeviceContext(), m_pipelineManager.m_screenToViewParams);
 
         if (!m_isForwardPlusInitialized)
             InitilializeForwardPlus(pCam);
-
-
 	}
 }
 
@@ -215,20 +211,26 @@ void Renderer::InitilializeForwardPlus(Camera* camera)
     // [x, y] screen resolution and [z, z] tile size yield [x/z, y/z] grid size.
     // Resulting in a total of x/z * y/z frustums.
     constexpr uint32_t TILE_SIZE = 16u;
-    const uint32_t numFrustums = { (screenWidth / TILE_SIZE) * (screenHeight / TILE_SIZE) };
 
 	//
     // Update DispatchParams.
     //
 
-    const dx::XMUINT4 numThreads = { static_cast<uint32_t>(std::ceil(screenWidth / TILE_SIZE)), static_cast<uint32_t>(std::ceil(screenHeight / TILE_SIZE)), 1u, 1u };
-    const dx::XMUINT4 numThreadGroups = { static_cast<uint32_t>(std::ceil((float)numThreads.x / (float)TILE_SIZE)), static_cast<uint32_t>(std::ceil((float)numThreads.y / (float)TILE_SIZE)), 1u, 1u };
+    const dx::XMUINT4 numThreads = {
+    	(uint32_t)std::ceil((float)screenWidth / (float)TILE_SIZE),
+        (uint32_t)std::ceil((float)screenHeight / (float)TILE_SIZE),
+        1u, 
+        1u
+    };
 
-    const uint32_t count = numThreads.x * numThreads.y * numThreads.z; // numGridCells
-    if (numFrustums != count)
-    {
-        LOG_WARNING("numFrustums != count")
-    }
+    const dx::XMUINT4 numThreadGroups = {
+        (uint32_t)std::ceil((float)numThreads.x / (float)TILE_SIZE),
+        (uint32_t)std::ceil((float)numThreads.y / (float)TILE_SIZE),
+    	1u,
+    	1u
+    };
+
+    const uint32_t numFrustums = { (screenWidth / TILE_SIZE) * (screenHeight / TILE_SIZE) };
 
     m_pipelineManager.m_dispatchParams.numThreadGroups = numThreadGroups;
     m_pipelineManager.m_dispatchParams.numThreads = numThreads;
@@ -250,9 +252,9 @@ void Renderer::InitilializeForwardPlus(Camera* camera)
     //
     
     //out_Frustums Forward+
-    m_pipelineManager.m_frustums_data.resize(count);
-   // m_pipelineManager.CreateCopyBuffer(m_pipelineManager.m_frustums.buffer.GetAddressOf(),
-	//	sizeof(frustum_t), m_pipelineManager.m_frustums_data.size());
+    m_pipelineManager.m_frustums_data.resize(numFrustums);
+	//m_pipelineManager.CreateCopyBuffer(m_pipelineManager.m_frustums.buffer.GetAddressOf(),
+		//sizeof(frustum_t), m_pipelineManager.m_frustums_data.size());
     m_pipelineManager.CreateStructuredBuffer(m_pipelineManager.m_frustums_data.data(),
         sizeof(frustum_t), m_pipelineManager.m_frustums_data.size(), m_pipelineManager.m_frustums);
 
@@ -275,7 +277,7 @@ void Renderer::InitilializeForwardPlus(Camera* camera)
     //
     // Create LightIndexList.
     //
-    if (!CreateLightIndexListRWB(count))
+    if (!CreateLightIndexListRWB(numFrustums))
     {
         LOG_ERROR("failed to create LightIndexListRWB")
     }
@@ -348,7 +350,7 @@ bool Renderer::CreateLightGridRWB()
     return !FAILED(hr);
 }
 
-bool Renderer::CreateLightIndexListRWB(const uint32_t& COUNT)
+bool Renderer::CreateLightIndexListRWB(const uint32_t& numFrustums)
 {
     // Size of the light index list: for a screen resolution of 1280x720 and
     // a tile size of 16x16 results in a 80x45 (3, 600) light grid.
@@ -360,7 +362,7 @@ bool Renderer::CreateLightIndexListRWB(const uint32_t& COUNT)
     // usage will double.
 
     // Size of the light index list:
-    const uint32_t SIZE = COUNT * m_pipelineManager.AVG_LIGHTS_PER_TILE;
+    const uint32_t SIZE = numFrustums * m_pipelineManager.AVG_LIGHTS_PER_TILE;
 
     m_pipelineManager.o_LightIndexList_data.clear();
     m_pipelineManager.t_LightIndexList_data.clear();
@@ -404,7 +406,7 @@ bool Renderer::CreateLightIndexCounterRWB()
 
 bool Renderer::CreateHeatMapRWB()
 {
-    ComPtr<ID3D11Texture2D> texture2D = nullptr;
+    ComPtr<ID3D11Texture2D> texture2D;
 
     D3D11_TEXTURE2D_DESC textureDesc;
     ZeroMemory(&textureDesc, sizeof(D3D11_TEXTURE2D_DESC));
