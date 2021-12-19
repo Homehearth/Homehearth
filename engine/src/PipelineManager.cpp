@@ -119,18 +119,18 @@ bool PipelineManager::CreateStructuredBuffer(ComPtr<ID3D11Buffer>& buffer, void*
     buffer.Reset();
     uav.Reset();
 
-    D3D11_BUFFER_DESC sBufferDesc = {};
-    D3D11_SUBRESOURCE_DATA sBufferSub = {};
+    D3D11_BUFFER_DESC bufferDesc = {};
+    D3D11_SUBRESOURCE_DATA dataDesc = {};
 
-    sBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-    sBufferDesc.ByteWidth = byteStride * arraySize;
-    sBufferDesc.BindFlags = D3D11_BIND_UNORDERED_ACCESS;
-    sBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ | D3D11_CPU_ACCESS_WRITE;
-    sBufferDesc.StructureByteStride = byteStride;
-    sBufferDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
-    sBufferSub.pSysMem = data;
+    bufferDesc.Usage = D3D11_USAGE_DEFAULT;
+    bufferDesc.ByteWidth = byteStride * arraySize;
+    bufferDesc.BindFlags = D3D11_BIND_UNORDERED_ACCESS;
+    bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ | D3D11_CPU_ACCESS_WRITE;
+    bufferDesc.StructureByteStride = byteStride;
+    bufferDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
+    dataDesc.pSysMem = data;
 
-    HRESULT hr = m_d3d11->Device()->CreateBuffer(&sBufferDesc, &sBufferSub, buffer.GetAddressOf());
+    HRESULT hr = m_d3d11->Device()->CreateBuffer(&bufferDesc, &dataDesc, buffer.GetAddressOf());
     if (FAILED(hr))
         return false;
 
@@ -145,39 +145,24 @@ bool PipelineManager::CreateStructuredBuffer(ComPtr<ID3D11Buffer>& buffer, void*
     return !FAILED(hr);
 }
 
-bool PipelineManager::CreateCopyBuffer(ID3D11Buffer** buffer, unsigned byteStride, unsigned arraySize)
-{
-    D3D11_BUFFER_DESC outputDesc = {};
-    outputDesc.ByteWidth = byteStride * arraySize;
-    outputDesc.StructureByteStride = byteStride;
-    outputDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
-
-    outputDesc.Usage = D3D11_USAGE_STAGING;
-    outputDesc.BindFlags = 0;
-    outputDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ | D3D11_CPU_ACCESS_WRITE;
-
-    HRESULT hr = m_d3d11->Device()->CreateBuffer(&outputDesc, nullptr, buffer);
-    return !FAILED(hr);
-}
-
 bool PipelineManager::CreateStructuredBuffer(void* data, unsigned byteStride, unsigned arraySize, ResourceAccessView& rav)
 {
     rav.buffer.Reset();
     rav.uav.Reset();
     rav.srv.Reset();
 
-    D3D11_BUFFER_DESC sBufferDesc = {};
-    D3D11_SUBRESOURCE_DATA sBufferSub = {};
+    D3D11_BUFFER_DESC bufferDesc = {};
+    D3D11_SUBRESOURCE_DATA dataDesc = {};
 
-    sBufferDesc.ByteWidth = byteStride * arraySize;
-    sBufferDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
-    sBufferDesc.BindFlags = D3D11_BIND_UNORDERED_ACCESS | D3D11_BIND_SHADER_RESOURCE;
-    sBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ | D3D11_CPU_ACCESS_WRITE;
-    sBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-    sBufferDesc.StructureByteStride = byteStride;
-    sBufferSub.pSysMem = data;
+    bufferDesc.ByteWidth = byteStride * arraySize;
+    bufferDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
+    bufferDesc.BindFlags = D3D11_BIND_UNORDERED_ACCESS | D3D11_BIND_SHADER_RESOURCE;
+    bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ | D3D11_CPU_ACCESS_WRITE;
+    bufferDesc.Usage = D3D11_USAGE_DEFAULT;
+    bufferDesc.StructureByteStride = byteStride;
+    dataDesc.pSysMem = data;
 
-    HRESULT hr = m_d3d11->Device()->CreateBuffer(&sBufferDesc, &sBufferSub, rav.buffer.GetAddressOf());
+    HRESULT hr = m_d3d11->Device()->CreateBuffer(&bufferDesc, &dataDesc, rav.buffer.GetAddressOf());
     if (FAILED(hr))
         return false;
 
@@ -206,9 +191,7 @@ bool PipelineManager::CreateStructuredBuffer(void* data, unsigned byteStride, un
 void PipelineManager::BindStructuredBuffer(size_t startSlot, size_t numUAV, ID3D11Buffer* buffer, void* data, ID3D11UnorderedAccessView** uav)
 {
     assert(buffer != nullptr);
-
     m_d3d11->DeviceContext()->UpdateSubresource(buffer, 0, nullptr, data, 0, 0);
-
     m_d3d11->DeviceContext()->CSSetUnorderedAccessViews(startSlot, numUAV, uav, nullptr);
 }
 
