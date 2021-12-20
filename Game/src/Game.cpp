@@ -1376,7 +1376,7 @@ void Game::UpdateEntityFromMessage(Entity e, message<GameMsg>& msg, bool skip)
 								LOG_INFO("HOUSE DAMAGED!");
 								house->displayWarning = true;
 								house->warningIcon.pos = e.GetComponent<comp::OrientedBoxCollider>()->Center;
-								house->warningIcon.timeRendered = omp_get_wtime();
+								house->warningIcon.timeRendered = static_cast<float>(omp_get_wtime());
 								if (house->iconID == -1)
 								{
 									//Create a new warning Icon and display it(6 exists as collections in the UI)

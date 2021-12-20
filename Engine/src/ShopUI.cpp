@@ -250,7 +250,7 @@ bool ShopUI::CheckHover()
 		else
 			m_signTexture->SetTexture("NotEnoughMoneySign.png");
 
-		m_chosenBorder->UpdatePos(draw_t(m_drawOpts.x_pos + m_drawOpts.width * 0.18, m_drawOpts.y_pos + m_drawOpts.height * 0.80f, (m_drawOpts.x_pos + m_drawOpts.width * 0.77f) - (m_drawOpts.x_pos + m_drawOpts.width * 0.18f), (m_drawOpts.y_pos + m_drawOpts.height) - (m_drawOpts.y_pos + m_drawOpts.height * 0.80f)));
+		m_chosenBorder->UpdatePos(draw_t(m_drawOpts.x_pos + m_drawOpts.width * 0.18f, m_drawOpts.y_pos + m_drawOpts.height * 0.80f, (m_drawOpts.x_pos + m_drawOpts.width * 0.77f) - (m_drawOpts.x_pos + m_drawOpts.width * 0.18f), (m_drawOpts.y_pos + m_drawOpts.height) - (m_drawOpts.y_pos + m_drawOpts.height * 0.80f)));
 		m_chosenBorder->SetVisiblity(true);
 
 		hoveringState = ElementState::INSIDE;

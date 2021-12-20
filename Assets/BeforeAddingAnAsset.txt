@@ -14,7 +14,7 @@ Materials with PBR:
 	Roughness:		"map_Ks   example_Roughness.png"
 	Ambient occlusion: 	"map_Ka   example_AO.png"
 	Displacement:		"map_disp example_Displace.png"
-	Opacitymask		"map_d    example_Opacity.png"	(feature is not up on master yet)
+	Opacitymask		"map_d    example_Opacity.png"
 
 //Filip 
 
