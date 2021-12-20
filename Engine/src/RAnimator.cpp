@@ -775,12 +775,8 @@ void RAnimator::ChangeAnimation(const EAnimationType& type)
 	//Check if animation exist
 	if (m_animations.find(type) != m_animations.end())
 	{
-		if (!HasStayAtEndAnim() &&
-			m_currentState != type)
-		{
-			//Queue up the animation
-			m_queue.push(type);
-		}
+		//Queue up the animation
+		m_queue.push(type);
 	}
 }
 
