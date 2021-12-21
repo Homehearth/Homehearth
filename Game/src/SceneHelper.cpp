@@ -30,6 +30,7 @@ namespace sceneHelp
 		Entity lightEntity = scene.CreateEntity();
 
 		lightEntity.AddComponent<comp::Light>();
+		pos.w = 1.0f;
 		lightEntity.GetComponent<comp::Light>()->lightData.position = pos;
 		lightEntity.AddComponent<comp::Transform>()->position = sm::Vector3(pos.x, pos.y, pos.z);
 		lightEntity.GetComponent<comp::Light>()->lightData.direction = dir;

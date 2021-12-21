@@ -232,7 +232,7 @@ void Renderer::InitilializeForwardPlus(Camera* camera)
 
     const uint32_t numFrustums = { numThreads.x * numThreads.y };
 
-    m_pipelineManager.m_dispatchParams.numThreadGroups = numThreads;
+    m_pipelineManager.m_dispatchParams.numThreadGroups = numThreadGroups;
     m_pipelineManager.m_dispatchParams.numThreads = numThreads;
     m_pipelineManager.m_dispatchParamsCB.SetData(m_d3d11->DeviceContext(), m_pipelineManager.m_dispatchParams);
 

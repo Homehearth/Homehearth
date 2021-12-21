@@ -194,8 +194,8 @@ RWStructuredBuffer<uint> t_LightIndexList						: register(u4);
 RWTexture2D<float4> rw_heatMap									: register(u5);
 Texture2D t_LightCountHeatMap									: register(t24);
 
-globallycoherent RWStructuredBuffer<uint> o_LightIndexCounter   : register(u6);
-globallycoherent RWStructuredBuffer<uint> t_LightIndexCounter   : register(u7);
+RWStructuredBuffer<uint> o_LightIndexCounter                    : register(u6);
+RWStructuredBuffer<uint> t_LightIndexCounter                    : register(u7);
 
 // Blur Pass (2) 
 RWTexture2D<unorm float4> t_bufferRead                          : register(u0);

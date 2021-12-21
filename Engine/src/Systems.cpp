@@ -389,7 +389,7 @@ void Systems::LightSystem(Scene& scene, float dt)
 			if (t)
 			{
 				//light.lightData.position = sm::Vector4(t->position.x, t->position.y, t->position.z, 1.f);
-				light.lightData.positionVS = sm::Vector4::Transform(light.lightData.position, scene.GetCurrentCamera()->GetView());
+				light.lightData.positionVS = sm::Vector4::Transform(sm::Vector4(light.lightData.position.x, light.lightData.position.y, light.lightData.position.z, 1.0f), scene.GetCurrentCamera()->GetView());
 			}
 
 			if (light.lightData.type == TypeLight::POINT && light.lightData.enabled)

@@ -13,17 +13,18 @@ void CullingPass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
     DC->CSSetShaderResources(24, 1, &PM->m_lightCountHeatMap.get()->GetShaderView());
     DC->CSSetShaderResources(25, 1, PM->m_frustums.srv.GetAddressOf());
 
+    DC->CSSetConstantBuffers(1, 1, pCam->m_viewConstantBuffer.GetAddressOf());  // Camera.
+
     ID3D11Buffer* const buffers[] = {
 		PM->m_screenToViewParamsCB.GetBuffer(),
 		PM->m_dispatchParamsCB.GetBuffer()
     };
     DC->CSSetConstantBuffers(11, ARRAYSIZE(buffers), buffers); // ScreenToViewParamsCB + DispatchParamsCB
-    DC->CSSetConstantBuffers(1, 1, pCam->m_viewConstantBuffer.GetAddressOf());  // Camera.
 
 	m_lights->Render(DC, true);
 
-    PM->o_LightIndexCounter_data[0] = 0;
-    PM->t_LightIndexCounter_data[0] = 0;
+    PM->o_LightIndexCounter_data.clear();
+    PM->t_LightIndexCounter_data.clear();
 
     PM->BindStructuredBuffer(6, 1, PM->o_LightIndexCounter.buffer.Get(), 
         PM->o_LightIndexCounter_data.data(),PM->o_LightIndexCounter.uav.GetAddressOf());
@@ -46,7 +47,7 @@ void CullingPass::Render(Scene* pScene)
 {
     PROFILE_FUNCTION();
 
-    GetDeviceContext()->Dispatch(PM->m_dispatchParams.numThreadGroups.x, PM->m_dispatchParams.numThreadGroups.y, 1);
+    GetDeviceContext()->Dispatch(PM->m_dispatchParams.numThreads.x, PM->m_dispatchParams.numThreads.y, 1);
 }
 
 void CullingPass::PostRender(ID3D11DeviceContext* pDeviceContext)

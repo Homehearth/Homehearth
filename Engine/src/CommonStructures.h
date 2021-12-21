@@ -604,6 +604,8 @@ struct screen_view_params_t
 {
 	sm::Matrix inverseProjection;
 	sm::Vector2 screenDimensions;
+	float padding;
+	float padding2;
 };
 
 ALIGN16

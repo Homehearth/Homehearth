@@ -67,12 +67,12 @@ void main(ComputeShaderIn input)
     int2 texCoord = input.dispatchThreadID.xy;
     float fDepth = t_depth.Load(int3(texCoord, 0)).r;
 
-	//float zNear = 40.f;
-	//float zFar = 220.f;
+ //   float zNear = 40.f;
+ //   float zFar = 220.f;
 
-	// Linearize the depth value from depth buffer (must do this because we created it using projection)
-	//float flinear = zNear / (zFar - fDepth * (zFar - zNear)) * zFar;
-	//fDepth = (flinear * 2.0) - 1.0;
+	//// Linearize the depth value from depth buffer (must do this because we created it using projection)
+ //   float flinear = zNear / (zFar - fDepth * (zFar - zNear)) * zFar;
+ //   fDepth = (flinear * 2.0) - 1.0;
 
 	// atomic operations only work on integers,
 	// hence we reinterrpret the bits from the
@@ -212,7 +212,7 @@ void main(ComputeShaderIn input)
     }
     else if (o_LightCount > 0)
     {
-        float normalizedLightCount = o_LightCount / 50.0f;
+        float normalizedLightCount = o_LightCount / 10.f;
         float4 lightCountHeatMapColor = t_LightCountHeatMap.SampleLevel(s_linearClamp, float2(normalizedLightCount, 0), 0);
         rw_heatMap[texCoord] = lightCountHeatMapColor;
     }

@@ -159,8 +159,6 @@ void Camera::Update(const float& deltaTime)
 			m_target = m_position + m_defaultForward;
 		}
 		m_view = dx::XMMatrixLookToLH(m_position, m_target, m_up);
-
-		UpdateProjection();
 	}
 	else if (m_type == CAMERATYPE::DEFAULT)
 	{
@@ -179,7 +177,6 @@ void Camera::Update(const float& deltaTime)
 		m_view = sm::Matrix::Identity;
 		m_view.Translation(-m_position);
 		m_view = sm::Matrix::Transform(m_view, m_rotation);
-		UpdateProjection();
 	}
 
 	m_cameraMat.position = { m_position.x, m_position.y, m_position.z, 0.0f };
@@ -188,6 +185,8 @@ void Camera::Update(const float& deltaTime)
 	//dx::BoundingFrustum::CreateFromMatrix(m_frustum, m_projection);
 	m_cameraMat.view = m_view;
 	s_cameraBuffers[0] = m_cameraMat;
+
+	UpdateProjection();
 }
 
 void Camera::SetFollowEntity(const Entity& entity)
