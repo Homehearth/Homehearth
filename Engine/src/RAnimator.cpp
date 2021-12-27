@@ -178,7 +178,7 @@ bool RAnimator::UpdateTime(const EAnimationType& type)
 	animation_t* anim = &m_animations[type];
 	if (anim)
 	{
-		float tick = anim->animation->GetTicksPerFrame() * Stats::Get().GetUpdateTime();
+		float tick = anim->animation->GetTicksPerFrame() * Stats::Get().GetFrameTime();
 
 		if (tick != anim->lastTick)
 		{
@@ -229,9 +229,9 @@ bool RAnimator::UpdateBlendTime(const EAnimationType& from, const EAnimationType
 		float blendDuration = m_states.at({ from, to }).blendDuration;
 
 		if (m_blendDir)
-			m_states.at({ from, to }).blendTimer += Stats::Get().GetUpdateTime();
+			m_states.at({ from, to }).blendTimer += Stats::Get().GetFrameTime();
 		else
-			m_states.at({ from, to }).blendTimer -= Stats::Get().GetUpdateTime();
+			m_states.at({ from, to }).blendTimer -= Stats::Get().GetFrameTime();
 
 		float blendTime = m_states.at({ from, to }).blendTimer;
 		

@@ -71,8 +71,6 @@ public:
 	void PushCombatText(const combat_text_inst_t& combat_text);
 	void HandleCombatText();
 
-	void HouseWarningIcons();
-
 	Skybox* GetSkybox();
 
 	bool IsRenderReady() const;

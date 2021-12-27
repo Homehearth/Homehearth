@@ -33,20 +33,6 @@ Scene::~Scene()
 
 void Scene::Update(float dt)
 {
-	/*std::cout << "Frametime: " << Stats::Get().GetFrameTime() << std::endl;
-	std::cout << "Updatetime: " << Stats::Get().GetUpdateTime() << std::endl;
-	std::cout << "DT: " << dt << std::endl;*/
-
-
-	//Update all the animations that can be updated
-	m_registry.view<comp::Animator>().each([&](comp::Animator& anim)
-		{
-			if (anim.animator && anim.updating)
-				anim.animator->Update();
-		});
-	
-	
-
 	m_2dHandler.Update();
 	PROFILE_FUNCTION();
 
@@ -203,6 +189,26 @@ void Scene::RenderDebug()
 
 }
 
+void Scene::RenderAnimation()
+{
+	PROFILE_FUNCTION();
+
+	for (auto& it : m_renderableAnimCopies[1])
+	{
+		m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.first.data);
+		ID3D11Buffer* const buffer = { m_publicBuffer.GetBuffer() };
+		D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, &buffer);
+
+		//Update the animator
+		if (it.second.updating)
+			it.second.animator->Update();
+
+		it.second.animator->Bind();
+		it.first.model->Render(D3D11Core::Get().DeviceContext());
+		it.second.animator->Unbind();
+	}
+}
+
 void Scene::Render2D()
 {
 	m_2dHandler.Render();
@@ -254,8 +260,6 @@ void Scene::RenderShadowAnimation()
 		}
 	}
 }
-
-
 
 void Scene::RenderParticles(void* voidPass)
 {
@@ -361,10 +365,6 @@ void Scene::HandleCombatText()
 	}
 }
 
-void Scene::HouseWarningIcons()
-{
-}
-
 Skybox* Scene::GetSkybox()
 {
 	return &m_sky;
@@ -388,23 +388,6 @@ void Scene::Add2DCollection(Collection2D* collection, const char* name)
 Collection2D* Scene::GetCollection(const std::string& name)
 {
 	return m_2dHandler.GetCollection(name);
-}
-
-void Scene::RenderAnimation()
-{
-	PROFILE_FUNCTION();
-
-	for (auto& it : m_renderableAnimCopies[1])
-	{
-		m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.first.data);
-		ID3D11Buffer* const buffer = {
-			m_publicBuffer.GetBuffer()
-		};
-		D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, &buffer);
-		it.second.animator->Bind();
-		it.first.model->Render(D3D11Core::Get().DeviceContext());
-		it.second.animator->Unbind();
-	}
 }
 
 bool Scene::IsRender3DReady() const
