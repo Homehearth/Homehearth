@@ -108,9 +108,9 @@ float3 DoPointlight(Light L, PixelIn input, float3 normal)
     else
     {
         float D = max(distance - L.range, 0.f);
-        float denom = D / L.range + 0.75f;
+        float denom = D / L.range + 1.0f;
         float attenuation = 1.f / (denom * denom);
-        float cutoff = 0.01f;
+        float cutoff = 0.005f;
         
         attenuation = (attenuation - cutoff) / (1 - cutoff);
         attenuation = max(attenuation, 0.f);

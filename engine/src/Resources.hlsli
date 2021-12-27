@@ -147,7 +147,6 @@ Texture2D t_roughness				                : register(t4);
 Texture2D t_aomap					                : register(t5);
 Texture2D t_displace				                : register(t6);
 Texture2D t_opacitymask				                : register(t7);
-Texture2D<uint2> t_pointLightGrid	                : register(t8);
 
 // StructuredBuffers.
 StructuredBuffer<float4x4> sb_boneTransforms        : register(t9); // read as column major, actually is row major.
@@ -194,8 +193,8 @@ RWStructuredBuffer<uint> t_LightIndexList						: register(u4);
 RWTexture2D<float4> rw_heatMap									: register(u5);
 Texture2D t_LightCountHeatMap									: register(t24);
 
-RWStructuredBuffer<uint> o_LightIndexCounter                    : register(u6);
-RWStructuredBuffer<uint> t_LightIndexCounter                    : register(u7);
+globallycoherent RWStructuredBuffer<uint> o_LightIndexCounter   : register(u6);
+globallycoherent RWStructuredBuffer<uint> t_LightIndexCounter   : register(u7);
 
 // Blur Pass (2) 
 RWTexture2D<unorm float4> t_bufferRead                          : register(u0);

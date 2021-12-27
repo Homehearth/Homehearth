@@ -242,7 +242,7 @@ void Systems::SelfDestructSystem(HeadlessScene& scene, float dt)
 			s.lifeTime -= dt;
 			if (s.lifeTime <= 0)
 			{
-				if(s.onDestruct)
+				if (s.onDestruct)
 					s.onDestruct();
 
 				ent.Destroy();
@@ -385,15 +385,16 @@ void Systems::LightSystem(Scene& scene, float dt)
 	scene.ForEachComponent<comp::Light>([&](Entity e, comp::Light& light)
 		{
 			//If an Entity has both a Light and Transform component use Transform for position
-			comp::Transform* t = e.GetComponent<comp::Transform>();
-			if (t)
-			{
-				//light.lightData.position = sm::Vector4(t->position.x, t->position.y, t->position.z, 1.f);
-				light.lightData.positionVS = sm::Vector4::Transform(sm::Vector4(light.lightData.position.x, light.lightData.position.y, light.lightData.position.z, 1.0f), scene.GetCurrentCamera()->GetView());
-			}
 
 			if (light.lightData.type == TypeLight::POINT && light.lightData.enabled)
 			{
+				comp::Transform* t = e.GetComponent<comp::Transform>();
+
+				if (t)
+				{
+					light.lightData.positionVS = sm::Vector4::Transform(sm::Vector4(t->position.x, t->position.y, t->position.z, 1.0f), scene.GetCurrentCamera()->GetView());
+				}
+
 				if (light.enabledTimer > 0.f)
 				{
 					light.enabledTimer -= dt;

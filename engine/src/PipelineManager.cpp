@@ -86,6 +86,10 @@ void PipelineManager::Initialize(Window* pWindow, ID3D11DeviceContext* context)
     {
         LOG_ERROR("failed creating texture effect resources.");
     }
+    // Set Viewport.
+    this->SetViewport();
+    m_windowWidth = m_window->GetWidth();
+    m_windowHeight = m_window->GetHeight();
 
     // Initialize Forward+ related resources.
     {
@@ -106,10 +110,6 @@ void PipelineManager::Initialize(Window* pWindow, ID3D11DeviceContext* context)
         m_screenToViewParamsCB.Create(m_d3d11->Device());        
     }
 
-    // Set Viewport.
-    this->SetViewport();
-    m_windowWidth = m_window->GetWidth();
-    m_windowHeight = m_window->GetHeight();
 }
 
 
@@ -853,7 +853,7 @@ bool PipelineManager::CreateDepth()
     textureDesc.Height = static_cast<FLOAT>(this->m_window->GetHeight());
     textureDesc.MipLevels = 1;
     textureDesc.ArraySize = 1;
-    textureDesc.Format = DXGI_FORMAT_R32_TYPELESS;
+    textureDesc.Format = DXGI_FORMAT_R24G8_TYPELESS;
     textureDesc.SampleDesc.Count = 1;
     textureDesc.Usage = D3D11_USAGE_DEFAULT;
     textureDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
@@ -864,7 +864,7 @@ bool PipelineManager::CreateDepth()
     if (FAILED(hr))
         return false;
 
-    depthStencilViewDesc.Format = DXGI_FORMAT_D32_FLOAT;
+    depthStencilViewDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
     depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
     depthStencilViewDesc.Texture2D.MipSlice = 0;
     depthStencilViewDesc.Flags = 0;
@@ -874,7 +874,7 @@ bool PipelineManager::CreateDepth()
     if (FAILED(hr))
         return false;
 
-    shaderResourceViewDesc.Format = DXGI_FORMAT_R32_FLOAT;
+    shaderResourceViewDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
     shaderResourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
     shaderResourceViewDesc.Texture2D.MostDetailedMip = 0;
     shaderResourceViewDesc.Texture2D.MipLevels = textureDesc.MipLevels;

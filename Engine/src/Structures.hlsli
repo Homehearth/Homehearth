@@ -117,7 +117,7 @@ struct Plane
 
 struct Frustum
 {
-    Plane planes[4];   // left, right, top, bottom frustum planes.
+    Plane planes[4];
 };
 
 struct Sphere

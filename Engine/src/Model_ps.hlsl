@@ -1,5 +1,6 @@
 #include "Common.hlsli"
 
+[earlydepthstencil]
 PixelOut main(PixelIn input)
 {
     //return t_shadowMaps.Sample(s_linear, float3(input.uv, 0.0f));
@@ -11,7 +12,7 @@ PixelOut main(PixelIn input)
     const float SCATTERING = .85f;
     
     float3 lightVolume = float3(1.0f, 1.0f, 1.0f);
-	float3 camPos = c_cameraPosition.xyz;
+    float3 camPos = c_cameraPosition.xyz;
     float ao = 1.0f;
     float3 albedo = 1.f;
     float metallic = 0.0f;
@@ -44,7 +45,7 @@ PixelOut main(PixelIn input)
     float3 lightCol = float3(0.f, 0.f, 0.f);
 
     // Get the index of the current pixel in the light grid.
-    const uint2 tileIndex = uint2(floor(input.pos.xy / (TILE_SIZE)));
+    uint2 tileIndex = uint2(floor(input.pos.xy / (TILE_SIZE)));
 
     // Get the start position and offset of the light in the light index list.
     const uint startOffset = LightGrid[tileIndex].x;
@@ -56,26 +57,28 @@ PixelOut main(PixelIn input)
         const uint lightIndex = LightIndexList[startOffset + i];
         Light currentLight = sb_lights[lightIndex];
 
-        if(currentLight.enabled == 1)
+        if (!currentLight.enabled)
         {
-			float4x4 lightMat = currentLight.lightMatrix;
-			float shadowCoef = 0.0f;
+            continue;
+        }
+
+        float4x4 lightMat = currentLight.lightMatrix;
+        float shadowCoef = 0.0f;
             
             // position of this pixel in the light clip space
-            float4 pixelposLightSpace = mul(lightMat, float4(input.worldPos.xyz, 1.0f));
+        float4 pixelposLightSpace = mul(lightMat, float4(input.worldPos.xyz, 1.0f));
 			
-            int shadowIndex = currentLight.shadowIndex;
+        int shadowIndex = currentLight.shadowIndex;
             
-            uint width, height, elementCount;
-            t_shadowMaps.GetDimensions(width, height, elementCount);
-            int shadowMapSize = width;
+        uint width, height, elementCount;
+        t_shadowMaps.GetDimensions(width, height, elementCount);
+        int shadowMapSize = width;
             
-            int blurKernalSize = 5;
-            
-            
-            switch (currentLight.type)
-            {
-                case DIRECTIONAL_LIGHT:
+        int blurKernalSize = 5;
+                    
+        switch (currentLight.type)
+        {
+            case DIRECTIONAL_LIGHT:
                 {
                     pixelposLightSpace.xy /= pixelposLightSpace.w;
             
@@ -84,7 +87,7 @@ PixelOut main(PixelIn input)
                     texCoords.y = -pixelposLightSpace.y * 0.5f + 0.5f;
             
                     if ((saturate(texCoords.x) == texCoords.x) & (saturate(texCoords.y) == texCoords.y))
-			        {
+                    {
                         //calculate current fragment depth
                         float currentDepth = pixelposLightSpace.z / pixelposLightSpace.w;
                         currentDepth = saturate(currentDepth);
@@ -94,82 +97,80 @@ PixelOut main(PixelIn input)
                     }
                     
                     // Volumetric Lighting
-                        if (length(camPos - input.worldPos.xyz) < LIGHT_VOLUME_RANGE)
-                        {
-                            float3 currentPos = camPos;
-                            float3 rayVector = input.worldPos.xyz - camPos;
-                            float3 rayDir = rayVector / length(rayVector);
-                            float3 stepLength = length(rayVector) / STEPS;
-                            float3 step = rayDir * stepLength;
+                    if (length(camPos - input.worldPos.xyz) < LIGHT_VOLUME_RANGE)
+                    {
+                        float3 currentPos = camPos;
+                        float3 rayVector = input.worldPos.xyz - camPos;
+                        float3 rayDir = rayVector / length(rayVector);
+                        float3 stepLength = length(rayVector) / STEPS;
+                        float3 step = rayDir * stepLength;
                             [loop]
-                            for (int j = 0; j < STEPS; j++)
-                            {
+                        for (int j = 0; j < STEPS; j++)
+                        {
                         // Camera position in shadow space.
-                                float4 cameraShadowSpace = mul(lightMat, float4(currentPos, 1.0f));
-                                float2 shadowCoords;
+                            float4 cameraShadowSpace = mul(lightMat, float4(currentPos, 1.0f));
+                            float2 shadowCoords;
                         
                         // Sample the depth of current position.
-                                shadowCoords.x = cameraShadowSpace.x * 0.5f + 0.5f;
-                                shadowCoords.y = -cameraShadowSpace.y * 0.5f + 0.5f;
-                                float depth = t_shadowMaps.Sample(s_linear, float3(shadowCoords, shadowIndex));
-                                if (depth > cameraShadowSpace.z & ((saturate(shadowCoords.x) == shadowCoords.x) & (saturate(shadowCoords.y) == shadowCoords.y)))
-                                {
-                                    lightVolume += scatter;
-                                }
-                        
-                                currentPos += step;
+                            shadowCoords.x = cameraShadowSpace.x * 0.5f + 0.5f;
+                            shadowCoords.y = -cameraShadowSpace.y * 0.5f + 0.5f;
+                            float depth = t_shadowMaps.Sample(s_linear, float3(shadowCoords, shadowIndex));
+                            if (depth > cameraShadowSpace.z & ((saturate(shadowCoords.x) == shadowCoords.x) & (saturate(shadowCoords.y) == shadowCoords.y)))
+                            {
+                                lightVolume += scatter;
                             }
-                            lightVolume /= STEPS;
+                        
+                            currentPos += step;
                         }
+                        lightVolume /= STEPS;
+                    }
                    
                     
                     lightCol += DoDirectionlight(currentLight, N) * (1.0f - shadowCoef);
                     break;
                 }
-                case POINT_LIGHT:
+            case POINT_LIGHT:
 				{
-
-                        float len = length(pixelposLightSpace.xyz);
-                        pixelposLightSpace.xyz /= len;
-                        float closestDepth = 1.0f;
-                        float currentDepth = 0.0f;
-                        float2 texCoords;
+                    float len = length(pixelposLightSpace.xyz);
+                    pixelposLightSpace.xyz /= len;
+                    float closestDepth = 1.0f;
+                    float currentDepth = 0.0f;
+                    float2 texCoords;
                      
-                        if(pixelposLightSpace.z >= 0.0f)
-                        {
+                    if (pixelposLightSpace.z >= 0.0f)
+                    {
                             //bottom Paraboloid
-                            texCoords.x = (pixelposLightSpace.x / (1.0f + pixelposLightSpace.z)) * 0.5f + 0.5f;
-                            texCoords.y = 1.0f - ((pixelposLightSpace.y / (1.0f + pixelposLightSpace.z)) * 0.5f + 0.5f);
+                        texCoords.x = (pixelposLightSpace.x / (1.0f + pixelposLightSpace.z)) * 0.5f + 0.5f;
+                        texCoords.y = 1.0f - ((pixelposLightSpace.y / (1.0f + pixelposLightSpace.z)) * 0.5f + 0.5f);
 
                             //calculate current fragment depth
-                            currentDepth = (len - 0.1f) / (500.f - 0.1f);
-                            currentDepth -= 0.001f;
+                        currentDepth = (len - 0.1f) / (500.f - 0.1f);
+                        currentDepth -= 0.001f;
                         
 
-                            shadowCoef = SampleShadowMap(texCoords, shadowIndex, currentDepth, shadowMapSize, blurKernalSize);
+                        shadowCoef = SampleShadowMap(texCoords, shadowIndex, currentDepth, shadowMapSize, blurKernalSize);
                         
-                        }
-                        else
-                        {
+                    }
+                    else
+                    {
                             //Top Paraboloid
-                            texCoords.x = 1.0f - (pixelposLightSpace.x / (1.0f - pixelposLightSpace.z)) * 0.5f + 0.5f;
-                            texCoords.y = 1.0f - ((pixelposLightSpace.y / (1.0f - pixelposLightSpace.z)) * 0.5f + 0.5f);
-                            currentDepth = (len - 0.1f) / (500.f - 0.1f);
-                            currentDepth -= 0.001f;
+                        texCoords.x = 1.0f - (pixelposLightSpace.x / (1.0f - pixelposLightSpace.z)) * 0.5f + 0.5f;
+                        texCoords.y = 1.0f - ((pixelposLightSpace.y / (1.0f - pixelposLightSpace.z)) * 0.5f + 0.5f);
+                        currentDepth = (len - 0.1f) / (500.f - 0.1f);
+                        currentDepth -= 0.001f;
                         
-                            shadowCoef = SampleShadowMap(texCoords, shadowIndex, currentDepth, shadowMapSize, blurKernalSize);
+                        shadowCoef = SampleShadowMap(texCoords, shadowIndex, currentDepth, shadowMapSize, blurKernalSize);
 
-                        }
-                        lightCol += DoPointlight(currentLight, input, N) * (1.0f - shadowCoef);
+                    }
+                    lightCol += DoPointlight(currentLight, input, N) * (1.0f - shadowCoef);
                     break;
                 }
-                default:
-                    break;
-            }
-        
-            CalcRadiance(input, V, N, roughness, metallic, albedo, currentLight.position.xyz, lightCol, F0, rad);
-            Lo += rad;
+            default:
+                break;
         }
+        
+        CalcRadiance(input, V, N, roughness, metallic, albedo, currentLight.position.xyz, lightCol, F0, rad);
+        Lo += rad;
     }
     
     //Ambient lighting
@@ -207,8 +208,8 @@ PixelOut main(PixelIn input)
         
             if ((saturate(texCoords.x) == texCoords.x) & (saturate(texCoords.y) == texCoords.y))
             {
-                float3 albedoDecal  = t_decal.Sample(s_linear, texCoords).xyz;
-                float alpha         = t_decal.Sample(s_linear, texCoords).r;
+                float3 albedoDecal = t_decal.Sample(s_linear, texCoords).xyz;
+                float alpha = t_decal.Sample(s_linear, texCoords).r;
                 
                 if (alpha > 0.4f)
                 {
@@ -220,8 +221,8 @@ PixelOut main(PixelIn input)
                     //Gamma correct
                     colorDecal = pow(max(colorDecal, 0.0f), float3(1.0 / 2.2, 1.0 / 2.2, 1.0 / 2.2));
                     colorDecal = lerp(colorDecal, fogColor.xyz, fogFactor);
-                    output.color =  float4(colorDecal, alpha);
-                    output.brightColor =  float4(0,0,0,0);
+                    output.color = float4(colorDecal, alpha);
+                    output.brightColor = float4(0, 0, 0, 0);
                     return output;
                 }
 
@@ -231,7 +232,7 @@ PixelOut main(PixelIn input)
     
     
     
-    float3 color = (ambient + Lo) * pow(lightVolumeFactor, 2.5f);   
+    float3 color = (ambient + Lo) * pow(lightVolumeFactor, 2.5f);
     float brightness = dot(color, float3(0.2126, 0.7152, 0.0722));
     
     //HDR tonemapping
@@ -239,7 +240,7 @@ PixelOut main(PixelIn input)
     //Gamma correct
     color = pow(max(color, 0.0f), float3(gamma, gamma, gamma));
     
-    color = lerp(color, fogColor.xyz, fogFactor);  
+    color = lerp(color, fogColor.xyz, fogFactor);
     
     //Bloom stuff
     if (brightness > 1.0f)

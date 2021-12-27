@@ -27,10 +27,13 @@ void main(ComputeShaderIn input)
     // Compute the 4 corner points on the far clipping plane to use as the frustum vertices.
     // clockwise from top-left
     float4 screenSpace[NUM_CORNERS];
-    screenSpace[TOP_LEFT]       = float4(input.dispatchThreadID.xy * TILE_SIZE, 1.0f, 1.0f);
-    screenSpace[TOP_RIGHT]      = float4(float2(input.dispatchThreadID.x + 1, input.dispatchThreadID.y) * TILE_SIZE, 1.0f, 1.0f);   // assuming left-handed coord: z is positive.
-    screenSpace[BOTTOM_RIGHT]   = float4(float2(input.dispatchThreadID.x + 1, input.dispatchThreadID.y + 1) * TILE_SIZE, 1.0f, 1.0f);
-    screenSpace[BOTTOM_LEFT]    = float4(float2(input.dispatchThreadID.x, input.dispatchThreadID.y + 1) * TILE_SIZE, 1.0f, 1.0f);
+    screenSpace[0] = float4(input.dispatchThreadID.xy * TILE_SIZE, 1.0f, 1.0f); //changed z from negative to positive in z component, all of these 4.
+	// Top right point
+    screenSpace[1] = float4(float2(input.dispatchThreadID.x + 1, input.dispatchThreadID.y) * TILE_SIZE, 1.0f, 1.0f);
+	// Bottom left point
+    screenSpace[2] = float4(float2(input.dispatchThreadID.x, input.dispatchThreadID.y + 1) * TILE_SIZE, 1.0f, 1.0f);
+	// Bottom right point
+    screenSpace[3] = float4(float2(input.dispatchThreadID.x + 1, input.dispatchThreadID.y + 1) * TILE_SIZE, 1.0f, 1.0f);
 
     float3 viewSpace[NUM_CORNERS];
     for (int i = 0; i < NUM_CORNERS; i++)
@@ -42,10 +45,14 @@ void main(ComputeShaderIn input)
 	// remember view space is left handed, so use the left-hand rule to determine 
 	// cross product direction
     Frustum frustum;
-    frustum.planes[TOP]     = ComputePlane(viewSpace[TOP_LEFT], viewSpace[TOP_RIGHT]);
-    frustum.planes[RIGHT]   = ComputePlane(viewSpace[TOP_RIGHT], viewSpace[BOTTOM_RIGHT]);
-    frustum.planes[BOTTOM]  = ComputePlane(viewSpace[BOTTOM_RIGHT], viewSpace[BOTTOM_LEFT]);
-    frustum.planes[LEFT]    = ComputePlane(viewSpace[BOTTOM_LEFT], viewSpace[TOP_LEFT]);
+	// Left plane
+    frustum.planes[0] = ComputePlane(viewSpace[2], viewSpace[0]);
+	// Right plane
+    frustum.planes[1] = ComputePlane(viewSpace[1], viewSpace[3]);
+	// Top plane
+    frustum.planes[2] = ComputePlane(viewSpace[0], viewSpace[1]);
+	// Bottom plane
+    frustum.planes[3] = ComputePlane(viewSpace[3], viewSpace[2]);
 
     // Store the computed frustum in global memory (if our thread ID is in bounds of the grid).
     if (input.dispatchThreadID.x < numThreads.x && input.dispatchThreadID.y < numThreads.y) 

@@ -7,7 +7,7 @@ Camera::Camera()
 {
 	m_FOV = dx::XMConvertToRadians(90.f); //0.4f * 3.14f;
 	m_zoomValue = 1;
-	m_nearPlane = 40.0f; // 1.0f;
+	m_nearPlane = 25.f; // 1.0f;
 	m_farPlane = 220.0f; // 1000.0f
 	m_rollPitchYaw = { 0.0f, 0.0f, 0.0f };
 	m_move = { 0.0f, 0.0f, 0.0f };

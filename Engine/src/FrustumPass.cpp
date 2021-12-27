@@ -35,33 +35,30 @@ void FrustumPass::PostRender(ID3D11DeviceContext* pDeviceContext)
     // Only run this pass once.
     SetEnable(false);
 
- //   const auto screenWidth = static_cast<uint32_t>(max(PM->m_viewport.Width, 1u));
- //   const auto screenHeight = static_cast<uint32_t>(max(PM->m_viewport.Height, 1u));
+    const auto screenWidth = static_cast<uint32_t>(max(PM->m_viewport.Width, 1u));
+    const auto screenHeight = static_cast<uint32_t>(max(PM->m_viewport.Height, 1u));
 
- //   // We will need 1 frustum for each grid cell.
- //   // [x, y] screen resolution and [z, z] tile size yield [x/z, y/z] grid size.
- //   // Resulting in a total of x/z * y/z frustums.
- //   constexpr uint32_t TILE_SIZE = 16u;
+    constexpr uint32_t TILE_SIZE = 16u;
 
- //   //
- //   // Update DispatchParams.
- //   //
+    //
+    // Update DispatchParams.
+    //
 
- //   const dx::XMUINT4 numThreadGroups = {
- //       (uint32_t)std::ceil((float)screenWidth / (float)TILE_SIZE),
- //       (uint32_t)std::ceil((float)screenHeight / (float)TILE_SIZE),
- //       1u,
- //       1u
- //   };
+    const dx::XMUINT4 numThreadGroups = {
+        (uint32_t)std::ceil((float)screenWidth / (float)TILE_SIZE),
+        (uint32_t)std::ceil((float)screenHeight / (float)TILE_SIZE),
+        1u,
+        1u
+    };
 
-	//const dx::XMUINT4 numThreads = {
-	//	screenWidth,
-	//	screenHeight,
-	//	1u,
-	//	1u
-	//};
+	const dx::XMUINT4 numThreads = {
+		numThreadGroups.x * TILE_SIZE,
+		numThreadGroups.y * TILE_SIZE,
+		1u,
+		1u
+	};
 
- //  PM->m_dispatchParams.numThreadGroups = numThreadGroups;
- //  PM->m_dispatchParams.numThreads = numThreads;
- //  PM->m_dispatchParamsCB.SetData(pDeviceContext, PM->m_dispatchParams);
+   PM->m_dispatchParams.numThreadGroups = numThreadGroups;
+   PM->m_dispatchParams.numThreads = numThreads;
+   PM->m_dispatchParamsCB.SetData(pDeviceContext, PM->m_dispatchParams);
 }

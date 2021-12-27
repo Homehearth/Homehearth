@@ -20,6 +20,7 @@ groupshared Frustum GroupFrustum;
 // To keep track of the number of lights that
 // are intersecting the current tile frustum.
 groupshared uint o_LightCount;
+groupshared uint t_LightCount;
 
 // Offset into the global light index list.
 // This index will be written to the light grid and
@@ -29,7 +30,6 @@ groupshared uint o_LightIndexStartOffset;
 groupshared uint o_LightList[MAX_LIGHTS];
 
 // Transparent geometry light lists.
-groupshared uint t_LightCount;
 groupshared uint t_LightIndexStartOffset;
 groupshared uint t_LightList[MAX_LIGHTS];
 
@@ -67,12 +67,10 @@ void main(ComputeShaderIn input)
     int2 texCoord = input.dispatchThreadID.xy;
     float fDepth = t_depth.Load(int3(texCoord, 0)).r;
 
- //   float zNear = 40.f;
- //   float zFar = 220.f;
+    //float zNear = 25.f;
+    //float zFar = 220.f;
 
-	//// Linearize the depth value from depth buffer (must do this because we created it using projection)
- //   float flinear = zNear / (zFar - fDepth * (zFar - zNear)) * zFar;
- //   fDepth = (flinear * 2.0) - 1.0;
+    //float zLinear = (2.0 * zNear) / (zFar + zNear - fDepth * (zFar - zNear));
 
 	// atomic operations only work on integers,
 	// hence we reinterrpret the bits from the
@@ -85,7 +83,7 @@ void main(ComputeShaderIn input)
 	// only one thread in the group needs to set them.
     if (input.groupIndex == 0)
     {
-        uMinDepth = 0xffffffff; // FLT_MAX as a uint
+        uMinDepth = 0xffffffff;
         uMaxDepth = 0;
         o_LightCount = 0;
         t_LightCount = 0;
@@ -96,7 +94,6 @@ void main(ComputeShaderIn input)
 	// all group shared accesses have been completed and
 	// all threads in the group have reached this call.
     GroupMemoryBarrierWithGroupSync();
-
 	// The InterlockedMin and InterlockedMax methods
 	// are used to atomically update the uMinDepth and
 	// uMaxDepth group - shared variables based on the current threads depth value.
@@ -113,26 +110,22 @@ void main(ComputeShaderIn input)
     float fMaxDepth = asfloat(uMaxDepth);
 
     // Convert depth values to view space.
-    float minDepthVS = ClipToView(float4(0, 0, fMinDepth, 1)).z;
-    float maxDepthVS = ClipToView(float4(0, 0, fMaxDepth, 1)).z;
+    float minDepthVS = ScreenToView(float4(0, 0, fMinDepth, 1)).z;
+    float maxDepthVS = ScreenToView(float4(0, 0, fMaxDepth, 1)).z;
 
 	// When culling lights for transparent geometry, we don’t want to use
 	// the minimum depth value from the depth map. Instead we will clip the
 	// lights using the camera’s near clipping plane. In this case, we will
 	// use the nearClipVS value which is the distance to the camera’s near
 	// clipping plane in view space.
-    float nearClipVS = ClipToView(float4(0, 0, 0, 1)).z;
+    float nearClipVS = ScreenToView(float4(0, 0, 0, 1)).z;
 
     // Clipping plane for minimum depth value 
     // (used for testing lights within the bounds of opaque geometry).
 	// assuming left-handed coord.
     Plane minPlane = { float3(0, 0, 1), minDepthVS };
 
-    //Frustum frustum = GroupFrustum;
-
-    Frustum frustum = in_Frustums[input.dispatchThreadID.x + (input.dispatchThreadID.y * numThreads.x)];
-    // Each thread in a group will cull 1 light until all lights have been culled.
-    for (uint i = input.groupIndex; i < c_info.x; i += TILE_SIZE * TILE_SIZE)
+    for (uint i = input.groupIndex; i < (uint)c_info.x; i += TILE_SIZE * TILE_SIZE)
     {
         if (sb_lights[i].enabled)
         {
@@ -140,37 +133,34 @@ void main(ComputeShaderIn input)
 
             switch (light.type)
             {
-                case DIRECTIONAL_LIGHT:
-				{
-                        //t_AppendLight(i);
-                        //o_AppendLight(i);
-                    break;
-                }
-                case POINT_LIGHT:
-				{
-                        Sphere sphere = { light.positionVS.xyz, light.range };
-                        if (SphereInsideFrustum(sphere, frustum, nearClipVS, maxDepthVS))
-                        {
-						// Add light to light list for transparent geometry.
-                            t_AppendLight(i);
+            case DIRECTIONAL_LIGHT:
+			{
+                //t_AppendLight(i);
+                //o_AppendLight(i);
+            }
+                break;
+            case POINT_LIGHT:
+			{
+                Sphere sphere = { light.positionVS.xyz, light.range };
+                if (SphereInsideFrustum(sphere, GroupFrustum, nearClipVS, maxDepthVS))
+                {
+			        //Add light to light list for transparent geometry.
+                    t_AppendLight(i);
 
-                            if (!SphereInsidePlane(sphere, minPlane))
-                            {
-							// Add light to light list for opaque geometry.
-                                o_AppendLight(i);
-                            }
-                        }
-                    break;
+                    if (!SphereInsidePlane(sphere, minPlane))
+                    {
+			          //Add light to light list for opaque geometry.
+                      o_AppendLight(i);
+                    }
                 }
-                default:
-                    break;
+            } 
+                break;
             }
         }
     }
 
 	// Wait till all threads in group have caught up.
     GroupMemoryBarrierWithGroupSync();
-
 	// Update global memory with visible light buffer.
 	// First update the light grid (only thread 0 in group needs to do this)
     if (input.groupIndex == 0)
@@ -212,7 +202,7 @@ void main(ComputeShaderIn input)
     }
     else if (o_LightCount > 0)
     {
-        float normalizedLightCount = o_LightCount / 10.f;
+        float normalizedLightCount = o_LightCount / 8.f;
         float4 lightCountHeatMapColor = t_LightCountHeatMap.SampleLevel(s_linearClamp, float2(normalizedLightCount, 0), 0);
         rw_heatMap[texCoord] = lightCountHeatMapColor;
     }

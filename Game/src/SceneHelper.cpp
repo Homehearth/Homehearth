@@ -165,6 +165,10 @@ namespace sceneHelp
 		CreateLightEntity(gameScene, { 193.5f, 28.f, -261.5f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, pointLightColor, pointRange, pointIntensity, TypeLight::POINT, 0);
 		// LEFT OF WATERMILL
 		CreateLightEntity(gameScene, { 338.5f, 28.f, -397.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, pointLightColor, pointRange, pointIntensity, TypeLight::POINT, 0);
+		//for (int i = 0; i < 100; i++)
+		//{
+		//	CreateLightEntity(gameScene, { 338.5f, 28.f, -397.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, pointLightColor, pointRange, pointIntensity, TypeLight::POINT, 0);
+		//}
 
 		InputSystem::Get().SetCamera(gameScene.GetCurrentCamera());
 
@@ -370,7 +374,7 @@ namespace sceneHelp
 					if (scene.GetCurrentCamera()->GetCameraType() == CAMERATYPE::DEBUG)
 					{
 						scene.SetCurrentCameraEntity(cameraEntity);
-						scene.GetCurrentCamera()->SetNearFarPlane(40.f, 220.f);
+						scene.GetCurrentCamera()->SetNearFarPlane(25.f, 220.f);
 						InputSystem::Get().SwitchMouseMode();
 						LOG_INFO("Game Camera selected");
 					}

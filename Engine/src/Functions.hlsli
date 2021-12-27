@@ -26,7 +26,7 @@ Plane ComputePlane(float3 b, float3 c)
     // normalize(cross( b-a, c-a )), except we know "a" is the origin
 	// also, typically there would be a fourth term of the plane equation, 
 	// -(n dot a), except we know "a" is the origin
-    plane.normal = normalize(cross(b, c));
+    plane.normal = normalize(cross(c, b));
 
     // -(n dot a), except we know "a" is the origin
     plane.distanceToOrigin = 0;
@@ -36,11 +36,7 @@ Plane ComputePlane(float3 b, float3 c)
 
 bool SphereInsidePlane(Sphere sphere, Plane plane)
 {
-    // point-plane distance, simplified for the case where 
-    // the plane passes through the origin.
-    // dot( plane.normal.xyz, sphere.center.xyz ) + plane.d, , except we know plane.d is zero 
-    // (see ComputePlane above)
-    return dot(plane.normal, sphere.center) < -sphere.radius;
+    return dot(plane.normal, sphere.center) - plane.distanceToOrigin < -sphere.radius;
 }
 
 bool SphereInsideFrustum(Sphere sphere, Frustum frustum, float zNear, float zFar)

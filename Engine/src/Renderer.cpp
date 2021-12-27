@@ -18,11 +18,11 @@ void Renderer::Initialize(Window* pWindow)
     m_shadowPass.StartUp();
 
     AddPass(&m_frustumPass);
-    AddPass(&m_cullingPass);
 
     AddPass(&m_decalPass); // måste vara före basepasset.
     m_decalPass.Create();
 
+    AddPass(&m_cullingPass);
     AddPass(&m_opaquePass);
 	AddPass(&m_animPass);
 	AddPass(&m_transparentPass);
@@ -230,27 +230,12 @@ void Renderer::InitilializeForwardPlus(Camera* camera)
     	1u
     };
 
-    const uint32_t numFrustums = { numThreads.x * numThreads.y };
-
     m_pipelineManager.m_dispatchParams.numThreadGroups = numThreadGroups;
     m_pipelineManager.m_dispatchParams.numThreads = numThreads;
     m_pipelineManager.m_dispatchParamsCB.SetData(m_d3d11->DeviceContext(), m_pipelineManager.m_dispatchParams);
-
-    //
-    // Update ScreenToViewParams.
-    //
-
-    m_pipelineManager.m_screenToViewParams.screenDimensions.x = static_cast<float>(screenWidth);
-    m_pipelineManager.m_screenToViewParams.screenDimensions.y = static_cast<float>(screenHeight);
-    m_pipelineManager.m_screenToViewParams.inverseProjection = camera->GetProjection().Invert();
-    m_pipelineManager.m_screenToViewParamsCB.SetData(m_d3d11->DeviceContext(), m_pipelineManager.m_screenToViewParams);
-
-    //
-    // Update GridFrustums.
-    //
-    //
     
     // Create out_Frustums.
+    const uint32_t numFrustums = { numThreads.x * numThreads.y };
     m_pipelineManager.m_frustums_data.resize(numFrustums);
     m_pipelineManager.CreateStructuredBuffer(m_pipelineManager.m_frustums_data.data(),
         sizeof(frustum_t), m_pipelineManager.m_frustums_data.size(), m_pipelineManager.m_frustums);
