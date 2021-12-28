@@ -73,7 +73,7 @@ namespace thread
 			1/true - Render on same thread.
 			0/false - Rendered on separate threads.
 		*/
-		static const render_instructions_t Launch(const int& amount_of_objects);
+		static const render_instructions_t Launch(const int& amount_of_objects, bool animated = false);
 
 		/*
 			

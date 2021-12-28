@@ -193,20 +193,52 @@ void Scene::RenderAnimation()
 {
 	PROFILE_FUNCTION();
 
-	for (auto& it : m_renderableAnimCopies[1])
+	thread::RenderThreadHandler::Get().SetObjectsBuffer(&m_renderableAnimCopies);
+	// Divides up work between threads.
+	const render_instructions_t inst = thread::RenderThreadHandler::Get().Launch(static_cast<int>(m_renderableAnimCopies[1].size()), true);
+
+	// Render everything on same thread.
+	if ((inst.start | inst.stop) == 0)
 	{
-		m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.first.data);
-		ID3D11Buffer* const buffer = { m_publicBuffer.GetBuffer() };
-		D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, &buffer);
+		// System that renders Renderable component
+		for (const auto& it : m_renderableAnimCopies[1])
+		{
+			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.first.data);
+			ID3D11Buffer* const buffer = { m_publicBuffer.GetBuffer() };
+			D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, &buffer);
 
-		//Update the animator
-		if (it.second.updating)
-			it.second.animator->Update();
+			//Update the animator
+			if (it.second.updating)
+				it.second.animator->Update();
 
-		it.second.animator->Bind();
-		it.first.model->Render(D3D11Core::Get().DeviceContext());
-		it.second.animator->Unbind();
+			it.second.animator->Bind(D3D11Core::Get().DeviceContext());
+			it.first.model->Render(D3D11Core::Get().DeviceContext());
+			it.second.animator->Unbind(D3D11Core::Get().DeviceContext());
+		}
 	}
+	// Render third part of the scene with immediate context
+	else
+	{
+		// System that renders Renderable component
+		for (int i = inst.start; i < inst.stop; i++)
+		{
+			const auto& it = m_renderableAnimCopies[1][i];
+			m_publicBuffer.SetData(D3D11Core::Get().DeviceContext(), it.first.data);
+			ID3D11Buffer* const buffer = { m_publicBuffer.GetBuffer() };
+			D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, &buffer);
+
+			//Update the animator
+			if (it.second.updating)
+				it.second.animator->Update();
+
+			it.second.animator->Bind(D3D11Core::Get().DeviceContext());
+			it.first.model->Render(D3D11Core::Get().DeviceContext());
+			it.second.animator->Unbind(D3D11Core::Get().DeviceContext());
+		}
+	}
+
+	// Run any available Command lists from worker threads.
+	thread::RenderThreadHandler::ExecuteCommandLists();
 }
 
 void Scene::Render2D()
@@ -254,9 +286,9 @@ void Scene::RenderShadowAnimation()
 				m_publicBuffer.GetBuffer()
 			};
 			D3D11Core::Get().DeviceContext()->VSSetConstantBuffers(0, 1, &buffer);
-			it.second.animator->Bind();
+			it.second.animator->Bind(D3D11Core::Get().DeviceContext());
 			it.first.model->Render(D3D11Core::Get().DeviceContext());
-			it.second.animator->Unbind();
+			it.second.animator->Unbind(D3D11Core::Get().DeviceContext());
 		}
 	}
 }

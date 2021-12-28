@@ -16,6 +16,7 @@ bool ShouldContinue();
 void RenderMain(const unsigned int id);
 void RenderJob(const unsigned int start, unsigned int stop, void* buffer, void* context);
 void RenderShadow(const unsigned int start, unsigned int stop, void* buffer, void* context);
+void RenderAnim(const unsigned int start, unsigned int stop, void* buffer, void* context);
 
 void RenderObjects(DoubleBuffer<std::vector<comp::Renderable>>* objects, dx::ConstantBuffer<basic_model_matrix_t>* buffer, ID3D11DeviceContext* context);
 
@@ -56,7 +57,7 @@ thread::RenderThreadHandler::~RenderThreadHandler()
 	{
 		INSTANCE.m_commands[i]->Release();
 	}
-	INSTANCE.m_jobs.clear();
+	INSTANCE.m_jobs.clear();	
 }
 
 void thread::RenderThreadHandler::Finish()
@@ -126,7 +127,7 @@ void thread::RenderThreadHandler::Setup(const int& amount)
 	INSTANCE.m_isPooled = true;
 }
 
-const render_instructions_t thread::RenderThreadHandler::Launch(const int& amount_of_objects)
+const render_instructions_t thread::RenderThreadHandler::Launch(const int& amount_of_objects, bool animated)
 {
 	render_instructions_t inst;
 	const unsigned int objects_per_thread = (unsigned int)std::floor((float)amount_of_objects / (float)(INSTANCE.m_amount + 1));
@@ -146,7 +147,10 @@ const render_instructions_t thread::RenderThreadHandler::Launch(const int& amoun
 				// Prepare job for threads.
 				auto f = [=](void* buffer, void* context)
 				{
-					RenderJob(start, stop, buffer, context);
+					if (animated)
+						RenderAnim(start, stop, buffer, context);
+					else
+						RenderJob(start, stop, buffer, context);
 				};
 
 				INSTANCE.m_jobs.push_back(f);
@@ -378,6 +382,8 @@ void RenderMain(const unsigned int id)
 void RenderJob(const unsigned int start,
 	unsigned int stop, void* buffer, void* context)
 {
+	PROFILE_FUNCTION();
+
 	DoubleBuffer<std::vector<comp::Renderable>>* m_objects = (DoubleBuffer<std::vector<comp::Renderable>>*)thread::RenderThreadHandler::GetObjectsBuffer();
 	dx::ConstantBuffer<basic_model_matrix_t>* m_buffer = (dx::ConstantBuffer<basic_model_matrix_t>*)buffer;
 	ID3D11DeviceContext* m_context = (ID3D11DeviceContext*)context;
@@ -410,6 +416,63 @@ void RenderJob(const unsigned int start,
 			if (it->model)
 				it->model->Render(m_context);
 
+		}
+
+		pass->PostRender(m_context);
+
+		// On Render Finish
+		HRESULT hr = m_context->FinishCommandList(0, &command_list);
+
+		EnterCriticalSection(&pushSection);
+		if (SUCCEEDED(hr))
+			thread::RenderThreadHandler::Get().InsertCommandList(std::move(command_list));
+		LeaveCriticalSection(&pushSection);
+	}
+
+	return;
+}
+
+void RenderAnim(const unsigned int start,
+	unsigned int stop, void* buffer, void* context)
+{
+	PROFILE_FUNCTION();
+
+	DoubleBuffer<std::vector<std::pair<comp::Renderable, comp::Animator>>>* m_objects = (DoubleBuffer<std::vector<std::pair<comp::Renderable, comp::Animator>>>*)thread::RenderThreadHandler::GetObjectsBuffer();
+	dx::ConstantBuffer<basic_model_matrix_t>* m_buffer = (dx::ConstantBuffer<basic_model_matrix_t>*)buffer;
+	ID3D11DeviceContext* m_context = (ID3D11DeviceContext*)context;
+	if (m_objects)
+	{
+		// On Render Start
+		ID3D11CommandList* command_list = nullptr;
+		IRenderPass* pass = thread::RenderThreadHandler::Get().GetRenderer()->GetCurrentPass();
+		Camera* cam = (Camera*)INSTANCE.Get().GetCamera();
+
+		pass->PreRender(cam, m_context);
+
+		// Make sure not to go out of range
+		if (stop > (unsigned int)(*m_objects)[1].size())
+			stop = (unsigned int)(*m_objects)[1].size();
+
+		// On Render
+		for (unsigned int i = start; i < stop; i++)
+		{
+			comp::Renderable* rend = &(*m_objects)[1][i].first;
+			comp::Animator* anim = &(*m_objects)[1][i].second;
+			ID3D11Buffer* const buffers[1] = { m_buffer->GetBuffer() };
+
+			if (rend && anim && buffers)
+			{
+				m_buffer->SetData(m_context, rend->data);
+				m_context->VSSetConstantBuffers(0, 1, buffers);
+
+				//Update the animator
+				if (anim->updating)
+					anim->animator->Update();
+
+				anim->animator->Bind(m_context);
+				rend->model->Render(m_context);
+				anim->animator->Unbind(m_context);
+			}
 		}
 
 		pass->PostRender(m_context);
@@ -502,6 +565,8 @@ void RenderShadow(const unsigned int start, unsigned int stop, void* buffer, voi
 
 void RenderObjects(DoubleBuffer<std::vector<comp::Renderable>>* objects, dx::ConstantBuffer<basic_model_matrix_t>* buffer, ID3D11DeviceContext* context)
 {
+	PROFILE_FUNCTION();
+
 	// For each object in world.
 	for (int j = 0; j < (*objects)[1].size(); j++)
 	{

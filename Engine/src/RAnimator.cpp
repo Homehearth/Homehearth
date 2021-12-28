@@ -126,12 +126,12 @@ bool RAnimator::CreateBonesSB()
 	return !FAILED(hr);
 }
 
-void RAnimator::UpdateStructureBuffer()
+void RAnimator::UpdateStructureBuffer(ID3D11DeviceContext* context)
 {
 	D3D11_MAPPED_SUBRESOURCE submap;
-	D3D11Core::Get().DeviceContext()->Map(m_bonesSB_Buffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &submap);
+	context->Map(m_bonesSB_Buffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &submap);
 	memcpy(submap.pData, &m_localMatrices[0], sizeof(sm::Matrix) * m_localMatrices.size());
-	D3D11Core::Get().DeviceContext()->Unmap(m_bonesSB_Buffer.Get(), 0);
+	context->Unmap(m_bonesSB_Buffer.Get(), 0);
 }
 
 EAnimationType RAnimator::StringToAnimationType(const std::string& name) const
@@ -828,14 +828,14 @@ void RAnimator::Update()
 	}
 }
 
-void RAnimator::Bind()
+void RAnimator::Bind(ID3D11DeviceContext* context)
 {
-	UpdateStructureBuffer();
-	D3D11Core::Get().DeviceContext()->VSSetShaderResources(T2D_BONESLOT, 1, m_bonesSB_RSV.GetAddressOf());
+	UpdateStructureBuffer(context);
+	context->VSSetShaderResources(T2D_BONESLOT, 1, m_bonesSB_RSV.GetAddressOf());
 }
 
-void RAnimator::Unbind() const
+void RAnimator::Unbind(ID3D11DeviceContext* context) const
 {
 	ID3D11ShaderResourceView* nullSRV = nullptr;
-	D3D11Core::Get().DeviceContext()->VSSetShaderResources(T2D_BONESLOT, 1, &nullSRV);
+	context->VSSetShaderResources(T2D_BONESLOT, 1, &nullSRV);
 }

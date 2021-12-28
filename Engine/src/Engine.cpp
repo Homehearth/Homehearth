@@ -477,6 +477,28 @@ void Engine::Update(float dt)
 
 	InputSystem::Get().UpdateEvents();
 
+	//[TEMP] Remove later
+	static bool isRecProfileSession = false;
+	if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::I, KeyState::RELEASED))
+	{
+		if (!isRecProfileSession)
+		{
+			isRecProfileSession = true;
+			PROFILER_BEGIN_SESSION();
+			std::cout << "Start recording" << std::endl;
+		}
+	}
+	else if (InputSystem::Get().CheckKeyboardKey(dx::Keyboard::O, KeyState::RELEASED))
+	{
+		if (isRecProfileSession)
+		{
+			isRecProfileSession = false;
+			PROFILER_END_SESSION();
+			std::cout << "Stopped recording" << std::endl;
+		}
+	}
+	//[TEMP] Remove later
+
 	MSG msg = { nullptr };
 	while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
 	{

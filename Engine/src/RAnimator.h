@@ -50,7 +50,7 @@ private:
 private:
 	bool LoadSkeleton(const std::vector<bone_t>& skeleton);
 	bool CreateBonesSB();
-	void UpdateStructureBuffer();
+	void UpdateStructureBuffer(ID3D11DeviceContext* context);
 
 	//Convert a string to enum
 	EAnimationType StringToAnimationType(const std::string& name) const;
@@ -104,6 +104,6 @@ public:
 	void Update();
 
 	//Bind/unbind the bones matrices structured buffer
-	void Bind();
-	void Unbind() const;
+	void Bind(ID3D11DeviceContext* context);
+	void Unbind(ID3D11DeviceContext* context) const;
 };
