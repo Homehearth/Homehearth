@@ -1,5 +1,7 @@
 #include "Common.hlsli"
 
+#define RUN_SWITCHCASE 0
+
 #define vertex          particlesUAV[particleID.x]
 #define lifeTime        c_pLifeTime
 #define counter         c_pCounter
@@ -23,7 +25,60 @@ void ExplosionSimulation(inout VertexParticleIn particle, in uint id);
 void MageBlinkSimulation(inout VertexParticleIn particle, in uint id);
 void UpgradeSimulation(inout VertexParticleIn particle, in uint id);
 
-
+#if RUN_SWITCHCASE
+[numthreads(50, 1, 1)]
+void main(uint3 particleID : SV_DispatchThreadID)
+{
+    uint id = particleID.x;
+    if (id >= 100)
+        id -= 100;
+        
+    [branch]
+    switch (vertex.type)
+    {
+        case 0:
+            BloodSimmulation(vertex, id);
+            break;
+        case 1:
+            LeafSimmulation(vertex, id);
+            break;
+        case 2:
+            WaterSplashSimmulation(vertex, id);
+            break;
+        case 3:
+            SmokePointSimmulation(vertex, id);
+            break;
+        case 4:
+            SmokeAreaSimmulation(vertex, id);
+            break;
+        case 5:
+            SparklesSimmulation(vertex, id);
+            break;
+        case 6:
+            RainSimmulation(vertex, id);
+            break;
+        case 8:
+            MageHealSimulation(vertex, id);
+            break;
+        case 9:
+            MageRangeSimulation(vertex, id);
+            break;
+        case 10:
+            ExplosionSimulation(vertex, id);
+            break;
+        case 11:
+            MageBlinkSimulation(vertex, id);
+            break;
+        case 12:
+            UpgradeSimulation(vertex, id);
+            break;
+        default:
+            break;
+    }
+    
+    vertex.life += dt;
+}
+#else
 [numthreads(50, 1, 1)]
 void main(uint3 particleID : SV_DispatchThreadID)
 {
@@ -46,18 +101,19 @@ void main(uint3 particleID : SV_DispatchThreadID)
     else if (vertex.type == 6)
         RainSimmulation(vertex, id);
     else if (vertex.type == 8)
-        MageHealSimulation(vertex, id);   
+        MageHealSimulation(vertex, id);
     else if (vertex.type == 9)
         MageRangeSimulation(vertex, id);
     else if (vertex.type == 10)
-        ExplosionSimulation(vertex, id);    
+        ExplosionSimulation(vertex, id);
     else if (vertex.type == 11)
-        MageBlinkSimulation(vertex, id);    
+        MageBlinkSimulation(vertex, id);
     else if (vertex.type == 12)
         UpgradeSimulation(vertex, id);
     
     vertex.life += dt;
 }
+#endif
 
 void BloodSimmulation(inout VertexParticleIn particle, in uint id)
 {
