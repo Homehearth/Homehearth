@@ -30,6 +30,12 @@ Scene::~Scene()
 		delete m_combatText;
 	}
 }
+ 
+void Scene::SetParticleCSShaders(std::vector<Shaders::ComputeShader> list, bool useShaderList) //TODO only for testing Particles
+{
+	m_particleCSList = list;
+	m_useShaderList = useShaderList;
+}
 
 void Scene::Update(float dt)
 {
@@ -296,6 +302,29 @@ void Scene::RenderParticles(void* voidPass)
 
 			pass->m_constantBufferParticleMode.SetData(D3D11Core::Get().DeviceContext(), pass->m_particleModeUpdate);
 			ID3D11Buffer* cbP = { pass->m_constantBufferParticleMode.GetBuffer() };
+
+			//TODO only for testing Particles
+			if (m_useShaderList)
+			{
+				if (emitter.type == ParticleMode::BLOOD)
+					D3D11Core::Get().DeviceContext()->CSSetShader(m_particleCSList[0].Get(), nullptr, 0);
+				else if (emitter.type == ParticleMode::EXPLOSION)
+					D3D11Core::Get().DeviceContext()->CSSetShader(m_particleCSList[1].Get(), nullptr, 0);
+				else if (emitter.type == ParticleMode::MAGEBLINK)
+					D3D11Core::Get().DeviceContext()->CSSetShader(m_particleCSList[2].Get(), nullptr, 0);
+				else if (emitter.type == ParticleMode::MAGEHEAL)
+					D3D11Core::Get().DeviceContext()->CSSetShader(m_particleCSList[3].Get(), nullptr, 0);
+				else if (emitter.type == ParticleMode::MAGERANGE)
+					D3D11Core::Get().DeviceContext()->CSSetShader(m_particleCSList[4].Get(), nullptr, 0);
+				else if (emitter.type == ParticleMode::RAIN)
+					D3D11Core::Get().DeviceContext()->CSSetShader(m_particleCSList[5].Get(), nullptr, 0);
+				else if (emitter.type == ParticleMode::SMOKEAREA)
+					D3D11Core::Get().DeviceContext()->CSSetShader(m_particleCSList[6].Get(), nullptr, 0);
+				else if (emitter.type == ParticleMode::SMOKEPOINT)
+					D3D11Core::Get().DeviceContext()->CSSetShader(m_particleCSList[7].Get(), nullptr, 0);
+				else if (emitter.type == ParticleMode::UPGRADE)
+					D3D11Core::Get().DeviceContext()->CSSetShader(m_particleCSList[8].Get(), nullptr, 0);
+			}
 
 			//Binding emitter speceific data
 			D3D11Core::Get().DeviceContext()->CSSetConstantBuffers(8, 1, &cb);

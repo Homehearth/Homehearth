@@ -33,6 +33,8 @@ private:
 	Lights m_lights;
 	Skybox m_sky;
 
+	std::vector<Shaders::ComputeShader> m_particleCSList; //TODO only for testing Particles
+	bool m_useShaderList; //TODO only for testing Particles
 
 	bool IsRender3DReady() const;
 	bool IsRenderDebugReady() const;
@@ -43,6 +45,8 @@ public:
 	DoubleBuffer<std::vector<comp::Renderable>> m_renderableCopies;
 	Scene();
 	~Scene();
+	
+	void SetParticleCSShaders(std::vector<Shaders::ComputeShader> list, bool useShaderList); //TODO only for testing Particles
 
 	// Emit update event and update constant buffers
 

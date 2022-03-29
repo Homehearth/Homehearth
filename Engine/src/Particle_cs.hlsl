@@ -13,11 +13,11 @@
 #define dir             c_pDirection
 
 void BloodSimmulation(inout VertexParticleIn particle, in uint id);
-void LeafSimmulation(inout VertexParticleIn particle, in uint id);
-void WaterSplashSimmulation(inout VertexParticleIn particle, in uint id);
+//TODO only out for testing Particles, void LeafSimmulation(inout VertexParticleIn particle, in uint id);
+//TODO only out for testing Particles, void WaterSplashSimmulation(inout VertexParticleIn particle, in uint id);
 void SmokePointSimmulation(inout VertexParticleIn particle, in uint id);
 void SmokeAreaSimmulation(inout VertexParticleIn particle, in uint id);
-void SparklesSimmulation(inout VertexParticleIn particle, in uint id);
+//TODO only out for testing Particles, void SparklesSimmulation(inout VertexParticleIn particle, in uint id);
 void RainSimmulation(inout VertexParticleIn particle, in uint id);
 void MageHealSimulation(inout VertexParticleIn particle, in uint id);
 void MageRangeSimulation(inout VertexParticleIn particle, in uint id);
@@ -39,11 +39,11 @@ void main(uint3 particleID : SV_DispatchThreadID)
         case 0:
             BloodSimmulation(vertex, id);
             break;
-        case 1:
-            LeafSimmulation(vertex, id);
-            break;
-        case 2:
-            WaterSplashSimmulation(vertex, id);
+      // case 1:
+      //     LeafSimmulation(vertex, id);
+      //     break;
+      // case 2:
+      //     WaterSplashSimmulation(vertex, id);
             break;
         case 3:
             SmokePointSimmulation(vertex, id);
@@ -51,9 +51,9 @@ void main(uint3 particleID : SV_DispatchThreadID)
         case 4:
             SmokeAreaSimmulation(vertex, id);
             break;
-        case 5:
-            SparklesSimmulation(vertex, id);
-            break;
+       // case 5:
+       //     SparklesSimmulation(vertex, id);
+       //     break;
         case 6:
             RainSimmulation(vertex, id);
             break;
@@ -88,16 +88,16 @@ void main(uint3 particleID : SV_DispatchThreadID)
         
     if (vertex.type == 0)
         BloodSimmulation(vertex, id);
-    else if (vertex.type == 1)
-        LeafSimmulation(vertex, id);
-    else if (vertex.type == 2)
-        WaterSplashSimmulation(vertex, id);
+ //  else if (vertex.type == 1) 
+ //      LeafSimmulation(vertex, id);
+ //  else if (vertex.type == 2)
+ //      WaterSplashSimmulation(vertex, id);
     else if (vertex.type == 3)
         SmokePointSimmulation(vertex, id);
     else if (vertex.type == 4)
         SmokeAreaSimmulation(vertex, id);
-    else if (vertex.type == 5)
-        SparklesSimmulation(vertex, id);
+  //  else if (vertex.type == 5)
+  //      SparklesSimmulation(vertex, id);
     else if (vertex.type == 6)
         RainSimmulation(vertex, id);
     else if (vertex.type == 8)
@@ -148,7 +148,8 @@ void BloodSimmulation(inout VertexParticleIn particle, in uint id)
     }
 }
 
-void LeafSimmulation(inout VertexParticleIn particle, in uint id) //OLD
+//TODO only for testing Particles
+/*void LeafSimmulation(inout VertexParticleIn particle, in uint id) //OLD
 {
     float particleLifeTime = (lifeTime - (randomNumbers[id + counter]));
     
@@ -201,6 +202,7 @@ void WaterSplashSimmulation(inout VertexParticleIn particle, in uint id) //OLD
         particle.color = float4(0, 0, 0.5, 0.5);
     }
 }
+*/
 
 void SmokePointSimmulation(inout VertexParticleIn particle, in uint id)
 {
@@ -271,7 +273,8 @@ void SmokeAreaSimmulation(inout VertexParticleIn particle, in uint id)
     }
 }
 
-void SparklesSimmulation(inout VertexParticleIn particle, in uint id) //OLD
+//TODO only out for testing Particles
+/*void SparklesSimmulation(inout VertexParticleIn particle, in uint id) //OLD
 {
     float particleLifeTime = (lifeTime) - (randomNumbers[id + counter] / 2 * dt);
     
@@ -300,7 +303,7 @@ void SparklesSimmulation(inout VertexParticleIn particle, in uint id) //OLD
         particle.velocity.y = (randomNumbers[id + 1]);
         particle.velocity.z = (randomNumbers[id + counter]);
     }
-}
+}*/
 
 void RainSimmulation(inout VertexParticleIn particle, in uint id)
 {

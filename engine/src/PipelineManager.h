@@ -78,8 +78,20 @@ public:
 	Shaders::VertexShader				m_paraboloidAnimationVertexShader;
 	Shaders::PixelShader				m_shadowPixelShader;
 
-	Shaders::ComputeShader				m_ParticleComputeShader;
 	Shaders::GeometryShader				m_ParticleGeometryShader;
+	Shaders::ComputeShader				m_ParticleComputeShader;
+
+	//TODO only for testing Particles
+	std::vector<Shaders::ComputeShader> m_ParticleComputeShadersList;
+	Shaders::ComputeShader				m_ParticleComputeShaderBloodSimmulation;
+	Shaders::ComputeShader				m_ParticleComputeShaderSmokePointSimmulation;
+	Shaders::ComputeShader				m_ParticleComputeShaderSmokeAreaSimmulation;
+	Shaders::ComputeShader				m_ParticleComputeShaderRainSimmulation;
+	Shaders::ComputeShader				m_ParticleComputeShaderMageHealSimulation;
+	Shaders::ComputeShader				m_ParticleComputeShaderMageRangeSimulation;
+	Shaders::ComputeShader				m_ParticleComputeShaderExplosionSimulation;
+	Shaders::ComputeShader				m_ParticleComputeShaderMageBlinkSimulation;
+	Shaders::ComputeShader				m_ParticleComputeShaderUpgradeSimulation;
 	
 	Shaders::ComputeShader			m_blurComputeShader;
 	Shaders::ComputeShader			m_dofComputeShader;
