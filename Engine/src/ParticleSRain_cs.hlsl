@@ -1,6 +1,6 @@
 #include "Common.hlsli"
 
-#define vertex          particlesUAV[particleID.x]
+#define particle        particlesUAV[particleID.x]
 #define lifeTime        c_pLifeTime
 #define counter         c_pCounter
 #define speed           c_pSpeed
@@ -13,6 +13,10 @@
 [numthreads(50, 1, 1)]
 void main(uint3 particleID : SV_DispatchThreadID)
 {
+    uint id = particleID.x;
+    if (id >= 100)
+        id -= 100;
+    
     float4 emitterToParticle = float4(0.0f, particle.pos.y, 0.0f, 1.f) - float4(0.0f, emitterPos.y, 0.0f, 1.f);
     if (length(emitterToParticle.y) < lifeTime)
     {

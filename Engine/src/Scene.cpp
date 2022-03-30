@@ -31,11 +31,11 @@ Scene::~Scene()
 	}
 }
  
-void Scene::SetParticleCSShaders(std::vector<Shaders::ComputeShader> list, bool useShaderList) //TODO only for testing Particles
-{
-	m_particleCSList = list;
-	m_useShaderList = useShaderList;
-}
+//void Scene::SetParticleCSShaders(std::vector<ComPtr<ID3D11ComputeShader>> list, bool useShaderList) //TODO only for testing Particles
+//{
+//	m_particleCSList = list;
+//	m_useShaderList = useShaderList;
+//}
 
 void Scene::Update(float dt)
 {
@@ -306,7 +306,7 @@ void Scene::RenderParticles(void* voidPass)
 			//TODO only for testing Particles
 			if (m_useShaderList)
 			{
-				if (emitter.type == ParticleMode::BLOOD)
+				/*if (emitter.type == ParticleMode::BLOOD)
 					D3D11Core::Get().DeviceContext()->CSSetShader(m_particleCSList[0].Get(), nullptr, 0);
 				else if (emitter.type == ParticleMode::EXPLOSION)
 					D3D11Core::Get().DeviceContext()->CSSetShader(m_particleCSList[1].Get(), nullptr, 0);
@@ -323,7 +323,7 @@ void Scene::RenderParticles(void* voidPass)
 				else if (emitter.type == ParticleMode::SMOKEPOINT)
 					D3D11Core::Get().DeviceContext()->CSSetShader(m_particleCSList[7].Get(), nullptr, 0);
 				else if (emitter.type == ParticleMode::UPGRADE)
-					D3D11Core::Get().DeviceContext()->CSSetShader(m_particleCSList[8].Get(), nullptr, 0);
+					D3D11Core::Get().DeviceContext()->CSSetShader(m_particleCSList[8].Get(), nullptr, 0);*/
 			}
 
 			//Binding emitter speceific data

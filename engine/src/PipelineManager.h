@@ -82,16 +82,16 @@ public:
 	Shaders::ComputeShader				m_ParticleComputeShader;
 
 	//TODO only for testing Particles
-	std::vector<Shaders::ComputeShader> m_ParticleComputeShadersList;
-	Shaders::ComputeShader				m_ParticleComputeShaderBloodSimmulation;
-	Shaders::ComputeShader				m_ParticleComputeShaderSmokePointSimmulation;
-	Shaders::ComputeShader				m_ParticleComputeShaderSmokeAreaSimmulation;
-	Shaders::ComputeShader				m_ParticleComputeShaderRainSimmulation;
-	Shaders::ComputeShader				m_ParticleComputeShaderMageHealSimulation;
-	Shaders::ComputeShader				m_ParticleComputeShaderMageRangeSimulation;
-	Shaders::ComputeShader				m_ParticleComputeShaderExplosionSimulation;
-	Shaders::ComputeShader				m_ParticleComputeShaderMageBlinkSimulation;
-	Shaders::ComputeShader				m_ParticleComputeShaderUpgradeSimulation;
+	/*std::vector<ComPtr<ID3D11ComputeShader>> m_ParticleComputeShadersList;
+	ComPtr<ID3D11ComputeShader>				 m_ParticleComputeShaderBloodSimmulation;
+	ComPtr<ID3D11ComputeShader>				 m_ParticleComputeShaderSmokePointSimmulation;
+	ComPtr<ID3D11ComputeShader>				 m_ParticleComputeShaderSmokeAreaSimmulation;
+	ComPtr<ID3D11ComputeShader>				 m_ParticleComputeShaderRainSimmulation;
+	ComPtr<ID3D11ComputeShader>				 m_ParticleComputeShaderMageHealSimulation;
+	ComPtr<ID3D11ComputeShader>				 m_ParticleComputeShaderMageRangeSimulation;
+	ComPtr<ID3D11ComputeShader>				 m_ParticleComputeShaderExplosionSimulation;
+	ComPtr<ID3D11ComputeShader>				 m_ParticleComputeShaderMageBlinkSimulation;
+	ComPtr<ID3D11ComputeShader>				 m_ParticleComputeShaderUpgradeSimulation;*/
 	
 	Shaders::ComputeShader			m_blurComputeShader;
 	Shaders::ComputeShader			m_dofComputeShader;

@@ -33,7 +33,7 @@ private:
 	Lights m_lights;
 	Skybox m_sky;
 
-	std::vector<Shaders::ComputeShader> m_particleCSList; //TODO only for testing Particles
+	//std::vector<ComPtr<ID3D11ComputeShader>> m_particleCSList; //TODO only for testing Particles
 	bool m_useShaderList; //TODO only for testing Particles
 
 	bool IsRender3DReady() const;
@@ -46,7 +46,7 @@ public:
 	Scene();
 	~Scene();
 	
-	void SetParticleCSShaders(std::vector<Shaders::ComputeShader> list, bool useShaderList); //TODO only for testing Particles
+	//void SetParticleCSShaders(std::vector<ComPtr<ID3D11ComputeShader>> list, bool useShaderList); //TODO only for testing Particles
 
 	// Emit update event and update constant buffers
 

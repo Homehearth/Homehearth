@@ -79,7 +79,7 @@ void ParticlePass::Initialize(ID3D11DeviceContext* pContextDevice, PipelineManag
 
 void ParticlePass::Render(Scene* pScene)
 {
-	pScene->SetParticleCSShaders(PM->m_ParticleComputeShadersList, false); //TODO only for testing Particles
+	//Scene->SetParticleCSShaders(PM->m_ParticleComputeShadersList, false); //TODO only for testing Particles
 	pScene->RenderParticles(this);
 }
 

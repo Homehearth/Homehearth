@@ -1,6 +1,6 @@
 #include "Common.hlsli"
 
-#define vertex          particlesUAV[particleID.x]
+#define particle          particlesUAV[particleID.x]
 #define lifeTime        c_pLifeTime
 #define counter         c_pCounter
 #define speed           c_pSpeed
