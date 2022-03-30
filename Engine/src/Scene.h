@@ -33,9 +33,6 @@ private:
 	Lights m_lights;
 	Skybox m_sky;
 
-	//std::vector<ComPtr<ID3D11ComputeShader>> m_particleCSList; //TODO only for testing Particles
-	bool m_useShaderList; //TODO only for testing Particles
-
 	bool IsRender3DReady() const;
 	bool IsRenderDebugReady() const;
 	bool IsRender2DReady() const;
@@ -46,8 +43,6 @@ public:
 	Scene();
 	~Scene();
 	
-	//void SetParticleCSShaders(std::vector<ComPtr<ID3D11ComputeShader>> list, bool useShaderList); //TODO only for testing Particles
-
 	// Emit update event and update constant buffers
 
 	/*
@@ -70,7 +65,7 @@ public:
 	void RenderShadow();
 	void RenderShadowAnimation();
 
-	void RenderParticles(void* pass);
+	void RenderParticles(void* pass, bool runCSList);
 
 	void PushCombatText(const combat_text_inst_t& combat_text);
 	void HandleCombatText();

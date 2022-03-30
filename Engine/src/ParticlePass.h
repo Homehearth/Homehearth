@@ -30,6 +30,7 @@ public:
 	float								m_counter = 0;
 	UINT								m_nrOfRandomNumbers = 0;
 	std::vector<float>					m_randomNumbers;
+	bool								m_useShaderList = false; //TODO only for testing Particles
 
 	dx::ConstantBuffer<ParticleUpdate>	m_constantBufferParticleUpdate;
 	dx::ConstantBuffer<ParticleModePUpdate>	m_constantBufferParticleMode;
@@ -45,6 +46,16 @@ public:
 	ID3D11UnorderedAccessView*			m_nullUAV = nullptr;
 	ID3D11GeometryShader*				m_nullGS = nullptr;
 	ID3D11ComputeShader*				m_nullCS = nullptr;
+
+	ID3D11ComputeShader*				m_ParticleComputeShaderBloodSimmulation;
+	ID3D11ComputeShader*				m_ParticleComputeShaderSmokePointSimmulation;
+	ID3D11ComputeShader*				m_ParticleComputeShaderSmokeAreaSimmulation;
+	ID3D11ComputeShader*				m_ParticleComputeShaderRainSimmulation;
+	ID3D11ComputeShader*				m_ParticleComputeShaderMageHealSimulation;
+	ID3D11ComputeShader*				m_ParticleComputeShaderMageRangeSimulation;
+	ID3D11ComputeShader*				m_ParticleComputeShaderExplosionSimulation;
+	ID3D11ComputeShader*				m_ParticleComputeShaderMageBlinkSimulation;
+	ID3D11ComputeShader*				m_ParticleComputeShaderUpgradeSimulation;
 
 	void CreateRandomNumbers();
 

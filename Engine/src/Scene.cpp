@@ -31,12 +31,6 @@ Scene::~Scene()
 	}
 }
  
-//void Scene::SetParticleCSShaders(std::vector<ComPtr<ID3D11ComputeShader>> list, bool useShaderList) //TODO only for testing Particles
-//{
-//	m_particleCSList = list;
-//	m_useShaderList = useShaderList;
-//}
-
 void Scene::Update(float dt)
 {
 	m_2dHandler.Update();
@@ -267,7 +261,7 @@ void Scene::RenderShadowAnimation()
 	}
 }
 
-void Scene::RenderParticles(void* voidPass)
+void Scene::RenderParticles(void* voidPass, bool runCSList)
 {
 	ParticlePass* pass = (ParticlePass*)voidPass;
 
@@ -303,33 +297,33 @@ void Scene::RenderParticles(void* voidPass)
 			pass->m_constantBufferParticleMode.SetData(D3D11Core::Get().DeviceContext(), pass->m_particleModeUpdate);
 			ID3D11Buffer* cbP = { pass->m_constantBufferParticleMode.GetBuffer() };
 
-			//TODO only for testing Particles
-			if (m_useShaderList)
-			{
-				/*if (emitter.type == ParticleMode::BLOOD)
-					D3D11Core::Get().DeviceContext()->CSSetShader(m_particleCSList[0].Get(), nullptr, 0);
-				else if (emitter.type == ParticleMode::EXPLOSION)
-					D3D11Core::Get().DeviceContext()->CSSetShader(m_particleCSList[1].Get(), nullptr, 0);
-				else if (emitter.type == ParticleMode::MAGEBLINK)
-					D3D11Core::Get().DeviceContext()->CSSetShader(m_particleCSList[2].Get(), nullptr, 0);
-				else if (emitter.type == ParticleMode::MAGEHEAL)
-					D3D11Core::Get().DeviceContext()->CSSetShader(m_particleCSList[3].Get(), nullptr, 0);
-				else if (emitter.type == ParticleMode::MAGERANGE)
-					D3D11Core::Get().DeviceContext()->CSSetShader(m_particleCSList[4].Get(), nullptr, 0);
-				else if (emitter.type == ParticleMode::RAIN)
-					D3D11Core::Get().DeviceContext()->CSSetShader(m_particleCSList[5].Get(), nullptr, 0);
-				else if (emitter.type == ParticleMode::SMOKEAREA)
-					D3D11Core::Get().DeviceContext()->CSSetShader(m_particleCSList[6].Get(), nullptr, 0);
-				else if (emitter.type == ParticleMode::SMOKEPOINT)
-					D3D11Core::Get().DeviceContext()->CSSetShader(m_particleCSList[7].Get(), nullptr, 0);
-				else if (emitter.type == ParticleMode::UPGRADE)
-					D3D11Core::Get().DeviceContext()->CSSetShader(m_particleCSList[8].Get(), nullptr, 0);*/
-			}
-
 			//Binding emitter speceific data
 			D3D11Core::Get().DeviceContext()->CSSetConstantBuffers(8, 1, &cb);
 			D3D11Core::Get().DeviceContext()->CSSetUnorderedAccessViews(7, 1, emitter.particleUAV.GetAddressOf(), nullptr);
 
+			//TODO only for testing Particles
+			if (runCSList)
+			{
+				if (pass->m_particleModeUpdate.type == ParticleMode::BLOOD)
+					D3D11Core::Get().DeviceContext()->CSSetShader(pass->m_ParticleComputeShaderBloodSimmulation, nullptr, 0);
+				else if (pass->m_particleModeUpdate.type == ParticleMode::EXPLOSION)
+					D3D11Core::Get().DeviceContext()->CSSetShader(pass->m_ParticleComputeShaderExplosionSimulation, nullptr, 0);
+				else if (pass->m_particleModeUpdate.type == ParticleMode::MAGEBLINK)
+					D3D11Core::Get().DeviceContext()->CSSetShader(pass->m_ParticleComputeShaderMageBlinkSimulation, nullptr, 0);
+				else if (pass->m_particleModeUpdate.type == ParticleMode::MAGEHEAL)
+					D3D11Core::Get().DeviceContext()->CSSetShader(pass->m_ParticleComputeShaderMageHealSimulation, nullptr, 0);
+				else if (pass->m_particleModeUpdate.type == ParticleMode::MAGERANGE)
+					D3D11Core::Get().DeviceContext()->CSSetShader(pass->m_ParticleComputeShaderMageRangeSimulation, nullptr, 0);
+				else if (pass->m_particleModeUpdate.type == ParticleMode::RAIN)
+					D3D11Core::Get().DeviceContext()->CSSetShader(pass->m_ParticleComputeShaderRainSimmulation, nullptr, 0);
+				else if (pass->m_particleModeUpdate.type == ParticleMode::SMOKEAREA)
+					D3D11Core::Get().DeviceContext()->CSSetShader(pass->m_ParticleComputeShaderSmokeAreaSimmulation, nullptr, 0);
+				else if (pass->m_particleModeUpdate.type == ParticleMode::SMOKEPOINT)
+					D3D11Core::Get().DeviceContext()->CSSetShader(pass->m_ParticleComputeShaderSmokePointSimmulation, nullptr, 0);
+				else if (pass->m_particleModeUpdate.type == ParticleMode::UPGRADE)
+					D3D11Core::Get().DeviceContext()->CSSetShader(pass->m_ParticleComputeShaderUpgradeSimulation, nullptr, 0);
+			}
+			
 			const int groupCount = static_cast<int>(ceil(emitter.nrOfParticles / 50)); //Hur m?nga grupper som k?rs
 			D3D11Core::Get().DeviceContext()->Dispatch(groupCount, 1, 1);
 			D3D11Core::Get().DeviceContext()->CSSetUnorderedAccessViews(7, 1, &pass->m_nullUAV, nullptr);

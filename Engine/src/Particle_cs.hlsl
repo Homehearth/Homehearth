@@ -1,5 +1,7 @@
 #include "Common.hlsli"
 
+#define RUN_SWITCHCASE 0
+
 #define vertex          particlesUAV[particleID.x]
 #define lifeTime        c_pLifeTime
 #define counter         c_pCounter
@@ -146,7 +148,7 @@ void BloodSimmulation(inout VertexParticleIn particle, in uint id)
     }
 }
 
-//TODO only for testing Particles
+//TODO out only for testing Particles
 /*void LeafSimmulation(inout VertexParticleIn particle, in uint id) //OLD
 {
     float particleLifeTime = (lifeTime - (randomNumbers[id + counter]));

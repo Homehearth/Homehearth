@@ -825,62 +825,51 @@ bool PipelineManager::CreateShaders()
     }
 
     //TODO only for testing Particles
-
-    //D3D11Core::Get().Device()->CreateComputeShader();
-    //if (!m_ParticleComputeShaderBloodSimmulation("ParticleSBlood_cs"))
-    //{
-    //    LOG_WARNING("failed creating ParticleSBlood_cs.");
-    //    return false;
-    //}
-    //m_ParticleComputeShadersList.push_back(m_ParticleComputeShaderBloodSimmulation);
-    //if (!m_ParticleComputeShaderExplosionSimulation.Create("ParticleSExplotion_cs"))
-    //{
-    //    LOG_WARNING("failed creating ParticleSExplotion_cs.");
-    //    return false;
-    //}
-    //m_ParticleComputeShadersList.push_back(m_ParticleComputeShaderExplosionSimulation);
-    //if (!m_ParticleComputeShaderMageBlinkSimulation.Create("ParticleSMageBlink_cs"))
-    //{
-    //    LOG_WARNING("failed creating ParticleSMageBlink_cs.");
-    //    return false;
-    //}
-    //m_ParticleComputeShadersList.push_back(m_ParticleComputeShaderMageBlinkSimulation);
-    //if (!m_ParticleComputeShaderMageHealSimulation.Create("ParticleSMageHeal_cs"))
-    //{
-    //    LOG_WARNING("failed creating ParticleSMageHeal_cs.");
-    //    return false;
-    //}
-    //m_ParticleComputeShadersList.push_back(m_ParticleComputeShaderMageHealSimulation);
-    //if (!m_ParticleComputeShaderMageRangeSimulation.Create("ParticleSMageRange_cs"))
-    //{
-    //    LOG_WARNING("failed creating ParticleSMageRange_cs.");
-    //    return false;
-    //}
-    //m_ParticleComputeShadersList.push_back(m_ParticleComputeShaderMageRangeSimulation);
-    //if (!m_ParticleComputeShaderRainSimmulation.Create("ParticleSRain_cs"))
-    //{
-    //    LOG_WARNING("failed creating ParticleSRain_cs.");
-    //    return false;
-    //}
-    //m_ParticleComputeShadersList.push_back(m_ParticleComputeShaderRainSimmulation);
-    //if (!m_ParticleComputeShaderSmokeAreaSimmulation.Create("ParticleSSmokeArea_cs"))
-    //{
-    //    LOG_WARNING("failed creating ParticleSSmokeArea_cs.");
-    //    return false;
-    //}
-    //m_ParticleComputeShadersList.push_back(m_ParticleComputeShaderSmokeAreaSimmulation);
-    //if (!m_ParticleComputeShaderSmokePointSimmulation.Create("ParticleSSmokePoint_cs"))
-    //{
-    //    LOG_WARNING("failed creating ParticleSSmokePoint_cs.");
-    //    return false;
-    //}
-    //m_ParticleComputeShadersList.push_back(m_ParticleComputeShaderSmokePointSimmulation);
-    //if (!m_ParticleComputeShaderUpgradeSimulation.Create("ParticleSUpgrade_cs"))
-    //{
-    //    LOG_WARNING("failed creating ParticleSUpgrade_cs.");
-    //    return false;
-    //}
-    //m_ParticleComputeShadersList.push_back(m_ParticleComputeShaderUpgradeSimulation);
+    if (!m_ParticleComputeShaderBloodSimmulation.Create("ParticleSBlood_cs"))
+    {
+        LOG_WARNING("failed creating ParticleSBlood_cs.");
+        return false;
+    }
+    if (!m_ParticleComputeShaderExplosionSimulation.Create("ParticleSExplotion_cs"))
+    {
+        LOG_WARNING("failed creating ParticleSExplotion_cs.");
+        return false;
+    }
+    if (!m_ParticleComputeShaderMageBlinkSimulation.Create("ParticleSMageBlink_cs"))
+    {
+        LOG_WARNING("failed creating ParticleSMageBlink_cs.");
+        return false;
+    }
+    if (!m_ParticleComputeShaderMageHealSimulation.Create("ParticleSMageHeal_cs"))
+    {
+        LOG_WARNING("failed creating ParticleSMageHeal_cs.");
+        return false;
+    }
+    if (!m_ParticleComputeShaderMageRangeSimulation.Create("ParticleSMageRange_cs"))
+    {
+        LOG_WARNING("failed creating ParticleSMageRange_cs.");
+        return false;
+    }
+    if (!m_ParticleComputeShaderRainSimmulation.Create("ParticleSRain_cs"))
+    {
+        LOG_WARNING("failed creating ParticleSRain_cs.");
+        return false;
+    }
+    if (!m_ParticleComputeShaderSmokeAreaSimmulation.Create("ParticleSSmokeArea_cs"))
+    {
+        LOG_WARNING("failed creating ParticleSSmokeArea_cs.");
+        return false;
+    }
+    if (!m_ParticleComputeShaderSmokePointSimmulation.Create("ParticleSSmokePoint_cs"))
+    {
+        LOG_WARNING("failed creating ParticleSSmokePoint_cs.");
+        return false;
+    }
+    if (!m_ParticleComputeShaderUpgradeSimulation.Create("ParticleSUpgrade_cs"))
+    {
+        LOG_WARNING("failed creating ParticleSUpgrade_cs.");
+        return false;
+    }
     //TODO only for testing Particles
 
     if (!m_blurComputeShader.Create("Blur_CS"))

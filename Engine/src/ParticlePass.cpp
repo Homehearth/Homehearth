@@ -16,7 +16,6 @@ void ParticlePass::PreRender(Camera* pCam, ID3D11DeviceContext* pDeviceContext)
 	DC->VSSetShader(PM->m_ParticleVertexShader.Get(), nullptr, 0);
 	DC->GSSetShader(PM->m_ParticleGeometryShader.Get(), nullptr, 0);
 	DC->PSSetShader(PM->m_ParticlePixelShader.Get(), nullptr, 0);
-	DC->CSSetShader(PM->m_ParticleComputeShader.Get(), nullptr, 0);
 
 	DC->OMSetBlendState(PM->m_blendStateParticle.Get(), nullptr, 0xffffffff);
 	DC->OMSetRenderTargets(1, PM->m_backBuffer.GetAddressOf(), PM->m_depthStencilView.Get());
@@ -73,14 +72,25 @@ void ParticlePass::Initialize(ID3D11DeviceContext* pContextDevice, PipelineManag
 	m_constantBufferParticleUpdate.Create(D3D11Core::Get().Device());
 	m_constantBufferParticleMode.Create(D3D11Core::Get().Device());
 
+
 	m_nrOfRandomNumbers = 100;
 	CreateRandomNumbers();
+
+	//TODO only for testing Particles
+	m_ParticleComputeShaderBloodSimmulation = PM->m_ParticleComputeShaderBloodSimmulation.Get();
+	m_ParticleComputeShaderSmokePointSimmulation = PM->m_ParticleComputeShaderSmokePointSimmulation.Get();
+	m_ParticleComputeShaderSmokeAreaSimmulation = PM->m_ParticleComputeShaderSmokeAreaSimmulation.Get();
+	m_ParticleComputeShaderRainSimmulation = PM->m_ParticleComputeShaderRainSimmulation.Get();
+	m_ParticleComputeShaderMageHealSimulation = PM->m_ParticleComputeShaderMageHealSimulation.Get();
+	m_ParticleComputeShaderMageRangeSimulation = PM->m_ParticleComputeShaderMageRangeSimulation.Get();
+	m_ParticleComputeShaderExplosionSimulation = PM->m_ParticleComputeShaderExplosionSimulation.Get();
+	m_ParticleComputeShaderMageBlinkSimulation = PM->m_ParticleComputeShaderMageBlinkSimulation.Get();
+	m_ParticleComputeShaderUpgradeSimulation = PM->m_ParticleComputeShaderUpgradeSimulation.Get();
 }
 
 void ParticlePass::Render(Scene* pScene)
 {
-	//Scene->SetParticleCSShaders(PM->m_ParticleComputeShadersList, false); //TODO only for testing Particles
-	pScene->RenderParticles(this);
+	pScene->RenderParticles(this, true);
 }
 
 void ParticlePass::PostRender(ID3D11DeviceContext* pDeviceContext)
