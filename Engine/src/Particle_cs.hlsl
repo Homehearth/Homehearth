@@ -1,7 +1,5 @@
 #include "Common.hlsli"
 
-#define RUN_SWITCHCASE 0
-
 #define vertex          particlesUAV[particleID.x]
 #define lifeTime        c_pLifeTime
 #define counter         c_pCounter
@@ -101,19 +99,18 @@ void main(uint3 particleID : SV_DispatchThreadID)
     else if (vertex.type == 6)
         RainSimmulation(vertex, id);
     else if (vertex.type == 8)
-        MageHealSimulation(vertex, id);
+        MageHealSimulation(vertex, id);   
     else if (vertex.type == 9)
         MageRangeSimulation(vertex, id);
     else if (vertex.type == 10)
-        ExplosionSimulation(vertex, id);
+        ExplosionSimulation(vertex, id);    
     else if (vertex.type == 11)
-        MageBlinkSimulation(vertex, id);
+        MageBlinkSimulation(vertex, id);    
     else if (vertex.type == 12)
         UpgradeSimulation(vertex, id);
     
     vertex.life += dt;
 }
-#endif
 
 void BloodSimmulation(inout VertexParticleIn particle, in uint id)
 {
