@@ -111,6 +111,7 @@ void main(uint3 particleID : SV_DispatchThreadID)
     
     vertex.life += dt;
 }
+#endif
 
 void BloodSimmulation(inout VertexParticleIn particle, in uint id)
 {
@@ -428,5 +429,5 @@ void UpgradeSimulation(inout VertexParticleIn particle, in uint id)
         particle.size = float2(sizeMulitplier, sizeMulitplier);
         particle.life = 0;
 
-    }   
+    }
 }
